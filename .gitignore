@@ -36,3 +36,11 @@ Thumbs.db
 # =========================
 .codegraph/*
 !.codegraph/.gitignore
+
+# Local multi-agent workflow artifacts
+.agent-runs/
+.agent-worktrees/
+
+# Python tooling caches
+__pycache__/
+*.py[cod]

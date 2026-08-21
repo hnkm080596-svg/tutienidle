@@ -1,0 +1,14 @@
+{
+  "project_dir": "game",
+  "worktree_root": ".agent-worktrees",
+  "run_root": ".agent-runs",
+  "max_review_cycles": 2,
+  "claude_model": "sonnet",
+  "claude_effort": "high",
+  "codex_model": null,
+  "verification_commands": [
+    ["npm.cmd", "run", "test"],
+    ["npm.cmd", "run", "type-check"],
+    ["npm.cmd", "run", "build"]
+  ]
+}
