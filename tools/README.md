@@ -26,7 +26,7 @@ Start a task:
 .\workflow.cmd
 ```
 
-The default task is read from `TASK.md`. Advanced users can still supply text directly with `--task` or choose another file with `--task-file`.
+The default task is read from `TASK.md`. Add `## Mode` with `Quick`, `Balanced`, or `Full`; `Balanced` is the default. Advanced users can still supply text directly with `--task` or choose another file with `--task-file`.
 
 Inspect a run:
 

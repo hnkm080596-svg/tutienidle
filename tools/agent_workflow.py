@@ -62,7 +62,16 @@ def claude_command() -> str:
 
 
 def codex_command() -> str:
-    return resolve_command("codex", "CODEX_BIN", [])
+    user = Path.home()
+    extensions: list[Path] = []
+    for root in (user / ".vscode" / "extensions", user / ".vscode-insiders" / "extensions"):
+        extensions.extend(
+            sorted(
+                root.glob("openai.chatgpt-*-win32-x64/bin/windows-x86_64/codex.exe"),
+                reverse=True,
+            )
+        )
+    return resolve_command("codex", "CODEX_BIN", extensions)
 
 
 def run_process(
@@ -173,6 +182,24 @@ def slugify(value: str) -> str:
     return (slug[:42] or "task")
 
 
+def task_mode(task: str, default: str) -> str:
+    match = re.search(r"(?im)^##\s+Mode\s*$\s*([^\r\n#]+)", task)
+    selected = match.group(1).strip() if match else default
+    modes = {"quick": "Quick", "balanced": "Balanced", "full": "Full"}
+    try:
+        return modes[selected.casefold()]
+    except KeyError as exc:
+        raise WorkflowError("Mode must be Quick, Balanced, or Full.") from exc
+
+
+def compact_plan(task: str, mode: str) -> str:
+    return (
+        f"{mode} mode: read PROJECT_CONTEXT.md first, then inspect only files relevant to "
+        "the task. Make focused changes and avoid broad repository scans unless the task "
+        "cannot be completed otherwise.\n\nTASK:\n" + task
+    )
+
+
 def extract_claude_result(raw: str) -> str:
     try:
         payload = json.loads(raw)
@@ -205,7 +232,7 @@ def render_prompt(name: str, **values: str) -> str:
 
 
 def run_claude_plan(task: str, worktree: Path, run_dir: Path, config: dict[str, Any]) -> str:
-    announce("GIAI ĐOẠN 1/4 — CLAUDE ĐANG LẬP KẾ HOẠCH", "Claude đang đọc và phân tích dự án. Bước này có thể mất vài phút.")
+    announce("CLAUDE — PLANNING", "Claude đang đọc và phân tích dự án. Bước này chỉ chạy trong Full mode.")
     prompt = render_prompt("claude-plan.md", task=task)
     result = run_process(
         [
@@ -225,27 +252,63 @@ def run_claude_plan(task: str, worktree: Path, run_dir: Path, config: dict[str, 
     return plan
 
 
-def run_codex(task: str, plan: str, worktree: Path, run_dir: Path, cycle: int, config: dict[str, Any]) -> None:
-    announce(f"GIAI ĐOẠN 2/4 — CODEX ĐANG VIẾT CODE (VÒNG {cycle})", "Các thao tác và tiến độ của Codex sẽ xuất hiện bên dưới.")
-    prompt = render_prompt("codex-implement.md", task=task, plan=plan)
+def codex_session_id(raw: str) -> str | None:
+    for line in raw.splitlines():
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(event, dict):
+            continue
+        for key in ("thread_id", "session_id"):
+            value = event.get(key)
+            if isinstance(value, str) and value:
+                return value
+        thread = event.get("thread")
+        if isinstance(thread, dict) and isinstance(thread.get("id"), str):
+            return thread["id"]
+    return None
+
+
+def run_codex(
+    task: str, plan: str, worktree: Path, run_dir: Path, cycle: int,
+    config: dict[str, Any], session_id: str | None,
+) -> str | None:
+    announce(f"CODEX — IMPLEMENTING (CYCLE {cycle})", "Các thao tác và tiến độ của Codex sẽ xuất hiện bên dưới.")
+    if session_id:
+        prompt = (
+            "Continue the same task in the same worktree. Keep prior context and fix only the "
+            "actionable verification or review feedback below. Re-run relevant checks.\n\n" + plan
+        )
+    else:
+        prompt = render_prompt("codex-implement.md", task=task, plan=plan)
     output = run_dir / f"implementation-{cycle}.md"
-    command = [
-        codex_command(), "exec", "-C", str(worktree),
-        "-s", "workspace-write", "--approve-for-me", "--json",
-        "-o", str(output), "-",
-    ]
-    if config.get("codex_model"):
-        command[2:2] = ["--model", str(config["codex_model"])]
-    run_process(
+    if session_id:
+        command = [
+            codex_command(), "exec", "resume", "--json",
+            "-o", str(output), session_id, "-",
+        ]
+        if config.get("codex_model"):
+            command[3:3] = ["--model", str(config["codex_model"])]
+    else:
+        command = [
+            codex_command(), "exec", "-C", str(worktree),
+            "-s", "workspace-write", "--approve-for-me", "--json",
+            "-o", str(output), "-",
+        ]
+        if config.get("codex_model"):
+            command[2:2] = ["--model", str(config["codex_model"])]
+    result = run_process(
         command,
         cwd=worktree,
         stdin=prompt,
         log_path=run_dir / f"codex-events-{cycle}.jsonl",
     )
+    return session_id or codex_session_id(result.stdout)
 
 
 def verify(worktree: Path, run_dir: Path, cycle: int, config: dict[str, Any]) -> bool:
-    announce("GIAI ĐOẠN 3/4 — ĐANG CHẠY KIỂM TRA", "Chạy test, kiểm tra TypeScript và build dự án.")
+    announce("VERIFY — TEST / TYPE-CHECK / BUILD", "Chạy test, kiểm tra TypeScript và build dự án.")
     report: list[str] = []
     passed = True
     project = worktree / str(config["project_dir"])
@@ -265,7 +328,7 @@ def run_review(
     task: str, plan: str, baseline: str, worktree: Path, run_dir: Path,
     cycle: int, config: dict[str, Any],
 ) -> dict[str, Any]:
-    announce(f"GIAI ĐOẠN 4/4 — CLAUDE ĐANG REVIEW (VÒNG {cycle})", "Claude đang đọc diff và kết quả kiểm tra; không chỉnh sửa code.")
+    announce(f"CLAUDE — REVIEWING (CYCLE {cycle})", "Claude đang đọc diff và kết quả kiểm tra; không chỉnh sửa code.")
     schema = load_json(TOOLS / "schemas" / "review.schema.json")
     verification = run_dir / f"verification-{cycle}.txt"
     prompt = render_prompt(
@@ -320,6 +383,7 @@ def command_run(args: argparse.Namespace) -> int:
         task = task_path.read_text(encoding="utf-8").strip()
     if not task:
         raise WorkflowError("Task is empty. Describe the work in TASK.md first.")
+    mode = task_mode(task, str(config["default_mode"]))
     require_clean_repo()
     baseline = git(["rev-parse", "HEAD"])
     stamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -332,18 +396,36 @@ def command_run(args: argparse.Namespace) -> int:
     git(["worktree", "add", "-b", branch, str(worktree), baseline])
     state = {
         "run_id": run_id, "task": task, "baseline": baseline,
-        "branch": branch, "worktree": str(worktree), "status": "planning", "cycle": 0,
+        "branch": branch, "worktree": str(worktree), "mode": mode,
+        "status": "planning" if mode == "Full" else "implementing",
+        "cycle": 0, "codex_session_id": None,
     }
     write_json(run_dir / "run.json", state)
     (run_dir / "task.md").write_text(task + "\n", encoding="utf-8")
     try:
-        plan = run_claude_plan(task, worktree, run_dir, config)
+        announce(f"WORKFLOW MODE — {mode}")
+        plan = run_claude_plan(task, worktree, run_dir, config) if mode == "Full" else compact_plan(task, mode)
+        (run_dir / "plan.md").write_text(plan + "\n", encoding="utf-8")
         max_cycles = int(config["max_review_cycles"])
+        session_id: str | None = None
         for cycle in range(1, max_cycles + 1):
             state.update(status="implementing", cycle=cycle)
             write_json(run_dir / "run.json", state)
-            run_codex(task, plan, worktree, run_dir, cycle, config)
+            session_id = run_codex(task, plan, worktree, run_dir, cycle, config, session_id)
+            state["codex_session_id"] = session_id
+            write_json(run_dir / "run.json", state)
             tests_passed = verify(worktree, run_dir, cycle, config)
+            if mode == "Quick":
+                if tests_passed:
+                    state["status"] = "passed"
+                    write_json(run_dir / "run.json", state)
+                    print(f"Workflow passed. Worktree: {worktree}")
+                    return 0
+                plan = (
+                    "Verification failed. Diagnose and fix these results:\n\n" +
+                    (run_dir / f"verification-{cycle}.txt").read_text(encoding="utf-8")
+                )
+                continue
             state["status"] = "reviewing"
             write_json(run_dir / "run.json", state)
             review = run_review(task, plan, baseline, worktree, run_dir, cycle, config)
@@ -352,7 +434,7 @@ def command_run(args: argparse.Namespace) -> int:
                 write_json(run_dir / "run.json", state)
                 print(f"Workflow passed. Worktree: {worktree}")
                 return 0
-            plan = plan + "\n\nREVIEW FEEDBACK TO FIX:\n" + json.dumps(review, ensure_ascii=False, indent=2)
+            plan = "REVIEW FEEDBACK TO FIX:\n" + json.dumps(review, ensure_ascii=False, indent=2)
         state["status"] = "changes_requested"
         write_json(run_dir / "run.json", state)
         print(f"Review still requests changes. See {run_dir}")

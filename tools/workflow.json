@@ -2,6 +2,7 @@
   "project_dir": "game",
   "worktree_root": ".agent-worktrees",
   "run_root": ".agent-runs",
+  "default_mode": "Balanced",
   "max_review_cycles": 2,
   "claude_model": "sonnet",
   "claude_effort": "high",

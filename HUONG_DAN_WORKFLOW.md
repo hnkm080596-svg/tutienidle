@@ -8,6 +8,20 @@ Mở file `TASK.md`, xóa nội dung ví dụ và viết điều bạn muốn b�
 
 Bạn không cần nêu tên file code hay giải pháp kỹ thuật. Hãy mô tả trải nghiệm hoặc kết quả mong muốn càng rõ càng tốt.
 
+Bạn có thể thêm một trong ba mode tiếng Anh ở đầu `TASK.md`:
+
+```text
+## Mode
+
+Balanced
+```
+
+- `Quick`: Codex làm và chạy kiểm tra; không gọi Claude. Dùng cho text, CSS nhỏ, hoặc thay đổi rất rõ ràng.
+- `Balanced`: Codex làm, sau đó Claude review bằng session độc lập. Đây là mặc định khi không ghi mode.
+- `Full`: Claude lập kế hoạch, Codex làm, rồi Claude review. Chỉ dùng cho task lớn hoặc ảnh hưởng nhiều hệ thống.
+
+Mỗi task bắt đầu bằng session mới. Chỉ các vòng Codex sửa feedback trong cùng task mới tiếp tục session cũ để giữ context mà không kéo lịch sử qua nhiều task.
+
 Ví dụ:
 
 ```text
