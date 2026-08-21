@@ -107,11 +107,17 @@ def git(args: Sequence[str], cwd: Path = ROOT) -> str:
     return result.stdout.strip()
 
 
+def repo_blockers() -> list[str]:
+    entries = git(["status", "--porcelain", "--untracked-files=all"]).splitlines()
+    return [entry for entry in entries if entry[3:] != "TASK.md"]
+
+
 def require_clean_repo() -> None:
-    status = git(["status", "--porcelain"])
-    if status:
+    blockers = repo_blockers()
+    if blockers:
         raise WorkflowError(
-            "Repository is not clean. Commit or stash existing work before starting an isolated run."
+            "Repository has changes outside TASK.md. Commit or stash them before starting an "
+            "isolated run:\n" + "\n".join(blockers)
         )
 
 
@@ -232,7 +238,7 @@ def command_doctor(_: argparse.Namespace) -> int:
         checks.append((label, f"{version} [{path}]"))
     checks.append(("Git", git(["--version"])))
     checks.append(("Project", str(ROOT / str(config["project_dir"]))))
-    checks.append(("Repo clean", "yes" if not git(["status", "--porcelain"]) else "no (run is blocked)"))
+    checks.append(("Repo ready", "yes" if not repo_blockers() else "no (run is blocked)"))
     for label, value in checks:
         print(f"{label}: {value}")
     return 0

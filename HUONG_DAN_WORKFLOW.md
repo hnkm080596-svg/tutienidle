@@ -71,6 +71,7 @@ Sau đó gửi toàn bộ phần lỗi hiển thị trong terminal cho Codex.
 ## Lưu ý
 
 - Mỗi lần chỉ để một yêu cầu trong `TASK.md`.
+- `TASK.md` được phép thay đổi; workflow vẫn chạy miễn là các file khác không có thay đổi chưa commit.
 - Không sửa code trong lúc workflow đang chạy.
 - Workflow không tự commit, push hoặc xóa code.
 - Nếu yêu cầu quá lớn, nên chia thành nhiều task nhỏ để review chính xác hơn.
