@@ -109,7 +109,7 @@ def git(args: Sequence[str], cwd: Path = ROOT) -> str:
 
 def repo_blockers() -> list[str]:
     entries = git(["status", "--porcelain", "--untracked-files=all"]).splitlines()
-    return [entry for entry in entries if entry[3:] != "TASK.md"]
+    return [entry for entry in entries if entry.split(maxsplit=1)[-1] != "TASK.md"]
 
 
 def require_clean_repo() -> None:
