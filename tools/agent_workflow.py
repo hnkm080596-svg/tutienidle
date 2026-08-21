@@ -4,10 +4,13 @@ import argparse
 import datetime as dt
 import json
 import os
+import queue
 import re
 import shutil
 import subprocess
 import sys
+import threading
+import time
 import uuid
 from pathlib import Path
 from typing import Any, Sequence
@@ -72,29 +75,73 @@ def run_process(
 ) -> subprocess.CompletedProcess[str]:
     display = subprocess.list2cmdline(list(command))
     print(f"> {display}", flush=True)
+    started = time.monotonic()
     try:
-        result = subprocess.run(
+        process = subprocess.Popen(
             list(command),
             cwd=cwd,
-            input=stdin,
             text=True,
             encoding="utf-8",
             errors="replace",
+            stdin=subprocess.PIPE if stdin is not None else None,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            timeout=timeout,
             shell=False,
             env={**os.environ, "NO_COLOR": "1"},
         )
-    except subprocess.TimeoutExpired as exc:
-        raise WorkflowError(f"Command timed out after {timeout}s: {display}") from exc
+        if stdin is not None and process.stdin is not None:
+            process.stdin.write(stdin)
+            process.stdin.close()
+
+        output_queue: queue.Queue[str | None] = queue.Queue()
+
+        def read_output() -> None:
+            assert process.stdout is not None
+            for line in process.stdout:
+                output_queue.put(line)
+            output_queue.put(None)
+
+        reader = threading.Thread(target=read_output, daemon=True)
+        reader.start()
+        chunks: list[str] = []
+        stream_finished = False
+        last_heartbeat = started
+        while not stream_finished:
+            elapsed = time.monotonic() - started
+            if elapsed > timeout:
+                process.kill()
+                raise WorkflowError(f"Command timed out after {timeout}s: {display}")
+            try:
+                item = output_queue.get(timeout=1)
+                if item is None:
+                    stream_finished = True
+                else:
+                    chunks.append(item)
+                    print(item, end="", flush=True)
+            except queue.Empty:
+                pass
+            now = time.monotonic()
+            if now - last_heartbeat >= 10:
+                minutes, seconds = divmod(int(now - started), 60)
+                print(f"[still working | {minutes:02d}:{seconds:02d}]", flush=True)
+                last_heartbeat = now
+        return_code = process.wait()
+        result = subprocess.CompletedProcess(command, return_code, "".join(chunks), None)
+    except OSError:
+        raise
     if log_path:
         log_path.write_text(result.stdout, encoding="utf-8")
-    if result.stdout:
-        print(result.stdout, end="" if result.stdout.endswith("\n") else "\n")
     if result.returncode != 0:
         raise WorkflowError(f"Command failed ({result.returncode}): {display}")
     return result
+
+
+def announce(title: str, detail: str = "") -> None:
+    line = "=" * 68
+    print(f"\n{line}\n{title}", flush=True)
+    if detail:
+        print(detail, flush=True)
+    print(f"{line}\n", flush=True)
 
 
 def git(args: Sequence[str], cwd: Path = ROOT) -> str:
@@ -129,8 +176,18 @@ def slugify(value: str) -> str:
 def extract_claude_result(raw: str) -> str:
     try:
         payload = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        raise WorkflowError("Claude did not return valid JSON output.") from exc
+    except json.JSONDecodeError:
+        payload = None
+        for line in reversed(raw.splitlines()):
+            try:
+                candidate = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(candidate, dict) and candidate.get("type") == "result":
+                payload = candidate
+                break
+        if payload is None:
+            raise WorkflowError("Claude did not return valid JSON output.")
     if payload.get("is_error"):
         raise WorkflowError(str(payload.get("result", "Claude returned an error")))
     structured = payload.get("structured_output")
@@ -148,12 +205,14 @@ def render_prompt(name: str, **values: str) -> str:
 
 
 def run_claude_plan(task: str, worktree: Path, run_dir: Path, config: dict[str, Any]) -> str:
+    announce("GIAI ĐOẠN 1/4 — CLAUDE ĐANG LẬP KẾ HOẠCH", "Claude đang đọc và phân tích dự án. Bước này có thể mất vài phút.")
     prompt = render_prompt("claude-plan.md", task=task)
     result = run_process(
         [
             claude_command(), "-p", prompt,
             "--output-format", "json",
-            "--permission-mode", "plan",
+            "--permission-mode", "dontAsk",
+            "--tools", "Read,Glob,Grep",
             "--model", str(config["claude_model"]),
             "--effort", str(config["claude_effort"]),
             "--no-session-persistence",
@@ -167,6 +226,7 @@ def run_claude_plan(task: str, worktree: Path, run_dir: Path, config: dict[str, 
 
 
 def run_codex(task: str, plan: str, worktree: Path, run_dir: Path, cycle: int, config: dict[str, Any]) -> None:
+    announce(f"GIAI ĐOẠN 2/4 — CODEX ĐANG VIẾT CODE (VÒNG {cycle})", "Các thao tác và tiến độ của Codex sẽ xuất hiện bên dưới.")
     prompt = render_prompt("codex-implement.md", task=task, plan=plan)
     output = run_dir / f"implementation-{cycle}.md"
     command = [
@@ -185,6 +245,7 @@ def run_codex(task: str, plan: str, worktree: Path, run_dir: Path, cycle: int, c
 
 
 def verify(worktree: Path, run_dir: Path, cycle: int, config: dict[str, Any]) -> bool:
+    announce("GIAI ĐOẠN 3/4 — ĐANG CHẠY KIỂM TRA", "Chạy test, kiểm tra TypeScript và build dự án.")
     report: list[str] = []
     passed = True
     project = worktree / str(config["project_dir"])
@@ -204,6 +265,7 @@ def run_review(
     task: str, plan: str, baseline: str, worktree: Path, run_dir: Path,
     cycle: int, config: dict[str, Any],
 ) -> dict[str, Any]:
+    announce(f"GIAI ĐOẠN 4/4 — CLAUDE ĐANG REVIEW (VÒNG {cycle})", "Claude đang đọc diff và kết quả kiểm tra; không chỉnh sửa code.")
     schema = load_json(TOOLS / "schemas" / "review.schema.json")
     verification = run_dir / f"verification-{cycle}.txt"
     prompt = render_prompt(
@@ -214,7 +276,9 @@ def run_review(
         [
             claude_command(), "-p", prompt,
             "--output-format", "json",
-            "--permission-mode", "plan",
+            "--permission-mode", "dontAsk",
+            "--tools", "Read,Glob,Grep,Bash",
+            "--allowedTools", "Read,Glob,Grep,Bash(git diff *),Bash(git status *),Bash(git show *)",
             "--model", str(config["claude_model"]),
             "--effort", str(config["claude_effort"]),
             "--json-schema", json.dumps(schema, separators=(",", ":")),
