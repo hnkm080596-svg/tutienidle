@@ -26,7 +26,10 @@ Start a task:
 .\workflow.cmd
 ```
 
-The default task is read from `TASK.md`. Add `## Mode` with `Quick`, `Balanced`, or `Full`; `Balanced` is the default. Advanced users can still supply text directly with `--task` or choose another file with `--task-file`.
+The default task is read from `TASK.md`. Without a `## Mode` section, a lightweight,
+read-only Claude advisor recommends `Quick`, `Balanced`, or `Full` and waits for the
+user to confirm. Add `## Mode` or pass `--mode` to bypass advice. Advanced users can
+still supply text directly with `--task` or choose another file with `--task-file`.
 
 Inspect a run:
 

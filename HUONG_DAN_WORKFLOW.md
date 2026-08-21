@@ -8,7 +8,20 @@ Mở file `TASK.md`, xóa nội dung ví dụ và viết điều bạn muốn b�
 
 Bạn không cần nêu tên file code hay giải pháp kỹ thuật. Hãy mô tả trải nghiệm hoặc kết quả mong muốn càng rõ càng tốt.
 
-Bạn có thể thêm một trong ba mode tiếng Anh ở đầu `TASK.md`:
+Bạn không cần tự chọn mode. Nếu `TASK.md` không có mục `## Mode`, Claude Advisor sẽ
+đọc yêu cầu và context cô đọng, đề xuất một mode, rồi chờ bạn xác nhận:
+
+```text
+Recommended mode: Balanced
+Press Enter to accept, Q=Quick, B=Balanced, F=Full, X=Cancel
+```
+
+Advisor dùng model nhẹ và không đọc toàn bộ source code. Workflow chỉ tạo worktree và
+bắt đầu làm việc sau khi bạn chọn. Nếu muốn bỏ qua Advisor, bạn vẫn có thể thêm mode
+tiếng Anh ở đầu `TASK.md`:
+
+Nếu Claude tạm thời mất mạng, menu vẫn xuất hiện với đề xuất an toàn là `Balanced` để
+bạn có thể tự chọn; lỗi Advisor không làm mất task hoặc tạo worktree dở dang.
 
 ```text
 ## Mode
@@ -54,11 +67,15 @@ Lưu `TASK.md`, sau đó mở terminal tại thư mục dự án và chạy:
 
 Workflow sẽ tự thực hiện:
 
-1. Claude đọc dự án và lập kế hoạch.
-2. Codex viết code và test.
-3. Hệ thống chạy test, kiểm tra TypeScript và build.
-4. Một phiên Claude mới review code.
-5. Nếu review phát hiện lỗi, Codex sửa và Claude kiểm tra lại.
+1. Claude Advisor đề xuất mode và chờ bạn chọn.
+2. Với `Full`, Claude đọc dự án và lập kế hoạch; `Quick`/`Balanced` bỏ qua bước này.
+3. Codex viết code.
+4. Hệ thống stream tiến độ test, kiểm tra TypeScript và build ra terminal.
+5. Với `Balanced`/`Full`, một phiên Claude mới review code.
+6. Nếu kiểm tra hoặc review phát hiện lỗi, cùng session Codex sửa lại để giữ context.
+
+Nếu test chưa đạt, workflow trả lỗi thẳng cho Codex và không gọi Claude review, giúp
+tránh tốn token review cho một bản code chưa sẵn sàng.
 
 Không đóng terminal khi workflow đang chạy.
 

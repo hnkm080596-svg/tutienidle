@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "recommended_mode": { "enum": ["Quick", "Balanced", "Full"] },
+    "reason": { "type": "string" },
+    "confidence": { "enum": ["high", "medium", "low"] }
+  },
+  "required": ["recommended_mode", "reason", "confidence"]
+}

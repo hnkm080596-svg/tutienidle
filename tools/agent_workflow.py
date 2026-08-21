@@ -81,9 +81,10 @@ def run_process(
     stdin: str | None = None,
     log_path: Path | None = None,
     timeout: int = 7200,
+    display_name: str | None = None,
 ) -> subprocess.CompletedProcess[str]:
     display = subprocess.list2cmdline(list(command))
-    print(f"> {display}", flush=True)
+    print(f"> {display_name or display}", flush=True)
     started = time.monotonic()
     try:
         process = subprocess.Popen(
@@ -191,14 +192,61 @@ def slugify(value: str) -> str:
     return (slug[:42] or "task")
 
 
-def task_mode(task: str, default: str) -> str:
+def task_mode(task: str) -> str | None:
     match = re.search(r"(?im)^##\s+Mode\s*$\s*([^\r\n#]+)", task)
-    selected = match.group(1).strip() if match else default
+    if not match:
+        return None
+    selected = match.group(1).strip()
     modes = {"quick": "Quick", "balanced": "Balanced", "full": "Full"}
     try:
         return modes[selected.casefold()]
     except KeyError as exc:
         raise WorkflowError("Mode must be Quick, Balanced, or Full.") from exc
+
+
+def run_mode_advisor(task: str, config: dict[str, Any]) -> dict[str, Any]:
+    announce("CLAUDE — MODE ADVISOR", "Claude is estimating scope and risk before any work starts.")
+    context_path = ROOT / "PROJECT_CONTEXT.md"
+    context = context_path.read_text(encoding="utf-8") if context_path.is_file() else ""
+    schema = load_json(TOOLS / "schemas" / "advisor.schema.json")
+    schema.pop("$schema", None)
+    prompt = render_prompt("claude-advise.md", task=task, project_context=context)
+    result = run_process(
+        [
+            claude_command(), "-p", prompt,
+            "--output-format", "json",
+            "--permission-mode", "dontAsk",
+            "--tools", "",
+            "--model", str(config.get("advisor_model", "haiku")),
+            "--effort", str(config.get("advisor_effort", "low")),
+            "--json-schema", json.dumps(schema, separators=(",", ":")),
+            "--no-session-persistence",
+        ],
+        cwd=ROOT,
+        display_name="claude (read-only mode advice)",
+    )
+    return json.loads(extract_claude_result(result.stdout))
+
+
+def choose_mode(advice: dict[str, Any]) -> str:
+    recommended = str(advice["recommended_mode"])
+    print(f"\nRecommended mode: {recommended}")
+    print(f"Reason: {advice['reason']}")
+    print(f"Confidence: {advice['confidence']}")
+    while True:
+        try:
+            choice = input("Press Enter to accept, Q=Quick, B=Balanced, F=Full, X=Cancel: ").strip().casefold()
+        except EOFError:
+            print(f"No interactive input; accepting {recommended}.")
+            return recommended
+        if not choice:
+            return recommended
+        choices = {"q": "Quick", "b": "Balanced", "f": "Full"}
+        if choice in choices:
+            return choices[choice]
+        if choice == "x":
+            raise WorkflowError("Cancelled by user before workflow started.")
+        print("Please choose Enter, Q, B, F, or X.")
 
 
 def compact_plan(task: str, mode: str) -> str:
@@ -255,6 +303,7 @@ def run_claude_plan(task: str, worktree: Path, run_dir: Path, config: dict[str, 
         ],
         cwd=worktree,
         log_path=run_dir / "claude-plan.json",
+        display_name="claude (read-only planning)",
     )
     plan = extract_claude_result(result.stdout)
     (run_dir / "plan.md").write_text(plan + "\n", encoding="utf-8")
@@ -321,14 +370,17 @@ def verify(worktree: Path, run_dir: Path, cycle: int, config: dict[str, Any]) ->
     report: list[str] = []
     passed = True
     project = worktree / str(config["project_dir"])
-    for command in config["verification_commands"]:
+    for index, command in enumerate(config["verification_commands"], start=1):
         display = subprocess.list2cmdline(command)
-        result = subprocess.run(
-            command, cwd=project, text=True, encoding="utf-8", errors="replace",
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=False,
-        )
-        report.extend([f"$ {display}", result.stdout, f"exit_code={result.returncode}", ""])
-        passed = passed and result.returncode == 0
+        command_log = run_dir / f"verification-{cycle}-{index}.txt"
+        try:
+            result = run_process(command, cwd=project, log_path=command_log)
+            output, return_code = result.stdout, 0
+        except WorkflowError:
+            output = command_log.read_text(encoding="utf-8") if command_log.is_file() else ""
+            return_code = 1
+        report.extend([f"$ {display}", output, f"exit_code={return_code}", ""])
+        passed = passed and return_code == 0
     (run_dir / f"verification-{cycle}.txt").write_text("\n".join(report), encoding="utf-8")
     return passed
 
@@ -360,6 +412,7 @@ def run_review(
         ],
         cwd=worktree,
         log_path=run_dir / f"claude-review-{cycle}.json",
+        display_name=f"claude (read-only review cycle {cycle})",
     )
     review = json.loads(extract_claude_result(result.stdout))
     write_json(run_dir / f"review-{cycle}.json", review)
@@ -393,7 +446,18 @@ def command_run(args: argparse.Namespace) -> int:
         task = task_path.read_text(encoding="utf-8").strip()
     if not task:
         raise WorkflowError("Task is empty. Describe the work in TASK.md first.")
-    mode = task_mode(task, str(config["default_mode"]))
+    mode = args.mode or task_mode(task)
+    if mode is None:
+        try:
+            advice = run_mode_advisor(task, config)
+        except (WorkflowError, OSError, json.JSONDecodeError) as exc:
+            print(f"Mode Advisor unavailable: {exc}")
+            advice = {
+                "recommended_mode": str(config["default_mode"]),
+                "reason": "Advisor could not connect, so the safe default is being offered.",
+                "confidence": "low",
+            }
+        mode = choose_mode(advice)
     require_clean_repo()
     baseline = git(["rev-parse", "HEAD"])
     stamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -425,17 +489,17 @@ def command_run(args: argparse.Namespace) -> int:
             state["codex_session_id"] = session_id
             write_json(run_dir / "run.json", state)
             tests_passed = verify(worktree, run_dir, cycle, config)
-            if mode == "Quick":
-                if tests_passed:
-                    state["status"] = "passed"
-                    write_json(run_dir / "run.json", state)
-                    print(f"Workflow passed. Worktree: {worktree}")
-                    return 0
+            if not tests_passed:
                 plan = (
                     "Verification failed. Diagnose and fix these results:\n\n" +
                     (run_dir / f"verification-{cycle}.txt").read_text(encoding="utf-8")
                 )
                 continue
+            if mode == "Quick":
+                state["status"] = "passed"
+                write_json(run_dir / "run.json", state)
+                print(f"Workflow passed. Worktree: {worktree}")
+                return 0
             state["status"] = "reviewing"
             write_json(run_dir / "run.json", state)
             review = run_review(task, plan, baseline, worktree, run_dir, cycle, config)
@@ -473,6 +537,7 @@ def parser() -> argparse.ArgumentParser:
     task_source = run.add_mutually_exclusive_group()
     task_source.add_argument("--task", help="Task text supplied directly")
     task_source.add_argument("--task-file", default="TASK.md", help="Task file (default: TASK.md)")
+    run.add_argument("--mode", choices=("Quick", "Balanced", "Full"), help="Skip advice and use this mode")
     run.set_defaults(handler=command_run)
     status = commands.add_parser("status", help="Print a run state")
     status.add_argument("run")

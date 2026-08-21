@@ -11,7 +11,7 @@ if errorlevel 1 set "PYTHON_EXE=%LOCALAPPDATA%\Programs\Python\Python313\python.
 if /I "%~1"=="doctor" (
   "%PYTHON_EXE%" tools\agent_workflow.py doctor
 ) else (
-  "%PYTHON_EXE%" tools\agent_workflow.py run
+  "%PYTHON_EXE%" tools\agent_workflow.py run %*
 )
 
 if errorlevel 1 (
