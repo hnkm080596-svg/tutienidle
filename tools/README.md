@@ -23,8 +23,10 @@ python tools/agent_workflow.py doctor
 Start a task:
 
 ```powershell
-python tools/agent_workflow.py run --task "Describe the complete task here"
+.\workflow.cmd
 ```
+
+The default task is read from `TASK.md`. Advanced users can still supply text directly with `--task` or choose another file with `--task-file`.
 
 Inspect a run:
 

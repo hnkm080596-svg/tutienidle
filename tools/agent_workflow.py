@@ -240,10 +240,20 @@ def command_doctor(_: argparse.Namespace) -> int:
 
 def command_run(args: argparse.Namespace) -> int:
     config = load_json(CONFIG_PATH)
+    task = args.task
+    if task is None:
+        task_path = Path(args.task_file)
+        if not task_path.is_absolute():
+            task_path = ROOT / task_path
+        if not task_path.is_file():
+            raise WorkflowError(f"Task file does not exist: {task_path}")
+        task = task_path.read_text(encoding="utf-8").strip()
+    if not task:
+        raise WorkflowError("Task is empty. Describe the work in TASK.md first.")
     require_clean_repo()
     baseline = git(["rev-parse", "HEAD"])
     stamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
-    run_id = f"{stamp}-{slugify(args.task)}-{uuid.uuid4().hex[:6]}"
+    run_id = f"{stamp}-{slugify(task)}-{uuid.uuid4().hex[:6]}"
     run_dir = ROOT / str(config["run_root"]) / run_id
     worktree = ROOT / str(config["worktree_root"]) / run_id
     run_dir.mkdir(parents=True)
@@ -251,22 +261,22 @@ def command_run(args: argparse.Namespace) -> int:
     branch = f"agent/{run_id}"
     git(["worktree", "add", "-b", branch, str(worktree), baseline])
     state = {
-        "run_id": run_id, "task": args.task, "baseline": baseline,
+        "run_id": run_id, "task": task, "baseline": baseline,
         "branch": branch, "worktree": str(worktree), "status": "planning", "cycle": 0,
     }
     write_json(run_dir / "run.json", state)
-    (run_dir / "task.md").write_text(args.task + "\n", encoding="utf-8")
+    (run_dir / "task.md").write_text(task + "\n", encoding="utf-8")
     try:
-        plan = run_claude_plan(args.task, worktree, run_dir, config)
+        plan = run_claude_plan(task, worktree, run_dir, config)
         max_cycles = int(config["max_review_cycles"])
         for cycle in range(1, max_cycles + 1):
             state.update(status="implementing", cycle=cycle)
             write_json(run_dir / "run.json", state)
-            run_codex(args.task, plan, worktree, run_dir, cycle, config)
+            run_codex(task, plan, worktree, run_dir, cycle, config)
             tests_passed = verify(worktree, run_dir, cycle, config)
             state["status"] = "reviewing"
             write_json(run_dir / "run.json", state)
-            review = run_review(args.task, plan, baseline, worktree, run_dir, cycle, config)
+            review = run_review(task, plan, baseline, worktree, run_dir, cycle, config)
             if review["verdict"] == "PASS" and tests_passed:
                 state["status"] = "passed"
                 write_json(run_dir / "run.json", state)
@@ -298,7 +308,9 @@ def parser() -> argparse.ArgumentParser:
     doctor = commands.add_parser("doctor", help="Check local prerequisites")
     doctor.set_defaults(handler=command_doctor)
     run = commands.add_parser("run", help="Start a new isolated workflow")
-    run.add_argument("--task", required=True)
+    task_source = run.add_mutually_exclusive_group()
+    task_source.add_argument("--task", help="Task text supplied directly")
+    task_source.add_argument("--task-file", default="TASK.md", help="Task file (default: TASK.md)")
     run.set_defaults(handler=command_run)
     status = commands.add_parser("status", help="Print a run state")
     status.add_argument("run")
