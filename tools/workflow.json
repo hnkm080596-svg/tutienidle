@@ -6,8 +6,9 @@
   "max_review_cycles": 2,
   "claude_model": "sonnet",
   "claude_effort": "high",
-  "advisor_model": "haiku",
-  "advisor_effort": "low",
+  "advisor_model": "nvidia/nemotron-mini-4b-instruct",
+  "advisor_url": "https://integrate.api.nvidia.com/v1/chat/completions",
+  "advisor_timeout_seconds": 300,
   "codex_model": null,
   "verification_commands": [
     ["npm.cmd", "run", "test"],

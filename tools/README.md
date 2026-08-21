@@ -27,8 +27,9 @@ Start a task:
 ```
 
 The default task is read from `TASK.md`. Without a `## Mode` section, a lightweight,
-read-only Claude advisor recommends `Quick`, `Balanced`, or `Full` and waits for the
-user to confirm. Add `## Mode` or pass `--mode` to bypass advice. Advanced users can
+read-only NVIDIA Nemotron advisor recommends `Quick`, `Balanced`, or `Full`. It starts
+automatically at high/medium confidence and asks the user only at low confidence or on provider failure.
+Add `## Mode` or pass `--mode` to bypass advice. Advanced users can
 still supply text directly with `--task` or choose another file with `--task-file`.
 
 Inspect a run:
@@ -40,3 +41,4 @@ python tools/agent_workflow.py status .agent-runs/<run-id>
 Artifacts are kept in `.agent-runs/`. Implementation work remains on the generated `agent/<run-id>` branch and in `.agent-worktrees/<run-id>`. The workflow never commits, pushes, deploys, or deletes a worktree automatically.
 
 Use `CLAUDE_BIN` or `CODEX_BIN` to override executable discovery. Models, verification commands, and the review-cycle limit are configured in `tools/workflow.json`.
+The advisor reads `NVIDIA_API_KEY` from the process environment and never stores it in the repository.

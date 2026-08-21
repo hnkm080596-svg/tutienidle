@@ -7,6 +7,8 @@ Judge only the task and compact project context below. Recommend:
 
 Prefer Balanced when uncertain between Quick and Balanced. Prefer Full when uncertainty or blast radius is material.
 Keep the reason short, use the same language as the task, and make it understandable to a nontechnical user. Do not start work.
+Return only one JSON object with exactly these fields:
+{{"recommended_mode":"Quick|Balanced|Full","reason":"short explanation","confidence":"high|medium|low"}}
 
 PROJECT CONTEXT:
 {project_context}

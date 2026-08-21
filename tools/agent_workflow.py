@@ -11,6 +11,8 @@ import subprocess
 import sys
 import threading
 import time
+import urllib.error
+import urllib.request
 import uuid
 from pathlib import Path
 from typing import Any, Sequence
@@ -204,28 +206,69 @@ def task_mode(task: str) -> str | None:
         raise WorkflowError("Mode must be Quick, Balanced, or Full.") from exc
 
 
+def extract_json_object(value: str) -> dict[str, Any]:
+    text = value.strip()
+    if text.startswith("```"):
+        text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text, flags=re.IGNORECASE)
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError:
+        start, end = text.find("{"), text.rfind("}")
+        if start < 0 or end <= start:
+            raise WorkflowError("Advisor did not return a JSON object.")
+        parsed = json.loads(text[start:end + 1])
+    if not isinstance(parsed, dict):
+        raise WorkflowError("Advisor response is not a JSON object.")
+    return parsed
+
+
+def validate_advice(advice: dict[str, Any]) -> dict[str, Any]:
+    if advice.get("recommended_mode") not in {"Quick", "Balanced", "Full"}:
+        raise WorkflowError("Advisor returned an invalid mode.")
+    if advice.get("confidence") not in {"high", "medium", "low"}:
+        raise WorkflowError("Advisor returned invalid confidence.")
+    if not isinstance(advice.get("reason"), str) or not advice["reason"].strip():
+        raise WorkflowError("Advisor returned no reason.")
+    return advice
+
+
 def run_mode_advisor(task: str, config: dict[str, Any]) -> dict[str, Any]:
-    announce("CLAUDE — MODE ADVISOR", "Claude is estimating scope and risk before any work starts.")
+    announce("NVIDIA NEMOTRON — MODE ADVISOR", "Nemotron is estimating scope and risk before any work starts.")
     context_path = ROOT / "PROJECT_CONTEXT.md"
     context = context_path.read_text(encoding="utf-8") if context_path.is_file() else ""
-    schema = load_json(TOOLS / "schemas" / "advisor.schema.json")
-    schema.pop("$schema", None)
-    prompt = render_prompt("claude-advise.md", task=task, project_context=context)
-    result = run_process(
-        [
-            claude_command(), "-p", prompt,
-            "--output-format", "json",
-            "--permission-mode", "dontAsk",
-            "--tools", "",
-            "--model", str(config.get("advisor_model", "haiku")),
-            "--effort", str(config.get("advisor_effort", "low")),
-            "--json-schema", json.dumps(schema, separators=(",", ":")),
-            "--no-session-persistence",
-        ],
-        cwd=ROOT,
-        display_name="claude (read-only mode advice)",
+    prompt = render_prompt("nvidia-advise.md", task=task, project_context=context)
+    api_key = os.environ.get("NVIDIA_API_KEY") or os.getenv("NVIDIA_API_KEY")
+    if not api_key:
+        raise WorkflowError("NVIDIA_API_KEY is not available in this terminal.")
+    payload = {
+        "model": str(config.get("advisor_model", "nvidia/nemotron-mini-4b-instruct")),
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.1,
+        "top_p": 0.9,
+        "max_tokens": 600,
+        "stream": False,
+    }
+    request = urllib.request.Request(
+        str(config.get("advisor_url", "https://integrate.api.nvidia.com/v1/chat/completions")),
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        method="POST",
     )
-    return json.loads(extract_claude_result(result.stdout))
+    print("> NVIDIA NIM chat completion (API key hidden)", flush=True)
+    try:
+        with urllib.request.urlopen(request, timeout=int(config.get("advisor_timeout_seconds", 300))) as response:
+            result = json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        raise WorkflowError(f"NVIDIA Advisor HTTP error {exc.code}.") from exc
+    except urllib.error.URLError as exc:
+        raise WorkflowError(f"NVIDIA Advisor connection failed: {exc.reason}") from exc
+    try:
+        content = result["choices"][0]["message"]["content"]
+    except (KeyError, IndexError, TypeError) as exc:
+        raise WorkflowError("NVIDIA Advisor returned an unexpected response.") from exc
+    if not isinstance(content, str):
+        raise WorkflowError("NVIDIA Advisor returned no text response.")
+    return validate_advice(extract_json_object(content))
 
 
 def choose_mode(advice: dict[str, Any]) -> str:
@@ -233,6 +276,10 @@ def choose_mode(advice: dict[str, Any]) -> str:
     print(f"\nRecommended mode: {recommended}")
     print(f"Reason: {advice['reason']}")
     print(f"Confidence: {advice['confidence']}")
+    if advice["confidence"] in {"high", "medium"}:
+        print(f"Automatically starting {recommended} mode.")
+        return recommended
+    print("The advisor is uncertain, so your decision is required.")
     while True:
         try:
             choice = input("Press Enter to accept, Q=Quick, B=Balanced, F=Full, X=Cancel: ").strip().casefold()
@@ -454,7 +501,7 @@ def command_run(args: argparse.Namespace) -> int:
             print(f"Mode Advisor unavailable: {exc}")
             advice = {
                 "recommended_mode": str(config["default_mode"]),
-                "reason": "Advisor could not connect, so the safe default is being offered.",
+                "reason": "Advisor could not connect, so your decision is required.",
                 "confidence": "low",
             }
         mode = choose_mode(advice)

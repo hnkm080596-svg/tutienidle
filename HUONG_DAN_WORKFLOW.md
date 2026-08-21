@@ -8,20 +8,21 @@ Mở file `TASK.md`, xóa nội dung ví dụ và viết điều bạn muốn b�
 
 Bạn không cần nêu tên file code hay giải pháp kỹ thuật. Hãy mô tả trải nghiệm hoặc kết quả mong muốn càng rõ càng tốt.
 
-Bạn không cần tự chọn mode. Nếu `TASK.md` không có mục `## Mode`, Claude Advisor sẽ
-đọc yêu cầu và context cô đọng, đề xuất một mode, rồi chờ bạn xác nhận:
+Bạn không cần tự chọn mode. Nếu `TASK.md` không có mục `## Mode`, Nemotron Advisor trên NVIDIA sẽ
+đọc yêu cầu và context cô đọng rồi tự chọn mode khi đủ tự tin:
 
 ```text
 Recommended mode: Balanced
-Press Enter to accept, Q=Quick, B=Balanced, F=Full, X=Cancel
+Automatically starting Balanced mode.
 ```
 
-Advisor dùng model nhẹ và không đọc toàn bộ source code. Workflow chỉ tạo worktree và
-bắt đầu làm việc sau khi bạn chọn. Nếu muốn bỏ qua Advisor, bạn vẫn có thể thêm mode
+Advisor không đọc toàn bộ source code và không lưu API key trong dự án. Nếu confidence
+`high` hoặc `medium`, workflow tự bắt đầu. Chỉ khi confidence `low` hoặc NVIDIA gặp lỗi,
+workflow mới hỏi bạn chọn Enter/Q/B/F. Nếu muốn bỏ qua Advisor, bạn vẫn có thể thêm mode
 tiếng Anh ở đầu `TASK.md`:
 
-Nếu Claude tạm thời mất mạng, menu vẫn xuất hiện với đề xuất an toàn là `Balanced` để
-bạn có thể tự chọn; lỗi Advisor không làm mất task hoặc tạo worktree dở dang.
+Nếu NVIDIA tạm thời mất mạng hoặc hết quota, menu vẫn xuất hiện để bạn tự chọn;
+lỗi Advisor không làm mất task hoặc tạo worktree dở dang.
 
 ```text
 ## Mode
