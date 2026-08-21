@@ -52,7 +52,7 @@ chỉ nới RANGE trước khi roll.
 Nâng Quality qua thao tác **Nâng Phẩm** (`EquipmentSystem.upgradeQuality()`) — tốn nguyên liệu
 theo `template.upgradeQualityCost`, tăng đúng 1 bậc mỗi lần, không roll lại gì khác.
 
-### 2a. Tiềm Năng Rèn — "EquipemtnQuality&rarity" pass (2026-08-14)
+### 2a. Tiềm Năng Rèn — lần chuẩn hóa phẩm chất/độ hiếm (2026-08-14)
 
 Cột "Trần Forge Point" ở bảng trên giờ là trần TUYỆT ĐỐI của cả tier, KHÔNG phải trần thật của 1
 instance cụ thể. Mỗi instance roll thêm 1 field độc lập `forgePotential: number` (0-100, đều,
@@ -67,14 +67,14 @@ Ví dụ: 2 item cùng Phàm Khí (trần tuyệt đối 20) nhưng 1 cái roll 
 hẳn nhau. Đây là hiện thực hoá phân biệt "**Phẩm Chất = cấp của vật phẩm**" (Quality, hiện NỔI
 BẬT trong UI Khí Đường — header/viền vàng) vs "**Tiềm Năng Rèn = độ hoàn thiện của lượt roll
 này**" (forgePotential, hiện SUBORDINATE — thanh %/số nhỏ trong khu vực Rèn) mà tài liệu
-"EquipemtnQuality&rarity" mô tả — 2 axis không cạnh tranh nhau về mặt nhận thức (Phẩm Chất trả
+Thiết kế hiện hành dùng 2 axis không cạnh tranh nhau về mặt nhận thức (Phẩm Chất trả
 lời "vật phẩm này ĐẲNG CẤP gì", Tiềm Năng Rèn trả lời "BẢN THỂ này roll tốt tới đâu"), dù cả 2
 cùng ảnh hưởng tới Rèn. `EquipmentRarity` (Hoàng/Huyền/.../Tiên Phẩm, mục "Rarity" bên dưới) là
 trục THỨ 3, hoàn toàn độc lập với cả 2 — tài liệu gốc không đề cập tới trục này.
 
 ### Rarity — 5 bậc Ngũ Phẩm (quyết định SỐ LƯỢNG affix, KHÔNG phải sức mạnh trần)
 
-Naming-principles pass (2026-08-14, xem file `nguyen li dat ten` ở gốc project) — đổi từ 4 bậc
+Lần chuẩn hóa nguyên tắc đặt tên (2026-08-14) đổi từ 4 bậc
 chủ đề "Duyên" sang 5 bậc **Phẩm** dùng CHUNG tên/thứ tự với Pill/Talisman/Formation
 (`core/item/Pham.ts`, mục 9 dưới):
 
@@ -257,7 +257,7 @@ hiệu ứng THẬT của mỗi loại khác nhau. Equipment KHÔNG theo quy ư�
 hiện qua UI label riêng (mục 2), lý do: Equipment có instance rớt ra với Phẩm random mỗi lần, còn
 Pill/Talisman/Formation không roll — Phẩm của chúng CỐ ĐỊNH theo đúng cái tên đã in trên nhãn.
 
-## 10. Nền kinh tế nguyên liệu — "tunghematandsuch" pass (2026-08-14)
+## 10. Nền kinh tế nguyên liệu (chuẩn hóa 2026-08-14)
 
 Thay hẳn material "mỗi loài quái 1-2 material riêng" (zoo material) bằng 1 hệ gọn hơn, theo
 đúng công thức tổng quát của tài liệu gốc:
