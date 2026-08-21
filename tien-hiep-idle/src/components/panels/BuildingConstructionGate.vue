@@ -1,0 +1,248 @@
+<script setup lang="ts">
+// BUILDing spec mục 2/5 — mỗi panel Tứ Nghệ (Đan Phòng/Trận Đài/Phù
+// Viện/Khí Đường) giờ đi qua đúng 1 BuildingInstance thật: CHƯA xây
+// thì chặn hẳn Function UI, hiện màn Construction (tái dùng
+// BuildingSystem.canBuild/build); ĐÃ xây thì hiện header Lv.X + Nâng
+// Cấp, rồi mới tới nội dung thật qua <slot /> — click Building (nav
+// entry) vẫn mở THẲNG panel như cũ, gate này chỉ quyết định BÊN TRONG
+// panel render gì (không thêm màn hình trung gian nào ngoài panel).
+// Thám Hiểm rework — build() thêm window.confirm() (y/n mở khoá) TRƯỚC
+// khi trừ nguyên liệu, cùng pattern HomeBuildingIcons.vue's
+// BuildingDetailPopover.vue (2 nơi build Building giờ đều xác nhận).
+import { computed, onMounted } from 'vue'
+import { usePlayerStore } from '@/stores/player'
+import { useGameManager, useStateVersion } from '@/composables/useGameState'
+import { formatNumber } from '@/core/format/NumberFormatter'
+import { TEST_MODE_UNLOCK_ALL } from '@/core/dev/DevMode'
+
+const props = defineProps<{ buildingId: string }>()
+
+const player = usePlayerStore()
+const gameManager = useGameManager()
+const { stateVersion, bumpState } = useStateVersion()
+
+const template = computed(() => gameManager.buildingRegistry.get(props.buildingId))
+
+const instance = computed(() => {
+  stateVersion.value
+
+  return gameManager.buildingManager.getByBuildingId(props.buildingId)
+})
+
+// Cờ test (2026-08-20) — tự cấp instance MIỄN PHÍ thay vì hiện màn
+// Construction, cùng pattern App.vue's grant khởi tạo cho
+// teleport_array/gathering_outpost (add THẲNG qua buildingManager, bỏ
+// qua canBuild/cost). Làm ở đây (thay vì fake `instance` trong template)
+// để nội dung thật phía sau gate (Lv.X/Nâng Cấp/<slot>) đọc 1 instance
+// THẬT, không cần né null-check riêng.
+onMounted(() => {
+  if (TEST_MODE_UNLOCK_ALL && !instance.value) {
+    gameManager.buildingManager.add({
+      instanceId: crypto.randomUUID(),
+      buildingId: props.buildingId,
+      level: 1,
+      lastCollectedAt: Date.now() / 1000,
+    })
+
+    bumpState()
+  }
+})
+
+const buildCost = computed(() => template.value.upgradeCost[0] ?? [])
+
+const canBuild = computed(() =>
+  gameManager.buildingSystem.canBuild(
+    props.buildingId,
+    gameManager.buildingRegistry,
+    gameManager.buildingManager,
+    player.$state,
+    gameManager.materialBag,
+  ),
+)
+
+const nextUpgradeCost = computed(() => {
+  const current = instance.value
+
+  if (!current) {
+    return null
+  }
+
+  return template.value.upgradeCost[current.level] ?? null
+})
+
+const canUpgrade = computed(() => {
+  const current = instance.value
+
+  return current !== undefined && current.level < template.value.maxLevel
+})
+
+function materialLabel(materialId: string): string {
+  return gameManager.materialRegistry.has(materialId) ? gameManager.materialRegistry.get(materialId).name : materialId
+}
+
+function build() {
+  const costLabel = buildCost.value.map(c => `${materialLabel(c.materialId)} x${formatNumber(c.amount)}`).join(', ') || 'miễn phí'
+
+  const confirmed = window.confirm(`Xây ${template.value.name}? Sẽ tốn ${costLabel}.`)
+
+  if (!confirmed) {
+    return
+  }
+
+  if (gameManager.buildBuilding(props.buildingId, player.$state)) {
+    bumpState()
+  }
+}
+
+function upgrade() {
+  const current = instance.value
+
+  if (current && gameManager.upgradeBuilding(current.instanceId)) {
+    bumpState()
+  }
+}
+</script>
+
+<template>
+  <div class="construction-gate">
+    <div v-if="!instance" class="construction-gate__locked">
+      <div class="construction-gate__icon">{{ template.name.charAt(0) }}</div>
+
+      <h3 class="construction-gate__name">{{ template.name }}</h3>
+
+      <p class="construction-gate__description">{{ template.description }}</p>
+
+      <p class="construction-gate__cost">
+        Cần: {{ buildCost.map(c => `${materialLabel(c.materialId)} x${formatNumber(c.amount)}`).join(', ') || 'Miễn phí' }}
+      </p>
+
+      <button type="button" class="construction-gate__build" :disabled="!canBuild" @click="build">
+        Xây Dựng
+      </button>
+    </div>
+
+    <template v-else>
+      <div class="construction-gate__header">
+        <span class="construction-gate__level">{{ template.name }} · Lv.{{ instance.level }}/{{ template.maxLevel }}</span>
+
+        <button
+          v-if="canUpgrade"
+          type="button"
+          class="construction-gate__upgrade"
+          v-tooltip="nextUpgradeCost ? { title: 'Nâng Cấp', description: nextUpgradeCost.map(c => `${materialLabel(c.materialId)} x${formatNumber(c.amount)}`).join(', ') } : undefined"
+          @click="upgrade"
+        >
+          Nâng Cấp
+        </button>
+      </div>
+
+      <div class="construction-gate__content">
+        <slot />
+      </div>
+    </template>
+  </div>
+</template>
+
+<style scoped>
+.construction-gate {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.construction-gate__locked {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+.construction-gate__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid var(--gold-500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  color: var(--gold-500);
+  font-size: 1.1rem;
+}
+
+.construction-gate__name {
+  margin: 4px 0 0;
+  font-family: var(--font-display);
+  color: var(--gold-500);
+  font-size: 1rem;
+}
+
+.construction-gate__description {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  max-width: 280px;
+}
+
+.construction-gate__cost {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.construction-gate__build {
+  margin-top: 10px;
+  padding: 8px 20px;
+  background: var(--gold-500);
+  color: var(--gold-ink);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.construction-gate__build:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.construction-gate__header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--ink-line-soft);
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.construction-gate__upgrade {
+  padding: 4px 10px;
+  background: var(--ink-800);
+  color: var(--text-primary);
+  border: 1px solid var(--ink-line-soft);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+
+.construction-gate__upgrade:hover {
+  border-color: var(--gold-500);
+  color: var(--gold-500);
+}
+
+.construction-gate__content {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+</style>

@@ -1,0 +1,130 @@
+/* "Mực & Vàng" (Ink & Gold) — bảng token màu/typography dùng chung
+   toàn app. Trước đợt này KHÔNG có hệ thống design-token nào (mọi hex
+   hardcode rời rạc mỗi component) — file này chính thức hoá bảng màu
+   tối giản/sang trọng kiếm hiệp đang dần được áp dụng, bắt đầu từ
+   accent vàng #ffd54f vốn đã là màu lặp lại nhiều nhất trong code cũ.
+   Chỉ các panel thuộc đợt redesign (Character/Loadout/Bag/Equipment/
+   Enhance/Exploration/chrome) dùng token này — panel khác giữ hex cũ,
+   sẽ theo sau ở đợt polish riêng. */
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Nền — thang mực đen */
+  --ink-950: #0a0a0d;
+  --ink-900: #131318;
+  --ink-800: #1b1b22;
+  --ink-700: #24242e;
+  --ink-line: #33333f;
+  --ink-line-soft: #24242c;
+
+  /* Chữ */
+  --text-primary: #ebe6d9;
+  --text-secondary: #b3ada0;
+  --text-muted: #7c7870;
+
+  /* Vàng — accent thương hiệu */
+  --gold-100: #fff3c4;
+  --gold-300: #ffe082;
+  --gold-500: #ffd54f;
+  --gold-700: #ffb300;
+  --gold-ink: #221a00;
+
+  /* Semantic */
+  --jade: #6fbf73;
+  --crimson: #e5484d;
+  --azure: #5b9bd5;
+
+  /* Combat HUD — HP trắng xám, Mana dùng lại --jade (xanh ngọc), Nộ
+     dùng lại --gold-500 (xem components/game/CombatHud.vue). */
+  --hp-color: #d8d5cc;
+
+  /* Ngũ Hành + Hỗn Nguyên — giữ nguyên giá trị đã dùng trong CharacterPanel.vue */
+  --el-wood: #7cb342;
+  --el-fire: #e53935;
+  --el-earth: #a1795a;
+  --el-metal: #cfd8dc;
+  --el-water: #42a5f5;
+  --el-primordial: #9b5de5;
+
+  /* Phong Lôi (Pháp Tu Redesign, magicpath) — ngang hàng Ngũ Hành,
+     màu tách biệt khỏi --el-primordial (tím) đã có sẵn. */
+  --el-wind: #4dd0e1;
+  --el-lightning: #ffca28;
+
+  /* Rarity — 9 bậc EquipmentQuality (thấp → cao), tên hậu tố khớp
+     THẲNG với EquipmentQuality union trong core/equipment/EquipmentQuality.ts */
+  --rarity-pham_khi: #8a877e;
+  --rarity-bao_khi: #7cb87c;
+  --rarity-linh_khi: #5b9bd5;
+  --rarity-phap_khi: #8b7cd9;
+  --rarity-phap_bao: #ffd54f;
+  --rarity-tien_bao: #ff9d3d;
+  --rarity-chi_bao: #ff5f5f;
+  --rarity-hon_don_chi_bao: #33d9d9;
+  --rarity-thien_dia_trong_khi: #fff6d8;
+
+  /* Tint 3 loại Tâm Pháp (Technique) — dùng CHUNG cơ chế lookup
+     `--rarity-${value}` với SlotView (rarity prop), khác hệ giá trị
+     với rarity trang bị (snake_case như 'pham_khi') nên không trùng
+     key — dùng riêng trong LoadoutManager.vue để phân biệt nhanh
+     3 loại: Tu Luyện/Chiến Đấu/Phá Cảnh. */
+  --rarity-cultivation: #6fbf73;
+  --rarity-combat: #e5484d;
+  --rarity-breakthrough: #ffd54f;
+
+  /* Item Rarity — Core Loop Foundation checklist, trục ĐỘC LẬP với
+     --rarity-* ở trên (trục đó là Quality/tint, giữ nguyên vai trò
+     cũ). Namespace riêng --item-rarity-* để không xung đột, dùng qua
+     SlotView's itemRarity prop (khác prop `rarity` hiện có).
+     Naming-principles pass (2026-08-14, "nguyen li dat ten") — 5 bậc
+     Ngũ Phẩm Hoàng/Huyền/Địa/Thiên/Tiên thay 4 bậc "Duyên" cũ (xem
+     core/item/Pham.ts) — màu escalate rõ rệt để nhận diện nhanh:
+     đồng(hoang_pham)/tím thẫm(huyen_pham)/lục bích(dia_pham)/
+     vàng kim(thien_pham)/trắng-kim rực rỡ(tien_pham, DÙNG LẠI hex đỉnh
+     của --rarity-thien_dia_trong_khi ở trên — cùng ý niệm "đỉnh phong"
+     dù khác trục). */
+  --item-rarity-hoang_pham: #c08a3e;
+  --item-rarity-huyen_pham: #6a4c93;
+  --item-rarity-dia_pham: #4caf7d;
+  --item-rarity-thien_pham: #e8b13d;
+  --item-rarity-tien_pham: #fff6d8;
+
+  /* Highlight cho Exalted Affix (roll bonus pool 'supreme' của
+     tien_pham — xem EquipmentSystem.createInstance()) — tái dùng hex
+     vàng-huyền-thoại cũ của 'unique' đã bỏ, giữ cảm giác "đặc biệt". */
+  --affix-exalted: #e8c74a;
+
+  /* Cơ chế Set (2026-08-15) — 1 màu CỐ ĐỊNH mỗi Set (core/equipment/
+     EquipmentSet.ts's colorVar), dùng cho segment tên vị thần trong
+     tên vật phẩm ghép động (EquipmentNaming.ts). Chỉ --set-thai_hu
+     (Kiếm Tu, Set ĐẦY ĐỦ) và --set-hau_tho (nâu, người dùng chỉ định)
+     cần đúng cảm quan — 4 màu còn lại là placeholder cho Set "khung",
+     chỉnh khi có vật phẩm thật. */
+  --set-thai_hu: #b8d4e3;
+  --set-hau_tho: #8b5a2b;
+  --set-cau_mang: #5cb85c;
+  --set-chuc_dung: #e05c3e;
+  --set-nhuc_thu: #d4c896;
+  --set-huyen_minh: #2c4a6e;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --shadow-panel: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-glow-gold: 0 0 12px rgba(255, 213, 79, 0.35);
+
+  --font-display: 'Noto Serif', Georgia, serif;
+  --font-body: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+/* Ẩn thanh scrollbar trên toàn app — mọi panel vẫn kéo/scroll được
+   bình thường (overflow-y/x: auto không đổi), chỉ là thanh trượt
+   không hiện ra. */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}

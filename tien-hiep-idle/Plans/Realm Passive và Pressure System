@@ -1,0 +1,438 @@
+PLAN — HỆ THỐNG CẢNH GIỚI & REALM PRESSURE
+I. Kiến trúc tổng thể
+
+Tách thành 3 hệ thống độc lập:
+
+                    CẢNH GIỚI
+                       │
+          ┌────────────┴────────────┐
+          │                         │
+    Realm Pressure          Realm Passive
+          │                         │
+  Quan hệ giữa cảnh giới      Buff nền đại cảnh giới
+          │                         │
+          │                  ┌──────┴──────┐
+          │                  │             │
+          │              Nhập Đạo       Kiến Cơ
+          │
+          ▼
+   Phàm Nhân → Luyện Khí
+   Luyện Khí → Trúc Cơ
+
+Riêng Phàm Nhân – Luyện Thể không phải một đại cảnh giới tu luyện thông thường.
+
+Nó là hệ thống progression tiền tu luyện, dùng để quyết định chất lượng đột phá Nhập Đạo.
+
+II. PHÀM NHÂN — HỆ THỐNG LUYỆN THỂ
+1. Định vị
+
+Phàm Nhân không có:
+
+MP
+Linh lực
+Skill tree tu luyện
+Ngũ Hành
+Pháp thuật
+Căn cơ
+
+Thay vào đó chỉ có:
+
+Luyện Thể
+
+Mục tiêu của hệ thống:
+
+Rèn luyện thân thể → tích lũy Tinh Hoa Phàm Thể → hoàn thiện 6 bộ phận → quyết định phẩm chất đột phá Luyện Khí.
+
+III. 6 TẦNG LUYỆN THỂ
+Luyện Bì
+   ↓
+Luyện Nhục
+   ↓
+Luyện Cốt
+   ↓
+Luyện Huyết
+   ↓
+Luyện Tạng
+   ↓
+Luyện Mạch
+
+Mỗi tầng là một progress bar độc lập.
+
+1. Luyện Bì
+
+Rèn luyện lớp da và khả năng chịu đựng bên ngoài.
+
+Chủ yếu ảnh hưởng:
+
+Physical Defense
+
+2. Luyện Nhục
+
+Rèn cơ nhục.
+
+Chủ yếu ảnh hưởng:
+
+Physical Damage
+
+3. Luyện Cốt
+
+Rèn xương và nền tảng thân thể.
+
+Chủ yếu ảnh hưởng:
+
+Max HP
+
+4. Luyện Huyết
+
+Rèn khí huyết.
+
+Chủ yếu ảnh hưởng:
+
+HP/s
+
+5. Luyện Tạng
+
+Rèn lục phủ ngũ tạng.
+
+Chủ yếu ảnh hưởng:
+
+Damage Reduction / Vitality
+
+6. Luyện Mạch
+
+Khai thông kinh mạch.
+
+Chủ yếu ảnh hưởng:
+
+HP + Recovery
+
+Đồng thời là tầng cuối cùng chuẩn bị:
+
+Nhập Đạo
+
+IV. TINH HOA PHÀM THỂ
+
+Không tạo 6 loại currency.
+
+Chỉ có:
+
+Tinh Hoa Phàm Thể
+
+Quái vật trong stage Phàm Nhân drop Tinh Hoa.
+
+Người chơi dùng Tinh Hoa để tăng progress cho từng tầng.
+
+Tinh Hoa Phàm Thể
+       │
+       ├── Luyện Bì
+       ├── Luyện Nhục
+       ├── Luyện Cốt
+       ├── Luyện Huyết
+       ├── Luyện Tạng
+       └── Luyện Mạch
+V. CƠ CHẾ 6 BẬC ĐỘT PHÁ
+
+Mỗi tầng hoàn thành = +1 Breakthrough Grade.
+
+Hoàn thành	Bậc Nhập Đạo
+Luyện Bì	1
+Bì + Nhục	2
++ Cốt	3
++ Huyết	4
++ Tạng	5
++ Mạch	6
+
+Điểm quan trọng:
+
+Người chơi không bắt buộc hoàn thành cả 6 tầng mới được đột phá.
+
+Họ có thể:
+
+Đột phá sớm
+
+Nhanh vào Luyện Khí nhưng Realm Pressure bất lợi.
+
+hoặc:
+
+Tiếp tục Luyện Thể
+
+Chậm tiến cảnh giới nhưng có chất lượng Nhập Đạo cao hơn.
+
+Đây tạo ra một lựa chọn gameplay thực sự.
+
+VI. REALM PRESSURE
+
+Đây là hệ thống xử lý chênh lệch đại cảnh giới.
+
+Không phải buff riêng của từng cảnh giới.
+
+Không phải stat.
+
+Nó là một combat modifier động, được tính dựa trên:
+
+Attacker Realm
++
+Defender Realm
++
+Breakthrough Grade
+VII. NGUYÊN TẮC CƠ BẢN
+
+Hai nhân vật cùng cảnh giới:
+
+×1.00
+
+Hai nhân vật chênh nhau đúng 1 đại cảnh giới:
+
+Không có chất lượng đột phá đặc biệt:
+Cao → Thấp
+×2.00
+
+
+Thấp → Cao
+×0.50
+
+Đây là Realm Pressure 100%.
+
+VIII. BREAKTHROUGH GRADE GIẢM REALM PRESSURE
+
+6 bậc:
+
+Grade	Pressure còn lại
+1	100%
+2	80%
+3	60%
+4	40%
+5	20%
+6	0%
+
+Từ đó:
+
+Cao → thấp
+Grade	Multiplier
+1	×2.00
+2	×1.80
+3	×1.60
+4	×1.40
+5	×1.20
+6	×1.00
+Thấp → cao
+Grade	Multiplier
+1	×0.50
+2	×0.60
+3	×0.70
+4	×0.80
+5	×0.90
+6	×1.00
+IX. QUY TẮC QUAN TRỌNG
+
+Không tạo:
+
+Damage Dealt ×2
++
+Damage Taken ×2
+
+Chỉ có một Realm Pressure Modifier.
+
+Ví dụ:
+
+Trúc Cơ Bậc thường đánh Luyện Khí.
+
+Damage resolver:
+
+Base Damage × 2.00
+
+Không cộng thêm:
+
+Luyện Khí Damage Taken ×2
+
+Nếu không sẽ thành ×4 và phá cân bằng.
+
+X. PHẠM VI CỦA REALM PRESSURE
+
+Chỉ áp dụng giữa hai đại cảnh giới liền kề.
+
+Ví dụ:
+
+Phàm Nhân ↔ Luyện Khí
+Luyện Khí ↔ Trúc Cơ
+Trúc Cơ ↔ Kim Đan
+Kim Đan ↔ Nguyên Anh
+...
+
+Không xử lý:
+
+Luyện Khí → Kim Đan
+
+bằng cách lấy ×2 hai lần.
+
+Nên có quy tắc riêng:
+
+Mỗi khoảng cách đại cảnh giới tăng thêm một bậc → Pressure tăng theo cấp số nhân hoặc một curve riêng.
+
+Nhưng ở phase hiện tại, tôi khuyên chỉ implement liền kề.
+
+XI. PASSIVE TOÀN CỤC — NHẬP ĐẠO
+
+Khi:
+
+Phàm Nhân → Luyện Khí
+
+nhận passive:
+
+Nhập Đạo
+
+Đây là passive vĩnh viễn của đại cảnh giới.
+
+Hiệu ứng nền
+Max HP +X%
+Max MP +X%
+HP/s +X%
+MP/s +X%
+
+X phụ thuộc vào Breakthrough Grade.
+
+Realm Interaction
+
+Nhập Đạo đồng thời xác định:
+
+Breakthrough Grade = 1–6
+
+→ dùng cho Realm Pressure.
+
+Như vậy Nhập Đạo không trực tiếp chứa ×2 / ×0.5.
+
+Nó chỉ cung cấp:
+
+breakthroughGrade
+
+Combat System tự tính Realm Pressure.
+
+Đây là architecture sạch hơn.
+
+XII. PASSIVE TOÀN CỤC — KIẾN CƠ
+
+Khi:
+
+Luyện Khí → Trúc Cơ
+
+nhận:
+
+Kiến Cơ
+
+Khác với Nhập Đạo.
+
+Nhập Đạo:
+
+xây dựng sinh mệnh nền + mở đường tu luyện
+
+Kiến Cơ:
+
+xây dựng căn cơ + khuếch đại Main Stat
+
+XIII. KIẾN CƠ — MAIN STAT
+
+Trúc Cơ có loại căn cơ.
+
+Ví dụ:
+
+Nhân Đạo Trúc Cơ
+Đại Đạo Trúc Cơ
+
+Mỗi loại quyết định:
+
+Main Stat Effectiveness %
+
+Ví dụ concept:
+
+Loại Trúc Cơ	Main Stat
+Nhân Đạo	+X%
+Đại Đạo	+Y%
+
+Sau này có thể mở rộng:
+
+Thiên Đạo Trúc Cơ
+
+mà không cần sửa architecture.
+
+XIV. KIẾN CƠ VÀ BREAKTHROUGH QUALITY
+
+Tôi đề xuất tách hai khái niệm:
+
+Loại Trúc Cơ
+
+Quyết định:
+
+Main Stat multiplier
+
+Chất lượng đột phá
+
+Quyết định:
+
+Realm Pressure
+
+Ví dụ:
+
+Đại Đạo Trúc Cơ
++
+Đột phá chất lượng 5
+
+sẽ có:
+
+Main Stat Effectiveness
+        ↑
+do Đại Đạo Trúc Cơ
+
+
+Realm Pressure
+        ↓
+do Breakthrough Grade 5
+
+Hai hệ thống không chồng chéo.
+
+XV. TOÀN BỘ FLOW
+                    PHÀM NHÂN
+                        │
+                 [Hệ thống Luyện Thể]
+                        │
+          ┌─────────────┼─────────────┐
+          ↓             ↓             ↓
+       Luyện Bì      Luyện Nhục     Luyện Cốt
+          ↓             ↓             ↓
+       Luyện Huyết → Luyện Tạng → Luyện Mạch
+                        │
+                  Breakthrough
+                   Grade 1–6
+                        │
+                        ▼
+                    Luyện Khí
+                   [NHẬP ĐẠO]
+                        │
+                 Realm Pressure
+                        │
+                        ▼
+                    Trúc Cơ
+                   [KIẾN CƠ]
+                        │
+                Main Stat Effect
+                        │
+                        ▼
+                    Kim Đan
+Chốt triết lý của 3 hệ thống
+
+Luyện Thể
+
+"Ta rèn thân thể đến đâu?"
+
+Nhập Đạo
+
+"Ta bước vào con đường tu luyện với nền tảng thế nào?"
+
+Realm Pressure
+
+"Khoảng cách cảnh giới thực sự áp chế ta đến đâu?"
+
+Kiến Cơ
+
+"Ta xây dựng căn cơ mạnh đến mức nào?"
+
+Đây là cách tách hệ thống mà tôi thấy ít coupling nhất, đồng thời rất dễ mở rộng khi bạn thêm Kim Đan, Nguyên Anh, Hóa Thần, Độ Kiếp sau này.

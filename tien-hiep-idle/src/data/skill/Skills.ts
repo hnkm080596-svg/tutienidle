@@ -1,0 +1,1478 @@
+import type { Skill } from '../../core/skill/Skill'
+
+// 4 skill chủ động — đúng 1 skill mẫu mỗi category (basic/special/
+// moving/ultimate). Player chỉ equip được 1 skill/category cùng lúc
+// (SkillSystem.equip()), nhưng "bảng skill" cho phép sau này thêm
+// nhiều lựa chọn hơn mỗi category mà không cần đổi cấu trúc data.
+//
+// Passive (9 cái, mỗi cảnh giới mở khóa 1) nằm ở cuối file —
+// xem GameManager.syncRealmPassive() và data/realms/realm.ts.
+export const SKILLS: Skill[] = [
+  {
+    id: 'basic_strike',
+
+    name: 'Trảm',
+
+    description: 'Một chiêu thức cơ bản, không tốn tài nguyên.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 10,
+
+    experience: 0,
+
+    experienceRequired: 100,
+
+    cooldown: 1,
+
+    remainingCooldown: 0,
+
+    cost: 0,
+
+    target: 'enemy',
+
+    effects: [
+      {
+        type: 'damage',
+
+        value: 1,
+
+        damageType: 'physical',
+      },
+    ],
+
+    // PLAN HOÀN CHỈNH mục 6/8 — thay activeCategory 'basic' cũ: skill
+    // này chạy theo attackSpeed timer (updatePlayerAttack), KHÔNG qua
+    // vòng lặp ưu tiên slot Loadout (updateAutoCast), bất kể đang ở
+    // slot nào hay chưa gắn slot nào (Phàm Nhân không có Loadout UI
+    // nhưng vẫn equip được trực tiếp, xem SkillSystem.equipWithoutSlot()).
+    isBasicAttack: true,
+
+    resourceType: 'none',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'tai_hu_sword',
+
+    name: 'Thái Hư Nhất Kiếm',
+
+    description: 'Một kiếm phá vạn pháp, tốn linh lực.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 10,
+
+    experience: 0,
+
+    experienceRequired: 100,
+
+    requiredRealmId: 'qi_refining',
+
+    requiredRealmLevel: 3,
+
+    cooldown: 5,
+
+    remainingCooldown: 0,
+
+    cost: 15,
+
+    target: 'enemy',
+
+    effects: [
+      {
+        type: 'damage',
+
+        value: 3,
+
+        // Demo Skill Element: 20% Physical + 80% Kim — Thái Hư Kiếm
+        // hợp Kim hơn về mặt chủ đề (kiếm khí sắc bén).
+        components: [
+          { kind: 'physical', ratio: 0.2 },
+          { kind: 'element', element: 'metal', ratio: 0.8 },
+        ],
+
+        // Demo attribute scaling — kiếm khí phần lớn là pháp lực (Kim
+        // component chiếm 80%), mỗi điểm Linh Căn cộng thêm 0.3% dame.
+        attributeScaling: [
+          { attributes: ['attunement'], ratioPerPoint: 0.003 },
+        ],
+      },
+
+      {
+        type: 'debuff',
+
+        buffId: 'sword_wound',
+
+        duration: 5,
+      },
+    ],
+    resourceType: 'mana',
+
+    unlocked: false,
+
+    equipped: false,
+
+    // Core Loop Foundation checklist (Mục SKILL) — "behavior-changing
+    // node" minh hoạ: 2 lối chơi khác hẳn nhau, không chỉ đổi số.
+    specializations: [
+      {
+        id: 'tai_hu_sword_heavy',
+
+        name: 'Trọng Kiếm',
+
+        description: 'Bỏ hẳn kiếm khí Kim, dồn toàn lực vào 1 đòn vật lý cực nặng — mất hiệu ứng cộng theo Linh Căn.',
+
+        effectsOverride: [
+          {
+            type: 'damage',
+
+            value: 5,
+
+            damageType: 'physical',
+          },
+
+          {
+            type: 'debuff',
+
+            buffId: 'sword_wound',
+
+            duration: 5,
+          },
+        ],
+      },
+
+      {
+        id: 'tai_hu_sword_spirit',
+
+        name: 'Linh Kiếm',
+
+        description: 'Kiếm khí hoá hoàn toàn thành Kim linh lực, hồi 1 phần khí huyết mỗi lần xuất chiêu.',
+
+        effectsOverride: [
+          {
+            type: 'damage',
+
+            value: 2.5,
+
+            components: [
+              { kind: 'element', element: 'metal', ratio: 1 },
+            ],
+
+            attributeScaling: [
+              { attributes: ['attunement'], ratioPerPoint: 0.005 },
+            ],
+          },
+
+          {
+            type: 'heal',
+
+            value: 10,
+          },
+
+          {
+            type: 'debuff',
+
+            buffId: 'sword_wound',
+
+            duration: 5,
+          },
+        ],
+      },
+    ],
+  },
+
+  {
+    id: 'nimble_step',
+
+    name: 'Phiêu Vân Bộ',
+
+    description: 'Thân pháp giúp né tránh và ra đòn nhanh hơn trong chốc lát.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 10,
+
+    experience: 0,
+
+    experienceRequired: 100,
+
+    cooldown: 8,
+
+    remainingCooldown: 0,
+
+    cost: 0,
+
+    target: 'self',
+
+    effects: [
+      {
+        type: 'buff',
+
+        buffId: 'nimble_step_buff',
+
+        duration: 4,
+      },
+    ],
+    resourceType: 'none',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'sky_shatter',
+
+    name: 'Phá Thiên Nhất Kích',
+
+    description: 'Chiêu cuối dồn hết thanh nộ vào một đòn đánh chí mạng.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 10,
+
+    experience: 0,
+
+    experienceRequired: 100,
+
+    requiredRealmId: 'foundation',
+
+    cooldown: 3,
+
+    remainingCooldown: 0,
+
+    cost: 90,
+
+    target: 'enemy',
+
+    effects: [
+      {
+        type: 'damage',
+
+        value: 5,
+
+        // Trước dùng 'true' (bỏ qua defense, scale theo attack) — giờ
+        // 'true' đã đổi tên 'primordial' VÀ đổi hẳn nguồn scale sang
+        // primordialPower riêng (Hỗn Nguyên, mặc định 0). Đây là 1
+        // chiêu rage-ultimate thuần võ thuật ("dồn hết thanh nộ"),
+        // không mang màu sắc Hỗn Nguyên/Void — giữ 'physical' (scale
+        // theo attack như cũ) để không bị nerf oan về gần 0 sát
+        // thương do primordialPower trống, thay vì đổi cứng theo tên.
+        damageType: 'physical',
+
+        // Demo Adaptive (nhiều attribute trong 1 entry — dùng giá trị
+        // CAO NHẤT): đòn dồn sức có thể xuất phát từ Căn Cốt (cường
+        // công) hoặc Thân Pháp (khéo léo dồn lực), tuỳ build nào cao hơn.
+        attributeScaling: [
+          { attributes: ['strength', 'dexterity'], ratioPerPoint: 0.004 },
+        ],
+      },
+    ],
+    resourceType: 'rage',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  // Hỏa Tu (Plans/magicpathgeneral + Plans/FirePath, 2026-08-21) —
+  // THAY HẲN kit 3-skill+1-passive cũ (xich_viem_chuong/viem_hai/
+  // bao_viem/passive_bao_viem_focus, đã xoá). Framework mới: 1 Active
+  // Skill DUY NHẤT mỗi hành (không còn multi-skill kit) — chiều sâu
+  // đến từ Node Tree (Minor đổi stat, Major đổi tag/behavior của
+  // CHÍNH skill này), xem data/progression/PhapTuNodes.ts. Học SẴN
+  // lúc chọn path (GameManager.chooseCultivationPath(), KHÔNG còn qua
+  // node "Lĩnh Ngộ Hỏa" — node đó đã gỡ khỏi PhapTuNodes.ts).
+  {
+    id: 'hoa_cau_thuat',
+
+    name: 'Hỏa Cầu Thuật',
+
+    description: 'Phóng Hỏa Cầu vào mục tiêu, có cơ hội gây Thiêu Đốt.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 10,
+
+    experience: 0,
+
+    experienceRequired: 100,
+
+    cooldown: 1,
+
+    remainingCooldown: 0,
+
+    cost: 0,
+
+    target: 'enemy',
+
+    effects: [
+      {
+        type: 'damage',
+
+        // FirePath.md mục 2 — "Damage: 100% Skill Power".
+        value: 1,
+
+        components: [
+          { kind: 'element', element: 'fire', ratio: 1 },
+        ],
+
+        attributeScaling: [
+          { attributes: ['attunement'], ratioPerPoint: 0.004 },
+        ],
+      },
+
+      {
+        type: 'ailment',
+
+        ailmentId: 'bong',
+
+        // 2026-08-21 — SỬA lại quyết định ban đầu ("100% luôn áp"):
+        // Hỏa Cầu Thuật gốc chỉ 50% cơ hội áp Thiêu Đốt, node "Dẫn
+        // Hỏa" (+15%) và "Hỏa Nguyên" (+5%) ở Trúc Cơ cộng thêm qua
+        // stat elementApplicationPercent (xem SkillEffectSystem.ts,
+        // data/progression/PhapTuNodes.ts) — để node đó có ý nghĩa
+        // thật thay vì cộng vào con số đã max.
+        ailmentChance: 0.5,
+      },
+    ],
+
+    // Skill tree redesign (2026-08-21) — skill này là ROOT NODE của
+    // Hỏa tree (xem PhapTuNodes.ts), CHIẾM 1 slot Loadout bình thường
+    // và chạy qua updateAutoCast() như mọi skill khác — KHÔNG còn
+    // isBasicAttack (đó là cơ chế "đóng khung" dành riêng cho Phàm
+    // Nhân/Kiếm Tu, xem basic_strike/ngu_kiem_thuat). Điểm khác biệt
+    // DUY NHẤT của Hỏa Cầu Thuật với 4 hành kia là được tự học + trang
+    // bị sẵn (cost 0, xem GameManager.chooseCultivationPath()).
+
+    // Hỏa Tu Pure (Plans/FirePath mục 7) — mỗi lần cast +hoaTheGainPerCast
+    // (0 nếu chưa mua "Tụ Hỏa"), xem BattleSystem.castSkill().
+    grantsHoaThePerCast: true,
+
+    resourceType: 'none',
+
+    buildTag: 'dot',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  // Mộc Tu (Plans/PoisonPath, 2026-08-21) — THAY HẲN kit 3-skill+1-
+  // passive cũ (dang_trao/doc_vu/hap_tinh_dai_phap/passive_hap_tinh_tuy,
+  // đã xoá). Cùng framework 1-Active-Skill/hành với Hỏa/Thủy — chiều
+  // sâu đến từ Node Tree, xem data/progression/PhapTuNodes.ts. Học SẴN
+  // lúc chọn path (GameManager.chooseCultivationPath()). KHÁC Hỏa/Thủy:
+  // 0 direct damage (chỉ có effect 'ailment', KHÔNG có effect 'damage'
+  // nào — PoisonPath.md mục 1 "0 direct damage"), ailmentChance CỐ ĐỊNH
+  // 100% — Mộc KHÔNG có Element Application Chance/minor nào chỉnh tỉ
+  // lệ này (khác Hỏa Cầu Thuật/Thủy Tiễn Thuật 50% base + node cộng
+  // thêm), toàn bộ sát thương đến từ Trúng Độc DoT.
+  {
+    id: 'doc_chuong',
+
+    name: 'Độc Chưởng',
+
+    description: 'Vỗ độc chưởng vào mục tiêu, không gây sát thương trực tiếp nhưng luôn áp Trúng Độc.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 10,
+
+    experience: 0,
+
+    experienceRequired: 100,
+
+    cooldown: 1,
+
+    remainingCooldown: 0,
+
+    cost: 0,
+
+    target: 'enemy',
+
+    effects: [
+      {
+        type: 'ailment',
+
+        ailmentId: 'trung_doc',
+
+        ailmentChance: 1,
+      },
+    ],
+
+    // Skill tree redesign (2026-08-21) — root node của Mộc tree, chiếm
+    // 1 slot Loadout bình thường (xem hoa_cau_thuat's ghi chú).
+    resourceType: 'none',
+
+    buildTag: 'core',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  // Thủy Tu (Plans/waterpath, 2026-08-21) — THAY HẲN kit 3-skill+1-
+  // passive cũ (luu_thuy_chuong/han_trieu/tuyet_bang_pha/
+  // passive_luu_thuy_man, đã xoá). Cùng framework 1-Active-Skill/hành
+  // với Hỏa (xem Skills.ts's ghi chú đầu khối hoa_cau_thuat) — chiều
+  // sâu đến từ Node Tree, xem data/progression/PhapTuNodes.ts. Học SẴN
+  // lúc chọn path (GameManager.chooseCultivationPath()).
+  {
+    id: 'thuy_tien_thuat',
+
+    name: 'Thủy Tiễn Thuật',
+
+    description: 'Bắn Thủy Tiễn vào mục tiêu, có cơ hội gây Tê Cóng.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 10,
+
+    experience: 0,
+
+    experienceRequired: 100,
+
+    cooldown: 1,
+
+    remainingCooldown: 0,
+
+    cost: 0,
+
+    target: 'enemy',
+
+    effects: [
+      {
+        type: 'damage',
+
+        // waterpath mục II — "Damage: 100% Skill Power".
+        value: 1,
+
+        components: [
+          { kind: 'element', element: 'water', ratio: 1 },
+        ],
+
+        attributeScaling: [
+          { attributes: ['attunement'], ratioPerPoint: 0.004 },
+        ],
+      },
+
+      {
+        type: 'ailment',
+
+        ailmentId: 'te_cong',
+
+        // 2026-08-21 — cùng quyết định với Hỏa Cầu Thuật (xem ghi chú
+        // ở đó): base 50%, KHÔNG luôn luôn áp — Thủy Dẫn (Luyện Khí)
+        // và Dẫn Lưu (Trúc Cơ) cộng thêm qua elementApplicationPercent.
+        ailmentChance: 0.5,
+      },
+    ],
+
+    // Skill tree redesign (2026-08-21) — skill này là ROOT NODE của
+    // element tree (xem PhapTuNodes.ts), CHIẾM 1 slot Loadout bình
+    // thường và chạy qua updateAutoCast() như mọi skill khác — KHÔNG
+    // còn isBasicAttack (đó là cơ chế "đóng khung" dành riêng cho
+    // Phàm Nhân/Kiếm Tu, xem basic_strike/ngu_kiem_thuat). Điểm khác
+    // biệt DUY NHẤT của Hỏa Cầu Thuật với 4 hành kia là được tự học +
+    // trang bị sẵn (cost 0, xem GameManager.chooseCultivationPath()).
+    resourceType: 'none',
+
+    buildTag: 'core',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  // Kim Tu (Plans/KimPath, 2026-08-21) — THAY HẲN kit 3-skill+1-passive
+  // cũ (thiet_sa_chuong/sa_vu/thiet_sa_bao/passive_thiet_sa_tich_uy, đã
+  // xoá — 'te_dien'/"Lôi Viêm" [bong.te_dien trong ElementReaction.ts]
+  // giờ mồ côi, không skill nào áp te_dien nữa, để nguyên như hoai_tu
+  // sau đợt Thổ). Cùng framework 1-Active-Skill/hành với Hỏa/Thủy/Mộc/
+  // Thổ — chiều sâu đến từ Node Tree, xem data/progression/PhapTuNodes.ts.
+  // Học SẴN lúc chọn path. GIỐNG Hỏa/Thủy (KHÁC Mộc/Thổ): ailmentChance
+  // 40% base + node-upgradeable qua elementApplicationPercent (doc mục 2:
+  // "Đánh trúng không đảm bảo Xuất Huyết — khác Độc Chưởng").
+  {
+    id: 'diem_kim_thuat',
+
+    name: 'Điểm Kim Thuật',
+
+    description: 'Điểm huyệt bằng khí Kim, có cơ hội gây Xuất Huyết.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 10,
+
+    experience: 0,
+
+    experienceRequired: 100,
+
+    cooldown: 1,
+
+    remainingCooldown: 0,
+
+    cost: 0,
+
+    target: 'enemy',
+
+    effects: [
+      {
+        type: 'damage',
+
+        value: 1,
+
+        components: [
+          { kind: 'element', element: 'metal', ratio: 1 },
+        ],
+
+        attributeScaling: [
+          { attributes: ['attunement'], ratioPerPoint: 0.004 },
+        ],
+      },
+
+      {
+        type: 'ailment',
+
+        ailmentId: 'chay_mau',
+
+        ailmentChance: 0.4,
+
+        // Kim Tu Trúc Cơ Pure (Plans/KimPath mục 9/11, 2026-08-21) — CHỈ
+        // roll THÀNH CÔNG (Xuất Huyết thật sự áp được) mới +Kim Thế, xem
+        // SkillEffectSystem.ts's apply(), case 'ailment'. 0 nếu chưa mua
+        // Major "Kim Thế" (kimTheGainPerProc nền 0).
+        grantsKimThePerProc: true,
+
+        // Plans/magicpathgeneral Phase 13 (2026-08-21) — Huyết Phá,
+        // CÙNG điều kiện roll với Kim Thế ở trên, 2 counter độc lập.
+        // 0 nếu chưa mua node "Huyết Phá" (huyetPhaGainPerProc nền 0).
+        grantsHuyetPhaPerProc: true,
+      },
+    ],
+
+    // Skill tree redesign (2026-08-21) — root node của Kim tree, chiếm
+    // 1 slot Loadout bình thường (xem hoa_cau_thuat's ghi chú).
+    resourceType: 'none',
+
+    buildTag: 'core',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  // Thổ Tu (Plans/EarthPath, 2026-08-21) — THAY HẲN kit 3-skill+1-
+  // passive cũ (ban_thach_quyen/thach_giap_tran/hau_tho_chan/
+  // passive_ban_thach_kien_nhan, đã xoá). Cùng framework 1-Active-
+  // Skill/hành với Hỏa/Thủy/Mộc — chiều sâu đến từ Node Tree, xem
+  // data/progression/PhapTuNodes.ts. Học SẴN lúc chọn path
+  // (GameManager.chooseCultivationPath()). ailmentChance CỐ ĐỊNH 100%
+  // — Thổ KHÔNG có Earth Application Chance/Petrify Chance/Minor nào
+  // chỉnh tỉ lệ này (PoisonPath-style, giống Mộc), khác Hỏa/Thủy's
+  // 50%-base-node-upgradeable. `earthPureProjectileBehavior: true` —
+  // GHI ĐÈ đơn-mục-tiêu thành AOE+Knockback thật khi mua Major "Thổ
+  // Thế" (xem SkillEffectSystem.ts's apply(), case 'damage').
+  {
+    id: 'tho_cau_thuat',
+
+    name: 'Thổ Cầu Thuật',
+
+    description: 'Bắn một Thổ Cầu vào mục tiêu, luôn gây Thạch Hóa.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 10,
+
+    experience: 0,
+
+    experienceRequired: 100,
+
+    cooldown: 1,
+
+    remainingCooldown: 0,
+
+    cost: 0,
+
+    target: 'enemy',
+
+    effects: [
+      {
+        type: 'damage',
+
+        value: 1,
+
+        components: [
+          { kind: 'element', element: 'earth', ratio: 1 },
+        ],
+
+        attributeScaling: [
+          { attributes: ['attunement'], ratioPerPoint: 0.004 },
+        ],
+
+        earthPureProjectileBehavior: true,
+      },
+
+      {
+        type: 'ailment',
+
+        ailmentId: 'thach_hoa',
+
+        ailmentChance: 1,
+      },
+    ],
+
+    // Skill tree redesign (2026-08-21) — root node của Thổ tree, chiếm
+    // 1 slot Loadout bình thường (xem hoa_cau_thuat's ghi chú).
+    resourceType: 'none',
+
+    buildTag: 'core',
+
+    // Thổ Tu Trúc Cơ Pure (Plans/EarthPath mục XV) — 0 nếu chưa mua
+    // Major "Thổ Thế" (thoTheGainPerCast nền 0), xem BattleSystem.
+    // castSkill().
+    grantsThoThePerCast: true,
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  // Kiếm Tu (2026-08-15) — xem data/technique/Techniques.ts's ghi chú
+  // đầu khối ngu_kiem. "Luyện Khí kì chỉ mở đánh thường, Trúc Cơ mở
+  // tuyệt kỹ, nộ kỹ tạm thời chưa ra mắt" — áp dụng MỌI path (xem
+  // requiredRealmId/unreleased dưới đây VÀ phần "retroactive gate" ở
+  // cuối file cho 5 skill special/5 skill ultimate Ngũ Hành).
+  {
+    id: 'ngu_kiem_thuat',
+
+    name: 'Ngự Kiếm Thuật',
+
+    description: 'Điều khiển phi kiếm bay lần lượt về phía mục tiêu, số kiếm tăng theo cảnh giới, mỗi kiếm trúng đích dồn thêm Kiếm Ý.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 10,
+
+    experience: 0,
+
+    experienceRequired: 100,
+
+    cooldown: 1,
+
+    remainingCooldown: 0,
+
+    cost: 0,
+
+    target: 'enemy',
+
+    effects: [
+      {
+        type: 'damage',
+
+        value: 0.6,
+
+        components: [
+          { kind: 'element', element: 'metal', ratio: 1 },
+        ],
+
+        attributeScaling: [
+          { attributes: ['attunement'], ratioPerPoint: 0.003 },
+        ],
+
+        // "1~9 kiếm bay lần lượt, cảnh giới càng cao càng nhiều" — bắn
+        // (realmIndex + 1) missile liên tiếp, xem SkillEffectSystem.ts.
+        hitCountByRealm: true,
+
+        // Combat Rework Phase 5 — "phi kiếm xuyên địch": mỗi kiếm xuyên
+        // qua 1 mục tiêu, bay tiếp trúng con kế tiếp cùng hàng, đúng
+        // tinh thần "Mưa kiếm" (mục 11 plan) thay vì chỉ dồn sát thương
+        // vào đúng 1 con. Xem core/combat/missile/Missile.ts's ProjectileBehavior.
+        projectileBehavior: { pierceCount: 1 },
+      },
+    ],
+
+    // PLAN HOÀN CHỈNH mục 6/8 — thay activeCategory 'basic' cũ: skill
+    // này chạy theo attackSpeed timer (updatePlayerAttack), KHÔNG qua
+    // vòng lặp ưu tiên slot Loadout (updateAutoCast), bất kể đang ở
+    // slot nào hay chưa gắn slot nào (Phàm Nhân không có Loadout UI
+    // nhưng vẫn equip được trực tiếp, xem SkillSystem.equipWithoutSlot()).
+    isBasicAttack: true,
+
+    resourceType: 'none',
+
+    // Mỗi kiếm ĐÁNH TRÚNG (không tính né) +1 Kiếm Ý chiến đấu — xem
+    // BattleSystem.ts's missile-resolve callback.
+    grantsSwordIntentPerHit: true,
+
+    buildTag: 'core',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'kiem_khai_thien_mon',
+
+    name: 'Kiếm Khai Thiên Môn',
+
+    description: 'Triệu hồi 1 thanh cự kiếm chém xuyên chiến trường, dựa vào Kiếm Ý hiện có và cảnh giới mà sát thương càng lớn.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 10,
+
+    experience: 0,
+
+    experienceRequired: 100,
+
+    cooldown: 6,
+
+    remainingCooldown: 0,
+
+    cost: 25,
+
+    // "Trúc Cơ mở tuyệt kỹ" — áp dụng mọi path, xem SkillSystem.canUse().
+    requiredRealmId: 'foundation',
+
+    target: 'all_enemies',
+
+    effects: [
+      {
+        type: 'damage',
+
+        value: 2,
+
+        components: [
+          { kind: 'element', element: 'metal', ratio: 1 },
+        ],
+
+        // "dựa vào số Kiếm Ý đang có" — CHỈ ĐỌC, không tiêu, xem
+        // SkillEffect.ts's ghi chú.
+        swordIntentDamageRatio: 0.0002,
+
+        // "cảnh giới càng cao sát thương càng lớn".
+        realmDamageRatio: 0.15,
+      },
+    ],
+    resourceType: 'mana',
+
+    buildTag: 'burst',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'van_kiem_trieu_tong',
+
+    name: 'Vạn Kiếm Triều Tông',
+
+    description: 'Dồn hết 9999 Kiếm Ý, triệu hồi mưa kiếm phủ kín chiến trường trong 9 giây, xuyên phá phần lớn giáp/kháng của toàn bộ kẻ địch.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 10,
+
+    experience: 0,
+
+    experienceRequired: 100,
+
+    cooldown: 20,
+
+    remainingCooldown: 0,
+
+    cost: 9999,
+
+    // "nộ kỹ tạm thời chưa ra mắt" — áp dụng mọi path, chặn cứng bất
+    // kể cảnh giới/tài nguyên, xem SkillSystem.canUse().
+    unreleased: true,
+
+    target: 'all_enemies',
+
+    effects: [
+      {
+        type: 'ailment',
+
+        ailmentId: 'van_kiem_vu',
+
+        ailmentChance: 1,
+      },
+    ],
+    resourceType: 'sword_intent',
+
+    buildTag: 'burst',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'passive_kiem_tam_lanh',
+
+    name: 'Kiếm Tâm Lãnh Liệt',
+
+    description: 'Tâm kiếm lạnh lùng sắc bén, mỗi đòn chí mạng càng thêm phần quyết liệt.',
+
+    type: 'passive',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    experience: 0,
+
+    experienceRequired: 0,
+
+    cooldown: 0,
+
+    remainingCooldown: 0,
+
+    cost: 0,
+
+    target: 'self',
+
+    effects: [],
+
+    passiveModifiers: [
+      {
+        id: 'passive_kiem_tam_lanh_crit_damage',
+
+        sourceId: 'passive_kiem_tam_lanh',
+        sourceType: 'skill',
+
+        stat: 'criticalDamage',
+
+        percent: 0.01,
+
+        stacks: 0,
+
+        maxStacks: 30,
+      },
+    ],
+
+    passiveTrigger: 'critical',
+
+    buildTag: 'burst',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  // 9 passive — mỗi cảnh giới mở khóa 1, nguồn map nằm ở tâm pháp tu
+  // luyện (xem Technique.passiveSkillIdsByRealm trong
+  // data/technique/Techniques.ts và GameManager.syncRealmPassive()).
+  // Mỗi cái dùng passiveTrigger khác nhau — không dùng chung 1 điều
+  // kiện tích stack.
+  {
+    id: 'passive_qi_sense',
+
+    name: 'Linh Khí Cảm Ứng',
+
+    description: 'Cảm nhận linh khí xung quanh, mỗi đòn đánh trúng tăng dần công kích.',
+
+    type: 'passive',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    experience: 0,
+
+    experienceRequired: 0,
+
+    requiredRealmId: 'qi_refining',
+
+    cooldown: 0,
+
+    remainingCooldown: 0,
+
+    cost: 0,
+
+    target: 'self',
+
+    effects: [],
+
+    passiveModifiers: [
+      {
+        id: 'passive_qi_sense_attack',
+
+        sourceId: 'passive_qi_sense',
+        sourceType: 'skill',
+
+        stat: 'attack',
+
+        percent: 0.005,
+
+        stacks: 0,
+
+        maxStacks: 50,
+      },
+    ],
+
+    passiveTrigger: 'hit',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'passive_foundation_will',
+
+    name: 'Trúc Cơ Ý Chí',
+
+    description: 'Nền tảng đạo tâm vững chắc, mỗi lần chịu đòn tăng dần phòng ngự.',
+
+    type: 'passive',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    experience: 0,
+
+    experienceRequired: 0,
+
+    requiredRealmId: 'foundation',
+
+    cooldown: 0,
+
+    remainingCooldown: 0,
+
+    cost: 0,
+
+    target: 'self',
+
+    effects: [],
+
+    passiveModifiers: [
+      {
+        id: 'passive_foundation_will_defense',
+
+        sourceId: 'passive_foundation_will',
+        sourceType: 'skill',
+
+        stat: 'defense',
+
+        percent: 0.008,
+
+        stacks: 0,
+
+        maxStacks: 50,
+      },
+    ],
+
+    passiveTrigger: 'damage_taken',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'passive_core_light',
+
+    name: 'Kim Đan Chi Quang',
+
+    description: 'Kim đan tỏa sáng mỗi khi ra đòn chí mạng, tăng dần sát thương chí mạng.',
+
+    type: 'passive',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    experience: 0,
+
+    experienceRequired: 0,
+
+    requiredRealmId: 'golden_core',
+
+    cooldown: 0,
+
+    remainingCooldown: 0,
+
+    cost: 0,
+
+    target: 'self',
+
+    effects: [],
+
+    passiveModifiers: [
+      {
+        id: 'passive_core_light_crit_damage',
+
+        sourceId: 'passive_core_light',
+        sourceType: 'skill',
+
+        stat: 'criticalDamage',
+
+        flat: 0.02,
+
+        stacks: 0,
+
+        maxStacks: 50,
+      },
+    ],
+
+    passiveTrigger: 'critical',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'passive_soul_clarity',
+
+    name: 'Nguyên Anh Minh Triệt',
+
+    // Pháp Tu Redesign (magicpath, 2026-08-18) — cultivationRate đã bị
+    // xoá khỏi Stats (tốc độ tu luyện giờ cố định, không ai tăng được
+    // nữa), passiveModifiers CŨ của skill này (buff cultivationRate)
+    // không còn hợp lệ. TẠM để trống, chưa gán stat mới — xem audit
+    // cuối phiên [[tienhiep-phap-tu-magicpath]], cần quyết định lại
+    // hướng passive này (đổi sang combat stat, hay bỏ hẳn) khi làm nội
+    // dung "class chính thức".
+    description: 'Nguyên Anh thấu triệt — cảm ngộ sâu hơn với thiên địa (hiện chưa có hiệu ứng, đang chờ thiết kế lại).',
+
+    type: 'passive',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    experience: 0,
+
+    experienceRequired: 0,
+
+    requiredRealmId: 'nascent_soul',
+
+    cooldown: 0,
+
+    remainingCooldown: 0,
+
+    cost: 0,
+
+    target: 'self',
+
+    effects: [],
+
+    passiveModifiers: [],
+
+    passiveTrigger: 'per_second',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'passive_divine_transformation',
+
+    name: 'Hóa Thần Chi Uy',
+
+    description: 'Uy áp Hóa Thần, mỗi lần hạ gục địch nhân tăng dần sức tấn công.',
+
+    type: 'passive',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    experience: 0,
+
+    experienceRequired: 0,
+
+    requiredRealmId: 'soul_transformation',
+
+    cooldown: 0,
+
+    remainingCooldown: 0,
+
+    cost: 0,
+
+    target: 'self',
+
+    effects: [],
+
+    passiveModifiers: [
+      {
+        id: 'passive_divine_transformation_attack',
+
+        sourceId: 'passive_divine_transformation',
+        sourceType: 'skill',
+
+        stat: 'attack',
+
+        percent: 0.02,
+
+        stacks: 0,
+
+        maxStacks: 50,
+      },
+    ],
+
+    passiveTrigger: 'kill',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'passive_void_step',
+
+    name: 'Luyện Hư Bộ',
+
+    description: 'Thân hình hòa vào hư không, mỗi lần thi triển skill tăng dần tốc độ ra đòn.',
+
+    type: 'passive',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    experience: 0,
+
+    experienceRequired: 0,
+
+    requiredRealmId: 'void_refinement',
+
+    cooldown: 0,
+
+    remainingCooldown: 0,
+
+    cost: 0,
+
+    target: 'self',
+
+    effects: [],
+
+    passiveModifiers: [
+      {
+        id: 'passive_void_step_attack_speed',
+
+        sourceId: 'passive_void_step',
+        sourceType: 'skill',
+
+        stat: 'attackSpeed',
+
+        percent: 0.01,
+
+        stacks: 0,
+
+        maxStacks: 50,
+      },
+    ],
+
+    passiveTrigger: 'cast',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'passive_body_unity',
+
+    name: 'Hợp Thể Chi Khu',
+
+    description: 'Thân thể và thần hồn hợp nhất, mỗi đòn xuất kích tăng dần khí huyết tối đa.',
+
+    type: 'passive',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    experience: 0,
+
+    experienceRequired: 0,
+
+    requiredRealmId: 'body_integration',
+
+    cooldown: 0,
+
+    remainingCooldown: 0,
+
+    cost: 0,
+
+    target: 'self',
+
+    effects: [],
+
+    passiveModifiers: [
+      {
+        id: 'passive_body_unity_max_hp',
+
+        sourceId: 'passive_body_unity',
+        sourceType: 'skill',
+
+        stat: 'maxHp',
+
+        percent: 0.01,
+
+        stacks: 0,
+
+        maxStacks: 50,
+      },
+    ],
+
+    passiveTrigger: 'attack',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'passive_mahayana_heart',
+
+    name: 'Đại Thừa Đạo Tâm',
+
+    description: 'Đạo tâm viên mãn, mỗi đòn đánh trúng tăng dần pháp lực.',
+
+    type: 'passive',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    experience: 0,
+
+    experienceRequired: 0,
+
+    requiredRealmId: 'mahayana',
+
+    cooldown: 0,
+
+    remainingCooldown: 0,
+
+    cost: 0,
+
+    target: 'self',
+
+    effects: [],
+
+    passiveModifiers: [
+      {
+        id: 'passive_mahayana_heart_attunement',
+
+        sourceId: 'passive_mahayana_heart',
+        sourceType: 'skill',
+
+        // Trước cộng %magicAttack (stat đã xoá, gộp vào tổng hợp 5
+        // hành) — đổi sang Linh Căn (Attunement), khớp thẳng ý nghĩa
+        // "đạo tâm viên mãn, pháp lực tăng dần" và tự lan toả đều
+        // sang cả 6 hành qua tầng dẫn xuất (xem
+        // StatCalculator.deriveAttributeModifiers()).
+        stat: 'attunement',
+
+        percent: 0.015,
+
+        stacks: 0,
+
+        maxStacks: 50,
+      },
+    ],
+
+    passiveTrigger: 'hit',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'passive_tribulation_resolve',
+
+    name: 'Độ Kiếp Chi Tâm',
+
+    description: 'Tâm cảnh kiên định qua thiên kiếp, mỗi giây trong trận tăng dần tỉ lệ chí mạng.',
+
+    type: 'passive',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    experience: 0,
+
+    experienceRequired: 0,
+
+    requiredRealmId: 'tribulation',
+
+    cooldown: 0,
+
+    remainingCooldown: 0,
+
+    cost: 0,
+
+    target: 'self',
+
+    effects: [],
+
+    passiveModifiers: [
+      {
+        id: 'passive_tribulation_resolve_crit_rate',
+
+        sourceId: 'passive_tribulation_resolve',
+        sourceType: 'skill',
+
+        stat: 'criticalRate',
+
+        flat: 0.002,
+
+        stacks: 0,
+
+        maxStacks: 50,
+      },
+    ],
+
+    passiveTrigger: 'per_second',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  // Nội tại chiến đấu của Tâm Pháp Chiến Đấu — tự học + equip khi
+  // technique tương ứng được trang bị (xem GameManager.equipTechnique()),
+  // KHÔNG liên quan tới hệ thống 9 passive theo cảnh giới ở trên.
+  {
+    id: 'passive_tai_hu_edge',
+
+    name: 'Thái Hư Kiếm Ý',
+
+    description: 'Kiếm ý thấu triệt hư vô, mỗi đòn chí mạng dồn thêm sát khí.',
+
+    type: 'passive',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    experience: 0,
+
+    experienceRequired: 0,
+
+    cooldown: 0,
+
+    remainingCooldown: 0,
+
+    cost: 0,
+
+    target: 'self',
+
+    effects: [],
+
+    passiveModifiers: [
+      {
+        id: 'passive_tai_hu_edge_crit_damage',
+
+        sourceId: 'passive_tai_hu_edge',
+        sourceType: 'skill',
+
+        stat: 'criticalDamage',
+
+        percent: 0.01,
+
+        stacks: 0,
+
+        maxStacks: 30,
+      },
+    ],
+
+    passiveTrigger: 'critical',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'passive_iron_body_resolve',
+
+    name: 'Kim Cang Ý Chí',
+
+    description: 'Thân thể cứng như kim thạch, mỗi đòn chịu đau càng thêm vững vàng.',
+
+    type: 'passive',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    experience: 0,
+
+    experienceRequired: 0,
+
+    cooldown: 0,
+
+    remainingCooldown: 0,
+
+    cost: 0,
+
+    target: 'self',
+
+    effects: [],
+
+    passiveModifiers: [
+      {
+        id: 'passive_iron_body_resolve_defense',
+
+        sourceId: 'passive_iron_body_resolve',
+        sourceType: 'skill',
+
+        stat: 'defense',
+
+        percent: 0.008,
+
+        stacks: 0,
+
+        maxStacks: 30,
+      },
+    ],
+
+    passiveTrigger: 'damage_taken',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+]

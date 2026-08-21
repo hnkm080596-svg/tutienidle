@@ -1,0 +1,490 @@
+💧 PLAN HOÀN CHỈNH HỆ THỦY
+Phạm vi: Luyện Khí → Trúc Cơ
+I. Identity của Thủy
+
+Thủy có hai hướng chơi:
+
+1. 💧 Reaction Path — Dẫn Lưu
+
+Chuyên:
+
+áp Thủy → kích Reaction → duy trì trạng thái → kiểm soát chiến trường.
+
+Các Reaction đã chốt:
+
+🔥 Bốc Hơi
+🌿 Độc Thủy
+⚡ Thủy Lôi
+🌪️ Đóng Băng
+🪨 Thủy Thổ
+⚙️ Không Reaction
+2. 💧 Pure Path — Tụ Thủy
+
+Chuyên:
+
+Thủy Thế → chuyển hóa thành khả năng giảm sát thương cho bản thân.
+
+Không phải burst.
+
+Không phải tích rồi tiêu.
+
+Thủy Thế là một giá trị phòng thủ tồn tại trên nhân vật.
+
+II. ACTIVE SKILL
+💧 Thủy Tiễn Thuật
+
+Đây là duy nhất một Active Skill của hệ Thủy ở giai đoạn này.
+
+Base
+Thuộc tính	Giá trị
+Element	WATER
+Damage	100% Skill Power
+Delivery	Projectile
+Target	Single Target
+Element Application	100%
+Cooldown	Theo hệ thống Skill
+Range	Chuẩn
+Projectile Tags
+[WATER]
+[PROJECTILE]
+[SINGLE_TARGET]
+[APPLY_ELEMENT]
+
+Không có:
+
+[PIERCE]
+[CHAIN]
+[BOUNCE]
+[EXPLODE]
+[MULTI_PROJECTILE]
+
+ở Luyện Khí/Trúc Cơ.
+
+III. REACTION SYSTEM CỦA THỦY
+
+Reaction là hệ thống toàn cục, không thuộc riêng Active.
+
+Thủy Tiễn chỉ cần mang:
+
+[WATER]
+
+Combat Engine tự kiểm tra Element trên mục tiêu.
+
+💧🔥 BỐC HƠI
+Hiệu ứng
+
+Giảm tốc độ hành động + tăng sát thương nhận vào.
+
+Đề xuất baseline:
+
+Action Speed: -20%
+Damage Taken: +10%
+Duration: 3 giây
+Vai trò
+
+Debuff / Setup
+
+Không gây một lượng damage lớn trực tiếp.
+
+💧🌿 ĐỘC THỦY
+Hiệu ứng
+
+Độc tick với tần suất gấp đôi.
+
+Ví dụ:
+
+Độc thường
+→ 1 tick / chu kỳ
+
+
+Độc Thủy
+→ 2 tick / chu kỳ
+
+Không hiểu là:
+
+Poison Damage ×2.
+
+Mà là:
+
+Damage được chia thành nhiều tick hơn.
+
+Điều này làm Độc Thủy khác Độc Viêm:
+
+Độc Viêm
+
+Damage dựa trên HP hiện tại.
+
+Độc Thủy
+
+Poison tick dày hơn.
+
+💧⚡ THỦY LÔI
+Hiệu ứng
+
+Sét truyền từ mục tiêu bị Reaction sang các mục tiêu lân cận.
+
+Baseline:
+
+Target A
+   ↓
+Target B
+   ↓
+Target C
+
+Đề xuất:
+
+tối đa 3 lần truyền
+mỗi lần truyền giảm damage
+không quay lại mục tiêu vừa bị đánh.
+Vai trò
+
+Chain / AoE
+
+💧🌪️ ĐÓNG BĂNG
+Hiệu ứng
+
+Mục tiêu không thể hành động trong thời gian Freeze.
+
+Baseline:
+
+1.5 giây
+
+Trong Freeze:
+
+không di chuyển
+không đánh
+không cast.
+
+Boss/Elite nên có Freeze Resistance để tránh lock vô hạn.
+
+Vai trò
+
+Hard CC
+
+💧🪨 THỦY THỔ
+Hiệu ứng
+
+Trói chân.
+
+Mục tiêu:
+
+❌ không thể di chuyển
+✅ vẫn attack
+✅ vẫn cast
+
+Baseline:
+
+2.5 giây
+
+Vai trò
+
+Root / Soft CC
+
+Điểm quan trọng:
+
+Đóng Băng khóa hành động.
+Trói Chân chỉ khóa di chuyển.
+
+💧⚙️ THỦY + KIM
+
+Không Reaction.
+
+Không cần ép mọi cặp nguyên tố phải có reaction.
+
+IV. LUYỆN KHÍ
+
+Luyện Khí là giai đoạn người chơi học Thủy, chưa chuyên hóa.
+
+Active
+Thủy Tiễn Thuật
+WATER
+PROJECTILE
+SINGLE_TARGET
+APPLY_ELEMENT
+V. MINOR — LUYỆN KHÍ
+
+Có 3 Minor.
+
+① Thủy Linh
+
++3% Thủy Damage
+
+② Thủy Tốc
+
++5% Projectile Speed
+
+③ Thủy Dẫn
+
++5% Element Application
+
+Tại sao không có Reaction Effect?
+
+Vì Luyện Khí chỉ nên cho:
+
+Damage / Delivery / Application
+
+Người chơi chưa cần tối ưu Reaction.
+
+VI. TRÚC CƠ
+
+Đây là thời điểm mở hai con đường.
+
+                 💧 THỦY TIỄN THUẬT
+                         │
+                 ┌───────┴───────┐
+                 │               │
+             REACTION          PURE
+                 │               │
+             DẪN LƯU           TỤ THỦY
+VII. MAJOR — REACTION PATH
+💧 DẪN LƯU
+
+Thủy trở thành nguyên tố chuyên thiết lập Reaction.
+
+Hiệu ứng
+
++15% Element Application
+
+và:
+
+Khi Thủy kích hoạt Reaction, thời gian duy trì Thủy còn lại trên mục tiêu được tăng 1 giây.
+
+Mục đích:
+
+THỦY
+ ↓
+REACTION
+ ↓
+THỦY VẪN CÒN
+ ↓
+REACTION TIẾP
+
+Đây là loop của Reaction Thủy.
+
+VIII. MAJOR — PURE PATH
+💧 TỤ THỦY
+
+Mở cơ chế:
+
+THỦY THẾ
+
+Đây là điểm khác biệt quan trọng nhất của Pure Thủy.
+
+IX. 💧 THỦY THẾ
+Định nghĩa
+
+Thủy Thế là tỷ lệ Linh lực có thể chuyển hóa thành khả năng giảm sát thương cho bản thân.
+
+Nó là:
+
+một Defensive Stat, không phải Stack/Resource.
+
+Ví dụ:
+
+Thủy Thế = 10%
+
+→ nhân vật nhận:
+
+90% sát thương ban đầu.
+
+Không có chuyện:
+Skill → +1 Stack
+Stack → tiêu
+
+Không.
+
+Thủy Thế là:
+
+giá trị tồn tại liên tục.
+
+X. MINOR TRÚC CƠ
+
+Mở thêm 3 Minor.
+
+Tổng cộng:
+
+6 Minor
+
+④ Thủy Nguyên
+
++5% Thủy Damage
+
+⑤ Lưu Tốc
+
++3% Cast Speed
+
+⑥ Cộng Lưu
+
++5% Reaction Effect
+
+Đây là stat đặc biệt quan trọng.
+
+Nó không chỉ là Damage.
+
+Ví dụ:
+
+Reaction	Cộng Lưu tác động vào
+Bốc Hơi	Slow / Damage Taken
+Độc Thủy	Poison Tick
+Thủy Lôi	Chain
+Đóng Băng	Freeze Duration
+Thủy Thổ	Root Duration
+XI. Pure Minor
+
+Tôi sẽ bổ sung thêm hai Minor chuyên Pure thay vì để toàn bộ Minor chỉ là stat chung.
+
+💧 Thủy Mạch
+
++2% Thủy Thế
+
+💧 Nhu Lưu
+
++2% Thủy Thế
+
+Hai node này có thể nằm trên nhánh Pure.
+
+Như vậy Trúc Cơ có:
+
+Minor chung
+├── Thủy Nguyên
+├── Lưu Tốc
+└── Cộng Lưu
+
+
+Minor Pure
+├── Thủy Mạch
+└── Nhu Lưu
+
+Tổng:
+
+5 Minor mới + 3 Minor Luyện Khí = 8 Minor khả dụng
+
+Nếu muốn giữ đúng giới hạn 6 Minor tổng cộng, thì tôi khuyên bỏ Nhu Lưu và giữ Thủy Mạch.
+
+Tôi nghiêng về phương án 6 Minor tổng cộng để cây không phình quá sớm.
+
+XII. CÂY THỦY TRÚC CƠ ĐỀ XUẤT
+                         💧 THỦY TIỄN
+                              │
+                     ┌────────┴────────┐
+                     │                 │
+                 MINOR CHUNG       MINOR CHUNG
+                     │                 │
+             ┌───────┴───┐         ┌───┴────────┐
+             │            │         │            │
+        💧 REACTION    💧 PURE      │            │
+             │            │         │            │
+          DẪN LƯU       TỤ THỦY    │            │
+             │            │         │            │
+        CỘNG LƯU       THỦY MẠCH   │            │
+
+Trong đó:
+
+Reaction Major
+
+Dẫn Lưu
+
+Pure Major
+
+Tụ Thủy
+
+Pure Minor
+
+Thủy Mạch
+
+XIII. HỆ THỐNG SKILL POINT
+
+Giữ nguyên quy tắc progression của game:
+
+Mỗi Tiểu Cảnh Giới → Skill Point.
+
+Node:
+
+Node	Cost
+Minor	1 SP
+Major	2 SP
+
+Như vậy người chơi phải quyết định:
+
+lấy stat trước
+
+hay:
+
+tích SP để lấy Major.
+
+XIV. GIỚI HẠN MAJOR
+
+Tại Trúc Cơ:
+
+chỉ chọn 1 Major Path của Thủy.
+
+Reaction Build
+Dẫn Lưu
+Pure Build
+Tụ Thủy
+
+Không đồng thời:
+
+Dẫn Lưu + Tụ Thủy
+
+Điều này làm hai hướng thực sự có ý nghĩa.
+
+XV. Trạng thái Thủy ở cuối Trúc Cơ
+💧 Reaction Thủy
+
+Gameplay:
+
+Thủy Tiễn
+    ↓
+Áp Thủy
+    ↓
+Reaction
+    ↓
+Dẫn Lưu duy trì Thủy
+    ↓
+Reaction tiếp
+
+Người chơi tập trung vào:
+
+Element Application + Reaction Effect + Control.
+
+💧 Pure Thủy
+
+Gameplay:
+
+Thủy Tiễn
+     ↓
+Thủy
+     ↓
+Thủy Thế
+     ↓
+Damage Mitigation
+     ↓
+Duy trì sức sống
+
+Người chơi tập trung vào:
+
+Thủy Damage + Thủy Thế + khả năng chống chịu.
+
+XVI. So sánh Hỏa và Thủy
+
+Đây là điều tôi muốn giữ làm nguyên tắc cho các hệ sau:
+
+	🔥 Hỏa	💧 Thủy
+Active	Hỏa Cầu	Thủy Tiễn
+Pure Mechanic	Hỏa Thế	Thủy Thế
+Pure Fantasy	Công kích	Phòng thủ
+Reaction Fantasy	Burst / Spread / Debuff	Control / Setup / Chain
+Resource	Hỏa Thế là mechanic tích lũy	Thủy Thế là defensive stat
+Reaction Stat	Reaction Effect	Reaction Effect
+Luyện Khí	Basic	Basic
+Trúc Cơ	Chọn Reaction/Pure	Chọn Reaction/Pure
+Hỏa
+
+“Ta càng đốt càng mạnh.”
+
+Thủy
+
+“Ta càng vận Thủy càng khó bị đánh xuyên.”
+
+Đây là hướng tôi khuyên chốt cho Thủy Luyện Khí → Trúc Cơ. Chưa nên thêm Pierce/Chain/Bounce/Explosion hay các Major biến đổi projectile ở hai cảnh giới này; chúng ta để các node đó làm phần thưởng cho giai đoạn Kim Đan trở lên, sau khi framework hai hệ đầu đã được kiểm chứng.

@@ -1,0 +1,410 @@
+⚙️ KIM HỆ — LUYỆN KHÍ → TRÚC CƠ
+1. Identity
+
+Kim = Xuất Huyết / DoT / xuyên kháng DoT / kết liễu.
+
+Kim có 3 lớp:
+
+Điểm Kim Thuật
+      ↓
+🩸 Xuất Huyết
+      ↓
+┌───────────────┐
+│               │
+Reaction       Pure
+│               │
+Huyết Dẫn     Kim Thế
+                ↓
+       nâng cấp Xuất Huyết
+2. Active — ⚙️ Điểm Kim Thuật
+
+Đây là Active cơ bản của Kim.
+
+Tags
+[KIM]
+[PROJECTILE]
+[DIRECT_DAMAGE]
+[BLEED_APPLICATION]
+Baseline — Luyện Khí
+Thuộc tính	Giá trị
+Direct Damage	100% Skill Power
+Target	Single
+Projectile	1
+Bleed Application	40%
+Bleed Duration	5s
+Bleed Tick	1/s
+Bleed Damage	20% Skill Power/tick
+
+Đánh trúng không đảm bảo Xuất Huyết.
+
+Đây là điểm khác biệt với Độc Chưởng.
+
+3. 🩸 Xuất Huyết
+
+Enemy state của Kim.
+
+Khi proc thành công:
+
++1 Xuất Huyết.
+
+Mỗi tầng:
+
+gây Kim DoT.
+
+Baseline:
+
+20% Skill Power / tick
+
+Max:
+
+5 tầng
+
+Refresh duration khi thêm stack.
+
+4. Reaction Matrix Kim
+Nguyên tố	Reaction
+🔥 Hỏa	Thiêu Huyết
+💧 Thủy	Không Reaction
+🌿 Mộc	Huyết Độc
+⚡ Lôi	Lôi Huyết
+🌪️ Phong	Không Reaction
+🪨 Thổ	Không Reaction
+5. 🔥⚙️ Thiêu Huyết
+
+Xuất Huyết + Hỏa:
+
+Gây Reaction Damage + giảm Max HP.
+
+Baseline:
+
+100% Skill Power Reaction Damage
+
+-3% Max HP
+
+Max HP Reduction có giới hạn riêng để tránh boss bị xóa HP quá nhanh.
+
+Identity:
+
+anti-high-HP
+
+Khác Độc Viêm:
+
+Độc Viêm → current HP.
+Thiêu Huyết → max HP.
+6. 🌿⚙️ Huyết Độc
+
+Độc + Xuất Huyết:
+
+Huyết Độc
+
+Hai DoT hợp nhất thành một DoT mạnh hơn.
+
+Poison + Bleed
+       ↓
+   Huyết Độc
+
+Không chạy song song hai DoT độc lập.
+
+7. ⚡⚙️ Lôi Huyết
+
+Mỗi lần Lôi gây:
+
+Ministun / Giật
+
+→ mục tiêu nhận:
+
++1 Xuất Huyết
+
+Ví dụ:
+
+⚡ Giật ×3
+      ↓
+🩸 Xuất Huyết +3
+
+Đây là Reaction stack enabler.
+
+8. 💧 / 🌪️ / 🪨
+
+Không Reaction.
+
+Điều này là chủ ý.
+
+Kim không cần phải tương tác với mọi hệ.
+
+9. Pure Path — ⚙️ KIM THẾ
+
+Đây là Major Core của Pure Kim.
+
+Kim Thế = self-buff trên nhân vật.
+
+Không phải enemy state.
+
+Không phải Reaction.
+
+Kim Thế
+
+Mỗi tầng tăng:
+
+Kim DoT Damage
+
+và:
+
+bỏ qua một phần DoT Resistance của mục tiêu.
+
+Baseline đề xuất
+
+Mỗi tầng:
+
++5% Kim DoT Damage
+
++3% bỏ qua DoT Resistance
+
+Max:
+
+5 tầng
+
+Tại 5 tầng:
+
++25% Kim DoT Damage
+15% DoT Resistance Penetration
+10. Vì sao dùng “DoT Resistance Penetration” thay vì “Effect Resistance”?
+
+Tôi khuyên gọi chính xác:
+
+Xuyên Kháng DoT
+
+Không phải:
+
+Xuyên Kháng Hiệu Ứng.
+
+Vì Kim không nên tự nhiên xuyên:
+
+Stun Resistance
+Root Resistance
+Freeze Resistance
+Blind Resistance.
+
+Kim chỉ có quyền:
+
+xuyên kháng sát thương theo thời gian.
+
+Nếu engine sau này có:
+
+dot_resistance
+
+thì:
+
+effective_dot_resistance
+=
+dot_resistance × (1 - kim_the_penetration)
+
+Ví dụ:
+
+Boss:
+
+40% DoT Resistance
+
+Player:
+
+15% DoT Resistance Penetration
+
+Effective:
+
+34%.
+
+11. Kim Thế không cần Reaction
+
+Điều kiện tích Kim Thế phải hoàn toàn Pure.
+
+Tôi đề xuất:
+
+Mỗi lần Điểm Kim Thuật áp thành công Xuất Huyết → +1 Kim Thế.
+
+Như vậy:
+
+Điểm Kim
+   ↓
+Proc Bleed
+   ↓
+🩸 Xuất Huyết
+   ↓
+⚙️ Kim Thế +1
+
+Điều này khiến Bleed Application Chance trở thành một phần gameplay quan trọng của Pure Kim.
+
+12. Có nên mất Kim Thế theo thời gian?
+
+Tôi đề xuất:
+
+Có decay, nhưng rất chậm.
+
+Ví dụ:
+
+Không áp Xuất Huyết mới trong 5 giây → mất 1 tầng.
+
+Như vậy Pure Kim phải duy trì áp lực.
+
+Không thể:
+
+tích 5 tầng rồi bỏ Kim hoàn toàn.
+
+Gameplay:
+
+Apply Bleed
+    ↓
+Kim Thế ↑
+    ↓
+Duy trì Bleed
+    ↓
+Kim Thế duy trì
+
+Identity:
+
+càng duy trì vết thương → Kim càng sắc bén.
+
+13. Pure Kim — 2 biến thể Xuất Huyết
+
+Kim Thế là core.
+
+Sau đó Pure Path có thể chọn một trong hai Major/nhánh nâng cấp Xuất Huyết.
+
+🩸 Huyết Lưu
+
+Xuất Huyết tick nhanh hơn.
+
+Ví dụ:
+
+1 tick/s → 2 tick/s
+
+Tổng duration giữ nguyên.
+
+Identity:
+
+DPS nhanh.
+
+🩸 Huyết Phá
+
+Xuất Huyết tích:
+
+Huyết Phá Charge
+
+Đủ 5:
+
+gây Burst.
+
+Identity:
+
+DoT → Burst.
+
+14. Cấu trúc cây
+                      ⚙️ ĐIỂM KIM THUẬT
+                             │
+                        🩸 XUẤT HUYẾT
+                             │
+                  ┌──────────┴──────────┐
+                  │                     │
+              REACTION                PURE
+                  │                     │
+             🩸 HUYẾT DẪN            ⚙️ KIM THẾ
+                  │                     │
+          ┌───────┼───────┐       ┌─────┴─────┐
+          │       │       │       │           │
+        🔥       🌿      ⚡     HUYẾT LƯU   HUYẾT PHÁ
+      Thiêu     Huyết    Lôi
+      Huyết      Độc    Huyết
+15. Minor Trúc Cơ
+Chung
+⚙️ Kim Khí
+
++5% Kim Damage
+
+🩸 Huyết Dẫn
+
++5% Bleed Damage
+
+🩸 Điểm Huyệt
+
++5% Bleed Application
+
+Reaction
+⚗️ Huyết Dẫn
+
++5% Reaction Effect
+
+Pure
+⚙️ Kim Thế
+
++1 Max Kim Thế
+
+🩸 Huyết Lưu
+
++10% Bleed Tick Rate
+
+🩸 Huyết Phá
+
+-1 stack yêu cầu để kích hoạt Burst
+
+16. Hai Pure build
+⚙️ Kim Thế — Huyết Lưu
+Bleed Application
+       ↓
+Kim Thế
+       ↓
++ Kim DoT
++ Xuyên DoT Resistance
+       ↓
+Huyết Lưu
+       ↓
+Tick cực nhanh
+
+Phong cách: DPS ổn định, kết liễu nhanh.
+
+⚙️ Kim Thế — Huyết Phá
+Bleed Application
+       ↓
+Kim Thế
+       ↓
++ Kim DoT
++ Xuyên DoT Resistance
+       ↓
+Huyết Phá
+       ↓
+tích tụ
+       ↓
+Burst
+
+Phong cách: DoT → burst.
+
+17. Luyện Khí → Trúc Cơ
+Luyện Khí
+
+Người chơi học:
+
+Điểm Kim Thuật → Xuất Huyết
+
+và bắt đầu đầu tư:
+
+Kim Damage
+Bleed Damage
+Bleed Application
+Trúc Cơ
+
+Mở lựa chọn:
+
+Huyết Dẫn — Reaction
+
+hoặc
+
+Kim Thế — Pure
+
+Đây là điểm phân nhánh thực sự.
+
+Chốt identity của Kim
+
+Mộc: Độc chắc chắn, thiên về Reaction/Poison.
+
+Kim: Xuất Huyết có xác suất, thiên về duy trì thương tổn và xuyên kháng DoT.
+
+Kim Thế: càng duy trì Xuất Huyết càng tăng Kim DoT Damage + DoT Resistance Penetration.
+
+Và Kim Thế là Pure Path, còn Huyết Độc / Thiêu Huyết / Lôi Huyết là Reaction Path.

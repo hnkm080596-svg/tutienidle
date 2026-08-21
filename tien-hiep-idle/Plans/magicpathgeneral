@@ -1,0 +1,546 @@
+PLAN SỬA TOÀN BỘ
+Phase 1 — Chuẩn hóa Status/Alignment/Reaction
+
+Trước tiên tách rõ 3 khái niệm:
+
+Alignment
+
+Là trạng thái nguyên tố đang "được đặt" trên mục tiêu và dùng để tạo reaction.
+
+Poison Alignment
+Petrify Alignment
+Burn Alignment
+...
+Debuff
+
+Hiệu ứng bất lợi đang tồn tại:
+
+Poison DoT
+Burn DoT
+Petrify
+Reaction Debuff
+...
+Buff
+
+Hiệu ứng có lợi trên entity:
+
+Mộc Thế
+Kim Thế
+Hỏa Thế
+Độc Căn
+Huyết Phá
+...
+
+Không được dùng một object duy nhất cho cả ba loại nếu hiện tại code đang làm vậy.
+
+Phase 2 — Reaction phải là một transaction
+
+Mỗi reaction thực hiện đúng 4 bước:
+
+1. Detect
+2. Consume
+3. Resolve
+4. Create Result
+
+Ví dụ:
+
+Alignment A
++
+Alignment B
+      ↓
+   REACTION
+      ↓
+remove A
+remove B
+      ↓
+calculate reaction result
+      ↓
+create NEW buff/debuff
+Không mutate source debuff
+
+Cấm kiểu:
+
+debuff.tickRate *= 2
+debuff.damage *= 1.5
+
+Reaction không được sửa trực tiếp object cũ.
+
+Phase 3 — Debuff tham gia reaction luôn bị consume
+
+Đây là rule global.
+
+Ví dụ:
+
+Burn + Poison
+
+thì:
+
+Burn      → CLEAR
+Poison    → CLEAR
+Reaction  → NEW DEBUFF
+
+Không được:
+
+Burn → giữ
+Poison → clear
+Reaction → add
+
+trừ khi reaction definition chủ động chỉ định một status không bị consume.
+
+Mặc định:
+
+mọi debuff/elemental status được dùng để tạo reaction đều bị consume.
+
+Phase 4 — Reaction Result là một Debuff/ Buff mới
+
+Ví dụ bạn nói:
+
+reaction tạo hiệu ứng x2 tick rate.
+
+Không lưu:
+
+Poison {
+    tickRate: 2x
+}
+
+Mà tạo:
+
+ReactionDebuff {
+    type: "SomeReaction"
+    tickRate: 2x
+}
+
+Ví dụ conceptual:
+
+Poison
+   +
+Fire
+   ↓
+consume Poison
+consume Fire
+   ↓
+Toxic Flame
+   ↓
+NEW DEBUFF
+tickRate = 2x
+
+Như vậy Toxic Flame là một status hoàn toàn độc lập.
+
+Phase 5 — Reaction Definition
+
+Reaction nên được khai báo dạng data.
+
+Ví dụ:
+
+ReactionDefinition {
+    id
+    elements
+    consumeAlignments
+    consumeDebuffs
+    resultDebuff
+    resultBuff
+    damage
+}
+
+Ví dụ:
+
+Mộc + Thổ
+
+definition:
+
+consume:
+    Poison
+    Petrify
+
+
+result:
+    Độc Căn → caster
+
+Nhưng lưu ý:
+
+Mộc + Thổ không được hiểu là "xóa Poison/Petrify bất kể chúng có phải hai alignment đang reaction hay không".
+
+Rule phải là:
+
+Các debuff/status tham gia reaction bị consume.
+
+Sau đó reaction-specific rule có thể có thêm:
+
+Mộc + Thổ:
+    remove Poison alignment
+    remove Petrify alignment
+
+Các alignment khác giữ nguyên.
+
+Phase 6 — Mộc + Thổ
+
+Chốt logic:
+
+Target:
+    Poison
+    Petrify
+    Burn
+    Wet
+
+
+Mộc + Thổ
+    ↓
+Poison + Petrify → consumed
+Burn + Wet → KEEP
+    ↓
+Caster receives Độc Căn
+
+Không clear toàn bộ target status.
+
+Kết quả
+Target:
+    Burn
+    Wet
+
+
+Caster:
+    Độc Căn
+Phase 7 — Mộc Thế
+
+Mộc Thế hoàn toàn nằm trong Pure system.
+
+Mộc Thế
+→ Pure Wood buff
+
+Không liên quan trực tiếp tới Độc Căn.
+
+Framework thống nhất:
+
+Pure Buff
+├── Kim Thế
+├── Hỏa Thế
+└── Mộc Thế
+
+Mỗi cái chỉ thay đổi modifier tương ứng.
+
+Phase 8 — Độc Căn
+
+Độc Căn là:
+
+Reaction Reward Buff
+
+được tạo khi:
+
+Mộc + Thổ
+
+reaction thành công.
+
+Không biến nó thành DoT.
+
+Không gắn nó vào target.
+
+Caster
+└── Độc Căn
+Phase 9 — DOT RES
+
+Thêm stat:
+
+dot_res
+
+Ý nghĩa duy nhất:
+
+giảm damage nhận từ DoT/debuff damage.
+
+Pipeline:
+
+Raw DoT Damage
+      ↓
+DOT RES
+      ↓
+Final Damage
+
+Ví dụ:
+
+100 damage
+30% DOT RES
+→ 70 damage
+
+Không ảnh hưởng:
+
+duration
+application chance
+stack
+tick rate
+Phase 10 — DoT phải biết source
+
+Mỗi DoT instance:
+
+DoT {
+    sourceId
+    targetId
+    effectId
+    damage
+    duration
+    tickRate
+}
+
+Tick:
+
+DoT
+ ↓
+DamageEvent
+ ↓
+sourceId
+targetId
+ ↓
+DOT RES
+ ↓
+final damage
+
+Điều này phục vụ trực tiếp cho Độc Căn / Poison recovery sau này.
+
+Phase 11 — Poison recovery
+
+Khi Poison gây damage:
+
+DoT tick
+ ↓
+DamageEvent
+ ↓
+resolve source
+ ↓
+damage target
+ ↓
+apply recovery to source
+
+Không được lấy attacker từ combat skill ban đầu vì DoT có thể tồn tại sau khi skill kết thúc.
+
+Source phải nằm trong DoT instance.
+
+Phase 12 — Lava Zone
+
+Lava Zone không phải DoT trên target.
+
+Nó là:
+
+Skill
+ ↓
+capture target position
+ ↓
+spawn Lava VFX
+ ↓
+spawn hit area
+
+Ví dụ:
+
+Target position = X,Y
+
+
+LavaZone {
+    position: X,Y
+    radius
+    duration
+    tickInterval
+}
+
+Mục tiêu bước vào vùng:
+
+enter/overlap
+ ↓
+damage
+
+VFX và damage area tách nhau:
+
+Lava VFX
+       ↕
+Lava HitArea
+
+Không để Phaser animation quyết định damage.
+
+Phase 13 — Huyết Phá
+
+Đưa hoàn toàn vào Buff System.
+
+Huyết Phá Buff
+├── currentCharge
+├── threshold
+└── triggerEffect
+
+Bleed tick:
+
+Bleed
+ ↓
+event
+ ↓
+Huyết Phá charge +
+ ↓
+threshold?
+
+Đạt threshold:
+
+consume/reset charge
+ ↓
+trigger NEW reaction-like payoff
+
+Không hard-code Huyết Phá trong Bleed.
+
+Phase 14 — Hỏa Thế
+
+Hỏa Thế cũng dùng Pure Buff framework.
+
+Không tạo mechanic riêng.
+
+Ví dụ:
+
+Hỏa Thế
+├── Burn Damage %
+└── Burn Duration %
+
+Sau này có thể thêm:
+
+Burn Stack Limit
+Fire DoT Penetration
+
+nhưng không nên mở quá nhiều stat cùng lúc.
+
+Mục tiêu là các Pure Path có cùng cấu trúc:
+
+Mộc Thế
+Kim Thế
+Hỏa Thế
+
+nhưng modifier khác nhau.
+
+Phase 15 — Phong/Lôi
+
+Không làm gameplay lúc này.
+
+Chỉ đảm bảo enum/data model không khóa hệ thống.
+
+Element:
+Metal
+Wood
+Water
+Fire
+Earth
+Wind
+Lightning
+
+Nhưng:
+
+Wind skills → Nguyên Anh
+Lightning skills → Nguyên Anh
+Wind reactions → Nguyên Anh
+Lightning reactions → Nguyên Anh
+
+Không đưa vào scope Luyện Khí/Trúc Cơ hiện tại.
+
+Phase 16 — Rule cực kỳ quan trọng cho Reaction Engine
+
+Tôi đề nghị Claude Code ghi thành invariant:
+
+Reaction không được mutate debuff cũ.
+
+Sai:
+
+oldDebuff.tickRate *= 2
+
+Đúng:
+
+consume(oldDebuff)
+
+
+create({
+    type: ReactionResult,
+    tickRate: 2x
+})
+Reaction không reuse duration của debuff cũ nếu design không nói rõ.
+
+Kết quả reaction là:
+
+NEW INSTANCE
+
+có:
+
+damage
+tick rate
+duration
+stack limit
+source
+target
+effect modifiers
+
+riêng.
+
+Phase 17 — Luyện Khí / Trúc Cơ scope
+Luyện Khí
+
+Chỉ cần ổn định:
+
+Alignment
+↓
+Reaction
+↓
+Consume
+↓
+New Result
+
+và:
+
+DoT source tracking
+DOT RES
+Mộc + Thổ
+Độc Căn
+các reaction cơ bản hiện có
+Trúc Cơ
+
+Mở:
+
+Mộc Thế
+Kim Thế
+Hỏa Thế
+Huyết Phá
+Lava Zone
+Poison recovery
+reaction debuff phức tạp hơn
+Kim Đan
+
+Mới bắt đầu tăng mạnh:
+
+Pure scaling
+Huyết Phá payoff
+Kim Thế penetration
+Hỏa Thế specialization
+reaction chain nâng cao
+Nguyên Anh
+
+Mở:
+
+Phong
+Lôi
+Mù
+Lôi Huyết
+Thủy Lôi
+các reaction Phong/Lôi.
+Thứ tự Claude Code nên sửa
+
+Tôi sẽ giao task theo thứ tự này, không làm ngược:
+
+01. Refactor Status / Alignment / Buff / Debuff model
+02. Refactor Reaction Engine thành transaction
+03. Reaction consume participating debuffs
+04. Reaction tạo NEW result buff/debuff instance
+05. Không mutate debuff cũ
+06. Fix Mộc + Thổ:
+      consume Poison + Petrify
+      preserve unrelated alignments
+      apply Độc Căn to caster
+07. Swap/fix Độc Căn và Mộc Thế theo đúng semantic
+08. Add DOT_RES
+09. Add sourceId vào DoT
+10. Fix DoT tick → DamageEvent → source resolution
+11. Implement Poison recovery
+12. Implement Lava Zone
+13. Implement Huyết Phá trong Buff System
+14. Implement Kim Thế
+15. Implement Hỏa Thế
+16. Balance Luyện Khí
+17. Balance Trúc Cơ
+18. Freeze Wind/Lightning until Nguyên Anh
+
+Đây là điểm tôi sẽ ưu tiên sửa trước tất cả balance: Reaction → consume → NEW result. Nếu primitive này đúng, các reaction kiểu x2 tick rate, đổi damage type, tăng duration, biến DoT thành burst, tạo buff cho caster đều trở thành data/content, thay vì mỗi reaction phải viết một logic đặc biệt.

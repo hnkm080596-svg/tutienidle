@@ -1,0 +1,155 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+import { useUiStore } from '@/stores/ui'
+import { useGameManager } from '@/composables/useGameState'
+
+// Combat UI Redesign mục 11 — CHỈ Play/Pause, không Auto (Auto Battle
+// giờ cấu hình TRƯỚC trận ở StageSelectPanel.vue, xem mục 15), không
+// tốc độ (mục 11-12 — hard rule "không speed control").
+const ui = useUiStore()
+const gameManager = useGameManager()
+
+// "Thoát Trận" (2026-08-21) — force về Động Phủ giữa chừng, có xác
+// nhận trước (showExitConfirm). CHỈ hiện cho trận Stage — Tribulation
+// (Đột Phá) có luồng thắng/thua riêng (useTribulation.ts), thoát ngang
+// giữa trận Kiếp dễ để lại state dở dang không đúng chỗ nào xử lý, xem
+// GameManager.abandonBattle()'s ghi chú.
+const showExitConfirm = ref(false)
+
+function confirmExit() {
+  gameManager.abandonBattle()
+
+  ui.isAuto = false
+  ui.exitCombatScene()
+  gameManager.eventBus.emit('combat_scene_exit', undefined)
+
+  showExitConfirm.value = false
+}
+</script>
+
+<template>
+  <div class="combat-control-bar">
+    <button type="button" class="combat-control-bar__play-pause" @click="ui.togglePause()">
+      {{ ui.isPaused ? '▶ Tiếp Tục' : '❚❚ Tạm Dừng' }}
+    </button>
+
+    <button
+      v-if="ui.combatOrigin === 'stage'"
+      type="button"
+      class="combat-control-bar__exit"
+      @click="showExitConfirm = true"
+    >
+      ✕ Thoát Trận
+    </button>
+
+    <div v-if="showExitConfirm" class="combat-control-bar__confirm-overlay" @click.self="showExitConfirm = false">
+      <div class="combat-control-bar__confirm">
+        <p class="combat-control-bar__confirm-text">Thoát trận và về Động Phủ? Trận đấu hiện tại sẽ bị huỷ.</p>
+
+        <div class="combat-control-bar__confirm-actions">
+          <button type="button" class="combat-control-bar__confirm-cancel" @click="showExitConfirm = false">Ở Lại</button>
+          <button type="button" class="combat-control-bar__confirm-ok" @click="confirmExit">Thoát Trận</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.combat-control-bar {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: var(--ink-950);
+  border-top: 1px solid var(--ink-line);
+  pointer-events: auto;
+}
+
+.combat-control-bar__play-pause {
+  padding: 8px 28px;
+  background: var(--gold-500);
+  color: var(--gold-ink);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.combat-control-bar__exit {
+  padding: 8px 20px;
+  background: var(--ink-800);
+  color: var(--text-secondary);
+  border: 1px solid var(--ink-line-soft);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.combat-control-bar__exit:hover {
+  border-color: var(--crimson);
+  color: var(--crimson);
+}
+
+.combat-control-bar__confirm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5, 5, 8, 0.72);
+}
+
+.combat-control-bar__confirm {
+  width: 320px;
+  padding: 20px;
+  background: var(--ink-900);
+  border: 1px solid var(--crimson);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-panel);
+  text-align: center;
+  font-family: var(--font-body);
+}
+
+.combat-control-bar__confirm-text {
+  margin: 0 0 16px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.combat-control-bar__confirm-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.combat-control-bar__confirm-cancel,
+.combat-control-bar__confirm-ok {
+  flex: 1 1 auto;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.combat-control-bar__confirm-cancel {
+  background: var(--ink-800);
+  color: var(--text-primary);
+  border: 1px solid var(--ink-line-soft);
+}
+
+.combat-control-bar__confirm-ok {
+  background: var(--crimson);
+  color: var(--ink-950);
+  border: none;
+}
+</style>

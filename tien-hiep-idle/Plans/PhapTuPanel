@@ -1,0 +1,849 @@
+PLAN FINAL — PANEL CON ĐƯỜNG PHÁP TU
+1. Mục tiêu
+
+Panel Pháp Tu phải giải quyết 4 việc:
+
+Chọn/đổi Hành đang phát triển
+Phân bổ điểm Pháp Tu
+Mở và nâng node trong cây kỹ năng
+Trang bị kỹ năng chiến đấu
+
+Nguyên tắc:
+
+Hành = hướng build
+Cây kỹ năng = nơi phát triển build
+Điểm Pháp Tu = tài nguyên nâng node
+Loadout = kỹ năng thực sự mang vào chiến đấu
+
+Không trộn 4 thứ này thành một UI duy nhất.
+
+2. Layout tổng thể
+
+Panel sử dụng layout 3 vùng chính + thanh điều khiển phía dưới.
+
+┌──────────────────────────────────────────────────────────────┐
+│                         HEADER                               │
+├──────────────┬───────────────────────────────┬───────────────┤
+│              │                               │               │
+│   HÀNH TU    │        CÂY KỸ NĂNG            │   LOADOUT     │
+│              │                               │               │
+│   20%        │            55~60%             │    20~25%     │
+│              │                               │               │
+├──────────────┴───────────────────────────────┴───────────────┤
+│                 NODE / ĐIỂM PHÁP TU                         │
+└──────────────────────────────────────────────────────────────┘
+
+Tỷ lệ mục tiêu:
+
+Header: 8–10%
+Main: 65–70%
+Bottom control: 20–25%
+
+Main:
+
+Left: ~20%
+Center: ~55–60%
+Right: ~20–25%
+
+Không chia 3 cột bằng nhau.
+
+3. HEADER
+
+Header cực gọn.
+
+PHÁP TU
+Con đường Ngũ Hành
+
+
+                    Luyện Khí · Tầng 9
+                    ✦ 12 Điểm Pháp Tu
+                    [Reset]
+Hiển thị
+Tên panel: PHÁP TU
+phụ đề: Con đường Ngũ Hành
+cảnh giới hiện tại
+số điểm còn lại
+nút Reset điểm
+
+Không đặt stat combat ở header.
+
+4. PANEL TRÁI — CON ĐƯỜNG NGŨ HÀNH
+
+Chiếm khoảng 20%.
+
+Đây là nơi lựa chọn Hành.
+
+5 Hành cơ bản
+🔥 Hỏa
+💧 Thủy
+🌳 Mộc
+⚔ Kim
+🪨 Thổ
+
+Phong và Lôi mở sau:
+
+🌪 Phong 🔒
+⚡ Lôi 🔒
+Card Hành
+
+Mỗi card:
+
+icon
+tên Hành
+level
+thanh tiến trình nhỏ
+trạng thái khóa/mở
+
+Ví dụ:
+
+┌──────────────┐
+│      🔥      │
+│     HỎA      │
+│     Lv.8     │
+│ ████████░░   │
+└──────────────┘
+
+Không hiển thị quá nhiều số.
+
+5. Hành không phải class cố định
+
+Đây là luật hệ thống.
+
+Người chơi không chọn một Hành rồi bị khóa vào nó.
+
+Có thể phân phối build:
+
+Hỏa 60%
+Thổ 30%
+Kim 10%
+
+hoặc:
+
+Hỏa 80%
+Thủy 20%
+
+hoặc build thuần:
+
+Hỏa 100%
+
+Vì vậy panel trái là:
+
+chọn Hành đang xem / phát triển
+
+không phải:
+
+chọn class nhân vật.
+
+6. PANEL GIỮA — CÂY KỸ NĂNG
+
+Đây là trọng tâm của toàn bộ UI.
+
+Chiếm khoảng 55–60%.
+
+Tên hiển thị:
+
+LINH MẠCH PHÁP TU
+
+Thay vì gọi đơn giản là “Skill Tree”, giúp UI có chất Tiên Hiệp hơn.
+
+6.1. Cấu trúc cây
+
+Mỗi Hành có một cây riêng.
+
+Ví dụ Hỏa:
+
+                 ◉
+              HỎA ĐẠO
+              /  |  \
+             /   |   \
+            ◉    ◉    ◉
+           / \   |   / \
+          ◉   ◉  ◉  ◉   ◉
+               \ | /
+                 ◉
+
+Không làm cây quá sâu.
+
+Mỗi Hành khoảng:
+
+1 node gốc
+3 nhánh chính
+mỗi nhánh 3–5 node
+1–2 node cuối
+
+Tổng khoảng 12–18 node/Hành là hợp lý.
+
+7. Ba nhánh chính của mỗi Hành
+
+Mỗi Hành có cùng framework nhưng hiệu ứng khác nhau.
+
+Nhánh 1 — Công Kích
+
+Tập trung:
+
+sát thương Hành
+sát thương kỹ năng
+xuyên
+chí mạng
+hiệu quả hiệu ứng nguyên tố
+Nhánh 2 — Pháp Lực
+
+Tập trung:
+
+MP
+MP/s
+tốc độ thi triển
+cooldown
+hiệu suất kỹ năng
+Nhánh 3 — Linh Hộ
+
+Tập trung:
+
+sinh tồn
+phòng thủ
+hồi phục
+giảm sát thương
+hiệu quả buff/debuff
+
+Như vậy người chơi có thể tạo:
+
+Hỏa Công Kích
+
+hoặc:
+
+Hỏa Pháp Lực
+
+hoặc:
+
+Hỏa Sinh Tồn
+
+hoặc mix cả ba.
+
+8. Node skill
+
+Node không chứa text dài.
+
+Chỉ:
+
+[ICON]
+Lv. 4
+
+Trạng thái:
+
+Locked
+○
+Available
+◉
+Learned
+◎
+Selected
+✦◎
+9. Đường nối node
+
+Đường nối cũng có trạng thái.
+
+Chưa mở
+
+Mờ.
+
+Đã mở đường
+
+Sáng nhẹ.
+
+Đường đang được sử dụng
+
+Có hiệu ứng linh khí chạy dọc đường rất nhẹ.
+
+Không dùng animation mạnh.
+
+Mục tiêu là tạo cảm giác:
+
+linh lực đang lưu chuyển trong kinh mạch.
+
+10. Click node
+
+Khi click node, khu vực dưới cây thay đổi thành thông tin node.
+
+Ví dụ:
+
+🔥 THIÊU ĐỐT
+
+
+Cấp 4 / 10
+
+
+Mỗi cấp:
++3% thời gian Thiêu Đốt
+
+
+Hiện tại:
++12%
+
+
+[ − ]   ●●●●○○○○○○   [ + ]
+
+
+Chi phí: 1 Điểm Pháp Tu
+
+Đây là nơi cộng/trừ điểm.
+
+Không cần panel stat riêng bên trái.
+
+11. Cơ chế cộng điểm
+
+Mỗi node có:
+
+currentLevel
+maxLevel
+
+Ví dụ:
+
+0 / 10
+
+Khi có điểm:
+
+[ + ]
+
+Khi đã đầu tư:
+
+[ − ]
+Luật
+Không thể vượt max level.
+Không thể nâng node chưa unlock.
+Node yêu cầu node cha đạt cấp tối thiểu → phải kiểm tra điều kiện.
+Trừ điểm trả lại điểm đã đầu tư.
+Reset toàn bộ bằng nút Reset.
+12. Điểm Pháp Tu
+
+Header hiển thị:
+
+✦ 12
+
+Bottom panel hiển thị rõ hơn:
+
+ĐIỂM PHÁP TU CÒN LẠI
+12
+
+Điểm kiếm được dựa trên tiểu cảnh giới.
+
+Theo plan trước:
+
+Mỗi tiểu cảnh giới tăng → +1 Skill Point.
+
+Ví dụ:
+
+Luyện Khí 1 → +1
+Luyện Khí 2 → +1
+Luyện Khí 3 → +1
+...
+
+Không cộng điểm theo từng Hành.
+
+Điểm là tài nguyên chung của Pháp Tu.
+
+13. PANEL PHẢI — KỸ NĂNG TRANG BỊ
+
+Chiếm khoảng 20–25%.
+
+Đây là Loadout.
+
+Tên:
+
+PHÁP THUẬT ĐANG VẬN HÀNH
+
+Không gọi là Inventory.
+
+13.1. Skill slot
+
+Ví dụ:
+
+┌──────────────────┐
+│       🔥         │
+│                  │
+│     HỎA CẦU      │
+│                  │
+│       [1]        │
+└──────────────────┘
+
+Slot lớn hơn ItemSlot thông thường.
+
+Mỗi slot:
+
+icon skill
+tên
+phím/slot
+cooldown nếu có
+13.2. Slot trống
+┌──────────────────┐
+│                  │
+│        +         │
+│                  │
+│    SLOT TRỐNG    │
+│                  │
+└──────────────────┘
+
+Click → mở danh sách skill có thể equip.
+
+14. Không đặt toàn bộ skill vào cây
+
+Đây là quy tắc quan trọng.
+
+Cây Pháp Tu
+
+Chứa:
+
+passive
+modifier
+elemental effect
+stat
+enhancement
+Loadout
+
+Chứa:
+
+Active Skill
+Special Skill
+Rage/Ultimate Skill nếu hệ thống có
+
+Ví dụ:
+
+Cây:
+🔥 +10% Fire Damage
+🔥 +20% Burn Duration
+🔥 +5% Spell Power
+
+
+Loadout:
+🔥 Hỏa Cầu
+🔥 Hỏa Long
+🔥 Liệt Diễm
+
+Như vậy rất rõ ràng.
+
+15. Equip skill
+
+Khi click slot:
+
+CHỌN PHÁP THUẬT
+
+
+[🔥 Hỏa Cầu]
+[🔥 Hỏa Long]
+[🔥 Liệt Diễm]
+[🔥 Hỏa Vũ]
+
+Skill không phù hợp build:
+
+vẫn có thể hiển thị
+nhưng bị khóa nếu chưa unlock.
+
+Skill chưa học:
+
+🔒 Chưa lĩnh ngộ
+
+Skill đã học:
+
+✓ Có thể trang bị
+16. Số lượng skill slot
+
+Không mở quá nhiều từ đầu.
+
+Ví dụ:
+
+Luyện Khí
+Skill Slot 1
+Skill Slot 2
+Trúc Cơ
+Skill Slot 1
+Skill Slot 2
+Skill Slot 3
+Kim Đan
+Skill Slot 1
+Skill Slot 2
+Skill Slot 3
+Skill Slot 4
+Cảnh giới cao
+
+tiếp tục mở.
+
+Điều này tạo progression rõ ràng.
+
+17. Bottom Panel
+
+Bottom là Node Inspector + Point Controller.
+
+Không phải bảng stat.
+
+Ví dụ:
+
+┌──────────────────────────────────────────────────────────────┐
+│ 🔥 THIÊU ĐỐT                              CẤP 4 / 10         │
+│                                                              │
+│ Tăng thời gian hiệu ứng Thiêu Đốt.                           │
+│                                                              │
+│        [ − ]       ●●●●○○○○○○       [ + ]                  │
+│                                                              │
+│        Hiện tại +12%                  Còn 8 điểm             │
+└──────────────────────────────────────────────────────────────┘
+
+Nếu không chọn node:
+
+Chọn một node trong Linh Mạch để xem chi tiết.
+18. Elemental identity
+
+Mỗi Hành chỉ cần một hiệu ứng đặc trưng.
+
+Hành	Hiệu ứng chính
+🔥 Hỏa	Thiêu đốt
+💧 Thủy	Làm chậm / suy yếu
+🌳 Mộc	Hồi phục
+⚔ Kim	Xuyên
+🪨 Thổ	Giảm sát thương
+🌪 Phong	Tốc độ
+⚡ Lôi	Choáng
+
+Không xây hệ thống reaction phức tạp trong panel này.
+
+Reaction nếu có sẽ thuộc combat system, không phải UI Pháp Tu.
+
+19. Unlock Hành
+
+Hành mở theo đại cảnh giới.
+
+Ví dụ:
+
+Luyện Khí
+→ Hỏa / Thủy / Mộc / Kim / Thổ
+
+
+Nguyên Anh
+→ Phong
+
+
+Hóa Thần
+→ Lôi
+
+Có thể thay đổi mốc sau khi balance.
+
+UI:
+
+🌪 PHONG
+🔒 Mở tại Nguyên Anh
+
+Không cho người chơi click vào cây bị khóa.
+
+20. Số lượng Hành đang sử dụng
+
+Hành có thể tồn tại cùng build nhưng số Hành active bị giới hạn.
+
+Ví dụ:
+
+Luyện Khí     1 Hành
+Trúc Cơ       2 Hành
+Kim Đan       3 Hành
+Nguyên Anh    4 Hành
+...
+
+Điều này tạo progression mà không cần khóa toàn bộ skill.
+
+21. Build hiện tại
+
+Có thể thêm một dòng nhỏ phía dưới header hoặc trên panel trái:
+
+BUILD
+
+
+🔥 Hỏa  Lv.8
+🪨 Thổ  Lv.3
+⚔ Kim   Lv.1
+
+Không cần biểu đồ phức tạp.
+
+Nếu muốn trực quan:
+
+🔥 ████████████ 60%
+🪨 ██████       30%
+⚔ ██            10%
+22. Tooltip
+
+Mọi node và skill đều dùng tooltip.
+
+Node tooltip:
+
+🔥 Thiêu Đốt
+Cấp 4 / 10
+
+
++3% thời gian Thiêu Đốt mỗi cấp
+
+
+Điều kiện:
+Hỏa Đạo Lv.3
+
+
+Chi phí:
+1 Điểm Pháp Tu
+
+Skill tooltip:
+
+🔥 Hỏa Cầu
+
+
+Pháp thuật chủ động
+
+
+Sát thương: 120% Pháp Công
+Gây Thiêu Đốt: 3s
+Cooldown: 2.5s
+
+Không nhồi thông tin vào UI chính.
+
+23. Visual hierarchy
+
+Thứ tự mắt nhìn:
+
+1 — Cây kỹ năng
+
+Lớn nhất, nổi bật nhất.
+
+2 — Hành đang chọn
+
+Icon + aura.
+
+3 — Skill Loadout
+
+Các skill đang equip.
+
+4 — Node detail
+
+Chỉ xuất hiện khi cần.
+
+5 — Số liệu
+
+Tối giản.
+
+24. Style UI
+
+Theo hướng game hiện tại:
+
+Mặc họa / Tiên Hiệp / Mực & Vàng
+
+Background
+tối
+texture giấy/mực
+vignette nhẹ
+không quá nhiều hoa văn
+Border
+vàng đồng
+xám đá
+không neon
+Node
+ngọc
+phù văn
+trận nhãn
+Active
+ánh sáng vàng nhẹ
+linh khí chuyển động nhẹ
+Hành
+
+Mỗi Hành có accent riêng nhưng không biến UI thành 7 màu sặc sỡ.
+
+Ví dụ:
+
+Hỏa → đỏ/cam trầm
+Thủy → xanh lam trầm
+Mộc → xanh lục trầm
+Kim → trắng/vàng
+Thổ → nâu/vàng đất
+25. Animation
+
+Chỉ cần 4 animation:
+
+Node unlock
+
+Linh khí chạy từ node cha → node con.
+
+Node selected
+
+Glow nhẹ.
+
+Equip skill
+
+Skill icon bay nhẹ vào slot.
+
+Switch Hành
+
+Cây skill fade/slide rất ngắn.
+
+Không dùng animation nặng vì đây là UI idle game.
+
+26. Responsive
+
+Không cố định số node theo pixel.
+
+Cây skill phải nằm trong viewport riêng:
+
+skill-tree-viewport
+        ↓
+skill-tree-canvas
+
+Canvas có thể lớn hơn viewport.
+
+Cho phép:
+
+pan nhẹ
+zoom nếu thật sự cần
+
+Nhưng ưu tiên fit toàn bộ cây ở độ phân giải game chuẩn.
+
+Không để node bị cắt.
+
+27. Component structure đề xuất
+
+Nếu triển khai Vue:
+
+CultivationPathPanel.vue
+│
+├── PathHeader.vue
+│
+├── ElementPathList.vue
+│   └── ElementPathCard.vue
+│
+├── SkillTree.vue
+│   ├── SkillTreeNode.vue
+│   └── SkillTreeConnection.vue
+│
+├── SkillLoadout.vue
+│   └── SkillEquipSlot.vue
+│
+└── SkillNodeInspector.vue
+
+Logic:
+
+Pháp Tu State
+├── availableSkillPoints
+├── activeElements
+├── elementLevels
+├── unlockedNodes
+├── nodeLevels
+└── equippedSkills
+
+UI không tự xử lý progression logic.
+
+28. Luồng sử dụng
+
+Người chơi vào Pháp Tu:
+
+1. Nhìn thấy build hiện tại
+        ↓
+2. Chọn Hỏa
+        ↓
+3. Cây Hỏa xuất hiện
+        ↓
+4. Click node
+        ↓
+5. Bottom panel hiện thông tin
+        ↓
+6. Nhấn +
+        ↓
+7. Node tăng cấp
+        ↓
+8. Node tiếp theo mở
+        ↓
+9. Mở skill mới
+        ↓
+10. Equip skill bên phải
+
+Đây là flow rất tự nhiên.
+
+29. Trạng thái panel
+
+Cần xử lý đầy đủ:
+
+Normal
+
+Hiển thị build hiện tại.
+
+Node selected
+
+Hiển thị inspector.
+
+Node locked
+
+Hiển thị điều kiện.
+
+No skill slot
+
+Hiển thị slot trống.
+
+Skill locked
+
+Tooltip giải thích điều kiện.
+
+No skill points
+
+Nút + disabled.
+
+Reset
+
+Có confirmation:
+
+Hoàn trả toàn bộ điểm Pháp Tu?
+
+Không reset skill đã unlock nếu game design không yêu cầu; chỉ reset điểm đầu tư.
+
+30. Những thứ KHÔNG làm
+
+Để tránh Claude Code làm UI thành mớ hỗn độn, chốt rõ:
+
+Không dùng 7 cây skill hiển thị cùng lúc.
+Không dùng 3 cột bằng nhau.
+Không đưa toàn bộ stat vào panel.
+Không nhét mô tả dài vào node.
+Không nhét active skill vào skill tree.
+Không dùng inventory slot nhỏ cho skill.
+Không làm quá nhiều màu neon.
+Không làm cây skill chiếm toàn màn hình nhưng thiếu chỗ equip.
+Không tạo scrollbar dọc cho toàn panel nếu có thể tránh.
+Không hard-code vị trí từng node theo viewport.
+Không để logic progression nằm trong component UI.
+31. Bố cục final cần Claude Code thực hiện
+╔══════════════════════════════════════════════════════════════╗
+║                        PHÁP TU                              ║
+║             Con đường Ngũ Hành                               ║
+║                                      Luyện Khí · ✦ 12        ║
+╠══════════════╦══════════════════════════════╦════════════════╣
+║              ║                              ║                ║
+║  CON ĐƯỜNG   ║       LINH MẠCH PHÁP TU     ║  PHÁP THUẬT    ║
+║              ║                              ║   VẬN HÀNH     ║
+║      🔥      ║              ◉               ║                ║
+║     HỎA      ║             / \              ║    ╭──────╮    ║
+║     Lv.8     ║            ◉   ◉             ║    │  🔥  │    ║
+║              ║           / \   \            ║    │ HỎA  │    ║
+║      💧      ║          ◉   ◉   ◉           ║    │ CẦU  │    ║
+║     THỦY     ║               │              ║    ╰──────╯    ║
+║     Lv.2     ║               ◉              ║                ║
+║              ║                              ║    ╭──────╮    ║
+║      🪨      ║                              ║    │  🔥  │    ║
+║     THỔ      ║                              ║    │ HỎA  │    ║
+║     Lv.1     ║                              ║    │ LONG │    ║
+║              ║                              ║    ╰──────╯    ║
+║      ⚔ 🔒    ║                              ║                ║
+║      🌳 🔒   ║                              ║      ＋         ║
+║              ║                              ║                ║
+╠══════════════╩══════════════════════════════╩════════════════╣
+║ 🔥 THIÊU ĐỐT                                  Lv.4 / 10      ║
+║ Tăng thời gian Thiêu Đốt +3% mỗi cấp                       ║
+║                                                              ║
+║       [ − ]      ●●●●○○○○○○      [ + ]      ✦ 8 điểm       ║
+╚══════════════════════════════════════════════════════════════╝
+Chốt thiết kế
+
+Panel Pháp Tu = 3 tầng chức năng:
+
+TRÁI: Tôi tu Hành nào?
+GIỮA: Tôi đang phát triển build như thế nào?
+PHẢI: Tôi mang kỹ năng nào vào combat?
+DƯỚI: Tôi đang dùng điểm vào node nào?
+
+Đây là cấu trúc tôi khuyên dùng làm baseline chính thức để đưa vào Claude Code. Nó đủ chỗ cho progression về sau mà không phải redesign lại panel khi thêm Phong, Lôi, cảnh giới mới, skill mới và nhiều slot kỹ năng hơn.

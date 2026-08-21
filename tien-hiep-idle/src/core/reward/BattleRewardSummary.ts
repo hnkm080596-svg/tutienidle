@@ -1,0 +1,32 @@
+// Combat UI Redesign — trước đây không có nơi nào gom lại "trận này
+// kiếm được gì": GameManager.grantItemDrops()/giveReward() cộng thẳng
+// vào bag/player mỗi lần quái chết, chỉ để lại toast rời rạc
+// (pendingNotifications, bị xoá mỗi tick). CombatVictoryPanel/
+// CombatDefeatPanel cần 1 bản TÍCH LUỸ theo từng trận để hiện lại lúc
+// kết thúc — accumulator này sống trong GameManager, reset mỗi khi 1
+// trận mới bắt đầu (xem GameManager.startBattle()).
+export interface BattleRewardSummary {
+  experience: number
+
+  cultivation: number
+
+  spiritStone: number
+
+  items: BattleRewardItem[]
+}
+
+export type BattleRewardItemKind = 'material' | 'pill' | 'equipment' | 'technique'
+
+export interface BattleRewardItem {
+  itemId: string
+
+  kind: BattleRewardItemKind
+
+  name: string
+
+  amount: number
+}
+
+export function createEmptyBattleRewardSummary(): BattleRewardSummary {
+  return { experience: 0, cultivation: 0, spiritStone: 0, items: [] }
+}

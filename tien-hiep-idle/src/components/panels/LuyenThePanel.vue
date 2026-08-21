@@ -1,0 +1,318 @@
+<script setup lang="ts">
+// Realm Passive & Pressure System (2026-08-20) — panel Luyện Thể, độc
+// quyền Phàm Nhân, cùng pattern overlay với SkillPathPanel.vue/
+// TechniquePanel.vue/RealmPassivePanel.vue. Đầu tư Tinh Hoa Phàm Thể
+// (materialBag) vào tầng đang dở qua GameManager.investLuyenThe() (xem
+// core/realm/LuyenTheSystem.ts) — tuần tự, đầy 1 tầng mới sang tầng kế.
+import { computed } from 'vue'
+import { useUiStore } from '@/stores/ui'
+import { usePlayerStore } from '@/stores/player'
+import { useGameManager, useStateVersion } from '@/composables/useGameState'
+import { LUYEN_THE_TIERS, TINH_HOA_PHAM_THE_MATERIAL_ID } from '@/data/realm/LuyenThe'
+import { getActiveTierIndex, getTierCap, computeBreakthroughGrade, isActiveTierUnlocked } from '@/core/realm/LuyenTheSystem'
+import { statLabel } from '@/core/stats/StatLabels'
+import { formatNumber } from '@/core/format/NumberFormatter'
+
+const ui = useUiStore()
+const player = usePlayerStore()
+const gameManager = useGameManager()
+const { stateVersion, bumpState } = useStateVersion()
+
+const isPhamNhan = computed(() => {
+  stateVersion.value
+
+  return player.realmId === 'pham_nhan'
+})
+
+const heldTinhHoa = computed(() => {
+  stateVersion.value
+
+  return gameManager.materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)
+})
+
+const activeTierIndex = computed(() => {
+  stateVersion.value
+
+  return getActiveTierIndex(player.$state)
+})
+
+const previewGrade = computed(() => {
+  stateVersion.value
+
+  return computeBreakthroughGrade(player.$state)
+})
+
+const tierUnlocked = computed(() => {
+  stateVersion.value
+
+  return isActiveTierUnlocked(player.$state)
+})
+
+const tierRows = computed(() => {
+  stateVersion.value
+
+  return LUYEN_THE_TIERS.map((tier, index) => {
+    const cap = getTierCap(index)
+
+    let progress = 0
+    let status: 'done' | 'active' | 'realm_locked' | 'locked' = 'locked'
+
+    if (index < player.luyenTheCompletedTiers) {
+      progress = cap
+      status = 'done'
+    } else if (index === player.luyenTheCompletedTiers) {
+      progress = player.luyenTheCurrentTierProgress
+      // requiredTang gate (2026-08-20) — tầng ĐÚNG lượt đầu tư nhưng
+      // chưa đạt Phàm Nhân tầng yêu cầu vẫn hiện riêng biệt (không lẫn
+      // với các tầng sau, còn chưa tới lượt hoàn toàn).
+      status = player.realmLevel >= tier.requiredTang ? 'active' : 'realm_locked'
+    }
+
+    return {
+      id: tier.id,
+      name: tier.name,
+      description: tier.description,
+      statLabels: tier.stats.map(stat => statLabel(stat)).join(' / '),
+      requiredTang: tier.requiredTang,
+      progress,
+      cap,
+      percent: cap > 0 ? Math.min(100, (progress / cap) * 100) : 0,
+      status,
+    }
+  })
+})
+
+const canInvest = computed(() => activeTierIndex.value !== undefined && tierUnlocked.value && heldTinhHoa.value > 0)
+
+function invest() {
+  if (!canInvest.value) {
+    return
+  }
+
+  gameManager.investLuyenThe(player.$state)
+  bumpState()
+}
+
+function close() {
+  ui.standalonePanel = null
+}
+</script>
+
+<template>
+  <div v-if="ui.standalonePanel === 'luyen_the'" class="luyen-the-panel" @click.self="close">
+    <div class="luyen-the-panel__card">
+      <div class="luyen-the-panel__header">
+        <h3 class="luyen-the-panel__title">Luyện Thể</h3>
+
+        <button type="button" class="luyen-the-panel__close" @click="close">✕</button>
+      </div>
+
+      <template v-if="isPhamNhan">
+        <div class="luyen-the-panel__summary">
+          <span>Tinh Hoa Phàm Thể: {{ formatNumber(heldTinhHoa) }}</span>
+          <span>Bậc Nhập Đạo (dự kiến): {{ previewGrade }}/6</span>
+        </div>
+
+        <div class="luyen-the-panel__tiers">
+          <div
+            v-for="row in tierRows"
+            :key="row.id"
+            class="luyen-the-panel__tier"
+            :class="`luyen-the-panel__tier--${row.status}`"
+          >
+            <div class="luyen-the-panel__tier-head">
+              <span class="luyen-the-panel__tier-name">{{ row.name }}</span>
+              <span class="luyen-the-panel__tier-stat">{{ row.statLabels }}</span>
+            </div>
+
+            <p class="luyen-the-panel__tier-desc">{{ row.description }}</p>
+
+            <p v-if="row.status === 'realm_locked'" class="luyen-the-panel__tier-lock">
+              Khóa — cần Phàm Nhân tầng {{ row.requiredTang }}
+            </p>
+
+            <div class="luyen-the-panel__tier-bar">
+              <div class="luyen-the-panel__tier-fill" :style="{ width: `${row.percent}%` }" />
+            </div>
+
+            <span class="luyen-the-panel__tier-progress">
+              {{ formatNumber(row.progress) }} / {{ formatNumber(row.cap) }}
+            </span>
+          </div>
+        </div>
+
+        <button type="button" class="luyen-the-panel__invest" :disabled="!canInvest" @click="invest">
+          Đầu Tư Tinh Hoa
+        </button>
+      </template>
+
+      <template v-else>
+        <div class="luyen-the-panel__summary">
+          <span>Bậc Nhập Đạo đã chốt: {{ player.breakthroughGrade }}/6</span>
+          <span>Tầng đã hoàn thành: {{ player.luyenTheCompletedTiers }}/6</span>
+        </div>
+
+        <p class="luyen-the-panel__empty">Đã hoàn thành Lễ Nhập Môn — Luyện Thể không còn thay đổi được nữa.</p>
+      </template>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.luyen-the-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 1800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 13, 0.72);
+}
+
+.luyen-the-panel__card {
+  width: min(560px, 90%);
+  max-height: 85%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px 24px;
+  background: var(--ink-900);
+  border: 1px solid var(--gold-500);
+  box-shadow: var(--shadow-panel);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  color: var(--text-primary);
+}
+
+.luyen-the-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.luyen-the-panel__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  letter-spacing: 0.06em;
+  color: var(--gold-500);
+}
+
+.luyen-the-panel__close {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: var(--ink-800);
+  color: var(--text-secondary);
+  border: 1px solid var(--ink-line-soft);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.luyen-the-panel__summary {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+}
+
+.luyen-the-panel__tiers {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.luyen-the-panel__tier {
+  padding: 8px 10px;
+  background: var(--ink-800);
+  border: 1px solid var(--ink-line-soft);
+  border-radius: var(--radius-sm);
+  opacity: 0.55;
+}
+
+.luyen-the-panel__tier--active {
+  opacity: 1;
+  border-color: var(--gold-500);
+}
+
+.luyen-the-panel__tier--realm_locked {
+  opacity: 0.8;
+  border-color: var(--ink-line-soft);
+}
+
+.luyen-the-panel__tier--done {
+  opacity: 1;
+}
+
+.luyen-the-panel__tier-lock {
+  margin: 2px 0 6px;
+  font-size: 0.68rem;
+  color: var(--crimson);
+}
+
+.luyen-the-panel__tier-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.luyen-the-panel__tier-name {
+  font-weight: 600;
+  color: var(--gold-500);
+  font-size: 0.85rem;
+}
+
+.luyen-the-panel__tier-stat {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.luyen-the-panel__tier-desc {
+  margin: 2px 0 6px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.luyen-the-panel__tier-bar {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--ink-700);
+  overflow: hidden;
+}
+
+.luyen-the-panel__tier-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--jade), var(--gold-500));
+}
+
+.luyen-the-panel__tier-progress {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.luyen-the-panel__invest {
+  padding: 10px;
+  background: var(--ink-800);
+  color: var(--gold-500);
+  border: 1px solid var(--gold-500);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+.luyen-the-panel__invest:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.luyen-the-panel__empty {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 8px 4px;
+  margin: 0;
+}
+</style>

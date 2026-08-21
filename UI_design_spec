@@ -1,0 +1,1058 @@
+TIÊN HIỆP IDLE — FINAL UI / UX IMPLEMENTATION PLAN
+0. MỤC TIÊU
+
+Thiết kế UI cho game Tiên Hiệp Idle theo phong cách:
+
+Dark Xianxia / Ancient Cultivation / Fantasy Game UI
+
+UI phải có cảm giác là một game tu tiên hoàn chỉnh, không phải một ứng dụng Vue chứa nhiều panel.
+
+Nguyên tắc lớn
+Mỗi hệ thống có bố cục riêng dựa trên bản chất gameplay.
+Không dùng một template dashboard cho tất cả màn hình.
+World/scene được dùng để thể hiện hệ thống khi có thể.
+UI hỗ trợ gameplay, không được thay thế gameplay.
+Item presentation phải thống nhất toàn game.
+Visual hierarchy quan trọng hơn việc nhồi nhiều thông tin.
+Ưu tiên hình ảnh, icon, object và khoảng trống hơn text.
+Không tạo UI mới nếu component tương ứng đã tồn tại.
+Không thay đổi game logic khi chỉ được yêu cầu làm UI.
+1. UI PHILOSOPHY
+Không làm
+┌────────────────────────────────────┐
+│ Header                             │
+├─────────────┬──────────────────────┤
+│ Menu        │ Card                 │
+│             │ Card                 │
+│ Menu        │ Card                 │
+│             │ Card                 │
+└─────────────┴──────────────────────┘
+
+Đây là dashboard, không phải UI mục tiêu của game.
+
+Phải làm
+
+Mỗi màn hình phải có:
+
+Focal Point
+    ↓
+Secondary Information
+    ↓
+Contextual Controls
+
+Ví dụ:
+
+Luyện Đan
+
+ĐAN LÔ
+  ↓
+Công thức + nguyên liệu
+  ↓
+Nút luyện
+
+Thám Hiểm
+
+BẢN ĐỒ
+  ↓
+Khu vực đang chọn
+  ↓
+Reward + bắt đầu
+
+Kỹ năng
+
+SKILL TREE
+  ↓
+Node đang chọn
+  ↓
+Skill information
+2. DESIGN HIERARCHY
+
+Mọi màn hình phải có 3 tầng thông tin.
+
+Tier 1 — Primary
+
+Thứ người chơi cần nhìn đầu tiên.
+
+Ví dụ:
+
+Nhân vật.
+Đan lô.
+Skill tree.
+Formation.
+World map.
+Item đang rèn.
+Tier 2 — Secondary
+
+Thông tin hỗ trợ:
+
+Stats.
+Progress.
+Materials.
+Requirements.
+Resource.
+Tier 3 — Contextual
+
+Chỉ xuất hiện khi cần:
+
+Tooltip.
+Hover information.
+Confirmation.
+Requirement.
+Description.
+
+Không đưa Tier 3 lên màn hình thường trực nếu không cần.
+
+3. ITEM SYSTEM — LUẬT TOÀN GAME
+
+Đây là rule quan trọng nhất.
+
+Mọi item đều dùng ItemSlot
+
+Không tạo:
+
+InventoryItem
+EquipmentItem
+CraftingItem
+RewardItem
+
+với các UI khác nhau nếu chúng thực chất là cùng một item.
+
+Dùng:
+
+ItemSlot
+
+và truyền context/config.
+
+ItemSlot phải hỗ trợ
+Icon.
+Quality frame.
+Quality color.
+Stack count.
+Level.
+Lock state.
+Selected state.
+Hover state.
+Empty state.
+Disabled state.
+4. ITEM QUALITY
+
+Game sử dụng 9 bậc phẩm chất.
+
+Phẩm chất phải được thể hiện nhất quán bằng:
+
+Frame.
+Border.
+Glow nếu phù hợp.
+Màu tên item.
+
+Không để mỗi screen tự định nghĩa màu phẩm chất.
+
+Tạo một nguồn dữ liệu duy nhất:
+
+EquipmentQuality
+
+UI chỉ đọc từ hệ thống này.
+
+5. ITEM TOOLTIP
+BẮT BUỘC
+
+Mọi item slot khi hover phải hiển thị:
+
+ItemSlot
+    ↓
+ItemTooltip
+
+Tooltip hiển thị:
+
+Tên item.
+Phẩm chất.
+Icon.
+Level.
+Base stat.
+Affix.
+Requirement.
+Set.
+Special effect.
+Description.
+Các thông tin liên quan khác nếu item type hỗ trợ.
+Không được
+
+Tạo một Item Detail Panel riêng chỉ để đọc thông tin item.
+
+Ví dụ Inventory:
+
+SAI
+
+Grid  | Item Detail
+
+ĐÚNG
+
+Grid
+ ↓
+Tooltip khi hover
+6. TOOLTIP BEHAVIOR
+
+Tooltip phải là một hệ thống dùng chung.
+
+TooltipManager
+      ↓
+ItemTooltip
+SkillTooltip
+BuildingTooltip
+...
+
+ItemTooltip:
+
+Không làm layout reflow.
+Không làm parent thay đổi kích thước.
+Không bị overflow: hidden cắt mất.
+Tự động chọn hướng hiển thị.
+Không vượt viewport.
+Có delay hover ngắn.
+Có transition nhẹ.
+Giữ vị trí ổn định khi di chuyển chuột giữa slot và tooltip nếu cần interaction.
+
+Ưu tiên:
+
+top/right
+↓
+bottom/right
+↓
+top/left
+↓
+bottom/left
+
+tùy khoảng trống thực tế.
+
+7. GLOBAL COMPONENT SYSTEM
+
+Ưu tiên xây các component dùng chung trước.
+
+UI/
+├── ItemSlot
+├── ItemTooltip
+├── QualityFrame
+├── SkillNode
+├── Building
+├── GamePanel
+├── GameButton
+├── TabBar
+├── ProgressBar
+├── ResourceDisplay
+├── IconButton
+├── ConfirmModal
+└── TooltipManager
+
+Không tạo component duplicate chỉ vì một screen có style hơi khác.
+
+8. ĐỘNG PHỦ — HOME WORLD
+
+Động Phủ là home screen chính.
+
+Nó không phải menu.
+
+Concept
+
+Người chơi đang thực sự ở trong động phủ.
+
+Trung tâm:
+
+Nhân vật ngồi xếp bằng tu luyện tại Linh Nhãn.
+
+Layout
+┌────────────────────────────────────────────────────────────┐
+│ ☰      Resources                              Realm     ⚙ │
+│                                                            │
+│                       TÀNG KINH CÁC                        │
+│                                                            │
+│        ĐAN PHÒNG                         PHÙ VIỆN          │
+│                                                            │
+│                         🧘                                 │
+│                      LINH NHÃN                             │
+│                                                            │
+│        KHÍ ĐƯỜNG                         TRẬN ĐÀI          │
+│                                                            │
+│                    CỔNG THÁM HIỂM                          │
+│                                                            │
+├────────────────────────────────────────────────────────────┤
+│   Nhân vật       Kho       Kỹ năng       Tâm pháp          │
+└────────────────────────────────────────────────────────────┘
+Buildings
+Vị trí	Công trình	Hệ thống
+Center	Linh Nhãn	Tu luyện
+Rear	Tàng Kinh Các	Bí kíp / tri thức
+Upper-left	Đan Phòng	Luyện Đan
+Upper-right	Phù Viện	Chế Phù
+Lower-left	Khí Đường	Luyện Khí
+Lower-right	Trận Đài	Bày Trận
+Foreground	Cổng	Thám Hiểm
+Quan trọng
+
+Building là world object, không phải button.
+
+Hover:
+
+Building
+   ↓
+BuildingTooltip
+
+Click:
+
+Building
+   ↓
+System Screen
+9. ĐỘNG PHỦ — ANIMATION
+
+Animation phải chậm và tinh tế:
+
+Nhân vật idle cultivation.
+Tóc/áo chuyển động.
+Linh khí bay.
+Formation pulse.
+Khói Đan Phòng.
+Lửa Khí Đường.
+Rune Phù Viện.
+Formation Đài.
+Cỏ/cây.
+Nước.
+Particle.
+
+Không cho mọi thứ pulse/flash liên tục.
+
+Mục tiêu:
+
+Tĩnh nhưng có sinh khí.
+
+10. ĐỘNG PHỦ — PROGRESSION
+
+Động Phủ phải thay đổi visual theo progression.
+
+Phàm nhân
+
+Hang động đơn giản.
+
+Luyện Khí
+
+Bắt đầu xuất hiện khu chức năng.
+
+Trúc Cơ
+
+Động phủ mở rộng, trận pháp hoàn thiện hơn.
+
+Kim Đan
+
+Linh tuyền, kiến trúc cao cấp hơn.
+
+Nguyên Anh+
+
+Động phủ dần trở thành không gian tu luyện cấp cao.
+
+Upgrade không chỉ tăng:
+
+
+
+
+mà nếu asset cho phép phải thay đổi:
+
+
+
+11. CHARACTER
+Focal Point
+
+Character + cảnh giới
+
+┌──────────────┬──────────────────────┬───────────────┐
+│              │                      │               │
+│ EQUIPMENT    │      CHARACTER       │   CẢNH GIỚI   │
+│              │                      │               │
+│     ◇        │        🧑            │   Luyện Khí   │
+│   ◇   ◇      │                      │    Tầng 9     │
+│     ◇        │                      │   Progress    │
+│              │                      │               │
+└──────────────┴──────────────────────┴───────────────┘
+
+Equipment slot → ItemTooltip.
+
+Stats cơ bản ở dưới.
+
+Không hiển thị một bảng stat khổng lồ.
+
+12. EQUIPMENT
+
+Equipment screen tập trung vào nhân vật + slot.
+
+                 HEAD
+                  ◇
+
+
+          WEAPON       ACCESSORY
+             ◇             ◇
+
+
+                CHARACTER
+
+
+          ARMOR        TALISMAN
+             ◇             ◇
+
+
+                 BOOTS
+                  ◇
+
+Slot:
+
+Đồng nhất.
+Quality frame.
+Tooltip.
+
+Không có Item Detail Panel.
+
+Click:
+
+Equip.
+Unequip.
+Select.
+Compare nếu hệ thống đã hỗ trợ.
+13. INVENTORY
+
+Inventory tập trung vào grid.
+
+┌────────────────────────────────────────────┐
+│ KHO VẬT                     126 / 200       │
+├────────────────────────────────────────────┤
+│ Tất cả | Trang bị | Vật liệu | Đan | Phù   │
+├────────────────────────────────────────────┤
+│                                            │
+│ □ □ □ □ □ □ □ □                            │
+│ □ □ □ □ □ □ □ □                            │
+│ □ □ □ □ □ □ □ □                            │
+│ □ □ □ □ □ □ □ □                            │
+│ □ □ □ □ □ □ □ □                            │
+│                                            │
+├────────────────────────────────────────────┤
+│                  ‹ 1 / 8 ›                 │
+└────────────────────────────────────────────┘
+
+Không có detail panel.
+
+Hover slot → tooltip.
+
+Pagination nằm cố định phía dưới.
+
+Tab:
+
+vuông/gọn.
+chia đều.
+không chiếm quá nhiều chiều cao.
+14. TU LUYỆN
+
+Focal point:
+
+Cảnh giới + progress
+
+                 LUYỆN KHÍ
+                   TẦNG 9
+
+
+                     🧘
+
+
+             ███████████░░
+                     82%
+
+
+                  18:42:17
+
+
+       HP/s     MP/s     Cultivation Speed
+
+Có thể hiển thị tâm pháp đang dùng bằng slot.
+
+Slot → tooltip.
+
+Không biến thành stat dashboard.
+
+15. TÂM PHÁP
+
+Focal point:
+
+Tâm pháp đang tu luyện
+
+Tâm pháp hiện tại lớn.
+
+Các tâm pháp khác nhỏ hơn.
+
+              [ ACTIVE TÂM PHÁP ]
+
+
+                 ◇
+
+
+             Huyền Nguyên Công
+
+
+             [ ĐANG TU LUYỆN ]
+
+
+────────────────────────────────────
+
+
+       ◇       ◇       ◇       ◇
+
+Hover → tooltip.
+
+16. SKILL TREE
+
+Skill UI phải giống cây tu luyện, không phải danh sách skill.
+
+                       ○
+                      / \
+                     ○   ○
+                    /     \
+                   ○───────○
+                      │
+                      ◎
+
+Node:
+
+Locked.
+Available.
+Unlocked.
+Active.
+
+Hover:
+
+SkillNode → SkillTooltip
+
+SkillTooltip:
+
+Name.
+Type.
+Level.
+Effect.
+Cost.
+Requirement.
+17. PHÁP TU / NGŨ HÀNH
+
+Ngũ Hành là visual centerpiece.
+
+Không làm:
+
+Fire
+Water
+Earth
+...
+
+thành một list đơn giản.
+
+Dùng Element Wheel / Formation.
+
+                         MỘC
+
+
+                  THỦY         HỎA
+
+
+                         THỔ
+
+
+                         KIM
+
+Chọn element:
+
+Element
+   ↓
+Element Skill Branch
+
+Skill branch:
+
+○──○──◎
+
+Phong/Lôi là hệ mở rộng theo progression đã thiết kế, không làm UI phá vỡ cấu trúc Ngũ Hành.
+
+18. LUYỆN ĐAN
+
+Focal point:
+
+Đan Lô
+
+┌──────────────┬─────────────────────┬──────────────┐
+│   RECIPE     │       ĐAN LÔ        │    RESULT    │
+│              │        🔥           │      ◇       │
+│     ◇        │                     │              │
+│     ◇        │      Progress       │              │
+│     ◇        │                     │              │
+├──────────────┴─────────────────────┴──────────────┤
+│                 NGUYÊN LIỆU                        │
+│             ◇      ◇      ◇      ◇                 │
+└─────────────────────────────────────────────────────┘
+
+Recipe/material/result:
+
+ItemSlot → ItemTooltip
+
+19. LUYỆN KHÍ
+
+Focal point:
+
+Equipment đang được rèn
+
+                   ◇
+                [ KIẾM ]
+
+
+                 +1
+
+
+             ████████░░
+
+
+        ◇   ◇   ◇   ◇
+
+Item chính và materials đều dùng ItemSlot.
+
+Quality frame phải đặc biệt nổi bật ở item chính.
+
+20. CHẾ PHÙ
+
+Focal point:
+
+Lá phù
+
+                  ╭────────╮
+                  │   符    │
+                  │  RUNE  │
+                  ╰────────╯
+
+
+                  EFFECTS
+
+
+             +12% Hỏa thương
+              -5% MP cost
+
+
+               [ KHẮC PHÙ ]
+
+
+              ◇   ◇   ◇
+
+Materials → ItemSlot → Tooltip.
+
+Result → ItemSlot → Tooltip.
+
+21. BÀY TRẬN
+
+Focal point:
+
+Formation diagram
+
+                 ○──────○──────○
+                 │ ╲    │    ╱ │
+                 ○──────◎──────○
+                 │ ╱    │    ╲ │
+                 ○──────○──────○
+
+Formation chiếm phần lớn màn hình.
+
+Panel bên phải chỉ hiển thị:
+
+Name.
+Grade.
+Buff.
+Requirement.
+Activate.
+
+Nếu node chứa item → ItemSlot + Tooltip.
+
+22. THÁM HIỂM
+
+Không làm stage list.
+
+Dùng world map.
+
+                         ●
+                         │
+                   ●─────●─────●
+                  /             \
+                 ●               ●
+                  \             /
+                   ●───────────★
+
+Click location:
+
+Location
+ ↓
+Small context panel
+
+Panel:
+
+Name.
+Danger.
+Time.
+Reward.
+Start.
+
+Reward → ItemSlot → Tooltip.
+
+23. TÀNG KINH CÁC
+
+Focal point:
+
+Bí kíp / sách
+
+Không làm skill list.
+
+Visual như một thư viện nhỏ:
+
+    📜       📜       📜       📜
+
+
+                 ┌──────────┐
+                 │   BÍ KÍP │
+                 │     ◇    │
+                 └──────────┘
+
+
+                [ HỌC ]
+
+Bí kíp → Tooltip.
+
+24. TOP BAR
+
+Top bar phải nhỏ.
+
+Chỉ chứa:
+
+Menu.
+Main resources.
+Cảnh giới.
+Settings.
+
+Không đặt:
+
+"ĐỘNG PHỦ"
+"INVENTORY"
+"SKILLS"
+
+lớn trên mọi màn hình nếu không cần.
+
+Tên screen chỉ dùng khi thực sự cần hierarchy.
+
+25. BOTTOM NAVIGATION
+
+Chỉ chứa các hệ thống cấp cao:
+
+Nhân vật
+Kho
+Kỹ năng
+Tâm pháp
+
+Không biến bottom bar thành danh sách:
+
+Đan
+Phù
+Khí
+Trận
+Thám hiểm
+Tàng kinh
+...
+
+Các hệ thống này đã có world location ở Động Phủ.
+
+26. PANEL RULES
+
+Panel dùng để group information, không phải để biến mọi thứ thành card.
+
+Được
+[Panel]
+  related information
+Không được
+[Card][Card][Card]
+[Card][Card][Card]
+[Card][Card][Card]
+
+chỉ vì dễ code.
+
+Không dùng border dày cho mọi thứ.
+
+Không dùng shadow mạnh cho mọi element.
+
+27. SPACING & HIERARCHY
+
+Ưu tiên:
+
+Whitespace
+    >
+Grouping
+    >
+Border
+    >
+Background
+
+Không dùng border để phân chia mọi thành phần.
+
+Các element cùng nhóm phải gần nhau.
+
+Các nhóm khác nhau phải có khoảng cách rõ.
+
+Không căn UI bằng:
+
+margin-left: 137px;
+margin-top: 83px;
+
+chỉ để sửa một viewport cụ thể.
+
+Ưu tiên:
+
+flex.
+grid.
+percentage.
+responsive container.
+anchor positioning.
+logical spacing.
+28. RESPONSIVE
+
+Thiết kế theo canvas game.
+
+Không làm responsive như website trước tiên.
+
+Các layout phải giữ:
+
+visual hierarchy.
+focal point.
+relative proportions.
+
+Khi viewport thay đổi:
+
+scale layout, không phá bố cục.
+
+29. ASSET RULE
+
+Đây là rule bắt buộc.
+
+Nếu cần artwork chưa tồn tại:
+
+KHÔNG tự tạo final asset bằng CSS.
+
+Tạo:
+
+src/assets/ui/<system>/ASSET_REQUIREMENTS.md
+
+Ví dụ:
+
+src/assets/ui/dong-phu/
+src/assets/ui/alchemy/
+src/assets/ui/forging/
+src/assets/ui/talisman/
+src/assets/ui/formation/
+src/assets/ui/exploration/
+
+File requirement phải ghi:
+
+Asset name
+Purpose
+Recommended dimensions
+Transparent/background
+Static/animated
+Sprite sheet layout
+Number of frames
+Placeholder status
+
+Ví dụ:
+
+alchemy-cauldron.png
+Purpose: Main Alchemy UI object
+Recommended: 256x256
+Transparent: Yes
+Animation: Static
+
+Nếu chưa có asset:
+
+dùng placeholder có đúng kích thước dự kiến.
+
+Không tải asset ngẫu nhiên từ Internet.
+
+Không dùng emoji làm final visual asset.
+
+30. SPRITE / ANIMATION ASSET RULE
+
+Khi yêu cầu animation asset:
+
+Không có text.
+Không có frame number.
+Không có border thừa.
+Không có padding ngoài yêu cầu.
+Các frame phải đồng đều.
+Kích thước frame cố định.
+Layout sprite sheet phải được ghi rõ.
+
+Ví dụ:
+
+Canvas: 512 × 256
+Frame: 64 × 64
+Grid: 8 × 4
+Frames: 32
+
+Claude Code chỉ chịu trách nhiệm hook animation vào game, không tự sửa artwork nếu chưa được yêu cầu.
+
+31. CODE ARCHITECTURE
+
+Project hiện tại:
+
+Vue 3.
+TypeScript.
+Pinia.
+Phaser.
+Element Plus khi phù hợp.
+
+UI logic và game logic phải tách nhau.
+
+Ví dụ:
+
+DongFuView
+ ├── DongFuScene
+ ├── DongFuTopBar
+ └── DongFuQuickNav
+
+Không tạo một:
+
+DongFu.vue
+
+hàng nghìn dòng.
+
+32. CLAUDE CODE RULES
+
+Claude Code phải:
+
+ĐƯỢC
+Tái sử dụng component hiện có.
+Tách component khi cần.
+Kiểm tra asset hiện có trước khi tạo placeholder.
+Chỉ sửa file liên quan.
+Giữ nguyên game logic.
+Giữ API/data model hiện tại nếu không cần thay đổi.
+Chạy targeted typecheck/build sau thay đổi.
+KHÔNG ĐƯỢC
+Refactor toàn project chỉ để làm UI.
+Đổi architecture không được yêu cầu.
+Thêm dependency mới nếu không cần.
+Đổi game logic.
+Đổi hệ thống item.
+Đổi stat system.
+Tự thay đổi gameplay.
+Tạo component duplicate.
+Tạo asset giả thành final asset.
+Tự tải ảnh Internet.
+Dùng emoji làm asset cuối cùng.
+Chuyển UI thành dashboard.
+Nhồi tất cả thông tin vào screen.
+Tạo item detail panel khi ItemTooltip đã đủ.
+33. IMPLEMENTATION ORDER
+
+Claude Code phải thực hiện theo thứ tự:
+
+01. Audit existing UI/components/assets
+02. ItemSlot
+03. QualityFrame
+04. ItemTooltip
+05. TooltipManager
+06. Shared UI primitives
+07. Động Phủ
+08. Character
+09. Equipment
+10. Inventory
+11. Tu luyện
+12. Tâm pháp
+13. Skills
+14. Pháp Tu / Ngũ Hành
+15. Luyện Đan
+16. Luyện Khí
+17. Chế Phù
+18. Bày Trận
+19. Thám Hiểm
+20. Tàng Kinh Các
+21. Visual consistency pass
+
+Không xây 15 màn hình cùng lúc rồi mới sửa UI.
+
+Mỗi màn hình phải hoàn thiện layout trước khi chuyển sang màn tiếp theo.
+
+34. DESIGN REVIEW CHECKLIST
+
+Sau mỗi screen, Claude Code phải tự kiểm tra:
+
+Layout
+Focal point có rõ không?
+Có quá nhiều panel không?
+Có đủ negative space không?
+Các group có hierarchy rõ không?
+Có cảm giác dashboard không?
+Components
+Có dùng component chung không?
+Có duplicate ItemSlot không?
+Item có Tooltip không?
+Visual
+Quality frame đúng không?
+Typography nhất quán không?
+Border có bị lạm dụng không?
+Animation có quá mạnh không?
+Technical
+Không phá game logic?
+Không tạo dependency không cần?
+Không sửa file ngoài scope?
+Không có overflow/cắt tooltip?
+Không có hardcoded positioning vô lý?
+35. NGUYÊN TẮC CUỐI CÙNG
+
+Toàn bộ UI phải tuân theo một câu:
+
+Mỗi hệ thống phải có một hình ảnh trung tâm đại diện cho bản chất của nó.
+
+Hệ thống	Visual Center
+Động Phủ	Không gian động phủ
+Nhân vật	Nhân vật
+Trang bị	Character + Equipment
+Kho	Item Grid
+Tu luyện	Cảnh giới + Progress
+Tâm pháp	Tâm pháp đang tu luyện
+Kỹ năng	Skill Tree
+Pháp tu	Ngũ Hành
+Luyện Đan	Đan Lô
+Luyện Khí	Equipment đang rèn
+Chế Phù	Lá phù
+Bày Trận	Formation
+Thám Hiểm	World Map
+Tàng Kinh Các	Bí kíp
+
+Và một câu thứ hai:
+
+Mọi vật phẩm trong game đều nói cùng một “ngôn ngữ UI”: ItemSlot → QualityFrame → ItemTooltip.
+
+Đây là design contract cho toàn bộ UI. Claude Code có thể tự quyết định chi tiết implementation, nhưng không được tự ý phá các nguyên tắc trên để thuận tiện cho việc code.
+
+Cấu trúc asset đề xuất
+src/assets/ui/
+├── common/
+│   ├── quality/
+│   ├── slots/
+│   ├── tooltip/
+│   ├── icons/
+│   └── panels/
+│
+├── dong-phu/
+├── character/
+├── equipment/
+├── inventory/
+├── cultivation/
+├── techniques/
+├── skills/
+├── elements/
+├── alchemy/
+├── forging/
+├── talisman/
+├── formation/
+├── exploration/
+└── scripture/
+
+common/ là nơi đặc biệt quan trọng: quality frame, item slot, tooltip, icon và các UI primitive phải được dùng xuyên suốt, tránh tình trạng mỗi màn hình lại có một bộ UI riêng.

@@ -1,0 +1,38 @@
+﻿# =========================
+# Local secrets
+# =========================
+APIKey
+.env
+.env.*
+!.env.example
+
+# =========================
+# Node / build artifacts
+# =========================
+node_modules/
+dist/
+dist-ssr/
+coverage/
+*.tsbuildinfo
+
+# =========================
+# Logs
+# =========================
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# =========================
+# Local IDE / OS
+# =========================
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*.local
+
+# =========================
+# AI / local tooling caches
+# =========================
+.codegraph/*
+!.codegraph/.gitignore

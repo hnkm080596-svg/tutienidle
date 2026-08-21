@@ -1,0 +1,190 @@
+import type { AilmentId } from '../ailment/AilmentTypes'
+import type { ElementType } from './ElementType'
+
+/**
+ * Combat Rework Phase 6 (Pháp Tu — Reaction) — 2 ailment hành KHÁC
+ * NHAU cùng active trên 1 target thì phản ứng, gây thêm 1 cục true
+ * damage MỘT LẦN (bỏ qua Armor/Resistance, cùng tinh thần Detonate/
+ * primordialPower hiện có) rồi tiêu CẢ 2 ailment. Không phụ thuộc build
+ * nào áp được đa-hành cùng lúc (equipment Set phụ, quái tự mang ailment
+ * nền, hoặc sau này nhiều hành/trận theo kế hoạch gộp path) — engine
+ * chỉ cần 2 ailment hành khác nhau CÙNG có mặt trên target, bất kể
+ * nguồn nào áp ra chúng.
+ */
+export interface ElementReactionDefinition {
+  name: string
+
+  // Flat, giống damagePerStack của Detonate hiện có (SkillEffect.ts) —
+  // không tự tính từ dpsRatio 2 ailment liên quan, dễ balance độc lập.
+  baseDamage: number
+
+  // Mộc Tu (Plans/PoisonPath mục 3, "Độc Viêm" — Mộc+Hỏa, "Damage dựa
+  // trên HP hiện tại") — % currentHp của TARGET tại thời điểm Reaction
+  // kích hoạt (TRƯỚC khi trừ baseDamage của chính lần kích này), cộng
+  // dồn với baseDamage — xem ReactionManager.checkAndTrigger(). Số
+  // liệu minh hoạ (10%), cần tinh chỉnh qua playtest, không phải số
+  // chốt cứng — cùng tinh thần baseDamage.
+  percentOfTargetCurrentHp?: number
+
+  // Thổ Tu (Plans/EarthPath mục V/VI, 2026-08-21) — Reaction sinh ra 1
+  // ailment MỚI trên TARGET (Dung Nham=DoT, Trói Chân=CC 'root') thay
+  // vì/thêm vào baseDamage — 2 ailment bị tiêu vẫn xoá như thường, xem
+  // ReactionManager.checkAndTrigger(). Duration của ailment này được
+  // nhân thêm reactionEffectPercent (không phải ailmentDurationPercent
+  // thường — ailment này đến từ REACTION, không phải skill trực tiếp).
+  appliesAilmentId?: AilmentId
+
+  // Thổ Tu (Plans/EarthPath mục VII, "Độc Thế") — Reaction ĐẶC BIỆT:
+  // KHÔNG áp gì lên target, mà cấp 1 tầng buff (BuffRegistry id) lên
+  // chính SOURCE (người kích Reaction) — xem ReactionManager.ts. Loại
+  // trừ lẫn nhau về mặt Ý NGHĨA với appliesAilmentId (1 reaction chỉ
+  // nên khai đúng 1 trong 2, dù kỹ thuật không cấm khai cả hai).
+  appliesBuffId?: string
+
+  // Kim Tu ("Thiêu Huyết", Hỏa+Kim, Plans/KimPath mục 5, 2026-08-21) —
+  // % maxHp của TARGET bị trừ VĨNH VIỄN (khác baseDamage — đó là
+  // currentHp), trần ở MAX_HP_REDUCTION_CAP_PERCENT CỘNG DỒN qua nhiều
+  // lần Reaction trong CÙNG 1 trận (xem ReactionManager.ts,
+  // CombatEntity.totalMaxHpReductionPercent) — "tránh boss bị xoá HP
+  // quá nhanh" đúng lo ngại doc tự nêu.
+  maxHpReductionPercent?: number
+
+  // Thủy Tu Trúc Cơ Reaction ("Dẫn Lưu" major, Plans/waterpath mục VII)
+  // — Plans/magicpathgeneral Phase 5 (2026-08-21) — kéo hành vi "GIỮ
+  // LẠI 1 vế thay vì tiêu" ra khỏi ReactionManager (trước đây hard-code
+  // `existingId === 'te_cong'`) thành 1 field DATA đúng tinh thần Phase
+  // 5's ví dụ ("trừ khi reaction definition chủ động chỉ định một
+  // status không bị consume"). CHỈ có tác dụng khi field này khớp 1
+  // trong 2 vế ĐANG reaction VÀ nguồn có
+  // `source.stats.waterReactionExtensionSeconds > 0` — nền là vế đó
+  // vẫn bị tiêu như mọi ailment khác (xem ReactionManager.ts). Không
+  // áp dụng cho appliesAilmentId/appliesBuffId (2 nhánh đó đã luôn
+  // consume-rồi-tạo-mới, tự thân đã đúng invariant Phase 16).
+  keepsAilmentId?: AilmentId
+
+  // Plans/magicpathgeneral Phase 12 (2026-08-21) — "Lava Zone không
+  // phải DoT trên target": ngoài (không thay thế) appliesAilmentId,
+  // reaction này CÒN spawn 1 LavaZone tại VỊ TRÍ target lúc kích hoạt
+  // (xem BattleSystem.spawnLavaZone()) — vùng tồn tại độc lập, gây
+  // damage cho MỌI entity phe đối lập đứng trong bán kính lúc tick,
+  // không riêng gì target ban đầu. Số liệu minh hoạ, cần playtest.
+  spawnsLavaZone?: {
+    radius: number
+    duration: number
+    tickInterval: number
+    damagePerTick: number
+    element: ElementType | 'physical'
+  }
+}
+
+// Khoá theo CẶP AilmentId — ReactionManager tự thử cả 2 chiều (A→B và
+// B→A) nên chỉ cần khai 1 chiều mỗi cặp. Số liệu khởi điểm hợp lý, cần
+// tinh chỉnh qua playtest — không phải số chốt cứng.
+//
+// Plans/waterpath (2026-08-21) — chốt lại bảng reaction của Thủy: XOÁ
+// hẳn Thủy+Kim ("Đông Lôi" cũ, te_cong+te_dien) vì spec Thủy mới nói rõ
+// "💧⚙️ THỦY + KIM: Không Reaction". THÊM Thủy+Mộc ("Độc Thủy",
+// te_cong+trung_doc) — cùng shape burst-damage-1-lần với Bốc Hơi/Lôi
+// Viêm (doc mô tả "tick dày hơn" về flavor, nhưng AilmentSystem hiện
+// mô hình DoT liên tục theo damagePerSecond, không có khái niệm "tick
+// rời rạc" để nhân đôi tần suất — burst damage là cách diễn giải gần
+// nhất với hạ tầng hiện có). Thủy+Lôi ("Thủy Lôi", chain propagation)
+// và Thủy+Phong ("Đóng Băng") CHƯA thêm — chưa có skill Lôi/Phong nào
+// tồn tại để mang ailment tương ứng (cùng lý do Phong/Lôi bị hoãn ở
+// [[tienhiep-phap-tu-magicpath]]), và bản thân "Thủy Lôi" (chain
+// nhiều mục tiêu) cũng cần engine mới (ElementReactionDefinition hiện
+// chỉ hỗ trợ 1 cục true damage, không phải chain) — để dành đợt sau.
+// Thủy+Thổ ("Thủy Thổ", trói chân) cũng hoãn cùng lý do — "Root" (chặn
+// di chuyển nhưng KHÔNG chặn đánh/cast) là 1 CC category hoàn toàn mới,
+// chưa tồn tại (AilmentCcEffect hiện chỉ có 'stun'/'freeze').
+//
+// Plans/PoisonPath (2026-08-21) — bảng phản ứng của Mộc (mục 3) có 6
+// cặp, nhưng CHỈ "Độc Viêm" (Mộc+Hỏa) và "Độc Thủy" (Mộc+Thủy, đã có
+// từ đợt Thủy) khớp được model hiện tại (1 cục true damage tức thời).
+// 3 cặp còn lại hoãn — mỗi cái cần 1 mechanic MỚI hoàn toàn, không thể
+// giả lập bằng baseDamage/percentOfTargetCurrentHp mà không sai lệch
+// thiết kế: "Độc Phong" (Mộc+Phong, lan Độc sang mục tiêu khác — cần
+// chain/spread, ElementReactionDefinition chỉ hỗ trợ 1 target; cũng
+// chưa có skill Phong nào tồn tại, cùng lý do Phong/Lôi bị hoãn ở
+// [[tienhiep-phap-tu-magicpath]]). "Độc Thế" (Mộc+Thổ, "Độc → buff
+// BẢN THÂN người chơi" — không phải damage lên target, cần 1 loại
+// Reaction hoàn toàn khác — cấp buff/stack cho SOURCE thay vì trừ HP
+// TARGET; Thổ cũng chưa redesign nên chưa chắc có skill nào áp
+// 'hoai_tu' vào combat thật). "Huyết Độc" (Mộc+Kim, "gộp 2 DoT thành 1
+// DoT MỚI mạnh hơn" — cần thay thế/nâng cấp ailment đang có, khác hẳn
+// "trừ 1 cục rồi xoá cả 2" hiện tại; Kim cũng chưa redesign).
+export const ELEMENT_REACTIONS: Partial<Record<AilmentId, Partial<Record<AilmentId, ElementReactionDefinition>>>> = {
+  // Hỏa (Bỏng) + Thủy (Tê Cóng) — "Bốc Hơi". keepsAilmentId: 'te_cong'
+  // (Plans/magicpathgeneral Phase 5) — Dẫn Lưu (waterReactionExtensionSeconds)
+  // có thể giữ lại Tê Cóng thay vì tiêu, xem ReactionManager.ts.
+  bong: {
+    te_cong: { name: 'Bốc Hơi', baseDamage: 60, keepsAilmentId: 'te_cong' },
+    // Hỏa (Bỏng) + Kim (Tê Điện) — "Lôi Viêm".
+    te_dien: { name: 'Lôi Viêm', baseDamage: 70 },
+    // Hỏa (Bỏng) + Mộc (Trúng Độc) — "Độc Viêm", damage dựa trên %
+    // currentHp của target thay vì flat (xem ElementReactionDefinition).
+    trung_doc: { name: 'Độc Viêm', baseDamage: 0, percentOfTargetCurrentHp: 0.1 },
+  },
+
+  // Thủy (Tê Cóng) + Mộc (Trúng Độc) — "Độc Thủy". keepsAilmentId:
+  // 'te_cong' cùng lý do như Bốc Hơi ở trên.
+  te_cong: {
+    trung_doc: { name: 'Độc Thủy', baseDamage: 65, keepsAilmentId: 'te_cong' },
+  },
+
+  // Plans/EarthPath mục IV (2026-08-21) — bảng phản ứng của Thổ (chốt
+  // 4/6 cặp, đúng doc mục IX/X: "Lôi+Thổ"/"Kim+Thổ" CHƯA thiết kế,
+  // "không nên ép Reaction chỉ để hoàn thành bảng" — không thêm entry
+  // giả cho 2 cặp đó). "Mù" (Thổ+Phong) cũng chưa thêm — chưa có skill
+  // Phong nào tồn tại để mang ailment tương ứng, cùng lý do Phong/Lôi
+  // bị hoãn khắp nơi khác trong hệ Ngũ Hành.
+  thach_hoa: {
+    // Thổ+Hỏa — "Dung Nham": DoT phần THẬT (ailment 'dung_nham') TRÊN
+    // target VẪN GIỮ NGUYÊN + Plans/magicpathgeneral Phase 12
+    // (2026-08-21) thêm phần AoE persistent theo VỊ TRÍ (LavaZone, xem
+    // ElementReactionDefinition/BattleSystem.spawnLavaZone()) — số
+    // liệu minh hoạ (bán kính/tick/damage), cần playtest.
+    bong: {
+      name: 'Dung Nham',
+      baseDamage: 0,
+      appliesAilmentId: 'dung_nham',
+      spawnsLavaZone: { radius: 40, duration: 6, tickInterval: 1, damagePerTick: 20, element: 'fire' },
+    },
+    // Thổ+Thủy — "Trói Chân": Root thuần, không damage (đúng doc mục
+    // VI, không nhắc gì tới sát thương).
+    te_cong: { name: 'Trói Chân', baseDamage: 0, appliesAilmentId: 'troi_chan' },
+    // Thổ+Mộc — "Độc Thế": KHÔNG áp ailment lên target, chuyển hóa
+    // thành buff self-stack trên SOURCE (xem appliesBuffId, data/buff/
+    // buffs.ts's `doc_the`). Doc mục VII còn có "+2% HP Recovery từ
+    // Poison Damage" mỗi tầng — CHƯA làm: AilmentSystem.update()'s DoT
+    // tick loop hiện chỉ có `target: CombatEntity`, không resolve lại
+    // được entity NGUỒN (chỉ có `sourceId` dạng string) để heal — cần
+    // plumbing entity resolution mới vào tick loop, để dành đợt sau.
+    trung_doc: { name: 'Độc Thế', baseDamage: 0, appliesBuffId: 'doc_the' },
+  },
+
+  // Plans/KimPath mục 4 (2026-08-21) — bảng phản ứng của Kim khai đủ
+  // 2/5 cặp khớp được engine hiện tại. Thủy/Phong/Thổ+Kim là "Không
+  // Reaction" CHỦ Ý theo doc (mục 8: "Kim không cần phải tương tác với
+  // mọi hệ") — không thêm entry giả. "Lôi Huyết" (Lôi+Kim, mục 7 —
+  // "mỗi lần Lôi giật +1 Xuất Huyết") hoãn — chưa có skill/ailment Lôi
+  // nào tồn tại, cùng lý do Phong/Lôi bị hoãn khắp nơi khác trong hệ
+  // Ngũ Hành ([[tienhiep-phap-tu-magicpath]]); bản thân mục 7 cũng là 1
+  // mechanic MỚI (Reaction cấp STACK thay vì damage/ailment/buff — 1
+  // dạng effect thứ 4 ngoài baseDamage/appliesAilmentId/appliesBuffId),
+  // để dành đợt Lôi.
+  chay_mau: {
+    // Kim+Hỏa — "Thiêu Huyết": Reaction Damage + trừ vĩnh viễn % maxHp
+    // (trần cộng dồn, xem ElementReactionDefinition's ghi chú). "100%
+    // Skill Power" của doc không literal-scale theo Power nguồn (đúng
+    // convention baseDamage flat hiện có, cùng cách xử lý mọi reaction
+    // khác) — 85 là số minh hoạ giữa khoảng 60-90 của các reaction cũ.
+    bong: { name: 'Thiêu Huyết', baseDamage: 85, maxHpReductionPercent: 0.03 },
+    // Kim+Mộc — "Huyết Độc": Trúng Độc + Chảy Máu "hợp nhất" thành 1
+    // DoT MỚI mạnh hơn (ailment 'huyet_doc'), tái dùng appliesAilmentId
+    // (đã xây cho Thổ) — closes luôn gap "Huyết Độc" từng bị hoãn ở đợt
+    // Mộc ([[tienhiep-poisonpath-moc]]'s ghi chú "cần thay thế/nâng cấp
+    // ailment đang có").
+    trung_doc: { name: 'Huyết Độc', baseDamage: 0, appliesAilmentId: 'huyet_doc' },
+  },
+}

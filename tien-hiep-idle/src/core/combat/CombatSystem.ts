@@ -1,0 +1,407 @@
+import type { CombatEntity } from './CombatEntity'
+
+import { calculateBaseDamage, applyMultiplierAndCritical } from './DamageCalculator'
+import { calculateSkillBaseDamage } from './ElementDamageCalculator'
+import { getRealmPressureMultiplier } from './RealmPressure'
+import { getHitChance } from './Accuracy'
+import { applyEndurance } from './Endurance'
+
+import { MAX_RAGE } from './CombatTypes'
+import type { DamageResult } from './CombatTypes'
+
+import type { EventBus } from '../events/EventBus'
+import type { MissileDamageInfo } from './missile/Missile'
+import type { ElementType } from '../element/ElementType'
+
+// Rage tích theo % damage gây ra/nhận vào — đặt ở CombatSystem
+// (không phải BattleSystem) để mọi đường gây damage (auto-attack,
+// skill, talisman) đều tích rage nhất quán, không chỉ riêng battle
+// auto-attack.
+const RAGE_PER_DAMAGE_DEALT = 0.5
+const RAGE_PER_DAMAGE_TAKEN = 0.5
+
+// Thủy Tu Trúc Cơ Pure (Plans/waterpath mục IX, 2026-08-21) — trần %
+// giảm sát thương từ thuyThePercent, cùng tinh thần ARMOR_CAP (Armor.
+// ts) — không thể trở nên bất tử chỉ bằng cách stack riêng 1 stat.
+const WATER_MITIGATION_CAP = 0.75
+
+// Plans/magicpathgeneral Phase 9 (2026-08-21) — DOT RES là 1 stat
+// dạng "*Percent" (fraction 0..1, CÙNG THANG với ailmentResistPercent/
+// ailmentPotencyPercent...), KHÁC thang "Rating" (net/100) của
+// Resistance.ts's getResistanceMitigationPercent() (dùng cho 5 hành
+// Power/Resistance/Penetration) — không tái dùng hàm đó ở đây để
+// tránh lệch thang đo. kimTheDotResistancePenetrationPercentPerStack
+// (penetration) CŨNG là fraction cùng thang, trừ thẳng.
+const DOT_RESISTANCE_CAP = 0.75
+const DOT_RESISTANCE_FLOOR = -1
+
+/**
+ * Toàn bộ combat giờ đi qua missile (xem MissileSystem/
+ * BattleSystem.resolveMissiles()) — resolveMissileHit() là điểm vào
+ * DUY NHẤT tính damage thật (attack()/attackWithElements() cũ đã bị
+ * xoá, không còn nơi nào gọi từ khi combat chuyển hẳn sang missile).
+ *
+ * Pipeline đầy đủ (đúng thứ tự accuracy → dodge → block →
+ * armor/resistance → endurance → ward → HP): mitigation Armor/
+ * Resistance đã áp xong TRONG calculateBaseDamage()/
+ * calculateSkillBaseDamage() (mỗi component tự mitigate theo đúng
+ * loại của nó — không gộp chung 1 công thức được vì skill nhiều
+ * component có thể mang nhiều hành khác nhau cùng lúc). Block và
+ * Armor/Resistance đều là % nhân đơn thuần nên thứ tự tính giữa 2
+ * bước không đổi kết quả cuối (phép nhân giao hoán) — chỉ thứ tự
+ * SỰ KIỆN/emit mới theo đúng accuracy→dodge→block như yêu cầu.
+ */
+export class CombatSystem {
+  constructor(private readonly eventBus: EventBus) {}
+
+  resolveMissileHit(
+    source: CombatEntity,
+    target: CombatEntity,
+    damage: MissileDamageInfo,
+    critical: boolean,
+  ): DamageResult {
+    if (!this.rollHit(source, target)) {
+      return this.resolveDodge(source, target, damage.kind)
+    }
+
+    const effectiveMultiplier = damage.multiplier * getRealmPressureMultiplier(source, target)
+
+    // Chance to Ignore Resistance — roll 1 LẦN/đòn (khác Penetration phẳng,
+    // đây là "bỏ qua hoàn toàn" mitigation của đòn đó nếu trúng).
+    const ignoreResistance = Math.random() < source.stats.chanceToIgnoreResistance
+
+    const baseDamage = damage.kind === 'elemental'
+      ? calculateSkillBaseDamage(source, target, damage.components, ignoreResistance)
+      : calculateBaseDamage(source, target, damage.kind, ignoreResistance)
+
+    const afterCrit = applyMultiplierAndCritical(baseDamage, effectiveMultiplier, critical, source.stats.criticalDamage)
+
+    const blocked = this.rollBlock(target)
+
+    const afterBlock = blocked ? afterCrit * (1 - target.stats.blockEffectiveness) : afterCrit
+
+    const afterEndurance = applyEndurance(afterBlock, target.stats.enduranceThreshold, target.stats.endurancePercent)
+
+    // Thủy Tu Trúc Cơ Pure (Plans/waterpath mục IX) — giảm thẳng %
+    // TOÀN BỘ sát thương cuối cùng (không phân biệt loại damage, cùng
+    // tầng với Endurance — cả 2 đều là lớp phòng thủ "cá nhân", không
+    // phải Armor/Resistance theo loại), nền 0 nên không ảnh hưởng path
+    // nào chưa có nguồn cấp.
+    const afterWaterMitigation = afterEndurance * (1 - Math.min(WATER_MITIGATION_CAP, target.stats.thuyThePercent))
+
+    // Floor "tối thiểu 1" ở CUỐI pipeline (sau cả Block/Endurance/Thủy
+    // Thế) — trước đây floor áp giữa chừng (ngay sau attack-defense,
+    // trước cả crit/multiplier), giờ dời xuống đây để đòn bị giảm
+    // nhiều tầng vẫn luôn gây được ít nhất 1 sát thương.
+    const finalDamage = Math.max(1, afterWaterMitigation)
+
+    const result: DamageResult = {
+      sourceId: source.id,
+
+      targetId: target.id,
+
+      rawDamage: finalDamage,
+
+      finalDamage,
+
+      damageType: damage.kind,
+
+      critical,
+
+      dodged: false,
+
+      blocked,
+
+      wardAbsorbed: 0,
+
+      manaShieldAbsorbed: 0,
+
+      targetKilled: target.currentHp <= finalDamage,
+    }
+
+    return this.resolveAttack(source, target, result, critical, blocked)
+  }
+
+  private rollHit(source: CombatEntity, target: CombatEntity): boolean {
+    return Math.random() < getHitChance(source.stats.accuracyRating, target.stats.evasionRate)
+  }
+
+  private rollBlock(target: CombatEntity): boolean {
+    return Math.random() < target.stats.blockChance
+  }
+
+  /**
+   * Public vì critical phải roll lúc BẮN missile (mang theo suốt
+   * hành trình bay), không còn roll ngay lúc tính damage như trước —
+   * cần gọi được từ BattleSystem lẫn SkillEffectSystem (2 nơi bắn
+   * missile), không chỉ nội bộ CombatSystem. `target` dùng để trừ
+   * Critical Strike Avoidance của phía phòng thủ (chance hiệu lực
+   * không thể âm).
+   */
+  rollCritical(source: CombatEntity, target: CombatEntity): boolean {
+    const effectiveChance = Math.max(0, source.stats.criticalRate - target.stats.criticalAvoidance)
+
+    return Math.random() < effectiveChance
+  }
+
+  /**
+   * Trượt (accuracy thua evasion trong contest — xem Accuracy.ts) —
+   * không tính damage, không trừ HP, không tích rage. Chỉ emit
+   * 'dodge' (giữ nguyên tên event/trigger cũ, không đổi PassiveSystem/
+   * FormationSystem) rồi trả kết quả rỗng — KHÔNG đi qua resolveAttack().
+   */
+  private resolveDodge(
+    source: CombatEntity,
+    target: CombatEntity,
+    damageType: DamageResult['damageType'],
+  ): DamageResult {
+    this.eventBus.emit('dodge', {
+      type: 'dodge',
+
+      sourceId: source.id,
+
+      targetId: target.id,
+    })
+
+    return {
+      sourceId: source.id,
+
+      targetId: target.id,
+
+      rawDamage: 0,
+
+      finalDamage: 0,
+
+      damageType,
+
+      critical: false,
+
+      dodged: true,
+
+      blocked: false,
+
+      wardAbsorbed: 0,
+
+      manaShieldAbsorbed: 0,
+
+      targetKilled: false,
+    }
+  }
+
+  private resolveAttack(
+    source: CombatEntity,
+    target: CombatEntity,
+    result: DamageResult,
+    critical: boolean,
+    blocked: boolean,
+  ) {
+    if (critical) {
+      this.eventBus.emit('critical', {
+        type: 'critical',
+
+        sourceId: source.id,
+
+        targetId: target.id,
+      })
+    }
+
+    if (blocked) {
+      this.eventBus.emit('block', {
+        type: 'block',
+
+        sourceId: source.id,
+
+        targetId: target.id,
+      })
+    }
+
+    this.eventBus.emit('hit', {
+      type: 'hit',
+
+      sourceId: source.id,
+
+      targetId: target.id,
+    })
+
+    // Pháp Tu (Thổ Tu, 2026-08-15) — reset đồng hồ "chưa bị đánh" MỖI
+    // LẦN thật sự trúng đòn (kể cả khi bị block/không có ward) —
+    // wardRegenPerSecond chỉ hồi sau khi mốc này đủ lâu, xem
+    // BattleSystem.updateRegen().
+    target.timeSinceLastHitTaken = 0
+
+    // Ward hấp thụ TRƯỚC currentHp — phần dư (nếu ward không đủ hoặc
+    // không có) mới thật sự trừ máu.
+    const wardAbsorbed = Math.min(target.currentWard, result.finalDamage)
+
+    target.currentWard -= wardAbsorbed
+
+    let hpDamage = result.finalDamage - wardAbsorbed
+
+    // Pháp Tu Redesign (magicpath) — Mana Shield: SAU Ward, TRƯỚC HP.
+    // % phần damage CÒN LẠI (không phải finalDamage gốc — Ward đã che
+    // bớt trước) được đẩy sang mana, quy đổi 1:1, PHẦN MANA KHÔNG ĐỦ
+    // CHE thì tràn ngược lại HP (không "ăn free" khi cạn mana, đúng
+    // yêu cầu "sát thương giảm sẽ đánh đổi bằng mana").
+    const manaShieldPortion = hpDamage * target.stats.manaShieldPercent
+
+    const manaShieldAbsorbed = Math.min(manaShieldPortion, target.currentMp)
+
+    target.currentMp -= manaShieldAbsorbed
+
+    hpDamage -= manaShieldAbsorbed
+
+    target.currentHp = Math.max(0, target.currentHp - hpDamage)
+
+    result.wardAbsorbed = wardAbsorbed
+
+    result.manaShieldAbsorbed = manaShieldAbsorbed
+
+    source.currentRage = Math.min(
+      MAX_RAGE,
+      source.currentRage + result.finalDamage * RAGE_PER_DAMAGE_DEALT,
+    )
+
+    target.currentRage = Math.min(
+      MAX_RAGE,
+      target.currentRage + result.finalDamage * RAGE_PER_DAMAGE_TAKEN,
+    )
+
+    this.eventBus.emit('damage', {
+      type: 'damage',
+
+      sourceId: source.id,
+
+      targetId: target.id,
+
+      value: result.finalDamage,
+
+      damageType: result.damageType,
+
+      critical,
+    })
+
+    // Leech — tính trên TOÀN BỘ finalDamage (không chỉ phần đã trừ
+    // HP thật), quy ước ARPG chuẩn.
+    if (source.stats.leechPercent > 0 && source.alive) {
+      source.currentHp = Math.min(source.maxHp, source.currentHp + result.finalDamage * source.stats.leechPercent)
+    }
+
+    // Thorns — trừ thẳng HP nguồn, KHÔNG lặp lại pipeline (không tự
+    // roll dodge/crit/thorns ngược lại) — tránh vòng lặp phản đòn vô
+    // hạn giữa 2 bên đều có thorns.
+    if (target.stats.thornsPercent > 0) {
+      source.currentHp = Math.max(0, source.currentHp - result.finalDamage * target.stats.thornsPercent)
+    }
+
+    // Pháp Tu (Thổ Tu) — "Khiên Nổ": Ward VỪA hấp thụ xong VÀ vừa vỡ
+    // hẳn (currentWard chạm 0 sau đòn này) thì phản thêm 1 cục damage
+    // riêng vào NGUỒN, tỉ lệ theo wardMax (khiên càng lớn nổ càng
+    // đau) — tách biệt hoàn toàn khỏi thornsPercent (đó là % theo
+    // damage NHẬN vào, cái này % theo DUNG LƯỢNG khiên tối đa).
+    if (wardAbsorbed > 0 && target.currentWard <= 0 && target.stats.wardBreakDamagePercent > 0) {
+      source.currentHp = Math.max(0, source.currentHp - target.stats.wardMax * target.stats.wardBreakDamagePercent)
+    }
+
+    this.killIfDead(target, source.id)
+
+    // Thorns có thể giết ngược nguồn — kiểm tra luôn, target là "kẻ
+    // giết" trong trường hợp này.
+    this.killIfDead(source, target.id)
+
+    return result
+  }
+
+  /**
+   * Plans/magicpathgeneral Phase 9-12 (2026-08-21) — điểm áp dụng THẬT
+   * SỰ cho 1 tick "damage-over-time-ở-1-điểm" — dùng chung bởi
+   * AilmentSystem.update() (DoT gắn trên entity) VÀ BattleSystem.
+   * updateLavaZones() (Lava Zone — Phase 12 nói rõ "không phải DoT
+   * trên target", nhưng damage vẫn cần qua ĐÚNG pipeline DOT RES/
+   * Poison Recovery/DamageEvent, chỉ khác nguồn KÍCH HOẠT tick là 1
+   * VÙNG theo vị trí thay vì 1 Ailment instance). Đúng pipeline Phase
+   * 10 "DoT tick → DamageEvent → sourceId/targetId/effectId → DOT RES
+   * → final damage". `source` có thể undefined (nguồn đã chết/rời
+   * trận) — chỉ ảnh hưởng Kim Thế xuyên kháng + Poison Recovery (2
+   * hiệu ứng cần ĐỌC nguồn còn sống), DOT RES phía target vẫn áp bình
+   * thường vì đó là stat của TARGET.
+   */
+  applyDotDamage(params: {
+    sourceId: string
+    source: CombatEntity | undefined
+    target: CombatEntity
+    rawDamage: number
+    element?: ElementType | 'physical'
+    effectId: string
+  }) {
+    const { sourceId, source, target, rawDamage, element, effectId } = params
+
+    // Kim Tu Trúc Cơ Pure ("Kim Thế" major, Plans/KimPath mục 10) — mỗi
+    // tầng currentKimThe xuyên thẳng qua dotResistancePercent của
+    // target, CHỈ cho DoT element 'metal' (cùng scope
+    // kimTheDotDamagePercentPerStack — build lai không nên xuyên kháng
+    // DoT hành khác chỉ vì có Kim Thế).
+    const penetration =
+      element === 'metal' && source
+        ? source.currentKimThe * source.stats.kimTheDotResistancePenetrationPercentPerStack
+        : 0
+
+    const mitigation = Math.min(DOT_RESISTANCE_CAP, Math.max(DOT_RESISTANCE_FLOOR, target.stats.dotResistancePercent - penetration))
+
+    const finalDamage = Math.max(0, rawDamage * (1 - mitigation))
+
+    target.currentHp = Math.max(0, target.currentHp - finalDamage)
+
+    this.eventBus.emit('damage', {
+      type: 'damage',
+
+      sourceId,
+
+      targetId: target.id,
+
+      value: finalDamage,
+
+      damageType: 'elemental',
+
+      effectId,
+    })
+
+    // Mộc Tu (Plans/PoisonPath/EarthPath, Phase 11) — Poison Recovery:
+    // CHỈ DoT element 'wood' (Trúng Độc), hồi theo damage THẬT SỰ đã
+    // trừ (sau DOT RES) — nguồn phải còn sống, người đã chết/rời trận
+    // không hồi được gì.
+    if (source?.alive && element === 'wood' && source.stats.poisonRecoveryPercent > 0) {
+      source.currentHp = Math.min(source.maxHp, source.currentHp + finalDamage * source.stats.poisonRecoveryPercent)
+    }
+
+    this.killIfDead(target, sourceId)
+  }
+
+  /**
+   * Public — AilmentSystem (DoT tick) dùng chung để đảm bảo chết vì
+   * hiệu ứng theo thời gian cũng emit đúng 'death'/'kill' như chết vì
+   * đòn đánh trực tiếp, không lặp code kiểm tra HP<=0 ở 2 nơi.
+   */
+  killIfDead(entity: CombatEntity, killerId: string) {
+    if (entity.currentHp > 0 || !entity.alive) {
+      return
+    }
+
+    entity.alive = false
+
+    this.eventBus.emit('death', {
+      type: 'death',
+
+      sourceId: killerId,
+
+      targetId: entity.id,
+    })
+
+    this.eventBus.emit('kill', {
+      type: 'kill',
+
+      sourceId: killerId,
+
+      targetId: entity.id,
+    })
+  }
+}

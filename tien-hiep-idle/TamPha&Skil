@@ -1,0 +1,795 @@
+PLAN — HỆ THỐNG PHÁP TU
+1. Mục tiêu thiết kế
+
+Pháp Tu là một trong 3 con đường tu luyện chính:
+
+                    TU LUYỆN
+                       │
+        ┌──────────────┼──────────────┐
+        │              │              │
+      KIẾM TU         THỂ TU        PHÁP TU
+
+Pháp Tu tập trung vào:
+
+Sử dụng pháp thuật.
+Sát thương nguyên tố.
+Hiệu ứng trạng thái.
+Burst damage.
+Damage over Time.
+Kiểm soát chiến trường.
+Kết hợp Ngũ Hành.
+
+Pháp Tu không có cơ chế Thân Pháp vì gameplay của nhân vật là dạng đứng vị trí cố định, tương tự tower-defense/idle combat.
+
+2. Cấu trúc progression
+
+Không xây Pháp Tu thành một cây class cứng.
+
+Dùng cấu trúc:
+
+PHÁP TU
+│
+├── Ngũ Hành Đơn Tu
+│   │
+│   ├── Hỏa
+│   │   ├── Tâm Pháp
+│   │   ├── DOT
+│   │   └── Big DMG
+│   │
+│   ├── Thủy
+│   │   ├── Tâm Pháp
+│   │   ├── DOT
+│   │   └── Big DMG
+│   │
+│   ├── Mộc
+│   │   ├── Tâm Pháp
+│   │   ├── DOT
+│   │   └── Big DMG
+│   │
+│   ├── Kim
+│   │   ├── Tâm Pháp
+│   │   ├── DOT
+│   │   └── Big DMG
+│   │
+│   └── Thổ
+│       ├── Tâm Pháp
+│       ├── DOT
+│       └── Big DMG
+│
+└── Ngũ Hành Đồng Tu
+    ├── Song Hành
+    ├── Tam Hành
+    └── Ngũ Hành Quy Nhất
+Quy tắc quan trọng
+
+Ngũ Hành = identity
+
+Tâm Pháp = gameplay loop
+
+DOT / Big DMG = build direction
+
+Skill + Passive + Item = cách hoàn thiện build
+
+3. Phase 1 — Xây Combat Framework
+
+Đây là phần phải làm trước khi tạo bất kỳ Ngũ Hành nào.
+
+3.1. Pháp Tu base
+
+Tạo abstraction:
+
+CultivationPath
+    └── SpellCultivator
+
+Pháp Tu cần có:
+
+Spell Damage
+Element Damage
+Cast Speed
+Cooldown
+Mana / Spiritual Energy
+Critical Chance
+Critical Damage
+Penetration
+Damage Over Time
+Duration
+
+Không tạo stat riêng kiểu:
+
+FireMagePower
+WaterMagePower
+
+Tận dụng stat framework hiện tại của game.
+
+4. Phase 2 — Element Framework
+
+Tạo 5 Element:
+
+FIRE
+WATER
+WOOD
+METAL
+EARTH
+
+Mỗi spell có:
+
+damage_type = SPELL
+element = FIRE
+
+Ví dụ:
+
+Spell:
+    BaseDamage: 100
+    DamageType: Spell
+    Element: Fire
+
+Damage pipeline:
+
+Base Damage
+      ↓
+Spell Damage
+      ↓
+Element Damage
+      ↓
+Skill Modifier
+      ↓
+Critical / Penetration
+      ↓
+Target Resistance
+      ↓
+Final Damage
+5. Phase 3 — Status Effect Framework
+
+Đây là phần rất quan trọng đối với DOT.
+
+Không viết Burn, Poison, Bleed thành ba hệ thống riêng.
+
+Tạo generic:
+
+DamageOverTimeEffect
+
+có:
+
+EffectType
+Element
+Damage
+Duration
+TickInterval
+StackLimit
+StackBehavior
+Snapshot / Dynamic
+
+Ví dụ:
+
+Burn
+Element = Fire
+Duration = 5s
+Tick = 1s
+MaxStack = 10
+
+Sau đó:
+
+Burn
+Poison
+Corrosion
+Frost
+Bleed
+...
+
+đều sử dụng framework chung.
+
+6. Phase 4 — Burst Framework
+
+Big DMG cũng phải có framework chung.
+
+Các cơ chế cần hỗ trợ:
+
+Charge
+Accumulation
+Resource Consumption
+Detonation
+Execute
+Critical Burst
+Cooldown Burst
+
+Ví dụ:
+
+Build Resource
+      ↓
+Accumulation
+      ↓
+Reach Threshold
+      ↓
+Cast Big Skill
+      ↓
+Consume Resource
+      ↓
+Massive Damage
+
+Như vậy Big DMG không phải chỉ đơn giản là:
+
+Skill có damage rất cao.
+
+Nó phải có setup → payoff.
+
+7. Phase 5 — Tâm Pháp Framework
+
+Tâm Pháp là trái tim của mỗi build.
+
+Mỗi Tâm Pháp định nghĩa:
+
+Identity
+Resource
+Passive
+Combat Loop
+Skill Interaction
+Build Bonuses
+
+Data structure nên hướng tới:
+
+CombatMind:
+    id
+    name
+    element
+    description
+
+
+    resource:
+        type
+        max
+        generation
+        consumption
+
+
+    passive:
+        ...
+
+
+    modifiers:
+        ...
+
+
+    tags:
+        ...
+
+Ví dụ:
+
+Xích Viêm Tâm Pháp
+
+
+Element:
+    Fire
+
+
+Resource:
+    Viêm Ý
+
+
+Generation:
+    Fire spell hit
+
+
+Consumption:
+    Explosion
+
+
+Core mechanic:
+    Burn → Viêm Ý → Explosion
+8. Phase 6 — Làm Hỏa trước
+
+Không làm cả 5 hành cùng lúc.
+
+Hỏa là vertical slice.
+
+Hỏa Identity
+
+Tích tụ sức mạnh → thiêu đốt → bùng nổ.
+
+Tâm Pháp:
+
+《Xích Viêm Tâm Kinh》
+
+Core loop:
+
+Cast Fire Spell
+      ↓
+Apply Burn
+      ↓
+Generate Viêm Ý
+      ↓
+Build stacks
+      ↓
+Choose:
+      ├── Maintain DOT
+      │
+      └── Detonate → Big DMG
+
+Điểm này rất hay vì một Tâm Pháp có thể tự nhiên tạo ra hai hướng build.
+
+9. Hỏa — DOT Build
+
+Tên tạm:
+
+Liệt Diễm
+
+Core:
+
+Burn
+ ↓
+Stack
+ ↓
+Duration
+ ↓
+Spread
+ ↓
+Amplify
+
+Các stat quan trọng:
+
+Fire Damage
+Spell Damage
+DoT Damage
+Burn Damage
+DoT Duration
+Effect Duration
+Cast Speed
+
+Gameplay:
+
+Không cần một hit cực lớn. Địch càng sống lâu càng chịu nhiều sát thương.
+
+10. Hỏa — Big DMG Build
+
+Tên tạm:
+
+Thiên Hỏa
+
+Core:
+
+Generate Viêm Ý
+       ↓
+Accumulate
+       ↓
+Charge
+       ↓
+Bạo Viêm
+       ↓
+Massive Explosion
+
+Stat:
+
+Fire Damage
+Spell Damage
+Critical Chance
+Critical Damage
+Penetration
+Burst Damage
+Resource Generation
+
+Gameplay:
+
+Chuẩn bị càng lâu → một lần nổ càng đau.
+
+11. Phase 7 — Skill Design
+
+Mỗi Tâm Pháp ban đầu chỉ cần 3 skill chính.
+
+Không mở rộng thành hàng chục skill ngay.
+
+Ví dụ Hỏa:
+
+Skill 1 — Xích Viêm Chưởng
+
+Vai trò:
+
+Basic damage
+Apply Burn
+Generate Viêm Ý
+Skill 2 — Viêm Hải
+
+Vai trò:
+
+AoE
+Increase Burn stacks
+Generate more Viêm Ý
+Skill 3 — Bạo Viêm
+
+Vai trò:
+
+Consume Viêm Ý
+Consume / interact with Burn
+Massive Fire Damage
+
+Sau đó có thể mở thêm skill thông qua progression.
+
+12. Phase 8 — Passive System
+
+Passive chia thành 3 nhóm.
+
+Core Passive
+
+Tăng sức mạnh trực tiếp cho Tâm Pháp.
+
++ Viêm Ý generation
++ Burn damage
++ Fire damage
+DOT Passive
++ Burn duration
++ Burn stack
++ Burn spread
++ DoT damage
+Burst Passive
++ Explosion damage
++ Critical
++ Penetration
++ Resource consumption efficiency
+
+Điều này tạo ra:
+
+             XÍCH VIÊM
+                 │
+        ┌────────┴────────┐
+        │                 │
+     LIỆT DIỄM         THIÊN HỎA
+        │                 │
+       DOT              BURST
+13. Phase 9 — Sau khi Hỏa hoàn chỉnh
+
+Không copy nguyên xi Hỏa.
+
+Dùng framework để tạo identity riêng.
+
+Thủy
+
+Theme:
+
+Khống chế → tích tụ → bùng phát.
+
+DOT:
+
+Hàn / ăn mòn / hiệu ứng kéo dài.
+
+Big DMG:
+
+Sóng / đóng băng / phá băng.
+
+Mộc
+
+Theme:
+
+Sinh trưởng → lan truyền → hút sinh lực.
+
+DOT:
+
+Poison / Growth / Spread.
+
+Big DMG:
+
+Sinh lực tích tụ → bùng nổ.
+
+Kim
+
+Theme:
+
+Xuyên phá → chí mạng → kết liễu.
+
+DOT:
+
+Bleed / Armor Shred.
+
+Big DMG:
+
+Penetration + Critical.
+
+Thổ
+
+Theme:
+
+Trấn áp → tích lực → trọng kích.
+
+DOT:
+
+Corrosion / Crush / Debuff.
+
+Big DMG:
+
+Heavy Burst.
+
+14. Phase 10 — Đồng Tu
+
+Chỉ làm sau khi 5 Đơn Tu ổn định.
+
+Đồng Tu không nên tạo class mới.
+
+Thay vào đó tạo:
+
+Element Affinity
+
+Ví dụ:
+
+Fire 70%
+Wood 30%
+
+Spell có thể mang:
+
+Fire + Wood
+
+Sau đó Element Interaction xử lý.
+
+15. Song Hành
+
+Ví dụ:
+
+Hỏa + Mộc
+Poison
+    ↓
+Ignite
+    ↓
+Tăng tốc DoT
+    ↓
+Explosion
+
+Build:
+
+Viêm Độc.
+
+Hỏa + Kim
+Fire
+ ↓
+Heat
+ ↓
+Armor Break
+ ↓
+Critical Burst
+
+Build:
+
+Kim Viêm.
+
+Thủy + Mộc
+Slow
+ ↓
+Poison
+ ↓
+Control
+ ↓
+DoT
+
+Build:
+
+Hàn Độc.
+
+16. Tam Hành
+
+Không cần tạo hàng chục Tâm Pháp ngay.
+
+Tam Hành nên là:
+
+3 Element Tags
+       ↓
+Interaction Rules
+       ↓
+Emergent Build
+
+Ví dụ:
+
+Fire + Wood + Metal
+
+có thể tạo:
+
+Poison
++
+Burn
++
+Armor Shred
+=
+Corrosive Flame
+
+Tức là sức mạnh đến từ interaction, không phải chỉ cộng 3 loại damage.
+
+17. Ngũ Hành Quy Nhất
+
+Đây nên là một late-game specialization.
+
+Không cho người chơi dễ dàng sử dụng toàn bộ Ngũ Hành ngay từ đầu.
+
+Concept:
+
+Kim
+ │
+木 ── 火
+ │    │
+水 ── 土
+      ↓
+Ngũ Hành Quy Nhất
+
+Mục tiêu:
+
+Không mạnh nhất từng mặt, nhưng có khả năng chuyển đổi và khai thác toàn bộ hệ thống Ngũ Hành.
+
+Đây có thể là một trong những build endgame.
+
+18. Itemization
+
+Pháp Tu phải kết nối trực tiếp với hệ thống item hiện tại.
+
+Item không chỉ:
+
++10 Fire Damage
+
+mà có thể modifier gameplay.
+
+Ví dụ:
+
+Pháp bảo Hỏa
++ Fire Damage
++ Spell Damage
++ Burn Damage
+Pháp bảo DOT
++ DoT Damage
++ Burn Duration
++ Maximum Burn Stack
+Pháp bảo Burst
++ Explosion Damage
++ Critical Chance
++ Viêm Ý Generation
+Tâm pháp-related affix
++ Viêm Ý generation
++ Viêm Ý maximum
++ Explosion multiplier
+19. Nguyên liệu và nghề nghiệp
+
+Hệ thống vật liệu trước đó cũng phải liên kết với Pháp Tu.
+
+Ví dụ:
+
+Linh Thảo
+    ↓
+Luyện Đan
+    ↓
+Đan dược
+    ↓
+Mana / Spell / Element
+
+
+Linh Mộc
+    ↓
+Pháp Bảo / Phù
+
+
+Linh Thiết
+    ↓
+Pháp Khí
+
+
+Linh Phù
+    ↓
+Pháp Thuật / Formation
+
+Như vậy Pháp Tu trở thành một consumer lớn của toàn bộ crafting system.
+
+20. UI progression
+
+UI nên thể hiện:
+
+                 PHÁP TU
+                    │
+             Tâm Pháp hiện tại
+                    │
+           《Xích Viêm Tâm Kinh》
+                    │
+       ┌────────────┴────────────┐
+       │                         │
+    Ngũ Hành                   Build
+       │                         │
+      Hỏa                  ┌─────┴─────┐
+                           │           │
+                          DOT       BIG DMG
+
+Người chơi nhìn vào phải hiểu ngay:
+
+Tôi là Pháp Tu → tôi tu Hỏa → tôi theo Tâm Pháp X → tôi đang build DOT/Burst.
+
+Không nên bắt người chơi đọc một cây passive khổng lồ mới hiểu build của mình.
+
+21. Thứ tự triển khai cho Claude Code
+
+Đây là thứ tự tôi khuyên khóa cứng:
+
+[01] Cultivation Path Framework
+        ↓
+[02] Spell Damage Framework
+        ↓
+[03] Element Framework
+        ↓
+[04] Status / DOT Framework
+        ↓
+[05] Burst Framework
+        ↓
+[06] Combat Mind Framework
+        ↓
+[07] Hỏa Element
+        ↓
+[08] Xích Viêm Tâm Kinh
+        ↓
+[09] Hỏa Skills
+        ↓
+[10] Hỏa DOT Build
+        ↓
+[11] Hỏa Big DMG Build
+        ↓
+[12] Hỏa Passive
+        ↓
+[13] Hỏa Item Affix
+        ↓
+[14] UI
+        ↓
+[15] Balance
+        ↓
+[16] Thủy
+        ↓
+[17] Mộc
+        ↓
+[18] Kim
+        ↓
+[19] Thổ
+        ↓
+[20] Song Hành
+        ↓
+[21] Tam Hành
+        ↓
+[22] Ngũ Hành Quy Nhất
+22. Definition of Done
+
+Không coi Pháp Tu hoàn thành chỉ vì có 5 Element.
+
+MVP phải đạt:
+
+Framework
+ Pháp Tu tồn tại như một cultivation path.
+ Spell damage hoạt động.
+ Element damage hoạt động.
+ DOT framework hoạt động.
+ Burst framework hoạt động.
+ Tâm Pháp framework hoạt động.
+Gameplay
+ Hỏa có Tâm Pháp riêng.
+ Hỏa có resource riêng.
+ Hỏa có DOT loop.
+ Hỏa có Big DMG loop.
+ Có ít nhất 3 skill.
+ Có passive hỗ trợ 2 hướng build.
+ Có item modifier hỗ trợ build.
+Content
+ Hỏa.
+ Thủy.
+ Mộc.
+ Kim.
+ Thổ.
+
+Mỗi hành:
+
+1 Tâm Pháp
++
+1 DOT Archetype
++
+1 Big DMG Archetype
++
+3 Core Skills
++
+Passive
+Advanced
+ Song Hành.
+ Tam Hành.
+ Ngũ Hành Quy Nhất.
+ Element Interaction.
+Nguyên tắc quan trọng nhất
+
+Tôi sẽ khóa kiến trúc Pháp Tu theo công thức:
+
+Ngũ Hành quyết định "ta là ai".
+Tâm Pháp quyết định "ta chiến đấu như thế nào".
+DOT / Big DMG quyết định "ta xây build theo hướng nào".
+Skill + Passive + Item quyết định "build của ta mạnh đến đâu".
+
+Và đừng implement cả Pháp Tu ngay. Hãy làm Hỏa → Xích Viêm Tâm Kinh → DOT/Big DMG thành vertical slice hoàn chỉnh trước. Nếu vertical slice này chạy tốt, toàn bộ Thủy/Mộc/Kim/Thổ sau đó chủ yếu là content + data, thay vì phải viết lại combat system.

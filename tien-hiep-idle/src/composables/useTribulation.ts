@@ -1,0 +1,179 @@
+import { usePlayerStore } from '../stores/player'
+import { useGameManager } from './useGameState'
+import { resolveFoundation } from '../core/breakthrough/FoundationResolver'
+import { getCurrentRealm } from '../core/realm/realmSystem'
+import { KIEP_THUONG_DEBUFF } from '../data/buff/buffs'
+import { FOUNDATION_LABELS, type FoundationType } from '../core/breakthrough/FoundationType'
+import type { GameManager, ActiveTribulation } from '../core/game/GameManager'
+import { useWorldAnnouncementStore } from '../stores/worldAnnouncement'
+import { useUiStore } from '../stores/ui'
+
+// Trảm gate (blockIfNoBasicAttack, 2026-08-20 → gỡ 2026-08-21) — Pháp
+// Tu giờ tự học + trang bị SẴN 1 chiêu cơ bản (Hỏa Cầu Thuật) ngay lúc
+// chọn path (xem GameManager.chooseCultivationPath()/useBattleActions.
+// ts), nên tình huống "chưa trang bị gì" không còn xảy ra — bỏ hẳn
+// kiểm tra trước trận đấu này, kể cả ở Độ Kiếp.
+type PlayerStore = ReturnType<typeof usePlayerStore>
+
+// Mất 1 PHẦN tu vi hiện có khi thất bại (mục 13 spec `breakthrough`
+// — "mất một phần Linh lực"), KHÔNG mất Đại Đạo Chi Cơ hay bất kỳ vật
+// phẩm nào (đúng "Không nên để mất Đại Đạo Chi Cơ 0.01% chỉ vì thất
+// bại một lần").
+const TRIBULATION_DEFEAT_CULTIVATION_LOSS_PERCENT = 0.5
+const TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS = 50
+
+/**
+ * Bấm nút "TRÚC CƠ" — âm thầm resolve Căn Cơ rồi vào thẳng Độ Kiếp
+ * tương ứng, KHÔNG hỏi lại/hiện điều kiện gì (mục 10 — hard rule, hệ
+ * Căn Cơ 4-tier vẫn ẩn hoàn toàn dù giờ có thêm panel vật phẩm CÔNG
+ * KHAI đứng TRƯỚC bước này — xem BreakthroughRequirementPanel.vue).
+ * Hàm THUẦN (nhận player/gameManager qua tham số) — dùng được cả từ
+ * component con (qua useTribulation() bên dưới) lẫn App.vue's tick()
+ * (App.vue tự provide GameManager cho cây con, provide()/inject() KHÔNG
+ * hoạt động khi component tự inject() giá trị CHÍNH NÓ vừa provide,
+ * nên App.vue không thể gọi useGameManager()/useTribulation() —
+ * phải gọi thẳng hàm này với gameManager/player nó đã có sẵn).
+ */
+export function triggerFoundationBreakthroughAction(player: PlayerStore, gameManager: GameManager): boolean {
+  const battle = gameManager.getBattle()
+
+  if (battle && battle.state === 'fighting') {
+    return false
+  }
+
+  const cap = getCurrentRealm(player.realmId).attributeCap
+
+  const foundationType = resolveFoundation(
+    player.$state,
+    gameManager.materialBag,
+    gameManager.pillBag,
+    cap,
+  )
+
+  const started = gameManager.startTribulation(player.$state, player.finalStats, 'foundation', foundationType)
+
+  if (started) {
+    useUiStore().enterCombatScene('tribulation')
+  }
+
+  return started
+}
+
+/**
+ * Đột Phá tổng quát (2026-08-16) — MỌI đại cảnh giới còn lại (Kim Đan
+ * trở đi) dùng đường này thay vì hệ Căn Cơ 4-tier riêng của Trúc Cơ.
+ * Không có resolveFoundation nào cả — enemy Kiếp cố định theo
+ * targetRealmId (xem GameManager.ts's TRIBULATION_ENEMY_ID_BY_REALM).
+ * `targetRealmId` LUÔN là `getNextRealm(player.realmId)?.id` — caller
+ * (BreakthroughRequirementPanel.vue) tự resolve trước khi gọi.
+ */
+export function triggerRealmBreakthroughAction(targetRealmId: string, player: PlayerStore, gameManager: GameManager): boolean {
+  const battle = gameManager.getBattle()
+
+  if (battle && battle.state === 'fighting') {
+    return false
+  }
+
+  const started = gameManager.startTribulation(player.$state, player.finalStats, targetRealmId)
+
+  if (started) {
+    useUiStore().enterCombatScene('tribulation')
+  }
+
+  return started
+}
+
+/**
+ * Gọi mỗi tick từ App.vue, TRƯỚC nhánh Auto-refight Stage — battle
+ * Tribulation không qua Stage nên GameManager chỉ tự set 'victory'/
+ * 'defeat', không tự phản ứng. Trả về true nếu VỪA xử lý xong 1 kết
+ * quả trong tick này, để App.vue biết bỏ qua Auto-refight Stage ngay
+ * tick đó (tránh startStage() đè mất battle Tribulation vừa kết thúc
+ * trước khi kịp đọc).
+ */
+export function checkTribulationOutcomeAction(player: PlayerStore, gameManager: GameManager): boolean {
+  const active = gameManager.getActiveTribulation()
+
+  if (!active) {
+    return false
+  }
+
+  const battle = gameManager.getBattle()
+
+  if (!battle || battle.state === 'fighting') {
+    return false
+  }
+
+  if (battle.state === 'victory') {
+    resolveVictory(player, gameManager, active)
+  } else if (battle.state === 'defeat') {
+    resolveDefeat(player, gameManager)
+  }
+
+  gameManager.clearActiveTribulation()
+
+  return true
+}
+
+function resolveVictory(player: PlayerStore, gameManager: GameManager, active: ActiveTribulation) {
+  const realm = getCurrentRealm(active.targetRealmId)
+
+  player.realmId = active.targetRealmId
+  player.realmLevel = 1
+  player.cultivation = 0
+
+  if (active.foundationType) {
+    player.highestFoundationAchieved = active.foundationType
+  }
+
+  gameManager.syncRealmPassive(player.$state)
+  gameManager.syncRealmStatPassive(player.$state)
+
+  gameManager.syncSkillLevelToRealm(player.$state)
+
+  // Beta Phase 4 (World Announcement, mục XVI tài liệu) — "discovery
+  // moment" reveal Căn Cơ vừa đạt (Trúc Cơ) hoặc đơn giản là cảnh giới
+  // mới (mọi cảnh giới khác, đột phá tổng quát 2026-08-16). Pinia store
+  // gọi được trực tiếp ở đây (khác useGameManager() — Pinia dùng
+  // active-pinia toàn cục, không qua provide/inject theo cây component,
+  // xem ghi chú triggerFoundationBreakthroughAction() phía trên).
+  if (active.foundationType) {
+    useWorldAnnouncementStore().show(
+      `★ ${FOUNDATION_LABELS[active.foundationType].toUpperCase()} TRÚC CƠ ★`,
+      'Đạo hữu đã vượt qua Độ Kiếp, chính thức bước vào Trúc Cơ kỳ.',
+    )
+  } else {
+    useWorldAnnouncementStore().show(
+      `★ ${realm.name.toUpperCase()} ★`,
+      `Đạo hữu đã vượt qua Độ Kiếp, chính thức bước vào ${realm.name}.`,
+    )
+  }
+}
+
+function resolveDefeat(player: PlayerStore, gameManager: GameManager) {
+  player.cultivation = Math.floor(player.cultivation * (1 - TRIBULATION_DEFEAT_CULTIVATION_LOSS_PERCENT))
+
+  player.spiritStone = Math.max(0, player.spiritStone - TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS)
+
+  gameManager.applyPersistentBuff(KIEP_THUONG_DEBUFF)
+
+  // Beta Phase 4 — thông điệp ngắn, không phô trương (khác thắng lợi).
+  useWorldAnnouncementStore().show('Độ Kiếp Thất Bại', 'Kiếp Thương còn vương lại — hãy dưỡng thương rồi thử lại.')
+}
+
+/**
+ * Đột Phá Trúc Cơ (Phase 5) — cầu nối Vue cho component CON (đọc
+ * player/gameManager qua injection bình thường, xem useGameState.ts).
+ * App.vue tự gọi thẳng *Action() ở trên thay vì composable này (lý do
+ * xem doc triggerFoundationBreakthroughAction()).
+ */
+export function useTribulation() {
+  const player = usePlayerStore()
+  const gameManager = useGameManager()
+
+  return {
+    triggerFoundationBreakthrough: () => triggerFoundationBreakthroughAction(player, gameManager),
+    triggerRealmBreakthrough: (targetRealmId: string) => triggerRealmBreakthroughAction(targetRealmId, player, gameManager),
+    checkTribulationOutcome: () => checkTribulationOutcomeAction(player, gameManager),
+  }
+}

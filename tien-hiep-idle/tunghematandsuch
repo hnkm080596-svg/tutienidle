@@ -1,0 +1,473 @@
+Plan hệ thống Nguyên liệu → Sản phẩm
+1. Nguyên tắc nền tảng
+
+Mỗi nguyên liệu chỉ cần có:
+
+[Niên đại] + [Tên nguyên liệu]
+
+Ví dụ:
+
+Tụ Linh Thảo
+Thập Niên Tụ Linh Thảo
+Bách Niên Tụ Linh Thảo
+Thiên Niên Tụ Linh Thảo
+
+Niên đại là trục sức mạnh của nguyên liệu, không phải một loại Quality riêng.
+
+4 nhóm nguyên liệu chính
+Nhóm	Nguyên liệu	Dùng cho
+🌿 Linh Thảo	Thập Niên Tụ Linh Thảo	Luyện đan
+🌳 Linh Mộc	Thập Niên Thanh Linh Mộc	Chế phù
+⛏️ Linh Thiết	Thập Niên Xích Đồng Linh Thiết	Bày trận
+🩸/🦴 Yêu Tài	Yêu Đan / Yêu Huyết / Yêu Cốt	Phụ trợ nghề nghiệp
+
+Ngoài ra:
+
+Linh Thạch là tài nguyên tiêu hao chung của toàn bộ hệ thống.
+
+2. Niên đại quyết định "trần" sản phẩm
+
+Đây là điểm tôi nghĩ nên giữ rất rõ.
+
+Không phải:
+
+nguyên liệu 100% quyết định phẩm cấp.
+
+Mà là:
+
+nguyên liệu quyết định phẩm cấp tối đa mà công thức có thể đạt tới.
+
+Ví dụ:
+
+Nguyên liệu	Trần sản phẩm
+Tụ Linh Thảo	Nhất phẩm
+Thập Niên Tụ Linh Thảo	Nhất phẩm
+Bách Niên Tụ Linh Thảo	Nhị phẩm
+Thiên Niên Tụ Linh Thảo	Tam phẩm
+Vạn Niên Tụ Linh Thảo	Tứ phẩm
+
+Như vậy:
+
+Bách Niên Tụ Linh Thảo → Tụ Linh Đan tối đa Nhị phẩm
+
+Nhưng không có nghĩa:
+
+cứ dùng Bách Niên là chắc chắn ra Nhị phẩm.
+
+Kết quả vẫn phụ thuộc vào:
+
+Công thức
+Cấp Luyện Đan Sư
+Building
+Chất lượng thao tác/hệ thống random
+Các bonus khác
+
+Điều này rất hợp với hệ thống randomizer mà chúng ta đã xây trước đó.
+
+3. Đừng làm mỗi nguyên liệu có quá nhiều thuộc tính
+
+Tôi khuyên nguyên liệu chỉ có:
+
+Name
+Type
+Years
+Element
+BaseValue
+
+Ví dụ:
+
+Bách Niên Tụ Linh Thảo
+
+
+Type: Herb
+Years: 100
+Element: Neutral
+BaseValue: 100
+
+Không cần thêm:
+
+Rarity
+Quality
+Grade
+Purity
+Potential
+Durability
+...
+
+Nếu không, hệ thống sẽ lại quay về vấn đề Quality + Rarity + phẩm chất + niên đại chồng chéo.
+
+4. Luyện đan — đơn giản hóa mạnh
+Công thức
+
+Linh Thảo + Yêu Đan + Linh Thạch
+
+Số lượng linh thảo không cố định cho mọi đan dược.
+
+Ví dụ:
+
+Tụ Linh Đan
+1–3 loại Linh Thảo
++
+1 Yêu Đan
++
+Linh Thạch
+Trúc Cơ Đan
+2–4 loại Linh Thảo
++
+1 Yêu Đan
++
+Linh Thạch
+Đan cao cấp
+3–6 loại Linh Thảo
++
+Yêu Đan
++
+Linh Thạch
+
+Như vậy người chơi vẫn có cảm giác "phối dược", nhưng không cần 20 loại nguyên liệu.
+
+5. Yêu Đan có vai trò riêng
+
+Yêu Đan không nên chỉ là "một nguyên liệu nữa".
+
+Nó là lõi năng lượng của đan dược.
+
+Ví dụ:
+
+Linh Thảo = dược tính
+Yêu Đan = năng lượng
+Linh Thạch = nhiên liệu luyện chế
+
+Điều này tạo ra logic rất dễ hiểu.
+
+Ví dụ:
+
+Tụ Linh Đan
+
+Tụ Linh Thảo → khả năng tụ linh
+Yêu Đan → cung cấp yêu lực chuyển hóa
+Linh Thạch → duy trì quá trình luyện
+
+6. Chế phù
+
+Tương tự nhưng đổi vật liệu cốt lõi.
+
+Linh Mộc + Yêu Huyết + Linh Thạch
+
+Trong đó:
+
+Linh Mộc = vật dẫn / nền phù
+Yêu Huyết = linh tính / lực dẫn
+Linh Thạch = năng lượng kích hoạt
+
+Ví dụ:
+
+Hỏa Cầu Phù
+1 Linh Mộc
++
+Yêu Huyết
++
+Linh Thạch
+Kim Cương Phù
+1–2 Linh Mộc
++
+Yêu Huyết
++
+Linh Thạch
+Phù cao cấp
+2–3 Linh Mộc
++
+Yêu Huyết
++
+Linh Thạch
+7. Linh Mộc cũng dùng cơ chế niên đại
+
+Ví dụ:
+
+Thanh Linh Mộc
+Thập Niên Thanh Linh Mộc
+Bách Niên Thanh Linh Mộc
+Thiên Niên Thanh Linh Mộc
+
+Niên đại quyết định trần phẩm cấp của Phù.
+
+Ví dụ:
+
+Linh Mộc	Phù tối đa
+Thanh Linh Mộc	Nhất phẩm
+Thập Niên	Nhất phẩm
+Bách Niên	Nhị phẩm
+Thiên Niên	Tam phẩm
+
+Như vậy người chơi lập tức hiểu:
+
+Muốn chế phù Nhị phẩm → phải kiếm Linh Mộc Bách Niên.
+
+8. Bày trận — dùng Linh Thiết
+
+Bày trận nên khác hai nghề trên một chút.
+
+Nhiều loại Linh Thiết + Yêu Cốt + Linh Thạch
+
+Ví dụ:
+
+Tụ Linh Trận
+1–3 Linh Thiết
++
+Yêu Cốt
++
+Linh Thạch
+Kim Cương Trận
+2–4 Linh Thiết
++
+Yêu Cốt
++
+Linh Thạch
+Đại trận
+3–6 Linh Thiết
++
+Yêu Cốt
++
+Linh Thạch
+
+Điểm quan trọng:
+
+Bày trận nên tiêu thụ nhiều loại Linh Thiết hơn, bởi đây là cách tạo ra sink cực tốt cho khoáng sản.
+
+9. Tại sao Bày trận cần nhiều Linh Thiết?
+
+Vì mỗi loại Linh Thiết có thể đại diện cho một thuộc tính trận pháp.
+
+Ví dụ:
+
+Xích Đồng Linh Thiết → Hỏa
+Huyền Thiết → Kim
+Thanh Đồng → Mộc
+Hàn Thiết → Thủy
+Hoàng Kim Linh Thiết → Thổ
+
+Một trận pháp có thể yêu cầu:
+
+Huyền Thiết
++
+Xích Đồng
++
+Thanh Đồng
++
+Yêu Cốt
++
+Linh Thạch
+
+Như vậy Linh Thiết không bị biến thành:
+
+"mỏ quặng nào tốt hơn thì cứ dùng loại đó."
+
+Mà mỗi loại có lý do tồn tại.
+
+10. Hệ thống Khí — dùng phế phẩm từ sản xuất
+
+Đây là phần tôi đặc biệt khuyến nghị.
+
+Đừng tạo một loại tài nguyên mới chỉ để cường hóa Khí.
+
+Hãy để:
+
+Luyện khí tạo ra Bụi Cốt.
+
+Ví dụ:
+
+Linh Thiết
+   ↓
+Lò Luyện Khí
+   ↓
+Khí
++
+Bụi Cốt
+
+Bụi Cốt là phế liệu sau luyện chế, được thu hồi từ quá trình luyện.
+
+11. Bụi Cốt dùng để cường hóa Khí
+
+Ví dụ:
+
+Khí + Bụi Cốt + Linh Thạch
+        ↓
+     Cường hóa
+
+Cấp thấp:
+
++1 → Bụi Cốt
++2 → Bụi Cốt
++3 → Bụi Cốt
+
+Cấp cao hơn:
+
+Khí + Bụi Cốt + Linh Thạch
++
+một phần Linh Thiết
+
+Từ đó hình thành vòng:
+
+Khai thác → Luyện khí → phế liệu → cường hóa → tiếp tục luyện khí
+
+12. Quan trọng: không để Bụi Cốt thành "rác"
+
+Nên có cơ chế:
+
+Thu hồi
+Linh Thiết
+↓
+Luyện khí
+↓
+Khí thành phẩm
+↓
+Bụi Cốt
+Cường hóa
+Khí
++
+Bụi Cốt
++
+Linh Thạch
+↓
+Khí mạnh hơn
+Luyện lại / tái chế
+
+Ở cấp cao:
+
+Bụi Cốt
++
+Linh Thạch
+↓
+Tinh Luyện Cốt
+
+Tinh Luyện Cốt có thể dùng cho:
+
+Cường hóa cao cấp
+Luyện khí cao cấp
+Sửa chữa Khí
+Tái luyện Khí
+
+Như vậy không có phế phẩm vô nghĩa.
+
+13. Toàn bộ nền kinh tế tài nguyên
+
+Tôi sẽ thiết kế thành vòng như sau:
+
+                    ┌──────────────┐
+                    │   LINH THẠCH │
+                    └──────┬───────┘
+                           │
+        ┌──────────────────┼──────────────────┐
+        ↓                  ↓                  ↓
+     Luyện Đan          Chế Phù             Bày Trận
+        ↑                  ↑                  ↑
+        │                  │                  │
+    Linh Thảo           Linh Mộc           Linh Thiết
+        │                  │                  │
+     Yêu Đan            Yêu Huyết           Yêu Cốt
+        │                  │                  │
+        ↓                  ↓                  ↓
+     Đan dược             Linh Phù          Trận pháp
+
+
+
+
+                     LINH THIẾT
+                         │
+                         ↓
+                     Luyện Khí
+                         │
+                  ┌──────┴──────┐
+                  ↓             ↓
+                  Khí        Bụi Cốt
+                  │             │
+                  │             ↓
+                  └──────→ Cường Hóa
+14. Tôi đề xuất chia "nguồn nguyên liệu" thành 4 tầng
+Tầng 1 — Thu thập
+Linh Thảo
+Linh Mộc
+Linh Thiết
+Tầng 2 — Yêu tài
+
+Từ yêu thú:
+
+Yêu Đan
+Yêu Huyết
+Yêu Cốt
+Tầng 3 — Tiền tệ sản xuất
+Linh Thạch
+Tầng 4 — Phế phẩm tái sử dụng
+Bụi Cốt
+Tinh Luyện Cốt
+
+Điểm hay là không cần thêm 30 loại currency.
+
+15. Quy tắc sử dụng mọi tài nguyên
+Tài nguyên	Tiêu thụ bởi	Vai trò
+🌿 Linh Thảo	Luyện đan	Dược tính
+🌳 Linh Mộc	Chế phù	Vật dẫn
+⛏️ Linh Thiết	Bày trận / Luyện khí	Vật liệu
+💠 Yêu Đan	Luyện đan	Năng lượng
+🩸 Yêu Huyết	Chế phù	Linh tính
+🦴 Yêu Cốt	Bày trận	Cốt trận
+💎 Linh Thạch	Tất cả	Chi phí sản xuất
+⚙️ Bụi Cốt	Cường hóa Khí	Phế liệu
+🔷 Tinh Luyện Cốt	Khí cao cấp	Tài nguyên tái chế
+16. Một thay đổi tôi rất khuyến nghị
+
+Đừng cho "số năm" áp dụng giống nhau một cách máy móc cho Yêu Đan/Huyết/Cốt.
+
+Linh tài:
+
+Niên đại
+
+Yêu tài:
+
+Tu vi / cảnh giới yêu thú
+
+Ví dụ:
+
+Bách Niên Tụ Linh Thảo
+
+nhưng:
+
+Yêu Đan — Luyện Khí Cảnh
+Yêu Đan — Trúc Cơ Cảnh
+Yêu Đan — Kim Đan Cảnh
+
+Như vậy hệ thống lore sẽ tự nhiên hơn.
+
+Và đặc biệt, nó tạo ra hai hướng farming:
+
+Người chơi cần thời gian để trồng/thu thập linh tài, nhưng cần săn yêu thú để lấy yêu tài.
+
+17. Công thức tổng quát của 3 nghề
+
+Cuối cùng người chơi chỉ cần nhớ 3 công thức:
+
+🍵 Luyện Đan
+
+Linh Thảo + Yêu Đan + Linh Thạch → Đan Dược
+
+🧿 Chế Phù
+
+Linh Mộc + Yêu Huyết + Linh Thạch → Linh Phù
+
+🌀 Bày Trận
+
+Linh Thiết + Yêu Cốt + Linh Thạch → Trận Pháp
+
+Còn:
+
+⚔️ Luyện Khí
+
+Linh Thiết + Linh Thạch → Khí + Bụi Cốt
+
+🔨 Cường Hóa Khí
+
+Khí + Bụi Cốt + Linh Thạch → Khí mạnh hơn
+
+Đây là cấu trúc tôi nghĩ rất phù hợp với game idle/tower-defense của bạn: ít loại nguyên liệu lõi, công thức dễ hiểu, nhưng bên dưới vẫn đủ sâu để tạo farming, crafting, progression và resource sink.
+
+Quan trọng nhất: niên đại của nguyên liệu không phải là phẩm chất của sản phẩm. Nó chỉ đặt trần phẩm cấp; còn sản phẩm cuối cùng vẫn đi qua hệ thống randomizer + nghề nghiệp + building để quyết định kết quả. Điều này giữ được vai trò của cả hai trục phẩm chất / chất lượng mà chúng ta đã bàn trước đó.

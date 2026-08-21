@@ -1,0 +1,701 @@
+PLAN FINAL — COMBAT SYSTEM & COMBAT SCENE
+1. Triết lý tổng thể
+
+Combat của game là:
+
+Build trước trận → vào ải → combat tự động → thắng/thua → kết quả
+
+Không có roguelike upgrade trong battle.
+
+Không có đổi build trong battle.
+
+Không có lựa chọn skill giữa các wave.
+
+Không có speed control.
+
+Không có movement control.
+
+Người chơi chỉ Play/Pause và xem diễn biến.
+
+2. Luồng gameplay hoàn chỉnh
+ĐỘNG PHỦ
+   │
+   ├── Nghề nghiệp
+   │      └── Thiết lập Build Combat
+   │
+   └── Thám hiểm
+          │
+          ↓
+      CHỌN ẢI
+          │
+          ├── [Vào Build]  ← tiện ích
+          │
+          └── [Bắt đầu]
+                │
+                ↓
+           COMBAT SCENE
+                │
+          ┌─────┴─────┐
+          ↓           ↓
+        THẮNG        THUA
+          │           │
+          ↓           ↓
+       RESULT       RESULT
+          │           │
+     ┌────┴────┐      │
+     ↓         ↓      ↓
+  Replay    Tiếp   Về Động Phủ
+     │       tục
+     ↓
+  CD 3s
+     ↓
+ Auto Start
+3. Build nằm hoàn toàn trong giao diện Nghề nghiệp
+
+Đây là điểm cần tách architecture rõ ràng.
+
+Combat không sở hữu Build System.
+
+Build được thiết lập tại:
+
+Động Phủ
+  ↓
+Nghề nghiệp
+  ↓
+Pháp Tu / Kiếm Tu / Thể Tu
+  ↓
+Combat Build
+
+Ví dụ Pháp Tu:
+
+┌─────────────────────────────────────┐
+│            PHÁP TU                  │
+├─────────────────────────────────────┤
+│ Hệ chính: HỎA                       │
+│                                     │
+│ Kỹ năng chủ đạo                     │
+│ 🔥 Hỏa Cầu                          │
+│                                     │
+│ Projectile                          │
+│ • Số lượng                          │
+│ • Quỹ đạo                           │
+│ • Tốc độ                             │
+│ • Xuyên                              │
+│ • Nảy                                │
+│                                     │
+│ Hiệu ứng                             │
+│ • Thiêu Đốt                         │
+│                                     │
+│ [LƯU BUILD]                         │
+└─────────────────────────────────────┘
+
+Build được lưu trước khi vào battle.
+
+4. Màn hình chọn ải
+
+Đây là nơi duy nhất trước battle có shortcut đến Build.
+
+┌────────────────────────────────────────────────┐
+│              HUYẾT LANG SƠN                    │
+│                                                │
+│  Tầng 12                                       │
+│                                                │
+│  Đề xuất: Luyện Khí                            │
+│                                                │
+│  Enemy: Huyết Lang / Lang Vệ                   │
+│                                                │
+│  ┌──────────────┐     ┌───────────────────┐   │
+│  │  ⚔ BUILD     │     │    BẮT ĐẦU        │   │
+│  └──────────────┘     └───────────────────┘   │
+└────────────────────────────────────────────────┘
+[BUILD]
+
+Chỉ là shortcut:
+
+Chuyển đến giao diện nghề nghiệp để chỉnh build.
+
+Sau khi chỉnh xong:
+
+Build
+ ↓
+Quay lại màn hình chọn ải
+
+Không tạo một Build UI thứ hai riêng cho Combat.
+
+5. Combat Scene — màn hình ngang
+
+Đây là layout chính.
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ [←] Huyết Lang Sơn • Tầng 12                         WAVE 12/30      ⚙      │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│                                                                              │
+│                                                                              │
+│     🧙                                                                 👹   │
+│     ███████████                                                👹   👹      │
+│     █████████                                                  👹           │
+│                                                                              │
+│             🔥 ───────────────────────────────→ 👹                         │
+│                ╲                               💥                           │
+│                 ╲──────────────────────→ 👹                                │
+│                                                                              │
+│                       🔥 ───────────────────→ 👹                            │
+│                                                                              │
+│                                                         ← ENEMY SPAWN       │
+│                                                                              │
+│                                                                              │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                         COMBAT STATUS / EVENT                                │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                         [ ▶ PLAY / ❚❚ PAUSE ]                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+6. Hero position
+
+Hero cố định:
+
+X ≈ 10–15%
+Y ≈ giữa battlefield
+
+Ví dụ:
+
+                   BATTLEFIELD
+
+
+   🧙
+   │
+   │──────────────────────────────→
+   │
+
+Hero không di chuyển gameplay.
+
+Chỉ có animation:
+
+Idle
+Cast
+Hit
+Death
+Skill/VFX
+Cultivation aura nếu cần
+7. Enemy Spawn
+
+Enemy luôn xuất hiện từ phía phải.
+
+                                    SPAWN
+                                      ↓
+                                👹 👹 👹
+                                  ↓
+                            👹    ↓
+                              ↓
+   🧙 ←────────────────────────────
+
+Spawn system có thể phân bố enemy theo nhiều Y:
+
+                         👹
+
+
+                              👹
+
+
+                   👹
+
+
+                              👹
+
+
+                         👹
+
+Sau đó enemy tiến về phía hero.
+
+8. Battlefield
+
+Battlefield là khu vực trình diễn chính.
+
+Khoảng:
+
+70–75% chiều cao Combat Scene
+
+Không đặt các panel thông tin lớn vào đây.
+
+Không đặt:
+
+Build
+Equipment
+Skill Tree
+Inventory
+Combat Log lớn
+Button skill
+Status panel
+
+Battlefield dành cho:
+
+Hero
+Enemy
+Projectile
+Collision
+Damage Number
+VFX
+Status effect
+Death effect
+9. Thanh trạng thái
+
+Theo yêu cầu của bạn:
+
+Không đặt thanh trạng thái trong battlefield.
+
+Đưa nó ra trên hoặc dưới.
+
+Mình đề xuất trên cùng, ngay dưới Top Bar hoặc tích hợp vào Top Bar.
+
+Ví dụ:
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ [←] Huyết Lang Sơn • Tầng 12                         WAVE 12/30      ⚙      │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ 🧙 ████████████████████  HP 82%                         WAVE 12 / 30        │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│                              BATTLEFIELD                                    │
+│                                                                              │
+│     🧙                           🔥 ───────────────→ 👹 👹                   │
+│                                      💥                                    │
+│                                      🔥 ───────────→ 👹                     │
+│                                                                              │
+│                                                               👹            │
+│                                                                              │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ Combat Events                                                                │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                              [ ▶ PLAY ]                                      │
+└──────────────────────────────────────────────────────────────────────────────┘
+Thanh trạng thái chỉ hiển thị thông tin cần thiết
+
+Player:
+
+HP
+Shield nếu có
+
+Boss:
+
+Boss HP
+
+Wave:
+
+Wave hiện tại / tổng wave
+
+Không nhồi stat.
+
+10. Combat Event
+
+Thanh event nằm dưới battlefield.
+
+Không phải combat log chi tiết.
+
+Ví dụ:
+
+🔥 Thiêu Đốt
+⚡ Điện Kích
+💥 Critical
+☠ Độc phát
+
+Có thể dùng dạng scrolling event nhỏ.
+
+Damage thông thường vẫn hiển thị trực tiếp trên enemy:
+
+          -128
+           💥
+          👹
+11. Play / Pause
+
+Chỉ giữ một control:
+
+[ ▶ PLAY ]
+
+Khi đang chạy:
+
+[ ❚❚ PAUSE ]
+
+Không có:
+
+❌ 1×
+❌ 2×
+❌ 4×
+❌ Speed slider
+
+Combat chạy với một tốc độ cố định.
+
+12. Khi Pause
+
+Pause chỉ dừng simulation:
+
+┌──────────────────────────────────────────┐
+│                                          │
+│              GAME PAUSED                 │
+│                                          │
+│              [ ▶ TIẾP TỤC ]             │
+│                                          │
+└──────────────────────────────────────────┘
+
+Nên freeze:
+
+enemy movement
+projectile
+timers
+status duration
+attack cycle
+spawn timer
+VFX gameplay-related
+13. Battle State Machine
+
+Combat nên có state rõ ràng:
+
+PREPARING
+    ↓
+RUNNING
+    ↓
+PAUSED
+    ↓
+RUNNING
+    ↓
+WAVE_CLEAR
+    ↓
+RUNNING
+    ↓
+VICTORY
+
+Hoặc:
+
+RUNNING
+   ↓
+DEFEAT
+
+Không có state:
+
+UPGRADE
+SELECT_REWARD
+CHANGE_BUILD
+REROLL
+14. Victory Screen
+
+Khi thắng:
+
+┌─────────────────────────────────────────────┐
+│                                             │
+│                ★ THẮNG ★                   │
+│                                             │
+│          Huyết Lang Sơn — Tầng 12           │
+│                                             │
+│          Wave: 30 / 30                      │
+│                                             │
+│          EXP          +1,240                │
+│          Linh Thạch   +320                  │
+│          Vật liệu     +8                    │
+│                                             │
+│     ┌─────────────┐   ┌────────────────┐   │
+│     │  ĐÁNH LẠI   │   │   TIẾP TỤC     │   │
+│     └─────────────┘   └────────────────┘   │
+│                                             │
+└─────────────────────────────────────────────┘
+15. Auto Battle — Victory
+
+Nếu trước khi vào battle người chơi đã bật:
+
+☑ AUTO BATTLE
+
+thì nút Đánh lại không hoạt động ngay.
+
+Ví dụ:
+
+┌──────────────────────┐
+│   ĐÁNH LẠI           │
+│                      │
+│       3              │
+│    đang chuẩn bị     │
+└──────────────────────┘
+
+Visual:
+
+[ ĐÁNH LẠI  3s ]
+
+Nút tối màu / disabled.
+
+Countdown:
+
+3s
+ ↓
+2s
+ ↓
+1s
+ ↓
+0
+
+Khi hết:
+
+VICTORY
+   ↓
+Start new battle
+   ↓
+Reset combat state
+   ↓
+Wave 1
+
+Không quay về màn hình chọn ải.
+
+16. Reset khi Auto Battle đánh lại
+
+Khi battle mới bắt đầu phải reset hoàn toàn:
+
+Player HP → Max
+Player status → reset
+Enemy list → clear
+Projectile list → clear
+Wave → 1
+Spawn timers → reset
+Combat timers → reset
+Boss → reset
+VFX → clear
+Damage numbers → clear
+
+Build vẫn giữ nguyên.
+
+Đây là một battle mới với cùng loadout.
+
+17. Nếu người chơi tắt Auto Battle
+
+Victory:
+
+[ ĐÁNH LẠI ]       [ TIẾP TỤC ]
+
+Đánh lại → bắt đầu ngay.
+
+Không countdown.
+
+18. Defeat Screen
+
+Theo yêu cầu của bạn, không có đánh lại.
+
+┌─────────────────────────────────────────────┐
+│                                             │
+│                ☠ THẤT BẠI                  │
+│                                             │
+│          Huyết Lang Sơn — Tầng 12           │
+│                                             │
+│          Wave đạt được: 18                  │
+│                                             │
+│          Thưởng: ...                        │
+│                                             │
+│              ┌────────────────┐             │
+│              │  VỀ ĐỘNG PHỦ  │             │
+│              └────────────────┘             │
+│                                             │
+└─────────────────────────────────────────────┘
+
+Chỉ có một nút:
+
+Về Động Phủ
+
+Không:
+
+❌ Đánh lại
+❌ Auto retry
+❌ Chọn build
+❌ Continue
+19. Auto Battle khi thắng
+
+Nên hiểu Auto Battle là:
+
+Sau khi thắng, tự động chạy lại cùng ải.
+
+Không phải:
+
+Tự động chọn build.
+
+Build đã khóa từ trước.
+
+Auto Battle ON
+
+
+Battle 1
+  ↓
+Victory
+  ↓
+3s Countdown
+  ↓
+Battle 2
+  ↓
+Victory
+  ↓
+3s Countdown
+  ↓
+Battle 3
+
+Nếu một battle thất bại:
+
+Battle
+ ↓
+Defeat
+ ↓
+Về Động Phủ
+
+Auto Battle dừng ngay lập tức.
+
+20. Architecture
+Vue
+CombatScene.vue
+│
+├── CombatTopBar
+│
+├── CombatStatusBar
+│
+├── PhaserGame
+│
+├── CombatEventBar
+│
+└── CombatControlBar
+    └── PlayPauseButton
+
+Result:
+
+CombatResultModal
+├── Victory
+│   ├── Rewards
+│   ├── RetryButton
+│   └── ContinueButton
+│
+└── Defeat
+    └── ReturnHomeButton
+21. Phaser
+
+Phaser chỉ chịu trách nhiệm battlefield:
+
+CombatScene
+│
+├── Background
+│
+├── Player
+│
+├── EnemySpawnSystem
+│
+├── EnemySystem
+│
+├── ProjectileSystem
+│
+├── CollisionSystem
+│
+├── DamageSystem
+│
+├── StatusEffectSystem
+│
+└── VFXSystem
+
+Combat controller:
+
+CombatController
+│
+├── start()
+├── pause()
+├── resume()
+├── update()
+├── nextWave()
+├── victory()
+├── defeat()
+└── reset()
+22. Data flow
+
+Build không nằm trong Combat.
+
+Profession System
+       │
+       ↓
+Combat Build
+       │
+       ↓
+Selected Stage
+       │
+       ↓
+Combat Session
+       │
+       ├── Player Stats
+       ├── Projectile Config
+       ├── Skill Config
+       ├── Element Config
+       └── Enemy Config
+
+Khi CombatSession bắt đầu:
+
+Snapshot build hiện tại.
+
+Sau đó combat sử dụng snapshot đó cho đến khi kết thúc.
+
+Nếu người chơi thay đổi build ở nơi khác trong lúc battle đang chạy thì battle hiện tại không bị ảnh hưởng.
+
+23. Quy tắc quan trọng cần khóa cho Claude Code
+Combat
+Landscape/horizontal.
+Hero cố định ở góc trái giữa.
+Enemy spawn từ bên phải.
+Enemy di chuyển về hero.
+Projectile di chuyển từ hero về enemy.
+Battlefield chiếm phần lớn màn hình.
+Combat tự động.
+Không movement control.
+Không skill button.
+Không upgrade giữa battle.
+Không change build giữa battle.
+Không reward selection giữa wave.
+Không speed control.
+Chỉ Play/Pause.
+Build
+Build thuộc Profession UI.
+Không thuộc Combat UI.
+Màn hình chọn ải có shortcut [Build].
+Build được khóa khi battle bắt đầu.
+Một battle sử dụng một build snapshot.
+Victory
+Hiện reward.
+Auto Battle OFF → [Đánh lại] + [Tiếp tục].
+Auto Battle ON → [Đánh lại] disabled/dark + countdown 3 giây.
+Countdown hết → tự động bắt đầu battle mới.
+Battle mới reset toàn bộ state.
+Build giữ nguyên.
+Defeat
+Không retry.
+Không auto retry.
+Chỉ [Về Động Phủ].
+Auto Battle dừng.
+24. Cấu trúc trải nghiệm cuối cùng
+                 ĐỘNG PHỦ
+                    │
+             ┌──────┴──────┐
+             │             │
+       NGHỀ NGHIỆP       THÁM HIỂM
+             │             │
+        SETUP BUILD     CHỌN ẢI
+                           │
+                     [ BUILD ] ───→ Nghề nghiệp
+                           │
+                       [ BẮT ĐẦU ]
+                           ↓
+                    ┌─────────────┐
+                    │   COMBAT    │
+                    │             │
+                    │ 🧙 → 🔥 → 👹│
+                    │             │
+                    │ AUTO        │
+                    └──────┬──────┘
+                           │
+                    ┌──────┴──────┐
+                    ↓             ↓
+                  THẮNG          THUA
+                    │             │
+              RESULT SCREEN       │
+                    │             │
+             Auto Battle?         │
+              /         \         │
+            YES          NO       │
+             │            │       │
+           3 sec        Manual    │
+             │            │       │
+             ↓            ↓       ↓
+          BATTLE       ĐÁNH LẠI  ĐỘNG PHỦ
+           MỚI

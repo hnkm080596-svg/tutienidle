@@ -1,0 +1,301 @@
+import type { StatModifier} from  '../stats/StatCalculator'
+import { createBaseStats, type Stats } from '../stats/StatBlock'
+import type { CombatEntity } from '../combat/CombatEntity'
+import { addCultivation } from '../cultivation/CultivationSystem'
+import type { RewardReceiver } from '../reward/RewardSystem'
+import { getRealmIndex } from '../realm/realmSystem'
+import type { FoundationType } from '../breakthrough/FoundationType'
+import type { CultivationPathId } from './CultivationPathKit'
+import type { ElementType } from '../element/ElementType'
+
+export interface PlayerData {
+  name: string
+
+  realmId: string
+  realmLevel: number
+
+  cultivation: number
+  cultivationPerSecond: number
+
+  baseStats: Stats
+
+  // Modifier "tĩnh", gắn trực tiếp với nhân vật: equipment, talent,
+  // reincarnation... Người chơi tự thêm/bớt qua các hành động rõ ràng
+  // (trang bị vũ khí, chọn talent...).
+  modifiers: StatModifier[]
+
+  // Modifier "động", được GameManager tổng hợp lại mỗi tick từ
+  // BuffSystem + TechniqueSystem (xem GameManager.getAggregatedModifiers()).
+  // Store không tự tính modifier này — chỉ nhận và lưu để finalStats dùng.
+  externalModifiers: StatModifier[]
+
+  spiritStone: number
+
+  // Ghi nhận đã unlock hiệu ứng gắn passive của Phá Cảnh Tâm Pháp khi
+  // phá ĐẠI cảnh giới (key: `${techniqueId}:${realmId}`) — tránh cộng
+  // trùng modifier vĩnh viễn nếu code chạy lại (idempotent, giống
+  // GameManager.syncRealmPassive()). Xem composables/useBreakthrough.ts.
+  unlockedRealmEnhancements: string[]
+
+  // Đột Phá Trúc Cơ (Phase 5) — Căn Cơ CAO NHẤT từng đạt qua Độ Kiếp
+  // thắng lợi (mục 16 spec `breakthrough` — "được reveal" sau khi
+  // thắng). undefined = chưa từng Trúc Cơ thành công. CHỈ dùng để
+  // hiện tên tier lúc reveal, KHÔNG BAO GIỜ dùng để gợi ý điều kiện
+  // trước khi đạt (xem core/breakthrough/FoundationResolver.ts).
+  highestFoundationAchieved?: FoundationType
+
+  // Beta Phase 4 (Tutorial Carousel) — đã xem/bỏ qua tutorial nhập môn
+  // chưa, gate theo nhân vật MỚI (App.vue's onMounted() else-branch) —
+  // đúng pattern unlockedRealmEnhancements (thêm field + default trong
+  // createDefaultPlayer(), tự persist qua spread).
+  hasSeenTutorial: boolean
+
+  // Cultivation ⇄ combat (2026-08-20) — KHÔNG còn nút bấm thủ công,
+  // field này giờ SUY RA THẲNG từ isFighting mỗi tick (App.vue's
+  // tick(): `player.isCultivating = !isFighting`) — chiến đấu thì
+  // không tu luyện, không chiến đấu thì tự động tu luyện. Vẫn giữ làm
+  // field thật (không tính lại tại chỗ dùng) vì MainScene.ts's
+  // onCultivationChanged() cần 1 giá trị ổn định để đổi pose ngồi
+  // thiền, và SaveSystem.ts vẫn persist field này.
+  isCultivating: boolean
+
+  // Pháp Tu profession-tier ladder (2026-08-14, xem
+  // core/player/CultivationPathKit.ts) — undefined (mặc định của MỌI
+  // nhân vật hiện có) -> chọn 1 lần DUY NHẤT qua
+  // GameManager.chooseCultivationPath() -> VĨNH VIỄN (không có thao
+  // tác "đổi lại"/respec — đúng tinh thần "nghề nghiệp", một khi chọn
+  // thì gắn bó). Việc chọn tự cấp Tâm Pháp Tu Luyện + Tâm Pháp Chiến
+  // Đấu + đúng 3 skill cố định của tier đó — KHÔNG phải hệ thống
+  // build tự do, chỉ là 1 bộ nội dung đã thiết kế sẵn được mở khoá.
+  //
+  // Phàm Nhân (2026-08-16) — GIỜ CŨNG là 1 đại cảnh giới thật (REALMS[0],
+  // xem data/realms/realm.ts), khác field này (vốn là trạng thái "chưa
+  // chọn nghề", độc lập với realmId). 2 khái niệm trùng tên nhưng KHÔNG
+  // phải 1: chọn path chính là nghi lễ đột phá Phàm Nhân -> Luyện Khí
+  // (xem GameManager.chooseCultivationPath()), nên trên thực tế
+  // cultivationPath luôn undefined trong lúc realmId === 'pham_nhan' và
+  // luôn có giá trị ngay khi realmId rời khỏi 'pham_nhan' — save cũ
+  // (tạo trước khi Phàm Nhân tồn tại, đã ở qi_refining+ mà chưa chọn
+  // path) là NGOẠI LỆ duy nhất, xem CharacterPanel.vue's
+  // canChooseCultivationPath.
+  cultivationPath?: CultivationPathId
+
+  // Kiếm Tu (2026-08-15) — Kiếm Ý VĨNH VIỄN: đếm dồn suốt đời save,
+  // KHÔNG BAO GIỜ giảm (khác `cultivation`, bị tiêu hao lúc đột phá) —
+  // mỗi 9999 điểm tích được thì +1 tầng Kiếm Ý, xem
+  // core/player/SwordIntentSystem.ts. Tăng trong stores/player.ts's
+  // cultivate() (ĐÚNG lượng tu vi thật vừa cộng, cùng nguồn nuôi
+  // techniqueExperience bên dưới).
+  totalCultivationGained: number
+
+  // Tâm Pháp có thanh kinh nghiệm riêng (2026-08-20) — thay driver cũ
+  // (đại cảnh giới người chơi) của getTechniqueTier(), xem
+  // core/technique/TechniqueTier.ts. Đếm dồn suốt đời save (không reset
+  // khi đột phá, cùng nguồn với totalCultivationGained) — technique chỉ
+  // có ĐÚNG 1 cái trong đời save (permanent path choice) nên 1 số vô
+  // hướng là đủ, không cần key theo techniqueId.
+  techniqueExperience: number
+
+  // Pháp Tu Redesign (magicpath, 2026-08-18) — điểm progression CHƯA
+  // TIÊU, +1 mỗi lần đột phá TIỂU cảnh giới (xem
+  // CultivationSystem.breakthrough()). Dùng để unlock/upgrade Element
+  // qua node tree (chưa xây — xem [[tienhiep-phap-tu-magicpath]]),
+  // KHÔNG liên quan gì tới equippedElements/Element Slot (2 hệ thống
+  // tách biệt theo đúng yêu cầu spec, mục 20).
+  skillPoints: number
+
+  // PLAN HOÀN CHỈNH mục 2 — điểm Main Stat CHƯA phân phối, cấp cùng
+  // lúc với skillPoints mỗi khi đột phá TIỂU cảnh giới (xem
+  // CultivationSystem.breakthrough()) nhưng là 1 hồ điểm HOÀN TOÀN
+  // riêng — tiêu vào baseStats.{strength,dexterity,intelligence,
+  // attunement,vitality} qua GameManager.allocateAttributePoint(), có
+  // trần riêng từng stat theo đại cảnh giới (xem core/stats/StatCap.ts).
+  attributePoints: number
+
+  // Pháp Tu Redesign — Element đã mở khóa (KHÔNG mất khi unequip, xem
+  // spec mục 32) — rỗng mặc định, phải mở qua node tree. Element
+  // KHÔNG nằm trong mảng này thì không equip/học skill/nâng cấp được.
+  unlockedElements: ElementType[]
+
+  // Pháp Tu Redesign — Element ĐANG mang vào combat, tối đa theo
+  // getElementSlotCount(realmId) (xem core/element/ElementSlot.ts).
+  // Phải là tập con của unlockedElements — GameManager.equipElement()
+  // enforce, type này không tự enforce được.
+  equippedElements: ElementType[]
+
+  // Pháp Tu Redesign — id của MỌI ProgressionNode đã mua, xuyên suốt
+  // MỌI path (Node Tree là hạ tầng CHUNG, không tách riêng theo path)
+  // — xem core/progression/NodeSystem.ts.
+  purchasedNodeIds: string[]
+
+  // Luyện Thể (Realm Passive & Pressure System, 2026-08-20) — 6 tầng
+  // rèn thể Phàm Nhân, xem data/realm/LuyenThe.ts. luyenTheCompletedTiers
+  // đếm số tầng ĐÃ HOÀN THÀNH (0-6, tuần tự), luyenTheCurrentTierProgress
+  // là Tinh Hoa Phàm Thể đã đầu tư vào tầng ĐANG DỞ (0..cap của tầng
+  // luyenTheCompletedTiers). Xem core/realm/LuyenTheSystem.ts.
+  luyenTheCompletedTiers: number
+
+  luyenTheCurrentTierProgress: number
+
+  // Bậc Nhập Đạo (1-6) — chốt DUY NHẤT 1 lần lúc Lễ Nhập Môn (Phàm
+  // Nhân -> Luyện Khí, xem GameManager.chooseCultivationPath()) từ
+  // luyenTheCompletedTiers tại thời điểm đó, dùng cho cả Nhập Đạo
+  // (data/realm/RealmPassives.ts) lẫn Realm Pressure (xem
+  // core/combat/RealmPressure.ts). Mặc định 6 (không bị áp chế) cho
+  // save cũ/nhân vật chưa từng qua Phàm Nhân — KHÔNG hồi tố phạt
+  // nhân vật chưa từng có cơ hội chọn.
+  breakthroughGrade: number
+
+  // Idempotency guard cho Realm Passive theo cảnh giới (Nhập Đạo/Kiến
+  // Cơ/...) — cùng pattern unlockedRealmEnhancements, key = realmId
+  // vừa bước vào. Xem core/realm/RealmPassiveSystem.ts.
+  grantedRealmPassiveIds: string[]
+
+  lastSavedAt: number
+}
+
+export function createDefaultPlayer(): PlayerData {
+  return {
+    name: 'Vô Danh',
+
+    realmId: 'pham_nhan',
+    realmLevel: 1,
+
+    cultivation: 0,
+    cultivationPerSecond: 10,
+
+    baseStats: createBaseStats(),
+    modifiers: [],
+    externalModifiers: [],
+
+    spiritStone: 0,
+    unlockedRealmEnhancements: [],
+    hasSeenTutorial: false,
+    isCultivating: false,
+
+    // PHẢI khai báo tường minh (dù `undefined`) — Pinia Options Store
+    // dựng reactive property bằng toRefs() snapshot 1 LẦN lúc khởi tạo
+    // store; field nào KHÔNG có mặt như 1 key ở đây thì
+    // player.cultivationPath (đọc qua store instance) sẽ KHÔNG BAO GIỜ
+    // phản ứng khi GameManager.chooseCultivationPath() gán giá trị qua
+    // player.$state sau này (bug thật đã gặp: technique/skill equip
+    // đúng nhưng UI gate không tự chuyển vì thiếu dòng này).
+    cultivationPath: undefined,
+
+    totalCultivationGained: 0,
+    techniqueExperience: 0,
+
+    skillPoints: 0,
+    attributePoints: 0,
+    unlockedElements: [],
+    equippedElements: [],
+    purchasedNodeIds: [],
+
+    luyenTheCompletedTiers: 0,
+    luyenTheCurrentTierProgress: 0,
+    breakthroughGrade: 6,
+    grantedRealmPassiveIds: [],
+
+    lastSavedAt: Date.now(),
+  }
+}
+
+/**
+ * Chuyển PlayerData thành CombatEntity để đưa vào BattleSystem.
+ *
+ * `stats` phải là finalStats đã tính sẵn (baseStats + modifiers +
+ * externalModifiers) — hàm này KHÔNG tự gọi calculateStats, để
+ * tránh phụ thuộc ngược vào StatCalculator theo 2 cách khác nhau
+ * tại 2 nơi (store đã có finalStats getter, dùng lại luôn).
+ *
+ * currentHp luôn khởi tạo bằng maxHp: giống enemyToCombatEntity(),
+ * PlayerData không lưu HP giữa các trận — HP là state "sống" chỉ
+ * tồn tại trong lúc battle đang diễn ra (do BattleSystem quản lý),
+ * không phải state cần persist vào save file.
+ */
+export function playerToCombatEntity(
+  player: PlayerData,
+  stats: Stats,
+): CombatEntity {
+  return {
+    id: 'player',
+
+    name: player.name,
+
+    type: 'player',
+
+    baseStats: stats,
+
+    stats,
+
+    currentHp: stats.maxHp,
+
+    maxHp: stats.maxHp,
+
+    currentMp: stats.maxMp,
+
+    currentRage: 0,
+
+    currentSwordIntent: 0,
+
+    currentMomentum: 0,
+
+    currentHoaThe: 0,
+
+    currentThoThe: 0,
+
+    currentKimThe: 0,
+
+    timeSinceLastBleedProc: 0,
+
+    currentWard: 0,
+
+    // Vô cực — "chưa từng bị đánh" lúc trận vừa bắt đầu, để Ward có
+    // thể hồi ngay từ đầu trận thay vì phải chờ 1 khoảng WARD_REGEN_
+    // DELAY_SECONDS giả tạo dù chưa hề ăn đòn nào (xem CombatEntity.ts).
+    timeSinceLastHitTaken: Infinity,
+
+    realmIndex: getRealmIndex(player.realmId),
+
+    // Realm Pressure (xem core/combat/RealmPressure.ts) — CHỈ player có
+    // giá trị thật (enemy không breakthrough nên không có khái niệm
+    // này, enemyToCombatEntity() để undefined).
+    breakthroughGrade: player.breakthroughGrade,
+
+    // Placeholder — BattleSystem.start() set lại thành HERO_HOME_X
+    // ngay khi trận bắt đầu (xem core/battle/BattleLane.ts).
+    x: 0,
+
+    // Tower luôn đứng trên đất.
+    lane: 'ground',
+
+    alive: true,
+  }
+}
+
+/**
+ * Pháp Tu Redesign (magicpath) — Tâm Pháp không còn level/experience
+ * (không còn cộng chỉ số nên không còn gì để "lên cấp" scale theo) —
+ * `addExperience` giờ là no-op, giữ lại CHỈ vì RewardReceiver interface
+ * yêu cầu (Reward.experience vẫn được enemy roll ra, xem
+ * RewardSystem.ts). `reward.experience` hiện KHÔNG còn tác dụng gì —
+ * xem audit cuối phiên Pháp Tu Redesign, cân nhắc xoá hẳn khỏi
+ * EnemyReward nếu xác nhận không cần dùng lại.
+ */
+export function createPlayerRewardReceiver(
+  player: PlayerData,
+): RewardReceiver {
+  return {
+    addExperience() {
+      // Cố ý không làm gì — xem ghi chú JSDoc phía trên.
+    },
+
+    addCultivation(amount: number) {
+      addCultivation(player, amount)
+    },
+
+    addSpiritStone(amount: number) {
+      player.spiritStone += amount
+    },
+  }
+}

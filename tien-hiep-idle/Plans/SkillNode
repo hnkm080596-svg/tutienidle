@@ -1,0 +1,153 @@
+Tôi muốn bổ sung hiệu ứng UNLOCK SKILL NODE cho Skill Tree.
+
+MỤC TIÊU:
+Khi người chơi unlock một Skill Node mới, phải có cảm giác năng lượng truyền từ node cha → connection → node con, sau đó node mới được kích hoạt bằng hiệu ứng glow/pulse.
+
+KIẾN TRÚC:
+- Dự án dùng Vue 3 + TypeScript.
+- Không dùng Phaser cho hiệu ứng UI này.
+- Dùng HTML/CSS cho node và SVG cho các đường connection.
+- Không thay đổi logic unlock/skill point hiện tại.
+- Không thay đổi layout hoặc kích thước node hiện tại nếu không cần thiết.
+
+1. CONNECTION
+Mỗi connection giữa các Skill Node phải được render bằng SVG <path>.
+
+Trạng thái:
+- locked: connection tối, opacity thấp.
+- active: connection đã mở, hiển thị bình thường.
+- unlocking: đang chạy animation truyền năng lượng.
+
+Khi connection chuyển sang trạng thái unlocking:
+- Một luồng sáng chạy từ node cha tới node con.
+- Dùng SVG stroke-dasharray / stroke-dashoffset hoặc kỹ thuật tương đương.
+- Animation khoảng 600–900ms.
+- Ánh sáng phải chạy theo đúng hướng parent → child.
+- Có glow nhẹ quanh phần stroke đang chạy.
+- Không làm thay đổi geometry của connection.
+
+2. NODE UNLOCK
+Sau khi energy chạy tới node con:
+- Node con pulse nhẹ.
+- Scale khoảng 0.85 → 1.08 → 1.0.
+- Glow tăng mạnh trong thời gian ngắn rồi trở về glow bình thường.
+- Có thể thêm một vòng sáng mở rộng từ tâm node nếu phù hợp với style UI hiện tại.
+- Animation khoảng 350–600ms.
+
+Thứ tự bắt buộc:
+
+NODE CHA
+   ↓
+ENERGY chạy trên CONNECTION
+   ↓
+NODE CON pulse/glow
+   ↓
+NODE CON chuyển sang trạng thái ACTIVE
+
+Không được cho node con active hoàn toàn trước khi animation kết thúc.
+
+3. STATE
+Tạo state/animation state riêng, ví dụ:
+
+locked
+available
+unlocking
+unlocked
+
+Không dùng việc thay đổi class trực tiếp một cách rải rác trong nhiều component.
+
+Ưu tiên một cơ chế rõ ràng như:
+
+connection.isUnlocking
+node.isUnlocking
+
+hoặc animation state tương đương.
+
+4. SVG LAYER
+Tạo một SVG layer riêng nằm phía dưới SkillNode nhưng phía trên background.
+
+Cấu trúc mong muốn:
+
+SkillTree
+├── SkillConnections.vue
+│   └── SVG
+│       └── connection paths
+└── SkillNode.vue
+
+SVG phải:
+- pointer-events: none
+- không chặn click node
+- tự cập nhật khi node position/layout thay đổi nếu hệ thống hiện tại có hỗ trợ dynamic position.
+
+5. CSS
+Animation phải được viết bằng CSS @keyframes hoặc SVG animation phù hợp.
+
+Không dùng JavaScript để liên tục thay đổi từng frame của đường sáng nếu CSS/SVG có thể xử lý.
+
+Có thể dùng:
+- stroke-dasharray
+- stroke-dashoffset
+- opacity
+- filter/drop-shadow
+- transform: scale()
+
+Ưu tiên GPU-friendly animation.
+
+6. TRIGGER
+Tìm đúng nơi hiện tại xử lý:
+"player unlock skill node thành công".
+
+Ngay sau khi unlock thành công:
+- xác định node cha
+- xác định connection tương ứng
+- kích hoạt connection animation
+- sau khi connection animation hoàn tất mới kích hoạt node animation
+- sau đó commit trạng thái unlocked cuối cùng nếu architecture hiện tại phù hợp.
+
+Không tạo một hệ thống unlock mới nếu project đã có logic unlock.
+
+7. QUAN TRỌNG
+Trước khi sửa code:
+- đọc các component Skill Tree hiện tại
+- tìm component render Skill Node
+- tìm nơi render connection
+- tìm logic unlock skill
+- tìm CSS/style hiện tại của Skill Tree
+- xác định cách project đang quản lý state.
+
+Sau đó hãy sửa trực tiếp trên architecture hiện tại thay vì tạo lại Skill Tree.
+
+8. VISUAL STYLE
+Hiệu ứng phải:
+- fantasy / cultivation game
+- sạch
+- cao cấp
+- không quá flashy
+- không giống neon sci-fi
+- glow tập trung vào connection và node vừa unlock
+- không làm toàn bộ Skill Tree nhấp nháy.
+
+9. ACCEPTANCE CRITERIA
+
+[ ] Unlock node → connection sáng chạy từ parent tới child.
+[ ] Energy chạy đúng hướng.
+[ ] Node child chỉ pulse sau khi energy tới node.
+[ ] Node mới có glow mạnh trong thời gian ngắn.
+[ ] Sau animation node giữ trạng thái unlocked bình thường.
+[ ] Connection unlocked giữ trạng thái active.
+[ ] Click vẫn hoạt động bình thường.
+[ ] Không ảnh hưởng skill point/unlock logic.
+[ ] Không ảnh hưởng layout.
+[ ] Không có animation loop vô hạn.
+[ ] Không tạo lỗi console.
+[ ] Không dùng Phaser cho UI animation.
+[ ] Animation vẫn hoạt động khi unlock các node khác nhau.
+
+Hãy kiểm tra code hiện tại trước, sau đó implement tối thiểu cần thiết.
+Không refactor những phần không liên quan.
+Sau khi hoàn thành, báo rõ:
+1. Những file đã sửa.
+2. Logic trigger animation nằm ở đâu.
+3. Connection animation hoạt động thế nào.
+4. Node animation hoạt động thế nào.
+5. Có thay đổi logic gameplay hay không.

@@ -1,0 +1,416 @@
+🪨 THỔ HỆ — LUYỆN KHÍ → TRÚC CƠ
+I. Identity
+
+Thổ = lực / diện / đẩy lùi / khống chế vị trí.
+
+Active cơ bản:
+
+🪨 Thổ Cầu Thuật
+
+Hai hướng:
+
+Path	Gameplay
+Reaction Path	Dùng Thạch Hóa để kích hoạt Reaction
+Pure Path	Thổ thuần → AOE + Knockback + Thổ Thế
+
+Thổ không phải tank path.
+
+II. ACTIVE — THỔ CẦU THUẬT
+
+Đây là skill nền duy nhất của Thổ ở giai đoạn này.
+
+Base
+
+Bắn một Thổ Cầu vào mục tiêu.
+
+[EARTH]
+[PROJECTILE]
+[DIRECT_DAMAGE]
+[APPLY_PETRIFY]
+Thông số Luyện Khí
+Stat	Giá trị
+Direct Damage	100% Skill Power
+Projectile	1
+Target	Single Target
+Range	100%
+AOE	Không
+Knockback	Không
+Thạch Hóa	100% khi đánh trúng
+
+Thổ Cầu luôn áp Thạch Hóa.
+
+Không có:
+
+Earth Application Chance
+Petrify Chance
+Minor tăng tỷ lệ áp Thạch Hóa.
+III. 🪨 THẠCH HÓA
+
+Thạch Hóa là trạng thái nền của Thổ trên mục tiêu.
+
+Nó tồn tại chủ yếu để làm:
+
+Reaction Enabler.
+
+Bản thân Thạch Hóa không gây damage và không tự cho các debuff phụ ở giai đoạn này.
+
+Thổ Cầu
+   ↓
+Thạch Hóa
+   ↓
+chờ nguyên tố thứ 2
+   ↓
+Reaction
+IV. REACTION MATRIX THỔ
+
+Hiện tại chốt 4 Reaction:
+
+Combo	Reaction	Hiệu ứng
+🪨 + 🔥	Dung Nham	DoT + vùng dung nham
+🪨 + 💧	Trói Chân	Không thể di chuyển
+🪨 + 🌿	Độc Thế	Độc → self-buff
+🪨 + 🌪️	Mù	Giảm khả năng tấn công
+🪨 + ⚡	TBD	Chưa thiết kế
+🪨 + ⚙️	TBD	Chưa thiết kế
+V. 🔥🪨 DUNG NHAM
+Điều kiện
+Thạch Hóa
++
+Hỏa
+↓
+Dung Nham
+Cơ chế
+
+Mục tiêu bị Dung Nham:
+
+chịu Damage Over Time
+
+đồng thời tạo:
+
+Lava Zone tại vị trí mục tiêu.
+
+Lava Zone gây damage cho kẻ địch đứng trong vùng.
+
+Identity
+
+Area Denial
+
+Khác hoàn toàn Độc Viêm:
+
+	Độc Viêm	Dung Nham
+Mộc + Hỏa	✅	—
+Damage	Theo HP hiện tại	DoT
+AoE	Không	Có
+Vùng	Không	Có
+VI. 💧🪨 TRÓI CHÂN
+Thạch Hóa
++
+Thủy
+↓
+Trói Chân
+Effect
+
+Không thể di chuyển.
+
+Nhưng vẫn:
+
+Attack được
+Cast skill được.
+Duration baseline
+
+2.5 giây
+
+Đây là:
+
+Root
+
+không phải Freeze.
+
+VII. 🌿🪨 ĐỘC THẾ
+Thạch Hóa
++
+Độc
+↓
+Độc Thế
+
+Đây là Reaction đặc biệt.
+
+Độc không biến thành debuff mới trên enemy.
+
+Nó được chuyển hóa thành:
+
+Buff Độc Thế trên người chơi.
+
+Độc Thế
+
+Mỗi tầng:
+
++5% Poison Damage
+
++2% HP Recovery từ Poison Damage
+
+Max:
+
+5 tầng
+
+Ví dụ 5 tầng:
+
++25% Poison Damage
++10% Poison-based Healing
+
+Độc Thế là Reaction của Mộc + Thổ, không phải Pure Thổ.
+
+VIII. 🌪️🪨 MÙ
+Thạch Hóa
++
+Phong
+↓
+Mù
+
+Thổ bị Phong cuốn thành bụi đất quanh mục tiêu.
+
+Effect
+
+-30% Hit Chance
+
+Nếu combat system không dùng Accuracy thì quy đổi thành stat tương đương trong combat engine.
+
+Identity
+
+Anti-Offense
+
+Không gây damage.
+
+IX. LÔI + THỔ
+Chưa thiết kế.
+
+Không nên ép Reaction chỉ để hoàn thành bảng.
+
+Ta sẽ thiết kế sau khi Lôi hệ hoàn chỉnh.
+
+X. KIM + THỔ
+Chưa thiết kế.
+
+Tương tự, để sau khi có identity của Kim.
+
+XI. LUYỆN KHÍ
+
+Luyện Khí chỉ giới thiệu:
+
+Thổ Cầu → Thạch Hóa → Reaction cơ bản.
+
+Chưa có Major.
+
+Minor
+🪨 Thổ Nguyên
+
++3% Earth Damage
+
+🪨 Thổ Tốc
+
++5% Projectile Speed
+
+🪨 Chấn Lực
+
++5% Skill Impact
+
+Skill Impact là stat nền để sau này Pure Thổ có thể khai thác Knockback/AOE mà không cần mở mechanic quá sớm.
+
+XII. TRÚC CƠ — CHIA 2 PATH
+                    🪨 THỔ CẦU THUẬT
+                           │
+                 ┌─────────┴─────────┐
+                 │                   │
+             REACTION              PURE
+                 │                   │
+             ĐỊNH THỔ             THỔ THẾ
+XIII. REACTION PATH — ⚒️ ĐỊNH THỔ
+
+Mục tiêu:
+
+Tăng hiệu quả tất cả Reaction do Thổ kích hoạt.
+
+Major: Định Thổ
+
++20% Reaction Effect
+
+Ví dụ:
+
+Trói Chân
+
+2.5s → tăng theo Reaction Effect.
+
+Mù
+
+-30% Hit Chance → hiệu quả mạnh hơn.
+
+Dung Nham
+
+DoT / Lava Zone → mạnh hơn.
+
+Độc Thế
+
+Hiệu quả chuyển hóa → mạnh hơn.
+
+Định Thổ không làm:
++Earth Damage
++AOE
++Knockback
+
+Đó là territory của Pure.
+
+XIV. PURE PATH — 🪨 THỔ THẾ
+
+Đây là Pure Thổ.
+
+Không cần Hỏa.
+
+Không cần Thủy.
+
+Không cần Reaction.
+
+Mục tiêu:
+
+Biến Thổ Cầu từ single-target projectile thành công cụ AOE + Knockback.
+
+XV. THỔ THẾ
+
+Thổ Thế là:
+
+self-buff của Pure Thổ.
+
+Nó không phải Thạch Hóa.
+
+Nó không nằm trên enemy.
+
+Vai trò
+
+Thổ Thế là một giá trị tăng cường Pure Thổ, được tạo ra khi người chơi sử dụng Thổ Cầu.
+
+Tôi đề xuất baseline:
+
+Mỗi lần Thổ Cầu kích hoạt đúng điều kiện Pure → +1 Thổ Thế.
+
+Max:
+
+5 tầng
+
+Nhưng không gán thêm các hiệu ứng +damage/+knockback tùy tiện vào từng stack ở giai đoạn này.
+
+Thổ Thế sẽ là stat nền của Pure Path, và Major/Minor quyết định nó được khai thác thế nào.
+
+Điều này giữ đúng nguyên tắc:
+
+“Thế” là một hệ thống buff của nhân vật, không phải một Reaction debuff.
+
+XVI. PURE BIẾN ĐỔI ACTIVE
+
+Sau khi mở Major Thổ Thế, Thổ Cầu nhận:
+
+[EARTH]
+[PROJECTILE]
+[DIRECT_DAMAGE]
+[AOE]
+[KNOCKBACK]
+[APPLY_PETRIFY]
+Primary Target
+
+100% damage
+
+Secondary Targets
+
+70% damage
+
+AOE
+
+bán kính khoảng 1.5× vùng va chạm cơ bản
+
+Knockback
+
+Có.
+
+Đây là đặc tính cốt lõi của Pure, không phải một Reaction.
+
+XVII. Minor Trúc Cơ
+Chung
+🪨 Thổ Nguyên
+
++5% Earth Damage
+
+🪨 Chấn Vực
+
++5% AOE Radius
+
+Pure
+🪨 Trọng Thổ
+
++10% Knockback Strength
+
+Reaction
+🪨 Định Lực
+
++5% Reaction Effect
+
+XVIII. Cây kỹ năng
+                         🪨 THỔ CẦU THUẬT
+                                │
+                 ┌──────────────┴──────────────┐
+                 │                             │
+              REACTION                       PURE
+                 │                             │
+             ⚒️ ĐỊNH THỔ                    🪨 THỔ THẾ
+                 │                             │
+          + Reaction Effect              AOE + Knockback
+                 │                             │
+        ┌────────┴────────┐          ┌─────────┴─────────┐
+        │                 │          │                   │
+    Định Lực          Reaction      Chấn Vực          Trọng Thổ
+                       Nodes
+XIX. Gameplay thực tế
+🪨 Reaction Thổ
+Thổ Cầu
+   ↓
+Thạch Hóa
+   ↓
+đợi / phối hợp nguyên tố
+   ↓
+🔥 Dung Nham
+💧 Trói Chân
+🌿 Độc Thế
+🌪️ Mù
+
+Người chơi chọn Thổ vì:
+
+Thổ là chất xúc tác để biến trạng thái nguyên tố thành Control/Utility.
+
+🪨 Pure Thổ
+Thổ Cầu
+   ↓
+AOE
+   ↓
+Knockback
+   ↓
+Thổ Thế
+   ↓
+tiếp tục sử dụng Thổ
+
+Người chơi chọn Pure vì:
+
+Không cần Reaction; chỉ dùng Thổ để gây AOE và kiểm soát vị trí.
+
+XX. Chuẩn hóa 4 hệ hiện tại
+Hệ	Active	Enemy State	Reaction Path	Pure Path
+🔥 Hỏa	Hỏa Cầu	Hỏa	Reaction	Hỏa Thế
+💧 Thủy	Thủy Tiễn	Thủy	Reaction	Thủy Thế
+🌿 Mộc	Độc Chưởng	Độc	Reaction	Pure Poison
+🪨 Thổ	Thổ Cầu	Thạch Hóa	Reaction	Thổ Thế
+
+Điểm quan trọng nhất cần khóa từ đây:
+
+“Thế” chỉ dùng cho self-buff của nhân vật.
+
+Trạng thái trên enemy dùng tên riêng: Độc, Thạch Hóa, v.v.
+
+Reaction Path không biến thành Pure Path; Pure Path không cần nguyên tố thứ hai.
+
+Với Thổ, hiện tại Dung Nham / Trói Chân / Độc Thế / Mù đã có concept rõ ràng; Lôi–Thổ và Kim–Thổ để trống, không nên cố nhét Reaction vào chỉ để hoàn thành ma trận.
