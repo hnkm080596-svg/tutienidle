@@ -96,11 +96,20 @@ def run_process(
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             shell=False,
-            env={**os.environ, "NO_COLOR": "1"},
+            env={
+                **os.environ,
+                "NO_COLOR": "1",
+                "CODEX_HOME": os.environ.get("CODEX_HOME", str(Path.home() / ".codex")),
+            },
         )
         if stdin is not None and process.stdin is not None:
-            process.stdin.write(stdin)
-            process.stdin.close()
+            try:
+                process.stdin.write(stdin)
+                process.stdin.close()
+            except BrokenPipeError:
+                # The child may reject its arguments before consuming stdin.
+                # Continue draining output so the actionable CLI error is shown.
+                pass
 
         output_queue: queue.Queue[str | None] = queue.Queue()
 
@@ -293,7 +302,7 @@ def run_codex(
     else:
         command = [
             codex_command(), "exec", "-C", str(worktree),
-            "-s", "workspace-write", "--approve-for-me", "--json",
+            "--approve-for-me", "--json",
             "-o", str(output), "-",
         ]
         if config.get("codex_model"):
@@ -330,6 +339,7 @@ def run_review(
 ) -> dict[str, Any]:
     announce(f"CLAUDE — REVIEWING (CYCLE {cycle})", "Claude đang đọc diff và kết quả kiểm tra; không chỉnh sửa code.")
     schema = load_json(TOOLS / "schemas" / "review.schema.json")
+    schema.pop("$schema", None)
     verification = run_dir / f"verification-{cycle}.txt"
     prompt = render_prompt(
         "claude-review.md", task=task, plan=plan, baseline=baseline,
