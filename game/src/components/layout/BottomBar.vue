@@ -6,11 +6,17 @@
 // TRƯỚC trận, đúng spec mục 15/19) — BottomBar chỉ còn hiện lúc Ở NHÀ
 // (Động Phủ, không combat) nên không cần control chiến đấu nào nữa.
 import DongFuQuickNav from './DongFuQuickNav.vue'
+import RealmActionNav from './RealmActionNav.vue'
 </script>
 
 <template>
   <div class="bottom-bar">
     <DongFuQuickNav />
+
+    <!-- Hệ thống đặc trưng cảnh giới (Luyện Thể/Pháp Bảo/...) — bên
+         PHẢI, đối xứng nhóm Động Phủ chung bên trái. Tự ẩn nếu cảnh
+         giới hiện tại chưa có hệ thống nào (xem RealmActionNav.vue). -->
+    <RealmActionNav />
   </div>
 </template>
 
@@ -18,6 +24,7 @@ import DongFuQuickNav from './DongFuQuickNav.vue'
 .bottom-bar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   height: 100%;
   padding: 0 16px;
   background: var(--ink-950);

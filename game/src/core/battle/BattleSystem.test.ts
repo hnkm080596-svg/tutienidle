@@ -12,9 +12,9 @@ import { MissileManager } from '../combat/missile/MissileManager'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Buff } from '../buff/Buff'
+import type { BattlePositionsEvent } from './BattleEvents'
 
-function createBattleSystem() {
-  const eventBus = new EventBus()
+function createBattleSystem(eventBus = new EventBus()) {
   const skillManager = new SkillManager()
 
   return new BattleSystem(
@@ -55,7 +55,7 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 'ground',
+    lane: 2,
     alive: true,
     ...overrides,
   }
@@ -71,6 +71,27 @@ function createTestBuff(id: string): Buff {
     modifiers: [],
   }
 }
+
+describe('BattleSystem — UI health snapshots', () => {
+  it('phát snapshot cuối tick với HP kết liễu thay vì giữ giá trị đầu tick', () => {
+    const eventBus = new EventBus()
+    const snapshots: BattlePositionsEvent[] = []
+    const system = createBattleSystem(eventBus)
+    const player = createCombatant({ id: 'player', type: 'player', x: 0 })
+    const enemy = createCombatant({ id: 'enemy', x: 50 })
+
+    eventBus.on<BattlePositionsEvent>('positions', event => snapshots.push(event))
+    system.start(player, enemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
+
+    player.currentHp = 0
+    player.alive = false
+    system.update(0.016)
+
+    expect(snapshots.at(-1)?.playerCurrentHp).toBe(0)
+    expect(snapshots.at(-1)?.playerMaxHp).toBe(player.maxHp)
+  })
+})
 
 describe('BattleSystem — Boss Mechanics (Combat Rework Phase 4)', () => {
   it('archetypeOverride: HP tụt qua ngưỡng phase thì đổi archetype quái NGAY trong tick đó', () => {
@@ -88,6 +109,7 @@ describe('BattleSystem — Boss Mechanics (Combat Rework Phase 4)', () => {
     })
 
     system.start(player, boss)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
 
     system.update(0.016)
 
@@ -109,6 +131,7 @@ describe('BattleSystem — Boss Mechanics (Combat Rework Phase 4)', () => {
     })
 
     system.start(player, boss)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
 
     system.update(0.016)
 
@@ -129,6 +152,7 @@ describe('BattleSystem — Boss Mechanics (Combat Rework Phase 4)', () => {
     })
 
     system.start(player, boss)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
 
     system.update(0.016)
     system.update(0.016)
@@ -146,6 +170,7 @@ describe('BattleSystem — Boss Mechanics (Combat Rework Phase 4)', () => {
     })
 
     system.start(player, boss)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
 
     system.update(0.5)
 
@@ -165,6 +190,7 @@ describe('BattleSystem — Boss Mechanics (Combat Rework Phase 4)', () => {
     })
 
     system.start(player, boss)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
 
     system.update(0.6)
     system.update(0.6)

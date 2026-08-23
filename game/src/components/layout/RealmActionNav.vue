@@ -1,0 +1,85 @@
+<script setup lang="ts">
+// Bottom bar, bên PHẢI (đối xứng DongFuQuickNav bên trái) — nút tắt
+// các hệ thống "signature" theo cảnh giới. Luyện Thể (2026-08-22) KHÔNG
+// còn giới hạn riêng Phàm Nhân nữa — luôn hiện để người chơi xem lại
+// tiến độ/kết quả dù đã rời Phàm Nhân (panel tự chuyển read-only, xem
+// LuyenThePanel.vue's isPhamNhan). Hệ thống tương lai (vd Trúc Cơ →
+// Pháp Bảo, CHƯA phát triển) sẽ thêm entry RIÊNG với điều kiện hiện
+// của chính nó vào ACTIONS bên dưới — không dùng chung 1 cờ theo
+// realmId nữa (mỗi hệ thống tự quyết định khi nào đáng hiện).
+import { computed } from 'vue'
+import { useUiStore, type StandalonePanel } from '@/stores/ui'
+
+const ui = useUiStore()
+
+interface RealmAction {
+  label: string
+  panel: Exclude<StandalonePanel, null>
+}
+
+// Thêm entry mới ở đây khi 1 hệ thống signature khác ra đời (vd Pháp
+// Bảo cho Trúc Cơ).
+const ACTIONS: RealmAction[] = [
+  { label: 'Luyện Thể', panel: 'luyen_the' },
+]
+
+const actions = computed(() => ACTIONS)
+</script>
+
+<template>
+  <div v-if="actions.length > 0" class="realm-action-nav">
+    <button
+      v-for="action in actions"
+      :key="action.panel"
+      type="button"
+      class="realm-action-nav__btn"
+      :class="{ 'is-active': ui.standalonePanel === action.panel }"
+      @click="ui.toggleStandalonePanel(action.panel)"
+    >
+      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="2" y="7" width="3" height="6" rx="1" stroke-linejoin="round" />
+        <rect x="15" y="7" width="3" height="6" rx="1" stroke-linejoin="round" />
+        <line x1="5" y1="10" x2="15" y2="10" stroke-linecap="round" />
+      </svg>
+      <span>{{ action.label }}</span>
+    </button>
+  </div>
+</template>
+
+<style scoped>
+.realm-action-nav {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+}
+
+.realm-action-nav__btn {
+  width: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.realm-action-nav__btn span {
+  font-size: 0.6rem;
+}
+
+.realm-action-nav__btn:hover {
+  color: var(--gold-300);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.realm-action-nav__btn.is-active {
+  color: var(--gold-500);
+  background: rgba(255, 213, 79, 0.08);
+}
+</style>

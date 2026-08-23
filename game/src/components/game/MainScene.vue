@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import DongFuScene from './DongFuScene.vue'
 import PhaserCanvas from './PhaserCanvas.vue'
 import { useCombatSceneActive } from '@/composables/useCombatSceneActive'
+import { useUiStore } from '@/stores/ui'
 import { BOTTOM_BAR_HEIGHT } from '@/core/ui/DesignFrame'
 
 // Combat UI Redesign — bình thường chừa chỗ cho BottomBar (xem
@@ -15,8 +16,9 @@ import { BOTTOM_BAR_HEIGHT } from '@/core/ui/DesignFrame'
 // của component này với class "game-root__scene" GameRoot.vue truyền
 // vào — rõ ràng, không mơ hồ.
 const isCombatSceneActive = useCombatSceneActive()
+const ui = useUiStore()
 
-const bottomInsetPx = computed(() => `${isCombatSceneActive.value ? 0 : BOTTOM_BAR_HEIGHT}px`)
+const bottomInsetPx = computed(() => `${isCombatSceneActive.value || ui.isTribulationSceneActive ? 0 : BOTTOM_BAR_HEIGHT}px`)
 </script>
 
 <template>

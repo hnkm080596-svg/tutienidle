@@ -23,10 +23,24 @@ export function getActiveTierIndex(player: PlayerData): number | undefined {
 }
 
 /**
- * Tầng ĐANG DỞ đã đủ điều kiện Phàm Nhân tầng để đầu tư chưa (2026-08-20
- * — mỗi tầng Luyện Thể còn gate thêm theo requiredTang, xem
- * data/realm/LuyenThe.ts). true nếu không còn tầng nào để đầu tư (đã
- * hoàn thành cả 6) — không có gì để khoá.
+ * requiredTang chỉ pace tiến độ TRONG Phàm Nhân (chờ lên đúng tầng mới
+ * được đầu tư tầng Luyện Thể kế) — rời Phàm Nhân rồi thì không còn
+ * tầng Phàm Nhân nào để chờ nữa (2026-08-22, cho phép tiêu nốt Tinh
+ * Hoa Phàm Thể còn tồn trong túi ở cảnh giới sau thay vì kẹt vĩnh
+ * viễn), mở thẳng — chỉ còn thứ tự tuần tự (getActiveTierIndex) ràng
+ * buộc.
+ */
+export function isTierRequiredTangMet(player: PlayerData, tierIndex: number): boolean {
+  if (player.realmId !== 'pham_nhan') {
+    return true
+  }
+
+  return player.realmLevel >= (LUYEN_THE_TIERS[tierIndex]?.requiredTang ?? 0)
+}
+
+/**
+ * Tầng ĐANG DỞ đã đủ điều kiện để đầu tư chưa — true nếu không còn
+ * tầng nào để đầu tư (đã hoàn thành cả 6), không có gì để khoá.
  */
 export function isActiveTierUnlocked(player: PlayerData): boolean {
   const activeTierIndex = getActiveTierIndex(player)
@@ -35,7 +49,7 @@ export function isActiveTierUnlocked(player: PlayerData): boolean {
     return true
   }
 
-  return player.realmLevel >= (LUYEN_THE_TIERS[activeTierIndex]?.requiredTang ?? 0)
+  return isTierRequiredTangMet(player, activeTierIndex)
 }
 
 function modifierId(tierId: string, stat: string): string {

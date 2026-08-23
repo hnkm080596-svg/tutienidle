@@ -7,6 +7,7 @@ import { TICK_INTERVAL_MS } from './core/idle/SpeedSettings'
 import { GameManager } from './core/game/GameManager'
 import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from './composables/useGameState'
 import { checkTribulationOutcomeAction } from './composables/useTribulation'
+import { isBattleInProgress } from './core/battle/BattleTypes'
 import { useBreakthrough } from './composables/useBreakthrough'
 import { useNotificationStore } from './stores/notification'
 import { useOfflineSummaryStore } from './stores/offlineSummary'
@@ -27,7 +28,6 @@ import { STAGES } from './data/stage/Stages'
 import { zones } from './data/stage/Zones'
 import { equipment } from './data/equipment/equipment'
 import { affixes } from './data/equipment/affixes'
-import { equipmentSets } from './data/equipment/equipmentSets'
 import { pills } from './data/pill/pills'
 import { talismans } from './data/talisman/talismans'
 import { buffs } from './data/buff/buffs'
@@ -37,6 +37,7 @@ import { ailments } from './data/ailment/ailments'
 import { buildings } from './data/building/buildings'
 import { processingRecipes } from './data/building/processingRecipes'
 import { PHAP_TU_NODES } from './data/progression/PhapTuNodes'
+import { isCultivationPoseActive } from './core/cultivation/CultivationPose'
 
 const player = usePlayerStore()
 const ui = useUiStore()
@@ -65,7 +66,6 @@ gameManager.registerStages(STAGES)
 gameManager.registerZones(zones)
 gameManager.registerEquipment(equipment)
 gameManager.registerAffixes(affixes)
-gameManager.registerEquipmentSets(equipmentSets)
 gameManager.registerPills(pills)
 gameManager.registerTalismans(talismans)
 gameManager.registerBuffs(buffs)
@@ -109,6 +109,16 @@ function tick() {
     return
   }
 
+  const battleAtTickStart = gameManager.getBattle()
+  const battleInProgress = battleAtTickStart !== null && isBattleInProgress(battleAtTickStart.state)
+
+  // Guard tầng game-loop: pause chỉ hợp lệ trong Combat Scene thường, nơi có
+  // nút Resume. State cũ/race từ action khác không được phép đóng băng Động
+  // Phủ hoặc scene Độ Kiếp không có điều khiển pause.
+  if (ui.isPaused && (!battleInProgress || ui.isTribulationSceneActive)) {
+    ui.setPaused(false)
+  }
+
   // clock vẫn update() đều để giữ mốc thời gian thực đồng bộ (tránh
   // "nhảy cóc" khi bỏ pause) — pause chỉ chặn simulatedDelta, không
   // đụng tới clock thật.
@@ -123,28 +133,30 @@ function tick() {
     // GameManager (hiện chỉ loot, xem GameManager.grantItemDrops())
     // mỗi tick, đẩy vào notificationStore để ToastContainer hiện.
     for (const event of gameManager.drainNotifications()) {
-      notification.push(event.kind, event.message)
+      notification.push(event.kind, event.message, event.loot)
     }
 
     // Đang trong trận thì không cộng tu vi — 2 việc loại trừ nhau.
     // Tầm Bảo (gather, trước là "Thu Thập") không bị ảnh hưởng: nó tự
     // tính tiến độ qua startedAt/collect(), không phụ thuộc vào nhánh
-    // này. player.isCultivating giờ là SUY RA (không còn bấm được, xem
-    // ghi chú `wasFighting` ở trên) — luôn bằng !isFighting.
+    // này. Tu vi vẫn tăng cả trong combat; isCultivating là trạng thái kinh tế
+    // (luôn bật), còn event cultivation_changed chỉ điều khiển pose hình ảnh.
     const battleBeforeAuto = gameManager.getBattle()
-    const isFighting = battleBeforeAuto !== null && battleBeforeAuto.state === 'fighting'
+    const isFighting = battleBeforeAuto !== null && isBattleInProgress(battleBeforeAuto.state)
 
-    player.isCultivating = !isFighting
+    // Cultivation progresses alongside combat. Fighting only controls the
+    // scene pose; it no longer suspends cultivation gains.
+    player.isCultivating = true
 
     if (isFighting !== wasFighting) {
-      gameManager.eventBus.emit('cultivation_changed', { isCultivating: !isFighting })
+      gameManager.eventBus.emit('cultivation_changed', {
+        isCultivating: isCultivationPoseActive(isFighting),
+      })
 
       wasFighting = isFighting
     }
 
-    if (player.isCultivating) {
-      player.cultivate(simulatedDelta)
-    }
+    player.cultivate(simulatedDelta)
 
     // Auto Đột Phá tiểu cảnh giới (2026-08-20) — user tick checkbox ở
     // CharacterPanel.vue (ui.isAutoBreakthrough), tick() tự bấm thay mỗi
@@ -152,6 +164,13 @@ function tick() {
     // bấm tay (BreakthroughRequirementPanel.vue, yêu cầu vật phẩm).
     if (ui.isAutoBreakthrough && player.cultivation >= player.cultivationRequired) {
       breakthrough()
+    }
+
+    if (ui.isAutoConsumeTinhHoa) {
+      // investLuyenThe tự giữ các gate tầng/cảnh giới và chỉ trừ đúng lượng
+      // thực sự dùng được. Loot được cấp trước đó trong GameManager.update(),
+      // nên Tinh Hoa vừa rơi có thể được hấp thu ngay trong cùng tick.
+      gameManager.investLuyenThe(player.$state)
     }
 
     // Đột Phá Trúc Cơ — phản ứng thắng/thua Độ Kiếp NGAY (battle

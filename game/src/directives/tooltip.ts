@@ -6,11 +6,15 @@ export type TooltipDirectiveValue = TooltipContent | string
 interface TooltipBinding {
   value: TooltipDirectiveValue
 
-  onMouseEnter: (event: MouseEvent) => void
+  onPointerEnter: () => void
 
-  onMouseMove: (event: MouseEvent) => void
+  onPointerLeave: () => void
 
-  onMouseLeave: () => void
+  onFocusIn: () => void
+
+  onFocusOut: () => void
+
+  onKeyDown: (event: KeyboardEvent) => void
 }
 
 // Value + listener hiện tại của mỗi element — tách khỏi closure
@@ -26,7 +30,7 @@ function normalize(value: TooltipDirectiveValue): TooltipContent {
 
 /**
  * `v-tooltip="description"` hoặc `v-tooltip="{ title, description }"`
- * — tự gắn mouseenter/mousemove/mouseleave, gọi thẳng useTooltip().
+ * — tự gắn pointer/focus lifecycle, gọi thẳng useTooltip().
  * Đây là "điểm chạm" duy nhất cần thêm vào bất kỳ element nào muốn
  * có tooltip, không cần tự viết handler mỗi chỗ.
  */
@@ -35,28 +39,38 @@ export const vTooltip: Directive<HTMLElement, TooltipDirectiveValue> = {
     const state: TooltipBinding = {
       value: binding.value,
 
-      onMouseEnter(event) {
+      onPointerEnter() {
         if (!state.value) {
           return
         }
 
-        useTooltip().showTooltip(normalize(state.value), event, el)
+        useTooltip().showTooltip(normalize(state.value), el)
       },
 
-      onMouseMove(event) {
-        useTooltip().moveTooltip(event)
-      },
-
-      onMouseLeave() {
+      onPointerLeave() {
         useTooltip().hideTooltip(el)
+      },
+
+      onFocusIn() {
+        if (state.value) useTooltip().showTooltip(normalize(state.value), el, true)
+      },
+
+      onFocusOut() {
+        useTooltip().hideTooltip(el)
+      },
+
+      onKeyDown(event) {
+        if (event.key === 'Escape') useTooltip().dismissTooltip()
       },
     }
 
     bindings.set(el, state)
 
-    el.addEventListener('mouseenter', state.onMouseEnter)
-    el.addEventListener('mousemove', state.onMouseMove)
-    el.addEventListener('mouseleave', state.onMouseLeave)
+    el.addEventListener('pointerenter', state.onPointerEnter)
+    el.addEventListener('pointerleave', state.onPointerLeave)
+    el.addEventListener('focusin', state.onFocusIn)
+    el.addEventListener('focusout', state.onFocusOut)
+    el.addEventListener('keydown', state.onKeyDown)
   },
 
   updated(el, binding) {
@@ -64,6 +78,7 @@ export const vTooltip: Directive<HTMLElement, TooltipDirectiveValue> = {
 
     if (state) {
       state.value = binding.value
+      if (binding.value) useTooltip().updateTooltip(normalize(binding.value), el)
     }
   },
 
@@ -74,9 +89,11 @@ export const vTooltip: Directive<HTMLElement, TooltipDirectiveValue> = {
       return
     }
 
-    el.removeEventListener('mouseenter', state.onMouseEnter)
-    el.removeEventListener('mousemove', state.onMouseMove)
-    el.removeEventListener('mouseleave', state.onMouseLeave)
+    el.removeEventListener('pointerenter', state.onPointerEnter)
+    el.removeEventListener('pointerleave', state.onPointerLeave)
+    el.removeEventListener('focusin', state.onFocusIn)
+    el.removeEventListener('focusout', state.onFocusOut)
+    el.removeEventListener('keydown', state.onKeyDown)
 
     bindings.delete(el)
 
@@ -84,6 +101,6 @@ export const vTooltip: Directive<HTMLElement, TooltipDirectiveValue> = {
     // BreakthroughButton biến mất do v-if tắt ngay sau khi bấm,
     // cultivation reset) — mouseleave tự nhiên không kịp fire, tooltip
     // sẽ dính màn hình vĩnh viễn nếu không dọn ở đây.
-    useTooltip().hideTooltip(el)
+    useTooltip().hideTooltip(el, true)
   },
 }

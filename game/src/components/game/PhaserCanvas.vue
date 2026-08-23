@@ -3,6 +3,7 @@ import { onMounted, onUnmounted, ref } from 'vue'
 import Phaser from 'phaser'
 import { MainScene } from '@/game/scenes/MainScene'
 import { CombatScene } from '@/game/scenes/CombatScene'
+import { TribulationScene } from '@/game/scenes/TribulationScene'
 import { useGameManager } from '@/composables/useGameState'
 
 const gameManager = useGameManager()
@@ -38,7 +39,11 @@ onMounted(() => {
     width: containerRef.value.clientWidth,
     height: containerRef.value.clientHeight,
     transparent: true,
-    scene: [MainScene, CombatScene],
+    physics: {
+      default: 'arcade',
+      arcade: { gravity: { x: 0, y: 0 }, debug: false },
+    },
+    scene: [MainScene, CombatScene, TribulationScene],
   })
 
   // MainScene.ts/CombatScene.ts CHỈ giao tiếp với core qua EventBus

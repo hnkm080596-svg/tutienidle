@@ -15,6 +15,7 @@ import { useNotificationStore } from '@/stores/notification'
 import { getCurrentRealm, getRealmIndex } from '@/core/realm/realmSystem'
 import type { Recipe, RecipeResultType } from '@/core/recipe/Recipe'
 import { formatNumber } from '@/core/format/NumberFormatter'
+import { phamRank } from '@/composables/slots/normalizeSlotRank'
 
 const props = defineProps<{
   resultType: RecipeResultType
@@ -233,8 +234,8 @@ function collect(craftId: string, recipeName: string | null) {
             :item="resultTemplate"
             :label="resultTemplate?.name ?? selectedRecipe.name"
             :description="resultTemplate?.description"
-            :item-rarity="resultTemplate?.pham"
-            :item-icon="resultTemplate?.icon"
+            :rarity-rank="resultTemplate?.pham ? phamRank(resultTemplate.pham) : undefined"
+            :icon="resultTemplate?.icon"
           />
         </div>
 
@@ -247,7 +248,7 @@ function collect(craftId: string, recipeName: string | null) {
           <SlotView
             :item="material"
             :label="material.label"
-            :highlight="material.owned >= material.required ? 'ok' : 'missing'"
+            :state="{ validation: material.owned >= material.required ? 'valid' : 'missing' }"
             :amount="material.owned"
           />
           <span class="cauldron__material-count">{{ formatNumber(material.owned) }}/{{ formatNumber(material.required) }}</span>

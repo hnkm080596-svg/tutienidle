@@ -31,6 +31,9 @@ import { EQUIPMENT_SLOT_LABELS } from '@/core/equipment/EquipmentTypes'
 import { EQUIPMENT_SLOTS } from '@/core/equipment/EquipmentSlotState'
 import type { StatType } from '@/core/stats/StatTypes'
 import { calculateEquipmentScale, getMaxForgePoints } from '@/core/equipment/EquipmentSystem'
+import { composeEquipmentDisplayName } from '@/core/equipment/EquipmentNaming'
+import { qualityRank, phamRank } from '@/composables/slots/normalizeSlotRank'
+import type { SlotBadge } from '@/components/common/SlotTypes'
 
 type OperationId = 'enhance' | 'wash' | 'refine' | 'forge' | 'upgradeQuality' | 'upgradeRealm' | 'addAffix' | 'upgradeAffixTier'
 
@@ -87,34 +90,48 @@ const gameManager = useGameManager()
 const { stateVersion, bumpState } = useStateVersion()
 const equipmentActions = useEquipmentActions()
 
-// "tunghematandsuch" pass (2026-08-14) — Luyện Khí (mint 1 equipment
-// MỚI từ Linh Thiết + Linh Thạch, xem GameManager.smeltEquipment()) —
-// KHÔNG dùng OPERATIONS/selectedInstance (không sửa 1 item có sẵn, mà
-// tạo MỚI), nên có state/picker riêng, tách hẳn khỏi khối enhance-view.
-const LINH_THIET_IDS = ['black-iron', 'red-copper', 'thanh-dong', 'han-thiet', 'hoang-kim-linh-thiet']
-
-const smeltTemplateId = ref<string | null>(null)
-const smeltLinhThietId = ref<string>(LINH_THIET_IDS[0]!)
+// Phân Giải nhận một instance chưa trang bị, xoá khỏi bag và trả Bụi Cốt.
+// Tách khỏi OPERATIONS vì đây là hành động huỷ item, không nâng cấp item.
+const smeltInstanceId = ref<string | null>(null)
 const smeltStatus = ref<'idle' | 'success' | 'failure'>('idle')
 
-const smeltableTemplates = computed(() => gameManager.equipmentRegistry.getAll())
+const smeltableInstances = computed(() => {
+  stateVersion.value
+
+  return gameManager.equipmentBag.getAll().filter(instance => !instance.equipped)
+})
+
+function smeltInstanceName(instanceId: string): string {
+  const instance = gameManager.equipmentBag.get(instanceId)
+
+  if (!instance) {
+    return instanceId
+  }
+
+  return composeEquipmentDisplayName(
+    instance,
+    gameManager.equipmentRegistry.get(instance.itemId),
+    gameManager.zoneRegistry,
+  )
+}
 
 const canSmelt = computed(() => {
   stateVersion.value
 
-  return smeltTemplateId.value !== null && gameManager.canSmeltEquipment(player.$state, smeltLinhThietId.value)
+  return smeltInstanceId.value !== null && gameManager.canSmeltEquipment(smeltInstanceId.value)
 })
 
 function smelt() {
-  if (!smeltTemplateId.value) {
+  if (!smeltInstanceId.value) {
     return
   }
 
-  const result = gameManager.smeltEquipment(smeltTemplateId.value, player.$state, smeltLinhThietId.value)
+  const result = gameManager.smeltEquipment(smeltInstanceId.value)
 
   smeltStatus.value = result ? 'success' : 'failure'
 
   if (result) {
+    smeltInstanceId.value = null
     bumpState()
   }
 }
@@ -214,8 +231,20 @@ const previewTooltip = computed(() => {
     gameManager.formationRegistry,
     gameManager.talismanRegistry,
     gameManager.zoneRegistry,
-    gameManager.equipmentSetRegistry,
   )
+})
+
+// Slot Revamp (mục 17.7) — Quality/Rarity rank + badge Cường Hóa giờ
+// do SlotView tự vẽ CSS, thay `.enhance-view__level-badge` absolute-
+// position bên ngoài slot cũ.
+const previewQualityRank = computed(() => (selectedInstance.value ? qualityRank(selectedInstance.value.quality) : undefined))
+
+const previewRarityRank = computed(() => (selectedInstance.value ? phamRank(selectedInstance.value.rarity) : undefined))
+
+const previewBadges = computed<SlotBadge[]>(() => {
+  const level = selectedSlotState.value?.enhanceLevel ?? 0
+
+  return level > 0 ? [{ kind: 'enhance', text: `+${level}` }] : []
 })
 
 const artifactMaterials = computed(() => {
@@ -332,11 +361,14 @@ const refineRollRangeHint = computed(() => {
 
   const qualityMultiplier = EQUIPMENT_QUALITY_IMPLICIT_MULTIPLIER[selectedInstance.value.quality]
 
-  const min = Math.round(template.mainStat.min * qualityMultiplier * scale)
+  const range = template.mainStats.find(candidate => candidate.stat === selectedInstance.value!.mainStat.stat)
+  if (!range) return 'Không tìm thấy khoảng chỉ số chính.'
 
-  const max = Math.round(template.mainStat.max * qualityMultiplier * scale)
+  const min = Math.round(range.min * qualityMultiplier * scale)
 
-  return `${statLabel(template.mainStat.stat)} sẽ roll lại trong khoảng ${min} – ${max}`
+  const max = Math.round(range.max * qualityMultiplier * scale)
+
+  return `${statLabel(range.stat)} sẽ roll lại trong khoảng ${min} – ${max}`
 })
 
 const artifactCanExecute = computed(() => {
@@ -443,13 +475,12 @@ function executeArtifact() {
             <SlotView
               class="enhance-view__icon"
               :item="selectedInstance"
-              :rarity="selectedInstance?.quality"
-              :item-rarity="selectedInstance?.rarity"
-              :item-icon="selectedInstance ? gameManager.equipmentRegistry.get(selectedInstance.itemId).icon : undefined"
+              :quality-rank="previewQualityRank"
+              :rarity-rank="previewRarityRank"
+              :badges="previewBadges"
+              :icon="selectedInstance ? (selectedInstance.icon ?? gameManager.equipmentRegistry.get(selectedInstance.itemId).icon) : undefined"
               :tooltip="previewTooltip"
             />
-
-            <span v-if="selectedSlotState" class="enhance-view__level-badge">+{{ selectedSlotState.enhanceLevel }}</span>
           </div>
 
           <p class="enhance-view__name">
@@ -557,7 +588,7 @@ function executeArtifact() {
                 class="enhance-material__slot"
                 :item="material"
                 :label="material.label"
-                :highlight="material.owned >= material.required ? 'ok' : 'missing'"
+                :state="{ validation: material.owned >= material.required ? 'valid' : 'missing' }"
               />
               <span class="enhance-material__count">{{ formatNumber(material.owned) }} / {{ formatNumber(material.required) }}</span>
             </div>
@@ -575,24 +606,18 @@ function executeArtifact() {
 
       <div class="equipment-hall__smelt">
         <div class="smelt-row">
-          <span class="smelt-row__label">Luyện Khí</span>
+          <span class="smelt-row__label">Phân Giải</span>
 
-          <select v-model="smeltTemplateId" class="smelt-row__select">
-            <option :value="null">— Chọn Khí —</option>
-            <option v-for="template in smeltableTemplates" :key="template.id" :value="template.id">
-              {{ template.name }}
+          <select v-model="smeltInstanceId" class="smelt-row__select">
+            <option :value="null">— Chọn trang bị —</option>
+            <option v-for="instance in smeltableInstances" :key="instance.instanceId" :value="instance.instanceId">
+              {{ smeltInstanceName(instance.instanceId) }}
             </option>
           </select>
 
-          <select v-model="smeltLinhThietId" class="smelt-row__select">
-            <option v-for="materialId in LINH_THIET_IDS" :key="materialId" :value="materialId">
-              {{ gameManager.materialRegistry.has(materialId) ? gameManager.materialRegistry.get(materialId).name : materialId }}
-            </option>
-          </select>
+          <span class="smelt-row__cost">Nhận 2 Bụi Cốt</span>
 
-          <span class="smelt-row__cost">3 Linh Thiết + 20 Linh Thạch</span>
-
-          <button type="button" :disabled="!canSmelt" @click="smelt">Luyện</button>
+          <button type="button" :disabled="!canSmelt" @click="smelt">Phân Giải</button>
 
           <span v-if="smeltStatus !== 'idle'" class="smelt-row__status" :class="`smelt-row__status--${smeltStatus}`">
             {{ smeltStatus === 'success' ? 'Thành công! (+2 Bụi Cốt)' : 'Thất bại' }}
@@ -719,9 +744,8 @@ function executeArtifact() {
   border-radius: var(--radius-md);
 }
 
-/* SlotView thật thay "chữ cái trong vòng tròn" cũ (UI redesign Step 9)
-   — wrapper chỉ để định vị badge cấp cường hóa (absolute, xem
-   .enhance-view__level-badge) chồng lên góc SlotView. */
+/* Badge cấp cường hóa giờ vẽ NGAY TRONG SlotView (prop `badges`, kind
+   'enhance') — wrapper chỉ còn để canh kích thước icon. */
 .enhance-view__icon-wrap {
   position: relative;
   width: 56%;
@@ -730,18 +754,6 @@ function executeArtifact() {
 
 .enhance-view__icon {
   width: 100%;
-}
-
-.enhance-view__level-badge {
-  position: absolute;
-  bottom: -4px;
-  right: -4px;
-  padding: 2px 6px;
-  border-radius: 10px;
-  background: var(--gold-500);
-  color: var(--gold-ink);
-  font-size: 0.7rem;
-  font-weight: 700;
 }
 
 .enhance-view__name {

@@ -1,6 +1,7 @@
 import type { StatModifier} from  '../stats/StatCalculator'
 import { createBaseStats, type Stats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
+import { HERO_LANE_INDEX } from '../battle/BattleLane'
 import { addCultivation } from '../cultivation/CultivationSystem'
 import type { RewardReceiver } from '../reward/RewardSystem'
 import { getRealmIndex } from '../realm/realmSystem'
@@ -94,8 +95,6 @@ export interface PlayerData {
   // khi đột phá, cùng nguồn với totalCultivationGained) — technique chỉ
   // có ĐÚNG 1 cái trong đời save (permanent path choice) nên 1 số vô
   // hướng là đủ, không cần key theo techniqueId.
-  techniqueExperience: number
-
   // Pháp Tu Redesign (magicpath, 2026-08-18) — điểm progression CHƯA
   // TIÊU, +1 mỗi lần đột phá TIỂU cảnh giới (xem
   // CultivationSystem.breakthrough()). Dùng để unlock/upgrade Element
@@ -127,6 +126,9 @@ export interface PlayerData {
   // MỌI path (Node Tree là hạ tầng CHUNG, không tách riêng theo path)
   // — xem core/progression/NodeSystem.ts.
   purchasedNodeIds: string[]
+
+  // Màn chỉ mở tuần tự: thắng một màn mới mở màn kế tiếp.
+  completedStageIds: string[]
 
   // Luyện Thể (Realm Passive & Pressure System, 2026-08-20) — 6 tầng
   // rèn thể Phàm Nhân, xem data/realm/LuyenThe.ts. luyenTheCompletedTiers
@@ -169,6 +171,7 @@ export function createDefaultPlayer(): PlayerData {
     externalModifiers: [],
 
     spiritStone: 0,
+    completedStageIds: [],
     unlockedRealmEnhancements: [],
     hasSeenTutorial: false,
     isCultivating: false,
@@ -183,8 +186,6 @@ export function createDefaultPlayer(): PlayerData {
     cultivationPath: undefined,
 
     totalCultivationGained: 0,
-    techniqueExperience: 0,
-
     skillPoints: 0,
     attributePoints: 0,
     unlockedElements: [],
@@ -216,6 +217,8 @@ export function createDefaultPlayer(): PlayerData {
 export function playerToCombatEntity(
   player: PlayerData,
   stats: Stats,
+  skillStats?: import('../skill/SkillRuntimeStats').SkillRuntimeStats,
+  skillLevels?: Readonly<Record<string, number>>,
 ): CombatEntity {
   return {
     id: 'player',
@@ -227,6 +230,10 @@ export function playerToCombatEntity(
     baseStats: stats,
 
     stats,
+
+    skillStats,
+
+    skillLevels,
 
     currentHp: stats.maxHp,
 
@@ -266,8 +273,8 @@ export function playerToCombatEntity(
     // ngay khi trận bắt đầu (xem core/battle/BattleLane.ts).
     x: 0,
 
-    // Tower luôn đứng trên đất.
-    lane: 'ground',
+    // Hero luôn đứng cố định lane giữa (2026-08-22, top-down 5-lane).
+    lane: HERO_LANE_INDEX,
 
     alive: true,
   }
@@ -284,9 +291,11 @@ export function playerToCombatEntity(
  */
 export function createPlayerRewardReceiver(
   player: PlayerData,
+  addInsight?: (amount: number) => void,
 ): RewardReceiver {
   return {
-    addExperience() {
+    addExperience(amount: number) {
+      addInsight?.(amount)
       // Cố ý không làm gì — xem ghi chú JSDoc phía trên.
     },
 

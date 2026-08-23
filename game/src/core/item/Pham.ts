@@ -32,7 +32,7 @@ export const PHAM_LABELS: Record<Pham, string> = {
 // bóc khỏi `name`, giữ lại đúng trong field `pham` này).
 export function composePhamNameSegments(name: string, pham: Pham): NameSegment[] {
   return [
-    { text: PHAM_LABELS[pham], colorVar: `--item-rarity-${pham}` },
+    { text: PHAM_LABELS[pham], colorVar: `--item-rarity-${pham}`, tone: pham },
     { text: name },
   ]
 }

@@ -58,7 +58,6 @@ function close() {
             :item="row.unlocked ? row : null"
             :label="row.name"
             :description="`${row.realmName} — ${row.description}`"
-            :rarity="row.unlocked ? 'breakthrough' : undefined"
           />
         </div>
       </div>

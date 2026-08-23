@@ -9,6 +9,7 @@ import { BuffRegistry } from '../buff/BuffRegistry'
 import { CombatSystem } from '../combat/CombatSystem'
 import { EventBus } from '../events/EventBus'
 import { createBaseStats } from '../stats/StatBlock'
+import { createSkillRuntimeStats } from '../skill/SkillRuntimeStats'
 import { ailments } from '../../data/ailment/ailments'
 import { buffs } from '../../data/buff/buffs'
 import type { CombatEntity } from '../combat/CombatEntity'
@@ -67,7 +68,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 'ground',
+    lane: 2,
     alive: true,
     ...overrides,
   }
@@ -231,7 +232,7 @@ describe('ReactionManager (Combat Rework Phase 6 — Pháp Tu Reaction)', () => 
 
     const source = createCombatant({ id: 'source', type: 'player' })
 
-    source.stats.waterReactionExtensionSeconds = 1
+    source.skillStats = { ...createSkillRuntimeStats(), waterReactionExtensionSeconds: 1 }
 
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
 

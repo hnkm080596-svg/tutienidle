@@ -61,6 +61,8 @@ export type StatType =
   // cooldownReduction (effectiveDelta = deltaSeconds * (1 + percent)).
   // Nền 0 — chưa skill/node nào cấp field này.
   | 'castSpeedPercent'
+  | 'finalDamagePercent'
+  | 'finalDamageReductionPercent'
   | 'criticalAvoidance'
   | 'chanceToIgnoreResistance'
   | 'ailmentResistPercent'
@@ -91,37 +93,6 @@ export type StatType =
   // quát cùng tinh thần ailmentPotencyPercent (đó là % sát thương/giây,
   // đây là % thời lượng). Nền 0 — Độc Tức là nguồn cấp đầu tiên.
   | 'ailmentDurationPercent'
-  // Skill rework (2026-08-21) — 19 field "Thế tài nguyên" (Hỏa Thế/Thủy
-  // Thế/Mộc Thế/Thổ Thế/Kim Thế/Huyết Phá). Số GỐC sống trên object Skill
-  // (xem Skill.ts's SkillResourceStatKey — Node Tree ghi trực tiếp vào
-  // đó, GameManager.purchaseNode()), NHƯNG combat vẫn đọc qua field
-  // CombatEntity.stats bên dưới như mọi stat khác — SkillSystem.
-  // getSkillResourceStatModifiers() (xem SkillSystem.ts) đồng bộ giá trị
-  // từ Skill thành StatModifier (sourceType 'skill') mỗi lần
-  // GameManager.getAggregatedModifiers() chạy, CÙNG pipeline với
-  // getScaledPassiveModifiers(). Field-level comment đã dời hẳn sang
-  // Skill.ts (nguồn gốc thật) — ở đây chỉ còn danh sách tên field cho
-  // CombatEntity.stats/Stats union.
-  | 'hoaTheGainPerCast'
-  | 'hoaTheDecayReductionPercent'
-  | 'thuyThePercent'
-  | 'waterReactionExtensionSeconds'
-  | 'poisonRootPercentPerStack'
-  | 'poisonRootMaxStacks'
-  | 'poisonRootThresholdBonusPercent'
-  | 'earthAoeRadius'
-  | 'earthAoeSecondaryDamagePercent'
-  | 'earthKnockbackDistance'
-  | 'skillImpactPercent'
-  | 'thoTheGainPerCast'
-  | 'kimTheGainPerProc'
-  | 'kimTheDotDamagePercentPerStack'
-  | 'kimTheDotResistancePenetrationPercentPerStack'
-  | 'kimTheMaxStacksBonus'
-  | 'metalAilmentPotencyPercent'
-  | 'huyetPhaGainPerProc'
-  | 'huyetPhaBurstDamage'
-
   // Plans/magicpathgeneral Phase 9 (2026-08-21) — DOT RES: giảm THẲNG %
   // damage nhận từ MỌI tick DoT (Bỏng/Trúng Độc/Chảy Máu/Tê Cóng/Tê
   // Điện/Hoại Tử/Dung Nham/Huyết Độc/Vạn Kiếm Vũ...), xem

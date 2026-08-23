@@ -12,6 +12,9 @@ import type { DamageResult } from './CombatTypes'
 import type { EventBus } from '../events/EventBus'
 import type { MissileDamageInfo } from './missile/Missile'
 import type { ElementType } from '../element/ElementType'
+import { EntityVitalsSystem, type VitalsChangeReason } from './EntityVitalsSystem'
+import { clampStatValue } from '../stats/StatMetadata'
+import { getSkillRuntimeStat } from '../skill/SkillRuntimeStats'
 
 // Rage tích theo % damage gây ra/nhận vào — đặt ở CombatSystem
 // (không phải BattleSystem) để mọi đường gây damage (auto-attack,
@@ -52,7 +55,35 @@ const DOT_RESISTANCE_FLOOR = -1
  * SỰ KIỆN/emit mới theo đúng accuracy→dodge→block như yêu cầu.
  */
 export class CombatSystem {
-  constructor(private readonly eventBus: EventBus) {}
+  readonly vitals: EntityVitalsSystem
+
+  constructor(private readonly eventBus: EventBus) {
+    this.vitals = new EntityVitalsSystem(eventBus)
+  }
+
+  applyDirectDamage(target: CombatEntity, amount: number, sourceId: string, reason: VitalsChangeReason = 'damage') {
+    const applied = this.vitals.applyDamage(target, amount, reason, sourceId)
+    this.killIfDead(target, sourceId)
+    return applied
+  }
+
+  // finalDamagePercent/finalDamageReductionPercent (affix top-tier, thay
+  // Supreme Strength/Intelligence) — dùng chung bởi resolveAttack()/
+  // applyDotDamage() VÀ mọi damage phản hồi trực tiếp (thorns, ward-break,
+  // reaction) để affix này thật sự áp dụng xuyên suốt pipeline, không chỉ
+  // đòn đánh chính.
+  private finalDamageMultiplier(attacker: CombatEntity | undefined, defender: CombatEntity): number {
+    return (1 + (attacker?.stats.finalDamagePercent ?? 0)) * (1 - clampStatValue('finalDamageReductionPercent', defender.stats.finalDamageReductionPercent))
+  }
+
+  applyModifiedDirectDamage(target: CombatEntity, rawAmount: number, attacker: CombatEntity, reason: VitalsChangeReason = 'damage') {
+    const amount = Math.max(0, rawAmount * this.finalDamageMultiplier(attacker, target))
+    return this.applyDirectDamage(target, amount, attacker.id, reason)
+  }
+
+  applyHealing(target: CombatEntity, amount: number, sourceId: string, reason: VitalsChangeReason = 'healing') {
+    return this.vitals.applyHealing(target, amount, reason, sourceId)
+  }
 
   resolveMissileHit(
     source: CombatEntity,
@@ -68,7 +99,7 @@ export class CombatSystem {
 
     // Chance to Ignore Resistance — roll 1 LẦN/đòn (khác Penetration phẳng,
     // đây là "bỏ qua hoàn toàn" mitigation của đòn đó nếu trúng).
-    const ignoreResistance = Math.random() < source.stats.chanceToIgnoreResistance
+    const ignoreResistance = Math.random() < clampStatValue('chanceToIgnoreResistance', source.stats.chanceToIgnoreResistance)
 
     const baseDamage = damage.kind === 'elemental'
       ? calculateSkillBaseDamage(source, target, damage.components, ignoreResistance)
@@ -78,16 +109,16 @@ export class CombatSystem {
 
     const blocked = this.rollBlock(target)
 
-    const afterBlock = blocked ? afterCrit * (1 - target.stats.blockEffectiveness) : afterCrit
+    const afterBlock = blocked ? afterCrit * (1 - clampStatValue('blockEffectiveness', target.stats.blockEffectiveness)) : afterCrit
 
-    const afterEndurance = applyEndurance(afterBlock, target.stats.enduranceThreshold, target.stats.endurancePercent)
+    const afterEndurance = applyEndurance(afterBlock, target.stats.enduranceThreshold, clampStatValue('endurancePercent', target.stats.endurancePercent))
 
     // Thủy Tu Trúc Cơ Pure (Plans/waterpath mục IX) — giảm thẳng %
     // TOÀN BỘ sát thương cuối cùng (không phân biệt loại damage, cùng
     // tầng với Endurance — cả 2 đều là lớp phòng thủ "cá nhân", không
     // phải Armor/Resistance theo loại), nền 0 nên không ảnh hưởng path
     // nào chưa có nguồn cấp.
-    const afterWaterMitigation = afterEndurance * (1 - Math.min(WATER_MITIGATION_CAP, target.stats.thuyThePercent))
+    const afterWaterMitigation = afterEndurance * (1 - Math.min(WATER_MITIGATION_CAP, getSkillRuntimeStat(target, 'thuyThePercent')))
 
     // Floor "tối thiểu 1" ở CUỐI pipeline (sau cả Block/Endurance/Thủy
     // Thế) — trước đây floor áp giữa chừng (ngay sau attack-defense,
@@ -127,7 +158,7 @@ export class CombatSystem {
   }
 
   private rollBlock(target: CombatEntity): boolean {
-    return Math.random() < target.stats.blockChance
+    return Math.random() < clampStatValue('blockChance', target.stats.blockChance)
   }
 
   /**
@@ -139,7 +170,7 @@ export class CombatSystem {
    * không thể âm).
    */
   rollCritical(source: CombatEntity, target: CombatEntity): boolean {
-    const effectiveChance = Math.max(0, source.stats.criticalRate - target.stats.criticalAvoidance)
+    const effectiveChance = clampStatValue('criticalRate', source.stats.criticalRate - target.stats.criticalAvoidance)
 
     return Math.random() < effectiveChance
   }
@@ -195,6 +226,9 @@ export class CombatSystem {
     critical: boolean,
     blocked: boolean,
   ) {
+    const targetBefore = { hp: target.currentHp, ward: target.currentWard, mp: target.currentMp }
+    result.finalDamage = Math.max(0, result.finalDamage * this.finalDamageMultiplier(source, target))
+
     if (critical) {
       this.eventBus.emit('critical', {
         type: 'critical',
@@ -242,7 +276,7 @@ export class CombatSystem {
     // bớt trước) được đẩy sang mana, quy đổi 1:1, PHẦN MANA KHÔNG ĐỦ
     // CHE thì tràn ngược lại HP (không "ăn free" khi cạn mana, đúng
     // yêu cầu "sát thương giảm sẽ đánh đổi bằng mana").
-    const manaShieldPortion = hpDamage * target.stats.manaShieldPercent
+    const manaShieldPortion = hpDamage * clampStatValue('manaShieldPercent', target.stats.manaShieldPercent)
 
     const manaShieldAbsorbed = Math.min(manaShieldPortion, target.currentMp)
 
@@ -250,7 +284,7 @@ export class CombatSystem {
 
     hpDamage -= manaShieldAbsorbed
 
-    target.currentHp = Math.max(0, target.currentHp - hpDamage)
+    this.vitals.applyHpDamageFromSnapshot(target, hpDamage, result.finalDamage, 'damage', targetBefore, source.id)
 
     result.wardAbsorbed = wardAbsorbed
 
@@ -283,14 +317,14 @@ export class CombatSystem {
     // Leech — tính trên TOÀN BỘ finalDamage (không chỉ phần đã trừ
     // HP thật), quy ước ARPG chuẩn.
     if (source.stats.leechPercent > 0 && source.alive) {
-      source.currentHp = Math.min(source.maxHp, source.currentHp + result.finalDamage * source.stats.leechPercent)
+      this.applyHealing(source, result.finalDamage * clampStatValue('leechPercent', source.stats.leechPercent), source.id, 'leech')
     }
 
     // Thorns — trừ thẳng HP nguồn, KHÔNG lặp lại pipeline (không tự
     // roll dodge/crit/thorns ngược lại) — tránh vòng lặp phản đòn vô
     // hạn giữa 2 bên đều có thorns.
     if (target.stats.thornsPercent > 0) {
-      source.currentHp = Math.max(0, source.currentHp - result.finalDamage * target.stats.thornsPercent)
+      this.applyModifiedDirectDamage(source, result.finalDamage * target.stats.thornsPercent, target, 'thorns')
     }
 
     // Pháp Tu (Thổ Tu) — "Khiên Nổ": Ward VỪA hấp thụ xong VÀ vừa vỡ
@@ -299,7 +333,7 @@ export class CombatSystem {
     // đau) — tách biệt hoàn toàn khỏi thornsPercent (đó là % theo
     // damage NHẬN vào, cái này % theo DUNG LƯỢNG khiên tối đa).
     if (wardAbsorbed > 0 && target.currentWard <= 0 && target.stats.wardBreakDamagePercent > 0) {
-      source.currentHp = Math.max(0, source.currentHp - target.stats.wardMax * target.stats.wardBreakDamagePercent)
+      this.applyModifiedDirectDamage(source, target.stats.wardMax * target.stats.wardBreakDamagePercent, target, 'ward_break')
     }
 
     this.killIfDead(target, source.id)
@@ -342,14 +376,14 @@ export class CombatSystem {
     // DoT hành khác chỉ vì có Kim Thế).
     const penetration =
       element === 'metal' && source
-        ? source.currentKimThe * source.stats.kimTheDotResistancePenetrationPercentPerStack
+        ? source.currentKimThe * getSkillRuntimeStat(source, 'kimTheDotResistancePenetrationPercentPerStack')
         : 0
 
     const mitigation = Math.min(DOT_RESISTANCE_CAP, Math.max(DOT_RESISTANCE_FLOOR, target.stats.dotResistancePercent - penetration))
 
-    const finalDamage = Math.max(0, rawDamage * (1 - mitigation))
+    const finalDamage = Math.max(0, rawDamage * (1 - mitigation) * this.finalDamageMultiplier(source, target))
 
-    target.currentHp = Math.max(0, target.currentHp - finalDamage)
+    this.vitals.applyDamage(target, finalDamage, 'dot', sourceId)
 
     this.eventBus.emit('damage', {
       type: 'damage',
@@ -370,7 +404,7 @@ export class CombatSystem {
     // trừ (sau DOT RES) — nguồn phải còn sống, người đã chết/rời trận
     // không hồi được gì.
     if (source?.alive && element === 'wood' && source.stats.poisonRecoveryPercent > 0) {
-      source.currentHp = Math.min(source.maxHp, source.currentHp + finalDamage * source.stats.poisonRecoveryPercent)
+      this.applyHealing(source, finalDamage * source.stats.poisonRecoveryPercent, source.id, 'leech')
     }
 
     this.killIfDead(target, sourceId)

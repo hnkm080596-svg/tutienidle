@@ -28,7 +28,7 @@ function createEntity(currentMomentum: number): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 'ground',
+    lane: 2,
     alive: true,
   }
 }

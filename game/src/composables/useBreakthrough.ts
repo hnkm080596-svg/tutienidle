@@ -43,8 +43,6 @@ export function useBreakthrough(gameManagerOverride?: GameManager) {
     gameManager.syncRealmPassive(player.$state)
     gameManager.syncRealmStatPassive(player.$state)
 
-    gameManager.syncSkillLevelToRealm(player.$state)
-
     if (player.realmId !== realmIdBefore) {
       // Beta Phase 4 (World Announcement) — đại cảnh giới đổi là 1
       // "milestone" theo mục XIII tài liệu (khác Đột Phá Trúc Cơ, đã

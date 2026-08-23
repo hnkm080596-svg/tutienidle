@@ -8,8 +8,10 @@ import type { EquipmentSlot } from '@/core/equipment/EquipmentTypes'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
+import { qualityRank, phamRank } from '@/composables/slots/normalizeSlotRank'
 import type { EquipmentTooltipContent } from '@/composables/useTooltip'
 import type { NameSegment } from '@/core/item/NameSegment'
+import type { SlotBadge } from '@/components/common/SlotTypes'
 
 const gameManager = useGameManager()
 const player = usePlayerStore()
@@ -64,7 +66,7 @@ function itemDescription(instance: EquipmentInstance): string | undefined {
 }
 
 function itemIcon(instance: EquipmentInstance): string | undefined {
-  return gameManager.equipmentRegistry.get(instance.itemId).icon
+  return instance.icon ?? gameManager.equipmentRegistry.get(instance.itemId).icon
 }
 
 // Tên ghép động (2026-08-15) — Phẩm · Set (nếu có) · Địa Giới+Tên gốc,
@@ -84,7 +86,6 @@ const nameSegmentsBySlot = computed<Record<EquipmentSlot, NameSegment[] | undefi
           instance,
           gameManager.equipmentRegistry.get(instance.itemId),
           gameManager.zoneRegistry,
-          gameManager.equipmentSetRegistry,
         )
       : undefined
   }
@@ -112,9 +113,48 @@ const tooltipBySlot = computed<Record<EquipmentSlot, EquipmentTooltipContent | u
           gameManager.formationRegistry,
           gameManager.talismanRegistry,
           gameManager.zoneRegistry,
-          gameManager.equipmentSetRegistry,
         )
       : undefined
+  }
+
+  return result
+})
+
+// Slot Revamp (mục 17.7 "Equipment paperdoll: empty/filled, enhance,
+// formation/talisman marker") — Quality/Rarity rank + badge Cường Hóa
+// giờ do SlotView tự vẽ CSS, thay `.paperdoll__enhance-badge` absolute-
+// position bên ngoài slot cũ.
+const qualityRankBySlot = computed<Record<EquipmentSlot, number | undefined>>(() => {
+  const result = {} as Record<EquipmentSlot, number | undefined>
+
+  for (const entry of SLOT_LAYOUT) {
+    const instance = equippedBySlot.value[entry.slot]
+
+    result[entry.slot] = instance ? qualityRank(instance.quality) : undefined
+  }
+
+  return result
+})
+
+const rarityRankBySlot = computed<Record<EquipmentSlot, number | undefined>>(() => {
+  const result = {} as Record<EquipmentSlot, number | undefined>
+
+  for (const entry of SLOT_LAYOUT) {
+    const instance = equippedBySlot.value[entry.slot]
+
+    result[entry.slot] = instance ? phamRank(instance.rarity) : undefined
+  }
+
+  return result
+})
+
+const badgesBySlot = computed<Record<EquipmentSlot, SlotBadge[]>>(() => {
+  const result = {} as Record<EquipmentSlot, SlotBadge[]>
+
+  for (const entry of SLOT_LAYOUT) {
+    const level = enhanceLevelBySlot.value[entry.slot]
+
+    result[entry.slot] = level > 0 ? [{ kind: 'enhance', text: `+${level}` }] : []
   }
 
   return result
@@ -190,14 +230,13 @@ const talismanNamesBySlot = computed<Record<EquipmentSlot, string[]>>(() => {
           :label="equippedBySlot[entry.slot] ? itemName(equippedBySlot[entry.slot]!) : entry.label"
           :name-segments="nameSegmentsBySlot[entry.slot]"
           :description="equippedBySlot[entry.slot] ? itemDescription(equippedBySlot[entry.slot]!) : undefined"
-          :rarity="equippedBySlot[entry.slot]?.quality"
-          :item-rarity="equippedBySlot[entry.slot]?.rarity"
+          :quality-rank="qualityRankBySlot[entry.slot]"
+          :rarity-rank="rarityRankBySlot[entry.slot]"
+          :badges="badgesBySlot[entry.slot]"
           :tooltip="tooltipBySlot[entry.slot]"
-          :item-icon="equippedBySlot[entry.slot] ? itemIcon(equippedBySlot[entry.slot]!) : undefined"
+          :icon="equippedBySlot[entry.slot] ? itemIcon(equippedBySlot[entry.slot]!) : undefined"
           @click="onSlotClick(equippedBySlot[entry.slot])"
         />
-
-        <span v-if="enhanceLevelBySlot[entry.slot] > 0" class="paperdoll__enhance-badge">+{{ enhanceLevelBySlot[entry.slot] }}</span>
       </div>
 
       <div
@@ -244,19 +283,6 @@ const talismanNamesBySlot = computed<Record<EquipmentSlot, string[]>>(() => {
 
 .paperdoll__slot {
   width: 100%;
-}
-
-.paperdoll__enhance-badge {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  padding: 1px 5px;
-  border-radius: 8px;
-  background: var(--gold-500);
-  color: var(--gold-ink);
-  font-size: 0.6rem;
-  font-weight: 700;
-  z-index: 2;
 }
 
 .paperdoll__formation-badge {

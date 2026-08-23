@@ -1,7 +1,8 @@
 import type { Stats } from '../stats/StatBlock'
-import type { EnemyLane } from '../battle/BattleLane'
+import type { LaneIndex } from '../battle/BattleLane'
 import type { EnemyArchetype } from '../enemy/EnemyArchetype'
 import type { TribulationPhase, BossEnrage } from '../enemy/TribulationPhase'
+import type { SkillRuntimeStats } from '../skill/SkillRuntimeStats'
 
 export type CombatEntityType =
   | 'player'
@@ -21,6 +22,15 @@ export interface CombatEntity {
   baseStats: Stats
 
   stats: Stats
+
+  // Tham số riêng của skill/path, tách khỏi character Stats. Optional để
+  // enemy và fixture không dùng skill không phải cấp một object toàn số 0.
+  skillStats?: SkillRuntimeStats
+
+  // Snapshot level của các skill đã học lúc bắt đầu trận. Skill vẫn nhận XP
+  // và level-up trong progression, nhưng damage trong trận đọc snapshot này
+  // để build mới chỉ có hiệu lực từ trận kế tiếp.
+  skillLevels?: Readonly<Record<string, number>>
 
   currentHp: number
 
@@ -47,7 +57,7 @@ export interface CombatEntity {
   // Hỏa Tu Pure (Plans/FirePath mục 7, 2026-08-21) — Hỏa Thế CHIẾN
   // ĐẤU, cùng mô hình currentSwordIntent/currentMomentum nhưng pool
   // 0-5 (xem CombatTypes.ts's MAX_HOA_THE), tích qua Skill.
-  // grantsHoaThePerCast × source.stats.hoaTheGainPerCast (0 nếu chưa
+  // grantsHoaThePerCast × source.skillStats.hoaTheGainPerCast (0 nếu chưa
   // mua node "Tụ Hỏa" — xem BattleSystem.castSkill()), TỰ GIẢM dần
   // theo thời gian nếu không cast tiếp (BattleSystem.updateHoaThe()).
   // Chưa cấp hiệu ứng gì (đúng tinh thần "chưa vội +damage" của spec —
@@ -57,7 +67,7 @@ export interface CombatEntity {
   // Thổ Tu Pure (Plans/EarthPath mục XV, 2026-08-21) — Thổ Thế CHIẾN
   // ĐẤU, cùng mô hình currentHoaThe nhưng KHÔNG tự giảm theo thời gian
   // (doc không nhắc tới decay, khác Hỏa Thế) — chỉ tích qua Skill.
-  // grantsThoThePerCast × source.stats.thoTheGainPerCast (0 nếu chưa
+  // grantsThoThePerCast × source.skillStats.thoTheGainPerCast (0 nếu chưa
   // mua "Thổ Thế" — xem BattleSystem.castSkill()), pool 0-5 (xem
   // CombatTypes.ts's MAX_THO_THE). Cũng chưa cấp hiệu ứng +damage nào
   // riêng — vai trò thật của nó là kích hoạt AOE+Knockback thật (đọc
@@ -136,10 +146,12 @@ export interface CombatEntity {
   // (MissileSystem). Không có trục Y — sân đấu chỉ 1 chiều ngang.
   x: number
 
-  // Cao độ hiển thị (dưới đất/mặt đất/trên trời) — CHỈ dùng bởi view
-  // (MainScene.ts) để tính vị trí Y, không tham gia phép tính combat
-  // nào. Player luôn 'ground'.
-  lane: EnemyLane
+  // Hàng hiển thị top-down 5-lane (2026-08-22) — CHỈ dùng bởi view
+  // (CombatScene.ts) để tính vị trí Y, không tham gia phép tính combat
+  // nào (targeting/pierce/aoe/homing vẫn thuần theo `.x`). Player LUÔN
+  // HERO_LANE_INDEX; quái random mỗi lần spawn trừ Boss luôn
+  // HERO_LANE_INDEX (xem BattleLane.ts/GameManager.ts).
+  lane: LaneIndex
 
   alive: boolean
 

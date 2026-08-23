@@ -19,7 +19,7 @@ const showExitConfirm = ref(false)
 function confirmExit() {
   gameManager.abandonBattle()
 
-  ui.isAuto = false
+  ui.battleRunMode = 'manual'
   ui.exitCombatScene()
   gameManager.eventBus.emit('combat_scene_exit', undefined)
 

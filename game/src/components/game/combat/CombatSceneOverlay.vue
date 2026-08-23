@@ -4,6 +4,7 @@ import CombatStatusBar from './CombatStatusBar.vue'
 import CombatEventBar from './CombatEventBar.vue'
 import CombatControlBar from './CombatControlBar.vue'
 import CombatResultModal from './CombatResultModal.vue'
+import CombatCountdownOverlay from './CombatCountdownOverlay.vue'
 import {
   COMBAT_TOP_BAR_HEIGHT,
   COMBAT_STATUS_BAR_HEIGHT,
@@ -39,6 +40,8 @@ const controlBarHeightPx = `${COMBAT_CONTROL_BAR_HEIGHT}px`
     <CombatControlBar class="combat-scene-overlay__control-bar" />
 
     <CombatResultModal />
+
+    <CombatCountdownOverlay />
   </div>
 </template>
 
@@ -59,6 +62,8 @@ const controlBarHeightPx = `${COMBAT_CONTROL_BAR_HEIGHT}px`
 
 .combat-scene-overlay__status-bar {
   flex: 0 0 v-bind(statusBarHeightPx);
+  position: relative;
+  z-index: 11;
 }
 
 .combat-scene-overlay__battlefield {

@@ -30,9 +30,11 @@ const props = withDefaults(defineProps<{
   height: number
   fps?: number
   playing?: boolean
+  imageScale?: number
 }>(), {
   fps: 8,
   playing: true,
+  imageScale: 1,
 })
 
 const atlas = ref<AtlasJson | null>(null)
@@ -54,6 +56,9 @@ const sourceSize = computed(() => frames.value[0]?.sourceSize ?? { w: 1, h: 1 })
 
 const scale = computed(() => props.height / sourceSize.value.h)
 const displayWidth = computed(() => sourceSize.value.w * scale.value)
+const renderedScale = computed(() => scale.value * props.imageScale)
+const stageOffsetX = computed(() => (displayWidth.value - sourceSize.value.w * renderedScale.value) / 2)
+const stageOffsetY = computed(() => props.height - sourceSize.value.h * renderedScale.value)
 
 const currentFrame = computed(() => frames.value[frameIndex.value] ?? null)
 
@@ -98,7 +103,13 @@ watch(() => props.playing, startTimer)
     <div
       v-if="currentFrame"
       class="atlas-sprite__stage"
-      :style="{ width: `${sourceSize.w}px`, height: `${sourceSize.h}px`, transform: `scale(${scale})` }"
+      :style="{
+        width: `${sourceSize.w}px`,
+        height: `${sourceSize.h}px`,
+        left: `${stageOffsetX}px`,
+        top: `${stageOffsetY}px`,
+        transform: `scale(${renderedScale})`,
+      }"
     >
       <div
         class="atlas-sprite__frame"
@@ -119,14 +130,12 @@ watch(() => props.playing, startTimer)
 <style scoped>
 .atlas-sprite {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   flex: 0 0 auto;
 }
 
 .atlas-sprite__stage {
   position: absolute;
-  top: 0;
-  left: 0;
   transform-origin: top left;
 }
 

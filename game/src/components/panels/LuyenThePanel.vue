@@ -1,15 +1,34 @@
 <script setup lang="ts">
-// Realm Passive & Pressure System (2026-08-20) — panel Luyện Thể, độc
-// quyền Phàm Nhân, cùng pattern overlay với SkillPathPanel.vue/
-// TechniquePanel.vue/RealmPassivePanel.vue. Đầu tư Tinh Hoa Phàm Thể
-// (materialBag) vào tầng đang dở qua GameManager.investLuyenThe() (xem
+// Realm Passive & Pressure System (2026-08-20) — panel Luyện Thể, cùng
+// pattern overlay với SkillPathPanel.vue/TechniquePanel.vue/
+// RealmPassivePanel.vue. Đầu tư Tinh Hoa Phàm Thể (materialBag) vào
+// tầng đang dở qua GameManager.investLuyenThe() (xem
 // core/realm/LuyenTheSystem.ts) — tuần tự, đầy 1 tầng mới sang tầng kế.
+//
+// KHÔNG còn giới hạn riêng Phàm Nhân (2026-08-22) — CẢ truy cập LẪN
+// đầu tư đều hoạt động ở mọi cảnh giới, để Tinh Hoa Phàm Thể còn tồn
+// trong túi (chưa kịp tiêu hết trước khi rời Phàm Nhân) vẫn tiếp tục
+// đổi được thành chỉ số thay vì kẹt vĩnh viễn. requiredTang (pace theo
+// tầng Phàm Nhân) tự bypass sau khi rời realm — xem
+// LuyenTheSystem.isTierRequiredTangMet(). Bậc Nhập Đạo (thưởng lúc Lễ
+// Nhập Môn) vẫn CHỈ chốt theo tiến độ tại đúng thời điểm ritual đó
+// (GameManager.chooseCultivationPath(), không đổi) — đầu tư thêm sau
+// đó vẫn lên chỉ số trực tiếp (buildTierModifiers) nhưng không kéo
+// ngược Bậc Nhập Đạo đã chốt, đúng tinh thần "thưởng cho ai xong SỚM,
+// không phạt ai xong TRỄ, không ép ai phải xong".
+//
+// Cơ chế "càng nhiều tầng hoàn thành → bậc Nhập Đạo càng cao" CỐ Ý
+// không hiện số bậc/công thức ra UI (2026-08-22, theo đúng tinh thần
+// "đột phá ẩn" đã áp dụng cho Căn Cơ Trúc Cơ — xem FoundationType.ts)
+// — người chơi chỉ thấy TIẾN ĐỘ đầu tư (tầng đã hoàn thành) và kết quả
+// CỤ THỂ (stat buff thật ở RealmPassivePanel.vue), không thấy con số
+// "bậc X/6" nào để đoán/min-max ngược công thức.
 import { computed } from 'vue'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { LUYEN_THE_TIERS, TINH_HOA_PHAM_THE_MATERIAL_ID } from '@/data/realm/LuyenThe'
-import { getActiveTierIndex, getTierCap, computeBreakthroughGrade, isActiveTierUnlocked } from '@/core/realm/LuyenTheSystem'
+import { getActiveTierIndex, getTierCap, isActiveTierUnlocked, isTierRequiredTangMet } from '@/core/realm/LuyenTheSystem'
 import { statLabel } from '@/core/stats/StatLabels'
 import { formatNumber } from '@/core/format/NumberFormatter'
 
@@ -17,12 +36,6 @@ const ui = useUiStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion, bumpState } = useStateVersion()
-
-const isPhamNhan = computed(() => {
-  stateVersion.value
-
-  return player.realmId === 'pham_nhan'
-})
 
 const heldTinhHoa = computed(() => {
   stateVersion.value
@@ -34,12 +47,6 @@ const activeTierIndex = computed(() => {
   stateVersion.value
 
   return getActiveTierIndex(player.$state)
-})
-
-const previewGrade = computed(() => {
-  stateVersion.value
-
-  return computeBreakthroughGrade(player.$state)
 })
 
 const tierUnlocked = computed(() => {
@@ -64,8 +71,10 @@ const tierRows = computed(() => {
       progress = player.luyenTheCurrentTierProgress
       // requiredTang gate (2026-08-20) — tầng ĐÚNG lượt đầu tư nhưng
       // chưa đạt Phàm Nhân tầng yêu cầu vẫn hiện riêng biệt (không lẫn
-      // với các tầng sau, còn chưa tới lượt hoàn toàn).
-      status = player.realmLevel >= tier.requiredTang ? 'active' : 'realm_locked'
+      // với các tầng sau, còn chưa tới lượt hoàn toàn). Tự bypass sau
+      // khi rời Phàm Nhân (xem isTierRequiredTangMet()) nên trạng thái
+      // này chỉ còn xảy ra khi player vẫn đang ở Phàm Nhân.
+      status = isTierRequiredTangMet(player.$state, index) ? 'active' : 'realm_locked'
     }
 
     return {
@@ -107,12 +116,21 @@ function close() {
         <button type="button" class="luyen-the-panel__close" @click="close">✕</button>
       </div>
 
-      <template v-if="isPhamNhan">
-        <div class="luyen-the-panel__summary">
-          <span>Tinh Hoa Phàm Thể: {{ formatNumber(heldTinhHoa) }}</span>
-          <span>Bậc Nhập Đạo (dự kiến): {{ previewGrade }}/6</span>
-        </div>
+      <div class="luyen-the-panel__summary">
+        <span>Tinh Hoa Phàm Thể: {{ formatNumber(heldTinhHoa) }}</span>
+        <span>Tầng đã hoàn thành: {{ player.luyenTheCompletedTiers }}/6</span>
+      </div>
 
+      <label class="luyen-the-panel__auto">
+        <input
+          type="checkbox"
+          :checked="ui.isAutoConsumeTinhHoa"
+          @change="ui.toggleAutoConsumeTinhHoa()"
+        >
+        <span>Tự động nuốt Tinh Hoa</span>
+      </label>
+
+      <template v-if="activeTierIndex !== undefined">
         <div class="luyen-the-panel__tiers">
           <div
             v-for="row in tierRows"
@@ -146,14 +164,7 @@ function close() {
         </button>
       </template>
 
-      <template v-else>
-        <div class="luyen-the-panel__summary">
-          <span>Bậc Nhập Đạo đã chốt: {{ player.breakthroughGrade }}/6</span>
-          <span>Tầng đã hoàn thành: {{ player.luyenTheCompletedTiers }}/6</span>
-        </div>
-
-        <p class="luyen-the-panel__empty">Đã hoàn thành Lễ Nhập Môn — Luyện Thể không còn thay đổi được nữa.</p>
-      </template>
+      <p v-else class="luyen-the-panel__empty">Đã hoàn thành toàn bộ Luyện Thể.</p>
     </div>
   </div>
 </template>
@@ -215,6 +226,20 @@ function close() {
   justify-content: space-between;
   font-size: 0.76rem;
   color: var(--text-secondary);
+}
+
+.luyen-the-panel__auto {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  font-size: 0.76rem;
+  color: var(--jade);
+  cursor: pointer;
+}
+
+.luyen-the-panel__auto input {
+  accent-color: var(--jade);
 }
 
 .luyen-the-panel__tiers {

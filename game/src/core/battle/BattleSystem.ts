@@ -17,11 +17,12 @@ import type { SkillSystem } from '../skill/SkillSystem'
 import { ACTIVE_SKILL_XP_PER_CAST } from '../skill/SkillSystem'
 import type { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import type { Skill } from '../skill/Skill'
+import { getSkillRuntimeStat } from '../skill/SkillRuntimeStats'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { EventBus } from '../events/EventBus'
 import type { MissileSystem, MissileTarget } from '../combat/missile/MissileSystem'
 import { ReactionManager } from '../element/ReactionManager'
-import { HERO_HOME_X, ENEMY_SPAWN_X } from './BattleLane'
+import { HERO_HOME_X, ENEMY_SPAWN_X, SCREEN_VISIBLE_MAX_X } from './BattleLane'
 import { MAX_SWORD_INTENT, MAX_MOMENTUM, MAX_HOA_THE, MAX_THO_THE, KIM_THE_DECAY_INTERVAL_SECONDS } from '../combat/CombatTypes'
 import type { MissileDamageInfo } from '../combat/missile/Missile'
 import type { BattlePositionsEvent } from './BattleEvents'
@@ -48,6 +49,11 @@ const WARD_REGEN_DELAY_SECONDS = 3
 // đúng tinh thần buff chiến đấu tạm thời.
 const HOA_THE_BASE_DECAY_PER_SECOND = 0.5
 
+// Countdown trước trận (2026-08-22) — giống vạch xuất phát đua xe:
+// quái đầu tiên đã spawn/hiển thị (xem start()) nhưng combat logic
+// đóng băng cho tới khi đếm về 0 (xem update()'s 'countdown' branch).
+const BATTLE_COUNTDOWN_SECONDS = 3
+
 export class BattleSystem {
   private battle: Battle | null = null
 
@@ -64,12 +70,35 @@ export class BattleSystem {
     private readonly missileSystem: MissileSystem,
   ) {
     this.reactionManager = new ReactionManager(eventBus)
+
+    // Uncommitted audit followup plan, mục "Projectile phải có authority
+    // ở core" (2026-08-24) — trước đây CombatScene.create() emit
+    // 'projectile_collision_ready:{enabled:true}' tắt hẳn
+    // resolveMissilesHeadless() bên dưới (update()), khiến sát thương
+    // missile phụ thuộc HOÀN TOÀN vào Phaser tự phát 'projectile_impact'
+    // qua physics.overlap() mỗi frame render — scene shutdown/FPS thấp/
+    // không có renderer (test headless, Electron chạy nền) thì combat
+    // ĐỨNG YÊN vĩnh viễn vì damage không bao giờ tự xảy ra. Core giờ LUÔN
+    // tự cập nhật vị trí/retarget/quyết định impact qua
+    // resolveMissilesHeadless() mỗi bước, không điều kiện. 'projectile_impact'
+    // do Phaser phát (nếu có renderer) chỉ còn là đường tắt hiển thị —
+    // impact()/resolveArrival() đã idempotent (missile đã bị remove thì
+    // gọi lại là no-op, xem MissileSystem.impact()), nên 2 nguồn cùng tồn
+    // tại KHÔNG áp damage 2 lần.
+    this.eventBus.on<{ projectileId: string; targetId: string }>('projectile_impact', event => {
+      const battle = this.battle
+
+      if (battle?.state === 'fighting') {
+        this.resolveMissileImpact(battle, event.projectileId, event.targetId)
+      }
+    })
   }
 
   start(
     player: CombatEntity,
     firstEnemy: CombatEntity,
   ) {
+    this.missileSystem.clear()
     player.x = HERO_HOME_X
     firstEnemy.x = ENEMY_SPAWN_X
 
@@ -80,7 +109,9 @@ export class BattleSystem {
 
       enemies: [this.createBattleEnemy(firstEnemy)],
 
-      state: 'fighting',
+      state: 'countdown',
+
+      countdownSecondsRemaining: BATTLE_COUNTDOWN_SECONDS,
 
       playerAttackTimer: 0,
 
@@ -110,6 +141,18 @@ export class BattleSystem {
     this.emitPositions(this.battle)
   }
 
+  startTribulation(player: CombatEntity) {
+    this.missileSystem.clear()
+    player.x = (HERO_HOME_X + SCREEN_VISIBLE_MAX_X) / 2
+    this.battle = {
+      id: crypto.randomUUID(), player, enemies: [], state: 'fighting', mode: 'tribulation',
+      playerAttackTimer: 0, playerBuffs: new BuffManager(), playerAilments: new AilmentManager(),
+      elapsedSeconds: 0, pendingSummons: [], lavaZones: [],
+    }
+    this.eventBus.emit('tribulation_started', undefined)
+    this.emitPositions(this.battle)
+  }
+
   /**
    * Quái mới vào trận GIỮA CHỪNG (wave spawn, không đợi quái cũ chết
    * hết) — gọi từ GameManager theo nhịp spawnIntervalSeconds. Không
@@ -136,15 +179,24 @@ export class BattleSystem {
   private emitPositions(battle: Battle) {
     const event: BattlePositionsEvent = {
       type: 'positions',
+      mode: battle.mode,
 
       playerX: battle.player.x,
+
+      playerCurrentHp: battle.player.currentHp,
+
+      playerMaxHp: battle.player.maxHp,
 
       enemies: battle.enemies
         .filter(battleEnemy => battleEnemy.entity.alive)
         .map(battleEnemy => ({
           id: battleEnemy.entity.id,
+          name: battleEnemy.entity.name,
           x: battleEnemy.entity.x,
           lane: battleEnemy.entity.lane,
+          currentHp: battleEnemy.entity.currentHp,
+          maxHp: battleEnemy.entity.maxHp,
+          isBoss: battleEnemy.entity.isBoss ?? false,
         })),
     }
 
@@ -174,6 +226,27 @@ export class BattleSystem {
       this.battle
 
     if (!battle) {
+      return
+    }
+
+    if (battle.mode === 'tribulation') {
+      this.emitPositions(battle)
+      return
+    }
+
+    // Countdown trước trận (2026-08-22) — quái đầu tiên đã spawn +
+    // emitPositions() đã chạy trong start(), nên chỉ cần TIẾP TỤC emit
+    // vị trí mỗi tick (Phaser vẽ đúng quái đứng yên trong lúc đếm),
+    // KHÔNG chạy movement/attack/spawn-tiếp-theo cho tới khi đếm về 0.
+    if (battle.state === 'countdown') {
+      battle.countdownSecondsRemaining = Math.max(0, (battle.countdownSecondsRemaining ?? 0) - deltaSeconds)
+
+      this.emitPositions(battle)
+
+      if (battle.countdownSecondsRemaining <= 0) {
+        battle.state = 'fighting'
+      }
+
       return
     }
 
@@ -225,6 +298,13 @@ export class BattleSystem {
       deltaSeconds,
     )
 
+    // Homing retarget-on-death (2026-08-22) — quét SỚM, trước
+    // resolveMissilesHeadless() ở cuối update() (xem dưới), để 1 missile
+    // vừa mất mục tiêu ở tick TRƯỚC được retarget/dọn NGAY từ đầu tick
+    // này — retarget trong tick này nhờ vậy phản ánh đúng trong snapshot
+    // emitPositions() gửi Phaser, không phải đợi thêm 1 tick nữa.
+    this.missileSystem.pruneDeadTargets(sourceId => this.getMissileTargets(battle, sourceId))
+
     // Emit NGAY SAU resolveMovement(), TRƯỚC updatePlayerAttack()/
     // updateEnemyAttacks() bên dưới — EventBus.emit() đồng bộ, nên
     // MainScene đã có snapshot MỚI của tick này trước khi 'attack'
@@ -262,14 +342,18 @@ export class BattleSystem {
       battle,
     )
 
-    this.resolveMissiles(
-      battle,
-      deltaSeconds,
-    )
+    // Core luôn tự cập nhật vị trí/retarget/impact projectile — không còn
+    // phụ thuộc Phaser gọi 'projectile_impact' (xem ghi chú ở constructor).
+    this.resolveMissilesHeadless(battle, deltaSeconds)
 
     this.checkBattleEnd(
       battle,
     )
+
+    // Snapshot sau khi toàn bộ damage/regen/thorns/ward-break của tick đã
+    // hoàn tất. Snapshot đầu tick vẫn cần cho vị trí bắn missile; snapshot
+    // này bảo đảm UI không bị giữ ở lượng HP của tick trước, kể cả đòn kết liễu.
+    this.emitPositions(battle)
   }
 
   /**
@@ -443,32 +527,37 @@ export class BattleSystem {
    * trong CHÍNH tick này) để 1 tick chỉ tính di chuyển 1 lần, tránh
    * missile vừa bắn đã bay luôn trong tick nó sinh ra.
    */
-  private resolveMissiles(battle: Battle, deltaSeconds: number) {
-    const findEntity = (id: string): CombatEntity | undefined => {
-      if (id === battle.player.id) {
-        return battle.player
-      }
+  private resolveMissileImpact(battle: Battle, projectileId: string, collisionTargetId: string) {
+    const getTargets = (sourceId: string) => this.getMissileTargets(battle, sourceId)
 
-      return battle.enemies.find(battleEnemy => battleEnemy.entity.id === id)?.entity
+    this.missileSystem.impact(projectileId, collisionTargetId, getTargets, (missile, targetId, isPrimary) => {
+      this.applyResolvedMissileHit(battle, missile, targetId, isPrimary)
+    })
+  }
+
+  // Pierce/Bounce/AOE (Phase 3) + homing retarget-on-death cần biết
+  // TOÀN BỘ mục tiêu khả dụng của phe đối lập với nguồn bắn, không chỉ
+  // đúng 1 targetId ban đầu — missile của player nhắm được MỌI quái
+  // còn sống, missile của quái chỉ có đúng 1 mục tiêu khả dĩ (player).
+  // Dùng chung bởi resolveMissileImpact()/resolveMissilesHeadless()/
+  // pruneDeadTargets() thay vì 3 closure gần giống hệt nhau.
+  private getMissileTargets(battle: Battle, sourceId: string): MissileTarget[] {
+    if (sourceId === battle.player.id) {
+      return battle.enemies
+        .filter(battleEnemy => battleEnemy.entity.alive)
+        .map(battleEnemy => ({ id: battleEnemy.entity.id, x: battleEnemy.entity.x }))
     }
 
-    // Pierce/Bounce/AOE (Phase 3) cần biết TOÀN BỘ mục tiêu khả dụng
-    // của phe đối lập với nguồn bắn, không chỉ đúng 1 targetId ban đầu
-    // — missile của player nhắm được MỌI quái còn sống, missile của
-    // quái chỉ có đúng 1 mục tiêu khả dĩ (player).
-    const getTargets = (sourceId: string): MissileTarget[] => {
-      if (sourceId === battle.player.id) {
-        return battle.enemies
-          .filter(battleEnemy => battleEnemy.entity.alive)
-          .map(battleEnemy => ({ id: battleEnemy.entity.id, x: battleEnemy.entity.x }))
-      }
+    return battle.player.alive ? [{ id: battle.player.id, x: battle.player.x }] : []
+  }
 
-      return battle.player.alive ? [{ id: battle.player.id, x: battle.player.x }] : []
-    }
-
-    this.missileSystem.update(deltaSeconds, getTargets, (missile, targetId, isPrimary) => {
-      const source = findEntity(missile.sourceId)
-      const target = findEntity(targetId)
+  private applyResolvedMissileHit(battle: Battle, missile: import('../combat/missile/Missile').Missile, targetId: string, isPrimary: boolean) {
+      const source = missile.sourceId === battle.player.id
+        ? battle.player
+        : battle.enemies.find(enemy => enemy.entity.id === missile.sourceId)?.entity
+      const target = targetId === battle.player.id
+        ? battle.player
+        : battle.enemies.find(enemy => enemy.entity.id === targetId)?.entity
 
       if (!source || !target || !target.alive) {
         return
@@ -543,6 +632,13 @@ export class BattleSystem {
 
         target.x += direction * missile.behavior.knockbackDistance
       }
+  }
+
+  private resolveMissilesHeadless(battle: Battle, deltaSeconds: number) {
+    const getTargets = (sourceId: string) => this.getMissileTargets(battle, sourceId)
+
+    this.missileSystem.update(deltaSeconds, getTargets, (missile, targetId, isPrimary) => {
+      this.applyResolvedMissileHit(battle, missile, targetId, isPrimary)
     })
   }
 
@@ -724,7 +820,15 @@ export class BattleSystem {
    */
   private updateRegen(battle: Battle, deltaSeconds: number) {
     if (battle.player.alive) {
-      battle.player.currentHp = Math.min(battle.player.maxHp, battle.player.currentHp + battle.player.stats.hpRegenPerSecond * deltaSeconds)
+      const playerRegen = battle.player.stats.hpRegenPerSecond * deltaSeconds
+
+      // Bỏ qua applyHealing()/emit 'entity_vitals_changed' khi không có gì
+      // để hồi — phần lớn entity không có hpRegenPerSecond, trước đây vẫn
+      // emit đầy đủ payload + trigger bumpState() mỗi tick dù amount=0.
+      if (playerRegen > 0) {
+        this.combat.applyHealing(battle.player, playerRegen, battle.player.id, 'regen')
+      }
+
       battle.player.currentMp = Math.min(battle.player.stats.maxMp, battle.player.currentMp + battle.player.stats.manaRegenPerSecond * deltaSeconds)
 
       battle.player.timeSinceLastHitTaken += deltaSeconds
@@ -739,7 +843,12 @@ export class BattleSystem {
         continue
       }
 
-      battleEnemy.entity.currentHp = Math.min(battleEnemy.entity.maxHp, battleEnemy.entity.currentHp + battleEnemy.entity.stats.hpRegenPerSecond * deltaSeconds)
+      const enemyRegen = battleEnemy.entity.stats.hpRegenPerSecond * deltaSeconds
+
+      if (enemyRegen > 0) {
+        this.combat.applyHealing(battleEnemy.entity, enemyRegen, battleEnemy.entity.id, 'regen')
+      }
+
       battleEnemy.entity.currentMp = Math.min(battleEnemy.entity.stats.maxMp, battleEnemy.entity.currentMp + battleEnemy.entity.stats.manaRegenPerSecond * deltaSeconds)
 
       battleEnemy.entity.timeSinceLastHitTaken += deltaSeconds
@@ -761,7 +870,7 @@ export class BattleSystem {
       return
     }
 
-    const decayPerSecond = HOA_THE_BASE_DECAY_PER_SECOND * (1 - battle.player.stats.hoaTheDecayReductionPercent)
+    const decayPerSecond = HOA_THE_BASE_DECAY_PER_SECOND * (1 - getSkillRuntimeStat(battle.player, 'hoaTheDecayReductionPercent'))
 
     battle.player.currentHoaThe = Math.max(0, battle.player.currentHoaThe - decayPerSecond * deltaSeconds)
   }
@@ -819,8 +928,12 @@ export class BattleSystem {
 
     // Chưa có quái nào trong tầm (hoặc chưa quái nào sống) — không
     // tốn nhịp timer, để đánh được NGAY khi vừa vào tầm thay vì phải
-    // chờ hết 1 interval trọn vẹn.
-    if (!target || Math.abs(target.x - battle.player.x) > battle.player.stats.attackRange) {
+    // chờ hết 1 interval trọn vẹn. `target.x > SCREEN_VISIBLE_MAX_X`
+    // (2026-08-22) — attackRange world-unit "vô hạn" của player
+    // (PLAYER_ATTACK_RANGE_INFINITE, xem StatBlock.ts) KHÔNG còn nghĩa
+    // là bắn trúng bất kỳ đâu nữa: phải THẤY quái mới bắn được, dù
+    // stat range có lớn cỡ nào.
+    if (!target || Math.abs(target.x - battle.player.x) > battle.player.stats.attackRange || target.x > SCREEN_VISIBLE_MAX_X) {
       return
     }
 
@@ -877,14 +990,14 @@ export class BattleSystem {
       return
     }
 
-    for (const skill of this.skillManager.getLoadoutSkills()) {
-      if (!this.skillSystem.canUse(skill.id, battle.player)) {
+    for (const { skill, slotIndex } of this.skillManager.getLoadoutEntries()) {
+      if (!this.skillSystem.canUseInSlot(skill.id, slotIndex, battle.player)) {
         continue
       }
 
       const target = skill.target === 'self' ? battle.player : nearest
 
-      this.beginCast(skill, battle.player, target, battle)
+      this.beginCast(skill, battle.player, target, battle, slotIndex)
 
       break
     }
@@ -899,16 +1012,17 @@ export class BattleSystem {
    * MMO chuẩn) nhưng hoãn resolveSkillEffects() tới khi updateCasting()
    * đếm castTimeRemaining về 0 — xem CombatEntity.castingSkillId.
    */
-  private beginCast(skill: Skill, source: CombatEntity, target: CombatEntity, battle: Battle) {
+  private beginCast(skill: Skill, source: CombatEntity, target: CombatEntity, battle: Battle, slotIndex?: number) {
     const castTime = skill.castTime ?? 0
 
     if (castTime <= 0) {
-      this.castSkill(skill, source, target, battle)
+      this.castSkill(skill, source, target, battle, slotIndex)
 
       return
     }
 
-    this.skillSystem.use(skill.id, source)
+    if (slotIndex === undefined) this.skillSystem.use(skill.id, source)
+    else this.skillSystem.useInSlot(skill.id, slotIndex, source)
 
     source.castingSkillId = skill.id
     source.castTimeRemaining = castTime
@@ -951,7 +1065,7 @@ export class BattleSystem {
       return
     }
 
-    player.castTimeRemaining -= deltaSeconds * (1 + player.stats.castSpeedPercent)
+    player.castTimeRemaining -= deltaSeconds * (1 + Math.min(3, Math.max(0, player.stats.castSpeedPercent)))
 
     if (player.castTimeRemaining > 0) {
       return
@@ -988,8 +1102,9 @@ export class BattleSystem {
     this.resolveSkillEffects(skill, player, target, battle)
   }
 
-  private castSkill(skill: Skill, source: CombatEntity, target: CombatEntity, battle: Battle) {
-    this.skillSystem.use(skill.id, source)
+  private castSkill(skill: Skill, source: CombatEntity, target: CombatEntity, battle: Battle, slotIndex?: number) {
+    if (slotIndex === undefined) this.skillSystem.use(skill.id, source)
+    else this.skillSystem.useInSlot(skill.id, slotIndex, source)
 
     this.resolveSkillEffects(skill, source, target, battle)
   }
@@ -1002,25 +1117,20 @@ export class BattleSystem {
    * lại ở đây để tránh trừ cooldown/resource 2 lần).
    */
   private resolveSkillEffects(skill: Skill, source: CombatEntity, target: CombatEntity, battle: Battle) {
-    // Core Loop Foundation checklist (Mục SKILL, "Skill modifier") —
-    // mỗi lần cast tích XP lên level skill, xem SkillSystem.
-    // gainExperience()/getEffectiveSkill() (scale damage theo level).
-    this.skillSystem.gainExperience(skill.id, ACTIVE_SKILL_XP_PER_CAST)
-
     // Hỏa Tu Pure (Plans/FirePath mục 7) — 0 nếu chưa mua "Tụ Hỏa"
     // (hoaTheGainPerCast nền = 0), cùng hook "gain theo CAST" như Kiếm
     // Ý/Momentum nhưng ở đây thay vì missile-resolve callback (đó là
     // "theo ĐÒN TRÚNG") vì Hỏa Thế tích theo LƯỢT DÙNG SKILL, xem
     // FirePath.md mục 7.
     if (skill.grantsHoaThePerCast) {
-      source.currentHoaThe = Math.min(MAX_HOA_THE, source.currentHoaThe + source.stats.hoaTheGainPerCast)
+      source.currentHoaThe = Math.min(MAX_HOA_THE, source.currentHoaThe + getSkillRuntimeStat(source, 'hoaTheGainPerCast'))
     }
 
     // Thổ Tu Pure (Plans/EarthPath mục XV, 2026-08-21) — cùng hook
     // "gain theo CAST" như Hỏa Thế, nhưng KHÔNG có decay đối ứng (doc
     // không nhắc tới, xem CombatEntity.currentThoThe's ghi chú).
     if (skill.grantsThoThePerCast) {
-      source.currentThoThe = Math.min(MAX_THO_THE, source.currentThoThe + source.stats.thoTheGainPerCast)
+      source.currentThoThe = Math.min(MAX_THO_THE, source.currentThoThe + getSkillRuntimeStat(source, 'thoTheGainPerCast'))
     }
 
     // Nguồn duy nhất emit 'cast' — PassiveSystem dùng event này cho
@@ -1031,6 +1141,8 @@ export class BattleSystem {
       sourceId: source.id,
 
       skillId: skill.id,
+
+      skillName: skill.name,
     })
 
     const sourceBuffs = new BuffSystem(this.getBuffsFor(battle, source))
@@ -1038,7 +1150,7 @@ export class BattleSystem {
     // Đọc qua getEffectiveSkill() để tôn trọng Specialization đã
     // chọn (behavior-changing node) + effect 'damage' đã scale theo
     // level hiện tại.
-    const effective = this.skillSystem.getEffectiveSkill(skill)
+    const effective = this.skillSystem.getEffectiveSkill(skill, source.skillLevels?.[skill.id])
 
     // Pháp Tu (Thổ Tu) — 'all_enemies' trước đây chỉ là NHÃN, không
     // hề fan-out (Viêm Hải/Độc Vụ trước đó thực chất chỉ trúng đúng 1
@@ -1068,6 +1180,10 @@ export class BattleSystem {
         skillId: skill.id,
       })
     }
+
+    // Chỉ cấp XP sau khi cast hợp lệ đã áp hiệu ứng. Vì effective skill được
+    // tính ở trên, lần cast làm tăng level không tự buff ngược chính nó.
+    this.skillSystem.gainExperience(skill.id, ACTIVE_SKILL_XP_PER_CAST)
   }
 
   private updateEnemyAttacks(
@@ -1111,7 +1227,10 @@ export class BattleSystem {
       const distance = Math.abs(battleEnemy.entity.x - battle.player.x)
 
       // Ngoài tầm — không tốn nhịp timer, giống lý do ở updatePlayerAttack().
-      if (distance > battleEnemy.entity.stats.attackRange) {
+      // target.x > SCREEN_VISIBLE_MAX_X (2026-08-22) — mob/boss cũng
+      // không được tấn công trong lúc còn off-screen, kể cả loại
+      // 'ranged'/'caster' có attackRange đủ xa để lý thuyết chạm tới.
+      if (distance > battleEnemy.entity.stats.attackRange || battleEnemy.entity.x > SCREEN_VISIBLE_MAX_X) {
         continue
       }
 
@@ -1160,6 +1279,7 @@ export class BattleSystem {
   }
 
   stop() {
+    this.missileSystem.clear()
     this.battle = null
   }
 }

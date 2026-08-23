@@ -7,7 +7,7 @@ import type { Stage } from '../../core/stage/Stage'
 // description GIỮ NGUYÊN (an toàn save, description vẫn còn giá trị
 // flavor riêng dù không còn khớp 1:1 với tên hiển thị "Quật N" nữa —
 // chưa viết lại, để dành nếu cần một lượt riêng).
-export const STAGES: Stage[] = [
+const BASE_STAGES: Stage[] = [
   {
     id: 'qi_refining_forest',
 
@@ -32,7 +32,7 @@ export const STAGES: Stage[] = [
     spawnIntervalSeconds: 3,
 
     // Core Loop Foundation checklist (Mục BOSS) — quái CUỐI CÙNG
-    // (thứ 10) LUÔN LÀ "Đại Vương Sơn Tặc" (Boss, buff HP×8/Attack×3),
+    // (thứ 10) LUÔN LÀ "Đại Vương Sơn Tặc" (Boss, buff HP×7/Attack×1.6),
     // KHÔNG roll enemyPool cho lượt đó — khác "Sơn Tặc Đầu Lĩnh"
     // (Elite) ở trên vốn có thể xuất hiện NGẪU NHIÊN ở bất kỳ lượt nào.
     bossEnemyId: 'bandit',
@@ -43,9 +43,11 @@ export const STAGES: Stage[] = [
   // Hành Tương Sinh: Mộc(1-2)→Hỏa(3-4)→Thổ(5-6)→Kim(7-8)→Thủy(9-10),
   // mỗi cặp tầng dùng CHUNG 2 loài (data/enemy/Enemies.ts), tầng chẵn
   // chỉ đổi tên "Hung "+stat mạnh hơn, KHÔNG đổi loài. `requiredRealmLevel`
-  // = số tầng (gate qua StageSelectPanel.vue's isStageUnlocked()).
-  // totalEnemyCount/spawnIntervalSeconds giữ NGUYÊN 10/3 xuyên suốt cả
-  // 10 tầng — chỉ độ khó (stat quái) thay đổi, không đổi nhịp độ.
+  // = số tầng hiển thị (label thôi — gate thật theo thứ tự khai trong
+  // Zones.ts's stageIds, xem GameManager.isStageUnlocked()).
+  // Nhịp spawn giữ ở 3 giây; tổng số quái được chuẩn hóa ở cuối file theo
+  // công thức 10 + (tầng - 1), tạo cảm giác quy mô tăng dần mà không làm
+  // thời lượng một màn nhảy quá mạnh.
 
   {
     id: 'qi_refining_deep_forest',
@@ -337,3 +339,25 @@ export const STAGES: Stage[] = [
     bossEnemyId: 'pham_nhan_ferocious_giant_crocodile',
   },
 ]
+
+const normalizedStages: Stage[] = BASE_STAGES.map(stage => ({
+  ...stage,
+  chapter: stage.requiredRealmId === 'pham_nhan' ? 1 : 2,
+  floor: stage.requiredRealmLevel ?? 1,
+  totalEnemyCount: 10 + (stage.requiredRealmLevel ?? 1) - 1,
+}))
+
+// Foundation content temporarily reuses the current Thanh Vân encounter
+// pools. The chapter/floor model is real; enemy balance remains data-only
+// and can be replaced without changing stage progression logic.
+const foundationStages: Stage[] = normalizedStages
+  .filter(stage => stage.chapter === 2)
+  .map(stage => ({
+    ...stage,
+    id: `foundation_floor_${stage.floor}`,
+    name: `Màn 3.${stage.floor}`,
+    requiredRealmId: 'foundation',
+    chapter: 3,
+  }))
+
+export const STAGES: Stage[] = [...normalizedStages, ...foundationStages]

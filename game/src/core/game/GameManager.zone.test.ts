@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
 import type { Zone } from '../stage/Zone'
+import { createDefaultPlayer } from '../player/Player'
 
 const ZONES: Zone[] = [
   { id: 'zone_a', name: 'Zone A', stageIds: ['stage_1', 'stage_2', 'stage_3'] },
@@ -40,5 +41,30 @@ describe('GameManager.getNextStageInZone (Thám Hiểm rework — Tự Động T
     const gameManager = setup()
 
     expect(gameManager.getNextStageInZone('zone_unknown', 'stage_1')).toBeNull()
+  })
+})
+
+describe('GameManager.isStageUnlocked — mở tuần tự theo hoàn thành', () => {
+  it('khóa màn kế và địa giới kế cho tới khi hoàn thành màn trước', () => {
+    const gameManager = setup()
+    const player = createDefaultPlayer()
+
+    expect(gameManager.isStageUnlocked('stage_1', player)).toBe(true)
+    expect(gameManager.isStageUnlocked('stage_2', player)).toBe(false)
+    expect(gameManager.isStageUnlocked('stage_x', player)).toBe(false)
+
+    player.completedStageIds.push('stage_1', 'stage_2', 'stage_3')
+    expect(gameManager.isStageUnlocked('stage_2', player)).toBe(true)
+    expect(gameManager.isStageUnlocked('stage_x', player)).toBe(true)
+  })
+})
+
+describe('GameManager.registerEquipment — startup validation', () => {
+  it('từ chối main stat không đúng slot ngay khi đăng ký', () => {
+    const gameManager = new GameManager()
+    expect(() => gameManager.registerEquipment([{
+      id: 'bad_boots', name: 'Sai', slot: 'boots', grade: 1, maxEnhanceLevel: 1,
+      mainStats: [{ stat: 'attack', min: 1, max: 2 }],
+    }])).toThrow(/Invalid main stat/)
   })
 })

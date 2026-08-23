@@ -6,17 +6,18 @@
 // NodeInspector.vue của nhánh phap_tu).
 import { computed } from 'vue'
 import type { Skill } from '@/core/skill/Skill'
+import { getSkillExperiencePercent } from '@/core/skill/SkillSystem'
 
 const props = defineProps<{
   skill: Skill | null
 }>()
 
 const levelPercent = computed(() => {
-  if (!props.skill || props.skill.maxLevel <= 0) {
+  if (!props.skill) {
     return 0
   }
 
-  return Math.min(100, (props.skill.level / props.skill.maxLevel) * 100)
+  return getSkillExperiencePercent(props.skill)
 })
 </script>
 
@@ -34,7 +35,10 @@ const levelPercent = computed(() => {
           <div class="skill-detail__level-fill" :style="{ width: `${levelPercent}%` }" />
         </div>
 
-        <span class="skill-detail__level-label">Lv. {{ skill.level }}/{{ skill.maxLevel }}</span>
+        <span class="skill-detail__level-label">
+          Lv. {{ skill.level }}/{{ skill.maxLevel }}
+          · {{ skill.level >= skill.maxLevel ? 'Tối đa' : `${skill.experience}/${skill.experienceRequired} XP` }}
+        </span>
       </div>
 
       <ul class="skill-detail__rows">

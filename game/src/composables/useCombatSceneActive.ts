@@ -27,6 +27,6 @@ export function useCombatSceneActive() {
 
     const battle = gameManager.getBattle()
 
-    return battle !== null && battle.state !== 'idle'
+    return battle !== null && battle.mode !== 'tribulation' && battle.state !== 'idle'
   })
 }

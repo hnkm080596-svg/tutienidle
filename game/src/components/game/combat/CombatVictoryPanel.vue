@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useGameManager } from '@/composables/useGameState'
 import { useBattleActions } from '@/composables/useBattleActions'
+import { useAutoRetryCountdown } from '@/composables/useAutoRetryCountdown'
 import { useUiStore } from '@/stores/ui'
+import { usePlayerStore } from '@/stores/player'
 import { formatNumber } from '@/core/format/NumberFormatter'
+import { resolveNextProgressStage } from '@/core/stage/ProgressStageResolver'
 
 // Combat UI Redesign mục 14-19 — thắng thì hiện reward tích luỹ cả
 // trận (xem GameManager.getBattleRewardSummary()). Auto Battle OFF:
@@ -16,25 +19,23 @@ const COUNTDOWN_SECONDS = 3
 
 const gameManager = useGameManager()
 const ui = useUiStore()
+const player = usePlayerStore()
 const { startBattle } = useBattleActions()
 
 const summary = computed(() => gameManager.getBattleRewardSummary())
 
-const countdown = ref(COUNTDOWN_SECONDS)
-let countdownHandle: ReturnType<typeof setInterval> | undefined
-
-function refight() {
+function refight(): boolean {
   if (!ui.selectedStageId) {
-    return
+    return false
   }
 
   const stage = gameManager.getStage(ui.selectedStageId)
 
   if (!stage) {
-    return
+    return false
   }
 
-  startBattle(stage)
+  return startBattle(stage)
 }
 
 function retryNow() {
@@ -46,48 +47,58 @@ function continueToStageSelect() {
   gameManager.eventBus.emit('combat_scene_exit', undefined)
 }
 
-function clearCountdown() {
-  if (countdownHandle) {
-    clearInterval(countdownHandle)
-    countdownHandle = undefined
-  }
-}
+const { remaining: countdown, start: startAutoRefightCountdown } = useAutoRetryCountdown(COUNTDOWN_SECONDS, () => {
+  // Tự Động Thám Hiểm — chỉ tiến khi resolver xác nhận màn kế đã mở. Màn
+  // tồn tại nhưng bị gate bởi tu vi là trạng thái dừng auto hợp lệ, không
+  // được gọi startStage() mù rồi để modal victory kẹt ở 0s.
+  if (ui.battleRunMode === 'progress' && ui.selectedZoneId && ui.selectedStageId) {
+    const resolution = resolveNextProgressStage(
+      gameManager,
+      player.$state,
+      ui.selectedZoneId,
+      ui.selectedStageId,
+    )
 
-function startAutoRefightCountdown() {
-  countdown.value = COUNTDOWN_SECONDS
+    if (resolution.status === 'ready') {
+      const nextStageId = resolution.stage.id
 
-  countdownHandle = setInterval(() => {
-    countdown.value -= 1
+      if (!gameManager.isStageUnlocked(nextStageId, player.$state)) {
+        // Có màn kế tiếp nhưng progression hiện tại chưa mở nó (vd thắng 1.5
+        // khi mới ở cảnh giới tầng 5). Kết thúc auto bằng UI thủ công thay vì
+        // gọi startStage() thất bại rồi kẹt modal victory ở countdown 0s.
+        ui.battleRunMode = 'manual'
 
-    if (countdown.value > 0) {
+        return
+      }
+
+      const previousStageId = ui.selectedStageId
+      ui.selectedStageId = nextStageId
+
+      if (!refight()) {
+        ui.selectedStageId = previousStageId
+        ui.battleRunMode = 'manual'
+      }
+
+      return
+    } else {
+      // Đã hoàn tất tuyến hiện tại: progress phải dừng, không được âm thầm
+      // biến thành repeat ở tầng cuối. Cùng nhánh này xử lý stage kế bị khóa
+      // hoặc dữ liệu đích không hợp lệ để modal trở lại tương tác được.
+      ui.battleRunMode = 'manual'
+
       return
     }
+  }
 
-    clearCountdown()
-
-    // Tự Động Thám Hiểm — leo lên Màn kế tiếp TRONG CÙNG Địa Giới
-    // trước khi refight; getNextStageInZone() tự trả null nếu đã ở
-    // Màn cuối/thiếu dữ liệu, refight() fallback lặp lại Màn hiện tại.
-    if (ui.explorationMode === 'auto' && ui.selectedZoneId && ui.selectedStageId) {
-      const nextStageId = gameManager.getNextStageInZone(ui.selectedZoneId, ui.selectedStageId)
-
-      if (nextStageId) {
-        ui.selectedStageId = nextStageId
-      }
-    }
-
-    refight()
-  }, 1000)
-}
-
-onMounted(() => {
-  if (ui.isAuto) {
-    startAutoRefightCountdown()
+  if (!refight()) {
+    ui.battleRunMode = 'manual'
   }
 })
 
-onUnmounted(() => {
-  clearCountdown()
+onMounted(() => {
+  if (ui.battleRunMode !== 'manual') {
+    startAutoRefightCountdown()
+  }
 })
 </script>
 
@@ -96,7 +107,7 @@ onUnmounted(() => {
     <h2 class="combat-victory-panel__title">★ THẮNG ★</h2>
 
     <div class="combat-victory-panel__rewards">
-      <p v-if="summary.experience > 0">EXP <span>+{{ formatNumber(summary.experience) }}</span></p>
+      <p v-if="summary.experience > 0">Cảm ngộ <span>+{{ formatNumber(summary.experience) }}</span></p>
       <p v-if="summary.spiritStone > 0">Linh Thạch <span>+{{ formatNumber(summary.spiritStone) }}</span></p>
       <p v-if="summary.cultivation > 0">Tu Vi <span>+{{ formatNumber(summary.cultivation) }}</span></p>
       <p v-for="item in summary.items" :key="`${item.kind}-${item.itemId}`">{{ item.name }} <span>+{{ formatNumber(item.amount) }}</span></p>
@@ -106,14 +117,14 @@ onUnmounted(() => {
       <button
         type="button"
         class="combat-victory-panel__retry"
-        :class="{ 'is-disabled': ui.isAuto }"
-        :disabled="ui.isAuto"
+        :class="{ 'is-disabled': ui.battleRunMode !== 'manual' }"
+        :disabled="ui.battleRunMode !== 'manual'"
         @click="retryNow"
       >
-        Đánh Lại<template v-if="ui.isAuto"> {{ countdown }}s</template>
+        Đánh Lại<template v-if="ui.battleRunMode !== 'manual'"> {{ countdown }}s</template>
       </button>
 
-      <button v-if="!ui.isAuto" type="button" class="combat-victory-panel__continue" @click="continueToStageSelect">
+      <button v-if="ui.battleRunMode === 'manual'" type="button" class="combat-victory-panel__continue" @click="continueToStageSelect">
         Tiếp Tục
       </button>
     </div>

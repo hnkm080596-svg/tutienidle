@@ -7,6 +7,7 @@ import { createBaseStats } from '../stats/StatBlock'
 import { ailments } from '../../data/ailment/ailments'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { AilmentTemplate } from './AilmentRegistry'
+import { createSkillRuntimeStats } from '../skill/SkillRuntimeStats'
 
 function getTemplate(id: string): AilmentTemplate {
   const template = ailments.find(ailment => ailment.id === id)
@@ -41,7 +42,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 'ground',
+    lane: 2,
     alive: true,
     ...overrides,
   }
@@ -74,8 +75,8 @@ describe('AilmentSystem — Kim Thế (Plans/KimPath, Trúc Cơ Pure Kim)', () =
     const eventBus = new EventBus()
     const combatSystem = new CombatSystem(eventBus)
 
-    const sourceStats = { ...createBaseStats(), metalPower: 100, kimTheDotDamagePercentPerStack: 0.05 }
-    const source = createCombatant({ id: 'source', type: 'player', stats: sourceStats, currentKimThe: 3 })
+    const sourceStats = { ...createBaseStats(), metalPower: 100 }
+    const source = createCombatant({ id: 'source', type: 'player', stats: sourceStats, skillStats: { ...createSkillRuntimeStats(), kimTheDotDamagePercentPerStack: 0.05 }, currentKimThe: 3 })
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
     const ailmentSystem = new AilmentSystem(new AilmentManager())
@@ -97,10 +98,11 @@ describe('AilmentSystem — Kim Thế (Plans/KimPath, Trúc Cơ Pure Kim)', () =
     const sourceStats = {
       ...createBaseStats(),
       metalPower: 100,
-      kimTheDotDamagePercentPerStack: 0.05,
-      metalAilmentPotencyPercent: 0.1,
     }
-    const source = createCombatant({ id: 'source', type: 'player', stats: sourceStats, currentKimThe: 3 })
+    const source = createCombatant({
+      id: 'source', type: 'player', stats: sourceStats, currentKimThe: 3,
+      skillStats: { ...createSkillRuntimeStats(), kimTheDotDamagePercentPerStack: 0.05, metalAilmentPotencyPercent: 0.1 },
+    })
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
     const ailmentSystem = new AilmentSystem(new AilmentManager())
@@ -119,8 +121,11 @@ describe('AilmentSystem — Kim Thế (Plans/KimPath, Trúc Cơ Pure Kim)', () =
     const eventBus = new EventBus()
     const combatSystem = new CombatSystem(eventBus)
 
-    const sourceStats = { ...createBaseStats(), woodPower: 100, kimTheDotDamagePercentPerStack: 0.05, metalAilmentPotencyPercent: 0.1 }
-    const source = createCombatant({ id: 'source', type: 'player', stats: sourceStats, currentKimThe: 5 })
+    const sourceStats = { ...createBaseStats(), woodPower: 100 }
+    const source = createCombatant({
+      id: 'source', type: 'player', stats: sourceStats, currentKimThe: 5,
+      skillStats: { ...createSkillRuntimeStats(), kimTheDotDamagePercentPerStack: 0.05, metalAilmentPotencyPercent: 0.1 },
+    })
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
     const ailmentSystem = new AilmentSystem(new AilmentManager())

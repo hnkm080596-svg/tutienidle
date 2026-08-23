@@ -9,16 +9,14 @@
 // BreakthroughRequirementPanel.vue (panel lớn không thuộc LeftPanel).
 import { computed } from 'vue'
 import { useUiStore } from '@/stores/ui'
-import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import TechniqueSlotCard from './loadout-sections/TechniqueSlotCard.vue'
 import { buildTechniqueSections } from '@/composables/useTechniqueSections'
-import { getTechniqueTierProgress } from '@/core/technique/TechniqueTier'
+import { getTechniqueInsightTotalRequired, getTechniqueTierProgress } from '@/core/technique/TechniqueTier'
 import { formatNumber } from '@/core/format/NumberFormatter'
 
 const ui = useUiStore()
 const gameManager = useGameManager()
-const player = usePlayerStore()
 const { stateVersion } = useStateVersion()
 
 const equippedTechnique = computed(() => {
@@ -30,10 +28,14 @@ const equippedTechnique = computed(() => {
 const techniqueSections = computed(() => {
   const technique = equippedTechnique.value
 
-  return technique ? buildTechniqueSections(technique, gameManager, player.techniqueExperience) : []
+  return technique ? buildTechniqueSections(technique, gameManager, technique.insight ?? 0) : []
 })
 
-const tierProgress = computed(() => getTechniqueTierProgress(player.techniqueExperience))
+const techniqueInsight = computed(() => equippedTechnique.value?.insight ?? 0)
+const tierProgress = computed(() => {
+  const technique = equippedTechnique.value
+  return getTechniqueTierProgress(techniqueInsight.value, technique ? getTechniqueInsightTotalRequired(technique) : undefined)
+})
 
 const tierExpPercent = computed(() => {
   const { lowerBound, nextThreshold } = tierProgress.value
@@ -42,7 +44,7 @@ const tierExpPercent = computed(() => {
     return 100
   }
 
-  return Math.min(100, ((player.techniqueExperience - lowerBound) / (nextThreshold - lowerBound)) * 100)
+  return Math.min(100, ((techniqueInsight.value - lowerBound) / (nextThreshold - lowerBound)) * 100)
 })
 
 const tierExpLabel = computed(() => {
@@ -50,7 +52,7 @@ const tierExpLabel = computed(() => {
 
   return nextThreshold === undefined
     ? 'Viên Mãn'
-    : `${formatNumber(player.techniqueExperience)} / ${formatNumber(nextThreshold)}`
+    : `${formatNumber(techniqueInsight.value)} / ${formatNumber(nextThreshold)}`
 })
 
 function close() {

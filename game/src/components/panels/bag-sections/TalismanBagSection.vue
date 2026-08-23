@@ -38,6 +38,8 @@ function buildTooltip(talisman: Talisman, owned: number): GradedItemTooltipConte
 
     phamLabel: PHAM_LABELS[talisman.pham],
 
+    phamKey: talisman.pham,
+
     ownedLabel: `Sở hữu: ${owned}`,
 
     description: talisman.description,
@@ -70,7 +72,7 @@ const cells = computed<BagCell[]>(() => {
 
     tooltip: buildTooltip(stack.talisman, stack.amount),
 
-    itemIcon: stack.talisman.icon,
+    icon: stack.talisman.icon,
 
     onClick: () => emit('toggle', stack.talisman.id),
   }))
@@ -91,9 +93,9 @@ const { currentPage, totalPages, goToPage, gridCells } = useBagPagination(cells,
         :name-segments="cell?.nameSegments"
         :description="cell?.description"
         :amount="cell?.amount"
-        :selected="cell?.selected"
+        :state="{ interaction: cell?.selected ? 'selected' : 'idle' }"
         :tooltip="cell?.tooltip"
-        :item-icon="cell?.itemIcon"
+        :icon="cell?.icon"
         @click="cell?.onClick?.()"
       />
     </div>

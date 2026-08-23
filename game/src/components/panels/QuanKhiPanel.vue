@@ -18,7 +18,11 @@ import type { CultivationPathId } from '@/core/player/CultivationPathKit'
 const ui = useUiStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()
-const { bumpState } = useStateVersion()
+const { stateVersion, bumpState } = useStateVersion()
+const cooldownSeconds = computed(() => {
+  stateVersion.value
+  return gameManager.getTribulationCooldownSeconds()
+})
 
 // Liệt kê TẤT CẢ path trong CULTIVATION_PATH_KITS thay vì hardcode 1 —
 // thêm path mới (Thủy/Kim/Thổ Tu sau này) chỉ cần thêm entry vào
@@ -36,7 +40,6 @@ function choosePath(pathId: CultivationPathId) {
   }
 
   const realmIdBefore = player.realmId
-
   if (gameManager.chooseCultivationPath(pathId, player.$state)) {
     bumpState()
 
@@ -76,6 +79,7 @@ function close() {
           :key="kit.id"
           type="button"
           class="quan-khi-panel__choice"
+          :disabled="cooldownSeconds > 0"
           @click="choosePath(kit.id)"
         >
           Bước Vào {{ kit.name }}

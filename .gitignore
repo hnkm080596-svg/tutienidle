@@ -37,6 +37,10 @@ Thumbs.db
 .codegraph/*
 !.codegraph/.gitignore
 
+# Claude Code local settings (per-developer permissions/config, not
+# meant to be shared — see uncommitted-audit-followup-plan.md).
+.claude/settings.local.json
+
 # Local multi-agent workflow artifacts
 .agent-runs/
 .agent-worktrees/

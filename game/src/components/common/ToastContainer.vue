@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { onBeforeUnmount, onMounted } from 'vue'
 import { useNotificationStore } from '@/stores/notification'
 import type { NotificationKind } from '@/core/notification/NotificationEvent'
+import { isMaxRankTone } from '@/composables/slots/normalizeSlotRank'
 
 const notification = useNotificationStore()
 
@@ -14,6 +16,32 @@ const KIND_COLOR: Record<NotificationKind, string> = {
   warning: 'var(--gold-500)',
   error: 'var(--crimson)',
 }
+
+// Số toast hiện đồng thời tuỳ chiều cao màn hình thật — Teleport to
+// body nên .toast-container KHÔNG nằm trong scale transform của
+// .game-root (xem GameRoot.vue), window.innerHeight là đúng đơn vị.
+// Ước lượng theo kích thước .toast-item ĐÃ giảm 1/2 (mục style bên
+// dưới) + gap thực tế của .toast-container.
+const TOAST_TOP_OFFSET_PX = 24
+const TOAST_BOTTOM_MARGIN_PX = 24
+const TOAST_ITEM_HEIGHT_PX = 32
+const TOAST_GAP_PX = 4
+
+function updateMaxVisible() {
+  const availableHeight = window.innerHeight - TOAST_TOP_OFFSET_PX - TOAST_BOTTOM_MARGIN_PX
+  const maxVisible = Math.floor((availableHeight + TOAST_GAP_PX) / (TOAST_ITEM_HEIGHT_PX + TOAST_GAP_PX))
+
+  notification.setMaxVisible(maxVisible)
+}
+
+onMounted(() => {
+  updateMaxVisible()
+  window.addEventListener('resize', updateMaxVisible)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateMaxVisible)
+})
 </script>
 
 <template>
@@ -24,10 +52,35 @@ const KIND_COLOR: Record<NotificationKind, string> = {
           v-for="toast in notification.toasts"
           :key="toast.id"
           class="toast-item"
-          :style="{ '--toast-color': KIND_COLOR[toast.kind] }"
+          :style="{ '--toast-color': toast.loot?.accentColorVar ? `var(${toast.loot.accentColorVar})` : KIND_COLOR[toast.kind] }"
           @click="notification.dismiss(toast.id)"
         >
-          {{ toast.message }}
+          <template v-if="toast.loot">
+            <div class="toast-item__icon-shell">
+              <span class="toast-item__icon-fallback">{{ toast.loot.nameSegments.at(-1)?.text.charAt(0) }}</span>
+              <img
+                v-if="toast.loot.icon"
+                class="toast-item__icon"
+                :src="toast.loot.icon"
+                alt=""
+                @error="($event.currentTarget as HTMLImageElement).hidden = true"
+              />
+            </div>
+            <div class="toast-item__content">
+              <span class="toast-item__eyebrow">Nhận được</span>
+              <span class="toast-item__name">
+                <template v-for="(segment, index) in toast.loot.nameSegments" :key="`${index}-${segment.text}`">
+                  <span v-if="index > 0" class="toast-item__separator"> · </span>
+                  <span
+                    :class="{ 'toast-item__segment--max-rank': isMaxRankTone(segment.tone) }"
+                    :style="segment.colorVar ? { color: `var(${segment.colorVar})` } : undefined"
+                  >{{ segment.text }}</span>
+                </template>
+              </span>
+            </div>
+            <strong v-if="toast.loot.amountLabel" class="toast-item__amount">{{ toast.loot.amountLabel }}</strong>
+          </template>
+          <template v-else>{{ toast.message }}</template>
         </div>
       </TransitionGroup>
     </div>
@@ -42,38 +95,119 @@ const KIND_COLOR: Record<NotificationKind, string> = {
   z-index: 1500;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
   pointer-events: none;
 }
 
 .toast-item {
   pointer-events: auto;
-  min-width: 200px;
-  max-width: 320px;
-  padding: 10px 14px;
+  min-width: 100px;
+  max-width: 160px;
+  padding: 5px 7px;
   background: rgba(15, 15, 20, 0.96);
   border: 1px solid var(--toast-color, var(--ink-line));
   border-left: 3px solid var(--toast-color, var(--ink-line));
   border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-family: var(--font-body);
-  font-size: 0.78rem;
+  font-size: 0.65rem;
   cursor: pointer;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
 }
 
-.toast-enter-active,
+.toast-item:has(.toast-item__content) {
+  display: grid;
+  grid-template-columns: 21px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 5px;
+  min-width: 140px;
+}
+
+.toast-item__icon-shell {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--toast-color) 55%, var(--ink-line));
+  border-radius: var(--radius-sm);
+  background: linear-gradient(145deg, var(--ink-700), var(--ink-950));
+}
+
+.toast-item__icon,
+.toast-item__icon-fallback {
+  grid-area: 1 / 1;
+}
+
+.toast-item__icon {
+  width: 100%;
+  height: 100%;
+  padding: 2px;
+  box-sizing: border-box;
+  object-fit: contain;
+  background: linear-gradient(145deg, var(--ink-700), var(--ink-950));
+}
+
+.toast-item__icon-fallback {
+  color: var(--toast-color);
+  font: 700 0.55rem var(--font-display);
+}
+
+.toast-item__content {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.toast-item__eyebrow {
+  color: var(--text-muted);
+  font-size: 0.52rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.toast-item__name {
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toast-item__separator {
+  color: var(--text-muted);
+}
+
+.toast-item__segment--max-rank {
+  color: transparent !important;
+  background: var(--rank-gradient-9);
+  background-clip: text;
+  -webkit-background-clip: text;
+}
+
+.toast-item__amount {
+  color: var(--toast-color);
+  font-variant-numeric: tabular-nums;
+}
+
+.toast-enter-active {
+  transition: transform 0.4s ease-out, opacity 0.4s ease-out;
+}
+
 .toast-leave-active {
-  transition: transform 0.25s ease, opacity 0.25s ease;
+  transition: transform 0.7s ease-in, opacity 0.7s ease-in;
+  position: absolute;
+}
+
+.toast-move {
+  transition: transform 0.3s ease;
 }
 
 .toast-enter-from,
 .toast-leave-to {
-  transform: translateX(40px);
+  transform: translateX(56px);
   opacity: 0;
 }
 
-.toast-leave-active {
-  position: absolute;
-}
 </style>

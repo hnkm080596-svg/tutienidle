@@ -5,10 +5,10 @@ import { EquipmentRegistry } from './EquipmentRegistry'
 import {
   EQUIPMENT_QUALITY_ORDER,
   EQUIPMENT_QUALITY_MAX_AFFIX_TIER,
-  EQUIPMENT_QUALITY_DROP_WEIGHT,
   EQUIPMENT_QUALITY_MAX_FORGE_POINTS,
   EQUIPMENT_QUALITY_IMPLICIT_MULTIPLIER,
   EQUIPMENT_QUALITY_UNLOCKED_POOLS,
+  EQUIPMENT_QUALITY_REALM_WEIGHTS,
 } from './EquipmentQuality'
 import type { EquipmentQuality } from './EquipmentQuality'
 import {
@@ -22,7 +22,6 @@ import type { EquipmentSlot } from './EquipmentTypes'
 import { EquipmentSlotManager } from './EquipmentSlotManager'
 import type { EquipmentSlotState } from './EquipmentSlotState'
 import { AffixRegistry } from './AffixRegistry'
-import type { EquipmentSetRegistry } from './EquipmentSetRegistry'
 import type { Affix, AffixKind, AffixPool } from './Affix'
 import type { RolledAffix } from './RolledAffix'
 import { ModifierSystem } from '../stats/ModifierSystem'
@@ -32,6 +31,7 @@ import { MaterialBag } from '../material/MaterialBag'
 import type { PlayerData } from '../player/Player'
 import { getGlobalCultivationLevel, getRealmIndex } from '../realm/realmSystem'
 import { randomInt, weightedRandom, rollChance } from '../reward/DropRoll'
+import { assertValidEquipmentMainStats, isValidEquipmentSubstat } from './EquipmentStatPolicy'
 
 // Hệ số nhân thêm mỗi bậc — cường hóa (Phase 6) và Rèn (Equipment
 // Rework, thay refine cũ — xem forge()) là 2 trục riêng, cộng dồn
@@ -67,6 +67,33 @@ export function getMaxForgePoints(quality: EquipmentQuality, forgePotential: num
   return Math.round((forgePotential / 100) * EQUIPMENT_QUALITY_MAX_FORGE_POINTS[quality])
 }
 
+// Affix có cả miền số nguyên (Attack, HP...) lẫn miền thập phân
+// (criticalRate, cooldownReduction...). randomInt trực tiếp làm miền 0.01–0.09
+// co lại sai thành 1, nên mọi đường roll affix phải đi qua hàm này.
+export function rollAffixRange(min: number, max: number): number {
+  const precision = 10_000
+  return randomInt(Math.round(min * precision), Math.round(max * precision)) / precision
+}
+
+export function normalizeRolledAffixValue(value: number, min: number, max: number): number {
+  if (value >= min && value <= max) return value
+
+  // Dữ liệu cũ từng lưu percent theo điểm nguyên hoặc bị randomInt ép thành
+  // 1. Ưu tiên phục hồi theo /100, sau đó mới clamp vào tier hiện tại.
+  const legacyPercent = value / 100
+  if (legacyPercent >= min && legacyPercent <= max) return legacyPercent
+  return Math.min(max, Math.max(min, legacyPercent))
+}
+
+// Dùng chung bởi applyModifiers() (áp modifier thật lúc equip) VÀ
+// useEquipmentTooltip.ts (hiện số trong tooltip) — 1 nguồn tính "giá trị
+// hiệu lực" của 1 RolledAffix duy nhất, tránh combat và tooltip lệch số
+// nếu sau này đổi cách xử lý tier không khớp (vd data cũ thiếu tier).
+export function getEffectiveAffixValue(rolled: RolledAffix, affix: Affix): number {
+  const tier = affix.tiers.find(candidate => candidate.tier === rolled.tier)
+  return tier ? normalizeRolledAffixValue(rolled.value, tier.min, tier.max) : rolled.value
+}
+
 // Trần TUYỆT ĐỐI số Affix 1 item có thể mang (base rarity cap + Exalted
 // Affix bonus + Yểm Phù tích luỹ trên slot) — cao hơn mức cap tự nhiên
 // của thien_duyen (3 prefix + 3 suffix + 1 exalted = 7) để Yểm Phù vẫn
@@ -79,7 +106,7 @@ export const GLOBAL_MAX_AFFIXES = 8
 // — quy đổi qua getGlobalCultivationLevel() (xuyên suốt 9 đại cảnh
 // giới) để đồ ở cảnh giới cao luôn mạnh hơn đồ cùng phẩm ở cảnh
 // giới thấp.
-const MAIN_STAT_REALM_SCALE = 0.05
+export const MAIN_STAT_REALM_SCALE = 0.05
 
 /**
  * Modifier của equipment là "tĩnh" (xem ghi chú trong Player.ts:
@@ -113,9 +140,12 @@ export class EquipmentSystem {
     affixRegistry: AffixRegistry,
     zoneId?: string,
   ): EquipmentInstance {
-    const quality = this.rollQuality()
+    assertValidEquipmentMainStats(template)
+
+    const quality = this.rollQuality(player.realmId)
 
     const rarity = this.rollRarity()
+    const mainStat = this.rollMainStat(template, player, quality)
 
     return {
       instanceId: crypto.randomUUID(),
@@ -132,16 +162,25 @@ export class EquipmentSystem {
 
       realmId: player.realmId,
 
+      realmLevel: player.realmLevel,
+
       zoneId,
 
-      mainStat: this.rollMainStat(template, player, quality),
+      icon: this.rollIcon(template),
 
-      affixes: this.rollAffixes(template, rarity, quality, affixRegistry),
+      mainStat,
+
+      affixes: this.rollAffixes(template, mainStat.stat, rarity, quality, affixRegistry),
 
       forgePoints: 0,
 
       forgePotential: this.rollForgePotential(),
     }
+  }
+
+  private rollIcon(template: Equipment): string | undefined {
+    const pool = template.iconPool?.filter(Boolean) ?? []
+    return pool.length > 0 ? pool[randomInt(0, pool.length - 1)] : template.icon
   }
 
   // "EquipemtnQuality&rarity" pass — roll đều 0-100, độc lập hoàn
@@ -150,14 +189,13 @@ export class EquipmentSystem {
     return randomInt(0, 100)
   }
 
-  private rollQuality(): EquipmentQuality {
-    return weightedRandom(
-      EQUIPMENT_QUALITY_ORDER.map(quality => ({
-        value: quality,
+  private rollQuality(realmId: string): EquipmentQuality {
+    const realmIndex = Math.max(0, getRealmIndex(realmId))
+    const weights = EQUIPMENT_QUALITY_REALM_WEIGHTS[Math.min(realmIndex, EQUIPMENT_QUALITY_REALM_WEIGHTS.length - 1)]!
 
-        weight: EQUIPMENT_QUALITY_DROP_WEIGHT[quality],
-      })),
-    )
+    return weightedRandom(EQUIPMENT_QUALITY_ORDER
+      .map((quality, index) => ({ value: quality, weight: weights[index] ?? 0 }))
+      .filter(entry => entry.weight > 0))
   }
 
   private rollRarity(): EquipmentRarity {
@@ -170,23 +208,30 @@ export class EquipmentSystem {
     )
   }
 
-  // roll giá trị nguyên — nội dung mainStat trong data nên dùng stat
-  // có bản chất số nguyên (attack/defense/maxHp...), tránh
-  // criticalRate/criticalDamage (giá trị lẻ 0~1) ở lượt này.
+  // Roll trong miền số nguyên có scale để giữ được main stat dạng
+  // tỉ lệ 0~1 (criticalRate/attackSpeed...) mà không làm tròn về 0.
   //
   // Equipment Rework — Quality scale RANGE trước khi roll (mục 6 kế
   // hoạch "Quality chỉ ảnh hưởng range, không cộng trực tiếp
   // multiplier"), Realm scale KẾT QUẢ sau khi roll — 2 trục nhân dồn
   // độc lập (Quality = tiềm năng của BẢN THÂN món đồ, Realm = sức
   // mạnh chung của người chơi lúc rớt đồ).
-  private rollMainStat(template: Equipment, player: PlayerData, quality: EquipmentQuality): StatModifier {
+  private rollMainStat(
+    template: Equipment,
+    player: PlayerData,
+    quality: EquipmentQuality,
+    retainedStat?: StatType,
+  ): StatModifier {
+    const range = retainedStat
+      ? template.mainStats.find(candidate => candidate.stat === retainedStat)
+      : template.mainStats[randomInt(0, template.mainStats.length - 1)]
+    if (!range) {
+      throw new Error(`Missing main stat range ${retainedStat ?? ''} for equipment ${template.id}`)
+    }
+    const stat = range.stat
     const qualityMultiplier = EQUIPMENT_QUALITY_IMPLICIT_MULTIPLIER[quality]
 
-    const min = template.mainStat.min * qualityMultiplier
-
-    const max = template.mainStat.max * qualityMultiplier
-
-    const base = randomInt(Math.round(min), Math.round(max))
+    const base = rollAffixRange(range.min * qualityMultiplier, range.max * qualityMultiplier)
 
     const globalLevel = getGlobalCultivationLevel(player.realmId, player.realmLevel)
 
@@ -195,16 +240,42 @@ export class EquipmentSystem {
     return {
       // id/sourceId ở đây chỉ là placeholder — applyModifiers() sẽ
       // build lại modifier thật (id theo instanceId) khi equip.
-      id: `roll-main-${template.mainStat.stat}`,
+      id: `roll-main-${stat}`,
 
       sourceId: 'roll-main',
 
       sourceType: 'equipment',
 
-      stat: template.mainStat.stat,
+      stat,
 
       flat: scaled,
     }
+  }
+
+  private canRollRetainedMainStat(
+    template: Equipment,
+    instance: EquipmentInstance,
+  ): boolean {
+    const range = template.mainStats.find(candidate => candidate.stat === instance.mainStat.stat)
+
+    return range !== undefined
+      && Number.isFinite(range.min)
+      && Number.isFinite(range.max)
+      && range.min <= range.max
+      && EQUIPMENT_QUALITY_IMPLICIT_MULTIPLIER[instance.quality] !== undefined
+  }
+
+  private getForwardEquipmentProgress(
+    instance: EquipmentInstance,
+    player: PlayerData,
+  ): Pick<PlayerData, 'realmId' | 'realmLevel'> {
+    const instanceLevel = instance.realmLevel ?? 1
+    const playerGlobalLevel = getGlobalCultivationLevel(player.realmId, player.realmLevel)
+    const instanceGlobalLevel = getGlobalCultivationLevel(instance.realmId, instanceLevel)
+
+    return playerGlobalLevel >= instanceGlobalLevel
+      ? { realmId: player.realmId, realmLevel: player.realmLevel }
+      : { realmId: instance.realmId, realmLevel: instanceLevel }
   }
 
   /**
@@ -221,6 +292,7 @@ export class EquipmentSystem {
    */
   private rollAffixes(
     template: Equipment,
+    mainStat: StatType,
     rarity: EquipmentRarity,
     quality: EquipmentQuality,
     affixRegistry: AffixRegistry,
@@ -235,7 +307,7 @@ export class EquipmentSystem {
     // suffix không bao giờ trùng STAT với nhau lẫn với Implicit
     // (mainStat), giống hệt cách rollAdditionalSubstats cũ tránh
     // trùng lặp.
-    const excludeStats: StatType[] = [template.mainStat.stat]
+    const excludeStats: StatType[] = [mainStat]
 
     const prefixes = this.rollAffixesOfKind(template, 'prefix', slots.prefix, maxTier, unlockedPools, excludeStats, affixRegistry)
 
@@ -302,7 +374,8 @@ export class EquipmentSystem {
     const candidates = affixRegistry.getByKind(kind).filter(affix =>
       pools.includes(affix.pool) &&
       !excludeStats.includes(affix.stat) &&
-      (!affix.slots || affix.slots.includes(template.slot)),
+      (!affix.slots || affix.slots.includes(template.slot)) &&
+      isValidEquipmentSubstat(template.slot, affix.stat),
     )
 
     if (candidates.length === 0) {
@@ -321,7 +394,7 @@ export class EquipmentSystem {
       ? eligibleTiers[randomInt(0, eligibleTiers.length - 1)]!
       : affix.tiers[0]!
 
-    return { affixId: affix.id, tier: tierDef.tier, value: randomInt(tierDef.min, tierDef.max) }
+    return { affixId: affix.id, tier: tierDef.tier, value: rollAffixRange(tierDef.min, tierDef.max) }
   }
 
   equip(
@@ -344,12 +417,10 @@ export class EquipmentSystem {
 
     const template = registry.get(instance.itemId)
 
-    // Level requirement (checklist Equipment Base) — chặn trang bị nếu
-    // player chưa đạt cảnh giới yêu cầu của template.
-    if (template.requiredRealmId && getRealmIndex(player.realmId) < getRealmIndex(template.requiredRealmId)) {
-      return false
-    }
-
+    // Equipment KHÔNG có requiredRealmId trên template (khác Recipe/
+    // Building/Skill) — không gate trang bị theo cảnh giới. Sức mạnh
+    // theo cảnh giới nằm ở instance.realmId (set lúc rớt đồ, nâng qua
+    // upgradeRealm()), không phải điều kiện equip.
     const current = inventory.getEquippedInSlot(instance.slot)
 
     if (current) {
@@ -506,7 +577,7 @@ export class EquipmentSystem {
       const tierDef = affix.tiers.find(candidate => candidate.tier === rolled.tier)
 
       if (tierDef) {
-        rolled.value = randomInt(tierDef.min, tierDef.max)
+        rolled.value = rollAffixRange(tierDef.min, tierDef.max)
       }
     }
 
@@ -544,7 +615,15 @@ export class EquipmentSystem {
       return false
     }
 
+    if (!registry.has(instance.itemId)) {
+      return false
+    }
+
     const template = registry.get(instance.itemId)
+
+    if (!this.canRollRetainedMainStat(template, instance)) {
+      return false
+    }
 
     const cost = template.refineCost ?? []
 
@@ -554,17 +633,16 @@ export class EquipmentSystem {
       }
     }
 
+    const progress = this.getForwardEquipmentProgress(instance, player)
+    const rerolled = this.rollMainStat(template, { ...player, ...progress }, instance.quality, instance.mainStat.stat)
+
     for (const entry of cost) {
       materialBag.remove(entry.materialId, entry.amount)
     }
 
-    const rerolled = this.rollMainStat(template, player, instance.quality)
-
     instance.mainStat.flat = rerolled.flat
-
-    if (getRealmIndex(player.realmId) > getRealmIndex(instance.realmId)) {
-      instance.realmId = player.realmId
-    }
+    instance.realmId = progress.realmId
+    instance.realmLevel = progress.realmLevel
 
     if (instance.equipped) {
       this.modifierSystem.removeBySource(instance.instanceId)
@@ -710,7 +788,15 @@ export class EquipmentSystem {
       return false
     }
 
+    if (!registry.has(instance.itemId)) {
+      return false
+    }
+
     const template = registry.get(instance.itemId)
+
+    if (!this.canRollRetainedMainStat(template, instance)) {
+      return false
+    }
 
     const cost = template.upgradeRealmCost ?? []
 
@@ -726,6 +812,8 @@ export class EquipmentSystem {
       }
     }
 
+    const rerolled = this.rollMainStat(template, player, instance.quality, instance.mainStat.stat)
+
     player.spiritStone -= spiritStoneCost
 
     for (const entry of cost) {
@@ -733,8 +821,8 @@ export class EquipmentSystem {
     }
 
     instance.realmId = player.realmId
-
-    instance.mainStat = this.rollMainStat(template, player, instance.quality)
+    instance.realmLevel = player.realmLevel
+    instance.mainStat = rerolled
 
     if (instance.equipped) {
       this.modifierSystem.removeBySource(instance.instanceId)
@@ -794,7 +882,7 @@ export class EquipmentSystem {
 
     const unlockedPools = EQUIPMENT_QUALITY_UNLOCKED_POOLS[instance.quality]
 
-    const excludeStats = [template.mainStat.stat, ...instance.affixes.map(rolled => affixRegistry.get(rolled.affixId).stat)]
+    const excludeStats = [instance.mainStat.stat, ...instance.affixes.map(rolled => affixRegistry.get(rolled.affixId).stat)]
 
     const rolled = this.rollEligibleAffix(template, kind, maxTier, unlockedPools, excludeStats, affixRegistry)
       ?? this.rollEligibleAffix(template, kind === 'prefix' ? 'suffix' : 'prefix', maxTier, unlockedPools, excludeStats, affixRegistry)
@@ -874,7 +962,7 @@ export class EquipmentSystem {
 
     rolled.tier = nextTierDef.tier
 
-    rolled.value = randomInt(nextTierDef.min, nextTierDef.max)
+    rolled.value = rollAffixRange(nextTierDef.min, nextTierDef.max)
 
     if (instance.equipped) {
       this.modifierSystem.removeBySource(instance.instanceId)
@@ -933,47 +1021,6 @@ export class EquipmentSystem {
   }
 
   /**
-   * Cơ chế Set (2026-08-15) — cộng dồn modifier theo mốc 2/4/6 món
-   * ĐANG TRANG BỊ cùng setId (mốc thấp hơn LUÔN cộng khi đã đạt mốc
-   * cao hơn, chuẩn ARPG). Tính lại HOÀN TOÀN mỗi lần gọi (không lưu
-   * state riêng) — cùng cách GameManager.getAggregatedModifiers() đọc
-   * Formation/Buff/Technique, gọi lại đây mỗi khi tổng hợp modifier.
-   */
-  getActiveSetModifiers(
-    inventory: EquipmentBag,
-    registry: EquipmentRegistry,
-    setRegistry: EquipmentSetRegistry,
-  ): StatModifier[] {
-    const countBySetId = new Map<string, number>()
-
-    for (const instance of inventory.getEquipped()) {
-      const setId = registry.get(instance.itemId).setId
-
-      if (!setId) {
-        continue
-      }
-
-      countBySetId.set(setId, (countBySetId.get(setId) ?? 0) + 1)
-    }
-
-    const result: StatModifier[] = []
-
-    for (const [setId, count] of countBySetId) {
-      if (!setRegistry.has(setId)) {
-        continue
-      }
-
-      for (const bonus of setRegistry.get(setId).bonuses) {
-        if (count >= bonus.pieces) {
-          result.push(...bonus.modifiers)
-        }
-      }
-    }
-
-    return result
-  }
-
-  /**
    * Build lại modifierSystem nội bộ từ toàn bộ instance đang
    * equipped trong inventory — cần gọi sau khi nạp EquipmentBag
    * từ save, vì modifierSystem là state trong bộ nhớ của
@@ -1003,8 +1050,9 @@ export class EquipmentSystem {
 
     for (const rolled of instance.affixes) {
       const affix = affixRegistry.get(rolled.affixId)
+      const value = getEffectiveAffixValue(rolled, affix)
 
-      this.applyScaledModifier(instance.instanceId, affix.stat, rolled.value, scale)
+      this.applyScaledModifier(instance.instanceId, affix.stat, value, scale)
     }
   }
 
@@ -1040,7 +1088,7 @@ export class EquipmentSystem {
 
     const unlockedPools = EQUIPMENT_QUALITY_UNLOCKED_POOLS[instance.quality]
 
-    const excludeStats = [template.mainStat.stat, ...instance.affixes.map(rolled => affixRegistry.get(rolled.affixId).stat)]
+    const excludeStats = [instance.mainStat.stat, ...instance.affixes.map(rolled => affixRegistry.get(rolled.affixId).stat)]
 
     for (let i = 0; i < missing; i++) {
       const rolled = this.rollEligibleAffix(template, 'prefix', maxTier, unlockedPools, excludeStats, affixRegistry)

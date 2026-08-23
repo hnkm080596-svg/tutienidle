@@ -40,6 +40,14 @@ export class StageManager {
     return this.active
   }
 
+  restartCycle(stage: Stage) {
+    if (!this.active || this.active.stageId !== stage.id) return false
+
+    this.active.spawnedCount = 0
+    this.active.spawnCountdown = 0
+    return true
+  }
+
   stop() {
     this.active = null
   }

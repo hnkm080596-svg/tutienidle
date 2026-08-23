@@ -3,6 +3,10 @@ export interface RealmData {
   name: string
   maxLevel: number
 
+  // Minutes needed for level 1 -> 2. Later levels add one minute each.
+  // Extended levels 13-18 never affect the next realm's base time.
+  baseCultivationMinutes?: number
+
   // Phàm Nhân (tutorial) DUY NHẤT — công thức hấp thu linh khí cũ
   // (baseRequiredCultivation * cultivationMultiplier^(level-1)), cố
   // tình KHÔNG đổi sang cơ chế ngân sách thời gian bên dưới (xem
@@ -29,6 +33,11 @@ export interface RealmData {
 }
 
 export const REALMS: RealmData[] = [
+  // PRODUCT SCOPE: progression hiện chỉ được thiết kế và cân bằng tới
+  // Trúc Cơ tầng 18. Các cảnh giới từ Kim Đan trở đi mới là dữ liệu giữ chỗ;
+  // không được dùng maxLevel/gate của chúng để suy ra rằng người chơi hiện có
+  // thể tiến xa hơn Trúc Cơ. Khi mở rộng scope phải thiết kế lại gate đại cảnh
+  // giới, thời gian tu luyện, nội dung và test progression cùng lúc.
   // Phàm Nhân (2026-08-16) — đại cảnh giới THẤP NHẤT, đứng TRƯỚC
   // qi_refining trong mảng này (getRealmIndex()/getGlobalCultivationLevel()
   // đều thuần index-driven, tự động đúng khi chèn ở đầu, không cần sửa
@@ -47,24 +56,24 @@ export const REALMS: RealmData[] = [
     // (tầng cuối Luyện Mạch cũng mở ở 12, xem data/realm/LuyenThe.ts)
     // hoặc grind thêm điểm thuộc tính trước khi quyết định Quán Khí.
     maxLevel: 18,
-    baseRequiredCultivation: 20,
-    cultivationMultiplier: 1.3,
+    baseCultivationMinutes: 1,
     attributeCap: 10,
   },
 
   {
     id: 'qi_refining',
     name: 'Luyện Khí',
-    maxLevel: 20,
-    realmDurationMultiplier: 10,
+    maxLevel: 18,
+    baseCultivationMinutes: 22,
     attributeCap: 20,
   },
 
   {
     id: 'foundation',
     name: 'Trúc Cơ',
-    maxLevel: 9,
-    realmDurationMultiplier: 30,
+    // Mốc kết thúc nội dung progression hiện tại, không có đột phá Kim Đan.
+    maxLevel: 18,
+    baseCultivationMinutes: 64,
     attributeCap: 100,
   },
 

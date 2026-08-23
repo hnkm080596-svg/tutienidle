@@ -15,6 +15,10 @@ export class MissileManager {
     return [...this.missiles]
   }
 
+  get(missileId: string) {
+    return this.missiles.find(missile => missile.id === missileId)
+  }
+
   clear() {
     this.missiles = []
   }

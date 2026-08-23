@@ -11,6 +11,7 @@ export class TechniqueSystem {
 
     this.manager.add({
       ...technique,
+      insight: technique.insight ?? 0,
       unlocked: true,
       equipped: false,
     })

@@ -26,6 +26,20 @@ function advance(system: MissileSystem, getTargets: (sourceId: string) => Missil
 }
 
 describe('MissileSystem — Normal', () => {
+  it('chỉ resolve một lần khi Phaser báo impact đúng projectile/target', () => {
+    const eventBus = new EventBus()
+    const system = new MissileSystem(new MissileManager(), eventBus)
+    const source = makeSource(0)
+    const target: CombatEntity = { id: 'enemy_a', x: 100 } as CombatEntity
+    const missile = system.fire(source, target, { kind: 'physical', multiplier: 1 }, false)
+    const hits: string[] = []
+    const targets = () => [{ id: 'enemy_a', x: 100 }]
+
+    expect(system.impact(missile.id, 'enemy_a', targets, (_missile, targetId) => hits.push(targetId))).toBe(true)
+    expect(system.impact(missile.id, 'enemy_a', targets, (_missile, targetId) => hits.push(targetId))).toBe(false)
+    expect(hits).toEqual(['enemy_a'])
+  })
+
   it('bay tới target rồi tự huỷ sau khi resolveHit đúng 1 lần', () => {
     const system = createSystem()
     const source = makeSource(0)
@@ -179,6 +193,32 @@ describe('MissileSystem — AOE', () => {
   })
 })
 
+describe('MissileSystem — projectile_spawned payload (CombatScene contract)', () => {
+  it('fire() KHÔNG behavior → payload.homing=false (CombatScene khoá velocity 1 lần, bay thẳng)', () => {
+    const eventBus = new EventBus()
+    const system = new MissileSystem(new MissileManager(), eventBus)
+    const spawned: Array<{ homing: boolean }> = []
+
+    eventBus.on<{ homing: boolean }>('projectile_spawned', event => spawned.push(event))
+
+    system.fire(makeSource(0), { id: 'enemy_a', x: 100 } as CombatEntity, { kind: 'physical', multiplier: 1 }, false)
+
+    expect(spawned.map(event => event.homing)).toEqual([false])
+  })
+
+  it('fire() với behavior.homing=true → payload.homing=true (CombatScene tính lại velocity mỗi frame)', () => {
+    const eventBus = new EventBus()
+    const system = new MissileSystem(new MissileManager(), eventBus)
+    const spawned: Array<{ homing: boolean }> = []
+
+    eventBus.on<{ homing: boolean }>('projectile_spawned', event => spawned.push(event))
+
+    system.fire(makeSource(0), { id: 'enemy_a', x: 100 } as CombatEntity, { kind: 'physical', multiplier: 1 }, false, undefined, { homing: true })
+
+    expect(spawned.map(event => event.homing)).toEqual([true])
+  })
+})
+
 describe('MissileSystem — Homing', () => {
   it('mục tiêu di chuyển ra xa hơn giữa lúc bay, missile homing vẫn đuổi kịp và trúng', () => {
     const system = createSystem()
@@ -203,5 +243,119 @@ describe('MissileSystem — Homing', () => {
     }
 
     expect(hits).toEqual(['enemy_a'])
+  })
+})
+
+describe('MissileSystem — Homing retarget-on-death (2026-08-22)', () => {
+  it('mục tiêu chết giữa chừng (biến mất khỏi getTargets trước khi bị trúng) → tự đổi sang mục tiêu còn sống gần nhất, không huỷ đạn', () => {
+    const eventBus = new EventBus()
+    const system = new MissileSystem(new MissileManager(), eventBus)
+    const source = makeSource(0)
+    // enemy_a ở RẤT XA (500) để đạn chưa kịp trúng trong vài tick đầu —
+    // đủ thời gian "giết" nó giữa chừng trước khi resolveArrival() chạy.
+    const targetA: CombatEntity = { id: 'enemy_a', x: 500 } as CombatEntity
+
+    system.fire(source, targetA, { kind: 'physical', multiplier: 1 }, false, undefined, { homing: true })
+
+    const retargeted: Array<{ projectileId: string; targetId: string }> = []
+
+    eventBus.on<{ projectileId: string; targetId: string }>('projectile_retargeted', event => retargeted.push(event))
+
+    let targetAAlive = true
+
+    const getTargets = () => {
+      const targets = [{ id: 'enemy_b', x: 60 }]
+
+      if (targetAAlive) {
+        targets.unshift({ id: 'enemy_a', x: 500 })
+      }
+
+      return targets
+    }
+
+    const hits: string[] = []
+
+    for (let i = 0; i < 3; i++) {
+      system.update(0.1, getTargets, (_missile, targetId) => hits.push(targetId))
+    }
+
+    targetAAlive = false
+
+    for (let i = 0; i < 100; i++) {
+      system.update(0.1, getTargets, (_missile, targetId) => hits.push(targetId))
+    }
+
+    expect(hits).toEqual(['enemy_b'])
+    expect(retargeted.map(event => event.targetId)).toEqual(['enemy_b'])
+  })
+
+  it('KHÔNG phải homing, mục tiêu chết giữa chừng → vẫn huỷ đạn như cũ (regression)', () => {
+    const system = createSystem()
+    const source = makeSource(0)
+    const targetA: CombatEntity = { id: 'enemy_a', x: 500 } as CombatEntity
+
+    system.fire(source, targetA, { kind: 'physical', multiplier: 1 }, false)
+
+    let targetAAlive = true
+
+    const getTargets = () => targetAAlive
+      ? [{ id: 'enemy_a', x: 500 }, { id: 'enemy_b', x: 60 }]
+      : [{ id: 'enemy_b', x: 60 }]
+
+    const hits: string[] = []
+
+    for (let i = 0; i < 3; i++) {
+      system.update(0.1, getTargets, (_missile, targetId) => hits.push(targetId))
+    }
+
+    targetAAlive = false
+
+    for (let i = 0; i < 100; i++) {
+      system.update(0.1, getTargets, (_missile, targetId) => hits.push(targetId))
+    }
+
+    expect(hits).toEqual([])
+  })
+})
+
+describe('MissileSystem — pruneDeadTargets (Phaser-driven orphan cleanup, 2026-08-22)', () => {
+  it('không panic khi không có missile nào đang bay', () => {
+    const system = createSystem()
+
+    expect(() => system.pruneDeadTargets(() => [])).not.toThrow()
+  })
+
+  it('missile homing mồ côi (target chết trước khi Phaser báo overlap) → tự retarget, vẫn bay tiếp và trúng mục tiêu mới', () => {
+    const eventBus = new EventBus()
+    const system = new MissileSystem(new MissileManager(), eventBus)
+    const source = makeSource(0)
+    const targetA: CombatEntity = { id: 'enemy_a', x: 500 } as CombatEntity
+
+    const missile = system.fire(source, targetA, { kind: 'physical', multiplier: 1 }, false, undefined, { homing: true })
+
+    // Chế độ Phaser-driven: update() không chạy, chỉ pruneDeadTargets()
+    // quét mỗi tick — enemy_a đã chết, chỉ còn enemy_b khả dụng.
+    system.pruneDeadTargets(() => [{ id: 'enemy_b', x: 60 }])
+
+    const hits: string[] = []
+
+    expect(system.impact(missile.id, 'enemy_b', () => [{ id: 'enemy_b', x: 60 }], (_m, targetId) => hits.push(targetId))).toBe(true)
+    expect(hits).toEqual(['enemy_b'])
+  })
+
+  it('missile thường mồ côi → removeMissile qua pruneDeadTargets, emit projectile_destroyed', () => {
+    const eventBus = new EventBus()
+    const system = new MissileSystem(new MissileManager(), eventBus)
+    const source = makeSource(0)
+    const targetA: CombatEntity = { id: 'enemy_a', x: 500 } as CombatEntity
+    const destroyed: string[] = []
+
+    eventBus.on<{ projectileId: string }>('projectile_destroyed', event => destroyed.push(event.projectileId))
+
+    const missile = system.fire(source, targetA, { kind: 'physical', multiplier: 1 }, false)
+
+    system.pruneDeadTargets(() => [])
+
+    expect(destroyed).toEqual([missile.id])
   })
 })

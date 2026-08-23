@@ -4,7 +4,47 @@ import SlotView from '../../common/SlotView.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useBagPagination } from '@/composables/useBagPagination'
 import { useBagGridLayout } from '@/composables/useBagGridLayout'
+import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
 import type { BagCell } from './BagCell'
+import type { Material, MaterialCategory } from '@/core/material/Material'
+import type { GradedItemTooltipContent } from '@/composables/useTooltip'
+
+const SOURCE_LABELS: Record<Material['sourceType'], string> = {
+  boss: 'Thủ Lĩnh',
+  monster: 'Yêu Thú',
+  building: 'Công Trình',
+  exploration: 'Thám Hiểm',
+}
+
+const CATEGORY_LABELS: Record<MaterialCategory, string> = {
+  herb: 'Linh Thảo',
+  wood: 'Linh Mộc',
+  ore: 'Linh Thiết',
+  monster_core: 'Yêu Đan',
+  spirit_stone: 'Linh Thạch',
+  essence: 'Yêu Tinh',
+  byproduct: 'Phế Liệu',
+  other: 'Khác',
+}
+
+function buildTooltip(material: Material, owned: number): GradedItemTooltipContent {
+  const rows = [
+    { label: 'Phân loại', value: CATEGORY_LABELS[material.category] },
+    { label: 'Nguồn chính', value: SOURCE_LABELS[material.sourceType] },
+  ]
+
+  if (material.years !== undefined) rows.push({ label: 'Niên đại', value: `${material.years} năm` })
+  if (material.element !== undefined) rows.push({ label: 'Thuộc tính', value: ELEMENT_LABELS[material.element] })
+
+  return {
+    kind: 'material',
+    name: material.name,
+    imagePath: material.icon,
+    ownedLabel: `Sở hữu: ${owned}`,
+    description: material.description,
+    sections: [{ label: 'Thông Tin', rows }],
+  }
+}
 
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
@@ -26,6 +66,10 @@ const cells = computed<BagCell[]>(() => {
     description: stack.material.description,
 
     amount: stack.amount,
+
+    icon: stack.material.icon,
+
+    tooltip: buildTooltip(stack.material, stack.amount),
   }))
 })
 
@@ -43,6 +87,8 @@ const { currentPage, totalPages, goToPage, gridCells } = useBagPagination(cells,
         :label="cell?.label"
         :description="cell?.description"
         :amount="cell?.amount"
+        :icon="cell?.icon"
+        :tooltip="cell?.tooltip"
       />
     </div>
 

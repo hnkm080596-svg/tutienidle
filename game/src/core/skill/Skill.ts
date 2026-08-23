@@ -7,8 +7,11 @@ import type {
 import type { SkillEffect } from './SkillEffect'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { SkillSpecialization } from './SkillSpecialization'
+import type { SkillRuntimeStats } from './SkillRuntimeStats'
+export { SKILL_RESOURCE_STAT_KEYS } from './SkillRuntimeStats'
+export type { SkillResourceStatKey } from './SkillRuntimeStats'
 
-export interface Skill {
+export interface Skill extends Partial<SkillRuntimeStats> {
   id: string
 
   name: string
@@ -70,6 +73,12 @@ export interface Skill {
   // getLoadoutSkills().
   loadoutSlot?: number
 
+  // A learned technique can occupy multiple loadout slots. Cooldowns live
+  // on slot instances so duplicate spells recharge independently.
+  loadoutSlots?: number[]
+
+  remainingCooldownBySlot?: Record<number, number>
+
   // Bắt buộc khi type === 'passive' — xem PassiveSystem.
   passiveTrigger?: PassiveTrigger
 
@@ -110,7 +119,7 @@ export interface Skill {
 
   // Hỏa Tu Pure (Plans/FirePath mục 7, 2026-08-21) — mỗi lần CAST
   // (không phải mỗi đòn TRÚNG như grantsMomentumPerHit) skill này thì
-  // +source.stats.hoaTheGainPerCast vào currentHoaThe (0 nếu chưa mua
+  // +source.skillStats.hoaTheGainPerCast vào currentHoaThe (0 nếu chưa mua
   // node "Tụ Hỏa" — nền của stat đó là 0), xem BattleSystem.castSkill().
   grantsHoaThePerCast?: boolean
 
@@ -139,78 +148,4 @@ export interface Skill {
   // combat đọc qua entity.skills (CombatEntity.ts) hoặc ctx.skill
   // (SkillEffectSystem.ts), KHÔNG còn đọc entity.stats.<field> nữa.
   // undefined = coi như 0 (chưa mua node cấp field này).
-  hoaTheGainPerCast?: number
-  hoaTheDecayReductionPercent?: number
-
-  thuyThePercent?: number
-  waterReactionExtensionSeconds?: number
-
-  poisonRootPercentPerStack?: number
-  poisonRootMaxStacks?: number
-  poisonRootThresholdBonusPercent?: number
-
-  earthAoeRadius?: number
-  earthAoeSecondaryDamagePercent?: number
-  earthKnockbackDistance?: number
-  thoTheGainPerCast?: number
-  skillImpactPercent?: number
-
-  kimTheGainPerProc?: number
-  kimTheDotDamagePercentPerStack?: number
-  kimTheDotResistancePenetrationPercentPerStack?: number
-  kimTheMaxStacksBonus?: number
-  metalAilmentPotencyPercent?: number
-  huyetPhaGainPerProc?: number
-  huyetPhaBurstDamage?: number
 }
-
-// Skill rework (2026-08-21) — 19 field "Thế tài nguyên" ở trên, dùng
-// chung cho NodeEffect.skillModifiers (ProgressionNode.ts) để TypeScript
-// giới hạn đúng field hợp lệ, tránh gõ nhầm tên stat như trước (khi còn
-// chung StatType với cả trăm field khác).
-export type SkillResourceStatKey =
-  | 'hoaTheGainPerCast'
-  | 'hoaTheDecayReductionPercent'
-  | 'thuyThePercent'
-  | 'waterReactionExtensionSeconds'
-  | 'poisonRootPercentPerStack'
-  | 'poisonRootMaxStacks'
-  | 'poisonRootThresholdBonusPercent'
-  | 'earthAoeRadius'
-  | 'earthAoeSecondaryDamagePercent'
-  | 'earthKnockbackDistance'
-  | 'thoTheGainPerCast'
-  | 'skillImpactPercent'
-  | 'kimTheGainPerProc'
-  | 'kimTheDotDamagePercentPerStack'
-  | 'kimTheDotResistancePenetrationPercentPerStack'
-  | 'kimTheMaxStacksBonus'
-  | 'metalAilmentPotencyPercent'
-  | 'huyetPhaGainPerProc'
-  | 'huyetPhaBurstDamage'
-
-// Danh sách RUNTIME của 19 key ở trên (union type không tự duyệt được
-// lúc chạy) — SkillSystem.getSkillResourceStatModifiers() dùng để đồng
-// bộ giá trị trên Skill thành StatModifier (CombatEntity.stats), nguồn
-// DUY NHẤT cho danh sách field — tránh lệch nếu sau này thêm/bớt field.
-export const SKILL_RESOURCE_STAT_KEYS: SkillResourceStatKey[] = [
-  'hoaTheGainPerCast',
-  'hoaTheDecayReductionPercent',
-  'thuyThePercent',
-  'waterReactionExtensionSeconds',
-  'poisonRootPercentPerStack',
-  'poisonRootMaxStacks',
-  'poisonRootThresholdBonusPercent',
-  'earthAoeRadius',
-  'earthAoeSecondaryDamagePercent',
-  'earthKnockbackDistance',
-  'thoTheGainPerCast',
-  'skillImpactPercent',
-  'kimTheGainPerProc',
-  'kimTheDotDamagePercentPerStack',
-  'kimTheDotResistancePenetrationPercentPerStack',
-  'kimTheMaxStacksBonus',
-  'metalAilmentPotencyPercent',
-  'huyetPhaGainPerProc',
-  'huyetPhaBurstDamage',
-]

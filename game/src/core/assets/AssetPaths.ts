@@ -125,92 +125,23 @@ export const EQUIPMENT_SLOT_ICON_PATHS: Record<string, string> = {
 // technique}/*.ts), KHÔNG còn tập trung ở đây nữa — mỗi item tự mang
 // theo icon của nó, sửa/thêm 1 món chỉ cần sửa đúng 1 chỗ (data file
 // của món đó) thay vì phải nhớ quay lại đồng bộ thêm ở AssetPaths.ts.
-// SlotView.vue nhận qua prop `itemIcon` do component cha tự đọc
-// `xxx.icon` rồi truyền vào — vd EquipmentBagSection.vue truyền
+// SlotView.vue nhận qua prop `icon` do component cha tự đọc `xxx.icon`
+// rồi truyền vào — vd EquipmentBagSection.vue truyền
 // `gameManager.equipmentRegistry.get(instance.itemId).icon`.
 //
 // Material (~35 id) chưa có field `icon` — ngoài phạm vi đợt này,
 // bàn riêng nếu cần.
 
-// ĐANG ĐƯỢC DÙNG THẬT — SlotView.vue (component slot dùng chung cho
-// Equipment/Material/Pill/Talisman/Formation bag + EquipmentPaperdoll)
-// đã tự import object này, vẽ 3 lớp <img> chồng nhau: backdrop (nền,
-// z-index thấp nhất) → itemIcon (nếu có, do cha truyền) → frame (viền
-// trang trí, LUÔN hiện) → hoverFrame (chỉ hiện khi hover, CSS toggle
-// opacity giữa frame/hoverFrame). Đúng 1 bộ DÙNG CHUNG cho MỌI slot,
-// KHÔNG phân biệt theo rarity/quality của item bên trong.
-export const SLOT_ASSETS = {
-  backdrop: '/assets/ui/Slot/slot-backdrop.png', // Nền phía sau mọi ô (Equipment/Material/Pill/Talisman/Formation/Paperdoll)
-  frame: '/assets/ui/Slot/slot-frame.png', // Viền trang trí MẶC ĐỊNH — chỉ hiện khi `rarity` không khớp bậc Quality nào trong QUALITY_FRAME_PATHS (item không phân Quality, vd Material/Pill/Talisman/Formation, hoặc giá trị đặc biệt như rarity="breakthrough" của Tâm Pháp)
-  hoverFrame: '/assets/ui/Slot/slot-frame-hover.png', // Lớp highlight chồng THÊM lúc rê chuột qua — KHÔNG thay thế `frame`/QUALITY_FRAME_PATHS, chỉ fade opacity lên trên
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// 2 TRỤC PHẨM CẤP ĐỘC LẬP CỦA TRANG BỊ — DỄ NHẦM, ĐỌC KỸ TRƯỚC KHI SỬA:
+// Slot Revamp (2026-08-23, tooltip-revamp-plan.md mục 17) — SLOT_ASSETS/
+// QUALITY_FRAME_PATHS/PHAM_FRAME_PATHS/QUALITY_BACKDROP_PATHS (backdrop/
+// frame/hoverFrame/badge PNG trang trí của SlotView.vue) đã XOÁ khỏi
+// đây — SlotView giờ CSS-only, không còn consumer nào đọc các path
+// này. Quality/Rarity giờ thể hiện qua CSS (--rank-color-1..9, xem
+// assets/theme.css mục 16-17 + composables/slots/normalizeSlotRank.ts),
+// KHÔNG qua ảnh khung riêng theo từng bậc nữa. File PNG vật lý (nếu
+// từng tồn tại dưới public/assets/ui/Slot, public/assets/frames,
+// public/assets/equipment/quality-backdrop) KHÔNG bị xoá ở đây — chưa
+// xác minh không còn nơi khác dùng.
 //
-//   • QUALITY (9 bậc, "Phẩm Chất": Phàm Khí → Thiên Địa Trọng Khí) —
-//     quyết định TRẦN Rèn (forgePoints) + TRẦN Tier Affix roll được.
-//     ĐANG ĐƯỢC DÙNG THẬT (2026-08-15) — SlotView.vue đọc prop `rarity`,
-//     tra QUALITY_FRAME_PATHS[rarity] làm src cho lớp <img class=
-//     "slot-view__frame"> (viền khung chính, luôn hiện) — không khớp
-//     bậc nào (vd rarity="breakthrough" của TechniqueSlotCard.vue) thì
-//     tự rơi về SLOT_ASSETS.frame dùng chung. Màu viền/glow CSS cũ
-//     (`--slot-rarity-color`, token `--rarity-${quality}`) VẪN GIỮ
-//     NGUYÊN song song — không xoá, để còn tín hiệu màu ngay cả lúc
-//     ảnh khung thật chưa tồn tại (404 im lặng, không vỡ layout).
-//
-//   • RARITY/PHẨM (5 bậc: Hoàng/Huyền/Địa/Thiên/Tiên Phẩm) — quyết
-//     định SỐ LƯỢNG Affix (Prefix/Suffix) tối đa item mang được, KHÔNG
-//     liên quan Rèn (đó là trục Quality ở trên). ĐANG ĐƯỢC DÙNG THẬT
-//     (2026-08-15) — SlotView.vue đọc prop `itemRarity`, tra
-//     PHAM_FRAME_PATHS[itemRarity] làm src cho 1 ô vuông nhỏ góc
-//     trên-phải (`.slot-view__item-rarity-badge`, THAY hẳn chấm tròn
-//     CSS cũ) — itemRarity không có giá trị thì không hiện gì (item
-//     không phân Phẩm, vd Material).
-// ═══════════════════════════════════════════════════════════════════
-
-// Khung viền RIÊNG theo 9 bậc Quality — xem giải thích ở trên. Thứ tự
-// thấp → cao.
-export const QUALITY_FRAME_PATHS: Record<string, string> = {
-  pham_khi: '/assets/frames/pham_khi.png', // Phàm Khí (bậc 1/9, thấp nhất)
-  bao_khi: '/assets/frames/bao_khi.png', // Bảo Khí (bậc 2/9)
-  linh_khi: '/assets/frames/linh_khi.png', // Linh Khí (bậc 3/9)
-  phap_khi: '/assets/frames/phap_khi.png', // Pháp Khí (bậc 4/9)
-  phap_bao: '/assets/frames/phap_bao.png', // Pháp Bảo (bậc 5/9)
-  tien_bao: '/assets/frames/tien_bao.png', // Tiên Bảo (bậc 6/9)
-  chi_bao: '/assets/frames/chi_bao.png', // Chí Bảo (bậc 7/9)
-  hon_don_chi_bao: '/assets/frames/hon_don_chi_bao.png', // Hỗn Độn Chí Bảo (bậc 8/9)
-  thien_dia_trong_khi: '/assets/frames/thien_dia_trong_khi.png', // Thiên Địa Trọng Khí (bậc 9/9, cao nhất)
-}
-
-// Khung ô vuông RIÊNG theo 5 bậc Rarity/Phẩm — xem giải thích ở trên.
-// Thứ tự thấp → cao. Dùng chung Equipment/Pill/Talisman/Formation
-// (cùng 1 thang Pham, xem core/item/Pham.ts).
-export const PHAM_FRAME_PATHS: Record<string, string> = {
-  hoang_pham: '/assets/frames/hoang_pham.png', // Hoàng Phẩm (bậc 1/5, thấp nhất)
-  huyen_pham: '/assets/frames/huyen_pham.png', // Huyền Phẩm (bậc 2/5)
-  dia_pham: '/assets/frames/dia_pham.png', // Địa Phẩm (bậc 3/5)
-  thien_pham: '/assets/frames/thien_pham.png', // Thiên Phẩm (bậc 4/5)
-  tien_pham: '/assets/frames/tien_pham.png', // Tiên Phẩm (bậc 5/5, cao nhất)
-}
-
-// Lớp backdrop MÀU RIÊNG theo 9 bậc Quality (2026-08-15) — layer ẢNH
-// bổ sung (không phải CSS tint), nhấn thêm tín hiệu 9 bậc song song
-// với QUALITY_FRAME_PATHS (viền) — xem SlotView.vue's `.slot-view__
-// quality-backdrop`. Placeholder path, asset thật thêm sau (404 im
-// lặng, không vỡ layout — cùng cách QUALITY_FRAME_PATHS graceful-
-// degrade). Thứ tự thấp → cao.
-export const QUALITY_BACKDROP_PATHS: Record<string, string> = {
-  pham_khi: '/assets/equipment/quality-backdrop/pham_khi.png',
-  bao_khi: '/assets/equipment/quality-backdrop/bao_khi.png',
-  linh_khi: '/assets/equipment/quality-backdrop/linh_khi.png',
-  phap_khi: '/assets/equipment/quality-backdrop/phap_khi.png',
-  phap_bao: '/assets/equipment/quality-backdrop/phap_bao.png',
-  tien_bao: '/assets/equipment/quality-backdrop/tien_bao.png',
-  chi_bao: '/assets/equipment/quality-backdrop/chi_bao.png',
-  hon_don_chi_bao: '/assets/equipment/quality-backdrop/hon_don_chi_bao.png',
-  thien_dia_trong_khi: '/assets/equipment/quality-backdrop/thien_dia_trong_khi.png',
-}
-
 // (5 bảng icon Tâm Pháp/Đan/Phù/Trận/Trang Bị trước ở đây đã dời sang
 // field `icon` ngay trên từng data item — xem ghi chú phía trên.)

@@ -25,6 +25,18 @@ import type { Pham } from '../item/Pham'
  */
 export type EquipmentRarity = Pham
 
+// Nhãn RIÊNG của Equipment Rarity. ID nội bộ tiếp tục dùng Pham để giữ
+// tương thích save và các bảng cap; phần hiển thị bỏ hậu tố "Phẩm" vì đây
+// là mật độ Affix của trang bị, không phải tên đầy đủ của thang Phẩm dùng
+// chung cho Đan/Phù/Trận.
+export const EQUIPMENT_RARITY_LABELS: Record<EquipmentRarity, string> = {
+  hoang_pham: 'Hoàng',
+  huyen_pham: 'Huyền',
+  dia_pham: 'Địa',
+  thien_pham: 'Thiên',
+  tien_pham: 'Tiên',
+}
+
 // Thứ tự thấp -> cao — dùng cho roll trọng số lúc rớt đồ.
 export const EQUIPMENT_RARITY_ORDER: EquipmentRarity[] = [
   'hoang_pham',

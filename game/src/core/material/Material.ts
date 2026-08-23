@@ -50,4 +50,8 @@ export interface Material {
   sourceType: SourceType
 
   description?: string
+
+  // PNG icon của template; không nằm trong save stack nên có thể bổ sung
+  // dần mà không cần migration.
+  icon?: string
 }

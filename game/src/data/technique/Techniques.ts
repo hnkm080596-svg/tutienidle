@@ -22,6 +22,8 @@ export const TECHNIQUES: Technique[] = [
   {
     id: 'dai_ngu_hanh_chan_quyet',
 
+    insightMultiplier: 3,
+
     name: 'Đại Ngũ Hành Chân Quyết',
 
     icon: '/assets/techniques/dai_ngu_hanh_chan_quyet.png',
@@ -56,6 +58,8 @@ export const TECHNIQUES: Technique[] = [
   // đơn giản.
   {
     id: 'ngu_kiem',
+
+    insightMultiplier: 3,
 
     name: 'Ngự Kiếm Tâm Kinh',
 

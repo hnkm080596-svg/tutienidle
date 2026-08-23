@@ -3,6 +3,8 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { MAX_RAGE, MAX_SWORD_INTENT } from '@/core/combat/CombatTypes'
 import type { CombatEvent } from '@/core/combat/CombatEvent'
+import type { BattlePositionsEvent } from '@/core/battle/BattleEvents'
+import type { EntityVitalsChangedEvent } from '@/core/combat/EntityVitalsSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
 
 // Combat UI Redesign — kế thừa nguyên logic target-bar/player-bars từ
@@ -14,100 +16,56 @@ import { formatNumber } from '@/core/format/NumberFormatter'
 // victory/defeat (đứng yên ở giá trị cuối, khớp modal kết quả đang
 // hiện đè lên).
 const gameManager = useGameManager()
-const { stateVersion } = useStateVersion()
+const { stateVersion, bumpState } = useStateVersion()
 
-const battle = computed(() => {
+const hasBattle = computed(() => {
   stateVersion.value
 
-  return gameManager.getBattle()
+  return gameManager.getBattle() !== null
 })
 
-const TARGET_BAR_TIMEOUT_MS = 4000
+const playerCurrentHp = ref(0)
+const playerMaxHp = ref(1)
 
-const lastHitEnemyId = ref<string | null>(null)
+function syncPlayerHealth(currentHp: number, maxHp: number) {
+  playerCurrentHp.value = currentHp
+  playerMaxHp.value = maxHp
+}
 
-let hideTimer: ReturnType<typeof setTimeout> | undefined
+function onDamage(_event: CombatEvent) {
+  bumpState()
+}
 
-function onDamage(event: CombatEvent) {
+function onVitalsChanged(event: EntityVitalsChangedEvent) {
   const activeBattle = gameManager.getBattle()
 
-  if (!activeBattle || event.sourceId !== activeBattle.player.id || !event.targetId) {
-    return
+  if (activeBattle && event.entityId === activeBattle.player.id) {
+    syncPlayerHealth(event.hpAfter, event.maxHp)
   }
 
-  lastHitEnemyId.value = event.targetId
+  bumpState()
+}
 
-  if (hideTimer) {
-    clearTimeout(hideTimer)
-  }
-
-  hideTimer = setTimeout(() => {
-    lastHitEnemyId.value = null
-  }, TARGET_BAR_TIMEOUT_MS)
+function onPositions(_event: BattlePositionsEvent) {
+  bumpState()
 }
 
 onMounted(() => {
+  const activeBattle = gameManager.getBattle()
+
+  if (activeBattle) {
+    syncPlayerHealth(activeBattle.player.currentHp, activeBattle.player.maxHp)
+  }
+
   gameManager.eventBus.on<CombatEvent>('damage', onDamage)
+  gameManager.eventBus.on<EntityVitalsChangedEvent>('entity_vitals_changed', onVitalsChanged)
+  gameManager.eventBus.on<BattlePositionsEvent>('positions', onPositions)
 })
 
 onUnmounted(() => {
   gameManager.eventBus.off<CombatEvent>('damage', onDamage)
-
-  if (hideTimer) {
-    clearTimeout(hideTimer)
-  }
-})
-
-const priorityEnemy = computed(() => {
-  stateVersion.value
-
-  const activeBattle = battle.value
-
-  if (!activeBattle) {
-    return undefined
-  }
-
-  const boss = activeBattle.enemies.find(enemy => enemy.entity.isBoss && enemy.entity.alive)?.entity
-
-  if (boss) {
-    return boss
-  }
-
-  return activeBattle.enemies.find(enemy => enemy.entity.isElite && enemy.entity.alive)?.entity
-})
-
-const isBossTarget = computed(() => {
-  stateVersion.value
-
-  return priorityEnemy.value?.isBoss ?? false
-})
-
-const isElitePriorityTarget = computed(() => {
-  stateVersion.value
-
-  return !isBossTarget.value && (priorityEnemy.value?.isElite ?? false)
-})
-
-const targetEnemy = computed(() => {
-  stateVersion.value
-
-  const activeBattle = battle.value
-
-  if (!activeBattle) {
-    return undefined
-  }
-
-  if (priorityEnemy.value) {
-    return priorityEnemy.value
-  }
-
-  if (!lastHitEnemyId.value) {
-    return undefined
-  }
-
-  const found = activeBattle.enemies.find(enemy => enemy.entity.id === lastHitEnemyId.value)?.entity
-
-  return found?.alive ? found : undefined
+  gameManager.eventBus.off<EntityVitalsChangedEvent>('entity_vitals_changed', onVitalsChanged)
+  gameManager.eventBus.off<BattlePositionsEvent>('positions', onPositions)
 })
 
 function percent(current: number, max: number): number {
@@ -132,10 +90,22 @@ const usesSwordIntent = computed(() => {
   return gameManager.techniqueManager.getEquipped()?.usesSwordIntentResource ?? false
 })
 
+const playerCurrentMp = computed(() => {
+  stateVersion.value
+
+  return gameManager.getBattle()?.player.currentMp ?? 0
+})
+
+const playerMaxMp = computed(() => {
+  stateVersion.value
+
+  return gameManager.getBattle()?.player.stats.maxMp ?? 0
+})
+
 const resourceCurrent = computed(() => {
   stateVersion.value
 
-  const activeBattle = battle.value
+  const activeBattle = gameManager.getBattle()
 
   if (!activeBattle) {
     return 0
@@ -148,16 +118,16 @@ const resourceMax = computed(() => usesSwordIntent.value ? MAX_SWORD_INTENT : MA
 </script>
 
 <template>
-  <div v-if="battle" class="combat-status-bar">
+  <div v-if="hasBattle" class="combat-status-bar">
     <div class="combat-status-bar__player">
       <div class="combat-status-bar__bar combat-status-bar__bar--hp">
-        <div class="combat-status-bar__bar-fill" :style="{ width: `${percent(battle.player.currentHp, battle.player.maxHp)}%` }" />
-        <span class="combat-status-bar__bar-label">{{ formatNumber(Math.ceil(battle.player.currentHp)) }} / {{ formatNumber(battle.player.maxHp) }}</span>
+        <div class="combat-status-bar__bar-fill" :style="{ width: `${percent(playerCurrentHp, playerMaxHp)}%` }" />
+        <span class="combat-status-bar__bar-label">{{ formatNumber(Math.ceil(playerCurrentHp)) }} / {{ formatNumber(playerMaxHp) }}</span>
       </div>
 
       <div class="combat-status-bar__bar combat-status-bar__bar--mp">
-        <div class="combat-status-bar__bar-fill" :style="{ width: `${percent(battle.player.currentMp, battle.player.stats.maxMp)}%` }" />
-        <span class="combat-status-bar__bar-label">{{ mpLabel }} {{ formatNumber(Math.ceil(battle.player.currentMp)) }} / {{ formatNumber(Math.round(battle.player.stats.maxMp)) }}</span>
+        <div class="combat-status-bar__bar-fill" :style="{ width: `${percent(playerCurrentMp, playerMaxMp)}%` }" />
+        <span class="combat-status-bar__bar-label">{{ mpLabel }} {{ formatNumber(Math.ceil(playerCurrentMp)) }} / {{ formatNumber(Math.round(playerMaxMp)) }}</span>
       </div>
 
       <div class="combat-status-bar__bar combat-status-bar__bar--rage">
@@ -166,17 +136,6 @@ const resourceMax = computed(() => usesSwordIntent.value ? MAX_SWORD_INTENT : MA
       </div>
     </div>
 
-    <div
-      v-if="targetEnemy"
-      class="combat-status-bar__target"
-      :class="{ 'combat-status-bar__target--boss': isBossTarget, 'combat-status-bar__target--elite': isElitePriorityTarget }"
-    >
-      <span class="combat-status-bar__target-name">{{ targetEnemy.name }}</span>
-
-      <div class="combat-status-bar__target-bar">
-        <div class="combat-status-bar__target-fill" :style="{ width: `${percent(targetEnemy.currentHp, targetEnemy.maxHp)}%` }" />
-      </div>
-    </div>
   </div>
 </template>
 
@@ -185,7 +144,7 @@ const resourceMax = computed(() => usesSwordIntent.value ? MAX_SWORD_INTENT : MA
   height: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 24px;
   padding: 0 20px;
   background: rgba(10, 10, 13, 0.55);
@@ -240,47 +199,4 @@ const resourceMax = computed(() => usesSwordIntent.value ? MAX_SWORD_INTENT : MA
   text-shadow: 0 0 2px rgba(255, 255, 255, 0.5);
 }
 
-.combat-status-bar__target {
-  width: 320px;
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.combat-status-bar__target--boss .combat-status-bar__target-name {
-  color: var(--gold-500);
-}
-
-.combat-status-bar__target--boss .combat-status-bar__target-bar {
-  border-color: var(--gold-500);
-}
-
-.combat-status-bar__target--elite .combat-status-bar__target-name {
-  color: var(--azure);
-}
-
-.combat-status-bar__target--elite .combat-status-bar__target-bar {
-  border-color: var(--azure);
-}
-
-.combat-status-bar__target-name {
-  font-size: 0.72rem;
-  color: var(--text-primary);
-  text-align: right;
-}
-
-.combat-status-bar__target-bar {
-  height: 8px;
-  border-radius: 4px;
-  background: var(--ink-900);
-  border: 1px solid var(--ink-line);
-  overflow: hidden;
-}
-
-.combat-status-bar__target-fill {
-  height: 100%;
-  background: var(--crimson);
-  transition: width 0.15s ease;
-}
 </style>

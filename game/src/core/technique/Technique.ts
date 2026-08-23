@@ -51,6 +51,12 @@ export interface Technique {
 
   description: string
 
+  // Insight belongs to each technique. Luyện Khí techniques use a
+  // multiplier of 3 relative to the mortal Tụ Linh Quyết baseline.
+  insight?: number
+
+  insightMultiplier?: number
+
   // Path ảnh minh hoạ (vd '/assets/techniques/xich_viem.png') — khai
   // NGAY TRÊN data item thay vì bảng tra tập trung (2026-08-15, theo
   // yêu cầu: icon thuộc về khai báo data của từng món, không nằm

@@ -59,6 +59,10 @@ export interface EquipmentInstance {
   // dùng cho nâng cảnh giới (Phase 8).
   realmId: string
 
+  // Level at drop time is required to reproduce the exact effective roll
+  // range in tooltips. Development saves are intentionally not migrated.
+  realmLevel?: number
+
   // Địa Giới (Zone) nơi quái rớt ra item này, = zone chứa Stage đang
   // hoạt động lúc tạo instance (xem GameManager.grantItemDrops(),
   // ZoneRegistry.getZoneForStage()) — undefined khi tạo qua đường
@@ -66,6 +70,8 @@ export interface EquipmentInstance {
   // làm tiền tố "Địa Giới" trong tên ghép động (EquipmentNaming.ts),
   // KHÔNG liên quan realmId (cảnh giới TU LUYỆN) ở trên.
   zoneId?: string
+
+  icon?: string
 
   mainStat: StatModifier
 

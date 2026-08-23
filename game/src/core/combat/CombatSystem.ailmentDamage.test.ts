@@ -4,6 +4,7 @@ import { AilmentSystem } from '../ailment/AilmentSystem'
 import { AilmentManager } from '../ailment/AilmentManager'
 import { EventBus } from '../events/EventBus'
 import { createBaseStats } from '../stats/StatBlock'
+import { createSkillRuntimeStats } from '../skill/SkillRuntimeStats'
 import { ailments } from '../../data/ailment/ailments'
 import type { CombatEntity } from './CombatEntity'
 import type { AilmentTemplate } from '../ailment/AilmentRegistry'
@@ -45,7 +46,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 'ground',
+    lane: 2,
     alive: true,
     ...overrides,
   }
@@ -138,7 +139,7 @@ describe('CombatSystem.applyDotDamage (Plans/magicpathgeneral Phase 9-11)', () =
     const source = createCombatant({ id: 'source', type: 'player' })
 
     source.currentKimThe = 5
-    source.stats.kimTheDotResistancePenetrationPercentPerStack = 0.1
+    source.skillStats = { ...createSkillRuntimeStats(), kimTheDotResistancePenetrationPercentPerStack: 0.1 }
     source.stats.metalPower = 10
     source.stats.woodPower = 10
 

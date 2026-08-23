@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import MainScene from '../game/MainScene.vue'
 import CombatSceneOverlay from '../game/combat/CombatSceneOverlay.vue'
+import TribulationSceneOverlay from '../game/tribulation/TribulationSceneOverlay.vue'
 import HomeBuildingIcons from '../game/HomeBuildingIcons.vue'
 import DongFuTopBar from './DongFuTopBar.vue'
 import BottomBar from './BottomBar.vue'
@@ -47,6 +48,7 @@ const ui = useUiStore()
 // MainScene (Phaser canvas) vẫn LUÔN mount (tự chuyển scene nội bộ,
 // xem MainScene.vue), chỉ DOM chrome xung quanh nó ẩn/hiện theo cờ này.
 const isCombatSceneActive = useCombatSceneActive()
+const isFullSceneActive = computed(() => isCombatSceneActive.value || ui.isTribulationSceneActive)
 
 // Bấm khoảng trống giữa màn hình (MainScene — cảnh Phaser, không phải
 // panel/icon/popover nào) tự đóng panel chức năng đang mở. Gắn THẲNG
@@ -85,7 +87,7 @@ onUnmounted(() => {
     <div class="game-root" :style="{ transform: `scale(${scale})` }">
       <MainScene @click="closeSidePanels" />
 
-      <template v-if="!isCombatSceneActive">
+      <template v-if="!isFullSceneActive">
         <HomeBuildingIcons />
 
         <LeftPanel class="game-root__left-panel" />
@@ -110,7 +112,8 @@ onUnmounted(() => {
         <BottomBar class="game-root__bottom-bar" />
       </template>
 
-      <CombatSceneOverlay v-else />
+      <CombatSceneOverlay v-if="isCombatSceneActive" />
+      <TribulationSceneOverlay v-else-if="ui.isTribulationSceneActive" />
 
       <NavMenuOverlay />
 

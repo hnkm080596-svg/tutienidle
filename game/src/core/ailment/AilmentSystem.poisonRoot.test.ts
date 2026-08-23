@@ -7,6 +7,7 @@ import { createBaseStats } from '../stats/StatBlock'
 import { ailments } from '../../data/ailment/ailments'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { AilmentTemplate } from './AilmentRegistry'
+import { createSkillRuntimeStats } from '../skill/SkillRuntimeStats'
 
 function getTemplate(id: string): AilmentTemplate {
   const template = ailments.find(ailment => ailment.id === id)
@@ -41,7 +42,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 'ground',
+    lane: 2,
     alive: true,
     ...overrides,
   }
@@ -74,8 +75,8 @@ describe('AilmentSystem — Độc Căn (Plans/PoisonPath, Trúc Cơ Pure Mộc)
     const eventBus = new EventBus()
     const combatSystem = new CombatSystem(eventBus)
 
-    const sourceStats = { ...createBaseStats(), woodPower: 100, poisonRootPercentPerStack: 0.03, poisonRootMaxStacks: 5 }
-    const source = createCombatant({ id: 'source', type: 'player', stats: sourceStats })
+    const sourceStats = { ...createBaseStats(), woodPower: 100 }
+    const source = createCombatant({ id: 'source', type: 'player', stats: sourceStats, skillStats: { ...createSkillRuntimeStats(), poisonRootPercentPerStack: 0.03, poisonRootMaxStacks: 5 } })
     const target = createCombatant({ id: 'target', currentHp: 1000000, maxHp: 1000000 })
 
     const ailmentSystem = new AilmentSystem(new AilmentManager())
@@ -107,11 +108,11 @@ describe('AilmentSystem — Độc Căn (Plans/PoisonPath, Trúc Cơ Pure Mộc)
     const sourceStats = {
       ...createBaseStats(),
       woodPower: 100,
-      poisonRootPercentPerStack: 0.03,
-      poisonRootMaxStacks: 5,
-      poisonRootThresholdBonusPercent: 0.05,
     }
-    const source = createCombatant({ id: 'source', type: 'player', stats: sourceStats })
+    const source = createCombatant({
+      id: 'source', type: 'player', stats: sourceStats,
+      skillStats: { ...createSkillRuntimeStats(), poisonRootPercentPerStack: 0.03, poisonRootMaxStacks: 5, poisonRootThresholdBonusPercent: 0.05 },
+    })
     const target = createCombatant({ id: 'target', currentHp: 1000000, maxHp: 1000000 })
 
     const ailmentSystem = new AilmentSystem(new AilmentManager())
@@ -135,8 +136,8 @@ describe('AilmentSystem — Độc Căn (Plans/PoisonPath, Trúc Cơ Pure Mộc)
     const eventBus = new EventBus()
     const combatSystem = new CombatSystem(eventBus)
 
-    const sourceStats = { ...createBaseStats(), woodPower: 100, poisonRootPercentPerStack: 0.03, poisonRootMaxStacks: 5 }
-    const source = createCombatant({ id: 'source', type: 'player', stats: sourceStats })
+    const sourceStats = { ...createBaseStats(), woodPower: 100 }
+    const source = createCombatant({ id: 'source', type: 'player', stats: sourceStats, skillStats: { ...createSkillRuntimeStats(), poisonRootPercentPerStack: 0.03, poisonRootMaxStacks: 5 } })
     const target = createCombatant({ id: 'target', currentHp: 1000000, maxHp: 1000000 })
 
     const ailmentSystem = new AilmentSystem(new AilmentManager())

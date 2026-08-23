@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, shallowRef } from 'vue'
 
 // Dạng cũ, DÙNG CHUNG cho tuyệt đại đa số v-tooltip hiện có trong
 // game (chỉ tiêu đề + mô tả 1 dòng) — `kind` optional để mọi object
@@ -16,6 +16,12 @@ export interface TooltipStatRow {
   label: string
 
   value: string
+
+  detail?: string
+
+  tone?: 'default' | 'muted' | 'positive' | 'negative' | 'warning' | 'special'
+
+  tier?: number
 }
 
 export interface TooltipSection {
@@ -56,13 +62,15 @@ export interface TechniqueTooltipContent {
 // BagSection tương ứng (PillBagSection.vue/TalismanBagSection.vue/
 // FormationBagSection.vue).
 export interface GradedItemTooltipContent {
-  kind: 'pill' | 'talisman' | 'formation'
+  kind: 'material' | 'pill' | 'talisman' | 'formation'
 
   name: string
 
   imagePath?: string
 
-  phamLabel: string
+  phamLabel?: string
+
+  phamKey?: string
 
   // "Sở hữu: N" — CHỈ có ý nghĩa khi hiện trong túi đồ (có bag stack
   // thật), undefined nếu hiện ở nơi khác (vd khi chưa sở hữu cái nào).
@@ -86,13 +94,13 @@ export interface EquipmentTooltipContent {
 
   slotLabel: string
 
-  qualityLabel: string
-
-  phamLabel: string
+  qualityKey: string
 
   description?: string
 
   sections: TooltipSection[]
+
+  advancedSections?: TooltipSection[]
 }
 
 // Tooltip Building (Động Phủ UI redesign) — công trình trong Home
@@ -120,7 +128,7 @@ export type TooltipContent =
 // tại 1 thời điểm trong toàn game, không cần theo dõi lịch sử/persist.
 const content = ref<TooltipContent | null>(null)
 
-const position = ref({ x: 0, y: 0 })
+const reference = shallowRef<HTMLElement | null>(null)
 
 // Element đang "sở hữu" tooltip hiện tại — cần để directive tooltip.ts
 // tự dọn đúng lúc unmounted() (vd BreakthroughButton biến mất ngay
@@ -129,31 +137,67 @@ const position = ref({ x: 0, y: 0 })
 // showTooltip() sau đó (edge case chuột di chuyển rất nhanh).
 let ownerElement: HTMLElement | null = null
 
-function showTooltip(value: TooltipContent, event: MouseEvent, owner?: HTMLElement) {
-  content.value = value
+let hideTimer: ReturnType<typeof setTimeout> | undefined
 
-  position.value = { x: event.clientX, y: event.clientY }
+// Tooltip của slot cần phản hồi ngay khi hover. Khoảng đệm lúc đóng vẫn
+// giữ rất ngắn để tránh chớp khi con trỏ đi qua ranh giới hai slot.
+const TOOLTIP_HIDE_DELAY_MS = 30
 
-  ownerElement = owner ?? null
+function clearTimers() {
+  if (hideTimer) clearTimeout(hideTimer)
+  hideTimer = undefined
 }
 
-function moveTooltip(event: MouseEvent) {
-  position.value = { x: event.clientX, y: event.clientY }
+function showTooltip(value: TooltipContent, owner: HTMLElement, _immediate = false) {
+  if (hideTimer) clearTimeout(hideTimer)
+
+  const commit = () => {
+    ownerElement?.removeAttribute('aria-describedby')
+    content.value = value
+    reference.value = owner
+    ownerElement = owner
+    owner.setAttribute('aria-describedby', 'global-tooltip')
+  }
+
+  commit()
 }
 
-// `owner` optional — truyền vào khi gọi từ unmounted() (dọn "phòng
-// hờ" nếu chính element này đang là chủ tooltip), bỏ qua nếu tooltip
-// hiện tại đã thuộc về element khác (không xoá nhầm).
-function hideTooltip(owner?: HTMLElement) {
-  if (owner && ownerElement !== owner) {
+function updateTooltip(value: TooltipContent, owner: HTMLElement) {
+  if (ownerElement === owner) {
+    content.value = value
+  }
+}
+
+function hideTooltip(owner?: HTMLElement, immediate = false) {
+  if (owner && ownerElement && ownerElement !== owner) {
     return
   }
 
-  content.value = null
+  const commit = () => {
+    if (owner && ownerElement && ownerElement !== owner) return
+    content.value = null
+    reference.value = null
+    ownerElement?.removeAttribute('aria-describedby')
+    ownerElement = null
+    hideTimer = undefined
+  }
 
+  if (immediate) {
+    commit()
+    return
+  }
+
+  hideTimer = setTimeout(commit, TOOLTIP_HIDE_DELAY_MS)
+}
+
+function dismissTooltip() {
+  clearTimers()
+  content.value = null
+  reference.value = null
+  ownerElement?.removeAttribute('aria-describedby')
   ownerElement = null
 }
 
 export function useTooltip() {
-  return { content, position, showTooltip, moveTooltip, hideTooltip }
+  return { content, reference, showTooltip, updateTooltip, hideTooltip, dismissTooltip }
 }

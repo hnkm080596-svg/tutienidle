@@ -1,4 +1,5 @@
 import type { Affix } from './Affix'
+import { EQUIPMENT_SLOT_STAT_POLICY, isForbiddenEquipmentStat, isValidEquipmentSubstat } from './EquipmentStatPolicy'
 
 export class AffixRegistry {
   private readonly affixes = new Map<string, Affix>()
@@ -8,7 +9,18 @@ export class AffixRegistry {
       throw new Error(`Affix already registered: ${affix.id}`)
     }
 
-    this.affixes.set(affix.id, affix)
+    if (isForbiddenEquipmentStat(affix.stat)) {
+      throw new Error(`Forbidden equipment stat on affix ${affix.id}: ${affix.stat}`)
+    }
+
+    const slots = affix.slots ?? Object.keys(EQUIPMENT_SLOT_STAT_POLICY) as Array<keyof typeof EQUIPMENT_SLOT_STAT_POLICY>
+    const validSlots = slots.filter(slot => isValidEquipmentSubstat(slot, affix.stat))
+
+    if (validSlots.length === 0) {
+      throw new Error(`Affix ${affix.id} is not allowed by any declared equipment slot policy`)
+    }
+
+    this.affixes.set(affix.id, { ...affix, slots: validSlots })
   }
 
   get(affixId: string): Affix {

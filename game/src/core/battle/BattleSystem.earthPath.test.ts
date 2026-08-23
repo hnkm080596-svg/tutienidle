@@ -11,6 +11,7 @@ import { EventBus } from '../events/EventBus'
 import { MissileSystem } from '../combat/missile/MissileSystem'
 import { MissileManager } from '../combat/missile/MissileManager'
 import { createBaseStats } from '../stats/StatBlock'
+import { createSkillRuntimeStats } from '../skill/SkillRuntimeStats'
 import { ailments } from '../../data/ailment/ailments'
 import { MAX_THO_THE } from '../combat/CombatTypes'
 import type { CombatEntity } from '../combat/CombatEntity'
@@ -57,7 +58,7 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 'ground',
+    lane: 2,
     alive: true,
     ...overrides,
   }
@@ -130,6 +131,7 @@ describe('BattleSystem — Thổ Thế (Plans/EarthPath mục XV, Thổ Thế ma
     const enemy = createCombatant({ id: 'enemy', x: 50 })
 
     system.start(player, enemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
 
     for (let i = 0; i < 320; i++) {
       tick(0.01)
@@ -143,11 +145,16 @@ describe('BattleSystem — Thổ Thế (Plans/EarthPath mục XV, Thổ Thế ma
 
     const player = createCombatant({ id: 'player', type: 'player', x: 0 })
 
-    player.stats.thoTheGainPerCast = 1
+    player.skillStats = { ...createSkillRuntimeStats(), thoTheGainPerCast: 1 }
 
     const enemy = createCombatant({ id: 'enemy', x: 50 })
 
     system.start(player, enemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
+    // start() ghi đè x=ENEMY_SPAWN_X(400) > SCREEN_VISIBLE_MAX_X(350) —
+    // đặt lại trong tầm nhìn (2026-08-22), cùng quy ước enemy.x=... đã
+    // dùng ở các test khác trong file này.
+    enemy.x = 50
 
     // attackSpeed mặc định 1 -> cast mỗi 1s (+1 Thổ Thế/cast), KHÔNG có
     // decay đối ứng (khác Hỏa Thế) nên PHẢI neo cứng đúng MAX_THO_THE
@@ -183,6 +190,7 @@ describe('BattleSystem — Trói Chân (Plans/EarthPath mục VI, Root)', () => 
     // start() TỰ SET x = ENEMY_SPAWN_X (400) bất kể fixture truyền vào
     // — ghi đè lại SAU start() để mô phỏng "ngoài tầm, lẽ ra phải tiến".
     system.start(player, enemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
     enemy.x = 200
 
     const battleEnemy = system.getBattle()!.enemies[0]!
@@ -208,6 +216,7 @@ describe('BattleSystem — Trói Chân (Plans/EarthPath mục VI, Root)', () => 
     enemy.stats.attack = 10
 
     system.start(player, enemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
     enemy.x = 5
 
     const battleEnemy = system.getBattle()!.enemies[0]!
@@ -229,9 +238,12 @@ describe('BattleSystem — AOE + Knockback (Plans/EarthPath mục XVI, Thổ Th�
     const player = createCombatant({ id: 'player', type: 'player', x: 0 })
 
     player.stats.attack = 100
-    player.stats.earthAoeRadius = 50
-    player.stats.earthAoeSecondaryDamagePercent = 0.5
-    player.stats.earthKnockbackDistance = 20
+    player.skillStats = {
+      ...createSkillRuntimeStats(),
+      earthAoeRadius: 50,
+      earthAoeSecondaryDamagePercent: 0.5,
+      earthKnockbackDistance: 20,
+    }
 
     // enemy2 nằm trong bán kính 50 quanh điểm trúng của enemy1 (gần
     // nhất, mục tiêu chính) — |60 - 50| = 10 <= 50.
@@ -241,6 +253,7 @@ describe('BattleSystem — AOE + Knockback (Plans/EarthPath mục XVI, Thổ Th�
     // start()/spawnEnemyInto() TỰ SET x = ENEMY_SPAWN_X — ghi đè lại
     // SAU mỗi lệnh để dựng đúng khoảng cách 10 giữa 2 mục tiêu.
     system.start(player, enemy1)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
     enemy1.x = 50
 
     system.spawnEnemyInto(system.getBattle()!, enemy2)
@@ -277,6 +290,7 @@ describe('BattleSystem — AOE + Knockback (Plans/EarthPath mục XVI, Thổ Th�
     const enemy2 = createCombatant({ id: 'enemy2', currentHp: 100000, maxHp: 100000 })
 
     system.start(player, enemy1)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
     enemy1.x = 50
 
     system.spawnEnemyInto(system.getBattle()!, enemy2)

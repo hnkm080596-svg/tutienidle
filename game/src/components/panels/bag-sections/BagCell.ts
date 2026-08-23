@@ -1,5 +1,6 @@
 import type { TooltipContent } from '@/composables/useTooltip'
 import type { NameSegment } from '@/core/item/NameSegment'
+import type { SlotPresentationState } from '@/components/common/SlotTypes'
 
 // Shape dùng chung cho mọi bag-section (tách từ BagGrid.vue, xem
 // composables/useBagPagination.ts) — mỗi section tự map dữ liệu bag
@@ -16,9 +17,15 @@ export interface BagCell {
 
   selected?: boolean
 
-  rarity?: string
+  // Rank chuẩn hoá 1-9 (xem composables/slots/normalizeSlotRank.ts) —
+  // truyền thẳng vào SlotView.vue's prop `qualityRank`/`rarityRank`.
+  qualityRank?: number
 
-  itemRarity?: string
+  rarityRank?: number
+
+  // Marker/comparison (equipped, upgrade/downgrade) — chỉ Equipment
+  // bag section dùng, xem SlotView.vue's prop `state`.
+  state?: SlotPresentationState
 
   onClick?: () => void
 
@@ -29,8 +36,8 @@ export interface BagCell {
   // Ảnh riêng của item — đọc từ field `icon` khai NGAY TRÊN data item
   // (Equipment/Pill/Talisman/Formation/Technique, xem core/assets/
   // AssetPaths.ts's ghi chú), truyền thẳng vào SlotView.vue's prop
-  // `itemIcon`.
-  itemIcon?: string
+  // `icon`.
+  icon?: string
 
   // Tên ghép động, nhiều đoạn tô màu riêng (2026-08-15) — ưu tiên HƠN
   // `label` nếu có, xem SlotView.vue's prop `nameSegments`.

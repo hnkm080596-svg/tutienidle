@@ -57,18 +57,25 @@ export const EQUIPMENT_QUALITY_MAX_AFFIX_TIER: Record<EquipmentQuality, number> 
   thien_dia_trong_khi: 5,
 }
 
-// Trọng số random khi rớt đồ — phẩm càng cao càng hiếm.
-export const EQUIPMENT_QUALITY_DROP_WEIGHT: Record<EquipmentQuality, number> = {
-  pham_khi: 40,
-  bao_khi: 24,
-  linh_khi: 14,
-  phap_khi: 8,
-  phap_bao: 6,
-  tien_bao: 4,
-  chi_bao: 2.5,
-  hon_don_chi_bao: 1,
-  thien_dia_trong_khi: 0.5,
-}
+/**
+ * Trọng số Quality theo đại cảnh giới (index khớp REALMS). Bậc chưa mở có
+ * weight 0 nên không thể xuất hiện. Ba dòng đầu chốt progression nhập môn:
+ * Phàm Nhân 100% Phàm Khí; Luyện Khí bắt đầu chạm Bảo Khí; Trúc Cơ mở
+ * Linh Khí. Các cảnh giới sau dịch phân phối dần lên trên nhưng vẫn giữ
+ * một phần đồ bậc thấp làm nguyên liệu phân giải.
+ */
+export const EQUIPMENT_QUALITY_REALM_WEIGHTS: readonly (readonly number[])[] = [
+  [100, 0, 0, 0, 0, 0, 0, 0, 0],
+  [90, 10, 0, 0, 0, 0, 0, 0, 0],
+  [75, 20, 5, 0, 0, 0, 0, 0, 0],
+  [55, 28, 13, 4, 0, 0, 0, 0, 0],
+  [40, 28, 18, 10, 4, 0, 0, 0, 0],
+  [28, 24, 20, 14, 9, 5, 0, 0, 0],
+  [18, 20, 20, 17, 12, 8, 5, 0, 0],
+  [10, 14, 17, 18, 15, 12, 8, 4, 2],
+  [5, 8, 12, 16, 18, 16, 12, 8, 5],
+  [2, 4, 7, 11, 15, 18, 17, 14, 12],
+]
 
 // Equipment Rework (2026-08-14) — trần Forge Point (xem
 // EquipmentSystem.forge()) theo Quality: phẩm càng cao, "tiềm năng"

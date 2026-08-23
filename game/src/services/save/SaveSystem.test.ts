@@ -47,7 +47,7 @@ beforeEach(() => {
   vi.stubGlobal('localStorage', new MemoryStorage())
 })
 
-const VALID_RAW = JSON.stringify({ version: 37, player: { name: 'test' } })
+const VALID_RAW = JSON.stringify({ version: 38, player: { name: 'test' } })
 
 describe('loadGame — phân biệt empty/ok/incompatible/corrupted (Phase 5, mục XVI)', () => {
   it('empty khi chưa từng có save', () => {

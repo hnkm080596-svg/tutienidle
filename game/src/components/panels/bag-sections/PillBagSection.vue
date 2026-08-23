@@ -70,6 +70,8 @@ function buildTooltip(pill: Pill, owned: number): GradedItemTooltipContent {
 
     phamLabel: PHAM_LABELS[pill.pham],
 
+    phamKey: pill.pham,
+
     ownedLabel: `Sở hữu: ${owned}`,
 
     description: pill.description,
@@ -91,7 +93,7 @@ function drinkPill(pillId: string) {
       const battle = gameManager.getBattle()
 
       if (battle && battle.player.alive) {
-        battle.player.currentHp = Math.min(battle.player.maxHp, battle.player.currentHp + amount)
+        gameManager.combatSystem.applyHealing(battle.player, amount, battle.player.id, 'healing')
       }
     },
   }
@@ -117,7 +119,7 @@ const cells = computed<BagCell[]>(() => {
 
     tooltip: buildTooltip(stack.pill, stack.amount),
 
-    itemIcon: stack.pill.icon,
+    icon: stack.pill.icon,
 
     onClick: () => drinkPill(stack.pill.id),
   }))
@@ -139,7 +141,7 @@ const { currentPage, totalPages, goToPage, gridCells } = useBagPagination(cells,
         :description="cell?.description"
         :amount="cell?.amount"
         :tooltip="cell?.tooltip"
-        :item-icon="cell?.itemIcon"
+        :icon="cell?.icon"
         @click="cell?.onClick?.()"
       />
     </div>

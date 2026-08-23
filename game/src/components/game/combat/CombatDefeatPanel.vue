@@ -1,13 +1,32 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useGameManager } from '@/composables/useGameState'
+import { useBattleActions } from '@/composables/useBattleActions'
+import { useAutoRetryCountdown } from '@/composables/useAutoRetryCountdown'
 import { useUiStore } from '@/stores/ui'
 import { formatNumber } from '@/core/format/NumberFormatter'
 
-// Combat UI Redesign mục 18/23 — CHỈ 1 nút "Về Động Phủ", không đánh
-// lại/auto retry/đổi build. Auto Battle DỪNG NGAY (spec mục 17/23).
+// Combat UI Redesign mục 18/23, mở rộng 2026-08-22 — trước đây CHỈ 1
+// nút "Về Động Phủ" (không đánh lại). Giờ thêm "Tái Chiến" (LUÔN đánh
+// lại ĐÚNG stage vừa thua — KHÔNG advance sang Màn kế tiếp như
+// CombatVictoryPanel.vue lúc thắng, vì thua thì không có lý do "tiến
+// bộ" sang stage mới):
+//   - ui.isAuto && explorationMode==='repeat' (Lặp Lại Khiêu Chiến) →
+//     tự đếm 3s rồi Tái Chiến, y hệt cơ chế Auto-refight của
+//     CombatVictoryPanel.vue.
+//   - ui.isAuto && explorationMode==='auto' (Tự Động Thám Hiểm) →
+//     KHÔNG tự đếm 3s (tránh auto-thua-lặp-lại mà người chơi không để
+//     ý) — chỉ hiện 2 lựa chọn, chờ bấm tay.
+//   - Cả 2 trường hợp trên đều có fallback: 10 giây không bấm gì thì
+//     tự về Động Phủ (khác 3s auto-refight — dùng setTimeout riêng,
+//     chỉ chạy khi nhánh 3s KHÔNG chạy).
+// Nút "Về Động Phủ" LUÔN hiện (khác Victory panel ẩn "Tiếp Tục" khi
+// isAuto) — người chơi phải huỷ được auto-countdown bất cứ lúc nào.
+const RETRY_COUNTDOWN_SECONDS = 3
+
 const gameManager = useGameManager()
 const ui = useUiStore()
+const { startBattle } = useBattleActions()
 
 const summary = computed(() => gameManager.getBattleRewardSummary())
 
@@ -15,11 +34,46 @@ const hasAnyReward = computed(() =>
   summary.value.experience > 0 || summary.value.spiritStone > 0 || summary.value.cultivation > 0 || summary.value.items.length > 0,
 )
 
+const isAutoRetrying = ref(false)
+
+function refight() {
+  if (!ui.selectedStageId) {
+    return
+  }
+
+  const stage = gameManager.getStage(ui.selectedStageId)
+
+  if (!stage) {
+    return
+  }
+
+  startBattle(stage)
+}
+
+const { remaining: retryCountdown, start: startAutoRetryCountdown, stop: stopAutoRetryCountdown } = useAutoRetryCountdown(RETRY_COUNTDOWN_SECONDS, refight)
+
+function clearTimers() {
+  stopAutoRetryCountdown()
+}
+
+function retryNow() {
+  clearTimers()
+  refight()
+}
+
 function returnHome() {
-  ui.isAuto = false
+  clearTimers()
+  ui.battleRunMode = 'manual'
   ui.exitCombatScene()
   gameManager.eventBus.emit('combat_scene_exit', undefined)
 }
+
+onMounted(() => {
+  if (ui.battleRunMode === 'repeat') {
+    isAutoRetrying.value = true
+    startAutoRetryCountdown()
+  }
+})
 </script>
 
 <template>
@@ -27,13 +81,25 @@ function returnHome() {
     <h2 class="combat-defeat-panel__title">☠ THẤT BẠI</h2>
 
     <div v-if="hasAnyReward" class="combat-defeat-panel__rewards">
-      <p v-if="summary.experience > 0">EXP <span>+{{ formatNumber(summary.experience) }}</span></p>
+      <p v-if="summary.experience > 0">Cảm ngộ <span>+{{ formatNumber(summary.experience) }}</span></p>
       <p v-if="summary.spiritStone > 0">Linh Thạch <span>+{{ formatNumber(summary.spiritStone) }}</span></p>
       <p v-if="summary.cultivation > 0">Tu Vi <span>+{{ formatNumber(summary.cultivation) }}</span></p>
       <p v-for="item in summary.items" :key="`${item.kind}-${item.itemId}`">{{ item.name }} <span>+{{ formatNumber(item.amount) }}</span></p>
     </div>
 
-    <button type="button" class="combat-defeat-panel__return" @click="returnHome">Về Động Phủ</button>
+    <div class="combat-defeat-panel__actions">
+      <button
+        type="button"
+        class="combat-defeat-panel__retry"
+        :class="{ 'is-disabled': isAutoRetrying }"
+        :disabled="isAutoRetrying"
+        @click="retryNow"
+      >
+        Tái Chiến<template v-if="isAutoRetrying"> {{ retryCountdown }}s</template>
+      </button>
+
+      <button type="button" class="combat-defeat-panel__return" @click="returnHome">Về Động Phủ</button>
+    </div>
   </div>
 </template>
 
@@ -76,17 +142,37 @@ function returnHome() {
   font-weight: 700;
 }
 
-.combat-defeat-panel__return {
-  width: 100%;
+.combat-defeat-panel__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.combat-defeat-panel__actions button {
+  flex: 1;
   padding: 10px;
-  background: var(--ink-800);
-  color: var(--text-primary);
-  border: 1px solid var(--ink-line-soft);
   border-radius: var(--radius-sm);
+  border: none;
   font-family: var(--font-body);
   font-weight: 700;
   font-size: 0.85rem;
   cursor: pointer;
+}
+
+.combat-defeat-panel__retry {
+  background: var(--crimson);
+  color: var(--text-primary);
+}
+
+.combat-defeat-panel__retry.is-disabled {
+  background: var(--ink-700);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.combat-defeat-panel__return {
+  background: var(--ink-800);
+  color: var(--text-primary);
+  border: 1px solid var(--ink-line-soft);
 }
 
 .combat-defeat-panel__return:hover {

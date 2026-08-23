@@ -14,7 +14,7 @@ const TEST_WEAPON: Equipment = {
   slot: 'weapon',
   grade: 1,
   maxEnhanceLevel: 10,
-  mainStat: { stat: 'attack', min: 50, max: 50 },
+  mainStats: [{ stat: 'attack', min: 50, max: 50 }],
 }
 
 function manualWeaponInstance(): EquipmentInstance {
@@ -78,6 +78,7 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
 
     // --- Class: chọn Kiếm Tu (path THẬT đã ship, không phải fixture)
     // — tự cấp Tâm Pháp (Technique) + 3 skill cố định.
+    player.realmLevel = 12
     expect(gameManager.chooseCultivationPath('kiem_tu', player)).toBe(true)
 
     const attackAfterClass = calculateStats(player.baseStats, [
@@ -136,5 +137,30 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
     gameManager.startBattleWithPlayer(player, finalStats, createTestEnemy())
 
     expect(gameManager.getBattle()!.player.stats.attack).toBe(finalStats.attack)
+  })
+
+  it('giữ nguyên skill runtime stats trong trận và chỉ nhận thay đổi ở trận kế tiếp', () => {
+    const gameManager = new GameManager()
+    const player = createDefaultPlayer()
+    const runtimeSkill = {
+      ...structuredClone(SKILLS[0]!),
+      id: 'snapshot_runtime_skill',
+      hoaTheGainPerCast: 1,
+    }
+    gameManager.skillManager.add(runtimeSkill)
+
+    const stats = calculateStats(player.baseStats, [])
+    gameManager.startBattleWithPlayer(player, stats, createTestEnemy())
+    expect(gameManager.getBattle()!.player.skillStats?.hoaTheGainPerCast).toBe(1)
+    expect(gameManager.getBattle()!.player.skillLevels?.snapshot_runtime_skill).toBe(runtimeSkill.level)
+
+    runtimeSkill.hoaTheGainPerCast = 5
+    runtimeSkill.level = 5
+    expect(gameManager.getBattle()!.player.skillStats?.hoaTheGainPerCast).toBe(1)
+    expect(gameManager.getBattle()!.player.skillLevels?.snapshot_runtime_skill).toBe(1)
+
+    gameManager.startBattleWithPlayer(player, stats, createTestEnemy())
+    expect(gameManager.getBattle()!.player.skillStats?.hoaTheGainPerCast).toBe(5)
+    expect(gameManager.getBattle()!.player.skillLevels?.snapshot_runtime_skill).toBe(5)
   })
 })

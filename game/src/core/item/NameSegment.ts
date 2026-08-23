@@ -10,4 +10,8 @@ export interface NameSegment {
   // KHÔNG phải giá trị màu — SlotView tự bọc var(...). undefined =
   // dùng màu chữ mặc định (--text-primary).
   colorVar?: string
+
+  // Semantic key cho hiệu ứng không thể biểu diễn bằng một màu đơn (vd
+  // Rarity Tiên dùng gradient bảy màu). Component render quyết định CSS.
+  tone?: string
 }

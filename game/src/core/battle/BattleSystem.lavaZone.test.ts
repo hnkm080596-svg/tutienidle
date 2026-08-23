@@ -61,7 +61,7 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 'ground',
+    lane: 2,
     alive: true,
     ...overrides,
   }
@@ -104,6 +104,7 @@ describe('BattleSystem — Lava Zone (Plans/magicpathgeneral Phase 12)', () => {
     const enemy = createCombatant({ id: 'enemy', x: 50 })
 
     system.start(player, enemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
 
     system.spawnLavaZone(system.getBattle()!, {
       ownerId: 'player',
@@ -129,6 +130,7 @@ describe('BattleSystem — Lava Zone (Plans/magicpathgeneral Phase 12)', () => {
     const enemyOutOfRange = createCombatant({ id: 'enemy_out', currentHp: 1000, maxHp: 1000 })
 
     system.start(player, enemyInRange)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
     enemyInRange.x = 55
 
     system.spawnEnemyInto(system.getBattle()!, enemyOutOfRange)
@@ -161,6 +163,7 @@ describe('BattleSystem — Lava Zone (Plans/magicpathgeneral Phase 12)', () => {
     const enemy = createCombatant({ id: 'enemy', x: 50 })
 
     system.start(player, enemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
 
     system.spawnLavaZone(system.getBattle()!, {
       ownerId: 'player',
@@ -186,6 +189,7 @@ describe('BattleSystem — Lava Zone (Plans/magicpathgeneral Phase 12)', () => {
     const enemy = createCombatant({ id: 'enemy', x: 500 })
 
     system.start(player, enemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
     player.x = 50
 
     system.spawnLavaZone(system.getBattle()!, {

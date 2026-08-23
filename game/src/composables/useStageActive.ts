@@ -1,5 +1,6 @@
 import { computed } from 'vue'
 import { useGameManager, useStateVersion } from './useGameState'
+import { isBattleInProgress } from '../core/battle/BattleTypes'
 
 // Trích từ HomeBuildingIcons.vue (Động Phủ UI redesign, giờ DongFuScene.vue
 // cũng cần đúng check này) — đang ở giữa 1 Stage hoặc trận đang đánh,
@@ -13,6 +14,6 @@ export function useStageActive() {
   return computed(() => {
     stateVersion.value
 
-    return gameManager.stageManager.get() !== null || gameManager.getBattle()?.state === 'fighting'
+    return gameManager.stageManager.get() !== null || isBattleInProgress(gameManager.getBattle()?.state)
   })
 }

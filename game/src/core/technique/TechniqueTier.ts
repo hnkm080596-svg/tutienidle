@@ -1,73 +1,62 @@
-import { REALMS } from '../../data/realms/realm'
-import { getRequiredCultivation } from '../realm/realmSystem'
-import type { TechniqueTier } from './Technique'
+import type { Technique, TechniqueTier } from './Technique'
 
-// PLAN HOÀN CHỈNH mục 5 rework (2026-08-20) — Tâm Pháp giờ có thanh
-// kinh nghiệm THẬT của riêng nó (PlayerData.techniqueExperience, nuôi
-// bởi stores/player.ts's cultivate() — cùng nguồn với
-// totalCultivationGained), thay cho driver cũ (suy tier thẳng từ đại
-// cảnh giới người chơi). Ngưỡng lên tier vẫn giữ ĐÚNG cảm giác ranh
-// giới cũ (tieu_thanh bắt đầu ở Trúc Cơ, dai_thanh ở Hóa Thần, vien_man
-// ở Đại Thừa) nhưng tính bằng TỔNG tu vi cộng dồn (không reset khi đột
-// phá, khác `cultivation`) cần để đi bộ tới đúng cảnh giới đó từ đầu
-// game — tái dùng getRequiredCultivation() thay vì bịa số mới.
-const TIER_BOUNDARY_REALM_INDEX = {
-  tieu_thanh: 2, // Trúc Cơ
-  dai_thanh: 5, // Hóa Thần
-  vien_man: 8, // Đại Thừa
-} as const
+// Temporary balance variable. All technique insight requirements derive
+// from this value so balancing does not require touching progression logic.
+export const BASE_TECHNIQUE_INSIGHT_REQUIRED = 1_000
 
-function cumulativeCultivationAtRealmStart(realmIndex: number): number {
-  let total = 0
+export const TECHNIQUE_TIER_COST_SHARES = {
+  so_nhap: 0.1,
+  tieu_thanh: 0.2,
+  dai_thanh: 0.3,
+  vien_man: 0.4,
+} as const satisfies Record<TechniqueTier, number>
 
-  for (let i = 0; i < realmIndex; i++) {
-    const realm = REALMS[i]!
-
-    for (let level = 1; level <= realm.maxLevel; level++) {
-      total += getRequiredCultivation(realm.id, level)
-    }
-  }
-
-  return total
+export function getTechniqueInsightTotalRequired(technique: Pick<Technique, 'insightMultiplier'>): number {
+  return Math.floor(BASE_TECHNIQUE_INSIGHT_REQUIRED * (technique.insightMultiplier ?? 1))
 }
 
 interface TierThreshold {
   tier: TechniqueTier
-  expRequired: number
+  lowerShare: number
 }
 
-const TIER_EXP_THRESHOLDS: TierThreshold[] = [
-  { tier: 'so_nhap', expRequired: 0 },
-  { tier: 'tieu_thanh', expRequired: cumulativeCultivationAtRealmStart(TIER_BOUNDARY_REALM_INDEX.tieu_thanh) },
-  { tier: 'dai_thanh', expRequired: cumulativeCultivationAtRealmStart(TIER_BOUNDARY_REALM_INDEX.dai_thanh) },
-  { tier: 'vien_man', expRequired: cumulativeCultivationAtRealmStart(TIER_BOUNDARY_REALM_INDEX.vien_man) },
+const TIER_THRESHOLDS: TierThreshold[] = [
+  { tier: 'so_nhap', lowerShare: 0 },
+  { tier: 'tieu_thanh', lowerShare: TECHNIQUE_TIER_COST_SHARES.so_nhap },
+  { tier: 'dai_thanh', lowerShare: 0.3 },
+  {
+    tier: 'vien_man',
+    lowerShare: 0.6,
+  },
 ]
 
-// Dùng chung cho cả getTechniqueTier() lẫn UI exp bar (TechniqueSlotCard.vue/
-// LoadoutManager.vue) — 1 lần quét ra cả tier hiện tại lẫn 2 mốc cần
-// cho thanh tiến độ. nextThreshold undefined = đã Viên Mãn (MAX).
-export function getTechniqueTierProgress(techniqueExperience: number): {
+export function getTechniqueTierProgress(
+  insight: number,
+  totalRequired = BASE_TECHNIQUE_INSIGHT_REQUIRED,
+): {
   tier: TechniqueTier
   lowerBound: number
   nextThreshold: number | undefined
 } {
-  let current = TIER_EXP_THRESHOLDS[0]!
-  let nextThreshold: number | undefined
+  const clamped = Math.max(0, insight)
+  let currentIndex = 0
 
-  for (let i = 0; i < TIER_EXP_THRESHOLDS.length; i++) {
-    const entry = TIER_EXP_THRESHOLDS[i]!
-
-    if (techniqueExperience >= entry.expRequired) {
-      current = entry
-      nextThreshold = TIER_EXP_THRESHOLDS[i + 1]?.expRequired
+  for (let index = 0; index < TIER_THRESHOLDS.length; index++) {
+    if (clamped >= totalRequired * TIER_THRESHOLDS[index]!.lowerShare) {
+      currentIndex = index
     }
   }
 
-  return { tier: current.tier, lowerBound: current.expRequired, nextThreshold }
+  const current = TIER_THRESHOLDS[currentIndex]!
+  const lowerBound = Math.floor(totalRequired * current.lowerShare)
+  const nextShare = TIER_THRESHOLDS[currentIndex + 1]?.lowerShare ?? 1
+  const nextThreshold = clamped >= totalRequired ? undefined : Math.floor(totalRequired * nextShare)
+
+  return { tier: current.tier, lowerBound, nextThreshold }
 }
 
-export function getTechniqueTier(techniqueExperience: number): TechniqueTier {
-  return getTechniqueTierProgress(techniqueExperience).tier
+export function getTechniqueTier(insight: number, totalRequired?: number): TechniqueTier {
+  return getTechniqueTierProgress(insight, totalRequired).tier
 }
 
 export const TECHNIQUE_TIER_LABELS: Record<TechniqueTier, string> = {

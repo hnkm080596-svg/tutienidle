@@ -71,6 +71,22 @@ const DEFAULT_EVASION_RATING = 25
 const DEFAULT_ACCURACY_RATING = 80
 const DEFAULT_BLOCK_EFFECTIVENESS = 0.25
 
+// Enemy data cũ được author theo thang 3-7, trong khi BattleSystem hiểu
+// attackSpeed là số đòn/giây. Quy đổi về nhịp 0.8-2.5 đòn/giây để một thay đổi
+// nhỏ ở Attack không còn tạo burst damage quá lớn. Giá trị <= 2.5 được xem là
+// dữ liệu đã theo thang mới, nhờ vậy enemy mới có thể author trực tiếp.
+const LEGACY_ATTACK_SPEED_DIVISOR = 2.5
+const MIN_ENEMY_ATTACK_SPEED = 0.8
+const MAX_ENEMY_ATTACK_SPEED = 2.5
+
+export function normalizeEnemyAttackSpeed(authoredAttackSpeed: number): number {
+  const converted = authoredAttackSpeed > MAX_ENEMY_ATTACK_SPEED
+    ? authoredAttackSpeed / LEGACY_ATTACK_SPEED_DIVISOR
+    : authoredAttackSpeed
+
+  return Math.min(MAX_ENEMY_ATTACK_SPEED, Math.max(MIN_ENEMY_ATTACK_SPEED, converted))
+}
+
 export function normalizeEnemyStats(input: EnemyStatInput): Stats {
   return {
     attack: input.attack,
@@ -79,7 +95,7 @@ export function normalizeEnemyStats(input: EnemyStatInput): Stats {
     maxHp: input.maxHp,
     maxMp: 0,
 
-    attackSpeed: input.attackSpeed,
+    attackSpeed: normalizeEnemyAttackSpeed(input.attackSpeed),
     movementSpeed: input.movementSpeed,
     attackRange: input.attackRange,
 
@@ -110,6 +126,8 @@ export function normalizeEnemyStats(input: EnemyStatInput): Stats {
     manaRegenPerSecond: input.special?.manaRegenPerSecond ?? 0,
     cooldownReduction: input.special?.cooldownReduction ?? 0,
     castSpeedPercent: 0,
+    finalDamagePercent: 0,
+    finalDamageReductionPercent: 0,
     criticalAvoidance: input.special?.criticalAvoidance ?? 0,
     chanceToIgnoreResistance: input.special?.chanceToIgnoreResistance ?? 0,
     ailmentResistPercent: input.special?.ailmentResistPercent ?? 0,
@@ -119,25 +137,6 @@ export function normalizeEnemyStats(input: EnemyStatInput): Stats {
     elementApplicationPercent: 0,
     reactionEffectPercent: 0,
     ailmentDurationPercent: 0,
-    hoaTheGainPerCast: 0,
-    hoaTheDecayReductionPercent: 0,
-    thuyThePercent: 0,
-    waterReactionExtensionSeconds: 0,
-    poisonRootPercentPerStack: 0,
-    poisonRootMaxStacks: 0,
-    poisonRootThresholdBonusPercent: 0,
-    earthAoeRadius: 0,
-    earthAoeSecondaryDamagePercent: 0,
-    earthKnockbackDistance: 0,
-    skillImpactPercent: 0,
-    thoTheGainPerCast: 0,
-    kimTheGainPerProc: 0,
-    kimTheDotDamagePercentPerStack: 0,
-    kimTheDotResistancePenetrationPercentPerStack: 0,
-    kimTheMaxStacksBonus: 0,
-    metalAilmentPotencyPercent: 0,
-    huyetPhaGainPerProc: 0,
-    huyetPhaBurstDamage: 0,
     dotResistancePercent: input.special?.dotResistancePercent ?? 0,
     poisonRecoveryPercent: 0,
 
@@ -173,12 +172,12 @@ export function normalizeEnemyStats(input: EnemyStatInput): Stats {
   }
 }
 
-// Hệ số Elite tối giản — buff thẳng maxHp/attack theo hằng số cố
-// định thay vì hệ thống rarity đầy đủ, đủ để có 1 nguồn rơi thật cho
-// Phá Cảnh Tâm Pháp (Boss/Elite+) mà không cần xây lại toàn bộ
-// Stage/Enemy. Xem Stage.StageEnemyEntry.eliteChance.
-const ELITE_MAX_HP_MULTIPLIER = 3
-const ELITE_ATTACK_MULTIPLIER = 1.8
+// Elite tăng thời gian giao chiến nhưng chỉ tăng vừa phải sát thương; thêm
+// Armor/Accuracy để khác quái thường mà không tạo burst bất ngờ.
+const ELITE_MAX_HP_MULTIPLIER = 2.5
+const ELITE_ATTACK_MULTIPLIER = 1.35
+const ELITE_DEFENSE_MULTIPLIER = 1.15
+const ELITE_ACCURACY_MULTIPLIER = 1.1
 
 export function applyEliteMultiplier(stats: Stats): Stats {
   return {
@@ -186,14 +185,20 @@ export function applyEliteMultiplier(stats: Stats): Stats {
 
     maxHp: stats.maxHp * ELITE_MAX_HP_MULTIPLIER,
     attack: stats.attack * ELITE_ATTACK_MULTIPLIER,
+    defense: stats.defense * ELITE_DEFENSE_MULTIPLIER,
+    accuracyRating: stats.accuracyRating * ELITE_ACCURACY_MULTIPLIER,
   }
 }
 
-// Core Loop Foundation checklist (Mục BOSS) — hệ số LỚN HƠN Elite
-// nhiều (HP×8/Attack×3 so với Elite HP×3/Attack×1.8), khớp vai trò
-// "thử thách cuối stage" thay vì spawn ngẫu nhiên như Elite.
-const BOSS_MAX_HP_MULTIPLIER = 8
-const BOSS_ATTACK_MULTIPLIER = 3
+// Boss dùng phần lớn power budget cho thời gian giao chiến và phòng thủ.
+// Attack chỉ ×1.6 vì boss sống lâu; hệ số ×3 cũ khiến tổng áp lực tăng quá
+// mạnh, đặc biệt với enemy data legacy có tốc đánh 3-7.
+const BOSS_MAX_HP_MULTIPLIER = 7
+const BOSS_ATTACK_MULTIPLIER = 1.6
+const BOSS_DEFENSE_MULTIPLIER = 1.2
+const BOSS_ACCURACY_MULTIPLIER = 1.15
+const BOSS_RESISTANCE_BONUS = 15
+const BOSS_CRITICAL_AVOIDANCE = 0.15
 
 export function applyBossMultiplier(stats: Stats): Stats {
   return {
@@ -201,5 +206,15 @@ export function applyBossMultiplier(stats: Stats): Stats {
 
     maxHp: stats.maxHp * BOSS_MAX_HP_MULTIPLIER,
     attack: stats.attack * BOSS_ATTACK_MULTIPLIER,
+    defense: stats.defense * BOSS_DEFENSE_MULTIPLIER,
+    accuracyRating: stats.accuracyRating * BOSS_ACCURACY_MULTIPLIER,
+    criticalAvoidance: Math.max(stats.criticalAvoidance, BOSS_CRITICAL_AVOIDANCE),
+    woodResistance: stats.woodPower > 0 ? stats.woodResistance + BOSS_RESISTANCE_BONUS : stats.woodResistance,
+    fireResistance: stats.firePower > 0 ? stats.fireResistance + BOSS_RESISTANCE_BONUS : stats.fireResistance,
+    earthResistance: stats.earthPower > 0 ? stats.earthResistance + BOSS_RESISTANCE_BONUS : stats.earthResistance,
+    metalResistance: stats.metalPower > 0 ? stats.metalResistance + BOSS_RESISTANCE_BONUS : stats.metalResistance,
+    waterResistance: stats.waterPower > 0 ? stats.waterResistance + BOSS_RESISTANCE_BONUS : stats.waterResistance,
+    windResistance: stats.windPower > 0 ? stats.windResistance + BOSS_RESISTANCE_BONUS : stats.windResistance,
+    lightningResistance: stats.lightningPower > 0 ? stats.lightningResistance + BOSS_RESISTANCE_BONUS : stats.lightningResistance,
   }
 }

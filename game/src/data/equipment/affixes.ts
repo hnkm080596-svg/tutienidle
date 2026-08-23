@@ -30,19 +30,6 @@ export const affixes: Affix[] = [
   },
 
   {
-    id: 'prefix_defense',
-    name: 'Kiên Cố',
-    stat: 'defense',
-    kind: 'prefix',
-    pool: 'basic',
-    tiers: [
-      { tier: 1, min: 2, max: 4 },
-      { tier: 2, min: 5, max: 9 },
-      { tier: 3, min: 10, max: 15 },
-    ],
-  },
-
-  {
     id: 'prefix_max_hp',
     name: 'Cường Kiện',
     stat: 'maxHp',
@@ -83,21 +70,21 @@ export const affixes: Affix[] = [
 
   {
     id: 'suffix_attack_speed',
-    name: 'Của Nhanh Nhẹn',
+    name: 'Nhanh Nhẹn',
     stat: 'attackSpeed',
     kind: 'suffix',
     pool: 'basic',
     tiers: [
-      { tier: 1, min: 1, max: 2 },
-      { tier: 2, min: 3, max: 4 },
-      { tier: 3, min: 5, max: 7 },
+      { tier: 1, min: 0.01, max: 0.02 },
+      { tier: 2, min: 0.03, max: 0.04 },
+      { tier: 3, min: 0.05, max: 0.07 },
     ],
   },
 
   {
-    id: 'suffix_dexterity',
-    name: 'Của Thân Pháp',
-    stat: 'dexterity',
+    id: 'suffix_accuracy',
+    name: 'Chính Xác',
+    stat: 'accuracyRating',
     kind: 'suffix',
     pool: 'basic',
     tiers: [
@@ -108,21 +95,21 @@ export const affixes: Affix[] = [
   },
 
   {
-    id: 'suffix_vitality',
-    name: 'Của Thể Chất',
-    stat: 'vitality',
+    id: 'suffix_critical_avoidance',
+    name: 'Hộ Mệnh',
+    stat: 'criticalAvoidance',
     kind: 'suffix',
     pool: 'basic',
     tiers: [
-      { tier: 1, min: 2, max: 4 },
-      { tier: 2, min: 5, max: 8 },
-      { tier: 3, min: 9, max: 13 },
+      { tier: 1, min: 0.02, max: 0.04 },
+      { tier: 2, min: 0.05, max: 0.08 },
+      { tier: 3, min: 0.09, max: 0.13 },
     ],
   },
 
   {
     id: 'suffix_critical_damage',
-    name: 'Của Trí Mạng',
+    name: 'Trí Mạng',
     stat: 'criticalDamage',
     kind: 'suffix',
     pool: 'basic',
@@ -135,44 +122,90 @@ export const affixes: Affix[] = [
 
   {
     id: 'suffix_movement_speed',
-    name: 'Của Phong Hành',
-    stat: 'movementSpeed',
+    name: 'Lưu Quang',
+    stat: 'projectileSpeedPercent',
     kind: 'suffix',
     pool: 'basic',
+    // projectileSpeedPercent chỉ khai trong substats của boots
+    // (EquipmentStatPolicy.ts) — AffixRegistry.register() lọc theo đó nên
+    // weapon/ring trước đây bị âm thầm loại; sửa khai báo khớp thực tế.
+    slots: ['boots'],
     tiers: [
-      { tier: 1, min: 1, max: 2 },
-      { tier: 2, min: 3, max: 4 },
-      { tier: 3, min: 5, max: 7 },
+      { tier: 1, min: 0.03, max: 0.05 },
+      { tier: 2, min: 0.06, max: 0.09 },
+      { tier: 3, min: 0.1, max: 0.15 },
+    ],
+  },
+
+  // Pool advanced mở từ Linh Khí: bổ sung lớp phòng thủ thật thay vì gate
+  // rỗng. Kháng dùng thang rating (1 điểm = 1%) giống Resistance.ts.
+  ...([
+    ['fire', 'Hỏa', ['helmet', 'armor', 'boots', 'necklace']],
+    ['wood', 'Mộc', ['helmet', 'armor', 'boots', 'necklace']],
+    ['water', 'Thủy', ['helmet', 'armor', 'boots', 'necklace']],
+    ['metal', 'Kim', ['helmet', 'armor', 'boots', 'necklace']],
+    ['earth', 'Thổ', ['helmet', 'armor', 'boots', 'necklace']],
+    ['wind', 'Phong', ['helmet', 'armor', 'boots', 'necklace']],
+    ['lightning', 'Lôi', ['helmet', 'armor', 'boots', 'necklace']],
+  ] as const).map(([element, label, slots]) => ({
+    id: `suffix_${element}_resistance`,
+    name: `Kháng ${label}`,
+    stat: `${element}Resistance` as Affix['stat'],
+    kind: 'suffix' as const,
+    pool: 'advanced' as const,
+    slots: [...slots] as Affix['slots'],
+    tiers: [
+      { tier: 1, min: 4, max: 8 },
+      { tier: 2, min: 9, max: 15 },
+      { tier: 3, min: 16, max: 24 },
+      { tier: 4, min: 25, max: 34 },
+      { tier: 5, min: 35, max: 45 },
+    ],
+  })),
+
+  {
+    id: 'prefix_ward',
+    name: 'Hộ Thuẫn',
+    stat: 'wardMax',
+    kind: 'prefix',
+    pool: 'advanced',
+    slots: ['helmet', 'necklace'],
+    tiers: [
+      { tier: 1, min: 8, max: 15 },
+      { tier: 2, min: 16, max: 28 },
+      { tier: 3, min: 29, max: 45 },
+      { tier: 4, min: 46, max: 68 },
+      { tier: 5, min: 69, max: 95 },
     ],
   },
 
   {
-    id: 'prefix_supreme_strength',
-    name: 'Cân Cốt Tuyệt Thế',
-    stat: 'strength',
+    id: 'prefix_supreme_final_damage',
+    name: 'Tuyệt Thế Công Phạt',
+    stat: 'finalDamagePercent',
     kind: 'prefix',
     pool: 'supreme',
     tiers: [
-      { tier: 1, min: 1, max: 2 },
-      { tier: 2, min: 3, max: 4 },
-      { tier: 3, min: 5, max: 7 },
-      { tier: 4, min: 8, max: 11 },
-      { tier: 5, min: 12, max: 16 },
+      { tier: 1, min: 0.01, max: 0.02 },
+      { tier: 2, min: 0.03, max: 0.04 },
+      { tier: 3, min: 0.05, max: 0.07 },
+      { tier: 4, min: 0.08, max: 0.11 },
+      { tier: 5, min: 0.12, max: 0.16 },
     ],
   },
 
   {
-    id: 'suffix_supreme_intelligence',
-    name: 'Của Thần Thức Vô Song',
-    stat: 'intelligence',
+    id: 'suffix_supreme_final_reduction',
+    name: 'Tuyệt Thế Hộ Thể',
+    stat: 'finalDamageReductionPercent',
     kind: 'suffix',
     pool: 'supreme',
     tiers: [
-      { tier: 1, min: 1, max: 2 },
-      { tier: 2, min: 3, max: 4 },
-      { tier: 3, min: 5, max: 7 },
-      { tier: 4, min: 8, max: 11 },
-      { tier: 5, min: 12, max: 16 },
+      { tier: 1, min: 0.01, max: 0.02 },
+      { tier: 2, min: 0.03, max: 0.04 },
+      { tier: 3, min: 0.05, max: 0.07 },
+      { tier: 4, min: 0.08, max: 0.11 },
+      { tier: 5, min: 0.12, max: 0.16 },
     ],
   },
 
@@ -196,7 +229,7 @@ export const affixes: Affix[] = [
 
   {
     id: 'suffix_ailment_potency',
-    name: 'Của Dị Hoả',
+    name: 'Dị Hỏa',
     stat: 'ailmentPotencyPercent',
     kind: 'suffix',
     pool: 'specialized',
@@ -227,7 +260,7 @@ export const affixes: Affix[] = [
 
   {
     id: 'suffix_leech',
-    name: 'Của Hấp Huyết',
+    name: 'Hấp Huyết',
     stat: 'leechPercent',
     kind: 'suffix',
     pool: 'specialized',
@@ -259,7 +292,7 @@ export const affixes: Affix[] = [
 
   {
     id: 'suffix_cooldown_reduction',
-    name: 'Của Lưu Thủy',
+    name: 'Lưu Thủy',
     stat: 'cooldownReduction',
     kind: 'suffix',
     pool: 'specialized',
@@ -298,7 +331,7 @@ export const affixes: Affix[] = [
 
   {
     id: 'suffix_thorns',
-    name: 'Của Bàn Thạch',
+    name: 'Bàn Thạch',
     stat: 'thornsPercent',
     kind: 'suffix',
     pool: 'specialized',

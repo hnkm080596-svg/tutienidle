@@ -56,7 +56,7 @@ export interface ElementReactionDefinition {
   // 5's ví dụ ("trừ khi reaction definition chủ động chỉ định một
   // status không bị consume"). CHỈ có tác dụng khi field này khớp 1
   // trong 2 vế ĐANG reaction VÀ nguồn có
-  // `source.stats.waterReactionExtensionSeconds > 0` — nền là vế đó
+  // `source.skillStats.waterReactionExtensionSeconds > 0` — nền là vế đó
   // vẫn bị tiêu như mọi ailment khác (xem ReactionManager.ts). Không
   // áp dụng cho appliesAilmentId/appliesBuffId (2 nhánh đó đã luôn
   // consume-rồi-tạo-mới, tự thân đã đúng invariant Phase 16).

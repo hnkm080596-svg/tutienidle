@@ -44,6 +44,10 @@ const owned = computed(() => {
 })
 
 const hasEnoughItem = computed(() => owned.value >= 1)
+const cooldownSeconds = computed(() => {
+  stateVersion.value
+  return gameManager.getTribulationCooldownSeconds()
+})
 
 const canCraft = computed(() =>
   requirement.value ? gameManager.canCraftBreakthroughToken(targetRealm.value!.id, player.$state) : false,
@@ -60,7 +64,7 @@ function craft() {
 }
 
 function confirmBreakthrough() {
-  if (!targetRealm.value || !hasEnoughItem.value) {
+  if (!targetRealm.value || !hasEnoughItem.value || cooldownSeconds.value > 0) {
     return
   }
 
@@ -104,7 +108,7 @@ function confirmBreakthrough() {
         <button
           type="button"
           class="breakthrough-requirement__confirm"
-          :disabled="!hasEnoughItem"
+          :disabled="!hasEnoughItem || cooldownSeconds > 0"
           @click="confirmBreakthrough"
         >
           Độ Kiếp

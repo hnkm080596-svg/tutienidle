@@ -1,5 +1,6 @@
 import type { SkillEffect } from './SkillEffect'
 import type { CombatEntity } from '../combat/CombatEntity'
+import { getSkillRuntimeStat } from './SkillRuntimeStats'
 import type { CombatSystem } from '../combat/CombatSystem'
 import type { MissileSystem } from '../combat/missile/MissileSystem'
 import type { BuffSystem } from '../buff/BuffSystem'
@@ -106,11 +107,11 @@ export class SkillEffectSystem {
         // (earthAoeRadius > 0) — trước đó bắn đơn mục tiêu như mọi
         // skill khác (effect.projectileBehavior undefined với Thổ Cầu).
         const behavior =
-          effect.earthPureProjectileBehavior && source.stats.earthAoeRadius > 0
+          effect.earthPureProjectileBehavior && getSkillRuntimeStat(source, 'earthAoeRadius') > 0
             ? {
-                aoeRadius: source.stats.earthAoeRadius,
-                aoeSecondaryDamagePercent: source.stats.earthAoeSecondaryDamagePercent,
-                knockbackDistance: source.stats.earthKnockbackDistance,
+                aoeRadius: getSkillRuntimeStat(source, 'earthAoeRadius'),
+                aoeSecondaryDamagePercent: getSkillRuntimeStat(source, 'earthAoeSecondaryDamagePercent'),
+                knockbackDistance: getSkillRuntimeStat(source, 'earthKnockbackDistance'),
               }
             : effect.projectileBehavior
 
@@ -151,7 +152,7 @@ export class SkillEffectSystem {
           if (stacks > 0) {
             const bonusDamage = stacks * effect.damagePerStack
 
-            target.currentHp = Math.max(0, target.currentHp - bonusDamage)
+            ctx.combatSystem.applyDirectDamage(target, bonusDamage, source.id, 'damage')
 
             ctx.targetAilments.remove(effect.consumesAilmentId)
 
@@ -160,7 +161,7 @@ export class SkillEffectSystem {
             // Lifedrain (Mộc Tu) — hồi máu SOURCE bằng % bonus damage
             // vừa gây, xem SkillEffect.ts's ghi chú.
             if (effect.healPercentOfDamage) {
-              source.currentHp = Math.min(source.maxHp, source.currentHp + bonusDamage * effect.healPercentOfDamage)
+              ctx.combatSystem.applyHealing(source, bonusDamage * effect.healPercentOfDamage, source.id, 'leech')
             }
           }
         }
@@ -174,16 +175,14 @@ export class SkillEffectSystem {
 
           source.currentWard = 0
 
-          target.currentHp = Math.max(0, target.currentHp - wardBonusDamage)
-
-          ctx.combatSystem.killIfDead(target, source.id)
+          ctx.combatSystem.applyDirectDamage(target, wardBonusDamage, source.id, 'ward_break')
         }
 
         break
       }
 
       case 'heal':
-        target.currentHp = Math.min(target.maxHp, target.currentHp + (effect.value ?? 0))
+        ctx.combatSystem.applyHealing(target, effect.value ?? 0, source.id, 'healing')
         break
 
       case 'buff':
@@ -213,10 +212,11 @@ export class SkillEffectSystem {
           // Kim Tu Trúc Cơ Pure ("Kim Thế" major, Plans/KimPath mục
           // 9/11, 2026-08-21) — CHỈ tích khi roll THÀNH CÔNG (đã ở
           // trong nhánh này), nền 0 nếu chưa mua "Kim Thế".
-          if (effect.grantsKimThePerProc && source.stats.kimTheGainPerProc > 0) {
+          const kimTheGain = getSkillRuntimeStat(source, 'kimTheGainPerProc')
+          if (effect.grantsKimThePerProc && kimTheGain > 0) {
             source.currentKimThe = Math.min(
-              MAX_KIM_THE + source.stats.kimTheMaxStacksBonus,
-              source.currentKimThe + source.stats.kimTheGainPerProc,
+              MAX_KIM_THE + getSkillRuntimeStat(source, 'kimTheMaxStacksBonus'),
+              source.currentKimThe + kimTheGain,
             )
 
             source.timeSinceLastBleedProc = 0
@@ -229,18 +229,20 @@ export class SkillEffectSystem {
           // đúng invariant Phase 16) rồi trigger 1 burst damage MỘT
           // LẦN lên target qua ĐÚNG pipeline DOT RES (applyDotDamage()),
           // effectId 'huyet_pha_burst' để phân biệt với tick DoT thường.
-          if (effect.grantsHuyetPhaPerProc && source.stats.huyetPhaGainPerProc > 0) {
-            const nextCharge = (source.currentHuyetPha ?? 0) + source.stats.huyetPhaGainPerProc
+          const huyetPhaGain = getSkillRuntimeStat(source, 'huyetPhaGainPerProc')
+          if (effect.grantsHuyetPhaPerProc && huyetPhaGain > 0) {
+            const nextCharge = (source.currentHuyetPha ?? 0) + huyetPhaGain
 
             if (nextCharge >= MAX_HUYET_PHA) {
               source.currentHuyetPha = 0
 
-              if (source.stats.huyetPhaBurstDamage > 0) {
+              const burstDamage = getSkillRuntimeStat(source, 'huyetPhaBurstDamage')
+              if (burstDamage > 0) {
                 ctx.combatSystem.applyDotDamage({
                   sourceId: source.id,
                   source,
                   target,
-                  rawDamage: source.stats.huyetPhaBurstDamage,
+                  rawDamage: burstDamage,
                   element: 'metal',
                   effectId: 'huyet_pha_burst',
                 })

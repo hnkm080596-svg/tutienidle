@@ -2,6 +2,7 @@ import { usePlayerStore } from '../stores/player'
 import { useUiStore } from '../stores/ui'
 import { useGameManager, useStateVersion } from './useGameState'
 import type { Stage } from '../core/stage/Stage'
+import type { BattleRunMode } from '../stores/ui'
 
 /**
  * Trước đây chỉ gọi được qua debug hook/console (fightWolf() cục bộ
@@ -30,9 +31,11 @@ export function useBattleActions() {
   function startBattle(stage: Stage) {
     // finalStats (từ store) đã cộng đủ modifiers + externalModifiers,
     // GameManager chỉ nhận và convert sang CombatEntity, không tính lại.
-    gameManager.startStage(player.$state, player.finalStats, stage)
+    const started = gameManager.startStage(player.$state, player.finalStats, stage, ui.battleRunMode === 'repeat')
 
     bumpState()
+
+    return started
   }
 
   /**
@@ -41,7 +44,7 @@ export function useBattleActions() {
    * chọn cho Auto-refight (xem App.vue's fightStage()), đóng panel để
    * quay lại Home Scene xem trận đấu diễn ra.
    */
-  function startSelectedStage(zoneId: string, stage: Stage, mode: 'repeat' | 'auto') {
+  function startSelectedStage(zoneId: string, stage: Stage, mode: BattleRunMode) {
     // isCultivating giờ SUY RA từ isFighting mỗi tick (App.vue's tick()),
     // KHÔNG cần set tay ở đây nữa — nhưng vẫn emit NGAY để pose ngồi
     // thiền tắt tức thời lúc bấm "Bắt Đầu", không đợi tick kế tiếp.
@@ -49,11 +52,11 @@ export function useBattleActions() {
 
     ui.selectedZoneId = zoneId
     ui.selectedStageId = stage.id
-    ui.explorationMode = mode
+    ui.battleRunMode = mode
     ui.leftPanelMode = null
     ui.enterCombatScene('stage')
 
-    startBattle(stage)
+    return startBattle(stage)
   }
 
   return { startBattle, startSelectedStage }

@@ -19,14 +19,18 @@ export interface Stage {
 
   requiredRealmId?: string
 
-  // Luyện Khí tầng 1-10 content pass (2026-08-14) — gate MỊN hơn
-  // requiredRealmId (chỉ phân biệt đại-cảnh-giới): tầng CỤ THỂ trong
-  // CHÍNH requiredRealmId đó. Chỉ có ý nghĩa khi player ĐANG ở đúng
-  // requiredRealmId — nếu player đã vượt qua hẳn đại-cảnh-giới này rồi
-  // thì field này bị bỏ qua (xem StageSelectPanel.vue's
-  // isStageUnlocked()). Không khai = mở ngay tầng 1 (giữ nguyên hành
-  // vi stage duy nhất trước đây).
+  // Luyện Khí tầng 1-10 content pass (2026-08-14) — CHỈ còn dùng để
+  // HIỂN THỊ số "Tầng N" (xem StageSelectPanel.vue). Gate mở/khoá THẬT
+  // SỰ chạy hoàn toàn qua GameManager.isStageUnlocked() (thứ tự
+  // zone.stageIds + player.completedStageIds) — field này KHÔNG được
+  // đọc bởi logic gate; đổi thứ tự stage trong Zones.ts thì nhớ đồng
+  // bộ số hiển thị ở đây theo, không tự khớp.
   requiredRealmLevel?: number
+
+  // One zone contains three realm chapters; every chapter has ten floors.
+  chapter?: number
+
+  floor?: number
 
   enemyPool: StageEnemyEntry[]
 

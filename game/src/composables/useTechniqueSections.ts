@@ -1,5 +1,5 @@
 import type { Technique } from '@/core/technique/Technique'
-import { getTechniqueTier } from '@/core/technique/TechniqueTier'
+import { getTechniqueInsightTotalRequired, getTechniqueTier } from '@/core/technique/TechniqueTier'
 import { statLabel } from '@/core/stats/StatLabels'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { COMBAT_TECHNIQUE_TYPES } from '@/data/technique/CombatTechniqueTypes'
@@ -19,7 +19,7 @@ import type { GameManager } from '@/core/game/GameManager'
 export function buildTechniqueSections(
   technique: Technique,
   gameManager: GameManager,
-  techniqueExperience: number,
+  techniqueInsight: number,
 ): TooltipSection[] {
   const sections: TooltipSection[] = []
 
@@ -52,7 +52,9 @@ export function buildTechniqueSections(
     combatRows.push({ label: 'Nguồn lực', value: 'Kiếm Ý (0-9999), không dùng Nộ Khí' })
   }
 
-  const tierEffect = technique.tierEffects?.[getTechniqueTier(techniqueExperience)]
+  const tierEffect = technique.tierEffects?.[
+    getTechniqueTier(techniqueInsight, getTechniqueInsightTotalRequired(technique))
+  ]
 
   if (tierEffect) {
     if (tierEffect.attackFlat !== undefined) {

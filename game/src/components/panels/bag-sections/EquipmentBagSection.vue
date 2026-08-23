@@ -9,6 +9,8 @@ import type { BagCell } from './BagCell'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
 import { useBagGridLayout } from '@/composables/useBagGridLayout'
+import { qualityRank, phamRank } from '@/composables/slots/normalizeSlotRank'
+import type { SlotPresentationState } from '@/components/common/SlotTypes'
 
 // Grid responsive theo chiều rộng thật — xem ghi chú đầy đủ ở
 // useBagGridLayout.ts/MaterialBagSection.vue (cùng pattern áp cho cả
@@ -77,14 +79,26 @@ const cells = computed<BagCell[]>(() => {
 
   return instances.map(instance => {
     const template = gameManager.equipmentRegistry.get(instance.itemId)
+    const equippedComparison = gameManager.equipmentBag.getEquippedInSlot(instance.slot)
 
     // Tên ghép động (2026-08-15) — Phẩm · Set (nếu có) · Địa Giới+Tên
     // gốc, xem EquipmentNaming.ts. "(đang mặc)" nối thêm làm segment
     // riêng (màu mặc định), giữ nguyên hành vi cũ.
-    const nameSegments = composeEquipmentNameSegments(instance, template, gameManager.zoneRegistry, gameManager.equipmentSetRegistry)
+    const nameSegments = composeEquipmentNameSegments(instance, template, gameManager.zoneRegistry)
 
     if (instance.equipped) {
       nameSegments.push({ text: '(đang mặc)' })
+    }
+
+    // Slot Revamp (mục 17.7 "Equipment bag: Quality, Rarity, equipped,
+    // comparison") — equipped chỉ là marker nhỏ (không đổi nền). So sánh
+    // chi tiết hiện chỉ được lộ trong tooltip advanced khi giữ Alt; chưa có
+    // nút/toggle bật mũi tên ▲/▼ trực tiếp trên slot. Vì vậy không tự gán
+    // state.comparison cho tới khi UX toggle đó được thiết kế và triển khai.
+    const state: SlotPresentationState = {}
+
+    if (instance.equipped) {
+      state.marker = 'equipped'
     }
 
     return {
@@ -96,13 +110,11 @@ const cells = computed<BagCell[]>(() => {
 
       description: template.description,
 
-      // Khớp thẳng token --rarity-${quality} trong assets/theme.css
-      // (đặt tên trùng EquipmentQuality union nên không cần map).
-      rarity: instance.quality,
+      qualityRank: qualityRank(instance.quality),
 
-      // Trục Item Rarity độc lập (Normal/Magic/Rare/Exalted/Unique) —
-      // khớp token --item-rarity-${rarity}.
-      itemRarity: instance.rarity,
+      rarityRank: phamRank(instance.rarity),
+
+      state,
 
       // slotState (Cường Hóa/Trận Pháp/Phù Chú) gắn theo SLOT chứ
       // không theo instance (xem EquipmentSlotState.ts) — chỉ có ý
@@ -116,10 +128,10 @@ const cells = computed<BagCell[]>(() => {
         gameManager.formationRegistry,
         gameManager.talismanRegistry,
         gameManager.zoneRegistry,
-        gameManager.equipmentSetRegistry,
+        equippedComparison,
       ),
 
-      itemIcon: template.icon,
+      icon: instance.icon ?? template.icon,
 
       onClick: () => handleClick(instance.instanceId),
     }
@@ -141,10 +153,11 @@ const { currentPage, totalPages, goToPage, gridCells } = useBagPagination(cells,
         :name-segments="cell?.nameSegments"
         :description="cell?.description"
         :amount="cell?.amount"
-        :rarity="cell?.rarity"
-        :item-rarity="cell?.itemRarity"
+        :quality-rank="cell?.qualityRank"
+        :rarity-rank="cell?.rarityRank"
+        :state="cell?.state"
         :tooltip="cell?.tooltip"
-        :item-icon="cell?.itemIcon"
+        :icon="cell?.icon"
         @click="cell?.onClick?.()"
       />
     </div>

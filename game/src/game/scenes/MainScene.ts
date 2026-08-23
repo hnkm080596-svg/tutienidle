@@ -77,6 +77,7 @@ export class MainScene extends Phaser.Scene {
 
   private eventBus?: EventBus
   private battleStartHandler = () => this.onBattleStart()
+  private tribulationStartHandler = () => this.scene.start('TribulationScene')
   private cultivationHandler = (event: CultivationStateEvent) => this.onCultivationChanged(event)
 
   private canvasWidth = 0
@@ -95,8 +96,13 @@ export class MainScene extends Phaser.Scene {
     // (xem asset-drop/idle.json's `textures[0].image`), multiatlas() tự
     // đọc field đó rồi ghép với `path` (tham số 3) để tìm ảnh, atlas()
     // thì bắt buộc truyền tay 1 textureURL nên không khớp shape này.
-    this.load.multiatlas(IDLE_KEY, 'assets/idle.json', 'assets')
-    this.load.multiatlas(CULTIVATE_KEY, 'assets/cultivate.json', 'assets')
+    if (!this.textures.exists(IDLE_KEY)) {
+      this.load.multiatlas(IDLE_KEY, 'assets/idle.json', 'assets')
+    }
+
+    if (!this.textures.exists(CULTIVATE_KEY)) {
+      this.load.multiatlas(CULTIVATE_KEY, 'assets/cultivate.json', 'assets')
+    }
   }
 
   create() {
@@ -110,19 +116,23 @@ export class MainScene extends Phaser.Scene {
     // 17 frame mỗi atlas, đặt tên frame_000.png..frame_016.png (xác
     // nhận qua asset-drop/idle.json/cultivate.json) — Sprite (khác
     // Rectangle) đã mặc định setOrigin(0.5), không cần chỉnh tay.
-    this.anims.create({
-      key: IDLE_KEY,
-      frames: this.anims.generateFrameNames(IDLE_KEY, { prefix: 'frame_', suffix: '.png', start: 0, end: 16, zeroPad: 3 }),
-      frameRate: ANIMATION_FRAME_RATE,
-      repeat: -1,
-    })
+    if (!this.anims.exists(IDLE_KEY)) {
+      this.anims.create({
+        key: IDLE_KEY,
+        frames: this.anims.generateFrameNames(IDLE_KEY, { prefix: 'frame_', suffix: '.png', start: 0, end: 16, zeroPad: 3 }),
+        frameRate: ANIMATION_FRAME_RATE,
+        repeat: -1,
+      })
+    }
 
-    this.anims.create({
-      key: CULTIVATE_KEY,
-      frames: this.anims.generateFrameNames(CULTIVATE_KEY, { prefix: 'frame_', suffix: '.png', start: 0, end: 16, zeroPad: 3 }),
-      frameRate: ANIMATION_FRAME_RATE,
-      repeat: -1,
-    })
+    if (!this.anims.exists(CULTIVATE_KEY)) {
+      this.anims.create({
+        key: CULTIVATE_KEY,
+        frames: this.anims.generateFrameNames(CULTIVATE_KEY, { prefix: 'frame_', suffix: '.png', start: 0, end: 16, zeroPad: 3 }),
+        frameRate: ANIMATION_FRAME_RATE,
+        repeat: -1,
+      })
+    }
 
     const sprite = this.add.sprite(0, 0, IDLE_KEY, 'frame_000.png').play(IDLE_KEY)
     const label = this.add.text(0, 0, 'Player', { fontSize: '14px', color: '#ffffff' }).setOrigin(0.5, 0)
@@ -213,6 +223,7 @@ export class MainScene extends Phaser.Scene {
     this.eventBus = eventBus
 
     eventBus.on<void>('battle_start', this.battleStartHandler)
+    eventBus.on<void>('tribulation_started', this.tribulationStartHandler)
     eventBus.on<CultivationStateEvent>('cultivation_changed', this.cultivationHandler)
   }
 
@@ -222,6 +233,7 @@ export class MainScene extends Phaser.Scene {
     }
 
     this.eventBus.off<void>('battle_start', this.battleStartHandler)
+    this.eventBus.off<void>('tribulation_started', this.tribulationStartHandler)
     this.eventBus.off<CultivationStateEvent>('cultivation_changed', this.cultivationHandler)
   }
 

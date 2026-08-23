@@ -52,6 +52,8 @@ export type ScripturePavilionTab = 'technique' | 'lore'
 // mở qua nút "Quán Khí" bên cạnh Đột Phá thay vì liệt kê thẳng.
 export type StandalonePanel = 'skill' | 'technique' | 'realm_passive' | 'luyen_the' | 'quan_khi' | null
 
+export type BattleRunMode = 'manual' | 'repeat' | 'progress'
+
 export const useUiStore = defineStore('ui', {
   state: () => ({
     leftPanelMode: null as LeftPanelMode,
@@ -84,7 +86,7 @@ export const useUiStore = defineStore('ui', {
 
     isPaused: false,
 
-    isAuto: false,
+    battleRunMode: 'manual' as BattleRunMode,
 
     // Auto Đột Phá tiểu cảnh giới (2026-08-20) — tick user tự bấm, App.vue's
     // tick() tự gọi breakthrough() thay người chơi mỗi khi tu vi đủ (xem
@@ -93,6 +95,10 @@ export const useUiStore = defineStore('ui', {
     // vật phẩm + xác nhận Độ Kiếp, không phù hợp tự động). Transient (KHÔNG
     // lưu save) — cùng nhóm isPaused/isAuto.
     isAutoBreakthrough: false,
+
+    // Tự tiêu Tinh Hoa Phàm Thể vừa nhặt vào tầng Luyện Thể đang mở.
+    // Transient theo phiên, giống các toggle auto khác.
+    isAutoConsumeTinhHoa: false,
 
     // Thám Hiểm rework — Địa Giới + Màn đang chọn để đánh (App.vue's
     // fightStage() đọc 2 field này thay vì hardcode STAGES[0]) + chế
@@ -104,8 +110,6 @@ export const useUiStore = defineStore('ui', {
     selectedZoneId: null as string | null,
 
     selectedStageId: null as string | null,
-
-    explorationMode: 'repeat' as 'repeat' | 'auto',
 
     // Combat UI Redesign — battle vẫn "sticky" ở state victory/defeat
     // (xem BattleSystem) cho tới khi trận mới ghi đè, nên
@@ -125,6 +129,7 @@ export const useUiStore = defineStore('ui', {
     // nhưng KHÔNG hiện CombatResultModal (tránh hiện 2 lớp kết quả chồng
     // nhau). null = chưa từng có trận nào.
     combatOrigin: null as 'stage' | 'tribulation' | null,
+    isTribulationSceneActive: false,
   }),
 
   actions: {
@@ -157,12 +162,20 @@ export const useUiStore = defineStore('ui', {
       this.isPaused = !this.isPaused
     },
 
-    toggleAuto() {
-      this.isAuto = !this.isAuto
+    setPaused(paused: boolean) {
+      this.isPaused = paused
+    },
+
+    setBattleRunMode(mode: BattleRunMode) {
+      this.battleRunMode = mode
     },
 
     toggleAutoBreakthrough() {
       this.isAutoBreakthrough = !this.isAutoBreakthrough
+    },
+
+    toggleAutoConsumeTinhHoa() {
+      this.isAutoConsumeTinhHoa = !this.isAutoConsumeTinhHoa
     },
 
     // Combat UI Redesign — gọi bởi CombatVictoryPanel's "Tiếp Tục" (khi
@@ -171,11 +184,23 @@ export const useUiStore = defineStore('ui', {
     // this.scene.start('MainScene'), xem CombatResultModal.vue.
     exitCombatScene() {
       this.combatSceneDismissed = true
+      this.isPaused = false
     },
 
     enterCombatScene(origin: 'stage' | 'tribulation') {
+      this.isPaused = false
       this.combatSceneDismissed = false
       this.combatOrigin = origin
+    },
+    enterTribulationScene() {
+      // Scene Độ Kiếp không có nút Play/Pause. Không cho một flag pause cũ
+      // từ trận Stage khiến kiếp nạn bị đóng băng vĩnh viễn.
+      this.isPaused = false
+      this.isTribulationSceneActive = true
+    },
+    exitTribulationScene() {
+      this.isPaused = false
+      this.isTribulationSceneActive = false
     },
   },
 })

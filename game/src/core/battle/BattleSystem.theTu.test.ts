@@ -40,7 +40,7 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 'ground',
+    lane: 2,
     alive: true,
     ...overrides,
   }
@@ -117,6 +117,7 @@ describe('BattleSystem — Thể Tu Momentum/Break engine (Combat Rework Phase 7
     const enemy = createCombatant({ id: 'enemy' })
 
     system.start(player, enemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
 
     // start() luôn đặt lại x = HERO_HOME_X/ENEMY_SPAWN_X (400) — set lại
     // TRỰC TIẾP sau đó để quãng đường bay ngắn, dễ tính số tick cần.
@@ -139,6 +140,7 @@ describe('BattleSystem — Thể Tu Momentum/Break engine (Combat Rework Phase 7
     const boss = createCombatant({ id: 'boss', breakGaugeMax: 50, currentBreakGauge: 50 })
 
     system.start(player, boss)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
 
     boss.x = 50
 

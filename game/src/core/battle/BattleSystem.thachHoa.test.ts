@@ -43,7 +43,7 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 'ground',
+    lane: 2,
     alive: true,
     ...overrides,
   }
@@ -115,6 +115,7 @@ describe('BattleSystem — Thạch Hóa on-hit Choáng (Plans/magicpathgeneral)'
     const enemy = createCombatant({ id: 'enemy', x: 50, currentHp: 1000000, maxHp: 1000000 })
 
     system.start(player, enemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
     enemy.x = 50
 
     // Đủ thời gian cho ÍT NHẤT 2 lần cast trúng đích thật (missile bay
@@ -137,6 +138,7 @@ describe('BattleSystem — Thạch Hóa on-hit Choáng (Plans/magicpathgeneral)'
     const enemy = createCombatant({ id: 'enemy', x: 50, currentHp: 1000000, maxHp: 1000000 })
 
     system.start(player, enemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
     enemy.x = 50
 
     for (let i = 0; i < 250; i++) {

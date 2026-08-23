@@ -10,6 +10,7 @@ import { EventBus } from '../events/EventBus'
 import { MissileSystem } from '../combat/missile/MissileSystem'
 import { MissileManager } from '../combat/missile/MissileManager'
 import { createBaseStats } from '../stats/StatBlock'
+import { createSkillRuntimeStats } from '../skill/SkillRuntimeStats'
 import { ailments } from '../../data/ailment/ailments'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
@@ -40,7 +41,7 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 'ground',
+    lane: 2,
     alive: true,
     ...overrides,
   }
@@ -109,6 +110,7 @@ describe('BattleSystem — Huyết Phá (Plans/magicpathgeneral Phase 13)', () =
     const enemy = createCombatant({ id: 'enemy', x: 50 })
 
     system.start(player, enemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
 
     for (let i = 0; i < 320; i++) {
       tick(0.01)
@@ -122,13 +124,15 @@ describe('BattleSystem — Huyết Phá (Plans/magicpathgeneral Phase 13)', () =
 
     const player = createCombatant({ id: 'player', type: 'player', x: 0 })
 
-    player.stats.huyetPhaGainPerProc = 1
+    player.skillStats = { ...createSkillRuntimeStats(), huyetPhaGainPerProc: 1 }
     // kimTheGainPerProc CỐ TÌNH để 0 — chứng minh 2 counter tách biệt
     // hoàn toàn, không tăng chung.
 
     const enemy = createCombatant({ id: 'enemy', x: 50 })
 
     system.start(player, enemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
+    enemy.x = 50 // start() ghi đè x=400 > SCREEN_VISIBLE_MAX_X(350) — đặt lại trong tầm nhìn.
 
     // remainingCooldown khởi tạo 0 -> cast NGAY ở t=0, rồi mỗi 1s tiếp
     // theo (attackSpeed mặc định 1) -> t=0,1,2 = 3 lần cast trong 2.5s
@@ -147,14 +151,15 @@ describe('BattleSystem — Huyết Phá (Plans/magicpathgeneral Phase 13)', () =
 
     const player = createCombatant({ id: 'player', type: 'player', x: 0 })
 
-    player.stats.huyetPhaGainPerProc = 1
-    player.stats.huyetPhaBurstDamage = 100
+    player.skillStats = { ...createSkillRuntimeStats(), huyetPhaGainPerProc: 1, huyetPhaBurstDamage: 100 }
 
     const enemy = createCombatant({ id: 'enemy', x: 50, currentHp: 1000, maxHp: 1000 })
 
     enemy.stats.dotResistancePercent = 0.2
 
     system.start(player, enemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
+    enemy.x = 50 // start() ghi đè x=400 > SCREEN_VISIBLE_MAX_X(350) — đặt lại trong tầm nhìn.
 
     // t=0,1,2,3,4 = ĐÚNG 5 lần cast trong 4.5s (dừng TRƯỚC lần cast
     // thứ 6 ở t=5) — chạm MAX_HUYET_PHA đúng ở lần cast thứ 5, burst
@@ -185,7 +190,7 @@ describe('BattleSystem — Huyết Phá (Plans/magicpathgeneral Phase 13)', () =
 
     const player = createCombatant({ id: 'player', type: 'player', x: 0 })
 
-    player.stats.huyetPhaGainPerProc = 1
+    player.skillStats = { ...createSkillRuntimeStats(), huyetPhaGainPerProc: 1 }
     // huyetPhaBurstDamage nền 0 — node "Huyết Phá" cấp CẢ HAI stat cùng
     // lúc trong data thật, nhưng engine phải xử lý đúng dù 1 trong 2
     // stat vẫn 0 (test riêng phần logic, không phụ thuộc data node).
@@ -193,6 +198,8 @@ describe('BattleSystem — Huyết Phá (Plans/magicpathgeneral Phase 13)', () =
     const enemy = createCombatant({ id: 'enemy', x: 50, currentHp: 1000, maxHp: 1000 })
 
     system.start(player, enemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
+    enemy.x = 50 // start() ghi đè x=400 > SCREEN_VISIBLE_MAX_X(350) — đặt lại trong tầm nhìn.
 
     // Cùng timing 4.5s/5 lần cast như test trên.
     for (let i = 0; i < 450; i++) {

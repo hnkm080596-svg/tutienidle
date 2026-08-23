@@ -40,7 +40,7 @@ function createPlayer(): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 'ground',
+    lane: 2,
     alive: true,
   }
 }
@@ -89,6 +89,7 @@ describe('GameManager.updateBossSummons (Combat Rework Phase 4 — Boss Mechanic
     })
 
     gameManager.startBattle(createPlayer(), boss)
+    gameManager.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
 
     expect(gameManager.getBattle()!.enemies).toHaveLength(1)
 
@@ -128,6 +129,7 @@ describe('GameManager.updateBossSummons (Combat Rework Phase 4 — Boss Mechanic
     })
 
     gameManager.startBattle(createPlayer(), boss)
+    gameManager.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
 
     expect(() => gameManager.update(0.016)).not.toThrow()
 

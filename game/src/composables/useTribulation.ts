@@ -7,6 +7,7 @@ import { FOUNDATION_LABELS, type FoundationType } from '../core/breakthrough/Fou
 import type { GameManager, ActiveTribulation } from '../core/game/GameManager'
 import { useWorldAnnouncementStore } from '../stores/worldAnnouncement'
 import { useUiStore } from '../stores/ui'
+import { isBattleInProgress } from '../core/battle/BattleTypes'
 
 // Trảm gate (blockIfNoBasicAttack, 2026-08-20 → gỡ 2026-08-21) — Pháp
 // Tu giờ tự học + trang bị SẴN 1 chiêu cơ bản (Hỏa Cầu Thuật) ngay lúc
@@ -35,9 +36,13 @@ const TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS = 50
  * phải gọi thẳng hàm này với gameManager/player nó đã có sẵn).
  */
 export function triggerFoundationBreakthroughAction(player: PlayerStore, gameManager: GameManager): boolean {
+  if (!gameManager.canTriggerFoundationBreakthrough(player.$state)) {
+    return false
+  }
+
   const battle = gameManager.getBattle()
 
-  if (battle && battle.state === 'fighting') {
+  if (battle && isBattleInProgress(battle.state)) {
     return false
   }
 
@@ -53,7 +58,7 @@ export function triggerFoundationBreakthroughAction(player: PlayerStore, gameMan
   const started = gameManager.startTribulation(player.$state, player.finalStats, 'foundation', foundationType)
 
   if (started) {
-    useUiStore().enterCombatScene('tribulation')
+    useUiStore().enterTribulationScene()
   }
 
   return started
@@ -68,18 +73,39 @@ export function triggerFoundationBreakthroughAction(player: PlayerStore, gameMan
  * (BreakthroughRequirementPanel.vue) tự resolve trước khi gọi.
  */
 export function triggerRealmBreakthroughAction(targetRealmId: string, player: PlayerStore, gameManager: GameManager): boolean {
+  if (!gameManager.canTriggerRealmBreakthrough(player.$state)) {
+    return false
+  }
+
   const battle = gameManager.getBattle()
 
-  if (battle && battle.state === 'fighting') {
+  if (battle && isBattleInProgress(battle.state)) {
     return false
   }
 
   const started = gameManager.startTribulation(player.$state, player.finalStats, targetRealmId)
 
   if (started) {
-    useUiStore().enterCombatScene('tribulation')
+    useUiStore().enterTribulationScene()
   }
 
+  return started
+}
+
+export function triggerQuanKhiAction(player: PlayerStore, gameManager: GameManager): boolean {
+  if (player.realmId !== 'pham_nhan' || player.cultivationPath || player.realmLevel < 12) {
+    return false
+  }
+
+  const battle = gameManager.getBattle()
+  if (battle && isBattleInProgress(battle.state)) {
+    return false
+  }
+
+  const started = gameManager.startTribulation(player.$state, player.finalStats, 'qi_refining')
+  if (started) {
+    useUiStore().enterTribulationScene()
+  }
   return started
 }
 
@@ -100,7 +126,7 @@ export function checkTribulationOutcomeAction(player: PlayerStore, gameManager: 
 
   const battle = gameManager.getBattle()
 
-  if (!battle || battle.state === 'fighting') {
+  if (!battle || isBattleInProgress(battle.state)) {
     return false
   }
 
@@ -111,12 +137,20 @@ export function checkTribulationOutcomeAction(player: PlayerStore, gameManager: 
   }
 
   gameManager.clearActiveTribulation()
+  useUiStore().exitTribulationScene()
+  gameManager.eventBus.emit('tribulation_scene_exit', undefined)
 
   return true
 }
 
 function resolveVictory(player: PlayerStore, gameManager: GameManager, active: ActiveTribulation) {
   const realm = getCurrentRealm(active.targetRealmId)
+
+  if (active.targetRealmId === 'qi_refining') {
+    useUiStore().standalonePanel = 'quan_khi'
+    useWorldAnnouncementStore().show('QUÁN KHÍ THÀNH CÔNG', 'Đạo hữu đã vượt lôi kiếp — hãy chọn con đường tu luyện để bước vào Luyện Khí kỳ.')
+    return
+  }
 
   player.realmId = active.targetRealmId
   player.realmLevel = 1
@@ -128,8 +162,6 @@ function resolveVictory(player: PlayerStore, gameManager: GameManager, active: A
 
   gameManager.syncRealmPassive(player.$state)
   gameManager.syncRealmStatPassive(player.$state)
-
-  gameManager.syncSkillLevelToRealm(player.$state)
 
   // Beta Phase 4 (World Announcement, mục XVI tài liệu) — "discovery
   // moment" reveal Căn Cơ vừa đạt (Trúc Cơ) hoặc đơn giản là cảnh giới
@@ -174,6 +206,7 @@ export function useTribulation() {
   return {
     triggerFoundationBreakthrough: () => triggerFoundationBreakthroughAction(player, gameManager),
     triggerRealmBreakthrough: (targetRealmId: string) => triggerRealmBreakthroughAction(targetRealmId, player, gameManager),
+    triggerQuanKhi: () => triggerQuanKhiAction(player, gameManager),
     checkTribulationOutcome: () => checkTribulationOutcomeAction(player, gameManager),
   }
 }

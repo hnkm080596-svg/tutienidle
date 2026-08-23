@@ -316,7 +316,9 @@ export const SKILLS: Skill[] = [
 
     remainingCooldown: 0,
 
-    cost: 0,
+    cost: 8,
+
+    castTime: 1.2,
 
     target: 'enemy',
 
@@ -363,7 +365,7 @@ export const SKILLS: Skill[] = [
     // (0 nếu chưa mua "Tụ Hỏa"), xem BattleSystem.castSkill().
     grantsHoaThePerCast: true,
 
-    resourceType: 'none',
+    resourceType: 'mana',
 
     buildTag: 'dot',
 
@@ -403,7 +405,9 @@ export const SKILLS: Skill[] = [
 
     remainingCooldown: 0,
 
-    cost: 0,
+    cost: 8,
+
+    castTime: 1.2,
 
     target: 'enemy',
 
@@ -417,9 +421,9 @@ export const SKILLS: Skill[] = [
       },
     ],
 
-    // Skill tree redesign (2026-08-21) — root node của Mộc tree, chiếm
-    // 1 slot Loadout bình thường (xem hoa_cau_thuat's ghi chú).
-    resourceType: 'none',
+      // Skill tree redesign (2026-08-21) — root node của Mộc tree, chiếm
+      // 1 slot Loadout bình thường (xem hoa_cau_thuat's ghi chú).
+    resourceType: 'mana',
 
     buildTag: 'core',
 
@@ -455,7 +459,9 @@ export const SKILLS: Skill[] = [
 
     remainingCooldown: 0,
 
-    cost: 0,
+    cost: 8,
+
+    castTime: 1.2,
 
     target: 'enemy',
 
@@ -492,9 +498,9 @@ export const SKILLS: Skill[] = [
     // thường và chạy qua updateAutoCast() như mọi skill khác — KHÔNG
     // còn isBasicAttack (đó là cơ chế "đóng khung" dành riêng cho
     // Phàm Nhân/Kiếm Tu, xem basic_strike/ngu_kiem_thuat). Điểm khác
-    // biệt DUY NHẤT của Hỏa Cầu Thuật với 4 hành kia là được tự học +
-    // trang bị sẵn (cost 0, xem GameManager.chooseCultivationPath()).
-    resourceType: 'none',
+      // biệt DUY NHẤT của Hỏa Cầu Thuật với 4 hành kia là được tự học +
+      // trang bị sẵn (cost 0, xem GameManager.chooseCultivationPath()).
+    resourceType: 'mana',
 
     buildTag: 'core',
 
@@ -533,7 +539,9 @@ export const SKILLS: Skill[] = [
 
     remainingCooldown: 0,
 
-    cost: 0,
+    cost: 8,
+
+    castTime: 1.2,
 
     target: 'enemy',
 
@@ -572,9 +580,9 @@ export const SKILLS: Skill[] = [
       },
     ],
 
-    // Skill tree redesign (2026-08-21) — root node của Kim tree, chiếm
-    // 1 slot Loadout bình thường (xem hoa_cau_thuat's ghi chú).
-    resourceType: 'none',
+      // Skill tree redesign (2026-08-21) — root node của Kim tree, chiếm
+      // 1 slot Loadout bình thường (xem hoa_cau_thuat's ghi chú).
+    resourceType: 'mana',
 
     buildTag: 'core',
 
@@ -615,7 +623,9 @@ export const SKILLS: Skill[] = [
 
     remainingCooldown: 0,
 
-    cost: 0,
+    cost: 8,
+
+    castTime: 1.2,
 
     target: 'enemy',
 
@@ -645,9 +655,9 @@ export const SKILLS: Skill[] = [
       },
     ],
 
-    // Skill tree redesign (2026-08-21) — root node của Thổ tree, chiếm
-    // 1 slot Loadout bình thường (xem hoa_cau_thuat's ghi chú).
-    resourceType: 'none',
+      // Skill tree redesign (2026-08-21) — root node của Thổ tree, chiếm
+      // 1 slot Loadout bình thường (xem hoa_cau_thuat's ghi chú).
+    resourceType: 'mana',
 
     buildTag: 'core',
 

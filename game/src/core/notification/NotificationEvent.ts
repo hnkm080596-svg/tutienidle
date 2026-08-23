@@ -6,8 +6,22 @@
 // notificationStore, không cần type này.
 export type NotificationKind = 'loot' | 'craft' | 'upgrade' | 'error' | 'warning' | 'save'
 
+import type { NameSegment } from '../item/NameSegment'
+
+export interface LootNotificationPresentation {
+  icon?: string
+
+  nameSegments: NameSegment[]
+
+  amountLabel?: string
+
+  accentColorVar?: string
+}
+
 export interface NotificationEvent {
   kind: NotificationKind
 
   message: string
+
+  loot?: LootNotificationPresentation
 }

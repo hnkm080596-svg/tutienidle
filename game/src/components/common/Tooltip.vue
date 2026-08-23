@@ -1,217 +1,244 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { autoUpdate, flip, offset, shift, size, useFloating } from '@floating-ui/vue'
 import { useTooltip } from '@/composables/useTooltip'
-import { TOOLTIP_BACKDROP_PATH } from '@/core/assets/AssetPaths'
+import type { EquipmentTooltipContent, GradedItemTooltipContent, TechniqueTooltipContent } from '@/composables/useTooltip'
+import { phamRank, qualityRank } from '@/composables/slots/normalizeSlotRank'
+import type { EquipmentQuality } from '@/core/equipment/EquipmentQuality'
+import type { Pham } from '@/core/item/Pham'
 
-const { content, position } = useTooltip()
+const { content, reference } = useTooltip()
+const floating = ref<HTMLElement | null>(null)
+const open = computed(() => content.value !== null)
+const isInspectModifierHeld = ref(false)
 
-// Lệch khỏi con trỏ chuột 1 chút để không che chính element đang hover.
-const style = computed(() => ({
-  left: `${position.value.x + 16}px`,
-  top: `${position.value.y + 16}px`,
-}))
+function updateInspectModifier(event: KeyboardEvent) {
+  isInspectModifierHeld.value = event.altKey
+}
+
+function clearInspectModifier() {
+  isInspectModifierHeld.value = false
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', updateInspectModifier)
+  window.addEventListener('keyup', updateInspectModifier)
+  window.addEventListener('blur', clearInspectModifier)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', updateInspectModifier)
+  window.removeEventListener('keyup', updateInspectModifier)
+  window.removeEventListener('blur', clearInspectModifier)
+})
+
+const visibleSections = computed(() => {
+  const value = richContent.value
+  if (!value) return []
+  if (value.kind === 'equipment' && isInspectModifierHeld.value) {
+    return value.advancedSections ?? value.sections
+  }
+  return value.sections
+})
+
+// Cap density theo từng loại tooltip (mục 5 tooltip-revamp-plan.md) —
+// khớp với .tooltip/--rich/--detailed ở CSS bên dưới. size() chỉ
+// dùng để clamp khi availableWidth NHỎ HƠN cap này (an toàn viewport),
+// không được ghi đè cap khi màn hình đủ rộng.
+function maxWidthForKind(kind: string | undefined): number {
+  if (kind === 'equipment') return 380
+  if (kind && kind !== 'plain') return 320
+  return 240
+}
+
+const { floatingStyles } = useFloating(reference, floating, {
+  open,
+  placement: 'right-start',
+  strategy: 'fixed',
+  whileElementsMounted: autoUpdate,
+  middleware: [
+    offset(10),
+    flip({ fallbackPlacements: ['left-start', 'top-start', 'bottom-start'] }),
+    shift({ padding: 12 }),
+    size({
+      padding: 12,
+      apply({ availableWidth, availableHeight, elements }) {
+        Object.assign(elements.floating.style, {
+          maxWidth: `${Math.min(maxWidthForKind(content.value?.kind), availableWidth)}px`,
+          maxHeight: `${availableHeight}px`,
+        })
+      },
+    }),
+  ],
+})
+
+const gradedContent = computed<GradedItemTooltipContent | null>(() => {
+  const value = content.value
+  return value && (value.kind === 'material' || value.kind === 'pill' || value.kind === 'talisman' || value.kind === 'formation') ? value : null
+})
+
+const richContent = computed<TechniqueTooltipContent | GradedItemTooltipContent | EquipmentTooltipContent | null>(() => {
+  const value = content.value
+  if (!value) return null
+
+  switch (value.kind) {
+    case 'technique':
+    case 'material':
+    case 'pill':
+    case 'talisman':
+    case 'formation':
+    case 'equipment':
+      return value
+    default:
+      return null
+  }
+})
+
+// Quality/Pham → 1 màu accent qua thang --rank-color-1..9 dùng CHUNG với
+// SlotView.vue (normalizeSlotRank.ts) — thay vì tự liệt kê lại từng ID
+// quality/pham thành 1 rule CSS[data-quality=...]/[data-rarity=...] riêng
+// (dễ sót khi thêm bậc mới, xem git history). --rarity-*/--item-rarity-*
+// trong theme.css vốn CHỈ LÀ alias của cùng thang --rank-color-N này.
+const qualityAccentColor = computed(() => {
+  if (content.value?.kind !== 'equipment') return undefined
+  return `var(--rank-color-${qualityRank(content.value.qualityKey as EquipmentQuality)})`
+})
+
+const isMaxQualityRank = computed(() =>
+  content.value?.kind === 'equipment' && qualityRank(content.value.qualityKey as EquipmentQuality) === 9,
+)
+
+const rarityAccentColor = computed(() => {
+  const phamKey = gradedContent.value?.phamKey
+  return phamKey ? `var(--rank-color-${phamRank(phamKey as Pham)})` : undefined
+})
+
+const isMaxPhamRank = computed(() => {
+  const phamKey = gradedContent.value?.phamKey
+  return phamKey ? phamRank(phamKey as Pham) === 9 : false
+})
+
+function hideBrokenImage(event: Event) {
+  const image = event.currentTarget
+  if (image instanceof HTMLImageElement) image.hidden = true
+}
 </script>
 
 <template>
   <Teleport to="body">
     <Transition name="tooltip-fade">
-      <div v-if="content && content.kind === 'technique'" class="tooltip tooltip--technique" :style="style">
-        <div class="tooltip__technique-header">
-          <img v-if="content.imagePath" class="tooltip__technique-image" :src="content.imagePath" :alt="content.name" />
-
-          <div class="tooltip__technique-heading">
-            <p class="tooltip__title">{{ content.name }}</p>
-            <p v-if="content.levelLabel || content.elementLabel" class="tooltip__technique-meta">
-              {{ content.levelLabel }}<span v-if="content.levelLabel && content.elementLabel"> · </span>{{ content.elementLabel }}
-            </p>
-          </div>
-        </div>
-
-        <p v-if="content.description" class="tooltip__description">{{ content.description }}</p>
-
-        <div v-for="section in content.sections" :key="section.label" class="tooltip__section">
-          <p class="tooltip__section-label">{{ section.label }}</p>
-
-          <div v-for="row in section.rows" :key="row.label" class="tooltip__section-row">
-            <span>{{ row.label }}</span>
-            <span>{{ row.value }}</span>
-          </div>
-        </div>
-      </div>
-
       <div
-        v-else-if="content && (content.kind === 'pill' || content.kind === 'talisman' || content.kind === 'formation')"
-        class="tooltip tooltip--graded"
-        :style="style"
+        v-if="content"
+        id="global-tooltip"
+        ref="floating"
+        role="tooltip"
+        class="tooltip"
+        :class="[content.kind ? `tooltip--${content.kind}` : 'tooltip--plain', content.kind === 'equipment' ? 'tooltip--detailed' : '', content.kind && content.kind !== 'plain' ? 'tooltip--rich' : '', isMaxQualityRank ? 'tooltip--max-quality-rank' : '']"
+        :style="{ ...floatingStyles, '--tooltip-accent': qualityAccentColor }"
       >
-        <div class="tooltip__technique-header">
-          <img v-if="content.imagePath" class="tooltip__technique-image" :src="content.imagePath" :alt="content.name" />
-
-          <div class="tooltip__technique-heading">
+        <header v-if="content.kind === 'technique'" class="tooltip__header">
+          <div class="tooltip__icon-shell">
+            <span class="tooltip__icon-fallback">{{ content.name.charAt(0) }}</span>
+            <img v-if="content.imagePath" class="tooltip__icon" :src="content.imagePath" :alt="content.name" @error="hideBrokenImage" />
+          </div>
+          <div class="tooltip__heading">
             <p class="tooltip__title">{{ content.name }}</p>
-            <p class="tooltip__technique-meta">
-              {{ content.phamLabel }}<span v-if="content.ownedLabel"> · {{ content.ownedLabel }}</span>
-            </p>
+            <p class="tooltip__meta">{{ [content.levelLabel, content.elementLabel].filter(Boolean).join(' · ') }}</p>
           </div>
-        </div>
+        </header>
 
-        <p v-if="content.description" class="tooltip__description">{{ content.description }}</p>
-
-        <div v-for="section in content.sections" :key="section.label" class="tooltip__section">
-          <p class="tooltip__section-label">{{ section.label }}</p>
-
-          <div v-for="row in section.rows" :key="row.label" class="tooltip__section-row">
-            <span>{{ row.label }}</span>
-            <span>{{ row.value }}</span>
+        <header v-else-if="gradedContent" class="tooltip__header">
+          <div class="tooltip__icon-shell">
+            <span class="tooltip__icon-fallback">{{ gradedContent.name.charAt(0) }}</span>
+            <img v-if="gradedContent.imagePath" class="tooltip__icon" :src="gradedContent.imagePath" :alt="gradedContent.name" @error="hideBrokenImage" />
           </div>
-        </div>
-      </div>
-
-      <div v-else-if="content && content.kind === 'equipment'" class="tooltip tooltip--graded" :style="style">
-        <div class="tooltip__technique-header">
-          <img v-if="content.imagePath" class="tooltip__technique-image" :src="content.imagePath" :alt="content.name" />
-
-          <div class="tooltip__technique-heading">
-            <p class="tooltip__title">{{ content.name }}</p>
-            <p class="tooltip__technique-meta">{{ content.slotLabel }} · {{ content.qualityLabel }} · {{ content.phamLabel }}</p>
+          <div class="tooltip__heading">
+            <p class="tooltip__title">{{ gradedContent.name }}</p>
+            <div class="tooltip__badges">
+              <span
+                v-if="gradedContent.phamLabel"
+                class="tooltip__badge tooltip__badge--rarity"
+                :class="{ 'tooltip__badge--max-rank': isMaxPhamRank }"
+                :style="rarityAccentColor ? { color: rarityAccentColor } : undefined"
+              >{{ gradedContent.phamLabel }}</span>
+              <span v-if="gradedContent.ownedLabel" class="tooltip__badge tooltip__badge--muted">{{ gradedContent.ownedLabel }}</span>
+            </div>
           </div>
-        </div>
+        </header>
 
-        <p v-if="content.description" class="tooltip__description">{{ content.description }}</p>
-
-        <div v-for="section in content.sections" :key="section.label" class="tooltip__section">
-          <p class="tooltip__section-label">{{ section.label }}</p>
-
-          <div v-for="row in section.rows" :key="row.label" class="tooltip__section-row">
-            <span>{{ row.label }}</span>
-            <span>{{ row.value }}</span>
+        <header v-else-if="content.kind === 'equipment'" class="tooltip__header">
+          <div class="tooltip__icon-shell">
+            <span class="tooltip__icon-fallback">{{ content.name.charAt(0) }}</span>
+            <img v-if="content.imagePath" class="tooltip__icon" :src="content.imagePath" :alt="content.name" @error="hideBrokenImage" />
           </div>
-        </div>
-      </div>
+          <div class="tooltip__heading">
+            <p class="tooltip__title tooltip__title--quality">{{ content.name }}</p>
+            <div class="tooltip__badges">
+              <span class="tooltip__badge">{{ content.slotLabel }}</span>
+            </div>
+          </div>
+        </header>
 
-      <div v-else-if="content && content.kind === 'building'" class="tooltip tooltip--building" :style="style">
-        <p class="tooltip__title">{{ content.name }}</p>
-        <p v-if="content.functionLabel" class="tooltip__description">{{ content.functionLabel }}</p>
-        <p class="tooltip__building-status">{{ content.statusLabel }}</p>
-      </div>
+        <template v-else-if="content.kind === 'building'">
+          <p class="tooltip__title">{{ content.name }}</p>
+          <p v-if="content.functionLabel" class="tooltip__description">{{ content.functionLabel }}</p>
+          <p class="tooltip__building-status">{{ content.statusLabel }}</p>
+        </template>
 
-      <div v-else-if="content && (content.kind === undefined || content.kind === 'plain')" class="tooltip" :style="style">
-        <p v-if="content.title" class="tooltip__title">{{ content.title }}</p>
-        <p v-if="content.description" class="tooltip__description">{{ content.description }}</p>
+        <template v-else-if="content.kind === undefined || content.kind === 'plain'">
+          <p v-if="content.title" class="tooltip__title">{{ content.title }}</p>
+          <p v-if="content.description" class="tooltip__description">{{ content.description }}</p>
+        </template>
+
+        <template v-if="richContent">
+          <p v-if="richContent.description" class="tooltip__description tooltip__description--rich">{{ richContent.description }}</p>
+          <section v-for="section in visibleSections" :key="section.label" class="tooltip__section">
+            <p class="tooltip__section-label">{{ section.label }}</p>
+            <div v-for="row in section.rows" :key="row.label" class="tooltip__section-row" :class="[row.tone ? `tooltip__section-row--${row.tone}` : '', row.tier ? `tooltip__section-row--tier-${row.tier}` : '']" :aria-label="row.tier ? `${row.label}, bậc ${row.tier}: ${row.value}` : undefined">
+              <span class="tooltip__row-label">{{ row.label }}</span>
+              <span class="tooltip__row-value">{{ row.value }}</span>
+              <small v-if="row.detail" class="tooltip__row-detail">{{ row.detail }}</small>
+            </div>
+          </section>
+        </template>
       </div>
     </Transition>
   </Teleport>
 </template>
 
 <style scoped>
-/* TOOLTIP_BACKDROP_PATH (core/assets/AssetPaths.ts) — chưa có file
-   ảnh thật thì `background-image` này không load được gì, tự rơi về
-   `background-color` phẳng bên dưới (không lỗi hiển thị), nên an toàn
-   để tham chiếu ngay từ bây giờ. */
 .tooltip {
-  position: fixed;
-  z-index: 1000;
-  max-width: 240px;
-  padding: 6px 10px;
-  background-color: rgba(15, 15, 20, 0.96);
-  background-image: v-bind('`url(${TOOLTIP_BACKDROP_PATH})`');
-  background-size: 100% 100%;
-  border: 1px solid #444;
-  border-radius: 4px;
-  color: #eee;
-  font-size: 0.75rem;
-  pointer-events: none;
+  --tooltip-accent: var(--gold-500);
+  position: fixed; z-index: 1000; width: max-content; max-width: min(240px, calc(100vw - 24px));
+  padding: 8px 10px; overflow: hidden auto;
+  border: 1px solid color-mix(in srgb, var(--tooltip-accent) 38%, var(--ink-line)); border-left: 3px solid var(--tooltip-accent); border-radius: var(--radius-md);
+  background: radial-gradient(circle at 12% 0%, color-mix(in srgb, var(--tooltip-accent) 12%, transparent), transparent 38%), linear-gradient(155deg, rgba(27,27,34,.985), rgba(10,10,13,.99));
+  box-shadow: var(--shadow-panel), inset 0 1px rgba(255,255,255,.04); color: var(--text-primary); font: .74rem var(--font-body); pointer-events: none; isolation: isolate;
 }
-
-.tooltip__title {
-  margin: 0 0 2px;
-  font-weight: bold;
-  color: #ffd54f;
-}
-
-.tooltip__description {
-  margin: 0;
-  color: #ccc;
-  line-height: 1.3;
-}
-
-/* ============================================================
-   TECHNIQUE (Tâm Pháp) — mẫu tooltip có cấu trúc đầu tiên, xem
-   TechniqueTooltipContent trong useTooltip.ts.
-   ============================================================ */
-
-.tooltip--technique,
-.tooltip--graded {
-  max-width: 300px;
-  padding: 10px 12px;
-}
-
-.tooltip__technique-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
-}
-
-.tooltip__technique-image {
-  flex: 0 0 auto;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1px solid #ffd54f;
-  object-fit: cover;
-}
-
-.tooltip__technique-heading {
-  min-width: 0;
-}
-
-.tooltip__technique-meta {
-  margin: 0;
-  color: #999;
-  font-size: 0.68rem;
-}
-
-.tooltip__section {
-  margin-top: 8px;
-  padding-top: 6px;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.tooltip__section-label {
-  margin: 0 0 3px;
-  color: #ffd54f;
-  font-size: 0.68rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.tooltip__section-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  color: #ddd;
-  line-height: 1.5;
-}
-
-.tooltip--building {
-  max-width: 220px;
-}
-
-.tooltip__building-status {
-  margin: 4px 0 0;
-  color: var(--jade);
-  font-size: 0.68rem;
-}
-
-.tooltip-fade-enter-active,
-.tooltip-fade-leave-active {
-  transition: opacity 0.12s ease;
-}
-
-.tooltip-fade-enter-from,
-.tooltip-fade-leave-to {
-  opacity: 0;
-}
+.tooltip::before { content: ''; position: absolute; inset: 0 0 auto; height: 1px; background: linear-gradient(90deg, transparent, var(--tooltip-accent), transparent); opacity: .55; }
+.tooltip--rich { max-width: min(320px, calc(100vw - 24px)); padding: 12px 14px; }
+.tooltip--detailed { max-width: min(380px, calc(100vw - 24px)); }
+.tooltip__header { display: flex; align-items: center; gap: 10px; }
+.tooltip__icon-shell { flex: 0 0 54px; display: grid; place-items: center; width: 54px; height: 54px; border: 1px solid color-mix(in srgb, var(--tooltip-accent) 62%, var(--ink-line)); border-radius: var(--radius-sm); background: linear-gradient(145deg, var(--ink-700), var(--ink-950)); overflow: hidden; }
+.tooltip__icon, .tooltip__icon-fallback { grid-area: 1 / 1; } .tooltip__icon { width: 100%; height: 100%; padding: 5px; object-fit: contain; box-sizing: border-box; background: linear-gradient(145deg, var(--ink-700), var(--ink-950)); } .tooltip__icon-fallback { color: var(--tooltip-accent); font: 700 1.35rem var(--font-display); }
+.tooltip__heading { min-width: 0; } .tooltip__title { margin: 0 0 3px; color: var(--gold-300); font-family: var(--font-display); font-weight: 700; line-height: 1.25; }
+.tooltip__title--quality { color: var(--tooltip-accent); text-shadow: 0 0 10px color-mix(in srgb, var(--tooltip-accent) 32%, transparent); } .tooltip__meta { margin: 0; color: var(--text-muted); font-size: .68rem; }
+.tooltip__badges { display: flex; flex-wrap: wrap; gap: 4px; } .tooltip__badge { padding: 1px 5px; border: 1px solid var(--ink-line); border-radius: 999px; color: var(--text-secondary); font-size: .62rem; }
+.tooltip__badge--quality { border-color: color-mix(in srgb, var(--tooltip-accent) 55%, var(--ink-line)); color: var(--tooltip-accent); } .tooltip__badge--rarity { color: var(--text-primary); } .tooltip__badge--muted { color: var(--text-muted); }
+.tooltip--max-quality-rank .tooltip__title--quality,
+.tooltip--max-quality-rank .tooltip__badge--quality,
+.tooltip__badge--rarity.tooltip__badge--max-rank { color: transparent; background: var(--rank-gradient-9); background-clip: text; -webkit-background-clip: text; font-weight: 700; }
+.tooltip__description { margin: 3px 0 0; color: var(--text-secondary); line-height: 1.45; } .tooltip__description--rich { margin-top: 9px; }
+.tooltip__section { margin-top: 10px; padding-top: 7px; border-top: 1px solid color-mix(in srgb, var(--tooltip-accent) 18%, var(--ink-line-soft)); }
+.tooltip__section-label { margin: 0 0 5px; color: color-mix(in srgb, var(--tooltip-accent) 76%, var(--text-primary)); font-size: .64rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+.tooltip__section-row { display: grid; grid-template-columns: minmax(0,1fr) auto; column-gap: 14px; align-items: baseline; color: var(--text-secondary); line-height: 1.55; }
+.tooltip__row-value { color: var(--text-primary); font-variant-numeric: tabular-nums; text-align: right; } .tooltip__row-detail { grid-column: 1/-1; color: var(--text-muted); }
+.tooltip__section-row--positive .tooltip__row-value { color: var(--jade); } .tooltip__section-row--negative .tooltip__row-value { color: var(--crimson); }
+.tooltip__section-row--warning .tooltip__row-value { color: var(--gold-500); } .tooltip__section-row--muted { color: var(--text-muted); } .tooltip__section-row--special .tooltip__row-value { color: var(--affix-exalted); }
+.tooltip__section-row--tier-1 .tooltip__row-label { color: var(--affix-tier-1); } .tooltip__section-row--tier-2 .tooltip__row-label { color: var(--affix-tier-2); }
+.tooltip__section-row--tier-3 .tooltip__row-label { color: var(--affix-tier-3); } .tooltip__section-row--tier-4 .tooltip__row-label { color: var(--affix-tier-4); } .tooltip__section-row--tier-5 .tooltip__row-label { color: transparent; background: var(--rank-gradient-9); background-clip: text; -webkit-background-clip: text; font-weight: 700; }
+.tooltip__building-status { margin: 5px 0 0; color: var(--jade); font-size: .68rem; }
+.tooltip-fade-enter-active { transition: opacity 35ms linear; } .tooltip-fade-leave-active { transition: opacity 30ms linear; }
+.tooltip-fade-enter-from, .tooltip-fade-leave-to { opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .tooltip-fade-enter-active, .tooltip-fade-leave-active { transition: opacity 1ms linear; } }
 </style>

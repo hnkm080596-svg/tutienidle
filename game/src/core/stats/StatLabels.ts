@@ -1,5 +1,6 @@
 import type { Stats } from './StatBlock'
 import { formatNumber } from '../format/NumberFormatter'
+import { isPercentStat } from './StatMetadata'
 
 export type StatCategory = 'combat' | 'survival' | 'special' | 'attribute' | 'defense_advanced'
 
@@ -22,6 +23,7 @@ export const BASE_STAT_LABELS: StatLabelEntry[] = [
   { key: 'attack', label: 'Công kích', description: 'Sát thương vật lý cơ bản gây ra khi tấn công.', category: 'combat' },
   { key: 'defense', label: 'Phòng ngự (Giáp)', description: 'Giảm % sát thương vật lý phải nhận theo đường cong (Armor) — càng cao càng giảm dần, có trần.', category: 'combat' },
   { key: 'attackSpeed', label: 'Tốc đánh', description: 'Số đòn đánh cơ bản mỗi giây.', category: 'combat' },
+  { key: 'movementSpeed', label: 'Tốc độ di chuyển', description: 'Tốc độ di chuyển trên chiến trường.', category: 'combat' },
 
   { key: 'maxHp', label: 'Khí huyết', description: 'Lượng máu tối đa — về 0 thì gục ngã.', category: 'survival' },
   { key: 'hpRegenPerSecond', label: 'Hồi khí huyết', description: 'Máu hồi tự nhiên mỗi giây.', category: 'survival' },
@@ -34,6 +36,9 @@ export const BASE_STAT_LABELS: StatLabelEntry[] = [
   { key: 'evasionRate', label: 'Tỉ lệ né', description: 'Đấu với Độ chính xác của đối phương — càng cao càng dễ né hoàn toàn 1 đòn.', category: 'special' },
   { key: 'cooldownReduction', label: 'Giảm hồi chiêu', description: 'Giảm % thời gian hồi chiêu của mọi skill.', category: 'special' },
   { key: 'castSpeedPercent', label: 'Tốc Độ Thi Triển', description: 'Rút ngắn % Cast Time của skill cần niệm chú (Cast Time), độc lập với Tốc đánh/Giảm hồi chiêu.', category: 'special' },
+  { key: 'finalDamagePercent', label: 'Sát thương cuối', description: 'Tăng toàn bộ sát thương sau các bước tính cơ bản.', category: 'special' },
+  { key: 'skillDamagePercent', label: 'Sát thương kỹ năng', description: 'Tăng sát thương gây ra bởi kỹ năng.', category: 'special' },
+  { key: 'finalDamageReductionPercent', label: 'Giảm sát thương cuối', description: 'Giảm toàn bộ sát thương nhận vào ở bước cuối.', category: 'defense_advanced' },
   { key: 'chanceToIgnoreResistance', label: 'Xuyên kháng tuyệt đối', description: 'Xác suất 1 đòn bỏ qua HOÀN TOÀN Giáp/Kháng của đối phương.', category: 'special' },
   { key: 'projectileSpeedPercent', label: 'Tốc độ đạn', description: 'Tăng % tốc độ bay của phi tiêu (Hỏa Cầu Thuật...).', category: 'special' },
   { key: 'elementApplicationPercent', label: 'Tỉ lệ áp Nguyên Tố', description: 'Cộng thẳng vào tỉ lệ áp dị thường (Thiêu Đốt...) của skill khi đánh trúng.', category: 'special' },
@@ -53,6 +58,7 @@ export const BASE_STAT_LABELS: StatLabelEntry[] = [
   { key: 'enduranceThreshold', label: 'Ngưỡng Kiên Cường', description: 'Đòn có sát thương ≤ ngưỡng này bị giảm mạnh theo % Kiên Cường — đòn to hơn chỉ bị trừ 1 lượng cố định.', category: 'defense_advanced' },
   { key: 'endurancePercent', label: '% Kiên Cường', description: 'Mức giảm sát thương áp dụng cho đòn nhỏ (xem Ngưỡng Kiên Cường).', category: 'defense_advanced' },
   { key: 'wardMax', label: 'Hộ Thuẫn tối đa', description: 'Máu phụ hấp thụ sát thương trước Khí huyết — tự hồi khi không bị đánh trúng 1 lúc.', category: 'defense_advanced' },
+  { key: 'manaShieldPercent', label: 'Linh lực hộ thể', description: 'Tỉ lệ sát thương được chuyển sang tiêu hao Linh lực.', category: 'defense_advanced' },
   { key: 'wardRegenPerSecond', label: 'Hồi Hộ Thuẫn', description: 'Hộ Thuẫn hồi mỗi giây (sau khi không bị đánh trúng đủ lâu).', category: 'defense_advanced' },
   { key: 'wardBreakDamagePercent', label: 'Khiên Nổ', description: 'Khi Hộ Thuẫn vừa vỡ hẳn, phản % dung lượng Hộ Thuẫn tối đa thành sát thương vào kẻ tấn công.', category: 'defense_advanced' },
   { key: 'leechPercent', label: 'Hút máu', description: 'Hồi máu theo % sát thương gây ra.', category: 'defense_advanced' },
@@ -72,21 +78,10 @@ const ELEMENT_STAT_LABELS: Partial<Record<keyof Stats, string>> = {
   earthPower: 'Thổ Lực', earthResistance: 'Kháng Thổ', earthPenetration: 'Xuyên Thổ',
   metalPower: 'Kim Lực', metalResistance: 'Kháng Kim', metalPenetration: 'Xuyên Kim',
   waterPower: 'Thủy Lực', waterResistance: 'Kháng Thủy', waterPenetration: 'Xuyên Thủy',
+  windPower: 'Phong Lực', windResistance: 'Kháng Phong', windPenetration: 'Xuyên Phong',
+  lightningPower: 'Lôi Lực', lightningResistance: 'Kháng Lôi', lightningPenetration: 'Xuyên Lôi',
   primordialPower: 'Hỗn Nguyên Lực',
 }
-
-// Stat tỉ lệ (0..1) hiện theo % làm tròn 1 chữ số thập phân — hiện số
-// thô (vd 0.05) khó đọc hơn nhiều so với "5.0%". evasionRate/
-// accuracyRating là Rating (số mở) chứ không phải xác suất 0..1 — hiện
-// nguyên, không nhân 100.
-export const PERCENT_STAT_KEYS: (keyof Stats)[] = [
-  'criticalRate', 'blockChance', 'endurancePercent', 'leechPercent', 'thornsPercent',
-  'criticalAvoidance', 'cooldownReduction', 'castSpeedPercent', 'chanceToIgnoreResistance',
-  'ailmentResistPercent', 'ailmentPotencyPercent', 'wardBreakDamagePercent',
-  'projectileSpeedPercent', 'elementApplicationPercent', 'reactionEffectPercent',
-  'ailmentDurationPercent',
-  'dotResistancePercent', 'poisonRecoveryPercent',
-]
 
 // attackSpeed/criticalDamage/blockEffectiveness là hệ số gần 1 (vd
 // 1.5) — làm tròn nguyên sẽ mất hết ý nghĩa, giữ tối đa 2 chữ số
@@ -100,7 +95,7 @@ export function statLabel(key: keyof Stats): string {
 // Trích từ CharacterPanel.vue — dùng chung cho mọi nơi hiện giá trị
 // stat cho người chơi đọc (bảng chỉ số, tooltip Tâm Pháp...).
 export function formatStat(key: keyof Stats, value: number): string {
-  if (PERCENT_STAT_KEYS.includes(key)) {
+  if (isPercentStat(key)) {
     return `${(value * 100).toFixed(1)}%`
   }
 

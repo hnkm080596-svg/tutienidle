@@ -52,26 +52,30 @@
   --el-wind: #4dd0e1;
   --el-lightning: #ffca28;
 
-  /* Rarity — 9 bậc EquipmentQuality (thấp → cao), tên hậu tố khớp
-     THẲNG với EquipmentQuality union trong core/equipment/EquipmentQuality.ts */
-  --rarity-pham_khi: #8a877e;
-  --rarity-bao_khi: #7cb87c;
-  --rarity-linh_khi: #5b9bd5;
-  --rarity-phap_khi: #8b7cd9;
-  --rarity-phap_bao: #ffd54f;
-  --rarity-tien_bao: #ff9d3d;
-  --rarity-chi_bao: #ff5f5f;
-  --rarity-hon_don_chi_bao: #33d9d9;
-  --rarity-thien_dia_trong_khi: #fff6d8;
+  /* Thang phẩm chất CHUẨN 9 bậc, dùng chung cho mọi hệ thống. Hệ ít
+     bậc hơn ánh xạ đều lên thang này; bậc 9 dùng màu sáng này làm
+     fallback và gradient bảy màu tại component có khả năng render gradient. */
+  --rank-color-1: #8a877e; /* xám */
+  --rank-color-2: #d8d5cc; /* bạc/trắng */
+  --rank-color-3: #6fbf73; /* lục */
+  --rank-color-4: #33d9d9; /* thanh */
+  --rank-color-5: #5b9bd5; /* lam */
+  --rank-color-6: #9b7de3; /* tím */
+  --rank-color-7: #ffd54f; /* kim */
+  --rank-color-8: #ff6b4a; /* xích */
+  --rank-color-9: #fff6d8; /* fallback cho bảy màu */
+  --rank-gradient-9: linear-gradient(90deg, #ff6b6b, #ffd66b, #7bd88f, #67d8ff, #9e8cff, #ef8cff, #ff6b6b);
 
-  /* Tint 3 loại Tâm Pháp (Technique) — dùng CHUNG cơ chế lookup
-     `--rarity-${value}` với SlotView (rarity prop), khác hệ giá trị
-     với rarity trang bị (snake_case như 'pham_khi') nên không trùng
-     key — dùng riêng trong LoadoutManager.vue để phân biệt nhanh
-     3 loại: Tu Luyện/Chiến Đấu/Phá Cảnh. */
-  --rarity-cultivation: #6fbf73;
-  --rarity-combat: #e5484d;
-  --rarity-breakthrough: #ffd54f;
+  /* Equipment Quality có đủ 9 bậc nên ánh xạ 1:1. */
+  --rarity-pham_khi: var(--rank-color-1);
+  --rarity-bao_khi: var(--rank-color-2);
+  --rarity-linh_khi: var(--rank-color-3);
+  --rarity-phap_khi: var(--rank-color-4);
+  --rarity-phap_bao: var(--rank-color-5);
+  --rarity-tien_bao: var(--rank-color-6);
+  --rarity-chi_bao: var(--rank-color-7);
+  --rarity-hon_don_chi_bao: var(--rank-color-8);
+  --rarity-thien_dia_trong_khi: var(--rank-color-9);
 
   /* Item Rarity — Core Loop Foundation checklist, trục ĐỘC LẬP với
      --rarity-* ở trên (trục đó là Quality/tint, giữ nguyên vai trò
@@ -84,34 +88,42 @@
      vàng kim(thien_pham)/trắng-kim rực rỡ(tien_pham, DÙNG LẠI hex đỉnh
      của --rarity-thien_dia_trong_khi ở trên — cùng ý niệm "đỉnh phong"
      dù khác trục). */
-  --item-rarity-hoang_pham: #c08a3e;
-  --item-rarity-huyen_pham: #6a4c93;
-  --item-rarity-dia_pham: #4caf7d;
-  --item-rarity-thien_pham: #e8b13d;
-  --item-rarity-tien_pham: #fff6d8;
+  /* Hệ 5 bậc ánh xạ đều lên 1–3–5–7–9. */
+  --item-rarity-hoang_pham: var(--rank-color-1);
+  --item-rarity-huyen_pham: var(--rank-color-3);
+  --item-rarity-dia_pham: var(--rank-color-5);
+  --item-rarity-thien_pham: var(--rank-color-7);
+  --item-rarity-tien_pham: var(--rank-color-9);
+
+  /* Tier Affix: UI dùng màu thay cho việc lặp ký hiệu I–V ở từng dòng. */
+  --affix-tier-1: var(--rank-color-1);
+  --affix-tier-2: var(--rank-color-3);
+  --affix-tier-3: var(--rank-color-5);
+  --affix-tier-4: var(--rank-color-7);
+  --affix-tier-5: var(--rank-color-9);
 
   /* Highlight cho Exalted Affix (roll bonus pool 'supreme' của
      tien_pham — xem EquipmentSystem.createInstance()) — tái dùng hex
      vàng-huyền-thoại cũ của 'unique' đã bỏ, giữ cảm giác "đặc biệt". */
   --affix-exalted: #e8c74a;
 
-  /* Cơ chế Set (2026-08-15) — 1 màu CỐ ĐỊNH mỗi Set (core/equipment/
-     EquipmentSet.ts's colorVar), dùng cho segment tên vị thần trong
-     tên vật phẩm ghép động (EquipmentNaming.ts). Chỉ --set-thai_hu
-     (Kiếm Tu, Set ĐẦY ĐỦ) và --set-hau_tho (nâu, người dùng chỉ định)
-     cần đúng cảm quan — 4 màu còn lại là placeholder cho Set "khung",
-     chỉnh khi có vật phẩm thật. */
-  --set-thai_hu: #b8d4e3;
-  --set-hau_tho: #8b5a2b;
-  --set-cau_mang: #5cb85c;
-  --set-chuc_dung: #e05c3e;
-  --set-nhuc_thu: #d4c896;
-  --set-huyen_minh: #2c4a6e;
-
   --radius-sm: 4px;
   --radius-md: 8px;
   --shadow-panel: 0 8px 24px rgba(0, 0, 0, 0.45);
   --shadow-glow-gold: 0 0 12px rgba(255, 213, 79, 0.35);
+
+  /* Slot Revamp (tooltip-revamp-plan.md mục 17.6) — token semantic
+     riêng cho SlotView, không hardcode màu trong component. */
+  --slot-surface: var(--ink-900);
+  --slot-surface-raised: var(--ink-800);
+  --slot-border: var(--ink-line-soft);
+  --slot-hover: var(--gold-500);
+  --slot-selected: var(--gold-500);
+  --slot-valid: var(--jade);
+  --slot-invalid: var(--crimson);
+  --slot-disabled-opacity: 0.45;
+  --slot-caption-bg: rgba(10, 10, 13, 0.55);
+  --slot-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
 
   --font-display: 'Noto Serif', Georgia, serif;
   --font-body: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;

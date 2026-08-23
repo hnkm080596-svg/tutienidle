@@ -11,6 +11,8 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useLoadoutActions } from '@/composables/useLoadoutActions'
 import { usePlayerStore } from '@/stores/player'
 import { getSkillLoadoutSlotCount, MAX_SKILL_LOADOUT_SLOTS } from '@/core/skill/SkillLoadoutSlots'
+import { getSkillExperiencePercent } from '@/core/skill/SkillSystem'
+import type { Skill } from '@/core/skill/Skill'
 
 const gameManager = useGameManager()
 const player = usePlayerStore()
@@ -49,8 +51,8 @@ const basicAttackSkill = computed(() => {
   return gameManager.skillManager.getBasicAttackSkill()
 })
 
-function levelPercent(level: number, maxLevel: number): number {
-  return maxLevel > 0 ? Math.min(100, (level / maxLevel) * 100) : 0
+function experiencePercent(skill: Skill): number {
+  return getSkillExperiencePercent(skill)
 }
 </script>
 
@@ -86,7 +88,7 @@ function levelPercent(level: number, maxLevel: number): number {
 
         <template v-else-if="slot.skill">
           <div class="loadout-card__level-bar">
-            <div class="loadout-card__level-fill" :style="{ width: `${levelPercent(slot.skill.level, slot.skill.maxLevel)}%` }" />
+            <div class="loadout-card__level-fill" :style="{ width: `${experiencePercent(slot.skill)}%` }" />
           </div>
 
           <span class="loadout-card__level-label">Lv. {{ slot.skill.level }}/{{ slot.skill.maxLevel }}</span>

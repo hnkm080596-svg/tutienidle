@@ -17,6 +17,7 @@ import { useLoadoutActions } from '@/composables/useLoadoutActions'
 import { useBreakthrough } from '@/composables/useBreakthrough'
 import { useBreakthroughRequirementStore } from '@/stores/breakthroughRequirement'
 import { useUiStore } from '@/stores/ui'
+import { useTribulation } from '@/composables/useTribulation'
 
 const player = usePlayerStore()
 const gameManager = useGameManager()
@@ -25,6 +26,7 @@ const { allocateAttributePoint } = useLoadoutActions()
 const { breakthrough } = useBreakthrough()
 const breakthroughRequirement = useBreakthroughRequirementStore()
 const ui = useUiStore()
+const { triggerQuanKhi } = useTribulation()
 
 // Quán Khí (2026-08-20, Realm Passive & Pressure follow-up) — mở SỚM ở
 // tầng 12 (KHÔNG còn chờ maxLevel=18), chừa 12-18 làm cửa sổ "chơi
@@ -51,7 +53,7 @@ const canChooseCultivationPath = computed(() => {
 })
 
 function openQuanKhi() {
-  ui.standalonePanel = 'quan_khi'
+  triggerQuanKhi()
 }
 
 const chosenKit = computed(() => player.cultivationPath ? CULTIVATION_PATH_KITS[player.cultivationPath] : undefined)
@@ -70,8 +72,8 @@ const characterAuraColor = computed(() =>
 // idle ở đây (khác DongFuScene.vue's dongfu-player, nơi đổi theo
 // player.isCultivating) — đây chỉ là chân dung nhỏ trong panel, không
 // phải nơi thể hiện trạng thái ngồi thiền.
-const characterAtlasUrl = '/assets/idle.json'
-const characterImageUrl = '/assets/idle.png'
+const characterAtlasUrl = '/assets/cultivate.json'
+const characterImageUrl = '/assets/cultivate.png'
 
 // Đọc tên skill qua skillManager (LEARNED skills, public) thay vì
 // GameManager.skillTemplates (private) — sau chooseCultivationPath(),
@@ -291,6 +293,7 @@ const pillPermanentRows = computed(() => {
             :atlas-url="characterAtlasUrl"
             :image-url="characterImageUrl"
             :height="104"
+            :image-scale="1.25"
           />
         </div>
 
@@ -572,6 +575,11 @@ const pillPermanentRows = computed(() => {
   display: flex;
   align-items: flex-end;
   justify-content: center;
+}
+
+.character-panel__figure-sprite {
+  z-index: 1;
+  pointer-events: none;
 }
 
 .character-panel__figure-aura {

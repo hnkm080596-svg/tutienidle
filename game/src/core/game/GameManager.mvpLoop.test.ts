@@ -7,6 +7,7 @@ import { TECHNIQUES } from '../../data/technique/Techniques'
 import { SKILLS } from '../../data/skill/Skills'
 import type { Stage } from '../stage/Stage'
 import type { Buff } from '../buff/Buff'
+import { isBattleInProgress } from '../battle/BattleTypes'
 
 // Combat Rework Phase 9 — mirror checklist "MVP cuối cùng" (plan mục
 // 20): PLAYER (HP/Attack/Class→Projectile Pierce) + ENEMY (HP/Defense/
@@ -47,7 +48,12 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
       level: 1,
       realmId: 'qi_refining',
       lane: 'ground',
-      statsInput: { maxHp: 20, attack: 0, attackSpeed: 1, movementSpeed: 60, attackRange: 999999, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+      // attackRange thật (không phải 999999 "vô hạn" kiểu player) — quái
+      // với range vô hạn nghĩ đã đủ tầm nên KHÔNG BAO GIỜ đi tới
+      // (resolveMovement() chỉ bước khi distance>range), mãi mãi đứng
+      // ngoài SCREEN_VISIBLE_MAX_X (2026-08-22, xem BattleLane.ts) —
+      // gate "không bắn quái offscreen" sẽ khoá cứng cả 2 phía.
+      statsInput: { maxHp: 20, attack: 0, attackSpeed: 1, movementSpeed: 60, attackRange: 90, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
       rewards: { experience: 0, cultivation: 0, spiritStone: 0 },
     })
 
@@ -57,10 +63,11 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
       level: 1,
       realmId: 'qi_refining',
       lane: 'ground',
-      statsInput: { maxHp: 15, attack: 0, attackSpeed: 1, movementSpeed: 60, attackRange: 999999, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+      // attackRange thật, cùng lý do đã ghi ở mob phía trên (2026-08-22).
+      statsInput: { maxHp: 15, attack: 0, attackSpeed: 1, movementSpeed: 60, attackRange: 90, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
       rewards: { experience: 0, cultivation: 0, spiritStone: 0 },
       isBoss: true,
-      // createBossVariant() nhân maxHp x8 -> 120 HP thật khi vào trận.
+      // createBossVariant() nhân maxHp x7 -> 105 HP thật khi vào trận.
       tribulationPhases: [{ hpThresholdPercent: 0.5, buff: phaseBuff, archetypeOverride: 'ranged' }],
       enrage: { afterSeconds: 1, buff: enrageBuff },
     })
@@ -71,6 +78,7 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
       id: 'mvp_test_stage',
       name: 'MVP Test Stage',
       description: '',
+      floor: 10,
       enemyPool: [{ enemyId: 'mvp_test_mob', weight: 1 }],
       totalEnemyCount: 2,
       spawnIntervalSeconds: 0.1,
@@ -83,6 +91,7 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
 
     // Class — Kiếm Tu THẬT, tự cấp Tâm Pháp + Ngự Kiếm Thuật (basic,
     // đã có Pierce từ Phase 5) + 2 skill còn lại.
+    player.realmLevel = 12
     expect(gameManager.chooseCultivationPath('kiem_tu', player)).toBe(true)
 
     const finalStats = calculateStats(player.baseStats, [
@@ -96,7 +105,9 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
     let sawBossPhaseTrigger = false
     let sawBossEnrageTrigger = false
 
-    for (let i = 0; i < 4000 && gameManager.getBattle()?.state === 'fighting'; i++) {
+    // Countdown 3 giây trước trận (2026-08-22) — startStage() giờ bắt
+    // đầu ở 'countdown' chứ không 'fighting' ngay, xem BattleSystem.start().
+    for (let i = 0; i < 4000 && isBattleInProgress(gameManager.getBattle()?.state); i++) {
       gameManager.update(0.05)
 
       const battle = gameManager.getBattle()
@@ -114,6 +125,7 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
           sawBossEnrageTrigger = true
         }
       }
+
     }
 
     // COMBAT + PLAYER + ENEMY: trận phải THẮNG thật (không phải hết

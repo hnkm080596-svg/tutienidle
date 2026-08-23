@@ -26,7 +26,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 'ground',
+    lane: 2,
     alive: true,
     ...overrides,
   }

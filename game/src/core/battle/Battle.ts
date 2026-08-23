@@ -57,6 +57,13 @@ export interface Battle {
 
   state: BattleState
 
+  mode?: 'combat' | 'tribulation'
+
+  // Countdown 3 giây trước trận (2026-08-22) — CHỈ có ý nghĩa khi
+  // state==='countdown', xem BattleSystem.update(). undefined ở mọi
+  // state khác.
+  countdownSecondsRemaining?: number
+
   playerAttackTimer: number
 
   // Buff/debuff phát sinh TRONG trận (skill debuff lên địch, skill

@@ -43,7 +43,7 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 'ground',
+    lane: 2,
     alive: true,
     ...overrides,
   }
@@ -84,6 +84,7 @@ describe('BattleSystem — Kiếm Tu Ngự Kiếm Thuật Pierce (Combat Rework 
     eventBus.on<{ targetId: string }>('hit', event => hitTargetIds.push(event.targetId))
 
     system.start(player, nearEnemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
     // Quái thứ 2 vào trận GIỮA CHỪNG (wave), cùng cách spawn thật trong
     // game (GameManager.updateStageProgress()) thay vì hardcode battle.enemies.
     system.spawnEnemyInto(system.getBattle()!, farEnemy)

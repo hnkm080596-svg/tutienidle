@@ -3,6 +3,7 @@ import { CombatSystem } from './CombatSystem'
 import { EventBus } from '../events/EventBus'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from './CombatEntity'
+import { createSkillRuntimeStats } from '../skill/SkillRuntimeStats'
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0 }
@@ -27,7 +28,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 'ground',
+    lane: 2,
     alive: true,
     ...overrides,
   }
@@ -58,8 +59,8 @@ describe('CombatSystem — Thủy Thế (Plans/waterpath, Tụ Thủy)', () => {
     const withoutMitigation = createCombatant({ id: 'target_a', currentHp: 100000, maxHp: 100000 })
     const rawResult = combat.resolveMissileHit(source, withoutMitigation, { kind: 'physical', multiplier: 1 }, false)
 
-    const targetStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, thuyThePercent: 0.1 }
-    const target = createCombatant({ id: 'target_b', stats: targetStats, currentHp: 100000, maxHp: 100000 })
+    const targetStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0 }
+    const target = createCombatant({ id: 'target_b', stats: targetStats, skillStats: { ...createSkillRuntimeStats(), thuyThePercent: 0.1 }, currentHp: 100000, maxHp: 100000 })
 
     const result = combat.resolveMissileHit(source, target, { kind: 'physical', multiplier: 1 }, false)
 
@@ -73,8 +74,8 @@ describe('CombatSystem — Thủy Thế (Plans/waterpath, Tụ Thủy)', () => {
     const sourceStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100000 }
     const source = createCombatant({ id: 'source', type: 'player', stats: sourceStats })
 
-    const targetStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, thuyThePercent: 5 }
-    const target = createCombatant({ id: 'target', stats: targetStats, currentHp: 1000000, maxHp: 1000000 })
+    const targetStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0 }
+    const target = createCombatant({ id: 'target', stats: targetStats, skillStats: { ...createSkillRuntimeStats(), thuyThePercent: 5 }, currentHp: 1000000, maxHp: 1000000 })
 
     const result = combat.resolveMissileHit(source, target, { kind: 'physical', multiplier: 1 }, false)
 

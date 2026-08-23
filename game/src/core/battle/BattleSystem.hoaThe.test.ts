@@ -10,6 +10,7 @@ import { EventBus } from '../events/EventBus'
 import { MissileSystem } from '../combat/missile/MissileSystem'
 import { MissileManager } from '../combat/missile/MissileManager'
 import { createBaseStats } from '../stats/StatBlock'
+import { createSkillRuntimeStats } from '../skill/SkillRuntimeStats'
 import { ailments } from '../../data/ailment/ailments'
 import { MAX_HOA_THE } from '../combat/CombatTypes'
 import type { CombatEntity } from '../combat/CombatEntity'
@@ -42,7 +43,7 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 'ground',
+    lane: 2,
     alive: true,
     ...overrides,
   }
@@ -116,6 +117,7 @@ describe('BattleSystem — Hỏa Thế (Plans/FirePath mục 7, Tụ Hỏa)', ()
     const enemy = createCombatant({ id: 'enemy' })
 
     system.start(player, enemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
     enemy.x = 50
 
     for (let i = 0; i < 320; i++) {
@@ -130,11 +132,12 @@ describe('BattleSystem — Hỏa Thế (Plans/FirePath mục 7, Tụ Hỏa)', ()
 
     const player = createCombatant({ id: 'player', type: 'player', x: 0 })
 
-    player.stats.hoaTheGainPerCast = 1
+    player.skillStats = { ...createSkillRuntimeStats(), hoaTheGainPerCast: 1 }
 
     const enemy = createCombatant({ id: 'enemy' })
 
     system.start(player, enemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
     enemy.x = 50
 
     // attackSpeed mặc định 1 -> cast mỗi 1s (+1 Hỏa Thế/cast), nhưng
@@ -161,6 +164,7 @@ describe('BattleSystem — Hỏa Thế (Plans/FirePath mục 7, Tụ Hỏa)', ()
     const enemy = createCombatant({ id: 'enemy' })
 
     system.start(player, enemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
 
     // HOA_THE_BASE_DECAY_PER_SECOND=0.5 -> 2s giảm hết 1 tầng.
     for (let i = 0; i < 200; i++) {
@@ -175,11 +179,12 @@ describe('BattleSystem — Hỏa Thế (Plans/FirePath mục 7, Tụ Hỏa)', ()
 
     const player = createCombatant({ id: 'player', type: 'player', x: 0, currentHoaThe: 5 })
 
-    player.stats.hoaTheDecayReductionPercent = 0.1
+    player.skillStats = { ...createSkillRuntimeStats(), hoaTheDecayReductionPercent: 0.1 }
 
     const enemy = createCombatant({ id: 'enemy' })
 
     system.start(player, enemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
 
     for (let i = 0; i < 200; i++) {
       tick(0.01)

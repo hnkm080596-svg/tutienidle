@@ -1,20 +1,19 @@
 import { describe, expect, it } from 'vitest'
-import { EquipmentSystem, calculateEquipmentScale } from './EquipmentSystem'
+import { EquipmentSystem, calculateEquipmentScale, rollAffixRange } from './EquipmentSystem'
 import { EquipmentBag } from './EquipmentBag'
 import { EquipmentRegistry } from './EquipmentRegistry'
 import { EquipmentSlotManager } from './EquipmentSlotManager'
-import { EquipmentSetRegistry } from './EquipmentSetRegistry'
 import { AffixRegistry } from './AffixRegistry'
 import { MaterialBag } from '../material/MaterialBag'
 import { createDefaultPlayer } from '../player/Player'
 import type { Equipment } from './Equipment'
 import type { EquipmentInstance } from './EquipmentInstance'
-import type { EquipmentSet } from './EquipmentSet'
 import { EQUIPMENT_RARITY_ORDER, EQUIPMENT_RARITY_AFFIX_SLOTS } from './EquipmentRarity'
-import { EQUIPMENT_QUALITY_MAX_AFFIX_TIER, EQUIPMENT_QUALITY_UNLOCKED_POOLS, EQUIPMENT_QUALITY_MAX_FORGE_POINTS } from './EquipmentQuality'
+import { EQUIPMENT_QUALITY_ORDER, EQUIPMENT_QUALITY_MAX_AFFIX_TIER, EQUIPMENT_QUALITY_UNLOCKED_POOLS, EQUIPMENT_QUALITY_MAX_FORGE_POINTS } from './EquipmentQuality'
 import { affixes } from '../../data/equipment/affixes'
 import { materials } from '../../data/materials/materials'
 import { ZoneRegistry } from '../stage/ZoneRegistry'
+import { isPercentStat } from '../stats/StatMetadata'
 
 const TEMPLATE: Equipment = {
   id: 'test_sword',
@@ -22,7 +21,7 @@ const TEMPLATE: Equipment = {
   slot: 'weapon',
   grade: 1,
   maxEnhanceLevel: 10,
-  mainStat: { stat: 'attack', min: 10, max: 20 },
+  mainStats: [{ stat: 'attack', min: 10, max: 20 }],
   enhanceCost: [{ materialId: 'black-iron', amount: 1 }],
   washCost: [{ materialId: 'black-iron', amount: 1 }],
   refineCost: [{ materialId: 'black-iron', amount: 1 }],
@@ -33,6 +32,25 @@ const TEMPLATE: Equipment = {
 }
 
 const BLACK_IRON = materials.find(m => m.id === 'black-iron')!
+
+describe('equipment stat unit invariants', () => {
+  it('roll affix thập phân không bị ép thành 1', () => {
+    for (let i = 0; i < 100; i++) {
+      const value = rollAffixRange(0.01, 0.09)
+      expect(value).toBeGreaterThanOrEqual(0.01)
+      expect(value).toBeLessThanOrEqual(0.09)
+    }
+  })
+
+  it('mọi affix phần trăm dùng cùng đơn vị thập phân 0..1', () => {
+    for (const affix of affixes.filter(candidate => isPercentStat(candidate.stat))) {
+      for (const tier of affix.tiers) {
+        expect(tier.min, affix.id).toBeGreaterThanOrEqual(0)
+        expect(tier.max, affix.id).toBeLessThanOrEqual(1)
+      }
+    }
+  })
+})
 
 function setup() {
   const system = new EquipmentSystem()
@@ -78,6 +96,71 @@ function manualInstance(overrides: Partial<EquipmentInstance> = {}): EquipmentIn
 }
 
 describe('EquipmentSystem.createInstance — roll pipeline invariants (Equipment Rework)', () => {
+  it.each([
+    ['pham_nhan', 0],
+    ['qi_refining', 1],
+    ['foundation', 2],
+    ['golden_core', 3],
+  ] as const)('không roll Quality cao hơn trần cảnh giới %s', (realmId, maxQualityIndex) => {
+    const { system, affixRegistry, player } = setup()
+    player.realmId = realmId
+
+    for (let i = 0; i < 100; i++) {
+      const instance = system.createInstance(TEMPLATE, player, affixRegistry)
+      expect(EQUIPMENT_QUALITY_ORDER.indexOf(instance.quality)).toBeLessThanOrEqual(maxQualityIndex)
+    }
+  })
+
+  it('Nhẫn dùng range riêng cho từng main stat có thể roll', () => {
+    const { system, affixRegistry, player } = setup()
+    const template: Equipment = {
+      ...TEMPLATE,
+      id: 'test_ring_ranges',
+      slot: 'ring',
+      mainStats: [
+        { stat: 'criticalRate', min: 0.01, max: 0.01 },
+        { stat: 'criticalDamage', min: 0.5, max: 0.5 },
+      ],
+    }
+    const seen = new Set<string>()
+
+    for (let i = 0; i < 100; i++) {
+      const instance = system.createInstance(template, player, affixRegistry)
+      seen.add(instance.mainStat.stat)
+      const value = instance.mainStat.flat ?? 0
+
+      if (instance.mainStat.stat === 'criticalRate') expect(value).toBeLessThan(0.1)
+      if (instance.mainStat.stat === 'criticalDamage') expect(value).toBeGreaterThan(0.1)
+    }
+
+    expect(seen).toEqual(new Set(['criticalRate', 'criticalDamage']))
+  })
+
+  it('roll và lưu icon từ iconPool trên instance', () => {
+    const { system, affixRegistry, player } = setup()
+    const instance = system.createInstance({ ...TEMPLATE, iconPool: ['/a.png'] }, player, affixRegistry)
+    expect(instance.icon).toBe('/a.png')
+  })
+
+  it.each([
+    ['ring', 'criticalRate', 0.02, 0.05],
+    ['necklace', 'attackSpeed', 0.03, 0.08],
+  ] as const)('giữ main stat tỉ lệ khác 0 cho slot %s', (slot, stat, min, max) => {
+    const { system, affixRegistry, player } = setup()
+    const template: Equipment = {
+      ...TEMPLATE,
+      id: `test_${slot}`,
+      slot,
+      mainStats: [{ stat, min, max }],
+    }
+
+    for (let i = 0; i < 20; i++) {
+      const instance = system.createInstance(template, player, affixRegistry)
+
+      expect(instance.mainStat.flat).toBeGreaterThan(0)
+    }
+  })
+
   it('luôn roll rarity trong 5 giá trị hợp lệ, không còn "unique"', () => {
     const { system, affixRegistry, player } = setup()
 
@@ -153,7 +236,6 @@ describe('EquipmentSystem.createInstance — roll pipeline invariants (Equipment
     expect(instance.forgePoints).toBe(0)
   })
 })
-
 describe('EquipmentSystem.forge — deterministic, trần theo Quality', () => {
   it('mỗi lần thành công +1 forgePoints, trừ nguyên liệu', () => {
     const { system, bag, registry, affixRegistry, slotManager, materialBag } = setup()
@@ -206,6 +288,66 @@ describe('EquipmentSystem.refine — reroll Implicit, KHÔNG đụng affixes/for
     // không cần khớp giá trị cụ thể (random).
     expect(instance.mainStat.flat).toBeGreaterThan(0)
   })
+
+  it('từ chối main stat không thuộc template mà không trừ nguyên liệu', () => {
+    const { system, bag, registry, affixRegistry, slotManager, materialBag, player } = setup()
+    const instance = manualInstance({
+      mainStat: { id: 'bad', sourceId: 'bad', sourceType: 'equipment', stat: 'defense', flat: 15 },
+    })
+    bag.add(instance)
+    const before = materialBag.getAmount('black-iron')
+
+    expect(system.refine(instance.instanceId, player, bag, registry, materialBag, slotManager, affixRegistry)).toBe(false)
+    expect(materialBag.getAmount('black-iron')).toBe(before)
+    expect(instance.mainStat.stat).toBe('defense')
+  })
+
+  it('cập nhật realmLevel nhưng không làm equipment tụt progression', () => {
+    const { system, bag, registry, affixRegistry, slotManager, materialBag, player } = setup()
+    const instance = manualInstance({ realmId: 'qi_refining', realmLevel: 2 })
+    bag.add(instance)
+    player.realmId = 'qi_refining'
+    player.realmLevel = 6
+
+    expect(system.refine(instance.instanceId, player, bag, registry, materialBag, slotManager, affixRegistry)).toBe(true)
+    expect(instance.realmId).toBe('qi_refining')
+    expect(instance.realmLevel).toBe(6)
+
+    player.realmLevel = 3
+    expect(system.refine(instance.instanceId, player, bag, registry, materialBag, slotManager, affixRegistry)).toBe(true)
+    expect(instance.realmLevel).toBe(6)
+  })
+})
+
+describe('EquipmentSystem.upgradeRealm — atomic realm metadata', () => {
+  it('cập nhật cả realmId và realmLevel khi nâng thành công', () => {
+    const { system, bag, registry, affixRegistry, slotManager, materialBag, player } = setup()
+    const instance = manualInstance({ realmId: 'pham_nhan', realmLevel: 5 })
+    bag.add(instance)
+    player.realmId = 'qi_refining'
+    player.realmLevel = 7
+
+    expect(system.upgradeRealm(instance.instanceId, player, bag, registry, materialBag, slotManager, affixRegistry)).toBe(true)
+    expect(instance.realmId).toBe('qi_refining')
+    expect(instance.realmLevel).toBe(7)
+  })
+
+  it('không trừ tài nguyên khi retained stat không hợp lệ', () => {
+    const { system, bag, registry, affixRegistry, slotManager, materialBag, player } = setup()
+    const instance = manualInstance({
+      realmId: 'pham_nhan',
+      mainStat: { id: 'bad', sourceId: 'bad', sourceType: 'equipment', stat: 'defense', flat: 10 },
+    })
+    bag.add(instance)
+    player.realmId = 'qi_refining'
+    player.spiritStone = 100
+    const stonesBefore = player.spiritStone
+    const materialBefore = materialBag.getAmount('black-iron')
+
+    expect(system.upgradeRealm(instance.instanceId, player, bag, registry, materialBag, slotManager, affixRegistry)).toBe(false)
+    expect(player.spiritStone).toBe(stonesBefore)
+    expect(materialBag.getAmount('black-iron')).toBe(materialBefore)
+  })
 })
 
 describe('EquipmentSystem.wash — reroll giá trị Affix, KHÔNG đụng mainStat', () => {
@@ -256,87 +398,5 @@ describe('EquipmentSystem.createInstance — zoneId (Địa Giới ghép động
 
     const withoutZone = system.createInstance(TEMPLATE, player, affixRegistry)
     expect(withoutZone.zoneId).toBeUndefined()
-  })
-})
-
-describe('EquipmentSystem.getActiveSetModifiers — mốc 2/4/6 món cùng Set', () => {
-  const SET: EquipmentSet = {
-    id: 'test_set',
-    name: 'Test Thần',
-    pathId: 'kiem_tu',
-    colorVar: '--set-test',
-    bonuses: [
-      { pieces: 2, modifiers: [{ id: 'b2', sourceId: 'test_set:2', sourceType: 'equipment', stat: 'attack', flat: 1 }] },
-      { pieces: 4, modifiers: [{ id: 'b4', sourceId: 'test_set:4', sourceType: 'equipment', stat: 'attack', flat: 2 }] },
-      { pieces: 6, modifiers: [{ id: 'b6', sourceId: 'test_set:6', sourceType: 'equipment', stat: 'attack', flat: 3 }] },
-    ],
-  }
-
-  function setupSet() {
-    const { system, bag, registry, affixRegistry } = setup()
-    const setRegistry = new EquipmentSetRegistry()
-    setRegistry.register(SET)
-
-    const slots: Equipment['slot'][] = ['weapon', 'helmet', 'armor', 'boots', 'ring', 'necklace']
-
-    for (const slot of slots) {
-      const template: Equipment = { ...TEMPLATE, id: `set_item_${slot}`, slot, setId: 'test_set' }
-      registry.register(template)
-    }
-
-    return { system, bag, registry, affixRegistry, setRegistry, slots }
-  }
-
-  function equipCount(bag: EquipmentBag, registry: EquipmentRegistry, slots: Equipment['slot'][], count: number) {
-    for (let i = 0; i < count; i++) {
-      const slot = slots[i]!
-      const instance = manualInstance({ instanceId: `set-${slot}`, itemId: `set_item_${slot}`, slot, equipped: true })
-      bag.add(instance)
-    }
-  }
-
-  it('dưới 2 món: không có bonus nào', () => {
-    const { system, bag, registry, setRegistry, slots } = setupSet()
-    equipCount(bag, registry, slots, 1)
-
-    expect(system.getActiveSetModifiers(bag, registry, setRegistry)).toHaveLength(0)
-  })
-
-  it('2 món: chỉ bonus mốc 2', () => {
-    const { system, bag, registry, setRegistry, slots } = setupSet()
-    equipCount(bag, registry, slots, 2)
-
-    const modifiers = system.getActiveSetModifiers(bag, registry, setRegistry)
-    expect(modifiers.map(m => m.id)).toEqual(['b2'])
-  })
-
-  it('4 món: cộng dồn mốc 2 VÀ mốc 4', () => {
-    const { system, bag, registry, setRegistry, slots } = setupSet()
-    equipCount(bag, registry, slots, 4)
-
-    const modifiers = system.getActiveSetModifiers(bag, registry, setRegistry)
-    expect(modifiers.map(m => m.id).sort()).toEqual(['b2', 'b4'])
-  })
-
-  it('6 món: cộng dồn cả 3 mốc', () => {
-    const { system, bag, registry, setRegistry, slots } = setupSet()
-    equipCount(bag, registry, slots, 6)
-
-    const modifiers = system.getActiveSetModifiers(bag, registry, setRegistry)
-    expect(modifiers.map(m => m.id).sort()).toEqual(['b2', 'b4', 'b6'])
-  })
-
-  it('item KHÔNG có setId hoặc CHƯA equip thì không tính vào count', () => {
-    const { system, bag, registry, setRegistry, slots } = setupSet()
-    equipCount(bag, registry, slots, 2)
-
-    // 1 item cùng set nhưng chưa equip — không được tính.
-    bag.add(manualInstance({ instanceId: 'set-unequipped', itemId: `set_item_${slots[2]}`, slot: slots[2]!, equipped: false }))
-
-    // 1 item không thuộc set nào, đã equip vào slot khác — cũng không ảnh hưởng.
-    registry.register({ ...TEMPLATE, id: 'plain_item', slot: 'armor' })
-    bag.add(manualInstance({ instanceId: 'plain-equipped', itemId: 'plain_item', slot: 'armor', equipped: true }))
-
-    expect(system.getActiveSetModifiers(bag, registry, setRegistry).map(m => m.id)).toEqual(['b2'])
   })
 })

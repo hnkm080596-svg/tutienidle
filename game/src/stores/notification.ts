@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { NotificationKind } from '@/core/notification/NotificationEvent'
+import type { LootNotificationPresentation, NotificationKind } from '@/core/notification/NotificationEvent'
 
 export interface ToastItem {
   id: string
@@ -7,6 +7,8 @@ export interface ToastItem {
   kind: NotificationKind
 
   message: string
+
+  loot?: LootNotificationPresentation
 }
 
 // Thời gian hiện trước khi tự gỡ — đủ đọc 1 dòng ngắn không cần thao
@@ -16,20 +18,49 @@ const TOAST_DURATION_MS = 3500
 
 export const useNotificationStore = defineStore('notification', {
   state: () => ({
+    // Nhiều toast có thể hiện ĐỒNG THỜI (xếp chồng), tối đa
+    // `maxVisible` cái cùng lúc — vượt mới rơi vào queuedToasts.
     toasts: [] as ToastItem[],
+    queuedToasts: [] as ToastItem[],
+    maxVisible: 5,
   }),
 
   actions: {
-    push(kind: NotificationKind, message: string) {
-      const id = crypto.randomUUID()
+    // ToastContainer.vue gọi lúc mount/resize — số toast hiện cùng lúc
+    // tuỳ theo chiều cao màn hình thật (Teleport to body nên thoát
+    // khỏi scale transform của .game-root, xem GameRoot.vue).
+    setMaxVisible(max: number) {
+      this.maxVisible = Math.max(1, max)
+      this.fillFromQueue()
+    },
 
-      this.toasts.push({ id, kind, message })
+    push(kind: NotificationKind, message: string, loot?: LootNotificationPresentation) {
+      const toast: ToastItem = { id: crypto.randomUUID(), kind, message, loot }
 
-      setTimeout(() => this.dismiss(id), TOAST_DURATION_MS)
+      if (this.toasts.length >= this.maxVisible) {
+        this.queuedToasts.push(toast)
+        return
+      }
+
+      this.show(toast)
+    },
+
+    show(toast: ToastItem) {
+      this.toasts.push(toast)
+      setTimeout(() => this.dismiss(toast.id), TOAST_DURATION_MS)
     },
 
     dismiss(id: string) {
+      if (!this.toasts.some(toast => toast.id === id)) return
+
       this.toasts = this.toasts.filter(toast => toast.id !== id)
+      this.fillFromQueue()
+    },
+
+    fillFromQueue() {
+      while (this.toasts.length < this.maxVisible && this.queuedToasts.length > 0) {
+        this.show(this.queuedToasts.shift()!)
+      }
     },
   },
 })

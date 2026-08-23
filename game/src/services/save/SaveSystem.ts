@@ -120,7 +120,9 @@ const BACKUP_KEY = 'tien-hiep-idle-save-backup'
 // optional/runtime-only, KHÔNG persist (không cần bump vì lý do này).
 // Save cũ thiếu 2 field Stats mới — không viết migration, cùng
 // convention mọi version trước.
-const CURRENT_SAVE_VERSION = 37 as const
+// version 38: progression/combat rework. No migration: development saves
+// from earlier schemas are intentionally rejected.
+const CURRENT_SAVE_VERSION = 38 as const
 
 export interface MaterialStackSave {
   materialId: string

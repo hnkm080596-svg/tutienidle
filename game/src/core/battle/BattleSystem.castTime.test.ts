@@ -63,7 +63,7 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 'ground',
+    lane: 2,
     alive: true,
     ...overrides,
   }
@@ -139,6 +139,7 @@ describe('BattleSystem — Cast Time (2026-08-21)', () => {
     player.stats.attack = 100
 
     system.start(player, enemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
 
     // Tick đầu tiên chọn skill trong Loadout, BẮT ĐẦU niệm — cooldown
     // đã tốn NGAY (đúng quy ước MMO) nhưng damage CHƯA áp.
@@ -146,7 +147,7 @@ describe('BattleSystem — Cast Time (2026-08-21)', () => {
 
     expect(enemy.currentHp).toBe(1000)
     expect(player.castingSkillId).toBe('test_cast_skill')
-    expect(skill.remainingCooldown).toBeGreaterThan(0)
+    expect(skill.remainingCooldownBySlot?.[0]).toBeGreaterThan(0)
     expect(events).toContainEqual(expect.objectContaining({
       type: 'cast_start',
       sourceId: 'player',
@@ -182,6 +183,7 @@ describe('BattleSystem — Cast Time (2026-08-21)', () => {
     player.stats.attack = 100
 
     system.start(player, enemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
 
     tick(0.1)
     tick(0.5)
@@ -203,6 +205,7 @@ describe('BattleSystem — Cast Time (2026-08-21)', () => {
     player.stats.castSpeedPercent = 1 // +100% tốc độ niệm — 2s còn 1s thật.
 
     system.start(player, enemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
 
     // Tick đầu chỉ BẮT ĐẦU niệm (updateCasting() chạy TRƯỚC
     // updateAutoCast() trong cùng tick — castTimeRemaining=2 raw chưa

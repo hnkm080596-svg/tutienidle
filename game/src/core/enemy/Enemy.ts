@@ -297,7 +297,12 @@ export function enemyToCombatEntity(
     // core/battle/BattleLane.ts).
     x: 0,
 
-    lane: enemy.lane,
+    // Placeholder — GameManager.startBattle()/updateStageProgress() set
+    // lại NGAY thành randomEnemyLaneIndex() (hoặc HERO_LANE_INDEX nếu
+    // isBoss) khi quái vào trận (2026-08-22, top-down 5-lane, xem
+    // core/battle/BattleLane.ts). `enemy.lane` (EnemyLane cũ, authored
+    // trong data/enemy/*.ts) không còn quyết định vị trí hiển thị nữa.
+    lane: 0,
 
     alive: enemy.alive,
 

@@ -39,7 +39,7 @@ export function createBaseStats(): Stats {
     // 25 vs accuracyRating mặc định 100 -> ~80% tỉ lệ trúng gốc, gần
     // với cảm giác "95% trúng/5% né" cũ nhưng vẫn để chỗ cho đầu tư
     // thật vào 1 trong 2 phía.
-    evasionRate: 25,
+    evasionRate: 5,
 
     // Tầng Attribute gốc — baseline 1 cho player (2026-08-20, giảm từ
     // 10: ở baseline cũ, trần Phàm Nhân cũng là 10 nên
@@ -69,6 +69,8 @@ export function createBaseStats(): Stats {
     manaRegenPerSecond: 1,
     cooldownReduction: 0,
     castSpeedPercent: 0,
+    finalDamagePercent: 0,
+    finalDamageReductionPercent: 0,
     criticalAvoidance: 0,
     chanceToIgnoreResistance: 0,
     ailmentResistPercent: 0,
@@ -78,25 +80,6 @@ export function createBaseStats(): Stats {
     elementApplicationPercent: 0,
     reactionEffectPercent: 0,
     ailmentDurationPercent: 0,
-    hoaTheGainPerCast: 0,
-    hoaTheDecayReductionPercent: 0,
-    thuyThePercent: 0,
-    waterReactionExtensionSeconds: 0,
-    poisonRootPercentPerStack: 0,
-    poisonRootMaxStacks: 0,
-    poisonRootThresholdBonusPercent: 0,
-    earthAoeRadius: 0,
-    earthAoeSecondaryDamagePercent: 0,
-    earthKnockbackDistance: 0,
-    skillImpactPercent: 0,
-    thoTheGainPerCast: 0,
-    kimTheGainPerProc: 0,
-    kimTheDotDamagePercentPerStack: 0,
-    kimTheDotResistancePenetrationPercentPerStack: 0,
-    kimTheMaxStacksBonus: 0,
-    metalAilmentPotencyPercent: 0,
-    huyetPhaGainPerProc: 0,
-    huyetPhaBurstDamage: 0,
     dotResistancePercent: 0,
     poisonRecoveryPercent: 0,
 

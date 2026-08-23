@@ -52,8 +52,16 @@ export class SkillManager {
 
   getEquippedInSlot(slotIndex: number): Skill | undefined {
     return this.skills.find(
-      skill => skill.equipped && skill.loadoutSlot === slotIndex,
+      skill => skill.equipped && (skill.loadoutSlots?.includes(slotIndex) || skill.loadoutSlot === slotIndex),
     )
+  }
+
+  getLoadoutEntries(): { slotIndex: number; skill: Skill }[] {
+    return this.skills
+      .filter(skill => skill.equipped && !skill.isBasicAttack)
+      .flatMap(skill => (skill.loadoutSlots ?? (skill.loadoutSlot === undefined ? [] : [skill.loadoutSlot]))
+        .map(slotIndex => ({ slotIndex, skill })))
+      .sort((a, b) => a.slotIndex - b.slotIndex)
   }
 
   // Danh sách skill ĐANG trong Skill Loadout, sắp theo đúng thứ tự
@@ -63,9 +71,7 @@ export class SkillManager {
   // riêng (getBasicAttackSkill()), không tham gia vòng lặp auto-cast
   // dù có đang chiếm 1 slot.
   getLoadoutSkills(): Skill[] {
-    return this.skills
-      .filter(skill => skill.equipped && skill.loadoutSlot !== undefined && !skill.isBasicAttack)
-      .sort((a, b) => a.loadoutSlot! - b.loadoutSlot!)
+    return this.getLoadoutEntries().map(entry => entry.skill)
   }
 
   has(skillId: string) {

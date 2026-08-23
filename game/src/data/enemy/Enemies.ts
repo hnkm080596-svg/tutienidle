@@ -91,7 +91,7 @@ export const ENEMIES: Enemy[] = [
         { kind: 'material', itemId: 'red-copper', amount: 1, chance: 0.3 },
         // Tăng tỷ lệ giai đoạn test (PLAN HOÀN CHỈNH mục 1) — trước
         // 0.05/0.2/0.5, quá thấp để kiểm thử weapon drop thực tế.
-        { kind: 'equipment', itemId: 'iron_sword', chance: 0.15 },
+        { kind: 'equipment', itemId: 'base_kiem', chance: 0.15 },
       ],
     },
 
@@ -111,7 +111,7 @@ export const ENEMIES: Enemy[] = [
         // Core Loop Foundation checklist (Phase 4) — currency Nâng
         // Cấp Dòng Affix, Boss-exclusive (giá trị cao hơn Thêm Dòng).
         { kind: 'material', itemId: 'affix_tier_stone', amount: 1, chance: 0.12 },
-        { kind: 'equipment', itemId: 'iron_sword', chance: 0.35 },
+        { kind: 'equipment', itemId: 'base_kiem', chance: 0.35 },
         { kind: 'technique', itemId: 'van_kiem_quyet', chance: 0.2 },
       ],
     },
@@ -131,7 +131,7 @@ export const ENEMIES: Enemy[] = [
         { kind: 'material', itemId: 'flame-essence', amount: 2, chance: 0.5 },
         { kind: 'material', itemId: 'demon-soul', amount: 1, chance: 0.3 },
         { kind: 'material', itemId: 'affix_tier_stone', amount: 2, chance: 0.4 },
-        { kind: 'equipment', itemId: 'iron_sword', chance: 0.75 },
+        { kind: 'equipment', itemId: 'base_kiem', chance: 0.75 },
         { kind: 'technique', itemId: 'van_kiem_quyet', chance: 1 },
         // Đột Phá Trúc Cơ (Phase 3) — 0.01%, mức thấp nhất từng có
         // trong codebase, có chủ đích (xem data/materials/materials.ts's
@@ -421,7 +421,7 @@ export const ENEMIES: Enemy[] = [
         { kind: 'material', itemId: 'yeu_dan_qi_refining', amount: 4, chance: 1 },
         { kind: 'material', itemId: 'yeu_cot_qi_refining', amount: 1, chance: 0.5 },
         { kind: 'material', itemId: 'affix_tier_stone', amount: 1, chance: 0.3 },
-        { kind: 'equipment', itemId: 'magma_boar_helm', chance: 0.4 },
+        { kind: 'equipment', itemId: 'base_quan', chance: 0.4 },
       ],
     },
   }),
@@ -506,7 +506,7 @@ export const ENEMIES: Enemy[] = [
         { kind: 'material', itemId: 'yeu_dan_qi_refining', amount: 4, chance: 1 },
         { kind: 'material', itemId: 'yeu_cot_qi_refining', amount: 1, chance: 0.5 },
         { kind: 'material', itemId: 'affix_tier_stone', amount: 1, chance: 0.3 },
-        { kind: 'equipment', itemId: 'magma_boar_helm', chance: 0.4 },
+        { kind: 'equipment', itemId: 'base_quan', chance: 0.4 },
       ],
     },
   }),
@@ -590,7 +590,7 @@ export const ENEMIES: Enemy[] = [
         { kind: 'material', itemId: 'yeu_huyet_qi_refining', amount: 3, chance: 1 },
         { kind: 'material', itemId: 'yeu_cot_qi_refining', amount: 1, chance: 0.5 },
         { kind: 'material', itemId: 'affix_tier_stone', amount: 1, chance: 0.3 },
-        { kind: 'equipment', itemId: 'sand_lynx_boots', chance: 0.4 },
+        { kind: 'equipment', itemId: 'base_hai', chance: 0.4 },
       ],
     },
   }),
@@ -674,7 +674,7 @@ export const ENEMIES: Enemy[] = [
         { kind: 'material', itemId: 'yeu_huyet_qi_refining', amount: 3, chance: 1 },
         { kind: 'material', itemId: 'yeu_cot_qi_refining', amount: 1, chance: 0.5 },
         { kind: 'material', itemId: 'affix_tier_stone', amount: 1, chance: 0.3 },
-        { kind: 'equipment', itemId: 'sand_lynx_boots', chance: 0.4 },
+        { kind: 'equipment', itemId: 'base_hai', chance: 0.4 },
       ],
     },
   }),
@@ -761,7 +761,7 @@ export const ENEMIES: Enemy[] = [
         { kind: 'material', itemId: 'yeu_dan_qi_refining', amount: 3, chance: 1 },
         { kind: 'material', itemId: 'yeu_cot_qi_refining', amount: 1, chance: 0.5 },
         { kind: 'material', itemId: 'affix_tier_stone', amount: 1, chance: 0.3 },
-        { kind: 'equipment', itemId: 'blade_edge_ring', chance: 0.4 },
+        { kind: 'equipment', itemId: 'base_gioi', chance: 0.4 },
       ],
     },
   }),
@@ -848,7 +848,7 @@ export const ENEMIES: Enemy[] = [
         { kind: 'material', itemId: 'yeu_dan_qi_refining', amount: 3, chance: 1 },
         { kind: 'material', itemId: 'yeu_cot_qi_refining', amount: 1, chance: 0.5 },
         { kind: 'material', itemId: 'affix_tier_stone', amount: 1, chance: 0.3 },
-        { kind: 'equipment', itemId: 'blade_edge_ring', chance: 0.4 },
+        { kind: 'equipment', itemId: 'base_gioi', chance: 0.4 },
       ],
     },
   }),
@@ -934,7 +934,7 @@ export const ENEMIES: Enemy[] = [
         { kind: 'material', itemId: 'yeu_huyet_qi_refining', amount: 4, chance: 1 },
         { kind: 'material', itemId: 'yeu_cot_qi_refining', amount: 1, chance: 0.5 },
         { kind: 'material', itemId: 'affix_tier_stone', amount: 1, chance: 0.35 },
-        { kind: 'equipment', itemId: 'flood_serpent_necklace', chance: 0.4 },
+        { kind: 'equipment', itemId: 'base_truy', chance: 0.4 },
       ],
     },
   }),
@@ -1020,7 +1020,7 @@ export const ENEMIES: Enemy[] = [
         { kind: 'material', itemId: 'yeu_huyet_qi_refining', amount: 4, chance: 1 },
         { kind: 'material', itemId: 'yeu_cot_qi_refining', amount: 1, chance: 0.5 },
         { kind: 'material', itemId: 'affix_tier_stone', amount: 1, chance: 0.35 },
-        { kind: 'equipment', itemId: 'flood_serpent_necklace', chance: 0.4 },
+        { kind: 'equipment', itemId: 'base_truy', chance: 0.4 },
       ],
     },
   }),
@@ -1033,7 +1033,7 @@ export const ENEMIES: Enemy[] = [
   // beastHP(T) = round(60 * 1.17^(T-1)), beastATK(T) = round(6 * 1.155^(T-1)),
   // armor = 5 + T. Loài boss-eligible (2nd loài mỗi hành, luôn là
   // bossEnemyId của Stage) = beast × 1.6 HP / × 1.4 ATK / × 1.3 armor,
-  // CÙNG T — vẫn PRE-multiplier (applyBossMultiplier tự nhân thêm ×8/×3
+  // CÙNG T — vẫn PRE-multiplier (applyBossMultiplier tự nhân thêm ×7/×1.6
   // lúc spawn boss thật, không tự cộng dồn ở đây). Không có material
   // riêng mới (tránh material chết không ai tiêu) — chỉ rơi
   // green-spirit-herb đã có sẵn.
@@ -1106,7 +1106,7 @@ export const ENEMIES: Enemy[] = [
       itemDrops: [
         { kind: 'material', itemId: 'green-spirit-herb', amount: 3, chance: 1 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 3, chance: 1 },
-        { kind: 'equipment', itemId: 'iron_sword', chance: 1 },
+        { kind: 'equipment', itemId: 'base_kiem', chance: 1 },
       ],
     },
   }),
@@ -1177,7 +1177,7 @@ export const ENEMIES: Enemy[] = [
       itemDrops: [
         { kind: 'material', itemId: 'green-spirit-herb', amount: 3, chance: 1 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 6, chance: 1 },
-        { kind: 'equipment', itemId: 'iron_sword', chance: 0.5 },
+        { kind: 'equipment', itemId: 'base_kiem', chance: 0.5 },
       ],
     },
   }),
@@ -1248,7 +1248,7 @@ export const ENEMIES: Enemy[] = [
       itemDrops: [
         { kind: 'material', itemId: 'green-spirit-herb', amount: 3, chance: 1 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 9, chance: 1 },
-        { kind: 'equipment', itemId: 'iron_sword', chance: 0.4 },
+        { kind: 'equipment', itemId: 'base_kiem', chance: 0.4 },
       ],
     },
   }),
@@ -1389,7 +1389,7 @@ export const ENEMIES: Enemy[] = [
       itemDrops: [
         { kind: 'material', itemId: 'green-spirit-herb', amount: 3, chance: 1 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 15, chance: 1 },
-        { kind: 'equipment', itemId: 'iron_sword', chance: 0.4 },
+        { kind: 'equipment', itemId: 'base_kiem', chance: 0.4 },
       ],
     },
   }),
@@ -1530,7 +1530,7 @@ export const ENEMIES: Enemy[] = [
       itemDrops: [
         { kind: 'material', itemId: 'green-spirit-herb', amount: 3, chance: 1 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 21, chance: 1 },
-        { kind: 'equipment', itemId: 'iron_sword', chance: 0.4 },
+        { kind: 'equipment', itemId: 'base_kiem', chance: 0.4 },
       ],
     },
   }),
@@ -1671,7 +1671,7 @@ export const ENEMIES: Enemy[] = [
       itemDrops: [
         { kind: 'material', itemId: 'green-spirit-herb', amount: 3, chance: 1 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 27, chance: 1 },
-        { kind: 'equipment', itemId: 'iron_sword', chance: 0.4 },
+        { kind: 'equipment', itemId: 'base_kiem', chance: 0.4 },
       ],
     },
   }),
@@ -1742,7 +1742,7 @@ export const ENEMIES: Enemy[] = [
       itemDrops: [
         { kind: 'material', itemId: 'green-spirit-herb', amount: 3, chance: 1 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 30, chance: 1 },
-        { kind: 'equipment', itemId: 'iron_sword', chance: 0.5 },
+        { kind: 'equipment', itemId: 'base_kiem', chance: 0.5 },
       ],
     },
   }),

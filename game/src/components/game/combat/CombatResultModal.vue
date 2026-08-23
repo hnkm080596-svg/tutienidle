@@ -25,6 +25,7 @@ const outcome = computed(() => {
 
   return state === 'victory' || state === 'defeat' ? state : null
 })
+
 </script>
 
 <template>

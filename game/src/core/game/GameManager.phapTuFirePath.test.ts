@@ -25,6 +25,7 @@ describe('GameManager — Pháp Tu FirePath (chọn path tự cấp basic + Hỏ
     gameManager.registerProgressionNodes(PHAP_TU_NODES)
 
     const player = createDefaultPlayer()
+    player.realmLevel = 12
 
     expect(gameManager.chooseCultivationPath('phap_tu', player)).toBe(true)
 
@@ -59,6 +60,7 @@ describe('GameManager — Pháp Tu FirePath (chọn path tự cấp basic + Hỏ
     gameManager.registerProgressionNodes(PHAP_TU_NODES)
 
     const player = createDefaultPlayer()
+    player.realmLevel = 12
 
     expect(gameManager.chooseCultivationPath('phap_tu', player)).toBe(true)
 
@@ -208,15 +210,8 @@ describe('GameManager — Pháp Tu FirePath (chọn path tự cấp basic + Hỏ
     expect(hoaCauThuat?.hoaTheGainPerCast).toBeGreaterThanOrEqual(1)
     expect(hoaCauThuat?.hoaTheDecayReductionPercent).toBeGreaterThanOrEqual(0.1)
 
-    // Skill rework — SkillSystem.getSkillResourceStatModifiers() phải
-    // đồng bộ đúng số đó thành CombatEntity.stats (combat đọc qua đây,
-    // KHÔNG đọc thẳng Skill.field), cùng pipeline getAggregatedModifiers().
-    const finalStats = calculateStats(player.baseStats, [
-      ...player.modifiers,
-      ...gameManager.getAggregatedModifiers(),
-    ])
-
-    expect(finalStats.hoaTheGainPerCast).toBeCloseTo(hoaCauThuat!.hoaTheGainPerCast!, 5)
-    expect(finalStats.hoaTheDecayReductionPercent).toBeCloseTo(hoaCauThuat!.hoaTheDecayReductionPercent!, 5)
+    const runtimeStats = gameManager.skillSystem.getSkillRuntimeStats()
+    expect(runtimeStats.hoaTheGainPerCast).toBeCloseTo(hoaCauThuat!.hoaTheGainPerCast!, 5)
+    expect(runtimeStats.hoaTheDecayReductionPercent).toBeCloseTo(hoaCauThuat!.hoaTheDecayReductionPercent!, 5)
   })
 })

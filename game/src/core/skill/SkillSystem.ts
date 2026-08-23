@@ -1,5 +1,5 @@
 import type { Skill } from './Skill'
-import { SKILL_RESOURCE_STAT_KEYS } from './Skill'
+import { SKILL_RESOURCE_STAT_KEYS, createSkillRuntimeStats, type SkillRuntimeStats } from './SkillRuntimeStats'
 import type { SkillEffect } from './SkillEffect'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { PassiveTrigger } from './SkillTypes'
@@ -24,6 +24,22 @@ export const ACTIVE_SKILL_XP_PER_CAST = 10
 
 export const PASSIVE_SKILL_XP_PER_TRIGGER = 2
 
+export function getSkillExperiencePercent(skill: Pick<Skill, 'level' | 'maxLevel' | 'experience' | 'experienceRequired'>): number {
+  if (skill.level >= skill.maxLevel) {
+    return 100
+  }
+
+  if (
+    !Number.isFinite(skill.experience)
+    || !Number.isFinite(skill.experienceRequired)
+    || skill.experienceRequired <= 0
+  ) {
+    return 0
+  }
+
+  return Math.min(100, Math.max(0, skill.experience / skill.experienceRequired) * 100)
+}
+
 export interface EffectiveSkill {
   effects: SkillEffect[]
 
@@ -35,6 +51,7 @@ export interface EffectiveSkill {
 export class SkillSystem {
   constructor(
     private readonly manager: SkillManager,
+    private readonly onLevelUp?: (skill: Skill, levelsGained: number) => void,
   ) {}
 
   /**
@@ -47,14 +64,15 @@ export class SkillSystem {
    * thẳng field trên Skill, để 1 điểm duy nhất quyết định "skill này
    * đang hoạt động thế nào".
    */
-  getEffectiveSkill(skill: Skill): EffectiveSkill {
+  getEffectiveSkill(skill: Skill, levelOverride?: number): EffectiveSkill {
     const specialization = skill.specializations?.find(
       candidate => candidate.id === skill.selectedSpecializationId,
     )
 
     const baseEffects = specialization?.effectsOverride ?? skill.effects
 
-    const levelMultiplier = 1 + (skill.level - 1) * ACTIVE_SKILL_DAMAGE_PERCENT_PER_LEVEL
+    const effectiveLevel = levelOverride ?? skill.level
+    const levelMultiplier = 1 + (effectiveLevel - 1) * ACTIVE_SKILL_DAMAGE_PERCENT_PER_LEVEL
 
     const effects = baseEffects.map(effect =>
       effect.type === 'damage' && effect.value !== undefined
@@ -98,40 +116,17 @@ export class SkillSystem {
     return modifiers
   }
 
-  /**
-   * Skill rework (2026-08-21) — 19 field "Thế tài nguyên" (Hỏa Thế/
-   * Thủy Thế/...) sống trên object Skill (Node Tree ghi trực tiếp vào
-   * đó, xem GameManager.purchaseNode()), nhưng combat vẫn đọc qua
-   * CombatEntity.stats như mọi stat khác (đơn giản hơn hẳn phải tra
-   * ngược "skill nào của entity này sở hữu field này" ở từng read-site
-   * combat, đặc biệt với các field đọc phía TARGET như thuyThePercent
-   * hay đọc NGOÀI lúc cast như hoaTheDecayReductionPercent). Hàm này
-   * đồng bộ giá trị đó thành StatModifier (sourceType 'skill'), gọi bởi
-   * GameManager.getAggregatedModifiers() CÙNG chỗ với
-   * getScaledPassiveModifiers() — chạy lại mỗi tick, luôn phản ánh
-   * đúng giá trị hiện tại trên Skill, không cần bước "resync" riêng khi
-   * mua node hay khi load save.
-   */
-  getSkillResourceStatModifiers(): StatModifier[] {
-    const modifiers: StatModifier[] = []
+  /** Tổng hợp riêng tham số path/skill; không đưa chúng vào character Stats. */
+  getSkillRuntimeStats(): SkillRuntimeStats {
+    const stats = createSkillRuntimeStats()
 
     for (const skill of this.manager.getAll()) {
-      for (const stat of SKILL_RESOURCE_STAT_KEYS) {
-        const value = skill[stat]
-
-        if (value) {
-          modifiers.push({
-            id: `skill:${skill.id}:${stat}`,
-            sourceId: skill.id,
-            sourceType: 'skill',
-            stat,
-            flat: value,
-          })
-        }
+      for (const key of SKILL_RESOURCE_STAT_KEYS) {
+        stats[key] += skill[key] ?? 0
       }
     }
 
-    return modifiers
+    return stats
   }
 
   selectSpecialization(skillId: string, specializationId: string): boolean {
@@ -153,23 +148,37 @@ export class SkillSystem {
       return false
     }
 
-    if (skill.level >= skill.maxLevel) {
+    if (
+      skill.level >= skill.maxLevel
+      || !Number.isFinite(amount)
+      || amount <= 0
+      || !Number.isFinite(skill.experienceRequired)
+      || skill.experienceRequired <= 0
+      || !Number.isFinite(skill.experience)
+      || skill.experience < 0
+    ) {
       return false
     }
 
     skill.experience += amount
+    let levelsGained = 0
 
-    while (skill.experience >= skill.experienceRequired) {
+    while (skill.level < skill.maxLevel && skill.experience >= skill.experienceRequired) {
       skill.experience -= skill.experienceRequired
 
       skill.level++
+      levelsGained++
 
-      skill.experienceRequired = Math.floor(skill.experienceRequired * 1.5)
+      skill.experienceRequired = Math.max(1, Math.floor(skill.experienceRequired * 1.5))
 
       if (skill.level >= skill.maxLevel) {
         skill.experience = 0
         break
       }
+    }
+
+    if (levelsGained > 0) {
+      this.onLevelUp?.(skill, levelsGained)
     }
 
     return true
@@ -181,12 +190,13 @@ export class SkillSystem {
     }
 
     this.manager.add({
-      ...skill,
+      ...structuredClone(skill),
 
       unlocked: true,
       equipped: false,
 
       remainingCooldown: 0,
+      remainingCooldownBySlot: {},
     })
 
     return true
@@ -213,20 +223,39 @@ export class SkillSystem {
       return false
     }
 
-    for (const other of this.manager.getAll()) {
-      const conflicts = other.loadoutSlot === slotIndex
-        || other.id === skillId
-        || (skill.isBasicAttack && other.isBasicAttack && other.id !== skillId)
+    if (skill.isBasicAttack) {
+      for (const other of this.manager.getAll()) {
+        if (other.id !== skillId && other.isBasicAttack) {
+          other.equipped = false
+          other.loadoutSlot = undefined
+          other.loadoutSlots = []
+        }
+      }
+    }
 
-      if (conflicts) {
-        other.equipped = false
-        other.loadoutSlot = undefined
+    for (const other of this.manager.getAll()) {
+      if (other.id !== skillId && (other.loadoutSlots?.includes(slotIndex) || other.loadoutSlot === slotIndex)) {
+        other.loadoutSlots = (other.loadoutSlots ?? []).filter(index => index !== slotIndex)
+        other.loadoutSlot = other.loadoutSlots[0]
+        other.equipped = other.loadoutSlots.length > 0
       }
     }
 
     skill.equipped = true
-    skill.loadoutSlot = slotIndex
+    skill.loadoutSlots = [...new Set([...(skill.loadoutSlots ?? []), slotIndex])].sort((a, b) => a - b)
+    skill.loadoutSlot = skill.loadoutSlots[0]
+    skill.remainingCooldownBySlot ??= {}
 
+    return true
+  }
+
+  unequipFromSlot(slotIndex: number): boolean {
+    const skill = this.manager.getEquippedInSlot(slotIndex)
+    if (!skill) return false
+    skill.loadoutSlots = (skill.loadoutSlots ?? []).filter(index => index !== slotIndex)
+    delete skill.remainingCooldownBySlot?.[slotIndex]
+    skill.loadoutSlot = skill.loadoutSlots[0]
+    skill.equipped = skill.isBasicAttack === true || skill.loadoutSlots.length > 0
     return true
   }
 
@@ -271,6 +300,8 @@ export class SkillSystem {
 
     skill.equipped = false
     skill.loadoutSlot = undefined
+    skill.loadoutSlots = []
+    skill.remainingCooldownBySlot = {}
 
     return true
   }
@@ -308,6 +339,16 @@ export class SkillSystem {
     }
 
     return this.hasEnoughResource(skill, entity)
+  }
+
+  canUseInSlot(skillId: string, slotIndex: number, entity: CombatEntity): boolean {
+    const skill = this.manager.get(skillId)
+    if (!skill || (skill.remainingCooldownBySlot?.[slotIndex] ?? 0) > 0) return false
+    const globalCooldown = skill.remainingCooldown
+    skill.remainingCooldown = 0
+    const canUse = this.canUse(skillId, entity)
+    skill.remainingCooldown = globalCooldown
+    return canUse
   }
 
   private hasEnoughResource(skill: Skill, entity: CombatEntity): boolean {
@@ -353,13 +394,36 @@ export class SkillSystem {
     return skill
   }
 
+  useInSlot(skillId: string, slotIndex: number, entity: CombatEntity): Skill | null {
+    if (!this.canUseInSlot(skillId, slotIndex, entity)) return null
+    const skill = this.manager.get(skillId)!
+    skill.remainingCooldownBySlot ??= {}
+    skill.remainingCooldownBySlot[slotIndex] = skill.cooldown
+    this.consumeResource(skill, entity)
+    return skill
+  }
+
+  private consumeResource(skill: Skill, entity: CombatEntity) {
+    if (skill.resourceType === 'mana') entity.currentMp -= skill.cost
+    else if (skill.resourceType === 'rage') entity.currentRage -= skill.cost
+    else if (skill.resourceType === 'sword_intent') entity.currentSwordIntent -= skill.cost
+    else if (skill.resourceType === 'momentum') entity.currentMomentum -= skill.cost
+  }
+
   update(deltaSeconds: number, cooldownReduction = 0) {
-    const effectiveDelta = deltaSeconds * (1 + cooldownReduction)
+    const effectiveDelta = deltaSeconds * (1 + Math.min(3, Math.max(0, cooldownReduction)))
 
     for (
       const skill
       of this.manager.getAll()
     ) {
+      for (const slot of Object.keys(skill.remainingCooldownBySlot ?? {})) {
+        const slotIndex = Number(slot)
+        skill.remainingCooldownBySlot![slotIndex] = Math.max(
+          0,
+          (skill.remainingCooldownBySlot![slotIndex] ?? 0) - effectiveDelta,
+        )
+      }
       if (
         skill.remainingCooldown <= 0
       ) {

@@ -35,29 +35,22 @@ export interface Equipment {
   // ghi chú tương tự trong core/technique/Technique.ts.
   icon?: string
 
-  slot: EquipmentSlot
+  iconPool?: string[]
 
-  // Cơ chế Set (2026-08-15) — liên kết tới EquipmentSet (xem
-  // EquipmentSet.ts), không khai = item KHÔNG thuộc Set nào (đa số
-  // item hiện có). 6 item CÙNG setId đại diện đủ 6 EquipmentSlot của 1
-  // Set — không enforce cứng ở type, chỉ đúng theo quy ước data.
-  setId?: string
+  slot: EquipmentSlot
 
   grade: number
 
   maxEnhanceLevel: number
-
-  // Cảnh giới tối thiểu để TRANG BỊ món này (Level requirement, checklist
-  // Equipment Base) — không set = mở ngay từ đầu, dùng lại đúng
-  // convention getRealmIndex() đã dùng ở Recipe/Building.
-  requiredRealmId?: string
 
   // Implicit — chỉ số CHẮC CHẮN có trên mọi instance của template này
   // (roll 1 giá trị trong range rồi scale thêm theo cảnh giới người
   // chơi lúc rớt, xem EquipmentSystem.createInstance()), tách biệt
   // hoàn toàn khỏi Affix pool (Prefix/Suffix, xem Affix.ts) — Implicit
   // không tính vào giới hạn số Affix theo Rarity.
-  mainStat: EquipmentStatRange
+  // Mỗi lựa chọn main stat sở hữu range riêng. Chỉ Nhẫn/Dây Chuyền có
+  // nhiều hơn một lựa chọn; các slot còn lại luôn có đúng một phần tử.
+  mainStats: readonly EquipmentStatRange[]
 
   enhanceCost?: EquipmentEnhanceCost[]
 

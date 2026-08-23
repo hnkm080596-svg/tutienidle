@@ -34,7 +34,7 @@ export interface SkillEffect {
 
   // Kim Tu Trúc Cơ Pure ("Kim Thế" major, Plans/KimPath mục 9/11,
   // 2026-08-21) — CHỈ dùng cho effect 'ailment'. Khi true VÀ roll
-  // ailmentChance THÀNH CÔNG, +source.stats.kimTheGainPerProc vào
+  // ailmentChance THÀNH CÔNG, +source.skillStats.kimTheGainPerProc vào
   // CombatEntity.currentKimThe (0 nếu chưa mua "Kim Thế") — xem
   // SkillEffectSystem.ts's apply(), case 'ailment'. KHÁC hẳn
   // Skill.grantsHoaThePerCast/grantsThoThePerCast (gate theo CAST,
@@ -109,7 +109,7 @@ export interface SkillEffect {
   projectileBehavior?: ProjectileBehavior
 
   // Thổ Tu Pure (Plans/EarthPath mục XVI, 2026-08-21) — CHỈ dùng cho
-  // effect 'damage'. Khi true VÀ source.stats.earthAoeRadius > 0 (đã
+  // effect 'damage'. Khi true VÀ source.skillStats.earthAoeRadius > 0 (đã
   // mua Major "Thổ Thế"), SkillEffectSystem tự build 1 ProjectileBehavior
   // từ earthAoeRadius/earthAoeSecondaryDamagePercent/earthKnockbackDistance
   // GHI ĐÈ `projectileBehavior` tĩnh ở trên — Thổ Cầu Thuật bắn đơn mục

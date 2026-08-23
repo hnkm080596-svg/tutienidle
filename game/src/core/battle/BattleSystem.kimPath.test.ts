@@ -10,6 +10,7 @@ import { EventBus } from '../events/EventBus'
 import { MissileSystem } from '../combat/missile/MissileSystem'
 import { MissileManager } from '../combat/missile/MissileManager'
 import { createBaseStats } from '../stats/StatBlock'
+import { createSkillRuntimeStats } from '../skill/SkillRuntimeStats'
 import { ailments } from '../../data/ailment/ailments'
 import { MAX_KIM_THE, KIM_THE_DECAY_INTERVAL_SECONDS } from '../combat/CombatTypes'
 import type { CombatEntity } from '../combat/CombatEntity'
@@ -43,7 +44,7 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 'ground',
+    lane: 2,
     alive: true,
     ...overrides,
   }
@@ -114,6 +115,7 @@ describe('BattleSystem — Kim Thế (Plans/KimPath mục 9/11, Kim Thế major)
     const enemy = createCombatant({ id: 'enemy', x: 50 })
 
     system.start(player, enemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
 
     for (let i = 0; i < 320; i++) {
       tick(0.01)
@@ -127,11 +129,13 @@ describe('BattleSystem — Kim Thế (Plans/KimPath mục 9/11, Kim Thế major)
 
     const player = createCombatant({ id: 'player', type: 'player', x: 0 })
 
-    player.stats.kimTheGainPerProc = 1
+    player.skillStats = { ...createSkillRuntimeStats(), kimTheGainPerProc: 1 }
 
     const enemy = createCombatant({ id: 'enemy', x: 50 })
 
     system.start(player, enemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
+    enemy.x = 50 // start() ghi đè x=400 > SCREEN_VISIBLE_MAX_X(350) — đặt lại trong tầm nhìn.
 
     // attackSpeed mặc định 1 -> cast mỗi 1s, ailmentChance=1 nên proc
     // LUÔN thành công -> +1 Kim Thế/giây, chạm trần sau 5 giây.
@@ -147,12 +151,13 @@ describe('BattleSystem — Kim Thế (Plans/KimPath mục 9/11, Kim Thế major)
 
     const player = createCombatant({ id: 'player', type: 'player', x: 0 })
 
-    player.stats.kimTheGainPerProc = 1
-    player.stats.kimTheMaxStacksBonus = 1
+    player.skillStats = { ...createSkillRuntimeStats(), kimTheGainPerProc: 1, kimTheMaxStacksBonus: 1 }
 
     const enemy = createCombatant({ id: 'enemy', x: 50 })
 
     system.start(player, enemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
+    enemy.x = 50 // start() ghi đè x=400 > SCREEN_VISIBLE_MAX_X(350) — đặt lại trong tầm nhìn.
 
     for (let i = 0; i < 700; i++) {
       tick(0.01)
@@ -171,6 +176,7 @@ describe('BattleSystem — Kim Thế (Plans/KimPath mục 9/11, Kim Thế major)
     const enemy = createCombatant({ id: 'enemy', x: 50 })
 
     system.start(player, enemy)
+    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
 
     // Đúng 1 interval (5s) -> mất đúng 1 tầng. +1 tick dư để tránh lỗi
     // làm tròn số thực (500 × 0.01 có thể ra 4.999999... < 5 đúng

@@ -24,11 +24,10 @@
 import { computed } from 'vue'
 import SlotView from '../../common/SlotView.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { usePlayerStore } from '@/stores/player'
 import type { TechniqueTooltipContent } from '@/composables/useTooltip'
 import { buildTechniqueSections } from '@/composables/useTechniqueSections'
 import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
-import { getTechniqueTierProgress, TECHNIQUE_TIER_LABELS } from '@/core/technique/TechniqueTier'
+import { getTechniqueInsightTotalRequired, getTechniqueTierProgress, TECHNIQUE_TIER_LABELS } from '@/core/technique/TechniqueTier'
 import { formatNumber } from '@/core/format/NumberFormatter'
 
 // UI redesign Step 12 (Tâm Pháp, spec mục 15) — "Tâm pháp hiện tại
@@ -45,7 +44,6 @@ const props = withDefaults(defineProps<{
 })
 
 const gameManager = useGameManager()
-const player = usePlayerStore()
 const { stateVersion } = useStateVersion()
 
 const equipped = computed(() => {
@@ -54,7 +52,11 @@ const equipped = computed(() => {
   return gameManager.techniqueManager.getEquipped()
 })
 
-const tierProgress = computed(() => getTechniqueTierProgress(player.techniqueExperience))
+const techniqueInsight = computed(() => equipped.value?.insight ?? 0)
+const tierProgress = computed(() => {
+  const technique = equipped.value
+  return getTechniqueTierProgress(techniqueInsight.value, technique ? getTechniqueInsightTotalRequired(technique) : undefined)
+})
 
 const currentTierLabel = computed(() => TECHNIQUE_TIER_LABELS[tierProgress.value.tier])
 
@@ -67,7 +69,7 @@ const tierExpPercent = computed(() => {
     return 100
   }
 
-  return Math.min(100, ((player.techniqueExperience - lowerBound) / (nextThreshold - lowerBound)) * 100)
+  return Math.min(100, ((techniqueInsight.value - lowerBound) / (nextThreshold - lowerBound)) * 100)
 })
 
 const tierExpLabel = computed(() => {
@@ -77,7 +79,7 @@ const tierExpLabel = computed(() => {
     return 'Viên Mãn'
   }
 
-  return `${formatNumber(player.techniqueExperience)} / ${formatNumber(nextThreshold)}`
+  return `${formatNumber(techniqueInsight.value)} / ${formatNumber(nextThreshold)}`
 })
 
 const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
@@ -98,7 +100,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 
     description: technique.description,
 
-    sections: buildTechniqueSections(technique, gameManager, player.techniqueExperience),
+    sections: buildTechniqueSections(technique, gameManager, techniqueInsight.value),
   }
 })
 </script>
@@ -109,8 +111,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
       class="loadout-card__icon"
       :item="equipped ?? null"
       :label="equipped?.name ?? label"
-      :item-icon="equipped?.icon"
-      rarity="breakthrough"
+      :icon="equipped?.icon"
     />
 
     <div class="loadout-card__info">

@@ -3,6 +3,7 @@ import type { AilmentId } from './AilmentTypes'
 import type { AilmentTemplate, AilmentRegistry } from './AilmentRegistry'
 import { AilmentManager } from './AilmentManager'
 import type { CombatEntity } from '../combat/CombatEntity'
+import { getSkillRuntimeStat } from '../skill/SkillRuntimeStats'
 import type { CombatSystem } from '../combat/CombatSystem'
 import { getArmorMitigationPercent } from '../combat/Armor'
 import { getResistanceMitigationPercent } from '../combat/Resistance'
@@ -40,7 +41,7 @@ export class AilmentSystem {
     // Kim Thế. currentKimThe đọc trực tiếp (KHÔNG qua StatModifier
     // pipeline — đây là 1 counter runtime, không phải stat tĩnh).
     const kimTheMultiplier = template.element === 'metal'
-      ? 1 + source.currentKimThe * source.stats.kimTheDotDamagePercentPerStack + source.stats.metalAilmentPotencyPercent
+      ? 1 + source.currentKimThe * getSkillRuntimeStat(source, 'kimTheDotDamagePercentPerStack') + getSkillRuntimeStat(source, 'metalAilmentPotencyPercent')
       : 1
 
     const damagePerSecond = template.category === 'dot'
@@ -92,11 +93,11 @@ export class AilmentSystem {
         // Mộc Tu Trúc Cơ Pure ("Mộc Thế" major, Plans/PoisonPath mục 8)
         // — snapshot 1 lần, || undefined để giữ field "không có" thay
         // vì 0 cho ailment/nguồn không mua node này (gọn hơn khi debug).
-        poisonRootPercentPerStack: source.stats.poisonRootPercentPerStack || undefined,
+        poisonRootPercentPerStack: getSkillRuntimeStat(source, 'poisonRootPercentPerStack') || undefined,
 
-        poisonRootMaxStacks: source.stats.poisonRootMaxStacks || undefined,
+        poisonRootMaxStacks: getSkillRuntimeStat(source, 'poisonRootMaxStacks') || undefined,
 
-        poisonRootThresholdBonusPercent: source.stats.poisonRootThresholdBonusPercent || undefined,
+        poisonRootThresholdBonusPercent: getSkillRuntimeStat(source, 'poisonRootThresholdBonusPercent') || undefined,
 
         // Thổ Tu (Thạch Hóa) — snapshot thẳng từ template, KHÔNG có
         // stat nguồn nào chi phối (khác poisonRoot* ở trên) — xem

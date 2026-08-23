@@ -2,6 +2,7 @@ import type { AilmentId } from '../ailment/AilmentTypes'
 import type { AilmentSystem } from '../ailment/AilmentSystem'
 import type { AilmentRegistry } from '../ailment/AilmentRegistry'
 import type { CombatEntity } from '../combat/CombatEntity'
+import { getSkillRuntimeStat } from '../skill/SkillRuntimeStats'
 import type { CombatSystem } from '../combat/CombatSystem'
 import type { BuffSystem } from '../buff/BuffSystem'
 import type { BuffRegistry } from '../buff/BuffRegistry'
@@ -82,7 +83,7 @@ export class ReactionManager {
 
       const reactionDamage = flatAndPercentDamage * (1 + source.stats.reactionEffectPercent)
 
-      target.currentHp = Math.max(0, target.currentHp - reactionDamage)
+      combatSystem.applyModifiedDirectDamage(target, reactionDamage, source, 'reaction')
 
       // Kim Tu ("Thiêu Huyết", Hỏa+Kim, Plans/KimPath mục 5, 2026-08-21)
       // — trừ vĩnh viễn % maxHp, trần MAX_HP_REDUCTION_CAP_PERCENT CỘNG
@@ -95,7 +96,7 @@ export class ReactionManager {
 
         if (appliedPercent > 0) {
           target.maxHp = Math.max(1, target.maxHp * (1 - appliedPercent))
-          target.currentHp = Math.min(target.currentHp, target.maxHp)
+          combatSystem.vitals.clampToMaxHp(target, 'reaction', source.id)
           target.totalMaxHpReductionPercent = alreadyReduced + appliedPercent
         }
       }
@@ -154,11 +155,12 @@ export class ReactionManager {
         const keptAilmentId =
           reaction.keepsAilmentId === existingId ? existingId : reaction.keepsAilmentId === newAilmentId ? newAilmentId : undefined
 
-        if (keptAilmentId && source.stats.waterReactionExtensionSeconds > 0) {
+        const extensionSeconds = getSkillRuntimeStat(source, 'waterReactionExtensionSeconds')
+        if (keptAilmentId && extensionSeconds > 0) {
           const otherAilmentId = keptAilmentId === existingId ? newAilmentId : existingId
 
           targetAilments.remove(otherAilmentId)
-          targetAilments.renewWithExtension(keptAilmentId, source.stats.waterReactionExtensionSeconds)
+          targetAilments.renewWithExtension(keptAilmentId, extensionSeconds)
         } else {
           targetAilments.remove(existingId)
           targetAilments.remove(newAilmentId)

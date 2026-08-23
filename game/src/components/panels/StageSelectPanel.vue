@@ -5,10 +5,9 @@
 // (Lặp Lại Khiêu Chiến / Tự Động Thám Hiểm) → Bắt Đầu.
 import { computed, ref, watch } from 'vue'
 import { usePlayerStore } from '@/stores/player'
-import { useUiStore } from '@/stores/ui'
+import { useUiStore, type BattleRunMode } from '@/stores/ui'
 import { useGameManager } from '@/composables/useGameState'
 import { useBattleActions } from '@/composables/useBattleActions'
-import { getRealmIndex, getCurrentRealm } from '@/core/realm/realmSystem'
 import BuildingConstructionGate from './BuildingConstructionGate.vue'
 
 const player = usePlayerStore()
@@ -30,8 +29,10 @@ function openBuild() {
 
 const zones = computed(() => gameManager.zoneRegistry.getAll())
 
-function isZoneUnlocked(requiredRealmId?: string): boolean {
-  return !requiredRealmId || getRealmIndex(player.realmId) >= getRealmIndex(requiredRealmId)
+function isZoneUnlocked(zoneId: string): boolean {
+  const zone = zones.value.find(candidate => candidate.id === zoneId)
+  const firstStageId = zone?.stageIds[0]
+  return Boolean(firstStageId && gameManager.isStageUnlocked(firstStageId, player.$state))
 }
 
 // Luyện Khí tầng 1-10 content pass — gate MỊN hơn isZoneUnlocked (chỉ
@@ -40,15 +41,7 @@ function isZoneUnlocked(requiredRealmId?: string): boolean {
 // cảnh giới này (vd đã lên Trúc Cơ), tầng gate coi như hết ý nghĩa,
 // Stage mở tự do để farm lại.
 function isStageUnlocked(stage: (typeof stagesInZone.value)[number]): boolean {
-  if (stage.requiredRealmId && getRealmIndex(player.realmId) < getRealmIndex(stage.requiredRealmId)) {
-    return false
-  }
-
-  if (stage.requiredRealmId === player.realmId && stage.requiredRealmLevel && player.realmLevel < stage.requiredRealmLevel) {
-    return false
-  }
-
-  return true
+  return gameManager.isStageUnlocked(stage.id, player.$state)
 }
 
 const selectedZoneId = ref<string | null>(zones.value[0]?.id ?? null)
@@ -106,14 +99,14 @@ const stagePathPoints = computed(() =>
   stageNodes.value.map(node => `${node.xPercent},${node.y}`).join(' '),
 )
 
-const mode = ref<'repeat' | 'auto'>('repeat')
+const mode = ref<BattleRunMode>('manual')
 
 const canStart = computed(() => {
   if (!selectedZone.value || !selectedStage.value) {
     return false
   }
 
-  return isZoneUnlocked(selectedZone.value.requiredRealmId) && isStageUnlocked(selectedStage.value)
+  return isZoneUnlocked(selectedZone.value.id) && isStageUnlocked(selectedStage.value)
 })
 
 function selectZone(zoneId: string) {
@@ -144,12 +137,12 @@ function start() {
         :key="zone.id"
         type="button"
         class="stage-select__item"
-        :class="{ 'is-selected': zone.id === selectedZoneId, 'is-locked': !isZoneUnlocked(zone.requiredRealmId) }"
+        :class="{ 'is-selected': zone.id === selectedZoneId, 'is-locked': !isZoneUnlocked(zone.id) }"
         @click="selectZone(zone.id)"
       >
         {{ zone.name }}
-        <span v-if="!isZoneUnlocked(zone.requiredRealmId)" class="stage-select__lock">
-          (Cần {{ getCurrentRealm(zone.requiredRealmId!).name }})
+        <span v-if="!isZoneUnlocked(zone.id)" class="stage-select__lock">
+          (Cần hoàn thành địa giới trước)
         </span>
       </button>
     </div>
@@ -178,7 +171,7 @@ function start() {
           v-tooltip="node.stage.description"
           @click="selectStage(node.stage.id)"
         >
-          {{ node.stage.requiredRealmLevel ?? 1 }}
+          {{ node.stage.chapter ?? 1 }}.{{ node.stage.floor ?? node.stage.requiredRealmLevel ?? 1 }}
         </button>
       </div>
     </div>
@@ -190,22 +183,20 @@ function start() {
         <p class="stage-select__meta">{{ selectedStage.totalEnemyCount }} quái</p>
 
         <div class="stage-select__mode">
-          <button type="button" :class="{ 'is-active': mode === 'repeat' }" @click="mode = 'repeat'">
-            Lặp Lại Khiêu Chiến
+          <button type="button" :class="{ 'is-active': mode === 'manual' }" @click="mode = 'manual'">
+            Thủ Công
           </button>
-          <button type="button" :class="{ 'is-active': mode === 'auto' }" @click="mode = 'auto'">
-            Tự Động Thám Hiểm
+          <button type="button" :class="{ 'is-active': mode === 'repeat' }" @click="mode = 'repeat'">
+            Lặp Lại
+          </button>
+          <button type="button" :class="{ 'is-active': mode === 'progress' }" @click="mode = 'progress'">
+            Tự Động Tiến Ải
           </button>
         </div>
 
         <p class="stage-select__mode-hint">
-          {{ mode === 'repeat' ? 'Thắng/thua đều tự đánh lại đúng Màn này.' : 'Thắng thì tự leo lên Màn kế tiếp, thua thì đánh lại Màn hiện tại.' }}
+          {{ mode === 'manual' ? 'Kết thúc trận và chờ bạn quyết định.' : mode === 'repeat' ? 'Tự đánh lại đúng tầng hiện tại.' : 'Thắng thì đi tiếp, thua thì dừng.' }}
         </p>
-
-        <label class="stage-select__auto">
-          <input type="checkbox" :checked="ui.isAuto" @change="ui.toggleAuto()">
-          Auto Battle — thắng thì tự đánh lại sau 3s
-        </label>
 
         <div class="stage-select__start-row">
           <button type="button" class="stage-select__build" @click="openBuild">⚔ Build</button>

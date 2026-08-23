@@ -38,6 +38,8 @@ function buildTooltip(formation: Formation, owned: number): GradedItemTooltipCon
 
     phamLabel: PHAM_LABELS[formation.pham],
 
+    phamKey: formation.pham,
+
     ownedLabel: `Sở hữu: ${owned}`,
 
     description: formation.description,
@@ -91,7 +93,7 @@ const cells = computed<BagCell[]>(() => {
 
     tooltip: buildTooltip(stack.formation, stack.amount),
 
-    itemIcon: stack.formation.icon,
+    icon: stack.formation.icon,
 
     onClick: () => emit('toggle', stack.formation.id),
   }))
@@ -112,9 +114,9 @@ const { currentPage, totalPages, goToPage, gridCells } = useBagPagination(cells,
         :name-segments="cell?.nameSegments"
         :description="cell?.description"
         :amount="cell?.amount"
-        :selected="cell?.selected"
+        :state="{ interaction: cell?.selected ? 'selected' : 'idle' }"
         :tooltip="cell?.tooltip"
-        :item-icon="cell?.itemIcon"
+        :icon="cell?.icon"
         @click="cell?.onClick?.()"
       />
     </div>

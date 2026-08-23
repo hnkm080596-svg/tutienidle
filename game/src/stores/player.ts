@@ -67,8 +67,6 @@ export const usePlayerStore = defineStore('player', {
       // Tâm Pháp có thanh kinh nghiệm riêng (2026-08-20) — cùng nguồn
       // "gained" nuôi Kiếm Ý ở trên, xem core/technique/TechniqueTier.ts's
       // getTechniqueTier().
-      this.techniqueExperience += gained
-
       return gained
     },
 
