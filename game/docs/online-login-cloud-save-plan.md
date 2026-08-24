@@ -207,6 +207,21 @@ Chỉ đưa save hiện tại lên database không đủ chống cheat vì logic
 - Phân bổ 5 điểm chỉ số.
 - Tạo character và initial save trong một transaction.
 
+Trạng thái frontend prototype (2026-08-24):
+
+- Đã có intro 3 giây, Login/Register/Chơi ngay và wizard tạo nhân vật ba bước.
+- Đã có validation ID phía client, chọn đúng 3/9 thiên phú và phân đúng 5 điểm.
+- Đã nối kết quả tạo nhân vật vào local player/save để kiểm thử end-to-end UI.
+- Chưa hoàn thành backend auth, kiểm tra tên unique, server roll và transaction tạo nhân vật; các phần này vẫn thuộc Phase 2/4 phía server.
+
+Hạ tầng Supabase đã scaffold (2026-08-24):
+
+- Migration nằm tại `supabase/migrations/202608240001_online_auth_character.sql`.
+- Adapter tự chuyển từ mock sang Supabase khi có `VITE_SUPABASE_URL` và `VITE_SUPABASE_ANON_KEY`.
+- Supabase Auth cần bật Anonymous Sign-ins và tắt email confirmation vì phase đầu dùng ID/mật khẩu, không dùng email người chơi.
+- Chỉ dùng anon key ở frontend; tuyệt đối không đưa service-role key vào biến `VITE_*`.
+- RPC session-sensitive đều xác minh `sessionId` active để thiết bị cũ mất quyền thao tác sau lần đăng nhập mới.
+
 ### Phase 5 - Cloud save
 
 - Tách bootstrap hiện tại khỏi `App.vue` thành state rõ ràng.
@@ -214,6 +229,13 @@ Chỉ đưa save hiện tại lên database không đủ chống cheat vì logic
 - Autosave định kỳ và theo sự kiện quan trọng.
 - Thêm `saveRevision`, retry an toàn và xử lý conflict.
 - Tắt offline progression không được server xác nhận.
+
+Trạng thái chuẩn bị trong development (2026-08-24):
+
+- Đã tách boot thành state machine: intro, auth, loading save, character creation, initializing, game và error.
+- Đã có `CloudSaveService`/`CloudSaveCoordinator` và local adapter dùng optimistic revision.
+- Conflict không tự động ghi đè; UI chuyển sang trạng thái lỗi để người chơi quyết định sau này.
+- Local save vẫn là nguồn chính trong development. Supabase cloud adapter, autosave và conflict UI đầy đủ được hoãn tới khi save schema ổn định.
 
 ### Phase 6 - Save preview và guest linking
 

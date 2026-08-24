@@ -1,0 +1,1 @@
+Giảm tỉ lệ kinh nghiệm tâm pháp và kỹ năng xuống còn 25% hiện tại
