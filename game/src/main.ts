@@ -6,6 +6,10 @@ import App from './App.vue'
 import router from './router'
 import { vTooltip } from './directives/tooltip'
 import { useErrorStore } from './stores/error'
+import { initUiScale } from './composables/uiScale'
+
+// WS8 — áp UI scale người chơi chọn TRƯỚC mount để không nhấp nháy font.
+initUiScale()
 
 const app = createApp(App)
 const pinia = createPinia()

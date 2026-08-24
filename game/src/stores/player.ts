@@ -5,7 +5,8 @@ import { equipElement as equipElementSystem, unequipElement as unequipElementSys
 import type { ElementType } from '../core/element/ElementType'
 import { calculateOfflineProgress } from '../core/idle/OfflineProgressSystem'
 import { calculateOfflineTime } from '../core/idle/GameClock'
-import { saveGame, loadGame } from '../services/save/SaveSystem'
+import { buildGameSave, loadGame, type GameSave } from '../services/save/SaveSystem'
+import { cloudSaveCoordinator } from '../services/cloudSave/CloudSaveServiceFactory'
 import type { GameManager } from '@/core/game/GameManager'
 import { getRequiredCultivation, BASE_CULTIVATION_PER_SECOND } from '@/core/realm/realmSystem'
 import { calculateStats, type StatModifier } from '@/core/stats/StatCalculator'
@@ -123,7 +124,7 @@ export const usePlayerStore = defineStore('player', {
       // (vì file lưu mốc thời gian cũ hơn thời điểm save thật).
       this.lastSavedAt = Date.now()
 
-      saveGame(this, gameManager)
+      return cloudSaveCoordinator.save(buildGameSave(this, gameManager))
     },
 
     // Chỉ merge phần PlayerData vào store — phần còn lại của save
@@ -137,7 +138,12 @@ export const usePlayerStore = defineStore('player', {
         return outcome
       }
 
-      const { save } = outcome
+      const offline = this.restoreFromSave(outcome.save)
+
+      return { status: 'ok' as const, offline, save: outcome.save }
+    },
+
+    restoreFromSave(save: GameSave) {
 
       // GameClock là nguồn duy nhất tính thời gian offline.
       // lastSavedAt của save file chính là lastOnlineAt của GameClockState.
@@ -158,7 +164,7 @@ export const usePlayerStore = defineStore('player', {
       // gán thẳng, không đi qua addCultivation().
       this.cultivation = Math.min(this.cultivation, this.cultivationRequired)
 
-      return { status: 'ok' as const, offline, save }
+      return offline
     },
   },
 })

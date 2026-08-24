@@ -36,7 +36,7 @@ const actions = computed(() => ACTIONS)
       :class="{ 'is-active': ui.standalonePanel === action.panel }"
       @click="ui.toggleStandalonePanel(action.panel)"
     >
-      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+      <svg width="24" height="24" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
         <rect x="2" y="7" width="3" height="6" rx="1" stroke-linejoin="round" />
         <rect x="15" y="7" width="3" height="6" rx="1" stroke-linejoin="round" />
         <line x1="5" y1="10" x2="15" y2="10" stroke-linecap="round" />
@@ -50,16 +50,19 @@ const actions = computed(() => ACTIONS)
 .realm-action-nav {
   display: flex;
   align-items: stretch;
-  gap: 2px;
+  gap: var(--space-1);
 }
 
+/* WS4 — đồng bộ shortcut sizing với DongFuQuickNav (72-88px, tap >= 40). */
 .realm-action-nav__btn {
-  width: 56px;
+  position: relative;
+  width: clamp(72px, 7vw, 88px);
+  min-height: var(--tap-min);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: var(--space-1);
   background: transparent;
   border: none;
   border-radius: var(--radius-sm);
@@ -70,7 +73,21 @@ const actions = computed(() => ACTIONS)
 }
 
 .realm-action-nav__btn span {
-  font-size: 0.6rem;
+  font-size: var(--text-xs);
+  line-height: var(--lh-tight);
+  white-space: nowrap;
+}
+
+.realm-action-nav__btn::after {
+  content: '';
+  position: absolute;
+  left: 20%;
+  right: 20%;
+  bottom: 3px;
+  height: 2px;
+  border-radius: 1px;
+  background: transparent;
+  transition: background 0.15s ease;
 }
 
 .realm-action-nav__btn:hover {
@@ -80,6 +97,15 @@ const actions = computed(() => ACTIONS)
 
 .realm-action-nav__btn.is-active {
   color: var(--gold-500);
-  background: rgba(255, 213, 79, 0.08);
+  background: rgba(255, 213, 79, 0.1);
+}
+
+.realm-action-nav__btn.is-active::after {
+  background: var(--gold-500);
+}
+
+.realm-action-nav__btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring-gold);
 }
 </style>

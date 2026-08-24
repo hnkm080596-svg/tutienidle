@@ -15,7 +15,7 @@ function instance(overrides: Partial<EquipmentInstance> = {}): EquipmentInstance
     slot: 'weapon',
     equipped: false,
     quality: 'pham_khi',
-    rarity: 'hoang_pham',
+    rarity: 'hoang',
     realmId: 'qi_refining',
     mainStat: { id: 'roll-main-attack', sourceId: 'roll-main', sourceType: 'equipment', stat: 'attack', flat: 10 },
     affixes: [],
@@ -83,7 +83,7 @@ describe('buildEquipmentTooltip', () => {
   it('dùng tên stat chuẩn và không lặp quality/rarity hay thiên hướng', () => {
     const { affixRegistry } = setup()
     const equipment = instance({
-      rarity: 'dia_pham',
+      rarity: 'dia',
       affixes: [
         { affixId: 'prefix_critical_rate', tier: 1, value: 0.02 },
         { affixId: 'suffix_accuracy', tier: 1, value: 4 },
@@ -111,7 +111,7 @@ describe('buildEquipmentTooltip', () => {
 
     expect(tooltip.name).toContain('Địa')
     expect(tooltip).not.toHaveProperty('qualityLabel')
-    expect(tooltip).not.toHaveProperty('phamLabel')
+    expect(tooltip).not.toHaveProperty('gradeLabel')
     expect(tooltip.sections.some(section => section.label === 'Thiên hướng')).toBe(false)
     expect(tooltip.sections.find(section => section.label.startsWith('Chỉ Số Phụ'))?.rows.map(row => row.label))
       .toEqual(['Tỉ lệ bạo kích', 'Độ chính xác'])
@@ -120,11 +120,11 @@ describe('buildEquipmentTooltip', () => {
   it('hides range/comparison by default and keeps effective range plus delta inline for Alt mode', () => {
     const { affixRegistry } = setup()
     const candidate = instance({
-      instanceId: 'candidate', realmId: 'pham_nhan', realmLevel: 1,
+      instanceId: 'candidate', realmId: 'mortal', realmLevel: 1,
       mainStat: { id: 'x', sourceId: 'roll-main', sourceType: 'equipment', stat: 'attack', flat: 14 },
     })
     const equipped = instance({
-      instanceId: 'equipped', realmId: 'pham_nhan', realmLevel: 1,
+      instanceId: 'equipped', realmId: 'mortal', realmLevel: 1,
       mainStat: { id: 'y', sourceId: 'roll-main', sourceType: 'equipment', stat: 'attack', flat: 10 },
     })
     const template: Equipment = {

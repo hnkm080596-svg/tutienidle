@@ -55,7 +55,7 @@ export function triggerFoundationBreakthroughAction(player: PlayerStore, gameMan
     cap,
   )
 
-  const started = gameManager.startTribulation(player.$state, player.finalStats, 'foundation', foundationType)
+  const started = gameManager.startTribulation(player.$state, player.finalStats, 'foundation_establishment', foundationType)
 
   if (started) {
     useUiStore().enterTribulationScene()
@@ -93,7 +93,7 @@ export function triggerRealmBreakthroughAction(targetRealmId: string, player: Pl
 }
 
 export function triggerQuanKhiAction(player: PlayerStore, gameManager: GameManager): boolean {
-  if (player.realmId !== 'pham_nhan' || player.cultivationPath || player.realmLevel < 12) {
+  if (player.realmId !== 'mortal' || player.cultivationPath || player.realmLevel < 12) {
     return false
   }
 

@@ -239,7 +239,7 @@ function toggleFormationSelection(formationId: string) {
 .bag-grid__tabs button {
   justify-self: stretch;
   padding: 4px 2px;
-  font-size: 0.64rem;
+  font-size: var(--text-xs);
   background: var(--ink-800);
   color: var(--text-secondary);
   border: 1px solid var(--ink-line-soft);
@@ -261,12 +261,12 @@ function toggleFormationSelection(formationId: string) {
   border: 1px solid var(--gold-500);
   border-radius: var(--radius-sm);
   color: var(--gold-500);
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
 }
 
 .bag-grid__hint button {
   flex: 0 0 auto;
-  font-size: 0.65rem;
+  font-size: var(--text-xs);
   padding: 3px 10px;
 }
 

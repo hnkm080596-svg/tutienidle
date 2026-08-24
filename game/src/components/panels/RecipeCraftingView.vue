@@ -15,7 +15,7 @@ import { useNotificationStore } from '@/stores/notification'
 import { getCurrentRealm, getRealmIndex } from '@/core/realm/realmSystem'
 import type { Recipe, RecipeResultType } from '@/core/recipe/Recipe'
 import { formatNumber } from '@/core/format/NumberFormatter'
-import { phamRank } from '@/composables/slots/normalizeSlotRank'
+import { itemGradeRank } from '@/composables/slots/normalizeSlotRank'
 
 const props = defineProps<{
   resultType: RecipeResultType
@@ -88,7 +88,7 @@ const selectedRecipe = computed(
 // trong 1 vòng tròn" (không icon/không tooltip), cùng anti-pattern đã
 // sửa ở EquipmentHallPanel.vue (Step 9). Tra template thật qua
 // GameManager.getRecipeResultTemplate() (cùng switch pattern với
-// getRecipeResultPham() đã có sẵn, xem GameManager.ts).
+// getRecipeResultGrade() đã có sẵn, xem GameManager.ts).
 const resultTemplate = computed(() => {
   stateVersion.value
 
@@ -234,7 +234,7 @@ function collect(craftId: string, recipeName: string | null) {
             :item="resultTemplate"
             :label="resultTemplate?.name ?? selectedRecipe.name"
             :description="resultTemplate?.description"
-            :rarity-rank="resultTemplate?.pham ? phamRank(resultTemplate.pham) : undefined"
+            :rarity-rank="resultTemplate?.grade ? itemGradeRank(resultTemplate.grade) : undefined"
             :icon="resultTemplate?.icon"
           />
         </div>
@@ -328,7 +328,7 @@ function collect(craftId: string, recipeName: string | null) {
 
 .crafting-category__label {
   margin: 0 0 4px;
-  font-size: 0.72rem;
+  font-size: var(--text-sm);
   color: var(--gold-500);
   font-family: var(--font-display);
 }
@@ -339,7 +339,7 @@ function collect(craftId: string, recipeName: string | null) {
   text-align: left;
   padding: 5px 6px;
   margin-bottom: 3px;
-  font-size: 0.72rem;
+  font-size: var(--text-sm);
   background: var(--ink-800);
   color: var(--text-primary);
   border: 1px solid var(--ink-line-soft);
@@ -358,7 +358,7 @@ function collect(craftId: string, recipeName: string | null) {
 }
 
 .crafting-category__lock {
-  font-size: 0.62rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
 }
 
@@ -407,7 +407,7 @@ function collect(craftId: string, recipeName: string | null) {
 }
 
 .cauldron__material-count {
-  font-size: 0.58rem;
+  font-size: var(--text-xs);
   color: var(--text-secondary);
   margin-top: 2px;
 }
@@ -435,7 +435,7 @@ function collect(craftId: string, recipeName: string | null) {
 .recipe-crafting-view__duration,
 .recipe-crafting-view__empty {
   margin: 0;
-  font-size: 0.72rem;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
 }
 
@@ -473,13 +473,13 @@ function collect(craftId: string, recipeName: string | null) {
 
 .job-slot__label {
   display: block;
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
   margin-bottom: 2px;
 }
 
 .job-slot__empty {
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
 }
 
@@ -487,7 +487,7 @@ function collect(craftId: string, recipeName: string | null) {
   width: 100%;
   margin-top: 4px;
   padding: 4px;
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
   background: var(--ink-700);
   color: var(--text-primary);
   border: 1px solid var(--ink-line-soft);

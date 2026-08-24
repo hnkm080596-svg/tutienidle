@@ -68,7 +68,7 @@ function confirmBreakthrough() {
     return
   }
 
-  const success = targetRealm.value.id === 'foundation'
+  const success = targetRealm.value.id === 'foundation_establishment'
     ? triggerFoundationBreakthrough()
     : triggerRealmBreakthrough(targetRealm.value.id)
 

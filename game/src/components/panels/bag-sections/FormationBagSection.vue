@@ -7,7 +7,7 @@ import type { BagCell } from './BagCell'
 import type { Formation } from '@/core/formation/Formation'
 import type { GradedItemTooltipContent } from '@/composables/useTooltip'
 import { statLabel, formatStat } from '@/core/stats/StatLabels'
-import { PHAM_LABELS, composePhamNameSegments } from '@/core/item/Pham'
+import { ITEM_GRADE_LABELS, composeItemGradeNameSegments } from '@/core/item/ItemGrade'
 import { PASSIVE_TRIGGER_LABELS } from '@/core/skill/PassiveTriggerLabels'
 import { useBagGridLayout } from '@/composables/useBagGridLayout'
 
@@ -36,9 +36,9 @@ function buildTooltip(formation: Formation, owned: number): GradedItemTooltipCon
 
     imagePath: formation.icon,
 
-    phamLabel: PHAM_LABELS[formation.pham],
+    gradeLabel: ITEM_GRADE_LABELS[formation.grade],
 
-    phamKey: formation.pham,
+    gradeKey: formation.grade,
 
     ownedLabel: `Sở hữu: ${owned}`,
 
@@ -83,7 +83,7 @@ const cells = computed<BagCell[]>(() => {
 
     label: stack.formation.name,
 
-    nameSegments: composePhamNameSegments(stack.formation.name, stack.formation.pham),
+    nameSegments: composeItemGradeNameSegments(stack.formation.name, stack.formation.grade),
 
     description: stack.formation.description,
 
@@ -172,10 +172,10 @@ const { currentPage, totalPages, goToPage, gridCells } = useBagPagination(cells,
 }
 
 .bag-section__pages button {
-  min-width: 22px;
-  height: 22px;
+  min-width: 36px;
+  min-height: 32px;
   padding: 0;
-  font-size: 0.7rem;
+  font-size: var(--text-sm);
   background: var(--ink-800);
   color: var(--text-secondary);
   border: 1px solid var(--ink-line-soft);

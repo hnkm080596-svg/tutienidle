@@ -123,7 +123,7 @@ function clear() {
 }
 
 .radial-skill-selector__center-label {
-  font-size: 0.62rem;
+  font-size: var(--text-xs);
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1.2;
@@ -131,7 +131,7 @@ function clear() {
 
 .radial-skill-selector__clear {
   padding: 1px 8px;
-  font-size: 0.58rem;
+  font-size: var(--text-xs);
   background: var(--ink-800);
   color: var(--crimson);
   border: 1px solid var(--crimson);
@@ -148,7 +148,7 @@ function clear() {
   background: var(--ink-800);
   color: var(--text-primary);
   border: 1px solid var(--ink-line-soft);
-  font-size: 0.6rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   padding: 4px;
   cursor: pointer;
@@ -177,7 +177,7 @@ function clear() {
   margin-top: 12px;
   width: 220px;
   text-align: center;
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
 }
 </style>

@@ -19,8 +19,13 @@ defineEmits<{ click: [] }>()
 <style scoped>
 .icon-button {
   flex: 0 0 auto;
-  width: 32px;
-  height: 32px;
+  /* WS2 — vùng bấm tối thiểu --tap-min (40px), khuyến nghị
+     --tap-comfortable (44px); trước đây 32px bị co thêm ~50% ở cửa
+     sổ Electron mặc định do global scale cũ. */
+  width: var(--tap-comfortable);
+  height: var(--tap-comfortable);
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -29,11 +34,17 @@ defineEmits<{ click: [] }>()
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: color 0.15s ease, background 0.15s ease;
+  transition: color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
 
 .icon-button:hover {
   color: var(--gold-500);
   background: rgba(255, 255, 255, 0.04);
+}
+
+/* WS2 — chuẩn hóa focus-visible cho mọi control dùng chung. */
+.icon-button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring-gold);
 }
 </style>

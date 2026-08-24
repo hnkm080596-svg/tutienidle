@@ -11,8 +11,6 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useLoadoutActions } from '@/composables/useLoadoutActions'
 import { usePlayerStore } from '@/stores/player'
 import { getSkillLoadoutSlotCount, MAX_SKILL_LOADOUT_SLOTS } from '@/core/skill/SkillLoadoutSlots'
-import { getSkillExperiencePercent } from '@/core/skill/SkillSystem'
-import type { Skill } from '@/core/skill/Skill'
 
 const gameManager = useGameManager()
 const player = usePlayerStore()
@@ -51,9 +49,6 @@ const basicAttackSkill = computed(() => {
   return gameManager.skillManager.getBasicAttackSkill()
 })
 
-function experiencePercent(skill: Skill): number {
-  return getSkillExperiencePercent(skill)
-}
 </script>
 
 <template>
@@ -87,10 +82,6 @@ function experiencePercent(skill: Skill): number {
         <span v-if="slot.locked" class="skill-loadout__slot-lock">Khóa</span>
 
         <template v-else-if="slot.skill">
-          <div class="loadout-card__level-bar">
-            <div class="loadout-card__level-fill" :style="{ width: `${experiencePercent(slot.skill)}%` }" />
-          </div>
-
           <span class="loadout-card__level-label">Lv. {{ slot.skill.level }}/{{ slot.skill.maxLevel }}</span>
         </template>
 
@@ -148,25 +139,13 @@ function experiencePercent(skill: Skill): number {
   width: 15%;
 }
 
-.loadout-card__level-bar {
-  height: 4px;
-  border-radius: 2px;
-  background: var(--ink-700);
-  overflow: hidden;
-}
-
-.loadout-card__level-fill {
-  height: 100%;
-  background: var(--gold-500);
-}
-
 .loadout-card__level-label {
-  font-size: 0.6rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
 }
 
 .loadout-card__empty {
-  font-size: 0.62rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
 }
 
@@ -199,7 +178,7 @@ function experiencePercent(skill: Skill): number {
 }
 
 .skill-loadout__basic-label {
-  font-size: 0.56rem;
+  font-size: var(--text-xs);
   color: var(--gold-500);
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -215,7 +194,7 @@ function experiencePercent(skill: Skill): number {
 }
 
 .skill-loadout__slot-lock {
-  font-size: 0.58rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
 }
 
@@ -228,7 +207,7 @@ function experiencePercent(skill: Skill): number {
 .loadout-specializations__btn {
   flex: 1 1 auto;
   padding: 3px 6px;
-  font-size: 0.6rem;
+  font-size: var(--text-xs);
   background: var(--ink-800);
   color: var(--text-secondary);
   border: 1px solid var(--ink-line-soft);

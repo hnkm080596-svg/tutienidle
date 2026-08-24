@@ -18,7 +18,14 @@ const SAVE_KEY = 'tien-hiep-idle-save'
 // này nằm cùng localStorage nên mất theo nếu người dùng xoá site data).
 const BACKUP_KEY = 'tien-hiep-idle-save-backup'
 
-// v23: Thiên Công Phường rework — thêm building 'thien_cong_phuong',
+// Revision phục vụ CAS optimistic-concurrency của cloud-save adapter
+// (xem services/cloudSave/). Đặt ở đây (thay vì trong LocalCloudSaveService)
+// để deleteSave() có thể xoá cùng lúc, tránh để lại revision cũ sau khi
+// save chính đã bị xoá — nếu không, nhân vật mới tạo sẽ CAS-fail ngay
+// lần save đầu tiên ("Save đã thay đổi ở một phiên khác.").
+export const SAVE_REVISION_KEY = 'tien-hiep-idle-save-revision'
+
+// v23: Thiên Công Phường rework — thêm building 'artisan_workshop',
 // xoá hẳn exploration 'myriad-demon-forest' (Vạn Yêu Lâm), thêm
 // 'wood-spirit-forest' (Mộc Lâm). Save cũ (version < 23) KHÔNG tương
 // thích, không viết migration — save cũ có thể đang chạy dở
@@ -60,10 +67,10 @@ const BACKUP_KEY = 'tien-hiep-idle-save-backup'
 // core/technique/TechniqueTier.ts). Save cũ thiếu field này — không
 // viết migration, cùng convention mọi version trước.
 // version 29 (2026-08-20): Realm Passive & Pressure System — player:
-// PlayerData thêm 4 field BẮT BUỘC MỚI `luyenTheCompletedTiers`/
-// `luyenTheCurrentTierProgress`/`breakthroughGrade`/
+// PlayerData thêm 4 field BẮT BUỘC MỚI `bodyRefinementCompletedTiers`/
+// `bodyRefinementCurrentTierProgress`/`breakthroughGrade`/
 // `grantedRealmPassiveIds` (Luyện Thể Phàm Nhân + Nhập Đạo/Kiến Cơ, xem
-// core/realm/LuyenTheSystem.ts/RealmPassiveSystem.ts). Save cũ thiếu
+// core/realm/BodyRefinementSystem.ts/RealmPassiveSystem.ts). Save cũ thiếu
 // các field này — không viết migration, cùng convention mọi version
 // trước.
 // version 30 (2026-08-21): Hỏa FirePath redesign (Plans/FirePath) —
@@ -122,7 +129,31 @@ const BACKUP_KEY = 'tien-hiep-idle-save-backup'
 // convention mọi version trước.
 // version 38: progression/combat rework. No migration: development saves
 // from earlier schemas are intentionally rejected.
-const CURRENT_SAVE_VERSION = 38 as const
+// version 40 (skill-insight-and-auto-combat-hud-plan.md): PlayerData's
+// `skillPoints` XOÁ HẲN, thay bằng `skillInsight`/`totalSkillInsightGained`
+// (nhận từ chiến đấu, không còn cấp khi đột phá tiểu cảnh giới, xem
+// CultivationSystem.breakthrough()). ProgressionNode.cost đổi tên thành
+// insightCost. Skill.experience/experienceRequired (XP-per-cast) đã xoá
+// hẳn — nâng cấp skill giờ tiêu skillInsight qua SkillSystem.upgradeSkill().
+// Save cũ thiếu/lệch field — không viết migration, cùng convention mọi
+// version trước.
+// version 41 (Milestone naming pass 2026-08-24, xem
+// docs/naming-conventions.md) — đổi TOÀN BỘ id values/fields lưu trong
+// save theo quy ước naming mới: realm 'pham_nhan'→'mortal',
+// 'foundation'→'foundation_establishment'; grade 5 phẩm
+// 'hoang_pham'→'hoang'… + field 'pham'→'grade' (Pill/Talisman/Formation);
+// skills/techniques/materials/buildings theo bảng mapping N2b; fields
+// Luyện Thể 'luyenThe*'→'bodyRefinement*'. Save v40 KHÔNG tương thích —
+// không viết migration, cùng convention mọi version trước.
+// Export cho các service ngoài (ví dụ SupabaseCharacterCreationService
+// gửi p_schema_version khi tạo nhân vật) — đảm bảo mọi nơi cùng tham chiếu
+// MỘT nguồn chân lý về version schema, không tự hardcode số.
+// version 42 (Combat Grid Rework 2026-08-24) — xoá stat
+// projectileSpeedPercent khỏi baseStats (StatBlock) cùng hệ affix/node/
+// enemy-input liên quan; thay thế theo ngữ cảnh: node pháp thuật ->
+// castSpeedPercent, affix vật lý -> attackSpeed/cooldown. Save v41
+// KHÔNG tương thích — không migration, cùng convention.
+export const CURRENT_SAVE_VERSION = 42 as const
 
 export interface MaterialStackSave {
   materialId: string
@@ -221,7 +252,7 @@ export interface FormationStackSave {
 // Ngũ Phẩm mới (hoang_pham/huyen_pham/dia_pham/thien_pham/tien_pham,
 // xem core/item/Pham.ts) thay 4 bậc "Duyên" cũ (vo_duyen/tieu_duyen/
 // ky_duyen/thien_duyen). Pill/Talisman/Formation template (đăng ký lúc
-// bootstrap, không nằm trong save) đổi `grade: number` -> `pham: Pham`
+// bootstrap, không nằm trong save) đổi `grade: number` -> `grade: ItemGrade`
 // — không ảnh hưởng save vì đó là template, chỉ liệt kê ở đây để dễ
 // tra cứu.
 // version 18: "EquipemtnQuality&rarity" + "tunghematandsuch" pass —
@@ -280,8 +311,8 @@ export interface GameSave {
   equipmentSlots: EquipmentSlotState[]
 }
 
-export function saveGame(player: PlayerData, gameManager: GameManager) {
-  const save: GameSave = {
+export function buildGameSave(player: PlayerData, gameManager: GameManager): GameSave {
+  return {
     version: CURRENT_SAVE_VERSION,
 
     player: {
@@ -329,7 +360,14 @@ export function saveGame(player: PlayerData, gameManager: GameManager) {
     equipmentSlots: gameManager.equipmentSlotManager.getAll(),
   }
 
+}
+
+export function writeGameSave(save: GameSave): void {
   localStorage.setItem(SAVE_KEY, JSON.stringify(save))
+}
+
+export function saveGame(player: PlayerData, gameManager: GameManager) {
+  writeGameSave(buildGameSave(player, gameManager))
 }
 
 // Phase 5 (Reliability, mục XVI) — trước đây version không khớp hoặc
@@ -407,6 +445,10 @@ export function deleteSave() {
   backupCurrentSave()
 
   localStorage.removeItem(SAVE_KEY)
+
+  // Xoá cả revision — save đã không còn thì revision cũ là rác, và
+  // revision tồn dư khiến lần CAS đầu tiên của nhân vật mới fail.
+  localStorage.removeItem(SAVE_REVISION_KEY)
 }
 
 // Tải save hiện có (bất kể đọc được hay không) xuống file .json —

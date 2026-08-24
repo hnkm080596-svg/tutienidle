@@ -4,10 +4,19 @@ import { usePlayerStore } from '@/stores/player'
 import { useGameManager } from '@/composables/useGameState'
 import { useNotificationStore } from '@/stores/notification'
 import { exportSaveToFile, getRawSave, importSaveRaw, deleteSave } from '@/services/save/SaveSystem'
+import { UI_SCALE_OPTIONS, loadUiScale, saveUiScale } from '@/composables/uiScale'
 
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const notification = useNotificationStore()
+
+// WS8 — cỡ chữ giao diện (chỉ scale semantic tokens, không zoom canvas).
+const uiScale = ref<number>(loadUiScale())
+
+function handleUiScale(scale: number) {
+  uiScale.value = scale
+  saveUiScale(scale)
+}
 
 const lastSavedLabel = ref('')
 
@@ -97,7 +106,7 @@ function handleReset() {
     <h3>Cài Đặt</h3>
 
     <p class="settings-panel__warning">
-      Tiến trình KHÔNG tự lưu — nhớ bấm "Lưu Tiến Trình" trước khi đóng trang.
+      Tiến trình tự lưu mỗi 15 giây và khi rời tab. Bạn vẫn có thể lưu thủ công tại đây.
     </p>
 
     <div class="settings-panel__actions">
@@ -116,6 +125,24 @@ function handleReset() {
         Xoá Save & Bắt Đầu Mới
       </button>
     </div>
+
+    <!-- WS8 — cỡ chữ giao diện: chỉ scale typography/control tokens,
+         không đụng canvas/khung layout. Áp dụng tức thời + lưu local. -->
+    <section class="settings-panel__ui-scale" aria-label="Cỡ chữ giao diện">
+      <h4>Cỡ Chữ Giao Diện</h4>
+
+      <div class="settings-panel__ui-scale-options">
+        <button
+          v-for="option in UI_SCALE_OPTIONS"
+          :key="option"
+          type="button"
+          :class="{ 'is-active': uiScale === option }"
+          @click="handleUiScale(option)"
+        >
+          {{ Math.round(option * 100) }}%
+        </button>
+      </div>
+    </section>
 
     <p v-if="lastSavedLabel" class="settings-panel__hint">Đã lưu lúc {{ lastSavedLabel }}</p>
   </div>
@@ -177,5 +204,48 @@ function handleReset() {
 .settings-panel__hint {
   color: #8bc98b;
   margin: 8px 0 0;
+}
+
+/* WS8 — chọn cỡ chữ giao diện. */
+.settings-panel__ui-scale {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #333;
+}
+
+.settings-panel__ui-scale h4 {
+  margin: 0 0 8px;
+}
+
+.settings-panel__ui-scale-options {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.settings-panel__ui-scale-options button {
+  min-height: var(--tap-min);
+  padding: 0 var(--space-4);
+  background: #222;
+  border: 1px solid #444;
+  border-radius: var(--radius-sm);
+  color: #ddd;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.settings-panel__ui-scale-options button:hover {
+  border-color: var(--gold-700);
+}
+
+.settings-panel__ui-scale-options button.is-active {
+  background: rgba(255, 213, 79, 0.12);
+  border-color: var(--gold-500);
+  color: var(--gold-300);
+}
+
+.settings-panel__ui-scale-options button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring-gold);
 }
 </style>

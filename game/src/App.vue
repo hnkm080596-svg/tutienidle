@@ -9,6 +9,7 @@ import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from './composabl
 import { checkTribulationOutcomeAction } from './composables/useTribulation'
 import { isBattleInProgress } from './core/battle/BattleTypes'
 import { useBreakthrough } from './composables/useBreakthrough'
+import { useElectronBridge } from './composables/useElectronBridge'
 import { useNotificationStore } from './stores/notification'
 import { useOfflineSummaryStore } from './stores/offlineSummary'
 import { useSaveIssueStore } from './stores/saveIssue'
@@ -17,6 +18,8 @@ import LoadingScreen from './components/common/LoadingScreen.vue'
 import ErrorBoundary from './components/common/ErrorBoundary.vue'
 import ErrorScreen from './components/common/ErrorScreen.vue'
 import SaveIncompatibleScreen from './components/common/SaveIncompatibleScreen.vue'
+import AuthEntryScreen from './components/onboarding/AuthEntryScreen.vue'
+import CharacterCreationScreen, { type CharacterCreationPayload } from './components/onboarding/CharacterCreationScreen.vue'
 
 import { materials } from './data/materials/materials'
 import { explorations } from './data/exploration/explorations'
@@ -38,6 +41,9 @@ import { buildings } from './data/building/buildings'
 import { processingRecipes } from './data/building/processingRecipes'
 import { PHAP_TU_NODES } from './data/progression/PhapTuNodes'
 import { isCultivationPoseActive } from './core/cultivation/CultivationPose'
+import { useBootFlow } from './composables/useBootFlow'
+import { cloudSaveCoordinator } from './services/cloudSave/CloudSaveServiceFactory'
+import { buildGameSave } from './services/save/SaveSystem'
 
 const player = usePlayerStore()
 const ui = useUiStore()
@@ -49,6 +55,10 @@ const saveIssue = useSaveIssueStore()
 // Home. Set true ở cuối onMounted() sau khi mọi thứ (load save/đăng
 // ký data/tick loop) đã sẵn sàng.
 const isBooted = ref(false)
+const bootFlow = useBootFlow()
+const entryStage = bootFlow.stage
+const bootError = ref('')
+let introHandle: number | undefined
 
 // GameClock chỉ đo thời gian (pure clock). GameManager chỉ điều
 // phối các system. Việc "mỗi giây thì làm gì" là trách nhiệm của
@@ -93,6 +103,49 @@ provide(STATE_VERSION_KEY, stateVersion)
 provide(BUMP_STATE_KEY, bumpState)
 
 let tickHandle: number | undefined
+let autosaveHandle: number | undefined
+let saveInFlight = false
+const AUTOSAVE_INTERVAL_MS = 15_000
+
+async function persistProgress() {
+  if (entryStage.value !== 'game' || saveInFlight) {
+    return
+  }
+
+  saveInFlight = true
+
+  try {
+    const result = await player.save(gameManager)
+
+    if (result.status !== 'ok') {
+      console.warn('[autosave] progress was not saved', result)
+    }
+  } catch (error: unknown) {
+    console.error('[autosave] unexpected save failure', error)
+  } finally {
+    saveInFlight = false
+  }
+}
+
+function onVisibilityChange() {
+  if (document.visibilityState === 'hidden') {
+    void persistProgress()
+  }
+}
+
+function onPageHide() {
+  void persistProgress()
+}
+
+function startAutosave() {
+  if (autosaveHandle !== undefined) {
+    return
+  }
+
+  autosaveHandle = window.setInterval(() => void persistProgress(), AUTOSAVE_INTERVAL_MS)
+  document.addEventListener('visibilitychange', onVisibilityChange)
+  window.addEventListener('pagehide', onPageHide)
+}
 
 // Cultivation ⇄ combat (2026-08-20) — không còn nút bấm thủ công, tu
 // luyện là trạng thái SUY RA THẲNG từ isFighting mỗi tick (chiến đấu
@@ -167,10 +220,10 @@ function tick() {
     }
 
     if (ui.isAutoConsumeTinhHoa) {
-      // investLuyenThe tự giữ các gate tầng/cảnh giới và chỉ trừ đúng lượng
+      // investBodyRefinement tự giữ các gate tầng/cảnh giới và chỉ trừ đúng lượng
       // thực sự dùng được. Loot được cấp trước đó trong GameManager.update(),
       // nên Tinh Hoa vừa rơi có thể được hấp thu ngay trong cùng tick.
-      gameManager.investLuyenThe(player.$state)
+      gameManager.investBodyRefinement(player.$state)
     }
 
     // Đột Phá Trúc Cơ — phản ứng thắng/thua Độ Kiếp NGAY (battle
@@ -208,8 +261,25 @@ function onKeydown(event: KeyboardEvent) {
   }
 }
 
-onMounted(() => {
-  const loaded = player.load()
+async function bootGame(createNewCharacter = false) {
+  bootFlow.startSaveLoad()
+
+  // Nhân vật mới không được bỏ qua coordinator — reset() bảo đảm revision
+  // nội bộ về 0 khớp với storage (deleteSave() đã xoá revision key), nếu
+  // không lần save đầu tiên có thể CAS-fail với revision cũ tồn dư.
+  let loaded
+  if (createNewCharacter) {
+    cloudSaveCoordinator.reset()
+    loaded = { status: 'empty' as const, revision: 0 as const }
+  } else {
+    loaded = await cloudSaveCoordinator.load()
+  }
+
+  if (loaded.status === 'unavailable') {
+    bootError.value = loaded.message
+    bootFlow.fail()
+    return
+  }
 
   // Phase 5 (Reliability, mục XVI) — save đọc được nhưng version
   // không khớp / JSON hỏng KHÔNG được coi như "chưa từng có save".
@@ -217,11 +287,19 @@ onMounted(() => {
   // thầm tạo nhân vật mới đè lên tiến trình cũ ở lần save() kế tiếp.
   if (loaded.status === 'incompatible' || loaded.status === 'corrupted') {
     saveIssue.report(loaded.status, loaded.raw, loaded.status === 'incompatible' ? loaded.foundVersion : undefined)
-
+    bootFlow.fail()
     return
   }
 
+  if (loaded.status === 'empty' && !createNewCharacter) {
+    bootFlow.requireCharacter()
+    return
+  }
+
+  bootFlow.startInitializing()
+
   if (loaded.status === 'ok') {
+    const offline = player.restoreFromSave(loaded.save)
     // registerXxx() ở trên đã chạy trước onMounted (module-level
     // trong <script setup>) nên registry đã sẵn data để resolve id
     // — restoreFromSave() PHẢI gọi sau đó, không phải trước.
@@ -235,25 +313,25 @@ onMounted(() => {
     // tại (hoặc bất kỳ lý do gì thiếu basic_strike) sẽ kẹt ở Phàm Nhân
     // không có đòn đánh nào — Phàm Nhân chưa có Skill Loadout UI để tự
     // sửa. Idempotent, an toàn no-op với save đã có sẵn skill này.
-    if (!gameManager.skillManager.has('basic_strike')) {
-      gameManager.learnSkill('basic_strike')
-      gameManager.equipSkillWithoutSlot('basic_strike')
+    if (!gameManager.skillManager.has('tram')) {
+      gameManager.learnSkill('tram')
+      gameManager.equipSkillWithoutSlot('tram')
     }
 
     // Beta Phase 4 (mục XIV) — chỉ hiện modal nếu offline đủ dài
     // (>60s, tránh phiền khi refresh nhanh) — thay console.log cũ.
-    if (loaded.offline.elapsedSeconds > 60) {
+    if (offline.elapsedSeconds > 60) {
       offlineSummary.show({
-        elapsedSeconds: loaded.offline.elapsedSeconds,
-        cultivation: loaded.offline.cultivation,
+        elapsedSeconds: offline.elapsedSeconds,
+        cultivation: offline.cultivation,
       })
     }
   } else {
     // Nhân vật mới: học sẵn + trang bị tâm pháp tu luyện cơ bản, nếu
     // không sẽ không có công pháp nào ở slot tu luyện để
     // syncRealmPassive() tra passiveSkillIdsByRealm khi đột phá.
-    gameManager.learnTechnique('spirit_gathering_scripture')
-    gameManager.equipTechnique('spirit_gathering_scripture')
+    gameManager.learnTechnique('tu_linh_quyet')
+    gameManager.equipTechnique('tu_linh_quyet')
 
     // Phàm Nhân (2026-08-16) — Tụ Linh Quyết không mang theo skill
     // chiến đấu nào (thuần tu luyện), nhưng nhân vật vẫn cần đánh được
@@ -263,8 +341,8 @@ onMounted(() => {
     // PLAN HOÀN CHỈNH mục 7/8) nên equip KHÔNG qua slot. Sau khi chọn
     // path, kit's basic skill tự GHI ĐÈ (SkillSystem.equipToSlot()/
     // equipWithoutSlot() tự dọn skill isBasicAttack cũ, xem ghi chú ở đó).
-    gameManager.learnSkill('basic_strike')
-    gameManager.equipSkillWithoutSlot('basic_strike')
+    gameManager.learnSkill('tram')
+    gameManager.equipSkillWithoutSlot('tram')
 
     // Truyền Tống Trận/Khai Thác rework (theo yêu cầu — "mặc định có,
     // không thì làm sao có nguyên liệu") — 2 Building này giờ granted
@@ -286,24 +364,83 @@ onMounted(() => {
 
   startTickLoop()
 
+  // No-op ngay nếu không chạy trong Electron (window.electronAPI không
+  // tồn tại ở bản web) — xem composables/useElectronBridge.ts.
+  useElectronBridge(gameManager)
+
   window.addEventListener('keydown', onKeydown)
 
   isBooted.value = true
+  bootFlow.enterGame()
+  startAutosave()
+}
+
+function onAuthenticated() {
+  void bootGame(false)
+}
+
+async function onCharacterCreated(payload: CharacterCreationPayload) {
+  player.name = payload.name
+  player.selectedTalentIds = payload.talentIds
+
+  for (const [stat, amount] of Object.entries(payload.attributes) as Array<[keyof CharacterCreationPayload['attributes'], number]>) {
+    player.baseStats[stat] += amount
+  }
+
+  await bootGame(true)
+  const result = await cloudSaveCoordinator.save(buildGameSave(player.$state, gameManager))
+  if (result.status !== 'ok') {
+    bootError.value = result.status === 'conflict' ? 'Save đã thay đổi ở một phiên khác.' : result.message
+    bootFlow.fail()
+  }
+}
+
+onMounted(() => {
+  introHandle = window.setTimeout(() => {
+    bootFlow.showAuth()
+  }, 3000)
 })
 
 onUnmounted(() => {
+  // Vite HMR also unmounts this component. Persist first so a development
+  // reload cannot roll the player back to an old manual save.
+  void persistProgress()
+
   clock.stop()
 
   if (tickHandle) {
     clearInterval(tickHandle)
   }
 
+  if (introHandle) {
+    clearTimeout(introHandle)
+  }
+
+  if (autosaveHandle !== undefined) {
+    clearInterval(autosaveHandle)
+    autosaveHandle = undefined
+  }
+
   window.removeEventListener('keydown', onKeydown)
+  document.removeEventListener('visibilitychange', onVisibilityChange)
+  window.removeEventListener('pagehide', onPageHide)
 })
 </script>
 
 <template>
-  <SaveIncompatibleScreen v-if="saveIssue.status" />
+  <LoadingScreen v-if="entryStage === 'intro'" />
+
+  <AuthEntryScreen v-else-if="entryStage === 'auth'" @authenticated="onAuthenticated" />
+
+  <CharacterCreationScreen v-else-if="entryStage === 'character'" @back="bootFlow.showAuth" @complete="onCharacterCreated" />
+
+  <SaveIncompatibleScreen v-else-if="saveIssue.status" />
+
+  <main v-else-if="entryStage === 'error'" class="boot-error">
+    <h1>Không thể khởi động</h1>
+    <p>{{ bootError }}</p>
+    <button type="button" @click="bootFlow.showAuth">Trở về đăng nhập</button>
+  </main>
 
   <ErrorBoundary v-else>
     <LoadingScreen v-if="!isBooted" />
@@ -331,4 +468,9 @@ body {
   font-family: var(--font-body);
   color: var(--text-primary);
 }
+
+.boot-error { width: 100vw; height: 100vh; display: grid; place-content: center; justify-items: center; background: var(--ink-950); }
+.boot-error h1 { color: var(--crimson); font-family: var(--font-display); }
+.boot-error p { color: var(--text-secondary); }
+.boot-error button { padding: 10px 16px; border: 1px solid var(--gold-500); background: transparent; color: var(--gold-300); cursor: pointer; }
 </style>

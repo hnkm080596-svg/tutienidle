@@ -1,24 +1,51 @@
 <script setup lang="ts">
 // SkillPathPanel.vue redesign (2026-08-20) — trung tâm panel cho path
-// KHÔNG có Node Tree (Kiếm Tu/Phàm Nhân, xem SkillPathList.vue) — chỉ
-// đọc thông tin kỹ năng ĐÃ có sẵn (cố định theo kit/Trảm), không có
-// hành động mua/nâng cấp nào ở đây (khác NodeTreePanel.vue/
-// NodeInspector.vue của nhánh phap_tu).
+// KHÔNG có Node Tree (Kiếm Tu/Phàm Nhân, xem SkillPathList.vue) — đọc
+// thông tin kỹ năng ĐÃ có sẵn (cố định theo kit/Trảm). Nâng cấp bằng
+// Cảm ngộ Kỹ năng (skill-insight-and-auto-combat-hud-plan.md mục 5)
+// ÁP DỤNG CHO MỌI skill đã học, không riêng nhánh phap_tu — khác
+// NodeTreePanel.vue/NodeInspector.vue vốn là nơi MỞ node (unlock), còn
+// đây là nơi NÂNG CẤP skill đã mở.
 import { computed } from 'vue'
 import type { Skill } from '@/core/skill/Skill'
-import { getSkillExperiencePercent } from '@/core/skill/SkillSystem'
+import { useGameManager, useStateVersion } from '@/composables/useGameState'
+import { usePlayerStore } from '@/stores/player'
 
 const props = defineProps<{
   skill: Skill | null
 }>()
 
-const levelPercent = computed(() => {
+const gameManager = useGameManager()
+const player = usePlayerStore()
+const { stateVersion, bumpState } = useStateVersion()
+
+const isMaxLevel = computed(() => !!props.skill && props.skill.level >= props.skill.maxLevel)
+
+const upgradeCost = computed(() => {
+  stateVersion.value
+
   if (!props.skill) {
-    return 0
+    return undefined
   }
 
-  return getSkillExperiencePercent(props.skill)
+  return gameManager.getSkillUpgradeInsightCost(props.skill.id)
 })
+
+const canUpgrade = computed(() => {
+  stateVersion.value
+
+  return upgradeCost.value !== undefined && player.skillInsight >= upgradeCost.value
+})
+
+function onUpgrade() {
+  if (!props.skill) {
+    return
+  }
+
+  if (gameManager.upgradeSkill(props.skill.id, player.$state)) {
+    bumpState()
+  }
+}
 </script>
 
 <template>
@@ -31,14 +58,19 @@ const levelPercent = computed(() => {
       <p v-if="skill.description" class="skill-detail__desc">{{ skill.description }}</p>
 
       <div class="skill-detail__level">
-        <div class="skill-detail__level-bar">
-          <div class="skill-detail__level-fill" :style="{ width: `${levelPercent}%` }" />
-        </div>
+        <span class="skill-detail__level-label">Lv. {{ skill.level }}/{{ skill.maxLevel }}</span>
 
-        <span class="skill-detail__level-label">
-          Lv. {{ skill.level }}/{{ skill.maxLevel }}
-          · {{ skill.level >= skill.maxLevel ? 'Tối đa' : `${skill.experience}/${skill.experienceRequired} XP` }}
-        </span>
+        <button
+          v-if="!isMaxLevel"
+          type="button"
+          class="skill-detail__upgrade"
+          :disabled="!canUpgrade"
+          @click="onUpgrade"
+        >
+          Nâng Cấp ({{ upgradeCost }} Cảm Ngộ)
+        </button>
+
+        <span v-else class="skill-detail__level-label">Tối đa</span>
       </div>
 
       <ul class="skill-detail__rows">
@@ -90,27 +122,32 @@ const levelPercent = computed(() => {
 .skill-detail__level {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
   margin-bottom: 10px;
 }
 
-.skill-detail__level-bar {
-  flex: 1;
-  height: 5px;
-  border-radius: 3px;
-  background: var(--ink-700);
-  overflow: hidden;
-}
-
-.skill-detail__level-fill {
-  height: 100%;
-  background: var(--gold-500);
-}
-
 .skill-detail__level-label {
   flex: 0 0 auto;
-  font-size: 0.7rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
+}
+
+.skill-detail__upgrade {
+  flex: 0 0 auto;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--gold-500);
+  background: transparent;
+  color: var(--gold-500);
+  cursor: pointer;
+}
+
+.skill-detail__upgrade:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .skill-detail__rows {

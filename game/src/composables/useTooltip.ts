@@ -54,7 +54,7 @@ export interface TechniqueTooltipContent {
 }
 
 // Tooltip Đan/Phù/Trận (2026-08-15) — 3 loại item CÙNG SHAPE
-// (name/image/phamLabel Ngũ Phẩm/description/sections), khác Equipment
+// (name/image/gradeLabel Ngũ Phẩm/description/sections), khác Equipment
 // (không có instance state riêng — pill/talisman/formation chỉ là
 // template + số lượng trong túi, không roll/enhance/affix như
 // EquipmentInstance) nên gộp chung 1 kind union thay vì 3 interface
@@ -68,9 +68,9 @@ export interface GradedItemTooltipContent {
 
   imagePath?: string
 
-  phamLabel?: string
+  gradeLabel?: string
 
-  phamKey?: string
+  gradeKey?: string
 
   // "Sở hữu: N" — CHỈ có ý nghĩa khi hiện trong túi đồ (có bag stack
   // thật), undefined nếu hiện ở nơi khác (vd khi chưa sở hữu cái nào).

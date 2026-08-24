@@ -3,9 +3,9 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { autoUpdate, flip, offset, shift, size, useFloating } from '@floating-ui/vue'
 import { useTooltip } from '@/composables/useTooltip'
 import type { EquipmentTooltipContent, GradedItemTooltipContent, TechniqueTooltipContent } from '@/composables/useTooltip'
-import { phamRank, qualityRank } from '@/composables/slots/normalizeSlotRank'
+import { itemGradeRank, equipmentQualityRank } from '@/composables/slots/normalizeSlotRank'
 import type { EquipmentQuality } from '@/core/equipment/EquipmentQuality'
-import type { Pham } from '@/core/item/Pham'
+import type { ItemGrade } from '@/core/item/ItemGrade'
 
 const { content, reference } = useTooltip()
 const floating = ref<HTMLElement | null>(null)
@@ -97,25 +97,25 @@ const richContent = computed<TechniqueTooltipContent | GradedItemTooltipContent 
 // Quality/Pham → 1 màu accent qua thang --rank-color-1..9 dùng CHUNG với
 // SlotView.vue (normalizeSlotRank.ts) — thay vì tự liệt kê lại từng ID
 // quality/pham thành 1 rule CSS[data-quality=...]/[data-rarity=...] riêng
-// (dễ sót khi thêm bậc mới, xem git history). --rarity-*/--item-rarity-*
+// (dễ sót khi thêm bậc mới, xem git history). --rarity-*/--grade-*
 // trong theme.css vốn CHỈ LÀ alias của cùng thang --rank-color-N này.
 const qualityAccentColor = computed(() => {
   if (content.value?.kind !== 'equipment') return undefined
-  return `var(--rank-color-${qualityRank(content.value.qualityKey as EquipmentQuality)})`
+  return `var(--rank-color-${equipmentQualityRank(content.value.qualityKey as EquipmentQuality)})`
 })
 
 const isMaxQualityRank = computed(() =>
-  content.value?.kind === 'equipment' && qualityRank(content.value.qualityKey as EquipmentQuality) === 9,
+  content.value?.kind === 'equipment' && equipmentQualityRank(content.value.qualityKey as EquipmentQuality) === 9,
 )
 
 const rarityAccentColor = computed(() => {
-  const phamKey = gradedContent.value?.phamKey
-  return phamKey ? `var(--rank-color-${phamRank(phamKey as Pham)})` : undefined
+  const gradeKey = gradedContent.value?.gradeKey
+  return gradeKey ? `var(--rank-color-${itemGradeRank(gradeKey as ItemGrade)})` : undefined
 })
 
 const isMaxPhamRank = computed(() => {
-  const phamKey = gradedContent.value?.phamKey
-  return phamKey ? phamRank(phamKey as Pham) === 9 : false
+  const gradeKey = gradedContent.value?.gradeKey
+  return gradeKey ? itemGradeRank(gradeKey as ItemGrade) === 9 : false
 })
 
 function hideBrokenImage(event: Event) {
@@ -156,11 +156,11 @@ function hideBrokenImage(event: Event) {
             <p class="tooltip__title">{{ gradedContent.name }}</p>
             <div class="tooltip__badges">
               <span
-                v-if="gradedContent.phamLabel"
+                v-if="gradedContent.gradeLabel"
                 class="tooltip__badge tooltip__badge--rarity"
                 :class="{ 'tooltip__badge--max-rank': isMaxPhamRank }"
                 :style="rarityAccentColor ? { color: rarityAccentColor } : undefined"
-              >{{ gradedContent.phamLabel }}</span>
+              >{{ gradedContent.gradeLabel }}</span>
               <span v-if="gradedContent.ownedLabel" class="tooltip__badge tooltip__badge--muted">{{ gradedContent.ownedLabel }}</span>
             </div>
           </div>
@@ -222,22 +222,22 @@ function hideBrokenImage(event: Event) {
 .tooltip__icon-shell { flex: 0 0 54px; display: grid; place-items: center; width: 54px; height: 54px; border: 1px solid color-mix(in srgb, var(--tooltip-accent) 62%, var(--ink-line)); border-radius: var(--radius-sm); background: linear-gradient(145deg, var(--ink-700), var(--ink-950)); overflow: hidden; }
 .tooltip__icon, .tooltip__icon-fallback { grid-area: 1 / 1; } .tooltip__icon { width: 100%; height: 100%; padding: 5px; object-fit: contain; box-sizing: border-box; background: linear-gradient(145deg, var(--ink-700), var(--ink-950)); } .tooltip__icon-fallback { color: var(--tooltip-accent); font: 700 1.35rem var(--font-display); }
 .tooltip__heading { min-width: 0; } .tooltip__title { margin: 0 0 3px; color: var(--gold-300); font-family: var(--font-display); font-weight: 700; line-height: 1.25; }
-.tooltip__title--quality { color: var(--tooltip-accent); text-shadow: 0 0 10px color-mix(in srgb, var(--tooltip-accent) 32%, transparent); } .tooltip__meta { margin: 0; color: var(--text-muted); font-size: .68rem; }
-.tooltip__badges { display: flex; flex-wrap: wrap; gap: 4px; } .tooltip__badge { padding: 1px 5px; border: 1px solid var(--ink-line); border-radius: 999px; color: var(--text-secondary); font-size: .62rem; }
+.tooltip__title--quality { color: var(--tooltip-accent); text-shadow: 0 0 10px color-mix(in srgb, var(--tooltip-accent) 32%, transparent); } .tooltip__meta { margin: 0; color: var(--text-muted); font-size: var(--text-xs); }
+.tooltip__badges { display: flex; flex-wrap: wrap; gap: 4px; } .tooltip__badge { padding: 1px 5px; border: 1px solid var(--ink-line); border-radius: 999px; color: var(--text-secondary); font-size: var(--text-xs); }
 .tooltip__badge--quality { border-color: color-mix(in srgb, var(--tooltip-accent) 55%, var(--ink-line)); color: var(--tooltip-accent); } .tooltip__badge--rarity { color: var(--text-primary); } .tooltip__badge--muted { color: var(--text-muted); }
 .tooltip--max-quality-rank .tooltip__title--quality,
 .tooltip--max-quality-rank .tooltip__badge--quality,
 .tooltip__badge--rarity.tooltip__badge--max-rank { color: transparent; background: var(--rank-gradient-9); background-clip: text; -webkit-background-clip: text; font-weight: 700; }
 .tooltip__description { margin: 3px 0 0; color: var(--text-secondary); line-height: 1.45; } .tooltip__description--rich { margin-top: 9px; }
 .tooltip__section { margin-top: 10px; padding-top: 7px; border-top: 1px solid color-mix(in srgb, var(--tooltip-accent) 18%, var(--ink-line-soft)); }
-.tooltip__section-label { margin: 0 0 5px; color: color-mix(in srgb, var(--tooltip-accent) 76%, var(--text-primary)); font-size: .64rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+.tooltip__section-label { margin: 0 0 5px; color: color-mix(in srgb, var(--tooltip-accent) 76%, var(--text-primary)); font-size: var(--text-xs); font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
 .tooltip__section-row { display: grid; grid-template-columns: minmax(0,1fr) auto; column-gap: 14px; align-items: baseline; color: var(--text-secondary); line-height: 1.55; }
 .tooltip__row-value { color: var(--text-primary); font-variant-numeric: tabular-nums; text-align: right; } .tooltip__row-detail { grid-column: 1/-1; color: var(--text-muted); }
 .tooltip__section-row--positive .tooltip__row-value { color: var(--jade); } .tooltip__section-row--negative .tooltip__row-value { color: var(--crimson); }
 .tooltip__section-row--warning .tooltip__row-value { color: var(--gold-500); } .tooltip__section-row--muted { color: var(--text-muted); } .tooltip__section-row--special .tooltip__row-value { color: var(--affix-exalted); }
 .tooltip__section-row--tier-1 .tooltip__row-label { color: var(--affix-tier-1); } .tooltip__section-row--tier-2 .tooltip__row-label { color: var(--affix-tier-2); }
 .tooltip__section-row--tier-3 .tooltip__row-label { color: var(--affix-tier-3); } .tooltip__section-row--tier-4 .tooltip__row-label { color: var(--affix-tier-4); } .tooltip__section-row--tier-5 .tooltip__row-label { color: transparent; background: var(--rank-gradient-9); background-clip: text; -webkit-background-clip: text; font-weight: 700; }
-.tooltip__building-status { margin: 5px 0 0; color: var(--jade); font-size: .68rem; }
+.tooltip__building-status { margin: 5px 0 0; color: var(--jade); font-size: var(--text-xs); }
 .tooltip-fade-enter-active { transition: opacity 35ms linear; } .tooltip-fade-leave-active { transition: opacity 30ms linear; }
 .tooltip-fade-enter-from, .tooltip-fade-leave-to { opacity: 0; }
 @media (prefers-reduced-motion: reduce) { .tooltip-fade-enter-active, .tooltip-fade-leave-active { transition: opacity 1ms linear; } }

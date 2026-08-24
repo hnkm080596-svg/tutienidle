@@ -62,8 +62,8 @@ const lockedReasons = computed(() => {
 
   const reasons: string[] = []
 
-  if (player.skillPoints < props.node.cost) {
-    reasons.push(`Cần ${props.node.cost} Skill Point (đang có ${player.skillPoints})`)
+  if (player.skillInsight < props.node.insightCost) {
+    reasons.push(`Cần ${props.node.insightCost} Cảm Ngộ (đang có ${player.skillInsight})`)
   }
 
   for (const prereq of props.node.prerequisites ?? []) {
@@ -130,7 +130,7 @@ function onPurchase() {
       </ul>
 
       <div class="node-inspector__actions">
-        <span class="node-inspector__cost">Chi phí: {{ node.cost }} Skill Point</span>
+        <span class="node-inspector__cost">Chi phí: {{ node.insightCost }} Cảm Ngộ</span>
 
         <button
           v-if="!purchased"
@@ -178,7 +178,7 @@ function onPurchase() {
 }
 
 .node-inspector__state {
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
 }
 
@@ -199,7 +199,7 @@ function onPurchase() {
 .node-inspector__reasons {
   margin: 4px 0;
   padding-left: 16px;
-  font-size: 0.7rem;
+  font-size: var(--text-sm);
   color: var(--crimson);
 }
 
@@ -207,7 +207,7 @@ function onPurchase() {
   list-style: none;
   margin: 4px 0;
   padding: 0;
-  font-size: 0.72rem;
+  font-size: var(--text-sm);
 }
 
 .node-inspector__skill-stats li {
@@ -231,7 +231,7 @@ function onPurchase() {
 }
 
 .node-inspector__cost {
-  font-size: 0.72rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
 }
 

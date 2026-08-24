@@ -2,15 +2,15 @@
 // Realm Passive & Pressure System (2026-08-20) — panel Luyện Thể, cùng
 // pattern overlay với SkillPathPanel.vue/TechniquePanel.vue/
 // RealmPassivePanel.vue. Đầu tư Tinh Hoa Phàm Thể (materialBag) vào
-// tầng đang dở qua GameManager.investLuyenThe() (xem
-// core/realm/LuyenTheSystem.ts) — tuần tự, đầy 1 tầng mới sang tầng kế.
+// tầng đang dở qua GameManager.investBodyRefinement() (xem
+// core/realm/BodyRefinementSystem.ts) — tuần tự, đầy 1 tầng mới sang tầng kế.
 //
 // KHÔNG còn giới hạn riêng Phàm Nhân (2026-08-22) — CẢ truy cập LẪN
 // đầu tư đều hoạt động ở mọi cảnh giới, để Tinh Hoa Phàm Thể còn tồn
 // trong túi (chưa kịp tiêu hết trước khi rời Phàm Nhân) vẫn tiếp tục
-// đổi được thành chỉ số thay vì kẹt vĩnh viễn. requiredTang (pace theo
+// đổi được thành chỉ số thay vì kẹt vĩnh viễn. requiredRealmLevel (pace theo
 // tầng Phàm Nhân) tự bypass sau khi rời realm — xem
-// LuyenTheSystem.isTierRequiredTangMet(). Bậc Nhập Đạo (thưởng lúc Lễ
+// BodyRefinementSystem.isTierRequiredRealmLevelMet(). Bậc Nhập Đạo (thưởng lúc Lễ
 // Nhập Môn) vẫn CHỈ chốt theo tiến độ tại đúng thời điểm ritual đó
 // (GameManager.chooseCultivationPath(), không đổi) — đầu tư thêm sau
 // đó vẫn lên chỉ số trực tiếp (buildTierModifiers) nhưng không kéo
@@ -27,8 +27,8 @@ import { computed } from 'vue'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { LUYEN_THE_TIERS, TINH_HOA_PHAM_THE_MATERIAL_ID } from '@/data/realm/LuyenThe'
-import { getActiveTierIndex, getTierCap, isActiveTierUnlocked, isTierRequiredTangMet } from '@/core/realm/LuyenTheSystem'
+import { BODY_REFINEMENT_TIERS, TINH_HOA_PHAM_THE_MATERIAL_ID } from '@/data/realm/BodyRefinement'
+import { getActiveTierIndex, getTierCap, isActiveTierUnlocked, isTierRequiredRealmLevelMet } from '@/core/realm/BodyRefinementSystem'
 import { statLabel } from '@/core/stats/StatLabels'
 import { formatNumber } from '@/core/format/NumberFormatter'
 
@@ -58,23 +58,23 @@ const tierUnlocked = computed(() => {
 const tierRows = computed(() => {
   stateVersion.value
 
-  return LUYEN_THE_TIERS.map((tier, index) => {
+  return BODY_REFINEMENT_TIERS.map((tier, index) => {
     const cap = getTierCap(index)
 
     let progress = 0
     let status: 'done' | 'active' | 'realm_locked' | 'locked' = 'locked'
 
-    if (index < player.luyenTheCompletedTiers) {
+    if (index < player.bodyRefinementCompletedTiers) {
       progress = cap
       status = 'done'
-    } else if (index === player.luyenTheCompletedTiers) {
-      progress = player.luyenTheCurrentTierProgress
-      // requiredTang gate (2026-08-20) — tầng ĐÚNG lượt đầu tư nhưng
+    } else if (index === player.bodyRefinementCompletedTiers) {
+      progress = player.bodyRefinementCurrentTierProgress
+      // requiredRealmLevel gate (2026-08-20) — tầng ĐÚNG lượt đầu tư nhưng
       // chưa đạt Phàm Nhân tầng yêu cầu vẫn hiện riêng biệt (không lẫn
       // với các tầng sau, còn chưa tới lượt hoàn toàn). Tự bypass sau
-      // khi rời Phàm Nhân (xem isTierRequiredTangMet()) nên trạng thái
+      // khi rời Phàm Nhân (xem isTierRequiredRealmLevelMet()) nên trạng thái
       // này chỉ còn xảy ra khi player vẫn đang ở Phàm Nhân.
-      status = isTierRequiredTangMet(player.$state, index) ? 'active' : 'realm_locked'
+      status = isTierRequiredRealmLevelMet(player.$state, index) ? 'active' : 'realm_locked'
     }
 
     return {
@@ -82,7 +82,7 @@ const tierRows = computed(() => {
       name: tier.name,
       description: tier.description,
       statLabels: tier.stats.map(stat => statLabel(stat)).join(' / '),
-      requiredTang: tier.requiredTang,
+      requiredRealmLevel: tier.requiredRealmLevel,
       progress,
       cap,
       percent: cap > 0 ? Math.min(100, (progress / cap) * 100) : 0,
@@ -98,7 +98,7 @@ function invest() {
     return
   }
 
-  gameManager.investLuyenThe(player.$state)
+  gameManager.investBodyRefinement(player.$state)
   bumpState()
 }
 
@@ -118,7 +118,7 @@ function close() {
 
       <div class="luyen-the-panel__summary">
         <span>Tinh Hoa Phàm Thể: {{ formatNumber(heldTinhHoa) }}</span>
-        <span>Tầng đã hoàn thành: {{ player.luyenTheCompletedTiers }}/6</span>
+        <span>Tầng đã hoàn thành: {{ player.bodyRefinementCompletedTiers }}/6</span>
       </div>
 
       <label class="luyen-the-panel__auto">
@@ -146,7 +146,7 @@ function close() {
             <p class="luyen-the-panel__tier-desc">{{ row.description }}</p>
 
             <p v-if="row.status === 'realm_locked'" class="luyen-the-panel__tier-lock">
-              Khóa — cần Phàm Nhân tầng {{ row.requiredTang }}
+              Khóa — cần Phàm Nhân tầng {{ row.requiredRealmLevel }}
             </p>
 
             <div class="luyen-the-panel__tier-bar">
@@ -272,7 +272,7 @@ function close() {
 
 .luyen-the-panel__tier-lock {
   margin: 2px 0 6px;
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
   color: var(--crimson);
 }
 
@@ -289,13 +289,13 @@ function close() {
 }
 
 .luyen-the-panel__tier-stat {
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
 }
 
 .luyen-the-panel__tier-desc {
   margin: 2px 0 6px;
-  font-size: 0.72rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
 }
 
@@ -314,7 +314,7 @@ function close() {
 .luyen-the-panel__tier-progress {
   display: block;
   margin-top: 3px;
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
 }
 

@@ -43,3 +43,9 @@ __screenshots__/
 /test-results-*.png
 /playwright-report/
 /blob-report/
+
+# Electron (vite-plugin-electron main/preload build output + electron-builder
+# packaging output — named to avoid colliding with the plain web build's
+# `dist`, see electron-builder.yml)
+dist-electron
+release

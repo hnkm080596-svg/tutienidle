@@ -143,10 +143,10 @@ const { currentPage, totalPages, goToPage, gridCells } = useBagPagination(cells,
 }
 
 .bag-section__pages button {
-  min-width: 22px;
-  height: 22px;
+  min-width: 36px;
+  min-height: 32px;
   padding: 0;
-  font-size: 0.7rem;
+  font-size: var(--text-sm);
   background: var(--ink-800);
   color: var(--text-secondary);
   border: 1px solid var(--ink-line-soft);

@@ -110,7 +110,7 @@ onBeforeUnmount(() => {
   border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-family: var(--font-body);
-  font-size: 0.65rem;
+  font-size: var(--text-xs);
   cursor: pointer;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
 }
@@ -162,7 +162,7 @@ onBeforeUnmount(() => {
 
 .toast-item__eyebrow {
   color: var(--text-muted);
-  font-size: 0.52rem;
+  font-size: var(--text-xs);
   letter-spacing: 0.07em;
   text-transform: uppercase;
 }

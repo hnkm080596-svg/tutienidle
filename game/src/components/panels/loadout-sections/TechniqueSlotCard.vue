@@ -165,7 +165,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 }
 
 .loadout-card__name {
-  font-size: 0.72rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -173,14 +173,14 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 }
 
 .loadout-card__empty {
-  font-size: 0.62rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
 }
 
 .loadout-card__tier {
   margin-left: 4px;
   padding: 1px 5px;
-  font-size: 0.55rem;
+  font-size: var(--text-xs);
   font-weight: 700;
   color: var(--gold-500);
   border: 1px solid var(--gold-500);
@@ -202,7 +202,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 }
 
 .loadout-card__tier-label {
-  font-size: 0.56rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
 }
 
@@ -242,7 +242,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 .loadout-card__status {
   margin-top: 2px;
   padding: 2px 10px;
-  font-size: 0.6rem;
+  font-size: var(--text-xs);
   font-weight: 700;
   letter-spacing: 0.04em;
   color: var(--jade);

@@ -12,7 +12,7 @@ defineProps<{
 
 <template>
   <div class="resource-display" v-tooltip="label ? { title: label } : undefined">
-    <svg class="resource-display__icon" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--gold-500)" stroke-width="1.4">
+    <svg class="resource-display__icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--gold-500)" stroke-width="1.4">
       <path d="M8 1 L14 8 L8 15 L2 8 Z" stroke-linejoin="round" />
     </svg>
 
@@ -24,9 +24,11 @@ defineProps<{
 .resource-display {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2);
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  /* WS2 — giá trị tài nguyên là nội dung chính: >= --text-body (14px). */
+  font-size: var(--text-body);
+  line-height: var(--lh-tight);
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
 }

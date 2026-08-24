@@ -67,33 +67,33 @@
   --rank-gradient-9: linear-gradient(90deg, #ff6b6b, #ffd66b, #7bd88f, #67d8ff, #9e8cff, #ef8cff, #ff6b6b);
 
   /* Equipment Quality có đủ 9 bậc nên ánh xạ 1:1. */
-  --rarity-pham_khi: var(--rank-color-1);
-  --rarity-bao_khi: var(--rank-color-2);
-  --rarity-linh_khi: var(--rank-color-3);
-  --rarity-phap_khi: var(--rank-color-4);
-  --rarity-phap_bao: var(--rank-color-5);
-  --rarity-tien_bao: var(--rank-color-6);
-  --rarity-chi_bao: var(--rank-color-7);
-  --rarity-hon_don_chi_bao: var(--rank-color-8);
-  --rarity-thien_dia_trong_khi: var(--rank-color-9);
+  --eq-quality-pham_khi: var(--rank-color-1);
+  --eq-quality-bao_khi: var(--rank-color-2);
+  --eq-quality-linh_khi: var(--rank-color-3);
+  --eq-quality-phap_khi: var(--rank-color-4);
+  --eq-quality-phap_bao: var(--rank-color-5);
+  --eq-quality-tien_bao: var(--rank-color-6);
+  --eq-quality-chi_bao: var(--rank-color-7);
+  --eq-quality-hon_don_chi_bao: var(--rank-color-8);
+  --eq-quality-thien_dia_trong_khi: var(--rank-color-9);
 
   /* Item Rarity — Core Loop Foundation checklist, trục ĐỘC LẬP với
      --rarity-* ở trên (trục đó là Quality/tint, giữ nguyên vai trò
-     cũ). Namespace riêng --item-rarity-* để không xung đột, dùng qua
+     cũ). Namespace riêng --grade-* để không xung đột, dùng qua
      SlotView's itemRarity prop (khác prop `rarity` hiện có).
      Naming-principles pass (2026-08-14, "nguyen li dat ten") — 5 bậc
      Ngũ Phẩm Hoàng/Huyền/Địa/Thiên/Tiên thay 4 bậc "Duyên" cũ (xem
      core/item/Pham.ts) — màu escalate rõ rệt để nhận diện nhanh:
      đồng(hoang_pham)/tím thẫm(huyen_pham)/lục bích(dia_pham)/
      vàng kim(thien_pham)/trắng-kim rực rỡ(tien_pham, DÙNG LẠI hex đỉnh
-     của --rarity-thien_dia_trong_khi ở trên — cùng ý niệm "đỉnh phong"
+     của --eq-quality-thien_dia_trong_khi ở trên — cùng ý niệm "đỉnh phong"
      dù khác trục). */
   /* Hệ 5 bậc ánh xạ đều lên 1–3–5–7–9. */
-  --item-rarity-hoang_pham: var(--rank-color-1);
-  --item-rarity-huyen_pham: var(--rank-color-3);
-  --item-rarity-dia_pham: var(--rank-color-5);
-  --item-rarity-thien_pham: var(--rank-color-7);
-  --item-rarity-tien_pham: var(--rank-color-9);
+  --grade-hoang: var(--rank-color-1);
+  --grade-huyen: var(--rank-color-3);
+  --grade-dia: var(--rank-color-5);
+  --grade-thien: var(--rank-color-7);
+  --grade-tien: var(--rank-color-9);
 
   /* Tier Affix: UI dùng màu thay cho việc lặp ký hiệu I–V ở từng dòng. */
   --affix-tier-1: var(--rank-color-1);
@@ -127,6 +127,58 @@
 
   --font-display: 'Noto Serif', Georgia, serif;
   --font-body: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* ============================================================
+     WS1 Responsive foundation (2026-08-24) — layout chrome theo px
+     THỰC (clamp), thay cho các hằng số design-frame 2560x1440 vốn bị
+     co ~50% ở cửa sổ Electron mặc định do transform-scale toàn game.
+     Canvas Phaser vẫn dùng hệ tọa độ riêng; khoảng reserved giữa DOM
+     và scene được đồng bộ qua game/support/combatInsets.ts (DOM đo
+     thật rồi cấp xuống scene).
+     ============================================================ */
+  --top-bar-h: clamp(52px, 5.5vh, 76px);
+  --bottom-bar-h: clamp(60px, 7vh, 92px);
+
+  --combat-topbar-h: clamp(46px, 4.8vh, 72px);
+  --combat-status-h: clamp(44px, 4.6vh, 68px);
+  --combat-event-h: clamp(32px, 3.4vh, 48px);
+  --combat-control-h: clamp(48px, 5.2vh, 76px);
+
+  /* ============================================================
+     WS2 Typography & interaction tokens (2026-08-24)
+     Nguyên tắc: KHÔNG có nội dung chính dưới 12px hiển thị thực tế;
+     icon navigation chính >= 22px; vùng bấm chính >= 40px.
+     Thay dần các cỡ 0.5-0.72rem cũ bằng các token semantic này.
+     WS8 (2026-08-24) — mọi token nhân theo var(--ui-scale) (90/100/
+     110/125% chọn ở Settings, xem composables/uiScale.ts). Chỉ scale
+     typography/control sizing, KHÔNG scale khung layout/canvas.
+     ============================================================ */
+
+  /* Typography scale */
+  --text-xs: calc(12px * var(--ui-scale, 1));        /* metadata/marker nhỏ nhất cho nội dung chính */
+  --text-sm: calc(13px * var(--ui-scale, 1));        /* label phụ, badge */
+  --text-body: calc(14px * var(--ui-scale, 1));      /* nội dung thông thường */
+  --text-md: calc(15px * var(--ui-scale, 1));        /* nội dung nhấn nhẹ */
+  --text-lg: calc(16px * var(--ui-scale, 1));        /* giá trị/stat chính */
+  --text-title: calc(18px * var(--ui-scale, 1));     /* section heading */
+  --text-panel-title: calc(20px * var(--ui-scale, 1)); /* panel title */
+
+  --lh-tight: 1.25;
+  --lh-body: 1.45;
+  --lh-relaxed: 1.55;
+
+  /* Spacing scale — KHÔNG nhân scale (tránh layout lệch khi zoom chữ). */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+
+  /* Interaction sizing */
+  --icon-nav: calc(24px * var(--ui-scale, 1));          /* icon navigation chính */
+  --tap-min: calc(40px * var(--ui-scale, 1));           /* vùng bấm tối thiểu */
+  --tap-comfortable: calc(44px * var(--ui-scale, 1));   /* vùng bấm khuyến nghị */
+  --focus-ring-gold: 0 0 0 2px rgba(255, 213, 79, 0.65);
 }
 
 /* Ẩn thanh scrollbar trên toàn app — mọi panel vẫn kéo/scroll được

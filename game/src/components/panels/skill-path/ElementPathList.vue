@@ -95,7 +95,7 @@ function onClick(row: ReturnType<typeof buildRow>) {
 }
 
 .element-path-list__title {
-  font-size: 0.72rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text-primary);
   text-transform: uppercase;
@@ -138,7 +138,7 @@ function onClick(row: ReturnType<typeof buildRow>) {
 }
 
 .element-path-list__meta {
-  font-size: 0.62rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
 }
 

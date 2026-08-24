@@ -269,7 +269,7 @@ function start() {
 
 .stage-select__lock {
   display: block;
-  font-size: 0.65rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
 }
 
@@ -333,7 +333,7 @@ function start() {
 .stage-select__description,
 .stage-select__meta {
   margin: 0;
-  font-size: 0.72rem;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
 }
 
@@ -351,7 +351,7 @@ function start() {
   border: 1px solid var(--ink-line-soft);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 0.72rem;
+  font-size: var(--text-sm);
 }
 
 .stage-select__mode button.is-active {
@@ -361,7 +361,7 @@ function start() {
 
 .stage-select__mode-hint {
   margin: 0;
-  font-size: 0.65rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
 }
 
@@ -369,7 +369,7 @@ function start() {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.7rem;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
   cursor: pointer;
 }

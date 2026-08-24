@@ -30,8 +30,8 @@ const props = defineProps<{
   nameSegments?: NameSegment[]
 
   /** Rank chuẩn hoá 1-9 (xem composables/slots/normalizeSlotRank.ts) —
-   * SlotView KHÔNG biết ID domain như 'pham_khi'/'tien_pham'. */
-  qualityRank?: number
+   * SlotView KHÔNG biết ID domain như 'pham_khi'/'tien'. */
+  equipmentQualityRank?: number
 
   /** Rank chuẩn hoá 1/3/5/7/9 (5 bậc Phẩm ánh xạ đều lên thang 1-9). */
   rarityRank?: number
@@ -76,7 +76,7 @@ function clampRank(rank: number | undefined): number | undefined {
 }
 
 const qualityColor = computed(() => {
-  const rank = clampRank(props.qualityRank)
+  const rank = clampRank(props.equipmentQualityRank)
   return rank ? `var(--rank-color-${rank})` : undefined
 })
 
@@ -85,7 +85,7 @@ const rarityColor = computed(() => {
   return rank ? `var(--rank-color-${rank})` : undefined
 })
 
-const isMaxRank = computed(() => clampRank(props.qualityRank) === 9)
+const isMaxRank = computed(() => clampRank(props.equipmentQualityRank) === 9)
 const isMaxRarityRank = computed(() => clampRank(props.rarityRank) === 9)
 
 // ============================================================
@@ -220,7 +220,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   background: var(--slot-surface);
   color: var(--text-primary);
   font-family: var(--font-body);
-  font-size: 0.7rem;
+  font-size: var(--text-sm);
   cursor: pointer;
   overflow: hidden;
   isolation: isolate;
@@ -323,7 +323,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   display: grid;
   place-items: center;
   border-radius: 50%;
-  font-size: 0.55rem;
+  font-size: var(--text-xs);
   font-weight: 700;
   line-height: 1;
   pointer-events: none;
@@ -392,7 +392,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   z-index: 6;
   padding: 0 3px;
   border-radius: 3px;
-  font-size: 0.5rem;
+  font-size: var(--text-xs);
   font-weight: 700;
   line-height: 1.3;
   pointer-events: none;
@@ -400,7 +400,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 
 .slot-view__marker--equipped {
   color: var(--slot-valid);
-  font-size: 0.6rem;
+  font-size: var(--text-xs);
 }
 
 .slot-view__marker--new {
@@ -414,7 +414,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   bottom: 16px;
   left: 3px;
   z-index: 6;
-  font-size: 0.6rem;
+  font-size: var(--text-xs);
   font-weight: 700;
   line-height: 1;
   pointer-events: none;
@@ -435,7 +435,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   border-radius: 3px;
   background: rgba(10, 10, 13, 0.82);
   color: var(--text-primary);
-  font-size: 0.56rem;
+  font-size: var(--text-xs);
   font-weight: 700;
   line-height: 1.4;
   pointer-events: none;
@@ -469,7 +469,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   border-radius: 3px;
   background: rgba(10, 10, 13, 0.75);
   color: var(--text-secondary);
-  font-size: 0.6rem;
+  font-size: var(--text-xs);
   line-height: 1.4;
   z-index: 6;
   pointer-events: none;
@@ -481,7 +481,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   padding: 2px 3px;
   background: var(--slot-caption-bg);
   color: var(--text-primary);
-  font-size: 0.62rem;
+  font-size: var(--text-xs);
   line-height: 1.15;
   text-align: center;
   white-space: nowrap;
@@ -491,7 +491,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   pointer-events: none;
 }
 
-.slot-view__caption [data-name-tone='tien_pham'],
+.slot-view__caption [data-name-tone='tien'],
 .slot-view__caption [data-name-tone='thien_dia_trong_khi'] {
   color: transparent !important;
   background: var(--rank-gradient-9);

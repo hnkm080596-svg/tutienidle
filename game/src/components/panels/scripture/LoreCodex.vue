@@ -68,7 +68,7 @@ const loreItems = computed(() => {
   margin: 0;
   padding: 12px;
   color: var(--text-muted);
-  font-size: 0.72rem;
+  font-size: var(--text-sm);
   text-align: center;
 }
 

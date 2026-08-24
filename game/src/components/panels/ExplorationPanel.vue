@@ -272,7 +272,7 @@ function formatDuration(seconds: number): string {
 .exploration-panel__summary {
   margin: 0 0 4px;
   color: var(--gold-500);
-  font-size: 0.7rem;
+  font-size: var(--text-sm);
 }
 
 .exploration-card {
@@ -321,7 +321,7 @@ function formatDuration(seconds: number): string {
   border-radius: 6px;
   background: var(--jade);
   color: var(--ink-950);
-  font-size: 0.5rem;
+  font-size: var(--text-xs);
   white-space: nowrap;
 }
 
@@ -334,7 +334,7 @@ function formatDuration(seconds: number): string {
 }
 
 .exploration-card__name {
-  font-size: 0.72rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -359,7 +359,7 @@ function formatDuration(seconds: number): string {
   border-radius: 8px;
   background: var(--gold-500);
   color: var(--gold-ink);
-  font-size: 0.65rem;
+  font-size: var(--text-xs);
   font-weight: 700;
 }
 
@@ -382,13 +382,13 @@ function formatDuration(seconds: number): string {
 
 .exploration-detail__description {
   margin: 0;
-  font-size: 0.72rem;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
 }
 
 .exploration-detail__section h4 {
   margin: 0 0 4px;
-  font-size: 0.62rem;
+  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.03em;
   color: var(--gold-500);
@@ -399,7 +399,7 @@ function formatDuration(seconds: number): string {
   justify-content: space-between;
   gap: 6px;
   padding: 2px 0;
-  font-size: 0.72rem;
+  font-size: var(--text-sm);
   border-bottom: 1px solid var(--ink-line-soft);
 }
 
@@ -416,7 +416,7 @@ function formatDuration(seconds: number): string {
 .tier-chip {
   padding: 0 5px;
   border-radius: 6px;
-  font-size: 0.58rem;
+  font-size: var(--text-xs);
   font-weight: 600;
 }
 

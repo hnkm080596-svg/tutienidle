@@ -312,7 +312,7 @@ watch(branches, () => {
   <div class="node-tree">
     <div class="node-tree__header">
       <span class="node-tree__title">Node Tree</span>
-      <span class="node-tree__points">{{ player.skillPoints }} Skill Point</span>
+      <span class="node-tree__points">{{ player.skillInsight }} Cảm Ngộ</span>
     </div>
 
     <div v-for="branch in branches" :key="branch.branchTag ?? 'other'" class="node-tree__branch">
@@ -348,7 +348,7 @@ watch(branches, () => {
             <span class="node-tree__node-name">{{ node.name }}</span>
             <span v-if="node.description" class="node-tree__node-desc">{{ node.description }}</span>
             <span class="node-tree__node-cost">
-              {{ purchased ? 'Đã lĩnh ngộ' : `${node.cost} Skill Point` }}
+              {{ purchased ? 'Đã lĩnh ngộ' : `${node.insightCost} Cảm Ngộ` }}
             </span>
           </button>
         </div>
@@ -372,18 +372,18 @@ watch(branches, () => {
 }
 
 .node-tree__title {
-  font-size: 0.72rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text-primary);
 }
 
 .node-tree__points {
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
   color: var(--gold-500);
 }
 
 .node-tree__branch-title {
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   margin: 0 0 4px;
 }
@@ -499,17 +499,17 @@ watch(branches, () => {
 }
 
 .node-tree__node-name {
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
   font-weight: 600;
 }
 
 .node-tree__node-desc {
-  font-size: 0.58rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
 }
 
 .node-tree__node-cost {
-  font-size: 0.58rem;
+  font-size: var(--text-xs);
   color: var(--gold-500);
 }
 </style>

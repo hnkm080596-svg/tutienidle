@@ -1,0 +1,32 @@
+# Uncommitted audit followup plan, Ưu tiên 2 (Electron packaging,
+# 2026-08-24) — file YAML thuần (không dùng key "build" trong package.json)
+# để tránh mọi ràng buộc ESM/CJS: package.json là "type":"module", còn YAML
+# không qua bất kỳ module loader JS nào.
+appId: com.tienhiepidle.app
+productName: Tien Hiep Idle
+
+# BẮT BUỘC override — mặc định electron-builder là "dist", sẽ đè lên
+# game/dist (output bản web build hiện có).
+directories:
+  output: release
+
+# Chỉ đóng gói output đã build sẵn — không ship source TypeScript.
+# '!node_modules/**/*' BẮT BUỘC: electron-builder có riêng
+# nodeModuleFilePatterns mặc định '**/*' (đóng gói TOÀN BỘ node_modules cho
+# app cần require() runtime deps), độc lập với 2 dòng trên — không loại trừ
+# tường minh thì asar phình to vô ích (đã thấy thật: 127MB gồm @babel/vite/...).
+# main.ts/preload.ts đã được vite-plugin-electron BUNDLE hết vào 1 file, chỉ
+# còn import 'electron' (Electron runtime tự cấp, không cần node_modules).
+files:
+  - dist/**/*
+  - dist-electron/**/*
+  - '!node_modules/**/*'
+
+win:
+  target: nsis
+  # Placeholder — chưa cần file .ico thật ngay, không blocking.
+  icon: build/icon.ico
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true

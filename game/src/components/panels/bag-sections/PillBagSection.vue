@@ -10,7 +10,7 @@ import type { Pill } from '@/core/pill/Pill'
 import type { BagCell } from './BagCell'
 import type { GradedItemTooltipContent, TooltipSection } from '@/composables/useTooltip'
 import { statLabel, formatStat } from '@/core/stats/StatLabels'
-import { PHAM_LABELS, composePhamNameSegments } from '@/core/item/Pham'
+import { ITEM_GRADE_LABELS, composeItemGradeNameSegments } from '@/core/item/ItemGrade'
 import { useBagGridLayout } from '@/composables/useBagGridLayout'
 
 const gameManager = useGameManager()
@@ -68,9 +68,9 @@ function buildTooltip(pill: Pill, owned: number): GradedItemTooltipContent {
 
     imagePath: pill.icon,
 
-    phamLabel: PHAM_LABELS[pill.pham],
+    gradeLabel: ITEM_GRADE_LABELS[pill.grade],
 
-    phamKey: pill.pham,
+    gradeKey: pill.grade,
 
     ownedLabel: `Sở hữu: ${owned}`,
 
@@ -111,7 +111,7 @@ const cells = computed<BagCell[]>(() => {
 
     label: stack.pill.name,
 
-    nameSegments: composePhamNameSegments(stack.pill.name, stack.pill.pham),
+    nameSegments: composeItemGradeNameSegments(stack.pill.name, stack.pill.grade),
 
     description: stack.pill.description,
 
@@ -197,10 +197,10 @@ const { currentPage, totalPages, goToPage, gridCells } = useBagPagination(cells,
 }
 
 .bag-section__pages button {
-  min-width: 22px;
-  height: 22px;
+  min-width: 36px;
+  min-height: 32px;
   padding: 0;
-  font-size: 0.7rem;
+  font-size: var(--text-sm);
   background: var(--ink-800);
   color: var(--text-secondary);
   border: 1px solid var(--ink-line-soft);

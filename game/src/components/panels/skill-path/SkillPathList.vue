@@ -42,7 +42,7 @@ const emit = defineEmits<{
 }
 
 .skill-path-list__title {
-  font-size: 0.72rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--text-primary);
   text-transform: uppercase;
@@ -78,7 +78,7 @@ const emit = defineEmits<{
 }
 
 .skill-path-list__meta {
-  font-size: 0.62rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
 }
 </style>

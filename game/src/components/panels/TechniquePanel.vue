@@ -178,7 +178,7 @@ function close() {
 .technique-panel__tier-label {
   display: block;
   margin: 0 0 8px;
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
 }
 
@@ -188,7 +188,7 @@ function close() {
 
 .technique-panel__group-title {
   margin: 0 0 4px;
-  font-size: 0.7rem;
+  font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.03em;
   color: var(--gold-500);

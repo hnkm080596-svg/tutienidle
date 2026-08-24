@@ -4,7 +4,7 @@
 // thành overlay riêng, cùng pattern SkillPathPanel.vue/TechniquePanel.vue.
 // Mở qua nút "Quán Khí" bên cạnh Đột Phá (CharacterPanel.vue's
 // .character-panel__breakthrough) khi player.realmLevel >= 12 ở Phàm
-// Nhân (xem QUAN_KHI_UNLOCK_TANG ở đó) — panel này KHÔNG tự kiểm tra
+// Nhân (xem QUAN_KHI_UNLOCK_LEVEL ở đó) — panel này KHÔNG tự kiểm tra
 // lại điều kiện, chỉ tự đóng ngay sau khi chọn xong (component gọi nó
 // đã gate rồi).
 import { computed } from 'vue'
@@ -46,7 +46,7 @@ function choosePath(pathId: CultivationPathId) {
     // Nghi Lễ Nhập Môn — chọn path VỪA LÀ hành động đột phá Phàm Nhân
     // -> Luyện Khí (xem GameManager.chooseCultivationPath()), xứng đáng
     // 1 world announcement giống mọi lần đổi đại cảnh giới khác.
-    if (realmIdBefore === 'pham_nhan' && player.realmId !== 'pham_nhan') {
+    if (realmIdBefore === 'mortal' && player.realmId !== 'mortal') {
       useWorldAnnouncementStore().show(
         'LỄ NHẬP MÔN',
         `Đạo hữu đã từ bỏ thân phận phàm nhân, chính thức bước vào ${kit.name}.`,
@@ -141,7 +141,7 @@ function close() {
 
 .quan-khi-panel__hint {
   margin: 0;
-  font-size: 0.7rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
 }
 

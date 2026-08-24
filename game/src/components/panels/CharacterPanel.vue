@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { getCurrentRealm, getNextRealm, BASE_CULTIVATION_PER_SECOND } from '@/core/realm/realmSystem'
 import TechniqueSlotCard from './loadout-sections/TechniqueSlotCard.vue'
@@ -34,7 +34,7 @@ const { triggerQuanKhi } = useTribulation()
 // trước khi quyết định. Nút bấm hiện bên cạnh Đột Phá (xem
 // .character-panel__breakthrough), mở QuanKhiPanel.vue thay vì liệt kê
 // path-choices ngay tại đây như trước.
-const QUAN_KHI_UNLOCK_TANG = 12
+const QUAN_KHI_UNLOCK_LEVEL = 12
 
 // Nghi Lễ Nhập Môn (2026-08-16) — chọn path. Save cũ (tạo trước khi
 // Phàm Nhân tồn tại, đã ở qi_refining+ mà chưa từng chọn path) là NGOẠI
@@ -45,8 +45,8 @@ const canChooseCultivationPath = computed(() => {
     return false
   }
 
-  if (player.realmId === 'pham_nhan') {
-    return player.realmLevel >= QUAN_KHI_UNLOCK_TANG
+  if (player.realmId === 'mortal') {
+    return player.realmLevel >= QUAN_KHI_UNLOCK_LEVEL
   }
 
   return true
@@ -69,7 +69,7 @@ const characterAuraColor = computed(() =>
 
 // Sprite thật (2026-08-20, thay khối robe/head CSS placeholder) — cùng
 // atlas idle/cultivate MainScene.ts dùng ở giữa Động Phủ. LUÔN dùng
-// idle ở đây (khác DongFuScene.vue's dongfu-player, nơi đổi theo
+// idle ở đây (khác DongFuScene.vue's home-player, nơi đổi theo
 // player.isCultivating) — đây chỉ là chân dung nhỏ trong panel, không
 // phải nơi thể hiện trạng thái ngồi thiền.
 const characterAtlasUrl = '/assets/cultivate.json'
@@ -178,6 +178,37 @@ const statGroups = computed(() =>
   })),
 )
 
+// WS3 Redesign Character Panel (2026-08-24) — chỉ số chia TAB thay vì
+// xếp 5 nhóm + Ngũ Hành + đan dược liên tiếp khiến mọi thứ phải nhỏ lại.
+// 4 tab: Thuộc Tính (attribute, có nút +) | Chiến Đấu (combat+special)
+// | Phòng Thủ & Sinh Tồn (defense_advanced+survival) | Ngũ Hành & Khác
+// (chips + hiệu ứng đan dược vĩnh viễn).
+const STAT_TABS = [
+  { key: 'attribute', label: 'Thuộc Tính' },
+  { key: 'combat', label: 'Chiến Đấu' },
+  { key: 'defense', label: 'Phòng Thủ & Sinh Tồn' },
+  { key: 'elements', label: 'Ngũ Hành & Khác' },
+] as const
+
+type StatTabKey = (typeof STAT_TABS)[number]['key']
+
+const activeStatTab = ref<StatTabKey>('attribute')
+
+const attributeGroups = computed(() => statGroups.value.filter(group => group.category === 'attribute'))
+
+const combatGroups = computed(() => statGroups.value.filter(group => group.category === 'combat' || group.category === 'special'))
+
+const defenseGroups = computed(() => statGroups.value.filter(group => group.category === 'defense_advanced' || group.category === 'survival'))
+
+const visibleStatGroups = computed(() => {
+  switch (activeStatTab.value) {
+    case 'attribute': return attributeGroups.value
+    case 'combat': return combatGroups.value
+    case 'defense': return defenseGroups.value
+    default: return []
+  }
+})
+
 // PLAN HOÀN CHỈNH mục 4 — UI Stat Cap: KHÔNG hiện "24/30", chỉ hiện số
 // + chữ "MAX" (vàng) ngay bên dưới khi ĐẦY. Trần tính trên baseStats
 // (phần người chơi TỰ đầu tư) chứ không phải finalStats đang hiện ở
@@ -265,26 +296,14 @@ const pillPermanentRows = computed(() => {
 
 <template>
   <div class="character-panel">
-    <!-- UI redesign mục 11 (Character) — 3 cột EQUIPMENT | CHARACTER |
-         CẢNH GIỚI thay header 1 cột cũ (chỉ có tên/chiến lực/tu vi,
-         KHÔNG có hình ảnh nhân vật hay trang bị nào). Panel trái hẹp
-         (25% khung 16:9, xem DesignFrame.ts) nên 3 cột không chia đều
-         như mockup gốc — cột Cảnh Giới rộng hơn để chứa thanh
-         progress+nút, cột Trang Bị dùng lại NGUYÊN paperdoll 6-slot
-         thật (SlotView/tooltip/unequip đầy đủ) thay vì vẽ giả 4 ô như
-         mockup — tránh tạo component trùng lặp, chỉ thu nhỏ container. -->
+    <!-- WS3 Redesign (2026-08-24) — header 2 VÙNG xếp dọc thay 3 cột
+         ngang chật chội cũ: (1) chân dung + tên/cảnh giới/chiến lực,
+         (2) thanh tu vi + ETA + auto-đột phá + hàng nút hành động.
+         Trang bị tách thành section RIÊNG bên dưới dùng trọn chiều rộng
+         panel — lưới paperdoll 3x2 đủ lớn để nhận diện item/badge
+         (trước đây bị nhét vào cột 32% của header). -->
     <div class="character-panel__header">
-      <div class="character-panel__col character-panel__col--equipment">
-        <span class="character-panel__col-label">Trang Bị</span>
-
-        <div class="character-panel__mini-paperdoll">
-          <EquipmentPaperdoll />
-        </div>
-      </div>
-
-      <div class="character-panel__col character-panel__col--figure">
-        <h3 class="character-panel__name">{{ player.name }}</h3>
-
+      <div class="character-panel__identity">
         <div class="character-panel__figure" :style="{ '--aura': characterAuraColor }">
           <span class="character-panel__figure-aura" />
 
@@ -297,18 +316,19 @@ const pillPermanentRows = computed(() => {
           />
         </div>
 
-        <div class="character-panel__power">
-          <span class="character-panel__power-value">{{ formatNumber(combatPower) }}</span>
-          <span class="character-panel__power-label">Chiến Lực</span>
+        <div class="character-panel__identity-text">
+          <h3 class="character-panel__name">{{ player.name }}</h3>
+
+          <p class="character-panel__realm-line">{{ realm.name }} · Tầng {{ player.realmLevel }}</p>
+
+          <p class="character-panel__power">
+            <span class="character-panel__power-value">{{ formatNumber(combatPower) }}</span>
+            <span class="character-panel__power-label">Chiến Lực</span>
+          </p>
         </div>
       </div>
 
-      <div class="character-panel__col character-panel__col--realm">
-        <span class="character-panel__col-label">Cảnh Giới</span>
-
-        <p class="character-panel__realm">{{ realm.name }}</p>
-        <p class="character-panel__realm-level">Tầng {{ player.realmLevel }}</p>
-
+      <div class="character-panel__progress">
         <div class="character-panel__cultivation">
           <div class="character-panel__cultivation-bar">
             <div
@@ -345,10 +365,10 @@ const pillPermanentRows = computed(() => {
           </button>
 
           <!-- Quán Khí (2026-08-20) — mở panel chọn Pháp Tu/Kiếm Tu (hoặc
-               path tương lai), thay path-choices liệt kê thẳng ở đây như
-               trước. Hiện SONG SONG với Đột Phá tiểu cảnh giới (Phàm Nhân
-               tầng 12-18 vẫn có thể tiếp tục đột phá thường, xem
-               QUAN_KHI_UNLOCK_TANG) — người chơi tự chọn lúc nào commit. -->
+                path tương lai), thay path-choices liệt kê thẳng ở đây như
+                trước. Hiện SONG SONG với Đột Phá tiểu cảnh giới (Phàm Nhân
+                tầng 12-18 vẫn có thể tiếp tục đột phá thường, xem
+                QUAN_KHI_UNLOCK_LEVEL) — người chơi tự chọn lúc nào commit. -->
           <button
             v-if="canChooseCultivationPath"
             type="button"
@@ -379,6 +399,15 @@ const pillPermanentRows = computed(() => {
         </div>
       </div>
     </div>
+
+    <!-- WS3 — Trang Bị là section độc lập, KHÔNG còn nằm trong header. -->
+    <section class="character-panel__equipment">
+      <h4 class="character-panel__section-title">Trang Bị</h4>
+
+      <div class="character-panel__paperdoll">
+        <EquipmentPaperdoll />
+      </div>
+    </section>
 
     <!-- Home Hub Phase 6 (Động Phủ) — Tâm Pháp hợp nhất đang trang bị
          (2026-08-15, không còn tách Tu Luyện/Chiến Đấu), dùng chung
@@ -417,11 +446,29 @@ const pillPermanentRows = computed(() => {
         Nhấn "Quán Khí" để chọn con đường tu luyện.
       </p>
 
-      <p v-else class="character-panel__path-hint">Đạt Phàm Nhân tầng {{ QUAN_KHI_UNLOCK_TANG }} để Quán Khí.</p>
+      <p v-else class="character-panel__path-hint">Đạt Phàm Nhân tầng {{ QUAN_KHI_UNLOCK_LEVEL }} để Quán Khí.</p>
     </div>
 
     <div class="character-panel__body">
-      <div v-for="group in statGroups" :key="group.category" class="stat-group">
+      <!-- WS3 — chỉ số chia TAB: mỗi tab giữ lượng thông tin quét mắt
+           được; Ngũ Hành + hiệu ứng đan dược gộp tab cuối cùng. -->
+      <div class="character-panel__tabs" role="tablist" aria-label="Nhóm chỉ số">
+        <button
+          v-for="tab in STAT_TABS"
+          :key="tab.key"
+          type="button"
+          role="tab"
+          class="character-panel__tab"
+          :class="{ 'is-active': activeStatTab === tab.key }"
+          :aria-selected="activeStatTab === tab.key"
+          @click="activeStatTab = tab.key"
+        >
+          {{ tab.label }}
+        </button>
+      </div>
+
+      <template v-if="activeStatTab !== 'elements'">
+        <div v-for="group in visibleStatGroups" :key="group.category" class="stat-group">
         <h4 class="stat-group__title stat-group__title--static">
           {{ group.label }}
           <template v-if="group.category === 'attribute' && player.attributePoints > 0">(còn {{ player.attributePoints }} điểm)</template>
@@ -454,7 +501,9 @@ const pillPermanentRows = computed(() => {
           </li>
         </ul>
       </div>
+      </template>
 
+      <template v-else>
       <div class="stat-group">
         <h4 class="stat-group__title stat-group__title--static">Ngũ Hành</h4>
 
@@ -488,6 +537,7 @@ const pillPermanentRows = computed(() => {
           {{ row.label }}: {{ row.value }}/{{ row.cap }}
         </span>
       </div>
+      </template>
     </div>
   </div>
 </template>
@@ -505,73 +555,25 @@ const pillPermanentRows = computed(() => {
 .character-panel__header {
   flex: 0 0 auto;
   display: flex;
-  align-items: stretch;
-  gap: 6px;
-  padding: 8px;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
   border-bottom: 1px solid var(--ink-line);
   background: linear-gradient(180deg, var(--ink-800), var(--ink-900));
 }
 
-.character-panel__col {
+/* WS3 vùng 1 — chân dung + tên/cảnh giới/chiến lực, nằm ngang thoải mái. */
+.character-panel__identity {
   display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.character-panel__col-label {
-  margin-bottom: 3px;
-  font-size: 0.56rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
-  text-align: center;
-}
-
-.character-panel__col--equipment {
-  flex: 1 1 32%;
-}
-
-.character-panel__mini-paperdoll {
-  flex: 1;
-  min-height: 96px;
-}
-
-.character-panel__col--figure {
-  flex: 1 1 28%;
   align-items: center;
-  justify-content: space-between;
-  text-align: center;
+  gap: var(--space-4);
 }
 
-.character-panel__col--realm {
-  flex: 1 1 40%;
-  justify-content: center;
-}
-
-.character-panel__name {
-  margin: 0 0 4px;
-  font-family: var(--font-display);
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-/* Silhouette nhân vật — sprite animation thật (2026-08-20, thay khối
-   robe/head CSS placeholder cũ), cùng atlas idle/cultivate MainScene.ts
-   dùng ở giữa Động Phủ. width để auto vì idle/cultivate 2 sheet có tỉ
-   lệ khung hình khác nhau (xem AtlasSprite.vue) — height cố định 56px
-   khớp :height prop, align-items:center của .character-panel__col
-   (base class) tự canh giữa theo chiều ngang dù width đổi. */
 .character-panel__figure {
   position: relative;
-  flex: 1 1 auto;
-  min-height: 72px;
-  width: 100%;
-  margin: 2px 0 4px;
+  flex: 0 0 auto;
+  width: 112px;
+  height: 116px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -597,51 +599,71 @@ const pillPermanentRows = computed(() => {
   50% { transform: scale(1.1); opacity: 0.5; }
 }
 
-.character-panel__power {
+.character-panel__identity-text {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.character-panel__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-title);
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.character-panel__realm-line {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-body);
+  font-weight: 600;
+  color: var(--gold-300);
+}
+
+.character-panel__power {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
   line-height: 1.1;
 }
 
 .character-panel__power-value {
   font-family: var(--font-display);
-  font-size: 1.02rem;
+  font-size: var(--text-lg);
   font-weight: 700;
   color: var(--gold-500);
   text-shadow: var(--shadow-glow-gold);
 }
 
 .character-panel__power-label {
-  font-size: 0.55rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
-.character-panel__realm {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 0.86rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  text-align: center;
-}
-
-.character-panel__realm-level {
-  margin: 1px 0 6px;
-  font-size: 0.62rem;
-  color: var(--text-secondary);
-  text-align: center;
+/* WS3 vùng 2 — tiến độ tu luyện + hành động chính, luôn trong viewport
+   đầu panel không cần cuộn. */
+.character-panel__progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
 .character-panel__cultivation {
-  margin-bottom: 6px;
+  margin-bottom: 0;
 }
 
 .character-panel__cultivation-bar {
-  height: 6px;
-  border-radius: 3px;
+  height: 8px;
+  border-radius: 4px;
   background: var(--ink-700);
   overflow: hidden;
 }
@@ -653,18 +675,18 @@ const pillPermanentRows = computed(() => {
 
 .character-panel__cultivation-label {
   display: block;
-  margin-top: 2px;
-  font-size: 0.6rem;
-  color: var(--text-muted);
-  text-align: center;
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  text-align: left;
 }
 
 /* Đồng hồ đếm ngược thật (spec mục 14) — xem cultivationEtaLabel. */
 .character-panel__cultivation-eta {
   display: block;
-  font-size: 0.58rem;
+  font-size: var(--text-xs);
   color: var(--gold-500);
-  text-align: center;
+  text-align: left;
 }
 
 /* Auto Đột Phá (2026-08-20) — nằm NGOÀI .character-panel__breakthrough
@@ -675,39 +697,65 @@ const pillPermanentRows = computed(() => {
 .character-panel__auto-breakthrough {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 5px;
-  margin-bottom: 4px;
-  font-size: 0.62rem;
+  gap: var(--space-2);
+  margin-bottom: 0;
+  font-size: var(--text-xs);
   color: var(--text-secondary);
   cursor: pointer;
 }
 
 /* Đột Phá — dời vào từ BreakthroughButton.vue (overlay cũ đã xoá, xem
-   Work Stream 2), thay nút Tu Luyện thủ công. */
+   Work Stream 2), thay nút Tu Luyện thủ công. WS3 — hàng nút NGANG
+   (wrap) thay vì xếp dọc chiếm chiều cao header. */
 .character-panel__breakthrough {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
 .character-panel__breakthrough-btn {
   display: block;
-  width: 100%;
-  padding: 6px;
+  min-height: var(--tap-min);
+  padding: var(--space-2) var(--space-4);
   background: linear-gradient(180deg, #ffe082, #ffb300);
   color: #221a00;
   border: 1px solid #fff3c4;
   border-radius: var(--radius-sm);
   font-weight: 700;
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
   cursor: pointer;
+}
+
+.character-panel__breakthrough-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring-gold);
 }
 
 .character-panel__breakthrough-btn--realm {
   background: linear-gradient(180deg, #e082ff, #b300ff);
   color: #1a0022;
   border-color: #f3c4ff;
+}
+
+/* WS3 — section Trang Bị độc lập dưới header, paperdoll dùng trọn
+   chiều rộng panel. */
+.character-panel__equipment {
+  flex: 0 0 auto;
+  padding: var(--space-3) var(--space-3) var(--space-2);
+  border-bottom: 1px solid var(--ink-line);
+}
+
+.character-panel__section-title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.character-panel__paperdoll {
+  min-height: 150px;
 }
 
 .character-panel__technique {
@@ -724,20 +772,20 @@ const pillPermanentRows = computed(() => {
 
 .character-panel__path-hint {
   margin: 0;
-  font-size: 0.65rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
 }
 
 .path-summary__title {
-  margin: 0 0 2px;
-  font-size: 0.75rem;
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-body);
   color: var(--gold-500);
   font-family: var(--font-display);
 }
 
 .path-summary__meta {
-  margin: 0 0 4px;
-  font-size: 0.65rem;
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-xs);
   color: var(--text-secondary);
 }
 
@@ -745,18 +793,18 @@ const pillPermanentRows = computed(() => {
   list-style: none;
   margin: 0;
   padding: 0;
-  font-size: 0.68rem;
+  font-size: var(--text-xs);
   color: var(--text-secondary);
 }
 
 .path-summary__skills li {
-  padding: 1px 0;
+  padding: 2px 0;
   border-bottom: 1px solid var(--ink-line-soft);
 }
 
 .path-summary__breakthrough {
-  margin: 4px 0 0;
-  font-size: 0.62rem;
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-xs);
   color: var(--gold-500);
 }
 
@@ -770,12 +818,48 @@ const pillPermanentRows = computed(() => {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 6px 8px;
-  font-size: 0.8rem;
+  padding: var(--space-3);
+  font-size: var(--text-body);
+}
+
+/* WS3 — tab bar chỉ số. */
+.character-panel__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+
+.character-panel__tab {
+  padding: var(--space-1) var(--space-3);
+  min-height: 32px;
+  background: var(--ink-800);
+  border: 1px solid var(--ink-line-soft);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.character-panel__tab:hover {
+  color: var(--gold-300);
+}
+
+.character-panel__tab.is-active {
+  color: var(--gold-500);
+  background: rgba(255, 213, 79, 0.1);
+  border-color: rgba(255, 213, 79, 0.45);
+}
+
+.character-panel__tab:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring-gold);
 }
 
 .stat-group {
-  margin-bottom: 6px;
+  margin-bottom: var(--space-4);
 }
 
 .stat-group__title {
@@ -783,11 +867,11 @@ const pillPermanentRows = computed(() => {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  margin: 0 0 2px;
-  padding: 2px 0;
+  margin: 0 0 var(--space-1);
+  padding: var(--space-1) 0;
   background: none;
   border: none;
-  font-size: 0.72rem;
+  font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.03em;
   color: var(--gold-500);
@@ -805,15 +889,15 @@ const pillPermanentRows = computed(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 4px;
-  padding: 1px 0;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
   border-bottom: 1px solid var(--ink-line-soft);
 }
 
 .stat-list__main-stat {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-2);
 }
 
 .stat-list__value-col {
@@ -826,14 +910,14 @@ const pillPermanentRows = computed(() => {
 /* PLAN HOÀN CHỈNH mục 4 — "MAX" màu vàng, nằm NGAY DƯỚI giá trị,
    KHÔNG hiện dạng X/Y hay dòng "Max: Y" riêng. */
 .stat-list__max {
-  font-size: 0.55rem;
+  font-size: var(--text-xs);
   font-weight: 700;
   color: var(--gold-500);
 }
 
 .stat-list__allocate {
-  width: 16px;
-  height: 16px;
+  width: 24px;
+  height: 24px;
   flex: 0 0 auto;
   display: flex;
   align-items: center;
@@ -844,7 +928,7 @@ const pillPermanentRows = computed(() => {
   border: none;
   border-radius: 50%;
   font-weight: 700;
-  font-size: 0.7rem;
+  font-size: var(--text-body);
   line-height: 1;
   cursor: pointer;
 }

@@ -125,7 +125,7 @@ function close() {
 
 .realm-passive-panel__section-title {
   margin: 0;
-  font-size: 0.7rem;
+  font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.03em;
   color: var(--gold-500);
@@ -151,7 +151,7 @@ function close() {
 }
 
 .realm-passive-panel__stat-desc {
-  font-size: 0.72rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
   margin-top: 2px;
 }

@@ -9,7 +9,7 @@ import type { BagCell } from './BagCell'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
 import { useBagGridLayout } from '@/composables/useBagGridLayout'
-import { qualityRank, phamRank } from '@/composables/slots/normalizeSlotRank'
+import { equipmentQualityRank, itemGradeRank } from '@/composables/slots/normalizeSlotRank'
 import type { SlotPresentationState } from '@/components/common/SlotTypes'
 
 // Grid responsive theo chiều rộng thật — xem ghi chú đầy đủ ở
@@ -110,9 +110,9 @@ const cells = computed<BagCell[]>(() => {
 
       description: template.description,
 
-      qualityRank: qualityRank(instance.quality),
+      equipmentQualityRank: equipmentQualityRank(instance.quality),
 
-      rarityRank: phamRank(instance.rarity),
+      rarityRank: itemGradeRank(instance.rarity),
 
       state,
 
@@ -153,7 +153,7 @@ const { currentPage, totalPages, goToPage, gridCells } = useBagPagination(cells,
         :name-segments="cell?.nameSegments"
         :description="cell?.description"
         :amount="cell?.amount"
-        :quality-rank="cell?.qualityRank"
+        :quality-rank="cell?.equipmentQualityRank"
         :rarity-rank="cell?.rarityRank"
         :state="cell?.state"
         :tooltip="cell?.tooltip"
@@ -213,10 +213,10 @@ const { currentPage, totalPages, goToPage, gridCells } = useBagPagination(cells,
 }
 
 .bag-section__pages button {
-  min-width: 22px;
-  height: 22px;
+  min-width: 36px;
+  min-height: 32px;
   padding: 0;
-  font-size: 0.7rem;
+  font-size: var(--text-sm);
   background: var(--ink-800);
   color: var(--text-secondary);
   border: 1px solid var(--ink-line-soft);

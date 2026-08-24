@@ -7,6 +7,8 @@ import {
   restoreBackup,
   getRawSave,
   importSaveRaw,
+  SAVE_REVISION_KEY,
+  CURRENT_SAVE_VERSION,
 } from './SaveSystem'
 
 const SAVE_KEY = 'tien-hiep-idle-save'
@@ -47,7 +49,7 @@ beforeEach(() => {
   vi.stubGlobal('localStorage', new MemoryStorage())
 })
 
-const VALID_RAW = JSON.stringify({ version: 38, player: { name: 'test' } })
+  const VALID_RAW = JSON.stringify({ version: CURRENT_SAVE_VERSION, player: { name: 'test' } })
 
 describe('loadGame — phân biệt empty/ok/incompatible/corrupted (Phase 5, mục XVI)', () => {
   it('empty khi chưa từng có save', () => {
@@ -90,6 +92,18 @@ describe('backup / restore', () => {
     expect(localStorage.getItem(SAVE_KEY)).toBeNull()
     expect(hasBackup()).toBe(true)
     expect(localStorage.getItem(BACKUP_KEY)).toBe(VALID_RAW)
+  })
+
+  // Fix (2026-08-24) — xoá save phải xoá cả revision key, nếu không
+  // revision tồn dư khiến lần CAS đầu của nhân vật mới fail ("Save đã
+  // thay đổi ở một phiên khác.").
+  it('deleteSave() xoá cả SAVE_REVISION_KEY để revision không tồn dư', () => {
+    localStorage.setItem(SAVE_KEY, VALID_RAW)
+    localStorage.setItem(SAVE_REVISION_KEY, '12')
+
+    deleteSave()
+
+    expect(localStorage.getItem(SAVE_REVISION_KEY)).toBeNull()
   })
 
   it('restoreBackup() ghi backup trở lại SAVE_KEY', () => {

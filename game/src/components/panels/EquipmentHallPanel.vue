@@ -25,14 +25,14 @@ import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import type { Equipment } from '@/core/equipment/Equipment'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { EQUIPMENT_QUALITY_IMPLICIT_MULTIPLIER, EQUIPMENT_QUALITY_LABELS } from '@/core/equipment/EquipmentQuality'
-import { PHAM_LABELS } from '@/core/item/Pham'
+import { ITEM_GRADE_LABELS } from '@/core/item/ItemGrade'
 import type { EquipmentSlot } from '@/core/equipment/EquipmentTypes'
 import { EQUIPMENT_SLOT_LABELS } from '@/core/equipment/EquipmentTypes'
 import { EQUIPMENT_SLOTS } from '@/core/equipment/EquipmentSlotState'
 import type { StatType } from '@/core/stats/StatTypes'
 import { calculateEquipmentScale, getMaxForgePoints } from '@/core/equipment/EquipmentSystem'
 import { composeEquipmentDisplayName } from '@/core/equipment/EquipmentNaming'
-import { qualityRank, phamRank } from '@/composables/slots/normalizeSlotRank'
+import { equipmentQualityRank, itemGradeRank } from '@/composables/slots/normalizeSlotRank'
 import type { SlotBadge } from '@/components/common/SlotTypes'
 
 type OperationId = 'enhance' | 'wash' | 'refine' | 'forge' | 'upgradeQuality' | 'upgradeRealm' | 'addAffix' | 'upgradeAffixTier'
@@ -237,9 +237,9 @@ const previewTooltip = computed(() => {
 // Slot Revamp (mục 17.7) — Quality/Rarity rank + badge Cường Hóa giờ
 // do SlotView tự vẽ CSS, thay `.enhance-view__level-badge` absolute-
 // position bên ngoài slot cũ.
-const previewQualityRank = computed(() => (selectedInstance.value ? qualityRank(selectedInstance.value.quality) : undefined))
+const previewQualityRank = computed(() => (selectedInstance.value ? equipmentQualityRank(selectedInstance.value.quality) : undefined))
 
-const previewRarityRank = computed(() => (selectedInstance.value ? phamRank(selectedInstance.value.rarity) : undefined))
+const previewRarityRank = computed(() => (selectedInstance.value ? itemGradeRank(selectedInstance.value.rarity) : undefined))
 
 const previewBadges = computed<SlotBadge[]>(() => {
   const level = selectedSlotState.value?.enhanceLevel ?? 0
@@ -491,8 +491,8 @@ function executeArtifact() {
             {{ EQUIPMENT_QUALITY_LABELS[selectedInstance.quality] }}
           </p>
 
-          <p v-if="selectedInstance" class="enhance-view__rarity" :style="{ color: `var(--item-rarity-${selectedInstance.rarity})` }">
-            {{ PHAM_LABELS[selectedInstance.rarity] }}
+          <p v-if="selectedInstance" class="enhance-view__rarity" :style="{ color: `var(--grade-${selectedInstance.rarity})` }">
+            {{ ITEM_GRADE_LABELS[selectedInstance.rarity] }}
           </p>
 
           <div v-if="selectedInstance" class="enhance-view__potential">
@@ -664,7 +664,7 @@ function executeArtifact() {
 
 .smelt-row__label {
   flex: 0 0 auto;
-  font-size: 0.72rem;
+  font-size: var(--text-sm);
   font-weight: 700;
   color: var(--gold-500);
   min-width: 70px;
@@ -678,12 +678,12 @@ function executeArtifact() {
   border: 1px solid var(--ink-line);
   border-radius: var(--radius-sm);
   padding: 3px;
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
 }
 
 .smelt-row__cost {
   flex: 0 0 auto;
-  font-size: 0.62rem;
+  font-size: var(--text-xs);
   color: var(--text-secondary);
 }
 
@@ -695,7 +695,7 @@ function executeArtifact() {
   border: none;
   border-radius: var(--radius-sm);
   font-weight: 700;
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
   cursor: pointer;
 }
 
@@ -706,7 +706,7 @@ function executeArtifact() {
 }
 
 .smelt-row__status {
-  font-size: 0.62rem;
+  font-size: var(--text-xs);
 }
 
 .smelt-row__status--success {
@@ -779,7 +779,7 @@ function executeArtifact() {
 
 .enhance-view__rarity {
   margin: 0;
-  font-size: 0.62rem;
+  font-size: var(--text-xs);
   font-weight: 700;
 }
 
@@ -805,7 +805,7 @@ function executeArtifact() {
 .enhance-view__potential-label {
   display: block;
   margin-top: 2px;
-  font-size: 0.58rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
   text-align: center;
 }
@@ -832,7 +832,7 @@ function executeArtifact() {
 .enhance-view__forge-label {
   display: block;
   margin-top: 2px;
-  font-size: 0.6rem;
+  font-size: var(--text-xs);
   color: var(--text-secondary);
   text-align: center;
 }
@@ -849,7 +849,7 @@ function executeArtifact() {
 
 .enhance-view__hint {
   margin: 4px 0 0;
-  font-size: 0.65rem;
+  font-size: var(--text-xs);
   color: var(--text-muted);
 }
 
@@ -875,7 +875,7 @@ function executeArtifact() {
 .enhance-view__ops button {
   flex: 1 1 auto;
   padding: 4px 6px;
-  font-size: 0.65rem;
+  font-size: var(--text-xs);
   background: var(--ink-800);
   color: var(--text-secondary);
   border: 1px solid var(--ink-line-soft);
@@ -900,14 +900,14 @@ function executeArtifact() {
 .enhance-view__stats-empty {
   margin: 0;
   color: var(--text-muted);
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
 }
 
 .enhance-stat-row {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
   padding: 1px 3px;
   border-radius: var(--radius-sm);
 }
@@ -973,7 +973,7 @@ function executeArtifact() {
 }
 
 .enhance-material__count {
-  font-size: 0.6rem;
+  font-size: var(--text-xs);
   color: var(--text-secondary);
   margin-top: 2px;
 }

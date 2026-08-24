@@ -74,9 +74,9 @@ describe('SlotView — empty/filled + icon fallback', () => {
 })
 
 describe('SlotView — rank 1-9 / 1-3-5-7-9', () => {
-  it('qualityRank ánh xạ đúng --slot-quality-color = --rank-color-N', () => {
+  it('equipmentQualityRank ánh xạ đúng --slot-quality-color = --rank-color-N', () => {
     for (const rank of [1, 5, 9]) {
-      const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'X', qualityRank: rank })
+      const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'X', equipmentQualityRank: rank })
       expect(button.style.getPropertyValue('--slot-quality-color')).toBe(`var(--rank-color-${rank})`)
       unmount()
     }
@@ -98,7 +98,7 @@ describe('SlotView — rank 1-9 / 1-3-5-7-9', () => {
   })
 
   it('rank 9 gắn class --max-rank (viền gradient bảy màu)', () => {
-    const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'X', qualityRank: 9 })
+    const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'X', equipmentQualityRank: 9 })
     expect(button.classList.contains('slot-view--max-rank')).toBe(true)
     unmount()
   })
@@ -148,7 +148,7 @@ describe('SlotView — precedence (mục 17.2)', () => {
     const { button, unmount } = mountSlot({
       item: { id: 1 },
       label: 'X',
-      qualityRank: 5,
+      equipmentQualityRank: 5,
       state: { interaction: 'processing' },
       onClick,
     })

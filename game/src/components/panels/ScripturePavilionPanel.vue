@@ -59,7 +59,7 @@ const ui = useUiStore()
 .scripture-pavilion__nav button {
   flex: 1;
   padding: 4px 0;
-  font-size: 0.7rem;
+  font-size: var(--text-sm);
   background: var(--ink-800);
   color: var(--text-secondary);
   border: 1px solid var(--ink-line-soft);

@@ -8,7 +8,7 @@ import type { EquipmentSlot } from '@/core/equipment/EquipmentTypes'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
-import { qualityRank, phamRank } from '@/composables/slots/normalizeSlotRank'
+import { equipmentQualityRank, itemGradeRank } from '@/composables/slots/normalizeSlotRank'
 import type { EquipmentTooltipContent } from '@/composables/useTooltip'
 import type { NameSegment } from '@/core/item/NameSegment'
 import type { SlotBadge } from '@/components/common/SlotTypes'
@@ -130,7 +130,7 @@ const qualityRankBySlot = computed<Record<EquipmentSlot, number | undefined>>(()
   for (const entry of SLOT_LAYOUT) {
     const instance = equippedBySlot.value[entry.slot]
 
-    result[entry.slot] = instance ? qualityRank(instance.quality) : undefined
+    result[entry.slot] = instance ? equipmentQualityRank(instance.quality) : undefined
   }
 
   return result
@@ -142,7 +142,7 @@ const rarityRankBySlot = computed<Record<EquipmentSlot, number | undefined>>(() 
   for (const entry of SLOT_LAYOUT) {
     const instance = equippedBySlot.value[entry.slot]
 
-    result[entry.slot] = instance ? phamRank(instance.rarity) : undefined
+    result[entry.slot] = instance ? itemGradeRank(instance.rarity) : undefined
   }
 
   return result
@@ -291,13 +291,13 @@ const talismanNamesBySlot = computed<Record<EquipmentSlot, string[]>>(() => {
   align-items: center;
   justify-content: center;
   gap: 4px;
-  font-size: 0.58rem;
+  font-size: var(--text-xs);
   color: var(--gold-500);
   white-space: nowrap;
 }
 
 .paperdoll__formation-badge button {
-  font-size: 0.55rem;
+  font-size: var(--text-xs);
   padding: 1px 5px;
 }
 
@@ -307,7 +307,7 @@ const talismanNamesBySlot = computed<Record<EquipmentSlot, string[]>>(() => {
   flex-direction: column;
   align-items: center;
   gap: 1px;
-  font-size: 0.58rem;
+  font-size: var(--text-xs);
   color: var(--jade);
   white-space: nowrap;
 }

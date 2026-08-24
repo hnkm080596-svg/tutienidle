@@ -75,10 +75,10 @@ function onSelectNode(node: ProgressionNode, purchased: boolean, purchasable: bo
 
 // Node vừa mua xong vẫn đang là selectedNode — refresh trạng thái
 // purchased/purchasable hiển thị ở inspector theo state mới nhất mỗi
-// khi purchasedNodeIds/skillPoints đổi, không chờ người chơi bấm lại
+// khi purchasedNodeIds/skillInsight đổi, không chờ người chơi bấm lại
 // vào node.
 watch(
-  () => [player.purchasedNodeIds.length, player.skillPoints] as const,
+  () => [player.purchasedNodeIds.length, player.skillInsight] as const,
   () => {
     if (!selectedNode.value) {
       return
@@ -133,7 +133,7 @@ function close() {
           <span v-if="showTree" class="skill-path-panel__subtitle">Con đường Ngũ Hành</span>
         </div>
 
-        <span v-if="showTree" class="skill-path-panel__points">✦ {{ player.skillPoints }} Điểm Pháp Tu</span>
+        <span v-if="showTree" class="skill-path-panel__points">✦ {{ player.skillInsight }} Cảm Ngộ</span>
 
         <button type="button" class="skill-path-panel__close" @click="close">✕</button>
       </div>
@@ -219,7 +219,7 @@ function close() {
 }
 
 .skill-path-panel__subtitle {
-  font-size: 0.7rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
 }
 
@@ -273,7 +273,7 @@ function close() {
 }
 
 .skill-path-panel__col-title {
-  font-size: 0.68rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
