@@ -8,7 +8,7 @@ import type { Skill } from './Skill'
 function skill(overrides: Partial<Skill>): Skill {
   return {
     id: 'test_skill', name: 'Test', description: '', type: 'active',
-    level: 1, maxLevel: 1, experience: 0, experienceRequired: 1,
+    level: 1, maxLevel: 1,  
     cooldown: 1, remainingCooldown: 0, cost: 0, target: 'enemy', effects: [],
     unlocked: true, equipped: true,
     ...overrides,

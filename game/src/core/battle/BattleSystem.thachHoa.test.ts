@@ -7,8 +7,9 @@ import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
 import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import { EventBus } from '../events/EventBus'
-import { MissileSystem } from '../combat/missile/MissileSystem'
-import { MissileManager } from '../combat/missile/MissileManager'
+import { ActionImpactSystem } from '../battle/ActionImpactSystem'
+
+
 import { createBaseStats } from '../stats/StatBlock'
 import { ailments } from '../../data/ailment/ailments'
 import type { CombatEntity } from '../combat/CombatEntity'
@@ -43,7 +44,7 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 2,
+    row: 2,
     alive: true,
     ...overrides,
   }
@@ -57,8 +58,6 @@ function createThoCauThuat(): Skill {
     type: 'active',
     level: 1,
     maxLevel: 10,
-    experience: 0,
-    experienceRequired: 100,
     cooldown: 1,
     remainingCooldown: 0,
     cost: 0,
@@ -94,7 +93,7 @@ function setup(onHitChanceOverride: number) {
     new BuffRegistry(),
     ailmentRegistry,
     eventBus,
-    new MissileSystem(new MissileManager(), eventBus),
+    new ActionImpactSystem({ eventBus, rollCritical: () => false }),
   )
 
   skillManager.add(createThoCauThuat())
@@ -116,7 +115,7 @@ describe('BattleSystem — Thạch Hóa on-hit Choáng (Plans/magicpathgeneral)'
 
     system.start(player, enemy)
     system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
-    enemy.x = 50
+    enemy.x = 5
 
     // Đủ thời gian cho ÍT NHẤT 2 lần cast trúng đích thật (missile bay
     // 0.1s + cooldown 1s) — lần 1 tự áp Thạch Hóa, lần 2 mới có cơ hội
@@ -139,7 +138,7 @@ describe('BattleSystem — Thạch Hóa on-hit Choáng (Plans/magicpathgeneral)'
 
     system.start(player, enemy)
     system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
-    enemy.x = 50
+    enemy.x = 5
 
     for (let i = 0; i < 250; i++) {
       tick(0.01)

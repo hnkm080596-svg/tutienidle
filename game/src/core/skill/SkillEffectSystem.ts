@@ -2,7 +2,6 @@ import type { SkillEffect } from './SkillEffect'
 import type { CombatEntity } from '../combat/CombatEntity'
 import { getSkillRuntimeStat } from './SkillRuntimeStats'
 import type { CombatSystem } from '../combat/CombatSystem'
-import type { MissileSystem } from '../combat/missile/MissileSystem'
 import type { BuffSystem } from '../buff/BuffSystem'
 import type { BuffRegistry } from '../buff/BuffRegistry'
 import type { AilmentSystem } from '../ailment/AilmentSystem'
@@ -10,14 +9,17 @@ import type { AilmentRegistry } from '../ailment/AilmentRegistry'
 import type { ReactionManager } from '../element/ReactionManager'
 import type { ElementType } from '../element/ElementType'
 import { MAX_KIM_THE, MAX_HUYET_PHA } from '../combat/CombatTypes'
+import type { ActionDamageInfo } from '../battle/ActionImpactSystem'
 
 export interface SkillEffectContext {
   combatSystem: CombatSystem
 
-  // Effect 'damage' giờ bắn missile thay vì áp tức thời — xem
-  // apply() bên dưới. combatSystem vẫn cần cho rollCritical() và
-  // (nếu sau này cần) các effect khác đọc trực tiếp combat state.
-  missileSystem: MissileSystem
+  // Combat Grid Rework (2026-08-24) — thay missileSystem.fire(): bắn MỘT
+  // hit impact TẠI target (windup đã trôi ở tầng cast). BattleSystem mở
+  // batch quanh applyAll() để gom mọi hit thành đúng 1 action_impact.
+  fireHit(target: CombatEntity, damage: ActionDamageInfo): { landed: boolean } | void
+
+  didLandHit?(): boolean
 
   buffRegistry: BuffRegistry
 
@@ -43,8 +45,10 @@ export interface SkillEffectContext {
   // hết reaction/test không cần.
   spawnLavaZone?: (spec: {
     ownerId: string
-    x: number
-    radius: number
+    row: number
+    column: number
+    laneRadius: number
+    columnRadius: number
     duration: number
     tickInterval: number
     damagePerTick: number
@@ -69,7 +73,16 @@ export interface SkillEffectContext {
  */
 export class SkillEffectSystem {
   applyAll(effects: SkillEffect[], source: CombatEntity, target: CombatEntity, ctx: SkillEffectContext) {
-    for (const effect of effects) {
+    const orderedEffects = [
+      ...effects.filter(effect => effect.type === 'damage'),
+      ...effects.filter(effect => effect.type !== 'damage'),
+    ]
+
+    for (const effect of orderedEffects) {
+      if (effect.type === 'ailment' && effects.some(candidate => candidate.type === 'damage') && !(ctx.didLandHit?.() ?? true)) {
+        continue
+      }
+
       this.apply(effect, source, target, ctx)
     }
   }
@@ -93,49 +106,21 @@ export class SkillEffectSystem {
         // khác chưa có nguồn cấp skillDamagePercent.
         const finalMultiplier = (effect.value ?? 1) * (1 + scalingBonus) * (1 + source.stats.skillDamagePercent)
 
-        // Kiếm Tu (Ngự Kiếm Thuật, 2026-08-15) — "1~9 kiếm bay lần
-        // lượt": bắn THẬT nhiều missile liên tiếp trong 1 lượt đánh
-        // thường, số lượng = realmIndex + 1 (0-based, khớp đúng dải
-        // "1~9" với 9 đại cảnh giới hiện có) — mỗi kiếm tự roll
-        // critical/dodge/Kiếm Ý riêng (xem BattleSystem's missile-
-        // resolve callback), không gộp chung 1 đòn.
+        // Kiếm Tu (Ngự Kiếm Thuật) — "1~9 kiếm bay lần lượt": resolve
+        // THẬT nhiều hit riêng trong cùng action, số lượng = realmIndex+1;
+        // mỗi hit tự roll critical/dodge/Kiếm Ý riêng (fireHit →
+        // BattleSystem.applyActionHit), không gộp chung 1 đòn.
         const hitCount = effect.hitCountByRealm ? source.realmIndex + 1 : 1
 
-        // Thổ Tu Pure (Plans/EarthPath mục XVI, 2026-08-21) — Thổ Cầu
-        // Thuật GHI ĐÈ projectileBehavior tĩnh bằng 1 behavior dựng từ
-        // stats NGAY LÚC CAST, chỉ khi đã mua Major "Thổ Thế"
-        // (earthAoeRadius > 0) — trước đó bắn đơn mục tiêu như mọi
-        // skill khác (effect.projectileBehavior undefined với Thổ Cầu).
-        const behavior =
-          effect.earthPureProjectileBehavior && getSkillRuntimeStat(source, 'earthAoeRadius') > 0
-            ? {
-                aoeRadius: getSkillRuntimeStat(source, 'earthAoeRadius'),
-                aoeSecondaryDamagePercent: getSkillRuntimeStat(source, 'earthAoeSecondaryDamagePercent'),
-                knockbackDistance: getSkillRuntimeStat(source, 'earthKnockbackDistance'),
-              }
-            : effect.projectileBehavior
+        // Thổ Tu Pure — AOE radius/knockback/secondary đã được batch meta
+        // phía BattleSystem đọc từ runtime stats (earthPureActive), nên ở
+        // đây chỉ việc fire N hit tại target; vùng quét do ActionTargetingSystem lo.
 
         for (let hitIndex = 0; hitIndex < hitCount; hitIndex++) {
-          const critical = ctx.combatSystem.rollCritical(source, target)
-
           if (effect.components) {
-            ctx.missileSystem.fire(
-              source,
-              target,
-              { kind: 'elemental', components: effect.components, multiplier: finalMultiplier },
-              critical,
-              ctx.skillId,
-              behavior,
-            )
+            ctx.fireHit(target, { kind: 'elemental', components: effect.components, multiplier: finalMultiplier })
           } else {
-            ctx.missileSystem.fire(
-              source,
-              target,
-              { kind: effect.damageType ?? 'physical', multiplier: finalMultiplier },
-              critical,
-              ctx.skillId,
-              behavior,
-            )
+            ctx.fireHit(target, { kind: effect.damageType ?? 'physical', multiplier: finalMultiplier })
           }
         }
 

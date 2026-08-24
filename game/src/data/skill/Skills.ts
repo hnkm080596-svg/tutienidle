@@ -9,7 +9,7 @@ import type { Skill } from '../../core/skill/Skill'
 // xem GameManager.syncRealmPassive() và data/realms/realm.ts.
 export const SKILLS: Skill[] = [
   {
-    id: 'basic_strike',
+    id: 'tram',
 
     name: 'Trảm',
 
@@ -20,10 +20,6 @@ export const SKILLS: Skill[] = [
     level: 1,
 
     maxLevel: 10,
-
-    experience: 0,
-
-    experienceRequired: 100,
 
     cooldown: 1,
 
@@ -58,7 +54,7 @@ export const SKILLS: Skill[] = [
   },
 
   {
-    id: 'tai_hu_sword',
+    id: 'thai_hu_nhat_kiem',
 
     name: 'Thái Hư Nhất Kiếm',
 
@@ -69,10 +65,6 @@ export const SKILLS: Skill[] = [
     level: 1,
 
     maxLevel: 10,
-
-    experience: 0,
-
-    experienceRequired: 100,
 
     requiredRealmId: 'qi_refining',
 
@@ -124,7 +116,7 @@ export const SKILLS: Skill[] = [
     // node" minh hoạ: 2 lối chơi khác hẳn nhau, không chỉ đổi số.
     specializations: [
       {
-        id: 'tai_hu_sword_heavy',
+        id: 'trong_kiem',
 
         name: 'Trọng Kiếm',
 
@@ -150,7 +142,7 @@ export const SKILLS: Skill[] = [
       },
 
       {
-        id: 'tai_hu_sword_spirit',
+        id: 'linh_kiem',
 
         name: 'Linh Kiếm',
 
@@ -190,7 +182,7 @@ export const SKILLS: Skill[] = [
   },
 
   {
-    id: 'nimble_step',
+    id: 'phieu_van_bo',
 
     name: 'Phiêu Vân Bộ',
 
@@ -201,10 +193,6 @@ export const SKILLS: Skill[] = [
     level: 1,
 
     maxLevel: 10,
-
-    experience: 0,
-
-    experienceRequired: 100,
 
     cooldown: 8,
 
@@ -218,7 +206,7 @@ export const SKILLS: Skill[] = [
       {
         type: 'buff',
 
-        buffId: 'nimble_step_buff',
+        buffId: 'phieu_van_bo_buff',
 
         duration: 4,
       },
@@ -231,7 +219,7 @@ export const SKILLS: Skill[] = [
   },
 
   {
-    id: 'sky_shatter',
+    id: 'pha_thien_nhat_kich',
 
     name: 'Phá Thiên Nhất Kích',
 
@@ -243,11 +231,7 @@ export const SKILLS: Skill[] = [
 
     maxLevel: 10,
 
-    experience: 0,
-
-    experienceRequired: 100,
-
-    requiredRealmId: 'foundation',
+    requiredRealmId: 'foundation_establishment',
 
     cooldown: 3,
 
@@ -307,10 +291,6 @@ export const SKILLS: Skill[] = [
     level: 1,
 
     maxLevel: 10,
-
-    experience: 0,
-
-    experienceRequired: 100,
 
     cooldown: 1,
 
@@ -397,10 +377,6 @@ export const SKILLS: Skill[] = [
 
     maxLevel: 10,
 
-    experience: 0,
-
-    experienceRequired: 100,
-
     cooldown: 1,
 
     remainingCooldown: 0,
@@ -450,10 +426,6 @@ export const SKILLS: Skill[] = [
     level: 1,
 
     maxLevel: 10,
-
-    experience: 0,
-
-    experienceRequired: 100,
 
     cooldown: 1,
 
@@ -531,10 +503,6 @@ export const SKILLS: Skill[] = [
 
     maxLevel: 10,
 
-    experience: 0,
-
-    experienceRequired: 100,
-
     cooldown: 1,
 
     remainingCooldown: 0,
@@ -599,7 +567,7 @@ export const SKILLS: Skill[] = [
   // (GameManager.chooseCultivationPath()). ailmentChance CỐ ĐỊNH 100%
   // — Thổ KHÔNG có Earth Application Chance/Petrify Chance/Minor nào
   // chỉnh tỉ lệ này (PoisonPath-style, giống Mộc), khác Hỏa/Thủy's
-  // 50%-base-node-upgradeable. `earthPureProjectileBehavior: true` —
+  // AOE theo grid, mở bằng Pure major. `earthPureAreaBehavior: true` —
   // GHI ĐÈ đơn-mục-tiêu thành AOE+Knockback thật khi mua Major "Thổ
   // Thế" (xem SkillEffectSystem.ts's apply(), case 'damage').
   {
@@ -614,10 +582,6 @@ export const SKILLS: Skill[] = [
     level: 1,
 
     maxLevel: 10,
-
-    experience: 0,
-
-    experienceRequired: 100,
 
     cooldown: 1,
 
@@ -643,7 +607,7 @@ export const SKILLS: Skill[] = [
           { attributes: ['attunement'], ratioPerPoint: 0.004 },
         ],
 
-        earthPureProjectileBehavior: true,
+        earthPureAreaBehavior: true,
       },
 
       {
@@ -689,10 +653,6 @@ export const SKILLS: Skill[] = [
 
     maxLevel: 10,
 
-    experience: 0,
-
-    experienceRequired: 100,
-
     cooldown: 1,
 
     remainingCooldown: 0,
@@ -722,8 +682,7 @@ export const SKILLS: Skill[] = [
         // Combat Rework Phase 5 — "phi kiếm xuyên địch": mỗi kiếm xuyên
         // qua 1 mục tiêu, bay tiếp trúng con kế tiếp cùng hàng, đúng
         // tinh thần "Mưa kiếm" (mục 11 plan) thay vì chỉ dồn sát thương
-        // vào đúng 1 con. Xem core/combat/missile/Missile.ts's ProjectileBehavior.
-        projectileBehavior: { pierceCount: 1 },
+        // vào đúng 1 con; behavior xuyên cũ đã được thay bằng targeting theo grid.
       },
     ],
 
@@ -760,10 +719,6 @@ export const SKILLS: Skill[] = [
 
     maxLevel: 10,
 
-    experience: 0,
-
-    experienceRequired: 100,
-
     cooldown: 6,
 
     remainingCooldown: 0,
@@ -771,7 +726,7 @@ export const SKILLS: Skill[] = [
     cost: 25,
 
     // "Trúc Cơ mở tuyệt kỹ" — áp dụng mọi path, xem SkillSystem.canUse().
-    requiredRealmId: 'foundation',
+    requiredRealmId: 'foundation_establishment',
 
     target: 'all_enemies',
 
@@ -815,10 +770,6 @@ export const SKILLS: Skill[] = [
 
     maxLevel: 10,
 
-    experience: 0,
-
-    experienceRequired: 100,
-
     cooldown: 20,
 
     remainingCooldown: 0,
@@ -850,7 +801,7 @@ export const SKILLS: Skill[] = [
   },
 
   {
-    id: 'passive_kiem_tam_lanh',
+    id: 'passive_kiem_tam_lanh_liet',
 
     name: 'Kiếm Tâm Lãnh Liệt',
 
@@ -861,10 +812,6 @@ export const SKILLS: Skill[] = [
     level: 1,
 
     maxLevel: 1,
-
-    experience: 0,
-
-    experienceRequired: 0,
 
     cooldown: 0,
 
@@ -878,9 +825,9 @@ export const SKILLS: Skill[] = [
 
     passiveModifiers: [
       {
-        id: 'passive_kiem_tam_lanh_crit_damage',
+        id: 'passive_kiem_tam_lanh_liet_crit_damage',
 
-        sourceId: 'passive_kiem_tam_lanh',
+        sourceId: 'passive_kiem_tam_lanh_liet',
         sourceType: 'skill',
 
         stat: 'criticalDamage',
@@ -908,7 +855,7 @@ export const SKILLS: Skill[] = [
   // Mỗi cái dùng passiveTrigger khác nhau — không dùng chung 1 điều
   // kiện tích stack.
   {
-    id: 'passive_qi_sense',
+    id: 'passive_linh_khi_cam_ung',
 
     name: 'Linh Khí Cảm Ứng',
 
@@ -919,10 +866,6 @@ export const SKILLS: Skill[] = [
     level: 1,
 
     maxLevel: 1,
-
-    experience: 0,
-
-    experienceRequired: 0,
 
     requiredRealmId: 'qi_refining',
 
@@ -938,9 +881,9 @@ export const SKILLS: Skill[] = [
 
     passiveModifiers: [
       {
-        id: 'passive_qi_sense_attack',
+        id: 'passive_linh_khi_cam_ung_attack',
 
-        sourceId: 'passive_qi_sense',
+        sourceId: 'passive_linh_khi_cam_ung',
         sourceType: 'skill',
 
         stat: 'attack',
@@ -961,7 +904,7 @@ export const SKILLS: Skill[] = [
   },
 
   {
-    id: 'passive_foundation_will',
+    id: 'passive_truc_co_y_chi',
 
     name: 'Trúc Cơ Ý Chí',
 
@@ -973,11 +916,7 @@ export const SKILLS: Skill[] = [
 
     maxLevel: 1,
 
-    experience: 0,
-
-    experienceRequired: 0,
-
-    requiredRealmId: 'foundation',
+    requiredRealmId: 'foundation_establishment',
 
     cooldown: 0,
 
@@ -991,9 +930,9 @@ export const SKILLS: Skill[] = [
 
     passiveModifiers: [
       {
-        id: 'passive_foundation_will_defense',
+        id: 'passive_truc_co_y_chi_defense',
 
-        sourceId: 'passive_foundation_will',
+        sourceId: 'passive_truc_co_y_chi',
         sourceType: 'skill',
 
         stat: 'defense',
@@ -1014,7 +953,7 @@ export const SKILLS: Skill[] = [
   },
 
   {
-    id: 'passive_core_light',
+    id: 'passive_kim_dan_chi_quang',
 
     name: 'Kim Đan Chi Quang',
 
@@ -1025,10 +964,6 @@ export const SKILLS: Skill[] = [
     level: 1,
 
     maxLevel: 1,
-
-    experience: 0,
-
-    experienceRequired: 0,
 
     requiredRealmId: 'golden_core',
 
@@ -1044,9 +979,9 @@ export const SKILLS: Skill[] = [
 
     passiveModifiers: [
       {
-        id: 'passive_core_light_crit_damage',
+        id: 'passive_kim_dan_chi_quang_crit_damage',
 
-        sourceId: 'passive_core_light',
+        sourceId: 'passive_kim_dan_chi_quang',
         sourceType: 'skill',
 
         stat: 'criticalDamage',
@@ -1067,7 +1002,7 @@ export const SKILLS: Skill[] = [
   },
 
   {
-    id: 'passive_soul_clarity',
+    id: 'passive_nguyen_anh_minh_triet',
 
     name: 'Nguyên Anh Minh Triệt',
 
@@ -1085,10 +1020,6 @@ export const SKILLS: Skill[] = [
     level: 1,
 
     maxLevel: 1,
-
-    experience: 0,
-
-    experienceRequired: 0,
 
     requiredRealmId: 'nascent_soul',
 
@@ -1112,7 +1043,7 @@ export const SKILLS: Skill[] = [
   },
 
   {
-    id: 'passive_divine_transformation',
+    id: 'passive_hoa_than_chi_uy',
 
     name: 'Hóa Thần Chi Uy',
 
@@ -1123,10 +1054,6 @@ export const SKILLS: Skill[] = [
     level: 1,
 
     maxLevel: 1,
-
-    experience: 0,
-
-    experienceRequired: 0,
 
     requiredRealmId: 'soul_transformation',
 
@@ -1142,9 +1069,9 @@ export const SKILLS: Skill[] = [
 
     passiveModifiers: [
       {
-        id: 'passive_divine_transformation_attack',
+        id: 'passive_hoa_than_chi_uy_attack',
 
-        sourceId: 'passive_divine_transformation',
+        sourceId: 'passive_hoa_than_chi_uy',
         sourceType: 'skill',
 
         stat: 'attack',
@@ -1165,7 +1092,7 @@ export const SKILLS: Skill[] = [
   },
 
   {
-    id: 'passive_void_step',
+    id: 'passive_luyen_hu_bo',
 
     name: 'Luyện Hư Bộ',
 
@@ -1176,10 +1103,6 @@ export const SKILLS: Skill[] = [
     level: 1,
 
     maxLevel: 1,
-
-    experience: 0,
-
-    experienceRequired: 0,
 
     requiredRealmId: 'void_refinement',
 
@@ -1195,9 +1118,9 @@ export const SKILLS: Skill[] = [
 
     passiveModifiers: [
       {
-        id: 'passive_void_step_attack_speed',
+        id: 'passive_luyen_hu_bo_attack_speed',
 
-        sourceId: 'passive_void_step',
+        sourceId: 'passive_luyen_hu_bo',
         sourceType: 'skill',
 
         stat: 'attackSpeed',
@@ -1218,7 +1141,7 @@ export const SKILLS: Skill[] = [
   },
 
   {
-    id: 'passive_body_unity',
+    id: 'passive_hop_the_chi_khu',
 
     name: 'Hợp Thể Chi Khu',
 
@@ -1229,10 +1152,6 @@ export const SKILLS: Skill[] = [
     level: 1,
 
     maxLevel: 1,
-
-    experience: 0,
-
-    experienceRequired: 0,
 
     requiredRealmId: 'body_integration',
 
@@ -1248,9 +1167,9 @@ export const SKILLS: Skill[] = [
 
     passiveModifiers: [
       {
-        id: 'passive_body_unity_max_hp',
+        id: 'passive_hop_the_chi_khu_max_hp',
 
-        sourceId: 'passive_body_unity',
+        sourceId: 'passive_hop_the_chi_khu',
         sourceType: 'skill',
 
         stat: 'maxHp',
@@ -1271,7 +1190,7 @@ export const SKILLS: Skill[] = [
   },
 
   {
-    id: 'passive_mahayana_heart',
+    id: 'passive_dai_thua_dao_tam',
 
     name: 'Đại Thừa Đạo Tâm',
 
@@ -1282,10 +1201,6 @@ export const SKILLS: Skill[] = [
     level: 1,
 
     maxLevel: 1,
-
-    experience: 0,
-
-    experienceRequired: 0,
 
     requiredRealmId: 'mahayana',
 
@@ -1301,9 +1216,9 @@ export const SKILLS: Skill[] = [
 
     passiveModifiers: [
       {
-        id: 'passive_mahayana_heart_attunement',
+        id: 'passive_dai_thua_dao_tam_attunement',
 
-        sourceId: 'passive_mahayana_heart',
+        sourceId: 'passive_dai_thua_dao_tam',
         sourceType: 'skill',
 
         // Trước cộng %magicAttack (stat đã xoá, gộp vào tổng hợp 5
@@ -1329,7 +1244,7 @@ export const SKILLS: Skill[] = [
   },
 
   {
-    id: 'passive_tribulation_resolve',
+    id: 'passive_do_kiep_chi_tam',
 
     name: 'Độ Kiếp Chi Tâm',
 
@@ -1340,10 +1255,6 @@ export const SKILLS: Skill[] = [
     level: 1,
 
     maxLevel: 1,
-
-    experience: 0,
-
-    experienceRequired: 0,
 
     requiredRealmId: 'tribulation',
 
@@ -1359,9 +1270,9 @@ export const SKILLS: Skill[] = [
 
     passiveModifiers: [
       {
-        id: 'passive_tribulation_resolve_crit_rate',
+        id: 'passive_do_kiep_chi_tam_crit_rate',
 
-        sourceId: 'passive_tribulation_resolve',
+        sourceId: 'passive_do_kiep_chi_tam',
         sourceType: 'skill',
 
         stat: 'criticalRate',
@@ -1385,7 +1296,7 @@ export const SKILLS: Skill[] = [
   // technique tương ứng được trang bị (xem GameManager.equipTechnique()),
   // KHÔNG liên quan tới hệ thống 9 passive theo cảnh giới ở trên.
   {
-    id: 'passive_tai_hu_edge',
+    id: 'passive_thai_hu_kiem_y',
 
     name: 'Thái Hư Kiếm Ý',
 
@@ -1396,10 +1307,6 @@ export const SKILLS: Skill[] = [
     level: 1,
 
     maxLevel: 1,
-
-    experience: 0,
-
-    experienceRequired: 0,
 
     cooldown: 0,
 
@@ -1413,9 +1320,9 @@ export const SKILLS: Skill[] = [
 
     passiveModifiers: [
       {
-        id: 'passive_tai_hu_edge_crit_damage',
+        id: 'passive_thai_hu_kiem_y_crit_damage',
 
-        sourceId: 'passive_tai_hu_edge',
+        sourceId: 'passive_thai_hu_kiem_y',
         sourceType: 'skill',
 
         stat: 'criticalDamage',
@@ -1436,7 +1343,7 @@ export const SKILLS: Skill[] = [
   },
 
   {
-    id: 'passive_iron_body_resolve',
+    id: 'passive_kim_cang_y_chi',
 
     name: 'Kim Cang Ý Chí',
 
@@ -1447,10 +1354,6 @@ export const SKILLS: Skill[] = [
     level: 1,
 
     maxLevel: 1,
-
-    experience: 0,
-
-    experienceRequired: 0,
 
     cooldown: 0,
 
@@ -1464,9 +1367,9 @@ export const SKILLS: Skill[] = [
 
     passiveModifiers: [
       {
-        id: 'passive_iron_body_resolve_defense',
+        id: 'passive_kim_cang_y_chi_defense',
 
-        sourceId: 'passive_iron_body_resolve',
+        sourceId: 'passive_kim_cang_y_chi',
         sourceType: 'skill',
 
         stat: 'defense',

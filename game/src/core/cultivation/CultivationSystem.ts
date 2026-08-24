@@ -44,11 +44,10 @@ export function breakthrough(player: PlayerData): boolean {
 
     player.realmLevel++
 
-    // Pháp Tu Redesign (magicpath mục 6) — "+1 Skill Point mỗi khi
-    // tăng 1 TIỂU cảnh giới". Đại cảnh giới (chọn path/Độ Kiếp) đi
-    // đường khác hẳn hàm này (xem comment dưới `return false`), KHÔNG
-    // cấp Skill Point — đúng đúng chữ nghĩa spec, chỉ tiểu cảnh giới.
-    player.skillPoints++
+    // skill-insight-and-auto-combat-hud-plan.md mục 1 — đột phá tiểu
+    // cảnh giới KHÔNG còn cấp điểm progression skill nữa (skillPoints
+    // cũ đã xoá hẳn khỏi PlayerData). Cảm ngộ Kỹ năng (skillInsight)
+    // giờ CHỈ đến từ chiến đấu, xem GameManager.grantBattleRewardIfNeeded().
 
     // 2026-08-20 (Realm Passive & Pressure follow-up) — đổi từ ramp
     // "1-9 điểm tùy tiểu cảnh giới" (PLAN HOÀN CHỈNH mục 2 cũ) sang

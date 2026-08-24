@@ -1,4 +1,5 @@
 import type { CombatEntity } from './CombatEntity'
+import { clamp } from '../math/clamp'
 
 // Realm Passive & Pressure System (2026-08-20) — thay thế hoàn toàn
 // RealmSuppression.ts cũ (±8%/gap, không có mitigation nào). Chênh
@@ -27,10 +28,6 @@ const LOW_TO_HIGH_PRESSURE_PER_GAP = 0.5
 // gap lớn (gap=5, grade1: 1 - 5*0.5 = -1.5 nếu không chặn).
 const LOW_TO_HIGH_MULTIPLIER_FLOOR = 0.1
 
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value))
-}
-
 function resolveBreakthroughGrade(source: CombatEntity, target: CombatEntity): number {
   // CHỈ player có breakthroughGrade thật (enemy luôn undefined) — 2
   // bên combat không thể CÙNG là player nên đọc bên nào có giá trị là
@@ -41,7 +38,7 @@ function resolveBreakthroughGrade(source: CombatEntity, target: CombatEntity): n
 
 /**
  * Hệ số Realm Pressure — nhân thẳng vào damage multiplier trước khi
- * tính damage (xem CombatSystem.resolveMissileHit()). > 1 khi source
+ * tính damage (xem CombatSystem.resolveActionHit()). > 1 khi source
  * cao cảnh giới hơn target (gây dư sát thương), < 1 khi thấp hơn (gây
  * thiếu sát thương), = 1 khi cùng cảnh giới.
  */

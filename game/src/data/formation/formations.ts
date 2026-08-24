@@ -5,7 +5,7 @@ import type { Formation } from '@/core/formation/Formation'
 // đổi "Liệt Diễm" -> "Liệt Hỏa" để khớp đúng chính tả Effect Dictionary
 // trong tài liệu (mục 12, nhóm Offensive). Tên ghép động (2026-08-15)
 // — tiền tố Phẩm KHÔNG còn bake vào `name`, ghép động lúc hiển thị từ
-// `pham` (xem core/item/Pham.ts's composePhamNameSegments(),
+// `pham` (xem core/item/Pham.ts's composeItemGradeNameSegments(),
 // FormationBagSection.vue).
 export const formations: Formation[] = [
   {
@@ -17,7 +17,7 @@ export const formations: Formation[] = [
 
     description: 'Trận pháp khảm vào vũ khí, mỗi đòn đánh trúng tích luỹ thêm sát khí.',
 
-    pham: 'huyen_pham',
+    grade: 'huyen',
 
     trigger: 'hit',
 
@@ -51,7 +51,7 @@ export const formations: Formation[] = [
 
     description: 'Trận pháp phòng ngự, mỗi giây chiến đấu tích luỹ thêm hộ thể chân khí.',
 
-    pham: 'huyen_pham',
+    grade: 'huyen',
 
     trigger: 'per_second',
 
@@ -84,7 +84,7 @@ export const formations: Formation[] = [
 
     description: 'Trận pháp tà môn, mỗi đòn chí mạng hút thêm sinh lực từ kẻ địch.',
 
-    pham: 'dia_pham',
+    grade: 'dia',
 
     trigger: 'critical',
 

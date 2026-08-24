@@ -12,7 +12,7 @@ function minorNode(overrides: Partial<ProgressionNode> = {}): ProgressionNode {
     id: 'test_minor',
     name: 'Test Minor',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     effect: { statModifiers: [{ id: 'test_mod', sourceId: 'test_minor', sourceType: 'talent', stat: 'attack', flat: 5 }] },
     ...overrides,
   }
@@ -57,29 +57,29 @@ describe('hasPrerequisite (Pháp Tu Redesign, Node Tree)', () => {
 })
 
 describe('canPurchaseNode (Pháp Tu Redesign, Node Tree)', () => {
-  it('true khi đủ skillPoints, chưa mua, không có prerequisite', () => {
-    const player = playerWith({ skillPoints: 5 })
+  it('true khi đủ skillInsight, chưa mua, không có prerequisite', () => {
+    const player = playerWith({ skillInsight: 5 })
 
-    expect(canPurchaseNode(player, minorNode({ cost: 3 }))).toBe(true)
+    expect(canPurchaseNode(player, minorNode({ insightCost: 3 }))).toBe(true)
   })
 
-  it('false khi KHÔNG đủ skillPoints', () => {
-    const player = playerWith({ skillPoints: 2 })
+  it('false khi KHÔNG đủ skillInsight', () => {
+    const player = playerWith({ skillInsight: 2 })
 
-    expect(canPurchaseNode(player, minorNode({ cost: 3 }))).toBe(false)
+    expect(canPurchaseNode(player, minorNode({ insightCost: 3 }))).toBe(false)
   })
 
   it('false khi node đã mua rồi (chặn mua trùng)', () => {
-    const player = playerWith({ skillPoints: 5, purchasedNodeIds: ['test_minor'] })
+    const player = playerWith({ skillInsight: 5, purchasedNodeIds: ['test_minor'] })
 
-    expect(canPurchaseNode(player, minorNode({ cost: 3 }))).toBe(false)
+    expect(canPurchaseNode(player, minorNode({ insightCost: 3 }))).toBe(false)
   })
 
   it('prerequisites là AND — thiếu 1 cái thì false', () => {
-    const player = playerWith({ skillPoints: 10, realmId: 'golden_core', unlockedElements: ['fire'] })
+    const player = playerWith({ skillInsight: 10, realmId: 'golden_core', unlockedElements: ['fire'] })
 
     const node = minorNode({
-      cost: 1,
+      insightCost: 1,
       prerequisites: [
         { kind: 'realm', realmId: 'golden_core' },
         { kind: 'element', element: 'water' }, // chưa unlock
@@ -95,36 +95,36 @@ describe('canPurchaseNode (Pháp Tu Redesign, Node Tree)', () => {
 })
 
 describe('purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
-  it('trừ skillPoints, đánh dấu đã mua, áp statModifiers', () => {
-    const player = playerWith({ skillPoints: 5 })
+  it('trừ skillInsight, đánh dấu đã mua, áp statModifiers', () => {
+    const player = playerWith({ skillInsight: 5 })
 
-    const node = minorNode({ cost: 3 })
+    const node = minorNode({ insightCost: 3 })
 
     expect(purchaseNode(player, node)).toBe(true)
-    expect(player.skillPoints).toBe(2)
+    expect(player.skillInsight).toBe(2)
     expect(player.purchasedNodeIds).toEqual(['test_minor'])
     expect(player.modifiers).toEqual(node.effect.statModifiers)
   })
 
   it('unlocksElement — thêm vào unlockedElements, không thêm trùng nếu đã có sẵn', () => {
-    const player = playerWith({ skillPoints: 5 })
+    const player = playerWith({ skillInsight: 5 })
 
-    expect(purchaseNode(player, minorNode({ id: 'unlock_fire', cost: 1, effect: { unlocksElement: 'fire' } }))).toBe(true)
+    expect(purchaseNode(player, minorNode({ id: 'unlock_fire', insightCost: 1, effect: { unlocksElement: 'fire' } }))).toBe(true)
     expect(player.unlockedElements).toEqual(['fire'])
 
     // Mua node KHÁC cũng unlock 'fire' (trường hợp giả định) — không
     // tạo bản trùng trong unlockedElements.
-    expect(purchaseNode(player, minorNode({ id: 'unlock_fire_2', cost: 1, effect: { unlocksElement: 'fire' } }))).toBe(true)
+    expect(purchaseNode(player, minorNode({ id: 'unlock_fire_2', insightCost: 1, effect: { unlocksElement: 'fire' } }))).toBe(true)
     expect(player.unlockedElements).toEqual(['fire'])
   })
 
   it('không đủ điều kiện thì trả false, KHÔNG mutate state gì cả', () => {
-    const player = playerWith({ skillPoints: 0 })
+    const player = playerWith({ skillInsight: 0 })
 
-    const node = minorNode({ cost: 5 })
+    const node = minorNode({ insightCost: 5 })
 
     expect(purchaseNode(player, node)).toBe(false)
-    expect(player.skillPoints).toBe(0)
+    expect(player.skillInsight).toBe(0)
     expect(player.purchasedNodeIds).toEqual([])
     expect(player.modifiers).toEqual([])
   })

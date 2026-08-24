@@ -40,7 +40,7 @@ function createPlayer(): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 2,
+    row: 2,
     alive: true,
   }
 }
@@ -50,10 +50,10 @@ function createSummonTargetDefinition(id: string): EnemyDefinition {
     id,
     name: 'Sói Triệu Hồi',
     level: 1,
-    realmId: 'pham_nhan',
+    realmId: 'mortal',
     lane: 'ground',
     statsInput: MINIMAL_STATS_INPUT,
-    rewards: { experience: 0, cultivation: 0, spiritStone: 0 },
+    rewards: { techniqueInsight: 0, cultivation: 0, spiritStone: 0 },
   }
 }
 
@@ -76,10 +76,10 @@ describe('GameManager.updateBossSummons (Combat Rework Phase 4 — Boss Mechanic
       id: 'boss_test',
       name: 'Boss Test',
       level: 1,
-      realmId: 'pham_nhan',
+      realmId: 'mortal',
       lane: 'ground',
       statsInput: MINIMAL_STATS_INPUT,
-      rewards: { experience: 0, cultivation: 0, spiritStone: 0 },
+      rewards: { techniqueInsight: 0, cultivation: 0, spiritStone: 0 },
       isBoss: true,
       tribulationPhases: [
         // hpThresholdPercent 1 -> HP đầy (100%) vẫn <= 1, trigger NGAY
@@ -89,7 +89,7 @@ describe('GameManager.updateBossSummons (Combat Rework Phase 4 — Boss Mechanic
     })
 
     gameManager.startBattle(createPlayer(), boss)
-    gameManager.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
+    gameManager.update(3) // Countdown 3s trước trận (2026-08-22) - bỏ qua để test chạy combat logic ngay
 
     expect(gameManager.getBattle()!.enemies).toHaveLength(1)
 
@@ -97,9 +97,17 @@ describe('GameManager.updateBossSummons (Combat Rework Phase 4 — Boss Mechanic
 
     const battle = gameManager.getBattle()!
 
+    // Spawn telegraph (2026-08-24): summon được ĐẶT LỊCH qua pending
+    // queue rồi materialize sau 0.75s — flush telegraph để assertions
+    // đọc trạng thái cuối (resolveBossSummons đã rút sạch pendingSummons).
+    gameManager.update(1)
+
     expect(battle.enemies).toHaveLength(2)
-    expect(battle.enemies.some(battleEnemy => battleEnemy.entity.id.startsWith('add_wolf_'))).toBe(true)
+    expect(
+      battle.enemies.some((battleEnemy) => battleEnemy.entity.id.startsWith('add_wolf_')),
+    ).toBe(true)
     expect(battle.pendingSummons).toEqual([])
+    expect(battle.pendingEnemySpawns).toEqual([])
   })
 
   it('không có template khớp id thì bỏ qua summon đó, không throw', () => {
@@ -119,10 +127,10 @@ describe('GameManager.updateBossSummons (Combat Rework Phase 4 — Boss Mechanic
       id: 'boss_test',
       name: 'Boss Test',
       level: 1,
-      realmId: 'pham_nhan',
+      realmId: 'mortal',
       lane: 'ground',
       statsInput: MINIMAL_STATS_INPUT,
-      rewards: { experience: 0, cultivation: 0, spiritStone: 0 },
+      rewards: { techniqueInsight: 0, cultivation: 0, spiritStone: 0 },
       tribulationPhases: [
         { hpThresholdPercent: 1, buff: enrageBuff, summonEnemyIds: ['unknown_enemy'] },
       ],

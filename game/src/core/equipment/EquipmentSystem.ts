@@ -315,7 +315,7 @@ export class EquipmentSystem {
 
     const result = [...prefixes, ...suffixes]
 
-    if (rarity === 'tien_pham' && rollChance(EQUIPMENT_RARITY_EXALTED_AFFIX_CHANCE)) {
+    if (rarity === 'tien' && rollChance(EQUIPMENT_RARITY_EXALTED_AFFIX_CHANCE)) {
       const exaltedKind: AffixKind = rollChance(0.5) ? 'prefix' : 'suffix'
 
       const exalted = this.rollEligibleAffix(template, exaltedKind, EQUIPMENT_QUALITY_MAX_AFFIX_TIER.thien_dia_trong_khi, ['supreme'], excludeStats, affixRegistry)

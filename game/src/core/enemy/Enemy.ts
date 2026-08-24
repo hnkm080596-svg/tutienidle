@@ -23,7 +23,17 @@ export interface EnemyItemDrop {
 }
 
 export interface EnemyReward {
-  experience: number
+  // Cảm ngộ Tâm Pháp — CHỈ vào tâm pháp đang trang bị (undefined/hết
+  // trần thì mất trắng, xem GameManager.gainEquippedTechniqueInsight()).
+  techniqueInsight: number
+
+  // Cảm ngộ Kỹ năng — LUÔN cấp bất kể có trang bị tâm pháp hay không
+  // (skill-insight-and-auto-combat-hud-plan.md mục 3), xem
+  // GameManager.grantBattleRewardIfNeeded(). Optional — undefined thì
+  // suy ra từ techniqueInsight qua getSkillInsightReward() (xem
+  // core/reward/SkillInsightBalance.ts), tránh phải sửa lại TOÀN BỘ
+  // data enemy hiện có (72 entry) chỉ để thêm 1 con số phase-đầu tạm.
+  skillInsight?: number
 
   cultivation: number
 
@@ -300,9 +310,9 @@ export function enemyToCombatEntity(
     // Placeholder — GameManager.startBattle()/updateStageProgress() set
     // lại NGAY thành randomEnemyLaneIndex() (hoặc HERO_LANE_INDEX nếu
     // isBoss) khi quái vào trận (2026-08-22, top-down 5-lane, xem
-    // core/battle/BattleLane.ts). `enemy.lane` (EnemyLane cũ, authored
+    // core/battle/BattleLane.ts). `enemy.row` (EnemyLane cũ, authored
     // trong data/enemy/*.ts) không còn quyết định vị trí hiển thị nữa.
-    lane: 0,
+    row: 0,
 
     alive: enemy.alive,
 

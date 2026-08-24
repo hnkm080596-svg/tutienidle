@@ -47,7 +47,7 @@ export const explorations: ExplorationData[] = [
     rewards: [
       {
         materialId:
-          'herb-seed',
+          'linh_thao_chung',
 
         minAmount: 3,
 
@@ -105,7 +105,7 @@ export const explorations: ExplorationData[] = [
     rewards: [
       {
         materialId:
-          'iron-ore',
+          'quang_sat',
 
         minAmount: 5,
 
@@ -144,7 +144,7 @@ export const explorations: ExplorationData[] = [
     rewards: [
       {
         materialId:
-          'thanh-linh-moc',
+          'thanh_linh_moc',
 
         minAmount: 3,
 

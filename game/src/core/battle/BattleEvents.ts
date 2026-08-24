@@ -4,6 +4,8 @@
 // hoạch: core ↔ Phaser chỉ giao tiếp qua EventBus).
 
 import type { LaneIndex } from './BattleLane'
+import type { CellArea, GridPosition } from './BattleGrid'
+import type { ActionTargetingShape, CombatVfxPresetId, EnemySpawnVfxPresetId } from './CombatAction'
 
 export interface BattlePositionsEvent {
   type: 'positions'
@@ -23,10 +25,28 @@ export interface BattlePositionsEvent {
     id: string
     name: string
     x: number
-    lane: LaneIndex
+    row: LaneIndex
     currentHp: number
     maxHp: number
     isBoss: boolean
+  }[]
+
+  /**
+   * Spawn telegraph (2026-08-24) — quái đang đếm ngược "telegraph → xuất
+   * hiện". Dùng SNAPSHOT (không chỉ event tức thời) để hiệu ứng không mất
+   * khi CombatScene vừa khởi tạo, resize giữa animation, auto-repeat bắt
+   * đầu trận mới trong cùng scene, hay 1 frame nhận nhiều event vị trí.
+   * `progress` ∈ [0,1] — 0 mới đặt lịch, 1 sắp materialize. Renderer
+   * reconcile theo `id`: id biến mất khỏi mảng = materialize xong.
+   */
+  spawningEnemies?: {
+    id: string
+    name: string
+    row: LaneIndex
+    column: number
+    progress: number
+    isBoss: boolean
+    presetId: EnemySpawnVfxPresetId
   }[]
 }
 
@@ -40,4 +60,76 @@ export interface BattleRewardParticleEvent {
   sourceId: string
   kind: 'item' | 'insight' | 'currency'
   color: number
+}
+
+// ================= Combat Grid Rework (2026-08-24) =================
+
+/**
+ * ĐÚNG MỘT event cho mỗi lần action áp damage (dù trúng 1 hay 20 enemy).
+ * Renderer dùng anchorCell + presetId để đặt MỘT VFX chính tại tâm ô
+ * primary target; affectedTargetIds chỉ phục vụ hit-flash/UI — KHÔNG sinh
+ * bản sao effect theo target.
+ */
+export interface ActionImpactEvent {
+  type: 'action_impact'
+
+  actionId: string
+
+  /** Lần chạy cụ thể (mỗi windup hoàn tất = 1 instance mới). */
+  actionInstanceId: string
+
+  sourceId: string
+
+  primaryTargetId: string
+
+  /** Ô neo VFX — snapshot vị trí primary target tại thời điểm impact. */
+  anchorCell: GridPosition
+
+  affectedTargetIds: string[]
+
+  landedTargetIds: string[]
+
+  dodgedTargetIds: string[]
+
+  affectedArea: CellArea & { shape: ActionTargetingShape }
+
+  /** Số hit lên mỗi target (multi-hit) — preset dùng để đếm pulse. */
+  hitCount: number
+
+  presetId: CombatVfxPresetId
+}
+
+/** DOT/persistent status VFX gắn THEO TARGET — dedupe theo
+ * (targetId + dotType + source), reapply = refresh, không spawn mới mỗi tick. */
+export interface StatusVfxAttachedEvent {
+  type: 'status_vfx_attached'
+
+  statusInstanceId: string
+
+  targetId: string
+
+  dotType: string
+
+  stacks: number
+
+  durationSeconds: number
+}
+
+export interface StatusVfxUpdatedEvent {
+  type: 'status_vfx_updated'
+
+  statusInstanceId: string
+
+  stacks: number
+
+  durationSeconds: number
+}
+
+export interface StatusVfxRemovedEvent {
+  type: 'status_vfx_removed'
+
+  statusInstanceId: string
+
+  /** Target chết / cleanse / hết hạn — renderer tự dọn đúng instance. */
+  reason: 'expired' | 'cleansed' | 'target_dead'
 }

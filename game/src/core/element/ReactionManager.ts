@@ -48,8 +48,10 @@ export class ReactionManager {
     // phần ailment, KHÔNG spawn Lava Zone (không crash).
     spawnLavaZone?: (spec: {
       ownerId: string
-      x: number
-      radius: number
+      row: number
+      column: number
+      laneRadius: number
+      columnRadius: number
       duration: number
       tickInterval: number
       damagePerTick: number
@@ -136,7 +138,8 @@ export class ReactionManager {
         if (reaction.spawnsLavaZone && spawnLavaZone) {
           spawnLavaZone({
             ownerId: source.id,
-            x: target.x,
+            row: target.row,
+            column: Math.round(target.x),
             ...reaction.spawnsLavaZone,
           })
         }

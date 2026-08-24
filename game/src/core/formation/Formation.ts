@@ -1,6 +1,6 @@
 import type { PassiveTrigger } from '../skill/SkillTypes'
 import type { StatModifier } from '../stats/StatCalculator'
-import type { Pham } from '../item/Pham'
+import type { ItemGrade } from '../item/ItemGrade'
 
 /**
  * Trận pháp — khảm vào vũ khí (EquipmentInstance.socketedFormation)
@@ -21,7 +21,7 @@ export interface Formation {
 
   // Naming-principles pass (2026-08-14) — thay `grade: number` cũ,
   // xem Pill.ts's ghi chú tương tự.
-  pham: Pham
+  grade: ItemGrade
 
   trigger: PassiveTrigger
 

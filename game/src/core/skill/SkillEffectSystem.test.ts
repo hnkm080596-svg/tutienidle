@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { SkillEffectSystem } from './SkillEffectSystem'
 import { CombatSystem } from '../combat/CombatSystem'
-import { MissileSystem } from '../combat/missile/MissileSystem'
-import { MissileManager } from '../combat/missile/MissileManager'
 import { BuffSystem } from '../buff/BuffSystem'
 import { BuffManager } from '../buff/BuffManager'
 import { BuffRegistry } from '../buff/BuffRegistry'
@@ -11,6 +9,7 @@ import { AilmentManager } from '../ailment/AilmentManager'
 import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import { ReactionManager } from '../element/ReactionManager'
 import { EventBus } from '../events/EventBus'
+import { ActionImpactSystem } from '../battle/ActionImpactSystem'
 import { createBaseStats } from '../stats/StatBlock'
 import { ailments } from '../../data/ailment/ailments'
 import type { CombatEntity } from '../combat/CombatEntity'
@@ -39,7 +38,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 2,
+    row: 2,
     alive: true,
     ...overrides,
   }
@@ -54,7 +53,7 @@ function createContext(eventBus: EventBus, targetAilments: AilmentSystem): Skill
 
   return {
     combatSystem: new CombatSystem(eventBus),
-    missileSystem: new MissileSystem(new MissileManager(), eventBus),
+        fireHit: () => {},
     buffRegistry: new BuffRegistry(),
     ailmentRegistry,
     sourceBuffs: new BuffSystem(new BuffManager()),

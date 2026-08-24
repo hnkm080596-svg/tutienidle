@@ -1,10 +1,9 @@
-import type {
-  CombatEntity,
-} from '../combat/CombatEntity'
+import type { CombatEntity } from '../combat/CombatEntity'
 
-import type {
-  BattleState,
-} from './BattleTypes'
+import type { BattleState } from './BattleTypes'
+
+import type { EnemySpawnVfxPresetId } from './CombatAction'
+import type { GridPosition } from './BattleGrid'
 
 import type { BuffManager } from '../buff/BuffManager'
 import type { AilmentManager } from '../ailment/AilmentManager'
@@ -92,4 +91,30 @@ export interface Battle {
   // LavaZone.ts/BattleSystem.updateLavaZones(). Runtime-only, KHÔNG
   // persist (giống playerBuffs/playerAilments — Battle không lưu save).
   lavaZones: LavaZone[]
+
+  /**
+   * Spawn telegraph (2026-08-24) — quái đang chờ hiệu ứng "telegraph →
+   * xuất hiện → tham chiến". ĐÂY LÀ TRẠNG THÁI GAMEPLAY THẬT, không chỉ
+   * animation: quái trong danh sách này CHƯA nằm trong `enemies` nên
+   * không thể bị chọn mục tiêu, không nhận sát thương và không tấn công
+   * — người chơi luôn có thời gian cảnh báo công bằng (attackRange quái
+   * hiện lớn hơn chiều rộng grid, spawn trong sân có thể đánh ngay sau
+   * khi materialize). Xem BattleSystem.queueEnemySpawn()/
+   * updatePendingEnemySpawns().
+   */
+  pendingEnemySpawns: PendingEnemySpawn[]
+}
+
+/** 1 lượt spawn đã đặt lịch, đang đếm ngược telegraph. */
+export interface PendingEnemySpawn {
+  entity: CombatEntity
+
+  /** Ô sẽ materialize — CHÍNH LÀ ô đã resolve, giữ nguyên tới khi hiện. */
+  position: GridPosition
+
+  remainingSeconds: number
+
+  totalSeconds: number
+
+  presetId: EnemySpawnVfxPresetId
 }

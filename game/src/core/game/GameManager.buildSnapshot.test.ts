@@ -24,7 +24,7 @@ function manualWeaponInstance(): EquipmentInstance {
     slot: 'weapon',
     equipped: false,
     quality: 'pham_khi',
-    rarity: 'hoang_pham',
+    rarity: 'hoang',
     realmId: 'qi_refining',
     mainStat: { id: 'roll-main-attack', sourceId: 'roll-main', sourceType: 'equipment', stat: 'attack', flat: 50 },
     affixes: [],
@@ -50,7 +50,7 @@ function createTestEnemy() {
       criticalDamage: 1.5,
       armor: 0,
     },
-    rewards: { experience: 0, cultivation: 0, spiritStone: 0 },
+    rewards: { techniqueInsight: 0, cultivation: 0, spiritStone: 0 },
   })
 }
 
@@ -103,11 +103,11 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
     expect(attackAfterEquipment).toBeGreaterThanOrEqual(attackAfterClass + 50)
 
     // --- Pre-Battle Upgrade: học skill THẬT có Specialization
-    // ("behavior-changing node") — tai_hu_sword, đổi hẳn effects.
-    gameManager.learnSkill('tai_hu_sword')
-    gameManager.equipSkillWithoutSlot('tai_hu_sword')
+    // ("behavior-changing node") — thai_hu_nhat_kiem, đổi hẳn effects.
+    gameManager.learnSkill('thai_hu_nhat_kiem')
+    gameManager.equipSkillWithoutSlot('thai_hu_nhat_kiem')
 
-    const rawSkill = gameManager.skillManager.get('tai_hu_sword')!
+    const rawSkill = gameManager.skillManager.get('thai_hu_nhat_kiem')!
 
     const beforeSpec = gameManager.skillSystem.getEffectiveSkill(rawSkill)
 
@@ -115,7 +115,7 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
     // physical đơn thuần.
     expect(beforeSpec.effects[0]?.components).toBeDefined()
 
-    expect(gameManager.selectSkillSpecialization('tai_hu_sword', 'tai_hu_sword_heavy')).toBe(true)
+    expect(gameManager.selectSkillSpecialization('thai_hu_nhat_kiem', 'trong_kiem')).toBe(true)
 
     const afterSpec = gameManager.skillSystem.getEffectiveSkill(rawSkill)
 

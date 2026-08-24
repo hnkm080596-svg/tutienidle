@@ -7,10 +7,11 @@ import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
 import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import { EventBus } from '../events/EventBus'
-import { MissileSystem } from '../combat/missile/MissileSystem'
-import { MissileManager } from '../combat/missile/MissileManager'
+import { ActionImpactSystem } from '../battle/ActionImpactSystem'
+
+
 import { createBaseStats } from '../stats/StatBlock'
-import { SCREEN_VISIBLE_MAX_X } from './BattleLane'
+import { VISIBLE_MAX_COLUMN } from './BattleLane'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
 
@@ -25,8 +26,6 @@ function createBasicSkill(): Skill {
     type: 'active',
     level: 1,
     maxLevel: 10,
-    experience: 0,
-    experienceRequired: 100,
     cooldown: 0,
     remainingCooldown: 0,
     cost: 0,
@@ -56,7 +55,7 @@ function createBattleSystem(eventBus = new EventBus()) {
     new BuffRegistry(),
     new AilmentRegistry(),
     eventBus,
-    new MissileSystem(new MissileManager(), eventBus),
+    new ActionImpactSystem({ eventBus, rollCritical: () => false }),
   )
 
   return { system, skillManager }
@@ -97,14 +96,14 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 2,
+    row: 2,
     alive: true,
     ...overrides,
   }
 }
 
 describe('BattleSystem — Attack range visibility gate (2026-08-22)', () => {
-  it('player attackRange world-unit "vô hạn" (999999, thiết kế tower defense gốc) nhưng quái đứng OFF-SCREEN (x > SCREEN_VISIBLE_MAX_X) → KHÔNG bắn được, dù đủ tầm world-unit', () => {
+  it('player attackRange world-unit "vô hạn" (999999, thiết kế tower defense gốc) nhưng quái đứng OFF-SCREEN (x > VISIBLE_MAX_COLUMN) → KHÔNG bắn được, dù đủ tầm world-unit', () => {
     const eventBus = new EventBus()
     const { system, skillManager } = createBattleSystem(eventBus)
     const player = createCombatant({ id: 'player', type: 'player' })
@@ -115,7 +114,7 @@ describe('BattleSystem — Attack range visibility gate (2026-08-22)', () => {
     system.start(player, enemy)
     system.update(3) // Bỏ qua countdown trước trận.
 
-    system.getBattle()!.enemies[0]!.entity.x = SCREEN_VISIBLE_MAX_X + 1
+    system.getBattle()!.enemies[0]!.entity.x = VISIBLE_MAX_COLUMN + 1
 
     for (let i = 0; i < 200; i++) {
       system.update(0.05)
@@ -124,7 +123,7 @@ describe('BattleSystem — Attack range visibility gate (2026-08-22)', () => {
     expect(enemy.currentHp).toBe(enemy.maxHp)
   })
 
-  it('quái đứng ĐÚNG biên giới nhìn thấy (x = SCREEN_VISIBLE_MAX_X) → player bắn được bình thường', () => {
+  it('quái đứng ĐÚNG biên giới nhìn thấy (x = VISIBLE_MAX_COLUMN) → player bắn được bình thường', () => {
     const eventBus = new EventBus()
     const { system, skillManager } = createBattleSystem(eventBus)
     const player = createCombatant({ id: 'player', type: 'player' })
@@ -135,7 +134,7 @@ describe('BattleSystem — Attack range visibility gate (2026-08-22)', () => {
     system.start(player, enemy)
     system.update(3)
 
-    system.getBattle()!.enemies[0]!.entity.x = SCREEN_VISIBLE_MAX_X
+    system.getBattle()!.enemies[0]!.entity.x = VISIBLE_MAX_COLUMN
 
     for (let i = 0; i < 200; i++) {
       system.update(0.05)
@@ -144,7 +143,7 @@ describe('BattleSystem — Attack range visibility gate (2026-08-22)', () => {
     expect(enemy.currentHp).toBeLessThan(enemy.maxHp)
   })
 
-  it('mob/boss ở off-screen (x > SCREEN_VISIBLE_MAX_X) cũng KHÔNG tấn công lại player được — gate áp dụng cả 2 phía', () => {
+  it('mob/boss ở off-screen (x > VISIBLE_MAX_COLUMN) cũng KHÔNG tấn công lại player được — gate áp dụng cả 2 phía', () => {
     const eventBus = new EventBus()
     const { system } = createBattleSystem(eventBus)
     const player = createCombatant({ id: 'player', type: 'player' })
@@ -153,7 +152,7 @@ describe('BattleSystem — Attack range visibility gate (2026-08-22)', () => {
     system.start(player, enemy)
     system.update(3)
 
-    system.getBattle()!.enemies[0]!.entity.x = SCREEN_VISIBLE_MAX_X + 1
+    system.getBattle()!.enemies[0]!.entity.x = VISIBLE_MAX_COLUMN + 1
 
     for (let i = 0; i < 200; i++) {
       system.update(0.05)

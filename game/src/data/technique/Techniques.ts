@@ -80,7 +80,7 @@ export const TECHNIQUES: Technique[] = [
     usesSwordIntentResource: true,
 
     // Nội tại chiến đấu — passive_kiem_tam_lanh (xem data/skill/Skills.ts).
-    innateSkillId: 'passive_kiem_tam_lanh',
+    innateSkillId: 'passive_kiem_tam_lanh_liet',
 
     unlocked: false,
 
@@ -88,7 +88,7 @@ export const TECHNIQUES: Technique[] = [
   },
 
   {
-    id: 'tai_hu_sword',
+    id: 'thai_hu_kiem_quyet',
 
     name: 'Thái Hư Kiếm Quyết',
 
@@ -103,7 +103,7 @@ export const TECHNIQUES: Technique[] = [
     requiredRealmLevel: 3,
 
     // Nội tại chiến đấu — passive_tai_hu_edge (xem data/skill/Skills.ts).
-    innateSkillId: 'passive_tai_hu_edge',
+    innateSkillId: 'passive_thai_hu_kiem_y',
 
     unlocked: false,
 
@@ -111,7 +111,7 @@ export const TECHNIQUES: Technique[] = [
   },
 
   {
-    id: 'iron_body_scripture',
+    id: 'kim_cang_bat_hoai_the',
 
     name: 'Kim Cang Bất Hoại Thể',
 
@@ -122,7 +122,7 @@ export const TECHNIQUES: Technique[] = [
     combatTypeId: 'def',
 
     // Nội tại chiến đấu — passive_iron_body_resolve.
-    innateSkillId: 'passive_iron_body_resolve',
+    innateSkillId: 'passive_kim_cang_y_chi',
 
     unlocked: false,
 
@@ -130,7 +130,7 @@ export const TECHNIQUES: Technique[] = [
   },
 
   {
-    id: 'spirit_gathering_scripture',
+    id: 'tu_linh_quyet',
 
     name: 'Tụ Linh Quyết',
 
@@ -143,15 +143,15 @@ export const TECHNIQUES: Technique[] = [
     // Technique.passiveSkillIdsByRealm. Đây là "cấp skill" (không phải
     // Tâm Pháp tự cộng chỉ số), skill tự có pipeline stat riêng.
     passiveSkillIdsByRealm: {
-      qi_refining: 'passive_qi_sense',
-      foundation: 'passive_foundation_will',
-      golden_core: 'passive_core_light',
-      nascent_soul: 'passive_soul_clarity',
-      soul_transformation: 'passive_divine_transformation',
-      void_refinement: 'passive_void_step',
-      body_integration: 'passive_body_unity',
-      mahayana: 'passive_mahayana_heart',
-      tribulation: 'passive_tribulation_resolve',
+      qi_refining: 'passive_linh_khi_cam_ung',
+      foundation_establishment: 'passive_truc_co_y_chi',
+      golden_core: 'passive_kim_dan_chi_quang',
+      nascent_soul: 'passive_nguyen_anh_minh_triet',
+      soul_transformation: 'passive_hoa_than_chi_uy',
+      void_refinement: 'passive_luyen_hu_bo',
+      body_integration: 'passive_hop_the_chi_khu',
+      mahayana: 'passive_dai_thua_dao_tam',
+      tribulation: 'passive_do_kiep_chi_tam',
     },
 
     // PLAN HOÀN CHỈNH mục 5.1 — Tụ Linh Quyết: Công/Phòng phẳng

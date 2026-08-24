@@ -7,8 +7,7 @@ import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
 import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import { EventBus } from '../events/EventBus'
-import { MissileSystem } from '../combat/missile/MissileSystem'
-import { MissileManager } from '../combat/missile/MissileManager'
+import { ActionImpactSystem } from '../battle/ActionImpactSystem'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Buff } from '../buff/Buff'
@@ -25,7 +24,7 @@ function createBattleSystem(eventBus = new EventBus()) {
     new BuffRegistry(),
     new AilmentRegistry(),
     eventBus,
-    new MissileSystem(new MissileManager(), eventBus),
+    new ActionImpactSystem({ eventBus, rollCritical: () => false }),
   )
 }
 
@@ -55,7 +54,7 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 2,
+    row: 2,
     alive: true,
     ...overrides,
   }

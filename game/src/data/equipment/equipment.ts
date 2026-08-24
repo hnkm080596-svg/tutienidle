@@ -24,12 +24,12 @@ export const EQUIPMENT_ICON_POOLS: Record<EquipmentSlot, readonly string[]> = {
 const BASE_COSTS: Pick<Equipment, 'maxEnhanceLevel' | 'enhanceCost' | 'enhanceSpiritStoneCost' | 'upgradeQualityCost' | 'upgradeRealmCost' | 'addAffixCost' | 'upgradeAffixCost' | 'washCost' | 'refineCost'> = {
   maxEnhanceLevel: 10,
   enhanceCost: [{ materialId: 'bui_cot', amount: 3 }], enhanceSpiritStoneCost: 20,
-  upgradeQualityCost: [{ materialId: 'yeu_dan_qi_refining', amount: 3 }],
-  upgradeRealmCost: [{ materialId: 'yeu_dan_qi_refining', amount: 2 }],
+  upgradeQualityCost: [{ materialId: 'yeu_dan_luyen_khi_canh', amount: 3 }],
+  upgradeRealmCost: [{ materialId: 'yeu_dan_luyen_khi_canh', amount: 2 }],
   addAffixCost: [{ materialId: 'affix_rune_stone', amount: 1 }],
   upgradeAffixCost: [{ materialId: 'affix_tier_stone', amount: 1 }],
-  washCost: [{ materialId: 'black-iron', amount: 2 }],
-  refineCost: [{ materialId: 'black-iron', amount: 2 }],
+  washCost: [{ materialId: 'huyen_thiet', amount: 2 }],
+  refineCost: [{ materialId: 'huyen_thiet', amount: 2 }],
 }
 
 function base(id: string, name: string, slot: EquipmentSlot): Equipment {

@@ -79,6 +79,18 @@ const LEGACY_ATTACK_SPEED_DIVISOR = 2.5
 const MIN_ENEMY_ATTACK_SPEED = 0.8
 const MAX_ENEMY_ATTACK_SPEED = 2.5
 
+// Enemy data trước Grid Rework được author theo world 0..400. Runtime mới
+// dùng 16 cột, nên 25 world-unit cũ tương ứng đúng 1 column.
+const LEGACY_WORLD_UNITS_PER_GRID_COLUMN = 25
+
+export function normalizeEnemyGridDistance(authoredValue: number): number {
+  return authoredValue > GRID_DISTANCE_AUTHORED_MAX
+    ? authoredValue / LEGACY_WORLD_UNITS_PER_GRID_COLUMN
+    : authoredValue
+}
+
+const GRID_DISTANCE_AUTHORED_MAX = 16
+
 export function normalizeEnemyAttackSpeed(authoredAttackSpeed: number): number {
   const converted = authoredAttackSpeed > MAX_ENEMY_ATTACK_SPEED
     ? authoredAttackSpeed / LEGACY_ATTACK_SPEED_DIVISOR
@@ -96,8 +108,8 @@ export function normalizeEnemyStats(input: EnemyStatInput): Stats {
     maxMp: 0,
 
     attackSpeed: normalizeEnemyAttackSpeed(input.attackSpeed),
-    movementSpeed: input.movementSpeed,
-    attackRange: input.attackRange,
+    movementSpeed: normalizeEnemyGridDistance(input.movementSpeed),
+    attackRange: normalizeEnemyGridDistance(input.attackRange),
 
     criticalRate: input.criticalRate,
     criticalDamage: input.criticalDamage,
@@ -133,7 +145,6 @@ export function normalizeEnemyStats(input: EnemyStatInput): Stats {
     ailmentResistPercent: input.special?.ailmentResistPercent ?? 0,
     ailmentPotencyPercent: input.special?.ailmentPotencyPercent ?? 0,
     skillDamagePercent: input.special?.skillDamagePercent ?? 0,
-    projectileSpeedPercent: 0,
     elementApplicationPercent: 0,
     reactionEffectPercent: 0,
     ailmentDurationPercent: 0,

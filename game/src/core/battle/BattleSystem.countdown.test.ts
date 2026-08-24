@@ -7,8 +7,7 @@ import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
 import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import { EventBus } from '../events/EventBus'
-import { MissileSystem } from '../combat/missile/MissileSystem'
-import { MissileManager } from '../combat/missile/MissileManager'
+import { ActionImpactSystem } from '../battle/ActionImpactSystem'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { BattlePositionsEvent } from './BattleEvents'
@@ -27,7 +26,7 @@ function createBattleSystem(eventBus = new EventBus()) {
     new BuffRegistry(),
     new AilmentRegistry(),
     eventBus,
-    new MissileSystem(new MissileManager(), eventBus),
+    new ActionImpactSystem({ eventBus, rollCritical: () => false }),
   )
 }
 
@@ -68,14 +67,14 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 2,
+    row: 2,
     alive: true,
     ...overrides,
   }
 }
 
 describe('BattleSystem — Countdown trước trận (2026-08-22)', () => {
-  it('start() bắt đầu ở state "countdown" với countdownSecondsRemaining=3, quái đầu tiên ĐÃ có trong battle.enemies ngay lập tức', () => {
+  it('start() bắt đầu ở state "countdown", quái đầu tiên ở GIAI ĐOẠN TELEGRAPH (pendingEnemySpawns) rồi materialize trong countdown', () => {
     const system = createBattleSystem()
     const player = createCombatant({ id: 'player', type: 'player' })
     const enemy = createCombatant({ id: 'enemy' })
@@ -86,8 +85,21 @@ describe('BattleSystem — Countdown trước trận (2026-08-22)', () => {
 
     expect(battle.state).toBe('countdown')
     expect(battle.countdownSecondsRemaining).toBe(3)
+
+    // Luồng mới (2026-08-24): quái đầu tiên đi qua "telegraph → xuất
+    // hiện" — CHƯA nằm trong battle.enemies ngay lập tức.
+    expect(battle.enemies).toHaveLength(0)
+    expect(battle.pendingEnemySpawns).toHaveLength(1)
+    expect(battle.pendingEnemySpawns[0]!.entity.id).toBe('enemy')
+    expect(battle.pendingEnemySpawns[0]!.position.column).toBeGreaterThan(0)
+
+    // Telegraph 0.75s < 1s tick — materialize trong countdown, đứng yên
+    // chờ trận bắt đầu (combat logic đóng băng).
+    system.update(1)
+
     expect(battle.enemies).toHaveLength(1)
     expect(battle.enemies[0]!.entity.id).toBe('enemy')
+    expect(battle.pendingEnemySpawns).toHaveLength(0)
   })
 
   it('trong lúc countdown, update() KHÔNG di chuyển quái/không bắn missile/không giảm attackTimer', () => {
@@ -97,6 +109,10 @@ describe('BattleSystem — Countdown trước trận (2026-08-22)', () => {
     const enemy = createCombatant({ id: 'enemy' })
 
     system.start(player, enemy)
+
+    // Flush telegraph (0.75s) trước — quái materialize trong countdown.
+    // 0.8 + 2 < 3s: vẫn còn countdown sau cả 2 lần update.
+    system.update(0.8)
 
     const enemyXBeforeUpdate = system.getBattle()!.enemies[0]!.entity.x
     const attackTimerBefore = system.getBattle()!.enemies[0]!.attackTimer
@@ -113,14 +129,14 @@ describe('BattleSystem — Countdown trước trận (2026-08-22)', () => {
     const battle = system.getBattle()!
 
     expect(battle.state).toBe('countdown')
-    expect(battle.countdownSecondsRemaining).toBeCloseTo(1, 5)
+    expect(battle.countdownSecondsRemaining).toBeCloseTo(3 - 2.8, 3)
     expect(battle.enemies[0]!.entity.x).toBe(enemyXBeforeUpdate)
     expect(battle.enemies[0]!.attackTimer).toBe(attackTimerBefore)
     expect(attackFired).toBe(false)
     expect(player.currentHp).toBe(player.maxHp)
   })
 
-  it('vẫn emit "positions" liên tục trong lúc countdown để Phaser vẽ đúng quái đã spawn đứng yên', () => {
+  it('vẫn emit "positions" liên tục trong countdown, snapshot có spawningEnemies progress tăng dần', () => {
     const eventBus = new EventBus()
     const system = createBattleSystem(eventBus)
     const player = createCombatant({ id: 'player', type: 'player' })
@@ -128,17 +144,28 @@ describe('BattleSystem — Countdown trước trận (2026-08-22)', () => {
 
     const snapshots: BattlePositionsEvent[] = []
 
-    eventBus.on<BattlePositionsEvent>('positions', event => snapshots.push(event))
+    eventBus.on<BattlePositionsEvent>('positions', (event) => snapshots.push(event))
 
     system.start(player, enemy)
 
     const snapshotCountAfterStart = snapshots.length
 
-    system.update(1)
+    // Ngay sau start: telegraph trong snapshot với progress 0.
+    expect(snapshots.at(-1)?.spawningEnemies).toHaveLength(1)
+    expect(snapshots.at(-1)?.spawningEnemies?.[0]?.progress).toBe(0)
+
+    system.update(0.4)
+    const midProgress = snapshots.at(-1)?.spawningEnemies?.[0]?.progress ?? 0
+
     system.update(1)
 
     expect(snapshots.length).toBeGreaterThan(snapshotCountAfterStart)
+
+    // Materialize xong (0.75s telegraph đã qua): id rời spawningEnemies,
+    // enemy xuất hiện trong enemies của snapshot.
+    expect(snapshots.at(-1)?.spawningEnemies ?? []).toHaveLength(0)
     expect(snapshots.at(-1)?.enemies).toHaveLength(1)
+    expect(midProgress).toBeGreaterThan(0)
   })
 
   it('đủ 3 giây tích luỹ (nhiều tick nhỏ) → tự chuyển "fighting", combat logic chạy bình thường từ tick kế', () => {

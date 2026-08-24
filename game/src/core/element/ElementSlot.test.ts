@@ -5,12 +5,12 @@ import { getElementSlotCount, MAX_ELEMENT_SLOTS } from './ElementSlot'
 // bảng ví dụ chính thức trong spec, dùng thẳng làm test case.
 describe('getElementSlotCount (Pháp Tu Redesign, magicpath mục 5/28)', () => {
   it('Phàm Nhân chưa có Element Slot nào', () => {
-    expect(getElementSlotCount('pham_nhan')).toBe(0)
+    expect(getElementSlotCount('mortal')).toBe(0)
   })
 
   it('Luyện Khí / Trúc Cơ = 2 slots', () => {
     expect(getElementSlotCount('qi_refining')).toBe(2)
-    expect(getElementSlotCount('foundation')).toBe(2)
+    expect(getElementSlotCount('foundation_establishment')).toBe(2)
   })
 
   it('Kim Đan / Nguyên Anh = 3 slots', () => {

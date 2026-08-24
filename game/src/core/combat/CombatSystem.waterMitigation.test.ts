@@ -28,7 +28,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 2,
+    row: 2,
     alive: true,
     ...overrides,
   }
@@ -45,7 +45,7 @@ describe('CombatSystem — Thủy Thế (Plans/waterpath, Tụ Thủy)', () => {
     const source = createCombatant({ id: 'source', type: 'player', stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 } })
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
-    const result = combat.resolveMissileHit(source, target, { kind: 'physical', multiplier: 1 }, false)
+    const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, false)
 
     expect(target.currentHp).toBe(1000 - result.finalDamage)
   })
@@ -57,12 +57,12 @@ describe('CombatSystem — Thủy Thế (Plans/waterpath, Tụ Thủy)', () => {
     const source = createCombatant({ id: 'source', type: 'player', stats: sourceStats })
 
     const withoutMitigation = createCombatant({ id: 'target_a', currentHp: 100000, maxHp: 100000 })
-    const rawResult = combat.resolveMissileHit(source, withoutMitigation, { kind: 'physical', multiplier: 1 }, false)
+    const rawResult = combat.resolveActionHit(source, withoutMitigation, { kind: 'physical', multiplier: 1 }, false)
 
     const targetStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0 }
     const target = createCombatant({ id: 'target_b', stats: targetStats, skillStats: { ...createSkillRuntimeStats(), thuyThePercent: 0.1 }, currentHp: 100000, maxHp: 100000 })
 
-    const result = combat.resolveMissileHit(source, target, { kind: 'physical', multiplier: 1 }, false)
+    const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, false)
 
     expect(result.finalDamage).toBeCloseTo(rawResult.finalDamage * 0.9, 5)
     expect(target.currentHp).toBe(100000 - result.finalDamage)
@@ -77,7 +77,7 @@ describe('CombatSystem — Thủy Thế (Plans/waterpath, Tụ Thủy)', () => {
     const targetStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0 }
     const target = createCombatant({ id: 'target', stats: targetStats, skillStats: { ...createSkillRuntimeStats(), thuyThePercent: 5 }, currentHp: 1000000, maxHp: 1000000 })
 
-    const result = combat.resolveMissileHit(source, target, { kind: 'physical', multiplier: 1 }, false)
+    const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, false)
 
     expect(result.finalDamage).toBeGreaterThan(0)
   })

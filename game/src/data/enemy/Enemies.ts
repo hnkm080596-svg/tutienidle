@@ -38,14 +38,14 @@ export const ENEMIES: Enemy[] = [
     },
 
     rewards: {
-      experience: 20,
+      techniqueInsight: 20,
       cultivation: 50,
       spiritStone: 5,
 
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 1, chance: 0.5 },
-        { kind: 'material', itemId: 'yeu_dan_qi_refining', amount: 1, chance: 0.6 },
-        { kind: 'material', itemId: 'yeu_huyet_qi_refining', amount: 1, chance: 0.3 },
+        { kind: 'material', itemId: 'linh_chi', amount: 1, chance: 0.5 },
+        { kind: 'material', itemId: 'yeu_dan_luyen_khi_canh', amount: 1, chance: 0.6 },
+        { kind: 'material', itemId: 'yeu_huyet_luyen_khi_canh', amount: 1, chance: 0.3 },
         // Đột Phá Trúc Cơ (Phase 6) — loot vô thưởng vô phạt (mục 14
         // spec `breakthrough`), chance thấp cố ý.
         { kind: 'material', itemId: 'cultivator_diary', amount: 1, chance: 0.07 },
@@ -83,12 +83,12 @@ export const ENEMIES: Enemy[] = [
     },
 
     rewards: {
-      experience: 40,
+      techniqueInsight: 40,
       cultivation: 100,
       spiritStone: 10,
 
       itemDrops: [
-        { kind: 'material', itemId: 'red-copper', amount: 1, chance: 0.3 },
+        { kind: 'material', itemId: 'xich_dong', amount: 1, chance: 0.3 },
         // Tăng tỷ lệ giai đoạn test (PLAN HOÀN CHỈNH mục 1) — trước
         // 0.05/0.2/0.5, quá thấp để kiểm thử weapon drop thực tế.
         { kind: 'equipment', itemId: 'base_kiem', chance: 0.15 },
@@ -100,14 +100,14 @@ export const ENEMIES: Enemy[] = [
     // nguồn DUY NHẤT của 2 material sourceType 'boss' (flame-essence,
     // demon-soul) — đúng "Boss farming = high-tier crafting" (Mục II).
     eliteRewards: {
-      experience: 200,
+      techniqueInsight: 200,
       cultivation: 500,
       spiritStone: 60,
 
       itemDrops: [
-        { kind: 'material', itemId: 'red-copper', amount: 3, chance: 0.6 },
-        { kind: 'material', itemId: 'flame-essence', amount: 1, chance: 0.15 },
-        { kind: 'material', itemId: 'demon-soul', amount: 1, chance: 0.1 },
+        { kind: 'material', itemId: 'xich_dong', amount: 3, chance: 0.6 },
+        { kind: 'material', itemId: 'tinh_hoa_hoa', amount: 1, chance: 0.15 },
+        { kind: 'material', itemId: 'yeu_hon', amount: 1, chance: 0.1 },
         // Core Loop Foundation checklist (Phase 4) — currency Nâng
         // Cấp Dòng Affix, Boss-exclusive (giá trị cao hơn Thêm Dòng).
         { kind: 'material', itemId: 'affix_tier_stone', amount: 1, chance: 0.12 },
@@ -122,14 +122,14 @@ export const ENEMIES: Enemy[] = [
     // quái cuối stage có bossEnemyId, xem data/stage/Stages.ts) — hiếm
     // hơn Elite nên xứng đáng phần thưởng chắc chắn thay vì roll %.
     bossRewards: {
-      experience: 500,
+      techniqueInsight: 500,
       cultivation: 1500,
       spiritStone: 150,
 
       itemDrops: [
-        { kind: 'material', itemId: 'red-copper', amount: 6, chance: 1 },
-        { kind: 'material', itemId: 'flame-essence', amount: 2, chance: 0.5 },
-        { kind: 'material', itemId: 'demon-soul', amount: 1, chance: 0.3 },
+        { kind: 'material', itemId: 'xich_dong', amount: 6, chance: 1 },
+        { kind: 'material', itemId: 'tinh_hoa_hoa', amount: 2, chance: 0.5 },
+        { kind: 'material', itemId: 'yeu_hon', amount: 1, chance: 0.3 },
         { kind: 'material', itemId: 'affix_tier_stone', amount: 2, chance: 0.4 },
         { kind: 'equipment', itemId: 'base_kiem', chance: 0.75 },
         { kind: 'technique', itemId: 'van_kiem_quyet', chance: 1 },
@@ -176,12 +176,12 @@ export const ENEMIES: Enemy[] = [
     },
 
     rewards: {
-      experience: 30,
+      techniqueInsight: 30,
       cultivation: 70,
       spiritStone: 8,
 
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 1, chance: 0.3 },
+        { kind: 'material', itemId: 'linh_chi', amount: 1, chance: 0.3 },
         // Core Loop Foundation checklist (Phase 4) — currency Thêm
         // Dòng Affix, nguồn monster thường (không cần Boss).
         { kind: 'material', itemId: 'affix_rune_stone', amount: 1, chance: 0.25 },
@@ -224,12 +224,12 @@ export const ENEMIES: Enemy[] = [
     },
 
     rewards: {
-      experience: 35,
+      techniqueInsight: 35,
       cultivation: 80,
       spiritStone: 8,
 
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 1, chance: 0.4 },
+        { kind: 'material', itemId: 'linh_chi', amount: 1, chance: 0.4 },
         // Đột Phá Trúc Cơ (Phase 6) — loot vô thưởng vô phạt (mục 14
         // spec `breakthrough`), chance thấp cố ý.
         { kind: 'material', itemId: 'stele_fragment', amount: 1, chance: 0.07 },
@@ -278,13 +278,13 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'wood', power: 10 },
     },
     rewards: {
-      experience: 25,
+      techniqueInsight: 25,
       cultivation: 60,
       spiritStone: 6,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 1, chance: 0.4 },
-        { kind: 'material', itemId: 'yeu_dan_qi_refining', amount: 1, chance: 0.55 },
-        { kind: 'material', itemId: 'yeu_huyet_qi_refining', amount: 1, chance: 0.3 },
+        { kind: 'material', itemId: 'linh_chi', amount: 1, chance: 0.4 },
+        { kind: 'material', itemId: 'yeu_dan_luyen_khi_canh', amount: 1, chance: 0.55 },
+        { kind: 'material', itemId: 'yeu_huyet_luyen_khi_canh', amount: 1, chance: 0.3 },
       ],
     },
   }),
@@ -310,32 +310,32 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'wood', power: 12 },
     },
     rewards: {
-      experience: 50,
+      techniqueInsight: 50,
       cultivation: 115,
       spiritStone: 12,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_dan_qi_refining', amount: 1, chance: 0.4 },
-        { kind: 'material', itemId: 'red-copper', amount: 1, chance: 0.3 },
+        { kind: 'material', itemId: 'yeu_dan_luyen_khi_canh', amount: 1, chance: 0.4 },
+        { kind: 'material', itemId: 'xich_dong', amount: 1, chance: 0.3 },
       ],
     },
     eliteRewards: {
-      experience: 250,
+      techniqueInsight: 250,
       cultivation: 575,
       spiritStone: 72,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_dan_qi_refining', amount: 2, chance: 0.8 },
-        { kind: 'material', itemId: 'demon-soul', amount: 1, chance: 0.15 },
+        { kind: 'material', itemId: 'yeu_dan_luyen_khi_canh', amount: 2, chance: 0.8 },
+        { kind: 'material', itemId: 'yeu_hon', amount: 1, chance: 0.15 },
         { kind: 'material', itemId: 'affix_rune_stone', amount: 1, chance: 0.2 },
       ],
     },
     bossRewards: {
-      experience: 625,
+      techniqueInsight: 625,
       cultivation: 1725,
       spiritStone: 180,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_dan_qi_refining', amount: 3, chance: 1 },
-        { kind: 'material', itemId: 'demon-soul', amount: 1, chance: 0.35 },
-        { kind: 'material', itemId: 'flame-essence', amount: 1, chance: 0.3 },
+        { kind: 'material', itemId: 'yeu_dan_luyen_khi_canh', amount: 3, chance: 1 },
+        { kind: 'material', itemId: 'yeu_hon', amount: 1, chance: 0.35 },
+        { kind: 'material', itemId: 'tinh_hoa_hoa', amount: 1, chance: 0.3 },
         { kind: 'material', itemId: 'affix_tier_stone', amount: 1, chance: 0.3 },
       ],
     },
@@ -364,12 +364,12 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'fire', power: 10 },
     },
     rewards: {
-      experience: 30,
+      techniqueInsight: 30,
       cultivation: 70,
       spiritStone: 7,
       itemDrops: [
-        { kind: 'material', itemId: 'fire-spirit-herb', amount: 1, chance: 0.4 },
-        { kind: 'material', itemId: 'yeu_huyet_qi_refining', amount: 1, chance: 0.5 },
+        { kind: 'material', itemId: 'que', amount: 1, chance: 0.4 },
+        { kind: 'material', itemId: 'yeu_huyet_luyen_khi_canh', amount: 1, chance: 0.5 },
       ],
     },
   }),
@@ -395,31 +395,31 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'fire', power: 12 },
     },
     rewards: {
-      experience: 55,
+      techniqueInsight: 55,
       cultivation: 135,
       spiritStone: 14,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_dan_qi_refining', amount: 1, chance: 0.4 },
-        { kind: 'material', itemId: 'red-copper', amount: 1, chance: 0.3 },
+        { kind: 'material', itemId: 'yeu_dan_luyen_khi_canh', amount: 1, chance: 0.4 },
+        { kind: 'material', itemId: 'xich_dong', amount: 1, chance: 0.3 },
       ],
     },
     eliteRewards: {
-      experience: 275,
+      techniqueInsight: 275,
       cultivation: 675,
       spiritStone: 84,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_dan_qi_refining', amount: 2, chance: 0.7 },
-        { kind: 'material', itemId: 'yeu_cot_qi_refining', amount: 1, chance: 0.15 },
+        { kind: 'material', itemId: 'yeu_dan_luyen_khi_canh', amount: 2, chance: 0.7 },
+        { kind: 'material', itemId: 'yeu_cot_luyen_khi_canh', amount: 1, chance: 0.15 },
         { kind: 'material', itemId: 'affix_rune_stone', amount: 1, chance: 0.2 },
       ],
     },
     bossRewards: {
-      experience: 690,
+      techniqueInsight: 690,
       cultivation: 2025,
       spiritStone: 210,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_dan_qi_refining', amount: 4, chance: 1 },
-        { kind: 'material', itemId: 'yeu_cot_qi_refining', amount: 1, chance: 0.5 },
+        { kind: 'material', itemId: 'yeu_dan_luyen_khi_canh', amount: 4, chance: 1 },
+        { kind: 'material', itemId: 'yeu_cot_luyen_khi_canh', amount: 1, chance: 0.5 },
         { kind: 'material', itemId: 'affix_tier_stone', amount: 1, chance: 0.3 },
         { kind: 'equipment', itemId: 'base_quan', chance: 0.4 },
       ],
@@ -449,12 +449,12 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'fire', power: 10 },
     },
     rewards: {
-      experience: 35,
+      techniqueInsight: 35,
       cultivation: 80,
       spiritStone: 8,
       itemDrops: [
-        { kind: 'material', itemId: 'fire-spirit-herb', amount: 1, chance: 0.4 },
-        { kind: 'material', itemId: 'yeu_huyet_qi_refining', amount: 1, chance: 0.5 },
+        { kind: 'material', itemId: 'que', amount: 1, chance: 0.4 },
+        { kind: 'material', itemId: 'yeu_huyet_luyen_khi_canh', amount: 1, chance: 0.5 },
       ],
     },
   }),
@@ -480,31 +480,31 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'fire', power: 12 },
     },
     rewards: {
-      experience: 65,
+      techniqueInsight: 65,
       cultivation: 155,
       spiritStone: 16,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_dan_qi_refining', amount: 1, chance: 0.4 },
-        { kind: 'material', itemId: 'red-copper', amount: 1, chance: 0.3 },
+        { kind: 'material', itemId: 'yeu_dan_luyen_khi_canh', amount: 1, chance: 0.4 },
+        { kind: 'material', itemId: 'xich_dong', amount: 1, chance: 0.3 },
       ],
     },
     eliteRewards: {
-      experience: 325,
+      techniqueInsight: 325,
       cultivation: 775,
       spiritStone: 96,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_dan_qi_refining', amount: 2, chance: 0.7 },
-        { kind: 'material', itemId: 'yeu_cot_qi_refining', amount: 1, chance: 0.15 },
+        { kind: 'material', itemId: 'yeu_dan_luyen_khi_canh', amount: 2, chance: 0.7 },
+        { kind: 'material', itemId: 'yeu_cot_luyen_khi_canh', amount: 1, chance: 0.15 },
         { kind: 'material', itemId: 'affix_rune_stone', amount: 1, chance: 0.2 },
       ],
     },
     bossRewards: {
-      experience: 815,
+      techniqueInsight: 815,
       cultivation: 2325,
       spiritStone: 240,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_dan_qi_refining', amount: 4, chance: 1 },
-        { kind: 'material', itemId: 'yeu_cot_qi_refining', amount: 1, chance: 0.5 },
+        { kind: 'material', itemId: 'yeu_dan_luyen_khi_canh', amount: 4, chance: 1 },
+        { kind: 'material', itemId: 'yeu_cot_luyen_khi_canh', amount: 1, chance: 0.5 },
         { kind: 'material', itemId: 'affix_tier_stone', amount: 1, chance: 0.3 },
         { kind: 'equipment', itemId: 'base_quan', chance: 0.4 },
       ],
@@ -533,12 +533,12 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'earth', power: 11 },
     },
     rewards: {
-      experience: 40,
+      techniqueInsight: 40,
       cultivation: 90,
       spiritStone: 10,
       itemDrops: [
-        { kind: 'material', itemId: 'black-iron', amount: 1, chance: 0.35 },
-        { kind: 'material', itemId: 'yeu_huyet_qi_refining', amount: 1, chance: 0.45 },
+        { kind: 'material', itemId: 'huyen_thiet', amount: 1, chance: 0.35 },
+        { kind: 'material', itemId: 'yeu_huyet_luyen_khi_canh', amount: 1, chance: 0.45 },
       ],
     },
   }),
@@ -564,31 +564,31 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'earth', power: 10 },
     },
     rewards: {
-      experience: 75,
+      techniqueInsight: 75,
       cultivation: 175,
       spiritStone: 18,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_huyet_qi_refining', amount: 1, chance: 0.35 },
-        { kind: 'material', itemId: 'black-iron', amount: 1, chance: 0.3 },
+        { kind: 'material', itemId: 'yeu_huyet_luyen_khi_canh', amount: 1, chance: 0.35 },
+        { kind: 'material', itemId: 'huyen_thiet', amount: 1, chance: 0.3 },
       ],
     },
     eliteRewards: {
-      experience: 375,
+      techniqueInsight: 375,
       cultivation: 875,
       spiritStone: 108,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_huyet_qi_refining', amount: 2, chance: 0.7 },
-        { kind: 'material', itemId: 'yeu_cot_qi_refining', amount: 1, chance: 0.15 },
+        { kind: 'material', itemId: 'yeu_huyet_luyen_khi_canh', amount: 2, chance: 0.7 },
+        { kind: 'material', itemId: 'yeu_cot_luyen_khi_canh', amount: 1, chance: 0.15 },
         { kind: 'material', itemId: 'affix_rune_stone', amount: 1, chance: 0.2 },
       ],
     },
     bossRewards: {
-      experience: 940,
+      techniqueInsight: 940,
       cultivation: 2625,
       spiritStone: 270,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_huyet_qi_refining', amount: 3, chance: 1 },
-        { kind: 'material', itemId: 'yeu_cot_qi_refining', amount: 1, chance: 0.5 },
+        { kind: 'material', itemId: 'yeu_huyet_luyen_khi_canh', amount: 3, chance: 1 },
+        { kind: 'material', itemId: 'yeu_cot_luyen_khi_canh', amount: 1, chance: 0.5 },
         { kind: 'material', itemId: 'affix_tier_stone', amount: 1, chance: 0.3 },
         { kind: 'equipment', itemId: 'base_hai', chance: 0.4 },
       ],
@@ -617,12 +617,12 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'earth', power: 11 },
     },
     rewards: {
-      experience: 45,
+      techniqueInsight: 45,
       cultivation: 105,
       spiritStone: 11,
       itemDrops: [
-        { kind: 'material', itemId: 'black-iron', amount: 1, chance: 0.35 },
-        { kind: 'material', itemId: 'yeu_huyet_qi_refining', amount: 1, chance: 0.45 },
+        { kind: 'material', itemId: 'huyen_thiet', amount: 1, chance: 0.35 },
+        { kind: 'material', itemId: 'yeu_huyet_luyen_khi_canh', amount: 1, chance: 0.45 },
       ],
     },
   }),
@@ -648,31 +648,31 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'earth', power: 10 },
     },
     rewards: {
-      experience: 85,
+      techniqueInsight: 85,
       cultivation: 200,
       spiritStone: 20,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_huyet_qi_refining', amount: 1, chance: 0.35 },
-        { kind: 'material', itemId: 'black-iron', amount: 1, chance: 0.3 },
+        { kind: 'material', itemId: 'yeu_huyet_luyen_khi_canh', amount: 1, chance: 0.35 },
+        { kind: 'material', itemId: 'huyen_thiet', amount: 1, chance: 0.3 },
       ],
     },
     eliteRewards: {
-      experience: 425,
+      techniqueInsight: 425,
       cultivation: 1000,
       spiritStone: 120,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_huyet_qi_refining', amount: 2, chance: 0.7 },
-        { kind: 'material', itemId: 'yeu_cot_qi_refining', amount: 1, chance: 0.15 },
+        { kind: 'material', itemId: 'yeu_huyet_luyen_khi_canh', amount: 2, chance: 0.7 },
+        { kind: 'material', itemId: 'yeu_cot_luyen_khi_canh', amount: 1, chance: 0.15 },
         { kind: 'material', itemId: 'affix_rune_stone', amount: 1, chance: 0.2 },
       ],
     },
     bossRewards: {
-      experience: 1065,
+      techniqueInsight: 1065,
       cultivation: 3000,
       spiritStone: 300,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_huyet_qi_refining', amount: 3, chance: 1 },
-        { kind: 'material', itemId: 'yeu_cot_qi_refining', amount: 1, chance: 0.5 },
+        { kind: 'material', itemId: 'yeu_huyet_luyen_khi_canh', amount: 3, chance: 1 },
+        { kind: 'material', itemId: 'yeu_cot_luyen_khi_canh', amount: 1, chance: 0.5 },
         { kind: 'material', itemId: 'affix_tier_stone', amount: 1, chance: 0.3 },
         { kind: 'equipment', itemId: 'base_hai', chance: 0.4 },
       ],
@@ -702,12 +702,12 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'metal', power: 12 },
     },
     rewards: {
-      experience: 50,
+      techniqueInsight: 50,
       cultivation: 120,
       spiritStone: 12,
       itemDrops: [
-        { kind: 'material', itemId: 'red-copper', amount: 1, chance: 0.3 },
-        { kind: 'material', itemId: 'yeu_huyet_qi_refining', amount: 1, chance: 0.4 },
+        { kind: 'material', itemId: 'xich_dong', amount: 1, chance: 0.3 },
+        { kind: 'material', itemId: 'yeu_huyet_luyen_khi_canh', amount: 1, chance: 0.4 },
         { kind: 'material', itemId: 'affix_rune_stone', amount: 1, chance: 0.2 },
       ],
     },
@@ -735,31 +735,31 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'metal', power: 13 },
     },
     rewards: {
-      experience: 95,
+      techniqueInsight: 95,
       cultivation: 230,
       spiritStone: 23,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_dan_qi_refining', amount: 1, chance: 0.35 },
-        { kind: 'material', itemId: 'red-copper', amount: 1, chance: 0.3 },
+        { kind: 'material', itemId: 'yeu_dan_luyen_khi_canh', amount: 1, chance: 0.35 },
+        { kind: 'material', itemId: 'xich_dong', amount: 1, chance: 0.3 },
       ],
     },
     eliteRewards: {
-      experience: 475,
+      techniqueInsight: 475,
       cultivation: 1150,
       spiritStone: 138,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_dan_qi_refining', amount: 2, chance: 0.7 },
-        { kind: 'material', itemId: 'yeu_cot_qi_refining', amount: 1, chance: 0.15 },
+        { kind: 'material', itemId: 'yeu_dan_luyen_khi_canh', amount: 2, chance: 0.7 },
+        { kind: 'material', itemId: 'yeu_cot_luyen_khi_canh', amount: 1, chance: 0.15 },
         { kind: 'material', itemId: 'affix_rune_stone', amount: 1, chance: 0.2 },
       ],
     },
     bossRewards: {
-      experience: 1190,
+      techniqueInsight: 1190,
       cultivation: 3450,
       spiritStone: 345,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_dan_qi_refining', amount: 3, chance: 1 },
-        { kind: 'material', itemId: 'yeu_cot_qi_refining', amount: 1, chance: 0.5 },
+        { kind: 'material', itemId: 'yeu_dan_luyen_khi_canh', amount: 3, chance: 1 },
+        { kind: 'material', itemId: 'yeu_cot_luyen_khi_canh', amount: 1, chance: 0.5 },
         { kind: 'material', itemId: 'affix_tier_stone', amount: 1, chance: 0.3 },
         { kind: 'equipment', itemId: 'base_gioi', chance: 0.4 },
       ],
@@ -789,12 +789,12 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'metal', power: 12 },
     },
     rewards: {
-      experience: 55,
+      techniqueInsight: 55,
       cultivation: 135,
       spiritStone: 14,
       itemDrops: [
-        { kind: 'material', itemId: 'red-copper', amount: 1, chance: 0.3 },
-        { kind: 'material', itemId: 'yeu_huyet_qi_refining', amount: 1, chance: 0.4 },
+        { kind: 'material', itemId: 'xich_dong', amount: 1, chance: 0.3 },
+        { kind: 'material', itemId: 'yeu_huyet_luyen_khi_canh', amount: 1, chance: 0.4 },
         { kind: 'material', itemId: 'affix_rune_stone', amount: 1, chance: 0.2 },
       ],
     },
@@ -822,31 +822,31 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'metal', power: 13 },
     },
     rewards: {
-      experience: 110,
+      techniqueInsight: 110,
       cultivation: 265,
       spiritStone: 27,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_dan_qi_refining', amount: 1, chance: 0.35 },
-        { kind: 'material', itemId: 'red-copper', amount: 1, chance: 0.3 },
+        { kind: 'material', itemId: 'yeu_dan_luyen_khi_canh', amount: 1, chance: 0.35 },
+        { kind: 'material', itemId: 'xich_dong', amount: 1, chance: 0.3 },
       ],
     },
     eliteRewards: {
-      experience: 550,
+      techniqueInsight: 550,
       cultivation: 1325,
       spiritStone: 162,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_dan_qi_refining', amount: 2, chance: 0.7 },
-        { kind: 'material', itemId: 'yeu_cot_qi_refining', amount: 1, chance: 0.15 },
+        { kind: 'material', itemId: 'yeu_dan_luyen_khi_canh', amount: 2, chance: 0.7 },
+        { kind: 'material', itemId: 'yeu_cot_luyen_khi_canh', amount: 1, chance: 0.15 },
         { kind: 'material', itemId: 'affix_rune_stone', amount: 1, chance: 0.2 },
       ],
     },
     bossRewards: {
-      experience: 1375,
+      techniqueInsight: 1375,
       cultivation: 3975,
       spiritStone: 405,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_dan_qi_refining', amount: 3, chance: 1 },
-        { kind: 'material', itemId: 'yeu_cot_qi_refining', amount: 1, chance: 0.5 },
+        { kind: 'material', itemId: 'yeu_dan_luyen_khi_canh', amount: 3, chance: 1 },
+        { kind: 'material', itemId: 'yeu_cot_luyen_khi_canh', amount: 1, chance: 0.5 },
         { kind: 'material', itemId: 'affix_tier_stone', amount: 1, chance: 0.3 },
         { kind: 'equipment', itemId: 'base_gioi', chance: 0.4 },
       ],
@@ -876,12 +876,12 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'water', power: 12 },
     },
     rewards: {
-      experience: 65,
+      techniqueInsight: 65,
       cultivation: 155,
       spiritStone: 16,
       itemDrops: [
-        { kind: 'material', itemId: 'cold-spirit-herb', amount: 1, chance: 0.3 },
-        { kind: 'material', itemId: 'yeu_huyet_qi_refining', amount: 1, chance: 0.4 },
+        { kind: 'material', itemId: 'cuc_hoa', amount: 1, chance: 0.3 },
+        { kind: 'material', itemId: 'yeu_huyet_luyen_khi_canh', amount: 1, chance: 0.4 },
       ],
     },
   }),
@@ -908,31 +908,31 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'water', power: 14 },
     },
     rewards: {
-      experience: 125,
+      techniqueInsight: 125,
       cultivation: 305,
       spiritStone: 31,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_huyet_qi_refining', amount: 1, chance: 0.35 },
-        { kind: 'material', itemId: 'cold-spirit-herb', amount: 1, chance: 0.3 },
+        { kind: 'material', itemId: 'yeu_huyet_luyen_khi_canh', amount: 1, chance: 0.35 },
+        { kind: 'material', itemId: 'cuc_hoa', amount: 1, chance: 0.3 },
       ],
     },
     eliteRewards: {
-      experience: 625,
+      techniqueInsight: 625,
       cultivation: 1525,
       spiritStone: 186,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_huyet_qi_refining', amount: 2, chance: 0.7 },
-        { kind: 'material', itemId: 'yeu_cot_qi_refining', amount: 1, chance: 0.15 },
+        { kind: 'material', itemId: 'yeu_huyet_luyen_khi_canh', amount: 2, chance: 0.7 },
+        { kind: 'material', itemId: 'yeu_cot_luyen_khi_canh', amount: 1, chance: 0.15 },
         { kind: 'material', itemId: 'affix_rune_stone', amount: 1, chance: 0.2 },
       ],
     },
     bossRewards: {
-      experience: 1565,
+      techniqueInsight: 1565,
       cultivation: 4575,
       spiritStone: 465,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_huyet_qi_refining', amount: 4, chance: 1 },
-        { kind: 'material', itemId: 'yeu_cot_qi_refining', amount: 1, chance: 0.5 },
+        { kind: 'material', itemId: 'yeu_huyet_luyen_khi_canh', amount: 4, chance: 1 },
+        { kind: 'material', itemId: 'yeu_cot_luyen_khi_canh', amount: 1, chance: 0.5 },
         { kind: 'material', itemId: 'affix_tier_stone', amount: 1, chance: 0.35 },
         { kind: 'equipment', itemId: 'base_truy', chance: 0.4 },
       ],
@@ -962,12 +962,12 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'water', power: 12 },
     },
     rewards: {
-      experience: 75,
+      techniqueInsight: 75,
       cultivation: 180,
       spiritStone: 18,
       itemDrops: [
-        { kind: 'material', itemId: 'cold-spirit-herb', amount: 1, chance: 0.3 },
-        { kind: 'material', itemId: 'yeu_huyet_qi_refining', amount: 1, chance: 0.4 },
+        { kind: 'material', itemId: 'cuc_hoa', amount: 1, chance: 0.3 },
+        { kind: 'material', itemId: 'yeu_huyet_luyen_khi_canh', amount: 1, chance: 0.4 },
       ],
     },
   }),
@@ -994,31 +994,31 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'water', power: 14 },
     },
     rewards: {
-      experience: 145,
+      techniqueInsight: 145,
       cultivation: 350,
       spiritStone: 35,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_huyet_qi_refining', amount: 1, chance: 0.35 },
-        { kind: 'material', itemId: 'cold-spirit-herb', amount: 1, chance: 0.3 },
+        { kind: 'material', itemId: 'yeu_huyet_luyen_khi_canh', amount: 1, chance: 0.35 },
+        { kind: 'material', itemId: 'cuc_hoa', amount: 1, chance: 0.3 },
       ],
     },
     eliteRewards: {
-      experience: 725,
+      techniqueInsight: 725,
       cultivation: 1750,
       spiritStone: 210,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_huyet_qi_refining', amount: 2, chance: 0.7 },
-        { kind: 'material', itemId: 'yeu_cot_qi_refining', amount: 1, chance: 0.15 },
+        { kind: 'material', itemId: 'yeu_huyet_luyen_khi_canh', amount: 2, chance: 0.7 },
+        { kind: 'material', itemId: 'yeu_cot_luyen_khi_canh', amount: 1, chance: 0.15 },
         { kind: 'material', itemId: 'affix_rune_stone', amount: 1, chance: 0.2 },
       ],
     },
     bossRewards: {
-      experience: 1815,
+      techniqueInsight: 1815,
       cultivation: 5250,
       spiritStone: 525,
       itemDrops: [
-        { kind: 'material', itemId: 'yeu_huyet_qi_refining', amount: 4, chance: 1 },
-        { kind: 'material', itemId: 'yeu_cot_qi_refining', amount: 1, chance: 0.5 },
+        { kind: 'material', itemId: 'yeu_huyet_luyen_khi_canh', amount: 4, chance: 1 },
+        { kind: 'material', itemId: 'yeu_cot_luyen_khi_canh', amount: 1, chance: 0.5 },
         { kind: 'material', itemId: 'affix_tier_stone', amount: 1, chance: 0.35 },
         { kind: 'equipment', itemId: 'base_truy', chance: 0.4 },
       ],
@@ -1038,10 +1038,10 @@ export const ENEMIES: Enemy[] = [
   // riêng mới (tránh material chết không ai tiêu) — chỉ rơi
   // green-spirit-herb đã có sẵn.
   defineEnemy({
-    id: 'pham_nhan_wild_boar',
+    id: 'mortal_wild_boar',
     name: 'Dã Trư',
     level: 1,
-    realmId: 'pham_nhan',
+    realmId: 'mortal',
     lane: 'ground',
     family: 'boar',
     statsInput: {
@@ -1057,21 +1057,21 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'wood', power: 2 },
     },
     rewards: {
-      experience: 5,
+      techniqueInsight: 5,
       cultivation: 10,
       spiritStone: 1,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 1, chance: 0.4 },
+        { kind: 'material', itemId: 'linh_chi', amount: 1, chance: 0.4 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 1, chance: 0.7 },
       ],
     },
   }),
 
   defineEnemy({
-    id: 'pham_nhan_mountain_bandit',
+    id: 'mortal_mountain_bandit',
     name: 'Sơn Khấu',
     level: 1,
-    realmId: 'pham_nhan',
+    realmId: 'mortal',
     lane: 'ground',
     family: 'bandit',
     statsInput: {
@@ -1088,23 +1088,23 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'wood', power: 3 },
     },
     rewards: {
-      experience: 10,
+      techniqueInsight: 10,
       cultivation: 20,
       spiritStone: 2,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 1, chance: 0.5 },
+        { kind: 'material', itemId: 'linh_chi', amount: 1, chance: 0.5 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 1, chance: 0.7 },
       ],
     },
     bossRewards: {
-      experience: 130,
+      techniqueInsight: 130,
       cultivation: 260,
       spiritStone: 26,
       // Guaranteed weapon drop (PLAN HOÀN CHỈNH mục 1) — boss Động 1,
       // quái đầu tiên người chơi gặp, KHÔNG có nguồn vũ khí nào khác ở
       // Phàm Nhân trước bản sửa này (toàn bộ realm chỉ rơi material).
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 3, chance: 1 },
+        { kind: 'material', itemId: 'linh_chi', amount: 3, chance: 1 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 3, chance: 1 },
         { kind: 'equipment', itemId: 'base_kiem', chance: 1 },
       ],
@@ -1112,10 +1112,10 @@ export const ENEMIES: Enemy[] = [
   }),
 
   defineEnemy({
-    id: 'pham_nhan_ferocious_wild_boar',
+    id: 'mortal_ferocious_wild_boar',
     name: 'Hung Dã Trư',
     level: 2,
-    realmId: 'pham_nhan',
+    realmId: 'mortal',
     lane: 'ground',
     family: 'boar',
     statsInput: {
@@ -1131,21 +1131,21 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'wood', power: 3 },
     },
     rewards: {
-      experience: 6,
+      techniqueInsight: 6,
       cultivation: 12,
       spiritStone: 1,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 1, chance: 0.4 },
+        { kind: 'material', itemId: 'linh_chi', amount: 1, chance: 0.4 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 2, chance: 0.7 },
       ],
     },
   }),
 
   defineEnemy({
-    id: 'pham_nhan_ferocious_mountain_bandit',
+    id: 'mortal_ferocious_mountain_bandit',
     name: 'Hung Sơn Khấu',
     level: 2,
-    realmId: 'pham_nhan',
+    realmId: 'mortal',
     lane: 'ground',
     family: 'bandit',
     statsInput: {
@@ -1162,20 +1162,20 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'wood', power: 4 },
     },
     rewards: {
-      experience: 12,
+      techniqueInsight: 12,
       cultivation: 24,
       spiritStone: 2,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 1, chance: 0.5 },
+        { kind: 'material', itemId: 'linh_chi', amount: 1, chance: 0.5 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 2, chance: 0.7 },
       ],
     },
     bossRewards: {
-      experience: 156,
+      techniqueInsight: 156,
       cultivation: 312,
       spiritStone: 26,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 3, chance: 1 },
+        { kind: 'material', itemId: 'linh_chi', amount: 3, chance: 1 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 6, chance: 1 },
         { kind: 'equipment', itemId: 'base_kiem', chance: 0.5 },
       ],
@@ -1183,10 +1183,10 @@ export const ENEMIES: Enemy[] = [
   }),
 
   defineEnemy({
-    id: 'pham_nhan_feral_dog',
+    id: 'mortal_feral_dog',
     name: 'Hoang Cẩu',
     level: 3,
-    realmId: 'pham_nhan',
+    realmId: 'mortal',
     lane: 'ground',
     family: 'dog',
     statsInput: {
@@ -1202,21 +1202,21 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'fire', power: 3 },
     },
     rewards: {
-      experience: 7,
+      techniqueInsight: 7,
       cultivation: 13,
       spiritStone: 1,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 1, chance: 0.4 },
+        { kind: 'material', itemId: 'linh_chi', amount: 1, chance: 0.4 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 3, chance: 0.7 },
       ],
     },
   }),
 
   defineEnemy({
-    id: 'pham_nhan_savage_tiger',
+    id: 'mortal_savage_tiger',
     name: 'Man Hổ',
     level: 3,
-    realmId: 'pham_nhan',
+    realmId: 'mortal',
     lane: 'ground',
     family: 'tiger',
     statsInput: {
@@ -1233,20 +1233,20 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'fire', power: 4 },
     },
     rewards: {
-      experience: 14,
+      techniqueInsight: 14,
       cultivation: 26,
       spiritStone: 2,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 1, chance: 0.5 },
+        { kind: 'material', itemId: 'linh_chi', amount: 1, chance: 0.5 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 3, chance: 0.7 },
       ],
     },
     bossRewards: {
-      experience: 182,
+      techniqueInsight: 182,
       cultivation: 338,
       spiritStone: 26,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 3, chance: 1 },
+        { kind: 'material', itemId: 'linh_chi', amount: 3, chance: 1 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 9, chance: 1 },
         { kind: 'equipment', itemId: 'base_kiem', chance: 0.4 },
       ],
@@ -1254,10 +1254,10 @@ export const ENEMIES: Enemy[] = [
   }),
 
   defineEnemy({
-    id: 'pham_nhan_ferocious_feral_dog',
+    id: 'mortal_ferocious_feral_dog',
     name: 'Hung Hoang Cẩu',
     level: 4,
-    realmId: 'pham_nhan',
+    realmId: 'mortal',
     lane: 'ground',
     family: 'dog',
     statsInput: {
@@ -1273,21 +1273,21 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'fire', power: 4 },
     },
     rewards: {
-      experience: 8,
+      techniqueInsight: 8,
       cultivation: 15,
       spiritStone: 2,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 1, chance: 0.4 },
+        { kind: 'material', itemId: 'linh_chi', amount: 1, chance: 0.4 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 4, chance: 0.7 },
       ],
     },
   }),
 
   defineEnemy({
-    id: 'pham_nhan_ferocious_savage_tiger',
+    id: 'mortal_ferocious_savage_tiger',
     name: 'Hung Man Hổ',
     level: 4,
-    realmId: 'pham_nhan',
+    realmId: 'mortal',
     lane: 'ground',
     family: 'tiger',
     statsInput: {
@@ -1304,30 +1304,30 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'fire', power: 5 },
     },
     rewards: {
-      experience: 16,
+      techniqueInsight: 16,
       cultivation: 30,
       spiritStone: 4,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 1, chance: 0.5 },
+        { kind: 'material', itemId: 'linh_chi', amount: 1, chance: 0.5 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 4, chance: 0.7 },
       ],
     },
     bossRewards: {
-      experience: 208,
+      techniqueInsight: 208,
       cultivation: 390,
       spiritStone: 52,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 3, chance: 1 },
+        { kind: 'material', itemId: 'linh_chi', amount: 3, chance: 1 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 12, chance: 1 },
       ],
     },
   }),
 
   defineEnemy({
-    id: 'pham_nhan_stone_lynx',
+    id: 'mortal_stone_lynx',
     name: 'Thạch Miêu',
     level: 5,
-    realmId: 'pham_nhan',
+    realmId: 'mortal',
     lane: 'ground',
     family: 'lynx',
     statsInput: {
@@ -1343,21 +1343,21 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'earth', power: 4 },
     },
     rewards: {
-      experience: 9,
+      techniqueInsight: 9,
       cultivation: 17,
       spiritStone: 2,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 1, chance: 0.4 },
+        { kind: 'material', itemId: 'linh_chi', amount: 1, chance: 0.4 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 5, chance: 0.7 },
       ],
     },
   }),
 
   defineEnemy({
-    id: 'pham_nhan_mud_ox',
+    id: 'mortal_mud_ox',
     name: 'Nê Ngưu',
     level: 5,
-    realmId: 'pham_nhan',
+    realmId: 'mortal',
     lane: 'ground',
     family: 'ox',
     statsInput: {
@@ -1374,20 +1374,20 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'earth', power: 6 },
     },
     rewards: {
-      experience: 18,
+      techniqueInsight: 18,
       cultivation: 34,
       spiritStone: 4,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 1, chance: 0.5 },
+        { kind: 'material', itemId: 'linh_chi', amount: 1, chance: 0.5 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 5, chance: 0.7 },
       ],
     },
     bossRewards: {
-      experience: 234,
+      techniqueInsight: 234,
       cultivation: 442,
       spiritStone: 52,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 3, chance: 1 },
+        { kind: 'material', itemId: 'linh_chi', amount: 3, chance: 1 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 15, chance: 1 },
         { kind: 'equipment', itemId: 'base_kiem', chance: 0.4 },
       ],
@@ -1395,10 +1395,10 @@ export const ENEMIES: Enemy[] = [
   }),
 
   defineEnemy({
-    id: 'pham_nhan_ferocious_stone_lynx',
+    id: 'mortal_ferocious_stone_lynx',
     name: 'Hung Thạch Miêu',
     level: 6,
-    realmId: 'pham_nhan',
+    realmId: 'mortal',
     lane: 'ground',
     family: 'lynx',
     statsInput: {
@@ -1414,21 +1414,21 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'earth', power: 5 },
     },
     rewards: {
-      experience: 10,
+      techniqueInsight: 10,
       cultivation: 20,
       spiritStone: 2,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 1, chance: 0.4 },
+        { kind: 'material', itemId: 'linh_chi', amount: 1, chance: 0.4 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 6, chance: 0.7 },
       ],
     },
   }),
 
   defineEnemy({
-    id: 'pham_nhan_ferocious_mud_ox',
+    id: 'mortal_ferocious_mud_ox',
     name: 'Hung Nê Ngưu',
     level: 6,
-    realmId: 'pham_nhan',
+    realmId: 'mortal',
     lane: 'ground',
     family: 'ox',
     statsInput: {
@@ -1445,30 +1445,30 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'earth', power: 7 },
     },
     rewards: {
-      experience: 20,
+      techniqueInsight: 20,
       cultivation: 40,
       spiritStone: 4,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 1, chance: 0.5 },
+        { kind: 'material', itemId: 'linh_chi', amount: 1, chance: 0.5 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 6, chance: 0.7 },
       ],
     },
     bossRewards: {
-      experience: 260,
+      techniqueInsight: 260,
       cultivation: 520,
       spiritStone: 52,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 3, chance: 1 },
+        { kind: 'material', itemId: 'linh_chi', amount: 3, chance: 1 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 18, chance: 1 },
       ],
     },
   }),
 
   defineEnemy({
-    id: 'pham_nhan_silver_fox',
+    id: 'mortal_silver_fox',
     name: 'Ngân Hồ',
     level: 7,
-    realmId: 'pham_nhan',
+    realmId: 'mortal',
     lane: 'ground',
     family: 'fox',
     statsInput: {
@@ -1484,21 +1484,21 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'metal', power: 6 },
     },
     rewards: {
-      experience: 12,
+      techniqueInsight: 12,
       cultivation: 23,
       spiritStone: 2,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 1, chance: 0.4 },
+        { kind: 'material', itemId: 'linh_chi', amount: 1, chance: 0.4 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 7, chance: 0.7 },
       ],
     },
   }),
 
   defineEnemy({
-    id: 'pham_nhan_iron_boar',
+    id: 'mortal_iron_boar',
     name: 'Thiết Giáp Trư',
     level: 7,
-    realmId: 'pham_nhan',
+    realmId: 'mortal',
     lane: 'ground',
     family: 'boar',
     statsInput: {
@@ -1515,20 +1515,20 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'metal', power: 8 },
     },
     rewards: {
-      experience: 24,
+      techniqueInsight: 24,
       cultivation: 46,
       spiritStone: 4,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 1, chance: 0.5 },
+        { kind: 'material', itemId: 'linh_chi', amount: 1, chance: 0.5 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 7, chance: 0.7 },
       ],
     },
     bossRewards: {
-      experience: 312,
+      techniqueInsight: 312,
       cultivation: 598,
       spiritStone: 52,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 3, chance: 1 },
+        { kind: 'material', itemId: 'linh_chi', amount: 3, chance: 1 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 21, chance: 1 },
         { kind: 'equipment', itemId: 'base_kiem', chance: 0.4 },
       ],
@@ -1536,10 +1536,10 @@ export const ENEMIES: Enemy[] = [
   }),
 
   defineEnemy({
-    id: 'pham_nhan_ferocious_silver_fox',
+    id: 'mortal_ferocious_silver_fox',
     name: 'Hung Ngân Hồ',
     level: 8,
-    realmId: 'pham_nhan',
+    realmId: 'mortal',
     lane: 'ground',
     family: 'fox',
     statsInput: {
@@ -1555,21 +1555,21 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'metal', power: 6 },
     },
     rewards: {
-      experience: 13,
+      techniqueInsight: 13,
       cultivation: 27,
       spiritStone: 3,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 1, chance: 0.4 },
+        { kind: 'material', itemId: 'linh_chi', amount: 1, chance: 0.4 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 8, chance: 0.7 },
       ],
     },
   }),
 
   defineEnemy({
-    id: 'pham_nhan_ferocious_iron_boar',
+    id: 'mortal_ferocious_iron_boar',
     name: 'Hung Thiết Giáp Trư',
     level: 8,
-    realmId: 'pham_nhan',
+    realmId: 'mortal',
     lane: 'ground',
     family: 'boar',
     statsInput: {
@@ -1586,30 +1586,30 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'metal', power: 9 },
     },
     rewards: {
-      experience: 26,
+      techniqueInsight: 26,
       cultivation: 54,
       spiritStone: 6,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 1, chance: 0.5 },
+        { kind: 'material', itemId: 'linh_chi', amount: 1, chance: 0.5 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 8, chance: 0.7 },
       ],
     },
     bossRewards: {
-      experience: 338,
+      techniqueInsight: 338,
       cultivation: 702,
       spiritStone: 78,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 3, chance: 1 },
+        { kind: 'material', itemId: 'linh_chi', amount: 3, chance: 1 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 24, chance: 1 },
       ],
     },
   }),
 
   defineEnemy({
-    id: 'pham_nhan_water_wolf',
+    id: 'mortal_water_wolf',
     name: 'Thủy Lang',
     level: 9,
-    realmId: 'pham_nhan',
+    realmId: 'mortal',
     lane: 'ground',
     family: 'wolf',
     statsInput: {
@@ -1625,21 +1625,21 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'water', power: 8 },
     },
     rewards: {
-      experience: 15,
+      techniqueInsight: 15,
       cultivation: 31,
       spiritStone: 3,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 1, chance: 0.4 },
+        { kind: 'material', itemId: 'linh_chi', amount: 1, chance: 0.4 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 9, chance: 0.7 },
       ],
     },
   }),
 
   defineEnemy({
-    id: 'pham_nhan_giant_crocodile',
+    id: 'mortal_giant_crocodile',
     name: 'Cự Ngạc',
     level: 9,
-    realmId: 'pham_nhan',
+    realmId: 'mortal',
     lane: 'ground',
     family: 'crocodile',
     statsInput: {
@@ -1656,20 +1656,20 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'water', power: 11 },
     },
     rewards: {
-      experience: 30,
+      techniqueInsight: 30,
       cultivation: 62,
       spiritStone: 6,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 1, chance: 0.5 },
+        { kind: 'material', itemId: 'linh_chi', amount: 1, chance: 0.5 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 9, chance: 0.7 },
       ],
     },
     bossRewards: {
-      experience: 390,
+      techniqueInsight: 390,
       cultivation: 806,
       spiritStone: 78,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 3, chance: 1 },
+        { kind: 'material', itemId: 'linh_chi', amount: 3, chance: 1 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 27, chance: 1 },
         { kind: 'equipment', itemId: 'base_kiem', chance: 0.4 },
       ],
@@ -1677,10 +1677,10 @@ export const ENEMIES: Enemy[] = [
   }),
 
   defineEnemy({
-    id: 'pham_nhan_ferocious_water_wolf',
+    id: 'mortal_ferocious_water_wolf',
     name: 'Hung Thủy Lang',
     level: 10,
-    realmId: 'pham_nhan',
+    realmId: 'mortal',
     lane: 'ground',
     family: 'wolf',
     statsInput: {
@@ -1696,21 +1696,21 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'water', power: 9 },
     },
     rewards: {
-      experience: 18,
+      techniqueInsight: 18,
       cultivation: 35,
       spiritStone: 4,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 1, chance: 0.4 },
+        { kind: 'material', itemId: 'linh_chi', amount: 1, chance: 0.4 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 10, chance: 0.7 },
       ],
     },
   }),
 
   defineEnemy({
-    id: 'pham_nhan_ferocious_giant_crocodile',
+    id: 'mortal_ferocious_giant_crocodile',
     name: 'Hung Cự Ngạc',
     level: 10,
-    realmId: 'pham_nhan',
+    realmId: 'mortal',
     lane: 'ground',
     family: 'crocodile',
     statsInput: {
@@ -1727,20 +1727,20 @@ export const ENEMIES: Enemy[] = [
       elemental: { element: 'water', power: 12 },
     },
     rewards: {
-      experience: 36,
+      techniqueInsight: 36,
       cultivation: 70,
       spiritStone: 8,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 1, chance: 0.5 },
+        { kind: 'material', itemId: 'linh_chi', amount: 1, chance: 0.5 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 10, chance: 0.7 },
       ],
     },
     bossRewards: {
-      experience: 468,
+      techniqueInsight: 468,
       cultivation: 910,
       spiritStone: 104,
       itemDrops: [
-        { kind: 'material', itemId: 'green-spirit-herb', amount: 3, chance: 1 },
+        { kind: 'material', itemId: 'linh_chi', amount: 3, chance: 1 },
         { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 30, chance: 1 },
         { kind: 'equipment', itemId: 'base_kiem', chance: 0.5 },
       ],

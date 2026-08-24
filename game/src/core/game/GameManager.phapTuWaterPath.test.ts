@@ -21,7 +21,7 @@ describe('GameManager — Pháp Tu waterpath (Thủy Node Tree Luyện Khí/Trú
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 5
+    player.skillInsight = 5
 
     expect(gameManager.purchaseNode('minor_water_intensity', player)).toBe(false)
 
@@ -32,14 +32,14 @@ describe('GameManager — Pháp Tu waterpath (Thủy Node Tree Luyện Khí/Trú
     expect(gameManager.purchaseNode('minor_water_haste', player)).toBe(true)
     expect(gameManager.purchaseNode('minor_water_application', player)).toBe(true)
 
-    expect(player.skillPoints).toBe(0)
+    expect(player.skillInsight).toBe(0)
 
     const finalStats = calculateStats(player.baseStats, [
       ...player.modifiers,
       ...gameManager.getAggregatedModifiers(),
     ])
 
-    expect(finalStats.projectileSpeedPercent).toBeGreaterThanOrEqual(0.05)
+    expect(finalStats.castSpeedPercent).toBeGreaterThanOrEqual(0.05)
     expect(finalStats.elementApplicationPercent).toBeGreaterThanOrEqual(0.05)
   })
 
@@ -51,14 +51,14 @@ describe('GameManager — Pháp Tu waterpath (Thủy Node Tree Luyện Khí/Trú
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 10
+    player.skillInsight = 10
     player.realmId = 'qi_refining'
 
     expect(gameManager.purchaseNode('thuy_linh_ngo', player)).toBe(true)
 
     expect(gameManager.purchaseNode('thuy_truc_co_dan_luu', player)).toBe(false)
 
-    player.realmId = 'foundation'
+    player.realmId = 'foundation_establishment'
 
     expect(gameManager.purchaseNode('thuy_truc_co_dan_luu', player)).toBe(true)
     expect(gameManager.purchaseNode('thuy_truc_co_tu_thuy', player)).toBe(false)
@@ -72,8 +72,8 @@ describe('GameManager — Pháp Tu waterpath (Thủy Node Tree Luyện Khí/Trú
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 4
-    player.realmId = 'foundation'
+    player.skillInsight = 4
+    player.realmId = 'foundation_establishment'
 
     expect(gameManager.purchaseNode('thuy_linh_ngo', player)).toBe(true)
 
@@ -96,8 +96,8 @@ describe('GameManager — Pháp Tu waterpath (Thủy Node Tree Luyện Khí/Trú
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 10
-    player.realmId = 'foundation'
+    player.skillInsight = 10
+    player.realmId = 'foundation_establishment'
 
     expect(gameManager.purchaseNode('thuy_linh_ngo', player)).toBe(true)
 
@@ -124,8 +124,8 @@ describe('GameManager — Pháp Tu waterpath (Thủy Node Tree Luyện Khí/Trú
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 10
-    player.realmId = 'foundation'
+    player.skillInsight = 10
+    player.realmId = 'foundation_establishment'
 
     expect(gameManager.purchaseNode('thuy_linh_ngo', player)).toBe(true)
 

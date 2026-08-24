@@ -84,7 +84,7 @@ export interface ProgressionNode {
 
   type: NodeType
 
-  cost: number
+  insightCost: number
 
   prerequisites?: NodePrerequisite[]
 

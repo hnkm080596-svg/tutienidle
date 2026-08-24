@@ -22,16 +22,16 @@ const TEMPLATE: Equipment = {
   grade: 1,
   maxEnhanceLevel: 10,
   mainStats: [{ stat: 'attack', min: 10, max: 20 }],
-  enhanceCost: [{ materialId: 'black-iron', amount: 1 }],
-  washCost: [{ materialId: 'black-iron', amount: 1 }],
-  refineCost: [{ materialId: 'black-iron', amount: 1 }],
-  forgeCost: [{ materialId: 'black-iron', amount: 1 }],
-  upgradeQualityCost: [{ materialId: 'black-iron', amount: 1 }],
-  addAffixCost: [{ materialId: 'black-iron', amount: 1 }],
-  upgradeAffixCost: [{ materialId: 'black-iron', amount: 1 }],
+  enhanceCost: [{ materialId: 'huyen_thiet', amount: 1 }],
+  washCost: [{ materialId: 'huyen_thiet', amount: 1 }],
+  refineCost: [{ materialId: 'huyen_thiet', amount: 1 }],
+  forgeCost: [{ materialId: 'huyen_thiet', amount: 1 }],
+  upgradeQualityCost: [{ materialId: 'huyen_thiet', amount: 1 }],
+  addAffixCost: [{ materialId: 'huyen_thiet', amount: 1 }],
+  upgradeAffixCost: [{ materialId: 'huyen_thiet', amount: 1 }],
 }
 
-const BLACK_IRON = materials.find(m => m.id === 'black-iron')!
+const BLACK_IRON = materials.find(m => m.id === 'huyen_thiet')!
 
 describe('equipment stat unit invariants', () => {
   it('roll affix thập phân không bị ép thành 1', () => {
@@ -81,7 +81,7 @@ function manualInstance(overrides: Partial<EquipmentInstance> = {}): EquipmentIn
     slot: 'weapon',
     equipped: false,
     quality: 'pham_khi',
-    rarity: 'hoang_pham',
+    rarity: 'hoang',
     realmId: 'qi_refining',
     mainStat: { id: 'roll-main-attack', sourceId: 'roll-main', sourceType: 'equipment', stat: 'attack', flat: 15 },
     affixes: [],
@@ -97,9 +97,9 @@ function manualInstance(overrides: Partial<EquipmentInstance> = {}): EquipmentIn
 
 describe('EquipmentSystem.createInstance — roll pipeline invariants (Equipment Rework)', () => {
   it.each([
-    ['pham_nhan', 0],
+    ['mortal', 0],
     ['qi_refining', 1],
-    ['foundation', 2],
+    ['foundation_establishment', 2],
     ['golden_core', 3],
   ] as const)('không roll Quality cao hơn trần cảnh giới %s', (realmId, maxQualityIndex) => {
     const { system, affixRegistry, player } = setup()
@@ -179,11 +179,11 @@ describe('EquipmentSystem.createInstance — roll pipeline invariants (Equipment
 
       const cap = EQUIPMENT_RARITY_AFFIX_SLOTS[instance.rarity]
 
-      if (instance.rarity === 'hoang_pham') {
+      if (instance.rarity === 'hoang') {
         expect(instance.affixes).toHaveLength(0)
       }
 
-      const maxAllowed = cap.prefix + cap.suffix + (instance.rarity === 'tien_pham' ? 1 : 0)
+      const maxAllowed = cap.prefix + cap.suffix + (instance.rarity === 'tien' ? 1 : 0)
 
       expect(instance.affixes.length).toBeLessThanOrEqual(maxAllowed)
       expect(instance.affixes.length).toBeLessThanOrEqual(8) // GLOBAL_MAX_AFFIXES
@@ -201,7 +201,7 @@ describe('EquipmentSystem.createInstance — roll pipeline invariants (Equipment
       for (const rolled of instance.affixes) {
         const affix = affixRegistry.get(rolled.affixId)
 
-        const isAllowed = unlockedPools.includes(affix.pool) || (affix.pool === 'supreme' && instance.rarity === 'tien_pham')
+        const isAllowed = unlockedPools.includes(affix.pool) || (affix.pool === 'supreme' && instance.rarity === 'tien')
 
         expect(isAllowed).toBe(true)
       }
@@ -244,11 +244,11 @@ describe('EquipmentSystem.forge — deterministic, trần theo Quality', () => {
 
     bag.add(instance)
 
-    const before = materialBag.getAmount('black-iron')
+    const before = materialBag.getAmount('huyen_thiet')
 
     expect(system.forge(instance.instanceId, bag, registry, materialBag, slotManager, affixRegistry)).toBe(true)
     expect(instance.forgePoints).toBe(1)
-    expect(materialBag.getAmount('black-iron')).toBeLessThan(before)
+    expect(materialBag.getAmount('huyen_thiet')).toBeLessThan(before)
   })
 
   it('bị chặn khi đạt EQUIPMENT_QUALITY_MAX_FORGE_POINTS của quality đó', () => {
@@ -295,10 +295,10 @@ describe('EquipmentSystem.refine — reroll Implicit, KHÔNG đụng affixes/for
       mainStat: { id: 'bad', sourceId: 'bad', sourceType: 'equipment', stat: 'defense', flat: 15 },
     })
     bag.add(instance)
-    const before = materialBag.getAmount('black-iron')
+    const before = materialBag.getAmount('huyen_thiet')
 
     expect(system.refine(instance.instanceId, player, bag, registry, materialBag, slotManager, affixRegistry)).toBe(false)
-    expect(materialBag.getAmount('black-iron')).toBe(before)
+    expect(materialBag.getAmount('huyen_thiet')).toBe(before)
     expect(instance.mainStat.stat).toBe('defense')
   })
 
@@ -322,7 +322,7 @@ describe('EquipmentSystem.refine — reroll Implicit, KHÔNG đụng affixes/for
 describe('EquipmentSystem.upgradeRealm — atomic realm metadata', () => {
   it('cập nhật cả realmId và realmLevel khi nâng thành công', () => {
     const { system, bag, registry, affixRegistry, slotManager, materialBag, player } = setup()
-    const instance = manualInstance({ realmId: 'pham_nhan', realmLevel: 5 })
+    const instance = manualInstance({ realmId: 'mortal', realmLevel: 5 })
     bag.add(instance)
     player.realmId = 'qi_refining'
     player.realmLevel = 7
@@ -335,18 +335,18 @@ describe('EquipmentSystem.upgradeRealm — atomic realm metadata', () => {
   it('không trừ tài nguyên khi retained stat không hợp lệ', () => {
     const { system, bag, registry, affixRegistry, slotManager, materialBag, player } = setup()
     const instance = manualInstance({
-      realmId: 'pham_nhan',
+      realmId: 'mortal',
       mainStat: { id: 'bad', sourceId: 'bad', sourceType: 'equipment', stat: 'defense', flat: 10 },
     })
     bag.add(instance)
     player.realmId = 'qi_refining'
     player.spiritStone = 100
     const stonesBefore = player.spiritStone
-    const materialBefore = materialBag.getAmount('black-iron')
+    const materialBefore = materialBag.getAmount('huyen_thiet')
 
     expect(system.upgradeRealm(instance.instanceId, player, bag, registry, materialBag, slotManager, affixRegistry)).toBe(false)
     expect(player.spiritStone).toBe(stonesBefore)
-    expect(materialBag.getAmount('black-iron')).toBe(materialBefore)
+    expect(materialBag.getAmount('huyen_thiet')).toBe(materialBefore)
   })
 })
 

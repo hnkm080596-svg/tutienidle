@@ -6,7 +6,9 @@
 // kết thúc — accumulator này sống trong GameManager, reset mỗi khi 1
 // trận mới bắt đầu (xem GameManager.startBattle()).
 export interface BattleRewardSummary {
-  experience: number
+  techniqueInsight: number
+
+  skillInsight: number
 
   cultivation: number
 
@@ -28,5 +30,5 @@ export interface BattleRewardItem {
 }
 
 export function createEmptyBattleRewardSummary(): BattleRewardSummary {
-  return { experience: 0, cultivation: 0, spiritStone: 0, items: [] }
+  return { techniqueInsight: 0, skillInsight: 0, cultivation: 0, spiritStone: 0, items: [] }
 }

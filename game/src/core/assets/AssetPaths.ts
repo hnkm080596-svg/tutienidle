@@ -50,9 +50,9 @@ export const HOME_SCENE_BACKDROP_PATH = '/assets/backdrops/home.png' // Nền th
 // đầu tên trong vòng tròn), chưa đọc bảng này.
 export const BUILDING_ICON_PATHS: Record<string, string> = {
   herb_garden: '/assets/buildings/herb_garden.png', // Linh Thảo Viên (vườn 9 ô gieo hạt)
-  linh_tuyen: '/assets/buildings/linh_tuyen.png', // Linh Tuyền (tự sinh Linh Thạch)
+  spirit_spring: '/assets/buildings/spirit_spring.png', // Linh Tuyền (tự sinh Linh Thạch)
   smelter: '/assets/buildings/smelter.png', // Lò Luyện (quặng thô → Huyền Thiết)
-  thien_cong_phuong: '/assets/buildings/thien_cong_phuong.png', // Thiên Công Phường (Linh Mộc → Phù Chỉ)
+  artisan_workshop: '/assets/buildings/artisan_workshop.png', // Thiên Công Phường (Linh Mộc → Phù Chỉ)
   equipment_hall: '/assets/buildings/equipment_hall.png', // Khí Đường (trang bị)
   pill_room: '/assets/buildings/pill_room.png', // Đan Phòng (luyện đan)
   formation_altar: '/assets/buildings/formation_altar.png', // Trận Đài (chế trận)

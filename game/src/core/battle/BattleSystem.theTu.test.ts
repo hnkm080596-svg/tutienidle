@@ -7,8 +7,9 @@ import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
 import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import { EventBus } from '../events/EventBus'
-import { MissileSystem } from '../combat/missile/MissileSystem'
-import { MissileManager } from '../combat/missile/MissileManager'
+import { ActionImpactSystem } from '../battle/ActionImpactSystem'
+
+
 import { createBaseStats } from '../stats/StatBlock'
 import { ailments } from '../../data/ailment/ailments'
 import { MAX_MOMENTUM } from '../combat/CombatTypes'
@@ -40,7 +41,7 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 2,
+    row: 2,
     alive: true,
     ...overrides,
   }
@@ -58,8 +59,6 @@ function createImpactSkill(): Skill {
     type: 'active',
     level: 1,
     maxLevel: 10,
-    experience: 0,
-    experienceRequired: 100,
     cooldown: 1,
     remainingCooldown: 0,
     cost: 0,
@@ -92,7 +91,7 @@ function setup() {
     new BuffRegistry(),
     ailmentRegistry,
     eventBus,
-    new MissileSystem(new MissileManager(), eventBus),
+    new ActionImpactSystem({ eventBus, rollCritical: () => false }),
   )
 
   skillManager.add(createImpactSkill())
@@ -121,7 +120,7 @@ describe('BattleSystem — Thể Tu Momentum/Break engine (Combat Rework Phase 7
 
     // start() luôn đặt lại x = HERO_HOME_X/ENEMY_SPAWN_X (400) — set lại
     // TRỰC TIẾP sau đó để quãng đường bay ngắn, dễ tính số tick cần.
-    enemy.x = 50
+    enemy.x = 5
 
     // ~4 phát Impact trong 3.2s (cooldown 1s, attackSpeed 1 -> cast mỗi
     // 1s, cộng ~0.1s bay) x 40 Momentum/đòn = 160 lý thuyết, phải chặn
@@ -142,7 +141,7 @@ describe('BattleSystem — Thể Tu Momentum/Break engine (Combat Rework Phase 7
     system.start(player, boss)
     system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
 
-    boss.x = 50
+    boss.x = 5
 
     // 1 phát Impact (cast ~t=0, bay 50/500=0.1s) = 30 break damage —
     // CHƯA đủ hạ 50 -> 0. 30 tick x 0.01s = 0.3s, đủ dư cho phát 1 bay

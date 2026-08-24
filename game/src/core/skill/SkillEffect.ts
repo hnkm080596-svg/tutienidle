@@ -2,10 +2,13 @@ import type { SkillEffectType } from  './SkillTypes'
 import type { SkillDamageComponent } from './SkillDamageComponent'
 import type { AilmentId } from '../ailment/AilmentTypes'
 import type { StatType } from '../stats/StatTypes'
-import type { ProjectileBehavior } from '../combat/missile/Missile'
+import type { EffectScope } from '../battle/CombatAction'
 
 export interface SkillEffect {
   type: SkillEffectType
+
+  /** Default: heal/buff -> source; damage/debuff/ailment -> affected_targets. */
+  scope?: EffectScope
 
   value?: number
 
@@ -104,16 +107,11 @@ export interface SkillEffect {
   // Combat Rework Phase 3 — CHỈ dùng cho effect 'damage'. Khai hành vi
   // bay Pierce/Bounce/Homing/AOE cho MỌI missile effect này bắn ra
   // (kể cả nhiều missile của hitCountByRealm) — xem
-  // core/combat/missile/Missile.ts's ProjectileBehavior, SkillEffectSystem.ts.
-  // undefined = Normal, hành vi giữ nguyên như trước khi có field này.
-  projectileBehavior?: ProjectileBehavior
+  // undefined = Normal, hành vi giữ nguyên như trước khi có field này.
 
   // Thổ Tu Pure (Plans/EarthPath mục XVI, 2026-08-21) — CHỈ dùng cho
   // effect 'damage'. Khi true VÀ source.skillStats.earthAoeRadius > 0 (đã
-  // mua Major "Thổ Thế"), SkillEffectSystem tự build 1 ProjectileBehavior
   // từ earthAoeRadius/earthAoeSecondaryDamagePercent/earthKnockbackDistance
-  // GHI ĐÈ `projectileBehavior` tĩnh ở trên — Thổ Cầu Thuật bắn đơn mục
   // tiêu như bình thường cho tới khi Pure major mở AOE+Knockback thật.
-  // Không set/earthAoeRadius=0 = dùng projectileBehavior tĩnh như cũ.
-  earthPureProjectileBehavior?: boolean
+  earthPureAreaBehavior?: boolean
 }

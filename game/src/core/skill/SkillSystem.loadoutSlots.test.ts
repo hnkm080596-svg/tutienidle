@@ -8,7 +8,7 @@ import { SkillSystem } from './SkillSystem'
 function fireball(): Skill {
   return {
     id: 'fireball', name: 'Hỏa Cầu', description: '', type: 'active',
-    level: 1, maxLevel: 10, experience: 0, experienceRequired: 100,
+    level: 1, maxLevel: 10,  
     cooldown: 5, remainingCooldown: 0, cost: 8, resourceType: 'mana',
     target: 'enemy', effects: [], unlocked: true, equipped: false,
   }

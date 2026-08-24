@@ -7,7 +7,7 @@ import type { Recipe } from './Recipe'
 import type { Material } from '../material/Material'
 
 const HERB: Material = {
-  id: 'green-spirit-herb',
+  id: 'linh_chi',
   name: 'Thanh Linh Thảo',
   category: 'herb',
   sourceType: 'exploration',
@@ -20,7 +20,7 @@ const RECIPE: Recipe = {
   resultType: 'pill',
   resultId: 'pill_a',
   resultAmount: 1,
-  materials: [{ materialId: 'green-spirit-herb', amount: 2 }],
+  materials: [{ materialId: 'linh_chi', amount: 2 }],
   craftDuration: 10,
 }
 
@@ -64,7 +64,7 @@ describe('CraftingSystem — Job Slots (BUILDing spec mục 16)', () => {
     expect(craftId1).not.toBeNull()
     expect(craftId2).not.toBeNull()
     expect(craftId1).not.toBe(craftId2)
-    expect(materialBag.getAmount('green-spirit-herb')).toBe(6)
+    expect(materialBag.getAmount('linh_chi')).toBe(6)
   })
 
   it('start() trả null khi không đủ slot hoặc không đủ nguyên liệu', () => {

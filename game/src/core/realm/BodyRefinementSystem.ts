@@ -1,41 +1,38 @@
 import type { PlayerData } from '../player/Player'
 import type { StatModifier } from '../stats/StatCalculator'
-import { LUYEN_THE_TIERS } from '../../data/realm/LuyenThe'
+import { BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
+import { clamp } from '../math/clamp'
 
-const TOTAL_TIERS = LUYEN_THE_TIERS.length
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value))
-}
+const TOTAL_TIERS = BODY_REFINEMENT_TIERS.length
 
 export function getTierCap(tierIndex: number): number {
-  return LUYEN_THE_TIERS[tierIndex]?.cap ?? 0
+  return BODY_REFINEMENT_TIERS[tierIndex]?.cap ?? 0
 }
 
 /**
  * Tầng ĐANG DỞ (0-based, thuần theo THỨ TỰ hoàn thành) — undefined khi
  * đã hoàn thành cả 6 tầng (không còn gì để đầu tư tiếp, xem
- * LuyenThePanel.vue's read-only state). KHÔNG xét requiredTang — tầng
+ * LuyenThePanel.vue's read-only state). KHÔNG xét requiredRealmLevel — tầng
  * trả về có thể vẫn đang khoá theo cảnh giới, xem isActiveTierUnlocked().
  */
 export function getActiveTierIndex(player: PlayerData): number | undefined {
-  return player.luyenTheCompletedTiers < TOTAL_TIERS ? player.luyenTheCompletedTiers : undefined
+  return player.bodyRefinementCompletedTiers < TOTAL_TIERS ? player.bodyRefinementCompletedTiers : undefined
 }
 
 /**
- * requiredTang chỉ pace tiến độ TRONG Phàm Nhân (chờ lên đúng tầng mới
+ * requiredRealmLevel chỉ pace tiến độ TRONG Phàm Nhân (chờ lên đúng tầng mới
  * được đầu tư tầng Luyện Thể kế) — rời Phàm Nhân rồi thì không còn
  * tầng Phàm Nhân nào để chờ nữa (2026-08-22, cho phép tiêu nốt Tinh
  * Hoa Phàm Thể còn tồn trong túi ở cảnh giới sau thay vì kẹt vĩnh
  * viễn), mở thẳng — chỉ còn thứ tự tuần tự (getActiveTierIndex) ràng
  * buộc.
  */
-export function isTierRequiredTangMet(player: PlayerData, tierIndex: number): boolean {
-  if (player.realmId !== 'pham_nhan') {
+export function isTierRequiredRealmLevelMet(player: PlayerData, tierIndex: number): boolean {
+  if (player.realmId !== 'mortal') {
     return true
   }
 
-  return player.realmLevel >= (LUYEN_THE_TIERS[tierIndex]?.requiredTang ?? 0)
+  return player.realmLevel >= (BODY_REFINEMENT_TIERS[tierIndex]?.requiredRealmLevel ?? 0)
 }
 
 /**
@@ -49,7 +46,7 @@ export function isActiveTierUnlocked(player: PlayerData): boolean {
     return true
   }
 
-  return isTierRequiredTangMet(player, activeTierIndex)
+  return isTierRequiredRealmLevelMet(player, activeTierIndex)
 }
 
 function modifierId(tierId: string, stat: string): string {
@@ -65,13 +62,13 @@ function modifierId(tierId: string, stat: string): string {
 function buildTierModifiers(player: PlayerData): StatModifier[] {
   const modifiers: StatModifier[] = []
 
-  LUYEN_THE_TIERS.forEach((tier, index) => {
+  BODY_REFINEMENT_TIERS.forEach((tier, index) => {
     let ratio = 0
 
-    if (index < player.luyenTheCompletedTiers) {
+    if (index < player.bodyRefinementCompletedTiers) {
       ratio = 1
-    } else if (index === player.luyenTheCompletedTiers) {
-      ratio = clamp(player.luyenTheCurrentTierProgress / tier.cap, 0, 1)
+    } else if (index === player.bodyRefinementCompletedTiers) {
+      ratio = clamp(player.bodyRefinementCurrentTierProgress / tier.cap, 0, 1)
     }
 
     if (ratio <= 0) {
@@ -105,7 +102,7 @@ function applyTierModifiers(player: PlayerData) {
  * tiêu tối đa `availableAmount`, KHÔNG vượt quá phần còn thiếu của
  * tầng hiện tại (dư thì giữ lại trong túi cho lượt đầu tư sau, không
  * tự động tràn sang tầng kế). Trả về số Tinh Hoa THẬT SỰ đã tiêu (để
- * GameManager.investLuyenThe() trừ đúng số lượng khỏi materialBag).
+ * GameManager.investBodyRefinement() trừ đúng số lượng khỏi materialBag).
  */
 export function investTinhHoa(player: PlayerData, availableAmount: number): number {
   const activeTierIndex = getActiveTierIndex(player)
@@ -114,21 +111,21 @@ export function investTinhHoa(player: PlayerData, availableAmount: number): numb
     return 0
   }
 
-  // requiredTang gate (2026-08-20) — chưa đạt tầng yêu cầu thì KHÔNG
+  // requiredRealmLevel gate (2026-08-20) — chưa đạt tầng yêu cầu thì KHÔNG
   // được đầu tư dù đã làm đầy tầng trước, xem data/realm/LuyenThe.ts.
   if (!isActiveTierUnlocked(player)) {
     return 0
   }
 
   const cap = getTierCap(activeTierIndex)
-  const remaining = cap - player.luyenTheCurrentTierProgress
+  const remaining = cap - player.bodyRefinementCurrentTierProgress
   const consumed = Math.min(availableAmount, remaining)
 
-  player.luyenTheCurrentTierProgress += consumed
+  player.bodyRefinementCurrentTierProgress += consumed
 
-  if (player.luyenTheCurrentTierProgress >= cap) {
-    player.luyenTheCompletedTiers += 1
-    player.luyenTheCurrentTierProgress = 0
+  if (player.bodyRefinementCurrentTierProgress >= cap) {
+    player.bodyRefinementCompletedTiers += 1
+    player.bodyRefinementCurrentTierProgress = 0
   }
 
   applyTierModifiers(player)
@@ -143,5 +140,5 @@ export function investTinhHoa(player: PlayerData, availableAmount: number): numb
  * "người chơi không bắt buộc hoàn thành cả 6 tầng"), tối thiểu grade 1.
  */
 export function computeBreakthroughGrade(player: PlayerData): number {
-  return clamp(player.luyenTheCompletedTiers, 1, TOTAL_TIERS)
+  return clamp(player.bodyRefinementCompletedTiers, 1, TOTAL_TIERS)
 }

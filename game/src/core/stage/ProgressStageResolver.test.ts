@@ -10,7 +10,7 @@ const stages: Stage[] = [5, 6, 10].map(floor => ({
   name: `Stage ${floor}`,
   description: '',
   floor,
-  requiredRealmId: 'pham_nhan',
+  requiredRealmId: 'mortal',
   requiredRealmLevel: floor,
   enemyPool: [],
   totalEnemyCount: 1,

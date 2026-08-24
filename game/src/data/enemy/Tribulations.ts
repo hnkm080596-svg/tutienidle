@@ -134,12 +134,12 @@ export const TRIBULATION_HUMAN: Enemy = defineEnemy({
   },
 
   rewards: {
-    experience: 800,
+    techniqueInsight: 800,
     cultivation: 2000,
     spiritStone: 200,
 
     itemDrops: [
-      { kind: 'material', itemId: 'red-copper', amount: 4, chance: 1 },
+      { kind: 'material', itemId: 'xich_dong', amount: 4, chance: 1 },
     ],
   },
 })
@@ -169,12 +169,12 @@ export const TRIBULATION_EARTH: Enemy = defineEnemy({
   },
 
   rewards: {
-    experience: 1500,
+    techniqueInsight: 1500,
     cultivation: 4000,
     spiritStone: 350,
 
     itemDrops: [
-      { kind: 'material', itemId: 'red-copper', amount: 6, chance: 1 },
+      { kind: 'material', itemId: 'xich_dong', amount: 6, chance: 1 },
     ],
   },
 })
@@ -204,12 +204,12 @@ export const TRIBULATION_HEAVEN: Enemy = defineEnemy({
   },
 
   rewards: {
-    experience: 3000,
+    techniqueInsight: 3000,
     cultivation: 8000,
     spiritStone: 600,
 
     itemDrops: [
-      { kind: 'material', itemId: 'flame-essence', amount: 2, chance: 1 },
+      { kind: 'material', itemId: 'tinh_hoa_hoa', amount: 2, chance: 1 },
     ],
   },
 })
@@ -239,22 +239,22 @@ export const TRIBULATION_GREAT_DAO: Enemy = defineEnemy({
   },
 
   rewards: {
-    experience: 10000,
+    techniqueInsight: 10000,
     cultivation: 30000,
     spiritStone: 2000,
 
     itemDrops: [
-      { kind: 'material', itemId: 'demon-soul', amount: 2, chance: 1 },
+      { kind: 'material', itemId: 'yeu_hon', amount: 2, chance: 1 },
     ],
   },
 })
 
 // Đột Phá tổng quát (2026-08-16) — 1 quái Kiếp DUY NHẤT cho mỗi đại
-// cảnh giới TRỪ 'foundation' (dùng hệ Căn Cơ 4-tier riêng ở trên,
+// cảnh giới TRỪ 'foundation_establishment' (dùng hệ Căn Cơ 4-tier riêng ở trên,
 // KHÔNG đổi) — đơn giản hơn hẳn Trúc Cơ CỐ Ý: không multi-phase enrage,
 // không itemDrops riêng, chỉ HP/ATK/reward leo thang theo cảnh giới
 // (xem GameManager.ts's TRIBULATION_ENEMY_ID_BY_REALM). Base = stat
-// TRIBULATION_GREAT_DAO (realmIndex của 'foundation'), nhân HP×3/
+// TRIBULATION_GREAT_DAO (realmIndex của 'foundation_establishment'), nhân HP×3/
 // ATK×1.8/reward×3 mỗi bậc realmIndex kế tiếp — thô nhưng đủ tạo cảm
 // giác "càng lên cao Kiếp càng khủng khiếp" cho phần cuối game, tinh
 // chỉnh lại qua playtest sau.
@@ -262,7 +262,7 @@ export const TRIBULATION_GOLDEN_CORE: Enemy = defineEnemy({
   id: 'tribulation_golden_core',
   name: 'Kim Đan Kiếp',
   level: 20,
-  realmId: 'foundation',
+  realmId: 'foundation_establishment',
   lane: 'ground',
   archetype: 'melee',
   isBoss: true,
@@ -282,7 +282,7 @@ export const TRIBULATION_GOLDEN_CORE: Enemy = defineEnemy({
   },
 
   rewards: {
-    experience: 30000,
+    techniqueInsight: 30000,
     cultivation: 90000,
     spiritStone: 6000,
   },
@@ -312,7 +312,7 @@ export const TRIBULATION_NASCENT_SOUL: Enemy = defineEnemy({
   },
 
   rewards: {
-    experience: 90000,
+    techniqueInsight: 90000,
     cultivation: 270000,
     spiritStone: 18000,
   },
@@ -342,7 +342,7 @@ export const TRIBULATION_SOUL_TRANSFORMATION: Enemy = defineEnemy({
   },
 
   rewards: {
-    experience: 270000,
+    techniqueInsight: 270000,
     cultivation: 810000,
     spiritStone: 54000,
   },
@@ -372,7 +372,7 @@ export const TRIBULATION_VOID_REFINEMENT: Enemy = defineEnemy({
   },
 
   rewards: {
-    experience: 810000,
+    techniqueInsight: 810000,
     cultivation: 2430000,
     spiritStone: 162000,
   },
@@ -402,7 +402,7 @@ export const TRIBULATION_BODY_INTEGRATION: Enemy = defineEnemy({
   },
 
   rewards: {
-    experience: 2430000,
+    techniqueInsight: 2430000,
     cultivation: 7290000,
     spiritStone: 486000,
   },
@@ -432,7 +432,7 @@ export const TRIBULATION_MAHAYANA: Enemy = defineEnemy({
   },
 
   rewards: {
-    experience: 7290000,
+    techniqueInsight: 7290000,
     cultivation: 21870000,
     spiritStone: 1458000,
   },
@@ -462,7 +462,7 @@ export const TRIBULATION_TRIBULATION: Enemy = defineEnemy({
   },
 
   rewards: {
-    experience: 21870000,
+    techniqueInsight: 21870000,
     cultivation: 65610000,
     spiritStone: 4374000,
   },

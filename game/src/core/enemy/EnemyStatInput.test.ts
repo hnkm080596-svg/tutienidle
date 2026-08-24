@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applyBossMultiplier, applyEliteMultiplier, normalizeEnemyAttackSpeed, normalizeEnemyStats } from './EnemyStatInput'
+import { applyBossMultiplier, applyEliteMultiplier, normalizeEnemyAttackSpeed, normalizeEnemyGridDistance, normalizeEnemyStats } from './EnemyStatInput'
 
 function baseEnemyStats() {
   return normalizeEnemyStats({
@@ -22,6 +22,14 @@ describe('enemy combat stat normalization', () => {
     expect(normalizeEnemyAttackSpeed(7)).toBe(2.5)
     expect(normalizeEnemyAttackSpeed(1.5)).toBe(1.5)
     expect(normalizeEnemyAttackSpeed(0.2)).toBe(0.8)
+  })
+
+  it('quy đổi movement/range legacy sang đơn vị cột nhưng giữ authored grid values', () => {
+    expect(normalizeEnemyGridDistance(50)).toBe(2)
+    expect(normalizeEnemyGridDistance(75)).toBe(3)
+    expect(normalizeEnemyGridDistance(2.5)).toBe(2.5)
+    expect(baseEnemyStats().movementSpeed).toBe(2)
+    expect(baseEnemyStats().attackRange).toBe(2)
   })
 
   it('Elite ưu tiên độ bền hơn burst damage', () => {

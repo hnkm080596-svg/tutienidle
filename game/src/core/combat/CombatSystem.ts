@@ -10,7 +10,7 @@ import { MAX_RAGE } from './CombatTypes'
 import type { DamageResult } from './CombatTypes'
 
 import type { EventBus } from '../events/EventBus'
-import type { MissileDamageInfo } from './missile/Missile'
+import type { ActionDamageInfo } from '../battle/ActionImpactSystem'
 import type { ElementType } from '../element/ElementType'
 import { EntityVitalsSystem, type VitalsChangeReason } from './EntityVitalsSystem'
 import { clampStatValue } from '../stats/StatMetadata'
@@ -40,7 +40,7 @@ const DOT_RESISTANCE_FLOOR = -1
 
 /**
  * Toàn bộ combat giờ đi qua missile (xem MissileSystem/
- * BattleSystem.resolveMissiles()) — resolveMissileHit() là điểm vào
+ * BattleSystem.resolveMissiles()) — resolveActionHit() là điểm vào
  * DUY NHẤT tính damage thật (attack()/attackWithElements() cũ đã bị
  * xoá, không còn nơi nào gọi từ khi combat chuyển hẳn sang missile).
  *
@@ -85,11 +85,11 @@ export class CombatSystem {
     return this.vitals.applyHealing(target, amount, reason, sourceId)
   }
 
-  resolveMissileHit(
+  resolveActionHit(
     source: CombatEntity,
     target: CombatEntity,
-    damage: MissileDamageInfo,
-    critical: boolean,
+    damage: ActionDamageInfo,
+    critical = false,
   ): DamageResult {
     if (!this.rollHit(source, target)) {
       return this.resolveDodge(source, target, damage.kind)

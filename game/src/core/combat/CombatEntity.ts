@@ -146,12 +146,11 @@ export interface CombatEntity {
   // (MissileSystem). Không có trục Y — sân đấu chỉ 1 chiều ngang.
   x: number
 
-  // Hàng hiển thị top-down 5-lane (2026-08-22) — CHỈ dùng bởi view
-  // (CombatScene.ts) để tính vị trí Y, không tham gia phép tính combat
-  // nào (targeting/pierce/aoe/homing vẫn thuần theo `.x`). Player LUÔN
-  // HERO_LANE_INDEX; quái random mỗi lần spawn trừ Boss luôn
-  // HERO_LANE_INDEX (xem BattleLane.ts/GameManager.ts).
-  lane: LaneIndex
+  // Combat Grid Rework (2026-08-24) — `row` là LANE thật trên grid
+  // 10×16 (xem BattleGrid.ts): targeting/AOE query đọc row + column
+  // (column = làm tròn `x`). Player đứng ở HERO_LANE_INDEX đại diện;
+  // quái random mỗi lần spawn trừ Boss luôn HERO_LANE_INDEX.
+  row: LaneIndex
 
   alive: boolean
 

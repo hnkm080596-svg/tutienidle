@@ -1,6 +1,6 @@
 import type { Zone } from '@/core/stage/Zone'
 
-const mortalFloors = Array.from({ length: 10 }, (_, index) => `pham_nhan_dong_${index + 1}`)
+const mortalFloors = Array.from({ length: 10 }, (_, index) => `mortal_dong_${index + 1}`)
 
 const qiFloors = [
   'qi_refining_forest',
@@ -21,7 +21,7 @@ export const zones: Zone[] = [
   {
     id: 'thanh_van',
     name: 'Thanh Vân',
-    requiredRealmId: 'pham_nhan',
+    requiredRealmId: 'mortal',
     stageIds: [...mortalFloors, ...qiFloors, ...foundationFloors],
   },
 ]

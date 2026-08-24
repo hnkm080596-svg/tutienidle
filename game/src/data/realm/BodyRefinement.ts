@@ -5,11 +5,11 @@ import type { StatType } from '../../core/stats/StatTypes'
 export const TINH_HOA_PHAM_THE_MATERIAL_ID = 'tinh_hoa_pham_the'
 
 // Luyện Thể (Realm Passive & Pressure System, 2026-08-20) — 6 tầng rèn
-// thể TUẦN TỰ, độc quyền Phàm Nhân (xem core/realm/LuyenTheSystem.ts).
+// thể TUẦN TỰ, độc quyền Phàm Nhân (xem core/realm/BodyRefinementSystem.ts).
 // Mỗi tầng ứng với ĐÚNG 1 (hoặc 2, tầng cuối) StatType theo tài liệu
 // Plan gốc — số liệu (cap/percent) là first pass, cần tinh chỉnh qua
 // playtest giống mọi hằng số cân bằng khác trong codebase.
-export interface LuyenTheTierDefinition {
+export interface BodyRefinementTierDefinition {
   id: string
 
   name: string
@@ -17,11 +17,11 @@ export interface LuyenTheTierDefinition {
   description: string
 
   // Tinh Hoa Phàm Thể cần để làm ĐẦY tầng này (tuần tự — phải làm đầy
-  // tầng trước mới được đầu tư vào tầng sau, xem LuyenTheSystem.ts).
+  // tầng trước mới được đầu tư vào tầng sau, xem BodyRefinementSystem.ts).
   cap: number
 
   // Stat được cộng percent khi tầng này đầy (scale tuyến tính theo
-  // progress/cap lúc CHƯA đầy — xem LuyenTheSystem.buildTierModifiers()).
+  // progress/cap lúc CHƯA đầy — xem BodyRefinementSystem.buildTierModifiers()).
   stats: StatType[]
 
   // % cộng vào MỖI stat trong `stats` lúc tầng đầy 100%.
@@ -30,14 +30,14 @@ export interface LuyenTheTierDefinition {
   // Phàm Nhân tầng tối thiểu để BẮT ĐẦU đầu tư tầng này (2026-08-20,
   // yêu cầu cụ thể: Bì/Nhục/Cốt/Huyết/Tạng/Mạch mở lần lượt ở tầng
   // 2/4/6/8/10/12) — ĐỘC LẬP với thứ tự tuần tự (phải làm đầy tầng
-  // trước MỚI tới lượt tầng này, xem LuyenTheSystem.investTinhHoa());
+  // trước MỚI tới lượt tầng này, xem BodyRefinementSystem.investTinhHoa());
   // cả 2 điều kiện đều phải thoả. Tầng cuối (Luyện Mạch) mở cùng lúc
-  // Quán Khí (tầng 12, xem CharacterPanel.vue's QUAN_KHI_UNLOCK_TANG)
+  // Quán Khí (tầng 12, xem CharacterPanel.vue's QUAN_KHI_UNLOCK_LEVEL)
   // — cố ý, chừa tầng 12-18 làm cửa sổ hoàn thiện trước khi Quán Khí.
-  requiredTang: number
+  requiredRealmLevel: number
 }
 
-export const LUYEN_THE_TIERS: LuyenTheTierDefinition[] = [
+export const BODY_REFINEMENT_TIERS: BodyRefinementTierDefinition[] = [
   {
     id: 'luyen_bi',
     name: 'Luyện Bì',
@@ -45,7 +45,7 @@ export const LUYEN_THE_TIERS: LuyenTheTierDefinition[] = [
     cap: 50,
     stats: ['defense'],
     percentAtFullTier: 0.08,
-    requiredTang: 2,
+    requiredRealmLevel: 2,
   },
   {
     id: 'luyen_nhuc',
@@ -54,7 +54,7 @@ export const LUYEN_THE_TIERS: LuyenTheTierDefinition[] = [
     cap: 90,
     stats: ['attack'],
     percentAtFullTier: 0.08,
-    requiredTang: 4,
+    requiredRealmLevel: 4,
   },
   {
     id: 'luyen_cot',
@@ -63,7 +63,7 @@ export const LUYEN_THE_TIERS: LuyenTheTierDefinition[] = [
     cap: 160,
     stats: ['maxHp'],
     percentAtFullTier: 0.08,
-    requiredTang: 6,
+    requiredRealmLevel: 6,
   },
   {
     id: 'luyen_huyet',
@@ -72,7 +72,7 @@ export const LUYEN_THE_TIERS: LuyenTheTierDefinition[] = [
     cap: 290,
     stats: ['hpRegenPerSecond'],
     percentAtFullTier: 0.08,
-    requiredTang: 8,
+    requiredRealmLevel: 8,
   },
   {
     id: 'luyen_tang',
@@ -85,7 +85,7 @@ export const LUYEN_THE_TIERS: LuyenTheTierDefinition[] = [
     // (StatCalculator.ts), tự dẫn ra maxHp/hpRegen/enduranceThreshold.
     stats: ['vitality'],
     percentAtFullTier: 0.08,
-    requiredTang: 10,
+    requiredRealmLevel: 10,
   },
   {
     id: 'luyen_mach',
@@ -94,6 +94,6 @@ export const LUYEN_THE_TIERS: LuyenTheTierDefinition[] = [
     cap: 940,
     stats: ['maxHp', 'hpRegenPerSecond'],
     percentAtFullTier: 0.08,
-    requiredTang: 12,
+    requiredRealmLevel: 12,
   },
 ]

@@ -1,4 +1,4 @@
-import type { Pham } from '../item/Pham'
+import type { ItemGrade } from '../item/ItemGrade'
 
 /**
  * Equipment Rework (2026-08-14) — trục ĐỘC LẬP với EquipmentQuality
@@ -12,7 +12,7 @@ import type { Pham } from '../item/Pham'
  * đổi từ 4 bậc chủ đề "Duyên" (may mắn/số phận) sang 5 bậc Ngũ Phẩm
  * Hoàng/Huyền/Địa/Thiên/Tiên (dùng LẠI Pham.ts — tên/thứ tự CHUNG với
  * Pill/Talisman/Formation, xem Pham.ts), theo yêu cầu người dùng —
- * value = Pham (không định nghĩa lại union con). Ý nghĩa MECHANIC của
+ * value = ItemGrade (không định nghĩa lại union con). Ý nghĩa MECHANIC của
  * trục này (số lượng Affix, KHÔNG phải sức mạnh trần) không đổi, chỉ
  * đổi TÊN hiển thị + số bậc 4->5.
  *
@@ -23,36 +23,36 @@ import type { Pham } from '../item/Pham'
  * EquipmentSystem.createInstance()) — vẫn ngẫu nhiên, không phải item
  * cố định.
  */
-export type EquipmentRarity = Pham
+export type EquipmentRarity = ItemGrade
 
 // Nhãn RIÊNG của Equipment Rarity. ID nội bộ tiếp tục dùng Pham để giữ
 // tương thích save và các bảng cap; phần hiển thị bỏ hậu tố "Phẩm" vì đây
 // là mật độ Affix của trang bị, không phải tên đầy đủ của thang Phẩm dùng
 // chung cho Đan/Phù/Trận.
 export const EQUIPMENT_RARITY_LABELS: Record<EquipmentRarity, string> = {
-  hoang_pham: 'Hoàng',
-  huyen_pham: 'Huyền',
-  dia_pham: 'Địa',
-  thien_pham: 'Thiên',
-  tien_pham: 'Tiên',
+  hoang: 'Hoàng',
+  huyen: 'Huyền',
+  dia: 'Địa',
+  thien: 'Thiên',
+  tien: 'Tiên',
 }
 
 // Thứ tự thấp -> cao — dùng cho roll trọng số lúc rớt đồ.
 export const EQUIPMENT_RARITY_ORDER: EquipmentRarity[] = [
-  'hoang_pham',
-  'huyen_pham',
-  'dia_pham',
-  'thien_pham',
-  'tien_pham',
+  'hoang',
+  'huyen',
+  'dia',
+  'thien',
+  'tien',
 ]
 
 // Trọng số random khi rớt đồ — rarity càng cao càng hiếm.
 export const EQUIPMENT_RARITY_DROP_WEIGHT: Record<EquipmentRarity, number> = {
-  hoang_pham: 55,
-  huyen_pham: 27,
-  dia_pham: 12,
-  thien_pham: 5,
-  tien_pham: 1,
+  hoang: 55,
+  huyen: 27,
+  dia: 12,
+  thien: 5,
+  tien: 1,
 }
 
 export interface EquipmentRarityAffixSlots {
@@ -65,11 +65,11 @@ export interface EquipmentRarityAffixSlots {
 // (dia_pham) lệch prefix trước suffix (2/1) trước khi đối xứng lại ở
 // thien_pham (2/2) rồi tien_pham (3/3), tránh 1 bước nhảy đột ngột.
 export const EQUIPMENT_RARITY_AFFIX_SLOTS: Record<EquipmentRarity, EquipmentRarityAffixSlots> = {
-  hoang_pham: { prefix: 0, suffix: 0 },
-  huyen_pham: { prefix: 1, suffix: 1 },
-  dia_pham: { prefix: 2, suffix: 1 },
-  thien_pham: { prefix: 2, suffix: 2 },
-  tien_pham: { prefix: 3, suffix: 3 },
+  hoang: { prefix: 0, suffix: 0 },
+  huyen: { prefix: 1, suffix: 1 },
+  dia: { prefix: 2, suffix: 1 },
+  thien: { prefix: 2, suffix: 2 },
+  tien: { prefix: 3, suffix: 3 },
 }
 
 // "Exalted Affix" (mục 2 kế hoạch) — CHỈ tien_pham mới có cơ hội roll

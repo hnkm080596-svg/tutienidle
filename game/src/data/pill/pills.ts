@@ -18,7 +18,7 @@ import type { Pill } from '@/core/pill/Pill'
 // Tên ghép động (2026-08-15) — tiền tố Phẩm KHÔNG còn bake vào `name`
 // (trước là "Hoàng Phẩm Hồi Nguyên Đan"), giờ ghép động lúc hiển thị
 // TỪ field `pham` bên dưới (xem core/item/Pham.ts's
-// composePhamNameSegments(), PillBagSection.vue) — `name` ở đây chỉ
+// composeItemGradeNameSegments(), PillBagSection.vue) — `name` ở đây chỉ
 // còn phần [Effect] + Đan.
 export const pills: Pill[] = [
   {
@@ -32,7 +32,7 @@ export const pills: Pill[] = [
 
     type: 'healing',
 
-    pham: 'hoang_pham',
+    grade: 'hoang',
 
     effects: [
       {
@@ -54,7 +54,7 @@ export const pills: Pill[] = [
 
     type: 'cultivation',
 
-    pham: 'huyen_pham',
+    grade: 'huyen',
 
     effects: [
       {
@@ -76,7 +76,7 @@ export const pills: Pill[] = [
 
     type: 'permanent',
 
-    pham: 'dia_pham',
+    grade: 'dia',
 
     effects: [
       {
@@ -100,7 +100,7 @@ export const pills: Pill[] = [
 
     type: 'permanent',
 
-    pham: 'huyen_pham',
+    grade: 'huyen',
 
     effects: [
       {
@@ -124,7 +124,7 @@ export const pills: Pill[] = [
 
     type: 'permanent',
 
-    pham: 'dia_pham',
+    grade: 'dia',
 
     effects: [
       {
@@ -153,7 +153,7 @@ export const pills: Pill[] = [
 
     type: 'permanent',
 
-    pham: 'dia_pham',
+    grade: 'dia',
 
     effects: [
       {
@@ -177,7 +177,7 @@ export const pills: Pill[] = [
 
     type: 'permanent',
 
-    pham: 'dia_pham',
+    grade: 'dia',
 
     effects: [
       {
@@ -201,7 +201,7 @@ export const pills: Pill[] = [
 
     type: 'permanent',
 
-    pham: 'dia_pham',
+    grade: 'dia',
 
     effects: [
       {
@@ -231,7 +231,7 @@ export const pills: Pill[] = [
 
     type: 'healing',
 
-    pham: 'huyen_pham',
+    grade: 'huyen',
 
     effects: [
       {
@@ -256,7 +256,7 @@ export const pills: Pill[] = [
 
     type: 'permanent',
 
-    pham: 'thien_pham',
+    grade: 'thien',
 
     effects: [
       {
@@ -281,7 +281,7 @@ export const pills: Pill[] = [
 
     type: 'permanent',
 
-    pham: 'thien_pham',
+    grade: 'thien',
 
     effects: [
       {
@@ -306,7 +306,7 @@ export const pills: Pill[] = [
 
     type: 'permanent',
 
-    pham: 'dia_pham',
+    grade: 'dia',
 
     effects: [
       {
@@ -336,7 +336,7 @@ export const pills: Pill[] = [
 
     type: 'permanent',
 
-    pham: 'tien_pham',
+    grade: 'tien',
 
     effects: [
       {
@@ -363,7 +363,7 @@ export const pills: Pill[] = [
 
     type: 'buff',
 
-    pham: 'dia_pham',
+    grade: 'dia',
 
     effects: [
       {
@@ -411,7 +411,7 @@ export const pills: Pill[] = [
 
     type: 'buff',
 
-    pham: 'dia_pham',
+    grade: 'dia',
 
     effects: [
       {
@@ -459,7 +459,7 @@ export const pills: Pill[] = [
 
     type: 'buff',
 
-    pham: 'dia_pham',
+    grade: 'dia',
 
     effects: [
       {
@@ -505,7 +505,7 @@ export const pills: Pill[] = [
 
     type: 'buff',
 
-    pham: 'dia_pham',
+    grade: 'dia',
 
     effects: [
       {
@@ -551,7 +551,7 @@ export const pills: Pill[] = [
 
     type: 'buff',
 
-    pham: 'dia_pham',
+    grade: 'dia',
 
     effects: [
       {

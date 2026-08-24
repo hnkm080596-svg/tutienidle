@@ -8,6 +8,7 @@ import type { SkillEffect } from './SkillEffect'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { SkillSpecialization } from './SkillSpecialization'
 import type { SkillRuntimeStats } from './SkillRuntimeStats'
+import type { ActionTargeting, CombatVfxPresetId } from '../battle/CombatAction'
 export { SKILL_RESOURCE_STAT_KEYS } from './SkillRuntimeStats'
 export type { SkillResourceStatKey } from './SkillRuntimeStats'
 
@@ -23,10 +24,6 @@ export interface Skill extends Partial<SkillRuntimeStats> {
   level: number
 
   maxLevel: number
-
-  experience: number
-
-  experienceRequired: number
 
   requiredRealmId?: string
 
@@ -64,6 +61,17 @@ export interface Skill extends Partial<SkillRuntimeStats> {
   // không — cho phép equip mà KHÔNG cần slot hợp lệ (Phàm Nhân chưa
   // có Skill Loadout UI, xem SkillSystem.equipWithoutSlot()).
   isBasicAttack?: boolean
+
+  // ================= Combat Grid Rework (2026-08-24) =================
+  targeting?: ActionTargeting
+
+  // AOE theo grid: lan quanh ô PRIMARY target. undefined/0 = single.
+  laneRadius?: number
+
+  columnRadius?: number
+
+  // Override preset VFX impact; mặc định suy từ element.
+  vfxPresetId?: CombatVfxPresetId
 
   // PLAN HOÀN CHỈNH mục 8/12 — vị trí (0-4) trong Skill Loadout, chỉ
   // có ý nghĩa khi equipped === true. undefined = đã HỌC (unlocked)

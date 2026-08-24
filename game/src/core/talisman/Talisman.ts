@@ -1,4 +1,4 @@
-import type { Pham } from '../item/Pham'
+import type { ItemGrade } from '../item/ItemGrade'
 
 /**
  * Phù chú — KHÔNG dùng trong combat. Là catalyst tiêu hao khi áp
@@ -18,7 +18,7 @@ export interface Talisman {
 
   // Naming-principles pass (2026-08-14) — thay `grade: number` cũ,
   // xem Pill.ts's ghi chú tương tự.
-  pham: Pham
+  grade: ItemGrade
 
   // 0~2 — số slot chỉ số phụ mở thêm mỗi lần áp dụng.
   extraSubstatSlots: number

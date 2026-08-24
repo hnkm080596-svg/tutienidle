@@ -7,8 +7,9 @@ import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
 import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import { EventBus } from '../events/EventBus'
-import { MissileSystem } from '../combat/missile/MissileSystem'
-import { MissileManager } from '../combat/missile/MissileManager'
+import { ActionImpactSystem } from '../battle/ActionImpactSystem'
+
+
 import { createBaseStats } from '../stats/StatBlock'
 import { createSkillRuntimeStats } from '../skill/SkillRuntimeStats'
 import { ailments } from '../../data/ailment/ailments'
@@ -41,7 +42,7 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 2,
+    row: 2,
     alive: true,
     ...overrides,
   }
@@ -55,8 +56,6 @@ function createDiemKimThuat(): Skill {
     type: 'active',
     level: 1,
     maxLevel: 10,
-    experience: 0,
-    experienceRequired: 100,
     cooldown: 1,
     remainingCooldown: 0,
     cost: 0,
@@ -87,7 +86,7 @@ function setup() {
     new BuffRegistry(),
     ailmentRegistry,
     eventBus,
-    new MissileSystem(new MissileManager(), eventBus),
+    new ActionImpactSystem({ eventBus, rollCritical: () => false }),
   )
 
   const diemKimThuat = createDiemKimThuat()
@@ -132,7 +131,7 @@ describe('BattleSystem — Huyết Phá (Plans/magicpathgeneral Phase 13)', () =
 
     system.start(player, enemy)
     system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
-    enemy.x = 50 // start() ghi đè x=400 > SCREEN_VISIBLE_MAX_X(350) — đặt lại trong tầm nhìn.
+    enemy.x = 5 // start() ghi đè x=400 > SCREEN_VISIBLE_MAX_X(350) — đặt lại trong tầm nhìn.
 
     // remainingCooldown khởi tạo 0 -> cast NGAY ở t=0, rồi mỗi 1s tiếp
     // theo (attackSpeed mặc định 1) -> t=0,1,2 = 3 lần cast trong 2.5s
@@ -159,7 +158,7 @@ describe('BattleSystem — Huyết Phá (Plans/magicpathgeneral Phase 13)', () =
 
     system.start(player, enemy)
     system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
-    enemy.x = 50 // start() ghi đè x=400 > SCREEN_VISIBLE_MAX_X(350) — đặt lại trong tầm nhìn.
+    enemy.x = 5 // start() ghi đè x=400 > SCREEN_VISIBLE_MAX_X(350) — đặt lại trong tầm nhìn.
 
     // t=0,1,2,3,4 = ĐÚNG 5 lần cast trong 4.5s (dừng TRƯỚC lần cast
     // thứ 6 ở t=5) — chạm MAX_HUYET_PHA đúng ở lần cast thứ 5, burst
@@ -199,7 +198,7 @@ describe('BattleSystem — Huyết Phá (Plans/magicpathgeneral Phase 13)', () =
 
     system.start(player, enemy)
     system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
-    enemy.x = 50 // start() ghi đè x=400 > SCREEN_VISIBLE_MAX_X(350) — đặt lại trong tầm nhìn.
+    enemy.x = 5 // start() ghi đè x=400 > SCREEN_VISIBLE_MAX_X(350) — đặt lại trong tầm nhìn.
 
     // Cùng timing 4.5s/5 lần cast như test trên.
     for (let i = 0; i < 450; i++) {

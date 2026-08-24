@@ -27,8 +27,8 @@ export const recipes: Recipe[] = [
     resultAmount: 1,
 
     materials: [
-      { materialId: 'green-spirit-herb', amount: 2 },
-      { materialId: 'yeu_dan_qi_refining', amount: 1 },
+      { materialId: 'linh_chi', amount: 2 },
+      { materialId: 'yeu_dan_luyen_khi_canh', amount: 1 },
     ],
 
     spiritStoneCost: 5,
@@ -50,9 +50,9 @@ export const recipes: Recipe[] = [
     resultAmount: 1,
 
     materials: [
-      { materialId: 'green-spirit-herb', amount: 2 },
-      { materialId: 'fire-spirit-herb', amount: 1 },
-      { materialId: 'yeu_dan_qi_refining', amount: 1 },
+      { materialId: 'linh_chi', amount: 2 },
+      { materialId: 'que', amount: 1 },
+      { materialId: 'yeu_dan_luyen_khi_canh', amount: 1 },
     ],
 
     spiritStoneCost: 10,
@@ -74,9 +74,9 @@ export const recipes: Recipe[] = [
     resultAmount: 1,
 
     materials: [
-      { materialId: 'green-spirit-herb', amount: 1 },
-      { materialId: 'fire-spirit-herb', amount: 1 },
-      { materialId: 'yeu_dan_qi_refining', amount: 1 },
+      { materialId: 'linh_chi', amount: 1 },
+      { materialId: 'que', amount: 1 },
+      { materialId: 'yeu_dan_luyen_khi_canh', amount: 1 },
     ],
 
     spiritStoneCost: 10,
@@ -103,8 +103,8 @@ export const recipes: Recipe[] = [
     // khiến pill KHÔNG THỂ đạt được trong suốt Luyện Khí, sai mục
     // đích thiết kế.
     materials: [
-      { materialId: 'bach-nien-que', amount: 2 },
-      { materialId: 'yeu_dan_qi_refining', amount: 2 },
+      { materialId: 'bach_nien_que', amount: 2 },
+      { materialId: 'yeu_dan_luyen_khi_canh', amount: 2 },
     ],
 
     spiritStoneCost: 20,
@@ -126,8 +126,8 @@ export const recipes: Recipe[] = [
     resultAmount: 1,
 
     materials: [
-      { materialId: 'thien-nien-que', amount: 2 },
-      { materialId: 'yeu_dan_qi_refining', amount: 3 },
+      { materialId: 'thien_nien_que', amount: 2 },
+      { materialId: 'yeu_dan_luyen_khi_canh', amount: 3 },
     ],
 
     spiritStoneCost: 40,
@@ -149,9 +149,9 @@ export const recipes: Recipe[] = [
     resultAmount: 1,
 
     materials: [
-      { materialId: 'green-spirit-herb', amount: 2 },
-      { materialId: 'cold-spirit-herb', amount: 1 },
-      { materialId: 'yeu_dan_qi_refining', amount: 1 },
+      { materialId: 'linh_chi', amount: 2 },
+      { materialId: 'cuc_hoa', amount: 1 },
+      { materialId: 'yeu_dan_luyen_khi_canh', amount: 1 },
     ],
 
     spiritStoneCost: 10,
@@ -173,9 +173,9 @@ export const recipes: Recipe[] = [
     resultAmount: 1,
 
     materials: [
-      { materialId: 'thien-nien-linh-chi', amount: 2 },
-      { materialId: 'thien-nien-cuc-hoa', amount: 2 },
-      { materialId: 'yeu_dan_qi_refining', amount: 3 },
+      { materialId: 'thien_nien_linh_chi', amount: 2 },
+      { materialId: 'thien_nien_cuc_hoa', amount: 2 },
+      { materialId: 'yeu_dan_luyen_khi_canh', amount: 3 },
     ],
 
     spiritStoneCost: 50,
@@ -197,8 +197,8 @@ export const recipes: Recipe[] = [
     resultAmount: 1,
 
     materials: [
-      { materialId: 'thien-nien-cuc-hoa', amount: 2 },
-      { materialId: 'yeu_dan_qi_refining', amount: 3 },
+      { materialId: 'thien_nien_cuc_hoa', amount: 2 },
+      { materialId: 'yeu_dan_luyen_khi_canh', amount: 3 },
     ],
 
     spiritStoneCost: 40,
@@ -220,8 +220,8 @@ export const recipes: Recipe[] = [
     resultAmount: 1,
 
     materials: [
-      { materialId: 'bach-nien-linh-chi', amount: 2 },
-      { materialId: 'yeu_dan_qi_refining', amount: 2 },
+      { materialId: 'bach_nien_linh_chi', amount: 2 },
+      { materialId: 'yeu_dan_luyen_khi_canh', amount: 2 },
     ],
 
     spiritStoneCost: 20,
@@ -243,8 +243,8 @@ export const recipes: Recipe[] = [
     resultAmount: 1,
 
     materials: [
-      { materialId: 'bach-nien-cuc-hoa', amount: 2 },
-      { materialId: 'yeu_dan_qi_refining', amount: 2 },
+      { materialId: 'bach_nien_cuc_hoa', amount: 2 },
+      { materialId: 'yeu_dan_luyen_khi_canh', amount: 2 },
     ],
 
     spiritStoneCost: 20,
@@ -274,8 +274,8 @@ export const recipes: Recipe[] = [
     resultAmount: 1,
 
     materials: [
-      { materialId: 'bach-nien-linh-chi', amount: 2 },
-      { materialId: 'yeu_dan_qi_refining', amount: 1 },
+      { materialId: 'bach_nien_linh_chi', amount: 2 },
+      { materialId: 'yeu_dan_luyen_khi_canh', amount: 1 },
     ],
 
     spiritStoneCost: 15,
@@ -297,8 +297,8 @@ export const recipes: Recipe[] = [
     resultAmount: 1,
 
     materials: [
-      { materialId: 'bach-nien-linh-chi', amount: 2 },
-      { materialId: 'yeu_dan_qi_refining', amount: 1 },
+      { materialId: 'bach_nien_linh_chi', amount: 2 },
+      { materialId: 'yeu_dan_luyen_khi_canh', amount: 1 },
     ],
 
     spiritStoneCost: 15,
@@ -320,8 +320,8 @@ export const recipes: Recipe[] = [
     resultAmount: 1,
 
     materials: [
-      { materialId: 'bach-nien-que', amount: 2 },
-      { materialId: 'yeu_dan_qi_refining', amount: 1 },
+      { materialId: 'bach_nien_que', amount: 2 },
+      { materialId: 'yeu_dan_luyen_khi_canh', amount: 1 },
     ],
 
     spiritStoneCost: 15,
@@ -343,8 +343,8 @@ export const recipes: Recipe[] = [
     resultAmount: 1,
 
     materials: [
-      { materialId: 'phu-chi', amount: 2 },
-      { materialId: 'yeu_huyet_qi_refining', amount: 1 },
+      { materialId: 'phu_chi', amount: 2 },
+      { materialId: 'yeu_huyet_luyen_khi_canh', amount: 1 },
     ],
 
     spiritStoneCost: 15,
@@ -366,16 +366,16 @@ export const recipes: Recipe[] = [
     resultAmount: 1,
 
     materials: [
-      { materialId: 'black-iron', amount: 2 },
-      { materialId: 'hoang-kim-linh-thiet', amount: 2 },
-      { materialId: 'yeu_cot_qi_refining', amount: 1 },
+      { materialId: 'huyen_thiet', amount: 2 },
+      { materialId: 'hoang_kim_linh_thiet', amount: 2 },
+      { materialId: 'yeu_cot_luyen_khi_canh', amount: 1 },
     ],
 
     spiritStoneCost: 20,
 
     craftDuration: 100,
 
-    requiredRealmId: 'foundation',
+    requiredRealmId: 'foundation_establishment',
   },
 
   {
@@ -393,8 +393,8 @@ export const recipes: Recipe[] = [
 
     materials: [
       { materialId: 'han-thiet', amount: 2 },
-      { materialId: 'red-copper', amount: 2 },
-      { materialId: 'yeu_cot_qi_refining', amount: 2 },
+      { materialId: 'xich_dong', amount: 2 },
+      { materialId: 'yeu_cot_luyen_khi_canh', amount: 2 },
     ],
 
     spiritStoneCost: 30,
@@ -418,9 +418,9 @@ export const recipes: Recipe[] = [
     resultAmount: 1,
 
     materials: [
-      { materialId: 'red-copper', amount: 2 },
-      { materialId: 'black-iron', amount: 2 },
-      { materialId: 'yeu_cot_qi_refining', amount: 1 },
+      { materialId: 'xich_dong', amount: 2 },
+      { materialId: 'huyen_thiet', amount: 2 },
+      { materialId: 'yeu_cot_luyen_khi_canh', amount: 1 },
     ],
 
     spiritStoneCost: 15,
@@ -445,8 +445,8 @@ export const recipes: Recipe[] = [
     resultAmount: 1,
 
     materials: [
-      { materialId: 'bach-nien-que', amount: 2 },
-      { materialId: 'yeu_dan_qi_refining', amount: 1 },
+      { materialId: 'bach_nien_que', amount: 2 },
+      { materialId: 'yeu_dan_luyen_khi_canh', amount: 1 },
     ],
 
     spiritStoneCost: 20,
@@ -468,8 +468,8 @@ export const recipes: Recipe[] = [
     resultAmount: 1,
 
     materials: [
-      { materialId: 'bach-nien-thanh-linh-moc', amount: 2 },
-      { materialId: 'yeu_huyet_qi_refining', amount: 1 },
+      { materialId: 'bach_nien_thanh_linh_moc', amount: 2 },
+      { materialId: 'yeu_huyet_luyen_khi_canh', amount: 1 },
     ],
 
     spiritStoneCost: 20,
@@ -491,8 +491,8 @@ export const recipes: Recipe[] = [
     resultAmount: 1,
 
     materials: [
-      { materialId: 'bach-nien-cuc-hoa', amount: 2 },
-      { materialId: 'yeu_dan_qi_refining', amount: 1 },
+      { materialId: 'bach_nien_cuc_hoa', amount: 2 },
+      { materialId: 'yeu_dan_luyen_khi_canh', amount: 1 },
     ],
 
     spiritStoneCost: 20,
@@ -514,8 +514,8 @@ export const recipes: Recipe[] = [
     resultAmount: 1,
 
     materials: [
-      { materialId: 'black-iron', amount: 2 },
-      { materialId: 'yeu_dan_qi_refining', amount: 1 },
+      { materialId: 'huyen_thiet', amount: 2 },
+      { materialId: 'yeu_dan_luyen_khi_canh', amount: 1 },
     ],
 
     spiritStoneCost: 20,
@@ -537,8 +537,8 @@ export const recipes: Recipe[] = [
     resultAmount: 1,
 
     materials: [
-      { materialId: 'hoang-kim-linh-thiet', amount: 2 },
-      { materialId: 'yeu_dan_qi_refining', amount: 1 },
+      { materialId: 'hoang_kim_linh_thiet', amount: 2 },
+      { materialId: 'yeu_dan_luyen_khi_canh', amount: 1 },
     ],
 
     spiritStoneCost: 20,

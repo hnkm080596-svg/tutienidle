@@ -51,7 +51,7 @@ function createAttackerPlayer(): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 2,
+    row: 2,
     alive: true,
   }
 }
@@ -67,8 +67,6 @@ function createBasicSkill(): Skill {
     type: 'active',
     level: 1,
     maxLevel: 10,
-    experience: 0,
-    experienceRequired: 100,
     cooldown: 0,
     remainingCooldown: 0,
     cost: 0,
@@ -86,13 +84,13 @@ function createStubbornEnemy() {
     id: 'stubborn_dummy',
     name: 'Bao Cát',
     level: 1,
-    realmId: 'pham_nhan',
+    realmId: 'mortal',
     lane: 'ground',
     // HP + armor rất cao — không bao giờ chết trong lúc test, đòn địch
     // đánh lại player cũng không đáng kể (attack=0) để player.alive luôn
     // true suốt bài test, không ảnh hưởng số đòn đếm được.
     statsInput: { ...ATTACKER_STATS_INPUT, maxHp: 10_000_000, attack: 0, armor: 0 },
-    rewards: { experience: 0, cultivation: 0, spiritStone: 0 },
+    rewards: { techniqueInsight: 0, cultivation: 0, spiritStone: 0 },
   })
 }
 
@@ -114,7 +112,7 @@ describe('GameManager — fixed-step catch-up cho combat (uncommitted audit foll
     // start() luôn ghi đè x = ENEMY_SPAWN_X (400) > SCREEN_VISIBLE_MAX_X
     // (350) — đặt lại trong tầm nhìn để player đánh được ngay khi
     // 'fighting' bắt đầu, cùng quy ước các test BattleSystem khác.
-    gameManager.getBattle()!.enemies[0]!.entity.x = 50
+    gameManager.getBattle()!.enemies[0]!.entity.x = 5
 
     let attackCount = 0
 
@@ -161,7 +159,7 @@ describe('GameManager — fixed-step catch-up cho combat (uncommitted audit foll
 
     gameManager.startBattle(player, createStubbornEnemy())
     gameManager.update(3)
-    gameManager.getBattle()!.enemies[0]!.entity.x = 50
+    gameManager.getBattle()!.enemies[0]!.entity.x = 5
 
     // Giả lập máy ngủ nhiều giờ rồi resume — deltaSeconds cực lớn.
     expect(() => gameManager.update(6 * 60 * 60)).not.toThrow()

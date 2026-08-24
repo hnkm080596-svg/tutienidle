@@ -3,6 +3,8 @@ import { SKILL_RESOURCE_STAT_KEYS, createSkillRuntimeStats, type SkillRuntimeSta
 import type { SkillEffect } from './SkillEffect'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { PassiveTrigger } from './SkillTypes'
+import type { PlayerData } from '../player/Player'
+import { getSkillUpgradeInsightCost } from './SkillUpgradeBalance'
 
 import {
   SkillManager,
@@ -17,28 +19,6 @@ import { getRealmIndex } from '../realm/realmSystem'
 // sẵn trên StatModifier (giống TechniqueSystem.getActiveModifiers()),
 // không cần hằng số riêng.
 const ACTIVE_SKILL_DAMAGE_PERCENT_PER_LEVEL = 0.05
-
-// Export để BattleSystem.castSkill()/PassiveSystem dùng khi gọi
-// gainExperience() — tránh mỗi nơi tự định nghĩa số khác nhau.
-export const ACTIVE_SKILL_XP_PER_CAST = 10
-
-export const PASSIVE_SKILL_XP_PER_TRIGGER = 2
-
-export function getSkillExperiencePercent(skill: Pick<Skill, 'level' | 'maxLevel' | 'experience' | 'experienceRequired'>): number {
-  if (skill.level >= skill.maxLevel) {
-    return 100
-  }
-
-  if (
-    !Number.isFinite(skill.experience)
-    || !Number.isFinite(skill.experienceRequired)
-    || skill.experienceRequired <= 0
-  ) {
-    return 0
-  }
-
-  return Math.min(100, Math.max(0, skill.experience / skill.experienceRequired) * 100)
-}
 
 export interface EffectiveSkill {
   effects: SkillEffect[]
@@ -141,45 +121,40 @@ export class SkillSystem {
     return true
   }
 
-  gainExperience(skillId: string, amount: number) {
+  /** Chi phí Cảm ngộ Kỹ năng để nâng skill này lên level kế tiếp — undefined nếu đã tối đa. */
+  getSkillUpgradeInsightCost(skillId: string): number | undefined {
     const skill = this.manager.get(skillId)
 
-    if (!skill) {
+    if (!skill || skill.level >= skill.maxLevel) {
+      return undefined
+    }
+
+    return getSkillUpgradeInsightCost(skill)
+  }
+
+  /**
+   * skill-insight-and-auto-combat-hud-plan.md mục 5 — thay HẲN
+   * gainExperience()/XP-per-cast cũ: người chơi CHỦ ĐỘNG nâng cấp
+   * ngoài combat, tiêu thẳng player.skillInsight. No-op hoàn toàn (KHÔNG
+   * mutate gì) nếu skill không tồn tại/đã max level/không đủ Cảm ngộ.
+   */
+  upgradeSkill(skillId: string, player: PlayerData): boolean {
+    const skill = this.manager.get(skillId)
+
+    if (!skill || skill.level >= skill.maxLevel) {
       return false
     }
 
-    if (
-      skill.level >= skill.maxLevel
-      || !Number.isFinite(amount)
-      || amount <= 0
-      || !Number.isFinite(skill.experienceRequired)
-      || skill.experienceRequired <= 0
-      || !Number.isFinite(skill.experience)
-      || skill.experience < 0
-    ) {
+    const cost = getSkillUpgradeInsightCost(skill)
+
+    if (player.skillInsight < cost) {
       return false
     }
 
-    skill.experience += amount
-    let levelsGained = 0
+    player.skillInsight -= cost
+    skill.level++
 
-    while (skill.level < skill.maxLevel && skill.experience >= skill.experienceRequired) {
-      skill.experience -= skill.experienceRequired
-
-      skill.level++
-      levelsGained++
-
-      skill.experienceRequired = Math.max(1, Math.floor(skill.experienceRequired * 1.5))
-
-      if (skill.level >= skill.maxLevel) {
-        skill.experience = 0
-        break
-      }
-    }
-
-    if (levelsGained > 0) {
-      this.onLevelUp?.(skill, levelsGained)
-    }
+    this.onLevelUp?.(skill, 1)
 
     return true
   }
@@ -317,7 +292,10 @@ export class SkillSystem {
     if (
       !skill.unlocked ||
       !skill.equipped ||
-      skill.remainingCooldown > 0
+      // Basic attacks are paced exclusively by Battle.playerAttackTimer
+      // (attack speed). Their data cooldown must not create alternating
+      // skill/fallback attacks when attackSpeed is greater than 1.
+      (!skill.isBasicAttack && skill.remainingCooldown > 0)
     ) {
       return false
     }
@@ -378,8 +356,7 @@ export class SkillSystem {
     const skill =
       this.manager.get(skillId)!
 
-    skill.remainingCooldown =
-      skill.cooldown
+    skill.remainingCooldown = skill.isBasicAttack ? 0 : skill.cooldown
 
     if (skill.resourceType === 'mana') {
       entity.currentMp -= skill.cost

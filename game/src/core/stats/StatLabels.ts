@@ -40,7 +40,6 @@ export const BASE_STAT_LABELS: StatLabelEntry[] = [
   { key: 'skillDamagePercent', label: 'Sát thương kỹ năng', description: 'Tăng sát thương gây ra bởi kỹ năng.', category: 'special' },
   { key: 'finalDamageReductionPercent', label: 'Giảm sát thương cuối', description: 'Giảm toàn bộ sát thương nhận vào ở bước cuối.', category: 'defense_advanced' },
   { key: 'chanceToIgnoreResistance', label: 'Xuyên kháng tuyệt đối', description: 'Xác suất 1 đòn bỏ qua HOÀN TOÀN Giáp/Kháng của đối phương.', category: 'special' },
-  { key: 'projectileSpeedPercent', label: 'Tốc độ đạn', description: 'Tăng % tốc độ bay của phi tiêu (Hỏa Cầu Thuật...).', category: 'special' },
   { key: 'elementApplicationPercent', label: 'Tỉ lệ áp Nguyên Tố', description: 'Cộng thẳng vào tỉ lệ áp dị thường (Thiêu Đốt...) của skill khi đánh trúng.', category: 'special' },
   { key: 'reactionEffectPercent', label: 'Hiệu Ứng Phản Ứng', description: 'Tăng % sát thương khi Phản Ứng Nguyên Tố kích hoạt.', category: 'special' },
   { key: 'ailmentDurationPercent', label: 'Thời Lượng Dị Thường', description: 'Tăng % thời lượng mọi dị thường mình gây ra.', category: 'special' },

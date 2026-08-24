@@ -22,7 +22,7 @@ export const materials: Material[] = [
   // TRẦN phẩm cấp tối đa của Đan chế từ nó (xem data/recipe/recipes.ts).
   // ============================================================
   {
-    id: 'green-spirit-herb',
+    id: 'linh_chi',
     name: 'Linh Chi',
     category: 'herb',
     years: 0,
@@ -32,7 +32,7 @@ export const materials: Material[] = [
   },
 
   {
-    id: 'bach-nien-linh-chi',
+    id: 'bach_nien_linh_chi',
     name: 'Bách Niên Linh Chi',
     category: 'herb',
     years: 100,
@@ -42,7 +42,7 @@ export const materials: Material[] = [
   },
 
   {
-    id: 'thien-nien-linh-chi',
+    id: 'thien_nien_linh_chi',
     name: 'Thiên Niên Linh Chi',
     category: 'herb',
     years: 1000,
@@ -52,7 +52,7 @@ export const materials: Material[] = [
   },
 
   {
-    id: 'fire-spirit-herb',
+    id: 'que',
     name: 'Quế',
     category: 'herb',
     years: 0,
@@ -62,7 +62,7 @@ export const materials: Material[] = [
   },
 
   {
-    id: 'bach-nien-que',
+    id: 'bach_nien_que',
     name: 'Bách Niên Quế',
     category: 'herb',
     years: 100,
@@ -72,7 +72,7 @@ export const materials: Material[] = [
   },
 
   {
-    id: 'thien-nien-que',
+    id: 'thien_nien_que',
     name: 'Thiên Niên Quế',
     category: 'herb',
     years: 1000,
@@ -82,7 +82,7 @@ export const materials: Material[] = [
   },
 
   {
-    id: 'cold-spirit-herb',
+    id: 'cuc_hoa',
     name: 'Cúc Hoa',
     category: 'herb',
     years: 0,
@@ -92,7 +92,7 @@ export const materials: Material[] = [
   },
 
   {
-    id: 'bach-nien-cuc-hoa',
+    id: 'bach_nien_cuc_hoa',
     name: 'Bách Niên Cúc Hoa',
     category: 'herb',
     years: 100,
@@ -102,7 +102,7 @@ export const materials: Material[] = [
   },
 
   {
-    id: 'thien-nien-cuc-hoa',
+    id: 'thien_nien_cuc_hoa',
     name: 'Thiên Niên Cúc Hoa',
     category: 'herb',
     years: 1000,
@@ -115,7 +115,7 @@ export const materials: Material[] = [
   // LINH MỘC (wood) — dùng cho Chế Phù. Cùng cơ chế niên đại.
   // ============================================================
   {
-    id: 'thanh-linh-moc',
+    id: 'thanh_linh_moc',
     name: 'Thanh Linh Mộc',
     category: 'wood',
     years: 0,
@@ -125,7 +125,7 @@ export const materials: Material[] = [
   },
 
   {
-    id: 'bach-nien-thanh-linh-moc',
+    id: 'bach_nien_thanh_linh_moc',
     name: 'Bách Niên Thanh Linh Mộc',
     category: 'wood',
     years: 100,
@@ -135,7 +135,7 @@ export const materials: Material[] = [
   },
 
   {
-    id: 'thien-nien-thanh-linh-moc',
+    id: 'thien_nien_thanh_linh_moc',
     name: 'Thiên Niên Thanh Linh Mộc',
     category: 'wood',
     years: 1000,
@@ -150,7 +150,7 @@ export const materials: Material[] = [
   // thanh-linh-moc làm nguyên liệu TRỰC TIẾP trong công thức chế Phù
   // (xem data/recipe/recipes.ts, data/building/processingRecipes.ts).
   {
-    id: 'phu-chi',
+    id: 'phu_chi',
     name: 'Phù Chỉ',
     category: 'wood',
     sourceType: 'building',
@@ -163,7 +163,7 @@ export const materials: Material[] = [
   // chồng 2 trục cùng lúc lên 1 nhóm — xem tunghematandsuch mục 8-9).
   // ============================================================
   {
-    id: 'black-iron',
+    id: 'huyen_thiet',
     name: 'Huyền Thiết',
     category: 'ore',
     years: 0,
@@ -173,7 +173,7 @@ export const materials: Material[] = [
   },
 
   {
-    id: 'red-copper',
+    id: 'xich_dong',
     name: 'Xích Đồng',
     category: 'ore',
     years: 0,
@@ -203,7 +203,7 @@ export const materials: Material[] = [
   },
 
   {
-    id: 'hoang-kim-linh-thiet',
+    id: 'hoang_kim_linh_thiet',
     name: 'Hoàng Kim Linh Thiết',
     category: 'ore',
     years: 0,
@@ -218,7 +218,7 @@ export const materials: Material[] = [
   // nhóm Linh Thiết 5-hành (không có element gán) — nguồn cung thật
   // để dành cho 1 đợt Economy tiếp theo.
   {
-    id: 'spirit-silver',
+    id: 'tinh_ngan',
     name: 'Tinh Ngân',
     category: 'ore',
     sourceType: 'building',
@@ -231,7 +231,7 @@ export const materials: Material[] = [
   // Khai Thác (exploration) — Thiết Khoáng Sơn đã bị thay bằng Linh
   // Tuyền (xem data/building/buildings.ts).
   {
-    id: 'iron-ore',
+    id: 'quang_sat',
     name: 'Quặng Sắt',
     category: 'ore',
     sourceType: 'exploration',
@@ -244,7 +244,7 @@ export const materials: Material[] = [
   // thật (green-spirit-herb) — tách bước "thu thập" khỏi "trồng trọt",
   // đúng ý tránh trùng chức năng giữa 2 Building.
   {
-    id: 'herb-seed',
+    id: 'linh_thao_chung',
     name: 'Linh Thảo Chủng',
     category: 'herb',
     sourceType: 'exploration',
@@ -260,7 +260,7 @@ export const materials: Material[] = [
   // để rơi, thêm khi có nội dung thật (xem data/enemy/Enemies.ts).
   // ============================================================
   {
-    id: 'yeu_dan_qi_refining',
+    id: 'yeu_dan_luyen_khi_canh',
     name: 'Yêu Đan (Luyện Khí Cảnh)',
     category: 'monster_core',
     sourceType: 'monster',
@@ -268,7 +268,7 @@ export const materials: Material[] = [
   },
 
   {
-    id: 'yeu_huyet_qi_refining',
+    id: 'yeu_huyet_luyen_khi_canh',
     name: 'Yêu Huyết (Luyện Khí Cảnh)',
     category: 'monster_core',
     sourceType: 'monster',
@@ -276,7 +276,7 @@ export const materials: Material[] = [
   },
 
   {
-    id: 'yeu_cot_qi_refining',
+    id: 'yeu_cot_luyen_khi_canh',
     name: 'Yêu Cốt (Luyện Khí Cảnh)',
     category: 'monster_core',
     sourceType: 'monster',
@@ -288,7 +288,7 @@ export const materials: Material[] = [
   // Mục II) — xem Enemies.ts's bandit.eliteRewards. Currency đặc thù,
   // KHÔNG thuộc nhóm Yêu Tài phổ thông ở trên.
   {
-    id: 'demon-soul',
+    id: 'yeu_hon',
     name: 'Yêu Hồn',
     category: 'essence',
     sourceType: 'boss',
@@ -298,7 +298,7 @@ export const materials: Material[] = [
   // MỚI — material CHỈ rơi từ Boss (Sơn Tặc Đầu Lĩnh, xem Enemies.ts),
   // minh hoạ đúng "Boss A → Flame Essence" (Mục II). Currency đặc thù.
   {
-    id: 'flame-essence',
+    id: 'tinh_hoa_hoa',
     name: 'Tinh Hoa Hỏa',
     category: 'essence',
     sourceType: 'boss',
@@ -307,8 +307,8 @@ export const materials: Material[] = [
 
   // Realm Passive & Pressure System (2026-08-20) — currency Luyện Thể,
   // CHỈ rơi từ 20 quái Phàm Nhân (data/enemy/Enemies.ts), đầu tư qua
-  // GameManager.investLuyenThe() để lấp đầy 6 tầng (xem
-  // data/realm/LuyenThe.ts/core/realm/LuyenTheSystem.ts). id khớp
+  // GameManager.investBodyRefinement() để lấp đầy 6 tầng (xem
+  // data/realm/LuyenThe.ts/core/realm/BodyRefinementSystem.ts). id khớp
   // TINH_HOA_PHAM_THE_MATERIAL_ID.
   {
     id: 'tinh_hoa_pham_the',
@@ -428,7 +428,7 @@ export const materials: Material[] = [
   // 'building' theo đúng tiền lệ tinh_luyen_cot.
   // ============================================================
   {
-    id: 'breakthrough_token_foundation',
+    id: 'breakthrough_token_foundation_establishment',
     name: 'Trúc Cơ Lệnh',
     category: 'other',
     sourceType: 'building',

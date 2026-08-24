@@ -1,5 +1,5 @@
 export interface Reward {
-  experience?: number
+  techniqueInsight?: number
 
   cultivation?: number
 

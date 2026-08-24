@@ -22,7 +22,7 @@ describe('GameManager — Pháp Tu PoisonPath (Mộc Node Tree Luyện Khí/Trú
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 5
+    player.skillInsight = 5
 
     expect(gameManager.purchaseNode('minor_wood_intensity', player)).toBe(false)
 
@@ -33,7 +33,7 @@ describe('GameManager — Pháp Tu PoisonPath (Mộc Node Tree Luyện Khí/Trú
     expect(gameManager.purchaseNode('minor_wood_duration', player)).toBe(true)
     expect(gameManager.purchaseNode('minor_wood_potency', player)).toBe(true)
 
-    expect(player.skillPoints).toBe(0)
+    expect(player.skillInsight).toBe(0)
 
     const finalStats = calculateStats(player.baseStats, [
       ...player.modifiers,
@@ -53,14 +53,14 @@ describe('GameManager — Pháp Tu PoisonPath (Mộc Node Tree Luyện Khí/Trú
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 10
+    player.skillInsight = 10
     player.realmId = 'qi_refining'
 
     expect(gameManager.purchaseNode('moc_linh_ngo', player)).toBe(true)
 
     expect(gameManager.purchaseNode('moc_truc_co_doc_dan', player)).toBe(false)
 
-    player.realmId = 'foundation'
+    player.realmId = 'foundation_establishment'
 
     expect(gameManager.purchaseNode('moc_truc_co_doc_dan', player)).toBe(true)
     expect(gameManager.purchaseNode('moc_truc_co_doc_can', player)).toBe(false)
@@ -74,8 +74,8 @@ describe('GameManager — Pháp Tu PoisonPath (Mộc Node Tree Luyện Khí/Trú
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 4
-    player.realmId = 'foundation'
+    player.skillInsight = 4
+    player.realmId = 'foundation_establishment'
 
     expect(gameManager.purchaseNode('moc_linh_ngo', player)).toBe(true)
 
@@ -99,8 +99,8 @@ describe('GameManager — Pháp Tu PoisonPath (Mộc Node Tree Luyện Khí/Trú
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 10
-    player.realmId = 'foundation'
+    player.skillInsight = 10
+    player.realmId = 'foundation_establishment'
 
     expect(gameManager.purchaseNode('moc_linh_ngo', player)).toBe(true)
 
@@ -126,8 +126,8 @@ describe('GameManager — Pháp Tu PoisonPath (Mộc Node Tree Luyện Khí/Trú
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 10
-    player.realmId = 'foundation'
+    player.skillInsight = 10
+    player.realmId = 'foundation_establishment'
 
     expect(gameManager.purchaseNode('moc_linh_ngo', player)).toBe(true)
 

@@ -20,7 +20,7 @@ function startTribulation(targetRealmId: string, defense = 0) {
 describe('GameManager — Độ Kiếp sinh tồn', () => {
   it('dùng thời lượng và sát thương lôi kiếp theo cảnh giới đích', () => {
     const qiRefining = startTribulation('qi_refining')
-    const foundation = startTribulation('foundation')
+    const foundation = startTribulation('foundation_establishment')
     let qiDamage = 0
     let foundationDamage = 0
 
@@ -28,7 +28,7 @@ describe('GameManager — Độ Kiếp sinh tồn', () => {
     foundation.eventBus.on<CombatEvent>('damage', event => { foundationDamage += event.value ?? 0 })
 
     qiRefining.update(TRIBULATION_PROFILES.qi_refining!.strikeIntervalSeconds)
-    foundation.update(TRIBULATION_PROFILES.foundation!.strikeIntervalSeconds)
+    foundation.update(TRIBULATION_PROFILES.foundation_establishment!.strikeIntervalSeconds)
 
     expect(qiRefining.getActiveTribulation()?.durationSeconds).toBe(12)
     expect(foundation.getActiveTribulation()?.durationSeconds).toBe(20)
@@ -37,8 +37,8 @@ describe('GameManager — Độ Kiếp sinh tồn', () => {
   })
 
   it('catch-up đủ mọi lôi kích khi Chromium gom cả trận vào một tick dài', () => {
-    const gameManager = startTribulation('foundation', 10_000)
-    const profile = TRIBULATION_PROFILES.foundation!
+    const gameManager = startTribulation('foundation_establishment', 10_000)
+    const profile = TRIBULATION_PROFILES.foundation_establishment!
     let strikeCount = 0
 
     gameManager.eventBus.on<CombatEvent>('damage', () => { strikeCount++ })

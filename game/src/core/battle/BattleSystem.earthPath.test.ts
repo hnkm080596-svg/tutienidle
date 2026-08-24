@@ -8,8 +8,8 @@ import { BuffRegistry } from '../buff/BuffRegistry'
 import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import { AilmentSystem } from '../ailment/AilmentSystem'
 import { EventBus } from '../events/EventBus'
-import { MissileSystem } from '../combat/missile/MissileSystem'
-import { MissileManager } from '../combat/missile/MissileManager'
+import { ActionImpactSystem } from '../battle/ActionImpactSystem'
+
 import { createBaseStats } from '../stats/StatBlock'
 import { createSkillRuntimeStats } from '../skill/SkillRuntimeStats'
 import { ailments } from '../../data/ailment/ailments'
@@ -58,14 +58,14 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 2,
+    row: 2,
     alive: true,
     ...overrides,
   }
 }
 
 // tho_cau_thuat (test-only fixture) — chỉ cần đúng field engine thật
-// sự đọc: earthPureProjectileBehavior (case 'damage' trong
+// sự đọc: earthPureAreaBehavior (case 'damage' trong
 // SkillEffectSystem.ts) + grantsThoThePerCast + isBasicAttack.
 function createThoCauThuat(): Skill {
   return {
@@ -75,13 +75,11 @@ function createThoCauThuat(): Skill {
     type: 'active',
     level: 1,
     maxLevel: 10,
-    experience: 0,
-    experienceRequired: 100,
     cooldown: 1,
     remainingCooldown: 0,
     cost: 0,
     target: 'enemy',
-    effects: [{ type: 'damage', value: 1, damageType: 'physical', earthPureProjectileBehavior: true }],
+    effects: [{ type: 'damage', value: 1, damageType: 'physical', earthPureAreaBehavior: true }],
     isBasicAttack: true,
     resourceType: 'none',
     grantsThoThePerCast: true,
@@ -108,7 +106,7 @@ function setup() {
     new BuffRegistry(),
     ailmentRegistry,
     eventBus,
-    new MissileSystem(new MissileManager(), eventBus),
+    new ActionImpactSystem({ eventBus, rollCritical: () => false }),
   )
 
   const thoCauThuat = createThoCauThuat()
@@ -154,7 +152,7 @@ describe('BattleSystem — Thổ Thế (Plans/EarthPath mục XV, Thổ Thế ma
     // start() ghi đè x=ENEMY_SPAWN_X(400) > SCREEN_VISIBLE_MAX_X(350) —
     // đặt lại trong tầm nhìn (2026-08-22), cùng quy ước enemy.x=... đã
     // dùng ở các test khác trong file này.
-    enemy.x = 50
+    enemy.x = 5
 
     // attackSpeed mặc định 1 -> cast mỗi 1s (+1 Thổ Thế/cast), KHÔNG có
     // decay đối ứng (khác Hỏa Thế) nên PHẢI neo cứng đúng MAX_THO_THE
@@ -209,7 +207,13 @@ describe('BattleSystem — Trói Chân (Plans/EarthPath mục VI, Root)', () => 
   it('Root KHÔNG chặn attack — enemy ĐÃ trong tầm vẫn đánh trúng player bình thường', () => {
     const { system, tick } = setup()
 
-    const player = createCombatant({ id: 'player', type: 'player', x: 0, currentHp: 1000, maxHp: 1000 })
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      x: 0,
+      currentHp: 1000,
+      maxHp: 1000,
+    })
     const enemy = createCombatant({ id: 'enemy' })
 
     enemy.stats.attackRange = 10
@@ -240,9 +244,9 @@ describe('BattleSystem — AOE + Knockback (Plans/EarthPath mục XVI, Thổ Th�
     player.stats.attack = 100
     player.skillStats = {
       ...createSkillRuntimeStats(),
-      earthAoeRadius: 50,
+      earthAoeRadius: 2,
       earthAoeSecondaryDamagePercent: 0.5,
-      earthKnockbackDistance: 20,
+      earthKnockbackDistance: 2,
     }
 
     // enemy2 nằm trong bán kính 50 quanh điểm trúng của enemy1 (gần
@@ -254,13 +258,14 @@ describe('BattleSystem — AOE + Knockback (Plans/EarthPath mục XVI, Thổ Th�
     // SAU mỗi lệnh để dựng đúng khoảng cách 10 giữa 2 mục tiêu.
     system.start(player, enemy1)
     system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
-    enemy1.x = 50
+    enemy1.x = 5
+    // Spawn telegraph (2026-08-24): materialize gán row từ resolver —
+    // khôi phục row tác giả để enemy2 (row 2) nằm cùng hàng cho AOE.
+    enemy1.row = 2
 
     system.spawnEnemyInto(system.getBattle()!, enemy2)
-    enemy2.x = 60
+    enemy2.x = 7
 
-    // Player attackRange vô hạn (createBaseStats() mặc định) nên cast
-    // ngay tick đầu — chờ đủ lâu để missile bay từ x=0 tới x=50
     // (MISSILE_SPEED=500 -> 0.1s) rồi trúng cả 2.
     for (let i = 0; i < 30; i++) {
       tick(0.01)
@@ -275,8 +280,8 @@ describe('BattleSystem — AOE + Knockback (Plans/EarthPath mục XVI, Thổ Th�
     expect(enemy2Damage).toBeCloseTo(enemy1Damage * 0.5, 1)
 
     // Cả 2 đều bị đẩy lùi xa player (x tăng, vì x ban đầu > player.x=0).
-    expect(enemy1.x).toBeCloseTo(70, 5)
-    expect(enemy2.x).toBeCloseTo(80, 5)
+    expect(enemy1.x).toBeCloseTo(7, 5)
+    expect(enemy2.x).toBeCloseTo(9, 5)
   })
 
   it('chưa mua "Thổ Thế" (earthAoeRadius=0) — Thổ Cầu Thuật vẫn bắn đơn mục tiêu như cũ, không AOE/Knockback', () => {
@@ -291,7 +296,7 @@ describe('BattleSystem — AOE + Knockback (Plans/EarthPath mục XVI, Thổ Th�
 
     system.start(player, enemy1)
     system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
-    enemy1.x = 50
+    enemy1.x = 5
 
     system.spawnEnemyInto(system.getBattle()!, enemy2)
     enemy2.x = 60
@@ -302,6 +307,6 @@ describe('BattleSystem — AOE + Knockback (Plans/EarthPath mục XVI, Thổ Th�
 
     expect(enemy1.currentHp).toBeLessThan(100000)
     expect(enemy2.currentHp).toBe(100000)
-    expect(enemy1.x).toBe(50)
+    expect(enemy1.x).toBe(5)
   })
 })

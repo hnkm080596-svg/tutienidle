@@ -6,7 +6,7 @@ describe('GameManager current realm progression scope', () => {
   it('không mở đột phá sau Trúc Cơ tầng 18', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
-    player.realmId = 'foundation'
+    player.realmId = 'foundation_establishment'
     player.realmLevel = 18
 
     expect(gameManager.canTriggerRealmBreakthrough(player)).toBe(false)

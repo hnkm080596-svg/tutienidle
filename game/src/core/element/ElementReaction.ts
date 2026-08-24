@@ -69,7 +69,9 @@ export interface ElementReactionDefinition {
   // damage cho MỌI entity phe đối lập đứng trong bán kính lúc tick,
   // không riêng gì target ban đầu. Số liệu minh hoạ, cần playtest.
   spawnsLavaZone?: {
-    radius: number
+    laneRadius: number
+
+  columnRadius: number
     duration: number
     tickInterval: number
     damagePerTick: number
@@ -148,7 +150,7 @@ export const ELEMENT_REACTIONS: Partial<Record<AilmentId, Partial<Record<Ailment
       name: 'Dung Nham',
       baseDamage: 0,
       appliesAilmentId: 'dung_nham',
-      spawnsLavaZone: { radius: 40, duration: 6, tickInterval: 1, damagePerTick: 20, element: 'fire' },
+      spawnsLavaZone: { laneRadius: 1, columnRadius: 2, duration: 6, tickInterval: 1, damagePerTick: 20, element: 'fire' },
     },
     // Thổ+Thủy — "Trói Chân": Root thuần, không damage (đúng doc mục
     // VI, không nhắc gì tới sát thương).

@@ -29,7 +29,6 @@ export const STAT_METADATA: Partial<Record<StatType, StatMetadata>> = {
   ailmentResistPercent: { unit: 'percent', min: 0, max: 0.75 },
   ailmentPotencyPercent: { unit: 'percent', min: 0 },
   skillDamagePercent: { unit: 'percent', min: 0 },
-  projectileSpeedPercent: { unit: 'percent', min: 0 },
   elementApplicationPercent: { unit: 'percent', min: 0, max: 1 },
   reactionEffectPercent: { unit: 'percent', min: 0 },
   ailmentDurationPercent: { unit: 'percent', min: 0 },

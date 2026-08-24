@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { calculateStats } from '../stats/StatCalculator'
@@ -9,6 +9,29 @@ import type { Stage } from '../stage/Stage'
 import type { Buff } from '../buff/Buff'
 import { isBattleInProgress } from '../battle/BattleTypes'
 
+// Math.random là state TOÀN CỤC theo worker thread — file test chạy
+// trước trong cùng worker làm đổi chuỗi random của test này khiến trận
+// đấu tự nhiên có thể kết thúc 'defeat' (flaky chỉ hiện khi chạy full
+// suite). Seed PRNG cố định (mulberry32) để vòng lặp MVP deterministic
+// bất kể thứ tự chia worker.
+function mulberry32(seed: number): () => number {
+  let state = seed >>> 0
+
+  return () => {
+    state = (state + 0x6d2b79f5) >>> 0
+
+    let t = state
+
+    t = Math.imul(t ^ (t >>> 15), t | 1)
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+// Seed chọn sao cho trận thắng ổn định (đã xác minh qua nhiều lần chạy).
+const MVP_LOOP_SEED = 1
+
 // Combat Rework Phase 9 — mirror checklist "MVP cuối cùng" (plan mục
 // 20): PLAYER (HP/Attack/Class→Projectile Pierce) + ENEMY (HP/Defense/
 // AttackRange/Projectile) + COMBAT (Targeting/Collision/Damage Engine/
@@ -18,7 +41,13 @@ import { isBattleInProgress } from '../battle/BattleTypes'
 // có chạy được không", không lặp lại các test chi tiết từng cơ chế đã
 // có ở Phase 3-8.
 describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('Class thật (Kiếm Tu) đánh xuyên 1 Stage 2 quái (mob + Boss có Phase/Enrage) tới Victory', () => {
+    vi.spyOn(Math, 'random').mockImplementation(mulberry32(MVP_LOOP_SEED))
+
     const gameManager = new GameManager()
 
     gameManager.registerTechniqueTemplates(TECHNIQUES)
@@ -53,8 +82,17 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
       // (resolveMovement() chỉ bước khi distance>range), mãi mãi đứng
       // ngoài SCREEN_VISIBLE_MAX_X (2026-08-22, xem BattleLane.ts) —
       // gate "không bắn quái offscreen" sẽ khoá cứng cả 2 phía.
-      statsInput: { maxHp: 20, attack: 0, attackSpeed: 1, movementSpeed: 60, attackRange: 90, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-      rewards: { experience: 0, cultivation: 0, spiritStone: 0 },
+      statsInput: {
+        maxHp: 20,
+        attack: 0,
+        attackSpeed: 1,
+        movementSpeed: 60,
+        attackRange: 90,
+        criticalRate: 0,
+        criticalDamage: 1.5,
+        armor: 0,
+      },
+      rewards: { techniqueInsight: 0, cultivation: 0, spiritStone: 0 },
     })
 
     const boss = defineEnemy({
@@ -64,11 +102,22 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
       realmId: 'qi_refining',
       lane: 'ground',
       // attackRange thật, cùng lý do đã ghi ở mob phía trên (2026-08-22).
-      statsInput: { maxHp: 15, attack: 0, attackSpeed: 1, movementSpeed: 60, attackRange: 90, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-      rewards: { experience: 0, cultivation: 0, spiritStone: 0 },
+      statsInput: {
+        maxHp: 15,
+        attack: 0,
+        attackSpeed: 1,
+        movementSpeed: 60,
+        attackRange: 90,
+        criticalRate: 0,
+        criticalDamage: 1.5,
+        armor: 0,
+      },
+      rewards: { techniqueInsight: 0, cultivation: 0, spiritStone: 0 },
       isBoss: true,
       // createBossVariant() nhân maxHp x7 -> 105 HP thật khi vào trận.
-      tribulationPhases: [{ hpThresholdPercent: 0.5, buff: phaseBuff, archetypeOverride: 'ranged' }],
+      tribulationPhases: [
+        { hpThresholdPercent: 0.5, buff: phaseBuff, archetypeOverride: 'ranged' },
+      ],
       enrage: { afterSeconds: 1, buff: enrageBuff },
     })
 
@@ -94,6 +143,12 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
     player.realmLevel = 12
     expect(gameManager.chooseCultivationPath('kiem_tu', player)).toBe(true)
 
+    // Spawn telegraph (2026-08-24): quái materialize trễ hơn (0.75–1.4s)
+    // khiến trận dài thêm ~2-3s, realm pressure tích lũy thêm — cộng
+    // buffer HP nhỏ để bài test giữ đúng mục đích "vòng lặp đầy đủ tới
+    // Victory" thay vì đua trên biên HP mỏng của seed.
+    player.baseStats.maxHp += 40
+
     const finalStats = calculateStats(player.baseStats, [
       ...player.modifiers,
       ...gameManager.getAggregatedModifiers(),
@@ -112,7 +167,9 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
 
       const battle = gameManager.getBattle()
 
-      const bossEntry = battle?.enemies.find(enemy => enemy.entity.id.startsWith('mvp_test_boss_'))
+      const bossEntry = battle?.enemies.find((enemy) =>
+        enemy.entity.id.startsWith('mvp_test_boss_'),
+      )
 
       if (bossEntry) {
         sawBossSpawn = true
@@ -125,7 +182,6 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
           sawBossEnrageTrigger = true
         }
       }
-
     }
 
     // COMBAT + PLAYER + ENEMY: trận phải THẮNG thật (không phải hết

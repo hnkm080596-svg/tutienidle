@@ -7,14 +7,15 @@ import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
 import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import { EventBus } from '../events/EventBus'
-import { MissileSystem } from '../combat/missile/MissileSystem'
-import { MissileManager } from '../combat/missile/MissileManager'
+import { ActionImpactSystem } from './ActionImpactSystem'
 import { createBaseStats } from '../stats/StatBlock'
 import { ailments } from '../../data/ailment/ailments'
 import type { CombatEntity } from '../combat/CombatEntity'
 
-// Plans/magicpathgeneral Phase 12 (2026-08-21) — Lava Zone: vùng sát
-// thương tồn tại ĐỘC LẬP theo vị trí (x), KHÔNG gắn với entity nào.
+// Combat Grid Rework (2026-08-24) — Lava Zone là GRID AREA
+// {row, column, laneRadius, columnRadius}, tick mọi entity phe đối lập
+// đang chiếm ô trong vùng. Vẫn tồn tại ĐỘC LẬP với entity (ownerId chỉ
+// xác định "phe"), damage đi qua applyDotDamage như cũ.
 function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
   const stats = {
     ...createBaseStats(),
@@ -23,21 +24,10 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     evasionRate: 0,
     dexterity: 0,
     criticalRate: 0,
-    // Loại bỏ HOÀN TOÀN đòn đánh thường tự động (player mặc định
-    // attackRange "vô hạn" qua createBaseStats(), enemy dùng chung
-    // stats này ở test file — cả 2 phía đều có thể tự bắn nhau nếu
-    // không chặn hẳn) — test này CHỈ muốn đo riêng Lava Zone.
+    // Chặn đòn thường tự động 2 phía — test này CHỈ đo Lava Zone.
     attackRange: 0,
     attackSpeed: 0,
-    // Vitality-derived hpRegenPerSecond gây nhiễu số HP chính xác qua
-    // nhiều tick (test này cần toBe() chặt, không phải toBeCloseTo()).
     vitality: 0,
-    // Bug phát hiện 2026-08-21 — thiếu dòng này khiến resolveMovement()
-    // tự đi (movementSpeed mặc định 60 từ createBaseStats()) vì
-    // attackRange=0 khiến enemy nghĩ mình luôn "ngoài tầm", đi ra khỏi
-    // bán kính Lava Zone TRƯỚC lần tick đầu tiên — false negative im
-    // lặng, không liên quan gì tới Lava Zone thật. Zero hẳn movement,
-    // đúng tinh thần "test này CHỈ muốn đo riêng Lava Zone" ở trên.
     movementSpeed: 0,
   }
 
@@ -61,7 +51,7 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 2,
+    row: 2,
     alive: true,
     ...overrides,
   }
@@ -85,7 +75,7 @@ function setup() {
     new BuffRegistry(),
     ailmentRegistry,
     eventBus,
-    new MissileSystem(new MissileManager(), eventBus),
+    new ActionImpactSystem({ eventBus, rollCritical: () => false }),
   )
 
   function tick(deltaSeconds: number) {
@@ -96,20 +86,22 @@ function setup() {
   return { system, tick }
 }
 
-describe('BattleSystem — Lava Zone (Plans/magicpathgeneral Phase 12)', () => {
+describe('BattleSystem — Lava Zone trên grid (Combat Grid Rework)', () => {
   it('spawnLavaZone thêm 1 zone vào battle.lavaZones với đúng field', () => {
     const { system } = setup()
 
-    const player = createCombatant({ id: 'player', type: 'player', x: 0 })
-    const enemy = createCombatant({ id: 'enemy', x: 50 })
+    const player = createCombatant({ id: 'player', type: 'player' })
+    const enemy = createCombatant({ id: 'enemy', x: 8 })
 
     system.start(player, enemy)
-    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
+    system.update(3)
 
     system.spawnLavaZone(system.getBattle()!, {
       ownerId: 'player',
-      x: 50,
-      radius: 20,
+      row: 2,
+      column: 8,
+      laneRadius: 1,
+      columnRadius: 1,
       duration: 3,
       tickInterval: 1,
       damagePerTick: 10,
@@ -119,27 +111,44 @@ describe('BattleSystem — Lava Zone (Plans/magicpathgeneral Phase 12)', () => {
     const zones = system.getBattle()!.lavaZones
 
     expect(zones).toHaveLength(1)
-    expect(zones[0]).toMatchObject({ ownerId: 'player', x: 50, radius: 20, remainingTime: 3, damagePerTick: 10 })
+    expect(zones[0]).toMatchObject({
+      ownerId: 'player',
+      row: 2,
+      column: 8,
+      laneRadius: 1,
+      columnRadius: 1,
+      remainingTime: 3,
+      damagePerTick: 10,
+    })
   })
 
-  it('gây damage cho enemy TRONG bán kính đúng mỗi tickInterval, KHÔNG damage entity ngoài bán kính', () => {
+  it('gây damage cho enemy TRONG vùng đúng mỗi tickInterval, KHÔNG trúng entity ngoài vùng', () => {
     const { system, tick } = setup()
 
-    const player = createCombatant({ id: 'player', type: 'player', x: 0 })
-    const enemyInRange = createCombatant({ id: 'enemy_in', currentHp: 1000, maxHp: 1000 })
-    const enemyOutOfRange = createCombatant({ id: 'enemy_out', currentHp: 1000, maxHp: 1000 })
+    const player = createCombatant({ id: 'player', type: 'player' })
+    const enemyInRange = createCombatant({ id: 'enemy_in', x: 8, currentHp: 1000, maxHp: 1000 })
+    const enemyOutOfRange = createCombatant({
+      id: 'enemy_out',
+      x: 12,
+      row: 3,
+      currentHp: 1000,
+      maxHp: 1000,
+    })
 
     system.start(player, enemyInRange)
-    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
-    enemyInRange.x = 55
-
+    system.update(3)
+    enemyInRange.x = 8
+    // Spawn telegraph (2026-08-24): materialize gán row từ resolver —
+    // khôi phục row tác giả (zone row 2, laneRadius 1 cần row 1..3).
+    enemyInRange.row = 2
     system.spawnEnemyInto(system.getBattle()!, enemyOutOfRange)
-    enemyOutOfRange.x = 500
 
     system.spawnLavaZone(system.getBattle()!, {
       ownerId: 'player',
-      x: 50,
-      radius: 20,
+      row: 2,
+      column: 8,
+      laneRadius: 1,
+      columnRadius: 1,
       duration: 5,
       tickInterval: 1,
       damagePerTick: 30,
@@ -153,22 +162,25 @@ describe('BattleSystem — Lava Zone (Plans/magicpathgeneral Phase 12)', () => {
     // Vừa chạm tickInterval (1s) — tick 1 lần.
     tick(0.5)
     expect(enemyInRange.currentHp).toBeLessThan(1000)
+    // Ngoài laneRadius (row 3 vs zone row 2 ±1 vẫn trong...) — dùng row ngoài: đặt lại bằng cách kiểm tra cột xa.
     expect(enemyOutOfRange.currentHp).toBe(1000)
   })
 
   it('zone tự xoá khỏi battle.lavaZones sau khi hết duration', () => {
     const { system, tick } = setup()
 
-    const player = createCombatant({ id: 'player', type: 'player', x: 0 })
-    const enemy = createCombatant({ id: 'enemy', x: 50 })
+    const player = createCombatant({ id: 'player', type: 'player' })
+    const enemy = createCombatant({ id: 'enemy', x: 8 })
 
     system.start(player, enemy)
-    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
+    system.update(3)
 
     system.spawnLavaZone(system.getBattle()!, {
       ownerId: 'player',
-      x: 50,
-      radius: 20,
+      row: 2,
+      column: 8,
+      laneRadius: 1,
+      columnRadius: 1,
       duration: 2,
       tickInterval: 1,
       damagePerTick: 10,
@@ -182,20 +194,27 @@ describe('BattleSystem — Lava Zone (Plans/magicpathgeneral Phase 12)', () => {
     expect(system.getBattle()!.lavaZones).toHaveLength(0)
   })
 
-  it('zone của player KHÔNG bao giờ damage player, kể cả nếu player đứng trong bán kính', () => {
+  it('zone của player KHÔNG bao giờ damage player, kể cả nếu player đứng trong vùng', () => {
     const { system, tick } = setup()
 
-    const player = createCombatant({ id: 'player', type: 'player', x: 50, currentHp: 1000, maxHp: 1000 })
-    const enemy = createCombatant({ id: 'enemy', x: 500 })
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      x: 8,
+      currentHp: 1000,
+      maxHp: 1000,
+    })
+    const enemy = createCombatant({ id: 'enemy', x: 9 })
 
     system.start(player, enemy)
-    system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
-    player.x = 50
+    system.update(3)
 
     system.spawnLavaZone(system.getBattle()!, {
       ownerId: 'player',
-      x: 50,
-      radius: 20,
+      row: 2,
+      column: 8,
+      laneRadius: 1,
+      columnRadius: 1,
       duration: 3,
       tickInterval: 1,
       damagePerTick: 999,

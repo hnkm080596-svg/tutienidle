@@ -28,7 +28,7 @@ function createEntity(currentMomentum: number): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 2,
+    row: 2,
     alive: true,
   }
 }
@@ -41,8 +41,6 @@ function createHeavyImpactSkill(): Skill {
     type: 'active',
     level: 1,
     maxLevel: 10,
-    experience: 0,
-    experienceRequired: 100,
     cooldown: 6,
     remainingCooldown: 0,
     cost: 100,

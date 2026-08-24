@@ -7,12 +7,14 @@ import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
 import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import { EventBus } from '../events/EventBus'
-import { MissileSystem, MISSILE_SPEED } from '../combat/missile/MissileSystem'
-import { MissileManager } from '../combat/missile/MissileManager'
+import { ActionImpactSystem } from '../battle/ActionImpactSystem'
+
 import { createBaseStats } from '../stats/StatBlock'
-import { ENEMY_SPAWN_X } from './BattleLane'
+import { SPAWN_COLUMN } from './BattleLane'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
+import { ailments } from '../../data/ailment/ailments'
+import type { StatusVfxAttachedEvent, StatusVfxUpdatedEvent } from './BattleEvents'
 
 // Cast Time (2026-08-21) — Skill.castTime > 0 hoãn hiệu ứng thật lại
 // (BattleSystem.beginCast()/updateCasting(), TÁCH khỏi castSkill() cũ)
@@ -21,12 +23,14 @@ import type { Skill } from '../skill/Skill'
 // đụng data/skill/Skills.ts thật.
 //
 // missile fired lúc resolveSkillEffects() phải BAY hết quãng đường tới
-// enemy (system.start() luôn set enemy.x = ENEMY_SPAWN_X, ghi đè bất kỳ
+// enemy (system.start() luôn set enemy.x = SPAWN_COLUMN, ghi đè bất kỳ
 // x nào truyền vào fixture — gotcha đã ghi ở EarthPath, xem BattleLane.ts).
-// MISSILE_TRAVEL_BUFFER_SECONDS = thời gian bay tối đa (ENEMY_SPAWN_X/
+// IMPACT_WAIT_SECONDS = thời gian bay tối đa (SPAWN_COLUMN/
 // MISSILE_SPEED) + biên an toàn nhỏ, dùng SAU khi cast complete để chờ
 // missile trúng đích trước khi assert currentHp.
-const MISSILE_TRAVEL_BUFFER_SECONDS = ENEMY_SPAWN_X / MISSILE_SPEED + 0.1
+// Combat Grid Rework — impact xảy ra ngay khi cast complete (không còn
+// thời gian bay); chờ nhỏ cho windup basic attack nếu có.
+const IMPACT_WAIT_SECONDS = 0.3
 
 function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
   const stats = {
@@ -63,7 +67,7 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 2,
+    row: 2,
     alive: true,
     ...overrides,
   }
@@ -77,8 +81,6 @@ function createCastTimeSkill(overrides: Partial<Skill> = {}): Skill {
     type: 'active',
     level: 1,
     maxLevel: 10,
-    experience: 0,
-    experienceRequired: 100,
     cooldown: 5,
     remainingCooldown: 0,
     cost: 0,
@@ -100,6 +102,11 @@ function setup(skill: Skill) {
   const eventBus = new EventBus()
   const skillManager = new SkillManager()
   const skillSystem = new SkillSystem(skillManager)
+  const ailmentRegistry = new AilmentRegistry()
+
+  for (const template of ailments) {
+    ailmentRegistry.register(template)
+  }
 
   skillManager.add(skill)
 
@@ -109,12 +116,18 @@ function setup(skill: Skill) {
     skillSystem,
     new SkillEffectSystem(),
     new BuffRegistry(),
-    new AilmentRegistry(),
+    ailmentRegistry,
     eventBus,
-    new MissileSystem(new MissileManager(), eventBus),
+    new ActionImpactSystem({ eventBus, rollCritical: () => false }),
   )
 
-  const events: { type: string; sourceId?: string; skillId?: string; skillName?: string; castTimeSeconds?: number }[] = []
+  const events: {
+    type: string
+    sourceId?: string
+    skillId?: string
+    skillName?: string
+    castTimeSeconds?: number
+  }[] = []
 
   for (const type of ['cast_start', 'cast_complete']) {
     eventBus.on(type, (event: any) => events.push({ type, ...event }))
@@ -125,7 +138,7 @@ function setup(skill: Skill) {
     system.update(deltaSeconds)
   }
 
-  return { system, tick, events }
+  return { system, tick, events, eventBus }
 }
 
 describe('BattleSystem — Cast Time (2026-08-21)', () => {
@@ -139,6 +152,7 @@ describe('BattleSystem — Cast Time (2026-08-21)', () => {
     player.stats.attack = 100
 
     system.start(player, enemy)
+    enemy.x = 8
     system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
 
     // Tick đầu tiên chọn skill trong Loadout, BẮT ĐẦU niệm — cooldown
@@ -148,13 +162,15 @@ describe('BattleSystem — Cast Time (2026-08-21)', () => {
     expect(enemy.currentHp).toBe(1000)
     expect(player.castingSkillId).toBe('test_cast_skill')
     expect(skill.remainingCooldownBySlot?.[0]).toBeGreaterThan(0)
-    expect(events).toContainEqual(expect.objectContaining({
-      type: 'cast_start',
-      sourceId: 'player',
-      skillId: 'test_cast_skill',
-      skillName: 'Niệm Chú Thử Nghiệm',
-      castTimeSeconds: 2,
-    }))
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        type: 'cast_start',
+        sourceId: 'player',
+        skillId: 'test_cast_skill',
+        skillName: 'Niệm Chú Thử Nghiệm',
+        castTimeSeconds: 2,
+      }),
+    )
 
     // Chưa đủ 2s — vẫn đang niệm, chưa áp damage.
     tick(1.5)
@@ -165,11 +181,17 @@ describe('BattleSystem — Cast Time (2026-08-21)', () => {
     // ra NGAY dù missile còn đang bay tới đích.
     tick(0.5)
     expect(player.castingSkillId).toBeUndefined()
-    expect(events).toContainEqual(expect.objectContaining({ type: 'cast_complete', sourceId: 'player', skillId: 'test_cast_skill' }))
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        type: 'cast_complete',
+        sourceId: 'player',
+        skillId: 'test_cast_skill',
+      }),
+    )
 
-    // Chờ missile bay hết quãng đường (ENEMY_SPAWN_X/MISSILE_SPEED)
+    // Chờ missile bay hết quãng đường (SPAWN_COLUMN/MISSILE_SPEED)
     // rồi mới đo damage thật.
-    tick(MISSILE_TRAVEL_BUFFER_SECONDS)
+    tick(IMPACT_WAIT_SECONDS)
     expect(enemy.currentHp).toBeLessThan(1000)
   })
 
@@ -183,6 +205,7 @@ describe('BattleSystem — Cast Time (2026-08-21)', () => {
     player.stats.attack = 100
 
     system.start(player, enemy)
+    enemy.x = 8
     system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
 
     tick(0.1)
@@ -191,7 +214,7 @@ describe('BattleSystem — Cast Time (2026-08-21)', () => {
 
     // 3 tick liên tiếp trong lúc đang niệm — vẫn CHỈ đúng 1 'cast_start'
     // (không bắt đầu cast chồng cast).
-    expect(events.filter(event => event.type === 'cast_start')).toHaveLength(1)
+    expect(events.filter((event) => event.type === 'cast_start')).toHaveLength(1)
   })
 
   it('castSpeedPercent rút ngắn Cast Time thật — cùng 1 khoảng deltaSeconds, cast xong sớm hơn', () => {
@@ -205,6 +228,7 @@ describe('BattleSystem — Cast Time (2026-08-21)', () => {
     player.stats.castSpeedPercent = 1 // +100% tốc độ niệm — 2s còn 1s thật.
 
     system.start(player, enemy)
+    enemy.x = 8
     system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
 
     // Tick đầu chỉ BẮT ĐẦU niệm (updateCasting() chạy TRƯỚC
@@ -218,7 +242,89 @@ describe('BattleSystem — Cast Time (2026-08-21)', () => {
     tick(0.2)
     expect(player.castingSkillId).toBeUndefined()
 
-    tick(MISSILE_TRAVEL_BUFFER_SECONDS)
+    tick(IMPACT_WAIT_SECONDS)
     expect(enemy.currentHp).toBeLessThan(1000)
+  })
+
+  it('targeting.rangeColumns gate auto-cast cho tới khi enemy đi vào tầm', () => {
+    const skill = createCastTimeSkill({
+      castTime: 0,
+      targeting: { rangeColumns: 2, shape: 'single' },
+    })
+    const { system, tick } = setup(skill)
+    const player = createCombatant({ id: 'player', type: 'player', x: 0 })
+    const enemy = createCombatant({ id: 'enemy', currentHp: 1000, maxHp: 1000 })
+
+    player.stats.attack = 100
+    system.start(player, enemy)
+    system.update(3)
+
+    enemy.x = 3
+    tick(0.1)
+    expect(enemy.currentHp).toBe(1000)
+
+    enemy.x = 2
+    tick(0.1)
+    expect(enemy.currentHp).toBeLessThan(1000)
+  })
+
+  it('AOE áp damage lên nhiều target nhưng effect source chỉ chạy đúng một lần', () => {
+    const skill = createCastTimeSkill({
+      castTime: 0,
+      targeting: { rangeColumns: 16, shape: 'area', laneRadius: 1, columnRadius: 1 },
+      effects: [
+        { type: 'damage', value: 1, damageType: 'physical' },
+        { type: 'heal', value: 10 },
+      ],
+    })
+    const { system, tick } = setup(skill)
+    const player = createCombatant({ id: 'player', type: 'player', currentHp: 50, maxHp: 100 })
+    const primary = createCombatant({ id: 'primary', currentHp: 1000, maxHp: 1000, row: 2 })
+    const secondary = createCombatant({ id: 'secondary', currentHp: 1000, maxHp: 1000, row: 3 })
+
+    player.stats.attack = 100
+    system.start(player, primary)
+    system.spawnEnemyInto(system.getBattle()!, secondary)
+    system.update(3)
+    primary.x = 5
+    secondary.x = 5
+    // Spawn telegraph (2026-08-24): materialize gán row từ resolver —
+    // khôi phục row tác giả để AOE laneRadius=1 phủ cả 2 mục tiêu.
+    primary.row = 2
+    secondary.row = 3
+
+    tick(0.1)
+
+    expect(primary.currentHp).toBeLessThan(1000)
+    expect(secondary.currentHp).toBeLessThan(1000)
+    expect(player.currentHp).toBeGreaterThanOrEqual(60)
+    expect(player.currentHp).toBeLessThan(61)
+  })
+
+  it('DOT emit attached ngay trong tick áp dụng và updated khi refresh', () => {
+    const skill = createCastTimeSkill({
+      castTime: 0,
+      cooldown: 0,
+      effects: [{ type: 'ailment', ailmentId: 'bong', ailmentChance: 1 }],
+    })
+    const { system, tick, eventBus } = setup(skill)
+    const player = createCombatant({ id: 'player', type: 'player' })
+    const enemy = createCombatant({ id: 'enemy', currentHp: 1000, maxHp: 1000 })
+    const attached: StatusVfxAttachedEvent[] = []
+    const updated: StatusVfxUpdatedEvent[] = []
+
+    eventBus.on<StatusVfxAttachedEvent>('status_vfx_attached', (event) => attached.push(event))
+    eventBus.on<StatusVfxUpdatedEvent>('status_vfx_updated', (event) => updated.push(event))
+
+    system.start(player, enemy)
+    system.update(3)
+    enemy.x = 5
+
+    tick(0.1)
+    expect(attached).toHaveLength(1)
+    expect(attached[0]).toMatchObject({ targetId: 'enemy', dotType: 'bong' })
+
+    tick(0.1)
+    expect(updated.length).toBeGreaterThanOrEqual(1)
   })
 })

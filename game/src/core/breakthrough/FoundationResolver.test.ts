@@ -21,7 +21,7 @@ function permanentPillModifier(stat: 'maxHp' | 'defense' | 'maxMp', flat: number
 
 function playerAt(realmLevel: number, modifiers: StatModifier[] = []): PlayerData {
   // Phàm Nhân (2026-08-16) — createDefaultPlayer() giờ khởi tạo ở
-  // 'pham_nhan', nhưng test file này giả lập nhân vật SẮP Trúc Cơ (tức
+  // 'mortal', nhưng test file này giả lập nhân vật SẮP Trúc Cơ (tức
   // đang ở qi_refining) — set tường minh, không phụ thuộc cảnh giới
   // khởi điểm mặc định (FoundationResolver không đọc realmId nên số
   // vẫn ra đúng dù không set, nhưng fixture nên khớp ngữ nghĩa thật).

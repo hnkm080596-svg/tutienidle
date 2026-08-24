@@ -74,7 +74,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Hỏa Cầu Thuật',
     description: 'Học Hỏa Cầu Thuật — root của Hỏa skill tree, luôn có sẵn miễn phí lúc chọn Pháp Tu.',
     type: 'major',
-    cost: 0,
+    insightCost: 0,
     effect: {
       unlocksSkillIds: ['hoa_cau_thuat'],
     },
@@ -85,7 +85,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Hỏa Linh',
     description: '+3% Hỏa Lực.',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: FIRE_LINH_NGO }],
     effect: {
       statModifiers: [
@@ -99,7 +99,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Xích Viêm',
     description: '+5% Sát Thương Thiêu Đốt.',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: FIRE_LINH_NGO }],
     effect: {
       statModifiers: [
@@ -113,11 +113,11 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Tật Hỏa',
     description: '+5% Tốc Độ Đạn.',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: FIRE_LINH_NGO }],
     effect: {
       statModifiers: [
-        { id: 'node:minor_fire_haste:projectileSpeedPercent', sourceId: 'minor_fire_haste', sourceType: 'talent', stat: 'projectileSpeedPercent', flat: 0.05 },
+        { id: 'node:minor_fire_haste:castSpeedPercent', sourceId: 'minor_fire_haste', sourceType: 'talent', stat: 'castSpeedPercent', flat: 0.05 },
       ],
     },
     branchTag: 'fire',
@@ -130,10 +130,10 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Dẫn Hỏa',
     description: '+15% Tỉ Lệ Áp Nguyên Tố (Thiêu Đốt) của Hỏa Cầu Thuật — mở khoá nhánh Minor Reaction.',
     type: 'major',
-    cost: 2,
+    insightCost: 2,
     prerequisites: [
       { kind: 'node', nodeId: FIRE_LINH_NGO },
-      { kind: 'realm', realmId: 'foundation' },
+      { kind: 'realm', realmId: 'foundation_establishment' },
       { kind: 'excludesNode', nodeId: FIRE_TRUC_CO_PURE },
     ],
     // 2026-08-21 — Hỏa Cầu Thuật giờ chỉ 50% base (xem Skills.ts),
@@ -156,10 +156,10 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Tụ Hỏa',
     description: 'Mỗi lần dùng Hỏa Cầu Thuật, tích 1 Hỏa Thế (tối đa 5 tầng, tự giảm theo thời gian nếu ngừng đánh) — mở khoá nhánh Minor Pure, nền tảng cho các Major Pure Hỏa ở Kim Đan trở đi.',
     type: 'major',
-    cost: 2,
+    insightCost: 2,
     prerequisites: [
       { kind: 'node', nodeId: FIRE_LINH_NGO },
-      { kind: 'realm', realmId: 'foundation' },
+      { kind: 'realm', realmId: 'foundation_establishment' },
       { kind: 'excludesNode', nodeId: FIRE_TRUC_CO_REACTION },
     ],
     // FirePath.md mục 7 — Hỏa Thế CHƯA cấp damage ở giai đoạn này
@@ -183,8 +183,8 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Hỏa Tâm',
     description: '+5% Hỏa Lực.',
     type: 'minor',
-    cost: 1,
-    prerequisites: [{ kind: 'realm', realmId: 'foundation' }],
+    insightCost: 1,
+    prerequisites: [{ kind: 'realm', realmId: 'foundation_establishment' }],
     effect: {
       statModifiers: [
         { id: 'node:minor_fire_heart:firePower', sourceId: 'minor_fire_heart', sourceType: 'talent', stat: 'firePower', percent: 0.05 },
@@ -197,8 +197,8 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Hỏa Nguyên',
     description: '+5% Tỉ Lệ Áp Nguyên Tố (Thiêu Đốt).',
     type: 'minor',
-    cost: 1,
-    prerequisites: [{ kind: 'realm', realmId: 'foundation' }],
+    insightCost: 1,
+    prerequisites: [{ kind: 'realm', realmId: 'foundation_establishment' }],
     effect: {
       statModifiers: [
         { id: 'node:minor_fire_application:elementApplicationPercent', sourceId: 'minor_fire_application', sourceType: 'talent', stat: 'elementApplicationPercent', flat: 0.05 },
@@ -213,7 +213,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Cộng Minh',
     description: '+5% Sát Thương Phản Ứng Nguyên Tố (Bốc Hơi/Lôi Hỏa/Độc Viêm/Phong Hỏa...).',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: FIRE_TRUC_CO_REACTION }],
     effect: {
       statModifiers: [
@@ -229,7 +229,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Hỏa Mạch',
     description: '+10% Hỏa Thế Tích Được Mỗi Lượt.',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: FIRE_TRUC_CO_PURE }],
     effect: {
       skillModifiers: [
@@ -243,7 +243,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Tụ Viêm',
     description: 'Hỏa Thế giảm chậm hơn 10%.',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: FIRE_TRUC_CO_PURE }],
     effect: {
       skillModifiers: [
@@ -269,7 +269,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Độc Chưởng',
     description: 'Học Độc Chưởng — root của Mộc skill tree, mở khoá toàn bộ Node Tree Mộc (Luyện Khí + Trúc Cơ).',
     type: 'major',
-    cost: 2,
+    insightCost: 2,
     effect: {
       unlocksSkillIds: ['doc_chuong'],
     },
@@ -280,7 +280,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Độc Nguyên',
     description: '+3% Sát Thương Độc.',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: WOOD_LINH_NGO }],
     effect: {
       statModifiers: [
@@ -294,7 +294,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Độc Tức',
     description: '+10% Thời Lượng Trúng Độc.',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: WOOD_LINH_NGO }],
     effect: {
       statModifiers: [
@@ -308,7 +308,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Độc Thực',
     description: '+5% Sát Thương Độc.',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: WOOD_LINH_NGO }],
     effect: {
       statModifiers: [
@@ -325,10 +325,10 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Độc Dẫn',
     description: '+20% Hiệu Ứng Phản Ứng (Độc Viêm/Độc Thủy...) — mở khoá nhánh Minor Reaction.',
     type: 'major',
-    cost: 2,
+    insightCost: 2,
     prerequisites: [
       { kind: 'node', nodeId: WOOD_LINH_NGO },
-      { kind: 'realm', realmId: 'foundation' },
+      { kind: 'realm', realmId: 'foundation_establishment' },
       { kind: 'excludesNode', nodeId: WOOD_TRUC_CO_PURE },
     ],
     effect: {
@@ -351,10 +351,10 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Mộc Thế',
     description: 'Trúng Độc tồn tại LIÊN TỤC trên mục tiêu càng lâu càng mạnh — mỗi giây tích 1 tầng Mộc Thế (tối đa 5), mỗi tầng +3% Sát Thương Độc lên đúng mục tiêu đó — mở khoá nhánh Minor Pure.',
     type: 'major',
-    cost: 2,
+    insightCost: 2,
     prerequisites: [
       { kind: 'node', nodeId: WOOD_LINH_NGO },
-      { kind: 'realm', realmId: 'foundation' },
+      { kind: 'realm', realmId: 'foundation_establishment' },
       { kind: 'excludesNode', nodeId: WOOD_TRUC_CO_REACTION },
     ],
     // PoisonPath.md mục 8 — snapshot lên chính Ailment lúc áp, xem
@@ -380,8 +380,8 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Độc Linh',
     description: '+5% Sát Thương Độc.',
     type: 'minor',
-    cost: 1,
-    prerequisites: [{ kind: 'realm', realmId: 'foundation' }],
+    insightCost: 1,
+    prerequisites: [{ kind: 'realm', realmId: 'foundation_establishment' }],
     effect: {
       statModifiers: [
         { id: 'node:minor_wood_heart:ailmentPotencyPercent', sourceId: 'minor_wood_heart', sourceType: 'talent', stat: 'ailmentPotencyPercent', flat: 0.05 },
@@ -397,8 +397,8 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Độc Trường',
     description: '+10% Thời Lượng Trúng Độc.',
     type: 'minor',
-    cost: 1,
-    prerequisites: [{ kind: 'realm', realmId: 'foundation' }],
+    insightCost: 1,
+    prerequisites: [{ kind: 'realm', realmId: 'foundation_establishment' }],
     effect: {
       statModifiers: [
         { id: 'node:minor_wood_duration_chung:ailmentDurationPercent', sourceId: 'minor_wood_duration_chung', sourceType: 'talent', stat: 'ailmentDurationPercent', flat: 0.1 },
@@ -414,7 +414,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Cộng Độc',
     description: '+5% Hiệu Ứng Phản Ứng (Độc Viêm/Độc Thủy...).',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: WOOD_TRUC_CO_REACTION }],
     effect: {
       statModifiers: [
@@ -432,7 +432,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Độc Uyên',
     description: '+1 Trần Mộc Thế.',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: WOOD_TRUC_CO_PURE }],
     effect: {
       skillModifiers: [
@@ -446,7 +446,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Độc Mạch',
     description: '+5% Sát Thương Độc khi mục tiêu có từ 3 tầng Mộc Thế trở lên.',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: WOOD_TRUC_CO_PURE }],
     effect: {
       skillModifiers: [
@@ -466,7 +466,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Thủy Tiễn Thuật',
     description: 'Học Thủy Tiễn Thuật — root của Thủy skill tree, mở khoá toàn bộ Node Tree Thủy (Luyện Khí + Trúc Cơ).',
     type: 'major',
-    cost: 2,
+    insightCost: 2,
     effect: {
       unlocksSkillIds: ['thuy_tien_thuat'],
     },
@@ -477,7 +477,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Thủy Linh',
     description: '+3% Thủy Lực.',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: WATER_LINH_NGO }],
     effect: {
       statModifiers: [
@@ -491,11 +491,11 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Thủy Tốc',
     description: '+5% Tốc Độ Đạn.',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: WATER_LINH_NGO }],
     effect: {
       statModifiers: [
-        { id: 'node:minor_water_haste:projectileSpeedPercent', sourceId: 'minor_water_haste', sourceType: 'talent', stat: 'projectileSpeedPercent', flat: 0.05 },
+        { id: 'node:minor_water_haste:castSpeedPercent', sourceId: 'minor_water_haste', sourceType: 'talent', stat: 'castSpeedPercent', flat: 0.05 },
       ],
     },
     branchTag: 'water',
@@ -505,7 +505,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Thủy Dẫn',
     description: '+5% Tỉ Lệ Áp Nguyên Tố (Tê Cóng).',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: WATER_LINH_NGO }],
     effect: {
       statModifiers: [
@@ -522,10 +522,10 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Dẫn Lưu',
     description: '+15% Tỉ Lệ Áp Nguyên Tố của Thủy Tiễn Thuật. Khi Thủy kích hoạt Phản Ứng, gia hạn Tê Cóng trên mục tiêu thêm 1 giây thay vì bị tiêu — mở khoá nhánh Minor Reaction.',
     type: 'major',
-    cost: 2,
+    insightCost: 2,
     prerequisites: [
       { kind: 'node', nodeId: WATER_LINH_NGO },
-      { kind: 'realm', realmId: 'foundation' },
+      { kind: 'realm', realmId: 'foundation_establishment' },
       { kind: 'excludesNode', nodeId: WATER_TRUC_CO_PURE },
     ],
     effect: {
@@ -543,10 +543,10 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Tụ Thủy',
     description: 'Mở Thủy Thế — giảm thẳng 5% sát thương phải nhận (Defensive Stat tồn tại liên tục, KHÔNG phải resource tích/tiêu) — mở khoá nhánh Minor Pure.',
     type: 'major',
-    cost: 2,
+    insightCost: 2,
     prerequisites: [
       { kind: 'node', nodeId: WATER_LINH_NGO },
-      { kind: 'realm', realmId: 'foundation' },
+      { kind: 'realm', realmId: 'foundation_establishment' },
       { kind: 'excludesNode', nodeId: WATER_TRUC_CO_REACTION },
     ],
     effect: {
@@ -563,8 +563,8 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Thủy Nguyên',
     description: '+5% Thủy Lực.',
     type: 'minor',
-    cost: 1,
-    prerequisites: [{ kind: 'realm', realmId: 'foundation' }],
+    insightCost: 1,
+    prerequisites: [{ kind: 'realm', realmId: 'foundation_establishment' }],
     effect: {
       statModifiers: [
         { id: 'node:minor_water_heart:waterPower', sourceId: 'minor_water_heart', sourceType: 'talent', stat: 'waterPower', percent: 0.05 },
@@ -577,8 +577,8 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Lưu Tốc',
     description: '+3% Giảm Hồi Chiêu (Cast Speed).',
     type: 'minor',
-    cost: 1,
-    prerequisites: [{ kind: 'realm', realmId: 'foundation' }],
+    insightCost: 1,
+    prerequisites: [{ kind: 'realm', realmId: 'foundation_establishment' }],
     effect: {
       statModifiers: [
         { id: 'node:minor_water_cast_speed:cooldownReduction', sourceId: 'minor_water_cast_speed', sourceType: 'talent', stat: 'cooldownReduction', flat: 0.03 },
@@ -593,7 +593,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Cộng Lưu',
     description: '+5% Sát Thương Phản Ứng Nguyên Tố (Bốc Hơi/Độc Thủy...).',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: WATER_TRUC_CO_REACTION }],
     effect: {
       statModifiers: [
@@ -609,7 +609,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Thủy Mạch',
     description: '+2% Thủy Thế.',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: WATER_TRUC_CO_PURE }],
     effect: {
       skillModifiers: [
@@ -623,7 +623,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Nhu Lưu',
     description: '+2% Thủy Thế.',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: WATER_TRUC_CO_PURE }],
     effect: {
       skillModifiers: [
@@ -653,7 +653,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Điểm Kim Thuật',
     description: 'Học Điểm Kim Thuật — root của Kim skill tree, mở khoá toàn bộ Node Tree Kim (Luyện Khí + Trúc Cơ).',
     type: 'major',
-    cost: 2,
+    insightCost: 2,
     effect: {
       unlocksSkillIds: ['diem_kim_thuat'],
     },
@@ -664,7 +664,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Kim Khí',
     description: '+3% Kim Lực.',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: METAL_LINH_NGO }],
     effect: {
       statModifiers: [
@@ -681,7 +681,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Huyết Ấn',
     description: '+5% Sát Thương Xuất Huyết.',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: METAL_LINH_NGO }],
     effect: {
       skillModifiers: [
@@ -695,7 +695,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Điểm Huyệt',
     description: '+5% Tỉ Lệ Áp Nguyên Tố (Xuất Huyết).',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: METAL_LINH_NGO }],
     effect: {
       statModifiers: [
@@ -712,10 +712,10 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Huyết Dẫn',
     description: '+20% Hiệu Ứng Phản Ứng (Thiêu Huyết/Huyết Độc...) — mở khoá nhánh Minor Reaction.',
     type: 'major',
-    cost: 2,
+    insightCost: 2,
     prerequisites: [
       { kind: 'node', nodeId: METAL_LINH_NGO },
-      { kind: 'realm', realmId: 'foundation' },
+      { kind: 'realm', realmId: 'foundation_establishment' },
       { kind: 'excludesNode', nodeId: METAL_TRUC_CO_PURE },
     ],
     effect: {
@@ -730,10 +730,10 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Kim Thế',
     description: 'Mỗi lần Điểm Kim Thuật áp THÀNH CÔNG Xuất Huyết, tích 1 Kim Thế (tối đa 5 tầng, mất 1 tầng mỗi 5 giây không proc mới) — mỗi tầng +5% Sát Thương Xuất Huyết — mở khoá nhánh Minor Pure.',
     type: 'major',
-    cost: 2,
+    insightCost: 2,
     prerequisites: [
       { kind: 'node', nodeId: METAL_LINH_NGO },
-      { kind: 'realm', realmId: 'foundation' },
+      { kind: 'realm', realmId: 'foundation_establishment' },
       { kind: 'excludesNode', nodeId: METAL_TRUC_CO_REACTION },
     ],
     // KimPath.md mục 10 — "Xuyên Kháng DoT" (kimTheDotResistancePenetrationPercentPerStack)
@@ -761,8 +761,8 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Kim Tâm',
     description: '+5% Kim Lực.',
     type: 'minor',
-    cost: 1,
-    prerequisites: [{ kind: 'realm', realmId: 'foundation' }],
+    insightCost: 1,
+    prerequisites: [{ kind: 'realm', realmId: 'foundation_establishment' }],
     effect: {
       statModifiers: [
         { id: 'node:minor_metal_heart:metalPower', sourceId: 'minor_metal_heart', sourceType: 'talent', stat: 'metalPower', percent: 0.05 },
@@ -779,7 +779,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Cộng Huyết',
     description: '+5% Hiệu Ứng Phản Ứng (Thiêu Huyết/Huyết Độc...).',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: METAL_TRUC_CO_REACTION }],
     effect: {
       statModifiers: [
@@ -797,7 +797,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Kim Uyên',
     description: '+1 Trần Kim Thế.',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: METAL_TRUC_CO_PURE }],
     effect: {
       skillModifiers: [
@@ -816,7 +816,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     // đương hiệu quả DPS.
     description: '+10% Sát Thương Xuất Huyết (Huyết Lưu — tick nhanh hơn, quy đổi sang %DPS).',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: METAL_TRUC_CO_PURE }],
     effect: {
       skillModifiers: [
@@ -838,7 +838,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     // khớp cặp) — cần playtest, không phải số chốt cứng.
     description: 'Xuất Huyết áp thành công tích 1 Huyết Phá (tối đa 5 tầng) — chạm đủ 5 tầng thì tiêu hết, bùng nổ 1 cục sát thương lên mục tiêu.',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: METAL_TRUC_CO_PURE }],
     effect: {
       skillModifiers: [
@@ -870,7 +870,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Thổ Cầu Thuật',
     description: 'Học Thổ Cầu Thuật — root của Thổ skill tree, mở khoá toàn bộ Node Tree Thổ (Luyện Khí + Trúc Cơ).',
     type: 'major',
-    cost: 2,
+    insightCost: 2,
     effect: {
       unlocksSkillIds: ['tho_cau_thuat'],
     },
@@ -881,7 +881,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Thổ Nguyên',
     description: '+3% Thổ Lực.',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: EARTH_LINH_NGO }],
     effect: {
       statModifiers: [
@@ -895,11 +895,11 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Thổ Tốc',
     description: '+5% Tốc Độ Đạn.',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: EARTH_LINH_NGO }],
     effect: {
       statModifiers: [
-        { id: 'node:minor_earth_haste:projectileSpeedPercent', sourceId: 'minor_earth_haste', sourceType: 'talent', stat: 'projectileSpeedPercent', flat: 0.05 },
+        { id: 'node:minor_earth_haste:castSpeedPercent', sourceId: 'minor_earth_haste', sourceType: 'talent', stat: 'castSpeedPercent', flat: 0.05 },
       ],
     },
     branchTag: 'earth',
@@ -909,7 +909,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Chấn Lực',
     description: '+5% Chấn Lực Kỹ Năng (stat nền dự phòng cho các cơ chế Thổ Tu tương lai — EarthPath.md mục XI, chưa có hiệu ứng ở bản này).',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: EARTH_LINH_NGO }],
     effect: {
       skillModifiers: [
@@ -926,10 +926,10 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Định Thổ',
     description: '+20% Hiệu Ứng Phản Ứng (Dung Nham/Trói Chân/Độc Thế...) — mở khoá nhánh Minor Reaction.',
     type: 'major',
-    cost: 2,
+    insightCost: 2,
     prerequisites: [
       { kind: 'node', nodeId: EARTH_LINH_NGO },
-      { kind: 'realm', realmId: 'foundation' },
+      { kind: 'realm', realmId: 'foundation_establishment' },
       { kind: 'excludesNode', nodeId: EARTH_TRUC_CO_PURE },
     ],
     effect: {
@@ -944,13 +944,13 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Thổ Thế',
     description: 'Thổ Cầu Thuật biến thành AOE + Knockback thật (mục tiêu chính 100% damage, mục tiêu phụ 70%), đồng thời mỗi lần thi triển tích 1 Thổ Thế (tối đa 5 tầng, chưa cấp hiệu ứng riêng) — mở khoá nhánh Minor Pure.',
     type: 'major',
-    cost: 2,
+    insightCost: 2,
     prerequisites: [
       { kind: 'node', nodeId: EARTH_LINH_NGO },
-      { kind: 'realm', realmId: 'foundation' },
+      { kind: 'realm', realmId: 'foundation_establishment' },
       { kind: 'excludesNode', nodeId: EARTH_TRUC_CO_REACTION },
     ],
-    // EarthPath.md mục XVI — số liệu minh hoạ cho earthAoeRadius (50)/
+    // Grid Rework — earthAoeRadius đo bằng số cell (1 = lan 1 lane/cột mỗi phía).
     // earthKnockbackDistance (30) là ước lượng của tôi (doc không chốt
     // con số cụ thể, chỉ nói "~1.5× vùng va chạm cơ bản" và "Có" cho
     // Knockback) — earthAoeSecondaryDamagePercent 0.7 là số CHỐT CỨNG
@@ -960,7 +960,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
         {
           skillId: 'tho_cau_thuat',
           statModifiers: [
-            { stat: 'earthAoeRadius', flat: 50 },
+            { stat: 'earthAoeRadius', flat: 1 },
             { stat: 'earthAoeSecondaryDamagePercent', flat: 0.7 },
             { stat: 'earthKnockbackDistance', flat: 30 },
             { stat: 'thoTheGainPerCast', flat: 1 },
@@ -977,8 +977,8 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Thổ Tâm',
     description: '+5% Thổ Lực.',
     type: 'minor',
-    cost: 1,
-    prerequisites: [{ kind: 'realm', realmId: 'foundation' }],
+    insightCost: 1,
+    prerequisites: [{ kind: 'realm', realmId: 'foundation_establishment' }],
     effect: {
       statModifiers: [
         { id: 'node:minor_earth_heart:earthPower', sourceId: 'minor_earth_heart', sourceType: 'talent', stat: 'earthPower', percent: 0.05 },
@@ -993,7 +993,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Định Lực',
     description: '+5% Hiệu Ứng Phản Ứng (Dung Nham/Trói Chân/Độc Thế...).',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: EARTH_TRUC_CO_REACTION }],
     effect: {
       statModifiers: [
@@ -1009,11 +1009,11 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Chấn Vực',
     description: '+5% Bán Kính Chấn Địa.',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: EARTH_TRUC_CO_PURE }],
     effect: {
       skillModifiers: [
-        { skillId: 'tho_cau_thuat', statModifiers: [{ stat: 'earthAoeRadius', percent: 0.05 }] },
+        { skillId: 'tho_cau_thuat', statModifiers: [{ stat: 'earthAoeRadius', flat: 1 }] },
       ],
     },
     branchTag: 'earth',
@@ -1023,7 +1023,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
     name: 'Trọng Thổ',
     description: '+10% Lực Đẩy Lùi.',
     type: 'minor',
-    cost: 1,
+    insightCost: 1,
     prerequisites: [{ kind: 'node', nodeId: EARTH_TRUC_CO_PURE }],
     effect: {
       skillModifiers: [

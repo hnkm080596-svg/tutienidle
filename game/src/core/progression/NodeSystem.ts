@@ -36,7 +36,7 @@ export function canPurchaseNode(player: PlayerData, node: ProgressionNode): bool
     return false
   }
 
-  if (player.skillPoints < node.cost) {
+  if (player.skillInsight < node.insightCost) {
     return false
   }
 
@@ -45,7 +45,7 @@ export function canPurchaseNode(player: PlayerData, node: ProgressionNode): bool
 
 /**
  * Áp phần effect KHÔNG cần registry (statModifiers/unlocksElement) +
- * trừ skillPoints + đánh dấu đã mua. `unlocksSkillId` KHÔNG xử lý ở
+ * trừ skillInsight + đánh dấu đã mua. `unlocksSkillId` KHÔNG xử lý ở
  * đây — GameManager.purchaseNode() tự làm nốt sau khi gọi hàm này,
  * vì cần skillTemplates để learnSkill() (giống pattern
  * Battle.pendingSummons ở Combat Rework Phase 4: phần core chỉ làm
@@ -57,7 +57,7 @@ export function purchaseNode(player: PlayerData, node: ProgressionNode): boolean
     return false
   }
 
-  player.skillPoints -= node.cost
+  player.skillInsight -= node.insightCost
 
   player.purchasedNodeIds.push(node.id)
 

@@ -21,7 +21,7 @@ export const SKILL_RESOURCE_STAT_LABELS: SkillResourceStatLabelEntry[] = [
   { key: 'poisonRootPercentPerStack', label: 'Mộc Thế/Tầng', description: 'Mỗi tầng Mộc Thế cộng thêm % sát thương Độc lên đúng mục tiêu đó.' },
   { key: 'poisonRootMaxStacks', label: 'Trần Mộc Thế', description: 'Số tầng Mộc Thế tối đa 1 mục tiêu có thể tích được.' },
   { key: 'poisonRootThresholdBonusPercent', label: 'Độc Mạch', description: 'Khi mục tiêu có từ 3 tầng Mộc Thế trở lên, cộng thêm % sát thương Độc.' },
-  { key: 'earthAoeRadius', label: 'Bán Kính Chấn Địa', description: 'Gây sát thương lan sang mục tiêu khác trong bán kính này.' },
+  { key: 'earthAoeRadius', label: 'Bán Kính Chấn Địa', description: 'Số ô lan theo mỗi hướng quanh ô mục tiêu.' },
   { key: 'earthAoeSecondaryDamagePercent', label: 'ST Mục Tiêu Phụ', description: 'Sát thương lên mục tiêu phụ (qua Bán Kính Chấn Địa) so với mục tiêu chính.' },
   { key: 'earthKnockbackDistance', label: 'Lực Đẩy Lùi', description: 'Đẩy lùi mục tiêu khỏi nguồn bắn mỗi lần trúng đòn.' },
   { key: 'thoTheGainPerCast', label: 'Thổ Thế Tích/Lượt', description: 'Lượng Thổ Thế nhận mỗi lần thi triển.' },

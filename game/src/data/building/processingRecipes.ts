@@ -10,11 +10,11 @@ export const processingRecipes: ProcessingRecipe[] = [
 
     buildingId: 'smelter',
 
-    inputMaterialId: 'iron-ore',
+    inputMaterialId: 'quang_sat',
 
     inputAmount: 1,
 
-    outputMaterialId: 'black-iron',
+    outputMaterialId: 'huyen_thiet',
 
     outputAmount: 1,
 
@@ -25,15 +25,15 @@ export const processingRecipes: ProcessingRecipe[] = [
   // (exploration) tự sinh thanh-linh-moc, Thiên Công Phường tự tiêu
   // thụ theo thời gian thực để ra phu-chi (nguyên liệu chế Phù thật).
   {
-    id: 'linh_moc_processing',
+    id: 'spirit_wood_processing',
 
-    buildingId: 'thien_cong_phuong',
+    buildingId: 'artisan_workshop',
 
-    inputMaterialId: 'thanh-linh-moc',
+    inputMaterialId: 'thanh_linh_moc',
 
     inputAmount: 1,
 
-    outputMaterialId: 'phu-chi',
+    outputMaterialId: 'phu_chi',
 
     outputAmount: 1,
 

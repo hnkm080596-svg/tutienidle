@@ -23,9 +23,14 @@ export interface LavaZone {
   // Reaction áp — zone tồn tại độc lập với target đó sau khi spawn.
   ownerId: string
 
-  x: number
+  // Vị trí grid của tâm zone (Combat Grid Rework).
+  row: number
 
-  radius: number
+  column: number
+
+  laneRadius: number
+
+  columnRadius: number
 
   remainingTime: number
 

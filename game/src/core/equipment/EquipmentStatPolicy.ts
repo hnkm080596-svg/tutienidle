@@ -35,7 +35,7 @@ export const EQUIPMENT_SLOT_STAT_POLICY: Record<EquipmentSlot, EquipmentSlotStat
   },
   boots: {
     tendency: 'Thủ', mainStats: ['evasionRate'],
-    substats: ['criticalAvoidance', 'ailmentResistPercent', 'hpRegenPerSecond', 'wardRegenPerSecond', 'endurancePercent', 'finalDamageReductionPercent', 'cooldownReduction', 'castSpeedPercent', 'projectileSpeedPercent', ...ELEMENT_RESISTANCE_STATS],
+    substats: ['criticalAvoidance', 'ailmentResistPercent', 'hpRegenPerSecond', 'wardRegenPerSecond', 'endurancePercent', 'finalDamageReductionPercent', 'cooldownReduction', 'castSpeedPercent', ...ELEMENT_RESISTANCE_STATS],
   },
   ring: {
     tendency: 'Công', mainStats: ['criticalRate', 'criticalDamage'],

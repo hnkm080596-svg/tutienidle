@@ -1,7 +1,6 @@
 import type { EventBus } from '../events/EventBus'
 import type { SkillManager } from './SkillManager'
 import type { SkillSystem } from './SkillSystem'
-import { PASSIVE_SKILL_XP_PER_TRIGGER } from './SkillSystem'
 import type { PassiveTrigger } from './SkillTypes'
 import { addStack } from '../stats/StatCalculator'
 
@@ -93,8 +92,6 @@ export class PassiveSystem {
       for (const modifier of effective.passiveModifiers ?? []) {
         addStack(modifier)
       }
-
-      this.skillSystem.gainExperience(skill.id, PASSIVE_SKILL_XP_PER_TRIGGER)
     }
   }
 
@@ -139,8 +136,6 @@ export class PassiveSystem {
 
         continue
       }
-
-      this.skillSystem.gainExperience(skill.id, PASSIVE_SKILL_XP_PER_TRIGGER * wholeSeconds)
 
       for (const modifier of effective.passiveModifiers ?? []) {
         addStack(modifier, wholeSeconds)

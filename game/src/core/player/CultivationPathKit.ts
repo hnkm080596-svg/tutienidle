@@ -23,7 +23,7 @@ export interface CultivationPathKit {
   // Tâm Pháp hợp nhất (2026-08-15) — CHỈ 1 technique, tự học+trang bị
   // qua GameManager.chooseCultivationPath(), GHI ĐÈ bất kỳ tâm pháp
   // nào đang trang bị (kể cả tâm pháp khởi đầu
-  // 'spirit_gathering_scripture' — chuyển nghề = đổi hẳn tâm pháp).
+  // 'tu_linh_quyet' — chuyển nghề = đổi hẳn tâm pháp).
   techniqueId: string
 
   // ĐÚNG 3 skill cố định, gán thẳng vào Skill Loadout slot 0/1/2 lúc
@@ -56,6 +56,6 @@ export const CULTIVATION_PATH_KITS: Record<CultivationPathId, CultivationPathKit
 // Nghi Lễ Nhập Môn (2026-08-16) — gate cũ (mốc realmLevel cố định
 // trong qi_refining) đã bị THAY THẾ: chọn nghề giờ CHÍNH LÀ nghi lễ
 // đột phá Phàm Nhân -> Luyện Khí, nên điều kiện mở khoá gắn với việc
-// hoàn thành Phàm Nhân cảnh (realmId === 'pham_nhan' && realmLevel ===
+// hoàn thành Phàm Nhân cảnh (realmId === 'mortal' && realmLevel ===
 // maxLevel), xem CharacterPanel.vue's canChooseCultivationPath. Không
 // còn hằng số riêng ở đây nữa — đọc thẳng maxLevel của REALMS.

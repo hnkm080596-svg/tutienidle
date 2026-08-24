@@ -120,22 +120,7 @@ export const affixes: Affix[] = [
     ],
   },
 
-  {
-    id: 'suffix_movement_speed',
-    name: 'Lưu Quang',
-    stat: 'projectileSpeedPercent',
-    kind: 'suffix',
-    pool: 'basic',
-    // projectileSpeedPercent chỉ khai trong substats của boots
-    // (EquipmentStatPolicy.ts) — AffixRegistry.register() lọc theo đó nên
-    // weapon/ring trước đây bị âm thầm loại; sửa khai báo khớp thực tế.
-    slots: ['boots'],
-    tiers: [
-      { tier: 1, min: 0.03, max: 0.05 },
-      { tier: 2, min: 0.06, max: 0.09 },
-      { tier: 3, min: 0.1, max: 0.15 },
-    ],
-  },
+  
 
   // Pool advanced mở từ Linh Khí: bổ sung lớp phòng thủ thật thay vì gate
   // rỗng. Kháng dùng thang rating (1 điểm = 1%) giống Resistance.ts.

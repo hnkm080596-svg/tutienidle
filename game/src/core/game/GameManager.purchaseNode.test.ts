@@ -18,7 +18,7 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
       id: 'unlock_ngu_kiem_thuat',
       name: 'Test Unlock',
       type: 'major',
-      cost: 2,
+      insightCost: 2,
       effect: { unlocksSkillIds: ['ngu_kiem_thuat'] },
     }
 
@@ -26,7 +26,7 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 5
+    player.skillInsight = 5
 
     expect(gameManager.skillManager.has('ngu_kiem_thuat')).toBe(false)
 
@@ -35,7 +35,7 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
     expect(gameManager.skillManager.has('ngu_kiem_thuat')).toBe(true)
     // learn() KHÔNG tự equip — đúng tinh thần "học" khác "trang bị".
     expect(gameManager.skillManager.get('ngu_kiem_thuat')?.equipped).toBe(false)
-    expect(player.skillPoints).toBe(3)
+    expect(player.skillInsight).toBe(3)
     expect(player.purchasedNodeIds).toEqual(['unlock_ngu_kiem_thuat'])
   })
 
@@ -47,7 +47,7 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
     expect(gameManager.purchaseNode('unknown_node', player)).toBe(false)
   })
 
-  it('không đủ skillPoints thì purchaseNode() trả false, không learnSkill()', () => {
+  it('không đủ skillInsight thì purchaseNode() trả false, không learnSkill()', () => {
     const gameManager = new GameManager()
 
     gameManager.registerSkillTemplates(SKILLS)
@@ -56,7 +56,7 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
       id: 'unlock_expensive',
       name: 'Test Unlock',
       type: 'major',
-      cost: 100,
+      insightCost: 100,
       effect: { unlocksSkillIds: ['ngu_kiem_thuat'] },
     }
 
@@ -64,10 +64,10 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 5
+    player.skillInsight = 5
 
     expect(gameManager.purchaseNode('unlock_expensive', player)).toBe(false)
     expect(gameManager.skillManager.has('ngu_kiem_thuat')).toBe(false)
-    expect(player.skillPoints).toBe(5)
+    expect(player.skillInsight).toBe(5)
   })
 })

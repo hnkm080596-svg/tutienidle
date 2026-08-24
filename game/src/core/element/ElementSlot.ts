@@ -2,8 +2,8 @@ import { getRealmIndex } from '../realm/realmSystem'
 
 // Pháp Tu Redesign (magicpath, mục 5/20) — Element Slot quyết định
 // BAO NHIÊU Element được mang vào combat cùng lúc, tách biệt HOÀN
-// TOÀN khỏi Skill Point (PlayerData.skillPoints) — 2 hệ thống không
-// được trộn lẫn theo đúng yêu cầu spec.
+// TOÀN khỏi Cảm ngộ Kỹ năng (PlayerData.skillInsight) — 2 hệ thống
+// không được trộn lẫn theo đúng yêu cầu spec.
 const BASE_ELEMENT_SLOTS = 2
 
 const ELEMENT_SLOT_REALM_GROUP_SIZE = 2

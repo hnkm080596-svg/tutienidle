@@ -13,14 +13,14 @@ export function composeEquipmentNameSegments(
   zoneRegistry: ZoneRegistry,
 ): NameSegment[] {
   const segments: NameSegment[] = [
-    { text: EQUIPMENT_RARITY_LABELS[instance.rarity], colorVar: `--item-rarity-${instance.rarity}`, tone: instance.rarity },
+    { text: EQUIPMENT_RARITY_LABELS[instance.rarity], colorVar: `--grade-${instance.rarity}`, tone: instance.rarity },
   ]
 
   const zoneName = instance.zoneId && zoneRegistry.has(instance.zoneId)
     ? `${zoneRegistry.get(instance.zoneId).name} `
     : ''
 
-  segments.push({ text: `${zoneName}${template.name}`, colorVar: `--rarity-${instance.quality}`, tone: instance.quality })
+  segments.push({ text: `${zoneName}${template.name}`, colorVar: `--eq-quality-${instance.quality}`, tone: instance.quality })
 
   return segments
 }

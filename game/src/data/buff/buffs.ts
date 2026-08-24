@@ -74,7 +74,7 @@ export const buffs: Buff[] = [
   },
 
   {
-    id: 'nimble_step_buff',
+    id: 'phieu_van_bo_buff',
 
     name: 'Phiêu Vân',
 
@@ -90,9 +90,9 @@ export const buffs: Buff[] = [
 
     modifiers: [
       {
-        id: 'nimble_step_attack_speed',
+        id: 'phieu_van_bo_attack_speed',
 
-        sourceId: 'nimble_step_buff',
+        sourceId: 'phieu_van_bo_buff',
         sourceType: 'buff',
 
         stat: 'attackSpeed',
@@ -101,9 +101,9 @@ export const buffs: Buff[] = [
       },
 
       {
-        id: 'nimble_step_crit',
+        id: 'phieu_van_bo_crit',
 
-        sourceId: 'nimble_step_buff',
+        sourceId: 'phieu_van_bo_buff',
         sourceType: 'buff',
 
         stat: 'criticalRate',

@@ -19,7 +19,7 @@ export interface BreakthroughRequirement {
 }
 
 export const BREAKTHROUGH_REQUIREMENTS: Record<string, BreakthroughRequirement> = {
-  foundation: { materialId: 'breakthrough_token_foundation', spiritStoneCost: 200 },
+  foundation_establishment: { materialId: 'breakthrough_token_foundation_establishment', spiritStoneCost: 200 },
   golden_core: { materialId: 'breakthrough_token_golden_core', spiritStoneCost: 2000 },
   nascent_soul: { materialId: 'breakthrough_token_nascent_soul', spiritStoneCost: 20000 },
   soul_transformation: { materialId: 'breakthrough_token_soul_transformation', spiritStoneCost: 200000 },

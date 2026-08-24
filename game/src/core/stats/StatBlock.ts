@@ -76,7 +76,6 @@ export function createBaseStats(): Stats {
     ailmentResistPercent: 0,
     ailmentPotencyPercent: 0,
     skillDamagePercent: 0,
-    projectileSpeedPercent: 0,
     elementApplicationPercent: 0,
     reactionEffectPercent: 0,
     ailmentDurationPercent: 0,

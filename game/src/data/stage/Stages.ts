@@ -184,165 +184,165 @@ const BASE_STAGES: Stage[] = [
     bossEnemyId: 'ferocious_flood_serpent',
   },
 
-  // Phàm Nhân Động 1-10 (2026-08-16) — cùng Zone pham_nhan_valley (xem
+  // Phàm Nhân Động 1-10 (2026-08-16) — cùng Zone mortal_valley (xem
   // data/stage/Zones.ts), cùng Ngũ Hành Tương Sinh Mộc(1-2)->Hỏa(3-4)->
   // Thổ(5-6)->Kim(7-8)->Thủy(9-10) và cấu trúc "requiredRealmLevel =
-  // số Động" như Luyện Khí, nhưng requiredRealmId 'pham_nhan' và quái
+  // số Động" như Luyện Khí, nhưng requiredRealmId 'mortal' và quái
   // riêng (data/enemy/Enemies.ts, công thức base thấp hơn hẳn).
 
   {
-    id: 'pham_nhan_dong_1',
+    id: 'mortal_dong_1',
     name: 'Động 1',
     description: 'Cửa hang đầu tiên nơi chân núi, Dã Trư và Sơn Khấu tranh nhau từng tấc đất — thử thách đầu đời của 1 phàm nhân.',
-    requiredRealmId: 'pham_nhan',
+    requiredRealmId: 'mortal',
     enemyPool: [
-      { enemyId: 'pham_nhan_wild_boar', weight: 5 },
-      { enemyId: 'pham_nhan_mountain_bandit', weight: 3, eliteChance: 0.1 },
+      { enemyId: 'mortal_wild_boar', weight: 5 },
+      { enemyId: 'mortal_mountain_bandit', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
     spawnIntervalSeconds: 3,
-    bossEnemyId: 'pham_nhan_mountain_bandit',
+    bossEnemyId: 'mortal_mountain_bandit',
   },
 
   {
-    id: 'pham_nhan_dong_2',
+    id: 'mortal_dong_2',
     name: 'Động 2',
     description: 'Hang sâu hơn, Dã Trư và Sơn Khấu ở đây đã dữ tợn hơn hẳn cửa hang ngoài.',
-    requiredRealmId: 'pham_nhan',
+    requiredRealmId: 'mortal',
     requiredRealmLevel: 2,
     enemyPool: [
-      { enemyId: 'pham_nhan_ferocious_wild_boar', weight: 5 },
-      { enemyId: 'pham_nhan_ferocious_mountain_bandit', weight: 3, eliteChance: 0.1 },
+      { enemyId: 'mortal_ferocious_wild_boar', weight: 5 },
+      { enemyId: 'mortal_ferocious_mountain_bandit', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
     spawnIntervalSeconds: 3,
-    bossEnemyId: 'pham_nhan_ferocious_mountain_bandit',
+    bossEnemyId: 'mortal_ferocious_mountain_bandit',
   },
 
   {
-    id: 'pham_nhan_dong_3',
+    id: 'mortal_dong_3',
     name: 'Động 3',
     description: 'Vùng đất khô nóng, Hoang Cẩu và Man Hổ lang thang tìm mồi giữa nắng gắt.',
-    requiredRealmId: 'pham_nhan',
+    requiredRealmId: 'mortal',
     requiredRealmLevel: 3,
     enemyPool: [
-      { enemyId: 'pham_nhan_feral_dog', weight: 5 },
-      { enemyId: 'pham_nhan_savage_tiger', weight: 3, eliteChance: 0.1 },
+      { enemyId: 'mortal_feral_dog', weight: 5 },
+      { enemyId: 'mortal_savage_tiger', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
     spawnIntervalSeconds: 3,
-    bossEnemyId: 'pham_nhan_savage_tiger',
+    bossEnemyId: 'mortal_savage_tiger',
   },
 
   {
-    id: 'pham_nhan_dong_4',
+    id: 'mortal_dong_4',
     name: 'Động 4',
     description: 'Nắng càng gắt, Hoang Cẩu và Man Hổ càng hung hãn — không còn là con mồi dễ dàng.',
-    requiredRealmId: 'pham_nhan',
+    requiredRealmId: 'mortal',
     requiredRealmLevel: 4,
     enemyPool: [
-      { enemyId: 'pham_nhan_ferocious_feral_dog', weight: 5 },
-      { enemyId: 'pham_nhan_ferocious_savage_tiger', weight: 3, eliteChance: 0.1 },
+      { enemyId: 'mortal_ferocious_feral_dog', weight: 5 },
+      { enemyId: 'mortal_ferocious_savage_tiger', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
     spawnIntervalSeconds: 3,
-    bossEnemyId: 'pham_nhan_ferocious_savage_tiger',
+    bossEnemyId: 'mortal_ferocious_savage_tiger',
   },
 
   {
-    id: 'pham_nhan_dong_5',
+    id: 'mortal_dong_5',
     name: 'Động 5',
     description: 'Nền đất đá cứng, Thạch Miêu ẩn mình sau từng tảng đá, Nê Ngưu lầm lì trấn giữ lối đi.',
-    requiredRealmId: 'pham_nhan',
+    requiredRealmId: 'mortal',
     requiredRealmLevel: 5,
     enemyPool: [
-      { enemyId: 'pham_nhan_stone_lynx', weight: 5 },
-      { enemyId: 'pham_nhan_mud_ox', weight: 3, eliteChance: 0.1 },
+      { enemyId: 'mortal_stone_lynx', weight: 5 },
+      { enemyId: 'mortal_mud_ox', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
     spawnIntervalSeconds: 3,
-    bossEnemyId: 'pham_nhan_mud_ox',
+    bossEnemyId: 'mortal_mud_ox',
   },
 
   {
-    id: 'pham_nhan_dong_6',
+    id: 'mortal_dong_6',
     name: 'Động 6',
     description: 'Đất đá dày hơn, Thạch Miêu và Nê Ngưu ở tầng này đã to khỏe rõ rệt.',
-    requiredRealmId: 'pham_nhan',
+    requiredRealmId: 'mortal',
     requiredRealmLevel: 6,
     enemyPool: [
-      { enemyId: 'pham_nhan_ferocious_stone_lynx', weight: 5 },
-      { enemyId: 'pham_nhan_ferocious_mud_ox', weight: 3, eliteChance: 0.1 },
+      { enemyId: 'mortal_ferocious_stone_lynx', weight: 5 },
+      { enemyId: 'mortal_ferocious_mud_ox', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
     spawnIntervalSeconds: 3,
-    bossEnemyId: 'pham_nhan_ferocious_mud_ox',
+    bossEnemyId: 'mortal_ferocious_mud_ox',
   },
 
   {
-    id: 'pham_nhan_dong_7',
+    id: 'mortal_dong_7',
     name: 'Động 7',
     description: 'Vách hang lấp lánh khoáng kim, Ngân Hồ tinh ranh và Thiết Giáp Trư lì lợm cùng trấn giữ.',
-    requiredRealmId: 'pham_nhan',
+    requiredRealmId: 'mortal',
     requiredRealmLevel: 7,
     enemyPool: [
-      { enemyId: 'pham_nhan_silver_fox', weight: 5 },
-      { enemyId: 'pham_nhan_iron_boar', weight: 3, eliteChance: 0.1 },
+      { enemyId: 'mortal_silver_fox', weight: 5 },
+      { enemyId: 'mortal_iron_boar', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
     spawnIntervalSeconds: 3,
-    bossEnemyId: 'pham_nhan_iron_boar',
+    bossEnemyId: 'mortal_iron_boar',
   },
 
   {
-    id: 'pham_nhan_dong_8',
+    id: 'mortal_dong_8',
     name: 'Động 8',
     description: 'Khoáng kim dày đặc hơn, Ngân Hồ và Thiết Giáp Trư ở đây đã cứng cáp hơn hẳn.',
-    requiredRealmId: 'pham_nhan',
+    requiredRealmId: 'mortal',
     requiredRealmLevel: 8,
     enemyPool: [
-      { enemyId: 'pham_nhan_ferocious_silver_fox', weight: 5 },
-      { enemyId: 'pham_nhan_ferocious_iron_boar', weight: 3, eliteChance: 0.1 },
+      { enemyId: 'mortal_ferocious_silver_fox', weight: 5 },
+      { enemyId: 'mortal_ferocious_iron_boar', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
     spawnIntervalSeconds: 3,
-    bossEnemyId: 'pham_nhan_ferocious_iron_boar',
+    bossEnemyId: 'mortal_ferocious_iron_boar',
   },
 
   {
-    id: 'pham_nhan_dong_9',
+    id: 'mortal_dong_9',
     name: 'Động 9',
     description: 'Hang ngập nước, Thủy Lang săn mồi dưới ánh sáng mờ, Cự Ngạc ẩn mình chờ đợi.',
-    requiredRealmId: 'pham_nhan',
+    requiredRealmId: 'mortal',
     requiredRealmLevel: 9,
     enemyPool: [
-      { enemyId: 'pham_nhan_water_wolf', weight: 5 },
-      { enemyId: 'pham_nhan_giant_crocodile', weight: 3, eliteChance: 0.1 },
+      { enemyId: 'mortal_water_wolf', weight: 5 },
+      { enemyId: 'mortal_giant_crocodile', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
     spawnIntervalSeconds: 3,
-    bossEnemyId: 'pham_nhan_giant_crocodile',
+    bossEnemyId: 'mortal_giant_crocodile',
   },
 
   {
-    id: 'pham_nhan_dong_10',
+    id: 'mortal_dong_10',
     name: 'Động 10',
     description: 'Đáy hang ngập nước sâu nhất — chặng thử thách cuối cùng của kiếp phàm nhân, trước ngưỡng cửa Luyện Khí.',
-    requiredRealmId: 'pham_nhan',
+    requiredRealmId: 'mortal',
     requiredRealmLevel: 10,
     enemyPool: [
-      { enemyId: 'pham_nhan_ferocious_water_wolf', weight: 5 },
-      { enemyId: 'pham_nhan_ferocious_giant_crocodile', weight: 3, eliteChance: 0.1 },
+      { enemyId: 'mortal_ferocious_water_wolf', weight: 5 },
+      { enemyId: 'mortal_ferocious_giant_crocodile', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
     spawnIntervalSeconds: 3,
-    bossEnemyId: 'pham_nhan_ferocious_giant_crocodile',
+    bossEnemyId: 'mortal_ferocious_giant_crocodile',
   },
 ]
 
 const normalizedStages: Stage[] = BASE_STAGES.map(stage => ({
   ...stage,
-  chapter: stage.requiredRealmId === 'pham_nhan' ? 1 : 2,
+  chapter: stage.requiredRealmId === 'mortal' ? 1 : 2,
   floor: stage.requiredRealmLevel ?? 1,
   totalEnemyCount: 10 + (stage.requiredRealmLevel ?? 1) - 1,
 }))
@@ -356,7 +356,7 @@ const foundationStages: Stage[] = normalizedStages
     ...stage,
     id: `foundation_floor_${stage.floor}`,
     name: `Màn 3.${stage.floor}`,
-    requiredRealmId: 'foundation',
+    requiredRealmId: 'foundation_establishment',
     chapter: 3,
   }))
 

@@ -1,6 +1,6 @@
 import type { PillType } from './PillTypes'
 import type { PillEffect } from './PillEffect'
-import type { Pham } from '../item/Pham'
+import type { ItemGrade } from '../item/ItemGrade'
 
 export interface Pill {
   id: string
@@ -20,8 +20,8 @@ export interface Pill {
   // core/item/Pham.ts) — Phẩm ở đây là driver THẬT (không phải nhãn
   // suy ra), quyết định trực tiếp độ mạnh effect. Tên ghép động
   // (2026-08-15) — `name` bên trên KHÔNG chứa tiền tố Phẩm, ghép động
-  // lúc hiển thị từ field này (xem composePhamNameSegments()).
-  pham: Pham
+  // lúc hiển thị từ field này (xem composeItemGradeNameSegments()).
+  grade: ItemGrade
 
   effects: PillEffect[]
 }

@@ -22,7 +22,7 @@ describe('GameManager — Pháp Tu KimPath (Kim Node Tree Luyện Khí/Trúc Cơ
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 5
+    player.skillInsight = 5
 
     expect(gameManager.purchaseNode('minor_metal_intensity', player)).toBe(false)
 
@@ -33,7 +33,7 @@ describe('GameManager — Pháp Tu KimPath (Kim Node Tree Luyện Khí/Trúc Cơ
     expect(gameManager.purchaseNode('minor_metal_bleed_damage', player)).toBe(true)
     expect(gameManager.purchaseNode('minor_metal_application', player)).toBe(true)
 
-    expect(player.skillPoints).toBe(0)
+    expect(player.skillInsight).toBe(0)
 
     const finalStats = calculateStats(player.baseStats, [
       ...player.modifiers,
@@ -52,14 +52,14 @@ describe('GameManager — Pháp Tu KimPath (Kim Node Tree Luyện Khí/Trúc Cơ
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 10
+    player.skillInsight = 10
     player.realmId = 'qi_refining'
 
     expect(gameManager.purchaseNode('kim_linh_ngo', player)).toBe(true)
 
     expect(gameManager.purchaseNode('kim_truc_co_huyet_dan', player)).toBe(false)
 
-    player.realmId = 'foundation'
+    player.realmId = 'foundation_establishment'
 
     expect(gameManager.purchaseNode('kim_truc_co_huyet_dan', player)).toBe(true)
     expect(gameManager.purchaseNode('kim_truc_co_kim_the', player)).toBe(false)
@@ -73,8 +73,8 @@ describe('GameManager — Pháp Tu KimPath (Kim Node Tree Luyện Khí/Trúc Cơ
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 3
-    player.realmId = 'foundation'
+    player.skillInsight = 3
+    player.realmId = 'foundation_establishment'
 
     expect(gameManager.purchaseNode('kim_linh_ngo', player)).toBe(true)
 
@@ -96,8 +96,8 @@ describe('GameManager — Pháp Tu KimPath (Kim Node Tree Luyện Khí/Trúc Cơ
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 10
-    player.realmId = 'foundation'
+    player.skillInsight = 10
+    player.realmId = 'foundation_establishment'
 
     expect(gameManager.purchaseNode('kim_linh_ngo', player)).toBe(true)
 
@@ -123,8 +123,8 @@ describe('GameManager — Pháp Tu KimPath (Kim Node Tree Luyện Khí/Trúc Cơ
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 10
-    player.realmId = 'foundation'
+    player.skillInsight = 10
+    player.realmId = 'foundation_establishment'
 
     expect(gameManager.purchaseNode('kim_linh_ngo', player)).toBe(true)
 

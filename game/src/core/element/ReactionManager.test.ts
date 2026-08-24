@@ -68,7 +68,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 2,
+    row: 2,
     alive: true,
     ...overrides,
   }
@@ -314,7 +314,7 @@ describe('ReactionManager (Combat Rework Phase 6 — Pháp Tu Reaction)', () => 
     ailmentSystem.apply(getTemplate('thach_hoa'), source, target)
     ailmentSystem.apply(getTemplate('bong'), source, target)
 
-    const spawnedZones: { ownerId: string; x: number }[] = []
+    const spawnedZones: { ownerId: string; row: number; column: number; laneRadius: number; columnRadius: number }[] = []
 
     reactionManager.checkAndTrigger(
       ailmentSystem,
@@ -329,7 +329,7 @@ describe('ReactionManager (Combat Rework Phase 6 — Pháp Tu Reaction)', () => 
     )
 
     expect(spawnedZones).toHaveLength(1)
-    expect(spawnedZones[0]).toMatchObject({ ownerId: 'source', x: 42 })
+    expect(spawnedZones[0]).toMatchObject({ ownerId: 'source', row: 2, column: 42 })
   })
 
   it('không truyền spawnLavaZone — "Dung Nham" vẫn hoạt động bình thường (ailment + không crash)', () => {

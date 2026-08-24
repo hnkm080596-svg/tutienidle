@@ -2,18 +2,18 @@ import { EventBus } from '../events/EventBus'
 
 import { CombatSystem } from '../combat/CombatSystem'
 import type { CombatEntity } from '../combat/CombatEntity'
-import { MissileManager } from '../combat/missile/MissileManager'
-import { MissileSystem } from '../combat/missile/MissileSystem'
+
+
 
 import { BattleSystem } from '../battle/BattleSystem'
 import type { Battle } from '../battle/Battle'
-import { HERO_LANE_INDEX, randomEnemyLaneIndex } from '../battle/BattleLane'
+import { applySpawnLaneRule } from '../battle/BattleLane'
+import { ActionImpactSystem } from '../battle/ActionImpactSystem'
 
 import type { FoundationType } from '../breakthrough/FoundationType'
-import { getTribulationProfile } from '../breakthrough/TribulationProfile'
 
-import { investTinhHoa, computeBreakthroughGrade } from '../realm/LuyenTheSystem'
-import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../data/realm/LuyenThe'
+import { investTinhHoa, computeBreakthroughGrade } from '../realm/BodyRefinementSystem'
+import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../data/realm/BodyRefinement'
 import { grantRealmPassive } from '../realm/RealmPassiveSystem'
 
 import { BuffManager } from '../buff/BuffManager'
@@ -50,7 +50,6 @@ import type { EquipmentSlot } from '../equipment/EquipmentTypes'
 import type { EquipmentSlotState } from '../equipment/EquipmentSlotState'
 import type { Equipment } from '../equipment/Equipment'
 import type { EquipmentInstance } from '../equipment/EquipmentInstance'
-import { composeEquipmentNameSegments } from '../equipment/EquipmentNaming'
 import { AffixRegistry } from '../equipment/AffixRegistry'
 import type { Affix } from '../equipment/Affix'
 import { assertValidEquipmentMainStats } from '../equipment/EquipmentStatPolicy'
@@ -77,7 +76,7 @@ import { CraftingSystem } from '../recipe/CraftingSystem'
 import type { Recipe, RecipeResultType } from '../recipe/Recipe'
 
 import { ItemRegistry } from '../item/ItemRegistry'
-import { composePhamNameSegments, type Pham } from '../item/Pham'
+import type { ItemGrade } from '../item/ItemGrade'
 
 import { ExplorationManager } from '../exploration/ExplorationManager'
 import { ExplorationSystem } from '../exploration/ExplorationSystem'
@@ -96,9 +95,9 @@ import type { ProcessingRecipe } from '../building/ProcessingRecipe'
 
 import { EnemyManager } from '../enemy/EnemyManager'
 import { EnemySystem } from '../enemy/EnemySystem'
-import { enemyToCombatEntity, createEliteVariant, createBossVariant } from '../enemy/Enemy'
-import type { Enemy, EnemyItemDrop } from '../enemy/Enemy'
-import type { LootNotificationPresentation, NotificationEvent } from '../notification/NotificationEvent'
+import { enemyToCombatEntity } from '../enemy/Enemy'
+import type { Enemy } from '../enemy/Enemy'
+import type { NotificationEvent } from '../notification/NotificationEvent'
 
 import { StageManager } from '../stage/StageManager'
 import { StageSystem } from '../stage/StageSystem'
@@ -106,13 +105,22 @@ import type { Stage } from '../stage/Stage'
 import { ZoneRegistry } from '../stage/ZoneRegistry'
 import type { Zone } from '../stage/Zone'
 
-import { randomInt, rollChance } from '../reward/DropRoll'
-import { BOSS_EQUIPMENT_DROP_CHANCE, NORMAL_EQUIPMENT_DROP_CHANCE, rollMortalEssenceAmount } from '../reward/StageDropRules'
+import { TemplateRegistry } from './TemplateRegistry'
+import { NotificationQueue } from './NotificationQueue'
+import { BattleLootSystem } from './BattleLootSystem'
+import { StageWaveSystem } from './StageWaveSystem'
+import { TribulationSystem } from './TribulationSystem'
+import type { ActiveTribulation } from './TribulationSystem'
+
+// Re-export giữ tương thích import cũ (useTribulation.ts và các nơi khác
+// import ActiveTribulation/TRIBULATION_COOLDOWN_SECONDS từ GameManager).
+export { TRIBULATION_COOLDOWN_SECONDS } from './TribulationSystem'
+export type { ActiveTribulation } from './TribulationSystem'
 
 import { RewardSystem } from '../reward/RewardSystem'
 import type { RewardReceiver } from '../reward/RewardSystem'
 import type { Reward } from '../reward/Reward'
-import { createEmptyBattleRewardSummary, type BattleRewardSummary, type BattleRewardItemKind } from '../reward/BattleRewardSummary'
+import type { BattleRewardSummary } from '../reward/BattleRewardSummary'
 
 import { playerToCombatEntity, createPlayerRewardReceiver } from '../player/Player'
 import type { PlayerData } from '../player/Player'
@@ -137,46 +145,34 @@ export interface ExplorationDataEntry {
 }
 
 /**
- * GameManager KHÔNG chứa business logic.
+ * GameManager là orchestrator (2026-08-24 refactor — tách business logic
+ * trận đấu đang diễn ra sang 3 service trong cùng thư mục):
  *
- * Nhiệm vụ duy nhất:
- * 1. Khởi tạo và giữ instance của mọi Manager/System.
- * 2. Điều phối update(deltaSeconds) mỗi tick cho các system
- *    có yếu tố thời gian (Buff, Skill, Battle).
- * 3. Tổng hợp modifier từ nhiều nguồn (buff/technique/skill)
- *    để đưa vào StatCalculator — đây là chỗ duy nhất nên làm
- *    việc "gộp modifier từ nhiều hệ thống", tránh mỗi nơi tự
- *    gộp một kiểu.
+ * 1. Khởi tạo và giữ instance của mọi Manager/System + wire dependency
+ *    cho BattleLootSystem (loot/particle/toast/battle summary),
+ *    StageWaveSystem (wave Màn + boss summon), TribulationSystem
+ *    (runtime Độ Kiếp) — xem constructor().
+ * 2. Điều phối update(deltaSeconds) mỗi tick cho các system có yếu tố
+ *    thời gian (Buff, Skill, Battle) qua fixed-step catch-up.
+ * 3. Tổng hợp modifier từ nhiều nguồn (buff/technique/skill).
+ * 4. Giữ public API ổn định cho Vue layer/tests: các method còn lại chủ
+ *    yếu là facade delegate xuống system tương ứng.
  *
- * Toàn bộ logic thật (điều kiện học skill, cách tính reward...)
- * vẫn nằm trong các System tương ứng như cũ.
+ * Toàn bộ logic thật (điều kiện học skill, cách tính reward...) nằm
+ * trong các System tương ứng.
  */
 
-// Trạng thái Tribulation ĐANG diễn ra — targetRealmId là cảnh giới sẽ
-// bước vào NẾU thắng, foundationType chỉ có mặt khi targetRealmId ===
-// 'foundation' (hệ Căn Cơ 4-tier riêng, xem FoundationResolver.ts).
-export interface ActiveTribulation {
-  targetRealmId: string
-
-  foundationType?: FoundationType
-
-  durationSeconds: number
-  secondsRemaining: number
-  strikeIntervalSeconds: number
-  nextStrikeInSeconds: number
-  lightningMaxHpDamagePercent: number
-}
-
-export const TRIBULATION_COOLDOWN_SECONDS = 5 * 60
+// Trạng thái Tribulation (ActiveTribulation/TRIBULATION_COOLDOWN_SECONDS)
+// đã chuyển sang TribulationSystem.ts — GameManager re-export ở đầu file.
 
 // Uncommitted audit followup plan, mục "Fixed-step/catch-up cho combat"
 // (2026-08-24) — App.vue đo deltaSeconds THẬT giữa 2 lần tick() bằng
 // GameClock (xem App.vue's tick()); khi tab bị trình duyệt throttle
 // (background/minimize) hoặc máy vừa resume sau suspend, deltaSeconds
 // của MỘT lần gọi có thể lớn bất thường. battleSystem.update()/
-// updateStageProgress() chỉ kiểm tra timer <= 0 MỘT LẦN mỗi lời gọi rồi
-// reset về mốc mới (playerAttackTimer, attackTimer, spawnCountdown) —
-// KHÔNG có vòng lặp catch-up như updateKimThe()/updateTribulation(), nên
+// StageWaveSystem.update() chỉ kiểm tra timer <= 0 MỘT LẦN mỗi lời gọi
+// rồi reset về mốc mới (playerAttackTimer, attackTimer, spawnCountdown) —
+// KHÔNG có vòng lặp catch-up như updateKimThe()/TribulationSystem.update(), nên
 // phần nợ (timer âm sâu) bị vứt bỏ thẳng: một khoảng deltaSeconds lớn
 // chỉ tạo ra ĐÚNG 1 đòn đánh/1 lần spawn thay vì nhiều lần đúng theo
 // nhịp thật. Chia deltaSeconds thành các bước cố định nhỏ khi gọi các
@@ -207,14 +203,11 @@ const PHAP_TU_STARTER_NODE_ID = 'hoa_linh_ngo'
 const PHAP_TU_STARTER_SKILL_ID = 'hoa_cau_thuat'
 
 export class GameManager {
-  private activeStagePlayer?: PlayerData
-  private repeatStageContinuously = false
   readonly eventBus = new EventBus()
 
   readonly combatSystem = new CombatSystem(this.eventBus)
-
-  readonly missileManager = new MissileManager()
-  readonly missileSystem = new MissileSystem(this.missileManager, this.eventBus)
+
+  readonly actionImpact = new ActionImpactSystem({ eventBus: this.eventBus, rollCritical: (s, t) => this.combatSystem.rollCritical(s, t) })
 
   readonly buffManager = new BuffManager()
   readonly buffSystem = new BuffSystem(this.buffManager)
@@ -224,7 +217,7 @@ export class GameManager {
 
   readonly skillManager = new SkillManager()
   readonly skillSystem = new SkillSystem(this.skillManager, (skill, levelsGained) => {
-    this.pendingNotifications.push({
+    this.notifications.push({
       kind: 'upgrade',
       message: levelsGained === 1
         ? `${skill.name} đạt cấp ${skill.level}`
@@ -258,7 +251,7 @@ export class GameManager {
     this.buffRegistry,
     this.ailmentRegistry,
     this.eventBus,
-    this.missileSystem,
+    this.actionImpact,
   )
 
   readonly techniqueManager = new TechniqueManager()
@@ -329,40 +322,73 @@ export class GameManager {
 
   private explorationData = new Map<string, ExplorationDataEntry>()
 
-  // Receiver để phát thưởng khi battle hiện tại kết thúc thắng —
-  // xem startBattleWithPlayer() và grantBattleRewardIfNeeded().
-  private activeReceiver: RewardReceiver | null = null
-
-  // PlayerData của trận đang diễn ra — cần cho việc roll equipment
-  // rớt ra (chỉ số chính scale theo cảnh giới người chơi).
-  private activePlayer: PlayerData | null = null
+  // Session trận đang diễn ra (receiver nhận thưởng + PlayerData để roll
+  // loot) đã chuyển vào BattleLootSystem — xem constructor().
 
   // Beta Phase 4 (Notification/UX) — hàng đợi toast phát sinh TRONG
-  // GameManager (hiện chỉ loot, xem grantItemDrops()) — GameManager
-  // là plain class không phụ thuộc Vue, Vue layer (App.vue's tick())
-  // tự rút ra mỗi tick qua drainNotifications() rồi đẩy vào
-  // stores/notification.ts. Nguồn toast khác (upgrade/craft/save) đã
-  // ở Vue layer sẵn, gọi thẳng store, không qua hàng đợi này.
-  private pendingNotifications: NotificationEvent[] = []
+  // core (loot từ BattleLootSystem, upgrade skill từ callback ở trên).
+  private readonly notifications = new NotificationQueue()
 
-  private pushLootNotification(message: string, loot: LootNotificationPresentation) {
-    this.pendingNotifications.push({ kind: 'loot', message, loot })
+  // =========================
+  // RUNTIME SERVICES (2026-08-24 tách khỏi thân class này)
+  // =========================
+  // Ba service dưới đây sở hữu business logic trận đấu đang diễn ra:
+  // - BattleLootSystem: loot/particle/toast/battle summary khi quái chết.
+  // - StageWaveSystem: vòng đời wave của Màn + boss summon.
+  // - TribulationSystem: runtime trận Độ Kiếp + cooldown.
+  // Khởi tạo trong constructor (KHÔNG phải field initializer) vì cần
+  // tham chiếu tới các field khai báo SAU chúng ở trên (bags/registries/
+  // zoneRegistry/template registries) — field initializer chạy theo thứ
+  // tự khai báo nên không thấy được; ctor body chạy sau cùng, an toàn.
+  private readonly battleLoot: BattleLootSystem
+  private readonly stageWaves: StageWaveSystem
+  private readonly tribulation: TribulationSystem
+
+  constructor() {
+    this.battleLoot = new BattleLootSystem({
+      eventBus: this.eventBus,
+      notifications: this.notifications,
+      materialRegistry: this.materialRegistry,
+      materialBag: this.materialBag,
+      pillRegistry: this.pillRegistry,
+      pillBag: this.pillBag,
+      equipmentRegistry: this.equipmentRegistry,
+      equipmentBag: this.equipmentBag,
+      equipmentSystem: this.equipmentSystem,
+      affixRegistry: this.affixRegistry,
+      zoneRegistry: this.zoneRegistry,
+      techniqueManager: this.techniqueManager,
+      techniqueSystem: this.techniqueSystem,
+      techniqueTemplates: this.techniqueTemplates,
+      enemySystem: this.enemySystem,
+      rewardSystem: this.rewardSystem,
+      stageManager: this.stageManager,
+      stageTemplates: this.stageTemplates,
+    })
+
+    this.stageWaves = new StageWaveSystem({
+      eventBus: this.eventBus,
+      battleSystem: this.battleSystem,
+      enemySystem: this.enemySystem,
+      stageManager: this.stageManager,
+      stageSystem: this.stageSystem,
+      stageTemplates: this.stageTemplates,
+      enemyTemplates: this.enemyTemplates,
+      isStageUnlocked: (stageId, player) => this.isStageUnlocked(stageId, player),
+      launchBattle: (player, playerStats, enemy) => this.startBattleWithPlayer(player, playerStats, enemy),
+    })
+
+    this.tribulation = new TribulationSystem({
+      eventBus: this.eventBus,
+      battleSystem: this.battleSystem,
+      combatSystem: this.combatSystem,
+      buildPlayerSnapshot: (player, playerStats) => {
+        const skillLevels = Object.fromEntries(this.skillManager.getAll().map(skill => [skill.id, skill.level]))
+
+        return playerToCombatEntity(player, playerStats, this.skillSystem.getSkillRuntimeStats(), skillLevels)
+      },
+    })
   }
-
-  // Combat UI Redesign — tích luỹ EXP/tu vi/Linh Thạch/vật phẩm rớt
-  // TRONG trận hiện tại, để CombatVictoryPanel/CombatDefeatPanel hiện
-  // lại lúc kết thúc (khác pendingNotifications — cái đó là toast rời
-  // rạc, bị drain/xoá mỗi tick). Reset mỗi khi 1 trận mới bắt đầu, xem
-  // startBattle().
-  private battleRewardSummary: BattleRewardSummary = createEmptyBattleRewardSummary()
-
-  // Đột Phá tổng quát (2026-08-16) — trận Độ Kiếp ĐANG diễn ra (mọi
-  // đại cảnh giới, không riêng Trúc Cơ nữa), null nếu không phải
-  // Tribulation (stage/menu bình thường). Ephemeral — KHÔNG persist
-  // vào save (giống activeReceiver/activePlayer), xem
-  // startTribulation()/updateTribulationProgress().
-  private activeTribulation: ActiveTribulation | null = null
-  private tribulationCooldownUntil = 0
 
   // =========================
   // DATA REGISTRATION
@@ -471,17 +497,17 @@ export class GameManager {
   // vào manager — chúng chỉ được add khi người chơi thực sự học
   // (learn), đúng như SkillSystem.learn()/TechniqueSystem.learn()
   // đã thiết kế. GameManager chỉ cung cấp nơi tra cứu template.
-  private skillTemplates = new Map<string, Skill>()
-  private techniqueTemplates = new Map<string, Technique>()
+  private skillTemplates = new TemplateRegistry<Skill>()
+  private techniqueTemplates = new TemplateRegistry<Technique>()
 
   // Enemy template tra theo id (dùng bởi StageSystem khi chọn quái
   // kế tiếp để spawn) — cùng pattern skillTemplates/techniqueTemplates,
   // KHÁC EnemyManager (chỉ chứa instance đã spawn, có id riêng từng
   // con — xem EnemySystem.spawn()).
-  private enemyTemplates = new Map<string, Enemy>()
+  private enemyTemplates = new TemplateRegistry<Enemy>()
 
   // Stage template tra theo id — cùng pattern enemyTemplates.
-  private stageTemplates = new Map<string, Stage>()
+  private stageTemplates = new TemplateRegistry<Stage>()
 
   // Thám Hiểm rework — Địa Giới (nhóm nhiều Stage/Màn), xem
   // core/stage/Zone.ts. Registry thật (không phải Map trần như
@@ -497,25 +523,25 @@ export class GameManager {
 
   registerSkillTemplates(skills: Skill[]) {
     for (const skill of skills) {
-      this.skillTemplates.set(skill.id, skill)
+      this.skillTemplates.register(skill.id, skill)
     }
   }
 
   registerTechniqueTemplates(techniques: Technique[]) {
     for (const technique of techniques) {
-      this.techniqueTemplates.set(technique.id, technique)
+      this.techniqueTemplates.register(technique.id, technique)
     }
   }
 
   registerEnemyTemplates(enemies: Enemy[]) {
     for (const enemy of enemies) {
-      this.enemyTemplates.set(enemy.id, enemy)
+      this.enemyTemplates.register(enemy.id, enemy)
     }
   }
 
   registerStages(stages: Stage[]) {
     for (const stage of stages) {
-      this.stageTemplates.set(stage.id, stage)
+      this.stageTemplates.register(stage.id, stage)
     }
   }
 
@@ -604,7 +630,7 @@ export class GameManager {
   /**
    * Pháp Tu Redesign (magicpath) — mua 1 ProgressionNode. Gọi
    * `purchaseNode()` thuần (core/progression/NodeSystem.ts) trước —
-   * hàm đó tự xử lý MỌI thứ không cần registry (trừ skillPoints, đánh
+   * hàm đó tự xử lý MỌI thứ không cần registry (trừ skillInsight, đánh
    * dấu đã mua, statModifiers, unlocksElement). Chỉ còn
    * `unlocksSkillIds` cần learnSkill() (cần skillTemplates, GameManager
    * mới có) — làm NGAY SAU nếu node đó có khai field này. KHÔNG tự
@@ -651,6 +677,19 @@ export class GameManager {
     }
 
     return true
+  }
+
+  /**
+   * skill-insight-and-auto-combat-hud-plan.md mục 5 — nâng cấp skill
+   * bằng Cảm ngộ Kỹ năng, thuần pass-through xuống SkillSystem (đã có
+   * skillManager qua constructor, không cần gì thêm từ GameManager).
+   */
+  upgradeSkill(skillId: string, player: PlayerData): boolean {
+    return this.skillSystem.upgradeSkill(skillId, player)
+  }
+
+  getSkillUpgradeInsightCost(skillId: string): number | undefined {
+    return this.skillSystem.getSkillUpgradeInsightCost(skillId)
   }
 
   /**
@@ -734,13 +773,13 @@ export class GameManager {
    * Phàm Nhân -> Luyện Khí (đúng "đột phá lên cảnh giới mới luôn có
    * nghi lễ" — Trúc Cơ có Độ Kiếp riêng, Phàm Nhân->Luyện Khí dùng
    * chính hành động chọn nghề này thay vì 1 nút Đột Phá thường, xem
-   * CultivationSystem.breakthrough()'s guard chặn realmId === 'pham_nhan').
+   * CultivationSystem.breakthrough()'s guard chặn realmId === 'mortal').
    * Nếu player đang ở Phàm Nhân lúc chọn, atomically chuyển luôn sang
    * qi_refining tầng 1 — 3 hàm gọi sau đó GIỐNG HỆT useBreakthrough.ts/
    * useTribulation.ts gọi sau mọi lần đột phá đại cảnh giới.
    */
   chooseCultivationPath(pathId: CultivationPathId, player: PlayerData): boolean {
-    if (player.cultivationPath || player.realmId !== 'pham_nhan' || player.realmLevel < CORE_REALM_LEVEL) {
+    if (player.cultivationPath || player.realmId !== 'mortal' || player.realmLevel < CORE_REALM_LEVEL) {
       return false
     }
 
@@ -788,7 +827,7 @@ export class GameManager {
       this.skillSystem.equipToSlot(PHAP_TU_STARTER_SKILL_ID, 0)
     }
 
-    if (player.realmId === 'pham_nhan') {
+    if (player.realmId === 'mortal') {
       // Realm Passive & Pressure System (2026-08-20) — chốt Bậc Nhập
       // Đạo TRƯỚC khi grant, để Nhập Đạo (RealmPassives.ts) đọc đúng
       // giá trị cuối cùng của Luyện Thể tại thời điểm Lễ Nhập Môn.
@@ -983,11 +1022,11 @@ export class GameManager {
 
   /**
    * Đầu tư Tinh Hoa Phàm Thể (đang cầm trong materialBag) vào tầng
-   * Luyện Thể đang dở — xem core/realm/LuyenTheSystem.ts. Trả về số
+   * Luyện Thể đang dở — xem core/realm/BodyRefinementSystem.ts. Trả về số
    * Tinh Hoa thật sự đã tiêu (0 nếu không còn tầng nào để đầu tư hoặc
    * không cầm Tinh Hoa nào).
    */
-  investLuyenThe(player: PlayerData): number {
+  investBodyRefinement(player: PlayerData): number {
     const available = this.materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)
 
     const consumed = investTinhHoa(player, available)
@@ -1302,16 +1341,16 @@ export class GameManager {
    * giờ `pham` đã LÀ nhãn thống nhất thật (Pham.ts, dùng chung với
    * Equipment Rarity) nên không cần lớp convert nào nữa — đọc thẳng.
    */
-  getRecipeResultPham(recipe: Recipe): Pham | null {
+  getRecipeResultGrade(recipe: Recipe): ItemGrade | null {
     switch (recipe.resultType) {
       case 'pill':
-        return this.pillRegistry.has(recipe.resultId) ? this.pillRegistry.get(recipe.resultId).pham : null
+        return this.pillRegistry.has(recipe.resultId) ? this.pillRegistry.get(recipe.resultId).grade : null
 
       case 'talisman':
-        return this.talismanRegistry.has(recipe.resultId) ? this.talismanRegistry.get(recipe.resultId).pham : null
+        return this.talismanRegistry.has(recipe.resultId) ? this.talismanRegistry.get(recipe.resultId).grade : null
 
       case 'formation':
-        return this.formationRegistry.has(recipe.resultId) ? this.formationRegistry.get(recipe.resultId).pham : null
+        return this.formationRegistry.has(recipe.resultId) ? this.formationRegistry.get(recipe.resultId).grade : null
 
       default:
         return null
@@ -1323,7 +1362,7 @@ export class GameManager {
    * Step 15/17/18 (RecipeCraftingView.vue's cauldron vessel, spec mục
    * 18/20/21 "Result → ItemSlot → Tooltip") cần icon/description thật
    * thay vì chỉ chữ cái đầu tên. Cùng switch pattern với
-   * getRecipeResultPham() ở trên — không tách hàm helper chung vì mỗi
+   * getRecipeResultGrade() ở trên — không tách hàm helper chung vì mỗi
    * nhánh trả về TYPE khác nhau (union caller phải tự narrow theo
    * recipe.resultType nếu cần field riêng từng loại).
    */
@@ -1703,40 +1742,27 @@ export class GameManager {
     return this.enemySystem.spawn(template)
   }
 
-  // Top-down 5-lane (2026-08-22) — Boss LUÔN đứng lane giữa, quái thường
-  // random mỗi lần spawn (xem BattleLane.ts). Helper DUY NHẤT cho quy tắc
-  // này — mọi entry point tạo CombatEntity từ Enemy (startBattle, wave
-  // spawn, boss summon) đều phải gọi qua đây, tránh lặp lại rồi bỏ sót
-  // như summon từng bị trước khi có helper này.
-  private assignEnemyLane(entity: CombatEntity) {
-    entity.lane = entity.isBoss ? HERO_LANE_INDEX : randomEnemyLaneIndex()
-  }
-
   startBattle(player: CombatEntity, enemy: Enemy) {
     const enemyEntity = enemyToCombatEntity(this.enemySystem.spawn(enemy))
 
-    this.assignEnemyLane(enemyEntity)
+    applySpawnLaneRule(enemyEntity)
 
-    // Reset mặc định — startBattleWithPlayer() sẽ set lại receiver
-    // thật ngay sau lệnh gọi này. Battle bắt đầu qua startBattle()
-    // trực tiếp (không phải PlayerData) thì không có ai nhận thưởng
-    // hay đồ rơi (equipment cần player để roll chỉ số chính).
-    this.activeReceiver = null
-    this.activePlayer = null
-
+    // Reset mặc định — startBattleWithPlayer() sẽ set lại session
+    // (receiver/player) thật ngay sau lệnh gọi này. Battle bắt đầu qua
+    // startBattle() trực tiếp (không phải PlayerData) thì không có ai
+    // nhận thưởng hay đồ rơi (equipment cần player để roll chỉ số chính).
     // Stack passive (vd Linh Khí Cảm Ứng +công kích/đòn trúng) là
     // buff TRONG TRẬN — reset về 0 mỗi khi 1 trận mới bắt đầu, kể cả
     // khi Auto tự nối trận ngay lập tức (theo yêu cầu, khác thiết kế
     // permanent progression ban đầu).
+    this.battleLoot.beginBattle()
     this.passiveSystem.resetStacks()
-
-    this.battleRewardSummary = createEmptyBattleRewardSummary()
 
     this.battleSystem.start(player, enemyEntity)
   }
 
   getBattleRewardSummary(): BattleRewardSummary {
-    return this.battleRewardSummary
+    return this.battleLoot.getSummary()
   }
 
   /**
@@ -1762,9 +1788,10 @@ export class GameManager {
 
     this.startBattle(playerEntity, enemy)
 
-    this.activeReceiver = createPlayerRewardReceiver(player, amount => this.gainEquippedTechniqueInsight(amount))
-
-    this.activePlayer = player
+    this.battleLoot.setSession(
+      createPlayerRewardReceiver(player, amount => this.gainEquippedTechniqueInsight(amount)),
+      player,
+    )
   }
 
   getBattle(): Battle | null {
@@ -1791,83 +1818,37 @@ export class GameManager {
    * Enemy Kiếp phải đã được đăng ký qua registerEnemyTemplates().
    *
    * Đột Phá tổng quát (2026-08-16) — `foundationType` CHỈ truyền khi
-   * targetRealmId === 'foundation' (tra TRIBULATION_ENEMY_ID_BY_FOUNDATION,
+   * targetRealmId === 'foundation_establishment' (tra TRIBULATION_ENEMY_ID_BY_FOUNDATION,
    * hệ Căn Cơ 4-tier cũ, không đổi); mọi targetRealmId khác tra
    * TRIBULATION_ENEMY_ID_BY_REALM (1 quái Kiếp/cảnh giới, không tier).
    */
+  /**
+   * Độ Kiếp (mục 11 spec `breakthrough`) — delegate xuống
+   * TribulationSystem (runtime trận Kiếp). Session loot được khởi tạo
+   * RIÊNG qua BattleLootSystem.beginTribulation(): reset receiver +
+   * reward summary của trận Stage trước (P2 fix 2026-08-24) rồi gắn
+   * player của phiên Độ Kiếp.
+   */
   startTribulation(player: PlayerData, playerStats: Stats, targetRealmId: string, foundationType?: FoundationType): boolean {
-    if (this.getTribulationCooldownSeconds() > 0 || this.activeTribulation) {
-      return false
+    const started = this.tribulation.start(player, playerStats, targetRealmId, foundationType)
+
+    if (started) {
+      this.battleLoot.beginTribulation(player)
     }
 
-    const profile = getTribulationProfile(targetRealmId)
-
-    if (!profile) {
-      return false
-    }
-
-    const skillLevels = Object.fromEntries(this.skillManager.getAll().map(skill => [skill.id, skill.level]))
-    const playerEntity = playerToCombatEntity(player, playerStats, this.skillSystem.getSkillRuntimeStats(), skillLevels)
-    this.battleSystem.startTribulation(playerEntity)
-    this.activePlayer = player
-    this.activeTribulation = {
-      targetRealmId,
-      foundationType,
-      durationSeconds: profile.durationSeconds,
-      secondsRemaining: profile.durationSeconds,
-      strikeIntervalSeconds: profile.strikeIntervalSeconds,
-      nextStrikeInSeconds: profile.strikeIntervalSeconds,
-      lightningMaxHpDamagePercent: profile.lightningMaxHpDamagePercent,
-    }
-
-    return true
+    return started
   }
 
   getTribulationCooldownSeconds(now = Date.now()): number {
-    return Math.max(0, Math.ceil((this.tribulationCooldownUntil - now) / 1000))
+    return this.tribulation.getCooldownSeconds(now)
   }
 
   getActiveTribulation(): ActiveTribulation | null {
-    return this.activeTribulation
+    return this.tribulation.getActive()
   }
 
-  /**
-   * Trận Kiếp KHÔNG đi qua Stage nên không ai tự set 'victory' khi hết
-   * quái (khác updateStageProgress() — Stage-specific, xem class doc
-   * BattleSystem.checkBattleEnd()) — hàm này bù lại đúng 1 việc đó.
-   * 'defeat' đã tự đúng sẵn (BattleSystem.checkBattleEnd() set khi
-   * player chết) — phần thưởng/phạt cho thắng/thua xử lý ở
-   * useTribulation.ts (Phase 5), hàm này CHỈ phát hiện thắng.
-   */
-  private updateTribulationProgress() {
-    if (!this.activeTribulation) {
-      return
-    }
-
-    const battle = this.battleSystem.getBattle()
-
-    if (!battle || battle.state !== 'fighting' || battle.mode !== 'tribulation') {
-      return
-    }
-
-    if (battle.player.currentHp <= 0) {
-      battle.state = 'defeat'
-      this.tribulationCooldownUntil = Date.now() + TRIBULATION_COOLDOWN_SECONDS * 1000
-      this.eventBus.emit('battle_end', { type: 'battle_end', state: 'defeat' })
-    } else if (this.activeTribulation.secondsRemaining <= 0) {
-      battle.state = 'victory'
-
-      this.eventBus.emit('battle_end', { type: 'battle_end', state: 'victory' })
-    }
-  }
-
-  /**
-   * Gọi sau khi useTribulation.ts (Phase 5) đã xử lý xong thắng/thua —
-   * dọn activeTribulation để trận kế tiếp (Stage bình thường hoặc
-   * TRÚC CƠ khác) không bị nhầm là đang giữa 1 Tribulation cũ.
-   */
   clearActiveTribulation() {
-    this.activeTribulation = null
+    this.tribulation.clear()
   }
 
   /**
@@ -1906,8 +1887,7 @@ export class GameManager {
     }
 
     battle.state = 'defeat'
-    this.stageManager.stop()
-    this.repeatStageContinuously = false
+    this.stageWaves.stopRepeat()
 
     this.eventBus.emit('battle_end', { type: 'battle_end', state: 'defeat' })
 
@@ -1917,197 +1897,15 @@ export class GameManager {
   // =========================
   // STAGE (wave spawn)
   // =========================
+  // Vòng đời wave (spawn nhịp, victory, auto-repeat, boss summon) nằm ở
+  // StageWaveSystem — các method dưới đây là delegate giữ public API.
 
-  /**
-   * Điểm vào DUY NHẤT để bắt đầu 1 màn — thay hẳn việc gọi thẳng
-   * startBattleWithPlayer() với 1 quái hardcode như trước. Quái đầu
-   * tiên spawn ngay trong lệnh gọi này (qua startBattleWithPlayer()
-   * có sẵn — tự nhiên tái dùng passiveSystem.resetStacks() bên trong,
-   * đúng điểm reset stack 1 LẦN/màn chứ không phải mỗi wave).
-   */
   startStage(player: PlayerData, playerStats: Stats, stage: Stage, repeatContinuously = false): boolean {
-    if (!this.isStageUnlocked(stage.id, player)) {
-      return false
-    }
-
-    if (!this.stageManager.start(stage)) {
-      return false
-    }
-
-    this.activeStagePlayer = player
-    this.repeatStageContinuously = repeatContinuously
-
-    // Stage chỉ 1 quái + có bossEnemyId -> quái đầu tiên (spawnedCount
-    // 0) CŨNG là quái CUỐI, phải là Boss ngay từ đầu.
-    const firstEnemyTemplate = this.pickEnemyForSpawn(stage, stage.totalEnemyCount === 1)
-
-    if (!firstEnemyTemplate) {
-      this.stageManager.stop()
-
-      return false
-    }
-
-    this.startBattleWithPlayer(player, playerStats, firstEnemyTemplate)
-
-    return true
-  }
-
-  /**
-   * Roll 1 entry trong enemyPool theo weight, tra template, rồi roll
-   * riêng `eliteChance` của ĐÚNG entry đó — trúng thì trả bản Elite
-   * (buff stat + eliteRewards nếu có, xem
-   * core/enemy/Enemy.createEliteVariant()) thay vì bản thường. Dùng
-   * chung cho quái ĐẦU (startStage) lẫn quái spawn giữa chừng
-   * (updateStageProgress).
-   *
-   * `isFinalSpawn` — Core Loop Foundation checklist (Mục BOSS): lượt
-   * spawn CUỐI của stage có bossEnemyId LUÔN LÀ Boss, bỏ qua roll
-   * enemyPool/eliteChance hoàn toàn (Boss KHÔNG ngẫu nhiên như Elite).
-   */
-  private pickEnemyForSpawn(stage: Stage, isFinalSpawn: boolean): Enemy | undefined {
-    const floor = stage.floor ?? stage.requiredRealmLevel
-
-    // Các chapter có thể tạm tái dùng encounter pool của chapter trước.
-    // Combat vẫn phải dùng cảnh giới của stage để Realm Pressure không biến
-    // quái Trúc Cơ thành quái Luyện Khí dưới tên khác.
-    const applyStageRealm = (enemy: Enemy): Enemy => stage.requiredRealmId
-      ? { ...enemy, realmId: stage.requiredRealmId }
-      : enemy
-
-    // DESIGN: boss chỉ xuất hiện ở tầng 10 (tầng cuối chương). bossEnemyId trên
-    // các stage 1-9 hiện là metadata/reserved data, không phải lệnh spawn boss.
-    // Không bỏ guard này chỉ vì stage 1-9 cũng khai bossEnemyId.
-    if (isFinalSpawn && floor === 10 && stage.bossEnemyId) {
-      const bossTemplate = this.enemyTemplates.get(stage.bossEnemyId)
-
-      if (bossTemplate) {
-        return applyStageRealm(createBossVariant(bossTemplate))
-      }
-    }
-
-    const entry = this.stageSystem.pickNextEnemyEntry(stage)
-    const template = this.enemyTemplates.get(entry.enemyId)
-
-    if (!template) {
-      return undefined
-    }
-
-    if (entry.eliteChance && rollChance(entry.eliteChance)) {
-      return applyStageRealm(createEliteVariant(template))
-    }
-
-    return applyStageRealm(template)
-  }
-
-  /**
-   * Gọi mỗi tick (sau grantBattleRewardIfNeeded() — cần battle.enemies
-   * đã được dọn quái chết trước khi đếm "còn sống bao nhiêu"). Quản
-   * lý toàn bộ vòng đời wave: spawn theo nhịp (SONG SONG, không đợi
-   * quái cũ chết), spawn ngay nếu sân trống, và set 'victory' khi đã
-   * spawn đủ + hết quái sống (BattleSystem không tự set 'victory'
-   * nữa — xem BattleSystem.checkBattleEnd()).
-   */
-  private updateStageProgress(deltaSeconds: number) {
-    const active = this.stageManager.get()
-
-    if (!active) {
-      return
-    }
-
-    const battle = this.battleSystem.getBattle()
-
-    // Player chết (battle.state 'defeat') — BattleSystem.checkBattleEnd()
-    // chỉ tự set 'defeat', KHÔNG tự dừng stage (không nên biết về
-    // Stage, xem class doc). Phải dừng stageManager ở ĐÂY, không thì
-    // active không bao giờ về null, khoá cứng nút "Chiến Đấu" vĩnh viễn.
-    if (!battle || battle.state === 'defeat') {
-      this.stageManager.stop()
-      this.repeatStageContinuously = false
-
-      return
-    }
-
-    if (battle.state !== 'fighting') {
-      return
-    }
-
-    const stage = this.stageTemplates.get(active.stageId)
-
-    if (!stage) {
-      return
-    }
-
-    const aliveCount = battle.enemies.length
-
-    if (active.spawnedCount >= stage.totalEnemyCount) {
-      if (aliveCount === 0) {
-        if (this.activeStagePlayer && !this.activeStagePlayer.completedStageIds.includes(stage.id)) {
-          this.activeStagePlayer.completedStageIds.push(stage.id)
-        }
-
-        if (this.repeatStageContinuously && this.stageManager.restartCycle(stage)) {
-          // Giữ nguyên Battle/player HP, resource, cooldown và reward summary;
-          // cycle mới chỉ khởi động lại bộ đếm spawn của stage.
-          return
-        }
-
-        battle.state = 'victory'
-
-        this.stageManager.stop()
-
-        // Chỉ chạy tới đây đúng 1 lần — tick kế battle.state đã là
-        // 'victory' (!== 'fighting'), hàm này return sớm ở trên.
-        this.eventBus.emit('battle_end', { type: 'battle_end', state: 'victory' })
-      }
-
-      return
-    }
-
-    active.spawnCountdown -= deltaSeconds
-
-    // Sân trống quái giữa chừng thì spawn ngay (không đợi hết nhịp) —
-    // tránh "chết thời gian" khi player out-DPS nhịp spawn mặc định.
-    if (active.spawnCountdown > 0 && aliveCount > 0) {
-      return
-    }
-
-    const nextEnemyTemplate = this.pickEnemyForSpawn(stage, active.spawnedCount === stage.totalEnemyCount - 1)
-
-    if (!nextEnemyTemplate) {
-      return
-    }
-
-    const nextEnemyEntity = enemyToCombatEntity(this.enemySystem.spawn(nextEnemyTemplate))
-
-    this.assignEnemyLane(nextEnemyEntity)
-
-    this.battleSystem.spawnEnemyInto(battle, nextEnemyEntity)
-
-    active.spawnedCount++
-
-    active.spawnCountdown = stage.spawnIntervalSeconds
+    return this.stageWaves.start(player, playerStats, stage, repeatContinuously)
   }
 
   getStageProgress(): { spawned: number; total: number; alive: number } | null {
-    const active = this.stageManager.get()
-
-    if (!active) {
-      return null
-    }
-
-    const stage = this.stageTemplates.get(active.stageId)
-
-    if (!stage) {
-      return null
-    }
-
-    return {
-      spawned: active.spawnedCount,
-
-      total: stage.totalEnemyCount,
-
-      alive: this.battleSystem.getBattle()?.enemies.length ?? 0,
-    }
+    return this.stageWaves.getProgress()
   }
 
   // =========================
@@ -2242,337 +2040,29 @@ export class GameManager {
 
       this.battleSystem.update(step)
       this.grantBattleRewardIfNeeded()
-      this.updateStageProgress(step)
-      this.updateBossSummons()
+      this.stageWaves.update(step)
+      this.stageWaves.resolveBossSummons()
     }
 
-    this.updateTribulation(deltaSeconds)
-    this.updateTribulationProgress()
+    // Ngoài vòng fixed-step — TribulationSystem tự có catch-up dạng đóng,
+    // chia nhỏ sẽ cộng dồn sai số float (xem class doc bên đó).
+    this.tribulation.update(deltaSeconds)
+    this.tribulation.updateProgress()
   }
 
-  private updateTribulation(deltaSeconds: number) {
-    const active = this.activeTribulation
-    const battle = this.battleSystem.getBattle()
-
-    if (!active || !battle || battle.mode !== 'tribulation' || battle.state !== 'fighting') {
-      return
-    }
-
-    // GameClock đo thời gian thực và Chromium có thể gom nhiều giây vào một
-    // tick khi tab/cửa sổ nằm nền. Chỉ tiêu thụ phần thời gian còn thuộc trận,
-    // rồi catch-up TẤT CẢ mốc lôi kích trong khoảng đó trước khi tuyên thắng.
-    const elapsedInTribulation = Math.min(deltaSeconds, active.secondsRemaining)
-
-    active.secondsRemaining = Math.max(0, active.secondsRemaining - elapsedInTribulation)
-    active.nextStrikeInSeconds -= elapsedInTribulation
-
-    while (active.nextStrikeInSeconds <= 0 && battle.player.currentHp > 0) {
-      const mitigation = 100 / (100 + Math.max(0, battle.player.stats.defense))
-      const damage = battle.player.maxHp * active.lightningMaxHpDamagePercent * mitigation
-      const applied = this.combatSystem.applyDirectDamage(battle.player, damage, 'heavenly_tribulation')
-      this.eventBus.emit('damage', {
-        type: 'damage', sourceId: 'heavenly_tribulation', targetId: battle.player.id,
-        value: applied, damageType: 'elemental',
-      })
-      this.eventBus.emit('tribulation_lightning', { targetId: battle.player.id })
-      active.nextStrikeInSeconds += active.strikeIntervalSeconds
-    }
-  }
-
-  /**
-   * Combat Rework Phase 4 (Boss Mechanics) — rút Battle.pendingSummons
-   * (BattleSystem đẩy vào khi 1 TribulationPhase.summonEnemyIds trigger,
-   * xem BattleSystem.updateTribulationPhases()) rồi spawn thật, cùng
-   * pattern updateStageProgress() dùng cho wave spawn — GameManager là
-   * nơi DUY NHẤT biết tra Enemy template theo id (enemyTemplates),
-   * BattleSystem không nên biết.
-   */
-  private updateBossSummons() {
-    const battle = this.battleSystem.getBattle()
-
-    if (!battle || battle.pendingSummons.length === 0) {
-      return
-    }
-
-    for (const enemyId of battle.pendingSummons) {
-      const template = this.enemyTemplates.get(enemyId)
-
-      if (!template) {
-        continue
-      }
-
-      const summonedEntity = enemyToCombatEntity(this.enemySystem.spawn(template))
-
-      this.assignEnemyLane(summonedEntity)
-
-      this.battleSystem.spawnEnemyInto(battle, summonedEntity)
-    }
-
-    battle.pendingSummons = []
-  }
-
-  /**
-   * Nhiều quái có thể chết cùng lúc/liên tục (wave) — quét TOÀN BỘ
-   * battle.enemies mỗi tick, cấp thưởng cho con nào vừa chết mà chưa
-   * xử lý (rewardGranted là cờ chống lặp thưởng), rồi dọn khỏi mảng.
-   * Không còn gate theo battle.state === 'victory' như model 1v1 cũ —
-   * quái chết giữa chừng lúc battle vẫn 'fighting' vẫn phải cấp
-   * thưởng ngay, không đợi cả trận kết thúc.
-   */
   private grantBattleRewardIfNeeded() {
     const battle = this.battleSystem.getBattle()
 
-    if (!battle) {
-      return
+    if (battle) {
+      this.battleLoot.processDefeatedEnemies(battle)
     }
-
-    for (const battleEnemy of battle.enemies) {
-      if (battleEnemy.entity.alive || battleEnemy.rewardGranted) {
-        continue
-      }
-
-      battleEnemy.rewardGranted = true
-
-      if (this.activeReceiver) {
-        const enemy = this.enemySystem.get(battleEnemy.entity.id)
-
-        if (enemy) {
-          // Tu vi giờ CHỈ đến từ tu luyện (2026-08-20) — giết quái
-          // KHÔNG còn cộng tu vi nữa, cố ý bỏ qua enemy.rewards.cultivation
-          // ở đây (data field vẫn còn trong Enemies.ts nhưng không dùng).
-          const equippedTechnique = this.techniqueManager.getEquipped()
-          const insightBeforeReward = equippedTechnique?.insight ?? 0
-
-          this.giveReward(this.activeReceiver, { ...enemy.rewards, cultivation: undefined })
-
-          // EXP đã được đổi nghĩa thành Cảm ngộ. Summary phải phản ánh lượng
-          // thực sự vào Tâm Pháp, kể cả khi không trang bị hoặc đã chạm trần.
-          const insightGained = Math.max(
-            0,
-            (equippedTechnique?.insight ?? 0) - insightBeforeReward,
-          )
-          this.battleRewardSummary.experience += insightGained
-
-          if (insightGained > 0) {
-            this.emitRewardParticle(battleEnemy.entity.id, 'insight', 0x78e6d0)
-          }
-          const spiritStoneGained = enemy.rewards.spiritStone ?? 0
-          this.battleRewardSummary.spiritStone += spiritStoneGained
-
-          if (spiritStoneGained > 0) {
-            this.emitRewardParticle(battleEnemy.entity.id, 'currency', 0xffd54f)
-          }
-
-          this.grantItemDrops(enemy.rewards.itemDrops, battleEnemy.entity.isBoss === true, battleEnemy.entity.id)
-          this.grantRandomEquipmentDrop(battleEnemy.entity.isBoss === true, battleEnemy.entity.id)
-        }
-      }
-
-      this.enemySystem.despawn(battleEnemy.entity.id)
-    }
-
-    // Dọn quái đã chết + đã cấp thưởng khỏi mảng — tránh phình vô hạn
-    // qua nhiều wave trong cùng 1 stage. Sau bước này battle.enemies
-    // chỉ còn quái đang sống, nên "còn quái không" = check .length.
-    battle.enemies = battle.enemies.filter(battleEnemy => battleEnemy.entity.alive)
-  }
-
-  /**
-   * Đồ rơi thẳng vào bag tương ứng ngay khi quái chết — không có
-   * bước "nhặt" thủ công/loot window. Mỗi lần cộng thành công đẩy 1
-   * toast 'loot' vào pendingNotifications (xem drainNotifications()).
-   */
-  private grantItemDrops(drops: EnemyItemDrop[] | undefined, isBoss: boolean, sourceId: string) {
-    if (!drops) {
-      return
-    }
-
-    for (const drop of drops) {
-      if (!rollChance(drop.chance)) {
-        continue
-      }
-
-      switch (drop.kind) {
-        case 'material':
-          if (this.materialRegistry.has(drop.itemId)) {
-            const material = this.materialRegistry.get(drop.itemId)
-            const activeStage = this.stageManager.get()
-            const stage = activeStage ? this.stageTemplates.get(activeStage.stageId) : undefined
-            const isMortalThanhVan = stage?.requiredRealmId === 'pham_nhan'
-              && (stage.floor ?? stage.requiredRealmLevel ?? 0) <= 10
-            const amount = drop.itemId === TINH_HOA_PHAM_THE_MATERIAL_ID && isMortalThanhVan
-              ? rollMortalEssenceAmount(isBoss)
-              : drop.amount ?? 1
-
-            this.materialBag.add(material, amount)
-            this.emitRewardParticle(sourceId, 'item', 0x6fbf73)
-
-            this.pushLootNotification(`+${amount} ${material.name}`, {
-              icon: material.icon,
-              nameSegments: [{ text: material.name }],
-              amountLabel: `+${amount}`,
-              accentColorVar: '--jade',
-            })
-            this.addBattleRewardItem('material', drop.itemId, material.name, amount)
-          }
-          break
-
-        case 'pill':
-          if (this.pillRegistry.has(drop.itemId)) {
-            const pill = this.pillRegistry.get(drop.itemId)
-            const amount = drop.amount ?? 1
-
-            this.pillBag.add(pill, amount)
-            this.emitRewardParticle(sourceId, 'item', this.getPhamParticleColor(pill.pham))
-
-            this.pushLootNotification(`+${amount} ${pill.name}`, {
-              icon: pill.icon,
-              nameSegments: composePhamNameSegments(pill.name, pill.pham),
-              amountLabel: `+${amount}`,
-              accentColorVar: `--item-rarity-${pill.pham}`,
-            })
-            this.addBattleRewardItem('pill', drop.itemId, pill.name, amount)
-          }
-          break
-
-        case 'equipment':
-          if (this.equipmentRegistry.has(drop.itemId) && this.activePlayer) {
-            const template = this.equipmentRegistry.get(drop.itemId)
-
-            // Địa Giới ghép động (2026-08-15) — Zone chứa Stage đang
-            // hoạt động lúc rớt đồ, xem ZoneRegistry.getZoneForStage()/
-            // EquipmentNaming.ts. undefined nếu không có Stage đang
-            // chạy (không nên xảy ra ở nhánh loot combat này, nhưng
-            // graceful nếu có).
-            const activeStageId = this.stageManager.get()?.stageId
-
-            const zoneId = activeStageId ? this.zoneRegistry.getZoneForStage(activeStageId)?.id : undefined
-
-            const instance = this.equipmentSystem.createInstance(
-              template,
-              this.activePlayer,
-              this.affixRegistry,
-              zoneId,
-            )
-
-            this.equipmentBag.add(instance)
-            this.emitRewardParticle(sourceId, 'item', this.getPhamParticleColor(instance.rarity))
-
-            this.pushLootNotification(`+1 ${template.name}`, {
-              icon: instance.icon ?? template.icon,
-              nameSegments: composeEquipmentNameSegments(instance, template, this.zoneRegistry),
-              amountLabel: '+1',
-              accentColorVar: `--rarity-${instance.quality}`,
-            })
-            this.addBattleRewardItem('equipment', template.id, template.name, 1)
-          }
-          break
-
-        // Phá Cảnh Tâm Pháp — rơi thẳng vào danh sách tâm pháp ĐÃ HỌC
-        // (unlocked), giống cách nhặt equipment KHÔNG cần bước
-        // "học" riêng như Đan/Phù/Trận. techniqueSystem.learn() tự
-        // no-op nếu đã sở hữu (xem TechniqueSystem.ts) — chỉ toast
-        // khi THỰC SỰ học mới (learn() trả true), tránh spam toast
-        // trùng lặp mỗi lần rớt trúng công pháp đã sở hữu.
-        case 'technique': {
-          const template = this.techniqueTemplates.get(drop.itemId)
-
-          if (template && this.techniqueSystem.learn(template)) {
-            this.emitRewardParticle(sourceId, 'item', 0xffd54f)
-            this.pushLootNotification(`Học được: ${template.name}`, {
-              icon: template.icon,
-              nameSegments: [{ text: template.name }],
-              amountLabel: 'Học được',
-              accentColorVar: '--gold-500',
-            })
-            this.addBattleRewardItem('technique', drop.itemId, template.name, 1)
-          }
-
-          break
-        }
-      }
-    }
-  }
-
-  private grantRandomEquipmentDrop(isBoss: boolean, sourceId: string) {
-    if (!this.activePlayer || !rollChance(isBoss ? BOSS_EQUIPMENT_DROP_CHANCE : NORMAL_EQUIPMENT_DROP_CHANCE)) {
-      return
-    }
-
-    const pool = this.equipmentRegistry.getAll()
-
-    if (pool.length === 0) {
-      return
-    }
-
-    const template = pool[randomInt(0, pool.length - 1)]!
-    const activeStageId = this.stageManager.get()?.stageId
-    const zoneId = activeStageId ? this.zoneRegistry.getZoneForStage(activeStageId)?.id : undefined
-    const instance = this.equipmentSystem.createInstance(
-      template,
-      this.activePlayer,
-      this.affixRegistry,
-      zoneId,
-    )
-
-    this.equipmentBag.add(instance)
-    this.emitRewardParticle(sourceId, 'item', this.getPhamParticleColor(instance.rarity))
-
-    // Uncommitted audit followup plan, mục "Đồng nhất thông báo trang bị
-    // rơi ngẫu nhiên" (2026-08-24) — nhánh drop này trước đây thiếu
-    // pushLootNotification() so với nhánh 'equipment' của grantItemDrops()
-    // ở trên (cùng formatter tên/icon/màu Phẩm), khiến rớt đồ ngẫu nhiên
-    // (BOSS/NORMAL_EQUIPMENT_DROP_CHANCE, KHÔNG khai trong enemy.rewards.itemDrops)
-    // không hiện toast dù đã cộng bag + particle + battle summary.
-    this.pushLootNotification(`+1 ${template.name}`, {
-      icon: instance.icon ?? template.icon,
-      nameSegments: composeEquipmentNameSegments(instance, template, this.zoneRegistry),
-      amountLabel: '+1',
-      accentColorVar: `--rarity-${instance.quality}`,
-    })
-    this.addBattleRewardItem('equipment', template.id, template.name, 1)
-  }
-
-  private emitRewardParticle(sourceId: string, kind: 'item' | 'insight' | 'currency', color: number) {
-    this.eventBus.emit('reward_particle', { sourceId, kind, color })
-  }
-
-  private getPhamParticleColor(pham: Pham): number {
-    const colors: Record<Pham, number> = {
-      hoang_pham: 0x8a877e,
-      huyen_pham: 0x6fbf73,
-      dia_pham: 0x5b9bd5,
-      thien_pham: 0xffd54f,
-      tien_pham: 0xfff6d8,
-    }
-
-    return colors[pham]
-  }
-
-  // Gộp theo itemId+kind (nhiều wave cùng trận có thể rớt trùng loại)
-  // thay vì đẩy 1 dòng riêng mỗi lần rớt — CombatVictoryPanel hiện
-  // "+N tên vật phẩm" gọn, không lặp dòng.
-  private addBattleRewardItem(kind: BattleRewardItemKind, itemId: string, name: string, amount: number) {
-    const existing = this.battleRewardSummary.items.find(item => item.kind === kind && item.itemId === itemId)
-
-    if (existing) {
-      existing.amount += amount
-
-      return
-    }
-
-    this.battleRewardSummary.items.push({ kind, itemId, name, amount })
   }
 
   /**
    * Vue layer (App.vue's tick()) gọi mỗi tick để rút toast phát sinh
-   * TRONG GameManager kể từ lần gọi trước — trả về rồi xoá hàng đợi.
+   * TRONG core kể từ lần gọi trước — trả về rồi xoá hàng đợi.
    */
   drainNotifications(): NotificationEvent[] {
-    const drained = this.pendingNotifications
-
-    this.pendingNotifications = []
-
-    return drained
+    return this.notifications.drain()
   }
 }

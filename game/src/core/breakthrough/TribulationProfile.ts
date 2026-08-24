@@ -14,7 +14,7 @@ export const TRIBULATION_PROFILES: Readonly<Record<string, TribulationProfile>> 
     strikeIntervalSeconds: 2,
     lightningMaxHpDamagePercent: 0.08,
   },
-  foundation: {
+  foundation_establishment: {
     durationSeconds: 20,
     strikeIntervalSeconds: 2,
     lightningMaxHpDamagePercent: 0.13,

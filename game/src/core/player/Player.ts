@@ -32,6 +32,10 @@ export interface PlayerData {
 
   spiritStone: number
 
+  // Ba Thiên Phú được chốt khi tạo nhân vật. Hiệu ứng gameplay sẽ được
+  // nối vào stat/effect system theo talent-system-plan.md.
+  selectedTalentIds: string[]
+
   // Ghi nhận đã unlock hiệu ứng gắn passive của Phá Cảnh Tâm Pháp khi
   // phá ĐẠI cảnh giới (key: `${techniqueId}:${realmId}`) — tránh cộng
   // trùng modifier vĩnh viễn nếu code chạy lại (idempotent, giống
@@ -74,8 +78,8 @@ export interface PlayerData {
   // chọn nghề", độc lập với realmId). 2 khái niệm trùng tên nhưng KHÔNG
   // phải 1: chọn path chính là nghi lễ đột phá Phàm Nhân -> Luyện Khí
   // (xem GameManager.chooseCultivationPath()), nên trên thực tế
-  // cultivationPath luôn undefined trong lúc realmId === 'pham_nhan' và
-  // luôn có giá trị ngay khi realmId rời khỏi 'pham_nhan' — save cũ
+  // cultivationPath luôn undefined trong lúc realmId === 'mortal' và
+  // luôn có giá trị ngay khi realmId rời khỏi 'mortal' — save cũ
   // (tạo trước khi Phàm Nhân tồn tại, đã ở qi_refining+ mà chưa chọn
   // path) là NGOẠI LỆ duy nhất, xem CharacterPanel.vue's
   // canChooseCultivationPath.
@@ -95,18 +99,21 @@ export interface PlayerData {
   // khi đột phá, cùng nguồn với totalCultivationGained) — technique chỉ
   // có ĐÚNG 1 cái trong đời save (permanent path choice) nên 1 số vô
   // hướng là đủ, không cần key theo techniqueId.
-  // Pháp Tu Redesign (magicpath, 2026-08-18) — điểm progression CHƯA
-  // TIÊU, +1 mỗi lần đột phá TIỂU cảnh giới (xem
-  // CultivationSystem.breakthrough()). Dùng để unlock/upgrade Element
-  // qua node tree (chưa xây — xem [[tienhiep-phap-tu-magicpath]]),
-  // KHÔNG liên quan gì tới equippedElements/Element Slot (2 hệ thống
-  // tách biệt theo đúng yêu cầu spec, mục 20).
-  skillPoints: number
+  // Cảm ngộ Kỹ năng (skill-insight-and-auto-combat-hud-plan.md) — thay
+  // HẲN skillPoints cũ (không còn cấp khi đột phá tiểu cảnh giới, xem
+  // CultivationSystem.breakthrough()). Nhận từ chiến đấu (hạ quái, xem
+  // GameManager.grantBattleRewardIfNeeded()), tiêu vào mở node tree
+  // (NodeSystem.ts's insightCost) và nâng cấp skill
+  // (SkillSystem.upgradeSkill()) — 1 hồ điểm DUY NHẤT cho cả 2 việc.
+  skillInsight: number
 
-  // PLAN HOÀN CHỈNH mục 2 — điểm Main Stat CHƯA phân phối, cấp cùng
-  // lúc với skillPoints mỗi khi đột phá TIỂU cảnh giới (xem
-  // CultivationSystem.breakthrough()) nhưng là 1 hồ điểm HOÀN TOÀN
-  // riêng — tiêu vào baseStats.{strength,dexterity,intelligence,
+  // Chỉ tăng, không giảm — thống kê/điều kiện progression về sau.
+  totalSkillInsightGained: number
+
+  // PLAN HOÀN CHỈNH mục 2 — điểm Main Stat CHƯA phân phối, cấp mỗi khi
+  // đột phá TIỂU cảnh giới (xem CultivationSystem.breakthrough()) —
+  // KHÁC skillInsight (giờ chỉ đến từ chiến đấu, không còn cấp cùng
+  // lúc với attributePoints nữa) — tiêu vào baseStats.{strength,dexterity,intelligence,
   // attunement,vitality} qua GameManager.allocateAttributePoint(), có
   // trần riêng từng stat theo đại cảnh giới (xem core/stats/StatCap.ts).
   attributePoints: number
@@ -131,17 +138,17 @@ export interface PlayerData {
   completedStageIds: string[]
 
   // Luyện Thể (Realm Passive & Pressure System, 2026-08-20) — 6 tầng
-  // rèn thể Phàm Nhân, xem data/realm/LuyenThe.ts. luyenTheCompletedTiers
-  // đếm số tầng ĐÃ HOÀN THÀNH (0-6, tuần tự), luyenTheCurrentTierProgress
+  // rèn thể Phàm Nhân, xem data/realm/LuyenThe.ts. bodyRefinementCompletedTiers
+  // đếm số tầng ĐÃ HOÀN THÀNH (0-6, tuần tự), bodyRefinementCurrentTierProgress
   // là Tinh Hoa Phàm Thể đã đầu tư vào tầng ĐANG DỞ (0..cap của tầng
-  // luyenTheCompletedTiers). Xem core/realm/LuyenTheSystem.ts.
-  luyenTheCompletedTiers: number
+  // bodyRefinementCompletedTiers). Xem core/realm/BodyRefinementSystem.ts.
+  bodyRefinementCompletedTiers: number
 
-  luyenTheCurrentTierProgress: number
+  bodyRefinementCurrentTierProgress: number
 
   // Bậc Nhập Đạo (1-6) — chốt DUY NHẤT 1 lần lúc Lễ Nhập Môn (Phàm
   // Nhân -> Luyện Khí, xem GameManager.chooseCultivationPath()) từ
-  // luyenTheCompletedTiers tại thời điểm đó, dùng cho cả Nhập Đạo
+  // bodyRefinementCompletedTiers tại thời điểm đó, dùng cho cả Nhập Đạo
   // (data/realm/RealmPassives.ts) lẫn Realm Pressure (xem
   // core/combat/RealmPressure.ts). Mặc định 6 (không bị áp chế) cho
   // save cũ/nhân vật chưa từng qua Phàm Nhân — KHÔNG hồi tố phạt
@@ -160,7 +167,7 @@ export function createDefaultPlayer(): PlayerData {
   return {
     name: 'Vô Danh',
 
-    realmId: 'pham_nhan',
+    realmId: 'mortal',
     realmLevel: 1,
 
     cultivation: 0,
@@ -171,6 +178,7 @@ export function createDefaultPlayer(): PlayerData {
     externalModifiers: [],
 
     spiritStone: 0,
+    selectedTalentIds: [],
     completedStageIds: [],
     unlockedRealmEnhancements: [],
     hasSeenTutorial: false,
@@ -186,14 +194,15 @@ export function createDefaultPlayer(): PlayerData {
     cultivationPath: undefined,
 
     totalCultivationGained: 0,
-    skillPoints: 0,
+    skillInsight: 0,
+    totalSkillInsightGained: 0,
     attributePoints: 0,
     unlockedElements: [],
     equippedElements: [],
     purchasedNodeIds: [],
 
-    luyenTheCompletedTiers: 0,
-    luyenTheCurrentTierProgress: 0,
+    bodyRefinementCompletedTiers: 0,
+    bodyRefinementCurrentTierProgress: 0,
     breakthroughGrade: 6,
     grantedRealmPassiveIds: [],
 
@@ -274,27 +283,26 @@ export function playerToCombatEntity(
     x: 0,
 
     // Hero luôn đứng cố định lane giữa (2026-08-22, top-down 5-lane).
-    lane: HERO_LANE_INDEX,
+    row: HERO_LANE_INDEX,
 
     alive: true,
   }
 }
 
 /**
- * Pháp Tu Redesign (magicpath) — Tâm Pháp không còn level/experience
- * (không còn cộng chỉ số nên không còn gì để "lên cấp" scale theo) —
- * `addExperience` giờ là no-op, giữ lại CHỈ vì RewardReceiver interface
- * yêu cầu (Reward.experience vẫn được enemy roll ra, xem
- * RewardSystem.ts). `reward.experience` hiện KHÔNG còn tác dụng gì —
- * xem audit cuối phiên Pháp Tu Redesign, cân nhắc xoá hẳn khỏi
- * EnemyReward nếu xác nhận không cần dùng lại.
+ * `addTechniqueInsight` nuôi Cảm ngộ Tâm Pháp CỦA riêng tâm pháp đang
+ * trang bị (xem GameManager.gainEquippedTechniqueInsight()) — tách
+ * biệt khỏi Cảm ngộ Kỹ năng (player.skillInsight), cấp trực tiếp trong
+ * GameManager.grantBattleRewardIfNeeded() vì KHÔNG cần trang bị tâm
+ * pháp vẫn nhận được (xem skill-insight-and-auto-combat-hud-plan.md
+ * mục 3).
  */
 export function createPlayerRewardReceiver(
   player: PlayerData,
   addInsight?: (amount: number) => void,
 ): RewardReceiver {
   return {
-    addExperience(amount: number) {
+    addTechniqueInsight(amount: number) {
       addInsight?.(amount)
       // Cố ý không làm gì — xem ghi chú JSDoc phía trên.
     },

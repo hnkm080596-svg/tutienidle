@@ -30,26 +30,26 @@ export const buildings: Building[] = [
 
     baseStorageCapacity: 0,
 
-    gardenSeedMaterialId: 'herb-seed',
+    gardenSeedMaterialId: 'linh_thao_chung',
 
     // 10 phút/ô — cùng cấp độ thời gian với sản lượng cũ (1 đơn vị/
     // 5 phút cho 1 instance), nhưng giờ tối đa 9 ô chạy song song.
     gardenGrowSeconds: 600,
 
-    gardenYieldMaterialId: 'green-spirit-herb',
+    gardenYieldMaterialId: 'linh_chi',
 
     gardenYieldAmount: 2,
 
     upgradeCost: [
-      [{ materialId: 'black-iron', amount: 3 }],
-      [{ materialId: 'black-iron', amount: 6 }, { materialId: 'green-spirit-herb', amount: 10 }],
-      [{ materialId: 'black-iron', amount: 12 }, { materialId: 'green-spirit-herb', amount: 20 }],
-      [{ materialId: 'red-copper', amount: 8 }, { materialId: 'green-spirit-herb', amount: 40 }],
-      [{ materialId: 'red-copper', amount: 12 }, { materialId: 'green-spirit-herb', amount: 60 }],
-      [{ materialId: 'red-copper', amount: 16 }, { materialId: 'green-spirit-herb', amount: 80 }],
-      [{ materialId: 'yeu_dan_qi_refining', amount: 2 }, { materialId: 'green-spirit-herb', amount: 100 }],
-      [{ materialId: 'yeu_dan_qi_refining', amount: 4 }, { materialId: 'green-spirit-herb', amount: 120 }],
-      [{ materialId: 'yeu_dan_qi_refining', amount: 6 }, { materialId: 'green-spirit-herb', amount: 150 }],
+      [{ materialId: 'huyen_thiet', amount: 3 }],
+      [{ materialId: 'huyen_thiet', amount: 6 }, { materialId: 'linh_chi', amount: 10 }],
+      [{ materialId: 'huyen_thiet', amount: 12 }, { materialId: 'linh_chi', amount: 20 }],
+      [{ materialId: 'xich_dong', amount: 8 }, { materialId: 'linh_chi', amount: 40 }],
+      [{ materialId: 'xich_dong', amount: 12 }, { materialId: 'linh_chi', amount: 60 }],
+      [{ materialId: 'xich_dong', amount: 16 }, { materialId: 'linh_chi', amount: 80 }],
+      [{ materialId: 'yeu_dan_luyen_khi_canh', amount: 2 }, { materialId: 'linh_chi', amount: 100 }],
+      [{ materialId: 'yeu_dan_luyen_khi_canh', amount: 4 }, { materialId: 'linh_chi', amount: 120 }],
+      [{ materialId: 'yeu_dan_luyen_khi_canh', amount: 6 }, { materialId: 'linh_chi', amount: 150 }],
     ],
   },
 
@@ -60,7 +60,7 @@ export const buildings: Building[] = [
   // Thạch (producesSpiritStone — đổ thẳng player.spiritStone lúc thu
   // hoạch thay vì materialBag, xem BuildingSystem.claim()).
   {
-    id: 'linh_tuyen',
+    id: 'spirit_spring',
 
     name: 'Linh Tuyền',
 
@@ -81,10 +81,10 @@ export const buildings: Building[] = [
     baseStorageCapacity: 60,
 
     upgradeCost: [
-      [{ materialId: 'black-iron', amount: 5 }, { materialId: 'red-copper', amount: 2 }],
-      [{ materialId: 'red-copper', amount: 6 }],
-      [{ materialId: 'red-copper', amount: 12 }],
-      [{ materialId: 'yeu_dan_qi_refining', amount: 4 }],
+      [{ materialId: 'huyen_thiet', amount: 5 }, { materialId: 'xich_dong', amount: 2 }],
+      [{ materialId: 'xich_dong', amount: 6 }],
+      [{ materialId: 'xich_dong', amount: 12 }],
+      [{ materialId: 'yeu_dan_luyen_khi_canh', amount: 4 }],
     ],
   },
 
@@ -109,15 +109,15 @@ export const buildings: Building[] = [
     // Sức chứa Huyền Thiết đã luyện xong, chờ thu hoạch.
     baseStorageCapacity: 10,
 
-    requiredRealmId: 'foundation',
+    requiredRealmId: 'foundation_establishment',
 
     // Phase 10 balancing: tier 4 cùng lý do trên — spirit-silver ->
     // demon-core (đã có ở tier 3, nâng số lượng cho tier 4 leo thang).
     upgradeCost: [
-      [{ materialId: 'red-copper', amount: 4 }, { materialId: 'iron-ore', amount: 10 }],
-      [{ materialId: 'red-copper', amount: 8 }],
-      [{ materialId: 'yeu_dan_qi_refining', amount: 2 }],
-      [{ materialId: 'yeu_dan_qi_refining', amount: 5 }],
+      [{ materialId: 'xich_dong', amount: 4 }, { materialId: 'quang_sat', amount: 10 }],
+      [{ materialId: 'xich_dong', amount: 8 }],
+      [{ materialId: 'yeu_dan_luyen_khi_canh', amount: 2 }],
+      [{ materialId: 'yeu_dan_luyen_khi_canh', amount: 5 }],
     ],
   },
 
@@ -129,7 +129,7 @@ export const buildings: Building[] = [
   // recipes.ts). Không set requiredRealmId — recipe nó phục vụ cũng
   // không gate cảnh giới, khoá building này sẽ softlock chế Phù sớm.
   {
-    id: 'thien_cong_phuong',
+    id: 'artisan_workshop',
 
     name: 'Thiên Công Phường',
 
@@ -141,17 +141,17 @@ export const buildings: Building[] = [
 
     maxLevel: 5,
 
-    processingRecipeId: 'linh_moc_processing',
+    processingRecipeId: 'spirit_wood_processing',
 
     baseProcessingSpeed: 1,
 
     baseStorageCapacity: 10,
 
     upgradeCost: [
-      [{ materialId: 'thanh-linh-moc', amount: 5 }, { materialId: 'black-iron', amount: 3 }],
-      [{ materialId: 'thanh-linh-moc', amount: 10 }],
-      [{ materialId: 'red-copper', amount: 6 }],
-      [{ materialId: 'yeu_dan_qi_refining', amount: 3 }],
+      [{ materialId: 'thanh_linh_moc', amount: 5 }, { materialId: 'huyen_thiet', amount: 3 }],
+      [{ materialId: 'thanh_linh_moc', amount: 10 }],
+      [{ materialId: 'xich_dong', amount: 6 }],
+      [{ materialId: 'yeu_dan_luyen_khi_canh', amount: 3 }],
     ],
   },
 
@@ -188,10 +188,10 @@ export const buildings: Building[] = [
     // Ngày 1-2 (Equipment) — gần như miễn phí, không được chặn nhịp độ
     // trang bị đầu game.
     upgradeCost: [
-      [{ materialId: 'black-iron', amount: 2 }],
-      [{ materialId: 'black-iron', amount: 6 }],
-      [{ materialId: 'red-copper', amount: 4 }],
-      [{ materialId: 'red-copper', amount: 10 }],
+      [{ materialId: 'huyen_thiet', amount: 2 }],
+      [{ materialId: 'huyen_thiet', amount: 6 }],
+      [{ materialId: 'xich_dong', amount: 4 }],
+      [{ materialId: 'xich_dong', amount: 10 }],
     ],
 
     levels: [
@@ -223,10 +223,10 @@ export const buildings: Building[] = [
     // rẻ hơn nhiều lần chi phí craft, đạt được trong nhịp thu thập
     // bình thường.
     upgradeCost: [
-      [{ materialId: 'green-spirit-herb', amount: 5 }, { materialId: 'black-iron', amount: 3 }],
-      [{ materialId: 'green-spirit-herb', amount: 10 }],
-      [{ materialId: 'fire-spirit-herb', amount: 6 }],
-      [{ materialId: 'cold-spirit-herb', amount: 6 }],
+      [{ materialId: 'linh_chi', amount: 5 }, { materialId: 'huyen_thiet', amount: 3 }],
+      [{ materialId: 'linh_chi', amount: 10 }],
+      [{ materialId: 'que', amount: 6 }],
+      [{ materialId: 'cuc_hoa', amount: 6 }],
     ],
 
     levels: [
@@ -255,10 +255,10 @@ export const buildings: Building[] = [
     functionType: 'formation_altar',
 
     upgradeCost: [
-      [{ materialId: 'black-iron', amount: 5 }, { materialId: 'red-copper', amount: 2 }],
-      [{ materialId: 'black-iron', amount: 10 }],
-      [{ materialId: 'red-copper', amount: 6 }],
-      [{ materialId: 'red-copper', amount: 12 }],
+      [{ materialId: 'huyen_thiet', amount: 5 }, { materialId: 'xich_dong', amount: 2 }],
+      [{ materialId: 'huyen_thiet', amount: 10 }],
+      [{ materialId: 'xich_dong', amount: 6 }],
+      [{ materialId: 'xich_dong', amount: 12 }],
     ],
 
     levels: [
@@ -287,10 +287,10 @@ export const buildings: Building[] = [
     functionType: 'talisman_institute',
 
     upgradeCost: [
-      [{ materialId: 'green-spirit-herb', amount: 5 }, { materialId: 'red-copper', amount: 2 }],
-      [{ materialId: 'green-spirit-herb', amount: 10 }],
-      [{ materialId: 'fire-spirit-herb', amount: 6 }],
-      [{ materialId: 'red-copper', amount: 10 }],
+      [{ materialId: 'linh_chi', amount: 5 }, { materialId: 'xich_dong', amount: 2 }],
+      [{ materialId: 'linh_chi', amount: 10 }],
+      [{ materialId: 'que', amount: 6 }],
+      [{ materialId: 'xich_dong', amount: 10 }],
     ],
 
     levels: [
@@ -334,7 +334,7 @@ export const buildings: Building[] = [
     functionType: 'stage_select',
 
     upgradeCost: [
-      [{ materialId: 'black-iron', amount: 3 }],
+      [{ materialId: 'huyen_thiet', amount: 3 }],
     ],
   },
 

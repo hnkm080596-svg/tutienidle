@@ -64,7 +64,7 @@ describe('GameManager — Pháp Tu FirePath (chọn path tự cấp basic + Hỏ
 
     expect(gameManager.chooseCultivationPath('phap_tu', player)).toBe(true)
 
-    player.skillPoints = 2
+    player.skillInsight = 2
 
     expect(gameManager.purchaseNode('thuy_linh_ngo', player)).toBe(true)
 
@@ -84,20 +84,20 @@ describe('GameManager — Pháp Tu FirePath (chọn path tự cấp basic + Hỏ
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 3
+    player.skillInsight = 3
 
     expect(gameManager.purchaseNode('minor_fire_intensity', player)).toBe(false)
 
     expect(gameManager.purchaseNode('hoa_linh_ngo', player)).toBe(true)
     expect(gameManager.skillManager.get('hoa_cau_thuat')?.unlocked).toBe(true)
     // Root cost 0 — không tốn Skill Point.
-    expect(player.skillPoints).toBe(3)
+    expect(player.skillInsight).toBe(3)
 
     expect(gameManager.purchaseNode('minor_fire_intensity', player)).toBe(true)
     expect(gameManager.purchaseNode('minor_fire_burn', player)).toBe(true)
     expect(gameManager.purchaseNode('minor_fire_haste', player)).toBe(true)
 
-    expect(player.skillPoints).toBe(0)
+    expect(player.skillInsight).toBe(0)
 
     const finalStats = calculateStats(player.baseStats, [
       ...player.modifiers,
@@ -105,7 +105,7 @@ describe('GameManager — Pháp Tu FirePath (chọn path tự cấp basic + Hỏ
     ])
 
     expect(finalStats.ailmentPotencyPercent).toBeGreaterThanOrEqual(0.05)
-    expect(finalStats.projectileSpeedPercent).toBeGreaterThanOrEqual(0.05)
+    expect(finalStats.castSpeedPercent).toBeGreaterThanOrEqual(0.05)
   })
 
   it('Hỏa Trúc Cơ: Major Dẫn Hỏa/Tụ Hỏa bị chặn trước Trúc Cơ, loại trừ lẫn nhau sau khi mua 1 trong 2', () => {
@@ -116,15 +116,15 @@ describe('GameManager — Pháp Tu FirePath (chọn path tự cấp basic + Hỏ
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 10
+    player.skillInsight = 10
     player.realmId = 'qi_refining'
 
     expect(gameManager.purchaseNode('hoa_linh_ngo', player)).toBe(true)
 
-    // Chưa tới Trúc Cơ ('foundation') — cả 2 Major đều chặn.
+    // Chưa tới Trúc Cơ ('foundation_establishment') — cả 2 Major đều chặn.
     expect(gameManager.purchaseNode('hoa_truc_co_dan_hoa', player)).toBe(false)
 
-    player.realmId = 'foundation'
+    player.realmId = 'foundation_establishment'
 
     expect(gameManager.purchaseNode('hoa_truc_co_dan_hoa', player)).toBe(true)
     // Đã chọn Dẫn Hỏa (Reaction) — Tụ Hỏa (Pure) bị loại trừ.
@@ -139,8 +139,8 @@ describe('GameManager — Pháp Tu FirePath (chọn path tự cấp basic + Hỏ
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 2
-    player.realmId = 'foundation'
+    player.skillInsight = 2
+    player.realmId = 'foundation_establishment'
 
     expect(gameManager.purchaseNode('minor_fire_heart', player)).toBe(true)
     expect(gameManager.purchaseNode('minor_fire_application', player)).toBe(true)
@@ -161,8 +161,8 @@ describe('GameManager — Pháp Tu FirePath (chọn path tự cấp basic + Hỏ
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 10
-    player.realmId = 'foundation'
+    player.skillInsight = 10
+    player.realmId = 'foundation_establishment'
 
     expect(gameManager.purchaseNode('hoa_linh_ngo', player)).toBe(true)
 
@@ -189,8 +189,8 @@ describe('GameManager — Pháp Tu FirePath (chọn path tự cấp basic + Hỏ
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 10
-    player.realmId = 'foundation'
+    player.skillInsight = 10
+    player.realmId = 'foundation_establishment'
 
     // Skill tree redesign — Hỏa Cầu Thuật giờ là root NODE (hoa_linh_ngo),
     // mua nó (cost 0) học skill vào skillManager, đúng con đường

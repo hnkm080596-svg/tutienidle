@@ -14,7 +14,7 @@ describe('GameManager continuous repeat stage', () => {
       id: 'repeat_dummy',
       name: 'Repeat Dummy',
       level: 1,
-      realmId: 'pham_nhan',
+      realmId: 'mortal',
       lane: 'ground',
       statsInput: {
         maxHp: 1,
@@ -26,7 +26,7 @@ describe('GameManager continuous repeat stage', () => {
         criticalDamage: 1.5,
         armor: 0,
       },
-      rewards: { experience: 0, cultivation: 0, spiritStone: 1 },
+      rewards: { techniqueInsight: 0, cultivation: 0, spiritStone: 1 },
     })
     const stage: Stage = {
       id: 'repeat_stage',
@@ -44,7 +44,7 @@ describe('GameManager continuous repeat stage', () => {
     gameManager.registerStages([stage])
     gameManager.registerSkillTemplates(SKILLS)
     expect(gameManager.skillSystem.learn(SKILLS[0]!)).toBe(true)
-    expect(gameManager.skillSystem.equipWithoutSlot('basic_strike')).toBe(true)
+    expect(gameManager.skillSystem.equipWithoutSlot('tram')).toBe(true)
     const rewardParticles: BattleRewardParticleEvent[] = []
     gameManager.eventBus.on<BattleRewardParticleEvent>('reward_particle', event => rewardParticles.push(event))
 
@@ -64,9 +64,9 @@ describe('GameManager continuous repeat stage', () => {
   it('can abandon during countdown and releases the active stage immediately', () => {
     const gameManager = new GameManager()
     const enemy = defineEnemy({
-      id: 'countdown_dummy', name: 'Countdown Dummy', level: 1, realmId: 'pham_nhan', lane: 'ground',
+      id: 'countdown_dummy', name: 'Countdown Dummy', level: 1, realmId: 'mortal', lane: 'ground',
       statsInput: { maxHp: 10, attack: 0, attackSpeed: 1, movementSpeed: 1, attackRange: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-      rewards: { experience: 0, cultivation: 0, spiritStone: 0 },
+      rewards: { techniqueInsight: 0, cultivation: 0, spiritStone: 0 },
     })
     const stage: Stage = {
       id: 'countdown_stage', name: 'Countdown Stage', description: '', floor: 1,

@@ -23,7 +23,7 @@ describe('GameManager — Pháp Tu EarthPath (Thổ Node Tree Luyện Khí/Trúc
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 5
+    player.skillInsight = 5
 
     expect(gameManager.purchaseNode('minor_earth_intensity', player)).toBe(false)
 
@@ -34,14 +34,14 @@ describe('GameManager — Pháp Tu EarthPath (Thổ Node Tree Luyện Khí/Trúc
     expect(gameManager.purchaseNode('minor_earth_haste', player)).toBe(true)
     expect(gameManager.purchaseNode('minor_earth_impact', player)).toBe(true)
 
-    expect(player.skillPoints).toBe(0)
+    expect(player.skillInsight).toBe(0)
 
     const finalStats = calculateStats(player.baseStats, [
       ...player.modifiers,
       ...gameManager.getAggregatedModifiers(),
     ])
 
-    expect(finalStats.projectileSpeedPercent).toBeGreaterThanOrEqual(0.05)
+    expect(finalStats.castSpeedPercent).toBeGreaterThanOrEqual(0.05)
     // "Chấn Lực" — honest placeholder, tick thật nhưng chưa ai đọc.
     expect(gameManager.skillManager.get('tho_cau_thuat')?.skillImpactPercent).toBeGreaterThanOrEqual(0.05)
   })
@@ -54,14 +54,14 @@ describe('GameManager — Pháp Tu EarthPath (Thổ Node Tree Luyện Khí/Trúc
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 10
+    player.skillInsight = 10
     player.realmId = 'qi_refining'
 
     expect(gameManager.purchaseNode('tho_linh_ngo', player)).toBe(true)
 
     expect(gameManager.purchaseNode('tho_truc_co_dinh_tho', player)).toBe(false)
 
-    player.realmId = 'foundation'
+    player.realmId = 'foundation_establishment'
 
     expect(gameManager.purchaseNode('tho_truc_co_dinh_tho', player)).toBe(true)
     expect(gameManager.purchaseNode('tho_truc_co_tho_the', player)).toBe(false)
@@ -75,8 +75,8 @@ describe('GameManager — Pháp Tu EarthPath (Thổ Node Tree Luyện Khí/Trúc
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 3
-    player.realmId = 'foundation'
+    player.skillInsight = 3
+    player.realmId = 'foundation_establishment'
 
     expect(gameManager.purchaseNode('tho_linh_ngo', player)).toBe(true)
 
@@ -98,8 +98,8 @@ describe('GameManager — Pháp Tu EarthPath (Thổ Node Tree Luyện Khí/Trúc
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 10
-    player.realmId = 'foundation'
+    player.skillInsight = 10
+    player.realmId = 'foundation_establishment'
 
     expect(gameManager.purchaseNode('tho_linh_ngo', player)).toBe(true)
 
@@ -125,8 +125,8 @@ describe('GameManager — Pháp Tu EarthPath (Thổ Node Tree Luyện Khí/Trúc
 
     const player = createDefaultPlayer()
 
-    player.skillPoints = 10
-    player.realmId = 'foundation'
+    player.skillInsight = 10
+    player.realmId = 'foundation_establishment'
 
     expect(gameManager.purchaseNode('tho_linh_ngo', player)).toBe(true)
 
@@ -139,7 +139,7 @@ describe('GameManager — Pháp Tu EarthPath (Thổ Node Tree Luyện Khí/Trúc
 
     const thoCauThuat = gameManager.skillManager.get('tho_cau_thuat')
 
-    expect(thoCauThuat?.earthAoeRadius).toBeGreaterThanOrEqual(50)
+    expect(thoCauThuat?.earthAoeRadius).toBeGreaterThanOrEqual(1)
     expect(thoCauThuat?.earthAoeSecondaryDamagePercent).toBeGreaterThanOrEqual(0.7)
     expect(thoCauThuat?.earthKnockbackDistance).toBeGreaterThanOrEqual(30)
     expect(thoCauThuat?.thoTheGainPerCast).toBeGreaterThanOrEqual(1)

@@ -1,37 +1,29 @@
 import { describe, expect, it } from 'vitest'
-import { LANE_COUNT, HERO_LANE_INDEX, randomEnemyLaneIndex, attackRangeVisiblePercent, SCREEN_VISIBLE_MAX_X } from './BattleLane'
+import { GRID_ROW_COUNT, GRID_COLUMN_COUNT, HERO_LANE_INDEX, HERO_COLUMN, SPAWN_COLUMN, VISIBLE_MAX_COLUMN, randomEnemyLaneIndex, attackRangeVisiblePercent } from './BattleLane'
 
-describe('BattleLane — top-down 5-lane (2026-08-22)', () => {
-  it('randomEnemyLaneIndex() luôn trả về giá trị hợp lệ trong [0, LANE_COUNT)', () => {
-    for (let i = 0; i < 500; i++) {
-      const lane = randomEnemyLaneIndex()
-
-      expect(lane).toBeGreaterThanOrEqual(0)
-      expect(lane).toBeLessThan(LANE_COUNT)
-      expect(Number.isInteger(lane)).toBe(true)
+describe('BattleLane — grid 10×16 (Combat Grid Rework)', () => {
+  it('randomEnemyLaneIndex() luôn trả về hàng hợp lệ trong [0, GRID_ROW_COUNT)', () => {
+    for (let i = 0; i < 200; i++) {
+      const row = randomEnemyLaneIndex()
+      expect(row).toBeGreaterThanOrEqual(0)
+      expect(row).toBeLessThan(GRID_ROW_COUNT)
     }
   })
 
-  it('HERO_LANE_INDEX là lane thứ 3 (tính từ 1) = index 2, nằm giữa 0..LANE_COUNT-1', () => {
-    expect(HERO_LANE_INDEX).toBe(2)
-    expect(LANE_COUNT).toBe(5)
-  })
-})
-
-describe('BattleLane — attackRangeVisiblePercent() (2026-08-22)', () => {
-  it('range = SCREEN_VISIBLE_MAX_X → 100%', () => {
-    expect(attackRangeVisiblePercent(SCREEN_VISIBLE_MAX_X)).toBe(100)
+  it('hero gate: cột neo 0, hàng đại diện giữa sân (4/10)', () => {
+    expect(HERO_COLUMN).toBe(0)
+    expect(HERO_LANE_INDEX).toBe(4)
+    expect(HERO_LANE_INDEX).toBeLessThan(GRID_ROW_COUNT)
   })
 
-  it('range = 0 → 0%', () => {
+  it('spawn ngoài mép phải, visible max trong grid', () => {
+    expect(SPAWN_COLUMN).toBe(GRID_COLUMN_COUNT)
+    expect(VISIBLE_MAX_COLUMN).toBeLessThan(GRID_COLUMN_COUNT)
+  })
+
+  it('attackRangeVisiblePercent theo đơn vị CỘT', () => {
+    expect(attackRangeVisiblePercent(GRID_COLUMN_COUNT)).toBe(100)
+    expect(attackRangeVisiblePercent(GRID_COLUMN_COUNT / 2)).toBe(50)
     expect(attackRangeVisiblePercent(0)).toBe(0)
-  })
-
-  it('range "vô hạn" (999999, kiểu player) vẫn bị CHẶN TRẦN ở 100%, không vượt quá', () => {
-    expect(attackRangeVisiblePercent(999999)).toBe(100)
-  })
-
-  it('range = nửa SCREEN_VISIBLE_MAX_X → 50%', () => {
-    expect(attackRangeVisiblePercent(SCREEN_VISIBLE_MAX_X / 2)).toBe(50)
   })
 })

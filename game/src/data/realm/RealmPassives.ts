@@ -19,7 +19,7 @@ export interface RealmPassiveDefinition {
 
 // Nhập Đạo (mục XI tài liệu) — Phàm Nhân -> Luyện Khí. Hiệu ứng nền
 // scale THẲNG theo breakthroughGrade (1-6, chốt lúc Lễ Nhập Môn, xem
-// core/realm/LuyenTheSystem.ts) — KHÔNG tự chứa Realm Pressure
+// core/realm/BodyRefinementSystem.ts) — KHÔNG tự chứa Realm Pressure
 // (×2.00/×0.50), Combat System tự đọc breakthroughGrade để tính Pressure
 // riêng (xem core/combat/RealmPressure.ts) — 2 hệ thống tách biệt đúng
 // architecture mục XI.
@@ -77,7 +77,7 @@ export const REALM_PASSIVES: RealmPassiveDefinition[] = [
     buildModifiers: buildNhapDaoModifiers,
   },
   {
-    id: 'foundation',
+    id: 'foundation_establishment',
     name: 'Kiến Cơ',
     description: 'Xây dựng căn cơ, khuếch đại Main Stat — hiệu lực theo Loại Trúc Cơ đã đạt.',
     buildModifiers: buildKienCoModifiers,

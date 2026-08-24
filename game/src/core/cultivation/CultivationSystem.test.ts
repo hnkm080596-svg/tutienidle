@@ -10,25 +10,25 @@ import {
 
 describe('Cultivation progression curve', () => {
   it.each([
-    ['pham_nhan', 1, 1],
-    ['pham_nhan', 11, 11],
-    ['pham_nhan', 12, 12],
-    ['pham_nhan', 17, 17],
+    ['mortal', 1, 1],
+    ['mortal', 11, 11],
+    ['mortal', 12, 12],
+    ['mortal', 17, 17],
     ['qi_refining', 1, 22],
     ['qi_refining', 11, 32],
     ['qi_refining', 17, 38],
-    ['foundation', 1, 64],
-    ['foundation', 11, 74],
-    ['foundation', 17, 80],
+    ['foundation_establishment', 1, 64],
+    ['foundation_establishment', 11, 74],
+    ['foundation_establishment', 17, 80],
   ])('%s level %i needs %i minutes', (realmId, level, minutes) => {
     expect(getCultivationDurationSeconds(realmId, level)).toBe(minutes * 60)
     expect(getRequiredCultivation(realmId, level)).toBe(minutes * 60 * BASE_CULTIVATION_PER_SECOND)
   })
 
   it.each([
-    ['pham_nhan', 66, 153],
+    ['mortal', 66, 153],
     ['qi_refining', 297, 510],
-    ['foundation', 759, 1224],
+    ['foundation_establishment', 759, 1224],
   ])('%s keeps core and extended totals independent', (realmId, coreMinutes, fullMinutes) => {
     const sumThrough = (lastSourceLevel: number) => Array.from(
       { length: lastSourceLevel },
@@ -39,7 +39,7 @@ describe('Cultivation progression curve', () => {
     expect(sumThrough(17)).toBe(fullMinutes)
   })
 
-  it.each(['pham_nhan', 'qi_refining', 'foundation'])('%s advances to 18 and stops', realmId => {
+  it.each(['mortal', 'qi_refining', 'foundation_establishment'])('%s advances to 18 and stops', realmId => {
     const player = createDefaultPlayer()
     player.realmId = realmId
 
@@ -64,5 +64,16 @@ describe('Cultivation progression curve', () => {
     const required = getRequiredCultivation(player.realmId, player.realmLevel)
     addCultivation(player, required * 5)
     expect(player.cultivation).toBe(required)
+  })
+
+  it('đột phá tiểu cảnh giới cấp attributePoints nhưng KHÔNG còn cấp skillInsight (skill-insight-and-auto-combat-hud-plan.md mục 1)', () => {
+    const player = createDefaultPlayer()
+    const required = getRequiredCultivation(player.realmId, player.realmLevel)
+
+    addCultivation(player, required)
+
+    expect(breakthrough(player)).toBe(true)
+    expect(player.attributePoints).toBe(1)
+    expect(player.skillInsight).toBe(0)
   })
 })

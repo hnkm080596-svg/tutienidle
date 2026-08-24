@@ -7,8 +7,9 @@ import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
 import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import { EventBus } from '../events/EventBus'
-import { MissileSystem } from '../combat/missile/MissileSystem'
-import { MissileManager } from '../combat/missile/MissileManager'
+import { ActionImpactSystem } from '../battle/ActionImpactSystem'
+
+
 import { createBaseStats } from '../stats/StatBlock'
 import { createSkillRuntimeStats } from '../skill/SkillRuntimeStats'
 import { ailments } from '../../data/ailment/ailments'
@@ -43,7 +44,7 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    lane: 2,
+    row: 2,
     alive: true,
     ...overrides,
   }
@@ -61,8 +62,6 @@ function createHoaCauThuat(): Skill {
     type: 'active',
     level: 1,
     maxLevel: 10,
-    experience: 0,
-    experienceRequired: 100,
     cooldown: 1,
     remainingCooldown: 0,
     cost: 0,
@@ -94,7 +93,7 @@ function setup() {
     new BuffRegistry(),
     ailmentRegistry,
     eventBus,
-    new MissileSystem(new MissileManager(), eventBus),
+    new ActionImpactSystem({ eventBus, rollCritical: () => false }),
   )
 
   const hoaCauThuat = createHoaCauThuat()
@@ -118,7 +117,7 @@ describe('BattleSystem — Hỏa Thế (Plans/FirePath mục 7, Tụ Hỏa)', ()
 
     system.start(player, enemy)
     system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
-    enemy.x = 50
+    enemy.x = 5
 
     for (let i = 0; i < 320; i++) {
       tick(0.01)
@@ -138,7 +137,7 @@ describe('BattleSystem — Hỏa Thế (Plans/FirePath mục 7, Tụ Hỏa)', ()
 
     system.start(player, enemy)
     system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
-    enemy.x = 50
+    enemy.x = 5
 
     // attackSpeed mặc định 1 -> cast mỗi 1s (+1 Hỏa Thế/cast), nhưng
     // HOA_THE_BASE_DECAY_PER_SECOND=0.5 chạy song song (updateHoaThe())

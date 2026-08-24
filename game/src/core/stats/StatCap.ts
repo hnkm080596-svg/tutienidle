@@ -12,9 +12,9 @@ import { getRealmIndex } from '../realm/realmSystem'
 // (xem StatBlock.ts's createBaseStats()) — trần 10 ở Phàm Nhân cho
 // đúng 9 điểm headroom để đầu tư trong 18 tầng.
 const MAIN_STAT_CAP_BY_REALM_ID: Record<string, number> = {
-  pham_nhan: 10,
+  mortal: 10,
   qi_refining: 30,
-  foundation: 100,
+  foundation_establishment: 100,
 }
 
 // Cảnh giới CHƯA có số liệu tay ở trên (Kim Đan trở đi) — tiếp tục
