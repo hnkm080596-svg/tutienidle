@@ -1,21 +1,61 @@
 <script setup lang="ts">
+import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 import CombatTopBar from './CombatTopBar.vue'
 import CombatStatusBar from './CombatStatusBar.vue'
 import CombatEventBar from './CombatEventBar.vue'
 import CombatControlBar from './CombatControlBar.vue'
 import CombatResultModal from './CombatResultModal.vue'
 import CombatCountdownOverlay from './CombatCountdownOverlay.vue'
-import {
-  COMBAT_TOP_BAR_HEIGHT,
-  COMBAT_STATUS_BAR_HEIGHT,
-  COMBAT_EVENT_BAR_HEIGHT,
-  COMBAT_CONTROL_BAR_HEIGHT,
-} from '@/core/ui/DesignFrame'
+import CombatBuildHud from './hud/CombatBuildHud.vue'
+import { setCombatInsets } from '@/game/support/combatInsets'
 
-const topBarHeightPx = `${COMBAT_TOP_BAR_HEIGHT}px`
-const statusBarHeightPx = `${COMBAT_STATUS_BAR_HEIGHT}px`
-const eventBarHeightPx = `${COMBAT_EVENT_BAR_HEIGHT}px`
-const controlBarHeightPx = `${COMBAT_CONTROL_BAR_HEIGHT}px`
+// WS1 Responsive foundation (2026-08-24) — các bar giờ có chiều cao px
+// THỰC theo clamp() (--combat-*-h trong theme.css), không còn đồng nhất
+// tỷ lệ với canvas sau khi bỏ transform-scale toàn game. Vì vậy DOM là
+// nguồn chân truth về khoảng reserved: đo chiều cao render thật của
+// 4 bar rồi cấp xuống CombatScene qua setCombatInsets() (ResizeObserver
+// theo dõi cả thay đổi viewport/DPI sau đó).
+const rootRef = ref<HTMLElement | null>(null)
+
+let insetsObserver: ResizeObserver | null = null
+
+// Scoped style giữ nguyên tên class nên querySelector theo class hoạt
+// động; dùng $el gián tiếp qua ref component sẽ mong manh hơn khi cấu
+// trúc con của từng bar thay đổi.
+function barHeight(root: HTMLElement, className: string): number {
+  return root.querySelector<HTMLElement>(`:scope > .${className}`)?.offsetHeight ?? 0
+}
+
+function publishInsets() {
+  const root = rootRef.value
+
+  if (!root) {
+    return
+  }
+
+  const top = barHeight(root, 'combat-scene-overlay__top-bar')
+    + barHeight(root, 'combat-scene-overlay__status-bar')
+  const bottom = barHeight(root, 'combat-scene-overlay__event-bar')
+    + barHeight(root, 'combat-scene-overlay__control-bar')
+
+  if (top > 0 || bottom > 0) {
+    setCombatInsets({ top, bottom })
+  }
+}
+
+onMounted(() => {
+  void nextTick(publishInsets)
+
+  if (rootRef.value && typeof ResizeObserver !== 'undefined') {
+    insetsObserver = new ResizeObserver(() => publishInsets())
+    insetsObserver.observe(rootRef.value)
+  }
+})
+
+onUnmounted(() => {
+  insetsObserver?.disconnect()
+  insetsObserver = null
+})
 </script>
 
 <template>
@@ -23,17 +63,18 @@ const controlBarHeightPx = `${COMBAT_CONTROL_BAR_HEIGHT}px`
        (LeftPanel/TopBar/BottomBar/HomeBuildingIcons, xem GameRoot.vue).
        KHÔNG chứa canvas riêng — PhaserCanvas.vue vẫn là canvas Phaser
        DUY NHẤT của cả app (luôn mount trong MainScene.vue), CombatScene.ts
-       tự vẽ battlefield NGAY DƯỚI các thanh này (xem
-       CombatScene.ts's applyBattlefieldLayout — chừa đúng khoảng cách
-       các hằng số COMBAT_*_HEIGHT bên dưới). Khoảng giữa (battlefield)
-       để trống/pointer-events:none để canvas hiện xuyên qua và không
-       chặn click. -->
-  <div class="combat-scene-overlay">
+       tự vẽ battlefield NGAY DƯỚI các thanh này (khoảng reserved được
+       cấp qua combatInsets — xem publishInsets() ở trên). Khoảng giữa
+       (battlefield) để trống/pointer-events:none để canvas hiện xuyên
+       qua và không chặn click. -->
+  <div ref="rootRef" class="combat-scene-overlay">
     <CombatTopBar class="combat-scene-overlay__top-bar" />
 
     <CombatStatusBar class="combat-scene-overlay__status-bar" />
 
-    <div class="combat-scene-overlay__battlefield" />
+    <div class="combat-scene-overlay__battlefield">
+      <CombatBuildHud class="combat-scene-overlay__build-hud" />
+    </div>
 
     <CombatEventBar class="combat-scene-overlay__event-bar" />
 
@@ -57,25 +98,38 @@ const controlBarHeightPx = `${COMBAT_CONTROL_BAR_HEIGHT}px`
 }
 
 .combat-scene-overlay__top-bar {
-  flex: 0 0 v-bind(topBarHeightPx);
+  flex: 0 0 auto;
+  height: var(--combat-topbar-h);
 }
 
 .combat-scene-overlay__status-bar {
-  flex: 0 0 v-bind(statusBarHeightPx);
+  flex: 0 0 auto;
+  height: var(--combat-status-h);
   position: relative;
   z-index: 11;
 }
 
 .combat-scene-overlay__battlefield {
+  position: relative;
   flex: 1 1 auto;
   pointer-events: none;
 }
 
+.combat-scene-overlay__build-hud {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 12;
+}
+
 .combat-scene-overlay__event-bar {
-  flex: 0 0 v-bind(eventBarHeightPx);
+  flex: 0 0 auto;
+  height: var(--combat-event-h);
 }
 
 .combat-scene-overlay__control-bar {
-  flex: 0 0 v-bind(controlBarHeightPx);
+  flex: 0 0 auto;
+  height: var(--combat-control-h);
 }
 </style>

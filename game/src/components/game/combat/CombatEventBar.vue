@@ -91,7 +91,7 @@ onUnmounted(() => {
 
 .combat-event-bar__item {
   font-family: var(--font-body);
-  font-size: 0.72rem;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
   white-space: nowrap;
 }

@@ -194,7 +194,7 @@ const resourceMax = computed(() => usesSwordIntent.value ? MAX_SWORD_INTENT : MA
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.55rem;
+  font-size: var(--text-xs);
   color: var(--ink-950);
   text-shadow: 0 0 2px rgba(255, 255, 255, 0.5);
 }

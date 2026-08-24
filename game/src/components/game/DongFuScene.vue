@@ -7,7 +7,7 @@
 // Phủ lúc idle (PhaserCanvas vẽ SAU component này trong DOM nhưng
 // canvas Phaser 0x0/trống lúc mount race, xem PhaserCanvas.vue's ghi
 // chú ResizeObserver — MainScene.ts's sprite vẫn được nối animation
-// thật cho các trường hợp Phaser thật sự vẽ được, nhưng .dongfu-player
+// thật cho các trường hợp Phaser thật sự vẽ được, nhưng .home-player
 // CSS ở đây mới là thứ người chơi thấy trên thực tế). Cùng cặp atlas
 // idle/cultivate MainScene.ts dùng, đổi theo player.isCultivating.
 import { computed } from 'vue'
@@ -23,39 +23,39 @@ const playerImageUrl = computed(() => player.isCultivating ? '/assets/cultivate.
 </script>
 
 <template>
-  <div v-if="!stageActive" class="dongfu-scene">
-    <div class="dongfu-scene__sky" />
-    <div class="dongfu-scene__mountains dongfu-scene__mountains--far" />
-    <div class="dongfu-scene__mountains" />
-    <div class="dongfu-scene__ground" />
+  <div v-if="!stageActive" class="home-scene">
+    <div class="home-scene__sky" />
+    <div class="home-scene__mountains home-scene__mountains--far" />
+    <div class="home-scene__mountains" />
+    <div class="home-scene__ground" />
 
-    <div class="dongfu-linhnhan">
-      <div class="dongfu-linhnhan__glow" />
-      <div class="dongfu-linhnhan__ring dongfu-linhnhan__ring--outer" />
-      <div class="dongfu-linhnhan__ring dongfu-linhnhan__ring--mid" />
-      <div class="dongfu-linhnhan__ring dongfu-linhnhan__ring--inner" />
+    <div class="home-linhnhan">
+      <div class="home-linhnhan__glow" />
+      <div class="home-linhnhan__ring home-linhnhan__ring--outer" />
+      <div class="home-linhnhan__ring home-linhnhan__ring--mid" />
+      <div class="home-linhnhan__ring home-linhnhan__ring--inner" />
     </div>
 
-    <div class="dongfu-motes">
+    <div class="home-motes">
       <span style="left: 44%; top: 54%; --mx: 14px; --my: -18px; animation-delay: 0s;" />
       <span style="left: 58%; top: 58%; --mx: -12px; --my: -16px; animation-delay: 1.4s;" />
       <span style="left: 50%; top: 66%; --mx: 10px; --my: -22px; animation-delay: 2.8s;" />
       <span style="left: 52%; top: 50%; --mx: -16px; --my: -14px; animation-delay: 4.1s;" />
     </div>
 
-    <div class="dongfu-player">
-      <div class="dongfu-player__aura" />
-      <div class="dongfu-player__float">
+    <div class="home-player">
+      <div class="home-player__aura" />
+      <div class="home-player__float">
         <AtlasSprite :atlas-url="playerAtlasUrl" :image-url="playerImageUrl" :height="239" />
       </div>
     </div>
 
-    <div class="dongfu-scene__vignette" />
+    <div class="home-scene__vignette" />
   </div>
 </template>
 
 <style scoped>
-.dongfu-scene {
+.home-scene {
   position: absolute;
   inset: 0;
   overflow: hidden;
@@ -63,13 +63,13 @@ const playerImageUrl = computed(() => player.isCultivating ? '/assets/cultivate.
   background: var(--ink-950);
 }
 
-.dongfu-scene__sky {
+.home-scene__sky {
   position: absolute;
   inset: 0;
   background: linear-gradient(180deg, #0c0d14 0%, #14141d 38%, #1a1a24 62%, #201d1a 100%);
 }
 
-.dongfu-scene__mountains {
+.home-scene__mountains {
   position: absolute;
   left: 0;
   right: 0;
@@ -80,7 +80,7 @@ const playerImageUrl = computed(() => player.isCultivating ? '/assets/cultivate.
   clip-path: polygon(0% 100%, 0% 62%, 9% 40%, 18% 58%, 27% 30%, 38% 52%, 48% 22%, 60% 50%, 71% 34%, 82% 56%, 91% 38%, 100% 60%, 100% 100%);
 }
 
-.dongfu-scene__mountains--far {
+.home-scene__mountains--far {
   top: 32%;
   height: 30%;
   background-color: #101017;
@@ -88,7 +88,7 @@ const playerImageUrl = computed(() => player.isCultivating ? '/assets/cultivate.
   clip-path: polygon(0% 100%, 0% 74%, 12% 56%, 24% 70%, 36% 48%, 50% 66%, 63% 46%, 76% 68%, 88% 52%, 100% 72%, 100% 100%);
 }
 
-.dongfu-scene__ground {
+.home-scene__ground {
   position: absolute;
   left: 0;
   right: 0;
@@ -98,14 +98,14 @@ const playerImageUrl = computed(() => player.isCultivating ? '/assets/cultivate.
   border-top: 1px solid rgba(255, 255, 255, 0.04);
 }
 
-.dongfu-scene__vignette {
+.home-scene__vignette {
   position: absolute;
   inset: 0;
   background: radial-gradient(ellipse 70% 60% at 50% 46%, transparent 55%, rgba(0, 0, 0, 0.5) 100%);
 }
 
 /* ================= Linh Nhãn — vòng trận pháp dưới chân nhân vật ================= */
-.dongfu-linhnhan {
+.home-linhnhan {
   position: absolute;
   left: 50%;
   top: 78%;
@@ -114,7 +114,7 @@ const playerImageUrl = computed(() => player.isCultivating ? '/assets/cultivate.
   transform: translate(-50%, -50%);
 }
 
-.dongfu-linhnhan__glow {
+.home-linhnhan__glow {
   position: absolute;
   inset: -30%;
   border-radius: 50%;
@@ -122,7 +122,7 @@ const playerImageUrl = computed(() => player.isCultivating ? '/assets/cultivate.
   filter: blur(6px);
 }
 
-.dongfu-linhnhan__ring {
+.home-linhnhan__ring {
   position: absolute;
   left: 50%;
   top: 50%;
@@ -131,48 +131,48 @@ const playerImageUrl = computed(() => player.isCultivating ? '/assets/cultivate.
   transform: translate(-50%, -50%) perspective(320px) rotateX(64deg);
 }
 
-.dongfu-linhnhan__ring--outer {
+.home-linhnhan__ring--outer {
   width: 100%;
   height: 300%;
   border-color: rgba(91, 155, 213, 0.25);
-  animation: dongfu-pulse 4.5s ease-in-out infinite;
+  animation: home-pulse 4.5s ease-in-out infinite;
 }
 
-.dongfu-linhnhan__ring--mid {
+.home-linhnhan__ring--mid {
   width: 74%;
   height: 220%;
   border-color: rgba(255, 213, 79, 0.32);
 }
 
-.dongfu-linhnhan__ring--inner {
+.home-linhnhan__ring--inner {
   width: 46%;
   height: 140%;
   border-color: rgba(255, 213, 79, 0.48);
-  animation: dongfu-pulse 3.2s ease-in-out infinite reverse;
+  animation: home-pulse 3.2s ease-in-out infinite reverse;
 }
 
-@keyframes dongfu-pulse {
+@keyframes home-pulse {
   0%, 100% { opacity: 0.4; }
   50% { opacity: 1; }
 }
 
 /* ================= Linh khí particle quanh nhân vật ================= */
-.dongfu-motes {
+.home-motes {
   position: absolute;
   inset: 0;
 }
 
-.dongfu-motes span {
+.home-motes span {
   position: absolute;
   width: 3px;
   height: 3px;
   border-radius: 50%;
   background: var(--gold-300);
   box-shadow: 0 0 6px 2px var(--gold-300);
-  animation: dongfu-mote 7s ease-in-out infinite;
+  animation: home-mote 7s ease-in-out infinite;
 }
 
-@keyframes dongfu-mote {
+@keyframes home-mote {
   0%, 100% { transform: translate(0, 0); opacity: 0.15; }
   50% { transform: translate(var(--mx, 14px), var(--my, -18px)); opacity: 0.85; }
 }
@@ -181,33 +181,33 @@ const playerImageUrl = computed(() => player.isCultivating ? '/assets/cultivate.
 /* width/height tự co theo AtlasSprite bên trong (height=239, xem
    template) — trước đây fix cứng width:7%/aspect-ratio cho khối robe/
    head CSS placeholder, giờ không cần nữa. */
-.dongfu-player {
+.home-player {
   position: absolute;
   left: 50%;
   top: 66%;
   transform: translate(-50%, -50%);
 }
 
-.dongfu-player__aura {
+.home-player__aura {
   position: absolute;
   inset: -30%;
   border-radius: 50%;
   background: radial-gradient(circle, rgba(255, 213, 79, 0.2), transparent 70%);
   filter: blur(8px);
-  animation: dongfu-breathe 5s ease-in-out infinite;
+  animation: home-breathe 5s ease-in-out infinite;
 }
 
-@keyframes dongfu-breathe {
+@keyframes home-breathe {
   0%, 100% { transform: scale(1); opacity: 0.75; }
   50% { transform: scale(1.08); opacity: 1; }
 }
 
-.dongfu-player__float {
+.home-player__float {
   position: relative;
-  animation: dongfu-float 6s ease-in-out infinite;
+  animation: home-float 6s ease-in-out infinite;
 }
 
-@keyframes dongfu-float {
+@keyframes home-float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-4%); }
 }

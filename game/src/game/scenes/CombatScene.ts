@@ -1,7 +1,49 @@
 import Phaser from 'phaser'
 import type { EventBus } from '@/core/events/EventBus'
-import type { BattlePositionsEvent, BattleEndEvent, BattleRewardParticleEvent } from '@/core/battle/BattleEvents'
-import { HERO_HOME_X, SCREEN_VISIBLE_MAX_X, LANE_COUNT, HERO_LANE_INDEX, type LaneIndex } from '@/core/battle/BattleLane'
+import type {
+  BattlePositionsEvent,
+  BattleEndEvent,
+  BattleRewardParticleEvent,
+  ActionImpactEvent,
+  StatusVfxAttachedEvent,
+  StatusVfxUpdatedEvent,
+  StatusVfxRemovedEvent,
+} from '@/core/battle/BattleEvents'
+import {
+  GRID_ROW_COUNT,
+  GRID_COLUMN_COUNT,
+  VISIBLE_MAX_COLUMN,
+  HERO_LANE_INDEX,
+  HERO_GATE_COLUMNS,
+  type LaneIndex,
+} from '@/core/battle/BattleLane'
+import { getCombatInsets } from '@/game/support/combatInsets'
+import { getColumnFromWorldX, getLaneFromWorldY, type GridPosition } from '@/core/battle/BattleGrid'
+import {
+  createBattleGridProjection,
+  type BattlefieldGeometrySnapshot,
+  type BattleGridProjection,
+} from '@/game/support/BattleGridProjection'
+import {
+  getBattlefieldRenderMode,
+  type BattlefieldRenderMode,
+} from '@/game/support/BattlefieldRenderMode'
+import { spawnActionImpactVfx, toVector2Points } from '@/game/support/ActionImpactVfx'
+import { spawnEnemySpawnVfx, type EnemySpawnVfxHandle } from '@/game/support/EnemySpawnVfx'
+import {
+  DEPTH_BACKGROUND,
+  DEPTH_GROUND_GRID,
+  DEPTH_GROUND_VFX,
+  DEPTH_ENTITY_SHADOW,
+  DEPTH_UPRIGHT_VFX,
+  DEPTH_OVERLAY_UI,
+  entitySpriteDepth,
+  uprightVfxDepth,
+} from '@/game/support/BattleLayers'
+import {
+  attachBattlefieldBackdrop,
+  type BattlefieldBackdropHandle,
+} from '@/game/support/BattlefieldBackdrop'
 import type { CombatEvent } from '@/core/combat/CombatEvent'
 import type { EntityVitalsChangedEvent } from '@/core/combat/EntityVitalsSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
@@ -12,14 +54,35 @@ import {
   COMBAT_EVENT_BAR_HEIGHT,
   COMBAT_CONTROL_BAR_HEIGHT,
 } from '@/core/ui/DesignFrame'
+import { getCombatVfxPreset } from '@/data/vfx/CombatVfxPresets'
+import { getStatusVfxPreset } from '@/data/vfx/StatusVfxPresets'
 
 const PLAYER_COLOR = 0x4a90d9
 const ENEMY_COLOR = 0xd94a4a
 
-// Top-down 5-lane (2026-08-22) — thay hẳn sky/ground side-view cũ, 1
-// nền đấu trường duy nhất chia 5 hàng ngang (xem applyBattlefieldLayout()).
+// Top-down 5-lane (2026-08-22) → 2.5D migration (2026-08-24): 'flat' giữ
+// nguyên palette legacy sau feature flag (BattlefieldRenderMode.ts);
+// 'perspective' chuyển sang BattlefieldBackdrop + lưới phối cảnh rất nhạt
+// để texture đất làm chính, tránh lộ cảm giác bàn cờ 10 lane.
 const ARENA_COLOR = 0x14161c
 const LANE_DIVIDER_COLOR = 0x2a2d38
+const PERSPECTIVE_GRID_COLOR = 0x8a94ad
+const PERSPECTIVE_GRID_ALPHA = 0.14
+const PERSPECTIVE_BORDER_COLOR = 0xaeb9d4
+const PERSPECTIVE_BORDER_ALPHA = 0.3
+
+// Bóng ellipse dưới chân — dẹt theo trục sâu, đậm vừa để tách unit khỏi
+// mặt đất; luôn nằm ở lớp ENTITY_SHADOW dưới MỌI sprite.
+const SHADOW_COLOR = 0x000000
+const SHADOW_ALPHA = 0.32
+const SHADOW_WIDTH_RATIO = 1.12
+const SHADOW_HEIGHT_RATIO = 0.34
+
+// Hover marker — vòng ellipse trên mặt đất đánh dấu ô pointer đang đứng,
+// quy đổi NGƯỢC screen→grid bằng đúng helpers làm tròn của core nên ô
+// hover luôn khớp ô targeting logic (migration gate: hover đúng cell).
+const HOVER_MARKER_COLOR = 0x9cecff
+const HOVER_MARKER_ALPHA = 0.55
 
 // Player idle animation thật (2026-08-21) — thay Rectangle placeholder,
 // CÙNG atlas/key MainScene.ts (Động Phủ) đã dùng từ 2026-08-20 (xem
@@ -38,8 +101,6 @@ const ANIMATION_FRAME_RATE = 8
 const HIT_FLASH_COLOR = 0xff6b6b
 const CRITICAL_FLASH_COLOR = 0xffffff
 const CAST_GLOW_COLOR = 0xffffff
-const MISSILE_COLOR_PLAYER = 0x8be9fd
-const MISSILE_COLOR_ENEMY = 0xffb86c
 
 // Cast Time (2026-08-21) — cast bar hiện phía TRÊN đầu unit (đối xứng
 // với label tên hiện phía dưới), màu vàng tách hẳn khỏi mọi màu số nảy
@@ -74,13 +135,13 @@ const CHARACTER_HEIGHT_RATIO = 0.7
 const CHARACTER_WIDTH_RATIO = 0.45 // tỉ lệ so với chiều cao nhân vật
 
 // Hero cố định sát mép trái battlefield (top-down 5-lane, 2026-08-22 —
-// thay layout side-view cũ có HERO_PIVOT_RATIO=0.12 lệch tâm) — chừa 1
+// thay layout side-view cũ có layout side-view cũ) — chừa 1
 // lề nhỏ để sprite không bị cắt viền trái.
-const HERO_PIVOT_RATIO = 0.06
 
 // Sàn thời lượng 1 đoạn nội suy — tránh chia gần 0 nếu 2 lần cập nhật
 // vị trí liên tiếp tới quá sát nhau.
 const MIN_SEGMENT_DURATION_MS = 16
+const MAX_SEGMENT_DURATION_MS = 200
 
 const PLAYER_ID = 'player'
 
@@ -112,8 +173,17 @@ interface EntitySprite {
   label: Phaser.GameObjects.Text
   color: number
   offsetX: number
-  lane: LaneIndex
+  row: LaneIndex
   healthBar?: EnemyHealthBar
+
+  // 2.5D presentation (2026-08-24) — bóng ellipse trên mặt đất (chỉ tạo
+  // ở perspective), foot point + column float lần chiếu gần nhất phục vụ
+  // depth sort, và boost object cho tween pop (Chí Mạng) KHÔNG đụng vào
+  // scale/geometry mà projection ghi mỗi frame.
+  shadow?: Phaser.GameObjects.Ellipse
+  boost: { value: number }
+  footY: number
+  columnFloat: number
 }
 
 interface EnemyHealthBar {
@@ -130,30 +200,15 @@ interface PositionInterpolation {
   toX: number
   segmentStart: number
   segmentDuration: number
+
+  // Thời điểm snapshot tạo segment (cadence đo từ đây).
+  lastSnapshotAt: number
 }
 
 interface CastBarSprite {
   bg: Phaser.GameObjects.Rectangle
   fill: Phaser.GameObjects.Rectangle
   widthPx: number
-}
-
-interface ProjectileVisual {
-  circle: Phaser.GameObjects.Arc
-  targetId: string
-  speed: number
-  // Homing (Missile.ts's ProjectileBehavior.homing) — true = tính lại
-  // hướng bay mỗi frame (bám đuổi), false = velocity tính 1 lần lúc
-  // spawn rồi giữ nguyên (bay thẳng), xem updateProjectiles().
-  homing: boolean
-}
-
-interface ProjectileSpawnPayload {
-  projectileId: string
-  sourceId: string
-  targetId: string
-  speed: number
-  homing: boolean
 }
 
 /**
@@ -171,16 +226,38 @@ interface ProjectileSpawnPayload {
  * animation rời rạc...).
  */
 export class CombatScene extends Phaser.Scene {
+  // Chỉ tồn tại ở chế độ 'flat' (renderer legacy cần nền phẳng đặc);
+  // 'perspective' thay bằng BattlefieldBackdrop hội tụ hậu cảnh.
   private arenaRect?: Phaser.GameObjects.Rectangle
-  private laneDividers: Phaser.GameObjects.Rectangle[] = []
+
+  // Projection layer — nguồn DUY NHẤT cho mọi quy đổi grid↔screen kể cả
+  // flat (2 mode cùng interface BattleGridProjection nên phần còn lại của
+  // scene không cần biết mode đang chạy).
+  private renderMode: BattlefieldRenderMode = getBattlefieldRenderMode()
+  private projection?: BattleGridProjection
+  private backdrop?: BattlefieldBackdropHandle
+  private gridGraphics?: Phaser.GameObjects.Graphics
+  private hoverMarker?: Phaser.GameObjects.Ellipse
 
   private sprites = new Map<string, EntitySprite>()
   private interpolations = new Map<string, PositionInterpolation>()
   private castBars = new Map<string, CastBarSprite>()
-  private projectiles = new Map<string, ProjectileVisual>()
+
+  // Combat Grid Rework — DOT VFX theo (targetId + ailmentId), bám target.
+  private statuses = new Map<
+    string,
+    { targetId: string; icon: Phaser.GameObjects.Rectangle; label: Phaser.GameObjects.Text }
+  >()
 
   private dyingIds = new Set<string>()
   private playerDying = false
+
+  // Spawn telegraph (2026-08-24) — VFX handle theo pending enemy id:
+  // reconcile từ SNAPSHOT positions.spawningEnemies (id biến mất =
+  // materialize → flash + fade-in enemy sprite). Flat mode không chạy
+  // (renderer legacy giữ nguyên hành vi cũ).
+  private spawnVfxHandles = new Map<string, { handle: EnemySpawnVfxHandle; progress: number }>()
+  private materializingIds = new Set<string>()
 
   private eventBus?: EventBus
   private boundHandlers: Array<[string, (event: CombatScenePayload) => void]> = []
@@ -188,16 +265,33 @@ export class CombatScene extends Phaser.Scene {
   private battleEndHandler = () => this.onBattleEnd()
   private exitHandler = () => this.onExit()
   private damageHandler = (event: CombatEvent) => this.onDamageNumber(event)
-  private projectileSpawnHandler = (event: ProjectileSpawnPayload) => this.onProjectileSpawned(event)
-  private projectileRetargetHandler = (event: { projectileId: string; targetId: string }) => this.onProjectileRetargeted(event)
-  private projectileDestroyHandler = (event: { projectileId: string }) => this.destroyProjectile(event.projectileId)
+  private actionImpactHandler = (event: ActionImpactEvent) => this.onActionImpact(event)
+  private statusAttachHandler = (event: StatusVfxAttachedEvent) => this.onStatusAttached(event)
+  private statusUpdateHandler = (event: StatusVfxUpdatedEvent) => this.onStatusUpdated(event)
+  private statusRemoveHandler = (event: StatusVfxRemovedEvent) => this.onStatusRemoved(event)
   private vitalsHandler = (event: EntityVitalsChangedEvent) => this.onVitalsChanged(event)
   private rewardParticleHandler = (event: BattleRewardParticleEvent) => this.onRewardParticle(event)
+  private pointerMoveHandler = (pointer: Phaser.Input.Pointer) => this.onPointerMove(pointer)
+
+  private get isPerspective(): boolean {
+    return this.renderMode === 'perspective'
+  }
+
+  // Combat Grid Rework — hình học lưới vuông (px), tính lại mỗi layout.
+  // GIỮ LẠI làm mirror chẩn đoán/test: flat = giá trị legacy chính xác;
+  // perspective = bounding box + bề rộng ô cạnh gần.
+  private gridLeft = 0
+  private gridTop = 0
+  private cellSize = 0
+
+  private pendingPositions?: BattlePositionsEvent
+  private pendingCadence?: number
+  private lastSnapshotAt?: number
 
   private canvasWidth = 0
   private canvasHeight = 0
 
-  // Top-down 5-lane (2026-08-22) — tâm Y của mỗi hàng, length LANE_COUNT,
+  // Top-down 5-lane (2026-08-22) — tâm Y của mỗi hàng, length GRID_ROW_COUNT,
   // tính lại mỗi khi layout đổi (xem applyBattlefieldLayout()).
   private laneRowCenterY: number[] = []
 
@@ -219,11 +313,24 @@ export class CombatScene extends Phaser.Scene {
   }
 
   create() {
-    this.arenaRect = this.add.rectangle(0, 0, 0, 0, ARENA_COLOR).setOrigin(0.5)
+    // Đọc flag MỖI LẦN create — đổi mode qua localStorage có hiệu lực ở
+    // lần vào Combat kế tiếp (Home ↔ Combat là đủ, không cần reload).
+    this.renderMode = getBattlefieldRenderMode()
 
-    this.laneDividers = Array.from({ length: LANE_COUNT - 1 }, () =>
-      this.add.rectangle(0, 0, 0, 0, LANE_DIVIDER_COLOR).setOrigin(0.5, 0),
-    )
+    this.gridGraphics = this.add.graphics().setDepth(DEPTH_GROUND_GRID)
+
+    if (this.isPerspective) {
+      this.hoverMarker = this.add
+        .ellipse(0, 0, 0, 0, HOVER_MARKER_COLOR, HOVER_MARKER_ALPHA)
+        .setOrigin(0.5)
+        .setVisible(false)
+        .setDepth(DEPTH_GROUND_VFX)
+    } else {
+      this.arenaRect = this.add
+        .rectangle(0, 0, 0, 0, ARENA_COLOR)
+        .setOrigin(0.5)
+        .setDepth(DEPTH_BACKGROUND)
+    }
 
     // AnimationManager cũng global — guard tương tự textures.exists()
     // ở preload(), tránh Phaser cảnh báo "animation key already exists"
@@ -231,7 +338,13 @@ export class CombatScene extends Phaser.Scene {
     if (!this.anims.exists(IDLE_KEY)) {
       this.anims.create({
         key: IDLE_KEY,
-        frames: this.anims.generateFrameNames(IDLE_KEY, { prefix: 'frame_', suffix: '.png', start: 0, end: 16, zeroPad: 3 }),
+        frames: this.anims.generateFrameNames(IDLE_KEY, {
+          prefix: 'frame_',
+          suffix: '.png',
+          start: 0,
+          end: 16,
+          zeroPad: 3,
+        }),
         frameRate: ANIMATION_FRAME_RATE,
         repeat: -1,
       })
@@ -246,19 +359,32 @@ export class CombatScene extends Phaser.Scene {
     // Home Scene).
     const player = this.getOrCreateSprite(PLAYER_ID, PLAYER_COLOR, 'Player', HERO_LANE_INDEX)
 
-    this.snapInterpolationTarget(PLAYER_ID, HERO_HOME_X)
-    this.positionSprite(player, HERO_HOME_X)
+    this.snapInterpolationTarget(PLAYER_ID, 0)
+    this.positionSprite(player, 0)
 
-    this.scale.on('resize', (gameSize: ResizeSize) => {
-      this.applyBattlefieldLayout(gameSize.width, gameSize.height)
-    })
+    // Lifecycle listeners dùng handler ỔN ĐỊNH + gỡ đúng lúc shutdown —
+    // ScaleManager là game-level nên anonymous callback đăng ký mỗi
+    // create() sẽ TÍCH TỤC qua các lần Home → Combat (N listener cùng
+    // chạy mỗi resize). events.once đảm bảo shutdown handler tự gỡ.
+    this.scale.on('resize', this.resizeHandler)
+
+    // Hover 2.5D — quy đổi NGƯỢC screen→grid mỗi lần pointer di chuyển.
+    this.input.on('pointermove', this.pointerMoveHandler)
 
     this.subscribeCombatEvents()
 
-    this.events.on('shutdown', () => {
-      this.unsubscribeCombatEvents()
-      this.clearSceneState()
-    })
+    this.events.once('shutdown', this.shutdownHandler)
+  }
+
+  private resizeHandler = (gameSize: ResizeSize) => {
+    this.applyBattlefieldLayout(gameSize.width, gameSize.height)
+  }
+
+  private shutdownHandler = () => {
+    this.scale.off('resize', this.resizeHandler)
+    this.input.off('pointermove', this.pointerMoveHandler)
+    this.unsubscribeCombatEvents()
+    this.clearSceneState()
   }
 
   update() {
@@ -278,104 +404,247 @@ export class CombatScene extends Phaser.Scene {
       }
     }
 
-    this.updateProjectiles()
+    // Combat Grid Rework — DOT icon bám theo target mỗi frame.
+    this.updateStatusIconPositions()
+
+    // Spawn telegraph — drive handle theo progress snapshot mới nhất.
+    for (const entry of this.spawnVfxHandles.values()) {
+      entry.handle.update(entry.progress)
+    }
+
+    // 2.5D depth sort — projected Y quyết định chính, column/entityId
+    // chỉ phá hòa chống nhấp nháy; chỉ chạy ở perspective vì flat giữ
+    // insertion order đúng như renderer cũ.
+    if (this.isPerspective) {
+      this.updateEntityDepths()
+    }
+
+    // Coalesce positions: apply ĐÚNG MỘT lần mỗi frame.
+    if (this.pendingPositions) {
+      const event = this.pendingPositions
+
+      this.pendingPositions = undefined
+      this.applyPendingPositions(event)
+    }
   }
 
-  // X màn hình nơi hero đứng cố định (top-down 5-lane, sát mép trái).
-  private heroScreenX(): number {
-    return this.canvasWidth * HERO_PIVOT_RATIO
-  }
+  /**
+   * Depth sort entity sprite theo projected foot Y (gần đè xa). min/max
+   * là BIÊN CỐ ĐỊNH của mặt đường (entityFootMinY/MaxY đặt từ
+   * projection.bounds() mỗi layout) — KHÔNG tính lại từ tập entity đang
+   * sống: spawn/death của 1 entity không remap depth của entity khác và
+   * upright VFX (chốt depth lúc spawn) luôn cùng thước với entity.
+   */
+  private entityFootMinY = 0
+  private entityFootMaxY = 1
 
-  // Hệ số world-unit → pixel — độ dốc của worldToScreenX(): world-X từ
-  // 0 tới SCREEN_VISIBLE_MAX_X (BattleLane.ts, dùng CHUNG với gate
-  // "không bắn quái offscreen" ở BattleSystem.ts) trải hết bề ngang còn
-  // lại sau hero. world-X > SCREEN_VISIBLE_MAX_X ngoại suy tuyến tính
-  // ra NGOÀI canvasWidth — đúng ý "quái spawn offscreen rồi đi vào".
-  private pixelsPerWorldUnit(): number {
-    return (this.canvasWidth - this.heroScreenX()) / SCREEN_VISIBLE_MAX_X
-  }
-
-  // Di chuyển toàn bộ projectile visual + phát 'projectile_impact' khi
-  // trúng đích. Uncommitted audit followup plan, mục "Projectile phải có
-  // authority ở core" (2026-08-24) — core (BattleSystem.resolveMissilesHeadless())
-  // giờ LUÔN tự resolve impact mỗi tick, không còn phụ thuộc event này;
-  // emit ở đây chỉ còn là đường tắt hiển thị cho damage khớp đúng lúc
-  // sprite chạm nhau ở 60fps (mượt hơn cadence fixed-step ~10Hz của
-  // core) — an toàn vì BattleSystem's handler idempotent (missile đã bị
-  // core resolve/remove thì gọi lại là no-op). Đạn homing tính lại
-  // hướng bay MỖI FRAME (bám đuổi mục tiêu di chuyển); đạn thường chỉ
-  // có velocity tính 1 lần lúc spawn (xem onProjectileSpawned()), ở
-  // đây chỉ cần kiểm tra overlap — Arcade body tự giữ velocity không
-  // đổi giữa các frame.
-  private updateProjectiles() {
-    // Map cho phép delete() đúng entry đang duyệt (destroyProjectile() làm
-    // vậy khi target biến mất) nên không cần spread ra array mới mỗi frame
-    // (60fps) chỉ để tránh lỗi mutate-khi-duyệt không có thật ở đây.
-    for (const [projectileId, projectile] of this.projectiles) {
-      const target = this.spriteFor(projectile.targetId)
-
-      if (!target || !target.rect.active) {
-        this.destroyProjectile(projectileId)
-        continue
-      }
-
-      if (projectile.homing) {
-        this.physics.moveToObject(projectile.circle, target.rect, projectile.speed * this.pixelsPerWorldUnit())
-      }
-
-      if (this.physics.overlap(projectile.circle, target.rect)) {
-        this.eventBus?.emit('projectile_impact', { projectileId, targetId: projectile.targetId })
-      }
+  private updateEntityDepths() {
+    for (const [id, sprite] of this.sprites) {
+      sprite.rect.setDepth(
+        entitySpriteDepth(
+          sprite.footY,
+          this.entityFootMinY,
+          this.entityFootMaxY,
+          sprite.columnFloat,
+          id,
+        ),
+      )
     }
   }
 
   /**
    * Dành khoảng trên (Top Bar + Status Bar) và dưới (Event Bar +
    * Control Bar) cho DOM chrome của CombatSceneOverlay.vue (xem
-   * DesignFrame.ts's COMBAT_*_HEIGHT) — battlefield thật (5 hàng lane +
-   * nhân vật) chỉ vẽ trong khoảng CÒN LẠI ở giữa (spec mục 8 — 70-75%
-   * chiều cao Combat Scene). Top-down 5-lane (2026-08-22) — chia đều
-   * battlefieldHeight thành LANE_COUNT hàng, thay hẳn sky/ground
-   * side-view cũ.
+   * DesignFrame.ts's COMBAT_*_HEIGHT) — battlefield thật chỉ vẽ trong
+   * khoảng CÒN LẠI ở giữa.
+   *
+   * 2.5D migration — layout chỉ còn 2 việc:
+   * 1. Dựng/resize projection (flat hoặc perspective theo flag) từ
+   *    viewport + insets. Insets ưu tiên số ĐO THẬT của bar DOM qua
+   *    getCombatInsets() (WS1), fallback công thức tỷ lệ legacy khi chưa
+   *   có phép đo đầu tiên.
+   * 2. Vẽ lại mọi lớp phụ thuộc hình học: nền, lưới, entity, chrome —
+   *    NGAY TRONG LẦN GỌI để không có frame nào hiện vị trí stale.
    */
   private applyBattlefieldLayout(width: number, height: number) {
-    if (!this.arenaRect) {
+    // Guard chống resize bắn vào scene đang STOPPED: listener trên
+    // ScaleManager (game-level) không tự gỡ khi shutdown, mà clearSceneState
+    // đã null gridGraphics — dùng nó làm cờ "scene đang sống" thay cho
+    // guard arenaRect của bản legacy.
+    if (!this.gridGraphics) {
       return
     }
 
     this.canvasWidth = width
     this.canvasHeight = height
 
-    const reservedTop = (height * (COMBAT_TOP_BAR_HEIGHT + COMBAT_STATUS_BAR_HEIGHT)) / DESIGN_HEIGHT
-    const reservedBottom = (height * (COMBAT_EVENT_BAR_HEIGHT + COMBAT_CONTROL_BAR_HEIGHT)) / DESIGN_HEIGHT
+    const measuredInsets = getCombatInsets()
+    const fallbackTop =
+      (height * (COMBAT_TOP_BAR_HEIGHT + COMBAT_STATUS_BAR_HEIGHT)) / DESIGN_HEIGHT
+    const fallbackBottom =
+      (height * (COMBAT_EVENT_BAR_HEIGHT + COMBAT_CONTROL_BAR_HEIGHT)) / DESIGN_HEIGHT
+    // Camera zoom của scene này LUÔN giữ 1 — mọi tọa độ combat là pixel
+    // canvas, projection không cần bù transform (plan: zoom không ảnh
+    // hưởng combat coordinates).
+    this.cameras.main.setZoom(1)
 
-    const battlefieldTop = reservedTop
-    const battlefieldBottom = height - reservedBottom
-    const battlefieldHeight = Math.max(0, battlefieldBottom - battlefieldTop)
-
-    this.arenaRect.setPosition(width / 2, battlefieldTop + battlefieldHeight / 2)
-    this.arenaRect.width = width
-    this.arenaRect.height = battlefieldHeight
-    this.arenaRect.updateDisplayOrigin()
-
-    const laneHeight = battlefieldHeight / LANE_COUNT
-
-    this.laneRowCenterY = Array.from({ length: LANE_COUNT }, (_, lane) => battlefieldTop + laneHeight * (lane + 0.5))
-
-    for (let i = 0; i < this.laneDividers.length; i++) {
-      const divider = this.laneDividers[i]!
-
-      divider.setPosition(width / 2, battlefieldTop + laneHeight * (i + 1))
-      divider.width = width
-      divider.height = 1
-      divider.updateDisplayOrigin()
+    const viewport = {
+      width,
+      height,
+      topInset: measuredInsets.measured ? measuredInsets.top : fallbackTop,
+      bottomInset: measuredInsets.measured ? measuredInsets.bottom : fallbackBottom,
     }
 
-    this.characterHeight = laneHeight * CHARACTER_HEIGHT_RATIO
+    if (!this.projection) {
+      this.projection = createBattleGridProjection(this.renderMode, viewport)
+    } else {
+      this.projection.resize(viewport)
+    }
+
+    if (this.isPerspective && !this.backdrop) {
+      this.backdrop = attachBattlefieldBackdrop(this, this.projection)
+    }
+
+    const bounds = this.projection.bounds()
+
+    // Mirror chẩn đoán/test — flat khớp chính xác số liệu legacy cũ.
+    this.gridLeft = bounds.left
+    this.gridTop = bounds.top
+    this.cellSize = this.projection.cellSizeAt(GRID_ROW_COUNT - 1).width
+    this.laneRowCenterY = Array.from(
+      { length: GRID_ROW_COUNT },
+      (_, row) => this.projection!.gridToScreen(row, 0).y,
+    )
+
+    if (this.arenaRect) {
+      // Legacy: nền phẳng phủ TOÀN băng battlefield (kể cả letterbox).
+      const bandHeight = Math.max(0, height - viewport.topInset - viewport.bottomInset)
+
+      this.arenaRect.setPosition(width / 2, viewport.topInset + bandHeight / 2)
+      this.arenaRect.width = width
+      this.arenaRect.height = bandHeight
+      this.arenaRect.updateDisplayOrigin()
+    }
+
+    // Kích thước cơ sở nhân vật: flat dùng ô vuông chuẩn (legacy).
+    // Perspective dùng BỀ RỘNG ô cạnh gần làm thước — chiều cao ô đã bị
+    // nén phối cảnh (và giờ nhỏ hơn nữa sau khi chia nửa phong cảnh),
+    // không còn là thước đo hợp lý cho chiều cao người đứng.
+    const nearCell = this.projection.cellSizeAt(GRID_ROW_COUNT - 1)
+    const baseCell = this.isPerspective ? nearCell.width : this.cellSize
+
+    this.characterHeight = Math.max(26, baseCell * 0.92)
     this.characterWidth = this.characterHeight * CHARACTER_WIDTH_RATIO
 
-    for (const sprite of this.sprites.values()) {
+    this.redrawGridLines()
+    this.backdrop?.redraw()
+
+    // Mốc depth ban đầu cho upright VFX (trước frame entity đầu tiên):
+    // full mặt đường theo projection hiện hành.
+    this.entityFootMinY = bounds.top
+    this.entityFootMaxY = bounds.bottom
+
+    // Snapshot hình học cho e2e/visual gate — assertion bố cục (tỉ lệ
+    // horizon, min road height) đọc từ đây thay vì đo pixel.
+    this.game.registry.set('battlefieldGeometry', {
+      viewportWidth: width,
+      viewportHeight: height,
+      topInset: viewport.topInset,
+      bottomInset: viewport.bottomInset,
+      horizonY: bounds.top,
+      roadBottomY: bounds.bottom,
+      sceneryHeight: bounds.top - viewport.topInset,
+      roadHeight: bounds.bottom - bounds.top,
+    } satisfies BattlefieldGeometrySnapshot)
+
+    // Resize giữa trận: dựng lại vị trí NGAY, không đợi snapshot kế tiếp.
+    this.hoverMarker?.setVisible(false)
+
+    for (const [id, sprite] of this.sprites) {
+      const entry = this.interpolations.get(id)
+
       this.applySpriteSize(sprite)
+      this.positionSprite(sprite, entry ? this.interpolate(entry, this.time.now) : 0)
+    }
+
+    for (const [id, castBar] of this.castBars) {
+      const sprite = this.sprites.get(id)
+
+      if (sprite) {
+        this.positionCastBar(sprite, castBar)
+      }
+    }
+
+    this.updateStatusIconPositions()
+  }
+
+  /**
+   * Vẽ lưới lane qua projection — cả 2 mode dùng chung 1 code path:
+   * flat tự cho ra ô vuông đều khớp renderer cũ; perspective cho lưới
+   * hội tụ về hậu cảnh với vạch RẤT NHẠT (texture đất trong backdrop là
+   * chính, tránh cảm giác bàn cờ). KHÔNG bake vào background.
+   */
+  private redrawGridLines() {
+    const graphics = this.gridGraphics
+    const projection = this.projection
+
+    if (!graphics || !projection) {
+      return
+    }
+
+    graphics.clear()
+
+    const isFlat = Boolean(this.arenaRect)
+
+    graphics.lineStyle(
+      1,
+      isFlat ? LANE_DIVIDER_COLOR : PERSPECTIVE_GRID_COLOR,
+      isFlat ? 0.55 : PERSPECTIVE_GRID_ALPHA,
+    )
+
+    for (let boundaryRow = 0; boundaryRow <= GRID_ROW_COUNT; boundaryRow++) {
+      const rowFloat = boundaryRow - 0.5
+      const left = projection.gridToScreen(rowFloat, -0.5)
+      const right = projection.gridToScreen(rowFloat, GRID_COLUMN_COUNT - 0.5)
+
+      graphics.beginPath()
+      graphics.moveTo(left.x, left.y)
+      graphics.lineTo(right.x, right.y)
+      graphics.strokePath()
+    }
+
+    for (let boundaryColumn = 0; boundaryColumn <= GRID_COLUMN_COUNT; boundaryColumn++) {
+      const columnFloat = boundaryColumn - 0.5
+      const far = projection.gridToScreen(-0.5, columnFloat)
+      const near = projection.gridToScreen(GRID_ROW_COUNT - 0.5, columnFloat)
+
+      graphics.beginPath()
+      graphics.moveTo(far.x, far.y)
+      graphics.lineTo(near.x, near.y)
+      graphics.strokePath()
+    }
+
+    if (!isFlat) {
+      // Viền ngoài + vùng cổng hero nhấn nhẹ màu phe ta.
+      const corners = [
+        projection.gridToScreen(-0.5, -0.5),
+        projection.gridToScreen(-0.5, GRID_COLUMN_COUNT - 0.5),
+        projection.gridToScreen(GRID_ROW_COUNT - 0.5, GRID_COLUMN_COUNT - 0.5),
+        projection.gridToScreen(GRID_ROW_COUNT - 0.5, -0.5),
+      ]
+
+      graphics.lineStyle(1.5, PERSPECTIVE_BORDER_COLOR, PERSPECTIVE_BORDER_ALPHA)
+      graphics.strokePoints(toVector2Points(corners), true, true)
+
+      const gatePolygon = projection.footprintPolygon({
+        rowStart: 0,
+        rowEnd: GRID_ROW_COUNT - 1,
+        colStart: 0,
+        colEnd: HERO_GATE_COLUMNS - 1,
+      })
+
+      graphics.fillStyle(PLAYER_COLOR, 0.05)
+      graphics.fillPoints(toVector2Points(gatePolygon), true)
     }
   }
 
@@ -385,7 +654,16 @@ export class CombatScene extends Phaser.Scene {
   // nếu không nhân vật sẽ méo hình khi ép cùng characterWidth/Height
   // hình vuông-ish của enemy (xem MainScene.ts's updateSpriteDisplaySize()
   // — cùng lý do).
+  //
+  // Perspective: baseline chỉ là kích thước ở hàng hiện hành — co giãn
+  // theo chiều sâu diễn ra trong applyEntityDepthScale() mỗi lần chiếu.
   private applySpriteSize(sprite: EntitySprite) {
+    if (this.isPerspective && this.projection) {
+      this.applyEntityDepthScale(sprite, this.projection.gridToScreen(sprite.row, 0).scale)
+
+      return
+    }
+
     if (sprite.kind === 'sprite') {
       const width = this.characterHeight * (IDLE_SOURCE_SIZE.w / IDLE_SOURCE_SIZE.h)
       const gameSprite = sprite.rect as Phaser.GameObjects.Sprite
@@ -411,22 +689,91 @@ export class CombatScene extends Phaser.Scene {
     }
   }
 
-  private worldToScreenX(worldX: number): number {
-    return this.heroScreenX() + worldX * this.pixelsPerWorldUnit()
+  /**
+   * Áp scale chiều sâu cho entity: kích thước = baseline × depthScale ×
+   * boost (pop Chí Mạng), ghi vào GEOMETRY/scale của GameObject nên tween
+   * cũ vẫn hoạt động; bóng ellipse dưới chân co giãn theo.
+   */
+  private applyEntityDepthScale(sprite: EntitySprite, depthScale: number) {
+    const effectiveScale = Math.max(0.05, depthScale * sprite.boost.value)
+
+    if (sprite.kind === 'sprite') {
+      const height = this.characterHeight * effectiveScale
+      const gameSprite = sprite.rect as Phaser.GameObjects.Sprite
+
+      gameSprite.setDisplaySize(height * (IDLE_SOURCE_SIZE.w / IDLE_SOURCE_SIZE.h), height)
+    } else {
+      const rect = sprite.rect as Phaser.GameObjects.Rectangle
+
+      rect.width = this.characterWidth * effectiveScale
+      rect.height = this.characterHeight * effectiveScale
+      rect.updateDisplayOrigin()
+
+      if (sprite.healthBar) {
+        const barWidth =
+          this.characterWidth * effectiveScale * (sprite.healthBar.isBoss ? 1.45 : 1.05)
+
+        sprite.healthBar.width = barWidth
+        sprite.healthBar.background.setSize(barWidth, ENEMY_HP_BAR_HEIGHT).updateDisplayOrigin()
+        sprite.healthBar.fill.setSize(barWidth, ENEMY_HP_BAR_HEIGHT - 2).updateDisplayOrigin()
+        this.updateEnemyHealthBar(sprite, sprite.healthBar.currentHp, sprite.healthBar.maxHp)
+      }
+    }
+
+    if (sprite.shadow) {
+      const shadowWidth = this.characterWidth * effectiveScale * SHADOW_WIDTH_RATIO
+
+      sprite.shadow.setSize(shadowWidth, shadowWidth * SHADOW_HEIGHT_RATIO)
+    }
   }
 
-  private positionSprite(sprite: EntitySprite, worldX: number) {
-    const screenX = this.worldToScreenX(worldX) + sprite.offsetX
-    const screenY = this.laneRowCenterY[sprite.lane] ?? this.canvasHeight / 2
+  // Đỉnh đầu sprite theo anchor hiện hành — mọi chrome treo trên đầu
+  // (HP bar / cast bar / DOT icon / text bay) đi qua đây để không phụ
+  // thuộc origin (foot anchor ở perspective, center anchor ở flat).
+  private entityHeadY(sprite: EntitySprite): number {
+    const displayHeight = sprite.rect.displayHeight
 
-    sprite.rect.setPosition(screenX, screenY)
-    sprite.label.setPosition(screenX, screenY + this.characterHeight / 2 + 4)
+    return this.isPerspective ? sprite.rect.y - displayHeight : sprite.rect.y - displayHeight / 2
+  }
+
+  private positionSprite(sprite: EntitySprite, worldColumn: number) {
+    const projection = this.projection
+
+    if (!projection) {
+      return
+    }
+
+    const point = projection.gridToScreen(sprite.row, worldColumn)
+
+    sprite.columnFloat = worldColumn
+
+    // offsetX (lunge/né) tính bằng px chuẩn hóa ở hàng gần — nhân depth
+    // scale để đòn đánh ở xa cũng lunge đúng tỷ lệ phối cảnh.
+    const screenX = point.x + sprite.offsetX * point.scale
+
+    if (this.isPerspective) {
+      this.applyEntityDepthScale(sprite, point.scale)
+
+      // Foot anchor: origin (0.5, 1) đặt tại điểm chân đất của ô.
+      sprite.rect.setPosition(screenX, point.y)
+      sprite.shadow?.setPosition(screenX, point.y)
+      sprite.footY = point.y
+      sprite.label.setPosition(screenX, point.y + 6)
+    } else {
+      // Flat giữ nguyên từng pixel hành vi legacy (center anchor); boost
+      // Chí Mạng áp qua setScale vì geometry flat là tĩnh. setScale PHẢI
+      // chạy vô điều kiện: tween yoyo kết thúc giữa 2 frame, frame kế
+      // value===1 nhưng rect vẫn giữ scale frame trước nếu bỏ qua.
+      sprite.rect.setPosition(screenX, point.y)
+      sprite.rect.setScale(sprite.boost.value)
+      sprite.label.setPosition(screenX, point.y + sprite.rect.displayHeight / 2 + 4)
+    }
 
     if (sprite.healthBar) {
-      const y = screenY - sprite.rect.displayHeight / 2 - ENEMY_HP_BAR_OFFSET_Y
+      const headY = this.entityHeadY(sprite) - ENEMY_HP_BAR_OFFSET_Y
 
-      sprite.healthBar.background.setPosition(screenX, y)
-      sprite.healthBar.fill.setPosition(screenX - sprite.healthBar.width / 2, y)
+      sprite.healthBar.background.setPosition(screenX, headY)
+      sprite.healthBar.fill.setPosition(screenX - sprite.healthBar.width / 2, headY)
     }
   }
 
@@ -434,7 +781,7 @@ export class CombatScene extends Phaser.Scene {
     id: string,
     color: number,
     labelText: string,
-    lane: LaneIndex = HERO_LANE_INDEX,
+    row: LaneIndex = HERO_LANE_INDEX,
     health?: { currentHp: number; maxHp: number; isBoss: boolean },
   ): EntitySprite {
     const existing = this.sprites.get(id)
@@ -443,7 +790,10 @@ export class CombatScene extends Phaser.Scene {
       return existing
     }
 
-    const label = this.add.text(0, 0, labelText, { fontSize: '14px', color: '#ffffff' }).setOrigin(0.5, 0)
+    const label = this.add
+      .text(0, 0, labelText, { fontSize: '14px', color: '#ffffff' })
+      .setOrigin(0.5, 0)
+      .setDepth(DEPTH_OVERLAY_UI + 1)
 
     // CHỈ player có idle animation thật — enemy chưa có atlas riêng,
     // vẫn dùng Rectangle màu như cũ (xem EntitySprite.kind's ghi chú).
@@ -452,7 +802,27 @@ export class CombatScene extends Phaser.Scene {
 
       this.physics.add.existing(gameSprite)
 
-      const sprite: EntitySprite = { kind: 'sprite', rect: gameSprite, label, color, offsetX: 0, lane }
+      if (this.isPerspective) {
+        gameSprite.setOrigin(0.5, 1)
+      }
+
+      const sprite: EntitySprite = {
+        kind: 'sprite',
+        rect: gameSprite,
+        label,
+        color,
+        offsetX: 0,
+        row,
+        boost: { value: 1 },
+        footY: 0,
+        columnFloat: 0,
+      }
+
+      if (this.isPerspective) {
+        sprite.shadow = this.add
+          .ellipse(0, 0, 10, 4, SHADOW_COLOR, SHADOW_ALPHA)
+          .setDepth(DEPTH_ENTITY_SHADOW)
+      }
 
       this.applySpriteSize(sprite)
       this.sprites.set(id, sprite)
@@ -460,18 +830,35 @@ export class CombatScene extends Phaser.Scene {
       return sprite
     }
 
-    const rect = this.add.rectangle(0, 0, this.characterWidth, this.characterHeight, color).setOrigin(0.5)
+    const rect = this.add
+      .rectangle(0, 0, this.characterWidth, this.characterHeight, color)
+      .setOrigin(0.5)
 
     this.physics.add.existing(rect)
+
+    // Quái hiện vẫn là Rectangle màu (chưa có atlas định hướng) — khi
+    // có sprite riêng chỉ cần setFlipX(true) ở đây, không cần spritesheet
+    // mới cho chiều ngược (plan: flip bằng Phaser).
+    if (this.isPerspective) {
+      rect.setOrigin(0.5, 1)
+    }
 
     const healthBarWidth = this.characterWidth * (health?.isBoss ? 1.45 : 1.05)
     const background = this.add
       .rectangle(0, 0, healthBarWidth, ENEMY_HP_BAR_HEIGHT, ENEMY_HP_BG_COLOR)
       .setOrigin(0.5)
       .setStrokeStyle(1, health?.isBoss ? BOSS_HP_FILL_COLOR : 0x6b4545)
+      .setDepth(DEPTH_OVERLAY_UI + 2)
     const fill = this.add
-      .rectangle(0, 0, healthBarWidth, ENEMY_HP_BAR_HEIGHT - 2, health?.isBoss ? BOSS_HP_FILL_COLOR : ENEMY_HP_FILL_COLOR)
+      .rectangle(
+        0,
+        0,
+        healthBarWidth,
+        ENEMY_HP_BAR_HEIGHT - 2,
+        health?.isBoss ? BOSS_HP_FILL_COLOR : ENEMY_HP_FILL_COLOR,
+      )
       .setOrigin(0, 0.5)
+      .setDepth(DEPTH_OVERLAY_UI + 2)
     const healthBar: EnemyHealthBar = {
       background,
       fill,
@@ -481,7 +868,24 @@ export class CombatScene extends Phaser.Scene {
       isBoss: health?.isBoss ?? false,
     }
 
-    const sprite: EntitySprite = { kind: 'rect', rect, label, color, offsetX: 0, lane, healthBar }
+    const sprite: EntitySprite = {
+      kind: 'rect',
+      rect,
+      label,
+      color,
+      offsetX: 0,
+      row,
+      boost: { value: 1 },
+      footY: 0,
+      columnFloat: 0,
+      healthBar,
+    }
+
+    if (this.isPerspective) {
+      sprite.shadow = this.add
+        .ellipse(0, 0, 10, 4, SHADOW_COLOR, SHADOW_ALPHA)
+        .setDepth(DEPTH_ENTITY_SHADOW)
+    }
 
     this.sprites.set(id, sprite)
     this.updateEnemyHealthBar(sprite, healthBar.currentHp, healthBar.maxHp)
@@ -505,6 +909,7 @@ export class CombatScene extends Phaser.Scene {
   }
 
   private destroyEntitySprite(sprite: EntitySprite) {
+    sprite.shadow?.destroy()
     sprite.healthBar?.background.destroy()
     sprite.healthBar?.fill.destroy()
     sprite.label.destroy()
@@ -512,78 +917,45 @@ export class CombatScene extends Phaser.Scene {
   }
 
   private clearSceneState() {
-    for (const projectileId of [...this.projectiles.keys()]) {
-      this.destroyProjectile(projectileId)
+    for (const status of this.statuses.values()) {
+      status.icon.destroy()
+      status.label.destroy()
     }
+
+    this.statuses.clear()
+
+    for (const entry of this.spawnVfxHandles.values()) {
+      entry.handle.destroy()
+    }
+
+    this.spawnVfxHandles.clear()
+    this.materializingIds.clear()
 
     this.sprites.clear()
     this.interpolations.clear()
     this.castBars.clear()
     this.dyingIds.clear()
     this.playerDying = false
+
+    // Scene shutdown đã destroy children của display list — chỉ cần bỏ
+    // tham chiếu để create() kế dựng lại sạch theo mode hiện hành.
+    this.arenaRect = undefined
+    this.gridGraphics = undefined
+    this.hoverMarker = undefined
+    this.backdrop = undefined
+    this.projection = undefined
   }
 
-  private onProjectileSpawned(event: ProjectileSpawnPayload) {
-    const source = this.spriteFor(event.sourceId)
-    const target = this.spriteFor(event.targetId)
-
-    if (!source || !target) {
-      return
-    }
-
-    const circle = this.add.circle(
-      source.rect.x,
-      source.rect.y,
-      5,
-      event.sourceId === PLAYER_ID ? MISSILE_COLOR_PLAYER : MISSILE_COLOR_ENEMY,
-    )
-
-    this.physics.add.existing(circle)
-    ;(circle.body as Phaser.Physics.Arcade.Body).setAllowGravity(false)
-
-    // Đạn thường (không homing) bay THẲNG — velocity tính 1 LẦN ở đây
-    // theo vị trí target lúc bắn, KHÔNG tính lại mỗi frame (đó là việc
-    // của updateProjectiles() cho riêng đạn homing).
-    if (!event.homing) {
-      this.physics.moveToObject(circle, target.rect, event.speed * this.pixelsPerWorldUnit())
-    }
-
-    this.projectiles.set(event.projectileId, { circle, targetId: event.targetId, speed: event.speed, homing: event.homing })
-  }
-
-  // Pierce/Bounce (Combat Rework Phase 3) — đạn vừa trúng 1 mục tiêu
-  // nhưng còn lượt xuyên/nảy, core đổi sang mục tiêu kế tiếp. Đạn homing
-  // tự tính lại hướng mỗi frame (updateProjectiles()) nên không cần làm
-  // gì thêm; đạn thường cần recompute velocity NGAY tại đây vì bình
-  // thường nó chỉ tính velocity 1 lần lúc spawn (xem onProjectileSpawned()).
-  private onProjectileRetargeted(event: { projectileId: string; targetId: string }) {
-    const projectile = this.projectiles.get(event.projectileId)
-
-    if (!projectile) {
-      return
-    }
-
-    projectile.targetId = event.targetId
-
-    if (!projectile.homing) {
-      const target = this.spriteFor(event.targetId)
-
-      if (target) {
-        this.physics.moveToObject(projectile.circle, target.rect, projectile.speed * this.pixelsPerWorldUnit())
-      }
-    }
-  }
-
-  private destroyProjectile(projectileId: string) {
-    this.projectiles.get(projectileId)?.circle.destroy()
-    this.projectiles.delete(projectileId)
-  }
-
-  private setInterpolationTarget(id: string, worldX: number) {
+  private setInterpolationTarget(
+    id: string,
+    worldX: number,
+    cadenceMs?: number,
+    snapshotAt?: number,
+  ) {
     const existing = this.interpolations.get(id)
 
     if (!existing) {
-      this.snapInterpolationTarget(id, worldX)
+      this.snapInterpolationTarget(id, worldX, snapshotAt)
 
       return
     }
@@ -594,20 +966,29 @@ export class CombatScene extends Phaser.Scene {
 
     const now = this.time.now
     const currentVisualX = this.interpolate(existing, now)
-    const segmentDuration = Math.max(now - existing.segmentStart, MIN_SEGMENT_DURATION_MS)
+    // Cadence ưu tiên từ snapshot (khoảng cách 2 event 'positions'),
+    // fallback: khoảng cách từ segment trước, clamp sàn.
+    const segmentDuration = Math.max(cadenceMs ?? MIN_SEGMENT_DURATION_MS, MIN_SEGMENT_DURATION_MS)
 
     this.interpolations.set(id, {
       fromX: currentVisualX,
       toX: worldX,
       segmentStart: now,
       segmentDuration,
+      lastSnapshotAt: snapshotAt ?? now,
     })
   }
 
-  private snapInterpolationTarget(id: string, worldX: number) {
+  private snapInterpolationTarget(id: string, worldX: number, snapshotAt?: number) {
     const now = this.time.now
 
-    this.interpolations.set(id, { fromX: worldX, toX: worldX, segmentStart: now, segmentDuration: 1 })
+    this.interpolations.set(id, {
+      fromX: worldX,
+      toX: worldX,
+      segmentStart: now,
+      segmentDuration: 1,
+      lastSnapshotAt: snapshotAt ?? now,
+    })
   }
 
   private interpolate(entry: PositionInterpolation, now: number): number {
@@ -627,14 +1008,21 @@ export class CombatScene extends Phaser.Scene {
   }
 
   private reconcileEnemySprites(enemies: BattlePositionsEvent['enemies']) {
-    const currentIds = new Set(enemies.map(enemy => enemy.id))
+    const currentIds = new Set(enemies.map((enemy) => enemy.id))
 
     for (const enemy of enemies) {
       if (this.sprites.has(enemy.id)) {
         continue
       }
 
-      this.getOrCreateSprite(enemy.id, ENEMY_COLOR, enemy.name, enemy.lane, enemy)
+      const sprite = this.getOrCreateSprite(enemy.id, ENEMY_COLOR, enemy.name, enemy.row, enemy)
+
+      // Vừa materialize từ telegraph — fade-in + scale 0.7→1 (bóng/máu/
+      // tên chỉ hiện từ khoảnh khắc này, đúng spec spawn mới).
+      if (this.materializingIds.has(enemy.id)) {
+        this.materializingIds.delete(enemy.id)
+        this.playMaterializeFadeIn(sprite)
+      }
     }
 
     for (const [id, sprite] of this.sprites) {
@@ -658,14 +1046,14 @@ export class CombatScene extends Phaser.Scene {
     this.eventBus = eventBus
 
     this.boundHandlers = [
-      ['attack', event => this.onAttack(event)],
-      ['critical', event => this.onCritical(event)],
-      ['hit', event => this.onHit(event)],
-      ['dodge', event => this.onDodge(event)],
-      ['cast', event => this.onCast(event)],
-      ['cast_start', event => this.onCastStart(event)],
-      ['cast_complete', event => this.onCastComplete(event)],
-      ['death', event => this.onDeath(event)],
+      ['attack', (event) => this.onAttack(event)],
+      ['critical', (event) => this.onCritical(event)],
+      ['hit', (event) => this.onHit(event)],
+      ['dodge', (event) => this.onDodge(event)],
+      ['cast', (event) => this.onCast(event)],
+      ['cast_start', (event) => this.onCastStart(event)],
+      ['cast_complete', (event) => this.onCastComplete(event)],
+      ['death', (event) => this.onDeath(event)],
       ['battle_start', () => this.onBattleStart()],
     ]
 
@@ -677,9 +1065,10 @@ export class CombatScene extends Phaser.Scene {
     eventBus.on<BattleEndEvent>('battle_end', this.battleEndHandler)
     eventBus.on<void>('combat_scene_exit', this.exitHandler)
     eventBus.on<CombatEvent>('damage', this.damageHandler)
-    eventBus.on<ProjectileSpawnPayload>('projectile_spawned', this.projectileSpawnHandler)
-    eventBus.on<{ projectileId: string; targetId: string }>('projectile_retargeted', this.projectileRetargetHandler)
-    eventBus.on<{ projectileId: string }>('projectile_destroyed', this.projectileDestroyHandler)
+    eventBus.on<ActionImpactEvent>('action_impact', this.actionImpactHandler)
+    eventBus.on<StatusVfxAttachedEvent>('status_vfx_attached', this.statusAttachHandler)
+    eventBus.on<StatusVfxUpdatedEvent>('status_vfx_updated', this.statusUpdateHandler)
+    eventBus.on<StatusVfxRemovedEvent>('status_vfx_removed', this.statusRemoveHandler)
     eventBus.on<EntityVitalsChangedEvent>('entity_vitals_changed', this.vitalsHandler)
     eventBus.on<BattleRewardParticleEvent>('reward_particle', this.rewardParticleHandler)
   }
@@ -699,9 +1088,10 @@ export class CombatScene extends Phaser.Scene {
     this.eventBus.off<BattleEndEvent>('battle_end', this.battleEndHandler)
     this.eventBus.off<void>('combat_scene_exit', this.exitHandler)
     this.eventBus.off<CombatEvent>('damage', this.damageHandler)
-    this.eventBus.off<ProjectileSpawnPayload>('projectile_spawned', this.projectileSpawnHandler)
-    this.eventBus.off<{ projectileId: string; targetId: string }>('projectile_retargeted', this.projectileRetargetHandler)
-    this.eventBus.off<{ projectileId: string }>('projectile_destroyed', this.projectileDestroyHandler)
+    this.eventBus.off<ActionImpactEvent>('action_impact', this.actionImpactHandler)
+    this.eventBus.off<StatusVfxAttachedEvent>('status_vfx_attached', this.statusAttachHandler)
+    this.eventBus.off<StatusVfxUpdatedEvent>('status_vfx_updated', this.statusUpdateHandler)
+    this.eventBus.off<StatusVfxRemovedEvent>('status_vfx_removed', this.statusRemoveHandler)
     this.eventBus.off<EntityVitalsChangedEvent>('entity_vitals_changed', this.vitalsHandler)
     this.eventBus.off<BattleRewardParticleEvent>('reward_particle', this.rewardParticleHandler)
   }
@@ -712,29 +1102,55 @@ export class CombatScene extends Phaser.Scene {
 
     if (!source || !player) return
 
-    const startX = source.rect.x
-    const startY = source.rect.y
-    const endX = player.rect.x
-    const endY = player.rect.y
+    // Điểm phát/hứng hạt: flat dùng tâm sprite (legacy); perspective
+    // phát từ LÕNG người (foot anchor nên trừ bớt chiều cao hiển thị).
+    const emitPoint = (sprite: EntitySprite) => ({
+      x: sprite.rect.x,
+      y: this.isPerspective ? sprite.rect.y - sprite.rect.displayHeight * 0.6 : sprite.rect.y,
+    })
+
+    const start = emitPoint(source)
+    const end = emitPoint(player)
+    const startX = start.x
+    const startY = start.y
+    const endX = end.x
+    const endY = end.y
     const midpointX = (startX + endX) / 2
     const horizontalDistance = Math.abs(endX - startX)
-    const battlefieldTop = (this.canvasHeight * (COMBAT_TOP_BAR_HEIGHT + COMBAT_STATUS_BAR_HEIGHT)) / DESIGN_HEIGHT
-    const battlefieldBottom = this.canvasHeight
-      - (this.canvasHeight * (COMBAT_EVENT_BAR_HEIGHT + COMBAT_CONTROL_BAR_HEIGHT)) / DESIGN_HEIGHT
-    const path = event.kind === 'insight'
-      ? {
-          controlX: midpointX - horizontalDistance * 0.06,
-          controlY: Math.max(battlefieldTop + 24, Math.min(startY, endY) - Math.max(72, horizontalDistance * 0.28)),
-        }
-      : event.kind === 'item'
+    // Ưu tiên bounds projection (đúng band battlefield hiện hành sau
+    // resize); fallback công thức tỷ lệ legacy khi chưa có projection.
+    const bounds = this.projection?.bounds()
+    const battlefieldTop = bounds
+      ? bounds.top
+      : (this.canvasHeight * (COMBAT_TOP_BAR_HEIGHT + COMBAT_STATUS_BAR_HEIGHT)) / DESIGN_HEIGHT
+    const battlefieldBottom = bounds
+      ? bounds.bottom
+      : this.canvasHeight -
+        (this.canvasHeight * (COMBAT_EVENT_BAR_HEIGHT + COMBAT_CONTROL_BAR_HEIGHT)) / DESIGN_HEIGHT
+    const path =
+      event.kind === 'insight'
         ? {
-            controlX: midpointX,
-            controlY: Math.max(battlefieldTop + 24, Math.min(startY, endY) - Math.max(48, horizontalDistance * 0.16)),
+            controlX: midpointX - horizontalDistance * 0.06,
+            controlY: Math.max(
+              battlefieldTop + 24,
+              Math.min(startY, endY) - Math.max(72, horizontalDistance * 0.28),
+            ),
           }
-        : {
-            controlX: midpointX + horizontalDistance * 0.05,
-            controlY: Math.min(battlefieldBottom - 24, Math.max(startY, endY) + Math.max(42, horizontalDistance * 0.08)),
-          }
+        : event.kind === 'item'
+          ? {
+              controlX: midpointX,
+              controlY: Math.max(
+                battlefieldTop + 24,
+                Math.min(startY, endY) - Math.max(48, horizontalDistance * 0.16),
+              ),
+            }
+          : {
+              controlX: midpointX + horizontalDistance * 0.05,
+              controlY: Math.min(
+                battlefieldBottom - 24,
+                Math.max(startY, endY) + Math.max(42, horizontalDistance * 0.08),
+              ),
+            }
     const particleCount = event.kind === 'insight' ? 28 : 24
 
     // Nhiều hạt nối đuôi nhau trên cùng quỹ đạo tạo thành một dòng linh khí
@@ -743,21 +1159,24 @@ export class CombatScene extends Phaser.Scene {
     for (let index = 0; index < particleCount; index++) {
       // Không có "hạt đầu" kích thước lớn: toàn bộ effect là những mote nhỏ
       // tương đồng, chồng ánh sáng lên nhau thành một dải liên tục.
-      const peakAlpha = event.kind === 'insight'
-        ? Phaser.Math.FloatBetween(0.5, 0.75)
-        : Phaser.Math.FloatBetween(0.72, 1)
+      const peakAlpha =
+        event.kind === 'insight'
+          ? Phaser.Math.FloatBetween(0.5, 0.75)
+          : Phaser.Math.FloatBetween(0.72, 1)
       // Khởi tạo trong suốt để các mote đang chờ stagger không chồng thành
       // một cục tròn tại xác quái; alpha chỉ nở dần khi hạt thực sự bay.
-      const mote = this.add.ellipse(
-        startX,
-        startY,
-        Phaser.Math.FloatBetween(9, 14),
-        Phaser.Math.FloatBetween(2.5, 4),
-        event.color,
-        1,
-      )
+      const mote = this.add
+        .ellipse(
+          startX,
+          startY,
+          Phaser.Math.FloatBetween(9, 14),
+          Phaser.Math.FloatBetween(2.5, 4),
+          event.color,
+          1,
+        )
         .setBlendMode(Phaser.BlendModes.ADD)
-        .setDepth(50)
+        // Lớp upright/air VFX — bay trên đầu mọi entity nhưng dưới chrome UI.
+        .setDepth(DEPTH_UPRIGHT_VFX + 2)
         .setAlpha(0)
 
       const state = { progress: 0 }
@@ -800,14 +1219,138 @@ export class CombatScene extends Phaser.Scene {
     return id ? this.sprites.get(id) : undefined
   }
 
+  // Combat Grid Rework — COALESCE: nhiều event 'positions' đồng bộ trong
+  // 1 frame chỉ giữ snapshot MỚI NHẤT, apply ĐÚNG MỘT lần trong update().
+  // Cadence = khoảng cách giữa 2 SNAPSHOT (lastSnapshotAt), clamp
+  // [MIN_SEGMENT_DURATION_MS, MAX_SEGMENT_DURATION_MS].
   private onPositions(event: BattlePositionsEvent) {
+    const now = this.time.now
+
+    if (this.lastSnapshotAt !== undefined) {
+      this.pendingCadence = Math.min(
+        MAX_SEGMENT_DURATION_MS,
+        Math.max(50, now - this.lastSnapshotAt),
+      )
+    }
+
+    this.lastSnapshotAt = now
+    this.pendingPositions = event
+  }
+
+  private applyPendingPositions(event: BattlePositionsEvent) {
+    // Spawn VFX reconcile TRƯỚC enemy sprites: id rời spawningEnemies =
+    // materialize xong → đánh dấu để sprite mới tạo dưới đây fade-in.
+    this.reconcileSpawnVfx(event)
+
     this.reconcileEnemySprites(event.enemies)
 
-    this.setInterpolationTarget(PLAYER_ID, event.playerX)
+    this.setInterpolationTarget(PLAYER_ID, event.playerX, this.pendingCadence, this.lastSnapshotAt)
 
     for (const enemy of event.enemies) {
-      this.setInterpolationTarget(enemy.id, enemy.x)
+      this.setInterpolationTarget(enemy.id, enemy.x, this.pendingCadence, this.lastSnapshotAt)
     }
+  }
+
+  /**
+   * Reconcile telegraph spawn VFX theo SNAPSHOT (không event tức thời):
+   * id mới → tạo handle; id còn → cập nhật progress; id MẤT → materialize
+   * (flash ngắn + fade-in sprite) và dọn handle. Flat mode bỏ qua (renderer
+   * legacy giữ hành vi cũ).
+   */
+  private reconcileSpawnVfx(event: BattlePositionsEvent) {
+    if (!this.isPerspective) {
+      return
+    }
+
+    const seen = new Set<string>()
+
+    for (const spawning of event.spawningEnemies ?? []) {
+      seen.add(spawning.id)
+
+      const existing = this.spawnVfxHandles.get(spawning.id)
+
+      if (existing) {
+        existing.progress = spawning.progress
+
+        continue
+      }
+
+      if (!this.projection) {
+        continue
+      }
+
+      const handle = spawnEnemySpawnVfx({
+        scene: this,
+        projection: this.projection,
+        row: spawning.row,
+        column: spawning.column,
+        presetId: spawning.presetId,
+        uprightDepth: this.resolveUprightVfxDepth(spawning),
+      })
+
+      this.spawnVfxHandles.set(spawning.id, { handle, progress: spawning.progress })
+    }
+
+    for (const [id, entry] of [...this.spawnVfxHandles]) {
+      if (seen.has(id)) {
+        continue
+      }
+
+      this.spawnVfxHandles.delete(id)
+      this.materializingIds.add(id)
+      entry.handle.complete()
+    }
+  }
+
+  /** Fade-in + scale 0.7→1 cho enemy vừa materialize (một lần duy nhất). */
+  private playMaterializeFadeIn(sprite: EntitySprite) {
+    sprite.boost.value = 0.7
+
+    this.tweens.add({
+      targets: sprite.boost,
+      value: 1,
+      duration: 200,
+      ease: 'Quad.easeOut',
+    })
+
+    // Chỉ cần khả năng setAlpha — structural typing thay vì component
+    // interface của Phaser 4 (gồm alphaTopLeft... không khớp GameObject).
+    const alphaTargets: Array<{ target: { setAlpha(value: number): unknown }; final: number }> = []
+
+    alphaTargets.push({ target: sprite.rect, final: 1 })
+    alphaTargets.push({ target: sprite.label, final: 1 })
+
+    if (sprite.shadow) {
+      alphaTargets.push({ target: sprite.shadow, final: SHADOW_ALPHA })
+    }
+
+    if (sprite.healthBar) {
+      alphaTargets.push({ target: sprite.healthBar.background, final: 1 })
+      alphaTargets.push({ target: sprite.healthBar.fill, final: 1 })
+    }
+
+    for (const entry of alphaTargets) {
+      entry.target.setAlpha(0)
+    }
+
+    const state = { t: 0 }
+
+    this.tweens.add({
+      targets: state,
+      t: 1,
+      duration: 200,
+      ease: 'Quad.easeOut',
+      onUpdate: () => {
+        for (const entry of alphaTargets) {
+          entry.target.setAlpha(entry.final * state.t)
+        }
+      },
+      onComplete: () => {
+        for (const entry of alphaTargets) {
+          entry.target.setAlpha(entry.final)
+        }
+      },
+    })
   }
 
   // Trận kết thúc (thắng/thua) — dọn quái còn sót (trừ đang dở tween
@@ -815,14 +1358,10 @@ export class CombatScene extends Phaser.Scene {
   // rời scene ở đây — CombatResultModal.vue (Vue) quyết định lúc nào
   // rời (xem onExit()), vì cần đợi người chơi xem kết quả trước.
   private onBattleEnd() {
-    for (const projectileId of [...this.projectiles.keys()]) {
-      this.destroyProjectile(projectileId)
-    }
-
     this.reconcileEnemySprites([])
 
     if (!this.playerDying) {
-      this.snapInterpolationTarget(PLAYER_ID, HERO_HOME_X)
+      this.snapInterpolationTarget(PLAYER_ID, 0)
     }
   }
 
@@ -847,7 +1386,6 @@ export class CombatScene extends Phaser.Scene {
         ease: 'Quad.easeOut',
       })
     }
-
   }
 
   // Nảy số sát thương — dùng CHUNG event 'damage' mà CombatStatusBar.vue
@@ -863,7 +1401,11 @@ export class CombatScene extends Phaser.Scene {
     }
 
     const isDamageToPlayer = event.targetId === PLAYER_ID
-    const color = event.critical ? CRITICAL_DAMAGE_COLOR : (isDamageToPlayer ? DAMAGE_TAKEN_COLOR : DAMAGE_DEALT_COLOR)
+    const color = event.critical
+      ? CRITICAL_DAMAGE_COLOR
+      : isDamageToPlayer
+        ? DAMAGE_TAKEN_COLOR
+        : DAMAGE_DEALT_COLOR
 
     this.showDamageNumber(target, event.value, color, event.critical ?? false)
   }
@@ -886,12 +1428,18 @@ export class CombatScene extends Phaser.Scene {
     const fontSize = critical ? 20 : 14
 
     const label = this.add
-      .text(sprite.rect.x + jitterX, sprite.rect.y - sprite.rect.displayHeight / 2, `-${formatNumber(Math.round(value))}`, {
-        fontSize: `${fontSize}px`,
-        fontStyle: critical ? 'bold' : 'normal',
-        color,
-      })
+      .text(
+        sprite.rect.x + jitterX,
+        this.entityHeadY(sprite),
+        `-${formatNumber(Math.round(value))}`,
+        {
+          fontSize: `${fontSize}px`,
+          fontStyle: critical ? 'bold' : 'normal',
+          color,
+        },
+      )
       .setOrigin(0.5, 1)
+      .setDepth(DEPTH_OVERLAY_UI + 6)
       .setScale(0.4)
 
     this.tweens.add({
@@ -919,10 +1467,15 @@ export class CombatScene extends Phaser.Scene {
       return
     }
 
+    // Pop qua boost object — projection ghi kích thước mỗi frame nên
+    // tween scale trực tiếp sẽ bị ghi đè; boost nhân vào kích thước cuối
+    // ở applyEntityDepthScale() (perspective) / setScale (flat).
+    this.tweens.killTweensOf(target.boost)
+    target.boost.value = 1
+
     this.tweens.add({
-      targets: target.rect,
-      scaleX: 1.25,
-      scaleY: 1.25,
+      targets: target.boost,
+      value: 1.25,
       duration: 90,
       yoyo: true,
       ease: 'Quad.easeOut',
@@ -1001,17 +1554,25 @@ export class CombatScene extends Phaser.Scene {
     this.destroyCastBar(event.sourceId)
 
     const widthPx = this.characterWidth
-    const y = caster.rect.y - caster.rect.displayHeight / 2 - CAST_BAR_OFFSET_Y
+    const y = this.entityHeadY(caster) - CAST_BAR_OFFSET_Y
 
     const bg = this.add
       .rectangle(caster.rect.x, y, widthPx, CAST_BAR_HEIGHT, CAST_BAR_BG_COLOR)
       .setOrigin(0.5)
       .setStrokeStyle(1, 0x000000, 0.5)
+      .setDepth(DEPTH_OVERLAY_UI + 3)
 
     const fill = this.add
-      .rectangle(caster.rect.x - widthPx / 2, y, widthPx - 2, CAST_BAR_HEIGHT - 2, CAST_BAR_FILL_COLOR)
+      .rectangle(
+        caster.rect.x - widthPx / 2,
+        y,
+        widthPx - 2,
+        CAST_BAR_HEIGHT - 2,
+        CAST_BAR_FILL_COLOR,
+      )
       .setOrigin(0, 0.5)
       .setScale(0, 1)
+      .setDepth(DEPTH_OVERLAY_UI + 3)
 
     this.castBars.set(event.sourceId, { bg, fill, widthPx })
 
@@ -1034,7 +1595,7 @@ export class CombatScene extends Phaser.Scene {
   }
 
   private positionCastBar(sprite: EntitySprite, castBar: CastBarSprite) {
-    const y = sprite.rect.y - sprite.rect.displayHeight / 2 - CAST_BAR_OFFSET_Y
+    const y = this.entityHeadY(sprite) - CAST_BAR_OFFSET_Y
 
     castBar.bg.setPosition(sprite.rect.x, y)
     castBar.fill.setPosition(sprite.rect.x - castBar.widthPx / 2, y)
@@ -1077,6 +1638,7 @@ export class CombatScene extends Phaser.Scene {
     this.destroyCastBar(id)
 
     this.tweens.killTweensOf(sprite.rect)
+    this.tweens.killTweensOf(sprite.boost)
 
     this.tweens.add({
       targets: sprite.rect,
@@ -1097,7 +1659,12 @@ export class CombatScene extends Phaser.Scene {
     })
 
     this.tweens.add({
-      targets: [sprite.label, sprite.healthBar?.background, sprite.healthBar?.fill].filter(Boolean),
+      targets: [
+        sprite.label,
+        sprite.shadow,
+        sprite.healthBar?.background,
+        sprite.healthBar?.fill,
+      ].filter(Boolean),
       alpha: 0,
       duration: 500,
     })
@@ -1116,7 +1683,16 @@ export class CombatScene extends Phaser.Scene {
     }
 
     this.playerDying = false
-    this.snapInterpolationTarget(PLAYER_ID, HERO_HOME_X)
+    this.snapInterpolationTarget(PLAYER_ID, 0)
+
+    // Auto-repeat/trận mới trong cùng scene — dọn telegraph cũ (snapshot
+    // mới của battle kế sẽ tạo handle sạch theo pendingEnemySpawns mới).
+    for (const entry of this.spawnVfxHandles.values()) {
+      entry.handle.destroy()
+    }
+
+    this.spawnVfxHandles.clear()
+    this.materializingIds.clear()
 
     for (const [id, sprite] of this.sprites) {
       if (id === PLAYER_ID) {
@@ -1132,6 +1708,168 @@ export class CombatScene extends Phaser.Scene {
 
     for (const id of [...this.castBars.keys()]) {
       this.destroyCastBar(id)
+    }
+  }
+
+  // ================= Combat Grid Rework — VFX 2.5D theo space =================
+
+  /**
+   * MỘT action_impact = MỘT VFX instance (spawnActionImpactVfx): mọi
+   * pulse/hit sống trong cùng 1 cặp Graphics + 1 timeline, không bao giờ
+   * sinh GameObject theo hitCount/target. preset.space quyết định không
+   * gian; polygon footprint CHỈ trình bày — damage do core quyết định.
+   */
+  private onActionImpact(event: ActionImpactEvent) {
+    const projection = this.projection
+
+    if (!projection) {
+      return
+    }
+
+    const preset = getCombatVfxPreset(event.presetId)
+    // MỘT action = MỘT VFX chính; multi-hit chỉ thêm pulse (spec mục 8).
+    const pulses = Math.max(1, Math.min(6, event.hitCount))
+
+    spawnActionImpactVfx({
+      scene: this,
+      projection,
+      area: event.affectedArea,
+      anchorCell: event.anchorCell,
+      preset,
+      pulses,
+      uprightDepth: this.resolveUprightVfxDepth(event.anchorCell),
+    })
+
+    if (preset.screenShake) {
+      this.cameras.main.shake(preset.screenShake.durationMs, preset.screenShake.intensity)
+    }
+
+    // affectedTargetIds chỉ phục vụ hit-flash — KHÔNG spawn effect sao.
+    for (const targetId of event.landedTargetIds) {
+      const sprite = this.spriteFor(targetId)
+
+      if (sprite) {
+        this.flashColor(sprite, preset.color, 90)
+      }
+    }
+  }
+
+  /**
+   * Depth lớp upright cho impact tại anchorCell: cùng hệ với entity sprite
+   * (foot Y) + bias nhỏ → effect đè đúng target của nó nhưng vẫn bị
+   * entity hàng GẦN camera che (occlusion 2.5D). Flat mode giữ lớp
+   * upright cố định như renderer cũ.
+   */
+  private resolveUprightVfxDepth(anchorCell: GridPosition): number {
+    if (!this.isPerspective || !this.projection) {
+      return DEPTH_UPRIGHT_VFX
+    }
+
+    const anchor = this.projection.gridToScreen(anchorCell.row, anchorCell.column)
+
+    return uprightVfxDepth(anchor.y, this.entityFootMinY, this.entityFootMaxY, anchorCell.column)
+  }
+
+  private onStatusAttached(event: StatusVfxAttachedEvent) {
+    if (this.statuses.has(event.statusInstanceId)) {
+      return
+    }
+
+    const target = this.spriteFor(event.targetId)
+
+    if (!target) {
+      return
+    }
+
+    const headY = this.entityHeadY(target)
+    const icon = this.add.rectangle(
+      target.rect.x,
+      headY - 14,
+      9,
+      9,
+      getStatusVfxPreset(event.dotType).color,
+    )
+
+    icon.setAngle(45)
+    icon.setDepth(DEPTH_OVERLAY_UI + 4)
+
+    const label = this.add.text(icon.x, headY - 27, String(event.stacks), {
+      fontFamily: 'monospace',
+      fontSize: '10px',
+      color: '#ffd54f',
+    })
+
+    label.setOrigin(0.5, 0.5)
+    label.setDepth(DEPTH_OVERLAY_UI + 5)
+
+    this.statuses.set(event.statusInstanceId, { targetId: event.targetId, icon, label })
+  }
+
+  private onStatusUpdated(event: StatusVfxUpdatedEvent) {
+    const status = this.statuses.get(event.statusInstanceId)
+
+    status?.label.setText(String(event.stacks))
+  }
+
+  private onStatusRemoved(event: StatusVfxRemovedEvent) {
+    const status = this.statuses.get(event.statusInstanceId)
+
+    if (!status) {
+      return
+    }
+
+    status.icon.destroy()
+    status.label.destroy()
+    this.statuses.delete(event.statusInstanceId)
+  }
+
+  // Input 2.5D — pointer quy đổi NGƯỢC screen→grid qua projection. Camera
+  // combat luôn zoom 1 nên pixel canvas == pixel màn hình, không cần bù
+  // transform; containsScreenPoint kiểm tra TRÊN MIỀN CHƯA clamp (sky/
+  // ngoài cạnh gần → false) nên marker không bao giờ "kẹt" ở hàng biên
+  // khi pointer nằm ngoài sân. Ô hover chuẩn hóa bằng chính helpers làm
+  // tròn của core (getLaneFromWorldY/getColumnFromWorldX) để LUÔN khớp ô
+  // targeting logic.
+  private onPointerMove(pointer: Phaser.Input.Pointer) {
+    const projection = this.projection
+    const marker = this.hoverMarker
+
+    if (!projection || !marker || !this.isPerspective) {
+      return
+    }
+
+    if (!projection.containsScreenPoint(pointer.x, pointer.y)) {
+      marker.setVisible(false)
+
+      return
+    }
+
+    const hit = projection.screenToGrid(pointer.x, pointer.y)
+
+    // hit.row/hit.column đã ở đúng ĐƠN VỊ của core (tâm ô = giá trị
+    // nguyên) — truyền thẳng vào helpers làm tròn chuẩn của BattleGrid.
+    const row = getLaneFromWorldY(hit.row)
+    const column = getColumnFromWorldX(hit.column)
+    const point = projection.gridToScreen(row, column)
+    const cell = projection.cellSizeAt(row)
+
+    marker.setSize(cell.width * 0.86, cell.height * 0.86)
+    marker.setPosition(point.x, point.y)
+    marker.setVisible(true)
+  }
+
+  private updateStatusIconPositions() {
+    for (const status of this.statuses.values()) {
+      const sprite = this.spriteFor(status.targetId)
+
+      if (!sprite) {
+        continue
+      }
+
+      const headY = this.entityHeadY(sprite)
+
+      status.icon.setPosition(sprite.rect.x, headY - 14)
+      status.label.setPosition(sprite.rect.x, headY - 27)
     }
   }
 
@@ -1157,8 +1895,9 @@ export class CombatScene extends Phaser.Scene {
 
   private showFloatingText(sprite: EntitySprite, text: string, color: string) {
     const label = this.add
-      .text(sprite.rect.x, sprite.rect.y - sprite.rect.displayHeight / 2, text, { fontSize: '13px', color })
+      .text(sprite.rect.x, this.entityHeadY(sprite), text, { fontSize: '13px', color })
       .setOrigin(0.5, 1)
+      .setDepth(DEPTH_OVERLAY_UI + 6)
 
     this.tweens.add({
       targets: label,
@@ -1173,11 +1912,13 @@ export class CombatScene extends Phaser.Scene {
   private resetVisual(sprite: EntitySprite) {
     this.tweens.killTweensOf(sprite.rect)
     this.tweens.killTweensOf(sprite)
+    this.tweens.killTweensOf(sprite.boost)
 
     sprite.rect.setAlpha(1)
     sprite.rect.setRotation(0)
     sprite.rect.setScale(1)
     sprite.label.setAlpha(1)
+    sprite.shadow?.setAlpha(SHADOW_ALPHA)
 
     if (sprite.kind === 'sprite') {
       const gameSprite = sprite.rect as Phaser.GameObjects.Sprite
@@ -1191,6 +1932,24 @@ export class CombatScene extends Phaser.Scene {
       rect.setFillStyle(sprite.color)
     }
 
+    if (sprite.healthBar) {
+      sprite.healthBar.background.setAlpha(1)
+      sprite.healthBar.fill.setAlpha(1)
+    }
+
+    sprite.boost.value = 1
     sprite.offsetX = 0
+
+    // Kích thước/foot point áp lại ngay để không chờ frame kế (reset
+    // hiện chỉ dùng cho player).
+    this.applySpriteSize(sprite)
+
+    if (sprite === this.sprites.get(PLAYER_ID)) {
+      const entry = this.interpolations.get(PLAYER_ID)
+
+      if (entry) {
+        this.positionSprite(sprite, entry.toX)
+      }
+    }
   }
 }

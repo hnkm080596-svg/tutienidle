@@ -31,7 +31,7 @@ const { startBattle } = useBattleActions()
 const summary = computed(() => gameManager.getBattleRewardSummary())
 
 const hasAnyReward = computed(() =>
-  summary.value.experience > 0 || summary.value.spiritStone > 0 || summary.value.cultivation > 0 || summary.value.items.length > 0,
+  summary.value.techniqueInsight > 0 || summary.value.skillInsight > 0 || summary.value.spiritStone > 0 || summary.value.cultivation > 0 || summary.value.items.length > 0,
 )
 
 const isAutoRetrying = ref(false)
@@ -81,7 +81,8 @@ onMounted(() => {
     <h2 class="combat-defeat-panel__title">☠ THẤT BẠI</h2>
 
     <div v-if="hasAnyReward" class="combat-defeat-panel__rewards">
-      <p v-if="summary.experience > 0">Cảm ngộ <span>+{{ formatNumber(summary.experience) }}</span></p>
+      <p v-if="summary.techniqueInsight > 0">Cảm Ngộ Tâm Pháp <span>+{{ formatNumber(summary.techniqueInsight) }}</span></p>
+      <p v-if="summary.skillInsight > 0">Cảm Ngộ Kỹ Năng <span>+{{ formatNumber(summary.skillInsight) }}</span></p>
       <p v-if="summary.spiritStone > 0">Linh Thạch <span>+{{ formatNumber(summary.spiritStone) }}</span></p>
       <p v-if="summary.cultivation > 0">Tu Vi <span>+{{ formatNumber(summary.cultivation) }}</span></p>
       <p v-for="item in summary.items" :key="`${item.kind}-${item.itemId}`">{{ item.name }} <span>+{{ formatNumber(item.amount) }}</span></p>
@@ -133,7 +134,7 @@ onMounted(() => {
   margin: 0;
   display: flex;
   justify-content: space-between;
-  font-size: 0.85rem;
+  font-size: var(--text-body);
   color: var(--text-secondary);
 }
 
@@ -154,7 +155,7 @@ onMounted(() => {
   border: none;
   font-family: var(--font-body);
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: var(--text-body);
   cursor: pointer;
 }
 

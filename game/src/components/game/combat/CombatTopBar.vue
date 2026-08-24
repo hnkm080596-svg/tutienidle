@@ -60,7 +60,7 @@ const progress = computed(() => {
 }
 
 .combat-top-bar__progress {
-  font-size: 0.75rem;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
 }
 </style>

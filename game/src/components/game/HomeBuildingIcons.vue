@@ -39,6 +39,18 @@ function buildingLevel(buildingId: string): number | null {
   return gameManager.buildingManager.getByBuildingId(buildingId)?.level ?? null
 }
 
+// WS5 (2026-08-24) — trạng thái trực quan KHÔNG phụ thuộc tooltip:
+// built (đã xây) / unbuilt (chưa xây) / upgradeable (đã xây, chưa max).
+function isUpgradeable(buildingId: string): boolean {
+  const definition = gameManager.getBuildingDefinitions().find(entry => entry.id === buildingId)
+
+  if (!definition) {
+    return false
+  }
+
+  return isBuilt(buildingId) && (buildingLevel(buildingId) ?? 0) < definition.maxLevel
+}
+
 interface BuildingSpot {
   left: number
   top: number
@@ -64,9 +76,9 @@ const BUILDING_POSITIONS: Record<string, BuildingSpot> = {
 // scene.
 const SECONDARY_POSITIONS: Record<string, BuildingSpot> = {
   herb_garden: { left: 6, top: 44, accent: 'var(--jade)' },
-  linh_tuyen: { left: 94, top: 44, accent: 'var(--azure)' },
+  spirit_spring: { left: 94, top: 44, accent: 'var(--azure)' },
   smelter: { left: 8, top: 68, accent: 'var(--crimson)' },
-  thien_cong_phuong: { left: 92, top: 68, accent: 'var(--jade)' },
+  artisan_workshop: { left: 92, top: 68, accent: 'var(--jade)' },
   gathering_outpost: { left: 30, top: 14, accent: 'var(--text-muted)' },
 }
 
@@ -139,29 +151,37 @@ function openScripturePavilion() {
 </script>
 
 <template>
-  <div v-if="!stageActive" class="dongfu-buildings">
+  <div v-if="!stageActive" class="home-buildings">
     <button
       type="button"
-      class="dongfu-building dongfu-building--tkc"
+      class="home-building home-building--tkc"
       style="left: 50%; top: 18%; --accent: var(--gold-500);"
       v-tooltip="SCRIPTURE_PAVILION_TOOLTIP"
       @click="openScripturePavilion"
     >
-      <span class="dongfu-building__glow" />
-      <span class="dongfu-building__roof dongfu-building__roof--upper" />
-      <span class="dongfu-building__roof" />
-      <span class="dongfu-building__body">
-        <span class="dongfu-building__door" />
+      <span class="home-building__glow" />
+      <span class="home-building__roof home-building__roof--upper" />
+      <span class="home-building__roof" />
+      <span class="home-building__body">
+        <span class="home-building__door" />
       </span>
-      <span class="dongfu-building__shadow" />
+      <span class="home-building__shadow" />
+      <!-- WS5 — nameplate luôn hiển thị, khỏi phụ thuộc tooltip. -->
+      <span class="home-building__name">Tàng Kinh Các</span>
     </button>
 
     <template v-for="(building, index) in buildings" :key="building.id">
       <button
         v-if="!spotFor(building.id, index, buildings.length).isGate"
         type="button"
-        class="dongfu-building"
-        :class="[`dongfu-building--${spotFor(building.id, index, buildings.length).tier}`, { 'is-built': isBuilt(building.id) }]"
+        class="home-building"
+        :class="[
+          `home-building--${spotFor(building.id, index, buildings.length).tier}`,
+          {
+            'is-built': isBuilt(building.id),
+            'is-upgradeable': isUpgradeable(building.id),
+          },
+        ]"
         :style="{
           left: `${spotFor(building.id, index, buildings.length).left}%`,
           top: `${spotFor(building.id, index, buildings.length).top}%`,
@@ -170,18 +190,25 @@ function openScripturePavilion() {
         v-tooltip="tooltipFor(building)"
         @click="clickIcon(building)"
       >
-        <span class="dongfu-building__glow" />
-        <span class="dongfu-building__roof" />
-        <span class="dongfu-building__body">
-          <span class="dongfu-building__door" />
+        <span class="home-building__glow" />
+        <span class="home-building__roof" />
+        <span class="home-building__body">
+          <span class="home-building__door" />
+          <!-- WS5 — badge cấp độ khi đã xây; chấm vàng nhấp nháy khi còn
+               nâng cấp được (không cần hover/tooltip để nhận biết). -->
+          <span v-if="isBuilt(building.id)" class="home-building__level">
+            {{ buildingLevel(building.id) }}
+            <i v-if="isUpgradeable(building.id)" class="home-building__level-dot" />
+          </span>
         </span>
-        <span class="dongfu-building__shadow" />
+        <span class="home-building__shadow" />
+        <span class="home-building__name">{{ building.name }}</span>
       </button>
 
       <button
         v-else
         type="button"
-        class="dongfu-gate"
+        class="home-gate"
         :class="{ 'is-built': isBuilt(building.id) }"
         :style="{
           left: `${spotFor(building.id, index, buildings.length).left}%`,
@@ -190,12 +217,13 @@ function openScripturePavilion() {
         v-tooltip="tooltipFor(building)"
         @click="clickIcon(building)"
       >
-        <span class="dongfu-gate__glow" />
-        <span class="dongfu-gate__path" />
-        <span class="dongfu-gate__pillar dongfu-gate__pillar--l" />
-        <span class="dongfu-gate__pillar dongfu-gate__pillar--r" />
-        <span class="dongfu-gate__lintel" />
-        <span class="dongfu-gate__portal" />
+        <span class="home-gate__glow" />
+        <span class="home-gate__path" />
+        <span class="home-gate__pillar home-gate__pillar--l" />
+        <span class="home-gate__pillar home-gate__pillar--r" />
+        <span class="home-gate__lintel" />
+        <span class="home-gate__portal" />
+        <span class="home-building__name home-gate__name">{{ building.name }}</span>
       </button>
     </template>
   </div>
@@ -208,7 +236,7 @@ function openScripturePavilion() {
 </template>
 
 <style scoped>
-.dongfu-buildings {
+.home-buildings {
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -217,7 +245,7 @@ function openScripturePavilion() {
 
 /* ================= Pavilion (Đan Phòng/Phù Viện/Khí Đường/Trận Đài/
    Tàng Kinh Các/công trình phụ) ================= */
-.dongfu-building {
+.home-building {
   position: absolute;
   transform: translate(-50%, -50%);
   display: flex;
@@ -229,7 +257,7 @@ function openScripturePavilion() {
   cursor: pointer;
 }
 
-.dongfu-building__glow {
+.home-building__glow {
   position: absolute;
   inset: -30px;
   border-radius: 50%;
@@ -240,11 +268,11 @@ function openScripturePavilion() {
   pointer-events: none;
 }
 
-.dongfu-building:hover .dongfu-building__glow {
+.home-building:hover .home-building__glow {
   opacity: 0.42;
 }
 
-.dongfu-building__roof {
+.home-building__roof {
   width: 84px;
   height: 24px;
   background: linear-gradient(180deg, #362c24, #1a1510);
@@ -253,17 +281,17 @@ function openScripturePavilion() {
   transition: filter 0.3s ease;
 }
 
-.dongfu-building:hover .dongfu-building__roof {
+.home-building:hover .home-building__roof {
   filter: drop-shadow(0 0 8px var(--accent)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
 }
 
-.dongfu-building__roof--upper {
+.home-building__roof--upper {
   width: 58px;
   height: 18px;
   margin-bottom: -8px;
 }
 
-.dongfu-building__body {
+.home-building__body {
   width: 66px;
   height: 36px;
   background: linear-gradient(180deg, #262019, #16130f);
@@ -272,16 +300,16 @@ function openScripturePavilion() {
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.dongfu-building:hover .dongfu-building__body {
+.home-building:hover .home-building__body {
   border-color: var(--accent);
   box-shadow: 0 0 14px -2px var(--accent);
 }
 
-.dongfu-building.is-built .dongfu-building__body {
+.home-building.is-built .home-building__body {
   border-color: rgba(255, 255, 255, 0.12);
 }
 
-.dongfu-building__door {
+.home-building__door {
   position: absolute;
   bottom: 0;
   left: 50%;
@@ -294,77 +322,143 @@ function openScripturePavilion() {
   transition: opacity 0.3s ease;
 }
 
-.dongfu-building.is-built .dongfu-building__door {
+.home-building.is-built .home-building__door {
   opacity: 0.9;
 }
 
-.dongfu-building__shadow {
+.home-building__shadow {
   width: 66px;
   height: 10px;
   margin-top: -3px;
   background: radial-gradient(ellipse, rgba(0, 0, 0, 0.55), transparent 72%);
 }
 
-/* Tier — công trình trung tâm to hơn hẳn công trình phụ (rải rìa). */
-.dongfu-building--featured .dongfu-building__roof {
+/* WS5 — nameplate ngắn luôn hiển thị dưới công trình: nhận diện chức
+   năng ngay khi nhìn scene, không phụ thuộc tooltip. */
+.home-building__name {
+  margin-top: var(--space-1);
+  padding: 1px var(--space-2);
+  border-radius: 999px;
+  background: rgba(10, 10, 13, 0.72);
+  border: 1px solid var(--ink-line);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  line-height: var(--lh-tight);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.home-building.is-built .home-building__name {
+  color: var(--text-primary);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--ink-line));
+}
+
+/* Chưa xây — silhouette mờ + viền đứt gợi "available". */
+.home-building:not(.is-built) .home-building__body {
+  border-style: dashed;
+}
+
+.home-building:not(.is-built) .home-building__name {
+  color: var(--text-muted);
+}
+
+/* Còn nâng cấp — badge cấp kèm chấm vàng nhấp nháy. */
+.home-building__level {
+  position: absolute;
+  top: -9px;
+  right: -10px;
+  min-width: 20px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--ink-950);
+  border: 1px solid var(--accent);
+  color: var(--gold-300);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.home-building__level-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--gold-500);
+  animation: home-level-dot-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes home-level-dot-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.75); }
+}
+
+/* Tier — công trình trung tâm to hơn hẳn công trình phụ (rải rìa).
+   WS5 — công trình phụ bump lên tối thiểu ~64px hiển thị (body 56×30
+   + roof), không còn nhỏ hơn icon navigation. */
+.home-building--featured .home-building__roof {
   width: 108px;
   height: 30px;
 }
 
-.dongfu-building--featured .dongfu-building__body {
+.home-building--featured .home-building__body {
   width: 84px;
   height: 46px;
 }
 
-.dongfu-building--featured .dongfu-building__door {
+.home-building--featured .home-building__door {
   width: 20px;
   height: 26px;
 }
 
-.dongfu-building--featured .dongfu-building__shadow {
+.home-building--featured .home-building__shadow {
   width: 84px;
 }
 
-.dongfu-building--secondary {
-  opacity: 0.75;
+.home-building--secondary {
+  opacity: 0.85;
 }
 
-.dongfu-building--secondary .dongfu-building__roof {
+.home-building--secondary .home-building__roof {
+  width: 64px;
+  height: 18px;
+}
+
+.home-building--secondary .home-building__body {
   width: 56px;
-  height: 16px;
+  height: 30px;
 }
 
-.dongfu-building--secondary .dongfu-building__body {
-  width: 44px;
-  height: 24px;
+.home-building--secondary .home-building__shadow {
+  width: 56px;
 }
 
-.dongfu-building--secondary .dongfu-building__shadow {
-  width: 44px;
-}
-
-.dongfu-building--tkc .dongfu-building__roof {
+.home-building--tkc .home-building__roof {
   width: 130px;
   height: 34px;
 }
 
-.dongfu-building--tkc .dongfu-building__body {
+.home-building--tkc .home-building__body {
   width: 100px;
   height: 54px;
 }
 
-.dongfu-building--tkc .dongfu-building__door {
+.home-building--tkc .home-building__door {
   width: 22px;
   height: 30px;
 }
 
-.dongfu-building--tkc .dongfu-building__shadow {
+.home-building--tkc .home-building__shadow {
   width: 100px;
 }
 
 /* ================= Cổng Thám Hiểm (Truyền Tống Trận) — KHÔNG phải
    pavilion, đường/cổng dẫn ra thế giới. ================= */
-.dongfu-gate {
+.home-gate {
   position: absolute;
   transform: translate(-50%, -50%);
   width: 180px;
@@ -375,7 +469,7 @@ function openScripturePavilion() {
   cursor: pointer;
 }
 
-.dongfu-gate__glow {
+.home-gate__glow {
   position: absolute;
   inset: -30px;
   z-index: -1;
@@ -385,11 +479,11 @@ function openScripturePavilion() {
   transition: opacity 0.3s ease;
 }
 
-.dongfu-gate:hover .dongfu-gate__glow {
+.home-gate:hover .home-gate__glow {
   opacity: 1;
 }
 
-.dongfu-gate__path {
+.home-gate__path {
   position: absolute;
   left: 50%;
   bottom: 0;
@@ -400,7 +494,7 @@ function openScripturePavilion() {
   background: linear-gradient(180deg, rgba(66, 165, 245, 0.04), rgba(120, 120, 130, 0.1));
 }
 
-.dongfu-gate__pillar {
+.home-gate__pillar {
   position: absolute;
   bottom: 8px;
   width: 14px;
@@ -409,15 +503,15 @@ function openScripturePavilion() {
   border-radius: 2px;
 }
 
-.dongfu-gate__pillar--l {
+.home-gate__pillar--l {
   left: 30px;
 }
 
-.dongfu-gate__pillar--r {
+.home-gate__pillar--r {
   right: 30px;
 }
 
-.dongfu-gate__lintel {
+.home-gate__lintel {
   position: absolute;
   top: 2px;
   left: 24px;
@@ -427,7 +521,7 @@ function openScripturePavilion() {
   border-radius: 2px;
 }
 
-.dongfu-gate__portal {
+.home-gate__portal {
   position: absolute;
   top: 12px;
   left: 44px;
@@ -437,11 +531,19 @@ function openScripturePavilion() {
   transition: box-shadow 0.3s ease;
 }
 
-.dongfu-gate:hover .dongfu-gate__portal {
+.home-gate:hover .home-gate__portal {
   box-shadow: 0 0 24px rgba(255, 213, 79, 0.25) inset;
 }
 
-.dongfu-gate.is-built .dongfu-gate__portal {
+.home-gate.is-built .home-gate__portal {
   box-shadow: 0 0 14px rgba(255, 213, 79, 0.15) inset;
+}
+
+/* WS5 — nameplate cổng Thám Hiểm. */
+.home-gate__name {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 0;
 }
 </style>

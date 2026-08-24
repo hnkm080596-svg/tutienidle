@@ -4,25 +4,26 @@ import DongFuScene from './DongFuScene.vue'
 import PhaserCanvas from './PhaserCanvas.vue'
 import { useCombatSceneActive } from '@/composables/useCombatSceneActive'
 import { useUiStore } from '@/stores/ui'
-import { BOTTOM_BAR_HEIGHT } from '@/core/ui/DesignFrame'
 
 // Combat UI Redesign — bình thường chừa chỗ cho BottomBar (xem
 // GameRoot.vue), nhưng lúc Combat Scene active thì BottomBar bị ẩn
 // hẳn (CombatSceneOverlay.vue thay thế) — container này (chứa
 // PhaserCanvas, tức toàn bộ canvas Phaser DUY NHẤT của cả app, xem
 // PhaserCanvas.vue) phải giãn hết cỡ để CombatScene.ts có đủ không
-// gian vẽ battlefield toàn màn hình. Set qua inline style (thắng mọi
-// CSS class khác) thay vì phụ thuộc thứ tự cascade giữa scoped style
-// của component này với class "game-root__scene" GameRoot.vue truyền
-// vào — rõ ràng, không mơ hồ.
+// gian vẽ battlefield toàn màn hình.
+//
+// WS1 Responsive foundation (2026-08-24) — chiều cao chừa chỗ dùng
+// var(--bottom-bar-h) (clamp px thực trong theme.css) thay cho hằng
+// số design-frame; inline style với giá trị var() vẫn thắng mọi CSS
+// class khác như cơ chế cũ.
 const isCombatSceneActive = useCombatSceneActive()
 const ui = useUiStore()
 
-const bottomInsetPx = computed(() => `${isCombatSceneActive.value || ui.isTribulationSceneActive ? 0 : BOTTOM_BAR_HEIGHT}px`)
+const bottomInset = computed(() => isCombatSceneActive.value || ui.isTribulationSceneActive ? '0px' : 'var(--bottom-bar-h)')
 </script>
 
 <template>
-  <div class="main-scene" :style="{ bottom: bottomInsetPx }">
+  <div class="main-scene" :style="{ bottom: bottomInset }">
     <!-- DongFuScene (UI redesign) đứng SAU PhaserCanvas trong z-order —
          PhaserCanvas transparent:true (xem PhaserCanvas.vue), lúc
          chiến đấu vẽ đè lên; lúc không chiến đấu PhaserCanvas không vẽ

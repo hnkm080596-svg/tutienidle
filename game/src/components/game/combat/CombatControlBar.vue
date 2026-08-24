@@ -76,7 +76,7 @@ function confirmExit() {
   border-radius: var(--radius-sm);
   font-family: var(--font-body);
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: var(--text-body);
   cursor: pointer;
 }
 
@@ -88,7 +88,7 @@ function confirmExit() {
   border-radius: var(--radius-sm);
   font-family: var(--font-body);
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: var(--text-body);
   cursor: pointer;
 }
 
@@ -120,7 +120,7 @@ function confirmExit() {
 
 .combat-control-bar__confirm-text {
   margin: 0 0 16px;
-  font-size: 0.85rem;
+  font-size: var(--text-body);
   color: var(--text-secondary);
   line-height: 1.4;
 }
@@ -137,7 +137,7 @@ function confirmExit() {
   border-radius: var(--radius-sm);
   font-family: var(--font-body);
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   cursor: pointer;
 }
 

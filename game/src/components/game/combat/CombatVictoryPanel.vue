@@ -107,7 +107,8 @@ onMounted(() => {
     <h2 class="combat-victory-panel__title">★ THẮNG ★</h2>
 
     <div class="combat-victory-panel__rewards">
-      <p v-if="summary.experience > 0">Cảm ngộ <span>+{{ formatNumber(summary.experience) }}</span></p>
+      <p v-if="summary.techniqueInsight > 0">Cảm Ngộ Tâm Pháp <span>+{{ formatNumber(summary.techniqueInsight) }}</span></p>
+      <p v-if="summary.skillInsight > 0">Cảm Ngộ Kỹ Năng <span>+{{ formatNumber(summary.skillInsight) }}</span></p>
       <p v-if="summary.spiritStone > 0">Linh Thạch <span>+{{ formatNumber(summary.spiritStone) }}</span></p>
       <p v-if="summary.cultivation > 0">Tu Vi <span>+{{ formatNumber(summary.cultivation) }}</span></p>
       <p v-for="item in summary.items" :key="`${item.kind}-${item.itemId}`">{{ item.name }} <span>+{{ formatNumber(item.amount) }}</span></p>
@@ -161,7 +162,7 @@ onMounted(() => {
   margin: 0;
   display: flex;
   justify-content: space-between;
-  font-size: 0.85rem;
+  font-size: var(--text-body);
   color: var(--text-secondary);
 }
 
@@ -182,7 +183,7 @@ onMounted(() => {
   border: none;
   font-family: var(--font-body);
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: var(--text-body);
   cursor: pointer;
 }
 

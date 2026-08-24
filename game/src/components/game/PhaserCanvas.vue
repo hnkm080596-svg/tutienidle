@@ -46,13 +46,17 @@ onMounted(() => {
     scene: [MainScene, CombatScene, TribulationScene],
   })
 
+  // Expose cho e2e/visual gate — đọc battlefieldGeometry qua registry
+  // mà không cần chạm canvas pixel. Không có code gameplay dùng nó.
+  ;(window as unknown as { __tutienPhaserGame?: Phaser.Game }).__tutienPhaserGame = game
+
   // MainScene.ts/CombatScene.ts CHỈ giao tiếp với core qua EventBus
   // này (không cầm tham chiếu GameManager trực tiếp) — mọi thứ chúng
   // cần (vị trí player/quái, animation attack/critical/hit/dodge/cast/
   // death/battle_start/battle_end/combat_scene_exit) đều tới qua đây.
   game.registry.set('eventBus', gameManager.eventBus)
 
-  resizeObserver = new ResizeObserver(entries => {
+  resizeObserver = new ResizeObserver((entries) => {
     const entry = entries[0]
 
     if (!entry || !game) {
@@ -72,6 +76,8 @@ onMounted(() => {
 onUnmounted(() => {
   resizeObserver?.disconnect()
   resizeObserver = null
+
+  ;(window as unknown as { __tutienPhaserGame?: Phaser.Game }).__tutienPhaserGame = undefined
 
   game?.destroy(true)
 
