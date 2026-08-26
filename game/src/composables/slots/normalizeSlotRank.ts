@@ -4,6 +4,7 @@
 // Cùng thang --rank-color-1..9 (assets/theme.css).
 import { EQUIPMENT_QUALITY_ORDER, type EquipmentQuality } from '@/core/equipment/EquipmentQuality'
 import { ITEM_GRADE_ORDER, type ItemGrade } from '@/core/item/ItemGrade'
+import { PROFESSION_GRADE_ORDER, type ProfessionGrade } from '@/core/profession/ProfessionGrade'
 
 // 9 bậc Quality ánh xạ 1:1 vào rank 1-9.
 export function equipmentQualityRank(quality: EquipmentQuality): number {
@@ -29,4 +30,12 @@ export function isMaxRankTone(tone?: string): boolean {
   }
 
   return false
+}
+
+// Phẩm nghề (Cửu→Tiên, 10 bậc) — rank 1-10 clamp vào thang 9 màu
+// (Tiên Phẩm đỉnh = rank 9). Khác trục với ItemGrade trang bị.
+export function professionGradeRank(grade: ProfessionGrade): number {
+  const index = PROFESSION_GRADE_ORDER.indexOf(grade)
+
+  return Math.min(9, Math.max(1, index + 1))
 }

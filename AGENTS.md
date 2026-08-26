@@ -11,3 +11,7 @@
 - Run relevant tests, `npm.cmd run type-check`, and `npm.cmd run build` before declaring completion.
 - Fix verification failures caused by the implementation.
 - Summaries must state what changed, what was verified, and any remaining limitations.
+
+## Development Phase
+
+- This project is currently in a development build. Save-migration correctness does NOT need to be maintained or verified — it is fine to break compatibility with old saves during this phase. Do not spend effort on save migrations.

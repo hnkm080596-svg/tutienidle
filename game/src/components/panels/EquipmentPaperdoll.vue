@@ -110,8 +110,6 @@ const tooltipBySlot = computed<Record<EquipmentSlot, EquipmentTooltipContent | u
           gameManager.equipmentRegistry.get(instance.itemId),
           gameManager.affixRegistry,
           gameManager.getSlotState(entry.slot),
-          gameManager.formationRegistry,
-          gameManager.talismanRegistry,
           gameManager.zoneRegistry,
         )
       : undefined
@@ -165,71 +163,20 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
     unequip(instance.instanceId)
   }
 }
-
-// MASTER SPEC Mục XVI (Phase 9) — Formation giờ thuộc SLOT 'weapon',
-// không thuộc instance vũ khí cụ thể (đọc qua equipmentSlotManager,
-// KHÔNG còn instance.socketedFormation).
-const weaponSlotState = computed(() => {
-  stateVersion.value
-
-  return gameManager.getSlotState('weapon')
-})
-
-function socketedFormationName(): string | undefined {
-  const socketed = weaponSlotState.value.socketedFormation
-
-  if (!socketed) {
-    return undefined
-  }
-
-  return gameManager.formationRegistry.has(socketed.formationId)
-    ? gameManager.formationRegistry.get(socketed.formationId).name
-    : socketed.formationId
-}
-
-function unsocketFormationFromWeapon() {
-  if (gameManager.unsocketFormation()) {
-    // Trận Pháp cộng modifier qua getAggregatedModifiers() (tính lại
-    // mỗi tick) — đồng bộ ngay ở đây để stat panel phản hồi tức thời
-    // thay vì đợi tick kế tiếp (~200ms, không sai nhưng chậm hơn cần).
-    player.setExternalModifiers(gameManager.getAggregatedModifiers(player.$state))
-    bumpState()
-  }
-}
-
-// Home Hub Phase 5 — Phù Chú áp được lên MỌI slot (không riêng vũ
-// khí như Trận Pháp, xem EquipmentBagSection.vue's filter), badge đối
-// xứng paperdoll__formation-badge nhưng KHÔNG có nút gỡ (Phù Chú hiện
-// không có cơ chế unsocket, xem GameManager.applyTalisman()).
-const talismanNamesBySlot = computed<Record<EquipmentSlot, string[]>>(() => {
-  stateVersion.value
-
-  const result = {} as Record<EquipmentSlot, string[]>
-
-  for (const entry of SLOT_LAYOUT) {
-    result[entry.slot] = gameManager.getSlotState(entry.slot).appliedTalismanIds.map(id =>
-      gameManager.talismanRegistry.has(id) ? gameManager.talismanRegistry.get(id).name : id,
-    )
-  }
-
-  return result
-})
 </script>
 
 <template>
   <div class="paperdoll">
-    <div
-      v-for="entry in SLOT_LAYOUT"
-      :key="entry.slot"
-      class="paperdoll__cell"
-    >
+    <div v-for="entry in SLOT_LAYOUT" :key="entry.slot" class="paperdoll__cell">
       <div class="paperdoll__slot-wrap">
         <SlotView
           class="paperdoll__slot"
           :item="equippedBySlot[entry.slot] ?? null"
           :label="equippedBySlot[entry.slot] ? itemName(equippedBySlot[entry.slot]!) : entry.label"
           :name-segments="nameSegmentsBySlot[entry.slot]"
-          :description="equippedBySlot[entry.slot] ? itemDescription(equippedBySlot[entry.slot]!) : undefined"
+          :description="
+            equippedBySlot[entry.slot] ? itemDescription(equippedBySlot[entry.slot]!) : undefined
+          "
           :quality-rank="qualityRankBySlot[entry.slot]"
           :rarity-rank="rarityRankBySlot[entry.slot]"
           :badges="badgesBySlot[entry.slot]"
@@ -237,19 +184,6 @@ const talismanNamesBySlot = computed<Record<EquipmentSlot, string[]>>(() => {
           :icon="equippedBySlot[entry.slot] ? itemIcon(equippedBySlot[entry.slot]!) : undefined"
           @click="onSlotClick(equippedBySlot[entry.slot])"
         />
-      </div>
-
-      <div
-        v-if="entry.slot === 'weapon' && weaponSlotState.socketedFormation"
-        class="paperdoll__formation-badge"
-      >
-        <span>{{ socketedFormationName() }}</span>
-
-        <button type="button" @click.stop="unsocketFormationFromWeapon">Gỡ</button>
-      </div>
-
-      <div v-if="talismanNamesBySlot[entry.slot].length > 0" class="paperdoll__talisman-badge">
-        <span v-for="name in talismanNamesBySlot[entry.slot]" :key="name">{{ name }}</span>
       </div>
     </div>
   </div>

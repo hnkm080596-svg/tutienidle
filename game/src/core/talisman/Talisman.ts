@@ -1,9 +1,13 @@
-import type { ItemGrade } from '../item/ItemGrade'
+import type { EquipmentSlot } from '../equipment/EquipmentTypes'
+import type { TwoModifiers } from '../equipment/SocketedModifierItem'
+import type { ProfessionGrade } from '../profession/ProfessionGrade'
 
 /**
- * Phù chú — KHÔNG dùng trong combat. Là catalyst tiêu hao khi áp
- * dụng lên 1 EquipmentInstance, mở thêm slot chỉ số phụ rồi roll
- * ngay substat mới lấp vào (xem TalismanSystem.applyToEquipment()).
+ * Phù (2026-08-24, resource-professions-rework §7) — modifier-item gắn
+ * TRÊN EQUIPMENT SLOT (mỗi slot tối đa 1 Phù), cấp ĐÚNG HAI modifier
+ * tĩnh thiên phòng thủ/tiện ích/tài nguyên. KHÔNG còn mở bonusAffixSlots
+ * (hệ Affix trở lại thuộc Luyện Khí). Socket mọi slot qua `allowedSlots`
+ * data; chỉ socket cùng cảnh giới với equipment đang gắn.
  */
 export interface Talisman {
   id: string
@@ -12,14 +16,15 @@ export interface Talisman {
 
   description?: string
 
-  // Path ảnh minh hoạ — khai NGAY TRÊN data item (2026-08-15), xem
-  // ghi chú tương tự trong core/technique/Technique.ts.
   icon?: string
 
-  // Naming-principles pass (2026-08-14) — thay `grade: number` cũ,
-  // xem Pill.ts's ghi chú tương tự.
-  grade: ItemGrade
+  /** Cảnh giới của Phù — socket chỉ khớp equipment cùng realmId. */
+  realmId: string
 
-  // 0~2 — số slot chỉ số phụ mở thêm mỗi lần áp dụng.
-  extraSubstatSlots: number
+  /** Phẩm nghề theo cảnh giới (ProfessionGrade, KHÁC ItemGrade trang bị). */
+  grade: ProfessionGrade
+
+  allowedSlots: readonly EquipmentSlot[]
+
+  modifiers: TwoModifiers
 }

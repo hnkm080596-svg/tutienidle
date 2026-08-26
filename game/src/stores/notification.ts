@@ -1,5 +1,8 @@
 import { defineStore } from 'pinia'
-import type { LootNotificationPresentation, NotificationKind } from '@/core/notification/NotificationEvent'
+import type {
+  LootNotificationPresentation,
+  NotificationKind,
+} from '@/core/notification/NotificationEvent'
 
 export interface ToastItem {
   id: string
@@ -51,9 +54,9 @@ export const useNotificationStore = defineStore('notification', {
     },
 
     dismiss(id: string) {
-      if (!this.toasts.some(toast => toast.id === id)) return
+      if (!this.toasts.some((toast) => toast.id === id)) return
 
-      this.toasts = this.toasts.filter(toast => toast.id !== id)
+      this.toasts = this.toasts.filter((toast) => toast.id !== id)
       this.fillFromQueue()
     },
 

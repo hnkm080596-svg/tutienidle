@@ -1,25 +1,19 @@
 <script setup lang="ts">
-// Đan Phòng (Home Hub Phase 3) — panel khu vực ĐẦU TIÊN, validate
-// pattern "ghép RecipeCraftingView (không sửa) + 1 bag-section" trước
-// khi lặp lại cho Trận Đài/Phù Viện/Khí Đường. Không có pending-target
-// flow (uống pill tức thời, không cần chọn đích).
-import RecipeCraftingView from './RecipeCraftingView.vue'
+// Đan Phòng (2026-08-25) — Luyện Đan qua AlchemyView + túi Đan.
+import AlchemyView from './AlchemyView.vue'
 import PillBagSection from './bag-sections/PillBagSection.vue'
-import BuildingConstructionGate from './BuildingConstructionGate.vue'
 </script>
 
 <template>
-  <BuildingConstructionGate building-id="pill_room">
-    <div class="pill-room">
-      <div class="pill-room__crafting">
-        <RecipeCraftingView result-type="pill" />
-      </div>
-
-      <div class="pill-room__bag">
-        <PillBagSection />
-      </div>
+  <div class="pill-room">
+    <div class="pill-room__crafting">
+      <AlchemyView />
     </div>
-  </BuildingConstructionGate>
+
+    <div class="pill-room__bag">
+      <PillBagSection />
+    </div>
+  </div>
 </template>
 
 <style scoped>

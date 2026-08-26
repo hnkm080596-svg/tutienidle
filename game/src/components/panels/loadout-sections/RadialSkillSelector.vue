@@ -5,13 +5,11 @@ import { useLoadoutActions } from '@/composables/useLoadoutActions'
 import type { Skill } from '@/core/skill/Skill'
 
 // PLAN HOÀN CHỈNH mục 9 — Radial Skill Selection: bấm 1 ô Skill
-// Loadout mở ra 1 vòng tròn các kỹ năng VIABLE (đã học qua Skill Tree,
-// KHÔNG phải đòn cơ bản — isBasicAttack tự chạy theo timer riêng,
-// không set vào Loadout được) xếp quanh tâm, bấm 1 cái để gắn vào
-// slotIndex đang mở. "Viable" ở đây = MỌI skill active đã unlocked
-// (không lọc theo hành/branch cụ thể — SkillManager không phân biệt
-// "thuộc profession nào", chỉ có unlocked hay chưa, đúng kiến trúc
-// Node Tree chung hiện có).
+// Loadout mở ra 1 vòng tròn các kỹ năng VIABLE (đã học qua Skill Tree)
+// xếp quanh tâm, bấm 1 cái để gắn vào slotIndex đang mở. "Viable" ở đây
+// = MỌI skill active đã unlocked — execution policy rework (plan §8.6)
+// KHÔNG còn loại đòn cơ bản riêng vì mọi active đều là loadout skill
+// bình thường.
 const props = defineProps<{ slotIndex: number }>()
 
 const emit = defineEmits<{ close: [] }>()
@@ -24,7 +22,7 @@ const viableSkills = computed<Skill[]>(() => {
   stateVersion.value
 
   return gameManager.skillManager.getAll().filter(
-    skill => skill.type === 'active' && skill.unlocked && !skill.isBasicAttack,
+    skill => skill.type === 'active' && skill.unlocked,
   )
 })
 

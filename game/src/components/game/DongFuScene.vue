@@ -3,31 +3,49 @@
 // nhân vật ngồi xếp bằng tại Linh Nhãn, vòng trận pháp nhẹ dưới chân,
 // linh khí bay chậm quanh — thay nền phẳng #0b0b10 cũ của MainScene.vue.
 //
-// Sprite thật (2026-08-20) — ĐÂY mới là lớp THẬT SỰ hiện ra giữa Động
-// Phủ lúc idle (PhaserCanvas vẽ SAU component này trong DOM nhưng
-// canvas Phaser 0x0/trống lúc mount race, xem PhaserCanvas.vue's ghi
-// chú ResizeObserver — MainScene.ts's sprite vẫn được nối animation
-// thật cho các trường hợp Phaser thật sự vẽ được, nhưng .home-player
-// CSS ở đây mới là thứ người chơi thấy trên thực tế). Cùng cặp atlas
-// idle/cultivate MainScene.ts dùng, đổi theo player.isCultivating.
-import { computed } from 'vue'
+// Trigger command wheel (2026-08-26, dong-fu-command-wheel plan
+// Workstream A/B) — .home-player giờ là NÚT BẮM render PlayerPortrait
+// (PNG tĩnh player-mortal-cultivate-v1 + chuyển động CSS), là trigger
+// DUY NHẤT mở command wheel nhiều tầng. Không còn atlas idle/cultivate
+// qua AtlasSprite ở đây nữa.
+//
+// Art base thật (2026-08-26 — thay thế HOÀN TOÀN nền CSS cũ):
+// thanh-van-dong-fu-base.png cover-fit làm lớp nền chính của Động Phủ.
+// Ảnh nằm TRÊN các div sky/mountains/ground CSS (fallback khi ảnh đang
+// load) và DƯỚI linh nhãn/particle/nhân vật/vignette. Trước đây ảnh này
+// được mount ở Phaser MainScene.ts nhưng bị chính overlay DOM opaque
+// của component này che KÍN (.home-scene position:absolute đè lên canvas
+// static) — giờ DOM là chủ sở hữu duy nhất của background để không duy
+// trì hai pipeline render song song.
 import { useStageActive } from '@/composables/useStageActive'
 import { usePlayerStore } from '@/stores/player'
-import AtlasSprite from '../common/AtlasSprite.vue'
+import { useUiStore } from '@/stores/ui'
+import PlayerPortrait from '../common/PlayerPortrait.vue'
+
+const BASE_IMAGE_URL = '/assets/backgrounds/dong-fu/thanh-van-dong-fu-master-buildings-v1.png'
 
 const stageActive = useStageActive()
+
 const player = usePlayerStore()
 
-const playerAtlasUrl = computed(() => player.isCultivating ? '/assets/cultivate.json' : '/assets/idle.json')
-const playerImageUrl = computed(() => player.isCultivating ? '/assets/cultivate.png' : '/assets/idle.png')
+const ui = useUiStore()
 </script>
 
 <template>
   <div v-if="!stageActive" class="home-scene">
+    <!-- Fallback gradient cũ — chỉ nhìn thấy trong lúc ảnh base đang load. -->
     <div class="home-scene__sky" />
     <div class="home-scene__mountains home-scene__mountains--far" />
     <div class="home-scene__mountains" />
     <div class="home-scene__ground" />
+
+    <img
+      class="home-scene__base"
+      :src="BASE_IMAGE_URL"
+      alt=""
+      draggable="false"
+      decoding="async"
+    />
 
     <div class="home-linhnhan">
       <div class="home-linhnhan__glow" />
@@ -44,10 +62,19 @@ const playerImageUrl = computed(() => player.isCultivating ? '/assets/cultivate.
     </div>
 
     <div class="home-player">
-      <div class="home-player__aura" />
-      <div class="home-player__float">
-        <AtlasSprite :atlas-url="playerAtlasUrl" :image-url="playerImageUrl" :height="239" />
-      </div>
+      <!-- Command wheel trigger (plan Workstream A/B) — ảnh tu luyện
+           PNG tĩnh mới + chuyển động CSS, là trigger DUY NHẤT mở wheel.
+           Nút thật (aria-label/focus-visible) cho bàn phím/touch. -->
+      <button
+        type="button"
+        class="home-player__trigger"
+        :class="{ 'is-wheel-open': ui.isCommandWheelOpen }"
+        aria-label="Mở bảng lệnh Động Phủ"
+        :aria-expanded="ui.isCommandWheelOpen"
+        @click.stop="ui.toggleCommandWheel()"
+      >
+        <PlayerPortrait variant="cultivate" :animated="true" :height="239" />
+      </button>
     </div>
 
     <div class="home-scene__vignette" />
@@ -96,6 +123,19 @@ const playerImageUrl = computed(() => player.isCultivating ? '/assets/cultivate.
   top: 64%;
   background: linear-gradient(180deg, #17161a 0%, #100f11 55%, #0a0909 100%);
   border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+/* ================= Art base Động Phủ (cover-fit, thay nền CSS) ====== */
+/* 1672×941 nguồn — object-fit:cover giữ tỉ lệ, crop phần thừa; nằm
+   TRÊN fallback gradient và DƯỚI mọi lớp nội dung (linh nhãn, motes,
+   player, vignette) theo thứ tự DOM. */
+.home-scene__base {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
 }
 
 .home-scene__vignette {
@@ -177,10 +217,10 @@ const playerImageUrl = computed(() => player.isCultivating ? '/assets/cultivate.
   50% { transform: translate(var(--mx, 14px), var(--my, -18px)); opacity: 0.85; }
 }
 
-/* ================= Nhân vật — ngồi xếp bằng, lơ lửng nhẹ ================= */
-/* width/height tự co theo AtlasSprite bên trong (height=239, xem
-   template) — trước đây fix cứng width:7%/aspect-ratio cho khối robe/
-   head CSS placeholder, giờ không cần nữa. */
+/* ================= Nhân vật — trigger command wheel ================= */
+/* PNG tu luyện mới (player-mortal-cultivate-v1) qua PlayerPortrait —
+   chuyển động float/breathe/aura sống trong component đó; khối này chỉ
+   định vị tâm màn hình và hit target. */
 .home-player {
   position: absolute;
   left: 50%;
@@ -188,27 +228,29 @@ const playerImageUrl = computed(() => player.isCultivating ? '/assets/cultivate.
   transform: translate(-50%, -50%);
 }
 
-.home-player__aura {
-  position: absolute;
-  inset: -30%;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 213, 79, 0.2), transparent 70%);
-  filter: blur(8px);
-  animation: home-breathe 5s ease-in-out infinite;
+/* .home-scene pointer-events:none toàn khối — trigger phải tự bật lại
+   để nhận click/touch mở command wheel. */
+.home-player__trigger {
+  display: block;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  /* .home-scene cố ý bỏ hit-test cho toàn bộ art overlay; trigger là
+     ngoại lệ tương tác duy nhất nên phải bật lại rõ ràng, giống hotspot. */
+  pointer-events: auto;
+  -webkit-tap-highlight-color: transparent;
 }
 
-@keyframes home-breathe {
-  0%, 100% { transform: scale(1); opacity: 0.75; }
-  50% { transform: scale(1.08); opacity: 1; }
+.home-player__trigger:focus-visible {
+  outline: 2px solid var(--gold-500);
+  outline-offset: 4px;
+  border-radius: var(--radius-md);
 }
 
-.home-player__float {
-  position: relative;
-  animation: home-float 6s ease-in-out infinite;
-}
-
-@keyframes home-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4%); }
+/* Khi wheel mở — aura tăng nhẹ (presentation-only). */
+.home-player__trigger.is-wheel-open :deep(.player-portrait__aura) {
+  opacity: 1;
+  scale: 1.08;
 }
 </style>

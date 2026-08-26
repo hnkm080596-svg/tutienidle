@@ -2,8 +2,6 @@ import type { Equipment } from '@/core/equipment/Equipment'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import type { EquipmentSlotState } from '@/core/equipment/EquipmentSlotState'
 import type { AffixRegistry } from '@/core/equipment/AffixRegistry'
-import type { FormationRegistry } from '@/core/formation/FormationRegistry'
-import type { TalismanRegistry } from '@/core/talisman/TalismanRegistry'
 import type { ZoneRegistry } from '@/core/stage/ZoneRegistry'
 import { getEffectiveAffixValue, getMaxForgePoints, GLOBAL_MAX_AFFIXES, MAIN_STAT_REALM_SCALE } from '@/core/equipment/EquipmentSystem'
 import { EQUIPMENT_QUALITY_IMPLICIT_MULTIPLIER } from '@/core/equipment/EquipmentQuality'
@@ -80,8 +78,6 @@ export function buildEquipmentTooltip(
   template: Equipment,
   affixRegistry: AffixRegistry,
   slotState: EquipmentSlotState | null,
-  formationRegistry: FormationRegistry,
-  talismanRegistry: TalismanRegistry,
   zoneRegistry: ZoneRegistry,
   comparedInstance?: EquipmentInstance,
 ): EquipmentTooltipContent {
@@ -145,36 +141,7 @@ export function buildEquipmentTooltip(
     sections.push({ label: 'Rèn', rows: forgeRows })
   }
 
-  // Trận Pháp/Phù Chú gắn theo SLOT (xem ghi chú trên) — CHỈ hiện khi
-  // món này đang thật sự mặc (slotState !== null). socketedFormation
-  // trong thực tế chỉ tồn tại ở slot 'weapon' (FormationSystem.socket()
-  // hardcode 'weapon'), nhưng đọc thẳng slotState thay vì check
-  // instance.slot === 'weapon' để không tự áp đặt luật đó ở đây.
-  const socketRows: { label: string; value: string }[] = []
-
-  if (slotState?.socketedFormation) {
-    const formationId = slotState.socketedFormation.formationId
-
-    socketRows.push({
-      label: 'Trận Pháp',
-
-      value: formationRegistry.has(formationId) ? formationRegistry.get(formationId).name : formationId,
-    })
-  }
-
-  if (slotState && slotState.appliedTalismanIds.length > 0) {
-    socketRows.push({
-      label: 'Phù Chú',
-
-      value: slotState.appliedTalismanIds
-        .map(id => (talismanRegistry.has(id) ? talismanRegistry.get(id).name : id))
-        .join(', '),
-    })
-  }
-
-  if (socketRows.length > 0) {
-    sections.push({ label: 'Trận Pháp & Phù Chú', rows: socketRows })
-  }
+  // Phù/Trận legacy đã khai tử (plan §10.1) — không còn socket rows.
 
   const deltas = comparedInstance && comparedInstance.instanceId !== instance.instanceId
     ? computeEquipmentStatDeltas(instance, comparedInstance, affixRegistry)

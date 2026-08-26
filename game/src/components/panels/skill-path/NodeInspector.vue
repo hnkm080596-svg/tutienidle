@@ -1,15 +1,19 @@
 <script setup lang="ts">
-// PhapTuPanel plan mục 10/17/29 — bottom panel: chi tiết node đang
-// CHỌN (không phải đang hover) + nút mua. ProgressionNode THẬT
-// (core/progression/ProgressionNode.ts) chỉ có 1 `cost` mua 1 lần —
-// KHÔNG có currentLevel/maxLevel như mockup +/- stepper của plan gốc
-// (hệ leveled-node đó chưa từng được xây), nên đây CHỈ có 1 nút "Lĩnh
-// Ngộ", không có +/-.
+// PhapTuPanel plan mục 10/17/29 + node level (combat-skill-flow-element-
+// power-dot-plan.md §6.2) — bottom panel: chi tiết node đang CHỌN + nút
+// mua/nâng cấp. Node nhiều cấp hiển thị `Cấp x/max`, Power nhận mỗi cấp
+// + tổng đang nhận, chi phí cấp kế; nút "Lĩnh Ngộ" ở level 0, "Nâng
+// Cấp" từ level 1, trạng thái "Tối đa" khi đạt maxLevel.
 import { computed } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useLoadoutActions } from '@/composables/useLoadoutActions'
-import { hasPrerequisite } from '@/core/progression/NodeSystem'
+import {
+  getNodeLevel,
+  getNextLevelCost,
+  hasPrerequisite,
+  canUpgradeNode,
+} from '@/core/progression/NodeSystem'
 import { getActiveSkillResourceStats } from '@/core/skill/SkillResourceStatLabels'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 
@@ -19,25 +23,43 @@ const props = defineProps<{
   purchasable: boolean
 }>()
 
-// Skill Node unlock animation (2026-08-21, Plans/SkillNode) — nguồn
-// DUY NHẤT xử lý "player unlock skill node thành công" hiện có
-// (onPurchase() bên dưới) — chỉ thêm đúng 1 emit ngay sau khi
-// purchaseNode() thật sự thành công, KHÔNG đổi gì logic mua/skill
-// point. NodeTreePanel.vue (qua SkillPathPanel.vue) lắng nghe event
-// này để chạy animation connection→node, không tạo hệ thống unlock
-// mới.
 const emit = defineEmits<{ unlocked: [node: ProgressionNode] }>()
 
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
-const { purchaseNode } = useLoadoutActions()
+const { purchaseNode, upgradeNode } = useLoadoutActions()
 
-// Skill rework (2026-08-21) — node cấp "Thế tài nguyên" (Hỏa Thế/Thủy
-// Thế/...) nhắm THẲNG 1 Skill qua node.effect.skillModifiers (không
-// còn CombatEntity.stats chung nữa) — hiện TỔNG hiện tại của skill đó
-// (mọi node đã mua cộng dồn), không chỉ riêng phần node này thêm (đã
-// có trong node.description).
+// Level hiện tại / max / cost cấp kế của node đang chọn.
+const level = computed(() => {
+  stateVersion.value
+
+  return props.node ? getNodeLevel(player.$state, props.node.id) : 0
+})
+
+const maxLevel = computed(() => Math.max(1, props.node?.maxLevel ?? 1))
+
+const nextCost = computed(() => {
+  stateVersion.value
+
+  if (!props.node) {
+    return null
+  }
+
+  return gameManager.getNextNodeCost(props.node.id, player.$state) ?? null
+})
+
+const upgradable = computed(() => {
+  stateVersion.value
+
+  return props.node ? canUpgradeNode(player.$state, props.node) : false
+})
+
+const isMaxed = computed(() => level.value >= maxLevel.value && maxLevel.value > 1)
+
+// Skill rework — node cấp "Thế tài nguyên" nhắm THẲNG 1 Skill qua
+// effect.skillModifiers — hiện TỔNG hiện tại của skill đó (đã gồm phần
+// node suy ra từ getSkillRuntimeStats(player)).
 const affectedSkillStats = computed(() => {
   stateVersion.value
 
@@ -53,17 +75,18 @@ const affectedSkillStats = computed(() => {
 })
 
 // Lý do khoá — thuần suy ra từ hasPrerequisite() đã có (không đụng
-// core), chỉ để hiện gợi ý, KHÔNG phải nguồn sự thật (canPurchaseNode
-// vẫn là nơi quyết định thật ở NodeSystem.ts).
+// core), chỉ để hiện gợi ý, KHÔNG phải nguồn sự thật.
 const lockedReasons = computed(() => {
-  if (!props.node || props.purchased || props.purchasable) {
+  if (!props.node || props.purchased || props.purchasable || level.value >= 1) {
     return []
   }
 
   const reasons: string[] = []
 
-  if (player.skillInsight < props.node.insightCost) {
-    reasons.push(`Cần ${props.node.insightCost} Cảm Ngộ (đang có ${player.skillInsight})`)
+  const cost = nextCost.value ?? props.node.insightCost
+
+  if (player.skillInsight < cost) {
+    reasons.push(`Cần ${cost} Cảm Ngộ (đang có ${player.skillInsight})`)
   }
 
   for (const prereq of props.node.prerequisites ?? []) {
@@ -98,6 +121,14 @@ function onPurchase() {
     emit('unlocked', node)
   }
 }
+
+function onUpgrade() {
+  if (!props.node || !upgradable.value) {
+    return
+  }
+
+  upgradeNode(props.node.id)
+}
 </script>
 
 <template>
@@ -108,17 +139,20 @@ function onPurchase() {
       <div class="node-inspector__header">
         <span class="node-inspector__name">{{ node.name }}</span>
 
+        <!-- Badge `Cấp x/max` cho node nhiều cấp (plan §6.2). -->
+        <span v-if="maxLevel > 1" class="node-inspector__level">{{ level }}/{{ maxLevel }}</span>
+
         <span
           class="node-inspector__state"
           :class="{ 'is-purchased': purchased, 'is-purchasable': !purchased && purchasable }"
         >
-          {{ purchased ? 'Đã Lĩnh Ngộ' : purchasable ? 'Có Thể Lĩnh Ngộ' : 'Chưa Đủ Điều Kiện' }}
+          {{ isMaxed ? 'Tối Đa' : purchased ? 'Đã Lĩnh Ngộ' : purchasable ? 'Có Thể Lĩnh Ngộ' : 'Chưa Đủ Điều Kiện' }}
         </span>
       </div>
 
       <p v-if="node.description" class="node-inspector__desc">{{ node.description }}</p>
 
-      <ul v-if="lockedReasons.length > 0" class="node-inspector__reasons">
+      <ul v-if="lockedReasons.length > 0 && level === 0" class="node-inspector__reasons">
         <li v-for="reason in lockedReasons" :key="reason">{{ reason }}</li>
       </ul>
 
@@ -130,16 +164,32 @@ function onPurchase() {
       </ul>
 
       <div class="node-inspector__actions">
-        <span class="node-inspector__cost">Chi phí: {{ node.insightCost }} Cảm Ngộ</span>
+        <span class="node-inspector__cost">
+          {{ level === 0
+            ? `Chi phí: ${nextCost ?? node.insightCost} Cảm Ngộ`
+            : isMaxed
+              ? 'Đã đạt cấp tối đa.'
+              : `Nâng cấp: ${nextCost} Cảm Ngộ` }}
+        </span>
 
         <button
-          v-if="!purchased"
+          v-if="level === 0"
           type="button"
           class="node-inspector__buy"
           :disabled="!purchasable"
           @click="onPurchase"
         >
           Lĩnh Ngộ
+        </button>
+
+        <button
+          v-else-if="!isMaxed"
+          type="button"
+          class="node-inspector__buy"
+          :disabled="!upgradable"
+          @click="onUpgrade"
+        >
+          Nâng Cấp
         </button>
       </div>
     </template>
@@ -175,6 +225,15 @@ function onPurchase() {
   font-size: 0.9rem;
   font-weight: 700;
   color: var(--gold-500);
+}
+
+/* Badge `Cấp x/max` — node nhiều cấp (plan §6.2). */
+.node-inspector__level {
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--gold-500) 55%, transparent);
+  font-size: var(--text-xs);
+  color: var(--gold-300);
 }
 
 .node-inspector__state {

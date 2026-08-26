@@ -1,8 +1,8 @@
-// StageWaveSystem × spawn telegraph (2026-08-24):
+// StageWaveSystem × spawn telegraph (plan §5.2):
 // - "Còn trên sân" = active enemies + pending spawns → pending chặn
 //   victory sớm VÀ chặn wave sau đặt lịch ồ ạt khi telegraph đang chạy.
-// - Hết chỗ trống → queueEnemySpawn false → HOÃN spawn (spawnedCount
-//   không tăng, retry tick sau), không bao giờ 2 quái chồng ô.
+// - Overlap hợp lệ → queueEnemySpawn LUÔN thành công (void), không còn
+//   nhánh "hết chỗ → hoãn".
 import { describe, expect, it, vi } from 'vitest'
 import { StageWaveSystem, type StageWaveSystemDeps } from './StageWaveSystem'
 import type { Battle, PendingEnemySpawn } from '../battle/Battle'
@@ -39,7 +39,7 @@ function createDeps(battle: Battle) {
     spawnIntervalSeconds: 1,
   }
 
-  const queueEnemySpawn = vi.fn(() => true)
+  const queueEnemySpawn = vi.fn(() => undefined)
 
   const deps: StageWaveSystemDeps = {
     eventBus: {
@@ -120,7 +120,7 @@ describe('StageWaveSystem — pending spawn telegraph', () => {
     expect(active.spawnedCount).toBe(0)
   })
 
-  it('nhịp spawn tới khi telegraph trước còn chạy → vẫn đặt lịch 1 lượt (ô khác, resolver tránh đè)', () => {
+  it('nhịp spawn tới khi telegraph trước còn chạy → vẫn đặt lịch 1 lượt (overlap hợp lệ, plan §5.2)', () => {
     const battle = {
       state: 'fighting',
       enemies: [],
@@ -133,7 +133,7 @@ describe('StageWaveSystem — pending spawn telegraph', () => {
     deps.battleSystem.queueEnemySpawn = vi.fn(() => {
       battle.pendingEnemySpawns.push(createPending(`spawned_${battle.pendingEnemySpawns.length}`))
 
-      return true
+      return undefined
     }) as unknown as StageWaveSystemDeps['battleSystem']['queueEnemySpawn']
 
     active.spawnedCount = 0
@@ -153,7 +153,7 @@ describe('StageWaveSystem — pending spawn telegraph', () => {
     expect(deps.battleSystem.queueEnemySpawn).toHaveBeenCalledTimes(1)
   })
 
-  it('hết chỗ (queue trả false) → hoãn spawn: spawnedCount không tăng, retry tick sau', () => {
+  it('đặt lịch luôn thành công (overlap hợp lệ) → spawnedCount tăng đúng 1 lượt/tick, reset nhịp spawn', () => {
     const battle = {
       state: 'fighting',
       enemies: [],
@@ -161,43 +161,14 @@ describe('StageWaveSystem — pending spawn telegraph', () => {
       pendingSummons: [],
     } as unknown as Battle
 
-    const { deps, active, queueEnemySpawn } = createDeps(battle)
-
-    queueEnemySpawn.mockReturnValue(false)
-
-    active.spawnedCount = 0
-    active.spawnCountdown = 0
-
-    const system = new StageWaveSystem(deps)
-
-    system.update(0.1)
-
-    expect(queueEnemySpawn).toHaveBeenCalledTimes(1)
-    expect(active.spawnedCount).toBe(0)
-
-    // Tick kế: vẫn retry (countdown giữ ≤ 0).
-    system.update(0.1)
-
-    expect(queueEnemySpawn).toHaveBeenCalledTimes(2)
-    expect(active.spawnedCount).toBe(0)
-  })
-
-  it('đặt lịch thành công → spawnedCount tăng đúng 1 lượt/tick, reset nhịp spawn', () => {
-    const battle = {
-      state: 'fighting',
-      enemies: [],
-      pendingEnemySpawns: [],
-      pendingSummons: [],
-    } as unknown as Battle
-
-    const { deps, active, queueEnemySpawn } = createDeps(battle)
+    const { deps, active } = createDeps(battle)
 
     // Mock có side-effect thật: push vào pendingEnemySpawns (giống
     // BattleSystem.queueEnemySpawn) để aliveCount tick kế phản ánh đúng.
     deps.battleSystem.queueEnemySpawn = vi.fn(() => {
       battle.pendingEnemySpawns.push(createPending(`spawned_${battle.pendingEnemySpawns.length}`))
 
-      return true
+      return undefined
     }) as unknown as StageWaveSystemDeps['battleSystem']['queueEnemySpawn']
 
     active.spawnedCount = 0
@@ -218,7 +189,7 @@ describe('StageWaveSystem — pending spawn telegraph', () => {
     expect(active.spawnedCount).toBe(1)
   })
 
-  it('boss summon hết chỗ → giữ lại id trong pendingSummons retry, không mất summon', () => {
+  it('boss summon: mọi id được đặt lịch (overlap hợp lệ), pendingSummons dọn sạch', () => {
     const battle = {
       state: 'fighting',
       enemies: [],
@@ -226,18 +197,13 @@ describe('StageWaveSystem — pending spawn telegraph', () => {
       pendingSummons: ['wolf_1', 'wolf_2'],
     } as unknown as Battle
 
-    const { deps } = createDeps(battle)
-
-    // Lượt gọi đầu thành công, lượt sau hết chỗ.
-    deps.battleSystem.queueEnemySpawn = vi
-      .fn(() => true)
-      .mockReturnValueOnce(true)
-      .mockReturnValue(false) as unknown as StageWaveSystemDeps['battleSystem']['queueEnemySpawn']
+    const { deps, queueEnemySpawn } = createDeps(battle)
 
     const system = new StageWaveSystem(deps)
 
     system.resolveBossSummons()
 
-    expect(battle.pendingSummons).toEqual(['wolf_2'])
+    expect(queueEnemySpawn).toHaveBeenCalledTimes(2)
+    expect(battle.pendingSummons).toEqual([])
   })
 })

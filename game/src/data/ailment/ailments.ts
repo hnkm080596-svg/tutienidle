@@ -93,9 +93,7 @@ export const ailments: AilmentTemplate[] = [
     duration: 4,
     stackMode: 'refresh',
     element: 'earth',
-    statModifiers: [
-      { stat: 'evasionRate', percent: -0.3 },
-    ],
+    statModifiers: [{ stat: 'evasionRate', percent: -0.3 }],
     onHitChance: 0.5,
     onHitAppliesAilmentId: 'choang',
   },
@@ -214,9 +212,7 @@ export const ailments: AilmentTemplate[] = [
     category: 'modifier',
     duration: 5,
     stackMode: 'refresh',
-    statModifiers: [
-      { stat: 'defense', percent: -0.25 },
-    ],
+    statModifiers: [{ stat: 'defense', percent: -0.25 }],
   },
 
   // Uy Áp (Dread) — debuff sát thương gây ra.
@@ -226,9 +222,7 @@ export const ailments: AilmentTemplate[] = [
     category: 'modifier',
     duration: 5,
     stackMode: 'refresh',
-    statModifiers: [
-      { stat: 'attack', percent: -0.2 },
-    ],
+    statModifiers: [{ stat: 'attack', percent: -0.2 }],
   },
 
   // Giáp Rạn (Pháp Tu Kim Tu, 2026-08-15) — "giảm kháng": trừ THẲNG
@@ -243,9 +237,7 @@ export const ailments: AilmentTemplate[] = [
     category: 'modifier',
     duration: 5,
     stackMode: 'refresh',
-    statModifiers: [
-      { stat: 'metalResistance', flat: -15 },
-    ],
+    statModifiers: [{ stat: 'metalResistance', flat: -15 }],
   },
 
   // Vạn Kiếm Vũ (Kiếm Tu, 2026-08-15) — "mưa kiếm 9 giây toàn màn

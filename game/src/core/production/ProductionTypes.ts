@@ -1,0 +1,143 @@
+// ProductionTypes (resource-professions-rework plan §3/§4/§5/§6) —
+// contract của vòng kinh tế mới: Địa Giới → Lâm/Quáng/Động Thiên →
+// MaterialBag → Khí Đường/Đan Phòng. Không còn chuỗi raw→processed,
+// không còn building trung gian.
+//
+// Quy ước tọa độ: realm tier trong Địa Giới dùng TRỰC TIẾP RealmId
+// (mortal/qi_refining/foundation_establishment cho Thanh Vân). Trọng số
+// profile theo "collectionRealmId" snapshot lúc bắt đầu cycle.
+
+export type ProductionSiteKind = 'forest' | 'mine' | 'grotto'
+
+export const PRODUCTION_SITE_KINDS: readonly ProductionSiteKind[] = ['forest', 'mine', 'grotto']
+
+export function isProductionSiteKind(value: unknown): value is ProductionSiteKind {
+  return value === 'forest' || value === 'mine' || value === 'grotto'
+}
+
+/** Phẩm Quáng (plan §5.3) — metadata material, không đổi thời gian cycle. */
+export type OreQuality = 'hoang' | 'huyen' | 'dia' | 'thien' | 'tien'
+
+export const ORE_QUALITIES: readonly OreQuality[] = ['hoang', 'huyen', 'dia', 'thien', 'tien']
+
+export function isOreQuality(value: unknown): value is OreQuality {
+  return (
+    value === 'hoang' || value === 'huyen' || value === 'dia' || value === 'thien' || value === 'tien'
+  )
+}
+
+/** Niên đại Linh Thảo (plan §6.1). */
+export type HerbAge = 'decade' | 'century' | 'millennium' | 'myriad_year'
+
+export const HERB_AGES: readonly HerbAge[] = ['decade', 'century', 'millennium', 'myriad_year']
+
+export function isHerbAge(value: unknown): value is HerbAge {
+  return (
+    value === 'decade' ||
+    value === 'century' ||
+    value === 'millennium' ||
+    value === 'myriad_year'
+  )
+}
+
+/** Cycle đang chạy — mọi kết quả reward CHƯA roll, chỉ snapshot điều kiện (§4.1). */
+export interface ProductionCycle {
+  cycleId: string
+
+  siteId: string
+
+  /** Cảnh giới ĐANG THU THẬP snapshot lúc start — quyết định deadline + profile trọng số. */
+  collectionRealmId: string
+
+  siteLevelAtStart: number
+
+  /** Version bảng reward — bump khi balance data đổi để cycle cũ roll theo bảng cũ. */
+  rewardTableVersion: number
+
+  /** RNG seed — roll toàn bộ reward SAU KHI hoàn thành bằng seed này (§4.1). */
+  rollSeed: number
+
+  startedAtMs: number
+
+  completesAtMs: number
+}
+
+export interface ProductionSiteState {
+  siteId: string
+
+  level: number
+
+  autoRestart: boolean
+
+  activeCycle?: ProductionCycle
+}
+
+/** Một Lâm/Quáng/Động Thiên của Địa Giới (§3.1). */
+export interface ProductionSiteDefinition {
+  siteId: string
+
+  territoryId: string
+
+  kind: ProductionSiteKind
+
+  name: string
+
+  description: string
+
+  maxLevel: number
+
+  /** Chi phí nâng level N → N+1, index = level hiện tại - 1. Gỗ + Linh Thạch. */
+  upgradeCosts: Array<{ woodMaterialId: string; woodAmount: number; spiritStone: number }>
+}
+
+/** Địa Giới (§3.1): đúng một Lâm, một Quáng, một Động Thiên. */
+export interface TerritoryDefinition {
+  id: string
+
+  name: string
+
+  /** Đúng 3 cảnh giới, thứ tự thấp → cao (local tier low/middle/high). */
+  realmIds: readonly [string, string, string]
+
+  productionSiteIds: {
+    forest: string
+
+    mine: string
+
+    grotto: string
+  }
+}
+
+// =========================
+// Reward definitions (§5.2/§5.3/§6.1)
+// =========================
+
+export interface ForestRewardDefinition {
+  materialId: string
+
+  /** Realm tier mà loại gỗ này thuộc về trong Địa Giới. */
+  realmId: string
+
+  amount: number
+}
+
+export interface MineRewardDefinition {
+  materialId: string
+
+  realmId: string
+
+  quality: OreQuality
+
+  amount: number
+}
+
+export interface GrottoHerbDefinition {
+  materialId: string
+
+  realmId: string
+
+  /** Đan phương duy nhất mà thảo này nuôi (§6.1 — mỗi recipe 1 thảo riêng). */
+  pillRecipeId: string
+
+  age: HerbAge
+}

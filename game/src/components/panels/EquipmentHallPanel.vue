@@ -1,997 +1,883 @@
 <script setup lang="ts">
-// Khí Đường (Home Hub Phase 5) — cắt nguyên khối xử lý tab 'artifact'
-// từ CraftingPanel.vue (không viết lại logic, chỉ đổi nơi ở).
-// UI redesign Step 9 (2026-08-20, spec mục 16 "Luyện Khí") — thu gọn
-// về THUẦN màn rèn: bỏ hẳn EquipmentPaperdoll (top 28%) + bag equip-
-// by-click (bottom 22%, EquipmentBagSection cũ) — 2 khối đó là việc
-// "quản lý trang bị đang mặc" (spec mục 11/13), giờ đã có ở Character
-// header (Step 8) + Kho/tab Trang Bị (bag click-to-equip THẬT, xem
-// BagGrid.vue), không cần giữ bản thứ 2 ở đây chỉ để duyệt/mặc đồ.
-// Luồng liên-panel Trận Đài/Phù Viện "chọn 1 trang bị làm đích" cũng
-// dời theo sang Kho (ui.pendingEquipTarget, xem stores/ui.ts + BagGrid.vue)
-// — nó là hành động "chọn đồ đang mặc", không phải rèn. Visual center
-// còn lại của màn này đúng CHỈ còn "Equipment đang rèn" (spec mục 35),
-// tức enhance-view__preview bên dưới — đã nâng cấp icon "chữ cái trong
-// vòng tròn" cũ thành SlotView thật (khung Quality/Phẩm + icon + tooltip
-// đúng chuẩn, khớp mục 34 checklist "Có duplicate ItemSlot không?").
 import { computed, ref } from 'vue'
-import CraftProgress from './CraftProgress.vue'
-import SlotView from '../common/SlotView.vue'
-import BuildingConstructionGate from './BuildingConstructionGate.vue'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useEquipmentActions } from '@/composables/useEquipmentActions'
-import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
-import type { Equipment } from '@/core/equipment/Equipment'
-import { formatNumber } from '@/core/format/NumberFormatter'
-import { EQUIPMENT_QUALITY_IMPLICIT_MULTIPLIER, EQUIPMENT_QUALITY_LABELS } from '@/core/equipment/EquipmentQuality'
-import { ITEM_GRADE_LABELS } from '@/core/item/ItemGrade'
+import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
+import {
+  WASH_ORE_AMOUNT,
+  WASH_REFINEMENT_COST,
+  WASH_SPIRIT_STONE_COST,
+  REFINE_REFINEMENT_COST,
+  REFINE_SPIRIT_STONE_PER_UNIT,
+  equipmentEssenceMaterialId,
+} from '@/core/equipment/RefinementBalance'
+import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import type { EquipmentSlot } from '@/core/equipment/EquipmentTypes'
-import { EQUIPMENT_SLOT_LABELS } from '@/core/equipment/EquipmentTypes'
-import { EQUIPMENT_SLOTS } from '@/core/equipment/EquipmentSlotState'
-import type { StatType } from '@/core/stats/StatTypes'
-import { calculateEquipmentScale, getMaxForgePoints } from '@/core/equipment/EquipmentSystem'
-import { composeEquipmentDisplayName } from '@/core/equipment/EquipmentNaming'
-import { equipmentQualityRank, itemGradeRank } from '@/composables/slots/normalizeSlotRank'
-import type { SlotBadge } from '@/components/common/SlotTypes'
 
-type OperationId = 'enhance' | 'wash' | 'refine' | 'forge' | 'upgradeQuality' | 'upgradeRealm' | 'addAffix' | 'upgradeAffixTier'
+// Khí Đường (2026-08-25, resource-professions-rework plan §7/§9.2) —
+// bốn tab ĐÚNG contract: Cường Hóa (slot), Tẩy Luyện (identity substat
+// theo phẩm Quáng), Tinh Luyện (±20% giá trị + khóa dòng N+L), Hóa
+// Luyện (destructive → Tinh Hoa, batch all-or-nothing).
+const TABS = [
+  { id: 'enhance', label: 'Cường Hóa' },
+  { id: 'wash', label: 'Tẩy Luyện' },
+  { id: 'refine', label: 'Tinh Luyện' },
+  { id: 'dissolve', label: 'Hóa Luyện' },
+] as const
 
-// Equipment Rework (2026-08-14) — Tinh Luyện đổi mục tiêu (reroll
-// Implicit thay vì tăng level, xem EquipmentSystem.refine()) và thêm
-// Rèn (forgePoints — đầu tư sức mạnh deterministic, thay vai trò cũ
-// của refineLevel). costKey của 'forge' chỉ dùng để tra tên hiển thị —
-// chi phí THẬT lấy qua gameManager.getForgeCost() (scale theo
-// forgePoints hiện tại), giống hệt cách 'enhance' đã làm với
-// getEnhanceCost() bên dưới.
-const OPERATIONS: { id: OperationId; label: string; costKey: keyof Equipment }[] = [
-  { id: 'enhance', label: 'Cường Hóa', costKey: 'enhanceCost' },
-  { id: 'wash', label: 'Tẩy Luyện', costKey: 'washCost' },
-  { id: 'refine', label: 'Tinh Luyện', costKey: 'refineCost' },
-  { id: 'forge', label: 'Rèn', costKey: 'forgeCost' },
-  { id: 'upgradeQuality', label: 'Nâng Phẩm', costKey: 'upgradeQualityCost' },
-  { id: 'upgradeRealm', label: 'Nâng Cảnh Giới', costKey: 'upgradeRealmCost' },
-  { id: 'addAffix', label: 'Thêm Dòng', costKey: 'addAffixCost' },
-  { id: 'upgradeAffixTier', label: 'Nâng Cấp Dòng', costKey: 'upgradeAffixCost' },
-]
-
-// BUILDing spec mục 8/10 — Cường Hóa gắn theo SLOT (EquipmentSlotState,
-// xem ghi chú "MASTER SPEC Mục XVI" ở đó), KHÔNG theo item cụ thể —
-// đổi trang bị trong slot không mất cấp đã cường hóa. Vì vậy picker
-// của thao tác này phải là CHỌN SLOT (rồi tự resolve item đang trang
-// bị ở đó), không phải chọn thẳng 1 item trong túi như 6 thao tác còn
-// lại (wash/refine/upgradeQuality/upgradeRealm/addAffix/
-// upgradeAffixTier — tất cả đều sửa field NẰM TRÊN EquipmentInstance,
-// xem EquipmentInstance.ts, nên phải tháo ra khỏi slot trước — spec
-// mục 10 "Item đang trang bị phải tháo trước").
-const SLOT_SCOPED_OPERATIONS: OperationId[] = ['enhance']
-
-const STAT_DISPLAY_NAMES: Partial<Record<StatType, string>> = {
-  attack: 'Công kích',
-  defense: 'Phòng ngự',
-  maxHp: 'Khí huyết',
-  maxMp: 'Linh lực',
-  attackSpeed: 'Tốc đánh',
-  criticalRate: 'Tỉ lệ bạo kích',
-  criticalDamage: 'ST bạo kích',
-  dexterity: 'Thân Pháp',
-  vitality: 'Thể Chất',
-  strength: 'Căn Cốt',
-  intelligence: 'Thần Thức',
-  attunement: 'Linh Căn',
-}
-
-function statLabel(stat: StatType): string {
-  return STAT_DISPLAY_NAMES[stat] ?? stat
-}
+type TabId = (typeof TABS)[number]['id']
 
 const player = usePlayerStore()
+
 const gameManager = useGameManager()
+
 const { stateVersion, bumpState } = useStateVersion()
-const equipmentActions = useEquipmentActions()
 
-// Phân Giải nhận một instance chưa trang bị, xoá khỏi bag và trả Bụi Cốt.
-// Tách khỏi OPERATIONS vì đây là hành động huỷ item, không nâng cấp item.
-const smeltInstanceId = ref<string | null>(null)
-const smeltStatus = ref<'idle' | 'success' | 'failure'>('idle')
+const { enhance, wash, refine, dissolve } = useEquipmentActions()
 
-const smeltableInstances = computed(() => {
-  stateVersion.value
+const activeTab = ref<TabId>('enhance')
 
-  return gameManager.equipmentBag.getAll().filter(instance => !instance.equipped)
-})
-
-function smeltInstanceName(instanceId: string): string {
-  const instance = gameManager.equipmentBag.get(instanceId)
-
-  if (!instance) {
-    return instanceId
-  }
-
-  return composeEquipmentDisplayName(
-    instance,
-    gameManager.equipmentRegistry.get(instance.itemId),
-    gameManager.zoneRegistry,
-  )
+function switchTab(tab: TabId) {
+  activeTab.value = tab
 }
 
-const canSmelt = computed(() => {
-  stateVersion.value
+// =========================
+// Dữ liệu chung — slot đang mặc + bag
+// =========================
 
-  return smeltInstanceId.value !== null && gameManager.canSmeltEquipment(smeltInstanceId.value)
-})
+interface EquippedRow {
+  instanceId: string
 
-function smelt() {
-  if (!smeltInstanceId.value) {
-    return
-  }
+  slot: EquipmentSlot
 
-  const result = gameManager.smeltEquipment(smeltInstanceId.value)
+  name: string
 
-  smeltStatus.value = result ? 'success' : 'failure'
+  realmId: string
 
-  if (result) {
-    smeltInstanceId.value = null
-    bumpState()
-  }
+  quality: string
+
+  affixCount: number
 }
 
-const canRefineBuiCot = computed(() => {
+const equippedRows = computed<EquippedRow[]>(() => {
   stateVersion.value
 
-  return gameManager.canRefineBuiCot(player.$state)
+  return gameManager.equipmentBag.getEquipped().map((instance) => {
+    const template = gameManager.equipmentRegistry.get(instance.itemId)
+
+    return {
+      instanceId: instance.instanceId,
+
+      slot: instance.slot,
+
+      name: template?.name ?? instance.itemId,
+
+      realmId: instance.realmId,
+
+      quality: instance.quality,
+
+      affixCount: instance.affixes.length,
+    }
+  })
 })
 
-function refineBuiCot() {
-  if (gameManager.refineBuiCot(player.$state)) {
-    bumpState()
-  }
-}
-
-// refiningInstanceId (spec mục 12-13 "Function Slot") — item đã chọn
-// GIỮ NGUYÊN qua nhiều lượt Tinh/Tẩy Luyện liên tiếp (không phải chọn
-// lại mỗi lần), chỉ đổi khi người chơi tự chọn item khác hoặc rời
-// panel (component unmount, ref mất theo). Không cần MOVE item khỏi
-// EquipmentBag thật sự (đây vốn đã là container DUY NHẤT cho cả "còn
-// trong túi" lẫn "đang trang bị", equip chỉ là boolean flag — xem
-// EquipmentSystem.equip()) — persistence chỉ cần KHÔNG tự clear ref.
 const selectedInstanceId = ref<string | null>(null)
 
-// Slot picker riêng cho Cường Hóa (xem SLOT_SCOPED_OPERATIONS).
-const selectedSlot = ref<EquipmentSlot | null>(null)
-
-const selectedOperation = ref<OperationId | null>(null)
-const lastStatus = ref<'idle' | 'success' | 'failure'>('idle')
-
-const selectedAffixIndex = ref<number | null>(null)
-
-// Processing lock (spec mục 17-19) — mọi thao tác artifact đều đi qua
-// 1 độ trễ ngắn có khoá UI, dù mutation nền vẫn đồng bộ/tức thời.
-const ACTION_DURATION_MS = 1000
-const isProcessing = ref(false)
-
-const ownedEquipment = computed(() => {
-  stateVersion.value
-
-  return gameManager.equipmentBag.getAll()
-})
-
-const isSlotScopedOperation = computed(
-  () => selectedOperation.value !== null && SLOT_SCOPED_OPERATIONS.includes(selectedOperation.value),
+const selectedRow = computed(
+  () => equippedRows.value.find((row) => row.instanceId === selectedInstanceId.value) ?? null,
 )
 
-const equippedInSelectedSlot = computed(() => {
+// =========================
+// Điểm Rèn PER-ITEM (rework 2026-08-26) = "Tình trạng rèn" trong
+// tooltip — forgePoints / getMaxForgePoints(quality, forgePotential).
+// Tẩy/Tinh Luyện tiêu thụ ngân sách này của CHÍNH món đồ.
+// =========================
+
+import { getMaxForgePoints } from '@/core/equipment/EquipmentSystem'
+
+const itemRenState = computed<{ points: number; max: number } | null>(() => {
   stateVersion.value
 
-  if (!selectedSlot.value) {
+  if (!selectedInstanceId.value) {
     return null
   }
 
-  return ownedEquipment.value.find(instance => instance.slot === selectedSlot.value && instance.equipped) ?? null
-})
+  const instance = gameManager.equipmentBag.get(selectedInstanceId.value)
 
-const selectedInstance = computed(() =>
-  isSlotScopedOperation.value
-    ? equippedInSelectedSlot.value
-    : ownedEquipment.value.find(instance => instance.instanceId === selectedInstanceId.value) ?? null,
-)
-
-// spec mục 10 — item ĐANG trang bị phải tháo trước khi Tinh/Tẩy
-// Luyện/Nâng Phẩm/Nâng Cảnh Giới/Affix (những field NẰM TRÊN
-// EquipmentInstance, xem ghi chú SLOT_SCOPED_OPERATIONS phía trên).
-// Cường Hóa KHÔNG áp dụng — slot-scoped, item equipped hay không
-// không quan trọng.
-const requiresUnequipFirst = computed(
-  () => !isSlotScopedOperation.value && selectedInstance.value?.equipped === true,
-)
-
-const selectedSlotState = computed(() => {
-  stateVersion.value
-
-  return selectedInstance.value ? gameManager.getSlotState(selectedInstance.value.slot) : null
-})
-
-// Tooltip THẬT cho preview (thay hộp "chữ cái trong vòng tròn" cũ,
-// không có tooltip nào cả) — cùng công thức buildEquipmentTooltip mà
-// EquipmentPaperdoll.vue/EquipmentBagSection.vue đang dùng, slotState
-// chỉ có ý nghĩa khi item ĐANG trang bị (y hệt pattern trong
-// EquipmentBagSection.vue's cells computed).
-const previewTooltip = computed(() => {
-  stateVersion.value
-
-  if (!selectedInstance.value) {
-    return undefined
+  if (!instance) {
+    return null
   }
 
-  return buildEquipmentTooltip(
-    selectedInstance.value,
-    gameManager.equipmentRegistry.get(selectedInstance.value.itemId),
-    gameManager.affixRegistry,
-    selectedInstance.value.equipped ? gameManager.getSlotState(selectedInstance.value.slot) : null,
-    gameManager.formationRegistry,
-    gameManager.talismanRegistry,
-    gameManager.zoneRegistry,
-  )
+  return {
+    points: gameManager.itemRefinementPoints(instance),
+
+    max: getMaxForgePoints(instance.quality, instance.forgePotential),
+  }
 })
 
-// Slot Revamp (mục 17.7) — Quality/Rarity rank + badge Cường Hóa giờ
-// do SlotView tự vẽ CSS, thay `.enhance-view__level-badge` absolute-
-// position bên ngoài slot cũ.
-const previewQualityRank = computed(() => (selectedInstance.value ? equipmentQualityRank(selectedInstance.value.quality) : undefined))
+function selectEquipped(instanceId: string) {
+  selectedInstanceId.value = instanceId
 
-const previewRarityRank = computed(() => (selectedInstance.value ? itemGradeRank(selectedInstance.value.rarity) : undefined))
+  lockedIndices.value = []
+}
 
-const previewBadges = computed<SlotBadge[]>(() => {
-  const level = selectedSlotState.value?.enhanceLevel ?? 0
-
-  return level > 0 ? [{ kind: 'enhance', text: `+${level}` }] : []
-})
-
-const artifactMaterials = computed(() => {
-  // BẮT BUỘC đọc trực tiếp stateVersion.value ở đây (không chỉ qua
-  // selectedInstance/selectedSlotState) — 2 computed đó trả về THẲNG
-  // object bị mutate-in-place, Vue coi "giá trị không đổi" (cùng
-  // reference) và KHÔNG re-run computed phụ thuộc dù state đã đổi
-  // thật (vd sau addAffix/upgradeAffixTier trừ nguyên liệu).
+/** Chọn ore cùng realm cho Tẩy Luyện — chỉ hiện stack người chơi có. */
+const oreChoices = computed(() => {
   stateVersion.value
 
-  if (!selectedInstance.value || !selectedOperation.value) {
+  if (!selectedRow.value) {
     return []
   }
 
-  const template = gameManager.equipmentRegistry.get(selectedInstance.value.itemId)
+  const prefix = `${selectedRow.value.realmId}_ore_`
 
-  const operation = OPERATIONS.find(op => op.id === selectedOperation.value)!
+  return gameManager.materialBag
+    .getAll()
+    .filter((stack) => stack.material.id.startsWith(prefix))
+    .map((stack) => ({
+      materialId: stack.material.id,
 
-  const cost = operation.id === 'enhance'
-    ? gameManager.getEnhanceCost(selectedInstance.value.instanceId)
-    : operation.id === 'forge'
-      ? gameManager.getForgeCost(selectedInstance.value.instanceId)
-      : (template[operation.costKey] as Equipment['enhanceCost']) ?? []
+      name: stack.material.name,
 
-  return cost.map(entry => ({
-    key: entry.materialId,
+      owned: stack.amount,
+    }))
+})
 
-    label: gameManager.materialRegistry.has(entry.materialId)
-      ? gameManager.materialRegistry.get(entry.materialId).name
-      : entry.materialId,
+const selectedOreId = ref<string | null>(null)
 
-    owned: gameManager.materialBag.getAmount(entry.materialId),
+// =========================
+// Tab Cường Hóa
+// =========================
 
-    required: entry.amount,
+interface EnhanceSlotRow {
+  slot: EquipmentSlot
+
+  itemName: string
+
+  enhanceLevel: number
+
+  maxLevel: number
+
+  costs: Array<{ materialId: string; amount: number; owned: number }>
+
+  spiritStone: number
+}
+
+const enhanceRows = computed<EnhanceSlotRow[]>(() => {
+  stateVersion.value
+
+  // Slot-level rework (yêu cầu 2026-08-26): Cường Hóa gắn SLOT —
+  // slot TRỐNG vẫn hiện trần/cost và nâng được; realmId lấy theo người
+  // chơi hiện hành để resolve catalog nghề.
+  const realmId = player.$state.realmId
+
+  return gameManager.getAllSlotStates().map((slotState) => {
+    const equipped = gameManager.equipmentBag.getEquippedInSlot(slotState.slot)
+
+    const costs = gameManager.getEnhanceCost(slotState.slot, realmId).map((entry) => ({
+      materialId: entry.materialId,
+
+      amount: entry.amount,
+
+      owned: gameManager.materialBag.getAmount(entry.materialId),
+    }))
+
+    const spiritStone = gameManager.getEnhanceSpiritStoneCost(slotState.slot, realmId)
+
+    const maxLevel = gameManager.getSlotMaxEnhanceLevel(slotState.slot, realmId)
+
+    return {
+      slot: slotState.slot,
+
+      itemName: equipped
+        ? gameManager.getEquipmentTemplate(equipped.itemId)?.name ?? equipped.itemId
+        : '— trống (vẫn cường hóa được) —',
+
+      enhanceLevel: slotState.enhanceLevel,
+
+      maxLevel,
+
+      costs,
+
+      spiritStone,
+    }
+  })
+})
+
+function canEnhance(row: EnhanceSlotRow): boolean {
+  return (
+    row.enhanceLevel < row.maxLevel &&
+    row.costs.every((cost) => cost.owned >= cost.amount) &&
+    spiritStoneOwned.value >= row.spiritStone
+  )
+}
+
+function doEnhance(row: EnhanceSlotRow) {
+  enhance(row.slot)
+}
+
+// =========================
+// Tab Tẩy Luyện
+// =========================
+
+function canWash(): boolean {
+  const ren = itemRenState.value
+
+  return (
+    selectedRow.value !== null &&
+    selectedOreId.value !== null &&
+    ren !== null &&
+    gameManager.materialBag.getAmount(selectedOreId.value) >= WASH_ORE_AMOUNT &&
+    ren.points >= WASH_REFINEMENT_COST &&
+    spiritStoneOwned.value >= WASH_SPIRIT_STONE_COST
+  )
+}
+
+function doWash() {
+  if (!selectedRow.value || !selectedOreId.value) {
+    return
+  }
+
+  wash(selectedRow.value.instanceId, selectedOreId.value)
+}
+
+// =========================
+// Tab Tinh Luyện — khóa dòng (§7.4)
+// =========================
+
+const selectedAffixes = computed(() => {
+  stateVersion.value
+
+  if (!selectedInstanceId.value) {
+    return []
+  }
+
+  const instance = gameManager.equipmentBag.get(selectedInstanceId.value)
+
+  if (!instance) {
+    return []
+  }
+
+  return instance.affixes.map((rolled, index) => ({
+    index,
+
+    label: gameManager.affixRegistry.has(rolled.affixId)
+      ? rolled.affixId
+      : rolled.affixId,
+
+    tier: rolled.tier,
   }))
 })
 
-const statPreviewRows = computed(() => {
+const lockedIndices = ref<number[]>([])
+
+function toggleLock(index: number) {
+  const position = lockedIndices.value.indexOf(index)
+
+  if (position >= 0) {
+    lockedIndices.value.splice(position, 1)
+  } else if (lockedIndices.value.length < 3) {
+    // Không cho khóa toàn bộ: tối đa N-1 (và ≤3).
+    if (lockedIndices.value.length + 1 < selectedAffixes.value.length) {
+      lockedIndices.value.push(index)
+    }
+  }
+}
+
+const refineEssenceUnits = computed(
+  () => (selectedAffixes.value.length || 0) + lockedIndices.value.length,
+)
+
+// Plan Workstream F — số dư Linh Thạch đọc từ MaterialBag.
+const spiritStoneOwned = computed(() => {
   stateVersion.value
 
-  if (!selectedInstance.value || !selectedSlotState.value) {
-    return []
-  }
-
-  const instance = selectedInstance.value
-
-  const enhanceLevel = selectedSlotState.value.enhanceLevel
-
-  const currentScale = calculateEquipmentScale(enhanceLevel, instance.forgePoints)
-
-  // Tinh Luyện (refine) giờ reroll Implicit thay vì tăng scale — không
-  // còn before/after xác định trước để hiện (kết quả ngẫu nhiên trong
-  // range), nên KHÔNG nằm trong nhánh tính afterScale này nữa.
-  const afterScale = selectedOperation.value === 'enhance'
-    ? calculateEquipmentScale(enhanceLevel + 1, instance.forgePoints)
-    : selectedOperation.value === 'forge'
-      ? calculateEquipmentScale(enhanceLevel, instance.forgePoints + 1)
-      : currentScale
-
-  const mainRow = {
-    stat: instance.mainStat.stat,
-
-    label: `${statLabel(instance.mainStat.stat)} (Implicit)`,
-
-    current: Math.round((instance.mainStat.flat ?? 0) * currentScale * 10) / 10,
-
-    after: Math.round((instance.mainStat.flat ?? 0) * afterScale * 10) / 10,
-
-    affixIndex: null as number | null,
-
-    isExalted: false,
-  }
-
-  const affixRows = instance.affixes.map((rolled, index) => {
-    const affix = gameManager.affixRegistry.get(rolled.affixId)
-
-    const kindLabel = affix.kind === 'prefix' ? 'Tiền Tố' : 'Hậu Tố'
-
-    return {
-      stat: affix.stat,
-
-      label: `${statLabel(affix.stat)} (${kindLabel} T${rolled.tier})`,
-
-      current: Math.round(rolled.value * currentScale * 10) / 10,
-
-      after: Math.round(rolled.value * afterScale * 10) / 10,
-
-      affixIndex: index,
-
-      // Exalted Affix (Equipment Rework mục 2) — affix bonus roll từ
-      // pool 'supreme' của rarity thien_duyen, tô nổi bật riêng trong
-      // stat list (--affix-exalted, xem assets/theme.css).
-      isExalted: affix.pool === 'supreme',
-    }
-  })
-
-  return [mainRow, ...affixRows]
+  return gameManager.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)
 })
 
-// Tinh Luyện giờ reroll Implicit (random trong range) thay vì tăng
-// scale deterministic — không có before/after cố định để hiện (xem
-// statPreviewRows), thay bằng gợi ý khoảng roll sẽ rơi vào.
-const refineRollRangeHint = computed(() => {
-  if (selectedOperation.value !== 'refine' || !selectedInstance.value) {
-    return null
+const refineEssenceOwned = computed(() => {
+  stateVersion.value
+
+  if (!selectedRow.value) {
+    return 0
   }
 
-  const template = gameManager.equipmentRegistry.get(selectedInstance.value.itemId)
+  return gameManager.materialBag.getAmount(equipmentEssenceMaterialId(selectedRow.value.realmId))
+})
 
-  const scale = calculateEquipmentScale(
-    selectedSlotState.value?.enhanceLevel ?? 0,
-    selectedInstance.value.forgePoints,
+function canRefine(): boolean {
+  const ren = itemRenState.value
+
+  return (
+    selectedAffixes.value.length > 0 &&
+    lockedIndices.value.length < selectedAffixes.value.length &&
+    refineEssenceOwned.value >= refineEssenceUnits.value &&
+    spiritStoneOwned.value >= refineEssenceUnits.value * REFINE_SPIRIT_STONE_PER_UNIT &&
+    ren !== null &&
+    ren.points >= REFINE_REFINEMENT_COST
   )
-
-  const qualityMultiplier = EQUIPMENT_QUALITY_IMPLICIT_MULTIPLIER[selectedInstance.value.quality]
-
-  const range = template.mainStats.find(candidate => candidate.stat === selectedInstance.value!.mainStat.stat)
-  if (!range) return 'Không tìm thấy khoảng chỉ số chính.'
-
-  const min = Math.round(range.min * qualityMultiplier * scale)
-
-  const max = Math.round(range.max * qualityMultiplier * scale)
-
-  return `${statLabel(range.stat)} sẽ roll lại trong khoảng ${min} – ${max}`
-})
-
-const artifactCanExecute = computed(() => {
-  if (isProcessing.value || !selectedInstance.value || !selectedOperation.value) {
-    return false
-  }
-
-  if (requiresUnequipFirst.value) {
-    return false
-  }
-
-  if (selectedOperation.value === 'upgradeAffixTier' && selectedAffixIndex.value === null) {
-    return false
-  }
-
-  return artifactMaterials.value.every(material => material.owned >= material.required)
-})
-
-function selectArtifactRecipe(id: string) {
-  selectedOperation.value = id as OperationId
-
-  selectedAffixIndex.value = null
-
-  lastStatus.value = 'idle'
 }
 
-function selectAffixRow(affixIndex: number | null) {
-  if (selectedOperation.value !== 'upgradeAffixTier' || affixIndex === null) {
+function doRefine() {
+  if (!selectedRow.value) {
     return
   }
 
-  selectedAffixIndex.value = affixIndex
+  refine(selectedRow.value.instanceId, [...lockedIndices.value])
 }
 
-function executeArtifact() {
-  if (!artifactCanExecute.value || !selectedInstance.value || !selectedOperation.value) {
+// =========================
+// Tab Hóa Luyện (§7.5) — filter + multi-select + preview + confirm
+// =========================
+
+interface DissolveCandidate {
+  instanceId: string
+
+  name: string
+
+  slotLabel: string
+
+  quality: string
+
+  realmId: string
+}
+
+const dissolveCandidates = computed<DissolveCandidate[]>(() => {
+  stateVersion.value
+
+  void nowTick.value
+
+  return gameManager.equipmentBag
+    .getAll()
+    .filter((instance) => !instance.equipped && !instance.locked && !instance.favorite)
+    .filter((instance) => passesDissolveFilter(instance))
+    .map((instance) => {
+      const template = gameManager.getEquipmentTemplate(instance.itemId)
+
+      return {
+        instanceId: instance.instanceId,
+
+        name: template?.name ?? instance.itemId,
+
+        slotLabel: instance.slot,
+
+        quality: instance.quality,
+
+        realmId: instance.realmId,
+      }
+    })
+})
+
+// Tick nhẹ để preview cập nhật khi selection đổi (computed phụ thuộc
+// stateVersion là chính).
+const nowTick = ref(0)
+
+const dissolveFilterRealm = ref<string>('any')
+
+const dissolveFilterQuality = ref<string>('any')
+
+function passesDissolveFilter(instance: EquipmentInstance): boolean {
+  if (dissolveFilterRealm.value !== 'any' && instance.realmId !== dissolveFilterRealm.value) {
+    return false
+  }
+
+  if (
+    dissolveFilterQuality.value !== 'any' &&
+    instance.rarity !== dissolveFilterQuality.value
+  ) {
+    return false
+  }
+
+  return true
+}
+
+const dissolveSelected = ref<Set<string>>(new Set())
+
+function toggleDissolve(instanceId: string) {
+  const next = new Set(dissolveSelected.value)
+
+  if (next.has(instanceId)) {
+    next.delete(instanceId)
+  } else {
+    next.add(instanceId)
+  }
+
+  dissolveSelected.value = next
+}
+
+/**
+ * Chọn TẤT CẢ candidate đang qua filter hiện hành (yêu cầu "hóa luyện
+ * toàn bộ/theo filter") — an toàn vì candidates đã loại equipped/locked/
+ * favorite ở computed nguồn.
+ */
+function selectAllDissolveByFilter() {
+  dissolveSelected.value = new Set(dissolveCandidates.value.map((candidate) => candidate.instanceId))
+}
+
+function clearDissolveSelection() {
+  dissolveSelected.value = new Set()
+}
+
+const dissolvePreview = computed(() => {
+  stateVersion.value
+
+  return gameManager.previewDissolveRewards(Array.from(dissolveSelected.value))
+})
+
+const dissolveConfirming = ref(false)
+
+function doDissolve() {
+  if (dissolveSelected.value.size === 0) {
     return
   }
 
-  const instanceId = selectedInstance.value.instanceId
-  const operation = selectedOperation.value
-  const affixIndex = selectedAffixIndex.value
+  if (!dissolveConfirming.value) {
+    dissolveConfirming.value = true
 
-  isProcessing.value = true
+    return
+  }
 
-  // spec mục 17-19 — khoá UI trong lúc "xử lý" dù mutation nền vẫn
-  // đồng bộ; chặn double-click/đổi item/đổi thao tác giữa chừng qua
-  // :disabled trong template (artifactCanExecute/isProcessing).
-  window.setTimeout(() => {
-    let ok: boolean
+  if (dissolve(Array.from(dissolveSelected.value))) {
+    dissolveSelected.value = new Set()
 
-    switch (operation) {
-      case 'enhance':
-        ok = equipmentActions.enhance(instanceId)
-        break
+    nowTick.value += 1
+  }
 
-      case 'wash':
-        ok = equipmentActions.wash(instanceId)
-        break
-
-      case 'refine':
-        ok = equipmentActions.refine(instanceId)
-        break
-
-      case 'forge':
-        ok = equipmentActions.forge(instanceId)
-        break
-
-      case 'upgradeQuality':
-        ok = equipmentActions.upgradeQuality(instanceId)
-        break
-
-      case 'upgradeRealm':
-        ok = equipmentActions.upgradeRealm(instanceId)
-        break
-
-      case 'addAffix':
-        ok = equipmentActions.addAffix(instanceId)
-        break
-
-      case 'upgradeAffixTier':
-        ok = affixIndex !== null && equipmentActions.upgradeAffixTier(instanceId, affixIndex)
-        break
-    }
-
-    if (ok) {
-      selectedAffixIndex.value = null
-    }
-
-    lastStatus.value = ok ? 'success' : 'failure'
-
-    isProcessing.value = false
-  }, ACTION_DURATION_MS)
+  dissolveConfirming.value = false
 }
-
 </script>
 
 <template>
-  <BuildingConstructionGate building-id="equipment_hall">
-    <div class="equipment-hall">
-      <div class="enhance-view">
-        <div class="enhance-view__preview">
-          <div class="enhance-view__icon-wrap">
-            <SlotView
-              class="enhance-view__icon"
-              :item="selectedInstance"
-              :quality-rank="previewQualityRank"
-              :rarity-rank="previewRarityRank"
-              :badges="previewBadges"
-              :icon="selectedInstance ? (selectedInstance.icon ?? gameManager.equipmentRegistry.get(selectedInstance.itemId).icon) : undefined"
-              :tooltip="previewTooltip"
-            />
-          </div>
+  <div class="qi-hall">
+    <header class="qi-hall__points">
+      <template v-if="itemRenState !== null">
+        <span>
+          Tình trạng rèn món đang chọn:
+          {{ itemRenState.points }}/{{ itemRenState.max }}
+        </span>
 
-          <p class="enhance-view__name">
-            {{ selectedInstance ? gameManager.equipmentRegistry.get(selectedInstance.itemId).name : 'Chưa chọn trang bị' }}
-          </p>
+        <small class="qi-hall__points-hint">
+          Điểm Rèn gắn với từng món đồ (cùng ngân sách với Rèn +power) — cạn là hết phát triển.
+        </small>
+      </template>
 
-          <p v-if="selectedInstance" class="enhance-view__quality">
-            {{ EQUIPMENT_QUALITY_LABELS[selectedInstance.quality] }}
-          </p>
+      <span v-else>Chọn một trang bị để xem Tình trạng rèn của nó</span>
+    </header>
 
-          <p v-if="selectedInstance" class="enhance-view__rarity" :style="{ color: `var(--grade-${selectedInstance.rarity})` }">
-            {{ ITEM_GRADE_LABELS[selectedInstance.rarity] }}
-          </p>
+    <nav class="qi-hall__tabs">
+      <button
+        v-for="tab in TABS"
+        :key="tab.id"
+        type="button"
+        :class="{ 'is-active': activeTab === tab.id }"
+        @click="switchTab(tab.id)"
+      >
+        {{ tab.label }}
+      </button>
+    </nav>
 
-          <div v-if="selectedInstance" class="enhance-view__potential">
-            <div class="enhance-view__potential-bar">
-              <div class="enhance-view__potential-fill" :style="{ width: `${selectedInstance.forgePotential}%` }" />
-            </div>
-            <span class="enhance-view__potential-label">Tiềm Năng Rèn {{ selectedInstance.forgePotential }}/100</span>
-          </div>
+    <!-- ===== CƯỜNG HÓA (slot-level, §7.1) ===== -->
+    <section v-if="activeTab === 'enhance'" class="qi-hall__body">
+      <p class="qi-hall__hint">Cường Hóa gắn với SLOT — đổi trang bị không mất cấp.</p>
 
-          <div v-if="selectedInstance" class="enhance-view__forge">
-            <div class="enhance-view__forge-bar">
-              <div
-                class="enhance-view__forge-fill"
-                :style="{ width: `${Math.min(100, (selectedInstance.forgePoints / Math.max(1, getMaxForgePoints(selectedInstance.quality, selectedInstance.forgePotential))) * 100)}%` }"
-              />
-            </div>
-            <span class="enhance-view__forge-label">
-              Rèn {{ selectedInstance.forgePoints }} / {{ getMaxForgePoints(selectedInstance.quality, selectedInstance.forgePotential) }}
-            </span>
-          </div>
+      <article v-for="row in enhanceRows" :key="row.slot" class="enhance-row">
+        <div class="enhance-row__head">
+          <strong>{{ row.itemName }}</strong>
 
-          <!-- Cường Hóa gắn theo SLOT — chọn slot, tự resolve item đang
-               trang bị (spec mục 8). Các thao tác khác chọn thẳng item
-               trong túi, nhưng item ĐANG trang bị bị chặn (mục 10, xem
-               requiresUnequipFirst) — người chơi phải tháo ra trước. -->
-          <select v-if="isSlotScopedOperation" v-model="selectedSlot" class="enhance-view__select" :disabled="isProcessing">
-            <option :value="null">— Chọn vị trí —</option>
-            <option v-for="slot in EQUIPMENT_SLOTS" :key="slot" :value="slot">
-              {{ EQUIPMENT_SLOT_LABELS[slot] }}
-            </option>
-          </select>
-
-          <select v-else v-model="selectedInstanceId" class="enhance-view__select" :disabled="isProcessing">
-            <option :value="null">— Chọn trang bị —</option>
-            <option v-for="instance in ownedEquipment" :key="instance.instanceId" :value="instance.instanceId">
-              {{ gameManager.equipmentRegistry.get(instance.itemId).name }} ({{ EQUIPMENT_QUALITY_LABELS[instance.quality] }}){{ instance.equipped ? ' · Đang trang bị' : '' }}
-            </option>
-          </select>
-
-          <p v-if="isSlotScopedOperation && selectedSlot && !selectedInstance" class="enhance-view__hint">
-            Chưa có trang bị ở vị trí này.
-          </p>
-
-          <p v-if="requiresUnequipFirst" class="enhance-view__hint enhance-view__hint--warning">
-            Tháo trang bị trước khi thao tác.
-          </p>
+          <span>+{{ row.enhanceLevel }}/{{ row.maxLevel }}</span>
         </div>
 
-        <div class="enhance-view__detail">
-          <div class="enhance-view__ops">
-            <button
-              v-for="operation in OPERATIONS"
-              :key="operation.id"
-              type="button"
-              :disabled="isProcessing"
-              :class="{ 'is-active': selectedOperation === operation.id }"
-              @click="selectArtifactRecipe(operation.id)"
-            >
-              {{ operation.label }}
-            </button>
-          </div>
+        <ul v-if="row.enhanceLevel < row.maxLevel" class="enhance-row__costs">
+          <li
+            v-for="cost in row.costs"
+            :key="cost.materialId"
+            :class="{ 'is-missing': cost.owned < cost.amount }"
+          >
+            {{ cost.materialId }}: {{ cost.owned }}/{{ cost.amount }}
+          </li>
+        </ul>
 
-          <div class="enhance-view__stats">
-            <p v-if="statPreviewRows.length === 0" class="enhance-view__stats-empty">Chọn trang bị để xem chỉ số.</p>
+        <button
+          v-if="row.enhanceLevel < row.maxLevel"
+          type="button"
+          :disabled="!canEnhance(row)"
+          @click="doEnhance(row)"
+        >
+          Cường Hóa
+        </button>
+      </article>
+    </section>
 
-            <p v-if="selectedOperation === 'upgradeAffixTier'" class="enhance-view__stats-empty">Chọn 1 dòng Affix để nâng cấp Tier.</p>
-
-            <p v-if="refineRollRangeHint" class="enhance-view__stats-empty">{{ refineRollRangeHint }}</p>
-
-            <div
-              v-for="row in statPreviewRows"
-              :key="row.affixIndex ?? 'implicit'"
-              class="enhance-stat-row"
-              :class="{
-                'is-selectable': selectedOperation === 'upgradeAffixTier' && row.affixIndex !== null,
-                'is-selected': selectedOperation === 'upgradeAffixTier' && row.affixIndex === selectedAffixIndex,
-                'is-exalted': row.isExalted,
-              }"
-              @click="selectAffixRow(row.affixIndex)"
-            >
-              <span class="enhance-stat-row__label">{{ row.label }}</span>
-              <span class="enhance-stat-row__value">{{ row.current }}</span>
-              <template v-if="row.after !== row.current">
-                <span class="enhance-stat-row__arrow">→</span>
-                <span class="enhance-stat-row__after">{{ row.after }}</span>
-              </template>
-            </div>
-          </div>
-
-          <div class="enhance-view__materials">
-            <div v-for="material in artifactMaterials" :key="material.key" class="enhance-material">
-              <SlotView
-                class="enhance-material__slot"
-                :item="material"
-                :label="material.label"
-                :state="{ validation: material.owned >= material.required ? 'valid' : 'missing' }"
-              />
-              <span class="enhance-material__count">{{ formatNumber(material.owned) }} / {{ formatNumber(material.required) }}</span>
-            </div>
-
-            <p v-if="selectedOperation && artifactMaterials.length === 0" class="enhance-view__stats-empty">Không cần nguyên liệu</p>
-          </div>
-
-          <button type="button" class="enhance-view__execute" :disabled="!artifactCanExecute" @click="executeArtifact">
-            {{ selectedOperation ? OPERATIONS.find(op => op.id === selectedOperation)?.label : 'Chọn thao tác' }}
-          </button>
-
-          <CraftProgress :status="isProcessing ? 'processing' : lastStatus" :progress="0" />
-        </div>
+    <!-- ===== TẦY LUYỆN (§7.3) ===== -->
+    <section v-else-if="activeTab === 'wash'" class="qi-hall__body">
+      <div class="qi-hall__picker">
+        <button
+          v-for="row in equippedRows"
+          :key="row.instanceId"
+          type="button"
+          :class="{ 'is-selected': row.instanceId === selectedInstanceId }"
+          @click="selectEquipped(row.instanceId)"
+        >
+          {{ row.name }}
+        </button>
       </div>
 
-      <div class="equipment-hall__smelt">
-        <div class="smelt-row">
-          <span class="smelt-row__label">Phân Giải</span>
+      <template v-if="selectedRow">
+        <h4>Chọn Quáng cùng cảnh giới (×{{ WASH_ORE_AMOUNT }})</h4>
 
-          <select v-model="smeltInstanceId" class="smelt-row__select">
-            <option :value="null">— Chọn trang bị —</option>
-            <option v-for="instance in smeltableInstances" :key="instance.instanceId" :value="instance.instanceId">
-              {{ smeltInstanceName(instance.instanceId) }}
-            </option>
-          </select>
+        <label v-for="ore in oreChoices" :key="ore.materialId" class="qi-hall__option">
+          <input type="radio" :value="ore.materialId" v-model="selectedOreId" />
 
-          <span class="smelt-row__cost">Nhận 2 Bụi Cốt</span>
+          <span>{{ ore.name }}</span>
 
-          <button type="button" :disabled="!canSmelt" @click="smelt">Phân Giải</button>
+          <span class="qi-hall__owned">×{{ ore.owned }}</span>
+        </label>
 
-          <span v-if="smeltStatus !== 'idle'" class="smelt-row__status" :class="`smelt-row__status--${smeltStatus}`">
-            {{ smeltStatus === 'success' ? 'Thành công! (+2 Bụi Cốt)' : 'Thất bại' }}
-          </span>
-        </div>
+        <p class="qi-hall__costline">
+          Chi phí: {{ WASH_REFINEMENT_COST }} Điểm Rèn (tình trạng rèn còn
+          {{ itemRenState?.points ?? 0 }}) · {{ WASH_SPIRIT_STONE_COST }} Linh Thạch
+        </p>
 
-        <div class="smelt-row">
-          <span class="smelt-row__label">Tinh Luyện Cốt</span>
-          <span class="smelt-row__cost">5 Bụi Cốt + 10 Linh Thạch</span>
-          <button type="button" :disabled="!canRefineBuiCot" @click="refineBuiCot">Chuyển Hoá</button>
-        </div>
+        <button type="button" class="qi-hall__action" :disabled="!canWash()" @click="doWash()">
+          Tẩy Luyện — roll lại toàn bộ dòng phụ
+        </button>
+      </template>
+    </section>
+
+    <!-- ===== TINH LUYỆN (§7.4) ===== -->
+    <section v-else-if="activeTab === 'refine'" class="qi-hall__body">
+      <div class="qi-hall__picker">
+        <button
+          v-for="row in equippedRows.filter((entry) => entry.affixCount > 0)"
+          :key="row.instanceId"
+          type="button"
+          :class="{ 'is-selected': row.instanceId === selectedInstanceId }"
+          @click="selectEquipped(row.instanceId)"
+        >
+          {{ row.name }}
+        </button>
       </div>
-    </div>
-  </BuildingConstructionGate>
+
+      <template v-if="selectedRow">
+        <h4>Chọn dòng KHÓA (tối đa {{ Math.min(3, Math.max(0, selectedAffixes.length - 1)) }})</h4>
+
+        <label
+          v-for="affix in selectedAffixes"
+          :key="affix.index"
+          class="qi-hall__option"
+        >
+          <input
+            type="checkbox"
+            :checked="lockedIndices.includes(affix.index)"
+            @change="toggleLock(affix.index)"
+          />
+
+          <span>{{ affix.label }} (tier {{ affix.tier }})</span>
+        </label>
+
+        <p class="qi-hall__costline">
+          Giá trị từng dòng không khóa roll trong ±20%. Cost hệ số N+L =
+          {{ refineEssenceUnits }} Tinh Hoa · {{ refineEssenceUnits * REFINE_SPIRIT_STONE_PER_UNIT }}
+          Linh Thạch · {{ REFINE_REFINEMENT_COST }} Điểm Rèn (tình trạng rèn còn
+          {{ itemRenState?.points ?? 0 }} · Tinh Hoa đang có {{ refineEssenceOwned }}).
+        </p>
+
+        <button type="button" class="qi-hall__action" :disabled="!canRefine()" @click="doRefine()">
+          Tinh Luyện
+        </button>
+      </template>
+    </section>
+
+    <!-- ===== HÓA LUYỆN (§7.5) ===== -->
+    <section v-else class="qi-hall__body">
+      <div class="dissolve-filters">
+        <select v-model="dissolveFilterRealm">
+          <option value="any">Mọi cảnh giới</option>
+
+          <option value="mortal">Phàm Nhân</option>
+
+          <option value="qi_refining">Luyện Khí</option>
+
+          <option value="foundation_establishment">Trúc Cơ</option>
+        </select>
+
+        <select v-model="dissolveFilterQuality">
+          <option value="any">Mọi phẩm</option>
+
+          <option value="hoang">Hoàng</option>
+
+          <option value="huyen">Huyền</option>
+
+          <option value="dia">Địa</option>
+
+          <option value="thien">Thiên</option>
+
+          <option value="tien">Tiên</option>
+        </select>
+
+        <button
+          type="button"
+          class="dissolve-filters__bulk"
+          :disabled="dissolveCandidates.length === 0"
+          @click="selectAllDissolveByFilter"
+        >
+          Chọn tất cả ({{ dissolveCandidates.length }})
+        </button>
+
+        <button
+          type="button"
+          class="dissolve-filters__bulk"
+          :disabled="dissolveSelected.size === 0"
+          @click="clearDissolveSelection"
+        >
+          Bỏ chọn hết
+        </button>
+      </div>
+
+      <p class="qi-hall__hint">
+        Đã chọn {{ dissolveSelected.size }}/{{ dissolveCandidates.length }} món qua filter hiện tại.
+      </p>
+
+      <ul class="dissolve-list">
+        <li
+          v-for="candidate in dissolveCandidates"
+          :key="candidate.instanceId"
+          :class="{ 'is-selected': dissolveSelected.has(candidate.instanceId) }"
+          @click="toggleDissolve(candidate.instanceId)"
+        >
+          <span>{{ candidate.name }}</span>
+
+          <span>{{ candidate.slotLabel }} · {{ candidate.quality }}</span>
+        </li>
+      </ul>
+
+      <div v-if="dissolvePreview.length > 0" class="dissolve-preview">
+        <h4>Xác nhận phân giải {{ dissolveSelected.size }} món:</h4>
+
+        <p v-for="entry in dissolvePreview" :key="entry.materialId">
+          {{ entry.materialId }}: {{ entry.minAmount }}–{{ entry.maxAmount }}
+        </p>
+
+        <p class="qi-hall__warning">Thao tác KHÔNG thể hoàn tác.</p>
+
+        <button type="button" class="qi-hall__action qi-hall__action--danger" @click="doDissolve">
+          {{ dissolveConfirming ? 'XÁC NHẬN HÓA LUYỆN' : 'Hóa Luyện' }}
+        </button>
+      </div>
+    </section>
+  </div>
 </template>
 
 <style scoped>
-.equipment-hall {
+.qi-hall {
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
-}
-
-/* "tunghematandsuch" pass — Luyện Khí/Tinh Luyện Cốt, 2 hàng gọn ở
-   cuối màn, không phải instance-scoped nên tách hẳn khỏi OPERATIONS/
-   selectedInstance. */
-.equipment-hall__smelt {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 6px 8px;
-  border-top: 1px solid var(--ink-line);
+  color: var(--text-primary);
   font-family: var(--font-body);
 }
 
-.smelt-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.smelt-row__label {
+.qi-hall__points {
   flex: 0 0 auto;
+  padding: 8px 12px;
   font-size: var(--text-sm);
-  font-weight: 700;
   color: var(--gold-500);
-  min-width: 70px;
+  border-bottom: 1px solid var(--ink-line-soft);
 }
 
-.smelt-row__select {
-  flex: 1 1 auto;
-  min-width: 80px;
-  background: var(--ink-900);
-  color: var(--text-primary);
-  border: 1px solid var(--ink-line);
-  border-radius: var(--radius-sm);
-  padding: 3px;
-  font-size: var(--text-sm);
-}
-
-.smelt-row__cost {
+.qi-hall__tabs {
   flex: 0 0 auto;
-  font-size: var(--text-xs);
-  color: var(--text-secondary);
-}
-
-.smelt-row button {
-  flex: 0 0 auto;
-  padding: 4px 10px;
-  background: var(--gold-500);
-  color: var(--gold-ink);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-weight: 700;
-  font-size: var(--text-sm);
-  cursor: pointer;
-}
-
-.smelt-row button:disabled {
-  background: var(--ink-700);
-  color: var(--text-muted);
-  cursor: not-allowed;
-}
-
-.smelt-row__status {
-  font-size: var(--text-xs);
-}
-
-.smelt-row__status--success {
-  color: var(--jade);
-}
-
-.smelt-row__status--failure {
-  color: var(--crimson);
-}
-
-/* ==== Enhance ("Khí") — preview lớn bên trái + before/after +
-   material list bên phải, cắt nguyên vẹn từ CraftingPanel.vue.
-   UI redesign Step 9 — flex:1 auto (trước là 46%, cố định để chừa chỗ
-   cho paperdoll/bag đã bỏ) — giờ là khối DUY NHẤT còn lại phía trên
-   khối Luyện Khí, chiếm hết chiều cao còn dư. ==== */
-.enhance-view {
-  display: flex;
-  flex: 1 1 auto;
-  min-height: 0;
-  gap: 8px;
-  padding: 8px;
-  font-family: var(--font-body);
-  color: var(--text-primary);
-}
-
-.enhance-view__preview {
-  flex: 0 0 42%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 4px;
-  padding: 10px;
-  background: var(--ink-800);
-  border: 1px solid var(--ink-line-soft);
-  border-radius: var(--radius-md);
+  padding: 8px 12px;
 }
 
-/* Badge cấp cường hóa giờ vẽ NGAY TRONG SlotView (prop `badges`, kind
-   'enhance') — wrapper chỉ còn để canh kích thước icon. */
-.enhance-view__icon-wrap {
-  position: relative;
-  width: 56%;
-  margin-bottom: 4px;
-}
-
-.enhance-view__icon {
-  width: 100%;
-}
-
-.enhance-view__name {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-align: center;
-}
-
-.enhance-view__quality {
-  /* "EquipemtnQuality&rarity" pass — Phẩm Chất giờ hiện NỔI BẬT hơn
-     hẳn Tiềm Năng Rèn bên dưới (font lớn hơn, có viền) — đúng tinh
-     thần "phẩm chất ở header, chất lượng chỉ ở phần chế tạo". */
-  margin: 2px 0 0;
-  padding: 2px 10px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--gold-500);
-  border: 1px solid var(--gold-500);
-  border-radius: var(--radius-sm);
-}
-
-.enhance-view__rarity {
-  margin: 0;
-  font-size: var(--text-xs);
-  font-weight: 700;
-}
-
-.enhance-view__potential {
-  width: 100%;
-  margin-top: 6px;
-}
-
-.enhance-view__potential-bar {
-  height: 4px;
-  border-radius: 2px;
-  background: var(--ink-900);
-  border: 1px solid var(--ink-line);
-  overflow: hidden;
-}
-
-.enhance-view__potential-fill {
-  height: 100%;
-  background: var(--text-secondary);
-  transition: width 0.15s ease;
-}
-
-.enhance-view__potential-label {
-  display: block;
-  margin-top: 2px;
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-  text-align: center;
-}
-
-.enhance-view__forge {
-  width: 100%;
-  margin-top: 6px;
-}
-
-.enhance-view__forge-bar {
-  height: 6px;
-  border-radius: 3px;
-  background: var(--ink-900);
-  border: 1px solid var(--ink-line);
-  overflow: hidden;
-}
-
-.enhance-view__forge-fill {
-  height: 100%;
-  background: var(--gold-500);
-  transition: width 0.15s ease;
-}
-
-.enhance-view__forge-label {
-  display: block;
-  margin-top: 2px;
-  font-size: var(--text-xs);
-  color: var(--text-secondary);
-  text-align: center;
-}
-
-.enhance-view__select {
-  width: 100%;
-  margin-top: 6px;
-  background: var(--ink-900);
-  color: var(--text-primary);
-  border: 1px solid var(--ink-line);
-  border-radius: var(--radius-sm);
-  padding: 4px;
-}
-
-.enhance-view__hint {
-  margin: 4px 0 0;
-  font-size: var(--text-xs);
-  color: var(--text-muted);
-}
-
-.enhance-view__hint--warning {
-  color: var(--crimson);
-}
-
-.enhance-view__detail {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-height: 0;
-}
-
-.enhance-view__ops {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-
-.enhance-view__ops button {
-  flex: 1 1 auto;
-  padding: 4px 6px;
-  font-size: var(--text-xs);
+.qi-hall__tabs button {
+  padding: 6px 4px;
   background: var(--ink-800);
   color: var(--text-secondary);
   border: 1px solid var(--ink-line-soft);
   border-radius: var(--radius-sm);
   cursor: pointer;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
 }
 
-.enhance-view__ops button.is-active {
+.qi-hall__tabs button.is-active {
   border-color: var(--gold-500);
   color: var(--gold-500);
 }
 
-.enhance-view__stats {
-  flex: 0 0 auto;
-  max-height: 30%;
+.qi-hall__body {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  padding: 4px 6px;
-  background: var(--ink-800);
-  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.enhance-view__stats-empty {
+.qi-hall__hint {
   margin: 0;
+  font-size: var(--text-xs);
   color: var(--text-muted);
+}
+
+.enhance-row {
+  padding: 8px;
+  background: var(--ink-800);
+  border: 1px solid var(--ink-line-soft);
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.enhance-row__head {
+  display: flex;
+  justify-content: space-between;
   font-size: var(--text-sm);
 }
 
-.enhance-stat-row {
+.enhance-row__costs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.enhance-row__costs li.is-missing {
+  color: var(--danger, #e05d5d);
+}
+
+.qi-hall__picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.qi-hall__picker button {
+  padding: 4px 8px;
+  background: var(--ink-800);
+  border: 1px solid var(--ink-line-soft);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: var(--text-xs);
+  font-family: var(--font-body);
+}
+
+.qi-hall__picker button.is-selected {
+  border-color: var(--gold-500);
+  color: var(--gold-500);
+}
+
+.qi-hall__option {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  padding: 3px 0;
   font-size: var(--text-sm);
-  padding: 1px 3px;
-  border-radius: var(--radius-sm);
-}
-
-.enhance-stat-row.is-selectable {
   cursor: pointer;
 }
 
-.enhance-stat-row.is-selectable:hover {
-  background: var(--ink-700);
-}
-
-.enhance-stat-row.is-selected {
-  background: var(--ink-700);
-  outline: 1px solid var(--gold-500);
-}
-
-.enhance-stat-row.is-exalted {
-  outline: 1px solid var(--affix-exalted);
-}
-
-.enhance-stat-row.is-exalted .enhance-stat-row__label {
-  color: var(--affix-exalted);
-}
-
-.enhance-stat-row__label {
-  flex: 1;
+.qi-hall__owned {
+  margin-left: auto;
   color: var(--text-secondary);
 }
 
-.enhance-stat-row__value {
-  color: var(--text-primary);
-}
-
-.enhance-stat-row__arrow {
-  color: var(--text-muted);
-}
-
-.enhance-stat-row__after {
-  color: var(--jade);
-  font-weight: 600;
-}
-
-.enhance-view__materials {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-wrap: wrap;
-  align-content: flex-start;
-  gap: 8px;
-  overflow-y: auto;
-}
-
-.enhance-material {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex: 0 0 48px;
-}
-
-.enhance-material__slot {
-  width: 48px;
-}
-
-.enhance-material__count {
+.qi-hall__costline {
+  margin: 0;
   font-size: var(--text-xs);
   color: var(--text-secondary);
-  margin-top: 2px;
 }
 
-.enhance-view__execute {
-  flex: 0 0 auto;
-  padding: 6px;
+.qi-hall__action {
+  align-self: flex-start;
+  padding: 8px 14px;
   background: var(--gold-500);
   color: var(--gold-ink);
   border: none;
   border-radius: var(--radius-sm);
   font-weight: 700;
   cursor: pointer;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
 }
 
-.enhance-view__execute:disabled {
+.qi-hall__action:disabled {
   background: var(--ink-700);
   color: var(--text-muted);
   cursor: not-allowed;
+}
+
+.qi-hall__action--danger {
+  background: var(--danger, #e05d5d);
+  color: #fff;
+}
+
+.dissolve-filters {
+  display: flex;
+  gap: 6px;
+}
+
+.dissolve-filters select {
+  background: var(--ink-800);
+  color: var(--text-primary);
+  border: 1px solid var(--ink-line-soft);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  font-family: var(--font-body);
+}
+
+.dissolve-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow-y: auto;
+}
+
+.dissolve-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 5px 8px;
+  background: var(--ink-800);
+  border: 1px solid var(--ink-line-soft);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.dissolve-list li.is-selected {
+  border-color: var(--danger, #e05d5d);
+  color: var(--danger, #e05d5d);
+}
+
+.dissolve-preview h4 {
+  margin: 0 0 4px;
+  font-size: var(--text-sm);
+}
+
+.dissolve-preview p {
+  margin: 0 0 3px;
+  font-size: var(--text-xs);
+  color: var(--jade);
+}
+
+.qi-hall__warning {
+  font-size: var(--text-xs);
+  color: var(--danger, #e05d5d);
 }
 </style>

@@ -5,8 +5,8 @@ export interface ActiveStage {
 
   spawnedCount: number
 
-  // Giây còn lại tới lần spawn kế — dùng deltaSeconds (giống
-  // Battle.playerAttackTimer), KHÔNG dùng Date.now(), để tôn trọng
+  // Giây còn lại tới lần spawn kế — dùng deltaSeconds (giống các
+  // timer combat trong Battle), KHÔNG dùng Date.now(), để tôn trọng
   // pause/tốc độ x1-x4 giống mọi timer combat khác (khác Exploration/
   // Crafting, cố ý chạy cả khi offline).
   spawnCountdown: number

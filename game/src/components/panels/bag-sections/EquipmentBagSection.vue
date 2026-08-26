@@ -1,84 +1,65 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import SlotView from '../../common/SlotView.vue'
+import BagPaginationControls, { type BagSortOption } from './BagPaginationControls.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
+import { useUiStore, type EquipmentSortMode } from '@/stores/ui'
 import { useBagPagination } from '@/composables/useBagPagination'
+import { useBagGridLayout } from '@/composables/useBagGridLayout'
 import { useEquipmentActions } from '@/composables/useEquipmentActions'
-import { usePlayerStore } from '@/stores/player'
+import { compareNumber, compareText, stableSort, withDirection } from '@/composables/useBagSort'
 import type { BagCell } from './BagCell'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
-import { useBagGridLayout } from '@/composables/useBagGridLayout'
 import { equipmentQualityRank, itemGradeRank } from '@/composables/slots/normalizeSlotRank'
+import { getRealmIndex } from '@/core/realm/realmSystem'
+import { EQUIPMENT_SLOTS } from '@/core/equipment/EquipmentSlotState'
+import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import type { SlotPresentationState } from '@/components/common/SlotTypes'
 
 // Grid responsive theo chiều rộng thật — xem ghi chú đầy đủ ở
 // useBagGridLayout.ts/MaterialBagSection.vue (cùng pattern áp cho cả
-// 5 bag-sections).
+// bag-sections).
 const { gridRef, pageSize, gridStyle } = useBagGridLayout()
 
-// pendingTarget: đang chờ áp Phù Chú/khảm Trận Pháp lên 1 món trang
-// bị — chủ động truyền từ ngoài vào (nguồn có thể là ref cục bộ trong
-// BagGrid.vue, hoặc ui.pendingEquipTarget dùng chung khi điều hướng
-// TỪ panel khác — UI redesign Step 9: trỏ vào đây qua Kho/tab Trang Bị,
-// trước đó từng đi qua Khí Đường/EquipmentHallPanel.vue Phase 5, xem
-// BagGrid.vue) — section này không tự giữ state "đang chờ", chỉ phản
-// ứng theo prop rồi emit 'resolved' khi xong.
-const props = defineProps<{
-  pendingTarget?: { kind: 'talisman' | 'formation'; id: string } | null
-}>()
-
-const emit = defineEmits<{ resolved: [] }>()
+const ui = useUiStore()
 
 const gameManager = useGameManager()
-const player = usePlayerStore()
+
 const { stateVersion, bumpState } = useStateVersion()
+
 const { equip } = useEquipmentActions()
 
 function handleClick(instanceId: string) {
-  if (props.pendingTarget?.kind === 'talisman') {
-    if (gameManager.applyTalisman(props.pendingTarget.id, instanceId)) {
-      // Phù Chú mở thêm substat cho item — nếu item đang trang bị,
-      // player.modifiers phải đồng bộ lại ngay, không thì finalStats
-      // hiện sai tới tick kế tiếp.
-      player.setEquipmentModifiers(gameManager.getEquipmentModifiers())
-      bumpState()
-      emit('resolved')
-    }
-
-    return
-  }
-
-  if (props.pendingTarget?.kind === 'formation') {
-    if (gameManager.socketFormation(props.pendingTarget.id, instanceId)) {
-      player.setExternalModifiers(gameManager.getAggregatedModifiers(player.$state))
-      bumpState()
-      emit('resolved')
-    }
-
-    return
-  }
-
   equip(instanceId)
 }
 
-const cells = computed<BagCell[]>(() => {
+interface EquipmentEntry {
+  cell: BagCell
+
+  instance: EquipmentInstance
+
+  name: string
+}
+
+const SORT_OPTIONS: Array<BagSortOption & { value: EquipmentSortMode }> = [
+  { value: 'quality', label: 'Phẩm chất' },
+  { value: 'rarity', label: 'Rarity' },
+  { value: 'realm', label: 'Cảnh giới' },
+  { value: 'slot', label: 'Slot' },
+  { value: 'name', label: 'Tên', ascLabel: 'Tên A–Z', descLabel: 'Tên Z–A' },
+  { value: 'forge', label: 'Điểm Rèn' },
+]
+
+const entries = computed<EquipmentEntry[]>(() => {
   stateVersion.value
 
-  // Bình thường chỉ hiện đồ CHƯA trang bị (bấm để trang bị). Đang chờ
-  // áp Phù/khảm Trận thì hiện CẢ đồ đang trang bị (áp/khảm thẳng lên
-  // món đang mặc, khỏi phải tháo ra trước) — Trận Pháp còn lọc thêm
-  // chỉ vũ khí vì chỉ vũ khí khảm được.
-  let instances = gameManager.equipmentBag.getAll()
+  // Chỉ hiện đồ CHƯA trang bị (bấm để trang bị).
+  const instances = gameManager.equipmentBag.getAll().filter((instance) => !instance.equipped)
 
-  if (props.pendingTarget?.kind === 'formation') {
-    instances = instances.filter(instance => instance.slot === 'weapon')
-  } else if (props.pendingTarget?.kind !== 'talisman') {
-    instances = instances.filter(instance => !instance.equipped)
-  }
-
-  return instances.map(instance => {
+  return instances.map((instance) => {
     const template = gameManager.equipmentRegistry.get(instance.itemId)
+
     const equippedComparison = gameManager.equipmentBag.getEquippedInSlot(instance.slot)
 
     // Tên ghép động (2026-08-15) — Phẩm · Set (nếu có) · Địa Giới+Tên
@@ -102,43 +83,91 @@ const cells = computed<BagCell[]>(() => {
     }
 
     return {
-      key: instance.instanceId,
+      instance,
 
-      label: template.name,
+      name: template.name,
 
-      nameSegments,
+      cell: {
+        key: instance.instanceId,
 
-      description: template.description,
+        label: template.name,
 
-      equipmentQualityRank: equipmentQualityRank(instance.quality),
+        nameSegments,
 
-      rarityRank: itemGradeRank(instance.rarity),
+        description: template.description,
 
-      state,
+        equipmentQualityRank: equipmentQualityRank(instance.quality),
 
-      // slotState (Cường Hóa/Trận Pháp/Phù Chú) gắn theo SLOT chứ
-      // không theo instance (xem EquipmentSlotState.ts) — chỉ có ý
-      // nghĩa THẬT SỰ thuộc về món đồ này khi nó đang được trang bị,
-      // đồ CHƯA mặc trong túi không thừa hưởng những thứ đó của slot.
-      tooltip: buildEquipmentTooltip(
-        instance,
-        template,
-        gameManager.affixRegistry,
-        instance.equipped ? gameManager.getSlotState(instance.slot) : null,
-        gameManager.formationRegistry,
-        gameManager.talismanRegistry,
-        gameManager.zoneRegistry,
-        equippedComparison,
-      ),
+        rarityRank: itemGradeRank(instance.rarity),
 
-      icon: instance.icon ?? template.icon,
+        state,
 
-      onClick: () => handleClick(instance.instanceId),
+        // slotState (Cường Hóa) gắn theo SLOT chứ không theo instance
+        // (xem EquipmentSlotState.ts) — chỉ có ý nghĩa THẬT SỰ thuộc về
+        // món đồ này khi nó đang được trang bị.
+        tooltip: buildEquipmentTooltip(
+          instance,
+          template,
+          gameManager.affixRegistry,
+          instance.equipped ? gameManager.getSlotState(instance.slot) : null,
+          gameManager.zoneRegistry,
+          equippedComparison,
+        ),
+
+        icon: instance.icon ?? template.icon,
+
+        onClick: () => handleClick(instance.instanceId),
+      },
     }
   })
 })
 
-const { currentPage, totalPages, goToPage, gridCells } = useBagPagination(cells, pageSize)
+// Tiêu chí Trang Bị (plan Workstream E) — mặc định/quality/rarity/
+// realm/slot/name/forge.
+const EQUIPMENT_COMPARATORS: Record<Exclude<EquipmentSortMode, 'default'>, (a: EquipmentEntry, b: EquipmentEntry) => number> = {
+  quality: (a, b) =>
+    equipmentQualityRank(a.instance.quality) - equipmentQualityRank(b.instance.quality),
+
+  rarity: (a, b) => itemGradeRank(a.instance.rarity) - itemGradeRank(b.instance.rarity),
+
+  realm: (a, b) => getRealmIndex(a.instance.realmId) - getRealmIndex(b.instance.realmId),
+
+  slot: (a, b) => {
+    const indexA = EQUIPMENT_SLOTS.indexOf(a.instance.slot)
+
+    const indexB = EQUIPMENT_SLOTS.indexOf(b.instance.slot)
+
+    return (indexA === -1 ? Number.MAX_SAFE_INTEGER : indexA) -
+      (indexB === -1 ? Number.MAX_SAFE_INTEGER : indexB)
+  },
+
+  name: (a, b) => compareText(a.name, b.name),
+
+  forge: (a, b) => compareNumber(a.instance.forgePoints, b.instance.forgePoints),
+}
+
+// Sort chạy trên bản copy của TOÀN BỘ list TRƯỚC pagination.
+const cells = computed<BagCell[]>(() => {
+  const sortState = ui.bagSorts.equipment
+
+  if (sortState.mode === 'default') {
+    return entries.value.map((entry) => entry.cell)
+  }
+
+  const sorted = stableSort(
+    entries.value,
+    withDirection(EQUIPMENT_COMPARATORS[sortState.mode], sortState.direction),
+  )
+
+  return sorted.map((entry) => entry.cell)
+})
+
+const { currentPage, totalPages, goToPage, resetPage, gridCells } = useBagPagination(cells, pageSize)
+
+watch(
+  () => ({ ...ui.bagSorts.equipment }),
+  () => resetPage(),
+)
 </script>
 
 <template>
@@ -162,21 +191,17 @@ const { currentPage, totalPages, goToPage, gridCells } = useBagPagination(cells,
       />
     </div>
 
-    <div class="bag-section__pages">
-      <button type="button" :disabled="currentPage === 0" @click="goToPage(currentPage - 1)">‹</button>
-
-      <button
-        v-for="page in totalPages"
-        :key="page"
-        type="button"
-        :class="{ 'is-active': currentPage === page - 1 }"
-        @click="goToPage(page - 1)"
-      >
-        {{ page }}
-      </button>
-
-      <button type="button" :disabled="currentPage === totalPages - 1" @click="goToPage(currentPage + 1)">›</button>
-    </div>
+    <BagPaginationControls
+      :current-page="currentPage"
+      :total-pages="totalPages"
+      :sort-options="SORT_OPTIONS"
+      :active-mode="ui.bagSorts.equipment.mode"
+      :active-direction="ui.bagSorts.equipment.direction"
+      @go-to-page="goToPage"
+      @select-mode="(mode) => ui.setBagSortMode('equipment', mode as EquipmentSortMode)"
+      @toggle-direction="ui.toggleBagSortDirection('equipment')"
+      @reset-sort="ui.resetBagSort('equipment')"
+    />
   </div>
 </template>
 
@@ -202,32 +227,5 @@ const { currentPage, totalPages, goToPage, gridCells } = useBagPagination(cells,
 .bag-section__slot {
   width: 100%;
   aspect-ratio: 1 / 1;
-}
-
-.bag-section__pages {
-  flex: 0 0 auto;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 4px;
-}
-
-.bag-section__pages button {
-  min-width: 36px;
-  min-height: 32px;
-  padding: 0;
-  font-size: var(--text-sm);
-  background: var(--ink-800);
-  color: var(--text-secondary);
-  border: 1px solid var(--ink-line-soft);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-family: var(--font-body);
-}
-
-.bag-section__pages button.is-active {
-  background: var(--gold-500);
-  color: var(--gold-ink);
-  border-color: var(--gold-500);
 }
 </style>

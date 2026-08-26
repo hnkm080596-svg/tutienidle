@@ -67,8 +67,9 @@ describe('AilmentSystem — Kim Thế (Plans/KimPath, Trúc Cơ Pure Kim)', () =
 
     ailmentSystem.update(1, target, combatSystem)
 
-    // dpsRatio 0.2 × metalPower 100 × stacks 1 × 1s, kimTheMultiplier = 1.
-    expect(before - target.currentHp).toBeCloseTo(20, 5)
+    // dpsRatio 0.2 × (ATK 10 + metalPower 100 = 110, plan §3.2) × stacks
+    // 1 × 1s, kimTheMultiplier = 1.
+    expect(before - target.currentHp).toBeCloseTo(22, 5)
   })
 
   it('currentKimThe > 0 nhân thêm kimTheDotDamagePercentPerStack VÀO ĐÚNG DoT element metal', () => {
@@ -87,8 +88,8 @@ describe('AilmentSystem — Kim Thế (Plans/KimPath, Trúc Cơ Pure Kim)', () =
 
     ailmentSystem.update(1, target, combatSystem)
 
-    // 20 × (1 + 3×0.05) = 23.
-    expect(before - target.currentHp).toBeCloseTo(23, 5)
+    // 22 × (1 + 3×0.05) = 25.3.
+    expect(before - target.currentHp).toBeCloseTo(25.3, 5)
   })
 
   it('metalAilmentPotencyPercent ("Huyết Lưu") cộng dồn cùng chỗ với kimTheDotDamagePercentPerStack', () => {
@@ -113,8 +114,8 @@ describe('AilmentSystem — Kim Thế (Plans/KimPath, Trúc Cơ Pure Kim)', () =
 
     ailmentSystem.update(1, target, combatSystem)
 
-    // 20 × (1 + 3×0.05 + 0.1) = 20 × 1.25 = 25.
-    expect(before - target.currentHp).toBeCloseTo(25, 5)
+    // 22 × (1 + 3×0.05 + 0.1) = 22 × 1.25 = 27.5.
+    expect(before - target.currentHp).toBeCloseTo(27.5, 5)
   })
 
   it('currentKimThe KHÔNG ảnh hưởng DoT hành khác (Trúng Độc, Mộc) — tránh build lai bị buff nhầm', () => {
@@ -136,9 +137,9 @@ describe('AilmentSystem — Kim Thế (Plans/KimPath, Trúc Cơ Pure Kim)', () =
 
     ailmentSystem.update(1, target, combatSystem)
 
-    // dpsRatio 0.2 × woodPower 100 × 1s = 20, KHÔNG nhân thêm gì cả dù
-    // currentKimThe=5 và metalAilmentPotencyPercent=0.1 (cả 2 chỉ scope
-    // cho element 'metal').
-    expect(before - target.currentHp).toBeCloseTo(20, 5)
+    // dpsRatio 0.2 × (ATK 10 + woodPower 100 = 110) × 1s = 22, KHÔNG nhân
+    // thêm gì cả dù currentKimThe=5 và metalAilmentPotencyPercent=0.1
+    // (cả 2 chỉ scope cho element 'metal').
+    expect(before - target.currentHp).toBeCloseTo(22, 5)
   })
 })

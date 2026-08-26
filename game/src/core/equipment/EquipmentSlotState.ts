@@ -1,5 +1,5 @@
 import type { EquipmentSlot } from './EquipmentTypes'
-import type { SocketedFormation } from './EquipmentInstance'
+import type { SocketedModifierItem } from './SocketedModifierItem'
 
 /**
  * MASTER SPEC Mục XVI ("Item và Slot phải tách hoàn toàn") — Cường
@@ -20,22 +20,32 @@ export interface EquipmentSlotState {
 
   enhanceLevel: number
 
-  socketedFormation?: SocketedFormation
+  // Phù/Trận socket (2026-08-24, resource-professions-rework §7.2) —
+  // MỖI slot tối đa 1 Phù + 1 Trận, mỗi item ĐÚNG HAI modifier; chỉ
+  // active khi slot đang có equipment. Legacy socketedFormation
+  // (trigger/stack) + appliedTalismanIds được migration v43 hoàn trả
+  // bag rồi xoá.
+  socketedTalisman?: SocketedModifierItem
 
-  // Tổng số slot Affix đã mở qua Yểm Phù, tích luỹ theo SLOT (không
-  // theo item) — item đang trang bị trong slot này phải có đủ affix
-  // khớp hạn mức, xem EquipmentSystem.reconcileBonusAffixSlots().
+  socketedFormation?: SocketedModifierItem
+
+  // LEGACY (migration v43) — tổng slot Affix mở qua Yểm Phù cũ. Sau
+  // migration luôn 0 (Phù không còn mở affix, hệ Affix thuộc Luyện Khí).
   bonusAffixSlots: number
 
-  // Home Hub Phase 2 — danh sách id các Phù Chú ĐÃ áp vào slot này
-  // (tích luỹ theo SLOT, giống bonusAffixSlots — Phù Chú chỉ CỘNG,
-  // không có cơ chế gỡ, xem TalismanSystem.applyToEquipment()). Dùng
-  // để hiện badge trên EquipmentPaperdoll.vue, đối xứng
-  // socketedFormation.
+  // LEGACY (migration v43) — id Phù đã apply theo cơ chế cũ; migration
+  // hoàn trả bag rồi xoá mảng.
   appliedTalismanIds: string[]
 }
 
-export const EQUIPMENT_SLOTS: EquipmentSlot[] = ['weapon', 'helmet', 'armor', 'boots', 'ring', 'necklace']
+export const EQUIPMENT_SLOTS: EquipmentSlot[] = [
+  'weapon',
+  'helmet',
+  'armor',
+  'boots',
+  'ring',
+  'necklace',
+]
 
 export function createDefaultSlotState(slot: EquipmentSlot): EquipmentSlotState {
   return {

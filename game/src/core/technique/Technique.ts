@@ -1,4 +1,5 @@
 import type { ElementType } from '../element/ElementType'
+import type { StatModifier } from '../stats/StatCalculator'
 
 // PLAN HOÀN CHỈNH mục 5 — Tâm Pháp giờ CÓ cộng chỉ số trở lại, theo
 // đúng 4 cảnh giới Sơ Nhập/Tiểu Thành/Đại Thành/Viên Mãn (đảo ngược có
@@ -28,6 +29,13 @@ export interface TechniqueTierEffect {
   maxMpPercent?: number
 
   manaRegenPercent?: number
+
+  // Yêu cầu 2026-08-26 — Tâm pháp cộng thêm 2 chỉ số MẶC ĐỊNH HP/s và
+  // MP/s: flat TỰU TRỰC lên stats hpRegenPerSecond/manaRegenPerSecond
+  // (không phải percent — giá trị tuyệt đối hồi/giây theo tier).
+  hpRegenFlat?: number
+
+  mpRegenFlat?: number
 }
 
 /**
@@ -112,6 +120,14 @@ export interface Technique {
   // chưa thiết kế (mục 5.3) — technique nào không khai coi như không
   // cộng gì (giữ hành vi cũ, không lỗi).
   tierEffects?: Partial<Record<TechniqueTier, TechniqueTierEffect>>
+
+  // Combat-gate-teleport-autocast plan §9 — modifier chiến đấu CỐ ĐỊNH
+  // (không theo tier) chỉ có hiệu lực khi technique đang EQUIPPED.
+  // Ví dụ: Đại Ngũ Hành Chân Quyết cộng +2 attackRange cho Pháp Tu.
+  // KHÔNG đưa bonus này vào tierEffects và KHÔNG scale theo tier; tổng
+  // hợp DUY NHẤT qua GameManager.getAggregatedModifiers() để không
+  // double-apply (plan §19 rủi ro 9).
+  combatModifiers?: StatModifier[]
 
   unlocked: boolean
 

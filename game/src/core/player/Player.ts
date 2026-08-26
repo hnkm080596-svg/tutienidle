@@ -1,12 +1,17 @@
-import type { StatModifier} from  '../stats/StatCalculator'
+import type { StatModifier } from '../stats/StatCalculator'
 import { createBaseStats, type Stats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
-import { HERO_LANE_INDEX } from '../battle/BattleLane'
+import { CENTER_LANE_INDEX } from '../battle/BattleLane'
+import {
+  DEFAULT_COMBAT_AI_STRATEGY,
+  type CombatAiStrategy,
+} from '../battle/CombatAiStrategy'
 import { addCultivation } from '../cultivation/CultivationSystem'
 import type { RewardReceiver } from '../reward/RewardSystem'
 import { getRealmIndex } from '../realm/realmSystem'
 import type { FoundationType } from '../breakthrough/FoundationType'
 import type { CultivationPathId } from './CultivationPathKit'
+import type { PersistentTimedEffect } from './PersistentTimedEffect'
 import type { ElementType } from '../element/ElementType'
 
 export interface PlayerData {
@@ -30,7 +35,8 @@ export interface PlayerData {
   // Store không tự tính modifier này — chỉ nhận và lưu để finalStats dùng.
   externalModifiers: StatModifier[]
 
-  spiritStone: number
+  // Linh Thạch KHÔNG còn là currency trên PlayerData (plan Workstream
+  // F) — số dư duy nhất là materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID).
 
   // Ba Thiên Phú được chốt khi tạo nhân vật. Hiệu ứng gameplay sẽ được
   // nối vào stat/effect system theo talent-system-plan.md.
@@ -134,6 +140,12 @@ export interface PlayerData {
   // — xem core/progression/NodeSystem.ts.
   purchasedNodeIds: string[]
 
+  // Node level (combat-skill-flow-element-power-dot-plan.md §6.1) —
+  // NGUỒN SỰ THẬT duy nhất của state đã đầu tư: level 0 = chưa lĩnh
+  // ngộ, >=1 = đã lĩnh ngộ (mức stack). purchasedNodeIds giữ lại làm
+  // compat read-only, luôn đồng bộ = các id có level >= 1.
+  nodeLevels: Record<string, number>
+
   // Màn chỉ mở tuần tự: thắng một màn mới mở màn kế tiếp.
   completedStageIds: string[]
 
@@ -160,6 +172,18 @@ export interface PlayerData {
   // vừa bước vào. Xem core/realm/RealmPassiveSystem.ts.
   grantedRealmPassiveIds: string[]
 
+  // Timed effect theo thời gian thực (2026-08-24, plan §5.4) — deadline
+  // tuyệt đối expiresAtMs là authority; load bỏ effect hết hạn. Xem
+  // PersistentTimedEffect.ts / GameManager.getActiveRuntimeModifiers().
+  persistentTimedEffects: PersistentTimedEffect[]
+
+
+  // Combat AI strategy (combat-gate-teleport-autocast plan §10) — lựa
+  // chọn gameplay lâu dài của người chơi, áp dụng ngay và tự lưu khi đổi.
+  // Save thiếu field/giá trị sai → fallback DEFAULT (development build,
+  // không migration).
+  combatAiStrategy: CombatAiStrategy
+
   lastSavedAt: number
 }
 
@@ -177,7 +201,6 @@ export function createDefaultPlayer(): PlayerData {
     modifiers: [],
     externalModifiers: [],
 
-    spiritStone: 0,
     selectedTalentIds: [],
     completedStageIds: [],
     unlockedRealmEnhancements: [],
@@ -200,11 +223,17 @@ export function createDefaultPlayer(): PlayerData {
     unlockedElements: [],
     equippedElements: [],
     purchasedNodeIds: [],
+    nodeLevels: {},
 
     bodyRefinementCompletedTiers: 0,
     bodyRefinementCurrentTierProgress: 0,
     breakthroughGrade: 6,
     grantedRealmPassiveIds: [],
+
+    persistentTimedEffects: [],
+
+
+    combatAiStrategy: DEFAULT_COMBAT_AI_STRATEGY,
 
     lastSavedAt: Date.now(),
   }
@@ -283,7 +312,7 @@ export function playerToCombatEntity(
     x: 0,
 
     // Hero luôn đứng cố định lane giữa (2026-08-22, top-down 5-lane).
-    row: HERO_LANE_INDEX,
+    row: CENTER_LANE_INDEX,
 
     alive: true,
   }
@@ -296,10 +325,15 @@ export function playerToCombatEntity(
  * GameManager.grantBattleRewardIfNeeded() vì KHÔNG cần trang bị tâm
  * pháp vẫn nhận được (xem skill-insight-and-auto-combat-hud-plan.md
  * mục 3).
+ *
+ * `addSpiritStone` (plan Workstream F) — GameManager inject implementation
+ * cộng vào MaterialBag (SPIRIT_STONE_MATERIAL_ID); PlayerData không còn
+ * giữ currency nào cả.
  */
 export function createPlayerRewardReceiver(
   player: PlayerData,
   addInsight?: (amount: number) => void,
+  addSpiritStone?: (amount: number) => void,
 ): RewardReceiver {
   return {
     addTechniqueInsight(amount: number) {
@@ -312,7 +346,7 @@ export function createPlayerRewardReceiver(
     },
 
     addSpiritStone(amount: number) {
-      player.spiritStone += amount
+      addSpiritStone?.(amount)
     },
   }
 }

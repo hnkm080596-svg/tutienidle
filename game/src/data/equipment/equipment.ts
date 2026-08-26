@@ -2,8 +2,10 @@ import type { Equipment, EquipmentStatRange } from '@/core/equipment/Equipment'
 import type { EquipmentSlot } from '@/core/equipment/EquipmentTypes'
 
 const MAIN_STATS: Record<EquipmentSlot, readonly EquipmentStatRange[]> = {
-  weapon: [{ stat: 'attack', min: 12, max: 20 }], helmet: [{ stat: 'maxHp', min: 18, max: 30 }],
-  armor: [{ stat: 'defense', min: 12, max: 20 }], boots: [{ stat: 'evasionRate', min: 12, max: 20 }],
+  weapon: [{ stat: 'attack', min: 12, max: 20 }],
+  helmet: [{ stat: 'maxHp', min: 18, max: 30 }],
+  armor: [{ stat: 'defense', min: 12, max: 20 }],
+  boots: [{ stat: 'evasionRate', min: 12, max: 20 }],
   ring: [
     { stat: 'criticalRate', min: 0.02, max: 0.05 },
     { stat: 'criticalDamage', min: 0.1, max: 0.2 },
@@ -15,15 +17,50 @@ const MAIN_STATS: Record<EquipmentSlot, readonly EquipmentStatRange[]> = {
 }
 
 // Thêm art mới vào đúng slot; mỗi instance tự chọn một ảnh trong pool.
-export const EQUIPMENT_ICON_POOLS: Record<EquipmentSlot, readonly string[]> = {
-  weapon: ['/assets/equipment-slots/weapon.png'], helmet: ['/assets/equipment-slots/helmet.png'],
-  armor: ['/assets/equipment-slots/armor.png'], boots: ['/assets/equipment-slots/boots.png'],
-  ring: ['/assets/equipment-slots/ring.png'], necklace: ['/assets/equipment-slots/necklace.png'],
-}
+export const EQUIPMENT_ICON_POOLS = {
+  base_kiem: Array.from({ length: 5 }, (_, index) =>
+    `/assets/equipment/items/base-kiem/kiem-${String(index + 1).padStart(2, '0')}.png`,
+  ),
+  base_chau: Array.from({ length: 5 }, (_, index) =>
+    `/assets/equipment/items/base-chau/chau-${String(index + 1).padStart(2, '0')}.png`,
+  ),
+  base_quyen: Array.from({ length: 5 }, (_, index) =>
+    `/assets/equipment/items/base-quyen/quyen-${String(index + 1).padStart(2, '0')}.png`,
+  ),
+  base_quan: Array.from({ length: 5 }, (_, index) =>
+    `/assets/equipment/items/base-quan/quan-${String(index + 1).padStart(2, '0')}.png`,
+  ),
+  base_bao: Array.from({ length: 5 }, (_, index) =>
+    `/assets/equipment/items/base-bao/bao-${String(index + 1).padStart(2, '0')}.png`,
+  ),
+  base_hai: Array.from({ length: 5 }, (_, index) =>
+    `/assets/equipment/items/base-hai/hai-${String(index + 1).padStart(2, '0')}.png`,
+  ),
+  base_gioi: Array.from({ length: 5 }, (_, index) =>
+    `/assets/equipment/items/base-gioi/gioi-${String(index + 1).padStart(2, '0')}.png`,
+  ),
+  base_truy: Array.from({ length: 5 }, (_, index) =>
+    `/assets/equipment/items/base-truy/truy-${String(index + 1).padStart(2, '0')}.png`,
+  ),
+} as const
 
-const BASE_COSTS: Pick<Equipment, 'maxEnhanceLevel' | 'enhanceCost' | 'enhanceSpiritStoneCost' | 'upgradeQualityCost' | 'upgradeRealmCost' | 'addAffixCost' | 'upgradeAffixCost' | 'washCost' | 'refineCost'> = {
+type EquipmentTemplateId = keyof typeof EQUIPMENT_ICON_POOLS
+
+const BASE_COSTS: Pick<
+  Equipment,
+  | 'maxEnhanceLevel'
+  | 'enhanceCost'
+  | 'enhanceSpiritStoneCost'
+  | 'upgradeQualityCost'
+  | 'upgradeRealmCost'
+  | 'addAffixCost'
+  | 'upgradeAffixCost'
+  | 'washCost'
+  | 'refineCost'
+> = {
   maxEnhanceLevel: 10,
-  enhanceCost: [{ materialId: 'bui_cot', amount: 3 }], enhanceSpiritStoneCost: 20,
+  enhanceCost: [{ materialId: 'bui_cot', amount: 3 }],
+  enhanceSpiritStoneCost: 20,
   upgradeQualityCost: [{ materialId: 'yeu_dan_luyen_khi_canh', amount: 3 }],
   upgradeRealmCost: [{ materialId: 'yeu_dan_luyen_khi_canh', amount: 2 }],
   addAffixCost: [{ materialId: 'affix_rune_stone', amount: 1 }],
@@ -32,13 +69,29 @@ const BASE_COSTS: Pick<Equipment, 'maxEnhanceLevel' | 'enhanceCost' | 'enhanceSp
   refineCost: [{ materialId: 'huyen_thiet', amount: 2 }],
 }
 
-function base(id: string, name: string, slot: EquipmentSlot): Equipment {
-  return { id, name, slot, grade: 1, mainStats: MAIN_STATS[slot], iconPool: [...EQUIPMENT_ICON_POOLS[slot]], ...BASE_COSTS }
+function base(id: EquipmentTemplateId, name: string, slot: EquipmentSlot): Equipment {
+  const iconPool = [...EQUIPMENT_ICON_POOLS[id]]
+
+  return {
+    id,
+    name,
+    slot,
+    grade: 1,
+    mainStats: MAIN_STATS[slot],
+    icon: iconPool[0],
+    iconPool,
+    ...BASE_COSTS,
+  }
 }
 
 // Chỉ còn từ loại cơ sở; tên đầy đủ, quality/rarity, stat và ảnh sống trên instance.
 export const equipment: Equipment[] = [
-  base('base_kiem', 'Kiếm', 'weapon'), base('base_chau', 'Châu', 'weapon'), base('base_quyen', 'Quyền', 'weapon'),
-  base('base_quan', 'Quán', 'helmet'), base('base_bao', 'Bào', 'armor'), base('base_hai', 'Hài', 'boots'),
-  base('base_gioi', 'Giới', 'ring'), base('base_truy', 'Trụy', 'necklace'),
+  base('base_kiem', 'Kiếm', 'weapon'),
+  base('base_chau', 'Châu', 'weapon'),
+  base('base_quyen', 'Quyền', 'weapon'),
+  base('base_quan', 'Quán', 'helmet'),
+  base('base_bao', 'Bào', 'armor'),
+  base('base_hai', 'Hài', 'boots'),
+  base('base_gioi', 'Giới', 'ring'),
+  base('base_truy', 'Trụy', 'necklace'),
 ]

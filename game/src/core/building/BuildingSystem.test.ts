@@ -21,8 +21,8 @@ const TEMPLATE: Building = {
   levels: [
     { level: 2, effects: [{ kind: 'craft_quality_bonus', percent: 5 }] },
     { level: 3, effects: [{ kind: 'craft_time_reduction', percent: 15 }] },
-    { level: 4, effects: [{ kind: 'concurrent_job_slots', amount: 2 }] },
-    { level: 5, effects: [{ kind: 'concurrent_job_slots', amount: 3 }] },
+    { level: 4, effects: [{ kind: 'craft_quality_bonus', percent: 5 }] },
+    { level: 5, effects: [{ kind: 'craft_time_reduction', percent: 10 }] },
   ],
 }
 
@@ -50,17 +50,16 @@ describe('BuildingSystem.getCraftModifiers (BUILDing spec mục 15-16)', () => {
 
     expect(modifiers.qualityBonusPercent).toBe(5)
     expect(modifiers.timeReductionPercent).toBe(15)
-    expect(modifiers.concurrentJobSlots).toBe(1)
   })
 
-  it('concurrent_job_slots dùng giá trị effect gần nhất đã đạt (không cộng dồn số slot)', () => {
+  it('cộng dồn effect cùng loại ở các mốc khác nhau', () => {
     const atLevel4 = system.getCraftModifiers(instanceAt(4), TEMPLATE)
 
-    expect(atLevel4.concurrentJobSlots).toBe(2)
+    expect(atLevel4.qualityBonusPercent).toBe(10)
 
     const atLevel5 = system.getCraftModifiers(instanceAt(5), TEMPLATE)
 
-    expect(atLevel5.concurrentJobSlots).toBe(3)
+    expect(atLevel5.timeReductionPercent).toBe(25)
   })
 
   it('không tính effect của level chưa đạt', () => {

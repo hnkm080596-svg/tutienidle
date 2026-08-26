@@ -7,6 +7,7 @@ import { getSkillRuntimeStat } from '../skill/SkillRuntimeStats'
 import type { CombatSystem } from '../combat/CombatSystem'
 import { getArmorMitigationPercent } from '../combat/Armor'
 import { getResistanceMitigationPercent } from '../combat/Resistance'
+import { elementalBasePower } from '../combat/ElementDamageCalculator'
 import type { StatModifier } from '../stats/StatCalculator'
 
 // Trần % giảm duration ailment nhận vào — tránh ailmentResistPercent
@@ -210,7 +211,10 @@ export class AilmentSystem {
       return Math.max(0, power * ratio * (1 - mitigation))
     }
 
-    const power = source.stats[`${template.element}Power`]
+    // combat-skill-flow-element-power-dot-plan.md §3.2 — DoT nguyên tố
+    // snapshot CÙNG nguồn Skill Power với direct hit: (ATK + Power hệ),
+    // qua đúng helper elementalBasePower() để 2 pipeline không thể lệch.
+    const power = elementalBasePower(source, template.element)
 
     const resistance = target.stats[`${template.element}Resistance`]
 

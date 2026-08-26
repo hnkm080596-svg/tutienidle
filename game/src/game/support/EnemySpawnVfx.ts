@@ -10,19 +10,26 @@
 //   scene shutdown). Upright depth do scene tính (uprightVfxDepth) để
 //   không xuyên sai qua entity.
 import Phaser from 'phaser'
-import type { EnemySpawnVfxPresetId } from '@/core/battle/CombatAction'
+import type {
+  EnemySpawnVfxPresetId,
+  PlayerSpawnVfxPresetId,
+} from '@/core/battle/CombatAction'
 import { DEPTH_GROUND_VFX } from './BattleLayers'
 import type { BattleGridProjection } from './BattleGridProjection'
+
+/** Preset spawn telegraph — quái theo cấp bậc + preset riêng cho Player. */
+export type SpawnVfxPresetId = EnemySpawnVfxPresetId | PlayerSpawnVfxPresetId
 
 interface SpawnPresetStyle {
   color: number
   radiusScale: number
 }
 
-const SPAWN_PRESET_STYLES: Record<EnemySpawnVfxPresetId, SpawnPresetStyle> = {
+const SPAWN_PRESET_STYLES: Record<SpawnVfxPresetId, SpawnPresetStyle> = {
   enemy_spawn: { color: 0x9cecff, radiusScale: 0.85 },
   elite_spawn: { color: 0xc9a2ff, radiusScale: 1.0 },
   boss_spawn: { color: 0xffd54f, radiusScale: 1.3 },
+  player_spawn: { color: 0x6fb2ff, radiusScale: 1.15 },
 }
 
 export interface EnemySpawnVfxHandle {
@@ -41,7 +48,7 @@ export interface EnemySpawnVfxParams {
   projection: BattleGridProjection
   row: number
   column: number
-  presetId: EnemySpawnVfxPresetId
+  presetId: SpawnVfxPresetId
   /** Depth cột linh khí — scene tính bằng uprightVfxDepth (occlusion). */
   uprightDepth: number
 }

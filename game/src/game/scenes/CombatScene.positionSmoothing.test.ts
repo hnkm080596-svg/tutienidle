@@ -41,6 +41,13 @@ function createScene() {
   scene.statuses = new Map()
   scene.spawnVfxHandles = new Map()
   scene.materializingIds = new Set()
+  scene.playerSpawnHandle = undefined
+  scene.playerMaterialized = true
+  scene.renderMode = 'flat'
+  scene.lastKnownScreenPositions = new Map()
+  scene.lastKnownGridPositions = new Map()
+  scene.maxTrackedSourcePositions = 64
+  scene.playerProfileId = 'mortal'
   scene.gridLeft = 0
   scene.gridTop = 0
   scene.cellSize = 50
@@ -74,6 +81,8 @@ function positionsEvent(overrides: Partial<BattlePositionsEvent> = {}): BattlePo
   return {
     type: 'positions',
     playerX: 0,
+    playerRow: 4,
+    playerMaterialized: true,
     playerCurrentHp: 100,
     playerMaxHp: 100,
     enemies: [],

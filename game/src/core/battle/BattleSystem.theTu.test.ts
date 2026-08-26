@@ -64,7 +64,9 @@ function createImpactSkill(): Skill {
     cost: 0,
     target: 'enemy',
     effects: [{ type: 'damage', value: 1, damageType: 'physical' }],
-    isBasicAttack: true,
+    execution: { kind: 'attack_speed' },
+    loadoutSlot: 0,
+    loadoutSlots: [0],
     resourceType: 'none',
     grantsMomentumPerHit: 40,
     breakDamagePerHit: 30,
@@ -120,7 +122,8 @@ describe('BattleSystem — Thể Tu Momentum/Break engine (Combat Rework Phase 7
 
     // start() luôn đặt lại x = HERO_HOME_X/ENEMY_SPAWN_X (400) — set lại
     // TRỰC TIẾP sau đó để quãng đường bay ngắn, dễ tính số tick cần.
-    enemy.x = 5
+    enemy.x = 2
+    enemy.row = 4
 
     // ~4 phát Impact trong 3.2s (cooldown 1s, attackSpeed 1 -> cast mỗi
     // 1s, cộng ~0.1s bay) x 40 Momentum/đòn = 160 lý thuyết, phải chặn

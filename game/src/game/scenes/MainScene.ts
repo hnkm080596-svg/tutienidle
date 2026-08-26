@@ -1,8 +1,15 @@
 import Phaser from 'phaser'
 import type { EventBus } from '@/core/events/EventBus'
+import { queueCombatAssets } from '@/game/support/CombatPreload'
 
 const GROUND_COLOR = 0x1c1712
 const SKY_COLOR = 0x11141c
+
+// (2026-08-26) Art base Động Phủ chuyển hẳn về DOM: DongFuScene.vue mount
+// thanh-van-dong-fu-base.png làm lớp nền cover-fit. Overlay DOM opaque
+// đó đè lên canvas nên image trong scene này KHÔNG BAO GIỜ nhìn thấy —
+// pipeline Phaser bị gỡ để không duy trì hai nguồn sự thật song song;
+// skyRect/groundRect giữ lại chỉ làm fallback khi canvas trống.
 
 const CHARACTER_HEIGHT_RATIO = 0.22
 
@@ -32,11 +39,17 @@ const CULTIVATION_LABEL = 'Đang Tu Luyện'
 // lại width hiển thị theo đúng tỉ lệ từng sheet mỗi lần đổi animation,
 // nếu không nhân vật sẽ méo hình lúc chuyển idle<->cultivate (xem
 // updateSpriteDisplaySize()).
-const IDLE_KEY = 'char-idle'
-const CULTIVATE_KEY = 'char-cultivate'
-const IDLE_SOURCE_SIZE = { w: 76, h: 112 }
-const CULTIVATE_SOURCE_SIZE = { w: 128, h: 132 }
-const ANIMATION_FRAME_RATE = 8
+// Player visual profile (body-anchor plan §4.3) — Home dùng art MỚI
+// theo profile: đứng = combat texture, kiết già = cultivate texture
+// (static PNG thay animation atlas). Kích thước nguồn đọc LIVE từ
+// texture (getSourceImage) nên đổi profile/texture không cần bảng số
+// cứng nữa.
+import {
+  PLAYER_VISUAL_PROFILES,
+  getCultivateTexture,
+  resolvePlayerVisualProfileId,
+  type PlayerVisualProfileId,
+} from '@/game/support/PlayerVisualProfiles'
 
 interface ResizeSize {
   width: number
@@ -45,8 +58,12 @@ interface ResizeSize {
 
 interface PlayerSprite {
   sprite: Phaser.GameObjects.Sprite
+
   label: Phaser.GameObjects.Text
+
   sitting: boolean
+
+  profileId: PlayerVisualProfileId
 }
 
 /**
@@ -79,6 +96,23 @@ export class MainScene extends Phaser.Scene {
   private battleStartHandler = () => this.onBattleStart()
   private tribulationStartHandler = () => this.scene.start('TribulationScene')
   private cultivationHandler = (event: CultivationStateEvent) => this.onCultivationChanged(event)
+  private playerVisualProfileHandler = () => {
+    if (!this.player) {
+      return
+    }
+
+    const registryProfileId = this.registry.get('playerVisualProfileId') as
+      | PlayerVisualProfileId
+      | undefined
+
+    if (registryProfileId && PLAYER_VISUAL_PROFILES[registryProfileId]) {
+      this.player.profileId = registryProfileId
+    }
+
+    this.refreshPlayerTexture()
+
+    this.updateSpriteDisplaySize()
+  }
 
   private canvasWidth = 0
   private canvasHeight = 0
@@ -91,18 +125,12 @@ export class MainScene extends Phaser.Scene {
   }
 
   preload() {
-    // load.multiatlas() (KHÔNG phải load.atlas()) — atlas TexturePacker
-    // dạng "multi-atlas" tự khai `image` bên trong chính file .json
-    // (xem asset-drop/idle.json's `textures[0].image`), multiatlas() tự
-    // đọc field đó rồi ghép với `path` (tham số 3) để tìm ảnh, atlas()
-    // thì bắt buộc truyền tay 1 textureURL nên không khớp shape này.
-    if (!this.textures.exists(IDLE_KEY)) {
-      this.load.multiatlas(IDLE_KEY, 'assets/idle.json', 'assets')
-    }
-
-    if (!this.textures.exists(CULTIVATE_KEY)) {
-      this.load.multiatlas(CULTIVATE_KEY, 'assets/cultivate.json', 'assets')
-    }
+    // Eager-load toàn bộ texture combat (thanh-van variant phiên + gourd +
+    // 20 art quái + player profiles) NGAY LÚC BOOT — CombatScene.start()
+    // lần ĐẦU (ngay sau 'battle_start') sẽ có loader queue rỗng, create()
+    // chạy gần như tức thời nên không bỏ lỡ phase spawn telegraph
+    // (fix "lần đầu vào combat không thấy spawn animation", 2026-08-26).
+    queueCombatAssets(this)
   }
 
   create() {
@@ -113,31 +141,21 @@ export class MainScene extends Phaser.Scene {
     this.skyRect = this.add.rectangle(0, 0, 0, 0, SKY_COLOR).setOrigin(0.5)
     this.groundRect = this.add.rectangle(0, 0, 0, 0, GROUND_COLOR).setOrigin(0.5)
 
-    // 17 frame mỗi atlas, đặt tên frame_000.png..frame_016.png (xác
-    // nhận qua asset-drop/idle.json/cultivate.json) — Sprite (khác
-    // Rectangle) đã mặc định setOrigin(0.5), không cần chỉnh tay.
-    if (!this.anims.exists(IDLE_KEY)) {
-      this.anims.create({
-        key: IDLE_KEY,
-        frames: this.anims.generateFrameNames(IDLE_KEY, { prefix: 'frame_', suffix: '.png', start: 0, end: 16, zeroPad: 3 }),
-        frameRate: ANIMATION_FRAME_RATE,
-        repeat: -1,
-      })
-    }
+    // Player visual profile (plan §4.3) — static texture theo profile;
+    // KHÔNG còn animation atlas idle/cultivate ở scene này.
+    const registryProfileId = this.registry.get('playerVisualProfileId') as
+      | PlayerVisualProfileId
+      | undefined
 
-    if (!this.anims.exists(CULTIVATE_KEY)) {
-      this.anims.create({
-        key: CULTIVATE_KEY,
-        frames: this.anims.generateFrameNames(CULTIVATE_KEY, { prefix: 'frame_', suffix: '.png', start: 0, end: 16, zeroPad: 3 }),
-        frameRate: ANIMATION_FRAME_RATE,
-        repeat: -1,
-      })
-    }
+    const profileId =
+      registryProfileId && PLAYER_VISUAL_PROFILES[registryProfileId]
+        ? registryProfileId
+        : resolvePlayerVisualProfileId({})
 
-    const sprite = this.add.sprite(0, 0, IDLE_KEY, 'frame_000.png').play(IDLE_KEY)
+    const sprite = this.add.sprite(0, 0, PLAYER_VISUAL_PROFILES[profileId].combatTextureKey)
     const label = this.add.text(0, 0, 'Player', { fontSize: '14px', color: '#ffffff' }).setOrigin(0.5, 0)
 
-    this.player = { sprite, label, sitting: false }
+    this.player = { sprite, label, sitting: false, profileId }
 
     this.applyBackgroundLayout(this.scale.width, this.scale.height)
 
@@ -158,14 +176,6 @@ export class MainScene extends Phaser.Scene {
     this.canvasWidth = width
     this.canvasHeight = height
 
-    this.skyRect.setPosition(width / 2, height / 2)
-    this.skyRect.width = width
-    this.skyRect.height = height
-    // width/height gán trực tiếp KHÔNG tự cập nhật displayOrigin (chỉ
-    // setSize() mới làm việc đó) — thiếu bước này thì rect chỉ hiện
-    // đúng góc dưới-phải của vị trí mong muốn (đã thấy qua Playwright).
-    this.skyRect.updateDisplayOrigin()
-
     this.groundY = height * GROUND_Y_RATIO
     const groundHeight = height * GROUND_HEIGHT_RATIO
 
@@ -181,19 +191,48 @@ export class MainScene extends Phaser.Scene {
     this.positionPlayer()
   }
 
-  // idle/cultivate là 2 atlas RIÊNG với sourceSize khác nhau (76x112 vs
-  // 128x132, xem hằng số đầu file) — nếu setDisplaySize() cùng 1 width
-  // cứng cho cả 2 thì 1 trong 2 sẽ méo hình. Luôn giữ characterHeight cố
-  // định, tự suy width theo ĐÚNG tỉ lệ khung hình của sheet đang phát.
+  // Static art theo profile — sourceSize đọc LIVE từ texture hiện hành
+  // (mỗi profile/art có kích thước nguồn khác nhau), giữ characterHeight
+  // cố định và tự suy width theo đúng tỉ lệ.
   private updateSpriteDisplaySize() {
     if (!this.player) {
       return
     }
 
-    const sourceSize = this.player.sitting ? CULTIVATE_SOURCE_SIZE : IDLE_SOURCE_SIZE
-    const width = this.characterHeight * (sourceSize.w / sourceSize.h)
+    const sourceImage = this.textures.get(this.player.sprite.texture.key).getSourceImage()
+
+    const sourceWidth = 'width' in sourceImage ? Number(sourceImage.width) : 1
+
+    const sourceHeight = 'height' in sourceImage ? Number(sourceImage.height) : 1
+
+    const width = this.characterHeight * (sourceWidth / Math.max(1, sourceHeight))
 
     this.player.sprite.setDisplaySize(width, this.characterHeight)
+  }
+
+  /** Texture key theo profile + pose đang hiển thị (plan §4.1 bảng). */
+  private textureKeyForCurrentPose(): string {
+    if (!this.player) {
+      return PLAYER_VISUAL_PROFILES.mortal.combatTextureKey
+    }
+
+    const profile = PLAYER_VISUAL_PROFILES[this.player.profileId]
+
+    return this.player.sitting
+      ? getCultivateTexture(profile).key
+      : profile.combatTextureKey
+  }
+
+  private refreshPlayerTexture() {
+    if (!this.player) {
+      return
+    }
+
+    const key = this.textureKeyForCurrentPose()
+
+    if (this.textures.exists(key) && this.player.sprite.texture.key !== key) {
+      this.player.sprite.setTexture(key)
+    }
   }
 
   // Player luôn đứng giữa Home Scene (HERO_HOME_X = 0, xem BattleLane.ts)
@@ -225,6 +264,9 @@ export class MainScene extends Phaser.Scene {
     eventBus.on<void>('battle_start', this.battleStartHandler)
     eventBus.on<void>('tribulation_started', this.tribulationStartHandler)
     eventBus.on<CultivationStateEvent>('cultivation_changed', this.cultivationHandler)
+    // Player visual profile bridge (plan §4.2) — đổi hình thái áp dụng
+    // texture NGAY cho pose đang hiển thị.
+    eventBus.on('player_visual_profile_changed', this.playerVisualProfileHandler)
   }
 
   private unsubscribeCombatEvents() {
@@ -235,19 +277,22 @@ export class MainScene extends Phaser.Scene {
     this.eventBus.off<void>('battle_start', this.battleStartHandler)
     this.eventBus.off<void>('tribulation_started', this.tribulationStartHandler)
     this.eventBus.off<CultivationStateEvent>('cultivation_changed', this.cultivationHandler)
+    this.eventBus.off('player_visual_profile_changed', this.playerVisualProfileHandler)
   }
 
-  // Cultivation gating — đổi animation player sang "ngồi thiền" (sheet
-  // cultivate + đổi label) khi isCultivating=true, trả lại idle khi
-  // false.
+  // Cultivation gating — đổi TEXTURE tĩnh sang art kiết già (theo profile
+  // hiện hành) khi isCultivating=true, trả lại art đứng khi false (plan
+  // §4.3: static swap thay animation atlas cũ).
   private onCultivationChanged(event: CultivationStateEvent) {
     if (!this.player) {
       return
     }
 
     this.player.sitting = event.isCultivating
+
     this.player.label.setText(event.isCultivating ? CULTIVATION_LABEL : 'Player')
-    this.player.sprite.play(event.isCultivating ? CULTIVATE_KEY : IDLE_KEY)
+
+    this.refreshPlayerTexture()
 
     this.updateSpriteDisplaySize()
     this.positionPlayer()

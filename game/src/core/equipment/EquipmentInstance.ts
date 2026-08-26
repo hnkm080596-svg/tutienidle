@@ -89,4 +89,15 @@ export interface EquipmentInstance {
   // EquipmentSystem.getMaxForgePoints(). 2 item CÙNG quality có thể có
   // trần Rèn khác hẳn nhau tuỳ độ may khi rớt.
   forgePotential: number
+
+  // Hóa Luyện guards (2026-08-25, resource-professions-rework plan
+  // §7.5) — item locked/favorite bị loại khỏi danh sách phân giải.
+  locked?: boolean
+
+  favorite?: boolean
+
+  // NOTE (rework 2026-08-26): "Điểm Rèn" của món đồ CHÍNH LÀ
+  // forgePoints/trần getMaxForgePoints(quality, forgePotential) ở trên
+  // (tooltip "Tình trạng rèn x/y") — Tẩy Luyện/Tinh Luyện tiêu thụ đúng
+  // tài nguyên này; KHÔNG thêm pool refinementPoints riêng nữa.
 }

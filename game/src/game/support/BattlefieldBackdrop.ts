@@ -47,9 +47,10 @@ function mulberry32(seed: number): () => number {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296
   }
 }
-
 export interface BattlefieldBackdropHandle {
-  redraw(): void
+  /** width/height optional — procedural backdrop bỏ qua, art mount dùng. */
+  redraw(width?: number, height?: number): void
+
   destroy(): void
 }
 

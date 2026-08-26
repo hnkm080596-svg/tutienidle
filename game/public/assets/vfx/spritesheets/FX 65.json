@@ -1,0 +1,16 @@
+﻿{
+    "frames":  {
+
+               },
+    "meta":  {
+                 "app":  "ImageMagick + PowerShell",
+                 "version":  "1.0",
+                 "image":  "FX 65.png",
+                 "format":  "RGBA8888",
+                 "size":  {
+                              "w":  0,
+                              "h":  0
+                          },
+                 "scale":  "1"
+             }
+}

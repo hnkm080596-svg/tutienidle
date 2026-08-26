@@ -5,19 +5,23 @@ import { calculateStats } from '../stats/StatCalculator'
 import { SKILLS } from '../../data/skill/Skills'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 
-// Plans/waterpath (2026-08-21) — Thủy đi theo ĐÚNG khuôn Hỏa (xem
-// GameManager.phapTuFirePath.test.ts): 1 Active Skill/hành, Node Tree
-// Luyện Khí (3 Minor) + Trúc Cơ (2 Major loại trừ nhau + Minor đi kèm).
-// Feedback (2026-08-21) — KHÁC Hỏa: Thủy Tiễn Thuật KHÔNG học sẵn miễn
-// phí nữa, phải mua node "Lĩnh Ngộ Thủy" (thuy_linh_ngo, 2 Skill Point)
-// TRƯỚC — node này là prerequisite của MỌI node khác trong hành, kể cả
-// Luyện Khí.
-describe('GameManager — Pháp Tu waterpath (Thủy Node Tree Luyện Khí/Trúc Cơ)', () => {
-  it('Thủy Luyện Khí: 3 Minor mua được sau khi Lĩnh Ngộ Thủy, KHÔNG mua được trước đó', () => {
-    const gameManager = new GameManager()
+// Rework combat-skill-flow-element-power-dot-plan.md §6 — Thủy dùng cùng
+// bộ khung: Root Thủy Tiễn Thuật → Power/Cadence/Mechanic growth →
+// Keystone Dẫn Lưu XOR Tụ Thủy → specialization sau keystone cha.
 
-    gameManager.registerSkillTemplates(SKILLS)
-    gameManager.registerProgressionNodes(PHAP_TU_NODES)
+function setup() {
+  const gameManager = new GameManager()
+
+  gameManager.registerSkillTemplates(SKILLS)
+
+  gameManager.registerProgressionNodes(PHAP_TU_NODES)
+
+  return gameManager
+}
+
+describe('GameManager — Pháp Tu WaterPath (Thủy Node Tree)', () => {
+  it('Thủy Luyện Khí: growth nodes mua được sau root, KHÔNG trước đó', () => {
+    const gameManager = setup()
 
     const player = createDefaultPlayer()
 
@@ -27,34 +31,35 @@ describe('GameManager — Pháp Tu waterpath (Thủy Node Tree Luyện Khí/Trú
 
     expect(gameManager.purchaseNode('thuy_linh_ngo', player)).toBe(true)
     expect(gameManager.skillManager.get('thuy_tien_thuat')?.unlocked).toBe(true)
+    expect(player.skillInsight).toBe(3)
 
     expect(gameManager.purchaseNode('minor_water_intensity', player)).toBe(true)
     expect(gameManager.purchaseNode('minor_water_haste', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_water_application', player)).toBe(true)
+    expect(gameManager.purchaseNode('minor_water_cast_speed', player)).toBe(true)
 
     expect(player.skillInsight).toBe(0)
 
     const finalStats = calculateStats(player.baseStats, [
       ...player.modifiers,
-      ...gameManager.getAggregatedModifiers(),
+      ...gameManager.getAggregatedModifiers(player),
     ])
 
-    expect(finalStats.castSpeedPercent).toBeGreaterThanOrEqual(0.05)
-    expect(finalStats.elementApplicationPercent).toBeGreaterThanOrEqual(0.05)
+    // Thủy Linh +2 Thủy Lực; Thủy Tốc +3% cast speed; Lưu Tốc +2% CDR.
+    expect(finalStats.waterPower).toBeGreaterThanOrEqual(2)
+    expect(finalStats.castSpeedPercent).toBeGreaterThanOrEqual(0.03)
+    expect(finalStats.cooldownReduction).toBeGreaterThanOrEqual(0.02)
   })
 
-  it('Thủy Trúc Cơ: Major Dẫn Lưu/Tụ Thủy bị chặn trước Trúc Cơ, loại trừ lẫn nhau sau khi mua 1 trong 2', () => {
-    const gameManager = new GameManager()
-
-    gameManager.registerSkillTemplates(SKILLS)
-    gameManager.registerProgressionNodes(PHAP_TU_NODES)
+  it('Thủy Trúc Cơ: Keystone cần Power ≥ 1 + Trúc Cơ, loại trừ lẫn nhau', () => {
+    const gameManager = setup()
 
     const player = createDefaultPlayer()
 
-    player.skillInsight = 10
+    player.skillInsight = 30
     player.realmId = 'qi_refining'
 
     expect(gameManager.purchaseNode('thuy_linh_ngo', player)).toBe(true)
+    expect(gameManager.purchaseNode('minor_water_intensity', player)).toBe(true)
 
     expect(gameManager.purchaseNode('thuy_truc_co_dan_luu', player)).toBe(false)
 
@@ -64,42 +69,41 @@ describe('GameManager — Pháp Tu waterpath (Thủy Node Tree Luyện Khí/Trú
     expect(gameManager.purchaseNode('thuy_truc_co_tu_thuy', player)).toBe(false)
   })
 
-  it('Thủy Trúc Cơ: Thủy Nguyên + Lưu Tốc (minor chung) chỉ cần Trúc Cơ, không cần chọn Major nào', () => {
-    const gameManager = new GameManager()
-
-    gameManager.registerSkillTemplates(SKILLS)
-    gameManager.registerProgressionNodes(PHAP_TU_NODES)
+  it('Thủy Trúc Cơ Pure: specialization chỉ mở sau Tụ Thủy; thùy thế qua runtime stats', () => {
+    const gameManager = setup()
 
     const player = createDefaultPlayer()
 
-    player.skillInsight = 4
+    player.skillInsight = 30
     player.realmId = 'foundation_establishment'
 
     expect(gameManager.purchaseNode('thuy_linh_ngo', player)).toBe(true)
+    expect(gameManager.purchaseNode('minor_water_intensity', player)).toBe(true)
 
-    expect(gameManager.purchaseNode('minor_water_heart', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_water_cast_speed', player)).toBe(true)
+    expect(gameManager.purchaseNode('minor_water_channeling', player)).toBe(false)
+    expect(gameManager.purchaseNode('minor_water_softness', player)).toBe(false)
 
-    const finalStats = calculateStats(player.baseStats, [
-      ...player.modifiers,
-      ...gameManager.getAggregatedModifiers(),
-    ])
+    expect(gameManager.purchaseNode('thuy_truc_co_tu_thuy', player)).toBe(true)
 
-    expect(finalStats.cooldownReduction).toBeGreaterThanOrEqual(0.03)
+    expect(gameManager.purchaseNode('minor_water_channeling', player)).toBe(true)
+    expect(gameManager.purchaseNode('minor_water_softness', player)).toBe(true)
+
+    const runtimeStats = gameManager.getSkillRuntimeStats(player)
+
+    // Tụ Thủy keystone +5%; Thủy Mạch + Nhuyễn Lưu mỗi node level 1 +1%.
+    expect(runtimeStats.thuyThePercent).toBeGreaterThanOrEqual(0.07)
   })
 
-  it('Thủy Trúc Cơ Reaction: Dẫn Lưu cấp thật elementApplicationPercent + waterReactionExtensionSeconds, Cộng Lưu CHẶN nếu chưa chọn Dẫn Lưu', () => {
-    const gameManager = new GameManager()
-
-    gameManager.registerSkillTemplates(SKILLS)
-    gameManager.registerProgressionNodes(PHAP_TU_NODES)
+  it('Thủy Trúc Cơ Reaction: Dẫn Lưu cấp elementApplication, Cộng Lưu CHẶN nếu chưa chọn', () => {
+    const gameManager = setup()
 
     const player = createDefaultPlayer()
 
-    player.skillInsight = 10
+    player.skillInsight = 30
     player.realmId = 'foundation_establishment'
 
     expect(gameManager.purchaseNode('thuy_linh_ngo', player)).toBe(true)
+    expect(gameManager.purchaseNode('minor_water_intensity', player)).toBe(true)
 
     expect(gameManager.purchaseNode('minor_water_reaction_effect', player)).toBe(false)
 
@@ -108,35 +112,11 @@ describe('GameManager — Pháp Tu waterpath (Thủy Node Tree Luyện Khí/Trú
 
     const finalStats = calculateStats(player.baseStats, [
       ...player.modifiers,
-      ...gameManager.getAggregatedModifiers(),
+      ...gameManager.getAggregatedModifiers(player),
     ])
 
+    // Dẫn Lưu 0.15 + Cộng Lưu level 1: 0.05.
     expect(finalStats.elementApplicationPercent).toBeGreaterThanOrEqual(0.15)
-    expect(gameManager.skillManager.get('thuy_tien_thuat')?.waterReactionExtensionSeconds).toBeGreaterThanOrEqual(1)
     expect(finalStats.reactionEffectPercent).toBeGreaterThanOrEqual(0.05)
-  })
-
-  it('Thủy Trúc Cơ Pure: Tụ Thủy cấp thuyThePercent, Thủy Mạch/Nhu Lưu CHẶN nếu chưa chọn Tụ Thủy', () => {
-    const gameManager = new GameManager()
-
-    gameManager.registerSkillTemplates(SKILLS)
-    gameManager.registerProgressionNodes(PHAP_TU_NODES)
-
-    const player = createDefaultPlayer()
-
-    player.skillInsight = 10
-    player.realmId = 'foundation_establishment'
-
-    expect(gameManager.purchaseNode('thuy_linh_ngo', player)).toBe(true)
-
-    expect(gameManager.purchaseNode('minor_water_channeling', player)).toBe(false)
-    expect(gameManager.purchaseNode('minor_water_softness', player)).toBe(false)
-
-    expect(gameManager.purchaseNode('thuy_truc_co_tu_thuy', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_water_channeling', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_water_softness', player)).toBe(true)
-
-    // Tụ Thủy flat 0.05 + Thủy Mạch flat 0.02 + Nhu Lưu flat 0.02.
-    expect(gameManager.skillManager.get('thuy_tien_thuat')?.thuyThePercent).toBeGreaterThanOrEqual(0.09)
   })
 })

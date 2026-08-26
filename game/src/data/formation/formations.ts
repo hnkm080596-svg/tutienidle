@@ -1,108 +1,47 @@
 import type { Formation } from '@/core/formation/Formation'
+import type { StatModifier } from '@/core/stats/StatCalculator'
 
-// Naming-principles pass (2026-08-14) — [Effect] + Trận, `pham` thay
-// `grade` cũ (xem Pham.ts). Effect word của blazing_strike_formation
-// đổi "Liệt Diễm" -> "Liệt Hỏa" để khớp đúng chính tả Effect Dictionary
-// trong tài liệu (mục 12, nhóm Offensive). Tên ghép động (2026-08-15)
-// — tiền tố Phẩm KHÔNG còn bake vào `name`, ghép động lúc hiển thị từ
-// `pham` (xem core/item/Pham.ts's composeItemGradeNameSegments(),
-// FormationBagSection.vue).
-export const formations: Formation[] = [
-  {
-    id: 'blazing_strike_formation',
+// Trận (2026-08-24, resource-professions-rework §7) — modifier-item hai
+// modifier tĩnh tấn công, socket mọi slot (mỗi slot 1 Trận cạnh 1 Phù).
+// MVP bỏ trigger/stack — FormationSystem legacy không còn chạy.
+function modifier(
+  id: string,
+  sourceId: string,
+  stat: StatModifier['stat'],
+  flat: number,
+): StatModifier {
+  return { id, sourceId, sourceType: 'formation', stat, flat }
+}
 
-    name: 'Liệt Hỏa Trận',
+const REALM_IDS = ['mortal', 'qi_refining', 'foundation_establishment'] as const
+const REALM_NAMES: Record<(typeof REALM_IDS)[number], string> = {
+  mortal: 'Phàm Nhân',
+  qi_refining: 'Luyện Khí',
+  foundation_establishment: 'Trúc Cơ',
+}
+const RARITY_NAMES = { common: 'Hạ Phẩm', uncommon: 'Trung Phẩm', rare: 'Thượng Phẩm' } as const
+const RARITY_SCALE = { common: 1, uncommon: 2.5, rare: 6 } as const
+const REALM_SCALE = { mortal: 1, qi_refining: 4, foundation_establishment: 12 } as const
+const ALL_SLOTS = ['weapon', 'helmet', 'armor', 'boots', 'ring', 'necklace'] as const
 
-    icon: '/assets/formations/blazing_strike_formation.png',
+export const formations: Formation[] = REALM_IDS.flatMap((realmId) =>
+  (['common', 'uncommon', 'rare'] as const).map((rarity) => {
+    const scale = RARITY_SCALE[rarity] * REALM_SCALE[realmId]
+    const id = `tran_${realmId}_${rarity}`
+    const name = `${RARITY_NAMES[rarity]} Trận ${REALM_NAMES[realmId]}`
 
-    description: 'Trận pháp khảm vào vũ khí, mỗi đòn đánh trúng tích luỹ thêm sát khí.',
-
-    grade: 'huyen',
-
-    trigger: 'hit',
-
-    modifiers: [
-      {
-        id: 'blazing_strike_formation_attack',
-
-        sourceId: 'blazing_strike_formation',
-        sourceType: 'formation',
-
-        stat: 'attack',
-
-        percent: 0.005,
-
-        stacks: 0,
-
-        maxStacks: 50,
-      },
-    ],
-  },
-
-  // MASTER SPEC Mục VI (Phase 8) — minh hoạ Defensive Formation với
-  // trigger khác 'hit' (per_second, giống buff tích luỹ theo thời
-  // gian đứng chiến đấu, không phụ thuộc số đòn đánh ra).
-  {
-    id: 'golden_bell_formation',
-
-    name: 'Kim Chung Trận',
-
-    icon: '/assets/formations/golden_bell_formation.png',
-
-    description: 'Trận pháp phòng ngự, mỗi giây chiến đấu tích luỹ thêm hộ thể chân khí.',
-
-    grade: 'huyen',
-
-    trigger: 'per_second',
-
-    modifiers: [
-      {
-        id: 'golden_bell_formation_defense',
-
-        sourceId: 'golden_bell_formation',
-        sourceType: 'formation',
-
-        stat: 'defense',
-
-        percent: 0.004,
-
-        stacks: 0,
-
-        maxStacks: 60,
-      },
-    ],
-  },
-
-  // Utility Formation — trigger 'critical', cấp leech thay vì buff
-  // thuần công/thủ.
-  {
-    id: 'lifesteal_formation',
-
-    name: 'Đoạt Mệnh Trận',
-
-    icon: '/assets/formations/lifesteal_formation.png',
-
-    description: 'Trận pháp tà môn, mỗi đòn chí mạng hút thêm sinh lực từ kẻ địch.',
-
-    grade: 'dia',
-
-    trigger: 'critical',
-
-    modifiers: [
-      {
-        id: 'lifesteal_formation_leech',
-
-        sourceId: 'lifesteal_formation',
-        sourceType: 'formation',
-
-        stat: 'leechPercent',
-
-        percent: 0.01,
-
-        stacks: 0,
-
-        maxStacks: 20,
-      },
-    ],
-  },
-]
+    return {
+      id,
+      name,
+      description: 'Trận hai modifier tấn công, gắn trên slot trang bị cùng cảnh giới.',
+      realmId,
+      grade:
+        realmId === 'mortal' ? 'cuu_pham' : realmId === 'qi_refining' ? 'bat_pham' : 'that_pham',
+      allowedSlots: ALL_SLOTS,
+      modifiers: [
+        modifier(`${id}_attack`, id, 'attack', Math.round(6 * scale)),
+        modifier(`${id}_crit`, id, 'criticalRate', Number((0.02 * scale).toFixed(4))),
+      ],
+    }
+  }),
+)

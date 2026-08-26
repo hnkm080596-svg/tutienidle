@@ -16,34 +16,127 @@ export interface EquipmentSlotStatPolicy {
   substats: readonly StatType[]
 }
 
-const ELEMENT_POWER_STATS = ['firePower', 'woodPower', 'waterPower', 'metalPower', 'earthPower'] as const
-const ELEMENT_PENETRATION_STATS = ['firePenetration', 'woodPenetration', 'waterPenetration', 'metalPenetration', 'earthPenetration'] as const
-const ELEMENT_RESISTANCE_STATS = ['fireResistance', 'woodResistance', 'waterResistance', 'metalResistance', 'earthResistance', 'windResistance', 'lightningResistance'] as const
+const ELEMENT_POWER_STATS = [
+  'firePower',
+  'woodPower',
+  'waterPower',
+  'metalPower',
+  'earthPower',
+] as const
+const ELEMENT_PENETRATION_STATS = [
+  'firePenetration',
+  'woodPenetration',
+  'waterPenetration',
+  'metalPenetration',
+  'earthPenetration',
+] as const
+const ELEMENT_RESISTANCE_STATS = [
+  'fireResistance',
+  'woodResistance',
+  'waterResistance',
+  'metalResistance',
+  'earthResistance',
+  'windResistance',
+  'lightningResistance',
+] as const
 
 export const EQUIPMENT_SLOT_STAT_POLICY: Record<EquipmentSlot, EquipmentSlotStatPolicy> = {
   weapon: {
-    tendency: 'Công', mainStats: ['attack'],
-    substats: ['criticalRate', 'criticalDamage', 'attackSpeed', 'castSpeedPercent', 'accuracyRating', 'skillDamagePercent', 'ailmentPotencyPercent', 'leechPercent', 'finalDamagePercent', ...ELEMENT_POWER_STATS, ...ELEMENT_PENETRATION_STATS],
+    tendency: 'Công',
+    mainStats: ['attack'],
+    substats: [
+      'criticalRate',
+      'criticalDamage',
+      'attackSpeed',
+      'castSpeedPercent',
+      'accuracyRating',
+      'skillDamagePercent',
+      'ailmentPotencyPercent',
+      'leechPercent',
+      'finalDamagePercent',
+      ...ELEMENT_POWER_STATS,
+      ...ELEMENT_PENETRATION_STATS,
+    ],
   },
   helmet: {
-    tendency: 'Thủ', mainStats: ['maxHp'],
-    substats: ['maxMp', 'wardMax', 'wardRegenPerSecond', 'manaRegenPerSecond', 'criticalAvoidance', 'ailmentResistPercent', 'dotResistancePercent', 'manaShieldPercent', 'finalDamageReductionPercent', ...ELEMENT_RESISTANCE_STATS],
+    tendency: 'Thủ',
+    mainStats: ['maxHp'],
+    substats: [
+      'maxMp',
+      'wardMax',
+      'wardRegenPerSecond',
+      'manaRegenPerSecond',
+      'criticalAvoidance',
+      'ailmentResistPercent',
+      'dotResistancePercent',
+      'manaShieldPercent',
+      'finalDamageReductionPercent',
+      ...ELEMENT_RESISTANCE_STATS,
+    ],
   },
   armor: {
-    tendency: 'Thủ', mainStats: ['defense'],
-    substats: ['maxHp', 'blockChance', 'blockEffectiveness', 'enduranceThreshold', 'endurancePercent', 'criticalAvoidance', 'dotResistancePercent', 'thornsPercent', 'hpRegenPerSecond', 'finalDamageReductionPercent', ...ELEMENT_RESISTANCE_STATS],
+    tendency: 'Thủ',
+    mainStats: ['defense'],
+    substats: [
+      'maxHp',
+      'blockChance',
+      'blockEffectiveness',
+      'enduranceThreshold',
+      'endurancePercent',
+      'criticalAvoidance',
+      'dotResistancePercent',
+      'thornsPercent',
+      'hpRegenPerSecond',
+      'finalDamageReductionPercent',
+      ...ELEMENT_RESISTANCE_STATS,
+    ],
   },
   boots: {
-    tendency: 'Thủ', mainStats: ['evasionRate'],
-    substats: ['criticalAvoidance', 'ailmentResistPercent', 'hpRegenPerSecond', 'wardRegenPerSecond', 'endurancePercent', 'finalDamageReductionPercent', 'cooldownReduction', 'castSpeedPercent', ...ELEMENT_RESISTANCE_STATS],
+    tendency: 'Thủ',
+    mainStats: ['evasionRate'],
+    substats: [
+      'criticalAvoidance',
+      'ailmentResistPercent',
+      'hpRegenPerSecond',
+      'wardRegenPerSecond',
+      'endurancePercent',
+      'finalDamageReductionPercent',
+      'cooldownReduction',
+      'castSpeedPercent',
+      ...ELEMENT_RESISTANCE_STATS,
+    ],
   },
   ring: {
-    tendency: 'Công', mainStats: ['criticalRate', 'criticalDamage'],
-    substats: ['attack', 'attackSpeed', 'castSpeedPercent', 'accuracyRating', 'skillDamagePercent', 'ailmentPotencyPercent', 'leechPercent', 'finalDamagePercent', ...ELEMENT_POWER_STATS],
+    tendency: 'Công',
+    mainStats: ['criticalRate', 'criticalDamage'],
+    substats: [
+      'attack',
+      'attackSpeed',
+      'castSpeedPercent',
+      'accuracyRating',
+      'skillDamagePercent',
+      'ailmentPotencyPercent',
+      'leechPercent',
+      'finalDamagePercent',
+      ...ELEMENT_POWER_STATS,
+    ],
   },
   necklace: {
-    tendency: 'Utility', mainStats: ['attackSpeed', 'castSpeedPercent'],
-    substats: ['cooldownReduction', 'manaRegenPerSecond', 'wardMax', 'wardRegenPerSecond', 'maxHp', 'criticalAvoidance', 'ailmentResistPercent', 'manaShieldPercent', 'leechPercent', 'finalDamageReductionPercent', ...ELEMENT_RESISTANCE_STATS],
+    tendency: 'Utility',
+    mainStats: ['attackSpeed', 'castSpeedPercent'],
+    substats: [
+      'cooldownReduction',
+      'manaRegenPerSecond',
+      'wardMax',
+      'wardRegenPerSecond',
+      'maxHp',
+      'criticalAvoidance',
+      'ailmentResistPercent',
+      'manaShieldPercent',
+      'leechPercent',
+      'finalDamageReductionPercent',
+      ...ELEMENT_RESISTANCE_STATS,
+    ],
   },
 }
 
@@ -63,21 +156,25 @@ export function isValidEquipmentSubstat(slot: EquipmentSlot, stat: StatType): bo
 // startup, TASK.md yêu cầu) VÀ EquipmentSystem.createInstance() (validate
 // lại lúc roll, phòng template lọt qua chưa đăng ký) — tránh 2 nơi tự copy
 // cùng 1 rule rồi lệch nhau khi rule đổi.
-export function assertValidEquipmentMainStats(item: Pick<Equipment, 'id' | 'slot' | 'mainStats'>): void {
+export function assertValidEquipmentMainStats(
+  item: Pick<Equipment, 'id' | 'slot' | 'mainStats'>,
+): void {
   if (item.mainStats.length === 0) {
     throw new Error(`Equipment ${item.id} has no main stat range`)
   }
 
-  const invalidMainStat = item.mainStats.find(range => !isValidEquipmentMainStat(item.slot, range.stat))
+  const invalidMainStat = item.mainStats.find(
+    (range) => !isValidEquipmentMainStat(item.slot, range.stat),
+  )
 
   if (invalidMainStat) {
-    throw new Error(`Invalid main stat ${invalidMainStat.stat} for equipment slot ${item.slot} (${item.id})`)
+    throw new Error(
+      `Invalid main stat ${invalidMainStat.stat} for equipment slot ${item.slot} (${item.id})`,
+    )
   }
 
-  const invalidRange = item.mainStats.find(range =>
-    !Number.isFinite(range.min)
-    || !Number.isFinite(range.max)
-    || range.min > range.max,
+  const invalidRange = item.mainStats.find(
+    (range) => !Number.isFinite(range.min) || !Number.isFinite(range.max) || range.min > range.max,
   )
 
   if (invalidRange) {

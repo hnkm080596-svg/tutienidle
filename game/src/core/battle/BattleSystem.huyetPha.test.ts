@@ -61,7 +61,9 @@ function createDiemKimThuat(): Skill {
     cost: 0,
     target: 'enemy',
     effects: [{ type: 'ailment', ailmentId: 'chay_mau', ailmentChance: 1, grantsKimThePerProc: true, grantsHuyetPhaPerProc: true }],
-    isBasicAttack: true,
+    execution: { kind: 'attack_speed' },
+    loadoutSlot: 0,
+    loadoutSlots: [0],
     resourceType: 'none',
     unlocked: true,
     equipped: true,
@@ -131,7 +133,8 @@ describe('BattleSystem — Huyết Phá (Plans/magicpathgeneral Phase 13)', () =
 
     system.start(player, enemy)
     system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
-    enemy.x = 5 // start() ghi đè x=400 > SCREEN_VISIBLE_MAX_X(350) — đặt lại trong tầm nhìn.
+    enemy.x = 2
+    enemy.row = 4 // start() ghi đè x=400 > SCREEN_VISIBLE_MAX_X(350) — đặt lại trong tầm nhìn.
 
     // remainingCooldown khởi tạo 0 -> cast NGAY ở t=0, rồi mỗi 1s tiếp
     // theo (attackSpeed mặc định 1) -> t=0,1,2 = 3 lần cast trong 2.5s
@@ -158,7 +161,8 @@ describe('BattleSystem — Huyết Phá (Plans/magicpathgeneral Phase 13)', () =
 
     system.start(player, enemy)
     system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
-    enemy.x = 5 // start() ghi đè x=400 > SCREEN_VISIBLE_MAX_X(350) — đặt lại trong tầm nhìn.
+    enemy.x = 2
+    enemy.row = 4 // start() ghi đè x=400 > SCREEN_VISIBLE_MAX_X(350) — đặt lại trong tầm nhìn.
 
     // t=0,1,2,3,4 = ĐÚNG 5 lần cast trong 4.5s (dừng TRƯỚC lần cast
     // thứ 6 ở t=5) — chạm MAX_HUYET_PHA đúng ở lần cast thứ 5, burst
@@ -198,7 +202,8 @@ describe('BattleSystem — Huyết Phá (Plans/magicpathgeneral Phase 13)', () =
 
     system.start(player, enemy)
     system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
-    enemy.x = 5 // start() ghi đè x=400 > SCREEN_VISIBLE_MAX_X(350) — đặt lại trong tầm nhìn.
+    enemy.x = 2
+    enemy.row = 4 // start() ghi đè x=400 > SCREEN_VISIBLE_MAX_X(350) — đặt lại trong tầm nhìn.
 
     // Cùng timing 4.5s/5 lần cast như test trên.
     for (let i = 0; i < 450; i++) {

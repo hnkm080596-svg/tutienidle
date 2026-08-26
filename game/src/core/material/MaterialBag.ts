@@ -16,13 +16,15 @@ export class MaterialBag {
       return
     }
 
+    const limit = material.stackLimit ?? MAX_STACK_AMOUNT
+
     const existing =
       this.materials.get(
         material.id,
       )
 
     if (existing) {
-      existing.amount = Math.min(existing.amount + amount, MAX_STACK_AMOUNT)
+      existing.amount = Math.min(existing.amount + amount, limit)
 
       return
     }
@@ -32,7 +34,7 @@ export class MaterialBag {
       {
         material,
 
-        amount: Math.min(amount, MAX_STACK_AMOUNT),
+        amount: Math.min(amount, limit),
       },
     )
   }

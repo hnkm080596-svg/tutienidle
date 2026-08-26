@@ -1,5 +1,1 @@
-export type PillType =
-  | 'healing'
-  | 'cultivation'
-  | 'buff'
-  | 'permanent'
+export type PillType = 'healing' | 'cultivation' | 'buff' | 'permanent'

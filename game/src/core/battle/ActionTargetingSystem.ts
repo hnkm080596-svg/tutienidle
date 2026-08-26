@@ -1,27 +1,58 @@
 // Combat Grid Rework — chọn primary target + thu thập vùng ảnh hưởng
 // hoàn toàn theo đơn vị GRID (cột/hàng). Pure functions, không state.
-import type { Battle, BattleEnemy } from './Battle'
+//
+// Hai semantics khoảng cách RIÊNG BIỆT (plan §6.1) — không được hợp nhất:
+// - Player → enemy: Chebyshev quanh avatar, so với player.stats.attackRange.
+// - Enemy → cổng Player: chỉ chênh CỘT tới gateColumn, không xét row.
+import type { Battle } from './Battle'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { ActionTargeting, TargetSelectionMode } from './CombatAction'
 import {
   GRID_ROW_COUNT,
   GRID_COLUMN_COUNT,
-  VISIBLE_MAX_COLUMN,
   getCellsInArea,
+  entityGridPosition,
+  getChebyshevDistance,
   getColumnFromWorldX,
   type CellArea,
   type LaneIndex,
 } from './BattleGrid'
+import { rankTargetsByStrategy, type CombatAiStrategy, DEFAULT_COMBAT_AI_STRATEGY } from './CombatAiStrategy'
 
 /** Hero là CỔNG chặn ngang mọi hàng — targetable từ bất kỳ row nào. */
 export function isHeroGate(entity: CombatEntity, playerId: string): boolean {
   return entity.id === playerId
 }
 
+/**
+ * Khoảng cách tấn công của Player (plan §2.3): Chebyshev giữa ô avatar
+ * và ô target. Mục tiêu trong tầm khi `<= player.stats.attackRange`.
+ */
+export function canPlayerReachTarget(player: CombatEntity, target: CombatEntity): boolean {
+  if (!target.alive) {
+    return false
+  }
+
+  return (
+    getChebyshevDistance(entityGridPosition(player), entityGridPosition(target)) <=
+    player.stats.attackRange
+  )
+}
+
+/**
+ * Khoảng cách quái tới CỔNG Player (plan §6.1):
+ * - KHÔNG xét row avatar;
+ * - distance = abs(enemy.x - gateColumn);
+ * - so với attackRange của chính quái;
+ * - yêu cầu quái đã materialize (nằm trong battle.enemies).
+ */
+export function canEnemyReachGate(enemy: CombatEntity, gateColumn: number): boolean {
+  return Math.abs(enemy.x - gateColumn) <= enemy.stats.attackRange
+}
+
 interface Candidate {
   entity: CombatEntity
   columnDistance: number
-  laneDistance: number
 }
 
 function compareBySelection(a: Candidate, b: Candidate, selection: TargetSelectionMode): number {
@@ -31,63 +62,89 @@ function compareBySelection(a: Candidate, b: Candidate, selection: TargetSelecti
     case 'highest_hp':
       return b.entity.currentHp - a.entity.currentHp
     default:
-      // nearest: gần theo CỘT trước, hòa thì gần theo HÀNG.
-      return a.columnDistance - b.columnDistance || a.laneDistance - b.laneDistance
+      // nearest: gần theo CỘT trước, hòa thì theo thứ tự danh sách ổn định.
+      return a.columnDistance - b.columnDistance
   }
 }
 
 /**
- * Chọn primary target trong rangeColumns (đơn vị cột) của nguồn.
- * - Nguồn = player → candidates là quái còn sống.
- * - Nguồn = quái → candidate duy nhất là hero (cổng chặn ngang mọi hàng,
- *   decision 2026-08-24) nếu còn sống.
- * - Gate hiển thị: candidate ngoài VISIBLE_MAX_COLUMN không được chọn
- *   (mirror gate cũ "phải thấy mới bắn"), áp cả 2 phía.
+ * Chọn primary target cho NGUỒN QUÁI — candidate duy nhất là Player/cổng:
+ * dùng canEnemyReachGate() theo cột, KHÔNG dùng Chebyshev tới avatar row.
  */
-export function selectPrimaryTarget(
-  battle: Battle,
-  source: CombatEntity,
-  targeting: ActionTargeting,
-): CombatEntity | null {
-  const range = targeting.rangeColumns
-  const selection: TargetSelectionMode = targeting.selection ?? 'nearest'
-  const sourceColumn = source.id === battle.player.id ? battle.player.x : source.x
-  const sourceRow = source.row
-
-  const candidates: Candidate[] = []
-
-  if (source.id === battle.player.id) {
-    for (const battleEnemy of battle.enemies) {
-      const entity = battleEnemy.entity
-
-      if (!entity.alive || entity.x > VISIBLE_MAX_COLUMN) continue
-
-      const columnDistance = Math.abs(entity.x - sourceColumn)
-
-      if (columnDistance > range) continue
-
-      candidates.push({
-        entity,
-        columnDistance,
-        laneDistance: Math.abs(entity.row - sourceRow),
-      })
-    }
-  } else if (battle.player.alive) {
-    // Hero gate: luôn trong tầm xét khi khoảng cách tới cột cổng đủ gần.
-    const columnDistance = Math.abs(battle.player.x - sourceColumn)
-
-    if (columnDistance <= range && source.x <= VISIBLE_MAX_COLUMN) {
-      candidates.push({ entity: battle.player, columnDistance, laneDistance: Math.abs(battle.player.row - sourceRow) })
-    }
-  }
-
-  if (candidates.length === 0) {
+export function selectPrimaryTargetForEnemy(battle: Battle, source: CombatEntity): CombatEntity | null {
+  if (!battle.playerMaterialized || !battle.player.alive) {
     return null
   }
 
-  candidates.sort((a, b) => compareBySelection(a, b, selection))
+  if (!canEnemyReachGate(source, battle.player.x)) {
+    return null
+  }
 
-  return candidates[0]!.entity
+  return battle.player
+}
+
+/**
+ * Chọn primary target CHO PLAYER theo AI strategy (plan §7.2 bước 1):
+ * candidate là toàn bộ enemy sống/materialized, CHỈ giữ enemy đang trong
+ * Chebyshev range của avatar, sắp theo strategy + tie-break deterministic.
+ */
+export function selectAttackableTarget(
+  battle: Battle,
+  strategy: CombatAiStrategy = DEFAULT_COMBAT_AI_STRATEGY,
+): CombatEntity | null {
+  const player = battle.player
+
+  if (!battle.playerMaterialized || !player.alive) {
+    return null
+  }
+
+  const candidates = rankTargetsByStrategy(
+    battle.enemies
+      .filter((battleEnemy) => canPlayerReachTarget(player, battleEnemy.entity))
+      .map((battleEnemy) => ({
+        entity: battleEnemy.entity,
+        distance: getChebyshevDistance(
+          entityGridPosition(player),
+          entityGridPosition(battleEnemy.entity),
+        ),
+      })),
+    strategy,
+  )
+
+  return candidates[0]?.entity ?? null
+}
+
+/**
+ * Teleport target (yêu cầu sản phẩm 2026-08-26) — Player TELE NGAY tới
+ * hàng có mục tiêu tốt nhất thay vì đứng đợi quái đi vào tầm: xếp hạng
+ * TOÀN BỘ enemy sống theo strategy tại vị trí avatar hiện tại, trả về
+ * ứng viên đầu tiên. BattleSystem chỉ gọi khi KHÔNG có target trong tầm
+ * và ICD teleport đã hết.
+ */
+export function selectTeleportTarget(
+  battle: Battle,
+  strategy: CombatAiStrategy = DEFAULT_COMBAT_AI_STRATEGY,
+): CombatEntity | null {
+  const player = battle.player
+
+  if (!battle.playerMaterialized || !player.alive) {
+    return null
+  }
+
+  const candidates = rankTargetsByStrategy(
+    battle.enemies
+      .filter((battleEnemy) => battleEnemy.entity.alive)
+      .map((battleEnemy) => ({
+        entity: battleEnemy.entity,
+        distance: getChebyshevDistance(
+          entityGridPosition(player),
+          entityGridPosition(battleEnemy.entity),
+        ),
+      })),
+    strategy,
+  )
+
+  return candidates[0]?.entity ?? null
 }
 
 export function areaFor(anchorRow: LaneIndex, anchorColumn: number, targeting: ActionTargeting): CellArea | null {
@@ -115,6 +172,8 @@ export function areaFor(anchorRow: LaneIndex, anchorColumn: number, targeting: A
  * Thu thập entity nằm trong vùng ảnh hưởng của action tại anchor.
  * - Nguồn quái: hero là mục tiêu duy nhất có thể bị action trúng
  *   (chưa có enemy AOE friendly-fire trong thiết kế hiện tại).
+ * - Secondary được phép nằm NGOÀI attack range của Player sau khi
+ *   primary hợp lệ đã chọn (plan §6.4) — đó là damage lan từ điểm va chạm.
  * - maxTargets: cắt sau khi sort theo cùng selection metric.
  */
 export function collectAffected(
@@ -126,7 +185,7 @@ export function collectAffected(
   targeting: ActionTargeting,
 ): CombatEntity[] {
   if (source.id !== battle.player.id) {
-    return battle.player.alive ? [battle.player] : []
+    return battle.player.alive && battle.playerMaterialized ? [battle.player] : []
   }
 
   const area = areaFor(anchorRow, anchorColumn, targeting)
@@ -152,7 +211,6 @@ export function collectAffected(
     .map(enemy => ({
       entity: enemy.entity,
       columnDistance: Math.abs(getColumnFromWorldX(enemy.entity.x) - anchorColumn),
-      laneDistance: Math.abs(enemy.entity.row - anchorRow),
       isPrimary: enemy.entity.id === primaryTargetId,
     }))
     .sort((a, b) => {
@@ -163,10 +221,9 @@ export function collectAffected(
     .slice(0, targeting.maxTargets ?? Number.MAX_SAFE_INTEGER)
     .map(entry => entry.entity)
 
-  void anchorColumn
   return affected
 }
 
-export function findBattleEnemy(battle: Battle, id: string): BattleEnemy | undefined {
+export function findBattleEnemy(battle: Battle, id: string): Battle['enemies'][number] | undefined {
   return battle.enemies.find(entry => entry.entity.id === id)
 }

@@ -27,13 +27,13 @@ export interface CultivationPathKit {
   techniqueId: string
 
   // ĐÚNG 3 skill cố định, gán thẳng vào Skill Loadout slot 0/1/2 lúc
-  // chọn path (xem GameManager.chooseCultivationPath(), PLAN HOÀN
-  // CHỈNH mục 8 — thay activeCategory basic/special/ultimate cũ). skill
-  // đầu tuple PHẢI khai isBasicAttack:true trong Skills.ts. Pháp Tu
-  // Redesign — Optional: CHỈ Kiếm Tu còn khai (chưa đi qua Node Tree).
-  // Pháp Tu để trống — skill giờ mở qua Node Tree (unlock 1 hành =
-  // unlock luôn 3 skill + 1 nội tại của hành đó, xem
-  // data/progression/PhapTuNodes.ts).
+  // chọn path (xem GameManager.chooseCultivationPath(), PLAN HOÀN CHỈNH
+  // mục 8). Execution policy rework (plan §8.6) — skill đầu tuple
+  // (Ngự Kiếm Thuật) dùng policy 'attack_speed', vẫn là 1 loadout skill
+  // bình thường ở slot 0. Pháp Tu Redesign — Optional: CHỈ Kiếm Tu còn
+  // khai (chưa đi qua Node Tree). Pháp Tu để trống — skill giờ mở qua
+  // Node Tree (unlock 1 hành = unlock luôn 3 skill + 1 nội tại của hành
+  // đó, xem data/progression/PhapTuNodes.ts).
   skillIds?: [basic: string, special: string, ultimate: string]
 }
 

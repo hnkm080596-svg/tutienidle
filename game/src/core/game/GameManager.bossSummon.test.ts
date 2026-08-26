@@ -11,7 +11,7 @@ const MINIMAL_STATS_INPUT = {
   attack: 0,
   attackSpeed: 1,
   movementSpeed: 60,
-  attackRange: 999999,
+  attackRangeRanks: 999999,
   criticalRate: 0,
   criticalDamage: 1.5,
   armor: 0,

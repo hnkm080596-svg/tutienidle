@@ -10,7 +10,8 @@ export const KIEP_THUONG_DEBUFF: Buff = {
 
   name: 'Kiếp Thương',
 
-  description: 'Vết thương do Thiên Kiếp để lại sau khi Độ Kiếp thất bại, làm suy giảm toàn thân trong chốc lát.',
+  description:
+    'Vết thương do Thiên Kiếp để lại sau khi Độ Kiếp thất bại, làm suy giảm toàn thân trong chốc lát.',
 
   category: 'debuff',
 
@@ -123,7 +124,8 @@ export const buffs: Buff[] = [
 
     name: 'Thạch Giáp',
 
-    description: 'Linh khí Thổ ngưng thành 1 lớp khiên đá tạm thời, tăng Hộ Thuẫn tối đa và khả năng phản đòn.',
+    description:
+      'Linh khí Thổ ngưng thành 1 lớp khiên đá tạm thời, tăng Hộ Thuẫn tối đa và khả năng phản đòn.',
 
     category: 'buff',
 
@@ -178,7 +180,8 @@ export const buffs: Buff[] = [
 
     name: 'Độc Căn',
 
-    description: 'Độc trên mục tiêu chuyển hóa thành sức mạnh của bản thân — mỗi tầng tăng Sát Thương Độc + hồi máu từ Trúng Độc, tối đa 5 tầng.',
+    description:
+      'Độc trên mục tiêu chuyển hóa thành sức mạnh của bản thân — mỗi tầng tăng Sát Thương Độc + hồi máu từ Trúng Độc, tối đa 5 tầng.',
 
     category: 'buff',
 

@@ -66,7 +66,9 @@ function createDiemKimThuat(): Skill {
     cost: 0,
     target: 'enemy',
     effects: [{ type: 'ailment', ailmentId: 'chay_mau', ailmentChance: 1, grantsKimThePerProc: true }],
-    isBasicAttack: true,
+    execution: { kind: 'attack_speed' },
+    loadoutSlot: 0,
+    loadoutSlots: [0],
     resourceType: 'none',
     unlocked: true,
     equipped: true,
@@ -134,7 +136,8 @@ describe('BattleSystem — Kim Thế (Plans/KimPath mục 9/11, Kim Thế major)
 
     system.start(player, enemy)
     system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
-    enemy.x = 5 // start() ghi đè x=400 > SCREEN_VISIBLE_MAX_X(350) — đặt lại trong tầm nhìn.
+    enemy.x = 2
+    enemy.row = 4 // start() ghi đè x=400 > SCREEN_VISIBLE_MAX_X(350) — đặt lại trong tầm nhìn.
 
     // attackSpeed mặc định 1 -> cast mỗi 1s, ailmentChance=1 nên proc
     // LUÔN thành công -> +1 Kim Thế/giây, chạm trần sau 5 giây.
@@ -156,7 +159,8 @@ describe('BattleSystem — Kim Thế (Plans/KimPath mục 9/11, Kim Thế major)
 
     system.start(player, enemy)
     system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
-    enemy.x = 5 // start() ghi đè x=400 > SCREEN_VISIBLE_MAX_X(350) — đặt lại trong tầm nhìn.
+    enemy.x = 2
+    enemy.row = 4 // start() ghi đè x=400 > SCREEN_VISIBLE_MAX_X(350) — đặt lại trong tầm nhìn.
 
     for (let i = 0; i < 700; i++) {
       tick(0.01)

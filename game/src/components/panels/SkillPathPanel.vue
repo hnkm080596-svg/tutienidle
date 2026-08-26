@@ -15,8 +15,8 @@
 // ElementLoadoutPicker.vue (equip Hành vào combat) đã GỠ HẲN (2026-08-20,
 // yêu cầu "dư thừa, không có tác dụng gì") — nó trùng chức năng với
 // SkillLoadoutStrip: skill nào equip vào 5 ô đó mới là thứ thật sự
-// vận hành trong combat (xem BattleSystem.updateAutoCast()), "equip cả
-// 1 Hành" không cộng thêm ý nghĩa nào khác.
+// vận hành trong combat (xem scheduler auto-cast thống nhất của
+// BattleSystem), "equip cả 1 Hành" không cộng thêm ý nghĩa nào khác.
 import { computed, ref, watch } from 'vue'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
@@ -27,7 +27,7 @@ import NodeInspector from './skill-path/NodeInspector.vue'
 import SkillPathList from './skill-path/SkillPathList.vue'
 import SkillDetailView from './skill-path/SkillDetailView.vue'
 import SkillLoadoutStrip from './skill-path/SkillLoadoutStrip.vue'
-import { canPurchaseNode } from '@/core/progression/NodeSystem'
+import { canPurchaseNode, getNodeLevel } from '@/core/progression/NodeSystem'
 import { CULTIVATION_PATH_KITS } from '@/core/player/CultivationPathKit'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 import type { ElementType } from '@/core/element/ElementType'
@@ -75,16 +75,15 @@ function onSelectNode(node: ProgressionNode, purchased: boolean, purchasable: bo
 
 // Node vừa mua xong vẫn đang là selectedNode — refresh trạng thái
 // purchased/purchasable hiển thị ở inspector theo state mới nhất mỗi
-// khi purchasedNodeIds/skillInsight đổi, không chờ người chơi bấm lại
-// vào node.
+// khi nodeLevels/skillInsight đổi, không chờ người chơi bấm lại vào node.
 watch(
-  () => [player.purchasedNodeIds.length, player.skillInsight] as const,
+  () => [Object.keys(player.nodeLevels).length, player.skillInsight] as const,
   () => {
     if (!selectedNode.value) {
       return
     }
 
-    selectedNodePurchased.value = player.purchasedNodeIds.includes(selectedNode.value.id)
+    selectedNodePurchased.value = getNodeLevel(player.$state, selectedNode.value.id) >= 1
     selectedNodePurchasable.value = canPurchaseNode(player.$state, selectedNode.value)
   },
 )
@@ -101,8 +100,9 @@ const fixedSkills = computed<Skill[]>(() => {
       .filter((skill): skill is Skill => skill !== undefined)
   }
 
-  // Phàm Nhân (chưa chọn path) — chỉ có đúng Trảm.
-  const basic = gameManager.skillManager.getBasicAttackSkill()
+  // Phàm Nhân (chưa chọn path) — chỉ có đúng Trảm (slot mặc định 0,
+  // xem plan §8.6).
+  const basic = gameManager.skillManager.getEquippedInSlot(0)
 
   return basic ? [basic] : []
 })
@@ -120,7 +120,7 @@ function onSelectSkill(skill: Skill) {
 }
 
 function close() {
-  ui.standalonePanel = null
+  ui.closeHomeOverlays()
 }
 </script>
 

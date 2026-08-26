@@ -103,7 +103,7 @@ function invest() {
 }
 
 function close() {
-  ui.standalonePanel = null
+  ui.closeHomeOverlays()
 }
 </script>
 

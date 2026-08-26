@@ -2,12 +2,23 @@ import type { StatType } from './StatTypes'
 import type { Stats } from './StatBlock'
 
 export type ModifierSourceType =
-  'realm' | 'technique' | 'skill' | 'buff' | 'debuff' | 'equipment' | 'talent' | 'reincarnation' | 'pill' | 'formation'
+  | 'realm'
+  | 'technique'
+  | 'skill'
+  | 'buff'
+  | 'debuff'
+  | 'equipment'
+  | 'talent'
+  | 'reincarnation'
+  | 'pill'
+  | 'formation'
+  | 'talisman'
   // 'attribute': modifier tự sinh ra bởi deriveAttributeModifiers() bên
   // dưới (dẫn xuất từ 5 attribute gốc) — không phải nguồn nào tạo tay.
   // 'ailment': modifier tổng hợp từ AilmentSystem.getActiveModifiers()
   // (vd Làm Chậm giảm attackSpeed/movementSpeed) — xem core/ailment/.
-  | 'attribute' | 'ailment'
+  | 'attribute'
+  | 'ailment'
 
 export interface StatModifier {
   id: string
@@ -80,11 +91,29 @@ const ATTUNEMENT_POWER_STATS: { stat: StatType; tag: string }[] = [
 ]
 
 function flatAttributeModifier(sourceId: string, stat: StatType, amount: number): StatModifier {
-  return { id: `attribute:${sourceId}:${stat}`, sourceId, sourceType: 'attribute', stat, flat: amount }
+  return {
+    id: `attribute:${sourceId}:${stat}`,
+    sourceId,
+    sourceType: 'attribute',
+    stat,
+    flat: amount,
+  }
 }
 
-function percentAttributeModifier(sourceId: string, stat: StatType, amount: number, tag?: string): StatModifier {
-  return { id: `attribute:${sourceId}:${stat}${tag ? `:${tag}` : ''}`, sourceId, sourceType: 'attribute', stat, percent: amount, tag }
+function percentAttributeModifier(
+  sourceId: string,
+  stat: StatType,
+  amount: number,
+  tag?: string,
+): StatModifier {
+  return {
+    id: `attribute:${sourceId}:${stat}${tag ? `:${tag}` : ''}`,
+    sourceId,
+    sourceType: 'attribute',
+    stat,
+    percent: amount,
+    tag,
+  }
 }
 
 // Linh Căn CAO thì hành đang tu luyện càng "thuần" — % nhỏ Increased
@@ -99,23 +128,72 @@ function deriveAttributeModifiers(finalized: Stats): StatModifier[] {
     flatAttributeModifier('strength', 'attack', finalized.strength * ATTRIBUTE_ATTACK_PER_POINT),
     flatAttributeModifier('strength', 'defense', finalized.strength * ATTRIBUTE_DEFENSE_PER_POINT),
 
-    percentAttributeModifier('dexterity', 'attackSpeed', finalized.dexterity * ATTRIBUTE_ATTACK_SPEED_PERCENT_PER_POINT),
-    flatAttributeModifier('dexterity', 'accuracyRating', finalized.dexterity * ATTRIBUTE_ACCURACY_PER_POINT),
-    flatAttributeModifier('dexterity', 'evasionRate', finalized.dexterity * ATTRIBUTE_EVASION_PER_POINT),
-    percentAttributeModifier('dexterity', 'criticalRate', finalized.dexterity * ATTRIBUTE_CRIT_RATE_PERCENT_PER_POINT),
+    percentAttributeModifier(
+      'dexterity',
+      'attackSpeed',
+      finalized.dexterity * ATTRIBUTE_ATTACK_SPEED_PERCENT_PER_POINT,
+    ),
+    flatAttributeModifier(
+      'dexterity',
+      'accuracyRating',
+      finalized.dexterity * ATTRIBUTE_ACCURACY_PER_POINT,
+    ),
+    flatAttributeModifier(
+      'dexterity',
+      'evasionRate',
+      finalized.dexterity * ATTRIBUTE_EVASION_PER_POINT,
+    ),
+    percentAttributeModifier(
+      'dexterity',
+      'criticalRate',
+      finalized.dexterity * ATTRIBUTE_CRIT_RATE_PERCENT_PER_POINT,
+    ),
 
-    flatAttributeModifier('intelligence', 'maxMp', finalized.intelligence * ATTRIBUTE_MAX_MP_PER_POINT),
-    percentAttributeModifier('intelligence', 'criticalDamage', finalized.intelligence * ATTRIBUTE_CRIT_DAMAGE_PERCENT_PER_POINT),
-    flatAttributeModifier('intelligence', 'manaRegenPerSecond', finalized.intelligence * ATTRIBUTE_MANA_REGEN_PER_POINT),
+    flatAttributeModifier(
+      'intelligence',
+      'maxMp',
+      finalized.intelligence * ATTRIBUTE_MAX_MP_PER_POINT,
+    ),
+    percentAttributeModifier(
+      'intelligence',
+      'criticalDamage',
+      finalized.intelligence * ATTRIBUTE_CRIT_DAMAGE_PERCENT_PER_POINT,
+    ),
+    flatAttributeModifier(
+      'intelligence',
+      'manaRegenPerSecond',
+      finalized.intelligence * ATTRIBUTE_MANA_REGEN_PER_POINT,
+    ),
 
     flatAttributeModifier('vitality', 'maxHp', finalized.vitality * ATTRIBUTE_MAX_HP_PER_POINT),
-    flatAttributeModifier('vitality', 'hpRegenPerSecond', finalized.vitality * ATTRIBUTE_HP_REGEN_PER_POINT),
-    flatAttributeModifier('vitality', 'enduranceThreshold', finalized.vitality * ATTRIBUTE_ENDURANCE_THRESHOLD_PER_POINT),
+    flatAttributeModifier(
+      'vitality',
+      'hpRegenPerSecond',
+      finalized.vitality * ATTRIBUTE_HP_REGEN_PER_POINT,
+    ),
+    flatAttributeModifier(
+      'vitality',
+      'enduranceThreshold',
+      finalized.vitality * ATTRIBUTE_ENDURANCE_THRESHOLD_PER_POINT,
+    ),
   ]
 
   for (const { stat, tag } of ATTUNEMENT_POWER_STATS) {
-    modifiers.push(flatAttributeModifier('attunement', stat, finalized.attunement * ATTRIBUTE_ELEMENT_POWER_PER_POINT))
-    modifiers.push(percentAttributeModifier('attunement', stat, finalized.attunement * ATTRIBUTE_ELEMENT_TAG_PERCENT_PER_POINT, tag))
+    modifiers.push(
+      flatAttributeModifier(
+        'attunement',
+        stat,
+        finalized.attunement * ATTRIBUTE_ELEMENT_POWER_PER_POINT,
+      ),
+    )
+    modifiers.push(
+      percentAttributeModifier(
+        'attunement',
+        stat,
+        finalized.attunement * ATTRIBUTE_ELEMENT_TAG_PERCENT_PER_POINT,
+        tag,
+      ),
+    )
   }
 
   return modifiers

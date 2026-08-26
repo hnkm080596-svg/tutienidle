@@ -12,6 +12,37 @@ import type { ActionTargeting, CombatVfxPresetId } from '../battle/CombatAction'
 export { SKILL_RESOURCE_STAT_KEYS } from './SkillRuntimeStats'
 export type { SkillResourceStatKey } from './SkillRuntimeStats'
 
+/**
+ * Skill execution policy (plan §8.1) — cơ chế timing DUY NHẤT của active
+ * skill auto-cast. Runtime CHỈ đọc field này (không fallback từ
+ * castTime/path). Mỗi policy tự khai ý nghĩa:
+ * - `attack_speed`: cadence theo Attack Speed (× multiplier), không ICD,
+ *   không CDR, không cast time. Timer theo TỪNG SLOT
+ *   (CombatEntity.skillCadenceRemainingBySlot).
+ * - `cooldown`: resolve tức thời, timer = skill.cooldown, chịu CDR.
+ * - `cast_time`: niệm trước khi thi triển; cast time chịu Cast Speed,
+ *   cooldown commit lúc BẮT ĐẦU niệm, chịu CDR.
+ * - `attack_speed_cast`: vừa niệm vừa có nhịp tái dùng theo Attack Speed;
+ *   không chịu CDR.
+ */
+export type SkillExecutionPolicy =
+  | {
+      kind: 'attack_speed'
+      attackSpeedMultiplier?: number
+    }
+  | {
+      kind: 'cooldown'
+    }
+  | {
+      kind: 'cast_time'
+      castTime: number
+    }
+  | {
+      kind: 'attack_speed_cast'
+      castTime: number
+      attackSpeedMultiplier?: number
+    }
+
 export interface Skill extends Partial<SkillRuntimeStats> {
   id: string
 
@@ -33,11 +64,11 @@ export interface Skill extends Partial<SkillRuntimeStats> {
 
   remainingCooldown: number
 
-  // Cast Time (2026-08-21) — giây "niệm" TRƯỚC KHI hiệu ứng thi triển,
-  // ĐỘC LẬP với cooldown (khoảng CHỜ SAU khi đã thi triển) và attackSpeed
-  // (nhịp đòn cơ bản, KHÔNG dùng cho skill chủ động). undefined/0 = cast
-  // tức thời (hành vi CŨ, mọi skill hiện có), xem BattleSystem.
-  // updateCasting(). Rút ngắn bởi stat castSpeedPercent.
+  // Cast Time (2026-08-21) — giây "niệm" TRƯỚC KHI hiệu ứng thi triển.
+  // Skill execution policy rework (plan §8) — field này CHỈ còn là dữ
+  // liệu tham khảo cho skill có `execution` kind 'cast_time'/
+  // 'attack_speed_cast' (policy tự khai castTime riêng); runtime KHÔNG
+  // đọc fallback từ đây nữa. Giữ để UI/tooltip hiển thị.
   castTime?: number
 
   // Lượng tài nguyên cần để cast, ý nghĩa tuỳ resourceType (mana
@@ -54,13 +85,10 @@ export interface Skill extends Partial<SkillRuntimeStats> {
   // không set.
   resourceType?: SkillResourceType
 
-  // PLAN HOÀN CHỈNH mục 6/8 — thay HẲN SkillActiveCategory 4-loại cũ.
-  // true = đòn đánh cơ bản, chạy theo attackSpeed timer
-  // (BattleSystem.updatePlayerAttack()), KHÔNG qua vòng lặp ưu tiên
-  // Skill Loadout (updateAutoCast()) dù có đang chiếm 1 slot hay
-  // không — cho phép equip mà KHÔNG cần slot hợp lệ (Phàm Nhân chưa
-  // có Skill Loadout UI, xem SkillSystem.equipWithoutSlot()).
-  isBasicAttack?: boolean
+  // Skill execution policy (plan §8.1/§8.3) — BẮT BUỘC cho MỌI active
+  // skill; passive không dùng. Runtime chỉ đọc field này — không còn
+  // fallback isBasicAttack/castTime/path. Xem type doc phía trên.
+  execution?: SkillExecutionPolicy
 
   // ================= Combat Grid Rework (2026-08-24) =================
   targeting?: ActionTargeting

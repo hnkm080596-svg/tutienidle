@@ -32,9 +32,11 @@ function setup(template = skill(), onLevelUp = vi.fn()) {
   return { manager, system, learned: manager.get(template.id)!, onLevelUp }
 }
 
-describe('SkillSystem basic attack cadence', () => {
-  it('does not let skill cooldown replace alternating basic attacks with fallback projectiles', () => {
-    const { system, learned } = setup(skill({ cooldown: 10, isBasicAttack: true, resourceType: 'none' }))
+describe('SkillSystem — execution policy cooldown clock', () => {
+  it('policy attack_speed KHÔNG set slot/global cooldown (cadence do BattleSystem quản)', () => {
+    const { system, learned } = setup(
+      skill({ cooldown: 10, execution: { kind: 'attack_speed' }, resourceType: 'none' }),
+    )
     const entity = {
       realmIndex: 0,
       currentMp: 0,
@@ -43,12 +45,31 @@ describe('SkillSystem basic attack cadence', () => {
       currentMomentum: 0,
     } as CombatEntity
 
-    system.equipWithoutSlot(learned.id)
-    learned.remainingCooldown = 9
+    system.equipToSlot(learned.id, 0)
 
-    expect(system.use(learned.id, entity)).toBe(learned)
+    expect(system.useInSlot(learned.id, 0, entity)).toBe(learned)
+    // Không cooldown clock nào được commit — cadence timer là runtime
+    // trên CombatEntity.skillCadenceRemainingBySlot.
     expect(learned.remainingCooldown).toBe(0)
-    expect(system.use(learned.id, entity)).toBe(learned)
+    expect(learned.remainingCooldownBySlot?.[0]).toBeUndefined()
+  })
+
+  it('policy cast_time commit cooldown ngay lúc BẮT ĐẦU niệm', () => {
+    const { system, learned } = setup(
+      skill({ cooldown: 10, execution: { kind: 'cast_time', castTime: 1.2 }, resourceType: 'none' }),
+    )
+    const entity = {
+      realmIndex: 0,
+      currentMp: 0,
+      currentRage: 0,
+      currentSwordIntent: 0,
+      currentMomentum: 0,
+    } as CombatEntity
+
+    system.equipToSlot(learned.id, 0)
+
+    expect(system.useInSlot(learned.id, 0, entity)).toBe(learned)
+    expect(learned.remainingCooldownBySlot?.[0]).toBe(10)
   })
 })
 

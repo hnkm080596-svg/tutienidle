@@ -21,7 +21,8 @@ export interface EnemyStatInput {
 
   movementSpeed: number
 
-  attackRange: number
+  /** Go Board (plan §4): tầm đánh theo HÀNH (rank) — data author trực tiếp, không heuristic runtime. */
+  attackRangeRanks: number
 
   criticalRate: number
 
@@ -79,17 +80,17 @@ const LEGACY_ATTACK_SPEED_DIVISOR = 2.5
 const MIN_ENEMY_ATTACK_SPEED = 0.8
 const MAX_ENEMY_ATTACK_SPEED = 2.5
 
+// Balance pass (2026-08-26, combat AI rework): enemy DỪNG LẠI bắn khi
+// vào đúng tầm của chính nó, nên điểm dừng xa nhất = cổng (cột 1) +
+// attackRange. Trần 5 bảo đảm quái không bao giờ đứng ngoài tầm với tới
+// của avatar Player (base range 5, xem StatBlock.ts) — chặn hẳn thế
+// "sniper bất khả chiến thắng" đứng ngoài sân bắn cổng mãi không thả.
+export const MAX_ENEMY_ATTACK_RANGE_RANKS = 5
+
 // Enemy data trước Grid Rework được author theo world 0..400. Runtime mới
 // dùng 16 cột, nên 25 world-unit cũ tương ứng đúng 1 column.
-const LEGACY_WORLD_UNITS_PER_GRID_COLUMN = 25
-
-export function normalizeEnemyGridDistance(authoredValue: number): number {
-  return authoredValue > GRID_DISTANCE_AUTHORED_MAX
-    ? authoredValue / LEGACY_WORLD_UNITS_PER_GRID_COLUMN
-    : authoredValue
-}
-
-const GRID_DISTANCE_AUTHORED_MAX = 16
+// (2026-08-25, plan §8.4) Heuristic world-unit → column đã XOÁ: enemy
+// data author TRỰC TIẾP theo attackRangeRanks/movementSpeed mới.
 
 export function normalizeEnemyAttackSpeed(authoredAttackSpeed: number): number {
   const converted = authoredAttackSpeed > MAX_ENEMY_ATTACK_SPEED
@@ -108,8 +109,12 @@ export function normalizeEnemyStats(input: EnemyStatInput): Stats {
     maxMp: 0,
 
     attackSpeed: normalizeEnemyAttackSpeed(input.attackSpeed),
-    movementSpeed: normalizeEnemyGridDistance(input.movementSpeed),
-    attackRange: normalizeEnemyGridDistance(input.attackRange),
+    movementSpeed: input.movementSpeed,
+
+    // Balance pass — clamp Trần 5 (xem MAX_ENEMY_ATTACK_RANGE_RANKS):
+    // data author > 5 tự hạ về 5, mọi quái spawn qua funnel này đều
+    // đứng trong tầm đánh của Player.
+    attackRange: Math.min(input.attackRangeRanks, MAX_ENEMY_ATTACK_RANGE_RANKS),
 
     criticalRate: input.criticalRate,
     criticalDamage: input.criticalDamage,

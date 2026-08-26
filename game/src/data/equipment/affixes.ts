@@ -120,19 +120,19 @@ export const affixes: Affix[] = [
     ],
   },
 
-  
-
   // Pool advanced mở từ Linh Khí: bổ sung lớp phòng thủ thật thay vì gate
   // rỗng. Kháng dùng thang rating (1 điểm = 1%) giống Resistance.ts.
-  ...([
-    ['fire', 'Hỏa', ['helmet', 'armor', 'boots', 'necklace']],
-    ['wood', 'Mộc', ['helmet', 'armor', 'boots', 'necklace']],
-    ['water', 'Thủy', ['helmet', 'armor', 'boots', 'necklace']],
-    ['metal', 'Kim', ['helmet', 'armor', 'boots', 'necklace']],
-    ['earth', 'Thổ', ['helmet', 'armor', 'boots', 'necklace']],
-    ['wind', 'Phong', ['helmet', 'armor', 'boots', 'necklace']],
-    ['lightning', 'Lôi', ['helmet', 'armor', 'boots', 'necklace']],
-  ] as const).map(([element, label, slots]) => ({
+  ...(
+    [
+      ['fire', 'Hỏa', ['helmet', 'armor', 'boots', 'necklace']],
+      ['wood', 'Mộc', ['helmet', 'armor', 'boots', 'necklace']],
+      ['water', 'Thủy', ['helmet', 'armor', 'boots', 'necklace']],
+      ['metal', 'Kim', ['helmet', 'armor', 'boots', 'necklace']],
+      ['earth', 'Thổ', ['helmet', 'armor', 'boots', 'necklace']],
+      ['wind', 'Phong', ['helmet', 'armor', 'boots', 'necklace']],
+      ['lightning', 'Lôi', ['helmet', 'armor', 'boots', 'necklace']],
+    ] as const
+  ).map(([element, label, slots]) => ({
     id: `suffix_${element}_resistance`,
     name: `Kháng ${label}`,
     stat: `${element}Resistance` as Affix['stat'],

@@ -5,7 +5,12 @@
 
 import type { LaneIndex } from './BattleLane'
 import type { CellArea, GridPosition } from './BattleGrid'
-import type { ActionTargetingShape, CombatVfxPresetId, EnemySpawnVfxPresetId } from './CombatAction'
+import type {
+  ActionTargetingShape,
+  CombatVfxPresetId,
+  EnemySpawnVfxPresetId,
+  PlayerSpawnVfxPresetId,
+} from './CombatAction'
 
 export interface BattlePositionsEvent {
   type: 'positions'
@@ -13,9 +18,32 @@ export interface BattlePositionsEvent {
 
   playerX: number
 
+  /**
+   * Row thật của avatar Player (plan §2.2) — teleport đổi row tức thời,
+   * renderer snap sprite tới projected cell mới.
+   */
+  playerRow: LaneIndex
+
   playerCurrentHp: number
 
   playerMaxHp: number
+
+  /**
+   * Targetability (plan §5.4) — false khi Player đang chờ telegraph
+   * spawn; renderer KHÔNG hiện sprite Player trong trạng thái này.
+   */
+  playerMaterialized: boolean
+
+  /**
+   * Telegraph spawn của avatar Player tại projected cell — vẽ VFX
+   * telegraph rồi materialize sprite khi biến mất khỏi snapshot.
+   */
+  playerSpawn?: {
+    row: LaneIndex
+    column: number
+    progress: number
+    presetId: PlayerSpawnVfxPresetId
+  }
 
   // Chỉ gồm quái CÒN SỐNG — quái chết tự "biến mất" khỏi payload,
   // MainScene coi đó là tín hiệu ngừng cập nhật vị trí (đóng băng
@@ -48,6 +76,15 @@ export interface BattlePositionsEvent {
     isBoss: boolean
     presetId: EnemySpawnVfxPresetId
   }[]
+}
+
+/** Teleport AI (plan §7.3) — phát TRƯỚC attack/cast cùng tick để renderer
+ * snap sprite ngay và gắn VFX sau này qua hook placeholder. */
+export interface PlayerTeleportedEvent {
+  type: 'player_teleported'
+  sourceId: string
+  from: GridPosition
+  to: GridPosition
 }
 
 export interface BattleEndEvent {

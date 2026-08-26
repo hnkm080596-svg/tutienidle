@@ -11,12 +11,12 @@ import { ActionImpactSystem } from '../battle/ActionImpactSystem'
 
 
 import { createBaseStats } from '../stats/StatBlock'
-import { VISIBLE_MAX_COLUMN } from './BattleLane'
+import { HERO_LANE_INDEX, VISIBLE_MAX_COLUMN } from './BattleLane'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
 
-// Basic-attack skill fixture tối thiểu — chỉ cần đúng field
-// updatePlayerAttack()/castSkill() thật sự đọc, cùng quy ước
+// Skill fixture 'attack_speed' tối thiểu — scheduler thống nhất đọc
+// execution + loadout slot (plan §8), cùng quy ước
 // BattleSystem.earthPath.test.ts's createThoCauThuat().
 function createBasicSkill(): Skill {
   return {
@@ -31,19 +31,18 @@ function createBasicSkill(): Skill {
     cost: 0,
     target: 'enemy',
     effects: [{ type: 'damage', value: 1, damageType: 'physical' }],
-    isBasicAttack: true,
+    execution: { kind: 'attack_speed' },
+    loadoutSlot: 0,
+    loadoutSlots: [0],
     resourceType: 'none',
     unlocked: true,
     equipped: true,
   }
 }
 
-// Attack range visibility gate (2026-08-22) — "100 là toàn màn hình,
-// nhưng phải đảm bảo thấy quái rồi mới đánh, không đánh quái
-// offscreen" — bổ sung TRÊN attackRange world-unit hiện có (không đổi
-// đơn vị lưu trữ, xem BattleLane.ts's attackRangeVisiblePercent()),
-// khoá cứng cả player (attackRange "vô hạn" 999999 theo thiết kế tower
-// defense gốc, xem StatBlock.ts) lẫn mob/boss.
+// Attack range rework (plan §2.3) — tầm đánh của Player là Chebyshev
+// quanh avatar với `player.stats.attackRange`; enemy giữ visible-gate
+// khi tấn công cổng (không đánh từ off-screen).
 function createBattleSystem(eventBus = new EventBus()) {
   const skillManager = new SkillManager()
 
@@ -64,7 +63,7 @@ function createBattleSystem(eventBus = new EventBus()) {
 // evasionRate/dexterity=0 đảm bảo hit chance 100%, cùng quy ước các
 // file BattleSystem.*.test.ts khác. movementSpeed=0 để x không trôi
 // ngoài dự đoán — test này CỐ TÌNH đặt x thủ công sau start() để kiểm
-// tra ĐÚNG biên giới visibility, không muốn resolveMovement() can thiệp.
+// tra ĐÚNG biên giới range/visibility, không muốn resolveMovement() can thiệp.
 function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
   const stats = {
     ...createBaseStats(),
@@ -92,8 +91,8 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     currentThoThe: 0,
     currentKimThe: 0,
     timeSinceLastBleedProc: 0,
-    currentWard: 0,
     timeSinceLastHitTaken: Infinity,
+    currentWard: 0,
     realmIndex: 0,
     x: 0,
     row: 2,
@@ -102,11 +101,22 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
   }
 }
 
-describe('BattleSystem — Attack range visibility gate (2026-08-22)', () => {
-  it('player attackRange world-unit "vô hạn" (999999, thiết kế tower defense gốc) nhưng quái đứng OFF-SCREEN (x > VISIBLE_MAX_COLUMN) → KHÔNG bắn được, dù đủ tầm world-unit', () => {
+/** Ghi đè stat qua CẢ stats/baseStats — updateStatsFromModifiers()
+ * recompute từ baseStats mỗi tick nên patch stats-only sẽ bị revert. */
+function withStats(entity: CombatEntity, patch: Partial<typeof entity.stats>): CombatEntity {
+  entity.stats = { ...entity.stats, ...patch }
+  entity.baseStats = { ...entity.baseStats, ...patch }
+
+  return entity
+}
+
+describe('BattleSystem — Player attack range là Chebyshev quanh avatar (plan §2.3)', () => {
+  it('range 1 (patch fixture): quái cách 2 cột KHÔNG bị đánh dù cùng hàng — teleport chỉ đổi ROW nên cũng không cứu được', () => {
     const eventBus = new EventBus()
     const { system, skillManager } = createBattleSystem(eventBus)
-    const player = createCombatant({ id: 'player', type: 'player' })
+    const player = withStats(createCombatant({ id: 'player', type: 'player' }), {
+      attackRange: 1,
+    })
     const enemy = createCombatant({ id: 'enemy' })
 
     skillManager.add(createBasicSkill())
@@ -114,7 +124,8 @@ describe('BattleSystem — Attack range visibility gate (2026-08-22)', () => {
     system.start(player, enemy)
     system.update(3) // Bỏ qua countdown trước trận.
 
-    system.getBattle()!.enemies[0]!.entity.x = VISIBLE_MAX_COLUMN + 1
+    system.getBattle()!.enemies[0]!.entity.x = 3 // col 3 — cách cổng col 1 đúng 2.
+    system.getBattle()!.enemies[0]!.entity.row = HERO_LANE_INDEX
 
     for (let i = 0; i < 200; i++) {
       system.update(0.05)
@@ -123,10 +134,12 @@ describe('BattleSystem — Attack range visibility gate (2026-08-22)', () => {
     expect(enemy.currentHp).toBe(enemy.maxHp)
   })
 
-  it('quái đứng ĐÚNG biên giới nhìn thấy (x = VISIBLE_MAX_COLUMN) → player bắn được bình thường', () => {
+  it('quái trong Chebyshev range (col 2, cùng hàng avatar) → player đánh bình thường', () => {
     const eventBus = new EventBus()
     const { system, skillManager } = createBattleSystem(eventBus)
-    const player = createCombatant({ id: 'player', type: 'player' })
+    const player = withStats(createCombatant({ id: 'player', type: 'player' }), {
+      attackRange: 1,
+    })
     const enemy = createCombatant({ id: 'enemy' })
 
     skillManager.add(createBasicSkill())
@@ -134,7 +147,8 @@ describe('BattleSystem — Attack range visibility gate (2026-08-22)', () => {
     system.start(player, enemy)
     system.update(3)
 
-    system.getBattle()!.enemies[0]!.entity.x = VISIBLE_MAX_COLUMN
+    system.getBattle()!.enemies[0]!.entity.x = 2
+    system.getBattle()!.enemies[0]!.entity.row = HERO_LANE_INDEX
 
     for (let i = 0; i < 200; i++) {
       system.update(0.05)
@@ -142,11 +156,13 @@ describe('BattleSystem — Attack range visibility gate (2026-08-22)', () => {
 
     expect(enemy.currentHp).toBeLessThan(enemy.maxHp)
   })
+})
 
-  it('mob/boss ở off-screen (x > VISIBLE_MAX_COLUMN) cũng KHÔNG tấn công lại player được — gate áp dụng cả 2 phía', () => {
+describe('BattleSystem — Enemy visible gate khi tấn công cổng (giữ từ 2026-08-22)', () => {
+  it('mob/boss ở off-screen (x > VISIBLE_MAX_COLUMN) KHÔNG tấn công player được dù đủ range', () => {
     const eventBus = new EventBus()
     const { system } = createBattleSystem(eventBus)
-    const player = createCombatant({ id: 'player', type: 'player' })
+    const player = createCombatant({ id: 'player', type: 'player', currentHp: 1000, maxHp: 1000 })
     const enemy = createCombatant({ id: 'enemy' })
 
     system.start(player, enemy)
@@ -159,5 +175,28 @@ describe('BattleSystem — Attack range visibility gate (2026-08-22)', () => {
     }
 
     expect(player.currentHp).toBe(player.maxHp)
+  })
+
+  it('quái ĐÃ vào màn hình và đủ range tới cổng → tấn công player bình thường', () => {
+    const eventBus = new EventBus()
+    const { system } = createBattleSystem(eventBus)
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      currentHp: 1000,
+      maxHp: 1000,
+    })
+    const enemy = withStats(createCombatant({ id: 'enemy' }), { attack: 10 })
+
+    system.start(player, enemy)
+    system.update(3)
+
+    system.getBattle()!.enemies[0]!.entity.x = Math.min(VISIBLE_MAX_COLUMN, 3)
+
+    for (let i = 0; i < 200; i++) {
+      system.update(0.05)
+    }
+
+    expect(player.currentHp).toBeLessThan(player.maxHp)
   })
 })

@@ -1,6 +1,10 @@
 import type { EquipmentSlot } from './EquipmentTypes'
 import type { StatType } from '../stats/StatTypes'
-import type { RecipeMaterialCost } from '../recipe/Recipe'
+export interface RecipeMaterialCost {
+  materialId: string
+
+  amount: number
+}
 
 // MASTER SPEC Mục VI (Phase 6, hợp nhất framework COST) — Luyện Khí
 // (Cường Hóa/Tẩy Luyện/Tinh Luyện/Nâng Phẩm/Nâng Cảnh Giới) dùng

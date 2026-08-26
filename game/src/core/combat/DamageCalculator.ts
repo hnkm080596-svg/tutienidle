@@ -2,6 +2,17 @@ import type { CombatEntity } from './CombatEntity'
 import { getArmorMitigationPercent } from './Armor'
 
 /**
+ * Helper nền DÙNG CHUNG cho Skill Power (combat-skill-flow-element-
+ * power-dot-plan.md §3.1) — mọi damage type "có power riêng" đều lấy
+ * ATK cộng power chuyên biệt làm nền. MỘT điểm duy nhất để direct hit
+ * (calculateBaseDamage + elementalBasePower) và DoT snapshot
+ * (AilmentSystem) không thể lệch công thức về sau.
+ */
+export function baseAttackPlusPower(attack: number, power: number): number {
+  return attack + power
+}
+
+/**
  * Base damage cho 2 damage type "đơn giản" (không nhiều component) —
  * 'elemental' KHÔNG đi qua đây, xem ElementDamageCalculator.ts (mỗi
  * component tự mitigate theo đúng hành của nó, không gộp chung 1
@@ -29,7 +40,10 @@ export function calculateBaseDamage(
     }
 
     case 'primordial':
-      return source.stats.primordialPower
+      // combat-skill-flow-element-power-dot-plan.md §3.1 — Primordial
+      // component cũng cộng ATK vào Power nền, QUA ĐÚNG helper nền dùng
+      // chung baseAttackPlusPower() (tránh hai công thức độc lập).
+      return baseAttackPlusPower(source.stats.attack, source.stats.primordialPower)
   }
 }
 

@@ -6,8 +6,8 @@ describe('rollCharacterCreationTalents', () => {
     for (let index = 0; index < 50; index++) {
       const roll = rollCharacterCreationTalents()
       expect(roll).toHaveLength(9)
-      expect(new Set(roll.map(talent => talent.id)).size).toBe(9)
-      expect(roll.every(talent => CHARACTER_CREATION_TALENTS.includes(talent))).toBe(true)
+      expect(new Set(roll.map((talent) => talent.id)).size).toBe(9)
+      expect(roll.every((talent) => CHARACTER_CREATION_TALENTS.includes(talent))).toBe(true)
     }
   })
 })

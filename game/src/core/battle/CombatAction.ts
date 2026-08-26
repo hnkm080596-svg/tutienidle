@@ -13,8 +13,10 @@ export type ActionTargetingShape = 'single' | 'area' | 'line' | 'all_lanes'
 export type TargetSelectionMode = 'nearest' | 'lowest_hp' | 'highest_hp'
 
 /**
- * Targeting đo hoàn toàn bằng đơn vị GRID (cột/hàng):
- * - rangeColumns: primary target phải cách nguồn không quá N cột.
+ * Targeting đo hoàn toàn bằng đơn vị GRID (cột/hàng) — plan §2.6: KHÔNG
+ * còn targeting range riêng cho skill, tầm thi triển thực tế luôn là
+ * `attackRange` của entity (Chebyshev với Player, column tới cổng với
+ * enemy). Interface này CHỈ chuẩn hoá shape/AOE quanh primary target:
  * - shape 'area' dùng laneRadius/columnRadius quanh primary target
  *   (radius 0 = chỉ hàng/cột của anchor; n = mở rộng n ô mỗi phía, clamp biên).
  * - shape 'line'  = toàn bộ hàng của primary target.
@@ -22,15 +24,12 @@ export type TargetSelectionMode = 'nearest' | 'lowest_hp' | 'highest_hp'
  * - maxTargets: giới hạn số enemy trúng (cân bằng).
  */
 export interface ActionTargeting {
-  rangeColumns: number
   shape: ActionTargetingShape
   laneRadius?: number
   columnRadius?: number
   maxTargets?: number
   selection?: TargetSelectionMode
 }
-
-export const DEFAULT_SKILL_RANGE_COLUMNS = GRID_COLUMN_COUNT
 
 export function targetingForSkill(skill: {
   target: string
@@ -43,18 +42,13 @@ export function targetingForSkill(skill: {
   }
 
   if (skill.target === 'all_enemies') {
-    return {
-      rangeColumns: DEFAULT_SKILL_RANGE_COLUMNS,
-      shape: 'all_lanes',
-      columnRadius: GRID_COLUMN_COUNT,
-    }
+    return { shape: 'all_lanes', columnRadius: GRID_COLUMN_COUNT }
   }
 
   const laneRadius = skill.laneRadius ?? 0
   const columnRadius = skill.columnRadius ?? 0
 
   return {
-    rangeColumns: DEFAULT_SKILL_RANGE_COLUMNS,
     shape: laneRadius > 0 || columnRadius > 0 ? 'area' : 'single',
     laneRadius,
     columnRadius,
@@ -125,6 +119,13 @@ export type CombatVfxPresetId =
  * tham chiến") — renderer đăng ký diễn xuất theo cấp bậc quái.
  */
 export type EnemySpawnVfxPresetId = 'enemy_spawn' | 'elite_spawn' | 'boss_spawn'
+
+/**
+ * Id preset VFX telegraph spawn Player (plan §5.3) — contract RIÊNG với
+ * enemy spawn để renderer phân biệt preset và không giả danh
+ * `enemy_spawned`.
+ */
+export type PlayerSpawnVfxPresetId = 'player_spawn'
 
 /**
  * Map element của skill → preset VFX mặc định. Skill có thể override

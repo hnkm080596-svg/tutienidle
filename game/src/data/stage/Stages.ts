@@ -13,7 +13,8 @@ const BASE_STAGES: Stage[] = [
 
     name: 'Quật 1',
 
-    description: 'Khu rừng đầu núi, nơi Dã Lang và Sơn Tặc lang thang — thử thách đầu tiên cho tu sĩ mới nhập môn.',
+    description:
+      'Khu rừng đầu núi, nơi Dã Lang và Sơn Tặc lang thang — thử thách đầu tiên cho tu sĩ mới nhập môn.',
 
     requiredRealmId: 'qi_refining',
 
@@ -142,7 +143,8 @@ const BASE_STAGES: Stage[] = [
   {
     id: 'qi_refining_mineral_pit',
     name: 'Quật 8',
-    description: 'Hầm khoáng sâu dưới Bạch Nhận Sơn, Kim Giáp Trùng đào hang chằng chịt trong bóng tối.',
+    description:
+      'Hầm khoáng sâu dưới Bạch Nhận Sơn, Kim Giáp Trùng đào hang chằng chịt trong bóng tối.',
     requiredRealmId: 'qi_refining',
     requiredRealmLevel: 8,
     enemyPool: [
@@ -172,7 +174,8 @@ const BASE_STAGES: Stage[] = [
   {
     id: 'qi_refining_abyssal_pool',
     name: 'Quật 10',
-    description: 'Vực nước sâu thẳm cuối Huyền Đàm Trạch — nơi Giao Xà ngự trị, chặng thử thách cuối cùng trước ngưỡng cửa Trúc Cơ.',
+    description:
+      'Vực nước sâu thẳm cuối Huyền Đàm Trạch — nơi Giao Xà ngự trị, chặng thử thách cuối cùng trước ngưỡng cửa Trúc Cơ.',
     requiredRealmId: 'qi_refining',
     requiredRealmLevel: 10,
     enemyPool: [
@@ -193,7 +196,8 @@ const BASE_STAGES: Stage[] = [
   {
     id: 'mortal_dong_1',
     name: 'Động 1',
-    description: 'Cửa hang đầu tiên nơi chân núi, Dã Trư và Sơn Khấu tranh nhau từng tấc đất — thử thách đầu đời của 1 phàm nhân.',
+    description:
+      'Cửa hang đầu tiên nơi chân núi, Dã Trư và Sơn Khấu tranh nhau từng tấc đất — thử thách đầu đời của 1 phàm nhân.',
     requiredRealmId: 'mortal',
     enemyPool: [
       { enemyId: 'mortal_wild_boar', weight: 5 },
@@ -252,7 +256,8 @@ const BASE_STAGES: Stage[] = [
   {
     id: 'mortal_dong_5',
     name: 'Động 5',
-    description: 'Nền đất đá cứng, Thạch Miêu ẩn mình sau từng tảng đá, Nê Ngưu lầm lì trấn giữ lối đi.',
+    description:
+      'Nền đất đá cứng, Thạch Miêu ẩn mình sau từng tảng đá, Nê Ngưu lầm lì trấn giữ lối đi.',
     requiredRealmId: 'mortal',
     requiredRealmLevel: 5,
     enemyPool: [
@@ -282,7 +287,8 @@ const BASE_STAGES: Stage[] = [
   {
     id: 'mortal_dong_7',
     name: 'Động 7',
-    description: 'Vách hang lấp lánh khoáng kim, Ngân Hồ tinh ranh và Thiết Giáp Trư lì lợm cùng trấn giữ.',
+    description:
+      'Vách hang lấp lánh khoáng kim, Ngân Hồ tinh ranh và Thiết Giáp Trư lì lợm cùng trấn giữ.',
     requiredRealmId: 'mortal',
     requiredRealmLevel: 7,
     enemyPool: [
@@ -327,7 +333,8 @@ const BASE_STAGES: Stage[] = [
   {
     id: 'mortal_dong_10',
     name: 'Động 10',
-    description: 'Đáy hang ngập nước sâu nhất — chặng thử thách cuối cùng của kiếp phàm nhân, trước ngưỡng cửa Luyện Khí.',
+    description:
+      'Đáy hang ngập nước sâu nhất — chặng thử thách cuối cùng của kiếp phàm nhân, trước ngưỡng cửa Luyện Khí.',
     requiredRealmId: 'mortal',
     requiredRealmLevel: 10,
     enemyPool: [
@@ -340,7 +347,7 @@ const BASE_STAGES: Stage[] = [
   },
 ]
 
-const normalizedStages: Stage[] = BASE_STAGES.map(stage => ({
+const normalizedStages: Stage[] = BASE_STAGES.map((stage) => ({
   ...stage,
   chapter: stage.requiredRealmId === 'mortal' ? 1 : 2,
   floor: stage.requiredRealmLevel ?? 1,
@@ -351,8 +358,8 @@ const normalizedStages: Stage[] = BASE_STAGES.map(stage => ({
 // pools. The chapter/floor model is real; enemy balance remains data-only
 // and can be replaced without changing stage progression logic.
 const foundationStages: Stage[] = normalizedStages
-  .filter(stage => stage.chapter === 2)
-  .map(stage => ({
+  .filter((stage) => stage.chapter === 2)
+  .map((stage) => ({
     ...stage,
     id: `foundation_floor_${stage.floor}`,
     name: `Màn 3.${stage.floor}`,

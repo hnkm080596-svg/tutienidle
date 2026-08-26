@@ -5,12 +5,12 @@
 // thuần trình bày, đọc snapshot chỉ-đọc.
 //
 // electron-combat-timing-smoothing-plan.md mục 7 — prop shape CỐ Ý
-// dùng tên trung lập (remaining/total/isMasked) thay vì cooldownRemaining/
-// cooldownTotal: component này phục vụ CẢ active skill loadout (cooldown
-// thật, xem CombatSkillPresentationState) LẪN Trảm (nhịp đánh, xem
-// BasicAttackPresentationState) — 2 khái niệm khác hẳn nhau ở tầng dữ
+// dùng tên trung lập (remaining/total/isMasked): component phục vụ cả
+// cooldown thật lẫn cadence Attack Speed — 2 clock khác nhau ở tầng dữ
 // liệu core, KHÔNG được hợp nhất lại thành 1 semantic ở đây. Mỗi call
-// site tự map type CỦA MÌNH sang prop trung lập bên dưới.
+// site tự map state CỦA MÌNH sang prop trung lập bên dưới. Execution
+// policy rework (plan §11.3) — thêm is-out-of-range cho trạng thái
+// thống nhất 'out_of_range'.
 import { computed } from 'vue'
 import SlotView from '@/components/common/SlotView.vue'
 import type { Skill } from '@/core/skill/Skill'
@@ -22,13 +22,13 @@ const props = withDefaults(defineProps<{
   emptyLabel?: string
 
   // Thời gian còn lại/tổng của "vòng phủ" đang hiện — cooldown thật
-  // (active skill) hoặc nhịp đánh (Trảm), tuỳ call site.
+  // (policy cooldown/cast_time) hoặc cadence Attack Speed (policy
+  // attack_speed), tuỳ call site.
   remaining: number
   total: number
 
   // true = hiện vòng phủ tối + số đếm ngược (remaining > 0 VÀ đang
-  // "chạy", call site tự quyết định — Trảm dùng isAdvancing, active
-  // skill dùng state==='cooldown').
+  // "chạy", call site tự quyết định).
   isMasked?: boolean
 
   castRemaining?: number
@@ -37,6 +37,10 @@ const props = withDefaults(defineProps<{
 
   resourceCost?: number
   isInsufficientResource?: boolean
+
+  // Trạng thái 'out_of_range' thống nhất (plan §11.3) — không có primary
+  // target trong attack range của avatar; slot làm mờ thay vì vòng phủ.
+  isOutOfRange?: boolean
 
   isUnreleased?: boolean
   isLocked?: boolean
@@ -47,6 +51,7 @@ const props = withDefaults(defineProps<{
   resourceCost: 0,
   isCasting: false,
   isInsufficientResource: false,
+  isOutOfRange: false,
   isUnreleased: false,
   isLocked: false,
 })
@@ -99,6 +104,7 @@ const tooltip = computed<TooltipContent | undefined>(() => {
       'is-masked': showMask,
       'is-casting': isCasting,
       'is-insufficient': isInsufficientResource,
+      'is-out-of-range': isOutOfRange,
       'is-unreleased': isUnreleased,
     }"
   >
@@ -206,7 +212,8 @@ const tooltip = computed<TooltipContent | undefined>(() => {
   pointer-events: none;
 }
 
-.combat-skill-slot.is-insufficient :deep(.slot-view) {
+.combat-skill-slot.is-insufficient :deep(.slot-view),
+.combat-skill-slot.is-out-of-range :deep(.slot-view) {
   filter: grayscale(0.6);
   opacity: 0.7;
 }

@@ -2,7 +2,7 @@ import type { CombatEntity } from '../combat/CombatEntity'
 
 import type { BattleState } from './BattleTypes'
 
-import type { EnemySpawnVfxPresetId } from './CombatAction'
+import type { EnemySpawnVfxPresetId, PlayerSpawnVfxPresetId } from './CombatAction'
 import type { GridPosition } from './BattleGrid'
 
 import type { BuffManager } from '../buff/BuffManager'
@@ -63,7 +63,29 @@ export interface Battle {
   // state khác.
   countdownSecondsRemaining?: number
 
-  playerAttackTimer: number
+  /**
+   * Teleport AI (plan §7.3) — internal cooldown (ICD) của Player: đúng
+   * 1 giây sau mỗi lần đổi row. Trong ICD Player vẫn cast/đánh mục tiêu
+   * đang trong tầm bình thường nhưng KHÔNG được teleport lần nữa.
+   */
+  playerTeleport: PlayerTeleportState
+
+  /**
+   * Player spawn telegraph (plan §5.3) — avatar Player đang chờ hiệu ứng
+   * "telegraph → materialize" tại ô (4,1). Contract RIÊNG (không nằm
+   * trong pendingEnemySpawns) để không giả danh enemy, không phát
+   * `enemy_spawned` và renderer phân biệt preset. undefined = đã
+   * materialize hoặc không dùng telegraph.
+   */
+  pendingPlayerSpawn?: PendingPlayerSpawn
+
+  /**
+   * Targetability (plan §5.4) — false khi Player chưa materialize:
+   * không thể bị enemy target, không nhận damage và không cast. KHÔNG
+   * dùng `alive = false` cho pending spawn vì "chưa xuất hiện" khác
+   * "đã chết".
+   */
+  playerMaterialized: boolean
 
   // Buff/debuff phát sinh TRONG trận (skill debuff lên địch, skill
   // buff lên bản thân, talisman...) — tách khỏi GameManager.buffSystem
@@ -82,9 +104,9 @@ export interface Battle {
   // Combat Rework Phase 4 (Boss Mechanics) — id Enemy template boss
   // vừa yêu cầu triệu hồi (TribulationPhase.summonEnemyIds) nhưng
   // BattleSystem chưa tự spawn được (không có EnemyTemplates registry
-  // — đó là việc của GameManager). GameManager rút hết mảng này mỗi
-  // tick rồi spawn thật qua spawnEnemyInto(), xem
-  // GameManager.updateBossSummons().
+  // — đó là việc của GameManager/StageWaveSystem). StageWaveSystem
+  // resolveBossSummons() rút hết mảng này mỗi tick rồi đặt lịch spawn
+  // telegraph qua queueEnemySpawn() (plan §5.2).
   pendingSummons: string[]
 
   // Plans/magicpathgeneral Phase 12 (2026-08-21) — Lava Zone, xem
@@ -99,10 +121,19 @@ export interface Battle {
    * không thể bị chọn mục tiêu, không nhận sát thương và không tấn công
    * — người chơi luôn có thời gian cảnh báo công bằng (attackRange quái
    * hiện lớn hơn chiều rộng grid, spawn trong sân có thể đánh ngay sau
-   * khi materialize). Xem BattleSystem.queueEnemySpawn()/
-   * updatePendingEnemySpawns().
+    * khi materialize). Xem BattleSystem.queueEnemySpawn()/
+   * updatePendingSpawns().
    */
   pendingEnemySpawns: PendingEnemySpawn[]
+
+  /**
+   * Round-robin scheduler (combat-skill-flow-element-power-dot-plan.md §5)
+   * — con trỏ RUNTIME vào vị trí trong mảng getLoadoutEntries() (đã sort
+   * theo slotIndex): lần chọn skill kế tiếp duyệt BẮT ĐẦU từ đây, đi hết
+   * vòng rồi quay lại; chỉ dời sau khi begin-cast thành công; reset về 0
+   * khi bắt đầu trận mới. KHÔNG persist (giống elapsedSeconds).
+   */
+  nextSkillSlotIndexCursor?: number
 }
 
 /** 1 lượt spawn đã đặt lịch, đang đếm ngược telegraph. */
@@ -117,4 +148,17 @@ export interface PendingEnemySpawn {
   totalSeconds: number
 
   presetId: EnemySpawnVfxPresetId
+}
+
+/** ICD teleport của Player (plan §2.5/§7.3) — 0 = sẵn sàng đổi row. */
+export interface PlayerTeleportState {
+  remainingSeconds: number
+}
+
+/** Telegraph spawn của avatar Player (plan §4.3) — preset riêng. */
+export interface PendingPlayerSpawn {
+  position: GridPosition
+  remainingSeconds: number
+  totalSeconds: number
+  presetId: PlayerSpawnVfxPresetId
 }

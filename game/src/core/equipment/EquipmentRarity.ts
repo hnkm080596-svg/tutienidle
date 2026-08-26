@@ -38,13 +38,7 @@ export const EQUIPMENT_RARITY_LABELS: Record<EquipmentRarity, string> = {
 }
 
 // Thứ tự thấp -> cao — dùng cho roll trọng số lúc rớt đồ.
-export const EQUIPMENT_RARITY_ORDER: EquipmentRarity[] = [
-  'hoang',
-  'huyen',
-  'dia',
-  'thien',
-  'tien',
-]
+export const EQUIPMENT_RARITY_ORDER: EquipmentRarity[] = ['hoang', 'huyen', 'dia', 'thien', 'tien']
 
 // Trọng số random khi rớt đồ — rarity càng cao càng hiếm.
 export const EQUIPMENT_RARITY_DROP_WEIGHT: Record<EquipmentRarity, number> = {

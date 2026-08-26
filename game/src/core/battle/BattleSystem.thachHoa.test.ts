@@ -66,7 +66,9 @@ function createThoCauThuat(): Skill {
       { type: 'damage', value: 1, damageType: 'physical' },
       { type: 'ailment', ailmentId: 'thach_hoa', ailmentChance: 1 },
     ],
-    isBasicAttack: true,
+    execution: { kind: 'attack_speed' },
+    loadoutSlot: 0,
+    loadoutSlots: [0],
     resourceType: 'none',
     unlocked: true,
     equipped: true,
@@ -115,7 +117,8 @@ describe('BattleSystem — Thạch Hóa on-hit Choáng (Plans/magicpathgeneral)'
 
     system.start(player, enemy)
     system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
-    enemy.x = 5
+    enemy.x = 2
+    enemy.row = 4
 
     // Đủ thời gian cho ÍT NHẤT 2 lần cast trúng đích thật (missile bay
     // 0.1s + cooldown 1s) — lần 1 tự áp Thạch Hóa, lần 2 mới có cơ hội
@@ -138,7 +141,8 @@ describe('BattleSystem — Thạch Hóa on-hit Choáng (Plans/magicpathgeneral)'
 
     system.start(player, enemy)
     system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
-    enemy.x = 5
+    enemy.x = 2
+    enemy.row = 4
 
     for (let i = 0; i < 250; i++) {
       tick(0.01)

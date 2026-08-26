@@ -1,5 +1,7 @@
 # Hướng dẫn hệ thống game hiện tại
 
+> Roadmap hậu kỳ: [Phù Ultimate và Trận Pháp chiến trường](./future-talisman-formation-system-plan.md).
+> Hiện tại Phù/Trận được giữ khóa; hướng socket vào Equipment đã bị loại bỏ.
 Tài liệu này là điểm tham chiếu tổng hợp cho trạng thái **đang được triển khai trong code**. Các plan rời trước đây đã được hợp nhất và loại bỏ vì trùng lặp hoặc lỗi thời. Khi tài liệu và code khác nhau, các module được dẫn bên dưới là nguồn sự thật.
 
 ## Kiến trúc và giao diện
@@ -34,6 +36,11 @@ Sau giao dịch thành công, `SkillPathPanel.vue` phát `unlockTrigger`; `NodeT
 ## Chiến đấu
 
 `BattleSystem` điều phối timeline, cast, movement và missile; `CombatSystem` giải quyết hit, né, chí mạng, giáp, kháng, Realm Pressure, ailment và sát thương. Model missile data-driven trong `src/core/combat/missile/` hỗ trợ xuyên, nảy, bám đích, AOE, tỷ lệ sát thương mục tiêu phụ và knockback; danh sách mục tiêu đã trúng ngăn damage lặp ngoài ý muốn.
+
+Code hiện tại vẫn dùng grid 10×16 và player gate ở mép trái. Hướng rework đã
+chốt là bàn cờ vây 19×19: player actor chuyển ra ngoài bàn; player có dải tầm
+đánh mặc định 9 hành trên toàn chiều ngang; quái gây sát thương khi vị trí cộng
+tầm đánh chạm hành thủ thành số 1. Plan này chưa phải trạng thái runtime hiện tại.
 
 Boss có thể đổi phase theo ngưỡng HP, nhận buff, enrage theo thời gian và triệu hồi quái. UI hiện hành nằm tại `src/components/game/combat/`, gồm top/status/event bar, control bar và các trạng thái thắng, thua, kết quả.
 

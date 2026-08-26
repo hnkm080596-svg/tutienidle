@@ -83,7 +83,9 @@ function positionsEvent(
 ): BattlePositionsEvent {
   return {
     type: 'positions',
-    playerX: 0,
+    playerX: 1,
+    playerRow: 4,
+    playerMaterialized: true,
     playerCurrentHp: 100,
     playerMaxHp: 100,
     enemies,

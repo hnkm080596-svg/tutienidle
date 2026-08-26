@@ -81,10 +81,9 @@ export const PANEL_BACKDROP_PATHS: Record<string, string> = {
   stage_select: '/assets/panels/stage_select.png', // Thám Hiểm (chọn Địa Giới/Màn để đánh)
 }
 
-// Thanh dưới (BottomBar.vue, chứa BattleControls + DongFuQuickNav) —
-// khối layout cố định, không đổi theo mode như PANEL_BACKDROP_PATHS.
-// RIGHT_PANEL_BACKDROP_PATH (cột phải, nút Menu tròn) đã gỡ cùng
-// RightPanel.vue — UI redesign thay bằng DongFuTopBar.vue.
+// Thanh dưới (BottomBar.vue — ĐÃ XOÁ 2026-08-26 cùng command-wheel
+// plan) — hằng số giữ lại cho consumer TS thuần còn tham chiếu asset
+// cũ; KHÔNG còn gắn với layout nào.
 export const BOTTOM_BAR_BACKDROP_PATH = '/assets/ui/bottom-bar.png' // Thanh dưới cùng (Pause/Auto)
 
 // Tooltip.vue — hiện chỉ 1 hộp `rgba(15,15,20,0.96)` + viền `#444`

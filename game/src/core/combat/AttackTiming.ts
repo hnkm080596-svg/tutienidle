@@ -1,7 +1,8 @@
 // electron-combat-timing-smoothing-plan.md mục 9 — công thức DUY NHẤT
-// quy đổi attackSpeed -> khoảng cách giữa 2 đòn đánh cơ bản (giây).
-// Trước đây `1 / Math.max(1, attackSpeed)` bị lặp lại ở 3 nơi (reset
-// playerAttackTimer, reset enemy attackTimer, buildBasicAttackPresentation())
+// quy đổi attackSpeed -> khoảng cách giữa 2 lần kích hoạt (giây) cho
+// nhịp đánh enemy và cadence Attack Speed của skill execution policy
+// 'attack_speed'/'attack_speed_cast'.
+// Trước đây `1 / Math.max(1, attackSpeed)` bị lặp lại ở 3 nơi
 // và có bug: MỌI attackSpeed < 1 vẫn bị ép về đúng 1 đòn/giây (Math.max
 // sàn ở 1, không phải ở attackSpeed), khiến debuff làm chậm (giảm
 // attackSpeed xuống dưới 1) hoàn toàn vô tác dụng ở baseline. Sàn giờ

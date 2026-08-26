@@ -52,8 +52,8 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
 
 // hoa_cau_thuat (test-only fixture, không đọc data/skill/Skills.ts
 // thật) — chỉ cần đúng 2 field engine thật sự đọc:
-// grantsHoaThePerCast (skill-level flag) + isBasicAttack (chạy theo
-// attackSpeed timer, cast mỗi giây ở attackSpeed mặc định).
+// grantsHoaThePerCast (skill-level flag) + execution 'attack_speed'
+// (nhịp cast theo Attack Speed, cast mỗi giây ở attackSpeed mặc định).
 function createHoaCauThuat(): Skill {
   return {
     id: 'hoa_cau_thuat',
@@ -67,7 +67,9 @@ function createHoaCauThuat(): Skill {
     cost: 0,
     target: 'enemy',
     effects: [{ type: 'damage', value: 1, damageType: 'physical' }],
-    isBasicAttack: true,
+    execution: { kind: 'attack_speed' },
+    loadoutSlot: 0,
+    loadoutSlots: [0],
     resourceType: 'none',
     grantsHoaThePerCast: true,
     unlocked: true,
@@ -117,7 +119,8 @@ describe('BattleSystem — Hỏa Thế (Plans/FirePath mục 7, Tụ Hỏa)', ()
 
     system.start(player, enemy)
     system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
-    enemy.x = 5
+    enemy.x = 2
+    enemy.row = 4
 
     for (let i = 0; i < 320; i++) {
       tick(0.01)
@@ -137,7 +140,8 @@ describe('BattleSystem — Hỏa Thế (Plans/FirePath mục 7, Tụ Hỏa)', ()
 
     system.start(player, enemy)
     system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
-    enemy.x = 5
+    enemy.x = 2
+    enemy.row = 4
 
     // attackSpeed mặc định 1 -> cast mỗi 1s (+1 Hỏa Thế/cast), nhưng
     // HOA_THE_BASE_DECAY_PER_SECOND=0.5 chạy song song (updateHoaThe())

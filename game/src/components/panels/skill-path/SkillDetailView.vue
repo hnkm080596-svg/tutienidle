@@ -84,9 +84,9 @@ function onUpgrade() {
           <span>{{ skill.cost }} {{ skill.resourceType }}</span>
         </li>
 
-        <li v-if="skill.isBasicAttack">
+        <li v-if="skill.execution?.kind === 'attack_speed'">
           <span>Loại</span>
-          <span>Chiêu Cơ Bản</span>
+          <span>Nhịp theo Tốc Độ Đánh</span>
         </li>
       </ul>
     </template>

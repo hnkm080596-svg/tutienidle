@@ -4,8 +4,6 @@ import { AffixRegistry } from '@/core/equipment/AffixRegistry'
 import { affixes } from '@/data/equipment/affixes'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import type { Equipment } from '@/core/equipment/Equipment'
-import { FormationRegistry } from '@/core/formation/FormationRegistry'
-import { TalismanRegistry } from '@/core/talisman/TalismanRegistry'
 import { ZoneRegistry } from '@/core/stage/ZoneRegistry'
 
 function instance(overrides: Partial<EquipmentInstance> = {}): EquipmentInstance {
@@ -20,7 +18,7 @@ function instance(overrides: Partial<EquipmentInstance> = {}): EquipmentInstance
     mainStat: { id: 'roll-main-attack', sourceId: 'roll-main', sourceType: 'equipment', stat: 'attack', flat: 10 },
     affixes: [],
     forgePoints: 0,
-    forgePotential: 100,
+  forgePotential: 100,
     ...overrides,
   }
 }
@@ -104,8 +102,6 @@ describe('buildEquipmentTooltip', () => {
       template,
       affixRegistry,
       null,
-      new FormationRegistry(),
-      new TalismanRegistry(),
       new ZoneRegistry(),
     )
 
@@ -133,7 +129,7 @@ describe('buildEquipmentTooltip', () => {
     }
     const tooltip = buildEquipmentTooltip(
       candidate, template, affixRegistry, null,
-      new FormationRegistry(), new TalismanRegistry(), new ZoneRegistry(), equipped,
+      new ZoneRegistry(), equipped,
     )
 
     expect(tooltip.sections[0]?.rows[0]?.value).toBe('+14')

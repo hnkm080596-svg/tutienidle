@@ -33,6 +33,11 @@ export function useBagPagination(cells: ComputedRef<BagCell[]>, pageSize: Comput
     currentPage.value = Math.min(Math.max(0, page), totalPages.value - 1)
   }
 
+  // Sort (plan Workstream E) — đổi mode/direction quay về trang đầu.
+  function resetPage() {
+    currentPage.value = 0
+  }
+
   // Luôn đủ pageSize ô — ô thừa hiển thị rỗng.
   const gridCells = computed<(BagCell | null)[]>(() => {
     const size = pageSize.value
@@ -43,5 +48,5 @@ export function useBagPagination(cells: ComputedRef<BagCell[]>, pageSize: Comput
     return Array.from({ length: size }, (_, index) => pageItems[index] ?? null)
   })
 
-  return { currentPage, totalPages, goToPage, gridCells }
+  return { currentPage, totalPages, goToPage, resetPage, gridCells }
 }

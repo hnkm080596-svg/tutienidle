@@ -8,6 +8,7 @@
 import { computed } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
+import { getNodeLevel } from '@/core/progression/NodeSystem'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import type { ElementType } from '@/core/element/ElementType'
 
@@ -33,7 +34,20 @@ function buildRow(element: ElementType, extended: boolean) {
   stateVersion.value
 
   const branchNodes = gameManager.nodeRegistry.getAll().filter(node => node.branchTag === element)
-  const purchasedCount = branchNodes.filter(node => player.purchasedNodeIds.includes(node.id)).length
+
+  // Tiến độ nhánh = tổng LEVEL đã đầu tư / tổng level tối đa của nhánh
+  // (plan §6.1) — node nhiều cấp tính theo tỉ lệ level thay vì boolean.
+  let purchasedCount = 0
+
+  let totalCount = 0
+
+  for (const node of branchNodes) {
+    const maxLevel = Math.max(1, node.maxLevel ?? 1)
+
+    purchasedCount += Math.min(maxLevel, getNodeLevel(player.$state, node.id))
+
+    totalCount += maxLevel
+  }
 
   return {
     element,
@@ -42,7 +56,7 @@ function buildRow(element: ElementType, extended: boolean) {
     // Phong/Lôi chưa có data node -> luôn khoá, không phụ thuộc
     // unlockedElements (không có cách nào unlock được lúc này).
     locked: extended || branchNodes.length === 0,
-    total: branchNodes.length,
+    total: totalCount,
     purchasedCount,
   }
 }

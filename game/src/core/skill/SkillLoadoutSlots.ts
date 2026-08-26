@@ -17,10 +17,11 @@ export function getSkillLoadoutSlotCount(realmId: string): number {
   const ordinal = getRealmIndex(realmId)
 
   // Phàm Nhân (ordinal 0) hoặc realmId không hợp lệ (ordinal -1) —
-  // chưa có Skill Loadout nào, chỉ có đúng 1 skill "Trảm" đóng khung
-  // (xem PLAN HOÀN CHỈNH mục 7, App.vue's equipSkillWithoutSlot()).
+  // execution policy rework (combat-gate-teleport-autocast plan §8.6):
+  // scheduler CHỈ đọc loadout nên Trảm được gán vào ĐÚNG slot mặc định
+  // (slot 0) thay vì "equipped không slot" như trước.
   if (ordinal < 1) {
-    return 0
+    return 1
   }
 
   const realmsPastFirst = ordinal - 1

@@ -1,7 +1,7 @@
 import type { CombatEntity } from './CombatEntity'
 import type { ElementType } from '../element/ElementType'
 import type { SkillDamageComponent } from '../skill/SkillDamageComponent'
-import { calculateBaseDamage } from './DamageCalculator'
+import { baseAttackPlusPower, calculateBaseDamage } from './DamageCalculator'
 import { getResistanceMitigationPercent } from './Resistance'
 
 /**
@@ -12,14 +12,25 @@ import { getResistanceMitigationPercent } from './Resistance'
  * (Attunement — xem StatCalculator.ts's deriveAttributeModifiers()),
  * nên Power ở đây đã BAO GỒM sẵn phần khuếch đại đó, không cần tính
  * thêm gì nữa.
+ *
+ * combat-skill-flow-element-power-dot-plan.md §3.1 — nguồn damage nền
+ * của component nguyên tố đổi thành `ATK + ElementPower[element]` để
+ * ATK và tiến trình trang bị đóng góp cho Pháp Tu thay vì chỉ đọc
+ * Power nền gần bằng 0. Helper DÙNG CHUNG bởi direct hit lẫn DoT
+ * snapshot (AilmentSystem.calculateDamagePerSecond) — tách 1 điểm duy
+ * nhất để hai pipeline không thể lệch công thức về sau.
  */
+export function elementalBasePower(source: CombatEntity, element: ElementType): number {
+  return baseAttackPlusPower(source.stats.attack, source.stats[`${element}Power`])
+}
+
 export function calculateElementComponentDamage(
   source: CombatEntity,
   target: CombatEntity,
   element: ElementType,
   ignoreResistance = false,
 ): number {
-  const power = source.stats[`${element}Power`]
+  const power = elementalBasePower(source, element)
 
   const resistance = target.stats[`${element}Resistance`]
 

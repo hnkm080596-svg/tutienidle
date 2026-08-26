@@ -1,12 +1,23 @@
 import { defineStore } from 'pinia'
 import { createDefaultPlayer, type PlayerData } from '../core/player/Player'
-import { addCultivation, breakthrough as breakthroughSystem } from '../core/cultivation/CultivationSystem'
-import { equipElement as equipElementSystem, unequipElement as unequipElementSystem } from '../core/element/ElementLoadout'
+import {
+  DEFAULT_COMBAT_AI_STRATEGY,
+  isCombatAiStrategy,
+} from '../core/battle/CombatAiStrategy'
+import {
+  addCultivation,
+  breakthrough as breakthroughSystem,
+} from '../core/cultivation/CultivationSystem'
+import {
+  equipElement as equipElementSystem,
+  unequipElement as unequipElementSystem,
+} from '../core/element/ElementLoadout'
 import type { ElementType } from '../core/element/ElementType'
 import { calculateOfflineProgress } from '../core/idle/OfflineProgressSystem'
 import { calculateOfflineTime } from '../core/idle/GameClock'
 import { buildGameSave, loadGame, type GameSave } from '../services/save/SaveSystem'
 import { cloudSaveCoordinator } from '../services/cloudSave/CloudSaveServiceFactory'
+import { PLAYER_BASE_RANGE_RANKS } from '@/core/stats/StatBlock'
 import type { GameManager } from '@/core/game/GameManager'
 import { getRequiredCultivation, BASE_CULTIVATION_PER_SECOND } from '@/core/realm/realmSystem'
 import { calculateStats, type StatModifier } from '@/core/stats/StatCalculator'
@@ -101,7 +112,6 @@ export const usePlayerStore = defineStore('player', {
       this.modifiers = modifiers
     },
 
-
     // true nếu MỚI đánh dấu (chưa từng unlock trước đó) — dùng để
     // chống cộng trùng hiệu ứng gắn passive khi đột phá đại cảnh giới
     // (xem composables/useBreakthrough.ts).
@@ -144,7 +154,6 @@ export const usePlayerStore = defineStore('player', {
     },
 
     restoreFromSave(save: GameSave) {
-
       // GameClock là nguồn duy nhất tính thời gian offline.
       // lastSavedAt của save file chính là lastOnlineAt của GameClockState.
       const { offlineSeconds } = calculateOfflineTime({
@@ -154,6 +163,28 @@ export const usePlayerStore = defineStore('player', {
       const offline = calculateOfflineProgress(offlineSeconds, save.player.cultivationPerSecond)
 
       Object.assign(this, save.player)
+
+      // Node level (plan §6.1) — save cũ giữa v46 thiếu object này;
+      // thiếu = chưa lĩnh ngộ node nào, KHÔNG được để undefined kẹo
+      // getNodeLevel/aggregate crash toàn UI (nguyên nhân "không xóa
+      // được save" — app chết trước khi tới được Settings).
+      this.nodeLevels ??= {}
+      this.purchasedNodeIds ??= []
+
+      // Combat AI strategy (plan §10.2) — save không có field hoặc giá
+      // trị sai dùng default 'nearest'. Không migration (development
+      // build), fallback đủ cho development save.
+      this.combatAiStrategy = isCombatAiStrategy(save.player.combatAiStrategy)
+        ? save.player.combatAiStrategy
+        : DEFAULT_COMBAT_AI_STRATEGY
+
+      // Balance pass 2026-08-26 — repair save CŨ: baseStats được snapshot
+      // nguyên trạng vào save, nên nhân vật tạo ở bản base range 1/9 giữ
+      // mãi giá trị cũ và KHÔNG BAO GIỜ với tới quái (triệu chứng "vẫn
+      // tele nhưng 0 sát thương, nhấp nháy teleport"). attackRange là
+      // baseline THUỘC CODE (không có đường đầu tư trực tiếp — bonus chỉ
+      // chảy qua StatModifier) nên ép về đúng baseline hiện hành.
+      this.baseStats.attackRange = PLAYER_BASE_RANGE_RANKS
 
       this.cultivation += offline.cultivation
 

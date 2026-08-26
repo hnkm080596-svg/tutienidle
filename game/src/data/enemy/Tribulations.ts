@@ -32,7 +32,13 @@ const HUMAN_PHASES: TribulationPhase[] = [
   {
     hpThresholdPercent: 0.5,
     buff: enrageBuff('tribulation_human_phase1', 'Nhân Kiếp Bộc Phát', [
-      { id: 'tribulation_human_phase1_attack', sourceId: 'tribulation_human_phase1', sourceType: 'buff', stat: 'attack', percent: 0.3 },
+      {
+        id: 'tribulation_human_phase1_attack',
+        sourceId: 'tribulation_human_phase1',
+        sourceType: 'buff',
+        stat: 'attack',
+        percent: 0.3,
+      },
     ]),
     message: 'Nhân Đạo Kiếp bộc phát sát khí!',
   },
@@ -42,15 +48,33 @@ const EARTH_PHASES: TribulationPhase[] = [
   {
     hpThresholdPercent: 0.6,
     buff: enrageBuff('tribulation_earth_phase1', 'Địa Kiếp Cuồng Nộ I', [
-      { id: 'tribulation_earth_phase1_attack', sourceId: 'tribulation_earth_phase1', sourceType: 'buff', stat: 'attack', percent: 0.25 },
+      {
+        id: 'tribulation_earth_phase1_attack',
+        sourceId: 'tribulation_earth_phase1',
+        sourceType: 'buff',
+        stat: 'attack',
+        percent: 0.25,
+      },
     ]),
     message: 'Địa Đạo Kiếp bắt đầu cuồng nộ!',
   },
   {
     hpThresholdPercent: 0.3,
     buff: enrageBuff('tribulation_earth_phase2', 'Địa Kiếp Cuồng Nộ II', [
-      { id: 'tribulation_earth_phase2_attack', sourceId: 'tribulation_earth_phase2', sourceType: 'buff', stat: 'attack', percent: 0.25 },
-      { id: 'tribulation_earth_phase2_armor', sourceId: 'tribulation_earth_phase2', sourceType: 'buff', stat: 'defense', percent: 0.2 },
+      {
+        id: 'tribulation_earth_phase2_attack',
+        sourceId: 'tribulation_earth_phase2',
+        sourceType: 'buff',
+        stat: 'attack',
+        percent: 0.25,
+      },
+      {
+        id: 'tribulation_earth_phase2_armor',
+        sourceId: 'tribulation_earth_phase2',
+        sourceType: 'buff',
+        stat: 'defense',
+        percent: 0.2,
+      },
     ]),
     message: 'Địa Đạo Kiếp lộ rõ sát ý!',
   },
@@ -60,22 +84,46 @@ const HEAVEN_PHASES: TribulationPhase[] = [
   {
     hpThresholdPercent: 0.66,
     buff: enrageBuff('tribulation_heaven_phase1', 'Thiên Kiếp Gia Tốc', [
-      { id: 'tribulation_heaven_phase1_speed', sourceId: 'tribulation_heaven_phase1', sourceType: 'buff', stat: 'attackSpeed', percent: 0.15 },
+      {
+        id: 'tribulation_heaven_phase1_speed',
+        sourceId: 'tribulation_heaven_phase1',
+        sourceType: 'buff',
+        stat: 'attackSpeed',
+        percent: 0.15,
+      },
     ]),
     message: 'Thiên Đạo Kiếp gia tốc!',
   },
   {
     hpThresholdPercent: 0.33,
     buff: enrageBuff('tribulation_heaven_phase2', 'Thiên Kiếp Chí Mạng', [
-      { id: 'tribulation_heaven_phase2_crit', sourceId: 'tribulation_heaven_phase2', sourceType: 'buff', stat: 'criticalRate', percent: 0.2 },
+      {
+        id: 'tribulation_heaven_phase2_crit',
+        sourceId: 'tribulation_heaven_phase2',
+        sourceType: 'buff',
+        stat: 'criticalRate',
+        percent: 0.2,
+      },
     ]),
     message: 'Thiên Đạo Kiếp nhắm chí mạng!',
   },
   {
     hpThresholdPercent: 0.15,
     buff: enrageBuff('tribulation_heaven_phase3', 'Thiên Kiếp Tối Hậu', [
-      { id: 'tribulation_heaven_phase3_speed', sourceId: 'tribulation_heaven_phase3', sourceType: 'buff', stat: 'attackSpeed', percent: 0.2 },
-      { id: 'tribulation_heaven_phase3_critdmg', sourceId: 'tribulation_heaven_phase3', sourceType: 'buff', stat: 'criticalDamage', percent: 0.3 },
+      {
+        id: 'tribulation_heaven_phase3_speed',
+        sourceId: 'tribulation_heaven_phase3',
+        sourceType: 'buff',
+        stat: 'attackSpeed',
+        percent: 0.2,
+      },
+      {
+        id: 'tribulation_heaven_phase3_critdmg',
+        sourceId: 'tribulation_heaven_phase3',
+        sourceType: 'buff',
+        stat: 'criticalDamage',
+        percent: 0.3,
+      },
     ]),
     message: 'Thiên Đạo Kiếp bùng nổ tối hậu!',
   },
@@ -85,25 +133,67 @@ const GREAT_DAO_PHASES: TribulationPhase[] = [
   {
     hpThresholdPercent: 0.7,
     buff: enrageBuff('tribulation_great_dao_phase1', 'Đại Đạo Kiếp Khởi', [
-      { id: 'tribulation_great_dao_phase1_attack', sourceId: 'tribulation_great_dao_phase1', sourceType: 'buff', stat: 'attack', percent: 0.25 },
-      { id: 'tribulation_great_dao_phase1_speed', sourceId: 'tribulation_great_dao_phase1', sourceType: 'buff', stat: 'attackSpeed', percent: 0.1 },
+      {
+        id: 'tribulation_great_dao_phase1_attack',
+        sourceId: 'tribulation_great_dao_phase1',
+        sourceType: 'buff',
+        stat: 'attack',
+        percent: 0.25,
+      },
+      {
+        id: 'tribulation_great_dao_phase1_speed',
+        sourceId: 'tribulation_great_dao_phase1',
+        sourceType: 'buff',
+        stat: 'attackSpeed',
+        percent: 0.1,
+      },
     ]),
     message: 'Đại Đạo Kiếp khởi động!',
   },
   {
     hpThresholdPercent: 0.4,
     buff: enrageBuff('tribulation_great_dao_phase2', 'Đại Đạo Kiếp Thịnh', [
-      { id: 'tribulation_great_dao_phase2_attack', sourceId: 'tribulation_great_dao_phase2', sourceType: 'buff', stat: 'attack', percent: 0.3 },
-      { id: 'tribulation_great_dao_phase2_crit', sourceId: 'tribulation_great_dao_phase2', sourceType: 'buff', stat: 'criticalRate', percent: 0.15 },
+      {
+        id: 'tribulation_great_dao_phase2_attack',
+        sourceId: 'tribulation_great_dao_phase2',
+        sourceType: 'buff',
+        stat: 'attack',
+        percent: 0.3,
+      },
+      {
+        id: 'tribulation_great_dao_phase2_crit',
+        sourceId: 'tribulation_great_dao_phase2',
+        sourceType: 'buff',
+        stat: 'criticalRate',
+        percent: 0.15,
+      },
     ]),
     message: 'Đại Đạo Kiếp cực thịnh!',
   },
   {
     hpThresholdPercent: 0.15,
     buff: enrageBuff('tribulation_great_dao_phase3', 'Đại Đạo Kiếp Tận', [
-      { id: 'tribulation_great_dao_phase3_attack', sourceId: 'tribulation_great_dao_phase3', sourceType: 'buff', stat: 'attack', percent: 0.35 },
-      { id: 'tribulation_great_dao_phase3_speed', sourceId: 'tribulation_great_dao_phase3', sourceType: 'buff', stat: 'attackSpeed', percent: 0.2 },
-      { id: 'tribulation_great_dao_phase3_critdmg', sourceId: 'tribulation_great_dao_phase3', sourceType: 'buff', stat: 'criticalDamage', percent: 0.4 },
+      {
+        id: 'tribulation_great_dao_phase3_attack',
+        sourceId: 'tribulation_great_dao_phase3',
+        sourceType: 'buff',
+        stat: 'attack',
+        percent: 0.35,
+      },
+      {
+        id: 'tribulation_great_dao_phase3_speed',
+        sourceId: 'tribulation_great_dao_phase3',
+        sourceType: 'buff',
+        stat: 'attackSpeed',
+        percent: 0.2,
+      },
+      {
+        id: 'tribulation_great_dao_phase3_critdmg',
+        sourceId: 'tribulation_great_dao_phase3',
+        sourceType: 'buff',
+        stat: 'criticalDamage',
+        percent: 0.4,
+      },
     ]),
     message: 'Đại Đạo Kiếp bộc phát toàn lực!',
   },
@@ -123,8 +213,8 @@ export const TRIBULATION_HUMAN: Enemy = defineEnemy({
     maxHp: 3000,
     attack: 110,
     attackSpeed: 4,
-    movementSpeed: 50,
-    attackRange: 55,
+    movementSpeed: 2,
+    attackRangeRanks: 1,
     criticalRate: 0.15,
     criticalDamage: 2.2,
     armor: 45,
@@ -138,9 +228,7 @@ export const TRIBULATION_HUMAN: Enemy = defineEnemy({
     cultivation: 2000,
     spiritStone: 200,
 
-    itemDrops: [
-      { kind: 'material', itemId: 'xich_dong', amount: 4, chance: 1 },
-    ],
+    itemDrops: [{ kind: 'material', itemId: 'xich_dong', amount: 4, chance: 1 }],
   },
 })
 
@@ -158,8 +246,8 @@ export const TRIBULATION_EARTH: Enemy = defineEnemy({
     maxHp: 6000,
     attack: 150,
     attackSpeed: 3.5,
-    movementSpeed: 40,
-    attackRange: 70,
+    movementSpeed: 1.6,
+    attackRangeRanks: 5,
     criticalRate: 0.15,
     criticalDamage: 2.3,
     armor: 60,
@@ -173,9 +261,7 @@ export const TRIBULATION_EARTH: Enemy = defineEnemy({
     cultivation: 4000,
     spiritStone: 350,
 
-    itemDrops: [
-      { kind: 'material', itemId: 'xich_dong', amount: 6, chance: 1 },
-    ],
+    itemDrops: [{ kind: 'material', itemId: 'xich_dong', amount: 6, chance: 1 }],
   },
 })
 
@@ -193,8 +279,8 @@ export const TRIBULATION_HEAVEN: Enemy = defineEnemy({
     maxHp: 12000,
     attack: 200,
     attackSpeed: 4.5,
-    movementSpeed: 55,
-    attackRange: 90,
+    movementSpeed: 2.2,
+    attackRangeRanks: 5,
     criticalRate: 0.2,
     criticalDamage: 2.5,
     armor: 75,
@@ -208,9 +294,7 @@ export const TRIBULATION_HEAVEN: Enemy = defineEnemy({
     cultivation: 8000,
     spiritStone: 600,
 
-    itemDrops: [
-      { kind: 'material', itemId: 'tinh_hoa_hoa', amount: 2, chance: 1 },
-    ],
+    itemDrops: [{ kind: 'material', itemId: 'tinh_hoa_hoa', amount: 2, chance: 1 }],
   },
 })
 
@@ -228,8 +312,8 @@ export const TRIBULATION_GREAT_DAO: Enemy = defineEnemy({
     maxHp: 30000,
     attack: 350,
     attackSpeed: 5,
-    movementSpeed: 60,
-    attackRange: 90,
+    movementSpeed: 2.4,
+    attackRangeRanks: 5,
     criticalRate: 0.25,
     criticalDamage: 2.8,
     armor: 100,
@@ -243,9 +327,7 @@ export const TRIBULATION_GREAT_DAO: Enemy = defineEnemy({
     cultivation: 30000,
     spiritStone: 2000,
 
-    itemDrops: [
-      { kind: 'material', itemId: 'yeu_hon', amount: 2, chance: 1 },
-    ],
+    itemDrops: [{ kind: 'material', itemId: 'yeu_hon', amount: 2, chance: 1 }],
   },
 })
 
@@ -271,8 +353,8 @@ export const TRIBULATION_GOLDEN_CORE: Enemy = defineEnemy({
     maxHp: 90000,
     attack: 630,
     attackSpeed: 5,
-    movementSpeed: 60,
-    attackRange: 90,
+    movementSpeed: 2.4,
+    attackRangeRanks: 1,
     criticalRate: 0.27,
     criticalDamage: 3,
     armor: 120,
@@ -301,8 +383,8 @@ export const TRIBULATION_NASCENT_SOUL: Enemy = defineEnemy({
     maxHp: 270000,
     attack: 1134,
     attackSpeed: 5,
-    movementSpeed: 60,
-    attackRange: 90,
+    movementSpeed: 2.4,
+    attackRangeRanks: 5,
     criticalRate: 0.29,
     criticalDamage: 3.2,
     armor: 140,
@@ -331,8 +413,8 @@ export const TRIBULATION_SOUL_TRANSFORMATION: Enemy = defineEnemy({
     maxHp: 810000,
     attack: 2041,
     attackSpeed: 5,
-    movementSpeed: 60,
-    attackRange: 90,
+    movementSpeed: 2.4,
+    attackRangeRanks: 5,
     criticalRate: 0.31,
     criticalDamage: 3.4,
     armor: 160,
@@ -361,8 +443,8 @@ export const TRIBULATION_VOID_REFINEMENT: Enemy = defineEnemy({
     maxHp: 2430000,
     attack: 3674,
     attackSpeed: 5,
-    movementSpeed: 60,
-    attackRange: 90,
+    movementSpeed: 2.4,
+    attackRangeRanks: 1,
     criticalRate: 0.33,
     criticalDamage: 3.6,
     armor: 180,
@@ -391,8 +473,8 @@ export const TRIBULATION_BODY_INTEGRATION: Enemy = defineEnemy({
     maxHp: 7290000,
     attack: 6613,
     attackSpeed: 5,
-    movementSpeed: 60,
-    attackRange: 90,
+    movementSpeed: 2.4,
+    attackRangeRanks: 5,
     criticalRate: 0.35,
     criticalDamage: 3.8,
     armor: 200,
@@ -421,8 +503,8 @@ export const TRIBULATION_MAHAYANA: Enemy = defineEnemy({
     maxHp: 21870000,
     attack: 11903,
     attackSpeed: 5,
-    movementSpeed: 60,
-    attackRange: 90,
+    movementSpeed: 2.4,
+    attackRangeRanks: 5,
     criticalRate: 0.37,
     criticalDamage: 4,
     armor: 220,
@@ -451,8 +533,8 @@ export const TRIBULATION_TRIBULATION: Enemy = defineEnemy({
     maxHp: 65610000,
     attack: 21426,
     attackSpeed: 5,
-    movementSpeed: 60,
-    attackRange: 90,
+    movementSpeed: 2.4,
+    attackRangeRanks: 1,
     criticalRate: 0.39,
     criticalDamage: 4.2,
     armor: 240,
@@ -481,3 +563,4 @@ export const TRIBULATIONS: Enemy[] = [
   TRIBULATION_MAHAYANA,
   TRIBULATION_TRIBULATION,
 ]
+

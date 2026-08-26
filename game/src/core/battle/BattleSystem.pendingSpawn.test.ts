@@ -1,6 +1,7 @@
-// Spawn telegraph là TRẠNG THÁI GAMEPLAY THẬT (2026-08-24): quái pending
-// chưa nằm trong battle.enemies → không target/đỡ đòn/đánh được; hết
-// telegraph mới materialize; snapshot positions có spawningEnemies.
+// Spawn telegraph là TRẠNG THÁI GAMEPLAY THẬT: quái pending chưa nằm
+// trong battle.enemies → không target/đỡ đòn/đánh được; hết telegraph mới
+// materialize; snapshot positions có spawningEnemies. Player CŨNG đi qua
+// telegraph riêng (plan §5.3) — overlap hợp lệ, queue luôn thành công.
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest'
 import { BattleSystem } from './BattleSystem'
@@ -15,9 +16,7 @@ import { ActionImpactSystem } from './ActionImpactSystem'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { BattlePositionsEvent } from './BattleEvents'
-import type { BattleEnemy } from './Battle'
 import { GRID_COLUMN_COUNT, GRID_ROW_COUNT } from './BattleGrid'
-import { HERO_GATE_COLUMNS } from './BattleLane'
 
 function createBattleSystem(eventBus = new EventBus()) {
   const skillManager = new SkillManager()
@@ -71,7 +70,7 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
   }
 }
 
-describe('BattleSystem — spawn telegraph (2026-08-24)', () => {
+describe('BattleSystem — spawn telegraph', () => {
   it('queueEnemySpawn: entity vào pendingEnemySpawns, KHÔNG vào battle.enemies (không target được)', () => {
     const system = createBattleSystem()
     const player = createCombatant({ id: 'player', type: 'player' })
@@ -83,7 +82,8 @@ describe('BattleSystem — spawn telegraph (2026-08-24)', () => {
     const battle = system.getBattle()!
     const latecomer = createCombatant({ id: 'latecomer' })
 
-    expect(system.queueEnemySpawn(battle, latecomer)).toBe(true)
+    // Plan §5.2 — luôn schedule thành công (void), overlap hợp lệ.
+    system.queueEnemySpawn(battle, latecomer)
 
     // Trạng thái gameplay thật: chưa nằm trong enemies → targeting/AOE/
     // enemy attack (tất cả đọc battle.enemies) không thể chạm tới nó.
@@ -93,7 +93,7 @@ describe('BattleSystem — spawn telegraph (2026-08-24)', () => {
     expect(battle.pendingEnemySpawns[0]!.totalSeconds).toBeCloseTo(0.75, 5)
   })
 
-  it('hết telegraph mới materialize: gán row/column, chuyển sang enemies, emit enemy_spawned', () => {
+  it('hết telegraph mới materialize: gán row/column từ ô đã resolve, emit enemy_spawned', () => {
     const eventBus = new EventBus()
     const system = createBattleSystem(eventBus)
     const player = createCombatant({ id: 'player', type: 'player' })
@@ -111,7 +111,7 @@ describe('BattleSystem — spawn telegraph (2026-08-24)', () => {
       spawnedId = event.targetId
     })
 
-    expect(system.queueEnemySpawn(battle, latecomer)).toBe(true)
+    system.queueEnemySpawn(battle, latecomer)
 
     // 0.5s — chưa đủ telegraph 0.75s.
     system.update(0.5)
@@ -127,14 +127,31 @@ describe('BattleSystem — spawn telegraph (2026-08-24)', () => {
 
     const materialized = battle.enemies.find((entry) => entry.entity.id === 'latecomer')!
 
-    // Row/column gán TỪ ô đã resolve — trong grid, bên phải cổng.
+    // Row/column gán TỪ ô đã resolve — đúng miền spawn plan §5.1.
     expect(materialized.entity.row).toBeGreaterThanOrEqual(0)
-    expect(materialized.entity.row).toBeLessThan(GRID_ROW_COUNT)
-    expect(materialized.entity.x).toBeGreaterThanOrEqual(HERO_GATE_COLUMNS)
+    expect(materialized.entity.row).toBeLessThanOrEqual(GRID_ROW_COUNT - 1)
+    expect(materialized.entity.x).toBeGreaterThanOrEqual(7)
     expect(materialized.entity.x).toBeLessThanOrEqual(GRID_COLUMN_COUNT - 1)
   })
 
-  it('snapshot positions chứa spawningEnemies với progress ∈ [0,1] và row/column hợp lệ', () => {
+  it('hai quái có thể cùng vị trí — queue không fail do overlap (plan §5.2)', () => {
+    const system = createBattleSystem()
+    const player = createCombatant({ id: 'player', type: 'player' })
+    const enemy = createCombatant({ id: 'enemy' })
+
+    system.start(player, enemy)
+    system.flushPendingSpawns()
+
+    const battle = system.getBattle()!
+
+    for (let i = 0; i < 50; i++) {
+      system.queueEnemySpawn(battle, createCombatant({ id: `mob_${i}` }))
+    }
+
+    expect(battle.pendingEnemySpawns).toHaveLength(50)
+  })
+
+  it('snapshot positions chứa spawningEnemies + playerSpawn với progress ∈ [0,1]', () => {
     const eventBus = new EventBus()
     const system = createBattleSystem(eventBus)
     const player = createCombatant({ id: 'player', type: 'player' })
@@ -146,15 +163,21 @@ describe('BattleSystem — spawn telegraph (2026-08-24)', () => {
 
     system.start(player, enemy)
 
-    const spawning = snapshots.at(-1)?.spawningEnemies ?? []
+    const firstSnapshot = snapshots.at(-1)!
+
+    const spawning = firstSnapshot.spawningEnemies ?? []
 
     expect(spawning).toHaveLength(1)
     expect(spawning[0]!.id).toBe('enemy')
     expect(spawning[0]!.progress).toBe(0)
     expect(spawning[0]!.row).toBeGreaterThanOrEqual(0)
-    expect(spawning[0]!.row).toBeLessThan(GRID_ROW_COUNT)
-    expect(spawning[0]!.column).toBeGreaterThanOrEqual(HERO_GATE_COLUMNS)
-    expect(spawning[0]!.column).toBeLessThan(GRID_COLUMN_COUNT)
+    expect(spawning[0]!.column).toBeGreaterThanOrEqual(7)
+
+    // Telegraph Player tại projected cell (4,1), preset riêng.
+    expect(firstSnapshot.playerMaterialized).toBe(false)
+    expect(firstSnapshot.playerSpawn?.row).toBe(4)
+    expect(firstSnapshot.playerSpawn?.column).toBe(1)
+    expect(firstSnapshot.playerSpawn?.presetId).toBe('player_spawn')
 
     system.update(0.4)
 
@@ -164,7 +187,7 @@ describe('BattleSystem — spawn telegraph (2026-08-24)', () => {
     expect(midProgress).toBeLessThan(1)
   })
 
-  it('flushPendingSpawns: materialize toàn bộ ngay (test tiện ích)', () => {
+  it('flushPendingSpawns: materialize toàn bộ ngay kể cả Player (test tiện ích)', () => {
     const system = createBattleSystem()
     const player = createCombatant({ id: 'player', type: 'player' })
     const enemy = createCombatant({ id: 'enemy' })
@@ -179,37 +202,28 @@ describe('BattleSystem — spawn telegraph (2026-08-24)', () => {
 
     expect(battle.pendingEnemySpawns).toHaveLength(0)
     expect(battle.enemies.map((entry) => entry.entity.id).sort()).toEqual(['enemy', 'second'])
+    expect(battle.pendingPlayerSpawn).toBeUndefined()
+    expect(battle.playerMaterialized).toBe(true)
   })
 
-  it('hết chỗ trống → queueEnemySpawn trả false (caller hoãn), không đè ô đã có', () => {
+  it('countdown chỉ chuyển fighting khi countdown về 0 VÀ cả hai phía materialize (plan §5.3)', () => {
     const system = createBattleSystem()
     const player = createCombatant({ id: 'player', type: 'player' })
     const enemy = createCombatant({ id: 'enemy' })
 
     system.start(player, enemy)
-    system.flushPendingSpawns()
 
     const battle = system.getBattle()!
 
-    // Lấp MỌI ô hợp lệ (cột ≥ HERO_GATE_COLUMNS, mọi hàng) bằng "quái".
-    for (let row = 0; row < GRID_ROW_COUNT; row++) {
-      for (let column = HERO_GATE_COLUMNS; column < GRID_COLUMN_COUNT; column++) {
-        battle.enemies.push(createBattleEnemyStub(`filler_${row}_${column}`, row, column))
-      }
-    }
+    // Đếm 2.5s (< countdown 3s): telegraph đã chạy xong nhưng còn đếm ngược.
+    system.update(2.5)
 
-    const latecomer = createCombatant({ id: 'latecomer' })
+    expect(battle.state).toBe('countdown')
 
-    expect(system.queueEnemySpawn(battle, latecomer)).toBe(false)
-    expect(battle.pendingEnemySpawns).toHaveLength(0)
-    expect(battle.enemies.map((entry) => entry.entity.id)).not.toContain('latecomer')
+    // Nốt 0.6s (tổng 3.1 > 3): hai telegraph (1.0s/0.75s) đã xong từ trước.
+    system.update(0.6)
+
+    expect(battle.state).toBe('fighting')
+    expect(battle.playerMaterialized).toBe(true)
   })
 })
-
-// Stub BattleEnemy tối thiểu — queueEnemySpawn chỉ đọc entity.id/row/x/
-// alive để tính occupied cells.
-function createBattleEnemyStub(id: string, row: number, column: number): BattleEnemy {
-  const entity = { id, row, x: column, alive: true } as unknown as CombatEntity
-
-  return { entity, attackTimer: 0 } as unknown as BattleEnemy
-}

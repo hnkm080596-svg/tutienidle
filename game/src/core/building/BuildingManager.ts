@@ -9,11 +9,11 @@ export class BuildingManager {
   }
 
   remove(instanceId: string) {
-    this.instances = this.instances.filter(instance => instance.instanceId !== instanceId)
+    this.instances = this.instances.filter((instance) => instance.instanceId !== instanceId)
   }
 
   get(instanceId: string): BuildingInstance | undefined {
-    return this.instances.find(instance => instance.instanceId === instanceId)
+    return this.instances.find((instance) => instance.instanceId === instanceId)
   }
 
   // BUILDing spec — building crafting-station (pill_room/formation_altar/
@@ -22,7 +22,7 @@ export class BuildingManager {
   // tra theo buildingId để biết "đã xây X chưa" mà không cần giữ
   // instanceId ở nơi gọi (Construction Gate/GameManager).
   getByBuildingId(buildingId: string): BuildingInstance | undefined {
-    return this.instances.find(instance => instance.buildingId === buildingId)
+    return this.instances.find((instance) => instance.buildingId === buildingId)
   }
 
   getAll(): BuildingInstance[] {

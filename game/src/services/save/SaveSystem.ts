@@ -3,8 +3,6 @@ import type { GameManager } from '../../core/game/GameManager'
 import type { Technique } from '../../core/technique/Technique'
 import type { Skill } from '../../core/skill/Skill'
 import type { EquipmentInstance } from '../../core/equipment/EquipmentInstance'
-import type { ActiveExploration } from '../../core/exploration/ExplorationManager'
-import type { ActiveCraft } from '../../core/recipe/CraftingManager'
 import type { BuildingInstance } from '../../core/building/BuildingInstance'
 import type { EquipmentSlotState } from '../../core/equipment/EquipmentSlotState'
 
@@ -153,7 +151,66 @@ export const SAVE_REVISION_KEY = 'tien-hiep-idle-save-revision'
 // enemy-input liên quan; thay thế theo ngữ cảnh: node pháp thuật ->
 // castSpeedPercent, affix vật lý -> attackSpeed/cooldown. Save v41
 // KHÔNG tương thích — không migration, cùng convention.
-export const CURRENT_SAVE_VERSION = 42 as const
+// version 43 (2026-08-24, resource-professions-rework): MIGRATION ĐẦU
+// TIÊN được viết (phá convention "không migration" — plan §9 yêu cầu
+// migrate không mất progression):
+// - player.persistentTimedEffects: mặc định [] (timed effect regen).
+// - materials map id cũ → mới: linh_thao_chung→mortal_herb_common_raw,
+//   quang_sat→mortal_ore_common_raw, thanh_linh_moc→mortal_wood_common_raw,
+//   huyen_thiet→mortal_ore_common_processed, phu_chi→mortal_wood_common_processed
+//   (gộp amount nếu trùng id đích).
+// - pills cũ map theo effect gần nhất: healing→pill_regen_mortal,
+//   cultivation→pill_cultivation_mortal; permanent/buff KHÔNG đổi thành
+//   +1 Main Stat (sai bản chất — plan §9) mà hoàn nguyên Linh Thạch
+//   100/stack vào player.spiritStone.
+// - Phù legacy: mỗi appliedTalismanIds[i] hoàn trả 1
+//   phu_mortal_common về bag, reset appliedTalismanIds/bonusAffixSlots
+//   (Affix đã roll KHÔNG xoá).
+// - Trận legacy trên weapon (socketedFormation có trigger): hoàn trả 1
+//   tran_mortal_common, xoá socket.
+// Migration IDEMPOTENT: chạy 2 lần không nhân đôi hoàn trả (guard theo
+// trạng thái đích: appliedTalismanIds rỗng/socket undefined = đã migrate).
+// version 44 (2026-08-25, resource-professions-rework plan §10 — rework
+// vòng kinh tế "Địa Giới → Lâm/Quáng/Động Thiên → Bag"):
+// - materials: map cặp raw/processed cũ về material TRỰC TIẾP mới theo
+//   bảng quy đổi cố định (không parse tên ID ngoài pattern đã chốt):
+//   wood_*_raw/processed → `<realm>_wood`; ore_*_raw/processed →
+//   `<realm>_ore_hoang`; herb_*_raw/processed → thảo Động Thiên decade
+//   đầu tiên của realm tương ứng (không xác định được đan phương cũ).
+// - Phù/Trận legacy KHAI TỬ (§10.1): talismans/formations trong Bag +
+//   socket trên slot quy đổi thành Linh Thạch theo bảng compensation
+//   (common 200 / uncommon 500 / rare 1200); xoá toàn bộ state socket,
+//   bonusAffixSlots, appliedTalismanIds. Affix đã roll trên equipment
+//   GIỮ NGUYÊN (§10.1.5).
+// - Buildings trung gian bị loại bỏ (herb_garden/smelter/
+//   artisan_workshop/formation_altar/talisman_institute): hoàn trả Linh
+//   Thạch theo bảng cố định /level; strip gardenPlots/processingJobs.
+// - Tạo productionSites (3 nguồn Thanh Vân level 1, idle) + alchemyJobs
+//   rỗng + Điểm Rèn per-item (đã chuyển sang EquipmentInstance, v46).
+// - Exploration/crafts legacy bỏ khỏi schema (hệ thống đã xoá).
+// version 45 (2026-08-26, combat-gate-teleport-autocast-rework): player:
+// PlayerData thêm field BẮT BUỘC MỚI `combatAiStrategy: CombatAiStrategy`
+// (AI target strategy, xem core/battle/CombatAiStrategy.ts). Restore
+// validate: thiếu/sai → fallback 'nearest' (plan §10.2 — development
+// build, KHÔNG viết migration). Save cũ (v44) không tương thích theo
+// convention "mỗi thay đổi schema đều bump".
+// version 46 (2026-08-26, điểm rèn per-item rework): PlayerData XOÁ
+// refinementPoints/lastRefinementRegenAtMs (pool chung + regen); Điểm Rèn
+// per-item DÙNG LẠI forgePoints/forgePotential có sẵn trên instance
+// (tooltip "Tình trạng rèn x/y") — Tẩy/Tinh Luyện trừ thẳng forgePoints.
+// Save v45 không tương thích theo convention development build — không migration.
+// version 47 (2026-08-26, node level plan §6.1): PlayerData thêm field
+// BẮT BUỘC MỚI `nodeLevels: Record<string, number>` (nguồn sự thật cấp
+// node, xem core/progression/NodeSystem.ts). Save v46 CŨ (trước khi có
+// field giữa chuỗi v46) thiếu nodeLevels — từng gây crash getNodeLevel
+// lúc boot khiến người chơi không thể tới Settings để Xoá Save; giờ
+// route thẳng qua SaveIncompatibleScreen (Xuất/Xoá) đúng UX recovery.
+// version 48 (2026-08-26, dong-fu-command-wheel-inventory-spirit-stone
+// plan Workstream F): PlayerData XOÁ field `spiritStone` — Linh Thạch
+// là MATERIAL trong MaterialBag (stack 'spirit_stone', xem
+// core/material/SpiritStoneMaterial.ts), KHÔNG migration (development
+// phase). Save v47 và mọi version cũ hơn → 'incompatible'.
+export const CURRENT_SAVE_VERSION = 48 as const
 
 export interface MaterialStackSave {
   materialId: string
@@ -298,17 +355,65 @@ export interface GameSave {
 
   pills: PillStackSave[]
 
+  /** v44: luôn rỗng — Phù legacy đã khai tử, quy đổi Linh Thạch (§10.1). */
   talismans: TalismanStackSave[]
 
+  /** v44: luôn rỗng — Trận legacy đã khai tử, quy đổi Linh Thạch (§10.1). */
   formations: FormationStackSave[]
-
-  explorations: ActiveExploration[]
-
-  crafts: ActiveCraft[]
 
   buildings: BuildingInstance[]
 
   equipmentSlots: EquipmentSlotState[]
+
+  /** v44: state ba nguồn Lâm/Quáng/Động Thiên (plan §4). */
+  productionSites?: ProductionSiteStateSave[]
+
+  /** v44: job luyện đan đang chạy (plan §8.2). */
+  alchemyJobs?: AlchemyJobSave[]
+}
+
+/** Shape persist của ProductionSiteState — khớp core/production. */
+export interface ProductionSiteStateSave {
+  siteId: string
+
+  level: number
+
+  autoRestart: boolean
+
+  activeCycle?: {
+    cycleId: string
+
+    siteId: string
+
+    collectionRealmId: string
+
+    siteLevelAtStart: number
+
+    rewardTableVersion: number
+
+    rollSeed: number
+
+    startedAtMs: number
+
+    completesAtMs: number
+  }
+}
+
+/** Shape persist của ActiveAlchemyJob — khớp core/alchemy. */
+export interface AlchemyJobSave {
+  jobId: string
+
+  recipeId: string
+
+  pillId: string
+
+  herbMaterialId: string
+
+  startedAtMs: number
+
+  completesAtMs: number
+
+  roomLevelAtStart: number
 }
 
 export function buildGameSave(player: PlayerData, gameManager: GameManager): GameSave {
@@ -325,7 +430,7 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
 
     skills: gameManager.skillManager.getAll(),
 
-    materials: gameManager.materialBag.getAll().map(stack => ({
+    materials: gameManager.materialBag.getAll().map((stack) => ({
       materialId: stack.material.id,
 
       amount: stack.amount,
@@ -333,33 +438,33 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
 
     equipment: gameManager.equipmentBag.getAll(),
 
-    pills: gameManager.pillBag.getAll().map(stack => ({
+    pills: gameManager.pillBag.getAll().map((stack) => ({
       pillId: stack.pill.id,
 
       amount: stack.amount,
     })),
 
-    talismans: gameManager.talismanBag.getAll().map(stack => ({
-      talismanId: stack.talisman.id,
+    // Phù/Trận khai tử (§10.1) — bag không còn; mảng rỗng giữ shape save.
+    talismans: [],
 
-      amount: stack.amount,
-    })),
-
-    formations: gameManager.formationBag.getAll().map(stack => ({
-      formationId: stack.formation.id,
-
-      amount: stack.amount,
-    })),
-
-    explorations: gameManager.explorationManager.getAll(),
-
-    crafts: gameManager.craftingManager.getAll(),
+    formations: [],
 
     buildings: gameManager.buildingManager.getAll(),
 
     equipmentSlots: gameManager.equipmentSlotManager.getAll(),
-  }
 
+    productionSites: gameManager.productionSystem.getAllStates().map((state) => ({
+      siteId: state.siteId,
+
+      level: state.level,
+
+      autoRestart: state.autoRestart,
+
+      activeCycle: state.activeCycle,
+    })),
+
+    alchemyJobs: gameManager.alchemySystem.getJobs(),
+  }
 }
 
 export function writeGameSave(save: GameSave): void {
@@ -399,10 +504,25 @@ export function loadGame(): LoadOutcome {
 
   const foundVersion = (parsed as { version?: unknown })?.version
 
-  if (typeof foundVersion !== 'number' || foundVersion !== CURRENT_SAVE_VERSION) {
+  if (typeof foundVersion !== 'number') {
     return {
       status: 'incompatible',
-      foundVersion: typeof foundVersion === 'number' ? foundVersion : undefined,
+      foundVersion: undefined,
+      raw,
+    }
+  }
+
+  // Development-phase policy (dong-fu-command-wheel-inventory-spirit-
+  // stone-plan.md §"Chính sách migration") — KHÔNG còn auto-migration
+  // nào: mọi version cũ hơn CURRENT_SAVE_VERSION trả về 'incompatible'
+  // để SaveIncompatibleScreen cho phép Export/Xoá. Điều này bảo đảm
+  // không bao giờ có writeGameSave() phát sinh từ loadGame() (trước đây
+  // nhánh v42/v43 ghi đè save gốc mà không backup và gắn thẳng version
+  // hiện hành dù thiếu field của schema mới).
+  if (foundVersion !== CURRENT_SAVE_VERSION) {
+    return {
+      status: 'incompatible',
+      foundVersion,
       raw,
     }
   }
@@ -477,7 +597,12 @@ export function importSaveRaw(raw: string): boolean {
   try {
     const parsed = JSON.parse(raw)
 
-    if (typeof parsed !== 'object' || parsed === null || !('version' in parsed) || !('player' in parsed)) {
+    if (
+      typeof parsed !== 'object' ||
+      parsed === null ||
+      !('version' in parsed) ||
+      !('player' in parsed)
+    ) {
       return false
     }
   } catch {

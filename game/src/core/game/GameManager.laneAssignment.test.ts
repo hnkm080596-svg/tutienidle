@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
 import { defineEnemy, createBossVariant } from '../enemy/Enemy'
 import { createBaseStats } from '../stats/StatBlock'
-import { GRID_ROW_COUNT, HERO_LANE_INDEX } from '../battle/BattleLane'
+import { GRID_ROW_COUNT, CENTER_LANE_INDEX } from '../battle/BattleLane'
 import type { CombatEntity } from '../combat/CombatEntity'
 
-// Top-down 5-spawnedLane (2026-08-22) — Boss LUÔN đứng spawnedLane giữa (HERO_LANE_INDEX),
+// Top-down 5-spawnedLane (2026-08-22) — Boss LUÔN đứng spawnedLane giữa (CENTER_LANE_INDEX),
 // quái thường random mỗi lần spawn. Gán spawnedLane xảy ra ở GameManager.startBattle()/
 // updateStageProgress() (SAU enemyToCombatEntity(), ghi đè placeholder spawnedLane:0 —
 // xem Enemy.ts's enemyToCombatEntity()), không phải ở core Enemy/EnemyDefinition.
@@ -14,7 +14,7 @@ const MINIMAL_STATS_INPUT = {
   attack: 0,
   attackSpeed: 1,
   movementSpeed: 60,
-  attackRange: 90,
+  attackRangeRanks: 8,
   criticalRate: 0,
   criticalDamage: 1.5,
   armor: 0,
@@ -43,13 +43,13 @@ function createPlayer(): CombatEntity {
     timeSinceLastHitTaken: Infinity,
     realmIndex: 0,
     x: 0,
-    row: HERO_LANE_INDEX,
+    row: CENTER_LANE_INDEX,
     alive: true,
   }
 }
 
 describe('GameManager — spawnedLane assignment (top-down 5-spawnedLane, 2026-08-22)', () => {
-  it('quái Boss (isBoss:true) LUÔN nhận spawnedLane === HERO_LANE_INDEX, bất kể EnemyLane authored trong data', () => {
+  it('quái Boss (isBoss:true) LUÔN nhận spawnedLane === CENTER_LANE_INDEX, bất kể EnemyLane authored trong data', () => {
     const gameManager = new GameManager()
 
     const bossTemplate = defineEnemy({
@@ -57,7 +57,7 @@ describe('GameManager — spawnedLane assignment (top-down 5-spawnedLane, 2026-0
       name: 'Boss',
       level: 1,
       realmId: 'qi_refining',
-      // EnemyLane authored 'air' — CỐ TÌNH khác HERO_LANE_INDEX, chứng
+      // EnemyLane authored 'air' — CỐ TÌNH khác CENTER_LANE_INDEX, chứng
       // minh field authored này không còn quyết định vị trí hiển thị.
       lane: 'air',
       statsInput: MINIMAL_STATS_INPUT,
@@ -70,7 +70,7 @@ describe('GameManager — spawnedLane assignment (top-down 5-spawnedLane, 2026-0
       gameManager.startBattle(createPlayer(), boss)
 
       // Spawn telegraph (2026-08-24): row gán lúc materialize — đọc row ĐÃ RESOLVE từ pending position (cùng giá trị sẽ gán cho entity).
-      expect(gameManager.getBattle()!.pendingEnemySpawns[0]!.position.row).toBe(HERO_LANE_INDEX)
+      expect(gameManager.getBattle()!.pendingEnemySpawns[0]!.position.row).toBe(CENTER_LANE_INDEX)
     }
   })
 

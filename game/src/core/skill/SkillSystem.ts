@@ -1,4 +1,5 @@
 import type { Skill } from './Skill'
+import type { SkillExecutionPolicy } from './Skill'
 import { SKILL_RESOURCE_STAT_KEYS, createSkillRuntimeStats, type SkillRuntimeStats } from './SkillRuntimeStats'
 import type { SkillEffect } from './SkillEffect'
 import type { StatModifier } from '../stats/StatCalculator'
@@ -19,6 +20,11 @@ import { getRealmIndex } from '../realm/realmSystem'
 // sẵn trên StatModifier (giống TechniqueSystem.getActiveModifiers()),
 // không cần hằng số riêng.
 const ACTIVE_SKILL_DAMAGE_PERCENT_PER_LEVEL = 0.05
+
+/** Policy dùng cooldown clock (chịu CDR) — còn lại dùng cadence Attack Speed. */
+function usesCooldownClock(execution: SkillExecutionPolicy | undefined): boolean {
+  return !execution || execution.kind === 'cooldown' || execution.kind === 'cast_time'
+}
 
 export interface EffectiveSkill {
   effects: SkillEffect[]
@@ -179,33 +185,19 @@ export class SkillSystem {
 
   /**
    * PLAN HOÀN CHỈNH mục 8/12 — Skill Loadout: set 1 skill ĐÃ HỌC vào
-   * ĐÚNG 1 trong 5 slot. Dọn các trường hợp trùng trước khi gán: (1)
+   * ĐÚNG 1 trong N slot. Dọn các trường hợp trùng trước khi gán: (1)
    * skill KHÁC đang chiếm sẵn slotIndex này — bật ra; (2) CHÍNH skill
-   * này đang ở 1 slot khác (hoặc equipped rời rạc qua
-   * equipWithoutSlot()) — dời hẳn qua slot mới; (3) skill MỚI là
-   * isBasicAttack — bật skill isBasicAttack KHÁC đang equip (bất kể có
-   * slot hay không, xem clearOtherBasicAttack()) vì tại 1 thời điểm
-   * CHỈ 1 đòn cơ bản có hiệu lực (thay mutual-exclusion theo category
-   * 'basic' cũ). Validate slotIndex hợp lệ theo tiến trình cảnh giới
-   * (getSkillLoadoutSlotCount) là việc của
-   * GameManager.setSkillLoadoutSlot() — hàm này thuần domain, không
-   * biết gì về realm.
+   * này đang ở 1 slot khác — dời hẳn qua slot mới. Validate slotIndex
+   * hợp lệ theo tiến trình cảnh giới (getSkillLoadoutSlotCount) là việc
+   * của GameManager.setSkillLoadoutSlot() — hàm này thuần domain, không
+   * biết gì về realm. Execution policy rework (plan §8.6): KHÔNG còn
+   * mutual-exclusion isBasicAttack — mọi active đều là loadout bình thường.
    */
   equipToSlot(skillId: string, slotIndex: number): boolean {
     const skill = this.manager.get(skillId)
 
     if (!skill || !skill.unlocked) {
       return false
-    }
-
-    if (skill.isBasicAttack) {
-      for (const other of this.manager.getAll()) {
-        if (other.id !== skillId && other.isBasicAttack) {
-          other.equipped = false
-          other.loadoutSlot = undefined
-          other.loadoutSlots = []
-        }
-      }
     }
 
     for (const other of this.manager.getAll()) {
@@ -230,34 +222,22 @@ export class SkillSystem {
     skill.loadoutSlots = (skill.loadoutSlots ?? []).filter(index => index !== slotIndex)
     delete skill.remainingCooldownBySlot?.[slotIndex]
     skill.loadoutSlot = skill.loadoutSlots[0]
-    skill.equipped = skill.isBasicAttack === true || skill.loadoutSlots.length > 0
+    skill.equipped = skill.loadoutSlots.length > 0
     return true
   }
 
   /**
-   * Equip KHÔNG qua slot — CHỈ dùng cho skill "đóng khung" (Phàm Nhân's
-   * Trảm, chưa có Skill Loadout UI nào để set vào; kit cố định của
-   * profession lúc khởi tạo) — xem Skill.isBasicAttack. Không dùng cho
-   * luồng người chơi tự chọn skill vào Loadout (đó là equipToSlot()).
+   * Equip KHÔNG qua slot — CHỈ dùng cho PASSIVE (passive không thuộc
+   * Skill Loadout, xem syncRealmPassive()/equipTechnique()).
+   * Execution policy rework (plan §8.6): scheduler chỉ đọc loadout nên
+   * active skill PHẢI equip qua slot — không còn luồng "equipped nhưng
+   * không có slot" cho active.
    */
   equipWithoutSlot(skillId: string): boolean {
     const skill = this.manager.get(skillId)
 
     if (!skill || !skill.unlocked) {
       return false
-    }
-
-    // Cùng bất biến "chỉ 1 đòn cơ bản tại 1 thời điểm" với equipToSlot()
-    // — cần thiết cho trường hợp Kiếm Tu's ngu_kiem_thuat (equip qua
-    // slot 0) GHI ĐÈ basic_strike (equip không slot lúc khởi tạo Phàm
-    // Nhân), y hệt hành vi mutual-exclusion category 'basic' cũ.
-    if (skill.isBasicAttack) {
-      for (const other of this.manager.getAll()) {
-        if (other.id !== skillId && other.isBasicAttack) {
-          other.equipped = false
-          other.loadoutSlot = undefined
-        }
-      }
     }
 
     skill.equipped = true
@@ -289,14 +269,7 @@ export class SkillSystem {
       return false
     }
 
-    if (
-      !skill.unlocked ||
-      !skill.equipped ||
-      // Basic attacks are paced exclusively by Battle.playerAttackTimer
-      // (attack speed). Their data cooldown must not create alternating
-      // skill/fallback attacks when attackSpeed is greater than 1.
-      (!skill.isBasicAttack && skill.remainingCooldown > 0)
-    ) {
+    if (!skill.unlocked || !skill.equipped || skill.remainingCooldown > 0) {
       return false
     }
 
@@ -356,27 +329,61 @@ export class SkillSystem {
     const skill =
       this.manager.get(skillId)!
 
-    skill.remainingCooldown = skill.isBasicAttack ? 0 : skill.cooldown
+    skill.remainingCooldown = skill.cooldown
 
-    if (skill.resourceType === 'mana') {
-      entity.currentMp -= skill.cost
-    } else if (skill.resourceType === 'rage') {
-      entity.currentRage -= skill.cost
-    } else if (skill.resourceType === 'sword_intent') {
-      entity.currentSwordIntent -= skill.cost
-    } else if (skill.resourceType === 'momentum') {
-      entity.currentMomentum -= skill.cost
-    }
+    this.consumeResource(skill, entity)
 
     return skill
   }
 
-  useInSlot(skillId: string, slotIndex: number, entity: CombatEntity): Skill | null {
+  /**
+   * Cast transaction (combat-skill-flow-element-power-dot-plan.md §4.1)
+   * — BẮT ĐẦU niệm: CHỈ trừ tài nguyên MỘT LẦN, KHÔNG set cooldown
+   * (cooldown commit lúc hoàn tất/fizzle qua commitSlotCooldown()).
+   * Trả null nếu không đủ điều kiện — khi đó KHÔNG mutate gì.
+   */
+  beginCastInSlot(skillId: string, slotIndex: number, entity: CombatEntity): Skill | null {
     if (!this.canUseInSlot(skillId, slotIndex, entity)) return null
+
     const skill = this.manager.get(skillId)!
-    skill.remainingCooldownBySlot ??= {}
-    skill.remainingCooldownBySlot[slotIndex] = skill.cooldown
+
     this.consumeResource(skill, entity)
+
+    return skill
+  }
+
+  /**
+   * Nửa còn lại của transaction — commit cooldown ĐẦY ĐỦ cho đúng slot,
+   * gọi lúc HOÀN TẤT niệm (kể cả fizzle) hoặc ngay sau resolve với skill
+   * tức thời (§4.2). Policy 'attack_speed' không dùng cooldown clock →
+   * no-op ở đây (cadence do BattleSystem quản).
+   */
+  commitSlotCooldown(skillId: string, slotIndex: number): void {
+    const skill = this.manager.get(skillId)
+
+    if (!skill) {
+      return
+    }
+
+    skill.remainingCooldownBySlot ??= {}
+
+    if (usesCooldownClock(skill.execution)) {
+      skill.remainingCooldownBySlot[slotIndex] = skill.cooldown
+    }
+  }
+
+  /**
+   * Legacy một-câu (begin + commit cùng lúc) — CHỈ còn cho skill TỨC
+   * THỜI ngoài scheduler; BattleSystem đã chuyển sang cặp
+   * beginCastInSlot()/commitSlotCooldown().
+   */
+  useInSlot(skillId: string, slotIndex: number, entity: CombatEntity): Skill | null {
+    const skill = this.beginCastInSlot(skillId, slotIndex, entity)
+
+    if (!skill) return null
+
+    this.commitSlotCooldown(skillId, slotIndex)
+
     return skill
   }
 

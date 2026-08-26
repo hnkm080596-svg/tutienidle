@@ -39,31 +39,14 @@ function openSlot(index: number) {
   openSlotIndex.value = index
 }
 
-// Đòn cơ bản (isBasicAttack) hiện RIÊNG, KHÔNG chiếm 1 trong 5 ô
-// Loadout (chạy theo attackSpeed timer, xem BattleSystem.
-// updatePlayerAttack()) — vẫn đáng hiện ở đây để người chơi biết đòn
-// thường hiện tại là gì.
-const basicAttackSkill = computed(() => {
-  stateVersion.value
-
-  return gameManager.skillManager.getBasicAttackSkill()
-})
+// Execution policy rework (plan §8.6) — KHÔNG còn "Đòn Cơ Bản" hiện
+// riêng: Trảm/Ngự Kiếm đều là loadout skill ở slot 0 như mọi skill khác.
 
 </script>
 
 <template>
   <div class="skill-loadout-strip">
     <div v-if="skillLoadoutSlotCount > 0" class="skill-loadout">
-      <button
-        v-if="basicAttackSkill"
-        type="button"
-        class="skill-loadout__basic"
-        v-tooltip="basicAttackSkill.description"
-      >
-        <SlotView class="loadout-card__icon" :item="basicAttackSkill" :label="basicAttackSkill.name" />
-        <span class="skill-loadout__basic-label">Đòn Cơ Bản</span>
-      </button>
-
       <button
         v-for="slot in skillLoadoutSlots"
         :key="slot.index"
@@ -90,7 +73,7 @@ const basicAttackSkill = computed(() => {
     </div>
 
     <p v-else class="skill-loadout-strip__passive-summary">
-      {{ basicAttackSkill?.name ?? 'Trảm' }} — đòn đánh cơ bản duy nhất khi chưa nhập môn.
+      Trảm — đòn đánh cơ bản duy nhất khi chưa nhập môn.
     </p>
 
     <!-- Core Loop Foundation checklist (Mục SKILL) — "behavior-
@@ -155,7 +138,6 @@ const basicAttackSkill = computed(() => {
   gap: 6px;
 }
 
-.skill-loadout__basic,
 .skill-loadout__slot {
   flex: 1 1 30%;
   min-width: 64px;
@@ -170,18 +152,6 @@ const basicAttackSkill = computed(() => {
   cursor: pointer;
   font-family: var(--font-body);
   color: var(--text-primary);
-}
-
-.skill-loadout__basic {
-  border-color: var(--gold-500);
-  cursor: default;
-}
-
-.skill-loadout__basic-label {
-  font-size: var(--text-xs);
-  color: var(--gold-500);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
 }
 
 .skill-loadout__slot:hover:not(.is-locked) {

@@ -2,15 +2,19 @@ import type { StatType } from './StatTypes'
 
 export type Stats = Record<StatType, number>
 
-// Player là tower cố định, tầm bắn "vô hạn" (xa hơn màn hình) — dùng
-// số hữu hạn rất lớn thay vì literal Infinity: PlayerData được
-// JSON.stringify() khi lưu save, Infinity serialize thành null, sau
-// JSON.parse() lại thành null khiến so sánh "distance > attackRange"
-// coi như "> 0" — vô hiệu hoá tầm bắn vô hạn ngay sau lần save/load
-// đầu tiên (bug âm thầm). Số này lớn hơn nhiều world-scale hiện tại
-// (WORLD_VIEW_HALF_WIDTH=300, ENEMY_SPAWN_X=400 — xem BattleLane.ts)
-// nên hiệu quả tương đương vô hạn mà vẫn serialize an toàn.
-const PLAYER_ATTACK_RANGE_INFINITE = 999999
+// Player KHÔNG còn tower tầm bắn vô hạn (combat-gate-teleport-autocast
+// plan §2.4 + balance pass 2026-08-26): avatar tấn công dùng Chebyshev
+// quanh ô đang đứng. Base range = 5 — khớp trần attackRange quái
+// (MAX_ENEMY_ATTACK_RANGE_RANKS = 5): quái dừng bắn xa nhất ở cột 1+5=6,
+// Player với tới cột ≤6 nên mọi trận đều có thể chiến thắng. Tâm pháp
+// Đại Ngũ Hành Chân Quyết cộng thêm +2 qua Technique.combatModifiers
+// (Pháp Tu range nền = 7).
+//
+// BASELINE THUỘC CODE, không thuộc progression: baseStats.attackRange
+// KHÔNG bao giờ được người chơi đầu tư trực tiếp (bonus range chỉ chảy
+// qua StatModifier — tâm pháp/trang bị), nên load save CŨ có thể ép về
+// đúng baseline này (xem stores/player.ts's restoreFromSave).
+export const PLAYER_BASE_RANGE_RANKS = 5
 
 export function createBaseStats(): Stats {
   return {
@@ -27,9 +31,10 @@ export function createBaseStats(): Stats {
     // enemy dùng chung Stats shape, chỉ enemy còn thật sự di chuyển.
     movementSpeed: 60,
 
-    // Tower defense — player bắn trúng bất kỳ đâu trên sân, không
-    // cần quái tới gần trước (xem PLAYER_ATTACK_RANGE_INFINITE).
-    attackRange: PLAYER_ATTACK_RANGE_INFINITE,
+    // Avatar Player tấn công bằng Chebyshev range quanh ô đang đứng
+    // (plan §2.3/§2.4) — base 1; enemy dùng chung Stats shape với
+    // attackRange đo tới CỘNG CỔNG (canEnemyReachGate).
+    attackRange: PLAYER_BASE_RANGE_RANKS,
 
     criticalRate: 0.05,
     criticalDamage: 1.5,

@@ -4,14 +4,15 @@ import { useUiStore } from '@/stores/ui'
 import EquipmentPaperdoll from '../panels/EquipmentPaperdoll.vue'
 import CharacterPanel from '../panels/CharacterPanel.vue'
 import InventoryPanel from '../panels/InventoryPanel.vue'
-import ExplorationPanel from '../panels/ExplorationPanel.vue'
+import ProductionPanel from '../panels/ProductionPanel.vue'
 import SettingsPanel from '../panels/SettingsPanel.vue'
 import PillRoomPanel from '../panels/PillRoomPanel.vue'
-import FormationAltarPanel from '../panels/FormationAltarPanel.vue'
-import TalismanInstitutePanel from '../panels/TalismanInstitutePanel.vue'
 import EquipmentHallPanel from '../panels/EquipmentHallPanel.vue'
 import ScripturePavilionPanel from '../panels/ScripturePavilionPanel.vue'
 import StageSelectPanel from '../panels/StageSelectPanel.vue'
+import BuildingPanelHeader from '../panels/BuildingPanelHeader.vue'
+import SpiritSpringPanel from '../panels/SpiritSpringPanel.vue'
+import type { LeftPanelMode } from '@/stores/ui'
 
 const ui = useUiStore()
 
@@ -23,6 +24,18 @@ const ui = useUiStore()
 // là nơi DUY NHẤT hiện paperdoll bên ngoài Character header. Các trang
 // còn lại chiếm TOÀN BỘ 100% panel.
 const showsEquipment = computed(() => ui.leftPanelMode === 'inventory')
+
+const BUILDING_ID_BY_PANEL: Partial<Record<Exclude<LeftPanelMode, null>, string>> = {
+  equipment_hall: 'equipment_hall',
+  pill_room: 'pill_room',
+  stage_select: 'teleport_array',
+  exploration: 'gathering_outpost',
+  spirit_spring: 'spirit_spring',
+}
+
+const activeBuildingId = computed(() =>
+  ui.leftPanelMode ? BUILDING_ID_BY_PANEL[ui.leftPanelMode] : undefined,
+)
 </script>
 
 <template>
@@ -33,25 +46,27 @@ const showsEquipment = computed(() => ui.leftPanelMode === 'inventory')
       </div>
 
       <div class="left-panel__content" :class="{ 'left-panel__content--full': !showsEquipment }">
-        <CharacterPanel v-if="ui.leftPanelMode === 'character'" />
+        <BuildingPanelHeader v-if="activeBuildingId" :building-id="activeBuildingId" />
 
-        <InventoryPanel v-else-if="ui.leftPanelMode === 'inventory'" />
+        <div class="left-panel__view">
+          <CharacterPanel v-if="ui.leftPanelMode === 'character'" />
 
-        <ExplorationPanel v-else-if="ui.leftPanelMode === 'exploration'" />
+          <InventoryPanel v-else-if="ui.leftPanelMode === 'inventory'" />
 
-        <StageSelectPanel v-else-if="ui.leftPanelMode === 'stage_select'" />
+          <ProductionPanel v-else-if="ui.leftPanelMode === 'exploration'" />
 
-        <SettingsPanel v-else-if="ui.leftPanelMode === 'settings'" />
+          <StageSelectPanel v-else-if="ui.leftPanelMode === 'stage_select'" />
 
-        <PillRoomPanel v-else-if="ui.leftPanelMode === 'pill_room'" />
+          <SettingsPanel v-else-if="ui.leftPanelMode === 'settings'" />
 
-        <FormationAltarPanel v-else-if="ui.leftPanelMode === 'formation_altar'" />
+          <PillRoomPanel v-else-if="ui.leftPanelMode === 'pill_room'" />
 
-        <TalismanInstitutePanel v-else-if="ui.leftPanelMode === 'talisman_institute'" />
+          <EquipmentHallPanel v-else-if="ui.leftPanelMode === 'equipment_hall'" />
 
-        <EquipmentHallPanel v-else-if="ui.leftPanelMode === 'equipment_hall'" />
+          <SpiritSpringPanel v-else-if="ui.leftPanelMode === 'spirit_spring'" />
 
-        <ScripturePavilionPanel v-else-if="ui.leftPanelMode === 'scripture_pavilion'" />
+          <ScripturePavilionPanel v-else-if="ui.leftPanelMode === 'scripture_pavilion'" />
+        </div>
       </div>
     </div>
   </Transition>
@@ -90,11 +105,19 @@ const showsEquipment = computed(() => ui.leftPanelMode === 'inventory')
 .left-panel__content {
   flex: 1 1 70%;
   min-height: 0;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .left-panel__content--full {
   flex: 1 1 100%;
+}
+
+.left-panel__view {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .panel-slide-left-enter-active,

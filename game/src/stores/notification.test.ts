@@ -16,8 +16,8 @@ describe('notification queue', () => {
     notification.push('loot', 'B')
     notification.push('loot', 'C')
 
-    expect(notification.toasts.map(toast => toast.message)).toEqual(['A', 'B'])
-    expect(notification.queuedToasts.map(toast => toast.message)).toEqual(['C'])
+    expect(notification.toasts.map((toast) => toast.message)).toEqual(['A', 'B'])
+    expect(notification.queuedToasts.map((toast) => toast.message)).toEqual(['C'])
   })
 
   it('gỡ 1 toast lấp đầy ngay bằng toast kế tiếp trong hàng đợi', () => {
@@ -30,7 +30,7 @@ describe('notification queue', () => {
 
     notification.dismiss(notification.toasts[0]!.id)
 
-    expect(notification.toasts.map(toast => toast.message)).toEqual(['B', 'C'])
+    expect(notification.toasts.map((toast) => toast.message)).toEqual(['B', 'C'])
     expect(notification.queuedToasts).toEqual([])
   })
 
@@ -53,12 +53,12 @@ describe('notification queue', () => {
     notification.push('loot', 'A')
     notification.push('loot', 'B')
 
-    expect(notification.toasts.map(toast => toast.message)).toEqual(['A'])
-    expect(notification.queuedToasts.map(toast => toast.message)).toEqual(['B'])
+    expect(notification.toasts.map((toast) => toast.message)).toEqual(['A'])
+    expect(notification.queuedToasts.map((toast) => toast.message)).toEqual(['B'])
 
     notification.setMaxVisible(2)
 
-    expect(notification.toasts.map(toast => toast.message)).toEqual(['A', 'B'])
+    expect(notification.toasts.map((toast) => toast.message)).toEqual(['A', 'B'])
     expect(notification.queuedToasts).toEqual([])
   })
 })

@@ -1,6 +1,7 @@
 import type { PillType } from './PillTypes'
 import type { PillEffect } from './PillEffect'
 import type { ItemGrade } from '../item/ItemGrade'
+import type { ProfessionGrade } from '../profession/ProfessionGrade'
 
 export interface Pill {
   id: string
@@ -22,6 +23,14 @@ export interface Pill {
   // (2026-08-15) — `name` bên trên KHÔNG chứa tiền tố Phẩm, ghép động
   // lúc hiển thị từ field này (xem composeItemGradeNameSegments()).
   grade: ItemGrade
+
+  // Nghề Đan mới (2026-08-24, resource-professions-rework §5.1): realm
+  // + phẩm nghề theo cảnh giới. Pill CÓ realmId bị gate ĐÚNG cảnh giới
+  // khi dùng (wrong_realm — plan §5.2); legacy pill không có field này
+  // giữ hành vi cũ.
+  realmId?: string
+
+  professionGrade?: ProfessionGrade
 
   effects: PillEffect[]
 }

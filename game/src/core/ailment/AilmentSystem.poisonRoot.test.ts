@@ -67,8 +67,9 @@ describe('AilmentSystem — Độc Căn (Plans/PoisonPath, Trúc Cơ Pure Mộc)
 
     ailmentSystem.update(1, target, combatSystem)
 
-    // dpsRatio 0.2 × woodPower 100 × stacks 1 × 1s, hệ số Độc Căn = 1.
-    expect(hpBeforeTick - target.currentHp).toBeCloseTo(20, 5)
+    // dpsRatio 0.2 × (ATK 10 + woodPower 100 = 110, plan §3.2) × stacks
+    // 1 × 1s, hệ số Độc Căn = 1.
+    expect(hpBeforeTick - target.currentHp).toBeCloseTo(22, 5)
   })
 
   it('Trúng Độc tồn tại liên tục càng lâu, damage/giây càng tăng theo tầng Độc Căn', () => {
@@ -97,8 +98,8 @@ describe('AilmentSystem — Độc Căn (Plans/PoisonPath, Trúc Cơ Pure Mộc)
 
     // Tick 2 (2 tầng Độc Căn) phải gây nhiều damage hơn Tick 1 (1 tầng).
     expect(hpAfterTick2).toBeGreaterThan(hpAfterTick1)
-    // Tick 1: 20 × (1 + 0.03×1) = 20.6.
-    expect(hpAfterTick1).toBeCloseTo(20.6, 5)
+    // Tick 1: 22 × (1 + 0.03×1) = 22.66.
+    expect(hpAfterTick1).toBeCloseTo(22.66, 5)
   })
 
   it('"Độc Mạch" — từ 3 tầng Độc Căn trở lên cộng thêm poisonRootThresholdBonusPercent', () => {
@@ -128,8 +129,8 @@ describe('AilmentSystem — Độc Căn (Plans/PoisonPath, Trúc Cơ Pure Mộc)
     ailmentSystem.update(1, target, combatSystem)
     const tick3Damage = before - target.currentHp
 
-    // 20 × (1 + 0.03×3 + 0.05) = 20 × 1.14 = 22.8.
-    expect(tick3Damage).toBeCloseTo(22.8, 5)
+    // 22 × (1 + 0.03×3 + 0.05) = 22 × 1.14 = 25.08.
+    expect(tick3Damage).toBeCloseTo(25.08, 5)
   })
 
   it('poisonRootMaxStacks — tầng Độc Căn KHÔNG vượt trần dù ailment tồn tại lâu hơn', () => {
@@ -164,9 +165,9 @@ describe('AilmentSystem — Độc Căn (Plans/PoisonPath, Trúc Cơ Pure Mộc)
     const tick6Damage = beforeTick6 - target.currentHp
 
     // Tick 5 (5 tầng, chạm trần) và Tick 6 (continuousSeconds=6 nhưng
-    // vẫn kẹp ở 5 tầng) phải GIỐNG NHAU — 20 × (1 + 0.03×5) = 23.
-    expect(tick5Damage).toBeCloseTo(23, 5)
-    expect(tick6Damage).toBeCloseTo(23, 5)
+    // vẫn kẹp ở 5 tầng) phải GIỐNG NHAU — 22 × (1 + 0.03×5) = 25.3.
+    expect(tick5Damage).toBeCloseTo(25.3, 5)
+    expect(tick6Damage).toBeCloseTo(25.3, 5)
   })
 
   it('ailmentDurationPercent — kéo dài duration khi áp ailment', () => {

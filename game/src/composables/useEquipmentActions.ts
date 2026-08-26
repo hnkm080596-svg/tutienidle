@@ -1,14 +1,17 @@
 import { useGameManager, useStateVersion } from './useGameState'
 import { usePlayerStore } from '../stores/player'
 import { useNotificationStore } from '../stores/notification'
+import type { EquipmentSlot } from '../core/equipment/EquipmentTypes'
 
 /**
  * Modifier equipment là "tĩnh" (xem ghi chú trong Player.ts/
  * EquipmentSystem.ts) — chỉ đổi khi có hành động rõ ràng, KHÔNG tự
- * gộp mỗi tick. Mọi nơi trong UI gọi equip/unequip/enhance/wash/
- * refine/upgrade đều phải qua đây để đồng bộ player.modifiers ngay
- * sau đó, nếu không finalStats hiển thị sẽ bị lệch so với trang bị
- * thật.
+ * gộp mỗi tick. Mọi nơi trong UI gọi equip/unequip/enhance/Tẩy/Tinh/
+ * Hóa đều phải qua đây để đồng bộ player.modifiers ngay sau đó.
+ *
+ * (2026-08-25, resource-professions-rework plan §7) — Khí Đường chỉ còn
+ * bốn operation: Cường Hóa (slot), Tẩy Luyện (identity), Tinh Luyện
+ * (±20% + khóa), Hóa Luyện (destructive → Tinh Hoa).
  */
 export function useEquipmentActions() {
   const gameManager = useGameManager()
@@ -33,18 +36,39 @@ export function useEquipmentActions() {
     return ok
   }
 
-  // Beta Phase 4 (Notification/UX) — 7 thao tác "chế tác" (Khí Đường)
-  // toast kết quả — equip/unequip KHÔNG toast (đã có phản hồi trực
-  // quan tức thời qua paperdoll, toast thêm sẽ gây spam vì đây là
-  // thao tác rất thường xuyên).
-  function withSyncAndToast(ok: boolean, label: string): boolean {
-    if (withSync(ok)) {
+  function withSyncAndResult(result: { ok: boolean; reason?: string }, label: string): boolean {
+    if (withSync(result.ok)) {
       notification.push('upgrade', `${label} thành công`)
     } else {
-      notification.push('error', `${label} thất bại`)
+      notification.push('error', `${label} thất bại (${result.reason ?? 'unknown'})`)
     }
 
-    return ok
+    return result.ok
+  }
+
+  function dissolve(instanceIds: readonly string[]): boolean {
+    const result = gameManager.dissolveItems(instanceIds)
+
+    if (result.ok && result.rewards) {
+      for (const reward of result.rewards) {
+        const material = gameManager.materialRegistry.has(reward.materialId)
+          ? gameManager.materialRegistry.get(reward.materialId)
+          : undefined
+
+        notification.push(
+          'upgrade',
+          `Hóa Luyện: ${material?.name ?? reward.materialId} ×${reward.amount}`,
+        )
+      }
+
+      syncEquipmentModifiers()
+
+      bumpState()
+    } else if (!result.ok) {
+      notification.push('error', `Hóa Luyện thất bại (${result.reason ?? 'unknown'})`)
+    }
+
+    return result.ok
   }
 
   return {
@@ -52,26 +76,27 @@ export function useEquipmentActions() {
 
     unequip: (instanceId: string) => withSync(gameManager.unequipItem(instanceId)),
 
-    enhance: (instanceId: string) => withSyncAndToast(gameManager.enhanceItem(instanceId, player.$state), 'Cường Hóa'),
+  // Cường Hóa gắn SLOT (slot-level rework) — slot trống vẫn nâng được.
+  enhance: (slot: EquipmentSlot) =>
+    withSync(gameManager.enhanceSlot(slot, player.$state))
+        ? (notification.push('upgrade', 'Cường Hóa thành công'), true)
+        : (notification.push('error', 'Cường Hóa thất bại'), false),
 
-    wash: (instanceId: string) => withSyncAndToast(gameManager.washItem(instanceId), 'Tẩy Luyện'),
+    /** Tẩy Luyện — oreMaterialId phải cùng cảnh giới item (§7.3). */
+    wash: (instanceId: string, oreMaterialId: string) =>
+      withSyncAndResult(
+        gameManager.washItem(instanceId, oreMaterialId, player.$state),
+        'Tẩy Luyện',
+      ),
 
-    refine: (instanceId: string) => withSyncAndToast(gameManager.refineItem(instanceId, player.$state), 'Tinh Luyện'),
+    /** Tinh Luyện — lockedIndices là các dòng giữ nguyên (§7.4). */
+    refine: (instanceId: string, lockedIndices: readonly number[]) =>
+      withSyncAndResult(
+        gameManager.refineItem(instanceId, lockedIndices, player.$state),
+        'Tinh Luyện',
+      ),
 
-    forge: (instanceId: string) => withSyncAndToast(gameManager.forgeItem(instanceId), 'Rèn'),
-
-    upgradeQuality: (instanceId: string) =>
-      withSyncAndToast(gameManager.upgradeItemQuality(instanceId), 'Nâng Phẩm'),
-
-    upgradeRealm: (instanceId: string) =>
-      withSyncAndToast(gameManager.upgradeItemRealm(instanceId, player.$state), 'Nâng Cảnh Giới'),
-
-    // Core Loop Foundation checklist (Phase 4) — Thêm Dòng/Nâng Cấp
-    // Dòng cho Affix (Prefix/Suffix), xem EquipmentSystem.addAffix()/
-    // upgradeAffixTier().
-    addAffix: (instanceId: string) => withSyncAndToast(gameManager.addEquipmentAffix(instanceId), 'Thêm Dòng'),
-
-    upgradeAffixTier: (instanceId: string, affixIndex: number) =>
-      withSyncAndToast(gameManager.upgradeEquipmentAffixTier(instanceId, affixIndex), 'Nâng Cấp Dòng'),
+    /** Hóa Luyện batch all-or-nothing (§7.5). */
+    dissolve,
   }
 }

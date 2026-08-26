@@ -120,7 +120,8 @@ export const pills: Pill[] = [
 
     icon: '/assets/pills/spirit_condensing_pill.png',
 
-    description: 'Đan dược cao cấp luyện từ Tinh Hoa Hỏa của yêu thú thủ lĩnh, tăng vĩnh viễn linh lực tối đa.',
+    description:
+      'Đan dược cao cấp luyện từ Tinh Hoa Hỏa của yêu thú thủ lĩnh, tăng vĩnh viễn linh lực tối đa.',
 
     type: 'permanent',
 
@@ -302,7 +303,8 @@ export const pills: Pill[] = [
 
     icon: '/assets/pills/blade_hawk_pill.png',
 
-    description: 'Đan dược luyện từ vuốt Đoạn Nhận Ưng và giáp Kim Giáp Trùng, tăng vĩnh viễn tỉ lệ bạo kích.',
+    description:
+      'Đan dược luyện từ vuốt Đoạn Nhận Ưng và giáp Kim Giáp Trùng, tăng vĩnh viễn tỉ lệ bạo kích.',
 
     type: 'permanent',
 
@@ -332,7 +334,8 @@ export const pills: Pill[] = [
 
     icon: '/assets/pills/flood_serpent_pill.png',
 
-    description: 'Đan dược quý hiếm luyện từ vảy Giao Xà và Tinh Hoa Thủy Long, tăng vĩnh viễn khí huyết tối đa.',
+    description:
+      'Đan dược quý hiếm luyện từ vảy Giao Xà và Tinh Hoa Thủy Long, tăng vĩnh viễn khí huyết tối đa.',
 
     type: 'permanent',
 
@@ -547,7 +550,8 @@ export const pills: Pill[] = [
 
     icon: '/assets/pills/earth_shield_pill.png',
 
-    description: 'Đan dược luyện từ Hoàng Kim Linh Thiết và Yêu Đan, tăng tạm thời Hộ Thuẫn tối đa và khả năng phản đòn.',
+    description:
+      'Đan dược luyện từ Hoàng Kim Linh Thiết và Yêu Đan, tăng tạm thời Hộ Thuẫn tối đa và khả năng phản đòn.',
 
     type: 'buff',
 
@@ -584,5 +588,171 @@ export const pills: Pill[] = [
         },
       },
     ],
+  },
+
+  // ============================================================
+  // PILL NGHỀ (2026-08-24, resource-professions-rework §5): realm +
+  // phẩm nghề theo cảnh giới, 4 effect MVP. Budget theo rarity primary
+  // herb (§5.6): common → regen, uncommon → cultivation, rare → insight
+  // + main stat (cần Yêu Đan catalyst). Gate ĐÚNG cảnh giới khi dùng.
+  // ============================================================
+
+  // ---- Phàm Nhân ----
+  {
+    id: 'pill_regen_mortal',
+    name: 'Hồi Nguyên Đan Phàm Nhân',
+    description: 'Đan hồi HP/MP theo giây trong 60 giây (thời gian thực).',
+    type: 'healing',
+    grade: 'hoang',
+    realmId: 'mortal',
+    professionGrade: 'cuu_pham',
+    effects: [
+      {
+        type: 'regen',
+        hpPerSecond: 4,
+        mpPerSecond: 2,
+        durationSeconds: 60,
+        effectGroup: 'pill_regen',
+      },
+    ],
+  },
+
+  {
+    id: 'pill_cultivation_mortal',
+    name: 'Tụ Khí Đan Phàm Nhân',
+    description: 'Tăng Tu Vi bằng 3% yêu cầu tầng hiện tại (Phàm Nhân).',
+    type: 'cultivation',
+    grade: 'huyen',
+    realmId: 'mortal',
+    professionGrade: 'cuu_pham',
+    effects: [{ type: 'cultivation', cultivationPercent: 0.03 }],
+  },
+
+  {
+    id: 'pill_insight_mortal',
+    name: 'Khải Thị Đan Phàm Nhân',
+    description: 'Tăng 2 Cảm Ngộ kỹ năng (skillInsight).',
+    type: 'buff',
+    grade: 'dia',
+    realmId: 'mortal',
+    professionGrade: 'cuu_pham',
+    effects: [{ type: 'skill_insight', value: 2 }],
+  },
+
+  {
+    id: 'pill_main_stat_mortal',
+    name: 'Phá Thiên Đan Phàm Nhân',
+    description: 'Tăng ngẫu nhiên +1 vào một Main Stat chưa đạt trần (Phàm Nhân).',
+    type: 'permanent',
+    grade: 'thien',
+    realmId: 'mortal',
+    professionGrade: 'cuu_pham',
+    effects: [{ type: 'random_main_stat', value: 1 }],
+  },
+
+  // ---- Luyện Khí ----
+  {
+    id: 'pill_regen_qi_refining',
+    name: 'Hồi Nguyên Đan Luyện Khí',
+    description: 'Đan hồi HP/MP theo giây trong 90 giây (thời gian thực).',
+    type: 'healing',
+    grade: 'huyen',
+    realmId: 'qi_refining',
+    professionGrade: 'bat_pham',
+    effects: [
+      {
+        type: 'regen',
+        hpPerSecond: 12,
+        mpPerSecond: 6,
+        durationSeconds: 90,
+        effectGroup: 'pill_regen',
+      },
+    ],
+  },
+
+  {
+    id: 'pill_cultivation_qi_refining',
+    name: 'Tụ Khí Đan Luyện Khí',
+    description: 'Tăng Tu Vi bằng 3% yêu cầu tầng hiện tại (Luyện Khí).',
+    type: 'cultivation',
+    grade: 'dia',
+    realmId: 'qi_refining',
+    professionGrade: 'bat_pham',
+    effects: [{ type: 'cultivation', cultivationPercent: 0.03 }],
+  },
+
+  {
+    id: 'pill_insight_qi_refining',
+    name: 'Khải Thị Đan Luyện Khí',
+    description: 'Tăng 5 Cảm Ngộ kỹ năng (skillInsight).',
+    type: 'buff',
+    grade: 'thien',
+    realmId: 'qi_refining',
+    professionGrade: 'bat_pham',
+    effects: [{ type: 'skill_insight', value: 5 }],
+  },
+
+  {
+    id: 'pill_main_stat_qi_refining',
+    name: 'Phá Thiên Đan Luyện Khí',
+    description: 'Tăng ngẫu nhiên +1 vào một Main Stat chưa đạt trần (Luyện Khí).',
+    type: 'permanent',
+    grade: 'tien',
+    realmId: 'qi_refining',
+    professionGrade: 'bat_pham',
+    effects: [{ type: 'random_main_stat', value: 1 }],
+  },
+
+  // ---- Trúc Cơ ----
+  {
+    id: 'pill_regen_foundation',
+    name: 'Hồi Nguyên Đan Trúc Cơ',
+    description: 'Đan hồi HP/MP theo giây trong 120 giây (thời gian thực).',
+    type: 'healing',
+    grade: 'dia',
+    realmId: 'foundation_establishment',
+    professionGrade: 'that_pham',
+    effects: [
+      {
+        type: 'regen',
+        hpPerSecond: 30,
+        mpPerSecond: 15,
+        durationSeconds: 120,
+        effectGroup: 'pill_regen',
+      },
+    ],
+  },
+
+  {
+    id: 'pill_cultivation_foundation',
+    name: 'Tụ Khí Đan Trúc Cơ',
+    description: 'Tăng Tu Vi bằng 3% yêu cầu tầng hiện tại (Trúc Cơ).',
+    type: 'cultivation',
+    grade: 'thien',
+    realmId: 'foundation_establishment',
+    professionGrade: 'that_pham',
+    effects: [{ type: 'cultivation', cultivationPercent: 0.03 }],
+  },
+
+  {
+    id: 'pill_insight_foundation',
+    name: 'Khải Thị Đan Trúc Cơ',
+    description: 'Tăng 12 Cảm Ngộ kỹ năng (skillInsight).',
+    type: 'buff',
+    grade: 'tien',
+    realmId: 'foundation_establishment',
+    professionGrade: 'that_pham',
+    effects: [{ type: 'skill_insight', value: 12 }],
+  },
+
+  {
+    id: 'pill_main_stat_foundation',
+    name: 'Phá Thiên Đan Trúc Cơ',
+    description: 'Tăng ngẫu nhiên +1 vào một Main Stat chưa đạt trần (Trúc Cơ).',
+    type: 'permanent',
+    grade: 'tien',
+    realmId: 'foundation_establishment',
+    professionGrade: 'that_pham',
+    effects: [{ type: 'random_main_stat', value: 1 }],
   },
 ]

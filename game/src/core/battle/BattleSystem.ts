@@ -14,7 +14,7 @@ import { AilmentSystem } from '../ailment/AilmentSystem'
 
 import type { AilmentRegistry } from '../ailment/AilmentRegistry'
 
-import { calculateStats } from '../stats/StatCalculator'
+import { calculateStats, type StatModifier } from '../stats/StatCalculator'
 
 import type { SkillManager } from '../skill/SkillManager'
 
@@ -23,6 +23,7 @@ import type { SkillSystem } from '../skill/SkillSystem'
 import type { SkillEffectSystem } from '../skill/SkillEffectSystem'
 
 import type { Skill } from '../skill/Skill'
+import type { SkillExecutionPolicy } from '../skill/Skill'
 import type { SkillEffect } from '../skill/SkillEffect'
 import { getSkillRuntimeStat } from '../skill/SkillRuntimeStats'
 
@@ -32,11 +33,26 @@ import type { EventBus } from '../events/EventBus'
 
 import { ReactionManager } from '../element/ReactionManager'
 
-import { HERO_COLUMN, SPAWN_COLUMN, VISIBLE_MAX_COLUMN } from './BattleLane'
+import { HERO_COLUMN, HERO_LANE_INDEX, SPAWN_COLUMN, VISIBLE_MAX_COLUMN } from './BattleLane'
 
-import { resolveEnemySpawnPosition, enemySpawnCellKey } from './EnemySpawnPlacement'
-import type { EnemySpawnVfxPresetId } from './CombatAction'
+import { resolveEnemySpawnPosition } from './EnemySpawnPlacement'
+import type { EnemySpawnVfxPresetId, PlayerSpawnVfxPresetId } from './CombatAction'
 import type { GridPosition } from './BattleGrid'
+import { entityGridPosition, worldToGridPosition } from './BattleGrid'
+
+import {
+  canEnemyReachGate,
+  canPlayerReachTarget,
+  collectAffected,
+  findBattleEnemy,
+  selectAttackableTarget,
+  selectTeleportTarget,
+  areaFor,
+} from './ActionTargetingSystem'
+import {
+  DEFAULT_COMBAT_AI_STRATEGY,
+  type CombatAiStrategy,
+} from './CombatAiStrategy'
 
 import {
   ActionImpactSystem,
@@ -44,7 +60,6 @@ import {
   type HitResolveOptions,
 } from './ActionImpactSystem'
 
-import { areaFor, collectAffected, selectPrimaryTarget } from './ActionTargetingSystem'
 import { targetingForSkill, vfxPresetForSkill, type EffectScope } from './CombatAction'
 import {
   MAX_SWORD_INTENT,
@@ -56,18 +71,15 @@ import {
 
 import { getAttackIntervalSeconds } from '../combat/AttackTiming'
 
-import type { BattlePositionsEvent } from './BattleEvents'
+import type { BattlePositionsEvent, PlayerTeleportedEvent } from './BattleEvents'
 
 import type { LavaZone } from './LavaZone'
 
 import type { ElementType } from '../element/ElementType'
-import { getColumnFromWorldX, worldToGridPosition } from './BattleGrid'
 
-// Combat Grid Rework — windup cơ bản cho đòn thường (không còn thời
-
-// gian bay projectile): đòn có "trọng lượng" nhờ khoảng lặng ngắn này.
-
-const PLAYER_BASIC_WINDUP_SECONDS = 0.12
+// Skill execution policy rework (plan §8) — windup "đòn thường" của
+// player basic attack KHÔNG CÒN TỒN TẠI: mọi đòn chủ động của Player là
+// skill auto-cast đi qua pipeline impact riêng của skill.
 
 const ENEMY_MELEE_WINDUP_SECONDS = 0.15
 
@@ -128,6 +140,16 @@ const SPAWN_TELEGRAPH_SECONDS = {
   boss: 1.4,
 } as const
 
+// Player spawn telegraph (plan §5.3) — avatar cũng đi qua "telegraph →
+// materialize" giống quái (preset riêng 'player_spawn'). Countdown 3s >
+// 1s nên bình thường Player hiện hình trước khi trận bắt đầu; nếu animation
+// dài hơn countdown, battle tiếp tục chờ cả hai phía hoàn tất.
+const PLAYER_SPAWN_TELEGRAPH_SECONDS = 1.0
+
+// Teleport AI (plan §2.5/§7.3) — internal cooldown ĐÚNG 1 giây giữa 2
+// lần đổi row. Trong ICD Player vẫn cast/đánh mục tiêu đang trong tầm.
+const PLAYER_TELEPORT_ICD_SECONDS = 1
+
 function spawnTelegraphSeconds(entity: Pick<CombatEntity, 'isBoss' | 'isElite'>): number {
   if (entity.isBoss) {
     return SPAWN_TELEGRAPH_SECONDS.boss
@@ -183,8 +205,22 @@ export class BattleSystem {
     /** Combat Grid Rework — thay hoàn toàn MissileSystem. */
 
     readonly actionImpact: ActionImpactSystem,
+
+    /** Modifier hiện hành bên ngoài battle buffs (thuốc, socket). */
+    private readonly getPlayerRuntimeModifiers: () => StatModifier[] = () => [],
+
+    /**
+     * AI target strategy hiện hành (plan §7/§10) — PlayerData là authority,
+     * GameManager inject closure đọc live để đổi strategy giữa trận có
+     * hiệu lực ngay. Test không quan tâm AI dùng default 'nearest'.
+     */
+    private readonly getAiStrategy: () => CombatAiStrategy = () => DEFAULT_COMBAT_AI_STRATEGY,
   ) {
     this.reactionManager = new ReactionManager(eventBus)
+  }
+
+  private aiStrategy(): CombatAiStrategy {
+    return this.getAiStrategy() ?? DEFAULT_COMBAT_AI_STRATEGY
   }
 
   start(
@@ -194,11 +230,15 @@ export class BattleSystem {
   ) {
     this.actionImpact.clear()
 
+    // Player spawn (plan §5.3) — đặt avatar logic tại (4,1), tạo telegraph
+    // spawn, CHƯA công bố materialized: enemy chưa thể target, Player
+    // chưa cast được cho tới khi telegraph chạy xong.
     player.x = HERO_COLUMN
 
-    // firstEnemy KHÔNG còn đặt x = SPAWN_COLUMN ngay — đi qua luồng
-    // telegraph giống mọi quái khác (queueEnemySpawn sau khi battle tạo).
-    // Countdown 3s hiển thị hiệu ứng telegraph trước khi trận bắt đầu.
+    player.row = HERO_LANE_INDEX
+
+    // Cadence timer theo slot là runtime-only — trận mới bắt đầu sạch.
+    player.skillCadenceRemainingBySlot = {}
 
     this.battle = {
       id: crypto.randomUUID(),
@@ -211,7 +251,16 @@ export class BattleSystem {
 
       countdownSecondsRemaining: BATTLE_COUNTDOWN_SECONDS,
 
-      playerAttackTimer: 0,
+      playerTeleport: { remainingSeconds: 0 },
+
+      pendingPlayerSpawn: {
+        position: { row: HERO_LANE_INDEX, column: HERO_COLUMN },
+        remainingSeconds: PLAYER_SPAWN_TELEGRAPH_SECONDS,
+        totalSeconds: PLAYER_SPAWN_TELEGRAPH_SECONDS,
+        presetId: 'player_spawn',
+      },
+
+      playerMaterialized: false,
 
       playerBuffs: new BuffManager(),
 
@@ -224,18 +273,14 @@ export class BattleSystem {
       lavaZones: [],
 
       pendingEnemySpawns: [],
+
+      // Trận mới reset vòng xoay về slot đầu (plan §5).
+      nextSkillSlotIndexCursor: 0,
     }
 
     // Quái đầu tiên cũng đi qua "telegraph → xuất hiện → tham chiến".
-    // Grid chắc chắn còn ô trống lúc start (0 occupied/reserved) nên
-    // queue luôn thành công; fallback biên: materialize tại cột spawn cũ.
-    if (!this.queueEnemySpawn(this.battle, firstEnemy)) {
-      firstEnemy.x = SPAWN_COLUMN
-
-      this.battle.enemies.push(this.createBattleEnemy(firstEnemy))
-
-      this.eventBus.emit('enemy_spawned', { type: 'enemy_spawned', targetId: firstEnemy.id })
-    }
+    // Overlap hợp lệ nên queue luôn thành công.
+    this.queueEnemySpawn(this.battle, firstEnemy)
 
     // Auto: trận mới có thể bắt đầu lại NGAY trong cùng 1 tick tick()
 
@@ -257,7 +302,8 @@ export class BattleSystem {
 
     // Emit SAU 'battle_start' — MainScene reset visual trước, có data
 
-    // vẽ khung hình đầu ngay sau, khỏi phải đợi tick kế tiếp.
+    // vẽ khung hình đầu ngay sau (snapshot chứa CẢ HAI telegraph:
+    // playerSpawn + spawningEnemies), khỏi phải đợi tick kế tiếp.
 
     this.emitPositions(this.battle)
   }
@@ -265,7 +311,11 @@ export class BattleSystem {
   startTribulation(player: CombatEntity) {
     this.actionImpact.clear()
 
-    player.x = (HERO_COLUMN + VISIBLE_MAX_COLUMN) / 2
+    player.x = HERO_COLUMN
+
+    player.row = HERO_LANE_INDEX
+
+    player.skillCadenceRemainingBySlot = {}
 
     this.battle = {
       id: crypto.randomUUID(),
@@ -274,7 +324,10 @@ export class BattleSystem {
       state: 'fighting',
       mode: 'tribulation',
 
-      playerAttackTimer: 0,
+      // Trận Kiếp giữ luồng riêng: Player materialized sẵn (không qua
+      // telegraph), teleport ICD sạch.
+      playerTeleport: { remainingSeconds: 0 },
+      playerMaterialized: true,
       playerBuffs: new BuffManager(),
       playerAilments: new AilmentManager(),
 
@@ -282,6 +335,7 @@ export class BattleSystem {
       pendingSummons: [],
       lavaZones: [],
       pendingEnemySpawns: [],
+      nextSkillSlotIndexCursor: 0,
     }
 
     this.eventBus.emit('tribulation_started', undefined)
@@ -315,54 +369,28 @@ export class BattleSystem {
 
   /**
 
-   * Spawn telegraph (2026-08-24) — ĐẶT LỊCH spawn: resolve 1 ô trống bên
+   * Spawn telegraph (plan §5.2) — ĐẶT LỊCH spawn: roll vị trí ĐÚNG MỘT
 
-   * phải player (không đè quái sống/telegraph khác), đẩy entity vào
+   * LẦN (row 0..9, column 7..15; Boss luôn row 4), đẩy entity vào
 
    * `pendingEnemySpawns` với thời gian đếm ngược theo cấp bậc. Trong thời
 
    * gian telegraph, entity CHƯA nằm trong `battle.enemies` — không thể bị
 
-   * target, không đỡ đòn, không tấn công (trạng thái gameplay thật, xem
+   * target, không đỡ đòn, không tấn công. Overlap HOỢP LỆ (nhiều quái
 
-   * Battle.pendingEnemySpawns). Hết chỗ → false: caller HOÃN spawn đến
+   * được trùng hoàn toàn một ô) nên luôn schedule thành công — không còn
 
-   * tick sau (StageWaveSystem giữ spawnedCount, retry tick kế).
+   * occupied/reserved gate, không retry vì "hết chỗ".
 
    */
 
-  queueEnemySpawn(battle: Battle, entity: CombatEntity): boolean {
-    const occupiedCells = new Set(
-      battle.enemies
-
-        .filter((battleEnemy) => battleEnemy.entity.alive)
-
-        .map((battleEnemy) =>
-          enemySpawnCellKey(battleEnemy.entity.row, getColumnFromWorldX(battleEnemy.entity.x)),
-        ),
-    )
-
-    const reservedCells = new Set(
-      battle.pendingEnemySpawns.map((pending) =>
-        enemySpawnCellKey(pending.position.row, pending.position.column),
-      ),
-    )
-
+  queueEnemySpawn(battle: Battle, entity: CombatEntity): void {
     const position = resolveEnemySpawnPosition({
-      playerColumn: battle.player.x,
-
-      occupiedCells,
-
-      reservedCells,
-
       isBoss: entity.isBoss ?? false,
 
       random: Math.random,
     })
-
-    if (!position) {
-      return false
-    }
 
     const totalSeconds = spawnTelegraphSeconds(entity)
 
@@ -383,46 +411,58 @@ export class BattleSystem {
     // đợi tick kế — quan trọng cho quái đầu tiên lúc countdown 3s).
 
     this.emitPositions(battle)
-
-    return true
   }
 
   /**
 
-   * Đếm ngược telegraph mỗi tick (chạy ở CẢ 'countdown' lẫn 'fighting'):
+   * Đếm ngược CẢ HAI telegraph Player + quái mỗi tick (chạy ở CẢ
+   * 'countdown' lẫn 'fighting'): hết thời gian → materialize. Player
 
-   * hết thời gian → gán row/x, chuyển sang battle.enemies (materialize),
+   * materialize = pendingPlayerSpawn xoá + playerMaterialized true (plan
+   * §5.4). Hai bên materialize trong countdown đứng yên (combat logic
 
-   * emit 'enemy_spawned' + snapshot positions. Quái materialize trong
+   * đóng băng) — đúng ý "người chơi thấy hai bên xuất hiện trước khi
 
-   * countdown đứng yên (combat logic đóng băng) — đúng ý "người chơi
-
-   * thấy quái xuất hiện trước khi trận chính thức bắt đầu".
+   * trận chính thức bắt đầu".
 
    */
 
-  updatePendingEnemySpawns(battle: Battle, deltaSeconds: number) {
-    if (battle.pendingEnemySpawns.length === 0) {
-      return
+  updatePendingSpawns(battle: Battle, deltaSeconds: number) {
+    let changed = false
+
+    if (battle.pendingPlayerSpawn) {
+      battle.pendingPlayerSpawn.remainingSeconds -= deltaSeconds
+
+      if (battle.pendingPlayerSpawn.remainingSeconds <= 0) {
+        battle.pendingPlayerSpawn = undefined
+
+        battle.playerMaterialized = true
+
+        changed = true
+      }
     }
 
-    let materialized = false
+    if (battle.pendingEnemySpawns.length > 0) {
+      let materialized = false
 
-    for (const pending of [...battle.pendingEnemySpawns]) {
-      pending.remainingSeconds -= deltaSeconds
+      for (const pending of [...battle.pendingEnemySpawns]) {
+        pending.remainingSeconds -= deltaSeconds
 
-      if (pending.remainingSeconds > 0) {
-        continue
+        if (pending.remainingSeconds > 0) {
+          continue
+        }
+
+        battle.pendingEnemySpawns = battle.pendingEnemySpawns.filter((entry) => entry !== pending)
+
+        this.materializePendingSpawn(battle, pending)
+
+        materialized = true
       }
 
-      battle.pendingEnemySpawns = battle.pendingEnemySpawns.filter((entry) => entry !== pending)
-
-      this.materializePendingSpawn(battle, pending)
-
-      materialized = true
+      changed ||= materialized
     }
 
-    if (materialized) {
+    if (changed) {
       this.emitPositions(battle)
     }
   }
@@ -439,24 +479,29 @@ export class BattleSystem {
 
   /**
 
-   * Materialize TOÀN BỘ pending ngay (bỏ qua telegraph) — dùng cho test
-
-   * cần trạng thái tức thời sau start(); runtime không gọi.
+   * Materialize TOÀN BỘ pending (Player + quái) ngay (bỏ qua telegraph) —
+   * dùng cho test cần trạng thái tức thời sau start(); runtime không gọi.
 
    */
 
   flushPendingSpawns() {
     const battle = this.battle
 
-    if (!battle || battle.pendingEnemySpawns.length === 0) {
+    if (!battle) {
       return
     }
 
-    for (const pending of battle.pendingEnemySpawns) {
+    for (const pending of [...battle.pendingEnemySpawns]) {
       this.materializePendingSpawn(battle, pending)
     }
 
     battle.pendingEnemySpawns = []
+
+    if (battle.pendingPlayerSpawn) {
+      battle.pendingPlayerSpawn = undefined
+
+      battle.playerMaterialized = true
+    }
 
     this.emitPositions(battle)
   }
@@ -481,9 +526,38 @@ export class BattleSystem {
 
       playerX: battle.player.x,
 
+      // Row thật của avatar (plan §2.2) + cờ targetability — renderer
+      // snap sprite khi row đổi và ẩn sprite khi chưa materialize.
+
+      playerRow: battle.player.row,
+
+      playerMaterialized: battle.playerMaterialized,
+
       playerCurrentHp: battle.player.currentHp,
 
       playerMaxHp: battle.player.maxHp,
+
+      // Telegraph spawn của Player — renderer vẽ telegraph tại projected
+      // cell rồi materialize sprite khi biến mất khỏi snapshot.
+
+      playerSpawn: battle.pendingPlayerSpawn
+        ? {
+            row: battle.pendingPlayerSpawn.position.row,
+            column: battle.pendingPlayerSpawn.position.column,
+            progress: battle.pendingPlayerSpawn.totalSeconds > 0
+              ? Math.min(
+                  1,
+                  Math.max(
+                    0,
+                    1 -
+                      battle.pendingPlayerSpawn.remainingSeconds /
+                        battle.pendingPlayerSpawn.totalSeconds,
+                  ),
+                )
+              : 1,
+            presetId: battle.pendingPlayerSpawn.presetId,
+          }
+        : undefined,
 
       enemies: battle.enemies
 
@@ -577,15 +651,21 @@ export class BattleSystem {
         (battle.countdownSecondsRemaining ?? 0) - deltaSeconds,
       )
 
-      // Telegraph spawn chạy cả trong countdown — quái đầu tiên hiện
+      // Telegraph spawn (Player + quái đầu tiên) chạy cả trong countdown —
+      // hai bên hiện hình TRƯỚC khi trận chính thức bắt đầu (đứng yên,
+      // combat đóng băng). Plan §5.3: chỉ chuyển 'fighting' khi countdown
+      // về 0 VÀ Player materialize VÀ quái đã materialize; animation dài
+      // hơn countdown thì battle tiếp tục chờ.
 
-      // hình TRƯỚC khi trận chính thức bắt đầu (đứng yên, combat đóng băng).
-
-      this.updatePendingEnemySpawns(battle, deltaSeconds)
+      this.updatePendingSpawns(battle, deltaSeconds)
 
       this.emitPositions(battle)
 
-      if (battle.countdownSecondsRemaining <= 0) {
+      if (
+        battle.countdownSecondsRemaining <= 0 &&
+        !battle.pendingPlayerSpawn &&
+        battle.pendingEnemySpawns.length === 0
+      ) {
         battle.state = 'fighting'
       }
 
@@ -596,13 +676,17 @@ export class BattleSystem {
       return
     }
 
-    // Telegraph spawn giữa trận — hết đếm ngược mới materialize (xem
+    // [1] Telegraph spawn giữa trận — hết đếm ngược mới materialize (xem
 
-    // updatePendingEnemySpawns()). Đặt TRƯỚC combat logic: quái vừa hiện
+    // updatePendingSpawns()). Đặt TRƯỚC combat logic: quái vừa hiện
 
-    // có thể bị target ngay tick này nhưng chưa từng tồn tại trước đó.
+    // có thể bị target ngay tick này nhưng chưa từng tồn tại trước đó;
 
-    this.updatePendingEnemySpawns(battle, deltaSeconds)
+    // entity pending spawn KHÔNG tham gia combat (plan §14).
+
+    this.updatePendingSpawns(battle, deltaSeconds)
+
+    // [3] Boss phases/enrage
 
     // Trước updateStatsFromModifiers() để buff phase mới áp (nếu có)
 
@@ -615,6 +699,8 @@ export class BattleSystem {
     this.updateEnrage(battle, deltaSeconds)
 
     const dotStatusesBefore = this.snapshotDotStatuses(battle)
+
+    // [4][5] Recompute modifiers → Ailment/DoT/Lava/Regen
 
     this.updateStatsFromModifiers(
       battle,
@@ -652,29 +738,12 @@ export class BattleSystem {
       deltaSeconds,
     )
 
-    this.resolveMovement(
-      battle,
+    // [6] Tick skill timers: cadence Attack Speed theo slot (policy
+    // attack_speed/attack_speed_cast) + enemy attack timer. Cooldown CDR
+    // chạy ở GameManager.update() qua skillSystem.update(). Timer KHÔNG
+    // trừ trong lúc Choáng/Đóng Băng — "dừng nhịp" thay vì mất tempo.
 
-      deltaSeconds,
-    )
-
-    // Emit NGAY SAU resolveMovement(), TRƯỚC updatePlayerAttack()/
-
-    // updateEnemyAttacks() bên dưới — EventBus.emit() đồng bộ, nên
-
-    // renderer có snapshot MỚI của tick này trước khi windup action
-
-    // nào hoàn tất cùng tick.
-
-    this.emitPositions(battle)
-
-    // Timer đánh KHÔNG trừ trong lúc Choáng/Đóng Băng — "dừng nhịp"
-
-    // thay vì mất tempo, hết khống chế đánh tiếp bình thường ngay.
-
-    if (!this.isIncapacitated(battle.playerAilments)) {
-      battle.playerAttackTimer -= deltaSeconds
-    }
+    this.updateSkillCadence(battle, deltaSeconds)
 
     for (const battleEnemy of battle.enemies) {
       if (!this.isIncapacitated(battleEnemy.ailments)) {
@@ -682,13 +751,41 @@ export class BattleSystem {
       }
     }
 
+    // [7] Teleport ICD tick — luôn trôi trong fighting, độc lập stun.
+
+    battle.playerTeleport.remainingSeconds = Math.max(
+      0,
+      battle.playerTeleport.remainingSeconds - deltaSeconds,
+    )
+
+    // [8] Enemy movement tới cổng (plan §13).
+
+    this.resolveMovement(
+      battle,
+
+      deltaSeconds,
+    )
+
+    // [9] Emit NGAY SAU resolveMovement(), TRƯỚC cast/attack bên dưới —
+    // EventBus.emit() đồng bộ, nên renderer có snapshot MỚI của tick này
+    // trước khi windup action nào hoàn tất cùng tick.
+
+    this.emitPositions(battle)
+
+    // [10] Resolve cast đang niệm.
+
     this.updateCasting(
       battle,
 
       deltaSeconds,
     )
 
-    this.updatePlayerAttack(battle)
+    // [11]-[13] Acquire target theo AI → teleport nếu cần → start TỐI ĐA
+    // MỘT Player skill (scheduler thống nhất, plan §8.4).
+
+    this.updatePlayerSkills(battle)
+
+    // [14] Enemy attacks.
 
     this.updateEnemyAttacks(
       battle,
@@ -696,11 +793,8 @@ export class BattleSystem {
       deltaSeconds,
     )
 
-    this.updateAutoCast(battle)
-
-    // Combat Grid Rework — tick các impact đang windup (basic attack),
-
-    // hết giờ thì snapshot anchor + resolve + emit action_impact.
+    // [15] Tick các impact đang windup, hết giờ thì snapshot anchor +
+    // resolve + emit action_impact.
 
     this.actionImpact.tick(
       battle,
@@ -710,15 +804,20 @@ export class BattleSystem {
       },
     )
 
+    // [16] Status VFX diff.
+
     this.emitStatusVfxDiff(battle, dotStatusesBefore)
+
+    // [17] Check defeat.
 
     this.checkBattleEnd(battle)
 
-    // Snapshot sau khi toàn bộ damage/regen/thorns/ward-break của tick đã
+    // [18] Snapshot sau khi toàn bộ damage/regen/thorns/ward-break của tick đã
 
     // hoàn tất. Snapshot đầu tick vẫn cần cho vị trí bắt đầu windup; snapshot
 
     // này bảo đảm UI không bị giữ ở lượng HP của tick trước, kể cả đòn kết liễu.
+    // ([19][20] loot/stage/victory do GameManager xử lý sau khi update() trả về.)
 
     this.emitPositions(battle)
   }
@@ -824,15 +923,21 @@ export class BattleSystem {
 
   /**
 
-   * Player là tower cố định (tower defense) — KHÔNG di chuyển, x set
+   * Enemy KHÔNG THỂ vừa di chuyển vừa tấn công (yêu cầu sản phẩm
+   * 2026-08-26): tiến về cổng cho tới khi vào đúng tầm đánh của CHÍNH nó
+   * (canEnemyReachGate) rồi DỨNG LẠI bắn — điểm dừng là biên range, và
 
-   * 1 lần lúc start() rồi giữ nguyên suốt trận. Chỉ quái tiến vào:
+   * KHÔNG BAO GIỜ vượt qua cổng (clamp HERO_COLUMN). Balance pass: 
 
-   * con nào ngoài tầm đánh của chính nó thì tiến về phía player, dừng
+   * attackRange quái bị chặn tối đa MAX_ENEMY_ATTACK_RANGE_RANKS = 5 ở
+   * normalizeEnemyStats nên điểm dừng xa nhất là cột 1+5=6 — luôn trong
+   * tầm với tới của avatar (base range 5). 'ranged'/'caster' giữ khoảng
 
-   * lại đúng mép tầm đánh (không đi lố vào bên trong). Quái đang Đóng
+   * cách kiting: bị ép sát hơn preferred thì lùi ra (plan §13 bullet 3).
 
-   * Băng đứng yên tại chỗ (Choáng KHÔNG chặn di chuyển).
+   * Row avatar Player KHÔNG ảnh hưởng việc quái di chuyển. Quái Đóng
+
+   * Băng/Trói Chân đứng yên tại chỗ.
 
    */
 
@@ -848,60 +953,69 @@ export class BattleSystem {
 
       // chuyển giống Đóng Băng nhưng KHÔNG chặn attack/cast (xem
 
-      // isIncapacitated() — cố tình KHÔNG gộp isRooted() vào đó).
+      // isIncapacitated() — cố ý KHÔNG gộp isRooted() vào đó).
 
       if (battleEnemyAilments.isFrozen() || battleEnemyAilments.isRooted()) {
         continue
       }
 
-      const distance = Math.abs(battleEnemy.entity.x - battle.player.x)
+      // Khoảng cách đo TỚI CỔNG theo cột (canEnemyReachGate semantics),
+      // không phải tới avatar row.
+
+      const distance = Math.abs(battleEnemy.entity.x - HERO_COLUMN)
 
       const range = battleEnemy.entity.stats.attackRange
 
-      // Combat Grid Rework (2026-08-24) — CHỈ được "giữ vị trí" khi đã
-      // VÀO màn hình (x <= VISIBLE_MAX_COLUMN). Range đơn vị cột mới
-      // thường ≥ khoảng cách spawn; không có gate này quái đứng off-screen
-      // vĩnh viễn và không bên nào bắn được nhau (gate hiển thị chặn 2 chiều).
-      const canHoldPosition = battleEnemy.entity.x <= VISIBLE_MAX_COLUMN
+      const isKiter =
+        battleEnemy.entity.archetype === 'ranged' || battleEnemy.entity.archetype === 'caster'
 
-      // Core Loop Foundation checklist (Mục MONSTER) — 'ranged' thích
+      // Combat Grid Rework (2026-08-24) — còn off-screen thì tiến tối
 
-      // giữ khoảng cách, lùi lại nếu player áp sát quá gần thay vì
+      // thiểu 0.5 cột mỗi tick cho tới khi VÀO màn hình, bất kể range.
 
-      // đứng ì hoặc tiếp tục tiến (hành vi 'melee'/không khai archetype
-
-      // giữ NGUYÊN như cũ, không đổi gì).
-
-      if (battleEnemy.entity.archetype === 'ranged' && canHoldPosition) {
-        const preferredDistance = range * RANGED_PREFERRED_DISTANCE_RATIO
-
-        if (distance < preferredDistance) {
-          const step = Math.min(
-            battleEnemy.entity.stats.movementSpeed * deltaSeconds,
-            preferredDistance - distance,
-          )
-
-          battleEnemy.entity.x += battleEnemy.entity.x > battle.player.x ? step : -step
-
-          continue
-        }
-      }
-
-      if (distance > range || !canHoldPosition) {
-        // Combat Grid Rework — khi còn off-screen, tiến tối thiểu 0.5 cột
-
-        // mỗi tick cho tới khi vào màn hình, bất kể range "đủ" hay không.
-
-        const holdDistance = canHoldPosition
-          ? distance - range
-          : battleEnemy.entity.x - VISIBLE_MAX_COLUMN
-
+      if (battleEnemy.entity.x > VISIBLE_MAX_COLUMN) {
         const step = Math.min(
           battleEnemy.entity.stats.movementSpeed * deltaSeconds,
-          Math.max(holdDistance, 0.5),
+          Math.max(battleEnemy.entity.x - VISIBLE_MAX_COLUMN, 0.5),
         )
 
-        battleEnemy.entity.x += battleEnemy.entity.x > battle.player.x ? -step : step
+        const nextX = battleEnemy.entity.x + (battleEnemy.entity.x >= HERO_COLUMN ? -step : step)
+
+        battleEnemy.entity.x = Math.max(HERO_COLUMN, nextX)
+
+        continue
+      }
+
+      // Core Loop Foundation checklist (Mục MONSTER) — 'ranged'/'caster'
+      // thích giữ khoảng cách với CỔNG: bị ép sát hơn preferred thì lùi
+
+      // ra thay vì đứng ì hoặc tiến tiếp (kiting).
+
+      if (isKiter && distance < range * RANGED_PREFERRED_DISTANCE_RATIO) {
+        const step = Math.min(
+          battleEnemy.entity.stats.movementSpeed * deltaSeconds,
+          range * RANGED_PREFERRED_DISTANCE_RATIO - distance,
+        )
+
+        battleEnemy.entity.x += battleEnemy.entity.x >= HERO_COLUMN ? step : -step
+
+        continue
+      }
+
+      // Ngoài tầm của chính nó → tiến về cổng; đã trong tầm → DỨNG YÊN
+      // ở biên range bắn (điểm dừng xa nhất = cột 1 + trần range 5 = 6).
+
+      if (distance > range) {
+        const step = Math.min(
+          battleEnemy.entity.stats.movementSpeed * deltaSeconds,
+          distance - range,
+        )
+
+        const nextX = battleEnemy.entity.x + (battleEnemy.entity.x >= HERO_COLUMN ? -step : step)
+
+        // Không đi qua cổng (plan §13): clamp tại HERO_COLUMN.
+
+        battleEnemy.entity.x = Math.max(HERO_COLUMN, nextX)
       }
     }
   }
@@ -916,7 +1030,7 @@ export class BattleSystem {
         continue
       }
 
-      const distance = Math.abs(battleEnemy.entity.x - battle.player.x)
+      const distance = Math.abs(battleEnemy.entity.x - HERO_COLUMN)
 
       if (distance < nearestDistance) {
         nearestDistance = distance
@@ -1032,7 +1146,12 @@ export class BattleSystem {
     if (options.knockbackDistance && target.alive) {
       const direction = target.x >= source.x ? 1 : -1
 
-      target.x += direction * options.knockbackDistance
+      // Player column LUÔN là cổng (plan §2.2), enemy không bị đẩy qua
+      // cổng (plan §13) — clamp cả hai phía tại HERO_COLUMN.
+      target.x =
+        target.id === battle.player.id
+          ? HERO_COLUMN
+          : Math.max(HERO_COLUMN, target.x + direction * options.knockbackDistance)
     }
 
     return { landed: !result.dodged }
@@ -1063,7 +1182,11 @@ export class BattleSystem {
     battle.player.stats = calculateStats(
       battle.player.baseStats,
 
-      [...playerBuffSystem.getActiveModifiers(), ...playerAilmentSystem.getActiveModifiers()],
+      [
+        ...this.getPlayerRuntimeModifiers(),
+        ...playerBuffSystem.getActiveModifiers(),
+        ...playerAilmentSystem.getActiveModifiers(),
+      ],
     )
 
     for (const battleEnemy of battle.enemies) {
@@ -1486,196 +1609,294 @@ export class BattleSystem {
     }
   }
 
-  private updatePlayerAttack(battle: Battle) {
-    if (battle.playerAttackTimer > 0) {
-      return
-    }
-
-    if (this.isIncapacitated(battle.playerAilments)) {
-      return
-    }
-
-    // PLAN HOÀN CHỈNH mục 6/8 — skill isBasicAttack equipped thay thế
-
-    // đòn đánh cứng (thay getEquippedInCategory('basic') cũ). Skill
-
-    // tree redesign (2026-08-21) — Pháp Tu KHÔNG còn skill nào flag
-
-    // isBasicAttack (Hỏa Cầu Thuật giờ là root node/skill Loadout bình
-
-    // thường, xem Skills.ts), nên basicSkill luôn undefined cho path
-
-    // này — return SỚM, KHÔNG rơi xuống fallback vật lý bên dưới (đó
-
-    // là hành vi vật lý-thuần dành cho Phàm Nhân/Kiếm Tu's Trảm/Ngự
-
-    // Kiếm, không hợp lý cho hệ phái thuật). Toàn bộ sát thương Pháp Tu
-
-    // đến từ updateAutoCast()'s Loadout rotation.
-
-    const basicSkill = this.skillManager.getBasicAttackSkill()
-
-    if (!basicSkill) {
-      return
-    }
-
-    const basicTargeting = targetingForSkill(basicSkill)
-    const target =
-      selectPrimaryTarget(battle, battle.player, {
-        ...basicTargeting,
-        rangeColumns: Math.min(basicTargeting.rangeColumns, battle.player.stats.attackRange),
-      }) ?? undefined
-
-    // Chưa có quái nào trong tầm (hoặc chưa quái nào sống) — không
-
-    // tốn nhịp timer, để đánh được NGAY khi vừa vào tầm thay vì phải
-
-    // chờ hết 1 interval trọn vẹn. `target.x > VISIBLE_MAX_COLUMN`
-
-    // (2026-08-22) — attackRange world-unit "vô hạn" của player
-
-    // (PLAYER_ATTACK_RANGE_INFINITE, xem StatBlock.ts) KHÔNG còn nghĩa
-
-    // là bắn trúng bất kỳ đâu nữa: phải THẤY quái mới bắn được, dù
-
-    // stat range có lớn cỡ nào.
-
-    if (
-      !target ||
-      Math.abs(target.x - battle.player.x) > battle.player.stats.attackRange ||
-      target.x > VISIBLE_MAX_COLUMN
-    ) {
-      return
-    }
-
-    const attackSpeed = battle.player.stats.attackSpeed
-
-    const interval = getAttackIntervalSeconds(attackSpeed)
-
-    battle.playerAttackTimer = interval
-
-    if (this.skillSystem.canUse(basicSkill.id, battle.player)) {
-      this.castSkill(basicSkill, battle.player, target, battle)
-
-      return
-    }
-
-    // Combat Grid Rework — đòn thường = 1 action impact có windup ngắn
-
-    // (không còn projectile bay); preset 'slash' tại ô primary target.
-
-    this.actionImpact.scheduleBasic({
-      actionId: basicSkill.id,
-
-      sourceId: battle.player.id,
-
-      targetId: target.id,
-
-      damage: { kind: 'physical', multiplier: 1 },
-
-      skillId: basicSkill.id,
-
-      presetId: 'slash',
-
-      windupSeconds: PLAYER_BASIC_WINDUP_SECONDS,
-    })
-  }
-
   /**
 
-   * PLAN HOÀN CHỈNH mục 8/12 — mỗi tick thử cast theo ĐÚNG thứ tự
+   * [6] Cadence Attack Speed THEO TỪNG SLOT (plan §4.4/§8.2) — clock ĐỘC
 
-   * Skill Loadout (slot 0→4, thay AUTO_CAST_PRIORITY theo category cố
+   * LẬP với cooldown CDR của SkillSystem. Policy 'attack_speed'/
 
-   * định cũ — giờ thứ tự ưu tiên do CHÍNH người chơi quyết định lúc
+   * 'attack_speed_cast' dùng slot timer này; 'cooldown'/'cast_time' dùng
 
-   * set Loadout, không còn cố định basic/special/moving/ultimate).
-
-   * Skill nào canUse() (đủ cooldown + mana/rage) thì cast rồi dừng,
-
-   * không cast nhiều skill cùng 1 tick. getLoadoutSkills() đã tự loại
-
-   * isBasicAttack (chạy theo attackSpeed timer riêng, xem
-
-   * updatePlayerAttack()). Nhắm quái GẦN NHẤT còn sống (không phải
-
-   * skill nào cũng cần trong tầm — xem quyết định thiết kế trong kế
-
-   * hoạch: skill KHÔNG bị gate theo khoảng cách ở bản này).
+   * remainingCooldownBySlot (tick ở GameManager qua skillSystem.update()).
 
    */
 
-  private updateAutoCast(battle: Battle) {
+  private updateSkillCadence(battle: Battle, deltaSeconds: number) {
+    const cadence = battle.player.skillCadenceRemainingBySlot
+
+    if (!cadence) {
+      return
+    }
+
+    for (const slot of Object.keys(cadence)) {
+      const slotIndex = Number(slot)
+
+      cadence[slotIndex] = Math.max(0, (cadence[slotIndex] ?? 0) - deltaSeconds)
+    }
+  }
+
+  private cadenceRemaining(player: CombatEntity, slotIndex: number | undefined): number {
+    if (slotIndex === undefined) {
+      return 0
+    }
+
+    return player.skillCadenceRemainingBySlot?.[slotIndex] ?? 0
+  }
+
+  /** Giây giữa 2 lần kích hoạt theo Attack Speed × multiplier của policy. */
+  private cadenceInterval(
+    player: CombatEntity,
+    execution: Extract<SkillExecutionPolicy, { kind: 'attack_speed' | 'attack_speed_cast' }>,
+  ): number {
+    return getAttackIntervalSeconds(player.stats.attackSpeed * (execution.attackSpeedMultiplier ?? 1))
+  }
+
+  /**
+   * Scheduler thống nhất (plan §8.4) — thay HẲN pipeline basic attack +
+   * auto-cast cũ: KHÔNG còn basic attack pipeline, mọi đòn chủ động
+   * của Player là active skill auto-cast từ Loadout.
+   *
+   * Invariant:
+   * - Không có skill chạy ngoài scheduler; không fallback physical attack.
+   * - Mỗi fixed-step bắt đầu TỐI ĐA MỘT skill.
+   * - Chỉ MỘT channeled cast tồn tại (castingSkillId).
+   * - Instant skill khác có thể bắt đầu ở fixed-step kế tiếp nếu ready.
+   */
+  private updatePlayerSkills(battle: Battle) {
+    if (!battle.playerMaterialized) {
+      return
+    }
+
+    if (!battle.player.alive) {
+      return
+    }
+
     if (this.isIncapacitated(battle.playerAilments)) {
       return
     }
 
-    // Cast Time (2026-08-21) — đang niệm dở 1 skill khác thì KHÔNG chọn
-
-    // skill mới (updateCasting() sẽ tự resolve khi niệm xong), xem
-
-    // beginCast().
-
+    // Cast Time — đang niệm dở 1 skill thì KHÔNG chọn skill mới
+    // (updateCasting() sẽ tự resolve khi niệm xong).
     if (battle.player.castingSkillId) {
       return
     }
 
-    for (const { skill, slotIndex } of this.skillManager.getLoadoutEntries()) {
+    const strategy = this.aiStrategy()
+
+    // Bước 11 — acquire target trong Chebyshev range hiện tại.
+    let primary: CombatEntity | null = selectAttackableTarget(battle, strategy)
+
+    // Bước 12 — teleport AI: KHÔNG có target trong tầm và ICD hết →
+    // pre-position ngay trên hàng của mục tiêu tốt nhất (yêu cầu sản
+    // phẩm 2026-08-26 — không đứng đợi quái tới trước).
+    if (!primary && battle.playerTeleport.remainingSeconds <= 0) {
+      primary = this.tryTeleportToTarget(battle, strategy) ?? null
+    }
+
+    // Vẫn không có mục tiêu nào trong tầm — bỏ tick, không tốn nhịp
+    // cadence/cooldown của skill nào (đánh được NGAY khi vừa vào tầm).
+
+    // Bước 13 — Round-robin theo slot (plan §5, 2026-08-26): duyệt
+    // loadout VÒNG TRÒN bắt đầu từ con trỏ runtime (không tự reset về
+    // slot 0 mỗi fixed-step), bỏ qua entry thiếu policy/đang cooldown/
+    // thiếu resource/không có target; bắt đầu TỐI ĐA 1 skill và CHỈ dời
+    // con trỏ sau khi begin-cast thành công. Hết vòng không bắt đầu được
+    // cái nào → giữ nguyên con trỏ.
+    const loadoutEntries = this.skillManager.getLoadoutEntries()
+
+    if (loadoutEntries.length === 0) {
+      return
+    }
+
+    const cursor = battle.nextSkillSlotIndexCursor ?? 0
+
+    for (let step = 0; step < loadoutEntries.length; step++) {
+      const position = (cursor + step) % loadoutEntries.length
+
+      const { skill, slotIndex } = loadoutEntries[position]!
+
+      if (!skill.execution) {
+        continue
+      }
+
+      if (this.cadenceRemaining(battle.player, slotIndex) > 0) {
+        continue
+      }
+
       if (!this.skillSystem.canUseInSlot(skill.id, slotIndex, battle.player)) {
         continue
       }
 
-      const primary = selectPrimaryTarget(battle, battle.player, targetingForSkill(skill))
+      // Primary đã qua range gate chung; skill self-target dùng Player.
+      const target = skill.target === 'self' ? battle.player : primary
 
-      if (!primary) {
+      if (!target) {
         continue
       }
 
-      const target = skill.target === 'self' ? battle.player : primary
+      if (!this.beginPlayerCast(skill, battle.player, target, battle, slotIndex, strategy)) {
+        continue
+      }
 
-      this.beginCast(skill, battle.player, target, battle, slotIndex)
+      // Chỉ SAU khi bắt đầu thành công mới dời con trỏ tới slot kế tiếp.
+      battle.nextSkillSlotIndexCursor = (position + 1) % loadoutEntries.length
 
       break
     }
   }
 
   /**
-
-   * Cast Time (2026-08-21) — cầu nối giữa "chọn skill để cast" (updateAutoCast())
-
-   * và "hiệu ứng thi triển thật" (resolveSkillEffects()). Skill.castTime
-
-   * undefined/0 (MỌI skill hiện có) = cast tức thời, hành vi Y HỆT
-
-   * trước đây (use() rồi resolve NGAY). castTime > 0 thì use() NGAY
-
-   * (tốn cooldown/resource tại thời điểm BẮT ĐẦU niệm, đúng quy ước
-
-   * MMO chuẩn) nhưng hoãn resolveSkillEffects() tới khi updateCasting()
-
-   * đếm castTimeRemaining về 0 — xem CombatEntity.castingSkillId.
-
+   * Thực thi teleport (plan §7.3 + yêu cầu sản phẩm 2026-08-26): chọn
+   * mục tiêu tốt nhất theo strategy (selectTeleportTarget — xếp hạng
+   * TOÀN BỘ enemy sống, KHÔNG đợi quái đi vào tầm), gán row giữ
+   * column = HERO_COLUMN, set ICD 1s, emit positions + player_teleported
+   * NGAY (trước attack/cast cùng tick). Player pre-position trên đúng
+   * hàng sớm để đánh được ngay khi quái đi vào tầm theo cột.
    */
+  private tryTeleportToTarget(
+    battle: Battle,
+    strategy: CombatAiStrategy,
+  ): CombatEntity | undefined {
+    const player = battle.player
+    const teleportTarget = selectTeleportTarget(battle, strategy)
 
-  private beginCast(
+    if (!teleportTarget) {
+      return undefined
+    }
+
+    // Đã đứng đúng hàng của mục tiêu tốt nhất → KHÔNG làm gì cả: không
+    // reset ICD, không emit event (tránh vòng "nhấp nháy" teleport mỗi
+    // lần ICD hết khi đang chờ quái đi vào tầm theo cột).
+    if (teleportTarget.row === player.row) {
+      return undefined
+    }
+
+    const from = entityGridPosition(player)
+
+    player.row = teleportTarget.row
+
+    player.x = HERO_COLUMN
+
+    battle.playerTeleport.remainingSeconds = PLAYER_TELEPORT_ICD_SECONDS
+
+    const to = entityGridPosition(player)
+
+    // Emit positions ngay để renderer snap sprite TRƯỚC khi windup action
+    // nào của cùng tick hoàn tất (EventBus.emit() đồng bộ).
+
+    this.emitPositions(battle)
+
+    this.eventBus.emit<PlayerTeleportedEvent>('player_teleported', {
+      type: 'player_teleported',
+      sourceId: player.id,
+      from,
+      to,
+    })
+
+    // TODO(renderer hook): VFX teleport gắn sau này qua event
+    // player_teleported — đợt này KHÔNG tự thiết kế VFX (plan §2.5).
+
+    return selectAttackableTarget(battle, strategy) ?? undefined
+  }
+
+  /**
+   * Commit resource/timer (plan §8.5 + combat-skill-flow-element-power-dot-plan.md
+   * §4.1/§4.2) — CHỈ gọi khi đã đạt đủ mọi điều kiện (learned/equipped/
+   * realm/unreleased/timer ready/đủ resource/primary target trong range).
+   * TRANSACTION 2 NỬA: tài nguyên trừ NGAY lúc bắt đầu; cooldown chỉ
+   * commit lúc HOÀN TẤT (kể cả fizzle) với skill niệm, hoặc ngay sau
+   * resolve với skill tức thời. Trả true nếu bắt đầu thành công (scheduler
+   * chỉ dời con trỏ khi nhận true).
+   */
+  private beginPlayerCast(
     skill: Skill,
     source: CombatEntity,
     target: CombatEntity,
     battle: Battle,
-    slotIndex?: number,
-  ) {
-    const castTime = skill.castTime ?? 0
+    slotIndex: number,
+    strategy: CombatAiStrategy,
+  ): boolean {
+    const execution = skill.execution!
 
-    if (castTime <= 0) {
-      this.castSkill(skill, source, target, battle, slotIndex)
+    // Transaction nửa 1 — trừ tài nguyên MỘT LẦN lúc bắt đầu (§4.1);
+    // chưa commit cooldown ở bước này nữa.
+    const begun = this.skillSystem.beginCastInSlot(skill.id, slotIndex, source)
 
-      return
+    if (!begun) {
+      return false
     }
 
-    if (slotIndex === undefined) this.skillSystem.use(skill.id, source)
-    else this.skillSystem.useInSlot(skill.id, slotIndex, source)
+    // Snapshot slot của lần niệm — completion/fizzle commit đúng slot này
+    // dù loadout có đổi giữa chừng (§4.1).
+    source.castingSlotIndex = slotIndex
 
+    switch (execution.kind) {
+      case 'attack_speed': {
+        // Resolve tức thời; cadence tái kích hoạt theo Attack Speed,
+        // không internal cooldown, không chịu CDR.
+        this.resolveSkillEffects(skill, source, target, battle)
+        this.setSlotCadence(source, slotIndex, this.cadenceInterval(source, execution))
+        this.finishPlayerCastTransaction(source, skill.id, slotIndex)
+        return true
+      }
+
+      case 'attack_speed_cast': {
+        if (execution.castTime > 0) {
+          this.startChannel(skill, source, execution.castTime, target.id)
+          return true
+        }
+
+        this.resolveSkillEffects(skill, source, target, battle)
+        this.setSlotCadence(source, slotIndex, this.cadenceInterval(source, execution))
+        this.finishPlayerCastTransaction(source, skill.id, slotIndex)
+        return true
+      }
+
+      case 'cast_time': {
+        if (execution.castTime > 0) {
+          this.startChannel(skill, source, execution.castTime, target.id)
+          return true
+        }
+
+        // Tức thời: begin và complete trong CÙNG fixed-step (§4.2).
+        this.resolveSkillEffects(skill, source, target, battle)
+        this.finishPlayerCastTransaction(source, skill.id, slotIndex)
+        return true
+      }
+
+      case 'cooldown': {
+        this.resolveSkillEffects(skill, source, target, battle)
+        this.finishPlayerCastTransaction(source, skill.id, slotIndex)
+        return true
+      }
+    }
+  }
+
+  /**
+   * Transaction nửa 2 cho skill TỨC THỜI (§4.2: "cooldown bắt đầu ngay
+   * sau khi effect resolve") — commit cooldown rồi dọn snapshot cast
+   * state. Skill niệm dùng chung hàm này tại updateCasting().
+   */
+  private finishPlayerCastTransaction(source: CombatEntity, skillId: string, slotIndex: number) {
+    this.skillSystem.commitSlotCooldown(skillId, slotIndex)
+
+    if (source.castingSlotIndex === slotIndex && !source.castingSkillId) {
+      source.castingSlotIndex = undefined
+    }
+  }
+
+  private setSlotCadence(player: CombatEntity, slotIndex: number, intervalSeconds: number) {
+    player.skillCadenceRemainingBySlot ??= {}
+
+    player.skillCadenceRemainingBySlot[slotIndex] = intervalSeconds
+  }
+
+  /** Bật channel: cast time chịu Cast Speed (scale lúc tick, xem updateCasting). */
+  private startChannel(skill: Skill, source: CombatEntity, castTime: number, targetId: string) {
     source.castingSkillId = skill.id
+
+    // Ghi nhớ target GỐC — completion validate đúng target này (§8.5).
+    source.castTargetId = targetId
 
     source.castTimeRemaining = castTime
 
@@ -1705,27 +1926,35 @@ export class BattleSystem {
   }
 
   /**
-
    * Cast Time — tick castTimeRemaining mỗi frame, resolve hiệu ứng thật
-
    * khi về 0. CHỈ player dùng cơ chế Skill-based casting (enemy có
-
    * telegraph riêng, xem battleEnemy.castTimer ở updateEnemyAttacks() —
-
-   * KHÁC hẳn, không đi qua Skill Loadout).
-
+   * KHÁC hẳn, không đi qua Skill Loadout). Completion VALIDATE LẠI
+   * target/range (plan §8.5): fizzle thì KHÔNG hoàn resource/cooldown
+   * (đã tiêu lúc bắt đầu niệm).
    */
 
   private updateCasting(battle: Battle, deltaSeconds: number) {
     const player = battle.player
 
+    // Audit P0-2 (dead-cast guard) — DoT/Ailment tick CHẠY TRƯỚC
+    // updateCasting() trong cùng frame. Nếu Player chết ở tick đó,
+    // cast đang niệm phải HỦY NGAY: clear toàn bộ cast state + phát
+    // tín hiệu để CombatScene gỡ cast bar (không kẹt trên unit đã
+    // chết), TUYỆT ĐỐI không resolveSkillEffects cho xác chết.
+    // checkBattleEnd() chạy sau cùng trong update() sẽ xử lý defeat.
+    if (!player.alive) {
+      this.cancelPlayerCast(player)
+
+      return
+    }
+
     if (!player.castingSkillId || player.castTimeRemaining === undefined) {
       return
     }
 
-    // Timer đúc KHÔNG trừ trong lúc Choáng/Đóng Băng — "dừng nhịp" giống
-
-    // playerAttackTimer, KHÔNG huỷ cast đang dở.
+    // Timer đúc KHÔNG trừ trong lúc Choáng/Đóng Băng — "dừng nhịp",
+    // KHÔNG huỷ cast đang dở.
 
     if (this.isIncapacitated(battle.playerAilments)) {
       return
@@ -1740,52 +1969,132 @@ export class BattleSystem {
 
     const skillId = player.castingSkillId
 
+    // Slot SNAPSHOT lúc bắt đầu niệm (§4.1) — không tra ngược loadout:
+    // đổi loadout giữa chừng không làm cooldown gắn nhầm slot.
+    const castSlotIndex = player.castingSlotIndex
+
     player.castingSkillId = undefined
 
     player.castTimeRemaining = undefined
 
     player.castTimeTotal = undefined
 
-    const skill = this.skillManager.get(skillId)
-
-    if (!skill) {
-      return
-    }
-
-    const primary = selectPrimaryTarget(battle, player, targetingForSkill(skill))
-    const target = skill.target === 'self' ? (primary ? player : undefined) : (primary ?? undefined)
-
-    if (!target || !target.alive) {
-      return
-    }
-
-    // MainScene/CombatScene ẩn cast bar qua event này — xem
-
-    // CombatScene.ts's onCastComplete().
+    // MainScene/CombatScene ẩn cast bar qua event này — phát LUÔN kể cả
+    // fizzle để cast bar không kẹt trên đầu unit.
 
     this.eventBus.emit('cast_complete', {
       type: 'cast_complete',
 
       sourceId: player.id,
 
-      skillId: skill.id,
+      skillId,
     })
 
-    this.resolveSkillEffects(skill, player, target, battle)
+    const skill = this.skillManager.get(skillId)
+
+    if (!skill) {
+      this.finishChannelledCastTransaction(player, skillId, castSlotIndex)
+
+      return
+    }
+
+    // Fizzle check (plan §8.5): validate ĐÚNG target GỐC lúc bắt đầu
+    // niệm — target chết/ra khỏi range trước completion → cast fizzle,
+    // KHÔNG re-target sang enemy khác (review 2026-08-26).
+    const castTargetId = player.castTargetId
+
+    player.castTargetId = undefined
+
+    if (skill.target === 'self') {
+      this.resolveSkillEffects(skill, player, player, battle)
+
+      this.finishChannelledCastTransaction(player, skillId, castSlotIndex)
+
+      this.rearmChannelCadence(skill, player, castSlotIndex)
+
+      return
+    }
+
+    const originalTarget = castTargetId
+      ? findBattleEnemy(battle, castTargetId)?.entity
+      : undefined
+
+    if (
+      !originalTarget ||
+      !originalTarget.alive ||
+      !canPlayerReachTarget(player, originalTarget)
+    ) {
+      // Fizzle (§4.2): vẫn là một lần niệm hoàn tất — mana đã tiêu lúc
+      // bắt đầu và cooldown ĐẦY ĐỦ vẫn bắt đầu, tránh vòng lặp cast lỗi
+      // liên tục.
+      this.finishChannelledCastTransaction(player, skillId, castSlotIndex)
+
+      return
+    }
+
+    this.resolveSkillEffects(skill, player, originalTarget, battle)
+
+    this.finishChannelledCastTransaction(player, skillId, castSlotIndex)
+
+    this.rearmChannelCadence(skill, player, castSlotIndex)
   }
 
-  private castSkill(
-    skill: Skill,
-    source: CombatEntity,
-    target: CombatEntity,
-    battle: Battle,
-    slotIndex?: number,
+  /**
+   * Commit transaction cho lần niệm CÓ THỜI GIAN lúc HOÀN TẤT/FIZZLE
+   * (§4.2) — cooldown đầy đủ cho slot đã snapshot + dọn castingSlotIndex.
+   */
+  private finishChannelledCastTransaction(
+    player: CombatEntity,
+    skillId: string,
+    slotIndex: number | undefined,
   ) {
-    if (slotIndex === undefined) this.skillSystem.use(skill.id, source)
-    else this.skillSystem.useInSlot(skill.id, slotIndex, source)
+    if (slotIndex !== undefined) {
+      this.skillSystem.commitSlotCooldown(skillId, slotIndex)
+    }
 
-    this.resolveSkillEffects(skill, source, target, battle)
+    player.castingSlotIndex = undefined
   }
+
+  /**
+   * HỦY cast (audit P0-2 — Player chết giữa lúc niệm): clear toàn bộ
+   * cast state KHÔNG commit cooldown (không phải một lần niệm hoàn tất),
+   * vẫn emit 'cast_complete' để CombatScene gỡ cast bar khỏi unit.
+   */
+  private cancelPlayerCast(player: CombatEntity) {
+    if (!player.castingSkillId) {
+      return
+    }
+
+    player.castingSkillId = undefined
+
+    player.castTimeRemaining = undefined
+
+    player.castTimeTotal = undefined
+
+    player.castTargetId = undefined
+
+    player.castingSlotIndex = undefined
+
+    this.eventBus.emit('cast_complete', {
+      type: 'cast_complete',
+
+      sourceId: player.id,
+
+      skillId: '',
+    })
+  }
+
+  /** attack_speed_cast: cadence tái kích hoạt SAU khi niệm xong (không CDR). */
+  private rearmChannelCadence(skill: Skill, player: CombatEntity, slotIndex?: number) {
+    const execution = skill.execution
+
+    if (!execution || execution.kind !== 'attack_speed_cast' || slotIndex === undefined) {
+      return
+    }
+
+    this.setSlotCadence(player, slotIndex, this.cadenceInterval(player, execution))
+  }
+
 
   /**
 
@@ -1993,12 +2302,34 @@ export class BattleSystem {
     this.actionImpact.endSkillBatch(battle)
   }
 
+  /**
+   * Enemy đã ở THẾ ĐỨNG BẮN: trong tầm của chính nó tới cổng VÀ không
+   * còn di chuyển nữa (kiter lùi về preferred thì coi như đang di chuyển).
+   * Yêu cầu sản phẩm 2026-08-26 — KHÔNG bắn khi đang đi bộ; quái chỉ mở
+   * hỏa lực sau khi dừng ở biên range.
+   */
+  private isEnemyInPosition(entity: CombatEntity): boolean {
+    if (!canEnemyReachGate(entity, HERO_COLUMN)) {
+      return false
+    }
+
+    const isKiter = entity.archetype === 'ranged' || entity.archetype === 'caster'
+
+    if (isKiter) {
+      return Math.abs(entity.x - HERO_COLUMN) >= entity.stats.attackRange * RANGED_PREFERRED_DISTANCE_RATIO
+    }
+
+    return true
+  }
+
   private updateEnemyAttacks(
     battle: Battle,
 
     deltaSeconds: number,
   ) {
-    if (!battle.player.alive) {
+    // Targetability (plan §5.4/§13): Player và enemy ĐỀU phải materialize
+    // + còn sống thì enemy mới có target (cổng) để đánh.
+    if (!battle.playerMaterialized || !battle.player.alive) {
       return
     }
 
@@ -2035,18 +2366,13 @@ export class BattleSystem {
         continue
       }
 
-      const distance = Math.abs(battleEnemy.entity.x - battle.player.x)
-
-      // Ngoài tầm — không tốn nhịp timer, giống lý do ở updatePlayerAttack().
-
-      // target.x > VISIBLE_MAX_COLUMN (2026-08-22) — mob/boss cũng
-
-      // không được tấn công trong lúc còn off-screen, kể cả loại
-
-      // 'ranged'/'caster' có attackRange đủ xa để lý thuyết chạm tới.
+      // "Đứng lại rồi mới đánh" (yêu cầu sản phẩm 2026-08-26): quái còn
+      // off-screen hoặc CHƯA dừng ở biên range của chính nó thì KHÔNG tiêu
+      // attack timer, không mở telegraph — di chuyển và tấn công loại trừ
+      // nhau.
 
       if (
-        distance > battleEnemy.entity.stats.attackRange ||
+        !this.isEnemyInPosition(battleEnemy.entity) ||
         battleEnemy.entity.x > VISIBLE_MAX_COLUMN
       ) {
         continue

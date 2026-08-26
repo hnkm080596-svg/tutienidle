@@ -51,6 +51,19 @@ export function useLoadoutActions() {
     // Node Tree — GameManager method (unlocksSkillIds cần skillTemplates).
     purchaseNode: (nodeId: string) => withBump(gameManager.purchaseNode(nodeId, player.$state)),
 
+    // Node level (plan §6.2) — nâng node đã lĩnh ngộ lên +1 cấp.
+    upgradeNode: (nodeId: string) => withBump(gameManager.upgradeNode(nodeId, player.$state)),
+
+    // Reset development một nhánh (plan §6.10) — hoàn Cảm Ngộ đã tiêu;
+    // bump vô điều kiện (reset về 0 level cũng là thay đổi state UI).
+    devResetBranch: (branchTag: string) => {
+      gameManager.devResetBranch(branchTag, player.$state)
+
+      bumpState()
+
+      return true
+    },
+
     // PLAN HOÀN CHỈNH mục 2 — Main Stat allocation, hồ điểm riêng biệt
     // hoàn toàn với Skill Point/Node Tree ở trên.
     allocateAttributePoint: (stat: MainStatKey) => withBump(gameManager.allocateAttributePoint(player.$state, stat)),

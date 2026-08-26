@@ -74,7 +74,10 @@ describe('CombatScene lifecycle — listener không tích lũy qua restart', () 
       scene.create()
 
       expect(activeResizeListeners.size).toBe(1)
-      expect(inputOn).toHaveBeenCalledTimes(cycle + 1)
+
+      // Combat tự động hoàn toàn (yêu cầu 2026-08-26) — KHÔNG đăng ký
+      // bất kỳ input listener nào nữa (hover circle đã gỡ).
+      expect(inputOn).not.toHaveBeenCalled()
 
       // Kích hoạt shutdown handler mà events.once đã đăng ký.
       const shutdownHandler = shutdownHandlers.at(-1)
@@ -83,11 +86,12 @@ describe('CombatScene lifecycle — listener không tích lũy qua restart', () 
       shutdownHandler!()
 
       expect(activeResizeListeners.size).toBe(0)
-      expect(inputOff).toHaveBeenCalledTimes(cycle + 1)
+      expect(inputOff).not.toHaveBeenCalled()
     }
 
-    // 10 chu kỳ = đúng 10 lần đăng ký (không chồng).
-    expect(inputOn).toHaveBeenCalledTimes(10)
+    // 10 chu kỳ = vẫn KHÔNG có input listener nào tích lũy.
+    expect(inputOn).not.toHaveBeenCalled()
+    expect(inputOff).not.toHaveBeenCalled()
   })
 
   it('resize bắn N lần sau khi vào combat — layout chỉ chạy qua listener duy nhất', () => {

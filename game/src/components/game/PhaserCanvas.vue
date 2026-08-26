@@ -1,17 +1,25 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import Phaser from 'phaser'
 import { MainScene } from '@/game/scenes/MainScene'
 import { CombatScene } from '@/game/scenes/CombatScene'
 import { TribulationScene } from '@/game/scenes/TribulationScene'
 import { useGameManager } from '@/composables/useGameState'
+import { usePlayerStore } from '@/stores/player'
+import type { BattlePositionsEvent } from '@/core/battle/BattleEvents'
+import {
+  resolvePlayerVisualProfileId,
+  type PlayerVisualProfileId,
+} from '@/game/support/PlayerVisualProfiles'
 
 const gameManager = useGameManager()
+const player = usePlayerStore()
 
 const containerRef = ref<HTMLDivElement | null>(null)
 
 let game: Phaser.Game | null = null
 let resizeObserver: ResizeObserver | null = null
+let positionsCleanup: (() => void) | null = null
 
 onMounted(() => {
   if (!containerRef.value) {
@@ -39,6 +47,10 @@ onMounted(() => {
     width: containerRef.value.clientWidth,
     height: containerRef.value.clientHeight,
     transparent: true,
+    // roundPixels (fix "nhân vật đôi khi bị blur", 2026-08-26): sprite
+    // đứng giữa pixel lẻ (projection tọa độ thập phân + walk sway/bob)
+    // bị sample mờ; snap vị trí vẽ về lưới nguyên pixel cho cạnh nét.
+    render: { roundPixels: true },
     physics: {
       default: 'arcade',
       arcade: { gravity: { x: 0, y: 0 }, debug: false },
@@ -55,6 +67,67 @@ onMounted(() => {
   // cần (vị trí player/quái, animation attack/critical/hit/dodge/cast/
   // death/battle_start/battle_end/combat_scene_exit) đều tới qua đây.
   game.registry.set('eventBus', gameManager.eventBus)
+
+  // Late-join replay (fix spawn animation lần đầu, lớp bảo hiểm thứ 2
+  // bên cạnh eager preload) — giữ snapshot 'positions' MỚI NHẤT trong
+  // registry để CombatScene.create() start muộn có thể fast-forward thay
+  // vì đứng ngoài phase spawn telegraph. Clear khi trận kết thúc/thoát
+  // để không phát lại snapshot STALE của trận cũ.
+  let lastPositionsSnapshot: { event: BattlePositionsEvent; at: number } | null = null
+
+  const clearPositionsSnapshot = () => {
+    lastPositionsSnapshot = null
+
+    game?.registry.set('lastBattlePositionsSnapshot', undefined)
+  }
+
+  const positionsHandler = (event: BattlePositionsEvent) => {
+    lastPositionsSnapshot = { event, at: performance.now() }
+
+    game?.registry.set('lastBattlePositionsSnapshot', lastPositionsSnapshot)
+  }
+
+  gameManager.eventBus.on<BattlePositionsEvent>('positions', positionsHandler)
+
+  gameManager.eventBus.on<void>('battle_end', clearPositionsSnapshot)
+
+  gameManager.eventBus.on<void>('combat_scene_exit', clearPositionsSnapshot)
+
+  positionsCleanup = () => {
+    gameManager.eventBus.off<BattlePositionsEvent>('positions', positionsHandler)
+    gameManager.eventBus.off<void>('battle_end', clearPositionsSnapshot)
+    gameManager.eventBus.off<void>('combat_scene_exit', clearPositionsSnapshot)
+  }
+
+  // Player visual profile bridge (player-body-anchor-reward-gourd-plan
+  // §4.2) — snapshot ID vào registry để scene đọc lúc create() (không
+  // bỏ lỡ trạng thái khi scene khởi động muộn), và phát event qua EventBus
+  // mỗi khi realm/path đổi. Scenes chỉ nhận PROFILE ID.
+  const publishProfile = () => {
+    const profileId: PlayerVisualProfileId = resolvePlayerVisualProfileId({
+      realmId: player.realmId,
+
+      cultivationPath: player.cultivationPath,
+    })
+
+    if (game) {
+      game.registry.set('playerVisualProfileId', profileId)
+    }
+
+    gameManager.eventBus.emit('player_visual_profile_changed', {
+      type: 'player_visual_profile_changed',
+
+      profileId,
+    })
+  }
+
+  publishProfile()
+
+  watch(
+    () => [player.realmId, player.cultivationPath] as const,
+
+    () => publishProfile(),
+  )
 
   resizeObserver = new ResizeObserver((entries) => {
     const entry = entries[0]
@@ -74,6 +147,10 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  positionsCleanup?.()
+
+  positionsCleanup = null
+
   resizeObserver?.disconnect()
   resizeObserver = null
 

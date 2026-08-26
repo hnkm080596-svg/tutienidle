@@ -1,10 +1,4 @@
-export type EquipmentSlot =
-  | 'weapon'
-  | 'helmet'
-  | 'armor'
-  | 'boots'
-  | 'ring'
-  | 'necklace'
+export type EquipmentSlot = 'weapon' | 'helmet' | 'armor' | 'boots' | 'ring' | 'necklace'
 
 // Trích từ EquipmentHallPanel.vue (2026-08-15, tooltip Equipment dùng
 // chung).

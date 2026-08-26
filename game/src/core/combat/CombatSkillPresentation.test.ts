@@ -4,12 +4,17 @@ import { createDefaultPlayer } from '../player/Player'
 import { createBaseStats } from '../stats/StatBlock'
 import { defineEnemy } from '../enemy/Enemy'
 import type { Skill } from '../skill/Skill'
-import { buildBasicAttackPresentation, buildLoadoutPresentation } from './CombatSkillPresentation'
+import { buildLoadoutPresentation } from './CombatSkillPresentation'
+import { HERO_LANE_INDEX } from '../battle/BattleLane'
 
-function basicSkill(overrides: Partial<Skill> = {}): Skill {
+// Execution policy rework (plan §11.3) — KHÔNG còn basic attack
+// presentation: mọi slot đọc từ scheduler thống nhất qua
+// buildLoadoutPresentation với các trạng thái ready/cadence/cooldown/
+// casting/blocked_resource/out_of_range.
+function attackSpeedSkill(overrides: Partial<Skill> = {}): Skill {
   return {
-    id: 'test_basic',
-    name: 'Test Basic',
+    id: 'test_cadence',
+    name: 'Test Cadence Skill',
     description: '',
     type: 'active',
     level: 1,
@@ -19,10 +24,12 @@ function basicSkill(overrides: Partial<Skill> = {}): Skill {
     cost: 0,
     target: 'enemy',
     effects: [{ type: 'damage', value: 1, damageType: 'physical' }],
-    isBasicAttack: true,
+    execution: { kind: 'attack_speed' },
     resourceType: 'none',
     unlocked: true,
     equipped: false,
+    loadoutSlot: 0,
+    loadoutSlots: [0],
     ...overrides,
   }
 }
@@ -41,8 +48,11 @@ function loadoutSkill(overrides: Partial<Skill> = {}): Skill {
     resourceType: 'mana',
     target: 'enemy',
     effects: [{ type: 'damage', value: 1, damageType: 'physical' }],
+    execution: { kind: 'cooldown' },
     unlocked: true,
     equipped: false,
+    loadoutSlot: 0,
+    loadoutSlots: [0],
     ...overrides,
   }
 }
@@ -56,112 +66,29 @@ function makeEnemy() {
     lane: 'ground',
     statsInput: {
       maxHp: 999, attack: 0, attackSpeed: 1, movementSpeed: 0,
-      attackRange: 999999, criticalRate: 0, criticalDamage: 1.5, armor: 0,
+      attackRangeRanks: 999999, criticalRate: 0, criticalDamage: 1.5, armor: 0,
     },
     rewards: { techniqueInsight: 0, cultivation: 0, spiritStone: 0 },
   })
 }
 
-describe('buildBasicAttackPresentation', () => {
-  it('null khi chưa equip skill isBasicAttack nào', () => {
-    const gameManager = new GameManager()
-    const player = createDefaultPlayer()
+/**
+ * Bỏ qua countdown: update(3) vừa materialize hai phía vừa chuyển
+ * 'fighting' — quái đầu tiên đã nằm trong battle.enemies ở vị trí resolver
+ * roll; đưa nó về ô kề avatar để các test điều khiển khoảng cách tường minh.
+ */
+function startFighting(gameManager: GameManager) {
+  gameManager.update(3)
 
-    gameManager.startBattleWithPlayer(player, createBaseStats(), makeEnemy())
+  const battle = gameManager.getBattle()!
 
-    expect(buildBasicAttackPresentation(gameManager.getBattle()!, gameManager.skillManager)).toBeNull()
-  })
+  battle.playerMaterialized = true
 
-  it('kind/cadenceTotal đúng theo getAttackIntervalSeconds(attackSpeed), cadenceRemaining=0 lúc mới bắt đầu', () => {
-    const gameManager = new GameManager()
-    const player = createDefaultPlayer()
-
-    gameManager.skillSystem.learn(basicSkill())
-    gameManager.skillSystem.equipWithoutSlot('test_basic')
-
-    const stats = createBaseStats()
-    stats.attackSpeed = 2
-
-    gameManager.startBattleWithPlayer(player, stats, makeEnemy())
-    gameManager.update(3) // bỏ qua countdown
-
-    const presentation = buildBasicAttackPresentation(gameManager.getBattle()!, gameManager.skillManager)
-
-    expect(presentation).not.toBeNull()
-    expect(presentation!.kind).toBe('basic_attack')
-    expect(presentation!.cadenceTotal).toBe(0.5)
-    expect(presentation!.cadenceRemaining).toBe(0)
-  })
-
-  it('isAdvancing true khi đang fighting, không bị khống chế, còn quái sống', () => {
-    const gameManager = new GameManager()
-    const player = createDefaultPlayer()
-
-    gameManager.skillSystem.learn(basicSkill())
-    gameManager.skillSystem.equipWithoutSlot('test_basic')
-
-    gameManager.startBattleWithPlayer(player, createBaseStats(), makeEnemy())
-    gameManager.update(3) // bỏ qua countdown -> state 'fighting'
-
-    expect(buildBasicAttackPresentation(gameManager.getBattle()!, gameManager.skillManager)!.isAdvancing).toBe(true)
-  })
-
-  it('isAdvancing false lúc còn countdown (chưa sang fighting)', () => {
-    const gameManager = new GameManager()
-    const player = createDefaultPlayer()
-
-    gameManager.skillSystem.learn(basicSkill())
-    gameManager.skillSystem.equipWithoutSlot('test_basic')
-
-    gameManager.startBattleWithPlayer(player, createBaseStats(), makeEnemy())
-
-    expect(gameManager.getBattle()!.state).toBe('countdown')
-    expect(buildBasicAttackPresentation(gameManager.getBattle()!, gameManager.skillManager)!.isAdvancing).toBe(false)
-  })
-
-  it('isAdvancing false khi player đang Choáng/Đóng Băng', () => {
-    const gameManager = new GameManager()
-    const player = createDefaultPlayer()
-
-    gameManager.skillSystem.learn(basicSkill())
-    gameManager.skillSystem.equipWithoutSlot('test_basic')
-
-    gameManager.startBattleWithPlayer(player, createBaseStats(), makeEnemy())
-    gameManager.update(3)
-
-    gameManager.getBattle()!.playerAilments.add({
-      id: 'choang',
-      category: 'cc',
-      sourceId: 'presentation_test_enemy',
-      targetId: 'player',
-      duration: 1,
-      remainingTime: 1,
-      stacks: 1,
-      stackMode: 'refresh',
-      ccEffect: 'stun',
-      continuousSeconds: 0,
-    })
-
-    expect(buildBasicAttackPresentation(gameManager.getBattle()!, gameManager.skillManager)!.isAdvancing).toBe(false)
-  })
-
-  it('isAdvancing false khi không còn quái nào sống', () => {
-    const gameManager = new GameManager()
-    const player = createDefaultPlayer()
-
-    gameManager.skillSystem.learn(basicSkill())
-    gameManager.skillSystem.equipWithoutSlot('test_basic')
-
-    gameManager.startBattleWithPlayer(player, createBaseStats(), makeEnemy())
-    gameManager.update(3)
-
-    for (const battleEnemy of gameManager.getBattle()!.enemies) {
-      battleEnemy.entity.alive = false
-    }
-
-    expect(buildBasicAttackPresentation(gameManager.getBattle()!, gameManager.skillManager)!.isAdvancing).toBe(false)
-  })
-})
+  for (const entry of battle.enemies) {
+    entry.entity.x = 2
+    entry.entity.row = HERO_LANE_INDEX as never
+  }
+}
 
 describe('buildLoadoutPresentation', () => {
   it('slot ngoài unlockedSlotCount thì state locked', () => {
@@ -169,6 +96,7 @@ describe('buildLoadoutPresentation', () => {
     const player = createDefaultPlayer()
 
     gameManager.startBattleWithPlayer(player, createBaseStats(), makeEnemy())
+    startFighting(gameManager)
 
     const entries = buildLoadoutPresentation(gameManager.getBattle()!, gameManager.skillManager, 5, 2)
 
@@ -179,7 +107,56 @@ describe('buildLoadoutPresentation', () => {
     expect(entries[4]!.state).toBe('locked')
   })
 
-  it('skill trong slot mở khoá nhưng thiếu resource thì insufficient_resource', () => {
+  it("policy attack_speed: cadenceRemaining/cadenceTotal theo getAttackIntervalSeconds(attackSpeed), state 'cadence' khi đang chờ nhịp", () => {
+    const gameManager = new GameManager()
+    const player = createDefaultPlayer()
+
+    gameManager.skillSystem.learn(attackSpeedSkill())
+    gameManager.skillSystem.equipToSlot('test_cadence', 0)
+
+    const stats = createBaseStats()
+    stats.attackSpeed = 2 // interval 0.5s
+
+    gameManager.startBattleWithPlayer(player, stats, makeEnemy())
+    startFighting(gameManager)
+
+    const battle = gameManager.getBattle()!
+    battle.player.skillCadenceRemainingBySlot = { 0: 0.25 }
+
+    const entries = buildLoadoutPresentation(battle, gameManager.skillManager, 5, 5)
+
+    expect(entries[0]!.skillId).toBe('test_cadence')
+    expect(entries[0]!.cadenceTotal).toBe(0.5)
+    expect(entries[0]!.cadenceRemaining).toBe(0.25)
+    expect(entries[0]!.state).toBe('cadence')
+
+    // Hết cadence → sẵn sàng.
+    battle.player.skillCadenceRemainingBySlot = { 0: 0 }
+
+    expect(buildLoadoutPresentation(battle, gameManager.skillManager, 5, 5)[0]!.state).toBe('ready')
+  })
+
+  it("policy cooldown: skill đang cooldown thì state cooldown, remaining khớp remainingCooldownBySlot", () => {
+    const gameManager = new GameManager()
+    const player = createDefaultPlayer()
+
+    gameManager.skillSystem.learn(loadoutSkill())
+    gameManager.skillSystem.equipToSlot('test_loadout', 0)
+
+    gameManager.startBattleWithPlayer(player, createBaseStats(), makeEnemy())
+    startFighting(gameManager)
+
+    const skill = gameManager.skillManager.get('test_loadout')!
+    skill.remainingCooldownBySlot = { 0: 3 }
+
+    const entries = buildLoadoutPresentation(gameManager.getBattle()!, gameManager.skillManager, 5, 5)
+
+    expect(entries[0]!.state).toBe('cooldown')
+    expect(entries[0]!.cooldownRemaining).toBe(3)
+    expect(entries[0]!.cooldownTotal).toBe(5)
+  })
+
+  it('thiếu resource thì state blocked_resource (đổi tên từ insufficient_resource)', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
 
@@ -190,29 +167,42 @@ describe('buildLoadoutPresentation', () => {
     stats.maxMp = 0
 
     gameManager.startBattleWithPlayer(player, stats, makeEnemy())
+    startFighting(gameManager)
 
     const entries = buildLoadoutPresentation(gameManager.getBattle()!, gameManager.skillManager, 5, 5)
 
     expect(entries[0]!.skillId).toBe('test_loadout')
-    expect(entries[0]!.state).toBe('insufficient_resource')
+    expect(entries[0]!.state).toBe('blocked_resource')
   })
 
-  it('skill đang cooldown thì state cooldown, cooldownRemaining khớp remainingCooldownBySlot', () => {
+  it('không có target trong attack range thì state out_of_range; có target thì ready', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
 
-    gameManager.skillSystem.learn(loadoutSkill())
+    gameManager.skillSystem.learn(loadoutSkill({ cost: 0 }))
     gameManager.skillSystem.equipToSlot('test_loadout', 0)
 
-    gameManager.startBattleWithPlayer(player, createBaseStats(), makeEnemy())
+    const stats = createBaseStats()
+    stats.attackRange = 1
 
-    const skill = gameManager.skillManager.get('test_loadout')!
-    skill.remainingCooldownBySlot = { 0: 3 }
+    gameManager.startBattleWithPlayer(player, stats, makeEnemy())
+    startFighting(gameManager)
 
-    const entries = buildLoadoutPresentation(gameManager.getBattle()!, gameManager.skillManager, 5, 5)
+    const battle = gameManager.getBattle()!
 
-    expect(entries[0]!.state).toBe('cooldown')
-    expect(entries[0]!.cooldownRemaining).toBe(3)
-    expect(entries[0]!.cooldownTotal).toBe(5)
+    // Quái đang ở xa (chưa vào range 1).
+    for (const entry of battle.enemies) {
+      entry.entity.x = 14
+    }
+
+    expect(buildLoadoutPresentation(battle, gameManager.skillManager, 5, 5)[0]!.state).toBe(
+      'out_of_range',
+    )
+
+    for (const entry of battle.enemies) {
+      entry.entity.x = 2
+    }
+
+    expect(buildLoadoutPresentation(battle, gameManager.skillManager, 5, 5)[0]!.state).toBe('ready')
   })
 })

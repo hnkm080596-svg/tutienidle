@@ -29,7 +29,7 @@ function manualWeaponInstance(): EquipmentInstance {
     mainStat: { id: 'roll-main-attack', sourceId: 'roll-main', sourceType: 'equipment', stat: 'attack', flat: 50 },
     affixes: [],
     forgePoints: 0,
-    forgePotential: 100,
+  forgePotential: 100,
   }
 }
 
@@ -45,7 +45,7 @@ function createTestEnemy() {
       attack: 1,
       attackSpeed: 1,
       movementSpeed: 60,
-      attackRange: 999999,
+      attackRangeRanks: 9,
       criticalRate: 0,
       criticalDamage: 1.5,
       armor: 0,
@@ -105,7 +105,8 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
     // --- Pre-Battle Upgrade: học skill THẬT có Specialization
     // ("behavior-changing node") — thai_hu_nhat_kiem, đổi hẳn effects.
     gameManager.learnSkill('thai_hu_nhat_kiem')
-    gameManager.equipSkillWithoutSlot('thai_hu_nhat_kiem')
+    // Execution policy rework (plan §8.6) — active skill equip qua slot.
+    gameManager.skillSystem.equipToSlot('thai_hu_nhat_kiem', 0)
 
     const rawSkill = gameManager.skillManager.get('thai_hu_nhat_kiem')!
 

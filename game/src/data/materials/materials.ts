@@ -1,4 +1,7 @@
 import type { Material } from '@/core/material/Material'
+import { SPIRIT_STONE_MATERIAL } from '@/core/material/SpiritStoneMaterial'
+import type { ProfessionMaterialMeta } from '@/core/profession/ProfessionMaterial'
+import { EQUIPMENT_REALM_ESSENCE_MATERIAL } from '@/core/equipment/RefinementBalance'
 
 // sourceType (MASTER SPEC Mục II-V) — nhãn nguồn CHÍNH, không ràng
 // buộc cứng (vd Xích Đồng vẫn rơi cả từ quái lẫn thám hiểm, xem
@@ -14,7 +17,7 @@ import type { Material } from '@/core/material/Material'
 // flame-essence/affix_rune_stone/affix_tier_stone/great_dao_seed + 4
 // item Trúc Cơ ẩn) giữ NGUYÊN — không thuộc phạm vi đơn giản hoá
 // "nguyên liệu tự nhiên" của tài liệu.
-export const materials: Material[] = [
+const legacyMaterials: Material[] = [
   // ============================================================
   // LINH THẢO (herb) — dùng cho Luyện Đan. 3 "họ" thật (kế thừa từ
   // naming-principles pass trước: Linh Chi/Quế/Cúc Hoa), mỗi họ có
@@ -121,7 +124,8 @@ export const materials: Material[] = [
     years: 0,
     element: 'wood',
     sourceType: 'exploration',
-    description: 'Gỗ linh mộc phổ thông, cần Thiên Công Phường xử lý thành Phù Chỉ mới dùng chế Phù được.',
+    description:
+      'Gỗ linh mộc phổ thông, cần Thiên Công Phường xử lý thành Phù Chỉ mới dùng chế Phù được.',
   },
 
   {
@@ -222,7 +226,8 @@ export const materials: Material[] = [
     name: 'Tinh Ngân',
     category: 'ore',
     sourceType: 'building',
-    description: 'Khoáng vật quý hiếm, chưa có Building nào khai thác được — dự kiến bổ sung ở đợt sau.',
+    description:
+      'Khoáng vật quý hiếm, chưa có Building nào khai thác được — dự kiến bổ sung ở đợt sau.',
   },
 
   // MỚI (Phase 4) — raw material do Building sản xuất, chưa qua chế
@@ -248,7 +253,8 @@ export const materials: Material[] = [
     name: 'Linh Thảo Chủng',
     category: 'herb',
     sourceType: 'exploration',
-    description: 'Hạt giống linh thảo thô nhặt được khi thám hiểm, đem gieo ở Linh Thảo Viên mới nảy mầm thành linh thảo thật.',
+    description:
+      'Hạt giống linh thảo thô nhặt được khi thám hiểm, đem gieo ở Linh Thảo Viên mới nảy mầm thành linh thảo thật.',
   },
 
   // ============================================================
@@ -264,7 +270,8 @@ export const materials: Material[] = [
     name: 'Yêu Đan (Luyện Khí Cảnh)',
     category: 'monster_core',
     sourceType: 'monster',
-    description: 'Nội đan của yêu thú Luyện Khí Cảnh, chứa tinh hoa tu vi — nguồn năng lượng chính khi Luyện Đan.',
+    description:
+      'Nội đan của yêu thú Luyện Khí Cảnh, chứa tinh hoa tu vi — nguồn năng lượng chính khi Luyện Đan.',
   },
 
   {
@@ -412,7 +419,8 @@ export const materials: Material[] = [
     name: 'Tinh Luyện Cốt',
     category: 'byproduct',
     sourceType: 'building',
-    description: 'Bụi Cốt đã qua tinh luyện, giá trị cao hơn hẳn — chưa có nơi tiêu thụ, giữ làm tài nguyên tích trữ.',
+    description:
+      'Bụi Cốt đã qua tinh luyện, giá trị cao hơn hẳn — chưa có nơi tiêu thụ, giữ làm tài nguyên tích trữ.',
   },
 
   // ============================================================
@@ -490,4 +498,224 @@ export const materials: Material[] = [
     sourceType: 'building',
     description: 'Lệnh bài ngưng tụ từ Linh Thạch, dẫn đường Độ Kiếp tối hậu.',
   },
+
+]
+
+// ============================================================
+// NGUYÊN LIỆU NGHỀ MỚI (2026-08-25, resource-professions-rework plan
+// §5/§6): KHÔNG còn cặp raw|processed (plan §2). Ba nhóm trực tiếp:
+// - Lâm: 3 gỗ `<realm>_wood` — xây/nâng công trình + nhiên liệu đan lò.
+// - Quáng: `<realm>_ore_<quality>` — sink Khí Đường (Cường Hóa/Tẩy
+//   Luyện), phẩm là metadata material.
+// - Động Thiên: mỗi đan phương một thảo riêng × 4 niên đại
+//   `<herbBase>_<age>` — sink Đan Phòng.
+// Tất cả sinh bằng generator để tránh author tay 66 entry lệch chuẩn;
+// tên hiển thị đặt TRẦN ở đây (không parse từ id).
+// ============================================================
+
+interface ProfessionRealmCell {
+  realmId: string
+
+  realmLabel: string
+}
+
+const PROFESSION_REALM_CELLS: readonly ProfessionRealmCell[] = [
+  { realmId: 'mortal', realmLabel: 'Phàm Nhân' },
+  { realmId: 'qi_refining', realmLabel: 'Luyện Khí' },
+  { realmId: 'foundation_establishment', realmLabel: 'Trúc Cơ' },
+]
+
+const WOOD_NAMES: Record<string, string> = {
+  mortal: 'Thanh Vân Mộc',
+  qi_refining: 'Hàn Ngọc Mộc',
+  foundation_establishment: 'Tử Điện Mộc',
+}
+
+const ORE_QUALITY_LABELS: Record<string, string> = {
+  hoang: 'Hoàng',
+  huyen: 'Huyền',
+  dia: 'Địa',
+  thien: 'Thiên',
+  tien: 'Tiên',
+}
+
+const ORE_BASE_NAMES: Record<string, string> = {
+  mortal: 'Thiết Quáng',
+  qi_refining: 'Huyền Sa',
+  foundation_establishment: 'Tinh Ngọc Thạch',
+}
+
+const HERB_AGE_LABELS: Record<string, string> = {
+  decade: 'Thập Niên',
+  century: 'Bách Niên',
+  millennium: 'Thiên Niên',
+  myriad_year: 'Vạn Niên',
+}
+
+const HERB_AGE_YEARS: Record<string, number> = {
+  decade: 10,
+  century: 100,
+  millennium: 1000,
+  myriad_year: 10000,
+}
+
+/**
+ * Mapping đan phương → thảo riêng (Phase 0 chốt, §13.3) — PHẢI khớp
+ * THANH_VAN_GROTTO_HERB_BASES trong core/production/ProductionCatalog.ts
+ * (data-integrity test chéo kiểm tra).
+ */
+const HERB_BASE_BY_RECIPE: Readonly<Record<string, { baseId: string; name: string; realmId: string }>> =
+  {
+    alchemy_pill_regen_mortal: { baseId: 'huyet_tham', name: 'Huyết Tham', realmId: 'mortal' },
+    alchemy_pill_cultivation_mortal: {
+      baseId: 'tinh_khi_thao',
+      name: 'Tinh Khi Thảo',
+      realmId: 'mortal',
+    },
+    alchemy_pill_insight_mortal: {
+      baseId: 'minh_muc_thao',
+      name: 'Minh Mục Thảo',
+      realmId: 'mortal',
+    },
+    alchemy_pill_main_stat_mortal: {
+      baseId: 'pho_cot_hoa',
+      name: 'Phổ Cốt Hoa',
+      realmId: 'mortal',
+    },
+    alchemy_pill_regen_qi_refining: {
+      baseId: 'ngoc_huyet_chi',
+      name: 'Ngọc Huyết Chi',
+      realmId: 'qi_refining',
+    },
+    alchemy_pill_cultivation_qi_refining: {
+      baseId: 'tuan_linh_cao',
+      name: 'Tuấn Linh Cao',
+      realmId: 'qi_refining',
+    },
+    alchemy_pill_insight_qi_refining: {
+      baseId: 'than_thong_hoa',
+      name: 'Thần Thông Hoa',
+      realmId: 'qi_refining',
+    },
+    alchemy_pill_main_stat_qi_refining: {
+      baseId: 'loc_cot_thao',
+      name: 'Lộc Cốt Thảo',
+      realmId: 'qi_refining',
+    },
+    alchemy_pill_regen_foundation_establishment: {
+      baseId: 'cu_phuong_qua',
+      name: 'Cử Phượng Quả',
+      realmId: 'foundation_establishment',
+    },
+    alchemy_pill_cultivation_foundation_establishment: {
+      baseId: 'dao_diem_lien',
+      name: 'Đạo Điềm Liên',
+      realmId: 'foundation_establishment',
+    },
+    alchemy_pill_insight_foundation_establishment: {
+      baseId: 'van_tu_dang',
+      name: 'Vạn Tự Đăng',
+      realmId: 'foundation_establishment',
+    },
+    alchemy_pill_main_stat_foundation_establishment: {
+      baseId: 'thien_cot_thao',
+      name: 'Thiên Cốt Thảo',
+      realmId: 'foundation_establishment',
+    },
+  }
+
+function buildProfessionMaterials(): Material[] {
+  const list: Material[] = []
+
+  // ---- Lâm: 3 gỗ ----
+  for (const cell of PROFESSION_REALM_CELLS) {
+    list.push({
+      id: `${cell.realmId}_wood`,
+      name: WOOD_NAMES[cell.realmId] ?? cell.realmId,
+      category: 'wood',
+      element: 'wood',
+      sourceType: 'exploration',
+      description: `Linh mộc ${cell.realmLabel} của Thanh Vân Lâm — xây công trình và làm nhiên liệu đan lò.`,
+      profession: {
+        resourceKind: 'wood',
+        realmId: cell.realmId,
+      },
+    })
+  }
+
+  // ---- Quáng: 3 tier × 5 phẩm ----
+  for (const cell of PROFESSION_REALM_CELLS) {
+    for (const quality of ['hoang', 'huyen', 'dia', 'thien', 'tien']) {
+      list.push({
+        id: `${cell.realmId}_ore_${quality}`,
+        name: `${ORE_QUALITY_LABELS[quality]} ${ORE_BASE_NAMES[cell.realmId]}`,
+        category: 'ore',
+        element: 'metal',
+        sourceType: 'exploration',
+        description: `Quảng thạch phẩm ${ORE_QUALITY_LABELS[quality]} của ${cell.realmLabel} — nguyên liệu Khí Đường.`,
+        profession: {
+          resourceKind: 'ore',
+          realmId: cell.realmId,
+          quality,
+        },
+      })
+    }
+  }
+
+  // ---- Động Thiên: 12 thảo × 4 niên đại ----
+  for (const [recipeId, herb] of Object.entries(HERB_BASE_BY_RECIPE)) {
+    for (const age of ['decade', 'century', 'millennium', 'myriad_year']) {
+      list.push({
+        id: `${herb.baseId}_${age}`,
+        name: `${herb.name} ${HERB_AGE_LABELS[age]}`,
+        category: 'herb',
+        years: HERB_AGE_YEARS[age],
+        element: 'wood',
+        sourceType: 'exploration',
+        description: 'Linh thảo riêng cho một đan phương duy nhất — niên đại quyết định tỷ lệ thành đan cơ sở.',
+        profession: {
+          resourceKind: 'herb',
+          realmId: herb.realmId,
+          age,
+          pillRecipeId: recipeId,
+          herbBaseId: herb.baseId,
+        },
+      })
+    }
+  }
+
+  // ---- Tinh Hoa (Khí Đường Hóa Luyện, §7.5): tier theo cảnh giới trang bị ----
+  const ESSENCE_TIERS: ReadonlyArray<{ realmId: string; name: string }> = [
+    { realmId: 'mortal', name: 'Phàm Khí Tinh Hoa' },
+    { realmId: 'qi_refining', name: 'Bảo Khí Tinh Hoa' },
+    { realmId: 'foundation_establishment', name: 'Linh Khí Tinh Hoa' },
+  ]
+
+  for (const tier of ESSENCE_TIERS) {
+    list.push({
+      id: equipmentEssenceMaterialId(tier.realmId),
+      name: tier.name,
+      category: 'essence',
+      sourceType: 'building',
+      description: 'Tinh hoa phân giải từ trang bị cùng cảnh giới — nguyên liệu Tinh Luyện.',
+    })
+  }
+
+  return list
+}
+
+/** Mapping cảnh giới trang bị → tier Tinh Hoa (chốt §13.6). */
+export function equipmentEssenceMaterialId(realmId: string): string {
+  return EQUIPMENT_REALM_ESSENCE_MATERIAL[realmId] ?? 'tinh_hoa_pham_khi'
+}
+
+export const materials: Material[] = [
+  // Linh Thạch — MATERIAL thật (plan Workstream F), tham gia mọi sort
+  // trong tab Nguyên Liệu như material bình thường; KHÔNG còn currency
+  // state trên PlayerData.
+  SPIRIT_STONE_MATERIAL,
+
+  ...legacyMaterials,
+
+  ...buildProfessionMaterials(),
 ]

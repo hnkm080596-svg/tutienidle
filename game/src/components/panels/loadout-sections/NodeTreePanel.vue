@@ -25,7 +25,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch, type ComponentPublicInstance } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { canPurchaseNode } from '@/core/progression/NodeSystem'
+import { canPurchaseNode, canUpgradeNode, getNodeLevel, getNextLevelCost } from '@/core/progression/NodeSystem'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
 import SkillConnections from './SkillConnections.vue'
 import type { SkillConnectionEntry, SkillConnectionRect } from './SkillConnections.vue'
@@ -61,12 +61,22 @@ function branchLabel(branchTag: string | undefined): string {
 function branchColor(branchTag: string | undefined): string {
   return ELEMENT_COLOR_VARS[branchTag as ElementType] ?? 'var(--text-primary)'
 }
-
 interface TreeEntry {
   node: ProgressionNode
   purchased: boolean
   purchasable: boolean
+
+  // Node level (plan §6.1) — badge `level/max` cho node nhiều cấp.
+  level: number
+
+  maxLevel: number
+
+  upgradable: boolean
+
+  nextCost: number | null
+
   parentId: string | null
+
   depth: number
 }
 
@@ -103,10 +113,20 @@ const branches = computed(() => {
     const entryById = new Map<string, TreeEntry>()
 
     for (const node of branchNodes) {
+      const level = getNodeLevel(player.$state, node.id)
+
+      const maxLevel = Math.max(1, node.maxLevel ?? 1)
+
+      const upgradable = canUpgradeNode(player.$state, node)
+
       entryById.set(node.id, {
         node,
-        purchased: player.purchasedNodeIds.includes(node.id),
+        purchased: level >= 1,
         purchasable: canPurchaseNode(player.$state, node),
+        level,
+        maxLevel,
+        upgradable,
+        nextCost: level >= maxLevel ? null : getNextLevelCost(node, level),
         parentId: parentOf(node),
         depth: 0,
       })
@@ -158,6 +178,19 @@ const branches = computed(() => {
 
 function onClick(node: ProgressionNode, purchased: boolean, purchasable: boolean) {
   emit('select', node, purchased, purchasable)
+}
+
+/** Nhãn cost theo level (plan §6.2/§6.7): Lĩnh Ngộ / Nâng cấp / Tối đa. */
+function costLabel(entry: TreeEntry): string {
+  if (entry.level === 0) {
+    return `${entry.nextCost ?? entry.node.insightCost} Cảm Ngộ`
+  }
+
+  if (entry.level >= entry.maxLevel) {
+    return 'Tối đa'
+  }
+
+  return `Nâng cấp · ${entry.nextCost} Cảm Ngộ`
 }
 
 // ---- Skill Node unlock animation (2026-08-21, Plans/SkillNode) ----
@@ -330,25 +363,31 @@ watch(branches, () => {
 
         <div v-for="tier in branch.tiers" :key="tier.depth" class="node-tree__row">
           <button
-            v-for="{ node, purchased, purchasable } in tier.entries"
-            :key="node.id"
-            :ref="el => setNodeRef(node.id, el)"
+            v-for="entry in tier.entries"
+            :key="entry.node.id"
+            :ref="el => setNodeRef(entry.node.id, el)"
             type="button"
             class="node-tree__node"
             :class="{
               'is-major': tier.depth === 0,
               'node-tree__node--child': tier.depth > 0,
-              'is-purchased': purchased,
-              'is-locked': !purchased && !purchasable,
-              'is-selected': node.id === selectedNodeId,
-              'is-unlocking': node.id === unlockingNodeId,
+              'is-purchased': entry.purchased,
+              'is-maxed': entry.purchased && !entry.upgradable && entry.maxLevel > 1,
+              'is-locked': !entry.purchased && !entry.purchasable,
+              'is-selected': entry.node.id === selectedNodeId,
+              'is-unlocking': entry.node.id === unlockingNodeId,
             }"
-            @click="onClick(node, purchased, purchasable)"
+            @click="onClick(entry.node, entry.purchased, entry.purchasable)"
           >
-            <span class="node-tree__node-name">{{ node.name }}</span>
-            <span v-if="node.description" class="node-tree__node-desc">{{ node.description }}</span>
+            <span class="node-tree__node-name">
+              {{ entry.node.name }}
+
+              <!-- Badge cấp cho node nhiều cấp (plan §6.2): `3/10`. -->
+              <span v-if="entry.maxLevel > 1" class="node-tree__node-level">{{ entry.level }}/{{ entry.maxLevel }}</span>
+            </span>
+            <span v-if="entry.node.description" class="node-tree__node-desc">{{ entry.node.description }}</span>
             <span class="node-tree__node-cost">
-              {{ purchased ? 'Đã lĩnh ngộ' : `${node.insightCost} Cảm Ngộ` }}
+              {{ costLabel(entry) }}
             </span>
           </button>
         </div>
@@ -501,6 +540,19 @@ watch(branches, () => {
 .node-tree__node-name {
   font-size: var(--text-sm);
   font-weight: 600;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+/* Badge cấp `3/10` — node nhiều cấp (plan §6.2). */
+.node-tree__node-level {
+  padding: 0 4px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--branch-color, var(--gold-500)) 55%, transparent);
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--gold-300);
 }
 
 .node-tree__node-desc {

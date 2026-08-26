@@ -18,6 +18,12 @@ export interface SkillModifier {
   flat?: number
 
   percent?: number
+
+  // Node nhiều cấp (§6.1) — cộng thêm mỗi level trên mức base:
+  // giá trị tại level L = flat + perLevelFlat × (L − 1).
+  perLevelFlat?: number
+
+  perLevelPercent?: number
 }
 
 export type NodeType = 'minor' | 'major'
@@ -84,7 +90,27 @@ export interface ProgressionNode {
 
   type: NodeType
 
+  // Node role (combat-skill-flow-element-power-dot-plan.md §6.4) —
+  // semantic rõ: 'root' (mở hành, 1 cấp), 'growth' (tăng chỉ số tuyến
+  // tính, 5/10 cấp), 'keystone' (đổi behavior, loại trừ keystone đối
+  // diện, 1 cấp), 'specialization' (chỉ hiệu lực sau keystone cha, 5
+  // cấp). Optional — node cũ không khai vẫn chạy như trước.
+  role?: 'root' | 'growth' | 'keystone' | 'specialization'
+
   insightCost: number
+
+  /**
+   * §6.1 — số cấp tối đa (mặc định 1 → mua một lần như cũ). Level >= 1
+   * nghĩa là đã lĩnh ngộ; nâng tiếp tốn cost theo `upgradeCost`.
+   */
+  maxLevel?: number
+
+  /**
+   * Cost theo cấp data-driven: nâng L→L+1 tốn base + floor(L / perLevel)
+   * Cảm Ngộ. Power 10 cấp {1,3} → 1,1,1,2,2,2,3,3,3,4; growth/specialization
+   * 5 cấp {1,2} → 1,1,2,2,3. Không khai → dùng insightCost cho mọi lần.
+   */
+  upgradeCost?: { base: number; perLevel: number }
 
   prerequisites?: NodePrerequisite[]
 

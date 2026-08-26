@@ -160,15 +160,10 @@ export class StageWaveSystem {
 
     const nextEnemyEntity = enemyToCombatEntity(this.deps.enemySystem.spawn(nextEnemyTemplate))
 
-    // Luồng mới: ĐẶT LỊCH spawn (telegraph 0.75–1.4s) thay vì materialize
-    // ngay tại cột 16. Hết chỗ trống → queueEnemySpawn trả false → HOÃN
-    // đến tick sau (spawnedCount không tăng, spawnCountdown giữ ≤0 để
-    // retry; pickNextEnemyEntry stateless nên retry không bỏ lỡ quái).
-    const scheduled = this.deps.battleSystem.queueEnemySpawn(battle, nextEnemyEntity)
-
-    if (!scheduled) {
-      return
-    }
+    // Luồng mới (plan §5.2): ĐẶT LỊCH spawn (telegraph 0.75–1.4s) thay vì
+    // materialize ngay tại cột 16. Overlap hợp lệ nên queue LUÔN thành
+    // công — không còn retry "hết chỗ" (spawnedCount tăng ngay).
+    this.deps.battleSystem.queueEnemySpawn(battle, nextEnemyEntity)
 
     active.spawnedCount++
 
@@ -219,10 +214,8 @@ export class StageWaveSystem {
       return
     }
 
-    // Spawn qua telegraph queue như quái thường; HẾT CHỖ → giữ lại id
-    // trong pendingSummons, retry tick sau (không bỏ rơi summon).
-    const unscheduled: string[] = []
-
+    // Spawn qua telegraph queue như quái thường; overlap hợp lệ nên
+    // luôn schedule được (plan §5.2).
     for (const enemyId of battle.pendingSummons) {
       const template = this.deps.enemyTemplates.get(enemyId)
 
@@ -232,12 +225,10 @@ export class StageWaveSystem {
 
       const summonedEntity = enemyToCombatEntity(this.deps.enemySystem.spawn(template))
 
-      if (!this.deps.battleSystem.queueEnemySpawn(battle, summonedEntity)) {
-        unscheduled.push(enemyId)
-      }
+      this.deps.battleSystem.queueEnemySpawn(battle, summonedEntity)
     }
 
-    battle.pendingSummons = unscheduled
+    battle.pendingSummons = []
   }
 
   /**

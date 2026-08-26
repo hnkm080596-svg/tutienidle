@@ -1,35 +1,20 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import DongFuScene from './DongFuScene.vue'
 import PhaserCanvas from './PhaserCanvas.vue'
-import { useCombatSceneActive } from '@/composables/useCombatSceneActive'
-import { useUiStore } from '@/stores/ui'
 
-// Combat UI Redesign — bình thường chừa chỗ cho BottomBar (xem
-// GameRoot.vue), nhưng lúc Combat Scene active thì BottomBar bị ẩn
-// hẳn (CombatSceneOverlay.vue thay thế) — container này (chứa
-// PhaserCanvas, tức toàn bộ canvas Phaser DUY NHẤT của cả app, xem
-// PhaserCanvas.vue) phải giãn hết cỡ để CombatScene.ts có đủ không
-// gian vẽ battlefield toàn màn hình.
-//
-// WS1 Responsive foundation (2026-08-24) — chiều cao chừa chỗ dùng
-// var(--bottom-bar-h) (clamp px thực trong theme.css) thay cho hằng
-// số design-frame; inline style với giá trị var() vẫn thắng mọi CSS
-// class khác như cơ chế cũ.
-const isCombatSceneActive = useCombatSceneActive()
-const ui = useUiStore()
-
-const bottomInset = computed(() => isCombatSceneActive.value || ui.isTribulationSceneActive ? '0px' : 'var(--bottom-bar-h)')
+// Command-wheel plan (2026-08-26) — không còn BottomBar nên home dùng
+// trọn viewport (bottom: 0). Combat Scene vẫn là full-screen overlay
+// độc lập; canvas Phaser luôn chiếm TOÀN container.
 </script>
 
 <template>
-  <div class="main-scene" :style="{ bottom: bottomInset }">
-    <!-- DongFuScene (UI redesign) đứng SAU PhaserCanvas trong z-order —
-         PhaserCanvas transparent:true (xem PhaserCanvas.vue), lúc
-         chiến đấu vẽ đè lên; lúc không chiến đấu PhaserCanvas không vẽ
-         gì, nền Động Phủ hiện qua khoảng trống. DongFuScene tự ẩn khi
-         stageActive (useStageActive()) nên không cần thêm điều kiện gì
-         ở đây. -->
+  <div class="main-scene">
+    <!-- DongFuScene là overlay DOM position:absolute vẽ TRÊN container
+         canvas (PhaserCanvas không set position → xếp dưới mọi phần tử
+         positioned cùng stacking context). Canvas Phaser transparent
+         nên điều này vô hại: lúc home, nền Động Phủ = art base PNG do
+         CHÍNH DongFuScene mount (2026-08-26); lúc chiến đấu DongFuScene
+         tự ẩn (useStageActive) nên CombatScene vẽ thoải mái. -->
     <DongFuScene />
 
     <PhaserCanvas />

@@ -45,7 +45,7 @@ describe('GameManager.grantRandomEquipmentDrop — toast đồng nhất với gr
       lane: 'ground',
       statsInput: {
         maxHp: 1, attack: 0, attackSpeed: 1, movementSpeed: 0,
-        attackRange: 999999, criticalRate: 0, criticalDamage: 1.5, armor: 0,
+        attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0,
       },
       // KHÔNG khai itemDrops — cô lập đúng nhánh grantRandomEquipmentDrop(),
       // không lẫn với grantItemDrops()'s nhánh 'equipment'.

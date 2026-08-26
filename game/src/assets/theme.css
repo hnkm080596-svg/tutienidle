@@ -135,10 +135,9 @@
      Canvas Phaser vẫn dùng hệ tọa độ riêng; khoảng reserved giữa DOM
      và scene được đồng bộ qua game/support/combatInsets.ts (DOM đo
      thật rồi cấp xuống scene).
+     Command-wheel plan (2026-08-26) — Động Phủ không còn top/bottom
+     action bar: --top-bar-h/--bottom-bar-h đã xoá vì hết consumer.
      ============================================================ */
-  --top-bar-h: clamp(52px, 5.5vh, 76px);
-  --bottom-bar-h: clamp(60px, 7vh, 92px);
-
   --combat-topbar-h: clamp(46px, 4.8vh, 72px);
   --combat-status-h: clamp(44px, 4.6vh, 68px);
   --combat-event-h: clamp(32px, 3.4vh, 48px);

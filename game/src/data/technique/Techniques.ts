@@ -28,7 +28,8 @@ export const TECHNIQUES: Technique[] = [
 
     icon: '/assets/techniques/dai_ngu_hanh_chan_quyet.png',
 
-    description: 'Cho khả năng cảm ngộ ngũ đại nguyên tố trong tự nhiên — Kim, Mộc, Thủy, Hỏa, Thổ đều có thể dung hợp vào một thân, vận dụng tuỳ ý qua từng chiêu thức.',
+    description:
+      'Cho khả năng cảm ngộ ngũ đại nguyên tố trong tự nhiên — Kim, Mộc, Thủy, Hỏa, Thổ đều có thể dung hợp vào một thân, vận dụng tuỳ ý qua từng chiêu thức.',
 
     resourceLabel: 'Pháp Lực',
 
@@ -39,11 +40,25 @@ export const TECHNIQUES: Technique[] = [
     // maxMp — xem Technique.ts's TechniqueTierEffect) 0.5→0.75→1.5→2,
     // giá trị Đại Thành đã chốt lại với user (doc gốc ghi nhầm 0.1%).
     tierEffects: {
-      so_nhap: { maxMpPercent: 0.03, manaRegenPercent: 0.005 },
-      tieu_thanh: { maxMpPercent: 0.04, manaRegenPercent: 0.0075 },
-      dai_thanh: { maxMpPercent: 0.05, manaRegenPercent: 0.015 },
-      vien_man: { maxMpPercent: 0.1, manaRegenPercent: 0.02 },
+      so_nhap: { maxMpPercent: 0.03, manaRegenPercent: 0.005, hpRegenFlat: 0.5, mpRegenFlat: 0.5 },
+      tieu_thanh: { maxMpPercent: 0.04, manaRegenPercent: 0.0075, hpRegenFlat: 0.75, mpRegenFlat: 0.75 },
+      dai_thanh: { maxMpPercent: 0.05, manaRegenPercent: 0.015, hpRegenFlat: 1.5, mpRegenFlat: 1.5 },
+      vien_man: { maxMpPercent: 0.1, manaRegenPercent: 0.02, hpRegenFlat: 2, mpRegenFlat: 2 },
     },
+
+    // Combat-gate-teleport-autocast plan §2.4/§9 — tâm pháp Pháp Tu cộng
+    // CỐ ĐỊNH +2 attackRange (không phụ thuộc tier): range nền thực tế
+    // của Pháp Tu = base 1 + 2 = 3. Chỉ hiệu lực khi equipped; tổng hợp
+    // qua ĐÚNG MỘT đường GameManager.getAggregatedModifiers().
+    combatModifiers: [
+      {
+        id: 'technique:dai_ngu_hanh_chan_quyet:attack_range',
+        sourceId: 'dai_ngu_hanh_chan_quyet',
+        sourceType: 'technique',
+        stat: 'attackRange',
+        flat: 2,
+      },
+    ],
 
     unlocked: false,
 
@@ -65,7 +80,8 @@ export const TECHNIQUES: Technique[] = [
 
     icon: '/assets/techniques/ngu_kiem.png',
 
-    description: 'Tâm pháp Kiếm hệ, dạy cách ngự sử phi kiếm vây quanh — kiếm ý ngưng tụ theo từng đòn.',
+    description:
+      'Tâm pháp Kiếm hệ, dạy cách ngự sử phi kiếm vây quanh — kiếm ý ngưng tụ theo từng đòn.',
 
     combatTypeId: 'crit',
 
@@ -81,6 +97,14 @@ export const TECHNIQUES: Technique[] = [
 
     // Nội tại chiến đấu — passive_kiem_tam_lanh (xem data/skill/Skills.ts).
     innateSkillId: 'passive_kiem_tam_lanh_liet',
+
+    // HP/s & MP/s mặc định (yêu cầu 2026-08-26) — kiếm tu thiên hồi máu.
+    tierEffects: {
+      so_nhap: { hpRegenFlat: 1.5, mpRegenFlat: 0.25 },
+      tieu_thanh: { hpRegenFlat: 2, mpRegenFlat: 0.5 },
+      dai_thanh: { hpRegenFlat: 3, mpRegenFlat: 1 },
+      vien_man: { hpRegenFlat: 4, mpRegenFlat: 1.5 },
+    },
 
     unlocked: false,
 
@@ -105,6 +129,14 @@ export const TECHNIQUES: Technique[] = [
     // Nội tại chiến đấu — passive_tai_hu_edge (xem data/skill/Skills.ts).
     innateSkillId: 'passive_thai_hu_kiem_y',
 
+    // HP/s & MP/s mặc định (yêu cầu 2026-08-26) — kiếm tu thiên hồi máu.
+    tierEffects: {
+      so_nhap: { hpRegenFlat: 1, mpRegenFlat: 0.5 },
+      tieu_thanh: { hpRegenFlat: 1.5, mpRegenFlat: 0.75 },
+      dai_thanh: { hpRegenFlat: 2, mpRegenFlat: 1.5 },
+      vien_man: { hpRegenFlat: 3, mpRegenFlat: 2 },
+    },
+
     unlocked: false,
 
     equipped: false,
@@ -124,6 +156,14 @@ export const TECHNIQUES: Technique[] = [
     // Nội tại chiến đấu — passive_iron_body_resolve.
     innateSkillId: 'passive_kim_cang_y_chi',
 
+    // HP/s & MP/s mặc định (yêu cầu 2026-08-26) — thể tu hồi máu mạnh.
+    tierEffects: {
+      so_nhap: { hpRegenFlat: 2, mpRegenFlat: 0.25 },
+      tieu_thanh: { hpRegenFlat: 3, mpRegenFlat: 0.5 },
+      dai_thanh: { hpRegenFlat: 4, mpRegenFlat: 0.75 },
+      vien_man: { hpRegenFlat: 6, mpRegenFlat: 1 },
+    },
+
     unlocked: false,
 
     equipped: false,
@@ -136,7 +176,8 @@ export const TECHNIQUES: Technique[] = [
 
     icon: '/assets/techniques/spirit_gathering_scripture.png',
 
-    description: 'Công pháp tu luyện căn bản nhất, giúp người mới nhập môn cảm ngộ linh khí trời đất.',
+    description:
+      'Công pháp tu luyện căn bản nhất, giúp người mới nhập môn cảm ngộ linh khí trời đất.',
 
     // 9 passive học được khi đột phá vào đúng cảnh giới, chỉ khi tâm
     // pháp này đang trang bị — xem GameManager.syncRealmPassive() và
@@ -158,10 +199,10 @@ export const TECHNIQUES: Technique[] = [
     // +15/+25/+35/+70 theo đúng 4 tier, giữ NGUYÊN giá trị doc yêu cầu
     // để tiếp tục balance sau (không tự ý làm tròn/đổi).
     tierEffects: {
-      so_nhap: { attackFlat: 15, defenseFlat: 15 },
-      tieu_thanh: { attackFlat: 25, defenseFlat: 25 },
-      dai_thanh: { attackFlat: 35, defenseFlat: 35 },
-      vien_man: { attackFlat: 70, defenseFlat: 70 },
+      so_nhap: { attackFlat: 15, defenseFlat: 15, hpRegenFlat: 1, mpRegenFlat: 0.5 },
+      tieu_thanh: { attackFlat: 25, defenseFlat: 25, hpRegenFlat: 1.5, mpRegenFlat: 0.75 },
+      dai_thanh: { attackFlat: 35, defenseFlat: 35, hpRegenFlat: 2, mpRegenFlat: 1.5 },
+      vien_man: { attackFlat: 70, defenseFlat: 70, hpRegenFlat: 3, mpRegenFlat: 2 },
     },
 
     unlocked: false,
@@ -183,7 +224,17 @@ export const TECHNIQUES: Technique[] = [
 
     icon: '/assets/techniques/van_kiem_quyet.png',
 
-    description: 'Tâm pháp hiếm rơi từ Elite — vạn kiếm quy tông, ý chí kiếm đạo không gì lay chuyển.',
+    description:
+      'Tâm pháp hiếm rơi từ Elite — vạn kiếm quy tông, ý chí kiếm đạo không gì lay chuyển.',
+
+    // HP/s & MP/s mặc định (yêu cầu 2026-08-26) — tâm pháp Elite hồi
+    // đều cả hai chỉ số.
+    tierEffects: {
+      so_nhap: { hpRegenFlat: 1, mpRegenFlat: 1 },
+      tieu_thanh: { hpRegenFlat: 2, mpRegenFlat: 2 },
+      dai_thanh: { hpRegenFlat: 3, mpRegenFlat: 3 },
+      vien_man: { hpRegenFlat: 4, mpRegenFlat: 4 },
+    },
 
     unlocked: false,
 

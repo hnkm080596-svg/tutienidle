@@ -1,19 +1,41 @@
 <script setup lang="ts">
-// skill-insight-and-auto-combat-hud-plan.md mục 7 — Kiếm Tu KHÔNG sao
-// chép dải 5 ô của Pháp Tu. Ngự Kiếm Thuật (basic, chạy theo nhịp đánh)
-// đứng riêng, 2 kỹ năng còn lại của kit (slot 1/2 — Thái Hư Nhất Kiếm/
-// tuyệt kỹ) nối tiếp thành chuỗi "vận kiếm" — mỹ thuật chi tiết (kiếm
-// trận/quỹ đạo thật) để phase thiết kế Kiếm Tu sau chốt, ở đây chỉ đảm
-// bảo CONTRACT dữ liệu hiển thị đúng ngay từ đầu.
+// skill-insight-and-auto-combat-hud-plan.md mục 7 + execution policy
+// rework (combat-gate-teleport-autocast plan §11.3) — Kiếm Tu KHÔNG sao
+// chép dải 5 ô của Pháp Tu. Ngự Kiếm Thuật (slot 0, policy 'attack_speed'
+// — đọc cadence từ scheduler thống nhất) đứng riêng, 2 kỹ năng còn lại
+// của kit (slot 1/2 — Thái Hư Nhất Kiếm/tuyệt kỹ) nối tiếp thành chuỗi
+// "vận kiếm" — mỹ thuật chi tiết (kiếm trận/quỹ đạo thật) để phase thiết
+// kế Kiếm Tu sau chốt, ở đây chỉ đảm bảo CONTRACT dữ liệu hiển thị đúng.
 import { computed } from 'vue'
 import CombatSkillSlot from './CombatSkillSlot.vue'
 import { useCombatSkillPresentation } from '@/composables/useCombatSkillPresentation'
-import { useBasicAttackCadence } from '@/composables/useBasicAttackCadence'
+import { useCadenceSmoothing } from '@/composables/useCadenceSmoothing'
+import { useGameManager } from '@/composables/useGameState'
+import { useUiStore } from '@/stores/ui'
+import { isBattleInProgress } from '@/core/battle/BattleTypes'
 
 const { loadout, skillFor } = useCombatSkillPresentation()
-const { basicAttack, basicAttackSkill, displayRemaining } = useBasicAttackCadence()
 
-// Kiếm Tu kit chỉ dùng slot 0 (basic, hiện riêng)/1/2 — bỏ qua 2 slot
+const primary = computed(() => loadout.value.find(entry => entry.slotIndex === 0))
+
+// Audit P1-4 — smoothing chỉ-presentation cho ô Ngự Kiếm (cadence),
+// cùng lớp dùng chung với Mortal HUD.
+const gameManager = useGameManager()
+const ui = useUiStore()
+
+const cadenceRemaining = useCadenceSmoothing(
+  () => ({
+    remaining: primary.value?.cadenceRemaining ?? 0,
+    total: primary.value?.cadenceTotal ?? 0,
+  }),
+  () => {
+    const battle = gameManager.getBattle()
+
+    return battle !== null && isBattleInProgress(battle.state) && !ui.isPaused
+  },
+)
+
+// Kiếm Tu kit chỉ dùng slot 0 (Ngự Kiếm, hiện riêng)/1/2 — bỏ qua 2 slot
 // cuối vốn dành cho Pháp Tu's 5-ô build (kit Kiếm Tu không cấp).
 const chainEntries = computed(() => loadout.value.filter(entry => entry.slotIndex !== undefined && entry.slotIndex >= 1 && entry.slotIndex <= 2))
 </script>
@@ -21,16 +43,13 @@ const chainEntries = computed(() => loadout.value.filter(entry => entry.slotInde
 <template>
   <div class="kiem-tu-combat-hud">
     <CombatSkillSlot
-      v-if="basicAttack"
+      v-if="primary && primary.skillId"
       class="kiem-tu-combat-hud__basic"
-      :skill="basicAttackSkill"
-      :remaining="displayRemaining"
-      :total="basicAttack.cadenceTotal"
-      :is-masked="displayRemaining > 0"
-      :tooltip-override="basicAttackSkill ? {
-        title: basicAttackSkill.name,
-        description: 'Nhịp đánh — đòn tự động theo tốc độ đánh, không phải hồi chiêu kỹ năng.',
-      } : undefined"
+      :skill="skillFor(primary)"
+      :remaining="cadenceRemaining"
+      :total="primary.cadenceTotal ?? 0"
+      :is-masked="cadenceRemaining > 0"
+      :is-out-of-range="primary.state === 'out_of_range'"
     />
 
     <div class="kiem-tu-combat-hud__chain">
@@ -47,7 +66,8 @@ const chainEntries = computed(() => loadout.value.filter(entry => entry.slotInde
           :cast-total="entry.castTotal"
           :is-casting="entry.state === 'casting'"
           :resource-cost="entry.resourceCost"
-          :is-insufficient-resource="entry.state === 'insufficient_resource'"
+          :is-insufficient-resource="entry.state === 'blocked_resource'"
+          :is-out-of-range="entry.state === 'out_of_range'"
           :is-unreleased="entry.state === 'unreleased'"
         />
       </template>

@@ -6,6 +6,7 @@ import CombatEventBar from './CombatEventBar.vue'
 import CombatControlBar from './CombatControlBar.vue'
 import CombatResultModal from './CombatResultModal.vue'
 import CombatCountdownOverlay from './CombatCountdownOverlay.vue'
+import CombatAiPanel from './CombatAiPanel.vue'
 import CombatBuildHud from './hud/CombatBuildHud.vue'
 import { setCombatInsets } from '@/game/support/combatInsets'
 
@@ -73,6 +74,11 @@ onUnmounted(() => {
     <CombatStatusBar class="combat-scene-overlay__status-bar" />
 
     <div class="combat-scene-overlay__battlefield">
+      <!-- Combat AI panel (plan §11.1/§11.2) — góc TRÁI battlefield, lớp
+           overlay riêng: chỉ panel nhận pointer events, không chặn canvas,
+           không đổi insets/không làm co battlefield. -->
+      <CombatAiPanel class="combat-scene-overlay__ai-panel" />
+
       <CombatBuildHud class="combat-scene-overlay__build-hud" />
     </div>
 
@@ -113,6 +119,15 @@ onUnmounted(() => {
   position: relative;
   flex: 1 1 auto;
   pointer-events: none;
+}
+
+/* Combat AI panel (plan §11.1) — góc trái battlefield, dưới top/status
+   bar (nằm trong vùng battlefield nên không đụng CombatTopBar). */
+.combat-scene-overlay__ai-panel {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  z-index: 12;
 }
 
 .combat-scene-overlay__build-hud {

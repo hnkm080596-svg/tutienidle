@@ -59,8 +59,7 @@ export interface SkillEffectContext {
   // bắn (xem MissileSystem.fire()'s tham số skillId) để lúc missile
   // TRÚNG (BattleSystem's missile-resolve callback, deferred — không
   // đồng bộ với apply() này) biết tra lại đúng skill nào vừa bắn ra
-  // nó, phục vụ Skill.grantsSwordIntentPerHit. undefined = đòn đánh
-  // thường fallback (không qua skill nào, xem updatePlayerAttack()).
+  // nó, phục vụ Skill.grantsSwordIntentPerHit.
   skillId?: string
 }
 

@@ -30,7 +30,7 @@ function buildNhapDaoModifiers(player: PlayerData): StatModifier[] {
 
   const stats: StatModifier['stat'][] = ['maxHp', 'maxMp', 'hpRegenPerSecond', 'manaRegenPerSecond']
 
-  return stats.map(stat => ({
+  return stats.map((stat) => ({
     id: `realm-passive:nhap_dao:${stat}`,
     sourceId: 'nhap_dao',
     sourceType: 'realm',
@@ -60,7 +60,7 @@ function buildKienCoModifiers(player: PlayerData): StatModifier[] {
 
   const percent = KIEN_CO_MAIN_STAT_PERCENT[foundationType]
 
-  return MAIN_STAT_KEYS.map(stat => ({
+  return MAIN_STAT_KEYS.map((stat) => ({
     id: `realm-passive:kien_co:${stat}`,
     sourceId: 'kien_co',
     sourceType: 'realm',
@@ -73,7 +73,8 @@ export const REALM_PASSIVES: RealmPassiveDefinition[] = [
   {
     id: 'qi_refining',
     name: 'Nhập Đạo',
-    description: 'Xây dựng sinh mệnh nền và mở đường tu luyện — hiệu lực theo Bậc Nhập Đạo đạt được lúc Lễ Nhập Môn.',
+    description:
+      'Xây dựng sinh mệnh nền và mở đường tu luyện — hiệu lực theo Bậc Nhập Đạo đạt được lúc Lễ Nhập Môn.',
     buildModifiers: buildNhapDaoModifiers,
   },
   {

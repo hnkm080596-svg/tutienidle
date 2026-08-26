@@ -307,11 +307,12 @@ export function enemyToCombatEntity(
     // core/battle/BattleLane.ts).
     x: 0,
 
-    // Placeholder — GameManager.startBattle()/updateStageProgress() set
-    // lại NGAY thành randomEnemyLaneIndex() (hoặc HERO_LANE_INDEX nếu
-    // isBoss) khi quái vào trận (2026-08-22, top-down 5-lane, xem
-    // core/battle/BattleLane.ts). `enemy.row` (EnemyLane cũ, authored
-    // trong data/enemy/*.ts) không còn quyết định vị trí hiển thị nữa.
+    // Placeholder — vị trí THẬT được resolver roll ĐÚNG MỘT LẦN khi đặt
+    // lịch spawn telegraph (plan §5.1): quái thường row 0..9, column
+    // 7..15; Boss luôn HERO_LANE_INDEX. Xem
+    // core/battle/EnemySpawnPlacement.ts. `enemy.row` (EnemyLane cũ,
+    // authored trong data/enemy/*.ts) không còn quyết định vị trí hiển
+    // thị nữa.
     row: 0,
 
     alive: enemy.alive,

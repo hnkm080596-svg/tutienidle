@@ -1,12 +1,13 @@
-import type { PassiveTrigger } from '../skill/SkillTypes'
-import type { StatModifier } from '../stats/StatCalculator'
-import type { ItemGrade } from '../item/ItemGrade'
+import type { EquipmentSlot } from '../equipment/EquipmentTypes'
+import type { TwoModifiers } from '../equipment/SocketedModifierItem'
+import type { ProfessionGrade } from '../profession/ProfessionGrade'
 
 /**
- * Trận pháp — khảm vào vũ khí (EquipmentInstance.socketedFormation)
- * để cấp 1 passive kích hoạt theo trigger, giống cơ chế passive
- * skill (PassiveSystem) nhưng gắn theo trang bị thay vì theo nhân
- * vật — chỉ có hiệu lực khi vũ khí đó đang equipped.
+ * Trận (2026-08-24, resource-professions-rework §7) — modifier-item gắn
+ * TRÊN EQUIPMENT SLOT (mỗi slot tối đa 1 Trận), cấp ĐÚNG HAI modifier
+ * tĩnh thiên tấn công/ngũ hành. MVP BỎ trigger/stack khỏi Trận — nếu
+ * sau này cần trigger, đó là archetype riêng đi qua modifier runtime
+ * authority, không nhét vào schema socket tĩnh.
  */
 export interface Formation {
   id: string
@@ -15,15 +16,13 @@ export interface Formation {
 
   description?: string
 
-  // Path ảnh minh hoạ — khai NGAY TRÊN data item (2026-08-15), xem
-  // ghi chú tương tự trong core/technique/Technique.ts.
   icon?: string
 
-  // Naming-principles pass (2026-08-14) — thay `grade: number` cũ,
-  // xem Pill.ts's ghi chú tương tự.
-  grade: ItemGrade
+  realmId: string
 
-  trigger: PassiveTrigger
+  grade: ProfessionGrade
 
-  modifiers: StatModifier[]
+  allowedSlots: readonly EquipmentSlot[]
+
+  modifiers: TwoModifiers
 }

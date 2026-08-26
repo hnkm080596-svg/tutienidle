@@ -1,13 +1,19 @@
 import { describe, expect, it } from 'vitest'
-import { applyBossMultiplier, applyEliteMultiplier, normalizeEnemyAttackSpeed, normalizeEnemyGridDistance, normalizeEnemyStats } from './EnemyStatInput'
+import {
+  applyBossMultiplier,
+  applyEliteMultiplier,
+  MAX_ENEMY_ATTACK_RANGE_RANKS,
+  normalizeEnemyAttackSpeed,
+  normalizeEnemyStats,
+} from './EnemyStatInput'
 
 function baseEnemyStats() {
   return normalizeEnemyStats({
     maxHp: 100,
     attack: 20,
     attackSpeed: 5,
-    movementSpeed: 50,
-    attackRange: 50,
+    movementSpeed: 2,
+    attackRangeRanks: 2,
     criticalRate: 0.05,
     criticalDamage: 1.5,
     armor: 10,
@@ -24,12 +30,25 @@ describe('enemy combat stat normalization', () => {
     expect(normalizeEnemyAttackSpeed(0.2)).toBe(0.8)
   })
 
-  it('quy đổi movement/range legacy sang đơn vị cột nhưng giữ authored grid values', () => {
-    expect(normalizeEnemyGridDistance(50)).toBe(2)
-    expect(normalizeEnemyGridDistance(75)).toBe(3)
-    expect(normalizeEnemyGridDistance(2.5)).toBe(2.5)
+  it('go board: data author truc tiep theo rank, khong heuristic', () => {
     expect(baseEnemyStats().movementSpeed).toBe(2)
     expect(baseEnemyStats().attackRange).toBe(2)
+  })
+
+  it('balance pass: attackRangeRanks > 5 bị clamp về trần 5 — quái luôn đứng trong tầm Player', () => {
+    const clamped = normalizeEnemyStats({
+      maxHp: 100,
+      attack: 20,
+      attackSpeed: 1,
+      movementSpeed: 2,
+      attackRangeRanks: 9,
+      criticalRate: 0,
+      criticalDamage: 1.5,
+      armor: 0,
+    })
+
+    expect(MAX_ENEMY_ATTACK_RANGE_RANKS).toBe(5)
+    expect(clamped.attackRange).toBe(5)
   })
 
   it('Elite ưu tiên độ bền hơn burst damage', () => {

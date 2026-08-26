@@ -1,19 +1,39 @@
 import type { Battle } from '../battle/Battle'
-import type { Skill } from '../skill/Skill'
+import type { Skill, SkillExecutionPolicy } from '../skill/Skill'
 import type { SkillManager } from '../skill/SkillManager'
-import { AilmentSystem } from '../ailment/AilmentSystem'
 import { getAttackIntervalSeconds } from './AttackTiming'
+import { selectAttackableTarget } from '../battle/ActionTargetingSystem'
+import { DEFAULT_COMBAT_AI_STRATEGY } from '../battle/CombatAiStrategy'
 
-// skill-insight-and-auto-combat-hud-plan.md mục 9 — snapshot CHỈ ĐỌC
-// từ runtime thật (Battle/CombatEntity/SkillManager), KHÔNG chạy timer
-// riêng trong Vue. Pause, fixed-step catch-up, Chromium throttle hay
-// Electron KHÔNG được làm HUD lệch khỏi BattleSystem vì mọi giá trị ở
-// đây đọc TRỰC TIẾP field runtime, không tự nội suy/đếm ngược riêng.
+type CadencePolicy = Extract<
+  SkillExecutionPolicy,
+  { kind: 'attack_speed' | 'attack_speed_cast' }
+>
+
+/** Policy dùng cadence clock Attack Speed (không CDR) — undefined nếu không. */
+function cadencePolicyOf(skill: Skill): CadencePolicy | undefined {
+  return skill.execution?.kind === 'attack_speed' || skill.execution?.kind === 'attack_speed_cast'
+    ? skill.execution
+    : undefined
+}
+
+// skill-insight-and-auto-combat-hud-plan.md mục 9 + combat-gate-teleport-
+// autocast plan §11.3 — snapshot CHỈ ĐỌC từ runtime thật (Battle/
+// CombatEntity/SkillManager), KHÔNG chạy timer riêng trong Vue. Pause,
+// fixed-step catch-up, Chromium throttle hay Electron KHÔNG được làm HUD
+// lệch khỏi BattleSystem vì mọi giá trị ở đây đọc TRỰC TIẾP field runtime.
+//
+// Trạng thái THỐNG NHẤT cho mọi slot (plan §11.3) — không hard-code
+// "basic" theo path:
+// - ready / cadence / cooldown / casting / blocked_resource / out_of_range
+// - kèm locked/empty/unreleased cho ô chưa mở/trống/chưa phát hành.
 export type CombatSkillPresentationStateKind =
   | 'ready'
+  | 'cadence'
   | 'cooldown'
   | 'casting'
-  | 'insufficient_resource'
+  | 'blocked_resource'
+  | 'out_of_range'
   | 'locked'
   | 'empty'
   | 'unreleased'
@@ -26,6 +46,11 @@ export interface CombatSkillPresentationState {
   cooldownRemaining: number
 
   cooldownTotal: number
+
+  /** Cadence Attack Speed còn lại (policy attack_speed/attack_speed_cast). */
+  cadenceRemaining?: number
+
+  cadenceTotal?: number
 
   castRemaining?: number
 
@@ -65,90 +90,10 @@ function hasEnoughResource(skill: Skill, resourceCurrent: number): boolean {
   return resourceCurrent >= skill.cost
 }
 
-function deriveState(
-  skill: Skill,
-  cooldownRemaining: number,
-  isCasting: boolean,
-  resourceCurrent: number,
-): CombatSkillPresentationStateKind {
-  if (skill.unreleased) {
-    return 'unreleased'
-  }
-
-  if (isCasting) {
-    return 'casting'
-  }
-
-  if (cooldownRemaining > 0) {
-    return 'cooldown'
-  }
-
-  if (!hasEnoughResource(skill, resourceCurrent)) {
-    return 'insufficient_resource'
-  }
-
-  return 'ready'
-}
-
 /**
- * electron-combat-timing-smoothing-plan.md mục 7 — Trảm (đòn cơ bản,
- * Skill.isBasicAttack) chạy theo NHỊP ĐÁNH (battle.playerAttackTimer,
- * reset bởi attackSpeed qua getAttackIntervalSeconds() trong
- * BattleSystem.updatePlayerAttack()), KHÔNG PHẢI Skill.cooldown — cố ý
- * KHÔNG tái sử dụng CombatSkillPresentationState (field
- * cooldownRemaining/cooldownTotal đó dành riêng cho active skill loadout
- * thật sự có cooldown) để không thể nhầm lẫn 2 khái niệm ở tầng type.
- */
-export interface BasicAttackPresentationState {
-  kind: 'basic_attack'
-
-  skillId: string
-
-  cadenceRemaining: number
-
-  cadenceTotal: number
-
-  // false khi pause (do Vue layer AND thêm — xem
-  // useCombatSkillPresentation.ts), battle không ở state 'fighting',
-  // đang Choáng/Đóng Băng, hoặc không còn quái nào sống để đánh — nhịp
-  // đánh KHÔNG thật sự trôi trong những trường hợp này dù
-  // cadenceRemaining vẫn còn giá trị cũ.
-  isAdvancing: boolean
-}
-
-/**
- * null khi chưa equip skill isBasicAttack nào (Pháp Tu không có basic
- * attack, xem BattleSystem.updatePlayerAttack()'s ghi chú).
- */
-export function buildBasicAttackPresentation(
-  battle: Battle,
-  skillManager: SkillManager,
-): BasicAttackPresentationState | null {
-  const skill = skillManager.getBasicAttackSkill()
-
-  if (!skill) {
-    return null
-  }
-
-  const cadenceTotal = getAttackIntervalSeconds(battle.player.stats.attackSpeed)
-  const cadenceRemaining = Math.max(0, Math.min(battle.playerAttackTimer, cadenceTotal))
-
-  const incapacitated = new AilmentSystem(battle.playerAilments).isStunned() || new AilmentSystem(battle.playerAilments).isFrozen()
-  const hasAliveTarget = battle.enemies.some(battleEnemy => battleEnemy.entity.alive)
-
-  return {
-    kind: 'basic_attack',
-    skillId: skill.id,
-    cadenceRemaining,
-    cadenceTotal,
-    isAdvancing: battle.state === 'fighting' && !incapacitated && hasAliveTarget,
-  }
-}
-
-/**
- * Dải Skill Loadout (0..slotCount-1) — LUÔN trả đủ `slotCount` phần
- * tử để renderer dựng đủ vị trí kể cả trống ('empty') hoặc chưa mở
- * theo cảnh giới ('locked', slotIndex >= unlockedSlotCount).
+ * Dải Skill Loadout (0..slotCount-1) — LUÔN trả đủ `slotCount` phần tử
+ * để renderer dựng đủ vị trí kể cả trống ('empty') hoặc chưa mở theo
+ * cảnh giới ('locked', slotIndex >= unlockedSlotCount).
  */
 export function buildLoadoutPresentation(
   battle: Battle,
@@ -157,6 +102,12 @@ export function buildLoadoutPresentation(
   unlockedSlotCount: number,
 ): CombatSkillPresentationState[] {
   const entries: CombatSkillPresentationState[] = []
+
+  // Target trong tầm hiện tại của avatar — dùng chung AI strategy default
+  // với scheduler để trạng thái out_of_range khớp hành vi runtime.
+  const hasTargetInRange = Boolean(
+    battle.playerMaterialized && selectAttackableTarget(battle, DEFAULT_COMBAT_AI_STRATEGY),
+  )
 
   for (let slotIndex = 0; slotIndex < slotCount; slotIndex++) {
     if (slotIndex >= unlockedSlotCount) {
@@ -188,21 +139,74 @@ export function buildLoadoutPresentation(
     }
 
     const cooldownRemaining = skill.remainingCooldownBySlot?.[slotIndex] ?? 0
+    const cadenceRemaining = battle.player.skillCadenceRemainingBySlot?.[slotIndex] ?? 0
     const isCasting = battle.player.castingSkillId === skill.id
     const resourceCurrent = resourceCurrentFor(skill, battle)
+    const cadencePolicy = cadencePolicyOf(skill)
 
     entries.push({
       skillId: skill.id,
       slotIndex,
       cooldownRemaining,
       cooldownTotal: skill.cooldown,
+      cadenceRemaining: cadencePolicy ? Math.max(0, cadenceRemaining) : undefined,
+      cadenceTotal: cadencePolicy
+        ? getAttackIntervalSeconds(
+            battle.player.stats.attackSpeed * (cadencePolicy.attackSpeedMultiplier ?? 1),
+          )
+        : undefined,
       castRemaining: isCasting ? battle.player.castTimeRemaining : undefined,
       castTotal: isCasting ? battle.player.castTimeTotal : undefined,
       resourceCurrent,
       resourceCost: skill.cost,
-      state: deriveState(skill, cooldownRemaining, isCasting, resourceCurrent),
+      state: deriveState({
+        skill,
+        cooldownRemaining,
+        cadenceRemaining,
+        isCasting,
+        resourceCurrent,
+        hasTargetInRange,
+      }),
     })
   }
 
   return entries
+}
+
+function deriveState(input: {
+  skill: Skill
+  cooldownRemaining: number
+  cadenceRemaining: number
+  isCasting: boolean
+  resourceCurrent: number
+  hasTargetInRange: boolean
+}): CombatSkillPresentationStateKind {
+  if (input.skill.unreleased) {
+    return 'unreleased'
+  }
+
+  if (input.isCasting) {
+    return 'casting'
+  }
+
+  // Cadence Attack Speed (policy attack_speed/attack_speed_cast) là clock
+  // ĐỘC LẬP với cooldown CDR — cadence chạy trước trong derive vì policy
+  // đó không bao giờ có slot cooldown.
+  if (input.cadenceRemaining > 0) {
+    return 'cadence'
+  }
+
+  if (input.cooldownRemaining > 0) {
+    return 'cooldown'
+  }
+
+  if (!hasEnoughResource(input.skill, input.resourceCurrent)) {
+    return 'blocked_resource'
+  }
+
+  if (!input.hasTargetInRange && input.skill.target !== 'self') {
+    return 'out_of_range'
+  }
+
+  return 'ready'
 }

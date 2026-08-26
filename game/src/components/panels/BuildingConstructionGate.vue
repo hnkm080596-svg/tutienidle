@@ -13,7 +13,7 @@ import { computed, onMounted } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { formatNumber } from '@/core/format/NumberFormatter'
-import { TEST_MODE_UNLOCK_ALL } from '@/core/dev/DevMode'
+import { isTestModeUnlockAll } from '@/core/dev/DevMode'
 
 const props = defineProps<{ buildingId: string }>()
 
@@ -36,7 +36,7 @@ const instance = computed(() => {
 // để nội dung thật phía sau gate (Lv.X/Nâng Cấp/<slot>) đọc 1 instance
 // THẬT, không cần né null-check riêng.
 onMounted(() => {
-  if (TEST_MODE_UNLOCK_ALL && !instance.value) {
+  if (isTestModeUnlockAll() && !instance.value) {
     gameManager.buildingManager.add({
       instanceId: crypto.randomUUID(),
       buildingId: props.buildingId,

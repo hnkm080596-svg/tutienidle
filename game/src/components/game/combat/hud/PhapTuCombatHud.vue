@@ -23,7 +23,8 @@ const { loadout, skillFor } = useCombatSkillPresentation()
       :cast-total="entry.castTotal"
       :is-casting="entry.state === 'casting'"
       :resource-cost="entry.resourceCost"
-      :is-insufficient-resource="entry.state === 'insufficient_resource'"
+      :is-insufficient-resource="entry.state === 'blocked_resource'"
+      :is-out-of-range="entry.state === 'out_of_range'"
       :is-unreleased="entry.state === 'unreleased'"
       :is-locked="entry.state === 'locked'"
     />

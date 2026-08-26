@@ -86,8 +86,8 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
         maxHp: 20,
         attack: 0,
         attackSpeed: 1,
-        movementSpeed: 60,
-        attackRange: 90,
+        movementSpeed: 2.4,
+        attackRangeRanks: 7,
         criticalRate: 0,
         criticalDamage: 1.5,
         armor: 0,
@@ -106,8 +106,8 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
         maxHp: 15,
         attack: 0,
         attackSpeed: 1,
-        movementSpeed: 60,
-        attackRange: 90,
+        movementSpeed: 2.4,
+        attackRangeRanks: 7,
         criticalRate: 0,
         criticalDamage: 1.5,
         armor: 0,
@@ -148,6 +148,13 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
     // buffer HP nhỏ để bài test giữ đúng mục đích "vòng lặp đầy đủ tới
     // Victory" thay vì đua trên biên HP mỏng của seed.
     player.baseStats.maxHp += 40
+
+    // Combat AI rework (plan §13/§2.4) + balance pass 2026-08-26: Boss
+    // đổi archetype sang 'ranged' ở phase 50% rồi giữ khoảng cách kiting
+    // 0.6×range tới cổng (rank authored 7 bị clamp về 5 → đứng ở cột ≥3).
+    // Kiếm Tu range nền 5 với tới cột ≤10 nên vẫn bắn được kiter; fixture
+    // cộng thêm range để bài test không phụ thuộc biên.
+    player.baseStats.attackRange += 8
 
     const finalStats = calculateStats(player.baseStats, [
       ...player.modifiers,

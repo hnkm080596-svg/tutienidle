@@ -5,20 +5,23 @@ import { calculateStats } from '../stats/StatCalculator'
 import { SKILLS } from '../../data/skill/Skills'
 import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 
-// Plans/KimPath (2026-08-21) — Kim đi theo ĐÚNG khuôn Hỏa/Thủy/Mộc/Thổ
-// (xem GameManager.phapTuFirePath.test.ts/phapTuWaterPath.test.ts/
-// phapTuWoodPath.test.ts/phapTuEarthPath.test.ts): 1 Active Skill/hành,
-// Node Tree Luyện Khí (3 Minor) + Trúc Cơ (2 Major loại trừ nhau + Minor
-// đi kèm). Feedback (2026-08-21) — mô hình "Lĩnh Ngộ X" quay TRỞ LẠI
-// cho Thủy/Mộc/Thổ/Kim (chỉ Hỏa học sẵn miễn phí) — Điểm Kim Thuật phải
-// mua node "Lĩnh Ngộ Kim" (kim_linh_ngo, 2 Skill Point) TRƯỚC, node này
-// là prerequisite của MỌI node khác trong hành.
-describe('GameManager — Pháp Tu KimPath (Kim Node Tree Luyện Khí/Trúc Cơ)', () => {
-  it('Kim Luyện Khí: 3 Minor mua được sau khi Lĩnh Ngộ Kim, KHÔNG mua được trước đó', () => {
-    const gameManager = new GameManager()
+// Rework combat-skill-flow-element-power-dot-plan.md §6 — Kim dùng cùng
+// bộ khung: Root Điểm Kim Thuật → Power/Cadence/Mechanic growth →
+// Keystone Huyết Dẫn XOR Kim Thế → specialization sau keystone cha.
 
-    gameManager.registerSkillTemplates(SKILLS)
-    gameManager.registerProgressionNodes(PHAP_TU_NODES)
+function setup() {
+  const gameManager = new GameManager()
+
+  gameManager.registerSkillTemplates(SKILLS)
+
+  gameManager.registerProgressionNodes(PHAP_TU_NODES)
+
+  return gameManager
+}
+
+describe('GameManager — Pháp Tu MetalPath (Kim Node Tree)', () => {
+  it('Kim Luyện Khí: growth nodes mua được sau root, KHÔNG trước đó', () => {
+    const gameManager = setup()
 
     const player = createDefaultPlayer()
 
@@ -28,34 +31,35 @@ describe('GameManager — Pháp Tu KimPath (Kim Node Tree Luyện Khí/Trúc Cơ
 
     expect(gameManager.purchaseNode('kim_linh_ngo', player)).toBe(true)
     expect(gameManager.skillManager.get('diem_kim_thuat')?.unlocked).toBe(true)
+    expect(player.skillInsight).toBe(3)
 
     expect(gameManager.purchaseNode('minor_metal_intensity', player)).toBe(true)
+    expect(gameManager.purchaseNode('minor_metal_burst', player)).toBe(true)
     expect(gameManager.purchaseNode('minor_metal_bleed_damage', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_metal_application', player)).toBe(true)
 
     expect(player.skillInsight).toBe(0)
 
     const finalStats = calculateStats(player.baseStats, [
       ...player.modifiers,
-      ...gameManager.getAggregatedModifiers(),
+      ...gameManager.getAggregatedModifiers(player),
     ])
 
-    expect(gameManager.skillManager.get('diem_kim_thuat')?.metalAilmentPotencyPercent).toBeGreaterThanOrEqual(0.05)
-    expect(finalStats.elementApplicationPercent).toBeGreaterThanOrEqual(0.05)
+    // Kim Khí +2 Kim Lực; Huyết Bạo +3% cast speed; Huyết Ấn +4% potency.
+    expect(finalStats.metalPower).toBeGreaterThanOrEqual(2)
+    expect(finalStats.castSpeedPercent).toBeGreaterThanOrEqual(0.03)
+    expect(finalStats.ailmentPotencyPercent).toBeGreaterThanOrEqual(0.04)
   })
 
-  it('Kim Trúc Cơ: Major Huyết Dẫn/Kim Thế bị chặn trước Trúc Cơ, loại trừ lẫn nhau sau khi mua 1 trong 2', () => {
-    const gameManager = new GameManager()
-
-    gameManager.registerSkillTemplates(SKILLS)
-    gameManager.registerProgressionNodes(PHAP_TU_NODES)
+  it('Kim Trúc Cơ: Keystone cần Power ≥ 1 + Trúc Cơ, loại trừ lẫn nhau', () => {
+    const gameManager = setup()
 
     const player = createDefaultPlayer()
 
-    player.skillInsight = 10
+    player.skillInsight = 30
     player.realmId = 'qi_refining'
 
     expect(gameManager.purchaseNode('kim_linh_ngo', player)).toBe(true)
+    expect(gameManager.purchaseNode('minor_metal_intensity', player)).toBe(true)
 
     expect(gameManager.purchaseNode('kim_truc_co_huyet_dan', player)).toBe(false)
 
@@ -65,41 +69,51 @@ describe('GameManager — Pháp Tu KimPath (Kim Node Tree Luyện Khí/Trúc Cơ
     expect(gameManager.purchaseNode('kim_truc_co_kim_the', player)).toBe(false)
   })
 
-  it('Kim Trúc Cơ: Kim Tâm (minor chung) chỉ cần Trúc Cơ, không cần chọn Major nào', () => {
-    const gameManager = new GameManager()
-
-    gameManager.registerSkillTemplates(SKILLS)
-    gameManager.registerProgressionNodes(PHAP_TU_NODES)
+  it('Kim Trúc Cơ Pure: specialization chỉ mở sau Kim Thế; kimTheMaxStacks qua runtime stats', () => {
+    const gameManager = setup()
 
     const player = createDefaultPlayer()
 
-    player.skillInsight = 3
+    player.skillInsight = 30
     player.realmId = 'foundation_establishment'
 
     expect(gameManager.purchaseNode('kim_linh_ngo', player)).toBe(true)
+    expect(gameManager.purchaseNode('minor_metal_intensity', player)).toBe(true)
 
-    expect(gameManager.purchaseNode('minor_metal_heart', player)).toBe(true)
+    expect(gameManager.purchaseNode('minor_metal_channeling', player)).toBe(false)
 
-    const finalStats = calculateStats(player.baseStats, [
-      ...player.modifiers,
-      ...gameManager.getAggregatedModifiers(),
-    ])
+    expect(gameManager.purchaseNode('kim_truc_co_kim_the', player)).toBe(true)
+    expect(gameManager.purchaseNode('minor_metal_channeling', player)).toBe(true)
 
-    expect(finalStats.metalPower).toBeGreaterThan(0)
+    // Nâng Kim Uyển lên level 3 (+1 tầng ở cấp 1, +3 tầng ở cấp 5).
+    expect(gameManager.upgradeNode('minor_metal_channeling', player)).toBe(true)
+    expect(gameManager.upgradeNode('minor_metal_channeling', player)).toBe(true)
+
+    const runtimeStats = gameManager.getSkillRuntimeStats(player)
+
+    // Kim Thế keystone +1; Kim Uyển level 3: 1 + 0.5×2 = 2 → tổng ≥ 3.
+    expect(runtimeStats.kimTheMaxStacksBonus).toBeGreaterThanOrEqual(3)
+
+    expect(gameManager.purchaseNode('minor_metal_shatter', player)).toBe(true)
+
+    const runtimeAfterShatter = gameManager.getSkillRuntimeStats(player)
+
+    // Huyết Phá level 1: 0.005.
+    expect(
+      runtimeAfterShatter.kimTheDotResistancePenetrationPercentPerStack,
+    ).toBeGreaterThanOrEqual(0.005)
   })
 
-  it('Kim Trúc Cơ Reaction: Huyết Dẫn cấp thật reactionEffectPercent, Cộng Huyết CHẶN nếu chưa chọn Huyết Dẫn', () => {
-    const gameManager = new GameManager()
-
-    gameManager.registerSkillTemplates(SKILLS)
-    gameManager.registerProgressionNodes(PHAP_TU_NODES)
+  it('Kim Trúc Cơ Reaction: Huyết Dẫn cấp reactionEffectPercent, Cộng Huyết CHẶN nếu chưa chọn', () => {
+    const gameManager = setup()
 
     const player = createDefaultPlayer()
 
-    player.skillInsight = 10
+    player.skillInsight = 30
     player.realmId = 'foundation_establishment'
 
     expect(gameManager.purchaseNode('kim_linh_ngo', player)).toBe(true)
+    expect(gameManager.purchaseNode('minor_metal_intensity', player)).toBe(true)
 
     expect(gameManager.purchaseNode('minor_metal_reaction_effect', player)).toBe(false)
 
@@ -108,40 +122,9 @@ describe('GameManager — Pháp Tu KimPath (Kim Node Tree Luyện Khí/Trúc Cơ
 
     const finalStats = calculateStats(player.baseStats, [
       ...player.modifiers,
-      ...gameManager.getAggregatedModifiers(),
+      ...gameManager.getAggregatedModifiers(player),
     ])
 
-    // Huyết Dẫn flat 0.2 + Cộng Huyết flat 0.05.
-    expect(finalStats.reactionEffectPercent).toBeGreaterThanOrEqual(0.25)
-  })
-
-  it('Kim Trúc Cơ Pure: Kim Thế cấp kimTheGainPerProc/kimTheDotDamagePercentPerStack/kimTheDotResistancePenetrationPercentPerStack, Kim Uyên/Huyết Lưu CHẶN nếu chưa chọn Kim Thế', () => {
-    const gameManager = new GameManager()
-
-    gameManager.registerSkillTemplates(SKILLS)
-    gameManager.registerProgressionNodes(PHAP_TU_NODES)
-
-    const player = createDefaultPlayer()
-
-    player.skillInsight = 10
-    player.realmId = 'foundation_establishment'
-
-    expect(gameManager.purchaseNode('kim_linh_ngo', player)).toBe(true)
-
-    expect(gameManager.purchaseNode('minor_metal_channeling', player)).toBe(false)
-    expect(gameManager.purchaseNode('minor_metal_burst', player)).toBe(false)
-
-    expect(gameManager.purchaseNode('kim_truc_co_kim_the', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_metal_channeling', player)).toBe(true)
-    expect(gameManager.purchaseNode('minor_metal_burst', player)).toBe(true)
-
-    const diemKimThuat = gameManager.skillManager.get('diem_kim_thuat')
-
-    expect(diemKimThuat?.kimTheGainPerProc).toBeGreaterThanOrEqual(1)
-    expect(diemKimThuat?.kimTheDotDamagePercentPerStack).toBeGreaterThanOrEqual(0.05)
-    expect(diemKimThuat?.kimTheDotResistancePenetrationPercentPerStack).toBeGreaterThanOrEqual(0.03)
-    expect(diemKimThuat?.kimTheMaxStacksBonus).toBeGreaterThanOrEqual(1)
-    // Kim Thế major chưa cấp metalAilmentPotencyPercent — chỉ Huyết Lưu (minor) mới cấp.
-    expect(diemKimThuat?.metalAilmentPotencyPercent).toBeGreaterThanOrEqual(0.1)
+    expect(finalStats.reactionEffectPercent).toBeGreaterThanOrEqual(0.2)
   })
 })

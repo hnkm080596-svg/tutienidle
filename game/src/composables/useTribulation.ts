@@ -8,6 +8,7 @@ import type { GameManager, ActiveTribulation } from '../core/game/GameManager'
 import { useWorldAnnouncementStore } from '../stores/worldAnnouncement'
 import { useUiStore } from '../stores/ui'
 import { isBattleInProgress } from '../core/battle/BattleTypes'
+import { SPIRIT_STONE_MATERIAL_ID } from '../core/material/SpiritStoneMaterial'
 
 // Trảm gate (blockIfNoBasicAttack, 2026-08-20 → gỡ 2026-08-21) — Pháp
 // Tu giờ tự học + trang bị SẴN 1 chiêu cơ bản (Hỏa Cầu Thuật) ngay lúc
@@ -185,7 +186,14 @@ function resolveVictory(player: PlayerStore, gameManager: GameManager, active: A
 function resolveDefeat(player: PlayerStore, gameManager: GameManager) {
   player.cultivation = Math.floor(player.cultivation * (1 - TRIBULATION_DEFEAT_CULTIVATION_LOSS_PERCENT))
 
-  player.spiritStone = Math.max(0, player.spiritStone - TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS)
+  // Plan Workstream F — penalty có thể trừ QUÁ số dư: trừ amount thực tế
+  // Math.min(owned, requested) trên MaterialBag.
+  const owned = gameManager.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)
+
+  gameManager.materialBag.remove(
+    SPIRIT_STONE_MATERIAL_ID,
+    Math.min(owned, TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS),
+  )
 
   gameManager.applyPersistentBuff(KIEP_THUONG_DEBUFF)
 

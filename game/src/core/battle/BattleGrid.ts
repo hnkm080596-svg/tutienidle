@@ -9,6 +9,8 @@
 //   viewport lệch tỉ lệ xử lý bằng letterbox/padding, không đụng logic.
 // - Core KHÔNG biết pixel — mọi khoảng cách combat (range/AOE) tính bằng
 //   cột/hàng qua BattleGrid.
+import type { CombatEntity } from '../combat/CombatEntity'
+
 export const GRID_ROW_COUNT = 10
 export const GRID_COLUMN_COUNT = 16
 
@@ -28,6 +30,29 @@ export type LaneIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 export interface GridPosition {
   row: LaneIndex
   column: number
+}
+
+/**
+ * Khoảng cách Chebyshev giữa 2 ô grid — bán kính tấn công của Player:
+ * target trong tầm khi `distance <= attackRange` (range 1 phủ cả 8 ô kề,
+ * gồm đường chéo). MỌI logic targeting Player dùng helper này, không tự
+ * tính khoảng cách riêng (plan §4.1).
+ */
+export function getChebyshevDistance(from: GridPosition, to: GridPosition): number {
+  return Math.max(Math.abs(to.row - from.row), Math.abs(to.column - from.column))
+}
+
+/**
+ * Chuẩn hoá vị trí entity về ô grid — column LÀM TRÒN qua đúng
+ * getColumnFromWorldX() (x là world-unit liên tục), row giữ nguyên vì đã
+ * rời rạc. Player targeting/enemy gate đều đi qua đây để tránh tự làm tròn
+ * lệch nhau giữa các nơi gọi.
+ */
+export function entityGridPosition(entity: Pick<CombatEntity, 'x' | 'row'>): GridPosition {
+  return {
+    row: entity.row,
+    column: getColumnFromWorldX(entity.x),
+  }
 }
 
 /** Tâm ô theo đơn vị cột/hàng (dùng cho renderer neo VFX/tween). */

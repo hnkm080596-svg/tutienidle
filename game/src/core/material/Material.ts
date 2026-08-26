@@ -1,3 +1,4 @@
+import type { ProfessionMaterialMeta } from '../profession/ProfessionMaterial'
 import type { SourceType } from './SourceType'
 import type { ElementType } from '../element/ElementType'
 
@@ -5,15 +6,7 @@ import type { ElementType } from '../element/ElementType'
 // Phù) và 'byproduct' (Bụi Cốt/Tinh Luyện Cốt, phế liệu từ Luyện
 // Khí/Cường Hóa) — 2 nhóm mới hoàn toàn, chưa có category nào khớp.
 export type MaterialCategory =
-  | 'herb'
-  | 'wood'
-  | 'ore'
-  | 'monster_core'
-  | 'spirit_stone'
-  | 'essence'
-  | 'byproduct'
-  | 'other'
-
+  'herb' | 'wood' | 'ore' | 'monster_core' | 'spirit_stone' | 'essence' | 'byproduct' | 'other'
 
 /**
  * "tunghematandsuch" pass (mục 3) — cố ý giữ TỐI GIẢN
@@ -51,7 +44,18 @@ export interface Material {
 
   description?: string
 
+  // Metadata nghề (2026-08-24, resource-professions-rework plan §4.1) —
+  // optional nên save/legacy material không có vẫn load bình thường;
+  // consumer mới (catalog/reward/recipe/validator) bắt buộc material có
+  // meta đầy đủ.
+  profession?: ProfessionMaterialMeta
+
   // PNG icon của template; không nằm trong save stack nên có thể bổ sung
   // dần mà không cần migration.
   icon?: string
+
+  // Trần stack riêng (plan Workstream F) — undefined = MAX_STACK_AMOUNT
+  // chung. Linh Thạch đặt MAX_SAFE_INTEGER vì chi phí Đột Phá scale tới
+  // hàng tỷ; MaterialBag.add() đọc field này lúc clamp.
+  stackLimit?: number
 }

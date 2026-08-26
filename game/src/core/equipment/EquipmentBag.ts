@@ -9,11 +9,11 @@ export class EquipmentBag {
   }
 
   remove(instanceId: string) {
-    this.instances = this.instances.filter(instance => instance.instanceId !== instanceId)
+    this.instances = this.instances.filter((instance) => instance.instanceId !== instanceId)
   }
 
   get(instanceId: string) {
-    return this.instances.find(instance => instance.instanceId === instanceId)
+    return this.instances.find((instance) => instance.instanceId === instanceId)
   }
 
   getAll(): EquipmentInstance[] {
@@ -21,14 +21,14 @@ export class EquipmentBag {
   }
 
   getEquipped(): EquipmentInstance[] {
-    return this.instances.filter(instance => instance.equipped)
+    return this.instances.filter((instance) => instance.equipped)
   }
 
   getEquippedInSlot(slot: EquipmentSlot) {
-    return this.instances.find(instance => instance.equipped && instance.slot === slot)
+    return this.instances.find((instance) => instance.equipped && instance.slot === slot)
   }
 
   has(instanceId: string): boolean {
-    return this.instances.some(instance => instance.instanceId === instanceId)
+    return this.instances.some((instance) => instance.instanceId === instanceId)
   }
 }

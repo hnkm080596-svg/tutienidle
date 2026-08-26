@@ -4,7 +4,7 @@ import { usePlayerStore } from '@/stores/player'
 import { getCurrentRealm, getNextRealm, BASE_CULTIVATION_PER_SECOND } from '@/core/realm/realmSystem'
 import TechniqueSlotCard from './loadout-sections/TechniqueSlotCard.vue'
 import EquipmentPaperdoll from './EquipmentPaperdoll.vue'
-import AtlasSprite from '../common/AtlasSprite.vue'
+import PlayerPortrait from '../common/PlayerPortrait.vue'
 import type { Stats } from '@/core/stats/StatBlock'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { BASE_STAT_LABELS, formatStat, type StatCategory } from '@/core/stats/StatLabels'
@@ -67,13 +67,10 @@ const characterAuraColor = computed(() =>
   chosenKit.value?.element ? ELEMENT_COLOR_VARS[chosenKit.value.element] : 'var(--gold-500)',
 )
 
-// Sprite thật (2026-08-20, thay khối robe/head CSS placeholder) — cùng
-// atlas idle/cultivate MainScene.ts dùng ở giữa Động Phủ. LUÔN dùng
-// idle ở đây (khác DongFuScene.vue's home-player, nơi đổi theo
-// player.isCultivating) — đây chỉ là chân dung nhỏ trong panel, không
-// phải nơi thể hiện trạng thái ngồi thiền.
-const characterAtlasUrl = '/assets/cultivate.json'
-const characterImageUrl = '/assets/cultivate.png'
+// Chân dung tĩnh (2026-08-26, dong-fu plan Workstream A) — PNG mortal
+// mới player-mortal-v1.png qua PlayerPortrait; ẢNH TĨNH, không áp
+// animation tu luyện (khác trigger cultivate giữa Động Phủ).
+const characterPortraitHeight = 104
 
 // Đọc tên skill qua skillManager (LEARNED skills, public) thay vì
 // GameManager.skillTemplates (private) — sau chooseCultivationPath(),
@@ -307,12 +304,10 @@ const pillPermanentRows = computed(() => {
         <div class="character-panel__figure" :style="{ '--aura': characterAuraColor }">
           <span class="character-panel__figure-aura" />
 
-          <AtlasSprite
+          <PlayerPortrait
             class="character-panel__figure-sprite"
-            :atlas-url="characterAtlasUrl"
-            :image-url="characterImageUrl"
-            :height="104"
-            :image-scale="1.25"
+            variant="portrait"
+            :height="characterPortraitHeight"
           />
         </div>
 

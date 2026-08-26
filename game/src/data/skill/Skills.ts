@@ -1,12 +1,15 @@
 import type { Skill } from '../../core/skill/Skill'
 
-// 4 skill chủ động — đúng 1 skill mẫu mỗi category (basic/special/
-// moving/ultimate). Player chỉ equip được 1 skill/category cùng lúc
-// (SkillSystem.equip()), nhưng "bảng skill" cho phép sau này thêm
-// nhiều lựa chọn hơn mỗi category mà không cần đổi cấu trúc data.
-//
-// Passive (9 cái, mỗi cảnh giới mở khóa 1) nằm ở cuối file —
-// xem GameManager.syncRealmPassive() và data/realms/realm.ts.
+// Skill execution policy rework (plan §8) — MỌI active skill khai
+// `execution` tường minh; runtime chỉ đọc field này (không fallback
+// isBasicAttack/castTime/path):
+// - Trảm + Ngự Kiếm Thuật → 'attack_speed' (cadence theo Attack Speed,
+//   không ICD/không CDR/không cast time).
+// - 5 skill Pháp Tu có cast time 1.2s giữ nguyên số liệu qua policy
+//   'cast_time' (cast time chịu Cast Speed, cooldown chịu CDR).
+// - Active còn lại → 'cooldown' với cooldown hiện có.
+// - 'attack_speed_cast' chưa gán cho skill nào (chỉ author khi thiết kế
+//   cụ thể yêu cầu — plan §8.3).
 export const SKILLS: Skill[] = [
   {
     id: 'tram',
@@ -39,12 +42,8 @@ export const SKILLS: Skill[] = [
       },
     ],
 
-    // PLAN HOÀN CHỈNH mục 6/8 — thay activeCategory 'basic' cũ: skill
-    // này chạy theo attackSpeed timer (updatePlayerAttack), KHÔNG qua
-    // vòng lặp ưu tiên slot Loadout (updateAutoCast), bất kể đang ở
-    // slot nào hay chưa gắn slot nào (Phàm Nhân không có Loadout UI
-    // nhưng vẫn equip được trực tiếp, xem SkillSystem.equipWithoutSlot()).
-    isBasicAttack: true,
+    // Plan §8.3 — baseline bảo toàn hành vi: đòn nhịp theo Attack Speed.
+    execution: { kind: 'attack_speed' },
 
     resourceType: 'none',
 
@@ -78,6 +77,9 @@ export const SKILLS: Skill[] = [
 
     target: 'enemy',
 
+    // Plan §8.3 — active skill không cast time → policy 'cooldown'.
+    execution: { kind: 'cooldown' },
+
     effects: [
       {
         type: 'damage',
@@ -93,9 +95,7 @@ export const SKILLS: Skill[] = [
 
         // Demo attribute scaling — kiếm khí phần lớn là pháp lực (Kim
         // component chiếm 80%), mỗi điểm Linh Căn cộng thêm 0.3% dame.
-        attributeScaling: [
-          { attributes: ['attunement'], ratioPerPoint: 0.003 },
-        ],
+        attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.003 }],
       },
 
       {
@@ -120,7 +120,8 @@ export const SKILLS: Skill[] = [
 
         name: 'Trọng Kiếm',
 
-        description: 'Bỏ hẳn kiếm khí Kim, dồn toàn lực vào 1 đòn vật lý cực nặng — mất hiệu ứng cộng theo Linh Căn.',
+        description:
+          'Bỏ hẳn kiếm khí Kim, dồn toàn lực vào 1 đòn vật lý cực nặng — mất hiệu ứng cộng theo Linh Căn.',
 
         effectsOverride: [
           {
@@ -146,7 +147,8 @@ export const SKILLS: Skill[] = [
 
         name: 'Linh Kiếm',
 
-        description: 'Kiếm khí hoá hoàn toàn thành Kim linh lực, hồi 1 phần khí huyết mỗi lần xuất chiêu.',
+        description:
+          'Kiếm khí hoá hoàn toàn thành Kim linh lực, hồi 1 phần khí huyết mỗi lần xuất chiêu.',
 
         effectsOverride: [
           {
@@ -154,13 +156,9 @@ export const SKILLS: Skill[] = [
 
             value: 2.5,
 
-            components: [
-              { kind: 'element', element: 'metal', ratio: 1 },
-            ],
+            components: [{ kind: 'element', element: 'metal', ratio: 1 }],
 
-            attributeScaling: [
-              { attributes: ['attunement'], ratioPerPoint: 0.005 },
-            ],
+            attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.005 }],
           },
 
           {
@@ -202,6 +200,9 @@ export const SKILLS: Skill[] = [
 
     target: 'self',
 
+    // Plan §8.3 — active skill không cast time → policy 'cooldown'.
+    execution: { kind: 'cooldown' },
+
     effects: [
       {
         type: 'buff',
@@ -241,6 +242,9 @@ export const SKILLS: Skill[] = [
 
     target: 'enemy',
 
+    // Plan §8.3 — active skill không cast time → policy 'cooldown'.
+    execution: { kind: 'cooldown' },
+
     effects: [
       {
         type: 'damage',
@@ -259,9 +263,7 @@ export const SKILLS: Skill[] = [
         // Demo Adaptive (nhiều attribute trong 1 entry — dùng giá trị
         // CAO NHẤT): đòn dồn sức có thể xuất phát từ Căn Cốt (cường
         // công) hoặc Thân Pháp (khéo léo dồn lực), tuỳ build nào cao hơn.
-        attributeScaling: [
-          { attributes: ['strength', 'dexterity'], ratioPerPoint: 0.004 },
-        ],
+        attributeScaling: [{ attributes: ['strength', 'dexterity'], ratioPerPoint: 0.004 }],
       },
     ],
     resourceType: 'rage',
@@ -300,6 +302,9 @@ export const SKILLS: Skill[] = [
 
     castTime: 1.2,
 
+    // Plan §8.3 — giữ nguyên cast time hiện có qua policy 'cast_time'.
+    execution: { kind: 'cast_time', castTime: 1.2 },
+
     target: 'enemy',
 
     effects: [
@@ -309,13 +314,9 @@ export const SKILLS: Skill[] = [
         // FirePath.md mục 2 — "Damage: 100% Skill Power".
         value: 1,
 
-        components: [
-          { kind: 'element', element: 'fire', ratio: 1 },
-        ],
+        components: [{ kind: 'element', element: 'fire', ratio: 1 }],
 
-        attributeScaling: [
-          { attributes: ['attunement'], ratioPerPoint: 0.004 },
-        ],
+        attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
       },
 
       {
@@ -335,11 +336,9 @@ export const SKILLS: Skill[] = [
 
     // Skill tree redesign (2026-08-21) — skill này là ROOT NODE của
     // Hỏa tree (xem PhapTuNodes.ts), CHIẾM 1 slot Loadout bình thường
-    // và chạy qua updateAutoCast() như mọi skill khác — KHÔNG còn
-    // isBasicAttack (đó là cơ chế "đóng khung" dành riêng cho Phàm
-    // Nhân/Kiếm Tu, xem basic_strike/ngu_kiem_thuat). Điểm khác biệt
-    // DUY NHẤT của Hỏa Cầu Thuật với 4 hành kia là được tự học + trang
-    // bị sẵn (cost 0, xem GameManager.chooseCultivationPath()).
+    // và chạy qua scheduler auto-cast thống nhất như mọi skill khác.
+    // Điểm khác biệt DUY NHẤT của Hỏa Cầu Thuật với 4 hành kia là được
+    // tự học + trang bị sẵn (cost 0, xem GameManager.chooseCultivationPath()).
 
     // Hỏa Tu Pure (Plans/FirePath mục 7) — mỗi lần cast +hoaTheGainPerCast
     // (0 nếu chưa mua "Tụ Hỏa"), xem BattleSystem.castSkill().
@@ -369,7 +368,8 @@ export const SKILLS: Skill[] = [
 
     name: 'Độc Chưởng',
 
-    description: 'Vỗ độc chưởng vào mục tiêu, không gây sát thương trực tiếp nhưng luôn áp Trúng Độc.',
+    description:
+      'Vỗ độc chưởng vào mục tiêu, không gây sát thương trực tiếp nhưng luôn áp Trúng Độc.',
 
     type: 'active',
 
@@ -385,6 +385,9 @@ export const SKILLS: Skill[] = [
 
     castTime: 1.2,
 
+    // Plan §8.3 — giữ nguyên cast time hiện có qua policy 'cast_time'.
+    execution: { kind: 'cast_time', castTime: 1.2 },
+
     target: 'enemy',
 
     effects: [
@@ -397,8 +400,8 @@ export const SKILLS: Skill[] = [
       },
     ],
 
-      // Skill tree redesign (2026-08-21) — root node của Mộc tree, chiếm
-      // 1 slot Loadout bình thường (xem hoa_cau_thuat's ghi chú).
+    // Skill tree redesign (2026-08-21) — root node của Mộc tree, chiếm
+    // 1 slot Loadout bình thường (xem hoa_cau_thuat's ghi chú).
     resourceType: 'mana',
 
     buildTag: 'core',
@@ -435,6 +438,9 @@ export const SKILLS: Skill[] = [
 
     castTime: 1.2,
 
+    // Plan §8.3 — giữ nguyên cast time hiện có qua policy 'cast_time'.
+    execution: { kind: 'cast_time', castTime: 1.2 },
+
     target: 'enemy',
 
     effects: [
@@ -444,13 +450,9 @@ export const SKILLS: Skill[] = [
         // waterpath mục II — "Damage: 100% Skill Power".
         value: 1,
 
-        components: [
-          { kind: 'element', element: 'water', ratio: 1 },
-        ],
+        components: [{ kind: 'element', element: 'water', ratio: 1 }],
 
-        attributeScaling: [
-          { attributes: ['attunement'], ratioPerPoint: 0.004 },
-        ],
+        attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
       },
 
       {
@@ -467,11 +469,9 @@ export const SKILLS: Skill[] = [
 
     // Skill tree redesign (2026-08-21) — skill này là ROOT NODE của
     // element tree (xem PhapTuNodes.ts), CHIẾM 1 slot Loadout bình
-    // thường và chạy qua updateAutoCast() như mọi skill khác — KHÔNG
-    // còn isBasicAttack (đó là cơ chế "đóng khung" dành riêng cho
-    // Phàm Nhân/Kiếm Tu, xem basic_strike/ngu_kiem_thuat). Điểm khác
-      // biệt DUY NHẤT của Hỏa Cầu Thuật với 4 hành kia là được tự học +
-      // trang bị sẵn (cost 0, xem GameManager.chooseCultivationPath()).
+    // thường và chạy qua scheduler auto-cast thống nhất như mọi skill
+    // khác. Điểm khác biệt DUY NHẤT của Hỏa Cầu Thuật với 4 hành kia là
+    // được tự học + trang bị sẵn (cost 0, xem GameManager.chooseCultivationPath()).
     resourceType: 'mana',
 
     buildTag: 'core',
@@ -511,6 +511,9 @@ export const SKILLS: Skill[] = [
 
     castTime: 1.2,
 
+    // Plan §8.3 — giữ nguyên cast time hiện có qua policy 'cast_time'.
+    execution: { kind: 'cast_time', castTime: 1.2 },
+
     target: 'enemy',
 
     effects: [
@@ -519,13 +522,9 @@ export const SKILLS: Skill[] = [
 
         value: 1,
 
-        components: [
-          { kind: 'element', element: 'metal', ratio: 1 },
-        ],
+        components: [{ kind: 'element', element: 'metal', ratio: 1 }],
 
-        attributeScaling: [
-          { attributes: ['attunement'], ratioPerPoint: 0.004 },
-        ],
+        attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
       },
 
       {
@@ -548,8 +547,8 @@ export const SKILLS: Skill[] = [
       },
     ],
 
-      // Skill tree redesign (2026-08-21) — root node của Kim tree, chiếm
-      // 1 slot Loadout bình thường (xem hoa_cau_thuat's ghi chú).
+    // Skill tree redesign (2026-08-21) — root node của Kim tree, chiếm
+    // 1 slot Loadout bình thường (xem hoa_cau_thuat's ghi chú).
     resourceType: 'mana',
 
     buildTag: 'core',
@@ -591,6 +590,9 @@ export const SKILLS: Skill[] = [
 
     castTime: 1.2,
 
+    // Plan §8.3 — giữ nguyên cast time hiện có qua policy 'cast_time'.
+    execution: { kind: 'cast_time', castTime: 1.2 },
+
     target: 'enemy',
 
     effects: [
@@ -599,13 +601,9 @@ export const SKILLS: Skill[] = [
 
         value: 1,
 
-        components: [
-          { kind: 'element', element: 'earth', ratio: 1 },
-        ],
+        components: [{ kind: 'element', element: 'earth', ratio: 1 }],
 
-        attributeScaling: [
-          { attributes: ['attunement'], ratioPerPoint: 0.004 },
-        ],
+        attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
 
         earthPureAreaBehavior: true,
       },
@@ -619,8 +617,8 @@ export const SKILLS: Skill[] = [
       },
     ],
 
-      // Skill tree redesign (2026-08-21) — root node của Thổ tree, chiếm
-      // 1 slot Loadout bình thường (xem hoa_cau_thuat's ghi chú).
+    // Skill tree redesign (2026-08-21) — root node của Thổ tree, chiếm
+    // 1 slot Loadout bình thường (xem hoa_cau_thuat's ghi chú).
     resourceType: 'mana',
 
     buildTag: 'core',
@@ -645,7 +643,8 @@ export const SKILLS: Skill[] = [
 
     name: 'Ngự Kiếm Thuật',
 
-    description: 'Điều khiển phi kiếm bay lần lượt về phía mục tiêu, số kiếm tăng theo cảnh giới, mỗi kiếm trúng đích dồn thêm Kiếm Ý.',
+    description:
+      'Điều khiển phi kiếm bay lần lượt về phía mục tiêu, số kiếm tăng theo cảnh giới, mỗi kiếm trúng đích dồn thêm Kiếm Ý.',
 
     type: 'active',
 
@@ -667,13 +666,9 @@ export const SKILLS: Skill[] = [
 
         value: 0.6,
 
-        components: [
-          { kind: 'element', element: 'metal', ratio: 1 },
-        ],
+        components: [{ kind: 'element', element: 'metal', ratio: 1 }],
 
-        attributeScaling: [
-          { attributes: ['attunement'], ratioPerPoint: 0.003 },
-        ],
+        attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.003 }],
 
         // "1~9 kiếm bay lần lượt, cảnh giới càng cao càng nhiều" — bắn
         // (realmIndex + 1) missile liên tiếp, xem SkillEffectSystem.ts.
@@ -686,12 +681,9 @@ export const SKILLS: Skill[] = [
       },
     ],
 
-    // PLAN HOÀN CHỈNH mục 6/8 — thay activeCategory 'basic' cũ: skill
-    // này chạy theo attackSpeed timer (updatePlayerAttack), KHÔNG qua
-    // vòng lặp ưu tiên slot Loadout (updateAutoCast), bất kể đang ở
-    // slot nào hay chưa gắn slot nào (Phàm Nhân không có Loadout UI
-    // nhưng vẫn equip được trực tiếp, xem SkillSystem.equipWithoutSlot()).
-    isBasicAttack: true,
+    // Plan §8.3 — baseline bảo toàn hành vi: nhịp bắn kiếm theo Attack
+    // Speed, chiếm slot 0 của kit Kiếm Tu như mọi loadout skill khác.
+    execution: { kind: 'attack_speed' },
 
     resourceType: 'none',
 
@@ -711,7 +703,8 @@ export const SKILLS: Skill[] = [
 
     name: 'Kiếm Khai Thiên Môn',
 
-    description: 'Triệu hồi 1 thanh cự kiếm chém xuyên chiến trường, dựa vào Kiếm Ý hiện có và cảnh giới mà sát thương càng lớn.',
+    description:
+      'Triệu hồi 1 thanh cự kiếm chém xuyên chiến trường, dựa vào Kiếm Ý hiện có và cảnh giới mà sát thương càng lớn.',
 
     type: 'active',
 
@@ -730,15 +723,16 @@ export const SKILLS: Skill[] = [
 
     target: 'all_enemies',
 
+    // Plan §8.3 — active skill không cast time → policy 'cooldown'.
+    execution: { kind: 'cooldown' },
+
     effects: [
       {
         type: 'damage',
 
         value: 2,
 
-        components: [
-          { kind: 'element', element: 'metal', ratio: 1 },
-        ],
+        components: [{ kind: 'element', element: 'metal', ratio: 1 }],
 
         // "dựa vào số Kiếm Ý đang có" — CHỈ ĐỌC, không tiêu, xem
         // SkillEffect.ts's ghi chú.
@@ -762,7 +756,8 @@ export const SKILLS: Skill[] = [
 
     name: 'Vạn Kiếm Triều Tông',
 
-    description: 'Dồn hết 9999 Kiếm Ý, triệu hồi mưa kiếm phủ kín chiến trường trong 9 giây, xuyên phá phần lớn giáp/kháng của toàn bộ kẻ địch.',
+    description:
+      'Dồn hết 9999 Kiếm Ý, triệu hồi mưa kiếm phủ kín chiến trường trong 9 giây, xuyên phá phần lớn giáp/kháng của toàn bộ kẻ địch.',
 
     type: 'active',
 
@@ -781,6 +776,9 @@ export const SKILLS: Skill[] = [
     unreleased: true,
 
     target: 'all_enemies',
+
+    // Plan §8.3 — active skill không cast time → policy 'cooldown'.
+    execution: { kind: 'cooldown' },
 
     effects: [
       {
@@ -1013,7 +1011,8 @@ export const SKILLS: Skill[] = [
     // cuối phiên [[tienhiep-phap-tu-magicpath]], cần quyết định lại
     // hướng passive này (đổi sang combat stat, hay bỏ hẳn) khi làm nội
     // dung "class chính thức".
-    description: 'Nguyên Anh thấu triệt — cảm ngộ sâu hơn với thiên địa (hiện chưa có hiệu ứng, đang chờ thiết kế lại).',
+    description:
+      'Nguyên Anh thấu triệt — cảm ngộ sâu hơn với thiên địa (hiện chưa có hiệu ứng, đang chờ thiết kế lại).',
 
     type: 'passive',
 

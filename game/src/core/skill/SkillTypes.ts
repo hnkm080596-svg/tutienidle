@@ -26,10 +26,9 @@ export type SkillEffectType =
 // CombatEntity.currentSwordIntent/CombatTypes.ts's MAX_SWORD_INTENT.
 // 'momentum' (Thể Tu, Combat Rework Phase 7) — pool RIÊNG 0-100, xem
 // CombatEntity.currentMomentum/CombatTypes.ts's MAX_MOMENTUM. Skill
-// "Heavy Impact" khai cost:100 + activeCategory 'special'/'ultimate'
-// -> canUse() TỰ CHẶN cho tới khi Momentum đầy, updateAutoCast() (đã
-// có sẵn, thử special/ultimate mỗi tick) TỰ bắn ngay khi đủ — không
-// cần logic "auto-swap đòn kế tiếp" riêng.
+// có cost theo momentum thì canUse() TỰ CHẶN cho tới khi Momentum đầy,
+// scheduler auto-cast thống nhất của BattleSystem (plan §8.4) TỰ bắn
+// ngay khi đủ — không cần logic "auto-swap đòn kế tiếp" riêng.
 export type SkillResourceType =
   | 'none'
   | 'mana'

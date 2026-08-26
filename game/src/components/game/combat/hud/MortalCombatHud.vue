@@ -1,28 +1,51 @@
 <script setup lang="ts">
-// skill-insight-and-auto-combat-hud-plan.md mục 7 — Phàm Nhân CHỈ có
-// đúng 1 ô lớn cho Trảm. KHÔNG dựng 5 ô trống, KHÔNG hiện slot khóa.
+// skill-insight-and-auto-combat-hud-plan.md mục 7 + execution policy
+// rework (combat-gate-teleport-autocast plan §11.3) — Phàm Nhân CHỈ có
+// đúng 1 ô lớn cho Trảm, giờ ĐỌC TỪ scheduler thống nhất (slot 0 của
+// loadout — Trảm được gán slot mặc định, xem SkillLoadoutSlots/App.vue).
+// KHÔNG dựng 5 ô trống, KHÔNG hiện slot khóa.
 //
-// electron-combat-timing-smoothing-plan.md mục 7/8 — ô này thể hiện
-// NHỊP ĐÁNH (cadenceRemaining/cadenceTotal, mượt qua rAF resync ở
-// useBasicAttackCadence.ts), KHÔNG PHẢI Skill.cooldown.
+// Ô này thể hiện NHỊP CADENCE theo Attack Speed (policy 'attack_speed'),
+// không phải hồi chiêu Skill.cooldown.
+import { computed } from 'vue'
 import CombatSkillSlot from './CombatSkillSlot.vue'
-import { useBasicAttackCadence } from '@/composables/useBasicAttackCadence'
+import { useCombatSkillPresentation } from '@/composables/useCombatSkillPresentation'
+import { useCadenceSmoothing } from '@/composables/useCadenceSmoothing'
+import { useGameManager } from '@/composables/useGameState'
+import { useUiStore } from '@/stores/ui'
+import { isBattleInProgress } from '@/core/battle/BattleTypes'
 
-const { basicAttack, basicAttackSkill, displayRemaining } = useBasicAttackCadence()
+const { loadout, skillFor } = useCombatSkillPresentation()
+
+const primary = computed(() => loadout.value.find(entry => entry.slotIndex === 0))
+
+// Audit P1-4 — mask/số đếm nội suy mượt giữa hai snapshot thay vì nhảy
+// theo nhịp tick; đóng băng khi pause/không có trận đang chạy.
+const gameManager = useGameManager()
+const ui = useUiStore()
+
+const cadenceRemaining = useCadenceSmoothing(
+  () => ({
+    remaining: primary.value?.cadenceRemaining ?? 0,
+    total: primary.value?.cadenceTotal ?? 0,
+  }),
+  () => {
+    const battle = gameManager.getBattle()
+
+    return battle !== null && isBattleInProgress(battle.state) && !ui.isPaused
+  },
+)
 </script>
 
 <template>
-  <div v-if="basicAttack" class="mortal-combat-hud">
+  <div class="mortal-combat-hud">
     <CombatSkillSlot
+      v-if="primary && primary.skillId"
       class="mortal-combat-hud__slot"
-      :skill="basicAttackSkill"
-      :remaining="displayRemaining"
-      :total="basicAttack.cadenceTotal"
-      :is-masked="displayRemaining > 0"
-      :tooltip-override="basicAttackSkill ? {
-        title: basicAttackSkill.name,
-        description: 'Nhịp đánh — đòn tự động theo tốc độ đánh, không phải hồi chiêu kỹ năng.',
-      } : undefined"
+      :skill="skillFor(primary)"
+      :remaining="cadenceRemaining"
+      :total="primary.cadenceTotal ?? 0"
+      :is-masked="cadenceRemaining > 0"
     />
   </div>
 </template>

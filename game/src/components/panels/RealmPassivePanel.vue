@@ -18,7 +18,7 @@ const { passiveRows } = usePassiveRows()
 const { realmStatPassiveRows } = useRealmStatPassives()
 
 function close() {
-  ui.standalonePanel = null
+  ui.closeHomeOverlays()
 }
 </script>
 

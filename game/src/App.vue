@@ -13,16 +13,18 @@ import { useElectronBridge } from './composables/useElectronBridge'
 import { useNotificationStore } from './stores/notification'
 import { useOfflineSummaryStore } from './stores/offlineSummary'
 import { useSaveIssueStore } from './stores/saveIssue'
+import { savePersistedUiAutomationFlags } from './stores/uiFlagsPersistence'
 import GameRoot from './components/layout/GameRoot.vue'
 import LoadingScreen from './components/common/LoadingScreen.vue'
 import ErrorBoundary from './components/common/ErrorBoundary.vue'
 import ErrorScreen from './components/common/ErrorScreen.vue'
 import SaveIncompatibleScreen from './components/common/SaveIncompatibleScreen.vue'
 import AuthEntryScreen from './components/onboarding/AuthEntryScreen.vue'
-import CharacterCreationScreen, { type CharacterCreationPayload } from './components/onboarding/CharacterCreationScreen.vue'
+import CharacterCreationScreen, {
+  type CharacterCreationPayload,
+} from './components/onboarding/CharacterCreationScreen.vue'
 
 import { materials } from './data/materials/materials'
-import { explorations } from './data/exploration/explorations'
 import { SKILLS } from './data/skill/Skills'
 import { TECHNIQUES } from './data/technique/Techniques'
 import { ENEMIES } from './data/enemy/Enemies'
@@ -35,10 +37,9 @@ import { pills } from './data/pill/pills'
 import { talismans } from './data/talisman/talismans'
 import { buffs } from './data/buff/buffs'
 import { formations } from './data/formation/formations'
-import { recipes } from './data/recipe/recipes'
+import { alchemyRecipes } from './data/alchemy/alchemyRecipes'
 import { ailments } from './data/ailment/ailments'
 import { buildings } from './data/building/buildings'
-import { processingRecipes } from './data/building/processingRecipes'
 import { PHAP_TU_NODES } from './data/progression/PhapTuNodes'
 import { isCultivationPoseActive } from './core/cultivation/CultivationPose'
 import { useBootFlow } from './composables/useBootFlow'
@@ -47,6 +48,37 @@ import { buildGameSave } from './services/save/SaveSystem'
 
 const player = usePlayerStore()
 const ui = useUiStore()
+
+// Automation flags persistence (2026-08-26, uiFlagsPersistence.ts) —
+// $subscribe bắt MỌI đường mutation (kể cả gán trực tiếp
+// `ui.battleRunMode = ...` trong CombatVictoryPanel/StageSelectPanel),
+// ghi snapshot vào localStorage. Ghi rẻ (JSON nhỏ), skip khi snapshot
+// không đổi để tránh ghi lặp vô nghĩa mỗi tick.
+let lastAutomationSnapshot = ''
+
+ui.$subscribe((_mutation, state) => {
+  const snapshot = JSON.stringify({
+    a: state.isAutoBreakthrough,
+
+    c: state.isAutoConsumeTinhHoa,
+
+    m: state.battleRunMode,
+  })
+
+  if (snapshot === lastAutomationSnapshot) {
+    return
+  }
+
+  lastAutomationSnapshot = snapshot
+
+  savePersistedUiAutomationFlags({
+    isAutoBreakthrough: state.isAutoBreakthrough,
+
+    isAutoConsumeTinhHoa: state.isAutoConsumeTinhHoa,
+
+    battleRunMode: state.battleRunMode,
+  })
+}, { detached: true })
 const notification = useNotificationStore()
 const offlineSummary = useOfflineSummaryStore()
 const saveIssue = useSaveIssueStore()
@@ -67,7 +99,6 @@ const clock = new GameClock()
 const gameManager = new GameManager()
 
 gameManager.registerMaterials(materials)
-gameManager.registerExplorations(explorations)
 gameManager.registerSkillTemplates(SKILLS)
 gameManager.registerTechniqueTemplates(TECHNIQUES)
 gameManager.registerEnemyTemplates(ENEMIES)
@@ -77,13 +108,17 @@ gameManager.registerZones(zones)
 gameManager.registerEquipment(equipment)
 gameManager.registerAffixes(affixes)
 gameManager.registerPills(pills)
-gameManager.registerTalismans(talismans)
+// Buff KHÔNG phải Phù/Trận legacy — SkillEffectSystem resolve effect
+// 'buff'/'debuff' qua buffRegistry.get() (THROW khi thiếu) cho skill
+// còn khai báo buffId (thai_hu_nhat_kiem → sword_wound, phieu_van_bo
+// → phieu_van_bo_buff); bỏ dòng này làm registry rỗng và crash giữa
+// trận (fix review 2026-08-26).
 gameManager.registerBuffs(buffs)
+gameManager.registerTalismans(talismans)
 gameManager.registerFormations(formations)
-gameManager.registerRecipes(recipes)
+gameManager.registerAlchemyRecipes(alchemyRecipes)
 gameManager.registerAilments(ailments)
 gameManager.registerBuildings(buildings)
-gameManager.registerProcessingRecipes(processingRecipes)
 gameManager.registerProgressionNodes(PHAP_TU_NODES)
 
 const { breakthrough } = useBreakthrough(gameManager)
@@ -250,17 +285,6 @@ function startTickLoop() {
   tickHandle = window.setInterval(tick, TICK_INTERVAL_MS)
 }
 
-// Phím tắt Tab mở/đóng NavMenuOverlay.vue (bảng navigation toàn màn
-// hình, xem RightPanel.vue/GameRoot.vue) — phải preventDefault() vì
-// Tab mặc định của trình duyệt sẽ nhảy focus sang phần tử kế tiếp.
-function onKeydown(event: KeyboardEvent) {
-  if (event.key === 'Tab') {
-    event.preventDefault()
-
-    ui.toggleNavMenu()
-  }
-}
-
 async function bootGame(createNewCharacter = false) {
   bootFlow.startSaveLoad()
 
@@ -286,7 +310,11 @@ async function bootGame(createNewCharacter = false) {
   // Chặn boot lại đây, để SaveIncompatibleScreen quyết thay vì âm
   // thầm tạo nhân vật mới đè lên tiến trình cũ ở lần save() kế tiếp.
   if (loaded.status === 'incompatible' || loaded.status === 'corrupted') {
-    saveIssue.report(loaded.status, loaded.raw, loaded.status === 'incompatible' ? loaded.foundVersion : undefined)
+    saveIssue.report(
+      loaded.status,
+      loaded.raw,
+      loaded.status === 'incompatible' ? loaded.foundVersion : undefined,
+    )
     bootFlow.fail()
     return
   }
@@ -300,22 +328,32 @@ async function bootGame(createNewCharacter = false) {
 
   if (loaded.status === 'ok') {
     const offline = player.restoreFromSave(loaded.save)
+
+    // Timed effect authority (2026-08-24): đăng ký player để update()
+    // tick expiry theo Date.now() (load bỏ effect hết hạn ngay).
+    gameManager.setActivePlayer(player.$state)
+
     // registerXxx() ở trên đã chạy trước onMounted (module-level
     // trong <script setup>) nên registry đã sẵn data để resolve id
-    // — restoreFromSave() PHẢI gọi sau đó, không phải trước.
+    // - restoreFromSave() PHẢI gọi sau đó, không phải trước.
     const equipmentModifiers = gameManager.restoreFromSave(loaded.save)
 
     player.setEquipmentModifiers(equipmentModifiers)
 
-    // Fix (2026-08-20) — "Trảm" (basic_strike) trước đây CHỈ được cấp
-    // ở nhánh nhân vật mới bên dưới, restoreFromSave() chỉ re-add skill
-    // đã CÓ SẴN trong save.skills. Save tạo trước khi grant này tồn
-    // tại (hoặc bất kỳ lý do gì thiếu basic_strike) sẽ kẹt ở Phàm Nhân
-    // không có đòn đánh nào — Phàm Nhân chưa có Skill Loadout UI để tự
-    // sửa. Idempotent, an toàn no-op với save đã có sẵn skill này.
+    // Fix (2026-08-20) — "Trảm" trước đây CHỈ được cấp ở nhánh nhân vật
+    // mới bên dưới, restoreFromSave() chỉ re-add skill đã CÓ SẴN trong
+    // save.skills. Save tạo trước khi grant này tồn tại (hoặc bất kỳ lý
+    // do gì thiếu tram) sẽ kẹt ở Phàm Nhân không có đòn đánh nào — Phàm
+    // Nhân chưa có Skill Loadout UI để tự sửa. Idempotent, an toàn no-op
+    // với save đã có sẵn skill này.
+    // Execution policy rework (combat-gate-teleport-autocast plan §8.6):
+    // scheduler chỉ đọc loadout → Trảm được GÁN VÀO slot mặc định (slot
+    // 0) thay vì equip không slot như trước.
     if (!gameManager.skillManager.has('tram')) {
       gameManager.learnSkill('tram')
-      gameManager.equipSkillWithoutSlot('tram')
+      gameManager.setSkillLoadoutSlot(player.$state, 0, 'tram')
+    } else if (!gameManager.skillManager.getEquippedInSlot(0)) {
+      gameManager.setSkillLoadoutSlot(player.$state, 0, 'tram')
     }
 
     // Beta Phase 4 (mục XIV) — chỉ hiện modal nếu offline đủ dài
@@ -335,14 +373,12 @@ async function bootGame(createNewCharacter = false) {
 
     // Phàm Nhân (2026-08-16) — Tụ Linh Quyết không mang theo skill
     // chiến đấu nào (thuần tu luyện), nhưng nhân vật vẫn cần đánh được
-    // 10 Động trước khi chọn Pháp Tu/Kiếm Tu — cấp sẵn "Trảm" (skill
-    // basic_strike có sẵn trong data, trước đây chưa ai grant) làm đòn
-    // đánh thường mặc định. Phàm Nhân CHƯA có Skill Loadout UI (xem
-    // PLAN HOÀN CHỈNH mục 7/8) nên equip KHÔNG qua slot. Sau khi chọn
-    // path, kit's basic skill tự GHI ĐÈ (SkillSystem.equipToSlot()/
-    // equipWithoutSlot() tự dọn skill isBasicAttack cũ, xem ghi chú ở đó).
+    // 10 Động trước khi chọn Pháp Tu/Kiếm Tu — cấp sẵn "Trảm" làm đòn
+    // đánh mặc định. Execution policy rework (plan §8.6): gán vào slot
+    // mặc định 0; sau khi chọn path, skill slot 0 của kit tự GHI ĐÈ qua
+    // equipToSlot() (dời skill cũ khỏi slot).
     gameManager.learnSkill('tram')
-    gameManager.equipSkillWithoutSlot('tram')
+    gameManager.setSkillLoadoutSlot(player.$state, 0, 'tram')
 
     // Truyền Tống Trận/Khai Thác rework (theo yêu cầu — "mặc định có,
     // không thì làm sao có nguyên liệu") — 2 Building này giờ granted
@@ -358,6 +394,31 @@ async function bootGame(createNewCharacter = false) {
         lastCollectedAt: clock.nowSeconds(),
       })
     }
+
+    // Fix "không có cách nào để xây Linh Tuyền/Khí Đường/Đan Phòng"
+    // (yêu cầu 2026-08-26): 3 công trình này tốn mortal_wood/mortal_ore_hoang
+    // mà nhân vật mới bắt đầu với bag RỖNG — người chơi không thể có
+    // nguyên liệu nếu chưa biết phải vào Sản Xuất bấm chu kỳ thủ công.
+    // (1) Starter pack đủ xây cả 3 base (13 gỗ + 4 quáng cần thiết):
+    for (const [materialId, amount] of [
+      ['mortal_wood', 15],
+      ['mortal_ore_hoang', 6],
+    ] as const) {
+      if (gameManager.materialRegistry.has(materialId)) {
+        gameManager.materialBag.add(gameManager.materialRegistry.get(materialId), amount)
+      }
+    }
+
+    // (2) Ba nguồn Thanh Vân tự chạy + autoRestart — nguyên liệu trickle
+    // về bag liên tục thay vì đợi người chơi khởi động từng chu kỳ.
+    for (const definition of gameManager.productionSystem.getSiteDefinitions()) {
+      gameManager.setProductionAutoRestart(definition.siteId, true)
+
+      gameManager.startProductionCycle(definition.siteId, player.$state)
+    }
+
+    // Nhân vật mới — đăng ký player cho timed effect authority.
+    gameManager.setActivePlayer(player.$state)
   }
 
   clock.start()
@@ -367,8 +428,6 @@ async function bootGame(createNewCharacter = false) {
   // No-op ngay nếu không chạy trong Electron (window.electronAPI không
   // tồn tại ở bản web) — xem composables/useElectronBridge.ts.
   useElectronBridge(gameManager)
-
-  window.addEventListener('keydown', onKeydown)
 
   isBooted.value = true
   bootFlow.enterGame()
@@ -383,14 +442,17 @@ async function onCharacterCreated(payload: CharacterCreationPayload) {
   player.name = payload.name
   player.selectedTalentIds = payload.talentIds
 
-  for (const [stat, amount] of Object.entries(payload.attributes) as Array<[keyof CharacterCreationPayload['attributes'], number]>) {
+  for (const [stat, amount] of Object.entries(payload.attributes) as Array<
+    [keyof CharacterCreationPayload['attributes'], number]
+  >) {
     player.baseStats[stat] += amount
   }
 
   await bootGame(true)
   const result = await cloudSaveCoordinator.save(buildGameSave(player.$state, gameManager))
   if (result.status !== 'ok') {
-    bootError.value = result.status === 'conflict' ? 'Save đã thay đổi ở một phiên khác.' : result.message
+    bootError.value =
+      result.status === 'conflict' ? 'Save đã thay đổi ở một phiên khác.' : result.message
     bootFlow.fail()
   }
 }
@@ -421,7 +483,6 @@ onUnmounted(() => {
     autosaveHandle = undefined
   }
 
-  window.removeEventListener('keydown', onKeydown)
   document.removeEventListener('visibilitychange', onVisibilityChange)
   window.removeEventListener('pagehide', onPageHide)
 })
@@ -432,7 +493,11 @@ onUnmounted(() => {
 
   <AuthEntryScreen v-else-if="entryStage === 'auth'" @authenticated="onAuthenticated" />
 
-  <CharacterCreationScreen v-else-if="entryStage === 'character'" @back="bootFlow.showAuth" @complete="onCharacterCreated" />
+  <CharacterCreationScreen
+    v-else-if="entryStage === 'character'"
+    @back="bootFlow.showAuth"
+    @complete="onCharacterCreated"
+  />
 
   <SaveIncompatibleScreen v-else-if="saveIssue.status" />
 
@@ -469,8 +534,26 @@ body {
   color: var(--text-primary);
 }
 
-.boot-error { width: 100vw; height: 100vh; display: grid; place-content: center; justify-items: center; background: var(--ink-950); }
-.boot-error h1 { color: var(--crimson); font-family: var(--font-display); }
-.boot-error p { color: var(--text-secondary); }
-.boot-error button { padding: 10px 16px; border: 1px solid var(--gold-500); background: transparent; color: var(--gold-300); cursor: pointer; }
+.boot-error {
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  background: var(--ink-950);
+}
+.boot-error h1 {
+  color: var(--crimson);
+  font-family: var(--font-display);
+}
+.boot-error p {
+  color: var(--text-secondary);
+}
+.boot-error button {
+  padding: 10px 16px;
+  border: 1px solid var(--gold-500);
+  background: transparent;
+  color: var(--gold-300);
+  cursor: pointer;
+}
 </style>

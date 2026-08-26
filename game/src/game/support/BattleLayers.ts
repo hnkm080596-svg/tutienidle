@@ -19,7 +19,24 @@
 // (projection.bounds()), KHÔNG phải tập entity đang sống. Spawn/death của
 // 1 entity không được làm remap depth của entity khác, và upright VFX
 // (depth chốt lúc spawn) luôn cùng thước với entity trong suốt timeline.
+//
+// Background sub-layers (2026-08-26) — art modular Thanh Vân KHÔNG dùng
+// chung một depth nữa (insertion order khiến atmosphere đè lên battle
+// ground). Thứ tự bắt buộc:
+//
+//   sky < far mountains < midground < atmosphere < battle ground
+//       < foreground left/right < time grading
+//
+// ⇒ đúng quan hệ "foreground > battle ground > atmosphere", và mọi depth
+// background vẫn NHỎ HƠN DEPTH_GROUND_GRID (=100).
 export const DEPTH_BACKGROUND = 0
+export const DEPTH_BACKGROUND_SKY = DEPTH_BACKGROUND + 1
+export const DEPTH_BACKGROUND_FAR_MOUNTAINS = DEPTH_BACKGROUND_SKY + 1
+export const DEPTH_BACKGROUND_MIDGROUND = DEPTH_BACKGROUND_FAR_MOUNTAINS + 1
+export const DEPTH_BACKGROUND_ATMOSPHERE = DEPTH_BACKGROUND_MIDGROUND + 1
+export const DEPTH_BACKGROUND_BATTLE_GROUND = DEPTH_BACKGROUND_ATMOSPHERE + 1
+export const DEPTH_BACKGROUND_FOREGROUND = DEPTH_BACKGROUND_BATTLE_GROUND + 1
+export const DEPTH_THANH_VAN_TIME_GRADE = DEPTH_BACKGROUND_FOREGROUND + 1
 export const DEPTH_GROUND_GRID = 100
 export const DEPTH_GROUND_VFX = 200
 export const DEPTH_ENTITY_SHADOW = 300

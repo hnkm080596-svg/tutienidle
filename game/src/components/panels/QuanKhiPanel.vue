@@ -58,7 +58,7 @@ function choosePath(pathId: CultivationPathId) {
 }
 
 function close() {
-  ui.standalonePanel = null
+  ui.closeHomeOverlays()
 }
 </script>
 

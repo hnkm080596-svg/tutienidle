@@ -1,9 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { selectPrimaryTarget, collectAffected } from './ActionTargetingSystem'
+import {
+  canEnemyReachGate,
+  canPlayerReachTarget,
+  collectAffected,
+  selectAttackableTarget,
+  selectTeleportTarget,
+} from './ActionTargetingSystem'
+import { rankTargetsByStrategy } from './CombatAiStrategy'
 import type { Battle } from '../battle/Battle'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { ActionTargeting } from '../battle/CombatAction'
-import { GRID_ROW_COUNT } from '../battle/BattleGrid'
+import { GRID_ROW_COUNT, getChebyshevDistance } from '../battle/BattleGrid'
 
 // Combat Grid Rework — selection + AOE shapes theo đơn vị GRID.
 function entity(id: string, x: number, row: number, hp = 100): CombatEntity {
@@ -15,64 +22,122 @@ function entity(id: string, x: number, row: number, hp = 100): CombatEntity {
     currentHp: hp,
     maxHp: 100,
     alive: true,
+    stats: { attackRange: 2 },
   } as unknown as CombatEntity
 }
 
-function battleWith(player: CombatEntity, enemies: CombatEntity[]): Battle {
+function battleWith(
+  player: CombatEntity,
+  enemies: CombatEntity[],
+  overrides?: Partial<Pick<Battle, 'playerMaterialized'>>,
+): Battle {
   return {
     player,
     enemies: enemies.map(e => ({ entity: e })),
+    playerMaterialized: true,
+    ...overrides,
   } as unknown as Battle
 }
 
-const PLAYER = entity('player', 0, 4)
+const PLAYER = entity('player', 1, 4)
 
-describe('selectPrimaryTarget', () => {
-  const targeting: ActionTargeting = { rangeColumns: 8, shape: 'single' }
+describe('canPlayerReachTarget — Chebyshev (plan §2.3)', () => {
+  it('range 1: cùng ô = 0, kề ngang/dọc/chéo = 1, xa 2 cột = ngoài tầm', () => {
+    const player = entity('p', 5, 4)
+    ;(player as unknown as { stats: { attackRange: number } }).stats.attackRange = 1
 
-  it('player source: chọn quái GẦN NHẤT theo cột, hòa thì gần hàng hơn', () => {
-    const e1 = entity('e1', 6, 0)
-    const e2 = entity('e2', 5, 9)
-    const battle = battleWith(PLAYER, [e1, e2])
+    expect(getChebyshevDistance({ row: 4, column: 5 }, { row: 4, column: 5 })).toBe(0)
 
-    expect(selectPrimaryTarget(battle, PLAYER, targeting)?.id).toBe('e2')
+    // Kề ngang (col 6), kề dọc (row 3), chéo — đều trong tầm range 1.
+    expect(canPlayerReachTarget(player, entity('a', 6.0, 4))).toBe(true)
+    expect(canPlayerReachTarget(player, entity('b', 5.0, 3))).toBe(true)
+    expect(canPlayerReachTarget(player, entity('c', 6.0, 5))).toBe(true)
+
+    // Xa 2 cột → ngoài tầm.
+    expect(canPlayerReachTarget(player, entity('d', 7.0, 4))).toBe(false)
+
+    // Target chết → không bao giờ reach được.
+    const dead = entity('dead', 6, 4)
+    dead.alive = false
+    expect(canPlayerReachTarget(player, dead)).toBe(false)
+  })
+})
+
+describe('canEnemyReachGate — semantics riêng với player-to-enemy (plan §6.1)', () => {
+  it('KHÔNG xét row: quái row 0 và row 9 đều đánh cổng khi đủ khoảng cách cột', () => {
+    const near = entity('near', 3.0, 0) // dist 2 tới cổng col 1 = range 2 ✓
+
+    expect(canEnemyReachGate(near, 1)).toBe(true)
+
+    const farRow = entity('farRow', 4.0, 9) // dist 3 > range 2 ✗
+
+    expect(canEnemyReachGate(farRow, 1)).toBe(false)
   })
 
-  it('loại quái ngoài rangeColumns và ngoài màn hình (x > VISIBLE)', () => {
-    const far = entity('far', 12, 2) // 12 > range 8
-    const offscreen = entity('off', 16, 2)
-    const near = entity('near', 3, 2)
-    const battle = battleWith(PLAYER, [far, offscreen, near])
+  it('quái đã vượt cổng (x < gateColumn) vẫn tính trong tầm theo |dx|', () => {
+    const inside = entity('inside', 1.0, 5)
 
-    expect(selectPrimaryTarget(battle, PLAYER, targeting)?.id).toBe('near')
+    expect(canEnemyReachGate(inside, 1)).toBe(true)
+  })
+})
+
+describe('selectAttackableTarget + selectTeleportTarget (plan §7.2 + sản phẩm 2026-08-26)', () => {
+  it('chỉ chọn enemy đang trong Chebyshev range của avatar', () => {
+    const inRange = entity('in', 2.0, 4) // dist 1
+    const outRange = entity('out', 8.0, 8)
+    const battle = battleWith(PLAYER, [outRange, inRange])
+
+    expect(selectAttackableTarget(battle)?.id).toBe('in')
+
+    // Không ai trong tầm → null.
+    const battleFar = battleWith(PLAYER, [outRange])
+
+    expect(selectAttackableTarget(battleFar)).toBeNull()
   })
 
-  it('selection lowest_hp / highest_hp bỏ qua khoảng cách', () => {
-    const a = entity('a', 4, 2, 80)
-    const b = entity('b', 6, 2, 30)
-    const battle = battleWith(PLAYER, [a, b])
+  it('teleport target: xếp hạng TOÀN BỘ enemy sống — pre-position ngay cả khi quái còn xa theo cột', () => {
+    // Quái ở cột 14 (xa cổng): KHÔNG attackable nhưng VẪN là teleport
+    // target — Player tele tới hàng nó sớm thay vì đứng đợi.
+    const marching = entity('march', 14.0, 3)
+    const battle = battleWith(PLAYER, [marching])
 
-    const lowest = selectPrimaryTarget(battle, PLAYER, { ...targeting, selection: 'lowest_hp' })
-    const highest = selectPrimaryTarget(battle, PLAYER, { ...targeting, selection: 'highest_hp' })
-
-    expect(lowest?.id).toBe('b')
-    expect(highest?.id).toBe('a')
+    expect(selectAttackableTarget(battle)).toBeNull()
+    expect(selectTeleportTarget(battle)?.id).toBe('march')
   })
 
-  it('enemy source: candidate DUY NHẤT là hero (cổng chặn ngang mọi hàng)', () => {
-    const enemy = entity('enemy', 10, 7)
-    const battle = battleWith(PLAYER, [])
+  it('player chưa materialize → không chọn target', () => {
+    const inRange = entity('in', 2.0, 4)
+    const battle = battleWith(PLAYER, [inRange], { playerMaterialized: false })
 
-    // Range 10 ≥ dist 10 ✓ → target là player.
-    expect(selectPrimaryTarget(battle, enemy, { rangeColumns: 10, shape: 'single' })?.id).toBe('player')
+    expect(selectAttackableTarget(battle)).toBeNull()
+    expect(selectTeleportTarget(battle)).toBeNull()
+  })
 
-    // Range ngắn hơn khoảng cách → không target.
-    expect(selectPrimaryTarget(battle, enemy, { rangeColumns: 5, shape: 'single' })).toBeNull()
+  it('AI strategy: boss_first ưu tiên Boss, tie-break theo distance/row/id', () => {
+    const normal = entity('normal_2', 2.0, 2)
+    const boss = entity('boss_1', 2.0, 6)
+    boss.isBoss = true
+    const battle = battleWith(PLAYER, [normal, boss])
+
+    expect(selectAttackableTarget(battle, 'nearest')?.id).toBe('normal_2')
+    expect(selectAttackableTarget(battle, 'boss_first')?.id).toBe('boss_1')
+    expect(selectAttackableTarget(battle, 'lowest_hp')?.id).toBe('normal_2')
+
+    // rankTargetsByStrategy: lowest_hp hòa HP → gần hơn thắng.
+    const ranked = rankTargetsByStrategy(
+      [
+        { entity: normal, distance: 1 },
+        { entity: boss, distance: 5 },
+      ],
+      'lowest_hp',
+    )
+
+    expect(ranked[0]?.entity.id).toBe(normal.id)
   })
 })
 
 describe('collectAffected — shape theo grid, clamp biên', () => {
-  const base: ActionTargeting = { rangeColumns: 99, shape: 'area', laneRadius: 1, columnRadius: 1 }
+  const base: ActionTargeting = { shape: 'area', laneRadius: 1, columnRadius: 1 }
 
   it("shape 'area': anchor ở GÓC trên-phải (row 0, col 15) — chỉ ô trong grid", () => {
     const inCell = entity('in', 14.6, 1) // col 15, row 1
@@ -120,7 +185,7 @@ describe('collectAffected — shape theo grid, clamp biên', () => {
       'primary',
       2,
       5,
-      { rangeColumns: 99, shape: 'line' },
+      { shape: 'line' },
     )
 
     // Primary LUÔN đứng đầu affected (sort isPrimary-first).
@@ -139,7 +204,7 @@ describe('collectAffected — shape theo grid, clamp biên', () => {
       'primary',
       2,
       5,
-      { rangeColumns: 99, shape: 'all_lanes', columnRadius: 1 },
+      { shape: 'all_lanes', columnRadius: 1 },
     )
 
     expect(affected.map(e => e.id)).toEqual(['primary', 'top', 'bottom'])
@@ -156,7 +221,7 @@ describe('collectAffected — shape theo grid, clamp biên', () => {
       'primary',
       2,
       5,
-      { rangeColumns: 99, shape: 'area', laneRadius: 0, columnRadius: 1, maxTargets: 2 },
+      { shape: 'area', laneRadius: 0, columnRadius: 1, maxTargets: 2 },
     )
 
     expect(affected).toHaveLength(2)

@@ -10,7 +10,8 @@ import type { Skill } from '../skill/Skill'
 // trình duyệt throttle (nền/minimize/máy vừa resume), một lần gọi
 // gameManager.update() có thể nhận đúng TỔNG THỜI GIAN đó dồn vào MỘT
 // deltaSeconds lớn thay vì nhiều deltaSeconds nhỏ như lúc chạy nền trước
-// (foreground). Trước khi sửa, playerAttackTimer/spawnCountdown chỉ kiểm
+// (foreground). Trước khi sửa, các timer đếm-ngược-rồi-reset (cadence/
+// attackTimer/spawnCountdown) chỉ kiểm
 // tra <= 0 MỘT LẦN mỗi lời gọi rồi reset thẳng về mốc mới — một
 // deltaSeconds lớn chỉ tạo ra ĐÚNG 1 đòn đánh dù đáng lẽ phải đủ N đòn
 // theo đúng nhịp thời gian thực đã trôi qua. Test này khoá lại bất biến
@@ -22,7 +23,7 @@ const ATTACKER_STATS_INPUT = {
   attack: 50,
   attackSpeed: 2, // interval = 1 / attackSpeed = 0.5s
   movementSpeed: 0,
-  attackRange: 999999,
+  attackRangeRanks: 9,
   criticalRate: 0,
   criticalDamage: 1.5,
   armor: 0,
@@ -56,9 +57,9 @@ function createAttackerPlayer(): CombatEntity {
   }
 }
 
-// updatePlayerAttack() (BattleSystem.ts) không có fallback vật lý thuần
-// nữa — player PHẢI có 1 skill isBasicAttack đã equip mới đánh được, xem
-// cùng fixture ở BattleSystem.attackRangeVisibility.test.ts.
+// Scheduler thống nhất (plan §8.4) — mọi đòn của player là skill
+// auto-cast; skill fixture 'attack_speed' chiếm slot 0 (nhịp theo Attack
+// Speed), xem cùng fixture ở BattleSystem.attackRangeVisibility.test.ts.
 function createBasicSkill(): Skill {
   return {
     id: 'basic_test',
@@ -72,10 +73,12 @@ function createBasicSkill(): Skill {
     cost: 0,
     target: 'enemy',
     effects: [{ type: 'damage', value: 1, damageType: 'physical' }],
-    isBasicAttack: true,
+    execution: { kind: 'attack_speed' },
     resourceType: 'none',
     unlocked: true,
     equipped: true,
+    loadoutSlot: 0,
+    loadoutSlots: [0],
   }
 }
 
@@ -101,7 +104,7 @@ describe('GameManager — fixed-step catch-up cho combat (uncommitted audit foll
 
     gameManager.registerSkillTemplates([createBasicSkill()])
     gameManager.learnSkill('basic_test')
-    gameManager.equipSkillWithoutSlot('basic_test')
+    gameManager.skillSystem.equipToSlot('basic_test', 0)
 
     gameManager.startBattle(player, createStubbornEnemy())
 
@@ -109,10 +112,10 @@ describe('GameManager — fixed-step catch-up cho combat (uncommitted audit foll
     // đếm đòn đánh ở giai đoạn này.
     gameManager.update(3)
 
-    // start() luôn ghi đè x = ENEMY_SPAWN_X (400) > SCREEN_VISIBLE_MAX_X
-    // (350) — đặt lại trong tầm nhìn để player đánh được ngay khi
-    // 'fighting' bắt đầu, cùng quy ước các test BattleSystem khác.
-    gameManager.getBattle()!.enemies[0]!.entity.x = 5
+    // Materialize gán vị trí từ resolver — đặt quái trong tầm teleport
+    // (col 2: sau khi đổi row về hàng quái, Chebyshev = 1) để player
+    // đánh được ngay khi 'fighting' bắt đầu.
+    gameManager.getBattle()!.enemies[0]!.entity.x = 2
 
     let attackCount = 0
 
@@ -159,7 +162,7 @@ describe('GameManager — fixed-step catch-up cho combat (uncommitted audit foll
 
     gameManager.startBattle(player, createStubbornEnemy())
     gameManager.update(3)
-    gameManager.getBattle()!.enemies[0]!.entity.x = 5
+    gameManager.getBattle()!.enemies[0]!.entity.x = 2
 
     // Giả lập máy ngủ nhiều giờ rồi resume — deltaSeconds cực lớn.
     expect(() => gameManager.update(6 * 60 * 60)).not.toThrow()
