@@ -136,6 +136,9 @@ function createHarness(playerOverrides: Partial<CombatEntity> = {}): Harness {
     currentKimThe: 0,
 
     timeSinceLastBleedProc: 0,
+    tuLucActive: false,
+    tuLucElapsed: 0,
+    tuLucDamageTakenPercent: 0,
 
     currentWard: 0,
 
@@ -189,6 +192,12 @@ function enterFighting(harness: Harness, enemyId = 'enemy') {
     currentKimThe: 0,
 
     timeSinceLastBleedProc: 0,
+
+    tuLucActive: false,
+
+    tuLucElapsed: 0,
+
+    tuLucDamageTakenPercent: 0,
 
     currentWard: 0,
 

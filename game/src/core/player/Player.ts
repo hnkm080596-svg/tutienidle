@@ -15,6 +15,9 @@ import type { PersistentTimedEffect } from './PersistentTimedEffect'
 import type { ElementType } from '../element/ElementType'
 import type { ArtifactProgress } from '../artifact/Artifact'
 
+/** Kiếm Tu tự lực (2026-08-28) — 2 nhánh song song, xem PlayerData.kiemTuRoute. */
+export type KiemTuRoute = 'kiem_tran' | 'bat_kiem'
+
 export interface PlayerData {
   name: string
 
@@ -94,6 +97,15 @@ export interface PlayerData {
   // path) là NGOẠI LỆ duy nhất, xem CharacterPanel.vue's
   // canChooseCultivationPath.
   cultivationPath?: CultivationPathId
+
+  // Kiếm Tu tự lực (2026-08-28) — route đang active trong 2 nhánh song
+  // song (Kiếm Trận/Bạt Kiếm), đổi được ngoài combat qua
+  // GameManager.setKiemTuRoute(). Mặc định (undefined) = 'kiem_tran'
+  // (đường mặc định lúc chọn Kiếm Tu, chưa cần ghi giá trị tường minh
+  // lúc path chưa chọn/chưa phải Kiếm Tu). Type export (Task 7 review
+  // fix) — tránh QuanKhiPanel.vue/CombatControlBar.vue tự khai lại union
+  // này rồi lệch khỏi field thật.
+  kiemTuRoute?: KiemTuRoute
 
   // Kiếm Tu (2026-08-15) — Kiếm Ý VĨNH VIỄN: đếm dồn suốt đời save,
   // KHÔNG BAO GIỜ giảm (khác `cultivation`, bị tiêu hao lúc đột phá) —
@@ -201,6 +213,18 @@ export interface PlayerData {
   // roll/nhặt/craft/equip/đổi sang pháp bảo nghề khác.
   artifact?: ArtifactProgress
 
+  // Kiếm Tu (2026-08-28) — mirror của Skill.totalExperience/level cho
+  // TỪNG skill (key = skillId), ghi mỗi lần cast trong
+  // SkillSystem.gainCastExperience() qua sink (xem
+  // GameManager's skillSystem.setCastCountSink()). Tồn tại VÌ
+  // NodeSystem.hasPrerequisite() chỉ nhận PlayerData — không có
+  // SkillManager để tra totalExperience/level trực tiếp. Skill instance
+  // thật vẫn sống trong SkillManager (KHÔNG nằm trong PlayerData); đây
+  // chỉ là bản sao đọc-thôi phục vụ prerequisite `skillCastCount`.
+  skillCastCounts?: Record<string, number>
+
+  skillLevels?: Record<string, number>
+
   lastSavedAt: number
 }
 
@@ -236,7 +260,18 @@ export function createDefaultPlayer(): PlayerData {
 
     // PHẢI khai báo tường minh (dù `undefined`) — cùng lý do
     // cultivationPath ở trên (toRefs() snapshot 1 lần lúc init store).
+    kiemTuRoute: undefined,
+
+    // PHẢI khai báo tường minh (dù `undefined`) — cùng lý do
+    // cultivationPath ở trên (toRefs() snapshot 1 lần lúc init store).
     artifact: undefined,
+
+    // PHẢI khai báo tường minh (rỗng, không undefined) — cùng lý do
+    // Pinia toRefs() snapshot ở trên: sink của SkillSystem ghi field
+    // con (`skillCastCounts[skillId] = ...`) sau khi store đã khởi
+    // tạo, nên object chứa PHẢI tồn tại sẵn làm key reactive từ đầu.
+    skillCastCounts: {},
+    skillLevels: {},
 
     totalCultivationGained: 0,
     skillInsight: 0,
@@ -315,6 +350,12 @@ export function playerToCombatEntity(
     currentKimThe: 0,
 
     timeSinceLastBleedProc: 0,
+
+    tuLucActive: false,
+
+    tuLucElapsed: 0,
+
+    tuLucDamageTakenPercent: 0,
 
     currentWard: 0,
 

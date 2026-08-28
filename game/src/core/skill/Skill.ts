@@ -24,6 +24,8 @@ export type { SkillResourceStatKey } from './SkillRuntimeStats'
  *   cooldown commit lúc BẮT ĐẦU niệm, chịu CDR.
  * - `attack_speed_cast`: vừa niệm vừa có nhịp tái dùng theo Attack Speed;
  *   không chịu CDR.
+ * - `channel`: TỤ LỰC liên tục, không cooldown, không cast time; mỗi
+ *   `tickSeconds` gây 1 phát (xem BattleSystem.updateChanneling()).
  */
 export type SkillExecutionPolicy =
   | {
@@ -41,6 +43,14 @@ export type SkillExecutionPolicy =
       kind: 'attack_speed_cast'
       castTime: number
       attackSpeedMultiplier?: number
+    }
+  // Kiếm Tu Bạt Kiếm (2026-08-28) — TỤ LỰC: không cooldown, không cast
+  // time; nhân vật ở trạng thái channel liên tục, MỖI tickSeconds gây 1
+  // phát theo effects/target của skill (BattleSystem.updateChanneling).
+  // tickSeconds chỉnh được bằng UI trong trận (3–9s, spec §4.2).
+  | {
+      kind: 'channel'
+      tickSeconds: number
     }
 
 export interface Skill extends Partial<SkillRuntimeStats> {

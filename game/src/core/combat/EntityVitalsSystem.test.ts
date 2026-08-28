@@ -12,6 +12,9 @@ function entity(): CombatEntity {
     currentHp: 100, maxHp: 100, currentMp: 50, currentWard: 0,
     currentRage: 0, currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0,
     currentThoThe: 0, currentKimThe: 0, timeSinceLastBleedProc: 0,
+ tuLucActive: false,
+ tuLucElapsed: 0,
+ tuLucDamageTakenPercent: 0,
     timeSinceLastHitTaken: 0, realmIndex: 0, x: 0, row: 2, alive: true,
   }
 }

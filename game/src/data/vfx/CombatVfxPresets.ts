@@ -92,6 +92,33 @@ export const COMBAT_VFX_PRESETS = {
     durationMs: 340,
     screenShake: { durationMs: 120, intensity: 0.004 },
   },
+  // Kiếm Tu Bạt Kiếm channel tick (Task 8, 2026-08-28) — full-screen AoE
+  // per design spec, art sau.
+  tu_luc: {
+    id: 'tu_luc',
+    color: 0xfff6d8,
+    space: 'hybrid',
+    areaScale: 1.2,
+    durationMs: 260,
+  },
+  // Kiếm Tu Bạt Kiếm release/final VFX.
+  bat_kiem_quat: {
+    id: 'bat_kiem_quat',
+    color: 0xfff6d8,
+    space: 'screen',
+    areaScale: 1.4,
+    durationMs: 320,
+    screenShake: { durationMs: 100, intensity: 0.003 },
+  },
+  // SwordZone ground presence (Kiếm Trận keystone) — persistent
+  // ground-anchored area, cùng convention earth_shockwave/water_surge.
+  kiem_tran_zone: {
+    id: 'kiem_tran_zone',
+    color: 0xffdf70,
+    space: 'ground_projected',
+    areaScale: 1.1,
+    durationMs: 280,
+  },
 } as const satisfies Record<CombatVfxPresetId, CombatVfxPreset>
 
 export function getCombatVfxPreset(id: CombatVfxPresetId): CombatVfxPreset {

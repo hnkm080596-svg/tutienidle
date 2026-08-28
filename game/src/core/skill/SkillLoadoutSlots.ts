@@ -13,6 +13,13 @@ const SKILL_LOADOUT_SLOT_REALM_GROUP_SIZE = 2
 
 export const MAX_SKILL_LOADOUT_SLOTS = 5
 
+// Kiếm Tu tự lực (2026-08-28, task-6-brief.md) — slot RIÊNG dành cho
+// chiêu trận Kiếm Trận (kiem_tran_*, xem data/progression/KiemTuNodes.ts),
+// đứng NGOÀI 5 ô loadout chuẩn (getSkillLoadoutSlotCount() ở trên KHÔNG
+// đổi) — mua node trận kế tiếp tự thay chiêu trận cũ ở đúng ô này, không
+// cạnh tranh chỗ với skill người chơi tự chọn qua Loadout UI.
+export const KIEM_TRAN_SLOT_INDEX = 4
+
 export function getSkillLoadoutSlotCount(realmId: string): number {
   const ordinal = getRealmIndex(realmId)
 

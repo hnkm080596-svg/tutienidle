@@ -41,6 +41,7 @@ import { alchemyRecipes } from './data/alchemy/alchemyRecipes'
 import { ailments } from './data/ailment/ailments'
 import { buildings } from './data/building/buildings'
 import { PHAP_TU_NODES } from './data/progression/PhapTuNodes'
+import { KIEM_TU_NODES } from './data/progression/KiemTuNodes'
 import { QUESTS } from './data/quest/quests'
 import { isCultivationPoseActive } from './core/cultivation/CultivationPose'
 import { useBootFlow } from './composables/useBootFlow'
@@ -117,6 +118,7 @@ gameManager.registerAlchemyRecipes(alchemyRecipes)
 gameManager.registerAilments(ailments)
 gameManager.registerBuildings(buildings)
 gameManager.registerProgressionNodes(PHAP_TU_NODES)
+gameManager.registerProgressionNodes(KIEM_TU_NODES)
 gameManager.registerQuests(QUESTS)
 
 const { breakthrough } = useBreakthrough(gameManager)

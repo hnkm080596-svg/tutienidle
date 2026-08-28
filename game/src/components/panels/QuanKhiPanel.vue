@@ -14,8 +14,10 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useWorldAnnouncementStore } from '@/stores/worldAnnouncement'
 import { CULTIVATION_PATH_KITS } from '@/core/player/CultivationPathKit'
 import type { CultivationPathId } from '@/core/player/CultivationPathKit'
+import type { KiemTuRoute } from '@/core/player/Player'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
+import { isBattleInProgress } from '@/core/battle/BattleTypes'
 
 const ui = useUiStore()
 const player = usePlayerStore()
@@ -79,11 +81,55 @@ function confirmChoosePath() {
 function close() {
   ui.closeHomeOverlays()
 }
+
+// Kiếm Tu tự lực (2026-08-28, task-7-brief.md §2) — 2 nút chọn đường
+// SONG SONG, khác hẳn availablePaths ở trên (đó là lựa chọn nghề MỘT
+// LẦN, KHÔNG đổi lại được — xem ConfirmModal). Đây đổi được nhiều lần
+// ngoài combat, cùng pattern reversible ArtifactPathCards.vue/
+// ArtifactPanel.vue's onSelectPath (setArtifactPath) — KHÔNG dùng
+// window.confirm/ConfirmModal.
+const isKiemTu = computed(() => {
+  stateVersion.value
+
+  return player.cultivationPath === 'kiem_tu'
+})
+
+const currentKiemTuRoute = computed<KiemTuRoute>(() => {
+  stateVersion.value
+
+  return player.kiemTuRoute ?? 'kiem_tran'
+})
+
+// Gate Bạt Kiếm — review fix (Important): GameManager.setKiemTuRoute()
+// thực ra chặn bằng getNodeLevel('bat_kiem_thuc', player) >= 1 (keystone
+// ĐÃ MUA trong cây công pháp, Task 6), KHÔNG phải ngưỡng skillCastCounts/
+// skillLevels['tram'] >= 9999/3 — ngưỡng đó chỉ là điều kiện MỞ node gốc
+// `bat_kiem_an` (xem KiemTuNodes.ts), một bước SỚM HƠN trong chuỗi mua
+// bat_kiem_an -> minor_bat_kiem_uy -> bat_kiem_thuc. Đọc nhầm mốc này khiến
+// nút "Bạt Kiếm" render enabled trong lúc setKiemTuRoute() vẫn âm thầm
+// trả false (chưa mua đủ cây). Dùng ĐÚNG hàm gate thật để không lệch.
+const isBatKiemUnlocked = computed(() => {
+  stateVersion.value
+
+  return gameManager.getNodeLevel('bat_kiem_thuc', player.$state) >= 1
+})
+
+const canChangeRoute = computed(() => {
+  stateVersion.value
+
+  return !isBattleInProgress(gameManager.getBattle()?.state)
+})
+
+function selectKiemTuRoute(route: KiemTuRoute) {
+  if (gameManager.setKiemTuRoute(player.$state, route)) {
+    bumpState()
+  }
+}
 </script>
 
 <template>
   <OverlayPanel :open="ui.standalonePanel === 'quan_khi'" title="Quán Khí" width="min(480px, 90vw)" @close="close">
-    <div class="quan-khi-panel__card">
+    <div v-if="!player.cultivationPath" class="quan-khi-panel__card">
       <p class="quan-khi-panel__hint">Chọn con đường tu luyện — quyết định này KHÔNG thể đổi lại.</p>
 
       <div class="quan-khi-panel__choices">
@@ -98,6 +144,43 @@ function close() {
           Bước Vào {{ kit.name }}
         </button>
       </div>
+    </div>
+
+    <!-- Kiếm Tu tự lực (task-7-brief.md §2) — chọn đường SONG SONG,
+         đổi được nhiều lần ngoài combat (khác lựa chọn nghề ở trên). -->
+    <div v-if="isKiemTu" class="quan-khi-panel__card">
+      <p class="quan-khi-panel__hint">Chọn đường Kiếm Tu — đổi được ngoài trận, không cần xác nhận.</p>
+
+      <div class="quan-khi-panel__choices">
+        <button
+          type="button"
+          class="quan-khi-panel__choice"
+          :class="{ 'is-selected': currentKiemTuRoute === 'kiem_tran' }"
+          :disabled="!canChangeRoute && currentKiemTuRoute !== 'kiem_tran'"
+          @click="selectKiemTuRoute('kiem_tran')"
+        >
+          Kiếm Trận
+        </button>
+
+        <button
+          v-if="isBatKiemUnlocked"
+          type="button"
+          class="quan-khi-panel__choice"
+          :class="{ 'is-selected': currentKiemTuRoute === 'bat_kiem' }"
+          :disabled="!canChangeRoute && currentKiemTuRoute !== 'bat_kiem'"
+          @click="selectKiemTuRoute('bat_kiem')"
+        >
+          Bạt Kiếm
+        </button>
+      </div>
+
+      <p v-if="!canChangeRoute" class="quan-khi-panel__warning">
+        Không thể đổi đường trong combat — sẽ áp dụng từ trận kế.
+      </p>
+
+      <p v-else-if="!isBatKiemUnlocked" class="quan-khi-panel__warning">
+        Bạt Kiếm mở khi đã tu luyện Trảm đạt tầng 3 + 9999 lần thi triển VÀ đã mua trọn Bạt Kiếm Thức trong cây công pháp.
+      </p>
     </div>
 
     <ConfirmModal
@@ -145,5 +228,22 @@ function close() {
   font-weight: 700;
   font-size: var(--text-xs);
   cursor: pointer;
+}
+
+.quan-khi-panel__choice.is-selected {
+  border-color: var(--jade);
+  background: linear-gradient(180deg, var(--jade), var(--ink-800));
+  box-shadow: 0 0 10px -3px var(--jade);
+}
+
+.quan-khi-panel__choice:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.quan-khi-panel__warning {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--gold-500);
 }
 </style>

@@ -113,11 +113,22 @@ export interface SkillEffect {
   // Combat Rework Phase 3 — CHỈ dùng cho effect 'damage'. Khai hành vi
   // bay Pierce/Bounce/Homing/AOE cho MỌI missile effect này bắn ra
   // (kể cả nhiều missile của hitCountByRealm) — xem
-  // undefined = Normal, hành vi giữ nguyên như trước khi có field này.
+  // undefined = Normal, hành vi giữ nguyên như trước khi có field này.
 
   // Thổ Tu Pure (Plans/EarthPath mục XVI, 2026-08-21) — CHỈ dùng cho
   // effect 'damage'. Khi true VÀ source.skillStats.earthAoeRadius > 0 (đã
   // từ earthAoeRadius/earthAoeSecondaryDamagePercent/earthKnockbackDistance
   // tiêu như bình thường cho tới khi Pure major mở AOE+Knockback thật.
   earthPureAreaBehavior?: boolean
+
+  // Kiếm Trận keystone (Tam Tài — Task 8, 2026-08-28) — CHỈ dùng cho
+  // effect 'damage'. Khi true, SAU KHI missile của effect này bắn xong,
+  // spawn 1 SwordZone tại vị trí TARGET (không phải source — vùng kiếm
+  // khí tồn tại độc lập sau khi trận đã bày, cùng tinh thần LavaZone),
+  // xem SkillEffectSystem.ts + BattleSystem.spawnSwordZone(). Không set
+  // = effect 'damage' hoạt động như cũ (chỉ bắn missile thường).
+  grantsSwordZone?: boolean
+  swordZoneCharges?: number
+  swordZoneTickInterval?: number
+  swordZoneDamageRatio?: number // × finalMultiplier của effect này = damagePerTick
 }

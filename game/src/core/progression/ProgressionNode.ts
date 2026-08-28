@@ -51,6 +51,10 @@ export type NodePrerequisite =
   // Hỏa/Tụ Hỏa, xem data/progression/PhapTuNodes.ts) — generic, không
   // hard-code riêng cho Hỏa.
   | { kind: 'excludesNode'; nodeId: string }
+  // Kiếm Tu (2026-08-28) — gate Bạt Kiếm: skill `skillId` phải đạt
+  // `level` VÀ tích lũy `count` cast (đọc PlayerData.skillCastCounts,
+  // mirror Skill.totalExperience — nguồn sự thật save).
+  | { kind: 'skillCastCount'; skillId: string; level?: number; count?: number }
 
 /**
  * Những gì 1 node THẬT SỰ làm khi mua — optional field, không phải

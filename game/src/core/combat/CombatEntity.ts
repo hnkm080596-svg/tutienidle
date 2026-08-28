@@ -217,4 +217,12 @@ export interface CombatEntity {
   // chịu CDR — hai clock ĐỘC LẬP, không double-apply). Runtime-only:
   // KHÔNG persist, reset khi trận bắt đầu. undefined/0 = slot sẵn sàng.
   skillCadenceRemainingBySlot?: Record<number, number>
+
+  // Kiếm Tu Bạt Kiếm — trạng thái tụ lực (reset mỗi kỳ sau mỗi phát
+  // quạt; tuLucActive=false khi chết/khống chế cứng).
+  tuLucActive: boolean
+  tuLucElapsed: number
+  // % maxHP đã MẤT trong kỳ tụ hiện tại — nền cho amp "nhận càng
+  // nhiều gây càng nhiều" (spec §4.2), đọc lúc resolve phát quạt.
+  tuLucDamageTakenPercent: number
 }

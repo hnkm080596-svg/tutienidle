@@ -37,10 +37,25 @@ const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
 
-const showTree = computed(() => player.cultivationPath === 'phap_tu')
+// Final review fix (Critical #1) — Kiếm Tu path cũng có Node Tree thật
+// (KiemTuNodes.ts's 2 cây kiem_tran/bat_kiem), chỉ trước đây không path
+// nào wire showTree cho kiem_tu nên purchaseNode() (chỉ gọi được qua
+// NodeInspector.vue, chỉ render khi showTree) hoàn toàn unreachable.
+const showTree = computed(() => player.cultivationPath === 'phap_tu' || player.cultivationPath === 'kiem_tu')
 
 // ---- Nhánh phap_tu (Hành -> Node Tree) ----
 const selectedBranch = ref<ElementType>('fire')
+
+// ---- Nhánh kiem_tu (2 cây song song, không suy được từ skill đang
+// chọn như phap_tu — kiem_tran_luong_nghi là ROOT cost-0 của cây Kiếm
+// Trận nhưng KHÔNG skill nào học sẵn để trỏ vào nó lúc chưa mua node
+// đầu tiên, xem KiemTuNodes.ts). Toggle riêng, độc lập SkillPathList. ----
+const kiemTuBranch = ref<'kiem_tran' | 'bat_kiem'>('kiem_tran')
+
+const KIEM_TU_BRANCH_LABELS: Record<'kiem_tran' | 'bat_kiem', string> = {
+  kiem_tran: 'Kiếm Trận',
+  bat_kiem: 'Bạt Kiếm',
+}
 
 const selectedNode = ref<ProgressionNode | null>(null)
 const selectedNodePurchased = ref(false)
@@ -110,8 +125,23 @@ function skillElement(skill: Skill): ElementType | null {
   return null
 }
 
-const selectedSkillHasTree = computed(() =>
-  showTree.value && selectedSkill.value !== null && skillElement(selectedSkill.value) !== null,
+// Kiếm Tu: cây được chọn qua toggle riêng (kiemTuBranch), không phụ
+// thuộc skill đang chọn ở SkillPathList. Pháp Tu: giữ hành vi cũ (chỉ
+// hiện cây khi skill đang chọn có tag 'element').
+const selectedSkillHasTree = computed(() => {
+  if (!showTree.value) {
+    return false
+  }
+
+  if (player.cultivationPath === 'kiem_tu') {
+    return true
+  }
+
+  return selectedSkill.value !== null && skillElement(selectedSkill.value) !== null
+})
+
+const treeBranchTag = computed<string>(() =>
+  player.cultivationPath === 'kiem_tu' ? kiemTuBranch.value : selectedBranch.value,
 )
 const huyKiemHiddenTreeOpen = computed(() =>
   selectedSkill.value?.id === 'tram' && selectedSkill.value.level >= 18 && player.cultivationPath === 'kiem_tu',
@@ -145,9 +175,22 @@ function close() {
           </div>
 
           <div class="skill-path-panel__col skill-path-panel__col--center">
+            <div v-if="selectedSkillHasTree && player.cultivationPath === 'kiem_tu'" class="skill-path-panel__kiem-tu-toggle">
+              <button
+                v-for="branch in (['kiem_tran', 'bat_kiem'] as const)"
+                :key="branch"
+                type="button"
+                class="skill-path-panel__kiem-tu-toggle-btn"
+                :class="{ 'is-active': kiemTuBranch === branch }"
+                @click="kiemTuBranch = branch; selectedNode = null"
+              >
+                {{ KIEM_TU_BRANCH_LABELS[branch] }}
+              </button>
+            </div>
+
             <NodeTreePanel
               v-if="selectedSkillHasTree"
-              :branch-tag="selectedBranch"
+              :branch-tag="treeBranchTag"
               :selected-node-id="selectedNode?.id ?? null"
               :unlock-trigger="unlockTrigger"
               @select="onSelectNode"
@@ -182,6 +225,9 @@ function close() {
 </template>
 
 <style scoped>
+.skill-path-panel__kiem-tu-toggle { display: flex; gap: 8px; margin-bottom: 10px; }
+.skill-path-panel__kiem-tu-toggle-btn { padding: 6px 16px; background: var(--ink-800); color: var(--text-secondary); border: 1px solid var(--ink-line-soft); border-radius: var(--radius-sm); font-size: var(--text-sm); font-weight: 600; cursor: pointer; }
+.skill-path-panel__kiem-tu-toggle-btn.is-active { color: var(--gold-500); border-color: var(--gold-500); background: color-mix(in srgb, var(--gold-500) 14%, var(--ink-800)); }
 .huy-kiem-tree { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100%; gap: 18px; padding: 24px; text-align: center; }
 .huy-kiem-tree h4 { margin: 0; color: var(--chrome-100); font-family: var(--font-display); }
 .huy-kiem-tree__nodes { display: flex; align-items: center; gap: 28px; }

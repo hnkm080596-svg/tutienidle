@@ -102,8 +102,17 @@ const lockedReasons = computed(() => {
       reasons.push(`Cần mở khoá Hành liên quan`)
     } else if (prereq.kind === 'excludesNode') {
       reasons.push(`Xung khắc với: ${gameManager.nodeRegistry.get(prereq.nodeId).name}`)
-    } else {
+    } else if (prereq.kind === 'nodeCount') {
       reasons.push(`Cần lĩnh ngộ ${prereq.countRequired}/${prereq.nodeIds.length} node liên quan`)
+    } else if (prereq.kind === 'skillCastCount') {
+      const skillName = gameManager.skillManager.get(prereq.skillId)?.name ?? prereq.skillId
+      const levelPart = prereq.level !== undefined ? `cấp ${prereq.level}` : undefined
+      const countPart = prereq.count !== undefined ? `${prereq.count} lần xuất chiêu` : undefined
+      const requirement = [levelPart, countPart].filter(Boolean).join(' và ')
+
+      reasons.push(`Cần ${skillName} đạt ${requirement}`)
+    } else {
+      reasons.push(`Cần nâng kỹ năng liên quan`)
     }
   }
 

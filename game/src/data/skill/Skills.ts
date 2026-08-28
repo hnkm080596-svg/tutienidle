@@ -1,4 +1,70 @@
 import type { Skill } from '../../core/skill/Skill'
+import { TRAN_SEQUENCE } from '../progression/KiemTuNodes'
+
+// 9 skill Kiếm Trận (chiêu trận) — table-driven từ `TRAN_SEQUENCE`
+// (KiemTuNodes.ts, dùng chung với các keystone tương ứng để tránh định
+// nghĩa lại chuỗi id/realmId/swordCount lần 2 — Task 5 review fix,
+// 2026-08-28). Mỗi trận unlock qua 1 keystone riêng (kiem_tran_luong_nghi
+// … kiem_tran_vo_cuc), cadence attack_speed như Huy Kiếm/Ngự Kiếm Thuật.
+// swordCount càng lớn thì damage/swordIntentDamageRatio càng cao — "dựa
+// vào số Kiếm Ý đang có" cùng công thức Kiếm Khai Thiên Môn. Công thức:
+// value = 0.5 + swordCount × 0.1; swordIntentDamageRatio = 0.0002 × swordCount
+// (số liệu GIỮ NGUYÊN so với bản hand-written trước review fix — refactor
+// thuần cấu trúc, không đổi con số).
+const KIEM_TRAN_SKILLS: Skill[] = TRAN_SEQUENCE.map((entry) => ({
+  id: entry.skillId,
+
+  name: entry.name,
+
+  description: entry.skillDescription ?? `Bày ${entry.name}, ${entry.swordCount} thanh phi kiếm hợp lực chém liên hoàn.`,
+
+  type: 'active',
+
+  level: 1,
+
+  maxLevel: 10,
+
+  requiredRealmId: entry.realmId,
+
+  cooldown: 1,
+
+  remainingCooldown: 0,
+
+  target: 'all_enemies',
+
+  execution: { kind: 'attack_speed', attackSpeedMultiplier: 1 },
+
+  effects: [
+    {
+      type: 'damage',
+
+      // Round — 0.5 + swordCount*0.1 / 0.0002*swordCount trôi float
+      // (vd swordCount=3 → 0.0006000000000000001) nếu không làm tròn về
+      // đúng độ chính xác của công thức gốc; giữ NGUYÊN số liệu hand-written
+      // trước review fix (không lệch dù chỉ 1e-16).
+      value: Math.round((0.5 + entry.swordCount * 0.1) * 10) / 10,
+
+      components: [{ kind: 'element', element: 'metal', ratio: 1 }],
+
+      swordIntentDamageRatio: Math.round(0.0002 * entry.swordCount * 10000) / 10000,
+
+      // Task 8 (2026-08-28) — Kiếm Trận keystone (Tam Tài) spawn 1
+      // SwordZone tại target sau khi bắn, xem SkillEffect.grantsSwordZone.
+      // CHỈ áp cho kiem_tran_tam_tai — 8 trận còn lại vẫn plain damage.
+      ...(entry.skillId === 'kiem_tran_tam_tai'
+        ? { grantsSwordZone: true, swordZoneCharges: 3, swordZoneDamageRatio: 0.3 }
+        : {}),
+    },
+  ],
+
+  resourceType: 'none',
+
+  buildTag: 'core',
+
+  unlocked: false,
+
+  equipped: false,
+}))
 
 // Skill execution policy rework (plan §8) — MỌI active skill khai
 // `execution` tường minh; runtime chỉ đọc field này (không fallback
@@ -22,7 +88,7 @@ export const SKILLS: Skill[] = [
 
     level: 1,
 
-    maxLevel: 18,
+    maxLevel: 3,
 
     experience: 0,
 
@@ -42,7 +108,11 @@ export const SKILLS: Skill[] = [
 
         damageType: 'physical',
 
-        skillExperienceRatio: 1 / 18,
+        // Final review fix (Important #3) — dead % ratio từ thời maxLevel
+        // 18 cũ. Huy Kiếm rework (spec §2) là skill DUY NHẤT đi flat-only
+        // (+1 dmg/10 cast qua SkillSystem.getEffectiveSkill()); ratio này
+        // từng cộng thêm 1 lớp % nhân totalExperience/attack lên trên flat,
+        // double-scale ngoài spec.
       },
     ],
 
@@ -759,6 +829,11 @@ export const SKILLS: Skill[] = [
 
     maxLevel: 10,
 
+    // Kiếm Tu Tự Lực (Task 5, 2026-08-28) — "Trúc Cơ mở tuyệt kỹ" áp dụng
+    // đồng bộ mọi ultimate/tuyệt kỹ path (xem Kiếm Khai Thiên Môn ở trên
+    // cùng requiredRealmId), skill này trước đây thiếu field này.
+    requiredRealmId: 'foundation_establishment',
+
     cooldown: 20,
 
     remainingCooldown: 0,
@@ -840,6 +915,61 @@ export const SKILLS: Skill[] = [
 
     equipped: false,
   },
+
+  // Kiếm Tu Tự Lực (Task 5, 2026-08-28, xem
+  // .superpowers/sdd/2026-08-28-kiem-tu-tu-luc/task-5-brief.md) —
+  // Bạt Kiếm Thuật: TỤ LỰC (execution 'channel', Task 3), mỗi tickSeconds
+  // (3-9s, UI slider Task 7) tự nổ 1 phát AOE toàn màn hình, sát thương
+  // khuếch đại theo damage-taken tích lũy trong lúc tụ (xem
+  // BattleSystem.resolveChannelTick()). Root node bat_kiem_an
+  // (KiemTuNodes.ts) unlock skill này, gate bởi skillCastCount Huy Kiếm
+  // Lv3 + 9999 lần cast.
+  {
+    id: 'bat_kiem_thuat',
+
+    name: 'Bạt Kiếm Thuật',
+
+    description: 'Tụ lực kiếm ý, mỗi vài giây quạt một kiếm khí xuyên thiên địa, sát thương toàn màn hình.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 10,
+
+    cooldown: 0,
+
+    remainingCooldown: 0,
+
+    target: 'all_enemies',
+
+    execution: { kind: 'channel', tickSeconds: 3 },
+
+    effects: [
+      {
+        type: 'damage',
+
+        value: 2,
+
+        components: [{ kind: 'element', element: 'metal', ratio: 1 }],
+
+        attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
+      },
+    ],
+
+    resourceType: 'none',
+
+    buildTag: 'burst',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  // 9 skill Kiếm Trận (chiêu trận) — generated từ KIEM_TRAN_SKILLS (xem
+  // định nghĩa + comment công thức ở đầu file, table-driven từ
+  // TRAN_SEQUENCE trong KiemTuNodes.ts).
+  ...KIEM_TRAN_SKILLS,
 
   // 9 passive — mỗi cảnh giới mở khóa 1, nguồn map nằm ở tâm pháp tu
   // luyện (xem Technique.passiveSkillIdsByRealm trong

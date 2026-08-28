@@ -29,6 +29,8 @@ import { getSkillRuntimeStat } from '../skill/SkillRuntimeStats'
 
 import type { CombatEntity } from '../combat/CombatEntity'
 
+import type { EntityVitalsChangedEvent } from '../combat/EntityVitalsSystem'
+
 import type { EventBus } from '../events/EventBus'
 
 import { ReactionManager } from '../element/ReactionManager'
@@ -75,6 +77,7 @@ import { getAttackIntervalSeconds } from '../combat/AttackTiming'
 import type { BattlePositionsEvent, PlayerTeleportedEvent } from './BattleEvents'
 
 import type { LavaZone } from './LavaZone'
+import type { SwordZone } from './SwordZone'
 
 import type { ElementType } from '../element/ElementType'
 import type { ArtifactRuntime } from '../artifact/ArtifactRuntime'
@@ -139,6 +142,24 @@ const PLAYER_SPAWN_TELEGRAPH_SECONDS = 1.0
 // lần đổi row. Trong ICD Player vẫn cast/đánh mục tiêu đang trong tầm.
 const PLAYER_TELEPORT_ICD_SECONDS = 1
 
+// Kiếm Tu Bạt Kiếm (2026-08-28, Task 4) — amp "nhận→gây": mỗi kỳ tụ lực
+// phát quạt được khuếch đại theo % maxHP Player mất TRONG kỳ đó (spec
+// §4.2). Hệ số chỉnh qua playtest, chưa có nguồn nào khác ghi đè.
+const BAT_KIEM_AMP_PER_DAMAGE_TAKEN = 1.0
+
+// Final review fix (Critical #2, spec §4.2) — "Sát thương dựa vào thời
+// gian tụ: multiplier phát quạt tăng theo x (nền: ×1 tại 3s → ×3 tại 9s,
+// tuyến tính)". Baseline tick = 3s (khớp UI slider's min, xem
+// useCombatSkillPresentation.ts's batKiemTickSeconds default); mỗi giây
+// vượt baseline cộng thêm 1/3 multiplier để chạm đúng ×3 tại 9s.
+const BAT_KIEM_TICK_BASELINE_SECONDS = 3
+
+const BAT_KIEM_TICK_DAMAGE_PER_SECOND_OVER_BASELINE = 1 / 3
+
+function batKiemTickLengthMultiplier(tickSeconds: number): number {
+  return 1 + Math.max(0, tickSeconds - BAT_KIEM_TICK_BASELINE_SECONDS) * BAT_KIEM_TICK_DAMAGE_PER_SECOND_OVER_BASELINE
+}
+
 function spawnTelegraphSeconds(entity: Pick<CombatEntity, 'isBoss' | 'isElite'>): number {
   if (entity.isBoss) {
     return SPAWN_TELEGRAPH_SECONDS.boss
@@ -176,6 +197,14 @@ export class BattleSystem {
 
   private readonly reactionManager: ReactionManager
 
+  // Kiếm Tu Bạt Kiếm (Task 4) — id skill channel đang equip lúc start()
+  // (undefined = không có skill channel nào trong loadout, updateChanneling
+  // no-op). Override tickSeconds theo skillId, đọc bởi Task 7 UI slider
+  // qua setChannelTickSeconds() — có hiệu lực ngay cả giữa kỳ tụ đang dở.
+  private channelSkillId: string | undefined
+
+  private readonly channelTickSecondsOverrides = new Map<string, number>()
+
   constructor(
     private readonly combat: CombatSystem,
 
@@ -211,8 +240,48 @@ export class BattleSystem {
      * phú player đang hoạt động. Nền 0 = không có thiên phú.
      */
     private readonly getReactionKeepChance: () => number = () => 0,
+
+    /**
+     * Final review fix (Important #6) — Bạt Kiếm channel activation
+     * (initChannelState()) và channel UI (CombatControlBar.vue/
+     * useCombatSkillPresentation.ts's tuLucState/KiemTuCombatHud.vue)
+     * PHẢI cùng nguồn sự thật `player.kiemTuRoute === 'bat_kiem'`, không
+     * chỉ "có channel skill trong loadout" (skill này có thể bị equip
+     * thủ công qua Loadout UI ngay khi bat_kiem_an mở, trước cả khi
+     * bat_kiem_thuc — full route-switch gate — tồn tại). Đọc LIVE giống
+     * mọi closure PlayerData khác ở trên.
+     */
+    private readonly getKiemTuRoute: () => 'kiem_tran' | 'bat_kiem' | undefined = () => undefined,
   ) {
     this.reactionManager = new ReactionManager(eventBus)
+
+    // Kiếm Tu Bạt Kiếm (Task 4) — nguồn DUY NHẤT tích tuLucDamageTakenPercent:
+    // bất kỳ đòn nào làm currentHp Player giảm (đánh trúng/DoT/reaction/…)
+    // trong lúc đang tụ lực đều tính vào % maxHP mất của kỳ hiện tại. Reuse
+    // event bus 'entity_vitals_changed' (đã là nguồn phát duy nhất mọi thay
+    // đổi HP/Mana/Ward, xem EntityVitalsSystem.ts) thay vì móc riêng vào
+    // applyActionHit — DoT/lava zone/tribulation không đi qua applyActionHit.
+    this.eventBus.on<EntityVitalsChangedEvent>('entity_vitals_changed', (event) =>
+      this.onEntityVitalsChanged(event),
+    )
+  }
+
+  private onEntityVitalsChanged(event: EntityVitalsChangedEvent) {
+    const battle = this.battle
+
+    if (!battle || !battle.player.tuLucActive) {
+      return
+    }
+
+    if (event.entityId !== battle.player.id) {
+      return
+    }
+
+    if (event.maxHp <= 0 || event.hpAfter >= event.hpBefore) {
+      return
+    }
+
+    battle.player.tuLucDamageTakenPercent += (event.hpBefore - event.hpAfter) / event.maxHp
   }
 
   private aiStrategy(): CombatAiStrategy {
@@ -268,6 +337,8 @@ export class BattleSystem {
 
       lavaZones: [],
 
+      swordZones: [],
+
       pendingEnemySpawns: [],
 
       // Trận mới reset vòng xoay về slot đầu (plan §5).
@@ -278,6 +349,8 @@ export class BattleSystem {
       // có artifact; undefined mặc định = không tick gì cả.
       artifactRuntime: undefined,
     }
+
+    this.initChannelState(player)
 
     // Quái đầu tiên cũng đi qua "telegraph → xuất hiện → tham chiến".
     // Overlap hợp lệ nên queue luôn thành công.
@@ -309,6 +382,31 @@ export class BattleSystem {
     this.emitPositions(this.battle)
   }
 
+  /**
+   * Final review fix (Important #5 + #6) — trước đây CHỈ start() khởi
+   * trạng thái tụ lực; startTribulation() (Đột Phá, trận thật ở mọi đại
+   * cảnh giới) bỏ sót hoàn toàn khối này nên Bạt Kiếm player vào Kiếp
+   * không có main skill nào chạy. Gộp lại 1 helper dùng chung, VÀ thêm
+   * gate `kiemTuRoute === 'bat_kiem'` (Important #6) khớp đúng điều kiện
+   * channel UI đang đọc (CombatControlBar.vue/useCombatSkillPresentation.ts's
+   * tuLucState) — trước đây start() chỉ xét "có channel skill trong
+   * loadout", desync được với UI nếu bat_kiem_thuat bị equip thủ công
+   * trước khi đổi route.
+   */
+  private initChannelState(player: CombatEntity) {
+    const channelEntry = this.skillManager
+      .getLoadoutEntries()
+      .find((entry) => entry.skill.execution?.kind === 'channel')
+
+    const isBatKiemRoute = this.getKiemTuRoute() === 'bat_kiem'
+
+    this.channelSkillId = channelEntry && isBatKiemRoute ? channelEntry.skill.id : undefined
+
+    player.tuLucActive = channelEntry !== undefined && isBatKiemRoute
+    player.tuLucElapsed = 0
+    player.tuLucDamageTakenPercent = 0
+  }
+
   startTribulation(player: CombatEntity) {
     this.actionImpact.clear()
 
@@ -335,12 +433,15 @@ export class BattleSystem {
       elapsedSeconds: 0,
       pendingSummons: [],
       lavaZones: [],
+      swordZones: [],
       pendingEnemySpawns: [],
       nextSkillSlotIndexCursor: 0,
 
       // Bản Mệnh Pháp Bảo — Độ Kiếp ngoài phạm vi doc hiện tại, không tick.
       artifactRuntime: undefined,
     }
+
+    this.initChannelState(player)
 
     this.eventBus.emit('tribulation_started', undefined)
 
@@ -748,6 +849,12 @@ export class BattleSystem {
       deltaSeconds,
     )
 
+    this.updateSwordZones(
+      battle,
+
+      deltaSeconds,
+    )
+
     this.updateRegen(
       battle,
 
@@ -755,6 +862,11 @@ export class BattleSystem {
     )
 
     updatePhapTuBattleResources(battle.player, deltaSeconds)
+
+    // Kiếm Tu Bạt Kiếm (Task 4) — TỤ LỰC: tick độc lập với cast/cadence
+    // scheduler bên dưới (channel skill KHÔNG đi qua beginPlayerCast, xem
+    // ghi chú tại case 'channel' của beginPlayerCast()).
+    this.updateChanneling(battle, deltaSeconds)
 
     // [6] Tick skill timers: cadence Attack Speed theo slot (policy
     // attack_speed/attack_speed_cast) + enemy attack timer. Cooldown CDR
@@ -1512,6 +1624,126 @@ export class BattleSystem {
   }
 
   /**
+   * Task 8 (Kiếm Trận keystone, 2026-08-28) — spawn SwordZone. KHÁC
+   * spawnLavaZone: gọi trực tiếp từ SkillEffectSystem's case 'damage'
+   * (SkillEffect.grantsSwordZone), KHÔNG đi qua ReactionManager. Element
+   * luôn 'metal' (Kiếm Trận).
+   */
+  spawnSwordZone(
+    battle: Battle,
+
+    spec: {
+      ownerId: string
+      row: number
+      column: number
+      laneRadius: number
+      columnRadius: number
+
+      charges: number
+
+      tickInterval: number
+
+      damagePerTick: number
+    },
+  ) {
+    battle.swordZones.push({
+      id: crypto.randomUUID(),
+
+      ownerId: spec.ownerId,
+
+      row: spec.row,
+
+      column: spec.column,
+
+      laneRadius: spec.laneRadius,
+
+      columnRadius: spec.columnRadius,
+
+      remainingCharges: spec.charges,
+
+      tickInterval: spec.tickInterval,
+
+      timeSinceLastTick: 0,
+
+      damagePerTick: spec.damagePerTick,
+
+      // Kiếm Trận LUÔN metal — không lấy từ spec (SkillEffectContext's
+      // spawnSwordZone không có field element).
+      element: 'metal',
+    })
+  }
+
+  /**
+   * Tick từng Sword Zone — vòng lặp `while` (bắt kịp overshoot, cùng
+   * pattern updateLavaZones()), nhưng mỗi tick THẬT SỰ trôi qua trừ 1
+   * `remainingCharges` thay vì trừ `deltaSeconds` khỏi remainingTime —
+   * zone hết hạn theo SỐ TICK ĐÃ LAND, không theo thời gian.
+   */
+  private updateSwordZones(battle: Battle, deltaSeconds: number) {
+    for (const zone of battle.swordZones) {
+      zone.timeSinceLastTick += deltaSeconds
+
+      // Guard tickInterval > 0 — interval 0/âm làm timeSinceLastTick không
+      // bao giờ giảm dưới ngưỡng, vòng lặp thành vô hạn.
+      while (
+        zone.tickInterval > 0 &&
+        zone.timeSinceLastTick >= zone.tickInterval &&
+        zone.remainingCharges > 0
+      ) {
+        zone.timeSinceLastTick -= zone.tickInterval
+
+        zone.remainingCharges -= 1
+
+        this.tickSwordZone(battle, zone)
+      }
+    }
+
+    battle.swordZones = battle.swordZones.filter((zone) => zone.remainingCharges > 0)
+  }
+
+  private tickSwordZone(battle: Battle, zone: SwordZone) {
+    const isPlayerOwned = zone.ownerId === battle.player.id
+
+    const owner = isPlayerOwned
+      ? battle.player
+      : battle.enemies.find((battleEnemy) => battleEnemy.entity.id === zone.ownerId)?.entity
+
+    const targets: CombatEntity[] = isPlayerOwned
+      ? battle.enemies
+          .filter((battleEnemy) => battleEnemy.entity.alive)
+          .map((battleEnemy) => battleEnemy.entity)
+      : battle.player.alive
+        ? [battle.player]
+        : []
+
+    for (const target of targets) {
+      const inArea =
+        target.row >= zone.row - zone.laneRadius &&
+        target.row <= zone.row + zone.laneRadius &&
+        Math.round(target.x) >= zone.column - zone.columnRadius &&
+        Math.round(target.x) <= zone.column + zone.columnRadius
+
+      if (!inArea) {
+        continue
+      }
+
+      this.combat.applyDotDamage({
+        sourceId: zone.ownerId,
+
+        source: owner,
+
+        target,
+
+        rawDamage: zone.damagePerTick,
+
+        element: zone.element,
+
+        effectId: zone.id,
+      })
+    }
+  }
+
+  /**
 
    * HP/Mana/Ward regen mỗi tick — `hpRegenPerSecond` đã có field từ
 
@@ -1688,6 +1920,18 @@ export class BattleSystem {
         continue
       }
 
+      // Final review fix (Important #4) — channel skill KHÔNG đi qua
+      // scheduler round-robin này (runtime thật sống ở updateChanneling()/
+      // resolveChannelTick(), tự tick theo tickSeconds độc lập). Trước
+      // đây beginPlayerCast() bên dưới vẫn gọi beginCastInSlot() (trừ
+      // resource + gán castingSlotIndex) TRƯỚC khi switch dispatch chạm
+      // `case 'channel': return false` — castingSlotIndex bị set nhưng
+      // không bao giờ được finishPlayerCastTransaction() dọn (channel
+      // không đi qua đường finish nào), kẹt vĩnh viễn.
+      if (skill.execution.kind === 'channel') {
+        continue
+      }
+
       if (this.cadenceRemaining(battle.player, slotIndex) > 0) {
         continue
       }
@@ -1837,6 +2081,21 @@ export class BattleSystem {
         this.resolveSkillEffects(skill, source, target, battle)
         this.finishPlayerCastTransaction(source, skill.id, slotIndex)
         return true
+      }
+
+      // Kiếm Tu Bạt Kiếm (2026-08-28, Task 4) — 'channel' runtime thật
+      // SỐNG Ở updateChanneling()/resolveChannelTick(), KHÔNG đi qua
+      // beginPlayerCast: channel không có resource/cooldown transaction
+      // theo LƯỢT cast (nó tự tick theo tickSeconds độc lập, xem
+      // update()). Case này giữ nguyên là no-op CHỦ Ý — nếu 1 channel
+      // skill lỡ nằm trong loadoutEntries (updatePlayerSkills() vẫn
+      // duyệt qua nó), trả về false khiến scheduler bỏ qua slot này và
+      // thử slot kế tiếp trong CÙNG fixed-step, đúng hành vi "channel
+      // không tranh lượt với slot khác". Không cần sửa gì thêm ở đây —
+      // xem case dispatch quyết định KHÔNG dời scheduler cursor tới
+      // slot channel.
+      case 'channel': {
+        return false
       }
     }
   }
@@ -2218,6 +2477,8 @@ export class BattleSystem {
 
         spawnLavaZone: (spec) => this.spawnLavaZone(battle, spec),
 
+        spawnSwordZone: (spec) => this.spawnSwordZone(battle, spec),
+
         skillId: skill.id,
 
         skillExperience: skill.totalExperience ?? skill.experience ?? 0,
@@ -2245,6 +2506,140 @@ export class BattleSystem {
     }
 
     this.actionImpact.endSkillBatch(battle)
+  }
+
+  /**
+   * Kiếm Tu Bạt Kiếm (Task 4, spec §4.2) — TỤ LỰC: tick độc lập, KHÔNG
+   * qua beginPlayerCast/cadence/CDR. `tuLucElapsed` đếm dồn mỗi frame;
+   * `while` (không `if`) để bắt kịp trường hợp deltaSeconds lớn bất
+   * thường bỏ qua nhiều kỳ liền — cùng gotcha đã gặp ở Kim Thế/Lava Zone.
+   * Chết/khống chế cứng cắt NGAY, huỷ tiến độ kỳ đang dở (không nổ phát
+   * dở dang) — kiểm tra TRƯỚC khi cộng dồn elapsed của tick này.
+   */
+  private updateChanneling(battle: Battle, deltaSeconds: number) {
+    const player = battle.player
+
+    if (!player.tuLucActive) {
+      return
+    }
+
+    if (this.isChannelInterrupted(battle)) {
+      player.tuLucActive = false
+      player.tuLucElapsed = 0
+      player.tuLucDamageTakenPercent = 0
+
+      return
+    }
+
+    if (!this.channelSkillId) {
+      return
+    }
+
+    const skill = this.skillManager.get(this.channelSkillId)
+
+    if (!skill || skill.execution?.kind !== 'channel') {
+      return
+    }
+
+    player.tuLucElapsed += deltaSeconds
+
+    const execution = skill.execution
+
+    const tickSeconds = this.channelTickSecondsOverrides.get(skill.id) ?? execution.tickSeconds
+
+    while (tickSeconds > 0 && player.tuLucElapsed >= tickSeconds) {
+      player.tuLucElapsed -= tickSeconds
+
+      // Review fix (Important #1) — snapshot TRƯỚC lệnh gọi, trừ ĐÚNG
+      // snapshot đó sau (KHÔNG `= 0`): resolveChannelTick() chạy đồng bộ
+      // qua CombatSystem pipeline, và target trúng đòn có thể phản
+      // damage NGƯỢC lại Player (thornsPercent/wardBreakDamagePercent,
+      // xem CombatSystem.ts applyModifiedDirectDamage) NGAY TRONG lệnh
+      // gọi này — onEntityVitalsChanged() sẽ cộng thêm phần phản đó vào
+      // tuLucDamageTakenPercent trước khi resolveChannelTick() trả về.
+      // `= 0` sẽ xoá mất phần vừa cộng thêm đó; trừ snapshot giữ lại nó
+      // cho kỳ KẾ TIẾP.
+      const ampSnapshot = player.tuLucDamageTakenPercent
+
+      this.resolveChannelTick(battle, skill, ampSnapshot, tickSeconds)
+
+      player.tuLucDamageTakenPercent -= ampSnapshot
+    }
+  }
+
+  /** Chết hoặc khống chế cứng (Choáng/Thạch Hóa/Trói Chân, spec §4.2) cắt tụ lực. */
+  private isChannelInterrupted(battle: Battle): boolean {
+    const player = battle.player
+
+    if (!player.alive) {
+      return true
+    }
+
+    const ailments = battle.playerAilments
+
+    return ailments.has('choang') || ailments.has('thach_hoa') || ailments.has('troi_chan')
+  }
+
+  /**
+   * Một kỳ tụ lực nổ — resolve qua ĐÚNG đường cast tức thời sẵn có
+   * (`resolveSkillEffects`), target = enemy gần nhất bất kỳ (shape thật
+   * sự của skill 'all_lanes' do `targetingForSkill()` tự quyết theo
+   * `skill.target === 'all_enemies'`, KHÔNG phụ thuộc primary chọn ai —
+   * xem CombatAction.ts:44). Amp "nhận→gây": khuếch đại tạm thời qua
+   * đúng multiplier path sẵn có (`finalDamagePercent`, đã được
+   * CombatSystem.resolveAttack() nhân vào MỌI đòn của nguồn) — KHÔNG
+   * đụng CombatSystem.ts. Trả `stats.finalDamagePercent` về giá trị gốc
+   * NGAY sau lệnh gọi đồng bộ này (fireSkillHit trong resolveSkillEffects
+   * resolve hit ngay tại chỗ, không qua windup queue) để không rò rỉ amp
+   * sang các đòn khác trong cùng frame (vd enemy attack cùng lúc, dù
+   * multiplier chỉ đọc phía attacker nên rủi ro rò rỉ gần như không có,
+   * vẫn khôi phục cho sạch).
+   *
+   * `tickSeconds` (Critical #2 review fix, spec §4.2) — cùng đường
+   * finalDamagePercent với amp "nhận→gây": multiplier phát quạt
+   * (batKiemTickLengthMultiplier, ×1@3s → ×3@9s tuyến tính) quy về
+   * percent-point CỘNG THÊM (M - 1), giữ cùng ngữ nghĩa cộng dồn với
+   * damage-taken amp thay vì bọc thêm 1 lớp nhân riêng.
+   */
+  private resolveChannelTick(battle: Battle, skill: Skill, damageTakenPercent: number, tickSeconds: number) {
+    const target = this.findNearestAliveEnemy(battle)
+
+    if (!target) {
+      return
+    }
+
+    const player = battle.player
+
+    const originalFinalDamagePercent = player.stats.finalDamagePercent
+
+    const tickLengthBonus = batKiemTickLengthMultiplier(tickSeconds) - 1
+
+    player.stats.finalDamagePercent =
+      originalFinalDamagePercent + tickLengthBonus + damageTakenPercent * BAT_KIEM_AMP_PER_DAMAGE_TAKEN
+
+    try {
+      this.resolveSkillEffects(skill, player, target, battle)
+    } finally {
+      player.stats.finalDamagePercent = originalFinalDamagePercent
+    }
+  }
+
+  /**
+   * Task 7 UI slider (spec §4.2, 3–9s) gọi — có hiệu lực TỪ KỲ TỤ KẾ
+   * TIẾP đúng nghĩa đen (Review fix, Important #2): nếu đang tụ lực
+   * ĐÚNG skill này, reset `tuLucElapsed` về 0 luôn — bỏ tiến độ dở dang
+   * theo nhịp CŨ thay vì diễn giải lại số giây đã tích dồn theo nhịp
+   * MỚI (nhịp mới nhỏ hơn nhịp cũ có thể khiến 1 frame nổ 2 lần nếu
+   * không reset, vì `tuLucElapsed` đã tích theo nhịp cũ chưa từng được
+   * "tiêu" ở nhịp mới). tuLucDamageTakenPercent GIỮ NGUYÊN — amp đã tích
+   * trong kỳ dở dang không phải lỗi của người chơi, không có lý do mất.
+   */
+  setChannelTickSeconds(skillId: string, seconds: number): void {
+    this.channelTickSecondsOverrides.set(skillId, seconds)
+
+    if (this.channelSkillId === skillId && this.battle?.player.tuLucActive) {
+      this.battle.player.tuLucElapsed = 0
+    }
   }
 
   /**

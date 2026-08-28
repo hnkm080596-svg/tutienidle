@@ -104,7 +104,28 @@ describe('buildLoadoutPresentation', () => {
     expect(entries[0]!.state).toBe('empty')
     expect(entries[1]!.state).toBe('empty')
     expect(entries[2]!.state).toBe('locked')
-    expect(entries[4]!.state).toBe('locked')
+    expect(entries[3]!.state).toBe('locked')
+    // Final review fix (Important #7) — slot 4 (KIEM_TRAN_SLOT_INDEX)
+    // đứng NGOÀI đường cong unlockedSlotCount theo realm (chiêu trận
+    // Kiếm Trận bắn mọi cadence bất kể realm, xem SkillLoadoutSlots.ts);
+    // trống thì 'empty', KHÔNG BAO GIỜ 'locked' như 4 slot chuẩn còn lại.
+    expect(entries[4]!.state).toBe('empty')
+  })
+
+  it('slot 4 (KIEM_TRAN_SLOT_INDEX) miễn khoá realm — có skill equip thì hiện ready dù unlockedSlotCount thấp (Important #7)', () => {
+    const gameManager = new GameManager()
+    const player = createDefaultPlayer()
+
+    gameManager.skillSystem.learn(attackSpeedSkill({ id: 'kiem_tran_test' }))
+    gameManager.skillSystem.equipToSlot('kiem_tran_test', 4)
+
+    gameManager.startBattleWithPlayer(player, createBaseStats(), makeEnemy())
+    startFighting(gameManager)
+
+    const entries = buildLoadoutPresentation(gameManager.getBattle()!, gameManager.skillManager, 5, 2)
+
+    expect(entries[4]!.skillId).toBe('kiem_tran_test')
+    expect(entries[4]!.state).not.toBe('locked')
   })
 
   it("policy attack_speed: cadenceRemaining/cadenceTotal theo getAttackIntervalSeconds(attackSpeed), state 'cadence' khi đang chờ nhịp", () => {
