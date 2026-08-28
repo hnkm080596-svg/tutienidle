@@ -8,8 +8,6 @@ import { useWorldAnnouncementStore } from '../stores/worldAnnouncement'
 import { useUiStore } from '../stores/ui'
 import { isBattleInProgress } from '../core/battle/BattleTypes'
 import { SPIRIT_STONE_MATERIAL_ID } from '../core/material/SpiritStoneMaterial'
-import { ARTIFACT_ID_BY_CULTIVATION_PATH } from '../core/artifact/Artifact'
-import { createDefaultArtifactProgress } from '../core/artifact/ArtifactProgression'
 
 // Trảm gate (blockIfNoBasicAttack, 2026-08-20 → gỡ 2026-08-21) — Pháp
 // Tu giờ tự học + trang bị SẴN 1 chiêu cơ bản (Hỏa Cầu Thuật) ngay lúc
@@ -160,30 +158,9 @@ function resolveVictory(player: PlayerStore, gameManager: GameManager, active: A
   gameManager.syncRealmPassive(player.$state)
   gameManager.syncRealmStatPassive(player.$state)
 
-  if (player.cultivationPath === 'phap_tu' && player.realmId === 'foundation_establishment') {
-    const inheritedInsight = gameManager.techniqueManager.getEquipped()?.insight ?? 0
-    gameManager.learnTechnique('dai_ngu_hanh_quyet_truc_co')
-    const nextTechnique = gameManager.techniqueManager.get('dai_ngu_hanh_quyet_truc_co')
-    if (nextTechnique) nextTechnique.insight = Math.max(nextTechnique.insight ?? 0, inheritedInsight)
-    gameManager.equipTechnique('dai_ngu_hanh_quyet_truc_co')
-  }
-
-  // Bản Mệnh Pháp Bảo (2026-08-27, foundation-artifact-system-plan.md
-  // §4) — thức tỉnh đúng lúc vào Trúc Cơ. Đây là điểm chuyển đại cảnh
-  // giới THẬT (khác useBreakthrough.ts's breakthrough() giờ CHỈ còn xử
-  // lý tiểu cảnh giới, xem CultivationSystem.breakthrough()). Tra
-  // ARTIFACT_ID_BY_CULTIVATION_PATH thay vì hardcode 'phap_tu' để nghề
-  // nào có definition sau này tự động được hưởng. Kiếm Tu/Thể Tu chưa
-  // có definition -> không nhận gì, đúng doc §4.
-  if (player.realmId === 'foundation_establishment' && !player.artifact) {
-    const artifactId = player.cultivationPath
-      ? ARTIFACT_ID_BY_CULTIVATION_PATH[player.cultivationPath]
-      : undefined
-
-    if (artifactId) {
-      player.artifact = createDefaultArtifactProgress(artifactId)
-    }
-  }
+  // Tâm pháp + pháp bảo theo path/realm đều do data kit và GameManager
+  // cấp idempotent; composable chỉ điều phối kết quả nghi lễ/UI.
+  gameManager.grantCultivationPathRealmReward(player.$state, player.realmId)
 
   // Beta Phase 4 (World Announcement, mục XVI tài liệu) — "discovery
   // moment" reveal Căn Cơ vừa đạt (Trúc Cơ) hoặc đơn giản là cảnh giới

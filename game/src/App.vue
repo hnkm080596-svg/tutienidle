@@ -71,8 +71,6 @@ ui.$subscribe((_mutation, state) => {
   lastAutomationSnapshot = snapshot
 
   savePersistedUiAutomationFlags({
-    isAutoBreakthrough: false,
-
     isAutoConsumeTinhHoa: state.isAutoConsumeTinhHoa,
 
     battleRunMode: state.battleRunMode,

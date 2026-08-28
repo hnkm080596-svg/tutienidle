@@ -104,8 +104,7 @@ export interface BagSortStateMap {
 }
 
 export const useUiStore = defineStore('ui', {
-  // Automation flags (isAutoBreakthrough/isAutoConsumeTinhHoa/
-  // battleRunMode) được HYDRATE từ localStorage qua
+  // Automation flags (isAutoConsumeTinhHoa/battleRunMode) được HYDRATE từ localStorage qua
   // uiFlagsPersistence.ts — người chơi yêu cầu "lưu lại flag của các
   // trạng thái tự động" nên chúng sống qua reload (2026-08-26). Các
   // flag còn lại vẫn transient theo phiên.
@@ -152,13 +151,6 @@ export const useUiStore = defineStore('ui', {
 
     battleRunMode: automation.battleRunMode ?? 'manual',
 
-    // Tiểu cảnh giới tự tăng (2026-08-28) — luôn bật, không còn flag,
-    // không còn checkbox. App.vue's tick() gọi breakthrough() mỗi khi
-    // tu vi đủ (CultivationSystem.breakthrough()). Đại cảnh giới vẫn
-    // cần qua nghi lễ riêng (Quán Khí/Trúc Cơ/Độ Kiếp), xem
-    // useTribulation.ts — không có automation cho nhánh này.
-    isAutoBreakthrough: false,
-
     // Tự tiêu Tinh Hoa Phàm Thể vừa nhặt vào tầng Luyện Thể đang mở.
     // 2026-08-26: ĐƯỢC LƯU qua localStorage — sống qua reload.
     isAutoConsumeTinhHoa: automation.isAutoConsumeTinhHoa ?? false,
@@ -204,8 +196,6 @@ export const useUiStore = defineStore('ui', {
      */
     persistAutomationFlags() {
       savePersistedUiAutomationFlags({
-        isAutoBreakthrough: false,
-
         isAutoConsumeTinhHoa: this.isAutoConsumeTinhHoa,
 
         battleRunMode: this.battleRunMode,

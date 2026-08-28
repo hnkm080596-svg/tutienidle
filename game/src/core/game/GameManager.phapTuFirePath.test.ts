@@ -23,6 +23,26 @@ function setup() {
 }
 
 describe('GameManager — Pháp Tu FirePath (chọn path tự cấp basic + Hỏa Node Tree)', () => {
+  it('Linh Lực đến từ data kit và được tổng hợp idempotent, không ghi modifier vĩnh viễn vào player', () => {
+    const gameManager = setup()
+    const player = createDefaultPlayer()
+
+    player.realmLevel = 12
+
+    expect(gameManager.chooseCultivationPath('phap_tu', player)).toBe(true)
+
+    const first = gameManager.getAggregatedModifiers(player)
+    const second = gameManager.getAggregatedModifiers(player)
+    const finalStats = calculateStats(player.baseStats, first)
+
+    expect(player.modifiers.filter(modifier => modifier.sourceId === 'phap_tu')).toEqual([])
+    expect(first.filter(modifier => modifier.sourceId === 'phap_tu')).toHaveLength(3)
+    expect(second).toEqual(first)
+    expect(finalStats.maxMp).toBe(100)
+    expect(finalStats.manaRegenPerSecond).toBe(2)
+    expect(finalStats.manaShieldPercent).toBeCloseTo(0.25, 5)
+  })
+
   it('chooseCultivationPath("phap_tu") học Hỏa Cầu Thuật + equip slot 0; 4 hành còn lại chưa học', () => {
     const gameManager = setup()
 

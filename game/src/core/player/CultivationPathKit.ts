@@ -1,4 +1,6 @@
 import type { ElementType } from '../element/ElementType'
+import type { StatModifier } from '../stats/StatCalculator'
+import type { ArtifactId } from '../artifact/Artifact'
 
 // Pháp Tu Redesign (magicpath, 2026-08-18) — 5 path Ngũ Hành cũ
 // (phap_tu_hoa/moc/thuy/kim/tho) đã GỘP thành 1 "phap_tu" duy nhất
@@ -8,6 +10,11 @@ import type { ElementType } from '../element/ElementType'
 // trị mới khi Thể Tu được thiết kế sau này — KHÔNG BAO GIỜ tái cấu
 // trúc union này, chỉ mở rộng thêm string.
 export type CultivationPathId = 'phap_tu' | 'kiem_tu'
+
+export interface CultivationPathRealmReward {
+  techniqueId?: string
+  artifactId?: ArtifactId
+}
 
 export interface CultivationPathKit {
   id: CultivationPathId
@@ -26,6 +33,14 @@ export interface CultivationPathKit {
   // 'tu_linh_quyet' — chuyển nghề = đổi hẳn tâm pháp).
   techniqueId: string
 
+  /** Chỉ số nền của con đường tu luyện. Được tổng hợp từ data mỗi lần
+   * tính stats, không ghi lặp vào PlayerData. */
+  statModifiers?: readonly StatModifier[]
+
+  /** Reward cấp theo đại cảnh giới. Consumer phải idempotent để không
+   * ghi đè tiến trình người chơi nếu được gọi lại. */
+  realmRewards?: Readonly<Record<string, CultivationPathRealmReward>>
+
   // ĐÚNG 3 skill cố định, gán thẳng vào Skill Loadout slot 0/1/2 lúc
   // chọn path (xem GameManager.chooseCultivationPath(), PLAN HOÀN CHỈNH
   // mục 8). Execution policy rework (plan §8.6) — skill đầu tuple
@@ -42,6 +57,35 @@ export const CULTIVATION_PATH_KITS: Record<CultivationPathId, CultivationPathKit
     id: 'phap_tu',
     name: 'Pháp Tu — Đại Ngũ Hành Chân Quyết',
     techniqueId: 'dai_ngu_hanh_chan_quyet',
+    statModifiers: [
+      {
+        id: 'phap_tu_linh_luc',
+        sourceId: 'phap_tu',
+        sourceType: 'realm',
+        stat: 'maxMp',
+        flat: 100,
+      },
+      {
+        id: 'phap_tu_linh_luc_regen',
+        sourceId: 'phap_tu',
+        sourceType: 'realm',
+        stat: 'manaRegenPerSecond',
+        flat: 2,
+      },
+      {
+        id: 'phap_tu_ho_the',
+        sourceId: 'phap_tu',
+        sourceType: 'realm',
+        stat: 'manaShieldPercent',
+        flat: 0.25,
+      },
+    ],
+    realmRewards: {
+      foundation_establishment: {
+        techniqueId: 'dai_ngu_hanh_quyet_truc_co',
+        artifactId: 'ngu_hanh_chau',
+      },
+    },
   },
 
   kiem_tu: {

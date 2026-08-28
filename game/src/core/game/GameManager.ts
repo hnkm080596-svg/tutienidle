@@ -169,6 +169,10 @@ import { getTechniqueInsightTotalRequired, getTechniqueTier } from '../technique
 import { getSkillLoadoutSlotCount } from '../skill/SkillLoadoutSlots'
 import { CULTIVATION_PATH_KITS } from '../player/CultivationPathKit'
 import type { CultivationPathId } from '../player/CultivationPathKit'
+import {
+  getCultivationPathStatModifiers,
+  grantCultivationPathRealmReward as grantPathRealmReward,
+} from '../player/CultivationPathSystem'
 import type { ArtifactPath } from '../artifact/Artifact'
 import { tryUpgradeArtifactGrade } from '../artifact/ArtifactProgression'
 import { createArtifactRuntime } from '../artifact/ArtifactRuntime'
@@ -782,6 +786,16 @@ export class GameManager {
     return true
   }
 
+  /** Cấp reward đại cảnh giới theo cultivation path từ data kit. */
+  grantCultivationPathRealmReward(player: PlayerData, realmId: string): boolean {
+    return grantPathRealmReward(player, realmId, {
+      getEquippedTechnique: () => this.techniqueManager.getEquipped(),
+      getTechnique: techniqueId => this.techniqueManager.get(techniqueId),
+      learnTechnique: techniqueId => this.learnTechnique(techniqueId),
+      equipTechnique: techniqueId => this.equipTechnique(techniqueId),
+    })
+  }
+
   /**
    * Nâng node đã lĩnh ngộ lên +1 cấp bằng Cảm Ngộ (§6.2) — cost theo
    * data node; không vượt maxLevel; thất bại không mutate gì.
@@ -951,33 +965,6 @@ export class GameManager {
     const kit = CULTIVATION_PATH_KITS[pathId]
 
     player.cultivationPath = pathId
-
-    if (pathId === 'phap_tu') {
-      // Linh Lực chỉ tồn tại như resource phòng thủ/sức mạnh riêng Pháp Tu.
-      player.modifiers.push(
-        {
-          id: 'phap_tu_linh_luc',
-          sourceId: 'phap_tu',
-          sourceType: 'realm',
-          stat: 'maxMp',
-          flat: 100,
-        },
-        {
-          id: 'phap_tu_linh_luc_regen',
-          sourceId: 'phap_tu',
-          sourceType: 'realm',
-          stat: 'manaRegenPerSecond',
-          flat: 2,
-        },
-        {
-          id: 'phap_tu_ho_the',
-          sourceId: 'phap_tu',
-          sourceType: 'realm',
-          stat: 'manaShieldPercent',
-          flat: 0.25,
-        },
-      )
-    }
 
     this.learnTechnique(kit.techniqueId)
     this.equipTechnique(kit.techniqueId)
@@ -1163,6 +1150,7 @@ export class GameManager {
       // skill.passiveModifiers, để áp Specialization + level scaling.
       ...this.skillSystem.getScaledPassiveModifiers(),
       ...(player ? this.getTechniqueTierModifiers(player) : []),
+      ...(player ? getCultivationPathStatModifiers(player) : []),
       // Node level (plan §6.8) — modifier node suy ra từ (registry,
       // nodeLevels), scale theo level hiện hành; KHÔNG nằm trong
       // player.modifiers nữa.

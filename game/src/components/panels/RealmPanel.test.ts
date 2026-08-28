@@ -47,23 +47,39 @@ afterEach(() => {
 describe('RealmPanel', () => {
   it('chỉ còn nút đại cảnh giới — tiểu cảnh giới tự tăng khi đủ tu vi', async () => {
     const mounted = mountRealmPanel()
+    const ritualButton = () => mounted.container.querySelector<HTMLButtonElement>(
+      '.realm-panel__actions button',
+    )!
     const actionLabels = () => Array.from(
       mounted.container.querySelectorAll<HTMLButtonElement>('.realm-panel__actions button'),
       button => button.textContent?.trim(),
     )
 
     expect(actionLabels()).toEqual(['Quán Khí'])
+    expect(ritualButton().disabled).toBe(true)
+
+    mounted.player.realmLevel = 12
+    await nextTick()
+
+    expect(ritualButton().disabled).toBe(false)
 
     mounted.player.realmId = 'qi_refining'
     mounted.player.realmLevel = 1
     await nextTick()
 
     expect(actionLabels()).toEqual(['Trúc Cơ'])
+    expect(ritualButton().disabled).toBe(true)
+
+    mounted.player.realmLevel = 12
+    await nextTick()
+
+    expect(ritualButton().disabled).toBe(false)
 
     mounted.player.realmId = 'foundation_establishment'
     await nextTick()
 
     expect(actionLabels()).toEqual(['Kim Đan'])
+    expect(ritualButton().disabled).toBe(true)
     mounted.unmount()
   })
 })

@@ -64,10 +64,11 @@ import { targetingForSkill, vfxPresetForSkill, type EffectScope } from './Combat
 import {
   MAX_SWORD_INTENT,
   MAX_MOMENTUM,
-  MAX_HOA_THE,
-  MAX_THO_THE,
-  KIM_THE_DECAY_INTERVAL_SECONDS,
 } from '../combat/CombatTypes'
+import {
+  gainPhapTuCastResources,
+  updatePhapTuBattleResources,
+} from './PhapTuBattleResourceSystem'
 
 import { getAttackIntervalSeconds } from '../combat/AttackTiming'
 
@@ -108,20 +109,6 @@ const CASTER_CAST_DELAY_SECONDS = 0.6
 // bị đánh trúng liên tục đủ số giây này, xem updateRegen().
 
 const WARD_REGEN_DELAY_SECONDS = 3
-
-// Hỏa Tu Pure (Plans/FirePath mục 7, 2026-08-21) — tốc độ Hỏa Thế TỰ
-
-// GIẢM mỗi giây (giảm 10% nhờ "Tụ Viêm" minor, xem updateHoaThe()).
-
-// 0.5/giây nghĩa là: đánh liên tục ở attackSpeed cơ bản (~1 cast/giây,
-
-// +1 Hỏa Thế/cast qua hoaTheGainPerCast) vẫn tích ròng dương, ngừng
-
-// đánh thì tụt hết trong 10 giây — "giữ nhịp thì lên, ngừng thì tụt"
-
-// đúng tinh thần buff chiến đấu tạm thời.
-
-const HOA_THE_BASE_DECAY_PER_SECOND = 0.5
 
 // Countdown trước trận (2026-08-22) — giống vạch xuất phát đua xe:
 
@@ -767,17 +754,7 @@ export class BattleSystem {
       deltaSeconds,
     )
 
-    this.updateHoaThe(
-      battle,
-
-      deltaSeconds,
-    )
-
-    this.updateKimThe(
-      battle,
-
-      deltaSeconds,
-    )
+    updatePhapTuBattleResources(battle.player, deltaSeconds)
 
     // [6] Tick skill timers: cadence Attack Speed theo slot (policy
     // attack_speed/attack_speed_cast) + enemy attack timer. Cooldown CDR
@@ -1607,66 +1584,6 @@ export class BattleSystem {
 
   /**
 
-   * Hỏa Tu Pure (Plans/FirePath mục 7, 2026-08-21) — Hỏa Thế TỰ GIẢM
-
-   * mỗi giây (chỉ player, quái không bao giờ tích được nên decay của
-
-   * chúng luôn là no-op). Gain thật sự xảy ra ở castSkill()
-
-   * (Skill.grantsHoaThePerCast) — hàm này CHỈ lo chiều giảm.
-
-   */
-
-  private updateHoaThe(battle: Battle, deltaSeconds: number) {
-    if (battle.player.currentHoaThe <= 0) {
-      return
-    }
-
-    const decayPerSecond =
-      HOA_THE_BASE_DECAY_PER_SECOND *
-      (1 - getSkillRuntimeStat(battle.player, 'hoaTheDecayReductionPercent'))
-
-    battle.player.currentHoaThe = Math.max(
-      0,
-      battle.player.currentHoaThe - decayPerSecond * deltaSeconds,
-    )
-  }
-
-  /**
-
-   * Kim Tu Trúc Cơ Pure (Plans/KimPath mục 12, 2026-08-21) — Kim Thế
-
-   * decay CHẬM và RỜI RẠC (khác Hỏa Thế's continuous per-second): 1
-
-   * tầng mỗi KIM_THE_DECAY_INTERVAL_SECONDS giây KHÔNG proc Xuất Huyết
-
-   * mới (reset về 0 trong SkillEffectSystem.ts's apply() mỗi lần proc
-
-   * thành công). `while` (không phải `if`) để bù đúng số tầng nếu
-
-   * deltaSeconds 1 tick > 1 interval (vd tab ẩn lâu rồi quay lại).
-
-   */
-
-  private updateKimThe(battle: Battle, deltaSeconds: number) {
-    if (battle.player.currentKimThe <= 0) {
-      return
-    }
-
-    battle.player.timeSinceLastBleedProc += deltaSeconds
-
-    while (
-      battle.player.timeSinceLastBleedProc >= KIM_THE_DECAY_INTERVAL_SECONDS &&
-      battle.player.currentKimThe > 0
-    ) {
-      battle.player.currentKimThe -= 1
-
-      battle.player.timeSinceLastBleedProc -= KIM_THE_DECAY_INTERVAL_SECONDS
-    }
-  }
-
-  /**
-
    * [6] Cadence Attack Speed THEO TỪNG SLOT (plan §4.4/§8.2) — clock ĐỘC
 
    * LẬP với cooldown CDR của SkillSystem. Policy 'attack_speed'/
@@ -2172,35 +2089,7 @@ export class BattleSystem {
     target: CombatEntity,
     battle: Battle,
   ) {
-    // Hỏa Tu Pure (Plans/FirePath mục 7) — 0 nếu chưa mua "Tụ Hỏa"
-
-    // (hoaTheGainPerCast nền = 0), cùng hook "gain theo CAST" như Kiếm
-
-    // Ý/Momentum nhưng ở đây thay vì missile-resolve callback (đó là
-
-    // "theo ĐÒN TRÚNG") vì Hỏa Thế tích theo LƯỢT DÙNG SKILL, xem
-
-    // FirePath.md mục 7.
-
-    if (skill.grantsHoaThePerCast) {
-      source.currentHoaThe = Math.min(
-        MAX_HOA_THE,
-        source.currentHoaThe + getSkillRuntimeStat(source, 'hoaTheGainPerCast'),
-      )
-    }
-
-    // Thổ Tu Pure (Plans/EarthPath mục XV, 2026-08-21) — cùng hook
-
-    // "gain theo CAST" như Hỏa Thế, nhưng KHÔNG có decay đối ứng (doc
-
-    // không nhắc tới, xem CombatEntity.currentThoThe's ghi chú).
-
-    if (skill.grantsThoThePerCast) {
-      source.currentThoThe = Math.min(
-        MAX_THO_THE,
-        source.currentThoThe + getSkillRuntimeStat(source, 'thoTheGainPerCast'),
-      )
-    }
+    gainPhapTuCastResources(skill, source)
 
     // Nguồn duy nhất emit 'cast' — PassiveSystem dùng event này cho
 

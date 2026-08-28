@@ -19,10 +19,9 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
     setActivePinia(createPinia())
   })
 
-  it('store mới chưa có save → defaults false/false/manual', () => {
+  it('store mới chưa có save → defaults false/manual', () => {
     const ui = useUiStore()
 
-    expect(ui.isAutoBreakthrough).toBe(false)
     expect(ui.isAutoConsumeTinhHoa).toBe(false)
     expect(ui.battleRunMode).toBe('manual')
   })
@@ -34,10 +33,7 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
 
     const raw = localStorage.getItem(UI_AUTOMATION_STORAGE_KEY)!
 
-    // 2026-08-28 — bỏ isAutoBreakthrough khỏi flow; ghi luôn false để
-    // save cũ KHÔNG ghi đè bằng true sau khi hydrate.
     expect(JSON.parse(raw)).toMatchObject({
-      isAutoBreakthrough: false,
       isAutoConsumeTinhHoa: true,
     })
   })
@@ -51,12 +47,12 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
     localStorage.setItem(
       UI_AUTOMATION_STORAGE_KEY,
 
-      JSON.stringify({ isAutoBreakthrough: 'yes', battleRunMode: 'turbo' }),
+      JSON.stringify({ isAutoConsumeTinhHoa: 'yes', battleRunMode: 'turbo' }),
     )
 
     const loaded = loadPersistedUiAutomationFlags()
 
-    expect(loaded.isAutoBreakthrough).toBeUndefined()
+    expect(loaded.isAutoConsumeTinhHoa).toBeUndefined()
     expect(loaded.battleRunMode).toBeUndefined()
 
     // Store mới đọc snapshot sạch còn lại trước đó? Không — key đã bị
@@ -65,14 +61,11 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
 
     const fresh = useUiStore()
 
-    expect(fresh.isAutoBreakthrough).toBe(false)
     expect(fresh.battleRunMode).toBe('manual')
   })
 
-  it('roundtrip: save cũ (có isAutoBreakthrough=true) hydrate AN TOÀN — field bị bỏ qua runtime', () => {
+  it('roundtrip hydrate đúng các automation flag còn hiệu lực', () => {
     savePersistedUiAutomationFlags({
-      isAutoBreakthrough: true,
-
       isAutoConsumeTinhHoa: true,
 
       battleRunMode: 'progress',
@@ -82,10 +75,6 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
 
     const ui = useUiStore()
 
-    // 2026-08-28 — tiểu cảnh giới tự tăng; flag vẫn đọc (back-compat) nhưng
-    // runtime ÉP về false. Đây là gate bảo vệ: dù save cũ có ghi true,
-    // game không cho phép tắt auto-advance nữa.
-    expect(ui.isAutoBreakthrough).toBe(false)
     expect(ui.isAutoConsumeTinhHoa).toBe(true)
     expect(ui.battleRunMode).toBe('progress')
   })
@@ -97,7 +86,6 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
 
     const ui = useUiStore()
 
-    expect(ui.isAutoBreakthrough).toBe(false)
     expect(ui.battleRunMode).toBe('manual')
 
     // Helper load cũng không throw.
@@ -124,8 +112,6 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
       lastSnapshot = snapshot
 
       savePersistedUiAutomationFlags({
-        isAutoBreakthrough: false,
-
         isAutoConsumeTinhHoa: state.isAutoConsumeTinhHoa,
 
         battleRunMode: state.battleRunMode,
