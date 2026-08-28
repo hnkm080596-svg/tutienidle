@@ -9,15 +9,15 @@ import { computed } from 'vue'
 const props = withDefaults(defineProps<{
   asset: string
   scene: 'fire' | 'portal' | 'water'
-  /** Chiều cao khối (px) — truyền qua style. */
-  height?: number
+  /** Chiều cao khối — number (px) hoặc chuỗi CSS (clamp/vh) cho chrome co giãn. */
+  height?: number | string
   /** Vị trí ảnh (object-position). */
   objectPosition?: string
   /** Độ mờ ảnh. */
   imageOpacity?: number
   caption?: string
 }>(), {
-  height: 150,
+  height: 'clamp(88px, 15vh, 150px)',
   objectPosition: 'center 58%',
   imageOpacity: 0.7,
   caption: undefined,
@@ -58,7 +58,7 @@ export default { name: 'SceneHeader' }
 </script>
 
 <template>
-  <div class="scene-header" :style="{ ...sceneVars, '--scene-header-h': `${height}px` }">
+  <div class="scene-header" :style="{ ...sceneVars, '--scene-header-h': typeof height === 'number' ? `${height}px` : height }">
     <img class="scene-header__image" :src="asset" alt="" aria-hidden="true" :style="{ objectPosition, opacity: imageOpacity }" />
 
     <!-- Scrim đáy — chiều sâu cảnh, dùng chung mọi scene. -->

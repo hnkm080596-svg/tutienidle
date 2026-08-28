@@ -216,7 +216,7 @@ function cancelJob(jobId: string) {
         class="alchemy-view__furnace"
         asset="/assets/buildings/dong-fu/pill_room.png"
         scene="fire"
-        :height="150"
+        height="clamp(88px, 15vh, 150px)"
         object-position="center 58%"
         :image-opacity="0.7"
       >
@@ -344,7 +344,7 @@ function cancelJob(jobId: string) {
 }
 
 .alchemy-view__recipes {
-  flex: 0 0 39%;
+  flex: 0 0 min(39%, 420px);
   overflow-y: auto;
   padding: 14px;
   border-right: 1px solid color-mix(in srgb, var(--scene-fire-accent) 30%, transparent);
@@ -493,10 +493,12 @@ function cancelJob(jobId: string) {
   padding: 8px;
 }
 
-@media (max-width: 760px) {
-  .alchemy-view { flex-direction: column; overflow-y: auto; }
-  .alchemy-view__recipes { flex-basis: auto; max-height: none; border-right: 0; border-bottom: 1px solid color-mix(in srgb, var(--scene-fire-accent) 30%, transparent); }
-  .alchemy-view__furnace { height: 110px; }
+/* Fit-refactor đợt 2 — breakpoint chuyển từ viewport sang CARD qua
+   container query (overlay-panel), scene clamp vh. Cột recipes chiếm flex
+   thay vì % cứng. */
+@container overlay-panel (max-width: 900px) {
+  .alchemy-view { flex-direction: column; }
+  .alchemy-view__recipes { flex: 0 0 auto; border-right: 0; border-bottom: 1px solid color-mix(in srgb, var(--scene-fire-accent) 30%, transparent); }
 }
 
 .alchemy-job {

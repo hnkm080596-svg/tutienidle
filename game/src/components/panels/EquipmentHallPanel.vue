@@ -561,7 +561,7 @@ function doDissolve() {
       class="qi-hall__forge-scene"
       asset="/assets/buildings/dong-fu/equipment_hall.png"
       scene="fire"
-      :height="132"
+      height="clamp(72px, 13vh, 132px)"
       object-position="center 58%"
       :image-opacity="0.58"
       caption="THIÊN HỎA LUYỆN KHÍ"
@@ -836,7 +836,7 @@ function doDissolve() {
 }
 
 .qi-hall__forge-scene {
-  flex: 0 0 132px;
+  flex: 0 0 auto;
   border-bottom: 1px solid color-mix(in srgb, var(--scene-fire-text-soft) 35%, transparent);
   box-shadow: inset 0 -30px 45px rgba(0, 0, 0, .68);
 }
@@ -1043,7 +1043,6 @@ function doDissolve() {
 }
 
 @media (max-width: 760px) {
-  .qi-hall__forge-scene { flex-basis: 96px; }
   .qi-hall__slot-grid { grid-template-columns: repeat(3, minmax(64px, 1fr)); }
 }
 </style>

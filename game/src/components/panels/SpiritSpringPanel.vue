@@ -121,7 +121,7 @@ function convertToThuongPham() {
       class="spirit-spring-panel__scene"
       asset="/assets/buildings/dong-fu/spirit_spring.png"
       scene="water"
-      :height="210"
+      height="clamp(96px, 21vh, 210px)"
       object-position="center 58%"
       :image-opacity="0.7"
       caption="LINH MẠCH HỘI TỤ"
