@@ -152,14 +152,12 @@ export const useUiStore = defineStore('ui', {
 
     battleRunMode: automation.battleRunMode ?? 'manual',
 
-    // Auto Đột Phá tiểu cảnh giới (2026-08-20) — tick user tự bấm, App.vue's
-    // tick() tự gọi breakthrough() thay người chơi mỗi khi tu vi đủ (xem
-    // useBreakthrough.ts). CHỈ áp dụng tiểu cảnh giới (tầng trong cùng đại
-    // cảnh giới) — Trúc Cơ/Đột Phá đại cảnh giới vẫn cần bấm tay (yêu cầu
-    // vật phẩm + xác nhận Độ Kiếp, không phù hợp tự động).
-    // 2026-08-26: ĐƯỢC LƯU qua localStorage (uiFlagsPersistence) — sống
-    // qua reload theo yêu cầu người chơi.
-    isAutoBreakthrough: automation.isAutoBreakthrough ?? false,
+    // Tiểu cảnh giới tự tăng (2026-08-28) — luôn bật, không còn flag,
+    // không còn checkbox. App.vue's tick() gọi breakthrough() mỗi khi
+    // tu vi đủ (CultivationSystem.breakthrough()). Đại cảnh giới vẫn
+    // cần qua nghi lễ riêng (Quán Khí/Trúc Cơ/Độ Kiếp), xem
+    // useTribulation.ts — không có automation cho nhánh này.
+    isAutoBreakthrough: false,
 
     // Tự tiêu Tinh Hoa Phàm Thể vừa nhặt vào tầng Luyện Thể đang mở.
     // 2026-08-26: ĐƯỢC LƯU qua localStorage — sống qua reload.
@@ -206,7 +204,7 @@ export const useUiStore = defineStore('ui', {
      */
     persistAutomationFlags() {
       savePersistedUiAutomationFlags({
-        isAutoBreakthrough: this.isAutoBreakthrough,
+        isAutoBreakthrough: false,
 
         isAutoConsumeTinhHoa: this.isAutoConsumeTinhHoa,
 
@@ -335,12 +333,6 @@ export const useUiStore = defineStore('ui', {
 
     setBattleRunMode(mode: BattleRunMode) {
       this.battleRunMode = mode
-
-      this.persistAutomationFlags()
-    },
-
-    toggleAutoBreakthrough() {
-      this.isAutoBreakthrough = !this.isAutoBreakthrough
 
       this.persistAutomationFlags()
     },

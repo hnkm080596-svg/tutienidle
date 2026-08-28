@@ -45,25 +45,25 @@ afterEach(() => {
 })
 
 describe('RealmPanel', () => {
-  it('chỉ có hai hành động đột phá và đổi tên đại cảnh giới theo cảnh giới hiện tại', async () => {
+  it('chỉ còn nút đại cảnh giới — tiểu cảnh giới tự tăng khi đủ tu vi', async () => {
     const mounted = mountRealmPanel()
     const actionLabels = () => Array.from(
       mounted.container.querySelectorAll<HTMLButtonElement>('.realm-panel__actions button'),
       button => button.textContent?.trim(),
     )
 
-    expect(actionLabels()).toEqual(['Đột phá', 'Quán Khí'])
+    expect(actionLabels()).toEqual(['Quán Khí'])
 
     mounted.player.realmId = 'qi_refining'
     mounted.player.realmLevel = 1
     await nextTick()
 
-    expect(actionLabels()).toEqual(['Đột phá', 'Trúc Cơ'])
+    expect(actionLabels()).toEqual(['Trúc Cơ'])
 
     mounted.player.realmId = 'foundation_establishment'
     await nextTick()
 
-    expect(actionLabels()).toEqual(['Đột phá', 'Kim Đan'])
+    expect(actionLabels()).toEqual(['Kim Đan'])
     mounted.unmount()
   })
 })

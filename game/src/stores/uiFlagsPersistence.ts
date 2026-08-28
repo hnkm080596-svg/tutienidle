@@ -1,6 +1,9 @@
 // Ui automation flags persistence (2026-08-26) — người chơi yêu cầu
-// "lưu lại flag của các trạng thái tự động" (tự động đột phá, tự động
-// dùng Tinh Hoa, chế độ auto-refight) nên chúng SURỐNG qua reload.
+// "lưu lại flag của các trạng thái tự động" (tự động dùng Tinh Hoa, chế
+// độ auto-refight) nên chúng SỐNG qua reload.
+//
+// 2026-08-28: bỏ isAutoBreakthrough (tiểu cảnh giới tự tăng không qua
+// flag nữa), nhưng type vẫn giữ field để đọc an toàn từ localStorage cũ.
 //
 // Lựa chọn storage: localStorage RIÊNG thay vì PlayerData/save chính vì
 // đây là tuỳ chọn THIẾT BỊ (per-device convenience), không thuộc tiến
@@ -14,8 +17,9 @@ export const UI_AUTOMATION_STORAGE_KEY = 'tien-hiep-idle-ui-automation'
 
 /** Nhóm flag tự động được lưu — CHỈ gồm các trạng thái có ý nghĩa dài hạn. */
 export interface UiAutomationFlagSnapshot {
-  /** Auto Đột Phá tiểu cảnh giới (CharacterPanel). */
-  isAutoBreakthrough: boolean
+  /** Deprecated (2026-08-28) — tiểu cảnh giới tự tăng, không còn flag.
+   *  Vẫn đọc từ localStorage cũ để không crash save, bị bỏ qua runtime. */
+  isAutoBreakthrough?: boolean
 
   /** Tự tiêu Tinh Hoa Phàm Thể vào Luyện Thể (LuyenThePanel). */
   isAutoConsumeTinhHoa: boolean

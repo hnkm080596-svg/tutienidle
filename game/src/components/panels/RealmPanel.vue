@@ -5,7 +5,6 @@ import PlayerPortrait from '@/components/common/PlayerPortrait.vue'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager } from '@/composables/useGameState'
-import { useBreakthrough } from '@/composables/useBreakthrough'
 import { useTribulation } from '@/composables/useTribulation'
 import { useBreakthroughRequirementStore } from '@/stores/breakthroughRequirement'
 import { getCurrentRealm, getNextRealm } from '@/core/realm/realmSystem'
@@ -13,10 +12,12 @@ import { getRealmTier } from '@/core/realm/RealmTierMap'
 import { REALM_PASSIVE_NODES } from '@/data/realm/RealmPassiveNodes'
 import { useRealmStatPassives } from '@/composables/useRealmStatPassives'
 
+// 2026-08-28 — tiểu cảnh giới tự tăng khi đủ tu vi (App.vue's tick(),
+// không còn nút Đột phá hay checkbox). Panel chỉ còn nút đại cảnh
+// giới (Quán Khí / Trúc Cơ / Độ Kiếp) — tách đúng 2 loại nghi lễ.
 const ui = useUiStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()
-const { breakthrough } = useBreakthrough()
 const { triggerQuanKhi } = useTribulation()
 const requirement = useBreakthroughRequirementStore()
 const { realmStatPassiveRows } = useRealmStatPassives()
@@ -27,10 +28,6 @@ const canFoundation = computed(() => gameManager.canTriggerFoundationBreakthroug
 const canRealm = computed(() => gameManager.canTriggerRealmBreakthrough(player.$state))
 const nextRealmName = computed(() => getNextRealm(player.realmId)?.name ?? '')
 const realmName = computed(() => getCurrentRealm(player.realmId).name)
-const canMinorBreakthrough = computed(() =>
-  player.realmLevel < getCurrentRealm(player.realmId).maxLevel &&
-  player.cultivation >= player.cultivationRequired,
-)
 const majorBreakthroughLabel = computed(() => {
   if (player.realmId === 'mortal') return 'Quán Khí'
   if (player.realmId === 'qi_refining') return 'Trúc Cơ'
@@ -72,9 +69,7 @@ function majorBreakthrough() {
       </div>
 
       <div class="realm-panel__actions">
-        <button type="button" :disabled="!canMinorBreakthrough" @click="breakthrough()">Đột phá</button>
         <button type="button" :disabled="!canMajorBreakthrough" @click="majorBreakthrough">{{ majorBreakthroughLabel }}</button>
-        <label><input type="checkbox" :checked="ui.isAutoBreakthrough" @change="ui.toggleAutoBreakthrough()"> Tự động đột phá</label>
       </div>
 
       <div class="realm-panel__nodes" aria-label="Tiến trình chín cảnh giới">

@@ -30,13 +30,14 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
   it('toggle action tự ghi snapshot vào localStorage', () => {
     const ui = useUiStore()
 
-    ui.toggleAutoBreakthrough()
     ui.toggleAutoConsumeTinhHoa()
 
     const raw = localStorage.getItem(UI_AUTOMATION_STORAGE_KEY)!
 
+    // 2026-08-28 — bỏ isAutoBreakthrough khỏi flow; ghi luôn false để
+    // save cũ KHÔNG ghi đè bằng true sau khi hydrate.
     expect(JSON.parse(raw)).toMatchObject({
-      isAutoBreakthrough: true,
+      isAutoBreakthrough: false,
       isAutoConsumeTinhHoa: true,
     })
   })
@@ -68,7 +69,7 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
     expect(fresh.battleRunMode).toBe('manual')
   })
 
-  it('roundtrip: save → pinia mới hydrate đúng toàn bộ flags', () => {
+  it('roundtrip: save cũ (có isAutoBreakthrough=true) hydrate AN TOÀN — field bị bỏ qua runtime', () => {
     savePersistedUiAutomationFlags({
       isAutoBreakthrough: true,
 
@@ -81,7 +82,10 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
 
     const ui = useUiStore()
 
-    expect(ui.isAutoBreakthrough).toBe(true)
+    // 2026-08-28 — tiểu cảnh giới tự tăng; flag vẫn đọc (back-compat) nhưng
+    // runtime ÉP về false. Đây là gate bảo vệ: dù save cũ có ghi true,
+    // game không cho phép tắt auto-advance nữa.
+    expect(ui.isAutoBreakthrough).toBe(false)
     expect(ui.isAutoConsumeTinhHoa).toBe(true)
     expect(ui.battleRunMode).toBe('progress')
   })
@@ -108,8 +112,6 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
 
     ui.$subscribe((_mutation, state) => {
       const snapshot = JSON.stringify({
-        a: state.isAutoBreakthrough,
-
         c: state.isAutoConsumeTinhHoa,
 
         m: state.battleRunMode,
@@ -122,7 +124,7 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
       lastSnapshot = snapshot
 
       savePersistedUiAutomationFlags({
-        isAutoBreakthrough: state.isAutoBreakthrough,
+        isAutoBreakthrough: false,
 
         isAutoConsumeTinhHoa: state.isAutoConsumeTinhHoa,
 

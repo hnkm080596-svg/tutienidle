@@ -59,8 +59,6 @@ let lastAutomationSnapshot = ''
 
 ui.$subscribe((_mutation, state) => {
   const snapshot = JSON.stringify({
-    a: state.isAutoBreakthrough,
-
     c: state.isAutoConsumeTinhHoa,
 
     m: state.battleRunMode,
@@ -73,7 +71,7 @@ ui.$subscribe((_mutation, state) => {
   lastAutomationSnapshot = snapshot
 
   savePersistedUiAutomationFlags({
-    isAutoBreakthrough: state.isAutoBreakthrough,
+    isAutoBreakthrough: false,
 
     isAutoConsumeTinhHoa: state.isAutoConsumeTinhHoa,
 
@@ -257,11 +255,11 @@ function tick() {
 
     player.cultivate(simulatedDelta)
 
-    // Auto Đột Phá tiểu cảnh giới (2026-08-20) — user tick checkbox ở
-    // CharacterPanel.vue (ui.isAutoBreakthrough), tick() tự bấm thay mỗi
-    // khi tu vi đủ. CHỈ tiểu cảnh giới — Trúc Cơ/đại cảnh giới vẫn cần
-    // bấm tay (BreakthroughRequirementPanel.vue, yêu cầu vật phẩm).
-    if (ui.isAutoBreakthrough && player.cultivation >= player.cultivationRequired) {
+    // Tiểu cảnh giới tự tăng (2026-08-28) — tick() bấm breakthrough()
+    // mỗi khi tu vi đầy, không còn checkbox bật/tắt (đúng tinh thần
+    // idle game + chủ game quyết định). Đại cảnh giới vẫn qua nghi lễ
+    // riêng (Quán Khí/Trúc Cơ/Độ Kiếp), xem useTribulation.ts.
+    if (player.cultivation >= player.cultivationRequired) {
       breakthrough()
     }
 
