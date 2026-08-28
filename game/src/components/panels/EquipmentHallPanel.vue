@@ -1042,7 +1042,7 @@ function doDissolve() {
   to { transform: scale(1.12) translateY(-4px); opacity: .82; }
 }
 
-@media (max-width: 760px) {
+@container overlay-panel (max-width: 760px) {
   .qi-hall__slot-grid { grid-template-columns: repeat(3, minmax(64px, 1fr)); }
 }
 </style>

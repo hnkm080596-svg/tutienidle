@@ -573,16 +573,22 @@ const pillPermanentRows = computed(() => {
   line-height: 1;
 }
 
+/* Fit-refactor đợt 3 — pentagram scale theo bề rộng panel thật (container
+   query nội bộ) thay vì px cứng 310px. Thiết kế gốc 310px giữ nguyên tỉ lệ
+   ngũ giác, chỉ co giãn toàn khối. */
 .element-chips {
   position: relative;
-  height: 260px;
+  width: 100%;
   max-width: 310px;
+  height: clamp(180px, 34vh, 260px);
   margin: 0 auto;
+  container-type: inline-size;
+  container-name: element-chips;
 }
 
 .element-chip {
   position: absolute;
-  width: 86px;
+  width: 28%;
   min-height: 42px;
   display: flex;
   align-items: center;
@@ -591,16 +597,27 @@ const pillPermanentRows = computed(() => {
   border-radius: var(--radius-sm);
   background: var(--ink-800);
   border: 1px solid var(--ink-line-soft);
+  font-size: var(--text-xs);
 }
 
 .element-chip--fire { left: 50%; top: 0; transform: translateX(-50%); }
-.element-chip--wood { left: 5%; top: 62px; }
-.element-chip--earth { right: 5%; top: 62px; }
-.element-chip--water { left: 20%; bottom: 16px; }
-.element-chip--metal { right: 20%; bottom: 16px; }
-.element-chip--wind { left: calc(50% - 92px); top: 112px; }
-.element-chip--lightning { right: calc(50% - 92px); top: 112px; }
-.element-chip:not([data-element]) { left: 50%; top: 158px; transform: translateX(-50%); }
+.element-chip--wood { left: 5%; top: 24%; }
+.element-chip--earth { right: 5%; top: 24%; }
+.element-chip--water { left: 20%; bottom: 6%; }
+.element-chip--metal { right: 20%; bottom: 6%; }
+.element-chip--wind { left: calc(50% - 30% - 2%); top: 43%; }
+.element-chip--lightning { right: calc(50% - 30% - 2%); top: 43%; }
+.element-chip:not([data-element]) { left: 50%; top: 60%; transform: translateX(-50%); }
+
+/* Panel hẹp: chip 28% < 86px gốc → thu label, giãn chip chiếm trọn để
+   chữ vẫn đọc được (floor --text-xs đã có từ token). */
+@container element-chips (max-width: 260px) {
+  .element-chip { width: 40%; }
+  .element-chip--water { left: 5%; bottom: 2%; }
+  .element-chip--metal { right: 5%; bottom: 2%; }
+  .element-chip--wind { left: 8%; top: 55%; }
+  .element-chip--lightning { right: 8%; top: 55%; }
+}
 
 .element-chip__dot {
   width: 8px;
