@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useEquipmentActions } from '@/composables/useEquipmentActions'
+import { usePanelPagination } from '@/composables/usePanelPagination'
 import {
   equipmentEssenceMaterialId,
 } from '@/core/equipment/RefinementBalance'
@@ -450,6 +451,32 @@ interface DissolveCandidate {
   realmId: string
 }
 
+// Fit-refactor đợt 4 — sắp xếp khai báo theo thứ tự phụ thuộc (refs ->
+// hàm -> computed -> pagination) để không rơi vào TDZ khi computed evaluate
+// ngay lúc mount (test bắt được lỗi này).
+const dissolveFilterRealm = ref<string>('any')
+
+const dissolveFilterQuality = ref<string>('any')
+
+function passesDissolveFilter(instance: EquipmentInstance): boolean {
+  if (dissolveFilterRealm.value !== 'any' && instance.realmId !== dissolveFilterRealm.value) {
+    return false
+  }
+
+  if (
+    dissolveFilterQuality.value !== 'any' &&
+    instance.rarity !== dissolveFilterQuality.value
+  ) {
+    return false
+  }
+
+  return true
+}
+
+// Tick nhẹ để preview cập nhật khi selection đổi (computed phụ thuộc
+// stateVersion là chính).
+const nowTick = ref(0)
+
 const dissolveCandidates = computed<DissolveCandidate[]>(() => {
   stateVersion.value
 
@@ -476,28 +503,18 @@ const dissolveCandidates = computed<DissolveCandidate[]>(() => {
     })
 })
 
-// Tick nhẹ để preview cập nhật khi selection đổi (computed phụ thuộc
-// stateVersion là chính).
-const nowTick = ref(0)
-
-const dissolveFilterRealm = ref<string>('any')
-
-const dissolveFilterQuality = ref<string>('any')
-
-function passesDissolveFilter(instance: EquipmentInstance): boolean {
-  if (dissolveFilterRealm.value !== 'any' && instance.realmId !== dissolveFilterRealm.value) {
-    return false
-  }
-
-  if (
-    dissolveFilterQuality.value !== 'any' &&
-    instance.rarity !== dissolveFilterQuality.value
-  ) {
-    return false
-  }
-
-  return true
-}
+// Hóa Luyện phân trang theo ngân sách chiều cao thật của list (row =
+// min-height 40px + padding 10px + border 2px + gap 3px).
+const {
+  containerEl: dissolveListEl,
+  currentPage: dissolvePage,
+  totalPages: dissolveTotalPages,
+  goToPage: dissolveGoTo,
+  pageItemsRange: dissolvePageRange,
+} = usePanelPagination(
+  computed(() => dissolveCandidates.value.length),
+  55,
+)
 
 const dissolveSelected = ref<Set<string>>(new Set())
 
@@ -794,9 +811,11 @@ function doDissolve() {
         Đã chọn {{ dissolveSelected.size }}/{{ dissolveCandidates.length }} món qua filter hiện tại.
       </p>
 
-      <ul class="dissolve-list">
+      <!-- Fit-refactor đợt 4 — list Hóa Luyện phân trang theo ngân sách
+           chiều cao thật của <ul> (ResizeObserver), không còn scroll. -->
+      <ul ref="dissolveListEl" class="dissolve-list">
         <li
-          v-for="candidate in dissolveCandidates"
+          v-for="candidate in dissolveCandidates.slice(dissolvePageRange.start, dissolvePageRange.end)"
           :key="candidate.instanceId"
           :class="{ 'is-selected': dissolveSelected.has(candidate.instanceId) }"
           @click="toggleDissolve(candidate.instanceId)"
@@ -806,6 +825,12 @@ function doDissolve() {
           <span>{{ candidate.slotLabel }} · {{ candidate.quality }}</span>
         </li>
       </ul>
+
+      <div v-if="dissolveTotalPages > 1" class="dissolve-pagination">
+        <GameButton variant="ghost" size="sm" :disabled="dissolvePage === 0" @click="dissolveGoTo(dissolvePage - 1)">‹</GameButton>
+        <span class="dissolve-pagination__label">{{ dissolvePage + 1 }} / {{ dissolveTotalPages }}</span>
+        <GameButton variant="ghost" size="sm" :disabled="dissolvePage >= dissolveTotalPages - 1" @click="dissolveGoTo(dissolvePage + 1)">›</GameButton>
+      </div>
 
       <div v-if="dissolvePreview.length > 0" class="dissolve-preview">
         <h4>Xác nhận phân giải {{ dissolveSelected.size }} món:</h4>
@@ -891,10 +916,13 @@ function doDissolve() {
   background: color-mix(in srgb, var(--scene-fire-deep) 88%, transparent);
 }
 
+/* Fit-refactor đợt 4 — body là ngân sách flex; section nào dài (Hóa Luyện)
+   tự paginate, section ngắn (Cường Hóa...) flex-fit; overflow hidden là rào
+   cuối, KHÔNG dùng để scroll. */
 .qi-hall__body {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  overflow: hidden;
   padding: 10px 12px;
   display: flex;
   flex-direction: column;
@@ -997,10 +1025,27 @@ function doDissolve() {
   list-style: none;
   margin: 0;
   padding: 0;
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 3px;
-  overflow-y: auto;
+  overflow: hidden;
+}
+
+.dissolve-pagination {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.dissolve-pagination__label {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
 }
 
 .dissolve-list li {
