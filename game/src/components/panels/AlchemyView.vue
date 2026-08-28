@@ -211,7 +211,7 @@ function cancelJob(jobId: string) {
 
 <template>
   <div class="alchemy-view">
-    <div class="alchemy-view__recipes">
+    <div class="alchemy-view__recipes scrollfade">
       <SceneHeader
         class="alchemy-view__furnace"
         asset="/assets/buildings/dong-fu/pill_room.png"
@@ -252,7 +252,7 @@ function cancelJob(jobId: string) {
       </section>
     </div>
 
-    <div v-if="selectedRecipe" class="alchemy-detail">
+    <div v-if="selectedRecipe" class="alchemy-detail scrollfade">
       <header class="alchemy-detail__header">
         <span>ĐAN PHƯƠNG</span>
         <h3>{{ gameManager.pillRegistry.get(selectedRecipe.pillId).name }}</h3>

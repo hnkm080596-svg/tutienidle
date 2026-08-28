@@ -324,3 +324,12 @@
 *::-webkit-scrollbar {
   display: none;
 }
+
+/* FIT-REFRACTOR — chỉ báo còn nội dung tràn ở các vùng wheel-scroll ẩn
+   thanh (fade vào mực). Áp class .scrollfade ở container có
+   overflow-y: auto; mask tự ẩn khi cuộn tới đáy. */
+.scrollfade {
+  --scrollfade-color: var(--ink-900);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+  mask-position: center top;
+}

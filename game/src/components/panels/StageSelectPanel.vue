@@ -236,7 +236,7 @@ function start() {
       </nav>
 
       <div class="stage-select__workspace">
-        <section class="stage-select__map-panel">
+        <section class="stage-select__map-panel scrollfade">
           <h4 class="stage-select__title">Chọn tầng</h4>
 
           <EmptyState v-if="visibleStages.length === 0" size="sm">Khu vực này chưa có tầng chiến đấu.</EmptyState>

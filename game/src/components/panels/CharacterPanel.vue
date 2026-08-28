@@ -235,7 +235,7 @@ const pillPermanentRows = computed(() => {
       </div>
     </div>
 
-    <div class="character-panel__body">
+    <div class="character-panel__body scrollfade">
         <div v-for="group in statGroups" :key="group.category" class="stat-group">
         <h4 class="stat-group__title stat-group__title--static">
           {{ group.label }}
@@ -648,9 +648,9 @@ const pillPermanentRows = computed(() => {
 
 .pill-usage {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   margin-top: 4px;
-  overflow-x: auto;
   max-width: 100%;
 }
 

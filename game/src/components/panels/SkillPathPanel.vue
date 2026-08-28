@@ -258,9 +258,12 @@ function close() {
   gap: 0;
 }
 
+/* Fit-refactor đợt 5 — cột tree sâu wheel-scroll ẩn thanh (theme ẩn sẵn
+   toàn cục), fade edge báo còn nội dung; ngân sách chiều cao do flex body. */
 .skill-path-panel__col {
   min-height: 0;
   overflow-y: auto;
+  mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
   padding: 12px 14px;
 }
 
