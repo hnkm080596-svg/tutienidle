@@ -5,6 +5,7 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
 import Bar from '@/components/common/primitives/Bar.vue'
 import GameButton from '@/components/common/GameButton.vue'
+import SceneHeader from '@/components/common/SceneHeader.vue'
 import {
   SPIRIT_STONE_CONVERSION_RATIO,
   SPIRIT_STONE_MATERIAL,
@@ -116,11 +117,19 @@ function convertToThuongPham() {
 
 <template>
   <section class="spirit-spring-panel">
-    <div class="spirit-spring-panel__scene" aria-hidden="true">
-      <img :src="'/assets/buildings/dong-fu/spirit_spring.png'" alt="" />
-      <div class="spirit-spring-panel__orb" />
-      <span>LINH MẠCH HỘI TỤ</span>
-    </div>
+    <SceneHeader
+      class="spirit-spring-panel__scene"
+      asset="/assets/buildings/dong-fu/spirit_spring.png"
+      scene="water"
+      :height="210"
+      object-position="center 58%"
+      :image-opacity="0.7"
+      caption="LINH MẠCH HỘI TỤ"
+    >
+      <template #decoration>
+        <div class="spirit-spring-panel__orb" />
+      </template>
+    </SceneHeader>
 
     <p class="spirit-spring-panel__description">{{ template?.description }}</p>
 
@@ -190,32 +199,18 @@ function convertToThuongPham() {
 }
 
 .spirit-spring-panel__scene {
-  position: relative;
-  height: 210px;
-  overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--scene-water-accent) 34%, transparent);
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--scene-water-accent) 8%, var(--ink-950));
   box-shadow: inset 0 -45px 55px color-mix(in srgb, var(--ink-950) 72%, transparent), 0 12px 30px rgba(0, 0, 0, .22);
 }
 
-.spirit-spring-panel__scene img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 58%;
-  opacity: .7;
+.spirit-spring-panel__scene :deep(.scene-header__image) {
   filter: saturate(1.18) contrast(1.05);
 }
 
-.spirit-spring-panel__scene span {
-  position: absolute;
-  left: 18px;
-  bottom: 14px;
+.spirit-spring-panel__scene :deep(.scene-header__caption) {
   color: color-mix(in srgb, var(--scene-water-accent) 55%, white);
-  font: 700 var(--text-sm) var(--font-display);
-  letter-spacing: .18em;
-  text-shadow: 0 2px 6px #000;
 }
 
 .spirit-spring-panel__orb {

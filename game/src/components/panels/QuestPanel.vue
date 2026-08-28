@@ -5,6 +5,7 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import Bar from '@/components/common/primitives/Bar.vue'
 import GameButton from '@/components/common/GameButton.vue'
+import EmptyState from '@/components/common/primitives/EmptyState.vue'
 import type { Quest } from '@/core/quest/Quest'
 import type { QuestProgress } from '@/core/quest/QuestProgress'
 
@@ -93,7 +94,7 @@ function close() {
         </ul>
       </section>
 
-      <p v-if="!rows.length" class="quest-panel__empty">Chưa có nhiệm vụ nào khả dụng.</p>
+      <EmptyState v-if="!rows.length">Chưa có nhiệm vụ nào khả dụng.</EmptyState>
     </div>
   </OverlayPanel>
 </template>
@@ -110,5 +111,4 @@ function close() {
 .quest-panel__progress-label { margin-top: 4px; color: var(--text-secondary); font-size: var(--text-sm); }
 .quest-panel__claim { flex: 0 0 auto; }
 .quest-panel__claim:disabled { color: var(--text-secondary); background: var(--ink-700, var(--ink-800)); }
-.quest-panel__empty { color: var(--text-secondary); text-align: center; padding: 24px 0; }
 </style>

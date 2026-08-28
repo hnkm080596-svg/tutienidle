@@ -10,6 +10,7 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useLoadoutActions } from '@/composables/useLoadoutActions'
 import GameButton from '@/components/common/GameButton.vue'
 import StatRow from '@/components/common/primitives/StatRow.vue'
+import EmptyState from '@/components/common/primitives/EmptyState.vue'
 import {
   getNodeLevel,
   getNextLevelCost,
@@ -144,7 +145,7 @@ function onUpgrade() {
 
 <template>
   <div class="node-inspector">
-    <p v-if="!node" class="node-inspector__empty">Chọn một node trong Linh Mạch để xem chi tiết.</p>
+    <EmptyState v-if="!node" size="lg">Chọn một node trong Linh Mạch để xem chi tiết.</EmptyState>
 
     <template v-else>
       <div class="node-inspector__header">
@@ -222,11 +223,7 @@ function onUpgrade() {
   color: var(--text-primary);
 }
 
-.node-inspector__empty {
-  margin: 0;
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-  text-align: center;
+.node-inspector .empty-state {
   padding: 8px 0;
 }
 

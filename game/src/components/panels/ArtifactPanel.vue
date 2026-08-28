@@ -8,6 +8,7 @@ import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
+import EmptyState from '@/components/common/primitives/EmptyState.vue'
 import ArtifactOverview from './artifact/ArtifactOverview.vue'
 import ArtifactExperienceBar from './artifact/ArtifactExperienceBar.vue'
 import ArtifactGradeSection from './artifact/ArtifactGradeSection.vue'
@@ -112,13 +113,13 @@ function close() {
 
 <template>
   <OverlayPanel :open="ui.standalonePanel === 'artifact'" title="Bản Mệnh Pháp Bảo" width="min(560px, 92vw)" height="min(720px, 88vh)" @close="close">
-    <div v-if="!definition" class="artifact-panel__empty">
-      <p>Bản mệnh pháp bảo của {{ cultivationPathLabel }} đang chờ thiết kế.</p>
-    </div>
+    <EmptyState v-if="!definition" size="lg">
+      Bản mệnh pháp bảo của {{ cultivationPathLabel }} đang chờ thiết kế.
+    </EmptyState>
 
-    <div v-else-if="!artifact" class="artifact-panel__empty">
-      <p>Chưa thức tỉnh — đột phá Trúc Cơ thành công sẽ tự động nhận {{ definition.name }}.</p>
-    </div>
+    <EmptyState v-else-if="!artifact" size="lg">
+      Chưa thức tỉnh — đột phá Trúc Cơ thành công sẽ tự động nhận {{ definition.name }}.
+    </EmptyState>
 
     <div v-else class="artifact-panel">
       <ArtifactOverview
@@ -161,9 +162,8 @@ function close() {
   flex-direction: column;
 }
 
-.artifact-panel__empty {
+.artifact-panel .empty-state {
   padding: var(--space-6);
-  text-align: center;
   color: var(--text-secondary);
 }
 </style>

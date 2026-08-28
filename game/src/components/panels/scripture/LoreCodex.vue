@@ -8,6 +8,7 @@
 // trước).
 import { computed, ref } from 'vue'
 import SlotView from '../../common/SlotView.vue'
+import EmptyState from '../../common/primitives/EmptyState.vue'
 import LoreCodexModal from '../LoreCodexModal.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 
@@ -35,7 +36,7 @@ const loreItems = computed(() => {
 
 <template>
   <div class="lore-codex">
-    <p v-if="loreItems.length === 0" class="lore-codex__empty">Chưa tìm thấy manh mối nào.</p>
+    <EmptyState v-if="loreItems.length === 0">Chưa tìm thấy manh mối nào.</EmptyState>
 
     <div v-else class="lore-codex__grid">
       <SlotView
@@ -64,12 +65,8 @@ const loreItems = computed(() => {
   font-family: var(--font-body);
 }
 
-.lore-codex__empty {
-  margin: 0;
+.lore-codex .empty-state {
   padding: 12px;
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-  text-align: center;
 }
 
 .lore-codex__grid {

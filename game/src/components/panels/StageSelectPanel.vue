@@ -11,6 +11,8 @@ import { useBattleActions } from '@/composables/useBattleActions'
 import BuildingConstructionGate from './BuildingConstructionGate.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import Chip from '@/components/common/primitives/Chip.vue'
+import SceneHeader from '@/components/common/SceneHeader.vue'
+import EmptyState from '@/components/common/primitives/EmptyState.vue'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 
 const player = usePlayerStore()
@@ -183,15 +185,24 @@ function start() {
 <template>
   <BuildingConstructionGate building-id="teleport_array">
   <div class="stage-select-shell">
-    <div class="stage-select__scene">
-      <img :src="'/assets/buildings/dong-fu/teleport_array.png'" alt="" />
-      <div class="stage-select__portal" aria-hidden="true">界</div>
-      <div>
+    <SceneHeader
+      class="stage-select__scene"
+      asset="/assets/buildings/dong-fu/teleport_array.png"
+      scene="portal"
+      :height="118"
+      object-position="center 52%"
+      :image-opacity="0.5"
+    >
+      <template #decoration>
+        <div class="stage-select__portal" aria-hidden="true">界</div>
+      </template>
+
+      <div class="stage-select__scene-copy">
         <small>TRẬN VĂN ĐỊNH VỊ</small>
         <h3>Chọn địa giới để truyền tống</h3>
         <p>Xem trước đội hình yêu thú, số lượng và nhịp xuất hiện của từng tầng.</p>
       </div>
-    </div>
+    </SceneHeader>
 
     <div class="stage-select">
       <nav class="stage-select__filters" aria-label="Chọn địa giới và chương">
@@ -228,7 +239,7 @@ function start() {
         <section class="stage-select__map-panel">
           <h4 class="stage-select__title">Chọn tầng</h4>
 
-          <p v-if="visibleStages.length === 0" class="stage-select__empty">Khu vực này chưa có tầng chiến đấu.</p>
+          <EmptyState v-if="visibleStages.length === 0" size="sm">Khu vực này chưa có tầng chiến đấu.</EmptyState>
 
           <div v-else class="stage-map">
             <button
@@ -297,7 +308,7 @@ function start() {
         </div>
       </template>
 
-          <p v-else class="stage-select__empty">Chọn một tầng để xem đội hình.</p>
+          <EmptyState v-else size="lg">Chọn một tầng để xem đội hình.</EmptyState>
         </section>
       </div>
     </div>
@@ -317,37 +328,26 @@ function start() {
 }
 
 .stage-select__scene {
-  position: relative;
-  flex: 0 0 118px;
   display: flex;
   align-items: center;
   gap: 18px;
-  overflow: hidden;
   padding: 14px 24px;
   border-bottom: 1px solid color-mix(in srgb, var(--scene-portal-accent) 30%, transparent);
 }
 
-.stage-select__scene::after {
-  content: '';
-  position: absolute;
-  inset: 0;
+/* Gradient ngang đặc thù panel Địa Giới — đè scrim dọc mặc định. */
+.stage-select__scene :deep(.scene-header__scrim) {
   background: linear-gradient(90deg, color-mix(in srgb, var(--scene-portal-deep) 18%, transparent), color-mix(in srgb, var(--scene-portal-deep) 96%, transparent) 62%);
 }
 
-.stage-select__scene img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 52%;
-  opacity: .5;
+.stage-select__scene-copy {
+  position: relative;
+  z-index: 1;
 }
 
-.stage-select__scene > div { position: relative; z-index: 1; }
-.stage-select__scene small { color: var(--scene-portal-accent); letter-spacing: .18em; }
-.stage-select__scene h3 { margin: 2px 0; color: var(--scene-portal-text); font: 700 var(--text-lg) var(--font-display); }
-.stage-select__scene p { margin: 0; color: var(--text-secondary); font-size: var(--text-xs); }
+.stage-select__scene-copy small { color: var(--scene-portal-accent); letter-spacing: .18em; }
+.stage-select__scene-copy h3 { margin: 2px 0; color: var(--scene-portal-text); font: 700 var(--text-lg) var(--font-display); }
+.stage-select__scene-copy p { margin: 0; color: var(--text-secondary); font-size: var(--text-xs); }
 .stage-select__portal {
   display: grid;
   flex: 0 0 64px;
@@ -442,7 +442,7 @@ function start() {
   font-size: var(--text-body);
 }
 
-.stage-select__empty {
+.stage-select .empty-state {
   color: var(--text-muted);
   font-size: var(--text-xs);
 }

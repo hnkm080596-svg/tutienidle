@@ -20,6 +20,7 @@ import { equipmentQualityRank, itemGradeRank } from '@/composables/slots/normali
 import GamePanel from '@/components/common/GamePanel.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import TabBar from '@/components/common/TabBar.vue'
+import SceneHeader from '@/components/common/SceneHeader.vue'
 
 // Khí Đường (2026-08-25, resource-professions-rework plan §7/§9.2) —
 // bốn tab ĐÚNG contract: Cường Hóa (slot), Tẩy Luyện (identity substat
@@ -556,12 +557,20 @@ function doDissolve() {
 
 <template>
   <GamePanel class="qi-hall" variant="ornate" padding="none">
-    <div class="qi-hall__forge-scene" aria-hidden="true">
-      <img :src="'/assets/buildings/dong-fu/equipment_hall.png'" alt="" />
-      <div class="qi-hall__forge-fire" />
-      <div class="qi-hall__anvil">⚒</div>
-      <p>THIÊN HỎA LUYỆN KHÍ</p>
-    </div>
+    <SceneHeader
+      class="qi-hall__forge-scene"
+      asset="/assets/buildings/dong-fu/equipment_hall.png"
+      scene="fire"
+      :height="132"
+      object-position="center 58%"
+      :image-opacity="0.58"
+      caption="THIÊN HỎA LUYỆN KHÍ"
+    >
+      <template #decoration>
+        <div class="qi-hall__forge-fire" />
+        <div class="qi-hall__anvil">⚒</div>
+      </template>
+    </SceneHeader>
 
     <header class="qi-hall__points">
       <template v-if="itemRenState !== null">
@@ -827,30 +836,18 @@ function doDissolve() {
 }
 
 .qi-hall__forge-scene {
-  position: relative;
   flex: 0 0 132px;
-  overflow: hidden;
   border-bottom: 1px solid color-mix(in srgb, var(--scene-fire-text-soft) 35%, transparent);
-  background: var(--scene-fire-deep);
   box-shadow: inset 0 -30px 45px rgba(0, 0, 0, .68);
 }
 
-.qi-hall__forge-scene img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 58%;
-  opacity: .58;
+.qi-hall__forge-scene :deep(.scene-header__image) {
   filter: sepia(.18) saturate(1.25) contrast(1.08);
 }
 
-.qi-hall__forge-scene p {
-  position: absolute;
-  left: 18px;
+.qi-hall__forge-scene :deep(.scene-header__caption) {
   bottom: 12px;
-  margin: 0;
   color: var(--scene-fire-text);
-  font: 700 var(--text-sm) var(--font-display);
   letter-spacing: .18em;
   text-shadow: 0 2px 5px #000;
 }

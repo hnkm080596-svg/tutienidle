@@ -12,6 +12,7 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
 import GameButton from '@/components/common/GameButton.vue'
 import StatRow from '@/components/common/primitives/StatRow.vue'
+import EmptyState from '@/components/common/primitives/EmptyState.vue'
 
 const props = defineProps<{
   skill: Skill | null
@@ -52,7 +53,7 @@ function onUpgrade() {
 
 <template>
   <div class="skill-detail">
-    <p v-if="!skill" class="skill-detail__empty">Chọn một kỹ năng để xem chi tiết.</p>
+    <EmptyState v-if="!skill" size="lg">Chọn một kỹ năng để xem chi tiết.</EmptyState>
 
     <template v-else>
       <h4 class="skill-detail__name">{{ skill.name }}</h4>
@@ -100,12 +101,8 @@ function onUpgrade() {
   padding: 4px;
 }
 
-.skill-detail__empty {
-  margin: 0;
+.skill-detail .empty-state {
   padding: 40px 0;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: var(--text-sm);
 }
 
 .skill-detail__name {

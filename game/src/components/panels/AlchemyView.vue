@@ -7,6 +7,7 @@ import type { AlchemyRecipe } from '@/core/alchemy/AlchemySystem'
 import Bar from '@/components/common/primitives/Bar.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import StatRow from '@/components/common/primitives/StatRow.vue'
+import SceneHeader from '@/components/common/SceneHeader.vue'
 import { PROFESSION_GRADE_NAMES, getProfessionGradeForRealm } from '@/core/profession/ProfessionGrade'
 
 // Luyện Đan (2026-08-25, resource-professions-rework plan §8/§9.3) —
@@ -211,10 +212,18 @@ function cancelJob(jobId: string) {
 <template>
   <div class="alchemy-view">
     <div class="alchemy-view__recipes">
-      <div class="alchemy-view__furnace" aria-hidden="true">
-        <img :src="'/assets/buildings/dong-fu/pill_room.png'" alt="" />
-        <span class="alchemy-view__furnace-core">丹</span>
-      </div>
+      <SceneHeader
+        class="alchemy-view__furnace"
+        asset="/assets/buildings/dong-fu/pill_room.png"
+        scene="fire"
+        :height="150"
+        object-position="center 58%"
+        :image-opacity="0.7"
+      >
+        <template #decoration>
+          <span class="alchemy-view__furnace-core">丹</span>
+        </template>
+      </SceneHeader>
 
       <section class="alchemy-group">
         <p class="alchemy-group__eyebrow">Đan lô hiện tại</p>
@@ -345,23 +354,18 @@ function cancelJob(jobId: string) {
 }
 
 .alchemy-view__furnace {
-  position: relative;
-  height: 150px;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--scene-fire-accent) 35%, transparent);
   border-radius: var(--radius-md);
   background: radial-gradient(circle at 50% 75%, color-mix(in srgb, var(--scene-fire-glow) 30%, transparent), transparent 45%), var(--scene-fire-deep);
   box-shadow: inset 0 0 35px rgba(0, 0, 0, .7);
 }
 
-.alchemy-view__furnace img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: .7;
+.alchemy-view__furnace :deep(.scene-header__image) {
   filter: sepia(.25) saturate(1.2) contrast(1.05);
+}
+
+.alchemy-view__furnace :deep(.scene-header__scrim) {
+  display: none;
 }
 
 .alchemy-view__furnace-core {

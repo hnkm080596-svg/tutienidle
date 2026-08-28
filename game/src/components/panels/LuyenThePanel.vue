@@ -34,6 +34,7 @@ import { formatNumber } from '@/core/format/NumberFormatter'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import Bar from '@/components/common/primitives/Bar.vue'
 import GameButton from '@/components/common/GameButton.vue'
+import EmptyState from '@/components/common/primitives/EmptyState.vue'
 
 const ui = useUiStore()
 const player = usePlayerStore()
@@ -159,7 +160,7 @@ function close() {
         </GameButton>
       </template>
 
-      <p v-else class="luyen-the-panel__empty">Đã hoàn thành toàn bộ Luyện Thể.</p>
+      <EmptyState v-else size="lg">Đã hoàn thành toàn bộ Luyện Thể.</EmptyState>
     </div>
   </OverlayPanel>
 </template>
@@ -270,13 +271,5 @@ function close() {
 
 .luyen-the-panel__invest:disabled {
   opacity: 0.4;
-}
-
-.luyen-the-panel__empty {
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-  text-align: center;
-  padding: 8px 4px;
-  margin: 0;
 }
 </style>

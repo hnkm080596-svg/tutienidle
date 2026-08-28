@@ -18,6 +18,7 @@ import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import Bar from '@/components/common/primitives/Bar.vue'
 import StatRow from '@/components/common/primitives/StatRow.vue'
 import Eyebrow from '@/components/common/primitives/Eyebrow.vue'
+import EmptyState from '@/components/common/primitives/EmptyState.vue'
 
 const ui = useUiStore()
 const gameManager = useGameManager()
@@ -95,10 +96,10 @@ function close() {
           </ul>
         </div>
 
-        <p v-if="techniqueSections.length === 0" class="technique-panel__empty">Không có thông tin bổ sung</p>
+        <EmptyState v-if="techniqueSections.length === 0" size="sm">Không có thông tin bổ sung</EmptyState>
       </div>
 
-      <p v-else class="technique-panel__empty">Chưa có công pháp — hoàn thành Lễ Nhập Môn để tự động nhận</p>
+      <EmptyState v-else size="md">Chưa có công pháp — hoàn thành Lễ Nhập Môn để tự động nhận</EmptyState>
   </OverlayPanel>
 </template>
 
@@ -139,12 +140,5 @@ function close() {
   margin: 0;
   padding: 0;
   font-size: var(--text-sm);
-}
-
-.technique-panel__empty {
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-  text-align: center;
-  padding: 12px 4px;
 }
 </style>
