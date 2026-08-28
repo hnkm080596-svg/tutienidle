@@ -1,30 +1,31 @@
 # UI Components — Danh mục đặc tả toàn bộ giao diện
 
-> Tài liệu liệt kê **toàn bộ 99 UI component Vue** của project kèm đường dẫn, chức năng, màu sắc đang dùng và đặc tả trực quan.
+> Tài liệu liệt kê **toàn bộ UI component Vue** của project kèm đường dẫn, chức năng, màu sắc đang dùng và đặc tả trực quan.
 > Nguồn sự thật về màu: `game/src/assets/theme.css` (theme **"Mực & Bạc"** — Ink & Silver).
 >
-> - Stack: Vue 3 + TypeScript, CSS scoped thuần (89/90 file dùng `<style scoped>`; riêng `App.vue` dùng global).
-> - Không dùng UI library (Tailwind/Element Plus...) hay preprocessor (Sass/Less).
+> - Stack: Vue 3 + TypeScript, CSS scoped thuần; không dùng UI library hay preprocessor.
 > - Gần như **100% màu đi qua CSS variables** — hex cứng rất hiếm (chỉ shadow `rgba(0,0,0,…)`).
+> - **UI primitives refactor (2026-08-29)**: lớp `common/primitives/` (Bar, Chip, Eyebrow, StatRow, EmptyState) + `SceneHeader` là nguồn sự thật duy nhất cho progress bar / tab-chip / section-title / stat-row / empty-state / scene-header. Xem spec `docs/superpowers/specs/2026-08-29-ui-primitives-refactor-design.md`.
 
 ---
 
 ## Mục lục
 
 1. [Hệ màu chuẩn (theme.css)](#1-hệ-màu-chuẩn-themecss)
-2. [Common (21)](#2-common--game-srccomponentscommon)
-3. [Layout (4)](#3-layout--game-srccomponentslayout)
-4. [Panels (22)](#4-panels--game-srccomponentspanels)
-5. [Panel con — skill-path (5)](#5-panel-con--skill-path)
-6. [Panel con — bag-sections (4)](#6-panel-con--bag-sections)
-7. [Panel con — loadout-sections (4)](#7-panel-con--loadout-sections)
-8. [Panel con — scripture (2)](#8-panel-con--scripture)
-9. [Panel con — artifact (4)](#9-panel-con--artifact)
-10. [Combat (10)](#10-combat--game-srccomponentsgamecombat)
-11. [Combat HUD (6)](#11-combat-hud--game-srccomponentsgamecombathud)
-12. [Game / Scene (7)](#12-game--scene--game-srccomponentsgame)
-13. [Onboarding (2)](#13-onboarding--game-srccomponentsonboarding)
-14. [Pattern lặp lại trên toàn UI](#14-pattern-lặp-lại-trên-toàn-ui)
+2. [Primitives — game/src/components/common/primitives/](#2-primitives--game-srccomponentscommonprimitives)
+3. [Common (20)](#3-common--game-srccomponentscommon)
+4. [Layout (4)](#4-layout--game-srccomponentslayout)
+5. [Panels (22)](#5-panels--game-srccomponentspanels)
+6. [Panel con — skill-path (5)](#6-panel-con--skill-path)
+7. [Panel con — bag-sections (4)](#7-panel-con--bag-sections)
+8. [Panel con — loadout-sections (4)](#8-panel-con--loadout-sections)
+9. [Panel con — scripture (2)](#9-panel-con--scripture)
+10. [Panel con — artifact (4)](#10-panel-con--artifact)
+11. [Combat (10)](#11-combat--game-srccomponentsgamecombat)
+12. [Combat HUD (6)](#12-combat-hud--game-srccomponentsgamecombathud)
+13. [Game / Scene (7)](#13-game--scene--game-srccomponentsgame)
+14. [Onboarding (2)](#14-onboarding--game-srccomponentsonboarding)
+15. [Pattern lặp lại trên toàn UI](#15-pattern-lặp-lại-trên-toàn-ui)
 
 ---
 
@@ -93,17 +94,51 @@ Mộc `#7cb342` · Hỏa `#e53935` · Thổ `#a1795a` · Kim `#cfd8dc` · Thủy
 
 ---
 
-## 2. Common — `game/src/components/common/`
+## 2. Primitives — `game/src/components/common/primitives/`
+
+Lớp atom của hệ UI (2026-08-29): props tối thiểu cho hành vi, **mọi visual qua CSS var** — nơi dùng override `style="--bar-from: var(--el-color)"`.
+
+### Bar
+- **Đường dẫn**: `game/src/components/common/primitives/Bar.vue`
+- **Chức năng**: Thanh fill ngang duy nhất của toàn app (tu vi, EXP, cycle, HP/MP/Nộ, countdown, cast bar). `role="progressbar"` + aria đầy đủ.
+- **Props**: `value`, `max`, `height` (default 8), `pill` (radius 999px), `anchor` ('left'|'right' — tribulation thu từ phải).
+- **CSS var**: `--bar-track` (default `--ink-700`), `--bar-from`/`--bar-to` (gradient fill, default **house style** `--jade → --chrome-300`; solid = from=to).
+- **Đặc tả**: slot `label` giữa bar (`tabular-nums`, text-shadow); fill transition width 200ms. Đã thay 17/19 bar tự làm (giữ nguyên ArtifactCombatSlot — mask dọc).
+
+### Chip
+- **Đường dẫn**: `game/src/components/common/primitives/Chip.vue`
+- **Chức năng**: Pill chọn được — atom cho TabBar và mọi filter/mode switcher.
+- **Props**: `active`, `disabled`.
+- **Màu sắc**: idle `--ink-800` + viền `--ink-line-soft` + chữ `--text-secondary`; active viền `--chrome-300` + chữ `--chrome-100` + nền `--chip-active-bg` (default transparent; Settings tint `--chrome-300 12%`, LoadoutStrip `--ink-700`, StageSelect filter portal-teal).
+
+### Eyebrow
+- **Đường dẫn**: `game/src/components/common/primitives/Eyebrow.vue`
+- **Chức năng**: Section title uppercase — chuẩn hóa dải tracking .02–.13em cũ về `--eyebrow-tracking` default .04em.
+- **Props**: `as` (h3/h4/h5/span/p), `tone` (chrome/muted/inherit).
+
+### StatRow
+- **Đường dẫn**: `game/src/components/common/primitives/StatRow.vue`
+- **Chức năng**: Hàng label — value cho bảng chỉ số 2 cột (thay ~14 chỗ tự viết).
+- **Props**: `label`, `tone` (default/positive/negative/warning/muted — khớp tone Tooltip), `bordered`; slot value (cho span màu).
+- **Đặc tả**: value `tabular-nums` căn phải; tone positive `--jade` / negative `--crimson` / warning `--chrome-100` / muted `--text-muted`.
+
+### EmptyState
+- **Đường dẫn**: `game/src/components/common/primitives/EmptyState.vue`
+- **Chức năng**: Khối trống centered — thay ~13 div empty tự viết.
+- **Props**: `size` (sm 8px/md 16px/lg 24px padding), `framed` (viền dashed `--ink-line`).
+
+## 3. Common — `game/src/components/common/`
 
 ### GameButton
 - **Đường dẫn**: `game/src/components/common/GameButton.vue`
 - **Chức năng**: Nút chuẩn toàn game — spinner loading, hover nhấc nhẹ.
-- **Props**: `variant` (primary/secondary/danger/ghost), `size` (sm/md/lg), `disabled`, `loading`.
+- **Props**: `variant` (primary/secondary/danger/ghost), `size` (sm/md/lg), `shape` (rect/circle — nút icon tròn), `accentVar` (CSS var — gradient accent scene, vd `--scene-fire-text` lò đan), `disabled`, `loading`.
 - **Màu sắc**:
   - Primary: gradient `--chrome-100 → --chrome-500`, chữ `--ink-950`, hover glow `--shadow-glow-chrome`
   - Secondary: nền `--ink-800`, viền `--ink-line`, hover viền `--chrome-300`
   - Danger: nền `--crimson`, chữ `#fff`, hover glow đỏ
   - Ghost: trong suốt, chữ `--text-secondary`, hover `--chrome-100`
+  - accentVar: gradient `var(--button-accent) → color-mix(accent 72%, --ink-950)`
 - **Đặc tả**: radius `--radius-sm`; font-weight 700; sm `--tap-min`/md `--tap-comfortable`/lg +8px; disabled opacity .55; hover `translateY(-1px)`.
 
 ### GamePanel
@@ -120,12 +155,8 @@ Mộc `#7cb342` · Hỏa `#e53935` · Thổ `#a1795a` · Kim `#cfd8dc` · Thủy
 - **Màu sắc**: backdrop `--scrim` + blur 4px; card gradient `155deg --ink-800 → --ink-950`, viền `1px --chrome-500`; h3 `--chrome-100`.
 - **Đặc tả**: max-height 94vh, radius `--radius-md`, shadow `--shadow-panel`; nút ✕ vuông `--tap-min`; enter/leave `translateY(12px) scale(.985)` 0.2s.
 
-### ProgressBar
-- **Đường dẫn**: `game/src/components/common/ProgressBar.vue`
-- **Chức năng**: Thanh tiến độ chuẩn — nhãn % tùy chọn.
-- **Props**: `value`, `max`, `variant` (gold/jade/crimson/azure), `showLabel`.
-- **Màu sắc**: track `--ink-800` viền `--ink-line-soft`; gold = gradient `--chrome-100 → --chrome-500` + glow; jade/crimson/azure = màu đặc; label `--text-primary` + text-shadow đen.
-- **Đặc tả**: cao 10px (có label 14px), radius `999px`, transition width 200ms, đầy đủ aria `role="progressbar"`.
+### ProgressBar — ĐÃ XÓA (2026-08-29)
+Thay bằng `primitives/Bar.vue` (xem mục 2). ProgressBar cũ có 0 usage — 19 bar tự làm giờ đều dùng Bar.
 
 ### TabBar
 - **Đường dẫn**: `game/src/components/common/TabBar.vue`
@@ -226,9 +257,15 @@ Mộc `#7cb342` · Hỏa `#e53935` · Thổ `#a1795a` · Kim `#cfd8dc` · Thủy
 - **Màu sắc**: slot viền `--ink-700` → ready `--jade` chữ `--jade`; nút Độ Kiếp gradient bạc chữ `--ink-950`.
 - **Đặc tả**: bọc OverlayPanel; mọi nút `min-height: --tap-min` radius `--radius-sm`.
 
+### SceneHeader — composite (2026-08-29)
+- **Đường dẫn**: `game/src/components/common/SceneHeader.vue`
+- **Chức năng**: Khối scene header dùng chung 4 panel có artwork (Khí Đường, Địa Giới, Linh Tuyền, Đan Phòng) — ảnh full-bleed + scrim + caption + slot decoration riêng từng panel (forge-fire, vòng portal, orb, lõi đan).
+- **Props**: `asset`, `scene` ('fire'|'portal'|'water' → tự map cụm `--scene-deep/accent/text/text-soft/glow` scope), `height`, `objectPosition`, `imageOpacity`, `caption`.
+- **Đặc tả**: caption bottom-left Noto Serif letter-spacing .18em text-shadow; scrim gradient dọc mặc định (override được — StageSelect dùng gradient ngang portal).
+
 ---
 
-## 3. Layout — `game/src/components/layout/`
+## 4. Layout — `game/src/components/layout/`
 
 ### GameRoot
 - **Đường dẫn**: `game/src/components/layout/GameRoot.vue`
@@ -256,7 +293,7 @@ Mộc `#7cb342` · Hỏa `#e53935` · Thổ `#a1795a` · Kim `#cfd8dc` · Thủy
 
 ---
 
-## 4. Panels — `game/src/components/panels/`
+## 5. Panels — `game/src/components/panels/`
 
 ### CharacterPanel
 - **Đường dẫn**: `game/src/components/panels/CharacterPanel.vue`
@@ -387,7 +424,7 @@ Mộc `#7cb342` · Hỏa `#e53935` · Thổ `#a1795a` · Kim `#cfd8dc` · Thủy
 
 ---
 
-## 5. Panel con — skill-path
+## 6. Panel con — skill-path
 
 ### SkillPathList
 - **Đường dẫn**: `game/src/components/panels/skill-path/SkillPathList.vue`
@@ -421,7 +458,7 @@ Mộc `#7cb342` · Hỏa `#e53935` · Thổ `#a1795a` · Kim `#cfd8dc` · Thủy
 
 ---
 
-## 6. Panel con — bag-sections
+## 7. Panel con — bag-sections
 
 ### PillBagSection
 - **Đường dẫn**: `game/src/components/panels/bag-sections/PillBagSection.vue`
@@ -449,7 +486,7 @@ Mộc `#7cb342` · Hỏa `#e53935` · Thổ `#a1795a` · Kim `#cfd8dc` · Thủy
 
 ---
 
-## 7. Panel con — loadout-sections
+## 8. Panel con — loadout-sections
 
 ### TechniqueSlotCard
 - **Đường dẫn**: `game/src/components/panels/loadout-sections/TechniqueSlotCard.vue`
@@ -477,7 +514,7 @@ Mộc `#7cb342` · Hỏa `#e53935` · Thổ `#a1795a` · Kim `#cfd8dc` · Thủy
 
 ---
 
-## 8. Panel con — scripture
+## 9. Panel con — scripture
 
 ### TechniqueCodex
 - **Đường dẫn**: `game/src/components/panels/scripture/TechniqueCodex.vue`
@@ -493,7 +530,7 @@ Mộc `#7cb342` · Hỏa `#e53935` · Thổ `#a1795a` · Kim `#cfd8dc` · Thủy
 
 ---
 
-## 9. Panel con — artifact
+## 10. Panel con — artifact
 
 ### ArtifactOverview
 - **Đường dẫn**: `game/src/components/panels/artifact/ArtifactOverview.vue`
@@ -521,7 +558,7 @@ Mộc `#7cb342` · Hỏa `#e53935` · Thổ `#a1795a` · Kim `#cfd8dc` · Thủy
 
 ---
 
-## 10. Combat — `game/src/components/game/combat/`
+## 11. Combat — `game/src/components/game/combat/`
 
 ### CombatSceneOverlay
 - **Đường dẫn**: `game/src/components/game/combat/CombatSceneOverlay.vue`
@@ -585,7 +622,7 @@ Mộc `#7cb342` · Hỏa `#e53935` · Thổ `#a1795a` · Kim `#cfd8dc` · Thủy
 
 ---
 
-## 11. Combat HUD — `game/src/components/game/combat/hud/`
+## 12. Combat HUD — `game/src/components/game/combat/hud/`
 
 ### CombatBuildHud
 - **Đường dẫn**: `game/src/components/game/combat/hud/CombatBuildHud.vue`
@@ -624,7 +661,7 @@ Mộc `#7cb342` · Hỏa `#e53935` · Thổ `#a1795a` · Kim `#cfd8dc` · Thủy
 
 ---
 
-## 12. Game / Scene — `game/src/components/game/`
+## 13. Game / Scene — `game/src/components/game/`
 
 ### PhaserCanvas
 - **Đường dẫn**: `game/src/components/game/PhaserCanvas.vue`
@@ -670,7 +707,7 @@ Mộc `#7cb342` · Hỏa `#e53935` · Thổ `#a1795a` · Kim `#cfd8dc` · Thủy
 
 ---
 
-## 13. Onboarding — `game/src/components/onboarding/`
+## 14. Onboarding — `game/src/components/onboarding/`
 
 ### AuthEntryScreen
 - **Đường dẫn**: `game/src/components/onboarding/AuthEntryScreen.vue`
@@ -686,17 +723,23 @@ Mộc `#7cb342` · Hỏa `#e53935` · Thổ `#a1795a` · Kim `#cfd8dc` · Thủy
 
 ---
 
-## 14. Pattern lặp lại trên toàn UI
+## 15. Pattern lặp lại trên toàn UI
 
-| Pattern | Giá trị | Xuất hiện |
+> Sau primitives refactor (2026-08-29), các pattern dưới đây **đã được hợp nhất** về component dùng chung — bảng này là quy ước mà mọi pattern tuân theo.
+
+| Pattern | Nguồn sự thật | Ghi chú |
 |---|---|---|
-| **Nút chính (CTA)** | gradient `--chrome-100 → --chrome-500`, chữ `--ink-950` | GameButton primary, mọi nút Xây/Nâng/Đột phá/Nhận/Bắt đầu |
-| **Nút danger** | nền `--crimson` phẳng, chữ trắng/#fff | GameButton danger, Tái Chiến, Thoát Trận |
-| **Panel modal** | gradient `160deg --ink-950 → --ink-800` + `.ornate-frame` + `--shadow-panel` + radius `--radius-md` | ConfirmModal, Error, Save, Tutorial, Building popover... |
+| **Progress bar** | `primitives/Bar.vue` | house style: track `--ink-700` + fill `--jade → --chrome-300`; override qua `--bar-*` |
+| **Nút chính (CTA)** | `GameButton` primary | gradient bạc `--chrome-100 → --chrome-500`, chữ `--ink-950` |
+| **Nút danger** | `GameButton` danger | nền `--crimson` phẳng, chữ trắng |
+| **Nút scene accent** | `GameButton` + `accentVar` | gradient đổ từ CSS var scene |
+| **Panel modal** | gradient `160deg --ink-950 → --ink-800` + `.ornate-frame` + `--shadow-panel` | ConfirmModal, Error, Save, Tutorial... |
 | **OverlayPanel** | gradient `155deg --ink-800 → --ink-950` viền `--chrome-500` | mọi panel chức năng |
-| **Progress fill** | gradient `--jade → --chrome-300` | EXP, tu vi, tier, production |
-| **Viền trái 3px accent** | màu theo kind/tone | Tooltip, Toast, ActionFeedbackLog |
+| **Tab / filter chip** | `primitives/Chip.vue` + `TabBar` | công thức `--ink-800` → active `--chrome-300`/`--chrome-100` |
+| **Section title** | `primitives/Eyebrow.vue` | uppercase, `--eyebrow-tracking` .04em |
+| **Stat row** | `primitives/StatRow.vue` | value `tabular-nums`, tone jade/crimson/chrome/muted |
+| **Empty state** | `primitives/EmptyState.vue` | size sm/md/lg, framed dashed |
+| **Scene header** | `SceneHeader.vue` | 4 panel artwork + slot decoration |
 | **Thành công / thiếu sót** | `--jade` / `--crimson` | toàn UI |
-| **Scene palette** | 5 cụm token riêng (fire/portal/water/forest-mine-grotto/tribulation) | panel theo khu chức năng |
 | **Chữ số** | `font-variant-numeric: tabular-nums` | mọi giá trị count/đếm |
 | **Accessibility** | `--tap-min` 40px, focus ring bạc, aria role, prefers-reduced-motion | toàn UI |
