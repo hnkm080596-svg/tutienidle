@@ -5,6 +5,7 @@ import { useUiStore } from '@/stores/ui'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import PlayerPortrait from '../common/PlayerPortrait.vue'
 import GamePanel from '../common/GamePanel.vue'
+import GameButton from '../common/GameButton.vue'
 import type { Stats } from '@/core/stats/StatBlock'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { BASE_STAT_LABELS, formatStat, type StatCategory } from '@/core/stats/StatLabels'
@@ -254,14 +255,15 @@ const pillPermanentRows = computed(() => {
                 <span v-if="isMainStatCapped(stat.key as MainStatKey)" class="stat-list__max">MAX</span>
               </span>
 
-              <button
+              <GameButton
                 v-if="player.attributePoints > 0 && !isMainStatCapped(stat.key as MainStatKey)"
-                type="button"
                 class="stat-list__allocate"
+                shape="circle"
+                size="sm"
                 @click="allocate(stat.key as MainStatKey)"
               >
                 +
-              </button>
+              </GameButton>
             </span>
 
             <span v-else>{{ formatStat(stat.key, player.finalStats[stat.key]) }}</span>
@@ -566,21 +568,9 @@ const pillPermanentRows = computed(() => {
 }
 
 .stat-list__allocate {
-  min-width: var(--tap-min);
-  min-height: var(--tap-min);
   flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
-  color: var(--ink-950);
-  border: none;
-  border-radius: 50%;
-  font-weight: 700;
   font-size: var(--text-body);
   line-height: 1;
-  cursor: pointer;
 }
 
 .element-chips {

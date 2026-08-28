@@ -9,6 +9,7 @@ import { useUiStore, type BattleRunMode } from '@/stores/ui'
 import { useGameManager } from '@/composables/useGameState'
 import { useBattleActions } from '@/composables/useBattleActions'
 import BuildingConstructionGate from './BuildingConstructionGate.vue'
+import GameButton from '@/components/common/GameButton.vue'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 
 const player = usePlayerStore()
@@ -291,11 +292,11 @@ function start() {
         </p>
 
         <div class="stage-select__start-row">
-          <button type="button" class="stage-select__build" @click="openBuild">⚔ Build</button>
+          <GameButton class="stage-select__build" variant="secondary" size="sm" @click="openBuild">? Build</GameButton>
 
-          <button type="button" class="stage-select__start" :disabled="!canStart" @click="start">
+          <GameButton class="stage-select__start" size="sm" :disabled="!canStart" @click="start">
             Bắt Đầu
-          </button>
+          </GameButton>
         </div>
       </template>
 
@@ -611,36 +612,16 @@ function start() {
 
 .stage-select__build {
   padding: 8px 10px;
-  min-height: var(--tap-min);
-  background: var(--ink-800);
-  color: var(--text-primary);
-  border: 1px solid var(--ink-line-soft);
-  border-radius: var(--radius-sm);
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.stage-select__build:hover {
-  border-color: var(--chrome-300);
-  color: var(--chrome-100);
 }
 
 .stage-select__start {
   flex: 1;
   padding: 8px;
-  min-height: var(--tap-min);
-  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
-  color: var(--ink-950);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-weight: 700;
-  cursor: pointer;
 }
 
 .stage-select__start:disabled {
   background: var(--ink-700);
   color: var(--text-muted);
-  cursor: not-allowed;
 }
 
 @media (max-width: 760px) {

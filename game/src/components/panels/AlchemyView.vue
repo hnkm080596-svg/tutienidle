@@ -5,6 +5,7 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 import type { AlchemyRecipe } from '@/core/alchemy/AlchemySystem'
 import Bar from '@/components/common/primitives/Bar.vue'
+import GameButton from '@/components/common/GameButton.vue'
 import { PROFESSION_GRADE_NAMES, getProfessionGradeForRealm } from '@/core/profession/ProfessionGrade'
 
 // Luyện Đan (2026-08-25, resource-professions-rework plan §8/§9.3) —
@@ -296,9 +297,9 @@ function cancelJob(jobId: string) {
           </li>
         </ul>
 
-        <button type="button" class="alchemy-detail__action" @click="startJob">
+        <GameButton class="alchemy-detail__action" size="sm" accent-var="--scene-fire-text" @click="startJob">
           Bắt đầu luyện
-        </button>
+        </GameButton>
       </section>
 
       <section v-if="jobs.length > 0" class="alchemy-detail__block">
@@ -313,9 +314,9 @@ function cancelJob(jobId: string) {
 
           <Bar class="alchemy-job__progress" :value="job.progress" :max="1" :height="6" />
 
-          <button type="button" class="alchemy-job__cancel" @click="cancelJob(job.jobId)">
+          <GameButton class="alchemy-job__cancel" variant="ghost" size="sm" @click="cancelJob(job.jobId)">
             Huỷ (mất nguyên liệu)
-          </button>
+          </GameButton>
         </div>
       </section>
     </div>
@@ -498,13 +499,6 @@ function cancelJob(jobId: string) {
 .alchemy-detail__action {
   width: 100%;
   padding: 8px;
-  background: linear-gradient(180deg, var(--scene-fire-text), var(--scene-fire-text-soft));
-  color: var(--ink-950);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-weight: 700;
-  cursor: pointer;
-  font-family: var(--font-body);
 }
 
 @media (max-width: 760px) {
@@ -532,11 +526,7 @@ function cancelJob(jobId: string) {
 
 .alchemy-job__cancel {
   align-self: flex-end;
-  background: none;
-  border: none;
   color: var(--crimson);
   font-size: var(--text-xs);
-  cursor: pointer;
-  font-family: var(--font-body);
 }
 </style>

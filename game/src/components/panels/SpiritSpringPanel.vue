@@ -4,6 +4,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
 import Bar from '@/components/common/primitives/Bar.vue'
+import GameButton from '@/components/common/GameButton.vue'
 import {
   SPIRIT_STONE_CONVERSION_RATIO,
   SPIRIT_STONE_MATERIAL,
@@ -138,7 +139,7 @@ function convertToThuongPham() {
 
       <small class="spirit-spring-panel__rate">+{{ ratePerMinute.toLocaleString('vi-VN', { maximumFractionDigits: 1 }) }} thạch/phút</small>
 
-      <button type="button" :disabled="storedAmount <= 0" @click="collect">Thu hoạch</button>
+      <GameButton class="spirit-spring-panel__collect" size="sm" :disabled="storedAmount <= 0" @click="collect">Thu hoạch</GameButton>
     </div>
 
     <div class="spirit-spring-panel__card">
@@ -156,21 +157,23 @@ function convertToThuongPham() {
       </div>
 
       <div class="spirit-spring-panel__convert">
-        <button
-          type="button"
+        <GameButton
+          class="spirit-spring-panel__convert-btn"
+          size="sm"
           :disabled="haPhamOwned < SPIRIT_STONE_CONVERSION_RATIO"
           @click="convertToTrungPham"
         >
           {{ SPIRIT_STONE_CONVERSION_RATIO }} Hạ → 1 Trung
-        </button>
+        </GameButton>
 
-        <button
-          type="button"
+        <GameButton
+          class="spirit-spring-panel__convert-btn"
+          size="sm"
           :disabled="trungPhamOwned < SPIRIT_STONE_CONVERSION_RATIO"
           @click="convertToThuongPham"
         >
           {{ SPIRIT_STONE_CONVERSION_RATIO }} Trung → 1 Thượng
-        </button>
+        </GameButton>
       </div>
     </div>
   </section>
@@ -263,22 +266,19 @@ function convertToThuongPham() {
   --bar-to: var(--jade);
 }
 
-.spirit-spring-panel__card button {
+.spirit-spring-panel__collect,
+.spirit-spring-panel__convert-btn {
   justify-self: start;
   padding: 8px 14px;
-  min-height: var(--tap-min);
-  border: 0;
-  border-radius: var(--radius-sm);
   background: var(--scene-water-accent);
+  border: 0;
   color: var(--ink-950);
-  font-weight: 700;
-  cursor: pointer;
 }
 
-.spirit-spring-panel__card button:disabled {
+.spirit-spring-panel__collect:disabled,
+.spirit-spring-panel__convert-btn:disabled {
   background: var(--ink-700);
   color: var(--text-muted);
-  cursor: not-allowed;
 }
 
 .spirit-spring-panel__tiers {

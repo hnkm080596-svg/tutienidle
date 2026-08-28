@@ -8,6 +8,7 @@ import { getNextRealm } from '@/core/realm/realmSystem'
 import { BREAKTHROUGH_REQUIREMENTS } from '@/core/breakthrough/BreakthroughRequirement'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
+import GameButton from '@/components/common/GameButton.vue'
 
 // Đột Phá tổng quát (2026-08-16) — "con đường bình thường" của Đột
 // Phá: panel giữa màn hình hiện TRƯỚC khi vào Độ Kiếp, hiện đúng 1
@@ -96,27 +97,28 @@ function confirmBreakthrough() {
         <span class="breakthrough-requirement__slot-amount">{{ owned }}/1</span>
       </div>
 
-      <button
+      <GameButton
         v-if="!hasEnoughItem"
-        type="button"
         class="breakthrough-requirement__craft"
+        variant="secondary"
+        size="sm"
         :disabled="!canCraft"
         @click="craft"
       >
         Luyện ({{ formatNumber(requirement.spiritStoneCost) }} Linh Thạch)
-      </button>
+      </GameButton>
 
       <div class="breakthrough-requirement__actions">
-        <button type="button" class="breakthrough-requirement__cancel" @click="store.close()">Đóng</button>
+        <GameButton class="breakthrough-requirement__cancel" variant="ghost" size="sm" @click="store.close()">Đóng</GameButton>
 
-        <button
-          type="button"
+        <GameButton
           class="breakthrough-requirement__confirm"
+          size="sm"
           :disabled="!hasEnoughItem || cooldownSeconds > 0"
           @click="confirmBreakthrough"
         >
           Độ Kiếp
-        </button>
+        </GameButton>
       </div>
     </div>
   </OverlayPanel>
@@ -155,17 +157,6 @@ function confirmBreakthrough() {
 
 .breakthrough-requirement__craft {
   padding: 8px;
-  min-height: var(--tap-min);
-  background: var(--ink-800);
-  color: var(--text-primary);
-  border: 1px solid var(--ink-700);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-}
-
-.breakthrough-requirement__craft:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .breakthrough-requirement__actions {
@@ -178,25 +169,9 @@ function confirmBreakthrough() {
 .breakthrough-requirement__confirm {
   flex: 1;
   padding: 8px;
-  min-height: var(--tap-min);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.breakthrough-requirement__cancel {
-  background: var(--ink-800);
-  color: var(--text-secondary);
-}
-
-.breakthrough-requirement__confirm {
-  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
-  color: var(--ink-950);
 }
 
 .breakthrough-requirement__confirm:disabled {
   opacity: 0.5;
-  cursor: not-allowed;
 }
 </style>

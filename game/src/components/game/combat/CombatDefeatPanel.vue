@@ -5,6 +5,7 @@ import { useBattleActions } from '@/composables/useBattleActions'
 import { useAutoRetryCountdown } from '@/composables/useAutoRetryCountdown'
 import { useUiStore } from '@/stores/ui'
 import { formatNumber } from '@/core/format/NumberFormatter'
+import GameButton from '@/components/common/GameButton.vue'
 
 // Combat UI Redesign mục 18/23, mở rộng 2026-08-22 — trước đây CHỈ 1
 // nút "Về Động Phủ" (không đánh lại). Giờ thêm "Tái Chiến" (LUÔN đánh
@@ -89,17 +90,17 @@ onMounted(() => {
     </div>
 
     <div class="combat-defeat-panel__actions">
-      <button
-        type="button"
+      <GameButton
         class="combat-defeat-panel__retry"
+        variant="danger"
         :class="{ 'is-disabled': isAutoRetrying }"
         :disabled="isAutoRetrying"
         @click="retryNow"
       >
         Tái Chiến<template v-if="isAutoRetrying"> {{ retryCountdown }}s</template>
-      </button>
+      </GameButton>
 
-      <button type="button" class="combat-defeat-panel__return" @click="returnHome">Về Động Phủ</button>
+      <GameButton class="combat-defeat-panel__return" variant="secondary" @click="returnHome">Về Động Phủ</GameButton>
     </div>
   </div>
 </template>
@@ -154,30 +155,11 @@ onMounted(() => {
 .combat-defeat-panel__actions button {
   flex: 1;
   padding: 10px;
-  min-height: var(--tap-min);
-  border-radius: var(--radius-sm);
-  border: none;
-  font-family: var(--font-body);
-  font-weight: 700;
-  font-size: var(--text-body);
-  cursor: pointer;
-}
-
-.combat-defeat-panel__retry {
-  background: var(--crimson);
-  color: var(--text-primary);
 }
 
 .combat-defeat-panel__retry.is-disabled {
   background: var(--ink-700);
   color: var(--text-muted);
-  cursor: not-allowed;
-}
-
-.combat-defeat-panel__return {
-  background: var(--ink-800);
-  color: var(--text-primary);
-  border: 1px solid var(--ink-line-soft);
 }
 
 .combat-defeat-panel__return:hover {

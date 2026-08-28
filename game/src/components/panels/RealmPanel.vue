@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import PlayerPortrait from '@/components/common/PlayerPortrait.vue'
 import Bar from '@/components/common/primitives/Bar.vue'
+import GameButton from '@/components/common/GameButton.vue'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager } from '@/composables/useGameState'
@@ -74,7 +75,7 @@ function majorBreakthrough() {
       </div>
 
       <div class="realm-panel__actions">
-        <button type="button" :disabled="!canMajorBreakthrough" @click="majorBreakthrough">{{ majorBreakthroughLabel }}</button>
+        <GameButton :disabled="!canMajorBreakthrough" @click="majorBreakthrough">{{ majorBreakthroughLabel }}</GameButton>
       </div>
 
       <div class="realm-panel__nodes" aria-label="Tiến trình chín cảnh giới">
@@ -106,8 +107,7 @@ function majorBreakthrough() {
 .realm-panel__cultivator strong { color: var(--chrome-100); font-family: var(--font-display); }
 .realm-panel__aura { position: absolute; width: 190px; height: 190px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--chrome-500) 25%, transparent), transparent 68%); animation: realm-breathe 3s ease-in-out infinite; }
 .realm-panel__actions { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; }
-.realm-panel__actions button { min-height: var(--tap-min); padding: 6px 16px; color: var(--ink-950); font-weight: 700; background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500)); border: 0; border-radius: var(--radius-sm); cursor: pointer; }
-.realm-panel__actions button:disabled { opacity: .38; filter: grayscale(1); cursor: not-allowed; }
+.realm-panel__actions :deep(button:disabled) { opacity: .38; filter: grayscale(1); }
 .realm-panel__actions label { color: var(--text-secondary); }
 .realm-panel__cultivation { width: min(560px, 90%); margin: 0 auto; }
 .realm-panel__cultivation-bar { --bar-track: var(--ink-950); border: 1px solid var(--ink-line); }

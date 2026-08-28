@@ -10,6 +10,7 @@ import {
 import { getRealmTier } from '@/core/realm/RealmTierMap'
 import BuildingConstructionGate from './BuildingConstructionGate.vue'
 import Bar from '@/components/common/primitives/Bar.vue'
+import GameButton from '@/components/common/GameButton.vue'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
 
 // Sản Xuất (2026-08-25, resource-professions-rework plan §9.1) — thay
@@ -307,14 +308,14 @@ function convertTier(fromId: string) {
             <p class="site-card__status">Đang sản xuất — còn {{ row.remainingLabel }}</p>
           </template>
 
-          <button
+          <GameButton
             v-else
-            type="button"
             class="site-card__action"
+            size="sm"
             @click="start(row.siteId)"
           >
             Bắt đầu
-          </button>
+          </GameButton>
 
           <label class="site-card__auto">
             <input
@@ -343,14 +344,15 @@ function convertTier(fromId: string) {
               </li>
             </ul>
 
-            <button
-              type="button"
+            <GameButton
               class="site-card__upgrade-button"
+              variant="ghost"
+              size="sm"
               :disabled="!canUpgrade(row.siteId, row.level)"
               @click="upgrade(row.siteId)"
             >
               Nâng cấp nguồn
-            </button>
+            </GameButton>
           </div>
         </article>
       </div>
@@ -371,14 +373,14 @@ function convertTier(fromId: string) {
               → {{ row.toName }}
             </span>
 
-            <button
-              type="button"
+            <GameButton
               class="tier-conversion__button"
+              size="sm"
               :disabled="row.owned < MATERIAL_TIER_CONVERSION_RATIO"
               @click="convertTier(row.fromId)"
             >
-              {{ MATERIAL_TIER_CONVERSION_RATIO }} → 1
-            </button>
+              {{ MATERIAL_TIER_CONVERSION_RATIO }}  1
+            </GameButton>
           </div>
         </div>
       </section>
@@ -510,14 +512,6 @@ function convertTier(fromId: string) {
 
 .site-card__action {
   padding: 8px;
-  min-height: var(--tap-min);
-  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
-  color: var(--ink-950);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-weight: 700;
-  cursor: pointer;
-  font-family: var(--font-body);
 }
 
 .site-card__auto {
@@ -552,15 +546,6 @@ function convertTier(fromId: string) {
 
 .site-card__upgrade-button {
   width: 100%;
-  padding: 6px;
-  min-height: var(--tap-min);
-  background: transparent;
-  border: 1px solid var(--ink-line);
-  border-radius: var(--radius-sm);
-  color: var(--text-primary);
-  cursor: pointer;
-  font-size: var(--text-xs);
-  font-family: var(--font-body);
 }
 
 .site-card__upgrade-button:disabled {
@@ -619,14 +604,6 @@ function convertTier(fromId: string) {
 
 .tier-conversion__button {
   padding: 5px 10px;
-  min-height: var(--tap-min);
-  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
-  color: var(--ink-950);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-weight: 700;
-  cursor: pointer;
-  font-family: var(--font-body);
   font-size: var(--text-xs);
   white-space: nowrap;
 }
@@ -634,6 +611,5 @@ function convertTier(fromId: string) {
 .tier-conversion__button:disabled {
   background: var(--ink-700);
   color: var(--text-muted);
-  cursor: not-allowed;
 }
 </style>

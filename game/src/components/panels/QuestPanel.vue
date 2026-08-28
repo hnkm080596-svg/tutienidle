@@ -4,6 +4,7 @@ import { useUiStore } from '@/stores/ui'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import Bar from '@/components/common/primitives/Bar.vue'
+import GameButton from '@/components/common/GameButton.vue'
 import type { Quest } from '@/core/quest/Quest'
 import type { QuestProgress } from '@/core/quest/QuestProgress'
 
@@ -81,14 +82,13 @@ function close() {
                 {{ row.targetLabel }} · {{ Math.min(row.progress.progress, row.quest.condition.amount) }}/{{ row.quest.condition.amount }}
               </div>
             </div>
-            <button
-              type="button"
+            <GameButton
               class="quest-panel__claim"
               :disabled="row.progress.claimed || !row.canClaim"
               @click="onClaim(row.quest.id)"
             >
               {{ row.progress.claimed ? 'Đã Nhận' : 'Nhận Thưởng' }}
-            </button>
+            </GameButton>
           </li>
         </ul>
       </section>
@@ -108,7 +108,7 @@ function close() {
 .quest-panel__desc { margin-top: 2px; color: var(--text-secondary); font-size: var(--text-body); }
 .quest-panel__progress-bar { margin-top: 8px; border-radius: 3px; --bar-track: var(--ink-950); --bar-from: var(--chrome-300); --bar-to: var(--chrome-300); }
 .quest-panel__progress-label { margin-top: 4px; color: var(--text-secondary); font-size: var(--text-sm); }
-.quest-panel__claim { flex: 0 0 auto; padding: 8px 16px; min-height: var(--tap-min); color: var(--ink-950); font-weight: 700; background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500)); border: none; border-radius: var(--radius-sm); cursor: pointer; }
-.quest-panel__claim:disabled { color: var(--text-secondary); background: var(--ink-700, var(--ink-800)); cursor: default; }
+.quest-panel__claim { flex: 0 0 auto; }
+.quest-panel__claim:disabled { color: var(--text-secondary); background: var(--ink-700, var(--ink-800)); }
 .quest-panel__empty { color: var(--text-secondary); text-align: center; padding: 24px 0; }
 </style>

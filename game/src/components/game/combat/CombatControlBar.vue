@@ -4,6 +4,7 @@ import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager } from '@/composables/useGameState'
 import { batKiemTickSeconds } from '@/composables/useCombatSkillPresentation'
+import GameButton from '@/components/common/GameButton.vue'
 
 // Combat UI Redesign mục 11 — pause đã bị loại bỏ (game idle, 2026-08-27);
 // chỉ còn "Thoát Trận" cho trận Stage. Auto Battle cấu hình TRƯỚC trận ở
@@ -54,14 +55,14 @@ function confirmExit() {
 
 <template>
   <div class="combat-control-bar">
-    <button
+    <GameButton
       v-if="ui.combatOrigin === 'stage'"
-      type="button"
       class="combat-control-bar__exit"
+      variant="secondary"
       @click="showExitConfirm = true"
     >
       ✕ Thoát Trận
-    </button>
+    </GameButton>
 
     <div v-if="player.kiemTuRoute === 'bat_kiem'" class="combat-control-bar__tu-luc">
       <label class="combat-control-bar__tu-luc-label" for="tu-luc-tick-slider">
@@ -85,8 +86,8 @@ function confirmExit() {
         <p class="combat-control-bar__confirm-text">Thoát trận và về Động Phủ? Trận đấu hiện tại sẽ bị huỷ.</p>
 
         <div class="combat-control-bar__confirm-actions">
-          <button type="button" class="combat-control-bar__confirm-cancel" @click="showExitConfirm = false">Ở Lại</button>
-          <button type="button" class="combat-control-bar__confirm-ok" @click="confirmExit">Thoát Trận</button>
+          <GameButton class="combat-control-bar__confirm-cancel" variant="secondary" size="sm" @click="showExitConfirm = false">Ở Lại</GameButton>
+          <GameButton class="combat-control-bar__confirm-ok" variant="danger" size="sm" @click="confirmExit">Thoát Trận</GameButton>
         </div>
       </div>
     </div>
@@ -108,15 +109,6 @@ function confirmExit() {
 
 .combat-control-bar__exit {
   padding: 8px 20px;
-  min-height: var(--tap-min);
-  background: var(--ink-800);
-  color: var(--text-secondary);
-  border: 1px solid var(--ink-line-soft);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-body);
-  font-weight: 700;
-  font-size: var(--text-body);
-  cursor: pointer;
 }
 
 .combat-control-bar__exit:hover {
@@ -186,23 +178,5 @@ function confirmExit() {
 .combat-control-bar__confirm-ok {
   flex: 1 1 auto;
   padding: 8px;
-  min-height: var(--tap-min);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-body);
-  font-weight: 700;
-  font-size: var(--text-sm);
-  cursor: pointer;
-}
-
-.combat-control-bar__confirm-cancel {
-  background: var(--ink-800);
-  color: var(--text-primary);
-  border: 1px solid var(--ink-line-soft);
-}
-
-.combat-control-bar__confirm-ok {
-  background: var(--crimson);
-  color: var(--ink-950);
-  border: none;
 }
 </style>

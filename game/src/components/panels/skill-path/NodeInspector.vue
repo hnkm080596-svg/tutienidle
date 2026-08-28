@@ -8,6 +8,7 @@ import { computed } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useLoadoutActions } from '@/composables/useLoadoutActions'
+import GameButton from '@/components/common/GameButton.vue'
 import {
   getNodeLevel,
   getNextLevelCost,
@@ -181,25 +182,25 @@ function onUpgrade() {
               : `Nâng cấp: ${nextCost} Cảm Ngộ` }}
         </span>
 
-        <button
+        <GameButton
           v-if="level === 0"
-          type="button"
           class="node-inspector__buy"
+          size="sm"
           :disabled="!purchasable"
           @click="onPurchase"
         >
           Lĩnh Ngộ
-        </button>
+        </GameButton>
 
-        <button
+        <GameButton
           v-else-if="!isMaxed"
-          type="button"
           class="node-inspector__buy"
+          size="sm"
           :disabled="!upgradable"
           @click="onUpgrade"
         >
           Nâng Cấp
-        </button>
+        </GameButton>
       </div>
     </template>
   </div>
@@ -305,14 +306,7 @@ function onUpgrade() {
 
 .node-inspector__buy {
   padding: 6px 16px;
-  min-height: var(--tap-min);
-  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
-  color: var(--ink-950);
   border: 1px solid var(--chrome-100);
-  border-radius: var(--radius-sm);
-  font-weight: 700;
-  font-size: var(--text-sm);
-  cursor: pointer;
 }
 
 .node-inspector__buy:disabled {

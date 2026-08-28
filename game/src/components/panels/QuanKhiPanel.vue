@@ -17,6 +17,7 @@ import type { CultivationPathId } from '@/core/player/CultivationPathKit'
 import type { KiemTuRoute } from '@/core/player/Player'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
+import GameButton from '@/components/common/GameButton.vue'
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
 
 const ui = useUiStore()
@@ -133,16 +134,17 @@ function selectKiemTuRoute(route: KiemTuRoute) {
       <p class="quan-khi-panel__hint">Chọn con đường tu luyện — quyết định này KHÔNG thể đổi lại.</p>
 
       <div class="quan-khi-panel__choices">
-        <button
+        <GameButton
           v-for="kit in availablePaths"
           :key="kit.id"
-          type="button"
           class="quan-khi-panel__choice"
+          variant="danger"
+          size="sm"
           :disabled="cooldownSeconds > 0"
           @click="choosePath(kit.id)"
         >
           Bước Vào {{ kit.name }}
-        </button>
+        </GameButton>
       </div>
     </div>
 
@@ -152,26 +154,28 @@ function selectKiemTuRoute(route: KiemTuRoute) {
       <p class="quan-khi-panel__hint">Chọn đường Kiếm Tu — đổi được ngoài trận, không cần xác nhận.</p>
 
       <div class="quan-khi-panel__choices">
-        <button
-          type="button"
+        <GameButton
           class="quan-khi-panel__choice"
+          variant="danger"
+          size="sm"
           :class="{ 'is-selected': currentKiemTuRoute === 'kiem_tran' }"
           :disabled="!canChangeRoute && currentKiemTuRoute !== 'kiem_tran'"
           @click="selectKiemTuRoute('kiem_tran')"
         >
           Kiếm Trận
-        </button>
+        </GameButton>
 
-        <button
+        <GameButton
           v-if="isBatKiemUnlocked"
-          type="button"
           class="quan-khi-panel__choice"
+          variant="danger"
+          size="sm"
           :class="{ 'is-selected': currentKiemTuRoute === 'bat_kiem' }"
           :disabled="!canChangeRoute && currentKiemTuRoute !== 'bat_kiem'"
           @click="selectKiemTuRoute('bat_kiem')"
         >
           Bạt Kiếm
-        </button>
+        </GameButton>
       </div>
 
       <p v-if="!canChangeRoute" class="quan-khi-panel__warning">
@@ -220,14 +224,11 @@ function selectKiemTuRoute(route: KiemTuRoute) {
   display: block;
   width: 100%;
   padding: 10px;
-  min-height: var(--tap-min);
+  /* Nghi thức chọn con đường vĩnh viễn — giữ crimson gradient chủ đích
+     (signaling quyết định không hoàn tác), đè lên variant danger phẳng. */
   background: linear-gradient(180deg, var(--crimson), var(--ink-800));
-  color: var(--text-primary);
   border: 1px solid var(--chrome-500);
-  border-radius: var(--radius-sm);
-  font-weight: 700;
-  font-size: var(--text-xs);
-  cursor: pointer;
+  color: var(--text-primary);
 }
 
 .quan-khi-panel__choice.is-selected {
@@ -238,7 +239,6 @@ function selectKiemTuRoute(route: KiemTuRoute) {
 
 .quan-khi-panel__choice:disabled {
   opacity: 0.6;
-  cursor: not-allowed;
 }
 
 .quan-khi-panel__warning {

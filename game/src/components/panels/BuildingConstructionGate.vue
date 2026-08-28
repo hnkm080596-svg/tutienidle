@@ -14,6 +14,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { isTestModeUnlockAll } from '@/core/dev/DevMode'
+import GameButton from '@/components/common/GameButton.vue'
 
 const props = defineProps<{ buildingId: string }>()
 
@@ -93,9 +94,9 @@ function build() {
         Cần: {{ buildCost.map(c => `${materialLabel(c.materialId)} x${formatNumber(c.amount)}`).join(', ') || 'Miễn phí' }}
       </p>
 
-      <button type="button" class="construction-gate__build" :disabled="!canBuild" @click="build">
+      <GameButton class="construction-gate__build" size="sm" :disabled="!canBuild" @click="build">
         Xây Dựng
-      </button>
+      </GameButton>
     </div>
 
     <div v-else class="construction-gate__content">
@@ -161,17 +162,6 @@ function build() {
 .construction-gate__build {
   margin-top: 10px;
   padding: 8px 20px;
-  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
-  color: var(--ink-950);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.construction-gate__build:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .construction-gate__content {

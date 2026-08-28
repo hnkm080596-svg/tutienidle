@@ -6,6 +6,7 @@ import { useAutoRetryCountdown } from '@/composables/useAutoRetryCountdown'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { formatNumber } from '@/core/format/NumberFormatter'
+import GameButton from '@/components/common/GameButton.vue'
 import { resolveNextProgressStage } from '@/core/stage/ProgressStageResolver'
 
 // Combat UI Redesign mục 14-19 — thắng thì hiện reward tích luỹ cả
@@ -115,19 +116,18 @@ onMounted(() => {
     </div>
 
     <div class="combat-victory-panel__actions">
-      <button
-        type="button"
+      <GameButton
         class="combat-victory-panel__retry"
         :class="{ 'is-disabled': ui.battleRunMode !== 'manual' }"
         :disabled="ui.battleRunMode !== 'manual'"
         @click="retryNow"
       >
         Đánh Lại<template v-if="ui.battleRunMode !== 'manual'"> {{ countdown }}s</template>
-      </button>
+      </GameButton>
 
-      <button v-if="ui.battleRunMode === 'manual'" type="button" class="combat-victory-panel__continue" @click="continueToStageSelect">
+      <GameButton v-if="ui.battleRunMode === 'manual'" class="combat-victory-panel__continue" variant="secondary" @click="continueToStageSelect">
         Tiếp Tục
-      </button>
+      </GameButton>
     </div>
   </div>
 </template>
@@ -182,29 +182,10 @@ onMounted(() => {
 .combat-victory-panel__actions button {
   flex: 1;
   padding: 10px;
-  min-height: var(--tap-min);
-  border-radius: var(--radius-sm);
-  border: none;
-  font-family: var(--font-body);
-  font-weight: 700;
-  font-size: var(--text-body);
-  cursor: pointer;
-}
-
-.combat-victory-panel__retry {
-  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
-  color: var(--ink-950);
 }
 
 .combat-victory-panel__retry.is-disabled {
   background: var(--ink-700);
   color: var(--text-muted);
-  cursor: not-allowed;
-}
-
-.combat-victory-panel__continue {
-  background: var(--ink-800);
-  color: var(--text-primary);
-  border: 1px solid var(--ink-line-soft);
 }
 </style>

@@ -6,12 +6,16 @@
 withDefaults(defineProps<{
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost'
   size?: 'sm' | 'md' | 'lg'
+  shape?: 'rect' | 'circle'
+  accentVar?: string
   disabled?: boolean
   loading?: boolean
   type?: 'button' | 'submit'
 }>(), {
   variant: 'primary',
   size: 'md',
+  shape: 'rect',
+  accentVar: undefined,
   disabled: false,
   loading: false,
   type: 'button',
@@ -24,7 +28,8 @@ defineEmits<{ click: [MouseEvent] }>()
   <button
     :type="type"
     class="game-button"
-    :class="[`game-button--${variant}`, `game-button--${size}`, { 'is-loading': loading }]"
+    :class="[`game-button--${variant}`, `game-button--${size}`, `game-button--${shape}`, { 'is-loading': loading, 'has-accent': accentVar !== undefined }]"
+    :style="accentVar ? { '--button-accent': accentVar } : undefined"
     :disabled="disabled || loading"
     @click="$emit('click', $event)"
   >
@@ -115,6 +120,20 @@ defineEmits<{ click: [MouseEvent] }>()
 .game-button:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring-chrome);
+}
+
+/* Dạng tròn — nút icon (+/−). */
+.game-button--circle {
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
+  padding: 0;
+  border-radius: 50%;
+}
+
+/* Accent động theo scene — fill đổ gradient từ 1 CSS var của nơi dùng
+   (ví dụ accentVar="--scene-fire-text" cho lò đan). */
+.game-button--primary.has-accent {
+  background: linear-gradient(180deg, var(--button-accent), color-mix(in srgb, var(--button-accent) 72%, var(--ink-950)));
 }
 
 .game-button__spinner {

@@ -33,6 +33,7 @@ import { statLabel } from '@/core/stats/StatLabels'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import Bar from '@/components/common/primitives/Bar.vue'
+import GameButton from '@/components/common/GameButton.vue'
 
 const ui = useUiStore()
 const player = usePlayerStore()
@@ -153,9 +154,9 @@ function close() {
           </div>
         </div>
 
-        <button type="button" class="luyen-the-panel__invest" :disabled="!canInvest" @click="invest">
+        <GameButton class="luyen-the-panel__invest" variant="secondary" size="sm" :disabled="!canInvest" @click="invest">
           Đầu Tư Tinh Hoa
-        </button>
+        </GameButton>
       </template>
 
       <p v-else class="luyen-the-panel__empty">Đã hoàn thành toàn bộ Luyện Thể.</p>
@@ -263,18 +264,12 @@ function close() {
 }
 
 .luyen-the-panel__invest {
-  padding: 10px;
-  background: var(--ink-800);
+  border-color: var(--chrome-300);
   color: var(--chrome-100);
-  border: 1px solid var(--chrome-300);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-body);
-  cursor: pointer;
 }
 
 .luyen-the-panel__invest:disabled {
   opacity: 0.4;
-  cursor: not-allowed;
 }
 
 .luyen-the-panel__empty {

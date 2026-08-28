@@ -4,6 +4,7 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
 import { getRealmIdForTier, getRealmTier } from '@/core/realm/RealmTierMap'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
+import GameButton from '@/components/common/GameButton.vue'
 
 const props = defineProps<{ buildingId: string }>()
 
@@ -89,16 +90,16 @@ function upgrade() {
     </div>
 
     <div class="building-panel-header__upgrade-area">
-      <button
+      <GameButton
         v-if="hasNextLevel"
-        type="button"
         class="building-panel-header__upgrade"
+        size="sm"
         :disabled="!meetsRealmRequirement || !canAffordUpgrade"
         :title="!meetsRealmRequirement ? `Cần đạt ${requiredRealmName}` : upgradeCostLabel || 'Không có chi phí nâng cấp được cấu hình'"
         @click="upgrade"
       >
         Nâng công trình
-      </button>
+      </GameButton>
 
       <small v-if="hasNextLevel" class="building-panel-header__cost">
         <template v-if="!meetsRealmRequirement">Cần đạt {{ requiredRealmName }}</template>
@@ -153,20 +154,13 @@ function upgrade() {
 .building-panel-header__upgrade {
   margin-top: 3px;
   padding: 7px 14px;
-  min-height: var(--tap-min);
   border: 1px solid var(--chrome-300);
-  border-radius: var(--radius-sm);
-  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
-  color: var(--ink-950);
-  font: 700 var(--text-sm) var(--font-body);
-  cursor: pointer;
 }
 
 .building-panel-header__upgrade:disabled {
   border-color: var(--ink-line);
   background: var(--ink-700);
   color: var(--text-muted);
-  cursor: not-allowed;
 }
 
 .building-panel-header__cost {

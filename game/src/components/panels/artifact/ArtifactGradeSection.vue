@@ -3,6 +3,7 @@
 // Thạch, chi phí, nút Nâng Phẩm.
 import { computed } from 'vue'
 import { formatNumber } from '@/core/format/NumberFormatter'
+import GameButton from '@/components/common/GameButton.vue'
 
 const props = defineProps<{
   gradeLabel: string
@@ -38,14 +39,14 @@ const canAfford = computed(() =>
     </div>
 
     <template v-if="upgradeCost !== undefined">
-      <button
-        type="button"
+      <GameButton
         class="artifact-grade__upgrade"
+        size="sm"
         :disabled="disabled || !canAfford"
         @click="emit('upgrade')"
       >
         Nâng Phẩm lên {{ nextGradeLabel }} ({{ formatNumber(upgradeCost) }} đá)
-      </button>
+      </GameButton>
 
       <p v-if="disabled" class="artifact-grade__hint">Chỉ nâng phẩm được ngoài combat.</p>
     </template>
@@ -82,16 +83,10 @@ const canAfford = computed(() =>
   margin-top: var(--space-2);
   padding: 10px 14px;
   border: 1px solid var(--chrome-500);
-  border-radius: var(--radius-sm);
-  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
-  color: var(--ink-950);
-  font-weight: 700;
-  cursor: pointer;
 }
 
 .artifact-grade__upgrade:disabled {
   opacity: 0.4;
-  cursor: not-allowed;
   background: transparent;
   color: var(--text-secondary);
 }
