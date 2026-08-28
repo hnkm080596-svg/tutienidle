@@ -127,6 +127,11 @@ export class QuestSystem {
 
       if (drop.kind === 'material' && bags.materialRegistry.has(drop.itemId)) {
         bags.materialBag.add(bags.materialRegistry.get(drop.itemId), amount)
+
+        // Item turn-in của quest này cũng là material thu thập — tính
+        // progress cho collect-quest khác đang active (cùng hook với
+        // mọi đường material vào túi).
+        this.onMaterialCollected(registry, manager, drop.itemId, amount)
       }
 
       if (drop.kind === 'pill' && bags.pillRegistry.has(drop.itemId)) {
@@ -200,6 +205,44 @@ export class QuestSystem {
       }
 
       manager.incrementProgress(progress.questId, 1)
+    }
+  }
+
+  /**
+   * Gọi MỖI KHI material vào túi người chơi (production settle, loot quái,
+   * claim toà nhà, Hóa Luyện, quest turn-in trả item...) — tăng progress
+   * collect-quest ĐANG active, chưa claim, có materialId khớp.
+   *
+   * KHÔNG gọi khi restore từ save (double-count) — review 2026-08-28 bug #3:
+   * trước đây collect-quest không có hook nào nên progress mãi 0/N,
+   * reward không bao giờ claim được.
+   */
+  onMaterialCollected(
+    registry: QuestRegistry,
+    manager: QuestManager,
+    materialId: string,
+    amount: number,
+  ): void {
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return
+    }
+
+    for (const progress of manager.getActive()) {
+      if (progress.claimed || !registry.has(progress.questId)) {
+        continue
+      }
+
+      const condition: QuestCondition = registry.get(progress.questId).condition
+
+      if (condition.kind !== 'collect') {
+        continue
+      }
+
+      if (condition.materialId !== materialId) {
+        continue
+      }
+
+      manager.incrementProgress(progress.questId, amount)
     }
   }
 }

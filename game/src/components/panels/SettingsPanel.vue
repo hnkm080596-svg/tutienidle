@@ -5,10 +5,30 @@ import { useGameManager } from '@/composables/useGameState'
 import { useNotificationStore } from '@/stores/notification'
 import { exportSaveToFile, getRawSave, importSaveRaw, SAVE_RESET_REQUEST_EVENT } from '@/services/save/SaveSystem'
 import { UI_SCALE_OPTIONS, loadUiScale, saveUiScale } from '@/composables/uiScale'
+import ConfirmModal from '@/components/common/ConfirmModal.vue'
+import GameButton from '@/components/common/GameButton.vue'
 
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const notification = useNotificationStore()
+
+// Thay window.confirm() native — modal xác nhận đồng bộ hoá bằng
+// pending-action: mở ConfirmModal, hành động thật chỉ chạy khi
+// resolvePendingConfirm() (nút "Xác Nhận") được gọi.
+const pendingConfirm = ref<null | { title: string; message: string; danger: boolean; onConfirm: () => void }>(null)
+
+function requestConfirm(title: string, message: string, onConfirm: () => void, danger = false) {
+  pendingConfirm.value = { title, message, danger, onConfirm }
+}
+
+function resolvePendingConfirm() {
+  pendingConfirm.value?.onConfirm()
+  pendingConfirm.value = null
+}
+
+function cancelPendingConfirm() {
+  pendingConfirm.value = null
+}
 
 // WS8 — cỡ chữ giao diện (chỉ scale semantic tokens, không zoom canvas).
 const uiScale = ref<number>(loadUiScale())
@@ -34,11 +54,11 @@ function handleLoad() {
   // đang chạy sẽ NHÂN ĐÔI tài nguyên thay vì thay thế. Reload tái
   // dùng đúng luồng onMounted() (đã đúng) thay vì phải viết clear()
   // cho từng Manager — rủi ro thấp hơn nhiều.
-  const confirmed = window.confirm('Tải lại từ lần lưu gần nhất? Tiến trình chưa lưu sẽ mất.')
-
-  if (confirmed) {
-    window.location.reload()
-  }
+  requestConfirm(
+    'Tải Lại',
+    'Tải lại từ lần lưu gần nhất? Tiến trình chưa lưu sẽ mất.',
+    () => window.location.reload(),
+  )
 }
 
 // Xuất save hiện tại — save() trước để file tải về phản ánh đúng
@@ -63,41 +83,36 @@ function handleImportFile(event: Event) {
     return
   }
 
-  const confirmed = window.confirm(
+  requestConfirm(
+    'Nhập Save',
     'Nhập save này sẽ THAY THẾ tiến trình hiện tại (đã sao lưu 1 bản trước khi ghi đè). Tiếp tục?',
+    () => {
+      const reader = new FileReader()
+
+      reader.onload = () => {
+        const ok = importSaveRaw(String(reader.result))
+
+        if (ok) {
+          window.location.reload()
+        } else {
+          window.alert('File save không hợp lệ.')
+        }
+      }
+
+      reader.readAsText(file)
+    },
   )
-
-  if (!confirmed) {
-    return
-  }
-
-  const reader = new FileReader()
-
-  reader.onload = () => {
-    const ok = importSaveRaw(String(reader.result))
-
-    if (ok) {
-      window.location.reload()
-    } else {
-      window.alert('File save không hợp lệ.')
-    }
-  }
-
-  reader.readAsText(file)
 }
 
 function handleReset() {
-  const confirmed = window.confirm(
+  requestConfirm(
+    'Xoá Save',
     'Xoá toàn bộ tiến trình và bắt đầu nhân vật mới? Nhớ "Xuất Save" trước nếu chưa làm — hành động này không thể hoàn tác.',
+    // App phải dừng interval/pagehide autosave TRƯỚC khi xóa; nếu panel tự xóa
+    // rồi reload, pagehide ghi lại chính save vừa xóa.
+    () => window.dispatchEvent(new Event(SAVE_RESET_REQUEST_EVENT)),
+    true,
   )
-
-  if (!confirmed) {
-    return
-  }
-
-  // App phải dừng interval/pagehide autosave TRƯỚC khi xóa; nếu panel tự xóa
-  // rồi reload, pagehide ghi lại chính save vừa xóa.
-  window.dispatchEvent(new Event(SAVE_RESET_REQUEST_EVENT))
 }
 </script>
 
@@ -110,20 +125,20 @@ function handleReset() {
     </p>
 
     <div class="settings-panel__actions">
-      <button type="button" @click="handleSave">Lưu Tiến Trình</button>
+      <GameButton variant="secondary" @click="handleSave">Lưu Tiến Trình</GameButton>
 
-      <button type="button" @click="handleLoad">Tải Lại (từ lần lưu gần nhất)</button>
+      <GameButton variant="secondary" @click="handleLoad">Tải Lại (từ lần lưu gần nhất)</GameButton>
 
-      <button type="button" @click="handleExport">Xuất Save (.json)</button>
+      <GameButton variant="secondary" @click="handleExport">Xuất Save (.json)</GameButton>
 
       <label class="settings-panel__import">
         Nhập Save
         <input type="file" accept="application/json" @change="handleImportFile" />
       </label>
 
-      <button type="button" class="settings-panel__danger" @click="handleReset">
+      <GameButton class="settings-panel__danger" variant="danger" @click="handleReset">
         Xoá Save & Bắt Đầu Mới
-      </button>
+      </GameButton>
     </div>
 
     <!-- WS8 — cỡ chữ giao diện: chỉ scale typography/control tokens,
@@ -145,11 +160,21 @@ function handleReset() {
     </section>
 
     <p v-if="lastSavedLabel" class="settings-panel__hint">Đã lưu lúc {{ lastSavedLabel }}</p>
+
+    <ConfirmModal
+      :open="pendingConfirm !== null"
+      :title="pendingConfirm?.title ?? ''"
+      :message="pendingConfirm?.message ?? ''"
+      :danger="pendingConfirm?.danger ?? false"
+      @confirm="resolvePendingConfirm"
+      @cancel="cancelPendingConfirm"
+    />
   </div>
 </template>
 
 <style scoped>
 .settings-panel {
+  position: relative;
   padding: 12px;
   color: #ddd;
   font-size: 0.85rem;
@@ -174,7 +199,6 @@ function handleReset() {
   gap: 8px;
 }
 
-.settings-panel__actions button,
 .settings-panel__import {
   padding: 8px 14px;
 }
@@ -195,10 +219,6 @@ function handleReset() {
   inset: 0;
   opacity: 0;
   cursor: pointer;
-}
-
-.settings-panel__danger {
-  color: #e57373;
 }
 
 .settings-panel__hint {

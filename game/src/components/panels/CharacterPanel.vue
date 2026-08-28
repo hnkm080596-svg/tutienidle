@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import PlayerPortrait from '../common/PlayerPortrait.vue'
+import GamePanel from '../common/GamePanel.vue'
 import type { Stats } from '@/core/stats/StatBlock'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { BASE_STAT_LABELS, formatStat, type StatCategory } from '@/core/stats/StatLabels'
@@ -165,7 +166,7 @@ const pillPermanentRows = computed(() => {
 </script>
 
 <template>
-  <div class="character-panel">
+  <GamePanel class="character-panel" variant="ornate" padding="none">
     <!-- Tu vi và Đột Phá thuộc hoàn toàn về panel Cảnh Giới. Nhân Vật
          chỉ giữ nhận diện, chiến lực và chỉ số để tránh lặp UI. -->
     <div class="character-panel__header">
@@ -279,7 +280,7 @@ const pillPermanentRows = computed(() => {
         </span>
       </div>
     </div>
-  </div>
+  </GamePanel>
 </template>
 
 <style scoped>

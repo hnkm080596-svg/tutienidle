@@ -7,8 +7,16 @@
 //   localStorage.setItem('dev.testModeUnlockAll', '1')  → reload trang
 // Tắt: removeItem('dev.testModeUnlockAll') hoặc set giá trị khác '1'.
 // Mặc định FALSE cho bản chạy thực tế.
+//
+// 2026-08-28 (review 2026-08-28 bug #11) — cờ này CHỈ còn hiệu lực trong
+// dev build: production build mà đọc được flag từ localStorage sẽ bypass
+// realm gate + chi phí vật liệu, xây mọi công trình miễn phí.
 
 export function isTestModeUnlockAll(): boolean {
+  if (!import.meta.env.DEV) {
+    return false
+  }
+
   if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
     return false
   }

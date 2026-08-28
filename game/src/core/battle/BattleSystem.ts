@@ -1457,7 +1457,9 @@ export class BattleSystem {
 
       zone.timeSinceLastTick += deltaSeconds
 
-      while (zone.timeSinceLastTick >= zone.tickInterval) {
+      // Guard tickInterval > 0 — interval 0/âm làm timeSinceLastTick không
+      // bao giờ giảm dưới ngưỡng, vòng lặp thành vô hạn.
+      while (zone.tickInterval > 0 && zone.timeSinceLastTick >= zone.tickInterval) {
         zone.timeSinceLastTick -= zone.tickInterval
 
         this.tickLavaZone(battle, zone)
@@ -1527,31 +1529,7 @@ export class BattleSystem {
 
   private updateRegen(battle: Battle, deltaSeconds: number) {
     if (battle.player.alive) {
-      const playerRegen = battle.player.stats.hpRegenPerSecond * deltaSeconds
-
-      // Bỏ qua applyHealing()/emit 'entity_vitals_changed' khi không có gì
-
-      // để hồi — phần lớn entity không có hpRegenPerSecond, trước đây vẫn
-
-      // emit đầy đủ payload + trigger bumpState() mỗi tick dù amount=0.
-
-      if (playerRegen > 0) {
-        this.combat.applyHealing(battle.player, playerRegen, battle.player.id, 'regen')
-      }
-
-      battle.player.currentMp = Math.min(
-        battle.player.stats.maxMp,
-        battle.player.currentMp + battle.player.stats.manaRegenPerSecond * deltaSeconds,
-      )
-
-      battle.player.timeSinceLastHitTaken += deltaSeconds
-
-      if (battle.player.timeSinceLastHitTaken >= WARD_REGEN_DELAY_SECONDS) {
-        battle.player.currentWard = Math.min(
-          battle.player.stats.wardMax,
-          battle.player.currentWard + battle.player.stats.wardRegenPerSecond * deltaSeconds,
-        )
-      }
+      this.regenEntityVitals(battle.player, deltaSeconds)
     }
 
     for (const battleEnemy of battle.enemies) {
@@ -1559,26 +1537,44 @@ export class BattleSystem {
         continue
       }
 
-      const enemyRegen = battleEnemy.entity.stats.hpRegenPerSecond * deltaSeconds
+      this.regenEntityVitals(battleEnemy.entity, deltaSeconds)
+    }
+  }
 
-      if (enemyRegen > 0) {
-        this.combat.applyHealing(battleEnemy.entity, enemyRegen, battleEnemy.entity.id, 'regen')
-      }
+  /**
+   * Regen HP/Mana/Ward của 1 entity — HP đi qua applyHealing(); Mana/Ward
+   * cũng phát 'entity_vitals_changed' qua emitCurrent() để HUD/consumer
+   * thấy thay đổi thật (trước đây mutate thẳng currentMp/currentWard không
+   * event). Bỏ qua emit khi không có gì thay đổi — phần lớn entity không
+   * có manaRegenPerSecond/wardRegenPerSecond, tránh noise mỗi tick.
+   */
+  private regenEntityVitals(entity: CombatEntity, deltaSeconds: number) {
+    const hpRegen = entity.stats.hpRegenPerSecond * deltaSeconds
 
-      battleEnemy.entity.currentMp = Math.min(
-        battleEnemy.entity.stats.maxMp,
-        battleEnemy.entity.currentMp + battleEnemy.entity.stats.manaRegenPerSecond * deltaSeconds,
+    if (hpRegen > 0) {
+      this.combat.applyHealing(entity, hpRegen, entity.id, 'regen')
+    }
+
+    const before = { hp: entity.currentHp, ward: entity.currentWard, mp: entity.currentMp }
+
+    entity.currentMp = Math.min(
+      entity.stats.maxMp,
+      entity.currentMp + entity.stats.manaRegenPerSecond * deltaSeconds,
+    )
+
+    entity.timeSinceLastHitTaken += deltaSeconds
+
+    if (entity.timeSinceLastHitTaken >= WARD_REGEN_DELAY_SECONDS) {
+      entity.currentWard = Math.min(
+        entity.stats.wardMax,
+        entity.currentWard + entity.stats.wardRegenPerSecond * deltaSeconds,
       )
+    }
 
-      battleEnemy.entity.timeSinceLastHitTaken += deltaSeconds
+    const changed = entity.currentMp - before.mp + (entity.currentWard - before.ward)
 
-      if (battleEnemy.entity.timeSinceLastHitTaken >= WARD_REGEN_DELAY_SECONDS) {
-        battleEnemy.entity.currentWard = Math.min(
-          battleEnemy.entity.stats.wardMax,
-          battleEnemy.entity.currentWard +
-            battleEnemy.entity.stats.wardRegenPerSecond * deltaSeconds,
-        )
-      }
+    if (changed !== 0) {
+      this.combat.vitals.emitCurrent(entity, 'regen', changed, before, entity.id)
     }
   }
 

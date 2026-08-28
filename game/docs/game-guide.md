@@ -39,12 +39,11 @@ Sau giao dịch thành công, `SkillPathPanel.vue` phát `unlockTrigger`; `NodeT
 
 ## Chiến đấu
 
-`BattleSystem` điều phối timeline, cast, movement và missile; `CombatSystem` giải quyết hit, né, chí mạng, giáp, kháng, Realm Pressure, ailment và sát thương. Model missile data-driven trong `src/core/combat/missile/` hỗ trợ xuyên, nảy, bám đích, AOE, tỷ lệ sát thương mục tiêu phụ và knockback; danh sách mục tiêu đã trúng ngăn damage lặp ngoài ý muốn.
+`BattleSystem` điều phối timeline, cast, movement và impact; `CombatSystem` giải quyết hit, né, chí mạng, giáp, kháng, Realm Pressure, ailment và sát thương. Hệ impact thống nhất `ActionImpactSystem` (`src/core/battle/ActionImpactSystem.ts`) thay thế model missile cũ: basic attack được schedule với windup rồi snapshot anchor cell (on_impact) và resolve từng hit; player skill mở một batch, mỗi `fireHit()` resolve ngay, `endBatch()` phát đúng một `action_impact` neo tại ô mục tiêu chính. Hỗ trợ AOE, knockback, tỷ lệ sát thương mục tiêu phụ; danh sách mục tiêu đã trúng ngăn damage lặp ngoài ý muốn. Gameplay không phụ thuộc VFX/Phaser — event chỉ mang dữ liệu grid.
 
-Code hiện tại vẫn dùng grid 10×16 và player gate ở mép trái. Hướng rework đã
-chốt là bàn cờ vây 19×19: player actor chuyển ra ngoài bàn; player có dải tầm
-đánh mặc định 9 hành trên toàn chiều ngang; quái gây sát thương khi vị trí cộng
-tầm đánh chạm hành thủ thành số 1. Plan này chưa phải trạng thái runtime hiện tại.
+Code hiện tại vẫn dùng grid 10×16 và player gate ở mép trái.
+
+> **Định hướng đã chốt, CHƯA implement**: bàn cờ vây 19×19 — player actor chuyển ra ngoài bàn; player có dải tầm đánh mặc định 9 hành trên toàn chiều ngang; quái gây sát thương khi vị trí cộng tầm đánh chạm hành thủ thành số 1. Đây KHÔNG phải trạng thái runtime hiện tại.
 
 Boss có thể đổi phase theo ngưỡng HP, nhận buff, enrage theo thời gian và triệu hồi quái. UI hiện hành nằm tại `src/components/game/combat/`, gồm top/status/event bar, control bar và các trạng thái thắng, thua, kết quả.
 
@@ -54,13 +53,17 @@ Quy tắc về phẩm chất, độ hiếm, affix, set, đặt tên, túi đồ 
 
 ## Công trình, chế tác và khai thác
 
-Khai thác là job theo thời gian, có giới hạn lượt đồng thời theo cảnh giới; các vùng cấp nguyên liệu thô như hạt giống, quặng và linh mộc. `BuildingSystem` quản lý xây, nâng cấp, tích trữ và thu hoạch:
+Địa Giới Thanh Vân (`src/core/production/ProductionCatalog.ts`) có đúng 3 nguồn khai thác, mỗi nguồn 1 site, level riêng (tối đa 9, giữ level khi đột phá, nâng bằng Gỗ cùng realm + Linh Thạch): **Thanh Vân Lâm** (gỗ), **Huyền Thiết Quảng** (linh khoáng 3 realm × 5 phẩm), **Thanh Vân Động Thiên** (linh thảo — mỗi đan phương có đúng 1 thảo riêng). Khai thác là job theo thời gian; worker tự động điều phối qua building Điều Phối Nhân Công.
 
-- Linh Thảo Viên gieo hạt theo các ô mở dần theo cấp; Linh Tuyền tạo Linh Thạch.
-- Lò Luyện và Thiên Công Phường xử lý nguyên liệu thô thành vật liệu chế tác.
-- Crafting station mở màn chức năng tương ứng; cấp công trình có thể giảm thời gian, tăng cơ hội phẩm chất và số job đồng thời.
+`BuildingSystem` (`src/data/building/buildings.ts`) quản lý xây/nâng/tích trữ/thu hoạch 5 building:
 
-Recipe/Crafting dùng hàng đợi theo thời gian và route thành phẩm về đúng bag. Định nghĩa cân bằng nằm tại `src/data/building/`, `src/data/exploration/` và `src/data/recipe/`.
+- **Linh Tuyền** — ngưng tụ Linh Thạch theo thời gian, storage = 10h sản lượng, rate scale theo realm.
+- **Khí Đường** — gate 4 thao tác trang bị (Cường Hóa/Tẩy Luyện/Tinh Luyện/Hóa Luyện, xem [Item Design Reference](./item-design-reference.md)); level giảm chi phí thao tác.
+- **Đan Phòng** — gate luyện đan; level 3/6/9 thêm slot luyện đan đồng thời.
+- **Truyền Tống Trận** — gate Thám Hiểm (chọn combat stage).
+- **Điều Phối Nhân Công** — gate panel 3 nguồn Lâm/Quáng/Động Thiên; +1 worker mỗi level.
+
+Không còn building trung gian chế tác (Linh Thảo Viên, Lò Luyện, Thiên Công Phường, Trận Đài, Phù Viện đã loại bỏ); nguyên liệu đến thẳng từ ProductionSite, không qua recipe/crafting queue. Định nghĩa cân bằng nằm tại `src/data/building/buildings.ts` và `src/core/production/`.
 
 ## Dữ liệu, asset và bảo trì tài liệu
 

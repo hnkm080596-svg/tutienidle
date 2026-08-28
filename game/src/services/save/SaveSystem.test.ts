@@ -10,6 +10,7 @@ import {
   SAVE_REVISION_KEY,
   CURRENT_SAVE_VERSION,
 } from './SaveSystem'
+import { createDefaultPlayer } from '../../core/player/Player'
 
 const SAVE_KEY = 'tien-hiep-idle-save'
 const BACKUP_KEY = 'tien-hiep-idle-save-backup'
@@ -49,7 +50,26 @@ beforeEach(() => {
   vi.stubGlobal('localStorage', new MemoryStorage())
 })
 
-const VALID_RAW = JSON.stringify({ version: CURRENT_SAVE_VERSION, player: { name: 'test' } })
+// Fixture hợp lệ đầy đủ theo shape GameSave hiện hành — từ
+// save-shape-validation-plan.md, loadGame() giờ validate shape nên
+// fixture tối thiểu { version, player: { name } } không còn đủ.
+function validSave(): Record<string, unknown> {
+  return {
+    version: CURRENT_SAVE_VERSION,
+    player: createDefaultPlayer(),
+    techniques: [],
+    skills: [],
+    materials: [],
+    equipment: [],
+    pills: [],
+    talismans: [],
+    formations: [],
+    buildings: [],
+    equipmentSlots: [],
+  }
+}
+
+const VALID_RAW = JSON.stringify(validSave())
 
 describe('loadGame — phân biệt empty/ok/incompatible/corrupted (Phase 5, mục XVI)', () => {
   it('empty khi chưa từng có save', () => {
@@ -78,6 +98,59 @@ describe('loadGame — phân biệt empty/ok/incompatible/corrupted (Phase 5, m�
     const outcome = loadGame()
 
     expect(outcome.status).toBe('corrupted')
+  })
+})
+
+describe('loadGame — shape validation (save-shape-validation-plan.md)', () => {
+  it('corrupted khi đúng version nhưng thiếu array bắt buộc (materials)', () => {
+    const save = validSave()
+
+    delete save.materials
+
+    localStorage.setItem(SAVE_KEY, JSON.stringify(save))
+
+    expect(loadGame().status).toBe('corrupted')
+  })
+
+  it('corrupted khi thiếu player.nodeLevels (tiền lệ crash boot v47)', () => {
+    const save = validSave()
+
+    delete (save.player as Record<string, unknown>).nodeLevels
+
+    localStorage.setItem(SAVE_KEY, JSON.stringify(save))
+
+    expect(loadGame().status).toBe('corrupted')
+  })
+
+  it('corrupted khi player.lastSavedAt không phải number (chặn NaN cultivation)', () => {
+    const save = validSave()
+    ;(save.player as Record<string, unknown>).lastSavedAt = 'yesterday'
+
+    localStorage.setItem(SAVE_KEY, JSON.stringify(save))
+
+    expect(loadGame().status).toBe('corrupted')
+  })
+
+  it('corrupted khi materials entry có amount NaN', () => {
+    const save = validSave()
+
+    save.materials = [{ materialId: 'spirit_stone', amount: Number.NaN }]
+
+    localStorage.setItem(SAVE_KEY, JSON.stringify(save))
+
+    expect(loadGame().status).toBe('corrupted')
+  })
+
+  it('ok với optional fields vắng mặt (productionSites/alchemyJobs/quests)', () => {
+    const save = validSave()
+
+    delete save.productionSites
+    delete save.alchemyJobs
+    delete save.quests
+
+    localStorage.setItem(SAVE_KEY, JSON.stringify(save))
+
+    expect(loadGame().status).toBe('ok')
   })
 })
 
@@ -139,5 +212,27 @@ describe('importSaveRaw', () => {
     expect(importSaveRaw(newRaw)).toBe(true)
     expect(getRawSave()).toBe(newRaw)
     expect(localStorage.getItem(BACKUP_KEY)).toBe(VALID_RAW)
+  })
+
+  it('từ chối save đúng version hiện hành nhưng sai shape (chặn ghi đè save hỏng)', () => {
+    localStorage.setItem(SAVE_KEY, VALID_RAW)
+
+    const broken = validSave()
+
+    delete broken.equipment
+
+    const brokenRaw = JSON.stringify(broken)
+
+    expect(importSaveRaw(brokenRaw)).toBe(false)
+
+    // Save tốt ban đầu KHÔNG bị ghi đè.
+    expect(getRawSave()).toBe(VALID_RAW)
+  })
+
+  it('chấp nhận save nguyên shape đúng version hiện hành', () => {
+    const raw = JSON.stringify(validSave())
+
+    expect(importSaveRaw(raw)).toBe(true)
+    expect(getRawSave()).toBe(raw)
   })
 })

@@ -32,8 +32,6 @@ export const SKILLS: Skill[] = [
 
     remainingCooldown: 0,
 
-    cost: 0,
-
     target: 'enemy',
 
     effects: [
@@ -63,7 +61,7 @@ export const SKILLS: Skill[] = [
 
     name: 'Thái Hư Nhất Kiếm',
 
-    description: 'Một kiếm phá vạn pháp, tốn linh lực.',
+    description: 'Một kiếm phá vạn pháp.',
 
     type: 'active',
 
@@ -78,8 +76,6 @@ export const SKILLS: Skill[] = [
     cooldown: 5,
 
     remainingCooldown: 0,
-
-    cost: 15,
 
     target: 'enemy',
 
@@ -202,8 +198,6 @@ export const SKILLS: Skill[] = [
 
     remainingCooldown: 0,
 
-    cost: 0,
-
     target: 'self',
 
     // Plan §8.3 — active skill không cast time → policy 'cooldown'.
@@ -304,8 +298,6 @@ export const SKILLS: Skill[] = [
 
     remainingCooldown: 0,
 
-    cost: 8,
-
     castTime: 1.2,
 
     // Plan §8.3 — giữ nguyên cast time hiện có qua policy 'cast_time'.
@@ -389,8 +381,6 @@ export const SKILLS: Skill[] = [
 
     remainingCooldown: 0,
 
-    cost: 8,
-
     castTime: 1.2,
 
     // Plan §8.3 — giữ nguyên cast time hiện có qua policy 'cast_time'.
@@ -441,8 +431,6 @@ export const SKILLS: Skill[] = [
     cooldown: 1,
 
     remainingCooldown: 0,
-
-    cost: 8,
 
     castTime: 1.2,
 
@@ -516,8 +504,6 @@ export const SKILLS: Skill[] = [
     cooldown: 1,
 
     remainingCooldown: 0,
-
-    cost: 8,
 
     castTime: 1.2,
 
@@ -598,8 +584,6 @@ export const SKILLS: Skill[] = [
 
     remainingCooldown: 0,
 
-    cost: 8,
-
     castTime: 1.2,
 
     // Plan §8.3 — giữ nguyên cast time hiện có qua policy 'cast_time'.
@@ -670,8 +654,6 @@ export const SKILLS: Skill[] = [
 
     remainingCooldown: 0,
 
-    cost: 0,
-
     target: 'enemy',
 
     effects: [
@@ -729,8 +711,6 @@ export const SKILLS: Skill[] = [
     cooldown: 6,
 
     remainingCooldown: 0,
-
-    cost: 25,
 
     // "Trúc Cơ mở tuyệt kỹ" — áp dụng mọi path, xem SkillSystem.canUse().
     requiredRealmId: 'foundation_establishment',

@@ -259,7 +259,7 @@ export class AilmentSystem {
         ailment.convertsAfterContinuousSeconds !== undefined &&
         ailment.continuousSeconds >= ailment.convertsAfterContinuousSeconds
       ) {
-        this.convertAilment(ailment, registry)
+        this.convertAilment(ailment, registry, target, resolveSource?.(ailment.sourceId))
 
         continue
       }
@@ -296,11 +296,29 @@ export class AilmentSystem {
    * update() chỉ có `target` (không giữ tham chiếu nguồn gây ailment).
    * Ailment đích ở use-case này (Đóng Băng) là CC thuần, không có
    * damagePerSecond nên không cần snapshot DoT — xây thẳng an toàn.
+   * Duration VẪN phải qua cùng công thức kháng cự như apply(): giảm theo
+   * ailmentResistPercent của đích (+ ailmentDurationPercent của nguồn nếu
+   * nguồn còn trong trận) — trước đây lấy trần duration template, bỏ qua
+   * kháng cự của đích.
    */
-  private convertAilment(ailment: Ailment, registry: AilmentRegistry) {
+  private convertAilment(
+    ailment: Ailment,
+    registry: AilmentRegistry,
+    target: CombatEntity,
+    source?: CombatEntity,
+  ) {
     const nextTemplate = registry.get(ailment.convertsToId!)
 
     this.manager.remove(ailment.id)
+
+    const resistMultiplier = 1 - Math.min(AILMENT_RESIST_CAP, Math.max(0, target.stats.ailmentResistPercent))
+
+    const duration = nextTemplate.duration * resistMultiplier * (1 + (source?.stats.ailmentDurationPercent ?? 0))
+
+    // Dedupe: nếu đích ĐÃ có sẵn ailment đích (vd Đóng Băng từ nguồn
+    // khác), add thẳng tạo 2 instance cùng id — manager.remove lọc theo id
+    // sẽ xoá CẢ HAI khi 1 cái hết hạn. Remove instance cũ trước để thế chỗ.
+    this.manager.remove(nextTemplate.id)
 
     this.manager.add({
       id: nextTemplate.id,
@@ -311,9 +329,9 @@ export class AilmentSystem {
 
       targetId: ailment.targetId,
 
-      duration: nextTemplate.duration,
+      duration,
 
-      remainingTime: nextTemplate.duration,
+      remainingTime: duration,
 
       stacks: 1,
 

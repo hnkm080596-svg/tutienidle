@@ -301,26 +301,32 @@ export class SkillSystem {
   canUseInSlot(skillId: string, slotIndex: number, entity: CombatEntity): boolean {
     const skill = this.manager.get(skillId)
     if (!skill || (skill.remainingCooldownBySlot?.[slotIndex] ?? 0) > 0) return false
+    // Tạm bỏ qua global cooldown để xét riêng slot — try/finally để
+    // remainingCooldown LUÔN được khôi phục kể cả khi canUse() throw.
     const globalCooldown = skill.remainingCooldown
     skill.remainingCooldown = 0
-    const canUse = this.canUse(skillId, entity)
-    skill.remainingCooldown = globalCooldown
-    return canUse
+    try {
+      return this.canUse(skillId, entity)
+    } finally {
+      skill.remainingCooldown = globalCooldown
+    }
   }
 
   private hasEnoughResource(skill: Skill, entity: CombatEntity): boolean {
+    const cost = skill.cost ?? 0
+
     switch (skill.resourceType) {
       case 'mana':
-        return entity.currentMp >= skill.cost
+        return entity.currentMp >= cost
 
       case 'rage':
-        return entity.currentRage >= skill.cost
+        return entity.currentRage >= cost
 
       case 'sword_intent':
-        return entity.currentSwordIntent >= skill.cost
+        return entity.currentSwordIntent >= cost
 
       case 'momentum':
-        return entity.currentMomentum >= skill.cost
+        return entity.currentMomentum >= cost
 
       default:
         return true
@@ -396,10 +402,12 @@ export class SkillSystem {
   }
 
   private consumeResource(skill: Skill, entity: CombatEntity) {
-    if (skill.resourceType === 'mana') entity.currentMp -= skill.cost
-    else if (skill.resourceType === 'rage') entity.currentRage -= skill.cost
-    else if (skill.resourceType === 'sword_intent') entity.currentSwordIntent -= skill.cost
-    else if (skill.resourceType === 'momentum') entity.currentMomentum -= skill.cost
+    const cost = skill.cost ?? 0
+
+    if (skill.resourceType === 'mana') entity.currentMp -= cost
+    else if (skill.resourceType === 'rage') entity.currentRage -= cost
+    else if (skill.resourceType === 'sword_intent') entity.currentSwordIntent -= cost
+    else if (skill.resourceType === 'momentum') entity.currentMomentum -= cost
   }
 
   private gainCastExperience(skill: Skill): void {

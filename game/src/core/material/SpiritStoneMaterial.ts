@@ -59,3 +59,25 @@ export function getSpiritStoneMaterialIdForEnhanceLevel(level: number): string {
   if (level >= 30) return SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID
   return SPIRIT_STONE_MATERIAL_ID
 }
+
+// =========================
+// Quy đổi phẩm (review 2026-08-28, economy-ecosystem-plan T2): CHỈ có
+// quy đổi 1 CHIỀU LÊN — 100 Hạ → 1 Trung, 100 Trung → 1 Thượng. Không
+// có chiều ngược để giữ sink (Linh Thạch thượng phẩm không bị tháo ra
+// lại thành 100 hạ phẩm bypass chi phí).
+// =========================
+
+export const SPIRIT_STONE_CONVERSION_RATIO = 100
+
+/** Id phẩm kế tiếp (cao hơn); undefined nếu đã là phẩm cao nhất. */
+export function getNextSpiritStoneMaterialId(materialId: string): string | undefined {
+  if (materialId === SPIRIT_STONE_MATERIAL_ID) {
+    return SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID
+  }
+
+  if (materialId === SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID) {
+    return SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID
+  }
+
+  return undefined
+}

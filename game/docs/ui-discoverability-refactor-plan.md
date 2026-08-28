@@ -109,3 +109,13 @@ npm.cmd run build
 - **Nameplate gây rối màn hình**: mật độ chữ phải kiểm tra ở viewport nhỏ; có toggle ẩn nameplate trong setting nếu cần.
 - **Workstream B đụng chạm nhiều enum reason**: làm theo danh sách rà soát, không sửa lan man ngoài lý do từ chối hành động.
 - Art final không block code: mọi task dùng placeholder đúng tông khi chưa có asset.
+
+## 7. Tham chiếu từ `Plans .md` cũ (ý tưởng UI rework, chưa implement)
+
+> Chuyển từ `docs/Plans .md` (đã xóa 2026-08-28, docs-sync Task 4) để không mất ý tưởng gốc. Đây là ĐỊNH HƯỚNG UI tương lai, chưa có trong code.
+
+- **Overlay panel thống nhất**: mọi chức năng dùng overlay panel (trừ Nhân Vật và Kho); cần quy tắc/tầng tương tác/logic chung, tránh mỗi chức năng một kiểu thiết kế.
+- **Nhân Vật + Kho hợp nhất**: phân 2 bên left/right panel; Kho bên phải; bấm Nhân Vật là slide out cả 2 bên. Left panel chỉ show stats (bỏ khu vực tâm pháp + trang bị), bỏ tab, show hết theo nhóm; Ngũ Hành có thể show dạng art ngôi sao 5 đỉnh (mỗi đỉnh 1 hành, phong lôi ở giữa). Stat dài cho slide nhưng không hiện thanh kéo. Panel phải khi bật luôn là equipment inventory (không phải material).
+- **Nút Cảnh Giới** (thay Kho cũ): overlay chứa cảnh giới, tu vi, nút tiểu đột phá/đại đột phá + auto đột phá flag; nút luôn hiện, xám khi chưa đủ điều kiện; giữa panel là sprite tu luyện nhân vật; dưới hoạt ảnh + cây tu vi là nút tương tác. Bỏ realm passive + buff nhập đạo; kiến cơ giữ nguyên nhưng show trong tu luyện panel như node skill (9 node, thắp sáng khi mở khóa).
+- **Tâm Pháp overlay**: show hình ảnh, tên, stat cộng thêm, description, thuần thục hiện tại theo thứ tự rõ ràng.
+- **Kỹ năng overlay**: không bỏ kỹ năng khi lên cảnh giới; show tất cả đã học, chia nhóm theo cảnh giới như thư viện; trái show tên + cấp tối giản, phải show cây kỹ năng tương ứng.

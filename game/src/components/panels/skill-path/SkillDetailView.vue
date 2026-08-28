@@ -79,7 +79,7 @@ function onUpgrade() {
           <span>{{ skill.cooldown }}s</span>
         </li>
 
-        <li v-if="skill.resourceType && skill.resourceType !== 'none' && skill.cost > 0">
+        <li v-if="skill.resourceType && skill.resourceType !== 'none' && (skill.cost ?? 0) > 0">
           <span>Tiêu Hao</span>
           <span>{{ skill.cost }} {{ skill.resourceType }}</span>
         </li>

@@ -108,7 +108,9 @@ export class TribulationSystem {
     active.secondsRemaining = Math.max(0, active.secondsRemaining - elapsedInTribulation)
     active.nextStrikeInSeconds -= elapsedInTribulation
 
-    while (active.nextStrikeInSeconds <= 0 && battle.player.currentHp > 0) {
+    // Guard interval > 0 — strikeIntervalSeconds 0/âm làm nextStrikeInSeconds
+    // không bao giờ tăng lại, vòng lặp catch-up thành vô hạn.
+    while (active.strikeIntervalSeconds > 0 && active.nextStrikeInSeconds <= 0 && battle.player.currentHp > 0) {
       const mitigation = 100 / (100 + Math.max(0, battle.player.stats.defense))
       const damage = battle.player.maxHp * active.lightningMaxHpDamagePercent * mitigation
       const applied = this.deps.combatSystem.applyDirectDamage(battle.player, damage, 'heavenly_tribulation')

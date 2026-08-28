@@ -31,7 +31,9 @@ import { MaterialBag } from '../material/MaterialBag'
 import {
   SPIRIT_STONE_MATERIAL_ID,
   getSpiritStoneMaterialIdForEnhanceLevel,
+  getSpiritStoneMaterialIdForRealmTier,
 } from '../material/SpiritStoneMaterial'
+import { getRealmTier } from '../realm/RealmTierMap'
 import type { PlayerData } from '../player/Player'
 import { getGlobalCultivationLevel, getRealmIndex } from '../realm/realmSystem'
 import { randomInt, weightedRandom, rollChance } from '../reward/DropRoll'
@@ -669,6 +671,16 @@ export class EquipmentSystem {
     }
   }
 
+  /**
+   * T2 (review 2026-08-28, economy-ecosystem-plan): phẩm Linh Thạch của
+   * Tẩy Luyện/Tinh Luyện resolve theo realm TRANG BỊ thay vì hard-code
+   * Hạ Phẩm — trang bị realm 4+ tiêu Trung Phẩm, realm 7+ tiêu Thượng
+   * Phẩm, nhất quán với nguồn phát (Linh Tuyền/quái rơi theo realm).
+   */
+  spiritStoneIdForRealm(realmId: string): string {
+    return getSpiritStoneMaterialIdForRealmTier(getRealmTier(realmId))
+  }
+
   getEnhanceCost(
     slot: EquipmentSlot,
 
@@ -709,25 +721,41 @@ export class EquipmentSystem {
     return this.resolveEnhanceCost(realmId, enhanceLevel, template).spiritStone
   }
 
-  /** W5 — cost Tẩy Luyện sau discount Khí Đường (UI và logic dùng chung). */
-  getWashCost(): { oreAmount: number; spiritStone: number; refinementPoints: number } {
+  /** W5 — cost Tẩy Luyện sau discount Khí Đường (UI và logic dùng chung).
+   * realmId của trang bị quyết định PHẨM Linh Thạch tiêu (T2); không có
+   * realmId → Hạ Phẩm (mặc định tương thích). */
+  getWashCost(realmId?: string): {
+    oreAmount: number
+    spiritStone: number
+    spiritStoneMaterialId: string
+    refinementPoints: number
+  } {
     return {
       oreAmount: this.applyCostDiscount(WASH_ORE_AMOUNT),
       spiritStone: this.applyCostDiscount(WASH_SPIRIT_STONE_COST),
+      spiritStoneMaterialId: realmId ? this.spiritStoneIdForRealm(realmId) : SPIRIT_STONE_MATERIAL_ID,
       refinementPoints: WASH_REFINEMENT_COST,
     }
   }
 
-  /** W5 — cost Tinh Luyện sau discount Khí Đường (UI và logic dùng chung). */
+  /** W5 — cost Tinh Luyện sau discount Khí Đường (UI và logic dùng chung).
+   * realmId của trang bị quyết định PHẨM Linh Thạch tiêu (T2). */
   getRefineCost(
     lineCount: number,
     lockedCount: number,
-  ): { essenceUnits: number; spiritStone: number; refinementPoints: number } {
+    realmId?: string,
+  ): {
+    essenceUnits: number
+    spiritStone: number
+    spiritStoneMaterialId: string
+    refinementPoints: number
+  } {
     const baseUnits = Math.max(0, lineCount) + Math.max(0, lockedCount)
 
     return {
       essenceUnits: this.applyCostDiscount(baseUnits),
       spiritStone: this.applyCostDiscount(baseUnits * REFINE_SPIRIT_STONE_PER_UNIT),
+      spiritStoneMaterialId: realmId ? this.spiritStoneIdForRealm(realmId) : SPIRIT_STONE_MATERIAL_ID,
       refinementPoints: REFINE_REFINEMENT_COST,
     }
   }
@@ -850,6 +878,7 @@ export class EquipmentSystem {
 
     const oreAmount = this.applyCostDiscount(WASH_ORE_AMOUNT)
     const washSpiritStoneCost = this.applyCostDiscount(WASH_SPIRIT_STONE_COST)
+    const washSpiritStoneId = this.spiritStoneIdForRealm(instance.realmId)
 
     if (!materialBag.has(oreMaterialId, oreAmount)) {
       return { ok: false, reason: 'missing_ore' }
@@ -860,7 +889,7 @@ export class EquipmentSystem {
       return { ok: false, reason: 'missing_refinement_points' }
     }
 
-    if (!materialBag.has(SPIRIT_STONE_MATERIAL_ID, washSpiritStoneCost)) {
+    if (!materialBag.has(washSpiritStoneId, washSpiritStoneCost)) {
       return { ok: false, reason: 'missing_spirit_stone' }
     }
 
@@ -970,7 +999,7 @@ export class EquipmentSystem {
 
     this.spendItemRefinementPoints(instance, WASH_REFINEMENT_COST)
 
-    materialBag.remove(SPIRIT_STONE_MATERIAL_ID, washSpiritStoneCost)
+    materialBag.remove(washSpiritStoneId, washSpiritStoneCost)
 
     materialBag.remove(oreMaterialId, oreAmount)
 
@@ -1052,6 +1081,10 @@ export class EquipmentSystem {
 
     const essenceId = equipmentEssenceMaterialId(instance.realmId)
 
+    if (!essenceId) {
+      return { ok: false, reason: 'no_conversion_rule' }
+    }
+
     if (!materialBag.has(essenceId, essenceUnits)) {
       return { ok: false, reason: 'missing_essence' }
     }
@@ -1060,7 +1093,9 @@ export class EquipmentSystem {
       (lineCount + uniqueLocks.length) * REFINE_SPIRIT_STONE_PER_UNIT,
     )
 
-    if (!materialBag.has(SPIRIT_STONE_MATERIAL_ID, spiritStoneCost)) {
+    const refineSpiritStoneId = this.spiritStoneIdForRealm(instance.realmId)
+
+    if (!materialBag.has(refineSpiritStoneId, spiritStoneCost)) {
       return { ok: false, reason: 'missing_spirit_stone' }
     }
 
@@ -1094,7 +1129,7 @@ export class EquipmentSystem {
 
     this.spendItemRefinementPoints(instance, REFINE_REFINEMENT_COST)
 
-    materialBag.remove(SPIRIT_STONE_MATERIAL_ID, spiritStoneCost)
+    materialBag.remove(refineSpiritStoneId, spiritStoneCost)
 
     materialBag.remove(essenceId, essenceUnits)
 
@@ -1130,12 +1165,17 @@ export class EquipmentSystem {
       return { ok: false, reason: 'empty_selection' }
     }
 
+    // Dedupe — selection trùng id (UI double-submit/race) từng khiến pass 1
+    // tính reward 2 lần trong khi pass 2 chỉ remove 1 lần → nhân bản Tinh
+    // Hoa (review 2026-08-28).
+    const uniqueIds = Array.from(new Set(instanceIds))
+
     const instances: EquipmentInstance[] = []
 
     const rewards: Array<{ materialId: string; amount: number }> = []
 
     // Pass 1 — validate TOÀN BỘ selection + tính trước rewards.
-    for (const instanceId of instanceIds) {
+    for (const instanceId of uniqueIds) {
       const instance = inventory.get(instanceId)
 
       if (!instance) {
@@ -1155,6 +1195,10 @@ export class EquipmentSystem {
       }
 
       const essenceId = equipmentEssenceMaterialId(instance.realmId)
+
+      if (!essenceId) {
+        return { ok: false, reason: 'no_conversion_rule' }
+      }
 
       const range = DISSOLVE_ESSENCE_RANGE_BY_QUALITY[instance.rarity]
 

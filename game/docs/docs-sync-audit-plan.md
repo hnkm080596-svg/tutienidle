@@ -1,5 +1,7 @@
 # Kế hoạch Đồng bộ Tài liệu với Code
 
+> ✅ **HOÀN THÀNH 2026-08-28** — đã thực hiện Task 1–5: viết lại mục Chiến đấu + Công trình (`game-guide.md`) và phần trang bị (`item-design-reference.md`), dọn comment MissileSystem ở 5 file liệt kê, phân loại + migrate ý tưởng `Plans .md` vào `truc-co-kim-dan-content-plan.md` §9 và `ui-discoverability-refactor-plan.md` §7 rồi xóa file, quy ước chống lệch đã có sẵn. Các điểm hoãn lại ghi ở mục **7. Phát sinh**.
+
 > Thuộc Phase 0 của [roadmap.md](./roadmap.md). Plan này chỉ sửa tài liệu và comment lỗi thời — không đổi hành vi runtime.
 
 ## 1. Mục tiêu
@@ -110,3 +112,9 @@ npm.cmd run build
 - **Mô tả sai khi viết lại**: bắt buộc đọc file nguồn trước khi viết từng đoạn; không suy luận từ tài liệu cũ.
 - **Xóa nhầm ý tưởng tương lai trong `Plans .md`**: bước phân loại phải hoàn tất và được ghi vào plan đích trước khi xóa file.
 - Plan này không sửa `naming-conventions.md`, `wandering.md` và các plan khác — chỉ xử lý các điểm lệch đã liệt kê; nếu khi triển khai phát hiện thêm lệch mới, ghi vào mục "Phát sinh" của plan này thay vì mở rộng phạm vi vô hạn.
+
+## 7. Phát sinh (khi thực hiện 2026-08-28)
+
+- **Tham chiếu missile còn ở NGOÀI 5 file §2.3** (chỉ comment, không ảnh hưởng hành vi): `AilmentSystem.ts`, `AilmentRegistry.ts`, `Skill.ts`, `SkillEffect.ts`, `Skills.ts`, `CombatAction.ts`, `CombatTypes.ts`, `MainScene.ts`, `CombatSystem.ts` (dòng ~178/181), `CombatEntity.ts` (dòng ~186), `BattleSystem.ts` (dòng ~2175) và các battle test (`BattleSystem.countdown/hoaThe/earthPath/thachHoa/test.ts`). `BattleSystem.resolveMissiles()` KHÔNG còn tồn tại — các comment này stale. HOÃN sửa để tránh mở rộng phạm vi; khi dọn thì đổi sang `ActionImpactSystem`/impact.
+- **`item-design-reference.md` §5** (`EquipmentSlotState`) vẫn mô tả `socketedFormation`/`bonusAffixSlots`/`appliedTalismanIds` — data ĐÚNG (field còn tồn tại); Phù/Trận đang giữ khóa, đã ghi chú ở §4 và §9.
+- **`game-guide.md` mục Thiên Phú / Con đường tu luyện** đối chiếu code vẫn khớp, không phải sửa.

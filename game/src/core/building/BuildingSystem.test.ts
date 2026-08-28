@@ -155,4 +155,49 @@ describe('BuildingSystem Linh Tuyền (engine offline, balance 2026-08-28)', () 
     expect(f).toBeGreaterThan(q)
     expect(q).toBeGreaterThan(m)
   })
+
+  it('claim giữ PHẦN LẺ: 2 lần claim liên tiếp nhận đúng tổng sản lượng (review 2026-08-28)', () => {
+    const s = spring()
+    const registry = new BuildingRegistry()
+    const manager = new BuildingManager()
+
+    registry.register(s)
+
+    const instance = { ...springInstance(1), lastCollectedAt: 0 }
+
+    manager.add(instance)
+
+    // Rate L1 mortal ≈ 0.03526/s → 100s tích ≈ 3.53 (3 nguyên + 0.53 lẻ).
+    const first = system.claim('i1', registry, manager, 100, 'mortal')
+
+    expect(first.amount).toBe(3)
+
+    // Phần lẻ được giữ: mốc lùi về quá khứ, KHÔNG reset về currentTime.
+    expect(manager.get('i1')!.lastCollectedAt).toBeLessThan(100)
+    expect(manager.get('i1')!.lastCollectedAt).toBeGreaterThan(0)
+
+    // Claim lần 2 ở t=200: nhận cả phần lẻ cũ → tổng 2 lần = floor(200 × rate) = 7.
+    const second = system.claim('i1', registry, manager, 200, 'mortal')
+
+    expect(second.amount).toBe(4)
+    expect(first.amount + second.amount).toBe(7)
+  })
+
+  it('claim chưa đủ 1 đơn vị → trả 0 và KHÔNG reset mốc', () => {
+    const s = spring()
+    const registry = new BuildingRegistry()
+    const manager = new BuildingManager()
+
+    registry.register(s)
+
+    const instance = { ...springInstance(1), lastCollectedAt: 0 }
+
+    manager.add(instance)
+
+    // 10s × 0.035 ≈ 0.35 < 1 → chưa claim được.
+    const result = system.claim('i1', registry, manager, 10, 'mortal')
+
+    expect(result.amount).toBe(0)
+    expect(manager.get('i1')!.lastCollectedAt).toBe(0)
+  })
 })

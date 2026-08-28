@@ -11,7 +11,9 @@ export class PillBag {
    * thay vì mất lặng lẽ.
    */
   add(pill: Pill, amount: number): number {
-    if (amount <= 0) {
+    // Guard NaN/Infinity (cùng vector đã harden ở MaterialBag): NaN <= 0 là
+    // false nên lọt qua, cộng vào stack sẽ poison amount vĩnh viễn.
+    if (!Number.isFinite(amount) || amount <= 0) {
       return 0
     }
 
@@ -40,8 +42,9 @@ export class PillBag {
 
   remove(pillId: string, amount: number): boolean {
     // Guard: amount <= 0 KHÔNG phải remove hợp lệ — amount âm sẽ CỘNG
-    // ngược vào stack (vector nhân bản tiềm ẩn).
-    if (amount <= 0) {
+    // ngược vào stack (vector nhân bản tiềm ẩn). NaN lọt qua guard <= 0
+    // nên phải chặn Number.isFinite trước.
+    if (!Number.isFinite(amount) || amount <= 0) {
       return false
     }
 

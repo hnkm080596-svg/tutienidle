@@ -1,7 +1,7 @@
 import type { CombatEntity } from './CombatEntity'
 import type { EventBus } from '../events/EventBus'
 
-export type VitalsChangeReason = 'damage' | 'dot' | 'thorns' | 'ward_break' | 'healing' | 'leech' | 'regen' | 'reaction' | 'heavenly_tribulation'
+export type VitalsChangeReason = 'damage' | 'dot' | 'thorns' | 'ward_break' | 'healing' | 'leech' | 'regen' | 'reaction' | 'heavenly_tribulation' | 'survive_lethal'
 
 export interface EntityVitalsChangedEvent {
   type: 'entity_vitals_changed'

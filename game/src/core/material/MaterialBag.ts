@@ -17,7 +17,10 @@ export class MaterialBag {
     material: Material,
     amount: number,
   ): number {
-    if (amount <= 0) {
+    // Guard NaN/Infinity: `NaN <= 0` là false nên check cũ lọt NaN —
+    // NaN cộng vào stack sẽ poison vĩnh viễn amount đó (mọi has() trả
+    // false, UI hiện NaN). amount phải là số hữu hạn dương.
+    if (!Number.isFinite(amount) || amount <= 0) {
       return 0
     }
 
@@ -58,8 +61,10 @@ export class MaterialBag {
     amount: number,
   ): boolean {
     // Guard: amount <= 0 KHÔNG phải remove hợp lệ — amount âm sẽ CỘNG
-    // ngược vào stack (vector nhân bản tiềm ẩn).
-    if (amount <= 0) {
+    // ngược vào stack (vector nhân bản tiềm ẩn). NaN cũng bị chặn:
+    // `existing.amount < NaN` là false nên NaN sẽ lọt qua và trừ NaN
+    // khỏi stack (poison amount).
+    if (!Number.isFinite(amount) || amount <= 0) {
       return false
     }
 

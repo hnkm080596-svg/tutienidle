@@ -7,7 +7,7 @@
 // Nhân (xem QUAN_KHI_UNLOCK_LEVEL ở đó) — panel này KHÔNG tự kiểm tra
 // lại điều kiện, chỉ tự đóng ngay sau khi chọn xong (component gọi nó
 // đã gate rồi).
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -15,6 +15,7 @@ import { useWorldAnnouncementStore } from '@/stores/worldAnnouncement'
 import { CULTIVATION_PATH_KITS } from '@/core/player/CultivationPathKit'
 import type { CultivationPathId } from '@/core/player/CultivationPathKit'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
+import ConfirmModal from '@/components/common/ConfirmModal.vue'
 
 const ui = useUiStore()
 const player = usePlayerStore()
@@ -31,14 +32,31 @@ const cooldownSeconds = computed(() => {
 // khi dời từ CharacterPanel.vue).
 const availablePaths = computed(() => Object.values(CULTIVATION_PATH_KITS))
 
+// Thay window.confirm() native — modal xác nhận đồng bộ hoá qua state
+// (giữ nguyên yêu cầu "lựa chọn KHÔNG thể đổi lại" bằng modal riêng
+// thay vì browser confirm() mặc định).
+const pendingPathId = ref<CultivationPathId | null>(null)
+
+const pendingPathName = computed(() => (pendingPathId.value ? CULTIVATION_PATH_KITS[pendingPathId.value].name : ''))
+
 function choosePath(pathId: CultivationPathId) {
-  const kit = CULTIVATION_PATH_KITS[pathId]
+  pendingPathId.value = pathId
+}
 
-  const confirmed = window.confirm(`Bước vào ${kit.name}? Lựa chọn này KHÔNG thể đổi lại.`)
+function cancelChoosePath() {
+  pendingPathId.value = null
+}
 
-  if (!confirmed) {
+function confirmChoosePath() {
+  const pathId = pendingPathId.value
+
+  pendingPathId.value = null
+
+  if (!pathId) {
     return
   }
+
+  const kit = CULTIVATION_PATH_KITS[pathId]
 
   const realmIdBefore = player.realmId
   if (gameManager.chooseCultivationPath(pathId, player.$state)) {
@@ -81,6 +99,15 @@ function close() {
         </button>
       </div>
     </div>
+
+    <ConfirmModal
+      :open="pendingPathId !== null"
+      title="Xác Nhận Con Đường"
+      :message="`Bước vào ${pendingPathName}? Lựa chọn này KHÔNG thể đổi lại.`"
+      danger
+      @confirm="confirmChoosePath"
+      @cancel="cancelChoosePath"
+    />
   </OverlayPanel>
 </template>
 

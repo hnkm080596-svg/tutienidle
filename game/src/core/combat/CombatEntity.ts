@@ -142,8 +142,8 @@ export interface CombatEntity {
 
   // Vị trí world-space trên trục X (đơn vị chung — xem
   // core/battle/BattleLane.ts) — dùng cho né/đuổi thật theo khoảng
-  // cách (BattleSystem.resolveMovement()) và va chạm missile
-  // (MissileSystem). Không có trục Y — sân đấu chỉ 1 chiều ngang.
+  // cách (BattleSystem.resolveMovement()) và va chạm action impact
+  // (ActionImpactSystem). Không có trục Y — sân đấu chỉ 1 chiều ngang.
   x: number
 
   // Combat Grid Rework (2026-08-24) — `row` là LANE thật trên grid

@@ -22,6 +22,7 @@ import {
 } from './ProductionCatalog'
 import {
   CYCLE_BASE_SECONDS_BY_REALM,
+  PRODUCTION_OFFLINE_CAP_SECONDS,
   computeCycleSeconds,
   getSiteSpeedMultiplier,
   getTierWeightProfile,
@@ -265,6 +266,128 @@ describe('ProductionSystem — cycle lifecycle (plan §4)', () => {
     )
 
     expect(cappedSettled).toBeLessThanOrEqual(361)
+  })
+
+  it('hết cap offline: backlog bị huỷ + restart từ nowMs, tick online KHÔNG trả thêm (chặn bypass cap)', () => {
+    const { bag, registry } = createBag()
+
+    const system = createSystem()
+
+    system.setAutoRestart('thanh_van_quang', true)
+
+    const startMs = 1_000_000_000
+
+    system.startCycle('thanh_van_quang', 'mortal', startMs)
+
+    // Vắng 100 giờ — vượt xa cap 10h.
+    const nowMs = startMs + 100 * 3600 * 1000
+
+    system.settleOffline(bag, registry, 'mortal', nowMs)
+
+    const totalAfterOffline = bag.getAll().reduce((total, stack) => total + stack.amount, 0)
+
+    // Backlog hết ngân sách phải bị huỷ: cycle kế tiếp bắt đầu từ nowMs
+    // (không còn cycle quá khứ chờ tick online trả dần).
+    const restarted = system.getState('thanh_van_quang')!.activeCycle!
+
+    expect(restarted.startedAtMs).toBe(nowMs)
+
+    // Tick online ngay sau đó không cấp thêm (cycle mới chưa hoàn thành).
+    system.tick(nowMs + 1000, bag, registry, 'mortal')
+
+    expect(bag.getAll().reduce((total, stack) => total + stack.amount, 0)).toBe(totalAfterOffline)
+  })
+
+  it('tick: auto-restart KHÔNG backdate quá cap (tab throttle dài ngày không trả backlog vô hạn)', () => {
+    const { bag, registry } = createBag()
+
+    const system = createSystem()
+
+    system.setAutoRestart('thanh_van_lam', true)
+
+    system.startCycle('thanh_van_lam', 'mortal', 0)
+
+    // Tick đầu tiên sau 3 ngày "chạy" (không qua settleOffline).
+    const nowMs = 3 * 24 * 3600 * 1000
+
+    system.tick(nowMs, bag, registry, 'mortal')
+
+    const restarted = system.getState('thanh_van_lam')!.activeCycle!
+
+    expect(restarted.startedAtMs).toBeGreaterThanOrEqual(
+      nowMs - PRODUCTION_OFFLINE_CAP_SECONDS * 1000,
+    )
+  })
+
+  it('worker offline (T3): cycle dở dang từ save + cycle mới chạy trong cap như slot tay', () => {
+    const { bag, registry } = createBag()
+
+    const system = createSystem()
+
+    const startMs = 1_000_000_000
+
+    // Giả lập save: site autoRestart với 1 worker cycle dở dang (hoàn thành sau 100s).
+    system.restoreStates([
+      {
+        siteId: 'thanh_van_lam',
+        level: 1,
+        autoRestart: true,
+        activeWorkerSlots: 1,
+        workerCycles: [
+          {
+            cycleId: 'worker_saved_1',
+            siteId: 'thanh_van_lam',
+            collectionRealmId: 'mortal',
+            siteLevelAtStart: 1,
+            rewardTableVersion: 1,
+            rollSeed: 42,
+            startedAtMs: startMs,
+            completesAtMs: startMs + 100_000,
+          },
+        ],
+      },
+    ])
+
+    // Vắng 1 giờ với 1 worker capacity.
+    const settled = system.settleOffline(bag, registry, 'mortal', startMs + 3600_000, {
+      workerCapacity: 1,
+      offlineSinceMs: startMs,
+    })
+
+    // 1 giờ / 100s ≈ 36 cycle (1 dở dang + ~35 mới) — cho phép sai số guard.
+    expect(settled).toBeGreaterThanOrEqual(30)
+
+    expect(settled).toBeLessThanOrEqual(37)
+
+    const woodTotal = bag.getAll().reduce((total, stack) => total + stack.amount, 0)
+
+    expect(woodTotal).toBeGreaterThanOrEqual(settled)
+  })
+
+  it('worker offline tuân cap chung: vắng 100 giờ chỉ settle tối đa ~360 cycle', () => {
+    const { bag, registry } = createBag()
+
+    const system = createSystem()
+
+    const startMs = 1_000_000_000
+
+    system.restoreStates([
+      {
+        siteId: 'thanh_van_lam',
+        level: 1,
+        autoRestart: true,
+        activeWorkerSlots: 1,
+        workerCycles: [],
+      },
+    ])
+
+    const settled = system.settleOffline(bag, registry, 'mortal', startMs + 100 * 3600_000, {
+      workerCapacity: 1,
+      offlineSinceMs: startMs,
+    })
+
+    // Cap 10h / 100s = 360 cycle — không được vượt dù vắng 100 giờ.
+    expect(settled).toBeLessThanOrEqual(361)
   })
 })
 

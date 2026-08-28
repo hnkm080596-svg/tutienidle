@@ -68,17 +68,34 @@ export const REFINE_SPIRIT_STONE_PER_UNIT = 50
 // =========================
 // Hóa Luyện (§7.5): số Tinh Hoa theo quality trang bị — mapping realm
 // trang bị → tier Tinh Hoa (chốt §13.6, data material tương ứng nằm ở
-// data/materials generator).
+// data/materials generator). ĐỦ 9 realm + body_integration (Hợp Thể
+// dùng chung tier kinh tế với Đại Thừa — RealmTierMap.ts). Id realm 4+
+// đặt theo bậc quality trang bị tương ứng (EquipmentQuality.ts) để
+// thống nhất với truc-co-kim-dan-content-plan (review 2026-08-28,
+// economy-ecosystem-plan T1).
 // =========================
 
 export const EQUIPMENT_REALM_ESSENCE_MATERIAL: Record<string, string> = {
   mortal: 'tinh_hoa_pham_khi',
   qi_refining: 'tinh_hoa_bao_khi',
   foundation_establishment: 'tinh_hoa_linh_khi',
+  golden_core: 'tinh_hoa_phap_khi',
+  nascent_soul: 'tinh_hoa_phap_bao',
+  soul_transformation: 'tinh_hoa_tien_bao',
+  void_refinement: 'tinh_hoa_chi_bao',
+  mahayana: 'tinh_hoa_hon_don_chi_bao',
+  body_integration: 'tinh_hoa_hon_don_chi_bao',
+  tribulation: 'tinh_hoa_thien_dia_trong_khi',
 }
 
-export function equipmentEssenceMaterialId(realmId: string): string {
-  return EQUIPMENT_REALM_ESSENCE_MATERIAL[realmId] ?? 'tinh_hoa_pham_khi'
+/**
+ * Resolve id Tinh Hoa theo realm trang bị. Trả `undefined` khi realm chưa
+ * map — caller PHẢI guard và từ chối thao tác (review 2026-08-28: fallback
+ * im lặng về pham_khi khiến trang bị realm cao bị phân giải ra Tinh Hoa
+ * realm 1, mất giá trị mà không ai biết).
+ */
+export function equipmentEssenceMaterialId(realmId: string): string | undefined {
+  return EQUIPMENT_REALM_ESSENCE_MATERIAL[realmId]
 }
 
 export const DISSOLVE_ESSENCE_RANGE_BY_QUALITY: Record<string, { min: number; max: number }> = {

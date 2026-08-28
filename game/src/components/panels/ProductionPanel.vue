@@ -3,6 +3,10 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { getSpiritStoneMaterialIdForRealmTier } from '@/core/material/SpiritStoneMaterial'
+import {
+  MATERIAL_TIER_CONVERSION_RATIO,
+  getNextTierMaterialId,
+} from '@/core/material/MaterialTierConversionBalance'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
 import BuildingConstructionGate from './BuildingConstructionGate.vue'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
@@ -203,6 +207,56 @@ function upgrade(siteId: string) {
     bumpState()
   }
 }
+
+// =========================
+// Quy đổi cảnh giới Linh Mộc/Linh Khoáng (2026-08-28): gộp 10 bậc thấp →
+// 1 bậc cao theo thang Phàm Nhân → Luyện Khí → Trúc Cơ. Chỉ hiện các
+// nguyên liệu đang sở hữu và còn bậc cao hơn để đổi.
+// =========================
+
+interface TierConversionRow {
+  fromId: string
+
+  fromName: string
+
+  toName: string
+
+  owned: number
+}
+
+const tierConversionRows = computed<TierConversionRow[]>(() => {
+  stateVersion.value
+
+  const rows: TierConversionRow[] = []
+
+  for (const stack of gameManager.materialBag.getAll()) {
+    const fromId = stack.material.id
+
+    const toId = getNextTierMaterialId(fromId)
+
+    if (!toId || !gameManager.materialRegistry.has(toId)) {
+      continue
+    }
+
+    rows.push({
+      fromId,
+
+      fromName: stack.material.name,
+
+      toName: gameManager.materialRegistry.get(toId).name,
+
+      owned: gameManager.materialBag.getAmount(fromId),
+    })
+  }
+
+  return rows
+})
+
+function convertTier(fromId: string) {
+  gameManager.convertMaterialTier(fromId, 1)
+
+  bumpState()
+}
 </script>
 
 <template>
@@ -273,6 +327,12 @@ function upgrade(siteId: string) {
             Auto lặp lại
           </label>
 
+          <!-- T4 (economy-ecosystem-plan): auto-restart đọc cảnh giới nhân
+               vật tại thời điểm lặp, KHÔNG nhớ cấp thu thập đã chọn. -->
+          <small v-if="row.autoRestart" class="site-card__auto-note">
+            Tự lặp lại dùng cảnh giới hiện tại của nhân vật.
+          </small>
+
           <div v-if="row.level < row.maxLevel" class="site-card__upgrade">
             <ul>
               <li
@@ -295,6 +355,34 @@ function upgrade(siteId: string) {
           </div>
         </article>
       </div>
+
+      <section v-if="tierConversionRows.length" class="tier-conversion">
+        <h3 class="tier-conversion__title">Quy đổi cảnh giới</h3>
+
+        <p class="tier-conversion__note">
+          Gộp {{ MATERIAL_TIER_CONVERSION_RATIO }} nguyên liệu cảnh giới thấp thành 1 cảnh giới cao
+          (Phàm Nhân → Luyện Khí → Trúc Cơ). Quáng giữ nguyên phẩm.
+        </p>
+
+        <div class="tier-conversion__rows">
+          <div v-for="row in tierConversionRows" :key="row.fromId" class="tier-conversion__row">
+            <span class="tier-conversion__label">
+              {{ row.fromName }}
+              <strong>({{ row.owned.toLocaleString('vi-VN') }})</strong>
+              → {{ row.toName }}
+            </span>
+
+            <button
+              type="button"
+              class="tier-conversion__button"
+              :disabled="row.owned < MATERIAL_TIER_CONVERSION_RATIO"
+              @click="convertTier(row.fromId)"
+            >
+              {{ MATERIAL_TIER_CONVERSION_RATIO }} → 1
+            </button>
+          </div>
+        </div>
+      </section>
     </div>
   </BuildingConstructionGate>
 </template>
@@ -446,6 +534,13 @@ function upgrade(siteId: string) {
   cursor: pointer;
 }
 
+.site-card__auto-note {
+  margin: -2px 0 0;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 .site-card__upgrade ul {
   list-style: none;
   margin: 0 0 6px;
@@ -473,6 +568,74 @@ function upgrade(siteId: string) {
 }
 
 .site-card__upgrade-button:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.tier-conversion {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: linear-gradient(145deg, rgba(35, 48, 39, .84), rgba(16, 21, 21, .92));
+  border: 1px solid rgba(111, 167, 128, .25);
+  border-radius: var(--radius-md);
+}
+
+.tier-conversion__title {
+  margin: 0;
+  color: var(--gold-500);
+  font-family: var(--font-display);
+  font-size: 1rem;
+}
+
+.tier-conversion__note {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.tier-conversion__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tier-conversion__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--ink-line);
+  border-radius: var(--radius-sm);
+  background: rgba(8, 18, 14, .4);
+}
+
+.tier-conversion__label {
+  font-size: var(--text-xs);
+  color: var(--text-primary);
+}
+
+.tier-conversion__label strong {
+  color: var(--jade);
+}
+
+.tier-conversion__button {
+  padding: 5px 10px;
+  background: var(--gold-500);
+  color: var(--gold-ink);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+.tier-conversion__button:disabled {
+  background: var(--ink-700);
   color: var(--text-muted);
   cursor: not-allowed;
 }

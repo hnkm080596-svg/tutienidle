@@ -227,7 +227,7 @@ export const TRIBULATION_HUMAN: Enemy = defineEnemy({
     techniqueInsight: 800,
     spiritStone: 200,
 
-    itemDrops: [{ kind: 'material', itemId: 'xich_dong', amount: 4, chance: 1 }],
+    itemDrops: [{ kind: 'material', itemId: 'qi_refining_ore_hoang', amount: 4, chance: 1 }],
   },
 })
 
@@ -259,7 +259,7 @@ export const TRIBULATION_EARTH: Enemy = defineEnemy({
     techniqueInsight: 1500,
     spiritStone: 350,
 
-    itemDrops: [{ kind: 'material', itemId: 'xich_dong', amount: 6, chance: 1 }],
+    itemDrops: [{ kind: 'material', itemId: 'qi_refining_ore_hoang', amount: 6, chance: 1 }],
   },
 })
 

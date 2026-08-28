@@ -27,6 +27,13 @@ function createTestSetup(rewards: EnemyReward, realmId: string, talentIds: strin
   const deps: BattleLootSystemDeps = {
     eventBus: { emit: vi.fn() },
     notifications: { push: vi.fn(), drain: () => [] },
+    combatSystem: {
+      applyHealing: (target: { currentHp: number; maxHp: number }, amount: number) => {
+        const before = target.currentHp
+        target.currentHp = Math.min(target.maxHp, target.currentHp + Math.max(0, amount))
+        return target.currentHp - before
+      },
+    },
     materialRegistry,
     materialBag,
     pillRegistry: {},
@@ -46,7 +53,7 @@ function createTestSetup(rewards: EnemyReward, realmId: string, talentIds: strin
     rewardSystem: { give: giveReward },
     stageManager: { get: () => undefined },
     stageTemplates: {},
-    questSystem: { onEnemyDefeated: vi.fn() },
+    questSystem: { onEnemyDefeated: vi.fn(), onMaterialCollected: vi.fn() },
     questRegistry: {},
     questManager: {},
   } as unknown as BattleLootSystemDeps

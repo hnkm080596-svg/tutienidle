@@ -225,4 +225,32 @@ describe('BattleSystem — Lava Zone trên grid (Combat Grid Rework)', () => {
 
     expect(player.currentHp).toBe(1000)
   })
+
+  it('tickInterval = 0 — không vòng lặp vô hạn, zone vẫn hết hạn bình thường', () => {
+    const { system, tick } = setup()
+
+    const player = createCombatant({ id: 'player', type: 'player' })
+    const enemy = createCombatant({ id: 'enemy', x: 8, currentHp: 1000, maxHp: 1000 })
+
+    system.start(player, enemy)
+    system.update(3)
+
+    system.spawnLavaZone(system.getBattle()!, {
+      ownerId: 'player',
+      row: 2,
+      column: 8,
+      laneRadius: 1,
+      columnRadius: 1,
+      duration: 2,
+      tickInterval: 0,
+      damagePerTick: 10,
+      element: 'fire',
+    })
+
+    tick(1)
+    expect(system.getBattle()!.lavaZones).toHaveLength(1)
+
+    tick(1.5)
+    expect(system.getBattle()!.lavaZones).toHaveLength(0)
+  })
 })

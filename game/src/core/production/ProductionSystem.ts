@@ -277,25 +277,16 @@ export class ProductionSystem {
 
       state.activeCycle = undefined
 
-      const rewards = this.rollRewards(cycle)
-
-      for (const reward of rewards) {
-        if (!registry.has(reward.materialId) || reward.amount <= 0) {
-          continue
-        }
-
-        const overflow = bag.add(registry.get(reward.materialId), reward.amount)
-
-        this.pendingEvents.push({
-          siteId: cycle.siteId,
-          materialId: reward.materialId,
-          amount: reward.amount,
-          overflow: overflow > 0 ? overflow : undefined,
-        })
-      }
+      this.grantCycleRewards(cycle, bag, registry)
 
       if (state.autoRestart && this.canStart(cycle.siteId)) {
-        this.startCycle(cycle.siteId, currentRealmId, cycle.completesAtMs)
+        // Chặn backdate quá cap — tab bị throttle/đóng lâu ngày từng khiến
+        // chuỗi auto-restart nối ngược về quá khứ và trả TOÀN BỘ backlog
+        // nhiều ngày trong vài phút, vô hiệu hoá cap offline (review
+        // 2026-08-28). Chain chỉ được lùi tối đa bằng cap.
+        const earliestRestartMs = nowMs - PRODUCTION_OFFLINE_CAP_SECONDS * 1000
+
+        this.startCycle(cycle.siteId, currentRealmId, Math.max(cycle.completesAtMs, earliestRestartMs))
       }
     }
   }
@@ -331,16 +322,7 @@ export class ProductionSystem {
       const completed = state.workerCycles.filter(cycle => cycle.completesAtMs <= nowMs)
       state.workerCycles = state.workerCycles.filter(cycle => cycle.completesAtMs > nowMs)
       for (const cycle of completed) {
-        for (const reward of this.rollRewards(cycle)) {
-          if (!registry.has(reward.materialId) || reward.amount <= 0) continue
-          const overflow = bag.add(registry.get(reward.materialId), reward.amount)
-          this.pendingEvents.push({
-            siteId: cycle.siteId,
-            materialId: reward.materialId,
-            amount: reward.amount,
-            overflow: overflow > 0 ? overflow : undefined,
-          })
-        }
+        this.grantCycleRewards(cycle, bag, registry)
       }
     }
   }
@@ -349,16 +331,25 @@ export class ProductionSystem {
    * Offline settle tuần tự (§4.3): settle các cycle hoàn thành trước
    * nowMs theo thứ tự thời gian, MỖI auto-cycle một seed/roll riêng —
    * không nhân một roll với số cycle. Ngân sách tổng bị chặn ở cap
-   * (§4.3): khi tổng thời gian cycle đã settle vượt cap thì dừng —
-   * cycle kế tiếp còn nguyên cho tick online. Trả về số cycle đã settle.
+   * (§4.3): khi tổng thời gian cycle đã settle vượt cap thì dừng.
+   *
+   * Backlog còn lại sau khi hết ngân sách (cycle hoàn thành trước nowMs
+   * nhưng chưa settle) bị HUỶ không cấp reward và auto-restart bắt đầu
+   * lại từ nowMs — nếu để nguyên, tick() online sẽ trả dần toàn bộ
+   * backlog nhiều ngày và cap mất tác dụng (review 2026-08-28).
+   *
+   * Worker (T3 economy-ecosystem-plan): cycle dở dang của worker được
+   * persist vào save và settle offline trong phần ngân sách còn lại,
+   * chạy nối tiếp như slot tay. Trả về số cycle đã settle (manual + worker).
    */
   settleOffline(
     bag: MaterialBag,
     registry: MaterialRegistry,
     currentRealmId: string,
     nowMs: number = Date.now(),
+    options: { workerCapacity?: number; offlineSinceMs?: number } = {},
   ): number {
-    let budgetUsedMs = 0
+    let budgetRemainingMs = PRODUCTION_OFFLINE_CAP_SECONDS * 1000
 
     let settled = 0
 
@@ -392,28 +383,15 @@ export class ProductionSystem {
 
       const durationMs = Math.max(0, targetCycle.completesAtMs - targetCycle.startedAtMs)
 
-      if (budgetUsedMs + durationMs > PRODUCTION_OFFLINE_CAP_SECONDS * 1000) {
+      if (durationMs > budgetRemainingMs) {
         break
       }
 
-      budgetUsedMs += durationMs
+      budgetRemainingMs -= durationMs
 
       targetState.activeCycle = undefined
 
-      for (const reward of this.rollRewards(targetCycle)) {
-        if (!registry.has(reward.materialId) || reward.amount <= 0) {
-          continue
-        }
-
-        const overflow = bag.add(registry.get(reward.materialId), reward.amount)
-
-        this.pendingEvents.push({
-          siteId: targetCycle.siteId,
-          materialId: reward.materialId,
-          amount: reward.amount,
-          overflow: overflow > 0 ? overflow : undefined,
-        })
-      }
+      this.grantCycleRewards(targetCycle, bag, registry)
 
       settled += 1
 
@@ -422,7 +400,175 @@ export class ProductionSystem {
       }
     }
 
+    // Huỷ backlog manual hết ngân sách (xem JSDoc).
+    for (const state of this.states.values()) {
+      const cycle = state.activeCycle
+
+      if (!cycle || cycle.completesAtMs > nowMs) {
+        continue
+      }
+
+      state.activeCycle = undefined
+
+      if (state.autoRestart) {
+        this.startCycle(state.siteId, currentRealmId, nowMs)
+      }
+    }
+
+    settled += this.settleWorkersOffline(
+      bag,
+      registry,
+      currentRealmId,
+      nowMs,
+      budgetRemainingMs,
+      Math.floor(options.workerCapacity ?? 0),
+      options.offlineSinceMs,
+    )
+
     return settled
+  }
+
+  /**
+   * Offline settle cho worker cycles (T3) — chia ngân sách còn lại sau
+   * manual settle. Mỗi site có slot worker chạy các chuỗi cycle song song
+   * nối tiếp nhau trong cửa sổ [offlineSinceMs, nowMs], mỗi cycle một
+   * seed riêng. Cycle dở dang vượt nowMs được giữ lại cho tickWorkers
+   * online; cycle hoàn thành mà hết ngân sách bị forfeit.
+   */
+  private settleWorkersOffline(
+    bag: MaterialBag,
+    registry: MaterialRegistry,
+    currentRealmId: string,
+    nowMs: number,
+    budgetRemainingMs: number,
+    workerCapacity: number,
+    offlineSinceMs?: number,
+  ): number {
+    if (workerCapacity <= 0 || budgetRemainingMs <= 0) {
+      return 0
+    }
+
+    // Phân bổ slot round-robin — đúng logic tickWorkers để offline khớp online.
+    const activeStates = [...this.states.values()].filter((state) => state.autoRestart)
+
+    if (activeStates.length === 0) {
+      return 0
+    }
+
+    const slotsBySite = new Map<string, number>()
+
+    for (const state of activeStates) {
+      slotsBySite.set(state.siteId, 0)
+    }
+
+    for (let index = 0; index < workerCapacity; index++) {
+      const state = activeStates[index % activeStates.length]!
+
+      slotsBySite.set(state.siteId, (slotsBySite.get(state.siteId) ?? 0) + 1)
+    }
+
+    let settled = 0
+
+    let budgetMs = budgetRemainingMs
+
+    for (const state of activeStates) {
+      const slots = slotsBySite.get(state.siteId) ?? 0
+
+      if (slots <= 0 || budgetMs <= 0) {
+        continue
+      }
+
+      const definition = this.getSiteDefinition(state.siteId)
+
+      const baseSeconds = CYCLE_BASE_SECONDS_BY_REALM[currentRealmId]
+
+      if (!definition || !baseSeconds) {
+        continue
+      }
+
+      const cycleMs = computeCycleSeconds(baseSeconds, state.level) * 1000
+
+      if (cycleMs <= 0) {
+        continue
+      }
+
+      state.workerCycles ??= []
+
+      // 1) Settle cycle dở dang từ save hoàn thành trước nowMs, trong ngân sách.
+      const kept: ProductionCycle[] = []
+
+      let lastCompleteMs = offlineSinceMs ?? nowMs
+
+      const pending = [...state.workerCycles].sort((a, b) => a.completesAtMs - b.completesAtMs)
+
+      for (const cycle of pending) {
+        if (cycle.completesAtMs > nowMs) {
+          kept.push(cycle)
+
+          continue
+        }
+
+        const durationMs = Math.max(0, cycle.completesAtMs - cycle.startedAtMs)
+
+        if (durationMs > budgetMs) {
+          continue
+        }
+
+        budgetMs -= durationMs
+
+        this.grantCycleRewards(cycle, bag, registry)
+
+        settled += 1
+
+        lastCompleteMs = Math.max(lastCompleteMs, cycle.completesAtMs)
+      }
+
+      state.workerCycles = kept
+
+      // 2) Chạy nối tiếp các cycle mới trong cửa sổ offline còn lại —
+      // `slots` chuỗi song song từ lastCompleteMs tới nowMs, tổng thời
+      // gian sản xuất bị chặn bởi ngân sách còn lại. Mỗi cycle một seed
+      // riêng (buildCycle).
+      const windowMs = Math.max(0, nowMs - lastCompleteMs)
+
+      const cyclesInWindow = Math.floor((windowMs * slots) / cycleMs)
+
+      const affordableCycles = Math.floor(budgetMs / cycleMs)
+
+      const newCycles = Math.max(0, Math.min(affordableCycles, cyclesInWindow))
+
+      for (let index = 0; index < newCycles; index++) {
+        const startMs = nowMs - (index + 1) * cycleMs
+
+        const cycle = buildCycle(state.siteId, currentRealmId, state.level, baseSeconds, startMs)
+
+        budgetMs -= cycleMs
+
+        this.grantCycleRewards(cycle, bag, registry)
+
+        settled += 1
+      }
+    }
+
+    return settled
+  }
+
+  /** Cộng reward của một cycle vào Bag + ghi settle event (dùng chung mọi đường settle). */
+  private grantCycleRewards(cycle: ProductionCycle, bag: MaterialBag, registry: MaterialRegistry): void {
+    for (const reward of this.rollRewards(cycle)) {
+      if (!registry.has(reward.materialId) || reward.amount <= 0) {
+        continue
+      }
+
+      const overflow = bag.add(registry.get(reward.materialId), reward.amount)
+
+      this.pendingEvents.push({
+        siteId: cycle.siteId,
+        materialId: reward.materialId,
+        amount: reward.amount,
+        overflow: overflow > 0 ? overflow : undefined,
+      })
+    }
   }
 
   // =========================

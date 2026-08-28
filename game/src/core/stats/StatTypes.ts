@@ -73,8 +73,8 @@ export type StatType =
   // (tích luỹ theo linh lực tu luyện, xem core/player/SwordIntentSystem.ts).
   | 'skillDamagePercent'
   // Hỏa Tu (Plans/FirePath, "Tật Hỏa" minor, 2026-08-21) — % cộng
-  // thêm vào MISSILE_SPEED cố định (xem
-  // core/combat/missile/MissileSystem.ts's fire()). Nền 0, không ảnh
+  // thêm vào tốc độ đạn bay (MissileSystem cũ đã xóa; combat hiện dùng
+  // ActionImpactSystem). Nền 0, không ảnh
   // hưởng path/hành nào chưa có nguồn cấp.
   // Hỏa Tu Trúc Cơ (Plans/FirePath mục 6/8, 2026-08-21) — cộng THẲNG
   // vào effect.ailmentChance lúc roll áp ailment (xem

@@ -40,10 +40,10 @@ const DOT_RESISTANCE_CAP = 0.75
 const DOT_RESISTANCE_FLOOR = -1
 
 /**
- * Toàn bộ combat giờ đi qua missile (xem MissileSystem/
- * BattleSystem.resolveMissiles()) — resolveActionHit() là điểm vào
+ * Toàn bộ combat giờ đi qua action impact (xem ActionImpactSystem/
+ * BattleSystem) — resolveActionHit() là điểm vào
  * DUY NHẤT tính damage thật (attack()/attackWithElements() cũ đã bị
- * xoá, không còn nơi nào gọi từ khi combat chuyển hẳn sang missile).
+ * xoá, không còn nơi nào gọi từ khi combat chuyển hẳn sang action impact).
  *
  * Pipeline đầy đủ (đúng thứ tự accuracy → dodge → block →
  * armor/resistance → endurance → ward → HP): mitigation Armor/
@@ -133,11 +133,11 @@ export class CombatSystem {
     // nào chưa có nguồn cấp.
     const afterWaterMitigation = afterEndurance * (1 - Math.min(WATER_MITIGATION_CAP, getSkillRuntimeStat(target, 'thuyThePercent')))
 
-    // Floor "tối thiểu 1" ở CUỐI pipeline (sau cả Block/Endurance/Thủy
-    // Thế) — trước đây floor áp giữa chừng (ngay sau attack-defense,
-    // trước cả crit/multiplier), giờ dời xuống đây để đòn bị giảm
-    // nhiều tầng vẫn luôn gây được ít nhất 1 sát thương.
-    const finalDamage = Math.max(1, afterWaterMitigation)
+    // Floor "tối thiểu 1" áp trong resolveAttack() SAU finalDamageMultiplier
+    // (finalDamagePercent/finalDamageReductionPercent) — đòn bị giảm nhiều
+    // tầng vẫn luôn gây được ít nhất 1 sát thương, kể cả khi affix giảm
+    // sát thương cuối cùng kéo về dưới 1.
+    const finalDamage = afterWaterMitigation
 
     const result: DamageResult = {
       sourceId: source.id,
@@ -240,7 +240,9 @@ export class CombatSystem {
     blocked: boolean,
   ) {
     const targetBefore = { hp: target.currentHp, ward: target.currentWard, mp: target.currentMp }
-    result.finalDamage = Math.max(0, result.finalDamage * this.finalDamageMultiplier(source, target))
+    // Floor "tối thiểu 1" áp SAU finalDamageMultiplier (xem resolveActionHit)
+    // — mọi đòn trúng đích luôn gây ít nhất 1 sát thương.
+    result.finalDamage = Math.max(1, result.finalDamage * this.finalDamageMultiplier(source, target))
 
     if (critical) {
       this.eventBus.emit('critical', {
@@ -444,6 +446,16 @@ export class CombatSystem {
       surviveSession.guard.tryConsumeUse()
     ) {
       entity.currentHp = 1
+
+      // Event vitals của đòn damage (emit TRƯỚC killIfDead) đã mang
+      // killed = true vì HP chạm 0 — phát thêm event hiệu chỉnh SAU khi
+      // guard giữ lượt sống sót để consumer (HUD/scene) đọc trạng thái
+      // CUỐI là còn sống, không kẹt ở hình ảnh "đã chết".
+      this.vitals.emitCurrent(entity, 'survive_lethal', 1, {
+        hp: 0,
+        ward: entity.currentWard,
+        mp: entity.currentMp,
+      }, killerId)
 
       this.eventBus.emit('talent_survive_lethal', {
         type: 'talent_survive_lethal',

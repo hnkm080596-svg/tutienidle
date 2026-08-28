@@ -14,7 +14,7 @@ import type { ActionDamageInfo } from '../battle/ActionImpactSystem'
 export interface SkillEffectContext {
   combatSystem: CombatSystem
 
-  // Combat Grid Rework (2026-08-24) — thay missileSystem.fire(): bắn MỘT
+  // Combat Grid Rework (2026-08-24) — bắn MỘT
   // hit impact TẠI target (windup đã trôi ở tầng cast). BattleSystem mở
   // batch quanh applyAll() để gom mọi hit thành đúng 1 action_impact.
   fireHit(target: CombatEntity, damage: ActionDamageInfo): { landed: boolean } | void
@@ -60,11 +60,10 @@ export interface SkillEffectContext {
     element: ElementType | 'physical'
   }) => void
 
-  // Kiếm Tu (2026-08-15) — id skill ĐANG cast, gắn vào Missile lúc
-  // bắn (xem MissileSystem.fire()'s tham số skillId) để lúc missile
-  // TRÚNG (BattleSystem's missile-resolve callback, deferred — không
-  // đồng bộ với apply() này) biết tra lại đúng skill nào vừa bắn ra
-  // nó, phục vụ Skill.grantsSwordIntentPerHit.
+  // Kiếm Tu (2026-08-15) — id skill ĐANG cast, gắn vào hit lúc
+  // bắn để lúc impact TRÚNG (BattleSystem's impact-resolve callback,
+  // deferred — không đồng bộ với apply() này) biết tra lại đúng skill
+  // nào vừa bắn ra nó, phục vụ Skill.grantsSwordIntentPerHit.
   skillId?: string
 
   skillExperience?: number
@@ -85,6 +84,12 @@ export class SkillEffectSystem {
     ]
 
     for (const effect of orderedEffects) {
+      // Target đã chết vì effect trước đó (vd damage giết trước khi
+      // debuff/ailment kịp áp) — bỏ qua effect còn lại, không áp lên xác.
+      if (!target.alive) {
+        continue
+      }
+
       if (effect.type === 'ailment' && effects.some(candidate => candidate.type === 'damage') && !(ctx.didLandHit?.() ?? true)) {
         continue
       }
@@ -97,10 +102,16 @@ export class SkillEffectSystem {
     switch (effect.type) {
       case 'damage': {
         // Attribute scaling/Adaptive — cộng thêm % vào multiplier gốc
-        // của skill tại thời điểm cast, không đụng Missile/DamageCalculator.
+        // của skill tại thời điểm cast, không đụng ActionImpactSystem/DamageCalculator.
+        // Guard attributes rỗng — Math.max() trên mảng rỗng = -Infinity,
+        // kéo toàn bộ multiplier về -Infinity.
         const scalingBonus =
           (effect.attributeScaling ?? []).reduce(
-            (sum, entry) => sum + entry.ratioPerPoint * Math.max(...entry.attributes.map(stat => source.stats[stat])),
+            (sum, entry) =>
+              sum +
+              (entry.attributes.length === 0
+                ? 0
+                : entry.ratioPerPoint * Math.max(...entry.attributes.map(stat => source.stats[stat]))),
             0,
           ) +
           (effect.swordIntentDamageRatio ? effect.swordIntentDamageRatio * source.currentSwordIntent : 0) +
@@ -127,6 +138,12 @@ export class SkillEffectSystem {
         // đây chỉ việc fire N hit tại target; vùng quét do ActionTargetingSystem lo.
 
         for (let hitIndex = 0; hitIndex < hitCount; hitIndex++) {
+          // Target đã chết vì hit trước — dừng loạt hit còn lại, không
+          // tiếp tục bắn vào xác.
+          if (!target.alive) {
+            break
+          }
+
           if (effect.components) {
             ctx.fireHit(target, { kind: 'elemental', components: effect.components, multiplier: finalMultiplier })
           } else {
@@ -137,11 +154,11 @@ export class SkillEffectSystem {
         // Pháp Tu Detonate — "cash in" stack ailment hiện có của target
         // cho 1 cục true damage RIÊNG (bỏ qua Armor/Resistance, cùng
         // tinh thần primordialPower), rồi xoá hẳn ailment đó. Tách
-        // khỏi missile ở trên (đi thẳng currentHp, không qua mitigation/
+        // khỏi damage impact ở trên (đi thẳng currentHp, không qua mitigation/
         // ward/leech/thorns) vì đây là "cash-in" 1 hiệu ứng ĐÃ mitigate
         // sẵn lúc apply ban đầu (xem AilmentSystem.apply()'s snapshot),
         // mitigate thêm lần nữa ở đây là tính trùng.
-        if (effect.consumesAilmentId && effect.damagePerStack) {
+        if (target.alive && effect.consumesAilmentId && effect.damagePerStack) {
           const stacks = ctx.targetAilments.getStacks(effect.consumesAilmentId)
 
           if (stacks > 0) {
@@ -165,7 +182,7 @@ export class SkillEffectSystem {
         // SOURCE (không phải target — khiên của người CAST, không
         // phải của kẻ địch) cho 1 cục true damage bonus lên target,
         // cùng tinh thần Detonate nhưng tiêu thụ Ward thay vì Ailment.
-        if (effect.consumesWardForDamage && effect.damagePerWardPoint && source.currentWard > 0) {
+        if (target.alive && effect.consumesWardForDamage && effect.damagePerWardPoint && source.currentWard > 0) {
           const wardBonusDamage = source.currentWard * effect.damagePerWardPoint
 
           source.currentWard = 0

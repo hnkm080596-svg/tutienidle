@@ -1,5 +1,7 @@
 # Kế hoạch Validate Shape Save
 
+> ✅ **HOÀN THÀNH 2026-08-28** — `saveShapeValidation.ts` + `saveVersion.ts` đã implement, `SaveRoundTrip.test.ts` + `saveShapeValidation.test.ts` xanh. Đợt review 2026-08-28 bổ sung validate shape `equipment` (slot/equipped/mainStat/affixes/forgePoints) và `equipmentSlots` (slot/enhanceLevel) để chặn crash boot/NaN tại `refreshModifiers`. Giữ file làm tham chiếu quy ước thêm field bắt buộc.
+
 > Thuộc Phase 0 của [roadmap.md](./roadmap.md). Plan này không thay đổi chính sách "không migration" của development phase — chỉ thêm lớp phát hiện save hỏng/thiếu field để không bao giờ crash boot âm thầm.
 
 ## 1. Mục tiêu

@@ -9,6 +9,7 @@ import type { CraftModifiers } from './BuildingLevelEffect'
 import { isTestModeUnlockAll } from '../dev/DevMode'
 import { getRealmTier } from '../realm/RealmTierMap'
 import { getSpiritStoneMaterialIdForRealmTier } from '../material/SpiritStoneMaterial'
+import { PRODUCTION_OFFLINE_CAP_SECONDS } from '../production/ProductionBalance'
 
 // Lý do từ chối xây — UI (popover/toast) dùng để báo người chơi thay vì
 // im lặng (fix "không thể xây dựng" không rõ nguyên nhân, 2026-08-26).
@@ -28,11 +29,10 @@ const DEFAULT_CRAFT_MODIFIERS: CraftModifiers = {
   equipmentCostDiscountPercent: 0,
 }
 
-// Trần offline production (MASTER SPEC Mục VII — "8-12 giờ là điểm
-// khởi đầu hợp lý") — áp dụng cho CẢ lúc online lẫn offline, chỉ khác
-// ở việc elapsed lúc offline có thể rất lớn (chặn ở đây để không tích
-// vô hạn nếu người chơi bỏ máy nhiều ngày).
-const OFFLINE_PRODUCTION_CAP_SECONDS = 10 * 60 * 60
+// Trần offline production — dùng CHUNG một hằng số với production
+// (PRODUCTION_OFFLINE_CAP_SECONDS, ProductionBalance.ts) để Linh Tuyền và
+// slot sản xuất không bao giờ lệch cap (review 2026-08-28,
+// economy-ecosystem-plan T8: trước đây khai báo trùng 2 nơi).
 
 // Rate/Capacity tăng tuyến tính theo level — +20%/level.
 const LEVEL_BONUS_PER_LEVEL = 0.2
@@ -273,7 +273,7 @@ export class BuildingSystem {
       // giờ cap TRƯỚC cap thời gian (2026-08-28 — thay 100^level cũ khiến
       // L1 chỉ chứa 100 thạch, đầy sau ~47 phút). Epsilon chặn float drift
       // (rate×36000 = 18600.000000000004 không bị ceil lên 18601).
-      const tenHourYield = this.getSpiritSpringRatePerSecond(template, level, realmId) * OFFLINE_PRODUCTION_CAP_SECONDS
+      const tenHourYield = this.getSpiritSpringRatePerSecond(template, level, realmId) * PRODUCTION_OFFLINE_CAP_SECONDS
       return Math.ceil(tenHourYield - 1e-6)
     }
 
@@ -295,7 +295,7 @@ export class BuildingSystem {
     if (template.producesMaterialId && template.baseProductionRate) {
       const elapsedSeconds = Math.min(
         currentTime - instance.lastCollectedAt,
-        OFFLINE_PRODUCTION_CAP_SECONDS,
+        PRODUCTION_OFFLINE_CAP_SECONDS,
       )
 
       if (elapsedSeconds <= 0) {
@@ -322,12 +322,29 @@ export class BuildingSystem {
   }
 
   /**
+   * Resolve materialId mà claim() sẽ trả — spirit_spring cấp Linh Thạch
+   * đúng PHẨM theo realm thu thập, building khác dùng template. Tách riêng
+   * để caller (GameManager.collectBuilding) pre-check registry TRƯỚC khi
+   * claim reset mốc thời gian — tránh mất sản lượng nếu id không resolve
+   * được (review 2026-08-28).
+   */
+  resolveProducesMaterialId(template: Building, currentRealmId?: string): string | undefined {
+    return template.id === 'spirit_spring' && currentRealmId
+      ? getSpiritStoneMaterialIdForRealmTier(getRealmTier(currentRealmId))
+      : template.producesMaterialId
+  }
+
+  /**
    * Thu hoạch — resource building (Linh Tuyền): cộng phần nguyên (floor)
    * sản lượng đã tích luỹ vào MaterialBag qua GameManager (claim chỉ
    * trả amount + materialId, không cầm bag/registry material — plan
-   * Workstream F: Linh Thạch là MATERIAL thật trong MaterialBag) rồi
-   * reset mốc thời gian về currentTime (phần thời gian vượt sức chứa
-   * coi như mất, đúng "Production Paused khi đầy").
+   * Workstream F: Linh Thạch là MATERIAL thật trong MaterialBag).
+   *
+   * Giữ PHẦN LẺ (review 2026-08-28): thay vì reset mốc về currentTime
+   * (mất tới ~0.99 đơn vị mỗi lần claim), mốc được LÙI về quá khứ đúng
+   * bằng thời gian đã sản xuất phần lẻ còn lại — lần claim kế tiếp sẽ
+   * cộng dồn tiếp phần đó. Phần thời gian vượt sức chứa vẫn coi như mất
+   * (đúng "Production Paused khi đầy").
    */
   claim(
     instanceId: string,
@@ -348,17 +365,24 @@ export class BuildingSystem {
       return { amount: 0 }
     }
 
-    const amount = Math.floor(this.getStoredAmount(instance, template, currentTime, currentRealmId))
+    const stored = this.getStoredAmount(instance, template, currentTime, currentRealmId)
+
+    const amount = Math.floor(stored)
 
     if (amount <= 0) {
       return { amount: 0 }
     }
 
-    instance.lastCollectedAt = currentTime
+    // Giữ phần lẻ: lùi mốc về quá khứ đúng bằng thời gian sản xuất phần
+    // lẻ (stored - amount), thay vì reset về currentTime làm mất phần đó.
+    const rate = this.getEffectiveRate(template, instance.level, currentRealmId)
 
-    const materialId = template.id === 'spirit_spring' && currentRealmId
-      ? getSpiritStoneMaterialIdForRealmTier(getRealmTier(currentRealmId))
-      : template.producesMaterialId
+    const fraction = stored - amount
+
+    instance.lastCollectedAt =
+      rate > 0 ? currentTime - fraction / rate : currentTime
+
+    const materialId = this.resolveProducesMaterialId(template, currentRealmId)
 
     return { amount, materialId }
   }

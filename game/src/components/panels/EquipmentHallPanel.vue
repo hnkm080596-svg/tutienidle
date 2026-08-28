@@ -3,7 +3,6 @@ import { computed, ref } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useEquipmentActions } from '@/composables/useEquipmentActions'
-import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 import {
   equipmentEssenceMaterialId,
 } from '@/core/equipment/RefinementBalance'
@@ -18,6 +17,9 @@ import { EQUIPMENT_SLOTS } from '@/core/equipment/EquipmentSlotState'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
 import { equipmentQualityRank, itemGradeRank } from '@/composables/slots/normalizeSlotRank'
+import GamePanel from '@/components/common/GamePanel.vue'
+import GameButton from '@/components/common/GameButton.vue'
+import TabBar from '@/components/common/TabBar.vue'
 
 // Khí Đường (2026-08-25, resource-professions-rework plan §7/§9.2) —
 // bốn tab ĐÚNG contract: Cường Hóa (slot), Tẩy Luyện (identity substat
@@ -287,7 +289,7 @@ function doEnhance(row: EnhanceSlotRow) {
 const washCost = computed(() => {
   stateVersion.value
 
-  return gameManager.getWashCost()
+  return gameManager.getWashCost(selectedRow.value?.realmId)
 })
 
 function canWash(): boolean {
@@ -369,14 +371,32 @@ function toggleLock(index: number) {
 const refineCost = computed(() => {
   stateVersion.value
 
-  return gameManager.getRefineCost(selectedAffixes.value.length, lockedIndices.value.length)
+  return gameManager.getRefineCost(
+    selectedAffixes.value.length,
+    lockedIndices.value.length,
+    selectedRow.value?.realmId,
+  )
 })
 
-// Plan Workstream F — số dư Linh Thạch đọc từ MaterialBag.
+// Plan Workstream F — số dư Linh Thạch đọc từ MaterialBag. T2 (review
+// 2026-08-28): phẩm Linh Thạch cần cho Tẩy/Tinh Luyện resolve theo realm
+// trang bị đang chọn — số dư hiển thị đúng phẩm đó.
+const spiritStoneCostMaterialId = computed(() => {
+  stateVersion.value
+
+  return washCost.value.spiritStoneMaterialId
+})
+
+const spiritStoneCostName = computed(() => {
+  const id = spiritStoneCostMaterialId.value
+
+  return gameManager.materialRegistry.has(id) ? gameManager.materialRegistry.get(id).name : 'Linh Thạch'
+})
+
 const spiritStoneOwned = computed(() => {
   stateVersion.value
 
-  return gameManager.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)
+  return gameManager.materialBag.getAmount(spiritStoneCostMaterialId.value)
 })
 
 const refineEssenceOwned = computed(() => {
@@ -386,7 +406,9 @@ const refineEssenceOwned = computed(() => {
     return 0
   }
 
-  return gameManager.materialBag.getAmount(equipmentEssenceMaterialId(selectedRow.value.realmId))
+  const essenceId = equipmentEssenceMaterialId(selectedRow.value.realmId)
+
+  return essenceId ? gameManager.materialBag.getAmount(essenceId) : 0
 })
 
 function canRefine(): boolean {
@@ -533,7 +555,7 @@ function doDissolve() {
 </script>
 
 <template>
-  <div class="qi-hall">
+  <GamePanel class="qi-hall" variant="ornate" padding="none">
     <div class="qi-hall__forge-scene" aria-hidden="true">
       <img :src="'/assets/buildings/dong-fu/equipment_hall.png'" alt="" />
       <div class="qi-hall__forge-fire" />
@@ -556,17 +578,12 @@ function doDissolve() {
       <span v-else>Chọn một trang bị để xem Tình trạng rèn của nó</span>
     </header>
 
-    <nav class="qi-hall__tabs">
-      <button
-        v-for="tab in TABS"
-        :key="tab.id"
-        type="button"
-        :class="{ 'is-active': activeTab === tab.id }"
-        @click="switchTab(tab.id)"
-      >
-        {{ tab.label }}
-      </button>
-    </nav>
+    <TabBar
+      class="qi-hall__tabs"
+      :tabs="TABS.map((tab) => ({ id: tab.id, label: tab.label }))"
+      :model-value="activeTab"
+      @update:model-value="switchTab($event as TabId)"
+    />
 
     <!-- ===== CƯỜNG HÓA (slot-level, §7.1) ===== -->
     <section v-if="activeTab === 'enhance'" class="qi-hall__body">
@@ -611,14 +628,14 @@ function doDissolve() {
           </li>
         </ul>
 
-        <button
+        <GameButton
           v-if="selectedEnhanceRow.enhanceLevel < selectedEnhanceRow.maxLevel"
-          type="button"
-          :class="{ 'is-unmet': !canEnhance(selectedEnhanceRow) }"
+          size="sm"
+          :disabled="!canEnhance(selectedEnhanceRow)"
           @click="doEnhance(selectedEnhanceRow)"
         >
           Cường Hóa
-        </button>
+        </GameButton>
       </article>
     </section>
 
@@ -656,17 +673,12 @@ function doDissolve() {
 
         <p class="qi-hall__costline">
           Chi phí: {{ washCost.refinementPoints }} Điểm Rèn (tình trạng rèn còn
-          {{ itemRenState?.points ?? 0 }}) · {{ washCost.spiritStone }} Linh Thạch
+          {{ itemRenState?.points ?? 0 }}) · {{ washCost.spiritStone }} {{ spiritStoneCostName }}
         </p>
 
-        <button
-          type="button"
-          class="qi-hall__action"
-          :class="{ 'is-unmet': !canWash() }"
-          @click="doWash()"
-        >
+        <GameButton size="sm" :disabled="!canWash()" @click="doWash()">
           Tẩy Luyện — roll lại toàn bộ dòng phụ
-        </button>
+        </GameButton>
       </template>
     </section>
 
@@ -713,18 +725,13 @@ function doDissolve() {
         <p class="qi-hall__costline">
           Giá trị từng dòng không khóa roll trong ±20%. Cost hệ số N+L =
           {{ refineCost.essenceUnits }} Tinh Hoa · {{ refineCost.spiritStone }}
-          Linh Thạch · {{ refineCost.refinementPoints }} Điểm Rèn (tình trạng rèn còn
+          {{ spiritStoneCostName }} · {{ refineCost.refinementPoints }} Điểm Rèn (tình trạng rèn còn
           {{ itemRenState?.points ?? 0 }} · Tinh Hoa đang có {{ refineEssenceOwned }}).
         </p>
 
-        <button
-          type="button"
-          class="qi-hall__action"
-          :class="{ 'is-unmet': !canRefine() }"
-          @click="doRefine()"
-        >
+        <GameButton size="sm" :disabled="!canRefine()" @click="doRefine()">
           Tinh Luyện
-        </button>
+        </GameButton>
       </template>
     </section>
 
@@ -800,12 +807,12 @@ function doDissolve() {
 
         <p class="qi-hall__warning">Thao tác KHÔNG thể hoàn tác.</p>
 
-        <button type="button" class="qi-hall__action qi-hall__action--danger" @click="doDissolve">
+        <GameButton size="sm" variant="danger" :disabled="dissolveSelected.size === 0" @click="doDissolve">
           {{ dissolveConfirming ? 'XÁC NHẬN HÓA LUYỆN' : 'Hóa Luyện' }}
-        </button>
+        </GameButton>
       </div>
     </section>
-  </div>
+  </GamePanel>
 </template>
 
 <style scoped>
@@ -888,23 +895,6 @@ function doDissolve() {
   padding: 8px 12px;
   border-bottom: 1px solid rgba(207, 133, 72, .2);
   background: rgba(21, 18, 17, .88);
-}
-
-.qi-hall__tabs button {
-  padding: 6px 4px;
-  background: var(--ink-800);
-  color: var(--text-secondary);
-  border: 1px solid var(--ink-line-soft);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-}
-
-.qi-hall__tabs button.is-active {
-  border-color: #e28c48;
-  color: #f0b767;
-  text-shadow: 0 0 12px rgba(255, 120, 48, .32);
 }
 
 .qi-hall__body {
@@ -991,30 +981,6 @@ function doDissolve() {
   margin: 0;
   font-size: var(--text-xs);
   color: var(--text-secondary);
-}
-
-.qi-hall__action {
-  align-self: flex-start;
-  padding: 8px 14px;
-  background: var(--gold-500);
-  color: var(--gold-ink);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-weight: 700;
-  cursor: pointer;
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-}
-
-.qi-hall__action.is-unmet,
-.enhance-row button.is-unmet {
-  background: var(--ink-700);
-  color: var(--text-muted);
-}
-
-.qi-hall__action--danger {
-  background: var(--danger, #e05d5d);
-  color: #fff;
 }
 
 .dissolve-filters {

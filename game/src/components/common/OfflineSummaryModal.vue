@@ -6,6 +6,8 @@
 // XIV có "+ Tài nguyên/+ Progress" nhưng đó là ví dụ minh hoạ, không
 // phải data thật đang có).
 import { formatNumber } from '@/core/format/NumberFormatter'
+import GamePanel from './GamePanel.vue'
+import GameButton from './GameButton.vue'
 
 const props = defineProps<{
   elapsedSeconds: number
@@ -29,7 +31,7 @@ function formatDuration(seconds: number): string {
 
 <template>
   <div class="offline-summary">
-    <div class="offline-summary__panel">
+    <GamePanel class="offline-summary__panel" variant="ornate" padding="sm">
       <h3 class="offline-summary__title">BẾ QUAN KẾT THÚC</h3>
 
       <div class="offline-summary__row">
@@ -37,13 +39,19 @@ function formatDuration(seconds: number): string {
         <span class="offline-summary__value">{{ formatDuration(props.elapsedSeconds) }}</span>
       </div>
 
+      <!-- Chỉ Thời gian + Tu vi — core/idle/OfflineProgressSystem.ts
+           CHỈ tính cultivationPerSecond * elapsedSeconds, không có
+           nguồn thu offline nào khác trong game logic hiện tại. Mở
+           rộng OfflineSummaryData (stores/offlineSummary.ts) + thêm
+           row tương ứng nếu sau này OfflineProgressSystem có nguồn
+           thu mới. -->
       <div class="offline-summary__row">
         <span class="offline-summary__label">+ Linh lực</span>
         <span class="offline-summary__value offline-summary__value--gain">{{ formatNumber(Math.floor(props.cultivation)) }}</span>
       </div>
 
-      <button type="button" class="offline-summary__continue" @click="emit('close')">Tiếp Tục</button>
-    </div>
+      <GameButton class="offline-summary__continue" @click="emit('close')">Tiếp Tục</GameButton>
+    </GamePanel>
   </div>
 </template>
 
@@ -58,15 +66,12 @@ function formatDuration(seconds: number): string {
   background: rgba(10, 10, 13, 0.72);
 }
 
-.offline-summary__panel {
-  background: var(--ink-900);
-  border: 1px solid var(--gold-500);
-  box-shadow: var(--shadow-panel);
-  border-radius: var(--radius-md);
-  padding: 24px 32px;
+/* Selector lặp class để thắng specificity của GamePanel.vue's
+   `.game-panel { height: 100% }` — modal card này phải co theo nội
+   dung, không được kéo full-height của backdrop. */
+.offline-summary__panel.offline-summary__panel {
+  height: auto;
   min-width: 320px;
-  display: flex;
-  flex-direction: column;
   gap: 10px;
 }
 
@@ -99,12 +104,5 @@ function formatDuration(seconds: number): string {
 
 .offline-summary__continue {
   margin-top: 10px;
-  padding: 8px;
-  background: var(--gold-500);
-  color: var(--gold-ink);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-weight: 700;
-  cursor: pointer;
 }
 </style>

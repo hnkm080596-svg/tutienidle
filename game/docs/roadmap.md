@@ -18,9 +18,9 @@
 1. **Tường nội dung Trúc Cơ**: hết nội dung thật ở Trúc Cơ tầng 18 (~34 giờ chơi); stage Trúc Cơ là bản clone của Luyện Khí (`data/stage/Stages.ts:357`); không có Kim Đan (`GameManager.ts:1439` trả `false` cứng).
 2. **Thiên phú trang trí** *(đã giải quyết 2026-08-28 — [talent-direction-choice-plan.md](./talent-direction-choice-plan.md))*: cũ — 11/13 thiên phú có `effects: []` rỗng; nay thiên phú là quyết định chọn hướng Đạo duy nhất (roll 9 chọn 1, 12 talent có effect thật).
 3. **Thiếu âm thanh hoàn toàn**: 0 file audio trong project; 1.137 spritesheet VFX không được tham chiếu.
-4. **Bug và drop chết trong kinh tế** *(phần lớn đã giải quyết 2026-08-28 — economy-ecosystem T1–T6+T8 xong; còn T7 Chọn Thảo, T9 docs-sync)*: mapping Tinh Hoa sai cho realm 4+ (`RefinementBalance.ts:74-81`); vật liệu legacy vẫn rơi nhưng không còn sink.
+4. **Bug và drop chết trong kinh tế** *(đã giải quyết 2026-08-28 — economy-ecosystem hoàn thành: T1–T6+T8+T9, T7 bỏ vì linh thảo giữ hoàn toàn random)*: mapping Tinh Hoa sai cho realm 4+ (`RefinementBalance.ts:74-81`); vật liệu legacy vẫn rơi nhưng không còn sink.
 5. **Save không validate shape** *(đã giải quyết 2026-08-28 — save-shape-validation Wave 1 + bổ sung equipment/slot shape khi review)*: chỉ kiểm tra version, tiền lệ crash boot v47 có thể tái diễn.
-6. **Tài liệu lệch code**: `game-guide.md` và `item-design-reference.md` mô tả hệ thống đã xóa.
+6. **Tài liệu lệch code** *(đã giải quyết 2026-08-28 — docs-sync viết lại game-guide.md + item-design-reference.md, dọn comment MissileSystem, xóa `Plans .md`)*: `game-guide.md` và `item-design-reference.md` mô tả hệ thống đã xóa.
 7. **Nợ kỹ thuật**: `GameManager.ts` 2.703 dòng; nhiều hệ thống core 0 test; 1 spec E2E; không có lint.
 
 ## 2. Nguyên tắc ưu tiên
@@ -31,18 +31,30 @@
 - **Tài liệu cập nhật cùng code** — không dồn nợ tài liệu.
 - Dự án đang trong development phase: không cần migration save (theo AGENTS.md).
 
+## 2.5. Kết quả thực thi 2026-08-28 (đợt sửa bug + review)
+
+Chi tiết từng bug/file:line trong [project-review-2026-08-28.md](./project-review-2026-08-28.md). Tóm tắt theo wave:
+
+- **Wave 1 — Integrity** ✅: save shape-validation (review bổ sung shape equipment/slot chặn crash boot + NaN), dedupe dissolve/restore, NaN guard MaterialBag.
+- **Wave 2 — Economy** ✅: enforce cap 10h online+offline, persist+settle worker, hook quest collect, Đan Phòng 9 level, claim Linh Tuyền giữ phần lẻ, T1 essence đủ 9 realm, T2 phẩm Linh Thạch + quy đổi 100:1.
+- **Wave 3 — Combat** ✅: dọn cost skill `resourceType:'none'`, hit-chance NaN guard, damage floor cuối pipeline, killed event sau SurviveLethalGuard, vitals events, guard loop lava/tribulation, kháng conversion, latent fixes.
+- **Wave 4 — Nốt Phase 0** ✅: T6 drop chết + material mồ côi ✅ (migrate drop sang `qi_refining_ore_hoang`, xóa 11 material legacy, drop-sink invariant test); HUD `out_of_range` ✅; T9 docs-sync ✅ (viết lại game-guide/item-design-reference, xóa `Plans .md`); T7 Chọn Thảo ⛔ bỏ (linh thảo hoàn toàn random).
+- **Ngoài plan (mới)** ✅: quy đổi cảnh giới linh mộc/linh khoáng 10:1 (`MaterialTierConversionBalance` + `GameManager.convertMaterialTier` + UI `ProductionPanel`).
+- **Review fixes 2026-08-28** ✅: false-negative save shape (equipment/slot), `craftBreakthroughToken` all-or-nothing, PillBag NaN guard, `convertAilment` dedupe.
+- **Wave 5 — Tech debt** ❌: eslint, phủ test hệ thống 0 test, E2E spec, GameManager extraction.
+
 ## 3. Các phase
 
 ### Phase 0 — Sửa lỗi & Ổn định nền tảng
 
 Mục tiêu: loại bug hiện hữu và nợ tài liệu trước khi xây tiếp.
 
-| Hạng mục | Plan |
-|---|---|
-| Validate shape save khi load/import (chặn crash kiểu v47) | [save-shape-validation-plan.md](./save-shape-validation-plan.md) |
-| Audit & sửa hệ sinh thái kinh tế: Tinh Hoa realm 4+, phẩm Linh Thạch, worker offline, Đan Phòng 6–9, drop chết, Chọn Thảo, curve Linh Tuyền | [economy-ecosystem-plan.md](./economy-ecosystem-plan.md) (gộp Phần A của economy-fixes-sinks-plan) |
-| Đồng bộ `game-guide.md`, `item-design-reference.md` với code | [docs-sync-audit-plan.md](./docs-sync-audit-plan.md) |
-| Sửa HUD `out_of_range` đọc sai strategy (nằm trong combat pass) | [combat-balance-pass-plan.md](./combat-balance-pass-plan.md) |
+| Hạng mục | Plan | Trạng thái |
+|---|---|---|
+| Validate shape save khi load/import (chặn crash kiểu v47) | [save-shape-validation-plan.md](./save-shape-validation-plan.md) | ✅ Xong 2026-08-28 (Wave 1; review bổ sung shape equipment/slot) |
+| Audit & sửa hệ sinh thái kinh tế: Tinh Hoa realm 4+, phẩm Linh Thạch, worker offline, Đan Phòng 6–9, drop chết, Chọn Thảo, curve Linh Tuyền | [economy-ecosystem-plan.md](./economy-ecosystem-plan.md) (gộp Phần A của economy-fixes-sinks-plan) | ✅ Xong — T1–T6+T8+T9; T7 Chọn Thảo ⛔ bỏ (linh thảo hoàn toàn random) |
+| Đồng bộ `game-guide.md`, `item-design-reference.md` với code | [docs-sync-audit-plan.md](./docs-sync-audit-plan.md) | ✅ Xong 2026-08-28 (Wave 4; đã xóa `Plans .md`) |
+| Sửa HUD `out_of_range` đọc sai strategy (nằm trong combat pass) | [combat-balance-pass-plan.md](./combat-balance-pass-plan.md) | ✅ Xong 2026-08-28 (Wave 4) |
 
 Tiêu chí hoàn thành: không còn bug kinh tế đã biết; save hỏng được phát hiện có chủ đích thay vì crash; tài liệu khớp code.
 
@@ -50,11 +62,11 @@ Tiêu chí hoàn thành: không còn bug kinh tế đã biết; save hỏng đư
 
 Mục tiêu: phá tường nội dung Trúc Cơ và biến thiên phú thành quyết định build thật.
 
-| Hạng mục | Plan |
-|---|---|
-| Thiên phú chọn hướng Đạo (roll 9 chọn 1) + easter egg Phàm Cốt | [talent-direction-choice-plan.md](./talent-direction-choice-plan.md) |
-| Nội dung Trúc Cơ thật + pass Kim Đan tối thiểu | [truc-co-kim-dan-content-plan.md](./truc-co-kim-dan-content-plan.md) |
-| Bật mana cost, reaction scale theo Power, đa dạng nhịp skill | [combat-balance-pass-plan.md](./combat-balance-pass-plan.md) |
+| Hạng mục | Plan | Trạng thái |
+|---|---|---|
+| Thiên phú chọn hướng Đạo (roll 9 chọn 1) + easter egg Phàm Cốt | [talent-direction-choice-plan.md](./talent-direction-choice-plan.md) | ✅ Xong |
+| Nội dung Trúc Cơ thật + pass Kim Đan tối thiểu | [truc-co-kim-dan-content-plan.md](./truc-co-kim-dan-content-plan.md) | ❌ Chưa làm |
+| Bật mana cost, reaction scale theo Power, đa dạng nhịp skill | [combat-balance-pass-plan.md](./combat-balance-pass-plan.md) | 🟡 1/8 — xong HUD `out_of_range`; còn mana/reaction/nhịp/fizzle/boss/playtest |
 
 Tiêu chí hoàn thành: người chơi có mục tiêu theo đuổi tới Kim Đan; thiên phú đã chọn tạo khác biệt đo được; combat có quyết định tài nguyên.
 
@@ -62,10 +74,10 @@ Tiêu chí hoàn thành: người chơi có mục tiêu theo đuổi tới Kim �
 
 Mục tiêu: game "có hồn" và dễ khám phá hơn.
 
-| Hạng mục | Plan |
-|---|---|
-| Âm thanh tối thiểu + hit-stop + mở rộng screen shake | [audio-game-feel-plan.md](./audio-game-feel-plan.md) |
-| Nameplate công trình, tách CombatScene, dọn placeholder/emoji | [ui-discoverability-refactor-plan.md](./ui-discoverability-refactor-plan.md) |
+| Hạng mục | Plan | Trạng thái |
+|---|---|---|
+| Âm thanh tối thiểu + hit-stop + mở rộng screen shake | [audio-game-feel-plan.md](./audio-game-feel-plan.md) | ❌ Chưa làm |
+| Nameplate công trình, tách CombatScene, dọn placeholder/emoji | [ui-discoverability-refactor-plan.md](./ui-discoverability-refactor-plan.md) | ❌ Chưa làm |
 
 Tiêu chí hoàn thành: có âm thanh cho các khoảnh khắc chính; hotspot công trình tự giải thích không cần tooltip; CombatScene không còn là god-class.
 
@@ -73,20 +85,19 @@ Tiêu chí hoàn thành: có âm thanh cho các khoảnh khắc chính; hotspot 
 
 Mục tiêu: mở rộng các trục progression đang bỏ hoang.
 
-| Hạng mục | Plan |
-|---|---|
-| Kiến Cơ 4 bậc, chiều sâu idle (Cảm Ngộ offline, nguồn tăng tốc tu luyện) | [progression-depth-plan.md](./progression-depth-plan.md) |
-| **Kiếm Tu rework**: Huy Kiếm (+1 flat dmg/10 cast vô trần, Lv 3 nấc), 2 đường Kiếm Trận (thang Lưỡng Nghi→Vô Cực theo 9 cảnh giới) / Bạt Kiếm ẩn (tụ lực 3–9s), Vạn Kiếm Triều Tông thành ultimate Trúc Cơ | [../superpowers/specs/2026-08-28-kiem-tu-design.md](./superpowers/specs/2026-08-28-kiem-tu-design.md) |
-| Sink Linh Thạch hậu kỳ, vendor, Điểm Rèn, filter túi đồ | [economy-fixes-sinks-plan.md](./economy-fixes-sinks-plan.md) (Phần B — Phần A đã gộp vào [economy-ecosystem-plan.md](./economy-ecosystem-plan.md)) |
+| Hạng mục | Plan | Trạng thái |
+|---|---|---|
+| Kiến Cơ 4 bậc, node tree Kiếm Tu, chiều sâu idle (Cảm Ngộ offline, nguồn tăng tốc tu luyện) | [progression-depth-plan.md](./progression-depth-plan.md) | ❌ Chưa làm |
+| Sink Linh Thạch hậu kỳ, vendor, Điểm Rèn, filter túi đồ | [economy-fixes-sinks-plan.md](./economy-fixes-sinks-plan.md) (Phần B — Phần A đã gộp vào [economy-ecosystem-plan.md](./economy-ecosystem-plan.md)) | ❌ Chưa làm |
 
 Tiêu chí hoàn thành: gate đột phá có chất lượng khác nhau; Kiếm Tu có chiều sâu build tương đương Pháp Tu; idle có đường nâng cấp.
 
 ### Phase 4 — Bền vững kỹ thuật (chạy song song, không chặn phase khác)
 
-| Hạng mục | Plan |
-|---|---|
-| Tách dần GameManager, phủ test hệ kinh tế, thêm E2E + lint | [tech-debt-test-coverage-plan.md](./tech-debt-test-coverage-plan.md) |
-| Cloud save / online (plan riêng đã có) | [online-login-cloud-save-plan.md](./online-login-cloud-save-plan.md) |
+| Hạng mục | Plan | Trạng thái |
+|---|---|---|
+| Tách dần GameManager, phủ test hệ kinh tế, thêm E2E + lint | [tech-debt-test-coverage-plan.md](./tech-debt-test-coverage-plan.md) | ❌ Chưa làm (Wave 5) |
+| Cloud save / online (plan riêng đã có) | [online-login-cloud-save-plan.md](./online-login-cloud-save-plan.md) | 🟡 Một phần — auth Supabase + migration SQL; chưa cloud-save adapter |
 
 Tiêu chí hoàn thành: không file nào quá ~1.000 dòng trong core/game; mọi hệ thống core có test; luồng boot → tạo nhân vật → combat có E2E.
 

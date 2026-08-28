@@ -4,6 +4,7 @@ import { EventBus } from '../events/EventBus'
 import { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from './CombatEntity'
+import type { EntityVitalsChangedEvent } from './EntityVitalsSystem'
 
 // Thiên phú Bất Tử Thể (talent-direction-choice-plan §6) — hook tại
 // CombatSystem.killIfDead(), điểm DUY NHẤT tuyên bố chết của mọi đường
@@ -137,5 +138,27 @@ describe('CombatSystem — Bất Tử Thể (survive_lethal)', () => {
     expect(player.currentHp).toBe(400)
     expect(player.alive).toBe(true)
     expect(session.guard.getRemainingUses()).toBe(1)
+  })
+
+  it('guard cứu sống — event vitals CUỐI cùng phải là killed=false (hiệu chỉnh sau guard)', () => {
+    const eventBus = new EventBus()
+    const combat = new CombatSystem(eventBus)
+
+    combat.setSurviveLethalSession(createSession(['bat_tu_the']))
+
+    const player = createCombatant({ id: 'player', type: 'player', currentHp: 10, maxHp: 1000 })
+
+    const vitalsEvents: EntityVitalsChangedEvent[] = []
+    eventBus.on<EntityVitalsChangedEvent>('entity_vitals_changed', (event) => vitalsEvents.push(event))
+
+    combat.applyDirectDamage(player, 9999, 'enemy_1')
+
+    // Event damage ban đầu mang killed=true (HP chạm 0), event hiệu chỉnh
+    // 'survive_lethal' phát SAU guard phải là trạng thái cuối: còn sống.
+    expect(vitalsEvents.length).toBeGreaterThanOrEqual(2)
+    expect(vitalsEvents[0]?.killed).toBe(true)
+
+    const last = vitalsEvents[vitalsEvents.length - 1]
+    expect(last).toMatchObject({ entityId: 'player', reason: 'survive_lethal', killed: false, hpAfter: 1 })
   })
 })

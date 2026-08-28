@@ -22,7 +22,12 @@ import {
 } from './EquipmentQuality'
 import { affixes } from '../../data/equipment/affixes'
 import { materials } from '../../data/materials/materials'
-import { SPIRIT_STONE_MATERIAL, SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
+import {
+  SPIRIT_STONE_MATERIAL,
+  SPIRIT_STONE_MATERIAL_ID,
+  SPIRIT_STONE_TRUNG_PHAM_MATERIAL,
+  SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID,
+} from '../material/SpiritStoneMaterial'
 import { ZoneRegistry } from '../stage/ZoneRegistry'
 import { isPercentStat } from '../stats/StatMetadata'
 import {
@@ -38,10 +43,10 @@ const TEMPLATE: Equipment = {
   grade: 1,
   maxEnhanceLevel: 10,
   mainStats: [{ stat: 'attack', min: 10, max: 20 }],
-  enhanceCost: [{ materialId: 'huyen_thiet', amount: 1 }],
+  enhanceCost: [{ materialId: 'qi_refining_ore_huyen', amount: 1 }],
 }
 
-const BLACK_IRON = materials.find((m) => m.id === 'huyen_thiet')!
+const ENHANCE_ORE = materials.find((m) => m.id === 'qi_refining_ore_huyen')!
 
 describe('equipment stat unit invariants', () => {
   it('roll affix thập phân không bị ép thành 1', () => {
@@ -77,7 +82,7 @@ function setup() {
     affixRegistry.register(affix)
   }
 
-  materialBag.add(BLACK_IRON, 100_000)
+  materialBag.add(ENHANCE_ORE, 100_000)
 
   // Plan Workstream F — Linh Thạch là MATERIAL: nạp sẵn số dư lớn.
   materialBag.add(SPIRIT_STONE_MATERIAL, 1_000_000)
@@ -442,7 +447,7 @@ describe('EquipmentSystem — Tinh Luyện (refineAffixValues, plan §7.4)', () 
   function refineSetup() {
     const ctx = setup()
 
-    const essenceId = equipmentEssenceMaterialId('qi_refining')
+    const essenceId = equipmentEssenceMaterialId('qi_refining')!
 
     const essence = materials.find((material) => material.id === essenceId)!
 
@@ -649,6 +654,24 @@ describe('EquipmentSystem — Hóa Luyện (dissolveInstances, plan §7.5)', () 
     expect(result2.rewards![0]!.amount).toBeLessThanOrEqual(7)
   })
 
+  it('item realm cao (Kim Đan) trả đúng essence tier 4 — tinh_hoa_phap_khi (T1)', () => {
+    const ctx = setup()
+
+    const item = manualInstance({
+      instanceId: 'golden-1',
+      rarity: 'huyen',
+      realmId: 'golden_core',
+    })
+
+    ctx.bag.add(item)
+
+    const result = ctx.system.dissolveInstances([item.instanceId], ctx.bag, () => 0.5)
+
+    expect(result.ok).toBe(true)
+
+    expect(result.rewards![0]!.materialId).toBe('tinh_hoa_phap_khi')
+  })
+
   it('item đang trang bị / locked → từ chối toàn batch (all-or-nothing)', () => {
     const ctx = setup()
 
@@ -676,5 +699,140 @@ describe('EquipmentSystem — Hóa Luyện (dissolveInstances, plan §7.5)', () 
     ctx.bag.add(equipped)
 
     expect(ctx.system.dissolveInstances([equipped.instanceId], ctx.bag).reason).toBe('equipped')
+  })
+
+  it('selection TRÙNG id chỉ tính reward 1 lần (chặn nhân bản Tinh Hoa)', () => {
+    const ctx = setup()
+
+    const item = manualInstance({ instanceId: 'dup-1', rarity: 'hoang', realmId: 'mortal' })
+
+    ctx.bag.add(item)
+
+    const result = ctx.system.dissolveInstances(['dup-1', 'dup-1', 'dup-1'], ctx.bag)
+
+    expect(result.ok).toBe(true)
+
+    // Chỉ 1 reward duy nhất dù id lặp 3 lần.
+    expect(result.rewards).toHaveLength(1)
+
+    // Item bị xoá đúng 1 lần.
+    expect(ctx.bag.get('dup-1')).toBeUndefined()
+  })
+})
+
+describe('EquipmentBag — dedupe instanceId (review 2026-08-28)', () => {
+  it('add trùng instanceId KHÔNG tạo bản sao thứ hai', () => {
+    const bag = new EquipmentBag()
+
+    const instance = manualInstance({ instanceId: 'dedupe-1' })
+
+    bag.add(instance)
+    bag.add({ ...instance })
+
+    expect(bag.getAll()).toHaveLength(1)
+    expect(bag.getEquipped().length).toBeLessThanOrEqual(1)
+  })
+})
+
+describe('EquipmentSystem — phẩm Linh Thạch theo realm (T2, review 2026-08-28)', () => {
+  it('getWashCost/getRefineCost resolve phẩm theo realm trang bị', () => {
+    const { system } = setup()
+
+    // Realm 1-3 → Hạ Phẩm.
+    expect(system.getWashCost('mortal').spiritStoneMaterialId).toBe(SPIRIT_STONE_MATERIAL_ID)
+    expect(system.getWashCost('foundation_establishment').spiritStoneMaterialId).toBe(
+      SPIRIT_STONE_MATERIAL_ID,
+    )
+
+    // Realm 4-6 → Trung Phẩm.
+    expect(system.getWashCost('golden_core').spiritStoneMaterialId).toBe(
+      SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID,
+    )
+    expect(system.getRefineCost(2, 1, 'nascent_soul').spiritStoneMaterialId).toBe(
+      SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID,
+    )
+
+    // Không realmId → mặc định Hạ Phẩm (tương thích).
+    expect(system.getWashCost().spiritStoneMaterialId).toBe(SPIRIT_STONE_MATERIAL_ID)
+  })
+
+  it('Tinh Luyện trang bị Kim Đan trừ TRUNG PHẨM, không đụng Hạ Phẩm', () => {
+    const ctx = setup()
+
+    const essenceId = equipmentEssenceMaterialId('golden_core')!
+
+    const essence = materials.find((material) => material.id === essenceId)!
+
+    ctx.materialBag.add(essence, 50)
+
+    ctx.materialBag.add(SPIRIT_STONE_TRUNG_PHAM_MATERIAL, 1_000)
+
+    const instance = manualInstance({ realmId: 'golden_core' })
+
+    instance.affixes = [
+      { affixId: affixes[0]!.id, tier: 2, value: 20 },
+      { affixId: affixes[1]!.id, tier: 2, value: 20 },
+    ]
+
+    instance.forgePoints = 50
+
+    ctx.bag.add(instance)
+
+    const haPhamBefore = ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)
+
+    const result = ctx.system.refineAffixValues(
+      instance.instanceId,
+      [0],
+      ctx.bag,
+      ctx.registry,
+      ctx.materialBag,
+      ctx.slotManager,
+      ctx.affixRegistry,
+      () => 0.5,
+    )
+
+    expect(result.ok).toBe(true)
+
+    // Cost N+L = 3 đơn vị × 50 = 150 Trung Phẩm.
+    expect(ctx.materialBag.getAmount(SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID)).toBe(1_000 - 150)
+
+    // Hạ Phẩm nguyên vẹn.
+    expect(ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(haPhamBefore)
+  })
+
+  it('Tinh Luyện trang bị Kim Đan thiếu Trung Phẩm → từ chối dù dư Hạ Phẩm', () => {
+    const ctx = setup()
+
+    const essenceId = equipmentEssenceMaterialId('golden_core')!
+
+    const essence = materials.find((material) => material.id === essenceId)!
+
+    ctx.materialBag.add(essence, 50)
+
+    // Chỉ có Hạ Phẩm (setup() nạp 1_000_000), KHÔNG có Trung Phẩm.
+    const instance = manualInstance({ instanceId: 'gc-2', realmId: 'golden_core' })
+
+    instance.affixes = [
+      { affixId: affixes[0]!.id, tier: 2, value: 20 },
+      { affixId: affixes[1]!.id, tier: 2, value: 20 },
+    ]
+
+    instance.forgePoints = 50
+
+    ctx.bag.add(instance)
+
+    const result = ctx.system.refineAffixValues(
+      instance.instanceId,
+      [0],
+      ctx.bag,
+      ctx.registry,
+      ctx.materialBag,
+      ctx.slotManager,
+      ctx.affixRegistry,
+      () => 0.5,
+    )
+
+    expect(result.ok).toBe(false)
+    expect(result.reason).toBe('missing_spirit_stone')
   })
 })

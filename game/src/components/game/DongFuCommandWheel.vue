@@ -17,6 +17,7 @@ import {
 import { getCommandWheelOrbitDirection } from '@/game/support/commandWheelOrbit'
 import { getRealmIndex } from '@/core/realm/realmSystem'
 import { ARTIFACT_ID_BY_CULTIVATION_PATH } from '@/core/artifact/Artifact'
+import NotificationBadge from '@/components/common/NotificationBadge.vue'
 
 const ui = useUiStore()
 const player = usePlayerStore()
@@ -250,6 +251,15 @@ function isUpgradeable(slot: CommandWheelSlot): boolean {
   )
 }
 
+// Idle-conventions rework — badge "có việc mới" đầu tiên trong game
+// (trước đợt này KHÔNG có pattern unseen/new nào). Đột Phá sẵn sàng
+// (cultivationProgress >= 1, cùng điều kiện Character panel's "Có thể
+// đột phá" — xem CharacterPanel.vue) là tín hiệu rõ ràng nhất hiện có
+// để gắn lên slot Nhân Vật, không cần thêm state mới.
+function hasBreakthroughBadge(slot: CommandWheelSlot): boolean {
+  return slot.id === 'character' && player.cultivationProgress >= 1
+}
+
 // Chọn shortcut: đóng wheel TRƯỚC rồi mới mở panel/overlay tương ứng.
 function activate(slot: CommandWheelSlot) {
   if (disabledReason(slot)) {
@@ -328,6 +338,12 @@ function activate(slot: CommandWheelSlot) {
         <span class="command-wheel__label">{{ slot.label }}</span>
 
         <span v-if="isUpgradeable(slot)" class="command-wheel__upgrade-dot" aria-hidden="true" />
+
+        <NotificationBadge
+          v-if="hasBreakthroughBadge(slot)"
+          variant="dot"
+          class="command-wheel__notification-badge"
+        />
       </button>
     </div>
   </div>
@@ -488,6 +504,12 @@ function activate(slot: CommandWheelSlot) {
   height: 9px;
   border-radius: 50%;
   background: var(--gold-500);
+}
+
+.command-wheel__notification-badge {
+  position: absolute;
+  left: 6px;
+  top: 6px;
 }
 
 @media (prefers-reduced-motion: reduce) {

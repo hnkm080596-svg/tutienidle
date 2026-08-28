@@ -33,7 +33,7 @@ export function useCombatSkillPresentation() {
       return []
     }
 
-    return buildLoadoutPresentation(battle, gameManager.skillManager, MAX_SKILL_LOADOUT_SLOTS, unlockedSlotCount.value)
+    return buildLoadoutPresentation(battle, gameManager.skillManager, MAX_SKILL_LOADOUT_SLOTS, unlockedSlotCount.value, player.combatAiStrategy)
   })
 
   function skillFor(entry: CombatSkillPresentationState) {

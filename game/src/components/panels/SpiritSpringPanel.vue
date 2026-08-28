@@ -3,7 +3,16 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
-import { getSpiritStoneMaterialIdForRealmTier } from '@/core/material/SpiritStoneMaterial'
+import {
+  SPIRIT_STONE_CONVERSION_RATIO,
+  SPIRIT_STONE_MATERIAL,
+  SPIRIT_STONE_MATERIAL_ID,
+  SPIRIT_STONE_THUONG_PHAM_MATERIAL,
+  SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID,
+  SPIRIT_STONE_TRUNG_PHAM_MATERIAL,
+  SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID,
+  getSpiritStoneMaterialIdForRealmTier,
+} from '@/core/material/SpiritStoneMaterial'
 
 const BUILDING_ID = 'spirit_spring'
 
@@ -72,6 +81,39 @@ function collect() {
   gameManager.collectBuilding(instance.value.instanceId, player.$state, nowSeconds.value)
   bumpState()
 }
+
+// =========================
+// Quy đổi phẩm Linh Thạch (T2, review 2026-08-28) — 1 chiều LÊN:
+// 100 Hạ → 1 Trung, 100 Trung → 1 Thượng.
+// =========================
+
+const haPhamOwned = computed(() => {
+  stateVersion.value
+
+  return gameManager.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)
+})
+
+const trungPhamOwned = computed(() => {
+  stateVersion.value
+
+  return gameManager.materialBag.getAmount(SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID)
+})
+
+const thuongPhamOwned = computed(() => {
+  stateVersion.value
+
+  return gameManager.materialBag.getAmount(SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID)
+})
+
+function convertToTrungPham() {
+  gameManager.convertSpiritStonesUp(SPIRIT_STONE_MATERIAL_ID, 1)
+  bumpState()
+}
+
+function convertToThuongPham() {
+  gameManager.convertSpiritStonesUp(SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID, 1)
+  bumpState()
+}
 </script>
 
 <template>
@@ -96,6 +138,39 @@ function collect() {
       <small class="spirit-spring-panel__rate">+{{ ratePerMinute.toLocaleString('vi-VN', { maximumFractionDigits: 1 }) }} thạch/phút</small>
 
       <button type="button" :disabled="storedAmount <= 0" @click="collect">Thu hoạch</button>
+    </div>
+
+    <div class="spirit-spring-panel__card">
+      <h3>Đổi Phẩm Linh Thạch</h3>
+
+      <small class="spirit-spring-panel__rate">
+        Quy đổi 1 chiều lên: {{ SPIRIT_STONE_CONVERSION_RATIO }} Hạ → 1 Trung,
+        {{ SPIRIT_STONE_CONVERSION_RATIO }} Trung → 1 Thượng.
+      </small>
+
+      <div class="spirit-spring-panel__tiers">
+        <span>{{ SPIRIT_STONE_MATERIAL.name }}: {{ haPhamOwned.toLocaleString('vi-VN') }}</span>
+        <span>{{ SPIRIT_STONE_TRUNG_PHAM_MATERIAL.name }}: {{ trungPhamOwned.toLocaleString('vi-VN') }}</span>
+        <span>{{ SPIRIT_STONE_THUONG_PHAM_MATERIAL.name }}: {{ thuongPhamOwned.toLocaleString('vi-VN') }}</span>
+      </div>
+
+      <div class="spirit-spring-panel__convert">
+        <button
+          type="button"
+          :disabled="haPhamOwned < SPIRIT_STONE_CONVERSION_RATIO"
+          @click="convertToTrungPham"
+        >
+          {{ SPIRIT_STONE_CONVERSION_RATIO }} Hạ → 1 Trung
+        </button>
+
+        <button
+          type="button"
+          :disabled="trungPhamOwned < SPIRIT_STONE_CONVERSION_RATIO"
+          @click="convertToThuongPham"
+        >
+          {{ SPIRIT_STONE_CONVERSION_RATIO }} Trung → 1 Thượng
+        </button>
+      </div>
     </div>
   </section>
 </template>
@@ -209,5 +284,18 @@ function collect() {
   background: var(--ink-700);
   color: var(--text-muted);
   cursor: not-allowed;
+}
+
+.spirit-spring-panel__tiers {
+  display: grid;
+  gap: 4px;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+}
+
+.spirit-spring-panel__convert {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 </style>

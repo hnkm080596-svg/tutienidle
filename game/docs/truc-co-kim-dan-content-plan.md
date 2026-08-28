@@ -124,3 +124,16 @@ npm.cmd run build
 - **Vỡ quy tắc progression**: mọi thay đổi `realm.ts` phải đối chiếu §3.1; không tự chế đường cong mới.
 - **Scope creep**: plan này KHÔNG thiết kế Nguyên Anh trở đi. Các realm sau Kim Đan giữ placeholder cho tới roadmap sau.
 - Nếu `docs/Plans .md` chứa ý tưởng Kim Đan chưa được đưa vào đây, Task 4 của docs-sync-plan phải chuyển chúng vào mục này trước khi xóa file — không làm mất ý tưởng gốc.
+
+## 9. Tham chiếu từ `Plans .md` cũ (ý tưởng tương lai, chưa implement)
+
+> Chuyển từ `docs/Plans .md` (đã xóa 2026-08-28, docs-sync Task 4) để không mất ý tưởng gốc. Đây là ĐỊNH HƯỚNG, chưa có trong code — cần lập thiết kế riêng trước khi làm.
+
+- **Đan Phương thu gọn 8 loại**: Tụ Linh Đan, Hồi Xuân Đan, Hồi Linh Đan, Phi Vân Đan, Tố Cốt Đan, Thối Thể Đan, Dưỡng Thần Đan, Khải Linh Đan — theo thứ tự: tăng tu vi, hồi hp/s, mp/s, tăng thân pháp, căn cốt, thể chất, thần thức, linh căn perm. Mỗi đan 9 phẩm ứng 9 cảnh giới. Hồi Xuân/Hồi Linh dùng liên tục cộng dồn thời gian; 5 loại kia giới hạn bởi chỉ số max từng cảnh giới. Mỗi loại cần 1 linh thảo tương ứng từ Động Thiên.
+- **Sản xuất theo cảnh giới**: mỗi cấp building tương ứng 1 cảnh giới (Phàm Nhân → Độ Kiếp, 9 cấp); tăng cấp tăng tốc sản xuất + thêm worker, ảnh hưởng toàn bộ địa giới. Thanh Vân chỉ sản xuất Cửu Phẩm → Thất Phẩm nguyên liệu.
+- **Linh Tuyền hậu kỳ**: tăng tỉ lệ thu hoạch phẩm chất/số lượng Linh Thạch cao hơn ở cấp cao; mỗi cảnh giới dùng loại Linh Thạch tương ứng (Khí Đường Cường Hóa: 30 cấp đầu Hạ Phẩm, 30 cấp sau Trung Phẩm...).
+- **Kỹ năng**: ultimate mỗi path mở ở Trúc Cơ, full nộ mới dùng được; ultimate có xương sống (level/nodes) như skill thường. Kỹ năng không tiêu hao mana, giới hạn bằng cast time/attack speed/cooldown.
+- **Huy Kiếm** (rework Trảm): max level 18, không nâng bằng cảm ngộ mà +1 kinh nghiệm mỗi lần cast; kinh nghiệm nâng = `round(10 × 1.4^(level-1)) + (level-1) × 15`; sát thương = 100% atk + kinh nghiệm tổng/18; level 18 + chuyển chức Kiếm Tu mở cây kỹ năng ẩn.
+- **Tâm pháp theo cảnh giới**: mỗi cultivation path đổi tâm pháp khi lên cảnh giới mới (vd Pháp Tu: Tiểu Ngũ Hành Quyết <Luyện Khí> → Đại Ngũ Hành Quyết <Trúc Cơ>), công pháp mới bao hàm công pháp cũ và mạnh hơn.
+- **Thần Thức**: không cộng linh lực; tăng/giảm hồi chiêu và kháng bất thường.
+- **Linh Lực Hộ Thể** (Pháp Tu): đột phá Pháp Tu tự mang Linh Lực Hộ Thể — giảm sát thương nhận vào theo tỉ lệ linh lực, bổ sung linh lực max vào công thức sát thương pháp thuật.

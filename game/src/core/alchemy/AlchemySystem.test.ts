@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { AlchemySystem, jobSuccessPercent } from './AlchemySystem'
+import {
+  AlchemySystem,
+  jobSuccessPercent,
+  alchemyRoomSuccessBonus,
+  alchemySecondsFor,
+  ALCHEMY_SUCCESS_BONUS_PERCENT,
+  ALCHEMY_SPEED_MULTIPLIERS,
+} from './AlchemySystem'
 import type { ActiveAlchemyJob, AlchemyRecipe } from './AlchemySystem'
 import { PillBag } from '../pill/PillBag'
 
@@ -101,5 +108,58 @@ describe('AlchemySystem — settleOffline với bonus thiên phú', () => {
 
     expect(settled).toBe(1)
     expect(bag.getAmount(RECIPE.pillId)).toBeGreaterThanOrEqual(1)
+  })
+})
+
+describe('AlchemySystem — Đan Phòng level 6-9 (economy-ecosystem-plan T5)', () => {
+  it('bảng bonus/speed đủ 9 entry theo maxLevel Đan Phòng', () => {
+    expect(ALCHEMY_SUCCESS_BONUS_PERCENT).toHaveLength(9)
+    expect(ALCHEMY_SPEED_MULTIPLIERS).toHaveLength(9)
+  })
+
+  it('level 6-9 có giá trị thật, không kẹt ở level 5', () => {
+    expect(alchemyRoomSuccessBonus(6)).toBeGreaterThan(alchemyRoomSuccessBonus(5))
+    expect(alchemyRoomSuccessBonus(9)).toBeGreaterThan(alchemyRoomSuccessBonus(8))
+
+    expect(alchemySecondsFor(RECIPE, 9)).toBeLessThan(alchemySecondsFor(RECIPE, 5))
+  })
+
+  it('bonus clamp với level ngoài khoảng (0/âm/vượt 9)', () => {
+    expect(alchemyRoomSuccessBonus(0)).toBe(ALCHEMY_SUCCESS_BONUS_PERCENT[0])
+    expect(alchemyRoomSuccessBonus(-3)).toBe(ALCHEMY_SUCCESS_BONUS_PERCENT[0])
+    expect(alchemyRoomSuccessBonus(99)).toBe(ALCHEMY_SUCCESS_BONUS_PERCENT[8])
+  })
+})
+
+describe('AlchemySystem — job không resolve được recipe/pill (review 2026-08-28)', () => {
+  it('recipe mất tích → phát event thất bại thay vì xoá im lặng', () => {
+    const system = new AlchemySystem()
+    const bag = new PillBag()
+
+    system.setRecipeLookup(() => undefined)
+    system.restoreJobs([makeJob()])
+
+    system.tick(2_000, bag, () => ({ id: RECIPE.pillId }), () => 0)
+
+    const events = system.drainSettlementEvents()
+
+    expect(events).toHaveLength(1)
+    expect(events[0]?.success).toBe(false)
+    expect(events[0]?.pills).toBe(0)
+
+    // Job đã xử lý xong (không treo vĩnh viễn).
+    expect(system.getJobs()).toHaveLength(0)
+  })
+
+  it('pill mất tích → phát event thất bại thay vì xoá im lặng', () => {
+    const { system, bag } = makeSystemWithJob()
+
+    system.tick(2_000, bag, () => undefined, () => 0)
+
+    const events = system.drainSettlementEvents()
+
+    expect(events).toHaveLength(1)
+    expect(events[0]?.success).toBe(false)
+    expect(system.getJobs()).toHaveLength(0)
   })
 })

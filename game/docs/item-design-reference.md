@@ -49,8 +49,8 @@ chỉ nới RANGE trước khi roll.
 | Hỗn Độn Chí Bảo | 4 | ×1.68 | 160 |
 | Thiên Địa Trọng Khí | 5 | ×1.80 | 200 |
 
-Nâng Quality qua thao tác **Nâng Phẩm** (`EquipmentSystem.upgradeQuality()`) — tốn nguyên liệu
-theo `template.upgradeQualityCost`, tăng đúng 1 bậc mỗi lần, không roll lại gì khác.
+Quality được roll lúc rớt/tạo item và **CỐ ĐỊNH** — hiện KHÔNG có thao tác nào nâng Quality (không
+còn `upgradeQuality`). Muốn Quality cao hơn phải rớt/tạo item mới.
 
 ### 2a. Tiềm Năng Rèn — lần chuẩn hóa phẩm chất/độ hiếm (2026-08-14)
 
@@ -116,7 +116,8 @@ cho Yểm Phù.
 dồn vào nhau**: Quality scale RANGE trước khi roll (`EQUIPMENT_QUALITY_IMPLICIT_MULTIPLIER`, xem
 mục 2), rồi Realm scale KẾT QUẢ sau khi roll (`MAIN_STAT_REALM_SCALE = 0.05`/mốc cảnh giới toàn
 cục — đồ rớt ở cảnh giới cao luôn mạnh hơn đồ cùng Quality rớt ở cảnh giới thấp). Nằm ngoài giới
-hạn affix theo Rarity. **Tinh Luyện** (mục 4) là thao tác DUY NHẤT reroll lại giá trị này.
+hạn affix theo Rarity. mainStat được roll lúc tạo/rớt và hiện **CỐ ĐỊNH** — không có thao tác nào
+reroll nó (Tẩy/Tinh Luyện chỉ tác động substat affix, xem mục 4).
 
 ### 3b. Affix (Prefix/Suffix) + Pool
 
@@ -139,33 +140,40 @@ Chí Bảo trở lên          → + supreme
 Pool `'supreme'` là pool DUY NHẤT Exalted Affix (mục 2) được phép rút ra, kể cả khi Quality thật
 của item chưa tự mở pool đó.
 
-## 4. Cường Hóa/Tẩy Luyện/Tinh Luyện/Rèn — 4 thao tác, 4 mục tiêu KHÔNG chồng nhau
+## 4. Cường Hóa/Tẩy Luyện/Tinh Luyện/Hóa Luyện — 4 thao tác Khí Đường
 
-Equipment Rework định nghĩa lại rõ ràng: mỗi thao tác nhắm vào ĐÚNG 1 thứ, không thao tác nào
-làm việc của thao tác khác:
+(resource-professions-rework 2026-08-25, `EquipmentSystem.ts`) — mỗi thao tác nhắm ĐÚNG 1 mục tiêu,
+không chồng nhau. Cường Hóa là slot-scoped; Tẩy/Tinh/Hóa Luyện là item-scoped — chọn thẳng 1 item
+trong túi, và **item đang trang bị / locked / favorite bị chặn** (không sửa field trên instance đang
+gắn modifier sống hoặc đang khóa).
 
-| Thao tác | Sửa gì | Lưu ở đâu | Kiểu thao tác |
+| Thao tác | Sửa gì | Lưu ở đâu | Cost |
 |---|---|---|---|
-| **Cường Hóa** (Enhance) | `enhanceLevel` | `EquipmentSlotState` (theo **SLOT** nhân vật) | Deterministic, +1 cấp/lần, có trần `maxEnhanceLevel` (theo template). |
-| **Tẩy Luyện** (Wash) | Giá trị từng `RolledAffix.value` hiện có | `EquipmentInstance.affixes` (theo **ITEM**) | Reroll ngẫu nhiên trong range tier hiện tại, KHÔNG đổi affixId/tier, không giới hạn số lần. |
-| **Tinh Luyện** (Refine) | `mainStat.flat` (Implicit) | `EquipmentInstance.mainStat` (theo **ITEM**) | Reroll ngẫu nhiên (mục 3a), KHÔNG đổi affixes, không giới hạn số lần — đối xứng với Tẩy Luyện nhưng nhắm Implicit thay vì Affix. |
-| **Rèn** (Forge) | `forgePoints` | `EquipmentInstance.forgePoints` (theo **ITEM**) | Deterministic, +1 điểm/lần, trần theo Quality (mục 2) — thay thế hoàn toàn vai trò cũ của `refineLevel`. |
+| **Cường Hóa** (Enhance) | `enhanceLevel` | `EquipmentSlotState` (theo **SLOT** nhân vật) | Deterministic +1 cấp/lần, trần `maxEnhanceLevel`. Cost nguyên liệu theo `EquipmentOperationCostCatalog` (scale theo level) + Linh Thạch; level Khí Đường giảm cost. |
+| **Tẩy Luyện** (Wash) | Reroll TOÀN BỘ identity substat: số dòng, identity từ pool hợp lệ, tier ban đầu — KHÔNG đổi main stat/quality/realm/Cường Hóa | `EquipmentInstance.affixes` (theo **ITEM**) | Điểm Rèn + 1 stack Quáng CÙNG cảnh giới item + Linh Thạch (`WASH_SPIRIT_STONE_COST`, phẩm theo realm item). |
+| **Tinh Luyện** (Refine) | Giữ NGUYÊN identity mọi substat, roll lại GIÁ TRỊ từng dòng không khóa trong ±20% (clamp tier); khóa ≤ `REFINE_MAX_LOCKS` dòng | `EquipmentInstance.affixes` (theo **ITEM**) | Điểm Rèn + Tinh Hoa cùng tier + Linh Thạch (đơn giá `REFINE_SPIRIT_STONE_PER_UNIT` × N+L). |
+| **Hóa Luyện** (Dissolve) | Phân giải item → **Tinh Hoa** theo realm (`EQUIPMENT_REALM_ESSENCE_MATERIAL`) | (hủy item) | Không tốn nguyên liệu; item equipped/locked/favorite bị loại khỏi danh sách. |
 
-Cường Hóa + Rèn cùng cộng vào 1 hệ số scale nhân thẳng vào mainStat + mọi affix
+**Điểm Rèn** (`forgePoints`, item-scoped) là tài nguyên Tẩy/Tinh Luyện TIÊU THỤ — khởi tạo ĐẦY theo
+`forgePotential` lúc rớt/tạo, trần `getMaxForgePoints(quality, forgePotential)` (mục 2a). KHÔNG còn
+thao tác "Rèn" cộng điểm riêng nào; Điểm Rèn chỉ giảm dần khi Tẩy/Tinh Luyện.
+
+Cường Hóa + Điểm Rèn còn lại cùng nhân vào 1 hệ số scale lên mainStat + mọi affix
 (`calculateEquipmentScale()`):
 
 ```
 scale = 1 + enhanceLevel × 0.08 + forgePoints × 0.005
 ```
 
-Vì Cường Hóa là slot-scoped (giống lý do kiến trúc gốc — "Mục XVI: Item và Slot phải tách hoàn
-toàn", đổi trang bị trong slot KHÔNG mất cấp đã cường hóa), thao tác này trong UI (Khí Đường)
-chọn **vị trí trang bị** (Vũ Khí/Mũ/Giáp/...) rồi tự resolve món đang trang bị ở đó. 3 thao tác
-còn lại (Tẩy/Tinh Luyện/Rèn) đều item-scoped — chọn thẳng 1 item trong túi, và **item đang trang
-bị bị chặn** cho tới khi tháo ra (không được sửa field trên 1 instance đang gắn modifier sống).
+Vì Cường Hóa là slot-scoped ("Mục XVI: Item và Slot phải tách hoàn toàn"), thao tác này trong UI
+Khí Đường chọn **vị trí trang bị** (Vũ Khí/Mũ/Giáp/...) rồi tự resolve món đang đeo ở đó; đổi trang
+bị trong slot KHÔNG mất cấp đã Cường Hóa. Linh Thạch tiêu thụ resolve PHẨM theo realm của trang bị
+(Tẩy/Tinh Luyện) hoặc theo enhance level (Cường Hóa), KHÔNG hard-code Hạ Phẩm.
 
-Tương tự Cường Hóa, **Khắc Trận** (socket Formation) và **Yểm Phù** (apply Talisman) cũng slot-
-scoped — sống trên `EquipmentSlotState.socketedFormation`/`appliedTalismanIds`, không theo item.
+**Khắc Trận** (socket Formation) và **Yểm Phù** (apply Talisman) trước đây cũng slot-scoped — sống
+trên `EquipmentSlotState.socketedFormation`/`appliedTalismanIds`. Hiện Phù/Trận đang **giữ khóa**
+(chưa phát hành, xem [future-talisman-formation-system-plan.md](./future-talisman-formation-system-plan.md));
+plumbing slot vẫn còn nhưng không có luồng tiêu thụ hoạt động.
 
 ## 5. `EquipmentSlotState` — dữ liệu sống theo NHÂN VẬT, không theo item
 
@@ -182,13 +190,13 @@ không bị xoá khi tháo/đổi đồ:
 Vì vậy: 1 item "yếu" (rarity thấp) vẫn có thể rất mạnh nếu trang bị vào 1 slot đã đầu tư nhiều
 Cường Hóa/Yểm Phù/Khắc Trận từ trước — sức mạnh KHÔNG nằm gọn trong 1 chỗ.
 
-## 6. Nâng Cảnh Giới (item)
+## 6. Cảnh giới của item (realmId) — cố định lúc rớt
 
-`instance.realmId` = cảnh giới người chơi lúc item được tạo/rớt ra — không tự đổi khi người chơi
-lên cảnh giới mới. Thao tác **Nâng Cảnh Giới** (`upgradeRealm()`) cập nhật `instance.realmId`
-lên bằng cảnh giới hiện tại của người chơi (chỉ khi player đang ở cảnh giới CAO HƠN), tốn cả
-nguyên liệu (`upgradeRealmCost`) lẫn Linh Thạch (`upgradeRealmSpiritStoneCost`) — cách duy nhất
-để 1 món đồ cũ không bị tụt hậu so với sức mạnh hiện tại của nhân vật mà không cần rớt đồ mới.
+`instance.realmId` = cảnh giới người chơi lúc item được tạo/rớt ra — **KHÔNG tự đổi** khi người
+chơi lên cảnh giới mới, và hiện **KHÔNG có thao tác nào nâng realmId của item** (không còn
+`upgradeRealm`). realmId quyết định PHẨM Linh Thạch + loại Tinh Hoa/Quáng dùng cho Tẩy/Tinh/Hóa
+Luyện của chính item đó (mục 4). Đồ cũ tụt hậu thì thay bằng đồ rớt ở cảnh giới cao hơn, hoặc giữ
+làm nguyên liệu Hóa Luyện.
 
 ## 7. Toàn bộ field của 1 EquipmentInstance
 
@@ -212,19 +220,21 @@ interface EquipmentInstance {
 Field slot-scoped (enhanceLevel/socketedFormation/bonusAffixSlots/appliedTalismanIds) **không**
 nằm trên instance — xem mục 5.
 
-## 8. Building level giờ ảnh hưởng crafting (mới trong đợt này)
+## 8. Building level ảnh hưởng chức năng (resource-professions-rework 2026-08-25)
 
-Đan/Trận/Phù (không phải Equipment) giờ chịu modifier từ Building tương ứng
-(`BuildingSystem.getCraftModifiers()`, xem `core/building/BuildingLevelEffect.ts`):
+Building KHÔNG còn là trạm craft trung gian — nguyên liệu đến thẳng từ ProductionSite (mục 10).
+Level building (tối đa 9, nâng bằng Gỗ cùng realm + Linh Thạch) giờ cấp hiệu ứng theo
+`BuildingLevelEffect` (`src/data/building/buildings.ts`):
 
-- `craft_time_reduction` — rút ngắn `craftDuration` thật của Recipe.
-- `craft_quality_bonus` — cơ hội (%) nhận thêm +1 thành phẩm khi thu hoạch (không phải roll
-  Quality/Rarity gì — Pill/Talisman/Formation không roll instance, `pham` là field TĨNH trên
-  template, xem mục 9).
-- `concurrent_job_slots` — số lượt craft chạy song song cùng loại (trước đây cứng 1 lượt/loại).
+- **Khí Đường**: mỗi cấp từ 2 trở đi giảm 3% chi phí Cường Hóa/Tẩy Luyện/Tinh Luyện (trần 24% ở
+  level 9, `equipment_cost_discount`).
+- **Đan Phòng**: level 3/6/9 mở thêm 1 slot luyện đan đồng thời (baseline 1, trần 4,
+  `concurrent_job_slots`); speed/success bonus luyện đan theo level riêng (`AlchemyBalance`).
+- **Linh Tuyền**: rate + storage Linh Thạch tăng theo level (storage = 10h sản lượng).
+- **Điều Phối Nhân Công**: +1 worker tự động mỗi level.
 
-Building này **không** ảnh hưởng gì tới Equipment (Khí Đường không đi qua CraftingSystem — Cường
-Hóa/Tẩy/Tinh Luyện/Rèn vẫn là thao tác tức thời, chỉ thêm 1 độ trễ UI cố định ~1s khi xử lý).
+Bốn thao tác Khí Đường (Cường Hóa/Tẩy/Tinh/Hóa Luyện) là thao tác TỨC THỜI — không đi qua job/
+recipe, chỉ có độ trễ UI cố định khi xử lý.
 
 ## 9. Item không phải Equipment (tóm tắt) + hệ Phẩm dùng chung
 
@@ -237,8 +247,12 @@ Hóa/Tẩy/Tinh Luyện/Rèn vẫn là thao tác tức thời, chỉ thêm 1 đ�
 | Talisman | `TalismanBag` | `{ talisman, amount }` — tiêu thụ khi Yểm Phù (áp vào `EquipmentSlotState.appliedTalismanIds`), stack biến mất, hiệu lực dồn vào SLOT chứ không phải bản thân Phù. |
 | Formation | `FormationBag` | `{ formation, amount }` — tiêu thụ khi Khắc Trận (socket vào `EquipmentSlotState.socketedFormation`), tương tự Talisman. |
 
-Không loại nào trong 4 loại này có Rarity/Affix/Enhance/Wash/Refine/Forge/Nâng Cảnh Giới — những
-khái niệm đó CHỈ tồn tại trên Equipment (roll ngẫu nhiên lúc rớt, có instance riêng biệt).
+Không loại nào trong 4 loại này có Rarity/Affix/Enhance/Wash/Refine/Hóa Luyện — những khái niệm đó
+CHỈ tồn tại trên Equipment (roll ngẫu nhiên lúc rớt, có instance riêng biệt).
+
+**Lưu ý**: Talisman (Phù) và Formation (Trận) hiện đang **giữ khóa** (chưa phát hành — xem
+[future-talisman-formation-system-plan.md](./future-talisman-formation-system-plan.md)). Plumbing bag
++ slot vẫn còn nhưng không có luồng tiêu thụ hoạt động; chỉ **Material** và **Pill** đang hoạt động thật.
 
 **Nhưng** kể từ naming-principles pass (2026-08-14), Pill/Talisman/Formation ĐỀU có field
 `pham: Pham` (`core/item/Pham.ts`) — cùng 5 tên/thứ tự Hoàng→Huyền→Địa→Thiên→Tiên Phẩm với
@@ -257,41 +271,31 @@ hiệu ứng THẬT của mỗi loại khác nhau. Equipment KHÔNG theo quy ư�
 hiện qua UI label riêng (mục 2), lý do: Equipment có instance rớt ra với Phẩm random mỗi lần, còn
 Pill/Talisman/Formation không roll — Phẩm của chúng CỐ ĐỊNH theo đúng cái tên đã in trên nhãn.
 
-## 10. Nền kinh tế nguyên liệu (chuẩn hóa 2026-08-14)
+## 10. Nền kinh tế nguyên liệu (resource-professions-rework 2026-08-25 + economy pass 2026-08-28)
 
-Thay hẳn material "mỗi loài quái 1-2 material riêng" (zoo material) bằng 1 hệ gọn hơn, theo
-đúng công thức tổng quát của tài liệu gốc:
+Đã loại bỏ hoàn toàn hệ cũ (Yêu Đan/Yêu Huyết/Yêu Cốt, Bụi Cốt, Luyện Khí `smeltEquipment`,
+Tinh Luyện Cốt, CraftingSystem/Recipe). Nguyên liệu hiện đến từ **3 nguồn sản xuất** của Địa Giới
+Thanh Vân (`src/core/production/ProductionCatalog.ts`), mỗi nguồn 1 site, level riêng (tối đa 9,
+giữ level khi đột phá, nâng bằng Gỗ cùng realm + Linh Thạch):
 
-```
-Đan:  1-3 Linh Thảo (niên đại tuỳ ý) + 1 Yêu Đan  + Linh Thạch
-Phù:  1-2 Linh Mộc  (niên đại tuỳ ý) + 1 Yêu Huyết + Linh Thạch
-Trận: 1-3 Linh Thiết (đa hành)       + 1 Yêu Cốt   + Linh Thạch
-```
+| Nguồn | Ra gì | Dùng vào đâu |
+|---|---|---|
+| **Thanh Vân Lâm** (forest) | Gỗ theo realm (`mortal_wood` / `qi_refining_wood` / `foundation_establishment_wood`) | Nâng building/site, nhiên liệu luyện đan. |
+| **Huyền Thiết Quảng** (mine) | Linh khoáng: 3 realm × 5 phẩm (`<realm>_ore_<phẩm>`) | Tẩy Luyện (1 stack cùng cảnh giới item), nâng building, quy đổi cảnh giới. |
+| **Thanh Vân Động Thiên** (grotto) | Linh thảo: mỗi đan phương có ĐÚNG 1 thảo riêng, 4 biến thể niên đại | Luyện đan (Đan Phòng). |
 
-- **Linh Thảo/Linh Mộc/Linh Thiết** (`Material.years`/`element`, `core/material/Material.ts`) —
-  3 nhóm nguyên liệu tự nhiên. Niên đại (0/100/1000, hậu tố Bách Niên/Thiên Niên) đặt TRẦN Phẩm
-  tối đa 1 recipe dùng nó có thể đạt (Hoàng/Huyền Phẩm dùng bậc gốc, Địa Phẩm dùng Bách Niên,
-  Thiên/Tiên Phẩm dùng Thiên Niên) — KHÔNG đảm bảo chắc chắn ra đúng Phẩm đó, kết quả vẫn qua
-  recipe/CraftingSystem như cũ, niên đại chỉ mở khoá TRẦN. Linh Thiết dùng trục Ngũ Hành (5 biến
-  thể nguyên tố: Huyền Thiết/Xích Đồng/Thanh Đồng/Hàn Thiết/Hoàng Kim Linh Thiết) thay vì niên
-  đại, vì đã đủ đa dạng cho Bày Trận cần trộn nhiều loại.
-- **Yêu Đan/Yêu Huyết/Yêu Cốt** (`yeu_dan_qi_refining` v.v.) — rơi từ MỌI quái, tiered theo
-  **cảnh giới của quái** (`realmId`), không phải theo loài — id hậu tố `_<realmId>`, chỉ tier
-  `qi_refining` tồn tại (chưa có Stage nào ở realm cao hơn). Thay hẳn 16 material trophy riêng
-  từng loài (wolf-fang/flame-fox-fur/... — xem `data/enemy/Enemies.ts`).
-- **`Linh Thạch`** — KHÔNG phải material mới, chính là `player.spiritStone` có sẵn (đã hiện "Linh
-  thạch" trong `CharacterPanel.vue` từ trước). Wire vào Recipe qua `Recipe.spiritStoneCost`
-  (`CraftingSystem.canStart()`/`start()`) và Equipment qua `Equipment.enhanceSpiritStoneCost`
-  (`EquipmentSystem.enhance()`) — cùng pattern `upgradeRealmSpiritStoneCost` đã có từ trước.
-- **Luyện Khí** (`GameManager.smeltEquipment()`) — cách THỨ HAI để có Equipment (ngoài rớt từ
-  quái): tốn 3 Linh Thiết + Linh Thạch, roll 1 instance mới qua ĐÚNG `equipmentSystem.
-  createInstance()` sẵn có, cộng thêm **Bụi Cốt** làm phế liệu. Vẫn là thao tác INSTANT (không
-  qua Recipe/CraftingSystem — Equipment luôn instant, xem mục 8), UI ở khu "Luyện Khí" riêng
-  trong Khí Đường (`EquipmentHallPanel.vue`, tách khỏi khối `OPERATIONS` vì đây tạo instance MỚI
-  chứ không sửa 1 instance có sẵn).
-- **Bụi Cốt** (`bui_cot`) — tiêu thụ lại bởi Cường Hóa (`enhanceCost`, mọi template Equipment đã
-  đổi sang tham chiếu material này) — đúng vòng "Khai thác → Luyện Khí → phế liệu → Cường Hóa".
-- **Tinh Luyện Cốt** (`tinh_luyen_cot`, `GameManager.refineBuiCot()`) — Bụi Cốt + Linh Thạch →
-  Tinh Luyện Cốt, 1 conversion đơn giản (không qua Recipe). **CHƯA có consumer nào trong đợt
-  này** — tài liệu gốc chỉ liệt kê use-case tương lai ("cường hóa cao cấp", "sửa chữa Khí") chưa
-  có mechanic cụ thể để wire vào; cố tình dừng ở mức "có nguồn thu thật" thay vì bịa 1 sink giả.
+- **Linh Thạch** — material thật trong `MaterialBag` (`SpiritStoneMaterial.ts`), 3 phẩm Hạ/Trung/
+  Thượng. Nguồn: Linh Tuyền, quái rơi, quest. Sink: 4 thao tác Khí Đường, luyện đan, thuê worker,
+  Đột Phá Lệnh. Quy đổi **1 chiều lên** `100 Hạ → 1 Trung`, `100 Trung → 1 Thượng`
+  (`GameManager.convertSpiritStonesUp`); phẩm dùng resolve theo realm/enhance level, KHÔNG hard-code
+  Hạ Phẩm.
+- **Tinh Hoa** (`tinh_hoa_*`) — ra từ **Hóa Luyện** trang bị, mapping theo realm
+  (`RefinementBalance.EQUIPMENT_REALM_ESSENCE_MATERIAL`); là nguyên liệu của **Tinh Luyện**.
+- **Quy đổi cảnh giới linh mộc/linh khoáng** — gộp LÊN `10 bậc thấp → 1 bậc cao` theo thang
+  mortal→qi_refining→foundation_establishment (`MaterialTierConversionBalance` +
+  `GameManager.convertMaterialTier`); gỗ giữ dạng `<realm>_wood`, quáng giữ phẩm
+  `<realm>_ore_<phẩm>`; chỉ 1 chiều (giữ sink).
+- **Vật liệu mồ côi đã dọn (2026-08-28)**: 11 material legacy (thanh_linh_moc, xich_dong,
+  huyen_thiet, thanh-dong, han-thiet, hoang_kim_linh_thiet, tinh_ngan, quang_sat, phu_chi, ...) đã
+  xóa; drop quái migrate về `qi_refining_ore_hoang`. Invariant test đảm bảo mọi material drop đều có
+  sink (`EnemyDropSinkInvariant.test.ts`).

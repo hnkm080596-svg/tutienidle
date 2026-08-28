@@ -13,7 +13,10 @@ export class TribulationScene extends Phaser.Scene {
   private lightningHandler = () => this.strikeLightning()
   private damageHandler = (event: CombatEvent) => this.showDamage(event)
   private vitalsHandler = (event: EntityVitalsChangedEvent) => {
-    if (event.entityId === 'player' && event.killed) this.player?.setAlpha(0.35)
+    // Bất Tử Thể có thể cứu player sau event killed=true (CombatSystem
+    // phát event hiệu chỉnh killed=false ngay sau guard) — alpha phải
+    // phản ánh trạng thái CUỐI của event, không chỉ chiều chết.
+    if (event.entityId === 'player') this.player?.setAlpha(event.killed ? 0.35 : 1)
   }
   private exitHandler = () => this.scene.start('MainScene')
 

@@ -88,9 +88,15 @@ import type { ItemGrade } from '../item/ItemGrade'
 import { SUPPORTED_PROFESSION_REALMS } from '../profession/ProfessionMaterial'
 import { validateProfessionMaterialEntry } from '../profession/ProfessionValidators'
 import {
+  SPIRIT_STONE_CONVERSION_RATIO,
   SPIRIT_STONE_MATERIAL_ID,
+  getNextSpiritStoneMaterialId,
   getSpiritStoneMaterialIdForRealmTier,
 } from '../material/SpiritStoneMaterial'
+import {
+  MATERIAL_TIER_CONVERSION_RATIO,
+  getNextTierMaterialId,
+} from '../material/MaterialTierConversionBalance'
 import { getRealmTier } from '../realm/RealmTierMap'
 import { calculateStats } from '../stats/StatCalculator'
 import type { PersistentTimedEffect } from '../player/PersistentTimedEffect'
@@ -108,7 +114,7 @@ import type { ProductionSiteState } from '../production/ProductionTypes'
 import {
   AlchemySystem,
   alchemySecondsFor,
-  ALCHEMY_SUCCESS_BONUS_PERCENT,
+  alchemyRoomSuccessBonus,
   type ActiveAlchemyJob,
   type AlchemyRecipe,
 } from '../alchemy/AlchemySystem'
@@ -411,6 +417,7 @@ export class GameManager {
     this.battleLoot = new BattleLootSystem({
       eventBus: this.eventBus,
       notifications: this.notifications,
+      combatSystem: this.combatSystem,
       materialRegistry: this.materialRegistry,
       materialBag: this.materialBag,
       pillRegistry: this.pillRegistry,
@@ -1509,6 +1516,7 @@ export class GameManager {
 
     return (
       requirement !== undefined &&
+      this.materialRegistry.has(requirement.materialId) &&
       this.materialBag.getAmount(spiritStoneId) >= requirement.spiritStoneCost
     )
   }
@@ -1521,11 +1529,119 @@ export class GameManager {
     const requirement = BREAKTHROUGH_REQUIREMENTS[targetRealmId]!
     const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(targetRealmId))
 
-    this.materialBag.remove(spiritStoneId, requirement.spiritStoneCost)
+    if (!this.materialBag.remove(spiritStoneId, requirement.spiritStoneCost)) {
+      return false
+    }
 
-    this.materialBag.add(this.materialRegistry.get(requirement.materialId), 1)
+    const overflow = this.materialBag.add(this.materialRegistry.get(requirement.materialId), 1)
+
+    if (overflow > 0) {
+      // All-or-nothing: token tràn stack thì hoàn Linh Thạch để không mất
+      // trắng (Linh Thạch cap MAX_SAFE_INTEGER nên hoàn lại luôn vừa chỗ).
+      this.materialBag.add(this.materialRegistry.get(spiritStoneId), requirement.spiritStoneCost)
+
+      return false
+    }
+
+    this.notifyQuestMaterialGained(requirement.materialId, 1)
 
     return true
+  }
+
+  /**
+   * Quy đổi Linh Thạch LÊN phẩm kế tiếp (review 2026-08-28,
+   * economy-ecosystem-plan T2): 100 Hạ → 1 Trung, 100 Trung → 1 Thượng.
+   * CHỈ có chiều lên — không có quy đổi ngược (giữ sink). Giao dịch
+   * atomic: check đủ → trừ → cộng; trừ thất bại thì không cộng.
+   */
+  convertSpiritStonesUp(
+    fromMaterialId: string,
+    times = 1,
+  ): { ok: boolean; reason?: string; gained?: number } {
+    const targetId = getNextSpiritStoneMaterialId(fromMaterialId)
+
+    if (!targetId) {
+      return { ok: false, reason: 'no_higher_tier' }
+    }
+
+    if (!Number.isInteger(times) || times <= 0) {
+      return { ok: false, reason: 'invalid_amount' }
+    }
+
+    if (!this.materialRegistry.has(fromMaterialId) || !this.materialRegistry.has(targetId)) {
+      return { ok: false, reason: 'unknown_material' }
+    }
+
+    const cost = SPIRIT_STONE_CONVERSION_RATIO * times
+
+    if (!this.materialBag.remove(fromMaterialId, cost)) {
+      return { ok: false, reason: 'insufficient' }
+    }
+
+    const overflow = this.materialBag.add(this.materialRegistry.get(targetId), times)
+
+    if (overflow > 0) {
+      // Trần stack Linh Thạch là MAX_SAFE_INTEGER nên thực tế không xảy
+      // ra; nếu xảy ra thì hoàn lại phẩm thấp để không mất trắng.
+      this.materialBag.add(
+        this.materialRegistry.get(fromMaterialId),
+        overflow * SPIRIT_STONE_CONVERSION_RATIO,
+      )
+
+      return { ok: false, reason: 'bag_full' }
+    }
+
+    this.notifyQuestMaterialGained(targetId, times)
+
+    return { ok: true, gained: times }
+  }
+
+  /**
+   * Quy đổi cảnh giới Linh Mộc/Linh Khoáng LÊN bậc kế (2026-08-28): gộp
+   * 10 bậc thấp → 1 bậc cao theo thang Phàm Nhân → Luyện Khí → Trúc Cơ.
+   * Gỗ `<realm>_wood` → `<nextRealm>_wood`; quáng giữ PHẨM khi lên cảnh
+   * giới `<realm>_ore_<quality>` → `<nextRealm>_ore_<quality>`. CHỈ có
+   * chiều lên (giữ sink). Giao dịch atomic: check đủ → trừ → cộng; trừ
+   * thất bại thì không cộng.
+   */
+  convertMaterialTier(
+    fromMaterialId: string,
+    times = 1,
+  ): { ok: boolean; reason?: string; gained?: number } {
+    const targetId = getNextTierMaterialId(fromMaterialId)
+
+    if (!targetId) {
+      return { ok: false, reason: 'no_higher_tier' }
+    }
+
+    if (!Number.isInteger(times) || times <= 0) {
+      return { ok: false, reason: 'invalid_amount' }
+    }
+
+    if (!this.materialRegistry.has(fromMaterialId) || !this.materialRegistry.has(targetId)) {
+      return { ok: false, reason: 'unknown_material' }
+    }
+
+    const cost = MATERIAL_TIER_CONVERSION_RATIO * times
+
+    if (!this.materialBag.remove(fromMaterialId, cost)) {
+      return { ok: false, reason: 'insufficient' }
+    }
+
+    const overflow = this.materialBag.add(this.materialRegistry.get(targetId), times)
+
+    if (overflow > 0) {
+      this.materialBag.add(
+        this.materialRegistry.get(fromMaterialId),
+        overflow * MATERIAL_TIER_CONVERSION_RATIO,
+      )
+
+      return { ok: false, reason: 'bag_full' }
+    }
+
+    this.notifyQuestMaterialGained(targetId, times)
+
+    return { ok: true, gained: times }
   }
 
   // =========================
@@ -1702,18 +1818,20 @@ export class GameManager {
     )
   }
 
-  /** W5 — cost Tẩy Luyện sau discount Khí Đường cho UI. */
-  getWashCost() {
+  /** W5 — cost Tẩy Luyện sau discount Khí Đường cho UI. realmId của trang
+   * bị quyết định PHẨM Linh Thạch tiêu (T2). */
+  getWashCost(realmId?: string) {
     this.syncEquipmentCostDiscount()
 
-    return this.equipmentSystem.getWashCost()
+    return this.equipmentSystem.getWashCost(realmId)
   }
 
-  /** W5 — cost Tinh Luyện sau discount Khí Đường cho UI. */
-  getRefineCost(lineCount: number, lockedCount: number) {
+  /** W5 — cost Tinh Luyện sau discount Khí Đường cho UI. realmId của trang
+   * bị quyết định PHẨM Linh Thạch tiêu (T2). */
+  getRefineCost(lineCount: number, lockedCount: number, realmId?: string) {
     this.syncEquipmentCostDiscount()
 
-    return this.equipmentSystem.getRefineCost(lineCount, lockedCount)
+    return this.equipmentSystem.getRefineCost(lineCount, lockedCount, realmId)
   }
 
   /**
@@ -1731,6 +1849,8 @@ export class GameManager {
       for (const reward of result.rewards) {
         if (this.materialRegistry.has(reward.materialId)) {
           this.materialBag.add(this.materialRegistry.get(reward.materialId), reward.amount)
+
+          this.notifyQuestMaterialGained(reward.materialId, reward.amount)
         }
       }
     }
@@ -1752,6 +1872,10 @@ export class GameManager {
       }
 
       const essenceId = equipmentEssenceMaterialId(instance.realmId)
+
+      if (!essenceId) {
+        continue
+      }
 
       const range = DISSOLVE_ESSENCE_RANGE_BY_QUALITY[instance.rarity]
 
@@ -2013,7 +2137,20 @@ export class GameManager {
   // material bình thường (plan Workstream F); claim() trả amount +
   // materialId, GameManager resolve template và cộng bag.
   collectBuilding(instanceId: string, player: PlayerData, currentTime = Date.now() / 1000): number {
-    void player
+    // Pre-check registry TRƯỚC khi claim reset mốc thời gian (review
+    // 2026-08-28): nếu materialId không resolve được mà vẫn claim, sản
+    // lượng bị mất trắng (mốc đã reset, bag không được cộng).
+    const instance = this.buildingManager.get(instanceId)
+
+    const template = instance ? this.buildingRegistry.get(instance.buildingId) : undefined
+
+    const expectedMaterialId = template
+      ? this.buildingSystem.resolveProducesMaterialId(template, player.realmId)
+      : undefined
+
+    if (!expectedMaterialId || !this.materialRegistry.has(expectedMaterialId)) {
+      return 0
+    }
 
     const claimed = this.buildingSystem.claim(
       instanceId,
@@ -2025,6 +2162,8 @@ export class GameManager {
 
     if (claimed.amount > 0 && claimed.materialId && this.materialRegistry.has(claimed.materialId)) {
       this.materialBag.add(this.materialRegistry.get(claimed.materialId), claimed.amount)
+
+      this.notifyQuestMaterialGained(claimed.materialId, claimed.amount)
     }
 
     return claimed.amount
@@ -2221,8 +2360,7 @@ export class GameManager {
     }
 
     const totalPercent = Math.min(
-      (HERB_AGE_BASE_SUCCESS_PERCENT[variant.age] ?? 0) +
-        (ALCHEMY_SUCCESS_BONUS_PERCENT[roomLevel - 1] ?? 0),
+      (HERB_AGE_BASE_SUCCESS_PERCENT[variant.age] ?? 0) + alchemyRoomSuccessBonus(roomLevel),
       300,
     )
 
@@ -2352,6 +2490,8 @@ export class GameManager {
 
         if (amount > 0 && this.materialRegistry.has(spiritStoneId)) {
           this.materialBag.add(this.materialRegistry.get(spiritStoneId), amount)
+
+          this.notifyQuestMaterialGained(spiritStoneId, amount)
         }
       },
     )
@@ -2360,6 +2500,18 @@ export class GameManager {
   // =========================
   // QUEST (Nhiệm Vụ)
   // =========================
+
+  /**
+   * Collect-quest hook (review 2026-08-28 bug #3) — gọi MỖI KHI material
+   * vào túi người chơi để tăng progress collect-quest đang active. KHÔNG
+   * gọi khi restore từ save (double-count). BattleLootSystem tự gọi trực
+   * tiếp (có deps quest); các đường cộng material còn lại của GameManager
+   * (production settle, claim toà nhà, Hóa Luyện, Linh Thạch reward...)
+   * đi qua helper này.
+   */
+  private notifyQuestMaterialGained(materialId: string, amount: number): void {
+    this.questSystem.onMaterialCollected(this.questRegistry, this.questManager, materialId, amount)
+  }
 
   getActiveQuests(): { quest: Quest; progress: QuestProgress }[] {
     if (!this.activePlayer) {
@@ -2647,10 +2799,18 @@ export class GameManager {
       )
 
       if (elapsedOfflineSeconds > 60) {
+        // T3 (economy-ecosystem-plan) — worker chạy offline như slot tay
+        // trong cap: truyền capacity + mốc bắt đầu vắng mặt để settle
+        // đúng cửa sổ.
         this.productionSystem.settleOffline(
           this.materialBag,
           this.materialRegistry,
           this.activePlayer.realmId,
+          Date.now(),
+          {
+            workerCapacity: this.activePlayer.autoWorkerCapacity ?? 0,
+            offlineSinceMs: save.player.lastSavedAt ?? Date.now(),
+          },
         )
       }
     }
@@ -2722,6 +2882,11 @@ export class GameManager {
         const material = this.materialRegistry.has(event.materialId)
           ? this.materialRegistry.get(event.materialId)
           : undefined
+
+        // Collect-quest hook (review 2026-08-28) — production settle là
+        // nguồn material chính của collect-quest. Chỉ tính lượng thật sự
+        // vào túi (trừ overflow).
+        this.notifyQuestMaterialGained(event.materialId, event.amount - (event.overflow ?? 0))
 
         this.notifications.push({
           kind: 'loot',

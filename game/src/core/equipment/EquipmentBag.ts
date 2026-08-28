@@ -5,6 +5,13 @@ export class EquipmentBag {
   private instances: EquipmentInstance[] = []
 
   add(instance: EquipmentInstance) {
+    // Dedupe theo instanceId — save import/hand-edit chứa trùng instanceId
+    // từng gây nhân bản trang bị + double stat modifier sau
+    // refreshModifiers() (review 2026-08-28). Bản ghi đầu thắng.
+    if (this.has(instance.instanceId)) {
+      return
+    }
+
     this.instances.push(instance)
   }
 

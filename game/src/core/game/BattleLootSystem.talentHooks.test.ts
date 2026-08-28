@@ -41,10 +41,16 @@ function createTestSetup(rewards: EnemyReward, talentIds: string[] = []) {
   const materialBag = new MaterialBag()
   const equipmentBag = { add: vi.fn() }
   const giveReward = vi.fn()
+  const applyHealing = vi.fn((target: { currentHp: number; maxHp: number }, amount: number) => {
+    const before = target.currentHp
+    target.currentHp = Math.min(target.maxHp, target.currentHp + Math.max(0, amount))
+    return target.currentHp - before
+  })
 
   const deps: BattleLootSystemDeps = {
     eventBus: { emit: vi.fn() },
     notifications: { push: vi.fn(), drain: () => [] },
+    combatSystem: { applyHealing },
     materialRegistry,
     materialBag,
     pillRegistry: {},
@@ -64,7 +70,7 @@ function createTestSetup(rewards: EnemyReward, talentIds: string[] = []) {
     rewardSystem: { give: giveReward },
     stageManager: { get: () => undefined },
     stageTemplates: {},
-    questSystem: { onEnemyDefeated: vi.fn() },
+    questSystem: { onEnemyDefeated: vi.fn(), onMaterialCollected: vi.fn() },
     questRegistry: {},
     questManager: {},
   } as unknown as BattleLootSystemDeps
@@ -76,7 +82,7 @@ function createTestSetup(rewards: EnemyReward, talentIds: string[] = []) {
 
   loot.setSession({} as RewardReceiver, player)
 
-  return { loot, player, materialBag, equipmentBag, giveReward }
+  return { loot, player, materialBag, equipmentBag, giveReward, applyHealing }
 }
 
 function createBattle(
@@ -278,6 +284,17 @@ describe('BattleLootSystem — Huyết Chiến (heal_on_kill)', () => {
     loot.processDefeatedEnemies(battle)
 
     expect(battle.player.currentHp).toBe(1000)
+  })
+
+  it('Huyết Chiến — hồi máu đi qua combatSystem.applyHealing (vitals event), không mutate thẳng HP', () => {
+    const rewards: EnemyReward = { techniqueInsight: 0, spiritStone: 0 }
+    const { loot, applyHealing } = createTestSetup(rewards, ['huyet_chien'])
+    const battle = createBattle([createDeadEnemy('mob', rewards)], { currentHp: 500, maxHp: 1000 })
+
+    loot.processDefeatedEnemies(battle)
+
+    expect(applyHealing).toHaveBeenCalledTimes(1)
+    expect(applyHealing).toHaveBeenCalledWith(battle.player, 20, battle.player.id, 'healing')
   })
 
   it('Huyết Chiến — diệt 2 quái cùng đợt hồi 2 lần', () => {

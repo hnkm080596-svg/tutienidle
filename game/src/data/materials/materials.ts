@@ -1,7 +1,7 @@
 import type { Material } from '@/core/material/Material'
 import { SPIRIT_STONE_MATERIALS } from '@/core/material/SpiritStoneMaterial'
 import type { ProfessionMaterialMeta } from '@/core/profession/ProfessionMaterial'
-import { EQUIPMENT_REALM_ESSENCE_MATERIAL } from '@/core/equipment/RefinementBalance'
+import { equipmentEssenceMaterialId } from '@/core/equipment/RefinementBalance'
 import { REALM_TIERS } from '@/core/realm/RealmTierMap'
 import {
   getProfessionGradeForRealm,
@@ -15,135 +15,6 @@ import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
 // 4 item Trúc Cơ ẩn) giữ NGUYÊN — không thuộc phạm vi đơn giản hoá
 // "nguyên liệu tự nhiên" của tài liệu.
 const legacyMaterials: Material[] = [
-  // ============================================================
-  // LINH MỘC (wood) — dùng cho Chế Phù. Cùng cơ chế niên đại.
-  // ============================================================
-  {
-    id: 'thanh_linh_moc',
-    name: 'Thanh Linh Mộc',
-    category: 'wood',
-    years: 10,
-    element: 'wood',
-    sourceType: 'exploration',
-    description:
-      'Gỗ linh mộc phổ thông, cần Thiên Công Phường xử lý thành Phù Chỉ mới dùng chế Phù được.',
-  },
-
-  {
-    id: 'bach_nien_thanh_linh_moc',
-    name: 'Bách Niên Thanh Linh Mộc',
-    category: 'wood',
-    years: 100,
-    element: 'wood',
-    sourceType: 'exploration',
-    description: 'Linh Mộc trăm năm tuổi, dẫn linh lực ổn định hơn hẳn.',
-  },
-
-  {
-    id: 'thien_nien_thanh_linh_moc',
-    name: 'Thiên Niên Thanh Linh Mộc',
-    category: 'wood',
-    years: 1000,
-    element: 'wood',
-    sourceType: 'exploration',
-    description: 'Linh Mộc nghìn năm tuổi, cực hiếm, gần như không hao tổn linh lực khi dẫn.',
-  },
-
-  // Thiên Công Phường (2026-08-15) — raw material do Building sản
-  // xuất, chưa qua chế luyện (đúng ví dụ chuỗi Iron Ore → Iron Ingot,
-  // giờ áp dụng thêm cho tuyến Linh Mộc → Phù Chỉ). Thay thế
-  // thanh-linh-moc làm nguyên liệu TRỰC TIẾP trong công thức chế Phù
-  // (xem data/alchemy/alchemyRecipes.ts).
-  {
-    id: 'phu_chi',
-    name: 'Phù Chỉ',
-    category: 'wood',
-    sourceType: 'building',
-    description: 'Giấy phù đã qua xử lý ở Thiên Công Phường, sẵn sàng để vẽ chú văn chế Phù.',
-  },
-
-  // ============================================================
-  // LINH THIẾT (ore) — dùng cho Bày Trận + Luyện Khí. KHÔNG dùng
-  // niên đại (đã có sẵn 5 biến thể Ngũ Hành làm trục đa dạng, tránh
-  // chồng 2 trục cùng lúc lên 1 nhóm — xem tunghematandsuch mục 8-9).
-  // ============================================================
-  {
-    id: 'huyen_thiet',
-    name: 'Huyền Thiết',
-    category: 'ore',
-    years: 0,
-    element: 'metal',
-    sourceType: 'exploration',
-    description: 'Khoáng thạch thường dùng trong luyện khí, thiên Kim.',
-  },
-
-  {
-    id: 'xich_dong',
-    name: 'Xích Đồng',
-    category: 'ore',
-    years: 0,
-    element: 'fire',
-    sourceType: 'exploration',
-    description: 'Khoáng kim loại chứa Hỏa linh khí.',
-  },
-
-  {
-    id: 'thanh-dong',
-    name: 'Thanh Đồng',
-    category: 'ore',
-    years: 0,
-    element: 'wood',
-    sourceType: 'exploration',
-    description: 'Khoáng kim loại thiên Mộc, dùng bày trận Mộc hệ.',
-  },
-
-  {
-    id: 'han-thiet',
-    name: 'Hàn Thiết',
-    category: 'ore',
-    years: 0,
-    element: 'water',
-    sourceType: 'exploration',
-    description: 'Khoáng thiết lạnh buốt, thiên Thủy.',
-  },
-
-  {
-    id: 'hoang_kim_linh_thiet',
-    name: 'Hoàng Kim Linh Thiết',
-    category: 'ore',
-    years: 0,
-    element: 'earth',
-    sourceType: 'exploration',
-    description: 'Khoáng thiết sắc vàng đất, thiên Thổ.',
-  },
-
-  // Orphan CÓ CHỦ ĐÍCH — Phase 4/5 (Herb Garden/Iron Mine/Smelter)
-  // không sản xuất chất này (đúng kế hoạch, tránh thêm building/
-  // recipe mới ngoài phạm vi Phase 10 "chỉ tune data"). Không thuộc
-  // nhóm Linh Thiết 5-hành (không có element gán) — nguồn cung thật
-  // để dành cho 1 đợt Economy tiếp theo.
-  {
-    id: 'tinh_ngan',
-    name: 'Tinh Ngân',
-    category: 'ore',
-    sourceType: 'building',
-    description:
-      'Khoáng vật quý hiếm, chưa có Building nào khai thác được — dự kiến bổ sung ở đợt sau.',
-  },
-
-  // MỚI (Phase 4) — raw material do Building sản xuất, chưa qua chế
-  // luyện (đúng ví dụ spec "Iron Ore → Iron Ingot", xem Phase 5's
-  // Smelter processing black-iron từ iron-ore này). Nguồn ĐỔI sang
-  // Khai Thác (exploration) — Thiết Khoáng Sơn đã bị thay bằng Linh
-  // Tuyền (xem data/building/buildings.ts).
-  {
-    id: 'quang_sat',
-    name: 'Quặng Sắt',
-    category: 'ore',
-    sourceType: 'exploration',
-    description: 'Quặng sắt thô, cần Lò Luyện xử lý mới dùng được.',
-  },
-
   // Realm Passive & Pressure System (2026-08-20) — currency Luyện Thể,
   // CHỈ rơi từ 20 quái Phàm Nhân (data/enemy/Enemies.ts), đầu tư qua
   // GameManager.investBodyRefinement() để lấp đầy 6 tầng (xem
@@ -406,16 +277,30 @@ function buildProfessionMaterials(): Material[] {
   }
 
   // ---- Tinh Hoa (Khí Đường Hóa Luyện, §7.5): tier theo cảnh giới trang bị ----
-  const ESSENCE_TIERS: ReadonlyArray<{ realmId: string; name: string }> = [
-    { realmId: 'mortal', name: 'Phàm Khí Tinh Hoa' },
-    { realmId: 'qi_refining', name: 'Bảo Khí Tinh Hoa' },
-    { realmId: 'foundation_establishment', name: 'Linh Khí Tinh Hoa' },
-  ]
+  // ĐỦ 9 realm (review 2026-08-28, economy-ecosystem-plan T1) — tier 4+ là
+  // scaffold data giống Linh Mộc/Linh Khoáng scaffold, chờ nội dung thật.
+  const ESSENCE_TIER_NAMES: Record<string, string> = {
+    mortal: 'Phàm Khí Tinh Hoa',
+    qi_refining: 'Bảo Khí Tinh Hoa',
+    foundation_establishment: 'Linh Khí Tinh Hoa',
+    golden_core: 'Pháp Khí Tinh Hoa',
+    nascent_soul: 'Pháp Bảo Tinh Hoa',
+    soul_transformation: 'Tiên Bảo Tinh Hoa',
+    void_refinement: 'Chí Bảo Tinh Hoa',
+    mahayana: 'Hỗn Độn Chí Bảo Tinh Hoa',
+    tribulation: 'Thiên Địa Trọng Khí Tinh Hoa',
+  }
 
-  for (const tier of ESSENCE_TIERS) {
+  for (const realmId of REALM_TIERS) {
+    const essenceId = equipmentEssenceMaterialId(realmId)
+
+    if (!essenceId) {
+      continue
+    }
+
     list.push({
-      id: equipmentEssenceMaterialId(tier.realmId),
-      name: tier.name,
+      id: essenceId,
+      name: ESSENCE_TIER_NAMES[realmId] ?? essenceId,
       category: 'essence',
       sourceType: 'building',
       description: 'Tinh hoa phân giải từ trang bị cùng cảnh giới — nguyên liệu Tinh Luyện.',
@@ -456,11 +341,6 @@ function buildReworkPillHerbs(): Material[] {
       }))
     }),
   )
-}
-
-/** Mapping cảnh giới trang bị → tier Tinh Hoa (chốt §13.6). */
-export function equipmentEssenceMaterialId(realmId: string): string {
-  return EQUIPMENT_REALM_ESSENCE_MATERIAL[realmId] ?? 'tinh_hoa_pham_khi'
 }
 
 function attachSharedProfessionResourceIcon(material: Material): Material {

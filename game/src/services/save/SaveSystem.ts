@@ -6,6 +6,13 @@ import type { EquipmentInstance } from '../../core/equipment/EquipmentInstance'
 import type { BuildingInstance } from '../../core/building/BuildingInstance'
 import type { EquipmentSlotState } from '../../core/equipment/EquipmentSlotState'
 import type { QuestManagerState } from '../../core/quest/QuestManager'
+import { validateGameSaveShape } from './saveShapeValidation'
+import { CURRENT_SAVE_VERSION } from './saveVersion'
+
+// Re-export cho mọi consumer cũ (SupabaseCharacterCreationService, tests...)
+// — nguồn sự thật của version nằm ở saveVersion.ts để tránh circular
+// import với saveShapeValidation.ts.
+export { CURRENT_SAVE_VERSION }
 
 const SAVE_KEY = 'tien-hiep-idle-save'
 
@@ -74,7 +81,7 @@ export const SAVE_REVISION_KEY = 'tien-hiep-idle-save-revision'
 // trước.
 // version 30 (2026-08-21): Hỏa FirePath redesign (Plans/FirePath) —
 // baseStats (Stats) thêm field BẮT BUỘC MỚI `projectileSpeedPercent`
-// (Tật Hỏa minor, xem core/combat/missile/MissileSystem.ts's fire()).
+// (Tật Hỏa minor; MissileSystem sau đó đã xóa, xem ActionImpactSystem).
 // Save cũ thiếu field này — không viết migration, cùng convention mọi
 // version trước.
 // version 31 (2026-08-21): Hỏa Trúc Cơ hoàn thiện (Plans/FirePath mục
@@ -225,7 +232,12 @@ export const SAVE_REVISION_KEY = 'tien-hiep-idle-save-revision'
 // thêm field `cultivationInsightAccumulator: number` (thiên phú Ngộ Đạo
 // tích luỹ tu vi đổi Cảm Ngộ Kỹ năng, xem stores/player.ts's cultivate()).
 // Không migration (development phase) — save v51 và cũ hơn -> 'incompatible'.
-export const CURRENT_SAVE_VERSION = 52 as const
+//
+// 2026-08-28 (save-shape-validation-plan.md, KHÔNG bump version vì không
+// đổi schema): loadGame()/importSaveRaw() chạy validateGameSaveShape()
+// sau khi version khớp — save đúng version nhưng thiếu/hỏng field bắt
+// buộc trả 'corrupted' (load) hoặc bị từ chối (import) thay vì crash
+// boot ở restoreFromSave() hay NaN cultivation vĩnh viễn.
 
 /** Settings phát sự kiện này để App dừng autosave trước khi xóa save. */
 export const SAVE_RESET_REQUEST_EVENT = 'tien-hiep:reset-save-requested'
@@ -393,6 +405,25 @@ export interface GameSave {
   quests?: QuestManagerState
 }
 
+/** Shape persist của một ProductionCycle — khớp core/production. */
+export interface ProductionCycleSave {
+  cycleId: string
+
+  siteId: string
+
+  collectionRealmId: string
+
+  siteLevelAtStart: number
+
+  rewardTableVersion: number
+
+  rollSeed: number
+
+  startedAtMs: number
+
+  completesAtMs: number
+}
+
 /** Shape persist của ProductionSiteState — khớp core/production. */
 export interface ProductionSiteStateSave {
   siteId: string
@@ -401,23 +432,12 @@ export interface ProductionSiteStateSave {
 
   autoRestart: boolean
 
-  activeCycle?: {
-    cycleId: string
+  activeCycle?: ProductionCycleSave
 
-    siteId: string
-
-    collectionRealmId: string
-
-    siteLevelAtStart: number
-
-    rewardTableVersion: number
-
-    rollSeed: number
-
-    startedAtMs: number
-
-    completesAtMs: number
-  }
+  // 2026-08-28 (economy-ecosystem-plan T3) — worker cycle dở dang trước
+  // đây KHÔNG được persist: mất trắng tiến trình mỗi lần reload và worker
+  // không sản xuất offline. Giờ lưu lại để settleOffline chạy tiếp trong cap.
+  workerCycles?: ProductionCycleSave[]
 }
 
 /** Shape persist của ActiveAlchemyJob — khớp core/alchemy. */
@@ -482,6 +502,8 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
       autoRestart: state.autoRestart,
 
       activeCycle: state.activeCycle,
+
+      workerCycles: state.workerCycles?.length ? state.workerCycles : undefined,
     })),
 
     alchemyJobs: gameManager.alchemySystem.getJobs(),
@@ -550,6 +572,18 @@ export function loadGame(): LoadOutcome {
     }
   }
 
+  // save-shape-validation-plan.md §3.4 — version khớp CHƯA đủ: save thiếu
+  // array/field bắt buộc (vd player.nodeLevels thời v47) từng gây crash
+  // boot hoặc NaN cultivation vĩnh viễn ở restoreFromSave(). Phát hiện
+  // có chủ đích tại đây để SaveIncompatibleScreen xử lý (Xuất/Xoá).
+  const shape = validateGameSaveShape(parsed)
+
+  if (!shape.ok) {
+    console.warn('[SaveSystem] Save đúng version nhưng sai shape:', shape.issues)
+
+    return { status: 'corrupted', raw }
+  }
+
   return { status: 'ok', save: parsed as GameSave }
 }
 
@@ -611,24 +645,37 @@ export function exportSaveToFile(raw: string) {
   URL.revokeObjectURL(url)
 }
 
-// Nhập save từ nội dung file .json do người chơi chọn — chỉ kiểm tra
-// tối thiểu (parse được + có field `version`/`player`) rồi ghi thẳng
-// vào SAVE_KEY; loadGame() ở lần reload kế tiếp sẽ tự đánh giá lại
-// tương thích version như mọi save khác. Backup save hiện tại (nếu
-// có) trước khi ghi đè.
+// Nhập save từ nội dung file .json do người chơi chọn — kiểm tra parse
+// được + có field `version`/`player`, và nếu là save ĐÚNG version hiện
+// hành thì phải nguyên shape (validateGameSaveShape) mới cho ghi — chặn
+// ghi đè save tốt bằng một save hỏng ngay tại cửa nhập. Save version
+// KHÁC vẫn được ghi (loadGame() lần reload kế sẽ phân loại 'incompatible'
+// và cho Export/Xoá qua SaveIncompatibleScreen — đúng flow recovery hiện
+// có). Backup save hiện tại (nếu có) trước khi ghi đè.
 export function importSaveRaw(raw: string): boolean {
-  try {
-    const parsed = JSON.parse(raw)
+  let parsed: unknown
 
-    if (
-      typeof parsed !== 'object' ||
-      parsed === null ||
-      !('version' in parsed) ||
-      !('player' in parsed)
-    ) {
-      return false
-    }
+  try {
+    parsed = JSON.parse(raw)
   } catch {
+    return false
+  }
+
+  if (
+    typeof parsed !== 'object' ||
+    parsed === null ||
+    !('version' in parsed) ||
+    !('player' in parsed)
+  ) {
+    return false
+  }
+
+  // Chỉ enforce shape khi đúng version hiện hành — save version khác để
+  // loadGame() xử lý 'incompatible' (không chặn đường recovery của user).
+  if (
+    (parsed as { version?: unknown }).version === CURRENT_SAVE_VERSION &&
+    !validateGameSaveShape(parsed).ok
+  ) {
     return false
   }
 

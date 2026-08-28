@@ -127,6 +127,42 @@ describe('QuestSystem', () => {
     expect(manager.getProgress('kill_test')?.progress).toBe(1)
   })
 
+  it('onMaterialCollected tăng progress collect-quest khớp materialId (review 2026-08-28 bug #3)', () => {
+    const { registry, manager, system } = setup()
+    const player = createPlayer()
+
+    system.getActiveQuests(registry, manager, player)
+
+    // Material lệch id → không tăng.
+    system.onMaterialCollected(registry, manager, 'other_material', 9)
+    expect(manager.getProgress('collect_test')?.progress).toBe(0)
+
+    // Đúng materialId → tăng đúng lượng.
+    system.onMaterialCollected(registry, manager, 'linh_chi', 3)
+    expect(manager.getProgress('collect_test')?.progress).toBe(3)
+
+    system.onMaterialCollected(registry, manager, 'linh_chi', 2)
+    expect(manager.getProgress('collect_test')?.progress).toBe(5)
+  })
+
+  it('onMaterialCollected bỏ qua amount NaN/âm và quest đã claim', () => {
+    const { registry, manager, system, bags, rewardSystem, materialRegistry, materialBag } = setup()
+    const player = createPlayer()
+
+    system.getActiveQuests(registry, manager, player)
+    materialBag.add(materialRegistry.get('linh_chi'), 5)
+    manager.incrementProgress('collect_test', 5)
+
+    const receiver = createReceiver()
+    expect(system.claim(registry, manager, rewardSystem, receiver, bags, 'collect_test')).toBe(true)
+
+    // Đã claim → không tăng nữa; NaN/âm bị bỏ qua.
+    system.onMaterialCollected(registry, manager, 'linh_chi', 7)
+    system.onMaterialCollected(registry, manager, 'linh_chi', Number.NaN)
+    system.onMaterialCollected(registry, manager, 'linh_chi', -5)
+    expect(manager.getProgress('collect_test')?.progress).toBe(5)
+  })
+
   it('daily reset xoá progress chưa claim nhưng không đụng completedOnceIds', () => {
     const { registry, manager, system } = setup()
     const player = createPlayer()

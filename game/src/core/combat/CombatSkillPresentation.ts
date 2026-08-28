@@ -3,7 +3,7 @@ import type { Skill, SkillExecutionPolicy } from '../skill/Skill'
 import type { SkillManager } from '../skill/SkillManager'
 import { getAttackIntervalSeconds } from './AttackTiming'
 import { selectAttackableTarget } from '../battle/ActionTargetingSystem'
-import { DEFAULT_COMBAT_AI_STRATEGY } from '../battle/CombatAiStrategy'
+import { DEFAULT_COMBAT_AI_STRATEGY, type CombatAiStrategy } from '../battle/CombatAiStrategy'
 
 type CadencePolicy = Extract<
   SkillExecutionPolicy,
@@ -87,7 +87,7 @@ function hasEnoughResource(skill: Skill, resourceCurrent: number): boolean {
     return true
   }
 
-  return resourceCurrent >= skill.cost
+  return resourceCurrent >= (skill.cost ?? 0)
 }
 
 /**
@@ -100,13 +100,15 @@ export function buildLoadoutPresentation(
   skillManager: SkillManager,
   slotCount: number,
   unlockedSlotCount: number,
+  aiStrategy: CombatAiStrategy = DEFAULT_COMBAT_AI_STRATEGY,
 ): CombatSkillPresentationState[] {
   const entries: CombatSkillPresentationState[] = []
 
-  // Target trong tầm hiện tại của avatar — dùng chung AI strategy default
-  // với scheduler để trạng thái out_of_range khớp hành vi runtime.
+  // Target trong tầm hiện tại của avatar — dùng CHUNG AI strategy với
+  // scheduler runtime (caller truyền strategy thật của player, không còn
+  // hard-code default) để trạng thái out_of_range khớp hành vi runtime.
   const hasTargetInRange = Boolean(
-    battle.playerMaterialized && selectAttackableTarget(battle, DEFAULT_COMBAT_AI_STRATEGY),
+    battle.playerMaterialized && selectAttackableTarget(battle, aiStrategy),
   )
 
   for (let slotIndex = 0; slotIndex < slotCount; slotIndex++) {
@@ -158,7 +160,7 @@ export function buildLoadoutPresentation(
       castRemaining: isCasting ? battle.player.castTimeRemaining : undefined,
       castTotal: isCasting ? battle.player.castTimeTotal : undefined,
       resourceCurrent,
-      resourceCost: skill.cost,
+      resourceCost: skill.cost ?? 0,
       state: deriveState({
         skill,
         cooldownRemaining,

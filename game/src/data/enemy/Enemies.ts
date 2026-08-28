@@ -81,7 +81,7 @@ const ENEMY_DEFINITIONS: Enemy[] = [
       spiritStone: 10,
 
       itemDrops: [
-        { kind: 'material', itemId: 'xich_dong', amount: 1, chance: 0.3 },
+        { kind: 'material', itemId: 'qi_refining_ore_hoang', amount: 1, chance: 0.3 },
         // Tăng tỷ lệ giai đoạn test (PLAN HOÀN CHỈNH mục 1) — trước
         // 0.05/0.2/0.5, quá thấp để kiểm thử weapon drop thực tế.
         { kind: 'equipment', itemId: 'base_kiem', chance: 0.15 },
@@ -95,7 +95,7 @@ const ENEMY_DEFINITIONS: Enemy[] = [
       spiritStone: 60,
 
       itemDrops: [
-        { kind: 'material', itemId: 'xich_dong', amount: 3, chance: 0.6 },
+        { kind: 'material', itemId: 'qi_refining_ore_hoang', amount: 3, chance: 0.6 },
         { kind: 'equipment', itemId: 'base_kiem', chance: 0.35 },
         { kind: 'technique', itemId: 'van_kiem_quyet', chance: 0.2 },
       ],
@@ -111,7 +111,7 @@ const ENEMY_DEFINITIONS: Enemy[] = [
       spiritStone: 150,
 
       itemDrops: [
-        { kind: 'material', itemId: 'xich_dong', amount: 6, chance: 1 },
+        { kind: 'material', itemId: 'qi_refining_ore_hoang', amount: 6, chance: 1 },
         { kind: 'equipment', itemId: 'base_kiem', chance: 0.75 },
         { kind: 'technique', itemId: 'van_kiem_quyet', chance: 1 },
         // Đột Phá Trúc Cơ (Phase 3) — 0.01%, mức thấp nhất từng có
@@ -268,7 +268,7 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 50,
       spiritStone: 12,
-      itemDrops: [{ kind: 'material', itemId: 'xich_dong', amount: 1, chance: 0.3 }],
+      itemDrops: [{ kind: 'material', itemId: 'qi_refining_ore_hoang', amount: 1, chance: 0.3 }],
     },
     eliteRewards: {
       techniqueInsight: 250,
@@ -331,7 +331,7 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 55,
       spiritStone: 14,
-      itemDrops: [{ kind: 'material', itemId: 'xich_dong', amount: 1, chance: 0.3 }],
+      itemDrops: [{ kind: 'material', itemId: 'qi_refining_ore_hoang', amount: 1, chance: 0.3 }],
     },
     eliteRewards: {
       techniqueInsight: 275,
@@ -395,7 +395,7 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 65,
       spiritStone: 16,
-      itemDrops: [{ kind: 'material', itemId: 'xich_dong', amount: 1, chance: 0.3 }],
+      itemDrops: [{ kind: 'material', itemId: 'qi_refining_ore_hoang', amount: 1, chance: 0.3 }],
     },
     eliteRewards: {
       techniqueInsight: 325,
@@ -432,7 +432,7 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 40,
       spiritStone: 10,
-      itemDrops: [{ kind: 'material', itemId: 'huyen_thiet', amount: 1, chance: 0.35 }],
+      itemDrops: [{ kind: 'material', itemId: 'qi_refining_ore_hoang', amount: 1, chance: 0.35 }],
     },
   }),
 
@@ -459,7 +459,7 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 75,
       spiritStone: 18,
-      itemDrops: [{ kind: 'material', itemId: 'huyen_thiet', amount: 1, chance: 0.3 }],
+      itemDrops: [{ kind: 'material', itemId: 'qi_refining_ore_hoang', amount: 1, chance: 0.3 }],
     },
     eliteRewards: {
       techniqueInsight: 375,
@@ -496,7 +496,7 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 45,
       spiritStone: 11,
-      itemDrops: [{ kind: 'material', itemId: 'huyen_thiet', amount: 1, chance: 0.35 }],
+      itemDrops: [{ kind: 'material', itemId: 'qi_refining_ore_hoang', amount: 1, chance: 0.35 }],
     },
   }),
 
@@ -523,7 +523,7 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 85,
       spiritStone: 20,
-      itemDrops: [{ kind: 'material', itemId: 'huyen_thiet', amount: 1, chance: 0.3 }],
+      itemDrops: [{ kind: 'material', itemId: 'qi_refining_ore_hoang', amount: 1, chance: 0.3 }],
     },
     eliteRewards: {
       techniqueInsight: 425,
@@ -561,7 +561,7 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 50,
       spiritStone: 12,
-      itemDrops: [{ kind: 'material', itemId: 'xich_dong', amount: 1, chance: 0.3 }],
+      itemDrops: [{ kind: 'material', itemId: 'qi_refining_ore_hoang', amount: 1, chance: 0.3 }],
     },
   }),
 
@@ -589,7 +589,7 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 95,
       spiritStone: 23,
-      itemDrops: [{ kind: 'material', itemId: 'xich_dong', amount: 1, chance: 0.3 }],
+      itemDrops: [{ kind: 'material', itemId: 'qi_refining_ore_hoang', amount: 1, chance: 0.3 }],
     },
     eliteRewards: {
       techniqueInsight: 475,
@@ -627,7 +627,7 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 55,
       spiritStone: 14,
-      itemDrops: [{ kind: 'material', itemId: 'xich_dong', amount: 1, chance: 0.3 }],
+      itemDrops: [{ kind: 'material', itemId: 'qi_refining_ore_hoang', amount: 1, chance: 0.3 }],
     },
   }),
 
@@ -655,7 +655,7 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 110,
       spiritStone: 27,
-      itemDrops: [{ kind: 'material', itemId: 'xich_dong', amount: 1, chance: 0.3 }],
+      itemDrops: [{ kind: 'material', itemId: 'qi_refining_ore_hoang', amount: 1, chance: 0.3 }],
     },
     eliteRewards: {
       techniqueInsight: 550,

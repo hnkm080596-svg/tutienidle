@@ -9,6 +9,7 @@
 // (Export/Xoá) thay vì bị migrate âm thầm.
 import { beforeEach, describe, expect, it } from 'vitest'
 import { CURRENT_SAVE_VERSION, loadGame } from './SaveSystem'
+import { createDefaultPlayer } from '../../core/player/Player'
 
 function writeRawSave(version: number): string {
   const raw = JSON.stringify({
@@ -17,6 +18,31 @@ function writeRawSave(version: number): string {
     player: { name: 'Test', spiritStone: 500 },
 
     materials: [{ materialId: 'legacy_material', amount: 3 }],
+  })
+
+  localStorage.setItem('tien-hiep-idle-save', raw)
+
+  return raw
+}
+
+// Save version hiện hành phải nguyên shape theo validateGameSaveShape —
+// fixture tối thiểu như writeRawSave không còn qua cửa load (đúng thiết
+// kế mới của save-shape-validation-plan.md).
+function writeValidCurrentSave(): string {
+  const raw = JSON.stringify({
+    version: CURRENT_SAVE_VERSION,
+
+    player: { ...createDefaultPlayer(), name: 'Test' },
+
+    techniques: [],
+    skills: [],
+    materials: [],
+    equipment: [],
+    pills: [],
+    talismans: [],
+    formations: [],
+    buildings: [],
+    equipmentSlots: [],
   })
 
   localStorage.setItem('tien-hiep-idle-save', raw)
@@ -47,7 +73,7 @@ describe('loadGame — retirement của auto-migration (v42–v46)', () => {
   }
 
   it(`version ${CURRENT_SAVE_VERSION} → ok giữ nguyên save`, () => {
-    const raw = writeRawSave(CURRENT_SAVE_VERSION)
+    const raw = writeValidCurrentSave()
 
     const outcome = loadGame()
 

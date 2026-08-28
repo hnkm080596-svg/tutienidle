@@ -157,3 +157,80 @@ describe('SkillEffectSystem — effect "ailment" elementApplicationPercent (Plan
     expect(targetAilments.getActiveIds()).toEqual(['bong'])
   })
 })
+
+describe('SkillEffectSystem — guard latent (attributes rỗng, target chết giữa chừng)', () => {
+  it('attributeScaling với attributes rỗng — multiplier không thành -Infinity', () => {
+    const eventBus = new EventBus()
+    const skillEffectSystem = new SkillEffectSystem()
+    const targetAilments = new AilmentSystem(new AilmentManager())
+    const ctx = createContext(eventBus, targetAilments)
+
+    const fired: number[] = []
+    ctx.fireHit = (_target, damageInfo) => {
+      fired.push(damageInfo.multiplier)
+    }
+
+    const source = createCombatant({ id: 'source', type: 'player' })
+    const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
+
+    skillEffectSystem.apply(
+      { type: 'damage', value: 1, attributeScaling: [{ attributes: [], ratioPerPoint: 0.003 }] },
+      source,
+      target,
+      ctx,
+    )
+
+    expect(fired).toHaveLength(1)
+    expect(Number.isFinite(fired[0])).toBe(true)
+    expect(fired[0]).toBeCloseTo(1, 5)
+  })
+
+  it('target chết vì damage — bỏ qua effect còn lại, không áp ailment lên xác', () => {
+    const eventBus = new EventBus()
+    const skillEffectSystem = new SkillEffectSystem()
+    const targetAilments = new AilmentSystem(new AilmentManager())
+    const ctx = createContext(eventBus, targetAilments)
+
+    const source = createCombatant({ id: 'source', type: 'player' })
+    const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
+
+    ctx.fireHit = () => {
+      target.currentHp = 0
+      target.alive = false
+    }
+
+    skillEffectSystem.applyAll(
+      [
+        { type: 'damage', value: 1 },
+        { type: 'ailment', ailmentId: 'bong', ailmentChance: 1 },
+      ],
+      source,
+      target,
+      ctx,
+    )
+
+    expect(targetAilments.getActiveIds()).toEqual([])
+  })
+
+  it('hitCountByRealm — dừng loạt hit khi target chết giữa chừng', () => {
+    const eventBus = new EventBus()
+    const skillEffectSystem = new SkillEffectSystem()
+    const targetAilments = new AilmentSystem(new AilmentManager())
+    const ctx = createContext(eventBus, targetAilments)
+
+    const source = createCombatant({ id: 'source', type: 'player', realmIndex: 3 })
+    const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
+
+    let hits = 0
+    ctx.fireHit = () => {
+      hits++
+      target.currentHp = 0
+      target.alive = false
+    }
+
+    skillEffectSystem.apply({ type: 'damage', value: 1, hitCountByRealm: true }, source, target, ctx)
+
+    // realmIndex 3 = 4 hit nếu target sống; chết sau hit 1 → dừng ngay.
+    expect(hits).toBe(1)
+  })
+})

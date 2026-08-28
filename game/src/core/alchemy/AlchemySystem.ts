@@ -92,19 +92,35 @@ export function jobSuccessPercent(
 
   const base = HERB_AGE_BASE_SUCCESS_PERCENT[variant?.age ?? 'decade']
 
-  const bonusIndex = Math.min(Math.max(job.roomLevelAtStart, 1), ALCHEMY_SUCCESS_BONUS_PERCENT.length) - 1
-  const bonus = ALCHEMY_SUCCESS_BONUS_PERCENT[bonusIndex] ?? 0
+  const bonus = alchemyRoomSuccessBonus(job.roomLevelAtStart)
 
   // Thiên phú Đan Duyên — cộng điểm % trước khi tách guaranteed/extra,
   // giữ cap 300 (plan §6).
   return Math.min(base + bonus + successBonusPercentPoints, 300)
 }
 
-/** Bảng bonus tỷ lệ thành đan theo level Đan Phòng — TÁCH BIỆT bảng speed (§8.3). */
-export const ALCHEMY_SUCCESS_BONUS_PERCENT: readonly number[] = [0, 5, 10, 15, 20]
+/** Bảng bonus tỷ lệ thành đan theo level Đan Phòng — TÁCH BIỆT bảng speed (§8.3).
+ * Đan Phòng maxLevel 9 (buildings.ts) — bảng phải đủ 9 entry; trước đây
+ * chỉ 5 entry khiến level 6-9 kẹt ở giá trị level 5 (review 2026-08-28,
+ * economy-ecosystem-plan T5). */
+export const ALCHEMY_SUCCESS_BONUS_PERCENT: readonly number[] = [0, 5, 10, 15, 20, 25, 30, 35, 40]
 
-/** Hệ số tốc độ luyện theo level Đan Phòng (§8.2). */
-export const ALCHEMY_SPEED_MULTIPLIERS: readonly number[] = [1.0, 1.15, 1.32, 1.52, 1.75]
+/**
+ * Bonus % thành đan theo level Đan Phòng — index clamp 1..length. Nguồn
+ * sự thật DUY NHẤT cho cả settle (jobSuccessPercent) lẫn preview
+ * (GameManager.previewAlchemyOutcome) để hai đường không bao giờ lệch
+ * (review 2026-08-28: preview dùng `?? 0` không clamp, settle clamp).
+ */
+export function alchemyRoomSuccessBonus(roomLevel: number): number {
+  const index = Math.min(Math.max(roomLevel, 1), ALCHEMY_SUCCESS_BONUS_PERCENT.length) - 1
+
+  return ALCHEMY_SUCCESS_BONUS_PERCENT[index] ?? 0
+}
+
+/** Hệ số tốc độ luyện theo level Đan Phòng (§8.2) — đủ 9 level (T5). */
+export const ALCHEMY_SPEED_MULTIPLIERS: readonly number[] = [
+  1.0, 1.15, 1.32, 1.52, 1.75, 2.01, 2.31, 2.66, 3.06,
+]
 
 export function alchemySecondsFor(recipe: AlchemyRecipe, roomLevel: number): number {
   const multiplier = ALCHEMY_SPEED_MULTIPLIERS[Math.min(Math.max(roomLevel, 1), ALCHEMY_SPEED_MULTIPLIERS.length) - 1] ?? 1
@@ -278,6 +294,13 @@ export class AlchemySystem {
       const pill = resolvePill(job.pillId)
 
       if (!recipe || !pill) {
+        // Recipe/pill không resolve được (data đổi/xoá giữa save và load) —
+        // TRƯỚC ĐÂY job bị xoá im lặng, mất trắng nguyên liệu đã reserve mà
+        // không có event nào (review 2026-08-28). Giờ phát event thất bại để
+        // UI thông báo; nguyên liệu đã đốt KHÔNG hoàn trả (job coi như luyện
+        // thất bại — đúng semantic §8.3, không tạo refund exploit).
+        this.pendingEvents.push({ jobId: job.jobId, pillId: job.pillId, pills: 0, success: false })
+
         continue
       }
 

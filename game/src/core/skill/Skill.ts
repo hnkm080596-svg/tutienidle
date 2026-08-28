@@ -77,9 +77,10 @@ export interface Skill extends Partial<SkillRuntimeStats> {
   // đọc fallback từ đây nữa. Giữ để UI/tooltip hiển thị.
   castTime?: number
 
-  // Lượng tài nguyên cần để cast, ý nghĩa tuỳ resourceType (mana
-  // hoặc rage) — 'none' thì cost không được dùng tới.
-  cost: number
+  // Lượng tài nguyên cần để cast, ý nghĩa tuỳ resourceType (mana, rage,
+  // sword_intent, momentum) — 'none' thì KHÔNG khai field này (skill free,
+  // runtime không đọc cost).
+  cost?: number
 
   target: SkillTarget
 

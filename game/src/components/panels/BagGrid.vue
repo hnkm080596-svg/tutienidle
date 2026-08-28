@@ -5,6 +5,7 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import EquipmentBagSection from './bag-sections/EquipmentBagSection.vue'
 import MaterialBagSection from './bag-sections/MaterialBagSection.vue'
 import PillBagSection from './bag-sections/PillBagSection.vue'
+import TabBar from '@/components/common/TabBar.vue'
 
 // Hành Trang (2026-08-25, resource-professions-rework plan §10.1) —
 // Phù/Trận khai tử: còn 3 tab (Trang Bị/Nguyên Liệu/Đan Dược), bỏ hẳn
@@ -41,17 +42,11 @@ const activeTabCount = computed(() => {
       <span class="bag-grid__count">{{ activeTabCount }} món</span>
     </div>
 
-    <div class="bag-grid__tabs bag-grid__tabs--three">
-      <button
-        v-for="entry in BAG_TABS"
-        :key="entry.tab"
-        type="button"
-        :class="{ 'is-active': ui.activeBagTab === entry.tab }"
-        @click="ui.setActiveBagTab(entry.tab)"
-      >
-        {{ entry.label }}
-      </button>
-    </div>
+    <TabBar
+      :tabs="BAG_TABS.map((entry) => ({ id: entry.tab, label: entry.label }))"
+      :model-value="ui.activeBagTab"
+      @update:model-value="ui.setActiveBagTab($event as BagTab)"
+    />
 
     <div class="bag-grid__body">
       <EquipmentBagSection v-if="activeTab === 'equipment'" />
@@ -93,31 +88,6 @@ const activeTabCount = computed(() => {
 .bag-grid__count {
   font-size: 0.66rem;
   color: var(--text-muted);
-}
-
-.bag-grid__tabs {
-  flex: 0 0 auto;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  align-items: stretch;
-  gap: 4px;
-}
-
-.bag-grid__tabs button {
-  justify-self: stretch;
-  padding: 4px 2px;
-  font-size: var(--text-xs);
-  background: var(--ink-800);
-  color: var(--text-secondary);
-  border: 1px solid var(--ink-line-soft);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-family: var(--font-body);
-}
-
-.bag-grid__tabs button.is-active {
-  border-color: var(--gold-500);
-  color: var(--gold-500);
 }
 
 .bag-grid__body {

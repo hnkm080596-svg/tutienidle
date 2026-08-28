@@ -50,10 +50,12 @@ import type { AffixRegistry } from '../equipment/AffixRegistry'
 import type { QuestSystem } from '../quest/QuestSystem'
 import type { QuestRegistry } from '../quest/QuestRegistry'
 import type { QuestManager } from '../quest/QuestManager'
+import type { CombatSystem } from '../combat/CombatSystem'
 
 export interface BattleLootSystemDeps {
   eventBus: EventBus
   notifications: NotificationQueue
+  combatSystem: CombatSystem
   materialRegistry: MaterialRegistry
   materialBag: MaterialBag
   pillRegistry: PillRegistry
@@ -158,14 +160,18 @@ export class BattleLootSystem {
 
       // Thiên phú Huyết Chiến — diệt quái hồi % max HP (plan §6). Đặt
       // ngoài nhánh receiver để kill nào cũng hồi, kể cả trận không loot.
+      // Đi qua combatSystem.applyHealing() để phát 'entity_vitals_changed'
+      // (HUD máu cập nhật), không mutate thẳng currentHp như trước.
       const healOnKillPercent = this.player
         ? getHealOnKillMaxHpPercent(this.player.selectedTalentIds)
         : 0
 
       if (healOnKillPercent > 0 && battle.player.currentHp > 0) {
-        battle.player.currentHp = Math.min(
-          battle.player.maxHp,
-          battle.player.currentHp + battle.player.maxHp * healOnKillPercent,
+        this.deps.combatSystem.applyHealing(
+          battle.player,
+          battle.player.maxHp * healOnKillPercent,
+          battle.player.id,
+          'healing',
         )
       }
 
@@ -328,6 +334,15 @@ export class BattleLootSystem {
                 : (drop.amount ?? 1)
 
             const materialOverflow = this.deps.materialBag.add(material, amount)
+
+            // Collect-quest hook (review 2026-08-28) — chỉ tính lượng thật
+            // sự vào túi (trừ overflow).
+            this.deps.questSystem.onMaterialCollected(
+              this.deps.questRegistry,
+              this.deps.questManager,
+              drop.itemId,
+              amount - materialOverflow,
+            )
 
             if (materialOverflow > 0) {
               overflowParts.push(`${materialOverflow} ${material.name}`)
@@ -531,7 +546,15 @@ export class BattleLootSystem {
 
     const material = this.deps.materialRegistry.get(DOAN_BAO_THACH_MATERIAL_ID)
 
-    this.deps.materialBag.add(material, amount)
+    const stoneOverflow = this.deps.materialBag.add(material, amount)
+
+    this.deps.questSystem.onMaterialCollected(
+      this.deps.questRegistry,
+      this.deps.questManager,
+      DOAN_BAO_THACH_MATERIAL_ID,
+      amount - stoneOverflow,
+    )
+
     this.emitRewardParticle(sourceId, 'item', 0x6fbf73)
 
     this.pushLootNotification(`+${amount} ${material.name}`, {
