@@ -1,4 +1,63 @@
 import type { Skill } from '../../core/skill/Skill'
+import { TRAN_SEQUENCE } from '../progression/KiemTuNodes'
+
+// 9 skill Kiếm Trận (chiêu trận) — table-driven từ `TRAN_SEQUENCE`
+// (KiemTuNodes.ts, dùng chung với các keystone tương ứng để tránh định
+// nghĩa lại chuỗi id/realmId/swordCount lần 2 — Task 5 review fix,
+// 2026-08-28). Mỗi trận unlock qua 1 keystone riêng (kiem_tran_luong_nghi
+// … kiem_tran_vo_cuc), cadence attack_speed như Huy Kiếm/Ngự Kiếm Thuật.
+// swordCount càng lớn thì damage/swordIntentDamageRatio càng cao — "dựa
+// vào số Kiếm Ý đang có" cùng công thức Kiếm Khai Thiên Môn. Công thức:
+// value = 0.5 + swordCount × 0.1; swordIntentDamageRatio = 0.0002 × swordCount
+// (số liệu GIỮ NGUYÊN so với bản hand-written trước review fix — refactor
+// thuần cấu trúc, không đổi con số).
+const KIEM_TRAN_SKILLS: Skill[] = TRAN_SEQUENCE.map((entry) => ({
+  id: entry.skillId,
+
+  name: entry.name,
+
+  description: entry.skillDescription ?? `Bày ${entry.name}, ${entry.swordCount} thanh phi kiếm hợp lực chém liên hoàn.`,
+
+  type: 'active',
+
+  level: 1,
+
+  maxLevel: 10,
+
+  requiredRealmId: entry.realmId,
+
+  cooldown: 1,
+
+  remainingCooldown: 0,
+
+  target: 'all_enemies',
+
+  execution: { kind: 'attack_speed', attackSpeedMultiplier: 1 },
+
+  effects: [
+    {
+      type: 'damage',
+
+      // Round — 0.5 + swordCount*0.1 / 0.0002*swordCount trôi float
+      // (vd swordCount=3 → 0.0006000000000000001) nếu không làm tròn về
+      // đúng độ chính xác của công thức gốc; giữ NGUYÊN số liệu hand-written
+      // trước review fix (không lệch dù chỉ 1e-16).
+      value: Math.round((0.5 + entry.swordCount * 0.1) * 10) / 10,
+
+      components: [{ kind: 'element', element: 'metal', ratio: 1 }],
+
+      swordIntentDamageRatio: Math.round(0.0002 * entry.swordCount * 10000) / 10000,
+    },
+  ],
+
+  resourceType: 'none',
+
+  buildTag: 'core',
+
+  unlocked: false,
+
+  equipped: false,
+}))
 
 // Skill execution policy rework (plan §8) — MỌI active skill khai
 // `execution` tường minh; runtime chỉ đọc field này (không fallback
@@ -896,406 +955,10 @@ export const SKILLS: Skill[] = [
     equipped: false,
   },
 
-  // 9 skill Kiếm Trận (chiêu trận) — mỗi trận unlock qua 1 keystone riêng
-  // (kiem_tran_luong_nghi...kiem_tran_vo_cuc trong KiemTuNodes.ts's
-  // TRAN_SEQUENCE), cadence attack_speed như Huy Kiếm/Ngự Kiếm Thuật.
-  // swordCount càng lớn thì damage/swordIntentDamageRatio càng cao —
-  // "dựa vào số Kiếm Ý đang có" cùng công thức Kiếm Khai Thiên Môn.
-  {
-    id: 'kiem_tran_luong_nghi',
-
-    name: 'Lưỡng Nghi Kiếm Trận',
-
-    description: 'Bày Lưỡng Nghi Kiếm Trận, 2 thanh phi kiếm hợp lực chém liên hoàn.',
-
-    type: 'active',
-
-    level: 1,
-
-    maxLevel: 10,
-
-    requiredRealmId: 'qi_refining',
-
-    cooldown: 1,
-
-    remainingCooldown: 0,
-
-    target: 'all_enemies',
-
-    execution: { kind: 'attack_speed', attackSpeedMultiplier: 1 },
-
-    effects: [
-      {
-        type: 'damage',
-
-        value: 0.7,
-
-        components: [{ kind: 'element', element: 'metal', ratio: 1 }],
-
-        swordIntentDamageRatio: 0.0004,
-      },
-    ],
-
-    resourceType: 'none',
-
-    buildTag: 'core',
-
-    unlocked: false,
-
-    equipped: false,
-  },
-
-  {
-    id: 'kiem_tran_tam_tai',
-
-    name: 'Tam Tài Kiếm Trận',
-
-    description: 'Bày Tam Tài Kiếm Trận, 3 thanh phi kiếm hợp lực chém liên hoàn.',
-
-    type: 'active',
-
-    level: 1,
-
-    maxLevel: 10,
-
-    requiredRealmId: 'foundation_establishment',
-
-    cooldown: 1,
-
-    remainingCooldown: 0,
-
-    target: 'all_enemies',
-
-    execution: { kind: 'attack_speed', attackSpeedMultiplier: 1 },
-
-    effects: [
-      {
-        type: 'damage',
-
-        value: 0.8,
-
-        components: [{ kind: 'element', element: 'metal', ratio: 1 }],
-
-        swordIntentDamageRatio: 0.0006,
-      },
-    ],
-
-    resourceType: 'none',
-
-    buildTag: 'core',
-
-    unlocked: false,
-
-    equipped: false,
-  },
-
-  {
-    id: 'kiem_tran_tu_tuong',
-
-    name: 'Tứ Tượng Kiếm Trận',
-
-    description: 'Bày Tứ Tượng Kiếm Trận, 4 thanh phi kiếm hợp lực chém liên hoàn.',
-
-    type: 'active',
-
-    level: 1,
-
-    maxLevel: 10,
-
-    requiredRealmId: 'golden_core',
-
-    cooldown: 1,
-
-    remainingCooldown: 0,
-
-    target: 'all_enemies',
-
-    execution: { kind: 'attack_speed', attackSpeedMultiplier: 1 },
-
-    effects: [
-      {
-        type: 'damage',
-
-        value: 0.9,
-
-        components: [{ kind: 'element', element: 'metal', ratio: 1 }],
-
-        swordIntentDamageRatio: 0.0008,
-      },
-    ],
-
-    resourceType: 'none',
-
-    buildTag: 'core',
-
-    unlocked: false,
-
-    equipped: false,
-  },
-
-  {
-    id: 'kiem_tran_ngu_hanh',
-
-    name: 'Ngũ Hành Kiếm Trận',
-
-    description: 'Bày Ngũ Hành Kiếm Trận, 5 thanh phi kiếm hợp lực chém liên hoàn.',
-
-    type: 'active',
-
-    level: 1,
-
-    maxLevel: 10,
-
-    requiredRealmId: 'nascent_soul',
-
-    cooldown: 1,
-
-    remainingCooldown: 0,
-
-    target: 'all_enemies',
-
-    execution: { kind: 'attack_speed', attackSpeedMultiplier: 1 },
-
-    effects: [
-      {
-        type: 'damage',
-
-        value: 1,
-
-        components: [{ kind: 'element', element: 'metal', ratio: 1 }],
-
-        swordIntentDamageRatio: 0.001,
-      },
-    ],
-
-    resourceType: 'none',
-
-    buildTag: 'core',
-
-    unlocked: false,
-
-    equipped: false,
-  },
-
-  {
-    id: 'kiem_tran_luc_dao',
-
-    name: 'Lục Đạo Kiếm Trận',
-
-    description: 'Bày Lục Đạo Kiếm Trận, 6 thanh phi kiếm hợp lực chém liên hoàn.',
-
-    type: 'active',
-
-    level: 1,
-
-    maxLevel: 10,
-
-    requiredRealmId: 'soul_transformation',
-
-    cooldown: 1,
-
-    remainingCooldown: 0,
-
-    target: 'all_enemies',
-
-    execution: { kind: 'attack_speed', attackSpeedMultiplier: 1 },
-
-    effects: [
-      {
-        type: 'damage',
-
-        value: 1.1,
-
-        components: [{ kind: 'element', element: 'metal', ratio: 1 }],
-
-        swordIntentDamageRatio: 0.0012,
-      },
-    ],
-
-    resourceType: 'none',
-
-    buildTag: 'core',
-
-    unlocked: false,
-
-    equipped: false,
-  },
-
-  {
-    id: 'kiem_tran_that_tinh',
-
-    name: 'Thất Tinh Kiếm Trận',
-
-    description: 'Bày Thất Tinh Kiếm Trận, 7 thanh phi kiếm hợp lực chém liên hoàn.',
-
-    type: 'active',
-
-    level: 1,
-
-    maxLevel: 10,
-
-    requiredRealmId: 'void_refinement',
-
-    cooldown: 1,
-
-    remainingCooldown: 0,
-
-    target: 'all_enemies',
-
-    execution: { kind: 'attack_speed', attackSpeedMultiplier: 1 },
-
-    effects: [
-      {
-        type: 'damage',
-
-        value: 1.2,
-
-        components: [{ kind: 'element', element: 'metal', ratio: 1 }],
-
-        swordIntentDamageRatio: 0.0014,
-      },
-    ],
-
-    resourceType: 'none',
-
-    buildTag: 'core',
-
-    unlocked: false,
-
-    equipped: false,
-  },
-
-  {
-    id: 'kiem_tran_bat_quai',
-
-    name: 'Bát Quái Kiếm Trận',
-
-    description: 'Bày Bát Quái Kiếm Trận, 8 thanh phi kiếm hợp lực chém liên hoàn.',
-
-    type: 'active',
-
-    level: 1,
-
-    maxLevel: 10,
-
-    requiredRealmId: 'body_integration',
-
-    cooldown: 1,
-
-    remainingCooldown: 0,
-
-    target: 'all_enemies',
-
-    execution: { kind: 'attack_speed', attackSpeedMultiplier: 1 },
-
-    effects: [
-      {
-        type: 'damage',
-
-        value: 1.3,
-
-        components: [{ kind: 'element', element: 'metal', ratio: 1 }],
-
-        swordIntentDamageRatio: 0.0016,
-      },
-    ],
-
-    resourceType: 'none',
-
-    buildTag: 'core',
-
-    unlocked: false,
-
-    equipped: false,
-  },
-
-  {
-    id: 'kiem_tran_cuu_cung',
-
-    name: 'Cửu Cung Kiếm Trận',
-
-    description: 'Bày Cửu Cung Kiếm Trận, 9 thanh phi kiếm hợp lực chém liên hoàn.',
-
-    type: 'active',
-
-    level: 1,
-
-    maxLevel: 10,
-
-    requiredRealmId: 'mahayana',
-
-    cooldown: 1,
-
-    remainingCooldown: 0,
-
-    target: 'all_enemies',
-
-    execution: { kind: 'attack_speed', attackSpeedMultiplier: 1 },
-
-    effects: [
-      {
-        type: 'damage',
-
-        value: 1.4,
-
-        components: [{ kind: 'element', element: 'metal', ratio: 1 }],
-
-        swordIntentDamageRatio: 0.0018,
-      },
-    ],
-
-    resourceType: 'none',
-
-    buildTag: 'core',
-
-    unlocked: false,
-
-    equipped: false,
-  },
-
-  {
-    id: 'kiem_tran_vo_cuc',
-
-    name: 'Vô Cực Kiếm Trận',
-
-    description: 'Bày Vô Cực Kiếm Trận, 9 thanh phi kiếm hợp thành vòng tròn vô tận chém liên hoàn.',
-
-    type: 'active',
-
-    level: 1,
-
-    maxLevel: 10,
-
-    requiredRealmId: 'tribulation',
-
-    cooldown: 1,
-
-    remainingCooldown: 0,
-
-    target: 'all_enemies',
-
-    execution: { kind: 'attack_speed', attackSpeedMultiplier: 1 },
-
-    effects: [
-      {
-        type: 'damage',
-
-        value: 1.4,
-
-        components: [{ kind: 'element', element: 'metal', ratio: 1 }],
-
-        swordIntentDamageRatio: 0.0018,
-      },
-    ],
-
-    resourceType: 'none',
-
-    buildTag: 'core',
-
-    unlocked: false,
-
-    equipped: false,
-  },
+  // 9 skill Kiếm Trận (chiêu trận) — generated từ KIEM_TRAN_SKILLS (xem
+  // định nghĩa + comment công thức ở đầu file, table-driven từ
+  // TRAN_SEQUENCE trong KiemTuNodes.ts).
+  ...KIEM_TRAN_SKILLS,
 
   // 9 passive — mỗi cảnh giới mở khóa 1, nguồn map nằm ở tâm pháp tu
   // luyện (xem Technique.passiveSkillIdsByRealm trong

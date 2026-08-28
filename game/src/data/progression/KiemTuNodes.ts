@@ -45,7 +45,19 @@ function stat(nodeId: string, statKey: StatModifier['stat'], flat?: number, perL
 
 // ───────────────────────── Cây Kiếm Trận ─────────────────────────
 
-const TRAN_SEQUENCE: Array<{ id: string; name: string; realmId: string; skillId: string; swordCount: number }> = [
+// Exported (không chỉ dùng nội bộ file này) — Skills.ts's 9 `kiem_tran_*`
+// skill entries generate THẲNG từ bảng này (Task 5 review fix, 2026-08-28)
+// để tránh định nghĩa lại chuỗi id/name/realmId/swordCount lần 2.
+// `skillDescription` optional — mặc định suy công thức chung, Vô Cực override
+// riêng (dòng chữ khác hẳn, không phải lỗi copy-paste).
+export const TRAN_SEQUENCE: Array<{
+  id: string
+  name: string
+  realmId: string
+  skillId: string
+  swordCount: number
+  skillDescription?: string
+}> = [
   { id: 'kiem_tran_luong_nghi', name: 'Lưỡng Nghi Kiếm Trận', realmId: 'qi_refining', skillId: 'kiem_tran_luong_nghi', swordCount: 2 },
   { id: 'kiem_tran_tam_tai', name: 'Tam Tài Kiếm Trận', realmId: 'foundation_establishment', skillId: 'kiem_tran_tam_tai', swordCount: 3 },
   { id: 'kiem_tran_tu_tuong', name: 'Tứ Tượng Kiếm Trận', realmId: 'golden_core', skillId: 'kiem_tran_tu_tuong', swordCount: 4 },
@@ -54,7 +66,11 @@ const TRAN_SEQUENCE: Array<{ id: string; name: string; realmId: string; skillId:
   { id: 'kiem_tran_that_tinh', name: 'Thất Tinh Kiếm Trận', realmId: 'void_refinement', skillId: 'kiem_tran_that_tinh', swordCount: 7 },
   { id: 'kiem_tran_bat_quai', name: 'Bát Quái Kiếm Trận', realmId: 'body_integration', skillId: 'kiem_tran_bat_quai', swordCount: 8 },
   { id: 'kiem_tran_cuu_cung', name: 'Cửu Cung Kiếm Trận', realmId: 'mahayana', skillId: 'kiem_tran_cuu_cung', swordCount: 9 },
-  { id: 'kiem_tran_vo_cuc', name: 'Vô Cực Kiếm Trận', realmId: 'tribulation', skillId: 'kiem_tran_vo_cuc', swordCount: 9 },
+  // swordCount + damage/ratio scaling ĐẠT TRẦN ở Cửu Cung (9 kiếm) — Vô Cực
+  // (đại cảnh giới cuối) CHỦ ĐỘNG dùng lại đúng swordCount/số liệu, chỉ khác
+  // biệt bằng realm gate cao hơn + flavor text riêng (vòng tròn vô tận), không
+  // phải lỗi copy-paste thiếu tăng tiến — 9 thanh kiếm đã là giới hạn thiết kế.
+  { id: 'kiem_tran_vo_cuc', name: 'Vô Cực Kiếm Trận', realmId: 'tribulation', skillId: 'kiem_tran_vo_cuc', swordCount: 9, skillDescription: 'Bày Vô Cực Kiếm Trận, 9 thanh phi kiếm hợp thành vòng tròn vô tận chém liên hoàn.' },
 ]
 
 const KIEM_TRAN_KEYSTONES: ProgressionNode[] = TRAN_SEQUENCE.map((entry, index) => ({
