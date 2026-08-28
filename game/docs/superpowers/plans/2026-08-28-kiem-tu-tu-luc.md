@@ -1,6 +1,6 @@
 # Kiếm Tu — Huy Kiếm / Kiếm Trận / Bạt Kiếm Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> Implement this plan sequentially in its own task branch and linked worktree. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Rework Huy Kiếm thành đòn cày vĩnh viễn (+1 flat dmg/10 cast, 3 level), dựng 2 đường Kiếm Tu — Kiếm Trận (thang 9 trận theo cảnh giới, AoE nhịp tốc đánh, scale theo Kiếm Ý combat) và Bạt Kiếm (ẩn, gate Huy Kiếm Lv3 + 9999 cast, tụ lực AoE toàn màn mỗi x giây).
 
