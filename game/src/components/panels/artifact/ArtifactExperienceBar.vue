@@ -6,6 +6,7 @@
 // dòng message kiểu LuyenThePanel.vue.
 import { computed } from 'vue'
 import { formatNumber } from '@/core/format/NumberFormatter'
+import Bar from '@/components/common/primitives/Bar.vue'
 import type { ArtifactExpStatus } from '@/core/artifact/ArtifactProgression'
 
 const props = defineProps<{
@@ -14,10 +15,6 @@ const props = defineProps<{
   required: number
   status: ArtifactExpStatus
 }>()
-
-const percent = computed(() =>
-  props.required > 0 ? Math.min(100, (props.experience / props.required) * 100) : 100,
-)
 
 const statusMessage = computed(() => {
   switch (props.status) {
@@ -39,9 +36,12 @@ const statusMessage = computed(() => {
       <span v-else>Viên Mãn</span>
     </div>
 
-    <div class="artifact-exp-bar__track">
-      <div class="artifact-exp-bar__fill" :style="{ width: `${percent}%` }" />
-    </div>
+    <Bar
+      class="artifact-exp-bar__track"
+      :value="experience"
+      :max="required"
+      :height="8"
+    />
 
     <p v-if="statusMessage" class="artifact-exp-bar__status">{{ statusMessage }}</p>
   </div>
@@ -62,24 +62,20 @@ const statusMessage = computed(() => {
 }
 
 .artifact-exp-bar__track {
-  height: 8px;
   border-radius: 4px;
-  background: var(--ink-950);
-  overflow: hidden;
+  --bar-track: var(--ink-950);
+  --bar-from: var(--chrome-300);
+  --bar-to: var(--chrome-300);
 }
 
-.artifact-exp-bar__fill {
-  height: 100%;
-  background: var(--chrome-300);
-  transition: width 0.2s ease;
+.artifact-exp-bar--content_ceiling .artifact-exp-bar__track {
+  --bar-from: var(--jade);
+  --bar-to: var(--jade);
 }
 
-.artifact-exp-bar--content_ceiling .artifact-exp-bar__fill {
-  background: var(--jade);
-}
-
-.artifact-exp-bar--capped_by_player .artifact-exp-bar__fill {
-  background: var(--azure);
+.artifact-exp-bar--capped_by_player .artifact-exp-bar__track {
+  --bar-from: var(--azure);
+  --bar-to: var(--azure);
 }
 
 .artifact-exp-bar__status {

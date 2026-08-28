@@ -4,6 +4,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 import type { AlchemyRecipe } from '@/core/alchemy/AlchemySystem'
+import Bar from '@/components/common/primitives/Bar.vue'
 import { PROFESSION_GRADE_NAMES, getProfessionGradeForRealm } from '@/core/profession/ProfessionGrade'
 
 // Luyện Đan (2026-08-25, resource-professions-rework plan §8/§9.3) —
@@ -310,9 +311,7 @@ function cancelJob(jobId: string) {
             <span>{{ job.remainingLabel }}</span>
           </div>
 
-          <div class="alchemy-job__progress">
-            <div class="alchemy-job__fill" :style="{ width: `${job.progress * 100}%` }" />
-          </div>
+          <Bar class="alchemy-job__progress" :value="job.progress" :max="1" :height="6" />
 
           <button type="button" class="alchemy-job__cancel" @click="cancelJob(job.jobId)">
             Huỷ (mất nguyên liệu)
@@ -528,15 +527,7 @@ function cancelJob(jobId: string) {
 }
 
 .alchemy-job__progress {
-  height: 6px;
-  background: var(--ink-700);
   border-radius: 3px;
-  overflow: hidden;
-}
-
-.alchemy-job__fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--jade), var(--chrome-300));
 }
 
 .alchemy-job__cancel {

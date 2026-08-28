@@ -23,6 +23,7 @@
 // tin inline mới, không chỉ lúc hover).
 import { computed } from 'vue'
 import SlotView from '../../common/SlotView.vue'
+import Bar from '../../common/primitives/Bar.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import type { TechniqueTooltipContent } from '@/composables/useTooltip'
 import { buildTechniqueSections } from '@/composables/useTechniqueSections'
@@ -62,14 +63,24 @@ const currentTierLabel = computed(() => TECHNIQUE_TIER_LABELS[tierProgress.value
 
 // Thanh exp — undefined nextThreshold nghĩa là đã Viên Mãn (MAX, hiện
 // đầy 100% thay vì chia cho undefined).
-const tierExpPercent = computed(() => {
+const tierExpValue = computed(() => {
   const { lowerBound, nextThreshold } = tierProgress.value
 
   if (nextThreshold === undefined) {
-    return 100
+    return 1
   }
 
-  return Math.min(100, ((techniqueInsight.value - lowerBound) / (nextThreshold - lowerBound)) * 100)
+  return techniqueInsight.value - lowerBound
+})
+
+const tierExpMax = computed(() => {
+  const { lowerBound, nextThreshold } = tierProgress.value
+
+  if (nextThreshold === undefined) {
+    return 1
+  }
+
+  return nextThreshold - lowerBound
 })
 
 const tierExpLabel = computed(() => {
@@ -124,9 +135,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 
       <span v-else class="loadout-card__empty">Trống — tự cấp khi bước vào nghề nghiệp tu luyện</span>
 
-      <div v-if="equipped" class="loadout-card__tier-bar">
-        <div class="loadout-card__tier-fill" :style="{ width: `${tierExpPercent}%` }" />
-      </div>
+      <Bar v-if="equipped" class="loadout-card__tier-bar" :value="tierExpValue" :max="tierExpMax" :height="4" />
 
       <span v-if="equipped" class="loadout-card__tier-label">{{ tierExpLabel }}</span>
 
@@ -192,16 +201,8 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 }
 
 .loadout-card__tier-bar {
-  height: 4px;
   margin-top: 2px;
   border-radius: 2px;
-  background: var(--ink-700);
-  overflow: hidden;
-}
-
-.loadout-card__tier-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--jade), var(--chrome-300));
 }
 
 .loadout-card__tier-label {

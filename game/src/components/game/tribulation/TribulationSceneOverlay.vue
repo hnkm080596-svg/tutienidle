@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { formatNumber } from '@/core/format/NumberFormatter'
+import Bar from '@/components/common/primitives/Bar.vue'
 
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
@@ -10,18 +11,18 @@ const battle = computed(() => { stateVersion.value; return gameManager.getBattle
 const seconds = computed(() => Math.max(0, Math.ceil(active.value?.secondsRemaining ?? 0)))
 const hp = computed(() => battle.value?.player.currentHp ?? 0)
 const maxHp = computed(() => battle.value?.player.maxHp ?? 1)
-const hpPercent = computed(() => Math.max(0, Math.min(100, hp.value / maxHp.value * 100)))
-const timePercent = computed(() => active.value ? active.value.secondsRemaining / active.value.durationSeconds * 100 : 0)
+const timeRemaining = computed(() => active.value?.secondsRemaining ?? 0)
+const timeDuration = computed(() => active.value?.durationSeconds ?? 1)
 </script>
 
 <template>
   <div v-if="active" class="tribulation-ui">
     <div class="tribulation-ui__timer-cluster">
       <div class="tribulation-ui__timer">{{ seconds }}s</div>
-      <div class="tribulation-ui__time-track"><div :style="{ width: `${timePercent}%` }" /></div>
+      <Bar class="tribulation-ui__time-track" :value="timeRemaining" :max="timeDuration" :height="8" anchor="right" />
     </div>
     <div class="tribulation-ui__hp-cluster">
-      <div class="tribulation-ui__hp-track"><div :style="{ width: `${hpPercent}%` }" /></div>
+      <Bar class="tribulation-ui__hp-track" :value="hp" :max="maxHp" :height="8" />
       <div class="tribulation-ui__hp">HP {{ formatNumber(Math.ceil(hp)) }} / {{ formatNumber(maxHp) }}</div>
       <div class="tribulation-ui__hint">Sống sót cho tới khi thiên kiếp kết thúc</div>
     </div>
@@ -36,10 +37,10 @@ const timePercent = computed(() => active.value ? active.value.secondsRemaining 
 .tribulation-ui__timer-cluster { top:calc(17% + 40px); }
 .tribulation-ui__hp-cluster { top:calc(62% + 84px); }
 .tribulation-ui__timer { font-size:var(--text-display-lg); font-weight:800; text-shadow:0 0 14px var(--scene-tribulation-glow); }
-.tribulation-ui__time-track,.tribulation-ui__hp-track { width:min(340px, 80vw); height:8px; margin-top:8px; overflow:hidden; border:1px solid var(--scene-tribulation-line); border-radius:8px; background:var(--scene-tribulation-deep); }
-.tribulation-ui__time-track div { height:100%; margin-left:auto; background:linear-gradient(90deg,var(--scene-tribulation-time),color-mix(in srgb, var(--scene-tribulation-line) 80%, white)); transition:width .15s linear; }
-.tribulation-ui__hp-track { border-color:color-mix(in srgb, var(--scene-tribulation-hp) 50%, var(--scene-tribulation-deep)); }
-.tribulation-ui__hp-track div { height:100%; background:var(--scene-tribulation-hp); transition:width .15s linear; }
+.tribulation-ui__time-track,.tribulation-ui__hp-track { width:min(340px, 80vw); margin-top:8px; border:1px solid var(--scene-tribulation-line); border-radius:8px; --bar-track: var(--scene-tribulation-deep); }
+.tribulation-ui__time-track { --bar-from: var(--scene-tribulation-time); --bar-to: color-mix(in srgb, var(--scene-tribulation-line) 80%, white); }
+.tribulation-ui__time-track :deep(.bar__fill),.tribulation-ui__hp-track :deep(.bar__fill) { transition:width .15s linear; }
+.tribulation-ui__hp-track { border-color:color-mix(in srgb, var(--scene-tribulation-hp) 50%, var(--scene-tribulation-deep)); --bar-from: var(--scene-tribulation-hp); --bar-to: var(--scene-tribulation-hp); }
 .tribulation-ui__hp,.tribulation-ui__hint { margin-top:6px; font-size:var(--text-xs); text-shadow:0 1px 3px #000; }
 .tribulation-ui__hint { color:var(--scene-tribulation-text-soft); }
 </style>

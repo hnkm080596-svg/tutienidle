@@ -32,6 +32,7 @@ import { getActiveTierIndex, getTierCap, isActiveTierUnlocked, isTierRequiredRea
 import { statLabel } from '@/core/stats/StatLabels'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
+import Bar from '@/components/common/primitives/Bar.vue'
 
 const ui = useUiStore()
 const player = usePlayerStore()
@@ -144,9 +145,7 @@ function close() {
               Khóa — cần Phàm Nhân tầng {{ row.requiredRealmLevel }}
             </p>
 
-            <div class="luyen-the-panel__tier-bar">
-              <div class="luyen-the-panel__tier-fill" :style="{ width: `${row.percent}%` }" />
-            </div>
+            <Bar class="luyen-the-panel__tier-bar" :value="row.progress" :max="row.cap" :height="5" />
 
             <span class="luyen-the-panel__tier-progress">
               {{ formatNumber(row.progress) }} / {{ formatNumber(row.cap) }}
@@ -253,15 +252,7 @@ function close() {
 }
 
 .luyen-the-panel__tier-bar {
-  height: 5px;
   border-radius: 3px;
-  background: var(--ink-700);
-  overflow: hidden;
-}
-
-.luyen-the-panel__tier-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--jade), var(--chrome-300));
 }
 
 .luyen-the-panel__tier-progress {

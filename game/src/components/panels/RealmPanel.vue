@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import PlayerPortrait from '@/components/common/PlayerPortrait.vue'
+import Bar from '@/components/common/primitives/Bar.vue'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager } from '@/composables/useGameState'
@@ -38,9 +39,6 @@ const canMajorBreakthrough = computed(() => {
   if (player.realmId === 'qi_refining') return canFoundation.value
   return canRealm.value
 })
-const cultivationPercent = computed(() => player.cultivationRequired > 0
-  ? Math.min(100, player.cultivation / player.cultivationRequired * 100)
-  : 100)
 
 function close() { ui.closeHomeOverlays() }
 function majorBreakthrough() {
@@ -64,8 +62,15 @@ function majorBreakthrough() {
       </div>
 
       <div class="realm-panel__cultivation">
-        <div class="realm-panel__cultivation-fill" :style="{ width: `${cultivationPercent}%` }" />
-        <span>{{ Math.floor(player.cultivation) }} / {{ Math.floor(player.cultivationRequired) }} Tu Vi</span>
+        <Bar
+          :value="player.cultivation"
+          :max="player.cultivationRequired"
+          :height="24"
+          pill
+          class="realm-panel__cultivation-bar"
+        >
+          <template #label>{{ Math.floor(player.cultivation) }} / {{ Math.floor(player.cultivationRequired) }} Tu Vi</template>
+        </Bar>
       </div>
 
       <div class="realm-panel__actions">
@@ -104,9 +109,8 @@ function majorBreakthrough() {
 .realm-panel__actions button { min-height: var(--tap-min); padding: 6px 16px; color: var(--ink-950); font-weight: 700; background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500)); border: 0; border-radius: var(--radius-sm); cursor: pointer; }
 .realm-panel__actions button:disabled { opacity: .38; filter: grayscale(1); cursor: not-allowed; }
 .realm-panel__actions label { color: var(--text-secondary); }
-.realm-panel__cultivation { position: relative; width: min(560px, 90%); height: 24px; margin: 0 auto; overflow: hidden; background: var(--ink-950); border: 1px solid var(--ink-line); border-radius: 999px; }
-.realm-panel__cultivation-fill { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, var(--jade), var(--chrome-300)); }
-.realm-panel__cultivation span { position: relative; z-index: 1; display: grid; height: 100%; place-items: center; color: var(--text-primary); font-size: var(--text-xs); }
+.realm-panel__cultivation { width: min(560px, 90%); margin: 0 auto; }
+.realm-panel__cultivation-bar { --bar-track: var(--ink-950); border: 1px solid var(--ink-line); }
 .realm-panel__nodes { display: grid; grid-template-columns: repeat(9, minmax(82px, 1fr)); gap: 8px; position: relative; }
 .realm-node { position: relative; min-height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; color: var(--text-muted); background: var(--ink-800); border: 1px solid var(--ink-line); border-radius: 50% 50% 12px 12px; }
 .realm-node:not(:last-child)::after { content: ''; position: absolute; left: 100%; top: 48%; width: 9px; height: 2px; background: var(--ink-line); }

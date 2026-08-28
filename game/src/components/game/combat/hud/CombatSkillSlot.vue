@@ -13,6 +13,7 @@
 // thống nhất 'out_of_range'.
 import { computed } from 'vue'
 import SlotView from '@/components/common/SlotView.vue'
+import Bar from '@/components/common/primitives/Bar.vue'
 import type { Skill } from '@/core/skill/Skill'
 import type { SlotPresentationState } from '@/components/common/SlotTypes'
 import type { TooltipContent } from '@/composables/useTooltip'
@@ -76,12 +77,12 @@ const maskPercent = computed(() => {
 
 const showMask = computed(() => props.isMasked && maskPercent.value > 0)
 
-const castPercent = computed(() => {
+const castValue = computed(() => {
   if (!props.castTotal || props.castTotal <= 0 || props.castRemaining === undefined) {
     return 0
   }
 
-  return Math.max(0, Math.min(100, ((props.castTotal - props.castRemaining) / props.castTotal) * 100))
+  return props.castTotal - props.castRemaining
 })
 
 const tooltip = computed<TooltipContent | undefined>(() => {
@@ -121,9 +122,13 @@ const tooltip = computed<TooltipContent | undefined>(() => {
       {{ Math.ceil(remaining * 10) / 10 }}
     </span>
 
-    <div v-if="isCasting" class="combat-skill-slot__cast-bar">
-      <div class="combat-skill-slot__cast-fill" :style="{ width: `${castPercent}%` }" />
-    </div>
+    <Bar
+      v-if="isCasting"
+      class="combat-skill-slot__cast-bar"
+      :value="castValue"
+      :max="castTotal ?? 1"
+      :height="3"
+    />
 
     <span v-if="resourceCost > 0" class="combat-skill-slot__resource-cost">
       {{ resourceCost }}
@@ -171,16 +176,15 @@ const tooltip = computed<TooltipContent | undefined>(() => {
   left: 2px;
   right: 2px;
   bottom: -6px;
-  height: 3px;
+  width: auto;
   border-radius: 2px;
-  background: var(--ink-900);
-  overflow: hidden;
   z-index: 9;
+  --bar-track: var(--ink-900);
+  --bar-from: var(--jade);
+  --bar-to: var(--jade);
 }
 
-.combat-skill-slot__cast-fill {
-  height: 100%;
-  background: var(--jade);
+.combat-skill-slot__cast-bar :deep(.bar__fill) {
   transition: width 0.05s linear;
 }
 

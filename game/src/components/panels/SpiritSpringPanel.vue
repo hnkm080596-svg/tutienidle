@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
+import Bar from '@/components/common/primitives/Bar.vue'
 import {
   SPIRIT_STONE_CONVERSION_RATIO,
   SPIRIT_STONE_MATERIAL,
@@ -69,10 +70,6 @@ const outputName = computed(() => {
   return gameManager.materialRegistry.has(id) ? gameManager.materialRegistry.get(id).name : 'Linh Thạch'
 })
 
-const storagePercent = computed(() =>
-  displayedCapacity.value > 0 ? Math.min(1, storedAmount.value / displayedCapacity.value) : 0,
-)
-
 function collect() {
   if (!instance.value || storedAmount.value <= 0) {
     return
@@ -129,9 +126,13 @@ function convertToThuongPham() {
     <div class="spirit-spring-panel__card">
       <h3>{{ outputName }} tích luỹ</h3>
 
-      <div class="spirit-spring-panel__progress" aria-hidden="true">
-        <div :style="{ width: `${storagePercent * 100}%` }" />
-      </div>
+      <Bar
+        class="spirit-spring-panel__progress"
+        :value="storedAmount"
+        :max="displayedCapacity"
+        :height="8"
+        pill
+      />
 
       <strong>{{ storedAmount.toLocaleString('vi-VN') }} / {{ displayedCapacity.toLocaleString('vi-VN') }}</strong>
 
@@ -258,15 +259,8 @@ function convertToThuongPham() {
 }
 
 .spirit-spring-panel__progress {
-  height: 8px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: var(--ink-700);
-}
-
-.spirit-spring-panel__progress div {
-  height: 100%;
-  background: linear-gradient(90deg, var(--scene-water-accent), var(--jade));
+  --bar-from: var(--scene-water-accent);
+  --bar-to: var(--jade);
 }
 
 .spirit-spring-panel__card button {

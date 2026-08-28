@@ -15,6 +15,7 @@ import { buildTechniqueSections } from '@/composables/useTechniqueSections'
 import { getTechniqueInsightTotalRequired, getTechniqueTierProgress } from '@/core/technique/TechniqueTier'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
+import Bar from '@/components/common/primitives/Bar.vue'
 
 const ui = useUiStore()
 const gameManager = useGameManager()
@@ -38,14 +39,24 @@ const tierProgress = computed(() => {
   return getTechniqueTierProgress(techniqueInsight.value, technique ? getTechniqueInsightTotalRequired(technique) : undefined)
 })
 
-const tierExpPercent = computed(() => {
+const tierExpValue = computed(() => {
   const { lowerBound, nextThreshold } = tierProgress.value
 
   if (nextThreshold === undefined) {
-    return 100
+    return 1
   }
 
-  return Math.min(100, ((techniqueInsight.value - lowerBound) / (nextThreshold - lowerBound)) * 100)
+  return techniqueInsight.value - lowerBound
+})
+
+const tierExpMax = computed(() => {
+  const { lowerBound, nextThreshold } = tierProgress.value
+
+  if (nextThreshold === undefined) {
+    return 1
+  }
+
+  return nextThreshold - lowerBound
 })
 
 const tierExpLabel = computed(() => {
@@ -68,9 +79,7 @@ function close() {
       </div>
 
       <div v-if="equippedTechnique" class="technique-panel__detail">
-        <div class="technique-panel__tier-bar">
-          <div class="technique-panel__tier-fill" :style="{ width: `${tierExpPercent}%` }" />
-        </div>
+        <Bar class="technique-panel__tier-bar" :value="tierExpValue" :max="tierExpMax" :height="5" />
 
         <span class="technique-panel__tier-label">{{ tierExpLabel }}</span>
 
@@ -105,16 +114,8 @@ function close() {
 }
 
 .technique-panel__tier-bar {
-  height: 5px;
   margin: 4px 0 0;
   border-radius: 3px;
-  background: var(--ink-700);
-  overflow: hidden;
-}
-
-.technique-panel__tier-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--jade), var(--chrome-300));
 }
 
 .technique-panel__tier-label {

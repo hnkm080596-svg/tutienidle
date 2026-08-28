@@ -6,6 +6,7 @@ import type { CombatEvent } from '@/core/combat/CombatEvent'
 import type { BattlePositionsEvent } from '@/core/battle/BattleEvents'
 import type { EntityVitalsChangedEvent } from '@/core/combat/EntityVitalsSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
+import Bar from '@/components/common/primitives/Bar.vue'
 import { usePlayerStore } from '@/stores/player'
 
 // Combat UI Redesign — kế thừa nguyên logic target-bar/player-bars từ
@@ -70,10 +71,6 @@ onUnmounted(() => {
   gameManager.eventBus.off<BattlePositionsEvent>('positions', onPositions)
 })
 
-function percent(current: number, max: number): number {
-  return max > 0 ? Math.max(0, Math.min(100, (current / max) * 100)) : 0
-}
-
 const rageLabel = computed(() => {
   stateVersion.value
 
@@ -122,20 +119,33 @@ const resourceMax = computed(() => usesSwordIntent.value ? MAX_SWORD_INTENT : MA
 <template>
   <div v-if="hasBattle" class="combat-status-bar">
     <div class="combat-status-bar__player">
-      <div class="combat-status-bar__bar combat-status-bar__bar--hp">
-        <div class="combat-status-bar__bar-fill" :style="{ width: `${percent(playerCurrentHp, playerMaxHp)}%` }" />
-        <span class="combat-status-bar__bar-label">{{ formatNumber(Math.ceil(playerCurrentHp)) }} / {{ formatNumber(playerMaxHp) }}</span>
-      </div>
+      <Bar
+        class="combat-status-bar__bar combat-status-bar__bar--hp"
+        :value="playerCurrentHp"
+        :max="playerMaxHp"
+        :height="14"
+      >
+        <template #label>{{ formatNumber(Math.ceil(playerCurrentHp)) }} / {{ formatNumber(playerMaxHp) }}</template>
+      </Bar>
 
-      <div v-if="player.cultivationPath === 'phap_tu'" class="combat-status-bar__bar combat-status-bar__bar--mp">
-        <div class="combat-status-bar__bar-fill" :style="{ width: `${percent(playerCurrentMp, playerMaxMp)}%` }" />
-        <span class="combat-status-bar__bar-label">{{ mpLabel }} {{ formatNumber(Math.ceil(playerCurrentMp)) }} / {{ formatNumber(Math.round(playerMaxMp)) }}</span>
-      </div>
+      <Bar
+        v-if="player.cultivationPath === 'phap_tu'"
+        class="combat-status-bar__bar combat-status-bar__bar--mp"
+        :value="playerCurrentMp"
+        :max="playerMaxMp"
+        :height="14"
+      >
+        <template #label>{{ mpLabel }} {{ formatNumber(Math.ceil(playerCurrentMp)) }} / {{ formatNumber(Math.round(playerMaxMp)) }}</template>
+      </Bar>
 
-      <div class="combat-status-bar__bar combat-status-bar__bar--rage">
-        <div class="combat-status-bar__bar-fill" :style="{ width: `${percent(resourceCurrent, resourceMax)}%` }" />
-        <span class="combat-status-bar__bar-label">{{ rageLabel }} {{ formatNumber(Math.ceil(resourceCurrent)) }} / {{ formatNumber(resourceMax) }}</span>
-      </div>
+      <Bar
+        class="combat-status-bar__bar combat-status-bar__bar--rage"
+        :value="resourceCurrent"
+        :max="resourceMax"
+        :height="14"
+      >
+        <template #label>{{ rageLabel }} {{ formatNumber(Math.ceil(resourceCurrent)) }} / {{ formatNumber(resourceMax) }}</template>
+      </Bar>
     </div>
 
   </div>
@@ -165,39 +175,31 @@ const resourceMax = computed(() => usesSwordIntent.value ? MAX_SWORD_INTENT : MA
 }
 
 .combat-status-bar__bar {
-  position: relative;
-  height: 14px;
   border-radius: 7px;
-  background: var(--ink-900);
+  --bar-track: var(--ink-900);
   border: 1px solid var(--ink-line);
-  overflow: hidden;
 }
 
-.combat-status-bar__bar-fill {
-  height: 100%;
+.combat-status-bar__bar :deep(.bar__fill) {
   transition: width 0.15s ease;
 }
 
-.combat-status-bar__bar--hp .combat-status-bar__bar-fill {
-  background: var(--hp-color);
+.combat-status-bar__bar--hp {
+  --bar-from: var(--hp-color);
+  --bar-to: var(--hp-color);
 }
 
-.combat-status-bar__bar--mp .combat-status-bar__bar-fill {
-  background: var(--jade);
+.combat-status-bar__bar--mp {
+  --bar-from: var(--jade);
+  --bar-to: var(--jade);
 }
 
-.combat-status-bar__bar--rage .combat-status-bar__bar-fill {
-  background: var(--gold-500);
+.combat-status-bar__bar--rage {
+  --bar-from: var(--gold-500);
+  --bar-to: var(--gold-500);
 }
 
-.combat-status-bar__bar-label {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--text-xs);
-  color: var(--text-primary);
+.combat-status-bar__bar :deep(.bar__label) {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
 }
 

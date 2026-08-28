@@ -10,6 +10,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { getNodeLevel } from '@/core/progression/NodeSystem'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
+import Bar from '@/components/common/primitives/Bar.vue'
 import type { ElementType } from '@/core/element/ElementType'
 
 const props = defineProps<{
@@ -94,9 +95,13 @@ function onClick(row: ReturnType<typeof buildRow>) {
       <span v-if="row.locked" class="element-path-list__meta">🔒 Chưa mở</span>
       <span v-else class="element-path-list__meta">{{ row.purchasedCount }}/{{ row.total }} lĩnh ngộ</span>
 
-      <div v-if="!row.locked" class="element-path-list__bar">
-        <div class="element-path-list__bar-fill" :style="{ width: `${row.total > 0 ? (row.purchasedCount / row.total) * 100 : 0}%` }" />
-      </div>
+      <Bar
+        v-if="!row.locked"
+        class="element-path-list__bar"
+        :value="row.purchasedCount"
+        :max="row.total"
+        :height="3"
+      />
     </button>
   </div>
 </template>
@@ -157,14 +162,8 @@ function onClick(row: ReturnType<typeof buildRow>) {
 }
 
 .element-path-list__bar {
-  height: 3px;
   border-radius: 2px;
-  background: var(--ink-700);
-  overflow: hidden;
-}
-
-.element-path-list__bar-fill {
-  height: 100%;
-  background: var(--el-color, var(--chrome-500));
+  --bar-from: var(--el-color, var(--chrome-500));
+  --bar-to: var(--el-color, var(--chrome-500));
 }
 </style>

@@ -9,6 +9,7 @@ import {
 } from '@/core/material/MaterialTierConversionBalance'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
 import BuildingConstructionGate from './BuildingConstructionGate.vue'
+import Bar from '@/components/common/primitives/Bar.vue'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
 
 // Sản Xuất (2026-08-25, resource-professions-rework plan §9.1) — thay
@@ -301,9 +302,7 @@ function convertTier(fromId: string) {
           <p class="site-card__reward">{{ rewardSummary(row.kind) }}</p>
 
           <template v-if="row.isProducing">
-            <div class="site-card__progress">
-              <div class="site-card__progress-fill" :style="{ width: `${row.progress * 100}%` }" />
-            </div>
+            <Bar class="site-card__progress" :value="row.progress" :max="1" :height="8" />
 
             <p class="site-card__status">Đang sản xuất — còn {{ row.remainingLabel }}</p>
           </template>
@@ -496,15 +495,10 @@ function convertTier(fromId: string) {
 }
 
 .site-card__progress {
-  height: 8px;
   border-radius: 4px;
-  background: var(--ink-700);
-  overflow: hidden;
 }
 
-.site-card__progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--jade), var(--chrome-300));
+.site-card__progress :deep(.bar__fill) {
   transition: width 0.5s linear;
 }
 
