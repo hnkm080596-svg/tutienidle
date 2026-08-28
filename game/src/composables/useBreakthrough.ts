@@ -12,8 +12,9 @@ import { advanceArtifactRealmLevel, createDefaultArtifactProgress } from '../cor
  * BreakthroughButton.vue mà không phải viết lại.
  *
  * Mỗi lần phá cảnh giới (tiểu HOẶC đại): realm passive tự sync
- * (GameManager.syncRealmPassive()) VÀ 3 skill chủ động đang trang bị
- * tự nâng level theo realmLevel (GameManager.syncSkillLevelToRealm()).
+ * (GameManager.syncRealmPassive()). Skill level KHÔNG còn bị cảnh giới
+ * chi phối (2026-08-28) — Huy Kiếm lên bằng cast, skill khác bằng Cảm
+ * Ngộ; đột phá chỉ còn cộng điểm thuộc tính + realm passive.
  * Pháp Tu Redesign (magicpath, 2026-08-18) — Tâm Pháp không còn tự áp
  * hiệu ứng đột phá nào nữa (breakthroughEffect đã xoá, Tâm Pháp không
  * còn cộng chỉ số dưới bất kỳ hình thức nào).
