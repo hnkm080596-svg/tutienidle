@@ -21,8 +21,18 @@ import { getRealmIndex } from '../realm/realmSystem'
 // không cần hằng số riêng.
 const ACTIVE_SKILL_DAMAGE_PERCENT_PER_LEVEL = 0.05
 
-export function getHuyKiemExperienceToNextLevel(level: number): number {
-  return Math.round(10 * Math.pow(1.4, Math.max(0, level - 1)) + Math.max(0, level - 1) * 15)
+export const HUY_KIEM_CASTS_PER_LEVEL = 10
+
+/** Mỗi 10 cast vĩnh viễn +1 flat damage cho Huy Kiếm — KHÔNG trần. */
+export function getHuyKiemFlatDamageBonus(totalExperience: number): number {
+  return Math.floor(Math.max(0, totalExperience) / HUY_KIEM_CASTS_PER_LEVEL)
+}
+
+/** Mốc level tuyến tính: Lv2 tại 1000 cast, Lv3 tại 10000 cast. */
+export function getHuyKiemLevelForCasts(totalExperience: number): number {
+  if (totalExperience >= 10000) return 3
+  if (totalExperience >= 1000) return 2
+  return 1
 }
 
 /** Policy dùng cooldown clock (chịu CDR) — còn lại dùng cadence Attack Speed. */
@@ -64,11 +74,19 @@ export class SkillSystem {
     const effectiveLevel = levelOverride ?? skill.level
     const levelMultiplier = 1 + (effectiveLevel - 1) * ACTIVE_SKILL_DAMAGE_PERCENT_PER_LEVEL
 
-    const effects = baseEffects.map(effect =>
-      effect.type === 'damage' && effect.value !== undefined
-        ? { ...effect, value: effect.value * levelMultiplier }
-        : effect,
-    )
+    const isHuyKiem = skill.id === 'tram'
+
+    const effects = baseEffects.map((effect) => {
+      if (effect.type !== 'damage' || effect.value === undefined) {
+        return effect
+      }
+
+      if (isHuyKiem) {
+        return { ...effect, value: effect.value + getHuyKiemFlatDamageBonus(skill.totalExperience ?? 0) }
+      }
+
+      return { ...effect, value: effect.value * levelMultiplier }
+    })
 
     return {
       effects,
@@ -411,18 +429,18 @@ export class SkillSystem {
   }
 
   private gainCastExperience(skill: Skill): void {
-    if (skill.id !== 'tram' || skill.level >= skill.maxLevel) return
+    if (skill.id !== 'tram') return
+
     skill.experience = (skill.experience ?? 0) + 1
     skill.totalExperience = (skill.totalExperience ?? 0) + 1
-    let levelsGained = 0
-    while (skill.level < skill.maxLevel) {
-      const required = getHuyKiemExperienceToNextLevel(skill.level)
-      if ((skill.experience ?? 0) < required) break
-      skill.experience = (skill.experience ?? 0) - required
-      skill.level++
-      levelsGained++
+
+    const targetLevel = getHuyKiemLevelForCasts(skill.totalExperience)
+
+    if (targetLevel > skill.level) {
+      const levelsGained = targetLevel - skill.level
+      skill.level = targetLevel
+      this.onLevelUp?.(skill, levelsGained)
     }
-    if (levelsGained > 0) this.onLevelUp?.(skill, levelsGained)
   }
 
   update(deltaSeconds: number, cooldownReduction = 0) {

@@ -22,7 +22,7 @@ export const SKILLS: Skill[] = [
 
     level: 1,
 
-    maxLevel: 18,
+    maxLevel: 3,
 
     experience: 0,
 
