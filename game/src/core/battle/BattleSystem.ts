@@ -29,6 +29,8 @@ import { getSkillRuntimeStat } from '../skill/SkillRuntimeStats'
 
 import type { CombatEntity } from '../combat/CombatEntity'
 
+import type { EntityVitalsChangedEvent } from '../combat/EntityVitalsSystem'
+
 import type { EventBus } from '../events/EventBus'
 
 import { ReactionManager } from '../element/ReactionManager'
@@ -139,6 +141,11 @@ const PLAYER_SPAWN_TELEGRAPH_SECONDS = 1.0
 // lần đổi row. Trong ICD Player vẫn cast/đánh mục tiêu đang trong tầm.
 const PLAYER_TELEPORT_ICD_SECONDS = 1
 
+// Kiếm Tu Bạt Kiếm (2026-08-28, Task 4) — amp "nhận→gây": mỗi kỳ tụ lực
+// phát quạt được khuếch đại theo % maxHP Player mất TRONG kỳ đó (spec
+// §4.2). Hệ số chỉnh qua playtest, chưa có nguồn nào khác ghi đè.
+const BAT_KIEM_AMP_PER_DAMAGE_TAKEN = 1.0
+
 function spawnTelegraphSeconds(entity: Pick<CombatEntity, 'isBoss' | 'isElite'>): number {
   if (entity.isBoss) {
     return SPAWN_TELEGRAPH_SECONDS.boss
@@ -175,6 +182,14 @@ export class BattleSystem {
   private battle: Battle | null = null
 
   private readonly reactionManager: ReactionManager
+
+  // Kiếm Tu Bạt Kiếm (Task 4) — id skill channel đang equip lúc start()
+  // (undefined = không có skill channel nào trong loadout, updateChanneling
+  // no-op). Override tickSeconds theo skillId, đọc bởi Task 7 UI slider
+  // qua setChannelTickSeconds() — có hiệu lực ngay cả giữa kỳ tụ đang dở.
+  private channelSkillId: string | undefined
+
+  private readonly channelTickSecondsOverrides = new Map<string, number>()
 
   constructor(
     private readonly combat: CombatSystem,
@@ -213,6 +228,34 @@ export class BattleSystem {
     private readonly getReactionKeepChance: () => number = () => 0,
   ) {
     this.reactionManager = new ReactionManager(eventBus)
+
+    // Kiếm Tu Bạt Kiếm (Task 4) — nguồn DUY NHẤT tích tuLucDamageTakenPercent:
+    // bất kỳ đòn nào làm currentHp Player giảm (đánh trúng/DoT/reaction/…)
+    // trong lúc đang tụ lực đều tính vào % maxHP mất của kỳ hiện tại. Reuse
+    // event bus 'entity_vitals_changed' (đã là nguồn phát duy nhất mọi thay
+    // đổi HP/Mana/Ward, xem EntityVitalsSystem.ts) thay vì móc riêng vào
+    // applyActionHit — DoT/lava zone/tribulation không đi qua applyActionHit.
+    this.eventBus.on<EntityVitalsChangedEvent>('entity_vitals_changed', (event) =>
+      this.onEntityVitalsChanged(event),
+    )
+  }
+
+  private onEntityVitalsChanged(event: EntityVitalsChangedEvent) {
+    const battle = this.battle
+
+    if (!battle || !battle.player.tuLucActive) {
+      return
+    }
+
+    if (event.entityId !== battle.player.id) {
+      return
+    }
+
+    if (event.maxHp <= 0 || event.hpAfter >= event.hpBefore) {
+      return
+    }
+
+    battle.player.tuLucDamageTakenPercent += (event.hpBefore - event.hpAfter) / event.maxHp
   }
 
   private aiStrategy(): CombatAiStrategy {
@@ -278,6 +321,20 @@ export class BattleSystem {
       // có artifact; undefined mặc định = không tick gì cả.
       artifactRuntime: undefined,
     }
+
+    // Kiếm Tu Bạt Kiếm (Task 4, spec §4.2) — skill channel đang equip
+    // trong loadout thì Player TỰ ĐỘNG vào trạng thái "tụ lực" ngay đầu
+    // trận (updateChanneling() sẽ chỉ thật sự tick khi state 'fighting',
+    // xem update()). Không có skill channel nào equip → no-op vĩnh viễn.
+    const channelEntry = this.skillManager
+      .getLoadoutEntries()
+      .find((entry) => entry.skill.execution?.kind === 'channel')
+
+    this.channelSkillId = channelEntry?.skill.id
+
+    player.tuLucActive = channelEntry !== undefined
+    player.tuLucElapsed = 0
+    player.tuLucDamageTakenPercent = 0
 
     // Quái đầu tiên cũng đi qua "telegraph → xuất hiện → tham chiến".
     // Overlap hợp lệ nên queue luôn thành công.
@@ -755,6 +812,11 @@ export class BattleSystem {
     )
 
     updatePhapTuBattleResources(battle.player, deltaSeconds)
+
+    // Kiếm Tu Bạt Kiếm (Task 4) — TỤ LỰC: tick độc lập với cast/cadence
+    // scheduler bên dưới (channel skill KHÔNG đi qua beginPlayerCast, xem
+    // ghi chú tại case 'channel' của beginPlayerCast()).
+    this.updateChanneling(battle, deltaSeconds)
 
     // [6] Tick skill timers: cadence Attack Speed theo slot (policy
     // attack_speed/attack_speed_cast) + enemy attack timer. Cooldown CDR
@@ -1839,11 +1901,17 @@ export class BattleSystem {
         return true
       }
 
-      // Kiếm Tu Bạt Kiếm (2026-08-28, Task 3/8) — 'channel' policy chưa
-      // có runtime thật (Task 4 sẽ build BattleSystem.updateChanneling()
-      // riêng, không đi qua beginPlayerCast). Case này CHỈ tồn tại để
-      // switch exhaustive qua type-check — không skill nào khai kind này
-      // hiện tại nên nhánh này không thể chạy trong thực tế.
+      // Kiếm Tu Bạt Kiếm (2026-08-28, Task 4) — 'channel' runtime thật
+      // SỐNG Ở updateChanneling()/resolveChannelTick(), KHÔNG đi qua
+      // beginPlayerCast: channel không có resource/cooldown transaction
+      // theo LƯỢT cast (nó tự tick theo tickSeconds độc lập, xem
+      // update()). Case này giữ nguyên là no-op CHỦ Ý — nếu 1 channel
+      // skill lỡ nằm trong loadoutEntries (updatePlayerSkills() vẫn
+      // duyệt qua nó), trả về false khiến scheduler bỏ qua slot này và
+      // thử slot kế tiếp trong CÙNG fixed-step, đúng hành vi "channel
+      // không tranh lượt với slot khác". Không cần sửa gì thêm ở đây —
+      // xem case dispatch quyết định KHÔNG dời scheduler cursor tới
+      // slot channel.
       case 'channel': {
         return false
       }
@@ -2254,6 +2322,108 @@ export class BattleSystem {
     }
 
     this.actionImpact.endSkillBatch(battle)
+  }
+
+  /**
+   * Kiếm Tu Bạt Kiếm (Task 4, spec §4.2) — TỤ LỰC: tick độc lập, KHÔNG
+   * qua beginPlayerCast/cadence/CDR. `tuLucElapsed` đếm dồn mỗi frame;
+   * `while` (không `if`) để bắt kịp trường hợp deltaSeconds lớn bất
+   * thường bỏ qua nhiều kỳ liền — cùng gotcha đã gặp ở Kim Thế/Lava Zone.
+   * Chết/khống chế cứng cắt NGAY, huỷ tiến độ kỳ đang dở (không nổ phát
+   * dở dang) — kiểm tra TRƯỚC khi cộng dồn elapsed của tick này.
+   */
+  private updateChanneling(battle: Battle, deltaSeconds: number) {
+    const player = battle.player
+
+    if (!player.tuLucActive) {
+      return
+    }
+
+    if (this.isChannelInterrupted(battle)) {
+      player.tuLucActive = false
+      player.tuLucElapsed = 0
+      player.tuLucDamageTakenPercent = 0
+
+      return
+    }
+
+    if (!this.channelSkillId) {
+      return
+    }
+
+    const skill = this.skillManager.get(this.channelSkillId)
+
+    if (!skill || skill.execution?.kind !== 'channel') {
+      return
+    }
+
+    player.tuLucElapsed += deltaSeconds
+
+    const execution = skill.execution
+
+    const tickSeconds = this.channelTickSecondsOverrides.get(skill.id) ?? execution.tickSeconds
+
+    while (tickSeconds > 0 && player.tuLucElapsed >= tickSeconds) {
+      player.tuLucElapsed -= tickSeconds
+
+      this.resolveChannelTick(battle, skill, player.tuLucDamageTakenPercent)
+
+      player.tuLucDamageTakenPercent = 0
+    }
+  }
+
+  /** Chết hoặc khống chế cứng (Choáng/Thạch Hóa/Trói Chân, spec §4.2) cắt tụ lực. */
+  private isChannelInterrupted(battle: Battle): boolean {
+    const player = battle.player
+
+    if (!player.alive) {
+      return true
+    }
+
+    const ailments = battle.playerAilments
+
+    return ailments.has('choang') || ailments.has('thach_hoa') || ailments.has('troi_chan')
+  }
+
+  /**
+   * Một kỳ tụ lực nổ — resolve qua ĐÚNG đường cast tức thời sẵn có
+   * (`resolveSkillEffects`), target = enemy gần nhất bất kỳ (shape thật
+   * sự của skill 'all_lanes' do `targetingForSkill()` tự quyết theo
+   * `skill.target === 'all_enemies'`, KHÔNG phụ thuộc primary chọn ai —
+   * xem CombatAction.ts:44). Amp "nhận→gây": khuếch đại tạm thời qua
+   * đúng multiplier path sẵn có (`finalDamagePercent`, đã được
+   * CombatSystem.resolveAttack() nhân vào MỌI đòn của nguồn) — KHÔNG
+   * đụng CombatSystem.ts. Trả `stats.finalDamagePercent` về giá trị gốc
+   * NGAY sau lệnh gọi đồng bộ này (fireSkillHit trong resolveSkillEffects
+   * resolve hit ngay tại chỗ, không qua windup queue) để không rò rỉ amp
+   * sang các đòn khác trong cùng frame (vd enemy attack cùng lúc, dù
+   * multiplier chỉ đọc phía attacker nên rủi ro rò rỉ gần như không có,
+   * vẫn khôi phục cho sạch).
+   */
+  private resolveChannelTick(battle: Battle, skill: Skill, damageTakenPercent: number) {
+    const target = this.findNearestAliveEnemy(battle)
+
+    if (!target) {
+      return
+    }
+
+    const player = battle.player
+
+    const originalFinalDamagePercent = player.stats.finalDamagePercent
+
+    player.stats.finalDamagePercent =
+      originalFinalDamagePercent + damageTakenPercent * BAT_KIEM_AMP_PER_DAMAGE_TAKEN
+
+    try {
+      this.resolveSkillEffects(skill, player, target, battle)
+    } finally {
+      player.stats.finalDamagePercent = originalFinalDamagePercent
+    }
+  }
+
+  /** Task 7 UI slider (spec §4.2, 3–9s) gọi — có hiệu lực NGAY, kể cả giữa kỳ tụ đang dở. */
+  setChannelTickSeconds(skillId: string, seconds: number): void {
+    this.channelTickSecondsOverrides.set(skillId, seconds)
   }
 
   /**
