@@ -2,6 +2,7 @@
 
 > Tài liệu định hướng tổng hợp, lập ngày 2026-08-27 sau đợt rà soát toàn diện 5 mảng: Chiến đấu, Tiến trình, Kinh tế, UI/UX, Kỹ thuật & Nội dung.
 > Mỗi hạng mục lớn có plan chi tiết riêng (dẫn link bên dưới). Khi plan và roadmap lệch nhau, plan chi tiết là nguồn sự thật cho hạng mục đó.
+> Audit toàn diện mới nhất (bug list + trạng thái từng plan, verify theo file:line): [project-review-2026-08-28.md](./project-review-2026-08-28.md).
 
 ## 1. Nhận định hiện trạng
 
@@ -17,8 +18,8 @@
 1. **Tường nội dung Trúc Cơ**: hết nội dung thật ở Trúc Cơ tầng 18 (~34 giờ chơi); stage Trúc Cơ là bản clone của Luyện Khí (`data/stage/Stages.ts:357`); không có Kim Đan (`GameManager.ts:1439` trả `false` cứng).
 2. **Thiên phú trang trí** *(đã giải quyết 2026-08-28 — [talent-direction-choice-plan.md](./talent-direction-choice-plan.md))*: cũ — 11/13 thiên phú có `effects: []` rỗng; nay thiên phú là quyết định chọn hướng Đạo duy nhất (roll 9 chọn 1, 12 talent có effect thật).
 3. **Thiếu âm thanh hoàn toàn**: 0 file audio trong project; 1.137 spritesheet VFX không được tham chiếu.
-4. **Bug và drop chết trong kinh tế**: mapping Tinh Hoa sai cho realm 4+ (`RefinementBalance.ts:74-81`); vật liệu legacy vẫn rơi nhưng không còn sink.
-5. **Save không validate shape**: chỉ kiểm tra version, tiền lệ crash boot v47 có thể tái diễn.
+4. **Bug và drop chết trong kinh tế** *(phần lớn đã giải quyết 2026-08-28 — economy-ecosystem T1–T6+T8 xong; còn T7 Chọn Thảo, T9 docs-sync)*: mapping Tinh Hoa sai cho realm 4+ (`RefinementBalance.ts:74-81`); vật liệu legacy vẫn rơi nhưng không còn sink.
+5. **Save không validate shape** *(đã giải quyết 2026-08-28 — save-shape-validation Wave 1 + bổ sung equipment/slot shape khi review)*: chỉ kiểm tra version, tiền lệ crash boot v47 có thể tái diễn.
 6. **Tài liệu lệch code**: `game-guide.md` và `item-design-reference.md` mô tả hệ thống đã xóa.
 7. **Nợ kỹ thuật**: `GameManager.ts` 2.703 dòng; nhiều hệ thống core 0 test; 1 spec E2E; không có lint.
 
@@ -39,7 +40,7 @@ Mục tiêu: loại bug hiện hữu và nợ tài liệu trước khi xây ti�
 | Hạng mục | Plan |
 |---|---|
 | Validate shape save khi load/import (chặn crash kiểu v47) | [save-shape-validation-plan.md](./save-shape-validation-plan.md) |
-| Sửa bug Tinh Hoa realm 4+, dọn drop legacy, sửa curve Linh Tuyền | [economy-fixes-sinks-plan.md](./economy-fixes-sinks-plan.md) |
+| Audit & sửa hệ sinh thái kinh tế: Tinh Hoa realm 4+, phẩm Linh Thạch, worker offline, Đan Phòng 6–9, drop chết, Chọn Thảo, curve Linh Tuyền | [economy-ecosystem-plan.md](./economy-ecosystem-plan.md) (gộp Phần A của economy-fixes-sinks-plan) |
 | Đồng bộ `game-guide.md`, `item-design-reference.md` với code | [docs-sync-audit-plan.md](./docs-sync-audit-plan.md) |
 | Sửa HUD `out_of_range` đọc sai strategy (nằm trong combat pass) | [combat-balance-pass-plan.md](./combat-balance-pass-plan.md) |
 
@@ -74,8 +75,9 @@ Mục tiêu: mở rộng các trục progression đang bỏ hoang.
 
 | Hạng mục | Plan |
 |---|---|
-| Kiến Cơ 4 bậc, node tree Kiếm Tu, chiều sâu idle (Cảm Ngộ offline, nguồn tăng tốc tu luyện) | [progression-depth-plan.md](./progression-depth-plan.md) |
-| Sink Linh Thạch hậu kỳ, vendor, Điểm Rèn, filter túi đồ | [economy-fixes-sinks-plan.md](./economy-fixes-sinks-plan.md) (phần Trung bình) |
+| Kiến Cơ 4 bậc, chiều sâu idle (Cảm Ngộ offline, nguồn tăng tốc tu luyện) | [progression-depth-plan.md](./progression-depth-plan.md) |
+| **Kiếm Tu rework**: Huy Kiếm (+1 flat dmg/10 cast vô trần, Lv 3 nấc), 2 đường Kiếm Trận (thang Lưỡng Nghi→Vô Cực theo 9 cảnh giới) / Bạt Kiếm ẩn (tụ lực 3–9s), Vạn Kiếm Triều Tông thành ultimate Trúc Cơ | [../superpowers/specs/2026-08-28-kiem-tu-design.md](./superpowers/specs/2026-08-28-kiem-tu-design.md) |
+| Sink Linh Thạch hậu kỳ, vendor, Điểm Rèn, filter túi đồ | [economy-fixes-sinks-plan.md](./economy-fixes-sinks-plan.md) (Phần B — Phần A đã gộp vào [economy-ecosystem-plan.md](./economy-ecosystem-plan.md)) |
 
 Tiêu chí hoàn thành: gate đột phá có chất lượng khác nhau; Kiếm Tu có chiều sâu build tương đương Pháp Tu; idle có đường nâng cấp.
 
@@ -91,12 +93,14 @@ Tiêu chí hoàn thành: không file nào quá ~1.000 dòng trong core/game; m�
 ## 4. Phụ thuộc giữa các plan
 
 ```
-Phase 0:  save-validation ─┐
-          economy-fixes  ──┼─► Phase 1: talent-direction (độc lập)
-          docs-sync      ──┘    truc-co-kim-dan (cần economy A1 — mapping Tinh Hoa — xong trước M2/M3)
-                                combat-balance (độc lập, nên sau docs-sync để cập nhật guide một lần)
+Phase 0:  save-validation    ─┐
+          economy-ecosystem ──┼─► Phase 1: talent-direction (độc lập)
+          docs-sync        ──┘    truc-co-kim-dan (cần economy-ecosystem T1 — mapping Tinh Hoa — và T2 — phẩm Linh Thạch theo realm — xong trước M2/M3)
+                                  combat-balance (độc lập, nên sau docs-sync để cập nhật guide một lần)
 Phase 2:  audio-game-feel, ui-refactor — độc lập, chạy song song Phase 1
 Phase 3:  progression-depth — cần truc-co-kim-dan M2 xong (để nối Kiến Cơ vào gate Kim Đan thật)
+          kiem-tu-design  — độc lập với truc-co-kim-dan về logic, nhưng thang trận Tứ Tượng+
+                            chỉ sống khi gate Kim Đan thật mở (data ghi sẵn, khóa chờ)
 Phase 4:  tech-debt — chạy nền liên tục
 ```
 
@@ -107,7 +111,7 @@ Phase 4:  tech-debt — chạy nền liên tục
 ## 5. Ngoài phạm vi roadmap này
 
 - **Phù/Trận Pháp**: đã có roadmap hậu kỳ riêng (`future-talisman-formation-system-plan.md`), giữ khóa.
-- **Bàn cờ vây 19×19**: hướng rework đã ghi trong `game-guide.md`, chưa đưa vào roadmap hiện tại — cần quyết định riêng trước khi lập plan.
+- **Bàn cờ vây 19×19**: hướng rework đã ghi trong `game-guide.md`, chưa đưa vào roadmap hiện tại — cần quyết định riêng trước khi lập plan.(bỏ)
 - **Server roll thiên phú / xác minh backend**: thuộc plan online (`online-login-cloud-save-plan.md`); plan thiên phú trong roadmap này chỉ làm phần effect client-side.
 - **Thể Tu**: plumbing combat đã có nhưng chưa đủ nội dung phát hành; được ghi nhận như lựa chọn mở rộng trong `progression-depth-plan.md`, không cam kết mốc.
 - **World map**: `src/core/world-map/` mới có hạ tầng (hex layout, validator), chưa có dữ liệu bản đồ thật. Chờ nội dung Kim Đan ổn định (truc-co-kim-dan M3) rồi mới quyết định Thanh Vân có chuyển sang biểu diễn world-map hay giữ stage list.

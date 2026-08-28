@@ -104,6 +104,58 @@ describe('GameManager — Pháp Tu MetalPath (Kim Node Tree)', () => {
     ).toBeGreaterThanOrEqual(0.005)
   })
 
+  it('Kim Thế keystone cấp kimTheGainPerProc — nhánh Pure tích được Kim Thế khi proc Xuất Huyết', () => {
+    const gameManager = setup()
+
+    const player = createDefaultPlayer()
+
+    player.skillInsight = 30
+    player.realmId = 'foundation_establishment'
+
+    expect(gameManager.purchaseNode('kim_linh_ngo', player)).toBe(true)
+    expect(gameManager.purchaseNode('minor_metal_intensity', player)).toBe(true)
+
+    const runtimeBefore = gameManager.getSkillRuntimeStats(player)
+
+    expect(runtimeBefore.kimTheGainPerProc).toBe(0)
+
+    expect(gameManager.purchaseNode('kim_truc_co_kim_the', player)).toBe(true)
+
+    const runtimeStats = gameManager.getSkillRuntimeStats(player)
+
+    // Keystone "Kim Thế" phải cấp nền gain per-proc (pattern Tụ Hỏa của
+    // Hỏa — không có stat này thì currentKimThe không bao giờ tăng).
+    expect(runtimeStats.kimTheGainPerProc).toBeGreaterThanOrEqual(1)
+  })
+
+  it('Huyết Phá node cấp huyetPhaGainPerProc + huyetPhaBurstDamage cùng lúc (BattleSystem.huyetPha contract)', () => {
+    const gameManager = setup()
+
+    const player = createDefaultPlayer()
+
+    player.skillInsight = 30
+    player.realmId = 'foundation_establishment'
+
+    expect(gameManager.purchaseNode('kim_linh_ngo', player)).toBe(true)
+    expect(gameManager.purchaseNode('minor_metal_intensity', player)).toBe(true)
+    expect(gameManager.purchaseNode('kim_truc_co_kim_the', player)).toBe(true)
+
+    const runtimeBefore = gameManager.getSkillRuntimeStats(player)
+
+    expect(runtimeBefore.huyetPhaGainPerProc).toBe(0)
+    expect(runtimeBefore.huyetPhaBurstDamage).toBe(0)
+
+    expect(gameManager.purchaseNode('minor_metal_shatter', player)).toBe(true)
+
+    const runtimeStats = gameManager.getSkillRuntimeStats(player)
+
+    // Node "Huyết Phá" cấp CẢ HAI stat cùng lúc — charge không burst thì
+    // chạm ngưỡng chỉ reset về 0 mà không damage (xem
+    // BattleSystem.huyetPha.test.ts "huyetPhaBurstDamage=0").
+    expect(runtimeStats.huyetPhaGainPerProc).toBeGreaterThanOrEqual(1)
+    expect(runtimeStats.huyetPhaBurstDamage).toBeGreaterThan(0)
+  })
+
   it('Kim Trúc Cơ Reaction: Huyết Dẫn cấp reactionEffectPercent, Cộng Huyết CHẶN nếu chưa chọn', () => {
     const gameManager = setup()
 

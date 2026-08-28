@@ -690,9 +690,15 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
       name: 'Kim Thế',
 
       description:
-        'Kim Thế tối đa +1 tầng — mở khoá nhánh Pure Kim Thế (keystone đối diện bị khoá).',
+        'Mỗi lần Xuất Huyết áp thành công tích 1 Kim Thế (tối đa +1 tầng) — mở khoá nhánh Pure Kim Thế (keystone đối diện bị khoá).',
 
-      effect: { skillModifiers: skillMod('diem_kim_thuat', [{ stat: 'kimTheMaxStacksBonus', flat: 1 }]) },
+      effect: {
+        skillModifiers: skillMod('diem_kim_thuat', [
+          { stat: 'kimTheGainPerProc', flat: 1 },
+
+          { stat: 'kimTheMaxStacksBonus', flat: 1 },
+        ]),
+      },
     },
 
     reactionSpecs: [
@@ -737,11 +743,16 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
 
         name: 'Huyết Phá',
 
-        description: '+0.5% Xuyên DOT RES mỗi tầng Kim Thế mỗi cấp.',
+        description:
+          'Mỗi lần Xuất Huyết áp thành công tích 1 Huyết Phá — chạm ngưỡng nổ 1 cục burst (mỗi cấp +0.5% Xuyên DOT RES mỗi tầng Kim Thế).',
 
         effect: {
           skillModifiers: skillMod('diem_kim_thuat', [
             { stat: 'kimTheDotResistancePenetrationPercentPerStack', flat: 0.005, perLevelFlat: 0.005 },
+
+            { stat: 'huyetPhaGainPerProc', flat: 1 },
+
+            { stat: 'huyetPhaBurstDamage', flat: 60 },
           ]),
         },
       },
@@ -817,9 +828,15 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
       name: 'Thổ Thế',
 
       description:
-        '+5% Sát Thương Kỹ Năng — mở khoá nhánh Pure Thổ Thế (keystone đối diện bị khoá).',
+        'Mỗi lần thi triển Thổ Cầu Thuật tích 1 Thổ Thế, +5% Sát Thương Kỹ Năng — mở khoá nhánh Pure Thổ Thế (keystone đối diện bị khoá).',
 
-      effect: { skillModifiers: skillMod('tho_cau_thuat', [{ stat: 'skillImpactPercent', flat: 0.05 }]) },
+      effect: {
+        skillModifiers: skillMod('tho_cau_thuat', [
+          { stat: 'thoTheGainPerCast', flat: 1 },
+
+          { stat: 'skillImpactPercent', flat: 0.05 },
+        ]),
+      },
     },
 
     reactionSpecs: [

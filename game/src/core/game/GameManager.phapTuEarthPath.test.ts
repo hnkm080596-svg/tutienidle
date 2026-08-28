@@ -111,6 +111,30 @@ describe('GameManager — Pháp Tu EarthPath (Thổ Node Tree)', () => {
     expect(finalStats.earthPower).toBeGreaterThanOrEqual(3)
   })
 
+  it('Thổ Thế keystone cấp thoTheGainPerCast — nhánh Pure tích được Thổ Thế khi cast', () => {
+    const gameManager = setup()
+
+    const player = createDefaultPlayer()
+
+    player.skillInsight = 30
+    player.realmId = 'foundation_establishment'
+
+    expect(gameManager.purchaseNode('tho_linh_ngo', player)).toBe(true)
+    expect(gameManager.purchaseNode('minor_earth_intensity', player)).toBe(true)
+
+    const runtimeBefore = gameManager.getSkillRuntimeStats(player)
+
+    expect(runtimeBefore.thoTheGainPerCast).toBe(0)
+
+    expect(gameManager.purchaseNode('tho_truc_co_tho_the', player)).toBe(true)
+
+    const runtimeStats = gameManager.getSkillRuntimeStats(player)
+
+    // Keystone "Thổ Thế" phải cấp nền gain per-cast (pattern Tụ Hỏa của
+    // Hỏa — không có stat này thì currentThoThe không bao giờ tăng).
+    expect(runtimeStats.thoTheGainPerCast).toBeGreaterThanOrEqual(1)
+  })
+
   it('Thổ Trúc Cơ Reaction: Định Thổ cấp reactionEffectPercent, Định Lực CHẶN nếu chưa chọn', () => {
     const gameManager = setup()
 
