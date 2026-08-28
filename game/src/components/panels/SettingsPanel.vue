@@ -7,6 +7,7 @@ import { exportSaveToFile, getRawSave, importSaveRaw, SAVE_RESET_REQUEST_EVENT }
 import { UI_SCALE_OPTIONS, loadUiScale, saveUiScale } from '@/composables/uiScale'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import GameButton from '@/components/common/GameButton.vue'
+import Chip from '@/components/common/primitives/Chip.vue'
 
 const player = usePlayerStore()
 const gameManager = useGameManager()
@@ -145,15 +146,15 @@ function handleReset() {
       <h4>Cỡ Chữ Giao Diện</h4>
 
       <div class="settings-panel__ui-scale-options">
-        <button
+        <Chip
           v-for="option in UI_SCALE_OPTIONS"
           :key="option"
-          type="button"
-          :class="{ 'is-active': uiScale === option }"
+          class="settings-panel__ui-scale-option"
+          :active="uiScale === option"
           @click="handleUiScale(option)"
         >
           {{ Math.round(option * 100) }}%
-        </button>
+        </Chip>
       </div>
     </section>
 
@@ -236,30 +237,15 @@ function handleReset() {
   gap: var(--space-2);
 }
 
-.settings-panel__ui-scale-options button {
-  min-height: var(--tap-min);
+.settings-panel__ui-scale-option {
   padding: 0 var(--space-4);
-  background: var(--ink-800);
-  border: 1px solid var(--ink-line);
-  border-radius: var(--radius-sm);
+  border-color: var(--ink-line);
   color: var(--text-primary);
   font-size: var(--text-sm);
-  cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+  --chip-active-bg: color-mix(in srgb, var(--chrome-300) 12%, transparent);
 }
 
-.settings-panel__ui-scale-options button:hover {
+.settings-panel__ui-scale-option:hover {
   border-color: var(--chrome-500);
-}
-
-.settings-panel__ui-scale-options button.is-active {
-  background: color-mix(in srgb, var(--chrome-300) 12%, transparent);
-  border-color: var(--chrome-300);
-  color: var(--chrome-100);
-}
-
-.settings-panel__ui-scale-options button:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring-chrome);
 }
 </style>

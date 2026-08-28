@@ -10,6 +10,7 @@ import { useGameManager } from '@/composables/useGameState'
 import { useBattleActions } from '@/composables/useBattleActions'
 import BuildingConstructionGate from './BuildingConstructionGate.vue'
 import GameButton from '@/components/common/GameButton.vue'
+import Chip from '@/components/common/primitives/Chip.vue'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 
 const player = usePlayerStore()
@@ -196,28 +197,30 @@ function start() {
       <nav class="stage-select__filters" aria-label="Chọn địa giới và chương">
         <div class="stage-select__filter-group">
           <small>Địa Giới</small>
-          <button
+          <Chip
             v-for="zone in zones"
             :key="zone.id"
-            type="button"
-            :class="{ 'is-selected': zone.id === selectedZoneId, 'is-locked': !isZoneUnlocked(zone.id) }"
+            class="stage-select__filter-chip"
+            :class="{ 'is-locked': !isZoneUnlocked(zone.id) }"
+            :active="zone.id === selectedZoneId"
+            :disabled="!isZoneUnlocked(zone.id)"
             @click="selectZone(zone.id)"
           >
             {{ zone.name }}
-          </button>
+          </Chip>
         </div>
 
         <div class="stage-select__filter-group stage-select__filter-group--chapters">
           <small>Cảnh Giới Khu Vực</small>
-          <button
+          <Chip
             v-for="chapter in chapterOptions"
             :key="chapter.chapter"
-            type="button"
-            :class="{ 'is-selected': chapter.chapter === selectedChapter }"
+            class="stage-select__filter-chip"
+            :active="chapter.chapter === selectedChapter"
             @click="selectChapter(chapter.chapter)"
           >
             {{ chapter.label }}
-          </button>
+          </Chip>
         </div>
       </nav>
 
@@ -276,15 +279,9 @@ function start() {
         </div>
 
         <div class="stage-select__mode">
-          <button type="button" :class="{ 'is-active': mode === 'manual' }" @click="mode = 'manual'">
-            Thủ Công
-          </button>
-          <button type="button" :class="{ 'is-active': mode === 'repeat' }" @click="mode = 'repeat'">
-            Lặp Lại
-          </button>
-          <button type="button" :class="{ 'is-active': mode === 'progress' }" @click="mode = 'progress'">
-            Tự Động Tiến Ải
-          </button>
+          <Chip :active="mode === 'manual'" @click="mode = 'manual'">Thủ Công</Chip>
+          <Chip :active="mode === 'repeat'" @click="mode = 'repeat'">Lặp Lại</Chip>
+          <Chip :active="mode === 'progress'" @click="mode = 'progress'">Tự Động Tiến Ải</Chip>
         </div>
 
         <p class="stage-select__mode-hint">
@@ -396,24 +393,20 @@ function start() {
   letter-spacing: .08em;
 }
 
-.stage-select__filter-group button {
+.stage-select__filter-chip {
   padding: 5px 10px;
-  min-height: var(--tap-min);
-  background: var(--ink-800);
-  color: var(--text-secondary);
-  border: 1px solid var(--ink-line-soft);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font: 600 var(--text-xs) var(--font-body);
+  font-weight: 600;
+  /* Filter Địa Giới dùng palette portal teal — đè công thức chrome chuẩn
+     của Chip bằng CSS var local. */
+  --chip-active-bg: color-mix(in srgb, var(--scene-portal-glow) 22%, transparent);
 }
 
-.stage-select__filter-group button.is-selected {
+.stage-select__filter-chip.is-active {
   border-color: var(--scene-portal-accent);
-  background: color-mix(in srgb, var(--scene-portal-glow) 22%, transparent);
   color: var(--scene-portal-text-soft);
 }
 
-.stage-select__filter-group button.is-locked {
+.stage-select__filter-chip.is-locked {
   opacity: 0.55;
 }
 
@@ -573,20 +566,9 @@ function start() {
   margin-top: 4px;
 }
 
-.stage-select__mode button {
+.stage-select__mode .chip {
   padding: 6px;
-  min-height: var(--tap-min);
-  background: var(--ink-800);
-  color: var(--text-secondary);
-  border: 1px solid var(--ink-line-soft);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
   font-size: var(--text-sm);
-}
-
-.stage-select__mode button.is-active {
-  border-color: var(--chrome-300);
-  color: var(--chrome-100);
 }
 
 .stage-select__mode-hint {

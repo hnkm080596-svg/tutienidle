@@ -6,6 +6,7 @@
 // 2 chỗ trong SkillPathPanel.vue.
 import { computed, ref } from 'vue'
 import SlotView from '../../common/SlotView.vue'
+import Chip from '../../common/primitives/Chip.vue'
 import RadialSkillSelector from '../loadout-sections/RadialSkillSelector.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useLoadoutActions } from '@/composables/useLoadoutActions'
@@ -82,17 +83,16 @@ function openSlot(index: number) {
       v-if="openSlotIndex !== null && skillLoadoutSlots[openSlotIndex]?.skill?.specializations?.length"
       class="loadout-specializations"
     >
-      <button
+      <Chip
         v-for="spec in skillLoadoutSlots[openSlotIndex]!.skill!.specializations"
         :key="spec.id"
-        type="button"
         class="loadout-specializations__btn"
-        :class="{ 'is-active': skillLoadoutSlots[openSlotIndex]!.skill!.selectedSpecializationId === spec.id }"
+        :active="skillLoadoutSlots[openSlotIndex]!.skill!.selectedSpecializationId === spec.id"
         v-tooltip="{ title: spec.name, description: spec.description }"
         @click="selectSkillSpecialization(skillLoadoutSlots[openSlotIndex]!.skill!.id, spec.id)"
       >
         {{ spec.name }}
-      </button>
+      </Chip>
     </div>
 
     <RadialSkillSelector
@@ -175,19 +175,7 @@ function openSlot(index: number) {
 
 .loadout-specializations__btn {
   flex: 1 1 auto;
-  min-height: var(--tap-min);
   padding: 3px 6px;
-  font-size: var(--text-xs);
-  background: var(--ink-800);
-  color: var(--text-secondary);
-  border: 1px solid var(--ink-line-soft);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-}
-
-.loadout-specializations__btn.is-active {
-  border-color: var(--chrome-300);
-  color: var(--chrome-100);
-  background: var(--ink-700);
+  --chip-active-bg: var(--ink-700);
 }
 </style>
