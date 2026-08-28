@@ -10,21 +10,21 @@ const notification = useNotificationStore()
 // mới, tái dùng đúng bảng màu game đã có.
 const KIND_COLOR: Record<NotificationKind, string> = {
   loot: 'var(--jade)',
-  craft: 'var(--gold-500)',
-  upgrade: 'var(--gold-500)',
+  craft: 'var(--chrome-300)',
+  upgrade: 'var(--chrome-300)',
   save: 'var(--azure)',
-  warning: 'var(--gold-500)',
+  warning: 'var(--chrome-300)',
   error: 'var(--crimson)',
 }
 
 // Số toast hiện đồng thời tuỳ chiều cao màn hình thật — Teleport to
 // body nên .toast-container KHÔNG nằm trong scale transform của
 // .game-root (xem GameRoot.vue), window.innerHeight là đúng đơn vị.
-// Ước lượng theo kích thước .toast-item ĐÃ giảm 1/2 (mục style bên
-// dưới) + gap thực tế của .toast-container.
+// Chiều cao item lấy dư ra (46px) vì loot toast kèm icon + nội dung
+// hai dòng render ~40-44px thực tế, không phải 32px như toast chữ trơn.
 const TOAST_TOP_OFFSET_PX = 24
 const TOAST_BOTTOM_MARGIN_PX = 24
-const TOAST_ITEM_HEIGHT_PX = 32
+const TOAST_ITEM_HEIGHT_PX = 46
 const TOAST_GAP_PX = 4
 
 function updateMaxVisible() {
@@ -104,7 +104,7 @@ onBeforeUnmount(() => {
   min-width: 100px;
   max-width: 160px;
   padding: 5px 7px;
-  background: rgba(15, 15, 20, 0.96);
+  background: color-mix(in srgb, var(--ink-900) 96%, transparent);
   border: 1px solid var(--toast-color, var(--ink-line));
   border-left: 3px solid var(--toast-color, var(--ink-line));
   border-radius: var(--radius-sm);
@@ -150,7 +150,7 @@ onBeforeUnmount(() => {
 
 .toast-item__icon-fallback {
   color: var(--toast-color);
-  font: 700 0.55rem var(--font-display);
+  font: 700 var(--text-xs) var(--font-display);
 }
 
 .toast-item__content {

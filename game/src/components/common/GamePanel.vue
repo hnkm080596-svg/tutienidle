@@ -2,8 +2,8 @@
 // Shared chrome primitive (UI/UX rework Giai đoạn A) — thay thế pattern
 // hand-roll background/border/box-shadow lặp lại ở mỗi panel
 // (CharacterPanel/EquipmentHallPanel/...). variant="ornate" dùng
-// "Ornate Ink Frame" thuần CSS (double-border qua box-shadow chồng lớp +
-// corner accent qua pseudo-element) — không cần asset PNG, xem
+// "Ornate Ink Frame" — overlay .ornate-frame định nghĩa MỘT LẦN trong
+// assets/theme.css (token --frame-*), không cần asset PNG, xem
 // docs plan UI/UX rework mục Giai đoạn B cho Asset Spec bổ sung sau này.
 withDefaults(defineProps<{
   title?: string
@@ -17,6 +17,10 @@ withDefaults(defineProps<{
 
 <template>
   <section class="game-panel" :class="[`game-panel--${variant}`, `game-panel--padding-${padding}`]">
+    <!-- Khung vàng ornate = overlay .ornate-frame (theme.css), vẽ TRÊN
+         nội dung nên nền opaque của child không che được viền. -->
+    <span v-if="variant === 'ornate'" class="ornate-frame" aria-hidden="true" />
+
     <header v-if="title" class="game-panel__header">
       <h3 class="game-panel__title">{{ title }}</h3>
       <div v-if="$slots['header-actions']" class="game-panel__header-actions">
@@ -47,43 +51,13 @@ withDefaults(defineProps<{
   border-radius: var(--radius-sm);
 }
 
-/* "Ornate Ink Frame" — double-border bằng box-shadow chồng lớp (không
-   thêm DOM) + 2 góc "khung triện" qua pseudo-element, tái dùng token
-   vàng/mực có sẵn, không cần asset. */
+/* "Ornate Ink Frame" — ring + corner do overlay .ornate-frame (theme.css)
+   vẽ; section chỉ giữ nền gradient mực và bỏ border riêng để khung vàng
+   ôm sát mép ngoài cùng. */
 .game-panel--ornate {
   background: linear-gradient(160deg, var(--ink-950), var(--ink-800));
-  border-color: transparent;
-  box-shadow:
-    var(--shadow-panel),
-    0 0 0 1px var(--gold-700),
-    inset 0 0 0 4px transparent,
-    inset 0 0 0 5px var(--gold-300);
-}
-
-.game-panel--ornate::before,
-.game-panel--ornate::after {
-  content: '';
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  pointer-events: none;
-  border-color: var(--gold-500);
-  border-style: solid;
-  border-width: 0;
-}
-
-.game-panel--ornate::before {
-  top: 6px;
-  left: 6px;
-  border-top-width: 2px;
-  border-left-width: 2px;
-}
-
-.game-panel--ornate::after {
-  bottom: 6px;
-  right: 6px;
-  border-bottom-width: 2px;
-  border-right-width: 2px;
+  border: 0;
+  box-shadow: var(--shadow-panel);
 }
 
 .game-panel__header {
@@ -101,7 +75,7 @@ withDefaults(defineProps<{
   font-family: var(--font-display);
   font-size: var(--text-panel-title);
   font-weight: 700;
-  color: var(--gold-500);
+  color: var(--chrome-100);
   letter-spacing: 0.04em;
 }
 
@@ -114,6 +88,8 @@ withDefaults(defineProps<{
 .game-panel__body {
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .game-panel--padding-sm .game-panel__body {

@@ -74,17 +74,17 @@ const canAfford = computed(() =>
 }
 
 .artifact-grade__value {
-  color: var(--gold-300);
+  color: var(--chrome-100);
   font-weight: 600;
 }
 
 .artifact-grade__upgrade {
   margin-top: var(--space-2);
   padding: 10px 14px;
-  border: 1px solid var(--gold-500);
+  border: 1px solid var(--chrome-500);
   border-radius: var(--radius-sm);
-  background: var(--gold-500);
-  color: var(--gold-ink);
+  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
+  color: var(--ink-950);
   font-weight: 700;
   cursor: pointer;
 }

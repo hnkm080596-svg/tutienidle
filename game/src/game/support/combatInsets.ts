@@ -34,6 +34,13 @@ export function setCombatInsets(insets: CombatInsets): void {
   current.measured = true
 }
 
+/** Về trạng thái chưa đo (overlay unmount) để scene dùng lại fallback tỷ lệ. */
+export function resetCombatInsets(): void {
+  current.top = 0
+  current.bottom = 0
+  current.measured = false
+}
+
 export function getCombatInsets(): MeasuredCombatInsets {
   return current
 }

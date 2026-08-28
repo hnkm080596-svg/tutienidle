@@ -165,7 +165,9 @@ function closeSidePanels() {
    360px cứng, vẫn chừa lối đóng (panel luôn có nút back/close riêng). */
 @media (max-width: 900px) {
   .game-root__left-panel {
-    width: min(88vw, 400px);
+    /* Cả Left+Right cùng mở theo characterOverlayOpen — mỗi bên tối đa
+       44vw để tổng không vượt viewport (tránh chồng panel). */
+    width: min(44vw, 400px);
   }
 }
 

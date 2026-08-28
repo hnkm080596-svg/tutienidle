@@ -51,10 +51,10 @@ const cadenceRemaining = useCadenceSmoothing(
 <style scoped>
 /* WS7 — phóng slot đòn thường (đọc cadence trong chuyển động). */
 .mortal-combat-hud {
-  width: 96px;
+  width: 88px;
 }
 
 .mortal-combat-hud__slot {
-  width: 96px;
+  width: 88px;
 }
 </style>

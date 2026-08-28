@@ -97,7 +97,7 @@ export const TOOLTIP_BACKDROP_PATH = '/assets/ui/tooltip.png' // Nền hộp too
 // TutorialOverlay.vue (hướng dẫn nhập môn)/OfflineSummaryModal.vue
 // (Bế Quan Kết Thúc)/SaveIncompatibleScreen.vue (lỗi save)/
 // ErrorScreen.vue đều tự vẽ 1 khối `.xxx__panel` giống hệt nhau
-// (`var(--ink-900)` + viền `var(--gold-500)` + `var(--shadow-panel)`)
+// (`var(--ink-900)` + viền `var(--chrome-500)` + `var(--shadow-panel)`)
 // — 1 ảnh dùng chung cho tất cả thay vì phải sửa 5 file.
 // WorldAnnouncementOverlay.vue (chữ chạy full màn khi phá cảnh) KHÔNG
 // dùng — full-bleed, không có khung hộp.

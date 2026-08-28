@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
 // Trình bày nhân vật dùng CHUNG (plan Workstream A) — PNG tĩnh mới,
 // KHÔNG còn qua AtlasSprite nhiều frame:
 // - variant 'cultivate' → player-mortal-cultivate-v1.png, giữa Động Phủ
@@ -15,8 +17,8 @@
 export interface PlayerPortraitProps {
   variant: 'cultivate' | 'portrait'
 
-  /** Chiều cao hiển thị (px). Mặc định theo chỗ dùng. */
-  height?: number
+  /** Chiều cao hiển thị — số (px) hoặc chuỗi CSS length (vd clamp(...)). */
+  height?: number | string
 
   /** Chỉ variant 'cultivate' honor cờ này. */
   animated?: boolean
@@ -35,6 +37,10 @@ const IMAGE_URLS = {
 } as const
 
 const imageUrl = IMAGE_URLS[props.variant]
+
+const portraitHeight = computed(() =>
+  typeof props.height === 'number' ? `${props.height}px` : props.height,
+)
 </script>
 
 <template>
@@ -44,7 +50,7 @@ const imageUrl = IMAGE_URLS[props.variant]
       `player-portrait--${variant}`,
       { 'is-animated': animated && variant === 'cultivate' },
     ]"
-    :style="{ '--portrait-h': `${height}px` }"
+    :style="{ '--portrait-h': portraitHeight }"
   >
     <span v-if="animated && variant === 'cultivate'" class="player-portrait__aura" aria-hidden="true" />
     <span v-if="animated && variant === 'cultivate'" class="player-portrait__qi-ring" aria-hidden="true" />
@@ -90,7 +96,7 @@ const imageUrl = IMAGE_URLS[props.variant]
   inset: -18% -30%;
   z-index: 1;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 213, 79, 0.22), transparent 68%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--chrome-500) 22%, transparent), transparent 68%);
   filter: blur(10px);
   animation: player-portrait-aura 5s ease-in-out infinite;
   pointer-events: none;
@@ -105,7 +111,7 @@ const imageUrl = IMAGE_URLS[props.variant]
   width: 58%;
   aspect-ratio: 3 / 1;
   border-radius: 50%;
-  border: 1px solid rgba(255, 213, 79, 0.42);
+  border: 1px solid color-mix(in srgb, var(--chrome-500) 42%, transparent);
   transform: translateX(-50%);
   animation: player-portrait-ring 6s ease-out infinite;
   pointer-events: none;

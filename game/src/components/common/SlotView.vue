@@ -297,7 +297,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   color: var(--slot-quality-color, var(--text-secondary));
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: var(--text-title);
 }
 
 /* ============================================================
@@ -433,7 +433,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   z-index: 6;
   padding: 0 4px;
   border-radius: 3px;
-  background: rgba(10, 10, 13, 0.82);
+  background: var(--slot-caption-bg-strong);
   color: var(--text-primary);
   font-size: var(--text-xs);
   font-weight: 700;
@@ -443,10 +443,10 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 }
 
 .slot-view__badge--enhance {
-  bottom: 16px;
+  bottom: 34px;
   right: 3px;
-  background: var(--gold-500);
-  color: var(--gold-ink);
+  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
+  color: var(--ink-950);
 }
 
 .slot-view__badge--positive {
@@ -467,7 +467,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   bottom: 16px;
   padding: 0 4px;
   border-radius: 3px;
-  background: rgba(10, 10, 13, 0.75);
+  background: var(--slot-caption-bg);
   color: var(--text-secondary);
   font-size: var(--text-xs);
   line-height: 1.4;
@@ -515,7 +515,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 
 .slot-view--veil-locked .slot-view__veil,
 .slot-view--veil-disabled .slot-view__veil {
-  background: rgba(10, 10, 13, 0.55);
+  background: var(--slot-caption-bg);
 }
 
 .slot-view--veil-locked,
@@ -529,12 +529,12 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 }
 
 .slot-view__veil-glyph {
-  font-size: 1rem;
+  font-size: var(--text-lg);
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
 }
 
 .slot-view--veil-processing .slot-view__veil {
-  background: rgba(10, 10, 13, 0.35);
+  background: color-mix(in srgb, var(--ink-950) 35%, transparent);
 }
 
 .slot-view__spinner {
@@ -542,7 +542,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   aspect-ratio: 1;
   border-radius: 50%;
   border: 2px solid var(--ink-line);
-  border-top-color: var(--gold-500);
+  border-top-color: var(--chrome-300);
   animation: slot-spin 0.8s linear infinite;
 }
 

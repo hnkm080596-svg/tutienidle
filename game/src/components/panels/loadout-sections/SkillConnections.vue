@@ -78,10 +78,10 @@ function pathFor(conn: SkillConnectionEntry, rects: Record<string, SkillConnecti
    xuống child (M parent ... đến child) và dashoffset giảm dần về 0. */
 .skill-connections__path.is-unlocking {
   opacity: 1;
-  stroke: var(--gold-500);
+  stroke: var(--chrome-300);
   stroke-width: 2.5px;
   stroke-dasharray: 10 8;
-  filter: drop-shadow(0 0 3px var(--gold-500));
+  filter: drop-shadow(0 0 3px var(--chrome-300));
   animation: skill-connections-flow 750ms ease-out forwards;
 }
 

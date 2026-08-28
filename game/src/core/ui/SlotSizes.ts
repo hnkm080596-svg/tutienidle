@@ -19,14 +19,16 @@ export const MIN_SLOT_SIZE = 55
 export const MAX_SLOT_SIZE = 75
 export const TARGET_SLOT_SIZE = 67
 
-export const MIN_COLUMNS = 8
+export const MIN_COLUMNS = 5
 export const MAX_COLUMNS = 14
 
 // Chặn số hàng/trang trong khoảng này để pageSize (= columns * rows)
 // không phình/co theo từng pixel resize — chỉ dùng chiều cao đo được
 // làm gợi ý PHỤ (calculateRows), không dùng để giải bài toán chiều
-// rộng/số cột.
-export const MIN_ROWS = 10
+// rộng/số cột. Sàn 3 (thay 10 cũ): vùng bag thấp (Đan Phòng 40%, Hành
+// Trang 70% cửa sổ hẹp) chỉ lắp vừa vài hàng — sàn cao hơn chiều cao
+// thật khiến grid render tràn khung rồi bị overflow:hidden cắt mất.
+export const MIN_ROWS = 3
 export const MAX_ROWS = 14
 
 export const GRID_GAP = 4

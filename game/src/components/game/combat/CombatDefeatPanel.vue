@@ -106,7 +106,8 @@ onMounted(() => {
 
 <style scoped>
 .combat-defeat-panel {
-  width: 420px;
+  box-sizing: border-box;
+  width: min(420px, calc(100vw - 32px));
   padding: 28px 32px;
   background: var(--ink-900);
   border: 1px solid var(--crimson);
@@ -120,13 +121,15 @@ onMounted(() => {
   margin: 0 0 16px;
   font-family: var(--font-display);
   color: var(--crimson);
-  font-size: 1.3rem;
+  font-size: var(--text-panel-title);
 }
 
 .combat-defeat-panel__rewards {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  max-height: min(240px, 30vh);
+  overflow-y: auto;
   margin-bottom: 20px;
 }
 
@@ -151,6 +154,7 @@ onMounted(() => {
 .combat-defeat-panel__actions button {
   flex: 1;
   padding: 10px;
+  min-height: var(--tap-min);
   border-radius: var(--radius-sm);
   border: none;
   font-family: var(--font-body);

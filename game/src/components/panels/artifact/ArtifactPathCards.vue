@@ -130,7 +130,7 @@ const emit = defineEmits<{ select: [path: ArtifactPath] }>()
 }
 
 .artifact-path-cards__milestone-name {
-  font-size: 9px;
+  font-size: var(--text-xs);
   text-align: center;
   color: var(--text-secondary);
   line-height: 1.2;
@@ -139,6 +139,6 @@ const emit = defineEmits<{ select: [path: ArtifactPath] }>()
 .artifact-path-cards__warning {
   margin: 0;
   font-size: var(--text-xs);
-  color: var(--gold-500);
+  color: var(--chrome-300);
 }
 </style>

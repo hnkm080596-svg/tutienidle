@@ -77,8 +77,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   padding: 0 20px;
-  background: rgba(10, 10, 13, 0.5);
-  border-bottom: 1px solid var(--ink-line-soft);
+  background: color-mix(in srgb, var(--ink-950) 50%, transparent);
   overflow: hidden;
   pointer-events: none;
 }

@@ -1,25 +1,45 @@
 <script setup lang="ts">
+import { ref } from 'vue'
+import GameButton from '@/components/common/GameButton.vue'
 import { useSaveIssueStore } from '@/stores/saveIssue'
 import { exportSaveToFile, deleteSave, importSaveRaw } from '@/services/save/SaveSystem'
+import ConfirmModal from './ConfirmModal.vue'
 
 const saveIssue = useSaveIssueStore()
+
+// Thay window.confirm()/window.alert() native — modal xác nhận đồng bộ
+// hoá bằng pending-action giống SettingsPanel.vue: mở ConfirmModal, hành
+// động thật chỉ chạy khi resolvePendingConfirm() (nút "Xác Nhận") được gọi.
+const pendingConfirm = ref<null | { title: string; message: string; danger: boolean; onConfirm: () => void }>(null)
+
+function requestConfirm(title: string, message: string, onConfirm: () => void, danger = false) {
+  pendingConfirm.value = { title, message, danger, onConfirm }
+}
+
+function resolvePendingConfirm() {
+  pendingConfirm.value?.onConfirm()
+  pendingConfirm.value = null
+}
+
+function cancelPendingConfirm() {
+  pendingConfirm.value = null
+}
 
 function handleExport() {
   exportSaveToFile(saveIssue.raw)
 }
 
 function handleReset() {
-  const confirmed = window.confirm(
+  requestConfirm(
+    'Xoá & Bắt Đầu Mới',
     'Xoá save hiện tại và bắt đầu nhân vật mới? Nhớ Tải Về Save trước nếu chưa làm — hành động này không thể hoàn tác.',
+    () => {
+      deleteSave()
+
+      window.location.reload()
+    },
+    true,
   )
-
-  if (!confirmed) {
-    return
-  }
-
-  deleteSave()
-
-  window.location.reload()
 }
 
 function handleImport(event: Event) {
@@ -38,7 +58,7 @@ function handleImport(event: Event) {
     if (ok) {
       window.location.reload()
     } else {
-      window.alert('File save không hợp lệ.')
+      requestConfirm('Nhập Save Thất Bại', 'File save không hợp lệ.', () => {})
     }
   }
 
@@ -49,6 +69,8 @@ function handleImport(event: Event) {
 <template>
   <div class="save-incompatible">
     <div class="save-incompatible__panel">
+      <span class="ornate-frame" aria-hidden="true" />
+
       <h2 class="save-incompatible__title">Save không tương thích với phiên bản hiện tại</h2>
 
       <p v-if="saveIssue.status === 'incompatible'" class="save-incompatible__message">
@@ -63,18 +85,25 @@ function handleImport(event: Event) {
       </p>
 
       <div class="save-incompatible__actions">
-        <button type="button" @click="handleExport">Tải Về Save (.json)</button>
+        <GameButton variant="secondary" @click="handleExport">Tải Về Save (.json)</GameButton>
 
         <label class="save-incompatible__import">
           Nhập Save Khác
           <input type="file" accept="application/json" @change="handleImport" />
         </label>
 
-        <button type="button" class="save-incompatible__danger" @click="handleReset">
-          Xoá & Bắt Đầu Mới
-        </button>
+        <GameButton variant="danger" @click="handleReset">Xoá & Bắt Đầu Mới</GameButton>
       </div>
     </div>
+
+    <ConfirmModal
+      :open="pendingConfirm !== null"
+      :title="pendingConfirm?.title ?? ''"
+      :message="pendingConfirm?.message ?? ''"
+      :danger="pendingConfirm?.danger ?? false"
+      @confirm="resolvePendingConfirm"
+      @cancel="cancelPendingConfirm"
+    />
   </div>
 </template>
 
@@ -83,6 +112,7 @@ function handleImport(event: Event) {
   position: fixed;
   inset: 0;
   z-index: 4000;
+  overflow: auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -90,10 +120,13 @@ function handleImport(event: Event) {
 }
 
 .save-incompatible__panel {
+  /* margin:auto — vẫn căn giữa khi vừa màn hình, nhưng khi overflow
+     thì panel dạt lên trên để cuộn tới được toàn bộ nội dung. */
+  position: relative;
+  margin: auto;
   max-width: 460px;
   padding: 28px 32px;
-  background: var(--ink-900);
-  border: 1px solid var(--gold-500);
+  background: linear-gradient(160deg, var(--ink-950), var(--ink-800));
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-panel);
   text-align: center;
@@ -103,14 +136,14 @@ function handleImport(event: Event) {
 .save-incompatible__title {
   margin: 0 0 12px;
   font-family: var(--font-display);
-  color: var(--gold-500);
-  font-size: 1.1rem;
+  color: var(--chrome-100);
+  font-size: var(--text-title);
 }
 
 .save-incompatible__message {
   margin: 0 0 20px;
   color: var(--text-secondary);
-  font-size: 0.82rem;
+  font-size: var(--text-sm);
   line-height: 1.5;
 }
 
@@ -120,20 +153,22 @@ function handleImport(event: Event) {
   gap: 10px;
 }
 
-.save-incompatible__actions button,
-.save-incompatible__import {
-  padding: 8px 18px;
-  background: var(--ink-800);
-  color: var(--text-primary);
-  border: 1px solid var(--ink-line-soft);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: 0.8rem;
-}
-
 .save-incompatible__import {
   position: relative;
   overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap-comfortable);
+  padding: var(--space-2) var(--space-4);
+  background: var(--ink-800);
+  color: var(--text-primary);
+  border: 1px solid var(--ink-line);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 700;
 }
 
 .save-incompatible__import input {
@@ -143,20 +178,8 @@ function handleImport(event: Event) {
   cursor: pointer;
 }
 
-.save-incompatible__actions button:hover,
 .save-incompatible__import:hover {
-  border-color: var(--gold-500);
-  color: var(--gold-500);
-}
-
-.save-incompatible__danger {
-  border-color: var(--crimson);
-  color: var(--crimson);
-}
-
-.save-incompatible__danger:hover {
-  border-color: var(--crimson);
-  color: var(--crimson);
-  opacity: 0.85;
+  border-color: var(--chrome-300);
+  color: var(--chrome-100);
 }
 </style>

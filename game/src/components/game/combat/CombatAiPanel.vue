@@ -79,9 +79,9 @@ function select(strategy: CombatAiStrategy) {
   flex-direction: column;
   gap: var(--space-1);
   padding: var(--space-2) var(--space-3);
-  border: 1px solid rgba(244, 197, 66, 0.25);
-  border-radius: 6px;
-  background: rgba(10, 10, 13, 0.78);
+  border: 1px solid var(--ink-line);
+  border-radius: var(--radius-md);
+  background: var(--scrim);
   backdrop-filter: blur(2px);
   font-size: var(--text-xs, 0.75rem);
   color: var(--text-primary);
@@ -90,7 +90,7 @@ function select(strategy: CombatAiStrategy) {
 
 .combat-ai-panel__title {
   font-family: var(--font-display);
-  color: var(--gold-400, #d4a72c);
+  color: var(--chrome-100);
   letter-spacing: 0.04em;
 }
 
@@ -98,11 +98,12 @@ function select(strategy: CombatAiStrategy) {
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  min-height: var(--tap-min);
   cursor: pointer;
   line-height: 1.5;
 }
 
 .combat-ai-panel__option input {
-  accent-color: var(--gold-500, #f4c542);
+  accent-color: var(--chrome-300);
 }
 </style>

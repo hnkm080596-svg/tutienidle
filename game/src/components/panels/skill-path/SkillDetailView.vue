@@ -103,19 +103,19 @@ function onUpgrade() {
   padding: 40px 0;
   text-align: center;
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
 }
 
 .skill-detail__name {
   margin: 0 0 6px;
-  font-size: 1rem;
+  font-size: var(--text-lg);
   font-weight: 700;
-  color: var(--gold-500);
+  color: var(--chrome-100);
 }
 
 .skill-detail__desc {
   margin: 0 0 10px;
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
 }
 
@@ -138,10 +138,11 @@ function onUpgrade() {
   font-family: var(--font-body);
   font-size: var(--text-sm);
   padding: 4px 8px;
+  min-height: var(--tap-min);
   border-radius: 4px;
-  border: 1px solid var(--gold-500);
+  border: 1px solid var(--chrome-500);
   background: transparent;
-  color: var(--gold-500);
+  color: var(--chrome-100);
   cursor: pointer;
 }
 
@@ -154,7 +155,7 @@ function onUpgrade() {
   list-style: none;
   margin: 0;
   padding: 0;
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
 }
 
 .skill-detail__rows li {

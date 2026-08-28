@@ -162,7 +162,7 @@ function close() {
 }
 
 .artifact-panel__empty {
-  padding: var(--space-5);
+  padding: var(--space-6);
   text-align: center;
   color: var(--text-secondary);
 }

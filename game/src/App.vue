@@ -564,9 +564,9 @@ body {
 }
 .boot-error button {
   padding: 10px 16px;
-  border: 1px solid var(--gold-500);
+  border: 1px solid var(--chrome-300);
   background: transparent;
-  color: var(--gold-300);
+  color: var(--chrome-100);
   cursor: pointer;
 }
 </style>

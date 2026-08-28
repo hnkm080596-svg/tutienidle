@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue'
 import CombatTopBar from './CombatTopBar.vue'
 import CombatStatusBar from './CombatStatusBar.vue'
 import CombatEventBar from './CombatEventBar.vue'
@@ -8,7 +8,7 @@ import CombatResultModal from './CombatResultModal.vue'
 import CombatCountdownOverlay from './CombatCountdownOverlay.vue'
 import CombatAiPanel from './CombatAiPanel.vue'
 import CombatBuildHud from './hud/CombatBuildHud.vue'
-import { setCombatInsets } from '@/game/support/combatInsets'
+import { resetCombatInsets, setCombatInsets } from '@/game/support/combatInsets'
 
 // WS1 Responsive foundation (2026-08-24) — các bar giờ có chiều cao px
 // THỰC theo clamp() (--combat-*-h trong theme.css), không còn đồng nhất
@@ -19,6 +19,13 @@ import { setCombatInsets } from '@/game/support/combatInsets'
 const rootRef = ref<HTMLElement | null>(null)
 
 let insetsObserver: ResizeObserver | null = null
+
+const BAR_CLASSES = [
+  'combat-scene-overlay__top-bar',
+  'combat-scene-overlay__status-bar',
+  'combat-scene-overlay__event-bar',
+  'combat-scene-overlay__control-bar',
+]
 
 // Scoped style giữ nguyên tên class nên querySelector theo class hoạt
 // động; dùng $el gián tiếp qua ref component sẽ mong manh hơn khi cấu
@@ -44,13 +51,41 @@ function publishInsets() {
   }
 }
 
+// Root inset:0 không đổi kích thước khi con mount/unmount — phải observe
+// từng bar riêng + battlefield (flex:1, luôn tồn tại, co lại khi bar khác
+// đổi chiều cao → bắt được CombatStatusBar vốn dựng theo v-if).
+// observe() trùng target là no-op nên gọi lại ở mỗi callback an toàn.
+function observeBars() {
+  const root = rootRef.value
+
+  if (!root || !insetsObserver) {
+    return
+  }
+
+  for (const className of [...BAR_CLASSES, 'combat-scene-overlay__battlefield']) {
+    const element = root.querySelector<HTMLElement>(`:scope > .${className}`)
+
+    if (element) {
+      insetsObserver.observe(element)
+    }
+  }
+}
+
 onMounted(() => {
   void nextTick(publishInsets)
 
   if (rootRef.value && typeof ResizeObserver !== 'undefined') {
-    insetsObserver = new ResizeObserver(() => publishInsets())
-    insetsObserver.observe(rootRef.value)
+    insetsObserver = new ResizeObserver(() => {
+      observeBars()
+      publishInsets()
+    })
+
+    observeBars()
   }
+})
+
+onBeforeUnmount(() => {
+  resetCombatInsets()
 })
 
 onUnmounted(() => {
@@ -125,16 +160,20 @@ onUnmounted(() => {
    bar (nằm trong vùng battlefield nên không đụng CombatTopBar). */
 .combat-scene-overlay__ai-panel {
   position: absolute;
-  left: 12px;
-  top: 12px;
+  left: var(--space-3);
+  top: var(--space-3);
   z-index: 12;
 }
 
+/* Wrapper full-width + flex-center (thay left:50%/translateX) để HUD con
+   được flex-wrap:wrap vẫn giữ căn giữa trên cửa sổ hẹp. */
 .combat-scene-overlay__build-hud {
   position: absolute;
-  left: 50%;
-  bottom: 16px;
-  transform: translateX(-50%);
+  left: 0;
+  right: 0;
+  bottom: var(--space-4);
+  display: flex;
+  justify-content: center;
   z-index: 12;
 }
 

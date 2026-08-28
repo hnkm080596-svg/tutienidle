@@ -26,6 +26,7 @@ const emit = defineEmits<{ confirm: []; cancel: [] }>()
   <Transition name="confirm-modal-fade">
     <div v-if="open" class="confirm-modal" :style="{ zIndex: OVERLAY_LAYERS.panel }">
       <section class="confirm-modal__card" role="alertdialog" aria-modal="true" :aria-label="title">
+        <span class="ornate-frame" aria-hidden="true" />
         <h3 class="confirm-modal__title">{{ title }}</h3>
 
         <p class="confirm-modal__message">{{ message }}</p>
@@ -41,16 +42,17 @@ const emit = defineEmits<{ confirm: []; cancel: [] }>()
 
 <style scoped>
 .confirm-modal {
-  position: absolute;
+  position: fixed;
   inset: 0;
   display: grid;
   place-items: center;
   padding: 3vh 3vw;
-  background: rgba(8, 9, 13, 0.76);
+  background: var(--scrim);
   backdrop-filter: blur(4px);
 }
 
 .confirm-modal__card {
+  position: relative;
   width: min(420px, 92vw);
   display: flex;
   flex-direction: column;
@@ -60,11 +62,7 @@ const emit = defineEmits<{ confirm: []; cancel: [] }>()
   font-family: var(--font-body);
   background: linear-gradient(160deg, var(--ink-950), var(--ink-800));
   border-radius: var(--radius-md);
-  box-shadow:
-    var(--shadow-panel),
-    0 0 0 1px var(--gold-700),
-    inset 0 0 0 4px transparent,
-    inset 0 0 0 5px var(--gold-300);
+  box-shadow: var(--shadow-panel);
 }
 
 .confirm-modal__title {
@@ -72,7 +70,7 @@ const emit = defineEmits<{ confirm: []; cancel: [] }>()
   font-family: var(--font-display);
   font-size: var(--text-title);
   font-weight: 700;
-  color: var(--gold-500);
+  color: var(--chrome-100);
 }
 
 .confirm-modal__message {

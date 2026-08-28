@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useLoadoutActions } from '@/composables/useLoadoutActions'
+import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import type { Skill } from '@/core/skill/Skill'
 
 // PLAN HOÀN CHỈNH mục 9 — Radial Skill Selection: bấm 1 ô Skill
@@ -32,14 +33,27 @@ const currentSkill = computed(() => {
   return gameManager.skillManager.getEquippedInSlot(props.slotIndex)
 })
 
-const RADIUS_PX = 108
+const ITEM_SIZE_PX = 72
+const MIN_RADIUS_PX = 108
+
+// Bán kính phải đủ lớn để các nút 72px không chồng nhau khi thư viện
+// skill đông (chord giữa 2 nút kề >= kích thước nút + khe hở), nhưng
+// không vượt quá nửa cạnh ngắn viewport (tràn màn hình).
+const radiusPx = computed(() => {
+  const count = Math.max(3, viableSkills.value.length)
+  const chordFit = (ITEM_SIZE_PX + 8) / (2 * Math.sin(Math.PI / count))
+  const viewportCap = Math.min(window.innerWidth, window.innerHeight) / 2 - ITEM_SIZE_PX
+  return Math.max(MIN_RADIUS_PX, Math.min(chordFit, viewportCap))
+})
+
+const stageSizePx = computed(() => (radiusPx.value + ITEM_SIZE_PX / 2 + 12) * 2)
 
 function positionFor(index: number, total: number) {
   const angle = (index / total) * 2 * Math.PI - Math.PI / 2
 
   return {
-    left: `calc(50% + ${Math.cos(angle) * RADIUS_PX}px)`,
-    top: `calc(50% + ${Math.sin(angle) * RADIUS_PX}px)`,
+    left: `calc(50% + ${Math.cos(angle) * radiusPx.value}px)`,
+    top: `calc(50% + ${Math.sin(angle) * radiusPx.value}px)`,
   }
 }
 
@@ -55,8 +69,11 @@ function clear() {
 </script>
 
 <template>
-  <div class="radial-skill-selector" @click.self="emit('close')">
-    <div class="radial-skill-selector__stage">
+  <div class="radial-skill-selector" :style="{ zIndex: OVERLAY_LAYERS.panel }" @click.self="emit('close')">
+    <div
+      class="radial-skill-selector__stage"
+      :style="{ width: `${stageSizePx}px`, height: `${stageSizePx}px` }"
+    >
       <div class="radial-skill-selector__center">
         <span class="radial-skill-selector__center-label">{{ currentSkill?.name ?? `Ô ${slotIndex + 1} — Trống` }}</span>
 
@@ -87,17 +104,14 @@ function clear() {
 .radial-skill-selector {
   position: fixed;
   inset: 0;
-  z-index: 500;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(5, 5, 8, 0.72);
+  background: var(--scrim);
 }
 
 .radial-skill-selector__stage {
   position: relative;
-  width: 280px;
-  height: 280px;
 }
 
 .radial-skill-selector__center {
@@ -109,7 +123,7 @@ function clear() {
   height: 88px;
   border-radius: 50%;
   background: var(--ink-900);
-  border: 2px solid var(--gold-500);
+  border: 2px solid var(--chrome-300);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -117,7 +131,7 @@ function clear() {
   gap: 4px;
   padding: 6px;
   text-align: center;
-  box-shadow: var(--shadow-glow-gold);
+  box-shadow: var(--shadow-glow-chrome);
 }
 
 .radial-skill-selector__center-label {
@@ -158,8 +172,8 @@ function clear() {
 }
 
 .radial-skill-selector__item:hover {
-  border-color: var(--gold-500);
-  color: var(--gold-500);
+  border-color: var(--chrome-300);
+  color: var(--chrome-100);
 }
 
 .radial-skill-selector__item.is-current {

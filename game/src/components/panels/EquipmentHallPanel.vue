@@ -824,23 +824,20 @@ function doDissolve() {
   min-height: 0;
   color: var(--text-primary);
   font-family: var(--font-body);
-  background:
-    radial-gradient(circle at 78% 10%, rgba(255, 96, 35, .12), transparent 28%),
-    linear-gradient(145deg, rgba(26, 23, 21, .98), rgba(10, 14, 17, .98));
 }
 
 .qi-hall__forge-scene {
   position: relative;
   flex: 0 0 132px;
   overflow: hidden;
-  border-bottom: 1px solid rgba(213, 119, 55, .35);
-  background: #120f0e;
+  border-bottom: 1px solid color-mix(in srgb, var(--scene-fire-text-soft) 35%, transparent);
+  background: var(--scene-fire-deep);
   box-shadow: inset 0 -30px 45px rgba(0, 0, 0, .68);
 }
 
 .qi-hall__forge-scene img {
   width: 100%;
-  height: 165px;
+  height: 100%;
   object-fit: cover;
   object-position: center 58%;
   opacity: .58;
@@ -852,7 +849,7 @@ function doDissolve() {
   left: 18px;
   bottom: 12px;
   margin: 0;
-  color: #f2bd72;
+  color: var(--scene-fire-text);
   font: 700 var(--text-sm) var(--font-display);
   letter-spacing: .18em;
   text-shadow: 0 2px 5px #000;
@@ -862,9 +859,9 @@ function doDissolve() {
   position: absolute;
   right: 32px;
   bottom: 18px;
-  color: #f7d09b;
-  font-size: 2.2rem;
-  filter: drop-shadow(0 0 10px rgba(255, 107, 47, .8));
+  color: var(--scene-fire-text);
+  font-size: var(--text-display-lg);
+  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--scene-fire-glow) 80%, transparent));
 }
 
 .qi-hall__forge-fire {
@@ -874,7 +871,7 @@ function doDissolve() {
   width: 85px;
   height: 95px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 220, 118, .95), rgba(255, 80, 22, .6) 35%, transparent 70%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--scene-fire-text) 95%, transparent), color-mix(in srgb, var(--scene-fire-glow) 60%, transparent) 35%, transparent 70%);
   filter: blur(4px);
   animation: forge-fire 1.35s ease-in-out infinite alternate;
 }
@@ -883,7 +880,7 @@ function doDissolve() {
   flex: 0 0 auto;
   padding: 8px 12px;
   font-size: var(--text-sm);
-  color: var(--gold-500);
+  color: var(--chrome-500);
   border-bottom: 1px solid var(--ink-line-soft);
 }
 
@@ -893,8 +890,8 @@ function doDissolve() {
   grid-template-columns: repeat(4, 1fr);
   gap: 4px;
   padding: 8px 12px;
-  border-bottom: 1px solid rgba(207, 133, 72, .2);
-  background: rgba(21, 18, 17, .88);
+  border-bottom: 1px solid color-mix(in srgb, var(--scene-fire-text-soft) 20%, transparent);
+  background: color-mix(in srgb, var(--scene-fire-deep) 88%, transparent);
 }
 
 .qi-hall__body {
@@ -915,8 +912,8 @@ function doDissolve() {
 
 .enhance-row {
   padding: 8px;
-  background: linear-gradient(105deg, rgba(61, 43, 33, .7), rgba(23, 24, 25, .82));
-  border: 1px solid rgba(158, 106, 69, .28);
+  background: linear-gradient(105deg, color-mix(in srgb, var(--scene-fire-deep) 70%, transparent), color-mix(in srgb, var(--ink-900) 82%, transparent));
+  border: 1px solid color-mix(in srgb, var(--scene-fire-text-soft) 28%, transparent);
   border-radius: var(--radius-sm);
   display: flex;
   flex-direction: column;
@@ -941,7 +938,7 @@ function doDissolve() {
 }
 
 .enhance-row__costs li.is-missing {
-  color: var(--danger, #e05d5d);
+  color: var(--crimson);
 }
 
 .qi-hall__slot-grid {
@@ -968,6 +965,7 @@ function doDissolve() {
   align-items: center;
   gap: 6px;
   padding: 3px 0;
+  min-height: var(--tap-min);
   font-size: var(--text-sm);
   cursor: pointer;
 }
@@ -994,6 +992,7 @@ function doDissolve() {
   border: 1px solid var(--ink-line-soft);
   border-radius: var(--radius-sm);
   padding: 4px;
+  min-height: var(--tap-min);
   font-family: var(--font-body);
 }
 
@@ -1009,9 +1008,11 @@ function doDissolve() {
 
 .dissolve-list li {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 6px;
   padding: 5px 8px;
+  min-height: var(--tap-min);
   background: var(--ink-800);
   border: 1px solid var(--ink-line-soft);
   border-radius: var(--radius-sm);
@@ -1020,8 +1021,8 @@ function doDissolve() {
 }
 
 .dissolve-list li.is-selected {
-  border-color: var(--danger, #e05d5d);
-  color: var(--danger, #e05d5d);
+  border-color: var(--crimson);
+  color: var(--crimson);
 }
 
 .dissolve-preview h4 {
@@ -1037,7 +1038,7 @@ function doDissolve() {
 
 .qi-hall__warning {
   font-size: var(--text-xs);
-  color: var(--danger, #e05d5d);
+  color: var(--crimson);
 }
 
 @keyframes forge-fire {
@@ -1046,7 +1047,6 @@ function doDissolve() {
 
 @media (max-width: 760px) {
   .qi-hall__forge-scene { flex-basis: 96px; }
-  .qi-hall__forge-scene img { height: 125px; }
   .qi-hall__slot-grid { grid-template-columns: repeat(3, minmax(64px, 1fr)); }
 }
 </style>

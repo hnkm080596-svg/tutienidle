@@ -40,11 +40,12 @@ const outcome = computed(() => {
 .combat-result-modal {
   position: absolute;
   inset: 0;
-  z-index: 10;
+  /* Trên status bar (z-11) + AI panel/build HUD (z-12) để backdrop phủ mờ chúng. */
+  z-index: 30;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(5, 5, 8, 0.72);
+  background: var(--scrim);
   pointer-events: auto;
 }
 </style>

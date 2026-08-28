@@ -215,7 +215,7 @@ onBeforeUnmount(() => {
 
 .bag-pagination button {
   min-width: 36px;
-  min-height: 32px;
+  min-height: var(--tap-min);
   padding: 0;
   font-size: var(--text-sm);
   background: var(--ink-800);
@@ -227,9 +227,9 @@ onBeforeUnmount(() => {
 }
 
 .bag-pagination__pages button.is-active {
-  background: var(--gold-500);
-  color: var(--gold-ink);
-  border-color: var(--gold-500);
+  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
+  color: var(--ink-950);
+  border-color: var(--chrome-500);
 }
 
 /* ================= Sort control — sát phải ========================== */
@@ -250,8 +250,8 @@ onBeforeUnmount(() => {
 }
 
 .bag-pagination__sort-btn.is-active {
-  border-color: var(--gold-500);
-  color: var(--gold-300);
+  border-color: var(--chrome-300);
+  color: var(--chrome-100);
 }
 
 .bag-pagination__menu {
@@ -264,13 +264,13 @@ onBeforeUnmount(() => {
   min-width: 168px;
   padding: 4px;
   background: var(--ink-900);
-  border: 1px solid var(--gold-500);
+  border: 1px solid var(--chrome-500);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-panel);
 }
 
 .bag-pagination__menu button {
-  min-height: 32px;
+  min-height: var(--tap-min);
   padding: 0 10px;
   text-align: left;
   background: transparent;
@@ -279,11 +279,11 @@ onBeforeUnmount(() => {
 
 .bag-pagination__menu button:hover {
   border-color: var(--ink-line);
-  color: var(--gold-300);
+  color: var(--chrome-100);
 }
 
 .bag-pagination__menu button.is-active {
-  color: var(--gold-500);
+  color: var(--chrome-100);
   border-color: var(--ink-line);
 }
 
@@ -293,7 +293,21 @@ onBeforeUnmount(() => {
   border-radius: 0 !important;
 }
 
-/* Khung hẹp — icon-only, tooltip vẫn mang nhãn đầy đủ. */
+/* Khung hẹp — icon-only, tooltip vẫn mang nhãn đầy đủ. Container query
+   theo chiều rộng THẬT của panel chứa bag (RightPanel khai báo
+   container-name: right-panel) — viewport media query không đúng vì
+   width panel decoupled khỏi width viewport; giữ thêm media fallback
+   cho cửa sổ thật hẹp. */
+@container right-panel (max-width: 420px) {
+  .bag-pagination__sort-label {
+    display: none;
+  }
+
+  .bag-pagination__sort-btn {
+    padding: 0 8px;
+  }
+}
+
 @media (max-width: 480px) {
   .bag-pagination__sort-label {
     display: none;

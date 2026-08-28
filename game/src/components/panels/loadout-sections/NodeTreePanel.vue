@@ -418,7 +418,7 @@ watch(branches, () => {
 
 .node-tree__points {
   font-size: var(--text-sm);
-  color: var(--gold-500);
+  color: var(--chrome-100);
 }
 
 .node-tree__branch-title {
@@ -474,7 +474,7 @@ watch(branches, () => {
 }
 
 .node-tree__node.is-purchased {
-  background: color-mix(in srgb, var(--branch-color, var(--gold-500)) 18%, var(--ink-800));
+  background: color-mix(in srgb, var(--branch-color, var(--chrome-300)) 18%, var(--ink-800));
 }
 
 /* Locked node vẫn CLICK ĐƯỢC (để xem điều kiện ở NodeInspector.vue,
@@ -485,7 +485,7 @@ watch(branches, () => {
 }
 
 .node-tree__node.is-selected {
-  outline: 2px solid var(--gold-500);
+  outline: 2px solid var(--chrome-300);
   outline-offset: -2px;
 }
 
@@ -496,8 +496,8 @@ watch(branches, () => {
 .node-tree__node.is-unlocking {
   position: relative;
   animation: skill-node-pulse 500ms ease-out;
-  border-color: var(--gold-500);
-  box-shadow: 0 0 14px 2px color-mix(in srgb, var(--gold-500) 55%, transparent);
+  border-color: var(--chrome-300);
+  box-shadow: 0 0 14px 2px color-mix(in srgb, var(--chrome-300) 55%, transparent);
 }
 
 .node-tree__node.is-unlocking::after {
@@ -505,7 +505,7 @@ watch(branches, () => {
   position: absolute;
   inset: -6px;
   border-radius: inherit;
-  border: 1px solid var(--gold-500);
+  border: 1px solid var(--chrome-300);
   opacity: 0;
   animation: skill-node-ring 500ms ease-out;
   pointer-events: none;
@@ -549,10 +549,10 @@ watch(branches, () => {
 .node-tree__node-level {
   padding: 0 4px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--branch-color, var(--gold-500)) 55%, transparent);
-  font-size: 10px;
+  border: 1px solid color-mix(in srgb, var(--branch-color, var(--chrome-300)) 55%, transparent);
+  font-size: var(--text-xs);
   line-height: 1.4;
-  color: var(--gold-300);
+  color: var(--chrome-100);
 }
 
 .node-tree__node-desc {
@@ -562,6 +562,6 @@ watch(branches, () => {
 
 .node-tree__node-cost {
   font-size: var(--text-xs);
-  color: var(--gold-500);
+  color: var(--chrome-100);
 }
 </style>

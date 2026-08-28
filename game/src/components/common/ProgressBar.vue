@@ -26,7 +26,7 @@ const percent = computed(() => {
 <template>
   <div
     class="progress-bar"
-    :class="`progress-bar--${variant}`"
+    :class="[`progress-bar--${variant}`, { 'progress-bar--labeled': showLabel }]"
     role="progressbar"
     :aria-valuenow="value"
     :aria-valuemin="0"
@@ -48,6 +48,10 @@ const percent = computed(() => {
   border-radius: 999px;
 }
 
+.progress-bar--labeled {
+  height: 14px;
+}
+
 .progress-bar__fill {
   height: 100%;
   border-radius: inherit;
@@ -55,8 +59,8 @@ const percent = computed(() => {
 }
 
 .progress-bar--gold .progress-bar__fill {
-  background: linear-gradient(90deg, var(--gold-300), var(--gold-700));
-  box-shadow: var(--shadow-glow-gold);
+  background: linear-gradient(90deg, var(--chrome-100), var(--chrome-500));
+  box-shadow: var(--shadow-glow-chrome);
 }
 
 .progress-bar--jade .progress-bar__fill {
@@ -78,8 +82,9 @@ const percent = computed(() => {
   align-items: center;
   justify-content: center;
   color: var(--text-primary);
-  font-size: 9px;
+  font-size: var(--text-xs);
   font-weight: 700;
+  line-height: 1;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 }
 </style>

@@ -26,11 +26,11 @@ onMounted(() => {
     return
   }
 
-  // GameRoot.vue là 1 frame 16:9 cố định, CSS transform:scale() để
-  // vừa cửa sổ — nhưng containerRef.value.clientWidth/Height đọc lúc
-  // mount() này ĐÔI KHI vẫn là 0 (race giữa lúc Vue mount component
-  // con này và lúc trình duyệt thật sự layout xong style của tổ tiên,
-  // ví dụ v-bind() CSS var từ GameRoot.vue) — canvas Phaser tạo với
+  // Canvas Phaser thích ứng với container (ResizeObserver bên dưới,
+  // không còn frame 16:9 cố định transform:scale() ở GameRoot) — nhưng
+  // containerRef.value.clientWidth/Height đọc lúc mount() này ĐÔI KHI vẫn
+  // là 0 (race giữa lúc Vue mount component con này và lúc trình duyệt
+  // thật sự layout xong style của tổ tiên) — canvas Phaser tạo với
   // width/height 0 thì kẹt luôn 0 vĩnh viễn vì Phaser chỉ đọc config
   // này 1 lần lúc khởi tạo. ResizeObserver ở đây vừa fix race đó (lần
   // gọi đầu tiên luôn có, báo kích thước THẬT ngay sau khi layout xong)

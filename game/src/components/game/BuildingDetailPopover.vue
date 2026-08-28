@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import GameButton from '@/components/common/GameButton.vue'
 import { usePlayerStore } from '@/stores/player'
 import { useUiStore, type LeftPanelMode } from '@/stores/ui'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -81,56 +82,62 @@ async function build() {
 
 <template>
   <div v-if="template && !instance" class="building-popover">
-    <div class="building-popover__header">
-      <div>
-        <h3 class="building-popover__title">{{ template.name }}</h3>
+    <span class="ornate-frame" aria-hidden="true" />
 
-        <p class="building-popover__description">{{ template.description }}</p>
+    <div class="building-popover__scroll">
+      <div class="building-popover__header">
+        <div>
+          <h3 class="building-popover__title">{{ template.name }}</h3>
+
+          <p class="building-popover__description">{{ template.description }}</p>
+        </div>
+
+        <button type="button" class="building-popover__close" @click="emit('close')">✕</button>
       </div>
 
-      <button type="button" class="building-popover__close" @click="emit('close')">✕</button>
-    </div>
+      <div class="building-popover__section">
+        <h4>Chi phí xây dựng</h4>
 
-    <div class="building-popover__section">
-      <h4>Chi phí xây dựng</h4>
+        <ul class="building-popover__costs">
+          <li
+            v-for="cost in costRows(buildCost)"
+            :key="cost.materialId"
+            :class="{ 'is-missing': cost.owned < cost.amount }"
+          >
+            <span>{{ cost.name }}</span>
 
-      <ul class="building-popover__costs">
-        <li
-          v-for="cost in costRows(buildCost)"
-          :key="cost.materialId"
-          :class="{ 'is-missing': cost.owned < cost.amount }"
-        >
-          <span>{{ cost.name }}</span>
+            <span>{{ cost.owned }} / {{ cost.amount }}</span>
+          </li>
+        </ul>
 
-          <span>{{ cost.owned }} / {{ cost.amount }}</span>
-        </li>
-      </ul>
-
-      <button
-        type="button"
-        class="building-popover__action"
-        :disabled="!canBuild"
-        @click="build"
-      >
-        Xây dựng
-      </button>
+        <GameButton class="building-popover__action" variant="primary" :disabled="!canBuild" @click="build">Xây dựng</GameButton>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
 .building-popover {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 10px;
   padding: 14px;
-  background: var(--ink-900);
-  border: 1px solid var(--ink-line);
+  background: linear-gradient(160deg, var(--ink-950), var(--ink-800));
   border-radius: var(--radius-md);
+  box-shadow: var(--shadow-panel);
   color: var(--text-primary);
   font-family: var(--font-body);
   min-width: 260px;
   max-width: 320px;
+  max-height: calc(100vh - 48px);
+}
+
+.building-popover__scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .building-popover__header {
@@ -143,8 +150,8 @@ async function build() {
 .building-popover__title {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 1rem;
-  color: var(--gold-500);
+  font-size: var(--text-lg);
+  color: var(--chrome-100);
 }
 
 .building-popover__description {
@@ -154,11 +161,15 @@ async function build() {
 }
 
 .building-popover__close {
+  display: inline-grid;
+  place-items: center;
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
   background: none;
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: var(--text-body);
 }
 
 .building-popover__section h4 {
@@ -166,7 +177,7 @@ async function build() {
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: var(--gold-500);
+  color: var(--chrome-100);
 }
 
 .building-popover__costs {
@@ -186,25 +197,7 @@ async function build() {
 }
 
 .building-popover__costs li.is-missing {
-  color: var(--danger, #e05d5d);
-}
-
-.building-popover__action {
-  padding: 7px 10px;
-  background: var(--gold-500);
-  color: var(--gold-ink);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-weight: 700;
-  cursor: pointer;
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-}
-
-.building-popover__action:disabled {
-  background: var(--ink-700);
-  color: var(--text-muted);
-  cursor: not-allowed;
+  color: var(--crimson);
 }
 
 </style>

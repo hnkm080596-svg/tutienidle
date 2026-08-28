@@ -314,8 +314,8 @@ function start() {
   height: 100%;
   min-height: 0;
   background:
-    radial-gradient(circle at 70% 0, rgba(95, 160, 187, .14), transparent 38%),
-    linear-gradient(150deg, rgba(12, 24, 28, .98), rgba(9, 13, 17, .98));
+    radial-gradient(circle at 70% 0, color-mix(in srgb, var(--scene-portal-glow) 14%, transparent), transparent 38%),
+    linear-gradient(150deg, color-mix(in srgb, var(--scene-portal-deep) 98%, transparent), color-mix(in srgb, var(--scene-portal-deep) 98%, transparent));
 }
 
 .stage-select__scene {
@@ -326,14 +326,14 @@ function start() {
   gap: 18px;
   overflow: hidden;
   padding: 14px 24px;
-  border-bottom: 1px solid rgba(104, 181, 205, .3);
+  border-bottom: 1px solid color-mix(in srgb, var(--scene-portal-accent) 30%, transparent);
 }
 
 .stage-select__scene::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(8, 14, 18, .18), rgba(8, 14, 18, .96) 62%);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--scene-portal-deep) 18%, transparent), color-mix(in srgb, var(--scene-portal-deep) 96%, transparent) 62%);
 }
 
 .stage-select__scene img {
@@ -347,19 +347,19 @@ function start() {
 }
 
 .stage-select__scene > div { position: relative; z-index: 1; }
-.stage-select__scene small { color: #72c5d8; letter-spacing: .18em; }
-.stage-select__scene h3 { margin: 2px 0; color: #d9f4f2; font: 700 1.05rem var(--font-display); }
+.stage-select__scene small { color: var(--scene-portal-accent); letter-spacing: .18em; }
+.stage-select__scene h3 { margin: 2px 0; color: var(--scene-portal-text); font: 700 var(--text-lg) var(--font-display); }
 .stage-select__scene p { margin: 0; color: var(--text-secondary); font-size: var(--text-xs); }
 .stage-select__portal {
   display: grid;
   flex: 0 0 64px;
   height: 64px;
   place-items: center;
-  border: 1px solid rgba(133, 228, 237, .65);
+  border: 1px solid color-mix(in srgb, var(--scene-portal-text-soft) 65%, transparent);
   border-radius: 50%;
-  color: #a8eef1;
-  font: 700 1.35rem var(--font-display);
-  box-shadow: 0 0 22px rgba(73, 189, 210, .34), inset 0 0 20px rgba(97, 205, 223, .2);
+  color: var(--scene-portal-text-soft);
+  font: 700 var(--text-panel-title) var(--font-display);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--scene-portal-glow) 34%, transparent), inset 0 0 20px color-mix(in srgb, var(--scene-portal-glow) 20%, transparent);
 }
 
 .stage-select {
@@ -378,7 +378,7 @@ function start() {
   gap: 18px;
   padding: 8px 12px;
   border-bottom: 1px solid var(--ink-line-soft);
-  background: rgba(10, 20, 24, .82);
+  background: color-mix(in srgb, var(--scene-portal-deep) 82%, transparent);
 }
 
 .stage-select__filter-group {
@@ -397,6 +397,7 @@ function start() {
 
 .stage-select__filter-group button {
   padding: 5px 10px;
+  min-height: var(--tap-min);
   background: var(--ink-800);
   color: var(--text-secondary);
   border: 1px solid var(--ink-line-soft);
@@ -406,9 +407,9 @@ function start() {
 }
 
 .stage-select__filter-group button.is-selected {
-  border-color: #75c8d5;
-  background: rgba(66, 136, 148, .22);
-  color: #a5e8eb;
+  border-color: var(--scene-portal-accent);
+  background: color-mix(in srgb, var(--scene-portal-glow) 22%, transparent);
+  color: var(--scene-portal-text-soft);
 }
 
 .stage-select__filter-group button.is-locked {
@@ -431,6 +432,7 @@ function start() {
 
 .stage-select__map-panel {
   border-right: 1px solid var(--ink-line-soft);
+  overflow-y: auto;
 }
 
 .stage-select__detail {
@@ -442,13 +444,13 @@ function start() {
 .stage-select__title {
   margin: 0 0 8px;
   font-family: var(--font-display);
-  color: var(--gold-500);
-  font-size: 0.85rem;
+  color: var(--chrome-100);
+  font-size: var(--text-body);
 }
 
 .stage-select__empty {
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
 }
 
 /* World map thu nhỏ (spec mục 22) — đường mòn ngoằn ngoèo, xem
@@ -470,8 +472,8 @@ function start() {
   gap: 4px;
   padding: 7px 5px;
   border-radius: var(--radius-sm);
-  background: linear-gradient(105deg, rgba(28, 48, 52, .9), rgba(17, 25, 29, .94));
-  border: 1px solid rgba(98, 157, 169, .28);
+  background: linear-gradient(105deg, color-mix(in srgb, var(--scene-portal-deep) 90%, transparent), color-mix(in srgb, var(--scene-portal-deep) 94%, transparent));
+  border: 1px solid color-mix(in srgb, var(--scene-portal-glow) 28%, transparent);
   color: var(--text-primary);
   cursor: pointer;
   text-align: center;
@@ -482,9 +484,9 @@ function start() {
   width: 34px;
   height: 34px;
   place-items: center;
-  border: 1px solid rgba(126, 212, 220, .44);
+  border: 1px solid color-mix(in srgb, var(--scene-portal-accent) 44%, transparent);
   border-radius: 50%;
-  color: #9ee2e5;
+  color: var(--scene-portal-text-soft);
   font: 700 var(--text-sm) var(--font-display);
 }
 .stage-map__copy { width: 100%; min-width: 0; display: flex; flex-direction: column; }
@@ -494,19 +496,19 @@ function start() {
   position: absolute;
   top: 4px;
   right: 4px;
-  color: #e79187;
-  font-size: .55rem;
+  color: color-mix(in srgb, var(--crimson) 62%, white);
+  font-size: var(--text-xs);
   font-weight: 800;
 }
 
 .stage-map__node:hover {
-  border-color: var(--gold-500);
+  border-color: var(--chrome-300);
 }
 
 .stage-map__node.is-selected {
-  border-color: var(--gold-500);
-  background: color-mix(in srgb, var(--gold-500) 22%, var(--ink-800));
-  box-shadow: 0 0 10px -2px var(--gold-500);
+  border-color: var(--chrome-300);
+  background: color-mix(in srgb, var(--chrome-300) 22%, var(--ink-800));
+  box-shadow: 0 0 10px -2px var(--chrome-300);
 }
 
 .stage-map__node.is-locked {
@@ -532,13 +534,13 @@ function start() {
 }
 .stage-select__encounter-summary span {
   padding: 3px 7px;
-  border: 1px solid rgba(102, 168, 177, .24);
+  border: 1px solid color-mix(in srgb, var(--scene-portal-glow) 24%, transparent);
   border-radius: 999px;
-  background: rgba(24, 42, 46, .7);
+  background: color-mix(in srgb, var(--scene-portal-deep) 70%, transparent);
   color: var(--text-secondary);
   font-size: var(--text-xs);
 }
-.stage-select__encounter-summary .is-boss { border-color: rgba(190, 70, 70, .42); color: #e99a91; }
+.stage-select__encounter-summary .is-boss { border-color: color-mix(in srgb, var(--crimson) 42%, transparent); color: color-mix(in srgb, var(--crimson) 60%, white); }
 .stage-select__enemy-list { display: flex; flex-direction: column; gap: 5px; }
 .stage-select__enemy {
   display: flex;
@@ -547,7 +549,7 @@ function start() {
   padding: 7px;
   border: 1px solid var(--ink-line-soft);
   border-radius: var(--radius-sm);
-  background: rgba(16, 24, 27, .82);
+  background: color-mix(in srgb, var(--scene-portal-deep) 82%, transparent);
 }
 .stage-select__enemy-sigil {
   display: grid;
@@ -555,8 +557,8 @@ function start() {
   height: 30px;
   place-items: center;
   border-radius: 50%;
-  background: rgba(79, 150, 159, .16);
-  color: #8bd5d8;
+  background: color-mix(in srgb, var(--scene-portal-glow) 16%, transparent);
+  color: var(--scene-portal-text-soft);
   font-family: var(--font-display);
 }
 .stage-select__enemy > span:last-child { min-width: 0; display: flex; flex-direction: column; }
@@ -572,6 +574,7 @@ function start() {
 
 .stage-select__mode button {
   padding: 6px;
+  min-height: var(--tap-min);
   background: var(--ink-800);
   color: var(--text-secondary);
   border: 1px solid var(--ink-line-soft);
@@ -581,8 +584,8 @@ function start() {
 }
 
 .stage-select__mode button.is-active {
-  border-color: var(--gold-500);
-  color: var(--gold-500);
+  border-color: var(--chrome-300);
+  color: var(--chrome-100);
 }
 
 .stage-select__mode-hint {
@@ -608,6 +611,7 @@ function start() {
 
 .stage-select__build {
   padding: 8px 10px;
+  min-height: var(--tap-min);
   background: var(--ink-800);
   color: var(--text-primary);
   border: 1px solid var(--ink-line-soft);
@@ -617,15 +621,16 @@ function start() {
 }
 
 .stage-select__build:hover {
-  border-color: var(--gold-500);
-  color: var(--gold-500);
+  border-color: var(--chrome-300);
+  color: var(--chrome-100);
 }
 
 .stage-select__start {
   flex: 1;
   padding: 8px;
-  background: var(--gold-500);
-  color: var(--gold-ink);
+  min-height: var(--tap-min);
+  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
+  color: var(--ink-950);
   border: none;
   border-radius: var(--radius-sm);
   font-weight: 700;

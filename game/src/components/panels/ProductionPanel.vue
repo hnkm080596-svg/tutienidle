@@ -399,13 +399,13 @@ function convertTier(fromId: string) {
   color: var(--text-primary);
   font-family: var(--font-body);
   background:
-    radial-gradient(circle at 50% 0, rgba(81, 154, 117, .12), transparent 38%),
-    linear-gradient(150deg, rgba(13, 25, 22, .96), rgba(10, 14, 17, .98));
+    radial-gradient(circle at 50% 0, color-mix(in srgb, var(--jade) 12%, transparent), transparent 38%),
+    linear-gradient(150deg, var(--ink-900), var(--ink-950));
 }
 
 .production-panel__summary {
   margin: 0;
-  color: var(--gold-500);
+  color: var(--chrome-100);
   font-size: var(--text-sm);
 }
 
@@ -420,8 +420,8 @@ function convertTier(fromId: string) {
   flex-direction: column;
   gap: 8px;
   padding: 12px;
-  background: linear-gradient(145deg, rgba(35, 48, 39, .84), rgba(16, 21, 21, .92));
-  border: 1px solid rgba(111, 167, 128, .25);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--scene-forest-deep) 84%, transparent), color-mix(in srgb, var(--scene-forest-deep-2) 92%, transparent));
+  border: 1px solid color-mix(in srgb, var(--scene-forest-accent) 25%, transparent);
   border-radius: var(--radius-md);
 }
 
@@ -434,23 +434,23 @@ function convertTier(fromId: string) {
   margin: -12px -12px 2px;
   border-radius: var(--radius-md) var(--radius-md) 0 0;
   background:
-    radial-gradient(circle, rgba(116, 197, 141, .25), transparent 48%),
-    linear-gradient(130deg, #21392c, #101919);
+    radial-gradient(circle, color-mix(in srgb, var(--scene-forest-accent) 25%, transparent), transparent 48%),
+    linear-gradient(130deg, var(--scene-forest-deep), var(--scene-forest-deep-2));
 }
 
-.site-card__art[data-kind='mine'] { background: radial-gradient(circle, rgba(202, 159, 91, .24), transparent 48%), linear-gradient(130deg, #382e23, #171515); }
-.site-card__art[data-kind='grotto'] { background: radial-gradient(circle, rgba(97, 178, 190, .25), transparent 48%), linear-gradient(130deg, #203a3b, #11191d); }
+.site-card__art[data-kind='mine'] { background: radial-gradient(circle, color-mix(in srgb, var(--scene-mine-accent) 24%, transparent), transparent 48%), linear-gradient(130deg, var(--scene-mine-deep), var(--scene-mine-deep-2)); }
+.site-card__art[data-kind='grotto'] { background: radial-gradient(circle, color-mix(in srgb, var(--scene-grotto-accent) 25%, transparent), transparent 48%), linear-gradient(130deg, var(--scene-grotto-deep), var(--scene-grotto-deep-2)); }
 .site-card__art span {
   display: grid;
   width: 56px;
   height: 56px;
   place-items: center;
-  color: #d8eacb;
-  font: 700 1.75rem var(--font-display);
-  border: 1px solid rgba(213, 229, 195, .38);
+  color: color-mix(in srgb, var(--scene-forest-accent) 40%, var(--text-primary));
+  font: 700 var(--text-display) var(--font-display);
+  border: 1px solid color-mix(in srgb, var(--scene-forest-accent) 38%, transparent);
   border-radius: 50%;
-  background: rgba(8, 18, 14, .58);
-  box-shadow: 0 0 24px rgba(101, 194, 130, .2), inset 0 0 16px rgba(153, 221, 174, .08);
+  background: color-mix(in srgb, var(--scene-forest-deep-2) 58%, transparent);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--scene-forest-accent) 20%, transparent), inset 0 0 16px color-mix(in srgb, var(--scene-forest-accent) 8%, transparent);
 }
 
 .site-card__header {
@@ -463,7 +463,7 @@ function convertTier(fromId: string) {
 .site-card__name {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: var(--text-lg);
 }
 
 .site-card__kind {
@@ -471,7 +471,7 @@ function convertTier(fromId: string) {
   border-radius: 999px;
   background: var(--ink-700);
   font-size: var(--text-xs);
-  color: var(--gold-500);
+  color: var(--chrome-500);
 }
 
 .site-card__description {
@@ -504,7 +504,7 @@ function convertTier(fromId: string) {
 
 .site-card__progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--jade), var(--gold-500));
+  background: linear-gradient(90deg, var(--jade), var(--chrome-300));
   transition: width 0.5s linear;
 }
 
@@ -516,8 +516,9 @@ function convertTier(fromId: string) {
 
 .site-card__action {
   padding: 8px;
-  background: var(--gold-500);
-  color: var(--gold-ink);
+  min-height: var(--tap-min);
+  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
+  color: var(--ink-950);
   border: none;
   border-radius: var(--radius-sm);
   font-weight: 700;
@@ -552,12 +553,13 @@ function convertTier(fromId: string) {
 }
 
 .site-card__upgrade li.is-missing {
-  color: var(--danger, #e05d5d);
+  color: var(--crimson);
 }
 
 .site-card__upgrade-button {
   width: 100%;
   padding: 6px;
+  min-height: var(--tap-min);
   background: transparent;
   border: 1px solid var(--ink-line);
   border-radius: var(--radius-sm);
@@ -577,16 +579,16 @@ function convertTier(fromId: string) {
   flex-direction: column;
   gap: 8px;
   padding: 12px;
-  background: linear-gradient(145deg, rgba(35, 48, 39, .84), rgba(16, 21, 21, .92));
-  border: 1px solid rgba(111, 167, 128, .25);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--scene-forest-deep) 84%, transparent), color-mix(in srgb, var(--scene-forest-deep-2) 92%, transparent));
+  border: 1px solid color-mix(in srgb, var(--scene-forest-accent) 25%, transparent);
   border-radius: var(--radius-md);
 }
 
 .tier-conversion__title {
   margin: 0;
-  color: var(--gold-500);
+  color: var(--chrome-100);
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: var(--text-lg);
 }
 
 .tier-conversion__note {
@@ -609,7 +611,7 @@ function convertTier(fromId: string) {
   padding: 6px 8px;
   border: 1px solid var(--ink-line);
   border-radius: var(--radius-sm);
-  background: rgba(8, 18, 14, .4);
+  background: color-mix(in srgb, var(--scene-forest-deep-2) 40%, transparent);
 }
 
 .tier-conversion__label {
@@ -623,8 +625,9 @@ function convertTier(fromId: string) {
 
 .tier-conversion__button {
   padding: 5px 10px;
-  background: var(--gold-500);
-  color: var(--gold-ink);
+  min-height: var(--tap-min);
+  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
+  color: var(--ink-950);
   border: none;
   border-radius: var(--radius-sm);
   font-weight: 700;

@@ -69,8 +69,11 @@ function outerOrbitRadius(): number {
   // Wheel ở y=66%: giới hạn theo khoảng trống thật phía dưới, không giả
   // định tâm nằm giữa viewport. Button nhỏ hơn cho phép vòng mở rộng mà vẫn
   // chừa mép màn hình; khoảng trống tâm phải đủ để không che sprite nhân vật.
+  // Sàn 168px KHÔNG được vượt bottomFit — cửa sổ thấp thà vòng nhỏ còn hơn
+  // slot tràn khỏi mép dưới viewport.
   const bottomFit = height * 0.34 - 32
-  return Math.max(168, Math.min(340, shortSide * 0.34, bottomFit))
+  const ideal = Math.max(168, Math.min(340, shortSide * 0.34))
+  return Math.max(96, Math.min(ideal, bottomFit))
 }
 
 function orbitRadius(orbitIndex: number): number {
@@ -371,7 +374,7 @@ function activate(slot: CommandWheelSlot) {
 .command-wheel-layer__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(6, 6, 9, 0.42);
+  background: color-mix(in srgb, var(--ink-950) 42%, transparent);
   cursor: pointer;
 }
 
@@ -395,7 +398,7 @@ function activate(slot: CommandWheelSlot) {
   top: 0;
   width: var(--orbit-diameter);
   height: var(--orbit-diameter);
-  border: 1px solid color-mix(in srgb, var(--gold-500) 34%, transparent);
+  border: 1px solid color-mix(in srgb, var(--chrome-500) 34%, transparent);
   border-radius: 50%;
   pointer-events: none;
   opacity: 0;
@@ -450,14 +453,14 @@ function activate(slot: CommandWheelSlot) {
 
 .command-wheel__slot:hover,
 .command-wheel__slot:focus-visible {
-  border-color: var(--gold-500);
+  border-color: var(--chrome-300);
   background: color-mix(in srgb, var(--ink-800) 92%, transparent);
-  color: var(--gold-300);
+  color: var(--chrome-100);
 }
 
 .command-wheel__slot:focus-visible {
   outline: none;
-  box-shadow: var(--focus-ring-gold);
+  box-shadow: var(--focus-ring-chrome);
 }
 
 /* Bản Mệnh Pháp Bảo (2026-08-27) — slot render được nhưng tạm chưa bấm
@@ -476,14 +479,14 @@ function activate(slot: CommandWheelSlot) {
 
 /* Active state suy ra từ uiStore (panel/popover đang mở). */
 .command-wheel__slot.is-active {
-  border-color: var(--gold-500);
-  background: rgba(255, 213, 79, 0.14);
-  color: var(--gold-300);
+  border-color: var(--chrome-300);
+  background: color-mix(in srgb, var(--chrome-300) 14%, transparent);
+  color: var(--chrome-100);
 }
 
 /* Ring màu nhận diện nhẹ theo tầng. */
 .command-wheel__slot--ring1 {
-  border-left: 3px solid var(--gold-500);
+  border-left: 3px solid var(--chrome-500);
 }
 .command-wheel__slot--ring2 {
   border-left: 3px solid var(--azure);
@@ -503,7 +506,7 @@ function activate(slot: CommandWheelSlot) {
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: var(--gold-500);
+  background: var(--chrome-500);
 }
 
 .command-wheel__notification-badge {

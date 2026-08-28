@@ -129,40 +129,40 @@ function build() {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  border: 1px solid var(--gold-500);
+  border: 1px solid var(--chrome-500);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-display);
-  color: var(--gold-500);
-  font-size: 1.1rem;
+  color: var(--chrome-100);
+  font-size: var(--text-title);
 }
 
 .construction-gate__name {
   margin: 4px 0 0;
   font-family: var(--font-display);
-  color: var(--gold-500);
-  font-size: 1rem;
+  color: var(--chrome-100);
+  font-size: var(--text-lg);
 }
 
 .construction-gate__description {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   max-width: 280px;
 }
 
 .construction-gate__cost {
   margin: 4px 0 0;
-  font-size: 0.78rem;
+  font-size: var(--text-xs);
   color: var(--text-secondary);
 }
 
 .construction-gate__build {
   margin-top: 10px;
   padding: 8px 20px;
-  background: var(--gold-500);
-  color: var(--gold-ink);
+  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
+  color: var(--ink-950);
   border: none;
   border-radius: var(--radius-sm);
   font-weight: 700;

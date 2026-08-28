@@ -113,13 +113,12 @@ function openSlot(index: number) {
 .skill-loadout-strip__passive-summary {
   margin: 0;
   padding: 8px;
-  color: var(--gold-500);
-  font-size: 0.75rem;
+  color: var(--chrome-100);
+  font-size: var(--text-xs);
 }
 
 .loadout-card__icon {
-  flex: 0 0 15%;
-  width: 15%;
+  width: 100%;
 }
 
 .loadout-card__level-label {
@@ -155,7 +154,7 @@ function openSlot(index: number) {
 }
 
 .skill-loadout__slot:hover:not(.is-locked) {
-  border-color: var(--gold-500);
+  border-color: var(--chrome-300);
 }
 
 .skill-loadout__slot.is-locked {
@@ -176,6 +175,7 @@ function openSlot(index: number) {
 
 .loadout-specializations__btn {
   flex: 1 1 auto;
+  min-height: var(--tap-min);
   padding: 3px 6px;
   font-size: var(--text-xs);
   background: var(--ink-800);
@@ -186,8 +186,8 @@ function openSlot(index: number) {
 }
 
 .loadout-specializations__btn.is-active {
-  border-color: var(--gold-500);
-  color: var(--gold-500);
+  border-color: var(--chrome-300);
+  color: var(--chrome-100);
   background: var(--ink-700);
 }
 </style>

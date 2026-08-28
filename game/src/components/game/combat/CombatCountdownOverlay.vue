@@ -54,10 +54,10 @@ const label = computed(() => (displayNumber.value > 0 ? String(displayNumber.val
 
 .combat-countdown-overlay__number {
   font-family: var(--font-display);
-  font-size: 6rem;
+  font-size: var(--text-hero);
   font-weight: 700;
-  color: var(--gold-500);
-  text-shadow: 0 0 24px rgba(244, 197, 66, 0.65), 0 2px 8px rgba(0, 0, 0, 0.8);
+  color: var(--chrome-100);
+  text-shadow: 0 0 24px color-mix(in srgb, var(--chrome-100) 60%, transparent), 0 2px 8px rgba(0, 0, 0, 0.8);
   animation: combat-countdown-pop 0.3s ease-out;
 }
 

@@ -358,7 +358,7 @@ const activeTimedEffects = computed(() => {
   display: flex;
   justify-content: space-between;
   gap: 6px;
-  font-size: 0.7rem;
+  font-size: var(--text-xs);
 }
 
 .pill-active__name {
@@ -376,7 +376,7 @@ const activeTimedEffects = computed(() => {
 }
 
 .pill-active__remaining {
-  color: var(--gold-500);
+  color: var(--chrome-500);
   white-space: nowrap;
   font-family: var(--font-body);
 }

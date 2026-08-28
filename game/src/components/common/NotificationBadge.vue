@@ -33,10 +33,10 @@ const isVisible = () => props.variant === 'dot' || (props.count ?? 0) > 0
   border-radius: 999px;
   color: #fff;
   font-family: var(--font-body);
-  font-size: 9px;
+  font-size: var(--text-xs);
   font-weight: 700;
   line-height: 1;
-  box-shadow: 0 0 6px -1px rgba(229, 72, 77, 0.7);
+  box-shadow: 0 0 6px -1px color-mix(in srgb, var(--crimson) 70%, transparent);
 }
 
 .notification-badge--dot {

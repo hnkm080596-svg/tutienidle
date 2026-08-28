@@ -131,7 +131,7 @@ function onClick(row: ReturnType<typeof buildRow>) {
 }
 
 .element-path-list__card:not(:disabled):hover {
-  border-color: var(--el-color, var(--gold-500));
+  border-color: var(--el-color, var(--chrome-500));
 }
 
 .element-path-list__card.is-selected {
@@ -147,7 +147,7 @@ function onClick(row: ReturnType<typeof buildRow>) {
 }
 
 .element-path-list__label {
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   font-weight: 700;
 }
 
@@ -165,6 +165,6 @@ function onClick(row: ReturnType<typeof buildRow>) {
 
 .element-path-list__bar-fill {
   height: 100%;
-  background: var(--el-color, var(--gold-500));
+  background: var(--el-color, var(--chrome-500));
 }
 </style>

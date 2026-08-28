@@ -116,23 +116,23 @@ function upgrade() {
   gap: 14px;
   min-height: 88px;
   padding: 10px 18px;
-  border-bottom: 1px solid rgba(185, 137, 73, .3);
-  background: linear-gradient(90deg, rgba(35, 31, 25, .97), rgba(16, 20, 22, .94));
+  border-bottom: 1px solid color-mix(in srgb, var(--chrome-500) 30%, transparent);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--ink-900) 97%, transparent), color-mix(in srgb, var(--ink-950) 94%, transparent));
 }
 
 .building-panel-header__art {
   width: 74px;
   height: 64px;
   object-fit: cover;
-  border: 1px solid rgba(214, 167, 92, .4);
+  border: 1px solid color-mix(in srgb, var(--chrome-500) 40%, transparent);
   border-radius: 50% 50% var(--radius-sm) var(--radius-sm);
   background: var(--ink-900);
   filter: saturate(.9) contrast(1.08);
-  box-shadow: 0 0 18px rgba(213, 157, 77, .14);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--chrome-500) 14%, transparent);
 }
 
 .building-panel-header__identity { min-width: 0; margin-right: auto; }
-.building-panel-header__identity small { color: #a97948; font-size: .63rem; letter-spacing: .17em; }
+.building-panel-header__identity small { color: var(--chrome-500); font-size: var(--text-xs); letter-spacing: .17em; }
 .building-panel-header__upgrade-area { display: flex; max-width: 45%; flex-direction: column; align-items: flex-end; gap: 5px; }
 
 .building-panel-header h2,
@@ -141,8 +141,8 @@ function upgrade() {
 }
 
 .building-panel-header h2 {
-  color: var(--gold-500);
-  font: 700 1.15rem var(--font-display);
+  color: var(--chrome-100);
+  font: 700 var(--text-title) var(--font-display);
 }
 
 .building-panel-header p {
@@ -153,10 +153,11 @@ function upgrade() {
 .building-panel-header__upgrade {
   margin-top: 3px;
   padding: 7px 14px;
-  border: 1px solid var(--gold-500);
+  min-height: var(--tap-min);
+  border: 1px solid var(--chrome-300);
   border-radius: var(--radius-sm);
-  background: var(--gold-500);
-  color: var(--gold-ink);
+  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
+  color: var(--ink-950);
   font: 700 var(--text-sm) var(--font-body);
   cursor: pointer;
 }

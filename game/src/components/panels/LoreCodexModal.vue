@@ -4,6 +4,8 @@
 // Kinh Các's Lore tab (Phase 7): người chơi bấm vào 1 lore item, đọc
 // trọn mô tả, tự đóng khi bấm ra ngoài/nút đóng, KHÔNG tự ẩn theo
 // chuột như Tooltip. Style nhất quán NavMenuOverlay.vue.
+import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
+
 defineProps<{
   content: { title: string; description: string } | null
 }>()
@@ -14,7 +16,7 @@ const emit = defineEmits<{ close: [] }>()
 <template>
   <Teleport to="body">
     <Transition name="lore-modal-fade">
-      <div v-if="content" class="lore-modal" @click.self="emit('close')">
+      <div v-if="content" class="lore-modal" :style="{ zIndex: OVERLAY_LAYERS.modal }" @click.self="emit('close')">
         <div class="lore-modal__panel">
           <h3 class="lore-modal__title">{{ content.title }}</h3>
 
@@ -34,25 +36,26 @@ const emit = defineEmits<{ close: [] }>()
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(10, 10, 13, 0.72);
-  z-index: 60;
+  background: var(--scrim);
 }
 
 .lore-modal__panel {
   background: var(--ink-900);
-  border: 1px solid var(--gold-500);
+  border: 1px solid var(--chrome-500);
   box-shadow: var(--shadow-panel);
   border-radius: var(--radius-md);
   padding: 24px 28px;
-  min-width: 340px;
+  min-width: min(340px, 92vw);
   max-width: 480px;
+  max-height: 84vh;
+  overflow-y: auto;
 }
 
 .lore-modal__title {
   margin: 0 0 12px;
   font-family: var(--font-display);
-  font-size: 1.05rem;
-  color: var(--gold-500);
+  font-size: var(--text-title);
+  color: var(--chrome-100);
   text-align: center;
 }
 
@@ -60,7 +63,7 @@ const emit = defineEmits<{ close: [] }>()
   margin: 0 0 20px;
   color: var(--text-primary);
   font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-size: var(--text-body);
   line-height: 1.5;
   white-space: pre-line;
 }
@@ -74,13 +77,13 @@ const emit = defineEmits<{ close: [] }>()
   border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-family: var(--font-body);
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   cursor: pointer;
 }
 
 .lore-modal__close:hover {
-  border-color: var(--gold-500);
-  color: var(--gold-500);
+  border-color: var(--chrome-300);
+  color: var(--chrome-100);
 }
 
 .lore-modal-fade-enter-active,

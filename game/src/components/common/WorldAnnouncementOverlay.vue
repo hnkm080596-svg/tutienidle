@@ -64,16 +64,15 @@ watch(
 <style scoped>
 .world-announcement {
   /* KHÔNG dùng position:fixed — component này KHÔNG Teleport, render
-     thẳng trong .game-root (đã transform:scale()), phải absolute để
-     ăn theo scale giống BreakthroughButton.vue/CombatHud.vue, không
-     neo theo viewport trình duyệt thật (xem ghi chú CombatHud.vue). */
+     thẳng trong .game-root nên absolute để phủ đúng vùng container
+     game, không neo theo viewport trình duyệt thật. */
   position: absolute;
   inset: 0;
   z-index: 2000;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(5, 5, 8, 0.86);
+  background: var(--scrim-heavy);
   cursor: pointer;
 }
 
@@ -86,17 +85,17 @@ watch(
 .world-announcement__title {
   margin: 0 0 16px;
   font-family: var(--font-display);
-  font-size: 2rem;
+  font-size: var(--text-display-lg);
   letter-spacing: 0.08em;
-  color: var(--gold-500);
-  text-shadow: 0 0 24px rgba(255, 213, 79, 0.5);
+  color: var(--chrome-100);
+  text-shadow: 0 0 24px color-mix(in srgb, var(--chrome-100) 50%, transparent);
 }
 
 .world-announcement__body {
   margin: 0;
   min-height: 1.6em;
   font-family: var(--font-body);
-  font-size: 1.05rem;
+  font-size: var(--text-lg);
   line-height: 1.6;
   color: var(--text-primary);
   white-space: pre-line;

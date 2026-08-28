@@ -77,7 +77,7 @@ const chainEntries = computed(() => loadout.value.filter(entry => entry.slotInde
 .kiem-tu-combat-hud {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: var(--space-3);
 }
 
 .kiem-tu-combat-hud__basic {
@@ -90,13 +90,13 @@ const chainEntries = computed(() => loadout.value.filter(entry => entry.slotInde
   gap: var(--space-2);
 }
 
-/* WS7 — slot chain 56px quá nhỏ, bump 68px. */
+/* WS7 — slot chain 56px quá nhỏ; 72px cho khớp ô skill của Pháp Tu. */
 .kiem-tu-combat-hud__slot {
-  width: 68px;
+  width: 72px;
 }
 
 .kiem-tu-combat-hud__link {
-  color: var(--gold-500);
-  font-size: 0.9rem;
+  color: var(--chrome-300);
+  font-size: var(--text-body);
 }
 </style>

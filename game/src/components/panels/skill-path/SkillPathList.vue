@@ -87,16 +87,16 @@ const groups = computed(() => {
 }
 
 .skill-path-list__card:hover {
-  border-color: var(--gold-500);
+  border-color: var(--chrome-300);
 }
 
 .skill-path-list__card.is-selected {
-  border-color: var(--gold-500);
-  background: color-mix(in srgb, var(--gold-500) 18%, var(--ink-800));
+  border-color: var(--chrome-300);
+  background: color-mix(in srgb, var(--chrome-300) 18%, var(--ink-800));
 }
 
 .skill-path-list__label {
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   font-weight: 700;
 }
 

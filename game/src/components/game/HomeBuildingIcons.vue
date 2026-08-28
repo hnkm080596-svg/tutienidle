@@ -24,10 +24,10 @@ const buildings = computed(() => gameManager.getBuildingDefinitions())
 type HotspotEffect = 'alchemy' | 'forge' | 'portal' | 'spring' | 'gather'
 
 interface BuildingHotspot {
-  /** Tọa độ tâm theo % của scene. Tăng left = sang phải; tăng top = đi xuống. */
+  /** Tọa độ tâm theo % của ART (ảnh nền 1672×941, cover-fit). Tăng left = sang phải; tăng top = đi xuống. */
   left: number
   top: number
-  /** Kích thước hitbox theo % của scene, độc lập với hình nền. */
+  /** Kích thước hitbox theo % của art, độc lập với hình nền. */
   width: number
   height: number
   accent: string
@@ -39,9 +39,9 @@ interface BuildingHotspot {
 const BUILDING_HOTSPOTS: Record<string, BuildingHotspot> = {
   pill_room: { left: 16, top: 25, width: 15, height: 25, accent: 'var(--el-fire)', effect: 'alchemy' },
   equipment_hall: { left: 10, top: 48, width: 15, height: 25, accent: 'var(--crimson)', effect: 'forge' },
-  teleport_array: { left: 50, top: 15, width: 15, height: 25, accent: 'var(--gold-500)', effect: 'portal' },
-  spirit_spring: { left: 90, top: 40, width: 25, height: 35, accent: 'var(--azure)', effect: 'spring' },
-  gathering_outpost: { left: 25, top: 1, width: 15, height: 25, accent: 'var(--text-muted)', effect: 'gather' },
+  teleport_array: { left: 50, top: 15, width: 15, height: 25, accent: 'var(--chrome-500)', effect: 'portal' },
+  spirit_spring: { left: 87, top: 40, width: 25, height: 35, accent: 'var(--azure)', effect: 'spring' },
+  gathering_outpost: { left: 25, top: 13, width: 15, height: 25, accent: 'var(--text-muted)', effect: 'gather' },
 }
 
 function hotspotFor(buildingId: string, index: number, total: number): BuildingHotspot {
@@ -89,35 +89,41 @@ function tooltipFor(building: (typeof buildings.value)[number]): BuildingTooltip
 
 <template>
   <div v-if="!stageActive" class="home-building-hotspots">
-    <div
-      v-for="(building, index) in buildings"
-      :key="building.id"
-      class="building-hotspot-anchor"
-      :style="hotspotStyle(hotspotFor(building.id, index, buildings.length))"
-      :data-building-id="building.id"
-    >
-      <button
-        type="button"
-        class="building-hotspot"
-        :class="[
-          `building-hotspot--${hotspotFor(building.id, index, buildings.length).effect}`,
-          {
-            'is-built': presentationFor(building.id).isBuilt,
-            'is-upgradeable': presentationFor(building.id).isUpgradeable,
-          },
-        ]"
-        :aria-label="presentationFor(building.id).isBuilt ? `Mở ${building.name}` : `Xem yêu cầu mở ${building.name}`"
-        v-tooltip="tooltipFor(building)"
-        @click="navigation.openBuilding(building.id)"
+    <!-- Art-space: box đúng bằng hình chữ nhật cover của ảnh nền 1672×941
+         (aspect-ratio + min-width/min-height 100% = object-fit:cover geometry)
+         để hotspot neo theo art, không trôi khỏi building khi viewport
+         khác 16:9. -->
+    <div class="home-building-hotspots__art-space">
+      <div
+        v-for="(building, index) in buildings"
+        :key="building.id"
+        class="building-hotspot-anchor"
+        :style="hotspotStyle(hotspotFor(building.id, index, buildings.length))"
+        :data-building-id="building.id"
       >
-        <span class="building-hotspot__outline" />
-        <span class="building-hotspot__vfx" aria-hidden="true"><i /><i /><i /></span>
-        <span class="building-hotspot__hover-label">
-          {{ building.name }}
-          <small>{{ presentationFor(building.id).isBuilt ? `Cấp ${presentationFor(building.id).level}` : 'Chưa mở' }}</small>
-        </span>
-      </button>
+        <button
+          type="button"
+          class="building-hotspot"
+          :class="[
+            `building-hotspot--${hotspotFor(building.id, index, buildings.length).effect}`,
+            {
+              'is-built': presentationFor(building.id).isBuilt,
+              'is-upgradeable': presentationFor(building.id).isUpgradeable,
+            },
+          ]"
+          :aria-label="presentationFor(building.id).isBuilt ? `Mở ${building.name}` : `Xem yêu cầu mở ${building.name}`"
+          v-tooltip="tooltipFor(building)"
+          @click="navigation.openBuilding(building.id)"
+        >
+          <span class="building-hotspot__outline" />
+          <span class="building-hotspot__vfx" aria-hidden="true"><i /><i /><i /></span>
+          <span class="building-hotspot__hover-label">
+            {{ building.name }}
+            <small>{{ presentationFor(building.id).isBuilt ? `Cấp ${presentationFor(building.id).level}` : 'Chưa mở' }}</small>
+          </span>
+        </button>
 
+      </div>
     </div>
   </div>
 </template>
@@ -127,6 +133,17 @@ function tooltipFor(building: (typeof buildings.value)[number]): BuildingTooltip
   position: absolute;
   inset: 0;
   z-index: 5;
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.home-building-hotspots__art-space {
+  position: relative;
+  aspect-ratio: 1672 / 941;
+  min-width: 100%;
+  min-height: 100%;
   pointer-events: none;
 }
 
@@ -264,7 +281,7 @@ function tooltipFor(building: (typeof buildings.value)[number]): BuildingTooltip
   padding: 3px 9px;
   border: 1px solid color-mix(in srgb, var(--accent) 48%, var(--ink-line));
   border-radius: 999px;
-  background: rgba(10, 10, 13, 0.88);
+  background: color-mix(in srgb, var(--ink-950) 88%, transparent);
   color: var(--text-primary);
   font: 600 var(--text-xs) var(--font-body);
   opacity: 0;
@@ -273,7 +290,7 @@ function tooltipFor(building: (typeof buildings.value)[number]): BuildingTooltip
   pointer-events: none;
 }
 
-.building-hotspot__hover-label small { color: var(--text-muted); font-size: 10px; font-weight: 400; }
+.building-hotspot__hover-label small { color: var(--text-muted); font-size: var(--text-xs); font-weight: 400; }
 .building-hotspot:hover .building-hotspot__hover-label,
 .building-hotspot:focus-visible .building-hotspot__hover-label { opacity: 1; transform: translate(-50%, 0); }
 

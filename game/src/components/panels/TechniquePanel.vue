@@ -93,57 +93,6 @@ function close() {
 </template>
 
 <style scoped>
-.technique-panel {
-  position: absolute;
-  inset: 0;
-  z-index: 1800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(10, 10, 13, 0.72);
-}
-
-.technique-panel__card {
-  width: min(560px, 90%);
-  max-height: 85%;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 20px 24px;
-  background: var(--ink-900);
-  border: 1px solid var(--gold-500);
-  box-shadow: var(--shadow-panel);
-  border-radius: var(--radius-md);
-  font-family: var(--font-body);
-  color: var(--text-primary);
-}
-
-.technique-panel__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.technique-panel__title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 1.1rem;
-  letter-spacing: 0.06em;
-  color: var(--gold-500);
-}
-
-.technique-panel__close {
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  background: var(--ink-800);
-  color: var(--text-secondary);
-  border: 1px solid var(--ink-line-soft);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-}
-
 .technique-panel__hero {
   display: flex;
   flex-direction: column;
@@ -165,7 +114,7 @@ function close() {
 
 .technique-panel__tier-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--jade), var(--gold-500));
+  background: linear-gradient(90deg, var(--jade), var(--chrome-300));
 }
 
 .technique-panel__tier-label {
@@ -184,14 +133,14 @@ function close() {
   font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: var(--gold-500);
+  color: var(--chrome-100);
 }
 
 .technique-panel__rows {
   list-style: none;
   margin: 0;
   padding: 0;
-  font-size: 0.76rem;
+  font-size: var(--text-sm);
 }
 
 .technique-panel__rows li {
@@ -205,7 +154,7 @@ function close() {
 
 .technique-panel__empty {
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   text-align: center;
   padding: 12px 4px;
 }

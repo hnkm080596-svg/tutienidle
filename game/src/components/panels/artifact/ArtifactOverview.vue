@@ -37,12 +37,12 @@ defineProps<{
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--gold-700), var(--ink-900));
-  border: 1px solid var(--gold-500);
-  color: var(--gold-300);
-  font-size: 28px;
+  background: radial-gradient(circle, var(--chrome-500), var(--ink-900));
+  border: 1px solid var(--chrome-500);
+  color: var(--chrome-100);
+  font-size: var(--text-display);
   font-family: var(--font-display);
-  box-shadow: var(--shadow-glow-gold);
+  box-shadow: var(--shadow-glow-chrome);
 }
 
 .artifact-overview__text {
@@ -59,7 +59,7 @@ defineProps<{
 
 .artifact-overview__meta {
   margin: 2px 0 0;
-  color: var(--gold-300);
+  color: var(--chrome-500);
   font-size: var(--text-body);
 }
 </style>

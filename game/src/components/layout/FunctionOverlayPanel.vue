@@ -65,5 +65,5 @@ function close() {
 </template>
 
 <style scoped>
-.function-overlay { min-height: 100%; display: flex; flex-direction: column; overflow: auto; }
+.function-overlay { height: 100%; display: flex; flex-direction: column; }
 </style>

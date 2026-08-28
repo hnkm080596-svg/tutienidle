@@ -137,12 +137,13 @@ function close() {
   display: block;
   width: 100%;
   padding: 10px;
+  min-height: var(--tap-min);
   background: linear-gradient(180deg, var(--crimson), var(--ink-800));
   color: var(--text-primary);
-  border: 1px solid var(--gold-500);
+  border: 1px solid var(--chrome-500);
   border-radius: var(--radius-sm);
   font-weight: 700;
-  font-size: 0.78rem;
+  font-size: var(--text-xs);
   cursor: pointer;
 }
 </style>

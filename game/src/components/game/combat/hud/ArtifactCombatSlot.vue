@@ -70,8 +70,8 @@ const elementColor = computed(() =>
   position: relative;
   z-index: 1;
   font-family: var(--font-display);
-  font-size: 18px;
-  color: var(--el-color, var(--gold-300));
+  font-size: var(--text-panel-title);
+  color: var(--el-color, var(--chrome-100));
 }
 
 .artifact-combat-slot__mask {
@@ -80,7 +80,7 @@ const elementColor = computed(() =>
   top: auto;
   bottom: 0;
   width: 100%;
-  background: rgba(10, 10, 13, 0.72);
+  background: color-mix(in srgb, var(--ink-950) 72%, transparent);
   transition: height 0.1s linear;
 }
 
@@ -92,29 +92,29 @@ const elementColor = computed(() =>
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--el-color, var(--gold-300));
+  background: var(--el-color, var(--chrome-100));
   box-shadow: 0 0 4px var(--el-color, transparent);
   z-index: 2;
 }
 
 .artifact-combat-slot__stacks {
   position: absolute;
-  top: -2px;
-  right: -2px;
+  top: 2px;
+  right: 2px;
   z-index: 3;
   min-width: 16px;
   padding: 0 3px;
   border-radius: 8px;
   background: var(--crimson);
   color: var(--text-primary);
-  font-size: 10px;
+  font-size: var(--text-xs);
   font-weight: 700;
   text-align: center;
   line-height: 16px;
 }
 
 .artifact-combat-slot__stacks--ready {
-  background: var(--gold-500);
-  color: var(--gold-ink);
+  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
+  color: var(--ink-950);
 }
 </style>

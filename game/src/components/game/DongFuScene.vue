@@ -73,7 +73,7 @@ const ui = useUiStore()
         :aria-expanded="ui.isCommandWheelOpen"
         @click.stop="ui.toggleCommandWheel()"
       >
-        <PlayerPortrait variant="cultivate" :animated="true" :height="239" />
+        <PlayerPortrait variant="cultivate" :animated="true" height="clamp(160px, 26vh, 239px)" />
       </button>
     </div>
 
@@ -93,7 +93,7 @@ const ui = useUiStore()
 .home-scene__sky {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, #0c0d14 0%, #14141d 38%, #1a1a24 62%, #201d1a 100%);
+  background: linear-gradient(180deg, var(--ink-950) 0%, var(--ink-900) 38%, var(--ink-800) 62%, var(--ink-800) 100%);
 }
 
 .home-scene__mountains {
@@ -102,7 +102,7 @@ const ui = useUiStore()
   right: 0;
   top: 28%;
   height: 32%;
-  background-color: #16161e;
+  background-color: var(--ink-900);
   opacity: 0.9;
   clip-path: polygon(0% 100%, 0% 62%, 9% 40%, 18% 58%, 27% 30%, 38% 52%, 48% 22%, 60% 50%, 71% 34%, 82% 56%, 91% 38%, 100% 60%, 100% 100%);
 }
@@ -110,7 +110,7 @@ const ui = useUiStore()
 .home-scene__mountains--far {
   top: 32%;
   height: 30%;
-  background-color: #101017;
+  background-color: var(--ink-900);
   opacity: 0.75;
   clip-path: polygon(0% 100%, 0% 74%, 12% 56%, 24% 70%, 36% 48%, 50% 66%, 63% 46%, 76% 68%, 88% 52%, 100% 72%, 100% 100%);
 }
@@ -121,8 +121,8 @@ const ui = useUiStore()
   right: 0;
   bottom: 0;
   top: 64%;
-  background: linear-gradient(180deg, #17161a 0%, #100f11 55%, #0a0909 100%);
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  background: linear-gradient(180deg, var(--ink-900) 0%, var(--ink-900) 55%, var(--ink-950) 100%);
+  border-top: 1px solid color-mix(in srgb, var(--text-primary) 4%, transparent);
 }
 
 /* ================= Art base Động Phủ (cover-fit, thay nền CSS) ====== */
@@ -158,7 +158,7 @@ const ui = useUiStore()
   position: absolute;
   inset: -30%;
   border-radius: 50%;
-  background: radial-gradient(ellipse, rgba(255, 213, 79, 0.14), rgba(66, 165, 245, 0.07) 55%, transparent 75%);
+  background: radial-gradient(ellipse, color-mix(in srgb, var(--chrome-500) 14%, transparent), color-mix(in srgb, var(--azure) 7%, transparent) 55%, transparent 75%);
   filter: blur(6px);
 }
 
@@ -167,27 +167,27 @@ const ui = useUiStore()
   left: 50%;
   top: 50%;
   border-radius: 50%;
-  border: 1px solid rgba(255, 213, 79, 0.3);
+  border: 1px solid color-mix(in srgb, var(--chrome-500) 30%, transparent);
   transform: translate(-50%, -50%) perspective(320px) rotateX(64deg);
 }
 
 .home-linhnhan__ring--outer {
   width: 100%;
   height: 300%;
-  border-color: rgba(91, 155, 213, 0.25);
+  border-color: color-mix(in srgb, var(--azure) 25%, transparent);
   animation: home-pulse 4.5s ease-in-out infinite;
 }
 
 .home-linhnhan__ring--mid {
   width: 74%;
   height: 220%;
-  border-color: rgba(255, 213, 79, 0.32);
+  border-color: color-mix(in srgb, var(--chrome-500) 32%, transparent);
 }
 
 .home-linhnhan__ring--inner {
   width: 46%;
   height: 140%;
-  border-color: rgba(255, 213, 79, 0.48);
+  border-color: color-mix(in srgb, var(--chrome-500) 48%, transparent);
   animation: home-pulse 3.2s ease-in-out infinite reverse;
 }
 
@@ -207,8 +207,8 @@ const ui = useUiStore()
   width: 3px;
   height: 3px;
   border-radius: 50%;
-  background: var(--gold-300);
-  box-shadow: 0 0 6px 2px var(--gold-300);
+  background: var(--chrome-100);
+  box-shadow: 0 0 6px 2px var(--chrome-100);
   animation: home-mote 7s ease-in-out infinite;
 }
 
@@ -243,7 +243,7 @@ const ui = useUiStore()
 }
 
 .home-player__trigger:focus-visible {
-  outline: 2px solid var(--gold-500);
+  outline: 2px solid var(--chrome-300);
   outline-offset: 4px;
   border-radius: var(--radius-md);
 }

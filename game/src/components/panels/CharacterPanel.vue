@@ -35,7 +35,7 @@ const selectedTalents = computed(() =>
 // CultivationPathKit.ts) — fallback vàng trung tính khi CHƯA chọn path
 // (còn ở Phàm Nhân) hoặc đã chọn Pháp Tu.
 const characterAuraColor = computed(() =>
-  chosenKit.value?.element ? ELEMENT_COLOR_VARS[chosenKit.value.element] : 'var(--gold-500)',
+    chosenKit.value?.element ? ELEMENT_COLOR_VARS[chosenKit.value.element] : 'var(--chrome-500)',
 )
 
 // Chân dung tĩnh (2026-08-26, dong-fu plan Workstream A) — PNG mortal
@@ -364,7 +364,7 @@ const pillPermanentRows = computed(() => {
   font-family: var(--font-display);
   font-size: var(--text-body);
   font-weight: 600;
-  color: var(--gold-300);
+  color: var(--chrome-100);
 }
 
 .character-panel__power {
@@ -379,8 +379,8 @@ const pillPermanentRows = computed(() => {
   font-family: var(--font-display);
   font-size: var(--text-lg);
   font-weight: 700;
-  color: var(--gold-500);
-  text-shadow: var(--shadow-glow-gold);
+  color: var(--chrome-100);
+  text-shadow: var(--shadow-glow-chrome);
 }
 
 .character-panel__power-label {
@@ -402,12 +402,12 @@ const pillPermanentRows = computed(() => {
 .talent-block {
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--ink-line);
-  border-radius: 7px;
-  background: #101016;
+  border-radius: var(--radius-md);
+  background: var(--ink-900);
 }
 
 .talent-block__rarity {
-  font-size: 10px;
+  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.13em;
 }
@@ -424,7 +424,7 @@ const pillPermanentRows = computed(() => {
 .talent-block__description {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 11px;
+  font-size: var(--text-xs);
   line-height: 1.5;
 }
 
@@ -436,28 +436,12 @@ const pillPermanentRows = computed(() => {
 
 /* WS3 — section Trang Bị độc lập dưới header, paperdoll dùng trọn
    chiều rộng panel. */
-.character-panel__equipment {
-  flex: 0 0 auto;
-  padding: var(--space-3) var(--space-3) var(--space-2);
-  border-bottom: 1px solid var(--ink-line);
-}
-
 .character-panel__section-title {
   margin: 0 0 var(--space-2);
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-muted);
-}
-
-.character-panel__paperdoll {
-  min-height: 150px;
-}
-
-.character-panel__technique {
-  flex: 0 0 auto;
-  padding: 6px 10px;
-  border-bottom: 1px solid var(--ink-line);
 }
 
 .character-panel__cultivation-path {
@@ -470,44 +454,6 @@ const pillPermanentRows = computed(() => {
   margin: 0;
   font-size: var(--text-xs);
   color: var(--text-muted);
-}
-
-.path-summary__title {
-  margin: 0 0 var(--space-1);
-  font-size: var(--text-body);
-  color: var(--gold-500);
-  font-family: var(--font-display);
-}
-
-.path-summary__meta {
-  margin: 0 0 var(--space-1);
-  font-size: var(--text-xs);
-  color: var(--text-secondary);
-}
-
-.path-summary__skills {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  font-size: var(--text-xs);
-  color: var(--text-secondary);
-}
-
-.path-summary__skills li {
-  padding: 2px 0;
-  border-bottom: 1px solid var(--ink-line-soft);
-}
-
-.path-summary__breakthrough {
-  margin: var(--space-1) 0 0;
-  font-size: var(--text-xs);
-  color: var(--gold-500);
-}
-
-.path-summary__section {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid var(--ink-line-soft);
 }
 
 .character-panel__body {
@@ -537,7 +483,7 @@ const pillPermanentRows = computed(() => {
   font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: var(--gold-500);
+  color: var(--chrome-500);
   cursor: default;
   font-family: var(--font-body);
 }
@@ -575,19 +521,19 @@ const pillPermanentRows = computed(() => {
 .stat-list__max {
   font-size: var(--text-xs);
   font-weight: 700;
-  color: var(--gold-500);
+  color: var(--chrome-100);
 }
 
 .stat-list__allocate {
-  width: 24px;
-  height: 24px;
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
   flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  background: var(--gold-500);
-  color: var(--gold-ink);
+  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
+  color: var(--ink-950);
   border: none;
   border-radius: 50%;
   font-weight: 700;
@@ -636,12 +582,20 @@ const pillPermanentRows = computed(() => {
 
 .element-chip__label {
   flex: 1;
+  min-width: 0;
   color: var(--chip-color);
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .element-chip__value {
+  min-width: 0;
   color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pill-usage {

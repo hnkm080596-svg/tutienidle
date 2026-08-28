@@ -23,17 +23,78 @@
   --text-secondary: #b3ada0;
   --text-muted: #7c7870;
 
-  /* Vàng — accent thương hiệu */
+  /* Vàng — KHÔNG còn là màu chrome (khung/nút/tiêu đề/viền chọn đã
+     chuyển họ bạc Mực & Bạc 2026-08-28). Chỉ giữ vai trò màu DỮ LIỆU:
+     phẩm chất rank 7 'kim', khoảnh khắc đặc biệt. */
   --gold-100: #fff3c4;
   --gold-300: #ffe082;
   --gold-500: #ffd54f;
   --gold-700: #ffb300;
   --gold-ink: #221a00;
 
+  /* Bạc — chrome đơn sắc ấm "Mực & Bạc" (2026-08-28), cùng họ mực ấm
+     với --text-*. Mọi khung viền/nút/tiêu đề/viền trạng thái chọn của
+     vùng trung tính dùng thang này thay vàng cũ:
+       100 = bạc trắng (corner, hover, nút chính, title)
+       300 = bạc sáng (inner ring, viền đang chọn, focus ring)
+       500 = bạc (outer ring, eyebrow/kicker)
+       700 = bạc tối (disabled, chi tiết chìm) */
+  --chrome-100: #f4f1ea;
+  --chrome-300: #d9d4c7;
+  --chrome-500: #b3ada0;
+  --chrome-700: #7c7870;
+
   /* Semantic */
   --jade: #6fbf73;
   --crimson: #e5484d;
   --azure: #5b9bd5;
+
+  /* ============================================================
+     Scene zone tokens (UI polish 2026-08-28) — mỗi khu chức năng giữ
+     palette sáng tạo riêng (lửa rèn/đan, teal trận pháp, nước linh
+     tuyền, tài nguyên sản xuất, thiên kiếp) nhưng ĐỊNH NGHĨA MỘT LẦN
+     tại đây thay vì hex rời rạc trong component. Biến thể alpha dùng
+     color-mix(in srgb, var(--scene-X-*) N%, transparent) tại chỗ.
+     ============================================================ */
+
+  /* Lò rèn (Khí Đường) + Đan Phòng — cùng họ lửa/ember. */
+  --scene-fire-deep: #15100d;
+  --scene-fire-accent: #e0a45b;
+  --scene-fire-glow: #ff6b1f;
+  --scene-fire-text: #f3cf8b;
+  --scene-fire-text-soft: #d58a48;
+
+  /* Trận pháp teleport (Địa Giới) — teal. */
+  --scene-portal-deep: #0c181c;
+  --scene-portal-accent: #72c5d8;
+  --scene-portal-glow: #49bdd2;
+  --scene-portal-text: #d9f4f2;
+  --scene-portal-text-soft: #9ee2e5;
+
+  /* Linh Tuyền — nước, accent tái dùng --azure. */
+  --scene-water-deep: #0a1216;
+  --scene-water-accent: var(--azure);
+  --scene-water-text: #d6ecf9;
+
+  /* Site cards Sản Xuất — 3 loại tài nguyên, mỗi loại cặp nền + accent. */
+  --scene-forest-deep: #21392c;
+  --scene-forest-deep-2: #101919;
+  --scene-forest-accent: #74c58d;
+  --scene-mine-deep: #382e23;
+  --scene-mine-deep-2: #171515;
+  --scene-mine-accent: #ca9f5b;
+  --scene-grotto-deep: #203a3b;
+  --scene-grotto-deep-2: #11191d;
+  --scene-grotto-accent: #61b2be;
+
+  /* Độ Kiếp — thiên kiếp xanh tím (Phaser scene overlay). */
+  --scene-tribulation-deep: #08101e;
+  --scene-tribulation-text: #e9f6ff;
+  --scene-tribulation-text-soft: #bcd8e9;
+  --scene-tribulation-glow: #69bfff;
+  --scene-tribulation-line: #9edaff;
+  --scene-tribulation-time: #7658d6;
+  --scene-tribulation-hp: #d34c4c;
 
   /* Combat HUD — HP trắng xám, Mana dùng lại --jade (xanh ngọc), Nộ
      dùng lại --gold-500 (xem components/game/CombatHud.vue). */
@@ -110,19 +171,50 @@
   --radius-sm: 4px;
   --radius-md: 8px;
   --shadow-panel: 0 8px 24px rgba(0, 0, 0, 0.45);
-  --shadow-glow-gold: 0 0 12px rgba(255, 213, 79, 0.35);
+  --shadow-glow-chrome: 0 0 12px rgba(217, 212, 199, 0.35);
+
+  /* Backdrop scrim dùng chung cho overlay/modal (thay rgba rời rạc
+     8,9,13/.76 | 5,5,8/.72 | 10,10,13/.72 lặp ở ~10 component). */
+  --scrim: rgba(8, 9, 13, 0.76);
+  --scrim-heavy: rgba(5, 5, 8, 0.92);
+
+  /* ============================================================
+     ORNATE INK FRAME (2026-08-28) — khung vàng chuẩn cho mọi surface
+     "nghi lễ" (panel/modal/popover/onboarding). ĐỊNH NGHĨA MỘT LẦN
+     tại đây; component KHÔNG tự vẽ frame nữa mà chỉ thả overlay
+     <span class="ornate-frame" aria-hidden="true" /> vào container
+     đã position:relative + border-radius (và KHÔNG còn border riêng).
+     Cấu trúc 3 lớp, tính từ mép ngoài vào:
+       1. outer hairline — 1px, --frame-outer (vàng đồng, mép ngoài cùng)
+       2. gap            — khe mực --frame-gap, KHÔNG có vàng
+       3. inner hairline — 1px, --frame-inner (vàng sáng, sát nội dung)
+     + 2 corner accent "khung triện" trên overlay (::before = góc trên
+     trái, ::after = góc dưới phải): dày --frame-corner-w, dài
+     --frame-corner-size, lùi vào --frame-corner-inset (ngay trong
+     inner hairline). Overlay z-index 2 + pointer-events:none nên vẽ
+     TRÊN nội dung — nền opaque của child không bao giờ che được viền.
+     ============================================================ */
+  --frame-outer: var(--chrome-500);
+  --frame-inner: var(--chrome-300);
+  --frame-corner: var(--chrome-100);
+  --frame-ring-w: 1px;
+  --frame-gap: 2px;
+  --frame-corner-w: 1px;
+  --frame-corner-size: 10px;
+  --frame-corner-inset: 4px;
 
   /* Slot Revamp (tooltip-revamp-plan.md mục 17.6) — token semantic
      riêng cho SlotView, không hardcode màu trong component. */
   --slot-surface: var(--ink-900);
   --slot-surface-raised: var(--ink-800);
   --slot-border: var(--ink-line-soft);
-  --slot-hover: var(--gold-500);
-  --slot-selected: var(--gold-500);
+  --slot-hover: var(--chrome-300);
+  --slot-selected: var(--chrome-300);
   --slot-valid: var(--jade);
   --slot-invalid: var(--crimson);
   --slot-disabled-opacity: 0.45;
   --slot-caption-bg: rgba(10, 10, 13, 0.55);
+  --slot-caption-bg-strong: rgba(10, 10, 13, 0.82);
   --slot-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
 
   --font-display: 'Noto Serif', Georgia, serif;
@@ -161,6 +253,9 @@
   --text-lg: calc(16px * var(--ui-scale, 1));        /* giá trị/stat chính */
   --text-title: calc(18px * var(--ui-scale, 1));     /* section heading */
   --text-panel-title: calc(20px * var(--ui-scale, 1)); /* panel title */
+  --text-display: calc(24px * var(--ui-scale, 1));   /* display vừa: heading onboarding, số lớn */
+  --text-display-lg: calc(32px * var(--ui-scale, 1)); /* display lớn: announcement, forge counter */
+  --text-hero: calc(96px * var(--ui-scale, 1));      /* khoảnh khắc kịch tính: countdown */
 
   --lh-tight: 1.25;
   --lh-body: 1.45;
@@ -177,7 +272,45 @@
   --icon-nav: calc(24px * var(--ui-scale, 1));          /* icon navigation chính */
   --tap-min: calc(40px * var(--ui-scale, 1));           /* vùng bấm tối thiểu */
   --tap-comfortable: calc(44px * var(--ui-scale, 1));   /* vùng bấm khuyến nghị */
-  --focus-ring-gold: 0 0 0 2px rgba(255, 213, 79, 0.65);
+  --focus-ring-chrome: 0 0 0 2px rgba(217, 212, 199, 0.65);
+}
+
+/* ORNATE INK FRAME — utility toàn cục, xem block token --frame-* ở
+   :root cho tài liệu cấu trúc. Component chỉ cần thêm overlay này,
+   KHÔNG tự khai báo ring/corner trong scoped style nữa. */
+.ornate-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    0 0 0 var(--frame-ring-w) var(--frame-outer),
+    inset 0 0 0 var(--frame-gap) transparent,
+    inset 0 0 0 calc(var(--frame-gap) + var(--frame-ring-w)) var(--frame-inner);
+}
+
+.ornate-frame::before,
+.ornate-frame::after {
+  content: '';
+  position: absolute;
+  width: var(--frame-corner-size);
+  height: var(--frame-corner-size);
+  border: 0 solid var(--frame-corner);
+}
+
+.ornate-frame::before {
+  top: var(--frame-corner-inset);
+  left: var(--frame-corner-inset);
+  border-top-width: var(--frame-corner-w);
+  border-left-width: var(--frame-corner-w);
+}
+
+.ornate-frame::after {
+  bottom: var(--frame-corner-inset);
+  right: var(--frame-corner-inset);
+  border-bottom-width: var(--frame-corner-w);
+  border-right-width: var(--frame-corner-w);
 }
 
 /* Ẩn thanh scrollbar trên toàn app — mọi panel vẫn kéo/scroll được

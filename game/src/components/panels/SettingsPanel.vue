@@ -118,8 +118,6 @@ function handleReset() {
 
 <template>
   <div class="settings-panel">
-    <h3>Cài Đặt</h3>
-
     <p class="settings-panel__warning">
       Tiến trình tự lưu mỗi 15 giây và khi rời tab. Bạn vẫn có thể lưu thủ công tại đây.
     </p>
@@ -174,21 +172,16 @@ function handleReset() {
 
 <style scoped>
 .settings-panel {
-  position: relative;
   padding: 12px;
-  color: #ddd;
-  font-size: 0.85rem;
-}
-
-.settings-panel h3 {
-  margin: 0 0 8px;
+  color: var(--text-primary);
+  font-size: var(--text-body);
 }
 
 .settings-panel__warning {
-  color: #ffb74d;
-  border: 1px solid #4a3a1f;
-  background: rgba(255, 183, 77, 0.08);
-  border-radius: 4px;
+  color: var(--chrome-100);
+  border: 1px solid var(--ink-line);
+  background: color-mix(in srgb, var(--chrome-500) 8%, transparent);
+  border-radius: var(--radius-sm);
   padding: 8px;
   margin: 0 0 12px;
 }
@@ -200,18 +193,19 @@ function handleReset() {
 }
 
 .settings-panel__import {
-  padding: 8px 14px;
-}
-
-.settings-panel__import {
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--tap-min);
+  padding: 8px 14px;
   overflow: hidden;
   text-align: center;
-  border: 1px solid #444;
-  border-radius: 4px;
+  border: 1px solid var(--ink-line);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  background: #222;
-  color: #ddd;
+  background: var(--ink-800);
+  color: var(--text-primary);
 }
 
 .settings-panel__import input {
@@ -222,7 +216,7 @@ function handleReset() {
 }
 
 .settings-panel__hint {
-  color: #8bc98b;
+  color: var(--jade);
   margin: 8px 0 0;
 }
 
@@ -230,7 +224,7 @@ function handleReset() {
 .settings-panel__ui-scale {
   margin-top: 16px;
   padding-top: 12px;
-  border-top: 1px solid #333;
+  border-top: 1px solid var(--ink-line-soft);
 }
 
 .settings-panel__ui-scale h4 {
@@ -245,27 +239,27 @@ function handleReset() {
 .settings-panel__ui-scale-options button {
   min-height: var(--tap-min);
   padding: 0 var(--space-4);
-  background: #222;
-  border: 1px solid #444;
+  background: var(--ink-800);
+  border: 1px solid var(--ink-line);
   border-radius: var(--radius-sm);
-  color: #ddd;
+  color: var(--text-primary);
   font-size: var(--text-sm);
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
 }
 
 .settings-panel__ui-scale-options button:hover {
-  border-color: var(--gold-700);
+  border-color: var(--chrome-500);
 }
 
 .settings-panel__ui-scale-options button.is-active {
-  background: rgba(255, 213, 79, 0.12);
-  border-color: var(--gold-500);
-  color: var(--gold-300);
+  background: color-mix(in srgb, var(--chrome-300) 12%, transparent);
+  border-color: var(--chrome-300);
+  color: var(--chrome-100);
 }
 
 .settings-panel__ui-scale-options button:focus-visible {
   outline: none;
-  box-shadow: var(--focus-ring-gold);
+  box-shadow: var(--focus-ring-chrome);
 }
 </style>

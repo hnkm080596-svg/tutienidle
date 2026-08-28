@@ -54,13 +54,13 @@ const emit = defineEmits<{ 'update:modelValue': [string] }>()
 }
 
 .tab-bar__item.is-active {
-  border-color: var(--gold-500);
-  color: var(--gold-500);
+  border-color: var(--chrome-300);
+  color: var(--chrome-100);
 }
 
 .tab-bar__item:focus-visible {
   outline: none;
-  box-shadow: var(--focus-ring-gold);
+  box-shadow: var(--focus-ring-chrome);
 }
 
 .tab-bar__badge {

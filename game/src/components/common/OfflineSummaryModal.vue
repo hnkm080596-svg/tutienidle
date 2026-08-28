@@ -63,7 +63,7 @@ function formatDuration(seconds: number): string {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(10, 10, 13, 0.72);
+  background: var(--scrim);
 }
 
 /* Selector lặp class để thắng specificity của GamePanel.vue's
@@ -71,16 +71,16 @@ function formatDuration(seconds: number): string {
    dung, không được kéo full-height của backdrop. */
 .offline-summary__panel.offline-summary__panel {
   height: auto;
-  min-width: 320px;
+  min-width: min(320px, 92vw);
   gap: 10px;
 }
 
 .offline-summary__title {
   margin: 0 0 6px;
   font-family: var(--font-display);
-  font-size: 1.1rem;
+  font-size: var(--text-title);
   letter-spacing: 0.06em;
-  color: var(--gold-500);
+  color: var(--chrome-100);
   text-align: center;
 }
 
@@ -89,7 +89,7 @@ function formatDuration(seconds: number): string {
   justify-content: space-between;
   gap: 24px;
   font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-size: var(--text-body);
   color: var(--text-secondary);
 }
 

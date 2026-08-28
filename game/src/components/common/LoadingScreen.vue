@@ -29,16 +29,16 @@
 .loading-screen__title {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 1.4rem;
+  font-size: var(--text-display);
   letter-spacing: 0.12em;
-  color: var(--gold-500);
+  color: var(--chrome-100);
 }
 
 .loading-screen__pulse {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border: 2px solid var(--gold-500);
+  border: 2px solid var(--chrome-100);
   opacity: 0.7;
   animation: loading-pulse 1.1s ease-in-out infinite;
 }

@@ -66,6 +66,7 @@ function confirmExit() {
 
 .combat-control-bar__exit {
   padding: 8px 20px;
+  min-height: var(--tap-min);
   background: var(--ink-800);
   color: var(--text-secondary);
   border: 1px solid var(--ink-line-soft);
@@ -88,11 +89,12 @@ function confirmExit() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(5, 5, 8, 0.72);
+  background: var(--scrim);
 }
 
 .combat-control-bar__confirm {
-  width: 320px;
+  box-sizing: border-box;
+  width: min(320px, calc(100vw - 32px));
   padding: 20px;
   background: var(--ink-900);
   border: 1px solid var(--crimson);
@@ -118,6 +120,7 @@ function confirmExit() {
 .combat-control-bar__confirm-ok {
   flex: 1 1 auto;
   padding: 8px;
+  min-height: var(--tap-min);
   border-radius: var(--radius-sm);
   font-family: var(--font-body);
   font-weight: 700;

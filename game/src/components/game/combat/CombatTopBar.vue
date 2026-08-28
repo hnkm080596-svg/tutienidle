@@ -44,7 +44,7 @@ const progress = computed(() => {
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
-  background: rgba(10, 10, 13, 0.7);
+  background: color-mix(in srgb, var(--ink-950) 70%, transparent);
   backdrop-filter: blur(6px);
   border-bottom: 1px solid var(--ink-line-soft);
   font-family: var(--font-body);
@@ -54,9 +54,13 @@ const progress = computed(() => {
 .combat-top-bar__title {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 0.9rem;
-  color: var(--gold-300);
+  font-size: var(--text-body);
+  color: var(--chrome-100);
   letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .combat-top-bar__progress {

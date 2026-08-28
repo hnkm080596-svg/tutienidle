@@ -78,7 +78,7 @@ const techniqueRows = computed(() => {
   font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: var(--gold-500);
+  color: var(--chrome-100);
 }
 
 .technique-codex__grid {

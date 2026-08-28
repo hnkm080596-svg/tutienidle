@@ -174,21 +174,10 @@ function close() {
   color: var(--text-primary);
 }
 
-.luyen-the-panel__close {
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  background: var(--ink-800);
-  color: var(--text-secondary);
-  border: 1px solid var(--ink-line-soft);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-}
-
 .luyen-the-panel__summary {
   display: flex;
   justify-content: space-between;
-  font-size: 0.76rem;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
 }
 
@@ -197,7 +186,7 @@ function close() {
   align-items: center;
   gap: 8px;
   width: fit-content;
-  font-size: 0.76rem;
+  font-size: var(--text-sm);
   color: var(--jade);
   cursor: pointer;
 }
@@ -222,7 +211,7 @@ function close() {
 
 .luyen-the-panel__tier--active {
   opacity: 1;
-  border-color: var(--gold-500);
+  border-color: var(--chrome-300);
 }
 
 .luyen-the-panel__tier--realm_locked {
@@ -248,8 +237,8 @@ function close() {
 
 .luyen-the-panel__tier-name {
   font-weight: 600;
-  color: var(--gold-500);
-  font-size: 0.85rem;
+  color: var(--chrome-100);
+  font-size: var(--text-body);
 }
 
 .luyen-the-panel__tier-stat {
@@ -272,7 +261,7 @@ function close() {
 
 .luyen-the-panel__tier-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--jade), var(--gold-500));
+  background: linear-gradient(90deg, var(--jade), var(--chrome-300));
 }
 
 .luyen-the-panel__tier-progress {
@@ -285,8 +274,8 @@ function close() {
 .luyen-the-panel__invest {
   padding: 10px;
   background: var(--ink-800);
-  color: var(--gold-500);
-  border: 1px solid var(--gold-500);
+  color: var(--chrome-100);
+  border: 1px solid var(--chrome-300);
   border-radius: var(--radius-sm);
   font-family: var(--font-body);
   cursor: pointer;
@@ -299,7 +288,7 @@ function close() {
 
 .luyen-the-panel__empty {
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   text-align: center;
   padding: 8px 4px;
   margin: 0;

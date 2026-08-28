@@ -10,7 +10,7 @@ const feedback = useActionFeedbackStore()
 
 const TONE_COLOR: Record<ActionFeedbackTone, string> = {
   success: 'var(--jade)',
-  warning: 'var(--gold-500)',
+  warning: 'var(--chrome-300)',
   error: 'var(--crimson)',
 }
 </script>
@@ -72,7 +72,7 @@ const TONE_COLOR: Record<ActionFeedbackTone, string> = {
   justify-content: space-between;
   padding: 4px 8px;
   border-radius: var(--radius-sm);
-  background: rgba(15, 15, 20, 0.85);
+  background: color-mix(in srgb, var(--ink-900) 85%, transparent);
   color: var(--text-muted);
   font-family: var(--font-body);
   font-size: var(--text-xs);
@@ -111,7 +111,7 @@ const TONE_COLOR: Record<ActionFeedbackTone, string> = {
   border: 1px solid var(--entry-color, var(--ink-line));
   border-left: 3px solid var(--entry-color, var(--ink-line));
   border-radius: var(--radius-sm);
-  background: rgba(15, 15, 20, 0.92);
+  background: color-mix(in srgb, var(--ink-900) 92%, transparent);
   color: var(--text-primary);
   font-family: var(--font-body);
   font-size: var(--text-xs);

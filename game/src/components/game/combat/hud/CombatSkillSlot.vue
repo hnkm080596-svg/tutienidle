@@ -145,7 +145,7 @@ const tooltip = computed<TooltipContent | undefined>(() => {
   top: auto;
   bottom: 0;
   width: 100%;
-  background: rgba(10, 10, 13, 0.72);
+  background: color-mix(in srgb, var(--ink-950) 72%, transparent);
   pointer-events: none;
   z-index: 8;
   transition: height 0.1s linear;
@@ -159,7 +159,7 @@ const tooltip = computed<TooltipContent | undefined>(() => {
   align-items: center;
   justify-content: center;
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: var(--text-lg);
   font-weight: 700;
   color: var(--text-primary);
   text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
@@ -191,7 +191,7 @@ const tooltip = computed<TooltipContent | undefined>(() => {
   z-index: 7;
   padding: 0 3px;
   border-radius: 3px;
-  background: rgba(10, 10, 13, 0.75);
+  background: color-mix(in srgb, var(--ink-950) 75%, transparent);
   color: var(--jade);
   font-size: var(--text-xs);
   line-height: 1.4;
@@ -208,7 +208,7 @@ const tooltip = computed<TooltipContent | undefined>(() => {
   text-align: center;
   font-size: var(--text-xs);
   color: var(--text-muted);
-  background: rgba(10, 10, 13, 0.6);
+  background: color-mix(in srgb, var(--ink-950) 60%, transparent);
   pointer-events: none;
 }
 

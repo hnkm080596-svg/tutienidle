@@ -149,7 +149,7 @@ const resourceMax = computed(() => usesSwordIntent.value ? MAX_SWORD_INTENT : MA
   justify-content: flex-start;
   gap: 24px;
   padding: 0 20px;
-  background: rgba(10, 10, 13, 0.55);
+  background: color-mix(in srgb, var(--ink-950) 55%, transparent);
   backdrop-filter: blur(4px);
   border-bottom: 1px solid var(--ink-line-soft);
   font-family: var(--font-body);
@@ -160,14 +160,14 @@ const resourceMax = computed(() => usesSwordIntent.value ? MAX_SWORD_INTENT : MA
   display: flex;
   flex-direction: column;
   gap: 3px;
-  width: 260px;
+  width: min(260px, 30vw);
   flex: 0 0 auto;
 }
 
 .combat-status-bar__bar {
   position: relative;
-  height: 10px;
-  border-radius: 5px;
+  height: 14px;
+  border-radius: 7px;
   background: var(--ink-900);
   border: 1px solid var(--ink-line);
   overflow: hidden;
@@ -197,8 +197,8 @@ const resourceMax = computed(() => usesSwordIntent.value ? MAX_SWORD_INTENT : MA
   align-items: center;
   justify-content: center;
   font-size: var(--text-xs);
-  color: var(--ink-950);
-  text-shadow: 0 0 2px rgba(255, 255, 255, 0.5);
+  color: var(--text-primary);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
 }
 
 </style>

@@ -99,16 +99,16 @@ function close() {
 
 <style scoped>
 .quest-panel { display: flex; flex-direction: column; gap: 20px; padding: 16px 18px; }
-.quest-panel__section-title { margin: 0 0 10px; color: var(--gold-500); font: 700 .95rem var(--font-display); letter-spacing: .04em; }
+.quest-panel__section-title { margin: 0 0 10px; color: var(--chrome-100); font: 700 var(--text-md) var(--font-display); letter-spacing: .04em; }
 .quest-panel__list { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
 .quest-panel__card { display: flex; align-items: center; gap: 14px; padding: 12px 14px; background: var(--ink-800); border: 1px solid var(--ink-line-soft); border-radius: var(--radius-sm); }
 .quest-panel__info { flex: 1 1 auto; min-width: 0; }
 .quest-panel__name { color: var(--text-primary); font-weight: 600; }
-.quest-panel__desc { margin-top: 2px; color: var(--text-secondary); font-size: .85rem; }
+.quest-panel__desc { margin-top: 2px; color: var(--text-secondary); font-size: var(--text-body); }
 .quest-panel__progress-bar { position: relative; height: 6px; margin-top: 8px; background: var(--ink-950); border-radius: 3px; overflow: hidden; }
-.quest-panel__progress-fill { height: 100%; background: var(--gold-500); border-radius: 3px; transition: width .2s ease; }
-.quest-panel__progress-label { margin-top: 4px; color: var(--text-secondary); font-size: .78rem; }
-.quest-panel__claim { flex: 0 0 auto; padding: 8px 16px; color: var(--ink-950); font-weight: 700; background: var(--gold-500); border: none; border-radius: var(--radius-sm); cursor: pointer; }
+.quest-panel__progress-fill { height: 100%; background: var(--chrome-300); border-radius: 3px; transition: width .2s ease; }
+.quest-panel__progress-label { margin-top: 4px; color: var(--text-secondary); font-size: var(--text-sm); }
+.quest-panel__claim { flex: 0 0 auto; padding: 8px 16px; min-height: var(--tap-min); color: var(--ink-950); font-weight: 700; background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500)); border: none; border-radius: var(--radius-sm); cursor: pointer; }
 .quest-panel__claim:disabled { color: var(--text-secondary); background: var(--ink-700, var(--ink-800)); cursor: default; }
 .quest-panel__empty { color: var(--text-secondary); text-align: center; padding: 24px 0; }
 </style>

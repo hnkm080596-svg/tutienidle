@@ -151,9 +151,12 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
   box-sizing: border-box;
 }
 
+/* Kích thước icon cố định tường minh — flex-basis (SlotView KHÔNG tự
+   set flex) quyết định kích cỡ trên trục row, không còn dựa vào tie
+   injection-order với width:100% nội bộ của SlotView.vue. */
 .loadout-card__icon {
-  flex: 0 0 15%;
-  width: 15%;
+  flex: 0 0 56px;
+  width: 56px;
 }
 
 .loadout-card__info {
@@ -182,8 +185,8 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
   padding: 1px 5px;
   font-size: var(--text-xs);
   font-weight: 700;
-  color: var(--gold-500);
-  border: 1px solid var(--gold-500);
+  color: var(--chrome-100);
+  border: 1px solid var(--chrome-500);
   border-radius: 999px;
   white-space: nowrap;
 }
@@ -198,7 +201,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 
 .loadout-card__tier-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--jade), var(--gold-500));
+  background: linear-gradient(90deg, var(--jade), var(--chrome-300));
 }
 
 .loadout-card__tier-label {
@@ -227,7 +230,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 
 .loadout-card--hero .loadout-card__name {
   font-family: var(--font-display);
-  font-size: 0.95rem;
+  font-size: var(--text-md);
   white-space: normal;
 }
 

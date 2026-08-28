@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import GameButton from '@/components/common/GameButton.vue'
 import { useErrorStore } from '@/stores/error'
 
 const errorStore = useErrorStore()
@@ -19,14 +20,18 @@ function returnHome() {
 <template>
   <div v-if="errorStore.current" class="error-screen">
     <div class="error-screen__panel">
-      <h2 class="error-screen__title">Đã xảy ra lỗi</h2>
+      <span class="ornate-frame" aria-hidden="true" />
 
-      <p class="error-screen__message">{{ errorStore.current }}</p>
+      <div class="error-screen__scroll">
+        <h2 class="error-screen__title">Đã xảy ra lỗi</h2>
 
-      <div class="error-screen__actions">
-        <button type="button" @click="retry">Thử Lại</button>
+        <p class="error-screen__message">{{ errorStore.current }}</p>
 
-        <button type="button" @click="returnHome">Về Trang Chủ</button>
+        <div class="error-screen__actions">
+          <GameButton variant="primary" @click="retry">Thử Lại</GameButton>
+
+          <GameButton variant="secondary" @click="returnHome">Về Trang Chủ</GameButton>
+        </div>
       </div>
     </div>
   </div>
@@ -40,31 +45,39 @@ function returnHome() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(5, 5, 8, 0.92);
+  background: var(--scrim-heavy);
 }
 
 .error-screen__panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
   max-width: 420px;
+  max-height: 90vh;
   padding: 28px 32px;
-  background: var(--ink-900);
-  border: 1px solid var(--crimson);
+  background: linear-gradient(160deg, var(--ink-950), var(--ink-800));
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-panel);
   text-align: center;
   font-family: var(--font-body);
 }
 
+.error-screen__scroll {
+  min-height: 0;
+  overflow: auto;
+}
+
 .error-screen__title {
   margin: 0 0 12px;
   font-family: var(--font-display);
   color: var(--crimson);
-  font-size: 1.15rem;
+  font-size: var(--text-title);
 }
 
 .error-screen__message {
   margin: 0 0 20px;
   color: var(--text-secondary);
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   word-break: break-word;
 }
 
@@ -72,20 +85,5 @@ function returnHome() {
   display: flex;
   gap: 10px;
   justify-content: center;
-}
-
-.error-screen__actions button {
-  padding: 8px 18px;
-  background: var(--ink-800);
-  color: var(--text-primary);
-  border: 1px solid var(--ink-line-soft);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: 0.8rem;
-}
-
-.error-screen__actions button:hover {
-  border-color: var(--gold-500);
-  color: var(--gold-500);
 }
 </style>

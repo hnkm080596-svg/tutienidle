@@ -70,7 +70,7 @@ const statusMessage = computed(() => {
 
 .artifact-exp-bar__fill {
   height: 100%;
-  background: var(--gold-500);
+  background: var(--chrome-300);
   transition: width 0.2s ease;
 }
 

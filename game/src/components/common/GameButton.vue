@@ -71,12 +71,12 @@ defineEmits<{ click: [MouseEvent] }>()
 }
 
 .game-button--primary {
-  background: linear-gradient(180deg, var(--gold-300), var(--gold-700));
-  color: var(--gold-ink);
+  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
+  color: var(--ink-950);
 }
 
 .game-button--primary:not(:disabled):hover {
-  box-shadow: var(--shadow-glow-gold);
+  box-shadow: var(--shadow-glow-chrome);
   transform: translateY(-1px);
 }
 
@@ -87,8 +87,8 @@ defineEmits<{ click: [MouseEvent] }>()
 }
 
 .game-button--secondary:not(:disabled):hover {
-  border-color: var(--gold-500);
-  color: var(--gold-500);
+  border-color: var(--chrome-300);
+  color: var(--chrome-100);
 }
 
 .game-button--danger {
@@ -108,13 +108,13 @@ defineEmits<{ click: [MouseEvent] }>()
 }
 
 .game-button--ghost:not(:disabled):hover {
-  color: var(--gold-500);
-  border-color: var(--gold-500);
+  color: var(--chrome-100);
+  border-color: var(--chrome-500);
 }
 
 .game-button:focus-visible {
   outline: none;
-  box-shadow: var(--focus-ring-gold);
+  box-shadow: var(--focus-ring-chrome);
 }
 
 .game-button__spinner {

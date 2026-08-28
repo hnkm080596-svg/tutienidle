@@ -212,37 +212,15 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
 
 .paperdoll__slot-wrap {
   position: relative;
-  width: 90%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  max-width: 90%;
+  aspect-ratio: 1;
 }
 
 .paperdoll__slot {
   width: 100%;
-}
-
-.paperdoll__formation-badge {
-  margin-top: 2px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  font-size: var(--text-xs);
-  color: var(--gold-500);
-  white-space: nowrap;
-}
-
-.paperdoll__formation-badge button {
-  font-size: var(--text-xs);
-  padding: 1px 5px;
-}
-
-.paperdoll__talisman-badge {
-  margin-top: 2px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-  font-size: var(--text-xs);
-  color: var(--jade);
-  white-space: nowrap;
 }
 </style>

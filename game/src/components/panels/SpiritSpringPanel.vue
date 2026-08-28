@@ -181,18 +181,18 @@ function convertToThuongPham() {
   padding: 18px;
   color: var(--text-primary);
   background:
-    radial-gradient(circle at 50% 20%, rgba(62, 178, 220, .13), transparent 32%),
-    linear-gradient(150deg, rgba(13, 29, 35, .96), rgba(9, 14, 18, .98));
+    radial-gradient(circle at 50% 20%, color-mix(in srgb, var(--scene-water-accent) 13%, transparent), transparent 32%),
+    linear-gradient(150deg, var(--ink-900), var(--ink-950));
 }
 
 .spirit-spring-panel__scene {
   position: relative;
   height: 210px;
   overflow: hidden;
-  border: 1px solid rgba(89, 198, 226, .34);
+  border: 1px solid color-mix(in srgb, var(--scene-water-accent) 34%, transparent);
   border-radius: var(--radius-md);
-  background: #0b1820;
-  box-shadow: inset 0 -45px 55px rgba(4, 12, 17, .72), 0 12px 30px rgba(0, 0, 0, .22);
+  background: color-mix(in srgb, var(--scene-water-accent) 8%, var(--ink-950));
+  box-shadow: inset 0 -45px 55px color-mix(in srgb, var(--ink-950) 72%, transparent), 0 12px 30px rgba(0, 0, 0, .22);
 }
 
 .spirit-spring-panel__scene img {
@@ -208,7 +208,7 @@ function convertToThuongPham() {
   position: absolute;
   left: 18px;
   bottom: 14px;
-  color: #a6e8f2;
+  color: color-mix(in srgb, var(--scene-water-accent) 55%, white);
   font: 700 var(--text-sm) var(--font-display);
   letter-spacing: .18em;
   text-shadow: 0 2px 6px #000;
@@ -221,8 +221,8 @@ function convertToThuongPham() {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #e8ffff, #56cee5 35%, rgba(31, 119, 180, .2) 72%);
-  box-shadow: 0 0 30px #5edcf2, 0 0 70px rgba(76, 198, 229, .5);
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--scene-water-accent) 12%, white), var(--scene-water-accent) 35%, color-mix(in srgb, var(--scene-water-accent) 20%, transparent) 72%);
+  box-shadow: 0 0 30px color-mix(in srgb, var(--scene-water-accent) 65%, white), 0 0 70px color-mix(in srgb, var(--scene-water-accent) 50%, transparent);
   animation: spring-orb 2.2s ease-in-out infinite alternate;
 }
 
@@ -236,10 +236,10 @@ function convertToThuongPham() {
   display: grid;
   gap: 10px;
   padding: 16px;
-  border: 1px solid color-mix(in srgb, var(--azure) 45%, var(--ink-line));
+  border: 1px solid color-mix(in srgb, var(--scene-water-accent) 45%, var(--ink-line));
   border-radius: var(--radius-md);
-  background: linear-gradient(110deg, rgba(30, 82, 99, .25), rgba(10, 22, 28, .86));
-  box-shadow: inset 0 0 24px rgba(75, 190, 220, .08);
+  background: linear-gradient(110deg, color-mix(in srgb, var(--scene-water-accent) 25%, transparent), color-mix(in srgb, var(--ink-950) 86%, transparent));
+  box-shadow: inset 0 0 24px color-mix(in srgb, var(--scene-water-accent) 8%, transparent);
 }
 
 @keyframes spring-orb {
@@ -248,8 +248,8 @@ function convertToThuongPham() {
 
 .spirit-spring-panel__card h3 {
   margin: 0;
-  color: var(--azure);
-  font: 700 1rem var(--font-display);
+  color: var(--scene-water-accent);
+  font: 700 var(--text-lg) var(--font-display);
 }
 
 .spirit-spring-panel__rate {
@@ -266,15 +266,16 @@ function convertToThuongPham() {
 
 .spirit-spring-panel__progress div {
   height: 100%;
-  background: linear-gradient(90deg, var(--azure), var(--jade));
+  background: linear-gradient(90deg, var(--scene-water-accent), var(--jade));
 }
 
 .spirit-spring-panel__card button {
   justify-self: start;
   padding: 8px 14px;
+  min-height: var(--tap-min);
   border: 0;
   border-radius: var(--radius-sm);
-  background: var(--azure);
+  background: var(--scene-water-accent);
   color: var(--ink-950);
   font-weight: 700;
   cursor: pointer;

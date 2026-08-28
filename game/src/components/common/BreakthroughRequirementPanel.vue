@@ -132,7 +132,7 @@ function confirmBreakthrough() {
 
 .breakthrough-requirement__hint {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
   text-align: center;
 }
@@ -144,7 +144,7 @@ function confirmBreakthrough() {
   padding: 10px 14px;
   border: 1px solid var(--ink-700);
   border-radius: var(--radius-sm);
-  font-size: 0.9rem;
+  font-size: var(--text-body);
   color: var(--text-primary);
 }
 
@@ -155,6 +155,7 @@ function confirmBreakthrough() {
 
 .breakthrough-requirement__craft {
   padding: 8px;
+  min-height: var(--tap-min);
   background: var(--ink-800);
   color: var(--text-primary);
   border: 1px solid var(--ink-700);
@@ -177,6 +178,7 @@ function confirmBreakthrough() {
 .breakthrough-requirement__confirm {
   flex: 1;
   padding: 8px;
+  min-height: var(--tap-min);
   border: none;
   border-radius: var(--radius-sm);
   font-weight: 700;
@@ -189,8 +191,8 @@ function confirmBreakthrough() {
 }
 
 .breakthrough-requirement__confirm {
-  background: var(--gold-500);
-  color: var(--gold-ink);
+  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
+  color: var(--ink-950);
 }
 
 .breakthrough-requirement__confirm:disabled {

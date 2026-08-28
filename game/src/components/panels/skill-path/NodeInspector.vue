@@ -200,7 +200,7 @@ function onUpgrade() {
 .node-inspector {
   padding: 10px 14px;
   min-height: 64px;
-  background: var(--ink-850, var(--ink-800));
+  background: var(--ink-800);
   border-top: 1px solid var(--ink-line);
   font-family: var(--font-body);
   color: var(--text-primary);
@@ -208,7 +208,7 @@ function onUpgrade() {
 
 .node-inspector__empty {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   color: var(--text-muted);
   text-align: center;
   padding: 8px 0;
@@ -222,18 +222,18 @@ function onUpgrade() {
 }
 
 .node-inspector__name {
-  font-size: 0.9rem;
+  font-size: var(--text-body);
   font-weight: 700;
-  color: var(--gold-500);
+  color: var(--chrome-100);
 }
 
 /* Badge `Cấp x/max` — node nhiều cấp (plan §6.2). */
 .node-inspector__level {
   padding: 1px 8px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--gold-500) 55%, transparent);
+  border: 1px solid color-mix(in srgb, var(--chrome-300) 55%, transparent);
   font-size: var(--text-xs);
-  color: var(--gold-300);
+  color: var(--chrome-100);
 }
 
 .node-inspector__state {
@@ -246,12 +246,12 @@ function onUpgrade() {
 }
 
 .node-inspector__state.is-purchasable {
-  color: var(--gold-500);
+  color: var(--chrome-100);
 }
 
 .node-inspector__desc {
   margin: 4px 0;
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   color: var(--text-secondary);
 }
 
@@ -278,7 +278,7 @@ function onUpgrade() {
 }
 
 .node-inspector__skill-stats li span:last-child {
-  color: var(--gold-500);
+  color: var(--chrome-100);
 }
 
 .node-inspector__actions {
@@ -296,12 +296,13 @@ function onUpgrade() {
 
 .node-inspector__buy {
   padding: 6px 16px;
-  background: linear-gradient(180deg, #ffe082, #ffb300);
-  color: #221a00;
-  border: 1px solid #fff3c4;
+  min-height: var(--tap-min);
+  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
+  color: var(--ink-950);
+  border: 1px solid var(--chrome-100);
   border-radius: var(--radius-sm);
   font-weight: 700;
-  font-size: 0.74rem;
+  font-size: var(--text-sm);
   cursor: pointer;
 }
 
