@@ -10,6 +10,8 @@ import { computed } from 'vue'
 import type { Skill } from '@/core/skill/Skill'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
+import GameButton from '@/components/common/GameButton.vue'
+import StatRow from '@/components/common/primitives/StatRow.vue'
 
 const props = defineProps<{
   skill: Skill | null
@@ -60,34 +62,34 @@ function onUpgrade() {
       <div class="skill-detail__level">
         <span class="skill-detail__level-label">Lv. {{ skill.level }}/{{ skill.maxLevel }}</span>
 
-        <button
+        <GameButton
           v-if="!isMaxLevel"
-          type="button"
           class="skill-detail__upgrade"
+          variant="ghost"
+          size="sm"
           :disabled="!canUpgrade"
           @click="onUpgrade"
         >
           Nâng Cấp ({{ upgradeCost }} Cảm Ngộ)
-        </button>
+        </GameButton>
 
         <span v-else class="skill-detail__level-label">Tối đa</span>
       </div>
 
       <ul class="skill-detail__rows">
-        <li>
-          <span>Hồi Chiêu</span>
-          <span>{{ skill.cooldown }}s</span>
-        </li>
+        <StatRow label="Hồi Chiêu" bordered>{{ skill.cooldown }}s</StatRow>
 
-        <li v-if="skill.resourceType && skill.resourceType !== 'none' && (skill.cost ?? 0) > 0">
-          <span>Tiêu Hao</span>
-          <span>{{ skill.cost }} {{ skill.resourceType }}</span>
-        </li>
+        <StatRow
+          v-if="skill.resourceType && skill.resourceType !== 'none' && (skill.cost ?? 0) > 0"
+          label="Tiêu Hao"
+          bordered
+        >
+          {{ skill.cost }} {{ skill.resourceType }}
+        </StatRow>
 
-        <li v-if="skill.execution?.kind === 'attack_speed'">
-          <span>Loại</span>
-          <span>Nhịp theo Tốc Độ Đánh</span>
-        </li>
+        <StatRow v-if="skill.execution?.kind === 'attack_speed'" label="Loại" bordered>
+          Nhịp theo Tốc Độ Đánh
+        </StatRow>
       </ul>
     </template>
   </div>
@@ -135,20 +137,13 @@ function onUpgrade() {
 
 .skill-detail__upgrade {
   flex: 0 0 auto;
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  padding: 4px 8px;
-  min-height: var(--tap-min);
   border-radius: 4px;
-  border: 1px solid var(--chrome-500);
-  background: transparent;
   color: var(--chrome-100);
-  cursor: pointer;
+  border-color: var(--chrome-500);
 }
 
 .skill-detail__upgrade:disabled {
   opacity: 0.4;
-  cursor: not-allowed;
 }
 
 .skill-detail__rows {
@@ -156,14 +151,5 @@ function onUpgrade() {
   margin: 0;
   padding: 0;
   font-size: var(--text-sm);
-}
-
-.skill-detail__rows li {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 4px 2px;
-  border-bottom: 1px solid var(--ink-line-soft);
-  color: var(--text-secondary);
 }
 </style>

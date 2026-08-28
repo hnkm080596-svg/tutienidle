@@ -4,6 +4,7 @@
 import { computed } from 'vue'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import GameButton from '@/components/common/GameButton.vue'
+import StatRow from '@/components/common/primitives/StatRow.vue'
 
 const props = defineProps<{
   gradeLabel: string
@@ -23,20 +24,11 @@ const canAfford = computed(() =>
 
 <template>
   <div class="artifact-grade">
-    <div class="artifact-grade__row">
-      <span class="artifact-grade__label">Phẩm</span>
-      <span class="artifact-grade__value">{{ gradeLabel }}</span>
-    </div>
+    <StatRow label="Phẩm">{{ gradeLabel }}</StatRow>
 
-    <div class="artifact-grade__row">
-      <span class="artifact-grade__label">Hệ số hiệu quả</span>
-      <span class="artifact-grade__value">{{ multiplierPercentLabel }}</span>
-    </div>
+    <StatRow label="Hệ số hiệu quả">{{ multiplierPercentLabel }}</StatRow>
 
-    <div class="artifact-grade__row">
-      <span class="artifact-grade__label">Đoán Bảo Thạch</span>
-      <span class="artifact-grade__value">{{ formatNumber(stoneAmount) }}</span>
-    </div>
+    <StatRow label="Đoán Bảo Thạch">{{ formatNumber(stoneAmount) }}</StatRow>
 
     <template v-if="upgradeCost !== undefined">
       <GameButton
@@ -64,17 +56,14 @@ const canAfford = computed(() =>
   gap: var(--space-1);
 }
 
-.artifact-grade__row {
-  display: flex;
-  justify-content: space-between;
+.artifact-grade ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   font-size: var(--text-body);
 }
 
-.artifact-grade__label {
-  color: var(--text-secondary);
-}
-
-.artifact-grade__value {
+.artifact-grade .stat-row__value {
   color: var(--chrome-100);
   font-weight: 600;
 }

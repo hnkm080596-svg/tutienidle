@@ -9,6 +9,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useLoadoutActions } from '@/composables/useLoadoutActions'
 import GameButton from '@/components/common/GameButton.vue'
+import StatRow from '@/components/common/primitives/StatRow.vue'
 import {
   getNodeLevel,
   getNextLevelCost,
@@ -167,10 +168,15 @@ function onUpgrade() {
       </ul>
 
       <ul v-if="affectedSkillStats.length > 0" class="node-inspector__skill-stats">
-        <li v-for="stat in affectedSkillStats" :key="stat.label" v-tooltip="stat.description">
-          <span>{{ stat.label }}</span>
-          <span>{{ stat.formatted }}</span>
-        </li>
+        <StatRow
+          v-for="stat in affectedSkillStats"
+          :key="stat.label"
+          v-tooltip="stat.description"
+          :label="stat.label"
+          bordered
+        >
+          <span class="node-inspector__stat-value">{{ stat.formatted }}</span>
+        </StatRow>
       </ul>
 
       <div class="node-inspector__actions">
@@ -279,15 +285,7 @@ function onUpgrade() {
   font-size: var(--text-sm);
 }
 
-.node-inspector__skill-stats li {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 2px 0;
-  color: var(--text-secondary);
-}
-
-.node-inspector__skill-stats li span:last-child {
+.node-inspector__stat-value {
   color: var(--chrome-100);
 }
 

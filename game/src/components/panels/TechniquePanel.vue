@@ -16,6 +16,8 @@ import { getTechniqueInsightTotalRequired, getTechniqueTierProgress } from '@/co
 import { formatNumber } from '@/core/format/NumberFormatter'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import Bar from '@/components/common/primitives/Bar.vue'
+import StatRow from '@/components/common/primitives/StatRow.vue'
+import Eyebrow from '@/components/common/primitives/Eyebrow.vue'
 
 const ui = useUiStore()
 const gameManager = useGameManager()
@@ -84,13 +86,12 @@ function close() {
         <span class="technique-panel__tier-label">{{ tierExpLabel }}</span>
 
         <div v-for="section in techniqueSections" :key="section.label" class="technique-panel__group">
-          <h5 class="technique-panel__group-title">{{ section.label }}</h5>
+          <Eyebrow as="h5">{{ section.label }}</Eyebrow>
 
           <ul class="technique-panel__rows">
-            <li v-for="row in section.rows" :key="row.label">
-              <span>{{ row.label }}</span>
-              <span>{{ row.value }}</span>
-            </li>
+            <StatRow v-for="row in section.rows" :key="row.label" :label="row.label" bordered>
+              {{ row.value }}
+            </StatRow>
           </ul>
         </div>
 
@@ -129,12 +130,8 @@ function close() {
   margin-bottom: 6px;
 }
 
-.technique-panel__group-title {
+.technique-panel__group .eyebrow {
   margin: 0 0 4px;
-  font-size: var(--text-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--chrome-100);
 }
 
 .technique-panel__rows {
@@ -142,15 +139,6 @@ function close() {
   margin: 0;
   padding: 0;
   font-size: var(--text-sm);
-}
-
-.technique-panel__rows li {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 3px 4px;
-  border-bottom: 1px solid var(--ink-line-soft);
-  color: var(--text-secondary);
 }
 
 .technique-panel__empty {

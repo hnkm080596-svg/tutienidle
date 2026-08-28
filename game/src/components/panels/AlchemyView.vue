@@ -6,6 +6,7 @@ import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 import type { AlchemyRecipe } from '@/core/alchemy/AlchemySystem'
 import Bar from '@/components/common/primitives/Bar.vue'
 import GameButton from '@/components/common/GameButton.vue'
+import StatRow from '@/components/common/primitives/StatRow.vue'
 import { PROFESSION_GRADE_NAMES, getProfessionGradeForRealm } from '@/core/profession/ProfessionGrade'
 
 // Luyện Đan (2026-08-25, resource-professions-rework plan §8/§9.3) —
@@ -284,17 +285,13 @@ function cancelJob(jobId: string) {
         <h4>Chi phí khác</h4>
 
         <ul class="alchemy-costs">
-          <li v-if="fuelWoodRow" :class="{ 'is-missing': fuelWoodRow.owned < fuelWoodRow.amount }">
-            <span>{{ fuelWoodRow.label }}</span>
+          <StatRow v-if="fuelWoodRow" :label="fuelWoodRow.label" :tone="fuelWoodRow.owned < fuelWoodRow.amount ? 'negative' : 'default'">
+            {{ fuelWoodRow.owned }}/{{ fuelWoodRow.amount }}
+          </StatRow>
 
-            <span>{{ fuelWoodRow.owned }}/{{ fuelWoodRow.amount }}</span>
-          </li>
-
-          <li :class="{ 'is-missing': spiritStoneRow.owned < spiritStoneRow.amount }">
-            <span>Linh Thạch</span>
-
-            <span>{{ spiritStoneRow.owned }}/{{ spiritStoneRow.amount }}</span>
-          </li>
+          <StatRow label="Linh Thạch" :tone="spiritStoneRow.owned < spiritStoneRow.amount ? 'negative' : 'default'">
+            {{ spiritStoneRow.owned }}/{{ spiritStoneRow.amount }}
+          </StatRow>
         </ul>
 
         <GameButton class="alchemy-detail__action" size="sm" accent-var="--scene-fire-text" @click="startJob">
@@ -485,15 +482,6 @@ function cancelJob(jobId: string) {
   flex-direction: column;
   gap: 3px;
   font-size: var(--text-sm);
-}
-
-.alchemy-costs li {
-  display: flex;
-  justify-content: space-between;
-}
-
-.alchemy-costs li.is-missing {
-  color: var(--crimson);
 }
 
 .alchemy-detail__action {

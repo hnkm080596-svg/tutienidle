@@ -8,6 +8,7 @@
 import { formatNumber } from '@/core/format/NumberFormatter'
 import GamePanel from './GamePanel.vue'
 import GameButton from './GameButton.vue'
+import StatRow from './primitives/StatRow.vue'
 
 const props = defineProps<{
   elapsedSeconds: number
@@ -34,21 +35,17 @@ function formatDuration(seconds: number): string {
     <GamePanel class="offline-summary__panel" variant="ornate" padding="sm">
       <h3 class="offline-summary__title">BẾ QUAN KẾT THÚC</h3>
 
-      <div class="offline-summary__row">
-        <span class="offline-summary__label">Thời gian</span>
-        <span class="offline-summary__value">{{ formatDuration(props.elapsedSeconds) }}</span>
-      </div>
+      <ul class="offline-summary__rows">
+        <StatRow label="Thời gian">{{ formatDuration(props.elapsedSeconds) }}</StatRow>
 
-      <!-- Chỉ Thời gian + Tu vi — core/idle/OfflineProgressSystem.ts
-           CHỈ tính cultivationPerSecond * elapsedSeconds, không có
-           nguồn thu offline nào khác trong game logic hiện tại. Mở
-           rộng OfflineSummaryData (stores/offlineSummary.ts) + thêm
-           row tương ứng nếu sau này OfflineProgressSystem có nguồn
-           thu mới. -->
-      <div class="offline-summary__row">
-        <span class="offline-summary__label">+ Linh lực</span>
-        <span class="offline-summary__value offline-summary__value--gain">{{ formatNumber(Math.floor(props.cultivation)) }}</span>
-      </div>
+        <!-- Chỉ Thời gian + Tu vi — core/idle/OfflineProgressSystem.ts
+             CHỈ tính cultivationPerSecond * elapsedSeconds, không có
+             nguồn thu offline nào khác trong game logic hiện tại. Mở
+             rộng OfflineSummaryData (stores/offlineSummary.ts) + thêm
+             row tương ứng nếu sau này OfflineProgressSystem có nguồn
+             thu mới. -->
+        <StatRow label="+ Linh lực" tone="positive">{{ formatNumber(Math.floor(props.cultivation)) }}</StatRow>
+      </ul>
 
       <GameButton class="offline-summary__continue" @click="emit('close')">Tiếp Tục</GameButton>
     </GamePanel>
@@ -84,22 +81,19 @@ function formatDuration(seconds: number): string {
   text-align: center;
 }
 
-.offline-summary__row {
-  display: flex;
-  justify-content: space-between;
-  gap: 24px;
+.offline-summary__rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   font-family: var(--font-body);
   font-size: var(--text-body);
-  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.offline-summary__value {
-  color: var(--text-primary);
+.offline-summary__rows .stat-row__value {
   font-weight: 600;
-}
-
-.offline-summary__value--gain {
-  color: var(--jade);
 }
 
 .offline-summary__continue {

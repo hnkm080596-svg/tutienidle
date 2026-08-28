@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import GameButton from '@/components/common/GameButton.vue'
+import StatRow from '@/components/common/primitives/StatRow.vue'
+import Eyebrow from '@/components/common/primitives/Eyebrow.vue'
 import { usePlayerStore } from '@/stores/player'
 import { useUiStore, type LeftPanelMode } from '@/stores/ui'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -96,18 +98,17 @@ async function build() {
       </div>
 
       <div class="building-popover__section">
-        <h4>Chi phí xây dựng</h4>
+        <Eyebrow as="h4">Chi phí xây dựng</Eyebrow>
 
         <ul class="building-popover__costs">
-          <li
+          <StatRow
             v-for="cost in costRows(buildCost)"
             :key="cost.materialId"
-            :class="{ 'is-missing': cost.owned < cost.amount }"
+            :label="cost.name"
+            :tone="cost.owned < cost.amount ? 'negative' : 'default'"
           >
-            <span>{{ cost.name }}</span>
-
-            <span>{{ cost.owned }} / {{ cost.amount }}</span>
-          </li>
+            {{ cost.owned }} / {{ cost.amount }}
+          </StatRow>
         </ul>
 
         <GameButton class="building-popover__action" variant="primary" :disabled="!canBuild" @click="build">Xây dựng</GameButton>
@@ -174,10 +175,6 @@ async function build() {
 
 .building-popover__section h4 {
   margin: 0 0 6px;
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--chrome-100);
 }
 
 .building-popover__costs {
@@ -188,16 +185,6 @@ async function build() {
   flex-direction: column;
   gap: 3px;
   font-size: var(--text-xs);
-}
-
-.building-popover__costs li {
-  display: flex;
-  justify-content: space-between;
-  gap: 6px;
-}
-
-.building-popover__costs li.is-missing {
-  color: var(--crimson);
 }
 
 </style>
