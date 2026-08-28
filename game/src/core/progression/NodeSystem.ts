@@ -60,6 +60,19 @@ export function hasPrerequisite(player: PlayerData, prerequisite: NodePrerequisi
 
     case 'excludesNode':
       return getNodeLevel(player, prerequisite.nodeId) === 0
+
+    // Kiếm Tu (2026-08-28) — đọc mirror player.skillCastCounts/skillLevels
+    // (skill instance thật sống trong SkillManager, NodeSystem chỉ nhận
+    // PlayerData nên không tra được trực tiếp).
+    case 'skillCastCount': {
+      const counts = player.skillCastCounts ?? {}
+      const levels = player.skillLevels ?? {}
+
+      const castOk = prerequisite.count === undefined || (counts[prerequisite.skillId] ?? 0) >= prerequisite.count
+      const levelOk = prerequisite.level === undefined || (levels[prerequisite.skillId] ?? 1) >= prerequisite.level
+
+      return castOk && levelOk
+    }
   }
 }
 

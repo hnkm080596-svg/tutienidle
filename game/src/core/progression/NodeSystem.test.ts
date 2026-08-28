@@ -94,6 +94,30 @@ describe('hasPrerequisite — theo LEVEL (plan §6.1)', () => {
   })
 })
 
+// Kiếm Tu (2026-08-28) — gate Bạt Kiếm đọc mirror player.skillCastCounts/
+// skillLevels (skill instance thật sống trong SkillManager, không phải
+// PlayerData — xem Player.ts's skillCastCounts field).
+describe('prerequisite skillCastCount', () => {
+  it('thoả khi level skill đạt ngưỡng VÀ cast count đạt ngưỡng', () => {
+    const player = playerWith({
+      skillCastCounts: { tram: 9999 },
+      skillLevels: { tram: 3 },
+    })
+
+    expect(
+      hasPrerequisite(player, { kind: 'skillCastCount', skillId: 'tram', level: 3, count: 9999 }),
+    ).toBe(true)
+
+    expect(
+      hasPrerequisite(player, { kind: 'skillCastCount', skillId: 'tram', level: 3, count: 10000 }),
+    ).toBe(false)
+
+    expect(
+      hasPrerequisite(player, { kind: 'skillCastCount', skillId: 'tram', level: 4, count: 9999 }),
+    ).toBe(false)
+  })
+})
+
 describe('cost theo cấp data-driven (plan §6.2/§6.7)', () => {
   it('Power {base:1, perLevel:3} → dãy 1,1,1,2,2,2,3,3,3,4', () => {
     const costs: number[] = []

@@ -201,6 +201,18 @@ export interface PlayerData {
   // roll/nhặt/craft/equip/đổi sang pháp bảo nghề khác.
   artifact?: ArtifactProgress
 
+  // Kiếm Tu (2026-08-28) — mirror của Skill.totalExperience/level cho
+  // TỪNG skill (key = skillId), ghi mỗi lần cast trong
+  // SkillSystem.gainCastExperience() qua sink (xem
+  // GameManager's skillSystem.setCastCountSink()). Tồn tại VÌ
+  // NodeSystem.hasPrerequisite() chỉ nhận PlayerData — không có
+  // SkillManager để tra totalExperience/level trực tiếp. Skill instance
+  // thật vẫn sống trong SkillManager (KHÔNG nằm trong PlayerData); đây
+  // chỉ là bản sao đọc-thôi phục vụ prerequisite `skillCastCount`.
+  skillCastCounts?: Record<string, number>
+
+  skillLevels?: Record<string, number>
+
   lastSavedAt: number
 }
 
@@ -237,6 +249,13 @@ export function createDefaultPlayer(): PlayerData {
     // PHẢI khai báo tường minh (dù `undefined`) — cùng lý do
     // cultivationPath ở trên (toRefs() snapshot 1 lần lúc init store).
     artifact: undefined,
+
+    // PHẢI khai báo tường minh (rỗng, không undefined) — cùng lý do
+    // Pinia toRefs() snapshot ở trên: sink của SkillSystem ghi field
+    // con (`skillCastCounts[skillId] = ...`) sau khi store đã khởi
+    // tạo, nên object chứa PHẢI tồn tại sẵn làm key reactive từ đầu.
+    skillCastCounts: {},
+    skillLevels: {},
 
     totalCultivationGained: 0,
     skillInsight: 0,

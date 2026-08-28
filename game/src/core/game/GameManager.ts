@@ -414,6 +414,22 @@ export class GameManager {
   private readonly tribulation: TribulationSystem
 
   constructor() {
+    // Kiếm Tu (2026-08-28) — mirror player.skillCastCounts/skillLevels
+    // mỗi lần cast, phục vụ NodeSystem prerequisite `skillCastCount`
+    // (NodeSystem chỉ nhận PlayerData, không có SkillManager). Ghi vào
+    // activePlayer (đăng ký qua setActivePlayer(), xem field bên dưới)
+    // — no-op an toàn nếu chưa có player active (vd unit test dựng
+    // GameManager trần).
+    this.skillSystem.setCastCountSink((skillId, totalExperience, level) => {
+      if (!this.activePlayer) return
+
+      this.activePlayer.skillCastCounts ??= {}
+      this.activePlayer.skillCastCounts[skillId] = totalExperience
+
+      this.activePlayer.skillLevels ??= {}
+      this.activePlayer.skillLevels[skillId] = level
+    })
+
     this.battleLoot = new BattleLootSystem({
       eventBus: this.eventBus,
       notifications: this.notifications,

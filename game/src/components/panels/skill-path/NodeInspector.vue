@@ -102,8 +102,10 @@ const lockedReasons = computed(() => {
       reasons.push(`Cần mở khoá Hành liên quan`)
     } else if (prereq.kind === 'excludesNode') {
       reasons.push(`Xung khắc với: ${gameManager.nodeRegistry.get(prereq.nodeId).name}`)
-    } else {
+    } else if (prereq.kind === 'nodeCount') {
       reasons.push(`Cần lĩnh ngộ ${prereq.countRequired}/${prereq.nodeIds.length} node liên quan`)
+    } else {
+      reasons.push(`Cần nâng kỹ năng liên quan`)
     }
   }
 

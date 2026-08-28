@@ -54,6 +54,17 @@ export class SkillSystem {
     private readonly onLevelUp?: (skill: Skill, levelsGained: number) => void,
   ) {}
 
+  // Kiếm Tu (2026-08-28) — NodeSystem.hasPrerequisite() chỉ nhận
+  // PlayerData (không có SkillManager) nên không đọc totalExperience/
+  // level của skill trực tiếp. Sink này đồng bộ mirror
+  // player.skillCastCounts/skillLevels mỗi lần cast — GameManager nối
+  // vào activePlayer (xem GameManager's constructor).
+  private castCountSink?: (skillId: string, totalExperience: number, level: number) => void
+
+  setCastCountSink(sink: (skillId: string, totalExperience: number, level: number) => void): void {
+    this.castCountSink = sink
+  }
+
   /**
    * Hiệu lực THẬT SỰ của 1 skill tại thời điểm hiện tại — áp
    * Specialization (nếu đã chọn, "behavior-changing node" thay hẳn
@@ -441,6 +452,8 @@ export class SkillSystem {
       skill.level = targetLevel
       this.onLevelUp?.(skill, levelsGained)
     }
+
+    this.castCountSink?.(skill.id, skill.totalExperience, skill.level)
   }
 
   update(deltaSeconds: number, cooldownReduction = 0) {
