@@ -320,6 +320,11 @@ export class GameManager {
     // Thiên phú Phản Phác (talent-direction-choice-plan §6) — xác suất giữ
     // ailment khi kích Reaction, đọc LIVE từ activePlayer.
     () => getReactionKeepChance(this.activePlayer?.selectedTalentIds ?? []),
+
+    // Final review fix (Important #6) — nguồn sự thật DUY NHẤT cho việc
+    // kích hoạt channel Bạt Kiếm, khớp đúng điều kiện channel UI đang
+    // đọc (player.kiemTuRoute === 'bat_kiem').
+    () => this.activePlayer?.kiemTuRoute,
   )
 
   readonly techniqueManager = new TechniqueManager()
@@ -1087,6 +1092,13 @@ export class GameManager {
    * skill route cũ vẫn giữ unlocked/trong bảo tàng.
    */
   setKiemTuRoute(player: PlayerData, route: 'kiem_tran' | 'bat_kiem'): boolean {
+    // Final review fix (Important #6) — trước đây không check
+    // cultivationPath: 1 Pháp Tu player (lý thuyết) có thể gọi hàm này
+    // và bị ghi đè slot 1 bằng skill Kiếm Tu.
+    if (player.cultivationPath !== 'kiem_tu') {
+      return false
+    }
+
     if (route === 'bat_kiem' && this.getNodeLevel('bat_kiem_thuc', player) < 1) {
       return false
     }
@@ -1097,12 +1109,21 @@ export class GameManager {
       return false
     }
 
-    player.kiemTuRoute = route
-
-    this.skillSystem.equipToSlot(
+    // Trước đây bỏ qua giá trị trả về của equipToSlot() (false nếu skill
+    // chưa unlocked) — commit route dù equip thất bại, để lại slot 1
+    // trỏ tới skill route CŨ trong khi player.kiemTuRoute đã đổi (desync
+    // đúng loại lỗi #6 cảnh báo). Giờ CHỈ commit route khi equip thành
+    // công thật sự.
+    const equipped = this.skillSystem.equipToSlot(
       route === 'bat_kiem' ? 'bat_kiem_thuat' : 'kiem_khai_thien_mon',
       1,
     )
+
+    if (!equipped) {
+      return false
+    }
+
+    player.kiemTuRoute = route
 
     return true
   }

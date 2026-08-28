@@ -147,6 +147,19 @@ const PLAYER_TELEPORT_ICD_SECONDS = 1
 // §4.2). Hệ số chỉnh qua playtest, chưa có nguồn nào khác ghi đè.
 const BAT_KIEM_AMP_PER_DAMAGE_TAKEN = 1.0
 
+// Final review fix (Critical #2, spec §4.2) — "Sát thương dựa vào thời
+// gian tụ: multiplier phát quạt tăng theo x (nền: ×1 tại 3s → ×3 tại 9s,
+// tuyến tính)". Baseline tick = 3s (khớp UI slider's min, xem
+// useCombatSkillPresentation.ts's batKiemTickSeconds default); mỗi giây
+// vượt baseline cộng thêm 1/3 multiplier để chạm đúng ×3 tại 9s.
+const BAT_KIEM_TICK_BASELINE_SECONDS = 3
+
+const BAT_KIEM_TICK_DAMAGE_PER_SECOND_OVER_BASELINE = 1 / 3
+
+function batKiemTickLengthMultiplier(tickSeconds: number): number {
+  return 1 + Math.max(0, tickSeconds - BAT_KIEM_TICK_BASELINE_SECONDS) * BAT_KIEM_TICK_DAMAGE_PER_SECOND_OVER_BASELINE
+}
+
 function spawnTelegraphSeconds(entity: Pick<CombatEntity, 'isBoss' | 'isElite'>): number {
   if (entity.isBoss) {
     return SPAWN_TELEGRAPH_SECONDS.boss
@@ -227,6 +240,18 @@ export class BattleSystem {
      * phú player đang hoạt động. Nền 0 = không có thiên phú.
      */
     private readonly getReactionKeepChance: () => number = () => 0,
+
+    /**
+     * Final review fix (Important #6) — Bạt Kiếm channel activation
+     * (initChannelState()) và channel UI (CombatControlBar.vue/
+     * useCombatSkillPresentation.ts's tuLucState/KiemTuCombatHud.vue)
+     * PHẢI cùng nguồn sự thật `player.kiemTuRoute === 'bat_kiem'`, không
+     * chỉ "có channel skill trong loadout" (skill này có thể bị equip
+     * thủ công qua Loadout UI ngay khi bat_kiem_an mở, trước cả khi
+     * bat_kiem_thuc — full route-switch gate — tồn tại). Đọc LIVE giống
+     * mọi closure PlayerData khác ở trên.
+     */
+    private readonly getKiemTuRoute: () => 'kiem_tran' | 'bat_kiem' | undefined = () => undefined,
   ) {
     this.reactionManager = new ReactionManager(eventBus)
 
@@ -325,19 +350,7 @@ export class BattleSystem {
       artifactRuntime: undefined,
     }
 
-    // Kiếm Tu Bạt Kiếm (Task 4, spec §4.2) — skill channel đang equip
-    // trong loadout thì Player TỰ ĐỘNG vào trạng thái "tụ lực" ngay đầu
-    // trận (updateChanneling() sẽ chỉ thật sự tick khi state 'fighting',
-    // xem update()). Không có skill channel nào equip → no-op vĩnh viễn.
-    const channelEntry = this.skillManager
-      .getLoadoutEntries()
-      .find((entry) => entry.skill.execution?.kind === 'channel')
-
-    this.channelSkillId = channelEntry?.skill.id
-
-    player.tuLucActive = channelEntry !== undefined
-    player.tuLucElapsed = 0
-    player.tuLucDamageTakenPercent = 0
+    this.initChannelState(player)
 
     // Quái đầu tiên cũng đi qua "telegraph → xuất hiện → tham chiến".
     // Overlap hợp lệ nên queue luôn thành công.
@@ -367,6 +380,31 @@ export class BattleSystem {
     // playerSpawn + spawningEnemies), khỏi phải đợi tick kế tiếp.
 
     this.emitPositions(this.battle)
+  }
+
+  /**
+   * Final review fix (Important #5 + #6) — trước đây CHỈ start() khởi
+   * trạng thái tụ lực; startTribulation() (Đột Phá, trận thật ở mọi đại
+   * cảnh giới) bỏ sót hoàn toàn khối này nên Bạt Kiếm player vào Kiếp
+   * không có main skill nào chạy. Gộp lại 1 helper dùng chung, VÀ thêm
+   * gate `kiemTuRoute === 'bat_kiem'` (Important #6) khớp đúng điều kiện
+   * channel UI đang đọc (CombatControlBar.vue/useCombatSkillPresentation.ts's
+   * tuLucState) — trước đây start() chỉ xét "có channel skill trong
+   * loadout", desync được với UI nếu bat_kiem_thuat bị equip thủ công
+   * trước khi đổi route.
+   */
+  private initChannelState(player: CombatEntity) {
+    const channelEntry = this.skillManager
+      .getLoadoutEntries()
+      .find((entry) => entry.skill.execution?.kind === 'channel')
+
+    const isBatKiemRoute = this.getKiemTuRoute() === 'bat_kiem'
+
+    this.channelSkillId = channelEntry && isBatKiemRoute ? channelEntry.skill.id : undefined
+
+    player.tuLucActive = channelEntry !== undefined && isBatKiemRoute
+    player.tuLucElapsed = 0
+    player.tuLucDamageTakenPercent = 0
   }
 
   startTribulation(player: CombatEntity) {
@@ -402,6 +440,8 @@ export class BattleSystem {
       // Bản Mệnh Pháp Bảo — Độ Kiếp ngoài phạm vi doc hiện tại, không tick.
       artifactRuntime: undefined,
     }
+
+    this.initChannelState(player)
 
     this.eventBus.emit('tribulation_started', undefined)
 
@@ -1880,6 +1920,18 @@ export class BattleSystem {
         continue
       }
 
+      // Final review fix (Important #4) — channel skill KHÔNG đi qua
+      // scheduler round-robin này (runtime thật sống ở updateChanneling()/
+      // resolveChannelTick(), tự tick theo tickSeconds độc lập). Trước
+      // đây beginPlayerCast() bên dưới vẫn gọi beginCastInSlot() (trừ
+      // resource + gán castingSlotIndex) TRƯỚC khi switch dispatch chạm
+      // `case 'channel': return false` — castingSlotIndex bị set nhưng
+      // không bao giờ được finishPlayerCastTransaction() dọn (channel
+      // không đi qua đường finish nào), kẹt vĩnh viễn.
+      if (skill.execution.kind === 'channel') {
+        continue
+      }
+
       if (this.cadenceRemaining(battle.player, slotIndex) > 0) {
         continue
       }
@@ -2509,7 +2561,7 @@ export class BattleSystem {
       // cho kỳ KẾ TIẾP.
       const ampSnapshot = player.tuLucDamageTakenPercent
 
-      this.resolveChannelTick(battle, skill, ampSnapshot)
+      this.resolveChannelTick(battle, skill, ampSnapshot, tickSeconds)
 
       player.tuLucDamageTakenPercent -= ampSnapshot
     }
@@ -2542,8 +2594,14 @@ export class BattleSystem {
    * sang các đòn khác trong cùng frame (vd enemy attack cùng lúc, dù
    * multiplier chỉ đọc phía attacker nên rủi ro rò rỉ gần như không có,
    * vẫn khôi phục cho sạch).
+   *
+   * `tickSeconds` (Critical #2 review fix, spec §4.2) — cùng đường
+   * finalDamagePercent với amp "nhận→gây": multiplier phát quạt
+   * (batKiemTickLengthMultiplier, ×1@3s → ×3@9s tuyến tính) quy về
+   * percent-point CỘNG THÊM (M - 1), giữ cùng ngữ nghĩa cộng dồn với
+   * damage-taken amp thay vì bọc thêm 1 lớp nhân riêng.
    */
-  private resolveChannelTick(battle: Battle, skill: Skill, damageTakenPercent: number) {
+  private resolveChannelTick(battle: Battle, skill: Skill, damageTakenPercent: number, tickSeconds: number) {
     const target = this.findNearestAliveEnemy(battle)
 
     if (!target) {
@@ -2554,8 +2612,10 @@ export class BattleSystem {
 
     const originalFinalDamagePercent = player.stats.finalDamagePercent
 
+    const tickLengthBonus = batKiemTickLengthMultiplier(tickSeconds) - 1
+
     player.stats.finalDamagePercent =
-      originalFinalDamagePercent + damageTakenPercent * BAT_KIEM_AMP_PER_DAMAGE_TAKEN
+      originalFinalDamagePercent + tickLengthBonus + damageTakenPercent * BAT_KIEM_AMP_PER_DAMAGE_TAKEN
 
     try {
       this.resolveSkillEffects(skill, player, target, battle)

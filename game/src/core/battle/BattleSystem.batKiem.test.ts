@@ -128,6 +128,13 @@ function setup(tickSeconds = 3) {
     ailmentRegistry,
     eventBus,
     new ActionImpactSystem({ eventBus, rollCritical: () => false }),
+    undefined,
+    undefined,
+    undefined,
+    // Final review fix (Important #6) — channel activation giờ gate
+    // thêm kiemTuRoute === 'bat_kiem' (khớp UI). Đây là fixture test
+    // độc lập Kiếm Tu route hoàn chỉnh (chỉ Bạt Kiếm) nên luôn 'bat_kiem'.
+    () => 'bat_kiem',
   )
 
   const skill = createBatKiemThuat(tickSeconds)
@@ -402,5 +409,103 @@ describe('BattleSystem — Bạt Kiếm auto-channel (spec §4.2, Task 4)', () =
     system.update(0.5) // 0.5+0.5=1.0s → đủ nhịp mới, nổ ĐÚNG 1 LẦN
 
     expect(damageEventsForEnemy()).toHaveLength(1)
+  })
+
+  // Critical #2 review fix (spec §4.2) — "multiplier phát quạt tăng theo
+  // x (nền: ×1 tại 3s → ×3 tại 9s, tuyến tính)". Trước fix, tickSeconds
+  // chỉ quyết định LÚC NÀO tick nổ, không bao giờ quyết định NẶNG BAO
+  // NHIÊU — slider Task 7 là 1 chiều lỗ DPS thuần khi kéo x lên.
+  it('tick 9s gây ~3x damage so với 3 tick 3s cộng lại (không amp, kiểm soát biến)', () => {
+    // 9s: đúng 1 kỳ tụ 9s, kiểm soát damageTaken=0 → chỉ đo multiplier
+    // theo tickSeconds thuần.
+    const nineSecond = setup(9)
+    const ninePlayer = createPlayer({})
+    const nineEnemy = createCombatant({ id: 'enemy', row: 4, currentHp: 100_000, maxHp: 100_000 })
+
+    nineSecond.system.start(ninePlayer, nineEnemy)
+    nineSecond.system.update(3) // bỏ qua countdown
+
+    const nineBefore = nineEnemy.currentHp
+
+    nineSecond.system.update(9) // đúng 1 kỳ 9s
+
+    const nineDamage = nineBefore - nineEnemy.currentHp
+
+    // 3s: 3 kỳ liên tiếp cộng lại — cùng tổng elapsed 9s, KHÔNG có amp
+    // xen vào (control enemy không bao giờ đụng Player).
+    const threeSecond = setup(3)
+    const threePlayer = createPlayer({})
+    const threeEnemy = createCombatant({ id: 'enemy', row: 4, currentHp: 100_000, maxHp: 100_000 })
+
+    threeSecond.system.start(threePlayer, threeEnemy)
+    threeSecond.system.update(3) // bỏ qua countdown
+
+    const threeBefore = threeEnemy.currentHp
+
+    threeSecond.system.update(3)
+    threeSecond.system.update(3)
+    threeSecond.system.update(3)
+
+    const threeTotalDamage = threeBefore - threeEnemy.currentHp
+    const threePerTickDamage = threeTotalDamage / 3
+
+    // 1 tick 9s ≈ 3x 1 tick 3s (từng tick riêng lẻ, không phải tổng 3
+    // tick — tổng 3 tick 3s vốn đã bằng 3x 1 tick 3s, nên so ĐÚNG scale
+    // ×3 phải so 1 tick 9s với 1 tick 3s, không phải tổng 3 tick).
+    expect(nineDamage).toBeGreaterThan(threePerTickDamage * 2.9)
+    expect(nineDamage).toBeLessThan(threePerTickDamage * 3.1)
+  })
+
+  // Important #4 review fix — scheduler round-robin (updatePlayerSkills)
+  // trước đây vẫn gọi beginPlayerCast()→beginCastInSlot() cho slot channel
+  // MỖI lần enemy nằm trong tầm, TRƯỚC khi switch dispatch chạm case
+  // 'channel' (return false) — set castingSlotIndex nhưng KHÔNG BAO GIỜ
+  // dọn (channel không đi qua finishPlayerCastTransaction). Enemy trong
+  // tầm (attackRange lớn, khác các test khác trong file cố ý attackRange=0
+  // để tránh đúng nhiễu này) để thật sự exercise scheduler round-robin.
+  it('channel skill KHÔNG bị scheduler round-robin set castingSlotIndex dù enemy trong tầm', () => {
+    const { system } = setup(3)
+
+    const player = createPlayer({ stats: { ...createBaseStats(), attack: 100, attackRange: 999 } })
+    const enemy = createCombatant({ id: 'enemy', row: 4, x: HERO_COLUMN })
+
+    system.start(player, enemy)
+    system.update(3) // bỏ qua countdown
+
+    const battle = system.getBattle()!
+
+    expect(battle.player.tuLucActive).toBe(true)
+
+    // Nhiều fixed-step, đủ để scheduler round-robin quét qua slot channel
+    // hàng chục lần nếu còn bug — castingSlotIndex phải LUÔN undefined.
+    for (let i = 0; i < 20; i++) {
+      system.update(0.5)
+      expect(battle.player.castingSlotIndex).toBeUndefined()
+    }
+  })
+
+  // Important #5 review fix — startTribulation() (Đột Phá) trước đây bỏ
+  // sót hoàn toàn khối init channel mà start() có: channelSkillId/
+  // tuLucActive/tuLucElapsed không bao giờ được (re)set khi bước vào 1
+  // trận Kiếp, để lại state RÁC từ trận Stage trước đó (vd tuLucActive
+  // stale=true dù route/loadout đã đổi, hoặc stale=false dù channel skill
+  // đang equip). BattleSystem.update() hiện bypass hẳn combat tick cho
+  // `mode === 'tribulation'` (chỉ lôi kích qua TribulationSystem.update()
+  // riêng, KHÔNG có enemy để tấn công) nên updateChanneling() không tick
+  // trong trận Kiếp — nằm ngoài phạm vi review này (không có finding nào
+  // yêu cầu đổi bypass đó). Test này xác nhận ĐÚNG phần được yêu cầu:
+  // state channel được khởi tạo nhất quán giống start(), không còn rác.
+  it('startTribulation() khởi tạo channel state giống start() (channelSkillId/tuLucActive/tuLucElapsed)', () => {
+    const { system } = setup(3)
+
+    const player = createPlayer({})
+
+    system.startTribulation(player)
+
+    const battle = system.getBattle()!
+
+    expect(battle.player.tuLucActive).toBe(true)
+    expect(battle.player.tuLucElapsed).toBe(0)
+    expect(battle.player.tuLucDamageTakenPercent).toBe(0)
   })
 })

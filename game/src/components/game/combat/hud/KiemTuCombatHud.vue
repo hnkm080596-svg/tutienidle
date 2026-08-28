@@ -49,9 +49,12 @@ const cadenceRemaining = useCadenceSmoothing(
   },
 )
 
-// Kiếm Tu kit chỉ dùng slot 0 (Ngự Kiếm, hiện riêng)/1/2 — bỏ qua 2 slot
-// cuối vốn dành cho Pháp Tu's 5-ô build (kit Kiếm Tu không cấp).
-const chainEntries = computed(() => loadout.value.filter(entry => entry.slotIndex !== undefined && entry.slotIndex >= 1 && entry.slotIndex <= 2))
+// Kiếm Tu kit dùng slot 0 (Ngự Kiếm, hiện riêng)/1/2 + slot 4 riêng
+// (KIEM_TRAN_SLOT_INDEX — chiêu trận Kiếm Trận, xem SkillLoadoutSlots.ts).
+// Bỏ qua slot 3 (dự phòng, chưa cấp gì — spec §3.3). Final review fix
+// (Important #7) — trước đây chỉ 1..2 nên chiêu trận (slot 4) bắn mỗi
+// nhịp nhưng KHÔNG BAO GIỜ hiện trong chain HUD.
+const chainEntries = computed(() => loadout.value.filter(entry => entry.slotIndex !== undefined && (entry.slotIndex === 1 || entry.slotIndex === 2 || entry.slotIndex === 4)))
 </script>
 
 <template>

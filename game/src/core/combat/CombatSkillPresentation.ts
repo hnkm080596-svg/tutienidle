@@ -4,6 +4,7 @@ import type { SkillManager } from '../skill/SkillManager'
 import { getAttackIntervalSeconds } from './AttackTiming'
 import { selectAttackableTarget } from '../battle/ActionTargetingSystem'
 import { DEFAULT_COMBAT_AI_STRATEGY, type CombatAiStrategy } from '../battle/CombatAiStrategy'
+import { KIEM_TRAN_SLOT_INDEX } from '../skill/SkillLoadoutSlots'
 
 type CadencePolicy = Extract<
   SkillExecutionPolicy,
@@ -112,7 +113,14 @@ export function buildLoadoutPresentation(
   )
 
   for (let slotIndex = 0; slotIndex < slotCount; slotIndex++) {
-    if (slotIndex >= unlockedSlotCount) {
+    // Final review fix (Important #7) — KIEM_TRAN_SLOT_INDEX (4) claims
+    // to sit OUTSIDE the standard 0-4 range (SkillLoadoutSlots.ts's own
+    // comment) but is actually inside it, so the realm-based unlock curve
+    // rendered it 'locked' until Hợp Thể even though the scheduler has
+    // no realm gate on which slots it iterates — the skill there fires
+    // every cadence regardless, just invisible. Exempt this slot from
+    // the realm lock; it should render unlocked once equipped, always.
+    if (slotIndex >= unlockedSlotCount && slotIndex !== KIEM_TRAN_SLOT_INDEX) {
       entries.push({
         skillId: '',
         slotIndex,

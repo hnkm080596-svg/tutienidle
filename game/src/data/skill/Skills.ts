@@ -108,7 +108,11 @@ export const SKILLS: Skill[] = [
 
         damageType: 'physical',
 
-        skillExperienceRatio: 1 / 18,
+        // Final review fix (Important #3) — dead % ratio từ thời maxLevel
+        // 18 cũ. Huy Kiếm rework (spec §2) là skill DUY NHẤT đi flat-only
+        // (+1 dmg/10 cast qua SkillSystem.getEffectiveSkill()); ratio này
+        // từng cộng thêm 1 lớp % nhân totalExperience/attack lên trên flat,
+        // double-scale ngoài spec.
       },
     ],
 

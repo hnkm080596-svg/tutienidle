@@ -97,6 +97,23 @@ describe('GameManager — Kiếm Tu tự lực: slot Kiếm Trận + route đổ
   it('setKiemTuRoute("bat_kiem") false khi chưa mua bat_kiem_thuc', () => {
     const gameManager = setup()
     const player = createDefaultPlayer()
+    player.cultivationPath = 'kiem_tu'
+
+    expect(gameManager.setKiemTuRoute(player, 'bat_kiem')).toBe(false)
+    expect(player.kiemTuRoute).toBeUndefined()
+  })
+
+  it('setKiemTuRoute false khi cultivationPath không phải kiem_tu (Important #6 review fix)', () => {
+    const gameManager = setup()
+    const player = createDefaultPlayer()
+    player.cultivationPath = 'phap_tu'
+    player.skillInsight = 100
+    player.skillCastCounts = { tram: 9999 }
+    player.skillLevels = { tram: 3 }
+
+    gameManager.purchaseNode('bat_kiem_an', player)
+    gameManager.purchaseNode('minor_bat_kiem_uy', player)
+    gameManager.purchaseNode('bat_kiem_thuc', player)
 
     expect(gameManager.setKiemTuRoute(player, 'bat_kiem')).toBe(false)
     expect(player.kiemTuRoute).toBeUndefined()
@@ -105,6 +122,7 @@ describe('GameManager — Kiếm Tu tự lực: slot Kiếm Trận + route đổ
   it('setKiemTuRoute("bat_kiem") true sau khi mua đủ bat_kiem_an + bat_kiem_thuc, equip slot 1', () => {
     const gameManager = setup()
     const player = createDefaultPlayer()
+    player.cultivationPath = 'kiem_tu'
     player.skillInsight = 100
     player.skillCastCounts = { tram: 9999 }
     player.skillLevels = { tram: 3 }
@@ -126,6 +144,7 @@ describe('GameManager — Kiếm Tu tự lực: slot Kiếm Trận + route đổ
   it('setKiemTuRoute chặn trong combat', () => {
     const gameManager = setup()
     const player = createDefaultPlayer()
+    player.cultivationPath = 'kiem_tu'
     player.skillInsight = 100
     player.skillCastCounts = { tram: 9999 }
     player.skillLevels = { tram: 3 }
