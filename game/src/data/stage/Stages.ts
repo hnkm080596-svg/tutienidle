@@ -354,17 +354,185 @@ const normalizedStages: Stage[] = BASE_STAGES.map((stage) => ({
   totalEnemyCount: 10 + (stage.requiredRealmLevel ?? 1) - 1,
 }))
 
-// Foundation content temporarily reuses the current Thanh Vân encounter
-// pools. The chapter/floor model is real; enemy balance remains data-only
-// and can be replaced without changing stage progression logic.
-const foundationStages: Stage[] = normalizedStages
-  .filter((stage) => stage.chapter === 2)
-  .map((stage) => ({
-    ...stage,
-    id: `foundation_floor_${stage.floor}`,
-    name: `Màn 3.${stage.floor}`,
+// Trúc Cơ (2026-08-29) — 10 stage authored tường minh, bỏ hẳn việc
+// clone enemy pool Luyện Khí. Ngũ Hành Tương Sinh Mộc(1-2)->Hỏa(3-4)->
+// Thổ(5-6)->Kim(7-8)->Thủy(9-10), 2 loài/tầng (1 thường + 1
+// boss-eligible), tầng chẵn dùng bản "Hung " mạnh hơn — đúng quy luật
+// Luyện Khí + Phàm Nhân. Quái `foundation_*` xem data/enemy/Enemies.ts.
+// Stage 10 (`foundation_floor_10`) có boss 2-phase + enrage 60s
+// (`foundation_ferocious_flood_dragon_whelp`). `requiredRealmLevel` =
+// số tầng hiển thị (gate thật theo thứ tự zone.stageIds, xem
+// GameManager.isStageUnlocked()).
+const foundationStages: Stage[] = [
+  {
+    id: 'foundation_floor_1',
+    name: 'Màn 3.1',
+    description: 'Hậu sơn Thanh Vân, yêu thú gỗ quấn quanh tán cổ thụ — chặng thử thách đầu tiên cho tu sĩ Trúc Cơ.',
     requiredRealmId: 'foundation_establishment',
+    requiredRealmLevel: 1,
     chapter: 3,
-  }))
+    floor: 1,
+    enemyPool: [
+      { enemyId: 'foundation_wood_ape', weight: 5 },
+      { enemyId: 'foundation_stone_fungus', weight: 3, eliteChance: 0.1 },
+    ],
+    totalEnemyCount: 10,
+    spawnIntervalSeconds: 3,
+    bossEnemyId: 'foundation_stone_fungus',
+  },
+
+  {
+    id: 'foundation_floor_2',
+    name: 'Màn 3.2',
+    description: 'Rừng sâu hơn, đám yêu thú Mộc hành ở đây đã bắt đầu có chút linh tính — lì lợm hơn hẳn.',
+    requiredRealmId: 'foundation_establishment',
+    requiredRealmLevel: 2,
+    chapter: 3,
+    floor: 2,
+    enemyPool: [
+      { enemyId: 'foundation_ferocious_wood_ape', weight: 5 },
+      { enemyId: 'foundation_ferocious_stone_fungus', weight: 3, eliteChance: 0.1 },
+    ],
+    totalEnemyCount: 11,
+    spawnIntervalSeconds: 3,
+    bossEnemyId: 'foundation_ferocious_stone_fungus',
+  },
+
+  {
+    id: 'foundation_floor_3',
+    name: 'Màn 3.3',
+    description: 'Vùng đất hỏa địa hậu sơn, khí nóng bốc lên ngùn ngụt — Dực Hỏa Khuyển và Sa Hắc ẩn mình trong tro tàn.',
+    requiredRealmId: 'foundation_establishment',
+    requiredRealmLevel: 3,
+    chapter: 3,
+    floor: 3,
+    enemyPool: [
+      { enemyId: 'foundation_lava_hound', weight: 5 },
+      { enemyId: 'foundation_sand_scorpion', weight: 3, eliteChance: 0.1 },
+    ],
+    totalEnemyCount: 12,
+    spawnIntervalSeconds: 3,
+    bossEnemyId: 'foundation_sand_scorpion',
+  },
+
+  {
+    id: 'foundation_floor_4',
+    name: 'Màn 3.4',
+    description: 'Hỏa địa càng dữ, lũ yêu Hỏa hành hung tợn hơn — không còn là trò trẻ con.',
+    requiredRealmId: 'foundation_establishment',
+    requiredRealmLevel: 4,
+    chapter: 3,
+    floor: 4,
+    enemyPool: [
+      { enemyId: 'foundation_ferocious_lava_hound', weight: 5 },
+      { enemyId: 'foundation_ferocious_sand_scorpion', weight: 3, eliteChance: 0.1 },
+    ],
+    totalEnemyCount: 13,
+    spawnIntervalSeconds: 3,
+    bossEnemyId: 'foundation_ferocious_sand_scorpion',
+  },
+
+  {
+    id: 'foundation_floor_5',
+    name: 'Màn 3.5',
+    description: 'Thạch cốc hậu sơn — Thạch Giáp Quy lì lợm canh giữ, Nê Cự Nhân lầm lũi trấn lối đi.',
+    requiredRealmId: 'foundation_establishment',
+    requiredRealmLevel: 5,
+    chapter: 3,
+    floor: 5,
+    enemyPool: [
+      { enemyId: 'foundation_rock_tortoise', weight: 5 },
+      { enemyId: 'foundation_mud_golem', weight: 3, eliteChance: 0.1 },
+    ],
+    totalEnemyCount: 14,
+    spawnIntervalSeconds: 3,
+    bossEnemyId: 'foundation_mud_golem',
+  },
+
+  {
+    id: 'foundation_floor_6',
+    name: 'Màn 3.6',
+    description: 'Đá càng dày đặc, đám yêu Thổ hành to khỏe hơn hẳn — đòn đánh nào cũng nặng trịch.',
+    requiredRealmId: 'foundation_establishment',
+    requiredRealmLevel: 6,
+    chapter: 3,
+    floor: 6,
+    enemyPool: [
+      { enemyId: 'foundation_ferocious_rock_tortoise', weight: 5 },
+      { enemyId: 'foundation_ferocious_mud_golem', weight: 3, eliteChance: 0.1 },
+    ],
+    totalEnemyCount: 15,
+    spawnIntervalSeconds: 3,
+    bossEnemyId: 'foundation_ferocious_mud_golem',
+  },
+
+  {
+    id: 'foundation_floor_7',
+    name: 'Màn 3.7',
+    description: 'Thiết mãng lệnh — khoáng kim lấp lánh, Đoạn Nhận Ưng Vương lượn vòng trên cao săn mồi.',
+    requiredRealmId: 'foundation_establishment',
+    requiredRealmLevel: 7,
+    chapter: 3,
+    floor: 7,
+    enemyPool: [
+      { enemyId: 'foundation_metal_beetle_swarm', weight: 5 },
+      { enemyId: 'foundation_blade_hawk_king', weight: 3, eliteChance: 0.1 },
+    ],
+    totalEnemyCount: 16,
+    spawnIntervalSeconds: 3,
+    bossEnemyId: 'foundation_blade_hawk_king',
+  },
+
+  {
+    id: 'foundation_floor_8',
+    name: 'Màn 3.8',
+    description: 'Khoáng kim dày đặc hơn, kim trùng và ưng vương nơi đây đã cứng cáp khác thường.',
+    requiredRealmId: 'foundation_establishment',
+    requiredRealmLevel: 8,
+    chapter: 3,
+    floor: 8,
+    enemyPool: [
+      { enemyId: 'foundation_ferocious_metal_beetle_swarm', weight: 5 },
+      { enemyId: 'foundation_ferocious_blade_hawk_king', weight: 3, eliteChance: 0.1 },
+    ],
+    totalEnemyCount: 17,
+    spawnIntervalSeconds: 3,
+    bossEnemyId: 'foundation_ferocious_blade_hawk_king',
+  },
+
+  {
+    id: 'foundation_floor_9',
+    name: 'Màn 3.9',
+    description: 'Hàn thạch đàm — hơi nước lạnh buốt, Vụ Cáp lướt nhanh dưới mặt nước, Giao Sủng ẩn mình chờ đợi.',
+    requiredRealmId: 'foundation_establishment',
+    requiredRealmLevel: 9,
+    chapter: 3,
+    floor: 9,
+    enemyPool: [
+      { enemyId: 'foundation_mist_shark', weight: 5 },
+      { enemyId: 'foundation_flood_dragon_whelp', weight: 3, eliteChance: 0.1 },
+    ],
+    totalEnemyCount: 18,
+    spawnIntervalSeconds: 3,
+    bossEnemyId: 'foundation_flood_dragon_whelp',
+  },
+
+  {
+    id: 'foundation_floor_10',
+    name: 'Màn 3.10',
+    description: 'Đáy hàn thạch đàm — Giao Sủng Hung cuồng nộ ngự trị, chặng thử thách cuối cùng trước khi người tu sĩ Trúc Cơ tìm kiếm cơ duyên kế tiếp.',
+    requiredRealmId: 'foundation_establishment',
+    requiredRealmLevel: 10,
+    chapter: 3,
+    floor: 10,
+    enemyPool: [
+      { enemyId: 'foundation_ferocious_mist_shark', weight: 5 },
+      { enemyId: 'foundation_ferocious_flood_dragon_whelp', weight: 3, eliteChance: 0.1 },
+    ],
+    totalEnemyCount: 19,
+    spawnIntervalSeconds: 3,
+    bossEnemyId: 'foundation_ferocious_flood_dragon_whelp',
+  },
+]
 
 export const STAGES: Stage[] = [...normalizedStages, ...foundationStages]

@@ -31,6 +31,12 @@ Code chiến đấu có một số plumbing và test cho Thể Tu, nhưng `Culti
 
 Hệ Ngũ Hành nằm trong `src/core/element/`; node Pháp Tu hiện hành nằm tại `src/data/progression/PhapTuNodes.ts`. Hai ailment khác hành cùng tồn tại có thể kích hoạt phản ứng. `ReactionManager` xử lý true damage, tiêu thụ trạng thái và các ngoại lệ data-driven như giữ một vế, tạo ailment, cấp buff hoặc giảm max HP. Các nhánh nguyên tố cũ vì vậy là nội dung của cùng một cây Pháp Tu.
 
+## Nội dung Trúc Cơ (chương 3)
+
+Chương 3 gồm 10 stage authored riêng `foundation_floor_1..10` (`src/data/stage/Stages.ts`) với 20 quái prefix `foundation_` (`src/data/enemy/Enemies.ts`) — không còn clone enemy pool Luyện Khí. Quy luật Ngũ Hành Tương Sinh theo cặp tầng Mộc(1-2)→Hỏa(3-4)→Thổ(5-6)→Kim(7-8)→Thủy(9-10); tầng chẵn dùng bản "Hung " mạnh hơn cùng loài. Boss `foundation_ferocious_flood_dragon_whelp` (Hung Giao Sủng, Màn 3.10) là boss Trúc Cơ đầu tiên dùng cơ chế 2 phase theo ngưỡng HP (0.5/0.25) + enrage sau 60 giây. Có 5 quest Trúc Cơ gate `requiredRealmId: 'foundation_establishment'` (`src/data/quest/quests.ts`) — phần thưởng tài nguyên; `QuestItemReward` chưa hỗ trợ equipment nên thưởng trang bị qua quest dời sau.
+
+**Giới hạn scope progression hiện tại**: nội dung dừng ở Trúc Cơ tầng 18. Kim Đan (gate đột phá, realm passive, node mới, vật liệu realm 4, stage chương 4) chưa mở trong version này — giữ cho version sau.
+
 ## Skill Node Tree
 
 Luồng hiện tại không mua trực tiếp trên node. Người chơi chọn node trong `NodeTreePanel.vue`, xem điều kiện/hiệu ứng và mua trong `NodeInspector.vue`. `GameManager.purchaseNode()` cùng `NodeSystem` kiểm tra prerequisite, điểm kỹ năng và áp dụng effect.

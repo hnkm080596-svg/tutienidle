@@ -15,13 +15,13 @@
 
 **Vấn đề lớn nhất, theo thứ tự rủi ro:**
 
-1. **Tường nội dung Trúc Cơ**: hết nội dung thật ở Trúc Cơ tầng 18 (~34 giờ chơi); stage Trúc Cơ là bản clone của Luyện Khí (`data/stage/Stages.ts:357`); không có Kim Đan (`GameManager.ts:1439` trả `false` cứng).
+1. **Tường nội dung Trúc Cơ**: hết nội dung thật ở Trúc Cơ tầng 18 (~34 giờ chơi); stage Trúc Cơ là bản clone của Luyện Khí (`data/stage/Stages.ts:357`); không có Kim Đan (`GameManager.ts:1439` trả `false` cứng). *(2026-08-29: M1 đã xong — 10 stage Trúc Cơ thật + 20 enemy `foundation_*` + boss 2-phase/enrage + 5 quest; Kiếm Tu có node tree thật qua kiem-tu-tu-luc, xem Phase 3. Gate Kim Đan M2/M3 giữ cho version sau.)*
 2. **Thiên phú trang trí** *(đã giải quyết 2026-08-28 — [talent-direction-choice-plan.md](./talent-direction-choice-plan.md))*: cũ — 11/13 thiên phú có `effects: []` rỗng; nay thiên phú là quyết định chọn hướng Đạo duy nhất (roll 9 chọn 1, 12 talent có effect thật).
 3. **Thiếu âm thanh hoàn toàn**: 0 file audio trong project; 1.137 spritesheet VFX không được tham chiếu.
 4. **Bug và drop chết trong kinh tế** *(đã giải quyết 2026-08-28 — economy-ecosystem hoàn thành: T1–T6+T8+T9, T7 bỏ vì linh thảo giữ hoàn toàn random)*: mapping Tinh Hoa sai cho realm 4+ (`RefinementBalance.ts:74-81`); vật liệu legacy vẫn rơi nhưng không còn sink.
 5. **Save không validate shape** *(đã giải quyết 2026-08-28 — save-shape-validation Wave 1 + bổ sung equipment/slot shape khi review)*: chỉ kiểm tra version, tiền lệ crash boot v47 có thể tái diễn.
 6. **Tài liệu lệch code** *(đã giải quyết 2026-08-28 — docs-sync viết lại game-guide.md + item-design-reference.md, dọn comment MissileSystem, xóa `Plans .md`)*: `game-guide.md` và `item-design-reference.md` mô tả hệ thống đã xóa.
-7. **Nợ kỹ thuật**: `GameManager.ts` 2.703 dòng; nhiều hệ thống core 0 test; 1 spec E2E; không có lint.
+7. **Nợ kỹ thuật**: `GameManager.ts` 2.504 dòng (giảm từ 2.703 sau khi tách TribulationSystem/StageWaveSystem); nhiều hệ thống core 0 test; 0 E2E spec (spec cũ đã xóa ở commit `e265e5c`); không có lint.
 
 ## 2. Nguyên tắc ưu tiên
 
@@ -42,6 +42,9 @@ Chi tiết từng bug/file:line trong [project-review-2026-08-28.md](./project-r
 - **Ngoài plan (mới)** ✅: quy đổi cảnh giới linh mộc/linh khoáng 10:1 (`MaterialTierConversionBalance` + `GameManager.convertMaterialTier` + UI `ProductionPanel`).
 - **Review fixes 2026-08-28** ✅: false-negative save shape (equipment/slot), `craftBreakthroughToken` all-or-nothing, PillBag NaN guard, `convertAilment` dedupe.
 - **Wave 5 — Tech debt** ❌: eslint, phủ test hệ thống 0 test, E2E spec, GameManager extraction.
+- **Kiếm Tu Tự Lực (ngoài plan, merged 2026-08-29)** ✅: node tree Kiếm Tu 2 nhánh (`KiemTuNodes.ts`), 9 skill Kiếm Trận + Bát Kiếm, tự lực combat state (auto-channel tick AoE, Huy Kiếm flat per-cast, skillCastCount prereq), route selection UI + slot auto-replace — phần lớn nằm trong phạm vi [progression-depth-plan.md](./progression-depth-plan.md) (xem Phase 3).
+- **UI primitives (ngoài plan, 2026-08-29)** ✅: Bar/Chip/Eyebrow/StatRow/EmptyState/SceneHeader primitives + GameButton mở rộng, migrate ~25+ button/19 progress bar — one bước chuẩn bị cho [ui-discoverability-refactor-plan.md](./ui-discoverability-refactor-plan.md).
+- **Pháp Tu ritual progression (ngoài plan, 2026-08-28)** ✅: bỏ nút tiểu đột phá — tự advance khi tu đầy; keystone kim/thổ mở stat The-Gain tương ứng.
 
 ## 3. Các phase
 
@@ -65,8 +68,8 @@ Mục tiêu: phá tường nội dung Trúc Cơ và biến thiên phú thành qu
 | Hạng mục | Plan | Trạng thái |
 |---|---|---|
 | Thiên phú chọn hướng Đạo (roll 9 chọn 1) + easter egg Phàm Cốt | [talent-direction-choice-plan.md](./talent-direction-choice-plan.md) | ✅ Xong |
-| Nội dung Trúc Cơ thật + pass Kim Đan tối thiểu | [truc-co-kim-dan-content-plan.md](./truc-co-kim-dan-content-plan.md) | ❌ Chưa làm |
-| Bật mana cost, reaction scale theo Power, đa dạng nhịp skill | [combat-balance-pass-plan.md](./combat-balance-pass-plan.md) | 🟡 1/8 — xong HUD `out_of_range`; còn mana/reaction/nhịp/fizzle/boss/playtest |
+| Nội dung Trúc Cơ thật + pass Kim Đan tối thiểu | [truc-co-kim-dan-content-plan.md](./truc-co-kim-dan-content-plan.md) | 🟡 M1 xong (2026-08-29) — 10 stage Trúc Cơ thật (`foundation_floor_1..10`) + 20 enemy `foundation_*` + boss 2-phase/enrage + 5 quest; **M2 gate Kim Đan / M3 đời sống Kim Đan giữ cho version sau** (yêu cầu người dùng) |
+| Bật mana cost, reaction scale theo Power, đa dạng nhịp skill | [combat-balance-pass-plan.md](./combat-balance-pass-plan.md) | 🟡 1/8 — xong HUD `out_of_range`; còn mana (12 skill vẫn `resourceType:'none'`)/reaction/nhịp/fizzle/boss/playtest |
 
 Tiêu chí hoàn thành: người chơi có mục tiêu theo đuổi tới Kim Đan; thiên phú đã chọn tạo khác biệt đo được; combat có quyết định tài nguyên.
 
@@ -76,8 +79,8 @@ Mục tiêu: game "có hồn" và dễ khám phá hơn.
 
 | Hạng mục | Plan | Trạng thái |
 |---|---|---|
-| Âm thanh tối thiểu + hit-stop + mở rộng screen shake | [audio-game-feel-plan.md](./audio-game-feel-plan.md) | ❌ Chưa làm |
-| Nameplate công trình, tách CombatScene, dọn placeholder/emoji | [ui-discoverability-refactor-plan.md](./ui-discoverability-refactor-plan.md) | ❌ Chưa làm |
+| Âm thanh tối thiểu + hit-stop + mở rộng screen shake | [audio-game-feel-plan.md](./audio-game-feel-plan.md) | ❌ Chưa làm — vẫn 0 file audio, 0 AudioManager |
+| Nameplate công trình, tách CombatScene, dọn placeholder/emoji | [ui-discoverability-refactor-plan.md](./ui-discoverability-refactor-plan.md) | 🟡 Chuẩn bị một phần — layer UI primitives (Bar/Chip/Eyebrow/StatRow/EmptyState/SceneHeader, GameButton mở rộng) đã landed 2026-08-29; CombatScene vẫn 2.922 dòng god-class, chưa nameplate, chưa dọn emoji |
 
 Tiêu chí hoàn thành: có âm thanh cho các khoảnh khắc chính; hotspot công trình tự giải thích không cần tooltip; CombatScene không còn là god-class.
 
@@ -87,8 +90,8 @@ Mục tiêu: mở rộng các trục progression đang bỏ hoang.
 
 | Hạng mục | Plan | Trạng thái |
 |---|---|---|
-| Kiến Cơ 4 bậc, node tree Kiếm Tu, chiều sâu idle (Cảm Ngộ offline, nguồn tăng tốc tu luyện) | [progression-depth-plan.md](./progression-depth-plan.md) | ❌ Chưa làm |
-| Sink Linh Thạch hậu kỳ, vendor, Điểm Rèn, filter túi đồ | [economy-fixes-sinks-plan.md](./economy-fixes-sinks-plan.md) (Phần B — Phần A đã gộp vào [economy-ecosystem-plan.md](./economy-ecosystem-plan.md)) | ❌ Chưa làm |
+| Kiến Cơ 4 bậc, node tree Kiếm Tu, chiều sâu idle (Cảm Ngộ offline, nguồn tăng tốc tu luyện) | [progression-depth-plan.md](./progression-depth-plan.md) | 🟡 Một phần — node tree Kiếm Tu (2 nhánh `KiemTuNodes.ts`, 9 skill Kiếm Trận, Bát Kiếm, tự lực combat) ✅ xong qua kiem-tu-tu-luc; Kiến Cơ 4 bậc vẫn parked (`FoundationResolver.ts` trả `'human'` cứng); Cảm Ngộ offline chưa làm (Ngộ Đạo chỉ online) |
+| Sink Linh Thạch hậu kỳ, vendor, Điểm Rèn, filter túi đồ | [economy-fixes-sinks-plan.md](./economy-fixes-sinks-plan.md) (Phần B — Phần A đã gộp vào [economy-ecosystem-plan.md](./economy-ecosystem-plan.md)) | 🟡 Một phần — Điểm Rèn per-item (forgePoints) đã có trong `EquipmentSystem` (rework 2026-08-26); chưa vendor, chưa filter túi đồ |
 
 Tiêu chí hoàn thành: gate đột phá có chất lượng khác nhau; Kiếm Tu có chiều sâu build tương đương Pháp Tu; idle có đường nâng cấp.
 
@@ -96,8 +99,8 @@ Tiêu chí hoàn thành: gate đột phá có chất lượng khác nhau; Kiếm
 
 | Hạng mục | Plan | Trạng thái |
 |---|---|---|
-| Tách dần GameManager, phủ test hệ kinh tế, thêm E2E + lint | [tech-debt-test-coverage-plan.md](./tech-debt-test-coverage-plan.md) | ❌ Chưa làm (Wave 5) |
-| Cloud save / online (plan riêng đã có) | [online-login-cloud-save-plan.md](./online-login-cloud-save-plan.md) | 🟡 Một phần — auth Supabase + migration SQL; chưa cloud-save adapter |
+| Tách dần GameManager, phủ test hệ kinh tế, thêm E2E + lint | [tech-debt-test-coverage-plan.md](./tech-debt-test-coverage-plan.md) | 🟡 Một phần — GameManager 2.703→2.504 dòng (tách `TribulationSystem`, `StageWaveSystem`, `TemplateRegistry`); test file tăng 154→191 (1093 test ~); vẫn chưa lint, chưa E2E spec (spec cũ đã xóa) |
+| Cloud save / online (plan riêng đã có) | [online-login-cloud-save-plan.md](./online-login-cloud-save-plan.md) | 🟡 Một phần — auth Supabase + migration SQL; cloud-save layer có rồi nhưng chỉ là local adapter (`LocalCloudSaveService`), chưa Supabase adapter thật |
 
 Tiêu chí hoàn thành: không file nào quá ~1.000 dòng trong core/game; mọi hệ thống core có test; luồng boot → tạo nhân vật → combat có E2E.
 
@@ -127,6 +130,7 @@ Phase 4:  tech-debt — chạy nền liên tục
 - **Thể Tu**: plumbing combat đã có nhưng chưa đủ nội dung phát hành; được ghi nhận như lựa chọn mở rộng trong `progression-depth-plan.md`, không cam kết mốc.
 - **World map**: `src/core/world-map/` mới có hạ tầng (hex layout, validator), chưa có dữ liệu bản đồ thật. Chờ nội dung Kim Đan ổn định (truc-co-kim-dan M3) rồi mới quyết định Thanh Vân có chuyển sang biểu diễn world-map hay giữ stage list.
 - **Tutorial động**: tutorial hiện là carousel 9 bước thuần thông tin (`src/data/tutorial/tutorialSteps.ts`). Việc instrument theo dõi hành động thật của người chơi mới chỉ ghi nhận, chưa lập plan.
+- **Kiếm Tu node tree (đã chuyển vào phạm vi)**: từng nằm ngoài, nay đã làm xong qua `worktree-kiem-tu-tu-luc` — xem Phase 3 / progression-depth.
 
 ## 6. Quy trình thực hiện
 

@@ -48,4 +48,56 @@ export const QUESTS: Quest[] = [
     reward: { reward: { cultivation: 200 } },
     cadence: 'daily',
   },
+
+  // Trúc Cơ content pass M1 (2026-08-29) — 5 quest chuỗi Trúc Cơ,
+  // tham chiếu quái `foundation_*` mới (data/enemy/Enemies.ts) + sink
+  // Linh Khoáng hiện có. Phần thưởng tài nguyên (spiritStone/
+  // techniqueInsight/cultivation) — QuestItemReward chưa hỗ trợ
+  // equipment, thưởng trang bị lần đầu dời sau (spec mục 4.3 ghi chú).
+  // Số liệu thưởng first pass, cân bằng kỹ hơn để sau.
+  {
+    id: 'kill_foundation_stone_fungus_15',
+    name: 'Diệt Địa Tinh Giám',
+    description: 'Yêu thú Địa Tinh Giám quấy phá hậu sơn Thanh Vân — diệt 15 con.',
+    condition: { kind: 'kill', enemyId: 'foundation_stone_fungus', amount: 15 },
+    reward: { reward: { techniqueInsight: 120 } },
+    cadence: 'once',
+    requiredRealmId: 'foundation_establishment',
+  },
+  {
+    id: 'kill_foundation_floor_10_boss_1',
+    name: 'Chinh Phục Hậu Sơn',
+    description: 'Đánh bại Giao Sủng hung hãn nơi đáy hàn thạch đàm — trùm cuối Trúc Cơ.',
+    condition: { kind: 'kill', enemyId: 'foundation_ferocious_flood_dragon_whelp', amount: 1 },
+    reward: { reward: { spiritStone: 800 } },
+    cadence: 'once',
+    requiredRealmId: 'foundation_establishment',
+  },
+  {
+    id: 'collect_foundation_ore_30',
+    name: 'Thu Thập Linh Khoáng Hậu Sơn',
+    description: 'Nộp 30 Bát Phẩm Linh Khoáng thu được từ yêu thú hậu sơn.',
+    condition: { kind: 'collect', materialId: 'qi_refining_ore_hoang', amount: 30 },
+    reward: { reward: { cultivation: 4000 } },
+    cadence: 'once',
+    requiredRealmId: 'foundation_establishment',
+  },
+  {
+    id: 'kill_foundation_flood_dragon_whelp_10',
+    name: 'Diệt Giao Sủng',
+    description: 'Giao Sủng trú ngụ hàn thạch đàm — đánh bại 10 con.',
+    condition: { kind: 'kill', enemyId: 'foundation_flood_dragon_whelp', amount: 10 },
+    reward: { reward: { techniqueInsight: 200 } },
+    cadence: 'once',
+    requiredRealmId: 'foundation_establishment',
+  },
+  {
+    id: 'kill_foundation_any_50',
+    name: 'Thanh Lý Yêu Thú Hậu Sơn',
+    description: 'Đánh bại 50 yêu thú bất kỳ nơi hậu sơn Thanh Vân.',
+    condition: { kind: 'kill', amount: 50 },
+    reward: { reward: { spiritStone: 500 } },
+    cadence: 'once',
+    requiredRealmId: 'foundation_establishment',
+  },
 ]
