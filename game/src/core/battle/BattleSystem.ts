@@ -2366,9 +2366,20 @@ export class BattleSystem {
     while (tickSeconds > 0 && player.tuLucElapsed >= tickSeconds) {
       player.tuLucElapsed -= tickSeconds
 
-      this.resolveChannelTick(battle, skill, player.tuLucDamageTakenPercent)
+      // Review fix (Important #1) — snapshot TRƯỚC lệnh gọi, trừ ĐÚNG
+      // snapshot đó sau (KHÔNG `= 0`): resolveChannelTick() chạy đồng bộ
+      // qua CombatSystem pipeline, và target trúng đòn có thể phản
+      // damage NGƯỢC lại Player (thornsPercent/wardBreakDamagePercent,
+      // xem CombatSystem.ts applyModifiedDirectDamage) NGAY TRONG lệnh
+      // gọi này — onEntityVitalsChanged() sẽ cộng thêm phần phản đó vào
+      // tuLucDamageTakenPercent trước khi resolveChannelTick() trả về.
+      // `= 0` sẽ xoá mất phần vừa cộng thêm đó; trừ snapshot giữ lại nó
+      // cho kỳ KẾ TIẾP.
+      const ampSnapshot = player.tuLucDamageTakenPercent
 
-      player.tuLucDamageTakenPercent = 0
+      this.resolveChannelTick(battle, skill, ampSnapshot)
+
+      player.tuLucDamageTakenPercent -= ampSnapshot
     }
   }
 
@@ -2421,9 +2432,22 @@ export class BattleSystem {
     }
   }
 
-  /** Task 7 UI slider (spec §4.2, 3–9s) gọi — có hiệu lực NGAY, kể cả giữa kỳ tụ đang dở. */
+  /**
+   * Task 7 UI slider (spec §4.2, 3–9s) gọi — có hiệu lực TỪ KỲ TỤ KẾ
+   * TIẾP đúng nghĩa đen (Review fix, Important #2): nếu đang tụ lực
+   * ĐÚNG skill này, reset `tuLucElapsed` về 0 luôn — bỏ tiến độ dở dang
+   * theo nhịp CŨ thay vì diễn giải lại số giây đã tích dồn theo nhịp
+   * MỚI (nhịp mới nhỏ hơn nhịp cũ có thể khiến 1 frame nổ 2 lần nếu
+   * không reset, vì `tuLucElapsed` đã tích theo nhịp cũ chưa từng được
+   * "tiêu" ở nhịp mới). tuLucDamageTakenPercent GIỮ NGUYÊN — amp đã tích
+   * trong kỳ dở dang không phải lỗi của người chơi, không có lý do mất.
+   */
   setChannelTickSeconds(skillId: string, seconds: number): void {
     this.channelTickSecondsOverrides.set(skillId, seconds)
+
+    if (this.channelSkillId === skillId && this.battle?.player.tuLucActive) {
+      this.battle.player.tuLucElapsed = 0
+    }
   }
 
   /**

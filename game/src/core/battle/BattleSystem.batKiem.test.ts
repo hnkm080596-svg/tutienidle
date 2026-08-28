@@ -309,4 +309,98 @@ describe('BattleSystem — Bạt Kiếm auto-channel (spec §4.2, Task 4)', () =
 
     expect(damageEventsForEnemy()).toHaveLength(1)
   })
+
+  // Review fix (Important #1) — resolveChannelTick() chạy ĐỒNG BỘ qua
+  // CombatSystem pipeline; nếu target có thornsPercent, damage phản
+  // ngược lại Player XẢY RA TRONG lệnh gọi này, được onEntityVitalsChanged()
+  // cộng vào tuLucDamageTakenPercent TRƯỚC khi resolveChannelTick() trả
+  // về. Bug cũ `player.tuLucDamageTakenPercent = 0` xoá mất phần vừa
+  // cộng; fix trừ ĐÚNG snapshot đã dùng làm amp, giữ lại phần phản đòn
+  // cho kỳ KẾ TIẾP.
+  it('phản damage (thorns) trong lúc tick tự resolve KHÔNG bị mất — mang sang kỳ tụ KẾ TIẾP', () => {
+    // Control: quái không có thorns → Player không bao giờ mất HP →
+    // không có amp nào tích luỹ ở kỳ 2 (baseline "không amp").
+    const control = setup(3)
+    const controlPlayer = createPlayer({})
+    const controlEnemy = createCombatant({ id: 'enemy', row: 4, currentHp: 10_000, maxHp: 10_000 })
+
+    control.system.start(controlPlayer, controlEnemy)
+    control.system.update(3) // bỏ qua countdown
+    control.system.update(3) // kỳ 1
+
+    const controlBeforeTick2 = controlEnemy.currentHp
+
+    control.system.update(3) // kỳ 2, vẫn không amp
+
+    const controlTick2Damage = controlBeforeTick2 - controlEnemy.currentHp
+
+    // Thí nghiệm: quái có thornsPercent=0.1 — MỖI đòn channel tick trúng
+    // quái sẽ phản 10% damage đó ngược lại Player NGAY TRONG
+    // resolveChannelTick() của kỳ đó.
+    const experiment = setup(3)
+    const player = createPlayer({})
+    const enemy = createCombatant({ id: 'enemy', row: 4, currentHp: 10_000, maxHp: 10_000 })
+
+    enemy.stats.thornsPercent = 0.1 // set TRƯỚC start() — stats/baseStats cùng object lúc này (xem createCombatant)
+
+    experiment.system.start(player, enemy)
+    experiment.system.update(3) // bỏ qua countdown
+
+    const battle = experiment.system.getBattle()!
+
+    expect(battle.player.tuLucDamageTakenPercent).toBe(0)
+
+    experiment.system.update(3) // kỳ 1 nổ — thorns phản damage vào Player NGAY trong lệnh này
+
+    // Đây là assertion cốt lõi của fix: KHÔNG bị `= 0` xoá mất.
+    expect(battle.player.tuLucDamageTakenPercent).toBeGreaterThan(0)
+
+    const experimentBeforeTick2 = enemy.currentHp
+
+    experiment.system.update(3) // kỳ 2 — amp mang từ phần thorns phản ở kỳ 1
+
+    const experimentTick2Damage = experimentBeforeTick2 - enemy.currentHp
+
+    expect(experimentTick2Damage).toBeGreaterThan(controlTick2Damage)
+  })
+
+  // Review fix (Important #2) — setChannelTickSeconds() đổi nhịp GIỮA
+  // 1 kỳ tụ ĐANG DỞ (tuLucElapsed > 0 dưới nhịp cũ) trước đây có thể
+  // khiến updateChanneling() nổ ĐÚP trong CÙNG 1 frame nếu nhịp mới nhỏ
+  // hơn số giây đã tích dồn theo nhịp cũ (`while` diễn giải lại elapsed
+  // cũ theo nhịp mới). Fix reset tuLucElapsed về 0 ngay trong
+  // setChannelTickSeconds() khi đang tụ lực đúng skill đó — "hiệu lực từ
+  // kỳ tụ KẾ TIẾP" đúng nghĩa đen: bỏ tiến độ dở dang, kỳ mới tính lại từ 0.
+  it('setChannelTickSeconds đổi nhịp GIỮA kỳ tụ đang dở — reset elapsed, không nổ đúp trong 1 frame', () => {
+    const { system, vitalsEvents } = setup(3)
+
+    const player = createPlayer({})
+    const enemy = createCombatant({ id: 'enemy', row: 4 })
+
+    system.start(player, enemy)
+    system.update(3) // bỏ qua countdown
+
+    system.update(2.9) // tuLucElapsed=2.9 dưới nhịp cũ (3s) — CHƯA nổ
+
+    const battle = system.getBattle()!
+
+    expect(battle.player.tuLucElapsed).toBeCloseTo(2.9, 5)
+
+    system.setChannelTickSeconds('bat_kiem_thuat', 1) // đổi nhịp GIỮA kỳ đang dở
+
+    // Tiến độ dở dang theo nhịp CŨ bị bỏ — không diễn giải lại 2.9s đã
+    // tích theo nhịp mới (nếu không sẽ nổ đúp ngay frame kế: 2.9>=1 hai lần).
+    expect(battle.player.tuLucElapsed).toBe(0)
+
+    const damageEventsForEnemy = () =>
+      vitalsEvents.filter((event) => event.entityId === 'enemy' && event.reason === 'damage')
+
+    system.update(0.5) // chưa đủ 1s nhịp mới
+
+    expect(damageEventsForEnemy()).toHaveLength(0)
+
+    system.update(0.5) // 0.5+0.5=1.0s → đủ nhịp mới, nổ ĐÚNG 1 LẦN
+
+    expect(damageEventsForEnemy()).toHaveLength(1)
+  })
 })
