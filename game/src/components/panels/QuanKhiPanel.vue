@@ -16,6 +16,9 @@ import { CULTIVATION_PATH_KITS } from '@/core/player/CultivationPathKit'
 import type { CultivationPathId } from '@/core/player/CultivationPathKit'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
+import { isBattleInProgress } from '@/core/battle/BattleTypes'
+
+type KiemTuRoute = 'kiem_tran' | 'bat_kiem'
 
 const ui = useUiStore()
 const player = usePlayerStore()
@@ -79,11 +82,51 @@ function confirmChoosePath() {
 function close() {
   ui.closeHomeOverlays()
 }
+
+// Kiếm Tu tự lực (2026-08-28, task-7-brief.md §2) — 2 nút chọn đường
+// SONG SONG, khác hẳn availablePaths ở trên (đó là lựa chọn nghề MỘT
+// LẦN, KHÔNG đổi lại được — xem ConfirmModal). Đây đổi được nhiều lần
+// ngoài combat, cùng pattern reversible ArtifactPathCards.vue/
+// ArtifactPanel.vue's onSelectPath (setArtifactPath) — KHÔNG dùng
+// window.confirm/ConfirmModal.
+const isKiemTu = computed(() => {
+  stateVersion.value
+
+  return player.cultivationPath === 'kiem_tu'
+})
+
+const currentKiemTuRoute = computed<KiemTuRoute>(() => {
+  stateVersion.value
+
+  return player.kiemTuRoute ?? 'kiem_tran'
+})
+
+// Gate Bạt Kiếm (Task 2): skillCastCounts/skillLevels là mirror của
+// tổng exp/level skill 'tram' (Trảm — kỹ năng Kiếm Trận), giữ đồng bộ
+// bởi SkillSystem's cast-count sink — KHÔNG đọc lại skillManager trực
+// tiếp ở panel này, cùng nguồn dữ liệu GameManager.setKiemTuRoute() đọc.
+const isBatKiemUnlocked = computed(() => {
+  stateVersion.value
+
+  return (player.skillCastCounts?.tram ?? 0) >= 9999 && (player.skillLevels?.tram ?? 0) >= 3
+})
+
+const canChangeRoute = computed(() => {
+  stateVersion.value
+
+  return !isBattleInProgress(gameManager.getBattle()?.state)
+})
+
+function selectKiemTuRoute(route: KiemTuRoute) {
+  if (gameManager.setKiemTuRoute(player.$state, route)) {
+    bumpState()
+  }
+}
 </script>
 
 <template>
   <OverlayPanel :open="ui.standalonePanel === 'quan_khi'" title="Quán Khí" width="min(480px, 90vw)" @close="close">
-    <div class="quan-khi-panel__card">
+    <div v-if="!player.cultivationPath" class="quan-khi-panel__card">
       <p class="quan-khi-panel__hint">Chọn con đường tu luyện — quyết định này KHÔNG thể đổi lại.</p>
 
       <div class="quan-khi-panel__choices">
@@ -98,6 +141,43 @@ function close() {
           Bước Vào {{ kit.name }}
         </button>
       </div>
+    </div>
+
+    <!-- Kiếm Tu tự lực (task-7-brief.md §2) — chọn đường SONG SONG,
+         đổi được nhiều lần ngoài combat (khác lựa chọn nghề ở trên). -->
+    <div v-if="isKiemTu" class="quan-khi-panel__card">
+      <p class="quan-khi-panel__hint">Chọn đường Kiếm Tu — đổi được ngoài trận, không cần xác nhận.</p>
+
+      <div class="quan-khi-panel__choices">
+        <button
+          type="button"
+          class="quan-khi-panel__choice"
+          :class="{ 'is-selected': currentKiemTuRoute === 'kiem_tran' }"
+          :disabled="!canChangeRoute && currentKiemTuRoute !== 'kiem_tran'"
+          @click="selectKiemTuRoute('kiem_tran')"
+        >
+          Kiếm Trận
+        </button>
+
+        <button
+          v-if="isBatKiemUnlocked"
+          type="button"
+          class="quan-khi-panel__choice"
+          :class="{ 'is-selected': currentKiemTuRoute === 'bat_kiem' }"
+          :disabled="!canChangeRoute && currentKiemTuRoute !== 'bat_kiem'"
+          @click="selectKiemTuRoute('bat_kiem')"
+        >
+          Bạt Kiếm
+        </button>
+      </div>
+
+      <p v-if="!canChangeRoute" class="quan-khi-panel__warning">
+        Không thể đổi đường trong combat — sẽ áp dụng từ trận kế.
+      </p>
+
+      <p v-else-if="!isBatKiemUnlocked" class="quan-khi-panel__warning">
+        Bạt Kiếm mở khi Trảm đạt tầng 3 và đã thi triển đủ 9999 lần.
+      </p>
     </div>
 
     <ConfirmModal
@@ -144,5 +224,22 @@ function close() {
   font-weight: 700;
   font-size: 0.78rem;
   cursor: pointer;
+}
+
+.quan-khi-panel__choice.is-selected {
+  border-color: var(--jade);
+  background: linear-gradient(180deg, var(--jade), var(--ink-800));
+  box-shadow: 0 0 10px -3px var(--jade);
+}
+
+.quan-khi-panel__choice:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.quan-khi-panel__warning {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--gold-500);
 }
 </style>

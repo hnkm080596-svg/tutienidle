@@ -1,13 +1,38 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useUiStore } from '@/stores/ui'
+import { usePlayerStore } from '@/stores/player'
 import { useGameManager } from '@/composables/useGameState'
+import { batKiemTickSeconds } from '@/composables/useCombatSkillPresentation'
 
 // Combat UI Redesign mục 11 — pause đã bị loại bỏ (game idle, 2026-08-27);
 // chỉ còn "Thoát Trận" cho trận Stage. Auto Battle cấu hình TRƯỚC trận ở
 // StageSelectPanel.vue, không tốc độ (mục 11-12 — hard rule).
 const ui = useUiStore()
+const player = usePlayerStore()
 const gameManager = useGameManager()
+
+// Task 7 (task-7-brief.md §1) — slider tụ lực Bạt Kiếm, 3-9s. Chỉ hiện
+// khi route hiện tại là 'bat_kiem' (setKiemTuRoute, Task 6). Cố ý
+// KHÔNG persist giá trị chọn giữa các trận (dev-phase, "đơn giản: không
+// nhớ, mặc định 3 mỗi trận") — mount lại mỗi lần vào trận (component
+// này chỉ sống trong CombatSceneOverlay) nên reset về 3 VÀ đồng bộ lại
+// override bên BattleSystem (nó không tự reset giữa các trận).
+onMounted(() => {
+  if (player.kiemTuRoute === 'bat_kiem') {
+    batKiemTickSeconds.value = 3
+
+    gameManager.battleSystem.setChannelTickSeconds('bat_kiem_thuat', 3)
+  }
+})
+
+function onTuLucTickInput(event: Event) {
+  const seconds = Number((event.target as HTMLInputElement).value)
+
+  batKiemTickSeconds.value = seconds
+
+  gameManager.battleSystem.setChannelTickSeconds('bat_kiem_thuat', seconds)
+}
 
 // "Thoát Trận" (2026-08-21) — force về Động Phủ giữa chừng, có xác
 // nhận trước (showExitConfirm). CHỈ hiện cho trận Stage — Tribulation
@@ -37,6 +62,23 @@ function confirmExit() {
     >
       ✕ Thoát Trận
     </button>
+
+    <div v-if="player.kiemTuRoute === 'bat_kiem'" class="combat-control-bar__tu-luc">
+      <label class="combat-control-bar__tu-luc-label" for="tu-luc-tick-slider">
+        Nhịp Tụ Lực: {{ batKiemTickSeconds }}s
+      </label>
+
+      <input
+        id="tu-luc-tick-slider"
+        type="range"
+        min="3"
+        max="9"
+        step="1"
+        class="combat-control-bar__tu-luc-slider"
+        :value="batKiemTickSeconds"
+        @input="onTuLucTickInput"
+      />
+    </div>
 
     <div v-if="showExitConfirm" class="combat-control-bar__confirm-overlay" @click.self="showExitConfirm = false">
       <div class="combat-control-bar__confirm">
@@ -79,6 +121,30 @@ function confirmExit() {
 .combat-control-bar__exit:hover {
   border-color: var(--crimson);
   color: var(--crimson);
+}
+
+.combat-control-bar__tu-luc {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  background: var(--ink-800);
+  border: 1px solid var(--ink-line-soft);
+  border-radius: var(--radius-sm);
+}
+
+.combat-control-bar__tu-luc-label {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--gold-300);
+  white-space: nowrap;
+}
+
+.combat-control-bar__tu-luc-slider {
+  width: 120px;
+  accent-color: var(--gold-500);
+  cursor: pointer;
 }
 
 .combat-control-bar__confirm-overlay {
