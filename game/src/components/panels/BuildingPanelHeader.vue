@@ -169,7 +169,7 @@ function upgrade() {
   font-size: var(--text-xs);
 }
 
-@media (max-width: 640px) {
+@container overlay-panel (max-width: 640px) {
   .building-panel-header { align-items: flex-start; flex-wrap: wrap; }
   .building-panel-header__upgrade-area { max-width: 100%; align-items: flex-start; }
   .building-panel-header__cost { text-align: left; }

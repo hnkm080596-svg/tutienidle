@@ -111,7 +111,10 @@ function majorBreakthrough() {
 .realm-panel__actions label { color: var(--text-secondary); }
 .realm-panel__cultivation { width: min(560px, 90%); margin: 0 auto; }
 .realm-panel__cultivation-bar { --bar-track: var(--ink-950); border: 1px solid var(--ink-line); }
-.realm-panel__nodes { display: grid; grid-template-columns: repeat(9, minmax(82px, 1fr)); gap: 8px; position: relative; }
+/* Fit-refactor đợt 3 — grid node cảnh giới auto-fit theo CARD: 9 cột khi
+   rộng, tự xuống 5/3 cột khi hẹp (bỏ dead zone 901–957px của media query
+   viewport cũ). Node khiên tròn giữ nguyên shape qua flex min-width. */
+.realm-panel__nodes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(108px, 100%), 1fr)); gap: 8px; position: relative; }
 .realm-node { position: relative; min-height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; color: var(--text-muted); background: var(--ink-800); border: 1px solid var(--ink-line); border-radius: 50% 50% 12px 12px; }
 .realm-node:not(:last-child)::after { content: ''; position: absolute; left: 100%; top: 48%; width: 9px; height: 2px; background: var(--ink-line); }
 .realm-node.is-complete { border-color: var(--jade); color: var(--jade); }
@@ -123,5 +126,5 @@ function majorBreakthrough() {
 .realm-panel__passives article { display: flex; flex-direction: column; gap: 3px; padding: 10px; background: var(--ink-800); border: 1px solid var(--ink-line-soft); border-radius: var(--radius-sm); }
 .realm-panel__passives article span { color: var(--text-muted); font-size: var(--text-sm); }
 @keyframes realm-breathe { 50% { transform: scale(1.08); opacity: .65; } }
-@media (max-width: 900px) { .realm-panel__nodes { grid-template-columns: repeat(3, 1fr); } .realm-node::after { display: none; } }
+@container overlay-panel (max-width: 900px) { .realm-node::after { display: none; } }
 </style>

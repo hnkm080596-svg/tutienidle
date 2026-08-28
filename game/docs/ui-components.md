@@ -817,3 +817,28 @@ Lớp atom, mỗi component đúng 1 pattern. Props = hành vi; visual = CSS var
 1. Bar/nút/chip/title/row/empty/scene-header: **dùng primitive trước**, chỉ override CSS var — không tự viết CSS mới.
 2. Màu mới: thêm token vào `theme.css`, không hex cứng trong component.
 3. Chiều cao nút bấm ≥ `--tap-min`; số liệu `tabular-nums`; animation tôn trọng `prefers-reduced-motion`.
+
+---
+
+## 16. Fit-refactor (2026-08-29) — panel tự co giãn mọi tỉ lệ
+
+Spec: `docs/superpowers/specs/2026-08-29-ui-fit-refactor-design.md` (branch `ui-fit-refactor`).
+
+### Nguyên tắc
+
+- Panel = **ngân sách flex**: chrome (scene/tabs/header) co giãn bằng `clamp(vh)`, phần còn lại cho nội dung.
+- **0 scrollbar**: scrollbar ẩn toàn cục (theme.css); list vô hạn → **phân trang đo ngân sách** (`usePanelPagination` — ResizeObserver đo chiều cao thật, pageSize reactive, tự lùi trang); vùng "đọc" (cây node, form) wheel-scroll ẩn thanh + fade-edge `.scrollfade`.
+- **Container query đo theo CARD**: `.overlay-panel__card { container-type: inline-size }` — breakpoint panel con theo `@container overlay-panel (max-width: ...)`, không còn lệch viewport.
+- Floor đọc được: `--text-xs`×ui-scale, hàng ≥ `--tap-min`.
+
+### Thay đổi chính
+
+- **OverlayPanel** body: `overflow: auto` → flex budget column (fit-engine).
+- **SceneHeader**: `height` nhận chuỗi CSS; 4 scene chrome clamp vh (rèn 72–132, lò 88–150, portal 72–118, spring 96–210).
+- **SkillPathPanel**: 3 cột stack dọc `@container 900px`; cột bên cap `min(20%/22%, 280/300px)`.
+- **CharacterPanel**: pentagram container-relative (%, clamp 180–260px), tự co < 260px; pill-usage flex-wrap.
+- **RealmPanel**: 9 node auto-fit `minmax(min(108px,100%),1fr)` — hết dead zone 901–957px.
+- **Khí Đường Hóa Luyện + 2 codex (Technique/Lore)**: phân trang theo ngân sách chiều cao (`usePanelPagination`, row 55/62px).
+- **Drawer**: floor 260px dưới 900px, full-width < 620px.
+- **theme.css**: utility `.scrollfade` (mask fade-edge cho vùng wheel-scroll ẩn thanh).
+- Composable mới: `src/composables/usePanelPagination.ts`.

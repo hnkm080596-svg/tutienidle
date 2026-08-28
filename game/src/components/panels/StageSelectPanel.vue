@@ -189,7 +189,7 @@ function start() {
       class="stage-select__scene"
       asset="/assets/buildings/dong-fu/teleport_array.png"
       scene="portal"
-      :height="118"
+      height="clamp(72px, 12vh, 118px)"
       object-position="center 52%"
       :image-opacity="0.5"
     >
@@ -236,7 +236,7 @@ function start() {
       </nav>
 
       <div class="stage-select__workspace">
-        <section class="stage-select__map-panel">
+        <section class="stage-select__map-panel scrollfade">
           <h4 class="stage-select__title">Chọn tầng</h4>
 
           <EmptyState v-if="visibleStages.length === 0" size="sm">Khu vực này chưa có tầng chiến đấu.</EmptyState>
@@ -606,15 +606,15 @@ function start() {
   color: var(--text-muted);
 }
 
-@media (max-width: 760px) {
-  .stage-select__scene { flex-basis: 94px; padding: 10px 14px; }
+/* Fit-refactor đợt 2 — đo theo CARD (overlay-panel container), không còn
+   viewport; scene clamp tự co nên bỏ flex-basis override. */
+@container overlay-panel (max-width: 900px) {
   .stage-select__portal { flex-basis: 48px; height: 48px; }
-  .stage-select { overflow-y: auto; }
   .stage-select__filters { align-items: flex-start; flex-direction: column; gap: 6px; }
-  .stage-select__filter-group { width: 100%; overflow-x: auto; }
+  .stage-select__filter-group { width: 100%; }
   .stage-select__workspace { display: flex; flex-direction: column; }
   .stage-select__map-panel { border-right: none; border-bottom: 1px solid var(--ink-line-soft); }
-  .stage-map { grid-template-columns: repeat(5, minmax(72px, 1fr)); overflow-x: auto; }
+  .stage-map { grid-template-columns: repeat(5, minmax(72px, 1fr)); }
   .stage-select__detail { min-height: 360px; }
 }
 </style>

@@ -11,6 +11,7 @@ import SlotView from '../../common/SlotView.vue'
 import EmptyState from '../../common/primitives/EmptyState.vue'
 import LoreCodexModal from '../LoreCodexModal.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
+import { usePanelPagination } from '@/composables/usePanelPagination'
 
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
@@ -32,24 +33,44 @@ const loreItems = computed(() => {
       },
     }))
 })
+
+// Fit-refactor đợt 5 — grid manh mối phân trang theo ngân sách chiều cao
+// (slot 56px + gap 6px), không scroll.
+const {
+  containerEl: loreGridEl,
+  currentPage: lorePage,
+  totalPages: lorePages,
+  goToPage: loreGoTo,
+  pageItemsRange: loreRange,
+} = usePanelPagination(computed(() => loreItems.value.length), 62)
+
+const pagedLoreItems = computed(() => loreItems.value.slice(loreRange.value.start, loreRange.value.end))
 </script>
 
 <template>
   <div class="lore-codex">
     <EmptyState v-if="loreItems.length === 0">Chưa tìm thấy manh mối nào.</EmptyState>
 
-    <div v-else class="lore-codex__grid">
-      <SlotView
-        v-for="item in loreItems"
-        :key="item.key"
-        class="lore-codex__slot"
-        :item="item"
-        :label="item.label"
-        :description="item.description"
-        :amount="item.amount"
-        @click="item.onClick"
-      />
-    </div>
+    <template v-else>
+      <div ref="loreGridEl" class="lore-codex__grid">
+        <SlotView
+          v-for="item in pagedLoreItems"
+          :key="item.key"
+          class="lore-codex__slot"
+          :item="item"
+          :label="item.label"
+          :description="item.description"
+          :amount="item.amount"
+          @click="item.onClick"
+        />
+      </div>
+
+      <div v-if="lorePages > 1" class="lore-codex__pagination">
+        <button type="button" :disabled="lorePage === 0" @click="loreGoTo(lorePage - 1)">‹</button>
+        <span>{{ lorePage + 1 }} / {{ lorePages }}</span>
+        <button type="button" :disabled="lorePage >= lorePages - 1" @click="loreGoTo(lorePage + 1)">›</button>
+      </div>
+    </template>
 
     <LoreCodexModal :content="openedContent" @close="openedContent = null" />
   </div>
@@ -59,9 +80,11 @@ const loreItems = computed(() => {
 .lore-codex {
   height: 100%;
   min-height: 0;
-  overflow-y: auto;
   padding: 8px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   font-family: var(--font-body);
 }
 
@@ -70,13 +93,43 @@ const loreItems = computed(() => {
 }
 
 .lore-codex__grid {
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   flex-wrap: wrap;
+  align-content: flex-start;
   gap: 6px;
+  overflow: hidden;
 }
 
 .lore-codex__slot {
   flex: 0 0 56px;
   width: 56px;
+}
+
+.lore-codex__pagination {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.lore-codex__pagination button {
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
+  background: var(--ink-800);
+  border: 1px solid var(--ink-line-soft);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.lore-codex__pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 </style>

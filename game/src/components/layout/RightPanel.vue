@@ -21,5 +21,9 @@ const ui = useUiStore()
 .right-panel__inventory { flex: 1; min-height: 0; overflow: auto; }
 .panel-slide-right-enter-active,.panel-slide-right-leave-active { transition: transform .28s ease, opacity .28s ease; }
 .panel-slide-right-enter-from,.panel-slide-right-leave-to { transform: translateX(100%); opacity: 0; }
+/* Fit-refactor đợt 4 — floor 260px: dưới 900px hai drawer vẫn đủ chỗ slot
+   grid tối thiểu; hẹp hơn nữa thì overlay character chiếm toàn màn thay
+   vì hai drawer đè nhau (characterOverlayOpen chỉ mở khi còn chỗ). */
 @media (max-width: 900px) { .right-panel { width: min(44vw, 400px); } }
+@media (max-width: 620px) { .right-panel { width: 100%; } }
 </style>

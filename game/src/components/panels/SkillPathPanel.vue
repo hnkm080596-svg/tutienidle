@@ -258,14 +258,27 @@ function close() {
   gap: 0;
 }
 
+/* Fit-refactor đợt 5 — cột tree sâu wheel-scroll ẩn thanh (theme ẩn sẵn
+   toàn cục), fade edge báo còn nội dung; ngân sách chiều cao do flex body. */
 .skill-path-panel__col {
   min-height: 0;
   overflow-y: auto;
+  mask-image: linear-gradient(to bottom, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
   padding: 12px 14px;
 }
 
+/* Fit-refactor đợt 3 — card hẹp (< 900px theo CARD, không phải viewport)
+   thì stack 3 cột thành khối dọc: mỗi cột co giãn theo nội dung thay vì
+   ép cột trái 70px. Cột trái thành accordion ngang bằng flex-wrap chips. */
+@container overlay-panel (max-width: 900px) {
+  .skill-path-panel__body { flex-direction: column; }
+  .skill-path-panel__col { flex: 1 1 auto; overflow-y: visible; border-right: 0; border-left: 0; border-bottom: 1px solid var(--ink-line); }
+  .skill-path-panel__col--left { flex: 0 0 auto; max-height: 32%; }
+  .skill-path-panel__col--right { flex: 0 0 auto; border-bottom: 0; }
+}
+
 .skill-path-panel__col--left {
-  flex: 0 0 20%;
+  flex: 0 0 min(20%, 280px);
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -277,7 +290,7 @@ function close() {
 }
 
 .skill-path-panel__col--right {
-  flex: 0 0 22%;
+  flex: 0 0 min(22%, 300px);
   display: flex;
   flex-direction: column;
   gap: 8px;

@@ -308,6 +308,7 @@ onBeforeUnmount(() => {
   }
 }
 
+/* Fallback media cho ngữ cảnh ngoài right-panel (bag trong overlay). */
 @media (max-width: 480px) {
   .bag-pagination__sort-label {
     display: none;

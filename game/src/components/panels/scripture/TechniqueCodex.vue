@@ -10,6 +10,7 @@ import { computed } from 'vue'
 import SlotView from '../../common/SlotView.vue'
 import TechniqueSlotCard from '../loadout-sections/TechniqueSlotCard.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
+import { usePanelPagination } from '@/composables/usePanelPagination'
 import { TECHNIQUES } from '@/data/technique/Techniques'
 
 const gameManager = useGameManager()
@@ -27,6 +28,16 @@ const techniqueRows = computed(() => {
     owned: gameManager.techniqueManager.has(technique.id),
   }))
 })
+
+// Fit-refactor đợt 5 — catalog phân trang theo ngân sách chiều cao của
+// grid (slot 56px + gap 6px = 62px/hàng), không còn scroll dọc.
+const {
+  containerEl: gridEl,
+  currentPage: page,
+  totalPages: pages,
+  goToPage,
+  pageItemsRange,
+} = usePanelPagination(computed(() => techniqueRows.value.length), 62)
 </script>
 
 <template>
@@ -39,9 +50,9 @@ const techniqueRows = computed(() => {
            của chính màn Tàng Kinh Các (spec mục 23). -->
       <TechniqueSlotCard label="Tâm Pháp" size="hero" />
 
-      <div class="technique-codex__grid">
+      <div ref="gridEl" class="technique-codex__grid">
         <SlotView
-          v-for="entry in techniqueRows"
+          v-for="entry in techniqueRows.slice(pageItemsRange.start, pageItemsRange.end)"
           :key="entry.id"
           class="technique-codex__slot"
           :class="{ 'is-locked': !entry.owned }"
@@ -49,6 +60,12 @@ const techniqueRows = computed(() => {
           :label="entry.owned ? entry.name : '???'"
           :description="entry.owned ? entry.description : 'Chưa học được công pháp này.'"
         />
+      </div>
+
+      <div v-if="pages > 1" class="technique-codex__pagination">
+        <button type="button" :disabled="page === 0" @click="goToPage(page - 1)">‹</button>
+        <span>{{ page + 1 }} / {{ pages }}</span>
+        <button type="button" :disabled="page >= pages - 1" @click="goToPage(page + 1)">›</button>
       </div>
     </div>
   </div>
@@ -58,7 +75,6 @@ const techniqueRows = computed(() => {
 .technique-codex {
   height: 100%;
   min-height: 0;
-  overflow-y: auto;
   padding: 8px;
   box-sizing: border-box;
   display: flex;
@@ -71,6 +87,8 @@ const techniqueRows = computed(() => {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-height: 0;
+  flex: 1 1 auto;
 }
 
 .technique-codex__title {
@@ -82,9 +100,39 @@ const techniqueRows = computed(() => {
 }
 
 .technique-codex__grid {
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   flex-wrap: wrap;
+  align-content: flex-start;
   gap: 6px;
+  overflow: hidden;
+}
+
+.technique-codex__pagination {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.technique-codex__pagination button {
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
+  background: var(--ink-800);
+  border: 1px solid var(--ink-line-soft);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.technique-codex__pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .technique-codex__slot {

@@ -263,7 +263,7 @@ function convertTier(fromId: string) {
 
 <template>
   <BuildingConstructionGate building-id="gathering_outpost">
-    <div class="production-panel">
+    <div class="production-panel scrollfade">
       <p class="production-panel__summary">
         Địa Giới Thanh Vân — chọn nguồn, bắt đầu cycle, nhận thẳng nguyên liệu vào Túi.
       </p>

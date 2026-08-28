@@ -18,7 +18,7 @@ const emit = defineEmits<{ close: [] }>()
   <Teleport to="body">
     <Transition name="lore-modal-fade">
       <div v-if="content" class="lore-modal" :style="{ zIndex: OVERLAY_LAYERS.modal }" @click.self="emit('close')">
-        <div class="lore-modal__panel">
+        <div class="lore-modal__panel scrollfade">
           <h3 class="lore-modal__title">{{ content.title }}</h3>
 
           <p class="lore-modal__description">{{ content.description }}</p>
