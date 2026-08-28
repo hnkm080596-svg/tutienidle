@@ -10,6 +10,39 @@
   "advisor_url": "https://integrate.api.nvidia.com/v1/chat/completions",
   "advisor_timeout_seconds": 300,
   "codex_model": null,
+  "workers": {
+    "codex": {
+      "command": "codex",
+      "adapter": "codex",
+      "frontier": true
+    },
+    "claude": {
+      "command": "claude",
+      "adapter": "claude",
+      "frontier": true
+    },
+    "qwen-1": {
+      "command": "opencode.cmd",
+      "adapter": "opencode",
+      "agent": "qwen-worker-1",
+      "model": "tokenrouter/qwen/qwen3.8-max-free",
+      "frontier": false
+    },
+    "qwen-2": {
+      "command": "opencode.cmd",
+      "adapter": "opencode",
+      "agent": "qwen-worker-2",
+      "model": "tokenrouter/qwen/qwen3.8-max-free",
+      "frontier": false
+    },
+    "glm": {
+      "command": "opencode.cmd",
+      "adapter": "opencode",
+      "agent": "glm-worker",
+      "model": "kiraai/glm-5.3",
+      "frontier": false
+    }
+  },
   "verification_commands": [
     ["npm.cmd", "run", "test"],
     ["npm.cmd", "run", "type-check"],

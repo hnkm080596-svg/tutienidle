@@ -1,0 +1,49 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "kiraai": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Kira AI",
+      "options": {
+        "baseURL": "https://kiraai.vn/api/v1"
+      },
+      "models": {
+        "glm-5.3": {
+          "name": "GLM 5.3"
+        }
+      }
+    }
+  },
+  "agent": {
+    "qwen-worker-1": {
+      "description": "Bounded implementation and unit-test worker 1",
+      "mode": "primary",
+      "model": "tokenrouter/qwen/qwen3.8-max-free",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "external_directory": "deny"
+      }
+    },
+    "qwen-worker-2": {
+      "description": "Bounded implementation and unit-test worker 2",
+      "mode": "primary",
+      "model": "tokenrouter/qwen/qwen3.8-max-free",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "external_directory": "deny"
+      }
+    },
+    "glm-worker": {
+      "description": "Planning, implementation, data, documentation, and routine review worker",
+      "mode": "primary",
+      "model": "kiraai/glm-5.3",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "external_directory": "deny"
+      }
+    }
+  }
+}
