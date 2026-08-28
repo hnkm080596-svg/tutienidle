@@ -8,6 +8,7 @@ import type { GridPosition } from './BattleGrid'
 import type { BuffManager } from '../buff/BuffManager'
 import type { AilmentManager } from '../ailment/AilmentManager'
 import type { LavaZone } from './LavaZone'
+import type { SwordZone } from './SwordZone'
 import type { ArtifactRuntime } from '../artifact/ArtifactRuntime'
 
 /**
@@ -114,6 +115,11 @@ export interface Battle {
   // LavaZone.ts/BattleSystem.updateLavaZones(). Runtime-only, KHÔNG
   // persist (giống playerBuffs/playerAilments — Battle không lưu save).
   lavaZones: LavaZone[]
+
+  // Task 8 (Kiếm Trận keystone, 2026-08-28) — SwordZone, xem SwordZone.ts/
+  // BattleSystem.updateSwordZones(). Runtime-only, KHÔNG persist (cùng
+  // cardinality với lavaZones).
+  swordZones: SwordZone[]
 
   /**
    * Spawn telegraph (2026-08-24) — quái đang chờ hiệu ứng "telegraph →

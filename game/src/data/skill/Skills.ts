@@ -47,6 +47,13 @@ const KIEM_TRAN_SKILLS: Skill[] = TRAN_SEQUENCE.map((entry) => ({
       components: [{ kind: 'element', element: 'metal', ratio: 1 }],
 
       swordIntentDamageRatio: Math.round(0.0002 * entry.swordCount * 10000) / 10000,
+
+      // Task 8 (2026-08-28) — Kiếm Trận keystone (Tam Tài) spawn 1
+      // SwordZone tại target sau khi bắn, xem SkillEffect.grantsSwordZone.
+      // CHỈ áp cho kiem_tran_tam_tai — 8 trận còn lại vẫn plain damage.
+      ...(entry.skillId === 'kiem_tran_tam_tai'
+        ? { grantsSwordZone: true, swordZoneCharges: 3, swordZoneDamageRatio: 0.3 }
+        : {}),
     },
   ],
 

@@ -99,6 +99,7 @@ function createBattle(overrides: Partial<Battle> = {}): Battle {
     elapsedSeconds: 0,
     pendingSummons: [],
     lavaZones: [],
+    swordZones: [],
     pendingEnemySpawns: [],
     ...overrides,
   }

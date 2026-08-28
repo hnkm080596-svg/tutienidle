@@ -77,6 +77,7 @@ import { getAttackIntervalSeconds } from '../combat/AttackTiming'
 import type { BattlePositionsEvent, PlayerTeleportedEvent } from './BattleEvents'
 
 import type { LavaZone } from './LavaZone'
+import type { SwordZone } from './SwordZone'
 
 import type { ElementType } from '../element/ElementType'
 import type { ArtifactRuntime } from '../artifact/ArtifactRuntime'
@@ -311,6 +312,8 @@ export class BattleSystem {
 
       lavaZones: [],
 
+      swordZones: [],
+
       pendingEnemySpawns: [],
 
       // Trận mới reset vòng xoay về slot đầu (plan §5).
@@ -392,6 +395,7 @@ export class BattleSystem {
       elapsedSeconds: 0,
       pendingSummons: [],
       lavaZones: [],
+      swordZones: [],
       pendingEnemySpawns: [],
       nextSkillSlotIndexCursor: 0,
 
@@ -800,6 +804,12 @@ export class BattleSystem {
     )
 
     this.updateLavaZones(
+      battle,
+
+      deltaSeconds,
+    )
+
+    this.updateSwordZones(
       battle,
 
       deltaSeconds,
@@ -1574,6 +1584,126 @@ export class BattleSystem {
   }
 
   /**
+   * Task 8 (Kiếm Trận keystone, 2026-08-28) — spawn SwordZone. KHÁC
+   * spawnLavaZone: gọi trực tiếp từ SkillEffectSystem's case 'damage'
+   * (SkillEffect.grantsSwordZone), KHÔNG đi qua ReactionManager. Element
+   * luôn 'metal' (Kiếm Trận).
+   */
+  spawnSwordZone(
+    battle: Battle,
+
+    spec: {
+      ownerId: string
+      row: number
+      column: number
+      laneRadius: number
+      columnRadius: number
+
+      charges: number
+
+      tickInterval: number
+
+      damagePerTick: number
+    },
+  ) {
+    battle.swordZones.push({
+      id: crypto.randomUUID(),
+
+      ownerId: spec.ownerId,
+
+      row: spec.row,
+
+      column: spec.column,
+
+      laneRadius: spec.laneRadius,
+
+      columnRadius: spec.columnRadius,
+
+      remainingCharges: spec.charges,
+
+      tickInterval: spec.tickInterval,
+
+      timeSinceLastTick: 0,
+
+      damagePerTick: spec.damagePerTick,
+
+      // Kiếm Trận LUÔN metal — không lấy từ spec (SkillEffectContext's
+      // spawnSwordZone không có field element).
+      element: 'metal',
+    })
+  }
+
+  /**
+   * Tick từng Sword Zone — vòng lặp `while` (bắt kịp overshoot, cùng
+   * pattern updateLavaZones()), nhưng mỗi tick THẬT SỰ trôi qua trừ 1
+   * `remainingCharges` thay vì trừ `deltaSeconds` khỏi remainingTime —
+   * zone hết hạn theo SỐ TICK ĐÃ LAND, không theo thời gian.
+   */
+  private updateSwordZones(battle: Battle, deltaSeconds: number) {
+    for (const zone of battle.swordZones) {
+      zone.timeSinceLastTick += deltaSeconds
+
+      // Guard tickInterval > 0 — interval 0/âm làm timeSinceLastTick không
+      // bao giờ giảm dưới ngưỡng, vòng lặp thành vô hạn.
+      while (
+        zone.tickInterval > 0 &&
+        zone.timeSinceLastTick >= zone.tickInterval &&
+        zone.remainingCharges > 0
+      ) {
+        zone.timeSinceLastTick -= zone.tickInterval
+
+        zone.remainingCharges -= 1
+
+        this.tickSwordZone(battle, zone)
+      }
+    }
+
+    battle.swordZones = battle.swordZones.filter((zone) => zone.remainingCharges > 0)
+  }
+
+  private tickSwordZone(battle: Battle, zone: SwordZone) {
+    const isPlayerOwned = zone.ownerId === battle.player.id
+
+    const owner = isPlayerOwned
+      ? battle.player
+      : battle.enemies.find((battleEnemy) => battleEnemy.entity.id === zone.ownerId)?.entity
+
+    const targets: CombatEntity[] = isPlayerOwned
+      ? battle.enemies
+          .filter((battleEnemy) => battleEnemy.entity.alive)
+          .map((battleEnemy) => battleEnemy.entity)
+      : battle.player.alive
+        ? [battle.player]
+        : []
+
+    for (const target of targets) {
+      const inArea =
+        target.row >= zone.row - zone.laneRadius &&
+        target.row <= zone.row + zone.laneRadius &&
+        Math.round(target.x) >= zone.column - zone.columnRadius &&
+        Math.round(target.x) <= zone.column + zone.columnRadius
+
+      if (!inArea) {
+        continue
+      }
+
+      this.combat.applyDotDamage({
+        sourceId: zone.ownerId,
+
+        source: owner,
+
+        target,
+
+        rawDamage: zone.damagePerTick,
+
+        element: zone.element,
+
+        effectId: zone.id,
+      })
+    }
+  }
+
+  /**
 
    * HP/Mana/Ward regen mỗi tick — `hpRegenPerSecond` đã có field từ
 
@@ -2294,6 +2424,8 @@ export class BattleSystem {
         reactionKeepChance: this.getReactionKeepChance(),
 
         spawnLavaZone: (spec) => this.spawnLavaZone(battle, spec),
+
+        spawnSwordZone: (spec) => this.spawnSwordZone(battle, spec),
 
         skillId: skill.id,
 

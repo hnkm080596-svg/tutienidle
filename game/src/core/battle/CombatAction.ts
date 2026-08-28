@@ -113,6 +113,11 @@ export type CombatVfxPresetId =
   | 'holy_radiance'
   | 'shadow_burst'
   | 'boss_ground_slam'
+  // Kiếm Tu Bạt Kiếm/Kiếm Trận (Task 8, 2026-08-28) — DATA ONLY, art/
+  // animation sau (renderer chưa đăng ký diễn xuất tương ứng).
+  | 'tu_luc'
+  | 'bat_kiem_quat'
+  | 'kiem_tran_zone'
 
 /**
  * Id preset VFX telegraph spawn quái (luồng "telegraph → xuất hiện →
