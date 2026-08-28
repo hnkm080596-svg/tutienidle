@@ -95,6 +95,13 @@ export interface PlayerData {
   // canChooseCultivationPath.
   cultivationPath?: CultivationPathId
 
+  // Kiếm Tu tự lực (2026-08-28) — route đang active trong 2 nhánh song
+  // song (Kiếm Trận/Bạt Kiếm), đổi được ngoài combat qua
+  // GameManager.setKiemTuRoute(). Mặc định (undefined) = 'kiem_tran'
+  // (đường mặc định lúc chọn Kiếm Tu, chưa cần ghi giá trị tường minh
+  // lúc path chưa chọn/chưa phải Kiếm Tu).
+  kiemTuRoute?: 'kiem_tran' | 'bat_kiem'
+
   // Kiếm Tu (2026-08-15) — Kiếm Ý VĨNH VIỄN: đếm dồn suốt đời save,
   // KHÔNG BAO GIỜ giảm (khác `cultivation`, bị tiêu hao lúc đột phá) —
   // mỗi 9999 điểm tích được thì +1 tầng Kiếm Ý, xem
@@ -245,6 +252,10 @@ export function createDefaultPlayer(): PlayerData {
     // player.$state sau này (bug thật đã gặp: technique/skill equip
     // đúng nhưng UI gate không tự chuyển vì thiếu dòng này).
     cultivationPath: undefined,
+
+    // PHẢI khai báo tường minh (dù `undefined`) — cùng lý do
+    // cultivationPath ở trên (toRefs() snapshot 1 lần lúc init store).
+    kiemTuRoute: undefined,
 
     // PHẢI khai báo tường minh (dù `undefined`) — cùng lý do
     // cultivationPath ở trên (toRefs() snapshot 1 lần lúc init store).

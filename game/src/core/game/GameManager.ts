@@ -172,7 +172,7 @@ import type { PlayerData } from '../player/Player'
 import type { MainStatKey } from '../stats/StatTypes'
 import { getMainStatCap } from '../stats/StatCap'
 import { getTechniqueInsightTotalRequired, getTechniqueTier } from '../technique/TechniqueTier'
-import { getSkillLoadoutSlotCount } from '../skill/SkillLoadoutSlots'
+import { getSkillLoadoutSlotCount, KIEM_TRAN_SLOT_INDEX } from '../skill/SkillLoadoutSlots'
 import { CULTIVATION_PATH_KITS } from '../player/CultivationPathKit'
 import type { CultivationPathId } from '../player/CultivationPathKit'
 import {
@@ -804,6 +804,15 @@ export class GameManager {
     // purchaseNodeSystem chỉ trả true đúng ở chuyển tiếp này.
     for (const skillId of node.effect.unlocksSkillIds ?? []) {
       this.learnSkill(skillId)
+
+      // Kiếm Tu tự lực (task-6-brief.md) — chiêu trận Kiếm Trận
+      // (kiem_tran_*) tự trang bị vào slot RIÊNG (KIEM_TRAN_SLOT_INDEX),
+      // thay hẳn chiêu trận trước đó — equipToSlot() tự dời occupant cũ
+      // (xem SkillSystem.equipToSlot), không cần người chơi tự vào
+      // Loadout UI đổi tay mỗi lần mở trận mới.
+      if (skillId.startsWith('kiem_tran_')) {
+        this.skillSystem.equipToSlot(skillId, KIEM_TRAN_SLOT_INDEX)
+      }
     }
 
     return true
@@ -1064,6 +1073,36 @@ export class GameManager {
     }
 
     player.artifact.selectedPath = path
+
+    return true
+  }
+
+  /**
+   * Kiếm Tu tự lực (2026-08-28, task-6-brief.md) — đổi route ngoài combat
+   * giữa 2 nhánh song song: 'kiem_tran' (mặc định lúc chọn Kiếm Tu) và
+   * 'bat_kiem' (chỉ mở sau khi đại thành keystone `bat_kiem_thuc`). Guard
+   * combat Y HỆT setArtifactPath() ở trên. Đổi route chỉ đụng slot 1
+   * (đặc kỹ) — slot 0 (Huy Kiếm) và slot Kiếm Trận (KIEM_TRAN_SLOT_INDEX)
+   * KHÔNG đổi. equipToSlot() tự dời skill cũ, và unequip KHÔNG unlearn —
+   * skill route cũ vẫn giữ unlocked/trong bảo tàng.
+   */
+  setKiemTuRoute(player: PlayerData, route: 'kiem_tran' | 'bat_kiem'): boolean {
+    if (route === 'bat_kiem' && this.getNodeLevel('bat_kiem_thuc', player) < 1) {
+      return false
+    }
+
+    const battle = this.getBattle()
+
+    if (battle && (battle.state === 'countdown' || battle.state === 'fighting' || battle.mode === 'tribulation')) {
+      return false
+    }
+
+    player.kiemTuRoute = route
+
+    this.skillSystem.equipToSlot(
+      route === 'bat_kiem' ? 'bat_kiem_thuat' : 'kiem_khai_thien_mon',
+      1,
+    )
 
     return true
   }
