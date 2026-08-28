@@ -1,6 +1,5 @@
 import { usePlayerStore } from '../stores/player'
 import { useGameManager } from './useGameState'
-import { resolveFoundation } from '../core/breakthrough/FoundationResolver'
 import { getCurrentRealm } from '../core/realm/realmSystem'
 import { KIEP_THUONG_DEBUFF } from '../data/buff/buffs'
 import { FOUNDATION_LABELS, type FoundationType } from '../core/breakthrough/FoundationType'
@@ -9,6 +8,8 @@ import { useWorldAnnouncementStore } from '../stores/worldAnnouncement'
 import { useUiStore } from '../stores/ui'
 import { isBattleInProgress } from '../core/battle/BattleTypes'
 import { SPIRIT_STONE_MATERIAL_ID } from '../core/material/SpiritStoneMaterial'
+import { ARTIFACT_ID_BY_CULTIVATION_PATH } from '../core/artifact/Artifact'
+import { createDefaultArtifactProgress } from '../core/artifact/ArtifactProgression'
 
 // Trảm gate (blockIfNoBasicAttack, 2026-08-20 → gỡ 2026-08-21) — Pháp
 // Tu giờ tự học + trang bị SẴN 1 chiêu cơ bản (Hỏa Cầu Thuật) ngay lúc
@@ -25,16 +26,18 @@ const TRIBULATION_DEFEAT_CULTIVATION_LOSS_PERCENT = 0.5
 const TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS = 50
 
 /**
- * Bấm nút "TRÚC CƠ" — âm thầm resolve Căn Cơ rồi vào thẳng Độ Kiếp
- * tương ứng, KHÔNG hỏi lại/hiện điều kiện gì (mục 10 — hard rule, hệ
- * Căn Cơ 4-tier vẫn ẩn hoàn toàn dù giờ có thêm panel vật phẩm CÔNG
- * KHAI đứng TRƯỚC bước này — xem BreakthroughRequirementPanel.vue).
- * Hàm THUẦN (nhận player/gameManager qua tham số) — dùng được cả từ
+ * Bấm nút "TRÚC CƠ" — vào thẳng Độ Kiếp Trúc Cơ, KHÔNG hỏi lại/hiện
+ * điều kiện gì (mục 10 — hard rule). (2026-08-27) Thiết kế hiện tại:
+ * mốc 12 tầng là Nhân Đạo baseline; các cấp đột phá ẩn khác (ví dụ 4
+ * mức Kiến Cơ cho Luyện Khí → Trúc Cơ) sẽ được thiết kế sau, nên dùng
+ * thẳng foundationType cố định 'human' (baseline, 0% bonus Kiến Cơ —
+ * xem data/realm/RealmPassives.ts's KIEN_CO_MAIN_STAT_PERCENT). Hàm
+ * THUẦN (nhận player/gameManager qua tham số) — dùng được cả từ
  * component con (qua useTribulation() bên dưới) lẫn App.vue's tick()
- * (App.vue tự provide GameManager cho cây con, provide()/inject() KHÔNG
- * hoạt động khi component tự inject() giá trị CHÍNH NÓ vừa provide,
- * nên App.vue không thể gọi useGameManager()/useTribulation() —
- * phải gọi thẳng hàm này với gameManager/player nó đã có sẵn).
+ * (App.vue tự provide GameManager cho cây con, provide()/inject()
+ * KHÔNG hoạt động khi component tự inject() giá trị CHÍNH NÓ vừa
+ * provide, nên App.vue không thể gọi useGameManager()/useTribulation()
+ * — phải gọi thẳng hàm này với gameManager/player nó đã có sẵn).
  */
 export function triggerFoundationBreakthroughAction(player: PlayerStore, gameManager: GameManager): boolean {
   if (!gameManager.canTriggerFoundationBreakthrough(player.$state)) {
@@ -47,14 +50,7 @@ export function triggerFoundationBreakthroughAction(player: PlayerStore, gameMan
     return false
   }
 
-  const cap = getCurrentRealm(player.realmId).attributeCap
-
-  const foundationType = resolveFoundation(
-    player.$state,
-    gameManager.materialBag,
-    gameManager.pillBag,
-    cap,
-  )
+  const foundationType: FoundationType = 'human'
 
   const started = gameManager.startTribulation(player.$state, player.finalStats, 'foundation_establishment', foundationType)
 
@@ -163,6 +159,31 @@ function resolveVictory(player: PlayerStore, gameManager: GameManager, active: A
 
   gameManager.syncRealmPassive(player.$state)
   gameManager.syncRealmStatPassive(player.$state)
+
+  if (player.cultivationPath === 'phap_tu' && player.realmId === 'foundation_establishment') {
+    const inheritedInsight = gameManager.techniqueManager.getEquipped()?.insight ?? 0
+    gameManager.learnTechnique('dai_ngu_hanh_quyet_truc_co')
+    const nextTechnique = gameManager.techniqueManager.get('dai_ngu_hanh_quyet_truc_co')
+    if (nextTechnique) nextTechnique.insight = Math.max(nextTechnique.insight ?? 0, inheritedInsight)
+    gameManager.equipTechnique('dai_ngu_hanh_quyet_truc_co')
+  }
+
+  // Bản Mệnh Pháp Bảo (2026-08-27, foundation-artifact-system-plan.md
+  // §4) — thức tỉnh đúng lúc vào Trúc Cơ. Đây là điểm chuyển đại cảnh
+  // giới THẬT (khác useBreakthrough.ts's breakthrough() giờ CHỈ còn xử
+  // lý tiểu cảnh giới, xem CultivationSystem.breakthrough()). Tra
+  // ARTIFACT_ID_BY_CULTIVATION_PATH thay vì hardcode 'phap_tu' để nghề
+  // nào có definition sau này tự động được hưởng. Kiếm Tu/Thể Tu chưa
+  // có definition -> không nhận gì, đúng doc §4.
+  if (player.realmId === 'foundation_establishment' && !player.artifact) {
+    const artifactId = player.cultivationPath
+      ? ARTIFACT_ID_BY_CULTIVATION_PATH[player.cultivationPath]
+      : undefined
+
+    if (artifactId) {
+      player.artifact = createDefaultArtifactProgress(artifactId)
+    }
+  }
 
   // Beta Phase 4 (World Announcement, mục XVI tài liệu) — "discovery
   // moment" reveal Căn Cơ vừa đạt (Trúc Cơ) hoặc đơn giản là cảnh giới

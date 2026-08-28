@@ -5,6 +5,7 @@ import type { Skill } from '../../core/skill/Skill'
 import type { EquipmentInstance } from '../../core/equipment/EquipmentInstance'
 import type { BuildingInstance } from '../../core/building/BuildingInstance'
 import type { EquipmentSlotState } from '../../core/equipment/EquipmentSlotState'
+import type { QuestManagerState } from '../../core/quest/QuestManager'
 
 const SAVE_KEY = 'tien-hiep-idle-save'
 
@@ -210,7 +211,24 @@ export const SAVE_REVISION_KEY = 'tien-hiep-idle-save-revision'
 // là MATERIAL trong MaterialBag (stack 'spirit_stone', xem
 // core/material/SpiritStoneMaterial.ts), KHÔNG migration (development
 // phase). Save v47 và mọi version cũ hơn → 'incompatible'.
-export const CURRENT_SAVE_VERSION = 48 as const
+// version 49: catalog đan/linh thảo được thay bằng đúng tám họ theo phẩm.
+// Development build không migration: save v48 trở xuống buộc reset rõ ràng.
+// version 50: loại hoàn toàn Linh Chi/Quế/Cúc Hoa và mọi linh thảo
+// luyện đan legacy khỏi registry/drop table runtime. Save v49 có thể
+// còn stack legacy nên buộc reset, không migration trong development.
+// version 51 (2026-08-27, Quest System v1): GameSave thêm field MỚI
+// `quests?: QuestManagerState` (active quest progress + completedOnceIds
+// + lastDailyResetAtMs, xem core/quest/QuestManager.ts). Không migration
+// (development phase) — save v50 và cũ hơn -> 'incompatible', buộc
+// Xuất/Xoá qua SaveIncompatibleScreen.
+// version 52 (2026-08-28, talent-direction-choice-plan §6): PlayerData
+// thêm field `cultivationInsightAccumulator: number` (thiên phú Ngộ Đạo
+// tích luỹ tu vi đổi Cảm Ngộ Kỹ năng, xem stores/player.ts's cultivate()).
+// Không migration (development phase) — save v51 và cũ hơn -> 'incompatible'.
+export const CURRENT_SAVE_VERSION = 52 as const
+
+/** Settings phát sự kiện này để App dừng autosave trước khi xóa save. */
+export const SAVE_RESET_REQUEST_EVENT = 'tien-hiep:reset-save-requested'
 
 export interface MaterialStackSave {
   materialId: string
@@ -370,6 +388,9 @@ export interface GameSave {
 
   /** v44: job luyện đan đang chạy (plan §8.2). */
   alchemyJobs?: AlchemyJobSave[]
+
+  /** v51: state Quest System (active progress + completedOnceIds + daily reset mốc). */
+  quests?: QuestManagerState
 }
 
 /** Shape persist của ProductionSiteState — khớp core/production. */
@@ -464,6 +485,8 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
     })),
 
     alchemyJobs: gameManager.alchemySystem.getJobs(),
+
+    quests: structuredClone(gameManager.questManager.getState()),
   }
 }
 

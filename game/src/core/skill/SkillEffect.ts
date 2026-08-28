@@ -104,6 +104,12 @@ export interface SkillEffect {
   // 9 đại cảnh giới) vào scalingBonus.
   realmDamageRatio?: number
 
+  /** Bonus multiplier theo Linh Lực tối đa của Pháp Tu. */
+  manaScalingRatio?: number
+
+  /** Bonus sát thương phẳng quy đổi thành multiplier theo ATK của source. */
+  skillExperienceRatio?: number
+
   // Combat Rework Phase 3 — CHỈ dùng cho effect 'damage'. Khai hành vi
   // bay Pierce/Bounce/Homing/AOE cho MỌI missile effect này bắn ra
   // (kể cả nhiều missile của hitCountByRealm) — xem

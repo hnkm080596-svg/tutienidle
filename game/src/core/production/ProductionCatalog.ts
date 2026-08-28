@@ -15,6 +15,9 @@ import type {
 } from './ProductionTypes'
 import { HERB_AGES, ORE_QUALITIES, PRODUCTION_SITE_KINDS } from './ProductionTypes'
 import { HERB_AGE_WEIGHTS, ORE_QUALITY_WEIGHTS } from './ProductionBalance'
+import { REALM_TIERS } from '../realm/RealmTierMap'
+import { ITEM_GRADE_ORDER } from '../item/ItemGrade'
+import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
 
 export const TERRITORY_THANH_VAN: TerritoryDefinition = {
   id: 'thanh_van',
@@ -33,16 +36,19 @@ export const TERRITORY_THANH_VAN: TerritoryDefinition = {
 // Lâm §5.2).
 // =========================
 
-const SITE_UPGRADE_COSTS = (
-  lowWood: string,
-  middleWood: string,
-  highWood: string,
-): ProductionSiteDefinition['upgradeCosts'] => [
-  { woodMaterialId: lowWood, woodAmount: 5, spiritStone: 100 },
-  { woodMaterialId: lowWood, woodAmount: 12, spiritStone: 300 },
-  { woodMaterialId: middleWood, woodAmount: 8, spiritStone: 800 },
-  { woodMaterialId: middleWood, woodAmount: 16, spiritStone: 2000 },
-]
+const SITE_UPGRADE_COSTS = (): ProductionSiteDefinition['upgradeCosts'] => {
+  const qualityByTier = ITEM_GRADE_ORDER.flatMap((grade) => [grade, grade]).slice(0, 9)
+  return REALM_TIERS.slice(1).map((realmId, index) => {
+    const targetTier = index + 2
+    return {
+      woodMaterialId: targetTier <= 3
+        ? `${realmId}_wood`
+        : `${realmId}_wood_${qualityByTier[targetTier - 1]}`,
+      woodAmount: Math.round(5 * Math.pow(1.65, index)),
+      spiritStone: Math.round(100 * Math.pow(2.2, index)),
+    }
+  })
+}
 
 function forestSite(): ProductionSiteDefinition {
   return {
@@ -51,8 +57,8 @@ function forestSite(): ProductionSiteDefinition {
     kind: 'forest',
     name: 'Thanh Vân Lâm',
     description: 'Rừng linh mộc của Địa Giới Thanh Vân — gỗ xây công trình và làm nhiên liệu đan lò.',
-    maxLevel: 5,
-    upgradeCosts: SITE_UPGRADE_COSTS('mortal_wood', 'qi_refining_wood', 'foundation_establishment_wood'),
+    maxLevel: 9,
+    upgradeCosts: SITE_UPGRADE_COSTS(),
   }
 }
 
@@ -63,8 +69,8 @@ function mineSite(): ProductionSiteDefinition {
     kind: 'mine',
     name: 'Huyền Thiết Quảng',
     description: 'Mạch quáng sâu của Thanh Vân — linh thạch quáng đi thẳng vào Khí Đường.',
-    maxLevel: 5,
-    upgradeCosts: SITE_UPGRADE_COSTS('mortal_wood', 'qi_refining_wood', 'foundation_establishment_wood'),
+    maxLevel: 9,
+    upgradeCosts: SITE_UPGRADE_COSTS(),
   }
 }
 
@@ -75,8 +81,8 @@ function grottoSite(): ProductionSiteDefinition {
     kind: 'grotto',
     name: 'Thanh Vân Động Thiên',
     description: 'Động thiên kỳ trân dị thảo — mỗi đan phương có đúng một linh thảo riêng.',
-    maxLevel: 5,
-    upgradeCosts: SITE_UPGRADE_COSTS('mortal_wood', 'qi_refining_wood', 'foundation_establishment_wood'),
+    maxLevel: 9,
+    upgradeCosts: SITE_UPGRADE_COSTS(),
   }
 }
 
@@ -115,8 +121,8 @@ export const THANH_VAN_MINE_REWARDS: readonly MineRewardDefinition[] = ORE_QUALI
 )
 
 /**
- * Động Thiên: mỗi đan phương ĐÚNG MỘT primary herb riêng (§6.1) —
- * 12 đan phương hiện hành × 4 biến thể niên đại. Thảo pool theo realm
+ * Động Thiên: mỗi loại đan có ĐÚNG MỘT primary herb riêng (§6.1) —
+ * 8 loại đan × 4 biến thể niên đại ở mỗi phẩm. Thảo pool theo realm
  * của đan phương; cycle roll tier → thảo trong tier → niên đại.
  *
  * Herb base identity đặt tại ĐÂY (Phase 0 chốt mapping, §13.3);
@@ -133,80 +139,13 @@ export interface GrottoHerbBase {
   realmId: string
 }
 
-export const THANH_VAN_GROTTO_HERB_BASES: readonly GrottoHerbBase[] = [
-  // ---- Phàm Nhân ----
-  { baseId: 'huyet_tham', name: 'Huyết Tham', pillRecipeId: 'alchemy_pill_regen_mortal', realmId: 'mortal' },
-  {
-    baseId: 'tinh_khi_thao',
-    name: 'Tinh Khi Thảo',
-    pillRecipeId: 'alchemy_pill_cultivation_mortal',
-    realmId: 'mortal',
-  },
-  {
-    baseId: 'minh_muc_thao',
-    name: 'Minh Mục Thảo',
-    pillRecipeId: 'alchemy_pill_insight_mortal',
-    realmId: 'mortal',
-  },
-  {
-    baseId: 'pho_cot_hoa',
-    name: 'Phổ Cốt Hoa',
-    pillRecipeId: 'alchemy_pill_main_stat_mortal',
-    realmId: 'mortal',
-  },
-
-  // ---- Luyện Khí ----
-  {
-    baseId: 'ngoc_huyet_chi',
-    name: 'Ngọc Huyết Chi',
-    pillRecipeId: 'alchemy_pill_regen_qi_refining',
-    realmId: 'qi_refining',
-  },
-  {
-    baseId: 'tuan_linh_cao',
-    name: 'Tuấn Linh Cao',
-    pillRecipeId: 'alchemy_pill_cultivation_qi_refining',
-    realmId: 'qi_refining',
-  },
-  {
-    baseId: 'than_thong_hoa',
-    name: 'Thần Thông Hoa',
-    pillRecipeId: 'alchemy_pill_insight_qi_refining',
-    realmId: 'qi_refining',
-  },
-  {
-    baseId: 'loc_cot_thao',
-    name: 'Lộc Cốt Thảo',
-    pillRecipeId: 'alchemy_pill_main_stat_qi_refining',
-    realmId: 'qi_refining',
-  },
-
-  // ---- Trúc Cơ ----
-  {
-    baseId: 'cu_phuong_qua',
-    name: 'Cử Phượng Quả',
-    pillRecipeId: 'alchemy_pill_regen_foundation_establishment',
-    realmId: 'foundation_establishment',
-  },
-  {
-    baseId: 'dao_diem_lien',
-    name: 'Đạo Điềm Liên',
-    pillRecipeId: 'alchemy_pill_cultivation_foundation_establishment',
-    realmId: 'foundation_establishment',
-  },
-  {
-    baseId: 'van_tu_dang',
-    name: 'Vạn Tự Đăng',
-    pillRecipeId: 'alchemy_pill_insight_foundation_establishment',
-    realmId: 'foundation_establishment',
-  },
-  {
-    baseId: 'thien_cot_thao',
-    name: 'Thiên Cốt Thảo',
-    pillRecipeId: 'alchemy_pill_main_stat_foundation_establishment',
-    realmId: 'foundation_establishment',
-  },
-]
+export const THANH_VAN_GROTTO_HERB_BASES: readonly GrottoHerbBase[] =
+  TERRITORY_THANH_VAN.realmIds.flatMap((realmId) => PILL_FAMILIES.map((family) => ({
+    baseId: `${family.herbId}_${realmId}`,
+    name: family.herbName,
+    pillRecipeId: `alchemy_${family.id}_${realmId}`,
+    realmId,
+  })))
 
 export const THANH_VAN_GROTTO_HERBS: readonly GrottoHerbDefinition[] =
   THANH_VAN_GROTTO_HERB_BASES.flatMap((base) =>

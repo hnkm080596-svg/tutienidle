@@ -17,6 +17,8 @@ import type { FoundationType } from '../breakthrough/FoundationType'
 import { investTinhHoa, computeBreakthroughGrade } from '../realm/BodyRefinementSystem'
 import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../data/realm/BodyRefinement'
 import { grantRealmPassive } from '../realm/RealmPassiveSystem'
+import { getAlchemySuccessBonusPercentPoints, getReactionKeepChance } from '../talent/TalentEffects'
+import { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 
 import { BuffManager } from '../buff/BuffManager'
 import { BuffSystem } from '../buff/BuffSystem'
@@ -85,15 +87,16 @@ import type { ItemGrade } from '../item/ItemGrade'
 
 import { SUPPORTED_PROFESSION_REALMS } from '../profession/ProfessionMaterial'
 import { validateProfessionMaterialEntry } from '../profession/ProfessionValidators'
-import { SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
+import {
+  SPIRIT_STONE_MATERIAL_ID,
+  getSpiritStoneMaterialIdForRealmTier,
+} from '../material/SpiritStoneMaterial'
+import { getRealmTier } from '../realm/RealmTierMap'
 import { calculateStats } from '../stats/StatCalculator'
 import type { PersistentTimedEffect } from '../player/PersistentTimedEffect'
 import { EQUIPMENT_SLOTS } from '../equipment/EquipmentSlotState'
 
-import {
-  ProductionSystem,
-  type ProductionSettlementEvent,
-} from '../production/ProductionSystem'
+import { ProductionSystem, type ProductionSettlementEvent } from '../production/ProductionSystem'
 import {
   TERRITORY_THANH_VAN,
   THANH_VAN_PRODUCTION_SITES,
@@ -119,6 +122,7 @@ import { BuildingRegistry } from '../building/BuildingRegistry'
 import { BuildingManager } from '../building/BuildingManager'
 import { BuildingSystem } from '../building/BuildingSystem'
 import type { Building } from '../building/Building'
+import type { BuildingInstance } from '../building/BuildingInstance'
 import type { CraftModifiers } from '../building/BuildingLevelEffect'
 
 import { EnemyManager } from '../enemy/EnemyManager'
@@ -140,6 +144,13 @@ import { StageWaveSystem } from './StageWaveSystem'
 import { TribulationSystem } from './TribulationSystem'
 import type { ActiveTribulation } from './TribulationSystem'
 
+import { QuestRegistry } from '../quest/QuestRegistry'
+import { QuestManager } from '../quest/QuestManager'
+import type { QuestManagerState } from '../quest/QuestManager'
+import { QuestSystem } from '../quest/QuestSystem'
+import type { Quest } from '../quest/Quest'
+import type { QuestProgress } from '../quest/QuestProgress'
+
 // Re-export giữ tương thích import cũ (useTribulation.ts và các nơi khác
 // import ActiveTribulation/TRIBULATION_COOLDOWN_SECONDS từ GameManager).
 export { TRIBULATION_COOLDOWN_SECONDS } from './TribulationSystem'
@@ -158,13 +169,12 @@ import { getTechniqueInsightTotalRequired, getTechniqueTier } from '../technique
 import { getSkillLoadoutSlotCount } from '../skill/SkillLoadoutSlots'
 import { CULTIVATION_PATH_KITS } from '../player/CultivationPathKit'
 import type { CultivationPathId } from '../player/CultivationPathKit'
+import type { ArtifactPath } from '../artifact/Artifact'
+import { tryUpgradeArtifactGrade } from '../artifact/ArtifactProgression'
+import { createArtifactRuntime } from '../artifact/ArtifactRuntime'
+import { filterNguHanhElements } from '../artifact/ArtifactSystem'
 
-import {
-  CORE_REALM_LEVEL,
-  getCurrentRealm,
-  getRealmIndex,
-  getMaxConcurrentExplorations,
-} from '../realm/realmSystem'
+import { CORE_REALM_LEVEL, getCurrentRealm, getRealmIndex } from '../realm/realmSystem'
 import { BREAKTHROUGH_REQUIREMENTS } from '../breakthrough/BreakthroughRequirement'
 
 import type { GameSave } from '../../services/save/SaveSystem'
@@ -235,6 +245,10 @@ export class GameManager {
 
   readonly combatSystem = new CombatSystem(this.eventBus)
 
+  // Thiên phú Bất Tử Thể (talent-direction-choice-plan §6) — guard giữ lượt
+  // sống sót battle-scoped; combatSystem.killIfDead() là điểm tiêu thụ.
+  readonly surviveLethalGuard = new SurviveLethalGuard()
+
   readonly actionImpact = new ActionImpactSystem({
     eventBus: this.eventBus,
     rollCritical: (s, t) => this.combatSystem.rollCritical(s, t),
@@ -292,6 +306,10 @@ export class GameManager {
     // Combat AI strategy (plan §7/§10) — PlayerData là authority; đọc
     // LIVE để đổi strategy giữa trận có hiệu lực ngay trong tick kế.
     () => this.activePlayer?.combatAiStrategy ?? DEFAULT_COMBAT_AI_STRATEGY,
+
+    // Thiên phú Phản Phác (talent-direction-choice-plan §6) — xác suất giữ
+    // ailment khi kích Reaction, đọc LIVE từ activePlayer.
+    () => getReactionKeepChance(this.activePlayer?.selectedTalentIds ?? []),
   )
 
   readonly techniqueManager = new TechniqueManager()
@@ -351,6 +369,10 @@ export class GameManager {
   readonly buildingManager = new BuildingManager()
   readonly buildingSystem = new BuildingSystem()
 
+  readonly questRegistry = new QuestRegistry()
+  readonly questManager = new QuestManager()
+  readonly questSystem = new QuestSystem()
+
   readonly enemyManager = new EnemyManager()
   readonly enemySystem = new EnemySystem(this.enemyManager)
 
@@ -401,6 +423,9 @@ export class GameManager {
       rewardSystem: this.rewardSystem,
       stageManager: this.stageManager,
       stageTemplates: this.stageTemplates,
+      questSystem: this.questSystem,
+      questRegistry: this.questRegistry,
+      questManager: this.questManager,
     })
 
     this.stageWaves = new StageWaveSystem({
@@ -514,6 +539,14 @@ export class GameManager {
     }
   }
 
+  registerQuests(quests: Quest[]) {
+    for (const quest of quests) {
+      if (!this.questRegistry.has(quest.id)) {
+        this.questRegistry.register(quest)
+      }
+    }
+  }
+
   /** Đăng ký đan phương (plan §8) — validate mapping thảo duy nhất. */
   registerAlchemyRecipes(recipes: AlchemyRecipe[]) {
     for (const recipe of recipes) {
@@ -525,7 +558,10 @@ export class GameManager {
         recipe.herbVariants.map((variant) => variant.materialId.split('_')[0]),
       )
 
-      if (herbBases.size > 1 && new Set(recipe.herbVariants.map((v) => v.materialId)).size !== recipe.herbVariants.length) {
+      if (
+        herbBases.size > 1 &&
+        new Set(recipe.herbVariants.map((v) => v.materialId)).size !== recipe.herbVariants.length
+      ) {
         throw new Error(`Alchemy recipe ${recipe.id}: herb variants trùng lặp`)
       }
 
@@ -785,15 +821,13 @@ export class GameManager {
 
   canPurchaseNode(nodeId: string, player: PlayerData): boolean {
     return (
-      this.nodeRegistry.has(nodeId) &&
-      canPurchaseNodeSystem(player, this.nodeRegistry.get(nodeId))
+      this.nodeRegistry.has(nodeId) && canPurchaseNodeSystem(player, this.nodeRegistry.get(nodeId))
     )
   }
 
   canUpgradeNode(nodeId: string, player: PlayerData): boolean {
     return (
-      this.nodeRegistry.has(nodeId) &&
-      canUpgradeNodeSystem(player, this.nodeRegistry.get(nodeId))
+      this.nodeRegistry.has(nodeId) && canUpgradeNodeSystem(player, this.nodeRegistry.get(nodeId))
     )
   }
 
@@ -918,6 +952,33 @@ export class GameManager {
 
     player.cultivationPath = pathId
 
+    if (pathId === 'phap_tu') {
+      // Linh Lực chỉ tồn tại như resource phòng thủ/sức mạnh riêng Pháp Tu.
+      player.modifiers.push(
+        {
+          id: 'phap_tu_linh_luc',
+          sourceId: 'phap_tu',
+          sourceType: 'realm',
+          stat: 'maxMp',
+          flat: 100,
+        },
+        {
+          id: 'phap_tu_linh_luc_regen',
+          sourceId: 'phap_tu',
+          sourceType: 'realm',
+          stat: 'manaRegenPerSecond',
+          flat: 2,
+        },
+        {
+          id: 'phap_tu_ho_the',
+          sourceId: 'phap_tu',
+          sourceType: 'realm',
+          stat: 'manaShieldPercent',
+          flat: 0.25,
+        },
+      )
+    }
+
     this.learnTechnique(kit.techniqueId)
     this.equipTechnique(kit.techniqueId)
 
@@ -970,6 +1031,50 @@ export class GameManager {
     }
 
     return true
+  }
+
+  /**
+   * Bản Mệnh Pháp Bảo (doc §7.1) — chọn/đổi hướng Công/Thủ/Khống. Đổi
+   * được NHIỀU LẦN ngoài combat (khác chooseCultivationPath() ở trên —
+   * đó là lựa chọn vĩnh viễn, đây là "đổi miễn phí ngoài combat để
+   * test"). Giữ nguyên EXP/tầng/phẩm, chỉ áp dụng từ trận kế (runtime
+   * artifact snapshot path lúc Battle bắt đầu, không đọc lại giữa trận).
+   * KHÔNG dùng window.confirm — khác QuanKhiPanel.vue (lựa chọn đó
+   * không thể đổi lại, đây thì có).
+   */
+  setArtifactPath(player: PlayerData, path: ArtifactPath): boolean {
+    if (!player.artifact) {
+      return false
+    }
+
+    const battle = this.getBattle()
+
+    if (battle && (battle.state === 'countdown' || battle.state === 'fighting' || battle.mode === 'tribulation')) {
+      return false
+    }
+
+    player.artifact.selectedPath = path
+
+    return true
+  }
+
+  /**
+   * Bản Mệnh Pháp Bảo (doc §5.3) — nâng phẩm bằng Đoán Bảo Thạch, CHỈ
+   * ngoài combat (transaction thật nằm ở tryUpgradeArtifactGrade() core
+   * thuần — enforce guard combat NGAY TẠI ĐÂY, không chỉ ở UI).
+   */
+  tryUpgradeArtifactGrade(player: PlayerData): boolean {
+    if (!player.artifact) {
+      return false
+    }
+
+    const battle = this.getBattle()
+
+    if (battle && (battle.state === 'countdown' || battle.state === 'fighting' || battle.mode === 'tribulation')) {
+      return false
+    }
+
+    return tryUpgradeArtifactGrade(player.artifact, this.materialBag)
   }
 
   /**
@@ -1147,7 +1252,12 @@ export class GameManager {
       )
 
       if (existing) {
-        existing.expiresAtMs = Math.max(existing.expiresAtMs, effect.expiresAtMs)
+        if (effect.durationStackable) {
+          const duration = Math.max(0, effect.expiresAtMs - effect.appliedAtMs)
+          existing.expiresAtMs = Math.max(Date.now(), existing.expiresAtMs) + duration
+        } else {
+          existing.expiresAtMs = Math.max(existing.expiresAtMs, effect.expiresAtMs)
+        }
 
         for (const modifier of effect.modifiers) {
           const old = existing.modifiers.find(
@@ -1369,10 +1479,11 @@ export class GameManager {
   }
 
   /**
-   * Đột Phá Trúc Cơ (mục 6 spec): mốc tối thiểu để nút "TRÚC CƠ" xuất
-   * hiện song song nút "Đột Phá" thường — ngưỡng Nhân Đạo (realmLevel
-   * >= 9). CHỈ áp dụng cho qi_refining — vẫn giữ hệ Căn Cơ 4-tier
-   * riêng, KHÔNG đổi (xem CultivationSystem.breakthrough()'s guard).
+   * Đột Phá Trúc Cơ: mốc tối thiểu để nút "TRÚC CƠ" xuất hiện song song
+   * nút "Đột Phá" thường. Thiết kế hiện tại (2026-08-27): mốc 12 tầng ở
+   * qi_refining là Nhân Đạo baseline; các cấp đột phá ẩn khác sẽ được
+   * thiết kế sau, cùng hằng số với mortal → qi_refining
+   * (chooseCultivationPath()).
    */
   canTriggerFoundationBreakthrough(player: PlayerData): boolean {
     return player.realmId === 'qi_refining' && player.realmLevel >= CORE_REALM_LEVEL
@@ -1398,19 +1509,19 @@ export class GameManager {
    * "Con đường bình thường" của Đột Phá tổng quát (2026-08-16, xem
    * core/breakthrough/BreakthroughRequirement.ts) — Đột Phá Lệnh luyện
    * trực tiếp bằng Linh Thạch, KHÔNG qua Recipe (RecipeResultType
-   * không hỗ trợ material làm kết quả) — cùng pattern
-   * Cùng pattern refineBuiCot(): check đủ Linh Thạch rồi trừ và cấp
-   * thẳng material. Phân Giải equipment là luồng huỷ item riêng.
+   * không hỗ trợ material làm kết quả): check đủ Linh Thạch rồi trừ và
+   * cấp thẳng material. Phân Giải equipment là luồng huỷ item riêng.
    * Plan Workstream F: Linh Thạch là MATERIAL — check/trừ qua
    * MaterialBag, `spiritStoneCost` chỉ còn là authoring sugar được
    * normalize ngay tại boundary này.
    */
   canCraftBreakthroughToken(targetRealmId: string, player: PlayerData): boolean {
     const requirement = BREAKTHROUGH_REQUIREMENTS[targetRealmId]
+    const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(targetRealmId))
 
     return (
       requirement !== undefined &&
-      this.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID) >= requirement.spiritStoneCost
+      this.materialBag.getAmount(spiritStoneId) >= requirement.spiritStoneCost
     )
   }
 
@@ -1420,8 +1531,9 @@ export class GameManager {
     }
 
     const requirement = BREAKTHROUGH_REQUIREMENTS[targetRealmId]!
+    const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(targetRealmId))
 
-    this.materialBag.remove(SPIRIT_STONE_MATERIAL_ID, requirement.spiritStoneCost)
+    this.materialBag.remove(spiritStoneId, requirement.spiritStoneCost)
 
     this.materialBag.add(this.materialRegistry.get(requirement.materialId), 1)
 
@@ -1431,6 +1543,25 @@ export class GameManager {
   // =========================
   // EQUIPMENT
   // =========================
+
+  /**
+   * W5 (2026-08-27) — level Khí Đường giảm chi phí Cường Hóa/Tẩy Luyện/
+   * Tinh Luyện. Đồng bộ discount vào EquipmentSystem trước mỗi query/spend.
+   */
+  private syncEquipmentCostDiscount() {
+    const instance = this.buildingManager.getByBuildingId('equipment_hall')
+
+    if (!instance) {
+      this.equipmentSystem.setCostDiscountPercent(0)
+      return
+    }
+
+    const template = this.buildingRegistry.get('equipment_hall')
+
+    this.equipmentSystem.setCostDiscountPercent(
+      this.buildingSystem.getCraftModifiers(instance, template).equipmentCostDiscountPercent / 100,
+    )
+  }
 
   obtainEquipment(equipmentId: string, player: PlayerData): EquipmentInstance | null {
     if (!this.equipmentRegistry.has(equipmentId)) {
@@ -1461,7 +1592,9 @@ export class GameManager {
   }
 
   /** Cường Hóa gắn SLOT — slot trống vẫn nâng được (slot-level rework). */
-  enhanceSlot(slot: EquipmentSlot, player: PlayerData): boolean {
+  enhanceSlot(slot: EquipmentSlot, player: PlayerData): { ok: boolean; reason?: string } {
+    this.syncEquipmentCostDiscount()
+
     return this.equipmentSystem.enhance(
       slot,
 
@@ -1480,6 +1613,8 @@ export class GameManager {
   }
 
   getEnhanceCost(slot: EquipmentSlot, realmId: string) {
+    this.syncEquipmentCostDiscount()
+
     return this.equipmentSystem.getEnhanceCost(
       slot,
 
@@ -1494,6 +1629,8 @@ export class GameManager {
   }
 
   getEnhanceSpiritStoneCost(slot: EquipmentSlot, realmId: string): number {
+    this.syncEquipmentCostDiscount()
+
     return this.equipmentSystem.getEnhanceSpiritStoneCost(
       slot,
 
@@ -1540,6 +1677,8 @@ export class GameManager {
   ): { ok: boolean; reason?: string } {
     void player
 
+    this.syncEquipmentCostDiscount()
+
     return this.equipmentSystem.washAffixes(
       instanceId,
       oreMaterialId,
@@ -1562,6 +1701,8 @@ export class GameManager {
   ): { ok: boolean; reason?: string } {
     void player
 
+    this.syncEquipmentCostDiscount()
+
     return this.equipmentSystem.refineAffixValues(
       instanceId,
       lockedIndices,
@@ -1571,6 +1712,20 @@ export class GameManager {
       this.equipmentSlotManager,
       this.affixRegistry,
     )
+  }
+
+  /** W5 — cost Tẩy Luyện sau discount Khí Đường cho UI. */
+  getWashCost() {
+    this.syncEquipmentCostDiscount()
+
+    return this.equipmentSystem.getWashCost()
+  }
+
+  /** W5 — cost Tinh Luyện sau discount Khí Đường cho UI. */
+  getRefineCost(lineCount: number, lockedCount: number) {
+    this.syncEquipmentCostDiscount()
+
+    return this.equipmentSystem.getRefineCost(lineCount, lockedCount)
   }
 
   /**
@@ -1634,66 +1789,6 @@ export class GameManager {
     }))
   }
 
-  private static readonly SMELT_BUI_COT_YIELD = 2
-
-  private static readonly REFINE_BUI_COT_COST = 5
-  private static readonly REFINE_SPIRIT_STONE_COST = 10
-
-  /**
-   * Phân Giải trang bị: chỉ nhận instance chưa mặc, xoá vĩnh viễn khỏi
-   * EquipmentBag và thu Bụi Cốt. Không tạo item mới và không tiêu nguyên liệu.
-   */
-  smeltEquipment(instanceId: string): boolean {
-    const instance = this.equipmentBag.get(instanceId)
-
-    if (!instance || instance.equipped || !this.materialRegistry.has('bui_cot')) {
-      return false
-    }
-
-    this.equipmentBag.remove(instanceId)
-    this.materialBag.add(this.materialRegistry.get('bui_cot'), GameManager.SMELT_BUI_COT_YIELD)
-
-    return true
-  }
-
-  /**
-   * Tinh Luyện Cốt (tunghematandsuch mục 12) — chuyển đổi đơn giản
-   * Bụi Cốt + Linh Thạch, KHÔNG qua Recipe (chỉ 1 conversion, không
-   * đáng thêm 'material' vào RecipeResultType). CHƯA có consumer nào
-   * tiêu thụ Tinh Luyện Cốt trong lượt này (tài liệu chỉ liệt kê
-   * use-case tương lai chưa có mechanic cụ thể) — method này chỉ đảm
-   * bảo có NGUỒN THU thật, tránh mint sẵn material không ai lấy được.
-   */
-  refineBuiCot(player: PlayerData): boolean {
-    if (
-      !this.materialBag.has('bui_cot', GameManager.REFINE_BUI_COT_COST) ||
-      !this.materialBag.has(SPIRIT_STONE_MATERIAL_ID, GameManager.REFINE_SPIRIT_STONE_COST)
-    ) {
-      return false
-    }
-
-    this.materialBag.remove('bui_cot', GameManager.REFINE_BUI_COT_COST)
-
-    this.materialBag.remove(SPIRIT_STONE_MATERIAL_ID, GameManager.REFINE_SPIRIT_STONE_COST)
-
-    this.materialBag.add(this.materialRegistry.get('tinh_luyen_cot'), 1)
-
-    return true
-  }
-
-  canSmeltEquipment(instanceId: string): boolean {
-    const instance = this.equipmentBag.get(instanceId)
-
-    return Boolean(instance && !instance.equipped && this.materialRegistry.has('bui_cot'))
-  }
-
-  canRefineBuiCot(player: PlayerData): boolean {
-    return (
-      this.materialBag.has('bui_cot', GameManager.REFINE_BUI_COT_COST) &&
-      this.materialBag.has(SPIRIT_STONE_MATERIAL_ID, GameManager.REFINE_SPIRIT_STONE_COST)
-    )
-  }
-
   /**
    * State cường hóa/formation/bonus affix slots của 1 slot cụ thể —
    * dùng cho UI hiện thông tin NGAY CẢ KHI slot đang trống (MASTER
@@ -1721,35 +1816,13 @@ export class GameManager {
   // FORMATION
   // =========================
 
-  
-
   // Không còn nhận instanceId (MASTER SPEC Mục XVI, Phase 9) — trận
-
 
   // =========================
   // RECIPE / CRAFTING (Đan/Phù/Trận — Khí dùng EquipmentSystem, không qua đây)
   // =========================
 
-  
-
-
-
-
-
   // BUILDing spec mục 15-16 — Building crafting-station (Đan Phòng/
-
-
-  
-
-  
-
-  
-
-
-
-  
-
-
 
   // =========================
   // PILL
@@ -1768,7 +1841,7 @@ export class GameManager {
     random: () => number = Math.random,
   ): {
     ok: boolean
-    reason?: 'not_found' | 'wrong_realm' | 'all_main_stats_capped' | 'cap'
+    reason?: 'not_found' | 'wrong_realm' | 'all_main_stats_capped' | 'requires_phap_tu' | 'cap'
     mainStat?: MainStatKey
   } {
     if (!this.pillBag.has(pillId, 1)) {
@@ -1841,27 +1914,9 @@ export class GameManager {
   // TALISMAN
   // =========================
 
-
-
-  
-
-
-
-  
-
   // =========================
   // EXPLORATION
   // =========================
-
-  
-
-  
-
-  
-
-  
-
-  
 
   // =========================
   // BUILDING
@@ -1914,6 +1969,7 @@ export class GameManager {
         message: `Xây ${this.buildingName(buildingId)} thất bại (${check.reason ?? 'unknown'})`,
       })
     } else {
+      this.refreshAutoWorkerCapacity(player, instance)
       this.notifications.push({
         kind: 'upgrade',
 
@@ -1933,13 +1989,37 @@ export class GameManager {
     }
   }
 
+  /**
+   * gathering_outpost cấp autoWorkerCapacity theo level (workersPerLevel
+   * trên Building template) — gọi lại sau mọi lần build/upgrade building
+   * này để player.autoWorkerCapacity luôn khớp level hiện tại.
+   */
+  refreshAutoWorkerCapacity(player: PlayerData, instance: BuildingInstance): void {
+    if (instance.buildingId !== 'gathering_outpost') {
+      return
+    }
+
+    const workersPerLevel = this.buildingRegistry.get(instance.buildingId).workersPerLevel ?? 0
+    player.autoWorkerCapacity = instance.level * workersPerLevel
+  }
+
   upgradeBuilding(instanceId: string): boolean {
-    return this.buildingSystem.upgrade(
+    const upgraded = this.buildingSystem.upgrade(
       instanceId,
       this.buildingRegistry,
       this.buildingManager,
       this.materialBag,
+      this.activePlayer?.realmId,
     )
+    const instance = this.buildingManager.get(instanceId)
+    if (upgraded && instance && this.activePlayer) {
+      this.refreshAutoWorkerCapacity(this.activePlayer, instance)
+    }
+    return upgraded
+  }
+
+  getEnemyTemplate(enemyId: string): Enemy | undefined {
+    return this.enemyTemplates.get(enemyId)
   }
   // Linh Tuyền (producesMaterialId) — thu hoạch đổ vào MaterialBag như
   // material bình thường (plan Workstream F); claim() trả amount +
@@ -1952,6 +2032,7 @@ export class GameManager {
       this.buildingRegistry,
       this.buildingManager,
       currentTime,
+      player.realmId,
     )
 
     if (claimed.amount > 0 && claimed.materialId && this.materialRegistry.has(claimed.materialId)) {
@@ -1972,6 +2053,35 @@ export class GameManager {
       instance,
       this.buildingRegistry.get(instance.buildingId),
       currentTime,
+      this.activePlayer?.realmId,
+    )
+  }
+
+  getBuildingCapacity(instanceId: string): number {
+    const instance = this.buildingManager.get(instanceId)
+
+    if (!instance) {
+      return 0
+    }
+
+    return this.buildingSystem.getCapacity(
+      instance,
+      this.buildingRegistry.get(instance.buildingId),
+      this.activePlayer?.realmId,
+    )
+  }
+
+  getBuildingRatePerMinute(instanceId: string): number {
+    const instance = this.buildingManager.get(instanceId)
+
+    if (!instance) {
+      return 0
+    }
+
+    return this.buildingSystem.getRatePerMinute(
+      instance,
+      this.buildingRegistry.get(instance.buildingId),
+      this.activePlayer?.realmId,
     )
   }
 
@@ -2010,10 +2120,8 @@ export class GameManager {
 
   /** Nâng level nguồn — cost Gỗ + Linh Thạch (sink chính của Lâm, §5.2). */
   upgradeProductionSite(siteId: string, player: PlayerData): boolean {
-    void player
-
     // Plan Workstream F — Linh Thạch check/trừ trực tiếp trên MaterialBag.
-    return this.productionSystem.upgradeSite(siteId, this.materialBag)
+    return this.productionSystem.upgradeSite(siteId, this.materialBag, getRealmTier(player.realmId))
   }
 
   getProductionUpgradeCost(siteId: string) {
@@ -2063,6 +2171,7 @@ export class GameManager {
     }
 
     const template = this.buildingRegistry.get('pill_room')
+    const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(recipe.realmId))
 
     const maxSlots = this.buildingSystem.getCraftModifiers(instance, template).concurrentJobSlots
 
@@ -2075,7 +2184,7 @@ export class GameManager {
 
       this.materialRegistry,
 
-      this.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID),
+      this.materialBag.getAmount(spiritStoneId),
 
       instance.level,
 
@@ -2089,7 +2198,7 @@ export class GameManager {
     // nguyên liệu thành công (all-or-nothing như mọi sink khác).
     // Plan Workstream F — trừ trên MaterialBag.
     if (started.ok && recipe.spiritStoneCost > 0) {
-      this.materialBag.remove(SPIRIT_STONE_MATERIAL_ID, recipe.spiritStoneCost)
+      this.materialBag.remove(spiritStoneId, recipe.spiritStoneCost)
     }
 
     return started
@@ -2100,7 +2209,11 @@ export class GameManager {
   }
 
   /** Preview tổng tỷ lệ thành + guaranteed + chance viên cộng thêm (§9.3). */
-  previewAlchemyOutcome(recipeId: string, herbMaterialId: string, roomLevel = Math.max(1, this.getAlchemyRoomLevel())): {
+  previewAlchemyOutcome(
+    recipeId: string,
+    herbMaterialId: string,
+    roomLevel = Math.max(1, this.getAlchemyRoomLevel()),
+  ): {
     totalPercent: number
 
     guaranteedPills: number
@@ -2111,7 +2224,9 @@ export class GameManager {
   } | null {
     const recipe = this.alchemyRecipesById.get(recipeId)
 
-    const variant = recipe?.herbVariants.find((candidate) => candidate.materialId === herbMaterialId)
+    const variant = recipe?.herbVariants.find(
+      (candidate) => candidate.materialId === herbMaterialId,
+    )
 
     if (!recipe || !variant) {
       return null
@@ -2133,8 +2248,6 @@ export class GameManager {
       durationSeconds: alchemySecondsFor(recipe, roomLevel),
     }
   }
-
-
 
   // =========================
   // BATTLE
@@ -2160,6 +2273,11 @@ export class GameManager {
     // permanent progression ban đầu).
     this.battleLoot.beginBattle()
     this.passiveSystem.resetStacks()
+
+    // Bất Tử Thể — reset mặc định về KHÔNG bảo vệ; startBattleWithPlayer()
+    // sẽ set lại session thật ngay sau (cùng pattern battleLoot.setSession()).
+    // Trận startBattle() trực tiếp (không PlayerData) thì không có thiên phú.
+    this.combatSystem.setSurviveLethalSession(null)
 
     this.battleSystem.start(player, enemyEntity)
   }
@@ -2197,23 +2315,117 @@ export class GameManager {
 
     this.startBattle(playerEntity, enemy)
 
-    this.battleLoot.setSession(
-      createPlayerRewardReceiver(
-        player,
-        (amount) => this.gainEquippedTechniqueInsight(amount),
-        (amount) => {
-          // Plan Workstream F — Linh Thạch reward đổ vào MaterialBag.
-          if (amount > 0 && this.materialRegistry.has(SPIRIT_STONE_MATERIAL_ID)) {
-            this.materialBag.add(this.materialRegistry.get(SPIRIT_STONE_MATERIAL_ID), amount)
-          }
-        },
-      ),
-      player,
+    this.battleLoot.setSession(this.buildPlayerRewardReceiver(player), player)
+
+    // Bất Tử Thể (talent-direction-choice-plan §6) — reset lượt sống sót
+    // theo thiên phú của player mỗi trận MỚI rồi gắn session cho
+    // combatSystem.killIfDead(). playerEntity.id là 'player' (xem
+    // playerToCombatEntity()).
+    this.surviveLethalGuard.beginBattle(player.selectedTalentIds)
+    this.combatSystem.setSurviveLethalSession({
+      playerEntityId: playerEntity.id,
+      guard: this.surviveLethalGuard,
+    })
+
+    // Bản Mệnh Pháp Bảo — snapshot level/grade/path/equippedElements
+    // NGAY lúc trận bắt đầu (doc §11); undefined nếu player không có
+    // artifact (Kiếm Tu/chưa Trúc Cơ) — updateArtifactActivation() tự
+    // no-op trong trường hợp đó.
+    this.battleSystem.setArtifactRuntime(
+      player.artifact
+        ? createArtifactRuntime(
+            player.artifact,
+            filterNguHanhElements(player.equippedElements),
+            playerEntity.currentWard,
+          )
+        : undefined,
     )
   }
 
   getBattle(): Battle | null {
     return this.battleSystem.getBattle()
+  }
+
+  /**
+   * RewardReceiver dùng chung cho mọi nơi cấp Reward trực tiếp cho
+   * player (battle victory, claim quest...) — insight đổ vào tâm pháp
+   * đang trang bị, Linh Thạch đổ vào MaterialBag (Plan Workstream F).
+   */
+  private buildPlayerRewardReceiver(player: PlayerData): RewardReceiver {
+    return createPlayerRewardReceiver(
+      player,
+      (amount) => this.gainEquippedTechniqueInsight(amount),
+      (amount) => {
+        // Cấp ĐÚNG phẩm Linh Thạch theo cảnh giới hiện tại (khớp phẩm mà
+        // chi phí Đột Phá/Cường Hóa/nâng cấp công trình đòi hỏi ở cảnh
+        // giới đó) — không cấp cứng Hạ Phẩm khiến người chơi cảnh giới
+        // cao kẹt lại vì có Linh Thạch nhưng sai phẩm.
+        const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(player.realmId))
+
+        if (amount > 0 && this.materialRegistry.has(spiritStoneId)) {
+          this.materialBag.add(this.materialRegistry.get(spiritStoneId), amount)
+        }
+      },
+    )
+  }
+
+  // =========================
+  // QUEST (Nhiệm Vụ)
+  // =========================
+
+  getActiveQuests(): { quest: Quest; progress: QuestProgress }[] {
+    if (!this.activePlayer) {
+      return []
+    }
+
+    return this.questSystem.getActiveQuests(
+      this.questRegistry,
+      this.questManager,
+      this.activePlayer,
+    )
+  }
+
+  canClaimQuest(questId: string): boolean {
+    return this.questSystem.canClaim(
+      this.questRegistry,
+      this.questManager,
+      {
+        materialRegistry: this.materialRegistry,
+        materialBag: this.materialBag,
+        pillRegistry: this.pillRegistry,
+        pillBag: this.pillBag,
+      },
+      questId,
+    )
+  }
+
+  claimQuest(questId: string): boolean {
+    if (!this.activePlayer) {
+      return false
+    }
+
+    const receiver = this.buildPlayerRewardReceiver(this.activePlayer)
+
+    const claimed = this.questSystem.claim(
+      this.questRegistry,
+      this.questManager,
+      this.rewardSystem,
+      receiver,
+      {
+        materialRegistry: this.materialRegistry,
+        materialBag: this.materialBag,
+        pillRegistry: this.pillRegistry,
+        pillBag: this.pillBag,
+      },
+      questId,
+    )
+
+    if (claimed) {
+      const quest = this.questRegistry.get(questId)
+      this.notifications.push({ kind: 'loot', message: `Hoàn thành: ${quest.name}` })
+    }
+
+    return claimed
   }
 
   gainEquippedTechniqueInsight(amount: number): number {
@@ -2257,6 +2469,13 @@ export class GameManager {
 
     if (started) {
       this.battleLoot.beginTribulation(player)
+
+      // Bất Tử Thể KHÔNG kích hoạt trong trận Độ Kiếp (plan §6 — giữ Độ
+      // Kiếp là nghi lễ thật). Trận Kiếp KHÔNG đi qua startBattle() nên
+      // phải tự xoá session ở đây, tránh lượt sống sót tồn dư từ trận
+      // Stage trước chảy vào.
+      this.surviveLethalGuard.beginTribulation()
+      this.combatSystem.setSurviveLethalSession(null)
     }
 
     return started
@@ -2421,6 +2640,10 @@ export class GameManager {
 
     this.buildingManager.restore(save.buildings)
 
+    this.questManager.restore(
+      save.quests ?? { active: [], completedOnceIds: [], lastDailyResetAtMs: 0 },
+    )
+
     // Production (plan §4.3) — restore state + offline settle tuần tự
     // trong cap; MỖI auto-cycle một seed/roll riêng.
     this.productionSystem.restoreStates((save.productionSites ?? []) as ProductionSiteState[])
@@ -2447,8 +2670,11 @@ export class GameManager {
     // Đan Phòng offline settle (§8.2).
     this.alchemySystem.restoreJobs((save.alchemyJobs ?? []) as ActiveAlchemyJob[])
 
-    this.alchemySystem.settleOffline(this.pillBag, (pillId) =>
-      this.pillRegistry.has(pillId) ? this.pillRegistry.get(pillId) : undefined,
+    this.alchemySystem.settleOffline(
+      this.pillBag,
+      (pillId) => (this.pillRegistry.has(pillId) ? this.pillRegistry.get(pillId) : undefined),
+      Date.now(),
+      getAlchemySuccessBonusPercentPoints(this.activePlayer?.selectedTalentIds ?? []),
     )
 
     return this.equipmentSystem.getModifiers()
@@ -2475,6 +2701,18 @@ export class GameManager {
     if (this.activePlayer) {
       this.tickTimedEffects(this.activePlayer)
 
+      // Quest daily reset (Quest System plan) — wall-clock day-bucket,
+      // check mỗi tick nên vẫn reset kể cả khi panel Nhiệm Vụ đang đóng.
+      if (
+        this.questSystem.checkAndResetDaily(
+          this.questRegistry,
+          this.questManager,
+          this.activePlayer,
+        )
+      ) {
+        this.notifications.push({ kind: 'craft', message: 'Nhiệm vụ hàng ngày đã làm mới' })
+      }
+
       // Production settle (plan §4.3) — delivery thẳng Bag khi cycle
       // hoàn thành; notification ghi rõ vật liệu + số lượng (§9.1).
       this.productionSystem.tick(
@@ -2482,6 +2720,14 @@ export class GameManager {
         this.materialBag,
         this.materialRegistry,
         this.activePlayer.realmId,
+      )
+
+      this.productionSystem.tickWorkers(
+        Date.now(),
+        this.materialBag,
+        this.materialRegistry,
+        this.activePlayer.realmId,
+        this.activePlayer.autoWorkerCapacity ?? 0,
       )
 
       for (const event of this.productionSystem.drainSettlementEvents()) {
@@ -2495,9 +2741,14 @@ export class GameManager {
         })
       }
 
-      // Đan Phòng settle (§8.3).
-      this.alchemySystem.tick(Date.now(), this.pillBag, (pillId) =>
-        this.pillRegistry.has(pillId) ? this.pillRegistry.get(pillId) : undefined,
+      // Đan Phòng settle (§8.3). Thiên phú Đan Duyên cộng điểm % thành
+      // đan (plan §6) — đọc từ activePlayer mỗi tick, đổi talent là có hiệu lực.
+      this.alchemySystem.tick(
+        Date.now(),
+        this.pillBag,
+        (pillId) => (this.pillRegistry.has(pillId) ? this.pillRegistry.get(pillId) : undefined),
+        Math.random,
+        getAlchemySuccessBonusPercentPoints(this.activePlayer.selectedTalentIds),
       )
 
       for (const event of this.alchemySystem.drainSettlementEvents()) {

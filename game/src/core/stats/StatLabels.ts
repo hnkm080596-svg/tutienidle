@@ -48,7 +48,7 @@ export const BASE_STAT_LABELS: StatLabelEntry[] = [
 
   { key: 'strength', label: 'Căn Cốt', description: 'Cộng thẳng Công kích + Phòng ngự.', category: 'attribute' },
   { key: 'dexterity', label: 'Thân Pháp', description: 'Cộng Tốc đánh, Độ chính xác, Tỉ lệ né, Tỉ lệ bạo kích.', category: 'attribute' },
-  { key: 'intelligence', label: 'Thần Thức', description: 'Cộng Linh lực tối đa + ST bạo kích.', category: 'attribute' },
+  { key: 'intelligence', label: 'Thần Thức', description: 'Cộng Giảm hồi chiêu, Kháng dị thường và ST bạo kích.', category: 'attribute' },
   { key: 'attunement', label: 'Linh Căn', description: 'Cộng đều Power cả 6 hành (Ngũ Hành + Hỗn Nguyên).', category: 'attribute' },
   { key: 'vitality', label: 'Thể Chất', description: 'Cộng Khí huyết tối đa, Hồi khí huyết, Ngưỡng Kiên Cường.', category: 'attribute' },
 

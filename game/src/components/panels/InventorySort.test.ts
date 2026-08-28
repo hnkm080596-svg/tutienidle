@@ -103,7 +103,7 @@ describe('Inventory — sort per-tab + Linh Thạch material (plan Workstream E/
     SPIRIT_STONE = { id: 'spirit_stone', name: 'Linh Thạch', category: 'spirit_stone', sourceType: 'building' }
   })
 
-  it('sort Tên asc/desc đúng thứ tự và Linh Thạch tham gia như material', async () => {
+  it('sort Tên asc/desc đúng thứ tự và Linh Thạch luôn ghim ô đầu (plan Workstream D)', async () => {
     seedMaterials()
 
     mounted = mountSections(gameManager)
@@ -114,18 +114,22 @@ describe('Inventory — sort per-tab + Linh Thạch material (plan Workstream E/
 
     await nextTick()
 
-    // Tên A→Z: Ám Hương, Bạch Thuật, Huyền Thiết, Linh Thạch.
-    expect(mounted.materialSlotLabels()[0]).toContain('Ám Hương')
-    expect(mounted.materialSlotLabels()[1]).toContain('Bạch Thuật')
-    expect(mounted.materialSlotLabels()[2]).toContain('Huyền Thiết')
-    expect(mounted.materialSlotLabels()[3]).toContain('Linh Thạch')
+    // Linh Thạch luôn ghim ô đầu bất kể mode/direction; phần còn lại
+    // sort Tên A→Z: Ám Hương, Bạch Thuật, Huyền Thiết.
+    expect(mounted.materialSlotLabels()[0]).toContain('Linh Thạch')
+    expect(mounted.materialSlotLabels()[1]).toContain('Ám Hương')
+    expect(mounted.materialSlotLabels()[2]).toContain('Bạch Thuật')
+    expect(mounted.materialSlotLabels()[3]).toContain('Huyền Thiết')
 
-    // Đảo chiều desc → Linh Thạch lên đầu.
+    // Đảo chiều desc → Linh Thạch vẫn ở ô đầu (ghim không đi qua withDirection).
     ui.toggleBagSortDirection('material')
 
     await nextTick()
 
     expect(mounted.materialSlotLabels()[0]).toContain('Linh Thạch')
+    expect(mounted.materialSlotLabels()[1]).toContain('Huyền Thiết')
+    expect(mounted.materialSlotLabels()[2]).toContain('Bạch Thuật')
+    expect(mounted.materialSlotLabels()[3]).toContain('Ám Hương')
 
     mounted.unmount()
   })

@@ -225,7 +225,6 @@ export const TRIBULATION_HUMAN: Enemy = defineEnemy({
 
   rewards: {
     techniqueInsight: 800,
-    cultivation: 2000,
     spiritStone: 200,
 
     itemDrops: [{ kind: 'material', itemId: 'xich_dong', amount: 4, chance: 1 }],
@@ -258,7 +257,6 @@ export const TRIBULATION_EARTH: Enemy = defineEnemy({
 
   rewards: {
     techniqueInsight: 1500,
-    cultivation: 4000,
     spiritStone: 350,
 
     itemDrops: [{ kind: 'material', itemId: 'xich_dong', amount: 6, chance: 1 }],
@@ -291,10 +289,7 @@ export const TRIBULATION_HEAVEN: Enemy = defineEnemy({
 
   rewards: {
     techniqueInsight: 3000,
-    cultivation: 8000,
     spiritStone: 600,
-
-    itemDrops: [{ kind: 'material', itemId: 'tinh_hoa_hoa', amount: 2, chance: 1 }],
   },
 })
 
@@ -324,10 +319,7 @@ export const TRIBULATION_GREAT_DAO: Enemy = defineEnemy({
 
   rewards: {
     techniqueInsight: 10000,
-    cultivation: 30000,
     spiritStone: 2000,
-
-    itemDrops: [{ kind: 'material', itemId: 'yeu_hon', amount: 2, chance: 1 }],
   },
 })
 
@@ -365,7 +357,6 @@ export const TRIBULATION_GOLDEN_CORE: Enemy = defineEnemy({
 
   rewards: {
     techniqueInsight: 30000,
-    cultivation: 90000,
     spiritStone: 6000,
   },
 })
@@ -395,7 +386,6 @@ export const TRIBULATION_NASCENT_SOUL: Enemy = defineEnemy({
 
   rewards: {
     techniqueInsight: 90000,
-    cultivation: 270000,
     spiritStone: 18000,
   },
 })
@@ -425,7 +415,6 @@ export const TRIBULATION_SOUL_TRANSFORMATION: Enemy = defineEnemy({
 
   rewards: {
     techniqueInsight: 270000,
-    cultivation: 810000,
     spiritStone: 54000,
   },
 })
@@ -455,7 +444,6 @@ export const TRIBULATION_VOID_REFINEMENT: Enemy = defineEnemy({
 
   rewards: {
     techniqueInsight: 810000,
-    cultivation: 2430000,
     spiritStone: 162000,
   },
 })
@@ -485,7 +473,6 @@ export const TRIBULATION_BODY_INTEGRATION: Enemy = defineEnemy({
 
   rewards: {
     techniqueInsight: 2430000,
-    cultivation: 7290000,
     spiritStone: 486000,
   },
 })
@@ -515,7 +502,6 @@ export const TRIBULATION_MAHAYANA: Enemy = defineEnemy({
 
   rewards: {
     techniqueInsight: 7290000,
-    cultivation: 21870000,
     spiritStone: 1458000,
   },
 })
@@ -545,7 +531,6 @@ export const TRIBULATION_TRIBULATION: Enemy = defineEnemy({
 
   rewards: {
     techniqueInsight: 21870000,
-    cultivation: 65610000,
     spiritStone: 4374000,
   },
 })
@@ -563,4 +548,3 @@ export const TRIBULATIONS: Enemy[] = [
   TRIBULATION_MAHAYANA,
   TRIBULATION_TRIBULATION,
 ]
-

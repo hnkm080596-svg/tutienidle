@@ -18,55 +18,56 @@ const MAIN_STATS: Record<EquipmentSlot, readonly EquipmentStatRange[]> = {
 
 // Thêm art mới vào đúng slot; mỗi instance tự chọn một ảnh trong pool.
 export const EQUIPMENT_ICON_POOLS = {
-  base_kiem: Array.from({ length: 5 }, (_, index) =>
-    `/assets/equipment/items/base-kiem/kiem-${String(index + 1).padStart(2, '0')}.png`,
+  base_kiem: Array.from(
+    { length: 5 },
+    (_, index) =>
+      `/assets/equipment/items/base-kiem/kiem-${String(index + 1).padStart(2, '0')}.png`,
   ),
-  base_chau: Array.from({ length: 5 }, (_, index) =>
-    `/assets/equipment/items/base-chau/chau-${String(index + 1).padStart(2, '0')}.png`,
+  base_chau: Array.from(
+    { length: 5 },
+    (_, index) =>
+      `/assets/equipment/items/base-chau/chau-${String(index + 1).padStart(2, '0')}.png`,
   ),
-  base_quyen: Array.from({ length: 5 }, (_, index) =>
-    `/assets/equipment/items/base-quyen/quyen-${String(index + 1).padStart(2, '0')}.png`,
+  base_quyen: Array.from(
+    { length: 5 },
+    (_, index) =>
+      `/assets/equipment/items/base-quyen/quyen-${String(index + 1).padStart(2, '0')}.png`,
   ),
-  base_quan: Array.from({ length: 5 }, (_, index) =>
-    `/assets/equipment/items/base-quan/quan-${String(index + 1).padStart(2, '0')}.png`,
+  base_quan: Array.from(
+    { length: 5 },
+    (_, index) =>
+      `/assets/equipment/items/base-quan/quan-${String(index + 1).padStart(2, '0')}.png`,
   ),
-  base_bao: Array.from({ length: 5 }, (_, index) =>
-    `/assets/equipment/items/base-bao/bao-${String(index + 1).padStart(2, '0')}.png`,
+  base_bao: Array.from(
+    { length: 5 },
+    (_, index) => `/assets/equipment/items/base-bao/bao-${String(index + 1).padStart(2, '0')}.png`,
   ),
-  base_hai: Array.from({ length: 5 }, (_, index) =>
-    `/assets/equipment/items/base-hai/hai-${String(index + 1).padStart(2, '0')}.png`,
+  base_hai: Array.from(
+    { length: 5 },
+    (_, index) => `/assets/equipment/items/base-hai/hai-${String(index + 1).padStart(2, '0')}.png`,
   ),
-  base_gioi: Array.from({ length: 5 }, (_, index) =>
-    `/assets/equipment/items/base-gioi/gioi-${String(index + 1).padStart(2, '0')}.png`,
+  base_gioi: Array.from(
+    { length: 5 },
+    (_, index) =>
+      `/assets/equipment/items/base-gioi/gioi-${String(index + 1).padStart(2, '0')}.png`,
   ),
-  base_truy: Array.from({ length: 5 }, (_, index) =>
-    `/assets/equipment/items/base-truy/truy-${String(index + 1).padStart(2, '0')}.png`,
+  base_truy: Array.from(
+    { length: 5 },
+    (_, index) =>
+      `/assets/equipment/items/base-truy/truy-${String(index + 1).padStart(2, '0')}.png`,
   ),
 } as const
 
 type EquipmentTemplateId = keyof typeof EQUIPMENT_ICON_POOLS
 
-const BASE_COSTS: Pick<
-  Equipment,
-  | 'maxEnhanceLevel'
-  | 'enhanceCost'
-  | 'enhanceSpiritStoneCost'
-  | 'upgradeQualityCost'
-  | 'upgradeRealmCost'
-  | 'addAffixCost'
-  | 'upgradeAffixCost'
-  | 'washCost'
-  | 'refineCost'
-> = {
+const BASE_COSTS: Pick<Equipment, 'maxEnhanceLevel' | 'enhanceSpiritStoneCost'> = {
   maxEnhanceLevel: 10,
-  enhanceCost: [{ materialId: 'bui_cot', amount: 3 }],
+
+  // Fallback khi catalog nghề không có band cho realm hiện hành (xem
+  // EquipmentSystem.resolveEnhanceCost(): catalog → template → Linh
+  // Thạch thuần). Catalog hiện phủ đủ 3 realm có content nên nhánh
+  // này chỉ là lưới an toàn.
   enhanceSpiritStoneCost: 20,
-  upgradeQualityCost: [{ materialId: 'yeu_dan_luyen_khi_canh', amount: 3 }],
-  upgradeRealmCost: [{ materialId: 'yeu_dan_luyen_khi_canh', amount: 2 }],
-  addAffixCost: [{ materialId: 'affix_rune_stone', amount: 1 }],
-  upgradeAffixCost: [{ materialId: 'affix_tier_stone', amount: 1 }],
-  washCost: [{ materialId: 'huyen_thiet', amount: 2 }],
-  refineCost: [{ materialId: 'huyen_thiet', amount: 2 }],
 }
 
 function base(id: EquipmentTemplateId, name: string, slot: EquipmentSlot): Equipment {

@@ -39,6 +39,11 @@ export interface SkillEffectContext {
   // ngay sau khi effect 'ailment' áp thành công, xem apply() bên dưới.
   reactionManager: ReactionManager
 
+  // Thiên phú Phản Phác (talent-direction-choice-plan §6) — xác suất giữ
+  // ailment ở nhánh consume chuẩn của ReactionManager. Nền 0/không truyền
+  // = hành vi mặc định (xoá cả 2).
+  reactionKeepChance?: number
+
   // Plans/magicpathgeneral Phase 12 (2026-08-21) — cho phép
   // ReactionManager spawn Lava Zone (Dung Nham) vào ĐÚNG `battle`
   // đang chạy — bind sẵn ở BattleSystem.castSkill(), optional vì hầu
@@ -61,6 +66,8 @@ export interface SkillEffectContext {
   // đồng bộ với apply() này) biết tra lại đúng skill nào vừa bắn ra
   // nó, phục vụ Skill.grantsSwordIntentPerHit.
   skillId?: string
+
+  skillExperience?: number
 }
 
 /**
@@ -97,7 +104,11 @@ export class SkillEffectSystem {
             0,
           ) +
           (effect.swordIntentDamageRatio ? effect.swordIntentDamageRatio * source.currentSwordIntent : 0) +
-          (effect.realmDamageRatio ? effect.realmDamageRatio * source.realmIndex : 0)
+          (effect.realmDamageRatio ? effect.realmDamageRatio * source.realmIndex : 0) +
+          (effect.manaScalingRatio ? effect.manaScalingRatio * source.stats.maxMp : 0) +
+          (effect.skillExperienceRatio
+            ? effect.skillExperienceRatio * (ctx.skillExperience ?? 0) / Math.max(1, source.stats.attack)
+            : 0)
 
         // Kiếm Ý vĩnh viễn (Kiếm Tu, 2026-08-15) — % khuếch đại MỌI
         // effect 'damage' của skill chủ động, xem core/player/
@@ -249,6 +260,7 @@ export class SkillEffectSystem {
             ctx.sourceBuffs,
             ctx.buffRegistry,
             ctx.spawnLavaZone,
+            ctx.reactionKeepChance ?? 0,
           )
         }
         break

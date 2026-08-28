@@ -129,7 +129,7 @@ describe('ProductionSystem — cycle lifecycle (plan §4)', () => {
   it('nâng level giữa cycle không đổi deadline của cycle đang chạy', () => {
     const { bag, registry } = createBag()
 
-    bag.add(registry.get('mortal_wood'), 50)
+    bag.add(registry.get('qi_refining_wood'), 50)
 
     // Plan Workstream F — Linh Thạch là MATERIAL trong bag.
     bag.add(SPIRIT_STONE_MATERIAL, 5000)

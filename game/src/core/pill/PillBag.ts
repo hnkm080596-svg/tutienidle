@@ -5,27 +5,46 @@ import { MAX_STACK_AMOUNT } from '../inventory/StackLimits'
 export class PillBag {
   private readonly pills = new Map<string, PillStack>()
 
-  add(pill: Pill, amount: number) {
+  /**
+   * Cộng dồn stack, clamp tại MAX_STACK_AMOUNT. Trả về lượng TRÀN bị
+   * mất (0 nếu vừa đủ chỗ) — caller đường reward dùng để báo "túi đầy"
+   * thay vì mất lặng lẽ.
+   */
+  add(pill: Pill, amount: number): number {
     if (amount <= 0) {
-      return
+      return 0
     }
 
     const existing = this.pills.get(pill.id)
 
     if (existing) {
-      existing.amount = Math.min(existing.amount + amount, MAX_STACK_AMOUNT)
+      const next = Math.min(existing.amount + amount, MAX_STACK_AMOUNT)
 
-      return
+      const overflow = existing.amount + amount - next
+
+      existing.amount = next
+
+      return overflow
     }
+
+    const stored = Math.min(amount, MAX_STACK_AMOUNT)
 
     this.pills.set(pill.id, {
       pill,
 
-      amount: Math.min(amount, MAX_STACK_AMOUNT),
+      amount: stored,
     })
+
+    return amount - stored
   }
 
   remove(pillId: string, amount: number): boolean {
+    // Guard: amount <= 0 KHÔNG phải remove hợp lệ — amount âm sẽ CỘNG
+    // ngược vào stack (vector nhân bản tiềm ẩn).
+    if (amount <= 0) {
+      return false
+    }
+
     const existing = this.pills.get(pillId)
 
     if (!existing) {

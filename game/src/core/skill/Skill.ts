@@ -56,6 +56,12 @@ export interface Skill extends Partial<SkillRuntimeStats> {
 
   maxLevel: number
 
+  /** XP còn lại trong cấp hiện tại; Huy Kiếm tự nhận +1 mỗi lần cast. */
+  experience?: number
+
+  /** XP tích lũy suốt đời, dùng cho hệ số sát thương và hook mở Kiếm Tu. */
+  totalExperience?: number
+
   requiredRealmId?: string
 
   requiredRealmLevel?: number

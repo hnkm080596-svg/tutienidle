@@ -27,6 +27,23 @@ export interface CommandWheelSlot {
 
   /** false = future slot, KHÔNG render nút. */
   available: () => boolean
+
+  /**
+   * Bản Mệnh Pháp Bảo (2026-08-27) — slot RENDER được nhưng tạm thời
+   * không bấm được (vd nghề chưa có definition), khác hẳn `available`
+   * (tồn tại tính năng hay chưa). Nhận `context` làm THAM SỐ thay vì tự
+   * đọc store/GameManager bên trong catalog — giữ đúng quy ước "catalog
+   * thuần data, không import runtime" ở đầu file; DongFuCommandWheel.vue
+   * tự build context rồi truyền vào. Trả về chuỗi lý do (hiện tooltip) hoặc
+   * null nếu không bị disable.
+   */
+  disabledReason?: (context: CommandWheelDisabledContext) => string | null
+}
+
+/** Context runtime tối thiểu cho disabledReason() — mở rộng dần khi có slot mới cần. */
+export interface CommandWheelDisabledContext {
+  hasFoundationRealm: boolean
+  hasArtifactDefinition: boolean
 }
 
 const NEVER_AVAILABLE = () => false
@@ -36,8 +53,9 @@ const ALWAYS_AVAILABLE = () => true
 /**
  * Bố cục 4 vòng (plan "Kiến trúc UI đích"):
  * - Ring 1 cốt lõi — Nhân Vật/Kho/Kỹ Năng/Tâm Pháp ở 4 đường chéo.
- * - Ring 2 hệ thống phát triển — Luyện Thể/Quan Khí/Realm Passive +
- *   future slots (Pháp Bảo/Phù/Trận) KHÔNG render.
+ * - Ring 2 hệ thống phát triển — Luyện Thể/Realm Passive + future slots
+ *   (Pháp Bảo/Phù/Trận) KHÔNG render. Quán Khí đã gỡ khỏi wheel — mở
+ *   qua nút riêng trong Character Panel khi đạt điều kiện.
  * - Ring 3 building thật — 5 công trình, còn hotspot trên background
  *   song song (Workstream C dual-entry).
  * - Ring 4 hệ thống — Tàng Kinh Các TRÁI / Cài Đặt PHẢI đối xứng ngang,
@@ -53,10 +71,10 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
     available: ALWAYS_AVAILABLE,
   },
   {
-    id: 'inventory',
+    id: 'realm',
     ring: 1,
-    label: 'Kho',
-    target: { kind: 'left_panel', mode: 'inventory' },
+    label: 'Cảnh Giới',
+    target: { kind: 'standalone', panel: 'realm' },
     available: ALWAYS_AVAILABLE,
   },
   {
@@ -83,26 +101,35 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
     available: ALWAYS_AVAILABLE,
   },
   {
-    id: 'quan_khi',
+    id: 'quest',
     ring: 2,
-    label: 'Quán Khí',
-    target: { kind: 'standalone', panel: 'quan_khi' },
+    label: 'Nhiệm Vụ',
+    target: { kind: 'standalone', panel: 'quest' },
     available: ALWAYS_AVAILABLE,
   },
-  {
-    id: 'realm_passive',
-    ring: 2,
-    label: 'Realm Passive',
-    target: { kind: 'standalone', panel: 'realm_passive' },
-    available: ALWAYS_AVAILABLE,
-  },
-  // Future slots — tồn tại trong catalog nhưng KHÔNG render nút.
+  // Bản Mệnh Pháp Bảo (2026-08-27) — SHIPPED (khác talisman_slot/
+  // formation_slot bên dưới, vẫn future). Render ngay cả trước Trúc Cơ/
+  // với nghề chưa có definition — disabledReason() chặn bấm + giải
+  // thích lý do, đúng doc §12.1 (khác ẩn hẳn nút).
   {
     id: 'phap_bao',
     ring: 2,
     label: 'Pháp Bảo',
-    available: NEVER_AVAILABLE,
+    target: { kind: 'standalone', panel: 'artifact' },
+    available: ALWAYS_AVAILABLE,
+    disabledReason: (context) => {
+      if (!context.hasFoundationRealm) {
+        return 'Cần đạt Trúc Cơ'
+      }
+
+      if (!context.hasArtifactDefinition) {
+        return 'Bản mệnh pháp bảo của nghề này đang chờ thiết kế'
+      }
+
+      return null
+    },
   },
+  // Future slots — tồn tại trong catalog nhưng KHÔNG render nút.
   {
     id: 'talisman_slot',
     ring: 2,

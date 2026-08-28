@@ -76,6 +76,8 @@ import type { BattlePositionsEvent, PlayerTeleportedEvent } from './BattleEvents
 import type { LavaZone } from './LavaZone'
 
 import type { ElementType } from '../element/ElementType'
+import type { ArtifactRuntime } from '../artifact/ArtifactRuntime'
+import { onArtifactHitResolved, updateArtifactActivation, type ArtifactSystemDeps } from '../artifact/ArtifactSystem'
 
 // Skill execution policy rework (plan §8) — windup "đòn thường" của
 // player basic attack KHÔNG CÒN TỒN TẠI: mọi đòn chủ động của Player là
@@ -215,6 +217,13 @@ export class BattleSystem {
      * hiệu lực ngay. Test không quan tâm AI dùng default 'nearest'.
      */
     private readonly getAiStrategy: () => CombatAiStrategy = () => DEFAULT_COMBAT_AI_STRATEGY,
+
+    /**
+     * Thiên phú Phản Phác (talent-direction-choice-plan §6) — xác suất giữ
+     * ailment khi kích Reaction (nhánh consume chuẩn), đọc LIVE từ thiên
+     * phú player đang hoạt động. Nền 0 = không có thiên phú.
+     */
+    private readonly getReactionKeepChance: () => number = () => 0,
   ) {
     this.reactionManager = new ReactionManager(eventBus)
   }
@@ -276,6 +285,11 @@ export class BattleSystem {
 
       // Trận mới reset vòng xoay về slot đầu (plan §5).
       nextSkillSlotIndexCursor: 0,
+
+      // Bản Mệnh Pháp Bảo — GameManager gọi setArtifactRuntime() NGAY
+      // SAU start() (cùng pattern battleLoot.setSession()) nếu player
+      // có artifact; undefined mặc định = không tick gì cả.
+      artifactRuntime: undefined,
     }
 
     // Quái đầu tiên cũng đi qua "telegraph → xuất hiện → tham chiến".
@@ -336,6 +350,9 @@ export class BattleSystem {
       lavaZones: [],
       pendingEnemySpawns: [],
       nextSkillSlotIndexCursor: 0,
+
+      // Bản Mệnh Pháp Bảo — Độ Kiếp ngoài phạm vi doc hiện tại, không tick.
+      artifactRuntime: undefined,
     }
 
     this.eventBus.emit('tribulation_started', undefined)
@@ -624,6 +641,30 @@ export class BattleSystem {
     return this.battle
   }
 
+  /**
+   * Bản Mệnh Pháp Bảo — GameManager gọi ngay sau start()/startBattle()
+   * (cùng pattern battleLoot.setSession()), truyền undefined nếu
+   * player không có artifact (Kiếm Tu/chưa Trúc Cơ) — no-op an toàn
+   * nếu chưa có battle nào đang chạy.
+   */
+  setArtifactRuntime(runtime: ArtifactRuntime | undefined) {
+    if (!this.battle) {
+      return
+    }
+
+    this.battle.artifactRuntime = runtime
+  }
+
+  private artifactSystemDeps(): ArtifactSystemDeps {
+    return {
+      actionImpact: this.actionImpact,
+      ailmentRegistry: this.ailmentRegistry,
+      getAilmentsFor: (battle, entity) => this.getAilmentsFor(battle, entity),
+      getBuffsFor: (battle, entity) => this.getBuffsFor(battle, entity),
+      aiStrategy: () => this.aiStrategy(),
+    }
+  }
+
   update(deltaSeconds: number) {
     const battle = this.battle
 
@@ -750,6 +791,11 @@ export class BattleSystem {
         battleEnemy.attackTimer -= deltaSeconds
       }
     }
+
+    // [6b] Bản Mệnh Pháp Bảo — timer ĐỘC LẬP với cast/basic attack và
+    // KHÔNG gate isIncapacitated() (player bị CC không dừng artifact,
+    // doc §11 điểm 3). No-op nếu battle.artifactRuntime undefined.
+    updateArtifactActivation(battle, deltaSeconds, this.artifactSystemDeps())
 
     // [7] Teleport ICD tick — luôn trôi trong fighting, độc lập stun.
 
@@ -1094,6 +1140,16 @@ export class BattleSystem {
     }
 
     const result = this.combat.resolveActionHit(source, target, damage, options.critical)
+
+    // Bản Mệnh Pháp Bảo — attribution + dispatch milestone theo hướng
+    // active. `element` suy từ chính damage vừa resolve (artifact luôn
+    // gửi ĐÚNG 1 component/hit, xem ArtifactSystem.buildArtifactDamage()).
+    if (options.origin?.kind === 'artifact') {
+      const firstComponent = damage.kind === 'elemental' ? damage.components[0] : undefined
+      const element = firstComponent?.kind === 'element' ? firstComponent.element : undefined
+
+      onArtifactHitResolved(battle, source, target, !result.dodged, element, this.artifactSystemDeps())
+    }
 
     // Thổ Tu (Thạch Hóa) — MỌI đòn đánh TRÚNG roll on-hit-proc đang
 
@@ -2273,9 +2329,13 @@ export class BattleSystem {
 
         reactionManager: this.reactionManager,
 
+        reactionKeepChance: this.getReactionKeepChance(),
+
         spawnLavaZone: (spec) => this.spawnLavaZone(battle, spec),
 
         skillId: skill.id,
+
+        skillExperience: skill.totalExperience ?? skill.experience ?? 0,
       })
     }
 

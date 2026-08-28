@@ -12,7 +12,6 @@ import CombatSkillSlot from './CombatSkillSlot.vue'
 import { useCombatSkillPresentation } from '@/composables/useCombatSkillPresentation'
 import { useCadenceSmoothing } from '@/composables/useCadenceSmoothing'
 import { useGameManager } from '@/composables/useGameState'
-import { useUiStore } from '@/stores/ui'
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
 
 const { loadout, skillFor } = useCombatSkillPresentation()
@@ -20,9 +19,8 @@ const { loadout, skillFor } = useCombatSkillPresentation()
 const primary = computed(() => loadout.value.find(entry => entry.slotIndex === 0))
 
 // Audit P1-4 — mask/số đếm nội suy mượt giữa hai snapshot thay vì nhảy
-// theo nhịp tick; đóng băng khi pause/không có trận đang chạy.
+// theo nhịp tick; đóng băng khi không có trận đang chạy.
 const gameManager = useGameManager()
-const ui = useUiStore()
 
 const cadenceRemaining = useCadenceSmoothing(
   () => ({
@@ -32,7 +30,7 @@ const cadenceRemaining = useCadenceSmoothing(
   () => {
     const battle = gameManager.getBattle()
 
-    return battle !== null && isBattleInProgress(battle.state) && !ui.isPaused
+    return battle !== null && isBattleInProgress(battle.state)
   },
 )
 </script>

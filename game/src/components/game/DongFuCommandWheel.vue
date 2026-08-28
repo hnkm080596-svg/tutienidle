@@ -6,16 +6,39 @@
 // quay ngược chiều nhau và tăng alpha trong suốt hành trình.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useUiStore } from '@/stores/ui'
+import { usePlayerStore } from '@/stores/player'
 import { useStageActive } from '@/composables/useStageActive'
 import { useBuildingNavigation } from '@/composables/useBuildingNavigation'
-import { COMMAND_WHEEL_SLOTS, type CommandWheelSlot } from '@/game/support/commandWheelCatalog'
+import {
+  COMMAND_WHEEL_SLOTS,
+  type CommandWheelDisabledContext,
+  type CommandWheelSlot,
+} from '@/game/support/commandWheelCatalog'
 import { getCommandWheelOrbitDirection } from '@/game/support/commandWheelOrbit'
+import { getRealmIndex } from '@/core/realm/realmSystem'
+import { ARTIFACT_ID_BY_CULTIVATION_PATH } from '@/core/artifact/Artifact'
 
 const ui = useUiStore()
+const player = usePlayerStore()
 
 const stageActive = useStageActive()
 
 const navigation = useBuildingNavigation()
+
+// Bản Mệnh Pháp Bảo (2026-08-27) — context runtime cho
+// CommandWheelSlot.disabledReason(), build ở ĐÂY (component, không
+// phải catalog) — xem ghi chú "catalog thuần data" trong
+// commandWheelCatalog.ts.
+const disabledContext = computed<CommandWheelDisabledContext>(() => ({
+  hasFoundationRealm: getRealmIndex(player.realmId) >= getRealmIndex('foundation_establishment'),
+  hasArtifactDefinition: player.cultivationPath
+    ? Boolean(ARTIFACT_ID_BY_CULTIVATION_PATH[player.cultivationPath])
+    : false,
+}))
+
+function disabledReason(slot: CommandWheelSlot): string | null {
+  return slot.disabledReason?.(disabledContext.value) ?? null
+}
 
 /** Future slot (available=false) tồn tại trong catalog nhưng KHÔNG render. */
 const renderedSlots = computed(() => COMMAND_WHEEL_SLOTS.filter((slot) => slot.available()))
@@ -229,6 +252,10 @@ function isUpgradeable(slot: CommandWheelSlot): boolean {
 
 // Chọn shortcut: đóng wheel TRƯỚC rồi mới mở panel/overlay tương ứng.
 function activate(slot: CommandWheelSlot) {
+  if (disabledReason(slot)) {
+    return
+  }
+
   ui.closeCommandWheel()
 
   if (slot.buildingId) {
@@ -288,12 +315,14 @@ function activate(slot: CommandWheelSlot) {
         class="command-wheel__slot"
         :class="[
           `command-wheel__slot--ring${slot.ring}`,
-          { 'is-active': isActive(slot), 'is-upgradeable': isUpgradeable(slot) },
+          { 'is-active': isActive(slot), 'is-upgradeable': isUpgradeable(slot), 'is-disabled': disabledReason(slot) },
         ]"
         :style="slotStyle(slot, index, renderedSlots.length)"
         :data-wheel-orbit="index % ORBIT_COUNT"
         :aria-label="slot.label"
         :data-wheel-slot="slot.id"
+        :aria-disabled="Boolean(disabledReason(slot))"
+        v-tooltip="disabledReason(slot) ?? undefined"
         @click="activate(slot)"
       >
         <span class="command-wheel__label">{{ slot.label }}</span>
@@ -413,6 +442,20 @@ function activate(slot: CommandWheelSlot) {
 .command-wheel__slot:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring-gold);
+}
+
+/* Bản Mệnh Pháp Bảo (2026-08-27) — slot render được nhưng tạm chưa bấm
+   được (disabledReason), khác hẳn "không tồn tại" (available=false,
+   không render nút nào cả). */
+.command-wheel__slot.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.command-wheel__slot.is-disabled:hover,
+.command-wheel__slot.is-disabled:focus-visible {
+  border-color: var(--ink-line);
+  color: var(--text-primary);
 }
 
 /* Active state suy ra từ uiStore (panel/popover đang mở). */

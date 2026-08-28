@@ -121,10 +121,9 @@ describe('DongFuCommandWheel', () => {
     expect(wheel.classList.contains('is-ready')).toBe(true)
   })
 
-  it('future slot (Pháp Bảo/Phù/Trận) KHÔNG render nút', async () => {
+  it('future slot (Phù/Trận) KHÔNG render nút', async () => {
     await mounted.open()
 
-    expect(mounted.slot('phap_bao')).toBeNull()
     expect(mounted.slot('talisman_slot')).toBeNull()
     expect(mounted.slot('formation_slot')).toBeNull()
 
@@ -133,13 +132,26 @@ describe('DongFuCommandWheel', () => {
     expect(mounted.slot('scripture_pavilion')).not.toBeNull()
   })
 
+  // Bản Mệnh Pháp Bảo (2026-08-27) — SHIPPED: slot render ngay (khác
+  // talisman_slot/formation_slot vẫn future) nhưng disabled trước Trúc
+  // Cơ, xem commandWheelCatalog.ts's phap_bao.disabledReason().
+  it('slot Pháp Bảo render nhưng disabled trước Trúc Cơ (Phàm Nhân mặc định)', async () => {
+    await mounted.open()
+
+    const slot = mounted.slot('phap_bao')
+
+    expect(slot).not.toBeNull()
+    expect(slot!.classList.contains('is-disabled')).toBe(true)
+    expect(slot!.getAttribute('aria-disabled')).toBe('true')
+  })
+
   it('shortcut Nhân Vật mở đúng leftPanelMode và đóng wheel', async () => {
     await mounted.open()
 
     mounted.slot('character')!.click()
     await nextTick()
 
-    expect(mounted.ui.leftPanelMode).toBe('character')
+    expect(mounted.ui.characterOverlayOpen).toBe(true)
     expect(mounted.ui.isCommandWheelOpen).toBe(false)
   })
 

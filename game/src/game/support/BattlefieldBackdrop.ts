@@ -48,8 +48,8 @@ function mulberry32(seed: number): () => number {
   }
 }
 export interface BattlefieldBackdropHandle {
-  /** width/height optional — procedural backdrop bỏ qua, art mount dùng. */
-  redraw(width?: number, height?: number): void
+  /** width/height/horizonY optional — procedural backdrop bỏ qua (đọc thẳng projection), art mount dùng để neo layer vào horizonY thật. */
+  redraw(width?: number, height?: number, horizonY?: number): void
 
   destroy(): void
 }

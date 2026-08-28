@@ -45,13 +45,21 @@ const SORT_OPTIONS: Array<BagSortOption & { value: MaterialSortMode }> = [
   { value: 'source', label: 'Nguồn chính' },
 ]
 
+const AGE_LABELS: Record<string, string> = {
+  decade: 'Thập Niên', century: 'Bách Niên', millennium: 'Thiên Niên', myriad_year: 'Vạn Niên',
+}
+
 function buildTooltip(material: Material, owned: number): GradedItemTooltipContent {
   const rows = [
     { label: 'Phân loại', value: CATEGORY_LABELS[material.category] },
     { label: 'Nguồn chính', value: SOURCE_LABELS[material.sourceType] },
   ]
 
-  if (material.years !== undefined) rows.push({ label: 'Niên đại', value: `${material.years} năm` })
+  if (material.profession?.age) {
+    rows.push({ label: 'Tuổi thọ', value: AGE_LABELS[material.profession.age] ?? `${material.years ?? 0} năm` })
+  } else if (material.years !== undefined) {
+    rows.push({ label: 'Tuổi thọ', value: `${material.years} năm` })
+  }
   if (material.element !== undefined)
     rows.push({ label: 'Thuộc tính', value: ELEMENT_LABELS[material.element] })
 
@@ -125,16 +133,29 @@ const MATERIAL_COMPARATORS: Record<Exclude<MaterialSortMode, 'default'>, (a: Mat
     SOURCE_ORDER.indexOf(a.material.sourceType) - SOURCE_ORDER.indexOf(b.material.sourceType),
 }
 
+// Ghim Linh Thạch ở ô đầu (plan Workstream D) — chạy TRƯỚC comparator
+// sort thường, KHÔNG qua withDirection(), áp dụng ở MỌI mode (kể cả
+// default) và cả hai direction.
+function comparePinned(a: MaterialEntry, b: MaterialEntry): number {
+  const aPinned = a.material.category === 'spirit_stone'
+  const bPinned = b.material.category === 'spirit_stone'
+
+  if (aPinned === bPinned) return 0
+
+  return aPinned ? -1 : 1
+}
+
 const cells = computed<BagCell[]>(() => {
   const sortState = ui.bagSorts.material
 
-  if (sortState.mode === 'default') {
-    return entries.value.map((entry) => entry.cell)
-  }
+  const normalCompare: (a: MaterialEntry, b: MaterialEntry) => number =
+    sortState.mode === 'default'
+      ? () => 0
+      : withDirection(MATERIAL_COMPARATORS[sortState.mode], sortState.direction)
 
   const sorted = stableSort(
     entries.value,
-    withDirection(MATERIAL_COMPARATORS[sortState.mode], sortState.direction),
+    (a, b) => comparePinned(a, b) || normalCompare(a, b),
   )
 
   return sorted.map((entry) => entry.cell)

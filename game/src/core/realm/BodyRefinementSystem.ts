@@ -2,6 +2,7 @@ import type { PlayerData } from '../player/Player'
 import type { StatModifier } from '../stats/StatCalculator'
 import { BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
 import { clamp } from '../math/clamp'
+import { getBodyRefinementProgressMultiplier } from '../talent/TalentEffects'
 
 const TOTAL_TIERS = BODY_REFINEMENT_TIERS.length
 
@@ -119,9 +120,21 @@ export function investTinhHoa(player: PlayerData, availableAmount: number): numb
 
   const cap = getTierCap(activeTierIndex)
   const remaining = cap - player.bodyRefinementCurrentTierProgress
-  const consumed = Math.min(availableAmount, remaining)
 
-  player.bodyRefinementCurrentTierProgress += consumed
+  if (remaining <= 0) {
+    return 0
+  }
+
+  // Thiên phú Luyện Thể Kỳ Tài — nhân progress trước khi so cap (plan §6).
+  // needed = ceil(remaining / multiplier) để multiplier > 1 tiêu ÍT Tinh
+  // Hoa hơn mà không lãng phí (progress clamp đúng phần còn thiếu); trả
+  // về số Tinh Hoa THẬT SỰ đã tiêu.
+  const multiplier = getBodyRefinementProgressMultiplier(player.selectedTalentIds)
+  const needed = Math.ceil(remaining / multiplier)
+  const consumed = Math.min(availableAmount, needed)
+  const progress = Math.min(consumed * multiplier, remaining)
+
+  player.bodyRefinementCurrentTierProgress += progress
 
   if (player.bodyRefinementCurrentTierProgress >= cap) {
     player.bodyRefinementCompletedTiers += 1

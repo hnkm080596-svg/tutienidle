@@ -8,8 +8,11 @@
         "baseURL": "https://kiraai.vn/api/v1"
       },
       "models": {
-        "glm-5.3": {
-          "name": "GLM 5.3"
+        "qwen3.8-flash": {
+          "name": "Qwen 3.8 Flash"
+        },
+        "glm-5.3-flash": {
+          "name": "GLM 5.3 Flash"
         }
       }
     }
@@ -26,9 +29,9 @@
       }
     },
     "qwen-worker-2": {
-      "description": "Bounded implementation and unit-test worker 2",
+      "description": "Kira AI implementation and unit-test worker",
       "mode": "primary",
-      "model": "tokenrouter/qwen/qwen3.8-max-free",
+      "model": "kiraai/qwen3.8-flash",
       "permission": {
         "edit": "allow",
         "bash": "allow",
@@ -38,7 +41,7 @@
     "glm-worker": {
       "description": "Planning, implementation, data, documentation, and routine review worker",
       "mode": "primary",
-      "model": "kiraai/glm-5.3",
+      "model": "kiraai/glm-5.3-flash",
       "permission": {
         "edit": "allow",
         "bash": "allow",

@@ -30,7 +30,7 @@ const validName = computed(() => isValidCharacterName(name.value))
 function toggleTalent(talent: TalentDefinition) {
   const index = selectedTalentIds.value.indexOf(talent.id)
   if (index >= 0) selectedTalentIds.value.splice(index, 1)
-  else if (selectedTalentIds.value.length < 3) selectedTalentIds.value.push(talent.id)
+  else selectedTalentIds.value = [talent.id]
 }
 async function reroll() {
   if (rolling.value) return
@@ -86,7 +86,7 @@ onMounted(() => { void reroll() })
     </section>
 
     <section v-else-if="step === 2" class="creation-panel talent-step">
-      <div class="panel-heading"><div><p class="kicker">THIÊN MỆNH</p><h2>Chọn ba Thiên Phú</h2></div><strong>Đã chọn {{ selectedTalentIds.length }} / 3</strong></div>
+      <div class="panel-heading"><div><p class="kicker">THIÊN MỆNH</p><h2>Chọn một Thiên Phú</h2></div><strong>Đã chọn {{ selectedTalentIds.length }} / 1</strong></div>
       <p v-if="rolling" class="loading-roll">Đang quan sát thiên cơ…</p>
       <p v-else-if="error && talents.length === 0" class="loading-roll">{{ error }}</p>
       <div v-else class="talent-grid">
@@ -94,7 +94,7 @@ onMounted(() => { void reroll() })
           <span class="talent-card__rarity">{{ TALENT_RARITY_LABELS[talent.rarity] }}</span><h3>{{ talent.name }}</h3><p>{{ talent.description }}</p><small>{{ talent.tags[0] }}</small>
         </button>
       </div>
-      <footer class="panel-actions"><button class="secondary" :disabled="rolling" type="button" @click="reroll">↻ Reroll toàn bộ</button><button class="primary" :disabled="selectedTalentIds.length !== 3" type="button" @click="step = 3">Xác nhận thiên phú</button></footer>
+      <footer class="panel-actions"><button class="secondary" :disabled="rolling" type="button" @click="reroll">↻ Reroll toàn bộ</button><button class="primary" :disabled="selectedTalentIds.length !== 1" type="button" @click="step = 3">Xác nhận thiên phú</button></footer>
     </section>
 
     <section v-else class="creation-panel attribute-step">
@@ -102,7 +102,7 @@ onMounted(() => { void reroll() })
       <div class="attribute-list">
         <div v-for="(label, key) in attributeLabels" :key="key" class="attribute-row"><div><b>{{ label.name }}</b><small>{{ label.hint }}</small></div><div class="counter"><button type="button" @click="changeAttribute(key, -1)">−</button><span>{{ attributes[key] }}</span><button type="button" @click="changeAttribute(key, 1)">+</button></div></div>
       </div>
-      <div class="creation-summary"><span>{{ name }}</span><span>3 Thiên Phú</span><span>5 Điểm Căn Cơ</span></div>
+      <div class="creation-summary"><span>{{ name }}</span><span>1 Thiên Phú</span><span>5 Điểm Căn Cơ</span></div>
       <p v-if="error" class="creation-error">{{ error }}</p>
       <footer class="panel-actions"><button class="secondary" :disabled="creating" type="button" @click="step = 2">Chọn lại thiên phú</button><button class="primary" :disabled="pointsLeft !== 0 || creating" type="button" @click="finish">{{ creating ? 'Đang lập mệnh…' : 'Bước vào tiên đồ' }}</button></footer>
     </section>

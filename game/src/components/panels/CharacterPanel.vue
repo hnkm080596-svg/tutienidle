@@ -1,62 +1,32 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { usePlayerStore } from '@/stores/player'
-import { getCurrentRealm, getNextRealm, BASE_CULTIVATION_PER_SECOND } from '@/core/realm/realmSystem'
-import TechniqueSlotCard from './loadout-sections/TechniqueSlotCard.vue'
-import EquipmentPaperdoll from './EquipmentPaperdoll.vue'
+import { getCurrentRealm } from '@/core/realm/realmSystem'
 import PlayerPortrait from '../common/PlayerPortrait.vue'
 import type { Stats } from '@/core/stats/StatBlock'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { BASE_STAT_LABELS, formatStat, type StatCategory } from '@/core/stats/StatLabels'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS, ELEMENT_ORDER } from '@/core/element/ElementLabels'
-import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { CULTIVATION_PATH_KITS } from '@/core/player/CultivationPathKit'
 import { MAIN_STAT_KEYS, type MainStatKey } from '@/core/stats/StatTypes'
 import { getMainStatCap } from '@/core/stats/StatCap'
 import { useLoadoutActions } from '@/composables/useLoadoutActions'
-import { useBreakthrough } from '@/composables/useBreakthrough'
-import { useBreakthroughRequirementStore } from '@/stores/breakthroughRequirement'
-import { useUiStore } from '@/stores/ui'
-import { useTribulation } from '@/composables/useTribulation'
+import { getTalentDefinition } from '@/data/talent/Talents'
+import { TALENT_RARITY_LABELS, type TalentDefinition } from '@/core/talent/Talent'
 
 const player = usePlayerStore()
-const gameManager = useGameManager()
-const { stateVersion, bumpState } = useStateVersion()
 const { allocateAttributePoint } = useLoadoutActions()
-const { breakthrough } = useBreakthrough()
-const breakthroughRequirement = useBreakthroughRequirementStore()
-const ui = useUiStore()
-const { triggerQuanKhi } = useTribulation()
-
-// Quán Khí (2026-08-20, Realm Passive & Pressure follow-up) — mở SỚM ở
-// tầng 12 (KHÔNG còn chờ maxLevel=18), chừa 12-18 làm cửa sổ "chơi
-// tiếp" (Luyện Thể tầng cuối cũng mở ở 12, xem data/realm/LuyenThe.ts)
-// trước khi quyết định. Nút bấm hiện bên cạnh Đột Phá (xem
-// .character-panel__breakthrough), mở QuanKhiPanel.vue thay vì liệt kê
-// path-choices ngay tại đây như trước.
-const QUAN_KHI_UNLOCK_LEVEL = 12
-
-// Nghi Lễ Nhập Môn (2026-08-16) — chọn path. Save cũ (tạo trước khi
-// Phàm Nhân tồn tại, đã ở qi_refining+ mà chưa từng chọn path) là NGOẠI
-// LỆ — coi như nghi lễ đã qua, mở ngay không cần lùi về Phàm Nhân (Phàm
-// Nhân->Luyện Khí là chuyển tiếp 1 chiều, không có đường quay lại).
-const canChooseCultivationPath = computed(() => {
-  if (player.cultivationPath) {
-    return false
-  }
-
-  if (player.realmId === 'mortal') {
-    return player.realmLevel >= QUAN_KHI_UNLOCK_LEVEL
-  }
-
-  return true
-})
-
-function openQuanKhi() {
-  triggerQuanKhi()
-}
 
 const chosenKit = computed(() => player.cultivationPath ? CULTIVATION_PATH_KITS[player.cultivationPath] : undefined)
+
+// Thiên Phú (talent-direction-choice-plan §7) — hiển thị thiên phú đã chọn
+// (tên + description) đọc từ selectedTalentIds qua getTalentDefinition;
+// id lạ trong save cũ bị bỏ qua an toàn (undefined → filter loại).
+const selectedTalents = computed(() =>
+  player.selectedTalentIds
+    .map((talentId) => getTalentDefinition(talentId))
+    .filter((talent): talent is TalentDefinition => talent !== undefined),
+)
 
 // UI redesign mục 11 (Character) — silhouette nhân vật ở cột giữa
 // header nhuộm màu theo hệ của path đã chọn (Kiếm Tu khai `element`
@@ -75,78 +45,6 @@ const characterPortraitHeight = 104
 // Đọc tên skill qua skillManager (LEARNED skills, public) thay vì
 // GameManager.skillTemplates (private) — sau chooseCultivationPath(),
 // cả 3 skill của kit đã chắc chắn có trong skillManager.
-const chosenKitSkillNames = computed(() => {
-  stateVersion.value
-
-  // Pháp Tu Redesign — Pháp Tu không còn skillIds cố định (skill mở
-  // qua Node Tree), CHỈ Kiếm Tu còn khai.
-  return (chosenKit.value?.skillIds ?? []).map(skillId => gameManager.skillManager.get(skillId)?.name ?? skillId)
-})
-
-// Đọc technique THẬT qua techniqueManager (không phải chỉ id tĩnh
-// trong kit) — Pháp Tu Redesign (magicpath): Tâm Pháp giờ thuần lớp
-// giới thiệu, hiện description hoa mỹ thay vì hiệu ứng đột phá cũ.
-const chosenTechnique = computed(() => {
-  stateVersion.value
-
-  const kit = chosenKit.value
-
-  if (!kit) {
-    return undefined
-  }
-
-  return gameManager.techniqueManager.get(kit.techniqueId)
-})
-
-// Đột Phá Trúc Cơ (mục 3/4 spec) — dời từ BreakthroughButton.vue (overlay
-// nổi giữa màn hình cũ, đã xoá) vào thẳng cột Cảnh Giới (2026-08-20,
-// thay nút "Dừng Tu Luyện" đã bỏ — xem Work Stream 3, tu luyện giờ tự
-// động hoàn toàn). Bỏ guard `!isFighting` cũ — CharacterPanel.vue chỉ
-// render trong chrome Động Phủ, GameRoot.vue đã ẩn hẳn chrome này lúc
-// combat (`v-if="!isCombatSceneActive"`), guard cũ thành thừa.
-const canTriggerFoundation = computed(() => gameManager.canTriggerFoundationBreakthrough(player.$state))
-
-const canTriggerRealm = computed(() => gameManager.canTriggerRealmBreakthrough(player.$state))
-
-const nextRealmName = computed(() => getNextRealm(player.realmId)?.name ?? '')
-
-// UI redesign mục 11/14 (Character đã hấp thu luôn "Tu Luyện" — không
-// có LeftPanelMode riêng nào cho nó, xem tienhiep-ui-redesign memory
-// Step 11) — spec mục 14 muốn 1 đồng hồ đếm ngược thật thay vì chỉ %.
-// cultivationPerSecond CỐ ĐỊNH cho MỌI người chơi từ Pháp Tu Redesign
-// (không còn bonus nào rút ngắn được nữa, xem realmSystem.ts's
-// BASE_CULTIVATION_PER_SECOND) nên ETA tính thẳng từ đó — số giây thật
-// có thể trải dài từ vài giây (Phàm Nhân) tới hàng chục ngày (đại cảnh
-// giới cao, realmDurationMultiplier lớn), KHÔNG dùng cứng HH:MM:SS như
-// mockup gốc (sẽ vỡ hình với ETA nhiều ngày) — tự chọn đơn vị theo độ
-// lớn, giống format-mẫu formatDuration() đã có ở ExplorationPanel.vue/
-// OfflineSummaryModal.vue (thêm biến thể "ngày" vì phạm vi ETA ở đây
-// rộng hơn 2 chỗ kia nhiều).
-const cultivationEtaLabel = computed(() => {
-  if (player.cultivationProgress >= 1) {
-    return 'Có thể đột phá'
-  }
-
-  const secondsLeft = (player.cultivationRequired - player.cultivation) / BASE_CULTIVATION_PER_SECOND
-
-  const days = Math.floor(secondsLeft / 86400)
-  const hours = Math.floor((secondsLeft % 86400) / 3600)
-  const minutes = Math.floor((secondsLeft % 3600) / 60)
-
-  if (days > 0) {
-    return `Còn ${days} ngày ${hours} giờ`
-  }
-
-  if (hours > 0) {
-    return `Còn ${hours} giờ ${minutes} phút`
-  }
-
-  if (minutes > 0) {
-    return `Còn ${minutes} phút`
-  }
-
-  return `Còn ${Math.ceil(secondsLeft)} giây`
-})
 
 const realm = computed(() => getCurrentRealm(player.realmId))
 
@@ -180,31 +78,6 @@ const statGroups = computed(() =>
 // 4 tab: Thuộc Tính (attribute, có nút +) | Chiến Đấu (combat+special)
 // | Phòng Thủ & Sinh Tồn (defense_advanced+survival) | Ngũ Hành & Khác
 // (chips + hiệu ứng đan dược vĩnh viễn).
-const STAT_TABS = [
-  { key: 'attribute', label: 'Thuộc Tính' },
-  { key: 'combat', label: 'Chiến Đấu' },
-  { key: 'defense', label: 'Phòng Thủ & Sinh Tồn' },
-  { key: 'elements', label: 'Ngũ Hành & Khác' },
-] as const
-
-type StatTabKey = (typeof STAT_TABS)[number]['key']
-
-const activeStatTab = ref<StatTabKey>('attribute')
-
-const attributeGroups = computed(() => statGroups.value.filter(group => group.category === 'attribute'))
-
-const combatGroups = computed(() => statGroups.value.filter(group => group.category === 'combat' || group.category === 'special'))
-
-const defenseGroups = computed(() => statGroups.value.filter(group => group.category === 'defense_advanced' || group.category === 'survival'))
-
-const visibleStatGroups = computed(() => {
-  switch (activeStatTab.value) {
-    case 'attribute': return attributeGroups.value
-    case 'combat': return combatGroups.value
-    case 'defense': return defenseGroups.value
-    default: return []
-  }
-})
 
 // PLAN HOÀN CHỈNH mục 4 — UI Stat Cap: KHÔNG hiện "24/30", chỉ hiện số
 // + chữ "MAX" (vàng) ngay bên dưới khi ĐẦY. Trần tính trên baseStats
@@ -293,12 +166,8 @@ const pillPermanentRows = computed(() => {
 
 <template>
   <div class="character-panel">
-    <!-- WS3 Redesign (2026-08-24) — header 2 VÙNG xếp dọc thay 3 cột
-         ngang chật chội cũ: (1) chân dung + tên/cảnh giới/chiến lực,
-         (2) thanh tu vi + ETA + auto-đột phá + hàng nút hành động.
-         Trang bị tách thành section RIÊNG bên dưới dùng trọn chiều rộng
-         panel — lưới paperdoll 3x2 đủ lớn để nhận diện item/badge
-         (trước đây bị nhét vào cột 32% của header). -->
+    <!-- Tu vi và Đột Phá thuộc hoàn toàn về panel Cảnh Giới. Nhân Vật
+         chỉ giữ nhận diện, chiến lực và chỉ số để tránh lặp UI. -->
     <div class="character-panel__header">
       <div class="character-panel__identity">
         <div class="character-panel__figure" :style="{ '--aura': characterAuraColor }">
@@ -323,147 +192,25 @@ const pillPermanentRows = computed(() => {
         </div>
       </div>
 
-      <div class="character-panel__progress">
-        <div class="character-panel__cultivation">
-          <div class="character-panel__cultivation-bar">
-            <div
-              class="character-panel__cultivation-fill"
-              :style="{ width: `${player.cultivationProgress * 100}%` }"
-            />
-          </div>
-
-          <span class="character-panel__cultivation-label">Tu vi {{ (player.cultivationProgress * 100).toFixed(1) }}%</span>
-
-          <span class="character-panel__cultivation-eta">{{ cultivationEtaLabel }}</span>
-        </div>
-
-        <label
-          class="character-panel__auto-breakthrough"
-          v-tooltip="'Tu vi đủ là tự động đột phá tiểu cảnh giới, không cần bấm tay. Không áp dụng cho Trúc Cơ/đại cảnh giới.'"
-        >
-          <input type="checkbox" :checked="ui.isAutoBreakthrough" @change="ui.toggleAutoBreakthrough()">
-          Tự Động Đột Phá
-        </label>
-
+      <!-- Thiên Phú đã chọn (talent-direction-choice-plan §7) — quyết định
+           hướng Đạo duy nhất lúc tạo nhân vật, luôn hiển thị để người
+           chơi nhớ mình đang đi đường nào. -->
+      <div v-if="selectedTalents.length > 0" class="character-panel__talents">
         <div
-          v-if="player.cultivation >= player.cultivationRequired || canTriggerFoundation || canTriggerRealm || canChooseCultivationPath"
-          class="character-panel__breakthrough"
+          v-for="talent in selectedTalents"
+          :key="talent.id"
+          class="talent-block"
+          :class="`talent-tier-${talent.rarity}`"
         >
-          <button
-            v-if="player.cultivation >= player.cultivationRequired"
-            type="button"
-            class="character-panel__breakthrough-btn"
-            v-tooltip="'Tu vi đã đủ — bấm để đột phá lên tầng kế tiếp.'"
-            @click="breakthrough()"
-          >
-            Đột Phá
-          </button>
-
-          <!-- Quán Khí (2026-08-20) — mở panel chọn Pháp Tu/Kiếm Tu (hoặc
-                path tương lai), thay path-choices liệt kê thẳng ở đây như
-                trước. Hiện SONG SONG với Đột Phá tiểu cảnh giới (Phàm Nhân
-                tầng 12-18 vẫn có thể tiếp tục đột phá thường, xem
-                QUAN_KHI_UNLOCK_LEVEL) — người chơi tự chọn lúc nào commit. -->
-          <button
-            v-if="canChooseCultivationPath"
-            type="button"
-            class="character-panel__breakthrough-btn character-panel__breakthrough-btn--realm"
-            v-tooltip="'Chọn con đường tu luyện — Pháp Tu hoặc Kiếm Tu.'"
-            @click="openQuanKhi()"
-          >
-            Quán Khí
-          </button>
-
-          <button
-            v-if="canTriggerFoundation"
-            type="button"
-            class="character-panel__breakthrough-btn character-panel__breakthrough-btn--realm"
-            @click="breakthroughRequirement.open()"
-          >
-            Trúc Cơ
-          </button>
-
-          <button
-            v-if="canTriggerRealm"
-            type="button"
-            class="character-panel__breakthrough-btn character-panel__breakthrough-btn--realm"
-            @click="breakthroughRequirement.open()"
-          >
-            Đột Phá {{ nextRealmName }}
-          </button>
+          <span class="talent-block__rarity">{{ TALENT_RARITY_LABELS[talent.rarity] }}</span>
+          <span class="talent-block__name">{{ talent.name }}</span>
+          <p class="talent-block__description">{{ talent.description }}</p>
         </div>
       </div>
-    </div>
-
-    <!-- WS3 — Trang Bị là section độc lập, KHÔNG còn nằm trong header. -->
-    <section class="character-panel__equipment">
-      <h4 class="character-panel__section-title">Trang Bị</h4>
-
-      <div class="character-panel__paperdoll">
-        <EquipmentPaperdoll />
-      </div>
-    </section>
-
-    <!-- Home Hub Phase 6 (Động Phủ) — Tâm Pháp hợp nhất đang trang bị
-         (2026-08-15, không còn tách Tu Luyện/Chiến Đấu), dùng chung
-         TechniqueSlotCard với LoadoutManager.vue's tab Tâm Pháp (cùng
-         nguồn techniqueManager, đổi ở đây phản ánh đúng sang đó và
-         ngược lại). -->
-    <div class="character-panel__technique">
-      <TechniqueSlotCard label="Tâm Pháp" />
-    </div>
-
-    <!-- Pháp Tu profession-tier ladder (2026-08-14) — chọn 1 lần, VĨNH
-         VIỄN. Trước khi chọn: nút bấm sống ở cột Cảnh Giới ("Quán Khí",
-         xem .character-panel__breakthrough) mở QuanKhiPanel.vue, ở đây
-         chỉ còn hint. Sau khi chọn: tóm tắt Tâm Pháp + 3 skill được
-         cấp, CHỈ ĐỌC (không đổi so với trước). -->
-    <div class="character-panel__cultivation-path">
-      <div v-if="chosenKit" class="path-summary">
-        <h4 class="path-summary__title">{{ chosenKit.name }}</h4>
-
-        <p v-if="chosenKit.element" class="path-summary__meta">Hệ {{ ELEMENT_LABELS[chosenKit.element] }}</p>
-
-        <ul v-if="chosenKitSkillNames.length > 0" class="path-summary__skills">
-          <li v-for="name in chosenKitSkillNames" :key="name">{{ name }}</li>
-        </ul>
-
-        <p v-if="chosenTechnique?.description" class="path-summary__breakthrough">
-          {{ chosenTechnique.description }}
-        </p>
-
-        <!-- Element Loadout + Node Tree dời sang LoadoutManager.vue's
-             tab Kỹ Năng (nửa dưới, 2026-08-20) — xem PLAN HOÀN CHỈNH
-             mục 10 rework. -->
-      </div>
-
-      <p v-else-if="canChooseCultivationPath" class="character-panel__path-hint">
-        Nhấn "Quán Khí" để chọn con đường tu luyện.
-      </p>
-
-      <p v-else class="character-panel__path-hint">Đạt Phàm Nhân tầng {{ QUAN_KHI_UNLOCK_LEVEL }} để Quán Khí.</p>
     </div>
 
     <div class="character-panel__body">
-      <!-- WS3 — chỉ số chia TAB: mỗi tab giữ lượng thông tin quét mắt
-           được; Ngũ Hành + hiệu ứng đan dược gộp tab cuối cùng. -->
-      <div class="character-panel__tabs" role="tablist" aria-label="Nhóm chỉ số">
-        <button
-          v-for="tab in STAT_TABS"
-          :key="tab.key"
-          type="button"
-          role="tab"
-          class="character-panel__tab"
-          :class="{ 'is-active': activeStatTab === tab.key }"
-          :aria-selected="activeStatTab === tab.key"
-          @click="activeStatTab = tab.key"
-        >
-          {{ tab.label }}
-        </button>
-      </div>
-
-      <template v-if="activeStatTab !== 'elements'">
-        <div v-for="group in visibleStatGroups" :key="group.category" class="stat-group">
+        <div v-for="group in statGroups" :key="group.category" class="stat-group">
         <h4 class="stat-group__title stat-group__title--static">
           {{ group.label }}
           <template v-if="group.category === 'attribute' && player.attributePoints > 0">(còn {{ player.attributePoints }} điểm)</template>
@@ -496,9 +243,6 @@ const pillPermanentRows = computed(() => {
           </li>
         </ul>
       </div>
-      </template>
-
-      <template v-else>
       <div class="stat-group">
         <h4 class="stat-group__title stat-group__title--static">Ngũ Hành</h4>
 
@@ -507,6 +251,8 @@ const pillPermanentRows = computed(() => {
             v-for="row in elementRows"
             :key="row.element"
             class="element-chip"
+            :data-element="row.element"
+            :class="`element-chip--${row.element}`"
             :style="{ '--chip-color': row.color }"
             v-tooltip="{ title: row.label, description: `Power ${Math.round(row.power)} · Kháng ${Math.round(row.resistance)} · Xuyên ${Math.round(row.penetration)}` }"
           >
@@ -532,7 +278,6 @@ const pillPermanentRows = computed(() => {
           {{ row.label }}: {{ row.value }}/{{ row.cap }}
         </span>
       </div>
-      </template>
     </div>
   </div>
 </template>
@@ -644,94 +389,49 @@ const pillPermanentRows = computed(() => {
   letter-spacing: 0.04em;
 }
 
-/* WS3 vùng 2 — tiến độ tu luyện + hành động chính, luôn trong viewport
-   đầu panel không cần cuộn. */
-.character-panel__progress {
+/* Thiên Phú đã chọn (talent-direction-choice-plan §7) — khối nhỏ dưới
+   vùng nhận diện, tông màu theo rarity giống thẻ roll lúc tạo nhân vật
+   (CharacterCreationScreen.vue's talent-tier-*). */
+.character-panel__talents {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
 }
 
-.character-panel__cultivation {
-  margin-bottom: 0;
+.talent-block {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--ink-line);
+  border-radius: 7px;
+  background: #101016;
 }
 
-.character-panel__cultivation-bar {
-  height: 8px;
-  border-radius: 4px;
-  background: var(--ink-700);
-  overflow: hidden;
+.talent-block__rarity {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
 }
 
-.character-panel__cultivation-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--jade), var(--gold-500));
-}
-
-.character-panel__cultivation-label {
+.talent-block__name {
   display: block;
-  margin-top: var(--space-1);
-  font-size: var(--text-xs);
+  margin: 4px 0 2px;
+  font-family: var(--font-display);
+  font-size: var(--text-body);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.talent-block__description {
+  margin: 0;
   color: var(--text-secondary);
-  text-align: left;
+  font-size: 11px;
+  line-height: 1.5;
 }
 
-/* Đồng hồ đếm ngược thật (spec mục 14) — xem cultivationEtaLabel. */
-.character-panel__cultivation-eta {
-  display: block;
-  font-size: var(--text-xs);
-  color: var(--gold-500);
-  text-align: left;
-}
-
-/* Auto Đột Phá (2026-08-20) — nằm NGOÀI .character-panel__breakthrough
-   (v-if theo cultivation đủ/không) để checkbox luôn hiện, không biến
-   mất ngay sau lần đột phá đầu tiên (progress reset về dưới ngưỡng),
-   người chơi khỏi phải tick lại mỗi tầng. Cùng kiểu với
-   StageSelectPanel.vue's .stage-select__auto. */
-.character-panel__auto-breakthrough {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-bottom: 0;
-  font-size: var(--text-xs);
-  color: var(--text-secondary);
-  cursor: pointer;
-}
-
-/* Đột Phá — dời vào từ BreakthroughButton.vue (overlay cũ đã xoá, xem
-   Work Stream 2), thay nút Tu Luyện thủ công. WS3 — hàng nút NGANG
-   (wrap) thay vì xếp dọc chiếm chiều cao header. */
-.character-panel__breakthrough {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.character-panel__breakthrough-btn {
-  display: block;
-  min-height: var(--tap-min);
-  padding: var(--space-2) var(--space-4);
-  background: linear-gradient(180deg, #ffe082, #ffb300);
-  color: #221a00;
-  border: 1px solid #fff3c4;
-  border-radius: var(--radius-sm);
-  font-weight: 700;
-  font-size: var(--text-sm);
-  cursor: pointer;
-}
-
-.character-panel__breakthrough-btn:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring-gold);
-}
-
-.character-panel__breakthrough-btn--realm {
-  background: linear-gradient(180deg, #e082ff, #b300ff);
-  color: #1a0022;
-  border-color: #f3c4ff;
-}
+.talent-tier-pham .talent-block__rarity { color: var(--rank-color-1); }
+.talent-tier-linh .talent-block__rarity { color: var(--rank-color-3); }
+.talent-tier-dia .talent-block__rarity { color: var(--rank-color-5); }
+.talent-tier-thien .talent-block__rarity { color: var(--rank-color-7); }
+.talent-tier-di .talent-block__rarity { color: var(--rank-color-8); }
 
 /* WS3 — section Trang Bị độc lập dưới header, paperdoll dùng trọn
    chiều rộng panel. */
@@ -815,43 +515,10 @@ const pillPermanentRows = computed(() => {
   overflow-y: auto;
   padding: var(--space-3);
   font-size: var(--text-body);
+  scrollbar-width: none;
 }
 
-/* WS3 — tab bar chỉ số. */
-.character-panel__tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1);
-  margin-bottom: var(--space-3);
-}
-
-.character-panel__tab {
-  padding: var(--space-1) var(--space-3);
-  min-height: 32px;
-  background: var(--ink-800);
-  border: 1px solid var(--ink-line-soft);
-  border-radius: 999px;
-  color: var(--text-secondary);
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-  cursor: pointer;
-  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
-}
-
-.character-panel__tab:hover {
-  color: var(--gold-300);
-}
-
-.character-panel__tab.is-active {
-  color: var(--gold-500);
-  background: rgba(255, 213, 79, 0.1);
-  border-color: rgba(255, 213, 79, 0.45);
-}
-
-.character-panel__tab:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring-gold);
-}
+.character-panel__body::-webkit-scrollbar { display: none; }
 
 .stat-group {
   margin-bottom: var(--space-4);
@@ -929,12 +596,16 @@ const pillPermanentRows = computed(() => {
 }
 
 .element-chips {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+  position: relative;
+  height: 260px;
+  max-width: 310px;
+  margin: 0 auto;
 }
 
 .element-chip {
+  position: absolute;
+  width: 86px;
+  min-height: 42px;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -943,6 +614,15 @@ const pillPermanentRows = computed(() => {
   background: var(--ink-800);
   border: 1px solid var(--ink-line-soft);
 }
+
+.element-chip--fire { left: 50%; top: 0; transform: translateX(-50%); }
+.element-chip--wood { left: 5%; top: 62px; }
+.element-chip--earth { right: 5%; top: 62px; }
+.element-chip--water { left: 20%; bottom: 16px; }
+.element-chip--metal { right: 20%; bottom: 16px; }
+.element-chip--wind { left: calc(50% - 92px); top: 112px; }
+.element-chip--lightning { right: calc(50% - 92px); top: 112px; }
+.element-chip:not([data-element]) { left: 50%; top: 158px; transform: translateX(-50%); }
 
 .element-chip__dot {
   width: 8px;

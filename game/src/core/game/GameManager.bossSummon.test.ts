@@ -53,7 +53,7 @@ function createSummonTargetDefinition(id: string): EnemyDefinition {
     realmId: 'mortal',
     lane: 'ground',
     statsInput: MINIMAL_STATS_INPUT,
-    rewards: { techniqueInsight: 0, cultivation: 0, spiritStone: 0 },
+    rewards: { techniqueInsight: 0, spiritStone: 0 },
   }
 }
 
@@ -79,7 +79,7 @@ describe('GameManager.updateBossSummons (Combat Rework Phase 4 — Boss Mechanic
       realmId: 'mortal',
       lane: 'ground',
       statsInput: MINIMAL_STATS_INPUT,
-      rewards: { techniqueInsight: 0, cultivation: 0, spiritStone: 0 },
+      rewards: { techniqueInsight: 0, spiritStone: 0 },
       isBoss: true,
       tribulationPhases: [
         // hpThresholdPercent 1 -> HP đầy (100%) vẫn <= 1, trigger NGAY
@@ -130,7 +130,7 @@ describe('GameManager.updateBossSummons (Combat Rework Phase 4 — Boss Mechanic
       realmId: 'mortal',
       lane: 'ground',
       statsInput: MINIMAL_STATS_INPUT,
-      rewards: { techniqueInsight: 0, cultivation: 0, spiritStone: 0 },
+      rewards: { techniqueInsight: 0, spiritStone: 0 },
       tribulationPhases: [
         { hpThresholdPercent: 1, buff: enrageBuff, summonEnemyIds: ['unknown_enemy'] },
       ],

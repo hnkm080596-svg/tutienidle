@@ -5,6 +5,7 @@ import type { OreQuality } from '../production/ProductionTypes'
 import { HERB_AGES, ORE_QUALITIES } from '../production/ProductionTypes'
 import { isHerbProfessionMeta, isOreProfessionMeta } from './ProfessionMaterial'
 import { SUPPORTED_PROFESSION_REALMS, type ProfessionMaterialMeta } from './ProfessionMaterial'
+import { REALM_TIERS } from '../realm/RealmTierMap'
 
 export interface ValidationResult {
   valid: boolean
@@ -21,13 +22,19 @@ export function validateProfessionMaterialEntry(
   materialId: string,
   meta: ProfessionMaterialMeta,
 ): string | null {
-  if (!SUPPORTED_PROFESSION_REALMS.includes(meta.realmId)) {
-    return `${materialId}: realm "${meta.realmId}" ngoài product scope`
+  if (!REALM_TIERS.some((realmId) => realmId === meta.realmId)) {
+    return `${materialId}: realm "${meta.realmId}" không hợp lệ`
   }
 
   switch (meta.resourceKind) {
     case 'wood': {
-      const expected = `${meta.realmId}_wood`
+      if (meta.quality !== undefined && !ORE_QUALITIES.includes(meta.quality as OreQuality)) {
+        return `${materialId}: gỗ có phẩm không hợp lệ (hoang..tien)`
+      }
+
+      const expected = meta.quality
+        ? `${meta.realmId}_wood_${meta.quality}`
+        : `${meta.realmId}_wood`
 
       if (materialId !== expected) {
         return `${materialId}: id gỗ phải là "${expected}"`

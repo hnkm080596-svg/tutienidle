@@ -6,7 +6,7 @@ import type { ZoneRegistry } from '@/core/stage/ZoneRegistry'
 import { getEffectiveAffixValue, getMaxForgePoints, GLOBAL_MAX_AFFIXES, MAIN_STAT_REALM_SCALE } from '@/core/equipment/EquipmentSystem'
 import { EQUIPMENT_QUALITY_IMPLICIT_MULTIPLIER } from '@/core/equipment/EquipmentQuality'
 import { getGlobalCultivationLevel } from '@/core/realm/realmSystem'
-import { composeEquipmentDisplayName } from '@/core/equipment/EquipmentNaming'
+import { composeEquipmentDisplayName, composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
 import { EQUIPMENT_SLOT_LABELS } from '@/core/equipment/EquipmentTypes'
 import { EQUIPMENT_RARITY_AFFIX_SLOTS } from '@/core/equipment/EquipmentRarity'
 import { statLabel, formatStat } from '@/core/stats/StatLabels'
@@ -203,6 +203,8 @@ export function buildEquipmentTooltip(
     // Vật phẩm không còn tên riêng (2026-08-15) — tiêu đề tooltip ghép
     // đủ Phẩm/Set/Địa Giới + từ loại, xem EquipmentNaming.ts.
     name: composeEquipmentDisplayName(instance, template, zoneRegistry),
+
+    nameSegments: composeEquipmentNameSegments(instance, template, zoneRegistry),
 
     imagePath: instance.icon ?? template.icon,
 

@@ -22,7 +22,7 @@ export function createBaseStats(): Stats {
     defense: 5,
 
     maxHp: 100,
-    maxMp: 50,
+    maxMp: 0,
 
     attackSpeed: 1,
 
@@ -71,7 +71,7 @@ export function createBaseStats(): Stats {
     leechPercent: 0,
     thornsPercent: 0,
     hpRegenPerSecond: 0,
-    manaRegenPerSecond: 1,
+    manaRegenPerSecond: 0,
     cooldownReduction: 0,
     castSpeedPercent: 0,
     finalDamagePercent: 0,

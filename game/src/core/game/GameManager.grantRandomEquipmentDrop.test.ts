@@ -49,7 +49,7 @@ describe('GameManager.grantRandomEquipmentDrop — toast đồng nhất với gr
       },
       // KHÔNG khai itemDrops — cô lập đúng nhánh grantRandomEquipmentDrop(),
       // không lẫn với grantItemDrops()'s nhánh 'equipment'.
-      rewards: { techniqueInsight: 0, cultivation: 0, spiritStone: 0 },
+      rewards: { techniqueInsight: 0, spiritStone: 0 },
       isBoss: true, // BOSS_EQUIPMENT_DROP_CHANCE = 0.3, roll=0 luôn trúng.
     })
 

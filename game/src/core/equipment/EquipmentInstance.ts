@@ -26,10 +26,9 @@ export interface SocketedFormation {
  * MASTER SPEC Mục XVI (Phase 9) — enhanceLevel/socketedFormation/
  * bonusAffixSlots đã CHUYỂN sang EquipmentSlotState (gắn theo SLOT,
  * không theo instance) — instance giờ chỉ giữ những gì THẬT SỰ gắn
- * liền với 1 món đồ cụ thể: quality/rarity/affixes (Tẩy Luyện/Nâng
- * Phẩm/Thêm Dòng/Nâng Cấp Dòng), mainStat (Tinh Luyện — Equipment
- * Rework, reroll implicit) và forgePoints (Rèn — Equipment Rework,
- * đầu tư sức mạnh deterministic).
+ * liền với 1 món đồ cụ thể: quality/rarity/affixes (Tẩy Luyện reroll
+ * identity), mainStat (Tinh Luyện reroll giá trị) và forgePoints
+ * (Điểm Rèn — tài nguyên Tẩy Luyện/Tinh Luyện tiêu thụ).
  *
  * Core Loop Foundation checklist (Mục AFFIX) — `substats` cũ (roll
  * ngẫu nhiên, không phân loại) đã bị THAY THẾ HOÀN TOÀN bởi `affixes`
@@ -55,8 +54,8 @@ export interface EquipmentInstance {
   // xem EquipmentSystem.createInstance().
   rarity: EquipmentRarity
 
-  // Cảnh giới của trang bị, = player.realmId lúc rớt/tạo ra —
-  // dùng cho nâng cảnh giới (Phase 8).
+  // Cảnh giới của trang bị, = player.realmId lúc rớt/tạo ra — dùng
+  // để resolve cost/essence theo cảnh giới (Tẩy Luyện/Hóa Luyện).
   realmId: string
 
   // Level at drop time is required to reproduce the exact effective roll
@@ -77,8 +76,9 @@ export interface EquipmentInstance {
 
   affixes: RolledAffix[]
 
-  // Equipment Rework (2026-08-14) — thay thế refineLevel cũ, xem
-  // EquipmentSystem.forge()/EQUIPMENT_QUALITY_MAX_FORGE_POINTS.
+  // Điểm Rèn — tài nguyên tiêu thụ của Tẩy Luyện/Tinh Luyện, trần
+  // theo getMaxForgePoints(quality, forgePotential), xem
+  // EQUIPMENT_QUALITY_MAX_FORGE_POINTS.
   forgePoints: number
 
   // "EquipemtnQuality&rarity" pass (2026-08-14) — Tiềm Năng Rèn, roll

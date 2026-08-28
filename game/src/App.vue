@@ -2,7 +2,7 @@
 import { onMounted, onUnmounted, provide, ref } from 'vue'
 import { usePlayerStore } from './stores/player'
 import { useUiStore } from './stores/ui'
-import { GameClock } from './core/idle/GameClock'
+import { GameClock, DEFAULT_MAX_OFFLINE_SECONDS } from './core/idle/GameClock'
 import { TICK_INTERVAL_MS } from './core/idle/SpeedSettings'
 import { GameManager } from './core/game/GameManager'
 import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from './composables/useGameState'
@@ -41,10 +41,11 @@ import { alchemyRecipes } from './data/alchemy/alchemyRecipes'
 import { ailments } from './data/ailment/ailments'
 import { buildings } from './data/building/buildings'
 import { PHAP_TU_NODES } from './data/progression/PhapTuNodes'
+import { QUESTS } from './data/quest/quests'
 import { isCultivationPoseActive } from './core/cultivation/CultivationPose'
 import { useBootFlow } from './composables/useBootFlow'
 import { cloudSaveCoordinator } from './services/cloudSave/CloudSaveServiceFactory'
-import { buildGameSave } from './services/save/SaveSystem'
+import { buildGameSave, deleteSave, SAVE_RESET_REQUEST_EVENT } from './services/save/SaveSystem'
 
 const player = usePlayerStore()
 const ui = useUiStore()
@@ -120,6 +121,7 @@ gameManager.registerAlchemyRecipes(alchemyRecipes)
 gameManager.registerAilments(ailments)
 gameManager.registerBuildings(buildings)
 gameManager.registerProgressionNodes(PHAP_TU_NODES)
+gameManager.registerQuests(QUESTS)
 
 const { breakthrough } = useBreakthrough(gameManager)
 
@@ -140,10 +142,11 @@ provide(BUMP_STATE_KEY, bumpState)
 let tickHandle: number | undefined
 let autosaveHandle: number | undefined
 let saveInFlight = false
+let suppressPersistence = false
 const AUTOSAVE_INTERVAL_MS = 15_000
 
 async function persistProgress() {
-  if (entryStage.value !== 'game' || saveInFlight) {
+  if (suppressPersistence || entryStage.value !== 'game' || saveInFlight) {
     return
   }
 
@@ -182,6 +185,23 @@ function startAutosave() {
   window.addEventListener('pagehide', onPageHide)
 }
 
+function stopAutosave() {
+  if (autosaveHandle !== undefined) {
+    clearInterval(autosaveHandle)
+    autosaveHandle = undefined
+  }
+
+  document.removeEventListener('visibilitychange', onVisibilityChange)
+  window.removeEventListener('pagehide', onPageHide)
+}
+
+function resetSaveFromSettings() {
+  suppressPersistence = true
+  stopAutosave()
+  deleteSave()
+  window.location.reload()
+}
+
 // Cultivation ⇄ combat (2026-08-20) — không còn nút bấm thủ công, tu
 // luyện là trạng thái SUY RA THẲNG từ isFighting mỗi tick (chiến đấu
 // thì không tu luyện, không chiến đấu thì tự tu luyện). Theo dõi giá
@@ -197,20 +217,11 @@ function tick() {
     return
   }
 
-  const battleAtTickStart = gameManager.getBattle()
-  const battleInProgress = battleAtTickStart !== null && isBattleInProgress(battleAtTickStart.state)
-
-  // Guard tầng game-loop: pause chỉ hợp lệ trong Combat Scene thường, nơi có
-  // nút Resume. State cũ/race từ action khác không được phép đóng băng Động
-  // Phủ hoặc scene Độ Kiếp không có điều khiển pause.
-  if (ui.isPaused && (!battleInProgress || ui.isTribulationSceneActive)) {
-    ui.setPaused(false)
-  }
-
-  // clock vẫn update() đều để giữ mốc thời gian thực đồng bộ (tránh
-  // "nhảy cóc" khi bỏ pause) — pause chỉ chặn simulatedDelta, không
-  // đụng tới clock thật.
-  const simulatedDelta = ui.isPaused ? 0 : deltaSeconds
+  // W9.2 (2026-08-27) — tab bị throttle/treo lâu có thể trả về delta
+  // rất lớn trong một tick. Clamp theo đúng trần offline 24h để thời
+  // gian "đuổi kịp" không vượt offline cap; combat đã có trần catch-up
+  // riêng trong GameManager.updateBattleFixedStep().
+  const simulatedDelta = Math.min(deltaSeconds, DEFAULT_MAX_OFFLINE_SECONDS)
 
   if (simulatedDelta > 0) {
     // GameManager luôn được update trước, để battle (nếu có) và
@@ -387,12 +398,19 @@ async function bootGame(createNewCharacter = false) {
     // Add THẲNG qua buildingManager (bỏ qua canBuild/cost) — đây là
     // grant khởi tạo, không phải hành động build của người chơi.
     for (const buildingId of ['teleport_array', 'gathering_outpost']) {
-      gameManager.buildingManager.add({
+      const instance = {
         instanceId: crypto.randomUUID(),
         buildingId,
         level: 1,
         lastCollectedAt: clock.nowSeconds(),
-      })
+      }
+
+      gameManager.buildingManager.add(instance)
+      // Grant thẳng bỏ qua buildBuilding() nên KHÔNG tự chạy
+      // refreshAutoWorkerCapacity() như đường build bình thường — gọi
+      // tay ở đây, nếu không gathering_outpost cấp 1 để lại
+      // autoWorkerCapacity = 0 (nhân vật mới có outpost nhưng 0 công nhân).
+      gameManager.refreshAutoWorkerCapacity(player.$state, instance)
     }
 
     // Fix "không có cách nào để xây Linh Tuyền/Khí Đường/Đan Phòng"
@@ -458,6 +476,8 @@ async function onCharacterCreated(payload: CharacterCreationPayload) {
 }
 
 onMounted(() => {
+  window.addEventListener(SAVE_RESET_REQUEST_EVENT, resetSaveFromSettings)
+
   introHandle = window.setTimeout(() => {
     bootFlow.showAuth()
   }, 3000)
@@ -466,7 +486,9 @@ onMounted(() => {
 onUnmounted(() => {
   // Vite HMR also unmounts this component. Persist first so a development
   // reload cannot roll the player back to an old manual save.
-  void persistProgress()
+  if (!suppressPersistence) {
+    void persistProgress()
+  }
 
   clock.stop()
 
@@ -478,13 +500,8 @@ onUnmounted(() => {
     clearTimeout(introHandle)
   }
 
-  if (autosaveHandle !== undefined) {
-    clearInterval(autosaveHandle)
-    autosaveHandle = undefined
-  }
-
-  document.removeEventListener('visibilitychange', onVisibilityChange)
-  window.removeEventListener('pagehide', onPageHide)
+  stopAutosave()
+  window.removeEventListener(SAVE_RESET_REQUEST_EVENT, resetSaveFromSettings)
 })
 </script>
 

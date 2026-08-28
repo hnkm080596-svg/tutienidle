@@ -7,6 +7,7 @@ import { useTribulation } from '@/composables/useTribulation'
 import { getNextRealm } from '@/core/realm/realmSystem'
 import { BREAKTHROUGH_REQUIREMENTS } from '@/core/breakthrough/BreakthroughRequirement'
 import { formatNumber } from '@/core/format/NumberFormatter'
+import OverlayPanel from '@/components/common/OverlayPanel.vue'
 
 // Đột Phá tổng quát (2026-08-16) — "con đường bình thường" của Đột
 // Phá: panel giữa màn hình hiện TRƯỚC khi vào Độ Kiếp, hiện đúng 1
@@ -81,10 +82,13 @@ function confirmBreakthrough() {
 </script>
 
 <template>
-  <div v-if="store.isOpen && targetRealm && requirement" class="breakthrough-requirement">
-    <div class="breakthrough-requirement__panel">
-      <h3 class="breakthrough-requirement__title">Đột Phá {{ targetRealm.name }}</h3>
-
+  <OverlayPanel
+    :open="store.isOpen && Boolean(targetRealm && requirement)"
+    :title="`Đột Phá ${targetRealm?.name ?? ''}`"
+    width="min(420px, 94vw)"
+    @close="store.close()"
+  >
+    <div v-if="targetRealm && requirement" class="breakthrough-requirement__panel">
       <p class="breakthrough-requirement__hint">Cần đủ vật phẩm dưới đây trước khi Độ Kiếp.</p>
 
       <div class="breakthrough-requirement__slot" :class="{ 'breakthrough-requirement__slot--ready': hasEnoughItem }">
@@ -115,39 +119,15 @@ function confirmBreakthrough() {
         </button>
       </div>
     </div>
-  </div>
+  </OverlayPanel>
 </template>
 
 <style scoped>
-.breakthrough-requirement {
-  position: absolute;
-  inset: 0;
-  z-index: 1800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(10, 10, 13, 0.72);
-}
-
 .breakthrough-requirement__panel {
-  background: var(--ink-900);
-  border: 1px solid var(--gold-500);
-  box-shadow: var(--shadow-panel);
-  border-radius: var(--radius-md);
-  padding: 24px 32px;
-  min-width: 340px;
+  padding: 20px 24px 24px;
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-.breakthrough-requirement__title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 1.1rem;
-  letter-spacing: 0.06em;
-  color: var(--gold-500);
-  text-align: center;
 }
 
 .breakthrough-requirement__hint {

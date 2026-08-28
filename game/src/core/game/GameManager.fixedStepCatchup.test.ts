@@ -93,7 +93,7 @@ function createStubbornEnemy() {
     // đánh lại player cũng không đáng kể (attack=0) để player.alive luôn
     // true suốt bài test, không ảnh hưởng số đòn đếm được.
     statsInput: { ...ATTACKER_STATS_INPUT, maxHp: 10_000_000, attack: 0, armor: 0 },
-    rewards: { techniqueInsight: 0, cultivation: 0, spiritStone: 0 },
+    rewards: { techniqueInsight: 0, spiritStone: 0 },
   })
 }
 

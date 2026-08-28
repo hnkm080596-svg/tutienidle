@@ -55,14 +55,12 @@ export interface EnemyStatInput {
     enduranceThreshold?: number
     endurancePercent?: number
     primordialPower?: number
-    manaRegenPerSecond?: number
     cooldownReduction?: number
     criticalAvoidance?: number
     chanceToIgnoreResistance?: number
     ailmentResistPercent?: number
     ailmentPotencyPercent?: number
     wardBreakDamagePercent?: number
-    manaShieldPercent?: number
     skillDamagePercent?: number
     dotResistancePercent?: number
   }
@@ -106,6 +104,9 @@ export function normalizeEnemyStats(input: EnemyStatInput): Stats {
     defense: input.armor,
 
     maxHp: input.maxHp,
+    // Quái không có Linh Lực (MP là tài nguyên riêng của Pháp Tu) — vì
+    // vậy manaShieldPercent/manaRegenPerSecond không thể author được ở
+    // EnemyStatInput.special (không có pool MP để hấp thụ/hồi vào).
     maxMp: 0,
 
     attackSpeed: normalizeEnemyAttackSpeed(input.attackSpeed),
@@ -136,11 +137,11 @@ export function normalizeEnemyStats(input: EnemyStatInput): Stats {
     wardMax: input.special?.wardMax ?? 0,
     wardRegenPerSecond: input.special?.wardRegenPerSecond ?? 0,
     wardBreakDamagePercent: input.special?.wardBreakDamagePercent ?? 0,
-    manaShieldPercent: input.special?.manaShieldPercent ?? 0,
+    manaShieldPercent: 0,
     leechPercent: input.special?.leechPercent ?? 0,
     thornsPercent: input.special?.thornsPercent ?? 0,
     hpRegenPerSecond: input.hpRegenPerSecond ?? 0,
-    manaRegenPerSecond: input.special?.manaRegenPerSecond ?? 0,
+    manaRegenPerSecond: 0,
     cooldownReduction: input.special?.cooldownReduction ?? 0,
     castSpeedPercent: 0,
     finalDamagePercent: 0,

@@ -8,6 +8,7 @@ import type { GridPosition } from './BattleGrid'
 import type { BuffManager } from '../buff/BuffManager'
 import type { AilmentManager } from '../ailment/AilmentManager'
 import type { LavaZone } from './LavaZone'
+import type { ArtifactRuntime } from '../artifact/ArtifactRuntime'
 
 /**
  * 1 quái đang sống trong trận — nhiều quái có thể cùng lúc tồn tại
@@ -134,6 +135,15 @@ export interface Battle {
    * khi bắt đầu trận mới. KHÔNG persist (giống elapsedSeconds).
    */
   nextSkillSlotIndexCursor?: number
+
+  /**
+   * Bản Mệnh Pháp Bảo (2026-08-27, foundation-artifact-system-plan.md
+   * §11) — snapshot level/grade/path + timer/rotation/ICD RUNTIME-ONLY
+   * (không persist, giống elapsedSeconds/lavaZones). undefined = player
+   * không có artifact (Kiếm Tu, hoặc Pháp Tu chưa Trúc Cơ) — tick
+   * artifact no-op hoàn toàn trong trường hợp đó.
+   */
+  artifactRuntime?: ArtifactRuntime
 }
 
 /** 1 lượt spawn đã đặt lịch, đang đếm ngược telegraph. */

@@ -67,6 +67,9 @@ export interface Building {
   // → effects[]), CHỈ dùng cho category 'crafting_station'.
   levels?: BuildingLevelDef[]
 
+  /** Số nhân công tự động toàn cục được cấp ở mỗi level. */
+  workersPerLevel?: number
+
   // BUILDing spec mục 5/22 — click Building này (qua NavMenuOverlay)
   // mở PANEL nào. Chỉ crafting_station mới set.
   functionType?: BuildingFunctionType

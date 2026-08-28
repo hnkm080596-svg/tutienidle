@@ -14,6 +14,7 @@ import TechniqueSlotCard from './loadout-sections/TechniqueSlotCard.vue'
 import { buildTechniqueSections } from '@/composables/useTechniqueSections'
 import { getTechniqueInsightTotalRequired, getTechniqueTierProgress } from '@/core/technique/TechniqueTier'
 import { formatNumber } from '@/core/format/NumberFormatter'
+import OverlayPanel from '@/components/common/OverlayPanel.vue'
 
 const ui = useUiStore()
 const gameManager = useGameManager()
@@ -61,14 +62,7 @@ function close() {
 </script>
 
 <template>
-  <div v-if="ui.standalonePanel === 'technique'" class="technique-panel" @click.self="close">
-    <div class="technique-panel__card">
-      <div class="technique-panel__header">
-        <h3 class="technique-panel__title">Tâm Pháp</h3>
-
-        <button type="button" class="technique-panel__close" @click="close">✕</button>
-      </div>
-
+  <OverlayPanel :open="ui.standalonePanel === 'technique'" title="Tâm Pháp" width="min(560px, 90vw)" @close="close">
       <div class="technique-panel__hero">
         <TechniqueSlotCard label="Tâm Pháp" size="hero" />
       </div>
@@ -95,8 +89,7 @@ function close() {
       </div>
 
       <p v-else class="technique-panel__empty">Chưa có công pháp — hoàn thành Lễ Nhập Môn để tự động nhận</p>
-    </div>
-  </div>
+  </OverlayPanel>
 </template>
 
 <style scoped>

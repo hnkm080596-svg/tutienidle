@@ -35,6 +35,9 @@ export interface PillEffect {
   /** Nhóm stack — cùng nhóm refresh deadline, không cộng dồn. */
   effectGroup?: string
 
+  /** Uống lại cộng tiếp thời lượng thay vì chỉ refresh deadline. */
+  stackable?: boolean
+
   // ---- 'cultivation' theo % yêu cầu tầng hiện tại (plan §5.5) ----
   cultivationPercent?: number
 }

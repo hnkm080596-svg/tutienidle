@@ -93,7 +93,7 @@ describe('GameManager — restore skill legacy thiếu execution (bugfix 2026-08
         criticalDamage: 1.5,
         armor: 0,
       },
-      rewards: { techniqueInsight: 0, cultivation: 0, spiritStone: 0 },
+      rewards: { techniqueInsight: 0, spiritStone: 0 },
     })
 
     gameManager.registerEnemyTemplates([enemy])

@@ -2,18 +2,20 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
+import { getSpiritStoneMaterialIdForRealmTier } from '@/core/material/SpiritStoneMaterial'
+import { getRealmTier } from '@/core/realm/RealmTierMap'
 import BuildingConstructionGate from './BuildingConstructionGate.vue'
+import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
 
 // Sản Xuất (2026-08-25, resource-professions-rework plan §9.1) — thay
 // ExplorationPanel: mỗi Địa Giới hiển thị đúng ba card Lâm/Quáng/
 // Động Thiên với level + speed, trạng thái idle/producing, đồng hồ
 // cycle, trọng số realm tier đã chuẩn hoá, toggle Auto. Nút Start chỉ
 // xuất hiện khi idle; KHÔNG có nút Claim — hoàn thành tự gửi Bag (§4.3).
-const KIND_LABELS: Record<string, string> = {
-  forest: 'Lâm',
-  mine: 'Quáng',
-  grotto: 'Động Thiên',
+const KIND_META: Record<string, { label: string; sigil: string }> = {
+  forest: { label: 'Lâm', sigil: '木' },
+  mine: { label: 'Quáng', sigil: '礦' },
+  grotto: { label: 'Động Thiên', sigil: '藥' },
 }
 
 const TIER_WEIGHT_LABELS: Record<string, readonly string[]> = {
@@ -35,7 +37,7 @@ function rewardSummary(kind: string): string {
 
   if (kind === 'mine') return 'Quáng phẩm Hoàng → Tiên'
 
-  return 'Linh thảo niên đại Thập Niên → Vạn Niên'
+  return `${PILL_FAMILIES.length} chủ dược: ${PILL_FAMILIES.map((family) => family.herbName).join(' · ')}`
 }
 
 const player = usePlayerStore()
@@ -67,6 +69,8 @@ interface SiteRow {
 
   kindLabel: string
 
+  sigil: string
+
   name: string
 
   description: string
@@ -80,6 +84,8 @@ interface SiteRow {
   nextSpeedMultiplier?: number
 
   autoRestart: boolean
+
+  activeWorkerSlots: number
 
   isProducing: boolean
 
@@ -109,7 +115,9 @@ const rows = computed<SiteRow[]>(() => {
 
       kind: view.definition.kind,
 
-      kindLabel: KIND_LABELS[view.definition.kind] ?? view.definition.kind,
+      kindLabel: KIND_META[view.definition.kind]?.label ?? view.definition.kind,
+
+      sigil: KIND_META[view.definition.kind]?.sigil ?? '•',
 
       name: view.definition.name,
 
@@ -124,6 +132,8 @@ const rows = computed<SiteRow[]>(() => {
       nextSpeedMultiplier: view.nextSpeedMultiplier,
 
       autoRestart: view.state.autoRestart,
+
+      activeWorkerSlots: view.state.activeWorkerSlots,
 
       isProducing: view.state.activeCycle !== undefined,
 
@@ -147,14 +157,13 @@ function toggleAuto(row: SiteRow) {
   bumpState()
 }
 
-function upgradeCostRows(siteId: string) {
+function upgradeCostRows(siteId: string, level: number) {
   stateVersion.value
 
   const costs = gameManager.getProductionUpgradeCost(siteId) ?? []
 
-  const level = rows.value.find((row) => row.siteId === siteId)?.level ?? 1
-
   const cost = costs[level - 1]
+  const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(level + 1)
 
   if (!cost) {
     return []
@@ -171,20 +180,22 @@ function upgradeCostRows(siteId: string) {
       amount: cost.woodAmount,
     },
     {
-      label: 'Linh Thạch',
+      label: gameManager.materialRegistry.has(spiritStoneId)
+        ? gameManager.materialRegistry.get(spiritStoneId).name
+        : 'Linh Thạch',
 
       // Plan Workstream F — Linh Thạch đọc từ MaterialBag.
-      owned: gameManager.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID),
+      owned: gameManager.materialBag.getAmount(spiritStoneId),
 
       amount: cost.spiritStone,
     },
   ]
 }
 
-function canUpgrade(siteId: string): boolean {
-  const rowsForCost = upgradeCostRows(siteId)
+function canUpgrade(siteId: string, level: number): boolean {
+  const rowsForCost = upgradeCostRows(siteId, level)
 
-  return rowsForCost.every((entry) => entry.owned >= entry.amount)
+  return level + 1 <= getRealmTier(player.realmId) && rowsForCost.every((entry) => entry.owned >= entry.amount)
 }
 
 function upgrade(siteId: string) {
@@ -203,6 +214,10 @@ function upgrade(siteId: string) {
 
       <div class="production-panel__grid">
         <article v-for="row in rows" :key="row.siteId" class="site-card">
+          <div class="site-card__art" :data-kind="row.kind" aria-hidden="true">
+            <span>{{ row.sigil }}</span>
+          </div>
+
           <header class="site-card__header">
             <h3 class="site-card__name">{{ row.name }}</h3>
 
@@ -219,6 +234,8 @@ function upgrade(siteId: string) {
             <span v-if="row.nextSpeedMultiplier">
               kế tiếp ×{{ row.nextSpeedMultiplier.toFixed(2) }}
             </span>
+
+            <span>Nhân công: {{ row.activeWorkerSlots }}</span>
           </div>
 
           <!-- Trọng số realm tier đã chuẩn hoá (§9.1) -->
@@ -259,7 +276,7 @@ function upgrade(siteId: string) {
           <div v-if="row.level < row.maxLevel" class="site-card__upgrade">
             <ul>
               <li
-                v-for="(cost, index) in upgradeCostRows(row.siteId)"
+                v-for="(cost, index) in upgradeCostRows(row.siteId, row.level)"
                 :key="index"
                 :class="{ 'is-missing': cost.owned < cost.amount }"
               >
@@ -270,7 +287,7 @@ function upgrade(siteId: string) {
             <button
               type="button"
               class="site-card__upgrade-button"
-              :disabled="!canUpgrade(row.siteId)"
+              :disabled="!canUpgrade(row.siteId, row.level)"
               @click="upgrade(row.siteId)"
             >
               Nâng cấp nguồn
@@ -293,6 +310,9 @@ function upgrade(siteId: string) {
   overflow-y: auto;
   color: var(--text-primary);
   font-family: var(--font-body);
+  background:
+    radial-gradient(circle at 50% 0, rgba(81, 154, 117, .12), transparent 38%),
+    linear-gradient(150deg, rgba(13, 25, 22, .96), rgba(10, 14, 17, .98));
 }
 
 .production-panel__summary {
@@ -303,7 +323,7 @@ function upgrade(siteId: string) {
 
 .production-panel__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
   gap: 10px;
 }
 
@@ -312,9 +332,37 @@ function upgrade(siteId: string) {
   flex-direction: column;
   gap: 8px;
   padding: 12px;
-  background: var(--ink-800);
-  border: 1px solid var(--ink-line-soft);
+  background: linear-gradient(145deg, rgba(35, 48, 39, .84), rgba(16, 21, 21, .92));
+  border: 1px solid rgba(111, 167, 128, .25);
   border-radius: var(--radius-md);
+}
+
+.site-card__art {
+  position: relative;
+  min-height: 92px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  margin: -12px -12px 2px;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  background:
+    radial-gradient(circle, rgba(116, 197, 141, .25), transparent 48%),
+    linear-gradient(130deg, #21392c, #101919);
+}
+
+.site-card__art[data-kind='mine'] { background: radial-gradient(circle, rgba(202, 159, 91, .24), transparent 48%), linear-gradient(130deg, #382e23, #171515); }
+.site-card__art[data-kind='grotto'] { background: radial-gradient(circle, rgba(97, 178, 190, .25), transparent 48%), linear-gradient(130deg, #203a3b, #11191d); }
+.site-card__art span {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  color: #d8eacb;
+  font: 700 1.75rem var(--font-display);
+  border: 1px solid rgba(213, 229, 195, .38);
+  border-radius: 50%;
+  background: rgba(8, 18, 14, .58);
+  box-shadow: 0 0 24px rgba(101, 194, 130, .2), inset 0 0 16px rgba(153, 221, 174, .08);
 }
 
 .site-card__header {

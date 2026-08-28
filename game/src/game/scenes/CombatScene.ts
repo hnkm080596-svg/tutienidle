@@ -697,6 +697,8 @@ export class CombatScene extends Phaser.Scene {
       this.projection.resize(viewport)
     }
 
+    const bounds = this.projection.bounds()
+
     if (this.isPerspective && !this.backdrop) {
       // Thanh Vân art mount (thanh-van-dong-fu-art-production-plan) —
       // ưu tiên modular layers (sky + 6 layer mùa); texture thiếu thì
@@ -714,6 +716,8 @@ export class CombatScene extends Phaser.Scene {
           width,
 
           height,
+
+          bounds.top,
         )
 
         this.usingArtBackdrop = true
@@ -723,8 +727,6 @@ export class CombatScene extends Phaser.Scene {
         this.usingArtBackdrop = false
       }
     }
-
-    const bounds = this.projection.bounds()
 
     // Mirror chẩn đoán/test — flat khớp chính xác số liệu legacy cũ.
     this.gridLeft = bounds.left
@@ -757,7 +759,7 @@ export class CombatScene extends Phaser.Scene {
 
     this.redrawGridLines()
 
-    this.backdrop?.redraw(width, height)
+    this.backdrop?.redraw(width, height, bounds.top)
 
     // Mốc depth ban đầu cho upright VFX (trước frame entity đầu tiên):
     // full mặt đường theo projection hiện hành.
@@ -2903,7 +2905,13 @@ export class CombatScene extends Phaser.Scene {
 
     this.backdrop?.destroy()
 
-    this.backdrop = attachThanhVanBackdrop(this, variant, this.canvasWidth, this.canvasHeight)
+    this.backdrop = attachThanhVanBackdrop(
+      this,
+      variant,
+      this.canvasWidth,
+      this.canvasHeight,
+      this.projection?.bounds().top ?? this.canvasHeight / 2,
+    )
 
     this.usingArtBackdrop = true
 

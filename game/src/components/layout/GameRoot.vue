@@ -7,13 +7,18 @@ import HomeBuildingIcons from '../game/HomeBuildingIcons.vue'
 import DongFuCommandWheel from '../game/DongFuCommandWheel.vue'
 import BuildingDetailPopover from '../game/BuildingDetailPopover.vue'
 import LeftPanel from './LeftPanel.vue'
+import RightPanel from './RightPanel.vue'
+import FunctionOverlayPanel from './FunctionOverlayPanel.vue'
 import SkillPathPanel from '../panels/SkillPathPanel.vue'
 import TechniquePanel from '../panels/TechniquePanel.vue'
-import RealmPassivePanel from '../panels/RealmPassivePanel.vue'
+import RealmPanel from '../panels/RealmPanel.vue'
 import LuyenThePanel from '../panels/LuyenThePanel.vue'
 import QuanKhiPanel from '../panels/QuanKhiPanel.vue'
+import QuestPanel from '../panels/QuestPanel.vue'
+import ArtifactPanel from '../panels/ArtifactPanel.vue'
 import Tooltip from '../common/Tooltip.vue'
 import ToastContainer from '../common/ToastContainer.vue'
+import ActionFeedbackLog from '../common/ActionFeedbackLog.vue'
 import WorldAnnouncementOverlay from '../common/WorldAnnouncementOverlay.vue'
 import OfflineSummaryModal from '../common/OfflineSummaryModal.vue'
 import BreakthroughRequirementPanel from '../common/BreakthroughRequirementPanel.vue'
@@ -73,6 +78,8 @@ function closeSidePanels() {
         </div>
 
         <LeftPanel class="game-root__left-panel" />
+        <RightPanel />
+        <FunctionOverlayPanel />
 
         <!-- Kỹ Năng/Tâm Pháp (2026-08-20) — tách khỏi LeftPanel thành
              overlay toàn màn hình độc lập (ui.standalonePanel), cùng
@@ -81,11 +88,15 @@ function closeSidePanels() {
 
         <TechniquePanel />
 
-        <RealmPassivePanel />
+        <RealmPanel />
 
         <LuyenThePanel />
 
         <QuanKhiPanel />
+
+        <QuestPanel />
+
+        <ArtifactPanel />
 
         <!-- Command wheel nhiều tầng — trigger là nhân vật tu luyện
              giữa Động Phủ (DongFuScene.vue). -->
@@ -98,6 +109,8 @@ function closeSidePanels() {
       <Tooltip />
 
       <ToastContainer />
+
+      <ActionFeedbackLog />
 
       <WorldAnnouncementOverlay />
 
@@ -142,6 +155,18 @@ function closeSidePanels() {
   /* Nổi trên hotspot (5)/command wheel (8) — panel chức năng mở thì
      nội dung phải bấm được trọn vẹn. */
   z-index: 10;
+  container-type: inline-size;
+  container-name: left-panel;
+}
+
+/* Workstream G (gameplay-ui-feedback-responsive-cleanup-plan.md §10) —
+   viewport rất hẹp (vd 800×600): clamp(360px,...) buộc panel chiếm gần
+   1 nửa màn hình. Chuyển sang drawer gần/full width thay vì giữ trần
+   360px cứng, vẫn chừa lối đóng (panel luôn có nút back/close riêng). */
+@media (max-width: 900px) {
+  .game-root__left-panel {
+    width: min(88vw, 400px);
+  }
 }
 
 .game-root__building-popover-layer {

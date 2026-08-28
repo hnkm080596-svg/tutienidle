@@ -3,9 +3,9 @@ import { ref } from 'vue'
 import { useUiStore } from '@/stores/ui'
 import { useGameManager } from '@/composables/useGameState'
 
-// Combat UI Redesign mục 11 — CHỈ Play/Pause, không Auto (Auto Battle
-// giờ cấu hình TRƯỚC trận ở StageSelectPanel.vue, xem mục 15), không
-// tốc độ (mục 11-12 — hard rule "không speed control").
+// Combat UI Redesign mục 11 — pause đã bị loại bỏ (game idle, 2026-08-27);
+// chỉ còn "Thoát Trận" cho trận Stage. Auto Battle cấu hình TRƯỚC trận ở
+// StageSelectPanel.vue, không tốc độ (mục 11-12 — hard rule).
 const ui = useUiStore()
 const gameManager = useGameManager()
 
@@ -29,10 +29,6 @@ function confirmExit() {
 
 <template>
   <div class="combat-control-bar">
-    <button type="button" class="combat-control-bar__play-pause" @click="ui.togglePause()">
-      {{ ui.isPaused ? '▶ Tiếp Tục' : '❚❚ Tạm Dừng' }}
-    </button>
-
     <button
       v-if="ui.combatOrigin === 'stage'"
       type="button"
@@ -66,18 +62,6 @@ function confirmExit() {
   background: var(--ink-950);
   border-top: 1px solid var(--ink-line);
   pointer-events: auto;
-}
-
-.combat-control-bar__play-pause {
-  padding: 8px 28px;
-  background: var(--gold-500);
-  color: var(--gold-ink);
-  border: none;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-body);
-  font-weight: 700;
-  font-size: var(--text-body);
-  cursor: pointer;
 }
 
 .combat-control-bar__exit {

@@ -1,5 +1,53 @@
 import type { Building } from '@/core/building/Building'
+import type { BuildingLevelDef } from '@/core/building/BuildingLevelEffect'
 import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
+import { REALM_TIERS, getRealmIdForTier } from '@/core/realm/RealmTierMap'
+
+const QUALITY_BY_TIER = ['hoang', 'hoang', 'huyen', 'huyen', 'dia', 'dia', 'thien', 'thien', 'tien'] as const
+
+function extendCosts(firstThree: Building['upgradeCost'], baseAmount: number): Building['upgradeCost'] {
+  const future = REALM_TIERS.slice(3).map((_, offset) => {
+    const tier = offset + 4
+    const realmId = getRealmIdForTier(tier)
+    const quality = QUALITY_BY_TIER[tier - 1]!
+    const amount = Math.round(baseAmount * Math.pow(1.65, tier - 3))
+    return [
+      { materialId: `${realmId}_wood_${quality}`, amount },
+      { materialId: `${realmId}_ore_${quality}`, amount: Math.max(1, Math.round(amount / 2)) },
+    ]
+  })
+  return [...firstThree, ...future]
+}
+
+// W5 (2026-08-27) — repurpose building levels:
+// - Khí Đường: mỗi cấp từ 2 trở đi giảm 3% chi phí Cường Hóa/Tẩy
+//   Luyện/Tinh Luyện (trần 24% ở level 9).
+// - Đan Phòng: level 3/6/9 mở thêm 1 slot luyện đan đồng thời
+//   (baseline 1 slot, trần 4 slot).
+function equipmentHallLevels(): BuildingLevelDef[] {
+  return Array.from({ length: 9 }, (_, index) => {
+    const level = index + 1
+
+    return {
+      level,
+      effects: level === 1 ? [] : [{ kind: 'equipment_cost_discount', percent: 3 }],
+      description: level === 1 ? undefined : `Giảm ${3 * (level - 1)}% chi phí Khí Đường`,
+    }
+  })
+}
+
+function pillRoomLevels(): BuildingLevelDef[] {
+  return Array.from({ length: 9 }, (_, index) => {
+    const level = index + 1
+    const grantsSlot = level === 3 || level === 6 || level === 9
+
+    return {
+      level,
+      effects: grantsSlot ? [{ kind: 'concurrent_job_slots', amount: 1 }] : [],
+      description: grantsSlot ? '+1 slot luyện đan đồng thời' : undefined,
+    }
+  })
+}
 
 // Buildings (2026-08-25, resource-professions-rework plan §2) — vòng
 // sản xuất KHÔNG còn building trung gian: herb_garden (Linh Thảo
@@ -26,26 +74,29 @@ export const buildings: Building[] = [
 
     tier: 1,
 
-    maxLevel: 5,
+    maxLevel: 9,
 
     producesMaterialId: SPIRIT_STONE_MATERIAL_ID,
 
-    // 1 Linh Thạch/phút ở level 1 — dòng thu phụ ổn định.
-    baseProductionRate: 1 / 60,
+    // Engine thạch offline chính (balance 2026-08-28) — rate THẬT scale
+    // theo realm trong BuildingSystem.getSpiritSpringRatePerSecond() (mục
+    // tiêu level max = 5% rate farm online ≈ 30 phút farm/10h offline).
+    // Giá trị dưới đây = rate L1 của Phàm Nhân, chỉ dùng làm mốc/gate;
+    // storage giờ = 10h sản lượng (không còn 100^level).
+    baseProductionRate: 5.5 / 60 / 2.6,
 
-    baseStorageCapacity: 60,
+    baseStorageCapacity: 100,
 
     functionType: 'spirit_spring',
 
-    upgradeCost: [
+    upgradeCost: extendCosts([
       [
         { materialId: 'mortal_wood', amount: 5 },
         { materialId: 'mortal_ore_hoang', amount: 2 },
       ],
       [{ materialId: 'qi_refining_wood', amount: 4 }],
-      [{ materialId: 'qi_refining_wood', amount: 8 }],
-      [{ materialId: 'foundation_establishment_wood', amount: 4 }],
-    ],
+      [{ materialId: 'foundation_establishment_wood', amount: 8 }],
+    ], 6),
   },
 
   // Khí Đường — gate + nâng cấp bốn operation (Cường Hóa/Tẩy Luyện/
@@ -61,7 +112,7 @@ export const buildings: Building[] = [
 
     tier: 1,
 
-    maxLevel: 5,
+    maxLevel: 9,
 
     baseStorageCapacity: 0,
 
@@ -69,38 +120,16 @@ export const buildings: Building[] = [
 
     // Ngày 1-2 (Equipment) — gần như miễn phí, không được chặn nhịp độ
     // trang bị đầu game.
-    upgradeCost: [
+    upgradeCost: extendCosts([
       [{ materialId: 'mortal_wood', amount: 3 }],
       [
-        { materialId: 'mortal_wood', amount: 6 },
-        { materialId: 'mortal_ore_hoang', amount: 3 },
+        { materialId: 'qi_refining_wood', amount: 6 },
+        { materialId: 'qi_refining_ore_hoang', amount: 3 },
       ],
-      [{ materialId: 'qi_refining_wood', amount: 4 }],
-      [{ materialId: 'foundation_establishment_wood', amount: 3 }],
-    ],
+      [{ materialId: 'foundation_establishment_wood', amount: 4 }],
+    ], 5),
 
-    levels: [
-      {
-        level: 2,
-        effects: [{ kind: 'craft_time_reduction', percent: 10 }],
-        description: '-10% thời gian xử lý',
-      },
-      {
-        level: 3,
-        effects: [{ kind: 'craft_quality_bonus', percent: 5 }],
-        description: '+5% cơ hội thành phẩm dư',
-      },
-      {
-        level: 4,
-        effects: [{ kind: 'craft_time_reduction', percent: 10 }],
-        description: '-10% thời gian xử lý',
-      },
-      {
-        level: 5,
-        effects: [{ kind: 'craft_quality_bonus', percent: 5 }],
-        description: '+5% cơ hội thành phẩm dư',
-      },
-    ],
+    levels: equipmentHallLevels(),
   },
 
   // Đan Phòng — gate luyện đan (alchemy jobs, plan §8); level quyết
@@ -116,7 +145,7 @@ export const buildings: Building[] = [
 
     tier: 1,
 
-    maxLevel: 5,
+    maxLevel: 9,
 
     baseStorageCapacity: 0,
 
@@ -124,38 +153,16 @@ export const buildings: Building[] = [
 
     // Ngày 3-5 (Đan) — cao hơn Khí Đường một chút nhưng vẫn rẻ hơn nhiều
     // lần chi phí luyện đan.
-    upgradeCost: [
+    upgradeCost: extendCosts([
       [
         { materialId: 'mortal_wood', amount: 5 },
         { materialId: 'mortal_ore_hoang', amount: 2 },
       ],
       [{ materialId: 'qi_refining_wood', amount: 5 }],
-      [{ materialId: 'qi_refining_wood', amount: 9 }],
-      [{ materialId: 'foundation_establishment_wood', amount: 5 }],
-    ],
+      [{ materialId: 'foundation_establishment_wood', amount: 9 }],
+    ], 7),
 
-    levels: [
-      {
-        level: 2,
-        effects: [{ kind: 'craft_quality_bonus', percent: 5 }],
-        description: '+5% tỷ lệ thành đan',
-      },
-      {
-        level: 3,
-        effects: [{ kind: 'craft_time_reduction', percent: 15 }],
-        description: '-15% thời gian luyện đan',
-      },
-      {
-        level: 4,
-        effects: [{ kind: 'craft_quality_bonus', percent: 5 }],
-        description: '+5% tỷ lệ thành đan',
-      },
-      {
-        level: 5,
-        effects: [{ kind: 'craft_quality_bonus', percent: 5 }],
-        description: '+5% tỷ lệ thành đan',
-      },
-    ],
+    levels: pillRoomLevels(),
   },
 
   // Truyền Tống Trận — gate Thám Hiểm (combat stage select).
@@ -184,20 +191,26 @@ export const buildings: Building[] = [
   {
     id: 'gathering_outpost',
 
-    name: 'Sản Xuất',
+    name: 'Điều Phối Nhân Công',
 
-    description: 'Trạm điều phối khai thác Lâm, Quáng và Động Thiên của Địa Giới Thanh Vân.',
+    description: 'Quản lý nhân công tự động khai thác Lâm, Quáng và Động Thiên trên mọi địa giới.',
 
     category: 'crafting_station',
 
     tier: 1,
 
-    maxLevel: 1,
+    maxLevel: 9,
+
+    workersPerLevel: 1,
 
     baseStorageCapacity: 0,
 
     functionType: 'exploration',
 
-    upgradeCost: [[]],
+    upgradeCost: extendCosts([
+      [],
+      [{ materialId: 'qi_refining_wood', amount: 4 }],
+      [{ materialId: 'foundation_establishment_wood', amount: 6 }],
+    ], 4),
   },
 ]

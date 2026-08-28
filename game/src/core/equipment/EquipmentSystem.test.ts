@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { EquipmentSystem, calculateEquipmentScale, rollAffixRange, getMaxForgePoints } from './EquipmentSystem'
+import {
+  EquipmentSystem,
+  calculateEquipmentScale,
+  rollAffixRange,
+  getMaxForgePoints,
+} from './EquipmentSystem'
 import { EquipmentBag } from './EquipmentBag'
 import { EquipmentRegistry } from './EquipmentRegistry'
 import { EquipmentSlotManager } from './EquipmentSlotManager'
@@ -34,12 +39,6 @@ const TEMPLATE: Equipment = {
   maxEnhanceLevel: 10,
   mainStats: [{ stat: 'attack', min: 10, max: 20 }],
   enhanceCost: [{ materialId: 'huyen_thiet', amount: 1 }],
-  washCost: [{ materialId: 'huyen_thiet', amount: 1 }],
-  refineCost: [{ materialId: 'huyen_thiet', amount: 1 }],
-  forgeCost: [{ materialId: 'huyen_thiet', amount: 1 }],
-  upgradeQualityCost: [{ materialId: 'huyen_thiet', amount: 1 }],
-  addAffixCost: [{ materialId: 'huyen_thiet', amount: 1 }],
-  upgradeAffixCost: [{ materialId: 'huyen_thiet', amount: 1 }],
 }
 
 const BLACK_IRON = materials.find((m) => m.id === 'huyen_thiet')!
@@ -107,13 +106,12 @@ function manualInstance(overrides: Partial<EquipmentInstance> = {}): EquipmentIn
     affixes: [],
     forgePoints: 0,
     // 100 mặc định = getMaxForgePoints() trả về ĐÚNG BẰNG
-    // EQUIPMENT_QUALITY_MAX_FORGE_POINTS[quality] (100% tiềm năng) —
-    // giữ nguyên hành vi các test forge() cũ viết trước khi có trục
-    // forgePotential (xem EquipmentInstance.ts's ghi chú).
+    // EQUIPMENT_QUALITY_MAX_FORGE_POINTS[quality] (100% tiềm năng),
+    // xem EquipmentInstance.ts's ghi chú.
     forgePotential: 100,
 
     // Điểm Rèn per-item (rework 2026-08-26) — mặc định full cap; các
-    // test Tẩy/Tinh Luyện ghi đè qua overrides hoặc gán trực tiếp.
+    // test Tẩy/Tinh Luyện ghi đè qua overrides hoặc gán trực tiếp.
 
     ...overrides,
   }
@@ -264,9 +262,7 @@ describe('EquipmentSystem.createInstance — roll pipeline invariants (Equipment
     const instance = system.createInstance(TEMPLATE, player, affixRegistry)
 
     // Full budget = trần theo potential roll; luôn > 0 với roll 1-100.
-    expect(instance.forgePoints).toBe(
-      getMaxForgePoints(instance.quality, instance.forgePotential),
-    )
+    expect(instance.forgePoints).toBe(getMaxForgePoints(instance.quality, instance.forgePotential))
 
     expect(instance.forgePoints).toBeGreaterThan(0)
   })
@@ -285,8 +281,11 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
     return ctx
   }
 
-  function equippedWithAffixes(ctx: ReturnType<typeof setup>) {
-    const instance = manualInstance()
+  function equippedWithAffixes(
+    ctx: ReturnType<typeof setup>,
+    overrides: Partial<EquipmentInstance> = {},
+  ) {
+    const instance = manualInstance(overrides)
 
     // Ngân sách Điểm Rèn per-item — full để test luồng thành công.
     instance.forgePoints = 100
@@ -316,7 +315,15 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
     const before = { ...ctx.player }
 
     expect(
-      ctx.system.washAffixes(instance.instanceId, 'mortal_ore_hoang', ctx.bag, ctx.registry, ctx.materialBag, ctx.slotManager, ctx.affixRegistry).reason,
+      ctx.system.washAffixes(
+        instance.instanceId,
+        'mortal_ore_hoang',
+        ctx.bag,
+        ctx.registry,
+        ctx.materialBag,
+        ctx.slotManager,
+        ctx.affixRegistry,
+      ).reason,
     ).toBe('ore_realm_mismatch')
 
     expect(instance.forgePoints).toBe(100)
@@ -330,14 +337,26 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
     instance.forgePoints = 0
 
     expect(
-      ctx.system.washAffixes(instance.instanceId, ORE, ctx.bag, ctx.registry, ctx.materialBag, ctx.slotManager, ctx.affixRegistry).reason,
+      ctx.system.washAffixes(
+        instance.instanceId,
+        ORE,
+        ctx.bag,
+        ctx.registry,
+        ctx.materialBag,
+        ctx.slotManager,
+        ctx.affixRegistry,
+      ).reason,
     ).toBe('missing_refinement_points')
   })
 
   it('thành công: reroll identity, trừ đúng cost, giữ mainStat/quality/realm', () => {
     const ctx = washSetup()
 
-    const instance = equippedWithAffixes(ctx)
+    // rarity 'tien' (3 prefix/3 suffix) — cần rarity có affix slot thật để
+    // test reroll; 'hoang' (mặc định manualInstance) có 0 slot nên
+    // washAffixes giờ đúng đắn từ chối (xem EquipmentSystem.ts's fix
+    // "Tẩy Luyện đồ Hoàng tạo affix từ hư không").
+    const instance = equippedWithAffixes(ctx, { rarity: 'tien' })
 
     const mainBefore = instance.mainStat.flat
 
@@ -369,6 +388,54 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
 
     expect(ctx.materialBag.getAmount(ORE)).toBe(97)
   })
+
+  it('đồ Hoàng (0 affix slot) → từ chối, KHÔNG tạo affix từ hư không', () => {
+    const ctx = washSetup()
+
+    const instance = equippedWithAffixes(ctx, { rarity: 'hoang' })
+
+    const result = ctx.system.washAffixes(
+      instance.instanceId,
+      ORE,
+      ctx.bag,
+      ctx.registry,
+      ctx.materialBag,
+      ctx.slotManager,
+      ctx.affixRegistry,
+      () => 0.99,
+    )
+
+    expect(result.ok).toBe(false)
+    expect(instance.affixes.length).toBe(3)
+  })
+
+  it('item locked/favorite → từ chối, KHÔNG trừ gì (nhất quán Hóa Luyện)', () => {
+    for (const key of ['locked', 'favorite'] as const) {
+      const ctx = washSetup()
+
+      const instance = equippedWithAffixes(ctx, { [key]: true })
+
+      const stonesBefore = ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)
+
+      const oreBefore = ctx.materialBag.getAmount(ORE)
+
+      const result = ctx.system.washAffixes(
+        instance.instanceId,
+        ORE,
+        ctx.bag,
+        ctx.registry,
+        ctx.materialBag,
+        ctx.slotManager,
+        ctx.affixRegistry,
+        () => 0.99,
+      )
+
+      expect(result.ok, key).toBe(false)
+      expect(result.reason, key).toBe(key)
+      expect(ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(stonesBefore)
+      expect(ctx.materialBag.getAmount(ORE)).toBe(oreBefore)
+    }
+  })
 })
 
 describe('EquipmentSystem — Tinh Luyện (refineAffixValues, plan §7.4)', () => {
@@ -398,6 +465,27 @@ describe('EquipmentSystem — Tinh Luyện (refineAffixValues, plan §7.4)', () 
     return { ...ctx, instance, essenceId }
   }
 
+  it('item locked/favorite → từ chối (nhất quán Hóa Luyện)', () => {
+    for (const key of ['locked', 'favorite'] as const) {
+      const ctx = refineSetup()
+
+      ctx.instance[key] = true
+
+      const result = ctx.system.refineAffixValues(
+        ctx.instance.instanceId,
+        [],
+        ctx.bag,
+        ctx.registry,
+        ctx.materialBag,
+        ctx.slotManager,
+        ctx.affixRegistry,
+      )
+
+      expect(result.ok, key).toBe(false)
+      expect(result.reason, key).toBe(key)
+    }
+  })
+
   it('khóa toàn bộ (3/3 dòng) → từ chối (cannot_lock_all)', () => {
     const ctx = refineSetup()
 
@@ -408,7 +496,15 @@ describe('EquipmentSystem — Tinh Luyện (refineAffixValues, plan §7.4)', () 
     ctx.bag.add(three)
 
     expect(
-      ctx.system.refineAffixValues(three.instanceId, [0, 1, 2], ctx.bag, ctx.registry, ctx.materialBag, ctx.slotManager, ctx.affixRegistry).reason,
+      ctx.system.refineAffixValues(
+        three.instanceId,
+        [0, 1, 2],
+        ctx.bag,
+        ctx.registry,
+        ctx.materialBag,
+        ctx.slotManager,
+        ctx.affixRegistry,
+      ).reason,
     ).toBe('cannot_lock_all')
   })
 
@@ -416,14 +512,30 @@ describe('EquipmentSystem — Tinh Luyện (refineAffixValues, plan §7.4)', () 
     const ctx = refineSetup()
 
     expect(
-      ctx.system.refineAffixValues(ctx.instance.instanceId, [0, 1, 2], ctx.bag, ctx.registry, ctx.materialBag, ctx.slotManager, ctx.affixRegistry, ).ok,
+      ctx.system.refineAffixValues(
+        ctx.instance.instanceId,
+        [0, 1, 2],
+        ctx.bag,
+        ctx.registry,
+        ctx.materialBag,
+        ctx.slotManager,
+        ctx.affixRegistry,
+      ).ok,
     ).toBe(true)
 
     const ctx2 = refineSetup()
 
     // 4 affixes → khóa 3 là hợp lệ; khóa index ngoài range → invalid.
     expect(
-      ctx2.system.refineAffixValues(ctx2.instance.instanceId, [9], ctx2.bag, ctx2.registry, ctx2.materialBag, ctx2.slotManager, ctx2.affixRegistry).reason,
+      ctx2.system.refineAffixValues(
+        ctx2.instance.instanceId,
+        [9],
+        ctx2.bag,
+        ctx2.registry,
+        ctx2.materialBag,
+        ctx2.slotManager,
+        ctx2.affixRegistry,
+      ).reason,
     ).toBe('invalid_lock')
   })
 
@@ -451,7 +563,9 @@ describe('EquipmentSystem — Tinh Luyện (refineAffixValues, plan §7.4)', () 
 
     expect(ctx.materialBag.getAmount(ctx.essenceId)).toBe(essenceBefore - 5)
 
-    expect(ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(stonesBefore - 5 * REFINE_SPIRIT_STONE_PER_UNIT)
+    expect(ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(
+      stonesBefore - 5 * REFINE_SPIRIT_STONE_PER_UNIT,
+    )
 
     expect(ctx.instance.forgePoints).toBe(pointsBefore - REFINE_REFINEMENT_COST)
   })
@@ -496,7 +610,11 @@ describe('EquipmentSystem — Hóa Luyện (dissolveInstances, plan §7.5)', () 
 
     const hoangItem = manualInstance({ rarity: 'hoang', realmId: 'mortal' })
 
-    const tienItem = manualInstance({ instanceId: 'manual-2', rarity: 'tien', realmId: 'qi_refining' })
+    const tienItem = manualInstance({
+      instanceId: 'manual-2',
+      rarity: 'tien',
+      realmId: 'qi_refining',
+    })
 
     ctx.bag.add(hoangItem)
 

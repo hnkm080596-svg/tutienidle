@@ -58,15 +58,21 @@ export type ScripturePavilionTab = 'technique' | 'lore'
 // vào LeftPanelMode) vì 2 panel này không thuộc nhóm "trang chức năng
 // chiếm 100% panel trái" ở đầu file.
 //
-// Realm Passive & Pressure System (2026-08-20) — 'realm_passive'
-// (RealmPassivePanel.vue, tách khỏi CharacterPanel.vue's "Passive Cảnh
-// Giới" cũ + nội dung Nhập Đạo/Kiến Cơ MỚI) và 'luyen_the'
-// (LuyenThePanel.vue, 6 tầng rèn thể Phàm Nhân) — cùng pattern 2 panel
-// trên. 'quan_khi' (QuanKhiPanel.vue, follow-up cùng ngày) — tách
+// Realm Passive & Pressure System (2026-08-20) — 'realm'
+// (RealmPanel.vue, kế thừa RealmPassivePanel.vue đã gỡ — tách khỏi
+// CharacterPanel.vue's "Passive Cảnh Giới" cũ + nội dung Nhập Đạo/Kiến
+// Cơ MỚI) và 'luyen_the' (LuyenThePanel.vue, 6 tầng rèn thể Phàm
+// Nhân) — cùng pattern 2 panel trên. 'quan_khi' (QuanKhiPanel.vue,
+// follow-up cùng ngày) — tách
 // path-choices ("Bước Vào Pháp Tu/Kiếm Tu") khỏi CharacterPanel.vue,
 // mở qua nút "Quán Khí" bên cạnh Đột Phá thay vì liệt kê thẳng.
+// 'quest' (QuestPanel.vue, Quest System v1) — panel Nhiệm Vụ độc lập,
+// mở qua command wheel giống các panel standalone khác ở trên.
+// 'artifact' (ArtifactPanel.vue, Bản Mệnh Pháp Bảo, 2026-08-27) — cùng
+// pattern các panel standalone trên, mở qua command wheel khi player
+// đạt Trúc Cơ (xem game/support/commandWheelCatalog.ts's slot phap_bao).
 export type StandalonePanel =
-  'skill' | 'technique' | 'realm_passive' | 'luyen_the' | 'quan_khi' | null
+  'skill' | 'technique' | 'realm' | 'luyen_the' | 'quan_khi' | 'quest' | 'artifact' | null
 
 export type BattleRunMode = 'manual' | 'repeat' | 'progress'
 
@@ -109,6 +115,8 @@ export const useUiStore = defineStore('ui', {
     return {
     leftPanelMode: null as LeftPanelMode,
 
+    characterOverlayOpen: false,
+
     // Command wheel (dong-fu-command-wheel plan) — mở/đóng bằng click
     // nhân vật tu luyện giữa Động Phủ; Escape/click vùng trống đóng.
     // Transient theo phiên, KHÔNG lưu save.
@@ -136,13 +144,11 @@ export const useUiStore = defineStore('ui', {
     // Động Phủ quick nav — "Kỹ Năng"/"Tâm Pháp" mở 1 trong 2 overlay
     // ĐỘC LẬP (xem StandalonePanel ở trên), thay cho loadoutTab cũ (2
     // tab của chung 1 LoadoutManager.vue, đã xoá). Transient (KHÔNG lưu
-    // save) — cùng nhóm isPaused/isAuto.
+    // save) — cùng nhóm isAuto.
     standalonePanel: null as StandalonePanel,
 
     // (legacy) pendingEquipTarget giữ để tránh vỡ shape store.
     pendingEquipTarget: null as { kind: 'talisman' | 'formation'; id: string } | null,
-
-    isPaused: false,
 
     battleRunMode: automation.battleRunMode ?? 'manual',
 
@@ -211,6 +217,13 @@ export const useUiStore = defineStore('ui', {
     // Bấm lại chức năng đang mở sẽ đóng, bấm chức năng khác tự thay
     // thế (không cần tự đóng cái cũ thủ công).
     toggleLeft(mode: Exclude<LeftPanelMode, null>) {
+      if (mode === 'character' || mode === 'inventory') {
+        const shouldClose = this.characterOverlayOpen
+        this.closeHomeOverlays()
+        this.characterOverlayOpen = !shouldClose
+        if (this.characterOverlayOpen) this.activeBagTab = 'equipment'
+        return
+      }
       const shouldClose = this.leftPanelMode === mode
 
       this.closeHomeOverlays()
@@ -221,6 +234,12 @@ export const useUiStore = defineStore('ui', {
     },
 
     openLeftPanel(mode: Exclude<LeftPanelMode, null>) {
+      if (mode === 'character' || mode === 'inventory') {
+        this.closeHomeOverlays()
+        this.characterOverlayOpen = true
+        this.activeBagTab = 'equipment'
+        return
+      }
       this.closeHomeOverlays()
 
       this.leftPanelMode = mode
@@ -235,6 +254,7 @@ export const useUiStore = defineStore('ui', {
     /** Đóng toàn bộ chrome/overlay của Động Phủ khi click nền chính. */
     closeHomeOverlays() {
       this.leftPanelMode = null
+      this.characterOverlayOpen = false
       this.standalonePanel = null
       this.activeBuildingPopoverId = null
       this.isCommandWheelOpen = false
@@ -313,14 +333,6 @@ export const useUiStore = defineStore('ui', {
       this.standalonePanel = this.standalonePanel === panel ? null : panel
     },
 
-    togglePause() {
-      this.isPaused = !this.isPaused
-    },
-
-    setPaused(paused: boolean) {
-      this.isPaused = paused
-    },
-
     setBattleRunMode(mode: BattleRunMode) {
       this.battleRunMode = mode
 
@@ -345,22 +357,16 @@ export const useUiStore = defineStore('ui', {
     // this.scene.start('MainScene'), xem CombatResultModal.vue.
     exitCombatScene() {
       this.combatSceneDismissed = true
-      this.isPaused = false
     },
 
     enterCombatScene(origin: 'stage' | 'tribulation') {
-      this.isPaused = false
       this.combatSceneDismissed = false
       this.combatOrigin = origin
     },
     enterTribulationScene() {
-      // Scene Độ Kiếp không có nút Play/Pause. Không cho một flag pause cũ
-      // từ trận Stage khiến kiếp nạn bị đóng băng vĩnh viễn.
-      this.isPaused = false
       this.isTribulationSceneActive = true
     },
     exitTribulationScene() {
-      this.isPaused = false
       this.isTribulationSceneActive = false
     },
   },

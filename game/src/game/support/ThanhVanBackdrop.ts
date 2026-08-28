@@ -11,14 +11,24 @@
 import Phaser from 'phaser'
 import { DEPTH_THANH_VAN_TIME_GRADE } from './BattleLayers'
 import {
+  THANH_VAN_CANVAS,
   thanhVanLayerDepth,
   thanhVanLoadList,
   thanhVanTimeGrade,
   type ThanhVanVariant,
 } from './ThanhVanArt'
 
+// Workstream H (gameplay-ui-feedback-responsive-cleanup-plan.md §11) — art
+// được author trên khung THANH_VAN_CANVAS với đường chân trời cố định ở
+// đúng giữa khung (khớp PERSPECTIVE_SCENERY_RATIO mặc định trong
+// BattleGridProjection.ts). Neo layer theo tỉ lệ NÀY thay vì kéo méo full
+// canvas — mọi viewport (kể cả màn thấp co road lớn hơn scenery qua
+// PERSPECTIVE_MIN_ROAD_HEIGHT clamp) đều khớp chân đất thật (horizonY).
+const THANH_VAN_HORIZON_FRACTION = 0.5
+
 export interface ThanhVanBackdropHandle {
-  redraw(width: number, height: number): void
+  /** horizonY optional để cùng shape với BattlefieldBackdropHandle; luôn truyền thật từ CombatScene. */
+  redraw(width?: number, height?: number, horizonY?: number): void
 
   destroy(): void
 
@@ -34,6 +44,8 @@ export function attachThanhVanBackdrop(
   width: number,
 
   height: number,
+
+  horizonY: number,
 ): ThanhVanBackdropHandle {
   const entries = thanhVanLoadList(variant)
 
@@ -57,13 +69,25 @@ export function attachThanhVanBackdrop(
         .setDepth(DEPTH_THANH_VAN_TIME_GRADE)
     : undefined
 
-  function redraw(canvasWidth: number, canvasHeight: number): void {
-    for (const image of images) {
-      image.setDisplaySize(canvasWidth, canvasHeight)
+  function redraw(
+    canvasWidth: number = width,
+    canvasHeight: number = height,
+    targetHorizonY: number = canvasHeight * THANH_VAN_HORIZON_FRACTION,
+  ): void {
+    // Scale ĐỀU theo bề rộng (không méo tỉ lệ) — bù chênh lệch aspect
+    // ratio bằng vị trí (offsetY), không phải bằng cách nén/giãn riêng
+    // trục dọc.
+    const scale = canvasWidth / THANH_VAN_CANVAS.w
+    const scaledHeight = THANH_VAN_CANVAS.h * scale
+    const offsetY = targetHorizonY - THANH_VAN_CANVAS.h * THANH_VAN_HORIZON_FRACTION * scale
 
-      image.setPosition(0, 0)
+    for (const image of images) {
+      image.setDisplaySize(canvasWidth, scaledHeight)
+
+      image.setPosition(0, offsetY)
     }
 
+    // Lớp phủ màu grading vẫn phủ TRỌN canvas (không lệ thuộc horizon).
     gradeOverlay?.setSize(canvasWidth, canvasHeight)
 
     gradeOverlay?.setPosition(0, 0)
@@ -81,7 +105,7 @@ export function attachThanhVanBackdrop(
     return new Map(depths)
   }
 
-  redraw(width, height)
+  redraw(width, height, horizonY)
 
   return { redraw, destroy, depthByKey }
 }

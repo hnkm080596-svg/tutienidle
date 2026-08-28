@@ -15,6 +15,7 @@ import type { ElementType } from '../element/ElementType'
 import { EntityVitalsSystem, type VitalsChangeReason } from './EntityVitalsSystem'
 import { clampStatValue } from '../stats/StatMetadata'
 import { getSkillRuntimeStat } from '../skill/SkillRuntimeStats'
+import type { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 
 // Rage tích theo % damage gây ra/nhận vào — đặt ở CombatSystem
 // (không phải BattleSystem) để mọi đường gây damage (auto-attack,
@@ -57,8 +58,20 @@ const DOT_RESISTANCE_FLOOR = -1
 export class CombatSystem {
   readonly vitals: EntityVitalsSystem
 
+  // Thiên phú Bất Tử Thể (talent-direction-choice-plan §6) — session
+  // battle-scoped: id entity player + guard giữ lượt sống sót. null =
+  // không bảo vệ (trận Độ Kiếp, trận không có PlayerData, hoặc không có
+  // thiên phú). GameManager set/reset mỗi lần bắt đầu trận.
+  private surviveLethalSession: { playerEntityId: string; guard: SurviveLethalGuard } | null = null
+
   constructor(private readonly eventBus: EventBus) {
     this.vitals = new EntityVitalsSystem(eventBus)
+  }
+
+  setSurviveLethalSession(
+    session: { playerEntityId: string; guard: SurviveLethalGuard } | null,
+  ): void {
+    this.surviveLethalSession = session
   }
 
   applyDirectDamage(target: CombatEntity, amount: number, sourceId: string, reason: VitalsChangeReason = 'damage') {
@@ -417,6 +430,27 @@ export class CombatSystem {
    */
   killIfDead(entity: CombatEntity, killerId: string) {
     if (entity.currentHp > 0 || !entity.alive) {
+      return
+    }
+
+    // Thiên phú Bất Tử Thể (talent-direction-choice-plan §6) — đòn lẽ ra
+    // chết thành sống sót HP = 1, trừ 1 lượt của trận. KHÔNG kích hoạt
+    // trong trận Độ Kiếp (session null — GameManager.beginTribulation xoá).
+    const surviveSession = this.surviveLethalSession
+
+    if (
+      surviveSession &&
+      entity.id === surviveSession.playerEntityId &&
+      surviveSession.guard.tryConsumeUse()
+    ) {
+      entity.currentHp = 1
+
+      this.eventBus.emit('talent_survive_lethal', {
+        type: 'talent_survive_lethal',
+        entityId: entity.id,
+        sourceId: killerId,
+      })
+
       return
     }
 

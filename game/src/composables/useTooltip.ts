@@ -1,4 +1,5 @@
 import { ref, shallowRef } from 'vue'
+import type { NameSegment } from '@/core/item/NameSegment'
 
 // Dạng cũ, DÙNG CHUNG cho tuyệt đại đa số v-tooltip hiện có trong
 // game (chỉ tiêu đề + mô tả 1 dòng) — `kind` optional để mọi object
@@ -89,6 +90,12 @@ export interface EquipmentTooltipContent {
   kind: 'equipment'
 
   name: string
+
+  // Workstream C (gameplay-ui-feedback-responsive-cleanup-plan.md §6) —
+  // tên ghép giữ màu RIÊNG cho từng segment (Rarity/Quality), thay vì
+  // tô toàn bộ tiêu đề theo 1 màu Quality duy nhất. `name` (chuỗi phẳng)
+  // vẫn giữ lại cho alt text/icon fallback.
+  nameSegments: NameSegment[]
 
   imagePath?: string
 

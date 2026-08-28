@@ -1,119 +1,20 @@
 import type { Material } from '@/core/material/Material'
-import { SPIRIT_STONE_MATERIAL } from '@/core/material/SpiritStoneMaterial'
+import { SPIRIT_STONE_MATERIALS } from '@/core/material/SpiritStoneMaterial'
 import type { ProfessionMaterialMeta } from '@/core/profession/ProfessionMaterial'
 import { EQUIPMENT_REALM_ESSENCE_MATERIAL } from '@/core/equipment/RefinementBalance'
+import { REALM_TIERS } from '@/core/realm/RealmTierMap'
+import {
+  getProfessionGradeForRealm,
+  PROFESSION_GRADE_NAMES,
+} from '@/core/profession/ProfessionGrade'
+import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
 
 // sourceType (MASTER SPEC Mục II-V) — nhãn nguồn CHÍNH, không ràng
-// buộc cứng (vd Xích Đồng vẫn rơi cả từ quái lẫn thám hiểm, xem
-// data/enemy/Enemies.ts và data/exploration/explorations.ts).
-//
-// "tunghematandsuch" pass (2026-08-14) — thay hẳn kiểu material zoo
-// "mỗi loài quái 1-2 material riêng" (13 material từ tầng 1-10 content
-// pass + wolf-fang/wolf-hide/demon-core cũ) bằng ĐÚNG 3 material Yêu
-// Tài dùng CHUNG cho mọi quái (Yêu Đan/Yêu Huyết/Yêu Cốt, tiered theo
-// CẢNH GIỚI của quái chứ không phải theo loài — xem
-// data/enemy/Enemies.ts) + 3 nhóm nguyên liệu tự nhiên age-tiered
-// (Linh Thảo/Linh Mộc/Linh Thiết). Currency đặc thù (demon-soul/
-// flame-essence/affix_rune_stone/affix_tier_stone/great_dao_seed + 4
-// item Trúc Cơ ẩn) giữ NGUYÊN — không thuộc phạm vi đơn giản hoá
+// buộc cứng. Nhóm nguyên liệu tự nhiên age-tiered (Linh Thảo/Linh Mộc/
+// Linh Thiết) là nguồn thu chính; currency đặc thù (great_dao_seed +
+// 4 item Trúc Cơ ẩn) giữ NGUYÊN — không thuộc phạm vi đơn giản hoá
 // "nguyên liệu tự nhiên" của tài liệu.
 const legacyMaterials: Material[] = [
-  // ============================================================
-  // LINH THẢO (herb) — dùng cho Luyện Đan. 3 "họ" thật (kế thừa từ
-  // naming-principles pass trước: Linh Chi/Quế/Cúc Hoa), mỗi họ có
-  // đúng 3 bậc niên đại (base/Bách Niên/Thiên Niên) — niên đại đặt
-  // TRẦN phẩm cấp tối đa của Đan chế từ nó (xem data/recipe/recipes.ts).
-  // ============================================================
-  {
-    id: 'linh_chi',
-    name: 'Linh Chi',
-    category: 'herb',
-    years: 0,
-    element: 'wood',
-    sourceType: 'exploration',
-    description: 'Linh thảo phổ thông chứa linh khí Mộc thuộc tính.',
-  },
-
-  {
-    id: 'bach_nien_linh_chi',
-    name: 'Bách Niên Linh Chi',
-    category: 'herb',
-    years: 100,
-    element: 'wood',
-    sourceType: 'exploration',
-    description: 'Linh Chi trăm năm tuổi, dược tính đậm đặc hơn hẳn.',
-  },
-
-  {
-    id: 'thien_nien_linh_chi',
-    name: 'Thiên Niên Linh Chi',
-    category: 'herb',
-    years: 1000,
-    element: 'wood',
-    sourceType: 'exploration',
-    description: 'Linh Chi nghìn năm tuổi, cực hiếm, tích tụ linh khí Mộc thuần khiết.',
-  },
-
-  {
-    id: 'que',
-    name: 'Quế',
-    category: 'herb',
-    years: 0,
-    element: 'fire',
-    sourceType: 'exploration',
-    description: 'Linh thảo mang Hỏa linh lực.',
-  },
-
-  {
-    id: 'bach_nien_que',
-    name: 'Bách Niên Quế',
-    category: 'herb',
-    years: 100,
-    element: 'fire',
-    sourceType: 'exploration',
-    description: 'Quế trăm năm tuổi, Hỏa khí nồng đậm.',
-  },
-
-  {
-    id: 'thien_nien_que',
-    name: 'Thiên Niên Quế',
-    category: 'herb',
-    years: 1000,
-    element: 'fire',
-    sourceType: 'exploration',
-    description: 'Quế nghìn năm tuổi, cực hiếm, Hỏa khí gần như thực chất.',
-  },
-
-  {
-    id: 'cuc_hoa',
-    name: 'Cúc Hoa',
-    category: 'herb',
-    years: 0,
-    element: 'water',
-    sourceType: 'exploration',
-    description: 'Linh thảo sinh trưởng tại nơi hàn khí hội tụ.',
-  },
-
-  {
-    id: 'bach_nien_cuc_hoa',
-    name: 'Bách Niên Cúc Hoa',
-    category: 'herb',
-    years: 100,
-    element: 'water',
-    sourceType: 'exploration',
-    description: 'Cúc Hoa trăm năm tuổi, hàn khí tinh thuần.',
-  },
-
-  {
-    id: 'thien_nien_cuc_hoa',
-    name: 'Thiên Niên Cúc Hoa',
-    category: 'herb',
-    years: 1000,
-    element: 'water',
-    sourceType: 'exploration',
-    description: 'Cúc Hoa nghìn năm tuổi, cực hiếm, hàn khí ngưng thành sương.',
-  },
-
   // ============================================================
   // LINH MỘC (wood) — dùng cho Chế Phù. Cùng cơ chế niên đại.
   // ============================================================
@@ -121,7 +22,7 @@ const legacyMaterials: Material[] = [
     id: 'thanh_linh_moc',
     name: 'Thanh Linh Mộc',
     category: 'wood',
-    years: 0,
+    years: 10,
     element: 'wood',
     sourceType: 'exploration',
     description:
@@ -152,7 +53,7 @@ const legacyMaterials: Material[] = [
   // xuất, chưa qua chế luyện (đúng ví dụ chuỗi Iron Ore → Iron Ingot,
   // giờ áp dụng thêm cho tuyến Linh Mộc → Phù Chỉ). Thay thế
   // thanh-linh-moc làm nguyên liệu TRỰC TIẾP trong công thức chế Phù
-  // (xem data/recipe/recipes.ts, data/building/processingRecipes.ts).
+  // (xem data/alchemy/alchemyRecipes.ts).
   {
     id: 'phu_chi',
     name: 'Phù Chỉ',
@@ -243,75 +144,6 @@ const legacyMaterials: Material[] = [
     description: 'Quặng sắt thô, cần Lò Luyện xử lý mới dùng được.',
   },
 
-  // Khai Thác/Linh Thảo Viên rework — Khai Thác (exploration) giờ chỉ
-  // cho hạt giống thô, Linh Thảo Viên là nơi GIEO hạt (9 ô vườn, xem
-  // Building.gardenSeedMaterialId) rồi mới ra thành phẩm linh thảo
-  // thật (green-spirit-herb) — tách bước "thu thập" khỏi "trồng trọt",
-  // đúng ý tránh trùng chức năng giữa 2 Building.
-  {
-    id: 'linh_thao_chung',
-    name: 'Linh Thảo Chủng',
-    category: 'herb',
-    sourceType: 'exploration',
-    description:
-      'Hạt giống linh thảo thô nhặt được khi thám hiểm, đem gieo ở Linh Thảo Viên mới nảy mầm thành linh thảo thật.',
-  },
-
-  // ============================================================
-  // YÊU TÀI — tài nguyên rơi từ MỌI quái, tiered theo CẢNH GIỚI của
-  // quái đó (không phải theo loài) — thay thế wolf-fang/wolf-hide/
-  // demon-core cũ VÀ 13 material trophy riêng từng loài của tầng
-  // 1-10 content pass (đã xoá khỏi file này). Chỉ id hậu tố
-  // `_qi_refining` được tạo — realm cao hơn chưa có Stage nào tồn tại
-  // để rơi, thêm khi có nội dung thật (xem data/enemy/Enemies.ts).
-  // ============================================================
-  {
-    id: 'yeu_dan_luyen_khi_canh',
-    name: 'Yêu Đan (Luyện Khí Cảnh)',
-    category: 'monster_core',
-    sourceType: 'monster',
-    description:
-      'Nội đan của yêu thú Luyện Khí Cảnh, chứa tinh hoa tu vi — nguồn năng lượng chính khi Luyện Đan.',
-  },
-
-  {
-    id: 'yeu_huyet_luyen_khi_canh',
-    name: 'Yêu Huyết (Luyện Khí Cảnh)',
-    category: 'monster_core',
-    sourceType: 'monster',
-    description: 'Máu yêu thú Luyện Khí Cảnh, mang linh tính mạnh — dùng dẫn lực khi Chế Phù.',
-  },
-
-  {
-    id: 'yeu_cot_luyen_khi_canh',
-    name: 'Yêu Cốt (Luyện Khí Cảnh)',
-    category: 'monster_core',
-    sourceType: 'monster',
-    description: 'Xương yêu thú Luyện Khí Cảnh, cứng chắc — làm cốt trận khi Bày Trận.',
-  },
-
-  // Reclassify: trước rơi ở Exploration (Vạn Yêu Lâm, chance 0.1) —
-  // giờ CHỈ rơi từ Boss (đúng flavor "hồn quái" hiếm/giá trị cao,
-  // Mục II) — xem Enemies.ts's bandit.eliteRewards. Currency đặc thù,
-  // KHÔNG thuộc nhóm Yêu Tài phổ thông ở trên.
-  {
-    id: 'yeu_hon',
-    name: 'Yêu Hồn',
-    category: 'essence',
-    sourceType: 'boss',
-    description: 'Một luồng thần hồn còn sót lại của yêu thú, chỉ tìm thấy nơi Boss trấn giữ.',
-  },
-
-  // MỚI — material CHỈ rơi từ Boss (Sơn Tặc Đầu Lĩnh, xem Enemies.ts),
-  // minh hoạ đúng "Boss A → Flame Essence" (Mục II). Currency đặc thù.
-  {
-    id: 'tinh_hoa_hoa',
-    name: 'Tinh Hoa Hỏa',
-    category: 'essence',
-    sourceType: 'boss',
-    description: 'Tinh hoa Hỏa linh khí ngưng tụ nơi Boss trấn giữ, cực kỳ hiếm.',
-  },
-
   // Realm Passive & Pressure System (2026-08-20) — currency Luyện Thể,
   // CHỈ rơi từ 20 quái Phàm Nhân (data/enemy/Enemies.ts), đầu tư qua
   // GameManager.investBodyRefinement() để lấp đầy 6 tầng (xem
@@ -325,26 +157,6 @@ const legacyMaterials: Material[] = [
     description: 'Tinh hoa ngưng tụ từ thể phách phàm thú, dùng để rèn luyện 6 tầng thân thể.',
   },
 
-  // MỚI (Core Loop Foundation, Phase 4) — currency cho 2 thao tác
-  // Affix (Thêm Dòng/Nâng Cấp Dòng), xem data/enemy/Enemies.ts's
-  // drop entries + data/equipment/equipment.ts's addAffixCost/
-  // upgradeAffixCost.
-  {
-    id: 'affix_rune_stone',
-    name: 'Phù Văn Thạch',
-    category: 'other',
-    sourceType: 'monster',
-    description: 'Đá khắc phù văn cổ, dùng khắc thêm 1 dòng Affix lên trang bị.',
-  },
-
-  {
-    id: 'affix_tier_stone',
-    name: 'Cường Hoa Thạch',
-    category: 'other',
-    sourceType: 'boss',
-    description: 'Đá cường hoá quý hiếm, dùng nâng Tier 1 dòng Affix đã có trên trang bị.',
-  },
-
   // Đột Phá Trúc Cơ (Phase 3) — điều kiện ẩn của Đại Đạo (mục 8/15
   // spec `breakthrough`), rơi 0.01% từ Boss "Đại Vương Sơn Tặc" (xem
   // data/enemy/Enemies.ts's bandit.bossRewards). Description CỐ Ý
@@ -355,6 +167,17 @@ const legacyMaterials: Material[] = [
     category: 'other',
     sourceType: 'boss',
     description: 'Một vật phẩm kỳ dị, không thể xác định công dụng.',
+  },
+
+  // Bản Mệnh Pháp Bảo (2026-08-27, foundation-artifact-system-plan.md
+  // §6) — đá nâng phẩm, rơi từ quái Trúc Cơ trở lên (xem
+  // BattleLootSystem.grantArtifactStoneDrop() + ArtifactDropBalance.ts).
+  {
+    id: 'doan_bao_thach',
+    name: 'Đoán Bảo Thạch',
+    category: 'other',
+    sourceType: 'monster',
+    description: 'Đá dị chất kết tinh từ khí tức yêu thú Trúc Cơ trở lên, dùng để nâng phẩm bản mệnh pháp bảo.',
   },
 
   // Đột Phá Trúc Cơ (Phase 6) — loot "vô thưởng vô phạt" (mục 14 spec
@@ -394,46 +217,15 @@ const legacyMaterials: Material[] = [
   },
 
   // ============================================================
-  // PHẾ LIỆU LUYỆN KHÍ — Bụi Cốt (byproduct của Luyện Khí, xem
-  // GameManager.smeltEquipment()), tiêu thụ lại bởi Cường Hóa. Tinh
-  // Luyện Cốt là bậc tinh chế cao hơn (Bụi Cốt + Linh Thạch, xem
-  // GameManager.refineBuiCot()) — CHƯA có consumer cụ thể trong lượt
-  // này (tài liệu chỉ liệt kê use-case tương lai — "cường hóa cao
-  // cấp/sửa chữa Khí" — chưa có mechanic thật để wire vào, cố tình
-  // KHÔNG bịa thêm 1 sink giả chỉ để lấp chỗ trống, tránh lặp lại lỗi
-  // "material chết" đã rút kinh nghiệm ở lượt naming-principles trước
-  // — khác ở chỗ lần này ít nhất ĐÃ có nguồn thu thật (refineBuiCot),
-  // chỉ thiếu điểm tiêu, sẽ bổ sung khi có mechanic "cường hóa cao
-  // cấp" cụ thể).
-  // ============================================================
-  {
-    id: 'bui_cot',
-    name: 'Bụi Cốt',
-    category: 'byproduct',
-    sourceType: 'building',
-    description: 'Phế liệu thu được sau khi Luyện Khí, dùng làm nguyên liệu Cường Hóa.',
-  },
-
-  {
-    id: 'tinh_luyen_cot',
-    name: 'Tinh Luyện Cốt',
-    category: 'byproduct',
-    sourceType: 'building',
-    description:
-      'Bụi Cốt đã qua tinh luyện, giá trị cao hơn hẳn — chưa có nơi tiêu thụ, giữ làm tài nguyên tích trữ.',
-  },
-
-  // ============================================================
   // ĐỘT PHÁ LỆNH — "con đường bình thường" của Đột Phá tổng quát
   // (2026-08-16, xem core/breakthrough/BreakthroughRequirement.ts):
   // vật phẩm CÔNG KHAI hiện trong BreakthroughRequirementPanel.vue
   // trước khi vào Độ Kiếp, khác hẳn 4 item Trúc Cơ ẩn phía trên
   // (great_dao_seed/broken_foundation_scroll/old_jade_slip/
   // cultivator_diary/stele_fragment — không đổi). Luyện được bằng
-  // Linh Thạch qua GameManager.craftBreakthroughToken() — cùng pattern
-  // "chuyển đổi trực tiếp, không qua Recipe" như refineBuiCot() ở trên
-  // (RecipeResultType không hỗ trợ material làm kết quả), sourceType
-  // 'building' theo đúng tiền lệ tinh_luyen_cot.
+  // Linh Thạch qua GameManager.craftBreakthroughToken() — "chuyển đổi
+  // trực tiếp, không qua Recipe" (RecipeResultType không hỗ trợ
+  // material làm kết quả), sourceType 'building'.
   // ============================================================
   {
     id: 'breakthrough_token_foundation_establishment',
@@ -498,7 +290,6 @@ const legacyMaterials: Material[] = [
     sourceType: 'building',
     description: 'Lệnh bài ngưng tụ từ Linh Thạch, dẫn đường Độ Kiếp tối hậu.',
   },
-
 ]
 
 // ============================================================
@@ -525,12 +316,6 @@ const PROFESSION_REALM_CELLS: readonly ProfessionRealmCell[] = [
   { realmId: 'foundation_establishment', realmLabel: 'Trúc Cơ' },
 ]
 
-const WOOD_NAMES: Record<string, string> = {
-  mortal: 'Thanh Vân Mộc',
-  qi_refining: 'Hàn Ngọc Mộc',
-  foundation_establishment: 'Tử Điện Mộc',
-}
-
 const ORE_QUALITY_LABELS: Record<string, string> = {
   hoang: 'Hoàng',
   huyen: 'Huyền',
@@ -539,17 +324,9 @@ const ORE_QUALITY_LABELS: Record<string, string> = {
   tien: 'Tiên',
 }
 
-const ORE_BASE_NAMES: Record<string, string> = {
-  mortal: 'Thiết Quáng',
-  qi_refining: 'Huyền Sa',
-  foundation_establishment: 'Tinh Ngọc Thạch',
-}
-
-const HERB_AGE_LABELS: Record<string, string> = {
-  decade: 'Thập Niên',
-  century: 'Bách Niên',
-  millennium: 'Thiên Niên',
-  myriad_year: 'Vạn Niên',
+function professionResourceName(realmId: string, kind: 'Linh Mộc' | 'Linh Khoáng'): string {
+  const grade = getProfessionGradeForRealm(realmId)
+  return `${grade ? PROFESSION_GRADE_NAMES[grade] : realmId} ${kind}`
 }
 
 const HERB_AGE_YEARS: Record<string, number> = {
@@ -559,71 +336,6 @@ const HERB_AGE_YEARS: Record<string, number> = {
   myriad_year: 10000,
 }
 
-/**
- * Mapping đan phương → thảo riêng (Phase 0 chốt, §13.3) — PHẢI khớp
- * THANH_VAN_GROTTO_HERB_BASES trong core/production/ProductionCatalog.ts
- * (data-integrity test chéo kiểm tra).
- */
-const HERB_BASE_BY_RECIPE: Readonly<Record<string, { baseId: string; name: string; realmId: string }>> =
-  {
-    alchemy_pill_regen_mortal: { baseId: 'huyet_tham', name: 'Huyết Tham', realmId: 'mortal' },
-    alchemy_pill_cultivation_mortal: {
-      baseId: 'tinh_khi_thao',
-      name: 'Tinh Khi Thảo',
-      realmId: 'mortal',
-    },
-    alchemy_pill_insight_mortal: {
-      baseId: 'minh_muc_thao',
-      name: 'Minh Mục Thảo',
-      realmId: 'mortal',
-    },
-    alchemy_pill_main_stat_mortal: {
-      baseId: 'pho_cot_hoa',
-      name: 'Phổ Cốt Hoa',
-      realmId: 'mortal',
-    },
-    alchemy_pill_regen_qi_refining: {
-      baseId: 'ngoc_huyet_chi',
-      name: 'Ngọc Huyết Chi',
-      realmId: 'qi_refining',
-    },
-    alchemy_pill_cultivation_qi_refining: {
-      baseId: 'tuan_linh_cao',
-      name: 'Tuấn Linh Cao',
-      realmId: 'qi_refining',
-    },
-    alchemy_pill_insight_qi_refining: {
-      baseId: 'than_thong_hoa',
-      name: 'Thần Thông Hoa',
-      realmId: 'qi_refining',
-    },
-    alchemy_pill_main_stat_qi_refining: {
-      baseId: 'loc_cot_thao',
-      name: 'Lộc Cốt Thảo',
-      realmId: 'qi_refining',
-    },
-    alchemy_pill_regen_foundation_establishment: {
-      baseId: 'cu_phuong_qua',
-      name: 'Cử Phượng Quả',
-      realmId: 'foundation_establishment',
-    },
-    alchemy_pill_cultivation_foundation_establishment: {
-      baseId: 'dao_diem_lien',
-      name: 'Đạo Điềm Liên',
-      realmId: 'foundation_establishment',
-    },
-    alchemy_pill_insight_foundation_establishment: {
-      baseId: 'van_tu_dang',
-      name: 'Vạn Tự Đăng',
-      realmId: 'foundation_establishment',
-    },
-    alchemy_pill_main_stat_foundation_establishment: {
-      baseId: 'thien_cot_thao',
-      name: 'Thiên Cốt Thảo',
-      realmId: 'foundation_establishment',
-    },
-  }
-
 function buildProfessionMaterials(): Material[] {
   const list: Material[] = []
 
@@ -631,7 +343,7 @@ function buildProfessionMaterials(): Material[] {
   for (const cell of PROFESSION_REALM_CELLS) {
     list.push({
       id: `${cell.realmId}_wood`,
-      name: WOOD_NAMES[cell.realmId] ?? cell.realmId,
+      name: professionResourceName(cell.realmId, 'Linh Mộc'),
       category: 'wood',
       element: 'wood',
       sourceType: 'exploration',
@@ -643,12 +355,43 @@ function buildProfessionMaterials(): Material[] {
     })
   }
 
+  // Scaffold 9 cảnh giới × 5 phẩm Linh Mộc. Các tier Kim Đan+ là data
+  // placeholder để building level 4-9 có cost hợp lệ trong registry.
+  for (const realmId of REALM_TIERS) {
+    for (const quality of ['hoang', 'huyen', 'dia', 'thien', 'tien']) {
+      list.push({
+        id: `${realmId}_wood_${quality}`,
+        name: professionResourceName(realmId, 'Linh Mộc'),
+        category: 'wood',
+        element: 'wood',
+        sourceType: 'exploration',
+        description: 'Linh mộc phân phẩm dùng cho xây dựng động phủ.',
+        profession: { resourceKind: 'wood', realmId, quality },
+      })
+    }
+  }
+
+  // Bổ sung scaffold Linh Khoáng cho sáu cảnh giới chưa có production thật.
+  for (const realmId of REALM_TIERS.slice(3)) {
+    for (const quality of ['hoang', 'huyen', 'dia', 'thien', 'tien']) {
+      list.push({
+        id: `${realmId}_ore_${quality}`,
+        name: professionResourceName(realmId, 'Linh Khoáng'),
+        category: 'ore',
+        element: 'metal',
+        sourceType: 'exploration',
+        description: 'Linh khoáng phân phẩm dùng cho luyện khí và xây dựng.',
+        profession: { resourceKind: 'ore', realmId, quality },
+      })
+    }
+  }
+
   // ---- Quáng: 3 tier × 5 phẩm ----
   for (const cell of PROFESSION_REALM_CELLS) {
     for (const quality of ['hoang', 'huyen', 'dia', 'thien', 'tien']) {
       list.push({
         id: `${cell.realmId}_ore_${quality}`,
-        name: `${ORE_QUALITY_LABELS[quality]} ${ORE_BASE_NAMES[cell.realmId]}`,
+        name: professionResourceName(cell.realmId, 'Linh Khoáng'),
         category: 'ore',
         element: 'metal',
         sourceType: 'exploration',
@@ -657,28 +400,6 @@ function buildProfessionMaterials(): Material[] {
           resourceKind: 'ore',
           realmId: cell.realmId,
           quality,
-        },
-      })
-    }
-  }
-
-  // ---- Động Thiên: 12 thảo × 4 niên đại ----
-  for (const [recipeId, herb] of Object.entries(HERB_BASE_BY_RECIPE)) {
-    for (const age of ['decade', 'century', 'millennium', 'myriad_year']) {
-      list.push({
-        id: `${herb.baseId}_${age}`,
-        name: `${herb.name} ${HERB_AGE_LABELS[age]}`,
-        category: 'herb',
-        years: HERB_AGE_YEARS[age],
-        element: 'wood',
-        sourceType: 'exploration',
-        description: 'Linh thảo riêng cho một đan phương duy nhất — niên đại quyết định tỷ lệ thành đan cơ sở.',
-        profession: {
-          resourceKind: 'herb',
-          realmId: herb.realmId,
-          age,
-          pillRecipeId: recipeId,
-          herbBaseId: herb.baseId,
         },
       })
     }
@@ -698,10 +419,43 @@ function buildProfessionMaterials(): Material[] {
       category: 'essence',
       sourceType: 'building',
       description: 'Tinh hoa phân giải từ trang bị cùng cảnh giới — nguyên liệu Tinh Luyện.',
+
+      // Currency-like của Hóa Luyện/Tinh Luyện — batch dissolve lớn
+      // không được phép chạm trần stack mặc định (1000) rồi mất lặng
+      // lẽ; nâng trần riêng cho nhóm này.
+      stackLimit: 9999,
     })
   }
 
   return list
+}
+
+function buildReworkPillHerbs(): Material[] {
+  const ages = ['decade', 'century', 'millennium', 'myriad_year'] as const
+
+  return REALM_TIERS.flatMap((realmId) =>
+    PILL_FAMILIES.flatMap((family) => {
+      const herbBaseId = `${family.herbId}_${realmId}`
+
+      return ages.map((age) => ({
+        id: `${herbBaseId}_${age}`,
+        name: family.herbName,
+        category: 'herb' as const,
+        years: HERB_AGE_YEARS[age],
+        element: 'wood' as const,
+        sourceType: 'exploration' as const,
+        icon: `/assets/materials/herbs/${family.herbId}/${age}.png`,
+        description: `Linh thảo chủ dược của ${family.name}, niên đại quyết định tỷ lệ thành đan.`,
+        profession: {
+          resourceKind: 'herb' as const,
+          realmId,
+          age,
+          pillRecipeId: `alchemy_${family.id}_${realmId}`,
+          herbBaseId,
+        },
+      }))
+    }),
+  )
 }
 
 /** Mapping cảnh giới trang bị → tier Tinh Hoa (chốt §13.6). */
@@ -709,13 +463,30 @@ export function equipmentEssenceMaterialId(realmId: string): string {
   return EQUIPMENT_REALM_ESSENCE_MATERIAL[realmId] ?? 'tinh_hoa_pham_khi'
 }
 
+function attachSharedProfessionResourceIcon(material: Material): Material {
+  if (material.icon || (material.category !== 'wood' && material.category !== 'ore')) {
+    return material
+  }
+
+  return {
+    ...material,
+    icon:
+      material.category === 'wood'
+        ? '/assets/materials/linh_moc.png'
+        : '/assets/materials/linh_khoang.png',
+  }
+}
+
 export const materials: Material[] = [
   // Linh Thạch — MATERIAL thật (plan Workstream F), tham gia mọi sort
   // trong tab Nguyên Liệu như material bình thường; KHÔNG còn currency
   // state trên PlayerData.
-  SPIRIT_STONE_MATERIAL,
+  ...SPIRIT_STONE_MATERIALS,
 
+  // Linh thảo legacy (Linh Chi/Quế/Cúc Hoa/Linh Thảo Chủng) đã bị xoá
+  // hẳn khỏi legacyMaterials — Đan Phòng chỉ dùng 8 họ thảo mới bên dưới.
   ...legacyMaterials,
 
   ...buildProfessionMaterials(),
-]
+  ...buildReworkPillHerbs(),
+].map(attachSharedProfessionResourceIcon)

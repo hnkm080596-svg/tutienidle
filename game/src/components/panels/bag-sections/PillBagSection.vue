@@ -15,8 +15,8 @@ import type { Pill } from '@/core/pill/Pill'
 import type { BagCell } from './BagCell'
 import type { GradedItemTooltipContent, TooltipSection } from '@/composables/useTooltip'
 import { statLabel, formatStat } from '@/core/stats/StatLabels'
-import { ITEM_GRADE_LABELS, composeItemGradeNameSegments } from '@/core/item/ItemGrade'
-import { itemGradeRank } from '@/composables/slots/normalizeSlotRank'
+import { ITEM_GRADE_LABELS } from '@/core/item/ItemGrade'
+import { compareProfessionGrades, PROFESSION_GRADE_NAMES } from '@/core/profession/ProfessionGrade'
 
 const ui = useUiStore()
 
@@ -116,7 +116,9 @@ function buildTooltip(pill: Pill, owned: number): GradedItemTooltipContent {
 
     imagePath: pill.icon,
 
-    gradeLabel: ITEM_GRADE_LABELS[pill.grade],
+    gradeLabel: pill.professionGrade
+      ? PROFESSION_GRADE_NAMES[pill.professionGrade]
+      : ITEM_GRADE_LABELS[pill.grade],
 
     gradeKey: pill.grade,
 
@@ -161,9 +163,11 @@ function drinkPill(pillId: string) {
       ? 'Chỉ dùng được tại đúng cảnh giới của đan dược.'
       : result.reason === 'all_main_stats_capped'
         ? 'Cả 5 chỉ số chính đã đạt trần cảnh giới.'
-        : result.reason === 'cap'
-          ? 'Chỉ số liên quan đã đạt trần cảnh giới.'
-          : 'Không thể dùng đan dược.'
+        : result.reason === 'requires_phap_tu'
+          ? 'Đan dược hồi Linh Lực chỉ dùng được cho Pháp Tu.'
+          : result.reason === 'cap'
+            ? 'Chỉ số liên quan đã đạt trần cảnh giới.'
+            : 'Không thể dùng đan dược.'
 
   useNotificationStore().push('warning', reasonText)
 }
@@ -196,7 +200,16 @@ const entries = computed<PillEntry[]>(() => {
 
       label: stack.pill.name,
 
-      nameSegments: composeItemGradeNameSegments(stack.pill.name, stack.pill.grade),
+      nameSegments: [
+        {
+          text: stack.pill.professionGrade
+            ? PROFESSION_GRADE_NAMES[stack.pill.professionGrade]
+            : ITEM_GRADE_LABELS[stack.pill.grade],
+          colorVar: `--grade-${stack.pill.grade}`,
+          tone: stack.pill.grade,
+        },
+        { text: stack.pill.name },
+      ],
 
       description: stack.pill.description,
 
@@ -214,7 +227,9 @@ const entries = computed<PillEntry[]>(() => {
 // Tiêu chí Đan Dược (plan Workstream E) — phẩm đan/loại hiệu ứng/số
 // lượng/tên. "Loại hiệu ứng" so sánh effect type ĐẦU TIÊN của recipe.
 const PILL_COMPARATORS: Record<Exclude<PillSortMode, 'default'>, (a: PillEntry, b: PillEntry) => number> = {
-  grade: (a, b) => itemGradeRank(a.pill.grade) - itemGradeRank(b.pill.grade),
+  grade: (a, b) => a.pill.professionGrade && b.pill.professionGrade
+    ? compareProfessionGrades(a.pill.professionGrade, b.pill.professionGrade)
+    : compareText(a.pill.grade, b.pill.grade),
 
   effect: (a, b) => compareText(a.pill.effects[0]?.type, b.pill.effects[0]?.type),
 

@@ -16,6 +16,10 @@ Mỗi đại cảnh giới cấp một nội tại đúng một lần qua `Realm
 
 Trong chiến đấu, `RealmPressure` so chênh lệch **đại cảnh giới**. Bên cao hơn gây nhiều và nhận ít sát thương hơn. Bậc Nhập Đạo giảm phần áp lực còn lại: bậc 1 không giảm, bậc 6 miễn hoàn toàn. Chênh lệch được chặn ở 5 cảnh giới và hệ số đánh ngược lên không thấp hơn 0,1. Đường cong tuyến tính hiện tại vẫn cần cân bằng bằng playtest.
 
+## Thiên Phú
+
+Thiên Phú là quyết định chọn hướng Đạo duy nhất lúc tạo nhân vật: roll 9 thẻ, chọn đúng 1 (`CharacterCreationService.ts`, catalog `src/data/talent/Talents.ts`). Mỗi thiên phú là một ngoại lệ của luật chơi — không có talent cộng chỉ số; effect được tiêu thụ qua getter tập trung tại `src/core/talent/TalentEffects.ts` (tốc độ tu luyện, Cảm Ngộ Kỹ năng, Linh Thạch, rơi trang bị, Luyện Thể, luyện đan, sống sót đòn chí mạng, giữ ailment khi Reaction, hồi máu khi diệt quái). Cảm Ngộ Kỹ năng vì vậy mặc định đến từ chiến đấu, riêng thiên phú Ngộ Đạo đổi tu vi tu luyện online lấy Cảm Ngộ — cố ý, là bản sắc talent. Thiên phú đã chọn hiển thị trong panel Nhân Vật. Thiết kế chi tiết: [talent-direction-choice-plan.md](./talent-direction-choice-plan.md).
+
 ## Con đường tu luyện hiện có
 
 `src/core/player/CultivationPathKit.ts` hiện chỉ công khai hai lựa chọn:

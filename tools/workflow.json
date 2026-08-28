@@ -32,14 +32,14 @@
       "command": "opencode.cmd",
       "adapter": "opencode",
       "agent": "qwen-worker-2",
-      "model": "tokenrouter/qwen/qwen3.8-max-free",
+      "model": "kiraai/qwen3.8-flash",
       "frontier": false
     },
     "glm": {
       "command": "opencode.cmd",
       "adapter": "opencode",
       "agent": "glm-worker",
-      "model": "kiraai/glm-5.3",
+      "model": "kiraai/glm-5.3-flash",
       "frontier": false
     }
   },

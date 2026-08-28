@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager } from '@/composables/useGameState'
 import { useNotificationStore } from '@/stores/notification'
-import { exportSaveToFile, getRawSave, importSaveRaw, deleteSave } from '@/services/save/SaveSystem'
+import { exportSaveToFile, getRawSave, importSaveRaw, SAVE_RESET_REQUEST_EVENT } from '@/services/save/SaveSystem'
 import { UI_SCALE_OPTIONS, loadUiScale, saveUiScale } from '@/composables/uiScale'
 
 const player = usePlayerStore()
@@ -95,9 +95,9 @@ function handleReset() {
     return
   }
 
-  deleteSave()
-
-  window.location.reload()
+  // App phải dừng interval/pagehide autosave TRƯỚC khi xóa; nếu panel tự xóa
+  // rồi reload, pagehide ghi lại chính save vừa xóa.
+  window.dispatchEvent(new Event(SAVE_RESET_REQUEST_EVENT))
 }
 </script>
 

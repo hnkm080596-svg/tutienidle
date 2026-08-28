@@ -25,7 +25,7 @@ function makeEnemyData(): Enemy {
     id: 'enemy_x',
     level: 1,
     realmId: 'mortal',
-    rewards: { techniqueInsight: 0, cultivation: 0, spiritStone: 0 },
+    rewards: { techniqueInsight: 0, spiritStone: 0 },
     lane: 'ground',
     name: 'Quái',
     type: 'enemy',
@@ -100,10 +100,9 @@ function setup() {
   return { gameManager, player }
 }
 
-const REGEN_PILL = 'pill_regen_mortal'
-const MAIN_STAT_PILL = 'pill_main_stat_mortal'
-const CULTIVATION_PILL = 'pill_cultivation_mortal'
-const INSIGHT_PILL = 'pill_insight_mortal'
+const REGEN_PILL = 'hoi_xuan_dan_mortal'
+const PERMANENT_PILL = 'to_cot_dan_mortal'
+const CULTIVATION_PILL = 'tu_linh_dan_mortal'
 
 function registerPill(gameManager: GameManager, pillId: string, amount = 1) {
   // Pill đã register qua bootstrap data ở App.vue; ở test, lấy từ registry
@@ -140,74 +139,29 @@ describe('Pill nghề — gate + atomic consumption', () => {
     expect(gameManager.pillBag.has(REGEN_PILL, 1)).toBe(true)
   })
 
-  it('main stat: +1 điểm thật vào baseStats, RNG quyết định stat; bỏ stat đã cap', async () => {
+  it('đan vĩnh viễn tăng đúng thuộc tính cố định của loại đan', async () => {
     const { gameManager, player } = setup()
 
-    await registerPill(gameManager, MAIN_STAT_PILL, 2)
-
-    const before = { ...player.baseStats }
-
-    // RNG = 0 → candidate ĐẦU TIÊN chưa cap.
-    const result = gameManager.usePillDetailed(MAIN_STAT_PILL, pillTarget(), player, () => 0)
+    await registerPill(gameManager, PERMANENT_PILL, 2)
+    const result = gameManager.usePillDetailed(PERMANENT_PILL, pillTarget(), player)
 
     expect(result.ok).toBe(true)
-    expect(result.mainStat).toBe('strength')
-    expect(player.baseStats.strength).toBe(before.strength + 1)
-
-    // Đã đăng ký 2 viên cho cả lượt dùng thứ hai — còn đúng 1.
-    expect(gameManager.pillBag.getAmount(MAIN_STAT_PILL)).toBe(1)
-
-    // Đẩy 4 stat lên ĐÚNG trần mortal (10) — vitality giữ dưới trần:
-    // RNG bất kỳ cũng phải rơi vào vitality (stat duy nhất còn candidate).
-    const cap = getMainStatCap('mortal')
-
-    player.baseStats.strength = cap
-    player.baseStats.dexterity = cap
-    player.baseStats.intelligence = cap
-    player.baseStats.attunement = cap
-    player.baseStats.vitality = cap - 1
-
-    const result2 = gameManager.usePillDetailed(MAIN_STAT_PILL, pillTarget(), player, () => 0.99)
-
-    expect(result2.mainStat).toBe('vitality')
-    expect(player.baseStats.vitality).toBe(cap)
+    expect(player.modifiers.find((modifier) => modifier.id === 'pill-permanent:strength')?.flat).toBe(1)
+    expect(gameManager.pillBag.getAmount(PERMANENT_PILL)).toBe(1)
   })
 
-  it('cả 5 Main Stat đã cap → all_main_stats_capped, KHÔNG consume', async () => {
+  it('thuộc tính đích đã chạm trần → không consume', async () => {
     const { gameManager, player } = setup()
 
-    await registerPill(gameManager, MAIN_STAT_PILL)
+    await registerPill(gameManager, PERMANENT_PILL)
 
     const cap = getMainStatCap('mortal')
-
-    for (const key of [
-      'strength',
-      'dexterity',
-      'intelligence',
-      'attunement',
-      'vitality',
-    ] as const) {
-      player.baseStats[key] = cap
-    }
-
-    const result = gameManager.usePillDetailed(MAIN_STAT_PILL, pillTarget(), player)
+    player.baseStats.strength = cap
+    const result = gameManager.usePillDetailed(PERMANENT_PILL, pillTarget(), player)
 
     expect(result.ok).toBe(false)
-    expect(result.reason).toBe('all_main_stats_capped')
-    expect(gameManager.pillBag.has(MAIN_STAT_PILL, 1)).toBe(true)
-  })
-
-  it('insight: cộng cả skillInsight lẫn totalSkillInsightGained', async () => {
-    const { gameManager, player } = setup()
-
-    await registerPill(gameManager, INSIGHT_PILL)
-
-    const before = player.totalSkillInsightGained
-
-    expect(gameManager.usePillDetailed(INSIGHT_PILL, pillTarget(), player).ok).toBe(true)
-
-    expect(player.skillInsight).toBe(2)
-    expect(player.totalSkillInsightGained).toBe(before + 2)
+    expect(result.reason).toBe('cap')
+    expect(gameManager.pillBag.has(PERMANENT_PILL, 1)).toBe(true)
   })
 
   it('cultivation: % yêu cầu tầng, qua addCultivation giữ cap tầng', async () => {

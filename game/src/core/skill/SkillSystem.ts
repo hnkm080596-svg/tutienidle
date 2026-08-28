@@ -21,6 +21,10 @@ import { getRealmIndex } from '../realm/realmSystem'
 // không cần hằng số riêng.
 const ACTIVE_SKILL_DAMAGE_PERCENT_PER_LEVEL = 0.05
 
+export function getHuyKiemExperienceToNextLevel(level: number): number {
+  return Math.round(10 * Math.pow(1.4, Math.max(0, level - 1)) + Math.max(0, level - 1) * 15)
+}
+
 /** Policy dùng cooldown clock (chịu CDR) — còn lại dùng cadence Attack Speed. */
 function usesCooldownClock(execution: SkillExecutionPolicy | undefined): boolean {
   return !execution || execution.kind === 'cooldown' || execution.kind === 'cast_time'
@@ -131,7 +135,7 @@ export class SkillSystem {
   getSkillUpgradeInsightCost(skillId: string): number | undefined {
     const skill = this.manager.get(skillId)
 
-    if (!skill || skill.level >= skill.maxLevel) {
+    if (!skill || skill.id === 'tram' || skill.level >= skill.maxLevel) {
       return undefined
     }
 
@@ -147,7 +151,7 @@ export class SkillSystem {
   upgradeSkill(skillId: string, player: PlayerData): boolean {
     const skill = this.manager.get(skillId)
 
-    if (!skill || skill.level >= skill.maxLevel) {
+    if (!skill || skill.id === 'tram' || skill.level >= skill.maxLevel) {
       return false
     }
 
@@ -178,6 +182,8 @@ export class SkillSystem {
 
       remainingCooldown: 0,
       remainingCooldownBySlot: {},
+      experience: skill.experience ?? 0,
+      totalExperience: skill.totalExperience ?? 0,
     })
 
     return true
@@ -332,6 +338,7 @@ export class SkillSystem {
     skill.remainingCooldown = skill.cooldown
 
     this.consumeResource(skill, entity)
+    this.gainCastExperience(skill)
 
     return skill
   }
@@ -348,6 +355,7 @@ export class SkillSystem {
     const skill = this.manager.get(skillId)!
 
     this.consumeResource(skill, entity)
+    this.gainCastExperience(skill)
 
     return skill
   }
@@ -392,6 +400,21 @@ export class SkillSystem {
     else if (skill.resourceType === 'rage') entity.currentRage -= skill.cost
     else if (skill.resourceType === 'sword_intent') entity.currentSwordIntent -= skill.cost
     else if (skill.resourceType === 'momentum') entity.currentMomentum -= skill.cost
+  }
+
+  private gainCastExperience(skill: Skill): void {
+    if (skill.id !== 'tram' || skill.level >= skill.maxLevel) return
+    skill.experience = (skill.experience ?? 0) + 1
+    skill.totalExperience = (skill.totalExperience ?? 0) + 1
+    let levelsGained = 0
+    while (skill.level < skill.maxLevel) {
+      const required = getHuyKiemExperienceToNextLevel(skill.level)
+      if ((skill.experience ?? 0) < required) break
+      skill.experience = (skill.experience ?? 0) - required
+      skill.level++
+      levelsGained++
+    }
+    if (levelsGained > 0) this.onLevelUp?.(skill, levelsGained)
   }
 
   update(deltaSeconds: number, cooldownReduction = 0) {

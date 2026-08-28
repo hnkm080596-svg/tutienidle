@@ -21,7 +21,7 @@ class AgentSetupTests(unittest.TestCase):
             {"qwen-worker-1", "qwen-worker-2", "glm-worker"},
         )
 
-    def test_qwen_workers_share_the_configured_token_router_model(self) -> None:
+    def test_qwen_workers_use_distinct_configured_providers(self) -> None:
         config = json.loads(self.opencode_path.read_text(encoding="utf-8"))
 
         self.assertEqual(
@@ -30,16 +30,20 @@ class AgentSetupTests(unittest.TestCase):
         )
         self.assertEqual(
             config["agent"]["qwen-worker-2"]["model"],
-            "tokenrouter/qwen/qwen3.8-max-free",
+            "kiraai/qwen3.8-flash",
         )
+        self.assertIn("qwen3.8-flash", config["provider"]["kiraai"]["models"])
 
     def test_kira_provider_uses_base_url_and_documented_glm_model(self) -> None:
         config = json.loads(self.opencode_path.read_text(encoding="utf-8"))
         kira = config["provider"]["kiraai"]
 
         self.assertEqual(kira["options"]["baseURL"], "https://kiraai.vn/api/v1")
-        self.assertEqual(config["agent"]["glm-worker"]["model"], "kiraai/glm-5.3")
-        self.assertIn("glm-5.3", kira["models"])
+        self.assertEqual(
+            config["agent"]["glm-worker"]["model"],
+            "kiraai/glm-5.3-flash",
+        )
+        self.assertIn("glm-5.3-flash", kira["models"])
 
     def test_repository_configuration_contains_no_api_key_literal(self) -> None:
         opencode_raw = self.opencode_path.read_text(encoding="utf-8").casefold()
@@ -61,6 +65,18 @@ class AgentSetupTests(unittest.TestCase):
         self.assertEqual(config["workers"]["qwen-1"]["command"], "opencode.cmd")
         self.assertEqual(config["workers"]["qwen-2"]["command"], "opencode.cmd")
         self.assertEqual(config["workers"]["glm"]["command"], "opencode.cmd")
+        self.assertEqual(
+            config["workers"]["qwen-1"]["model"],
+            "tokenrouter/qwen/qwen3.8-max-free",
+        )
+        self.assertEqual(
+            config["workers"]["qwen-2"]["model"],
+            "kiraai/qwen3.8-flash",
+        )
+        self.assertEqual(
+            config["workers"]["glm"]["model"],
+            "kiraai/glm-5.3-flash",
+        )
 
 
 if __name__ == "__main__":

@@ -68,7 +68,7 @@ function makeEnemy() {
       maxHp: 999, attack: 0, attackSpeed: 1, movementSpeed: 0,
       attackRangeRanks: 999999, criticalRate: 0, criticalDamage: 1.5, armor: 0,
     },
-    rewards: { techniqueInsight: 0, cultivation: 0, spiritStone: 0 },
+    rewards: { techniqueInsight: 0, spiritStone: 0 },
   })
 }
 

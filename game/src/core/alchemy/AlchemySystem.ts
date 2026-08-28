@@ -11,6 +11,7 @@ import type { PillBag } from '../pill/PillBag'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
 import { SUPPORTED_PROFESSION_REALMS } from '../profession/ProfessionMaterial'
+import { REALM_TIERS } from '../realm/RealmTierMap'
 import { HERB_AGE_BASE_SUCCESS_PERCENT } from '../production/ProductionBalance'
 import { mulberry32 } from '../production/ProductionBalance'
 
@@ -82,14 +83,21 @@ export interface AlchemySettlementEvent {
   success: boolean
 }
 
-export function jobSuccessPercent(job: ActiveAlchemyJob, recipe: AlchemyRecipe): number {
+export function jobSuccessPercent(
+  job: ActiveAlchemyJob,
+  recipe: AlchemyRecipe,
+  successBonusPercentPoints = 0,
+): number {
   const variant = recipe.herbVariants.find((candidate) => candidate.materialId === job.herbMaterialId)
 
   const base = HERB_AGE_BASE_SUCCESS_PERCENT[variant?.age ?? 'decade']
 
-  const bonus = ALCHEMY_SUCCESS_BONUS_PERCENT[job.roomLevelAtStart - 1] ?? 0
+  const bonusIndex = Math.min(Math.max(job.roomLevelAtStart, 1), ALCHEMY_SUCCESS_BONUS_PERCENT.length) - 1
+  const bonus = ALCHEMY_SUCCESS_BONUS_PERCENT[bonusIndex] ?? 0
 
-  return Math.min(base + bonus, 300)
+  // Thiên phú Đan Duyên — cộng điểm % trước khi tách guaranteed/extra,
+  // giữ cap 300 (plan §6).
+  return Math.min(base + bonus + successBonusPercentPoints, 300)
 }
 
 /** Bảng bonus tỷ lệ thành đan theo level Đan Phòng — TÁCH BIỆT bảng speed (§8.3). */
@@ -122,8 +130,20 @@ export function resolveFuelWood(
   amount: number,
 ): string | null {
   const minIndex = SUPPORTED_PROFESSION_REALMS.indexOf(minRealmId)
+  const realmIndex = REALM_TIERS.findIndex(realmId => realmId === minRealmId)
 
-  if (minIndex < 0) {
+  if (minIndex < 0 && realmIndex < 0) {
+    return null
+  }
+
+  if (realmIndex >= SUPPORTED_PROFESSION_REALMS.length) {
+    const qualities = ['hoang', 'huyen', 'dia', 'thien', 'tien'] as const
+    for (let index = realmIndex; index < REALM_TIERS.length; index++) {
+      for (const quality of qualities) {
+        const candidate = `${REALM_TIERS[index]}_wood_${quality}`
+        if (bag.has(candidate, amount)) return candidate
+      }
+    }
     return null
   }
 
@@ -242,6 +262,7 @@ export class AlchemySystem {
     pillBag: PillBag,
     resolvePill: (pillId: string) => { id: string } | undefined,
     random: () => number = Math.random,
+    successBonusPercentPoints = 0,
   ): void {
     const remaining: ActiveAlchemyJob[] = []
 
@@ -260,7 +281,7 @@ export class AlchemySystem {
         continue
       }
 
-      const totalPercent = jobSuccessPercent(job, recipe)
+      const totalPercent = jobSuccessPercent(job, recipe, successBonusPercentPoints)
 
       const guaranteedPills = Math.floor(totalPercent / 100)
 
@@ -287,10 +308,11 @@ export class AlchemySystem {
     pillBag: PillBag,
     resolvePill: (pillId: string) => { id: string } | undefined,
     nowMs: number = Date.now(),
+    successBonusPercentPoints = 0,
   ): number {
     const before = this.jobs.length
 
-    this.tick(nowMs, pillBag, resolvePill)
+    this.tick(nowMs, pillBag, resolvePill, Math.random, successBonusPercentPoints)
 
     return before - this.jobs.length
   }

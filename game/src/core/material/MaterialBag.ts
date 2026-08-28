@@ -8,12 +8,17 @@ export class MaterialBag {
     new Map<string, MaterialStack>()
 
 
+  /**
+   * Cộng dồn stack, clamp tại stackLimit (mặc định MAX_STACK_AMOUNT).
+   * Trả về lượng TRÀN bị mất (0 nếu vừa đủ chỗ) — caller đường reward
+   * dùng để báo "túi đầy" thay vì mất lặng lẽ.
+   */
   add(
     material: Material,
     amount: number,
-  ) {
+  ): number {
     if (amount <= 0) {
-      return
+      return 0
     }
 
     const limit = material.stackLimit ?? MAX_STACK_AMOUNT
@@ -24,19 +29,27 @@ export class MaterialBag {
       )
 
     if (existing) {
-      existing.amount = Math.min(existing.amount + amount, limit)
+      const next = Math.min(existing.amount + amount, limit)
 
-      return
+      const overflow = existing.amount + amount - next
+
+      existing.amount = next
+
+      return overflow
     }
+
+    const stored = Math.min(amount, limit)
 
     this.materials.set(
       material.id,
       {
         material,
 
-        amount: Math.min(amount, limit),
+        amount: stored,
       },
     )
+
+    return amount - stored
   }
 
 
@@ -44,6 +57,12 @@ export class MaterialBag {
     materialId: string,
     amount: number,
   ): boolean {
+    // Guard: amount <= 0 KHÔNG phải remove hợp lệ — amount âm sẽ CỘNG
+    // ngược vào stack (vector nhân bản tiềm ẩn).
+    if (amount <= 0) {
+      return false
+    }
+
     const existing =
       this.materials.get(
         materialId,

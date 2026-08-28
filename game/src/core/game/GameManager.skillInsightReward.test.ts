@@ -19,7 +19,7 @@ function makeEnemy(techniqueInsight: number) {
       maxHp: 1, attack: 0, attackSpeed: 1, movementSpeed: 0,
       attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0,
     },
-    rewards: { techniqueInsight, cultivation: 0, spiritStone: 0 },
+    rewards: { techniqueInsight, spiritStone: 0 },
   })
 }
 

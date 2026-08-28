@@ -69,7 +69,13 @@ export interface ProductionSiteState {
 
   autoRestart: boolean
 
+  /** Số cycle song song hiện được pool nhân công toàn cục cấp cho site. */
+  activeWorkerSlots: number
+
   activeCycle?: ProductionCycle
+
+  /** Các cycle bổ sung do worker 2+ vận hành. */
+  workerCycles?: ProductionCycle[]
 }
 
 /** Một Lâm/Quáng/Động Thiên của Địa Giới (§3.1). */

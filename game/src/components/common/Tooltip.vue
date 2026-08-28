@@ -3,7 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { autoUpdate, flip, offset, shift, size, useFloating } from '@floating-ui/vue'
 import { useTooltip } from '@/composables/useTooltip'
 import type { EquipmentTooltipContent, GradedItemTooltipContent, TechniqueTooltipContent } from '@/composables/useTooltip'
-import { itemGradeRank, equipmentQualityRank } from '@/composables/slots/normalizeSlotRank'
+import { itemGradeRank, equipmentQualityRank, isMaxRankTone } from '@/composables/slots/normalizeSlotRank'
 import type { EquipmentQuality } from '@/core/equipment/EquipmentQuality'
 import type { ItemGrade } from '@/core/item/ItemGrade'
 
@@ -172,7 +172,15 @@ function hideBrokenImage(event: Event) {
             <img v-if="content.imagePath" class="tooltip__icon" :src="content.imagePath" :alt="content.name" @error="hideBrokenImage" />
           </div>
           <div class="tooltip__heading">
-            <p class="tooltip__title tooltip__title--quality">{{ content.name }}</p>
+            <p class="tooltip__title">
+              <template v-for="(segment, index) in content.nameSegments" :key="`${index}-${segment.text}`">
+                <span v-if="index > 0"> </span>
+                <span
+                  :class="{ 'tooltip__title-segment--max-rank': isMaxRankTone(segment.tone) }"
+                  :style="segment.colorVar && !isMaxRankTone(segment.tone) ? { color: `var(${segment.colorVar})` } : undefined"
+                >{{ segment.text }}</span>
+              </template>
+            </p>
             <div class="tooltip__badges">
               <span class="tooltip__badge">{{ content.slotLabel }}</span>
             </div>
@@ -222,10 +230,9 @@ function hideBrokenImage(event: Event) {
 .tooltip__icon-shell { flex: 0 0 54px; display: grid; place-items: center; width: 54px; height: 54px; border: 1px solid color-mix(in srgb, var(--tooltip-accent) 62%, var(--ink-line)); border-radius: var(--radius-sm); background: linear-gradient(145deg, var(--ink-700), var(--ink-950)); overflow: hidden; }
 .tooltip__icon, .tooltip__icon-fallback { grid-area: 1 / 1; } .tooltip__icon { width: 100%; height: 100%; padding: 5px; object-fit: contain; box-sizing: border-box; background: linear-gradient(145deg, var(--ink-700), var(--ink-950)); } .tooltip__icon-fallback { color: var(--tooltip-accent); font: 700 1.35rem var(--font-display); }
 .tooltip__heading { min-width: 0; } .tooltip__title { margin: 0 0 3px; color: var(--gold-300); font-family: var(--font-display); font-weight: 700; line-height: 1.25; }
-.tooltip__title--quality { color: var(--tooltip-accent); text-shadow: 0 0 10px color-mix(in srgb, var(--tooltip-accent) 32%, transparent); } .tooltip__meta { margin: 0; color: var(--text-muted); font-size: var(--text-xs); }
+.tooltip__title-segment--max-rank { color: transparent; background: var(--rank-gradient-9); background-clip: text; -webkit-background-clip: text; } .tooltip__meta { margin: 0; color: var(--text-muted); font-size: var(--text-xs); }
 .tooltip__badges { display: flex; flex-wrap: wrap; gap: 4px; } .tooltip__badge { padding: 1px 5px; border: 1px solid var(--ink-line); border-radius: 999px; color: var(--text-secondary); font-size: var(--text-xs); }
 .tooltip__badge--quality { border-color: color-mix(in srgb, var(--tooltip-accent) 55%, var(--ink-line)); color: var(--tooltip-accent); } .tooltip__badge--rarity { color: var(--text-primary); } .tooltip__badge--muted { color: var(--text-muted); }
-.tooltip--max-quality-rank .tooltip__title--quality,
 .tooltip--max-quality-rank .tooltip__badge--quality,
 .tooltip__badge--rarity.tooltip__badge--max-rank { color: transparent; background: var(--rank-gradient-9); background-clip: text; -webkit-background-clip: text; font-weight: 700; }
 .tooltip__description { margin: 3px 0 0; color: var(--text-secondary); line-height: 1.45; } .tooltip__description--rich { margin-top: 9px; }

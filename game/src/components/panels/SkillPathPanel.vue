@@ -21,17 +21,16 @@ import { computed, ref, watch } from 'vue'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import ElementPathList from './skill-path/ElementPathList.vue'
 import NodeTreePanel from './loadout-sections/NodeTreePanel.vue'
 import NodeInspector from './skill-path/NodeInspector.vue'
 import SkillPathList from './skill-path/SkillPathList.vue'
 import SkillDetailView from './skill-path/SkillDetailView.vue'
 import SkillLoadoutStrip from './skill-path/SkillLoadoutStrip.vue'
 import { canPurchaseNode, getNodeLevel } from '@/core/progression/NodeSystem'
-import { CULTIVATION_PATH_KITS } from '@/core/player/CultivationPathKit'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
 import type { ElementType } from '@/core/element/ElementType'
 import type { Skill } from '@/core/skill/Skill'
+import OverlayPanel from '@/components/common/OverlayPanel.vue'
 
 const ui = useUiStore()
 const player = usePlayerStore()
@@ -88,23 +87,10 @@ watch(
   },
 )
 
-// ---- Nhánh khác (Kiếm Tu 3 skill cố định / Phàm Nhân chỉ Trảm) ----
-const fixedSkills = computed<Skill[]>(() => {
+// Thư viện duy nhất: mọi active skill đã học, không phụ thuộc loadout/path.
+const learnedSkills = computed<Skill[]>(() => {
   stateVersion.value
-
-  if (player.cultivationPath === 'kiem_tu') {
-    const skillIds = CULTIVATION_PATH_KITS.kiem_tu.skillIds ?? []
-
-    return skillIds
-      .map(id => gameManager.skillManager.get(id))
-      .filter((skill): skill is Skill => skill !== undefined)
-  }
-
-  // Phàm Nhân (chưa chọn path) — chỉ có đúng Trảm (slot mặc định 0,
-  // xem plan §8.6).
-  const basic = gameManager.skillManager.getEquippedInSlot(0)
-
-  return basic ? [basic] : []
+  return gameManager.skillManager.getAll().filter(skill => skill.unlocked && skill.type === 'active')
 })
 
 const selectedSkillId = ref<string | null>(null)
@@ -112,12 +98,36 @@ const selectedSkillId = ref<string | null>(null)
 const selectedSkill = computed<Skill | null>(() => {
   stateVersion.value
 
-  return fixedSkills.value.find(skill => skill.id === selectedSkillId.value) ?? null
+  return learnedSkills.value.find(skill => skill.id === selectedSkillId.value) ?? null
 })
+
+function skillElement(skill: Skill): ElementType | null {
+  for (const effect of skill.effects) {
+    for (const component of effect.components ?? []) {
+      if (component.kind === 'element') return component.element
+    }
+  }
+  return null
+}
+
+const selectedSkillHasTree = computed(() =>
+  showTree.value && selectedSkill.value !== null && skillElement(selectedSkill.value) !== null,
+)
+const huyKiemHiddenTreeOpen = computed(() =>
+  selectedSkill.value?.id === 'tram' && selectedSkill.value.level >= 18 && player.cultivationPath === 'kiem_tu',
+)
 
 function onSelectSkill(skill: Skill) {
   selectedSkillId.value = skill.id
+  const element = skillElement(skill)
+  if (element) onSelectBranch(element)
 }
+
+watch(learnedSkills, skills => {
+  if (!skills.some(skill => skill.id === selectedSkillId.value)) {
+    selectedSkillId.value = skills[0]?.id ?? null
+  }
+}, { immediate: true })
 
 function close() {
   ui.closeHomeOverlays()
@@ -125,35 +135,30 @@ function close() {
 </script>
 
 <template>
-  <div v-if="ui.standalonePanel === 'skill'" class="skill-path-panel" @click.self="close">
-    <div class="skill-path-panel__card">
-      <div class="skill-path-panel__header">
-        <div>
-          <h3 class="skill-path-panel__title">Kỹ Năng</h3>
-          <span v-if="showTree" class="skill-path-panel__subtitle">Con đường Ngũ Hành</span>
-        </div>
-
-        <span v-if="showTree" class="skill-path-panel__points">✦ {{ player.skillInsight }} Cảm Ngộ</span>
-
-        <button type="button" class="skill-path-panel__close" @click="close">✕</button>
-      </div>
-
+  <OverlayPanel :open="ui.standalonePanel === 'skill'" title="Kỹ Năng" width="min(1400px, 94vw)" height="min(760px, 88vh)" @close="close">
+      <template #subtitle><span v-if="showTree" class="skill-path-panel__subtitle">Thư viện theo cảnh giới · Con đường Ngũ Hành</span></template>
+      <template #header-actions><span v-if="showTree" class="skill-path-panel__points">✦ {{ player.skillInsight }} Cảm Ngộ</span></template>
       <div class="skill-path-panel__body">
         <div class="skill-path-panel__col skill-path-panel__col--left">
-          <ElementPathList v-if="showTree" :selected="selectedBranch" @select="onSelectBranch" />
-
-          <SkillPathList v-else :skills="fixedSkills" :selected-id="selectedSkillId" @select="onSelectSkill" />
+          <SkillPathList :skills="learnedSkills" :selected-id="selectedSkillId" @select="onSelectSkill" />
         </div>
 
         <div class="skill-path-panel__col skill-path-panel__col--center">
           <NodeTreePanel
-            v-if="showTree"
+            v-if="selectedSkillHasTree"
             :branch-tag="selectedBranch"
             :selected-node-id="selectedNode?.id ?? null"
             :unlock-trigger="unlockTrigger"
             @select="onSelectNode"
           />
 
+          <div v-else-if="huyKiemHiddenTreeOpen" class="huy-kiem-tree">
+            <h4>Kiếm Tâm Ẩn · Huy Kiếm</h4>
+            <div class="huy-kiem-tree__nodes">
+              <span>Kiếm Ý Sơ Minh</span><span>Nhân Kiếm Hợp Nhất</span><span>Vạn Kiếm Quy Tông</span>
+            </div>
+            <p>Cây ẩn đã thức tỉnh. Các node chuyên sâu sẽ mở rộng cùng tuyến Kiếm Tu.</p>
+          </div>
           <SkillDetailView v-else :skill="selectedSkill" />
         </div>
 
@@ -165,17 +170,22 @@ function close() {
       </div>
 
       <NodeInspector
-        v-if="showTree"
+        v-if="selectedSkillHasTree"
         :node="selectedNode"
         :purchased="selectedNodePurchased"
         :purchasable="selectedNodePurchasable"
         @unlocked="onNodeUnlocked"
       />
-    </div>
-  </div>
+  </OverlayPanel>
 </template>
 
 <style scoped>
+.huy-kiem-tree { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100%; gap: 18px; padding: 24px; text-align: center; }
+.huy-kiem-tree h4 { margin: 0; color: var(--gold-500); font-family: var(--font-display); }
+.huy-kiem-tree__nodes { display: flex; align-items: center; gap: 28px; }
+.huy-kiem-tree__nodes span { position: relative; display: grid; place-items: center; width: 112px; min-height: 72px; padding: 8px; color: var(--jade); background: var(--ink-800); border: 1px solid var(--jade); border-radius: 50%; box-shadow: 0 0 18px color-mix(in srgb, var(--jade) 28%, transparent); }
+.huy-kiem-tree__nodes span:not(:last-child)::after { content: ''; position: absolute; left: 100%; width: 29px; height: 2px; background: var(--jade); }
+.huy-kiem-tree p { color: var(--text-muted); }
 .skill-path-panel {
   position: absolute;
   inset: 0;

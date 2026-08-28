@@ -6,6 +6,7 @@ import type { CombatEvent } from '@/core/combat/CombatEvent'
 import type { BattlePositionsEvent } from '@/core/battle/BattleEvents'
 import type { EntityVitalsChangedEvent } from '@/core/combat/EntityVitalsSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
+import { usePlayerStore } from '@/stores/player'
 
 // Combat UI Redesign — kế thừa nguyên logic target-bar/player-bars từ
 // CombatHud.vue cũ (đã retire, xem GameRoot.vue), chỉ đổi layout từ
@@ -16,6 +17,7 @@ import { formatNumber } from '@/core/format/NumberFormatter'
 // victory/defeat (đứng yên ở giá trị cuối, khớp modal kết quả đang
 // hiện đè lên).
 const gameManager = useGameManager()
+const player = usePlayerStore()
 const { stateVersion, bumpState } = useStateVersion()
 
 const hasBattle = computed(() => {
@@ -125,7 +127,7 @@ const resourceMax = computed(() => usesSwordIntent.value ? MAX_SWORD_INTENT : MA
         <span class="combat-status-bar__bar-label">{{ formatNumber(Math.ceil(playerCurrentHp)) }} / {{ formatNumber(playerMaxHp) }}</span>
       </div>
 
-      <div class="combat-status-bar__bar combat-status-bar__bar--mp">
+      <div v-if="player.cultivationPath === 'phap_tu'" class="combat-status-bar__bar combat-status-bar__bar--mp">
         <div class="combat-status-bar__bar-fill" :style="{ width: `${percent(playerCurrentMp, playerMaxMp)}%` }" />
         <span class="combat-status-bar__bar-label">{{ mpLabel }} {{ formatNumber(Math.ceil(playerCurrentMp)) }} / {{ formatNumber(Math.round(playerMaxMp)) }}</span>
       </div>

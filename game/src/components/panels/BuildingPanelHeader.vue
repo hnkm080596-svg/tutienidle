@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
+import { usePlayerStore } from '@/stores/player'
+import { getRealmIdForTier, getRealmTier } from '@/core/realm/RealmTierMap'
+import { getCurrentRealm } from '@/core/realm/realmSystem'
 
 const props = defineProps<{ buildingId: string }>()
 
 const gameManager = useGameManager()
+const player = usePlayerStore()
 
 const { stateVersion, bumpState } = useStateVersion()
 
@@ -22,6 +26,8 @@ const instance = computed(() => {
   return current ? { ...current } : undefined
 })
 
+const artPath = computed(() => `/assets/buildings/dong-fu/${props.buildingId}.png`)
+
 const nextUpgradeCost = computed(() => {
   if (!template.value || !instance.value) {
     return []
@@ -36,11 +42,18 @@ const canAffordUpgrade = computed(() =>
   ),
 )
 
-const canUpgrade = computed(() =>
-  Boolean(
-    template.value && instance.value && instance.value.level < template.value.maxLevel,
-  ),
+const hasNextLevel = computed(() =>
+  Boolean(template.value && instance.value && instance.value.level < template.value.maxLevel),
 )
+
+const meetsRealmRequirement = computed(() =>
+  Boolean(instance.value && instance.value.level + 1 <= getRealmTier(player.realmId)),
+)
+
+const requiredRealmName = computed(() => {
+  if (!instance.value) return ''
+  return getCurrentRealm(getRealmIdForTier(instance.value.level + 1)).name
+})
 
 const upgradeCostLabel = computed(() =>
   nextUpgradeCost.value
@@ -55,7 +68,7 @@ const upgradeCostLabel = computed(() =>
 )
 
 function upgrade() {
-  if (!instance.value || !canUpgrade.value || !canAffordUpgrade.value) {
+  if (!instance.value || !hasNextLevel.value || !meetsRealmRequirement.value || !canAffordUpgrade.value) {
     return
   }
 
@@ -67,24 +80,31 @@ function upgrade() {
 
 <template>
   <header v-if="template && instance" class="building-panel-header">
-    <h2>{{ template.name }}</h2>
+    <img class="building-panel-header__art" :src="artPath" alt="" />
 
-    <p>Cấp {{ instance.level }} / {{ template.maxLevel }}</p>
+    <div class="building-panel-header__identity">
+      <small>CÔNG TRÌNH ĐỘNG PHỦ</small>
+      <h2>{{ template.name }}</h2>
+      <p>Cấp {{ instance.level }} / {{ template.maxLevel }}</p>
+    </div>
 
-    <button
-      v-if="canUpgrade"
-      type="button"
-      class="building-panel-header__upgrade"
-      :disabled="!canAffordUpgrade"
-      :title="upgradeCostLabel || 'Không có chi phí nâng cấp được cấu hình'"
-      @click="upgrade"
-    >
-      Nâng cấp
-    </button>
+    <div class="building-panel-header__upgrade-area">
+      <button
+        v-if="hasNextLevel"
+        type="button"
+        class="building-panel-header__upgrade"
+        :disabled="!meetsRealmRequirement || !canAffordUpgrade"
+        :title="!meetsRealmRequirement ? `Cần đạt ${requiredRealmName}` : upgradeCostLabel || 'Không có chi phí nâng cấp được cấu hình'"
+        @click="upgrade"
+      >
+        Nâng công trình
+      </button>
 
-    <small v-if="canUpgrade && upgradeCostLabel" class="building-panel-header__cost">
-      {{ upgradeCostLabel }}
-    </small>
+      <small v-if="hasNextLevel" class="building-panel-header__cost">
+        <template v-if="!meetsRealmRequirement">Cần đạt {{ requiredRealmName }}</template>
+        <template v-else-if="upgradeCostLabel">{{ upgradeCostLabel }}</template>
+      </small>
+    </div>
   </header>
 </template>
 
@@ -92,13 +112,28 @@ function upgrade() {
 .building-panel-header {
   flex: 0 0 auto;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 5px;
-  padding: 16px 18px 14px;
-  border-bottom: 1px solid var(--ink-line);
-  background: color-mix(in srgb, var(--ink-800) 84%, transparent);
+  align-items: center;
+  gap: 14px;
+  min-height: 88px;
+  padding: 10px 18px;
+  border-bottom: 1px solid rgba(185, 137, 73, .3);
+  background: linear-gradient(90deg, rgba(35, 31, 25, .97), rgba(16, 20, 22, .94));
 }
+
+.building-panel-header__art {
+  width: 74px;
+  height: 64px;
+  object-fit: cover;
+  border: 1px solid rgba(214, 167, 92, .4);
+  border-radius: 50% 50% var(--radius-sm) var(--radius-sm);
+  background: var(--ink-900);
+  filter: saturate(.9) contrast(1.08);
+  box-shadow: 0 0 18px rgba(213, 157, 77, .14);
+}
+
+.building-panel-header__identity { min-width: 0; margin-right: auto; }
+.building-panel-header__identity small { color: #a97948; font-size: .63rem; letter-spacing: .17em; }
+.building-panel-header__upgrade-area { display: flex; max-width: 45%; flex-direction: column; align-items: flex-end; gap: 5px; }
 
 .building-panel-header h2,
 .building-panel-header p {
@@ -134,7 +169,14 @@ function upgrade() {
 }
 
 .building-panel-header__cost {
+  text-align: right;
   color: var(--text-muted);
   font-size: var(--text-xs);
+}
+
+@media (max-width: 640px) {
+  .building-panel-header { align-items: flex-start; flex-wrap: wrap; }
+  .building-panel-header__upgrade-area { max-width: 100%; align-items: flex-start; }
+  .building-panel-header__cost { text-align: left; }
 }
 </style>

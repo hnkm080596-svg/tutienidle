@@ -5,15 +5,19 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useEquipmentActions } from '@/composables/useEquipmentActions'
 import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 import {
-  WASH_ORE_AMOUNT,
-  WASH_REFINEMENT_COST,
-  WASH_SPIRIT_STONE_COST,
-  REFINE_REFINEMENT_COST,
-  REFINE_SPIRIT_STONE_PER_UNIT,
   equipmentEssenceMaterialId,
 } from '@/core/equipment/RefinementBalance'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import type { EquipmentSlot } from '@/core/equipment/EquipmentTypes'
+import { materialLabel, affixLabel, equipmentSlotLabel, equipmentQualityLabel } from '@/core/presentation/labels'
+import { statLabel } from '@/core/stats/StatLabels'
+import { useActionFeedbackStore } from '@/stores/actionFeedback'
+import { getSpiritStoneMaterialIdForEnhanceLevel } from '@/core/material/SpiritStoneMaterial'
+import SlotView from '@/components/common/SlotView.vue'
+import { EQUIPMENT_SLOTS } from '@/core/equipment/EquipmentSlotState'
+import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
+import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
+import { equipmentQualityRank, itemGradeRank } from '@/composables/slots/normalizeSlotRank'
 
 // Khí Đường (2026-08-25, resource-professions-rework plan §7/§9.2) —
 // bốn tab ĐÚNG contract: Cường Hóa (slot), Tẩy Luyện (identity substat
@@ -36,6 +40,8 @@ const { stateVersion, bumpState } = useStateVersion()
 
 const { enhance, wash, refine, dissolve } = useEquipmentActions()
 
+const feedback = useActionFeedbackStore()
+
 const activeTab = ref<TabId>('enhance')
 
 function switchTab(tab: TabId) {
@@ -47,6 +53,8 @@ function switchTab(tab: TabId) {
 // =========================
 
 interface EquippedRow {
+  instance: EquipmentInstance
+
   instanceId: string
 
   slot: EquipmentSlot
@@ -58,6 +66,16 @@ interface EquippedRow {
   quality: string
 
   affixCount: number
+
+  icon?: string
+
+  nameSegments: ReturnType<typeof composeEquipmentNameSegments>
+
+  tooltip: ReturnType<typeof buildEquipmentTooltip>
+
+  qualityRank: number
+
+  rarityRank: number
 }
 
 const equippedRows = computed<EquippedRow[]>(() => {
@@ -67,6 +85,8 @@ const equippedRows = computed<EquippedRow[]>(() => {
     const template = gameManager.equipmentRegistry.get(instance.itemId)
 
     return {
+      instance,
+
       instanceId: instance.instanceId,
 
       slot: instance.slot,
@@ -78,6 +98,24 @@ const equippedRows = computed<EquippedRow[]>(() => {
       quality: instance.quality,
 
       affixCount: instance.affixes.length,
+
+      icon: instance.icon ?? template?.icon,
+
+      nameSegments: template
+        ? composeEquipmentNameSegments(instance, template, gameManager.zoneRegistry)
+        : [{ text: instance.itemId }],
+
+      tooltip: buildEquipmentTooltip(
+        instance,
+        gameManager.equipmentRegistry.get(instance.itemId),
+        gameManager.affixRegistry,
+        gameManager.getSlotState(instance.slot),
+        gameManager.zoneRegistry,
+      ),
+
+      qualityRank: equipmentQualityRank(instance.quality),
+
+      rarityRank: itemGradeRank(instance.rarity),
     }
   })
 })
@@ -120,6 +158,8 @@ function selectEquipped(instanceId: string) {
   selectedInstanceId.value = instanceId
 
   lockedIndices.value = []
+
+  selectedOreId.value = null
 }
 
 /** Chọn ore cùng realm cho Tẩy Luyện — chỉ hiện stack người chơi có. */
@@ -159,9 +199,13 @@ interface EnhanceSlotRow {
 
   maxLevel: number
 
-  costs: Array<{ materialId: string; amount: number; owned: number }>
+  costs: Array<{ materialId: string; label: string; amount: number; owned: number }>
 
   spiritStone: number
+  spiritStoneMaterialId: string
+  spiritStoneOwned: number
+
+  equippedRow?: EquippedRow
 }
 
 const enhanceRows = computed<EnhanceSlotRow[]>(() => {
@@ -172,11 +216,15 @@ const enhanceRows = computed<EnhanceSlotRow[]>(() => {
   // chơi hiện hành để resolve catalog nghề.
   const realmId = player.$state.realmId
 
+  const equippedRowBySlot = new Map(equippedRows.value.map((row) => [row.slot, row]))
+
   return gameManager.getAllSlotStates().map((slotState) => {
     const equipped = gameManager.equipmentBag.getEquippedInSlot(slotState.slot)
 
     const costs = gameManager.getEnhanceCost(slotState.slot, realmId).map((entry) => ({
       materialId: entry.materialId,
+
+      label: materialLabel(entry.materialId, gameManager.materialRegistry),
 
       amount: entry.amount,
 
@@ -184,6 +232,7 @@ const enhanceRows = computed<EnhanceSlotRow[]>(() => {
     }))
 
     const spiritStone = gameManager.getEnhanceSpiritStoneCost(slotState.slot, realmId)
+    const spiritStoneMaterialId = getSpiritStoneMaterialIdForEnhanceLevel(slotState.enhanceLevel)
 
     const maxLevel = gameManager.getSlotMaxEnhanceLevel(slotState.slot, realmId)
 
@@ -201,15 +250,29 @@ const enhanceRows = computed<EnhanceSlotRow[]>(() => {
       costs,
 
       spiritStone,
+      spiritStoneMaterialId,
+      spiritStoneOwned: gameManager.materialBag.getAmount(spiritStoneMaterialId),
+
+      equippedRow: equippedRowBySlot.get(slotState.slot),
     }
   })
 })
+
+const selectedEnhanceSlot = ref<EquipmentSlot>(EQUIPMENT_SLOTS[0]!)
+
+const selectedEnhanceRow = computed(() =>
+  enhanceRows.value.find((row) => row.slot === selectedEnhanceSlot.value) ?? null,
+)
+
+function selectEnhanceSlot(slot: EquipmentSlot) {
+  selectedEnhanceSlot.value = slot
+}
 
 function canEnhance(row: EnhanceSlotRow): boolean {
   return (
     row.enhanceLevel < row.maxLevel &&
     row.costs.every((cost) => cost.owned >= cost.amount) &&
-    spiritStoneOwned.value >= row.spiritStone
+    row.spiritStoneOwned >= row.spiritStone
   )
 }
 
@@ -221,6 +284,12 @@ function doEnhance(row: EnhanceSlotRow) {
 // Tab Tẩy Luyện
 // =========================
 
+const washCost = computed(() => {
+  stateVersion.value
+
+  return gameManager.getWashCost()
+})
+
 function canWash(): boolean {
   const ren = itemRenState.value
 
@@ -228,14 +297,20 @@ function canWash(): boolean {
     selectedRow.value !== null &&
     selectedOreId.value !== null &&
     ren !== null &&
-    gameManager.materialBag.getAmount(selectedOreId.value) >= WASH_ORE_AMOUNT &&
-    ren.points >= WASH_REFINEMENT_COST &&
-    spiritStoneOwned.value >= WASH_SPIRIT_STONE_COST
+    gameManager.materialBag.getAmount(selectedOreId.value) >= washCost.value.oreAmount &&
+    ren.points >= washCost.value.refinementPoints &&
+    spiritStoneOwned.value >= washCost.value.spiritStone
   )
 }
 
 function doWash() {
-  if (!selectedRow.value || !selectedOreId.value) {
+  if (!selectedRow.value) {
+    feedback.warning('Không thể Tẩy Luyện: cần chọn một trang bị.')
+    return
+  }
+
+  if (!selectedOreId.value) {
+    feedback.warning('Không thể Tẩy Luyện: cần chọn Quáng cùng cảnh giới.')
     return
   }
 
@@ -259,15 +334,21 @@ const selectedAffixes = computed(() => {
     return []
   }
 
-  return instance.affixes.map((rolled, index) => ({
-    index,
+  return instance.affixes.map((rolled, index) => {
+    const affix = gameManager.affixRegistry.has(rolled.affixId)
+      ? gameManager.affixRegistry.get(rolled.affixId)
+      : undefined
 
-    label: gameManager.affixRegistry.has(rolled.affixId)
-      ? rolled.affixId
-      : rolled.affixId,
+    return {
+      index,
 
-    tier: rolled.tier,
-  }))
+      label: affix
+        ? `${affixLabel(rolled.affixId, gameManager.affixRegistry)} (${statLabel(affix.stat)})`
+        : affixLabel(rolled.affixId, gameManager.affixRegistry),
+
+      tier: rolled.tier,
+    }
+  })
 })
 
 const lockedIndices = ref<number[]>([])
@@ -285,9 +366,11 @@ function toggleLock(index: number) {
   }
 }
 
-const refineEssenceUnits = computed(
-  () => (selectedAffixes.value.length || 0) + lockedIndices.value.length,
-)
+const refineCost = computed(() => {
+  stateVersion.value
+
+  return gameManager.getRefineCost(selectedAffixes.value.length, lockedIndices.value.length)
+})
 
 // Plan Workstream F — số dư Linh Thạch đọc từ MaterialBag.
 const spiritStoneOwned = computed(() => {
@@ -312,15 +395,16 @@ function canRefine(): boolean {
   return (
     selectedAffixes.value.length > 0 &&
     lockedIndices.value.length < selectedAffixes.value.length &&
-    refineEssenceOwned.value >= refineEssenceUnits.value &&
-    spiritStoneOwned.value >= refineEssenceUnits.value * REFINE_SPIRIT_STONE_PER_UNIT &&
+    refineEssenceOwned.value >= refineCost.value.essenceUnits &&
+    spiritStoneOwned.value >= refineCost.value.spiritStone &&
     ren !== null &&
-    ren.points >= REFINE_REFINEMENT_COST
+    ren.points >= refineCost.value.refinementPoints
   )
 }
 
 function doRefine() {
   if (!selectedRow.value) {
+    feedback.warning('Không thể Tinh Luyện: cần chọn một trang bị có ít nhất một dòng phụ.')
     return
   }
 
@@ -360,9 +444,9 @@ const dissolveCandidates = computed<DissolveCandidate[]>(() => {
 
         name: template?.name ?? instance.itemId,
 
-        slotLabel: instance.slot,
+        slotLabel: equipmentSlotLabel(instance.slot),
 
-        quality: instance.quality,
+        quality: equipmentQualityLabel(instance.quality),
 
         realmId: instance.realmId,
       }
@@ -450,6 +534,13 @@ function doDissolve() {
 
 <template>
   <div class="qi-hall">
+    <div class="qi-hall__forge-scene" aria-hidden="true">
+      <img :src="'/assets/buildings/dong-fu/equipment_hall.png'" alt="" />
+      <div class="qi-hall__forge-fire" />
+      <div class="qi-hall__anvil">⚒</div>
+      <p>THIÊN HỎA LUYỆN KHÍ</p>
+    </div>
+
     <header class="qi-hall__points">
       <template v-if="itemRenState !== null">
         <span>
@@ -481,28 +572,50 @@ function doDissolve() {
     <section v-if="activeTab === 'enhance'" class="qi-hall__body">
       <p class="qi-hall__hint">Cường Hóa gắn với SLOT — đổi trang bị không mất cấp.</p>
 
-      <article v-for="row in enhanceRows" :key="row.slot" class="enhance-row">
-        <div class="enhance-row__head">
-          <strong>{{ row.itemName }}</strong>
+      <div class="qi-hall__slot-grid" aria-label="Chọn slot cường hóa">
+        <SlotView
+          v-for="row in enhanceRows"
+          :key="row.slot"
+          class="qi-hall__slot"
+          :item="row.equippedRow?.instance ?? null"
+          :label="row.equippedRow?.name ?? equipmentSlotLabel(row.slot)"
+          :name-segments="row.equippedRow?.nameSegments"
+          :icon="row.equippedRow?.icon"
+          :quality-rank="row.equippedRow?.qualityRank"
+          :rarity-rank="row.equippedRow?.rarityRank"
+          :tooltip="row.equippedRow?.tooltip ?? { title: equipmentSlotLabel(row.slot), description: 'Slot trống vẫn có thể Cường Hóa.' }"
+          :badges="[{ kind: 'enhance', text: `+${row.enhanceLevel}` }]"
+          :state="{ interaction: row.slot === selectedEnhanceSlot ? 'selected' : 'idle' }"
+          @click="selectEnhanceSlot(row.slot)"
+        />
+      </div>
 
-          <span>+{{ row.enhanceLevel }}/{{ row.maxLevel }}</span>
+      <article v-if="selectedEnhanceRow" class="enhance-row">
+        <div class="enhance-row__head">
+          <strong>{{ equipmentSlotLabel(selectedEnhanceRow.slot) }} · {{ selectedEnhanceRow.itemName }}</strong>
+
+          <span>+{{ selectedEnhanceRow.enhanceLevel }}/{{ selectedEnhanceRow.maxLevel }}</span>
         </div>
 
-        <ul v-if="row.enhanceLevel < row.maxLevel" class="enhance-row__costs">
+        <ul v-if="selectedEnhanceRow.enhanceLevel < selectedEnhanceRow.maxLevel" class="enhance-row__costs">
           <li
-            v-for="cost in row.costs"
+            v-for="cost in selectedEnhanceRow.costs"
             :key="cost.materialId"
             :class="{ 'is-missing': cost.owned < cost.amount }"
           >
-            {{ cost.materialId }}: {{ cost.owned }}/{{ cost.amount }}
+            {{ cost.label }}: {{ cost.owned }}/{{ cost.amount }}
+          </li>
+          <li :class="{ 'is-missing': selectedEnhanceRow.spiritStoneOwned < selectedEnhanceRow.spiritStone }">
+            {{ materialLabel(selectedEnhanceRow.spiritStoneMaterialId, gameManager.materialRegistry) }}:
+            {{ selectedEnhanceRow.spiritStoneOwned }}/{{ selectedEnhanceRow.spiritStone }}
           </li>
         </ul>
 
         <button
-          v-if="row.enhanceLevel < row.maxLevel"
+          v-if="selectedEnhanceRow.enhanceLevel < selectedEnhanceRow.maxLevel"
           type="button"
-          :disabled="!canEnhance(row)"
-          @click="doEnhance(row)"
+          :class="{ 'is-unmet': !canEnhance(selectedEnhanceRow) }"
+          @click="doEnhance(selectedEnhanceRow)"
         >
           Cường Hóa
         </button>
@@ -511,20 +624,27 @@ function doDissolve() {
 
     <!-- ===== TẦY LUYỆN (§7.3) ===== -->
     <section v-else-if="activeTab === 'wash'" class="qi-hall__body">
-      <div class="qi-hall__picker">
-        <button
+      <div class="qi-hall__slot-grid" aria-label="Chọn trang bị để tẩy luyện">
+        <SlotView
           v-for="row in equippedRows"
           :key="row.instanceId"
-          type="button"
-          :class="{ 'is-selected': row.instanceId === selectedInstanceId }"
+          class="qi-hall__slot"
+          :item="row.instance"
+          :label="row.name"
+          :name-segments="row.nameSegments"
+          :icon="row.icon"
+          :quality-rank="row.qualityRank"
+          :rarity-rank="row.rarityRank"
+          :tooltip="row.tooltip"
+          :state="{ interaction: row.instanceId === selectedInstanceId ? 'selected' : 'idle', marker: 'equipped' }"
           @click="selectEquipped(row.instanceId)"
-        >
-          {{ row.name }}
-        </button>
+        />
       </div>
 
+      <p v-if="equippedRows.length === 0" class="qi-hall__empty">Hãy trang bị một món đồ trước khi Tẩy Luyện.</p>
+
       <template v-if="selectedRow">
-        <h4>Chọn Quáng cùng cảnh giới (×{{ WASH_ORE_AMOUNT }})</h4>
+        <h4>Chọn Quáng cùng cảnh giới (×{{ washCost.oreAmount }})</h4>
 
         <label v-for="ore in oreChoices" :key="ore.materialId" class="qi-hall__option">
           <input type="radio" :value="ore.materialId" v-model="selectedOreId" />
@@ -535,11 +655,16 @@ function doDissolve() {
         </label>
 
         <p class="qi-hall__costline">
-          Chi phí: {{ WASH_REFINEMENT_COST }} Điểm Rèn (tình trạng rèn còn
-          {{ itemRenState?.points ?? 0 }}) · {{ WASH_SPIRIT_STONE_COST }} Linh Thạch
+          Chi phí: {{ washCost.refinementPoints }} Điểm Rèn (tình trạng rèn còn
+          {{ itemRenState?.points ?? 0 }}) · {{ washCost.spiritStone }} Linh Thạch
         </p>
 
-        <button type="button" class="qi-hall__action" :disabled="!canWash()" @click="doWash()">
+        <button
+          type="button"
+          class="qi-hall__action"
+          :class="{ 'is-unmet': !canWash() }"
+          @click="doWash()"
+        >
           Tẩy Luyện — roll lại toàn bộ dòng phụ
         </button>
       </template>
@@ -547,17 +672,26 @@ function doDissolve() {
 
     <!-- ===== TINH LUYỆN (§7.4) ===== -->
     <section v-else-if="activeTab === 'refine'" class="qi-hall__body">
-      <div class="qi-hall__picker">
-        <button
+      <div class="qi-hall__slot-grid" aria-label="Chọn trang bị để tinh luyện">
+        <SlotView
           v-for="row in equippedRows.filter((entry) => entry.affixCount > 0)"
           :key="row.instanceId"
-          type="button"
-          :class="{ 'is-selected': row.instanceId === selectedInstanceId }"
+          class="qi-hall__slot"
+          :item="row.instance"
+          :label="row.name"
+          :name-segments="row.nameSegments"
+          :icon="row.icon"
+          :quality-rank="row.qualityRank"
+          :rarity-rank="row.rarityRank"
+          :tooltip="row.tooltip"
+          :state="{ interaction: row.instanceId === selectedInstanceId ? 'selected' : 'idle', marker: 'equipped' }"
           @click="selectEquipped(row.instanceId)"
-        >
-          {{ row.name }}
-        </button>
+        />
       </div>
+
+      <p v-if="equippedRows.every((entry) => entry.affixCount === 0)" class="qi-hall__empty">
+        Không có trang bị đang mặc nào có dòng phụ để Tinh Luyện.
+      </p>
 
       <template v-if="selectedRow">
         <h4>Chọn dòng KHÓA (tối đa {{ Math.min(3, Math.max(0, selectedAffixes.length - 1)) }})</h4>
@@ -578,12 +712,17 @@ function doDissolve() {
 
         <p class="qi-hall__costline">
           Giá trị từng dòng không khóa roll trong ±20%. Cost hệ số N+L =
-          {{ refineEssenceUnits }} Tinh Hoa · {{ refineEssenceUnits * REFINE_SPIRIT_STONE_PER_UNIT }}
-          Linh Thạch · {{ REFINE_REFINEMENT_COST }} Điểm Rèn (tình trạng rèn còn
+          {{ refineCost.essenceUnits }} Tinh Hoa · {{ refineCost.spiritStone }}
+          Linh Thạch · {{ refineCost.refinementPoints }} Điểm Rèn (tình trạng rèn còn
           {{ itemRenState?.points ?? 0 }} · Tinh Hoa đang có {{ refineEssenceOwned }}).
         </p>
 
-        <button type="button" class="qi-hall__action" :disabled="!canRefine()" @click="doRefine()">
+        <button
+          type="button"
+          class="qi-hall__action"
+          :class="{ 'is-unmet': !canRefine() }"
+          @click="doRefine()"
+        >
           Tinh Luyện
         </button>
       </template>
@@ -656,7 +795,7 @@ function doDissolve() {
         <h4>Xác nhận phân giải {{ dissolveSelected.size }} món:</h4>
 
         <p v-for="entry in dissolvePreview" :key="entry.materialId">
-          {{ entry.materialId }}: {{ entry.minAmount }}–{{ entry.maxAmount }}
+          {{ materialLabel(entry.materialId, gameManager.materialRegistry) }}: {{ entry.minAmount }}–{{ entry.maxAmount }}
         </p>
 
         <p class="qi-hall__warning">Thao tác KHÔNG thể hoàn tác.</p>
@@ -671,12 +810,66 @@ function doDissolve() {
 
 <style scoped>
 .qi-hall {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
   color: var(--text-primary);
   font-family: var(--font-body);
+  background:
+    radial-gradient(circle at 78% 10%, rgba(255, 96, 35, .12), transparent 28%),
+    linear-gradient(145deg, rgba(26, 23, 21, .98), rgba(10, 14, 17, .98));
+}
+
+.qi-hall__forge-scene {
+  position: relative;
+  flex: 0 0 132px;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(213, 119, 55, .35);
+  background: #120f0e;
+  box-shadow: inset 0 -30px 45px rgba(0, 0, 0, .68);
+}
+
+.qi-hall__forge-scene img {
+  width: 100%;
+  height: 165px;
+  object-fit: cover;
+  object-position: center 58%;
+  opacity: .58;
+  filter: sepia(.18) saturate(1.25) contrast(1.08);
+}
+
+.qi-hall__forge-scene p {
+  position: absolute;
+  left: 18px;
+  bottom: 12px;
+  margin: 0;
+  color: #f2bd72;
+  font: 700 var(--text-sm) var(--font-display);
+  letter-spacing: .18em;
+  text-shadow: 0 2px 5px #000;
+}
+
+.qi-hall__anvil {
+  position: absolute;
+  right: 32px;
+  bottom: 18px;
+  color: #f7d09b;
+  font-size: 2.2rem;
+  filter: drop-shadow(0 0 10px rgba(255, 107, 47, .8));
+}
+
+.qi-hall__forge-fire {
+  position: absolute;
+  right: 25px;
+  bottom: -35px;
+  width: 85px;
+  height: 95px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 220, 118, .95), rgba(255, 80, 22, .6) 35%, transparent 70%);
+  filter: blur(4px);
+  animation: forge-fire 1.35s ease-in-out infinite alternate;
 }
 
 .qi-hall__points {
@@ -693,6 +886,8 @@ function doDissolve() {
   grid-template-columns: repeat(4, 1fr);
   gap: 4px;
   padding: 8px 12px;
+  border-bottom: 1px solid rgba(207, 133, 72, .2);
+  background: rgba(21, 18, 17, .88);
 }
 
 .qi-hall__tabs button {
@@ -707,8 +902,9 @@ function doDissolve() {
 }
 
 .qi-hall__tabs button.is-active {
-  border-color: var(--gold-500);
-  color: var(--gold-500);
+  border-color: #e28c48;
+  color: #f0b767;
+  text-shadow: 0 0 12px rgba(255, 120, 48, .32);
 }
 
 .qi-hall__body {
@@ -729,8 +925,8 @@ function doDissolve() {
 
 .enhance-row {
   padding: 8px;
-  background: var(--ink-800);
-  border: 1px solid var(--ink-line-soft);
+  background: linear-gradient(105deg, rgba(61, 43, 33, .7), rgba(23, 24, 25, .82));
+  border: 1px solid rgba(158, 106, 69, .28);
   border-radius: var(--radius-sm);
   display: flex;
   flex-direction: column;
@@ -758,26 +954,23 @@ function doDissolve() {
   color: var(--danger, #e05d5d);
 }
 
-.qi-hall__picker {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
+.qi-hall__slot-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(70px, 1fr));
+  gap: 8px;
 }
 
-.qi-hall__picker button {
-  padding: 4px 8px;
-  background: var(--ink-800);
-  border: 1px solid var(--ink-line-soft);
-  border-radius: var(--radius-sm);
-  color: var(--text-primary);
-  cursor: pointer;
-  font-size: var(--text-xs);
-  font-family: var(--font-body);
+.qi-hall__slot {
+  min-width: 0;
 }
 
-.qi-hall__picker button.is-selected {
-  border-color: var(--gold-500);
-  color: var(--gold-500);
+.qi-hall__empty {
+  margin: 0;
+  padding: 12px;
+  border: 1px dashed var(--ink-line-soft);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  text-align: center;
 }
 
 .qi-hall__option {
@@ -813,10 +1006,10 @@ function doDissolve() {
   font-size: var(--text-sm);
 }
 
-.qi-hall__action:disabled {
+.qi-hall__action.is-unmet,
+.enhance-row button.is-unmet {
   background: var(--ink-700);
   color: var(--text-muted);
-  cursor: not-allowed;
 }
 
 .qi-hall__action--danger {
@@ -879,5 +1072,15 @@ function doDissolve() {
 .qi-hall__warning {
   font-size: var(--text-xs);
   color: var(--danger, #e05d5d);
+}
+
+@keyframes forge-fire {
+  to { transform: scale(1.12) translateY(-4px); opacity: .82; }
+}
+
+@media (max-width: 760px) {
+  .qi-hall__forge-scene { flex-basis: 96px; }
+  .qi-hall__forge-scene img { height: 125px; }
+  .qi-hall__slot-grid { grid-template-columns: repeat(3, minmax(64px, 1fr)); }
 }
 </style>

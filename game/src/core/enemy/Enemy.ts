@@ -35,8 +35,9 @@ export interface EnemyReward {
   // data enemy hiện có (72 entry) chỉ để thêm 1 con số phase-đầu tạm.
   skillInsight?: number
 
-  cultivation: number
-
+  // Tu vi giờ CHỈ đến từ tu luyện (2026-08-20) — giết quái KHÔNG cộng
+  // tu vi, nên EnemyReward không có cultivation. Quest reward vẫn dùng
+  // Reward.cultivation (core/reward/Reward.ts) — đó là đường riêng.
   spiritStone: number
 
   itemDrops?: EnemyItemDrop[]
@@ -262,9 +263,7 @@ export function createBossVariant(enemy: Enemy): Enemy {
  * Chuyển Enemy thành CombatEntity
  * trước khi đưa vào Combat System.
  */
-export function enemyToCombatEntity(
-  enemy: Enemy,
-): CombatEntity {
+export function enemyToCombatEntity(enemy: Enemy): CombatEntity {
   return {
     id: enemy.id,
 

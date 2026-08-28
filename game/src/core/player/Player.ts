@@ -13,6 +13,7 @@ import type { FoundationType } from '../breakthrough/FoundationType'
 import type { CultivationPathId } from './CultivationPathKit'
 import type { PersistentTimedEffect } from './PersistentTimedEffect'
 import type { ElementType } from '../element/ElementType'
+import type { ArtifactProgress } from '../artifact/Artifact'
 
 export interface PlayerData {
   name: string
@@ -22,6 +23,9 @@ export interface PlayerData {
 
   cultivation: number
   cultivationPerSecond: number
+
+  /** Pool nhân công tự động dùng chung cho mọi ProductionSite. */
+  autoWorkerCapacity: number
 
   baseStats: Stats
 
@@ -116,6 +120,12 @@ export interface PlayerData {
   // Chỉ tăng, không giảm — thống kê/điều kiện progression về sau.
   totalSkillInsightGained: number
 
+  // Thiên phú Ngộ Đạo (talent-direction-choice-plan §6) — tu vi tu luyện
+  // online tích luỹ vào đây, đủ ngưỡng cultivationPerInsight thì đổi 1
+  // điểm Cảm Ngộ Kỹ năng; phần dư giữ lại cho lần sau. Chỉ tu luyện
+  // online — tiến độ offline là thiết kế riêng sau này.
+  cultivationInsightAccumulator: number
+
   // PLAN HOÀN CHỈNH mục 2 — điểm Main Stat CHƯA phân phối, cấp mỗi khi
   // đột phá TIỂU cảnh giới (xem CultivationSystem.breakthrough()) —
   // KHÁC skillInsight (giờ chỉ đến từ chiến đấu, không còn cấp cùng
@@ -184,6 +194,13 @@ export interface PlayerData {
   // không migration).
   combatAiStrategy: CombatAiStrategy
 
+  // Bản Mệnh Pháp Bảo (2026-08-27, foundation-artifact-system-plan.md
+  // §10.2) — undefined trước Trúc Cơ hoặc khi nghề chưa có definition
+  // (Kiếm Tu/Thể Tu, xem ARTIFACT_ID_BY_CULTIVATION_PATH). KHÔNG phải
+  // array inventory — mỗi nhân vật chỉ có đúng MỘT bản mệnh, không
+  // roll/nhặt/craft/equip/đổi sang pháp bảo nghề khác.
+  artifact?: ArtifactProgress
+
   lastSavedAt: number
 }
 
@@ -196,6 +213,7 @@ export function createDefaultPlayer(): PlayerData {
 
     cultivation: 0,
     cultivationPerSecond: 10,
+    autoWorkerCapacity: 0,
 
     baseStats: createBaseStats(),
     modifiers: [],
@@ -216,9 +234,14 @@ export function createDefaultPlayer(): PlayerData {
     // đúng nhưng UI gate không tự chuyển vì thiếu dòng này).
     cultivationPath: undefined,
 
+    // PHẢI khai báo tường minh (dù `undefined`) — cùng lý do
+    // cultivationPath ở trên (toRefs() snapshot 1 lần lúc init store).
+    artifact: undefined,
+
     totalCultivationGained: 0,
     skillInsight: 0,
     totalSkillInsightGained: 0,
+    cultivationInsightAccumulator: 0,
     attributePoints: 0,
     unlockedElements: [],
     equippedElements: [],

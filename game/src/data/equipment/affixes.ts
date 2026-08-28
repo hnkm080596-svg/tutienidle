@@ -43,19 +43,6 @@ export const affixes: Affix[] = [
   },
 
   {
-    id: 'prefix_max_mp',
-    name: 'Linh Tuyền',
-    stat: 'maxMp',
-    kind: 'prefix',
-    pool: 'basic',
-    tiers: [
-      { tier: 1, min: 5, max: 10 },
-      { tier: 2, min: 11, max: 20 },
-      { tier: 3, min: 21, max: 35 },
-    ],
-  },
-
-  {
     id: 'prefix_critical_rate',
     name: 'Chuẩn Xác',
     stat: 'criticalRate',

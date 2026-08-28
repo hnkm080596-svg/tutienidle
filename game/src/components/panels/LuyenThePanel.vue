@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // Realm Passive & Pressure System (2026-08-20) — panel Luyện Thể, cùng
 // pattern overlay với SkillPathPanel.vue/TechniquePanel.vue/
-// RealmPassivePanel.vue. Đầu tư Tinh Hoa Phàm Thể (materialBag) vào
+// RealmPanel.vue. Đầu tư Tinh Hoa Phàm Thể (materialBag) vào
 // tầng đang dở qua GameManager.investBodyRefinement() (xem
 // core/realm/BodyRefinementSystem.ts) — tuần tự, đầy 1 tầng mới sang tầng kế.
 //
@@ -21,7 +21,7 @@
 // không hiện số bậc/công thức ra UI (2026-08-22, theo đúng tinh thần
 // "đột phá ẩn" đã áp dụng cho Căn Cơ Trúc Cơ — xem FoundationType.ts)
 // — người chơi chỉ thấy TIẾN ĐỘ đầu tư (tầng đã hoàn thành) và kết quả
-// CỤ THỂ (stat buff thật ở RealmPassivePanel.vue), không thấy con số
+// CỤ THỂ (stat buff thật ở RealmPanel.vue), không thấy con số
 // "bậc X/6" nào để đoán/min-max ngược công thức.
 import { computed } from 'vue'
 import { useUiStore } from '@/stores/ui'
@@ -31,6 +31,7 @@ import { BODY_REFINEMENT_TIERS, TINH_HOA_PHAM_THE_MATERIAL_ID } from '@/data/rea
 import { getActiveTierIndex, getTierCap, isActiveTierUnlocked, isTierRequiredRealmLevelMet } from '@/core/realm/BodyRefinementSystem'
 import { statLabel } from '@/core/stats/StatLabels'
 import { formatNumber } from '@/core/format/NumberFormatter'
+import OverlayPanel from '@/components/common/OverlayPanel.vue'
 
 const ui = useUiStore()
 const player = usePlayerStore()
@@ -108,14 +109,8 @@ function close() {
 </script>
 
 <template>
-  <div v-if="ui.standalonePanel === 'luyen_the'" class="luyen-the-panel" @click.self="close">
+  <OverlayPanel :open="ui.standalonePanel === 'luyen_the'" title="Luyện Thể" width="min(560px, 90vw)" height="85vh" @close="close">
     <div class="luyen-the-panel__card">
-      <div class="luyen-the-panel__header">
-        <h3 class="luyen-the-panel__title">Luyện Thể</h3>
-
-        <button type="button" class="luyen-the-panel__close" @click="close">✕</button>
-      </div>
-
       <div class="luyen-the-panel__summary">
         <span>Tinh Hoa Phàm Thể: {{ formatNumber(heldTinhHoa) }}</span>
         <span>Tầng đã hoàn thành: {{ player.bodyRefinementCompletedTiers }}/6</span>
@@ -166,48 +161,17 @@ function close() {
 
       <p v-else class="luyen-the-panel__empty">Đã hoàn thành toàn bộ Luyện Thể.</p>
     </div>
-  </div>
+  </OverlayPanel>
 </template>
 
 <style scoped>
-.luyen-the-panel {
-  position: absolute;
-  inset: 0;
-  z-index: 1800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(10, 10, 13, 0.72);
-}
-
 .luyen-the-panel__card {
-  width: min(560px, 90%);
-  max-height: 85%;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 10px;
   padding: 20px 24px;
-  background: var(--ink-900);
-  border: 1px solid var(--gold-500);
-  box-shadow: var(--shadow-panel);
-  border-radius: var(--radius-md);
   font-family: var(--font-body);
   color: var(--text-primary);
-}
-
-.luyen-the-panel__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.luyen-the-panel__title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 1.1rem;
-  letter-spacing: 0.06em;
-  color: var(--gold-500);
 }
 
 .luyen-the-panel__close {

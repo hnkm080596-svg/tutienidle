@@ -14,6 +14,9 @@ import {
   validateWeightOrdering,
 } from '../production/ProductionCatalog'
 import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
+import { pills } from '../../data/pill/pills'
+import { PILL_FAMILIES } from '../../data/pill/PillFamilies'
+import { REALM_TIERS } from '../realm/RealmTierMap'
 import {
   validateProfessionMaterialCatalog,
   validateProfessionMaterialEntry,
@@ -87,6 +90,31 @@ describe('Du lieu nghe that trong repo (data-integrity gate)', () => {
 
         expect(materials.some((material) => material.id === variant.materialId)).toBe(true)
       }
+    }
+  })
+
+  it('moi linh thao, linh moc va linh khoang co icon dung quy uoc', () => {
+    for (const material of materials) {
+      if (material.category === 'herb') {
+        expect(material.icon).toMatch(
+          /^\/assets\/materials\/herbs\/.+\/(decade|century|millennium|myriad_year)\.png$/,
+        )
+      } else if (material.category === 'wood') {
+        expect(material.icon).toBe('/assets/materials/linh_moc.png')
+      } else if (material.category === 'ore') {
+        expect(material.icon).toBe('/assets/materials/linh_khoang.png')
+      }
+    }
+  })
+
+  it('moi pham cua cung mot ho dan dung chung mot icon', () => {
+    for (const family of PILL_FAMILIES) {
+      const familyPills = pills.filter((pill) => pill.id.startsWith(`${family.id}_`))
+
+      expect(familyPills).toHaveLength(REALM_TIERS.length)
+      expect(new Set(familyPills.map((pill) => pill.icon))).toEqual(
+        new Set([`/assets/pills/${family.id}.png`]),
+      )
     }
   })
 })

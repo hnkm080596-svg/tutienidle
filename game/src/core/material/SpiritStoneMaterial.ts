@@ -6,12 +6,16 @@ import type { Material } from './Material'
 // Cộng bằng materialBag.add(); tiêu bằng materialBag.remove() sau khi
 // kiểm tra has(). Với penalty có thể trừ quá số dư, dùng amount thực tế
 // Math.min(owned, requested).
-export const SPIRIT_STONE_MATERIAL_ID = 'spirit_stone'
+export type SpiritStoneTier = 'ha_pham' | 'trung_pham' | 'thuong_pham'
+
+export const SPIRIT_STONE_MATERIAL_ID = 'spirit_stone_ha_pham'
+export const SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID = 'spirit_stone_trung_pham'
+export const SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID = 'spirit_stone_thuong_pham'
 
 export const SPIRIT_STONE_MATERIAL: Material = {
   id: SPIRIT_STONE_MATERIAL_ID,
 
-  name: 'Linh Thạch',
+  name: 'Hạ phẩm Linh Thạch',
 
   category: 'spirit_stone',
 
@@ -23,4 +27,35 @@ export const SPIRIT_STONE_MATERIAL: Material = {
   // — chi phí Đột Phá lên tới hàng tỷ. undefined với material khác =
   // trần chung.
   stackLimit: Number.MAX_SAFE_INTEGER,
+}
+
+export const SPIRIT_STONE_TRUNG_PHAM_MATERIAL: Material = {
+  ...SPIRIT_STONE_MATERIAL,
+  id: SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID,
+  name: 'Trung phẩm Linh Thạch',
+}
+
+export const SPIRIT_STONE_THUONG_PHAM_MATERIAL: Material = {
+  ...SPIRIT_STONE_MATERIAL,
+  id: SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID,
+  name: 'Thượng phẩm Linh Thạch',
+}
+
+export const SPIRIT_STONE_MATERIALS: readonly Material[] = [
+  SPIRIT_STONE_MATERIAL,
+  SPIRIT_STONE_TRUNG_PHAM_MATERIAL,
+  SPIRIT_STONE_THUONG_PHAM_MATERIAL,
+]
+
+export function getSpiritStoneMaterialIdForRealmTier(tier: number): string {
+  if (tier >= 7) return SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID
+  if (tier >= 4) return SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID
+  return SPIRIT_STONE_MATERIAL_ID
+}
+
+/** Mỗi 30 cấp Cường Hóa chuyển sang một phẩm Linh Thạch cao hơn. */
+export function getSpiritStoneMaterialIdForEnhanceLevel(level: number): string {
+  if (level >= 60) return SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID
+  if (level >= 30) return SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID
+  return SPIRIT_STONE_MATERIAL_ID
 }

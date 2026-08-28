@@ -36,7 +36,7 @@ describe('startTribulation — reset session loot của trận Stage trước', 
         maxHp: 1, attack: 0, attackSpeed: 1, movementSpeed: 0,
         attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0,
       },
-      rewards: { techniqueInsight: 5, cultivation: 0, spiritStone: 7 },
+      rewards: { techniqueInsight: 5, spiritStone: 7 },
     })
 
     gameManager.startBattleWithPlayer(player, createBaseStats(), enemy)

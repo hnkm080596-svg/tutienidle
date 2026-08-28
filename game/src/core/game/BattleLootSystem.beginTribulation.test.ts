@@ -45,13 +45,16 @@ function createStubDeps() {
     enemySystem: {
       // Enemy có rewards thật — nếu receiver còn thì give() PHẢI được gọi.
       get: () => ({
-        rewards: { techniqueInsight: 5, cultivation: 3, spiritStone: 7 },
+        rewards: { techniqueInsight: 5, spiritStone: 7 },
       }) as unknown as Enemy,
       despawn,
     },
     rewardSystem: { give },
-    stageManager: {},
+    stageManager: { get: () => undefined },
     stageTemplates: {},
+    questSystem: { onEnemyDefeated: vi.fn() },
+    questRegistry: {},
+    questManager: {},
   } as unknown as BattleLootSystemDeps
 
   return { deps, give, despawn }

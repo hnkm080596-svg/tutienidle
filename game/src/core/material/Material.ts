@@ -30,7 +30,7 @@ export interface Material {
   // "Niên đại" (tài liệu mục 1-2, 6-7) — trục sức mạnh của nguyên liệu
   // tự nhiên (Linh Thảo/Linh Mộc/Linh Thiết), KHÔNG phải 1 loại
   // Quality riêng — quyết định TRẦN phẩm cấp tối đa mà 1 công thức
-  // dùng nguyên liệu này có thể đạt tới (xem data/recipe/recipes.ts).
+  // dùng nguyên liệu này có thể đạt tới (xem data/alchemy/alchemyRecipes.ts).
   // Không khai = không áp dụng trục niên đại (material Yêu Tài/phế
   // liệu/currency đặc thù khác).
   years?: number

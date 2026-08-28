@@ -8,6 +8,7 @@ export type BuildingLevelEffect =
   | { kind: 'craft_time_reduction'; percent: number }
   | { kind: 'craft_quality_bonus'; percent: number }
   | { kind: 'concurrent_job_slots'; amount: number }
+  | { kind: 'equipment_cost_discount'; percent: number }
 
 export interface BuildingLevelDef {
   level: number
@@ -24,4 +25,6 @@ export interface CraftModifiers {
   qualityBonusPercent: number
 
   concurrentJobSlots: number
+
+  equipmentCostDiscountPercent: number
 }

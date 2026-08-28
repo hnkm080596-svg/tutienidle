@@ -1,6 +1,7 @@
 import { useGameManager, useStateVersion } from './useGameState'
 import { usePlayerStore } from '../stores/player'
-import { useNotificationStore } from '../stores/notification'
+import { useActionFeedbackStore } from '../stores/actionFeedback'
+import { actionFailureLabel } from '../core/presentation/ActionAvailability'
 import type { EquipmentSlot } from '../core/equipment/EquipmentTypes'
 
 /**
@@ -20,7 +21,7 @@ export function useEquipmentActions() {
 
   const { bumpState } = useStateVersion()
 
-  const notification = useNotificationStore()
+  const feedback = useActionFeedbackStore()
 
   function syncEquipmentModifiers() {
     player.setEquipmentModifiers(gameManager.getEquipmentModifiers())
@@ -36,11 +37,13 @@ export function useEquipmentActions() {
     return ok
   }
 
+  // Workstream A §3.3 — thất bại KHÔNG mutate state, thành công/thất bại
+  // đều báo qua "Nhật ký thao tác" với lý do đã dịch tiếng Việt cụ thể.
   function withSyncAndResult(result: { ok: boolean; reason?: string }, label: string): boolean {
     if (withSync(result.ok)) {
-      notification.push('upgrade', `${label} thành công`)
+      feedback.success(`${label} thành công`)
     } else {
-      notification.push('error', `${label} thất bại (${result.reason ?? 'unknown'})`)
+      feedback.error(`Không thể ${label}: ${actionFailureLabel(result.reason)}`)
     }
 
     return result.ok
@@ -55,17 +58,14 @@ export function useEquipmentActions() {
           ? gameManager.materialRegistry.get(reward.materialId)
           : undefined
 
-        notification.push(
-          'upgrade',
-          `Hóa Luyện: ${material?.name ?? reward.materialId} ×${reward.amount}`,
-        )
+        feedback.success(`Hóa Luyện: ${material?.name ?? 'Nguyên liệu không xác định'} ×${reward.amount}`)
       }
 
       syncEquipmentModifiers()
 
       bumpState()
     } else if (!result.ok) {
-      notification.push('error', `Hóa Luyện thất bại (${result.reason ?? 'unknown'})`)
+      feedback.error(`Không thể Hóa Luyện: ${actionFailureLabel(result.reason)}`)
     }
 
     return result.ok
@@ -76,11 +76,9 @@ export function useEquipmentActions() {
 
     unequip: (instanceId: string) => withSync(gameManager.unequipItem(instanceId)),
 
-  // Cường Hóa gắn SLOT (slot-level rework) — slot trống vẫn nâng được.
-  enhance: (slot: EquipmentSlot) =>
-    withSync(gameManager.enhanceSlot(slot, player.$state))
-        ? (notification.push('upgrade', 'Cường Hóa thành công'), true)
-        : (notification.push('error', 'Cường Hóa thất bại'), false),
+    // Cường Hóa gắn SLOT (slot-level rework) — slot trống vẫn nâng được.
+    enhance: (slot: EquipmentSlot) =>
+      withSyncAndResult(gameManager.enhanceSlot(slot, player.$state), 'Cường Hóa'),
 
     /** Tẩy Luyện — oreMaterialId phải cùng cảnh giới item (§7.3). */
     wash: (instanceId: string, oreMaterialId: string) =>

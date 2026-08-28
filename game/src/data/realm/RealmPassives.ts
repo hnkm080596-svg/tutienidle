@@ -40,10 +40,10 @@ function buildNhapDaoModifiers(player: PlayerData): StatModifier[] {
 }
 
 // Kiến Cơ (mục XII-XIV tài liệu) — Luyện Khí -> Trúc Cơ, khuếch đại
-// Main Stat theo "Loại Trúc Cơ" (Căn Cơ ẨN có sẵn, xem
-// core/breakthrough/FoundationType.ts's highestFoundationAchieved) —
-// TÁCH BIỆT hoàn toàn với breakthroughGrade/Realm Pressure (mục XIV —
-// "2 hệ thống không chồng chéo"). Số liệu first pass, tinh chỉnh sau.
+// Main Stat theo "Loại Trúc Cơ". Thiết kế 2026-08-27: mốc 12 = Nhân Đạo
+// baseline; 4 mức Kiến Cơ ẩn khác sẽ được thiết kế sau. TÁCH BIỆT hoàn
+// toàn với breakthroughGrade/Realm Pressure (mục XIV — "2 hệ thống không
+// chồng chéo"). Số liệu first pass, tinh chỉnh sau.
 const KIEN_CO_MAIN_STAT_PERCENT: Record<FoundationType, number> = {
   human: 0,
   earth: 0.05,

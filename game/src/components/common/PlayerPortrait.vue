@@ -3,7 +3,7 @@
 // KHÔNG còn qua AtlasSprite nhiều frame:
 // - variant 'cultivate' → player-mortal-cultivate-v1.png, giữa Động Phủ
 //   (trigger command wheel), CÓ chuyển động CSS khi animated.
-// - variant 'portrait'  → player-mortal-v1.png, chân dung tab Nhân Vật,
+// - variant 'portrait'  → player-mortal-ink-sword-concept-v2.png, tab Nhân Vật,
 //   LUÔN ảnh tĩnh (không bao giờ áp animation tu luyện).
 //
 // Chuyển động chỉ-Presentation (cultivate + animated):
@@ -31,7 +31,7 @@ const props = withDefaults(defineProps<PlayerPortraitProps>(), {
 const IMAGE_URLS = {
   cultivate: '/assets/characters/player/mortal/player-mortal-cultivate-v1.png',
 
-  portrait: '/assets/characters/player/mortal/player-mortal-v1.png',
+  portrait: '/assets/characters/player/mortal/player-mortal-ink-sword-concept-v2.png',
 } as const
 
 const imageUrl = IMAGE_URLS[props.variant]

@@ -1,7 +1,11 @@
 import type { TalentDefinition } from '@/core/talent/Talent'
 
 export const CHARACTER_CREATION_ATTRIBUTE_POINTS = 5
-export const CHARACTER_CREATION_TALENT_COUNT = 3
+// Thiên Phú là quyết định chọn HƯỚNG ĐẠO duy nhất của nhân vật
+// (talent-direction-choice-plan.md): mỗi nhân vật chọn đúng 1 thiên phú
+// từ lượt roll 9. Save cũ còn 3 thiên phú vẫn chạy — mọi effect helper
+// lặp mảng và bỏ qua id lạ, không migration (development phase).
+export const CHARACTER_CREATION_TALENT_COUNT = 1
 export const CHARACTER_CREATION_ROLL_SIZE = 9
 
 export type CharacterAttribute = 'strength' | 'dexterity' | 'intelligence' | 'attunement' | 'vitality'
@@ -42,7 +46,7 @@ export function validateCharacterCreationDraft(
     || uniqueTalentIds.size !== CHARACTER_CREATION_TALENT_COUNT
     || draft.talentIds.some(id => !availableTalentIds.has(id))
   ) {
-    return { ok: false, code: 'invalid_talents', message: 'Phải chọn đúng ba Thiên Phú thuộc lượt roll hiện tại.' }
+    return { ok: false, code: 'invalid_talents', message: 'Phải chọn đúng một Thiên Phú thuộc lượt roll hiện tại.' }
   }
 
   const values = Object.values(draft.attributes)

@@ -15,8 +15,8 @@ import { isBattleInProgress } from '../core/battle/BattleTypes'
 // khiến DongFuScene hiện lại che canvas dù CombatScene chưa thoát. Home
 // CHỈ được hiện khi combatSceneDismissed === true (người chơi đã bấm
 // "Tiếp Tục"/"Về Động Phủ") hoặc chưa từng vào combat (combatOrigin
-// null). Không dùng ui.isPaused / scene.pause() để giữ màn — core tự
-// ngừng combat vì battle không còn state fighting.
+// null). Không dùng scene.pause() để giữ màn — core tự ngừng combat vì
+// battle không còn state fighting.
 export function useStageActive() {
   const gameManager = useGameManager()
   const ui = useUiStore()

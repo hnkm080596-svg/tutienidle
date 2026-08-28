@@ -30,7 +30,7 @@ describe('GameManager continuous repeat stage', () => {
         criticalDamage: 1.5,
         armor: 0,
       },
-      rewards: { techniqueInsight: 0, cultivation: 0, spiritStone: 1 },
+      rewards: { techniqueInsight: 0, spiritStone: 1 },
     })
     const stage: Stage = {
       id: 'repeat_stage',
@@ -56,7 +56,7 @@ describe('GameManager continuous repeat stage', () => {
     expect(gameManager.startStage(player, stats, stage, true)).toBe(true)
 
     // Plan Workstream F — Linh Thạch credit vào MaterialBag.
-    const spiritStoneBalance = () => gameManager.materialBag.getAmount('spirit_stone')
+    const spiritStoneBalance = () => gameManager.materialBag.getAmount(SPIRIT_STONE_MATERIAL.id)
 
     for (let index = 0; index < 300 && spiritStoneBalance() < 2; index++) {
       gameManager.update(0.05)
@@ -74,7 +74,7 @@ describe('GameManager continuous repeat stage', () => {
     const enemy = defineEnemy({
       id: 'countdown_dummy', name: 'Countdown Dummy', level: 1, realmId: 'mortal', lane: 'ground',
       statsInput: { maxHp: 10, attack: 0, attackSpeed: 1, movementSpeed: 1, attackRangeRanks: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
-      rewards: { techniqueInsight: 0, cultivation: 0, spiritStone: 0 },
+      rewards: { techniqueInsight: 0, spiritStone: 0 },
     })
     const stage: Stage = {
       id: 'countdown_stage', name: 'Countdown Stage', description: '', floor: 1,

@@ -1,20 +1,15 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 import type { AlchemyRecipe } from '@/core/alchemy/AlchemySystem'
+import { PROFESSION_GRADE_NAMES, getProfessionGradeForRealm } from '@/core/profession/ProfessionGrade'
 
 // Luyện Đan (2026-08-25, resource-professions-rework plan §8/§9.3) —
 // thay RecipeCraftingView: mỗi đan phương nhận ĐÚNG MỘT Linh Thảo
 // riêng; chọn biến thể niên đại đang có trong Túi; preview "Chắc chắn
 // N viên, X% thêm 1 viên" (không dùng cụm ">100%").
-const REALM_LABELS: Record<string, string> = {
-  mortal: 'Phàm Nhân',
-  qi_refining: 'Luyện Khí',
-  foundation_establishment: 'Trúc Cơ',
-}
-
 const REASON_LABELS: Record<string, string> = {
   not_found: 'Không tìm thấy đan phương',
   room_not_built: 'Cần xây Đan Phòng trước',
@@ -50,21 +45,12 @@ onUnmounted(() => {
 const recipes = computed<AlchemyRecipe[]>(() => {
   stateVersion.value
 
-  return gameManager.getAlchemyRecipes()
+  return gameManager.getAlchemyRecipes().filter((recipe) => recipe.realmId === player.realmId)
 })
 
-const grouped = computed(() => {
-  const groups = new Map<string, AlchemyRecipe[]>()
-
-  for (const recipe of recipes.value) {
-    const list = groups.get(recipe.realmId) ?? []
-
-    list.push(recipe)
-
-    groups.set(recipe.realmId, list)
-  }
-
-  return Array.from(groups.entries())
+const currentGradeLabel = computed(() => {
+  const grade = getProfessionGradeForRealm(player.realmId)
+  return grade ? PROFESSION_GRADE_NAMES[grade] : 'Chưa xác định'
 })
 
 const selectedRecipeId = ref<string | null>(null)
@@ -87,6 +73,13 @@ function selectRecipe(recipe: AlchemyRecipe) {
   selectedHerbId.value =
     affordable?.materialId ?? recipe.herbVariants[recipe.herbVariants.length - 1]?.materialId ?? null
 }
+
+watch(recipes, (available) => {
+  if (!available.some((recipe) => recipe.id === selectedRecipeId.value)) {
+    const first = available[0]
+    if (first) selectRecipe(first)
+  }
+}, { immediate: true })
 
 interface VariantRow {
   materialId: string
@@ -215,11 +208,18 @@ function cancelJob(jobId: string) {
 <template>
   <div class="alchemy-view">
     <div class="alchemy-view__recipes">
-      <section v-for="[realmId, realmRecipes] in grouped" :key="realmId" class="alchemy-group">
-        <h4 class="alchemy-group__title">{{ REALM_LABELS[realmId] ?? realmId }}</h4>
+      <div class="alchemy-view__furnace" aria-hidden="true">
+        <img :src="'/assets/buildings/dong-fu/pill_room.png'" alt="" />
+        <span class="alchemy-view__furnace-core">丹</span>
+      </div>
+
+      <section class="alchemy-group">
+        <p class="alchemy-group__eyebrow">Đan lô hiện tại</p>
+        <h4 class="alchemy-group__title">{{ currentGradeLabel }}</h4>
+        <small>8 đan phương · phẩm tự khóa theo cảnh giới</small>
 
         <button
-          v-for="recipe in realmRecipes"
+          v-for="(recipe, index) in recipes"
           :key="recipe.id"
           type="button"
           class="alchemy-row"
@@ -227,6 +227,7 @@ function cancelJob(jobId: string) {
           @click="selectRecipe(recipe)"
         >
           <span class="alchemy-row__pill">
+            <b>{{ String(index + 1).padStart(2, '0') }}</b>
             {{
               gameManager.pillRegistry.has(recipe.pillId)
                 ? gameManager.pillRegistry.get(recipe.pillId).name
@@ -234,12 +235,17 @@ function cancelJob(jobId: string) {
             }}
           </span>
 
-          <span class="alchemy-row__herb">{{ recipe.herbAmount }} thảo</span>
+          <span class="alchemy-row__herb">{{ recipe.herbAmount }} chủ dược</span>
         </button>
       </section>
     </div>
 
     <div v-if="selectedRecipe" class="alchemy-detail">
+      <header class="alchemy-detail__header">
+        <span>ĐAN PHƯƠNG</span>
+        <h3>{{ gameManager.pillRegistry.get(selectedRecipe.pillId).name }}</h3>
+        <small>{{ currentGradeLabel }} · Đan lô cấp {{ gameManager.getAlchemyRoomLevel() || 0 }}</small>
+      </header>
       <!-- §9.3: preview thời gian + tỷ lệ tổng + guaranteed + chance cộng -->
       <section v-if="preview" class="alchemy-detail__block">
         <h4>Xem trước lần luyện</h4>
@@ -319,28 +325,69 @@ function cancelJob(jobId: string) {
 
 <style scoped>
 .alchemy-view {
+  position: relative;
   display: flex;
   height: 100%;
   min-height: 0;
   color: var(--text-primary);
   font-family: var(--font-body);
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 23% 28%, rgba(239, 119, 46, .13), transparent 30%),
+    linear-gradient(135deg, rgba(34, 19, 17, .96), rgba(10, 14, 18, .98));
 }
 
 .alchemy-view__recipes {
-  flex: 0 0 42%;
+  flex: 0 0 39%;
   overflow-y: auto;
-  padding: 10px;
-  border-right: 1px solid var(--ink-line);
+  padding: 14px;
+  border-right: 1px solid rgba(217, 154, 74, .3);
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
+.alchemy-view__furnace {
+  position: relative;
+  min-height: 150px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(228, 147, 69, .35);
+  border-radius: var(--radius-md);
+  background: radial-gradient(circle at 50% 75%, rgba(255, 103, 31, .3), transparent 45%), #120e0d;
+  box-shadow: inset 0 0 35px rgba(0, 0, 0, .7);
+}
+
+.alchemy-view__furnace img {
+  width: 100%;
+  height: 155px;
+  object-fit: cover;
+  opacity: .7;
+  filter: sepia(.25) saturate(1.2) contrast(1.05);
+}
+
+.alchemy-view__furnace-core {
+  position: absolute;
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  color: #ffe2a4;
+  font: 700 1.55rem var(--font-display);
+  border: 1px solid rgba(255, 202, 115, .75);
+  border-radius: 50%;
+  background: rgba(93, 28, 12, .88);
+  box-shadow: 0 0 22px rgba(255, 94, 31, .7), inset 0 0 12px rgba(255, 204, 107, .25);
+}
+
+.alchemy-group__eyebrow { margin: 0; color: #d58a48; font-size: var(--text-xs); letter-spacing: .18em; }
+.alchemy-group > small { display: block; margin-bottom: 9px; color: var(--text-muted); }
+
 .alchemy-group__title {
-  margin: 0;
-  font-size: var(--text-xs);
-  text-transform: uppercase;
-  color: var(--gold-500);
+  margin: 2px 0;
+  color: #f0c47a;
+  font: 700 1.05rem var(--font-display);
 }
 
 .alchemy-row {
@@ -350,9 +397,9 @@ function cancelJob(jobId: string) {
   align-items: center;
   gap: 6px;
   margin-bottom: 4px;
-  padding: 6px;
-  background: var(--ink-800);
-  border: 1px solid var(--ink-line-soft);
+  padding: 9px 10px;
+  background: linear-gradient(90deg, rgba(75, 43, 31, .72), rgba(27, 25, 25, .82));
+  border: 1px solid rgba(169, 111, 66, .25);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
   cursor: pointer;
@@ -360,8 +407,12 @@ function cancelJob(jobId: string) {
 }
 
 .alchemy-row.is-selected {
-  border-color: var(--gold-500);
+  border-color: #e0a45b;
+  box-shadow: inset 3px 0 #e0a45b, 0 0 14px rgba(214, 114, 45, .12);
 }
+
+.alchemy-row__pill { display: flex; align-items: center; gap: 8px; }
+.alchemy-row__pill b { color: #a9693f; font-size: var(--text-xs); }
 
 .alchemy-row__herb {
   font-size: var(--text-xs);
@@ -372,17 +423,27 @@ function cancelJob(jobId: string) {
   flex: 1;
   min-width: 0;
   overflow-y: auto;
-  padding: 12px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
+.alchemy-detail__header {
+  padding: 14px 16px;
+  border: 1px solid rgba(220, 162, 83, .28);
+  border-radius: var(--radius-md);
+  background: linear-gradient(110deg, rgba(104, 48, 27, .35), rgba(18, 22, 24, .8));
+}
+.alchemy-detail__header span { color: #c77b42; font-size: var(--text-xs); letter-spacing: .18em; }
+.alchemy-detail__header h3 { margin: 3px 0; color: #f3cf8b; font: 700 1.35rem var(--font-display); }
+.alchemy-detail__header small { color: var(--text-secondary); }
+
 .alchemy-detail__block h4 {
   margin: 0 0 6px;
   font-size: var(--text-xs);
   text-transform: uppercase;
-  color: var(--gold-500);
+  color: #e1a65c;
 }
 
 .alchemy-detail__outcome {
@@ -438,13 +499,19 @@ function cancelJob(jobId: string) {
 .alchemy-detail__action {
   width: 100%;
   padding: 8px;
-  background: var(--gold-500);
+  background: linear-gradient(180deg, #e3aa61, #a96132);
   color: var(--gold-ink);
   border: none;
   border-radius: var(--radius-sm);
   font-weight: 700;
   cursor: pointer;
   font-family: var(--font-body);
+}
+
+@media (max-width: 760px) {
+  .alchemy-view { flex-direction: column; overflow-y: auto; }
+  .alchemy-view__recipes { flex-basis: auto; max-height: none; border-right: 0; border-bottom: 1px solid rgba(217, 154, 74, .3); }
+  .alchemy-view__furnace { min-height: 110px; }
 }
 
 .alchemy-job {

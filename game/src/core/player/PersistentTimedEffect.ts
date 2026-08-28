@@ -19,6 +19,8 @@ export interface PersistentTimedEffect {
    */
   effectGroup?: string
 
+  durationStackable?: boolean
+
   appliedAtMs: number
 
   expiresAtMs: number

@@ -61,7 +61,7 @@ describe('GameManager — spawnedLane assignment (top-down 5-spawnedLane, 2026-0
       // minh field authored này không còn quyết định vị trí hiển thị.
       lane: 'air',
       statsInput: MINIMAL_STATS_INPUT,
-      rewards: { techniqueInsight: 0, cultivation: 0, spiritStone: 0 },
+      rewards: { techniqueInsight: 0, spiritStone: 0 },
     })
 
     for (let i = 0; i < 30; i++) {
@@ -84,7 +84,7 @@ describe('GameManager — spawnedLane assignment (top-down 5-spawnedLane, 2026-0
       realmId: 'qi_refining',
       lane: 'ground',
       statsInput: MINIMAL_STATS_INPUT,
-      rewards: { techniqueInsight: 0, cultivation: 0, spiritStone: 0 },
+      rewards: { techniqueInsight: 0, spiritStone: 0 },
     })
 
     const seenLanes = new Set<number>()

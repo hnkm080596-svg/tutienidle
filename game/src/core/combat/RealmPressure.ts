@@ -11,10 +11,15 @@ import { clamp } from '../math/clamp'
 // nhân đôi).
 const MAX_REALM_GAP = 5
 
-// Bậc Nhập Đạo (1-6, xem core/player/Player.ts's breakthroughGrade)
-// giảm dần Pressure còn lại: grade1 = 100% (không giảm), grade6 = 0%
-// (miễn nhiễm hoàn toàn), đúng bảng mục VIII tài liệu.
+// Bậc Nhập Đạo/Kiến Cơ (1-6, xem core/player/Player.ts's
+// breakthroughGrade) giảm dần Pressure còn lại: grade1 = 100% (không
+// giảm), grade6 = 0% (miễn nhiễm hoàn toàn), đúng bảng mục VIII tài
+// liệu. B2 (2026-08-27): Realm Pressure là tuyệt đối theo cảnh giới;
+// căn cơ là sức kháng của BÊN YẾU THẾ. gap > 0 đọc grade của target,
+// gap < 0 đọc grade của source. Enemy không có khái niệm căn cơ ->
+// grade 1 (chịu/toàn bộ pressure, không miễn nhiễm vô căn cứ).
 const PRESSURE_REMAINING_PER_GRADE_STEP = 0.2
+const DEFAULT_NO_FOUNDATION_GRADE = 1
 
 // Ở gap = 1: bên cao gây ×2.00 (grade1) -> ×1.00 (grade6); bên thấp
 // gây ×0.50 (grade1) -> ×1.00 (grade6) — đúng bảng mục VII/VIII. Chưa
@@ -28,12 +33,10 @@ const LOW_TO_HIGH_PRESSURE_PER_GAP = 0.5
 // gap lớn (gap=5, grade1: 1 - 5*0.5 = -1.5 nếu không chặn).
 const LOW_TO_HIGH_MULTIPLIER_FLOOR = 0.1
 
-function resolveBreakthroughGrade(source: CombatEntity, target: CombatEntity): number {
-  // CHỈ player có breakthroughGrade thật (enemy luôn undefined) — 2
-  // bên combat không thể CÙNG là player nên đọc bên nào có giá trị là
-  // đủ. Không có player nào ở đây (chưa xảy ra trong game hiện tại) ->
-  // mặc định 6 (không mitigation) thay vì phạt vô căn cứ.
-  return source.breakthroughGrade ?? target.breakthroughGrade ?? 6
+function resolveWeakerSideGrade(source: CombatEntity, target: CombatEntity, gap: number): number {
+  const weakerSide = gap > 0 ? target : source
+
+  return clamp(weakerSide.breakthroughGrade ?? DEFAULT_NO_FOUNDATION_GRADE, 1, 6)
 }
 
 /**
@@ -49,7 +52,7 @@ export function getRealmPressureMultiplier(source: CombatEntity, target: CombatE
     return 1
   }
 
-  const grade = clamp(resolveBreakthroughGrade(source, target), 1, 6)
+  const grade = resolveWeakerSideGrade(source, target, gap)
 
   const pressureRemaining = clamp(1 - (grade - 1) * PRESSURE_REMAINING_PER_GRADE_STEP, 0, 1)
 

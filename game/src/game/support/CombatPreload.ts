@@ -19,7 +19,8 @@ import { peekThanhVanVariant, thanhVanLoadList } from './ThanhVanArt'
 // the scenes intentionally use separate texture keys and presentations.
 export const PLAYER_TEXTURE_KEY = 'player-mortal'
 
-export const PLAYER_TEXTURE_URL = 'assets/characters/player/mortal/player-mortal-v1.png'
+export const PLAYER_TEXTURE_URL =
+  'assets/characters/player/mortal/player-mortal-ink-sword-concept-v2.png'
 
 // Mortal enemy art batch (mortal-enemy-art-batch-plan.md) — 20 PNG cho
 // 10 loài + bản ferocious; id ngoài batch fallback Rectangle.
@@ -50,7 +51,7 @@ const ENEMY_TEMPLATE_IDS = [
  * Queue mọi texture combat cần — DEDUPE THEO TEXTURE KEY trong chính
  * một lần queue (P2 cleanup, dong-fu plan): `textures.exists()` không
  * nhận biết key vừa được queue trong CÙNG lượt gọi, và các Player
- * profile dùng trùng key (kiem_tu tái dùng 'player-mortal-v1',
+ * profile dùng trùng key (kiem_tu tái dùng Mortal combat art,
  * cultivate chung 'player-mortal-cultivate-v1') nên guard exists một
  * mình là chưa đủ. Một Set cục bộ chặn queue trùng; guard
  * textures.exists() vẫn giữ cho các lần gọi sau khi load hoàn tất.

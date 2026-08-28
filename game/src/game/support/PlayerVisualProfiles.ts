@@ -54,7 +54,7 @@ export interface PlayerVisualProfile {
   cultivateBodyAnchors?: Record<PlayerBodyAnchorId, NormalizedBodyAnchor>
 }
 
-const MORTAL_COMBAT_KEY = 'player-mortal-v1'
+const MORTAL_COMBAT_KEY = 'player-mortal-ink-sword-concept-v2'
 const MORTAL_CULTIVATE_KEY = 'player-mortal-cultivate-v1'
 const PHAP_TU_COMBAT_KEY = 'player-phap-tu-v1'
 
@@ -89,15 +89,19 @@ export const PLAYER_VISUAL_PROFILES: Record<PlayerVisualProfileId, PlayerVisualP
 
     combatTextureKey: MORTAL_COMBAT_KEY,
     combatTextureUrl: `/assets/characters/player/mortal/${MORTAL_COMBAT_KEY}.png`,
-    combatSourceSize: { w: 1244, h: 1264 },
+    combatSourceSize: { w: 1312, h: 1199 },
 
     cultivateTextureKey: MORTAL_CULTIVATE_KEY,
     cultivateTextureUrl: `/assets/characters/player/mortal/${MORTAL_CULTIVATE_KEY}.png`,
     cultivateSourceSize: { w: 1233, h: 1275 },
 
     bodyAnchors: standingAnchors({
-      // Art Phàm Nhân v1: tay phải cầm kiếm hơi thấp hơn chuẩn.
-      castHand: { x: 0.68, y: 0.5 },
+      // Art thủy mặc cầm kiếm v2: tay kiếm nằm bên trái texture.
+      head: { x: 0.55, y: 0.25 },
+      chest: { x: 0.55, y: 0.46 },
+      castHand: { x: 0.32, y: 0.62 },
+      offHand: { x: 0.78, y: 0.47 },
+      feet: { x: 0.55, y: 0.96 },
     }),
 
     cultivateBodyAnchors: lotusAnchors(),
@@ -131,13 +135,19 @@ export const PLAYER_VISUAL_PROFILES: Record<PlayerVisualProfileId, PlayerVisualP
     // Chưa có art riêng — toàn bộ fallback Phàm Nhân (plan §2).
     combatTextureKey: MORTAL_COMBAT_KEY,
     combatTextureUrl: `/assets/characters/player/mortal/${MORTAL_COMBAT_KEY}.png`,
-    combatSourceSize: { w: 1244, h: 1264 },
+    combatSourceSize: { w: 1312, h: 1199 },
 
     cultivateTextureKey: MORTAL_CULTIVATE_KEY,
     cultivateTextureUrl: `/assets/characters/player/mortal/${MORTAL_CULTIVATE_KEY}.png`,
     cultivateSourceSize: { w: 1233, h: 1275 },
 
-    bodyAnchors: standingAnchors(),
+    bodyAnchors: standingAnchors({
+      head: { x: 0.55, y: 0.25 },
+      chest: { x: 0.55, y: 0.46 },
+      castHand: { x: 0.32, y: 0.62 },
+      offHand: { x: 0.78, y: 0.47 },
+      feet: { x: 0.55, y: 0.96 },
+    }),
 
     cultivateBodyAnchors: lotusAnchors(),
   },

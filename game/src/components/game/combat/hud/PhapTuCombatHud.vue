@@ -3,9 +3,12 @@
 // trung tâm build HUD, LUÔN dựng đủ 5 vị trí (trống/khóa hiện rõ ràng
 // qua CombatSkillSlot/SlotView, không ẩn đi).
 import CombatSkillSlot from './CombatSkillSlot.vue'
+import ArtifactCombatSlot from './ArtifactCombatSlot.vue'
 import { useCombatSkillPresentation } from '@/composables/useCombatSkillPresentation'
+import { useArtifactCombatPresentation } from '@/composables/useArtifactCombatPresentation'
 
 const { loadout, skillFor } = useCombatSkillPresentation()
+const { presentation: artifactPresentation } = useArtifactCombatPresentation()
 </script>
 
 <template>
@@ -28,6 +31,8 @@ const { loadout, skillFor } = useCombatSkillPresentation()
       :is-unreleased="entry.state === 'unreleased'"
       :is-locked="entry.state === 'locked'"
     />
+
+    <ArtifactCombatSlot :state="artifactPresentation" />
   </div>
 </template>
 

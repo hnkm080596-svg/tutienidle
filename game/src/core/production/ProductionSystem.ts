@@ -6,7 +6,7 @@
 
 import type { MaterialBag } from '../material/MaterialBag'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
-import { SPIRIT_STONE_MATERIAL_ID } from '../material/SpiritStoneMaterial'
+import { getSpiritStoneMaterialIdForRealmTier } from '../material/SpiritStoneMaterial'
 import type {
   ForestRewardDefinition,
   GrottoHerbDefinition,
@@ -39,6 +39,9 @@ export interface ProductionSettlementEvent {
   materialId: string
 
   amount: number
+
+  /** Lượng tràn stack bị mất (túi đầy) — 0/undefined nếu không tràn. */
+  overflow?: number
 }
 
 export interface ResolvedProductionReward {
@@ -70,16 +73,40 @@ function nextCycleId(siteId: string): string {
   return `cycle_${siteId}_${Date.now().toString(36)}_${cycleCounter}`
 }
 
+function buildCycle(
+  siteId: string,
+  collectionRealmId: string,
+  siteLevelAtStart: number,
+  baseSeconds: number,
+  nowMs: number,
+): ProductionCycle {
+  const seconds = computeCycleSeconds(baseSeconds, siteLevelAtStart)
+
+  return {
+    cycleId: nextCycleId(siteId),
+    siteId,
+    collectionRealmId,
+    siteLevelAtStart,
+    rewardTableVersion: REWARD_TABLE_VERSION,
+    rollSeed: Math.floor(Math.random() * 0x7fffffff),
+    startedAtMs: nowMs,
+    completesAtMs: nowMs + seconds * 1000,
+  }
+}
+
 export class ProductionSystem {
   private readonly deps: ProductionSystemDeps
 
   private readonly states = new Map<string, ProductionSiteState>()
+
+  private readonly siteDefinitionsById: Map<string, ProductionSiteDefinition>
 
   /** Settle events tích luỹ kể từ lần drain gần nhất (UI notification). */
   private pendingEvents: ProductionSettlementEvent[] = []
 
   constructor(deps: ProductionSystemDeps) {
     this.deps = deps
+    this.siteDefinitionsById = new Map(deps.sites.map((site) => [site.siteId, site]))
   }
 
   // =========================
@@ -91,7 +118,7 @@ export class ProductionSystem {
     let state = this.states.get(siteId)
 
     if (!state) {
-      state = { siteId, level: 1, autoRestart: false }
+      state = { siteId, level: 1, autoRestart: false, activeWorkerSlots: 0, workerCycles: [] }
 
       this.states.set(siteId, state)
     }
@@ -103,7 +130,11 @@ export class ProductionSystem {
     this.states.clear()
 
     for (const state of states) {
-      this.states.set(state.siteId, { ...state })
+      this.states.set(state.siteId, {
+        ...state,
+        activeWorkerSlots: state.activeWorkerSlots ?? 0,
+        workerCycles: state.workerCycles?.length ? [...state.workerCycles] : [],
+      })
     }
   }
 
@@ -116,7 +147,7 @@ export class ProductionSystem {
   }
 
   getSiteDefinition(siteId: string): ProductionSiteDefinition | undefined {
-    return this.deps.sites.find((site) => site.siteId === siteId)
+    return this.siteDefinitionsById.get(siteId)
   }
 
   getSiteDefinitions(): readonly ProductionSiteDefinition[] {
@@ -171,18 +202,7 @@ export class ProductionSystem {
       return false
     }
 
-    const seconds = computeCycleSeconds(baseSeconds, state.level)
-
-    state.activeCycle = {
-      cycleId: nextCycleId(siteId),
-      siteId,
-      collectionRealmId,
-      siteLevelAtStart: state.level,
-      rewardTableVersion: REWARD_TABLE_VERSION,
-      rollSeed: Math.floor(Math.random() * 0x7fffffff),
-      startedAtMs: nowMs,
-      completesAtMs: nowMs + seconds * 1000,
-    }
+    state.activeCycle = buildCycle(siteId, collectionRealmId, state.level, baseSeconds, nowMs)
 
     return true
   }
@@ -202,7 +222,7 @@ export class ProductionSystem {
    * chạy giữ nguyên levelAtStart. Plan Workstream F — Linh Thạch là
    * MATERIAL: check/trừ trực tiếp trên MaterialBag.
    */
-  upgradeSite(siteId: string, bag: MaterialBag): boolean {
+  upgradeSite(siteId: string, bag: MaterialBag, currentRealmTier?: number): boolean {
     const definition = this.getSiteDefinition(siteId)
 
     const state = this.states.get(siteId)
@@ -217,16 +237,20 @@ export class ProductionSystem {
       return false
     }
 
+    const targetLevel = state.level + 1
+    if (currentRealmTier !== undefined && currentRealmTier < targetLevel) return false
+    const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(targetLevel)
+
     if (
       !bag.has(cost.woodMaterialId, cost.woodAmount) ||
-      !bag.has(SPIRIT_STONE_MATERIAL_ID, cost.spiritStone)
+      !bag.has(spiritStoneId, cost.spiritStone)
     ) {
       return false
     }
 
     bag.remove(cost.woodMaterialId, cost.woodAmount)
 
-    bag.remove(SPIRIT_STONE_MATERIAL_ID, cost.spiritStone)
+    bag.remove(spiritStoneId, cost.spiritStone)
 
     state.level += 1
 
@@ -260,17 +284,63 @@ export class ProductionSystem {
           continue
         }
 
-        bag.add(registry.get(reward.materialId), reward.amount)
+        const overflow = bag.add(registry.get(reward.materialId), reward.amount)
 
         this.pendingEvents.push({
           siteId: cycle.siteId,
           materialId: reward.materialId,
           amount: reward.amount,
+          overflow: overflow > 0 ? overflow : undefined,
         })
       }
 
       if (state.autoRestart && this.canStart(cycle.siteId)) {
         this.startCycle(cycle.siteId, currentRealmId, cycle.completesAtMs)
+      }
+    }
+  }
+
+  /**
+   * Phân bổ pool worker theo round-robin và vận hành các cycle bổ sung.
+   * Slot đầu tiên vẫn là activeCycle thủ công để không đổi contract UI cũ.
+   */
+  tickWorkers(
+    nowMs: number,
+    bag: MaterialBag,
+    registry: MaterialRegistry,
+    currentRealmId: string,
+    capacity: number,
+  ): void {
+    const activeStates = [...this.states.values()].filter(state => state.autoRestart)
+    for (const state of this.states.values()) state.activeWorkerSlots = 0
+    if (activeStates.length === 0 || capacity <= 0) return
+
+    for (let index = 0; index < Math.floor(capacity); index++) {
+      activeStates[index % activeStates.length]!.activeWorkerSlots++
+    }
+
+    for (const state of activeStates) {
+      state.workerCycles ??= []
+      while (state.workerCycles.length < state.activeWorkerSlots) {
+        const definition = this.getSiteDefinition(state.siteId)
+        const baseSeconds = CYCLE_BASE_SECONDS_BY_REALM[currentRealmId]
+        if (!definition || !baseSeconds) break
+        state.workerCycles.push(buildCycle(state.siteId, currentRealmId, state.level, baseSeconds, nowMs))
+      }
+
+      const completed = state.workerCycles.filter(cycle => cycle.completesAtMs <= nowMs)
+      state.workerCycles = state.workerCycles.filter(cycle => cycle.completesAtMs > nowMs)
+      for (const cycle of completed) {
+        for (const reward of this.rollRewards(cycle)) {
+          if (!registry.has(reward.materialId) || reward.amount <= 0) continue
+          const overflow = bag.add(registry.get(reward.materialId), reward.amount)
+          this.pendingEvents.push({
+            siteId: cycle.siteId,
+            materialId: reward.materialId,
+            amount: reward.amount,
+            overflow: overflow > 0 ? overflow : undefined,
+          })
+        }
       }
     }
   }
@@ -335,12 +405,13 @@ export class ProductionSystem {
           continue
         }
 
-        bag.add(registry.get(reward.materialId), reward.amount)
+        const overflow = bag.add(registry.get(reward.materialId), reward.amount)
 
         this.pendingEvents.push({
           siteId: targetCycle.siteId,
           materialId: reward.materialId,
           amount: reward.amount,
+          overflow: overflow > 0 ? overflow : undefined,
         })
       }
 

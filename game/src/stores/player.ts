@@ -20,8 +20,10 @@ import { cloudSaveCoordinator } from '../services/cloudSave/CloudSaveServiceFact
 import { PLAYER_BASE_RANGE_RANKS } from '@/core/stats/StatBlock'
 import type { GameManager } from '@/core/game/GameManager'
 import { getRequiredCultivation, BASE_CULTIVATION_PER_SECOND } from '@/core/realm/realmSystem'
+import { getCultivationSpeedMultiplier, getInsightPerCultivation } from '@/core/talent/TalentEffects'
 import { calculateStats, type StatModifier } from '@/core/stats/StatCalculator'
 import { getSwordIntentModifiers } from '@/core/player/SwordIntentSystem'
+import { normalizeArtifactProgress } from '@/core/artifact/ArtifactProgression'
 
 export const usePlayerStore = defineStore('player', {
   state: (): PlayerData => createDefaultPlayer(),
@@ -53,17 +55,19 @@ export const usePlayerStore = defineStore('player', {
   },
 
   actions: {
-    // Pháp Tu Redesign (magicpath, 2026-08-18) — cultivationRate đã bị
-    // xoá khỏi Stats, tốc độ tu luyện giờ CỐ ĐỊNH
-    // BASE_CULTIVATION_PER_SECOND cho MỌI người chơi, không đọc
-    // finalStats/không nhận bonus nào nữa (tâm pháp/skill/buff/gear
-    // không còn đường nào rút ngắn tu luyện). Vẫn đồng bộ vào
-    // `cultivationPerSecond` — field này vẫn cần giữ vì đó là snapshot
-    // được LƯU vào save, dùng để tính tiến độ ngoại tuyến lúc load (xem
-    // player.load()). Trả về lượng tu vi THẬT vừa cộng được (sau khi
-    // đã chặn ở "required", xem addCultivation()).
+    // Tốc độ tu luyện nền = BASE_CULTIVATION_PER_SECOND, nhân với effect
+    // 'cultivation_speed' của thiên phú đã chọn (2026-08-27). Các nguồn
+    // buff/tâm pháp/trang bị vẫn KHÔNG có đường thay đổi tốc độ tu luyện.
+    // `cultivationPerSecond` là snapshot được LƯU vào save, dùng để tính
+    // tiến độ ngoại tuyến lúc load (xem player.load()). Trả về lượng tu
+    // vi THẬT vừa cộng được (sau khi đã chặn ở "required", xem
+    // addCultivation()).
     cultivate(deltaSeconds: number): number {
-      this.cultivationPerSecond = BASE_CULTIVATION_PER_SECOND
+      // Guard 0.01 (plan §6) — percent âm hợp lệ (Phàm Cốt −75% → 0.25×)
+      // nhưng không bao giờ về 0/âm.
+      this.cultivationPerSecond =
+        BASE_CULTIVATION_PER_SECOND *
+        Math.max(0.01, getCultivationSpeedMultiplier(this.selectedTalentIds))
 
       const before = this.cultivation
 
@@ -75,6 +79,22 @@ export const usePlayerStore = defineStore('player', {
       // KHÔNG theo `this.cultivation` (bị đột phá tiêu hao) mà theo
       // TỔNG đã từng tích được, xem core/player/SwordIntentSystem.ts.
       this.totalCultivationGained += gained
+
+      // Thiên phú Ngộ Đạo (talent-direction-choice-plan §6) — đổi tu vi
+      // tu luyện ONLINE lấy Cảm Ngộ Kỹ năng theo ngưỡng. Chưa đủ ngưỡng
+      // thì dồn accumulator sang lần sau. Chỉ online — offline là thiết
+      // kế riêng sau này.
+      const insightThreshold = getInsightPerCultivation(this.selectedTalentIds)
+
+      if (insightThreshold !== undefined && gained > 0) {
+        this.cultivationInsightAccumulator += gained
+
+        while (this.cultivationInsightAccumulator >= insightThreshold) {
+          this.cultivationInsightAccumulator -= insightThreshold
+          this.skillInsight += 1
+          this.totalSkillInsightGained += 1
+        }
+      }
 
       // Tâm Pháp có thanh kinh nghiệm riêng (2026-08-20) — cùng nguồn
       // "gained" nuôi Kiếm Ý ở trên, xem core/technique/TechniqueTier.ts's
@@ -107,9 +127,16 @@ export const usePlayerStore = defineStore('player', {
 
     // Modifier "tĩnh" từ equipment (xem ghi chú kiểu PlayerData).
     // Gọi ngay sau equip/unequip/enhance, không phải mỗi tick —
-    // khác setExternalModifiers ở trên.
+    // khác setExternalModifiers ở trên. player.modifiers là bucket
+    // DÙNG CHUNG cho nhiều nguồn tĩnh khác (realm passive, Luyện Thể,
+    // pill vĩnh viễn — phân biệt qua sourceType/id prefix), nên chỉ
+    // được thay THẾ phần sourceType 'equipment', không được gán đè cả
+    // mảng — gán đè từng xoá sạch mọi nguồn khác mỗi lần equip/reload.
     setEquipmentModifiers(modifiers: StatModifier[]) {
-      this.modifiers = modifiers
+      this.modifiers = [
+        ...this.modifiers.filter(modifier => modifier.sourceType !== 'equipment'),
+        ...modifiers,
+      ]
     },
 
     // true nếu MỚI đánh dấu (chưa từng unlock trước đó) — dùng để
@@ -194,6 +221,11 @@ export const usePlayerStore = defineStore('player', {
       // cultivation vượt ngưỡng, phải chặn lại ở đây vì Object.assign
       // gán thẳng, không đi qua addCultivation().
       this.cultivation = Math.min(this.cultivation, this.cultivationRequired)
+
+      // Bản Mệnh Pháp Bảo (doc §10.2) — sửa mọi invariant sai ngay sau
+      // blind Object.assign() ở trên: nghề không khớp, thiếu state dù
+      // đủ gate, grade/path sai enum, realm/level/EXP vượt trần.
+      normalizeArtifactProgress(this)
 
       return offline
     },

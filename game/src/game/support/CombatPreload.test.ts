@@ -3,9 +3,30 @@
 // biết key mới chỉ được queue, và các Player profile dùng trùng key
 // (kiem_tu = mortal combat key; cultivate key chung 3 profile).
 import { describe, expect, it } from 'vitest'
-import { queueCombatAssets } from './CombatPreload'
+import { PLAYER_TEXTURE_KEY, PLAYER_TEXTURE_URL, queueCombatAssets } from './CombatPreload'
 
 describe('CombatPreload.queueCombatAssets — dedupe theo texture key', () => {
+  it('queues the ink-sword v2 art for the Mortal fallback texture', () => {
+    const queued = new Map<string, string>()
+
+    const fakeScene = {
+      textures: { exists: () => false },
+
+      load: {
+        image(key: string, url: string) {
+          queued.set(key, url)
+        },
+      },
+    } as never
+
+    queueCombatAssets(fakeScene)
+
+    expect(PLAYER_TEXTURE_URL).toBe(
+      'assets/characters/player/mortal/player-mortal-ink-sword-concept-v2.png',
+    )
+    expect(queued.get(PLAYER_TEXTURE_KEY)).toBe(PLAYER_TEXTURE_URL)
+  })
+
   it('mỗi texture key chỉ được queue ĐÚNG MỘT lần trong cùng lượt gọi', () => {
     const queued: string[] = []
 

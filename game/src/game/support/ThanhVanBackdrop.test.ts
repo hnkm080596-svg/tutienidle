@@ -7,20 +7,26 @@
 import { describe, expect, it } from 'vitest'
 import { DEPTH_GROUND_GRID, DEPTH_THANH_VAN_TIME_GRADE } from './BattleLayers'
 import { attachThanhVanBackdrop } from './ThanhVanBackdrop'
-import { THANH_VAN_SEASONS, THANH_VAN_TIMES } from './ThanhVanArt'
+import { THANH_VAN_CANVAS, THANH_VAN_SEASONS, THANH_VAN_TIMES } from './ThanhVanArt'
 
 interface FakeImage {
   textureKey: string
 
   depth: number
 
+  displayWidth: number
+
+  displayHeight: number
+
+  y: number
+
   setOrigin(): this
 
   setDepth(depth: number): this
 
-  setDisplaySize(): this
+  setDisplaySize(width: number, height: number): this
 
-  setPosition(): this
+  setPosition(x: number, y: number): this
 }
 
 function createFakeScene() {
@@ -34,6 +40,12 @@ function createFakeScene() {
 
           depth: Number.NaN,
 
+          displayWidth: 0,
+
+          displayHeight: 0,
+
+          y: 0,
+
           setOrigin() {
             return image
           },
@@ -44,11 +56,16 @@ function createFakeScene() {
             return image
           },
 
-          setDisplaySize() {
+          setDisplaySize(width: number, height: number) {
+            image.displayWidth = width
+            image.displayHeight = height
+
             return image
           },
 
-          setPosition() {
+          setPosition(_x: number, y: number) {
+            image.y = y
+
             return image
           },
         }
@@ -94,7 +111,7 @@ describe('ThanhVanBackdrop — depth theo texture key', () => {
     const variant = { season: 'spring' as const, time: 'morning' as const }
     const { scene } = createFakeScene()
 
-    const handle = attachThanhVanBackdrop(scene as never, variant, 1600, 900)
+    const handle = attachThanhVanBackdrop(scene as never, variant, 1600, 900, 450)
 
     const byKey = handle.depthByKey()
 
@@ -125,7 +142,7 @@ describe('ThanhVanBackdrop — depth theo texture key', () => {
       for (const time of THANH_VAN_TIMES) {
         const { scene } = createFakeScene()
 
-        const handle = attachThanhVanBackdrop(scene as never, variant(season, time), 1600, 900)
+        const handle = attachThanhVanBackdrop(scene as never, variant(season, time), 1600, 900, 450)
 
         const byKey = handle.depthByKey()
 
@@ -160,13 +177,62 @@ describe('ThanhVanBackdrop — depth theo texture key', () => {
   it('grading overlay nằm trên mọi layer background và dưới grid', () => {
     const { scene } = createFakeScene()
 
-    const handle = attachThanhVanBackdrop(scene as never, { season: 'winter', time: 'night' }, 1600, 900)
+    const handle = attachThanhVanBackdrop(scene as never, { season: 'winter', time: 'night' }, 1600, 900, 450)
 
     const maxBackgroundDepth = Math.max(...[...handle.depthByKey().values()])
 
     expect(DEPTH_THANH_VAN_TIME_GRADE).toBeGreaterThan(maxBackgroundDepth)
 
     expect(DEPTH_THANH_VAN_TIME_GRADE).toBeLessThan(DEPTH_GROUND_GRID)
+  })
+})
+
+describe('ThanhVanBackdrop — neo horizonY (Workstream H, unit foot alignment)', () => {
+  const variant = { season: 'spring' as const, time: 'morning' as const }
+
+  it('scale ĐỀU theo bề rộng, không méo tỉ lệ khung thiết kế', () => {
+    const { scene, images } = createFakeScene()
+
+    attachThanhVanBackdrop(scene as never, variant, 1600, 900, 450)
+
+    const scale = 1600 / THANH_VAN_CANVAS.w
+
+    for (const image of images) {
+      expect(image.displayWidth).toBe(1600)
+      expect(image.displayHeight).toBeCloseTo(THANH_VAN_CANVAS.h * scale)
+    }
+  })
+
+  it('neo đường chân trời của art đúng vào horizonY thật ở màn thấp (800×600)', () => {
+    const { scene, images } = createFakeScene()
+
+    const horizonY = 180 // ví dụ: road lớn hơn scenery do PERSPECTIVE_MIN_ROAD_HEIGHT clamp
+
+    attachThanhVanBackdrop(scene as never, variant, 800, 600, horizonY)
+
+    const scale = 800 / THANH_VAN_CANVAS.w
+
+    for (const image of images) {
+      const designHorizonScreenY = image.y + THANH_VAN_CANVAS.h * 0.5 * scale
+      expect(designHorizonScreenY).toBeCloseTo(horizonY)
+    }
+  })
+
+  it('neo lại đúng horizonY MỚI sau khi redraw() (resize)', () => {
+    const { scene, images } = createFakeScene()
+
+    const handle = attachThanhVanBackdrop(scene as never, variant, 1280, 720, 300)
+
+    const nextHorizonY = 260
+
+    handle.redraw(1920, 1080, nextHorizonY)
+
+    const scale = 1920 / THANH_VAN_CANVAS.w
+
+    for (const image of images) {
+      const designHorizonScreenY = image.y + THANH_VAN_CANVAS.h * 0.5 * scale
+      expect(designHorizonScreenY).toBeCloseTo(nextHorizonY)
+    }
   })
 })
 

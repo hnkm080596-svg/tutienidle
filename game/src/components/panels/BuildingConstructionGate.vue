@@ -60,22 +60,6 @@ const canBuild = computed(() =>
   ),
 )
 
-const nextUpgradeCost = computed(() => {
-  const current = instance.value
-
-  if (!current) {
-    return null
-  }
-
-  return template.value.upgradeCost[current.level] ?? null
-})
-
-const canUpgrade = computed(() => {
-  const current = instance.value
-
-  return current !== undefined && current.level < template.value.maxLevel
-})
-
 function materialLabel(materialId: string): string {
   return gameManager.materialRegistry.has(materialId) ? gameManager.materialRegistry.get(materialId).name : materialId
 }
@@ -94,13 +78,6 @@ function build() {
   }
 }
 
-function upgrade() {
-  const current = instance.value
-
-  if (current && gameManager.upgradeBuilding(current.instanceId)) {
-    bumpState()
-  }
-}
 </script>
 
 <template>
@@ -121,25 +98,9 @@ function upgrade() {
       </button>
     </div>
 
-    <template v-else>
-      <div class="construction-gate__header">
-        <span class="construction-gate__level">{{ template.name }} · Lv.{{ instance.level }}/{{ template.maxLevel }}</span>
-
-        <button
-          v-if="canUpgrade"
-          type="button"
-          class="construction-gate__upgrade"
-          v-tooltip="nextUpgradeCost ? { title: 'Nâng Cấp', description: nextUpgradeCost.map(c => `${materialLabel(c.materialId)} x${formatNumber(c.amount)}`).join(', ') } : undefined"
-          @click="upgrade"
-        >
-          Nâng Cấp
-        </button>
-      </div>
-
-      <div class="construction-gate__content">
-        <slot />
-      </div>
-    </template>
+    <div v-else class="construction-gate__content">
+      <slot />
+    </div>
   </div>
 </template>
 
@@ -211,32 +172,6 @@ function upgrade() {
 .construction-gate__build:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-.construction-gate__header {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 10px;
-  border-bottom: 1px solid var(--ink-line-soft);
-  font-size: 0.78rem;
-  color: var(--text-secondary);
-}
-
-.construction-gate__upgrade {
-  padding: 4px 10px;
-  background: var(--ink-800);
-  color: var(--text-primary);
-  border: 1px solid var(--ink-line-soft);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: 0.75rem;
-}
-
-.construction-gate__upgrade:hover {
-  border-color: var(--gold-500);
-  color: var(--gold-500);
 }
 
 .construction-gate__content {

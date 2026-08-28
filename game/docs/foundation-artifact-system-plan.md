@@ -1,1315 +1,502 @@
-# Kế hoạch hệ thống Bản Mệnh Pháp Bảo — Trúc Cơ
+# Kế hoạch hệ thống Bản Mệnh Pháp Bảo — theo hiện trạng dự án
 
-## 1. Trạng thái tài liệu
+## 1. Trạng thái và phạm vi
 
-- Phiên bản: `v1.0-draft`.
-- Phạm vi: nội dung Trúc Cơ tầng 1–18.
-- Trạng thái: chờ validate trước khi triển khai.
-- Tên hiển thị: **Bản Mệnh Pháp Bảo**.
-- Tên kỹ thuật đề xuất: `artifact`.
-- Không dùng tên kỹ thuật `equipment` hoặc `skill` vì pháp bảo là một hệ thống chiến đấu riêng.
+- Phiên bản: `v2.0-rework`.
+- Mốc đối chiếu code: `2026-08-27`.
+- Phạm vi hiện tại: Trúc Cơ tầng 1–18.
+- Tên kỹ thuật: `artifact`; tên hiển thị luôn là **Bản Mệnh Pháp Bảo**.
+- Pháp bảo đầu tiên: **Ngũ Hành Châu** của Pháp Tu.
+- Pháp bảo Kiếm Tu và Thể Tu thiết kế sau. Hạ tầng mở rộng theo `CultivationPathId`, không tạo nội dung placeholder.
 
-Hệ trang bị hiện đã có một bậc Quality mang tên Pháp Bảo. Vì vậy, giao diện của hệ thống mới phải luôn dùng đầy đủ tên **Bản Mệnh Pháp Bảo** ở tiêu đề, tutorial và panel chính để tránh nhầm với phẩm chất trang bị.
+Tài liệu này thay thế toàn bộ draft cũ về ba pháp bảo có thể chọn, chế tạo và trang bị. Mỗi nhân vật chỉ có đúng một bản mệnh pháp bảo đã được thiết kế sẵn theo con đường tu luyện.
 
-## 2. Mục tiêu thiết kế
+## 2. Hiện trạng dự án ảnh hưởng thiết kế
 
-Bản Mệnh Pháp Bảo là một vũ khí phụ tự vận hành, tương đương “sub gun” của nhân vật:
+### 2.1. Progression
 
-1. Tạo thêm một lớp hỏa lực tự động nhưng không tranh ô kỹ năng.
-2. Không ngắt đòn cơ bản, cast hoặc movement timeline hiện tại.
-3. Mỗi pháp bảo thay đổi cách đánh, không chỉ khác tên và VFX.
-4. Có vòng nuôi dài xuyên suốt Trúc Cơ tầng 1–18.
-5. Không thiên vị Pháp Tu hoặc Kiếm Tu.
-6. Dùng lại combat missile data-driven và core authority hiện có.
-7. Tạo công dụng thật cho `Tinh Luyện Cốt`, tài nguyên hiện đã có nguồn tạo nhưng chưa có nơi tiêu thụ.
+- `PlayerData.cultivationPath` hiện là `'phap_tu' | 'kiem_tu'`; nghề được chọn vĩnh viễn khi từ Phàm Nhân vào Luyện Khí.
+- Nội dung đang cân bằng tới `foundation_establishment`, 18 tầng. Kim Đan trở lên chỉ là dữ liệu giữ chỗ.
+- Trần sức mạnh đọc từ `player.realmId` + `player.realmLevel`; so sánh thứ tự bằng realm index, không so string.
+- Tâm Pháp/Kỹ Năng đã có cảm ngộ riêng từ combat. Pháp bảo cần progression riêng, không mượn level của hai hệ đó.
+- Dự án là development build; không cần migration cho draft artifact chưa từng phát hành.
 
-### 2.1. Ngân sách sức mạnh
+### 2.2. Combat, loot và UI
 
-| Giai đoạn | DPS pháp bảo so với `Pháp Bảo Công` |
-|---|---:|
-| Vừa vào Trúc Cơ, cấp 1 | 16–18%/giây |
-| Cấp 6, đã chọn Đại Nhánh | 20–25%/giây |
-| Cấp 12, đã chọn Tiểu Nhánh | 25–32%/giây |
-| Cấp 18, hoàn thiện | 30–40%/giây tùy điều kiện |
-| Tỷ trọng mục tiêu trong tổng damage build | Khoảng 12–25% |
+- Combat đã dùng `BattleSystem` + `CombatActionDefinition` theo pipeline `windup → impact → resolve`. `MissileSystem` cũ đã bị thay thế; “subgun” chỉ là vai trò gameplay.
+- Buff/ward đi qua battle buff; slow/root/stun/freeze đi qua `AilmentSystem`.
+- `BattleLootSystem.processDefeatedEnemies()` là authority cấp reward ngay khi từng quái chết. `Enemy` đã có `realmId`, `isElite`, `isBoss`.
+- Material rơi thẳng vào `MaterialBag`, notification và `BattleRewardSummary`.
+- Trang lớn như Kỹ Năng/Tâm Pháp dùng `StandalonePanel`; combat HUD đã tách theo nghề.
+- Equipment đã có quality tên “Pháp Bảo”, vì vậy không gọi tắt panel mới là “Pháp Bảo” ở nơi dễ gây nhầm.
 
-Nhánh chuyên dụng có thể vượt 40% `Pháp Bảo Công`/giây trong đúng tình huống của nó, chẳng hạn Trấn Sơn Ấn đánh boss đơn, nhưng phải yếu hơn khi gặp tình huống ngoài chuyên môn.
+## 3. Trụ cột thiết kế
 
-## 3. Mở khóa, sở hữu và trang bị
+1. **Một nhân vật, một bản mệnh:** quyết định bởi nghề; không roll, nhặt, craft, equip hay đổi sang pháp bảo nghề khác.
+2. **Subgun tự vận hành:** timer/action riêng; không chiếm skill slot, không ngắt basic attack, cast hoặc teleport AI.
+3. **Ba hướng chuyên môn:** chọn một trong `Công`, `Thủ`, `Khống`. Cả ba còn action subgun nền nhưng phân bổ ngân sách khác nhau.
+4. **Lớn lên bằng chiến đấu:** có EXP riêng, nhận khi quái bị hạ trong combat thật.
+5. **Không vượt chủ nhân:** cảnh giới/tầng pháp bảo luôn ≤ nhân vật.
+6. **Nâng phẩm bằng loot:** quái Trúc Cơ trở lên có tỷ lệ rơi Đoán Bảo Thạch.
+7. **Data-driven theo nghề:** luật chung nằm trong artifact core; cơ chế Ngũ Hành Châu nằm trong definition riêng.
 
-### 3.1. Thời điểm mở
+## 4. Sở hữu và thức tỉnh
 
-Sau khi người chơi đột phá thành công từ Luyện Khí sang Trúc Cơ:
+Khi đột phá thành công từ Luyện Khí sang Trúc Cơ:
 
-- Mở nút **Pháp Bảo** trong `RealmActionNav`.
-- Mở đúng một slot Bản Mệnh Pháp Bảo.
-- Hiện nghi thức chọn pháp bảo đầu tiên.
-- Người chơi chọn miễn phí một trong ba pháp bảo ra mắt.
-- Pháp bảo nhận được bắt đầu ở cấp 1.
-- Hai pháp bảo còn lại có thể chế tạo sau.
+- Đọc `player.cultivationPath` và tạo đúng artifact tương ứng nếu có definition.
+- Pháp Tu nhận **Ngũ Hành Châu**, Trúc Cơ tầng 1, EXP 0, **Phàm phẩm**.
+- Mở panel Bản Mệnh Pháp Bảo và nhắc chọn Công/Thủ/Khống.
+- Trước khi chọn hướng, pháp bảo vẫn dùng action nền nhưng không có milestone hướng.
 
-Kết quả Căn Cơ ẩn không ảnh hưởng loại hoặc sức mạnh pháp bảo. Không biến một điều kiện ẩn thành lợi thế build không minh bạch.
+Kiếm Tu chưa có thiết kế trong phase này:
 
-Nếu người chơi đóng nghi thức mà chưa chọn, nhân vật vẫn vào Trúc Cơ bình thường nhưng chưa có pháp bảo. Nút Pháp Bảo phải giữ trạng thái nhắc chọn miễn phí cho đến khi lựa chọn hoàn tất.
+- Không nhận Ngũ Hành Châu, không tạo artifact giả.
+- UI hiển thị “Bản mệnh pháp bảo của Kiếm Tu đang chờ thiết kế”, không crash hoặc để panel trống.
 
-### 3.2. Chế tạo pháp bảo còn lại
+Pháp bảo không có slot trong `EquipmentPaperdoll`, không nằm trong bag, không thể tháo, bán, phân giải, rơi mất hoặc sở hữu bản trùng. Nó không dùng quality/rarity/affix/forge của `EquipmentSystem`.
 
-Mỗi pháp bảo là vật phẩm duy nhất. Không thể sở hữu bản trùng.
+## 5. Hai trục trưởng thành
 
-Chi phí chế tạo một pháp bảo chưa sở hữu:
+| Trục | Nguồn tăng | Vai trò |
+|---|---|---|
+| Cảnh giới + tầng | EXP chiến đấu | Tăng chỉ số nền, mở milestone |
+| Phẩm | Đoán Bảo Thạch | Nhân tiềm năng của hướng active |
 
-| Nguyên liệu | Số lượng |
-|---|---:|
-| Linh Bảo Tàn Phiến | 30 |
-| Tinh Luyện Cốt | 5 |
-| Linh Thạch | 1.500 |
+Không dùng Linh Thạch, Linh Bảo Tàn Phiến, Tinh Luyện Cốt hoặc tài nguyên equipment trong MVP.
 
-Pháp bảo chế tạo mới bắt đầu ở cấp 1 và phải nâng riêng.
+### 5.1. Cảnh giới/tầng và trần chủ nhân
 
-### 3.3. Trang bị
+UI hiển thị `Ngũ Hành Châu — Trúc Cơ tầng 7`, không hiển thị global level kiểu 37.
 
-- Chỉ trang bị tối đa một pháp bảo.
-- Đổi pháp bảo miễn phí ngoài chiến đấu.
-- Không thể đổi trong countdown hoặc đang chiến đấu.
-- Pháp bảo đang trang bị được đưa vào combat snapshot.
-- Nâng cấp hoặc đổi nhánh ngoài trận chỉ có hiệu lực từ trận kế tiếp.
-- Pháp bảo không chiếm slot `weapon` và không thuộc sáu slot equipment hiện có.
-- Pháp bảo không chiếm loadout skill.
+- Thức tỉnh ở Trúc Cơ tầng 1.
+- Đủ EXP thì tự tăng tầng, không tốn material.
+- Không thể tăng nếu tầng kế cao hơn người chơi.
+- Ở trần chủ nhân, EXP được đầy tới đúng requirement kế tiếp rồi dừng; không bank nhiều tầng.
+- Khi người chơi tăng tầng, artifact có thanh đầy lập tức tăng đúng một tầng rồi EXP về 0.
+- Scope hiện tại dừng ở Trúc Cơ tầng 18; chưa thiết kế đột phá artifact lên Kim Đan.
+- Chỉ nhận EXP sau khi thức tỉnh, không hồi tố combat Luyện Khí.
 
-## 4. Tài nguyên
+### 5.2. Nguồn EXP
 
-### 4.1. Linh Bảo Tàn Phiến
+EXP cấp khi reward của một quái chết được xử lý thành công:
 
-Thêm nguyên liệu chuyên dụng:
+- Không yêu cầu pháp bảo kết liễu hoặc đã gây damage; nhánh Thủ không bị thiệt.
+- Không nhận từ idle/offline cultivation, production, pill hoặc thao tác UI.
+- Dùng chung `BattleEnemy.rewardGranted` để chống cấp lặp.
+- Độ Kiếp chỉ cấp nếu reward thật đi qua `BattleLootSystem`; không tạo đường thưởng thứ hai.
 
-- Tên: **Linh Bảo Tàn Phiến**.
-- ID dự kiến: `artifact_fragment`.
-- Category dự kiến: `artifact` hoặc `other` nếu chưa mở rộng union.
-- Source type: `monster`.
-- Chỉ rơi trong các màn có `requiredRealmId === 'foundation'`.
+Thêm hàm balance thuần:
 
-Tỷ lệ rơi:
-
-| Nguồn | Phần thưởng |
-|---|---:|
-| Quái thường Trúc Cơ | 12% nhận 1 |
-| Tinh Anh Trúc Cơ | Chắc chắn 2 |
-| Boss màn 3.1–3.2 | Chắc chắn 3 |
-| Boss màn 3.3–3.4 | Chắc chắn 4 |
-| Boss màn 3.5–3.6 | Chắc chắn 5 |
-| Boss màn 3.7–3.8 | Chắc chắn 6 |
-| Boss màn 3.9–3.10 | Chắc chắn 7 |
-
-Công thức boss:
-
-```text
-Số Tàn Phiến = 2 + ceil(số tầng / 2)
+```ts
+getArtifactExperienceReward(enemy: Enemy): number
 ```
 
-Mục tiêu farm dự kiến:
-
-- Chỉ farm màn 3.1: khoảng 35–40 lượt để đủ 162 Tàn Phiến.
-- Farm màn 3.10: khoảng 17–20 lượt.
-- Elite có thể rút ngắn thêm thời gian.
-
-### 4.2. Tinh Luyện Cốt
-
-Giữ nguyên nguồn hiện tại:
+MVP suy ra từ `enemy.rewards.techniqueInsight`, không thêm field thủ công cho toàn bộ enemy data:
 
 ```text
-1 trang bị phân giải = 2 Bụi Cốt
-5 Bụi Cốt + 10 Linh Thạch = 1 Tinh Luyện Cốt
+base = max(1, floor(techniqueInsight × 0,25))
+normal = base
+elite = base × 2
+boss = base × 5
+
+required(level) = round(20 × level^1,35)
 ```
 
-Tổng 29 Tinh Luyện Cốt để nâng một pháp bảo lên cấp 18 tương đương:
+> Balance 2026-08-28: hệ số EXP giảm từ `0,5` xuống `0,25` để kéo dài thời
+> gian luyện pháp bảo. Với pool quái Trúc Cơ hiện tái dùng encounter Luyện
+> Khí (techniqueInsight cao), hệ số `0,5` khiến artifact gần như luôn dính
+> trần nhân vật; `0,25` nhân đôi số kill cần để max, buộc người chơi phải
+> chủ động farm mới theo kịp trần.
 
-- 145 Bụi Cốt.
-- Khoảng 73 trang bị phân giải.
-- Thêm 290 Linh Thạch cho bước tinh luyện.
+Đây là số để simulation. Mục tiêu: người chơi chủ động farm combat giữ artifact cách trần nhân vật không quá 2–3 tầng, nhưng không mặc định luôn ngang trần.
 
-Tinh Luyện Cốt là nút thắt đầu tư trang bị, không phải tài nguyên farm boss.
+### 5.3. Phẩm pháp bảo
 
-### 4.3. Vai trò từng tài nguyên
+Dùng type riêng, không tái sử dụng `EquipmentQuality`:
 
-- Linh Thạch: chi phí kinh tế chung.
-- Linh Bảo Tàn Phiến: chứng minh đã farm nội dung Trúc Cơ.
-- Tinh Luyện Cốt: nối vòng rơi đồ → phân giải → tinh luyện → nuôi pháp bảo.
+```ts
+type ArtifactGrade = 'pham' | 'linh' | 'dia' | 'thien' | 'tien'
+```
 
-## 5. Cấp pháp bảo 1–18
+| Phẩm | Hệ số hiệu quả tổng | Đá để lên phẩm kế |
+|---|---:|---:|
+| Phàm phẩm | ×1,00 | 10 |
+| Linh phẩm | ×1,12 | 25 |
+| Địa phẩm | ×1,26 | 60 |
+| Thiên phẩm | ×1,42 | 150 |
+| Tiên phẩm | ×1,60 | — |
 
-### 5.1. Quy tắc chung
+Trong content Trúc Cơ, Linh phẩm là mốc tự nhiên; Địa phẩm là mục tiêu farm cuối cảnh giới. Thiên/Tiên chỉ giữ trong schema cho tương lai.
 
-- Pháp bảo có cấp 1–18.
-- Cấp pháp bảo không được vượt tầng Trúc Cơ hiện tại.
-- Nếu nhân vật Trúc Cơ tầng 7, pháp bảo tối đa cấp 7.
-- Mỗi cấp tăng 4% damage cơ bản, cộng tuyến tính.
+Nâng phẩm chỉ làm ngoài combat, transaction kiểm tra-trừ-cập nhật, không thất bại, không giảm phẩm và không phá hủy pháp bảo. Hệ số phẩm nhân damage/buff/control magnitude; duration hard CC dùng cap riêng, không nhân thẳng ×1,60.
 
-Công thức:
+## 6. Đoán Bảo Thạch
+
+- Tên: **Đoán Bảo Thạch**.
+- ID: `doan_bao_thach`.
+- `MaterialCategory`: `other` trong MVP.
+- Nguồn hiển thị: “Quái Trúc Cơ trở lên”.
+
+Chỉ roll khi:
 
 ```text
-Hệ số cấp L = 1 + 0,04 × (L - 1)
+getRealmIndex(enemy.realmId) >= getRealmIndex('foundation_establishment')
 ```
 
-Ví dụ:
+| Loại quái | Tỷ lệ khởi điểm | Số lượng |
+|---|---:|---:|
+| Thường | 2% | 1 |
+| Tinh Anh | 8% | 1 |
+| Boss | 25% | 1–2 |
 
-- Cấp 1: ×1,00.
-- Cấp 6: ×1,20.
-- Cấp 12: ×1,44.
-- Cấp 18: ×1,68.
+Mỗi quái chỉ dùng dòng cao nhất; Boss không roll thêm bảng Elite/Thường. Tỷ lệ nằm trong `ArtifactDropBalance.ts` và được gọi tập trung từ `BattleLootSystem`, không rải vào enemy definitions.
 
-### 5.2. Bảng chi phí đầy đủ
+Khi rơi phải cộng `MaterialBag`, `BattleRewardSummary`, reward particle và loot notification theo luồng material hiện hữu. RNG cần injectable cho test. Dùng `enemy.realmId` làm authority, không dùng stage realm vì enemy có thể xuất hiện ngoài Stage.
 
-Chi phí trong mỗi dòng là chi phí nâng tới cấp được ghi trong dòng.
+## 7. Ba hướng Công / Thủ / Khống
 
-| Cấp đạt tới | Hệ số cấp | Linh Thạch | Tàn Phiến | Tinh Luyện Cốt | Nội dung mở |
-|---:|---:|---:|---:|---:|---|
-| 1 | 1,00 | 0 | 0 | 0 | Nhận pháp bảo |
-| 2 | 1,04 | 50 | 1 | 0 | +4% damage |
-| 3 | 1,08 | 75 | 1 | 0 | +4% damage |
-| 4 | 1,12 | 100 | 2 | 0 | +4% damage |
-| 5 | 1,16 | 150 | 2 | 0 | +4% damage |
-| 6 | 1,20 | 250 | 4 | 1 | Chọn Đại Nhánh |
-| 7 | 1,24 | 300 | 4 | 0 | +4% damage |
-| 8 | 1,28 | 400 | 5 | 0 | +4% damage |
-| 9 | 1,32 | 500 | 6 | 1 | +4% damage |
-| 10 | 1,36 | 650 | 7 | 1 | +4% damage |
-| 11 | 1,40 | 800 | 8 | 1 | +4% damage |
-| 12 | 1,44 | 1.100 | 12 | 3 | Chọn Tiểu Nhánh |
-| 13 | 1,48 | 1.300 | 12 | 2 | +4% damage |
-| 14 | 1,52 | 1.600 | 14 | 2 | +4% damage |
-| 15 | 1,56 | 1.900 | 16 | 3 | +4% damage |
-| 16 | 1,60 | 2.300 | 18 | 3 | +4% damage |
-| 17 | 1,64 | 2.800 | 20 | 4 | +4% damage |
-| 18 | 1,68 | 3.600 | 30 | 8 | Mở Chân Hình |
+### 7.1. Luật chọn
 
-Tổng cho một pháp bảo cấp 18:
+```ts
+type ArtifactPath = 'attack' | 'defense' | 'control'
+```
 
-| Tài nguyên | Tổng |
-|---|---:|
-| Linh Thạch | 17.875 |
-| Linh Bảo Tàn Phiến | 162 |
-| Tinh Luyện Cốt | 29 |
+- Chỉ một hướng active.
+- Chọn lần đầu miễn phí; trong development build được đổi miễn phí ngoài combat để test.
+- Không đổi trong countdown, combat hoặc tribulation.
+- Đổi hướng giữ EXP, cảnh giới/tầng và phẩm; chỉ áp dụng từ trận kế.
+- Không cộng bonus từ hướng inactive.
+- Sau balance mới quyết định phí respec; MVP không dùng Đoán Bảo Thạch cho việc này để đá có một chức năng rõ ràng.
 
-Theo giai đoạn:
-
-| Giai đoạn | Linh Thạch | Tàn Phiến | Tinh Luyện Cốt |
+| Hướng | Damage | Phòng thủ/buff | Khống chế |
 |---|---:|---:|---:|
-| Cấp 1 → 6 | 625 | 10 | 1 |
-| Cấp 6 → 12 | 3.750 | 42 | 6 |
-| Cấp 12 → 18 | 13.500 | 110 | 22 |
+| Công | 75% | 10% | 15% |
+| Thủ | 30% | 60% | 10% |
+| Khống | 35% | 10% | 55% |
 
-Phần lớn chi phí nằm ở cấp 13–18 để cấp 6 và nhánh đầu tiên đến sớm, còn hoàn thiện cấp 18 vẫn là mục tiêu dài hạn.
+Đây là ngân sách thiết kế tương đối, không phải modifier đưa thẳng vào code.
 
-## 6. Công thức sát thương
+### 7.2. Mốc trưởng thành chung
 
-### 6.1. Pháp Bảo Công thích ứng
+| Tầng artifact | Mở khóa |
+|---:|---|
+| 1 | Subgun nền |
+| 3 | Nhận diện hướng |
+| 6 | Cơ chế chính |
+| 12 | Nâng cấp cơ chế chính |
+| 18 | Chân hình |
 
-Để không thiên vị Kiếm Tu hoặc Pháp Tu, pháp bảo sử dụng chỉ số thích ứng.
+MVP dùng milestone table, không dựng node tree thứ hai.
 
-Khi bắt đầu trận:
+## 8. Ngũ Hành Châu — Pháp Tu
 
-```text
-Pháp Bảo Công = giá trị lớn nhất trong:
-- Công
-- Mộc Công
-- Hỏa Công
-- Thổ Công
-- Kim Công
-- Thủy Công
-```
+### 8.1. Identity và action nền
 
-Loại damage được khóa theo chỉ số thắng tại combat snapshot:
+Năm linh châu xoay quanh Pháp Tu, tự tích tụ rồi phóng vào mục tiêu:
 
-- Công cao nhất → damage vật lý.
-- Mộc Công cao nhất → damage Mộc.
-- Hỏa Công cao nhất → damage Hỏa.
-- Thổ Công cao nhất → damage Thổ.
-- Kim Công cao nhất → damage Kim.
-- Thủy Công cao nhất → damage Thủy.
-- Nếu bằng nhau, ưu tiên Công vật lý.
+- Chỉ dùng Ngũ Hành đã unlock và equip trong combat snapshot.
+- Nhiều hành thì xoay ổn định `Mộc → Hỏa → Thổ → Kim → Thủy` trong tập đang equip.
+- Không có hành hợp lệ thì dùng damage/VFX trung tính; không tự mở hành hoặc tạo phản ứng.
+- Mỗi phát dùng Power, resistance và penetration của đúng hành.
+- Không tự chọn hành mạnh nhất mỗi tick, tránh buff làm đổi đạn khó hiểu.
+- Có source metadata artifact riêng; không giả làm basic attack/skill.
 
-Sau khi loại damage đã được khóa:
-
-- Buff trong trận lên đúng chỉ số đó vẫn tăng damage pháp bảo.
-- Loại damage không đổi giữa trận.
-- Không xảy ra tình trạng pháp bảo đổi hành liên tục vì buff.
-
-Phong và Lôi chưa thuộc scope Trúc Cơ nên không tham gia phép chọn trong phiên bản đầu. Khi hai hành này thành nội dung chơi được, bổ sung chúng vào danh sách thích ứng mà không đổi công thức còn lại.
-
-### 6.2. Công thức một hit
-
-```text
-Sát thương gốc
-= Pháp Bảo Công hiện tại
-× Hệ số riêng của pháp bảo
-× Hệ số cấp
-× Hệ số nhánh
-```
-
-Sau đó đi qua combat pipeline hiện tại:
-
-```text
-Accuracy
-→ Dodge
-→ Realm Pressure
-→ Armor hoặc kháng nguyên tố
-→ Critical
-→ Block
-→ Endurance
-→ giảm sát thương cuối
-→ Ward
-→ HP
-```
-
-Pháp bảo được hưởng:
-
-- Accuracy.
-- Critical Rate.
-- Critical Damage.
-- Chance to Ignore Resistance.
-- Final Damage Percent.
-- Projectile Speed Percent.
-- Realm Pressure.
-
-Pháp bảo không được hưởng:
-
-- Attack Speed.
-- Cast Speed.
-- Cooldown Reduction.
-- Skill Damage Percent.
-- Các modifier ghi rõ “kỹ năng”.
-
-### 6.3. Quy tắc chống vòng lặp proc
-
-Damage pháp bảo:
-
-- Không tạo Mana.
-- Không tạo Nộ.
-- Không tạo Kiếm Ý.
-- Không tạo Hỏa Thế, Thủy Thế, Kim Thế hoặc tài nguyên path.
-- Không kích hoạt passive “khi ra đòn”.
-- Không kích hoạt passive “khi dùng kỹ năng”.
-- Không kích hoạt hiệu ứng “khi skill đánh trúng”.
-- Không gây ailment nếu pháp bảo không ghi rõ.
-- Không hút máu.
-- Không thể kích hoạt lại chính pháp bảo.
-
-Pháp bảo phát các event riêng:
-
-- `artifact_fired`.
-- `artifact_hit`.
-- `artifact_critical`.
-- `artifact_kill`.
-
-Các event này phục vụ VFX, HUD và thống kê damage, không đi qua proc kỹ năng.
-
-## 7. Hoạt động trong chiến đấu
-
-### 7.1. Timer
-
-- Pháp bảo có timer riêng.
-- Timer bắt đầu ở 0 khi trận chuyển từ countdown sang `fighting`.
-- Pháp bảo bắn ngay khi trận chính thức bắt đầu.
-- Timer không chạy trong countdown, pause, victory hoặc defeat.
-- Khi không có mục tiêu, timer vẫn về 0 và giữ trạng thái sẵn sàng.
-- Khi quái mới xuất hiện, pháp bảo bắn ngay.
-- Pháp bảo tiếp tục hoạt động khi nhân vật đang cast, bị choáng hoặc bị đóng băng.
-- Pháp bảo dừng khi nhân vật chết.
-- Fixed-step simulation phải là authority; Phaser chỉ trình bày projectile/VFX.
-
-### 7.2. Mục tiêu
-
-Mỗi pháp bảo có AI mục tiêu riêng:
-
-- Phi Kiếm: bám mục tiêu mà đòn cơ bản của nhân vật sẽ chọn.
-- Liệt Hồn Châm: ưu tiên kẻ địch có phần trăm HP thấp nhất.
-- Trấn Sơn Ấn: chọn vị trí có thể đánh trúng nhiều mục tiêu nhất.
-
-Quy tắc hòa:
-
-1. Mục tiêu gần người chơi hơn.
-2. Nếu vẫn bằng nhau, mục tiêu spawn trước.
-
-## 8. Pháp bảo 1 — Thanh Trúc Phi Kiếm
-
-### 8.1. Vai trò
-
-- Pháp bảo cân bằng.
-- Ổn định ở mọi nội dung.
-- Có nhánh dọn quái và nhánh đánh boss.
-- Đạn bám mục tiêu.
-
-### 8.2. Chỉ số cơ bản
-
-| Thuộc tính | Giá trị |
+| Thuộc tính | Khởi điểm simulation |
 |---|---:|
-| Chu kỳ | 2,4 giây |
-| Hệ số damage cấp 1 | 0,42 |
-| Projectile | Homing |
-| Mục tiêu | Mục tiêu đòn cơ bản |
-| AOE | Không |
-| Xuyên mặc định | Không |
+| Chu kỳ | 3,0 giây |
+| Windup | 0,25 giây |
+| Target | Theo Combat AI strategy, fallback gần nhất hợp lệ |
+| Tầm | `player.stats.attackRange` snapshot |
+| Damage | 45% Power của hành mỗi phát |
+| Crit/dodge | Pipeline combat hiện hữu |
 
-Damage mỗi phát:
+Artifact không kích hoạt lại chính nó. On-hit/reaction nào được phép phải khai rõ trong definition.
 
-```text
-Phi Kiếm Damage = Pháp Bảo Công × 0,42 × Hệ số cấp
-```
+### 8.2. Công — Ngũ Hành Liên Châu
 
-| Cấp | Hệ số mỗi phát | DPS trước phòng thủ, chưa tính crit |
-|---:|---:|---:|
-| 1 | 0,420 | 17,50% Pháp Bảo Công/giây |
-| 6 | 0,504 | 21,00%/giây |
-| 12 | 0,605 | 25,20%/giây |
-| 18 | 0,706 | 29,40%/giây |
+- Tầng 1: action nền.
+- Tầng 3, `Tụ Linh`: +15% artifact damage.
+- Tầng 6, `Liên Châu`: thêm một hit bằng 55% hit chính, dùng hành kế trong vòng xoay.
+- Tầng 12, `Ngũ Hành Cộng Minh`: hai hành khác nhau trúng cùng mục tiêu giảm 10% chu kỳ kế; tối đa một lần/activation.
+- Tầng 18, `Vạn Tượng Quy Nhất`: activation thứ năm phóng các hành đang equip vào primary target; tổng damage có cap theo số hành.
 
-Với crit nền 5% và Critical Damage 150%, DPS kỳ vọng cấp 18 là khoảng 30,2% Pháp Bảo Công/giây trước phòng thủ.
+Chu kỳ không thấp hơn 1,5 giây. Mục tiêu cuối Trúc Cơ/Địa phẩm: artifact chiếm 18–25% tổng DPS build chuẩn, không vượt skill chính.
 
-### 8.3. Đại Nhánh cấp 6 A — Phân Quang Kiếm Trận
+### 8.3. Thủ — Ngũ Hành Hộ Thể
 
-Dành cho dọn nhiều quái.
+- Tầng 1: action nền với damage ×0,70.
+- Tầng 3, `Châu Quang Hộ Thể`: cấp ward theo Power của hành vừa bắn, cap theo max HP.
+- Tầng 6, `Ngũ Khí Tuần Hoàn`: mỗi activation cấp buff ngắn tăng `finalDamageReductionPercent`; refresh duration, không stack magnitude.
+- Tầng 12, `Sinh Sinh Bất Tức`: ward do artifact vỡ sẽ hồi một phần sau internal cooldown; không hồi HP trực tiếp.
+- Tầng 18, `Ngũ Hành Hộ Giới`: activation thứ năm tạo hộ giới ngắn tăng ailment resistance và critical avoidance.
 
-Hiệu ứng cấp 6:
+Buff phải đi qua `Battle.playerBuffs`, không sửa stats vĩnh viễn; không mang ward/buff sang trận sau và không cho 100% uptime với lớp giảm damage mạnh nhất.
 
-- Mỗi lần kích hoạt thứ ba là một lượt Phân Quang.
-- Vẫn bắn một phi kiếm chính 100%.
-- Bắn thêm hai phi kiếm phụ.
-- Mỗi kiếm phụ gây 55% damage của kiếm chính.
-- Kiếm phụ phải chọn hai mục tiêu khác nhau.
-- Không được dồn kiếm phụ vào mục tiêu chính.
-- Nếu không đủ mục tiêu, số kiếm thừa biến mất.
-- Mỗi kiếm roll accuracy và crit riêng.
-- Bộ đếm reset khi bắt đầu trận.
+### 8.4. Khống — Ngũ Hành Trấn Linh
 
-Ví dụ lượt thứ ba có ba mục tiêu:
+- Tầng 1: action nền với damage ×0,80.
+- Tầng 3, `Trệ Khí`: hit áp `lam_cham` ngắn qua `AilmentSystem`.
+- Tầng 6, `Ngũ Hành Phược`: ba hit artifact lên cùng mục tiêu trong cửa sổ thời gian áp `troi_chan`; counter là runtime artifact.
+- Tầng 12, `Trấn Mạch`: target đang root nhận debuff attack speed ngắn.
+- Tầng 18, `Ngũ Châu Trấn Vực`: activation thứ năm tác động vùng nhỏ, áp slow; root chỉ xét primary target.
 
-```text
-Mục tiêu chính: 100%
-Mục tiêu phụ 1: 55%
-Mục tiêu phụ 2: 55%
-Tổng damage tối đa: 210%
-```
+Boss có duration multiplier/cap và per-target ICD để không root-lock. Không dùng stun/freeze trong bộ nền; reapply tuân thủ rule của `AilmentSystem`.
 
-#### Tiểu nhánh cấp 12 A1 — Vạn Ảnh
+## 9. Công thức sức mạnh
 
-- Damage kiếm phụ tăng từ 55% lên 75%.
-- Cấu hình lượt Phân Quang: `100% + 75% + 75%`.
-- Tổng tối đa: 250%.
-
-#### Tiểu nhánh cấp 12 A2 — Truy Mệnh
-
-- Kiếm phụ vẫn gây 55%.
-- Nếu mục tiêu phụ còn dưới hoặc bằng 35% HP trước hit, kiếm phụ gây thêm 50%.
-- Damage thực tế với mục tiêu thấp máu: `55% × 1,5 = 82,5%`.
-- Nếu mục tiêu chết khi kiếm đang bay, kiếm tự tìm mục tiêu thấp máu gần nhất.
-
-#### Chân Hình cấp 18 — Vạn Kiếm Phân Quang
-
-Áp dụng cho cả A1 và A2:
-
-- Lượt Phân Quang bắn bốn kiếm phụ thay vì hai.
-- Mỗi kiếm vẫn phải vào một mục tiêu khác nhau.
-- A1: `100% + 4 × 75% = 400%` tối đa.
-- A2: `100% + 4 × 55%`, hoặc tối đa 430% nếu cả bốn mục tiêu phụ đều thấp máu.
-- Không tăng damage đơn mục tiêu.
-
-### 8.4. Đại Nhánh cấp 6 B — Dưỡng Kiếm Tâm
-
-Dành cho boss hoặc mục tiêu sống lâu.
-
-Hiệu ứng cấp 6:
-
-- Phi Kiếm đánh trúng cùng một mục tiêu sẽ tạo một Kiếm Ấn.
-- Tối đa năm Kiếm Ấn.
-- Mỗi Kiếm Ấn có sẵn trước hit tăng 4% damage cho hit đó.
-- Dodge không tạo Kiếm Ấn.
-- Đổi mục tiêu hoặc mục tiêu chết sẽ mất toàn bộ ấn.
-
-Chuỗi damage:
-
-| Phát | Ấn trước hit | Damage |
-|---:|---:|---:|
-| 1 | 0 | 100% |
-| 2 | 1 | 104% |
-| 3 | 2 | 108% |
-| 4 | 3 | 112% |
-| 5 | 4 | 116% |
-| 6 trở đi | 5 | 120% |
-
-#### Tiểu nhánh cấp 12 B1 — Phá Cương
-
-Mỗi Kiếm Ấn khiến hit hiện tại bỏ qua 4% phần mitigation đã tính của mục tiêu.
+Không thêm `artifactAttack` vào `Stats` trong MVP:
 
 ```text
-Mitigation hiệu lực
-= Mitigation gốc × (1 - 0,04 × số Kiếm Ấn)
+basePower = player.stats[elementPower]
+raw = basePower × actionCoefficient
+scaled = raw × levelMultiplier × gradeMultiplier × pathMultiplier
+
+levelMultiplier = 1 + 0,025 × (artifactLevel - 1)
 ```
 
-Ở năm ấn:
+- Tầng 1: ×1,00; tầng 6: ×1,125; tầng 12: ×1,275; tầng 18: ×1,425.
+- Damage tiếp tục qua calculator của element tương ứng.
+- Không cộng `skillDamagePercent`; artifact không phải skill.
+- Buff/CC dùng formula trong milestone definition, không suy từ damage formula.
 
-- Giáp đang giảm 50% → chỉ còn giảm 40%.
-- Kháng đang giảm 40% → chỉ còn giảm 32%.
+## 10. Dữ liệu và save
 
-Đây là bỏ qua tương đối, không trừ thẳng 20 điểm phần trăm.
+### 10.1. Static definition
 
-#### Tiểu nhánh cấp 12 B2 — Tật Ảnh
+```ts
+type ArtifactId = 'ngu_hanh_chau'
 
-Mỗi Kiếm Ấn giảm 2,5% chu kỳ Phi Kiếm.
+interface ArtifactDefinition {
+  id: ArtifactId
+  name: string
+  cultivationPathId: CultivationPathId
+  unlockRealmId: string
+  baseAction: CombatActionDefinition
+  paths: Record<ArtifactPath, ArtifactPathDefinition>
+}
 
-| Số ấn | Chu kỳ |
-|---:|---:|
-| 0 | 2,40 giây |
-| 1 | 2,34 giây |
-| 2 | 2,28 giây |
-| 3 | 2,22 giây |
-| 4 | 2,16 giây |
-| 5 | 2,10 giây |
-
-Không chịu thêm Cooldown Reduction hoặc Attack Speed.
-
-#### Chân Hình cấp 18 — Nhất Kiếm Phá Đạo
-
-Khi một hit chuẩn bị đưa Kiếm Ấn từ bốn lên năm:
-
-- Hit đó nhận hệ số ×1,8.
-- Hit đó chắc chắn chí mạng.
-- Sau khi hit resolve, toàn bộ Kiếm Ấn bị xóa.
-- Nếu hit bị dodge, không kích hoạt Chân Hình và giữ nguyên bốn ấn.
-
-Ví dụ với bốn ấn:
-
-```text
-Damage trước crit
-= damage cơ bản × 1,16 × 1,8
-= 208,8%
+const ARTIFACT_ID_BY_CULTIVATION_PATH: Partial<Record<CultivationPathId, ArtifactId>> = {
+  phap_tu: 'ngu_hanh_chau',
+}
 ```
 
-Sau đó nhân Critical Damage hiện tại.
+`Partial` có chủ ý vì Kiếm Tu chưa có artifact.
 
-## 9. Pháp bảo 2 — Liệt Hồn Châm
+### 10.2. Player state
 
-### 9.1. Vai trò
-
-- Tốc độ bắn cao.
-- Kết liễu quái yếu.
-- Mạnh với mục tiêu thấp máu.
-- Có nhánh xử tử hoặc nhánh multi-hit.
-
-### 9.2. Chỉ số cơ bản
-
-| Thuộc tính | Giá trị |
-|---|---:|
-| Chu kỳ | 0,8 giây |
-| Hệ số damage cấp 1 | 0,13 |
-| Projectile | Homing |
-| Mục tiêu | Phần trăm HP thấp nhất |
-| AOE | Không |
-
-Damage:
-
-```text
-Liệt Hồn Châm Damage
-= Pháp Bảo Công × 0,13 × Hệ số cấp
-```
-
-Nội tại mặc định:
-
-- Nếu mục tiêu còn tối đa 25% HP trước hit: +25% damage.
-- Kiểm tra HP khi châm chạm mục tiêu, không kiểm tra lúc bắn.
-
-| Cấp | Hệ số mỗi châm | DPS chưa tính nội tại |
-|---:|---:|---:|
-| 1 | 0,130 | 16,25%/giây |
-| 6 | 0,156 | 19,50%/giây |
-| 12 | 0,187 | 23,40%/giây |
-| 18 | 0,218 | 27,30%/giây |
-
-Ở cấp 18, đánh mục tiêu dưới hoặc bằng 25% HP:
-
-```text
-27,30% × 1,25 = 34,13% Pháp Bảo Công/giây
-```
-
-### 9.3. Đại Nhánh cấp 6 A — Đoạt Mệnh
-
-Thay nội tại mặc định bằng:
-
-- Ngưỡng kích hoạt tăng từ 25% lên 35% HP.
-- Bonus damage tăng từ 25% lên 45%.
-
-```text
-Mục tiêu ≤35% HP: damage ×1,45
-```
-
-#### Tiểu nhánh cấp 12 A1 — Tuyệt Mạch
-
-- Bonus execute tăng từ 45% lên 70%.
-- Với boss, bonus bị giới hạn ở 50%.
-
-```text
-Quái thường ≤35% HP: ×1,70
-Boss ≤35% HP: ×1,50
-```
-
-#### Tiểu nhánh cấp 12 A2 — Liên Sát
-
-- Giữ bonus ×1,45.
-- Nếu Liệt Hồn Châm trực tiếp giết mục tiêu, timer lập tức về 0.
-- Có internal cooldown 1,2 giây.
-- Kill bởi DOT, skill hoặc pháp bảo khác không kích hoạt.
-- Nếu không có mục tiêu mới, pháp bảo giữ trạng thái sẵn sàng.
-
-#### Chân Hình cấp 18 — Đoạn Hồn
-
-Lần đầu tiên Liệt Hồn Châm đánh một mục tiêu khi nó đang dưới hoặc bằng 15% HP:
-
-- Quái thường: hit đó ×2.
-- Boss: hit đó ×1,25.
-- Mỗi mục tiêu chỉ bị Đoạn Hồn một lần trong trận.
-- Hệ số này nhân sau bonus Đoạt Mệnh.
-
-Với A1, quái thường dưới hoặc bằng 15% HP:
-
-```text
-Damage = cơ bản ×1,70 ×2
-       = 340%
-```
-
-Đây là một hit damage, không phải execute theo phần trăm max HP.
-
-### 9.4. Đại Nhánh cấp 6 B — Thiên La Châm
-
-Dành cho hit dày và damage ổn định.
-
-Hiệu ứng cấp 6:
-
-- Mỗi lần kích hoạt thứ tư thay phát thường bằng ba châm.
-- Mỗi châm gây 60% damage phát thường.
-- Cả ba bắn vào cùng mục tiêu.
-- Mỗi châm roll hit và crit riêng.
-- Tổng tối đa: 180%.
-- Bộ đếm tính theo lần kích hoạt, không tính số projectile.
-- Bộ đếm reset đầu trận.
-
-Chuỗi:
-
-```text
-Lần 1: 100%
-Lần 2: 100%
-Lần 3: 100%
-Lần 4: 3 × 60% = 180%
-```
-
-#### Tiểu nhánh cấp 12 B1 — Tụ Mang
-
-- Ba châm ở lần thứ tư tăng từ 60% lên 75%.
-- Tổng damage lượt thứ tư: 225%.
-
-#### Tiểu nhánh cấp 12 B2 — Tán Mang
-
-Lần thứ tư:
-
-- Châm chính gây 100% vào mục tiêu chính.
-- Hai châm phụ gây 65% vào hai mục tiêu khác nhau.
-- Không đủ mục tiêu thì châm thừa biến mất.
-- Không dồn châm phụ vào mục tiêu chính.
-- Tổng tối đa: 230%.
-
-#### Chân Hình cấp 18 — Vạn Châm Xuyên Tâm
-
-Mỗi lần kích hoạt thứ tám thay hoàn toàn lượt thứ tư thông thường.
-
-Nếu chọn Tụ Mang:
-
-- Bắn sáu châm vào cùng mục tiêu.
-- Mỗi châm gây 50%.
-- Tổng: 300%.
-
-Nếu chọn Tán Mang:
-
-- Một châm 100% vào mục tiêu chính.
-- Tối đa năm châm phụ, mỗi châm 55%.
-- Mỗi châm phụ phải chọn mục tiêu khác nhau.
-- Tổng tối đa: 375%.
-- Nếu không đủ mục tiêu, châm thừa biến mất.
-
-Nội tại +25% damage dưới hoặc bằng 25% HP vẫn áp dụng riêng cho từng châm.
-
-## 10. Pháp bảo 3 — Trấn Sơn Ấn
-
-### 10.1. Vai trò
-
-- Pháp bảo chậm, hit nặng.
-- AOE và kiểm soát đội hình.
-- Có nhánh dọn quái và nhánh đánh boss.
-
-### 10.2. Chỉ số cơ bản
-
-| Thuộc tính | Giá trị |
-|---|---:|
-| Chu kỳ | 4,8 giây |
-| Hệ số damage cấp 1 | 0,78 |
-| Bán kính AOE | 90 world unit |
-| Damage mục tiêu phụ | 55% |
-| Knockback | 18 world unit |
-| Mục tiêu | Tâm cụm đông nhất |
-
-Damage:
-
-```text
-Damage chính = Pháp Bảo Công × 0,78 × Hệ số cấp
-Damage phụ = Damage chính × 0,55
-```
-
-| Cấp | Hệ số hit chính | DPS đơn mục tiêu |
-|---:|---:|---:|
-| 1 | 0,780 | 16,25%/giây |
-| 6 | 0,936 | 19,50%/giây |
-| 12 | 1,123 | 23,40%/giây |
-| 18 | 1,310 | 27,30%/giây |
-
-Một lần crit được roll cho lần giáng Ấn; mục tiêu chính và toàn bộ mục tiêu phụ cùng nhận trạng thái crit đó. Accuracy vẫn roll riêng cho từng mục tiêu.
-
-### 10.3. Chọn tâm AOE
-
-Với mỗi kẻ địch sống, hệ thống thử dùng vị trí của nó làm tâm:
-
-1. Đếm số mục tiêu trong bán kính.
-2. Chọn tâm đánh được nhiều mục tiêu nhất.
-3. Nếu bằng nhau, chọn tâm gần người chơi hơn.
-4. Nếu vẫn bằng nhau, chọn mục tiêu spawn trước.
-
-Tâm được khóa khi Ấn bắt đầu giáng. Nếu mục tiêu tâm chết, Ấn vẫn rơi tại vị trí đã khóa.
-
-### 10.4. Đại Nhánh cấp 6 A — Sơn Hà Trấn
-
-Dành cho dọn quái:
-
-- Bán kính tăng từ 90 lên 135.
-- Damage mục tiêu phụ tăng từ 55% lên 75%.
-- Knockback tăng từ 18 lên 28.
-- Mục tiêu chính vẫn nhận 100%.
-
-#### Tiểu nhánh cấp 12 A1 — Chấn Địa
-
-Mục tiêu sống sót sau khi bị hit:
-
-- Quái thường: giảm 20% tốc độ di chuyển trong 2,5 giây.
-- Boss: giảm 10% trong 2,5 giây.
-- Chỉ ảnh hưởng movement speed.
-- Không giảm attack speed hoặc cast speed.
-- Tái kích hoạt chỉ làm mới thời gian, không cộng dồn.
-
-#### Tiểu nhánh cấp 12 A2 — Liên Sơn
-
-Mỗi mục tiêu phụ thực sự nhận damage giảm 0,3 giây chu kỳ tiếp theo:
-
-- Không tính mục tiêu chính.
-- Dodge không được tính.
-- Tối đa giảm 1,2 giây.
-- Chu kỳ thấp nhất là 3,6 giây.
-- Chỉ áp dụng cho một lần kích hoạt kế tiếp.
-
-Ví dụ đánh trúng chính và bốn mục tiêu phụ:
-
-```text
-Chu kỳ kế tiếp = 4,8 - 4 × 0,3 = 3,6 giây
-```
-
-#### Chân Hình cấp 18 — Sơn Hà Cộng Chấn
-
-Mỗi lần kích hoạt chẵn tạo một dư chấn sau 0,7 giây:
-
-- Dư chấn xảy ra tại vị trí lần giáng Ấn trước.
-- Gây 45% damage của hit chính cho mọi mục tiêu trong bán kính.
-- Roll accuracy riêng cho từng mục tiêu.
-- Roll crit mới một lần cho cả dư chấn.
-- Không knockback.
-- Không gây slow Chấn Địa.
-- Không kích hoạt giảm chu kỳ Liên Sơn.
-- Nếu không còn kẻ địch trong vùng, dư chấn vẫn diễn ra nhưng không gây damage.
-
-### 10.5. Đại Nhánh cấp 6 B — Trấn Vương Ấn
-
-Dành cho boss và mục tiêu đơn:
-
-- Bán kính giảm từ 90 xuống 60.
-- Damage phụ giảm từ 55% xuống 40%.
-- Nếu tại thời điểm impact chỉ có một kẻ địch trong bán kính:
-  - damage chính ×1,25;
-  - boss không bị knockback.
-- Nếu có từ hai kẻ địch trở lên, không nhận bonus đơn mục tiêu.
-
-#### Tiểu nhánh cấp 12 B1 — Phá Nhạc
-
-Khi điều kiện đơn mục tiêu thỏa mãn, bỏ qua 30% mitigation đã tính.
-
-```text
-Mitigation hiệu lực = Mitigation gốc ×0,70
-```
-
-Ví dụ:
-
-- Giáp giảm 50% → còn giảm 35%.
-- Kháng giảm 40% → còn giảm 28%.
-
-#### Tiểu nhánh cấp 12 B2 — Điệp Ấn
-
-Mỗi lần mục tiêu chính bị đánh trúng liên tiếp:
-
-- Sau hit nhận một tầng Điệp Ấn.
-- Tối đa ba tầng.
-- Mỗi tầng tồn tại trước hit tăng 6% damage hit đó.
-- Đổi mục tiêu hoặc mục tiêu chết xóa toàn bộ tầng.
-- Dodge không thêm tầng.
-
-| Tầng trước hit | Bonus |
-|---:|---:|
-| 0 | 0% |
-| 1 | 6% |
-| 2 | 12% |
-| 3 | 18% |
-
-#### Chân Hình cấp 18 — Trấn Thiên Nhất Kích
-
-Mỗi lần kích hoạt thứ ba thỏa điều kiện đơn mục tiêu:
-
-- Hệ số đơn mục tiêu tăng từ ×1,25 lên ×1,75.
-- Không cộng `1,25 × 1,75`; ×1,75 thay thế ×1,25.
-- Nếu lúc impact có thêm quái đi vào bán kính, Chân Hình không kích hoạt.
-- Bộ đếm vẫn tiêu thụ dù điều kiện thất bại.
-
-Chuỗi đơn mục tiêu:
-
-```text
-Lần 1: ×1,25
-Lần 2: ×1,25
-Lần 3: ×1,75
-```
-
-## 11. Bảng hệ số damage từng cấp
-
-Các hệ số dưới đây chưa tính nhánh.
-
-| Cấp | Phi Kiếm/phát | Liệt Hồn Châm/phát | Trấn Sơn Ấn/hit chính |
-|---:|---:|---:|---:|
-| 1 | 0,420 | 0,130 | 0,780 |
-| 2 | 0,437 | 0,135 | 0,811 |
-| 3 | 0,454 | 0,140 | 0,842 |
-| 4 | 0,470 | 0,146 | 0,874 |
-| 5 | 0,487 | 0,151 | 0,905 |
-| 6 | 0,504 | 0,156 | 0,936 |
-| 7 | 0,521 | 0,161 | 0,967 |
-| 8 | 0,538 | 0,166 | 0,998 |
-| 9 | 0,554 | 0,172 | 1,030 |
-| 10 | 0,571 | 0,177 | 1,061 |
-| 11 | 0,588 | 0,182 | 1,092 |
-| 12 | 0,605 | 0,187 | 1,123 |
-| 13 | 0,622 | 0,192 | 1,154 |
-| 14 | 0,638 | 0,198 | 1,186 |
-| 15 | 0,655 | 0,203 | 1,217 |
-| 16 | 0,672 | 0,208 | 1,248 |
-| 17 | 0,689 | 0,213 | 1,279 |
-| 18 | 0,706 | 0,218 | 1,310 |
-
-## 12. Ví dụ damage thực tế
-
-Giả sử:
-
-```text
-Pháp Bảo Công = 500
-Critical Rate = 5%
-Critical Damage = 150%
-Mục tiêu có Defense = 50
-```
-
-Defense 50 tạo mitigation:
-
-```text
-50 / (50 + 50) = 50%
-```
-
-### 12.1. Cấp 1
-
-Phi Kiếm:
-
-```text
-Raw = 500 ×0,42 = 210
-Sau giáp = 105
-Critical = 157,5
-```
-
-Liệt Hồn Châm:
-
-```text
-Raw = 500 ×0,13 = 65
-Sau giáp = 32,5
-Dưới 25% HP = 40,625
-Critical khi thấp HP = 60,9375
-```
-
-Trấn Sơn Ấn:
-
-```text
-Raw chính = 500 ×0,78 = 390
-Sau giáp = 195
-
-Raw phụ = 390 ×0,55 = 214,5
-Sau giáp = 107,25
-```
-
-### 12.2. Cấp 18
-
-Phi Kiếm:
-
-```text
-Raw = 500 ×0,706 = 353
-Sau giáp = 176,5
-Critical = 264,75
-```
-
-Liệt Hồn Châm:
-
-```text
-Raw = 500 ×0,218 = 109
-Sau giáp = 54,5
-Dưới 25% HP = 68,125
-```
-
-Trấn Sơn Ấn:
-
-```text
-Raw chính = 500 ×1,310 = 655
-Sau giáp = 327,5
-
-Raw phụ = 655 ×0,55 = 360,25
-Sau giáp = 180,125
-```
-
-## 13. Đổi nhánh
-
-Lần chọn ở cấp 6 và cấp 12 là miễn phí. Chỉ được đổi ngoài trận.
-
-### 13.1. Đổi Tiểu Nhánh cấp 12
-
-Giữ nguyên Đại Nhánh:
-
-| Chi phí | Số lượng |
-|---|---:|
-| Linh Thạch | 300 |
-| Linh Bảo Tàn Phiến | 5 |
-| Tinh Luyện Cốt | 1 |
-
-### 13.2. Đổi Đại Nhánh
-
-Xóa cả Đại Nhánh và Tiểu Nhánh:
-
-| Chi phí | Số lượng |
-|---|---:|
-| Linh Thạch | 750 |
-| Linh Bảo Tàn Phiến | 12 |
-| Tinh Luyện Cốt | 3 |
-
-Quy tắc:
-
-- Không giảm cấp pháp bảo.
-- Không hoàn nguyên liệu nâng cấp.
-- Sau khi trả phí, người chơi chọn nhánh mới ngay.
-- Không cho để pháp bảo ở trạng thái thiếu nhánh nếu đã vượt cấp yêu cầu.
-- Việc đổi nhánh phải atomic; nếu không thể hoàn thành lựa chọn mới thì không trừ tài nguyên.
-
-## 14. Giao diện
-
-### 14.1. Panel Bản Mệnh Pháp Bảo
-
-Nút **Pháp Bảo** xuất hiện trong `RealmActionNav` từ Trúc Cơ.
-
-Khu bên trái:
-
-- Danh sách ba pháp bảo.
-- Cấp hiện tại.
-- Trạng thái đã sở hữu/chưa sở hữu.
-- Dấu đang trang bị.
-
-Khu trung tâm:
-
-- Hình pháp bảo.
-- Cấp và thanh tiến hóa.
-- Pháp Bảo Công hiện tại.
-- Loại damage thích ứng dự kiến.
-- Damage mỗi phát.
-- Chu kỳ.
-- DPS đơn mục tiêu ước tính.
-- Hành vi mục tiêu.
-- Tổng damage pháp bảo ở trận gần nhất.
-
-Khu bên phải:
-
-- Cây Đại Nhánh cấp 6.
-- Hai Tiểu Nhánh cấp 12.
-- Chân Hình cấp 18.
-- Nút đổi nhánh.
-- Preview chính xác trước/sau khi chọn.
-
-Khu nâng cấp phải hiển thị số thực trước/sau, không chỉ ghi “damage tăng 4%”:
-
-```text
-Cấp 11 → 12
-Damage Phi Kiếm: 0,588 → 0,605 Pháp Bảo Công
-Mở: Khắc Ấn cấp 12
-
-Cần:
-1.100 Linh Thạch       đang có X
-12 Linh Bảo Tàn Phiến đang có Y
-3 Tinh Luyện Cốt       đang có Z
-```
-
-### 14.2. Combat HUD
-
-Một slot pháp bảo nhỏ cạnh HUD kỹ năng:
-
-- Icon pháp bảo.
-- Cấp.
-- Vòng đếm chu kỳ.
-- Bộ đếm nhánh:
-  - Phi Kiếm: số lần tới Phân Quang hoặc số Kiếm Ấn.
-  - Liệt Hồn Châm: số lần tới Tam Châm/Vạn Châm.
-  - Trấn Sơn Ấn: số lần tới Cộng Chấn/Trấn Thiên.
-- Flash vàng khi Chân Hình sẵn sàng.
-- Không hiển thị như một ô skill có thể bấm.
-
-### 14.3. Tooltip
-
-Tooltip pháp bảo phải hiển thị:
-
-- Hệ số damage hiện tại.
-- Damage ước tính theo snapshot ngoài trận.
-- Chu kỳ cố định.
-- DPS đơn mục tiêu trước mitigation.
-- Loại damage thích ứng dự kiến.
-- Targeting rule.
-- Toàn bộ hiệu ứng nhánh bằng số cụ thể.
-- Dòng cảnh báo: “Không nhận Tốc Đánh, Tốc Thi Triển hoặc Hồi Chiêu”.
-- Dòng cảnh báo: “Không tạo tài nguyên chiến đấu hoặc kích hoạt hiệu ứng kỹ năng”.
-
-## 15. Dữ liệu cần lưu
-
-Mỗi nhân vật có:
+Không dùng array inventory vì mỗi nhân vật chỉ có một bản mệnh:
 
 ```ts
 interface ArtifactProgress {
-  artifactId: string
-  owned: boolean
-  level: number
-  majorBranchId?: string
-  minorBranchId?: string
+  artifactId: ArtifactId
+  realmId: string
+  realmLevel: number
+  experience: number
+  grade: ArtifactGrade
+  selectedPath?: ArtifactPath
 }
 
-interface ArtifactLoadout {
-  equippedArtifactId?: string
-  artifacts: ArtifactProgress[]
+interface PlayerData {
+  artifact?: ArtifactProgress
 }
 ```
 
-Không lưu runtime combat:
+Normalize invariants:
 
-- Timer.
-- Bộ đếm phát.
-- Kiếm Ấn.
-- Điệp Ấn.
-- Internal cooldown của Liên Sát.
-- Danh sách mục tiêu đã bị Đoạn Hồn.
-- Trạng thái Chân Hình.
+- `artifactId` phải khớp nghề; sai thì bỏ và thức tỉnh lại nếu đủ gate.
+- Realm/tầng không vượt player và không thấp hơn mốc unlock.
+- EXP hữu hạn, không âm, không vượt requirement kế.
+- Grade/path sai fallback `pham`/`undefined`.
+- Trước Trúc Cơ: `artifact === undefined`.
+- Pháp Tu đã Trúc Cơ nhưng thiếu state: tạo Ngũ Hành Châu mặc định khi boot/normalize.
 
-Các state trên reset mỗi trận.
+## 11. Runtime và combat integration
 
-Save cũ không có field pháp bảo được normalize thành:
-
-```text
-Không sở hữu pháp bảo
-Không trang bị pháp bảo
+```ts
+interface ArtifactRuntime {
+  artifactId: ArtifactId
+  path?: ArtifactPath
+  activationTimer: number
+  activationCount: number
+  elementCursor: number
+  perTargetControl: Record<string, ArtifactTargetControlState>
+  lastBattleDamage: number
+}
 ```
 
-Nếu người chơi đã ở Trúc Cơ nhưng chưa chọn pháp bảo, panel hiển thị nghi thức chọn miễn phí.
+State này nằm trong `Battle`, không persist. Tick order:
 
-Các guard dữ liệu bắt buộc:
+1. Update buff/ailment và pending action như hiện tại.
+2. Không tick khi chưa materialize, player chết hoặc battle không `fighting`.
+3. Timer artifact chạy độc lập với cast/basic attack; player bị CC không dừng artifact.
+4. Khi ready, chọn target theo AI/range và tạo action đã snapshot từ level/grade/path.
+5. Resolve qua pipeline combat hiện hữu và emit event cho Phaser.
 
-- `level` luôn clamp 1–18 cho pháp bảo đã sở hữu.
-- Pháp bảo chưa sở hữu không được trang bị.
-- `equippedArtifactId` không tồn tại trong registry thì bỏ trang bị an toàn.
-- Nhánh không hợp lệ với pháp bảo thì bỏ nhánh, không crash save.
-- Cấp dưới 6 không giữ Đại Nhánh.
-- Cấp dưới 12 không giữ Tiểu Nhánh.
+Thêm origin type an toàn để attribution:
 
-## 16. Kiến trúc triển khai dự kiến
+```ts
+type CombatActionOrigin =
+  | { kind: 'basic_attack' }
+  | { kind: 'skill'; skillId: string }
+  | { kind: 'artifact'; artifactId: ArtifactId }
+  | { kind: 'enemy'; enemyId: string }
+```
 
-Không đưa pháp bảo vào `SkillSystem`, vì nếu làm vậy sẽ dễ vô tình nhận:
+Không dùng nhiều boolean rời hoặc `any`. `ActionImpactEvent` mang origin để Phaser chọn VFX và summary ghi đúng artifact damage.
 
-- cooldown reduction;
-- skill XP;
-- mana cost;
-- passive trigger;
-- loadout slot;
-- cast state.
+## 12. UI riêng
 
-Module riêng:
+### 12.1. Panel
+
+Thêm `'artifact'` vào `StandalonePanel`, cùng tầng với Kỹ Năng/Tâm Pháp. Thêm shortcut **Bản Mệnh Pháp Bảo** vào command wheel khi đạt Trúc Cơ; nghề chưa có definition hiển thị disabled + tooltip.
+
+Panel có bốn vùng:
+
+1. Artwork/icon, tên, nghề sở hữu, identity.
+2. Cảnh giới/tầng, trần theo player, EXP hiện tại/yêu cầu, trạng thái chạm trần.
+3. Phẩm, bonus, số Đoán Bảo Thạch, chi phí và nút Nâng Phẩm.
+4. Ba card Công/Thủ/Khống, role, milestone 1/3/6/12/18, active state và nút chọn/đổi.
+
+Thông tin bắt buộc: coefficient/chu kỳ sau modifier, hành kế tiếp và luật xoay vòng, buff/CC active, milestone kế, nguồn Đoán Bảo Thạch, cảnh báo thay đổi áp dụng từ trận sau. Không hiển thị DPS ước tính nếu chưa dùng chung calculator với core.
+
+### 12.2. Combat HUD và reward
+
+Trong `PhapTuCombatHud`, thêm slot riêng `ArtifactCombatSlot`, không giả làm `CombatSkillSlot`:
+
+- Icon Ngũ Hành Châu, vòng cooldown, icon hướng.
+- Hành của phát kế.
+- Counter activation thứ năm hoặc stack khống chế trên target hiện tại.
+
+HUD chỉ đọc runtime, không cho đổi hướng/nâng phẩm. Victory/Defeat summary thêm **Kinh nghiệm Pháp Bảo +N**; Đoán Bảo Thạch dùng item row hiện hữu. Tăng tầng giữa trận chỉ đẩy notification, không mở modal.
+
+## 13. Cấu trúc file dự kiến
 
 ```text
 src/core/artifact/
   Artifact.ts
-  ArtifactRegistry.ts
-  ArtifactProgress.ts
+  ArtifactProgression.ts
+  ArtifactRuntime.ts
   ArtifactSystem.ts
-  ArtifactTargeting.ts
-  ArtifactUpgradeBalance.ts
-  ArtifactBranch.ts
+  ArtifactDropBalance.ts
+
+src/data/artifact/
+  Artifacts.ts
+  NguHanhChau.ts
+
+src/components/panels/
+  ArtifactPanel.vue
+
+src/components/panels/artifact/
+  ArtifactOverview.vue
+  ArtifactExperienceBar.vue
+  ArtifactGradeSection.vue
+  ArtifactPathCards.vue
+
+src/components/game/combat/hud/
+  ArtifactCombatSlot.vue
 ```
 
-Dữ liệu:
+Điểm tích hợp: `Player.ts`, save/player restore, `GameManager`, `Battle.ts`, `BattleSystem.ts`, `CombatAction.ts`, `BattleEvents.ts`, `BattleLootSystem.ts`, `BattleRewardSummary.ts`, `ui.ts`, `GameRoot.vue`, command wheel và `PhapTuCombatHud.vue`.
 
-```text
-src/data/artifact/Artifacts.ts
-src/data/artifact/ArtifactBranches.ts
-```
+## 14. Thứ tự triển khai
 
-UI dự kiến:
+### Phase 1 — Domain/progression
 
-```text
-src/components/panels/ArtifactPanel.vue
-src/components/panels/artifact/ArtifactList.vue
-src/components/panels/artifact/ArtifactDetails.vue
-src/components/panels/artifact/ArtifactBranchTree.vue
-src/components/game/combat/hud/ArtifactCombatHud.vue
-```
+1. Type, registry, definition Ngũ Hành Châu.
+2. `PlayerData.artifact`, normalize và thức tỉnh.
+3. EXP requirement, cap theo player, chọn/đổi hướng.
+4. Unit test invariant progression.
 
-### 16.1. Combat integration
+### Phase 2 — Đá và nâng phẩm
 
-- `Battle` giữ `artifactRuntime`.
-- `GameManager` đưa artifact loadout/progress vào player combat snapshot.
-- `BattleSystem.update()` gọi `ArtifactSystem.update()` sau movement và trước missile resolution.
-- `ArtifactSystem` tạo missile qua `MissileSystem`.
-- Missile bổ sung metadata nguồn `artifact` và `artifactId`.
-- Damage vẫn đi qua `CombatSystem`, nhưng nhận damage context cấm resource/proc/leech.
-- `projectile_spawned` mang `artifactId` để Phaser chọn VFX.
-- Core tiếp tục là authority cho projectile, target và impact.
+1. Đăng ký `doan_bao_thach`.
+2. Bảng drop tập trung theo realm + normal/elite/boss.
+3. Loot notification/summary và transaction nâng phẩm.
+4. Test RNG, realm gate, double reward, thiếu/đủ đá.
 
-Damage context dự kiến phải phân biệt tối thiểu:
+### Phase 3 — Combat subgun
 
-```ts
-type CombatDamageOrigin = 'basic_attack' | 'skill' | 'artifact' | 'enemy'
+1. Snapshot/runtime trong Battle.
+2. Activation timer trong fixed-step.
+3. Origin `artifact`, attribution và action nền.
+4. Vòng xoay Ngũ Hành; lần lượt triển khai Công, Thủ, Khống.
+5. Test milestone và death/materialize/CC/targeting.
 
-interface CombatDamageContext {
-  origin: CombatDamageOrigin
-  skillId?: string
-  artifactId?: string
-  grantsResources: boolean
-  triggersSkillPassives: boolean
-  allowsLeech: boolean
-}
-```
+### Phase 4 — UI/presentation
 
-Không dùng một cờ rời rạc ở nhiều call site. Một context thống nhất giúp ngăn pháp bảo vô tình kích hoạt đường damage cũ.
+1. Standalone panel + command wheel.
+2. Overview, EXP/cap, grade/stone, path cards.
+3. HUD slot + reward summary.
+4. VFX từ `ActionImpactEvent`; component test và responsive.
 
-### 16.2. Runtime state dự kiến
+### Phase 5 — Balance
 
-```ts
-interface ArtifactRuntimeState {
-  artifactId: string
-  level: number
-  majorBranchId?: string
-  minorBranchId?: string
-  damageStat: 'attack' | 'woodPower' | 'firePower' | 'earthPower' | 'metalPower' | 'waterPower'
-  damageElement?: 'wood' | 'fire' | 'earth' | 'metal' | 'water'
-  timerRemaining: number
-  activationCount: number
-  lockedTargetId?: string
-  stackCount: number
-  internalCooldownRemaining: number
-  markedTargetIds: string[]
-}
-```
+1. Simulation EXP/drop/DPS/survivability/control uptime.
+2. Playtest boss, wave đông, auto-repeat dài.
+3. Chốt coefficient, EXP curve, stone drop và grade cost.
 
-Nếu các pháp bảo cần state khác biệt nhiều khi triển khai, dùng discriminated union theo `artifactId`; không dùng `any` hoặc một object tự do.
+## 15. Test nghiệm thu
 
-## 17. Test nghiệm thu
+### 15.1. Ownership/save/progression
 
-### 17.1. Upgrade và economy
+- Pháp Tu vào Trúc Cơ nhận đúng một Ngũ Hành Châu; Kiếm Tu không nhận nhầm.
+- Không có equip/craft/duplicate artifact.
+- Save/load giữ realm, tầng, EXP, phẩm, hướng; state sai được normalize.
+- Mỗi quái chỉ cấp EXP một lần và ba hướng nhận bằng nhau.
+- Artifact không vượt player; ở cap chỉ bank một thanh; player tăng tầng chỉ nhảy đúng một tầng.
+- Offline cultivation không cấp artifact EXP.
 
-- Không thể nâng vượt tầng Trúc Cơ.
-- Không thể nâng nếu nhân vật chưa đạt Trúc Cơ.
-- Không thể nâng nếu thiếu một trong ba nguyên liệu.
-- Trừ nguyên liệu atomic: thất bại không trừ gì.
-- Cấp 6 bắt buộc chọn Đại Nhánh.
-- Cấp 12 bắt buộc chọn Tiểu Nhánh.
-- Cấp 18 mở đúng Chân Hình theo Đại Nhánh.
-- Tổng chi phí cấp 1→18 đúng `17.875 / 162 / 29`.
-- Không thể chế tạo pháp bảo đã sở hữu.
-- Pháp bảo mới chế tạo luôn ở cấp 1.
-- Đổi nhánh không làm giảm cấp.
-- Đổi nhánh thất bại không trừ nguyên liệu.
+### 15.2. Drop/phẩm
 
-### 17.2. Combat chung
+- Quái dưới Trúc Cơ không rơi đá.
+- Normal/Elite/Boss dùng đúng một bảng tỷ lệ.
+- Drop vào bag/summary/notification đúng một lần.
+- Nâng phẩm thiếu đá không mutate; đủ đá trừ đúng và tăng một phẩm.
+- Không vượt `tien`, không thất bại hoặc giảm phẩm.
 
-- Pháp bảo không bắn trong countdown.
-- Bắn ngay khi `fighting` bắt đầu.
-- Tiếp tục bắn khi nhân vật choáng/đóng băng.
-- Tiếp tục bắn khi nhân vật đang cast.
-- Dừng khi nhân vật chết.
-- Không tạo Nộ, Mana, Kiếm Ý hoặc Thế.
-- Không kích hoạt passive attack/skill.
-- Không bị Attack Speed hoặc Cooldown Reduction tác động.
-- Buff đúng Pháp Bảo Công trong trận thay đổi damage.
-- Buff hành khác không làm đổi loại damage đã snapshot.
-- Đổi trang bị ngoài trận không thay đổi snapshot trận đang chạy.
-- Projectile vẫn resolve đúng khi không có Phaser renderer.
-- Một delta lớn và nhiều delta nhỏ cho kết quả tương đương trong fixed-step simulation.
-- Homing retarget đúng khi mục tiêu chết giữa đường.
-- Damage attribution trong battle summary ghi đúng `artifactId`.
+### 15.3. Combat
 
-### 17.3. Thanh Trúc Phi Kiếm
+- Artifact không chiếm/reset skill slot/cooldown.
+- Vẫn tick khi player cast hoặc bị CC; ngừng ở countdown, pending materialize, death, victory/defeat.
+- Đổi hướng chỉ ảnh hưởng trận kế.
+- Không target enemy pending spawn hoặc ngoài range.
+- Damage/kill/impact attribution là artifact.
+- Ngũ Hành chỉ xoay qua element equip và dùng đúng Power/RES/Pen.
+- Công không proc loop; Thủ không leak buff; Khống có per-target ICD và không root-lock boss.
 
-- Phân Quang kích hoạt đúng mỗi lần thứ ba.
-- Không dồn kiếm phụ vào một mục tiêu.
-- Không đủ mục tiêu thì không phát sinh damage ảo.
-- Vạn Ảnh dùng đúng 75%.
-- Truy Mệnh kiểm tra HP lúc impact.
-- Kiếm Tâm chỉ cộng ấn khi hit.
-- Đổi mục tiêu xóa ấn.
-- Tật Ảnh không hạ chu kỳ dưới 2,10 giây.
-- Nhất Kiếm Phá Đạo không kích hoạt khi dodge.
-- Guaranteed crit dùng đúng Critical Damage hiện tại.
-- Sau Chân Hình, Kiếm Ấn trở về 0.
+### 15.4. UI
 
-### 17.4. Liệt Hồn Châm
+- Panel hiển thị đúng artifact theo nghề và đủ EXP/cap/phẩm/đá/path/milestone.
+- EXP bar phân biệt đang luyện, đầy chờ chủ nhân và đạt trần content.
+- Không đổi hướng hoặc nâng phẩm trong combat.
+- HUD cooldown/hành/counter khớp runtime.
+- Không dùng nhầm nhãn quality equipment “Pháp Bảo”.
 
-- Target đúng mục tiêu có phần trăm HP thấp nhất.
-- Execute kiểm tra HP lúc impact.
-- Boss dùng đúng cap bonus của Tuyệt Mạch.
-- Liên Sát có internal cooldown 1,2 giây.
-- Kill từ nguồn khác không reset timer.
-- Lần thứ tư bắn đúng ba projectile.
-- Lần thứ tám thay thế, không cộng thêm lượt thứ tư.
-- Tụ Mang và Tán Mang chọn đúng mục tiêu.
-- Đoạn Hồn chỉ kích hoạt một lần trên mỗi mục tiêu.
-- Boss nhận ×1,25 thay vì ×2 từ Đoạn Hồn.
+## 16. Chỉ tiêu balance ban đầu
 
-### 17.5. Trấn Sơn Ấn
+Simulation artifact tầng 1/6/12/18, phẩm Phàm/Linh/Địa trên boss đơn, wave đông, enemy áp sát nhanh và auto-repeat dài.
 
-- Chọn đúng cụm đông nhất.
-- Tie-break target deterministic.
-- Tâm impact không đổi nếu target chết.
-- Damage phụ dùng đúng hệ số.
-- Knockback dùng đúng khoảng cách.
-- Slow chỉ ảnh hưởng movement speed.
-- Slow refresh nhưng không stack.
-- Liên Sơn chỉ đếm secondary hit không dodge.
-- Liên Sơn không giảm chu kỳ dưới 3,6 giây.
-- Cộng Chấn không kích hoạt slow hoặc giảm chu kỳ.
-- Trấn Vương mất bonus nếu mục tiêu thứ hai đi vào vùng trước impact.
-- Phá Nhạc giảm mitigation theo tỷ lệ tương đối.
-- Điệp Ấn xóa stack khi đổi mục tiêu.
-- Trấn Thiên dùng ×1,75 thay thế ×1,25.
+- Công: 18–25% tổng DPS build cuối Trúc Cơ, không vượt skill chính.
+- Thủ: giảm 15–25% damage nhận trong trận phù hợp, đổi lại DPS thấp rõ.
+- Khống: giảm áp lực wave nhưng hard CC boss không quá 20% uptime.
+- Không hướng nào bắt buộc cho mọi nội dung.
+- Địa phẩm đạt được bằng farm cuối Trúc Cơ hợp lý; Thiên/Tiên không là yêu cầu progression.
 
-### 17.6. Save và UI
+## 17. Ngoài phạm vi
 
-- Save/load giữ đúng sở hữu, cấp, nhánh và pháp bảo trang bị.
-- Runtime state không persist.
-- Save cũ không có artifact vẫn load được.
-- Trúc Cơ chưa chọn pháp bảo thấy nghi thức chọn miễn phí.
-- Tooltip hiển thị đúng hệ số trước/sau nâng cấp.
-- HUD timer không giả vờ chạy khi không có combat target.
-- HUD counter nhánh đồng bộ runtime state.
-- Panel không cho thao tác thay đổi build trong combat.
+- Pháp bảo Kiếm Tu/Thể Tu.
+- Tiến hóa Kim Đan trở lên.
+- Nhiều pháp bảo, artifact inventory, trade, craft hoặc drop nguyên món.
+- Affix ngẫu nhiên, forge, durability, phân giải.
+- Cây node hỗn hợp nhiều hướng.
+- PvP/leaderboard và save migration từ draft chưa phát hành.
 
-## 18. Chỉ tiêu balance khi playtest
+## 18. Điểm cần validate bằng playtest
 
-Một pháp bảo được coi là đạt nếu:
-
-- Cấp 1 đóng góp 10–18% tổng damage của build Trúc Cơ mới.
-- Cấp 18 đóng góp 20–30% tổng damage.
-- Nhánh chuyên boss không vượt nhánh còn lại quá 15% trong trận nhiều quái.
-- Nhánh AOE không vượt nhánh boss ở mục tiêu đơn.
-- Không pháp bảo nào rút ngắn thời gian diệt boss quá 30% so với không trang bị.
-- Không nhánh nào tạo tài nguyên path nhanh hơn build không dùng pháp bảo.
-- Nâng từ cấp 1 lên 6 cảm nhận được nhưng không làm mất giá trị skill.
-- Cấp 18 thay đổi rõ nhịp chiến đấu, không chỉ là thêm damage.
-- Ba pháp bảo cùng cấp/chưa chọn nhánh phải có single-target DPS nền lệch nhau không quá 10%.
-- Khi đúng chuyên môn, nhánh nên mạnh hơn nhánh đối diện khoảng 15–30%, không phải 2–3 lần.
-
-### 18.1. Ma trận simulation tối thiểu
-
-Chạy simulation cố định seed cho mỗi cấu hình:
-
-| Biến | Giá trị cần thử |
-|---|---|
-| Pháp Bảo Công | 100, 500, 1.000 |
-| Cấp pháp bảo | 1, 6, 12, 18 |
-| Critical Rate | 5%, 25%, 50% |
-| Critical Damage | 150%, 200%, 300% |
-| Mitigation mục tiêu | 0%, 25%, 50%, 75% |
-| Số mục tiêu | 1, 3, 6 |
-| Thời lượng trận | 15, 30, 60, 180 giây |
-
-Mỗi cấu hình chạy tối thiểu 1.000 lần nếu có RNG crit/dodge để so damage trung bình và độ lệch.
-
-## 19. Thứ tự triển khai sau khi plan được duyệt
-
-### Phase 1 — Domain và economy
-
-1. Thêm type, registry và static data pháp bảo.
-2. Thêm progress/loadout vào PlayerData và save normalization.
-3. Thêm Linh Bảo Tàn Phiến và drop rule Trúc Cơ.
-4. Thêm chọn pháp bảo đầu tiên, chế tạo, nâng cấp và đổi nhánh.
-5. Unit test toàn bộ transaction và bảng chi phí.
-
-### Phase 2 — Combat core
-
-1. Thêm combat damage origin/context.
-2. Thêm artifact runtime snapshot.
-3. Thêm timer và target selection.
-4. Tích hợp MissileSystem mà không phát skill/basic-attack proc.
-5. Triển khai ba hành vi cơ bản.
-6. Triển khai toàn bộ nhánh cấp 6/12/18.
-7. Unit test headless, fixed-step và projectile lifecycle.
-
-### Phase 3 — UI
-
-1. Thêm entry `Pháp Bảo` vào RealmActionNav.
-2. Thêm nghi thức lựa chọn đầu tiên.
-3. Thêm ArtifactPanel, cây nhánh và transaction feedback.
-4. Thêm tooltip tính damage thực.
-5. Thêm ArtifactCombatHud.
-6. Component test trạng thái khóa/mở/nâng/đổi nhánh.
-
-### Phase 4 — Phaser presentation
-
-1. Pháp bảo bay quanh nhân vật.
-2. VFX projectile riêng cho từng pháp bảo.
-3. Telegraph Trấn Sơn Ấn.
-4. VFX Chân Hình cấp 18.
-5. Đảm bảo presentation không nắm combat authority.
-
-### Phase 5 — Balance và hoàn thiện
-
-1. Chạy simulation matrix.
-2. Playtest các build Pháp Tu và Kiếm Tu.
-3. So tỷ trọng damage theo cấp 1/6/12/18.
-4. Chỉnh hệ số data-only nếu vượt ngưỡng.
-5. Chạy toàn bộ Vitest, type-check, build và E2E combat liên quan.
-
-## 20. Giới hạn và điểm cần validate
-
-Nội dung Trúc Cơ hiện đang tái sử dụng encounter pool Luyện Khí và đổi realm của quái. Bảng chi phí trong tài liệu phù hợp với economy hiện tại, nhưng khi quái/drop Trúc Cơ thật được thiết kế, phải chạy simulation lại và có thể chỉnh tỷ lệ Tàn Phiến.
-
-Các quyết định cần được validate trước khi implementation:
-
-1. Duyệt ba pháp bảo: Thanh Trúc Phi Kiếm, Liệt Hồn Châm, Trấn Sơn Ấn.
-2. Duyệt damage thích ứng theo chỉ số cao nhất.
-3. Duyệt pháp bảo vẫn hoạt động khi nhân vật bị khống chế.
-4. Duyệt bảng chi phí cấp 1–18.
-5. Duyệt Linh Bảo Tàn Phiến và tỷ lệ rơi.
-6. Duyệt mốc Đại Nhánh cấp 6, Tiểu Nhánh cấp 12, Chân Hình cấp 18.
-7. Duyệt chi phí đổi nhánh.
-8. Duyệt quy tắc không tạo tài nguyên và không kích hoạt proc skill.
-9. Duyệt một slot pháp bảo riêng, không dùng slot `weapon`.
-10. Duyệt mục tiêu tỷ trọng 12–25% tổng damage build.
+1. EXP `0,25 × techniqueInsight` (đã giảm từ `0,5`, balance 2026-08-28) có giữ artifact gần nhưng không luôn chạm trần player.
+2. Drop `2% / 8% / 25%` có đưa phần lớn người chơi tới Linh phẩm và người farm tới Địa phẩm.
+3. Chu kỳ 3 giây, coefficient 45% có đủ cảm giác subgun mà không lấn skill/VFX.
+4. Nhánh Thủ nên ưu tiên ward hay final damage reduction sau khi đo thực tế.
+5. Duration/ICD root Boss cần chỉnh theo time-to-kill.
+6. Sau development, đổi hướng nên tiếp tục miễn phí hay có chi phí.

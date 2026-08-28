@@ -36,6 +36,23 @@ function expectedWoodPerHour(profileKey: 'low' | 'middle' | 'high'): number[] {
 }
 
 describe('Economy simulation — yield → sink', () => {
+  it('Linh Mộc và Linh Khoáng chỉ dùng tên phẩm nghề, không dùng tên riêng', () => {
+    const materialName = (id: string) => materials.find((material) => material.id === id)?.name
+
+    expect(materialName('mortal_wood')).toBe('Cửu Phẩm Linh Mộc')
+    expect(materialName('mortal_ore_hoang')).toBe('Cửu Phẩm Linh Khoáng')
+    expect(materialName('mahayana_wood_dia')).toBe('Nhất Phẩm Linh Mộc')
+    expect(materialName('mahayana_ore_dia')).toBe('Nhất Phẩm Linh Khoáng')
+  })
+
+  it('registry chỉ còn linh thảo của đúng 8 họ đan mới', () => {
+    const herbs = materials.filter(material => material.category === 'herb')
+    const legacyIds = ['linh_chi', 'que', 'cuc_hoa', 'linh_thao_chung', 'huyet_tham_decade']
+
+    expect(herbs).toHaveLength(8 * 9 * 4)
+    expect(legacyIds.every(id => !materials.some(material => material.id === id))).toBe(true)
+  })
+
   it('moi realm trong scope co cycle time duoc dinh nghia va duong', () => {
     for (const realmId of REALM_IDS) {
       expect(CYCLE_BASE_SECONDS_BY_REALM[realmId]).toBeGreaterThan(0)
@@ -98,11 +115,9 @@ describe('Economy simulation — yield → sink', () => {
   })
 
   it('thao: moi dan phuong nghe co dung mot thao rieng du 4 tuoi; sink ton tai', () => {
-    const grottoRecipeIds = alchemyRecipes.filter((recipe) =>
-      recipe.id.startsWith('alchemy_pill_'),
-    )
+    const grottoRecipeIds = alchemyRecipes.filter((recipe) => recipe.realmId === 'mortal')
 
-    expect(grottoRecipeIds.length).toBe(12)
+    expect(grottoRecipeIds.length).toBe(8)
 
     for (const recipe of grottoRecipeIds) {
       expect(recipe.herbVariants.length).toBe(4)
@@ -116,7 +131,6 @@ describe('Economy simulation — yield → sink', () => {
       }
     }
 
-    // Legacy recipes van con sink cho ho thao cu.
-    expect(alchemyRecipes.length).toBeGreaterThanOrEqual(30)
+    expect(alchemyRecipes).toHaveLength(72)
   })
 })

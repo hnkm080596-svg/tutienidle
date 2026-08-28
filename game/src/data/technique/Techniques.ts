@@ -24,7 +24,7 @@ export const TECHNIQUES: Technique[] = [
 
     insightMultiplier: 3,
 
-    name: 'Đại Ngũ Hành Chân Quyết',
+    name: 'Tiểu Ngũ Hành Quyết',
 
     icon: '/assets/techniques/dai_ngu_hanh_chan_quyet.png',
 
@@ -62,6 +62,28 @@ export const TECHNIQUES: Technique[] = [
 
     unlocked: false,
 
+    equipped: false,
+  },
+
+  {
+    id: 'dai_ngu_hanh_quyet_truc_co',
+    insightMultiplier: 4,
+    name: 'Đại Ngũ Hành Quyết',
+    icon: '/assets/techniques/dai_ngu_hanh_chan_quyet.png',
+    description: 'Bản Trúc Cơ kế thừa Tiểu Ngũ Hành Quyết, dung nạp linh lực sâu hơn và điều động ngũ hành mạnh hơn.',
+    requiredRealmId: 'foundation_establishment',
+    resourceLabel: 'Pháp Lực',
+    mpLabel: 'Linh Lực',
+    tierEffects: {
+      so_nhap: { maxMpPercent: 0.05, manaRegenPercent: 0.01, hpRegenFlat: 1, mpRegenFlat: 1 },
+      tieu_thanh: { maxMpPercent: 0.07, manaRegenPercent: 0.015, hpRegenFlat: 1.5, mpRegenFlat: 1.5 },
+      dai_thanh: { maxMpPercent: 0.1, manaRegenPercent: 0.025, hpRegenFlat: 2.5, mpRegenFlat: 2.5 },
+      vien_man: { maxMpPercent: 0.15, manaRegenPercent: 0.04, hpRegenFlat: 4, mpRegenFlat: 4 },
+    },
+    combatModifiers: [
+      { id: 'technique:dai_ngu_hanh_quyet_truc_co:attack_range', sourceId: 'dai_ngu_hanh_quyet_truc_co', sourceType: 'technique', stat: 'attackRange', flat: 2 },
+    ],
+    unlocked: false,
     equipped: false,
   },
 

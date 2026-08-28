@@ -14,10 +14,17 @@ export const CYCLE_BASE_SECONDS_BY_REALM: Record<string, number> = {
   mortal: 100,
   qi_refining: 300,
   foundation_establishment: 900,
+  golden_core: 2700,
+  nascent_soul: 8100,
+  soul_transformation: 24300,
+  void_refinement: 72900,
+  body_integration: 218700,
+  mahayana: 218700,
+  tribulation: 656100,
 }
 
 /** Speed multiplier theo level nguồn (§4.2) — index 0 = level 1. */
-export const SITE_SPEED_MULTIPLIERS: readonly number[] = [1.0, 1.15, 1.35, 1.6, 2.0]
+export const SITE_SPEED_MULTIPLIERS: readonly number[] = [1.0, 1.15, 1.35, 1.6, 2.0, 2.5, 3.1, 3.8, 4.6]
 
 export function getSiteSpeedMultiplier(level: number): number {
   return SITE_SPEED_MULTIPLIERS[Math.min(Math.max(level, 1), SITE_SPEED_MULTIPLIERS.length) - 1] ?? 1

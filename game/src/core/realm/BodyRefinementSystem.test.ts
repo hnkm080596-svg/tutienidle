@@ -59,3 +59,61 @@ describe('BodyRefinementSystem — đầu tư xuyên cảnh giới', () => {
     expect(investTinhHoa(player, 100)).toBe(0)
   })
 })
+
+// Thiên phú Luyện Thể Kỳ Tài (talent-direction-choice-plan §6) — progress
+// nhân đôi, tiêu nửa Tinh Hoa; clamp đúng phần còn thiếu để không lãng phí.
+describe('BodyRefinementSystem — thiên phú Luyện Thể Kỳ Tài', () => {
+  function playerWithTalent(): ReturnType<typeof createDefaultPlayer> {
+    const player = createDefaultPlayer()
+
+    player.realmId = 'qi_refining'
+    player.selectedTalentIds = ['luyen_the_ky_tai']
+
+    return player
+  }
+
+  it('đầu tư 1 Tinh Hoa được tính 2 progress', () => {
+    const player = playerWithTalent()
+
+    const consumed = investTinhHoa(player, 1)
+
+    expect(consumed).toBe(1)
+    expect(player.bodyRefinementCurrentTierProgress).toBe(2)
+  })
+
+  it('đầu tư đúng nửa cap — hoàn thành tầng với nửa Tinh Hoa', () => {
+    const player = playerWithTalent()
+
+    const cap = BODY_REFINEMENT_TIERS[0]!.cap
+    const consumed = investTinhHoa(player, Math.ceil(cap / 2))
+
+    expect(consumed).toBe(Math.ceil(cap / 2))
+    expect(player.bodyRefinementCompletedTiers).toBe(1)
+    expect(player.bodyRefinementCurrentTierProgress).toBe(0)
+  })
+
+  it('phần còn thiếu lẻ — clamp progress đúng remaining, không tràn cap', () => {
+    const player = playerWithTalent()
+
+    const cap = BODY_REFINEMENT_TIERS[0]!.cap
+
+    player.bodyRefinementCurrentTierProgress = cap - 5
+
+    const consumed = investTinhHoa(player, 100)
+
+    expect(consumed).toBe(3) // ceil(5 / 2)
+    expect(player.bodyRefinementCompletedTiers).toBe(1)
+    expect(player.bodyRefinementCurrentTierProgress).toBe(0)
+  })
+
+  it('không có talent — hành vi giữ nguyên (1 Tinh Hoa = 1 progress)', () => {
+    const player = createDefaultPlayer()
+
+    player.realmId = 'qi_refining'
+
+    const consumed = investTinhHoa(player, 1)
+
+    expect(consumed).toBe(1)
+    expect(player.bodyRefinementCurrentTierProgress).toBe(1)
+  })
+})

@@ -57,6 +57,12 @@ export class ReactionManager {
       damagePerTick: number
       element: ElementType | 'physical'
     }) => void,
+    // Thiên phú Phản Phác (talent-direction-choice-plan §6) — xác suất giữ
+    // lại CẢ 2 ailment ở nhánh consume chuẩn thay vì tiêu, mở đường chain
+    // reaction kế tiếp. Nền 0 = hành vi mặc định (xoá cả 2). CHỈ tác động
+    // nhánh chuẩn; các nhánh đặc biệt (appliesBuffId/appliesAilmentId/
+    // keepsAilmentId) giữ nguyên hành vi.
+    reactionKeepChance = 0,
   ) {
     for (const existingId of targetAilments.getActiveIds()) {
       if (existingId === newAilmentId) {
@@ -164,6 +170,10 @@ export class ReactionManager {
 
           targetAilments.remove(otherAilmentId)
           targetAilments.renewWithExtension(keptAilmentId, extensionSeconds)
+        } else if (reactionKeepChance > 0 && Math.random() < reactionKeepChance) {
+          // Thiên phú Phản Phác (plan §6) — roll trúng thì bỏ qua CẢ HAI
+          // remove: ailment tồn tại nguyên vẹn trên target (không mutate,
+          // đúng invariant Phase 16), có thể kích reaction tiếp theo.
         } else {
           targetAilments.remove(existingId)
           targetAilments.remove(newAilmentId)

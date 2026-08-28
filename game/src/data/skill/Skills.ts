@@ -14,7 +14,7 @@ export const SKILLS: Skill[] = [
   {
     id: 'tram',
 
-    name: 'Trảm',
+    name: 'Huy Kiếm',
 
     description: 'Một chiêu thức cơ bản, không tốn tài nguyên.',
 
@@ -22,7 +22,11 @@ export const SKILLS: Skill[] = [
 
     level: 1,
 
-    maxLevel: 10,
+    maxLevel: 18,
+
+    experience: 0,
+
+    totalExperience: 0,
 
     cooldown: 1,
 
@@ -39,6 +43,8 @@ export const SKILLS: Skill[] = [
         value: 1,
 
         damageType: 'physical',
+
+        skillExperienceRatio: 1 / 18,
       },
     ],
 
@@ -106,7 +112,7 @@ export const SKILLS: Skill[] = [
         duration: 5,
       },
     ],
-    resourceType: 'mana',
+    resourceType: 'none',
 
     unlocked: false,
 
@@ -316,6 +322,8 @@ export const SKILLS: Skill[] = [
 
         components: [{ kind: 'element', element: 'fire', ratio: 1 }],
 
+        manaScalingRatio: 0.001,
+
         attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
       },
 
@@ -344,7 +352,7 @@ export const SKILLS: Skill[] = [
     // (0 nếu chưa mua "Tụ Hỏa"), xem BattleSystem.castSkill().
     grantsHoaThePerCast: true,
 
-    resourceType: 'mana',
+    resourceType: 'none',
 
     buildTag: 'dot',
 
@@ -402,7 +410,7 @@ export const SKILLS: Skill[] = [
 
     // Skill tree redesign (2026-08-21) — root node của Mộc tree, chiếm
     // 1 slot Loadout bình thường (xem hoa_cau_thuat's ghi chú).
-    resourceType: 'mana',
+    resourceType: 'none',
 
     buildTag: 'core',
 
@@ -452,6 +460,8 @@ export const SKILLS: Skill[] = [
 
         components: [{ kind: 'element', element: 'water', ratio: 1 }],
 
+        manaScalingRatio: 0.001,
+
         attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
       },
 
@@ -472,7 +482,7 @@ export const SKILLS: Skill[] = [
     // thường và chạy qua scheduler auto-cast thống nhất như mọi skill
     // khác. Điểm khác biệt DUY NHẤT của Hỏa Cầu Thuật với 4 hành kia là
     // được tự học + trang bị sẵn (cost 0, xem GameManager.chooseCultivationPath()).
-    resourceType: 'mana',
+    resourceType: 'none',
 
     buildTag: 'core',
 
@@ -524,6 +534,8 @@ export const SKILLS: Skill[] = [
 
         components: [{ kind: 'element', element: 'metal', ratio: 1 }],
 
+        manaScalingRatio: 0.001,
+
         attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
       },
 
@@ -549,7 +561,7 @@ export const SKILLS: Skill[] = [
 
     // Skill tree redesign (2026-08-21) — root node của Kim tree, chiếm
     // 1 slot Loadout bình thường (xem hoa_cau_thuat's ghi chú).
-    resourceType: 'mana',
+    resourceType: 'none',
 
     buildTag: 'core',
 
@@ -603,6 +615,8 @@ export const SKILLS: Skill[] = [
 
         components: [{ kind: 'element', element: 'earth', ratio: 1 }],
 
+        manaScalingRatio: 0.001,
+
         attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
 
         earthPureAreaBehavior: true,
@@ -619,7 +633,7 @@ export const SKILLS: Skill[] = [
 
     // Skill tree redesign (2026-08-21) — root node của Thổ tree, chiếm
     // 1 slot Loadout bình thường (xem hoa_cau_thuat's ghi chú).
-    resourceType: 'mana',
+    resourceType: 'none',
 
     buildTag: 'core',
 
@@ -742,7 +756,7 @@ export const SKILLS: Skill[] = [
         realmDamageRatio: 0.15,
       },
     ],
-    resourceType: 'mana',
+    resourceType: 'none',
 
     buildTag: 'burst',
 
@@ -773,7 +787,7 @@ export const SKILLS: Skill[] = [
 
     // "nộ kỹ tạm thời chưa ra mắt" — áp dụng mọi path, chặn cứng bất
     // kể cảnh giới/tài nguyên, xem SkillSystem.canUse().
-    unreleased: true,
+    unreleased: false,
 
     target: 'all_enemies',
 

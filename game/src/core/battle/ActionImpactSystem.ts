@@ -12,6 +12,7 @@ import type { SkillDamageComponent } from '../skill/SkillDamageComponent'
 import type { CombatVfxPresetId } from './CombatAction'
 import type { ActionTargetingShape } from './CombatAction'
 import { getCellsInArea, worldToGridPosition, type CellArea, type GridPosition } from './BattleGrid'
+import type { CombatActionOrigin } from './BattleEvents'
 
 /** Thay thế MissileDamageInfo — cùng shape, tên trung lập hành động. */
 export type ActionDamageInfo =
@@ -39,6 +40,9 @@ export interface HitResolveOptions {
 
   /** false = mục tiêu phụ trong AOE (áp secondaryPercent). */
   isPrimary: boolean
+
+  /** Bản Mệnh Pháp Bảo — attribution cho applyActionHit dispatch milestone. */
+  origin?: CombatActionOrigin
 }
 
 export type ResolveOneHitFn = (
@@ -67,6 +71,9 @@ export interface ScheduledBasicImpact {
   hitCount?: number
 
   knockbackDistance?: number
+
+  /** Bản Mệnh Pháp Bảo — thread qua tick() vào resolveOneHit + action_impact. */
+  origin?: CombatActionOrigin
 }
 
 interface PendingImpact extends ScheduledBasicImpact {
@@ -256,6 +263,7 @@ export class ActionImpactSystem {
           skillId: entry.skillId,
           knockbackDistance: entry.knockbackDistance,
           isPrimary: true,
+          origin: entry.origin,
         })
         landed ||= result.landed
       }
@@ -273,6 +281,7 @@ export class ActionImpactSystem {
         affectedArea: { ...getCellsInArea(anchorCell, 0, 0), shape: 'single' },
         hitCount,
         presetId: entry.presetId,
+        origin: entry.origin,
       })
     }
   }

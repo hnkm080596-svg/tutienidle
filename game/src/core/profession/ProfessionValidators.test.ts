@@ -82,11 +82,11 @@ describe('validateProfessionMaterialEntry — boot validator', () => {
     ).not.toBeNull()
   })
 
-  it('realm ngoài scope → fail', () => {
+  it('realm không hợp lệ → fail', () => {
     expect(
-      validateProfessionMaterialEntry('golden_core_wood', {
+      validateProfessionMaterialEntry('unknown_realm_wood', {
         resourceKind: 'wood',
-        realmId: 'golden_core',
+        realmId: 'unknown_realm',
       }),
     ).not.toBeNull()
   })

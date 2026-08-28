@@ -11,8 +11,8 @@ export type EquipmentQuality =
   | 'hon_don_chi_bao'
   | 'thien_dia_trong_khi'
 
-// Thứ tự từ thấp tới cao — dùng cho upgradeQuality() (Phase nâng
-// phẩm) và roll trọng số lúc rớt đồ.
+// Thứ tự từ thấp tới cao — dùng cho roll trọng số lúc rớt đồ và tra
+// cứu theo bậc.
 export const EQUIPMENT_QUALITY_ORDER: EquipmentQuality[] = [
   'pham_khi',
   'bao_khi',
@@ -77,9 +77,8 @@ export const EQUIPMENT_QUALITY_REALM_WEIGHTS: readonly (readonly number[])[] = [
   [2, 4, 7, 11, 15, 18, 17, 14, 12],
 ]
 
-// Equipment Rework (2026-08-14) — trần Forge Point (xem
-// EquipmentSystem.forge()) theo Quality: phẩm càng cao, "tiềm năng"
-// đầu tư vào món đồ càng lớn — đúng nghĩa "Quality = Potential".
+// Trần Điểm Rèn theo Quality: phẩm càng cao, "tiềm năng" đầu tư vào
+// món đồ càng lớn — đúng nghĩa "Quality = Potential".
 export const EQUIPMENT_QUALITY_MAX_FORGE_POINTS: Record<EquipmentQuality, number> = {
   pham_khi: 20,
   bao_khi: 30,

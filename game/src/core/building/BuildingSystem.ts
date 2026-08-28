@@ -7,6 +7,8 @@ import type { PlayerData } from '../player/Player'
 import { getRealmIndex } from '../realm/realmSystem'
 import type { CraftModifiers } from './BuildingLevelEffect'
 import { isTestModeUnlockAll } from '../dev/DevMode'
+import { getRealmTier } from '../realm/RealmTierMap'
+import { getSpiritStoneMaterialIdForRealmTier } from '../material/SpiritStoneMaterial'
 
 // Lý do từ chối xây — UI (popover/toast) dùng để báo người chơi thay vì
 // im lặng (fix "không thể xây dựng" không rõ nguyên nhân, 2026-08-26).
@@ -22,6 +24,8 @@ const DEFAULT_CRAFT_MODIFIERS: CraftModifiers = {
   qualityBonusPercent: 0,
 
   concurrentJobSlots: 1,
+
+  equipmentCostDiscountPercent: 0,
 }
 
 // Trần offline production (MASTER SPEC Mục VII — "8-12 giờ là điểm
@@ -32,6 +36,44 @@ const OFFLINE_PRODUCTION_CAP_SECONDS = 10 * 60 * 60
 
 // Rate/Capacity tăng tuyến tính theo level — +20%/level.
 const LEVEL_BONUS_PER_LEVEL = 0.2
+
+// Linh Tuyền — engine thạch offline chính (balance playtest 2026-08-28).
+// Mục tiêu sản lượng ở level MAX = 5% rate farm online của realm, tương
+// đương ~30 phút farm cho mỗi 10h offline (đúng cap). Đơn vị: thạch/phút.
+// Realm trên Trúc Cơ scale ×3 mỗi bậc (khớp getRealmRewardMultiplier bên
+// core/reward/RealmRewardScale.ts — farm online cũng tăng ×3 nên offline giữ
+// tỉ lệ 5%).
+const SPIRIT_SPRING_TARGET_PER_MINUTE: Record<string, number> = {
+  mortal: 5.5,
+  qi_refining: 31,
+  foundation_establishment: 93,
+}
+
+const SPIRIT_SPRING_REALM_GROWTH_BASE = 3
+const SPIRIT_SPRING_MORTAL_FALLBACK = 5.5
+const SPIRIT_SPRING_FOUNDATION_FALLBACK = 93
+
+function getSpiritSpringTargetRatePerMinute(realmId: string | undefined): number {
+  if (realmId) {
+    const tableRate = SPIRIT_SPRING_TARGET_PER_MINUTE[realmId]
+
+    if (tableRate !== undefined) {
+      return tableRate
+    }
+  }
+
+  const realmIndex = realmId ? getRealmIndex(realmId) : -1
+  const foundationIndex = getRealmIndex('foundation_establishment')
+
+  if (realmIndex > foundationIndex) {
+    return (
+      SPIRIT_SPRING_FOUNDATION_FALLBACK *
+      Math.pow(SPIRIT_SPRING_REALM_GROWTH_BASE, realmIndex - foundationIndex)
+    )
+  }
+
+  return SPIRIT_SPRING_MORTAL_FALLBACK
+}
 
 /**
  * Building KHÔNG giữ state nội bộ (giống EquipmentSystem) — bag/
@@ -137,6 +179,7 @@ export class BuildingSystem {
     registry: BuildingRegistry,
     manager: BuildingManager,
     materialBag: MaterialBag,
+    currentRealmId?: string,
   ): boolean {
     const instance = manager.get(instanceId)
 
@@ -147,6 +190,12 @@ export class BuildingSystem {
     const template = registry.get(instance.buildingId)
 
     if (instance.level >= template.maxLevel) {
+      return false
+    }
+
+    // Building level N corresponds to realm tier N. Direct system callers
+    // may omit realm for isolated tests/tools; gameplay always supplies it.
+    if (currentRealmId && getRealmTier(currentRealmId) < instance.level + 1) {
       return false
     }
 
@@ -189,6 +238,10 @@ export class BuildingSystem {
           result.timeReductionPercent += effect.percent
         } else if (effect.kind === 'craft_quality_bonus') {
           result.qualityBonusPercent += effect.percent
+        } else if (effect.kind === 'concurrent_job_slots') {
+          result.concurrentJobSlots += effect.amount
+        } else if (effect.kind === 'equipment_cost_discount') {
+          result.equipmentCostDiscountPercent += effect.percent
         }
       }
     }
@@ -196,11 +249,34 @@ export class BuildingSystem {
     return result
   }
 
-  private getEffectiveRate(template: Building, level: number): number {
+  private getEffectiveRate(template: Building, level: number, realmId?: string): number {
+    if (template.id === 'spirit_spring') {
+      return this.getSpiritSpringRatePerSecond(template, level, realmId)
+    }
+
     return (template.baseProductionRate ?? 0) * (1 + (level - 1) * LEVEL_BONUS_PER_LEVEL)
   }
 
-  private getEffectiveCapacity(template: Building, level: number): number {
+  // Linh Tuyền — rate neo theo realm (bảng SPIRIT_SPRING_TARGET_PER_MINUTE),
+  // level scaling giữ +20%/level; level MAX đạt đúng target 5% farm online.
+  private getSpiritSpringRatePerSecond(template: Building, level: number, realmId?: string): number {
+    const targetPerMinute = getSpiritSpringTargetRatePerMinute(realmId)
+    const maxLevelMultiplier = 1 + (template.maxLevel - 1) * LEVEL_BONUS_PER_LEVEL
+    const levelOneRatePerSecond = targetPerMinute / 60 / maxLevelMultiplier
+
+    return levelOneRatePerSecond * (1 + (level - 1) * LEVEL_BONUS_PER_LEVEL)
+  }
+
+  private getEffectiveCapacity(template: Building, level: number, realmId?: string): number {
+    if (template.id === 'spirit_spring') {
+      // Storage = đúng 10h sản lượng ở level/realm đó để offline không bao
+      // giờ cap TRƯỚC cap thời gian (2026-08-28 — thay 100^level cũ khiến
+      // L1 chỉ chứa 100 thạch, đầy sau ~47 phút). Epsilon chặn float drift
+      // (rate×36000 = 18600.000000000004 không bị ceil lên 18601).
+      const tenHourYield = this.getSpiritSpringRatePerSecond(template, level, realmId) * OFFLINE_PRODUCTION_CAP_SECONDS
+      return Math.ceil(tenHourYield - 1e-6)
+    }
+
     return template.baseStorageCapacity * (1 + (level - 1) * LEVEL_BONUS_PER_LEVEL)
   }
 
@@ -214,6 +290,7 @@ export class BuildingSystem {
     instance: BuildingInstance,
     template: Building,
     currentTime: number,
+    realmId?: string,
   ): number {
     if (template.producesMaterialId && template.baseProductionRate) {
       const elapsedSeconds = Math.min(
@@ -225,13 +302,23 @@ export class BuildingSystem {
         return 0
       }
 
-      const rate = this.getEffectiveRate(template, instance.level)
-      const capacity = this.getEffectiveCapacity(template, instance.level)
+      const rate = this.getEffectiveRate(template, instance.level, realmId)
+      const capacity = this.getEffectiveCapacity(template, instance.level, realmId)
 
       return Math.min(elapsedSeconds * rate, capacity)
     }
 
     return 0
+  }
+
+  // UI đọc sức chứa + tốc độ (Linh Tuyền) để hiển thị, cùng nguồn với
+  // getStoredAmount/claim nên luôn khớp (2026-08-28).
+  getCapacity(instance: BuildingInstance, template: Building, realmId?: string): number {
+    return this.getEffectiveCapacity(template, instance.level, realmId)
+  }
+
+  getRatePerMinute(instance: BuildingInstance, template: Building, realmId?: string): number {
+    return this.getEffectiveRate(template, instance.level, realmId) * 60
   }
 
   /**
@@ -247,6 +334,7 @@ export class BuildingSystem {
     registry: BuildingRegistry,
     manager: BuildingManager,
     currentTime: number,
+    currentRealmId?: string,
   ): { amount: number; materialId?: string } {
     const instance = manager.get(instanceId)
 
@@ -260,7 +348,7 @@ export class BuildingSystem {
       return { amount: 0 }
     }
 
-    const amount = Math.floor(this.getStoredAmount(instance, template, currentTime))
+    const amount = Math.floor(this.getStoredAmount(instance, template, currentTime, currentRealmId))
 
     if (amount <= 0) {
       return { amount: 0 }
@@ -268,6 +356,10 @@ export class BuildingSystem {
 
     instance.lastCollectedAt = currentTime
 
-    return { amount, materialId: template.producesMaterialId }
+    const materialId = template.id === 'spirit_spring' && currentRealmId
+      ? getSpiritStoneMaterialIdForRealmTier(getRealmTier(currentRealmId))
+      : template.producesMaterialId
+
+    return { amount, materialId }
   }
 }

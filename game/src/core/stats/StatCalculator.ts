@@ -62,8 +62,8 @@ const ATTRIBUTE_ATTACK_SPEED_PERCENT_PER_POINT = 0.0015
 const ATTRIBUTE_ACCURACY_PER_POINT = 1.5
 const ATTRIBUTE_EVASION_PER_POINT = 1.0
 const ATTRIBUTE_CRIT_RATE_PERCENT_PER_POINT = 0.0005
-const ATTRIBUTE_MAX_MP_PER_POINT = 2
-const ATTRIBUTE_MANA_REGEN_PER_POINT = 0.02
+const ATTRIBUTE_COOLDOWN_REDUCTION_PER_POINT = 0.001
+const ATTRIBUTE_AILMENT_RESIST_PER_POINT = 0.002
 const ATTRIBUTE_CRIT_DAMAGE_PERCENT_PER_POINT = 0.003
 const ATTRIBUTE_ELEMENT_POWER_PER_POINT = 0.5
 const ATTRIBUTE_MAX_HP_PER_POINT = 8
@@ -151,8 +151,8 @@ function deriveAttributeModifiers(finalized: Stats): StatModifier[] {
 
     flatAttributeModifier(
       'intelligence',
-      'maxMp',
-      finalized.intelligence * ATTRIBUTE_MAX_MP_PER_POINT,
+      'cooldownReduction',
+      finalized.intelligence * ATTRIBUTE_COOLDOWN_REDUCTION_PER_POINT,
     ),
     percentAttributeModifier(
       'intelligence',
@@ -161,8 +161,8 @@ function deriveAttributeModifiers(finalized: Stats): StatModifier[] {
     ),
     flatAttributeModifier(
       'intelligence',
-      'manaRegenPerSecond',
-      finalized.intelligence * ATTRIBUTE_MANA_REGEN_PER_POINT,
+      'ailmentResistPercent',
+      finalized.intelligence * ATTRIBUTE_AILMENT_RESIST_PER_POINT,
     ),
 
     flatAttributeModifier('vitality', 'maxHp', finalized.vitality * ATTRIBUTE_MAX_HP_PER_POINT),

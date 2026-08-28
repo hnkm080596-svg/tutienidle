@@ -9,6 +9,10 @@ import { getMainStatCap } from '../stats/StatCap'
 import { addCultivation } from '../cultivation/CultivationSystem'
 import { getRequiredCultivation } from '../realm/realmSystem'
 
+export function clampToRealmCap(current: number, increase: number, realmId: string): number {
+  return Math.max(0, Math.min(increase, getMainStatCap(realmId) - current))
+}
+
 /**
  * Nơi hiệu ứng pill thật sự ghi vào — do PillSystem không giữ
  * PlayerData/CombatEntity cụ thể (giống RewardSystem/RewardReceiver),
@@ -21,7 +25,7 @@ export interface PillTarget {
   heal(amount: number): void
 }
 
-export type PillUseReason = 'ok' | 'wrong_realm' | 'all_main_stats_capped'
+export type PillUseReason = 'ok' | 'wrong_realm' | 'all_main_stats_capped' | 'requires_phap_tu'
 
 export class PillSystem {
   constructor(private readonly buffSystem: BuffSystem) {}
@@ -47,7 +51,7 @@ export class PillSystem {
         (modifier) => modifier.id === `pill-permanent:${effect.stat}`,
       )
 
-      const current = existing?.flat ?? 0
+      const current = player.baseStats[effect.stat] + (existing?.flat ?? 0)
 
       if (current + (effect.value ?? 0) > cap) {
         return false
@@ -132,6 +136,16 @@ export class PillSystem {
       return 'wrong_realm'
     }
 
+    // Linh lực (MP) là tài nguyên riêng của Pháp Tu (maxMp = 0 với path
+    // khác) — pill hồi MP báo lỗi thay vì lãng phí hiệu ứng trong im lặng.
+    const hasManaRegen = pill.effects.some(
+      (effect) => effect.type === 'regen' && (effect.mpPerSecond ?? 0) > 0,
+    )
+
+    if (hasManaRegen && player.cultivationPath !== 'phap_tu') {
+      return 'requires_phap_tu'
+    }
+
     if (pill.effects.some((effect) => effect.type === 'random_main_stat')) {
       const cap = getMainStatCap(player.realmId)
       const uncapped = MAIN_STAT_KEYS.filter((key) => (player.baseStats[key] ?? 0) < cap)
@@ -189,6 +203,8 @@ export class PillSystem {
           sourceItemId: pill.id,
 
           effectGroup: effect.effectGroup ?? 'pill_regen',
+
+          durationStackable: effect.stackable ?? false,
 
           appliedAtMs: now,
 

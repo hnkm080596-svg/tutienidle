@@ -10,9 +10,13 @@ export interface BattleRewardSummary {
 
   skillInsight: number
 
-  cultivation: number
-
   spiritStone: number
+
+  // Bản Mệnh Pháp Bảo (doc §5.2/§12.2) — EXP artifact cấp khi reward
+  // của quái chết được xử lý thành công, cùng nguồn/nhịp với
+  // skillInsight (BattleLootSystem.processDefeatedEnemies()). Đoán Bảo
+  // Thạch KHÔNG có field riêng — đi qua `items[]` với kind 'material'.
+  artifactInsight: number
 
   items: BattleRewardItem[]
 }
@@ -30,5 +34,5 @@ export interface BattleRewardItem {
 }
 
 export function createEmptyBattleRewardSummary(): BattleRewardSummary {
-  return { techniqueInsight: 0, skillInsight: 0, cultivation: 0, spiritStone: 0, items: [] }
+  return { techniqueInsight: 0, skillInsight: 0, spiritStone: 0, artifactInsight: 0, items: [] }
 }

@@ -38,6 +38,9 @@ describe('PlayerVisualProfiles — fallback policy', () => {
     const mortal = PLAYER_VISUAL_PROFILES.mortal
 
     expect(kiemTu.combatTextureKey).toBe(mortal.combatTextureKey)
+    expect(kiemTu.combatTextureUrl).toBe(mortal.combatTextureUrl)
+    expect(kiemTu.combatSourceSize).toEqual(mortal.combatSourceSize)
+    expect(kiemTu.bodyAnchors).toEqual(mortal.bodyAnchors)
     expect(getCultivateTexture(kiemTu).key).toBe(getCultivateTexture(mortal).key)
   })
 
@@ -70,5 +73,24 @@ describe('PlayerVisualProfiles — fallback policy', () => {
         )
       }
     }
+  })
+})
+
+describe('PlayerVisualProfiles - Mortal sword art', () => {
+  it('uses the ink-sword v2 asset and measured combat geometry', () => {
+    const mortal = PLAYER_VISUAL_PROFILES.mortal
+
+    expect(mortal.combatTextureKey).toBe('player-mortal-ink-sword-concept-v2')
+    expect(mortal.combatTextureUrl).toBe(
+      '/assets/characters/player/mortal/player-mortal-ink-sword-concept-v2.png',
+    )
+    expect(mortal.combatSourceSize).toEqual({ w: 1312, h: 1199 })
+    expect(mortal.bodyAnchors).toEqual({
+      head: { x: 0.55, y: 0.25 },
+      chest: { x: 0.55, y: 0.46 },
+      castHand: { x: 0.32, y: 0.62 },
+      offHand: { x: 0.78, y: 0.47 },
+      feet: { x: 0.55, y: 0.96 },
+    })
   })
 })
