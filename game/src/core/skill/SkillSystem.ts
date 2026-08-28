@@ -35,9 +35,14 @@ export function getHuyKiemLevelForCasts(totalExperience: number): number {
   return 1
 }
 
-/** Policy dùng cooldown clock (chịu CDR) — còn lại dùng cadence Attack Speed. */
+/** Policy dùng cooldown clock (chịu CDR) — còn lại dùng cadence Attack Speed/channel tick. */
 function usesCooldownClock(execution: SkillExecutionPolicy | undefined): boolean {
   return !execution || execution.kind === 'cooldown' || execution.kind === 'cast_time'
+}
+
+/** Test-only export — usesCooldownClock() không cần public API thật. */
+export function usesCooldownClockForTest(execution: SkillExecutionPolicy | undefined): boolean {
+  return usesCooldownClock(execution)
 }
 
 export interface EffectiveSkill {

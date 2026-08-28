@@ -335,6 +335,12 @@ export function playerToCombatEntity(
 
     timeSinceLastBleedProc: 0,
 
+    tuLucActive: false,
+
+    tuLucElapsed: 0,
+
+    tuLucDamageTakenPercent: 0,
+
     currentWard: 0,
 
     // Vô cực — "chưa từng bị đánh" lúc trận vừa bắt đầu, để Ward có

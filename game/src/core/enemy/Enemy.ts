@@ -295,6 +295,12 @@ export function enemyToCombatEntity(enemy: Enemy): CombatEntity {
 
     timeSinceLastBleedProc: 0,
 
+    tuLucActive: false,
+
+    tuLucElapsed: 0,
+
+    tuLucDamageTakenPercent: 0,
+
     currentWard: 0,
 
     timeSinceLastHitTaken: Infinity,

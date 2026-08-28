@@ -1838,6 +1838,15 @@ export class BattleSystem {
         this.finishPlayerCastTransaction(source, skill.id, slotIndex)
         return true
       }
+
+      // Kiếm Tu Bạt Kiếm (2026-08-28, Task 3/8) — 'channel' policy chưa
+      // có runtime thật (Task 4 sẽ build BattleSystem.updateChanneling()
+      // riêng, không đi qua beginPlayerCast). Case này CHỈ tồn tại để
+      // switch exhaustive qua type-check — không skill nào khai kind này
+      // hiện tại nên nhánh này không thể chạy trong thực tế.
+      case 'channel': {
+        return false
+      }
     }
   }
 
