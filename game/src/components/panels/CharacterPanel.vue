@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { usePlayerStore } from '@/stores/player'
+import { useUiStore } from '@/stores/ui'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import PlayerPortrait from '../common/PlayerPortrait.vue'
 import GamePanel from '../common/GamePanel.vue'
@@ -16,7 +17,21 @@ import { getTalentDefinition } from '@/data/talent/Talents'
 import { TALENT_RARITY_LABELS, type TalentDefinition } from '@/core/talent/Talent'
 
 const player = usePlayerStore()
+const ui = useUiStore()
 const { allocateAttributePoint } = useLoadoutActions()
+
+// Entry point Quán Khí (Task 7 review fix, Critical) — QuanKhiPanel.vue chỉ
+// dùng đường mở duy nhất từ trước là useTribulation.ts's triggerQuanKhi(),
+// bắn 1 lần lúc Phàm Nhân đột phá lên Kiếm Tu/Pháp Tu. Sau đó không còn nút
+// nào mở lại panel (commandWheelCatalog.ts đã bỏ slot quan_khi với comment
+// hứa "mở qua nút riêng trong Character Panel" nhưng chưa ai làm) — khiến
+// UI đổi đường Kiếm Tu (Kiếm Trận/Bạt Kiếm) mới thêm ở Task 7 không ai bấm
+// tới được. Chỉ hiện khi đã chọn Kiếm Tu (route switch chỉ có ý nghĩa ở đó).
+const showQuanKhiEntry = computed(() => player.cultivationPath === 'kiem_tu')
+
+function openQuanKhi() {
+  ui.openStandalonePanel('quan_khi')
+}
 
 const chosenKit = computed(() => player.cultivationPath ? CULTIVATION_PATH_KITS[player.cultivationPath] : undefined)
 
@@ -190,6 +205,15 @@ const pillPermanentRows = computed(() => {
             <span class="character-panel__power-value">{{ formatNumber(combatPower) }}</span>
             <span class="character-panel__power-label">Chiến Lực</span>
           </p>
+
+          <button
+            v-if="showQuanKhiEntry"
+            type="button"
+            class="character-panel__quan-khi-btn"
+            @click="openQuanKhi"
+          >
+            Quán Khí
+          </button>
         </div>
       </div>
 
@@ -388,6 +412,23 @@ const pillPermanentRows = computed(() => {
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+
+.character-panel__quan-khi-btn {
+  align-self: flex-start;
+  margin-top: var(--space-1);
+  padding: 3px 10px;
+  background: var(--ink-800);
+  color: var(--gold-300);
+  border: 1px solid var(--gold-500);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  font-family: var(--font-body);
+  cursor: pointer;
+}
+
+.character-panel__quan-khi-btn:hover {
+  background: var(--ink-700, var(--ink-800));
 }
 
 /* Thiên Phú đã chọn (talent-direction-choice-plan §7) — khối nhỏ dưới

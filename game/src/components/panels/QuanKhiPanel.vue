@@ -14,11 +14,10 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useWorldAnnouncementStore } from '@/stores/worldAnnouncement'
 import { CULTIVATION_PATH_KITS } from '@/core/player/CultivationPathKit'
 import type { CultivationPathId } from '@/core/player/CultivationPathKit'
+import type { KiemTuRoute } from '@/core/player/Player'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
-
-type KiemTuRoute = 'kiem_tran' | 'bat_kiem'
 
 const ui = useUiStore()
 const player = usePlayerStore()
@@ -101,14 +100,18 @@ const currentKiemTuRoute = computed<KiemTuRoute>(() => {
   return player.kiemTuRoute ?? 'kiem_tran'
 })
 
-// Gate Bạt Kiếm (Task 2): skillCastCounts/skillLevels là mirror của
-// tổng exp/level skill 'tram' (Trảm — kỹ năng Kiếm Trận), giữ đồng bộ
-// bởi SkillSystem's cast-count sink — KHÔNG đọc lại skillManager trực
-// tiếp ở panel này, cùng nguồn dữ liệu GameManager.setKiemTuRoute() đọc.
+// Gate Bạt Kiếm — review fix (Important): GameManager.setKiemTuRoute()
+// thực ra chặn bằng getNodeLevel('bat_kiem_thuc', player) >= 1 (keystone
+// ĐÃ MUA trong cây công pháp, Task 6), KHÔNG phải ngưỡng skillCastCounts/
+// skillLevels['tram'] >= 9999/3 — ngưỡng đó chỉ là điều kiện MỞ node gốc
+// `bat_kiem_an` (xem KiemTuNodes.ts), một bước SỚM HƠN trong chuỗi mua
+// bat_kiem_an -> minor_bat_kiem_uy -> bat_kiem_thuc. Đọc nhầm mốc này khiến
+// nút "Bạt Kiếm" render enabled trong lúc setKiemTuRoute() vẫn âm thầm
+// trả false (chưa mua đủ cây). Dùng ĐÚNG hàm gate thật để không lệch.
 const isBatKiemUnlocked = computed(() => {
   stateVersion.value
 
-  return (player.skillCastCounts?.tram ?? 0) >= 9999 && (player.skillLevels?.tram ?? 0) >= 3
+  return gameManager.getNodeLevel('bat_kiem_thuc', player.$state) >= 1
 })
 
 const canChangeRoute = computed(() => {
@@ -176,7 +179,7 @@ function selectKiemTuRoute(route: KiemTuRoute) {
       </p>
 
       <p v-else-if="!isBatKiemUnlocked" class="quan-khi-panel__warning">
-        Bạt Kiếm mở khi Trảm đạt tầng 3 và đã thi triển đủ 9999 lần.
+        Bạt Kiếm mở khi đã tu luyện Trảm đạt tầng 3 + 9999 lần thi triển VÀ đã mua trọn Bạt Kiếm Thức trong cây công pháp.
       </p>
     </div>
 

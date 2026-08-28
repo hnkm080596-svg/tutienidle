@@ -15,6 +15,9 @@ import type { PersistentTimedEffect } from './PersistentTimedEffect'
 import type { ElementType } from '../element/ElementType'
 import type { ArtifactProgress } from '../artifact/Artifact'
 
+/** Kiếm Tu tự lực (2026-08-28) — 2 nhánh song song, xem PlayerData.kiemTuRoute. */
+export type KiemTuRoute = 'kiem_tran' | 'bat_kiem'
+
 export interface PlayerData {
   name: string
 
@@ -99,8 +102,10 @@ export interface PlayerData {
   // song (Kiếm Trận/Bạt Kiếm), đổi được ngoài combat qua
   // GameManager.setKiemTuRoute(). Mặc định (undefined) = 'kiem_tran'
   // (đường mặc định lúc chọn Kiếm Tu, chưa cần ghi giá trị tường minh
-  // lúc path chưa chọn/chưa phải Kiếm Tu).
-  kiemTuRoute?: 'kiem_tran' | 'bat_kiem'
+  // lúc path chưa chọn/chưa phải Kiếm Tu). Type export (Task 7 review
+  // fix) — tránh QuanKhiPanel.vue/CombatControlBar.vue tự khai lại union
+  // này rồi lệch khỏi field thật.
+  kiemTuRoute?: KiemTuRoute
 
   // Kiếm Tu (2026-08-15) — Kiếm Ý VĨNH VIỄN: đếm dồn suốt đời save,
   // KHÔNG BAO GIỜ giảm (khác `cultivation`, bị tiêu hao lúc đột phá) —

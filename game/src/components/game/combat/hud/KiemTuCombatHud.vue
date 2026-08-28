@@ -89,7 +89,7 @@ const chainEntries = computed(() => loadout.value.filter(entry => entry.slotInde
       </div>
     </div>
 
-    <div v-if="tuLucState" class="kiem-tu-combat-hud__tu-luc" v-tooltip="`Tụ Lực: ${tuLucState.elapsed.toFixed(1)}/${tuLucState.tickSeconds}s`">
+    <div v-if="tuLucState" class="kiem-tu-combat-hud__tu-luc">
       <div class="kiem-tu-combat-hud__tu-luc-fill" :style="{ width: `${tuLucPercent}%` }" />
       <span class="kiem-tu-combat-hud__tu-luc-label">Tụ Lực {{ tuLucState.elapsed.toFixed(1) }}/{{ tuLucState.tickSeconds }}s</span>
     </div>
