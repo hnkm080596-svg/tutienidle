@@ -7,10 +7,22 @@
 - Do not edit files outside the task scope.
 - Prefer focused changes to rewrites.
 - Never read or expose local secrets such as `APIKey` or `.env` files.
-- Do not commit, push, deploy, or perform destructive Git operations.
+- Do not push, deploy, or perform destructive Git operations.
 - Run relevant tests, `npm.cmd run type-check`, and `npm.cmd run build` before declaring completion.
 - Fix verification failures caused by the implementation.
 - Summaries must state what changed, what was verified, and any remaining limitations.
+
+## Direct Assignment and Worktree Isolation
+
+- Work only on tasks assigned directly by the user. Do not delegate work or create sub-agents.
+- Before changing any project file, create a dedicated Git branch and linked worktree for the task from the current committed state of the primary branch.
+- Make all task edits, dependency setup, tests, builds, and task commits inside that dedicated worktree. Never implement changes directly in the primary worktree.
+- Keep each task isolated in its own worktree and branch. Do not reuse a worktree or branch from another task.
+- Before merging, run all relevant tests, `npm.cmd run type-check`, and `npm.cmd run build` in the task worktree. Fix failures caused by the task and rerun the failed checks.
+- Commit the task changes on the task branch only after verification passes.
+- Merge the task branch into the primary project branch only after every required check passes.
+- Before merging, verify that the primary worktree is clean and still on the expected primary branch. If it is dirty, has moved, or the merge would conflict, stop and report the issue to the user; do not overwrite, stash, discard, or resolve unrelated changes automatically.
+- If verification does not pass, do not merge. Report the failures and leave the task branch and worktree available for follow-up.
 
 ## Development Phase
 
