@@ -37,6 +37,9 @@ export interface BodyRefinementTierDefinition {
   requiredRealmLevel: number
 }
 
+// Caps cấp số nhân (spec dot-pha-loi-kiep §3.1 — hệ số ×3.5/tầng
+// first-pass: 50/175/615/2150/7500/26300; đối chiếu tổng nguồn Tinh
+// Hoa farm được trong 18 tầng Phàm Nhân khi playtest).
 export const BODY_REFINEMENT_TIERS: BodyRefinementTierDefinition[] = [
   {
     id: 'luyen_bi',
@@ -51,7 +54,7 @@ export const BODY_REFINEMENT_TIERS: BodyRefinementTierDefinition[] = [
     id: 'luyen_nhuc',
     name: 'Luyện Nhục',
     description: 'Rèn cơ nhục.',
-    cap: 90,
+    cap: 175,
     stats: ['attack'],
     percentAtFullTier: 0.08,
     requiredRealmLevel: 4,
@@ -60,7 +63,7 @@ export const BODY_REFINEMENT_TIERS: BodyRefinementTierDefinition[] = [
     id: 'luyen_cot',
     name: 'Luyện Cốt',
     description: 'Rèn xương và nền tảng thân thể.',
-    cap: 160,
+    cap: 615,
     stats: ['maxHp'],
     percentAtFullTier: 0.08,
     requiredRealmLevel: 6,
@@ -69,7 +72,7 @@ export const BODY_REFINEMENT_TIERS: BodyRefinementTierDefinition[] = [
     id: 'luyen_huyet',
     name: 'Luyện Huyết',
     description: 'Rèn khí huyết.',
-    cap: 290,
+    cap: 2150,
     stats: ['hpRegenPerSecond'],
     percentAtFullTier: 0.08,
     requiredRealmLevel: 8,
@@ -78,7 +81,7 @@ export const BODY_REFINEMENT_TIERS: BodyRefinementTierDefinition[] = [
     id: 'luyen_tang',
     name: 'Luyện Tạng',
     description: 'Rèn lục phủ ngũ tạng.',
-    cap: 520,
+    cap: 7500,
     // "Damage Reduction / Vitality" (tài liệu mục III.5) — dùng
     // vitality (Thể Chất, tầng Attribute gốc) thay vì 1 stat mitigation
     // trực tiếp: đi qua đúng pipeline deriveAttributeModifiers() sẵn có
@@ -91,7 +94,7 @@ export const BODY_REFINEMENT_TIERS: BodyRefinementTierDefinition[] = [
     id: 'luyen_mach',
     name: 'Luyện Mạch',
     description: 'Khai thông kinh mạch — chuẩn bị Nhập Đạo.',
-    cap: 940,
+    cap: 26300,
     stats: ['maxHp', 'hpRegenPerSecond'],
     percentAtFullTier: 0.08,
     requiredRealmLevel: 12,
