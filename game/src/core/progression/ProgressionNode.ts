@@ -76,7 +76,29 @@ export interface NodeEffect {
   unlocksElement?: ElementType
 
   unlocksSkillIds?: string[]
+
+  // Kiếm Thế / Kiếm Ý (spec 2026-08-29-kiem-the-kiem-y mục 4) — on-hit
+  // effect của kiếm trận: mỗi hit kiếm trận/ult TTKT roll tỉ lệ độc lập
+  // theo cấp node (3%/level, max 15% ở Lv5), hiệu ứng chạy qua modifier
+  // pipeline + damage engine (KiemTranOnHitSystem).
+  onHitEffect?: {
+    kind: OnHitEffectKind
+    baseChancePercent: number
+    perLevelChancePercent: number
+  }
 }
+
+/** 9 loại on-hit kiếm trận (spec mục 4) — mở theo cấp trận 2→9. */
+export type OnHitEffectKind =
+  | 'khiem_khi_dmg'
+  | 'khiem_phong_haste'
+  | 'xuat_huyet_dot'
+  | 'tran_tru_cc'
+  | 'phan_kich_dodge'
+  | 'hap_linh_leech'
+  | 'pha_giap_pen'
+  | 'quang_crit'
+  | 'than_ngu_hanh'
 
 /**
  * Node Tree (magicpath mục 7/30) — hạ tầng CHUNG cho mọi path (Pháp
