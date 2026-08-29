@@ -1,5 +1,6 @@
 import type { PlayerData } from '../player/Player'
 import type { Stats } from '../stats/StatBlock'
+import type { CombatEntity } from '../combat/CombatEntity'
 import type { FoundationType } from '../breakthrough/FoundationType'
 import type { EventBus } from '../events/EventBus'
 import { EntityVitalsSystem } from '../combat/EntityVitalsSystem'
@@ -72,6 +73,12 @@ export class TribulationDirector {
   private readonly vitals: EntityVitalsSystem
   private active: ActiveTribulationState | null = null
   private chapters: readonly TribulationChapterProfile[] = []
+  /**
+   * Entity "ma" cho EntityVitalsSystem phát event chuẩn (HUD/scene đọc
+   * 'entity_vitals_changed'/'damage' như trận cũ) — damage thật áp trên
+   * snapshot fields riêng, entity này chỉ là kênh phát event.
+   */
+  private ghost: CombatEntity | null = null
   private snapshotHp = 0
   private snapshotMaxHp = 0
   private snapshotDefense = 0
@@ -108,6 +115,22 @@ export class TribulationDirector {
     this.snapshotMaxHp = maxHp
     this.snapshotHp = maxHp
     this.snapshotDefense = Math.max(0, playerStats.defense)
+    // Entity ma chỉ mang HP/def — vitals events shape chuẩn cho UI.
+    this.ghost = {
+      id: 'player',
+      name: player.name,
+      type: 'player',
+      baseStats: playerStats,
+      stats: playerStats,
+      currentHp: maxHp,
+      maxHp,
+      currentMp: 0,
+      currentKiemThe: 0,
+      currentKiemYTemp: 0,
+      currentHoaThe: 0,
+      currentMomentum: 0,
+      alive: true,
+    } as CombatEntity
     this.mindFailStacks = 0
     this.mindCorrectLightningReduction = 0
 
@@ -274,12 +297,13 @@ export class TribulationDirector {
     // Buff tự động gộp (spec §5.3 — không chọn): hồi máu + kháng lôi
     this.mindCorrectLightningReduction += MIND_CORRECT_LIGHTNING_DAMAGE_REDUCTION
     const healed = this.vitals.applyHealing(
-      this.ghostEntity(),
+      this.ghost!,
       this.snapshotMaxHp * MIND_CORRECT_HEAL_MAXHP_PERCENT,
       'healing',
       'tribulation_mind',
     )
     this.snapshotHp = Math.min(this.snapshotMaxHp, this.snapshotHp + healed)
+    this.ghost!.currentHp = this.snapshotHp
   }
 
   private applyMindFailure() {
@@ -349,8 +373,12 @@ export class TribulationDirector {
 
     const raw = this.snapshotMaxHp * maxHpPercent * multiplier * mitigation * takenMultiplier * (1 - reduction)
 
-    const applied = this.vitals.applyDamage(this.ghostEntity(), raw, 'heavenly_tribulation', 'tribulation')
+    const applied = this.vitals.applyDamage(this.ghost!, raw, 'heavenly_tribulation', 'tribulation')
     this.snapshotHp = Math.max(0, this.snapshotHp - applied)
+    // Đồng bộ ghost.currentHp cho event/tick kế (vitals đã mutate ghost —
+    // ghost là kênh event, snapshot là nguồn sự thật của Director).
+    this.ghost!.currentHp = this.snapshotHp
+    this.ghost!.alive = this.snapshotHp > 0
 
     if (this.snapshotHp <= 0) {
       this.active!.state = 'defeat'
@@ -420,30 +448,6 @@ export class TribulationDirector {
     }
     active.secondsRemaining = tank.durationSeconds
     active.questionSecondsRemaining = 0
-  }
-
-  /** Entity "ma" cho EntityVitalsSystem phát event chuẩn — damage áp trên snapshot fields riêng. */
-  private ghostEntity() {
-    const active = this.active!
-
-    return {
-      id: 'player',
-      type: 'player' as const,
-      currentHp: this.snapshotHp,
-      maxHp: this.snapshotMaxHp,
-      currentWard: 0,
-      maxWard: 0,
-      currentMp: 0,
-      maxMp: 0,
-      alive: this.snapshotHp > 0,
-      stats: { defense: this.snapshotDefense } as never,
-      // EntityVitalsSystem mutate trực tiếp currentHp trên entity này —
-      // giữ đồng bộ qua getter/setter không được, cho nên đọc lại sau apply.
-      get snapshot(): number {
-        return active.hp
-      },
-      ...{},
-    }
   }
 
   private emitState() {

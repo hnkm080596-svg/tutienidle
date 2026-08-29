@@ -31,7 +31,7 @@ export type CombatActionOrigin =
 
 export interface BattlePositionsEvent {
   type: 'positions'
-  mode?: 'combat' | 'tribulation'
+  mode?: 'combat'
 
   playerX: number
 

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import { ENEMIES } from './Enemies'
-import { TRIBULATIONS } from './Tribulations'
 import { QUESTS } from '../quest/quests'
 import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../realm/BodyRefinement'
 import { DOAN_BAO_THACH_MATERIAL_ID } from '../../core/artifact/ArtifactProgression'
@@ -23,7 +22,9 @@ const LORE_ALLOWLIST = new Set([
 function collectDroppedMaterialIds(): Set<string> {
   const ids = new Set<string>()
 
-  for (const enemy of [...ENEMIES, ...TRIBULATIONS]) {
+  // Spec dot-pha-loi-kiep §5.1 — quái Kiếp đã dỡ (TribulationDirector
+  // không dùng quái), chỉ ENEMIES còn rơi material.
+  for (const enemy of ENEMIES) {
     for (const reward of [enemy.rewards, enemy.eliteRewards, enemy.bossRewards]) {
       for (const drop of reward?.itemDrops ?? []) {
         if (drop.kind === 'material') {

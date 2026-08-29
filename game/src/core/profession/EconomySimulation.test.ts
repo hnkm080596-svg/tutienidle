@@ -131,6 +131,8 @@ describe('Economy simulation — yield → sink', () => {
       }
     }
 
-    expect(alchemyRecipes).toHaveLength(72)
+    // 72 đan phương generated theo PILL_FAMILIES × 9 realm + 2 đan đặc
+    // biệt của gate Trúc Cơ (spec dot-pha-loi-kiep §4.1b).
+    expect(alchemyRecipes).toHaveLength(72 + 2)
   })
 })

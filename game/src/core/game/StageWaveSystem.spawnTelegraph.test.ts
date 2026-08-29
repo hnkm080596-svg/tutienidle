@@ -68,6 +68,11 @@ function createDeps(battle: Battle) {
     } as unknown as StageWaveSystemDeps['enemyTemplates'],
     isStageUnlocked: () => true,
     launchBattle: vi.fn(),
+    hiddenBeast: {
+      isWindowOpen: () => false,
+      maybeReplaceSpawn: vi.fn(() => undefined),
+      onEnemyDefeated: vi.fn(),
+    } as unknown as StageWaveSystemDeps['hiddenBeast'],
   }
 
   return { deps, active, stage, queueEnemySpawn }

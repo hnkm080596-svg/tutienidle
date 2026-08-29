@@ -5,18 +5,16 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useBreakthroughRequirementStore } from '@/stores/breakthroughRequirement'
 import { useTribulation } from '@/composables/useTribulation'
 import { getNextRealm } from '@/core/realm/realmSystem'
-import { BREAKTHROUGH_REQUIREMENTS } from '@/core/breakthrough/BreakthroughRequirement'
 import { formatNumber } from '@/core/format/NumberFormatter'
+import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import GameButton from '@/components/common/GameButton.vue'
 
-// Đột Phá tổng quát (2026-08-16) — "con đường bình thường" của Đột
-// Phá: panel giữa màn hình hiện TRƯỚC khi vào Độ Kiếp, hiện đúng 1
-// slot vật phẩm yêu cầu (xem core/breakthrough/BreakthroughRequirement.ts)
-// + nút luyện thẳng bằng Linh Thạch nếu thiếu. KHÔNG đụng gì tới cơ
-// chế Căn Cơ ẨN (FoundationResolver.ts) — panel này chỉ là 1 cổng MỚI
-// đứng TRƯỚC bước resolveFoundation()/startTribulation() sẵn có, hệ ẩn
-// vẫn tự chạy y hệt cũ ngay khi bấm "Đột Phá" ở dưới.
+// Spec dot-pha-loi-kiep §6.3 — Đột Phá Lệnh đã DỠ: panel chỉ còn xác
+// nhận Linh Thạch trực tiếp (trừ khi bấm Độ Kiếp, không qua token).
+// Điều kiện bậc ẩn KHÔNG BAO GIỜ liệt kê (chính sách phơi bày 3 tầng:
+// Nhân công khai qua gate tầng 12, Địa/Thiên chỉ flavor hint bên dưới,
+// Đại Đạo ẩn hoàn toàn).
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion, bumpState } = useStateVersion()
@@ -29,44 +27,25 @@ const targetRealm = computed(() => {
   return getNextRealm(player.realmId)
 })
 
-const requirement = computed(() =>
-  targetRealm.value ? BREAKTHROUGH_REQUIREMENTS[targetRealm.value.id] : undefined,
+const spiritStoneCost = computed(() =>
+  targetRealm.value ? gameManager.getTribulationSpiritStoneCost(targetRealm.value.id) : 0,
 )
 
-const materialName = computed(() =>
-  requirement.value && gameManager.materialRegistry.has(requirement.value.materialId)
-    ? gameManager.materialRegistry.get(requirement.value.materialId).name
-    : '',
-)
-
-const owned = computed(() => {
+const ownedSpiritStones = computed(() => {
   stateVersion.value
 
-  return requirement.value ? gameManager.materialBag.getAmount(requirement.value.materialId) : 0
+  return gameManager.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)
 })
 
-const hasEnoughItem = computed(() => owned.value >= 1)
+const hasEnoughStones = computed(() => ownedSpiritStones.value >= spiritStoneCost.value)
+
 const cooldownSeconds = computed(() => {
   stateVersion.value
   return gameManager.getTribulationCooldownSeconds()
 })
 
-const canCraft = computed(() =>
-  requirement.value ? gameManager.canCraftBreakthroughToken(targetRealm.value!.id, player.$state) : false,
-)
-
-function craft() {
-  if (!targetRealm.value) {
-    return
-  }
-
-  if (gameManager.craftBreakthroughToken(targetRealm.value.id, player.$state)) {
-    bumpState()
-  }
-}
-
 function confirmBreakthrough() {
-  if (!targetRealm.value || !hasEnoughItem.value || cooldownSeconds.value > 0) {
+  if (!targetRealm.value || !hasEnoughStones.value || cooldownSeconds.value > 0) {
     return
   }
 
@@ -84,29 +63,23 @@ function confirmBreakthrough() {
 
 <template>
   <OverlayPanel
-    :open="store.isOpen && Boolean(targetRealm && requirement)"
+    :open="store.isOpen && Boolean(targetRealm)"
     :title="`Đột Phá ${targetRealm?.name ?? ''}`"
     width="min(420px, 94vw)"
     @close="store.close()"
   >
-    <div v-if="targetRealm && requirement" class="breakthrough-requirement__panel">
-      <p class="breakthrough-requirement__hint">Cần đủ vật phẩm dưới đây trước khi Độ Kiếp.</p>
+    <div v-if="targetRealm" class="breakthrough-requirement__panel">
+      <p class="breakthrough-requirement__hint">Thiên lôi đã giăng kín — chỉ thiếu lòng quyết.</p>
 
-      <div class="breakthrough-requirement__slot" :class="{ 'breakthrough-requirement__slot--ready': hasEnoughItem }">
-        <span class="breakthrough-requirement__slot-name">{{ materialName }}</span>
-        <span class="breakthrough-requirement__slot-amount">{{ owned }}/1</span>
+      <div class="breakthrough-requirement__slot" :class="{ 'breakthrough-requirement__slot--ready': hasEnoughStones }">
+        <span>Linh Thạch</span>
+        <span class="breakthrough-requirement__slot-amount">{{ formatNumber(ownedSpiritStones) }} / {{ formatNumber(spiritStoneCost) }}</span>
       </div>
 
-      <GameButton
-        v-if="!hasEnoughItem"
-        class="breakthrough-requirement__craft"
-        variant="secondary"
-        size="sm"
-        :disabled="!canCraft"
-        @click="craft"
-      >
-        Luyện ({{ formatNumber(requirement.spiritStoneCost) }} Linh Thạch)
-      </GameButton>
+      <div class="breakthrough-requirement__flavor">
+        <p>Tương truyền người có Trúc Cơ Đan tại thân, căn cốt lại vững...</p>
+        <p>...kinh mạch thông suốt, thiên kiếp cũng phải nhường ba phần.</p>
+      </div>
 
       <div class="breakthrough-requirement__actions">
         <GameButton class="breakthrough-requirement__cancel" variant="ghost" size="sm" @click="store.close()">Đóng</GameButton>
@@ -114,7 +87,7 @@ function confirmBreakthrough() {
         <GameButton
           class="breakthrough-requirement__confirm"
           size="sm"
-          :disabled="!hasEnoughItem || cooldownSeconds > 0"
+          :disabled="!hasEnoughStones || cooldownSeconds > 0"
           @click="confirmBreakthrough"
         >
           Độ Kiếp
@@ -155,8 +128,20 @@ function confirmBreakthrough() {
   color: var(--jade);
 }
 
-.breakthrough-requirement__craft {
-  padding: 8px;
+.breakthrough-requirement__flavor {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 14px;
+  border: 1px dashed var(--ink-line-soft);
+  border-radius: var(--radius-sm);
+}
+
+.breakthrough-requirement__flavor p {
+  margin: 0;
+  font-size: var(--text-xs);
+  font-style: italic;
+  color: var(--text-muted);
 }
 
 .breakthrough-requirement__actions {

@@ -12,11 +12,13 @@ import {
   type CombatAiStrategy,
 } from '../battle/CombatAiStrategy'
 
-import type { FoundationType } from '../breakthrough/FoundationType'
-
 import { investTinhHoa, computeBreakthroughGrade } from '../realm/BodyRefinementSystem'
 import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../data/realm/BodyRefinement'
 import { grantRealmPassive } from '../realm/RealmPassiveSystem'
+import {
+  TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM,
+  TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_FALLBACK,
+} from '../../data/tribulation/TribulationChapters'
 import { getAlchemySuccessBonusPercentPoints, getReactionKeepChance } from '../talent/TalentEffects'
 import { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 
@@ -147,9 +149,8 @@ import { TemplateRegistry } from './TemplateRegistry'
 import { NotificationQueue } from './NotificationQueue'
 import { BattleLootSystem } from './BattleLootSystem'
 import { StageWaveSystem } from './StageWaveSystem'
-import { TribulationSystem } from './TribulationSystem'
 import { HiddenBeastSystem } from './HiddenBeastSystem'
-import type { ActiveTribulation } from './TribulationSystem'
+import { TribulationDirector, type ActiveTribulationState } from '../tribulation/TribulationDirector'
 
 import { QuestRegistry } from '../quest/QuestRegistry'
 import { QuestManager } from '../quest/QuestManager'
@@ -158,10 +159,10 @@ import { QuestSystem } from '../quest/QuestSystem'
 import type { Quest } from '../quest/Quest'
 import type { QuestProgress } from '../quest/QuestProgress'
 
-// Re-export giữ tương thích import cũ (useTribulation.ts và các nơi khác
-// import ActiveTribulation/TRIBULATION_COOLDOWN_SECONDS từ GameManager).
-export { TRIBULATION_COOLDOWN_SECONDS } from './TribulationSystem'
-export type { ActiveTribulation } from './TribulationSystem'
+// Re-export giữ tương thích import cũ (useTribulation.ts import
+// ActiveTribulation/TRIBULATION_COOLDOWN_SECONDS từ GameManager).
+export { TRIBULATION_COOLDOWN_SECONDS } from '../tribulation/TribulationDirector'
+export type { ActiveTribulationState } from '../tribulation/TribulationDirector'
 
 import { RewardSystem } from '../reward/RewardSystem'
 import type { RewardReceiver } from '../reward/RewardSystem'
@@ -186,7 +187,6 @@ import { createArtifactRuntime } from '../artifact/ArtifactRuntime'
 import { filterNguHanhElements } from '../artifact/ArtifactSystem'
 
 import { CORE_REALM_LEVEL, getCurrentRealm, getRealmIndex } from '../realm/realmSystem'
-import { BREAKTHROUGH_REQUIREMENTS } from '../breakthrough/BreakthroughRequirement'
 
 import type { GameSave } from '../../services/save/SaveSystem'
 
@@ -410,14 +410,15 @@ export class GameManager {
   // Ba service dưới đây sở hữu business logic trận đấu đang diễn ra:
   // - BattleLootSystem: loot/particle/toast/battle summary khi quái chết.
   // - StageWaveSystem: vòng đời wave của Màn + boss summon.
-  // - TribulationSystem: runtime trận Độ Kiếp + cooldown.
+  // - TribulationDirector: runtime chương kiếp mới (tâm ma + tank lôi,
+  //   spec dot-pha-loi-kiep §5) + cooldown.
   // Khởi tạo trong constructor (KHÔNG phải field initializer) vì cần
   // tham chiếu tới các field khai báo SAU chúng ở trên (bags/registries/
   // zoneRegistry/template registries) — field initializer chạy theo thứ
   // tự khai báo nên không thấy được; ctor body chạy sau cùng, an toàn.
   private readonly battleLoot: BattleLootSystem
   private readonly stageWaves: StageWaveSystem
-  private readonly tribulation: TribulationSystem
+  private readonly tribulationDirector: TribulationDirector
 
   // Quái ẩn (spec dot-pha-loi-kiep §4.1c) — cửa sổ 1000 kill Luyện Khí.
   readonly hiddenBeastSystem: HiddenBeastSystem
@@ -441,7 +442,7 @@ export class GameManager {
 
     // Quái ẩn (spec dot-pha-loi-kiep §4.1c) — tra template qua registry
     // chung (registerEnemyTemplates đã đăng ký Huyết Mông qua ENEMIES).
-    this.hiddenBeast = new HiddenBeastSystem({
+    this.hiddenBeastSystem = new HiddenBeastSystem({
       getEnemyTemplate: (id) => this.enemyTemplates.get(id),
     })
 
@@ -468,7 +469,7 @@ export class GameManager {
       questSystem: this.questSystem,
       questRegistry: this.questRegistry,
       questManager: this.questManager,
-      hiddenBeast: this.hiddenBeast,
+      hiddenBeast: this.hiddenBeastSystem,
     })
 
     this.stageWaves = new StageWaveSystem({
@@ -482,28 +483,11 @@ export class GameManager {
       isStageUnlocked: (stageId, player) => this.isStageUnlocked(stageId, player),
       launchBattle: (player, playerStats, enemy) =>
         this.startBattleWithPlayer(player, playerStats, enemy),
-      hiddenBeast: this.hiddenBeast,
+      hiddenBeast: this.hiddenBeastSystem,
     })
 
-    this.tribulation = new TribulationSystem({
+    this.tribulationDirector = new TribulationDirector({
       eventBus: this.eventBus,
-      battleSystem: this.battleSystem,
-      combatSystem: this.combatSystem,
-      buildPlayerSnapshot: (player, playerStats) => {
-        const skillLevels = Object.fromEntries(
-          this.skillManager.getAll().map((skill) => [skill.id, skill.level]),
-        )
-
-        return playerToCombatEntity(
-          player,
-
-          playerStats,
-
-          this.getSkillRuntimeStats(player),
-
-          skillLevels,
-        )
-      },
     })
   }
 
@@ -1108,7 +1092,7 @@ export class GameManager {
 
     const battle = this.getBattle()
 
-    if (battle && (battle.state === 'countdown' || battle.state === 'fighting' || battle.mode === 'tribulation')) {
+    if (battle && (battle.state === 'countdown' || battle.state === 'fighting')) {
       return false
     }
 
@@ -1136,7 +1120,7 @@ export class GameManager {
 
     const battle = this.getBattle()
 
-    if (battle && (battle.state === 'countdown' || battle.state === 'fighting' || battle.mode === 'tribulation')) {
+    if (battle && (battle.state === 'countdown' || battle.state === 'fighting')) {
       return false
     }
 
@@ -1573,51 +1557,30 @@ export class GameManager {
   }
 
   /**
-   * "Con đường bình thường" của Đột Phá tổng quát (2026-08-16, xem
-   * core/breakthrough/BreakthroughRequirement.ts) — Đột Phá Lệnh luyện
-   * trực tiếp bằng Linh Thạch, KHÔNG qua Recipe (RecipeResultType
-   * không hỗ trợ material làm kết quả): check đủ Linh Thạch rồi trừ và
-   * cấp thẳng material. Phân Giải equipment là luồng huỷ item riêng.
-   * Plan Workstream F: Linh Thạch là MATERIAL — check/trừ qua
-   * MaterialBag, `spiritStoneCost` chỉ còn là authoring sugar được
-   * normalize ngay tại boundary này.
+   * Spec dot-pha-loi-kiep §4.2/§6.3 — Đột Phá Lệnh đã DỠ: gate chỉ còn
+   * tầng 12 + Linh Thạch (trừ trực tiếp khi bấm Độ Kiếp, không qua
+   * token craft). Hàm này check + trừ Linh Thạch đúng loại theo realm —
+   * UI confirm gọi ngay trước startTribulation().
    */
-  canCraftBreakthroughToken(targetRealmId: string, player: PlayerData): boolean {
-    const requirement = BREAKTHROUGH_REQUIREMENTS[targetRealmId]
+  consumeTribulationSpiritStones(targetRealmId: string): boolean {
+    const cost = TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM[targetRealmId] ??
+      TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_FALLBACK
     const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(targetRealmId))
 
-    return (
-      requirement !== undefined &&
-      this.materialRegistry.has(requirement.materialId) &&
-      this.materialBag.getAmount(spiritStoneId) >= requirement.spiritStoneCost
-    )
-  }
-
-  craftBreakthroughToken(targetRealmId: string, player: PlayerData): boolean {
-    if (!this.canCraftBreakthroughToken(targetRealmId, player)) {
+    if (!this.materialBag.remove(spiritStoneId, cost)) {
       return false
     }
-
-    const requirement = BREAKTHROUGH_REQUIREMENTS[targetRealmId]!
-    const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(targetRealmId))
-
-    if (!this.materialBag.remove(spiritStoneId, requirement.spiritStoneCost)) {
-      return false
-    }
-
-    const overflow = this.materialBag.add(this.materialRegistry.get(requirement.materialId), 1)
-
-    if (overflow > 0) {
-      // All-or-nothing: token tràn stack thì hoàn Linh Thạch để không mất
-      // trắng (Linh Thạch cap MAX_SAFE_INTEGER nên hoàn lại luôn vừa chỗ).
-      this.materialBag.add(this.materialRegistry.get(spiritStoneId), requirement.spiritStoneCost)
-
-      return false
-    }
-
-    this.notifyQuestMaterialGained(requirement.materialId, 1)
 
     return true
+  }
+
+  /**
+   * Chi phí Linh Thạch của gate (UI hiển thị trước khi bấm) — cùng nguồn
+   * sự thật với consumeTribulationSpiritStones.
+   */
+  getTribulationSpiritStoneCost(targetRealmId: string): number {
+    return TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM[targetRealmId] ??
+      TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_FALLBACK
   }
 
   /**
@@ -2655,54 +2618,38 @@ export class GameManager {
   }
 
   /**
-   * Độ Kiếp (mục 11 spec `breakthrough`) — khởi trận đấu với quái Kiếp,
-   * bỏ qua Stage hoàn toàn (giống startBattle() nhận Enemy bất kỳ).
-   * Enemy Kiếp phải đã được đăng ký qua registerEnemyTemplates().
-   *
-   * Đột Phá tổng quát (2026-08-16) — `foundationType` CHỈ truyền khi
-   * targetRealmId === 'foundation_establishment' (tra TRIBULATION_ENEMY_ID_BY_FOUNDATION,
-   * hệ Căn Cơ 4-tier cũ, không đổi); mọi targetRealmId khác tra
-   * TRIBULATION_ENEMY_ID_BY_REALM (1 quái Kiếp/cảnh giới, không tier).
-   */
-  /**
-   * Độ Kiếp (mục 11 spec `breakthrough`) — delegate xuống
-   * TribulationSystem (runtime trận Kiếp). Session loot được khởi tạo
-   * RIÊNG qua BattleLootSystem.beginTribulation(): reset receiver +
-   * reward summary của trận Stage trước (P2 fix 2026-08-24) rồi gắn
-   * player của phiên Độ Kiếp.
-   */
+    * Độ Kiếp (spec dot-pha-loi-kiep §5.1) — delegate xuống
+    * TribulationDirector (runtime chương kiếp mới: tâm ma + tank lôi,
+    * KHÔNG qua BattleSystem, không quái Kiếp). hasTrucCoDan đọc từ
+    * PillBag (vật chứng bậc Địa/Thiên, không tiêu). Bất Tử Thể không áp
+    * trong kiếp (nghi lễ thật — giữ pattern cũ): kiếp không qua combat
+    * nên không có session nào để xoá.
+    */
   startTribulation(
     player: PlayerData,
     playerStats: Stats,
     targetRealmId: string,
-    foundationType?: FoundationType,
   ): boolean {
-    const started = this.tribulation.start(player, playerStats, targetRealmId, foundationType)
+    const hasTrucCoDan = this.pillBag.has('truc_co_dan', 1)
 
-    if (started) {
-      this.battleLoot.beginTribulation(player)
+    return this.tribulationDirector.start(player, playerStats, hasTrucCoDan, targetRealmId)
+  }
 
-      // Bất Tử Thể KHÔNG kích hoạt trong trận Độ Kiếp (plan §6 — giữ Độ
-      // Kiếp là nghi lễ thật). Trận Kiếp KHÔNG đi qua startBattle() nên
-      // phải tự xoá session ở đây, tránh lượt sống sót tồn dư từ trận
-      // Stage trước chảy vào.
-      this.surviveLethalGuard.beginTribulation()
-      this.combatSystem.setSurviveLethalSession(null)
-    }
-
-    return started
+  /** Trả lời câu hỏi tâm ma hiện tại (overlay Vue gọi qua facade này). */
+  answerTribulationQuestion(answerIndex: number): boolean {
+    return this.tribulationDirector.answerQuestion(answerIndex)
   }
 
   getTribulationCooldownSeconds(now = Date.now()): number {
-    return this.tribulation.getCooldownSeconds(now)
+    return this.tribulationDirector.getCooldownSeconds(now)
   }
 
-  getActiveTribulation(): ActiveTribulation | null {
-    return this.tribulation.getActive()
+  getActiveTribulation(): ActiveTribulationState | null {
+    return this.tribulationDirector.getState()
   }
 
   clearActiveTribulation() {
-    this.tribulation.clear()
+    this.tribulationDirector.clear()
   }
 
   /**
@@ -3034,10 +2981,9 @@ export class GameManager {
       this.stageWaves.resolveBossSummons()
     }
 
-    // Ngoài vòng fixed-step — TribulationSystem tự có catch-up dạng đóng,
-    // chia nhỏ sẽ cộng dồn sai số float (xem class doc bên đó).
-    this.tribulation.update(deltaSeconds)
-    this.tribulation.updateProgress()
+    // Ngoài vòng fixed-step — TribulationDirector tự có catch-up dạng
+    // đóng (spec dot-pha-loi-kiep §5.6), chia nhỏ sẽ cộng dồn sai số float.
+    this.tribulationDirector.update(deltaSeconds)
   }
 
   private grantBattleRewardIfNeeded() {

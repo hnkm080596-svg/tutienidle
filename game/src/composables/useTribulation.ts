@@ -2,12 +2,21 @@ import { usePlayerStore } from '../stores/player'
 import { useGameManager } from './useGameState'
 import { getCurrentRealm } from '../core/realm/realmSystem'
 import { KIEP_THUONG_DEBUFF } from '../data/buff/buffs'
-import { FOUNDATION_LABELS, type FoundationType } from '../core/breakthrough/FoundationType'
-import type { GameManager, ActiveTribulation } from '../core/game/GameManager'
+import { FOUNDATION_LABELS } from '../core/breakthrough/FoundationType'
+import type { GameManager } from '../core/game/GameManager'
+import type { ActiveTribulationState } from '../core/tribulation/TribulationDirector'
 import { useWorldAnnouncementStore } from '../stores/worldAnnouncement'
 import { useUiStore } from '../stores/ui'
 import { isBattleInProgress } from '../core/battle/BattleTypes'
-import { SPIRIT_STONE_MATERIAL_ID } from '../core/material/SpiritStoneMaterial'
+import { getSpiritStoneMaterialIdForRealmTier } from '../core/material/SpiritStoneMaterial'
+import { getRealmTier } from '../core/realm/RealmTierMap'
+import {
+  TRIBULATION_DEFEAT_CULTIVATION_LOSS_BY_REALM,
+  TRIBULATION_DEFEAT_CULTIVATION_LOSS_FALLBACK,
+  TRIBULATION_DEFEAT_CULTIVATION_LOSS_FLOOR,
+  TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM,
+  TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_FALLBACK,
+} from '../data/tribulation/TribulationChapters'
 
 // Trảm gate (blockIfNoBasicAttack, 2026-08-20 → gỡ 2026-08-21) — Pháp
 // Tu giờ tự học + trang bị SẴN 1 chiêu cơ bản (Hỏa Cầu Thuật) ngay lúc
@@ -16,12 +25,8 @@ import { SPIRIT_STONE_MATERIAL_ID } from '../core/material/SpiritStoneMaterial'
 // kiểm tra trước trận đấu này, kể cả ở Độ Kiếp.
 type PlayerStore = ReturnType<typeof usePlayerStore>
 
-// Mất 1 PHẦN tu vi hiện có khi thất bại (mục 13 spec `breakthrough`
-// — "mất một phần Linh lực"), KHÔNG mất Đại Đạo Chi Cơ hay bất kỳ vật
-// phẩm nào (đúng "Không nên để mất Đại Đạo Chi Cơ 0.01% chỉ vì thất
-// bại một lần").
-const TRIBULATION_DEFEAT_CULTIVATION_LOSS_PERCENT = 0.5
-const TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS = 50
+// Phạt thất bại giờ chuẩn hóa theo realm (spec dot-pha-loi-kiep §5.7,
+// data/tribulation/TribulationChapters.ts) — hằng số cứng cũ đã dỡ.
 
 /**
  * Bấm nút "TRÚC CƠ" — vào thẳng Độ Kiếp Trúc Cơ, KHÔNG hỏi lại/hiện
@@ -48,9 +53,10 @@ export function triggerFoundationBreakthroughAction(player: PlayerStore, gameMan
     return false
   }
 
-  const foundationType: FoundationType = 'human'
-
-  const started = gameManager.startTribulation(player.$state, player.finalStats, 'foundation_establishment', foundationType)
+  // Spec dot-pha-loi-kiep — bậc Kiến Cơ do TribulationDirector resolve
+  // nội bộ (từ đầu tư trước kiếp + Trúc Cơ Đan trong túi), không còn
+  // foundationType truyền tay ở đây.
+  const started = gameManager.startTribulation(player.$state, player.finalStats, 'foundation_establishment')
 
   if (started) {
     useUiStore().enterTribulationScene()
@@ -119,16 +125,16 @@ export function checkTribulationOutcomeAction(player: PlayerStore, gameManager: 
     return false
   }
 
-  const battle = gameManager.getBattle()
-
-  if (!battle || isBattleInProgress(battle.state)) {
+  // Kiếp mới (spec dot-pha-loi-kiep §5.1) KHÔNG qua battle — state nằm
+  // trong ActiveTribulationState của Director.
+  if (active.state === 'ongoing') {
     return false
   }
 
-  if (battle.state === 'victory') {
+  if (active.state === 'victory') {
     resolveVictory(player, gameManager, active)
-  } else if (battle.state === 'defeat') {
-    resolveDefeat(player, gameManager)
+  } else if (active.state === 'defeat') {
+    resolveDefeat(player, gameManager, active)
   }
 
   gameManager.clearActiveTribulation()
@@ -138,7 +144,7 @@ export function checkTribulationOutcomeAction(player: PlayerStore, gameManager: 
   return true
 }
 
-function resolveVictory(player: PlayerStore, gameManager: GameManager, active: ActiveTribulation) {
+function resolveVictory(player: PlayerStore, gameManager: GameManager, active: ActiveTribulationState) {
   const realm = getCurrentRealm(active.targetRealmId)
 
   if (active.targetRealmId === 'qi_refining') {
@@ -151,8 +157,10 @@ function resolveVictory(player: PlayerStore, gameManager: GameManager, active: A
   player.realmLevel = 1
   player.cultivation = 0
 
-  if (active.foundationType) {
-    player.highestFoundationAchieved = active.foundationType
+  // Spec dot-pha-loi-kiep §4.2/§4.4 — bậc Kiến Cơ công bố SAU khi đạt;
+  // highestFoundationAchieved nuôi passive Kiến Cơ (RealmPassives.ts).
+  if (active.targetRealmId === 'foundation_establishment') {
+    player.highestFoundationAchieved = active.grade
   }
 
   gameManager.syncRealmPassive(player.$state)
@@ -162,15 +170,25 @@ function resolveVictory(player: PlayerStore, gameManager: GameManager, active: A
   // cấp idempotent; composable chỉ điều phối kết quả nghi lễ/UI.
   gameManager.grantCultivationPathRealmReward(player.$state, player.realmId)
 
-  // Beta Phase 4 (World Announcement, mục XVI tài liệu) — "discovery
-  // moment" reveal Căn Cơ vừa đạt (Trúc Cơ) hoặc đơn giản là cảnh giới
-  // mới (mọi cảnh giới khác, đột phá tổng quát 2026-08-16). Pinia store
-  // gọi được trực tiếp ở đây (khác useGameManager() — Pinia dùng
-  // active-pinia toàn cục, không qua provide/inject theo cây component,
-  // xem ghi chú triggerFoundationBreakthroughAction() phía trên).
-  if (active.foundationType) {
+  // Spec §4.3/§4.4 — thắng kiếp Đại Đạo Trúc Cơ: Phàm Cốt chuyển hóa
+  // thành Phàm Nhân Chi Cốt (đảo hình phạt thành thưởng, first-pass
+  // +75% tốc tu — hiệu ứng khác playtest quyết định).
+  if (active.targetRealmId === 'foundation_establishment' && active.grade === 'great_dao') {
+    const index = player.selectedTalentIds.indexOf('pham_cot')
+
+    if (index >= 0) {
+      player.selectedTalentIds.splice(index, 1)
+    }
+
+    if (!player.selectedTalentIds.includes('pham_nhan_chi_cot')) {
+      player.selectedTalentIds.push('pham_nhan_chi_cot')
+    }
+  }
+
+  // Discovery moment — reveal bậc vừa đạt (Trúc Cơ) hoặc tên cảnh giới.
+  if (active.targetRealmId === 'foundation_establishment') {
     useWorldAnnouncementStore().show(
-      `★ ${FOUNDATION_LABELS[active.foundationType].toUpperCase()} TRÚC CƠ ★`,
+      `★ ${FOUNDATION_LABELS[active.grade].toUpperCase()} TRÚC CƠ ★`,
       'Đạo hữu đã vượt qua Độ Kiếp, chính thức bước vào Trúc Cơ kỳ.',
     )
   } else {
@@ -181,21 +199,37 @@ function resolveVictory(player: PlayerStore, gameManager: GameManager, active: A
   }
 }
 
-function resolveDefeat(player: PlayerStore, gameManager: GameManager) {
-  player.cultivation = Math.floor(player.cultivation * (1 - TRIBULATION_DEFEAT_CULTIVATION_LOSS_PERCENT))
+function resolveDefeat(player: PlayerStore, gameManager: GameManager, active: ActiveTribulationState) {
+  // Phạt chuẩn hóa theo realm (spec §5.7) — tu vi giảm dần theo realm
+  // (sàn 20%), Linh Thạch scale theo realm.
+  const lossPercent = Math.max(
+    TRIBULATION_DEFEAT_CULTIVATION_LOSS_FLOOR,
+    TRIBULATION_DEFEAT_CULTIVATION_LOSS_BY_REALM[active.targetRealmId] ??
+      TRIBULATION_DEFEAT_CULTIVATION_LOSS_FALLBACK,
+  )
+
+  player.cultivation = Math.floor(player.cultivation * (1 - lossPercent))
 
   // Plan Workstream F — penalty có thể trừ QUÁ số dư: trừ amount thực tế
   // Math.min(owned, requested) trên MaterialBag.
-  const owned = gameManager.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)
+  const stoneLoss = TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM[active.targetRealmId] ??
+    TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_FALLBACK
+  const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(active.targetRealmId))
+  const owned = gameManager.materialBag.getAmount(spiritStoneId)
 
-  gameManager.materialBag.remove(
-    SPIRIT_STONE_MATERIAL_ID,
-    Math.min(owned, TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS),
-  )
+  gameManager.materialBag.remove(spiritStoneId, Math.min(owned, stoneLoss))
 
   gameManager.applyPersistentBuff(KIEP_THUONG_DEBUFF)
 
-  // Beta Phase 4 — thông điệp ngắn, không phô trương (khác thắng lợi).
+  // Spec §4.3 — thua kiếp Đại Đạo: mất VĨNH VIỄN cơ hội Đại Đạo, mọi
+  // lần xét sau cap ở Thiên Đạo.
+  if (active.targetRealmId === 'foundation_establishment' && active.grade === 'great_dao') {
+    player.greatDaoOpportunityLost = true
+
+    useWorldAnnouncementStore().show('Đại Đạo Đoạn Tuyệt', 'Nghịch thiên bất thành — cơ duyên Đại Đạo Chi Cơ đã vĩnh viễn đóng lại. Lần tới tối đa là Thiên Đạo.')
+    return
+  }
+
   useWorldAnnouncementStore().show('Độ Kiếp Thất Bại', 'Kiếp Thương còn vương lại — hãy dưỡng thương rồi thử lại.')
 }
 
