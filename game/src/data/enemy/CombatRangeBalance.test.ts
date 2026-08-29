@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import { ENEMIES } from './Enemies'
-import { TRIBULATIONS } from './Tribulations'
 import { MAX_ENEMY_ATTACK_RANGE_RANKS } from '../../core/enemy/EnemyStatInput'
 
 // Balance pass 2026-08-26 — hợp đồng tầm đánh quái (đo trên Enemy RUNTIME
@@ -34,8 +33,10 @@ describe('Enemy data — combat range balance contract', () => {
     expect(collectOffenders(ENEMIES)).toEqual([])
   })
 
-  it('mọi quái Kiếp: melee rank 1, ranged/caster rank ≤ 5', () => {
-    expect(collectOffenders(TRIBULATIONS)).toEqual([])
+  it('quái ẩn Huyết Mông: melee rank 1 (spec dot-pha-loi-kiep)', () => {
+    const beast = ENEMIES.find((enemy) => enemy.id === 'huyet_mong')
+    expect(beast).toBeDefined()
+    expect(beast!.stats.attackRange).toBe(1)
   })
 
   it('có ít nhất một kiter và nhiều melee — guard chống xoá nhầm dữ liệu mẫu', () => {

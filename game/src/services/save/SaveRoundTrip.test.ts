@@ -55,4 +55,29 @@ describe('SaveRoundTrip — buildGameSave() luôn qua validateGameSaveShape()', 
 
     expect(materials).toContainEqual({ materialId: TEST_MATERIAL.id, amount: 42 })
   })
+
+  // Spec dot-pha-loi-kiep §6.1 — 4 fields mới v54: openedMeridianIds,
+  // luyenKhiKillsSinceBeast, mortalPerfectionAchieved,
+  // greatDaoOpportunityLost phải sống sót qua round-trip JSON.
+  it('save v54 với 4 fields đột phá mới round-trip nguyên vẹn', () => {
+    const gameManager = createBootedGameManager()
+    const player = createDefaultPlayer()
+
+    player.openedMeridianIds = ['nham_mach', 'doi_mach']
+    player.luyenKhiKillsSinceBeast = 500
+    player.mortalPerfectionAchieved = true
+    player.greatDaoOpportunityLost = false
+
+    const save = buildGameSave(player, gameManager)
+    const roundTripped: unknown = JSON.parse(JSON.stringify(save))
+
+    expect(validateGameSaveShape(roundTripped)).toEqual({ ok: true, issues: [] })
+
+    const playerData = (roundTripped as { player: typeof player }).player
+
+    expect(playerData.openedMeridianIds).toEqual(['nham_mach', 'doi_mach'])
+    expect(playerData.luyenKhiKillsSinceBeast).toBe(500)
+    expect(playerData.mortalPerfectionAchieved).toBe(true)
+    expect(playerData.greatDaoOpportunityLost).toBe(false)
+  })
 })

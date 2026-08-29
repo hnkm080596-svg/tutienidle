@@ -375,6 +375,13 @@ export interface FormationStackSave {
 // `bossKillCount: number` (tầng Kiếm Ý vĩnh viễn theo boss diệt);
 // kiemTuRoute chốt vĩnh viễn lúc chọn path; gỡ skill Kiếm Tu cũ (mỗi
 // route 1 active skill); gỡ rage. Chi tiết xem saveVersion.ts.
+// version 54 (2026-08-29, dot-pha-loi-kiep spec): thêm 4 field BẮT
+// BUỘC `openedMeridianIds: string[]` (Bát Mạch đã thông),
+// `luyenKhiKillsSinceBeast: number` (cửa sổ quái ẩn),
+// `mortalPerfectionAchieved: boolean` (snapshot hoàn hảo Phàm Nhân),
+// `greatDaoOpportunityLost: boolean` (mất vĩnh viễn Đại Đạo). Gỡ Đột
+// Phá Lệnh (token materials) + quái Kiếp. Save v53 bị từ chối (dev
+// phase, không migration). Chi tiết xem saveVersion.ts.
 export interface GameSave {
   version: typeof CURRENT_SAVE_VERSION
 

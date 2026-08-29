@@ -473,47 +473,6 @@ export class BattleSystem {
     this.ultAutoCheckTimer = 0
   }
 
-  startTribulation(player: CombatEntity) {
-    this.actionImpact.clear()
-
-    player.x = HERO_COLUMN
-
-    player.row = HERO_LANE_INDEX
-
-    player.skillCadenceRemainingBySlot = {}
-
-    this.battle = {
-      id: crypto.randomUUID(),
-      player,
-      enemies: [],
-      state: 'fighting',
-      mode: 'tribulation',
-
-      // Trận Kiếp giữ luồng riêng: Player materialized sẵn (không qua
-      // telegraph), teleport ICD sạch.
-      playerTeleport: { remainingSeconds: 0 },
-      playerMaterialized: true,
-      playerBuffs: new BuffManager(),
-      playerAilments: new AilmentManager(),
-
-      elapsedSeconds: 0,
-      pendingSummons: [],
-      lavaZones: [],
-      swordZones: [],
-      pendingEnemySpawns: [],
-      nextSkillSlotIndexCursor: 0,
-
-      // Bản Mệnh Pháp Bảo — Độ Kiếp ngoài phạm vi doc hiện tại, không tick.
-      artifactRuntime: undefined,
-    }
-
-    this.initChannelState(player)
-
-    this.eventBus.emit('tribulation_started', undefined)
-
-    this.emitPositions(this.battle)
-  }
-
   /**
 
    * Quái mới vào trận GIỮA CHỪNG (wave spawn, không đợi quái cũ chết
@@ -823,12 +782,6 @@ export class BattleSystem {
     const battle = this.battle
 
     if (!battle) {
-      return
-    }
-
-    if (battle.mode === 'tribulation') {
-      this.emitPositions(battle)
-
       return
     }
 

@@ -27,8 +27,7 @@ import CharacterCreationScreen, {
 import { materials } from './data/materials/materials'
 import { SKILLS } from './data/skill/Skills'
 import { TECHNIQUES } from './data/technique/Techniques'
-import { ENEMIES } from './data/enemy/Enemies'
-import { TRIBULATIONS } from './data/enemy/Tribulations'
+import { ENEMIES } from './data/enemy/Enemies'
 import { STAGES } from './data/stage/Stages'
 import { zones } from './data/stage/Zones'
 import { equipment } from './data/equipment/equipment'
@@ -100,7 +99,6 @@ gameManager.registerMaterials(materials)
 gameManager.registerSkillTemplates(SKILLS)
 gameManager.registerTechniqueTemplates(TECHNIQUES)
 gameManager.registerEnemyTemplates(ENEMIES)
-gameManager.registerEnemyTemplates(TRIBULATIONS)
 gameManager.registerStages(STAGES)
 gameManager.registerZones(zones)
 gameManager.registerEquipment(equipment)

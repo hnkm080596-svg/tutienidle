@@ -64,7 +64,10 @@ export interface Battle {
 
   state: BattleState
 
-  mode?: 'combat' | 'tribulation'
+  // Spec dot-pha-loi-kiep §5.1 — mode 'tribulation' đã dỡ cùng quái
+  // Kiếp (TribulationDirector tự chạy vòng lặp riêng, không qua
+  // BattleSystem); chỉ còn 'combat'.
+  mode?: 'combat'
 
   // Countdown 3 giây trước trận (2026-08-22) — CHỈ có ý nghĩa khi
   // state==='countdown', xem BattleSystem.update(). undefined ở mọi

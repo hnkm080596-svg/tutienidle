@@ -40,6 +40,27 @@ const legacyMaterials: Material[] = [
     description: 'Một vật phẩm kỳ dị, không thể xác định công dụng.',
   },
 
+  // Đoán Bảo Thạch + spec dot-pha-loi-kiep §4.1b/c — 2 nguyên liệu
+  // của gate Trúc Cơ: Yêu Đan (boss Luyện Khí tầng 10, nguyên liệu
+  // chính Thông Mạch Đan/Trúc Cơ Đan) + Thiên Địa Chi Kiều (5% từ
+  // quái ẩn Huyết Mông, nguyên liệu Kỳ Kinh).
+  {
+    id: 'yeu_dan_hung_giao',
+    name: 'Yêu Đan',
+    category: 'other',
+    sourceType: 'boss',
+    description: 'Đan hạch ngưng tụ trong thân Hung Giao Xà — nguyên liệu chính luyện Thông Mạch Đan.',
+    stackLimit: 100,
+  },
+  {
+    id: 'thien_dia_chi_kieu',
+    name: 'Thiên Địa Chi Kiều',
+    category: 'other',
+    sourceType: 'monster',
+    description: 'Một vật phẩm kỳ dị, không thể xác định công dụng.',
+    stackLimit: 10,
+  },
+
   // Bản Mệnh Pháp Bảo (2026-08-27, foundation-artifact-system-plan.md
   // §6) — đá nâng phẩm, rơi từ quái Trúc Cơ trở lên (xem
   // BattleLootSystem.grantArtifactStoneDrop() + ArtifactDropBalance.ts).

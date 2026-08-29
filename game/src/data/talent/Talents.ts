@@ -182,10 +182,26 @@ export const PARKED_TALENTS: TalentDefinition[] = [
 // toàn (getTalentDefinition trả undefined) — không migration
 // (development phase).
 
-// BY_ID phủ cả catalog lẫn PARKED để save cũ chọn trúng thiên phú parked
-// vẫn resolve được definition khi hiển thị.
+// Phần thưởng Đại Đạo Trúc Cơ (spec dot-pha-loi-kiep §4.4) — KHÔNG thuộc
+// pool roll (chỉ đạt được qua chuyển hóa từ pham_cot khi thắng kiếp
+// Đại Đạo). Effect: đảo dấu hình phạt -75% thành +75% tốc tu luyện;
+// hiệu ứng thêm playtest quyết định (spec §9).
+export const GREAT_DAO_REWARD_TALENTS: TalentDefinition[] = [
+  {
+    id: 'pham_nhan_chi_cot',
+    name: 'Phàm Nhân Chi Cốt',
+    description: 'Đại nạn bất tử, phàm thai hữu đạo. Tốc độ tu luyện tăng 75%.',
+    rarity: 'di',
+    weight: 0,
+    tags: ['cultivation', 'mechanic', 'risk_reward'],
+    effects: [{ kind: 'cultivation_speed', percent: 0.75 }],
+  },
+]
+
+// BY_ID phủ cả catalog lẫn PARKED lẫn GREAT_DAO_REWARD để save cũ chọn
+// trúng thiên phú parked vẫn resolve được definition khi hiển thị.
 const TALENTS_BY_ID = new Map(
-  [...CHARACTER_CREATION_TALENTS, ...PARKED_TALENTS].map(talent => [talent.id, talent]),
+  [...CHARACTER_CREATION_TALENTS, ...PARKED_TALENTS, ...GREAT_DAO_REWARD_TALENTS].map(talent => [talent.id, talent]),
 )
 
 export function getTalentDefinition(talentId: string): TalentDefinition | undefined {

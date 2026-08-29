@@ -10,6 +10,7 @@ import type { StageSystem } from '../stage/StageSystem'
 import type { Stage } from '../stage/Stage'
 import type { EnemySystem } from '../enemy/EnemySystem'
 import type { TemplateRegistry } from './TemplateRegistry'
+import type { HiddenBeastSystem } from './HiddenBeastSystem'
 
 export interface StageWaveSystemDeps {
   eventBus: EventBus
@@ -22,9 +23,12 @@ export interface StageWaveSystemDeps {
   // Gate mở màn (realm gate + tuyến zone) — GameManager cung cấp closure
   // vì isStageUnlocked cần cả stageTemplates lẫn zoneRegistry.
   isStageUnlocked: (stageId: string, player: PlayerData) => boolean
-  // Khởi trận với player thật (snapshot skill/stats) — GameManager
-  // cung cấp startBattleWithPlayer để không phải inject skill systems.
+  // Khởi trận với player thật (snapshot skill/stats) — GameManager cung cấp
+  // startBattleWithPlayer để không phải inject skill systems.
   launchBattle: (player: PlayerData, playerStats: Stats, enemy: Enemy) => void
+  // Quái ẩn (spec dot-pha-loi-kiep §4.1c) — roll trà trộn pool spawn
+  // Luyện Khí khi cửa sổ 1000 kill mở.
+  hiddenBeast: HiddenBeastSystem
 }
 
 /**
@@ -270,6 +274,18 @@ export class StageWaveSystem {
 
     if (entry.eliteChance && rollChance(entry.eliteChance)) {
       return applyStageRealm(createEliteVariant(template))
+    }
+
+    // Quái ẩn trà trộn (spec dot-pha-loi-kiep §4.1c) — chỉ stage Luyện
+    // Khí + cửa sổ 1000 kill mở; roll 5% thay thế quái pool bằng Huyết Mông.
+    if (this.activeStagePlayer) {
+      const hidden = this.deps.hiddenBeast.maybeReplaceSpawn(
+        this.activeStagePlayer,
+        stage.requiredRealmId ?? 'qi_refining',
+      )
+      if (hidden) {
+        return applyStageRealm(hidden)
+      }
     }
 
     return applyStageRealm(template)

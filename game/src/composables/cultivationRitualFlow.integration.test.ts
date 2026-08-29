@@ -6,12 +6,24 @@ import { TECHNIQUES } from '../data/technique/Techniques'
 import { usePlayerStore } from '../stores/player'
 import { useUiStore } from '../stores/ui'
 import { GameManager } from '../core/game/GameManager'
-import { TRIBULATION_PROFILES } from '../core/breakthrough/TribulationProfile'
+import { getTribulationChapters } from '../data/tribulation/TribulationChapters'
 import {
   checkTribulationOutcomeAction,
   triggerFoundationBreakthroughAction,
   triggerQuanKhiAction,
 } from './useTribulation'
+
+// Tổng thời gian trôi để KẾT THÚC kiếp (mind + tank đều hết) — đủ dư
+// để mọi chương chạy xong bất kể tốc độ trả lời (hết giờ = sai vẫn
+// trôi chương).
+function tribulationTotalSeconds(targetRealmId: string): number {
+  return getTribulationChapters(targetRealmId)!.reduce((total, chapter) => {
+    if (chapter.mind) {
+      return total + chapter.mind.questionCount * (chapter.mind.firstQuestionSeconds + chapter.mind.restSecondsBetweenQuestions) + 2
+    }
+    return total + chapter.tank!.durationSeconds + 2
+  }, 0)
+}
 
 describe('chuỗi nghi lễ tu luyện Pháp Tu', () => {
   beforeEach(() => {
@@ -28,9 +40,12 @@ describe('chuỗi nghi lễ tu luyện Pháp Tu', () => {
 
     player.realmLevel = 12
     player.baseStats.defense = 10_000
+    // HP đủ cao để sống sót kiếp khi KHÔNG trả lời câu nào (hết giờ =
+    // sai → debuff stack, nhưng tổng lôi Nhân Đạo ~ 35% maxHp).
+    player.baseStats.maxHp = 500_000
 
     expect(triggerQuanKhiAction(player, gameManager)).toBe(true)
-    gameManager.update(TRIBULATION_PROFILES.qi_refining!.durationSeconds + 1)
+    gameManager.update(tribulationTotalSeconds('qi_refining'))
     expect(checkTribulationOutcomeAction(player, gameManager)).toBe(true)
     expect(player.realmId).toBe('mortal')
     expect(useUiStore().standalonePanel).toBe('quan_khi')
@@ -42,7 +57,7 @@ describe('chuỗi nghi lễ tu luyện Pháp Tu', () => {
     player.realmLevel = 12
 
     expect(triggerFoundationBreakthroughAction(player, gameManager)).toBe(true)
-    gameManager.update(TRIBULATION_PROFILES.foundation_establishment!.durationSeconds + 1)
+    gameManager.update(tribulationTotalSeconds('foundation_establishment'))
     expect(checkTribulationOutcomeAction(player, gameManager)).toBe(true)
 
     expect(player.realmId).toBe('foundation_establishment')

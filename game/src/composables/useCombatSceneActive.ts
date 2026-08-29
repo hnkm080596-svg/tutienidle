@@ -27,6 +27,8 @@ export function useCombatSceneActive() {
 
     const battle = gameManager.getBattle()
 
-    return battle !== null && battle.mode !== 'tribulation' && battle.state !== 'idle'
+    // Kiếp mới (spec dot-pha-loi-kiep §5.1) không còn battle mode
+    // 'tribulation' — TribulationScene riêng hiện qua uiStore flag.
+    return battle !== null && battle.state !== 'idle'
   })
 }

@@ -124,6 +124,25 @@ export interface PlayerData {
   // xem core/player/KiemYSystem.ts.
   bossKillCount: number
 
+  // Bát Mạch (spec dot-pha-loi-kiep §4.1a) — id các đường Kỳ Kinh đã
+  // thông (tuần tự, xem core/realm/MeridianSystem.ts). 9/9 gồm Kỳ Kinh
+  // Thiên Địa Chi Kiều là điều kiện Đại Đạo Trúc Cơ.
+  openedMeridianIds: string[]
+
+  // Quái ẩn (spec dot-pha-loi-kiep §4.1c) — đếm kill quái Luyện Khí từ
+  // lần giết quái ẩn gần nhất; đủ 1000 mở cửa sổ quái ẩn trà trộn pool
+  // spawn (giết quái ẩn reset về 0).
+  luyenKhiKillsSinceBeast: number
+
+  // Đại Đạo Trúc Cơ (spec §4.2/§4.3) — snapshot "hoàn hảo Phàm Nhân"
+  // (5/5 main stat 10/10 + Luyện Th thể 6/6) chốt lúc bấm Quán Khí,
+  // KHÔNG hồi cứu sau khi vào Luyện Khí.
+  mortalPerfectionAchieved: boolean
+
+  // Thua kiếp Đại Đạo → mất VĨNH VIỄN cơ hội Đại Đạo (spec §4.3) —
+  // chỉ set, không bao giờ clear. Resolver cap ở Thiên Đạo khi true.
+  greatDaoOpportunityLost: boolean
+
   // Tâm Pháp có thanh kinh nghiệm riêng (2026-08-20) — thay driver cũ
   // (đại cảnh giới người chơi) của getTechniqueTier(), xem
   // core/technique/TechniqueTier.ts. Đếm dồn suốt đời save (không reset
@@ -284,6 +303,10 @@ export function createDefaultPlayer(): PlayerData {
 
     totalCultivationGained: 0,
     bossKillCount: 0,
+    openedMeridianIds: [],
+    luyenKhiKillsSinceBeast: 0,
+    mortalPerfectionAchieved: false,
+    greatDaoOpportunityLost: false,
     skillInsight: 0,
     totalSkillInsightGained: 0,
     cultivationInsightAccumulator: 0,

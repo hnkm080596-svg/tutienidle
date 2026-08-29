@@ -4,7 +4,7 @@ import { usePlayerStore } from '../stores/player'
 import { GameManager } from '../core/game/GameManager'
 import { checkTribulationOutcomeAction } from './useTribulation'
 import { createDefaultArtifactProgress } from '../core/artifact/ArtifactProgression'
-import { TRIBULATION_PROFILES } from '../core/breakthrough/TribulationProfile'
+import { getTribulationChapters } from '../data/tribulation/TribulationChapters'
 
 // Bản Mệnh Pháp Bảo (doc §4) — resolveVictory() trong useTribulation.ts
 // là điểm chuyển đại cảnh giới THẬT cho Trúc Cơ (khác
@@ -12,16 +12,26 @@ import { TRIBULATION_PROFILES } from '../core/breakthrough/TribulationProfile'
 // giới, xem CultivationSystem.breakthrough()).
 function winFoundationTribulation(player: ReturnType<typeof usePlayerStore>, gameManager: GameManager) {
   player.realmId = 'qi_refining'
-  player.baseStats.defense = 10_000 // sống sót hết Độ Kiếp
+  player.realmLevel = 12
+  player.baseStats.defense = 10_000 // mitigation gần tuyệt đối
+  player.baseStats.maxHp = 500_000 // sống sót hết kiếp dù sai hết câu
 
   expect(
     gameManager.startTribulation(player.$state, player.finalStats, 'foundation_establishment'),
   ).toBe(true)
 
-  const profile = TRIBULATION_PROFILES.foundation_establishment!
-  gameManager.update(profile.durationSeconds + 5)
+  // Trôi đủ tổng thời gian các chương (không trả lời — hết giờ = sai
+  // nhưng HP đủ trụ vì defense cao + maxHp lớn).
+  const chapters = getTribulationChapters('foundation_establishment')!
+  const totalSeconds = chapters.reduce((total, chapter) => {
+    if (chapter.mind) {
+      return total + chapter.mind.questionCount * (chapter.mind.firstQuestionSeconds + chapter.mind.restSecondsBetweenQuestions) + 2
+    }
+    return total + chapter.tank!.durationSeconds + 2
+  }, 0)
+  gameManager.update(totalSeconds)
 
-  expect(gameManager.getBattle()?.state).toBe('victory')
+  expect(gameManager.getActiveTribulation()?.state).toBe('victory')
 }
 
 describe('useTribulation resolveVictory — Bản Mệnh Pháp Bảo thức tỉnh (doc §4)', () => {

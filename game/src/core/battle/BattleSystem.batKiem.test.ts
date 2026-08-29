@@ -486,28 +486,8 @@ describe('BattleSystem — Bạt Kiếm auto-channel (spec §4.2, Task 4)', () =
     }
   })
 
-  // Important #5 review fix — startTribulation() (Đột Phá) trước đây bỏ
-  // sót hoàn toàn khối init channel mà start() có: channelSkillId/
-  // tuLucActive/tuLucElapsed không bao giờ được (re)set khi bước vào 1
-  // trận Kiếp, để lại state RÁC từ trận Stage trước đó (vd tuLucActive
-  // stale=true dù route/loadout đã đổi, hoặc stale=false dù channel skill
-  // đang equip). BattleSystem.update() hiện bypass hẳn combat tick cho
-  // `mode === 'tribulation'` (chỉ lôi kích qua TribulationSystem.update()
-  // riêng, KHÔNG có enemy để tấn công) nên updateChanneling() không tick
-  // trong trận Kiếp — nằm ngoài phạm vi review này (không có finding nào
-  // yêu cầu đổi bypass đó). Test này xác nhận ĐÚNG phần được yêu cầu:
-  // state channel được khởi tạo nhất quán giống start(), không còn rác.
-  it('startTribulation() khởi tạo channel state giống start() (channelSkillId/tuLucActive/tuLucElapsed)', () => {
-    const { system } = setup(3)
-
-    const player = createPlayer({})
-
-    system.startTribulation(player)
-
-    const battle = system.getBattle()!
-
-    expect(battle.player.tuLucActive).toBe(true)
-    expect(battle.player.tuLucElapsed).toBe(0)
-    expect(battle.player.tuLucDamageTakenPercent).toBe(0)
-  })
+  // Spec dot-pha-loi-kiep §5.1 — startTribulation() đã DỞ khỏi
+  // BattleSystem (kiếp không còn là trận battle mode 'tribulation',
+  // TribulationDirector tự chạy). Test cũ "startTribulation() khởi tạo
+  // channel state" dỡ cùng method.
 })

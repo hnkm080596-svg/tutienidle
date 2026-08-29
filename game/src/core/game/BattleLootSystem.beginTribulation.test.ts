@@ -62,6 +62,7 @@ function createStubDeps() {
     questSystem: { onEnemyDefeated: vi.fn(), onMaterialCollected: vi.fn() },
     questRegistry: {},
     questManager: {},
+    hiddenBeast: { onEnemyDefeated: vi.fn() },
   } as unknown as BattleLootSystemDeps
 
   return { deps, give, despawn }

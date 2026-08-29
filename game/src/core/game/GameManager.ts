@@ -12,11 +12,13 @@ import {
   type CombatAiStrategy,
 } from '../battle/CombatAiStrategy'
 
-import type { FoundationType } from '../breakthrough/FoundationType'
-
 import { investTinhHoa, computeBreakthroughGrade } from '../realm/BodyRefinementSystem'
 import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../data/realm/BodyRefinement'
 import { grantRealmPassive } from '../realm/RealmPassiveSystem'
+import {
+  TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM,
+  TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_FALLBACK,
+} from '../../data/tribulation/TribulationChapters'
 import { getAlchemySuccessBonusPercentPoints, getReactionKeepChance } from '../talent/TalentEffects'
 import { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 
@@ -149,8 +151,8 @@ import { TemplateRegistry } from './TemplateRegistry'
 import { NotificationQueue } from './NotificationQueue'
 import { BattleLootSystem } from './BattleLootSystem'
 import { StageWaveSystem } from './StageWaveSystem'
-import { TribulationSystem } from './TribulationSystem'
-import type { ActiveTribulation } from './TribulationSystem'
+import { HiddenBeastSystem } from './HiddenBeastSystem'
+import { TribulationDirector, type ActiveTribulationState } from '../tribulation/TribulationDirector'
 
 import { QuestRegistry } from '../quest/QuestRegistry'
 import { QuestManager } from '../quest/QuestManager'
@@ -158,10 +160,12 @@ import { QuestSystem } from '../quest/QuestSystem'
 import type { Quest } from '../quest/Quest'
 import type { QuestProgress } from '../quest/QuestProgress'
 
-// Re-export giá»¯ tÆ°Æ¡ng thÃ­ch import cÅ© (useTribulation.ts vÃ  cÃ¡c nÆ¡i khÃ¡c
-// import ActiveTribulation/TRIBULATION_COOLDOWN_SECONDS tá»« GameManager).
-export { TRIBULATION_COOLDOWN_SECONDS } from './TribulationSystem'
-export type { ActiveTribulation } from './TribulationSystem'
+
+// Re-export giữ tương thích import cũ (useTribulation.ts import
+// ActiveTribulation/TRIBULATION_COOLDOWN_SECONDS từ GameManager).
+export { TRIBULATION_COOLDOWN_SECONDS } from '../tribulation/TribulationDirector'
+export type { ActiveTribulationState } from '../tribulation/TribulationDirector'
+
 
 import { RewardSystem } from '../reward/RewardSystem'
 import type { RewardReceiver } from '../reward/RewardSystem'
@@ -172,6 +176,8 @@ import { playerToCombatEntity, createPlayerRewardReceiver } from '../player/Play
 import type { PlayerData, KiemTuRoute } from '../player/Player'
 import type { MainStatKey } from '../stats/StatTypes'
 import { getMainStatCap } from '../stats/StatCap'
+import { MAIN_STAT_KEYS } from '../stats/StatTypes'
+import { BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
 import { getTechniqueInsightTotalRequired, getTechniqueTier } from '../technique/TechniqueTier'
 import { getSkillLoadoutSlotCount, KIEM_TRAN_SLOT_INDEX } from '../skill/SkillLoadoutSlots'
 import { CULTIVATION_PATH_KITS } from '../player/CultivationPathKit'
@@ -186,7 +192,6 @@ import { createArtifactRuntime } from '../artifact/ArtifactRuntime'
 import { filterNguHanhElements } from '../artifact/ArtifactSystem'
 
 import { CORE_REALM_LEVEL, getCurrentRealm, getRealmIndex } from '../realm/realmSystem'
-import { BREAKTHROUGH_REQUIREMENTS } from '../breakthrough/BreakthroughRequirement'
 
 import type { GameSave } from '../../services/save/SaveSystem'
 
@@ -407,17 +412,23 @@ export class GameManager {
   // =========================
   // RUNTIME SERVICES (2026-08-24 tÃ¡ch khá»i thÃ¢n class nÃ y)
   // =========================
-  // Ba service dÆ°á»›i Ä‘Ã¢y sá»Ÿ há»¯u business logic tráº­n Ä‘áº¥u Ä‘ang diá»…n ra:
-  // - BattleLootSystem: loot/particle/toast/battle summary khi quÃ¡i cháº¿t.
-  // - StageWaveSystem: vÃ²ng Ä‘á»i wave cá»§a MÃ n + boss summon.
-  // - TribulationSystem: runtime tráº­n Äá»™ Kiáº¿p + cooldown.
-  // Khá»Ÿi táº¡o trong constructor (KHÃ”NG pháº£i field initializer) vÃ¬ cáº§n
-  // tham chiáº¿u tá»›i cÃ¡c field khai bÃ¡o SAU chÃºng á»Ÿ trÃªn (bags/registries/
-  // zoneRegistry/template registries) â€” field initializer cháº¡y theo thá»©
-  // tá»± khai bÃ¡o nÃªn khÃ´ng tháº¥y Ä‘Æ°á»£c; ctor body cháº¡y sau cÃ¹ng, an toÃ n.
+
+  // Ba service dưới đây sở hữu business logic trận đấu đang diễn ra:
+  // - BattleLootSystem: loot/particle/toast/battle summary khi quái chết.
+  // - StageWaveSystem: vòng đời wave của Màn + boss summon.
+  // - TribulationDirector: runtime chương kiếp mới (tâm ma + tank lôi,
+  //   spec dot-pha-loi-kiep §5) + cooldown.
+  // Khởi tạo trong constructor (KHÔNG phải field initializer) vì cần
+  // tham chiếu tới các field khai báo SAU chúng ở trên (bags/registries/
+  // zoneRegistry/template registries) — field initializer chạy theo thứ
+  // tự khai báo nên không thấy được; ctor body chạy sau cùng, an toàn.
+
   private readonly battleLoot: BattleLootSystem
   private readonly stageWaves: StageWaveSystem
-  private readonly tribulation: TribulationSystem
+  private readonly tribulationDirector: TribulationDirector
+
+  // Quái ẩn (spec dot-pha-loi-kiep §4.1c) — cửa sổ 1000 kill Luyện Khí.
+  readonly hiddenBeastSystem: HiddenBeastSystem
 
   constructor() {
     // Kiáº¿m Tu (2026-08-28) â€” mirror player.skillCastCounts/skillLevels
@@ -434,6 +445,12 @@ export class GameManager {
 
       this.activePlayer.skillLevels ??= {}
       this.activePlayer.skillLevels[skillId] = level
+    })
+
+    // Quái ẩn (spec dot-pha-loi-kiep §4.1c) — tra template qua registry
+    // chung (registerEnemyTemplates đã đăng ký Huyết Mông qua ENEMIES).
+    this.hiddenBeastSystem = new HiddenBeastSystem({
+      getEnemyTemplate: (id) => this.enemyTemplates.get(id),
     })
 
     this.battleLoot = new BattleLootSystem({
@@ -459,6 +476,7 @@ export class GameManager {
       questSystem: this.questSystem,
       questRegistry: this.questRegistry,
       questManager: this.questManager,
+      hiddenBeast: this.hiddenBeastSystem,
     })
 
     this.stageWaves = new StageWaveSystem({
@@ -472,27 +490,11 @@ export class GameManager {
       isStageUnlocked: (stageId, player) => this.isStageUnlocked(stageId, player),
       launchBattle: (player, playerStats, enemy) =>
         this.startBattleWithPlayer(player, playerStats, enemy),
+      hiddenBeast: this.hiddenBeastSystem,
     })
 
-    this.tribulation = new TribulationSystem({
+    this.tribulationDirector = new TribulationDirector({
       eventBus: this.eventBus,
-      battleSystem: this.battleSystem,
-      combatSystem: this.combatSystem,
-      buildPlayerSnapshot: (player, playerStats) => {
-        const skillLevels = Object.fromEntries(
-          this.skillManager.getAll().map((skill) => [skill.id, skill.level]),
-        )
-
-        return playerToCombatEntity(
-          player,
-
-          playerStats,
-
-          this.getSkillRuntimeStats(player),
-
-          skillLevels,
-        )
-      },
     })
   }
 
@@ -1058,6 +1060,14 @@ export class GameManager {
       // giÃ¡ trá»‹ cuá»‘i cÃ¹ng cá»§a Luyá»‡n Thá»ƒ táº¡i thá»i Ä‘iá»ƒm Lá»… Nháº­p MÃ´n.
       player.breakthroughGrade = computeBreakthroughGrade(player)
 
+      // Spec dot-pha-loi-kiep §4.2 — snapshot "hoàn hảo Phàm Nhân"
+      // (5/5 main stat đạt cap mortal + Luyện Th thể 6/6) chốt đúng
+      // lúc bấm Quán Khí, KHÔNG hồi cứu sau khi vào Luyện Khí. Là 1
+      // điều kiện Đại Đạo Trúc Cơ.
+      player.mortalPerfectionAchieved =
+        player.bodyRefinementCompletedTiers >= BODY_REFINEMENT_TIERS.length &&
+        MAIN_STAT_KEYS.every((stat) => player.baseStats[stat] >= getMainStatCap('mortal'))
+
       player.realmId = 'qi_refining'
       player.realmLevel = 1
       player.cultivation = 0
@@ -1097,7 +1107,7 @@ export class GameManager {
 
     const battle = this.getBattle()
 
-    if (battle && (battle.state === 'countdown' || battle.state === 'fighting' || battle.mode === 'tribulation')) {
+    if (battle && (battle.state === 'countdown' || battle.state === 'fighting')) {
       return false
     }
 
@@ -1126,7 +1136,7 @@ export class GameManager {
 
     const battle = this.getBattle()
 
-    if (battle && (battle.state === 'countdown' || battle.state === 'fighting' || battle.mode === 'tribulation')) {
+    if (battle && (battle.state === 'countdown' || battle.state === 'fighting')) {
       return false
     }
 
@@ -1602,58 +1612,43 @@ export class GameManager {
   }
 
   /**
-   * "Con Ä‘Æ°á»ng bÃ¬nh thÆ°á»ng" cá»§a Äá»™t PhÃ¡ tá»•ng quÃ¡t (2026-08-16, xem
-   * core/breakthrough/BreakthroughRequirement.ts) â€” Äá»™t PhÃ¡ Lá»‡nh luyá»‡n
-   * trá»±c tiáº¿p báº±ng Linh Tháº¡ch, KHÃ”NG qua Recipe (RecipeResultType
-   * khÃ´ng há»— trá»£ material lÃ m káº¿t quáº£): check Ä‘á»§ Linh Tháº¡ch rá»“i trá»« vÃ 
-   * cáº¥p tháº³ng material. PhÃ¢n Giáº£i equipment lÃ  luá»“ng huá»· item riÃªng.
-   * Plan Workstream F: Linh Tháº¡ch lÃ  MATERIAL â€” check/trá»« qua
-   * MaterialBag, `spiritStoneCost` chá»‰ cÃ²n lÃ  authoring sugar Ä‘Æ°á»£c
-   * normalize ngay táº¡i boundary nÃ y.
+
+   * Spec dot-pha-loi-kiep §4.2/§6.3 — Đột Phá Lệnh đã DỠ: gate chỉ còn
+   * tầng 12 + Linh Thạch (trừ trực tiếp khi bấm Độ Kiếp, không qua
+   * token craft). Hàm này check + trừ Linh Thạch đúng loại theo realm —
+   * UI confirm gọi ngay trước startTribulation().
    */
-  canCraftBreakthroughToken(targetRealmId: string, _player: PlayerData): boolean {
-    const requirement = BREAKTHROUGH_REQUIREMENTS[targetRealmId]
+  consumeTribulationSpiritStones(targetRealmId: string): boolean {
+    const cost = TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM[targetRealmId] ??
+      TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_FALLBACK
+
     const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(targetRealmId))
 
-    return (
-      requirement !== undefined &&
-      this.materialRegistry.has(requirement.materialId) &&
-      this.materialBag.getAmount(spiritStoneId) >= requirement.spiritStoneCost
-    )
-  }
-
-  craftBreakthroughToken(targetRealmId: string, player: PlayerData): boolean {
-    if (!this.canCraftBreakthroughToken(targetRealmId, player)) {
+    if (!this.materialBag.remove(spiritStoneId, cost)) {
       return false
     }
 
-    const requirement = BREAKTHROUGH_REQUIREMENTS[targetRealmId]!
-    const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(targetRealmId))
 
-    if (!this.materialBag.remove(spiritStoneId, requirement.spiritStoneCost)) {
-      return false
-    }
-
-    const overflow = this.materialBag.add(this.materialRegistry.get(requirement.materialId), 1)
-
-    if (overflow > 0) {
-      // All-or-nothing: token trÃ n stack thÃ¬ hoÃ n Linh Tháº¡ch Ä‘á»ƒ khÃ´ng máº¥t
-      // tráº¯ng (Linh Tháº¡ch cap MAX_SAFE_INTEGER nÃªn hoÃ n láº¡i luÃ´n vá»«a chá»—).
-      this.materialBag.add(this.materialRegistry.get(spiritStoneId), requirement.spiritStoneCost)
-
-      return false
-    }
-
-    this.notifyQuestMaterialGained(requirement.materialId, 1)
 
     return true
   }
 
   /**
-   * Quy Ä‘á»•i Linh Tháº¡ch LÃŠN pháº©m káº¿ tiáº¿p (review 2026-08-28,
-   * economy-ecosystem-plan T2): 100 Háº¡ â†’ 1 Trung, 100 Trung â†’ 1 ThÆ°á»£ng.
-   * CHá»ˆ cÃ³ chiá»u lÃªn â€” khÃ´ng cÃ³ quy Ä‘á»•i ngÆ°á»£c (giá»¯ sink). Giao dá»‹ch
-   * atomic: check Ä‘á»§ â†’ trá»« â†’ cá»™ng; trá»« tháº¥t báº¡i thÃ¬ khÃ´ng cá»™ng.
+
+   * Chi phí Linh Thạch của gate (UI hiển thị trước khi bấm) — cùng nguồn
+   * sự thật với consumeTribulationSpiritStones.
+   */
+  getTribulationSpiritStoneCost(targetRealmId: string): number {
+    return TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM[targetRealmId] ??
+      TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_FALLBACK
+  }
+
+  /**
+   * Quy đổi Linh Thạch LÊN phẩm kế tiếp (review 2026-08-28,
+   * economy-ecosystem-plan T2): 100 Hạ → 1 Trung, 100 Trung → 1 Thượng.
+   * CHỈ có chiều lên — không có quy đổi ngược (giữ sink). Giao dịch
+   * atomic: check đủ → trừ → cộng; trừ thất bại thì không cộng.
+
    */
   convertSpiritStonesUp(
     fromMaterialId: string,
@@ -2709,54 +2704,42 @@ export class GameManager {
   }
 
   /**
-   * Äá»™ Kiáº¿p (má»¥c 11 spec `breakthrough`) â€” khá»Ÿi tráº­n Ä‘áº¥u vá»›i quÃ¡i Kiáº¿p,
-   * bá» qua Stage hoÃ n toÃ n (giá»‘ng startBattle() nháº­n Enemy báº¥t ká»³).
-   * Enemy Kiáº¿p pháº£i Ä‘Ã£ Ä‘Æ°á»£c Ä‘Äƒng kÃ½ qua registerEnemyTemplates().
-   *
-   * Äá»™t PhÃ¡ tá»•ng quÃ¡t (2026-08-16) â€” `foundationType` CHá»ˆ truyá»n khi
-   * targetRealmId === 'foundation_establishment' (tra TRIBULATION_ENEMY_ID_BY_FOUNDATION,
-   * há»‡ CÄƒn CÆ¡ 4-tier cÅ©, khÃ´ng Ä‘á»•i); má»i targetRealmId khÃ¡c tra
-   * TRIBULATION_ENEMY_ID_BY_REALM (1 quÃ¡i Kiáº¿p/cáº£nh giá»›i, khÃ´ng tier).
-   */
-  /**
-   * Äá»™ Kiáº¿p (má»¥c 11 spec `breakthrough`) â€” delegate xuá»‘ng
-   * TribulationSystem (runtime tráº­n Kiáº¿p). Session loot Ä‘Æ°á»£c khá»Ÿi táº¡o
-   * RIÃŠNG qua BattleLootSystem.beginTribulation(): reset receiver +
-   * reward summary cá»§a tráº­n Stage trÆ°á»›c (P2 fix 2026-08-24) rá»“i gáº¯n
-   * player cá»§a phiÃªn Äá»™ Kiáº¿p.
-   */
+
+    * Độ Kiếp (spec dot-pha-loi-kiep §5.1) — delegate xuống
+    * TribulationDirector (runtime chương kiếp mới: tâm ma + tank lôi,
+    * KHÔNG qua BattleSystem, không quái Kiếp). hasTrucCoDan đọc từ
+    * PillBag (vật chứng bậc Địa/Thiên, không tiêu). Bất Tử Thể không áp
+    * trong kiếp (nghi lễ thật — giữ pattern cũ): kiếp không qua combat
+    * nên không có session nào để xoá.
+    */
+
   startTribulation(
     player: PlayerData,
     playerStats: Stats,
     targetRealmId: string,
-    foundationType?: FoundationType,
   ): boolean {
-    const started = this.tribulation.start(player, playerStats, targetRealmId, foundationType)
+    const hasTrucCoDan = this.pillBag.has('truc_co_dan', 1)
 
-    if (started) {
-      this.battleLoot.beginTribulation(player)
+    return this.tribulationDirector.start(player, playerStats, hasTrucCoDan, targetRealmId)
+  }
 
-      // Báº¥t Tá»­ Thá»ƒ KHÃ”NG kÃ­ch hoáº¡t trong tráº­n Äá»™ Kiáº¿p (plan Â§6 â€” giá»¯ Äá»™
-      // Kiáº¿p lÃ  nghi lá»… tháº­t). Tráº­n Kiáº¿p KHÃ”NG Ä‘i qua startBattle() nÃªn
-      // pháº£i tá»± xoÃ¡ session á»Ÿ Ä‘Ã¢y, trÃ¡nh lÆ°á»£t sá»‘ng sÃ³t tá»“n dÆ° tá»« tráº­n
-      // Stage trÆ°á»›c cháº£y vÃ o.
-      this.surviveLethalGuard.beginTribulation()
-      this.combatSystem.setSurviveLethalSession(null)
-    }
 
-    return started
+  /** Trả lời câu hỏi tâm ma hiện tại (overlay Vue gọi qua facade này). */
+  answerTribulationQuestion(answerIndex: number): boolean {
+    return this.tribulationDirector.answerQuestion(answerIndex)
+
   }
 
   getTribulationCooldownSeconds(now = Date.now()): number {
-    return this.tribulation.getCooldownSeconds(now)
+    return this.tribulationDirector.getCooldownSeconds(now)
   }
 
-  getActiveTribulation(): ActiveTribulation | null {
-    return this.tribulation.getActive()
+  getActiveTribulation(): ActiveTribulationState | null {
+    return this.tribulationDirector.getState()
   }
 
   clearActiveTribulation() {
-    this.tribulation.clear()
+    this.tribulationDirector.clear()
   }
 
   /**
@@ -3088,10 +3071,11 @@ export class GameManager {
       this.stageWaves.resolveBossSummons()
     }
 
-    // NgoÃ i vÃ²ng fixed-step â€” TribulationSystem tá»± cÃ³ catch-up dáº¡ng Ä‘Ã³ng,
-    // chia nhá» sáº½ cá»™ng dá»“n sai sá»‘ float (xem class doc bÃªn Ä‘Ã³).
-    this.tribulation.update(deltaSeconds)
-    this.tribulation.updateProgress()
+
+    // Ngoài vòng fixed-step — TribulationDirector tự có catch-up dạng
+    // đóng (spec dot-pha-loi-kiep §5.6), chia nhỏ sẽ cộng dồn sai số float.
+    this.tribulationDirector.update(deltaSeconds)
+
   }
 
   private grantBattleRewardIfNeeded() {

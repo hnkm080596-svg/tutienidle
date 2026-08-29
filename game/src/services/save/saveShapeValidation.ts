@@ -140,6 +140,17 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     issues.push({ path: 'player.nodeLevels', message: 'phải là object' })
   }
 
+  // Spec dot-pha-loi-kiep §6.1 — 4 field v54 (Bát Mạch, cửa sổ quái ẩn,
+  // snapshot hoàn hảo, mất vĩnh viễn Đại Đào).
+  requireArray(player, 'openedMeridianIds', 'player', issues)
+  requireNonNegativeNumber(player, 'luyenKhiKillsSinceBeast', 'player', issues)
+  if (typeof player.mortalPerfectionAchieved !== 'boolean') {
+    issues.push({ path: 'player.mortalPerfectionAchieved', message: 'phải là boolean' })
+  }
+  if (typeof player.greatDaoOpportunityLost !== 'boolean') {
+    issues.push({ path: 'player.greatDaoOpportunityLost', message: 'phải là boolean' })
+  }
+
   // lastSavedAt — buildGameSave() LUÔN ghi; thiếu nó khiến offline time
   // tính ra NaN (review 2026-08-28 bug #2). Save hiện hành bắt buộc có.
   if (!isFiniteNumber(player.lastSavedAt)) {
