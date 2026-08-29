@@ -13,12 +13,12 @@ const ui = useUiStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 
-// Task 7 (task-7-brief.md §1) — slider tụ lực Bạt Kiếm, 3-9s. Chỉ hiện
-// khi route hiện tại là 'bat_kiem' (setKiemTuRoute, Task 6). Cố ý
-// KHÔNG persist giá trị chọn giữa các trận (dev-phase, "đơn giản: không
-// nhớ, mặc định 3 mỗi trận") — mount lại mỗi lần vào trận (component
-// này chỉ sống trong CombatSceneOverlay) nên reset về 3 VÀ đồng bộ lại
-// override bên BattleSystem (nó không tự reset giữa các trận).
+// Slider tụ lực Bạt Kiếm 3-9s (task-7-brief §1, xem spec 2026-08-29
+// kiem-the-kiem-y) — chỉ hiện khi route chốt vĩnh viễn là 'bat_kiem'.
+// Cố ý KHÔNG persist giá trị chọn giữa các trận (dev-phase, "đơn
+// giản: không nhớ, mặc định 3 mỗi trận") — mount lại mỗi lần vào trận
+// (component này chỉ sống trong CombatSceneOverlay) nên reset về 3 VÀ
+// đồng bộ lại override bên BattleSystem (nó không tự reset giữa các trận).
 onMounted(() => {
   if (player.kiemTuRoute === 'bat_kiem') {
     batKiemTickSeconds.value = 3

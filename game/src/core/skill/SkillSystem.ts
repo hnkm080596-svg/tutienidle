@@ -35,6 +35,10 @@ export function getHuyKiemLevelForCasts(totalExperience: number): number {
   return 1
 }
 
+/** Ngưỡng cast Huy Kiếm đạt Lv3 — route Kiếm Tu chốt Bạt Kiếm khi
+ * tram ≥ mốc này (spec 2026-08-29-kiem-the-kiem-y mục 1). */
+export const HUY_KIEM_L3_CASTS = 10000
+
 /** Policy dùng cooldown clock (chịu CDR) — còn lại dùng cadence Attack Speed/channel tick. */
 function usesCooldownClock(execution: SkillExecutionPolicy | undefined): boolean {
   return !execution || execution.kind === 'cooldown' || execution.kind === 'cast_time'

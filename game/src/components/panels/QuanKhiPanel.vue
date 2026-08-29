@@ -95,37 +95,15 @@ const isKiemTu = computed(() => {
   return player.cultivationPath === 'kiem_tu'
 })
 
+// Kiếm Thế / Kiếm Ý (spec 2026-08-29-kiem-the-kiem-y mục 1) — route
+// chốt VĨNH VIỄN ngay lúc chọn path (tram Lv3 → Bạt Kiếm, chưa → Kiếm
+// Trận). KHÔNG còn UI đổi đường — khối chọn route cũ đã dỡ, chỉ hiển
+// thị đường đã chốt + giải thích điều kiện.
 const currentKiemTuRoute = computed<KiemTuRoute>(() => {
   stateVersion.value
 
   return player.kiemTuRoute ?? 'kiem_tran'
 })
-
-// Gate Bạt Kiếm — review fix (Important): GameManager.setKiemTuRoute()
-// thực ra chặn bằng getNodeLevel('bat_kiem_thuc', player) >= 1 (keystone
-// ĐÃ MUA trong cây công pháp, Task 6), KHÔNG phải ngưỡng skillCastCounts/
-// skillLevels['tram'] >= 9999/3 — ngưỡng đó chỉ là điều kiện MỞ node gốc
-// `bat_kiem_an` (xem KiemTuNodes.ts), một bước SỚM HƠN trong chuỗi mua
-// bat_kiem_an -> minor_bat_kiem_uy -> bat_kiem_thuc. Đọc nhầm mốc này khiến
-// nút "Bạt Kiếm" render enabled trong lúc setKiemTuRoute() vẫn âm thầm
-// trả false (chưa mua đủ cây). Dùng ĐÚNG hàm gate thật để không lệch.
-const isBatKiemUnlocked = computed(() => {
-  stateVersion.value
-
-  return gameManager.getNodeLevel('bat_kiem_thuc', player.$state) >= 1
-})
-
-const canChangeRoute = computed(() => {
-  stateVersion.value
-
-  return !isBattleInProgress(gameManager.getBattle()?.state)
-})
-
-function selectKiemTuRoute(route: KiemTuRoute) {
-  if (gameManager.setKiemTuRoute(player.$state, route)) {
-    bumpState()
-  }
-}
 </script>
 
 <template>
@@ -148,42 +126,16 @@ function selectKiemTuRoute(route: KiemTuRoute) {
       </div>
     </div>
 
-    <!-- Kiếm Tu tự lực (task-7-brief.md §2) — chọn đường SONG SONG,
-         đổi được nhiều lần ngoài combat (khác lựa chọn nghề ở trên). -->
+    <!-- Kiếm Thế / Kiếm Ý (spec 2026-08-29) — route đã chốt vĩnh viễn
+         lúc chọn path, hiển thị thông tin thay vì UI đổi đường cũ. -->
     <div v-if="isKiemTu" class="quan-khi-panel__card">
-      <p class="quan-khi-panel__hint">Chọn đường Kiếm Tu — đổi được ngoài trận, không cần xác nhận.</p>
-
-      <div class="quan-khi-panel__choices">
-        <GameButton
-          class="quan-khi-panel__choice"
-          variant="danger"
-          size="sm"
-          :class="{ 'is-selected': currentKiemTuRoute === 'kiem_tran' }"
-          :disabled="!canChangeRoute && currentKiemTuRoute !== 'kiem_tran'"
-          @click="selectKiemTuRoute('kiem_tran')"
-        >
-          Kiếm Trận
-        </GameButton>
-
-        <GameButton
-          v-if="isBatKiemUnlocked"
-          class="quan-khi-panel__choice"
-          variant="danger"
-          size="sm"
-          :class="{ 'is-selected': currentKiemTuRoute === 'bat_kiem' }"
-          :disabled="!canChangeRoute && currentKiemTuRoute !== 'bat_kiem'"
-          @click="selectKiemTuRoute('bat_kiem')"
-        >
-          Bạt Kiếm
-        </GameButton>
-      </div>
-
-      <p v-if="!canChangeRoute" class="quan-khi-panel__warning">
-        Không thể đổi đường trong combat — sẽ áp dụng từ trận kế.
+      <p class="quan-khi-panel__hint">
+        Đường Kiếm Tu đã chốt: <strong>{{ currentKiemTuRoute === 'bat_kiem' ? 'Bạt Kiếm (Đơn Kiếm)' : 'Kiếm Trận (Đa Kiếm)' }}</strong> — không thể đổi.
       </p>
-
-      <p v-else-if="!isBatKiemUnlocked" class="quan-khi-panel__warning">
-        Bạt Kiếm mở khi đã tu luyện Trảm đạt tầng 3 + 9999 lần thi triển VÀ đã mua trọn Bạt Kiếm Thức trong cây công pháp.
+      <p class="quan-khi-panel__warning">
+        {{ currentKiemTuRoute === 'bat_kiem'
+          ? 'Huy Kiếm đạt tầng 3 (10.000 lần trảm) nên khai mở Bạt Kiếm — một chiêu tụ lực, mạnh dần theo tầng Kiếm Ý diệt boss.'
+          : 'Huy Kiếm chưa đạt tầng 3 nên bước vào Kiếm Trận — kiếm trận tiến hóa theo cảnh giới, mở hiệu ứng on-hit theo cấp trận.' }}
       </p>
     </div>
 

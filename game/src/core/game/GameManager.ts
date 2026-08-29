@@ -44,7 +44,7 @@ import {
 } from '../progression/NodeSystem'
 
 import { SkillManager } from '../skill/SkillManager'
-import { SkillSystem } from '../skill/SkillSystem'
+import { SkillSystem, HUY_KIEM_L3_CASTS } from '../skill/SkillSystem'
 import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { PassiveSystem } from '../skill/PassiveSystem'
 import type { Skill } from '../skill/Skill'
@@ -168,7 +168,7 @@ import type { Reward } from '../reward/Reward'
 import type { BattleRewardSummary } from '../reward/BattleRewardSummary'
 
 import { playerToCombatEntity, createPlayerRewardReceiver } from '../player/Player'
-import type { PlayerData } from '../player/Player'
+import type { PlayerData, KiemTuRoute } from '../player/Player'
 import type { MainStatKey } from '../stats/StatTypes'
 import { getMainStatCap } from '../stats/StatCap'
 import { getTechniqueInsightTotalRequired, getTechniqueTier } from '../technique/TechniqueTier'
@@ -810,13 +810,12 @@ export class GameManager {
     for (const skillId of node.effect.unlocksSkillIds ?? []) {
       this.learnSkill(skillId)
 
-      // Kiếm Tu tự lực (task-6-brief.md) — chiêu trận Kiếm Trận
-      // (kiem_tran_*) tự trang bị vào slot RIÊNG (KIEM_TRAN_SLOT_INDEX),
-      // thay hẳn chiêu trận trước đó — equipToSlot() tự dời occupant cũ
-      // (xem SkillSystem.equipToSlot), không cần người chơi tự vào
-      // Loadout UI đổi tay mỗi lần mở trận mới.
+      // Kiếm Thế / Kiếm Ý (spec 2026-08-29 mục 5.1) — kiếm trận tiến
+      // hóa: mỗi route ĐÚNG 1 active skill ở slot 0, keystone mới tự
+      // THAY THẾ trận cũ (equipToSlot tự dời occupant cũ). KHÔNG còn
+      // slot riêng KIEM_TRAN_SLOT_INDEX.
       if (skillId.startsWith('kiem_tran_')) {
-        this.skillSystem.equipToSlot(skillId, KIEM_TRAN_SLOT_INDEX)
+        this.skillSystem.equipToSlot(skillId, 0)
       }
     }
 
@@ -1006,17 +1005,29 @@ export class GameManager {
     this.learnTechnique(kit.techniqueId)
     this.equipTechnique(kit.techniqueId)
 
-    // Pháp Tu Redesign — kit.skillIds giờ optional (chỉ Kiếm Tu còn
-    // khai cố định).
-    //
-    // PLAN HOÀN CHỈNH mục 8 — gán THẲNG vào slot 0/1/2 theo đúng thứ tự
-    // tuple [basic, special, ultimate] của kit, BỎ QUA validate
-    // getSkillLoadoutSlotCount() (setSkillLoadoutSlot() dưới đây có gate
-    // đó cho hành động CỦA NGƯỜI CHƠI — đây là kit HỆ THỐNG cấp sẵn lúc
-    // nhập môn, phải có đủ chỗ ngay cả khi Luyện Khí mới mở 2/5 ô; ô
-    // 3 tồn tại sẵn trong dữ liệu, chỉ đơn giản chưa lộ ra UI cho tới
-    // khi đủ cảnh giới).
-    if (kit.skillIds) {
+    // Kiếm Thế / Kiếm Ý (spec 2026-08-29-kiem-the-kiem-y mục 1) — route
+    // chốt VĨNH VIỄN đúng lúc chọn path: Huy Kiếm (tram) đã đạt Lv3
+    // (10.000 lần trảm) → Bạt Kiếm; chưa → Kiếm Trận. KHÔNG còn API
+    // đổi route (setKiemTuRoute đã dỡ) — branch node còn lại bị ẩn ở
+    // UI (SkillPathPanel hiển thị đúng 1 branch theo route).
+    // kit.skillIds của Kiếm Tu giờ KHÔNG dùng nữa (mỗi route 1 skill
+    // duy nhất, gán trong nhánh này) — tuple 3-skill cũ đã dỡ khỏi
+    // CultivationPathKit.
+    if (pathId === 'kiem_tu') {
+      const tramCasts = player.skillCastCounts?.['tram'] ?? 0
+      const route: KiemTuRoute = tramCasts >= HUY_KIEM_L3_CASTS ? 'bat_kiem' : 'kiem_tran'
+
+      player.kiemTuRoute = route
+
+      // Mỗi route ĐÚNG 1 active skill duy nhất (spec mục 5) — tháo bộ
+      // skill kit cũ + tram khỏi loadout (KHÔNG unlearn: Phàm Nhân save
+      // khác vẫn dùng tram được; Kiếm Tu đã chốt route thì tram bị khóa
+      // re-equip qua guard ở SkillSystem — xem guard tram phía dưới).
+      this.skillSystem.unequip('tram')
+      for (const skillId of ['ngu_kiem_thuat', 'kiem_khai_thien_mon', 'van_kiem_trieu_tong']) {
+        this.skillSystem.unequip(skillId)
+      }
+    } else if (kit.skillIds) {
       kit.skillIds.forEach((skillId, index) => {
         this.learnSkill(skillId)
         this.skillSystem.equipToSlot(skillId, index)
@@ -1054,6 +1065,18 @@ export class GameManager {
       this.syncRealmStatPassive(player)
     }
 
+    // Kiếm Thế / Kiếm Ý (spec mục 1/5) — grant skill route SAU realm
+    // advance: root Lưỡng Nghi có realm prereq 'qi_refining', phải đợi
+    // Lễ Nhập Môn đổi realm xong mới purchaseNode được. Mỗi route ĐÚNG
+    // 1 active skill ở slot 0 (đơn kiếm/bạt kiếm thức hoặc đa kiếm/
+    // lưỡng nghi tiến hóa).
+    if (pathId === 'kiem_tu' && player.kiemTuRoute === 'bat_kiem') {
+      this.learnSkill('bat_kiem_thuat')
+      this.skillSystem.equipToSlot('bat_kiem_thuat', 0)
+    } else if (pathId === 'kiem_tu') {
+      this.purchaseNode('kiem_tran_luong_nghi', player)
+    }
+
     return true
   }
 
@@ -1083,50 +1106,11 @@ export class GameManager {
   }
 
   /**
-   * Kiếm Tu tự lực (2026-08-28, task-6-brief.md) — đổi route ngoài combat
-   * giữa 2 nhánh song song: 'kiem_tran' (mặc định lúc chọn Kiếm Tu) và
-   * 'bat_kiem' (chỉ mở sau khi đại thành keystone `bat_kiem_thuc`). Guard
-   * combat Y HỆT setArtifactPath() ở trên. Đổi route chỉ đụng slot 1
-   * (đặc kỹ) — slot 0 (Huy Kiếm) và slot Kiếm Trận (KIEM_TRAN_SLOT_INDEX)
-   * KHÔNG đổi. equipToSlot() tự dời skill cũ, và unequip KHÔNG unlearn —
-   * skill route cũ vẫn giữ unlocked/trong bảo tàng.
+   * Kiếm Tu tự lực (2026-08-28) từng có setKiemTuRoute() đổi route
+   * ngoài combat — ĐÃ DỞ (spec 2026-08-29-kiem-the-kiem-y mục 1): route
+   * giờ chốt VĨNH VIỄN trong chooseCultivationPath('kiem_tu') theo
+   * tram Lv3, không còn thao tác đổi sau này.
    */
-  setKiemTuRoute(player: PlayerData, route: 'kiem_tran' | 'bat_kiem'): boolean {
-    // Final review fix (Important #6) — trước đây không check
-    // cultivationPath: 1 Pháp Tu player (lý thuyết) có thể gọi hàm này
-    // và bị ghi đè slot 1 bằng skill Kiếm Tu.
-    if (player.cultivationPath !== 'kiem_tu') {
-      return false
-    }
-
-    if (route === 'bat_kiem' && this.getNodeLevel('bat_kiem_thuc', player) < 1) {
-      return false
-    }
-
-    const battle = this.getBattle()
-
-    if (battle && (battle.state === 'countdown' || battle.state === 'fighting' || battle.mode === 'tribulation')) {
-      return false
-    }
-
-    // Trước đây bỏ qua giá trị trả về của equipToSlot() (false nếu skill
-    // chưa unlocked) — commit route dù equip thất bại, để lại slot 1
-    // trỏ tới skill route CŨ trong khi player.kiemTuRoute đã đổi (desync
-    // đúng loại lỗi #6 cảnh báo). Giờ CHỈ commit route khi equip thành
-    // công thật sự.
-    const equipped = this.skillSystem.equipToSlot(
-      route === 'bat_kiem' ? 'bat_kiem_thuat' : 'kiem_khai_thien_mon',
-      1,
-    )
-
-    if (!equipped) {
-      return false
-    }
-
-    player.kiemTuRoute = route
-
-    return true
-  }
 
   /**
    * Bản Mệnh Pháp Bảo (doc §5.3) — nâng phẩm bằng Đoán Bảo Thạch, CHỈ

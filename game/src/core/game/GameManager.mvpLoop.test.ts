@@ -5,6 +5,7 @@ import { calculateStats } from '../stats/StatCalculator'
 import { defineEnemy } from '../enemy/Enemy'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { SKILLS } from '../../data/skill/Skills'
+import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import type { Stage } from '../stage/Stage'
 import type { Buff } from '../buff/Buff'
 import { isBattleInProgress } from '../battle/BattleTypes'
@@ -52,6 +53,10 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
 
     gameManager.registerTechniqueTemplates(TECHNIQUES)
     gameManager.registerSkillTemplates(SKILLS)
+    // Route-lock Kiếm Tu (spec 2026-08-29) — chooseCultivationPath giờ
+    // purchaseNode('kiem_tran_luong_nghi') cho route Kiếm Trận nên PHẢI
+    // đăng ký cây node (game thật đăng ký KIEM_TU_NODES qua App.vue).
+    gameManager.registerProgressionNodes(KIEM_TU_NODES)
 
     const enrageBuff: Buff = {
       id: 'mvp_test_enrage',
@@ -138,8 +143,10 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
 
     const player = createDefaultPlayer()
 
-    // Class — Kiếm Tu THẬT, tự cấp Tâm Pháp + Ngự Kiếm Thuật (basic,
-    // đã có Pierce từ Phase 5) + 2 skill còn lại.
+    // Class — Kiếm Tu THẬT theo route-lock mới (spec 2026-08-29
+    // kiem-the-kiem-y): tram chưa Lv3 → route Kiếm Trận, slot 0 = Lưỡng
+    // Nghi Kiếm Trận (2 kiếm) — đúng 1 active skill duy nhất của route,
+    // thay bộ 3 skill kit cũ.
     player.realmLevel = 12
     expect(gameManager.chooseCultivationPath('kiem_tu', player)).toBe(true)
 

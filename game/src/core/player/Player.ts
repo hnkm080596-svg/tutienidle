@@ -98,14 +98,16 @@ export interface PlayerData {
   // canChooseCultivationPath.
   cultivationPath?: CultivationPathId
 
-  // Kiếm Tu tự lực (2026-08-28) — route đang active trong 2 nhánh song
-  // song (Kiếm Trận/Bạt Kiếm), đổi được ngoài combat qua
-  // GameManager.setKiemTuRoute(). Mặc định (undefined) = 'kiem_tran'
-  // (đường mặc định lúc chọn Kiếm Tu, chưa cần ghi giá trị tường minh
-  // lúc path chưa chọn/chưa phải Kiếm Tu). Type export (Task 7 review
-  // fix) — tránh QuanKhiPanel.vue/CombatControlBar.vue tự khai lại union
-  // này rồi lệch khỏi field thật.
+  // Kiếm Tu route (spec 2026-08-29-kiem-the-kiem-y mục 1) — chốt VĨNH
+  // VIỄN trong chooseCultivationPath() theo tram Lv3 (10.000 trảm →
+  // bat_kiem, chưa → kiem_tran), KHÔNG còn API đổi (setKiemTuRoute đã
+  // dỡ). Mặc định (undefined) = chưa chọn path Kiếm Tu. Type export —
+  // tránh UI component tự khai lại union này rồi lệch field thật.
   kiemTuRoute?: KiemTuRoute
+
+  // Kiếm Tu (2026-08-15) — Kiếm Ý VĨNH VIỄN: đếm dồn suốt đời save,
+  // KHÔNG BAO GIỜ giảm (khác `cultivation`, bị tiêu hao lúc đột phá) —
+  // mỗi 9999 điểm tích được thì +1 tầng Kiếm Ý, xem
 
   // Kiếm Tu (2026-08-15) — Kiếm Ý VĨNH VIỄN: đếm dồn suốt đời save,
   // KHÔNG BAO GIỜ giảm (khác `cultivation`, bị tiêu hao lúc đột phá) —

@@ -93,7 +93,10 @@ export const CULTIVATION_PATH_KITS: Record<CultivationPathId, CultivationPathKit
     name: 'Kiếm Tu — Ngự Kiếm Tâm Kinh',
     element: 'metal',
     techniqueId: 'ngu_kiem',
-    skillIds: ['ngu_kiem_thuat', 'kiem_khai_thien_mon', 'van_kiem_trieu_tong'],
+    // Kiếm Thế / Kiếm Ý (spec 2026-08-29) — KHÔNG còn tuple 3-skill:
+    // route chốt vĩnh viễn trong chooseCultivationPath theo tram Lv3,
+    // mỗi route ĐÚNG 1 active skill (Lưỡng Nghi Kiếm Trận / Bạt Kiếm
+    // Thức) vào slot 0, ult qua node + nút manual riêng.
   },
 }
 
