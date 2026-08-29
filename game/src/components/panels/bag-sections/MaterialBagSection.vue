@@ -1,12 +1,26 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import SlotView from '../../common/SlotView.vue'
+import Chip from '../../common/primitives/Chip.vue'
 import BagPaginationControls, { type BagSortOption } from './BagPaginationControls.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useUiStore, type MaterialSortMode } from '@/stores/ui'
 import { useBagPagination } from '@/composables/useBagPagination'
 import { useBagGridLayout } from '@/composables/useBagGridLayout'
-import { compareNumber, compareText, stableSort, withDirection } from '@/composables/useBagSort'
+import {
+  compareNumber,
+  compareText,
+  stableSort,
+  withDirection,
+} from '@/composables/useBagSort'
+import {
+  useBagFilter,
+  ageRank,
+  GROUP_LABELS,
+  MATERIAL_GROUPS,
+  type FilteredMaterial,
+  type MaterialGroup,
+} from '@/composables/useBagFilter'
 import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
 import type { BagCell } from './BagCell'
 import type { Material, MaterialCategory } from '@/core/material/Material'
@@ -117,9 +131,78 @@ const entries = computed<MaterialEntry[]>(() => {
   }))
 })
 
-// Sort trên MỘT BẢN COPY của toàn bộ list TRƯỚC pagination; comparator
-// cuối cùng quay về original index (stable sort trong useBagSort).
-const MATERIAL_COMPARATORS: Record<Exclude<MaterialSortMode, 'default'>, (a: MaterialEntry, b: MaterialEntry) => number> = {
+// ================= Filter/search/gộp họ (plan §3.2 B4) =================
+// State filter sống trong phiên (cùng nhóm transient với bagSorts,
+// KHÔNG ghi save). Filter chạy TRƯỚC sort + pagination.
+const searchQuery = ref('')
+
+const activeGroup = ref<MaterialGroup | 'all'>('all')
+
+// entries map về shape {material, amount} — composable không biết BagCell.
+const filterInput = computed(() =>
+  entries.value.map((entry) => ({ material: entry.material, amount: entry.amount })),
+)
+
+const { filtered, visibleCount } = useBagFilter(filterInput, { searchQuery, activeGroup })
+
+// Material của 1 ô họ thảo: biến thể niên đại CAO NHẤT làm đại diện
+// tooltip/icon (badge đã hiện realm + niên đại rộng nhất trên ô).
+function representativeMaterial(item: FilteredMaterial): Material {
+  const variants = item.family?.variants
+
+  if (!variants) {
+    return item.material
+  }
+
+  return variants.reduce((best, variant) =>
+    ageRank(variant.material.profession?.age) > ageRank(best.material.profession?.age)
+      ? { material: variant.material, amount: 0 }
+      : best,
+  { material: variants[0]!.material, amount: 0 }).material
+}
+
+function familyCell(item: FilteredMaterial): BagCell {
+  const material = representativeMaterial(item)
+
+  const badge = item.family?.badgeLabel
+
+  return {
+    key: item.key,
+
+    label: material.name,
+
+    description: material.description,
+
+    amount: item.amount,
+
+    icon: material.icon,
+
+    tooltip: buildTooltip(material, item.amount),
+
+    nameSegments: badge
+      ? [
+          { text: material.name },
+          { text: badge, colorVar: '--text-muted' },
+        ]
+      : undefined,
+  }
+}
+
+// Ô filter bar: tìm kiếm theo tên + chip nhóm (bấm lại chip đang chọn
+// để bỏ filter nhóm).
+const GROUP_CHIPS: Array<{ value: MaterialGroup | 'all'; label: string }> = [
+  { value: 'all', label: 'Tất cả' },
+  ...MATERIAL_GROUPS.map((group) => ({ value: group, label: GROUP_LABELS[group] })),
+]
+
+function toggleGroup(value: MaterialGroup | 'all') {
+  activeGroup.value = activeGroup.value === value ? 'all' : value
+}
+
+// ================= Sort (giữ nguyên hành vi Workstream E) =================
+// Filter chạy TRƯỚC sort; sort trên MỘT BẢN COPY (stableSort) rồi mới
+// pagination. Họ thảo đã gộp sort theo tên họ.
+const MATERIAL_COMPARATORS: Record<Exclude<MaterialSortMode, 'default'>, (a: FilteredMaterial, b: FilteredMaterial) => number> = {
   category: (a, b) =>
     CATEGORY_ORDER.indexOf(a.material.category) - CATEGORY_ORDER.indexOf(b.material.category),
 
@@ -136,7 +219,7 @@ const MATERIAL_COMPARATORS: Record<Exclude<MaterialSortMode, 'default'>, (a: Mat
 // Ghim Linh Thạch ở ô đầu (plan Workstream D) — chạy TRƯỚC comparator
 // sort thường, KHÔNG qua withDirection(), áp dụng ở MỌI mode (kể cả
 // default) và cả hai direction.
-function comparePinned(a: MaterialEntry, b: MaterialEntry): number {
+function comparePinned(a: FilteredMaterial, b: FilteredMaterial): number {
   const aPinned = a.material.category === 'spirit_stone'
   const bPinned = b.material.category === 'spirit_stone'
 
@@ -148,30 +231,66 @@ function comparePinned(a: MaterialEntry, b: MaterialEntry): number {
 const cells = computed<BagCell[]>(() => {
   const sortState = ui.bagSorts.material
 
-  const normalCompare: (a: MaterialEntry, b: MaterialEntry) => number =
+  const normalCompare: (a: FilteredMaterial, b: FilteredMaterial) => number =
     sortState.mode === 'default'
       ? () => 0
       : withDirection(MATERIAL_COMPARATORS[sortState.mode], sortState.direction)
 
   const sorted = stableSort(
-    entries.value,
+    filtered.value,
     (a, b) => comparePinned(a, b) || normalCompare(a, b),
   )
 
-  return sorted.map((entry) => entry.cell)
+  return sorted.map((item) =>
+    item.family
+      ? familyCell(item)
+      : {
+          key: item.material.id,
+          label: item.material.name,
+          description: item.material.description,
+          amount: item.amount,
+          icon: item.material.icon,
+          tooltip: buildTooltip(item.material, item.amount),
+        },
+  )
 })
 
 const { currentPage, totalPages, goToPage, resetPage, gridCells } = useBagPagination(cells, pageSize)
 
-// Đổi mode/direction → quay về trang đầu.
+// Đổi mode/direction/filter → quay về trang đầu.
 watch(
   () => ({ ...ui.bagSorts.material }),
   () => resetPage(),
 )
+
+watch([searchQuery, activeGroup], () => resetPage())
 </script>
 
 <template>
   <div class="bag-section">
+    <div class="bag-section__filters">
+      <input
+        v-model="searchQuery"
+        type="search"
+        class="bag-section__search"
+        placeholder="Tìm nguyên liệu..."
+        aria-label="Tìm nguyên liệu theo tên"
+      >
+
+      <div class="bag-section__chips" role="group" aria-label="Lọc theo nhóm nguyên liệu">
+        <Chip
+          v-for="chip in GROUP_CHIPS"
+          :key="chip.value"
+          :active="activeGroup === chip.value"
+          @click="toggleGroup(chip.value)"
+        >
+          {{ chip.label }}
+        </Chip>
+      </div>
+
+      <span class="bag-section__count">{{ visibleCount }} loại</span>
+    </div>
+
     <div ref="gridRef" class="bag-section__grid" :style="gridStyle">
       <SlotView
         v-for="(cell, index) in gridCells"
@@ -183,6 +302,7 @@ watch(
         :amount="cell?.amount"
         :icon="cell?.icon"
         :tooltip="cell?.tooltip"
+        :name-segments="cell?.nameSegments"
       />
     </div>
 
@@ -207,6 +327,50 @@ watch(
   height: 100%;
   min-height: 0;
   gap: 6px;
+}
+
+.bag-section__filters {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.bag-section__search {
+  flex: 1 1 120px;
+  min-width: 0;
+  min-height: var(--tap-min);
+  padding: 0 var(--space-2);
+  background: var(--ink-800);
+  color: var(--text-primary);
+  border: 1px solid var(--ink-line-soft);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+}
+
+.bag-section__search::placeholder {
+  color: var(--text-muted);
+}
+
+.bag-section__search:focus-visible {
+  outline: none;
+  border-color: var(--chrome-300);
+  box-shadow: var(--focus-ring-chrome);
+}
+
+.bag-section__chips {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+.bag-section__count {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  white-space: nowrap;
 }
 
 .bag-section__grid {

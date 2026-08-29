@@ -41,7 +41,7 @@ function submit() {
 </script>
 
 <template>
-  <main class="auth-screen">
+  <main class="auth-screen" data-testid="auth-screen">
     <div class="auth-screen__mist auth-screen__mist--one" />
     <div class="auth-screen__mist auth-screen__mist--two" />
     <section class="auth-card">
@@ -73,7 +73,7 @@ function submit() {
       </form>
 
       <div class="auth-divider"><span>hoặc</span></div>
-      <GameButton class="guest-action" variant="ghost" size="lg" :disabled="submitting" @click="authenticate('guest')">
+      <GameButton class="guest-action" variant="ghost" size="lg" :disabled="submitting" data-testid="auth-guest-button" @click="authenticate('guest')">
         Chơi ngay
         <small>Tiến trình khách dừng tại Trúc Cơ</small>
       </GameButton>

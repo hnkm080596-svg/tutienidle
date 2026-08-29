@@ -96,6 +96,13 @@ import {
 } from '../material/MaterialTierConversionBalance'
 import { getRealmTier } from '../realm/RealmTierMap'
 import type { PersistentTimedEffect } from '../player/PersistentTimedEffect'
+import {
+  TU_LINH_TRAN_BUFF_PERCENT,
+  TU_LINH_TRAN_DURATION_MS,
+  TU_LINH_TRAN_EFFECT_GROUP,
+  getTuLinhTranCost,
+} from '../economy/TuLinhTranBalance'
+import { VendorSystem } from '../economy/VendorSystem'
 import { EQUIPMENT_SLOTS } from '../equipment/EquipmentSlotState'
 
 import { ProductionSystem } from '../production/ProductionSystem'
@@ -1352,6 +1359,45 @@ export class GameManager {
   }
 
   /**
+   * TỤ LINH TRẬN (economy-fixes-sinks-plan §3.2 B1, 2026-08-29) — sink
+   * Linh Thạch mua % tốc độ tu luyện 24h. Cost leo thang theo số effect
+   * CÙNG NHÓM đang active (expiresAtMs > now); chỉ MỘT effect group tồn
+   * tại tại 1 thời điểm (stack policy MVP của applyTimedEffect — refresh
+   * deadline). Giao dịch atomic: thiếu Linh Thạch → không trừ gì.
+   */
+  activateTuLinhTran(player: PlayerData, now = Date.now()): { ok: boolean; reason?: string } {
+    const activeStacks = player.persistentTimedEffects.filter(
+      (effect) => effect.effectGroup === TU_LINH_TRAN_EFFECT_GROUP && effect.expiresAtMs > now,
+    ).length
+
+    const cost = getTuLinhTranCost(player.realmId, activeStacks)
+
+    if (!this.materialRegistry.has(cost.materialId) || !this.materialBag.has(cost.materialId, cost.amount)) {
+      return { ok: false, reason: 'missing_spirit_stone' }
+    }
+
+    this.materialBag.remove(cost.materialId, cost.amount)
+
+    this.applyTimedEffect(player, {
+      id: 'tu_linh_tran',
+
+      sourceItemId: 'tu_linh_tran',
+
+      effectGroup: TU_LINH_TRAN_EFFECT_GROUP,
+
+      appliedAtMs: now,
+
+      expiresAtMs: now + TU_LINH_TRAN_DURATION_MS,
+
+      modifiers: [],
+
+      cultivationSpeedPercent: TU_LINH_TRAN_BUFF_PERCENT,
+    })
+
+    return { ok: true }
+  }
+
+  /**
    * Nguá»“n DUY NHáº¤T tá»•ng há»£p 2+2 modifier PhÃ¹/Tráº­n trÃªn cÃ¡c slot Ä‘ang cÃ³
    * equipment (plan Â§7.2). Socket modifier giá»¯ sourceId/sourceType á»•n
    * Ä‘á»‹nh Ä‘á»ƒ tooltip/debug truy nguá»“n, KHÃ”NG vÃ o baseStats snapshot.
@@ -1697,6 +1743,31 @@ export class GameManager {
     this.notifyQuestMaterialGained(targetId, times)
 
     return { ok: true, gained: times }
+  }
+
+  /**
+   * HÓA BÁN (economy-fixes-sinks-plan §3.2 B2, 2026-08-29) — bán nguyên
+   * liệu thừa cho Vendor lấy Linh Thạch đúng phẩm. VendorSystem khởi tạo
+   * per-call (nhẹ, stateless) với registry + đan phương hiện hành — sole-
+   * ingredient guard cần danh sách herbVariants của mọi recipe.
+   */
+  sellMaterialToVendor(
+    materialId: string,
+    amount: number,
+    player: PlayerData,
+  ): { ok: boolean; reason?: string; gained?: number } {
+    const vendorSystem = new VendorSystem(this.materialRegistry, this.getAlchemyRecipes())
+
+    const result = vendorSystem.sellMaterial(this.materialBag, materialId, amount, player.realmId)
+
+    if (result.ok && result.gained) {
+      this.notifyQuestMaterialGained(
+        getSpiritStoneMaterialIdForRealmTier(getRealmTier(player.realmId)),
+        result.gained,
+      )
+    }
+
+    return result
   }
 
   // =========================

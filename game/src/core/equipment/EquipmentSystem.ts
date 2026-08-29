@@ -51,6 +51,8 @@ import {
   REFINE_REFINEMENT_COST,
   REFINE_SPIRIT_STONE_PER_UNIT,
   REFINE_VALUE_VARIANCE,
+  rechargeEssenceCost,
+  rechargeSpiritStoneCost,
   WASH_LINE_COUNT_WEIGHTS,
   WASH_ORE_AMOUNT,
   WASH_REFINEMENT_COST,
@@ -1139,6 +1141,64 @@ export class EquipmentSystem {
 
       this.applyModifiers(instance, slotManager, affixRegistry)
     }
+
+    return { ok: true }
+  }
+
+  /**
+   * NẠP ĐIỂM RÈN (economy-fixes-sinks-plan §3.2 B3, 2026-08-29) — item
+   * cạn forgePoints nạp lại về TRẦN THẬT (getMaxForgePoints theo
+   * quality/forgePotential). Chi phí: Tinh Hoa cùng tier cảnh giới item +
+   * Linh Thạch đúng phẩm realm, leo thang ×1.5 theo số lần đã nạp
+   * (rechargeCount). Giao dịch atomic: thiếu bất kỳ nguyên liệu nào →
+   * không trừ gì, không đổi state.
+   */
+  rechargeForgePoints(
+    instanceId: string,
+    inventory: EquipmentBag,
+    materialBag: MaterialBag,
+  ): { ok: boolean; reason?: string } {
+    const instance = inventory.get(instanceId)
+
+    if (!instance) {
+      return { ok: false, reason: 'not_found' }
+    }
+
+    const essenceId = equipmentEssenceMaterialId(instance.realmId)
+
+    if (!essenceId) {
+      return { ok: false, reason: 'no_conversion_rule' }
+    }
+
+    const maxPoints = getMaxForgePoints(instance.quality, instance.forgePotential)
+
+    if (instance.forgePoints >= maxPoints) {
+      return { ok: false, reason: 'forge_points_full' }
+    }
+
+    const rechargeCount = instance.rechargeCount ?? 0
+
+    const essenceCost = rechargeEssenceCost(rechargeCount)
+
+    const stoneCost = rechargeSpiritStoneCost(rechargeCount)
+
+    const stoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(instance.realmId))
+
+    if (!materialBag.has(essenceId, essenceCost)) {
+      return { ok: false, reason: 'missing_essence' }
+    }
+
+    if (!materialBag.has(stoneId, stoneCost)) {
+      return { ok: false, reason: 'missing_spirit_stone' }
+    }
+
+    materialBag.remove(essenceId, essenceCost)
+
+    materialBag.remove(stoneId, stoneCost)
+
+    instance.forgePoints = maxPoints
+
+    instance.rechargeCount = rechargeCount + 1
 
     return { ok: true }
   }

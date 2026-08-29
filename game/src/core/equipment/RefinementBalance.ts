@@ -98,6 +98,35 @@ export function equipmentEssenceMaterialId(realmId: string): string | undefined 
   return EQUIPMENT_REALM_ESSENCE_MATERIAL[realmId]
 }
 
+// =========================
+// Nạp Điểm Rèn (economy-fixes-sinks-plan §3.2 B3, 2026-08-29) — item cạn
+// Điểm Rèn có thể nạp lại: tiêu Tinh Hoa cùng tier cảnh giới item +
+// Linh Thạch đúng phẩm realm, khôi phục forgePoints về TRẦN thật của
+// instance (getMaxForgePoints(quality, forgePotential)). Cost leo thang
+// ×1.5 mỗi lần nạp — sink dài hạn cho nguyên liệu Tinh Hoa dư.
+// =========================
+
+/** Tinh Hoa mỗi lần nạp (lần đầu). */
+export const RECHARGE_ESSENCE_BASE = 5
+
+/** Linh Thạch mỗi lần nạp (lần đầu) — hạ tương đương. */
+export const RECHARGE_SPIRIT_STONE_BASE = 100
+
+/** Hệ số leo thang cost theo số lần đã nạp. */
+export const RECHARGE_COST_ESCALATION = 1.5
+
+/** Cost Tinh Hoa của lần nạp thứ rechargeCount + 1 (ceil). */
+export function rechargeEssenceCost(rechargeCount: number): number {
+  return Math.ceil(RECHARGE_ESSENCE_BASE * Math.pow(RECHARGE_COST_ESCALATION, rechargeCount))
+}
+
+/** Cost Linh Thạch của lần nạp thứ rechargeCount + 1 (ceil). */
+export function rechargeSpiritStoneCost(rechargeCount: number): number {
+  return Math.ceil(
+    RECHARGE_SPIRIT_STONE_BASE * Math.pow(RECHARGE_COST_ESCALATION, rechargeCount),
+  )
+}
+
 export const DISSOLVE_ESSENCE_RANGE_BY_QUALITY: Record<string, { min: number; max: number }> = {
   hoang: { min: 1, max: 3 },
   huyen: { min: 2, max: 4 },

@@ -49,6 +49,7 @@ function close() {
     :title="mode ? TITLES[mode] : ''"
     width="min(1120px, 94vw)"
     height="min(820px, 92vh)"
+    data-testid="function-overlay-panel"
     @close="close"
   >
     <div v-if="mode" class="function-overlay">

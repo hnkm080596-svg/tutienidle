@@ -247,6 +247,7 @@ function start() {
               :key="node.stage.id"
               type="button"
               class="stage-map__node"
+              :data-testid="`stage-node-${node.stage.id}`"
               :class="{
                 'is-selected': node.stage.id === selectedStageId,
                 'is-locked': !isStageUnlocked(node.stage),
@@ -302,7 +303,7 @@ function start() {
         <div class="stage-select__start-row">
           <GameButton class="stage-select__build" variant="secondary" size="sm" @click="openBuild">? Build</GameButton>
 
-          <GameButton class="stage-select__start" size="sm" :disabled="!canStart" @click="start">
+          <GameButton class="stage-select__start" size="sm" :disabled="!canStart" data-testid="stage-start-button" @click="start">
             Bắt Đầu
           </GameButton>
         </div>

@@ -92,6 +92,9 @@ function mountHomeBuildings(gameManager: GameManager) {
     buildingButton: (buildingId: string) =>
       container.querySelector<HTMLButtonElement>(`[data-building-id="${buildingId}"] .building-hotspot`),
 
+    nameplate: (buildingId: string) =>
+      container.querySelector<HTMLElement>(`[data-building-id="${buildingId}"] .building-nameplate`),
+
     scriptureButton: () =>
       container.querySelector<HTMLButtonElement>('[data-building-id="scripture_pavilion"]'),
 
@@ -268,6 +271,102 @@ describe('HomeBuildingIcons — building navigation không dùng chip nổi', ()
 
     expect(ui.leftPanelMode).toBe('spirit_spring')
     expect(ui.activeBuildingPopoverId).toBeNull()
+
+    mounted.unmount()
+  })
+})
+
+describe('HomeBuildingIcons — nameplate + badge trạng thái (plan §3.1)', () => {
+  it('nameplate hiển thị đúng tên building từ template', () => {
+    const mounted = mountHomeBuildings(gameManager)
+
+    const nameplate = mounted.nameplate('pill_room')
+
+    expect(nameplate).not.toBeNull()
+    expect(nameplate!.textContent).toContain('Đan Phòng')
+
+    mounted.unmount()
+  })
+
+  it('chưa xây → badge locked (icon khóa + nameplate mờ)', () => {
+    const mounted = mountHomeBuildings(gameManager)
+
+    const nameplate = mounted.nameplate('pill_room')!
+
+    expect(nameplate.classList.contains('building-nameplate--locked')).toBe(true)
+    expect(nameplate.querySelector('.building-nameplate__lock')).not.toBeNull()
+
+    mounted.unmount()
+  })
+
+  it('đã xây + đủ nguyên liệu nâng cấp → badge upgradeable (chấm sáng)', () => {
+    gameManager.buildingManager.add({
+      instanceId: 'inst_pill_upgrade',
+      buildingId: 'pill_room',
+      level: 1,
+      lastCollectedAt: 0,
+    })
+
+    // upgradeCost[1] = 10 Gỗ Linh Mộc — cấp đủ nguyên liệu.
+    gameManager.materialBag.add(UPGRADE_MATERIAL, 10)
+
+    const mounted = mountHomeBuildings(gameManager)
+
+    const nameplate = mounted.nameplate('pill_room')!
+
+    expect(nameplate.classList.contains('building-nameplate--upgradeable')).toBe(true)
+    expect(nameplate.querySelector('.building-nameplate__upgradeable')).not.toBeNull()
+
+    mounted.unmount()
+  })
+
+  it('đã xây + thiếu nguyên liệu → chỉ nameplate, không badge', () => {
+    gameManager.buildingManager.add({
+      instanceId: 'inst_pill_plain',
+      buildingId: 'pill_room',
+      level: 1,
+      lastCollectedAt: 0,
+    })
+
+    const mounted = mountHomeBuildings(gameManager)
+
+    const nameplate = mounted.nameplate('pill_room')!
+
+    expect(nameplate.classList.contains('building-nameplate--default')).toBe(true)
+
+    mounted.unmount()
+  })
+
+  it('Linh Tuyền có sản lượng claim được → badge ready', () => {
+    const springManager = new GameManager()
+
+    springManager.registerMaterials([UPGRADE_MATERIAL])
+    springManager.registerBuildings([{
+      id: 'spirit_spring',
+      name: 'Linh Tuyền',
+      category: 'resource',
+      tier: 1,
+      maxLevel: 3,
+      baseStorageCapacity: 60,
+      baseProductionRate: 1,
+      producesMaterialId: 'spirit_stone',
+      upgradeCost: [[], [], []],
+      functionType: 'spirit_spring',
+    }])
+    springManager.buildingManager.add({
+      instanceId: 'inst_spring',
+      buildingId: 'spirit_spring',
+      level: 1,
+      // lastCollectedAt lùi sâu vào quá khứ → stored >= 1.
+      lastCollectedAt: Date.now() / 1000 - 3600,
+    })
+
+    const mounted = mountHomeBuildings(springManager)
+
+    const nameplate = mounted.nameplate('spirit_spring')!
+
+    expect(nameplate.classList.contains('building-nameplate--ready')).toBe(true)
+    expect(nameplate.querySelector('.building-nameplate__ready')).not.toBeNull()
 
     mounted.unmount()
   })

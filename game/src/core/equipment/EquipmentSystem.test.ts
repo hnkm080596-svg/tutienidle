@@ -31,6 +31,8 @@ import {
   REFINE_REFINEMENT_COST,
   REFINE_SPIRIT_STONE_PER_UNIT,
   equipmentEssenceMaterialId,
+  rechargeEssenceCost,
+  rechargeSpiritStoneCost,
 } from './RefinementBalance'
 
 const TEMPLATE: Equipment = {
@@ -829,5 +831,170 @@ describe('EquipmentSystem — phẩm Linh Thạch theo realm (T2, review 2026-08
 
     expect(result.ok).toBe(false)
     expect(result.reason).toBe('missing_spirit_stone')
+  })
+})
+
+// =========================
+// Nạp Điểm Rèn (economy-fixes-sinks-plan §3.2 B3, 2026-08-29)
+// =========================
+describe('EquipmentSystem.rechargeForgePoints — Nạp Điểm Rèn', () => {
+  it('nạp thành công — forgePoints về TRẦN thật, trừ đúng Tinh Hoa + Linh Thạch', () => {
+    const ctx = setup()
+
+    const essenceId = equipmentEssenceMaterialId('qi_refining')!
+
+    const essence = materials.find((material) => material.id === essenceId)!
+
+    ctx.materialBag.add(essence, 100)
+
+    const instance = manualInstance({ instanceId: 'recharge-1', realmId: 'qi_refining' })
+
+    instance.forgePoints = 0
+
+    ctx.bag.add(instance)
+
+    const maxPoints = getMaxForgePoints(instance.quality, instance.forgePotential)
+
+    const essenceCost = rechargeEssenceCost(0)
+    const stoneCost = rechargeSpiritStoneCost(0)
+
+    const result = ctx.system.rechargeForgePoints(instance.instanceId, ctx.bag, ctx.materialBag)
+
+    expect(result.ok).toBe(true)
+    expect(instance.forgePoints).toBe(maxPoints)
+    expect(instance.rechargeCount).toBe(1)
+    expect(ctx.materialBag.getAmount(essenceId)).toBe(100 - essenceCost)
+    expect(ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(1_000_000 - stoneCost)
+  })
+
+  it('lần nạp thứ hai — cost leo thang ×1.5', () => {
+    const ctx = setup()
+
+    const essenceId = equipmentEssenceMaterialId('qi_refining')!
+
+    const essence = materials.find((material) => material.id === essenceId)!
+
+    ctx.materialBag.add(essence, 1000)
+
+    const instance = manualInstance({ instanceId: 'recharge-2', realmId: 'qi_refining' })
+
+    instance.forgePoints = 0
+
+    ctx.bag.add(instance)
+
+    const firstEssence = rechargeEssenceCost(0)
+    const firstStone = rechargeSpiritStoneCost(0)
+
+    expect(ctx.system.rechargeForgePoints(instance.instanceId, ctx.bag, ctx.materialBag).ok).toBe(
+      true,
+    )
+
+    const essenceAfterFirst = ctx.materialBag.getAmount(essenceId)
+    const stoneAfterFirst = ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)
+
+    // Đốt bớt forgePoints để lần nạp kế có gì đó để hồi.
+    instance.forgePoints = 0
+
+    expect(ctx.system.rechargeForgePoints(instance.instanceId, ctx.bag, ctx.materialBag).ok).toBe(
+      true,
+    )
+
+    const secondEssence = rechargeEssenceCost(1)
+    const secondStone = rechargeSpiritStoneCost(1)
+
+    expect(secondEssence).toBeGreaterThan(firstEssence)
+    expect(secondStone).toBeGreaterThan(firstStone)
+    expect(essenceAfterFirst - ctx.materialBag.getAmount(essenceId)).toBe(secondEssence)
+    expect(stoneAfterFirst - ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(secondStone)
+    expect(instance.rechargeCount).toBe(2)
+  })
+
+  it('thiếu Tinh Hoa → từ chối với missing_essence, atomic (không trừ Linh Thạch)', () => {
+    const ctx = setup()
+
+    const essenceId = equipmentEssenceMaterialId('qi_refining')!
+
+    const essence = materials.find((material) => material.id === essenceId)!
+
+    ctx.materialBag.add(essence, 1)
+
+    const instance = manualInstance({ instanceId: 'recharge-3', realmId: 'qi_refining' })
+
+    instance.forgePoints = 0
+
+    ctx.bag.add(instance)
+
+    const stoneBefore = ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)
+
+    const result = ctx.system.rechargeForgePoints(instance.instanceId, ctx.bag, ctx.materialBag)
+
+    expect(result.ok).toBe(false)
+    expect(result.reason).toBe('missing_essence')
+    expect(instance.forgePoints).toBe(0)
+    expect(instance.rechargeCount).toBeUndefined()
+    expect(ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(stoneBefore)
+  })
+
+  it('thiếu Linh Thạch → từ chối với missing_spirit_stone, atomic (không trừ Tinh Hoa)', () => {
+    const ctx = setup()
+
+    const essenceId = equipmentEssenceMaterialId('qi_refining')!
+
+    const essence = materials.find((material) => material.id === essenceId)!
+
+    ctx.materialBag.add(essence, 100)
+
+    const instance = manualInstance({ instanceId: 'recharge-4', realmId: 'qi_refining' })
+
+    instance.forgePoints = 0
+
+    ctx.bag.add(instance)
+
+    // Vét sạch Linh Thạch Hạ (setup nạp 1_000_000).
+    ctx.materialBag.remove(SPIRIT_STONE_MATERIAL_ID, 1_000_000)
+
+    const essenceBefore = ctx.materialBag.getAmount(essenceId)
+
+    const result = ctx.system.rechargeForgePoints(instance.instanceId, ctx.bag, ctx.materialBag)
+
+    expect(result.ok).toBe(false)
+    expect(result.reason).toBe('missing_spirit_stone')
+    expect(instance.forgePoints).toBe(0)
+    expect(ctx.materialBag.getAmount(essenceId)).toBe(essenceBefore)
+  })
+
+  it('forgePoints đã full → từ chối với forge_points_full, không trừ gì', () => {
+    const ctx = setup()
+
+    const essenceId = equipmentEssenceMaterialId('qi_refining')!
+
+    const essence = materials.find((material) => material.id === essenceId)!
+
+    ctx.materialBag.add(essence, 100)
+
+    const instance = manualInstance({ instanceId: 'recharge-5', realmId: 'qi_refining' })
+
+    instance.forgePoints = getMaxForgePoints(instance.quality, instance.forgePotential)
+
+    ctx.bag.add(instance)
+
+    const stoneBefore = ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)
+
+    const result = ctx.system.rechargeForgePoints(instance.instanceId, ctx.bag, ctx.materialBag)
+
+    expect(result.ok).toBe(false)
+    expect(result.reason).toBe('forge_points_full')
+    expect(instance.rechargeCount).toBeUndefined()
+    expect(ctx.materialBag.getAmount(essenceId)).toBe(100)
+    expect(ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(stoneBefore)
+  })
+
+  it('instance không tồn tại → not_found', () => {
+    const ctx = setup()
+
+    const result = ctx.system.rechargeForgePoints('ghost-instance', ctx.bag, ctx.materialBag)
+
+    expect(result.ok).toBe(false)
+    expect(result.reason).toBe('not_found')
   })
 })

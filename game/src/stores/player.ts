@@ -81,6 +81,17 @@ export const usePlayerStore = defineStore('player', {
         BASE_CULTIVATION_PER_SECOND *
         Math.max(0.01, getCultivationSpeedMultiplier(this.selectedTalentIds))
 
+      // Tụ Linh Trận (economy-fixes-sinks-plan §3.2 B1, 2026-08-29) —
+      // cộng dồn % từ các effect tu_linh_tran đang active (thường chỉ 1
+      // effect tại 1 thời điểm, nhưng để an toàn sum qua tất cả).
+      const tuLinhPercent = this.persistentTimedEffects
+        .filter((effect) => effect.expiresAtMs > Date.now())
+        .reduce((sum, effect) => sum + (effect.cultivationSpeedPercent ?? 0), 0)
+
+      if (tuLinhPercent > 0) {
+        this.cultivationPerSecond *= 1 + tuLinhPercent
+      }
+
       const before = this.cultivation
 
       addCultivation(this, this.cultivationPerSecond * deltaSeconds)

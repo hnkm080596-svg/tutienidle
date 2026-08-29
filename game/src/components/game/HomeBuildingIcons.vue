@@ -73,6 +73,13 @@ function presentationFor(buildingId: string) {
   return navigation.getBuildingPresentation(buildingId)
 }
 
+// Badge trạng thái nameplate (plan ui-discoverability §3.1) — suy ra từ
+// useBuildingNavigation.getBuildingStatus() (đọc thuần BuildingSystem/
+// AlchemySystem qua GameManager, không state song song).
+function statusFor(buildingId: string) {
+  return navigation.getBuildingStatus(buildingId)
+}
+
 function tooltipFor(building: (typeof buildings.value)[number]): BuildingTooltipContent {
   const presentation = presentationFor(building.id)
 
@@ -122,6 +129,21 @@ function tooltipFor(building: (typeof buildings.value)[number]): BuildingTooltip
             <small>{{ presentationFor(building.id).isBuilt ? `Cấp ${presentationFor(building.id).level}` : 'Chưa mở' }}</small>
           </span>
         </button>
+
+        <span
+          class="building-nameplate"
+          :class="`building-nameplate--${statusFor(building.id)}`"
+          aria-hidden="true"
+        >
+          <span
+            v-if="statusFor(building.id) === 'locked'"
+            class="building-nameplate__lock"
+          />
+          <span v-else-if="statusFor(building.id) === 'ready'" class="building-nameplate__ready" />
+          <span v-else-if="statusFor(building.id) === 'active'" class="building-nameplate__active" />
+          <span v-else-if="statusFor(building.id) === 'upgradeable'" class="building-nameplate__upgradeable" />
+          <span class="building-nameplate__text">{{ building.name }}</span>
+        </span>
 
       </div>
     </div>
@@ -293,6 +315,120 @@ function tooltipFor(building: (typeof buildings.value)[number]): BuildingTooltip
 .building-hotspot__hover-label small { color: var(--text-muted); font-size: var(--text-xs); font-weight: 400; }
 .building-hotspot:hover .building-hotspot__hover-label,
 .building-hotspot:focus-visible .building-hotspot__hover-label { opacity: 1; transform: translate(-50%, 0); }
+
+/* Nameplate + badge trạng thái (plan ui-discoverability §3.1) — luôn
+   hiện ở zoom mặc định, đặt phía dưới vùng bấm hotspot. */
+.building-nameplate {
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: max-content;
+  max-width: 220%;
+  padding: 2px 8px;
+  border: 1px solid var(--ink-line);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--ink-950) 82%, transparent);
+  color: var(--text-primary);
+  font: 500 var(--text-xs) var(--font-body);
+  line-height: var(--lh-tight);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.building-nameplate__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.building-nameplate__lock {
+  flex: 0 0 auto;
+  width: 0.58em;
+  height: 0.5em;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  position: relative;
+}
+
+.building-nameplate__lock::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -0.55em;
+  width: 0.36em;
+  height: 0.55em;
+  border: 1px solid currentColor;
+  border-bottom: 0;
+  border-radius: 0.36em 0.36em 0 0;
+  transform: translateX(-50%);
+}
+
+.building-nameplate__ready,
+.building-nameplate__active,
+.building-nameplate__upgradeable {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.building-nameplate--locked {
+  color: var(--text-muted);
+  opacity: 0.85;
+}
+
+.building-nameplate--locked .building-nameplate__lock {
+  border-color: var(--text-muted);
+}
+
+.building-nameplate--ready {
+  color: var(--jade);
+}
+
+.building-nameplate--ready .building-nameplate__ready {
+  background: var(--jade);
+  box-shadow: 0 0 6px var(--jade);
+}
+
+.building-nameplate--active {
+  color: var(--el-fire);
+}
+
+.building-nameplate--active .building-nameplate__active {
+  background: var(--el-fire);
+  box-shadow: 0 0 6px var(--el-fire);
+  animation: nameplate-pulse 1.4s ease-in-out infinite;
+}
+
+.building-nameplate--upgradeable {
+  color: var(--gold-500);
+}
+
+.building-nameplate--upgradeable .building-nameplate__upgradeable {
+  background: var(--gold-500);
+  box-shadow: 0 0 6px var(--gold-500);
+  animation: nameplate-glow 1.8s ease-in-out infinite;
+}
+
+@keyframes nameplate-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.8); }
+}
+
+@keyframes nameplate-glow {
+  0%, 100% { box-shadow: 0 0 4px var(--gold-500); }
+  50% { box-shadow: 0 0 10px var(--gold-500); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .building-nameplate__active,
+  .building-nameplate__upgradeable {
+    animation: none !important;
+  }
+}
 
 @keyframes hotspot-spin { to { transform: rotate(360deg); } }
 @keyframes hotspot-rise {

@@ -96,6 +96,13 @@ export interface EquipmentInstance {
 
   favorite?: boolean
 
+  /**
+   * economy-fixes-sinks-plan §3.2 B3 (2026-08-29) — Điểm Rèn Nạp: số lần
+   * đã nạp lại forgePoints thành công của item này. undefined = chưa nạp
+   * lần nào. Cost leo thang theo số lần nạp.
+   */
+  rechargeCount?: number
+
   // NOTE (rework 2026-08-26): "Điểm Rèn" của món đồ CHÍNH LÀ
   // forgePoints/trần getMaxForgePoints(quality, forgePotential) ở trên
   // (tooltip "Tình trạng rèn x/y") — Tẩy Luyện/Tinh Luyện tiêu thụ đúng

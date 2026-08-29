@@ -198,9 +198,9 @@ const pillPermanentRows = computed(() => {
         </div>
 
         <div class="character-panel__identity-text">
-          <h3 class="character-panel__name">{{ player.name }}</h3>
+          <h3 class="character-panel__name" data-testid="character-name">{{ player.name }}</h3>
 
-          <p class="character-panel__realm-line">{{ realm.name }} · Tầng {{ player.realmLevel }}</p>
+          <p class="character-panel__realm-line" data-testid="character-realm-line">{{ realm.name }} · Tầng {{ player.realmLevel }}</p>
 
           <p class="character-panel__power">
             <span class="character-panel__power-value">{{ formatNumber(combatPower) }}</span>

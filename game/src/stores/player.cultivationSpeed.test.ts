@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { usePlayerStore } from './player'
+import { TU_LINH_TRAN_BUFF_PERCENT } from '../core/economy/TuLinhTranBalance'
 
 // Khóa hành vi cultivation_speed (talent-direction-choice-plan §9) —
 // BASE_CULTIVATION_PER_SECOND = 10: Phàm Cốt −75% → đúng 2.5/s, Tiên
@@ -61,5 +62,55 @@ describe('player store — tốc độ tu luyện theo thiên phú', () => {
     store.cultivate(1)
 
     expect(store.cultivationPerSecond).toBeCloseTo(0.1) // 10 × 0.01
+  })
+
+  // Tụ Linh Trận (economy-fixes-sinks-plan §3.2 B1) — effect active nhân
+  // tốc độ tu luyện thêm cultivationSpeedPercent; hết hạn thì mất buff.
+  it('effect tu_linh_tran active — cultivationPerSecond nhân (1 + 25%)', () => {
+    const store = usePlayerStore()
+
+    store.persistentTimedEffects.push({
+      id: 'tu_linh_tran',
+
+      sourceItemId: 'tu_linh_tran',
+
+      effectGroup: 'tu_linh_tran',
+
+      appliedAtMs: Date.now() - 1000,
+
+      expiresAtMs: Date.now() + 60_000,
+
+      modifiers: [],
+
+      cultivationSpeedPercent: TU_LINH_TRAN_BUFF_PERCENT,
+    })
+
+    store.cultivate(1)
+
+    expect(store.cultivationPerSecond).toBeCloseTo(10 * (1 + TU_LINH_TRAN_BUFF_PERCENT))
+  })
+
+  it('effect tu_linh_tran hết hạn — không còn buff', () => {
+    const store = usePlayerStore()
+
+    store.persistentTimedEffects.push({
+      id: 'tu_linh_tran',
+
+      sourceItemId: 'tu_linh_tran',
+
+      effectGroup: 'tu_linh_tran',
+
+      appliedAtMs: Date.now() - 120_000,
+
+      expiresAtMs: Date.now() - 60_000,
+
+      modifiers: [],
+
+      cultivationSpeedPercent: TU_LINH_TRAN_BUFF_PERCENT,
+    })
+
+    store.cultivate(1)
+
+    expect(store.cultivationPerSecond).toBe(10)
   })
 })

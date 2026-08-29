@@ -124,7 +124,7 @@ function handleReset() {
     </p>
 
     <div class="settings-panel__actions">
-      <GameButton variant="secondary" @click="handleSave">Lưu Tiến Trình</GameButton>
+      <GameButton variant="secondary" data-testid="settings-save-button" @click="handleSave">Lưu Tiến Trình</GameButton>
 
       <GameButton variant="secondary" @click="handleLoad">Tải Lại (từ lần lưu gần nhất)</GameButton>
 

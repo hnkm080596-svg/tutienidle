@@ -26,6 +26,18 @@ export interface BuildingPresentation {
   isUpgradeable: boolean
 }
 
+/**
+ * Trạng thái badge nameplate (plan ui-discoverability §3.1) — suy ra THUẦN
+ * từ BuildingSystem/ProductionSystem state hiện hành, không có store mới.
+ * Ưu tiên: locked > ready > active > upgradeable > default.
+ */
+export type BuildingBadgeStatus =
+  | 'locked'
+  | 'upgradeable'
+  | 'active'
+  | 'ready'
+  | 'default'
+
 export function useBuildingNavigation() {
   const gameManager = useGameManager()
 
@@ -51,6 +63,49 @@ export function useBuildingNavigation() {
 
       isUpgradeable,
     }
+  }
+
+  /**
+   * Badge trạng thái nameplate (plan ui-discoverability §3.1) — ĐỌC THUẦN
+   * từ system hiện có qua GameManager facade, không mutate gì:
+   * - locked: chưa có instance (canBuild ĐÚNG nguồn sự thật với popover).
+   * - ready: resource building (Linh Tuyền) có sản lượng claim được
+   *   (getStoredAmount ≥ 1, cùng nguồn với nút thu hoạch popover).
+   * - active: đang có job chạy — vòng job DUY NHẤT của building là luyện
+   *   đan pill_room (AlchemySystem qua getAlchemyJobs()).
+   * - upgradeable: built + chưa max + đủ nguyên liệu nâng KẾ TIẾP
+   *   (upgradeCost[level], cùng luật cost index với BuildingSystem.upgrade()).
+   */
+  function getBuildingStatus(buildingId: string): BuildingBadgeStatus {
+    const template = gameManager.getBuildingDefinitions().find((entry) => entry.id === buildingId)
+
+    const instance = gameManager.buildingManager.getByBuildingId(buildingId)
+
+    if (!template || !instance) {
+      return 'locked'
+    }
+
+    if (template.producesMaterialId) {
+      const stored = gameManager.getBuildingStoredAmount(instance.instanceId, Date.now() / 1000)
+
+      if (stored >= 1) {
+        return 'ready'
+      }
+    }
+
+    if (template.id === 'pill_room' && gameManager.getAlchemyJobs().length > 0) {
+      return 'active'
+    }
+
+    if (instance.level < template.maxLevel) {
+      const cost = template.upgradeCost[instance.level] ?? []
+
+      if (cost.every((entry) => gameManager.materialBag.has(entry.materialId, entry.amount))) {
+        return 'upgradeable'
+      }
+    }
+
+    return 'default'
   }
 
   function openBuilding(buildingId: string): void {
@@ -82,5 +137,7 @@ export function useBuildingNavigation() {
     openBuilding,
 
     getBuildingPresentation,
+
+    getBuildingStatus,
   }
 }

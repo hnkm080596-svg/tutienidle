@@ -67,7 +67,7 @@ onMounted(() => { void reroll() })
 </script>
 
 <template>
-  <main class="creation-screen">
+  <main class="creation-screen" data-testid="character-creation-screen">
     <header class="creation-header">
       <GameButton variant="ghost" size="sm" @click="step === 1 ? emit('back') : step--">← Trở lại</GameButton>
       <div><p>KHAI MỆNH</p><h1>Tạo Nhân Vật</h1></div>
@@ -82,9 +82,9 @@ onMounted(() => { void reroll() })
       <span class="ornate-frame" aria-hidden="true" />
       <p class="kicker">ĐẠO DANH</p><h2>Danh xưng theo suốt tiên đồ</h2>
       <p>Tên nhân vật sẽ là duy nhất và không thể đổi trong giai đoạn đầu.</p>
-      <label><span>Tên nhân vật</span><input v-model="name" maxlength="20" autofocus placeholder="Nhập đạo danh…" /></label>
+      <label><span>Tên nhân vật</span><input v-model="name" maxlength="20" autofocus placeholder="Nhập đạo danh…" data-testid="creation-name-input" /></label>
       <small :class="{ valid: validName }">{{ name.length }}/20 · Tối thiểu 2 ký tự</small>
-      <GameButton variant="primary" :disabled="!validName" @click="step = 2">Tiếp tục</GameButton>
+      <GameButton variant="primary" :disabled="!validName" data-testid="creation-continue-name" @click="step = 2">Tiếp tục</GameButton>
     </section>
 
     <section v-else-if="step === 2" class="creation-panel talent-step">
@@ -93,22 +93,22 @@ onMounted(() => { void reroll() })
       <p v-if="rolling" class="loading-roll">Đang quan sát thiên cơ…</p>
       <p v-else-if="error && talents.length === 0" class="loading-roll">{{ error }}</p>
       <div v-else class="talent-grid">
-        <button v-for="talent in talents" :key="talent.id" type="button" class="talent-card" :class="[`talent-tier-${talent.rarity}`, { selected: selectedTalentIds.includes(talent.id) }]" @click="toggleTalent(talent)">
+        <button v-for="talent in talents" :key="talent.id" type="button" class="talent-card" :data-testid="`creation-talent-${talent.id}`" :class="[`talent-tier-${talent.rarity}`, { selected: selectedTalentIds.includes(talent.id) }]" @click="toggleTalent(talent)">
           <span class="talent-card__rarity">{{ TALENT_RARITY_LABELS[talent.rarity] }}</span><h3>{{ talent.name }}</h3><p>{{ talent.description }}</p><small>{{ talent.tags[0] }}</small>
         </button>
       </div>
-      <footer class="panel-actions"><GameButton variant="secondary" :disabled="rolling" @click="reroll">↻ Reroll toàn bộ</GameButton><GameButton variant="primary" :disabled="selectedTalentIds.length !== 1" @click="step = 3">Xác nhận thiên phú</GameButton></footer>
+      <footer class="panel-actions"><GameButton variant="secondary" :disabled="rolling" @click="reroll">↻ Reroll toàn bộ</GameButton><GameButton variant="primary" :disabled="selectedTalentIds.length !== 1" data-testid="creation-confirm-talent" @click="step = 3">Xác nhận thiên phú</GameButton></footer>
     </section>
 
     <section v-else class="creation-panel attribute-step">
       <span class="ornate-frame" aria-hidden="true" />
       <div class="panel-heading"><div><p class="kicker">CĂN CƠ</p><h2>Phân bổ điểm khởi đầu</h2></div><strong class="points">Còn {{ pointsLeft }} điểm</strong></div>
       <div class="attribute-list">
-        <div v-for="(label, key) in attributeLabels" :key="key" class="attribute-row"><div><b>{{ label.name }}</b><small>{{ label.hint }}</small></div><div class="counter"><button type="button" @click="changeAttribute(key, -1)">−</button><span>{{ attributes[key] }}</span><button type="button" @click="changeAttribute(key, 1)">+</button></div></div>
+        <div v-for="(label, key) in attributeLabels" :key="key" class="attribute-row" :data-testid="`creation-attribute-${key}`"><div><b>{{ label.name }}</b><small>{{ label.hint }}</small></div><div class="counter"><button type="button" @click="changeAttribute(key, -1)">−</button><span>{{ attributes[key] }}</span><button type="button" :data-testid="`creation-attribute-plus-${key}`" @click="changeAttribute(key, 1)">+</button></div></div>
       </div>
       <div class="creation-summary"><span>{{ name }}</span><span>1 Thiên Phú</span><span>5 Điểm Căn Cơ</span></div>
       <p v-if="error" class="creation-error">{{ error }}</p>
-      <footer class="panel-actions"><GameButton variant="secondary" :disabled="creating" @click="step = 2">Chọn lại thiên phú</GameButton><GameButton variant="primary" :disabled="pointsLeft !== 0 || creating" @click="finish">{{ creating ? 'Đang lập mệnh…' : 'Bước vào tiên đồ' }}</GameButton></footer>
+      <footer class="panel-actions"><GameButton variant="secondary" :disabled="creating" @click="step = 2">Chọn lại thiên phú</GameButton><GameButton variant="primary" :disabled="pointsLeft !== 0 || creating" data-testid="creation-finish" @click="finish">{{ creating ? 'Đang lập mệnh…' : 'Bước vào tiên đồ' }}</GameButton></footer>
     </section>
   </main>
 </template>

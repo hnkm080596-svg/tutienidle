@@ -26,4 +26,12 @@ export interface PersistentTimedEffect {
   expiresAtMs: number
 
   modifiers: StatModifier[]
+
+  /**
+   * economy-fixes-sinks-plan §3.2 B1 (2026-08-29) — Tụ Linh Trận: % tốc
+   * độ tu luyện tạm thời. KHÔNG phải StatModifier (tốc độ tu luyện không
+   * còn là stat pipeline — read riêng ở stores/player.ts's cultivate()).
+   * undefined = effect này không buff tu luyện.
+   */
+  cultivationSpeedPercent?: number
 }

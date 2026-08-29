@@ -19,12 +19,18 @@ export interface BreakthroughRequirement {
 }
 
 export const BREAKTHROUGH_REQUIREMENTS: Record<string, BreakthroughRequirement> = {
-  foundation_establishment: { materialId: 'breakthrough_token_foundation_establishment', spiritStoneCost: 200 },
+  // economy-fixes-sinks-plan §3.2 B1 (2026-08-29) — re-anchor sink Linh
+  // Thạch cho gate đột phá: baseline 500 (Trúc Cơ — GATE THẬT DUY NHẤT
+  // hiện chơi được, content kết thúc ở Trúc Cơ), ×4 mỗi cảnh giới kế
+  // (data hàm mũ đặt sẵn cho mọi gate — Kim Đan+ hiện chưa reachable
+  // trong game nhưng giữ entry để scale khi mở). Kim Đan M2/M3 đã bỏ
+  // khỏi roadmap — xem roadmap.md section 5.
+  foundation_establishment: { materialId: 'breakthrough_token_foundation_establishment', spiritStoneCost: 500 },
   golden_core: { materialId: 'breakthrough_token_golden_core', spiritStoneCost: 2000 },
-  nascent_soul: { materialId: 'breakthrough_token_nascent_soul', spiritStoneCost: 20000 },
-  soul_transformation: { materialId: 'breakthrough_token_soul_transformation', spiritStoneCost: 200000 },
-  void_refinement: { materialId: 'breakthrough_token_void_refinement', spiritStoneCost: 2000000 },
-  body_integration: { materialId: 'breakthrough_token_body_integration', spiritStoneCost: 20000000 },
-  mahayana: { materialId: 'breakthrough_token_mahayana', spiritStoneCost: 200000000 },
-  tribulation: { materialId: 'breakthrough_token_tribulation', spiritStoneCost: 2000000000 },
+  nascent_soul: { materialId: 'breakthrough_token_nascent_soul', spiritStoneCost: 8000 },
+  soul_transformation: { materialId: 'breakthrough_token_soul_transformation', spiritStoneCost: 32000 },
+  void_refinement: { materialId: 'breakthrough_token_void_refinement', spiritStoneCost: 128000 },
+  body_integration: { materialId: 'breakthrough_token_body_integration', spiritStoneCost: 512000 },
+  mahayana: { materialId: 'breakthrough_token_mahayana', spiritStoneCost: 2048000 },
+  tribulation: { materialId: 'breakthrough_token_tribulation', spiritStoneCost: 8192000 },
 }
