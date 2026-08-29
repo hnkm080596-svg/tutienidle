@@ -1,5 +1,6 @@
 import { defineEnemy } from '../../core/enemy/Enemy'
 import type { Enemy } from '../../core/enemy/Enemy'
+import type { EnemySpecialAttack } from '../../core/enemy/Enemy'
 import type { TribulationPhase, BossEnrage } from '../../core/enemy/TribulationPhase'
 
 // defineEnemy() nhận statsInput gọn (~10-13 field, xem EnemyStatInput.ts)
@@ -1502,6 +1503,7 @@ function foundationBeast(params: {
   resistance: number
   tribulationPhases?: TribulationPhase[]
   enrage?: BossEnrage
+  specialAttacks?: EnemySpecialAttack[]
 }) {
   const hp = Math.round(450 * 1.2 ** (params.t - 1))
   const atk = Math.round(42 * 1.15 ** (params.t - 1))
@@ -1523,6 +1525,7 @@ function foundationBeast(params: {
     archetype: params.archetype,
     tribulationPhases: params.tribulationPhases,
     enrage: params.enrage,
+    specialAttacks: params.specialAttacks,
     statsInput: {
       maxHp: Math.round(hp * mult.hp),
       attack: Math.round(atk * mult.atk),
@@ -1792,6 +1795,11 @@ const FOUNDATION_ENEMIES: Enemy[] = [
     resistance: 20,
     tribulationPhases: FLOOD_DRAGON_PHASES,
     enrage: FLOOD_DRAGON_ENRAGE,
+    // Combat Balance Pass (2026-08-29, plan §3.6) — boss mẫu có action
+    // đặc biệt data-driven: mỗi đòn thứ 4 là "Nuốt Sóng" — đòn nước nặng
+    // (×2.5 damage) với preset riêng, windup caster chuẩn. Số minh hoạ,
+    // playtest chỉnh. Boss KHÁC chưa khai — tiếp tục basic attack cứng.
+    specialAttacks: [{ everyNth: 4, damageMultiplier: 2.5, presetId: 'water_surge' }],
   }),
 ]
 

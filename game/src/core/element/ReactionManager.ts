@@ -7,6 +7,7 @@ import type { CombatSystem } from '../combat/CombatSystem'
 import type { BuffSystem } from '../buff/BuffSystem'
 import type { BuffRegistry } from '../buff/BuffRegistry'
 import type { EventBus } from '../events/EventBus'
+import { elementalBasePower } from '../combat/ElementDamageCalculator'
 import type { ElementType } from './ElementType'
 import { ELEMENT_REACTIONS } from './ElementReaction'
 
@@ -86,8 +87,26 @@ export class ReactionManager {
       // percentOfTargetCurrentHp đọc target.currentHp NGAY TẠI ĐÂY
       // (trước khi bị trừ bởi chính lần kích này), cộng dồn với
       // baseDamage rồi mới khuếch đại reactionEffectPercent chung.
+      //
+      // Combat Balance Pass (2026-08-29, plan §3.2) — reaction khai
+      // `powerScalingRatio` cộng thêm Power nguyên tố của NGUỒN: element
+      // đọc từ instance ailment vừa áp (newAilmentId — snapshot lúc
+      // AilmentSystem.apply()), Power qua helper DÙNG CHUNG
+      // elementalBasePower() (cùng nguồn với direct hit/DoT — hai
+      // pipeline không thể lệch). Ailment không có element (CC thuần
+      // 'choang'/'dong_bang'/'troi_chan') hoặc không tra được instance
+      // → phần power = 0, hành vi về baseDamage thuần như trước.
+      const powerElement = targetAilments.getAilment(newAilmentId)?.element
+
+      const sourcePower =
+        reaction.powerScalingRatio && powerElement && powerElement !== 'physical'
+          ? elementalBasePower(source, powerElement) * reaction.powerScalingRatio
+          : 0
+
       const flatAndPercentDamage =
-        reaction.baseDamage + (reaction.percentOfTargetCurrentHp ? target.currentHp * reaction.percentOfTargetCurrentHp : 0)
+        reaction.baseDamage +
+        sourcePower +
+        (reaction.percentOfTargetCurrentHp ? target.currentHp * reaction.percentOfTargetCurrentHp : 0)
 
       const reactionDamage = flatAndPercentDamage * (1 + source.stats.reactionEffectPercent)
 

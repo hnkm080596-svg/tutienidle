@@ -65,7 +65,7 @@ describe('SkillSystem — resourceType "momentum" (Thể Tu, Combat Rework Phase
     expect(skillSystem.canUse('heavy_impact_test', createEntity(99))).toBe(false)
   })
 
-  it('canUse() true khi Momentum đủ cost, use() trừ đúng lượng', () => {
+  it('canUse() true khi Momentum đủ cost, useInSlot() trừ đúng lượng', () => {
     const skillManager = new SkillManager()
     const skillSystem = new SkillSystem(skillManager)
 
@@ -75,7 +75,9 @@ describe('SkillSystem — resourceType "momentum" (Thể Tu, Combat Rework Phase
 
     expect(skillSystem.canUse('heavy_impact_test', entity)).toBe(true)
 
-    skillSystem.use('heavy_impact_test', entity)
+    // Combat Balance Pass (2026-08-29) — use() legacy đã gộp vào
+    // useInSlot() (plan §3.7): begin + commit cooldown cùng lúc.
+    skillSystem.useInSlot('heavy_impact_test', 0, entity)
 
     expect(entity.currentMomentum).toBe(0)
   })

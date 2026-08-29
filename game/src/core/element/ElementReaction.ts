@@ -18,6 +18,18 @@ export interface ElementReactionDefinition {
   // không tự tính từ dpsRatio 2 ailment liên quan, dễ balance độc lập.
   baseDamage: number
 
+  // Combat Balance Pass (2026-08-29, plan §3.2) — tỷ lệ Power nguyên tố
+  // của NGUỒN kích (element snapshot trên instance ailment vừa áp)
+  // cộng vào damage: damage = (baseDamage + sourcePower × ratio) ×
+  // (1 + reactionEffectPercent). Nguồn Power đọc qua helper DÙNG CHUNG
+  // elementalBasePower() (ElementDamageCalculator.ts) — cùng nguồn với
+  // direct hit/DoT, hai pipeline không thể lệch. undefined = giữ nguyên
+  // behavior cũ (chỉ baseDamage) — tương thích test/data hiện có.
+  // Reaction "Độc Viêm" (percentOfTargetCurrentHp) và reaction không
+  // damage (appliesAilmentId/appliesBuffId với baseDamage 0) không cần
+  // field này.
+  powerScalingRatio?: number
+
   // Mộc Tu (Plans/PoisonPath mục 3, "Độc Viêm" — Mộc+Hỏa, "Damage dựa
   // trên HP hiện tại") — % currentHp của TARGET tại thời điểm Reaction
   // kích hoạt (TRƯỚC khi trừ baseDamage của chính lần kích này), cộng
@@ -120,9 +132,9 @@ export const ELEMENT_REACTIONS: Partial<Record<AilmentId, Partial<Record<Ailment
   // (Plans/magicpathgeneral Phase 5) — Dẫn Lưu (waterReactionExtensionSeconds)
   // có thể giữ lại Tê Cóng thay vì tiêu, xem ReactionManager.ts.
   bong: {
-    te_cong: { name: 'Bốc Hơi', baseDamage: 60, keepsAilmentId: 'te_cong' },
+    te_cong: { name: 'Bốc Hơi', baseDamage: 60, keepsAilmentId: 'te_cong', powerScalingRatio: 0.5 },
     // Hỏa (Bỏng) + Kim (Tê Điện) — "Lôi Viêm".
-    te_dien: { name: 'Lôi Viêm', baseDamage: 70 },
+    te_dien: { name: 'Lôi Viêm', baseDamage: 70, powerScalingRatio: 0.5 },
     // Hỏa (Bỏng) + Mộc (Trúng Độc) — "Độc Viêm", damage dựa trên %
     // currentHp của target thay vì flat (xem ElementReactionDefinition).
     trung_doc: { name: 'Độc Viêm', baseDamage: 0, percentOfTargetCurrentHp: 0.1 },
@@ -131,7 +143,7 @@ export const ELEMENT_REACTIONS: Partial<Record<AilmentId, Partial<Record<Ailment
   // Thủy (Tê Cóng) + Mộc (Trúng Độc) — "Độc Thủy". keepsAilmentId:
   // 'te_cong' cùng lý do như Bốc Hơi ở trên.
   te_cong: {
-    trung_doc: { name: 'Độc Thủy', baseDamage: 65, keepsAilmentId: 'te_cong' },
+    trung_doc: { name: 'Độc Thủy', baseDamage: 65, keepsAilmentId: 'te_cong', powerScalingRatio: 0.5 },
   },
 
   // Plans/EarthPath mục IV (2026-08-21) — bảng phản ứng của Thổ (chốt
@@ -181,7 +193,7 @@ export const ELEMENT_REACTIONS: Partial<Record<AilmentId, Partial<Record<Ailment
     // Skill Power" của doc không literal-scale theo Power nguồn (đúng
     // convention baseDamage flat hiện có, cùng cách xử lý mọi reaction
     // khác) — 85 là số minh hoạ giữa khoảng 60-90 của các reaction cũ.
-    bong: { name: 'Thiêu Huyết', baseDamage: 85, maxHpReductionPercent: 0.03 },
+    bong: { name: 'Thiêu Huyết', baseDamage: 85, maxHpReductionPercent: 0.03, powerScalingRatio: 0.5 },
     // Kim+Mộc — "Huyết Độc": Trúng Độc + Chảy Máu "hợp nhất" thành 1
     // DoT MỚI mạnh hơn (ailment 'huyet_doc'), tái dùng appliesAilmentId
     // (đã xây cho Thổ) — closes luôn gap "Huyết Độc" từng bị hoãn ở đợt

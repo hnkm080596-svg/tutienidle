@@ -295,7 +295,7 @@ describe('BattleSystem — cast transaction trong trận (plan §4)', () => {
     expect(harness.player.currentMp).toBeCloseTo(1000 - 8, 2)
   })
 
-  it('fizzle (target chết giữa lúc niệm) vẫn tiêu mana và bắt đầu cooldown đầy đủ', () => {
+  it('fizzle (target chết giữa lúc niệm) HOÀN mana và commit 50% cooldown (Combat Balance Pass 2026-08-29)', () => {
     const harness = createHarness()
 
     harness.skillManager.add(channeledSkill())
@@ -316,10 +316,16 @@ describe('BattleSystem — cast transaction trong trận (plan §4)', () => {
     harness.system.update(0.6)
 
     expect(harness.player.castingSkillId).toBeUndefined()
-    expect(harness.player.currentMp).toBeCloseTo(1000 - 8, 2)
+    // Combat Balance Pass (plan §3.5) — fizzle hoàn 100% mana (trừ 8 lúc
+    // begin, giờ hoàn lại về 1000).
+    expect(harness.player.currentMp).toBeCloseTo(1000, 2)
+    // Cooldown chỉ commit 50% (10 × 0.5 = 5) thay vì đầy đủ — khác 9.
     expect(
       (harness.skillManager.get('skill_chan')!.remainingCooldownBySlot?.[0] ?? 0),
-    ).toBeGreaterThan(9)
+    ).toBeLessThan(6)
+    expect(
+      (harness.skillManager.get('skill_chan')!.remainingCooldownBySlot?.[0] ?? 0),
+    ).toBeGreaterThan(0)
   })
 
   it('skill tức thời resolve rồi cooldown bắt đầu trong CÙNG fixed-step', () => {

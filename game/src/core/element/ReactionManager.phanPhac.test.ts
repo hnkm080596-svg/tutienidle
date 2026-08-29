@@ -90,7 +90,9 @@ describe('ReactionManager — Phản Phác (reaction_keep_chance)', () => {
 
     reactionManager.checkAndTrigger(ailmentSystem, 'te_dien', source, target, combatSystem)
 
-    expect(target.currentHp).toBe(1000 - 70)
+    // Combat Balance Pass (2026-08-29) — "Lôi Viêm" powerScalingRatio
+    // 0.5: 70 + attack(10)×0.5 = 75.
+    expect(target.currentHp).toBe(1000 - 75)
     expect(ailmentSystem.getActiveIds()).toEqual([])
   })
 
@@ -105,7 +107,7 @@ describe('ReactionManager — Phản Phác (reaction_keep_chance)', () => {
       undefined, undefined, undefined, undefined, 1,
     )
 
-    expect(target.currentHp).toBe(1000 - 70)
+    expect(target.currentHp).toBe(1000 - 75)
     expect(ailmentSystem.getActiveIds().sort()).toEqual(['bong', 'te_dien'])
   })
 
@@ -158,7 +160,8 @@ describe('ReactionManager — Phản Phác (reaction_keep_chance)', () => {
       undefined, undefined, undefined, undefined, 1,
     )
 
-    expect(target.currentHp).toBe(1000 - 140)
+    // Combat Balance Pass (2026-08-29) — 2 lần "Lôi Viêm": (70 + 5) × 2.
+    expect(target.currentHp).toBe(1000 - 150)
     expect(ailmentSystem.getActiveIds().sort()).toEqual(['bong', 'te_dien'])
   })
 

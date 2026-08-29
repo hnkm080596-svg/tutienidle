@@ -86,7 +86,9 @@ describe('SkillEffectSystem — effect "ailment" trigger Reaction (Combat Rework
     // TỰ kích qua đúng ctx.reactionManager, không cần gọi tay thêm.
     skillEffectSystem.apply({ type: 'ailment', ailmentId: 'te_cong', ailmentChance: 1 }, source, target, ctx)
 
-    expect(target.currentHp).toBe(1000 - 60)
+    // Combat Balance Pass (2026-08-29) — powerScalingRatio 0.5:
+    // 60 + attack(10)×0.5 = 65.
+    expect(target.currentHp).toBe(1000 - 65)
     expect(targetAilments.getActiveIds()).toEqual([])
   })
 

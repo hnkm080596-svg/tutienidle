@@ -390,6 +390,17 @@ export class AilmentSystem {
   }
 
   /**
+   * Combat Balance Pass (2026-08-29, plan §3.2) — trả instance ailment
+   * đang active (hoặc undefined) để ReactionManager đọc field `element`
+   * snapshot của nguồn khi scale reaction theo Power nguyên tố. Read-only
+   * passthrough — caller KHÔNG mutate instance trả về (invariant Phase 16:
+   * mutation phải qua method có chủ đích của system này).
+   */
+  getAilment(ailmentId: AilmentId) {
+    return this.manager.get(ailmentId)
+  }
+
+  /**
    * Thổ Tu (Thạch Hóa, Plans/magicpathgeneral, 2026-08-21) — gọi bởi
    * BattleSystem NGAY SAU 1 đòn XÁC NHẬN TRÚNG (không dodged) lên
    * chính entity sở hữu pool này. Quét MỌI ailment đang active có khai

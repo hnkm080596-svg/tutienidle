@@ -5,9 +5,29 @@ import type { EnemyStatInput } from './EnemyStatInput'
 import { normalizeEnemyStats, applyEliteMultiplier, applyBossMultiplier } from './EnemyStatInput'
 import type { EnemyArchetype } from './EnemyArchetype'
 import type { TribulationPhase, BossEnrage } from './TribulationPhase'
+import type { CombatVfxPresetId } from '../battle/CombatAction'
 import { getRealmIndex } from '../realm/realmSystem'
 
 export type { EnemyLane }
+
+/**
+ * Combat Balance Pass (2026-08-29, plan §3.6) — 1 action ĐẶC BIỆT data-
+ * driven của quái (boss mẫu trước): mỗi lần attack MỚI thứ `everyNth`
+ * (1-based, đếm LẠI TỪ ĐẦU sau khi khớp) thay basic attack bằng impact
+ * với `damageMultiplier` (nhân cả stats attack qua pipeline thường) và
+ * `presetId` riêng để renderer diễn xuất khác biệt. `windupSeconds`
+ * override thời gian chuẩn bị (undefined = theo basic của archetype).
+ * KHÔNG có UI báo hiệu telegraph riêng — phần đó để dành phase sau.
+ */
+export interface EnemySpecialAttack {
+  everyNth: number
+
+  damageMultiplier: number
+
+  presetId?: CombatVfxPresetId
+
+  windupSeconds?: number
+}
 
 export interface EnemyItemDrop {
   kind: 'material' | 'equipment' | 'pill' | 'technique'
@@ -113,6 +133,10 @@ export interface Enemy {
   // CHỈ Boss/quái lớn cần khai, quái thường để trống.
   breakGaugeMax?: number
 
+  // Combat Balance Pass (2026-08-29, plan §3.6) — action đặc biệt data-
+  // driven thay basic attack cứng, xem EnemySpecialAttack. Boss mẫu trước.
+  specialAttacks?: EnemySpecialAttack[]
+
   lane: EnemyLane
 }
 
@@ -148,6 +172,10 @@ export interface EnemyDefinition {
   enrage?: BossEnrage
 
   breakGaugeMax?: number
+
+  // Combat Balance Pass (2026-08-29, plan §3.6) — thread qua Enemy/
+  // CombatEntity, tiêu thụ ở BattleSystem.fireEnemyAttack().
+  specialAttacks?: EnemySpecialAttack[]
 
   // Đột Phá Trúc Cơ (Phase 4) — quái Kiếp set true trực tiếp lúc định
   // nghĩa (KHÔNG qua createBossVariant(), vì multiplier 8x/3x của Boss
@@ -185,6 +213,8 @@ export function defineEnemy(definition: EnemyDefinition): Enemy {
     enrage: definition.enrage,
 
     breakGaugeMax: definition.breakGaugeMax,
+
+    specialAttacks: definition.specialAttacks,
 
     isBoss: definition.isBoss,
 
@@ -335,5 +365,7 @@ export function enemyToCombatEntity(enemy: Enemy): CombatEntity {
     breakGaugeMax: enemy.breakGaugeMax,
 
     currentBreakGauge: enemy.breakGaugeMax,
+
+    specialAttacks: enemy.specialAttacks,
   }
 }

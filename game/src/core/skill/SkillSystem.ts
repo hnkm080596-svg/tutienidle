@@ -335,15 +335,13 @@ export class SkillSystem {
   canUseInSlot(skillId: string, slotIndex: number, entity: CombatEntity): boolean {
     const skill = this.manager.get(skillId)
     if (!skill || (skill.remainingCooldownBySlot?.[slotIndex] ?? 0) > 0) return false
-    // Tạm bỏ qua global cooldown để xét riêng slot — try/finally để
-    // remainingCooldown LUÔN được khôi phục kể cả khi canUse() throw.
-    const globalCooldown = skill.remainingCooldown
-    skill.remainingCooldown = 0
-    try {
-      return this.canUse(skillId, entity)
-    } finally {
-      skill.remainingCooldown = globalCooldown
-    }
+    // Combat Balance Pass (2026-08-29, plan §3.7) — không mutate state
+    // để lách global check: inline các kiểm tra thay vì gọi canUse() rồi
+    // tạm set remainingCooldown=0.
+    if (!skill.unlocked || !skill.equipped) return false
+    if (skill.unreleased) return false
+    if (skill.requiredRealmId && entity.realmIndex < getRealmIndex(skill.requiredRealmId)) return false
+    return this.hasEnoughResource(skill, entity)
   }
 
   private hasEnoughResource(skill: Skill, entity: CombatEntity): boolean {
@@ -365,22 +363,6 @@ export class SkillSystem {
       default:
         return true
     }
-  }
-
-  use(skillId: string, entity: CombatEntity): Skill | null {
-    if (!this.canUse(skillId, entity)) {
-      return null
-    }
-
-    const skill =
-      this.manager.get(skillId)!
-
-    skill.remainingCooldown = skill.cooldown
-
-    this.consumeResource(skill, entity)
-    this.gainCastExperience(skill)
-
-    return skill
   }
 
   /**
@@ -405,8 +387,11 @@ export class SkillSystem {
    * gọi lúc HOÀN TẤT niệm (kể cả fizzle) hoặc ngay sau resolve với skill
    * tức thời (§4.2). Policy 'attack_speed' không dùng cooldown clock →
    * no-op ở đây (cadence do BattleSystem quản).
+   * Combat Balance Pass (2026-08-29, plan §3.5) — tham số `fraction`
+   * (0..1) cho phép commit MỘT PHẦN cooldown: fizzle commit 0.5 thay vì
+   * đủ (penalty nhẹ hơn cho idle game). Mặc định 1 giữ hành vi cũ.
    */
-  commitSlotCooldown(skillId: string, slotIndex: number): void {
+  commitSlotCooldown(skillId: string, slotIndex: number, fraction = 1): void {
     const skill = this.manager.get(skillId)
 
     if (!skill) {
@@ -416,8 +401,27 @@ export class SkillSystem {
     skill.remainingCooldownBySlot ??= {}
 
     if (usesCooldownClock(skill.execution)) {
-      skill.remainingCooldownBySlot[slotIndex] = skill.cooldown
+      skill.remainingCooldownBySlot[slotIndex] = skill.cooldown * Math.max(0, Math.min(1, fraction))
     }
+  }
+
+  /**
+   * Combat Balance Pass (2026-08-29, plan §3.5) — HOÀN LẠI 100% tài
+   * nguyên đã trừ lúc beginCastInSlot() khi cast fizzle (cast bị hủy vì
+   * target chết/ra khỏi tầm — không phải quyết định của người chơi, idle
+   * game không thể phản ứng). Đối xứng với consumeResource().
+   */
+  refundResource(skill: Skill, entity: CombatEntity): void {
+    const cost = skill.cost ?? 0
+
+    if (cost <= 0) {
+      return
+    }
+
+    if (skill.resourceType === 'mana') entity.currentMp += cost
+    else if (skill.resourceType === 'rage') entity.currentRage += cost
+    else if (skill.resourceType === 'sword_intent') entity.currentSwordIntent += cost
+    else if (skill.resourceType === 'momentum') entity.currentMomentum += cost
   }
 
   /**

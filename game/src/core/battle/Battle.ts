@@ -47,6 +47,12 @@ export interface BattleEnemy {
   // cho quái này chưa, tránh áp lại mỗi tick sau khi elapsedSeconds đã
   // vượt ngưỡng. Xem BattleSystem.updateEnrage().
   enrageApplied?: boolean
+
+  // Combat Balance Pass (2026-08-29, plan §3.6) — counter đòn đánh của
+  // quái, tăng dần mỗi lần fireEnemyAttack(), reset khi trận mới bắt đầu.
+  // undefined coi như 0. Dùng để chọn action đặc biệt (everyNth) thay vì
+  // basic attack. Runtime-only, không persist.
+  specialAttackCounter?: number
 }
 
 export interface Battle {

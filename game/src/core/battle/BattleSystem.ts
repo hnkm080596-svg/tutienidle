@@ -2252,10 +2252,13 @@ export class BattleSystem {
       !originalTarget.alive ||
       !canPlayerReachTarget(player, originalTarget)
     ) {
-      // Fizzle (§4.2): vẫn là một lần niệm hoàn tất — mana đã tiêu lúc
-      // bắt đầu và cooldown ĐẦY ĐỦ vẫn bắt đầu, tránh vòng lặp cast lỗi
-      // liên tục.
-      this.finishChannelledCastTransaction(player, skillId, castSlotIndex)
+      // Fizzle (§4.2 + Combat Balance Pass 2026-08-29, plan §3.5): cast
+      // bị hủy vì target chết/ra khỏi tầm — KHÔNG phải lỗi của người
+      // chơi, idle game không thể phản ứng → hoàn 100% tài nguyên đã trừ
+      // lúc begin, chỉ commit 50% cooldown (đủ chặn vòng lặp cast lỗi
+      // liên tục nhưng nhẹ hơn penalty đầy đủ).
+      this.skillSystem.refundResource(skill, player)
+      this.finishChannelledCastTransaction(player, skillId, castSlotIndex, 0.5)
 
       return
     }
@@ -2269,15 +2272,17 @@ export class BattleSystem {
 
   /**
    * Commit transaction cho lần niệm CÓ THỜI GIAN lúc HOÀN TẤT/FIZZLE
-   * (§4.2) — cooldown đầy đủ cho slot đã snapshot + dọn castingSlotIndex.
+   * (§4.2) — cooldown (x fraction, plan §3.5: fizzle = 0.5) cho slot đã
+   * snapshot + dọn castingSlotIndex.
    */
   private finishChannelledCastTransaction(
     player: CombatEntity,
     skillId: string,
     slotIndex: number | undefined,
+    cooldownFraction = 1,
   ) {
     if (slotIndex !== undefined) {
-      this.skillSystem.commitSlotCooldown(skillId, slotIndex)
+      this.skillSystem.commitSlotCooldown(skillId, slotIndex, cooldownFraction)
     }
 
     player.castingSlotIndex = undefined
@@ -2745,6 +2750,32 @@ export class BattleSystem {
 
     const isRanged =
       battleEnemy.entity.archetype === 'ranged' || battleEnemy.entity.archetype === 'caster'
+
+    // Combat Balance Pass (2026-08-29, plan §3.6) — action đặc biệt data-
+    // driven: đếm attack 1-based, mỗi attack MỚI thứ `everyNth` (khớp
+    // spec ĐẦU TIÊN trong danh sách) thay basic bằng impact với
+    // damageMultiplier/presetId riêng. Đếm qua field runtime trên
+    // battleEnemy — không mutate data gốc.
+    const specialCount = (battleEnemy.specialAttackCounter ?? 0) + 1
+
+    battleEnemy.specialAttackCounter = specialCount
+
+    const special = battleEnemy.entity.specialAttacks?.find(
+      candidate => specialCount % candidate.everyNth === 0,
+    )
+
+    if (special) {
+      this.actionImpact.scheduleBasic({
+        actionId: `${battleEnemy.entity.id}:special`,
+        sourceId: battleEnemy.entity.id,
+        targetId: battle.player.id,
+        damage: { kind: 'physical', multiplier: special.damageMultiplier },
+        presetId: special.presetId ?? 'boss_ground_slam',
+        windupSeconds: special.windupSeconds ?? ENEMY_MELEE_WINDUP_SECONDS,
+      })
+
+      return
+    }
 
     this.actionImpact.scheduleBasic({
       actionId: `${battleEnemy.entity.id}:basic`,

@@ -2,6 +2,7 @@ import type { Stats } from '../stats/StatBlock'
 import type { LaneIndex } from '../battle/BattleLane'
 import type { EnemyArchetype } from '../enemy/EnemyArchetype'
 import type { TribulationPhase, BossEnrage } from '../enemy/TribulationPhase'
+import type { EnemySpecialAttack } from '../enemy/Enemy'
 import type { SkillRuntimeStats } from '../skill/SkillRuntimeStats'
 
 export type CombatEntityType =
@@ -177,6 +178,12 @@ export interface CombatEntity {
   // Combat Rework Phase 4 (Boss Mechanics) — DPS check, xem
   // TribulationPhase.ts's BossEnrage, BattleSystem.updateEnrage().
   enrage?: BossEnrage
+
+  // Combat Balance Pass (2026-08-29, plan §3.6) — action đặc biệt data-
+  // driven thay basic attack cứng (xem core/enemy/Enemy.ts's
+  // EnemySpecialAttack). Thread từ Enemy qua enemyToCombatEntity(), đọc
+  // tại BattleSystem.fireEnemyAttack(). undefined = quái chỉ basic attack.
+  specialAttacks?: EnemySpecialAttack[]
 
   // Thể Tu (Combat Rework Phase 7) — thanh máu phụ CHỐNG PHÁ, tách
   // hẳn currentHp: Thể Tu skill (Skill.breakDamagePerHit) trừ riêng
