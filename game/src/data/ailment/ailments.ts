@@ -242,8 +242,9 @@ export const ailments: AilmentTemplate[] = [
 
   // Vạn Kiếm Vũ (Kiếm Tu, 2026-08-15) — "mưa kiếm 9 giây toàn màn
   // hình, bỏ qua 10%-90% giáp/kháng theo cảnh giới". dpsRatio cao hẳn
-  // so với 6 DOT thường (nộ kỹ, tốn hẳn 9999 Kiếm Ý mới kích hoạt được,
-  // xem data/skill/Skills.ts's van_kiem_trieu_tong) —
+  // so với 6 DOT thường (từng là nộ kỹ 9999 Kiếm Ý của Vạn Kiếm Triều
+  // Tông — skill đã chuyển thành node KT theo spec 2026-08-29, ailment
+  // giữ làm hiệu ứng on-hit Xuất Huyết kiếm trận) —
   // armorIgnorePercentByRealm xem AilmentSystem.calculateDamagePerSecond().
   {
     id: 'van_kiem_vu',

@@ -367,9 +367,14 @@ export interface FormationStackSave {
 // KHÔNG khớp shape mới — không viết migration, cùng convention mọi
 // version trước.
 // version 21: Kiếm Tu — player: PlayerData thêm field BẮT BUỘC MỚI
-// `totalCultivationGained: number` (Kiếm Ý vĩnh viễn, xem core/player/
-// SwordIntentSystem.ts). Save cũ thiếu field này — không viết
-// migration, cùng convention mọi version trước.
+// `totalCultivationGained: number` (đếm tu vi suốt đời — sau này nguồn
+// tier Kiếm Ý chuyển sang bossKillCount, xem KiemYSystem.ts). Save cũ
+// thiếu field này — không viết migration, cùng convention mọi version
+// trước.
+// version 53 (2026-08-29, kiem-the-kiem-y spec): thêm
+// `bossKillCount: number` (tầng Kiếm Ý vĩnh viễn theo boss diệt);
+// kiemTuRoute chốt vĩnh viễn lúc chọn path; gỡ skill Kiếm Tu cũ (mỗi
+// route 1 active skill); gỡ rage. Chi tiết xem saveVersion.ts.
 export interface GameSave {
   version: typeof CURRENT_SAVE_VERSION
 

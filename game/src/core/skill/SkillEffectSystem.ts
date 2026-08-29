@@ -136,10 +136,10 @@ export class SkillEffectSystem {
             ? effect.skillExperienceRatio * (ctx.skillExperience ?? 0) / Math.max(1, source.stats.attack)
             : 0)
 
-        // Kiếm Ý vĩnh viễn (Kiếm Tu, 2026-08-15) — % khuếch đại MỌI
-        // effect 'damage' của skill chủ động, xem core/player/
-        // SwordIntentSystem.ts. Nền = 0 nên KHÔNG ảnh hưởng path nào
-        // khác chưa có nguồn cấp skillDamagePercent.
+        // skillDamagePercent là tổng hợp modifier chung (equipment/
+        // node/technique + tier Kiếm Ý vĩnh viễn route Bạt Kiếm tính ở
+        // stores/player.ts finalStats qua KiemYSystem). Nền = 0 nên
+        // KHÔNG ảnh hưởng path nào chưa có nguồn cấp skillDamagePercent.
         const finalMultiplier = (effect.value ?? 1) * (1 + scalingBonus) * (1 + source.stats.skillDamagePercent)
 
         // Kiếm Tu (Ngự Kiếm Thuật) — "1~9 kiếm bay lần lượt": resolve

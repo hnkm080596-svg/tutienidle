@@ -107,10 +107,10 @@ gameManager.registerEquipment(equipment)
 gameManager.registerAffixes(affixes)
 gameManager.registerPills(pills)
 // Buff KHÔNG phải Phù/Trận legacy — SkillEffectSystem resolve effect
-// 'buff'/'debuff' qua buffRegistry.get() (THROW khi thiếu) cho skill
-// còn khai báo buffId (thai_hu_nhat_kiem → sword_wound, phieu_van_bo
-// → phieu_van_bo_buff); bỏ dòng này làm registry rỗng và crash giữa
-// trận (fix review 2026-08-26).
+// 'buff'/'debuff' qua buffRegistry.get() (THROW khi thiếu); bỏ dòng
+// này làm registry rỗng và crash giữa trận (fix review 2026-08-26).
+// Skill buff-carrying Kiếm Tu cũ đã chuyển node (spec 2026-08-29),
+// registry vẫn cần cho buff hệ khác (Thổ Giáp/Độ Kiếp...).
 gameManager.registerBuffs(buffs)
 gameManager.registerTalismans(talismans)
 gameManager.registerFormations(formations)

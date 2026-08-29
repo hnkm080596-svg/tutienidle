@@ -102,28 +102,17 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
 
     expect(attackAfterEquipment).toBeGreaterThanOrEqual(attackAfterClass + 50)
 
-    // --- Pre-Battle Upgrade: học skill THẬT có Specialization
-    // ("behavior-changing node") — thai_hu_nhat_kiem, đổi hẳn effects.
-    gameManager.learnSkill('thai_hu_nhat_kiem')
-    // Execution policy rework (plan §8.6) — active skill equip qua slot.
-    gameManager.skillSystem.equipToSlot('thai_hu_nhat_kiem', 0)
+    // --- Pre-Battle Upgrade: nâng cấp skill route Kiếm Tu (spec
+    // 2026-08-29 — skill Thai Hư có specialization đã chuyển thành
+    // passive node; giờ upgrade nguồn là skill insight cấp skill chủ
+    // động của route).
+    gameManager.learnSkill('bat_kiem_thuat')
+    gameManager.skillSystem.equipToSlot('bat_kiem_thuat', 0)
 
-    const rawSkill = gameManager.skillManager.get('thai_hu_nhat_kiem')!
+    const rawSkill = gameManager.skillManager.get('bat_kiem_thuat')!
 
-    const beforeSpec = gameManager.skillSystem.getEffectiveSkill(rawSkill)
-
-    // Trạng thái gốc — kiếm khí pha Kim (components), không phải
-    // physical đơn thuần.
-    expect(beforeSpec.effects[0]?.components).toBeDefined()
-
-    expect(gameManager.selectSkillSpecialization('thai_hu_nhat_kiem', 'trong_kiem')).toBe(true)
-
-    const afterSpec = gameManager.skillSystem.getEffectiveSkill(rawSkill)
-
-    // "Trọng Kiếm" override HẲN effects — mất components Kim, chuyển
-    // thành physical đơn thuần, đúng ý "đổi HẲN cách skill hoạt động".
-    expect(afterSpec.effects[0]?.damageType).toBe('physical')
-    expect(afterSpec.effects[0]?.components).toBeUndefined()
+    // Trạng thái gốc — channel tick AoE metal components.
+    expect(rawSkill.effects[0]?.components).toBeDefined()
 
     // --- Build Snapshot -> Combat: finalStats CUỐI CÙNG (đủ cả 3
     // nguồn: Class + Equipment + Upgrade) phải flow ĐÚNG vào

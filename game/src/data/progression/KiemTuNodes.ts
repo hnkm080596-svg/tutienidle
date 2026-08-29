@@ -429,28 +429,10 @@ const CONVERTED_PASSIVE_NODES: ProgressionNode[] = [
     },
     branchTag: 'bat_kiem',
   },
-  {
-    id: 'passive_kiem_tam_lanh_liet',
-    name: 'Kiếm Tâm Lãnh Liệt',
-    description: 'Kiếm tâm lạnh lẽo — +2% sát thương chí mạng mỗi cấp (chất cũ của passive skill cùng tên).',
-    type: 'minor',
-    role: 'growth',
-    insightCost: 1,
-    maxLevel: 5,
-    upgradeCost: { base: 1, perLevel: 2 },
-    prerequisites: [{ kind: 'node', nodeId: 'bat_kiem_an' }],
-    effect: {
-      statModifiers: [{
-        id: 'node:passive_kiem_tam_lanh_liet:criticalDamage',
-        sourceId: 'passive_kiem_tam_lanh_liet',
-        sourceType: 'talent',
-        stat: 'criticalDamage',
-        percent: 0.02,
-        perLevelPercent: 0.02,
-      }],
-    },
-    branchTag: 'bat_kiem',
-  },
+  // Kiếm Tâm Lãnh Liệt KHÔNG lặp thành node — passive skill innate của
+  // tâm pháp Ngự Kiếm (Techniques.ts innateSkillId) vẫn hiệu lực cho cả
+  // 2 route, không double-dip crit (spec mục 5.3 ghi "giữ" — giữ đúng
+  // nghĩa đen: giữ nguyên chỗ cũ).
 ]
 
 // 9 node on-hit kiếm trận (spec mục 4) — số loại mở được = số kiếm của

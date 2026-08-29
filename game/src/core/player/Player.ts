@@ -107,14 +107,12 @@ export interface PlayerData {
 
   // Kiếm Tu (2026-08-15) — Kiếm Ý VĨNH VIỄN: đếm dồn suốt đời save,
   // KHÔNG BAO GIỜ giảm (khác `cultivation`, bị tiêu hao lúc đột phá) —
-  // mỗi 9999 điểm tích được thì +1 tầng Kiếm Ý, xem
-
-  // Kiếm Tu (2026-08-15) — Kiếm Ý VĨNH VIỄN: đếm dồn suốt đời save,
-  // KHÔNG BAO GIỜ giảm (khác `cultivation`, bị tiêu hao lúc đột phá) —
-  // mỗi 9999 điểm tích được thì +1 tầng Kiếm Ý, xem
-  // core/player/SwordIntentSystem.ts. Tăng trong stores/player.ts's
-  // cultivate() (ĐÚNG lượng tu vi thật vừa cộng, cùng nguồn nuôi
-  // techniqueExperience bên dưới).
+  // Tu vi tích được suốt đời save (đếm dồn, KHÔNG BAO GIỜ giảm — khác
+  // `cultivation`, bị tiêu hao lúc đột phá). Tăng trong stores/
+  // player.ts's cultivate() (ĐÚNG lượng tu vi thật vừa cộng, cùng nguồn
+  // nuôi techniqueExperience bên dưới). Sau spec 2026-08-29, nguồn
+  // tầng Kiếm Ý đổi sang bossKillCount (xem dưới) — field này còn nuôi
+  // technique tier + thống kê.
   totalCultivationGained: number
 
   // Kiếm Ý VĨNH VIỄN (spec 2026-08-29-kiem-the-kiem-y mục 3.1) — tổng

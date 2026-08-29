@@ -57,10 +57,10 @@ describe('data/buff — mọi buffId tham chiếu phải tồn tại trong regis
   it('skill effects (kể cả effectsOverride) chỉ tham chiếu buff đã khai báo', () => {
     const referenced = collectSkillBuffIds()
 
-    // Phải có ít nhất các tham chiếu đã biết để test không rỗng vô nghĩa.
-    expect(referenced).toContain('sword_wound')
-    expect(referenced).toContain('phieu_van_bo_buff')
-
+    // Kiếm Thế / Kiếm Ý (spec 2026-08-29): skill buff-carrying (Thái Hư
+    // Nhất Kiếm/Phiêu Vân Bộ) đã chuyển thành passive node — hiện KHÔNG
+    // còn skill nào tham chiếu buff. Invariant vẫn giữ: nếu sau này
+    // thêm tham chiếu mới mà quên khai báo, test bắt ngay.
     const missing = [...new Set(referenced)].filter((id) => !BUFF_IDS.has(id))
 
     expect(missing).toEqual([])

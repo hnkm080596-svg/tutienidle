@@ -22,7 +22,7 @@ import type { GameManager } from '@/core/game/GameManager'
 import { getRequiredCultivation, BASE_CULTIVATION_PER_SECOND } from '@/core/realm/realmSystem'
 import { getCultivationSpeedMultiplier, getInsightPerCultivation } from '@/core/talent/TalentEffects'
 import { calculateStats, type StatModifier } from '@/core/stats/StatCalculator'
-import { getSwordIntentModifiers } from '@/core/player/SwordIntentSystem'
+import { getKiemYDamageMultipliers, getKiemYTier } from '@/core/player/KiemYSystem'
 import { normalizeArtifactProgress } from '@/core/artifact/ArtifactProgression'
 
 export const usePlayerStore = defineStore('player', {
@@ -44,12 +44,24 @@ export const usePlayerStore = defineStore('player', {
     // + externalModifiers (buff/technique, do GameManager gộp mỗi tick).
     // Đây là nguồn duy nhất UI/CombatEntity nên đọc.
     finalStats(state) {
+      // Kiếm Ý vĩnh viễn (spec 2026-08-29-kiem-the-kiem-y mục 3.3) —
+      // thay SwordIntentSystem cũ (tier theo tu vi đã dỡ): tier theo
+      // bossKillCount (KiemYSystem), CHỈ áp khi đã chốt path Kiếm Tu
+      // route Bạt Kiếm (Đơn Kiếm ăn tier, Đa Kiếm không).
+      const kiemYModifiers: StatModifier[] = []
+      if (state.cultivationPath === 'kiem_tu' && state.kiemTuRoute === 'bat_kiem' && state.bossKillCount > 0) {
+        const multipliers = getKiemYDamageMultipliers(getKiemYTier(state.bossKillCount))
+        kiemYModifiers.push(
+          { id: 'kiem_y:skill_damage', sourceId: 'kiem_y', sourceType: 'attribute', stat: 'skillDamagePercent', flat: multipliers.skillDamagePercent },
+          { id: 'kiem_y:critical_rate', sourceId: 'kiem_y', sourceType: 'attribute', stat: 'criticalRate', flat: multipliers.criticalRate },
+          { id: 'kiem_y:critical_damage', sourceId: 'kiem_y', sourceType: 'attribute', stat: 'criticalDamage', flat: multipliers.criticalDamage },
+        )
+      }
+
       return calculateStats(state.baseStats, [
         ...state.modifiers,
         ...state.externalModifiers,
-        // Kiếm Ý vĩnh viễn (Kiếm Tu, 2026-08-15) — tính LIVE từ
-        // totalCultivationGained, xem core/player/SwordIntentSystem.ts.
-        ...getSwordIntentModifiers(state.totalCultivationGained),
+        ...kiemYModifiers,
       ])
     },
   },
@@ -75,9 +87,9 @@ export const usePlayerStore = defineStore('player', {
 
       const gained = this.cultivation - before
 
-      // Kiếm Ý vĩnh viễn (Kiếm Tu, 2026-08-15) — đếm dồn suốt đời,
-      // KHÔNG theo `this.cultivation` (bị đột phá tiêu hao) mà theo
-      // TỔNG đã từng tích được, xem core/player/SwordIntentSystem.ts.
+      // Đếm tu vi dồn suốt đời (không bị đột phá tiêu hao) — nuôi
+      // technique tier; tier Kiếm Ý sau spec 2026-08-29 đọc
+      // bossKillCount (xem KiemYSystem.ts).
       this.totalCultivationGained += gained
 
       // Thiên phú Ngộ Đạo (talent-direction-choice-plan §6) — đổi tu vi

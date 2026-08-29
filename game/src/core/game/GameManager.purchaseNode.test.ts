@@ -15,11 +15,11 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
     gameManager.registerSkillTemplates(SKILLS)
 
     const node: ProgressionNode = {
-      id: 'unlock_ngu_kiem_thuat',
+      id: 'unlock_tru_tien',
       name: 'Test Unlock',
       type: 'major',
       insightCost: 2,
-      effect: { unlocksSkillIds: ['ngu_kiem_thuat'] },
+      effect: { unlocksSkillIds: ['tru_tien_kiem_tran'] },
     }
 
     gameManager.registerProgressionNodes([node])
@@ -28,15 +28,15 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
 
     player.skillInsight = 5
 
-    expect(gameManager.skillManager.has('ngu_kiem_thuat')).toBe(false)
+    expect(gameManager.skillManager.has('tru_tien_kiem_tran')).toBe(false)
 
-    expect(gameManager.purchaseNode('unlock_ngu_kiem_thuat', player)).toBe(true)
+    expect(gameManager.purchaseNode('unlock_tru_tien', player)).toBe(true)
 
-    expect(gameManager.skillManager.has('ngu_kiem_thuat')).toBe(true)
+    expect(gameManager.skillManager.has('tru_tien_kiem_tran')).toBe(true)
     // learn() KHÔNG tự equip — đúng tinh thần "học" khác "trang bị".
-    expect(gameManager.skillManager.get('ngu_kiem_thuat')?.equipped).toBe(false)
+    expect(gameManager.skillManager.get('tru_tien_kiem_tran')?.equipped).toBe(false)
     expect(player.skillInsight).toBe(3)
-    expect(player.purchasedNodeIds).toEqual(['unlock_ngu_kiem_thuat'])
+    expect(player.purchasedNodeIds).toEqual(['unlock_tru_tien'])
   })
 
   it('nodeId không tồn tại trong registry thì trả false, không throw', () => {
@@ -57,7 +57,7 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
       name: 'Test Unlock',
       type: 'major',
       insightCost: 100,
-      effect: { unlocksSkillIds: ['ngu_kiem_thuat'] },
+      effect: { unlocksSkillIds: ['tru_tien_kiem_tran'] },
     }
 
     gameManager.registerProgressionNodes([node])
@@ -67,7 +67,7 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
     player.skillInsight = 5
 
     expect(gameManager.purchaseNode('unlock_expensive', player)).toBe(false)
-    expect(gameManager.skillManager.has('ngu_kiem_thuat')).toBe(false)
+    expect(gameManager.skillManager.has('tru_tien_kiem_tran')).toBe(false)
     expect(player.skillInsight).toBe(5)
   })
 })

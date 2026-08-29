@@ -25,7 +25,9 @@ Thiên Phú là quyết định chọn hướng Đạo duy nhất lúc tạo nh�
 `src/core/player/CultivationPathKit.ts` hiện chỉ công khai hai lựa chọn:
 
 - **Pháp Tu** dùng Đại Ngũ Hành Chân Quyết. Đây là một path thống nhất; người chơi mở Hỏa, Mộc, Thủy, Kim, Thổ và kỹ năng qua Node Tree, rồi phối hợp nhiều hành bằng element loadout.
-- **Kiếm Tu** dùng Ngự Kiếm Tâm Kinh, bộ ba kỹ năng cố định và tài nguyên Kiếm Ý riêng.
+- **Kiếm Tu** dùng Ngự Kiếm Tâm Kinh (spec 2026-08-29-kiem-the-kiem-y). Route chốt VĨNH VIỄN đúng lúc chọn path: Huy Kiếm (tram) đạt Lv3 (10.000 lần trảm) → Bạt Kiếm (Đơn Kiếm), chưa → Kiếm Trận (Đa Kiếm). Mỗi route ĐÚNG 1 active skill ở slot 0:
+  - **Kiếm Trận (Đa Kiếm)**: kiếm trận tiến hóa Lưỡng Nghi → Tam Tài → ... (mỗi keystone thay thế skill cũ), tích **Kiếm Thế** (pool trong trận, +số kiếm/cast, cap 100) cho ult Tru Tiên Kiếm Trận (nổ trảm AoE + kiếm trận trường tồn) + buff +1% sát thương mỗi 2 điểm. Chiều sâu qua 9 node on-hit (mở theo cấp trận 2-9 kiếm, roll 3%/cấp tối đa 15%).
+  - **Bạt Kiếm (Đơn Kiếm)**: Bạt Kiếm Thức tụ lực (channel) duy nhất — "càng treo càng mạnh": tầng **Kiếm Ý vĩnh viễn** theo boss diệt (tầng N cần tổng 10+5×(N-1) boss, mỗi tầng +10 kiếm ý nền đầu trận + 0.5% dmg/crit), pool tạm gain theo tick tụ lực + sát thương nhận vào, tiêu hao ăn tạm trước (vĩnh viễn bất khả xâm phạm). Ult Kiếm Khai Thiên Môn đốt toàn bộ kiếm ý tạm, đơn mục tiêu ưu tiên boss, overkill tràn 50%. Skill cũ (Ngự Kiếm/Thái Hư/Phiêu Vân/Phá Thiên/Vạn Kiếm...) chuyển thành passive node trong cây công pháp; hồi sinh 1 lần/trận qua node Kiếm Ý Bất Tử; Nộ (rage) đã gỡ khỏi hệ thống.
 
 Code chiến đấu có một số plumbing và test cho Thể Tu, nhưng `CultivationPathId` chưa đưa Thể Tu thành lựa chọn chơi được. Không nên mô tả nó như path đã phát hành.
 

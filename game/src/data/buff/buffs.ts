@@ -44,76 +44,11 @@ export const KIEP_THUONG_DEBUFF: Buff = {
 // SkillEffectSystem, data/skill/Skills.ts). Áp lên buff pool riêng
 // theo entity trong trận (Battle.playerBuffs/enemyBuffs) — không
 // phải buff persistent ngoài trận.
+// Kiếm Thế / Kiếm Ý (spec 2026-08-29 mục 5.3): sword_wound (thuộc
+// Thái Hư Nhất Kiếm) và phieu_van_bo_buff (thuộc Phiêu Vân Bộ) đã
+// dọn CÙNG skill — 2 skill chuyển thành passive node route BK, không
+// còn effect nào tham chiếu.
 export const buffs: Buff[] = [
-  {
-    id: 'sword_wound',
-
-    name: 'Kiếm Thương',
-
-    description: 'Vết thương do kiếm khí gây ra, làm giảm phòng ngự.',
-
-    category: 'debuff',
-
-    duration: 5,
-
-    stacks: 1,
-
-    stackMode: 'refresh',
-
-    modifiers: [
-      {
-        id: 'sword_wound_defense',
-
-        sourceId: 'sword_wound',
-        sourceType: 'debuff',
-
-        stat: 'defense',
-
-        percent: -0.2,
-      },
-    ],
-  },
-
-  {
-    id: 'phieu_van_bo_buff',
-
-    name: 'Phiêu Vân',
-
-    description: 'Thân pháp nhẹ nhàng, tăng tốc đánh và né tránh trong chốc lát.',
-
-    category: 'buff',
-
-    duration: 4,
-
-    stacks: 1,
-
-    stackMode: 'refresh',
-
-    modifiers: [
-      {
-        id: 'phieu_van_bo_attack_speed',
-
-        sourceId: 'phieu_van_bo_buff',
-        sourceType: 'buff',
-
-        stat: 'attackSpeed',
-
-        percent: 0.3,
-      },
-
-      {
-        id: 'phieu_van_bo_crit',
-
-        sourceId: 'phieu_van_bo_buff',
-        sourceType: 'buff',
-
-        stat: 'criticalRate',
-
-        flat: 0.1,
-      },
-    ],
-  },
-
   KIEP_THUONG_DEBUFF,
 
   // Pháp Tu (Thổ Tu, 2026-08-15) — Thạch Giáp Trận (special skill,

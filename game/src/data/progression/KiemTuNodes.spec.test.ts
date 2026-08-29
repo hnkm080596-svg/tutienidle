@@ -91,14 +91,13 @@ describe('KiemTuNodes — node ult unlock (spec mục 2/3.4)', () => {
 })
 
 describe('KiemTuNodes — node chuyển skill cũ thành passive (spec mục 5.3)', () => {
-  it('6 node passive tồn tại đúng branch + tên (KKTM là ult, có node unlock riêng)', () => {
+  it('5 node passive tồn tại đúng branch + tên (KKTM là ult; Kiếm Tâm Lãnh Liệt giữ làm innate tâm pháp)', () => {
     const expected: Array<{ id: string; name: string; branch: string }> = [
       { id: 'passive_ngu_kiem_thuat', name: 'Ngự Kiếm Thuật', branch: 'kiem_tran' },
       { id: 'passive_van_kiem_trieu_tong', name: 'Vạn Kiếm Triều Tông', branch: 'kiem_tran' },
       { id: 'passive_thai_hu_nhat_kiem', name: 'Thái Hư Nhất Kiếm', branch: 'bat_kiem' },
       { id: 'passive_phieu_van_bo', name: 'Phiêu Vân Bộ', branch: 'bat_kiem' },
       { id: 'passive_pha_thien_nhat_kich', name: 'Phá Thiên Nhất Kích', branch: 'bat_kiem' },
-      { id: 'passive_kiem_tam_lanh_liet', name: 'Kiếm Tâm Lãnh Liệt', branch: 'bat_kiem' },
     ]
     for (const e of expected) {
       const node = KIEM_TU_NODES.find((n) => n.id === e.id)
@@ -106,6 +105,9 @@ describe('KiemTuNodes — node chuyển skill cũ thành passive (spec mục 5.3
       expect(node!.name).toBe(e.name)
       expect(node!.branchTag).toBe(e.branch)
     }
+    // Kiếm Tâm Lãnh Liệt KHÔNG thành node — giữ nguyên passive innate
+    // của tâm pháp Ngự Kiếm (tránh double-dip crit stack).
+    expect(KIEM_TU_NODES.find((n) => n.id === 'passive_kiem_tam_lanh_liet')).toBeUndefined()
   })
 })
 

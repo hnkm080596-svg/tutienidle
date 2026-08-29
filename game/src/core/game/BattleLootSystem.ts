@@ -272,6 +272,19 @@ export class BattleLootSystem {
             battleEnemy.entity.id,
             zoneId,
           )
+
+          // Kiếm Ý vĩnh viễn (spec 2026-08-29-kiem-the-kiem-y mục 3.1) —
+          // đếm boss diệt: boss stage (isBoss) + elite/mini-boss (isElite);
+          // boss Độ Kiếp đi qua beginTribulation battle (entity isBoss
+          // do defineEnemy tribulation template). CHỈ Kiếm Tu route
+          // Bạt Kiếm tiêu thụ tầng, nhưng counter đếm cho MỌI path (thống
+          // kê vô hại, đổi path muộn không mất tiến trình).
+          if (
+            this.player &&
+            (battleEnemy.entity.isBoss === true || battleEnemy.entity.isElite === true)
+          ) {
+            this.player.bossKillCount += 1
+          }
         }
       }
 

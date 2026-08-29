@@ -49,7 +49,7 @@ export function buildTechniqueSections(
   }
 
   if (technique.usesSwordIntentResource) {
-    combatRows.push({ label: 'Nguồn lực', value: 'Kiếm Ý (0-9999), không dùng Nộ Khí' })
+    combatRows.push({ label: 'Nguồn lực', value: 'Kiếm Ý — tầng vĩnh viễn theo boss diệt + pool trong trận' })
   }
 
   const tierEffect = technique.tierEffects?.[
