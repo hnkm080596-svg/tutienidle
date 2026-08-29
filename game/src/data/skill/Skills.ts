@@ -417,7 +417,101 @@ export const SKILLS: Skill[] = [
 
     resourceType: 'none',
 
-    buildTag: 'dot',
+    buildTag: 'burst',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  // Ult Kiếm Tu (spec 2026-08-29-kiem-the-kiem-y mục 2/3.4) — 2 ult
+  // MANUAL: KHÔNG thuộc loadout scheduler (BattleSystem.skip như channel),
+  // kích hoạt qua nút Ult trong CombatControlBar + auto-AI. Unlock bằng
+  // node ult riêng (KiemTuNodes.ts) — KHÔNG requiredRealmId vì node đã gate.
+  {
+    id: 'tru_tien_kiem_tran',
+
+    name: 'Tru Tiên Kiếm Trận',
+
+    description: 'Đốt Kiếm Thế, tru tiên nhất nổ trảm diệt toàn màn, để lại kiếm trận trường tồn mãi đao vùng.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    cooldown: 30,
+
+    remainingCooldown: 0,
+
+    target: 'all_enemies',
+
+    // Ult không qua scheduler — execution chỉ mang tính mô tả data.
+    execution: { kind: 'cooldown' },
+
+    effects: [
+      {
+        type: 'damage',
+
+        value: 3,
+
+        components: [{ kind: 'element', element: 'metal', ratio: 1 }],
+
+        attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.008 }],
+      },
+    ],
+
+    resourceType: 'none',
+
+    buildTag: 'ult',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'kiem_khai_thien_mon',
+
+    name: 'Kiếm Khai Thiên Môn',
+
+    description: 'Đốt toàn bộ Kiếm Ý tụ lực, một kiếm khai thiên, sát thương dư tràn ra toàn màn hình.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    cooldown: 60,
+
+    remainingCooldown: 0,
+
+    target: 'enemy',
+
+    execution: { kind: 'cooldown' },
+
+    effects: [
+      {
+        type: 'damage',
+
+        value: 5,
+
+        components: [{ kind: 'element', element: 'metal', ratio: 1 }],
+
+        // Đốt kiếm ý khuếch đại (đọc currentSwordIntent qua
+        // swordIntentDamageRatio pipeline sẵn có — pool kiếm ý tạm của
+        // route BK).
+        swordIntentDamageRatio: 0.0002,
+
+        attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.006 }],
+      },
+    ],
+
+    resourceType: 'none',
+
+    buildTag: 'ult',
 
     unlocked: false,
 

@@ -78,6 +78,7 @@ import {
   initKiemTuBattleResources,
   kiemTheDamageBonusPercent,
 } from './KiemTuResourceSystem'
+import { autoUltimateDecision, triggerUltimate } from './UltimateSystem'
 import { getFormationSwordCount } from '../../data/progression/KiemTuNodes'
 import { getHuyKiemFlatDamageBonus } from '../skill/SkillSystem'
 
@@ -225,6 +226,10 @@ export class BattleSystem {
   private channelSkillId: string | undefined
 
   private readonly channelTickSecondsOverrides = new Map<string, number>()
+
+  // Ult Kiếm Tu auto-AI (spec 2026-08-29 mục 3.4) — tích giây giữa 2 lần
+  // check autoUltimateDecision (1s/lần), reset mỗi trận.
+  private ultAutoCheckTimer = 0
 
   constructor(
     private readonly combat: CombatSystem,
@@ -456,6 +461,8 @@ export class BattleSystem {
     // trận cùng lúc với channel state: KT Kiếm Thế về 0 (tích trong
     // trận theo cast), BK kiếm ý tạm khởi đầu = vĩnh viễn.
     initKiemTuBattleResources(player, this.getKiemTuRoute(), this.getKiemYPermanent())
+
+    this.ultAutoCheckTimer = 0
   }
 
   startTribulation(player: CombatEntity) {
@@ -970,6 +977,20 @@ export class BattleSystem {
     // MỘT Player skill (scheduler thống nhất, plan §8.4).
 
     this.updatePlayerSkills(battle)
+
+    // Ult Kiếm Tu auto (spec 2026-08-29 mục 3.4) — AI check 1 lần/giây,
+    // TTKT auto khi đủ Kiếm Thế, KKTM auto khi boss + ngưỡng 500 kiếm ý.
+    this.ultAutoCheckTimer += deltaSeconds
+    if (this.ultAutoCheckTimer >= 1) {
+      this.ultAutoCheckTimer = 0
+      const route = this.getKiemTuRoute()
+      if (route) {
+        const decision = autoUltimateDecision(battle, route, this.getHighestFormationSwordCount())
+        if (decision) {
+          this.tryPlayerUltimate()
+        }
+      }
+    }
 
     // [14] Enemy attacks.
 
@@ -2768,6 +2789,59 @@ export class BattleSystem {
     if (this.channelSkillId === skillId && this.battle?.player.tuLucActive) {
       this.battle.player.tuLucElapsed = 0
     }
+  }
+
+  /**
+   * Ult Kiếm Tu (spec 2026-08-29 mục 2/3.4) — nút manual từ UI gọi
+   * trực tiếp; auto-check 1 lần/giây từ update() (timer riêng dưới).
+   * Trả 'ttkt'/'kktm' nếu ult đã nổ, null nếu không đủ điều kiện.
+   * Ult KHÔNG đi qua loadout scheduler (như channel).
+   */
+  tryPlayerUltimate(): 'ttkt' | 'kktm' | null {
+    const battle = this.battle
+    const route = this.getKiemTuRoute()
+
+    if (!battle || battle.state !== 'fighting' || !route) {
+      return null
+    }
+
+    const swordCount = this.getHighestFormationSwordCount()
+
+    const nukeResolver = (target: CombatEntity) => {
+      // Đòn nuke đơn giản: dùng effective stats + resolveSkillEffects
+      // với ult skill tương ứng route (đã đăng ký qua node unlock).
+      const ultSkillId = route === 'kiem_tran' ? 'tru_tien_kiem_tran' : 'kiem_khai_thien_mon'
+      const ultSkill = this.skillManager.get(ultSkillId)
+
+      const targetHpBefore = target.currentHp
+
+      if (ultSkill) {
+        this.resolveSkillEffects(ultSkill, battle.player, target, battle)
+      }
+
+      // Ước lượng total damage cho overkill KKTM: phần HP target mất.
+      return targetHpBefore - Math.max(0, target.currentHp)
+    }
+
+    const triggered = triggerUltimate(battle, route, swordCount, { resolveNuke: nukeResolver })
+
+    if (!triggered) {
+      return null
+    }
+
+    return route === 'kiem_tran' ? 'ttkt' : 'kktm'
+  }
+
+  /** Cấp trận cao nhất đã mở (số kiếm cho cost ult TTKT). */
+  private getHighestFormationSwordCount(): number {
+    let highest = 2
+    for (const entry of this.skillManager.getLoadoutEntries()) {
+      const swordCount = getFormationSwordCount(entry.skill.id)
+      if (swordCount !== undefined && swordCount > highest) {
+        highest = swordCount
+      }
+    }
+    return highest
   }
 
   /**

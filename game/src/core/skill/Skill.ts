@@ -139,7 +139,9 @@ export interface Skill extends Partial<SkillRuntimeStats> {
   // UI cho passive skill (Skill.ts's Tâm Pháp summary panel nhóm
   // passive theo hướng build) — không ảnh hưởng runtime, chỉ tổ chức
   // hiển thị "Core/DOT/Burst" cho người chơi dễ hiểu build của mình.
-  buildTag?: 'core' | 'dot' | 'burst'
+  // 'ult' (spec 2026-08-29-kiem-the-kiem-y) — ult manual Kiếm Tu,
+  // KHÔNG thuộc loadout scheduler.
+  buildTag?: 'core' | 'dot' | 'burst' | 'ult'
 
   unlocked: boolean
 
