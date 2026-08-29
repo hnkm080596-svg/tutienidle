@@ -173,6 +173,8 @@ import { playerToCombatEntity, createPlayerRewardReceiver } from '../player/Play
 import type { PlayerData, KiemTuRoute } from '../player/Player'
 import type { MainStatKey } from '../stats/StatTypes'
 import { getMainStatCap } from '../stats/StatCap'
+import { MAIN_STAT_KEYS } from '../stats/StatTypes'
+import { BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
 import { getTechniqueInsightTotalRequired, getTechniqueTier } from '../technique/TechniqueTier'
 import { getSkillLoadoutSlotCount, KIEM_TRAN_SLOT_INDEX } from '../skill/SkillLoadoutSlots'
 import { CULTIVATION_PATH_KITS } from '../player/CultivationPathKit'
@@ -1052,6 +1054,14 @@ export class GameManager {
       // Đạo TRƯỚC khi grant, để Nhập Đạo (RealmPassives.ts) đọc đúng
       // giá trị cuối cùng của Luyện Thể tại thời điểm Lễ Nhập Môn.
       player.breakthroughGrade = computeBreakthroughGrade(player)
+
+      // Spec dot-pha-loi-kiep §4.2 — snapshot "hoàn hảo Phàm Nhân"
+      // (5/5 main stat đạt cap mortal + Luyện Th thể 6/6) chốt đúng
+      // lúc bấm Quán Khí, KHÔNG hồi cứu sau khi vào Luyện Khí. Là 1
+      // điều kiện Đại Đạo Trúc Cơ.
+      player.mortalPerfectionAchieved =
+        player.bodyRefinementCompletedTiers >= BODY_REFINEMENT_TIERS.length &&
+        MAIN_STAT_KEYS.every((stat) => player.baseStats[stat] >= getMainStatCap('mortal'))
 
       player.realmId = 'qi_refining'
       player.realmLevel = 1
