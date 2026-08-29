@@ -23,6 +23,7 @@ function buildMinimalSave(playerOverrides: Record<string, unknown>): GameSave {
     hasSeenTutorial: false,
     isCultivating: false,
     totalCultivationGained: 0,
+    bossKillCount: 0,
     skillInsight: 0,
     totalSkillInsightGained: 0,
     attributePoints: 0,

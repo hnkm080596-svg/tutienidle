@@ -115,6 +115,15 @@ export interface PlayerData {
   // techniqueExperience bên dưới).
   totalCultivationGained: number
 
+  // Kiếm Ý VĨNH VIỄN (spec 2026-08-29-kiem-the-kiem-y mục 3.1) — tổng
+  // boss/elite đã diệt vĩnh viễn suốt đời save (boss stage isBoss +
+  // boss Độ Kiếp + elite/mini-boss, đếm trong BattleLootSystem), chỉ
+  // tăng không giảm. Nguồn tầng Kiếm Ý (thay totalCultivationGained cũ
+  // của SwordIntentSystem đã dọn): tầng N cần tổng 10 + 5×(N-1) boss
+  // cộng dồn, mỗi tầng +10 kiếm ý vĩnh viễn + 0.5%/tầng dmg/crit —
+  // xem core/player/KiemYSystem.ts.
+  bossKillCount: number
+
   // Tâm Pháp có thanh kinh nghiệm riêng (2026-08-20) — thay driver cũ
   // (đại cảnh giới người chơi) của getTechniqueTier(), xem
   // core/technique/TechniqueTier.ts. Đếm dồn suốt đời save (không reset
@@ -274,6 +283,7 @@ export function createDefaultPlayer(): PlayerData {
     skillLevels: {},
 
     totalCultivationGained: 0,
+    bossKillCount: 0,
     skillInsight: 0,
     totalSkillInsightGained: 0,
     cultivationInsightAccumulator: 0,
