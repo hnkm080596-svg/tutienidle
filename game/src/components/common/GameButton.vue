@@ -26,8 +26,10 @@ const props = withDefaults(defineProps<{
 
 defineEmits<{ click: [MouseEvent] }>()
 
-const sliceAsset = computed<InkWashUiAssetId>(() => {
-  if (props.shape === 'circle') return 'frame-xs-ink-line'
+const sliceAsset = computed<InkWashUiAssetId | undefined>(() => {
+  // border-image (InkNineSlice) không theo border-radius — nút circle
+  // dùng viền CSS thường (.game-button--circle) thay vì asset chữ nhật.
+  if (props.shape === 'circle') return undefined
   switch (props.variant) {
     case 'secondary': return 'button-s-ink'
     case 'danger': return 'button-s-seal'
@@ -37,7 +39,7 @@ const sliceAsset = computed<InkWashUiAssetId>(() => {
 })
 
 const sliceLayer = computed(() => (
-  sliceAsset.value.startsWith('frame-') ? 'frame' as const : 'surface' as const
+  sliceAsset.value?.startsWith('frame-') ? 'frame' as const : 'surface' as const
 ))
 const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : undefined))
 </script>
@@ -51,7 +53,7 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
     :disabled="disabled || loading"
     @click="$emit('click', $event)"
   >
-    <InkNineSlice :asset-id="sliceAsset" :layer="sliceLayer" :tint-var="sliceTint" />
+    <InkNineSlice v-if="sliceAsset" :asset-id="sliceAsset" :layer="sliceLayer" :tint-var="sliceTint" />
     <span v-if="loading" class="game-button__spinner" aria-hidden="true" />
     <span class="game-button__label"><slot /></span>
   </button>
@@ -140,7 +142,12 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
   min-width: var(--tap-min);
   min-height: var(--tap-min);
   padding: 0;
+  border: 1px solid var(--paper-line, rgba(42, 41, 36, 0.42));
   border-radius: 50%;
+}
+
+.game-button--circle:not(:disabled):hover {
+  border-color: var(--chrome-500);
 }
 
 .game-button:not(:disabled):active {

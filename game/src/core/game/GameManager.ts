@@ -282,8 +282,8 @@ export class GameManager {
       kind: 'upgrade',
       message:
         levelsGained === 1
-          ? `${skill.name} Ä‘áº¡t cáº¥p ${skill.level}`
-          : `${skill.name} tÄƒng ${levelsGained} cáº¥p, Ä‘áº¡t cáº¥p ${skill.level}`,
+          ? `${skill.name} đạt cấp ${skill.level}`
+          : `${skill.name} tăng ${levelsGained} cấp, đạt cấp ${skill.level}`,
     })
   })
   readonly skillEffectSystem = new SkillEffectSystem()
@@ -597,7 +597,7 @@ export class GameManager {
         herbBases.size > 1 &&
         new Set(recipe.herbVariants.map((v) => v.materialId)).size !== recipe.herbVariants.length
       ) {
-        throw new Error(`Alchemy recipe ${recipe.id}: herb variants trÃ¹ng láº·p`)
+        throw new Error(`Alchemy recipe ${recipe.id}: herb variants trùng lặp`)
       }
 
       this.alchemyRecipesById.set(recipe.id, recipe)
@@ -2199,14 +2199,14 @@ export class GameManager {
       this.notifications.push({
         kind: 'error',
 
-        message: `XÃ¢y ${this.buildingName(buildingId)} tháº¥t báº¡i (${check.reason ?? 'unknown'})`,
+        message: `Xây ${this.buildingName(buildingId)} thất bại (${check.reason ?? 'unknown'})`,
       })
     } else {
       this.refreshAutoWorkerCapacity(player, instance)
       this.notifications.push({
         kind: 'upgrade',
 
-        message: `ÄÃ£ xÃ¢y ${this.buildingName(buildingId)} Â· Cáº¥p 1`,
+        message: `Đã xây ${this.buildingName(buildingId)} · Cấp 1`,
       })
     }
 
@@ -2683,7 +2683,7 @@ export class GameManager {
 
     if (claimed) {
       const quest = this.questRegistry.get(questId)
-      this.notifications.push({ kind: 'loot', message: `HoÃ n thÃ nh: ${quest.name}` })
+      this.notifications.push({ kind: 'loot', message: `Hoàn thành: ${quest.name}` })
     }
 
     return claimed
@@ -2967,7 +2967,7 @@ export class GameManager {
           this.activePlayer,
         )
       ) {
-        this.notifications.push({ kind: 'craft', message: 'Nhiá»‡m vá»¥ hÃ ng ngÃ y Ä‘Ã£ lÃ m má»›i' })
+      this.notifications.push({ kind: 'craft', message: 'Nhiệm vụ hàng ngày đã làm mới' })
       }
 
       // Production settle (plan Â§4.3) â€” delivery tháº³ng Bag khi cycle
@@ -2999,7 +2999,7 @@ export class GameManager {
 
         this.notifications.push({
           kind: 'loot',
-          message: `${material?.name ?? event.materialId} Ã—${event.amount}`,
+          message: `${material?.name ?? event.materialId} ×${event.amount}`,
         })
       }
 
@@ -3021,8 +3021,8 @@ export class GameManager {
         this.notifications.push({
           kind: 'craft',
           message: event.success
-            ? `${pill?.name ?? event.pillId} Ã—${event.pills}`
-            : `Luyá»‡n ${pill?.name ?? event.pillId} tháº¥t báº¡i`,
+            ? `${pill?.name ?? event.pillId} ×${event.pills}`
+            : `Luyện ${pill?.name ?? event.pillId} thất bại`,
         })
       }
     }

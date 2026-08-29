@@ -4,13 +4,19 @@ import { formatNumber } from '@/core/format/NumberFormatter'
 import type { TooltipContent } from '@/composables/useTooltip'
 import type { NameSegment } from '@/core/item/NameSegment'
 import type { SlotBadge, SlotPresentationState } from './SlotTypes'
-import InkNineSlice from './primitives/InkNineSlice.vue'
 
 // Slot Revamp — CSS-only presentation (tooltip-revamp-plan.md mục 17).
 // PNG DUY NHẤT được phép là icon riêng của item (prop `icon`); mọi
 // backdrop/frame/badge/glow khác giờ do CSS đảm nhiệm. Xem SlotTypes.ts
 // cho 5 trục semantic (availability/interaction/validation/marker/
 // comparison) — KHÔNG dùng danh sách boolean rời rạc.
+//
+// InkNineSlice frame-s-slot ĐÃ BỎ (2026-08-30) — brush ink-wash lặp lại
+// trên MỌI slot (paperdoll + toàn bộ lưới Kho Vật, hàng chục ô/màn) tạo
+// cảm giác rối/loạn khi xếp thành lưới dày đặc, khác hẳn mục đích gốc
+// của frame ink-wash (viền trang trí cho panel LỚN, không phải lặp lại
+// trên từng ô nhỏ). Viền quay lại CSS đơn giản `.slot-view` (border 1px
+// + quality-color) như trước ink-wash refactor.
 const props = defineProps<{
   /** Item mà Slot đang chứa. null = slot trống — filled/empty suy trực
    * tiếp từ đây, KHÔNG có prop `hasItem` riêng. */
@@ -158,7 +164,6 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
     v-tooltip="tooltipContent"
     @click="handleClick"
   >
-    <InkNineSlice asset-id="frame-s-slot" layer="frame" />
     <!-- layer 2: icon / monogram fallback -->
     <span class="slot-view__icon-wrap">
       <img v-if="showIcon" class="slot-view__item-icon" :src="icon" :alt="label || ''" @error="onIconError" />

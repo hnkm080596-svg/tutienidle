@@ -18,10 +18,10 @@ import { EQUIPMENT_SLOTS } from '@/core/equipment/EquipmentSlotState'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
 import { equipmentQualityRank, itemGradeRank } from '@/composables/slots/normalizeSlotRank'
-import GamePanel from '@/components/common/GamePanel.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import TabBar from '@/components/common/TabBar.vue'
 import SceneHeader from '@/components/common/SceneHeader.vue'
+import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 
 // Khí Đường (2026-08-25, resource-professions-rework plan §7/§9.2) —
 // bốn tab ĐÚNG contract: Cường Hóa (slot), Tẩy Luyện (identity substat
@@ -573,7 +573,9 @@ function doDissolve() {
 </script>
 
 <template>
-  <GamePanel class="qi-hall" variant="ornate" padding="none">
+  <div class="qi-hall">
+    <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
+    <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
     <SceneHeader
       class="qi-hall__forge-scene"
       asset="/assets/buildings/dong-fu/equipment_hall.png"
@@ -624,7 +626,7 @@ function doDissolve() {
           :label="row.equippedRow?.name ?? equipmentSlotLabel(row.slot)"
           :name-segments="row.equippedRow?.nameSegments"
           :icon="row.equippedRow?.icon"
-          :quality-rank="row.equippedRow?.qualityRank"
+          :equipment-quality-rank="row.equippedRow?.qualityRank"
           :rarity-rank="row.equippedRow?.rarityRank"
           :tooltip="row.equippedRow?.tooltip ?? { title: equipmentSlotLabel(row.slot), description: 'Slot trống vẫn có thể Cường Hóa.' }"
           :badges="[{ kind: 'enhance', text: `+${row.enhanceLevel}` }]"
@@ -676,7 +678,7 @@ function doDissolve() {
           :label="row.name"
           :name-segments="row.nameSegments"
           :icon="row.icon"
-          :quality-rank="row.qualityRank"
+          :equipment-quality-rank="row.qualityRank"
           :rarity-rank="row.rarityRank"
           :tooltip="row.tooltip"
           :state="{ interaction: row.instanceId === selectedInstanceId ? 'selected' : 'idle', marker: 'equipped' }"
@@ -719,7 +721,7 @@ function doDissolve() {
           :label="row.name"
           :name-segments="row.nameSegments"
           :icon="row.icon"
-          :quality-rank="row.qualityRank"
+          :equipment-quality-rank="row.qualityRank"
           :rarity-rank="row.rarityRank"
           :tooltip="row.tooltip"
           :state="{ interaction: row.instanceId === selectedInstanceId ? 'selected' : 'idle', marker: 'equipped' }"
@@ -846,18 +848,24 @@ function doDissolve() {
         </GameButton>
       </div>
     </section>
-  </GamePanel>
+  </div>
 </template>
 
 <style scoped>
 .qi-hall {
   position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
   color: var(--text-primary);
   font-family: var(--font-body);
+}
+
+.qi-hall > :not(.ink-nine-slice) {
+  position: relative;
+  z-index: 3;
 }
 
 .qi-hall__forge-scene {
@@ -902,8 +910,8 @@ function doDissolve() {
   flex: 0 0 auto;
   padding: 8px 12px;
   font-size: var(--text-sm);
-  color: var(--chrome-500);
-  border-bottom: 1px solid var(--ink-line-soft);
+  color: var(--paper-text, #211f1a);
+  border-bottom: 1px solid var(--paper-line, rgba(42, 41, 36, 0.42));
 }
 
 .qi-hall__tabs {
@@ -932,7 +940,17 @@ function doDissolve() {
 .qi-hall__hint {
   margin: 0;
   font-size: var(--text-xs);
-  color: var(--text-muted);
+  color: var(--paper-text-soft, #5e5a50);
+}
+
+.qi-hall__body h4 {
+  margin: 0;
+  color: var(--paper-text, #211f1a);
+  font-size: var(--text-sm);
+}
+
+.qi-hall__option {
+  color: var(--paper-text, #211f1a);
 }
 
 .enhance-row {
@@ -979,8 +997,8 @@ function doDissolve() {
 .qi-hall__empty {
   margin: 0;
   padding: 12px;
-  border: 1px dashed var(--ink-line-soft);
-  color: var(--text-muted);
+  border: 1px dashed var(--paper-line, rgba(42, 41, 36, 0.42));
+  color: var(--paper-text-soft, #5e5a50);
   font-size: var(--text-sm);
   text-align: center;
 }
@@ -997,13 +1015,13 @@ function doDissolve() {
 
 .qi-hall__owned {
   margin-left: auto;
-  color: var(--text-secondary);
+  color: var(--paper-text-soft, #5e5a50);
 }
 
 .qi-hall__costline {
   margin: 0;
   font-size: var(--text-xs);
-  color: var(--text-secondary);
+  color: var(--paper-text-soft, #5e5a50);
 }
 
 .dissolve-filters {
@@ -1019,6 +1037,23 @@ function doDissolve() {
   padding: 4px;
   min-height: var(--tap-min);
   font-family: var(--font-body);
+}
+
+.dissolve-filters__bulk {
+  background: var(--ink-800);
+  color: var(--text-primary);
+  border: 1px solid var(--ink-line-soft);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  min-height: var(--tap-min);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.dissolve-filters__bulk:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .dissolve-list {
@@ -1044,7 +1079,7 @@ function doDissolve() {
 
 .dissolve-pagination__label {
   font-size: var(--text-sm);
-  color: var(--text-secondary);
+  color: var(--paper-text-soft, #5e5a50);
   font-variant-numeric: tabular-nums;
 }
 

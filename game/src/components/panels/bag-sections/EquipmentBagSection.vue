@@ -182,7 +182,7 @@ watch(
         :name-segments="cell?.nameSegments"
         :description="cell?.description"
         :amount="cell?.amount"
-        :quality-rank="cell?.equipmentQualityRank"
+        :equipment-quality-rank="cell?.equipmentQualityRank"
         :rarity-rank="cell?.rarityRank"
         :state="cell?.state"
         :tooltip="cell?.tooltip"

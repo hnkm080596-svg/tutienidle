@@ -4,8 +4,8 @@ import { usePlayerStore } from '@/stores/player'
 import { useUiStore } from '@/stores/ui'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import PlayerPortrait from '../common/PlayerPortrait.vue'
-import GamePanel from '../common/GamePanel.vue'
 import GameButton from '../common/GameButton.vue'
+import InkNineSlice from '../common/primitives/InkNineSlice.vue'
 import type { Stats } from '@/core/stats/StatBlock'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { BASE_STAT_LABELS, formatStat, type StatCategory } from '@/core/stats/StatLabels'
@@ -182,7 +182,9 @@ const pillPermanentRows = computed(() => {
 </script>
 
 <template>
-  <GamePanel class="character-panel" variant="ornate" padding="none">
+  <section class="character-panel">
+    <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
+    <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
     <!-- Tu vi và Đột Phá thuộc hoàn toàn về panel Cảnh Giới. Nhân Vật
          chỉ giữ nhận diện, chiến lực và chỉ số để tránh lặp UI. -->
     <div class="character-panel__header">
@@ -306,17 +308,24 @@ const pillPermanentRows = computed(() => {
         </span>
       </div>
     </div>
-  </GamePanel>
+  </section>
 </template>
 
 <style scoped>
 .character-panel {
+  position: relative;
+  isolation: isolate;
   height: 100%;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  color: var(--text-primary);
+  color: var(--paper-text, #211f1a);
   font-family: var(--font-body);
+}
+
+.character-panel > :not(.ink-nine-slice) {
+  position: relative;
+  z-index: 3;
 }
 
 .character-panel__header {

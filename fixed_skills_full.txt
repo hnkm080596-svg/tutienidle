@@ -1,0 +1,1228 @@
+import type { Skill } from '../../core/skill/Skill'
+import { TRAN_SEQUENCE } from '../progression/KiemTuNodes'
+
+// 9 skill Kiếm Trận (chiêu trận) � table-driven từ `TRAN_SEQUENCE`
+// (KiemTuNodes.ts, dùng chung v�:i các keystone tương ứng �Ồ tránh ��9nh
+// nghĩa lại chu�i id/realmId/swordCount lần 2 � Task 5 review fix,
+// 2026-08-28). M�i trận unlock qua 1 keystone riêng (kiem_tran_luong_nghi
+// ⬦ kiem_tran_vo_cuc), cadence attack_speed như Huy Kiếm/Ngự Kiếm Thuật.
+// swordCount càng l�:n thì damage/swordIntentDamageRatio càng cao � "dựa
+// vào s� Kiếm Ý �ang có" cùng công thức Kiếm Khai Thiên Môn. Công thức:
+// value = 0.5 + swordCount � 0.1; swordIntentDamageRatio = 0.0002 � swordCount
+// (s� li�!u GIỮ NGUY�`N so v�:i bản hand-written trư�:c review fix � refactor
+// thuần cấu trúc, không ��"i con s�).
+const KIEM_TRAN_SKILLS: Skill[] = TRAN_SEQUENCE.map((entry) => ({
+  id: entry.skillId,
+
+  name: entry.name,
+
+  description: entry.skillDescription ?? `Bày ${entry.name}, ${entry.swordCount} thanh phi kiếm hợp lực chém liên hoàn.`,
+
+  type: 'active',
+
+  level: 1,
+
+  maxLevel: 10,
+
+  requiredRealmId: entry.realmId,
+
+  cooldown: 1,
+
+  remainingCooldown: 0,
+
+  target: 'all_enemies',
+
+  execution: { kind: 'attack_speed', attackSpeedMultiplier: 1 },
+
+  effects: [
+    {
+      type: 'damage',
+
+      // Round � 0.5 + swordCount*0.1 / 0.0002*swordCount trôi float
+      // (vd swordCount=3 �  0.0006000000000000001) nếu không làm tròn về
+      // �úng ��" chính xác của công thức g�c; giữ NGUY�`N s� li�!u hand-written
+      // trư�:c review fix (không l�!ch dù ch�0 1e-16).
+      value: Math.round((0.5 + entry.swordCount * 0.1) * 10) / 10,
+
+      components: [{ kind: 'element', element: 'metal', ratio: 1 }],
+
+      swordIntentDamageRatio: Math.round(0.0002 * entry.swordCount * 10000) / 10000,
+
+      // Task 8 (2026-08-28) � Kiếm Trận keystone (Tam Tài) spawn 1
+      // SwordZone tại target sau khi bắn, xem SkillEffect.grantsSwordZone.
+      // CH�� áp cho kiem_tran_tam_tai � 8 trận còn lại vẫn plain damage.
+      ...(entry.skillId === 'kiem_tran_tam_tai'
+        ? { grantsSwordZone: true, swordZoneCharges: 3, swordZoneDamageRatio: 0.3 }
+        : {}),
+    },
+  ],
+
+  resourceType: 'none',
+
+  buildTag: 'core',
+
+  unlocked: false,
+
+  equipped: false,
+}))
+
+// Skill execution policy rework (plan §8) � M�RI active skill khai
+// `execution` tường minh; runtime ch�0 �ọc field này (không fallback
+// isBasicAttack/castTime/path):
+// - Trảm + Ngự Kiếm Thuật �  'attack_speed' (cadence theo Attack Speed,
+//   không ICD/không CDR/không cast time).
+// - 5 skill Pháp Tu có cast time 1.2s giữ nguyên s� li�!u qua policy
+//   'cast_time' (cast time ch�9u Cast Speed, cooldown ch�9u CDR).
+// - Active còn lại �  'cooldown' v�:i cooldown hi�!n có.
+// - 'attack_speed_cast' chưa gán cho skill nào (ch�0 author khi thiết kế
+//   cụ thỒ yêu cầu � plan §8.3).
+export const SKILLS: Skill[] = [
+  {
+    id: 'tram',
+
+    name: 'Huy Kiếm',
+
+    description: 'M�"t chiêu thức cơ bản, không t�n tài nguyên.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 3,
+
+    experience: 0,
+
+    totalExperience: 0,
+
+    cooldown: 1,
+
+    remainingCooldown: 0,
+
+    target: 'enemy',
+
+    effects: [
+      {
+        type: 'damage',
+
+        value: 1,
+
+        damageType: 'physical',
+
+        // Final review fix (Important #3) � dead % ratio từ thời maxLevel
+        // 18 cũ. Huy Kiếm rework (spec §2) là skill DUY NHẤT �i flat-only
+        // (+1 dmg/10 cast qua SkillSystem.getEffectiveSkill()); ratio này
+        // từng c�"ng thêm 1 l�:p % nhân totalExperience/attack lên trên flat,
+        // double-scale ngoài spec.
+      },
+    ],
+
+    // Plan §8.3 � baseline bảo toàn hành vi: �òn nh�9p theo Attack Speed.
+    execution: { kind: 'attack_speed' },
+
+    resourceType: 'none',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  // Hỏa Tu (Plans/magicpathgeneral + Plans/FirePath, 2026-08-21) �
+  // THAY HẲN kit 3-skill+1-passive cũ (xich_viem_chuong/viem_hai/
+  // bao_viem/passive_bao_viem_focus, �ã xoá). Framework m�:i: 1 Active
+  // Skill DUY NHẤT m�i hành (không còn multi-skill kit) � chiều sâu
+  // �ến từ Node Tree (Minor ��"i stat, Major ��"i tag/behavior của
+  // CHÍNH skill này), xem data/progression/PhapTuNodes.ts. Học SẴN
+  // lúc chọn path (GameManager.chooseCultivationPath(), KH�NG còn qua
+  // node "Lĩnh Ng�" Hỏa" � node �ó �ã gỡ khỏi PhapTuNodes.ts).
+  {
+    id: 'hoa_cau_thuat',
+
+    name: 'H�a C�u Thu�t',
+
+    description: 'Ph�ng H�a C�u v�o m�c ti�u, c� c� h�i g�y Thi�u �t.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 10,
+
+    // Combat Balance Pass (2026-08-29, plan �3.3)  H�a (b�ng n�):
+    // cast 1.6s / cooldown 4s  �n ch�m m�nh, thay nh�p 1.2/1 ci.
+    cooldown: 4,
+
+    remainingCooldown: 0,
+
+    castTime: 1.6,
+
+    // Plan �8.3  policy 'cast_time' l� ngu�n s� th�t runtime; field
+    // castTime tr�n gi� �ng b� cho UI/tooltip.
+    execution: { kind: 'cast_time', castTime: 1.6 },
+
+    target: 'enemy',
+
+    effects: [
+      {
+        type: 'damage',
+
+        // FirePath.md mục 2 � "Damage: 100% Skill Power".
+        value: 1,
+
+        components: [{ kind: 'element', element: 'fire', ratio: 1 }],
+
+        manaScalingRatio: 0.001,
+
+        attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
+      },
+
+      {
+        type: 'ailment',
+
+        ailmentId: 'bong',
+
+        // 2026-08-21 � SỬA lại quyết ��9nh ban �ầu ("100% luôn áp"):
+        // Hỏa Cầu Thuật g�c ch�0 50% cơ h�"i áp Thiêu Đ�t, node "Dẫn
+        // Hỏa" (+15%) và "Hỏa Nguyên" (+5%) �x Trúc Cơ c�"ng thêm qua
+        // stat elementApplicationPercent (xem SkillEffectSystem.ts,
+        // data/progression/PhapTuNodes.ts) � �Ồ node �ó có ý nghĩa
+        // thật thay vì c�"ng vào con s� �ã max.
+        ailmentChance: 0.5,
+      },
+    ],
+
+    // Skill tree redesign (2026-08-21) � skill này là ROOT NODE của
+    // Hỏa tree (xem PhapTuNodes.ts), CHIẾM 1 slot Loadout bình thường
+    // và chạy qua scheduler auto-cast th�ng nhất như mọi skill khác.
+    // ĐiỒm khác bi�!t DUY NHẤT của Hỏa Cầu Thuật v�:i 4 hành kia là �ược
+    // tự học + trang b�9 sẵn (cost 0, xem GameManager.chooseCultivationPath()).
+
+    // Hỏa Tu Pure (Plans/FirePath mục 7) � m�i lần cast +hoaTheGainPerCast
+    // (0 nếu chưa mua "Tụ Hỏa"), xem BattleSystem.castSkill().
+    grantsHoaThePerCast: true,
+
+    resourceType: 'none',
+
+    buildTag: 'burst',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  // Ult Ki�m Tu (spec 2026-08-29-kiem-the-kiem-y m�c 2/3.4)  2 ult
+  // MANUAL: KH�NG thu�c loadout scheduler (BattleSystem.skip nh� channel),
+  // k�ch ho�t qua n�t Ult trong CombatControlBar + auto-AI. Unlock b�ng
+  // node ult ri�ng (KiemTuNodes.ts)  KH�NG requiredRealmId v� node � gate.
+  {
+    id: 'tru_tien_kiem_tran',
+
+    name: 'Tru Ti�n Ki�m Tr�n',
+
+    description: '�t Ki�m Th�, tru ti�n nh�t n� tr�m di�t to�n m�n, � l�i ki�m tr�n tr��ng t�n m�i ao v�ng.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    cooldown: 30,
+
+    remainingCooldown: 0,
+
+    target: 'all_enemies',
+
+    // Ult kh�ng qua scheduler  execution ch� mang t�nh m� t� data.
+    execution: { kind: 'cooldown' },
+
+    effects: [
+      {
+        type: 'damage',
+
+        value: 3,
+
+        components: [{ kind: 'element', element: 'metal', ratio: 1 }],
+
+        attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.008 }],
+      },
+    ],
+
+    resourceType: 'none',
+
+    buildTag: 'ult',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'kiem_khai_thien_mon',
+
+    name: 'Ki�m Khai Thi�n M�n',
+
+    description: '�t to�n b� Ki�m � t� l�c, m�t ki�m khai thi�n, s�t th��ng d� tr�n ra to�n m�n h�nh.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    cooldown: 60,
+
+    remainingCooldown: 0,
+
+    target: 'enemy',
+
+    execution: { kind: 'cooldown' },
+
+    effects: [
+      {
+        type: 'damage',
+
+        value: 5,
+
+        components: [{ kind: 'element', element: 'metal', ratio: 1 }],
+
+        // �t ki�m � khu�ch �i (�c currentSwordIntent qua
+        // swordIntentDamageRatio pipeline s�n c�  pool ki�m � t�m c�a
+        // route BK).
+        swordIntentDamageRatio: 0.0002,
+
+        attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.006 }],
+      },
+    ],
+
+    resourceType: 'none',
+
+    buildTag: 'ult',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  // M�"c Tu (Plans/PoisonPath, 2026-08-21) � THAY HẲN kit 3-skill+1-
+  // passive cũ (dang_trao/doc_vu/hap_tinh_dai_phap/passive_hap_tinh_tuy,
+  // �ã xoá). Cùng framework 1-Active-Skill/hành v�:i Hỏa/Thủy � chiều
+  // sâu �ến từ Node Tree, xem data/progression/PhapTuNodes.ts. Học SẴN
+  // lúc chọn path (GameManager.chooseCultivationPath()). KHÁC Hỏa/Thủy:
+  // 0 direct damage (ch�0 có effect 'ailment', KH�NG có effect 'damage'
+  // nào � PoisonPath.md mục 1 "0 direct damage"), ailmentChance CỐ Đ�`NH
+  // 100% � M�"c KH�NG có Element Application Chance/minor nào ch�0nh t�0
+  // l�! này (khác Hỏa Cầu Thuật/Thủy Ti�&n Thuật 50% base + node c�"ng
+  // thêm), toàn b�" sát thương �ến từ Trúng Đ�"c DoT.
+  {
+    id: 'doc_chuong',
+
+    name: '�c Ch��ng',
+
+    description:
+      'V� �c ch��ng v�o m�c ti�u, kh�ng g�y s�t th��ng tr�c ti�p nh�ng lu�n �p Tr�ng �c.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 10,
+
+    // Combat Balance Pass (2026-08-29, plan �3.3)  M�c (DoT): cast
+    // 1.2s / cooldown 2s  �p �c m�nh, nh�p v�a.
+    cooldown: 2,
+
+    remainingCooldown: 0,
+
+    castTime: 1.2,
+
+    // Plan �8.3  policy 'cast_time' l� ngu�n s� th�t runtime; field
+    // castTime tr�n gi� �ng b� cho UI/tooltip.
+    execution: { kind: 'cast_time', castTime: 1.2 },
+
+    target: 'enemy',
+
+    effects: [
+      {
+        type: 'ailment',
+
+        ailmentId: 'trung_doc',
+
+        ailmentChance: 1,
+      },
+    ],
+
+    // Skill tree redesign (2026-08-21) � root node của M�"c tree, chiếm
+    // 1 slot Loadout bình thường (xem hoa_cau_thuat's ghi chú).
+    resourceType: 'none',
+
+    buildTag: 'core',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  // Thủy Tu (Plans/waterpath, 2026-08-21) � THAY HẲN kit 3-skill+1-
+  // passive cũ (luu_thuy_chuong/han_trieu/tuyet_bang_pha/
+  // passive_luu_thuy_man, �ã xoá). Cùng framework 1-Active-Skill/hành
+  // v�:i Hỏa (xem Skills.ts's ghi chú �ầu kh�i hoa_cau_thuat) � chiều
+  // sâu �ến từ Node Tree, xem data/progression/PhapTuNodes.ts. Học SẴN
+  // lúc chọn path (GameManager.chooseCultivationPath()).
+  {
+    id: 'thuy_tien_thuat',
+
+    name: 'Th�y Ti�n Thu�t',
+
+    description: 'B�n Th�y Ti�n v�o m�c ti�u, c� c� h�i g�y T� C�ng.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 10,
+
+    // Combat Balance Pass (2026-08-29, plan �3.3)  Th�y (duy tr�):
+    // cast 0.9s / cooldown 1s  nh�p nhanh �p ailment.
+    cooldown: 1,
+
+    remainingCooldown: 0,
+
+    castTime: 0.9,
+
+    // Plan �8.3  policy 'cast_time' l� ngu�n s� th�t runtime; field
+    // castTime tr�n gi� �ng b� cho UI/tooltip.
+    execution: { kind: 'cast_time', castTime: 0.9 },
+
+    target: 'enemy',
+
+    effects: [
+      {
+        type: 'damage',
+
+        // waterpath mục II � "Damage: 100% Skill Power".
+        value: 1,
+
+        components: [{ kind: 'element', element: 'water', ratio: 1 }],
+
+        manaScalingRatio: 0.001,
+
+        attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
+      },
+
+      {
+        type: 'ailment',
+
+        ailmentId: 'te_cong',
+
+        // 2026-08-21 � cùng quyết ��9nh v�:i Hỏa Cầu Thuật (xem ghi chú
+        // �x �ó): base 50%, KH�NG luôn luôn áp � Thủy Dẫn (Luy�!n Khí)
+        // và Dẫn Lưu (Trúc Cơ) c�"ng thêm qua elementApplicationPercent.
+        ailmentChance: 0.5,
+      },
+    ],
+
+    // Skill tree redesign (2026-08-21) � skill này là ROOT NODE của
+    // element tree (xem PhapTuNodes.ts), CHIẾM 1 slot Loadout bình
+    // thường và chạy qua scheduler auto-cast th�ng nhất như mọi skill
+    // khác. ĐiỒm khác bi�!t DUY NHẤT của Hỏa Cầu Thuật v�:i 4 hành kia là
+    // �ược tự học + trang b�9 sẵn (cost 0, xem GameManager.chooseCultivationPath()).
+    resourceType: 'none',
+
+    buildTag: 'core',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  // Kim Tu (Plans/KimPath, 2026-08-21) � THAY HẲN kit 3-skill+1-passive
+  // cũ (thiet_sa_chuong/sa_vu/thiet_sa_bao/passive_thiet_sa_tich_uy, �ã
+  // xoá � 'te_dien'/"Lôi Viêm" [bong.te_dien trong ElementReaction.ts]
+  // giờ m� côi, không skill nào áp te_dien nữa, �Ồ nguyên như hoai_tu
+  // sau �ợt Th�"). Cùng framework 1-Active-Skill/hành v�:i Hỏa/Thủy/M�"c/
+  // Th�" � chiều sâu �ến từ Node Tree, xem data/progression/PhapTuNodes.ts.
+  // Học SẴN lúc chọn path. GIỐNG Hỏa/Thủy (KHÁC M�"c/Th�"): ailmentChance
+  // 40% base + node-upgradeable qua elementApplicationPercent (doc mục 2:
+  // "Đánh trúng không �ảm bảo Xuất Huyết � khác Đ�"c Chư�xng").
+  {
+    id: 'diem_kim_thuat',
+
+    name: 'i�m Kim Thu�t',
+
+    description: 'i�m huy�t b�ng kh� Kim, c� c� h�i g�y Xu�t Huy�t.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 10,
+
+    // Combat Balance Pass (2026-08-29, plan �3.3)  Kim (xuy�n): cast
+    // 1.0s / cooldown 2.5s  single-target n�ng, nh�p nhanh-trung b�nh.
+    cooldown: 2.5,
+
+    remainingCooldown: 0,
+
+    castTime: 1.0,
+
+    // Plan �8.3  policy 'cast_time' l� ngu�n s� th�t runtime; field
+    // castTime tr�n gi� �ng b� cho UI/tooltip.
+    execution: { kind: 'cast_time', castTime: 1.0 },
+
+    target: 'enemy',
+
+    effects: [
+      {
+        type: 'damage',
+
+        value: 1,
+
+        components: [{ kind: 'element', element: 'metal', ratio: 1 }],
+
+        manaScalingRatio: 0.001,
+
+        attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
+      },
+
+      {
+        type: 'ailment',
+
+        ailmentId: 'chay_mau',
+
+        ailmentChance: 0.4,
+
+        // Kim Tu Trúc Cơ Pure (Plans/KimPath mục 9/11, 2026-08-21) � CH��
+        // roll THìNH C�NG (Xuất Huyết thật sự áp �ược) m�:i +Kim Thế, xem
+        // SkillEffectSystem.ts's apply(), case 'ailment'. 0 nếu chưa mua
+        // Major "Kim Thế" (kimTheGainPerProc nền 0).
+        grantsKimThePerProc: true,
+
+        // Plans/magicpathgeneral Phase 13 (2026-08-21) � Huyết Phá,
+        // C�"NG �iều ki�!n roll v�:i Kim Thế �x trên, 2 counter ��"c lập.
+        // 0 nếu chưa mua node "Huyết Phá" (huyetPhaGainPerProc nền 0).
+        grantsHuyetPhaPerProc: true,
+      },
+    ],
+
+    // Skill tree redesign (2026-08-21) � root node của Kim tree, chiếm
+    // 1 slot Loadout bình thường (xem hoa_cau_thuat's ghi chú).
+    resourceType: 'none',
+
+    buildTag: 'core',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  // Th�" Tu (Plans/EarthPath, 2026-08-21) � THAY HẲN kit 3-skill+1-
+  // passive cũ (ban_thach_quyen/thach_giap_tran/hau_tho_chan/
+  // passive_ban_thach_kien_nhan, �ã xoá). Cùng framework 1-Active-
+  // Skill/hành v�:i Hỏa/Thủy/M�"c � chiều sâu �ến từ Node Tree, xem
+  // data/progression/PhapTuNodes.ts. Học SẴN lúc chọn path
+  // (GameManager.chooseCultivationPath()). ailmentChance CỐ Đ�`NH 100%
+  // � Th�" KH�NG có Earth Application Chance/Petrify Chance/Minor nào
+  // ch�0nh t�0 l�! này (PoisonPath-style, gi�ng M�"c), khác Hỏa/Thủy's
+  // AOE theo grid, m�x bằng Pure major. `earthPureAreaBehavior: true` �
+  // GHI Đ�� �ơn-mục-tiêu thành AOE+Knockback thật khi mua Major "Th�"
+  // Thế" (xem SkillEffectSystem.ts's apply(), case 'damage').
+  {
+    id: 'tho_cau_thuat',
+
+    name: 'Th� C�u Thu�t',
+
+    description: 'B�n m�t Th� C�u v�o m�c ti�u, lu�n g�y Th�ch H�a.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 10,
+
+    // Combat Balance Pass (2026-08-29, plan �3.3)  Th� (kh�ng ch�):
+    // cast 1.4s / cooldown 5s  CC ch�m, m�nh v� i�u khi�n.
+    cooldown: 5,
+
+    remainingCooldown: 0,
+
+    castTime: 1.4,
+
+    // Plan �8.3  policy 'cast_time' l� ngu�n s� th�t runtime; field
+    // castTime tr�n gi� �ng b� cho UI/tooltip.
+    execution: { kind: 'cast_time', castTime: 1.4 },
+
+    target: 'enemy',
+
+    effects: [
+      {
+        type: 'damage',
+
+        value: 1,
+
+        components: [{ kind: 'element', element: 'earth', ratio: 1 }],
+
+        manaScalingRatio: 0.001,
+
+        attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
+
+        earthPureAreaBehavior: true,
+      },
+
+      {
+        type: 'ailment',
+
+        ailmentId: 'thach_hoa',
+
+        ailmentChance: 1,
+      },
+    ],
+
+    // Skill tree redesign (2026-08-21) � root node của Th�" tree, chiếm
+    // 1 slot Loadout bình thường (xem hoa_cau_thuat's ghi chú).
+    resourceType: 'none',
+
+    buildTag: 'core',
+
+    // Th�" Tu Trúc Cơ Pure (Plans/EarthPath mục XV) � 0 nếu chưa mua
+    // Major "Th�" Thế" (thoTheGainPerCast nền 0), xem BattleSystem.
+    // castSkill().
+    grantsThoThePerCast: true,
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'passive_kiem_tam_lanh_liet',
+
+    name: 'Kiếm Tâm Lãnh Li�!t',
+
+    description: 'Tâm kiếm lạnh lùng sắc bén, m�i �òn chí mạng càng thêm phần quyết li�!t.',
+
+    type: 'passive',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    cooldown: 0,
+
+    remainingCooldown: 0,
+
+
+    target: 'self',
+
+    effects: [],
+
+    passiveModifiers: [
+      {
+        id: 'passive_kiem_tam_lanh_liet_crit_damage',
+
+        sourceId: 'passive_kiem_tam_lanh_liet',
+        sourceType: 'skill',
+
+        stat: 'criticalDamage',
+
+        percent: 0.01,
+
+        stacks: 0,
+
+        maxStacks: 30,
+      },
+    ],
+
+    passiveTrigger: 'critical',
+
+    buildTag: 'burst',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  // Kiếm Tu Tự Lực (Task 5, 2026-08-28, xem
+  // .superpowers/sdd/2026-08-28-kiem-tu-tu-luc/task-5-brief.md) �
+  // Bạt Kiếm Thuật: TỤ LỰC (execution 'channel', Task 3), m�i tickSeconds
+  // (3-9s, UI slider Task 7) tự n�" 1 phát AOE toàn màn hình, sát thương
+  // khuếch �ại theo damage-taken tích lũy trong lúc tụ (xem
+  // BattleSystem.resolveChannelTick()). Root node bat_kiem_an
+  // (KiemTuNodes.ts) unlock skill này, gate b�xi skillCastCount Huy Kiếm
+  // Lv3 + 9999 lần cast.
+  {
+    id: 'bat_kiem_thuat',
+
+    name: 'Bạt Kiếm Thuật',
+
+    description: 'Tụ lực kiếm ý, m�i vài giây quạt m�"t kiếm khí xuyên thiên ��9a, sát thương toàn màn hình.',
+
+    type: 'active',
+
+    level: 1,
+
+    maxLevel: 10,
+
+    cooldown: 0,
+
+    remainingCooldown: 0,
+
+    target: 'all_enemies',
+
+    execution: { kind: 'channel', tickSeconds: 3 },
+
+    effects: [
+      {
+        type: 'damage',
+
+        value: 2,
+
+        components: [{ kind: 'element', element: 'metal', ratio: 1 }],
+
+        attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
+      },
+    ],
+
+    resourceType: 'none',
+
+    buildTag: 'burst',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  // 9 skill Kiếm Trận (chiêu trận) � generated từ KIEM_TRAN_SKILLS (xem
+  // ��9nh nghĩa + comment công thức �x �ầu file, table-driven từ
+  // TRAN_SEQUENCE trong KiemTuNodes.ts).
+  ...KIEM_TRAN_SKILLS,
+
+  // 9 passive � m�i cảnh gi�:i m�x khóa 1, ngu�n map nằm �x tâm pháp tu
+  // luy�!n (xem Technique.passiveSkillIdsByRealm trong
+  // data/technique/Techniques.ts và GameManager.syncRealmPassive()).
+  // M�i cái dùng passiveTrigger khác nhau � không dùng chung 1 �iều
+  // ki�!n tích stack.
+  {
+    id: 'passive_linh_khi_cam_ung',
+
+    name: 'Linh Khí Cảm Ứng',
+
+    description: 'Cảm nhận linh khí xung quanh, m�i �òn �ánh trúng tĒng dần công kích.',
+
+    type: 'passive',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    requiredRealmId: 'qi_refining',
+
+    cooldown: 0,
+
+    remainingCooldown: 0,
+
+
+    target: 'self',
+
+    effects: [],
+
+    passiveModifiers: [
+      {
+        id: 'passive_linh_khi_cam_ung_attack',
+
+        sourceId: 'passive_linh_khi_cam_ung',
+        sourceType: 'skill',
+
+        stat: 'attack',
+
+        percent: 0.005,
+
+        stacks: 0,
+
+        maxStacks: 50,
+      },
+    ],
+
+    passiveTrigger: 'hit',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'passive_truc_co_y_chi',
+
+    name: 'Trúc Cơ Ý Chí',
+
+    description: 'Nền tảng �ạo tâm vững chắc, m�i lần ch�9u �òn tĒng dần phòng ngự.',
+
+    type: 'passive',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    requiredRealmId: 'foundation_establishment',
+
+    cooldown: 0,
+
+    remainingCooldown: 0,
+
+
+    target: 'self',
+
+    effects: [],
+
+    passiveModifiers: [
+      {
+        id: 'passive_truc_co_y_chi_defense',
+
+        sourceId: 'passive_truc_co_y_chi',
+        sourceType: 'skill',
+
+        stat: 'defense',
+
+        percent: 0.008,
+
+        stacks: 0,
+
+        maxStacks: 50,
+      },
+    ],
+
+    passiveTrigger: 'damage_taken',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'passive_kim_dan_chi_quang',
+
+    name: 'Kim Đan Chi Quang',
+
+    description: 'Kim �an tỏa sáng m�i khi ra �òn chí mạng, tĒng dần sát thương chí mạng.',
+
+    type: 'passive',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    requiredRealmId: 'golden_core',
+
+    cooldown: 0,
+
+    remainingCooldown: 0,
+
+
+    target: 'self',
+
+    effects: [],
+
+    passiveModifiers: [
+      {
+        id: 'passive_kim_dan_chi_quang_crit_damage',
+
+        sourceId: 'passive_kim_dan_chi_quang',
+        sourceType: 'skill',
+
+        stat: 'criticalDamage',
+
+        flat: 0.02,
+
+        stacks: 0,
+
+        maxStacks: 50,
+      },
+    ],
+
+    passiveTrigger: 'critical',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'passive_nguyen_anh_minh_triet',
+
+    name: 'Nguyên Anh Minh Tri�!t',
+
+    // Pháp Tu Redesign (magicpath, 2026-08-18) � cultivationRate �ã b�9
+    // xoá khỏi Stats (t�c ��" tu luy�!n giờ c� ��9nh, không ai tĒng �ược
+    // nữa), passiveModifiers CŨ của skill này (buff cultivationRate)
+    // không còn hợp l�!. TẠM �Ồ tr�ng, chưa gán stat m�:i � xem audit
+    // cu�i phiên [[tienhiep-phap-tu-magicpath]], cần quyết ��9nh lại
+    // hư�:ng passive này (��"i sang combat stat, hay bỏ hẳn) khi làm n�"i
+    // dung "class chính thức".
+    description:
+      'Nguyên Anh thấu tri�!t � cảm ng�" sâu hơn v�:i thiên ��9a (hi�!n chưa có hi�!u ứng, �ang chờ thiết kế lại).',
+
+    type: 'passive',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    requiredRealmId: 'nascent_soul',
+
+    cooldown: 0,
+
+    remainingCooldown: 0,
+
+
+    target: 'self',
+
+    effects: [],
+
+    passiveModifiers: [],
+
+    passiveTrigger: 'per_second',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'passive_hoa_than_chi_uy',
+
+    name: 'Hóa Thần Chi Uy',
+
+    description: 'Uy áp Hóa Thần, m�i lần hạ gục ��9ch nhân tĒng dần sức tấn công.',
+
+    type: 'passive',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    requiredRealmId: 'soul_transformation',
+
+    cooldown: 0,
+
+    remainingCooldown: 0,
+
+
+    target: 'self',
+
+    effects: [],
+
+    passiveModifiers: [
+      {
+        id: 'passive_hoa_than_chi_uy_attack',
+
+        sourceId: 'passive_hoa_than_chi_uy',
+        sourceType: 'skill',
+
+        stat: 'attack',
+
+        percent: 0.02,
+
+        stacks: 0,
+
+        maxStacks: 50,
+      },
+    ],
+
+    passiveTrigger: 'kill',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'passive_luyen_hu_bo',
+
+    name: 'Luy�!n Hư B�"',
+
+    description: 'Thân hình hòa vào hư không, m�i lần thi triỒn skill tĒng dần t�c ��" ra �òn.',
+
+    type: 'passive',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    requiredRealmId: 'void_refinement',
+
+    cooldown: 0,
+
+    remainingCooldown: 0,
+
+
+    target: 'self',
+
+    effects: [],
+
+    passiveModifiers: [
+      {
+        id: 'passive_luyen_hu_bo_attack_speed',
+
+        sourceId: 'passive_luyen_hu_bo',
+        sourceType: 'skill',
+
+        stat: 'attackSpeed',
+
+        percent: 0.01,
+
+        stacks: 0,
+
+        maxStacks: 50,
+      },
+    ],
+
+    passiveTrigger: 'cast',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'passive_hop_the_chi_khu',
+
+    name: 'Hợp ThỒ Chi Khu',
+
+    description: 'Thân thỒ và thần h�n hợp nhất, m�i �òn xuất kích tĒng dần khí huyết t�i �a.',
+
+    type: 'passive',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    requiredRealmId: 'body_integration',
+
+    cooldown: 0,
+
+    remainingCooldown: 0,
+
+
+    target: 'self',
+
+    effects: [],
+
+    passiveModifiers: [
+      {
+        id: 'passive_hop_the_chi_khu_max_hp',
+
+        sourceId: 'passive_hop_the_chi_khu',
+        sourceType: 'skill',
+
+        stat: 'maxHp',
+
+        percent: 0.01,
+
+        stacks: 0,
+
+        maxStacks: 50,
+      },
+    ],
+
+    passiveTrigger: 'attack',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'passive_dai_thua_dao_tam',
+
+    name: 'Đại Thừa Đạo Tâm',
+
+    description: 'Đạo tâm viên mãn, m�i �òn �ánh trúng tĒng dần pháp lực.',
+
+    type: 'passive',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    requiredRealmId: 'mahayana',
+
+    cooldown: 0,
+
+    remainingCooldown: 0,
+
+
+    target: 'self',
+
+    effects: [],
+
+    passiveModifiers: [
+      {
+        id: 'passive_dai_thua_dao_tam_attunement',
+
+        sourceId: 'passive_dai_thua_dao_tam',
+        sourceType: 'skill',
+
+        // Trư�:c c�"ng %magicAttack (stat �ã xoá, g�"p vào t�"ng hợp 5
+        // hành) � ��"i sang Linh CĒn (Attunement), kh�:p thẳng ý nghĩa
+        // "�ạo tâm viên mãn, pháp lực tĒng dần" và tự lan toả �ều
+        // sang cả 6 hành qua tầng dẫn xuất (xem
+        // StatCalculator.deriveAttributeModifiers()).
+        stat: 'attunement',
+
+        percent: 0.015,
+
+        stacks: 0,
+
+        maxStacks: 50,
+      },
+    ],
+
+    passiveTrigger: 'hit',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'passive_do_kiep_chi_tam',
+
+    name: 'Đ�" Kiếp Chi Tâm',
+
+    description: 'Tâm cảnh kiên ��9nh qua thiên kiếp, m�i giây trong trận tĒng dần t�0 l�! chí mạng.',
+
+    type: 'passive',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    requiredRealmId: 'tribulation',
+
+    cooldown: 0,
+
+    remainingCooldown: 0,
+
+
+    target: 'self',
+
+    effects: [],
+
+    passiveModifiers: [
+      {
+        id: 'passive_do_kiep_chi_tam_crit_rate',
+
+        sourceId: 'passive_do_kiep_chi_tam',
+        sourceType: 'skill',
+
+        stat: 'criticalRate',
+
+        flat: 0.002,
+
+        stacks: 0,
+
+        maxStacks: 50,
+      },
+    ],
+
+    passiveTrigger: 'per_second',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  // N�"i tại chiến �ấu của Tâm Pháp Chiến Đấu � tự học + equip khi
+  // technique tương ứng �ược trang b�9 (xem GameManager.equipTechnique()),
+  // KH�NG liên quan t�:i h�! th�ng 9 passive theo cảnh gi�:i �x trên.
+  {
+    id: 'passive_thai_hu_kiem_y',
+
+    name: 'Thái Hư Kiếm Ý',
+
+    description: 'Kiếm ý thấu tri�!t hư vô, m�i �òn chí mạng d�n thêm sát khí.',
+
+    type: 'passive',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    cooldown: 0,
+
+    remainingCooldown: 0,
+
+
+    target: 'self',
+
+    effects: [],
+
+    passiveModifiers: [
+      {
+        id: 'passive_thai_hu_kiem_y_crit_damage',
+
+        sourceId: 'passive_thai_hu_kiem_y',
+        sourceType: 'skill',
+
+        stat: 'criticalDamage',
+
+        percent: 0.01,
+
+        stacks: 0,
+
+        maxStacks: 30,
+      },
+    ],
+
+    passiveTrigger: 'critical',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+
+  {
+    id: 'passive_kim_cang_y_chi',
+
+    name: 'Kim Cang Ý Chí',
+
+    description: 'Thân thỒ cứng như kim thạch, m�i �òn ch�9u �au càng thêm vững vàng.',
+
+    type: 'passive',
+
+    level: 1,
+
+    maxLevel: 1,
+
+    cooldown: 0,
+
+    remainingCooldown: 0,
+
+
+    target: 'self',
+
+    effects: [],
+
+    passiveModifiers: [
+      {
+        id: 'passive_kim_cang_y_chi_defense',
+
+        sourceId: 'passive_kim_cang_y_chi',
+        sourceType: 'skill',
+
+        stat: 'defense',
+
+        percent: 0.008,
+
+        stacks: 0,
+
+        maxStacks: 30,
+      },
+    ],
+
+    passiveTrigger: 'damage_taken',
+
+    unlocked: false,
+
+    equipped: false,
+  },
+]

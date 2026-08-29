@@ -177,7 +177,7 @@ function onSlotClick(instance: EquipmentInstance | undefined) {
           :description="
             equippedBySlot[entry.slot] ? itemDescription(equippedBySlot[entry.slot]!) : undefined
           "
-          :quality-rank="qualityRankBySlot[entry.slot]"
+          :equipment-quality-rank="qualityRankBySlot[entry.slot]"
           :rarity-rank="rarityRankBySlot[entry.slot]"
           :badges="badgesBySlot[entry.slot]"
           :tooltip="tooltipBySlot[entry.slot]"

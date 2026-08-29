@@ -190,7 +190,18 @@ function handleReset() {
 .settings-panel__actions {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: 360px;
+  padding: 14px;
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--paper-100) 35%, transparent);
+}
+
+.settings-panel__actions > .game-button,
+.settings-panel__actions > .settings-panel__import {
+  width: 100%;
 }
 
 .settings-panel__import {

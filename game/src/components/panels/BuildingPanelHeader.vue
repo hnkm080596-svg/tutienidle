@@ -117,8 +117,9 @@ function upgrade() {
   gap: 14px;
   min-height: 88px;
   padding: 10px 18px;
-  border-bottom: 1px solid color-mix(in srgb, var(--chrome-500) 30%, transparent);
-  background: linear-gradient(90deg, color-mix(in srgb, var(--ink-900) 97%, transparent), color-mix(in srgb, var(--ink-950) 94%, transparent));
+  border-top: 1px solid color-mix(in srgb, var(--paper-100) 30%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--paper-100) 16%, transparent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ink-900) 88%, var(--paper-100)), color-mix(in srgb, var(--ink-950) 92%, var(--paper-100)));
 }
 
 .building-panel-header__art {

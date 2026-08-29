@@ -177,7 +177,7 @@ const ENEMY_HP_BAR_HEIGHT = 6
 // TÃ¡Â»â€° lÃ¡Â»â€¡ theo CHIÃ¡Â»â‚¬U CAO 1 HÃƒâ‚¬NG lane (khÃƒÂ´ng phÃ¡ÂºÂ£i cÃ¡ÂºÂ£ battlefield nhÃ†Â° side-
 // view cÃ…Â©) Ã¢â‚¬â€ 5 lane top-down (2026-08-22), nhÃƒÂ¢n vÃ¡ÂºÂ­t phÃ¡ÂºÂ£i nhÃ¡Â»Â hÃ†Â¡n hÃ¡ÂºÂ³n
 // hÃƒÂ ng cÃ¡Â»Â§a nÃƒÂ³ Ã„â€˜Ã¡Â»Æ’ cÃƒÂ²n chÃ¡Â»Â«a lÃ¡Â»Â trÃƒÂªn/dÃ†Â°Ã¡Â»â€ºi, khÃƒÂ´ng Ã„â€˜ÃƒÂ¨ hÃƒÂ ng kÃ¡ÂºÂ¿ bÃƒÂªn.
-const CHARACTER_WIDTH_RATIO = 0.45 // tÃ¡Â»â€° lÃ¡Â»â€¡ so vÃ¡Â»â€ºi chiÃ¡Â»Âu cao nhÃƒÂ¢n vÃ¡ÂºÂ­t
+const CHARACTER_WIDTH_RATIO = 0.45 // tỉ lệ so với chiều cao nhân vật
 
 // Combat AI rework (plan Ã‚Â§12.1) Ã¢â‚¬â€ avatar Player LÃ¡Â»Å¡N GÃ¡ÂºÂ¤P Ã„ÂÃƒâ€I enemy: chÃ¡Â»â€°
 // nhÃƒÂ¢n lÃƒÂªn PLAYER sprite, khÃƒÂ´ng Ã„â€˜Ã¡Â»Â¥ng enemy/VFX footprint. KÃƒÂ­ch thÃ†Â°Ã¡Â»â€ºc cuÃ¡Â»â€˜i
@@ -1677,7 +1677,7 @@ export class CombatScene extends Phaser.Scene {
     })
 
     this.flashColor(target, CRITICAL_FLASH_COLOR, 120)
-    this.showFloatingText(target, 'ChÃƒÂ­ MÃ¡ÂºÂ¡ng!', '#ffd54f')
+    this.showFloatingText(target, 'Chí Mạng!', '#ffd54f')
   }
 
   onHit(event: CombatScenePayload) {
@@ -1715,7 +1715,7 @@ export class CombatScene extends Phaser.Scene {
       ease: 'Quad.easeOut',
     })
 
-    this.showFloatingText(dodger, 'NÃƒÂ©!', '#8be9fd')
+    this.showFloatingText(dodger, 'Né!', '#8be9fd')
   }
 
   onCast(event: CombatScenePayload) {

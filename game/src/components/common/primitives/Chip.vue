@@ -20,7 +20,11 @@ withDefaults(defineProps<{
     :class="{ 'is-active': active }"
     :disabled="disabled"
   >
-    <InkNineSlice asset-id="frame-xs-ink-line" layer="frame" />
+    <InkNineSlice
+      asset-id="frame-xs-ink-line"
+      layer="frame"
+      :tint-var="active ? '--chrome-300' : undefined"
+    />
     <span class="chip__content"><slot /></span>
   </button>
 </template>
@@ -31,8 +35,8 @@ withDefaults(defineProps<{
   isolation: isolate;
   min-height: var(--tap-min);
   padding: var(--space-1) var(--space-2);
-  background: transparent;
-  color: var(--paper-text-soft, #5e5a50);
+  background: var(--ink-800);
+  color: var(--text-secondary);
   border: 0;
   border-radius: var(--radius-sm);
   font-family: var(--font-body);
@@ -42,8 +46,8 @@ withDefaults(defineProps<{
 }
 
 .chip.is-active {
-  background: var(--chip-active-bg, transparent);
-  color: var(--paper-text, #211f1a);
+  background: var(--chip-active-bg, var(--ink-800));
+  color: var(--chrome-100);
 }
 
 .chip:focus-visible {

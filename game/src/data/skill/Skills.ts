@@ -16,7 +16,7 @@ const KIEM_TRAN_SKILLS: Skill[] = TRAN_SEQUENCE.map((entry) => ({
 
   name: entry.name,
 
-  description: entry.skillDescription ?? `BÃ y ${entry.name}, ${entry.swordCount} thanh phi kiáº¿m há»£p lá»±c chÃ©m liÃªn hoÃ n.`,
+  description: entry.skillDescription ?? `Bày ${entry.name}, ${entry.swordCount} thanh phi kiếm hợp lực chém liên hoàn.`,
 
   type: 'active',
 
@@ -80,9 +80,9 @@ export const SKILLS: Skill[] = [
   {
     id: 'tram',
 
-    name: 'Huy Kiáº¿m',
+    name: 'Huy Kiếm',
 
-    description: 'Má»™t chiÃªu thá»©c cÆ¡ báº£n, khÃ´ng tá»‘n tÃ i nguyÃªn.',
+    description: 'Một chiêu thức cơ bản, không tốn tài nguyên.',
 
     type: 'active',
 
@@ -596,9 +596,9 @@ export const SKILLS: Skill[] = [
   {
     id: 'passive_kiem_tam_lanh_liet',
 
-    name: 'Kiáº¿m TÃ¢m LÃ£nh Liá»‡t',
+    name: 'Kiếm Tâm Lãnh Liệt',
 
-    description: 'TÃ¢m kiáº¿m láº¡nh lÃ¹ng sáº¯c bÃ©n, má»—i Ä‘Ã²n chÃ­ máº¡ng cÃ ng thÃªm pháº§n quyáº¿t liá»‡t.',
+    description: 'Tâm kiếm lạnh lùng sắc bén, mỗi đòn chí mạng càng thêm phần quyết liệt.',
 
     type: 'passive',
 
@@ -652,9 +652,9 @@ export const SKILLS: Skill[] = [
   {
     id: 'bat_kiem_thuat',
 
-    name: 'Báº¡t Kiáº¿m Thuáº­t',
+    name: 'Bạt Kiếm Thuật',
 
-    description: 'Tá»¥ lá»±c kiáº¿m Ã½, má»—i vÃ i giÃ¢y quáº¡t má»™t kiáº¿m khÃ­ xuyÃªn thiÃªn Ä‘á»‹a, sÃ¡t thÆ°Æ¡ng toÃ n mÃ n hÃ¬nh.',
+    description: 'Tụ lực kiếm ý, mỗi vài giây quạt một kiếm khí xuyên thiên địa, sát thương toàn màn hình.',
 
     type: 'active',
 
@@ -704,9 +704,9 @@ export const SKILLS: Skill[] = [
   {
     id: 'passive_linh_khi_cam_ung',
 
-    name: 'Linh KhÃ­ Cáº£m á»¨ng',
+    name: 'Linh Khí Cảm Ứng',
 
-    description: 'Cáº£m nháº­n linh khÃ­ xung quanh, má»—i Ä‘Ã²n Ä‘Ã¡nh trÃºng tÄƒng dáº§n cÃ´ng kÃ­ch.',
+    description: 'Cảm nhận linh khí xung quanh, mỗi đòn đánh trúng tăng dần công kích.',
 
     type: 'passive',
 
@@ -752,9 +752,9 @@ export const SKILLS: Skill[] = [
   {
     id: 'passive_truc_co_y_chi',
 
-    name: 'TrÃºc CÆ¡ Ã ChÃ­',
+    name: 'Trúc Cơ Ý Chí',
 
-    description: 'Ná»n táº£ng Ä‘áº¡o tÃ¢m vá»¯ng cháº¯c, má»—i láº§n chá»‹u Ä‘Ã²n tÄƒng dáº§n phÃ²ng ngá»±.',
+    description: 'Nền tảng đạo tâm vững chắc, mỗi lần chịu đòn tăng dần phòng ngự.',
 
     type: 'passive',
 
@@ -800,9 +800,9 @@ export const SKILLS: Skill[] = [
   {
     id: 'passive_kim_dan_chi_quang',
 
-    name: 'Kim Äan Chi Quang',
+    name: 'Kim Đan Chi Quang',
 
-    description: 'Kim Ä‘an tá»a sÃ¡ng má»—i khi ra Ä‘Ã²n chÃ­ máº¡ng, tÄƒng dáº§n sÃ¡t thÆ°Æ¡ng chÃ­ máº¡ng.',
+    description: 'Kim đan tỏa sáng mỗi khi ra đòn chí mạng, tăng dần sát thương chí mạng.',
 
     type: 'passive',
 
@@ -848,7 +848,7 @@ export const SKILLS: Skill[] = [
   {
     id: 'passive_nguyen_anh_minh_triet',
 
-    name: 'NguyÃªn Anh Minh Triá»‡t',
+    name: 'Nguyên Anh Minh Triệt',
 
     // PhÃ¡p Tu Redesign (magicpath, 2026-08-18) â€” cultivationRate Ä‘Ã£ bá»‹
     // xoÃ¡ khá»i Stats (tá»‘c Ä‘á»™ tu luyá»‡n giá» cá»‘ Ä‘á»‹nh, khÃ´ng ai tÄƒng Ä‘Æ°á»£c
@@ -858,7 +858,7 @@ export const SKILLS: Skill[] = [
     // hÆ°á»›ng passive nÃ y (Ä‘á»•i sang combat stat, hay bá» háº³n) khi lÃ m ná»™i
     // dung "class chÃ­nh thá»©c".
     description:
-      'NguyÃªn Anh tháº¥u triá»‡t â€” cáº£m ngá»™ sÃ¢u hÆ¡n vá»›i thiÃªn Ä‘á»‹a (hiá»‡n chÆ°a cÃ³ hiá»‡u á»©ng, Ä‘ang chá» thiáº¿t káº¿ láº¡i).',
+      'Nguyên Anh thấu triệt — cảm ngộ sâu hơn với thiên địa (hiện chưa có hiệu ứng, đang chờ thiết kế lại).',
 
     type: 'passive',
 
@@ -889,9 +889,9 @@ export const SKILLS: Skill[] = [
   {
     id: 'passive_hoa_than_chi_uy',
 
-    name: 'HÃ³a Tháº§n Chi Uy',
+    name: 'Hóa Thần Chi Uy',
 
-    description: 'Uy Ã¡p HÃ³a Tháº§n, má»—i láº§n háº¡ gá»¥c Ä‘á»‹ch nhÃ¢n tÄƒng dáº§n sá»©c táº¥n cÃ´ng.',
+    description: 'Uy áp Hóa Thần, mỗi lần hạ gục địch nhân tăng dần sức tấn công.',
 
     type: 'passive',
 
@@ -937,9 +937,9 @@ export const SKILLS: Skill[] = [
   {
     id: 'passive_luyen_hu_bo',
 
-    name: 'Luyá»‡n HÆ° Bá»™',
+    name: 'Luyện Hư Bộ',
 
-    description: 'ThÃ¢n hÃ¬nh hÃ²a vÃ o hÆ° khÃ´ng, má»—i láº§n thi triá»ƒn skill tÄƒng dáº§n tá»‘c Ä‘á»™ ra Ä‘Ã²n.',
+    description: 'Thân hình hòa vào hư không, mỗi lần thi triển skill tăng dần tốc độ ra đòn.',
 
     type: 'passive',
 
@@ -985,9 +985,9 @@ export const SKILLS: Skill[] = [
   {
     id: 'passive_hop_the_chi_khu',
 
-    name: 'Há»£p Thá»ƒ Chi Khu',
+    name: 'Hợp Thể Chi Khu',
 
-    description: 'ThÃ¢n thá»ƒ vÃ  tháº§n há»“n há»£p nháº¥t, má»—i Ä‘Ã²n xuáº¥t kÃ­ch tÄƒng dáº§n khÃ­ huyáº¿t tá»‘i Ä‘a.',
+    description: 'Thân thể và thần hồn hợp nhất, mỗi đòn xuất kích tăng dần khí huyết tối đa.',
 
     type: 'passive',
 
@@ -1033,9 +1033,9 @@ export const SKILLS: Skill[] = [
   {
     id: 'passive_dai_thua_dao_tam',
 
-    name: 'Äáº¡i Thá»«a Äáº¡o TÃ¢m',
+    name: 'Đại Thừa Đạo Tâm',
 
-    description: 'Äáº¡o tÃ¢m viÃªn mÃ£n, má»—i Ä‘Ã²n Ä‘Ã¡nh trÃºng tÄƒng dáº§n phÃ¡p lá»±c.',
+    description: 'Đạo tâm viên mãn, mỗi đòn đánh trúng tăng dần pháp lực.',
 
     type: 'passive',
 
@@ -1086,9 +1086,9 @@ export const SKILLS: Skill[] = [
   {
     id: 'passive_do_kiep_chi_tam',
 
-    name: 'Äá»™ Kiáº¿p Chi TÃ¢m',
+    name: 'Độ Kiếp Chi Tâm',
 
-    description: 'TÃ¢m cáº£nh kiÃªn Ä‘á»‹nh qua thiÃªn kiáº¿p, má»—i giÃ¢y trong tráº­n tÄƒng dáº§n tá»‰ lá»‡ chÃ­ máº¡ng.',
+    description: 'Tâm cảnh kiên định qua thiên kiếp, mỗi giây trong trận tăng dần tỉ lệ chí mạng.',
 
     type: 'passive',
 
@@ -1137,9 +1137,9 @@ export const SKILLS: Skill[] = [
   {
     id: 'passive_thai_hu_kiem_y',
 
-    name: 'ThÃ¡i HÆ° Kiáº¿m Ã',
+    name: 'Thái Hư Kiếm Ý',
 
-    description: 'Kiáº¿m Ã½ tháº¥u triá»‡t hÆ° vÃ´, má»—i Ä‘Ã²n chÃ­ máº¡ng dá»“n thÃªm sÃ¡t khÃ­.',
+    description: 'Kiếm ý thấu triệt hư vô, mỗi đòn chí mạng dồn thêm sát khí.',
 
     type: 'passive',
 
@@ -1183,9 +1183,9 @@ export const SKILLS: Skill[] = [
   {
     id: 'passive_kim_cang_y_chi',
 
-    name: 'Kim Cang Ã ChÃ­',
+    name: 'Kim Cang Ý Chí',
 
-    description: 'ThÃ¢n thá»ƒ cá»©ng nhÆ° kim tháº¡ch, má»—i Ä‘Ã²n chá»‹u Ä‘au cÃ ng thÃªm vá»¯ng vÃ ng.',
+    description: 'Thân thể cứng như kim thạch, mỗi đòn chịu đau càng thêm vững vàng.',
 
     type: 'passive',
 

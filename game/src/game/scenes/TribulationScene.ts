@@ -30,7 +30,7 @@ export class TribulationScene extends Phaser.Scene {
   }
   private exitHandler = () => this.scene.start('MainScene')
   private resizeHandler = (gameSize: ResizeSize) => {
-    this.viewportFrame?.setSize(gameSize.width - 24, gameSize.height - 24)
+    this.viewportFrame?.setSize(Math.max(0, gameSize.width - 24), Math.max(0, gameSize.height - 24))
   }
   private shutdownHandler = () => {
     this.scale.off('resize', this.resizeHandler)

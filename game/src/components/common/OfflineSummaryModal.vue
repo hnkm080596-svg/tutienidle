@@ -6,9 +6,9 @@
 // XIV có "+ Tài nguyên/+ Progress" nhưng đó là ví dụ minh hoạ, không
 // phải data thật đang có).
 import { formatNumber } from '@/core/format/NumberFormatter'
-import GamePanel from './GamePanel.vue'
 import GameButton from './GameButton.vue'
 import StatRow from './primitives/StatRow.vue'
+import InkNineSlice from './primitives/InkNineSlice.vue'
 
 const props = defineProps<{
   elapsedSeconds: number
@@ -32,7 +32,10 @@ function formatDuration(seconds: number): string {
 
 <template>
   <div class="offline-summary">
-    <GamePanel class="offline-summary__panel" variant="ornate" padding="sm">
+    <section class="offline-summary__panel">
+      <InkNineSlice asset-id="surface-m-paper" layer="surface" />
+      <InkNineSlice asset-id="frame-m-seal-corner" layer="frame" :thickness="18" />
+
       <h3 class="offline-summary__title">BẾ QUAN KẾT THÚC</h3>
 
       <ul class="offline-summary__rows">
@@ -48,7 +51,7 @@ function formatDuration(seconds: number): string {
       </ul>
 
       <GameButton class="offline-summary__continue" @click="emit('close')">Tiếp Tục</GameButton>
-    </GamePanel>
+    </section>
   </div>
 </template>
 
@@ -63,13 +66,28 @@ function formatDuration(seconds: number): string {
   background: var(--scrim);
 }
 
-/* Selector lặp class để thắng specificity của GamePanel.vue's
-   `.game-panel { height: 100% }` — modal card này phải co theo nội
-   dung, không được kéo full-height của backdrop. */
-.offline-summary__panel.offline-summary__panel {
-  height: auto;
-  min-width: min(320px, 92vw);
+/* M-tier InkNineSlice (surface-m-paper + frame-m-seal-corner) thay
+   cho GamePanel ornate (frame-xl-ceremony, slice 80px) — khung XL vẽ
+   đè lên nội dung ở card nhỏ 320px vì băng khung 80px mỗi bên không
+   còn chỗ cho padding hợp lý. thickness="18" (thay vì slice gốc 32px)
+   thu nhỏ mực vẽ lại — 32px nguyên bản quá dày với card 320-420px,
+   nuốt gần hết cạnh thành 1 dải đen. Padding nới thêm để chữ lùi hẳn
+   vào trong, không còn sát viền mực. */
+.offline-summary__panel {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
+  min-width: min(320px, 92vw);
+  padding: 44px 40px;
+  color: var(--paper-text, #211f1a);
+  font-family: var(--font-body);
+}
+
+.offline-summary__panel > :not(.ink-nine-slice) {
+  position: relative;
+  z-index: 3;
 }
 
 .offline-summary__title {
@@ -77,7 +95,7 @@ function formatDuration(seconds: number): string {
   font-family: var(--font-display);
   font-size: var(--text-title);
   letter-spacing: 0.06em;
-  color: var(--chrome-100);
+  color: var(--paper-text, #211f1a);
   text-align: center;
 }
 

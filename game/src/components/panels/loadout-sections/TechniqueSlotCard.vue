@@ -225,6 +225,9 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
   align-items: center;
   text-align: center;
   gap: 6px;
+  width: 100%;
+  max-width: 220px;
+  margin: 0 auto;
   padding: 14px 10px;
 }
 
