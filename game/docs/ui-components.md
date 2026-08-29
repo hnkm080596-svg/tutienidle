@@ -1,16 +1,46 @@
 # UI Components — Đặc tả toàn bộ giao diện
 
-> Cập nhật: 2026-08-29 (sau UI primitives refactor)
-> Nguồn sự thật về màu: `game/src/assets/theme.css` — theme **"Mực & Bạc"** (Ink & Silver)
+> Cập nhật: 2026-08-29 (sau ink-wash nine-slice refactor)
+> Nguồn sự thật về màu: `game/src/assets/theme.css` — theme **"Mực và Giấy Trắng"**
 
 ## Tổng quan
 
-- **94 component Vue** chia theo 14 nhóm thư mục (xem mục lục).
+- **96 component Vue** chia theo 14 nhóm thư mục (xem mục lục).
 - Stack: Vue 3 + TypeScript, CSS scoped thuần. Không UI library (Tailwind/Element Plus...), không preprocessor (Sass/Less).
 - Riêng `App.vue` dùng `<style>` global (reset body + boot-error); `src/assets/theme.css` là biến theme toàn cục; mọi component còn lại dùng `<style scoped>`.
 - Gần như **100% màu đi qua CSS variables** — hex/rgba cứng chỉ xuất hiện trong shadow và mask hiệu ứng.
 - **Lớp primitives (mới 2026-08-29)**: `common/primitives/` (Bar, Chip, Eyebrow, StatRow, EmptyState) + composite `SceneHeader` là nguồn sự thật duy nhất cho 6 pattern từng bị trùng lặp (~90 đoạn CSS tự viết trên ~30 file đã được hợp nhất).
 - Nguyên tắc primitives: **props chỉ điều khiển hành vi, mọi visual qua CSS var** — nơi dùng override `style="--bar-from: var(--el-color)"` thay vì thêm prop.
+
+### Hệ UI thủy mặc 9-slice
+
+UI không còn được xem như các hộp hiện đại đặt trên tranh. Khung, nút, panel và
+backdrop là các nét mực/giấy nằm trong cùng một bức thủy mặc; chữ, số và trạng
+thái tương tác vẫn được render sống để giữ khả năng đọc và accessibility.
+
+- Nguồn metadata duy nhất: `src/assets/ink-wash-ui-slices.json`; API TypeScript:
+  `src/assets/inkWashUi.ts`.
+- Primitive Vue: `common/primitives/InkNineSlice.vue`; adapter Phaser:
+  `game/support/InkWashUiPhaser.ts`.
+- Runtime: PNG `@1x/@2x`, atlas Phaser 2048px có extrusion, và sáu overlay tranh
+  trong `public/assets/ui/ink-wash/`.
+- Màu vật liệu: giấy tuyên ấm trắng + mực carbon + wash xám khói. Chu sa, ngọc,
+  thanh khoáng và kim nhạt chỉ là sắc tố semantic; không dùng bạc kim loại,
+  neon, bevel hoặc glow hiện đại làm ngôn ngữ khung.
+
+| Tier | Logical source | Slice | Vai trò |
+| --- | ---: | ---: | --- |
+| XS | 64×64 | 12 | viền mực nhỏ, chip, badge, vòng icon |
+| S | 192×64 / 96×96 | 24×16 / 20 | button và slot |
+| M | 192×192 | 32 | giấy card/tooltip và khung góc ấn |
+| L | 320×320 | 48 | data surface tối và panel phong cảnh |
+| XL | 512×512 | 80 | scroll/form dài, modal và nghi lễ toàn màn hình |
+
+Quy tắc bắt buộc: corner cố định; edge center thẳng và yên; decoration không
+được cắt qua slice line; frame có center alpha 0; paper/data surface dùng `fill`;
+asset không chứa chữ/icon; decorative DOM luôn `aria-hidden` và
+`pointer-events: none`. `InkWashBackdrop` chỉ nối bố cục bằng núi, sương, trúc
+và ấn—không được che hoặc nhận input của nội dung.
 
 ## Mục lục
 
@@ -47,14 +77,18 @@
 | `--ink-line`      | `#33333f` | Viền chuẩn                               |
 | `--ink-line-soft` | `#24242c` | Viền mềm                                 |
 
-### Họ bạc (Chrome) — thay vàng từ 2026-08-28
+### Họ giấy và nét mực (các alias `--chrome-*` kế thừa)
 
 | Token          | Hex       | Vai trò                                 |
 | -------------- | --------- | --------------------------------------- |
-| `--chrome-100` | `#f4f1ea` | Bạc trắng — nút chính, title, corner    |
-| `--chrome-300` | `#d9d4c7` | Bạc sáng — viền đang chọn, focus        |
-| `--chrome-500` | `#b3ada0` | Bạc — eyebrow, viền ngoài               |
-| `--chrome-700` | `#7c7870` | Bạc tối — disabled, tint nền onboarding |
+| `--chrome-100` | `#f4f1ea` | Giấy sáng — title, corner               |
+| `--chrome-300` | `#d9d4c7` | Giấy ngà — viền đang chọn, focus        |
+| `--chrome-500` | `#b3ada0` | Mực nhạt — eyebrow, chi tiết ngoài      |
+| `--chrome-700` | `#7c7870` | Mực chìm — disabled, chi tiết phụ       |
+
+Tên `chrome` chỉ được giữ để tương thích component cũ; hệ mới không mô phỏng bạc
+kim loại. Surface trung tính mới dùng trực tiếp `--paper-*`, `--brush-*`,
+`--paper-text`, `--paper-line` và các pigment `--cinnabar`/`--mineral-*`.
 
 (Vàng giờ **chỉ là màu dữ liệu**: `--gold-100..700` — rank 7 "kim", Nộ Khí, dot trạng thái.)
 
@@ -103,7 +137,7 @@ Mộc `#7cb342` · Hỏa `#e53935` · Thổ `#a1795a` · Kim `#cfd8dc` · Thủy
 | `--text-xs…hero`                  | `12/13/14/15/16/18/20/24/32/96px` × `var(--ui-scale,1)` (set runtime qua Settings 90–125%)                                              |
 | `--tap-min` / `--tap-comfortable` | `40px` / `44px` × ui-scale                                                                                                              |
 | `--combat-*-h`                    | clamp chiều cao 4 bar combat (topbar 46–72 / status 44–68 / event 32–48 / control 48–76px)                                              |
-| Class `.ornate-frame`             | Khung triện 3 lớp bạc (outer `--chrome-500` + inner `--chrome-300` + corner `--chrome-100`) — thả `<span class="ornate-frame" />` là có |
+| Class `.ornate-frame`             | Khung triện code-native kế thừa (outer `--chrome-500` + inner `--chrome-300` + corner `--chrome-100`); khung 9-slice mới ưu tiên `InkNineSlice` |
 | Scrollbar                         | Ẩn toàn app (`scrollbar-width: none` + webkit) — panel vẫn scroll                                                                       |
 
 ---

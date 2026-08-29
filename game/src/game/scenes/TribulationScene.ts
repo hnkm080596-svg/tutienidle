@@ -3,12 +3,22 @@ import type { EventBus } from '@/core/events/EventBus'
 import type { EntityVitalsChangedEvent } from '@/core/combat/EntityVitalsSystem'
 import type { CombatEvent } from '@/core/combat/CombatEvent'
 import { formatNumber } from '@/core/format/NumberFormatter'
+import {
+  addInkWashNineSlice,
+  queueInkWashUiAtlas,
+} from '@/game/support/InkWashUiPhaser'
 
 const CULTIVATE_KEY = 'char-cultivate'
 const FRAME_RATE = 8
 
+interface ResizeSize {
+  width: number
+  height: number
+}
+
 export class TribulationScene extends Phaser.Scene {
   private player?: Phaser.GameObjects.Sprite
+  private viewportFrame?: Phaser.GameObjects.NineSlice
   private eventBus?: EventBus
   private lightningHandler = () => this.strikeLightning()
   private damageHandler = (event: CombatEvent) => this.showDamage(event)
@@ -19,6 +29,14 @@ export class TribulationScene extends Phaser.Scene {
     if (event.entityId === 'player') this.player?.setAlpha(event.killed ? 0.35 : 1)
   }
   private exitHandler = () => this.scene.start('MainScene')
+  private resizeHandler = (gameSize: ResizeSize) => {
+    this.viewportFrame?.setSize(gameSize.width - 24, gameSize.height - 24)
+  }
+  private shutdownHandler = () => {
+    this.scale.off('resize', this.resizeHandler)
+    this.viewportFrame = undefined
+    this.unsubscribe()
+  }
 
   constructor() {
     super('TribulationScene')
@@ -28,11 +46,20 @@ export class TribulationScene extends Phaser.Scene {
     if (!this.textures.exists(CULTIVATE_KEY)) {
       this.load.multiatlas(CULTIVATE_KEY, 'assets/cultivate.json', 'assets')
     }
+    queueInkWashUiAtlas(this)
   }
 
   create() {
     const { width, height } = this.scale
     this.add.rectangle(width / 2, height / 2, width, height, 0x050812)
+    this.viewportFrame = addInkWashNineSlice(this, {
+      id: 'frame-xl-ceremony',
+      x: 12,
+      y: 12,
+      width: width - 24,
+      height: height - 24,
+      origin: 0,
+    })
     this.add.circle(width / 2, height * 0.62, Math.min(width, height) * 0.2, 0x273064, 0.35)
       .setStrokeStyle(3, 0x879cff, 0.7)
     this.add.text(width / 2, height * 0.17, 'THIÊN KIẾP', {
@@ -61,7 +88,8 @@ export class TribulationScene extends Phaser.Scene {
       bus.on('tribulation_scene_exit', this.exitHandler)
     }
 
-    this.events.once('shutdown', () => this.unsubscribe())
+    this.scale.on('resize', this.resizeHandler)
+    this.events.once('shutdown', this.shutdownHandler)
   }
 
   private strikeLightning() {

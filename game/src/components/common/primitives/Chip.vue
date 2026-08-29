@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import InkNineSlice from './InkNineSlice.vue'
 // Primitive pill chọn được — atom cho TabBar và mọi filter/mode switcher.
 // Công thức chuẩn: idle ink-800 + ink-line-soft + text-secondary; active
 // viền --chrome-300 + chữ --chrome-100. Nền active điều khiển qua CSS var
@@ -19,17 +20,20 @@ withDefaults(defineProps<{
     :class="{ 'is-active': active }"
     :disabled="disabled"
   >
-    <slot />
+    <InkNineSlice asset-id="frame-xs-ink-line" layer="frame" />
+    <span class="chip__content"><slot /></span>
   </button>
 </template>
 
 <style scoped>
 .chip {
+  position: relative;
+  isolation: isolate;
   min-height: var(--tap-min);
   padding: var(--space-1) var(--space-2);
-  background: var(--ink-800);
-  color: var(--text-secondary);
-  border: 1px solid var(--ink-line-soft);
+  background: transparent;
+  color: var(--paper-text-soft, #5e5a50);
+  border: 0;
   border-radius: var(--radius-sm);
   font-family: var(--font-body);
   font-size: var(--text-xs);
@@ -39,8 +43,7 @@ withDefaults(defineProps<{
 
 .chip.is-active {
   background: var(--chip-active-bg, transparent);
-  border-color: var(--chrome-300);
-  color: var(--chrome-100);
+  color: var(--paper-text, #211f1a);
 }
 
 .chip:focus-visible {
@@ -51,5 +54,10 @@ withDefaults(defineProps<{
 .chip:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.chip__content {
+  position: relative;
+  z-index: 3;
 }
 </style>

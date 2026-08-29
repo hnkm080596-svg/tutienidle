@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import InkNineSlice from './primitives/InkNineSlice.vue'
+import type { InkWashUiAssetId } from '@/assets/inkWashUi'
 // Shared chrome primitive (UI/UX rework Giai đoạn A) — thay button
 // hand-roll (mỗi panel tự khai background/color/border riêng) bằng 1
 // component dùng chung, tái dùng token --gold/--jade/--crimson/--tap-*
 // có sẵn trong theme.css.
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost'
   size?: 'sm' | 'md' | 'lg'
   shape?: 'rect' | 'circle'
@@ -22,6 +25,21 @@ withDefaults(defineProps<{
 })
 
 defineEmits<{ click: [MouseEvent] }>()
+
+const sliceAsset = computed<InkWashUiAssetId>(() => {
+  if (props.shape === 'circle') return 'frame-xs-ink-line'
+  switch (props.variant) {
+    case 'secondary': return 'button-s-ink'
+    case 'danger': return 'button-s-seal'
+    case 'ghost': return 'frame-xs-ink-line'
+    default: return 'button-s-paper'
+  }
+})
+
+const sliceLayer = computed(() => (
+  sliceAsset.value.startsWith('frame-') ? 'frame' as const : 'surface' as const
+))
+const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : undefined))
 </script>
 
 <template>
@@ -33,6 +51,7 @@ defineEmits<{ click: [MouseEvent] }>()
     :disabled="disabled || loading"
     @click="$emit('click', $event)"
   >
+    <InkNineSlice :asset-id="sliceAsset" :layer="sliceLayer" :tint-var="sliceTint" />
     <span v-if="loading" class="game-button__spinner" aria-hidden="true" />
     <span class="game-button__label"><slot /></span>
   </button>
@@ -40,16 +59,20 @@ defineEmits<{ click: [MouseEvent] }>()
 
 <style scoped>
 .game-button {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  border: 1px solid transparent;
+  border: 0;
   border-radius: var(--radius-sm);
   font-family: var(--font-body);
   font-weight: 700;
   cursor: pointer;
-  transition: box-shadow 150ms ease, transform 150ms ease, opacity 150ms ease, border-color 150ms ease, color 150ms ease;
+  background: transparent;
+  transition: transform 120ms ease, opacity 120ms ease, color 120ms ease;
 }
 
 .game-button:disabled {
@@ -76,45 +99,35 @@ defineEmits<{ click: [MouseEvent] }>()
 }
 
 .game-button--primary {
-  background: linear-gradient(180deg, var(--chrome-100), var(--chrome-500));
-  color: var(--ink-950);
+  color: var(--paper-text, #211f1a);
 }
 
 .game-button--primary:not(:disabled):hover {
-  box-shadow: var(--shadow-glow-chrome);
-  transform: translateY(-1px);
+  color: var(--brush-950, #171713);
 }
 
 .game-button--secondary {
-  background: var(--ink-800);
-  color: var(--text-primary);
-  border-color: var(--ink-line);
+  color: var(--paper-50, #f5f0e4);
 }
 
 .game-button--secondary:not(:disabled):hover {
-  border-color: var(--chrome-300);
-  color: var(--chrome-100);
+  color: #fff;
 }
 
 .game-button--danger {
-  background: var(--crimson);
   color: #fff;
 }
 
 .game-button--danger:not(:disabled):hover {
-  box-shadow: 0 0 12px -2px var(--crimson);
-  transform: translateY(-1px);
+  color: var(--paper-50, #f5f0e4);
 }
 
 .game-button--ghost {
-  background: transparent;
-  color: var(--text-secondary);
-  border-color: var(--ink-line-soft);
+  color: var(--paper-text-soft, #5e5a50);
 }
 
 .game-button--ghost:not(:disabled):hover {
-  color: var(--chrome-100);
-  border-color: var(--chrome-500);
+  color: var(--paper-text, #211f1a);
 }
 
 .game-button:focus-visible {
@@ -130,10 +143,24 @@ defineEmits<{ click: [MouseEvent] }>()
   border-radius: 50%;
 }
 
+.game-button:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+.game-button:not(:disabled):active :deep(.ink-nine-slice) {
+  opacity: 0.82 !important;
+}
+
 /* Accent động theo scene — fill đổ gradient từ 1 CSS var của nơi dùng
    (ví dụ accentVar="--scene-fire-text" cho lò đan). */
 .game-button--primary.has-accent {
-  background: linear-gradient(180deg, var(--button-accent), color-mix(in srgb, var(--button-accent) 72%, var(--ink-950)));
+  color: var(--button-accent);
+}
+
+.game-button__label,
+.game-button__spinner {
+  position: relative;
+  z-index: 3;
 }
 
 .game-button__spinner {

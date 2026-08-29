@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import GameButton from '@/components/common/GameButton.vue'
+import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
+import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { TALENT_RARITY_LABELS, type TalentDefinition } from '@/core/talent/Talent'
 import { characterCreationService } from '@/services/character/CharacterCreationServiceFactory'
 import { isValidCharacterName } from '@/services/character/CharacterCreationService'
@@ -68,6 +70,7 @@ onMounted(() => { void reroll() })
 
 <template>
   <main class="creation-screen" data-testid="character-creation-screen">
+    <InkWashBackdrop left-mountain right-mountain bottom-mist />
     <header class="creation-header">
       <GameButton variant="ghost" size="sm" @click="step === 1 ? emit('back') : step--">← Trở lại</GameButton>
       <div><p>KHAI MỆNH</p><h1>Tạo Nhân Vật</h1></div>
@@ -79,7 +82,8 @@ onMounted(() => { void reroll() })
     </nav>
 
     <section v-if="step === 1" class="creation-panel name-step">
-      <span class="ornate-frame" aria-hidden="true" />
+      <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
+      <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
       <p class="kicker">ĐẠO DANH</p><h2>Danh xưng theo suốt tiên đồ</h2>
       <p>Tên nhân vật sẽ là duy nhất và không thể đổi trong giai đoạn đầu.</p>
       <label><span>Tên nhân vật</span><input v-model="name" maxlength="20" autofocus placeholder="Nhập đạo danh…" data-testid="creation-name-input" /></label>
@@ -88,7 +92,8 @@ onMounted(() => { void reroll() })
     </section>
 
     <section v-else-if="step === 2" class="creation-panel talent-step">
-      <span class="ornate-frame" aria-hidden="true" />
+      <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
+      <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
       <div class="panel-heading"><div><p class="kicker">THIÊN MỆNH</p><h2>Chọn một Thiên Phú</h2></div><strong>Đã chọn {{ selectedTalentIds.length }} / 1</strong></div>
       <p v-if="rolling" class="loading-roll">Đang quan sát thiên cơ…</p>
       <p v-else-if="error && talents.length === 0" class="loading-roll">{{ error }}</p>
@@ -101,7 +106,8 @@ onMounted(() => { void reroll() })
     </section>
 
     <section v-else class="creation-panel attribute-step">
-      <span class="ornate-frame" aria-hidden="true" />
+      <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
+      <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
       <div class="panel-heading"><div><p class="kicker">CĂN CƠ</p><h2>Phân bổ điểm khởi đầu</h2></div><strong class="points">Còn {{ pointsLeft }} điểm</strong></div>
       <div class="attribute-list">
         <div v-for="(label, key) in attributeLabels" :key="key" class="attribute-row" :data-testid="`creation-attribute-${key}`"><div><b>{{ label.name }}</b><small>{{ label.hint }}</small></div><div class="counter"><button type="button" @click="changeAttribute(key, -1)">−</button><span>{{ attributes[key] }}</span><button type="button" :data-testid="`creation-attribute-plus-${key}`" @click="changeAttribute(key, 1)">+</button></div></div>
@@ -114,13 +120,15 @@ onMounted(() => { void reroll() })
 </template>
 
 <style scoped>
-.creation-screen { width: 100vw; height: 100vh; box-sizing: border-box; overflow: auto; padding: 22px clamp(20px,5vw,72px) 34px; background: radial-gradient(circle at 50% -15%, color-mix(in srgb, var(--chrome-700) 8%, var(--ink-950)), var(--ink-900) 42%, var(--ink-950) 85%); }
+.creation-screen { position: relative; width: 100vw; height: 100vh; box-sizing: border-box; overflow: auto; padding: 22px clamp(20px,5vw,72px) 34px; color: var(--paper-text, #211f1a); background: var(--paper-50, #f5f0e4); }
+.creation-header,.stepper,.creation-panel { position: relative; z-index: 1; }
 .creation-header { max-width: 1120px; margin: 0 auto; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; text-align: center; }.creation-header button { justify-self: start; }.creation-header span { justify-self: end; color: var(--text-muted); font-size: var(--text-xs); }.creation-header p,.kicker { margin: 0; color: var(--chrome-500); font-size: var(--text-xs); letter-spacing: .25em; }.creation-header h1 { margin: 4px 0; font: 700 var(--text-display) var(--font-display); }
-.stepper { max-width: 420px; margin: 18px auto 24px; display: flex; align-items: center; }.stepper i { display: flex; flex: 1; align-items: center; color: var(--ink-line); }.stepper i::after { content: ''; height: 1px; flex: 1; background: currentColor; }.stepper i:last-child { flex: 0; }.stepper i:last-child::after { display: none; }.stepper b { width: 26px; height: 26px; display: grid; place-items: center; border: 1px solid currentColor; border-radius: 50%; font: 500 var(--text-xs) var(--font-body); }.stepper i.active { color: var(--chrome-100); }
-.creation-panel { position: relative; max-width: 1120px; margin: auto; box-sizing: border-box; border-radius: var(--radius-md); padding: clamp(22px,3vw,36px); background: linear-gradient(160deg, var(--ink-950), var(--ink-800)); box-shadow: var(--shadow-panel); }
-.creation-panel h2 { margin: 5px 0 8px; font: 600 var(--text-display) var(--font-display); }.creation-panel>p:not(.kicker) { color: var(--text-secondary); }.name-step { max-width: 560px; text-align: center; }.name-step label { display: grid; gap: 8px; margin: 30px 0 8px; text-align: left; color: var(--text-secondary); font-size: var(--text-xs); }.name-step input { padding: 15px; border: 1px solid var(--ink-line); border-radius: 6px; background: var(--ink-950); color: var(--text-primary); font: 600 var(--text-panel-title) var(--font-display); text-align: center; outline: none; }.name-step input:focus { border-color: var(--chrome-100); }.name-step small { display: block; margin-bottom: 28px; color: var(--text-muted); }.name-step small.valid { color: var(--jade); }
-.panel-heading { display: flex; justify-content: space-between; align-items: end; margin-bottom: 18px; }.panel-heading strong { color: var(--chrome-100); font-size: var(--text-xs); }.talent-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }.talent-card { position: relative; min-height: 128px; padding: 15px; border: 1px solid var(--ink-line); border-radius: var(--radius-md); background: var(--ink-900); color: var(--text-primary); text-align: left; cursor: pointer; transition: transform .15s,border-color .15s; }.talent-card:hover { transform: translateY(-2px); }.talent-card.selected { border-color: var(--chrome-300); box-shadow: inset 0 0 0 1px var(--chrome-300), 0 0 15px color-mix(in srgb, var(--chrome-300) 12%, transparent); }.talent-card__rarity { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .13em; }.talent-card h3 { margin: 7px 0; font: 600 var(--text-md) var(--font-display); }.talent-card p { margin: 0 0 8px; color: var(--text-secondary); font-size: var(--text-xs); line-height: 1.5; }.talent-card small { color: var(--text-muted); }.talent-tier-pham .talent-card__rarity{color:var(--rank-color-1)}.talent-tier-linh .talent-card__rarity{color:var(--rank-color-3)}.talent-tier-dia .talent-card__rarity{color:var(--rank-color-5)}.talent-tier-thien .talent-card__rarity{color:var(--rank-color-7)}.talent-tier-di .talent-card__rarity{color:var(--rank-color-8)}
-.panel-actions { display: flex; justify-content: space-between; gap: 12px; margin-top: 22px; }.attribute-step { max-width: 700px; }.points { padding: 8px 12px; border: 1px solid color-mix(in srgb, var(--chrome-300) 25%, transparent); border-radius: 20px; }.attribute-list { display: grid; gap: 8px; }.attribute-row { display: flex; justify-content: space-between; align-items: center; padding: 13px 16px; border: 1px solid var(--ink-line-soft); background: var(--ink-900); }.attribute-row>div:first-child { display: grid; gap: 3px; }.attribute-row small { color: var(--text-muted); }.counter { display: flex; align-items: center; gap: 16px; }.counter button { min-width: var(--tap-min); min-height: var(--tap-min); border: 1px solid var(--ink-line); border-radius: 50%; background: var(--ink-800); color: var(--chrome-100); cursor: pointer; }.counter span { min-width: 18px; text-align: center; font-weight: 700; }.creation-summary { display: flex; justify-content: center; gap: 22px; margin-top: 20px; color: var(--text-secondary); font-size: var(--text-xs); }
-.loading-roll { min-height: min(380px, 50vh); display: grid; place-items: center; color: var(--chrome-100); font-family: var(--font-display); }.creation-error { margin: 14px 0 0; color: var(--crimson); text-align: center; font-size: var(--text-xs); }
+.stepper { max-width: 420px; margin: 18px auto 24px; display: flex; align-items: center; }.stepper i { display: flex; flex: 1; align-items: center; color: var(--ink-line); }.stepper i::after { content: ''; height: 1px; flex: 1; background: currentColor; }.stepper i:last-child { flex: 0; }.stepper i:last-child::after { display: none; }.stepper b { width: 26px; height: 26px; display: grid; place-items: center; border: 1px solid currentColor; border-radius: 50%; font: 500 var(--text-xs) var(--font-body); }.stepper i.active { color: var(--cinnabar, #b54432); }
+.creation-panel { position: relative; isolation: isolate; max-width: 1120px; margin: auto; box-sizing: border-box; border-radius: 0; padding: clamp(52px,5vw,68px) clamp(30px,5vw,64px); background: transparent; box-shadow: none; }
+.creation-panel > :not(.ink-nine-slice) { position: relative; z-index: 3; }
+.creation-panel h2 { margin: 5px 0 8px; font: 600 var(--text-display) var(--font-display); }.creation-panel>p:not(.kicker) { color: var(--paper-text-soft, #5e5a50); }.name-step { max-width: 560px; text-align: center; }.name-step label { display: grid; gap: 8px; margin: 24px 0 8px; text-align: left; color: var(--paper-text-soft, #5e5a50); font-size: var(--text-xs); }.name-step input { padding: 15px; border: 1px solid var(--paper-line, rgba(42,41,36,.42)); border-radius: 2px; background: color-mix(in srgb, var(--paper-50, #f5f0e4) 88%, transparent); color: var(--paper-text, #211f1a); font: 600 var(--text-panel-title) var(--font-display); text-align: center; outline: none; }.name-step input:focus { border-color: var(--cinnabar, #b54432); }.name-step small { display: block; margin-bottom: 28px; color: var(--text-muted); }.name-step small.valid { color: var(--jade); }
+.panel-heading { display: flex; justify-content: space-between; align-items: end; margin-bottom: 18px; }.panel-heading strong { color: var(--cinnabar, #b54432); font-size: var(--text-xs); }.talent-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }.talent-card { position: relative; min-height: 128px; padding: 15px; border: 1px solid var(--paper-line, rgba(42,41,36,.42)); border-radius: 2px; background: color-mix(in srgb, var(--paper-50, #f5f0e4) 88%, transparent); color: var(--paper-text, #211f1a); text-align: left; cursor: pointer; transition: transform .15s,border-color .15s; }.talent-card:hover { transform: translateY(-2px); }.talent-card.selected { border-color: var(--cinnabar, #b54432); box-shadow: inset 0 0 0 1px var(--cinnabar, #b54432); }.talent-card__rarity { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .13em; }.talent-card h3 { margin: 7px 0; font: 600 var(--text-md) var(--font-display); }.talent-card p { margin: 0 0 8px; color: var(--paper-text-soft, #5e5a50); font-size: var(--text-xs); line-height: 1.5; }.talent-card small { color: var(--text-muted); }.talent-tier-pham .talent-card__rarity{color:var(--rank-color-1)}.talent-tier-linh .talent-card__rarity{color:var(--rank-color-3)}.talent-tier-dia .talent-card__rarity{color:var(--rank-color-5)}.talent-tier-thien .talent-card__rarity{color:var(--rank-color-7)}.talent-tier-di .talent-card__rarity{color:var(--rank-color-8)}
+.panel-actions { display: flex; justify-content: space-between; gap: 12px; margin-top: 22px; }.attribute-step { max-width: 700px; }.points { padding: 8px 12px; border: 1px solid var(--paper-line, rgba(42,41,36,.42)); border-radius: 20px; }.attribute-list { display: grid; gap: 8px; }.attribute-row { display: flex; justify-content: space-between; align-items: center; padding: 13px 16px; border: 1px solid var(--paper-line, rgba(42,41,36,.42)); background: color-mix(in srgb, var(--paper-50, #f5f0e4) 88%, transparent); }.attribute-row>div:first-child { display: grid; gap: 3px; }.attribute-row small { color: var(--text-muted); }.counter { display: flex; align-items: center; gap: 16px; }.counter button { min-width: var(--tap-min); min-height: var(--tap-min); border: 1px solid var(--paper-line, rgba(42,41,36,.42)); border-radius: 50%; background: var(--paper-50, #f5f0e4); color: var(--paper-text, #211f1a); cursor: pointer; }.counter span { min-width: 18px; text-align: center; font-weight: 700; }.creation-summary { display: flex; justify-content: center; gap: 22px; margin-top: 20px; color: var(--paper-text-soft, #5e5a50); font-size: var(--text-xs); }
+.loading-roll { min-height: min(380px, 50vh); display: grid; place-items: center; color: var(--cinnabar, #b54432); font-family: var(--font-display); }.creation-error { margin: 14px 0 0; color: var(--crimson); text-align: center; font-size: var(--text-xs); }
 @media(max-width:760px){.talent-grid{grid-template-columns:1fr 1fr}.creation-header{grid-template-columns:1fr auto}.creation-header>div{grid-column:1/-1;grid-row:1}.creation-header button{grid-row:2}.creation-header span{grid-row:2}.panel-heading{align-items:start}.creation-summary{flex-wrap:wrap}}
 </style>

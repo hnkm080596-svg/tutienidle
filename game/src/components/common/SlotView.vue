@@ -4,6 +4,7 @@ import { formatNumber } from '@/core/format/NumberFormatter'
 import type { TooltipContent } from '@/composables/useTooltip'
 import type { NameSegment } from '@/core/item/NameSegment'
 import type { SlotBadge, SlotPresentationState } from './SlotTypes'
+import InkNineSlice from './primitives/InkNineSlice.vue'
 
 // Slot Revamp — CSS-only presentation (tooltip-revamp-plan.md mục 17).
 // PNG DUY NHẤT được phép là icon riêng của item (prop `icon`); mọi
@@ -157,6 +158,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
     v-tooltip="tooltipContent"
     @click="handleClick"
   >
+    <InkNineSlice asset-id="frame-s-slot" layer="frame" />
     <!-- layer 2: icon / monogram fallback -->
     <span class="slot-view__icon-wrap">
       <img v-if="showIcon" class="slot-view__item-icon" :src="icon" :alt="label || ''" @error="onIconError" />

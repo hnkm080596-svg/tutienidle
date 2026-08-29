@@ -6,6 +6,8 @@ import { useAutoRetryCountdown } from '@/composables/useAutoRetryCountdown'
 import { useUiStore } from '@/stores/ui'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import GameButton from '@/components/common/GameButton.vue'
+import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
 
 // Combat UI Redesign mục 18/23, mở rộng 2026-08-22 — trước đây CHỈ 1
 // nút "Về Động Phủ" (không đánh lại). Giờ thêm "Tái Chiến" (LUÔN đánh
@@ -79,6 +81,9 @@ onMounted(() => {
 
 <template>
   <div class="combat-defeat-panel">
+    <InkWashBackdrop left-mountain bottom-mist :right-mountain="false" />
+    <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
+    <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" tint-var="--cinnabar" />
     <h2 class="combat-defeat-panel__title">☠ THẤT BẠI</h2>
 
     <div v-if="hasAnyReward" class="combat-defeat-panel__rewards">
@@ -107,15 +112,22 @@ onMounted(() => {
 
 <style scoped>
 .combat-defeat-panel {
+  position: relative;
+  isolation: isolate;
   box-sizing: border-box;
   width: min(420px, calc(100vw - 32px));
   padding: 28px 32px;
-  background: var(--ink-900);
-  border: 1px solid var(--crimson);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-panel);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
   text-align: center;
   font-family: var(--font-body);
+}
+
+.combat-defeat-panel > :not(.ink-nine-slice):not(.ink-wash-backdrop) {
+  position: relative;
+  z-index: 3;
 }
 
 .combat-defeat-panel__title {
@@ -139,7 +151,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   font-size: var(--text-body);
-  color: var(--text-secondary);
+  color: var(--paper-text-soft, #5e5a50);
 }
 
 .combat-defeat-panel__rewards p span {

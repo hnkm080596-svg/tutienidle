@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import GameButton from '@/components/common/GameButton.vue'
 import StatRow from '@/components/common/primitives/StatRow.vue'
 import Eyebrow from '@/components/common/primitives/Eyebrow.vue'
+import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { usePlayerStore } from '@/stores/player'
 import { useUiStore, type LeftPanelMode } from '@/stores/ui'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -84,7 +85,8 @@ async function build() {
 
 <template>
   <div v-if="template && !instance" class="building-popover">
-    <span class="ornate-frame" aria-hidden="true" />
+    <InkNineSlice asset-id="surface-m-paper" layer="surface" />
+    <InkNineSlice asset-id="frame-m-seal-corner" layer="frame" />
 
     <div class="building-popover__scroll">
       <div class="building-popover__header">
@@ -123,10 +125,10 @@ async function build() {
   display: flex;
   flex-direction: column;
   padding: 14px;
-  background: linear-gradient(160deg, var(--ink-950), var(--ink-800));
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-panel);
-  color: var(--text-primary);
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--paper-text, #211f1a);
   font-family: var(--font-body);
   min-width: 260px;
   max-width: 320px;
@@ -134,6 +136,8 @@ async function build() {
 }
 
 .building-popover__scroll {
+  position: relative;
+  z-index: 3;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -152,13 +156,13 @@ async function build() {
   margin: 0;
   font-family: var(--font-display);
   font-size: var(--text-lg);
-  color: var(--chrome-100);
+  color: var(--paper-text, #211f1a);
 }
 
 .building-popover__description {
   margin: 4px 0 0;
   font-size: var(--text-xs);
-  color: var(--text-secondary);
+  color: var(--paper-text-soft, #5e5a50);
 }
 
 .building-popover__close {
@@ -168,7 +172,7 @@ async function build() {
   min-height: var(--tap-min);
   background: none;
   border: none;
-  color: var(--text-muted);
+  color: var(--paper-text-soft, #5e5a50);
   cursor: pointer;
   font-size: var(--text-body);
 }

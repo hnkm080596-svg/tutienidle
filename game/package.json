@@ -16,6 +16,8 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write --experimental-cli src/",
     "assets:route": "node scripts/route-assets.mjs",
+    "assets:ink-ui": "node scripts/build-ink-wash-assets.mjs",
+    "assets:ink-ui:check": "node scripts/build-ink-wash-assets.mjs --check",
     "electron:dev": "set ELECTRON=1 && vite",
     "dist:win": "set ELECTRON=1 && npm run build && electron-builder --win"
   },

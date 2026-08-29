@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import GameButton from './GameButton.vue'
+import InkNineSlice from './primitives/InkNineSlice.vue'
 
 // Shared chrome primitive (UI/UX rework Giai đoạn A) — thay
 // window.confirm() native còn sót ở SettingsPanel.vue/QuanKhiPanel.vue.
@@ -26,7 +27,8 @@ const emit = defineEmits<{ confirm: []; cancel: [] }>()
   <Transition name="confirm-modal-fade">
     <div v-if="open" class="confirm-modal" :style="{ zIndex: OVERLAY_LAYERS.panel }">
       <section class="confirm-modal__card" role="alertdialog" aria-modal="true" :aria-label="title">
-        <span class="ornate-frame" aria-hidden="true" />
+        <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
+        <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
         <h3 class="confirm-modal__title">{{ title }}</h3>
 
         <p class="confirm-modal__message">{{ message }}</p>
@@ -53,16 +55,22 @@ const emit = defineEmits<{ confirm: []; cancel: [] }>()
 
 .confirm-modal__card {
   position: relative;
+  isolation: isolate;
   width: min(420px, 92vw);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-4) var(--space-6);
-  color: var(--text-primary);
+  color: var(--paper-text, #211f1a);
   font-family: var(--font-body);
-  background: linear-gradient(160deg, var(--ink-950), var(--ink-800));
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-panel);
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.confirm-modal__card > :not(.ink-nine-slice) {
+  position: relative;
+  z-index: 3;
 }
 
 .confirm-modal__title {
@@ -70,12 +78,12 @@ const emit = defineEmits<{ confirm: []; cancel: [] }>()
   font-family: var(--font-display);
   font-size: var(--text-title);
   font-weight: 700;
-  color: var(--chrome-100);
+  color: var(--paper-text, #211f1a);
 }
 
 .confirm-modal__message {
   margin: 0;
-  color: var(--text-secondary);
+  color: var(--paper-text-soft, #5e5a50);
   font-size: var(--text-body);
   line-height: var(--lh-body);
   white-space: pre-line;

@@ -1,4 +1,4 @@
-/* "Mực & Vàng" (Ink & Gold) — bảng token màu/typography dùng chung
+/* "Mực & Giấy Trắng" — bảng token màu/typography dùng chung
    toàn app. Trước đợt này KHÔNG có hệ thống design-token nào (mọi hex
    hardcode rời rạc mỗi component) — file này chính thức hoá bảng màu
    tối giản/sang trọng kiếm hiệp đang dần được áp dụng, bắt đầu từ
@@ -18,13 +18,30 @@
   --ink-line: #33333f;
   --ink-line-soft: #24242c;
 
+  /* Mực & Giấy — bề mặt UI trung tính là giấy tuyên ấm; các scene thế giới
+     vẫn tiếp tục dùng token --ink-* và --scene-* riêng ở bên dưới. */
+  --paper-50: #f5f0e4;
+  --paper-100: #ebe3d2;
+  --paper-200: #d9cfbb;
+  --brush-950: #171713;
+  --brush-800: #2a2924;
+  --brush-600: #5e5a50;
+  --brush-400: #8f897c;
+  --cinnabar: #b54432;
+  --mineral-jade: #668f78;
+  --mineral-azure: #66899b;
+  --mineral-gold: #b79653;
+  --paper-text: #211f1a;
+  --paper-text-soft: #5e5a50;
+  --paper-line: rgba(42, 41, 36, 0.42);
+
   /* Chữ */
   --text-primary: #ebe6d9;
   --text-secondary: #b3ada0;
   --text-muted: #7c7870;
 
-  /* Vàng — KHÔNG còn là màu chrome (khung/nút/tiêu đề/viền chọn đã
-     chuyển họ bạc Mực & Bạc 2026-08-28). Chỉ giữ vai trò màu DỮ LIỆU:
+  /* Vàng — KHÔNG phải màu chrome của khung/nút/tiêu đề. Chỉ giữ vai trò
+     màu DỮ LIỆU:
      phẩm chất rank 7 'kim', khoảnh khắc đặc biệt. */
   --gold-100: #fff3c4;
   --gold-300: #ffe082;
@@ -32,13 +49,12 @@
   --gold-700: #ffb300;
   --gold-ink: #221a00;
 
-  /* Bạc — chrome đơn sắc ấm "Mực & Bạc" (2026-08-28), cùng họ mực ấm
-     với --text-*. Mọi khung viền/nút/tiêu đề/viền trạng thái chọn của
-     vùng trung tính dùng thang này thay vàng cũ:
-       100 = bạc trắng (corner, hover, nút chính, title)
-       300 = bạc sáng (inner ring, viền đang chọn, focus ring)
-       500 = bạc (outer ring, eyebrow/kicker)
-       700 = bạc tối (disabled, chi tiết chìm) */
+  /* Alias chrome kế thừa để giữ tương thích component cũ. Đây là thang
+     giấy sáng → nét mực nhạt, không đại diện cho vật liệu bạc kim loại:
+       100 = giấy sáng (corner, hover, nút chính, title)
+       300 = giấy ngà (inner ring, viền đang chọn, focus ring)
+       500 = mực nhạt (outer ring, eyebrow/kicker)
+       700 = mực chìm (disabled, chi tiết phụ) */
   --chrome-100: #f4f1ea;
   --chrome-300: #d9d4c7;
   --chrome-500: #b3ada0;

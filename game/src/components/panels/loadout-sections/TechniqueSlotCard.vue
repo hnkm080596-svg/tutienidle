@@ -24,6 +24,7 @@
 import { computed } from 'vue'
 import SlotView from '../../common/SlotView.vue'
 import Bar from '../../common/primitives/Bar.vue'
+import InkNineSlice from '../../common/primitives/InkNineSlice.vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import type { TechniqueTooltipContent } from '@/composables/useTooltip'
 import { buildTechniqueSections } from '@/composables/useTechniqueSections'
@@ -37,7 +38,7 @@ import { formatNumber } from '@/core/format/NumberFormatter'
 // CharacterPanel.vue (khối header hẹp) và TechniqueCodex.vue (danh
 // sách thư viện, xem Step 20) vẫn dùng layout ngang gọn mặc định,
 // KHÔNG đổi 2 chỗ đó — prop optional, mặc định giữ nguyên hành vi cũ.
-const props = withDefaults(defineProps<{
+withDefaults(defineProps<{
   label: string
   size?: 'normal' | 'hero'
 }>(), {
@@ -118,6 +119,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 
 <template>
   <div class="loadout-card" :class="{ 'loadout-card--hero': size === 'hero' }" v-tooltip="tooltipContent">
+    <InkNineSlice asset-id="frame-m-seal-corner" layer="frame" />
     <SlotView
       class="loadout-card__icon"
       :item="equipped ?? null"
@@ -146,16 +148,18 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 
 <style scoped>
 .loadout-card {
+  position: relative;
+  isolation: isolate;
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 4px;
-  background: var(--ink-800);
-  border: 1px solid var(--ink-line-soft);
-  border-radius: var(--radius-sm);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
   text-align: left;
   font-family: var(--font-body);
-  color: var(--text-primary);
+  color: var(--paper-text, #211f1a);
   width: 100%;
   box-sizing: border-box;
 }
@@ -164,11 +168,15 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
    set flex) quyết định kích cỡ trên trục row, không còn dựa vào tie
    injection-order với width:100% nội bộ của SlotView.vue. */
 .loadout-card__icon {
+  position: relative;
+  z-index: 3;
   flex: 0 0 56px;
   width: 56px;
 }
 
 .loadout-card__info {
+  position: relative;
+  z-index: 3;
   flex: 1;
   min-width: 0;
   display: flex;
@@ -186,7 +194,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 
 .loadout-card__empty {
   font-size: var(--text-xs);
-  color: var(--text-muted);
+  color: var(--paper-text-soft, #5e5a50);
 }
 
 .loadout-card__tier {
@@ -194,8 +202,8 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
   padding: 1px 5px;
   font-size: var(--text-xs);
   font-weight: 700;
-  color: var(--chrome-100);
-  border: 1px solid var(--chrome-500);
+  color: var(--mineral-gold, #b79653);
+  border: 1px solid currentColor;
   border-radius: 999px;
   white-space: nowrap;
 }
@@ -207,7 +215,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 
 .loadout-card__tier-label {
   font-size: var(--text-xs);
-  color: var(--text-muted);
+  color: var(--paper-text-soft, #5e5a50);
 }
 
 /* Biến thể hero (spec mục 15 "Tâm pháp hiện tại lớn") — layout dọc,

@@ -174,15 +174,15 @@ function handleReset() {
 <style scoped>
 .settings-panel {
   padding: 12px;
-  color: var(--text-primary);
+  color: var(--paper-text);
   font-size: var(--text-body);
 }
 
 .settings-panel__warning {
-  color: var(--chrome-100);
-  border: 1px solid var(--ink-line);
-  background: color-mix(in srgb, var(--chrome-500) 8%, transparent);
-  border-radius: var(--radius-sm);
+  color: var(--paper-text-soft);
+  border: 1px solid var(--paper-line);
+  background: color-mix(in srgb, var(--paper-100) 45%, transparent);
+  border-radius: 2px;
   padding: 8px;
   margin: 0 0 12px;
 }
@@ -225,7 +225,7 @@ function handleReset() {
 .settings-panel__ui-scale {
   margin-top: 16px;
   padding-top: 12px;
-  border-top: 1px solid var(--ink-line-soft);
+  border-top: 1px solid var(--paper-line);
 }
 
 .settings-panel__ui-scale h4 {
@@ -239,8 +239,8 @@ function handleReset() {
 
 .settings-panel__ui-scale-option {
   padding: 0 var(--space-4);
-  border-color: var(--ink-line);
-  color: var(--text-primary);
+  border-color: var(--paper-line);
+  color: var(--paper-text);
   font-size: var(--text-sm);
   --chip-active-bg: color-mix(in srgb, var(--chrome-300) 12%, transparent);
 }

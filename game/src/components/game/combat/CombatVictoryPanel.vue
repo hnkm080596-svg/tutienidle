@@ -8,6 +8,8 @@ import { usePlayerStore } from '@/stores/player'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import GameButton from '@/components/common/GameButton.vue'
 import { resolveNextProgressStage } from '@/core/stage/ProgressStageResolver'
+import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
+import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
 
 // Combat UI Redesign mục 14-19 — thắng thì hiện reward tích luỹ cả
 // trận (xem GameManager.getBattleRewardSummary()). Auto Battle OFF:
@@ -105,6 +107,9 @@ onMounted(() => {
 
 <template>
   <div class="combat-victory-panel">
+    <InkWashBackdrop :left-mountain="false" bottom-mist seal="large" />
+    <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
+    <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
     <h2 class="combat-victory-panel__title">★ THẮNG ★</h2>
 
     <div class="combat-victory-panel__rewards">
@@ -134,21 +139,28 @@ onMounted(() => {
 
 <style scoped>
 .combat-victory-panel {
+  position: relative;
+  isolation: isolate;
   box-sizing: border-box;
   width: min(420px, calc(100vw - 32px));
   padding: 28px 32px;
-  background: var(--ink-900);
-  border: 1px solid var(--chrome-500);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-panel);
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
   text-align: center;
   font-family: var(--font-body);
+}
+
+.combat-victory-panel > :not(.ink-nine-slice):not(.ink-wash-backdrop) {
+  position: relative;
+  z-index: 3;
 }
 
 .combat-victory-panel__title {
   margin: 0 0 16px;
   font-family: var(--font-display);
-  color: var(--chrome-100);
+  color: var(--paper-text, #211f1a);
   font-size: var(--text-panel-title);
 }
 
@@ -166,7 +178,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   font-size: var(--text-body);
-  color: var(--text-secondary);
+  color: var(--paper-text-soft, #5e5a50);
 }
 
 .combat-victory-panel__rewards p span {

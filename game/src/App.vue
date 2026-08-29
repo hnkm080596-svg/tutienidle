@@ -542,9 +542,9 @@ body {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background: var(--ink-950);
+  background: var(--paper-50);
   font-family: var(--font-body);
-  color: var(--text-primary);
+  color: var(--paper-text);
 }
 
 .boot-error {
@@ -553,7 +553,7 @@ body {
   display: grid;
   place-content: center;
   justify-items: center;
-  background: var(--ink-950);
+  background: var(--paper-50);
 }
 .boot-error h1 {
   color: var(--crimson);
@@ -564,9 +564,9 @@ body {
 }
 .boot-error button {
   padding: 10px 16px;
-  border: 1px solid var(--chrome-300);
-  background: transparent;
-  color: var(--chrome-100);
+  border: 1px solid var(--paper-line);
+  background: var(--paper-100);
+  color: var(--paper-text);
   cursor: pointer;
 }
 </style>
