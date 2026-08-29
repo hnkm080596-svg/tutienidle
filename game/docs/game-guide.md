@@ -10,7 +10,16 @@ Game dùng Vue 3 cho UI, Pinia cho state phía UI và Phaser cho cảnh nền/ch
 
 ## Tu luyện, đột phá và cảnh giới
 
-`CultivationSystem` quản lý tiến độ tu luyện. Luồng đột phá nằm ở `useBreakthrough.ts`; Độ Kiếp được điều phối qua `useTribulation.ts` và dữ liệu kiếp nạn. Lần chuyển từ Phàm Nhân sang Luyện Khí cũng là nghi lễ chọn con đường tu luyện.
+`CultivationSystem` quản lý tiến độ tu luyện (tiểu cảnh giới tự tăng khi tu vi đầy — `useBreakthrough.ts`). Đột phá **đại cảnh giới** là nghi lễ riêng (spec `2026-08-29-dot-pha-loi-kiep`): bấm nút Quán Khí/Trúc Cơ → qua cổng **Độ Kiếp** — `useTribulation.ts` điều phối, runtime nằm ở `core/tribulation/TribulationDirector.ts` (chương kiếp, KHÔNG còn trận đánh quái Kiếp).
+
+**Độ Kiếp mới** gồm các chương theo realm — Quán Khí 2 chương (Tâm Ma → Lôi), Trúc Cơ 3 chương (Tâm Ma → Thân → Lôi):
+- **Tâm Ma Kiếp** — minigame hỏi đáp dồn dập (bank câu hỏi `data/tribulation/TribulationMindQuestions.ts`, 4 đáp án, thanh giờ co dần): đúng được hồi máu + kháng lôi tự động, sai stack debuff (giảm phòng thủ, tăng sát thương nhận vào) đến hết kiếp. Kiếp là nội dung tay — vào kiếp mọi vòng tự động dừng.
+- **Thân Kiếp / Lôi Kiếp** — tank lôi %maxHP theo nhịp, mitigation `100/(100+phòng thủ)`; chương Lôi khép lại bằng một đạo đại lôi.
+- Thua: mất % tu vi theo realm (50% Quán Khí, 40% Trúc Cơ, realm sau giảm dần) + Linh Thạch + Kiếp Thương, cooldown 5 phút.
+
+**Bậc ẩn khi đột phá** (spec §4.2): bậc được xét NGAY LÚC BẤM từ đầu tư trước kiếp, công bố sau khi thắng. Gate công khai chỉ bậc Nhân (tầng 12 + Linh Thạch — Đột Phá Lệnh đã dỡ). Tương truyền người có Trúc Cơ Đan tại thân, căn cốt vững... kinh mạch thông suốt... thiên kiếp cũng phải nhường ba phần. Bậc càng cao kiếp càng khó nhưng nội tại realm càng mạnh (0/5/10/20% chỉ số chính). Người nghịch thiên đủ mọi cơ duyên sẽ gặp **lôi kiếp siêu cấp** — vượt qua thì Phàm Cốt chuyển hóa Phàm Nhân Chi Cốt; thất bại thì cơ duyên Đại Đạo vĩnh viễn đoạn tuyệt.
+
+**Kỳ Kinh Bát Mạch** (độc quyền Luyện Khí, `core/realm/MeridianSystem.ts`): 9 đường kinh mở tuần tự theo tầng (2/4/.../16, Kỳ Kinh Thiên Địa Chi Kiều ở 18), mỗi đường tiêu Thông Mạch Đan (luyện từ Yêu Đan boss Luyện Khí tầng 10). Tương truyền nơi sâu nhất Huyền Đàm Trạch có dị thú chỉ xuất hiện với kẻ đã chém quá ngàn yêu...
 
 Mỗi đại cảnh giới cấp một nội tại đúng một lần qua `RealmPassiveSystem` và dữ liệu `RealmPassives.ts`; người chơi xem chúng trong `RealmPassivePanel.vue`.
 
