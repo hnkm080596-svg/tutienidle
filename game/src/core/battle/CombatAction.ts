@@ -4,7 +4,6 @@
 // Gameplay KHÔNG phụ thuộc VFX hay Phaser callback — core emit đúng MỘT
 // event `action_impact` cho mỗi lần action áp sát thương, renderer đọc
 // preset để diễn xuất.
-import type { GridPosition } from './BattleGrid'
 import { GRID_COLUMN_COUNT } from './BattleGrid'
 
 /** Hình dạng chọn vùng ảnh hưởng (decision 2026-08-24: shape union). */

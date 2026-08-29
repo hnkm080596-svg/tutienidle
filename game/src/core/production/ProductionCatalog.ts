@@ -10,7 +10,6 @@ import type {
   GrottoHerbDefinition,
   MineRewardDefinition,
   ProductionSiteDefinition,
-  ProductionSiteKind,
   TerritoryDefinition,
 } from './ProductionTypes'
 import { HERB_AGES, ORE_QUALITIES, PRODUCTION_SITE_KINDS } from './ProductionTypes'

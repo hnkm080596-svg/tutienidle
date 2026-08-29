@@ -20,7 +20,6 @@ import {
 import type { EquipmentRarity } from './EquipmentRarity'
 import type { EquipmentSlot } from './EquipmentTypes'
 import { EquipmentSlotManager } from './EquipmentSlotManager'
-import type { EquipmentSlotState } from './EquipmentSlotState'
 import { AffixRegistry } from './AffixRegistry'
 import type { Affix, AffixKind, AffixPool } from './Affix'
 import type { RolledAffix } from './RolledAffix'
@@ -542,8 +541,6 @@ export class EquipmentSystem {
       return true
     }
 
-    const template = registry.get(instance.itemId)
-
     // Equipment KHÔNG có requiredRealmId trên template (khác Recipe/
     // Building/Skill) — không gate trang bị theo cảnh giới. Sức mạnh
     // theo cảnh giới nằm ở instance.realmId (set lúc rớt đồ), không
@@ -1032,7 +1029,7 @@ export class EquipmentSystem {
     materialBag: MaterialBag,
     slotManager: EquipmentSlotManager,
     affixRegistry: AffixRegistry,
-    random: () => number = Math.random,
+    _random: () => number = Math.random,
   ): { ok: boolean; reason?: string } {
     const instance = inventory.get(instanceId)
 

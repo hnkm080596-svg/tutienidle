@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
   EquipmentSystem,
-  calculateEquipmentScale,
   rollAffixRange,
   getMaxForgePoints,
 } from './EquipmentSystem'
@@ -18,7 +17,6 @@ import {
   EQUIPMENT_QUALITY_ORDER,
   EQUIPMENT_QUALITY_MAX_AFFIX_TIER,
   EQUIPMENT_QUALITY_UNLOCKED_POOLS,
-  EQUIPMENT_QUALITY_MAX_FORGE_POINTS,
 } from './EquipmentQuality'
 import { affixes } from '../../data/equipment/affixes'
 import { materials } from '../../data/materials/materials'
@@ -28,7 +26,6 @@ import {
   SPIRIT_STONE_TRUNG_PHAM_MATERIAL,
   SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID,
 } from '../material/SpiritStoneMaterial'
-import { ZoneRegistry } from '../stage/ZoneRegistry'
 import { isPercentStat } from '../stats/StatMetadata'
 import {
   REFINE_REFINEMENT_COST,
@@ -316,8 +313,6 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
     ctx.materialBag.add(wrongOre, 10)
 
     const instance = equippedWithAffixes(ctx)
-
-    const before = { ...ctx.player }
 
     expect(
       ctx.system.washAffixes(

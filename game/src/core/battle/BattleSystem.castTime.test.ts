@@ -129,7 +129,11 @@ function setup(skill: Skill) {
   }[] = []
 
   for (const type of ['cast_start', 'cast_complete']) {
-    eventBus.on(type, (event: any) => events.push({ type, ...event }))
+    eventBus.on(
+      type,
+      (event: { type: string; sourceId?: string; skillId?: string; skillName?: string; castTimeSeconds?: number }) =>
+        events.push({ ...event, type }),
+    )
   }
 
   function tick(deltaSeconds: number) {

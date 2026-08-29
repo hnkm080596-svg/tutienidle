@@ -34,7 +34,7 @@ function createSystem(rollCritical = () => false) {
 
 describe('ActionImpactSystem — basic action pipeline', () => {
   it('windup chưa hết → KHÔNG resolve; hết windup → resolve hitCount lần + ĐÚNG MỘT action_impact', () => {
-    const { system, eventBus, impacts } = createSystem()
+    const { system, impacts } = createSystem()
     const player = entity('player')
     const enemy = entity('enemy')
     const battle = battleWith(player, [enemy])
@@ -112,7 +112,7 @@ describe('ActionImpactSystem — basic action pipeline', () => {
   })
 
   it('target CHẾT trước khi windup kết thúc → bỏ impact (không event, không resolve)', () => {
-    const { system, eventBus, impacts } = createSystem()
+    const { system, impacts } = createSystem()
     const player = entity('player')
     const enemy = entity('enemy')
     const battle = battleWith(player, [enemy])

@@ -6,12 +6,10 @@
 import { describe, expect, it, vi, afterEach } from 'vitest'
 import { GameManager } from '../game/GameManager'
 import { createDefaultPlayer } from '../player/Player'
-import { calculateStats, type StatModifier } from '../stats/StatCalculator'
 import { getMainStatCap } from '../stats/StatCap'
 import { getRequiredCultivation } from '../realm/realmSystem'
 import { createBaseStats } from '../stats/StatBlock'
 import type { Enemy } from '../enemy/Enemy'
-import type { CombatEntity } from '../combat/CombatEntity'
 
 function makeEnemyData(): Enemy {
   const stats = {
@@ -34,63 +32,6 @@ function makeEnemyData(): Enemy {
     maxHp: stats.maxHp,
     alive: true,
   } as unknown as Enemy
-}
-
-function makeEnemy(): CombatEntity {
-  const stats = {
-    ...calculateStats({ ...emptyStats() }, []),
-    attack: 0,
-    attackRange: 0,
-    movementSpeed: 0,
-  }
-
-  return {
-    id: 'enemy',
-    name: 'Quái',
-    type: 'enemy',
-    baseStats: stats,
-    stats,
-    currentHp: stats.maxHp,
-    maxHp: stats.maxHp,
-    currentMp: stats.maxMp,
-    currentSwordIntent: 0,
-    currentMomentum: 0,
-    currentHoaThe: 0,
-    currentThoThe: 0,
-    currentKimThe: 0,
-    timeSinceLastBleedProc: 0,
-    tuLucActive: false,
-    tuLucElapsed: 0,
-    tuLucDamageTakenPercent: 0,
-    currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
-    realmIndex: 0,
-    x: 8,
-    row: 4,
-    alive: true,
-  }
-}
-
-function emptyStats() {
-  return {
-    maxHp: 100,
-    maxMp: 50,
-    attack: 0,
-    defense: 0,
-    attackSpeed: 1,
-    movementSpeed: 0,
-    attackRange: 0,
-    criticalRate: 0,
-    criticalDamage: 1.5,
-    evasionRate: 0,
-    strength: 0,
-    dexterity: 0,
-    intelligence: 0,
-    attunement: 0,
-    vitality: 0,
-    hpRegenPerSecond: 0,
-    manaRegenPerSecond: 0,
-  } as unknown as ReturnType<typeof calculateStats>
 }
 
 function setup() {
@@ -253,5 +194,3 @@ describe('Regen timed effect — thời gian thực, hết hạn trong combat', 
     expect(refreshed.modifiers.map((modifier) => modifier.flat)).toEqual(firstModifiers)
   })
 })
-
-export type { StatModifier }

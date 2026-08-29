@@ -1,5 +1,4 @@
 import type { Buff } from './Buff'
-import type { BuffStackMode } from './BuffTypes'
 import { BuffManager } from './BuffManager'
 import type { StatModifier } from '../stats/StatCalculator'
 
@@ -63,7 +62,7 @@ export class BuffSystem {
 
     return modifiers
   }
-  private addStack(existing: Buff, incoming: Buff) {
+  private addStack(existing: Buff, _incoming: Buff) {
     const current = existing.stacks
 
     let next = current + 1

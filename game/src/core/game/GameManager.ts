@@ -1,4 +1,4 @@
-import { EventBus } from '../events/EventBus'
+﻿import { EventBus } from '../events/EventBus'
 
 import { CombatSystem } from '../combat/CombatSystem'
 import type { CombatEntity } from '../combat/CombatEntity'
@@ -83,13 +83,10 @@ import { FormationRegistry } from '../formation/FormationRegistry'
 import type { Formation } from '../formation/Formation'
 
 import { ItemRegistry } from '../item/ItemRegistry'
-import type { ItemGrade } from '../item/ItemGrade'
 
-import { SUPPORTED_PROFESSION_REALMS } from '../profession/ProfessionMaterial'
 import { validateProfessionMaterialEntry } from '../profession/ProfessionValidators'
 import {
   SPIRIT_STONE_CONVERSION_RATIO,
-  SPIRIT_STONE_MATERIAL_ID,
   getNextSpiritStoneMaterialId,
   getSpiritStoneMaterialIdForRealmTier,
 } from '../material/SpiritStoneMaterial'
@@ -98,11 +95,10 @@ import {
   getNextTierMaterialId,
 } from '../material/MaterialTierConversionBalance'
 import { getRealmTier } from '../realm/RealmTierMap'
-import { calculateStats } from '../stats/StatCalculator'
 import type { PersistentTimedEffect } from '../player/PersistentTimedEffect'
 import { EQUIPMENT_SLOTS } from '../equipment/EquipmentSlotState'
 
-import { ProductionSystem, type ProductionSettlementEvent } from '../production/ProductionSystem'
+import { ProductionSystem } from '../production/ProductionSystem'
 import {
   TERRITORY_THANH_VAN,
   THANH_VAN_PRODUCTION_SITES,
@@ -129,7 +125,6 @@ import { BuildingManager } from '../building/BuildingManager'
 import { BuildingSystem } from '../building/BuildingSystem'
 import type { Building } from '../building/Building'
 import type { BuildingInstance } from '../building/BuildingInstance'
-import type { CraftModifiers } from '../building/BuildingLevelEffect'
 
 import { EnemyManager } from '../enemy/EnemyManager'
 import { EnemySystem } from '../enemy/EnemySystem'
@@ -152,13 +147,12 @@ import type { ActiveTribulation } from './TribulationSystem'
 
 import { QuestRegistry } from '../quest/QuestRegistry'
 import { QuestManager } from '../quest/QuestManager'
-import type { QuestManagerState } from '../quest/QuestManager'
 import { QuestSystem } from '../quest/QuestSystem'
 import type { Quest } from '../quest/Quest'
 import type { QuestProgress } from '../quest/QuestProgress'
 
-// Re-export giữ tương thích import cũ (useTribulation.ts và các nơi khác
-// import ActiveTribulation/TRIBULATION_COOLDOWN_SECONDS từ GameManager).
+// Re-export giá»¯ tÆ°Æ¡ng thÃ­ch import cÅ© (useTribulation.ts vÃ  cÃ¡c nÆ¡i khÃ¡c
+// import ActiveTribulation/TRIBULATION_COOLDOWN_SECONDS tá»« GameManager).
 export { TRIBULATION_COOLDOWN_SECONDS } from './TribulationSystem'
 export type { ActiveTribulation } from './TribulationSystem'
 
@@ -193,60 +187,60 @@ import type { StatModifier } from '../stats/StatCalculator'
 import type { Stats } from '../stats/StatBlock'
 
 /**
- * GameManager là orchestrator (2026-08-24 refactor — tách business logic
- * trận đấu đang diễn ra sang 3 service trong cùng thư mục):
+ * GameManager lÃ  orchestrator (2026-08-24 refactor â€” tÃ¡ch business logic
+ * tráº­n Ä‘áº¥u Ä‘ang diá»…n ra sang 3 service trong cÃ¹ng thÆ° má»¥c):
  *
- * 1. Khởi tạo và giữ instance của mọi Manager/System + wire dependency
+ * 1. Khá»Ÿi táº¡o vÃ  giá»¯ instance cá»§a má»i Manager/System + wire dependency
  *    cho BattleLootSystem (loot/particle/toast/battle summary),
- *    StageWaveSystem (wave Màn + boss summon), TribulationSystem
- *    (runtime Độ Kiếp) — xem constructor().
- * 2. Điều phối update(deltaSeconds) mỗi tick cho các system có yếu tố
- *    thời gian (Buff, Skill, Battle) qua fixed-step catch-up.
- * 3. Tổng hợp modifier từ nhiều nguồn (buff/technique/skill).
- * 4. Giữ public API ổn định cho Vue layer/tests: các method còn lại chủ
- *    yếu là facade delegate xuống system tương ứng.
+ *    StageWaveSystem (wave MÃ n + boss summon), TribulationSystem
+ *    (runtime Äá»™ Kiáº¿p) â€” xem constructor().
+ * 2. Äiá»u phá»‘i update(deltaSeconds) má»—i tick cho cÃ¡c system cÃ³ yáº¿u tá»‘
+ *    thá»i gian (Buff, Skill, Battle) qua fixed-step catch-up.
+ * 3. Tá»•ng há»£p modifier tá»« nhiá»u nguá»“n (buff/technique/skill).
+ * 4. Giá»¯ public API á»•n Ä‘á»‹nh cho Vue layer/tests: cÃ¡c method cÃ²n láº¡i chá»§
+ *    yáº¿u lÃ  facade delegate xuá»‘ng system tÆ°Æ¡ng á»©ng.
  *
- * Toàn bộ logic thật (điều kiện học skill, cách tính reward...) nằm
- * trong các System tương ứng.
+ * ToÃ n bá»™ logic tháº­t (Ä‘iá»u kiá»‡n há»c skill, cÃ¡ch tÃ­nh reward...) náº±m
+ * trong cÃ¡c System tÆ°Æ¡ng á»©ng.
  */
 
-// Trạng thái Tribulation (ActiveTribulation/TRIBULATION_COOLDOWN_SECONDS)
-// đã chuyển sang TribulationSystem.ts — GameManager re-export ở đầu file.
+// Tráº¡ng thÃ¡i Tribulation (ActiveTribulation/TRIBULATION_COOLDOWN_SECONDS)
+// Ä‘Ã£ chuyá»ƒn sang TribulationSystem.ts â€” GameManager re-export á»Ÿ Ä‘áº§u file.
 
-// Uncommitted audit followup plan, mục "Fixed-step/catch-up cho combat"
-// (2026-08-24) — App.vue đo deltaSeconds THẬT giữa 2 lần tick() bằng
-// GameClock (xem App.vue's tick()); khi tab bị trình duyệt throttle
-// (background/minimize) hoặc máy vừa resume sau suspend, deltaSeconds
-// của MỘT lần gọi có thể lớn bất thường. battleSystem.update()/
-// StageWaveSystem.update() chỉ kiểm tra timer <= 0 MỘT LẦN mỗi lời gọi
-// rồi reset về mốc mới (cadence skill, attackTimer, spawnCountdown) —
-// KHÔNG có vòng lặp catch-up như updateKimThe()/TribulationSystem.update(), nên
-// phần nợ (timer âm sâu) bị vứt bỏ thẳng: một khoảng deltaSeconds lớn
-// chỉ tạo ra ĐÚNG 1 đòn đánh/1 lần spawn thay vì nhiều lần đúng theo
-// nhịp thật. Chia deltaSeconds thành các bước cố định nhỏ khi gọi các
-// hàm phụ thuộc timer-đếm-ngược-rồi-reset này sửa đúng gốc vấn đề mà
-// không cần viết lại vòng lặp catch-up riêng cho từng timer.
+// Uncommitted audit followup plan, má»¥c "Fixed-step/catch-up cho combat"
+// (2026-08-24) â€” App.vue Ä‘o deltaSeconds THáº¬T giá»¯a 2 láº§n tick() báº±ng
+// GameClock (xem App.vue's tick()); khi tab bá»‹ trÃ¬nh duyá»‡t throttle
+// (background/minimize) hoáº·c mÃ¡y vá»«a resume sau suspend, deltaSeconds
+// cá»§a Má»˜T láº§n gá»i cÃ³ thá»ƒ lá»›n báº¥t thÆ°á»ng. battleSystem.update()/
+// StageWaveSystem.update() chá»‰ kiá»ƒm tra timer <= 0 Má»˜T Láº¦N má»—i lá»i gá»i
+// rá»“i reset vá» má»‘c má»›i (cadence skill, attackTimer, spawnCountdown) â€”
+// KHÃ”NG cÃ³ vÃ²ng láº·p catch-up nhÆ° updateKimThe()/TribulationSystem.update(), nÃªn
+// pháº§n ná»£ (timer Ã¢m sÃ¢u) bá»‹ vá»©t bá» tháº³ng: má»™t khoáº£ng deltaSeconds lá»›n
+// chá»‰ táº¡o ra ÄÃšNG 1 Ä‘Ã²n Ä‘Ã¡nh/1 láº§n spawn thay vÃ¬ nhiá»u láº§n Ä‘Ãºng theo
+// nhá»‹p tháº­t. Chia deltaSeconds thÃ nh cÃ¡c bÆ°á»›c cá»‘ Ä‘á»‹nh nhá» khi gá»i cÃ¡c
+// hÃ m phá»¥ thuá»™c timer-Ä‘áº¿m-ngÆ°á»£c-rá»“i-reset nÃ y sá»­a Ä‘Ãºng gá»‘c váº¥n Ä‘á» mÃ 
+// khÃ´ng cáº§n viáº¿t láº¡i vÃ²ng láº·p catch-up riÃªng cho tá»«ng timer.
 const BATTLE_FIXED_STEP_SECONDS = 0.1
 
-// Giới hạn tổng thời gian được "đuổi kịp" cho mỗi lần update() — tránh
-// hàng ngàn bước đồng bộ khoá UI sau khi máy ngủ/tab bị treo rất lâu.
-// Phần deltaSeconds vượt ngưỡng này bị bỏ qua cho riêng nhánh combat/
-// stage (coi như trận đấu "tạm dừng" trong khoảng đó) — các hệ thống
-// khác (buff/cooldown/passive/formation ở update() bên dưới) vẫn nhận
-// ĐỦ deltaSeconds thật vì chúng vốn đã an toàn với delta lớn.
+// Giá»›i háº¡n tá»•ng thá»i gian Ä‘Æ°á»£c "Ä‘uá»•i ká»‹p" cho má»—i láº§n update() â€” trÃ¡nh
+// hÃ ng ngÃ n bÆ°á»›c Ä‘á»“ng bá»™ khoÃ¡ UI sau khi mÃ¡y ngá»§/tab bá»‹ treo ráº¥t lÃ¢u.
+// Pháº§n deltaSeconds vÆ°á»£t ngÆ°á»¡ng nÃ y bá»‹ bá» qua cho riÃªng nhÃ¡nh combat/
+// stage (coi nhÆ° tráº­n Ä‘áº¥u "táº¡m dá»«ng" trong khoáº£ng Ä‘Ã³) â€” cÃ¡c há»‡ thá»‘ng
+// khÃ¡c (buff/cooldown/passive/formation á»Ÿ update() bÃªn dÆ°á»›i) váº«n nháº­n
+// Äá»¦ deltaSeconds tháº­t vÃ¬ chÃºng vá»‘n Ä‘Ã£ an toÃ n vá»›i delta lá»›n.
 const BATTLE_MAX_CATCHUP_SECONDS = 30
 
-// Pháp Tu skill tree redesign (2026-08-21) — "Starter Skill KHÔNG nằm
-// bên ngoài skill tree, nó CHÍNH LÀ root node của skill tree hành đó"
-// (user spec). Không còn learnSkill() gọi trực tiếp ở đây nữa (đó là
-// "auto-grant system riêng" mà spec cấm) — chooseCultivationPath() giờ
-// mua node gốc của Hỏa (PHAP_TU_STARTER_NODE_ID, cost 0, xem
-// data/progression/PhapTuNodes.ts's FIRE_LINH_NGO) qua ĐÚNG con đường
-// purchaseNode() dùng chung với 4 hành còn lại (Thủy/Mộc/Thổ/Kim tốn 2
-// Skill Point, người chơi tự mua node gốc của hành đó). Chỉ Hỏa được
-// tự động mua sẵn (cost 0 = luôn đủ điểm); phần "trang bị vào slot 0"
-// vẫn giữ riêng (equip khác học, xem SkillSystem.ts) vì Node Tree
-// không mô tả khái niệm loadout slot.
+// PhÃ¡p Tu skill tree redesign (2026-08-21) â€” "Starter Skill KHÃ”NG náº±m
+// bÃªn ngoÃ i skill tree, nÃ³ CHÃNH LÃ€ root node cá»§a skill tree hÃ nh Ä‘Ã³"
+// (user spec). KhÃ´ng cÃ²n learnSkill() gá»i trá»±c tiáº¿p á»Ÿ Ä‘Ã¢y ná»¯a (Ä‘Ã³ lÃ 
+// "auto-grant system riÃªng" mÃ  spec cáº¥m) â€” chooseCultivationPath() giá»
+// mua node gá»‘c cá»§a Há»a (PHAP_TU_STARTER_NODE_ID, cost 0, xem
+// data/progression/PhapTuNodes.ts's FIRE_LINH_NGO) qua ÄÃšNG con Ä‘Æ°á»ng
+// purchaseNode() dÃ¹ng chung vá»›i 4 hÃ nh cÃ²n láº¡i (Thá»§y/Má»™c/Thá»•/Kim tá»‘n 2
+// Skill Point, ngÆ°á»i chÆ¡i tá»± mua node gá»‘c cá»§a hÃ nh Ä‘Ã³). Chá»‰ Há»a Ä‘Æ°á»£c
+// tá»± Ä‘á»™ng mua sáºµn (cost 0 = luÃ´n Ä‘á»§ Ä‘iá»ƒm); pháº§n "trang bá»‹ vÃ o slot 0"
+// váº«n giá»¯ riÃªng (equip khÃ¡c há»c, xem SkillSystem.ts) vÃ¬ Node Tree
+// khÃ´ng mÃ´ táº£ khÃ¡i niá»‡m loadout slot.
 const PHAP_TU_STARTER_NODE_ID = 'hoa_linh_ngo'
 const PHAP_TU_STARTER_SKILL_ID = 'hoa_cau_thuat'
 
@@ -255,8 +249,8 @@ export class GameManager {
 
   readonly combatSystem = new CombatSystem(this.eventBus)
 
-  // Thiên phú Bất Tử Thể (talent-direction-choice-plan §6) — guard giữ lượt
-  // sống sót battle-scoped; combatSystem.killIfDead() là điểm tiêu thụ.
+  // ThiÃªn phÃº Báº¥t Tá»­ Thá»ƒ (talent-direction-choice-plan Â§6) â€” guard giá»¯ lÆ°á»£t
+  // sá»‘ng sÃ³t battle-scoped; combatSystem.killIfDead() lÃ  Ä‘iá»ƒm tiÃªu thá»¥.
   readonly surviveLethalGuard = new SurviveLethalGuard()
 
   readonly actionImpact = new ActionImpactSystem({
@@ -276,14 +270,14 @@ export class GameManager {
       kind: 'upgrade',
       message:
         levelsGained === 1
-          ? `${skill.name} đạt cấp ${skill.level}`
-          : `${skill.name} tăng ${levelsGained} cấp, đạt cấp ${skill.level}`,
+          ? `${skill.name} Ä‘áº¡t cáº¥p ${skill.level}`
+          : `${skill.name} tÄƒng ${levelsGained} cáº¥p, Ä‘áº¡t cáº¥p ${skill.level}`,
     })
   })
   readonly skillEffectSystem = new SkillEffectSystem()
   readonly passiveSystem = new PassiveSystem(this.eventBus, this.skillManager, this.skillSystem)
 
-  // Pháp Tu Redesign (magicpath) — Node Tree, hạ tầng CHUNG cho mọi
+  // PhÃ¡p Tu Redesign (magicpath) â€” Node Tree, háº¡ táº§ng CHUNG cho má»i
   // path, xem core/progression/.
   readonly nodeRegistry = new NodeRegistry()
 
@@ -295,9 +289,9 @@ export class GameManager {
     }
   }
 
-  // Khai báo sau skillManager/skillSystem/skillEffectSystem/
-  // buffRegistry vì field class khởi tạo theo thứ tự khai báo —
-  // BattleSystem cần các field này đã có giá trị (basic skill
+  // Khai bÃ¡o sau skillManager/skillSystem/skillEffectSystem/
+  // buffRegistry vÃ¬ field class khá»Ÿi táº¡o theo thá»© tá»± khai bÃ¡o â€”
+  // BattleSystem cáº§n cÃ¡c field nÃ y Ä‘Ã£ cÃ³ giÃ¡ trá»‹ (basic skill
   // thay auto-attack + auto-cast, xem BattleSystem.ts).
   readonly battleSystem = new BattleSystem(
     this.combatSystem,
@@ -310,20 +304,20 @@ export class GameManager {
     this.actionImpact,
 
     // Timed pill effects and socket modifiers remain live while the
-    // restored 10×16 battle recomputes effective stats each tick.
+    // restored 10Ã—16 battle recomputes effective stats each tick.
     () => (this.activePlayer ? this.getActiveRuntimeModifiers(this.activePlayer) : []),
 
-    // Combat AI strategy (plan §7/§10) — PlayerData là authority; đọc
-    // LIVE để đổi strategy giữa trận có hiệu lực ngay trong tick kế.
+    // Combat AI strategy (plan Â§7/Â§10) â€” PlayerData lÃ  authority; Ä‘á»c
+    // LIVE Ä‘á»ƒ Ä‘á»•i strategy giá»¯a tráº­n cÃ³ hiá»‡u lá»±c ngay trong tick káº¿.
     () => this.activePlayer?.combatAiStrategy ?? DEFAULT_COMBAT_AI_STRATEGY,
 
-    // Thiên phú Phản Phác (talent-direction-choice-plan §6) — xác suất giữ
-    // ailment khi kích Reaction, đọc LIVE từ activePlayer.
+    // ThiÃªn phÃº Pháº£n PhÃ¡c (talent-direction-choice-plan Â§6) â€” xÃ¡c suáº¥t giá»¯
+    // ailment khi kÃ­ch Reaction, Ä‘á»c LIVE tá»« activePlayer.
     () => getReactionKeepChance(this.activePlayer?.selectedTalentIds ?? []),
 
-    // Final review fix (Important #6) — nguồn sự thật DUY NHẤT cho việc
-    // kích hoạt channel Bạt Kiếm, khớp đúng điều kiện channel UI đang
-    // đọc (player.kiemTuRoute === 'bat_kiem').
+    // Final review fix (Important #6) â€” nguá»“n sá»± tháº­t DUY NHáº¤T cho viá»‡c
+    // kÃ­ch hoáº¡t channel Báº¡t Kiáº¿m, khá»›p Ä‘Ãºng Ä‘iá»u kiá»‡n channel UI Ä‘ang
+    // Ä‘á»c (player.kiemTuRoute === 'bat_kiem').
     () => this.activePlayer?.kiemTuRoute,
   )
 
@@ -337,21 +331,21 @@ export class GameManager {
   readonly equipmentBag = new EquipmentBag()
   readonly equipmentSystem = new EquipmentSystem(createDefaultEquipmentOperationCostCatalog())
 
-  // Core Loop Foundation checklist (Phase 3, Mục AFFIX) — thay thế
-  // hoàn toàn substatPool cũ.
+  // Core Loop Foundation checklist (Phase 3, Má»¥c AFFIX) â€” thay tháº¿
+  // hoÃ n toÃ n substatPool cÅ©.
   readonly affixRegistry = new AffixRegistry()
 
-  // MASTER SPEC Mục XVI (Phase 9) — Cường Hóa sống ở đây (theo SLOT,
-  // 6 slot cố định), tách khỏi EquipmentInstance.
+  // MASTER SPEC Má»¥c XVI (Phase 9) â€” CÆ°á»ng HÃ³a sá»‘ng á»Ÿ Ä‘Ã¢y (theo SLOT,
+  // 6 slot cá»‘ Ä‘á»‹nh), tÃ¡ch khá»i EquipmentInstance.
   readonly equipmentSlotManager = new EquipmentSlotManager()
 
   readonly pillRegistry = new PillRegistry()
   readonly pillBag = new PillBag()
   readonly pillSystem = new PillSystem(this.buffSystem)
 
-  // Phù/Trận legacy (2026-08-25, plan §10.1.4) — registry giữ lại CHỈ
-  // ĐỌC như tombstone để save cũ không crash vì registry lookup; KHÔNG
-  // còn bag, KHÔNG đăng ký content mới dùng được.
+  // PhÃ¹/Tráº­n legacy (2026-08-25, plan Â§10.1.4) â€” registry giá»¯ láº¡i CHá»ˆ
+  // Äá»ŒC nhÆ° tombstone Ä‘á»ƒ save cÅ© khÃ´ng crash vÃ¬ registry lookup; KHÃ”NG
+  // cÃ²n bag, KHÃ”NG Ä‘Äƒng kÃ½ content má»›i dÃ¹ng Ä‘Æ°á»£c.
   readonly talismanRegistry = new TalismanRegistry()
   readonly formationRegistry = new FormationRegistry()
 
@@ -363,9 +357,9 @@ export class GameManager {
   )
 
   // =========================
-  // Production (2026-08-25, resource-professions-rework plan §4) —
-  // thay ExplorationSystem: ba nguồn Lâm/Quáng/Động Thiên của Thanh Vân
-  // dùng chung engine cycle snapshot + settle idempotent.
+  // Production (2026-08-25, resource-professions-rework plan Â§4) â€”
+  // thay ExplorationSystem: ba nguá»“n LÃ¢m/QuÃ¡ng/Äá»™ng ThiÃªn cá»§a Thanh VÃ¢n
+  // dÃ¹ng chung engine cycle snapshot + settle idempotent.
   // =========================
   readonly productionSystem = new ProductionSystem({
     territory: TERRITORY_THANH_VAN,
@@ -375,7 +369,7 @@ export class GameManager {
     grottoHerbs: THANH_VAN_GROTTO_HERBS,
   })
 
-  // Đan Phòng (plan §8) — job luyện đan với reserve atomic.
+  // Äan PhÃ²ng (plan Â§8) â€” job luyá»‡n Ä‘an vá»›i reserve atomic.
   readonly alchemySystem = new AlchemySystem()
 
   private alchemyRecipesById = new Map<string, AlchemyRecipe>()
@@ -396,35 +390,35 @@ export class GameManager {
 
   readonly rewardSystem = new RewardSystem()
 
-  // Session trận đang diễn ra (receiver nhận thưởng + PlayerData để roll
-  // loot) đã chuyển vào BattleLootSystem — xem constructor().
+  // Session tráº­n Ä‘ang diá»…n ra (receiver nháº­n thÆ°á»Ÿng + PlayerData Ä‘á»ƒ roll
+  // loot) Ä‘Ã£ chuyá»ƒn vÃ o BattleLootSystem â€” xem constructor().
 
-  // Beta Phase 4 (Notification/UX) — hàng đợi toast phát sinh TRONG
-  // core (loot từ BattleLootSystem, upgrade skill từ callback ở trên).
+  // Beta Phase 4 (Notification/UX) â€” hÃ ng Ä‘á»£i toast phÃ¡t sinh TRONG
+  // core (loot tá»« BattleLootSystem, upgrade skill tá»« callback á»Ÿ trÃªn).
   private readonly notifications = new NotificationQueue()
 
   // =========================
-  // RUNTIME SERVICES (2026-08-24 tách khỏi thân class này)
+  // RUNTIME SERVICES (2026-08-24 tÃ¡ch khá»i thÃ¢n class nÃ y)
   // =========================
-  // Ba service dưới đây sở hữu business logic trận đấu đang diễn ra:
-  // - BattleLootSystem: loot/particle/toast/battle summary khi quái chết.
-  // - StageWaveSystem: vòng đời wave của Màn + boss summon.
-  // - TribulationSystem: runtime trận Độ Kiếp + cooldown.
-  // Khởi tạo trong constructor (KHÔNG phải field initializer) vì cần
-  // tham chiếu tới các field khai báo SAU chúng ở trên (bags/registries/
-  // zoneRegistry/template registries) — field initializer chạy theo thứ
-  // tự khai báo nên không thấy được; ctor body chạy sau cùng, an toàn.
+  // Ba service dÆ°á»›i Ä‘Ã¢y sá»Ÿ há»¯u business logic tráº­n Ä‘áº¥u Ä‘ang diá»…n ra:
+  // - BattleLootSystem: loot/particle/toast/battle summary khi quÃ¡i cháº¿t.
+  // - StageWaveSystem: vÃ²ng Ä‘á»i wave cá»§a MÃ n + boss summon.
+  // - TribulationSystem: runtime tráº­n Äá»™ Kiáº¿p + cooldown.
+  // Khá»Ÿi táº¡o trong constructor (KHÃ”NG pháº£i field initializer) vÃ¬ cáº§n
+  // tham chiáº¿u tá»›i cÃ¡c field khai bÃ¡o SAU chÃºng á»Ÿ trÃªn (bags/registries/
+  // zoneRegistry/template registries) â€” field initializer cháº¡y theo thá»©
+  // tá»± khai bÃ¡o nÃªn khÃ´ng tháº¥y Ä‘Æ°á»£c; ctor body cháº¡y sau cÃ¹ng, an toÃ n.
   private readonly battleLoot: BattleLootSystem
   private readonly stageWaves: StageWaveSystem
   private readonly tribulation: TribulationSystem
 
   constructor() {
-    // Kiếm Tu (2026-08-28) — mirror player.skillCastCounts/skillLevels
-    // mỗi lần cast, phục vụ NodeSystem prerequisite `skillCastCount`
-    // (NodeSystem chỉ nhận PlayerData, không có SkillManager). Ghi vào
-    // activePlayer (đăng ký qua setActivePlayer(), xem field bên dưới)
-    // — no-op an toàn nếu chưa có player active (vd unit test dựng
-    // GameManager trần).
+    // Kiáº¿m Tu (2026-08-28) â€” mirror player.skillCastCounts/skillLevels
+    // má»—i láº§n cast, phá»¥c vá»¥ NodeSystem prerequisite `skillCastCount`
+    // (NodeSystem chá»‰ nháº­n PlayerData, khÃ´ng cÃ³ SkillManager). Ghi vÃ o
+    // activePlayer (Ä‘Äƒng kÃ½ qua setActivePlayer(), xem field bÃªn dÆ°á»›i)
+    // â€” no-op an toÃ n náº¿u chÆ°a cÃ³ player active (vd unit test dá»±ng
+    // GameManager tráº§n).
     this.skillSystem.setCastCountSink((skillId, totalExperience, level) => {
       if (!this.activePlayer) return
 
@@ -496,10 +490,10 @@ export class GameManager {
   }
 
   /**
-   * Skill runtime stats + node-derived skillModifiers (plan §6.8) —
-   * thay đường mutate Skill instance lúc purchase: cộng flat/perLevel
-   * suy ra từ (registry, nodeLevels) lên trên tổng hợp của SkillSystem.
-   * Public cho UI/test; combat snapshot đi qua cùng đường này.
+   * Skill runtime stats + node-derived skillModifiers (plan Â§6.8) â€”
+   * thay Ä‘Æ°á»ng mutate Skill instance lÃºc purchase: cá»™ng flat/perLevel
+   * suy ra tá»« (registry, nodeLevels) lÃªn trÃªn tá»•ng há»£p cá»§a SkillSystem.
+   * Public cho UI/test; combat snapshot Ä‘i qua cÃ¹ng Ä‘Æ°á»ng nÃ y.
    */
   getSkillRuntimeStats(player: PlayerData) {
     const stats = this.skillSystem.getSkillRuntimeStats()
@@ -516,18 +510,18 @@ export class GameManager {
   // =========================
   // DATA REGISTRATION
   // =========================
-  // Nạp dữ liệu tĩnh (từ /data) vào các Manager. Gọi 1 lần lúc
-  // khởi tạo game. Tách riêng khỏi constructor để có thể gọi lại
-  // trong test hoặc khi cần nạp thêm data theo DLC/patch sau này.
+  // Náº¡p dá»¯ liá»‡u tÄ©nh (tá»« /data) vÃ o cÃ¡c Manager. Gá»i 1 láº§n lÃºc
+  // khá»Ÿi táº¡o game. TÃ¡ch riÃªng khá»i constructor Ä‘á»ƒ cÃ³ thá»ƒ gá»i láº¡i
+  // trong test hoáº·c khi cáº§n náº¡p thÃªm data theo DLC/patch sau nÃ y.
 
   registerMaterials(materials: Material[]) {
-    // Boot validator (plan §4.1/§10 Phase 1): lỗi authoring dữ liệu nghề
-    // fail NGAY khi đăng ký — không âm thầm tạo kinh tế hỏng. Chỉ validate
-    // material CÓ meta nghề (legacy material không đụng); kiểm tra
-    // PER-ENTRY (id convention + realm scope) — completeness toàn catalog
-    // (đủ 3 rarity/cell) enforce ở ProfessionDataIntegrity.test trên
-    // TOÀN BỘ mảng materials (registerMaterials có thể được gọi từng
-    // phần trong test).
+    // Boot validator (plan Â§4.1/Â§10 Phase 1): lá»—i authoring dá»¯ liá»‡u nghá»
+    // fail NGAY khi Ä‘Äƒng kÃ½ â€” khÃ´ng Ã¢m tháº§m táº¡o kinh táº¿ há»ng. Chá»‰ validate
+    // material CÃ“ meta nghá» (legacy material khÃ´ng Ä‘á»¥ng); kiá»ƒm tra
+    // PER-ENTRY (id convention + realm scope) â€” completeness toÃ n catalog
+    // (Ä‘á»§ 3 rarity/cell) enforce á»Ÿ ProfessionDataIntegrity.test trÃªn
+    // TOÃ€N Bá»˜ máº£ng materials (registerMaterials cÃ³ thá»ƒ Ä‘Æ°á»£c gá»i tá»«ng
+    // pháº§n trong test).
     for (const material of materials) {
       if (!material.profession) {
         continue
@@ -579,7 +573,7 @@ export class GameManager {
     }
   }
 
-  /** Đăng ký đan phương (plan §8) — validate mapping thảo duy nhất. */
+  /** ÄÄƒng kÃ½ Ä‘an phÆ°Æ¡ng (plan Â§8) â€” validate mapping tháº£o duy nháº¥t. */
   registerAlchemyRecipes(recipes: AlchemyRecipe[]) {
     for (const recipe of recipes) {
       if (this.alchemyRecipesById.has(recipe.id)) {
@@ -594,7 +588,7 @@ export class GameManager {
         herbBases.size > 1 &&
         new Set(recipe.herbVariants.map((v) => v.materialId)).size !== recipe.herbVariants.length
       ) {
-        throw new Error(`Alchemy recipe ${recipe.id}: herb variants trùng lặp`)
+        throw new Error(`Alchemy recipe ${recipe.id}: herb variants trÃ¹ng láº·p`)
       }
 
       this.alchemyRecipesById.set(recipe.id, recipe)
@@ -630,7 +624,7 @@ export class GameManager {
   }
 
   registerFormations(formations: Formation[]) {
-    // Tombstone-only (plan §10.1.4).
+    // Tombstone-only (plan Â§10.1.4).
     for (const formation of formations) {
       if (!this.formationRegistry.has(formation.id)) {
         this.formationRegistry.register(formation)
@@ -639,8 +633,8 @@ export class GameManager {
   }
 
   registerTalismans(talismans: Talisman[]) {
-    // Tombstone-only (plan §10.1.4) — đăng ký để save cũ load không
-    // crash, KHÔNG tạo nguồn mới.
+    // Tombstone-only (plan Â§10.1.4) â€” Ä‘Äƒng kÃ½ Ä‘á»ƒ save cÅ© load khÃ´ng
+    // crash, KHÃ”NG táº¡o nguá»“n má»›i.
     for (const talisman of talismans) {
       if (!this.talismanRegistry.has(talisman.id)) {
         this.talismanRegistry.register(talisman)
@@ -648,26 +642,26 @@ export class GameManager {
     }
   }
 
-  // Skill/Technique không "register" sẵn có toàn bộ danh sách gốc
-  // vào manager — chúng chỉ được add khi người chơi thực sự học
-  // (learn), đúng như SkillSystem.learn()/TechniqueSystem.learn()
-  // đã thiết kế. GameManager chỉ cung cấp nơi tra cứu template.
+  // Skill/Technique khÃ´ng "register" sáºµn cÃ³ toÃ n bá»™ danh sÃ¡ch gá»‘c
+  // vÃ o manager â€” chÃºng chá»‰ Ä‘Æ°á»£c add khi ngÆ°á»i chÆ¡i thá»±c sá»± há»c
+  // (learn), Ä‘Ãºng nhÆ° SkillSystem.learn()/TechniqueSystem.learn()
+  // Ä‘Ã£ thiáº¿t káº¿. GameManager chá»‰ cung cáº¥p nÆ¡i tra cá»©u template.
   private skillTemplates = new TemplateRegistry<Skill>()
   private techniqueTemplates = new TemplateRegistry<Technique>()
 
-  // Enemy template tra theo id (dùng bởi StageSystem khi chọn quái
-  // kế tiếp để spawn) — cùng pattern skillTemplates/techniqueTemplates,
-  // KHÁC EnemyManager (chỉ chứa instance đã spawn, có id riêng từng
-  // con — xem EnemySystem.spawn()).
+  // Enemy template tra theo id (dÃ¹ng bá»Ÿi StageSystem khi chá»n quÃ¡i
+  // káº¿ tiáº¿p Ä‘á»ƒ spawn) â€” cÃ¹ng pattern skillTemplates/techniqueTemplates,
+  // KHÃC EnemyManager (chá»‰ chá»©a instance Ä‘Ã£ spawn, cÃ³ id riÃªng tá»«ng
+  // con â€” xem EnemySystem.spawn()).
   private enemyTemplates = new TemplateRegistry<Enemy>()
 
-  // Stage template tra theo id — cùng pattern enemyTemplates.
+  // Stage template tra theo id â€” cÃ¹ng pattern enemyTemplates.
   private stageTemplates = new TemplateRegistry<Stage>()
 
-  // Thám Hiểm rework — Địa Giới (nhóm nhiều Stage/Màn), xem
-  // core/stage/Zone.ts. Registry thật (không phải Map trần như
-  // stageTemplates) vì StageSelectPanel.vue cần getAll()/has() trực
-  // tiếp, không chỉ tra theo id đơn lẻ.
+  // ThÃ¡m Hiá»ƒm rework â€” Äá»‹a Giá»›i (nhÃ³m nhiá»u Stage/MÃ n), xem
+  // core/stage/Zone.ts. Registry tháº­t (khÃ´ng pháº£i Map tráº§n nhÆ°
+  // stageTemplates) vÃ¬ StageSelectPanel.vue cáº§n getAll()/has() trá»±c
+  // tiáº¿p, khÃ´ng chá»‰ tra theo id Ä‘Æ¡n láº».
   readonly zoneRegistry = new ZoneRegistry()
 
   registerZones(zones: Zone[]) {
@@ -705,12 +699,12 @@ export class GameManager {
   }
 
   /**
-   * Tự Động Thám Hiểm (mode 'auto', xem stores/ui.ts) — Màn kế tiếp
-   * trong CÙNG Địa Giới với `currentStageId`, theo đúng thứ tự khai
-   * trong `Zone.stageIds`. Trả về null nếu đã ở Màn cuối hoặc
-   * currentStageId không thuộc zone này — caller (App.vue's
-   * fightStage()) tự fallback lặp lại Màn hiện tại khi null (graceful,
-   * không cần biết trước zone có bao nhiêu Màn).
+   * Tá»± Äá»™ng ThÃ¡m Hiá»ƒm (mode 'auto', xem stores/ui.ts) â€” MÃ n káº¿ tiáº¿p
+   * trong CÃ™NG Äá»‹a Giá»›i vá»›i `currentStageId`, theo Ä‘Ãºng thá»© tá»± khai
+   * trong `Zone.stageIds`. Tráº£ vá» null náº¿u Ä‘Ã£ á»Ÿ MÃ n cuá»‘i hoáº·c
+   * currentStageId khÃ´ng thuá»™c zone nÃ y â€” caller (App.vue's
+   * fightStage()) tá»± fallback láº·p láº¡i MÃ n hiá»‡n táº¡i khi null (graceful,
+   * khÃ´ng cáº§n biáº¿t trÆ°á»›c zone cÃ³ bao nhiÃªu MÃ n).
    */
   getNextStageInZone(zoneId: string, currentStageId: string): string | null {
     if (!this.zoneRegistry.has(zoneId)) {
@@ -753,7 +747,7 @@ export class GameManager {
     const zone = zones[zoneIndex]
 
     if (!zone) {
-      // Stage độc lập (Độ Kiếp/test/debug) không thuộc tuyến thám hiểm.
+      // Stage Ä‘á»™c láº­p (Äá»™ Kiáº¿p/test/debug) khÃ´ng thuá»™c tuyáº¿n thÃ¡m hiá»ƒm.
       return true
     }
 
@@ -783,16 +777,16 @@ export class GameManager {
   }
 
   /**
-   * Pháp Tu Redesign (magicpath) — mua 1 ProgressionNode (LĨNH NGỘ,
-   * 0→1). Gọi `purchaseNode()` thuần (core/progression/NodeSystem.ts)
-   * trước — hàm đó tự xử lý mọi thứ không cần registry. Chỉ còn
-   * `unlocksSkillIds` cần learnSkill() (cần skillTemplates, GameManager
-   * mới có). KHÔNG tự equip skill vừa unlock.
+   * PhÃ¡p Tu Redesign (magicpath) â€” mua 1 ProgressionNode (LÄ¨NH NGá»˜,
+   * 0â†’1). Gá»i `purchaseNode()` thuáº§n (core/progression/NodeSystem.ts)
+   * trÆ°á»›c â€” hÃ m Ä‘Ã³ tá»± xá»­ lÃ½ má»i thá»© khÃ´ng cáº§n registry. Chá»‰ cÃ²n
+   * `unlocksSkillIds` cáº§n learnSkill() (cáº§n skillTemplates, GameManager
+   * má»›i cÃ³). KHÃ”NG tá»± equip skill vá»«a unlock.
    *
-   * §6.8 — KHÔNG còn mutate Skill instance / push player.modifiers lúc
-   * mua: mọi hiệu lực suy ra từ (registry, nodeLevels) qua aggregator
-   * (getAggregatedModifiers + buildSkillRuntimeStats), recompute luôn
-   * cho cùng kết quả xác định.
+   * Â§6.8 â€” KHÃ”NG cÃ²n mutate Skill instance / push player.modifiers lÃºc
+   * mua: má»i hiá»‡u lá»±c suy ra tá»« (registry, nodeLevels) qua aggregator
+   * (getAggregatedModifiers + buildSkillRuntimeStats), recompute luÃ´n
+   * cho cÃ¹ng káº¿t quáº£ xÃ¡c Ä‘á»‹nh.
    */
   purchaseNode(nodeId: string, player: PlayerData): boolean {
     if (!this.nodeRegistry.has(nodeId)) {
@@ -805,8 +799,8 @@ export class GameManager {
       return false
     }
 
-    // Effect mở khoá skill chỉ chạy ở chuyển tiếp 0 → 1 —
-    // purchaseNodeSystem chỉ trả true đúng ở chuyển tiếp này.
+    // Effect má»Ÿ khoÃ¡ skill chá»‰ cháº¡y á»Ÿ chuyá»ƒn tiáº¿p 0 â†’ 1 â€”
+    // purchaseNodeSystem chá»‰ tráº£ true Ä‘Ãºng á»Ÿ chuyá»ƒn tiáº¿p nÃ y.
     for (const skillId of node.effect.unlocksSkillIds ?? []) {
       this.learnSkill(skillId)
 
@@ -822,7 +816,7 @@ export class GameManager {
     return true
   }
 
-  /** Cấp reward đại cảnh giới theo cultivation path từ data kit. */
+  /** Cáº¥p reward Ä‘áº¡i cáº£nh giá»›i theo cultivation path tá»« data kit. */
   grantCultivationPathRealmReward(player: PlayerData, realmId: string): boolean {
     return grantPathRealmReward(player, realmId, {
       getEquippedTechnique: () => this.techniqueManager.getEquipped(),
@@ -833,8 +827,8 @@ export class GameManager {
   }
 
   /**
-   * Nâng node đã lĩnh ngộ lên +1 cấp bằng Cảm Ngộ (§6.2) — cost theo
-   * data node; không vượt maxLevel; thất bại không mutate gì.
+   * NÃ¢ng node Ä‘Ã£ lÄ©nh ngá»™ lÃªn +1 cáº¥p báº±ng Cáº£m Ngá»™ (Â§6.2) â€” cost theo
+   * data node; khÃ´ng vÆ°á»£t maxLevel; tháº¥t báº¡i khÃ´ng mutate gÃ¬.
    */
   upgradeNode(nodeId: string, player: PlayerData): boolean {
     if (!this.nodeRegistry.has(nodeId)) {
@@ -852,7 +846,7 @@ export class GameManager {
     return this.nodeRegistry.has(nodeId) ? getNodeMaxLevelSystem(this.nodeRegistry.get(nodeId)) : 0
   }
 
-  /** Cost Cảm Ngộ của lần mua/nâng KẾ TIẾP — undefined khi đã max. */
+  /** Cost Cáº£m Ngá»™ cá»§a láº§n mua/nÃ¢ng Káº¾ TIáº¾P â€” undefined khi Ä‘Ã£ max. */
   getNextNodeCost(nodeId: string, player: PlayerData): number | undefined {
     if (!this.nodeRegistry.has(nodeId)) {
       return undefined
@@ -882,18 +876,18 @@ export class GameManager {
   }
 
   /**
-   * Reset development một nhánh (§6.10) — hoàn đúng tổng Cảm Ngộ đã
-   * tiêu (suy từ level/cost data), cascade gỡ node con mồ côi; modifier
-   * tự cập nhật qua aggregator (không trừ ngược modifier cũ).
+   * Reset development má»™t nhÃ¡nh (Â§6.10) â€” hoÃ n Ä‘Ãºng tá»•ng Cáº£m Ngá»™ Ä‘Ã£
+   * tiÃªu (suy tá»« level/cost data), cascade gá»¡ node con má»“ cÃ´i; modifier
+   * tá»± cáº­p nháº­t qua aggregator (khÃ´ng trá»« ngÆ°á»£c modifier cÅ©).
    */
   devResetBranch(branchTag: string, player: PlayerData): number {
     return devResetBranchSystem(player, this.nodeRegistry, branchTag)
   }
 
   /**
-   * skill-insight-and-auto-combat-hud-plan.md mục 5 — nâng cấp skill
-   * bằng Cảm ngộ Kỹ năng, thuần pass-through xuống SkillSystem (đã có
-   * skillManager qua constructor, không cần gì thêm từ GameManager).
+   * skill-insight-and-auto-combat-hud-plan.md má»¥c 5 â€” nÃ¢ng cáº¥p skill
+   * báº±ng Cáº£m ngá»™ Ká»¹ nÄƒng, thuáº§n pass-through xuá»‘ng SkillSystem (Ä‘Ã£ cÃ³
+   * skillManager qua constructor, khÃ´ng cáº§n gÃ¬ thÃªm tá»« GameManager).
    */
   upgradeSkill(skillId: string, player: PlayerData): boolean {
     return this.skillSystem.upgradeSkill(skillId, player)
@@ -904,10 +898,10 @@ export class GameManager {
   }
 
   /**
-   * PLAN HOÀN CHỈNH mục 2 — tiêu 1 attributePoint vào ĐÚNG 1 Main Stat.
-   * No-op (trả false) nếu hết điểm hoặc stat đã chạm trần đại cảnh
-   * giới hiện tại (getMainStatCap()) — trần tính riêng từng stat,
-   * KHÔNG có trần tổng của cả 5 (đúng "Nguyên tắc" mục 2 của doc).
+   * PLAN HOÃ€N CHá»ˆNH má»¥c 2 â€” tiÃªu 1 attributePoint vÃ o ÄÃšNG 1 Main Stat.
+   * No-op (tráº£ false) náº¿u háº¿t Ä‘iá»ƒm hoáº·c stat Ä‘Ã£ cháº¡m tráº§n Ä‘áº¡i cáº£nh
+   * giá»›i hiá»‡n táº¡i (getMainStatCap()) â€” tráº§n tÃ­nh riÃªng tá»«ng stat,
+   * KHÃ”NG cÃ³ tráº§n tá»•ng cá»§a cáº£ 5 (Ä‘Ãºng "NguyÃªn táº¯c" má»¥c 2 cá»§a doc).
    */
   allocateAttributePoint(player: PlayerData, stat: MainStatKey): boolean {
     if (player.attributePoints <= 0) {
@@ -935,11 +929,11 @@ export class GameManager {
   }
 
   /**
-   * Tâm Pháp Chiến Đấu có thể mang `innateSkillId` (nội tại chiến đấu
-   * đặc trưng) — tự học + equip skill passive đó ngay khi tâm pháp
-   * được trang bị, pattern Y HỆT syncRealmPassive() (idempotent qua
-   * skillManager.has(), un-equip technique sau đó KHÔNG tự gỡ skill —
-   * giữ tinh thần "học rồi thì giữ" toàn hệ thống).
+   * TÃ¢m PhÃ¡p Chiáº¿n Äáº¥u cÃ³ thá»ƒ mang `innateSkillId` (ná»™i táº¡i chiáº¿n Ä‘áº¥u
+   * Ä‘áº·c trÆ°ng) â€” tá»± há»c + equip skill passive Ä‘Ã³ ngay khi tÃ¢m phÃ¡p
+   * Ä‘Æ°á»£c trang bá»‹, pattern Y Há»†T syncRealmPassive() (idempotent qua
+   * skillManager.has(), un-equip technique sau Ä‘Ã³ KHÃ”NG tá»± gá»¡ skill â€”
+   * giá»¯ tinh tháº§n "há»c rá»“i thÃ¬ giá»¯" toÃ n há»‡ thá»‘ng).
    */
   equipTechnique(techniqueId: string): boolean {
     const success = this.techniqueSystem.equip(techniqueId)
@@ -956,9 +950,9 @@ export class GameManager {
       if (template) {
         this.skillSystem.learn(template)
 
-        // innateSkillId luôn là passive (xem Technique.ts) — không
-        // thuộc Skill Loadout, dùng equipWithoutSlot() như mọi passive
-        // khác (syncRealmPassive()).
+        // innateSkillId luÃ´n lÃ  passive (xem Technique.ts) â€” khÃ´ng
+        // thuá»™c Skill Loadout, dÃ¹ng equipWithoutSlot() nhÆ° má»i passive
+        // khÃ¡c (syncRealmPassive()).
         this.skillSystem.equipWithoutSlot(technique.innateSkillId)
       }
     }
@@ -971,23 +965,23 @@ export class GameManager {
   }
 
   /**
-   * Pháp Tu profession-tier ladder (2026-08-14, hợp nhất Tâm Pháp
-   * 2026-08-15) — "chọn nghề nghiệp", MỘT LẦN DUY NHẤT, VĨNH VIỄN (xem
-   * PlayerData.cultivationPath) — tự cấp ĐÚNG bộ kit cố định của tier
-   * đó: 1 Tâm Pháp hợp nhất (GHI ĐÈ tâm pháp đang trang bị, kể cả tâm
-   * pháp khởi đầu) + 3 skill cố định (basic/special/ultimate, GHI ĐÈ
-   * bất kỳ skill nào đang chiếm 3 slot đó). KHÔNG phải hệ thống build
-   * tự do — tái dùng nguyên vẹn learnTechnique()/equipTechnique()/
-   * learnSkill()/equipSkill() đã có.
+   * PhÃ¡p Tu profession-tier ladder (2026-08-14, há»£p nháº¥t TÃ¢m PhÃ¡p
+   * 2026-08-15) â€” "chá»n nghá» nghiá»‡p", Má»˜T Láº¦N DUY NHáº¤T, VÄ¨NH VIá»„N (xem
+   * PlayerData.cultivationPath) â€” tá»± cáº¥p ÄÃšNG bá»™ kit cá»‘ Ä‘á»‹nh cá»§a tier
+   * Ä‘Ã³: 1 TÃ¢m PhÃ¡p há»£p nháº¥t (GHI ÄÃˆ tÃ¢m phÃ¡p Ä‘ang trang bá»‹, ká»ƒ cáº£ tÃ¢m
+   * phÃ¡p khá»Ÿi Ä‘áº§u) + 3 skill cá»‘ Ä‘á»‹nh (basic/special/ultimate, GHI ÄÃˆ
+   * báº¥t ká»³ skill nÃ o Ä‘ang chiáº¿m 3 slot Ä‘Ã³). KHÃ”NG pháº£i há»‡ thá»‘ng build
+   * tá»± do â€” tÃ¡i dÃ¹ng nguyÃªn váº¹n learnTechnique()/equipTechnique()/
+   * learnSkill()/equipSkill() Ä‘Ã£ cÃ³.
    *
-   * Nghi Lễ Nhập Môn (2026-08-16) — chọn path CHÍNH LÀ nghi lễ đột phá
-   * Phàm Nhân -> Luyện Khí (đúng "đột phá lên cảnh giới mới luôn có
-   * nghi lễ" — Trúc Cơ có Độ Kiếp riêng, Phàm Nhân->Luyện Khí dùng
-   * chính hành động chọn nghề này thay vì 1 nút Đột Phá thường, xem
-   * CultivationSystem.breakthrough()'s guard chặn realmId === 'mortal').
-   * Nếu player đang ở Phàm Nhân lúc chọn, atomically chuyển luôn sang
-   * qi_refining tầng 1 — 3 hàm gọi sau đó GIỐNG HỆT useBreakthrough.ts/
-   * useTribulation.ts gọi sau mọi lần đột phá đại cảnh giới.
+   * Nghi Lá»… Nháº­p MÃ´n (2026-08-16) â€” chá»n path CHÃNH LÃ€ nghi lá»… Ä‘á»™t phÃ¡
+   * PhÃ m NhÃ¢n -> Luyá»‡n KhÃ­ (Ä‘Ãºng "Ä‘á»™t phÃ¡ lÃªn cáº£nh giá»›i má»›i luÃ´n cÃ³
+   * nghi lá»…" â€” TrÃºc CÆ¡ cÃ³ Äá»™ Kiáº¿p riÃªng, PhÃ m NhÃ¢n->Luyá»‡n KhÃ­ dÃ¹ng
+   * chÃ­nh hÃ nh Ä‘á»™ng chá»n nghá» nÃ y thay vÃ¬ 1 nÃºt Äá»™t PhÃ¡ thÆ°á»ng, xem
+   * CultivationSystem.breakthrough()'s guard cháº·n realmId === 'mortal').
+   * Náº¿u player Ä‘ang á»Ÿ PhÃ m NhÃ¢n lÃºc chá»n, atomically chuyá»ƒn luÃ´n sang
+   * qi_refining táº§ng 1 â€” 3 hÃ m gá»i sau Ä‘Ã³ GIá»NG Há»†T useBreakthrough.ts/
+   * useTribulation.ts gá»i sau má»i láº§n Ä‘á»™t phÃ¡ Ä‘áº¡i cáº£nh giá»›i.
    */
   chooseCultivationPath(pathId: CultivationPathId, player: PlayerData): boolean {
     if (
@@ -1033,28 +1027,28 @@ export class GameManager {
         this.skillSystem.equipToSlot(skillId, index)
       })
     } else {
-      // Skill tree redesign (2026-08-21) — Hỏa Cầu Thuật là ROOT NODE
-      // của Hỏa skill tree (không phải 1 skill học riêng bên ngoài cây),
-      // xem data/progression/PhapTuNodes.ts's FIRE_LINH_NGO — cost 0 nên
-      // luôn mua được ngay, purchaseNode() tự lo learnSkill() qua
-      // unlocksSkillIds. Sau đó trang bị NGAY vào slot 0, thay vì bắt
-      // người chơi tự mở Node Tree + Radial Skill Selector trước khi
-      // đánh được trận nào. equipToSlot() tự dời skill đang chiếm slot 0
-      // (Trảm của Phàm Nhân) — execution policy rework (plan §8.6) không
-      // còn mutual-exclusion đòn cơ bản riêng. Vì luôn có skill ngay
-      // sau bước này, gate blockIfNoBasicAttack() ở useBattleActions.ts/
-      // useTribulation.ts đã GỠ theo (không còn tình huống "chưa trang bị
-      // gì" nữa). Thủy/Mộc/Thổ/Kim KHÔNG tự mua — root node của 4 hành
-      // đó tốn 2 Skill Point, người chơi tự mua qua Node Tree UI.
+      // Skill tree redesign (2026-08-21) â€” Há»a Cáº§u Thuáº­t lÃ  ROOT NODE
+      // cá»§a Há»a skill tree (khÃ´ng pháº£i 1 skill há»c riÃªng bÃªn ngoÃ i cÃ¢y),
+      // xem data/progression/PhapTuNodes.ts's FIRE_LINH_NGO â€” cost 0 nÃªn
+      // luÃ´n mua Ä‘Æ°á»£c ngay, purchaseNode() tá»± lo learnSkill() qua
+      // unlocksSkillIds. Sau Ä‘Ã³ trang bá»‹ NGAY vÃ o slot 0, thay vÃ¬ báº¯t
+      // ngÆ°á»i chÆ¡i tá»± má»Ÿ Node Tree + Radial Skill Selector trÆ°á»›c khi
+      // Ä‘Ã¡nh Ä‘Æ°á»£c tráº­n nÃ o. equipToSlot() tá»± dá»i skill Ä‘ang chiáº¿m slot 0
+      // (Tráº£m cá»§a PhÃ m NhÃ¢n) â€” execution policy rework (plan Â§8.6) khÃ´ng
+      // cÃ²n mutual-exclusion Ä‘Ã²n cÆ¡ báº£n riÃªng. VÃ¬ luÃ´n cÃ³ skill ngay
+      // sau bÆ°á»›c nÃ y, gate blockIfNoBasicAttack() á»Ÿ useBattleActions.ts/
+      // useTribulation.ts Ä‘Ã£ Gá»  theo (khÃ´ng cÃ²n tÃ¬nh huá»‘ng "chÆ°a trang bá»‹
+      // gÃ¬" ná»¯a). Thá»§y/Má»™c/Thá»•/Kim KHÃ”NG tá»± mua â€” root node cá»§a 4 hÃ nh
+      // Ä‘Ã³ tá»‘n 2 Skill Point, ngÆ°á»i chÆ¡i tá»± mua qua Node Tree UI.
       this.purchaseNode(PHAP_TU_STARTER_NODE_ID, player)
 
       this.skillSystem.equipToSlot(PHAP_TU_STARTER_SKILL_ID, 0)
     }
 
     if (player.realmId === 'mortal') {
-      // Realm Passive & Pressure System (2026-08-20) — chốt Bậc Nhập
-      // Đạo TRƯỚC khi grant, để Nhập Đạo (RealmPassives.ts) đọc đúng
-      // giá trị cuối cùng của Luyện Thể tại thời điểm Lễ Nhập Môn.
+      // Realm Passive & Pressure System (2026-08-20) â€” chá»‘t Báº­c Nháº­p
+      // Äáº¡o TRÆ¯á»šC khi grant, Ä‘á»ƒ Nháº­p Äáº¡o (RealmPassives.ts) Ä‘á»c Ä‘Ãºng
+      // giÃ¡ trá»‹ cuá»‘i cÃ¹ng cá»§a Luyá»‡n Thá»ƒ táº¡i thá»i Ä‘iá»ƒm Lá»… Nháº­p MÃ´n.
       player.breakthroughGrade = computeBreakthroughGrade(player)
 
       player.realmId = 'qi_refining'
@@ -1081,13 +1075,13 @@ export class GameManager {
   }
 
   /**
-   * Bản Mệnh Pháp Bảo (doc §7.1) — chọn/đổi hướng Công/Thủ/Khống. Đổi
-   * được NHIỀU LẦN ngoài combat (khác chooseCultivationPath() ở trên —
-   * đó là lựa chọn vĩnh viễn, đây là "đổi miễn phí ngoài combat để
-   * test"). Giữ nguyên EXP/tầng/phẩm, chỉ áp dụng từ trận kế (runtime
-   * artifact snapshot path lúc Battle bắt đầu, không đọc lại giữa trận).
-   * KHÔNG dùng window.confirm — khác QuanKhiPanel.vue (lựa chọn đó
-   * không thể đổi lại, đây thì có).
+   * Báº£n Má»‡nh PhÃ¡p Báº£o (doc Â§7.1) â€” chá»n/Ä‘á»•i hÆ°á»›ng CÃ´ng/Thá»§/Khá»‘ng. Äá»•i
+   * Ä‘Æ°á»£c NHIá»€U Láº¦N ngoÃ i combat (khÃ¡c chooseCultivationPath() á»Ÿ trÃªn â€”
+   * Ä‘Ã³ lÃ  lá»±a chá»n vÄ©nh viá»…n, Ä‘Ã¢y lÃ  "Ä‘á»•i miá»…n phÃ­ ngoÃ i combat Ä‘á»ƒ
+   * test"). Giá»¯ nguyÃªn EXP/táº§ng/pháº©m, chá»‰ Ã¡p dá»¥ng tá»« tráº­n káº¿ (runtime
+   * artifact snapshot path lÃºc Battle báº¯t Ä‘áº§u, khÃ´ng Ä‘á»c láº¡i giá»¯a tráº­n).
+   * KHÃ”NG dÃ¹ng window.confirm â€” khÃ¡c QuanKhiPanel.vue (lá»±a chá»n Ä‘Ã³
+   * khÃ´ng thá»ƒ Ä‘á»•i láº¡i, Ä‘Ã¢y thÃ¬ cÃ³).
    */
   setArtifactPath(player: PlayerData, path: ArtifactPath): boolean {
     if (!player.artifact) {
@@ -1112,10 +1106,11 @@ export class GameManager {
    * tram Lv3, không còn thao tác đổi sau này.
    */
 
+
   /**
-   * Bản Mệnh Pháp Bảo (doc §5.3) — nâng phẩm bằng Đoán Bảo Thạch, CHỈ
-   * ngoài combat (transaction thật nằm ở tryUpgradeArtifactGrade() core
-   * thuần — enforce guard combat NGAY TẠI ĐÂY, không chỉ ở UI).
+   * Báº£n Má»‡nh PhÃ¡p Báº£o (doc Â§5.3) â€” nÃ¢ng pháº©m báº±ng ÄoÃ¡n Báº£o Tháº¡ch, CHá»ˆ
+   * ngoÃ i combat (transaction tháº­t náº±m á»Ÿ tryUpgradeArtifactGrade() core
+   * thuáº§n â€” enforce guard combat NGAY Táº I ÄÃ‚Y, khÃ´ng chá»‰ á»Ÿ UI).
    */
   tryUpgradeArtifactGrade(player: PlayerData): boolean {
     if (!player.artifact) {
@@ -1132,11 +1127,11 @@ export class GameManager {
   }
 
   /**
-   * PLAN HOÀN CHỈNH mục 8/12 — "Set Skill vào Loadout" (Tầng 4), tách
-   * biệt HOÀN TOÀN khỏi learnSkill()/purchaseNode() (Tầng 3, "học").
-   * skillId === null thì DỌN slot đó (unequip skill đang chiếm, nếu
-   * có). Validate slotIndex theo tiến trình cảnh giới ở ĐÂY (không
-   * phải SkillSystem — domain thuần không biết realm).
+   * PLAN HOÃ€N CHá»ˆNH má»¥c 8/12 â€” "Set Skill vÃ o Loadout" (Táº§ng 4), tÃ¡ch
+   * biá»‡t HOÃ€N TOÃ€N khá»i learnSkill()/purchaseNode() (Táº§ng 3, "há»c").
+   * skillId === null thÃ¬ Dá»ŒN slot Ä‘Ã³ (unequip skill Ä‘ang chiáº¿m, náº¿u
+   * cÃ³). Validate slotIndex theo tiáº¿n trÃ¬nh cáº£nh giá»›i á»Ÿ ÄÃ‚Y (khÃ´ng
+   * pháº£i SkillSystem â€” domain thuáº§n khÃ´ng biáº¿t realm).
    */
   setSkillLoadoutSlot(player: PlayerData, slotIndex: number, skillId: string | null): boolean {
     if (skillId === null) {
@@ -1161,10 +1156,10 @@ export class GameManager {
   }
 
   /**
-   * Combat AI strategy (plan §10) — PlayerData là nguồn sự thật duy nhất;
-   * UI không tự giữ state. Validate qua isCombatAiStrategy() dùng chung,
-   * trả false nếu giá trị sai. Lưu tự kích hoạt qua save scheduling hiện
-   * có (autosave/visibilitychange) sau khi UI bumpState().
+   * Combat AI strategy (plan Â§10) â€” PlayerData lÃ  nguá»“n sá»± tháº­t duy nháº¥t;
+   * UI khÃ´ng tá»± giá»¯ state. Validate qua isCombatAiStrategy() dÃ¹ng chung,
+   * tráº£ false náº¿u giÃ¡ trá»‹ sai. LÆ°u tá»± kÃ­ch hoáº¡t qua save scheduling hiá»‡n
+   * cÃ³ (autosave/visibilitychange) sau khi UI bumpState().
    */
   setCombatAiStrategy(player: PlayerData, strategy: CombatAiStrategy): boolean {
     if (!isCombatAiStrategy(strategy)) {
@@ -1176,7 +1171,7 @@ export class GameManager {
     return true
   }
 
-  // Core Loop Foundation checklist (Mục SKILL) — "behavior-changing
+  // Core Loop Foundation checklist (Má»¥c SKILL) â€” "behavior-changing
   // node".
   selectSkillSpecialization(skillId: string, specializationId: string): boolean {
     return this.skillSystem.selectSpecialization(skillId, specializationId)
@@ -1187,50 +1182,50 @@ export class GameManager {
   // =========================
 
   /**
-   * Modifier tổng hợp từ Buff + Technique đang trang bị + Skill
-   * passive đang equipped. Stack của passiveModifiers được
-   * PassiveSystem tích trực tiếp lên object Skill (xem
-   * PassiveSystem.ts) nên chỉ cần đọc thẳng từ skillManager, không
-   * cần một bước "gộp" riêng như trước đây comment cũ nhắc tới.
+   * Modifier tá»•ng há»£p tá»« Buff + Technique Ä‘ang trang bá»‹ + Skill
+   * passive Ä‘ang equipped. Stack cá»§a passiveModifiers Ä‘Æ°á»£c
+   * PassiveSystem tÃ­ch trá»±c tiáº¿p lÃªn object Skill (xem
+   * PassiveSystem.ts) nÃªn chá»‰ cáº§n Ä‘á»c tháº³ng tá»« skillManager, khÃ´ng
+   * cáº§n má»™t bÆ°á»›c "gá»™p" riÃªng nhÆ° trÆ°á»›c Ä‘Ã¢y comment cÅ© nháº¯c tá»›i.
    *
-   * Đây là điểm duy nhất trong toàn bộ game tổng hợp modifier
-   * theo thời gian thực. player.ts (store) chỉ cần gọi hàm này
-   * mỗi tick thay vì tự đi gộp từ buffSystem/techniqueSystem/skillManager.
+   * ÄÃ¢y lÃ  Ä‘iá»ƒm duy nháº¥t trong toÃ n bá»™ game tá»•ng há»£p modifier
+   * theo thá»i gian thá»±c. player.ts (store) chá»‰ cáº§n gá»i hÃ m nÃ y
+   * má»—i tick thay vÃ¬ tá»± Ä‘i gá»™p tá»« buffSystem/techniqueSystem/skillManager.
    */
   /**
-   * `player` optional (mặc định bỏ qua tier tâm pháp) — nhiều call site
-   * cũ (test files, vài panel refresh phụ) gọi hàm này KHÔNG có sẵn
-   * PlayerData tiện tay; chữ ký cũ vẫn hợp lệ nguyên vẹn. Call site
-   * "thật" mỗi tick (App.vue) LUÔN truyền player để tier tâm pháp có
-   * hiệu lực — xem getTechniqueTierModifiers().
+   * `player` optional (máº·c Ä‘á»‹nh bá» qua tier tÃ¢m phÃ¡p) â€” nhiá»u call site
+   * cÅ© (test files, vÃ i panel refresh phá»¥) gá»i hÃ m nÃ y KHÃ”NG cÃ³ sáºµn
+   * PlayerData tiá»‡n tay; chá»¯ kÃ½ cÅ© váº«n há»£p lá»‡ nguyÃªn váº¹n. Call site
+   * "tháº­t" má»—i tick (App.vue) LUÃ”N truyá»n player Ä‘á»ƒ tier tÃ¢m phÃ¡p cÃ³
+   * hiá»‡u lá»±c â€” xem getTechniqueTierModifiers().
    */
   getAggregatedModifiers(player?: PlayerData): StatModifier[] {
-    // STATIC-ONLY (2026-08-24, plan §5.4): timed effect + socket
-    // Phù/Trận là modifier SỐNG — KHÔNG nằm ở đây để finalStats caller
-    // truyền vào battle là snapshot tĩnh sạch (không double-apply);
-    // combat recompute nhận runtime qua provider mỗi tick, menu hiển thị
-    // qua store getter cộng getActiveRuntimeModifiers().
+    // STATIC-ONLY (2026-08-24, plan Â§5.4): timed effect + socket
+    // PhÃ¹/Tráº­n lÃ  modifier Sá»NG â€” KHÃ”NG náº±m á»Ÿ Ä‘Ã¢y Ä‘á»ƒ finalStats caller
+    // truyá»n vÃ o battle lÃ  snapshot tÄ©nh sáº¡ch (khÃ´ng double-apply);
+    // combat recompute nháº­n runtime qua provider má»—i tick, menu hiá»ƒn thá»‹
+    // qua store getter cá»™ng getActiveRuntimeModifiers().
     return [
       ...this.buffSystem.getActiveModifiers(),
-      // Core Loop Foundation checklist (Mục SKILL) - qua
-      // getScaledPassiveModifiers() thay vì đọc thẳng
-      // skill.passiveModifiers, để áp Specialization + level scaling.
+      // Core Loop Foundation checklist (Má»¥c SKILL) - qua
+      // getScaledPassiveModifiers() thay vÃ¬ Ä‘á»c tháº³ng
+      // skill.passiveModifiers, Ä‘á»ƒ Ã¡p Specialization + level scaling.
       ...this.skillSystem.getScaledPassiveModifiers(),
       ...(player ? this.getTechniqueTierModifiers(player) : []),
       ...(player ? getCultivationPathStatModifiers(player) : []),
-      // Node level (plan §6.8) — modifier node suy ra từ (registry,
-      // nodeLevels), scale theo level hiện hành; KHÔNG nằm trong
-      // player.modifiers nữa.
+      // Node level (plan Â§6.8) â€” modifier node suy ra tá»« (registry,
+      // nodeLevels), scale theo level hiá»‡n hÃ nh; KHÃ”NG náº±m trong
+      // player.modifiers ná»¯a.
       ...(player ? aggregateNodeStatModifiers(this.nodeRegistry, player) : []),
-      // Combat-gate-teleport-autocast plan §9 — combatModifiers của tâm
-      // pháp ĐANG trang bị (+2 attackRange Đại Ngũ Hành Chân Quyết):
-      // cố định, không theo tier, chỉ khi equipped. DUY NHẤT đường tổng
-      // hợp để tránh cộng hai lần.
+      // Combat-gate-teleport-autocast plan Â§9 â€” combatModifiers cá»§a tÃ¢m
+      // phÃ¡p ÄANG trang bá»‹ (+2 attackRange Äáº¡i NgÅ© HÃ nh ChÃ¢n Quyáº¿t):
+      // cá»‘ Ä‘á»‹nh, khÃ´ng theo tier, chá»‰ khi equipped. DUY NHáº¤T Ä‘Æ°á»ng tá»•ng
+      // há»£p Ä‘á»ƒ trÃ¡nh cá»™ng hai láº§n.
       ...this.getTechniqueCombatModifiers(),
     ]
   }
 
-  /** Modifier combat cố định của tâm pháp đang trang bị (plan §9). */
+  /** Modifier combat cá»‘ Ä‘á»‹nh cá»§a tÃ¢m phÃ¡p Ä‘ang trang bá»‹ (plan Â§9). */
   private getTechniqueCombatModifiers(): StatModifier[] {
     const technique = this.techniqueManager.getEquipped()
 
@@ -1242,33 +1237,33 @@ export class GameManager {
   }
 
   /**
-   * PLAN HOÀN CHỈNH mục 5 rework (2026-08-20) — hiệu ứng chỉ số của tâm
-   * pháp ĐANG trang bị, theo ĐÚNG tier hiện tại (getTechniqueTier(),
-   * giờ tính từ techniqueExperience — thanh kinh nghiệm riêng của Tâm
-   * Pháp, xem TechniqueTier.ts). manaRegenPercent cố ý map vào percent
-   * CỦA stat manaRegenPerSecond (Increased chuẩn, xem StatCalculator.ts's
-   * runPipeline) thay vì %maxMp — %maxMp sẽ tạo phụ thuộc vòng (maxMp
-   * chưa tính xong ngay tại bước gộp modifier này).
+   * PLAN HOÃ€N CHá»ˆNH má»¥c 5 rework (2026-08-20) â€” hiá»‡u á»©ng chá»‰ sá»‘ cá»§a tÃ¢m
+   * phÃ¡p ÄANG trang bá»‹, theo ÄÃšNG tier hiá»‡n táº¡i (getTechniqueTier(),
+   * giá» tÃ­nh tá»« techniqueExperience â€” thanh kinh nghiá»‡m riÃªng cá»§a TÃ¢m
+   * PhÃ¡p, xem TechniqueTier.ts). manaRegenPercent cá»‘ Ã½ map vÃ o percent
+   * Cá»¦A stat manaRegenPerSecond (Increased chuáº©n, xem StatCalculator.ts's
+   * runPipeline) thay vÃ¬ %maxMp â€” %maxMp sáº½ táº¡o phá»¥ thuá»™c vÃ²ng (maxMp
+   * chÆ°a tÃ­nh xong ngay táº¡i bÆ°á»›c gá»™p modifier nÃ y).
    */
   // =========================
   // RUNTIME MODIFIER AUTHORITY (2026-08-24, resource-professions-rework
-  // Phase 4/6 — plan §5.4/§7.2): modifier SỐNG theo thời gian (timed
-  // effect) + modifier socket trên slot (Phù/Trận). MỘT authority duy
-  // nhất ở đây — menu (getAggregatedModifiers) và combat recompute
-  // (BattleSystem qua provider) cùng đọc, không hai bản sao lệch nhau.
-  // KHÔNG bao giờ vào CombatEntity.baseStats snapshot.
+  // Phase 4/6 â€” plan Â§5.4/Â§7.2): modifier Sá»NG theo thá»i gian (timed
+  // effect) + modifier socket trÃªn slot (PhÃ¹/Tráº­n). Má»˜T authority duy
+  // nháº¥t á»Ÿ Ä‘Ã¢y â€” menu (getAggregatedModifiers) vÃ  combat recompute
+  // (BattleSystem qua provider) cÃ¹ng Ä‘á»c, khÃ´ng hai báº£n sao lá»‡ch nhau.
+  // KHÃ”NG bao giá» vÃ o CombatEntity.baseStats snapshot.
   // =========================
 
   private activePlayer?: PlayerData
 
   /**
-   * App.vue đăng ký player sau boot/load — update() dùng để tick expiry
+   * App.vue Ä‘Äƒng kÃ½ player sau boot/load â€” update() dÃ¹ng Ä‘á»ƒ tick expiry
    * timed effect theo Date.now().
    */
   setActivePlayer(player: PlayerData) {
     this.activePlayer = player
 
-    // Load save: bỏ effect đã hết hạn ngay (plan §9).
+    // Load save: bá» effect Ä‘Ã£ háº¿t háº¡n ngay (plan Â§9).
     this.tickTimedEffects(player)
   }
 
@@ -1279,24 +1274,24 @@ export class GameManager {
   }
 
   /**
-   * Toàn bộ modifier SỐNG của player: timed effect + socket Phù/Trận
-   * trên slot đang có equipment. Battle recompute gọi qua provider mỗi
-   * tick — effect hết hạn giữa trận tự rơi khỏi recompute kế tiếp.
+   * ToÃ n bá»™ modifier Sá»NG cá»§a player: timed effect + socket PhÃ¹/Tráº­n
+   * trÃªn slot Ä‘ang cÃ³ equipment. Battle recompute gá»i qua provider má»—i
+   * tick â€” effect háº¿t háº¡n giá»¯a tráº­n tá»± rÆ¡i khá»i recompute káº¿ tiáº¿p.
    */
   getActiveRuntimeModifiers(player: PlayerData, now = Date.now()): StatModifier[] {
     return [...this.getActiveTimedModifiers(player, now), ...this.getSlotModifiers()]
   }
 
   /**
-   * Stack policy MVP (plan §5.4): cùng effectGroup → refresh deadline
-   * (max) và giữ giá trị mạnh hơn per-modifier; khác nhóm → thêm mới.
+   * Stack policy MVP (plan Â§5.4): cÃ¹ng effectGroup â†’ refresh deadline
+   * (max) vÃ  giá»¯ giÃ¡ trá»‹ máº¡nh hÆ¡n per-modifier; khÃ¡c nhÃ³m â†’ thÃªm má»›i.
    *
-   * Merge key theo IDENTITY THỰC của modifier: `stat` + `tag` (tag phân
-   * biệt pool Increased trong runPipeline(), xem StatCalculator) — KHÔNG
-   * dùng giá trị `percent` làm key (bug audit P0-1: hai percent khác nhau
-   * của cùng stat không match và cộng dồn ngoài policy). Khi match, chọn
-   * giá trị mạnh hơn RIÊNG cho flat/percent/multiplier để modifier yếu và
-   * mạnh không cùng tồn tại.
+   * Merge key theo IDENTITY THá»°C cá»§a modifier: `stat` + `tag` (tag phÃ¢n
+   * biá»‡t pool Increased trong runPipeline(), xem StatCalculator) â€” KHÃ”NG
+   * dÃ¹ng giÃ¡ trá»‹ `percent` lÃ m key (bug audit P0-1: hai percent khÃ¡c nhau
+   * cá»§a cÃ¹ng stat khÃ´ng match vÃ  cá»™ng dá»“n ngoÃ i policy). Khi match, chá»n
+   * giÃ¡ trá»‹ máº¡nh hÆ¡n RIÃŠNG cho flat/percent/multiplier Ä‘á»ƒ modifier yáº¿u vÃ 
+   * máº¡nh khÃ´ng cÃ¹ng tá»“n táº¡i.
    */
   applyTimedEffect(player: PlayerData, effect: PersistentTimedEffect) {
     const group = effect.effectGroup
@@ -1345,7 +1340,7 @@ export class GameManager {
     player.persistentTimedEffects.push(effect)
   }
 
-  /** Bỏ effect hết hạn — trả số effect đã rơi (debug/test). */
+  /** Bá» effect háº¿t háº¡n â€” tráº£ sá»‘ effect Ä‘Ã£ rÆ¡i (debug/test). */
   tickTimedEffects(player: PlayerData, now = Date.now()): number {
     const before = player.persistentTimedEffects.length
 
@@ -1357,9 +1352,9 @@ export class GameManager {
   }
 
   /**
-   * Nguồn DUY NHẤT tổng hợp 2+2 modifier Phù/Trận trên các slot đang có
-   * equipment (plan §7.2). Socket modifier giữ sourceId/sourceType ổn
-   * định để tooltip/debug truy nguồn, KHÔNG vào baseStats snapshot.
+   * Nguá»“n DUY NHáº¤T tá»•ng há»£p 2+2 modifier PhÃ¹/Tráº­n trÃªn cÃ¡c slot Ä‘ang cÃ³
+   * equipment (plan Â§7.2). Socket modifier giá»¯ sourceId/sourceType á»•n
+   * Ä‘á»‹nh Ä‘á»ƒ tooltip/debug truy nguá»“n, KHÃ”NG vÃ o baseStats snapshot.
    */
   getSlotModifiers(): StatModifier[] {
     const result: StatModifier[] = []
@@ -1383,7 +1378,7 @@ export class GameManager {
     return result
   }
 
-  private getTechniqueTierModifiers(player: PlayerData): StatModifier[] {
+  private getTechniqueTierModifiers(_player: PlayerData): StatModifier[] {
     const technique = this.techniqueManager.getEquipped()
 
     const effect =
@@ -1437,8 +1432,8 @@ export class GameManager {
       })
     }
 
-    // Yêu cầu 2026-08-26 — HP/s & MP/s mặc định của tâm pháp: flat trực
-    // tiếp lên 2 stat hồi/giây, áp cho MỌI technique khai tierEffects.
+    // YÃªu cáº§u 2026-08-26 â€” HP/s & MP/s máº·c Ä‘á»‹nh cá»§a tÃ¢m phÃ¡p: flat trá»±c
+    // tiáº¿p lÃªn 2 stat há»“i/giÃ¢y, Ã¡p cho Má»ŒI technique khai tierEffects.
     if (effect.hpRegenFlat !== undefined) {
       modifiers.push({
         id: `technique-tier:${technique!.id}:hpRegen`,
@@ -1463,15 +1458,15 @@ export class GameManager {
   }
 
   /**
-   * Mở khóa + tự equip passive skill ứng với cảnh giới hiện tại của
-   * player — gọi ngay sau breakthrough() thành công. Nguồn passive
-   * giờ đến từ tâm pháp ĐANG trang bị (Technique.passiveSkillIdsByRealm,
-   * hợp nhất 2026-08-15 — không còn slot 'cultivation' riêng), không
-   * còn cố định theo cảnh giới (RealmData.unlockSkillId cũ) — đổi tâm
-   * pháp thì 9 passive tương lai cũng đổi theo, passive đã học trước
-   * đó thì giữ nguyên. Không có tâm pháp nào đang trang bị thì không
-   * có passive nào được học. Idempotent (kiểm tra skillManager.has()
-   * trước khi learn) nên an toàn khi gọi lặp hoặc sau khi load save.
+   * Má»Ÿ khÃ³a + tá»± equip passive skill á»©ng vá»›i cáº£nh giá»›i hiá»‡n táº¡i cá»§a
+   * player â€” gá»i ngay sau breakthrough() thÃ nh cÃ´ng. Nguá»“n passive
+   * giá» Ä‘áº¿n tá»« tÃ¢m phÃ¡p ÄANG trang bá»‹ (Technique.passiveSkillIdsByRealm,
+   * há»£p nháº¥t 2026-08-15 â€” khÃ´ng cÃ²n slot 'cultivation' riÃªng), khÃ´ng
+   * cÃ²n cá»‘ Ä‘á»‹nh theo cáº£nh giá»›i (RealmData.unlockSkillId cÅ©) â€” Ä‘á»•i tÃ¢m
+   * phÃ¡p thÃ¬ 9 passive tÆ°Æ¡ng lai cÅ©ng Ä‘á»•i theo, passive Ä‘Ã£ há»c trÆ°á»›c
+   * Ä‘Ã³ thÃ¬ giá»¯ nguyÃªn. KhÃ´ng cÃ³ tÃ¢m phÃ¡p nÃ o Ä‘ang trang bá»‹ thÃ¬ khÃ´ng
+   * cÃ³ passive nÃ o Ä‘Æ°á»£c há»c. Idempotent (kiá»ƒm tra skillManager.has()
+   * trÆ°á»›c khi learn) nÃªn an toÃ n khi gá»i láº·p hoáº·c sau khi load save.
    */
   syncRealmPassive(player: PlayerData) {
     const realm = getCurrentRealm(player.realmId)
@@ -1496,19 +1491,19 @@ export class GameManager {
 
     this.skillSystem.learn(template)
 
-    // Passive KHÔNG thuộc Skill Loadout (không tranh slot với active
-    // skill) — equipWithoutSlot() y hệt hành vi equip() cũ cho passive.
+    // Passive KHÃ”NG thuá»™c Skill Loadout (khÃ´ng tranh slot vá»›i active
+    // skill) â€” equipWithoutSlot() y há»‡t hÃ nh vi equip() cÅ© cho passive.
     this.skillSystem.equipWithoutSlot(skillId)
   }
 
   /**
-   * Realm Passive & Pressure System (2026-08-20) — cấp buff VĨNH VIỄN
-   * (Nhập Đạo/Kiến Cơ/..., xem data/realm/RealmPassives.ts) của cảnh
-   * giới HIỆN TẠI, tên tách biệt syncRealmPassive() ở trên (đó là
-   * passive SKILL theo tâm pháp, đây là stat modifier theo Breakthrough
-   * Grade/Loại Trúc Cơ) để khỏi nhầm 2 khái niệm. Idempotent (xem
-   * RealmPassiveSystem.grantRealmPassive()) — gọi cùng 3 điểm với
-   * syncRealmPassive() (chooseCultivationPath() dưới đây,
+   * Realm Passive & Pressure System (2026-08-20) â€” cáº¥p buff VÄ¨NH VIá»„N
+   * (Nháº­p Äáº¡o/Kiáº¿n CÆ¡/..., xem data/realm/RealmPassives.ts) cá»§a cáº£nh
+   * giá»›i HIá»†N Táº I, tÃªn tÃ¡ch biá»‡t syncRealmPassive() á»Ÿ trÃªn (Ä‘Ã³ lÃ 
+   * passive SKILL theo tÃ¢m phÃ¡p, Ä‘Ã¢y lÃ  stat modifier theo Breakthrough
+   * Grade/Loáº¡i TrÃºc CÆ¡) Ä‘á»ƒ khá»i nháº§m 2 khÃ¡i niá»‡m. Idempotent (xem
+   * RealmPassiveSystem.grantRealmPassive()) â€” gá»i cÃ¹ng 3 Ä‘iá»ƒm vá»›i
+   * syncRealmPassive() (chooseCultivationPath() dÆ°á»›i Ä‘Ã¢y,
    * useBreakthrough.ts, useTribulation.ts's resolveVictory()).
    */
   syncRealmStatPassive(player: PlayerData) {
@@ -1516,10 +1511,10 @@ export class GameManager {
   }
 
   /**
-   * Đầu tư Tinh Hoa Phàm Thể (đang cầm trong materialBag) vào tầng
-   * Luyện Thể đang dở — xem core/realm/BodyRefinementSystem.ts. Trả về số
-   * Tinh Hoa thật sự đã tiêu (0 nếu không còn tầng nào để đầu tư hoặc
-   * không cầm Tinh Hoa nào).
+   * Äáº§u tÆ° Tinh Hoa PhÃ m Thá»ƒ (Ä‘ang cáº§m trong materialBag) vÃ o táº§ng
+   * Luyá»‡n Thá»ƒ Ä‘ang dá»Ÿ â€” xem core/realm/BodyRefinementSystem.ts. Tráº£ vá» sá»‘
+   * Tinh Hoa tháº­t sá»± Ä‘Ã£ tiÃªu (0 náº¿u khÃ´ng cÃ²n táº§ng nÃ o Ä‘á»ƒ Ä‘áº§u tÆ° hoáº·c
+   * khÃ´ng cáº§m Tinh Hoa nÃ o).
    */
   investBodyRefinement(player: PlayerData): number {
     const available = this.materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)
@@ -1534,10 +1529,10 @@ export class GameManager {
   }
 
   /**
-   * Đột Phá Trúc Cơ: mốc tối thiểu để nút "TRÚC CƠ" xuất hiện song song
-   * nút "Đột Phá" thường. Thiết kế hiện tại (2026-08-27): mốc 12 tầng ở
-   * qi_refining là Nhân Đạo baseline; các cấp đột phá ẩn khác sẽ được
-   * thiết kế sau, cùng hằng số với mortal → qi_refining
+   * Äá»™t PhÃ¡ TrÃºc CÆ¡: má»‘c tá»‘i thiá»ƒu Ä‘á»ƒ nÃºt "TRÃšC CÆ " xuáº¥t hiá»‡n song song
+   * nÃºt "Äá»™t PhÃ¡" thÆ°á»ng. Thiáº¿t káº¿ hiá»‡n táº¡i (2026-08-27): má»‘c 12 táº§ng á»Ÿ
+   * qi_refining lÃ  NhÃ¢n Äáº¡o baseline; cÃ¡c cáº¥p Ä‘á»™t phÃ¡ áº©n khÃ¡c sáº½ Ä‘Æ°á»£c
+   * thiáº¿t káº¿ sau, cÃ¹ng háº±ng sá»‘ vá»›i mortal â†’ qi_refining
    * (chooseCultivationPath()).
    */
   canTriggerFoundationBreakthrough(player: PlayerData): boolean {
@@ -1545,32 +1540,32 @@ export class GameManager {
   }
 
   /**
-   * Gate dành cho đột phá đại cảnh giới sau Trúc Cơ. Nội dung hiện kết thúc
-   * tại Trúc Cơ tầng 18 nên gate đóng hoàn toàn; chỉ mở lại cùng một content
-   * pass thiết kế Kim Đan và các requirement/Tribulation tương ứng.
+   * Gate dÃ nh cho Ä‘á»™t phÃ¡ Ä‘áº¡i cáº£nh giá»›i sau TrÃºc CÆ¡. Ná»™i dung hiá»‡n káº¿t thÃºc
+   * táº¡i TrÃºc CÆ¡ táº§ng 18 nÃªn gate Ä‘Ã³ng hoÃ n toÃ n; chá»‰ má»Ÿ láº¡i cÃ¹ng má»™t content
+   * pass thiáº¿t káº¿ Kim Äan vÃ  cÃ¡c requirement/Tribulation tÆ°Æ¡ng á»©ng.
    */
   canTriggerRealmBreakthrough(player: PlayerData): boolean {
-    // PRODUCT SCOPE: game hiện chỉ thiết kế tới Trúc Cơ tầng 18. Hàm tổng
-    // quát này là phần mở rộng chưa hoàn thiện; không được mở đường sang các
-    // realm placeholder (Kim Đan+) trước khi có thiết kế progression tương ứng.
-    // Trúc Cơ tầng 18 là điểm cuối nội dung hiện tại. Giữ tham số để API/UI
-    // ổn định nhưng không cho mở Tribulation sang các realm placeholder.
+    // PRODUCT SCOPE: game hiá»‡n chá»‰ thiáº¿t káº¿ tá»›i TrÃºc CÆ¡ táº§ng 18. HÃ m tá»•ng
+    // quÃ¡t nÃ y lÃ  pháº§n má»Ÿ rá»™ng chÆ°a hoÃ n thiá»‡n; khÃ´ng Ä‘Æ°á»£c má»Ÿ Ä‘Æ°á»ng sang cÃ¡c
+    // realm placeholder (Kim Äan+) trÆ°á»›c khi cÃ³ thiáº¿t káº¿ progression tÆ°Æ¡ng á»©ng.
+    // TrÃºc CÆ¡ táº§ng 18 lÃ  Ä‘iá»ƒm cuá»‘i ná»™i dung hiá»‡n táº¡i. Giá»¯ tham sá»‘ Ä‘á»ƒ API/UI
+    // á»•n Ä‘á»‹nh nhÆ°ng khÃ´ng cho má»Ÿ Tribulation sang cÃ¡c realm placeholder.
     void player
 
     return false
   }
 
   /**
-   * "Con đường bình thường" của Đột Phá tổng quát (2026-08-16, xem
-   * core/breakthrough/BreakthroughRequirement.ts) — Đột Phá Lệnh luyện
-   * trực tiếp bằng Linh Thạch, KHÔNG qua Recipe (RecipeResultType
-   * không hỗ trợ material làm kết quả): check đủ Linh Thạch rồi trừ và
-   * cấp thẳng material. Phân Giải equipment là luồng huỷ item riêng.
-   * Plan Workstream F: Linh Thạch là MATERIAL — check/trừ qua
-   * MaterialBag, `spiritStoneCost` chỉ còn là authoring sugar được
-   * normalize ngay tại boundary này.
+   * "Con Ä‘Æ°á»ng bÃ¬nh thÆ°á»ng" cá»§a Äá»™t PhÃ¡ tá»•ng quÃ¡t (2026-08-16, xem
+   * core/breakthrough/BreakthroughRequirement.ts) â€” Äá»™t PhÃ¡ Lá»‡nh luyá»‡n
+   * trá»±c tiáº¿p báº±ng Linh Tháº¡ch, KHÃ”NG qua Recipe (RecipeResultType
+   * khÃ´ng há»— trá»£ material lÃ m káº¿t quáº£): check Ä‘á»§ Linh Tháº¡ch rá»“i trá»« vÃ 
+   * cáº¥p tháº³ng material. PhÃ¢n Giáº£i equipment lÃ  luá»“ng huá»· item riÃªng.
+   * Plan Workstream F: Linh Tháº¡ch lÃ  MATERIAL â€” check/trá»« qua
+   * MaterialBag, `spiritStoneCost` chá»‰ cÃ²n lÃ  authoring sugar Ä‘Æ°á»£c
+   * normalize ngay táº¡i boundary nÃ y.
    */
-  canCraftBreakthroughToken(targetRealmId: string, player: PlayerData): boolean {
+  canCraftBreakthroughToken(targetRealmId: string, _player: PlayerData): boolean {
     const requirement = BREAKTHROUGH_REQUIREMENTS[targetRealmId]
     const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(targetRealmId))
 
@@ -1596,8 +1591,8 @@ export class GameManager {
     const overflow = this.materialBag.add(this.materialRegistry.get(requirement.materialId), 1)
 
     if (overflow > 0) {
-      // All-or-nothing: token tràn stack thì hoàn Linh Thạch để không mất
-      // trắng (Linh Thạch cap MAX_SAFE_INTEGER nên hoàn lại luôn vừa chỗ).
+      // All-or-nothing: token trÃ n stack thÃ¬ hoÃ n Linh Tháº¡ch Ä‘á»ƒ khÃ´ng máº¥t
+      // tráº¯ng (Linh Tháº¡ch cap MAX_SAFE_INTEGER nÃªn hoÃ n láº¡i luÃ´n vá»«a chá»—).
       this.materialBag.add(this.materialRegistry.get(spiritStoneId), requirement.spiritStoneCost)
 
       return false
@@ -1609,10 +1604,10 @@ export class GameManager {
   }
 
   /**
-   * Quy đổi Linh Thạch LÊN phẩm kế tiếp (review 2026-08-28,
-   * economy-ecosystem-plan T2): 100 Hạ → 1 Trung, 100 Trung → 1 Thượng.
-   * CHỈ có chiều lên — không có quy đổi ngược (giữ sink). Giao dịch
-   * atomic: check đủ → trừ → cộng; trừ thất bại thì không cộng.
+   * Quy Ä‘á»•i Linh Tháº¡ch LÃŠN pháº©m káº¿ tiáº¿p (review 2026-08-28,
+   * economy-ecosystem-plan T2): 100 Háº¡ â†’ 1 Trung, 100 Trung â†’ 1 ThÆ°á»£ng.
+   * CHá»ˆ cÃ³ chiá»u lÃªn â€” khÃ´ng cÃ³ quy Ä‘á»•i ngÆ°á»£c (giá»¯ sink). Giao dá»‹ch
+   * atomic: check Ä‘á»§ â†’ trá»« â†’ cá»™ng; trá»« tháº¥t báº¡i thÃ¬ khÃ´ng cá»™ng.
    */
   convertSpiritStonesUp(
     fromMaterialId: string,
@@ -1641,8 +1636,8 @@ export class GameManager {
     const overflow = this.materialBag.add(this.materialRegistry.get(targetId), times)
 
     if (overflow > 0) {
-      // Trần stack Linh Thạch là MAX_SAFE_INTEGER nên thực tế không xảy
-      // ra; nếu xảy ra thì hoàn lại phẩm thấp để không mất trắng.
+      // Tráº§n stack Linh Tháº¡ch lÃ  MAX_SAFE_INTEGER nÃªn thá»±c táº¿ khÃ´ng xáº£y
+      // ra; náº¿u xáº£y ra thÃ¬ hoÃ n láº¡i pháº©m tháº¥p Ä‘á»ƒ khÃ´ng máº¥t tráº¯ng.
       this.materialBag.add(
         this.materialRegistry.get(fromMaterialId),
         overflow * SPIRIT_STONE_CONVERSION_RATIO,
@@ -1657,12 +1652,12 @@ export class GameManager {
   }
 
   /**
-   * Quy đổi cảnh giới Linh Mộc/Linh Khoáng LÊN bậc kế (2026-08-28): gộp
-   * 10 bậc thấp → 1 bậc cao theo thang Phàm Nhân → Luyện Khí → Trúc Cơ.
-   * Gỗ `<realm>_wood` → `<nextRealm>_wood`; quáng giữ PHẨM khi lên cảnh
-   * giới `<realm>_ore_<quality>` → `<nextRealm>_ore_<quality>`. CHỈ có
-   * chiều lên (giữ sink). Giao dịch atomic: check đủ → trừ → cộng; trừ
-   * thất bại thì không cộng.
+   * Quy Ä‘á»•i cáº£nh giá»›i Linh Má»™c/Linh KhoÃ¡ng LÃŠN báº­c káº¿ (2026-08-28): gá»™p
+   * 10 báº­c tháº¥p â†’ 1 báº­c cao theo thang PhÃ m NhÃ¢n â†’ Luyá»‡n KhÃ­ â†’ TrÃºc CÆ¡.
+   * Gá»— `<realm>_wood` â†’ `<nextRealm>_wood`; quÃ¡ng giá»¯ PHáº¨M khi lÃªn cáº£nh
+   * giá»›i `<realm>_ore_<quality>` â†’ `<nextRealm>_ore_<quality>`. CHá»ˆ cÃ³
+   * chiá»u lÃªn (giá»¯ sink). Giao dá»‹ch atomic: check Ä‘á»§ â†’ trá»« â†’ cá»™ng; trá»«
+   * tháº¥t báº¡i thÃ¬ khÃ´ng cá»™ng.
    */
   convertMaterialTier(
     fromMaterialId: string,
@@ -1709,8 +1704,8 @@ export class GameManager {
   // =========================
 
   /**
-   * W5 (2026-08-27) — level Khí Đường giảm chi phí Cường Hóa/Tẩy Luyện/
-   * Tinh Luyện. Đồng bộ discount vào EquipmentSystem trước mỗi query/spend.
+   * W5 (2026-08-27) â€” level KhÃ­ ÄÆ°á»ng giáº£m chi phÃ­ CÆ°á»ng HÃ³a/Táº©y Luyá»‡n/
+   * Tinh Luyá»‡n. Äá»“ng bá»™ discount vÃ o EquipmentSystem trÆ°á»›c má»—i query/spend.
    */
   private syncEquipmentCostDiscount() {
     const instance = this.buildingManager.getByBuildingId('equipment_hall')
@@ -1755,7 +1750,7 @@ export class GameManager {
     return this.equipmentSystem.unequip(instanceId, this.equipmentBag)
   }
 
-  /** Cường Hóa gắn SLOT — slot trống vẫn nâng được (slot-level rework). */
+  /** CÆ°á»ng HÃ³a gáº¯n SLOT â€” slot trá»‘ng váº«n nÃ¢ng Ä‘Æ°á»£c (slot-level rework). */
   enhanceSlot(slot: EquipmentSlot, player: PlayerData): { ok: boolean; reason?: string } {
     this.syncEquipmentCostDiscount()
 
@@ -1808,7 +1803,7 @@ export class GameManager {
     )
   }
 
-  getSlotMaxEnhanceLevel(slot: EquipmentSlot, realmId: string): number {
+  getSlotMaxEnhanceLevel(slot: EquipmentSlot, _realmId: string): number {
     const equipped = this.equipmentBag.getEquippedInSlot(slot)
 
     const template = equipped ? this.getEquipmentTemplate(equipped.itemId) : undefined
@@ -1816,7 +1811,7 @@ export class GameManager {
     return this.equipmentSystem.getMaxEnhanceLevel(template)
   }
 
-  /** Template tra an toàn — registry.get() ném lỗi với id lạ, UI cần undefined. */
+  /** Template tra an toÃ n â€” registry.get() nÃ©m lá»—i vá»›i id láº¡, UI cáº§n undefined. */
   getEquipmentTemplate(itemId: string): Equipment | undefined {
     try {
       return this.equipmentRegistry.get(itemId)
@@ -1825,14 +1820,14 @@ export class GameManager {
     }
   }
 
-  /** Điểm Rèn per-item hiện tại của 1 instance (= forgePoints, "Tình trạng rèn x/y"). */
+  /** Äiá»ƒm RÃ¨n per-item hiá»‡n táº¡i cá»§a 1 instance (= forgePoints, "TÃ¬nh tráº¡ng rÃ¨n x/y"). */
   itemRefinementPoints(instance: EquipmentInstance): number {
     return this.equipmentSystem.itemRefinementPoints(instance)
   }
 
   /**
-   * TẦY LUYỆN (plan §7.3) — reroll identity substat bằng Quáng cùng
-   * cảnh giới + Điểm Rèn + Linh Thạch. Trả về reason lỗi cho UI.
+   * Táº¦Y LUYá»†N (plan Â§7.3) â€” reroll identity substat báº±ng QuÃ¡ng cÃ¹ng
+   * cáº£nh giá»›i + Äiá»ƒm RÃ¨n + Linh Tháº¡ch. Tráº£ vá» reason lá»—i cho UI.
    */
   washItem(
     instanceId: string,
@@ -1855,8 +1850,8 @@ export class GameManager {
   }
 
   /**
-   * TINH LUYỆN (plan §7.4) — reroll giá trị substat ±20%, khóa dòng
-   * tùy chọn (cost hệ số N+L). Trả về reason lỗi cho UI.
+   * TINH LUYá»†N (plan Â§7.4) â€” reroll giÃ¡ trá»‹ substat Â±20%, khÃ³a dÃ²ng
+   * tÃ¹y chá»n (cost há»‡ sá»‘ N+L). Tráº£ vá» reason lá»—i cho UI.
    */
   refineItem(
     instanceId: string,
@@ -1878,16 +1873,16 @@ export class GameManager {
     )
   }
 
-  /** W5 — cost Tẩy Luyện sau discount Khí Đường cho UI. realmId của trang
-   * bị quyết định PHẨM Linh Thạch tiêu (T2). */
+  /** W5 â€” cost Táº©y Luyá»‡n sau discount KhÃ­ ÄÆ°á»ng cho UI. realmId cá»§a trang
+   * bá»‹ quyáº¿t Ä‘á»‹nh PHáº¨M Linh Tháº¡ch tiÃªu (T2). */
   getWashCost(realmId?: string) {
     this.syncEquipmentCostDiscount()
 
     return this.equipmentSystem.getWashCost(realmId)
   }
 
-  /** W5 — cost Tinh Luyện sau discount Khí Đường cho UI. realmId của trang
-   * bị quyết định PHẨM Linh Thạch tiêu (T2). */
+  /** W5 â€” cost Tinh Luyá»‡n sau discount KhÃ­ ÄÆ°á»ng cho UI. realmId cá»§a trang
+   * bá»‹ quyáº¿t Ä‘á»‹nh PHáº¨M Linh Tháº¡ch tiÃªu (T2). */
   getRefineCost(lineCount: number, lockedCount: number, realmId?: string) {
     this.syncEquipmentCostDiscount()
 
@@ -1895,8 +1890,8 @@ export class GameManager {
   }
 
   /**
-   * HÓA LUYỆN (plan §7.5) — phân giải batch trang bị thành Tinh Hoa,
-   * all-or-nothing. Không tiêu hao Điểm Rèn.
+   * HÃ“A LUYá»†N (plan Â§7.5) â€” phÃ¢n giáº£i batch trang bá»‹ thÃ nh Tinh Hoa,
+   * all-or-nothing. KhÃ´ng tiÃªu hao Äiá»ƒm RÃ¨n.
    */
   dissolveItems(instanceIds: readonly string[]): {
     ok: boolean
@@ -1918,7 +1913,7 @@ export class GameManager {
     return result
   }
 
-  /** Preview Tinh Hoa nhận được khi Hóa Luyện selection hiện tại (§9.2). */
+  /** Preview Tinh Hoa nháº­n Ä‘Æ°á»£c khi HÃ³a Luyá»‡n selection hiá»‡n táº¡i (Â§9.2). */
   previewDissolveRewards(
     instanceIds: readonly string[],
   ): Array<{ materialId: string; minAmount: number; maxAmount: number }> {
@@ -1962,9 +1957,9 @@ export class GameManager {
   }
 
   /**
-   * State cường hóa/formation/bonus affix slots của 1 slot cụ thể —
-   * dùng cho UI hiện thông tin NGAY CẢ KHI slot đang trống (MASTER
-   * SPEC Mục XVI, Phase 9).
+   * State cÆ°á»ng hÃ³a/formation/bonus affix slots cá»§a 1 slot cá»¥ thá»ƒ â€”
+   * dÃ¹ng cho UI hiá»‡n thÃ´ng tin NGAY Cáº¢ KHI slot Ä‘ang trá»‘ng (MASTER
+   * SPEC Má»¥c XVI, Phase 9).
    */
   getSlotState(slot: EquipmentSlot): EquipmentSlotState {
     return this.equipmentSlotManager.get(slot)
@@ -1975,10 +1970,10 @@ export class GameManager {
   }
 
   /**
-   * Modifier "tĩnh" từ equipment — xem ghi chú trong Player.ts và
-   * EquipmentSystem. Chỉ đổi khi equip/unequip/enhance, caller
-   * (player store) tự gán lại vào player.modifiers sau mỗi hành
-   * động, KHÔNG gọi mỗi tick như getAggregatedModifiers().
+   * Modifier "tÄ©nh" tá»« equipment â€” xem ghi chÃº trong Player.ts vÃ 
+   * EquipmentSystem. Chá»‰ Ä‘á»•i khi equip/unequip/enhance, caller
+   * (player store) tá»± gÃ¡n láº¡i vÃ o player.modifiers sau má»—i hÃ nh
+   * Ä‘á»™ng, KHÃ”NG gá»i má»—i tick nhÆ° getAggregatedModifiers().
    */
   getEquipmentModifiers(): StatModifier[] {
     return this.equipmentSystem.getModifiers()
@@ -1988,23 +1983,23 @@ export class GameManager {
   // FORMATION
   // =========================
 
-  // Không còn nhận instanceId (MASTER SPEC Mục XVI, Phase 9) — trận
+  // KhÃ´ng cÃ²n nháº­n instanceId (MASTER SPEC Má»¥c XVI, Phase 9) â€” tráº­n
 
   // =========================
-  // RECIPE / CRAFTING (Đan/Phù/Trận — Khí dùng EquipmentSystem, không qua đây)
+  // RECIPE / CRAFTING (Äan/PhÃ¹/Tráº­n â€” KhÃ­ dÃ¹ng EquipmentSystem, khÃ´ng qua Ä‘Ã¢y)
   // =========================
 
-  // BUILDing spec mục 15-16 — Building crafting-station (Đan Phòng/
+  // BUILDing spec má»¥c 15-16 â€” Building crafting-station (Äan PhÃ²ng/
 
   // =========================
   // PILL
   // =========================
 
   /**
-   * Uống pill (2026-08-24, plan §5.2) — ATOMIC consumption: mọi
-   * validation + apply thành công rồi mới remove khỏi PillBag. Pill
-   * nghề (có realmId): gate ĐÚNG cảnh giới + 4 effect MVP; legacy pill
-   * (không realmId) giữ hành vi cũ. `random` inject cho main stat roll.
+   * Uá»‘ng pill (2026-08-24, plan Â§5.2) â€” ATOMIC consumption: má»i
+   * validation + apply thÃ nh cÃ´ng rá»“i má»›i remove khá»i PillBag. Pill
+   * nghá» (cÃ³ realmId): gate ÄÃšNG cáº£nh giá»›i + 4 effect MVP; legacy pill
+   * (khÃ´ng realmId) giá»¯ hÃ nh vi cÅ©. `random` inject cho main stat roll.
    */
   usePillDetailed(
     pillId: string,
@@ -2022,7 +2017,7 @@ export class GameManager {
 
     const pill = this.pillRegistry.get(pillId)
 
-    // Exact-realm gate cho pill nghề (plan §5.2).
+    // Exact-realm gate cho pill nghá» (plan Â§5.2).
     if (pill.realmId && pill.realmId !== player.realmId) {
       return { ok: false, reason: 'wrong_realm' }
     }
@@ -2053,7 +2048,7 @@ export class GameManager {
       return { ok: true, mainStat: result.mainStat }
     }
 
-    // Legacy path — giữ nguyên hành vi cũ (permanent_stat cap + heal/
+    // Legacy path â€” giá»¯ nguyÃªn hÃ nh vi cÅ© (permanent_stat cap + heal/
     // buff/cultivation flat).
     const cap = getCurrentRealm(player.realmId).attributeCap
 
@@ -2098,7 +2093,7 @@ export class GameManager {
     return this.buildingRegistry.getAll()
   }
 
-  /** Gate UI xây mới — delegate BuildingSystem.canBuild (§ popover). */
+  /** Gate UI xÃ¢y má»›i â€” delegate BuildingSystem.canBuild (Â§ popover). */
   canBuildBuilding(buildingId: string, player: PlayerData): boolean {
     return this.buildingSystem.canBuild(
       buildingId,
@@ -2119,9 +2114,9 @@ export class GameManager {
       currentTime,
     )
 
-    // Fix (review 2026-08-26) — build thất bại trước đây IM LẶNG (null
-    // không ai đọc): giờ push toast lý do cụ thể để người chơi biết phải
-    // làm gì tiếp (thiếu nguyên liệu/cảnh giới...).
+    // Fix (review 2026-08-26) â€” build tháº¥t báº¡i trÆ°á»›c Ä‘Ã¢y IM Láº¶NG (null
+    // khÃ´ng ai Ä‘á»c): giá» push toast lÃ½ do cá»¥ thá»ƒ Ä‘á»ƒ ngÆ°á»i chÆ¡i biáº¿t pháº£i
+    // lÃ m gÃ¬ tiáº¿p (thiáº¿u nguyÃªn liá»‡u/cáº£nh giá»›i...).
     if (!instance) {
       const check = this.buildingSystem.canBuildDetailed(
         buildingId,
@@ -2138,21 +2133,21 @@ export class GameManager {
       this.notifications.push({
         kind: 'error',
 
-        message: `Xây ${this.buildingName(buildingId)} thất bại (${check.reason ?? 'unknown'})`,
+        message: `XÃ¢y ${this.buildingName(buildingId)} tháº¥t báº¡i (${check.reason ?? 'unknown'})`,
       })
     } else {
       this.refreshAutoWorkerCapacity(player, instance)
       this.notifications.push({
         kind: 'upgrade',
 
-        message: `Đã xây ${this.buildingName(buildingId)} · Cấp 1`,
+        message: `ÄÃ£ xÃ¢y ${this.buildingName(buildingId)} Â· Cáº¥p 1`,
       })
     }
 
     return instance
   }
 
-  /** Tên building hiển thị cho toast — fallback id khi registry thiếu. */
+  /** TÃªn building hiá»ƒn thá»‹ cho toast â€” fallback id khi registry thiáº¿u. */
   private buildingName(buildingId: string): string {
     try {
       return this.buildingRegistry.get(buildingId).name
@@ -2162,9 +2157,9 @@ export class GameManager {
   }
 
   /**
-   * gathering_outpost cấp autoWorkerCapacity theo level (workersPerLevel
-   * trên Building template) — gọi lại sau mọi lần build/upgrade building
-   * này để player.autoWorkerCapacity luôn khớp level hiện tại.
+   * gathering_outpost cáº¥p autoWorkerCapacity theo level (workersPerLevel
+   * trÃªn Building template) â€” gá»i láº¡i sau má»i láº§n build/upgrade building
+   * nÃ y Ä‘á»ƒ player.autoWorkerCapacity luÃ´n khá»›p level hiá»‡n táº¡i.
    */
   refreshAutoWorkerCapacity(player: PlayerData, instance: BuildingInstance): void {
     if (instance.buildingId !== 'gathering_outpost') {
@@ -2193,13 +2188,13 @@ export class GameManager {
   getEnemyTemplate(enemyId: string): Enemy | undefined {
     return this.enemyTemplates.get(enemyId)
   }
-  // Linh Tuyền (producesMaterialId) — thu hoạch đổ vào MaterialBag như
-  // material bình thường (plan Workstream F); claim() trả amount +
-  // materialId, GameManager resolve template và cộng bag.
+  // Linh Tuyá»n (producesMaterialId) â€” thu hoáº¡ch Ä‘á»• vÃ o MaterialBag nhÆ°
+  // material bÃ¬nh thÆ°á»ng (plan Workstream F); claim() tráº£ amount +
+  // materialId, GameManager resolve template vÃ  cá»™ng bag.
   collectBuilding(instanceId: string, player: PlayerData, currentTime = Date.now() / 1000): number {
-    // Pre-check registry TRƯỚC khi claim reset mốc thời gian (review
-    // 2026-08-28): nếu materialId không resolve được mà vẫn claim, sản
-    // lượng bị mất trắng (mốc đã reset, bag không được cộng).
+    // Pre-check registry TRÆ¯á»šC khi claim reset má»‘c thá»i gian (review
+    // 2026-08-28): náº¿u materialId khÃ´ng resolve Ä‘Æ°á»£c mÃ  váº«n claim, sáº£n
+    // lÆ°á»£ng bá»‹ máº¥t tráº¯ng (má»‘c Ä‘Ã£ reset, bag khÃ´ng Ä‘Æ°á»£c cá»™ng).
     const instance = this.buildingManager.get(instanceId)
 
     const template = instance ? this.buildingRegistry.get(instance.buildingId) : undefined
@@ -2273,7 +2268,7 @@ export class GameManager {
   }
 
   // =========================
-  // PRODUCTION (2026-08-25 — Lâm/Quáng/Động Thiên, plan §4/§9)
+  // PRODUCTION (2026-08-25 â€” LÃ¢m/QuÃ¡ng/Äá»™ng ThiÃªn, plan Â§4/Â§9)
   // =========================
 
   getProductionViews(nowMs = Date.now()) {
@@ -2296,7 +2291,7 @@ export class GameManager {
     })
   }
 
-  /** Bắt đầu cycle tại cảnh giới HIỆN TẠI của player (snapshot §4.1). */
+  /** Báº¯t Ä‘áº§u cycle táº¡i cáº£nh giá»›i HIá»†N Táº I cá»§a player (snapshot Â§4.1). */
   startProductionCycle(siteId: string, player: PlayerData): boolean {
     return this.productionSystem.startCycle(siteId, player.realmId, Date.now())
   }
@@ -2305,9 +2300,9 @@ export class GameManager {
     return this.productionSystem.setAutoRestart(siteId, enabled)
   }
 
-  /** Nâng level nguồn — cost Gỗ + Linh Thạch (sink chính của Lâm, §5.2). */
+  /** NÃ¢ng level nguá»“n â€” cost Gá»— + Linh Tháº¡ch (sink chÃ­nh cá»§a LÃ¢m, Â§5.2). */
   upgradeProductionSite(siteId: string, player: PlayerData): boolean {
-    // Plan Workstream F — Linh Thạch check/trừ trực tiếp trên MaterialBag.
+    // Plan Workstream F â€” Linh Tháº¡ch check/trá»« trá»±c tiáº¿p trÃªn MaterialBag.
     return this.productionSystem.upgradeSite(siteId, this.materialBag, getRealmTier(player.realmId))
   }
 
@@ -2316,7 +2311,7 @@ export class GameManager {
   }
 
   // =========================
-  // ALCHEMY (Đan Phòng — plan §8)
+  // ALCHEMY (Äan PhÃ²ng â€” plan Â§8)
   // =========================
 
   getAlchemyRecipes(): AlchemyRecipe[] {
@@ -2327,7 +2322,7 @@ export class GameManager {
     return this.alchemyRecipesById.get(recipeId)
   }
 
-  /** Level Đan Phòng (pill_room) hiện hành — chưa xây = 0. */
+  /** Level Äan PhÃ²ng (pill_room) hiá»‡n hÃ nh â€” chÆ°a xÃ¢y = 0. */
   getAlchemyRoomLevel(): number {
     return this.buildingManager.getByBuildingId('pill_room')?.level ?? 0
   }
@@ -2337,13 +2332,13 @@ export class GameManager {
   }
 
   /**
-   * Bắt đầu luyện đan — reserve nguyên liệu ATOMIC (§8.2); slot job theo
-   * concurrent_job_slots effect của pill_room (mặc định 1).
+   * Báº¯t Ä‘áº§u luyá»‡n Ä‘an â€” reserve nguyÃªn liá»‡u ATOMIC (Â§8.2); slot job theo
+   * concurrent_job_slots effect cá»§a pill_room (máº·c Ä‘á»‹nh 1).
    */
   startAlchemyJob(
     recipeId: string,
     herbMaterialId: string,
-    player: PlayerData,
+    _player: PlayerData,
   ): { ok: boolean; reason?: string } {
     const recipe = this.alchemyRecipesById.get(recipeId)
 
@@ -2380,10 +2375,10 @@ export class GameManager {
       maxSlots,
     )
 
-    // Bugfix (review 2026-08-26) — Linh Thạch được CHECK ở startJob
-    // nhưng chưa từng được TRỪ: luyện đan miễn phí. Trừ sau khi reserve
-    // nguyên liệu thành công (all-or-nothing như mọi sink khác).
-    // Plan Workstream F — trừ trên MaterialBag.
+    // Bugfix (review 2026-08-26) â€” Linh Tháº¡ch Ä‘Æ°á»£c CHECK á»Ÿ startJob
+    // nhÆ°ng chÆ°a tá»«ng Ä‘Æ°á»£c TRá»ª: luyá»‡n Ä‘an miá»…n phÃ­. Trá»« sau khi reserve
+    // nguyÃªn liá»‡u thÃ nh cÃ´ng (all-or-nothing nhÆ° má»i sink khÃ¡c).
+    // Plan Workstream F â€” trá»« trÃªn MaterialBag.
     if (started.ok && recipe.spiritStoneCost > 0) {
       this.materialBag.remove(spiritStoneId, recipe.spiritStoneCost)
     }
@@ -2395,7 +2390,7 @@ export class GameManager {
     return this.alchemySystem.cancelJob(jobId)
   }
 
-  /** Preview tổng tỷ lệ thành + guaranteed + chance viên cộng thêm (§9.3). */
+  /** Preview tá»•ng tá»· lá»‡ thÃ nh + guaranteed + chance viÃªn cá»™ng thÃªm (Â§9.3). */
   previewAlchemyOutcome(
     recipeId: string,
     herbMaterialId: string,
@@ -2446,23 +2441,23 @@ export class GameManager {
   startBattle(player: CombatEntity, enemy: Enemy) {
     const enemyEntity = enemyToCombatEntity(this.enemySystem.spawn(enemy))
 
-    // Spawn placement (plan §5.1) — row/column do resolver roll trong
-    // queueEnemySpawn (Boss luôn row 4); không còn gán lane ngoài.
+    // Spawn placement (plan Â§5.1) â€” row/column do resolver roll trong
+    // queueEnemySpawn (Boss luÃ´n row 4); khÃ´ng cÃ²n gÃ¡n lane ngoÃ i.
 
-    // Reset mặc định — startBattleWithPlayer() sẽ set lại session
-    // (receiver/player) thật ngay sau lệnh gọi này. Battle bắt đầu qua
-    // startBattle() trực tiếp (không phải PlayerData) thì không có ai
-    // nhận thưởng hay đồ rơi (equipment cần player để roll chỉ số chính).
-    // Stack passive (vd Linh Khí Cảm Ứng +công kích/đòn trúng) là
-    // buff TRONG TRẬN — reset về 0 mỗi khi 1 trận mới bắt đầu, kể cả
-    // khi Auto tự nối trận ngay lập tức (theo yêu cầu, khác thiết kế
-    // permanent progression ban đầu).
+    // Reset máº·c Ä‘á»‹nh â€” startBattleWithPlayer() sáº½ set láº¡i session
+    // (receiver/player) tháº­t ngay sau lá»‡nh gá»i nÃ y. Battle báº¯t Ä‘áº§u qua
+    // startBattle() trá»±c tiáº¿p (khÃ´ng pháº£i PlayerData) thÃ¬ khÃ´ng cÃ³ ai
+    // nháº­n thÆ°á»Ÿng hay Ä‘á»“ rÆ¡i (equipment cáº§n player Ä‘á»ƒ roll chá»‰ sá»‘ chÃ­nh).
+    // Stack passive (vd Linh KhÃ­ Cáº£m á»¨ng +cÃ´ng kÃ­ch/Ä‘Ã²n trÃºng) lÃ 
+    // buff TRONG TRáº¬N â€” reset vá» 0 má»—i khi 1 tráº­n má»›i báº¯t Ä‘áº§u, ká»ƒ cáº£
+    // khi Auto tá»± ná»‘i tráº­n ngay láº­p tá»©c (theo yÃªu cáº§u, khÃ¡c thiáº¿t káº¿
+    // permanent progression ban Ä‘áº§u).
     this.battleLoot.beginBattle()
     this.passiveSystem.resetStacks()
 
-    // Bất Tử Thể — reset mặc định về KHÔNG bảo vệ; startBattleWithPlayer()
-    // sẽ set lại session thật ngay sau (cùng pattern battleLoot.setSession()).
-    // Trận startBattle() trực tiếp (không PlayerData) thì không có thiên phú.
+    // Báº¥t Tá»­ Thá»ƒ â€” reset máº·c Ä‘á»‹nh vá» KHÃ”NG báº£o vá»‡; startBattleWithPlayer()
+    // sáº½ set láº¡i session tháº­t ngay sau (cÃ¹ng pattern battleLoot.setSession()).
+    // Tráº­n startBattle() trá»±c tiáº¿p (khÃ´ng PlayerData) thÃ¬ khÃ´ng cÃ³ thiÃªn phÃº.
     this.combatSystem.setSurviveLethalSession(null)
 
     this.battleSystem.start(player, enemyEntity)
@@ -2473,22 +2468,22 @@ export class GameManager {
   }
 
   /**
-   * Tiện ích: bắt đầu trận đấu thẳng từ PlayerData thay vì phải
-   * tự convert sang CombatEntity trước. `playerStats` truyền vào
-   * phải là finalStats (đã cộng modifiers) — lấy từ
-   * player store getter `finalStats`, không tính lại ở đây để
-   * tránh 2 nơi tự gọi calculateStats() khác nhau.
+   * Tiá»‡n Ã­ch: báº¯t Ä‘áº§u tráº­n Ä‘áº¥u tháº³ng tá»« PlayerData thay vÃ¬ pháº£i
+   * tá»± convert sang CombatEntity trÆ°á»›c. `playerStats` truyá»n vÃ o
+   * pháº£i lÃ  finalStats (Ä‘Ã£ cá»™ng modifiers) â€” láº¥y tá»«
+   * player store getter `finalStats`, khÃ´ng tÃ­nh láº¡i á»Ÿ Ä‘Ã¢y Ä‘á»ƒ
+   * trÃ¡nh 2 nÆ¡i tá»± gá»i calculateStats() khÃ¡c nhau.
    */
   startBattleWithPlayer(player: PlayerData, playerStats: Stats, enemy: Enemy) {
-    // DESIGN: mọi chỉ số combat, gồm skill runtime stats, được snapshot lúc
-    // bắt đầu trận. Mua node/đổi trang bị/loadout giữa trận chỉ có hiệu lực từ
-    // trận kế tiếp; không đụng tới CombatEntity đang chiến đấu.
+    // DESIGN: má»i chá»‰ sá»‘ combat, gá»“m skill runtime stats, Ä‘Æ°á»£c snapshot lÃºc
+    // báº¯t Ä‘áº§u tráº­n. Mua node/Ä‘á»•i trang bá»‹/loadout giá»¯a tráº­n chá»‰ cÃ³ hiá»‡u lá»±c tá»«
+    // tráº­n káº¿ tiáº¿p; khÃ´ng Ä‘á»¥ng tá»›i CombatEntity Ä‘ang chiáº¿n Ä‘áº¥u.
     //
-    // Runtime authority (2026-08-24, plan §5.4): `playerStats` là snapshot
-    // TĨNH (getAggregatedModifiers chỉ trả static — runtime không nằm ở
-    // đó); timed effect + socket modifier chảy vào combat qua provider
-    // MỖI TICK (updateStatsFromModifiers) → effect hết hạn giữa trận tự
-    // trở về baseline, không double-apply, không đóng băng trong baseStats.
+    // Runtime authority (2026-08-24, plan Â§5.4): `playerStats` lÃ  snapshot
+    // TÄ¨NH (getAggregatedModifiers chá»‰ tráº£ static â€” runtime khÃ´ng náº±m á»Ÿ
+    // Ä‘Ã³); timed effect + socket modifier cháº£y vÃ o combat qua provider
+    // Má»–I TICK (updateStatsFromModifiers) â†’ effect háº¿t háº¡n giá»¯a tráº­n tá»±
+    // trá»Ÿ vá» baseline, khÃ´ng double-apply, khÃ´ng Ä‘Ã³ng bÄƒng trong baseStats.
     const skillLevels = Object.fromEntries(
       this.skillManager.getAll().map((skill) => [skill.id, skill.level]),
     )
@@ -2503,9 +2498,9 @@ export class GameManager {
 
     this.battleLoot.setSession(this.buildPlayerRewardReceiver(player), player)
 
-    // Bất Tử Thể (talent-direction-choice-plan §6) — reset lượt sống sót
-    // theo thiên phú của player mỗi trận MỚI rồi gắn session cho
-    // combatSystem.killIfDead(). playerEntity.id là 'player' (xem
+    // Báº¥t Tá»­ Thá»ƒ (talent-direction-choice-plan Â§6) â€” reset lÆ°á»£t sá»‘ng sÃ³t
+    // theo thiÃªn phÃº cá»§a player má»—i tráº­n Má»šI rá»“i gáº¯n session cho
+    // combatSystem.killIfDead(). playerEntity.id lÃ  'player' (xem
     // playerToCombatEntity()).
     this.surviveLethalGuard.beginBattle(player.selectedTalentIds)
     this.combatSystem.setSurviveLethalSession({
@@ -2513,10 +2508,10 @@ export class GameManager {
       guard: this.surviveLethalGuard,
     })
 
-    // Bản Mệnh Pháp Bảo — snapshot level/grade/path/equippedElements
-    // NGAY lúc trận bắt đầu (doc §11); undefined nếu player không có
-    // artifact (Kiếm Tu/chưa Trúc Cơ) — updateArtifactActivation() tự
-    // no-op trong trường hợp đó.
+    // Báº£n Má»‡nh PhÃ¡p Báº£o â€” snapshot level/grade/path/equippedElements
+    // NGAY lÃºc tráº­n báº¯t Ä‘áº§u (doc Â§11); undefined náº¿u player khÃ´ng cÃ³
+    // artifact (Kiáº¿m Tu/chÆ°a TrÃºc CÆ¡) â€” updateArtifactActivation() tá»±
+    // no-op trong trÆ°á»ng há»£p Ä‘Ã³.
     this.battleSystem.setArtifactRuntime(
       player.artifact
         ? createArtifactRuntime(
@@ -2533,19 +2528,19 @@ export class GameManager {
   }
 
   /**
-   * RewardReceiver dùng chung cho mọi nơi cấp Reward trực tiếp cho
-   * player (battle victory, claim quest...) — insight đổ vào tâm pháp
-   * đang trang bị, Linh Thạch đổ vào MaterialBag (Plan Workstream F).
+   * RewardReceiver dÃ¹ng chung cho má»i nÆ¡i cáº¥p Reward trá»±c tiáº¿p cho
+   * player (battle victory, claim quest...) â€” insight Ä‘á»• vÃ o tÃ¢m phÃ¡p
+   * Ä‘ang trang bá»‹, Linh Tháº¡ch Ä‘á»• vÃ o MaterialBag (Plan Workstream F).
    */
   private buildPlayerRewardReceiver(player: PlayerData): RewardReceiver {
     return createPlayerRewardReceiver(
       player,
       (amount) => this.gainEquippedTechniqueInsight(amount),
       (amount) => {
-        // Cấp ĐÚNG phẩm Linh Thạch theo cảnh giới hiện tại (khớp phẩm mà
-        // chi phí Đột Phá/Cường Hóa/nâng cấp công trình đòi hỏi ở cảnh
-        // giới đó) — không cấp cứng Hạ Phẩm khiến người chơi cảnh giới
-        // cao kẹt lại vì có Linh Thạch nhưng sai phẩm.
+        // Cáº¥p ÄÃšNG pháº©m Linh Tháº¡ch theo cáº£nh giá»›i hiá»‡n táº¡i (khá»›p pháº©m mÃ 
+        // chi phÃ­ Äá»™t PhÃ¡/CÆ°á»ng HÃ³a/nÃ¢ng cáº¥p cÃ´ng trÃ¬nh Ä‘Ã²i há»i á»Ÿ cáº£nh
+        // giá»›i Ä‘Ã³) â€” khÃ´ng cáº¥p cá»©ng Háº¡ Pháº©m khiáº¿n ngÆ°á»i chÆ¡i cáº£nh giá»›i
+        // cao káº¹t láº¡i vÃ¬ cÃ³ Linh Tháº¡ch nhÆ°ng sai pháº©m.
         const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(player.realmId))
 
         if (amount > 0 && this.materialRegistry.has(spiritStoneId)) {
@@ -2558,16 +2553,16 @@ export class GameManager {
   }
 
   // =========================
-  // QUEST (Nhiệm Vụ)
+  // QUEST (Nhiá»‡m Vá»¥)
   // =========================
 
   /**
-   * Collect-quest hook (review 2026-08-28 bug #3) — gọi MỖI KHI material
-   * vào túi người chơi để tăng progress collect-quest đang active. KHÔNG
-   * gọi khi restore từ save (double-count). BattleLootSystem tự gọi trực
-   * tiếp (có deps quest); các đường cộng material còn lại của GameManager
-   * (production settle, claim toà nhà, Hóa Luyện, Linh Thạch reward...)
-   * đi qua helper này.
+   * Collect-quest hook (review 2026-08-28 bug #3) â€” gá»i Má»–I KHI material
+   * vÃ o tÃºi ngÆ°á»i chÆ¡i Ä‘á»ƒ tÄƒng progress collect-quest Ä‘ang active. KHÃ”NG
+   * gá»i khi restore tá»« save (double-count). BattleLootSystem tá»± gá»i trá»±c
+   * tiáº¿p (cÃ³ deps quest); cÃ¡c Ä‘Æ°á»ng cá»™ng material cÃ²n láº¡i cá»§a GameManager
+   * (production settle, claim toÃ  nhÃ , HÃ³a Luyá»‡n, Linh Tháº¡ch reward...)
+   * Ä‘i qua helper nÃ y.
    */
   private notifyQuestMaterialGained(materialId: string, amount: number): void {
     this.questSystem.onMaterialCollected(this.questRegistry, this.questManager, materialId, amount)
@@ -2622,7 +2617,7 @@ export class GameManager {
 
     if (claimed) {
       const quest = this.questRegistry.get(questId)
-      this.notifications.push({ kind: 'loot', message: `Hoàn thành: ${quest.name}` })
+      this.notifications.push({ kind: 'loot', message: `HoÃ n thÃ nh: ${quest.name}` })
     }
 
     return claimed
@@ -2643,21 +2638,21 @@ export class GameManager {
   }
 
   /**
-   * Độ Kiếp (mục 11 spec `breakthrough`) — khởi trận đấu với quái Kiếp,
-   * bỏ qua Stage hoàn toàn (giống startBattle() nhận Enemy bất kỳ).
-   * Enemy Kiếp phải đã được đăng ký qua registerEnemyTemplates().
+   * Äá»™ Kiáº¿p (má»¥c 11 spec `breakthrough`) â€” khá»Ÿi tráº­n Ä‘áº¥u vá»›i quÃ¡i Kiáº¿p,
+   * bá» qua Stage hoÃ n toÃ n (giá»‘ng startBattle() nháº­n Enemy báº¥t ká»³).
+   * Enemy Kiáº¿p pháº£i Ä‘Ã£ Ä‘Æ°á»£c Ä‘Äƒng kÃ½ qua registerEnemyTemplates().
    *
-   * Đột Phá tổng quát (2026-08-16) — `foundationType` CHỈ truyền khi
+   * Äá»™t PhÃ¡ tá»•ng quÃ¡t (2026-08-16) â€” `foundationType` CHá»ˆ truyá»n khi
    * targetRealmId === 'foundation_establishment' (tra TRIBULATION_ENEMY_ID_BY_FOUNDATION,
-   * hệ Căn Cơ 4-tier cũ, không đổi); mọi targetRealmId khác tra
-   * TRIBULATION_ENEMY_ID_BY_REALM (1 quái Kiếp/cảnh giới, không tier).
+   * há»‡ CÄƒn CÆ¡ 4-tier cÅ©, khÃ´ng Ä‘á»•i); má»i targetRealmId khÃ¡c tra
+   * TRIBULATION_ENEMY_ID_BY_REALM (1 quÃ¡i Kiáº¿p/cáº£nh giá»›i, khÃ´ng tier).
    */
   /**
-   * Độ Kiếp (mục 11 spec `breakthrough`) — delegate xuống
-   * TribulationSystem (runtime trận Kiếp). Session loot được khởi tạo
-   * RIÊNG qua BattleLootSystem.beginTribulation(): reset receiver +
-   * reward summary của trận Stage trước (P2 fix 2026-08-24) rồi gắn
-   * player của phiên Độ Kiếp.
+   * Äá»™ Kiáº¿p (má»¥c 11 spec `breakthrough`) â€” delegate xuá»‘ng
+   * TribulationSystem (runtime tráº­n Kiáº¿p). Session loot Ä‘Æ°á»£c khá»Ÿi táº¡o
+   * RIÃŠNG qua BattleLootSystem.beginTribulation(): reset receiver +
+   * reward summary cá»§a tráº­n Stage trÆ°á»›c (P2 fix 2026-08-24) rá»“i gáº¯n
+   * player cá»§a phiÃªn Äá»™ Kiáº¿p.
    */
   startTribulation(
     player: PlayerData,
@@ -2670,10 +2665,10 @@ export class GameManager {
     if (started) {
       this.battleLoot.beginTribulation(player)
 
-      // Bất Tử Thể KHÔNG kích hoạt trong trận Độ Kiếp (plan §6 — giữ Độ
-      // Kiếp là nghi lễ thật). Trận Kiếp KHÔNG đi qua startBattle() nên
-      // phải tự xoá session ở đây, tránh lượt sống sót tồn dư từ trận
-      // Stage trước chảy vào.
+      // Báº¥t Tá»­ Thá»ƒ KHÃ”NG kÃ­ch hoáº¡t trong tráº­n Äá»™ Kiáº¿p (plan Â§6 â€” giá»¯ Äá»™
+      // Kiáº¿p lÃ  nghi lá»… tháº­t). Tráº­n Kiáº¿p KHÃ”NG Ä‘i qua startBattle() nÃªn
+      // pháº£i tá»± xoÃ¡ session á»Ÿ Ä‘Ã¢y, trÃ¡nh lÆ°á»£t sá»‘ng sÃ³t tá»“n dÆ° tá»« tráº­n
+      // Stage trÆ°á»›c cháº£y vÃ o.
       this.surviveLethalGuard.beginTribulation()
       this.combatSystem.setSurviveLethalSession(null)
     }
@@ -2694,10 +2689,10 @@ export class GameManager {
   }
 
   /**
-   * Áp 1 buff/debuff PERSISTENT (ngoài trận) lên player — dùng cho
-   * Kiếp Thương khi thất bại Độ Kiếp (mục 13 spec `breakthrough`).
-   * Cùng buffSystem/buffManager nuôi getAggregatedModifiers() mỗi
-   * tick (xem PillSystem's effect 'buff' — cùng cơ chế).
+   * Ãp 1 buff/debuff PERSISTENT (ngoÃ i tráº­n) lÃªn player â€” dÃ¹ng cho
+   * Kiáº¿p ThÆ°Æ¡ng khi tháº¥t báº¡i Äá»™ Kiáº¿p (má»¥c 13 spec `breakthrough`).
+   * CÃ¹ng buffSystem/buffManager nuÃ´i getAggregatedModifiers() má»—i
+   * tick (xem PillSystem's effect 'buff' â€” cÃ¹ng cÆ¡ cháº¿).
    */
   applyPersistentBuff(buff: Buff) {
     this.buffSystem.apply(buff)
@@ -2708,18 +2703,18 @@ export class GameManager {
   }
 
   /**
-   * Người chơi CHỦ ĐỘNG thoát trận giữa chừng (nút "Thoát Trận" ở
-   * CombatControlBar.vue, có xác nhận trước khi gọi tới đây) — TÁI
-   * DÙNG luồng 'defeat' sẵn có thay vì dựng 1 BattleState/UI mới:
-   * chỉ set battle.state + emit 'battle_end' giống hệt
-   * BattleSystem.checkBattleEnd() làm khi player chết.
-   * updateStageProgress() TỰ dừng stageManager ở tick kế tiếp khi thấy
-   * state 'defeat' (xem ghi chú ở đó) — không cần tự dọn gì thêm ở
-   * đây. Phần thưởng đã kiếm được (grantBattleRewardIfNeeded() chạy
-   * MỖI TICK theo từng quái chết, không đợi tới cuối trận) KHÔNG mất
-   * dù thoát giữa chừng. Chỉ áp dụng trận Stage — Tribulation (Đột
-   * Phá) có luồng thắng/thua RIÊNG (useTribulation.ts), nút "Thoát
-   * Trận" không hiện trong trận đó (xem CombatControlBar.vue).
+   * NgÆ°á»i chÆ¡i CHá»¦ Äá»˜NG thoÃ¡t tráº­n giá»¯a chá»«ng (nÃºt "ThoÃ¡t Tráº­n" á»Ÿ
+   * CombatControlBar.vue, cÃ³ xÃ¡c nháº­n trÆ°á»›c khi gá»i tá»›i Ä‘Ã¢y) â€” TÃI
+   * DÃ™NG luá»“ng 'defeat' sáºµn cÃ³ thay vÃ¬ dá»±ng 1 BattleState/UI má»›i:
+   * chá»‰ set battle.state + emit 'battle_end' giá»‘ng há»‡t
+   * BattleSystem.checkBattleEnd() lÃ m khi player cháº¿t.
+   * updateStageProgress() Tá»° dá»«ng stageManager á»Ÿ tick káº¿ tiáº¿p khi tháº¥y
+   * state 'defeat' (xem ghi chÃº á»Ÿ Ä‘Ã³) â€” khÃ´ng cáº§n tá»± dá»n gÃ¬ thÃªm á»Ÿ
+   * Ä‘Ã¢y. Pháº§n thÆ°á»Ÿng Ä‘Ã£ kiáº¿m Ä‘Æ°á»£c (grantBattleRewardIfNeeded() cháº¡y
+   * Má»–I TICK theo tá»«ng quÃ¡i cháº¿t, khÃ´ng Ä‘á»£i tá»›i cuá»‘i tráº­n) KHÃ”NG máº¥t
+   * dÃ¹ thoÃ¡t giá»¯a chá»«ng. Chá»‰ Ã¡p dá»¥ng tráº­n Stage â€” Tribulation (Äá»™t
+   * PhÃ¡) cÃ³ luá»“ng tháº¯ng/thua RIÃŠNG (useTribulation.ts), nÃºt "ThoÃ¡t
+   * Tráº­n" khÃ´ng hiá»‡n trong tráº­n Ä‘Ã³ (xem CombatControlBar.vue).
    */
   abandonBattle(): boolean {
     const battle = this.battleSystem.getBattle()
@@ -2739,8 +2734,8 @@ export class GameManager {
   // =========================
   // STAGE (wave spawn)
   // =========================
-  // Vòng đời wave (spawn nhịp, victory, auto-repeat, boss summon) nằm ở
-  // StageWaveSystem — các method dưới đây là delegate giữ public API.
+  // VÃ²ng Ä‘á»i wave (spawn nhá»‹p, victory, auto-repeat, boss summon) náº±m á»Ÿ
+  // StageWaveSystem â€” cÃ¡c method dÆ°á»›i Ä‘Ã¢y lÃ  delegate giá»¯ public API.
 
   startStage(
     player: PlayerData,
@@ -2760,15 +2755,15 @@ export class GameManager {
   // =========================
 
   /**
-   * Nạp lại toàn bộ state đã lưu vào các Manager tương ứng. PHẢI
-   * gọi sau khi registerMaterials/registerEquipment/registerPills/
+   * Náº¡p láº¡i toÃ n bá»™ state Ä‘Ã£ lÆ°u vÃ o cÃ¡c Manager tÆ°Æ¡ng á»©ng. PHáº¢I
+   * gá»i sau khi registerMaterials/registerEquipment/registerPills/
    * registerTalismans/registerSkillTemplates/registerTechniqueTemplates
-   * đã chạy — materials/pills/talismans resolve theo id qua registry,
-   * cần registry đã có data trước.
+   * Ä‘Ã£ cháº¡y â€” materials/pills/talismans resolve theo id qua registry,
+   * cáº§n registry Ä‘Ã£ cÃ³ data trÆ°á»›c.
    *
-   * Trả về modifier equipment mới nhất để caller đồng bộ vào
-   * player.modifiers (equipmentSystem.getModifiers() không tự biết
-   * gọi player.setEquipmentModifiers()).
+   * Tráº£ vá» modifier equipment má»›i nháº¥t Ä‘á»ƒ caller Ä‘á»“ng bá»™ vÃ o
+   * player.modifiers (equipmentSystem.getModifiers() khÃ´ng tá»± biáº¿t
+   * gá»i player.setEquipmentModifiers()).
    */
   restoreFromSave(save: GameSave): StatModifier[] {
     for (const technique of save.techniques) {
@@ -2783,13 +2778,13 @@ export class GameManager {
       }
 
       // Execution policy rework + development-build no-migration (2026-
-      // 08-26): save của nhân vật CŨ lưu skill object nguyên trạng trước
-      // khi có field `execution` bắt buộc — scheduler thống nhất BỎ QUA
-      // mọi active thiếu execution ("không cast gì" dù tele/di chuyển
-      // vẫn chạy). Đối chiếu template đã đăng ký để hồi phục AUTHORED
-      // combat data (execution/targeting/AOE/VFX preset), giữ NGUYÊN
-      // progression state của instance (level/equipped/slot/cooldown/
-      // specialization). Template thiếu thì giữ nguyên object save.
+      // 08-26): save cá»§a nhÃ¢n váº­t CÅ¨ lÆ°u skill object nguyÃªn tráº¡ng trÆ°á»›c
+      // khi cÃ³ field `execution` báº¯t buá»™c â€” scheduler thá»‘ng nháº¥t Bá»Ž QUA
+      // má»i active thiáº¿u execution ("khÃ´ng cast gÃ¬" dÃ¹ tele/di chuyá»ƒn
+      // váº«n cháº¡y). Äá»‘i chiáº¿u template Ä‘Ã£ Ä‘Äƒng kÃ½ Ä‘á»ƒ há»“i phá»¥c AUTHORED
+      // combat data (execution/targeting/AOE/VFX preset), giá»¯ NGUYÃŠN
+      // progression state cá»§a instance (level/equipped/slot/cooldown/
+      // specialization). Template thiáº¿u thÃ¬ giá»¯ nguyÃªn object save.
       const template = this.skillTemplates.get(skill.id)
 
       if (!skill.execution && template?.execution) {
@@ -2815,23 +2810,23 @@ export class GameManager {
       }
     }
 
-    // Phù/Trận legacy (plan §10.1): save đã qua migration v44 có mảng
-    // rỗng — bỏ qua hoàn toàn, không còn bag để nạp.
+    // PhÃ¹/Tráº­n legacy (plan Â§10.1): save Ä‘Ã£ qua migration v44 cÃ³ máº£ng
+    // rá»—ng â€” bá» qua hoÃ n toÃ n, khÃ´ng cÃ²n bag Ä‘á»ƒ náº¡p.
 
     for (const instance of save.equipment) {
-      // Item template cũ đã bị xoá theo equipment rework; bỏ hẳn instance
-      // mồ côi thay vì để restoreModifiers truy cập registry và crash.
+      // Item template cÅ© Ä‘Ã£ bá»‹ xoÃ¡ theo equipment rework; bá» háº³n instance
+      // má»“ cÃ´i thay vÃ¬ Ä‘á»ƒ restoreModifiers truy cáº­p registry vÃ  crash.
       if (this.equipmentRegistry.has(instance.itemId)) {
         this.equipmentBag.add(instance)
       }
     }
 
-    // MASTER SPEC Mục XVI (Phase 9) — slot state (enhance) PHẢI nạp
-    // trước refreshModifiers() bên dưới.
+    // MASTER SPEC Má»¥c XVI (Phase 9) â€” slot state (enhance) PHáº¢I náº¡p
+    // trÆ°á»›c refreshModifiers() bÃªn dÆ°á»›i.
     this.equipmentSlotManager.restore(save.equipmentSlots)
 
-    // ModifierSystem nội bộ của equipmentSystem không tự phục hồi
-    // theo EquipmentBag vừa nạp — phải build lại thủ công.
+    // ModifierSystem ná»™i bá»™ cá»§a equipmentSystem khÃ´ng tá»± phá»¥c há»“i
+    // theo EquipmentBag vá»«a náº¡p â€” pháº£i build láº¡i thá»§ cÃ´ng.
     this.equipmentSystem.refreshModifiers(
       this.equipmentBag,
       this.equipmentSlotManager,
@@ -2844,8 +2839,8 @@ export class GameManager {
       save.quests ?? { active: [], completedOnceIds: [], lastDailyResetAtMs: 0 },
     )
 
-    // Production (plan §4.3) — restore state + offline settle tuần tự
-    // trong cap; MỖI auto-cycle một seed/roll riêng.
+    // Production (plan Â§4.3) â€” restore state + offline settle tuáº§n tá»±
+    // trong cap; Má»–I auto-cycle má»™t seed/roll riÃªng.
     this.productionSystem.restoreStates((save.productionSites ?? []) as ProductionSiteState[])
 
     for (const definition of this.productionSystem.getSiteDefinitions()) {
@@ -2859,9 +2854,9 @@ export class GameManager {
       )
 
       if (elapsedOfflineSeconds > 60) {
-        // T3 (economy-ecosystem-plan) — worker chạy offline như slot tay
-        // trong cap: truyền capacity + mốc bắt đầu vắng mặt để settle
-        // đúng cửa sổ.
+        // T3 (economy-ecosystem-plan) â€” worker cháº¡y offline nhÆ° slot tay
+        // trong cap: truyá»n capacity + má»‘c báº¯t Ä‘áº§u váº¯ng máº·t Ä‘á»ƒ settle
+        // Ä‘Ãºng cá»­a sá»•.
         this.productionSystem.settleOffline(
           this.materialBag,
           this.materialRegistry,
@@ -2875,7 +2870,7 @@ export class GameManager {
       }
     }
 
-    // Đan Phòng offline settle (§8.2).
+    // Äan PhÃ²ng offline settle (Â§8.2).
     this.alchemySystem.restoreJobs((save.alchemyJobs ?? []) as ActiveAlchemyJob[])
 
     this.alchemySystem.settleOffline(
@@ -2893,24 +2888,24 @@ export class GameManager {
   // =========================
 
   /**
-   * Gọi mỗi tick từ game loop (App.vue) với deltaSeconds đo được
-   * từ GameClock. GameManager chỉ forward xuống các system có
-   * trạng thái phụ thuộc thời gian — không tự tính thời gian.
+   * Gá»i má»—i tick tá»« game loop (App.vue) vá»›i deltaSeconds Ä‘o Ä‘Æ°á»£c
+   * tá»« GameClock. GameManager chá»‰ forward xuá»‘ng cÃ¡c system cÃ³
+   * tráº¡ng thÃ¡i phá»¥ thuá»™c thá»i gian â€” khÃ´ng tá»± tÃ­nh thá»i gian.
    */
   update(deltaSeconds: number) {
     if (deltaSeconds <= 0) {
       return
     }
 
-    // Timed effect theo thời gian thực — tick expiry ở MỌI update (cả
-    // khi pause battle) vì deadline là Date.now() tuyệt đối, không dùng
-    // game delta kéo dài buff (plan §5.4). Player reference do App.vue
-    // đăng ký qua setActivePlayer() sau boot/load.
+    // Timed effect theo thá»i gian thá»±c â€” tick expiry á»Ÿ Má»ŒI update (cáº£
+    // khi pause battle) vÃ¬ deadline lÃ  Date.now() tuyá»‡t Ä‘á»‘i, khÃ´ng dÃ¹ng
+    // game delta kÃ©o dÃ i buff (plan Â§5.4). Player reference do App.vue
+    // Ä‘Äƒng kÃ½ qua setActivePlayer() sau boot/load.
     if (this.activePlayer) {
       this.tickTimedEffects(this.activePlayer)
 
-      // Quest daily reset (Quest System plan) — wall-clock day-bucket,
-      // check mỗi tick nên vẫn reset kể cả khi panel Nhiệm Vụ đang đóng.
+      // Quest daily reset (Quest System plan) â€” wall-clock day-bucket,
+      // check má»—i tick nÃªn váº«n reset ká»ƒ cáº£ khi panel Nhiá»‡m Vá»¥ Ä‘ang Ä‘Ã³ng.
       if (
         this.questSystem.checkAndResetDaily(
           this.questRegistry,
@@ -2918,11 +2913,11 @@ export class GameManager {
           this.activePlayer,
         )
       ) {
-        this.notifications.push({ kind: 'craft', message: 'Nhiệm vụ hàng ngày đã làm mới' })
+        this.notifications.push({ kind: 'craft', message: 'Nhiá»‡m vá»¥ hÃ ng ngÃ y Ä‘Ã£ lÃ m má»›i' })
       }
 
-      // Production settle (plan §4.3) — delivery thẳng Bag khi cycle
-      // hoàn thành; notification ghi rõ vật liệu + số lượng (§9.1).
+      // Production settle (plan Â§4.3) â€” delivery tháº³ng Bag khi cycle
+      // hoÃ n thÃ nh; notification ghi rÃµ váº­t liá»‡u + sá»‘ lÆ°á»£ng (Â§9.1).
       this.productionSystem.tick(
         Date.now(),
         this.materialBag,
@@ -2943,19 +2938,19 @@ export class GameManager {
           ? this.materialRegistry.get(event.materialId)
           : undefined
 
-        // Collect-quest hook (review 2026-08-28) — production settle là
-        // nguồn material chính của collect-quest. Chỉ tính lượng thật sự
-        // vào túi (trừ overflow).
+        // Collect-quest hook (review 2026-08-28) â€” production settle lÃ 
+        // nguá»“n material chÃ­nh cá»§a collect-quest. Chá»‰ tÃ­nh lÆ°á»£ng tháº­t sá»±
+        // vÃ o tÃºi (trá»« overflow).
         this.notifyQuestMaterialGained(event.materialId, event.amount - (event.overflow ?? 0))
 
         this.notifications.push({
           kind: 'loot',
-          message: `${material?.name ?? event.materialId} ×${event.amount}`,
+          message: `${material?.name ?? event.materialId} Ã—${event.amount}`,
         })
       }
 
-      // Đan Phòng settle (§8.3). Thiên phú Đan Duyên cộng điểm % thành
-      // đan (plan §6) — đọc từ activePlayer mỗi tick, đổi talent là có hiệu lực.
+      // Äan PhÃ²ng settle (Â§8.3). ThiÃªn phÃº Äan DuyÃªn cá»™ng Ä‘iá»ƒm % thÃ nh
+      // Ä‘an (plan Â§6) â€” Ä‘á»c tá»« activePlayer má»—i tick, Ä‘á»•i talent lÃ  cÃ³ hiá»‡u lá»±c.
       this.alchemySystem.tick(
         Date.now(),
         this.pillBag,
@@ -2972,17 +2967,17 @@ export class GameManager {
         this.notifications.push({
           kind: 'craft',
           message: event.success
-            ? `${pill?.name ?? event.pillId} ×${event.pills}`
-            : `Luyện ${pill?.name ?? event.pillId} thất bại`,
+            ? `${pill?.name ?? event.pillId} Ã—${event.pills}`
+            : `Luyá»‡n ${pill?.name ?? event.pillId} tháº¥t báº¡i`,
         })
       }
     }
 
     this.buffSystem.update(deltaSeconds)
 
-    // cooldownReduction đọc từ battle.player.stats (CombatEntity) đang
-    // sống trong trận nếu có — ngoài combat (menu/màn hình cảnh giới)
-    // không có battle nào thì mặc định 0, khớp hành vi cũ.
+    // cooldownReduction Ä‘á»c tá»« battle.player.stats (CombatEntity) Ä‘ang
+    // sá»‘ng trong tráº­n náº¿u cÃ³ â€” ngoÃ i combat (menu/mÃ n hÃ¬nh cáº£nh giá»›i)
+    // khÃ´ng cÃ³ battle nÃ o thÃ¬ máº·c Ä‘á»‹nh 0, khá»›p hÃ nh vi cÅ©.
     const activeBattle = this.battleSystem.getBattle()
 
     this.skillSystem.update(deltaSeconds, activeBattle?.player.stats.cooldownReduction ?? 0)
@@ -2993,19 +2988,19 @@ export class GameManager {
   }
 
   /**
-   * Chia deltaSeconds thành các bước cố định BATTLE_FIXED_STEP_SECONDS
-   * cho nhánh phụ thuộc timer-đếm-ngược-rồi-reset (đòn đánh, spawn
-   * quái, phần thưởng) — xem ghi chú ở BATTLE_FIXED_STEP_SECONDS phía
-   * trên. Giới hạn ở BATTLE_MAX_CATCHUP_SECONDS để không lặp hàng ngàn
-   * bước khi deltaSeconds bất thường lớn.
+   * Chia deltaSeconds thÃ nh cÃ¡c bÆ°á»›c cá»‘ Ä‘á»‹nh BATTLE_FIXED_STEP_SECONDS
+   * cho nhÃ¡nh phá»¥ thuá»™c timer-Ä‘áº¿m-ngÆ°á»£c-rá»“i-reset (Ä‘Ã²n Ä‘Ã¡nh, spawn
+   * quÃ¡i, pháº§n thÆ°á»Ÿng) â€” xem ghi chÃº á»Ÿ BATTLE_FIXED_STEP_SECONDS phÃ­a
+   * trÃªn. Giá»›i háº¡n á»Ÿ BATTLE_MAX_CATCHUP_SECONDS Ä‘á»ƒ khÃ´ng láº·p hÃ ng ngÃ n
+   * bÆ°á»›c khi deltaSeconds báº¥t thÆ°á»ng lá»›n.
    *
-   * updateTribulation()/updateTribulationProgress() CHỦ Ý đứng NGOÀI
-   * vòng lặp bước nhỏ: updateTribulation() đã tự có vòng lặp catch-up
-   * riêng (while nextStrikeInSeconds <= 0) hoạt động đúng với deltaSeconds
-   * lớn dạng đóng (không tích luỹ theo bước), gọi 1 lần với deltaSeconds
-   * gốc là chính xác. Chia nhỏ nó thành hàng trăm bước 0.1s sẽ CỘNG DỒN
-   * sai số dấu phẩy động (0.1 không biểu diễn chẵn nhị phân) vào
-   * active.nextStrikeInSeconds, có thể làm lệch 1 lôi kích so với thật.
+   * updateTribulation()/updateTribulationProgress() CHá»¦ Ã Ä‘á»©ng NGOÃ€I
+   * vÃ²ng láº·p bÆ°á»›c nhá»: updateTribulation() Ä‘Ã£ tá»± cÃ³ vÃ²ng láº·p catch-up
+   * riÃªng (while nextStrikeInSeconds <= 0) hoáº¡t Ä‘á»™ng Ä‘Ãºng vá»›i deltaSeconds
+   * lá»›n dáº¡ng Ä‘Ã³ng (khÃ´ng tÃ­ch luá»¹ theo bÆ°á»›c), gá»i 1 láº§n vá»›i deltaSeconds
+   * gá»‘c lÃ  chÃ­nh xÃ¡c. Chia nhá» nÃ³ thÃ nh hÃ ng trÄƒm bÆ°á»›c 0.1s sáº½ Cá»˜NG Dá»’N
+   * sai sá»‘ dáº¥u pháº©y Ä‘á»™ng (0.1 khÃ´ng biá»ƒu diá»…n cháºµn nhá»‹ phÃ¢n) vÃ o
+   * active.nextStrikeInSeconds, cÃ³ thá»ƒ lÃ m lá»‡ch 1 lÃ´i kÃ­ch so vá»›i tháº­t.
    */
 
   private updateBattleFixedStep(deltaSeconds: number) {
@@ -3022,8 +3017,8 @@ export class GameManager {
       this.stageWaves.resolveBossSummons()
     }
 
-    // Ngoài vòng fixed-step — TribulationSystem tự có catch-up dạng đóng,
-    // chia nhỏ sẽ cộng dồn sai số float (xem class doc bên đó).
+    // NgoÃ i vÃ²ng fixed-step â€” TribulationSystem tá»± cÃ³ catch-up dáº¡ng Ä‘Ã³ng,
+    // chia nhá» sáº½ cá»™ng dá»“n sai sá»‘ float (xem class doc bÃªn Ä‘Ã³).
     this.tribulation.update(deltaSeconds)
     this.tribulation.updateProgress()
   }
@@ -3037,8 +3032,8 @@ export class GameManager {
   }
 
   /**
-   * Vue layer (App.vue's tick()) gọi mỗi tick để rút toast phát sinh
-   * TRONG core kể từ lần gọi trước — trả về rồi xoá hàng đợi.
+   * Vue layer (App.vue's tick()) gá»i má»—i tick Ä‘á»ƒ rÃºt toast phÃ¡t sinh
+   * TRONG core ká»ƒ tá»« láº§n gá»i trÆ°á»›c â€” tráº£ vá» rá»“i xoÃ¡ hÃ ng Ä‘á»£i.
    */
   drainNotifications(): NotificationEvent[] {
     return this.notifications.drain()

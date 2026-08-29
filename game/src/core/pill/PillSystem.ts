@@ -81,7 +81,7 @@ export class PillSystem {
     return permanentModifiers
   }
 
-  private applyEffect(effect: PillEffect, target: PillTarget, pill: Pill): StatModifier | null {
+  private applyEffect(effect: PillEffect, target: PillTarget, _pill: Pill): StatModifier | null {
     switch (effect.type) {
       case 'cultivation':
         target.addCultivation(effect.value ?? 0)

@@ -373,7 +373,7 @@ describe('devResetBranch (plan §6.10)', () => {
   })
 
   it('cascade gỡ node con mồ côi khi prerequisite cha về 0', () => {
-    const { registry, power, childOfPower } = branchRegistry()
+    const { registry, power } = branchRegistry()
 
     const player = playerWith({
       skillInsight: 100,

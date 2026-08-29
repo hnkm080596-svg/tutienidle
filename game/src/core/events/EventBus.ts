@@ -3,7 +3,7 @@ export type EventHandler<T> =
 
 export class EventBus {
   private handlers =
-    new Map<string, Set<EventHandler<any>>>()
+    new Map<string, Set<EventHandler<never>>>()
 
   on<T>(
     eventType: string,
@@ -18,7 +18,7 @@ export class EventBus {
 
     this.handlers
       .get(eventType)!
-      .add(handler)
+      .add(handler as EventHandler<never>)
   }
 
   off<T>(
@@ -27,7 +27,7 @@ export class EventBus {
   ) {
     this.handlers
       .get(eventType)
-      ?.delete(handler)
+      ?.delete(handler as EventHandler<never>)
   }
 
   emit<T>(
@@ -45,7 +45,7 @@ export class EventBus {
       const handler
       of handlers
     ) {
-      handler(event)
+      (handler as EventHandler<T>)(event)
     }
   }
 

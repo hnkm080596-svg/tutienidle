@@ -38,8 +38,7 @@ import { ReactionManager } from '../element/ReactionManager'
 import { HERO_COLUMN, HERO_LANE_INDEX, SPAWN_COLUMN, VISIBLE_MAX_COLUMN } from './BattleLane'
 
 import { resolveEnemySpawnPosition } from './EnemySpawnPlacement'
-import type { EnemySpawnVfxPresetId, PlayerSpawnVfxPresetId } from './CombatAction'
-import type { GridPosition } from './BattleGrid'
+import type { EnemySpawnVfxPresetId } from './CombatAction'
 import { entityGridPosition, worldToGridPosition } from './BattleGrid'
 
 import {
@@ -2111,7 +2110,7 @@ export class BattleSystem {
     target: CombatEntity,
     battle: Battle,
     slotIndex: number,
-    strategy: CombatAiStrategy,
+    _strategy: CombatAiStrategy,
   ): boolean {
     const execution = skill.execution!
 

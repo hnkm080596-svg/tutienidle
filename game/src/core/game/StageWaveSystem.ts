@@ -1,4 +1,3 @@
-import type { Battle } from '../battle/Battle'
 import type { BattleSystem } from '../battle/BattleSystem'
 import type { EventBus } from '../events/EventBus'
 import { enemyToCombatEntity, createEliteVariant, createBossVariant } from '../enemy/Enemy'
