@@ -53,6 +53,13 @@ export interface AlchemyRecipe {
   spiritStoneCost: number
 
   baseDurationSeconds: number
+
+  /**
+   * Nguyên liệu đặc biệt ngoài thảo/gỗ (spec dot-pha-loi-kiep §4.1b —
+   * vd Yêu Đan của Thông Mạch Đan/Trúc Cơ Đan). undefined = recipe
+   * generated theo PILL_FAMILIES, không có nguyên liệu phụ.
+   */
+  specialIngredients?: { materialId: string; amount: number }[]
 }
 
 export interface ActiveAlchemyJob {
@@ -241,10 +248,22 @@ export class AlchemySystem {
       return { ok: false, reason: 'missing_spirit_stone' }
     }
 
+    // Nguyên liệu đặc biệt (spec dot-pha-loi-kiep §4.1b) — check đủ
+    // TẤT CẢ trước khi reserve bất cứ thứ gì (giữ atomic §7.2).
+    for (const special of recipe.specialIngredients ?? []) {
+      if (!bag.has(special.materialId, special.amount)) {
+        return { ok: false, reason: 'missing_special_ingredient' }
+      }
+    }
+
     // Reserve atomic — trừ toàn bộ sau khi mọi check pass.
     bag.remove(herbMaterialId, recipe.herbAmount)
 
     bag.remove(woodId, recipe.fuelWoodAmount)
+
+    for (const special of recipe.specialIngredients ?? []) {
+      bag.remove(special.materialId, special.amount)
+    }
 
     this.jobs.push({
       jobId: nextJobId(),

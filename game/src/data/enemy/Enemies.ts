@@ -794,7 +794,12 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     bossRewards: {
       techniqueInsight: 1815,
       spiritStone: 525,
-      itemDrops: [{ kind: 'equipment', itemId: 'base_truy', chance: 0.4 }],
+      itemDrops: [
+        { kind: 'equipment', itemId: 'base_truy', chance: 0.4 },
+        // Spec dot-pha-loi-kiep §4.1b — Yêu Đan 100% từ boss LK t10,
+        // nguyên liệu chính Thông Mạch Đan/Trúc Cơ Đan.
+        { kind: 'material', itemId: 'yeu_dan_hung_giao', amount: 1, chance: 1 },
+      ],
     },
   }),
 
@@ -1803,5 +1808,42 @@ const FOUNDATION_ENEMIES: Enemy[] = [
   }),
 ]
 
+// Quái ẩn (spec dot-pha-loi-kiep §4.1c) — Huyết Mông KHÔNG thuộc
+// enemyPool stage nào; chỉ trà trộn pool spawn qua HiddenBeastSystem
+// khi cửa sổ 1000 kill mở (xem core/game/HiddenBeastSystem.ts).
+// Rơi Thiên Địa Chi Kiều 5% — nguyên liệu Kỳ Kinh (đường 9 Bát Mạch).
+const HIDDEN_BEASTS: Enemy[] = [
+  defineEnemy({
+    id: 'huyet_mong',
+    name: 'Huyết Mông',
+    level: 10,
+    realmId: 'qi_refining',
+    lane: 'ground',
+    archetype: 'melee',
+    family: 'hidden_beast',
+    statsInput: {
+      maxHp: 2600,
+      attack: 130,
+      attackSpeed: 4,
+      movementSpeed: 1.6,
+      attackRangeRanks: 1,
+      criticalRate: 0.1,
+      criticalDamage: 2.2,
+      armor: 45,
+      evasionRate: 10,
+      resistances: { water: 10, fire: 10 },
+      elemental: { element: 'water', power: 18 },
+    },
+    rewards: {
+      techniqueInsight: 500,
+      spiritStone: 150,
+      itemDrops: [
+        { kind: 'material', itemId: 'thien_dia_chi_kieu', amount: 1, chance: 0.05 },
+        { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 12, chance: 1 },
+      ],
+    },
+  }),
+]
+
 /** Runtime enemy data: linh thảo chỉ đến từ Động Thiên, không rơi từ quái. */
-export const ENEMIES: Enemy[] = [...ENEMY_DEFINITIONS, ...FOUNDATION_ENEMIES]
+export const ENEMIES: Enemy[] = [...ENEMY_DEFINITIONS, ...FOUNDATION_ENEMIES, ...HIDDEN_BEASTS]

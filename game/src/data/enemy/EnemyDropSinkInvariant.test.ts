@@ -6,6 +6,8 @@ import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../realm/BodyRefinement'
 import { DOAN_BAO_THACH_MATERIAL_ID } from '../../core/artifact/ArtifactProgression'
 import { createDefaultEquipmentOperationCostCatalog } from '../../core/equipment/EquipmentOperationCostCatalog'
 import { SUPPORTED_PROFESSION_REALMS } from '../../core/profession/ProfessionMaterial'
+import { alchemyRecipes } from '../alchemy/alchemyRecipes'
+import { THIEN_DIA_CHI_KIEU_MATERIAL_ID } from '../realm/Meridians'
 
 // Item lore / manh mối Đột Phá Trúc Cơ — CỐ Ý không có sink chức năng
 // (description ẩn công dụng, xem data/materials/materials.ts). Chúng được
@@ -57,6 +59,17 @@ function collectSinkMaterialIds(): Set<string> {
       sinks.add(material.materialId)
     }
   }
+
+  // Đan phương đặc biệt (spec dot-pha-loi-kiep §4.1b) — Yêu Đan là
+  // nguyên liệu chính Thông Mạch Đan/Trúc Cơ Đan.
+  for (const recipe of alchemyRecipes) {
+    for (const special of recipe.specialIngredients ?? []) {
+      sinks.add(special.materialId)
+    }
+  }
+
+  // Bát Mạch — Kỳ Kinh Thiên Địa Chi Kiều (đường 9) cần nguyên liệu ẩn.
+  sinks.add(THIEN_DIA_CHI_KIEU_MATERIAL_ID)
 
   return sinks
 }

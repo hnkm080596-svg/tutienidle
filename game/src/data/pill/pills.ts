@@ -59,4 +59,33 @@ export function buildTieredPills(): Pill[] {
   })))
 }
 
-export const pills: Pill[] = buildTieredPills()
+// Đan đặc biệt (spec dot-pha-loi-kiep §4.1b) — 2 đan của gate Trúc
+// Cơ, type 'material' KHÔNG uống: Thông Mạch Đan tiêu qua
+// MeridianSystem.investThongMachDan(), Trúc Cơ Đan là vật chứng bậc
+// Địa/Thiên (CÓ trong túi lúc bấm đột phá, không tiêu).
+const SPECIAL_PILLS: Pill[] = [
+  {
+    id: 'thong_mach_dan',
+    name: 'Thông Mạch Đan',
+    description: 'Đan dược khai thông kinh mạch — tiêu qua Bát Mạch, không uống trực tiếp.',
+    type: 'material',
+    grade: 'huyen',
+    realmId: 'qi_refining',
+    professionGrade: getProfessionGradeForRealm('qi_refining'),
+    icon: '/assets/pills/thong_mach_dan.png',
+    effects: [],
+  },
+  {
+    id: 'truc_co_dan',
+    name: 'Trúc Cơ Đan',
+    description: 'Đan dược vững căn cơ — giữ bên mình khi đột phá, không uống trực tiếp.',
+    type: 'material',
+    grade: 'huyen',
+    realmId: 'qi_refining',
+    professionGrade: getProfessionGradeForRealm('qi_refining'),
+    icon: '/assets/pills/truc_co_dan.png',
+    effects: [],
+  },
+]
+
+export const pills: Pill[] = [...buildTieredPills(), ...SPECIAL_PILLS]
