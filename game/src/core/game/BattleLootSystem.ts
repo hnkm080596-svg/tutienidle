@@ -51,6 +51,7 @@ import type { QuestSystem } from '../quest/QuestSystem'
 import type { QuestRegistry } from '../quest/QuestRegistry'
 import type { QuestManager } from '../quest/QuestManager'
 import type { CombatSystem } from '../combat/CombatSystem'
+import type { HiddenBeastSystem } from './HiddenBeastSystem'
 
 export interface BattleLootSystemDeps {
   eventBus: EventBus
@@ -75,6 +76,9 @@ export interface BattleLootSystemDeps {
   questSystem: QuestSystem
   questRegistry: QuestRegistry
   questManager: QuestManager
+  // Quái ẩn (spec dot-pha-loi-kiep §4.1c) — đếm kill Luyện Khí/reset
+  // khi giết quái ẩn.
+  hiddenBeast: HiddenBeastSystem
 }
 
 /**
@@ -284,6 +288,16 @@ export class BattleLootSystem {
             (battleEnemy.entity.isBoss === true || battleEnemy.entity.isElite === true)
           ) {
             this.player.bossKillCount += 1
+          }
+
+          // Quái ẩn (spec dot-pha-loi-kiep §4.1c) — đếm kill Luyện Khí;
+          // giết Huyết Mông reset cửa sổ về 0.
+          if (this.player) {
+            this.deps.hiddenBeast.onEnemyDefeated(
+              this.player,
+              battleEnemy.entity.id,
+              enemy.realmId,
+            )
           }
         }
       }

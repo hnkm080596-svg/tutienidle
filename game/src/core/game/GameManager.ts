@@ -148,6 +148,7 @@ import { NotificationQueue } from './NotificationQueue'
 import { BattleLootSystem } from './BattleLootSystem'
 import { StageWaveSystem } from './StageWaveSystem'
 import { TribulationSystem } from './TribulationSystem'
+import { HiddenBeastSystem } from './HiddenBeastSystem'
 import type { ActiveTribulation } from './TribulationSystem'
 
 import { QuestRegistry } from '../quest/QuestRegistry'
@@ -418,6 +419,9 @@ export class GameManager {
   private readonly stageWaves: StageWaveSystem
   private readonly tribulation: TribulationSystem
 
+  // Quái ẩn (spec dot-pha-loi-kiep §4.1c) — cửa sổ 1000 kill Luyện Khí.
+  readonly hiddenBeastSystem: HiddenBeastSystem
+
   constructor() {
     // Kiếm Tu (2026-08-28) — mirror player.skillCastCounts/skillLevels
     // mỗi lần cast, phục vụ NodeSystem prerequisite `skillCastCount`
@@ -433,6 +437,12 @@ export class GameManager {
 
       this.activePlayer.skillLevels ??= {}
       this.activePlayer.skillLevels[skillId] = level
+    })
+
+    // Quái ẩn (spec dot-pha-loi-kiep §4.1c) — tra template qua registry
+    // chung (registerEnemyTemplates đã đăng ký Huyết Mông qua ENEMIES).
+    this.hiddenBeast = new HiddenBeastSystem({
+      getEnemyTemplate: (id) => this.enemyTemplates.get(id),
     })
 
     this.battleLoot = new BattleLootSystem({
@@ -458,6 +468,7 @@ export class GameManager {
       questSystem: this.questSystem,
       questRegistry: this.questRegistry,
       questManager: this.questManager,
+      hiddenBeast: this.hiddenBeast,
     })
 
     this.stageWaves = new StageWaveSystem({
@@ -471,6 +482,7 @@ export class GameManager {
       isStageUnlocked: (stageId, player) => this.isStageUnlocked(stageId, player),
       launchBattle: (player, playerStats, enemy) =>
         this.startBattleWithPlayer(player, playerStats, enemy),
+      hiddenBeast: this.hiddenBeast,
     })
 
     this.tribulation = new TribulationSystem({

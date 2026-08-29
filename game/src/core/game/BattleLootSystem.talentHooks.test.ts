@@ -73,6 +73,7 @@ function createTestSetup(rewards: EnemyReward, talentIds: string[] = []) {
     questSystem: { onEnemyDefeated: vi.fn(), onMaterialCollected: vi.fn() },
     questRegistry: {},
     questManager: {},
+    hiddenBeast: { onEnemyDefeated: vi.fn() },
   } as unknown as BattleLootSystemDeps
 
   const loot = new BattleLootSystem(deps)
