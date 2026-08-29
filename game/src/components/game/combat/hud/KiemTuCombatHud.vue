@@ -1,11 +1,9 @@
 <script setup lang="ts">
-// skill-insight-and-auto-combat-hud-plan.md mục 7 + execution policy
-// rework (combat-gate-teleport-autocast plan §11.3) — Kiếm Tu KHÔNG sao
-// chép dải 5 ô của Pháp Tu. Ngự Kiếm Thuật (slot 0, policy 'attack_speed'
-// — đọc cadence từ scheduler thống nhất) đứng riêng, 2 kỹ năng còn lại
-// của kit (slot 1/2 — Thái Hư Nhất Kiếm/tuyệt kỹ) nối tiếp thành chuỗi
-// "vận kiếm" — mỹ thuật chi tiết (kiếm trận/quỹ đạo thật) để phase thiết
-// kế Kiếm Tu sau chốt, ở đây chỉ đảm bảo CONTRACT dữ liệu hiển thị đúng.
+// Kiếm Thế / Kiếm Ý (spec 2026-08-29-kiem-the-kiem-y mục 5/6) — mỗi
+// route Kiếm Tu ĐÚNG 1 active skill duy nhất ở slot 0 (Kiếm Trận tiến
+// hóa hoặc Bạt Kiếm Thức), KHÔNG còn chain slot 1/2/4 (bộ 3-skill kit
+// cũ + slot Kiếm Trận riêng đã dỡ). Ult là nút manual riêng trong
+// CombatControlBar, không phải loadout slot.
 import { computed } from 'vue'
 import CombatSkillSlot from './CombatSkillSlot.vue'
 import { useCombatSkillPresentation } from '@/composables/useCombatSkillPresentation'
@@ -17,12 +15,9 @@ const { loadout, skillFor, tuLucState } = useCombatSkillPresentation()
 
 const primary = computed(() => loadout.value.find(entry => entry.slotIndex === 0))
 
-// Task 7 (task-7-brief.md §3) — Bạt Kiếm dùng execution 'channel' (Task
-// 3/4), KHÔNG có cadenceRemaining/Total qua buildLoadoutPresentation()
-// (policy đó chỉ tính attack_speed/attack_speed_cast) nên slot 1 (chain
-// đầu tiên) không tự hiện tiến độ tụ lực — vẽ riêng progress bar đọc
-// tuLucState (CombatEntity.tuLucElapsed/tuLucActive + nhịp UI đang áp
-// dụng từ CombatControlBar's slider).
+// Bạt Kiếm dùng execution 'channel' — slot 0 không tự hiện tiến độ tụ
+// lực qua buildLoadoutPresentation() nên vẽ riêng progress bar đọc
+// tuLucState (CombatEntity.tuLucElapsed/tuLucActive + nhịp UI slider).
 const tuLucPercent = computed(() => {
   const state = tuLucState.value
 
@@ -33,7 +28,7 @@ const tuLucPercent = computed(() => {
   return Math.min(100, (state.elapsed / state.tickSeconds) * 100)
 })
 
-// Audit P1-4 — smoothing chỉ-presentation cho ô Ngự Kiếm (cadence),
+// Audit P1-4 — smoothing chỉ-presentation cho ô chính (cadence KT),
 // cùng lớp dùng chung với Mortal HUD.
 const gameManager = useGameManager()
 
@@ -48,13 +43,6 @@ const cadenceRemaining = useCadenceSmoothing(
     return battle !== null && isBattleInProgress(battle.state)
   },
 )
-
-// Kiếm Tu kit dùng slot 0 (Ngự Kiếm, hiện riêng)/1/2 + slot 4 riêng
-// (KIEM_TRAN_SLOT_INDEX — chiêu trận Kiếm Trận, xem SkillLoadoutSlots.ts).
-// Bỏ qua slot 3 (dự phòng, chưa cấp gì — spec §3.3). Final review fix
-// (Important #7) — trước đây chỉ 1..2 nên chiêu trận (slot 4) bắn mỗi
-// nhịp nhưng KHÔNG BAO GIỜ hiện trong chain HUD.
-const chainEntries = computed(() => loadout.value.filter(entry => entry.slotIndex !== undefined && (entry.slotIndex === 1 || entry.slotIndex === 2 || entry.slotIndex === 4)))
 </script>
 
 <template>
@@ -69,27 +57,6 @@ const chainEntries = computed(() => loadout.value.filter(entry => entry.slotInde
         :is-masked="cadenceRemaining > 0"
         :is-out-of-range="primary.state === 'out_of_range'"
       />
-
-      <div class="kiem-tu-combat-hud__chain">
-        <template v-for="(entry, index) in chainEntries" :key="entry.slotIndex">
-          <span v-if="index > 0" class="kiem-tu-combat-hud__link">→</span>
-
-          <CombatSkillSlot
-            class="kiem-tu-combat-hud__slot"
-            :skill="skillFor(entry)"
-            :remaining="entry.cooldownRemaining"
-            :total="entry.cooldownTotal"
-            :is-masked="entry.state === 'cooldown'"
-            :cast-remaining="entry.castRemaining"
-            :cast-total="entry.castTotal"
-            :is-casting="entry.state === 'casting'"
-            :resource-cost="entry.resourceCost"
-            :is-insufficient-resource="entry.state === 'blocked_resource'"
-            :is-out-of-range="entry.state === 'out_of_range'"
-            :is-unreleased="entry.state === 'unreleased'"
-          />
-        </template>
-      </div>
     </div>
 
     <div v-if="tuLucState" class="kiem-tu-combat-hud__tu-luc">

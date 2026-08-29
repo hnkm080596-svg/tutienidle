@@ -79,6 +79,7 @@ import {
   kiemTheDamageBonusPercent,
 } from './KiemTuResourceSystem'
 import { autoUltimateDecision, triggerUltimate } from './UltimateSystem'
+import { resolveOnHitEffects } from './KiemTranOnHitSystem'
 import { getFormationSwordCount } from '../../data/progression/KiemTuNodes'
 import { getHuyKiemFlatDamageBonus } from '../skill/SkillSystem'
 
@@ -228,8 +229,10 @@ export class BattleSystem {
   private readonly channelTickSecondsOverrides = new Map<string, number>()
 
   // Ult Kiếm Tu auto-AI (spec 2026-08-29 mục 3.4) — tích giây giữa 2 lần
-  // check autoUltimateDecision (1s/lần), reset mỗi trận.
+  // check autoUltimateDecision (1s/lần), reset mỗi trận. ultAutoEnabled
+  // là UI toggle (CombatControlBar) — tắt = chỉ manual bấm nút.
   private ultAutoCheckTimer = 0
+  ultAutoEnabled = true
 
   constructor(
     private readonly combat: CombatSystem,
@@ -295,6 +298,12 @@ export class BattleSystem {
      * skillManager.get('tram')?.totalExperience.
      */
     private readonly getTramTotalCasts: () => number = () => 0,
+
+    /**
+     * On-hit kiếm trận (spec mục 4) — cấp các node on-hit đã mua (đọc
+     * PlayerData.nodeLevels lọc qua registry), inject bởi GameManager.
+     */
+    private readonly getOnHitNodeLevels: () => Record<string, number> = () => ({}),
   ) {
     this.reactionManager = new ReactionManager(eventBus)
 
@@ -980,8 +989,9 @@ export class BattleSystem {
 
     // Ult Kiếm Tu auto (spec 2026-08-29 mục 3.4) — AI check 1 lần/giây,
     // TTKT auto khi đủ Kiếm Thế, KKTM auto khi boss + ngưỡng 500 kiếm ý.
+    // Toggle UI tắt = giữ tài nguyên cho manual.
     this.ultAutoCheckTimer += deltaSeconds
-    if (this.ultAutoCheckTimer >= 1) {
+    if (this.ultAutoCheckTimer >= 1 && this.ultAutoEnabled) {
       this.ultAutoCheckTimer = 0
       const route = this.getKiemTuRoute()
       if (route) {
@@ -990,6 +1000,8 @@ export class BattleSystem {
           this.tryPlayerUltimate()
         }
       }
+    } else if (this.ultAutoCheckTimer >= 1) {
+      this.ultAutoCheckTimer = 0
     }
 
     // [14] Enemy attacks.
@@ -2455,8 +2467,132 @@ export class BattleSystem {
       source.stats.finalDamagePercent = originalFinalDamagePercent
     }
 
+    // On-hit kiếm trận (spec 2026-08-29 mục 4) — roll sau mỗi cast,
+    // áp lên MỌI địch còn sống trong trận (hit kiếm trận là AoE theo
+    // targeting; ult TTKT nuke/zone cũng đi qua wrapper này).
+    if (battle.enemies.some((enemy) => enemy.entity.alive)) {
+      this.resolveOnHitForBattle(battle, source, swordCount)
+    }
+
     // Gain SAU resolve: pool tăng theo cast vừa tung, hưởng từ cast kế.
     gainKiemTheOnFormationCast(source, swordCount)
+  }
+
+  /** Roll + dispatch on-hit kiếm trận lên mọi địch còn sống. */
+  private resolveOnHitForBattle(battle: Battle, source: CombatEntity, swordCount: number) {
+    const nodeLevels = this.getOnHitNodeLevels()
+    if (Object.keys(nodeLevels).length === 0) {
+      return
+    }
+
+    for (const enemy of battle.enemies) {
+      if (!enemy.entity.alive) {
+        continue
+      }
+
+      resolveOnHitEffects(
+        nodeLevels,
+        Math.random,
+        source,
+        enemy.entity,
+        swordCount,
+        (kind, _source, target, swords) => this.dispatchOnHitEffect(kind, _source, target, swords),
+      )
+    }
+  }
+
+  /** Map từng kind on-hit vào hệ thống sẵn có (spec mục 4 — qua pipeline). */
+  private dispatchOnHitEffect(
+    kind: import('../progression/ProgressionNode').OnHitEffectKind,
+    source: CombatEntity,
+    target: CombatEntity,
+    swordCount: number,
+  ) {
+    const battle = this.battle
+    if (!battle) {
+      return
+    }
+
+    switch (kind) {
+      case 'khiem_khi_dmg': {
+        // Kiếm khí bổ sung — bonus damage kim qua applyModifiedDirectDamage
+        // (pipeline CombatSystem sẵn có, KHÔNG hack trực tiếp).
+        const bonus = 0.5 * swordCount * source.stats.attack
+        this.combat.applyModifiedDirectDamage(target, bonus, source, 'damage')
+        break
+      }
+      case 'xuat_huyet_dot': {
+        // Chảy máu — tái dùng ailment van_kiem_vu sẵn có.
+        const ailment = this.ailmentRegistry.get('van_kiem_vu')
+        if (ailment) {
+          new AilmentSystem(this.getAilmentsFor(battle, target)).apply(
+            ailment,
+            source,
+            target,
+            this.ailmentRegistry,
+          )
+        }
+        break
+      }
+      case 'tran_tru_cc': {
+        // Trói chân/choáng — ailment sẵn có theo roll phụ.
+        const ccId = Math.random() < 0.5 ? 'troi_chan' : 'choang'
+        const ailment = this.ailmentRegistry.get(ccId)
+        if (ailment) {
+          new AilmentSystem(this.getAilmentsFor(battle, target)).apply(
+            ailment,
+            source,
+            target,
+            this.ailmentRegistry,
+          )
+        }
+        break
+      }
+      case 'hap_linh_leech': {
+        // Hút máu theo sát thương ước lượng (leechPercent pipeline).
+        const heal = source.stats.attack * 0.2 * swordCount * 0.1
+        if (heal > 0 && source.alive) {
+          this.combat.applyHealing(source, heal, source.id, 'healing')
+        }
+        break
+      }
+      case 'khiem_phong_haste':
+      case 'phan_kich_dodge':
+      case 'pha_giap_pen':
+      case 'quang_crit':
+      case 'than_ngu_hanh': {
+        // Stat-based kinds — buff stack tạm trong trận qua BuffManager
+        // sẵn có (tự hết khi trận kết thúc vì battle buff managers là
+        // runtime-per-battle). Modifier pipeline là nguồn tính lại
+        // stats (calculateStats chạy mỗi update).
+        const statByKind: Record<string, StatModifier['stat']> = {
+          khiem_phong_haste: 'attackSpeed',
+          phan_kich_dodge: 'evasionRate',
+          pha_giap_pen: 'metalPenetration',
+          quang_crit: 'criticalRate',
+          than_ngu_hanh: 'metalPower',
+        }
+        const statKey = statByKind[kind] as (typeof statByKind)[string] | undefined
+        if (statKey) {
+          const buffManager = this.getBuffsFor(battle, source)
+          const buffId = `onhit_${kind}`
+          const existing = buffManager.get(buffId)
+          if (existing) {
+            existing.stacks += 1
+          } else {
+            buffManager.add({
+              id: buffId,
+              name: `On-hit ${kind}`,
+              category: 'buff',
+              stacks: 1,
+              stackMode: 'stack',
+              modifiers: [{ id: `${buffId}:${statKey}`, sourceId: buffId, sourceType: 'buff', stat: statKey, percent: 0.02 }],
+            })
+          }
+        }
+        break
+      }
+    }
   }
 
   private resolveSkillEffects(

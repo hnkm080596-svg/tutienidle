@@ -45,16 +45,10 @@ const showTree = computed(() => player.cultivationPath === 'phap_tu' || player.c
 // ---- Nhánh phap_tu (Hành -> Node Tree) ----
 const selectedBranch = ref<ElementType>('fire')
 
-// ---- Nhánh kiem_tu (2 cây song song, không suy được từ skill đang
-// chọn như phap_tu — kiem_tran_luong_nghi là ROOT cost-0 của cây Kiếm
-// Trận nhưng KHÔNG skill nào học sẵn để trỏ vào nó lúc chưa mua node
-// đầu tiên, xem KiemTuNodes.ts). Toggle riêng, độc lập SkillPathList. ----
-const kiemTuBranch = ref<'kiem_tran' | 'bat_kiem'>('kiem_tran')
-
-const KIEM_TU_BRANCH_LABELS: Record<'kiem_tran' | 'bat_kiem', string> = {
-  kiem_tran: 'Kiếm Trận',
-  bat_kiem: 'Bạt Kiếm',
-}
+// ---- Nhánh kiem_tu (spec 2026-08-29-kiem-the-kiem-y mục 1) — route
+// chốt VĨNH VIỄN lúc chọn path (tram Lv3 → bat_kiem, chưa →
+// kiem_tran), KHÔNG còn toggle đổi cây — hiển thị ĐÚNG 1 branch theo
+// route. Cây ẩn "Kiếm Tâm Ẩn" placeholder đã gỡ cùng cơ chế. ----
 
 const selectedNode = ref<ProgressionNode | null>(null)
 const selectedNodePurchased = ref(false)
@@ -140,10 +134,7 @@ const selectedSkillHasTree = computed(() => {
 })
 
 const treeBranchTag = computed<string>(() =>
-  player.cultivationPath === 'kiem_tu' ? kiemTuBranch.value : selectedBranch.value,
-)
-const huyKiemHiddenTreeOpen = computed(() =>
-  selectedSkill.value?.id === 'tram' && selectedSkill.value.level >= 18 && player.cultivationPath === 'kiem_tu',
+  player.cultivationPath === 'kiem_tu' ? (player.kiemTuRoute ?? 'kiem_tran') : selectedBranch.value,
 )
 
 function onSelectSkill(skill: Skill) {
@@ -174,19 +165,6 @@ function close() {
           </div>
 
           <div class="skill-path-panel__col skill-path-panel__col--center">
-            <div v-if="selectedSkillHasTree && player.cultivationPath === 'kiem_tu'" class="skill-path-panel__kiem-tu-toggle">
-              <button
-                v-for="branch in (['kiem_tran', 'bat_kiem'] as const)"
-                :key="branch"
-                type="button"
-                class="skill-path-panel__kiem-tu-toggle-btn"
-                :class="{ 'is-active': kiemTuBranch === branch }"
-                @click="kiemTuBranch = branch; selectedNode = null"
-              >
-                {{ KIEM_TU_BRANCH_LABELS[branch] }}
-              </button>
-            </div>
-
             <NodeTreePanel
               v-if="selectedSkillHasTree"
               :branch-tag="treeBranchTag"
@@ -195,13 +173,6 @@ function close() {
               @select="onSelectNode"
             />
 
-            <div v-else-if="huyKiemHiddenTreeOpen" class="huy-kiem-tree">
-              <h4>Kiếm Tâm Ẩn · Huy Kiếm</h4>
-              <div class="huy-kiem-tree__nodes">
-                <span>Kiếm Ý Sơ Minh</span><span>Nhân Kiếm Hợp Nhất</span><span>Vạn Kiếm Quy Tông</span>
-              </div>
-              <p>Cây ẩn đã thức tỉnh. Các node chuyên sâu sẽ mở rộng cùng tuyến Kiếm Tu.</p>
-            </div>
             <SkillDetailView v-else :skill="selectedSkill" />
           </div>
 
@@ -224,15 +195,6 @@ function close() {
 </template>
 
 <style scoped>
-.skill-path-panel__kiem-tu-toggle { display: flex; gap: 8px; margin-bottom: 10px; }
-.skill-path-panel__kiem-tu-toggle-btn { padding: 6px 16px; background: var(--ink-800); color: var(--text-secondary); border: 1px solid var(--ink-line-soft); border-radius: var(--radius-sm); font-size: var(--text-sm); font-weight: 600; cursor: pointer; }
-.skill-path-panel__kiem-tu-toggle-btn.is-active { color: var(--gold-500); border-color: var(--gold-500); background: color-mix(in srgb, var(--gold-500) 14%, var(--ink-800)); }
-.huy-kiem-tree { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100%; gap: 18px; padding: 24px; text-align: center; }
-.huy-kiem-tree h4 { margin: 0; color: var(--chrome-100); font-family: var(--font-display); }
-.huy-kiem-tree__nodes { display: flex; align-items: center; gap: 28px; }
-.huy-kiem-tree__nodes span { position: relative; display: grid; place-items: center; width: 112px; min-height: 72px; padding: 8px; color: var(--jade); background: var(--ink-800); border: 1px solid var(--jade); border-radius: 50%; box-shadow: 0 0 18px color-mix(in srgb, var(--jade) 28%, transparent); }
-.huy-kiem-tree__nodes span:not(:last-child)::after { content: ''; position: absolute; left: 100%; width: 29px; height: 2px; background: var(--jade); }
-.huy-kiem-tree p { color: var(--text-muted); }
 .skill-path-panel {
   height: 100%;
   min-height: 0;
