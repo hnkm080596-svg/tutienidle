@@ -29,7 +29,7 @@
 
 - Offline cap 24h (`GameClock.ts`) chỉ cho tu vi (`OfflineProgressSystem.ts`); không có Cảm Ngộ offline — node tree đói currency nếu không grind tay.
 - Tốc độ tu luyện = 10/s × thiên phú (`stores/player.ts`); không có pill/building/tâm pháp nào tăng tốc.
-- Tâm pháp có tiến độ Sơ Nhập/Tiểu Thành/Đại Thành/Viên Mãn (progression-combat-rework-plan §3) nhưng chưa gắn phần thưởng tốc độ tu luyện.
+- Tâm pháp có tiến độ Sơ Nhập/Tiểu Thành/Đại Thành/Viên Mãn (quy tắc cũ của progression-combat-rework-plan — plan đã dọn; hiện trạng: `src/core/skill`/`SkillSystem`) nhưng chưa gắn phần thưởng tốc độ tu luyện.
 
 ## 3. Thiết kế
 
@@ -113,7 +113,7 @@ npm.cmd run build
 ## 6. Rủi ro và lưu ý
 
 - **Kiến Cơ ẨN gây frustrate**: nếu không ai tìm ra, tính năng chết. Mitigation: lớp công bố sau đạt + hint flavor (§3.1); theo dõi tỷ lệ đạt qua telemetry nếu có.
-- **Ba nguồn tốc độ làm vỡ pacing**: tổng nhân có thể vượt xa thiết kế thời gian realm. Mitigation: trần mềm tổng multiplier (vd ×3) trong điểm tính duy nhất; đối chiếu bảng thời gian progression-combat-rework-plan §1 khi tune.
+- **Ba nguồn tốc độ làm vỡ pacing**: tổng nhân có thể vượt xa thiết kế thời gian realm. Mitigation: trần mềm tổng multiplier (vd ×3) trong điểm tính duy nhất; đối chiếu bảng thời gian realm trong `src/data/realms/realm.ts` khi tune.
 - **Cảm Ngộ offline làm grind tay mất giá**: giữ 50% tỷ lệ online và không cho Cảm Ngộ từ boss offline.
 - Không đổi cơ chế Kiếm Ý hiện có trong plan này; nếu playtest (Task 9) cho thấy cần sửa, tách task riêng.
 

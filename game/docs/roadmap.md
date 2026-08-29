@@ -16,7 +16,7 @@
 **Vấn đề lớn nhất, theo thứ tự rủi ro:**
 
 1. **Tường nội dung Trúc Cơ**: hết nội dung thật ở Trúc Cơ tầng 18 (~34 giờ chơi); stage Trúc Cơ là bản clone của Luyện Khí (`data/stage/Stages.ts:357`); không có Kim Đan (`GameManager.ts:1439` trả `false` cứng). *(2026-08-29: M1 đã xong — 10 stage Trúc Cơ thật + 20 enemy `foundation_*` + boss 2-phase/enrage + 5 quest; Kiếm Tu có node tree thật qua kiem-tu-tu-luc, xem Phase 3. Gate Kim Đan M2/M3 giữ cho version sau.)*
-2. **Thiên phú trang trí** *(đã giải quyết 2026-08-28 — [talent-direction-choice-plan.md](./talent-direction-choice-plan.md))*: cũ — 11/13 thiên phú có `effects: []` rỗng; nay thiên phú là quyết định chọn hướng Đạo duy nhất (roll 9 chọn 1, 12 talent có effect thật).
+2. **Thiên phú trang trí** *(đã giải quyết 2026-08-28 — talent-direction-choice-plan, đã dọn sau khi hoàn thành)*: cũ — 11/13 thiên phú có `effects: []` rỗng; nay thiên phú là quyết định chọn hướng Đạo duy nhất (roll 9 chọn 1, 12 talent có effect thật).
 3. **Thiếu âm thanh hoàn toàn**: 0 file audio trong project; 1.137 spritesheet VFX không được tham chiếu.
 4. **Bug và drop chết trong kinh tế** *(đã giải quyết 2026-08-28 — economy-ecosystem hoàn thành: T1–T6+T8+T9, T7 bỏ vì linh thảo giữ hoàn toàn random)*: mapping Tinh Hoa sai cho realm 4+ (`RefinementBalance.ts:74-81`); vật liệu legacy vẫn rơi nhưng không còn sink.
 5. **Save không validate shape** *(đã giải quyết 2026-08-28 — save-shape-validation Wave 1 + bổ sung equipment/slot shape khi review)*: chỉ kiểm tra version, tiền lệ crash boot v47 có thể tái diễn.
@@ -55,8 +55,8 @@ Mục tiêu: loại bug hiện hữu và nợ tài liệu trước khi xây ti�
 | Hạng mục | Plan | Trạng thái |
 |---|---|---|
 | Validate shape save khi load/import (chặn crash kiểu v47) | [save-shape-validation-plan.md](./save-shape-validation-plan.md) | ✅ Xong 2026-08-28 (Wave 1; review bổ sung shape equipment/slot) |
-| Audit & sửa hệ sinh thái kinh tế: Tinh Hoa realm 4+, phẩm Linh Thạch, worker offline, Đan Phòng 6–9, drop chết, Chọn Thảo, curve Linh Tuyền | [economy-ecosystem-plan.md](./economy-ecosystem-plan.md) (gộp Phần A của economy-fixes-sinks-plan) | ✅ Xong — T1–T6+T8+T9; T7 Chọn Thảo ⛔ bỏ (linh thảo hoàn toàn random) |
-| Đồng bộ `game-guide.md`, `item-design-reference.md` với code | [docs-sync-audit-plan.md](./docs-sync-audit-plan.md) | ✅ Xong 2026-08-28 (Wave 4; đã xóa `Plans .md`) |
+| Audit & sửa hệ sinh thái kinh tế: Tinh Hoa realm 4+, phẩm Linh Thạch, worker offline, Đan Phòng 6–9, drop chết, Chọn Thảo, curve Linh Tuyền | economy-ecosystem-plan (đã dọn sau khi hoàn thành; gộp Phần A của economy-fixes-sinks-plan) | ✅ Xong — T1–T6+T8+T9; T7 Chọn Thảo ⛔ bỏ (linh thảo hoàn toàn random) |
+| Đồng bộ `game-guide.md`, `item-design-reference.md` với code | docs-sync-audit-plan (đã dọn sau khi hoàn thành) | ✅ Xong 2026-08-28 (Wave 4; đã xóa `Plans .md`) |
 | Sửa HUD `out_of_range` đọc sai strategy (nằm trong combat pass) | [combat-balance-pass-plan.md](./combat-balance-pass-plan.md) | ✅ Xong 2026-08-28 (Wave 4) |
 
 Tiêu chí hoàn thành: không còn bug kinh tế đã biết; save hỏng được phát hiện có chủ đích thay vì crash; tài liệu khớp code.
@@ -67,7 +67,7 @@ Mục tiêu: phá tường nội dung Trúc Cơ và biến thiên phú thành qu
 
 | Hạng mục | Plan | Trạng thái |
 |---|---|---|
-| Thiên phú chọn hướng Đạo (roll 9 chọn 1) + easter egg Phàm Cốt | [talent-direction-choice-plan.md](./talent-direction-choice-plan.md) | ✅ Xong |
+| Thiên phú chọn hướng Đạo (roll 9 chọn 1) + easter egg Phàm Cốt | talent-direction-choice-plan (đã dọn sau khi hoàn thành) | ✅ Xong |
 | Nội dung Trúc Cơ thật + pass Kim Đan tối thiểu | [truc-co-kim-dan-content-plan.md](./truc-co-kim-dan-content-plan.md) | 🟡 M1 xong (2026-08-29) — 10 stage Trúc Cơ thật (`foundation_floor_1..10`) + 20 enemy `foundation_*` + boss 2-phase/enrage + 5 quest; **M2 gate Kim Đan / M3 đời sống Kim Đan giữ cho version sau** (yêu cầu người dùng) |
 | Bật mana cost, reaction scale theo Power, đa dạng nhịp skill | [combat-balance-pass-plan.md](./combat-balance-pass-plan.md) | 🟡 1/8 — xong HUD `out_of_range`; còn mana (12 skill vẫn `resourceType:'none'`)/reaction/nhịp/fizzle/boss/playtest |
 
@@ -91,7 +91,7 @@ Mục tiêu: mở rộng các trục progression đang bỏ hoang.
 | Hạng mục | Plan | Trạng thái |
 |---|---|---|
 | Kiến Cơ 4 bậc, node tree Kiếm Tu, chiều sâu idle (Cảm Ngộ offline, nguồn tăng tốc tu luyện) | [progression-depth-plan.md](./progression-depth-plan.md) | 🟡 Một phần — node tree Kiếm Tu (2 nhánh `KiemTuNodes.ts`, 9 skill Kiếm Trận, Bát Kiếm, tự lực combat) ✅ xong qua kiem-tu-tu-luc; Kiến Cơ 4 bậc vẫn parked (`FoundationResolver.ts` trả `'human'` cứng); Cảm Ngộ offline chưa làm (Ngộ Đạo chỉ online) |
-| Sink Linh Thạch hậu kỳ, vendor, Điểm Rèn, filter túi đồ | [economy-fixes-sinks-plan.md](./economy-fixes-sinks-plan.md) (Phần B — Phần A đã gộp vào [economy-ecosystem-plan.md](./economy-ecosystem-plan.md)) | 🟡 Một phần — Điểm Rèn per-item (forgePoints) đã có trong `EquipmentSystem` (rework 2026-08-26); chưa vendor, chưa filter túi đồ |
+| Sink Linh Thạch hậu kỳ, vendor, Điểm Rèn, filter túi đồ | [economy-fixes-sinks-plan.md](./economy-fixes-sinks-plan.md) (Phần B — Phần A đã gộp vào economy-ecosystem-plan, đã dọn sau khi hoàn thành) | 🟡 Một phần — Điểm Rèn per-item (forgePoints) đã có trong `EquipmentSystem` (rework 2026-08-26); chưa vendor, chưa filter túi đồ |
 
 Tiêu chí hoàn thành: gate đột phá có chất lượng khác nhau; Kiếm Tu có chiều sâu build tương đương Pháp Tu; idle có đường nâng cấp.
 

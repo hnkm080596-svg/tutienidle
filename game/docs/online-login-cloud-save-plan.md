@@ -286,4 +286,4 @@ Trạng thái chuẩn bị trong development (2026-08-24):
 - Chưa có tài khoản Vercel/Supabase hoặc cấu hình môi trường.
 - Cần chọn chính xác cơ chế session/token để việc đá thiết bị cũ có hiệu lực nhanh.
 - Cần đặc tả tác dụng gameplay của năm chỉ số chính.
-- Hệ thống thiên phú được thiết kế trong tài liệu riêng `talent-system-plan.md`.
+- Hệ thống thiên phú (roll 9 chọn 1) đã ship — thiết kế tại `src/core/talent/` + `src/data/talent/Talents.ts`.

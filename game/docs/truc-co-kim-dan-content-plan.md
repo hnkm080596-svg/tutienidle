@@ -88,7 +88,7 @@
 
 ### 6.2 Tầng node mới cho Pháp Tu
 
-- Thêm tier node Kim Đan vào `src/data/progression/PhapTuNodes.ts`: mỗi hành mở 1 keystone bậc hai hoặc node ultimate (tham chiếu ý tưởng "ultimate Trúc Cơ/Kim Đan" trong `docs/Plans .md` trước khi file bị xóa — xem [docs-sync-audit-plan.md](./docs-sync-audit-plan.md) Task 4).
+- Thêm tier node Kim Đan vào `src/data/progression/PhapTuNodes.ts`: mỗi hành mở 1 keystone bậc hai hoặc node ultimate (tham chiếu ý tưởng "ultimate Trúc Cơ/Kim Đan" trong `docs/Plans .md` trước khi file bị xóa — xem Task 4 của docs-sync-audit đã hoàn thành 2026-08-28).
 - Kiếm Tu: nếu node tree Kiếm Tu chưa có (progression-depth-plan), thêm ít nhất 1 tầng Kiếm Ý milestone để Kiếm Tu không trống ở Kim Đan.
 
 ### 6.3 Nguyên liệu realm 4 — mở nguồn farm

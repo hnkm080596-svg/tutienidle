@@ -49,7 +49,7 @@ export type LeftPanelMode =
 export type BagTab = 'equipment' | 'material' | 'pill'
 export type ScripturePavilionTab = 'technique' | 'lore'
 // 'passive' đã gỡ (2026-08-20) — 9 ô Passive Cảnh Giới dời sang
-// CharacterPanel.vue, xem composables/usePassiveRows.ts.
+// CharacterPanel.vue (useRealmStatPassives.ts).
 
 // Kỹ Năng/Tâm Pháp overlay đứng ĐỘC LẬP với LeftPanel (2026-08-20) —
 // SkillPathPanel.vue/TechniquePanel.vue, cùng pattern

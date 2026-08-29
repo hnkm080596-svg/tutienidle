@@ -1,6 +1,6 @@
 # Kế hoạch Sửa lỗi Kinh tế & Bổ sung Sink
 
-> **Cập nhật 2026-08-28**: Phần A (A1–A5) đã được gộp và thay thế bởi [economy-ecosystem-plan.md](./economy-ecosystem-plan.md) (Phase 0). File này chỉ còn là nguồn sự thật cho **Phần B** (B1–B4, Phase 3). Không thực hiện Phần A từ file này.
+> **Cập nhật 2026-08-28**: Phần A (A1–A5) đã được gộp và thay thế bởi economy-ecosystem-plan (Phase 0, hoàn thành — đã dọn file). File này chỉ còn là nguồn sự thật cho **Phần B** (B1–B4, Phase 3). Không thực hiện Phần A từ file này.
 
 > Thuộc Phase 0 (phần Cao — sửa bug) và Phase 3 (phần Trung bình — sink/UX) của [roadmap.md](./roadmap.md). Plan chia 2 phần độc lập: **A. Sửa lỗi ngay** và **B. Cân bằng & UX**. Có thể thực hiện A trước, B sau.
 
@@ -99,7 +99,7 @@
 2. **Task A2**: thêm conversion recipe; xóa material mồ côi sau khi grep xác nhận không tham chiếu; thêm invariant test "mọi drop có sink".
 3. **Task A3**: Chọn Thảo (data + logic trong `ProductionSystem`/UI Động Thiên) + tăng `GROTTO_HERB_AMOUNT` theo cấp; unit test yield và chi phí.
 4. **Task A4**: sửa curve Linh Tuyền + gộp hằng số offline cap; cập nhật test building.
-5. **Task A5**: cập nhật `docs/item-design-reference.md` phần liên quan (phối hợp [docs-sync-audit-plan.md](./docs-sync-audit-plan.md)).
+5. **Task A5**: cập nhật `docs/item-design-reference.md` phần liên quan (theo quy trình docs-sync-audit đã hoàn thành 2026-08-28).
 
 ### Phần B (Phase 3)
 

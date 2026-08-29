@@ -1,6 +1,6 @@
 # Kế hoạch Combat Balance Pass
 
-> Thuộc Phase 1 của [roadmap.md](./roadmap.md). Plan này hoàn tất các quy tắc đã chốt trong [progression-combat-rework-plan.md](./progression-combat-rework-plan.md) còn nợ (đặc biệt §7 — mana cho active skill Pháp Tu) và sửa các vấn đề cân bằng/feedback được phát hiện trong đợt rà soát 2026-08-27.
+> Thuộc Phase 1 của [roadmap.md](./roadmap.md). Plan này hoàn tất các quy tắc đã chốt trong progression-combat-rework-plan (đã dọn sau khi hoàn thành) còn nợ (đặc biệt §7 — mana cho active skill Pháp Tu) và sửa các vấn đề cân bằng/feedback được phát hiện trong đợt rà soát 2026-08-27.
 > KHÔNG bao gồm: bàn cờ vây 19×19 (hướng riêng, chưa vào roadmap), Thể Tu (thuộc [progression-depth-plan.md](./progression-depth-plan.md)).
 
 ## 1. Mục tiêu
@@ -134,7 +134,7 @@ npm.cmd run build
 - **Bật mana phá vỡ idle**: nếu regen quá thấp, auto-battle chết đứng khi hết mana. Mitigation: mục tiêu thiết kế §3.1 + test mô phỏng 10 phút combat liên tục.
 - **Đổi nhịp skill vỡ test snapshot**: nhiều test battle có thể hardcode cast time; cập nhật từng cái có chủ đích.
 - **Boss skill scope creep**: giới hạn đúng §3.6; UI báo hiệu và đa dạng skill boss để dành phase sau.
-- Sau khi hoàn tất: cập nhật `docs/game-guide.md` mục Chiến đấu (phối hợp [docs-sync-audit-plan.md](./docs-sync-audit-plan.md)).
+- Sau khi hoàn tất: cập nhật `docs/game-guide.md` mục Chiến đấu (theo quy trình docs-sync-audit đã hoàn thành 2026-08-28).
 
 ## Kết quả playtest
 

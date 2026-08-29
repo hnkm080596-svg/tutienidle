@@ -1,6 +1,6 @@
 # Kế hoạch UI Discoverability & Dọn dẹp Trình bày
 
-> Thuộc Phase 2 của [roadmap.md](./roadmap.md). Kế thừa phần còn nợ của [gameplay-ui-feedback-responsive-cleanup-plan.md](./gameplay-ui-feedback-responsive-cleanup-plan.md) (Workstream A/B/I) và giải quyết các vấn đề discoverability/god-class phát hiện trong đợt rà soát 2026-08-27.
+> Thuộc Phase 2 của [roadmap.md](./roadmap.md). Kế thừa phần còn nợ của gameplay-ui-feedback-responsive-cleanup-plan (Workstream A/B/I — plan đã dọn sau khi các workstream đó hoàn thành) và giải quyết các vấn đề discoverability/god-class phát hiện trong đợt rà soát 2026-08-27.
 > Phần âm thanh tách riêng tại [audio-game-feel-plan.md](./audio-game-feel-plan.md).
 
 ## 1. Mục tiêu
@@ -61,7 +61,7 @@ Nguyên tắc:
 ### 3.4 Dọn emoji và placeholder
 
 - `CombatEventBar.vue`: thay 💥☠🔥 bằng glyph SVG/CSS theo theme Ink & Gold (mỗi reaction một glyph riêng — phối hợp Task icon reaction của [combat-balance-pass-plan.md](./combat-balance-pass-plan.md)).
-- `BuildingConstructionGate.vue`: thay chữ cái hình học bằng art placeholder đúng tông (icon công trình + khung); art final theo [thanh-van-dong-fu-art-production-plan.md](./thanh-van-dong-fu-art-production-plan.md).
+- `BuildingConstructionGate.vue`: thay chữ cái hình học bằng art placeholder đúng tông (icon công trình + khung); art final theo quy trình sản xuất art đã hoàn thành (thanh-van-dong-fu — xem README trong `public/assets/buildings/dong-fu/`).
 - Art quái realm cao và portrait Kiếm Tu: ghi vào checklist asset, thực hiện cùng [truc-co-kim-dan-content-plan.md](./truc-co-kim-dan-content-plan.md) (M1 cần art quái Trúc Cơ).
 
 ### 3.5 Tài nguyên thường trực ở home

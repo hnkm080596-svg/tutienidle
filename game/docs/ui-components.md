@@ -5,11 +5,11 @@
 
 ## Tổng quan
 
-- **95 component Vue** chia theo 14 nhóm thư mục (xem mục lục).
+- **94 component Vue** chia theo 14 nhóm thư mục (xem mục lục).
 - Stack: Vue 3 + TypeScript, CSS scoped thuần. Không UI library (Tailwind/Element Plus...), không preprocessor (Sass/Less).
 - Riêng `App.vue` dùng `<style>` global (reset body + boot-error); `src/assets/theme.css` là biến theme toàn cục; mọi component còn lại dùng `<style scoped>`.
 - Gần như **100% màu đi qua CSS variables** — hex/rgba cứng chỉ xuất hiện trong shadow và mask hiệu ứng.
-- **Lớp primitives (mới 2026-08-29)**: `common/primitives/` (Bar, Chip, Eyebrow, StatRow, EmptyState) + composite `SceneHeader` là nguồn sự thật duy nhất cho 6 pattern từng bị trùng lặp (~90 đoạn CSS tự viết trên ~30 file đã được hợp nhất). Spec: `docs/superpowers/specs/2026-08-29-ui-primitives-refactor-design.md`.
+- **Lớp primitives (mới 2026-08-29)**: `common/primitives/` (Bar, Chip, Eyebrow, StatRow, EmptyState) + composite `SceneHeader` là nguồn sự thật duy nhất cho 6 pattern từng bị trùng lặp (~90 đoạn CSS tự viết trên ~30 file đã được hợp nhất).
 - Nguyên tắc primitives: **props chỉ điều khiển hành vi, mọi visual qua CSS var** — nơi dùng override `style="--bar-from: var(--el-color)"` thay vì thêm prop.
 
 ## Mục lục
@@ -466,19 +466,13 @@ Lớp atom, mỗi component đúng 1 pattern. Props = hành vi; visual = CSS var
 
 ---
 
-## 6. Panel con — skill-path (5)
+## 6. Panel con — skill-path (4)
 
 ### SkillPathList
 
 - **Đường dẫn**: `game/src/components/panels/skill-path/SkillPathList.vue`
-- **Chức năng**: Cột trái cho path KHÔNG có Node Tree (Kiếm Tu/Phàm) — list skill nhóm theo cảnh giới.
+- **Chức năng**: Cột trái cho MỌI path — list skill nhóm theo cảnh giới (ElementPathList cũ đã gỡ 2026-08-29; mọi path dùng chung list này).
 - **Màu sắc**: card `--ink-800`; selected nền `--chrome-300` 18% + viền `--chrome-300`.
-
-### ElementPathList
-
-- **Đường dẫn**: `game/src/components/panels/skill-path/ElementPathList.vue`
-- **Chức năng**: Cột trái Pháp Tu — chọn Hành (Hỏa/Mộc/Thủy/Kim/Thổ + Phong/Lôi 🔒), tiến độ lĩnh ngộ (**Bar 3px** màu động `--bar-from/--bar-to = --el-color`).
-- **Màu sắc**: selected nền + viền + glow `--el-color`; locked opacity .55.
 
 ### SkillDetailView
 
@@ -822,7 +816,7 @@ Lớp atom, mỗi component đúng 1 pattern. Props = hành vi; visual = CSS var
 
 ## 16. Fit-refactor (2026-08-29) — panel tự co giãn mọi tỉ lệ
 
-Spec: `docs/superpowers/specs/2026-08-29-ui-fit-refactor-design.md` (branch `ui-fit-refactor`).
+Spec đã được thực hiện qua branch `ui-fit-refactor` (merged 2026-08-29) — nguồn tham khảo: git history của branch.
 
 ### Nguyên tắc
 

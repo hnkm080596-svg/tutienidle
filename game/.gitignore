@@ -7,6 +7,9 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Scratch output (test runner dumps, one-off tool output)
+tmp-*.txt
+
 node_modules
 .DS_Store
 dist

@@ -18,7 +18,7 @@ Trong chiến đấu, `RealmPressure` so chênh lệch **đại cảnh giới**.
 
 ## Thiên Phú
 
-Thiên Phú là quyết định chọn hướng Đạo duy nhất lúc tạo nhân vật: roll 9 thẻ, chọn đúng 1 (`CharacterCreationService.ts`, catalog `src/data/talent/Talents.ts`). Mỗi thiên phú là một ngoại lệ của luật chơi — không có talent cộng chỉ số; effect được tiêu thụ qua getter tập trung tại `src/core/talent/TalentEffects.ts` (tốc độ tu luyện, Cảm Ngộ Kỹ năng, Linh Thạch, rơi trang bị, Luyện Thể, luyện đan, sống sót đòn chí mạng, giữ ailment khi Reaction, hồi máu khi diệt quái). Cảm Ngộ Kỹ năng vì vậy mặc định đến từ chiến đấu, riêng thiên phú Ngộ Đạo đổi tu vi tu luyện online lấy Cảm Ngộ — cố ý, là bản sắc talent. Thiên phú đã chọn hiển thị trong panel Nhân Vật. Thiết kế chi tiết: [talent-direction-choice-plan.md](./talent-direction-choice-plan.md).
+Thiên Phú là quyết định chọn hướng Đạo duy nhất lúc tạo nhân vật: roll 9 thẻ, chọn đúng 1 (`CharacterCreationService.ts`, catalog `src/data/talent/Talents.ts`). Mỗi thiên phú là một ngoại lệ của luật chơi — không có talent cộng chỉ số; effect được tiêu thụ qua getter tập trung tại `src/core/talent/TalentEffects.ts` (tốc độ tu luyện, Cảm Ngộ Kỹ năng, Linh Thạch, rơi trang bị, Luyện Thể, luyện đan, sống sót đòn chí mạng, giữ ailment khi Reaction, hồi máu khi diệt quái). Cảm Ngộ Kỹ năng vì vậy mặc định đến từ chiến đấu, riêng thiên phú Ngộ Đạo đổi tu vi tu luyện online lấy Cảm Ngộ — cố ý, là bản sắc talent. Thiên phú đã chọn hiển thị trong panel Nhân Vật.
 
 ## Con đường tu luyện hiện có
 
@@ -75,5 +75,5 @@ Không còn building trung gian chế tác (Linh Thảo Viên, Lò Luyện, Thi�
 
 - Dữ liệu gameplay tĩnh nằm trong `src/data/`; logic domain nằm trong `src/core/`.
 - Seed tên tiên hiệp chưa được runtime sử dụng nằm tại `docs/reference/xianxia-name-seed.json`, tách khỏi data tham gia build.
-- Quy trình asset: [asset-drop/README.md](../asset-drop/README.md). Yêu cầu riêng của Động Phủ: `src/assets/UI/dong-phu/ASSET_REQUIREMENTS.md`.
+- Quy trình asset: [asset-drop/README.md](../asset-drop/README.md).
 - Khi đổi hành vi, cập nhật tài liệu sống trong `docs/` cùng thay đổi code; không tạo thêm plan extensionless.

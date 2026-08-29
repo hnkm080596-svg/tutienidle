@@ -1,9 +1,7 @@
 <script setup lang="ts">
-// SkillPathPanel.vue redesign (2026-08-20) — cột trái CHO PATH KHÔNG
-// CÓ Node Tree (Kiếm Tu/Phàm Nhân), song song ElementPathList.vue
-// (dùng riêng cho phap_tu — chọn HÀNH để lọc cây, khác hẳn ý nghĩa
-// "chọn 1 trong các kỹ năng cố định để xem chi tiết" ở đây, nên tách
-// component riêng thay vì ép chung 1 shape prop/emit).
+// SkillPathPanel.vue redesign (2026-08-20) — cột trái CHO MỌI PATH
+// (kể cả Phàm Nhân/Kiếm Tu): "chọn 1 trong các kỹ năng cố định để
+// xem chi tiết".
 import { computed } from 'vue'
 import type { Skill } from '@/core/skill/Skill'
 import { getRealmIndex } from '@/core/realm/realmSystem'

@@ -6,7 +6,7 @@
 // SkillPathPanel.vue redesign (2026-08-20, PhapTuPanel plan mục 6/10)
 // — trước đây click node MUA THẲNG, hiện MỌI branch cùng lúc. Giờ:
 // (1) prop `branchTag` optional lọc còn ĐÚNG 1 branch (SkillPathPanel
-// truyền vào theo Hành đang chọn ở ElementPathList.vue — không truyền
+// truyền vào theo skill/branch đang chọn — không truyền
 // gì = hiện tất cả, giữ nguyên hành vi cũ cho caller khác nếu có);
 // (2) click CHỈ emit 'select' (kể cả node đã mua/còn khoá — plan mục
 // 29 "Node locked → hiện điều kiện" nghĩa là vẫn xem được), mua thật

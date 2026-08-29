@@ -4,12 +4,11 @@
 // + redesign theo tien-hiep-idle/Plans/PhapTuPanel (header/chọn kỹ
 // năng/chi tiết/Loadout). Bố cục 3 cột ÁP DỤNG CHO MỌI PATH (kể cả
 // Phàm Nhân/Kiếm Tu, không riêng Pháp Tu) — chỉ khác NỘI DUNG cột
-// trái/giữa vì Kiếm Tu/Phàm Nhân không có Node Tree phân nhánh:
-//   phap_tu   -> trái: ElementPathList (chọn Hành để lọc cây)
-//                giữa: NodeTreePanel (cây thật của Hành đó)
-//   khác      -> trái: SkillPathList (liệt kê skill cố định/Trảm)
-//                giữa: SkillDetailView (chi tiết skill đang chọn, đọc only)
-// Cột phải (SkillLoadoutStrip, "Pháp Thuật Đang Vận Hành") và
+// giữa vì Kiếm Tu/Phàm Nhân không có Node Tree phân nhánh:
+//   có tree   -> giữa: NodeTreePanel (cây thật của skill/branch đó)
+//   khác      -> giữa: SkillDetailView (chi tiết skill đang chọn, đọc only)
+// Cột trái dùng chung SkillPathList cho mọi path; cột phải
+// (SkillLoadoutStrip, "Pháp Thuật Đang Vận Hành") và
 // NodeInspector (bottom, CHỈ có ý nghĩa khi có node để mua) không đổi.
 //
 // ElementLoadoutPicker.vue (equip Hành vào combat) đã GỠ HẲN (2026-08-20,
