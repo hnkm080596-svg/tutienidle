@@ -50,6 +50,25 @@ export interface CombatEntity {
   // Ngự Kiếm Thuật ĐÁNH TRÚNG +1, không theo % damage gây/nhận).
   currentSwordIntent: number
 
+  // Kiếm Thế / Kiếm Ý tạm (spec 2026-08-29-kiem-the-kiem-y) — 2 pool
+  // CHIẾN ĐẤU của 2 route Kiếm Tu sau khi chốt đường ở Quán Khí, cùng
+  // mô hình "sống, không persist" như currentSwordIntent:
+  //   currentKiemThe (route Kiếm Trận): pool 0-MAX_KIEM_THE, reset về
+  //   0 mỗi trận, +số kiếm của trận mỗi lần cast (KiemTuResourceSystem
+  //   .gainKiemTheOnFormationCast), tiêu hao cho ult Tru Tiên Kiếm
+  //   Trận + buff +1% dmg mỗi 2 điểm (kiemTheDamageBonusPercent).
+  //   currentKiemYTemp (route Bạt Kiếm): kiếm ý TẠM khởi đầu bằng số
+  //   kiếm ý vĩnh viễn (tầng boss × 10), gain qua channel tick + dmg
+  //   nhận vào, cap vĩnh viễn + MAX_KIEM_Y_TEMP_CAP. Tiêu hao ăn tạm
+  //   TRƯỚC — vĩnh viễn bất khả xâm phạm (consumeKiemYTempFirst).
+  // Optional (KHÔNG bắt buộc như currentSwordIntent) — cùng precedent
+  // currentHuyetPha/totalMaxHpReductionPercent bên dưới: 2 field này
+  // CHỈ có ý nghĩa với Kiếm Tu đã chốt route, mọi fixture/factory hiện
+  // có của path khác không cần touch; undefined coi như 0 (mọi consumer
+  // đọc qua `?? 0`, xem KiemTuResourceSystem).
+  currentKiemThe?: number
+  currentKiemYTemp?: number
+
   // Thể Tu (Combat Rework Phase 7) — Momentum CHIẾN ĐẤU, cùng mô hình
   // currentSwordIntent nhưng pool 0-100 (xem CombatTypes.ts's
   // MAX_MOMENTUM), tích qua Skill.grantsMomentumPerHit.

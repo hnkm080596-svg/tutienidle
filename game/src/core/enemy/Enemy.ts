@@ -315,6 +315,10 @@ export function enemyToCombatEntity(enemy: Enemy): CombatEntity {
 
     currentSwordIntent: 0,
 
+    currentKiemThe: 0,
+
+    currentKiemYTemp: 0,
+
     currentMomentum: 0,
 
     currentHoaThe: 0,

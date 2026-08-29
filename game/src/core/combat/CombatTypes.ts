@@ -63,6 +63,25 @@ export const KIM_THE_DECAY_INTERVAL_SECONDS = 5
 // 5 tầng" theo đúng số Plans/KimPath mục 13/15 để lại.
 export const MAX_HUYET_PHA = 5
 
+// Kiếm Thế / Kiếm Ý (spec 2026-08-29-kiem-the-kiem-y) — 2 tài nguyên
+// route Kiếm Tu sau khi chốt đường ở Quán Khí:
+//   - Kiếm Thế (route Kiếm Trận): pool TRONG TRẬN 0-100, reset mỗi
+//     trận, tích = số kiếm của trận mỗi lần cast (Lưỡng Nghi +2 ...
+//     Vô Cực +9). Tiêu hao cho ult Tru Tiên Kiếm Trận (cost 10 × số
+//     kiếm) + buff sát thương +1% mỗi 2 điểm (đầy 100 = +50%).
+//   - Kiếm Ý tạm (route Bạt Kiếm): pool trong trận khởi đầu bằng số
+//     kiếm ý VĨNH VIỄN (tầng boss diệt × 10), cap cộng thêm tối đa
+//     MAX_KIEM_Y_TEMP_CAP lên trên nền vĩnh viễn (vd 10 vĩnh viễn +
+//     90 tạm). Tiêu hao ăn TẠM TRƯỚC — vĩnh viễn bất khả xâm phạm
+//     (xem KiemTuResourceSystem.consumeKiemYTempFirst).
+// Số liệu "khởi điểm tinh chỉnh playtest" theo spec mục 2/3.2.
+export const MAX_KIEM_THE = 100
+export const MAX_KIEM_Y_TEMP_CAP = 900
+
+// +1 Kiếm Ý tạm mỗi lần mất KIEM_Y_DMG_TAKEN_GAIN_PER_MAXHP_PERCENT%
+// maxHP (spec mục 3.2 — "tinh chỉnh playtest").
+export const KIEM_Y_DMG_TAKEN_GAIN_PER_MAXHP_PERCENT = 5
+
 export interface DamageResult {
   sourceId: string
 
