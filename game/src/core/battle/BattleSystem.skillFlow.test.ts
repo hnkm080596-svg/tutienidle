@@ -123,8 +123,6 @@ function createHarness(playerOverrides: Partial<CombatEntity> = {}): Harness {
 
     currentMp: 1000,
 
-    currentRage: 0,
-
     currentSwordIntent: 0,
 
     currentMomentum: 0,
@@ -178,8 +176,6 @@ function enterFighting(harness: Harness, enemyId = 'enemy') {
     maxHp: 1_000_000,
 
     currentMp: 0,
-
-    currentRage: 0,
 
     currentSwordIntent: 0,
 

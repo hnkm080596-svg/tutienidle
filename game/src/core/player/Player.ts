@@ -349,8 +349,6 @@ export function playerToCombatEntity(
 
     currentMp: stats.maxMp,
 
-    currentRage: 0,
-
     currentSwordIntent: 0,
 
     currentKiemThe: 0,

@@ -40,7 +40,6 @@ describe('SkillSystem — execution policy cooldown clock', () => {
     const entity = {
       realmIndex: 0,
       currentMp: 0,
-      currentRage: 0,
       currentSwordIntent: 0,
       currentMomentum: 0,
     } as CombatEntity
@@ -61,7 +60,6 @@ describe('SkillSystem — execution policy cooldown clock', () => {
     const entity = {
       realmIndex: 0,
       currentMp: 0,
-      currentRage: 0,
       currentSwordIntent: 0,
       currentMomentum: 0,
     } as CombatEntity

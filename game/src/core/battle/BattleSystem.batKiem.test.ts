@@ -53,7 +53,6 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     currentHp: stats.maxHp,
     maxHp: stats.maxHp,
     currentMp: stats.maxMp,
-    currentRage: 0,
     currentSwordIntent: 0,
     currentMomentum: 0,
     currentHoaThe: 0,
@@ -213,7 +212,7 @@ describe('BattleSystem — Bạt Kiếm auto-channel (spec §4.2, Task 4)', () =
     expect(battle.player.tuLucElapsed).toBeCloseTo(0, 5)
   })
 
-  it('amp: mất 20% maxHP trong kỳ → phát quạt +20% damage (hệ số 1.0)', () => {
+  it('amp: mất 20% maxHP trong kỳ → phát quạt +6% damage (hệ số 0.3 — nerf spec 2026-08-29)', () => {
     // Control: không ai đụng tới Player trong kỳ tụ → damage nền, không amp.
     const control = setup(3)
     const controlPlayer = createPlayer({})
@@ -247,11 +246,14 @@ describe('BattleSystem — Bạt Kiếm auto-channel (spec §4.2, Task 4)', () =
 
     const before = enemy.currentHp
 
-    experiment.system.update(3) // đúng 1 kỳ nổ, amp = +20%
+    experiment.system.update(3) // đúng 1 kỳ nổ, amp = 0.2 × 0.3 = +6%
 
     const ampDamage = before - enemy.currentHp
 
-    expect(ampDamage).toBeGreaterThan(baseDamage * 1.19)
+    // Amp hệ số 0.3 (nerf spec 2026-08-29 mục 3.4): 20% maxHP mất →
+    // +6% damage — assert có tăng (> +5%) nhưng nhỏ hơn mức cũ 1.0.
+    expect(ampDamage).toBeGreaterThan(baseDamage * 1.05)
+    expect(ampDamage).toBeLessThan(baseDamage * 1.19)
     // ampPercent reset về 0 sau khi kỳ đã nổ.
     expect(player.tuLucDamageTakenPercent).toBe(0)
   })

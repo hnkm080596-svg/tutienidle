@@ -6,15 +6,14 @@
 // 'magic' riêng, xác nhận qua grep lúc revamp).
 export type DamageType = 'physical' | 'primordial' | 'elemental'
 
-// Ngưỡng thanh nộ tối đa — chiêu cuối (ultimate) tốn gần bằng mức
-// này. Xem CombatSystem.attack() (tích rage theo damage) và
-// SkillSystem (trừ rage khi cast ultimate).
-export const MAX_RAGE = 100
+// Nộ (rage) đã GỠ (spec 2026-08-29-kiem-the-kiem-y mục 5.4) —
+// consumer duy nhất (Phá Thiên Nhất Kích) chuyển thành passive node
+// của route Bạt Kiếm, pool currentRage/MAX_RAGE dọn sạch không để
+// mồ côi (dev phase, không migration).
 
-// Kiếm Tu (2026-08-15) — Kiếm Ý CHIẾN ĐẤU, pool RIÊNG tách hẳn khỏi
-// Nộ Khí (không dùng chung MAX_RAGE — thang điểm khác hẳn, 9999 vs
-// 100, và tích theo cơ chế khác: mỗi kiếm ĐÁNH TRÚNG của Ngự Kiếm
-// Thuật +1, không theo % damage gây/nhận như Rage). Xem
+// Kiếm Tu (2026-08-15) — Kiếm Ý CHIẾN ĐẤU, pool RIÊNG (thang điểm
+// 9999, tích theo cơ chế riêng: mỗi kiếm ĐÁNH TRÚNG của Ngự Kiếm
+// Thuật +1, không theo % damage gây/nhận). Xem
 // CombatEntity.currentSwordIntent, SkillTypes.ts's 'sword_intent'.
 export const MAX_SWORD_INTENT = 9999
 

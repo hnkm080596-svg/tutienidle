@@ -69,9 +69,6 @@ function resourceCurrentFor(skill: Skill, battle: Battle): number {
     case 'mana':
       return battle.player.currentMp
 
-    case 'rage':
-      return battle.player.currentRage
-
     case 'sword_intent':
       return battle.player.currentSwordIntent
 

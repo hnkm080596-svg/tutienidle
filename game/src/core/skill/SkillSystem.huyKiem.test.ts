@@ -8,7 +8,6 @@ function makeEntity(): CombatEntity {
   return {
     realmIndex: 0,
     currentMp: 0,
-    currentRage: 0,
     currentSwordIntent: 0,
     currentMomentum: 0,
   } as CombatEntity

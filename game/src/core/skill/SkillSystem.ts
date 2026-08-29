@@ -355,9 +355,6 @@ export class SkillSystem {
       case 'mana':
         return entity.currentMp >= cost
 
-      case 'rage':
-        return entity.currentRage >= cost
-
       case 'sword_intent':
         return entity.currentSwordIntent >= cost
 
@@ -423,7 +420,6 @@ export class SkillSystem {
     }
 
     if (skill.resourceType === 'mana') entity.currentMp += cost
-    else if (skill.resourceType === 'rage') entity.currentRage += cost
     else if (skill.resourceType === 'sword_intent') entity.currentSwordIntent += cost
     else if (skill.resourceType === 'momentum') entity.currentMomentum += cost
   }
@@ -447,7 +443,6 @@ export class SkillSystem {
     const cost = skill.cost ?? 0
 
     if (skill.resourceType === 'mana') entity.currentMp -= cost
-    else if (skill.resourceType === 'rage') entity.currentRage -= cost
     else if (skill.resourceType === 'sword_intent') entity.currentSwordIntent -= cost
     else if (skill.resourceType === 'momentum') entity.currentMomentum -= cost
   }

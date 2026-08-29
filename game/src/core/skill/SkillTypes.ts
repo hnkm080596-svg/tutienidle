@@ -21,18 +21,19 @@ export type SkillEffectType =
   | 'remove_buff'
 
 // Tài nguyên bị trừ khi cast — 'none' cho basic/moving (chỉ có
-// cooldown), 'mana' cho special, 'rage' cho ultimate. 'sword_intent'
-// (Kiếm Tu, 2026-08-15) — pool RIÊNG 0-9999, xem
-// CombatEntity.currentSwordIntent/CombatTypes.ts's MAX_SWORD_INTENT.
-// 'momentum' (Thể Tu, Combat Rework Phase 7) — pool RIÊNG 0-100, xem
+// cooldown), 'mana' cho special. 'sword_intent' (Kiếm Tu) — pool
+// RIÊNG 0-9999, xem CombatEntity.currentSwordIntent/CombatTypes.ts's
+// MAX_SWORD_INTENT (spec 2026-08-29-kiem-the-kiem-y: gộp thành Kiếm Ý
+// tạm route Bạt Kiếm). 'momentum' (Thể Tu) — pool RIÊNG 0-100, xem
 // CombatEntity.currentMomentum/CombatTypes.ts's MAX_MOMENTUM. Skill
 // có cost theo momentum thì canUse() TỰ CHẶN cho tới khi Momentum đầy,
 // scheduler auto-cast thống nhất của BattleSystem (plan §8.4) TỰ bắn
 // ngay khi đủ — không cần logic "auto-swap đòn kế tiếp" riêng.
+// 'rage' ĐÃ GỠ (spec mục 5.4 — Phá Thiên Nhất Kích chuyển thành node,
+// không còn consumer nào).
 export type SkillResourceType =
   | 'none'
   | 'mana'
-  | 'rage'
   | 'sword_intent'
   | 'momentum'
 

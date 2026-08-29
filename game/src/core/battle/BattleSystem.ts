@@ -71,6 +71,15 @@ import {
   gainPhapTuCastResources,
   updatePhapTuBattleResources,
 } from './PhapTuBattleResourceSystem'
+import {
+  gainKiemTheOnFormationCast,
+  gainKiemYTempOnChannelTick,
+  gainKiemYTempOnDamageTaken,
+  initKiemTuBattleResources,
+  kiemTheDamageBonusPercent,
+} from './KiemTuResourceSystem'
+import { getFormationSwordCount } from '../../data/progression/KiemTuNodes'
+import { getHuyKiemFlatDamageBonus } from '../skill/SkillSystem'
 
 import { getAttackIntervalSeconds } from '../combat/AttackTiming'
 
@@ -144,8 +153,20 @@ const PLAYER_TELEPORT_ICD_SECONDS = 1
 
 // Kiếm Tu Bạt Kiếm (2026-08-28, Task 4) — amp "nhận→gây": mỗi kỳ tụ lực
 // phát quạt được khuếch đại theo % maxHP Player mất TRONG kỳ đó (spec
-// §4.2). Hệ số chỉnh qua playtest, chưa có nguồn nào khác ghi đè.
-const BAT_KIEM_AMP_PER_DAMAGE_TAKEN = 1.0
+// §4.2). Kiếm Thế / Kiếm Ý (spec 2026-08-29 mục 3.4 — nerf giai đoạn
+// đầu): hạ 1.0 → 0.3 vì BKT giờ còn hưởng tier kiếm ý vĩnh viễn (base
+// 0.6 + 0.02×tầng) + hồi sinh + ult; đường về 1.0 phải qua node BK
+// riêng (+0.1/level). Hệ số chỉnh qua playtest.
+const BAT_KIEM_AMP_PER_DAMAGE_TAKEN = 0.3
+
+// Kiếm Ý nerf BKT (spec 2026-08-29 mục 3.4) — base theo tầng vĩnh viễn:
+// 0 tầng chỉ 60% value, +2%/tầng (~tầng 20 về 100%, vô hạn về sau).
+const BAT_KIEM_BASE_AT_TIER_0 = 0.6
+const BAT_KIEM_BASE_PER_KIEM_Y_TIER = 0.02
+// tier = vĩnh viễn / KIEM_Y_PER_TIER (10 kiếm ý mỗi tầng) — local alias
+// tránh import cycle KiemYSystem → BattleSystem (dùng getKiemYTier bên
+// dưới cho phần nguyên tầng, hệ số hằng số giữ tại đây).
+const KIEM_Y_PER_TIER_LOCAL = 10
 
 // Final review fix (Critical #2, spec §4.2) — "Sát thương dựa vào thời
 // gian tụ: multiplier phát quạt tăng theo x (nền: ×1 tại 3s → ×3 tại 9s,
@@ -252,6 +273,23 @@ export class BattleSystem {
      * mọi closure PlayerData khác ở trên.
      */
     private readonly getKiemTuRoute: () => 'kiem_tran' | 'bat_kiem' | undefined = () => undefined,
+
+    /**
+     * Kiếm Ý vĩnh viễn (spec 2026-08-29-kiem-the-kiem-y mục 3) —
+     * Kiếm Ý nền đầu trận route Bạt Kiếm (tầng boss × 10) + nguồn
+     * tier cho nerf BKT (base 0.6 + 0.02×tier). GameManager inject
+     * closure đọc live từ KiemYSystem.getKiemYPermanent(player.
+     * bossKillCount). Nền 0 = không có.
+     */
+    private readonly getKiemYPermanent: () => number = () => 0,
+
+    /**
+     * Hấp thụ Huy Kiếm (spec mục 3.4) — tổng số lần trảm của tram,
+     * dùng cho flat bonus floor(casts/10) cộng vào Bạt Kiếm Thức
+     * ("10 năm trảm có giá trị"). GameManager inject closure đọc
+     * skillManager.get('tram')?.totalExperience.
+     */
+    private readonly getTramTotalCasts: () => number = () => 0,
   ) {
     this.reactionManager = new ReactionManager(eventBus)
 
@@ -269,11 +307,7 @@ export class BattleSystem {
   private onEntityVitalsChanged(event: EntityVitalsChangedEvent) {
     const battle = this.battle
 
-    if (!battle || !battle.player.tuLucActive) {
-      return
-    }
-
-    if (event.entityId !== battle.player.id) {
+    if (!battle || event.entityId !== battle.player.id) {
       return
     }
 
@@ -281,7 +315,19 @@ export class BattleSystem {
       return
     }
 
-    battle.player.tuLucDamageTakenPercent += (event.hpBefore - event.hpAfter) / event.maxHp
+    const maxHpPercentLost = (event.hpBefore - event.hpAfter) / event.maxHp
+
+    // Kiếm Ý tạm (spec 2026-08-29 mục 3.2) — route Bạt Kiếm: MỌI sát
+    // thương nhận vào (không chỉ lúc đang tụ lực) +1 kiếm ý tạm mỗi
+    // 5% maxHP mất — "nén lực bị đánh" đối xứng amp dmg-taken.
+    if (this.getKiemTuRoute() === 'bat_kiem') {
+      gainKiemYTempOnDamageTaken(battle.player, maxHpPercentLost)
+    }
+
+    // Amp channel (Task 4) — chỉ tích khi đang tụ lực.
+    if (battle.player.tuLucActive) {
+      battle.player.tuLucDamageTakenPercent += maxHpPercentLost
+    }
   }
 
   private aiStrategy(): CombatAiStrategy {
@@ -405,6 +451,11 @@ export class BattleSystem {
     player.tuLucActive = channelEntry !== undefined && isBatKiemRoute
     player.tuLucElapsed = 0
     player.tuLucDamageTakenPercent = 0
+
+    // Kiếm Thế / Kiếm Ý (spec 2026-08-29 mục 2/3.2) — reset 2 pool đầu
+    // trận cùng lúc với channel state: KT Kiếm Thế về 0 (tích trong
+    // trận theo cast), BK kiếm ý tạm khởi đầu = vĩnh viễn.
+    initKiemTuBattleResources(player, this.getKiemTuRoute(), this.getKiemYPermanent())
   }
 
   startTribulation(player: CombatEntity) {
@@ -2047,7 +2098,7 @@ export class BattleSystem {
       case 'attack_speed': {
         // Resolve tức thời; cadence tái kích hoạt theo Attack Speed,
         // không internal cooldown, không chịu CDR.
-        this.resolveSkillEffects(skill, source, target, battle)
+        this.resolvePlayerSkillEffects(skill, source, target, battle)
         this.setSlotCadence(source, slotIndex, this.cadenceInterval(source, execution))
         this.finishPlayerCastTransaction(source, skill.id, slotIndex)
         return true
@@ -2059,7 +2110,7 @@ export class BattleSystem {
           return true
         }
 
-        this.resolveSkillEffects(skill, source, target, battle)
+        this.resolvePlayerSkillEffects(skill, source, target, battle)
         this.setSlotCadence(source, slotIndex, this.cadenceInterval(source, execution))
         this.finishPlayerCastTransaction(source, skill.id, slotIndex)
         return true
@@ -2343,6 +2394,50 @@ export class BattleSystem {
 
    */
 
+  /**
+   * Kiếm Thế (spec 2026-08-29-kiem-the-kiem-y mục 2) — wrapper cho
+   * resolveSkillEffects với skill CỦA PLAYER: cast kiếm trận
+   * (kiem_tran_*) +số kiếm của trận vào pool (cap 100), và mọi hit
+   * kiếm trận được cộng +1% sát thương mỗi 2 điểm Kiếm Thế hiện có
+   * (đầy 100 = +50%) qua cùng đường finalDamagePercent snapshot như
+   * amp Bạt Kiếm. Ult TTKT KHÔNG đi qua đây (nút manual riêng).
+   */
+  private resolvePlayerSkillEffects(
+    skill: Skill,
+    source: CombatEntity,
+    target: CombatEntity,
+    battle: Battle,
+  ) {
+    const isFormation = skill.id.startsWith('kiem_tran_')
+    const route = this.getKiemTuRoute()
+
+    if (!isFormation || route !== 'kiem_tran') {
+      this.resolveSkillEffects(skill, source, target, battle)
+      return
+    }
+
+    const swordCount = getFormationSwordCount(skill.id) ?? 0
+
+    const originalFinalDamagePercent = source.stats.finalDamagePercent
+
+    // +1% mỗi 2 điểm Kiếm Thế (đầy 100 = +50%) — quy về FRACTION cùng
+    // thang finalDamagePercent (0.5 = +50%).
+    const kiemTheBonus = kiemTheDamageBonusPercent(source.currentKiemThe ?? 0) / 100
+
+    if (kiemTheBonus > 0) {
+      source.stats.finalDamagePercent = originalFinalDamagePercent + kiemTheBonus
+    }
+
+    try {
+      this.resolveSkillEffects(skill, source, target, battle)
+    } finally {
+      source.stats.finalDamagePercent = originalFinalDamagePercent
+    }
+
+    // Gain SAU resolve: pool tăng theo cast vừa tung, hưởng từ cast kế.
+    gainKiemTheOnFormationCast(source, swordCount)
+  }
+
   private resolveSkillEffects(
     skill: Skill,
     source: CombatEntity,
@@ -2569,6 +2664,10 @@ export class BattleSystem {
       this.resolveChannelTick(battle, skill, ampSnapshot, tickSeconds)
 
       player.tuLucDamageTakenPercent -= ampSnapshot
+
+      // Kiếm Ý tạm (spec 2026-08-29 mục 3.2) — mỗi tick tụ lực +1,
+      // cap vĩnh viễn + 900 (đã hấp thụ qua init đầu trận).
+      gainKiemYTempOnChannelTick(player, this.getKiemYPermanent())
     }
   }
 
@@ -2619,11 +2718,35 @@ export class BattleSystem {
 
     const tickLengthBonus = batKiemTickLengthMultiplier(tickSeconds) - 1
 
-    player.stats.finalDamagePercent =
-      originalFinalDamagePercent + tickLengthBonus + damageTakenPercent * BAT_KIEM_AMP_PER_DAMAGE_TAKEN
+    // Kiếm Ý nerf BKT (spec 2026-08-29 mục 3.4) — base theo tầng vĩnh
+    // viễn (10 kiếm ý/tầng): 0.6 + 0.02×tier, tầng 20 về 1.0. Tier là
+    // multiplier NHÂN vào tổng (tickLength + amp) — KHÔNG cộng thẳng
+    // fDP (cộng sẽ phá tỷ lệ tickLength ×3@9s: (2−0.4) thay vì 2×0.6),
+    // xem BattleSystem.batKiem.test.ts "tick 9s ~3x".
+    const kiemYPermanent = this.getKiemYPermanent()
+    const tier = Math.floor(kiemYPermanent / KIEM_Y_PER_TIER_LOCAL)
+    const tierMultiplier = BAT_KIEM_BASE_AT_TIER_0 + BAT_KIEM_BASE_PER_KIEM_Y_TIER * tier
+
+    const combinedMultiplier =
+      (1 + tickLengthBonus + damageTakenPercent * BAT_KIEM_AMP_PER_DAMAGE_TAKEN) * tierMultiplier
+
+    player.stats.finalDamagePercent = originalFinalDamagePercent + (combinedMultiplier - 1)
+
+    // Hấp thụ Huy Kiếm (spec mục 3.4) — flat floor(tramCasts/10) cộng
+    // thẳng vào value damage đầu tiên của skill qua bản effective tạm
+    // ( KHÔNG mutate skill template dùng chung): resolveSkillEffects
+    // đọc skill.effects — tạo shallow copy với value + huyKiemBonus.
+    const huyKiemBonus = getHuyKiemFlatDamageBonus(this.getTramTotalCasts())
+    const effectiveSkill: Skill = huyKiemBonus > 0
+      ? { ...skill, effects: skill.effects.map((effect, index) =>
+          index === 0 && effect.type === 'damage' && effect.value !== undefined
+            ? { ...effect, value: effect.value + huyKiemBonus }
+            : effect,
+        ) }
+      : skill
 
     try {
-      this.resolveSkillEffects(skill, player, target, battle)
+      this.resolveSkillEffects(effectiveSkill, player, target, battle)
     } finally {
       player.stats.finalDamagePercent = originalFinalDamagePercent
     }

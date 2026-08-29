@@ -37,12 +37,10 @@ export interface CombatEntity {
 
   maxHp: number
 
-  // MP/Rage là state "sống" giống currentHp — chỉ tồn tại trong lúc
+  // MP là state "sống" giống currentHp — chỉ tồn tại trong lúc
   // battle, không persist vào PlayerData (xem ghi chú trong
   // core/player/Player.ts).
   currentMp: number
-
-  currentRage: number
 
   // Kiếm Tu (2026-08-15) — Kiếm Ý CHIẾN ĐẤU, state "sống" như
   // currentRage nhưng pool RIÊNG (0-9999, xem CombatTypes.ts's

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { MAX_RAGE, MAX_SWORD_INTENT } from '@/core/combat/CombatTypes'
+import { MAX_KIEM_THE, MAX_KIEM_Y_TEMP_CAP } from '@/core/combat/CombatTypes'
+import { getKiemYPermanent, getKiemYTier } from '@/core/player/KiemYSystem'
 import type { CombatEvent } from '@/core/combat/CombatEvent'
 import type { BattlePositionsEvent } from '@/core/battle/BattleEvents'
 import type { EntityVitalsChangedEvent } from '@/core/combat/EntityVitalsSystem'
@@ -71,22 +72,14 @@ onUnmounted(() => {
   gameManager.eventBus.off<BattlePositionsEvent>('positions', onPositions)
 })
 
-const rageLabel = computed(() => {
-  stateVersion.value
-
-  return gameManager.techniqueManager.getEquipped()?.resourceLabel ?? 'Nộ Khí'
-})
-
+// Kiếm Thế / Kiếm Ý (spec 2026-08-29-kiem-the-kiem-y mục 6) — bar 3
+// theo route chốt vĩnh viễn: KT hiển thị Kiếm Thế 0-100, BK hiển thị
+// Kiếm Ý tạm (cap vĩnh viễn + 900) + badge tầng vĩnh viễn. Nộ (rage)
+// đã GỠ (mục 5.4).
 const mpLabel = computed(() => {
   stateVersion.value
 
   return gameManager.techniqueManager.getEquipped()?.mpLabel ?? 'Linh Lực'
-})
-
-const usesSwordIntent = computed(() => {
-  stateVersion.value
-
-  return gameManager.techniqueManager.getEquipped()?.usesSwordIntentResource ?? false
 })
 
 const playerCurrentMp = computed(() => {
@@ -101,6 +94,18 @@ const playerMaxMp = computed(() => {
   return gameManager.getBattle()?.player.stats.maxMp ?? 0
 })
 
+const playerRoute = computed(() => {
+  stateVersion.value
+
+  return player.cultivationPath === 'kiem_tu' ? (player.kiemTuRoute ?? 'kiem_tran') : undefined
+})
+
+const kiemYTier = computed(() => {
+  stateVersion.value
+
+  return getKiemYTier(player.bossKillCount)
+})
+
 const resourceCurrent = computed(() => {
   stateVersion.value
 
@@ -110,10 +115,30 @@ const resourceCurrent = computed(() => {
     return 0
   }
 
-  return usesSwordIntent.value ? activeBattle.player.currentSwordIntent : activeBattle.player.currentRage
+  if (playerRoute.value === 'bat_kiem') {
+    return activeBattle.player.currentKiemYTemp ?? 0
+  }
+
+  return activeBattle.player.currentKiemThe ?? 0
 })
 
-const resourceMax = computed(() => usesSwordIntent.value ? MAX_SWORD_INTENT : MAX_RAGE)
+const resourceMax = computed(() => {
+  stateVersion.value
+
+  if (playerRoute.value === 'bat_kiem') {
+    return getKiemYPermanent(player.bossKillCount) + MAX_KIEM_Y_TEMP_CAP
+  }
+
+  return MAX_KIEM_THE
+})
+
+const resourceLabel = computed(() => {
+  stateVersion.value
+
+  return playerRoute.value === 'bat_kiem'
+    ? `Kiếm Ý T.${kiemYTier.value}`
+    : 'Kiếm Thế'
+})
 </script>
 
 <template>
@@ -139,12 +164,13 @@ const resourceMax = computed(() => usesSwordIntent.value ? MAX_SWORD_INTENT : MA
       </Bar>
 
       <Bar
+        v-if="playerRoute"
         class="combat-status-bar__bar combat-status-bar__bar--rage"
         :value="resourceCurrent"
         :max="resourceMax"
         :height="14"
       >
-        <template #label>{{ rageLabel }} {{ formatNumber(Math.ceil(resourceCurrent)) }} / {{ formatNumber(resourceMax) }}</template>
+        <template #label>{{ resourceLabel }} {{ formatNumber(Math.ceil(resourceCurrent)) }} / {{ formatNumber(resourceMax) }}</template>
       </Bar>
     </div>
 

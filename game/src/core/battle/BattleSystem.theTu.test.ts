@@ -30,7 +30,6 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     currentHp: stats.maxHp,
     maxHp: stats.maxHp,
     currentMp: stats.maxMp,
-    currentRage: 0,
     currentSwordIntent: 0,
     currentMomentum: 0,
     currentHoaThe: 0,

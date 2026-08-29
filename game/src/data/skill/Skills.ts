@@ -1,4 +1,4 @@
-﻿import type { Skill } from '../../core/skill/Skill'
+import type { Skill } from '../../core/skill/Skill'
 import { TRAN_SEQUENCE } from '../progression/KiemTuNodes'
 
 // 9 skill Kiáº¿m Tráº­n (chiÃªu tráº­n) â€” table-driven tá»« `TRAN_SEQUENCE`
@@ -308,8 +308,6 @@ export const SKILLS: Skill[] = [
 
     remainingCooldown: 0,
 
-    cost: 90,
-
     target: 'enemy',
 
     // Plan Â§8.3 â€” active skill khÃ´ng cast time â†’ policy 'cooldown'.
@@ -336,7 +334,7 @@ export const SKILLS: Skill[] = [
         attributeScaling: [{ attributes: ['strength', 'dexterity'], ratioPerPoint: 0.004 }],
       },
     ],
-    resourceType: 'rage',
+    resourceType: 'none',
 
     unlocked: false,
 

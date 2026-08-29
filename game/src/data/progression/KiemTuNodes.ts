@@ -278,3 +278,10 @@ export const KIEM_TU_NODES: ProgressionNode[] = [
   ...BAT_KIEM_GROWTH,
   BAT_KIEM_KEYSTONE,
 ]
+
+/** Số kiếm của trận theo skillId (Lưỡng Nghi 2 → Cửu Cung 9) — dùng
+ * cho gain Kiếm Thế mỗi cast (spec 2026-08-29-kiem-the-kiem-y mục 2);
+ * skillId không thuộc chuỗi trận → undefined. */
+export function getFormationSwordCount(skillId: string): number | undefined {
+  return TRAN_SEQUENCE.find((entry) => entry.skillId === skillId)?.swordCount
+}

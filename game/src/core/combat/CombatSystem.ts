@@ -6,7 +6,6 @@ import { getRealmPressureMultiplier } from './RealmPressure'
 import { getHitChance } from './Accuracy'
 import { applyEndurance } from './Endurance'
 
-import { MAX_RAGE } from './CombatTypes'
 import type { DamageResult } from './CombatTypes'
 
 import type { EventBus } from '../events/EventBus'
@@ -16,13 +15,6 @@ import { EntityVitalsSystem, type VitalsChangeReason } from './EntityVitalsSyste
 import { clampStatValue } from '../stats/StatMetadata'
 import { getSkillRuntimeStat } from '../skill/SkillRuntimeStats'
 import type { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
-
-// Rage tích theo % damage gây ra/nhận vào — đặt ở CombatSystem
-// (không phải BattleSystem) để mọi đường gây damage (auto-attack,
-// skill, talisman) đều tích rage nhất quán, không chỉ riêng battle
-// auto-attack.
-const RAGE_PER_DAMAGE_DEALT = 0.5
-const RAGE_PER_DAMAGE_TAKEN = 0.5
 
 // Thủy Tu Trúc Cơ Pure (Plans/waterpath mục IX, 2026-08-21) — trần %
 // giảm sát thương từ thuyThePercent, cùng tinh thần ARMOR_CAP (Armor.
@@ -305,15 +297,8 @@ export class CombatSystem {
 
     result.manaShieldAbsorbed = manaShieldAbsorbed
 
-    source.currentRage = Math.min(
-      MAX_RAGE,
-      source.currentRage + result.finalDamage * RAGE_PER_DAMAGE_DEALT,
-    )
-
-    target.currentRage = Math.min(
-      MAX_RAGE,
-      target.currentRage + result.finalDamage * RAGE_PER_DAMAGE_TAKEN,
-    )
+    // Nộ (rage) đã GỠ (spec 2026-08-29-kiem-the-kiem-y mục 5.4) —
+    // khối tích currentRage theo damage gây/nhận dỡ sạch.
 
     this.eventBus.emit('damage', {
       type: 'damage',

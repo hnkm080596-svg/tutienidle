@@ -17,7 +17,6 @@ function createEntity(currentMomentum: number): CombatEntity {
     currentHp: stats.maxHp,
     maxHp: stats.maxHp,
     currentMp: stats.maxMp,
-    currentRage: 0,
     currentSwordIntent: 0,
     currentMomentum,
     currentHoaThe: 0,

@@ -311,8 +311,6 @@ export function enemyToCombatEntity(enemy: Enemy): CombatEntity {
 
     currentMp: enemy.stats.maxMp,
 
-    currentRage: 0,
-
     currentSwordIntent: 0,
 
     currentKiemThe: 0,
