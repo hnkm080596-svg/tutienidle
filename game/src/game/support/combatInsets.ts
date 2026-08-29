@@ -44,3 +44,23 @@ export function resetCombatInsets(): void {
 export function getCombatInsets(): MeasuredCombatInsets {
   return current
 }
+
+// ui-discoverability-refactor-plan.md §3.3 (2026-08-29) — fallback insets
+// TỈ LỆ chuyển từ hằng COMBAT_*_HEIGHT (DesignFrame.ts, ĐÃ XÓA) về ĐÂY —
+// một nguồn duy nhất cho "kích thước chrome combat" dùng khi chưa đo được
+// DOM (mounted/ResizeObserver chưa kịp chạy). Fallback này CHỈ cho frame
+// thiết kế 16:9; khi viewport rời tỉ lệ, đo thật (measured=true) đúng hơn
+// và có ưu tiên.
+const DESIGN_HEIGHT = 1440
+
+const FALLBACK_TOP_BAR = 64
+const FALLBACK_STATUS_BAR = 56
+const FALLBACK_EVENT_BAR = 40
+const FALLBACK_CONTROL_BAR = 64
+
+export function getFallbackCombatInsets(height: number): CombatInsets {
+  return {
+    top: (height * (FALLBACK_TOP_BAR + FALLBACK_STATUS_BAR)) / DESIGN_HEIGHT,
+    bottom: (height * (FALLBACK_EVENT_BAR + FALLBACK_CONTROL_BAR)) / DESIGN_HEIGHT,
+  }
+}

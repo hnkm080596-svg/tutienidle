@@ -18,7 +18,7 @@ import {
   HERO_LANE_INDEX,
   type LaneIndex,
 } from '@/core/battle/BattleLane'
-import { getCombatInsets } from '@/game/support/combatInsets'
+import { getCombatInsets, getFallbackCombatInsets } from '@/game/support/combatInsets'
 import type { GridPosition } from '@/core/battle/BattleGrid'
 import {
   createBattleGridProjection,
@@ -86,13 +86,6 @@ import { PLAYER_TEXTURE_KEY, queueCombatAssets } from '@/game/support/CombatPrel
 import type { CombatEvent } from '@/core/combat/CombatEvent'
 import type { EntityVitalsChangedEvent } from '@/core/combat/EntityVitalsSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
-import {
-  DESIGN_HEIGHT,
-  COMBAT_TOP_BAR_HEIGHT,
-  COMBAT_STATUS_BAR_HEIGHT,
-  COMBAT_EVENT_BAR_HEIGHT,
-  COMBAT_CONTROL_BAR_HEIGHT,
-} from '@/core/ui/DesignFrame'
 import { getCombatVfxPreset } from '@/data/vfx/CombatVfxPresets'
 import { getStatusVfxPreset } from '@/data/vfx/StatusVfxPresets'
 import { CombatDamageText } from './combat/combat-damage-text'
@@ -710,10 +703,10 @@ export class CombatScene extends Phaser.Scene {
     this.canvasHeight = height
 
     const measuredInsets = getCombatInsets()
-    const fallbackTop =
-      (height * (COMBAT_TOP_BAR_HEIGHT + COMBAT_STATUS_BAR_HEIGHT)) / DESIGN_HEIGHT
-    const fallbackBottom =
-      (height * (COMBAT_EVENT_BAR_HEIGHT + COMBAT_CONTROL_BAR_HEIGHT)) / DESIGN_HEIGHT
+    // ui-discoverability-refactor-plan.md §3.3 — fallback insets một nguồn
+    // (combatInsets.getFallbackCombatInsets) thay vì hằng COMBAT_*_HEIGHT
+    // trùng lặp giữa DesignFrame và CSS clamp().
+    const fallbackInsets = getFallbackCombatInsets(height)
     // Camera zoom cÃ¡Â»Â§a scene nÃƒÂ y LUÃƒâ€N giÃ¡Â»Â¯ 1 Ã¢â‚¬â€ mÃ¡Â»Âi tÃ¡Â»Âa Ã„â€˜Ã¡Â»â„¢ combat lÃƒÂ  pixel
     // canvas, projection khÃƒÂ´ng cÃ¡ÂºÂ§n bÃƒÂ¹ transform (plan: zoom khÃƒÂ´ng Ã¡ÂºÂ£nh
     // hÃ†Â°Ã¡Â»Å¸ng combat coordinates).
@@ -722,8 +715,8 @@ export class CombatScene extends Phaser.Scene {
     const viewport = {
       width,
       height,
-      topInset: measuredInsets.measured ? measuredInsets.top : fallbackTop,
-      bottomInset: measuredInsets.measured ? measuredInsets.bottom : fallbackBottom,
+      topInset: measuredInsets.measured ? measuredInsets.top : fallbackInsets.top,
+      bottomInset: measuredInsets.measured ? measuredInsets.bottom : fallbackInsets.bottom,
     }
 
     if (!this.projection) {

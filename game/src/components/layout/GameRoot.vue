@@ -4,6 +4,7 @@ import MainScene from '../game/MainScene.vue'
 import CombatSceneOverlay from '../game/combat/CombatSceneOverlay.vue'
 import TribulationSceneOverlay from '../game/tribulation/TribulationSceneOverlay.vue'
 import HomeBuildingIcons from '../game/HomeBuildingIcons.vue'
+import HomeResourceStrip from '../game/HomeResourceStrip.vue'
 import DongFuCommandWheel from '../game/DongFuCommandWheel.vue'
 import BuildingDetailPopover from '../game/BuildingDetailPopover.vue'
 import LeftPanel from './LeftPanel.vue'
@@ -65,6 +66,7 @@ function closeSidePanels() {
       <MainScene @click="closeSidePanels" />
 
       <template v-if="!isFullSceneActive">
+        <HomeResourceStrip />
         <HomeBuildingIcons />
 
         <!-- Shared popover authority (plan Workstream C) — CHỈ MỘT

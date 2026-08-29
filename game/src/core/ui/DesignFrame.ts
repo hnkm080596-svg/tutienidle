@@ -19,15 +19,9 @@ export const LEFT_PANEL_WIDTH = DESIGN_WIDTH * LEFT_PANEL_WIDTH_PERCENT
 
 export const LEFT_PANEL_HEIGHT = DESIGN_HEIGHT - BOTTOM_BAR_HEIGHT - TOP_BAR_HEIGHT
 
-// Combat UI Redesign — Combat Scene chiếm TOÀN BỘ khung 2560×1440 (đè
-// lên cả TOP_BAR_HEIGHT/BOTTOM_BAR_HEIGHT của Động Phủ, xem
-// CombatSceneOverlay.vue), tự chia layout riêng theo đúng thứ tự spec
-// mục 5/9: Top Bar → Status Bar → Battlefield (phần lớn) → Event Bar →
-// Control Bar.
-export const COMBAT_TOP_BAR_HEIGHT = 64
-
-export const COMBAT_STATUS_BAR_HEIGHT = 56
-
-export const COMBAT_EVENT_BAR_HEIGHT = 40
-
-export const COMBAT_CONTROL_BAR_HEIGHT = 64
+// ui-discoverability-refactor-plan.md §3.3 (2026-08-29) — các hằng
+// COMBAT_TOP_BAR_HEIGHT / COMBAT_STATUS_BAR_HEIGHT / COMBAT_EVENT_BAR_HEIGHT /
+// COMBAT_CONTROL_BAR_HEIGHT ĐÃ XÓA: nguồn sự thật cho chrome combat là DOM
+// đo thật (getCombatInsets/setCombatInsets — xem src/game/support/combatInsets.ts,
+// khớp CSS clamp() --combat-*-h trong theme.css); fallback tỉ lệ nằm ở
+// getFallbackCombatInsets() trong cùng module, KHÔNG còn ở đây.
