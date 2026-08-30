@@ -39,6 +39,10 @@ Isolation theo quy tắc AGENTS.md: mọi file-changing task trong worktree + br
 | 3 | `51d0215` | T1 | Bỏ Phong/Lôi khỏi type system + stats + affixes + vfx | 12 file (chi tiết §4) |
 | 4 | `6dc36c7` | T2 | Xoá ailment `te_dien` + reaction Lôi Viêm + rework fixture phanPhac sang Bốc Hơi | 6 file (chi tiết §4) |
 | 5 | `911478b` | T3 | Field `relation` sinh/khắc cho 10 reaction + Ngưng Lộ + Khai Sơn + 2 buff | 3 file (chi tiết §4) |
+| 6 | `c1d379c` | T4 | `WuxingRelations.ts` — bảng sinh/khắc + isSinhCycle (pure functions) | 2 file mới |
+| 7 | `c68dfe1` | T5 | Slot gate theo bảng realm 1/2/3/4/5 (thay công thức cũ) | 2 file |
+| 8 | `d404f81` | T6 | Thế engine — MAX_THE/gain/consume + field `currentThe` | 4 file |
+| 9 | `2fe556a` | T7 | ChainStateSystem — gate chuỗi + reset-on-kill (pure) | 2 file mới |
 
 *(bảng cập nhật sau mỗi task)*
 
@@ -106,6 +110,20 @@ Isolation theo quy tắc AGENTS.md: mọi file-changing task trong worktree + br
 - Task 3 phụ thuộc Task 2 (bảng 8 cặp sạch) — cherry-pick cùng cụm.
 - `manaRegenPerSecond` + `defense` là stat có sẵn — không đụng StatTypes.
 
+### Task 4–7 — Engine thuần (commits `c1d379c`, `c68dfe1`, `d404f81`, `2fe556a`)
+
+**Việc đã làm (4 task engine nền, mỗi task test-first):**
+- **T4 `WuxingRelations.ts`**: `SINH_CYCLE` (Mộc→Hỏa→Thổ→Kim→Thủy), `KHAC_PAIRS` 5 cặp chéo đối xứng, `wuxingRelation(from, to)` ĐƠN HƯỚNG (sinh chỉ chiều thuận; khắc đối xứng), `isSinhCycle(loadout)` đủ 5 slot vòng sinh khép kín. Test 8/8. *Lí do: nguồn sự thật duy nhất cho adjacency Đa Pháp + relation reaction + UI ngôi sao.*
+- **T5 `SkillLoadoutSlots.ts`**: thay công thức `base 2 + mỗi 2 realm +1` bằng bảng `REALM_SLOT_TABLE` — mortal 1, qi_refining/foundation 2, golden_core/nascent_soul 3, soul_transformation→mahayana 4, tribulation 5. Test 7/7 (RED trước: công thức cũ cho Hóa Thần 5, bảng mới 4). `KIEM_TRAN_SLOT_INDEX`/`MAX` giữ nguyên.
+- **T6 Thế engine**: `CombatTypes.ts` thêm `MAX_THE 100`/`THE_GAIN_PER_LINK 10`/`THE_GAIN_PER_FINISHER 20`; `CombatEntity.ts` thêm field optional `currentThe?: number` (precedent `currentKiemThe`); `TheResourceSystem.ts` — `gainTheOnChainLink(player, isFinisher)` cap 100 + `consumeTheForUlt(player)` đầy mới bắn + reset 0. Test 4/4.
+- **T7 `ChainStateSystem.ts`**: pure functions — `canCastChainSkill` (skill thuộc chuỗi chỉ cast khi ĐÚNG nextIndex VÀ index < loadoutSize; skill ngoài chuỗi tự do), `advanceChain` (đúng vị trí mới advance, E quay về 0), `resetChainOnKill` (về 0). Test 6/6.
+
+**Lí do (spec §2/§6/§7):** tách engine thuần (pure, test đơn giản) khỏi wire vào BattleSystem (Task 8) — đúng pattern codebase tách KiemTuResourceSystem khỏi BattleSystem.
+
+**Kiểm chứng:** mỗi task vitest pass + type-check PASS; T5 full suite 1440/1441 (1 pre-existing InkWash).
+
+**Ghi chú cherry-pick / conflict:** T4–T7 là file MỚI + 2 sửa nhỏ (CombatTypes/CombatEntity thêm block cuối, SkillLoadoutSlots thay hàm) — xung đột thấp, cherry-pick độc lập được trừ khi main worktree cũng đụng cùng file.
+
 
 
 ## 5. Rulings / quyết định controller (mọi quyết định nằm ở đây)
@@ -127,6 +145,6 @@ Isolation theo quy tắc AGENTS.md: mọi file-changing task trong worktree + br
 
 ## 7. Trạng thái
 
-- Task 3/17 ✅ (commit `911478b`).
-- Tiếp theo: Task 4 — WuxingRelations (bảng sinh/khắc + isSinhCycle).
+- Task 7/17 ✅ (commits `c1d379c`, `c68dfe1`, `d404f81`, `2fe556a`).
+- Tiếp theo: Task 8 — wire chain gate + Thế gain + reset-on-kill vào BattleSystem scheduler (task nặng nhất, đụng `BattleSystem.ts` ~3100 dòng).
 - Cập nhật file này sau mỗi task hoàn thành.
