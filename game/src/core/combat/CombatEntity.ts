@@ -67,6 +67,15 @@ export interface CombatEntity {
   currentKiemThe?: number
   currentKiemYTemp?: number
 
+  // Pháp Tu Đạo Sắc (spec 2026-08-30-phap-tu-dao-sac §2.3) — Thế
+  // THUẦN HỆ Pháp Tu sau Lập Đạo, pool 0-MAX_THE (CombatTypes.ts),
+  // tích +10 mỗi link chuỗi cast hoàn tất (+20 finisher E), XUYÊN
+  // KILL trong phiên farm (không decay), reset về 0 khi bắn Ultimate.
+  // Optional — cùng precedent currentKiemThe: chỉ Pháp Tu đã chốt
+  // Thuần mới có ý nghĩa, mọi fixture/path khác đọc qua `?? 0`
+  // (xem core/battle/TheResourceSystem.ts).
+  currentThe?: number
+
   // Thể Tu (Combat Rework Phase 7) — Momentum CHIẾN ĐẤU, cùng mô hình
   // currentSwordIntent nhưng pool 0-100 (xem CombatTypes.ts's
   // MAX_MOMENTUM), tích qua Skill.grantsMomentumPerHit.

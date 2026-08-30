@@ -81,6 +81,15 @@ export const MAX_KIEM_Y_TEMP_CAP = 900
 // maxHP (spec mục 3.2 — "tinh chỉnh playtest").
 export const KIEM_Y_DMG_TAKEN_GAIN_PER_MAXHP_PERCENT = 5
 
+// Pháp Tu Đạo Sắc (spec 2026-08-30-phap-tu-dao-sac §2.3) — Thế Thuần
+// hệ Pháp Tu sau Lập Đạo: pool 0-100 tích xuyên kill trong phiên farm
+// (+10 mỗi link chuỗi cast hoàn tất, +20 finisher E), KHÔNG decay,
+// đầy thì bắn được Ultimate nhánh (reset về 0). Số liệu khởi điểm
+// playtest theo convention.
+export const MAX_THE = 100
+export const THE_GAIN_PER_LINK = 10
+export const THE_GAIN_PER_FINISHER = 20
+
 export interface DamageResult {
   sourceId: string
 
