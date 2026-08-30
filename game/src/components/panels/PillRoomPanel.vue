@@ -1,18 +1,14 @@
 <script setup lang="ts">
-// Đan Phòng (2026-08-25) — Luyện Đan qua AlchemyView + túi Đan.
+// Đan Phòng (2026-08-25) — Luyện Đan qua AlchemyView. Túi Đan ĐÃ BỎ khỏi
+// đây (2026-08-30, bug report: trùng lặp với tab "Đan Dược" của Hành
+// Trang, tốn nửa chiều cao panel gây phải cuộn) — xem đan đã luyện trong
+// Hành Trang, không xem lại ở đây.
 import AlchemyView from './AlchemyView.vue'
-import PillBagSection from './bag-sections/PillBagSection.vue'
 </script>
 
 <template>
   <div class="pill-room">
-    <div class="pill-room__crafting">
-      <AlchemyView />
-    </div>
-
-    <div class="pill-room__bag">
-      <PillBagSection />
-    </div>
+    <AlchemyView class="pill-room__crafting" />
   </div>
 </template>
 
@@ -25,15 +21,7 @@ import PillBagSection from './bag-sections/PillBagSection.vue'
 }
 
 .pill-room__crafting {
-  flex: 1 1 60%;
+  flex: 1;
   min-height: 0;
-  border-bottom: 1px solid var(--ink-line);
-}
-
-.pill-room__bag {
-  flex: 1 1 40%;
-  min-height: 0;
-  padding: 8px;
-  box-sizing: border-box;
 }
 </style>

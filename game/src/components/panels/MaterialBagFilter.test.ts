@@ -34,6 +34,26 @@ const ORE: Material = {
   sourceType: 'exploration',
 }
 
+// Quáng thật (có profession meta) × 2 phẩm cùng realm — TÊN TRÙNG NHAU
+// (professionResourceName bỏ qua quality) nên phải gộp về 1 ô như họ
+// thảo, chứ không hiện 2 ô trùng tên (bug report 2026-08-30).
+function ore(quality: string): Material {
+  return {
+    id: `mortal_ore_${quality}`,
+    name: 'Cửu Phẩm Linh Khoáng',
+    category: 'ore',
+    sourceType: 'exploration',
+    profession: {
+      resourceKind: 'ore',
+      realmId: 'mortal',
+      quality,
+    },
+  }
+}
+
+const ORE_HOANG = ore('hoang')
+const ORE_HUYEN = ore('huyen')
+
 const ESSENCE: Material = {
   id: 'tinh_hoa_pham_khi',
   name: 'Phàm Khí Tinh Hoa',
@@ -255,6 +275,22 @@ describe('MaterialBag — filter/search/group họ thảo (plan §3.2 B4)', () =
     // Badge realm/niên đại rộng nhất trong họ (Bách Niên > Thập Niên).
     expect(labels[0]).toContain('Phàm Nhân')
     expect(labels[0]).toContain('Bách Niên')
+
+    mounted.unmount()
+  })
+
+  it('gộp quáng theo realm: 2 phẩm cùng tên/cùng realm collapse về 1 ô, badge hiện phẩm cao nhất', async () => {
+    gameManager.registerMaterials([ORE_HOANG, ORE_HUYEN])
+    gameManager.materialBag.add(gameManager.materialRegistry.get(ORE_HOANG.id), 3)
+    gameManager.materialBag.add(gameManager.materialRegistry.get(ORE_HUYEN.id), 5)
+
+    mounted = mountSection(gameManager)
+
+    const labels = mounted.slotLabels()
+
+    expect(labels).toHaveLength(1)
+    expect(labels[0]).toContain('Cửu Phẩm Linh Khoáng')
+    expect(labels[0]).toContain('Huyền')
 
     mounted.unmount()
   })

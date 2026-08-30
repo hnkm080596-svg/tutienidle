@@ -112,7 +112,7 @@ onMounted(() => {
     <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
     <h2 class="combat-victory-panel__title">★ THẮNG ★</h2>
 
-    <div class="combat-victory-panel__rewards">
+    <div class="combat-victory-panel__rewards scrollfade">
       <p v-if="summary.techniqueInsight > 0">Cảm Ngộ Tâm Pháp <span>+{{ formatNumber(summary.techniqueInsight) }}</span></p>
       <p v-if="summary.skillInsight > 0">Cảm Ngộ Kỹ Năng <span>+{{ formatNumber(summary.skillInsight) }}</span></p>
       <p v-if="summary.artifactInsight > 0">Kinh Nghiệm Pháp Bảo <span>+{{ formatNumber(summary.artifactInsight) }}</span></p>

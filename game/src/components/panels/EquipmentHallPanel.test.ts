@@ -55,7 +55,7 @@ function mountHall() {
 afterEach(() => { document.body.innerHTML = '' })
 
 describe('EquipmentHallPanel — chọn trang bị bằng slot', () => {
-  it('Cường Hóa hiện đủ 6 slot và Tẩy Luyện chỉ hiện đồ đang mặc', async () => {
+  it('Cường Hóa và Tẩy Luyện đều hiện đủ 6 slot (2026-08-30: ô luôn tồn tại, tham chiếu equip trực tiếp)', async () => {
     const mounted = mountHall()
 
     expect(mounted.container.querySelectorAll('[aria-label="Chọn slot cường hóa"] .slot-view')).toHaveLength(6)
@@ -65,8 +65,15 @@ describe('EquipmentHallPanel — chọn trang bị bằng slot', () => {
     await nextTick()
 
     const washSlots = mounted.container.querySelectorAll('[aria-label="Chọn trang bị để tẩy luyện"] .slot-view')
-    expect(washSlots).toHaveLength(1)
-    expect(washSlots[0]?.getAttribute('aria-label')).toBe('Kiếm')
+
+    expect(washSlots).toHaveLength(6)
+
+    // Slot weapon (đang mặc 'equipped') hiện tên item — 5 slot còn lại
+    // trống, dùng nhãn tên slot mặc định (Mũ/Giáp/Giày/Dây Chuyền/Nhẫn).
+    const labels = Array.from(washSlots).map((el) => el.getAttribute('aria-label'))
+
+    expect(labels).toContain('Kiếm')
+    expect(labels.filter((label) => label === 'Kiếm')).toHaveLength(1)
 
     mounted.unmount()
   })

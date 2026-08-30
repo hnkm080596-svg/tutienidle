@@ -246,8 +246,14 @@ function close() {
   border-right: 1px solid var(--ink-line);
 }
 
+/* Cây kỹ năng KHÔNG cuộn nữa (2026-08-30, bug report) — NodeTreePanel
+   tự thu nhỏ (zoom-to-fit) vừa khung, có nút zoom thủ công riêng thay
+   vì dựa vào overflow-y:auto của cột dùng chung. */
 .skill-path-panel__col--center {
   flex: 1 1 auto;
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .skill-path-panel__col--right {

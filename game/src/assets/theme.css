@@ -231,10 +231,13 @@
   /* Slot Revamp (tooltip-revamp-plan.md mục 17.6) — token semantic
      riêng cho SlotView, không hardcode màu trong component. */
   /* Slot rỗng — khay giấy nông (paper-toned), KHÔNG phải ô đen: chỉ item
-     THẬT mới "đóng dấu mực" (slot-surface-raised). Tránh cảm giác lưới
+     THẬT mới "đặt vào khay" (slot-surface-raised). Tránh cảm giác lưới
      20 ô trống nhìn như 20 lỗ hổng trên nền giấy sáng. */
   --slot-surface: linear-gradient(175deg, var(--paper-100), var(--paper-200));
-  --slot-surface-raised: linear-gradient(160deg, var(--brush-800), var(--ink-900));
+  /* Slot có item — khay gỗ/đồng trầm hơn khay giấy rỗng (đủ phân biệt
+     trống/có), nhưng CÙNG họ ấm với paper/frame-outer xung quanh thay vì
+     mực đen lạc tông (2026-08-30, feedback: nền ô không hợp màu xung quanh). */
+  --slot-surface-raised: linear-gradient(160deg, var(--paper-200), var(--frame-outer));
   --slot-border: var(--paper-line);
   --slot-border-filled: var(--ink-line-soft);
   --slot-hover: var(--chrome-300);

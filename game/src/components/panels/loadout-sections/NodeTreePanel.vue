@@ -337,7 +337,98 @@ watch(branches, () => {
         resizeObserver.observe(el)
       }
     }
+
+    recomputeFit()
   })
+})
+
+// ---- Zoom-to-fit thay cho cuộn (2026-08-30, bug report) ----
+// Cây kỹ năng nhiều tầng dễ cao hơn khung panel — trước đây cuộn dọc để
+// xem hết, giờ TỰ CO co giãn (CSS `zoom`, không phải transform:scale —
+// `zoom` đổi layout box thật nên getBoundingClientRect() dùng bởi
+// measure() ở trên vẫn đúng, ResizeObserver container vẫn tự bắn lại
+// khi zoom đổi, không cần patch riêng cho SkillConnections.vue) để vừa
+// khung theo mặc định. Người chơi có thể zoom tay để xem chi tiết hơn —
+// khi đó (và chỉ khi đó) viewport mới cho cuộn/pan.
+const ZOOM_MIN = 0.4
+const ZOOM_MAX = 1.5
+const ZOOM_STEP = 0.15
+
+const viewportEl = ref<HTMLElement | null>(null)
+const contentEl = ref<HTMLElement | null>(null)
+
+const fitZoom = ref(1)
+const zoom = ref(1)
+const zoomOverridden = ref(false)
+
+function clampZoom(value: number): number {
+  return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(value * 100) / 100))
+}
+
+function recomputeFit() {
+  const viewport = viewportEl.value
+  const content = contentEl.value
+
+  if (!viewport || !content) {
+    return
+  }
+
+  // CSS `zoom` (khác transform:scale) đổi LUÔN layout box của chính nó
+  // — scrollHeight đo được đã PHẢN ÁNH zoom hiện tại, nên phải quy đổi
+  // ngược về "chiều cao tự nhiên" (zoom=1) trước khi tính fit mới,
+  // không thì fit sẽ trôi dần mỗi lần recompute.
+  const currentZoom = zoom.value || 1
+  const naturalHeight = content.scrollHeight / currentZoom
+
+  if (naturalHeight <= 0 || viewport.clientHeight <= 0) {
+    return
+  }
+
+  fitZoom.value = clampZoom(viewport.clientHeight / naturalHeight)
+
+  if (!zoomOverridden.value) {
+    zoom.value = fitZoom.value
+  }
+}
+
+function zoomIn() {
+  zoomOverridden.value = true
+  zoom.value = clampZoom(zoom.value + ZOOM_STEP)
+}
+
+function zoomOut() {
+  zoomOverridden.value = true
+  zoom.value = clampZoom(zoom.value - ZOOM_STEP)
+}
+
+function zoomToFit() {
+  zoomOverridden.value = false
+  zoom.value = fitZoom.value
+}
+
+const isPannable = computed(() => zoom.value > fitZoom.value + 0.01)
+
+// Zoom đổi vị trí render thật của từng node — vẽ lại đường nối SVG theo
+// toạ độ mới. Không chỉ dựa vào ResizeObserver (đủ tin cậy với `zoom`
+// vì nó đổi layout box thật, nhưng canh chắc để không lệch đường nối).
+watch(zoom, () => {
+  nextTick(measure)
+})
+
+let viewportResizeObserver: ResizeObserver | undefined
+
+onMounted(() => {
+  nextTick(recomputeFit)
+
+  viewportResizeObserver = new ResizeObserver(() => recomputeFit())
+
+  if (viewportEl.value) {
+    viewportResizeObserver.observe(viewportEl.value)
+  }
+})
+
+onBeforeUnmount(() => {
+  viewportResizeObserver?.disconnect()
 })
 </script>
 
@@ -345,51 +436,64 @@ watch(branches, () => {
   <div class="node-tree">
     <div class="node-tree__header">
       <span class="node-tree__title">Node Tree</span>
+
+      <div class="node-tree__zoom" role="group" aria-label="Zoom cây kỹ năng">
+        <button type="button" :disabled="zoom <= ZOOM_MIN" @click="zoomOut">−</button>
+        <button type="button" class="node-tree__zoom-value" title="Về vừa khung" @click="zoomToFit">{{ Math.round(zoom * 100) }}%</button>
+        <button type="button" :disabled="zoom >= ZOOM_MAX" @click="zoomIn">+</button>
+      </div>
+
       <span class="node-tree__points">{{ player.skillInsight }} Cảm Ngộ</span>
     </div>
 
-    <div v-for="branch in branches" :key="branch.branchTag ?? 'other'" class="node-tree__branch">
-      <h5 class="node-tree__branch-title" :style="{ color: branch.color }">{{ branch.label }}</h5>
+    <!-- Zoom-to-fit thay cuộn (2026-08-30) — mặc định co vừa khung,
+         zoom tay vượt fit mới cho cuộn/pan (is-pannable). -->
+    <div ref="viewportEl" class="node-tree__viewport" :class="{ 'is-pannable': isPannable }">
+      <div ref="contentEl" class="node-tree__scale-content" :style="{ zoom: `${zoom}` }">
+        <div v-for="branch in branches" :key="branch.branchTag ?? 'other'" class="node-tree__branch">
+          <h5 class="node-tree__branch-title" :style="{ color: branch.color }">{{ branch.label }}</h5>
 
-      <div
-        :ref="el => setContainerRef(branch.branchTag ?? '__other__', el)"
-        class="node-tree__branch-tree"
-        :style="{ '--branch-color': branch.color }"
-      >
-        <SkillConnections
-          :connections="connectionsFor(branch)"
-          :rects="rectsByBranch[branch.branchTag ?? '__other__'] ?? {}"
-        />
-
-        <div v-for="tier in branch.tiers" :key="tier.depth" class="node-tree__row">
-          <button
-            v-for="entry in tier.entries"
-            :key="entry.node.id"
-            :ref="el => setNodeRef(entry.node.id, el)"
-            type="button"
-            class="node-tree__node"
-            :class="{
-              'is-major': tier.depth === 0,
-              'node-tree__node--child': tier.depth > 0,
-              'is-purchased': entry.purchased,
-              'is-maxed': entry.purchased && !entry.upgradable && entry.maxLevel > 1,
-              'is-locked': !entry.purchased && !entry.purchasable,
-              'is-selected': entry.node.id === selectedNodeId,
-              'is-unlocking': entry.node.id === unlockingNodeId,
-            }"
-            @click="onClick(entry.node, entry.purchased, entry.purchasable)"
+          <div
+            :ref="el => setContainerRef(branch.branchTag ?? '__other__', el)"
+            class="node-tree__branch-tree"
+            :style="{ '--branch-color': branch.color }"
           >
-            <span class="node-tree__node-name">
-              {{ entry.node.name }}
+            <SkillConnections
+              :connections="connectionsFor(branch)"
+              :rects="rectsByBranch[branch.branchTag ?? '__other__'] ?? {}"
+            />
 
-              <!-- Badge cấp cho node nhiều cấp (plan §6.2): `3/10`. -->
-              <span v-if="entry.maxLevel > 1" class="node-tree__node-level">{{ entry.level }}/{{ entry.maxLevel }}</span>
-            </span>
-            <span v-if="entry.node.description" class="node-tree__node-desc">{{ entry.node.description }}</span>
-            <span class="node-tree__node-cost">
-              {{ costLabel(entry) }}
-            </span>
-          </button>
+            <div v-for="tier in branch.tiers" :key="tier.depth" class="node-tree__row">
+              <button
+                v-for="entry in tier.entries"
+                :key="entry.node.id"
+                :ref="el => setNodeRef(entry.node.id, el)"
+                type="button"
+                class="node-tree__node"
+                :class="{
+                  'is-major': tier.depth === 0,
+                  'node-tree__node--child': tier.depth > 0,
+                  'is-purchased': entry.purchased,
+                  'is-maxed': entry.purchased && !entry.upgradable && entry.maxLevel > 1,
+                  'is-locked': !entry.purchased && !entry.purchasable,
+                  'is-selected': entry.node.id === selectedNodeId,
+                  'is-unlocking': entry.node.id === unlockingNodeId,
+                }"
+                @click="onClick(entry.node, entry.purchased, entry.purchasable)"
+              >
+                <span class="node-tree__node-name">
+                  {{ entry.node.name }}
+
+                  <!-- Badge cấp cho node nhiều cấp (plan §6.2): `3/10`. -->
+                  <span v-if="entry.maxLevel > 1" class="node-tree__node-level">{{ entry.level }}/{{ entry.maxLevel }}</span>
+                </span>
+                <span v-if="entry.node.description" class="node-tree__node-desc">{{ entry.node.description }}</span>
+                <span class="node-tree__node-cost">
+                  {{ costLabel(entry) }}
+                </span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -398,17 +502,65 @@ watch(branches, () => {
 
 <style scoped>
 .node-tree {
+  height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
 .node-tree__header {
+  flex: 0 0 auto;
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+  gap: 10px;
   font-family: var(--font-body);
 }
+
+.node-tree__zoom {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.node-tree__zoom button {
+  min-width: 22px;
+  min-height: 22px;
+  padding: 0 4px;
+  background: var(--ink-800);
+  border: 1px solid var(--ink-line-soft);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.node-tree__zoom button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.node-tree__zoom-value {
+  min-width: 42px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Zoom-to-fit thay cuộn (2026-08-30) — mặc định overflow:hidden (nội
+   dung đã co vừa khung qua CSS `zoom`), chỉ cho cuộn/pan khi người chơi
+   tự zoom tay vượt mức fit (is-pannable). */
+.node-tree__viewport {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.node-tree__viewport.is-pannable {
+  overflow: auto;
+}
+
 
 .node-tree__title {
   font-size: var(--text-sm);

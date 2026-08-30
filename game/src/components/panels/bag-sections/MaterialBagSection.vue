@@ -15,7 +15,7 @@ import {
 } from '@/composables/useBagSort'
 import {
   useBagFilter,
-  ageRank,
+  variantRank,
   GROUP_LABELS,
   MATERIAL_GROUPS,
   type FilteredMaterial,
@@ -155,7 +155,7 @@ function representativeMaterial(item: FilteredMaterial): Material {
   }
 
   return variants.reduce((best, variant) =>
-    ageRank(variant.material.profession?.age) > ageRank(best.material.profession?.age)
+    variantRank(variant.material) > variantRank(best.material)
       ? { material: variant.material, amount: 0 }
       : best,
   { material: variants[0]!.material, amount: 0 }).material

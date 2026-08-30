@@ -86,7 +86,7 @@ async function build() {
     <InkNineSlice asset-id="surface-m-paper" layer="surface" />
     <InkNineSlice asset-id="frame-m-seal-corner" layer="frame" />
 
-    <div class="building-popover__scroll">
+    <div class="building-popover__scroll scrollfade">
       <div class="building-popover__header">
         <div>
           <h3 class="building-popover__title">{{ template.name }}</h3>
@@ -108,10 +108,13 @@ async function build() {
             {{ cost.owned }} / {{ cost.amount }}
           </StatRow>
         </ul>
-
-        <GameButton class="building-popover__action" variant="primary" :disabled="!canBuild" @click="build">Xây dựng</GameButton>
       </div>
     </div>
+
+    <!-- Nút hành động cố định NGOÀI vùng scroll (2026-08-30, bug report:
+         popup nhiều chi phí đẩy nút "Xây dựng" xuống dưới, phải cuộn mới
+         bấm được) — luôn hiện dù nội dung chi phí dài cỡ nào. -->
+    <GameButton class="building-popover__action" variant="primary" :disabled="!canBuild" @click="build">Xây dựng</GameButton>
   </div>
 </template>
 
@@ -167,12 +170,17 @@ async function build() {
 
 .building-popover__costs {
   list-style: none;
-  margin: 0 0 8px;
+  margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
   gap: 3px;
   font-size: var(--text-xs);
+}
+
+.building-popover__action {
+  flex: 0 0 auto;
+  margin-top: 10px;
 }
 
 </style>

@@ -107,6 +107,17 @@ export function rollAffixRange(min: number, max: number): number {
   return randomInt(Math.round(min * precision), Math.round(max * precision)) / precision
 }
 
+/**
+ * 1 dòng giá trị Tinh Luyện đã roll (preview/commit — 2026-08-30, UI
+ * "giữ/bỏ") — index trỏ vào instance.affixes, value là giá trị mới đã
+ * roll trong khoảng ±20% cho dòng đó.
+ */
+export interface RefineValueEntry {
+  index: number
+
+  value: number
+}
+
 export function normalizeRolledAffixValue(value: number, min: number, max: number): number {
   if (value >= min && value <= max) return value
 
@@ -848,6 +859,68 @@ export class EquipmentSystem {
     affixRegistry: AffixRegistry,
     random: () => number = Math.random,
   ): { ok: boolean; reason?: string } {
+    const result = this.rollWashAffixes(instanceId, oreMaterialId, inventory, registry, materialBag, affixRegistry, random)
+
+    if (!result.ok) {
+      return result
+    }
+
+    return this.commitWashAffixes(instanceId, result.affixes, inventory, slotManager, affixRegistry)
+  }
+
+  /**
+   * Xem trước Tẩy Luyện (2026-08-30, UI "giữ/bỏ") — roll + validate + TRỪ
+   * COST giống hệt washAffixes(), nhưng KHÔNG ghi affixes mới vào
+   * instance. Trả affixes đã roll cho UI hiển thị cột "sau khi Tẩy" —
+   * người chơi bấm lại (trả cost lần nữa, roll mới) hoặc "Giữ"
+   * (commitWashAffixes, không tốn thêm) để chốt.
+   */
+  previewWashAffixes(
+    instanceId: string,
+    oreMaterialId: string,
+    inventory: EquipmentBag,
+    registry: EquipmentRegistry,
+    materialBag: MaterialBag,
+    affixRegistry: AffixRegistry,
+    random: () => number = Math.random,
+  ): { ok: boolean; reason?: string; affixes?: RolledAffix[] } {
+    return this.rollWashAffixes(instanceId, oreMaterialId, inventory, registry, materialBag, affixRegistry, random)
+  }
+
+  /** Chốt kết quả đã preview (previewWashAffixes) — không kiểm tra/trừ cost lần nữa. */
+  commitWashAffixes(
+    instanceId: string,
+    affixes: RolledAffix[],
+    inventory: EquipmentBag,
+    slotManager: EquipmentSlotManager,
+    affixRegistry: AffixRegistry,
+  ): { ok: boolean; reason?: string } {
+    const instance = inventory.get(instanceId)
+
+    if (!instance) {
+      return { ok: false, reason: 'not_found' }
+    }
+
+    instance.affixes = affixes
+
+    if (instance.equipped) {
+      this.modifierSystem.removeBySource(instance.instanceId)
+
+      this.applyModifiers(instance, slotManager, affixRegistry)
+    }
+
+    return { ok: true }
+  }
+
+  private rollWashAffixes(
+    instanceId: string,
+    oreMaterialId: string,
+    inventory: EquipmentBag,
+    registry: EquipmentRegistry,
+    materialBag: MaterialBag,
+    affixRegistry: AffixRegistry,
+    random: () => number = Math.random,
+  ): { ok: true; affixes: RolledAffix[] } | { ok: false; reason: string } {
     const instance = inventory.get(instanceId)
 
     if (!instance || !registry.has(instance.itemId)) {
@@ -992,25 +1065,17 @@ export class EquipmentSystem {
       return { ok: false, reason: 'no_eligible_affix' }
     }
 
-    // Validation xong — trừ toàn bộ cost rồi áp kết quả.
-    // Điểm Rèn trừ vào INSTANCE (per-item), Linh Thạch là MATERIAL
-    // trong MaterialBag (plan Workstream F).
-
+    // Validation xong — trừ toàn bộ cost NGAY (mỗi lần roll/preview đều
+    // trả phí, xem ghi chú previewWashAffixes) — KHÔNG ghi affixes vào
+    // instance ở đây nữa, commitWashAffixes() làm việc đó khi người
+    // chơi bấm "Giữ".
     this.spendItemRefinementPoints(instance, WASH_REFINEMENT_COST)
 
     materialBag.remove(washSpiritStoneId, washSpiritStoneCost)
 
     materialBag.remove(oreMaterialId, oreAmount)
 
-    instance.affixes = rolled
-
-    if (instance.equipped) {
-      this.modifierSystem.removeBySource(instance.instanceId)
-
-      this.applyModifiers(instance, slotManager, affixRegistry)
-    }
-
-    return { ok: true }
+    return { ok: true, affixes: rolled }
   }
 
   /**
@@ -1033,6 +1098,70 @@ export class EquipmentSystem {
     affixRegistry: AffixRegistry,
     _random: () => number = Math.random,
   ): { ok: boolean; reason?: string } {
+    const result = this.rollRefineValues(instanceId, lockedIndices, inventory, registry, materialBag, affixRegistry, _random)
+
+    if (!result.ok) {
+      return result
+    }
+
+    return this.commitRefineValues(instanceId, result.values, inventory, slotManager, affixRegistry)
+  }
+
+  /**
+   * Xem trước Tinh Luyện (2026-08-30, UI "giữ/bỏ") — cùng cơ chế preview/
+   * commit với previewWashAffixes/commitWashAffixes: roll + validate + TRỪ
+   * COST giống refineAffixValues() nhưng KHÔNG ghi value mới vào instance.
+   */
+  previewRefineValues(
+    instanceId: string,
+    lockedIndices: readonly number[],
+    inventory: EquipmentBag,
+    registry: EquipmentRegistry,
+    materialBag: MaterialBag,
+    affixRegistry: AffixRegistry,
+    random: () => number = Math.random,
+  ): { ok: boolean; reason?: string; values?: RefineValueEntry[] } {
+    return this.rollRefineValues(instanceId, lockedIndices, inventory, registry, materialBag, affixRegistry, random)
+  }
+
+  /** Chốt kết quả đã preview (previewRefineValues) — không kiểm tra/trừ cost lần nữa. */
+  commitRefineValues(
+    instanceId: string,
+    values: readonly RefineValueEntry[],
+    inventory: EquipmentBag,
+    slotManager: EquipmentSlotManager,
+    affixRegistry: AffixRegistry,
+  ): { ok: boolean; reason?: string } {
+    const instance = inventory.get(instanceId)
+
+    if (!instance) {
+      return { ok: false, reason: 'not_found' }
+    }
+
+    for (const entry of values) {
+      if (instance.affixes[entry.index]) {
+        instance.affixes[entry.index]!.value = entry.value
+      }
+    }
+
+    if (instance.equipped) {
+      this.modifierSystem.removeBySource(instance.instanceId)
+
+      this.applyModifiers(instance, slotManager, affixRegistry)
+    }
+
+    return { ok: true }
+  }
+
+  private rollRefineValues(
+    instanceId: string,
+    lockedIndices: readonly number[],
+    inventory: EquipmentBag,
+    registry: EquipmentRegistry,
+    materialBag: MaterialBag,
+    affixRegistry: AffixRegistry,
+    _random: () => number = Math.random,
+  ): { ok: true; values: RefineValueEntry[] } | { ok: false; reason: string } {
     const instance = inventory.get(instanceId)
 
     if (!instance || !registry.has(instance.itemId)) {
@@ -1126,23 +1255,19 @@ export class EquipmentSystem {
       newValues.set(index, rollAffixRange(Math.min(low, high), Math.max(low, high)))
     }
 
+    // Trừ cost NGAY (mỗi lần roll/preview đều trả phí, xem ghi chú
+    // previewRefineValues) — KHÔNG ghi value vào instance ở đây nữa,
+    // commitRefineValues() làm việc đó khi người chơi bấm "Giữ".
     this.spendItemRefinementPoints(instance, REFINE_REFINEMENT_COST)
 
     materialBag.remove(refineSpiritStoneId, spiritStoneCost)
 
     materialBag.remove(essenceId, essenceUnits)
 
-    for (const [index, value] of newValues) {
-      instance.affixes[index]!.value = value
+    return {
+      ok: true,
+      values: Array.from(newValues, ([index, value]) => ({ index, value })),
     }
-
-    if (instance.equipped) {
-      this.modifierSystem.removeBySource(instance.instanceId)
-
-      this.applyModifiers(instance, slotManager, affixRegistry)
-    }
-
-    return { ok: true }
   }
 
   /**

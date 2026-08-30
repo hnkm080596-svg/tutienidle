@@ -119,23 +119,6 @@ const style = computed<CSSProperties>(() => {
   box-shadow: inset 0 0 0 var(--ink-slice-ring-w, 1.5px) var(--ink-slice-tint, var(--brush-600));
 }
 
-.ink-nine-slice--frame-m-seal-corner::after {
-  content: '印';
-  position: absolute;
-  top: -6px;
-  right: 8px;
-  width: 16px;
-  height: 16px;
-  display: grid;
-  place-items: center;
-  background: var(--cinnabar);
-  color: var(--paper-50);
-  font: 700 9px/1 var(--font-display);
-  border-radius: 3px;
-  box-shadow: 0 0 0 1px var(--brush-950), 0 2px 4px rgba(0, 0, 0, 0.4);
-  transform: rotate(-4deg);
-}
-
 .ink-nine-slice--frame-l-landscape {
   box-shadow:
     0 0 0 1px var(--ink-slice-tint, var(--brush-800)),
@@ -148,33 +131,6 @@ const style = computed<CSSProperties>(() => {
     0 0 0 1px var(--ink-slice-tint, var(--frame-outer)),
     inset 0 0 0 var(--ink-slice-ring-w, 3px) transparent,
     inset 0 0 0 calc(var(--ink-slice-ring-w, 3px) + 1px) var(--ink-slice-tint, var(--frame-inner));
-}
-
-.ink-nine-slice--frame-xl-ceremony::before,
-.ink-nine-slice--frame-xl-ceremony::after {
-  content: '印';
-  position: absolute;
-  width: 26px;
-  height: 26px;
-  display: grid;
-  place-items: center;
-  background: var(--cinnabar);
-  color: var(--paper-50);
-  font: 700 13px/1 var(--font-display);
-  border-radius: 4px;
-  box-shadow: 0 0 0 1px var(--ink-slice-tint, var(--frame-corner)), 0 3px 8px rgba(0, 0, 0, 0.45);
-}
-
-.ink-nine-slice--frame-xl-ceremony::before {
-  top: 12px;
-  left: 12px;
-  transform: rotate(-6deg);
-}
-
-.ink-nine-slice--frame-xl-ceremony::after {
-  bottom: 12px;
-  right: 12px;
-  transform: rotate(4deg);
 }
 
 /* ============================================================

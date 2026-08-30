@@ -9,26 +9,150 @@
 // DUY NHẤT mở command wheel nhiều tầng. Không còn atlas idle/cultivate
 // qua AtlasSprite ở đây nữa.
 //
-// Art base thật (2026-08-26 — thay thế HOÀN TOÀN nền CSS cũ):
-// thanh-van-dong-fu-base.png cover-fit làm lớp nền chính của Động Phủ.
-// Ảnh nằm TRÊN các div sky/mountains/ground CSS (fallback khi ảnh đang
-// load) và DƯỚI linh nhãn/particle/nhân vật/vignette. Trước đây ảnh này
-// được mount ở Phaser MainScene.ts nhưng bị chính overlay DOM opaque
-// của component này che KÍN (.home-scene position:absolute đè lên canvas
-// static) — giờ DOM là chủ sở hữu duy nhất của background để không duy
-// trì hai pipeline render song song.
+// Background 2D parallax (2026-08-30): ten aligned textures compose depth
+// from far to near. The straight ground is reserved for separate 2D buildings,
+// while season and time reuse the shared ThanhVanVariant selected by combat.
+// DOM remains the sole background renderer to avoid competing pipelines.
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useStageActive } from '@/composables/useStageActive'
-import { usePlayerStore } from '@/stores/player'
+import {
+  dongFuLayerList,
+  type DongFuLayerDescriptor,
+} from '@/game/support/DongFuArt'
+import { preloadDongFuStack } from '@/game/support/DongFuStackLoader'
+import {
+  peekThanhVanVariant,
+  type ThanhVanVariant,
+} from '@/game/support/ThanhVanArt'
 import { useUiStore } from '@/stores/ui'
 import PlayerPortrait from '../common/PlayerPortrait.vue'
 
-const BASE_IMAGE_URL = '/assets/backgrounds/dong-fu/thanh-van-dong-fu-master-buildings-v1.png'
+interface DongFuRenderStack {
+  variant: ThanhVanVariant
+  layers: readonly DongFuLayerDescriptor[]
+}
 
+function createRenderStack(variant: ThanhVanVariant): DongFuRenderStack {
+  return {
+    variant,
+    layers: dongFuLayerList(variant),
+  }
+}
+
+const pointerPosition = ref({ x: 0, y: 0 })
+const reducedMotion = ref(false)
+const activeStack = ref<DongFuRenderStack>(createRenderStack(peekThanhVanVariant()))
+const previousStack = ref<DongFuRenderStack | null>(null)
+const transitionActive = ref(false)
 const stageActive = useStageActive()
-
-const player = usePlayerStore()
-
 const ui = useUiStore()
+
+let reducedMotionQuery: MediaQueryList | undefined
+let transitionTimer: ReturnType<typeof setTimeout> | undefined
+let refreshGeneration = 0
+
+function clampUnit(value: number): number {
+  return Math.max(-1, Math.min(1, value))
+}
+
+function variantsMatch(left: ThanhVanVariant, right: ThanhVanVariant): boolean {
+  return left.season === right.season && left.time === right.time
+}
+
+function parallaxStyle(layer: DongFuLayerDescriptor) {
+  const x = reducedMotion.value ? 0 : -pointerPosition.value.x * layer.shiftX
+  const y = reducedMotion.value ? 0 : -pointerPosition.value.y * layer.shiftY
+
+  return {
+    '--parallax-x': `${x}px`,
+    '--parallax-y': `${y}px`,
+  }
+}
+
+function handlePointerMove(event: PointerEvent): void {
+  if (reducedMotion.value) {
+    pointerPosition.value = { x: 0, y: 0 }
+    return
+  }
+
+  pointerPosition.value = {
+    x: clampUnit((event.clientX / window.innerWidth - 0.5) * 2),
+    y: clampUnit((event.clientY / window.innerHeight - 0.5) * 2),
+  }
+}
+
+function handleReducedMotionChange(event: MediaQueryListEvent): void {
+  reducedMotion.value = event.matches
+  if (event.matches) {
+    pointerPosition.value = { x: 0, y: 0 }
+  }
+}
+
+function clearPreviousStack(): void {
+  previousStack.value = null
+  transitionActive.value = false
+  if (transitionTimer !== undefined) {
+    clearTimeout(transitionTimer)
+    transitionTimer = undefined
+  }
+}
+
+async function refreshBackgroundVariant(): Promise<void> {
+  const nextVariant = peekThanhVanVariant()
+  if (variantsMatch(nextVariant, activeStack.value.variant)) {
+    return
+  }
+
+  const generation = ++refreshGeneration
+  const incomingStack = createRenderStack(nextVariant)
+
+  try {
+    await preloadDongFuStack(incomingStack.layers)
+  } catch {
+    return
+  }
+
+  if (generation !== refreshGeneration) {
+    return
+  }
+
+  if (reducedMotion.value) {
+    activeStack.value = incomingStack
+    clearPreviousStack()
+    return
+  }
+
+  previousStack.value = activeStack.value
+  activeStack.value = incomingStack
+  transitionActive.value = true
+
+  if (transitionTimer !== undefined) {
+    clearTimeout(transitionTimer)
+  }
+  transitionTimer = setTimeout(clearPreviousStack, 520)
+}
+
+watch(stageActive, (active, wasActive) => {
+  if (wasActive && !active) {
+    void refreshBackgroundVariant()
+  }
+})
+
+onMounted(() => {
+  reducedMotionQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)')
+  reducedMotion.value = reducedMotionQuery?.matches ?? false
+  reducedMotionQuery?.addEventListener?.('change', handleReducedMotionChange)
+  window.addEventListener('pointermove', handlePointerMove, { passive: true })
+})
+
+onBeforeUnmount(() => {
+  refreshGeneration += 1
+  reducedMotionQuery?.removeEventListener?.('change', handleReducedMotionChange)
+  window.removeEventListener('pointermove', handlePointerMove)
+  if (transitionTimer !== undefined) {
+    clearTimeout(transitionTimer)
+  }
+})
 </script>
 
 <template>
@@ -39,13 +163,54 @@ const ui = useUiStore()
     <div class="home-scene__mountains" />
     <div class="home-scene__ground" />
 
-    <img
-      class="home-scene__base"
-      :src="BASE_IMAGE_URL"
-      alt=""
-      draggable="false"
-      decoding="async"
-    />
+    <div
+      v-if="previousStack"
+      class="home-scene__parallax-stack home-scene__parallax-stack--previous is-leaving"
+      :class="{ 'is-reduced-motion': reducedMotion }"
+      :data-season="previousStack.variant.season"
+      :data-time="previousStack.variant.time"
+      @animationend.self="clearPreviousStack"
+    >
+      <img
+        v-for="layer in previousStack.layers"
+        :key="layer.key"
+        class="home-scene__parallax-layer"
+        :class="`home-scene__parallax-layer--${layer.motion}`"
+        :data-layer="layer.name"
+        :data-season="previousStack.variant.season"
+        :data-time="previousStack.variant.time"
+        :src="layer.url"
+        :style="parallaxStyle(layer)"
+        alt=""
+        draggable="false"
+        decoding="async"
+      />
+    </div>
+
+    <div
+      class="home-scene__parallax-stack home-scene__parallax-stack--active"
+      :class="{
+        'is-entering': transitionActive,
+        'is-reduced-motion': reducedMotion,
+      }"
+      :data-season="activeStack.variant.season"
+      :data-time="activeStack.variant.time"
+    >
+      <img
+        v-for="layer in activeStack.layers"
+        :key="layer.key"
+        class="home-scene__parallax-layer"
+        :class="`home-scene__parallax-layer--${layer.motion}`"
+        :data-layer="layer.name"
+        :data-season="activeStack.variant.season"
+        :data-time="activeStack.variant.time"
+        :src="layer.url"
+        :style="parallaxStyle(layer)"
+        alt=""
+        draggable="false"
+        decoding="async"
+      />
+    </div>
 
     <div class="home-linhnhan">
       <div class="home-linhnhan__glow" />
@@ -125,17 +290,65 @@ const ui = useUiStore()
   border-top: 1px solid color-mix(in srgb, var(--text-primary) 4%, transparent);
 }
 
-/* ================= Art base Động Phủ (cover-fit, thay nền CSS) ====== */
-/* 1672×941 nguồn — object-fit:cover giữ tỉ lệ, crop phần thừa; nằm
-   TRÊN fallback gradient và DƯỚI mọi lớp nội dung (linh nhãn, motes,
-   player, vignette) theo thứ tự DOM. */
-.home-scene__base {
+/* Bốn texture 1672×941 dùng cùng cover geometry để luôn khớp hình khi dịch
+   nhẹ theo con trỏ; vùng bleed 2% che mép trong biên độ parallax tối đa. */
+.home-scene__parallax-stack {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
+}
+
+.home-scene__parallax-stack.is-entering {
+  animation: dong-fu-stack-enter 520ms ease-out both;
+}
+
+.home-scene__parallax-stack.is-leaving {
+  animation: dong-fu-stack-leave 520ms ease-out both;
+}
+
+.home-scene__parallax-layer {
+  position: absolute;
+  inset: -2%;
+  width: 104%;
+  height: 104%;
   object-fit: cover;
   user-select: none;
+  transform: translate3d(var(--parallax-x, 0), var(--parallax-y, 0), 0);
+  transition: transform 140ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: transform;
+}
+
+.home-scene__parallax-layer--cloud-slow {
+  animation: dong-fu-cloud-slow 48s ease-in-out infinite alternate;
+}
+
+.home-scene__parallax-layer--cloud-medium {
+  animation: dong-fu-cloud-medium 36s ease-in-out infinite alternate;
+}
+
+.home-scene__parallax-layer--mist-slow {
+  animation: dong-fu-mist-slow 28s ease-in-out infinite alternate;
+}
+
+@keyframes dong-fu-stack-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes dong-fu-stack-leave {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes dong-fu-cloud-slow {
+  to { translate: 0.8% 0; }
+}
+
+@keyframes dong-fu-cloud-medium {
+  to { translate: -1.1% 0.2%; }
+}
+
+@keyframes dong-fu-mist-slow {
+  to { translate: 1.4% -0.2%; }
 }
 
 .home-scene__vignette {
@@ -252,5 +465,15 @@ const ui = useUiStore()
 .home-player__trigger.is-wheel-open :deep(.player-portrait__aura) {
   opacity: 1;
   scale: 1.08;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-scene__parallax-stack,
+  .home-scene__parallax-layer {
+    animation: none;
+    transition: none;
+    transform: none;
+    translate: none;
+  }
 }
 </style>

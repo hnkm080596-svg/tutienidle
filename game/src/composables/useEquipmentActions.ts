@@ -3,6 +3,8 @@ import { usePlayerStore } from '../stores/player'
 import { useActionFeedbackStore } from '../stores/actionFeedback'
 import { actionFailureLabel } from '../core/presentation/ActionAvailability'
 import type { EquipmentSlot } from '../core/equipment/EquipmentTypes'
+import type { RolledAffix } from '../core/equipment/RolledAffix'
+import type { RefineValueEntry } from '../core/equipment/EquipmentSystem'
 
 /**
  * Modifier equipment là "tĩnh" (xem ghi chú trong Player.ts/
@@ -93,6 +95,54 @@ export function useEquipmentActions() {
         gameManager.refineItem(instanceId, lockedIndices, player.$state),
         'Tinh Luyện',
       ),
+
+    /**
+     * Xem trước Tẩy Luyện (2026-08-30, UI "giữ/bỏ") — roll + TRỪ COST NGAY
+     * nhưng KHÔNG ghi vào instance; UI giữ affixes trả về ở state tạm rồi
+     * gọi washCommit() khi bấm "Giữ". Thất bại (thiếu nguyên liệu...) báo
+     * qua Nhật ký thao tác giống mọi action khác — KHÔNG bumpState vì
+     * chưa mutate gì nếu fail, có bumpState nếu thành công (cost đã trừ).
+     */
+    washPreview: (instanceId: string, oreMaterialId: string): RolledAffix[] | null => {
+      const result = gameManager.previewWashItem(instanceId, oreMaterialId)
+
+      if (!result.ok || !result.affixes) {
+        feedback.error(`Không thể Tẩy Luyện: ${actionFailureLabel(result.reason)}`)
+
+        return null
+      }
+
+      syncEquipmentModifiers()
+
+      bumpState()
+
+      return result.affixes
+    },
+
+    /** Chốt affixes đã washPreview() — không trừ cost lần nữa. */
+    washCommit: (instanceId: string, affixes: RolledAffix[]) =>
+      withSyncAndResult(gameManager.commitWashItem(instanceId, affixes), 'Tẩy Luyện'),
+
+    /** Xem trước Tinh Luyện (2026-08-30, UI "giữ/bỏ") — cùng cơ chế washPreview. */
+    refinePreview: (instanceId: string, lockedIndices: readonly number[]): RefineValueEntry[] | null => {
+      const result = gameManager.previewRefineItem(instanceId, lockedIndices)
+
+      if (!result.ok || !result.values) {
+        feedback.error(`Không thể Tinh Luyện: ${actionFailureLabel(result.reason)}`)
+
+        return null
+      }
+
+      syncEquipmentModifiers()
+
+      bumpState()
+
+      return result.values
+    },
+
+    /** Chốt values đã refinePreview() — không trừ cost lần nữa. */
+    refineCommit: (instanceId: string, values: RefineValueEntry[]) =>
+      withSyncAndResult(gameManager.commitRefineItem(instanceId, values), 'Tinh Luyện'),
 
     /** Hóa Luyện batch all-or-nothing (§7.5). */
     dissolve,

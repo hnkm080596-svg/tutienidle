@@ -37,10 +37,13 @@ const props = defineProps<{
   nameSegments?: NameSegment[]
 
   /** Rank chuẩn hoá 1-9 (xem composables/slots/normalizeSlotRank.ts) —
-   * SlotView KHÔNG biết ID domain như 'pham_khi'/'tien'. */
+   * SlotView KHÔNG biết ID domain như 'pham_khi'/'tien'. Hiện thành chấm
+   * nhỏ góc phải (tín hiệu PHỤ — Chất/Tiềm Năng Rèn đang luyện). */
   equipmentQualityRank?: number
 
-  /** Rank chuẩn hoá 1/3/5/7/9 (5 bậc Phẩm ánh xạ đều lên thang 1-9). */
+  /** Rank chuẩn hoá 1/3/5/7/9 (5 bậc Phẩm ánh xạ đều lên thang 1-9).
+   * Tín hiệu CHÍNH — quyết định khung/glow của cả ô (2026-08-30, theo
+   * đúng quy ước "Phẩm = khung, Chất = chữ/badge phụ"). */
   rarityRank?: number
 
   state?: SlotPresentationState
@@ -152,7 +155,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
       showSelected ? 'slot-view--selected' : '',
       veil !== 'none' ? `slot-view--veil-${veil}` : '',
       validation !== 'neutral' ? `slot-view--validation-${validation}` : '',
-      isMaxRank ? 'slot-view--max-rank' : '',
+      isMaxRarityRank ? 'slot-view--max-rank' : '',
     ]"
     :style="{
       '--slot-quality-color': qualityColor,
@@ -173,8 +176,8 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
     <!-- layer 4: validation glyph (màu KHÔNG phải tín hiệu duy nhất) -->
     <span v-if="validation !== 'neutral'" class="slot-view__validation-glyph" aria-hidden="true">{{ validationGlyph }}</span>
 
-    <!-- layer 6: rarity chip + marker + comparison + custom badges -->
-    <span v-if="filled && rarityRank !== undefined" class="slot-view__rarity-chip" :class="{ 'slot-view__rarity-chip--max': isMaxRarityRank }" aria-hidden="true" />
+    <!-- layer 6: quality chip (Chất — tín hiệu phụ) + marker + comparison + custom badges -->
+    <span v-if="filled && equipmentQualityRank !== undefined" class="slot-view__quality-chip" :class="{ 'slot-view__quality-chip--max': isMaxRank }" aria-hidden="true" />
 
     <span v-if="marker === 'equipped'" class="slot-view__marker slot-view__marker--equipped" aria-hidden="true">●</span>
     <span v-else-if="marker === 'new'" class="slot-view__marker slot-view__marker--new" aria-hidden="true">NEW</span>
@@ -234,14 +237,10 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   transition: border-color 35ms linear, box-shadow 35ms linear, background-color 35ms linear;
 }
 
-.slot-view--empty {
-  border-style: dashed;
-}
-
 .slot-view--filled {
   background: var(--slot-surface-raised);
-  border-color: var(--slot-quality-color, var(--ink-line));
-  box-shadow: var(--slot-shadow), 0 0 8px var(--slot-quality-color, transparent);
+  border-color: var(--slot-rarity-color, var(--ink-line));
+  box-shadow: var(--slot-shadow), 0 0 8px var(--slot-rarity-color, transparent);
 }
 
 .slot-view--filled.slot-view--max-rank {
@@ -269,7 +268,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--slot-quality-color, transparent) 22%, transparent), transparent 70%);
+  background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--slot-rarity-color, transparent) 22%, transparent), transparent 70%);
   pointer-events: none;
 }
 
@@ -301,7 +300,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   aspect-ratio: 1;
   border-radius: 50%;
   background: var(--ink-700);
-  color: var(--slot-quality-color, var(--text-secondary));
+  color: var(--slot-rarity-color, var(--text-secondary));
   font-family: var(--font-display);
   font-weight: 600;
   font-size: var(--text-title);
@@ -376,7 +375,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
    6. RARITY CHIP / MARKER / COMPARISON / BADGES
    ============================================================ */
 
-.slot-view__rarity-chip {
+.slot-view__quality-chip {
   position: absolute;
   top: 3px;
   right: 3px;
@@ -384,11 +383,11 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   width: 8px;
   height: 8px;
   border-radius: 2px;
-  background: var(--slot-rarity-color, var(--text-muted));
+  background: var(--slot-quality-color, var(--text-muted));
   pointer-events: none;
 }
 
-.slot-view__rarity-chip--max {
+.slot-view__quality-chip--max {
   background: var(--rank-gradient-9);
 }
 

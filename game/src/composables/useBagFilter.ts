@@ -34,6 +34,22 @@ const AGE_LABELS: Record<string, string> = {
   myriad_year: 'Vạn Niên',
 }
 
+// Quáng/Gỗ phân phẩm (hoang..tien) DÙNG CHUNG TÊN theo realm (xem
+// professionResourceName trong materials.ts — không ghép phẩm vào tên),
+// nên nhiều biến thể phẩm của cùng 1 realm/kind trước đây hiện thành
+// NHIỀU Ô TRÙNG TÊN trong túi đồ (bug report 2026-08-30: "nguyên liệu có
+// nhiều loại stack khác nhau cùng một loại vật phẩm"). Gộp theo cùng cơ
+// chế "họ thảo" bên dưới, badge hiện phẩm cao nhất đang sở hữu.
+const QUALITY_LABELS: Record<string, string> = {
+  hoang: 'Hoàng',
+  huyen: 'Huyền',
+  dia: 'Địa',
+  thien: 'Thiên',
+  tien: 'Tiên',
+}
+
+const QUALITY_ORDER = ['hoang', 'huyen', 'dia', 'thien', 'tien']
+
 const REALM_NAME_BY_ID: Readonly<Record<string, string>> = Object.fromEntries(
   REALMS.map((realm) => [realm.id, realm.name]),
 )
@@ -67,6 +83,52 @@ export function ageRank(age: string | undefined): number {
     case 'myriad_year': return 3
     default: return -1
   }
+}
+
+/** Số phẩm hoang..tien để chọn badge/đại diện "cao nhất" — như ageRank nhưng cho Gỗ/Quáng. */
+export function qualityRank(quality: string | undefined): number {
+  if (!quality) return -1
+
+  return QUALITY_ORDER.indexOf(quality)
+}
+
+/**
+ * Rank biến thể DÙNG CHUNG cho mọi kiểu họ gộp (thảo theo niên đại, gỗ/
+ * quáng theo phẩm) — biến thể "cao nhất" làm đại diện icon/tooltip và
+ * badge. Material không có age/quality (vd. gỗ mặc định không phẩm) xếp
+ * thấp nhất (-1), giống hành vi ageRank cũ.
+ */
+export function variantRank(material: Material): number {
+  const meta = material.profession
+
+  if (meta?.age !== undefined) return ageRank(meta.age)
+  if (meta?.quality !== undefined) return qualityRank(meta.quality)
+
+  return -1
+}
+
+function variantLabel(material: Material): string | undefined {
+  const meta = material.profession
+
+  if (meta?.age !== undefined) return ageLabel(meta.age, material.years)
+  if (meta?.quality !== undefined) return QUALITY_LABELS[meta.quality]
+
+  return undefined
+}
+
+/** Khoá gộp họ: thảo theo herbBaseId, gỗ/quáng theo resourceKind+realmId — undefined nếu không gộp. */
+function familyKeyFor(material: Material): string | undefined {
+  const meta = material.profession
+
+  if (!meta) return undefined
+
+  if (meta.resourceKind === 'herb') return meta.herbBaseId
+
+  if (meta.resourceKind === 'wood' || meta.resourceKind === 'ore') {
+    return `${meta.resourceKind}:${meta.realmId}`
+  }
+
+  return undefined
 }
 
 export interface HerbVariant {
@@ -123,12 +185,12 @@ export interface BagFilterState {
 
 function badgeFor(family: HerbFamilyGroup): string {
   const best = family.variants.reduce((acc, variant) => {
-    const rank = ageRank(variant.material.profession?.age)
+    const rank = variantRank(variant.material)
 
     return rank > acc.rank ? { rank, variant } : acc
   }, { rank: Number.NEGATIVE_INFINITY, variant: family.variants[0]! })
 
-  const label = ageLabel(best.variant.material.profession?.age, best.variant.material.years)
+  const label = variantLabel(best.variant.material)
 
   return label ? `${realmLabel(family.realmId)} · ${label}` : realmLabel(family.realmId)
 }
@@ -159,11 +221,11 @@ export function useBagFilter(
 
       const meta = entry.material.profession
 
-      // Gộp thảo theo HỌ (herbBaseId) — thảo legacy không có meta đi
-      // theo đường material riêng.
-      if (meta?.resourceKind === 'herb' && meta.herbBaseId) {
-        const familyKey = meta.herbBaseId
+      // Gộp theo HỌ: thảo theo herbBaseId, gỗ/quáng theo resourceKind+
+      // realmId — material legacy không có meta đi theo đường riêng.
+      const familyKey = familyKeyFor(entry.material)
 
+      if (familyKey) {
         const existing = grouped.get(familyKey)
 
         if (existing?.family) {
@@ -177,7 +239,7 @@ export function useBagFilter(
             family: {
               herbBaseId: familyKey,
               name: entry.material.name,
-              realmId: meta.realmId,
+              realmId: meta!.realmId,
               variants: [{ material: entry.material, amount: entry.amount }],
               badgeLabel: '',
             },

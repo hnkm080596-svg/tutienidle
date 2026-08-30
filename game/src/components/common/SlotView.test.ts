@@ -82,23 +82,23 @@ describe('SlotView — rank 1-9 / 1-3-5-7-9', () => {
     }
   })
 
-  it('rarityRank chỉ hiện chip khi có giá trị, map đúng rank vào --slot-rarity-color', () => {
+  it('equipmentQualityRank (Chất) chỉ hiện chip phụ khi có giá trị, map đúng rank vào --slot-quality-color', () => {
     for (const rank of [1, 3, 5, 7, 9]) {
-      const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'X', rarityRank: rank })
-      expect(button.querySelector('.slot-view__rarity-chip')).not.toBeNull()
-      expect(button.style.getPropertyValue('--slot-rarity-color')).toBe(`var(--rank-color-${rank})`)
+      const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'X', equipmentQualityRank: rank })
+      expect(button.querySelector('.slot-view__quality-chip')).not.toBeNull()
+      expect(button.style.getPropertyValue('--slot-quality-color')).toBe(`var(--rank-color-${rank})`)
       unmount()
     }
   })
 
-  it('không truyền rarityRank thì không render rarity chip', () => {
+  it('không truyền equipmentQualityRank thì không render chip phụ', () => {
     const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'X' })
-    expect(button.querySelector('.slot-view__rarity-chip')).toBeNull()
+    expect(button.querySelector('.slot-view__quality-chip')).toBeNull()
     unmount()
   })
 
-  it('rank 9 gắn class --max-rank (viền gradient bảy màu)', () => {
-    const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'X', equipmentQualityRank: 9 })
+  it('rarityRank (Phẩm) = 9 gắn class --max-rank (viền gradient bảy màu) — Phẩm quyết định khung, không phải Chất', () => {
+    const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'X', rarityRank: 9 })
     expect(button.classList.contains('slot-view--max-rank')).toBe(true)
     unmount()
   })

@@ -7,7 +7,6 @@ import type { AlchemyRecipe } from '@/core/alchemy/AlchemySystem'
 import Bar from '@/components/common/primitives/Bar.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import StatRow from '@/components/common/primitives/StatRow.vue'
-import SceneHeader from '@/components/common/SceneHeader.vue'
 import { PROFESSION_GRADE_NAMES, getProfessionGradeForRealm } from '@/core/profession/ProfessionGrade'
 
 // Luyện Đan (2026-08-25, resource-professions-rework plan §8/§9.3) —
@@ -212,19 +211,6 @@ function cancelJob(jobId: string) {
 <template>
   <div class="alchemy-view">
     <div class="alchemy-view__recipes scrollfade">
-      <SceneHeader
-        class="alchemy-view__furnace"
-        asset="/assets/buildings/dong-fu/pill_room.png"
-        scene="fire"
-        height="clamp(88px, 15vh, 150px)"
-        object-position="center 58%"
-        :image-opacity="0.7"
-      >
-        <template #decoration>
-          <span class="alchemy-view__furnace-core">丹</span>
-        </template>
-      </SceneHeader>
-
       <section class="alchemy-group">
         <p class="alchemy-group__eyebrow">Đan lô hiện tại</p>
         <h4 class="alchemy-group__title">{{ currentGradeLabel }}</h4>
@@ -344,6 +330,25 @@ function cancelJob(jobId: string) {
     linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 60%, var(--paper-200) 100%);
 }
 
+/* Ảnh lò luyện đan mờ LÀM NỀN PHỤ thay banner SceneHeader đã bỏ
+   (2026-08-30, bug report: banner "không giá trị" choán chỗ) — ngồi
+   TRÊN nền giấy hiện có, DƯỚI 2 cột nội dung, chỉ phủ khung Luyện Đan
+   này (không phải toàn panel/overlay). */
+.alchemy-view::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: url('/assets/buildings/dong-fu/pill_room.png') center 55% / 55% no-repeat;
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.alchemy-view > * {
+  position: relative;
+  z-index: 1;
+}
+
 .alchemy-view__recipes {
   flex: 0 0 min(39%, 420px);
   overflow-y: auto;
@@ -352,35 +357,6 @@ function cancelJob(jobId: string) {
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-
-.alchemy-view__furnace {
-  border: 1px solid color-mix(in srgb, var(--scene-fire-accent) 35%, transparent);
-  border-radius: var(--radius-md);
-  background: radial-gradient(circle at 50% 75%, color-mix(in srgb, var(--scene-fire-glow) 30%, transparent), transparent 45%), var(--scene-fire-deep);
-  box-shadow: inset 0 0 35px rgba(0, 0, 0, .7);
-}
-
-.alchemy-view__furnace :deep(.scene-header__image) {
-  filter: sepia(.25) saturate(1.2) contrast(1.05);
-}
-
-.alchemy-view__furnace :deep(.scene-header__scrim) {
-  display: none;
-}
-
-.alchemy-view__furnace-core {
-  position: absolute;
-  display: grid;
-  width: 48px;
-  height: 48px;
-  place-items: center;
-  color: var(--scene-fire-text);
-  font: 700 var(--text-display) var(--font-display);
-  border: 1px solid color-mix(in srgb, var(--scene-fire-text) 75%, transparent);
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--scene-fire-deep) 88%, transparent);
-  box-shadow: 0 0 22px color-mix(in srgb, var(--scene-fire-glow) 70%, transparent), inset 0 0 12px color-mix(in srgb, var(--scene-fire-text) 25%, transparent);
 }
 
 .alchemy-group__eyebrow { margin: 0; color: var(--cinnabar); font-size: var(--text-xs); letter-spacing: .18em; }

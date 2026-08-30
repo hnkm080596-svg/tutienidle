@@ -224,6 +224,8 @@ const pillPermanentRows = computed(() => {
            hướng Đạo duy nhất lúc tạo nhân vật, luôn hiển thị để người
            chơi nhớ mình đang đi đường nào. -->
       <div v-if="selectedTalents.length > 0" class="character-panel__talents">
+        <h4 class="character-panel__talents-title">Thiên Phú</h4>
+
         <div
           v-for="talent in selectedTalents"
           :key="talent.id"
@@ -334,8 +336,10 @@ const pillPermanentRows = computed(() => {
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-3);
-  border-bottom: 1px solid var(--ink-line);
-  background: linear-gradient(180deg, var(--ink-800), var(--ink-900));
+  border-bottom: 1px solid var(--paper-line);
+  background:
+    var(--paper-grain) 0 0 / 140px 140px repeat,
+    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 100%);
 }
 
 /* WS3 vùng 1 — chân dung + tên/cảnh giới/chiến lực, nằm ngang thoải mái. */
@@ -387,7 +391,7 @@ const pillPermanentRows = computed(() => {
   font-family: var(--font-display);
   font-size: var(--text-title);
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--paper-text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -399,7 +403,7 @@ const pillPermanentRows = computed(() => {
   font-family: var(--font-display);
   font-size: var(--text-body);
   font-weight: 600;
-  color: var(--chrome-100);
+  color: var(--jade);
 }
 
 .character-panel__power {
@@ -414,13 +418,13 @@ const pillPermanentRows = computed(() => {
   font-family: var(--font-display);
   font-size: var(--text-lg);
   font-weight: 700;
-  color: var(--chrome-100);
-  text-shadow: var(--shadow-glow-chrome);
+  color: var(--paper-text);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--mineral-gold) 35%, transparent);
 }
 
 .character-panel__power-label {
   font-size: var(--text-xs);
-  color: var(--text-muted);
+  color: var(--paper-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -429,17 +433,18 @@ const pillPermanentRows = computed(() => {
   align-self: flex-start;
   margin-top: var(--space-1);
   padding: 3px 10px;
-  background: var(--ink-800);
-  color: var(--gold-300);
-  border: 1px solid var(--gold-500);
+  background: var(--paper-100);
+  color: var(--cinnabar);
+  border: 1px solid var(--mineral-gold);
   border-radius: var(--radius-sm);
   font-size: var(--text-xs);
   font-family: var(--font-body);
+  font-weight: 600;
   cursor: pointer;
 }
 
 .character-panel__quan-khi-btn:hover {
-  background: var(--ink-700, var(--ink-800));
+  background: var(--paper-50);
 }
 
 /* Thiên Phú đã chọn (talent-direction-choice-plan §7) — khối nhỏ dưới
@@ -451,15 +456,30 @@ const pillPermanentRows = computed(() => {
   gap: var(--space-2);
 }
 
+.character-panel__talents-title {
+  margin: 0;
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: var(--paper-eyebrow);
+}
+
+/* Thẻ nổi bật — nền sáng nhất trong header + viền đồng dày bên trái
+   nhuộm theo tier, tách hẳn khỏi các dòng thông tin còn lại thay vì
+   chìm thành 1 khối mực như trước. */
 .talent-block {
+  position: relative;
   padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--ink-line);
+  border: 1px solid var(--frame-outer);
+  border-left: 4px solid var(--talent-tier-color, var(--mineral-gold));
   border-radius: var(--radius-md);
-  background: var(--ink-900);
+  background: linear-gradient(175deg, var(--paper-50), #fffdf7);
+  box-shadow: 0 2px 8px rgba(20, 16, 8, 0.12);
 }
 
 .talent-block__rarity {
   font-size: var(--text-xs);
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.13em;
 }
@@ -468,17 +488,23 @@ const pillPermanentRows = computed(() => {
   display: block;
   margin: 4px 0 2px;
   font-family: var(--font-display);
-  font-size: var(--text-body);
-  font-weight: 600;
-  color: var(--text-primary);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--paper-text);
 }
 
 .talent-block__description {
   margin: 0;
-  color: var(--text-secondary);
+  color: var(--paper-text-soft);
   font-size: var(--text-xs);
   line-height: 1.5;
 }
+
+.talent-tier-pham { --talent-tier-color: var(--rank-color-1); }
+.talent-tier-linh { --talent-tier-color: var(--rank-color-3); }
+.talent-tier-dia { --talent-tier-color: var(--rank-color-5); }
+.talent-tier-thien { --talent-tier-color: var(--rank-color-7); }
+.talent-tier-di { --talent-tier-color: var(--rank-color-8); }
 
 .talent-tier-pham .talent-block__rarity { color: var(--rank-color-1); }
 .talent-tier-linh .talent-block__rarity { color: var(--rank-color-3); }

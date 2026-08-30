@@ -62,6 +62,8 @@ import type { Material } from '../material/Material'
 import { EquipmentRegistry } from '../equipment/EquipmentRegistry'
 import { EquipmentBag } from '../equipment/EquipmentBag'
 import { EquipmentSystem } from '../equipment/EquipmentSystem'
+import type { RefineValueEntry } from '../equipment/EquipmentSystem'
+import type { RolledAffix } from '../equipment/RolledAffix'
 import { createDefaultEquipmentOperationCostCatalog } from '../equipment/EquipmentOperationCostCatalog'
 import { EquipmentSlotManager } from '../equipment/EquipmentSlotManager'
 import type { EquipmentSlot } from '../equipment/EquipmentTypes'
@@ -1934,6 +1936,69 @@ export class GameManager {
       this.equipmentBag,
       this.equipmentRegistry,
       this.materialBag,
+      this.equipmentSlotManager,
+      this.affixRegistry,
+    )
+  }
+
+  /**
+   * Xem trước Tẩy Luyện (2026-08-30, UI "giữ/bỏ") — roll + trừ cost NGAY,
+   * KHÔNG ghi affixes mới vào instance. UI giữ affixes trả về ở state
+   * tạm, gọi commitWashItem() khi người chơi bấm "Giữ".
+   */
+  previewWashItem(
+    instanceId: string,
+    oreMaterialId: string,
+  ): { ok: boolean; reason?: string; affixes?: RolledAffix[] } {
+    this.syncEquipmentCostDiscount()
+
+    return this.equipmentSystem.previewWashAffixes(
+      instanceId,
+      oreMaterialId,
+      this.equipmentBag,
+      this.equipmentRegistry,
+      this.materialBag,
+      this.affixRegistry,
+    )
+  }
+
+  /** Chốt affixes đã preview (previewWashItem) — không trừ cost lần nữa. */
+  commitWashItem(instanceId: string, affixes: RolledAffix[]): { ok: boolean; reason?: string } {
+    return this.equipmentSystem.commitWashAffixes(
+      instanceId,
+      affixes,
+      this.equipmentBag,
+      this.equipmentSlotManager,
+      this.affixRegistry,
+    )
+  }
+
+  /**
+   * Xem trước Tinh Luyện (2026-08-30, UI "giữ/bỏ") — cùng cơ chế với
+   * previewWashItem/commitWashItem.
+   */
+  previewRefineItem(
+    instanceId: string,
+    lockedIndices: readonly number[],
+  ): { ok: boolean; reason?: string; values?: RefineValueEntry[] } {
+    this.syncEquipmentCostDiscount()
+
+    return this.equipmentSystem.previewRefineValues(
+      instanceId,
+      lockedIndices,
+      this.equipmentBag,
+      this.equipmentRegistry,
+      this.materialBag,
+      this.affixRegistry,
+    )
+  }
+
+  /** Chốt values đã preview (previewRefineItem) — không trừ cost lần nữa. */
+  commitRefineItem(instanceId: string, values: RefineValueEntry[]): { ok: boolean; reason?: string } {
+    return this.equipmentSystem.commitRefineValues(
+      instanceId,
+      values,
+      this.equipmentBag,
       this.equipmentSlotManager,
       this.affixRegistry,
     )
