@@ -8,8 +8,6 @@ export const ELEMENT_LABELS: Record<ElementType, string> = {
   earth: 'Thổ',
   metal: 'Kim',
   water: 'Thủy',
-  wind: 'Phong',
-  lightning: 'Lôi',
 }
 
 // Màu đặc trưng từng hành — token --el-* (xem assets/theme.css). Trích
@@ -21,10 +19,8 @@ export const ELEMENT_COLOR_VARS: Record<ElementType, string> = {
   earth: 'var(--el-earth)',
   metal: 'var(--el-metal)',
   water: 'var(--el-water)',
-  wind: 'var(--el-wind)',
-  lightning: 'var(--el-lightning)',
 }
 
-// Phong/Lôi đặt SAU Ngũ Hành trong thứ tự hiển thị — đúng ý "nền tảng
-// ban đầu" (mục 10 magicpath), dù ngang hàng về mặt architecture.
-export const ELEMENT_ORDER: ElementType[] = ['wood', 'fire', 'earth', 'metal', 'water', 'wind', 'lightning']
+// Spec 2026-08-30-phap-tu-dao-sac §5 — bỏ Phong/Lôi toàn hệ: thứ tự
+// hiển thị chỉ còn đúng 5 hành Ngũ Hành.
+export const ELEMENT_ORDER: ElementType[] = ['wood', 'fire', 'earth', 'metal', 'water']

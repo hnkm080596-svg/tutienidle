@@ -36,8 +36,8 @@ const ELEMENT_RESISTANCE_STATS = [
   'waterResistance',
   'metalResistance',
   'earthResistance',
-  'windResistance',
-  'lightningResistance',
+  // Spec 2026-08-30-phap-tu-dao-sac §5 — windResistance/
+  // lightningResistance đã xoá cùng element Phong/Lôi.
 ] as const
 
 export const EQUIPMENT_SLOT_STAT_POLICY: Record<EquipmentSlot, EquipmentSlotStatPolicy> = {

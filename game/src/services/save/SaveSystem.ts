@@ -42,9 +42,9 @@ export const SAVE_REVISION_KEY = 'tien-hiep-idle-save-revision'
 // version 24: Pháp Tu Redesign (magicpath) — player: PlayerData thêm 3
 // field BẮT BUỘC MỚI `skillPoints: number`/`unlockedElements: ElementType[]`/
 // `equippedElements: ElementType[]` (xem core/element/ElementLoadout.ts,
-// core/player/Player.ts), CỘNG THÊM baseStats (Stats) có thêm 6 field
-// mới (windPower/windResistance/windPenetration/lightningPower/
-// lightningResistance/lightningPenetration, xem core/element/ElementType.ts).
+// core/player/Player.ts), CỘNG THÊM baseStats (Stats) lúc đó có thêm 6
+// field wind/lightning (đã bị XOÁ lại ở spec 2026-08-30-phap-tu-dao-sac
+// §5 — bỏ Phong/Lôi toàn hệ). Lịch sử version giữ nguyên để truy vết.
 // Save cũ thiếu các field này — không viết migration, cùng convention
 // mọi version trước.
 // version 25: Pháp Tu Redesign — Node Tree, player: PlayerData thêm

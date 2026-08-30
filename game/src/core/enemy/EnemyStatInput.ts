@@ -177,13 +177,8 @@ export function normalizeEnemyStats(input: EnemyStatInput): Stats {
     waterResistance: input.resistances?.water ?? 0,
     waterPenetration: input.elemental?.element === 'water' ? (input.elemental.penetration ?? 0) : 0,
 
-    windPower: input.elemental?.element === 'wind' ? input.elemental.power : 0,
-    windResistance: input.resistances?.wind ?? 0,
-    windPenetration: input.elemental?.element === 'wind' ? (input.elemental.penetration ?? 0) : 0,
-
-    lightningPower: input.elemental?.element === 'lightning' ? input.elemental.power : 0,
-    lightningResistance: input.resistances?.lightning ?? 0,
-    lightningPenetration: input.elemental?.element === 'lightning' ? (input.elemental.penetration ?? 0) : 0,
+    // Spec 2026-08-30-phap-tu-dao-sac §5 — Phong/Lôi đã bỏ toàn hệ nên
+    // không còn field normalize tương ứng.
 
     primordialPower: input.special?.primordialPower ?? 0,
   }
@@ -231,7 +226,7 @@ export function applyBossMultiplier(stats: Stats): Stats {
     earthResistance: stats.earthPower > 0 ? stats.earthResistance + BOSS_RESISTANCE_BONUS : stats.earthResistance,
     metalResistance: stats.metalPower > 0 ? stats.metalResistance + BOSS_RESISTANCE_BONUS : stats.metalResistance,
     waterResistance: stats.waterPower > 0 ? stats.waterResistance + BOSS_RESISTANCE_BONUS : stats.waterResistance,
-    windResistance: stats.windPower > 0 ? stats.windResistance + BOSS_RESISTANCE_BONUS : stats.windResistance,
-    lightningResistance: stats.lightningPower > 0 ? stats.lightningResistance + BOSS_RESISTANCE_BONUS : stats.lightningResistance,
+    // Spec 2026-08-30-phap-tu-dao-sac §5 — boss resistance bonus cho
+    // Phong/Lôi đã xoá cùng stat.
   }
 }

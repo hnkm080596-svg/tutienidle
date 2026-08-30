@@ -72,21 +72,17 @@ const ATTRIBUTE_ENDURANCE_THRESHOLD_PER_POINT = 1
 
 // Linh Căn (Attunement) hấp thụ nguyên vai trò "độ thiên hành" cũ của
 // ElementAffinity (đã xoá — luôn = 0 với player, chỉ có ý nghĩa thật
-// với enemy) — 1 điểm Linh Căn tăng đều sát thương CẢ 8 hành (kể cả
+// với enemy) — 1 điểm Linh Căn tăng đều sát thương CẢ 6 hành (kể cả
 // Hỗn Nguyên), đúng nghĩa "linh căn tốt thì dùng thuật pháp hành nào
-// cũng mạnh hơn", không thiên vị 1 hành cụ thể. Phong/Lôi (Pháp Tu
-// Redesign, magicpath) nằm CHUNG danh sách này dù unlock trễ hơn (Nguyên
-// Anh+) — Attunement không cần biết gì về unlock-gate, chỉ khuếch đại
-// Power đã có, hành nào 0 điểm Power (chưa unlock) thì % này nhân với 0
-// vẫn là 0, vô hại.
+// cũng mạnh hơn", không thiên vị 1 hành cụ thể. Spec
+// 2026-08-30-phap-tu-dao-sac §5 — Phong/Lôi đã bỏ toàn hệ nên không
+// còn trong danh sách này.
 const ATTUNEMENT_POWER_STATS: { stat: StatType; tag: string }[] = [
   { stat: 'woodPower', tag: 'wood' },
   { stat: 'firePower', tag: 'fire' },
   { stat: 'earthPower', tag: 'earth' },
   { stat: 'metalPower', tag: 'metal' },
   { stat: 'waterPower', tag: 'water' },
-  { stat: 'windPower', tag: 'wind' },
-  { stat: 'lightningPower', tag: 'lightning' },
   { stat: 'primordialPower', tag: 'primordial' },
 ]
 

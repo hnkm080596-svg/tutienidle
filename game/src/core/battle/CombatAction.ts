@@ -147,10 +147,9 @@ export function vfxPresetForElement(element: string | undefined): CombatVfxPrese
       return 'earth_shockwave'
     case 'metal':
       return 'metal_slash'
-    case 'wind':
-      return 'wind_blade'
-    case 'lightning':
-      return 'lightning_strike'
+    // Spec 2026-08-30-phap-tu-dao-sac §5 — case 'wind'/'lightning' đã
+    // xoá cùng element; preset wind_blade/lightning_strike không còn
+    // đường gán từ element của skill.
     case 'primordial':
       return 'shadow_burst'
     default:

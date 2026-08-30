@@ -111,17 +111,10 @@ export function createBaseStats(): Stats {
     waterResistance: 0,
     waterPenetration: 0,
 
-    // Phong/Lôi (Pháp Tu Redesign, magicpath) — cùng shape với Ngũ
-    // Hành, mặc định 0. Unlock-gate (Nguyên Anh+) là chuyện của
-    // progression (Element unlock), KHÔNG phải chuyện của Stats — quái/
-    // player CHƯA unlock vẫn có 2 field này = 0, vô hại.
-    windPower: 0,
-    windResistance: 0,
-    windPenetration: 0,
-
-    lightningPower: 0,
-    lightningResistance: 0,
-    lightningPenetration: 0,
+    // Spec 2026-08-30-phap-tu-dao-sac §5 — Phong/Lôi (wind/lightning
+    // Power/Resistance/Penetration) đã bị XOÁ khỏi Stats: 0 skill/0
+    // node/0 reaction từng tồn tại nên đây toàn stat chết, không giữ
+    // baseline 0 vô nghĩa.
 
     // Hỗn Nguyên (Void) — bỏ qua mọi mitigation, không có Resistance/
     // Penetration riêng (xem StatTypes.ts).

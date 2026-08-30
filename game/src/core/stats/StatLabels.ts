@@ -77,8 +77,8 @@ const ELEMENT_STAT_LABELS: Partial<Record<keyof Stats, string>> = {
   earthPower: 'Thổ Lực', earthResistance: 'Kháng Thổ', earthPenetration: 'Xuyên Thổ',
   metalPower: 'Kim Lực', metalResistance: 'Kháng Kim', metalPenetration: 'Xuyên Kim',
   waterPower: 'Thủy Lực', waterResistance: 'Kháng Thủy', waterPenetration: 'Xuyên Thủy',
-  windPower: 'Phong Lực', windResistance: 'Kháng Phong', windPenetration: 'Xuyên Phong',
-  lightningPower: 'Lôi Lực', lightningResistance: 'Kháng Lôi', lightningPenetration: 'Xuyên Lôi',
+  // Spec 2026-08-30-phap-tu-dao-sac §5 — label Phong/Lôi đã xoá cùng
+  // stat wind/lightning khỏi Stats.
   primordialPower: 'Hỗn Nguyên Lực',
 }
 

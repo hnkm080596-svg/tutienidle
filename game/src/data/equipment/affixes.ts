@@ -109,6 +109,8 @@ export const affixes: Affix[] = [
 
   // Pool advanced mở từ Linh Khí: bổ sung lớp phòng thủ thật thay vì gate
   // rỗng. Kháng dùng thang rating (1 điểm = 1%) giống Resistance.ts.
+  // Spec 2026-08-30-phap-tu-dao-sac §5 — nhóm affix kháng Phong/Lôi đã
+  // xoá cùng element wind/lightning.
   ...(
     [
       ['fire', 'Hỏa', ['helmet', 'armor', 'boots', 'necklace']],
@@ -116,8 +118,6 @@ export const affixes: Affix[] = [
       ['water', 'Thủy', ['helmet', 'armor', 'boots', 'necklace']],
       ['metal', 'Kim', ['helmet', 'armor', 'boots', 'necklace']],
       ['earth', 'Thổ', ['helmet', 'armor', 'boots', 'necklace']],
-      ['wind', 'Phong', ['helmet', 'armor', 'boots', 'necklace']],
-      ['lightning', 'Lôi', ['helmet', 'armor', 'boots', 'necklace']],
     ] as const
   ).map(([element, label, slots]) => ({
     id: `suffix_${element}_resistance`,
