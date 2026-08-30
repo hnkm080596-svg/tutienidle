@@ -16,12 +16,15 @@ import {
 import {
   useBagFilter,
   variantRank,
+  baseNameFor,
   GROUP_LABELS,
   MATERIAL_GROUPS,
   type FilteredMaterial,
   type MaterialGroup,
 } from '@/composables/useBagFilter'
 import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
+import { getProfessionGradeForRealm } from '@/core/profession/ProfessionGrade'
+import { professionGradeRank } from '@/composables/slots/normalizeSlotRank'
 import type { BagCell } from './BagCell'
 import type { Material, MaterialCategory } from '@/core/material/Material'
 import type { GradedItemTooltipContent } from '@/composables/useTooltip'
@@ -63,10 +66,29 @@ const AGE_LABELS: Record<string, string> = {
   decade: 'Thập Niên', century: 'Bách Niên', millennium: 'Thiên Niên', myriad_year: 'Vạn Niên',
 }
 
+// Nhãn cảnh giới cho tooltip — người chơi không phân biệt được màu
+// (color-blind) vẫn đọc được realm trên tooltip (spec §"Cảnh giới").
+const REALM_LABELS: Record<string, string> = {
+  mortal: 'Phàm Nhân',
+  qi_refining: 'Luyện Khí',
+  foundation_establishment: 'Trúc Cơ',
+  golden_core: 'Kim Đan',
+  nascent_soul: 'Nguyên Anh',
+  soul_transformation: 'Hóa Thần',
+  void_refinement: 'Luyện Hư',
+  body_integration: 'Hợp Thể',
+  mahayana: 'Đại Thừa',
+  tribulation: 'Độ Kiếp',
+}
+
 function buildTooltip(material: Material, owned: number): GradedItemTooltipContent {
+  const realmId = material.profession?.realmId
+  const realmLabel = realmId ? REALM_LABELS[realmId] : undefined
+
   const rows = [
     { label: 'Phân loại', value: CATEGORY_LABELS[material.category] },
     { label: 'Nguồn chính', value: SOURCE_LABELS[material.sourceType] },
+    ...(realmLabel ? [{ label: 'Cảnh giới', value: realmLabel }] : []),
   ]
 
   if (material.profession?.age) {
@@ -107,6 +129,37 @@ interface MaterialEntry {
   amount: number
 }
 
+// Màu theo phẩm nghề cảnh giới (spec 2026-08-30-unify-material-quality-
+// names-design.md): nhìn TÊN biết tuổi/chất, nhìn MÀU (tên + khung) biết
+// realm. Material không có profession meta (linh thạch, legacy...) không
+// tô — undefined = màu mặc định.
+function professionRankOf(material: Material): number | undefined {
+  const realmId = material.profession?.realmId
+
+  if (!realmId) {
+    return undefined
+  }
+
+  const grade = getProfessionGradeForRealm(realmId)
+
+  return grade ? professionGradeRank(grade) : undefined
+}
+
+// Tên material tô màu phẩm realm qua NameSegment — dùng cho mọi ô có
+// material (single + family).
+function materialNameSegments(material: Material, trailing?: { text: string; colorVar: string }) {
+  const rank = professionRankOf(material)
+
+  const segments = [
+    {
+      text: material.name,
+      colorVar: rank === undefined ? undefined : `--rank-color-${rank}`,
+    },
+  ]
+
+  return trailing ? [...segments, trailing] : segments
+}
+
 const entries = computed<MaterialEntry[]>(() => {
   stateVersion.value
 
@@ -127,6 +180,10 @@ const entries = computed<MaterialEntry[]>(() => {
       icon: stack.material.icon,
 
       tooltip: buildTooltip(stack.material, stack.amount),
+
+      rarityRank: professionRankOf(stack.material),
+
+      nameSegments: materialNameSegments(stack.material),
     },
   }))
 })
@@ -166,10 +223,16 @@ function familyCell(item: FilteredMaterial): BagCell {
 
   const badge = item.family?.badgeLabel
 
+  // Ô họ hiển thị TÊN GỐC (không prefix tuổi — badge đã ghi
+  // realm · bậc cao nhất, tránh lặp tuổi hai lần trên cùng ô).
+  const baseLabel = baseNameFor(material)
+
+  const baseRank = professionRankOf(material)
+
   return {
     key: item.key,
 
-    label: material.name,
+    label: baseLabel,
 
     description: material.description,
 
@@ -179,12 +242,12 @@ function familyCell(item: FilteredMaterial): BagCell {
 
     tooltip: buildTooltip(material, item.amount),
 
-    nameSegments: badge
-      ? [
-          { text: material.name },
-          { text: badge, colorVar: '--text-muted' },
-        ]
-      : undefined,
+    rarityRank: baseRank,
+
+    nameSegments: [
+      { text: baseLabel, colorVar: baseRank === undefined ? undefined : `--rank-color-${baseRank}` },
+      ...(badge ? [{ text: badge, colorVar: '--text-muted' }] : []),
+    ],
   }
 }
 
@@ -251,6 +314,8 @@ const cells = computed<BagCell[]>(() => {
           amount: item.amount,
           icon: item.material.icon,
           tooltip: buildTooltip(item.material, item.amount),
+          rarityRank: professionRankOf(item.material),
+          nameSegments: materialNameSegments(item.material),
         },
   )
 })
@@ -302,6 +367,7 @@ watch([searchQuery, activeGroup], () => resetPage())
         :amount="cell?.amount"
         :icon="cell?.icon"
         :tooltip="cell?.tooltip"
+        :rarity-rank="cell?.rarityRank"
         :name-segments="cell?.nameSegments"
       />
     </div>

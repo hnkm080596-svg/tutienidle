@@ -22,25 +22,25 @@ import { vTooltip } from '@/directives/tooltip'
 
 const WOOD: Material = {
   id: 'mortal_wood',
-  name: 'Cửu Phẩm Linh Mộc',
+  name: 'Thập Niên Linh Mộc',
   category: 'wood',
   sourceType: 'exploration',
 }
 
 const ORE: Material = {
   id: 'mortal_ore_hoang',
-  name: 'Cửu Phẩm Linh Khoáng',
+  name: 'Thập Niên Linh Khoáng',
   category: 'ore',
   sourceType: 'exploration',
 }
 
-// Quáng thật (có profession meta) × 2 phẩm cùng realm — TÊN TRÙNG NHAU
-// (professionResourceName bỏ qua quality) nên phải gộp về 1 ô như họ
-// thảo, chứ không hiện 2 ô trùng tên (bug report 2026-08-30).
+// Quáng thật (có profession meta) × 2 phẩm cùng realm — nhãn khác nhau
+// ("Thập Niên"/"Bách Niên" Linh Khoáng) nhưng vẫn gộp về 1 ô như họ
+// thảo theo resourceKind+realmId (useBagFilter.familyKeyFor).
 function ore(quality: string): Material {
   return {
     id: `mortal_ore_${quality}`,
-    name: 'Cửu Phẩm Linh Khoáng',
+    name: `${QUALITY_NAME[quality]} Linh Khoáng`,
     category: 'ore',
     sourceType: 'exploration',
     profession: {
@@ -49,6 +49,11 @@ function ore(quality: string): Material {
       quality,
     },
   }
+}
+
+const QUALITY_NAME: Record<string, string> = {
+  hoang: 'Thập Niên',
+  huyen: 'Bách Niên',
 }
 
 const ORE_HOANG = ore('hoang')
@@ -217,7 +222,7 @@ describe('MaterialBag — filter/search/group họ thảo (plan §3.2 B4)', () =
     const labels = mounted.slotLabels()
 
     expect(labels).toHaveLength(1)
-    expect(labels[0]).toContain('Cửu Phẩm Linh Khoáng')
+    expect(labels[0]).toContain('Thập Niên Linh Khoáng')
 
     mounted.unmount()
   })
@@ -279,7 +284,7 @@ describe('MaterialBag — filter/search/group họ thảo (plan §3.2 B4)', () =
     mounted.unmount()
   })
 
-  it('gộp quáng theo realm: 2 phẩm cùng tên/cùng realm collapse về 1 ô, badge hiện phẩm cao nhất', async () => {
+  it('gộp quáng theo realm: 2 bậc tuổi cùng realm collapse về 1 ô, badge hiện bậc cao nhất', async () => {
     gameManager.registerMaterials([ORE_HOANG, ORE_HUYEN])
     gameManager.materialBag.add(gameManager.materialRegistry.get(ORE_HOANG.id), 3)
     gameManager.materialBag.add(gameManager.materialRegistry.get(ORE_HUYEN.id), 5)
@@ -289,8 +294,8 @@ describe('MaterialBag — filter/search/group họ thảo (plan §3.2 B4)', () =
     const labels = mounted.slotLabels()
 
     expect(labels).toHaveLength(1)
-    expect(labels[0]).toContain('Cửu Phẩm Linh Khoáng')
-    expect(labels[0]).toContain('Huyền')
+    expect(labels[0]).toContain('Linh Khoáng')
+    expect(labels[0]).toContain('Bách Niên')
 
     mounted.unmount()
   })

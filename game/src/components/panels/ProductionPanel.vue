@@ -41,7 +41,7 @@ function tierProfileLabel(realmId: string): string {
 function rewardSummary(kind: string): string {
   if (kind === 'forest') return 'Gỗ theo cảnh giới thu thập'
 
-  if (kind === 'mine') return 'Quáng phẩm Hoàng → Tiên'
+  if (kind === 'mine') return 'Quáng Thập Niên → Thượng Cổ'
 
   return `${PILL_FAMILIES.length} chủ dược: ${PILL_FAMILIES.map((family) => family.herbName).join(' · ')}`
 }

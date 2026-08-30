@@ -65,7 +65,7 @@ export function createDefaultEquipmentOperationCostCatalog(): EquipmentOperation
 
       realmId,
 
-      // Sink Quáng phẩm Hoàng + Linh Thạch — scale theo enhance level.
+      // Sink Quáng Thập Niên (`ore_hoang`) + Linh Thạch — scale theo enhance level.
       cost: {
         materials: [{ materialId: `${realmId}_ore_hoang`, amount: 2 }],
 

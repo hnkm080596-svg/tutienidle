@@ -18,8 +18,8 @@ export const QUESTS: Quest[] = [
   },
   {
     id: 'collect_qi_refining_ore_hoang_1',
-    name: 'Thu Thập Bát Phẩm Linh Khoáng',
-    description: 'Nộp 3 Bát Phẩm Linh Khoáng để nhận thưởng.',
+    name: 'Thu Thập Thập Niên Linh Khoáng',
+    description: 'Nộp 3 Thập Niên Linh Khoáng để nhận thưởng.',
     condition: { kind: 'collect', materialId: 'qi_refining_ore_hoang', amount: 3 },
     reward: { reward: { spiritStone: 30 } },
     cadence: 'once',
@@ -76,7 +76,7 @@ export const QUESTS: Quest[] = [
   {
     id: 'collect_foundation_ore_30',
     name: 'Thu Thập Linh Khoáng Hậu Sơn',
-    description: 'Nộp 30 Bát Phẩm Linh Khoáng thu được từ yêu thú hậu sơn.',
+    description: 'Nộp 30 Thập Niên Linh Khoáng thu được từ yêu thú hậu sơn.',
     condition: { kind: 'collect', materialId: 'qi_refining_ore_hoang', amount: 30 },
     reward: { reward: { cultivation: 4000 } },
     cadence: 'once',
