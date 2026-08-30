@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest'
-import { createApp, h, ref } from 'vue'
+import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
 import { GameManager } from '@/core/game/GameManager'
 import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composables/useGameState'
@@ -40,14 +40,27 @@ function makeManager() {
 }
 
 describe('HomeResourceStrip (ui-discoverability-refactor-plan §3.5)', () => {
-  it('hiện Linh Thạch với số lượng thật từ materialBag', () => {
+  it('thu gọn mặc định (2026-08-30 bug report: che góc màn hình) — chỉ hiện số Linh Thạch, bấm mới bung full', async () => {
     const manager = makeManager()
 
     manager.materialBag.add(SPIRIT_STONE_MATERIAL, 1234)
 
     const { root } = mountWith(manager)
 
+    // Thu gọn: số vẫn thấy được (đủ hữu ích), tên "Linh Thạch" thì KHÔNG
+    // hiện (đó là phần "che màn hình" gây khó chịu).
+    expect(root.textContent).toContain('1234')
+    expect(root.textContent).not.toContain('Linh Thạch')
+
+    root.querySelector<HTMLButtonElement>('.home-resource-strip__toggle')!.click()
+    await nextTick()
+
     expect(root.textContent).toContain('Linh Thạch')
     expect(root.textContent).toContain('1234')
+
+    root.querySelector<HTMLButtonElement>('.home-resource-strip__collapse')!.click()
+    await nextTick()
+
+    expect(root.textContent).not.toContain('Linh Thạch')
   })
 })

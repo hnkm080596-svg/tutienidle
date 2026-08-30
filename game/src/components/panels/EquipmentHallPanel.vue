@@ -12,7 +12,8 @@ import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import type { EquipmentSlot } from '@/core/equipment/EquipmentTypes'
 import type { RolledAffix } from '@/core/equipment/RolledAffix'
 import { materialLabel, affixLabel, equipmentSlotLabel, equipmentQualityLabel } from '@/core/presentation/labels'
-import { statLabel } from '@/core/stats/StatLabels'
+import { statLabel, formatStat } from '@/core/stats/StatLabels'
+import type { Stats } from '@/core/stats/StatBlock'
 import { useActionFeedbackStore } from '@/stores/actionFeedback'
 import { getSpiritStoneMaterialIdForEnhanceLevel } from '@/core/material/SpiritStoneMaterial'
 import SlotView from '@/components/common/SlotView.vue'
@@ -22,8 +23,6 @@ import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
 import { equipmentQualityRank, itemGradeRank } from '@/composables/slots/normalizeSlotRank'
 import GameButton from '@/components/common/GameButton.vue'
 import TabBar from '@/components/common/TabBar.vue'
-import SceneHeader from '@/components/common/SceneHeader.vue'
-import Eyebrow from '@/components/common/primitives/Eyebrow.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import {
   getMaxForgePoints,
@@ -359,9 +358,34 @@ function doEnhance(row: EnhanceSlotRow) {
   enhance(row.slot)
 }
 
-/** Xem trước "sau Cường Hóa" — xác định (không random), luôn tính được
- * ngay khi có mainStat, không cần preview/giữ/bỏ như Tẩy/Tinh Luyện. */
-const enhancePreview = computed(() => {
+interface EnhancePreviewRow {
+  key: string
+
+  label: string
+
+  // Stat key để formatStat chọn độ chính xác theo loại stat — số thập
+  // phân nhỏ (attackSpeed 0.01–0.02) không bị toFixed(1) thành "0.0"
+  // (bug report 2026-08-30).
+  stat: keyof Stats | undefined
+
+  currentValue: number
+
+  nextValue: number
+
+  percent: number
+}
+
+/**
+ * Xem trước "sau Cường Hóa" — xác định (không random), luôn tính được ngay
+ * khi có mainStat, không cần preview/giữ/bỏ như Tẩy/Tinh Luyện. Danh sách
+ * dòng khớp CHÍNH XÁC những gì EquipmentSystem.applyModifiers() thật sự
+ * scale theo enhanceLevel (2026-08-30 bug report: cột "Sau Cường Hóa" cũ
+ * chỉ tính mainStat, bỏ sót toàn bộ affix phụ nên 2 cột không khớp dòng) —
+ * dòng đầu LUÔN là mainStat, sau đó từng affix theo ĐÚNG thứ tự
+ * instance.affixes để 2 cột "Hiện tại"/"Sau" render cùng danh sách, khớp
+ * 1-1 theo index thay vì 2 mảng khác nguồn.
+ */
+const enhancePreviewRows = computed<EnhancePreviewRow[] | null>(() => {
   stateVersion.value
 
   const row = selectedEnhanceRow.value
@@ -376,19 +400,43 @@ const enhancePreview = computed(() => {
 
   const nextScale = calculateEquipmentScale(row.enhanceLevel + 1, instance.forgePoints)
 
-  const currentValue = (instance.mainStat.flat ?? 0) * currentScale
+  function toRow(key: string, label: string, stat: keyof Stats | undefined, baseFlat: number): EnhancePreviewRow {
+    const currentValue = baseFlat * currentScale
 
-  const nextValue = (instance.mainStat.flat ?? 0) * nextScale
+    const nextValue = baseFlat * nextScale
 
-  return {
-    label: statLabel(instance.mainStat.stat),
+    return {
+      key,
 
-    currentValue,
+      label,
 
-    nextValue,
+      stat,
 
-    percent: currentValue > 0 ? ((nextValue - currentValue) / currentValue) * 100 : 0,
+      currentValue,
+
+      nextValue,
+
+      percent: currentValue > 0 ? ((nextValue - currentValue) / currentValue) * 100 : 0,
+    }
   }
+
+  const rows: EnhancePreviewRow[] = [
+    toRow('main', statLabel(instance.mainStat.stat), instance.mainStat.stat, instance.mainStat.flat ?? 0),
+  ]
+
+  instance.affixes.forEach((rolled, index) => {
+    const affix = gameManager.affixRegistry.has(rolled.affixId)
+      ? gameManager.affixRegistry.get(rolled.affixId)
+      : undefined
+
+    if (!affix) {
+      return
+    }
+
+    rows.push(toRow(`affix-${index}`, statLabel(affix.stat), affix.stat, getEffectiveAffixValue(rolled, affix)))
+  })
+
+  return rows
 })
 
 // =========================
@@ -453,6 +501,17 @@ function doWashKeep() {
   }
 }
 
+/**
+ * Tier hiển thị bằng MÀU chứ không phải text "(tier N)" (2026-08-30 bug
+ * report: "thông tin chỉ số item cần theo quy tắc của tooltip, tier 1 đã
+ * đổi thành màu sắc thay vì text") — tái dùng ĐÚNG token --affix-tier-N
+ * mà Tooltip.vue's `.tooltip__section-row--tier-N` đã dùng, giữ nhất
+ * quán 1 quy tắc màu tier DUY NHẤT trong toàn project.
+ */
+function tierClass(tier: number): string {
+  return `qi-hall__tier-${tier}`
+}
+
 function affixDisplayLabel(rolled: RolledAffix): string {
   const affix = gameManager.affixRegistry.has(rolled.affixId)
     ? gameManager.affixRegistry.get(rolled.affixId)
@@ -490,13 +549,23 @@ const selectedAffixes = computed(() => {
     return []
   }
 
-  return instance.affixes.map((rolled, index) => ({
-    index,
+  return instance.affixes.map((rolled, index) => {
+    const affix = gameManager.affixRegistry.has(rolled.affixId)
+      ? gameManager.affixRegistry.get(rolled.affixId)
+      : undefined
 
-    label: affixDisplayLabel(rolled),
+    return {
+      index,
 
-    tier: rolled.tier,
-  }))
+      label: affixDisplayLabel(rolled),
+
+      tier: rolled.tier,
+
+      // Stat key để formatStat chọn độ chính xác đúng loại stat (bug
+      // 2026-08-30: toFixed(1) ép attackSpeed 0.015 thành "0.0").
+      stat: affix?.stat,
+    }
+  })
 })
 
 /** Giá trị hiệu lực hiện tại của 1 dòng affix (cột "Hiện tại" Tinh Luyện). */
@@ -518,6 +587,19 @@ function currentAffixValue(index: number): number | null {
     : undefined
 
   return affix ? getEffectiveAffixValue(rolled, affix) : rolled.value
+}
+
+/**
+ * Format giá trị stat theo đúng độ chính xác loại stat (formatStat) —
+ * stat lạ/registry thiếu fallback 2 chữ số thập phân, KHÔNG bao giờ
+ * ép số thập phân nhỏ về "0.0" (bug report 2026-08-30).
+ */
+function formatAffixValue(stat: keyof Stats | undefined, value: number): string {
+  if (stat === undefined) {
+    return (Math.round(value * 100) / 100).toString()
+  }
+
+  return formatStat(stat, value)
 }
 
 const lockedIndices = ref<number[]>([])
@@ -629,86 +711,49 @@ const pendingRefineByIndex = computed(() => {
 })
 
 // =========================
-// Bảng so sánh Trước ⇒ Sau dùng chung Tẩy/Tinh Luyện (rework
-// 2026-08-30) — thông tin trước và sau thao tác nằm CÙNG MỘT HÀNG
-// cho từng chỉ số, thay vì text rời rạc từng tab.
+// Bảng so sánh Trước ⇒ Sau dùng chung Cường Hóa/Tẩy/Tinh Luyện (rework
+// 2026-08-30 — bọc gọn vào 1 card, mỗi dòng phụ MỘT hàng thật trong
+// <table>, khớp đúng pattern Cường Hóa đã duyệt thay vì 2 cột flex tách
+// rời + bảng meta text rời rạc như trước).
 // =========================
 
-interface CompareRow {
-  key: string
+interface AffixCompareRow {
+  index: number
 
-  label: string
+  beforeLabel: string
 
-  before: string
+  beforeTier: number
 
-  after: string
+  afterLabel?: string
+
+  afterTier?: number
 }
 
-const washPreviewRows = computed<CompareRow[]>(() => {
-  stateVersion.value
+/** Tẩy Luyện reroll TOÀN BỘ affix (đổi cả identity) — mỗi dòng so sánh
+ * theo ĐÚNG vị trí index giữa affix hiện tại và affix preview đang chờ. */
+const washAffixCompareRows = computed<AffixCompareRow[]>(() => {
+  const pending = pendingWashAffixDisplay.value
 
-  const ren = itemRenState.value
+  return selectedAffixes.value.map((affix, position) => ({
+    index: affix.index,
 
-  const row = selectedRow.value
+    beforeLabel: affix.label,
 
-  if (!ren || !row) {
-    return []
-  }
+    beforeTier: affix.tier,
 
-  return [
-    {
-      key: 'ren',
-      label: 'Điểm Rèn',
-      before: `${ren.points}/${ren.max}`,
-      after: `${Math.max(0, ren.points - washCost.value.refinementPoints)}/${ren.max}`,
-    },
-    {
-      key: 'lines',
-      label: 'Số dòng phụ',
-      before: `${row.affixCount}`,
-      after: 'roll lại theo Quáng',
-    },
-    {
-      key: 'tier',
-      label: 'Tier ban đầu',
-      before: `${Math.max(...row.instance.affixes.map((a) => a.tier), 0)}`,
-      after: 'roll lại theo Quáng',
-    },
-  ]
+    afterLabel: pending[position]?.label,
+
+    afterTier: pending[position]?.tier,
+  }))
 })
 
-const refinePreviewRows = computed<CompareRow[]>(() => {
-  stateVersion.value
+const washRenAfter = computed(() =>
+  itemRenState.value ? Math.max(0, itemRenState.value.points - washCost.value.refinementPoints) : 0,
+)
 
-  const ren = itemRenState.value
-
-  const row = selectedRow.value
-
-  if (!ren || !row) {
-    return []
-  }
-
-  return [
-    {
-      key: 'ren',
-      label: 'Điểm Rèn',
-      before: `${ren.points}/${ren.max}`,
-      after: `${Math.max(0, ren.points - refineCost.value.refinementPoints)}/${ren.max}`,
-    },
-    {
-      key: 'locked',
-      label: 'Dòng giữ nguyên',
-      before: `${lockedIndices.value.length}`,
-      after: `${lockedIndices.value.length} (không đổi)`,
-    },
-    {
-      key: 'rerolled',
-      label: 'Dòng roll lại',
-      before: `${row.affixCount - lockedIndices.value.length}`,
-      after: '±20% trong range tier',
-    },
-  ]
-})
+const refineRenAfter = computed(() =>
+  itemRenState.value ? Math.max(0, itemRenState.value.points - refineCost.value.refinementPoints) : 0,
+)
 
 // =========================
 // Tab Hóa Luyện (§7.5) — filter + multi-select + preview + confirm
@@ -881,35 +926,11 @@ function doDissolve() {
   <div class="qi-hall">
     <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
     <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
-    <SceneHeader
-      class="qi-hall__forge-scene"
-      asset="/assets/buildings/dong-fu/equipment_hall.png"
-      scene="fire"
-      height="clamp(72px, 13vh, 132px)"
-      object-position="center 58%"
-      :image-opacity="0.58"
-      caption="THIÊN HỎA LUYỆN KHÍ"
-    >
-      <template #decoration>
-        <div class="qi-hall__forge-fire" />
-        <div class="qi-hall__anvil">⚒</div>
-      </template>
-    </SceneHeader>
 
-    <header class="qi-hall__points">
-      <template v-if="itemRenState !== null">
-        <span>
-          Điểm Rèn món đang chọn:
-          {{ itemRenState.points }}/{{ itemRenState.max }}
-        </span>
-
-        <small class="qi-hall__points-hint">
-          Điểm Rèn gắn với từng món đồ, sinh ra đúng trần theo phẩm — Tẩy/Tinh Luyện tiêu và không thể nạp lại.
-        </small>
-      </template>
-
-      <span v-else>Chọn một trang bị để xem Điểm Rèn của nó</span>
-    </header>
+    <!-- Header "Điểm Rèn món đang chọn" cũ đã BỎ (2026-08-30, bug report:
+         thông tin không cần thiết) — số Điểm Rèn chỉ liên quan Tẩy/Tinh
+         Luyện, tự hiện đúng ngay trong card của 2 tab đó, không cần lặp
+         lại ở đầu panel cho cả Cường Hóa/Hóa Luyện không dùng tới nó. -->
 
     <!-- Nav chức năng lên NGAY đầu card, không nền riêng (2026-08-30,
          bug report) — bỏ hẳn header "Chọn một trang bị..." cũ. -->
@@ -943,38 +964,51 @@ function doDissolve() {
       </div>
 
       <div v-if="selectedEnhanceRow" class="qi-hall__split-right">
-        <div class="qi-hall__compare">
-          <div class="qi-hall__col">
-            <Eyebrow>Hiện tại</Eyebrow>
+        <!-- Dùng THẲNG <table> giống Tẩy/Tinh Luyện thay vì 2 cột flex độc
+             lập (2026-08-30 bug report: "không ngang hàng với nhau" — 2
+             cột flex co giãn riêng nên dòng chính/dòng phụ lệch nhau khi
+             số dòng hoặc độ dài nội dung khác nhau; <tr> đảm bảo khớp
+             hàng-với-hàng thật sự). Bỏ hẳn dòng tiêu đề "Slot · Tên món"
+             cũ (2026-08-30, bug report thứ 2: dòng đó tạo lệch — thông
+             tin này đã có sẵn qua ô đang chọn ở lưới bên trái, không cần
+             lặp lại). Header bảng dùng "Trước/Sau" y hệt Tẩy/Tinh Luyện
+             thay vì hiện số cấp thô màu eyebrow khó đọc — cấp đổi dời
+             xuống 1 dòng chú thích màu chữ thường, dễ đọc. -->
+        <div class="qi-hall__preview-card">
+          <p v-if="enhancePreviewRows && selectedEnhanceRow.enhanceLevel < selectedEnhanceRow.maxLevel" class="qi-hall__col-title">
+            Cấp +{{ selectedEnhanceRow.enhanceLevel }}/{{ selectedEnhanceRow.maxLevel }}
+            ⇒ +{{ selectedEnhanceRow.enhanceLevel + 1 }}/{{ selectedEnhanceRow.maxLevel }}
+          </p>
 
-            <p class="qi-hall__col-title">{{ equipmentSlotLabel(selectedEnhanceRow.slot) }} · {{ selectedEnhanceRow.itemName }}</p>
+          <table
+            v-if="enhancePreviewRows && selectedEnhanceRow.enhanceLevel < selectedEnhanceRow.maxLevel"
+            class="qi-hall__compare-table"
+            aria-label="So sánh trước và sau Cường Hóa"
+          >
+            <thead>
+              <tr>
+                <th scope="col">Chỉ số</th>
+                <th scope="col">Trước</th>
+                <th scope="col" aria-hidden="true"></th>
+                <th scope="col">Sau</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="statRow in enhancePreviewRows" :key="statRow.key">
+                <th scope="row">{{ statRow.label }}</th>
+                <td>{{ formatAffixValue(statRow.stat, statRow.currentValue) }}</td>
+                <td class="qi-hall__compare-arrow" aria-hidden="true">⇒</td>
+                <td>
+                  {{ formatAffixValue(statRow.stat, statRow.nextValue) }}
+                  <span class="qi-hall__up-arrow">▲ +{{ statRow.percent.toFixed(1) }}%</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
-            <p class="qi-hall__col-level">+{{ selectedEnhanceRow.enhanceLevel }}/{{ selectedEnhanceRow.maxLevel }}</p>
-
-            <p v-if="enhancePreview" class="qi-hall__stat-line">
-              {{ enhancePreview.label }}: <strong>{{ enhancePreview.currentValue.toFixed(1) }}</strong>
-            </p>
-          </div>
-
-          <span class="qi-hall__compare-arrow" aria-hidden="true">⇒</span>
-
-          <div class="qi-hall__col">
-            <Eyebrow>Sau Cường Hóa</Eyebrow>
-
-            <template v-if="enhancePreview && selectedEnhanceRow.enhanceLevel < selectedEnhanceRow.maxLevel">
-              <p class="qi-hall__col-level">+{{ selectedEnhanceRow.enhanceLevel + 1 }}/{{ selectedEnhanceRow.maxLevel }}</p>
-
-              <p class="qi-hall__stat-line">
-                {{ enhancePreview.label }}: <strong>{{ enhancePreview.nextValue.toFixed(1) }}</strong>
-
-                <span class="qi-hall__up-arrow">▲ +{{ enhancePreview.percent.toFixed(1) }}%</span>
-              </p>
-            </template>
-
-            <p v-else class="qi-hall__empty">
-              {{ enhancePreview ? 'Đã đạt cấp tối đa.' : 'Slot trống — không có chỉ số chính để xem trước.' }}
-            </p>
-          </div>
+          <p v-else class="qi-hall__empty">
+            {{ enhancePreviewRows ? 'Đã đạt cấp tối đa.' : 'Slot trống — không có chỉ số chính để xem trước.' }}
+          </p>
         </div>
 
         <ul v-if="selectedEnhanceRow.enhanceLevel < selectedEnhanceRow.maxLevel" class="qi-hall__info-row enhance-row__costs">
@@ -1026,51 +1060,38 @@ function doDissolve() {
       </div>
 
       <div v-if="selectedRow" class="qi-hall__split-right">
-        <div class="qi-hall__compare">
-          <div class="qi-hall__col">
-            <Eyebrow>Hiện tại</Eyebrow>
+        <!-- Card duy nhất (2026-08-30 spec, khớp đúng Cường Hóa đã duyệt)
+             — Điểm Rèn làm dòng chú thích, mỗi dòng phụ 1 hàng thật
+             trong bảng, không còn 2 cột flex + bảng meta tách rời. -->
+        <div class="qi-hall__preview-card">
+          <p v-if="itemRenState" class="qi-hall__col-title">
+            Điểm Rèn {{ itemRenState.points }}/{{ itemRenState.max }} ⇒ {{ washRenAfter }}/{{ itemRenState.max }}
+          </p>
 
-            <p v-for="affix in selectedAffixes" :key="affix.index" class="qi-hall__affix-line">
-              {{ affix.label }} (tier {{ affix.tier }})
-            </p>
+          <table v-if="washAffixCompareRows.length" class="qi-hall__compare-table" aria-label="So sánh trước và sau Tẩy Luyện">
+            <thead>
+              <tr>
+                <th scope="col">Chỉ số</th>
+                <th scope="col">Trước</th>
+                <th scope="col" aria-hidden="true"></th>
+                <th scope="col">Sau</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(row, position) in washAffixCompareRows" :key="row.index">
+                <th scope="row">Dòng {{ position + 1 }}</th>
+                <td><span :class="tierClass(row.beforeTier)">{{ row.beforeLabel }}</span></td>
+                <td class="qi-hall__compare-arrow" aria-hidden="true">⇒</td>
+                <td>
+                  <span v-if="row.afterLabel" :class="tierClass(row.afterTier!)">{{ row.afterLabel }}</span>
+                  <span v-else class="qi-hall__owned">chưa roll</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
-            <p v-if="selectedAffixes.length === 0" class="qi-hall__empty">Chưa có dòng phụ.</p>
-          </div>
-
-          <span class="qi-hall__compare-arrow" aria-hidden="true">⇒</span>
-
-          <div class="qi-hall__col">
-            <Eyebrow>Sau Tẩy Luyện</Eyebrow>
-
-            <template v-if="pendingWashAffixes">
-              <p v-for="affix in pendingWashAffixDisplay" :key="affix.index" class="qi-hall__affix-line qi-hall__affix-line--new">
-                {{ affix.label }} (tier {{ affix.tier }})
-              </p>
-            </template>
-
-            <p v-else class="qi-hall__empty">Bấm Tẩy Luyện để xem trước kết quả rồi mới Giữ.</p>
-          </div>
+          <p v-else class="qi-hall__empty">Chưa có dòng phụ.</p>
         </div>
-
-        <!-- Trước ⇒ Sau — từng chỉ số cùng một hàng -->
-        <table class="qi-hall__compare-table" aria-label="So sánh trước và sau Tẩy Luyện">
-          <thead>
-            <tr>
-              <th scope="col">Chỉ số</th>
-              <th scope="col">Trước</th>
-              <th scope="col" aria-hidden="true"></th>
-              <th scope="col">Sau</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in washPreviewRows" :key="row.key">
-              <th scope="row">{{ row.label }}</th>
-              <td>{{ row.before }}</td>
-              <td class="qi-hall__compare-arrow" aria-hidden="true">⇒</td>
-              <td>{{ row.after }}</td>
-            </tr>
-          </tbody>
-        </table>
 
         <div class="qi-hall__info-row">
           <div class="qi-hall__info-options">
@@ -1083,9 +1104,11 @@ function doDissolve() {
             </label>
           </div>
 
+          <!-- Điểm Rèn tốn mỗi lượt đã hiện ở dòng chú thích đầu card
+               (2026-08-30, bug report: trùng lặp) — costline chỉ còn chi
+               phí KHÁC (Linh Thạch) chưa hiện ở đâu. -->
           <p class="qi-hall__costline">
-            Chi phí mỗi lượt: {{ washCost.refinementPoints }} Điểm Rèn (còn {{ itemRenState?.points ?? 0 }})
-            · {{ washCost.spiritStone }} {{ spiritStoneCostName }}
+            Chi phí mỗi lượt: {{ washCost.spiritStone }} {{ spiritStoneCostName }}
           </p>
         </div>
 
@@ -1125,64 +1148,56 @@ function doDissolve() {
       </div>
 
       <div v-if="selectedRow" class="qi-hall__split-right">
-        <div class="qi-hall__compare">
-          <div class="qi-hall__col">
-            <Eyebrow>Hiện tại · khóa tối đa {{ Math.min(3, Math.max(0, selectedAffixes.length - 1)) }} dòng</Eyebrow>
+        <!-- Card duy nhất (2026-08-30 spec, khớp đúng Cường Hóa đã duyệt)
+             — cột "Khóa" gộp thẳng vào bảng thay vì tách 2 cột flex
+             riêng, Điểm Rèn làm dòng chú thích. -->
+        <div class="qi-hall__preview-card">
+          <p v-if="itemRenState" class="qi-hall__col-title">
+            Điểm Rèn {{ itemRenState.points }}/{{ itemRenState.max }} ⇒ {{ refineRenAfter }}/{{ itemRenState.max }}
+            · khóa tối đa {{ Math.min(3, Math.max(0, selectedAffixes.length - 1)) }} dòng
+          </p>
 
-            <label v-for="affix in selectedAffixes" :key="affix.index" class="qi-hall__option">
-              <input
-                type="checkbox"
-                :checked="lockedIndices.includes(affix.index)"
-                @change="toggleLock(affix.index)"
-              />
+          <table v-if="selectedAffixes.length" class="qi-hall__compare-table" aria-label="So sánh trước và sau Tinh Luyện">
+            <thead>
+              <tr>
+                <th scope="col">Chỉ số</th>
+                <th scope="col">Trước</th>
+                <th scope="col" aria-hidden="true"></th>
+                <th scope="col">Sau</th>
+                <th scope="col">Khóa</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="affix in selectedAffixes" :key="affix.index">
+                <th scope="row"><span :class="tierClass(affix.tier)">{{ affix.label }}</span></th>
+                <td>{{ currentAffixValue(affix.index) !== null ? formatAffixValue(affix.stat, currentAffixValue(affix.index)!) : '—' }}</td>
+                <td class="qi-hall__compare-arrow" aria-hidden="true">⇒</td>
+                <td>
+                  <span v-if="lockedIndices.includes(affix.index)" class="qi-hall__owned">giữ nguyên</span>
+                  <strong v-else-if="pendingRefineByIndex.has(affix.index)">{{ formatAffixValue(affix.stat, pendingRefineByIndex.get(affix.index)!) }}</strong>
+                  <span v-else class="qi-hall__owned">chưa roll</span>
+                </td>
+                <td>
+                  <input
+                    type="checkbox"
+                    :checked="lockedIndices.includes(affix.index)"
+                    @change="toggleLock(affix.index)"
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
-              <span>{{ affix.label }} (tier {{ affix.tier }})</span>
-
-              <span class="qi-hall__owned">{{ currentAffixValue(affix.index)?.toFixed(1) }}</span>
-            </label>
-
-            <p v-if="selectedAffixes.length === 0" class="qi-hall__empty">Không có dòng phụ để Tinh Luyện.</p>
-          </div>
-
-          <span class="qi-hall__compare-arrow" aria-hidden="true">⇒</span>
-
-          <div class="qi-hall__col">
-            <Eyebrow>Sau Tinh Luyện</Eyebrow>
-
-            <p v-for="affix in selectedAffixes" :key="affix.index" class="qi-hall__affix-line">
-              {{ affix.label }} (tier {{ affix.tier }}) —
-              <span v-if="lockedIndices.includes(affix.index)" class="qi-hall__owned">giữ nguyên</span>
-              <strong v-else-if="pendingRefineByIndex.has(affix.index)">{{ pendingRefineByIndex.get(affix.index)?.toFixed(1) }}</strong>
-              <span v-else class="qi-hall__owned">chưa roll</span>
-            </p>
-          </div>
+          <p v-else class="qi-hall__empty">Không có dòng phụ để Tinh Luyện.</p>
         </div>
 
-        <!-- Trước ⇒ Sau — từng chỉ số cùng một hàng -->
-        <table class="qi-hall__compare-table" aria-label="So sánh trước và sau Tinh Luyện">
-          <thead>
-            <tr>
-              <th scope="col">Chỉ số</th>
-              <th scope="col">Trước</th>
-              <th scope="col" aria-hidden="true"></th>
-              <th scope="col">Sau</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="row in refinePreviewRows" :key="row.key">
-              <th scope="row">{{ row.label }}</th>
-              <td>{{ row.before }}</td>
-              <td class="qi-hall__compare-arrow" aria-hidden="true">⇒</td>
-              <td>{{ row.after }}</td>
-            </tr>
-          </tbody>
-        </table>
-
+        <!-- Bỏ jargon nội bộ "Cost hệ số N+L" + Điểm Rèn trùng dòng chú
+             thích đầu card (2026-08-30, bug report) — chỉ còn quy tắc
+             ±20% (không hiển thị ở đâu khác) và chi phí Tinh Hoa/Linh
+             Thạch thật sự chưa có chỗ nào hiện. -->
         <p class="qi-hall__info-row qi-hall__costline">
-          Giá trị từng dòng không khóa roll trong ±20%. Cost hệ số N+L =
-          {{ refineCost.essenceUnits }} Tinh Hoa · {{ refineCost.spiritStone }}
-          {{ spiritStoneCostName }} · {{ refineCost.refinementPoints }} Điểm Rèn (còn
-          {{ itemRenState?.points ?? 0 }} · Tinh Hoa đang có {{ refineEssenceOwned }}).
+          Mỗi dòng không khóa roll lại trong ±20%. Chi phí: {{ refineCost.essenceUnits }} Tinh Hoa
+          (đang có {{ refineEssenceOwned }}) · {{ refineCost.spiritStone }} {{ spiritStoneCostName }}
         </p>
 
         <div class="qi-hall__button-row">
@@ -1316,51 +1331,6 @@ function doDissolve() {
   z-index: 3;
 }
 
-.qi-hall__forge-scene {
-  flex: 0 0 auto;
-  border-bottom: 1px solid color-mix(in srgb, var(--scene-fire-text-soft) 35%, transparent);
-  box-shadow: inset 0 -30px 45px rgba(0, 0, 0, .68);
-}
-
-.qi-hall__forge-scene :deep(.scene-header__image) {
-  filter: sepia(.18) saturate(1.25) contrast(1.08);
-}
-
-.qi-hall__forge-scene :deep(.scene-header__caption) {
-  bottom: 12px;
-  color: var(--scene-fire-text);
-  letter-spacing: .18em;
-  text-shadow: 0 2px 5px #000;
-}
-
-.qi-hall__anvil {
-  position: absolute;
-  right: 32px;
-  bottom: 18px;
-  color: var(--scene-fire-text);
-  font-size: var(--text-display-lg);
-  filter: drop-shadow(0 0 10px color-mix(in srgb, var(--scene-fire-glow) 80%, transparent));
-}
-
-.qi-hall__forge-fire {
-  position: absolute;
-  right: 25px;
-  bottom: -35px;
-  width: 85px;
-  height: 95px;
-  border-radius: 50%;
-  background: radial-gradient(circle, color-mix(in srgb, var(--scene-fire-text) 95%, transparent), color-mix(in srgb, var(--scene-fire-glow) 60%, transparent) 35%, transparent 70%);
-  filter: blur(4px);
-  animation: forge-fire 1.35s ease-in-out infinite alternate;
-}
-
-.qi-hall__points {
-  flex: 0 0 auto;
-  padding: 8px 12px;
-  font-size: var(--text-sm);
-  color: var(--paper-text, #211f1a);
-  border-bottom: 1px solid var(--paper-line, rgba(42, 41, 36, 0.42));
-}
 
 /* Nav lên đầu, KHÔNG nền riêng (2026-08-30, bug report) — hoà vào card
    giống Chip.vue paper-toned thay vì dải tối tách biệt. */
@@ -1374,37 +1344,62 @@ function doDissolve() {
   background: transparent;
 }
 
-/* Bảng so sánh Trước ⇒ Sau dùng chung Tẩy/Tinh Luyện (rework 2026-08-30)
-   — từng chỉ số nằm CÙNG MỘT HÀNG, hết tình trạng "trước/sau tách rời". */
+/* Bảng so sánh Trước ⇒ Sau dùng chung Cường Hóa/Tẩy/Tinh Luyện (rework
+   2026-08-30) — từng chỉ số nằm CÙNG MỘT HÀNG. Đợt tăng cỡ chữ + đánh
+   bóng (2026-08-30, bug report "tăng kích thước text, làm đẹp lên") —
+   đọc như 1 trang sổ rèn: nhãn đậm bên trái, Trước/Sau canh giữa bằng
+   số liệu lớn (tabular-nums để cột số thẳng hàng), zebra row nhạt để
+   mắt dò hàng dễ hơn khi bảng nhiều dòng phụ. */
 .qi-hall__compare-table {
   width: 100%;
   margin: 0;
   border-collapse: collapse;
-  font-size: var(--text-xs);
+  font-size: var(--text-md);
 }
 
 .qi-hall__compare-table th,
 .qi-hall__compare-table td {
-  padding: 4px 6px;
+  padding: 9px 12px;
   border-bottom: 1px solid color-mix(in srgb, var(--paper-line, rgba(42, 41, 36, 0.42)) 60%, transparent);
   text-align: left;
   color: var(--paper-text, #211f1a);
+  font-variant-numeric: tabular-nums;
 }
 
 .qi-hall__compare-table thead th {
-  font-weight: 600;
-  color: var(--paper-text-soft, #5e5a50);
+  padding-top: 4px;
+  padding-bottom: 8px;
+  font: 700 var(--text-sm) var(--font-body);
+  color: var(--paper-eyebrow);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 2px solid color-mix(in srgb, var(--paper-eyebrow) 35%, var(--paper-line));
+}
+
+.qi-hall__compare-table thead th:not(:first-child) {
+  text-align: center;
 }
 
 .qi-hall__compare-table tbody th {
-  font-weight: 500;
+  font: 600 var(--text-md) var(--font-display);
+  letter-spacing: 0.01em;
+}
+
+.qi-hall__compare-table tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--mineral-gold) 5%, transparent);
+}
+
+.qi-hall__compare-table tbody td:not(.qi-hall__compare-arrow) {
+  text-align: center;
+  font-size: var(--text-lg);
 }
 
 .qi-hall__compare-table td.qi-hall__compare-arrow {
-  width: 24px;
-  padding: 4px 2px;
+  width: 28px;
+  padding: 9px 2px;
   text-align: center;
-  color: var(--paper-text-soft, #5e5a50);
+  color: color-mix(in srgb, var(--paper-eyebrow) 55%, var(--paper-text-soft));
+  font-size: var(--text-lg);
   border-bottom-color: transparent;
 }
 
@@ -1420,24 +1415,6 @@ function doDissolve() {
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-
-/* Ảnh lò rèn mờ LÀM NỀN PHỤ thay banner SceneHeader đã bỏ (2026-08-30) —
-   ngồi TRÊN nền giấy/vàng hiện có, DƯỚI nội dung, chỉ phủ khung info này
-   (không phải toàn panel). */
-.qi-hall__body::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background: url('/assets/buildings/dong-fu/equipment_hall.png') center center / 50% no-repeat;
-  opacity: 0.08;
-  pointer-events: none;
-}
-
-.qi-hall__body > * {
-  position: relative;
-  z-index: 1;
 }
 
 .qi-hall__body h4 {
@@ -1514,6 +1491,25 @@ function doDissolve() {
   padding: 0 4%;
 }
 
+/* Card bọc bảng so sánh — DÙNG CHUNG Cường Hóa/Tẩy/Tinh Luyện (2026-08-30
+   spec: "bọc phần như tôi đã gửi vào trong một card cho gọn gàng").
+   flex:1 để chiếm hết khoảng trống còn lại giữa header và info-row/
+   button-row, justify-content:center để bảng không dính sát lên trên
+   khi ít dòng (tránh trống dưới). */
+.qi-hall__preview-card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  overflow-y: auto;
+  border: 1px solid var(--paper-line, rgba(42, 41, 36, 0.42));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--paper-50) 70%, transparent);
+}
+
 /* Cột trang bị: 6 Ô LUÔN TỒN TẠI, CÁCH ĐỀU, AUTOFIT CHIỀU CAO (2026-08-30
    spec) — 1 cột dọc duy nhất, mỗi ô chiếm đúng 1/6 chiều cao khả dụng
    (khớp với tổng chiều cao cột phải: so sánh + info + nút), không co cụm
@@ -1567,34 +1563,11 @@ function doDissolve() {
   color: var(--paper-text-soft, #5e5a50);
 }
 
-/* "Vùng thông tin trước ⇒ vùng thông tin sau" (2026-08-30 spec) — dùng
-   CHUNG cho cả 3 tab Cường Hóa/Tẩy/Tinh Luyện, thay vì mỗi tab một bố
-   cục cột riêng như trước. */
-.qi-hall__compare {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: stretch;
-  gap: 12px;
-}
-
 .qi-hall__compare-arrow {
   align-self: center;
   color: var(--paper-eyebrow);
   font-size: 22px;
   line-height: 1;
-}
-
-.qi-hall__col {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 10px 12px;
-  border: 1px solid var(--paper-line, rgba(42, 41, 36, 0.42));
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--paper-50) 70%, transparent);
-  overflow-y: auto;
 }
 
 /* Dải "nguyên liệu cần thiết / options" NGAY DƯỚI vùng so sánh, phía
@@ -1625,40 +1598,41 @@ function doDissolve() {
   letter-spacing: 0.03em;
 }
 
+/* Chú thích đầu card (Cấp/Điểm Rèn trước ⇒ sau) — vạch cinnabar bên trái
+   giống dấu triện mở đầu 1 trang sổ, cỡ chữ lớn hẳn so với phần còn lại
+   của panel vì đây là con số người chơi quan tâm nhất trong tab. */
 .qi-hall__col-title {
-  margin: 0;
-  font-size: var(--text-sm);
-  color: var(--paper-text, #211f1a);
-}
-
-.qi-hall__col-level {
-  margin: 0;
-  font-size: var(--text-xs);
-  color: var(--paper-text-soft, #5e5a50);
-}
-
-.qi-hall__stat-line {
-  margin: 0;
-  font-size: var(--text-body);
+  margin: 0 0 8px;
+  padding-left: 10px;
+  border-left: 3px solid var(--paper-eyebrow);
+  font: 700 var(--text-title) var(--font-display);
   color: var(--paper-text, #211f1a);
 }
 
 .qi-hall__up-arrow {
-  margin-left: 6px;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--jade) 16%, transparent);
   color: var(--jade);
   font-weight: 700;
-  font-size: var(--text-xs);
-}
-
-.qi-hall__affix-line {
-  margin: 0;
   font-size: var(--text-sm);
-  color: var(--paper-text, #211f1a);
 }
 
-.qi-hall__affix-line--new strong,
-.qi-hall__affix-line--new {
-  color: var(--jade);
+/* Tier hiển thị bằng màu (2026-08-30 bug report) — cùng token
+   --affix-tier-N với Tooltip.vue's .tooltip__section-row--tier-N. */
+.qi-hall__tier-1 { color: var(--affix-tier-1); }
+.qi-hall__tier-2 { color: var(--affix-tier-2); }
+.qi-hall__tier-3 { color: var(--affix-tier-3); }
+.qi-hall__tier-4 { color: var(--affix-tier-4); }
+.qi-hall__tier-5 {
+  color: transparent;
+  background: var(--rank-gradient-9);
+  background-clip: text;
+  -webkit-background-clip: text;
+  font-weight: 700;
 }
 
 /* Hóa Luyện — cột đơn full width, không split trái/phải. */
@@ -1781,11 +1755,6 @@ function doDissolve() {
     border-bottom: 1px solid color-mix(in srgb, var(--scene-fire-text-soft) 22%, transparent);
   }
   .qi-hall__slot-grid { grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); grid-template-rows: none; }
-  .qi-hall__compare { grid-template-columns: 1fr; }
-  .qi-hall__compare-arrow { justify-self: center; transform: rotate(90deg); }
 }
 
-@keyframes forge-fire {
-  to { transform: scale(1.12) translateY(-4px); opacity: .82; }
-}
 </style>

@@ -122,6 +122,12 @@ export interface BuildingTooltipContent {
   functionLabel?: string
 
   statusLabel: string
+
+  // 2026-08-30 frontend-design pass — statusLabel trước đây LUÔN tô màu
+  // jade dù đang nói "Chưa mở" (locked) hay "Đã mở" (built), gây hiểu
+  // nhầm trạng thái khóa trông như tích cực. Optional để không phá vỡ
+  // caller cũ khác (không caller nào khác ngoài HomeBuildingIcons.vue).
+  isBuilt?: boolean
 }
 
 export type TooltipContent =

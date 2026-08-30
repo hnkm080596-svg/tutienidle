@@ -13,7 +13,7 @@
 // from far to near. The straight ground is reserved for separate 2D buildings,
 // while season and time reuse the shared ThanhVanVariant selected by combat.
 // DOM remains the sole background renderer to avoid competing pipelines.
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useStageActive } from '@/composables/useStageActive'
 import {
   dongFuLayerList,
@@ -69,6 +69,17 @@ function parallaxStyle(layer: DongFuLayerDescriptor) {
     '--parallax-y': `${y}px`,
   }
 }
+
+// Building hotspot layer "gắn" vào đúng mặt đất nó đứng trên (bug report
+// 2026-08-30: building không ăn parallax nên trôi so với mặt đất khi mặt
+// đất dịch theo chuột) — dùng LẠI đúng shiftX/shiftY của lớp
+// '07-sect-ground', building sẽ dịch CÙNG PHA với mặt đất, chỉ lệch so
+// với các lớp xa hơn (mây/núi) để vẫn giữ cảm giác chiều sâu.
+const buildingParallaxStyle = computed(() => {
+  const groundLayer = activeStack.value.layers.find((layer) => layer.name === '07-sect-ground')
+
+  return groundLayer ? parallaxStyle(groundLayer) : {}
+})
 
 function handlePointerMove(event: PointerEvent): void {
   if (reducedMotion.value) {
@@ -228,8 +239,10 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- Building art shares this scene's stacking context so foreground scenery
-         and the cultivating character can remain in front of it. -->
-    <HomeBuildingIcons :variant="activeStack.variant" />
+         and the cultivating character can remain in front of it. Parallax
+         style bơm qua fallthrough attrs — root của HomeBuildingIcons.vue
+         tự đọc --parallax-x/y cùng cơ chế .home-scene__parallax-layer. -->
+    <HomeBuildingIcons :variant="activeStack.variant" :style="buildingParallaxStyle" />
 
     <div class="home-player">
       <!-- Command wheel trigger (plan Workstream A/B) — ảnh tu luyện
@@ -480,6 +493,22 @@ onBeforeUnmount(() => {
     transition: none;
     transform: none;
     translate: none;
+  }
+}
+
+/* Building hotspot layer nhận --parallax-x/y qua fallthrough attrs
+   (buildingParallaxStyle) — cùng transform/transition với
+   .home-scene__parallax-layer để building "gắn" đúng pha với mặt đất. */
+.home-scene :deep(.home-building-hotspots) {
+  transform: translate3d(var(--parallax-x, 0), var(--parallax-y, 0), 0);
+  transition: transform 140ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-scene :deep(.home-building-hotspots) {
+    transition: none;
+    transform: none;
   }
 }
 </style>

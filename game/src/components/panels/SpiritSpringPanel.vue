@@ -5,17 +5,7 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
 import Bar from '@/components/common/primitives/Bar.vue'
 import GameButton from '@/components/common/GameButton.vue'
-import SceneHeader from '@/components/common/SceneHeader.vue'
-import {
-  SPIRIT_STONE_CONVERSION_RATIO,
-  SPIRIT_STONE_MATERIAL,
-  SPIRIT_STONE_MATERIAL_ID,
-  SPIRIT_STONE_THUONG_PHAM_MATERIAL,
-  SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID,
-  SPIRIT_STONE_TRUNG_PHAM_MATERIAL,
-  SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID,
-  getSpiritStoneMaterialIdForRealmTier,
-} from '@/core/material/SpiritStoneMaterial'
+import { getSpiritStoneMaterialIdForRealmTier } from '@/core/material/SpiritStoneMaterial'
 
 const BUILDING_ID = 'spirit_spring'
 
@@ -80,57 +70,10 @@ function collect() {
   gameManager.collectBuilding(instance.value.instanceId, player.$state, nowSeconds.value)
   bumpState()
 }
-
-// =========================
-// Quy đổi phẩm Linh Thạch (T2, review 2026-08-28) — 1 chiều LÊN:
-// 100 Hạ → 1 Trung, 100 Trung → 1 Thượng.
-// =========================
-
-const haPhamOwned = computed(() => {
-  stateVersion.value
-
-  return gameManager.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)
-})
-
-const trungPhamOwned = computed(() => {
-  stateVersion.value
-
-  return gameManager.materialBag.getAmount(SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID)
-})
-
-const thuongPhamOwned = computed(() => {
-  stateVersion.value
-
-  return gameManager.materialBag.getAmount(SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID)
-})
-
-function convertToTrungPham() {
-  gameManager.convertSpiritStonesUp(SPIRIT_STONE_MATERIAL_ID, 1)
-  bumpState()
-}
-
-function convertToThuongPham() {
-  gameManager.convertSpiritStonesUp(SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID, 1)
-  bumpState()
-}
 </script>
 
 <template>
   <section class="spirit-spring-panel">
-    <SceneHeader
-      class="spirit-spring-panel__scene"
-      asset="/assets/buildings/dong-fu/spirit_spring.png"
-      scene="water"
-      height="clamp(96px, 21vh, 210px)"
-      object-position="center 58%"
-      :image-opacity="0.7"
-      caption="LINH MẠCH HỘI TỤ"
-    >
-      <template #decoration>
-        <div class="spirit-spring-panel__orb" />
-      </template>
-    </SceneHeader>
-
     <p class="spirit-spring-panel__description">{{ template?.description }}</p>
 
     <div class="spirit-spring-panel__card">
@@ -150,41 +93,6 @@ function convertToThuongPham() {
 
       <GameButton class="spirit-spring-panel__collect" size="sm" :disabled="storedAmount <= 0" @click="collect">Thu hoạch</GameButton>
     </div>
-
-    <div class="spirit-spring-panel__card">
-      <h3>Đổi Phẩm Linh Thạch</h3>
-
-      <small class="spirit-spring-panel__rate">
-        Quy đổi 1 chiều lên: {{ SPIRIT_STONE_CONVERSION_RATIO }} Hạ → 1 Trung,
-        {{ SPIRIT_STONE_CONVERSION_RATIO }} Trung → 1 Thượng.
-      </small>
-
-      <div class="spirit-spring-panel__tiers">
-        <span>{{ SPIRIT_STONE_MATERIAL.name }}: {{ haPhamOwned.toLocaleString('vi-VN') }}</span>
-        <span>{{ SPIRIT_STONE_TRUNG_PHAM_MATERIAL.name }}: {{ trungPhamOwned.toLocaleString('vi-VN') }}</span>
-        <span>{{ SPIRIT_STONE_THUONG_PHAM_MATERIAL.name }}: {{ thuongPhamOwned.toLocaleString('vi-VN') }}</span>
-      </div>
-
-      <div class="spirit-spring-panel__convert">
-        <GameButton
-          class="spirit-spring-panel__convert-btn"
-          size="sm"
-          :disabled="haPhamOwned < SPIRIT_STONE_CONVERSION_RATIO"
-          @click="convertToTrungPham"
-        >
-          {{ SPIRIT_STONE_CONVERSION_RATIO }} Hạ → 1 Trung
-        </GameButton>
-
-        <GameButton
-          class="spirit-spring-panel__convert-btn"
-          size="sm"
-          :disabled="trungPhamOwned < SPIRIT_STONE_CONVERSION_RATIO"
-          @click="convertToThuongPham"
-        >
-          {{ SPIRIT_STONE_CONVERSION_RATIO }} Trung → 1 Thượng
-        </GameButton>
-      </div>
-    </div>
   </section>
 </template>
 
@@ -199,35 +107,8 @@ function convertToThuongPham() {
     linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 60%, var(--paper-200) 100%);
 }
 
-.spirit-spring-panel__scene {
-  border: 1px solid color-mix(in srgb, var(--scene-water-accent) 34%, transparent);
-  border-radius: var(--radius-md);
-  background: color-mix(in srgb, var(--scene-water-accent) 8%, var(--ink-950));
-  box-shadow: inset 0 -45px 55px color-mix(in srgb, var(--ink-950) 72%, transparent), 0 12px 30px rgba(0, 0, 0, .22);
-}
-
-.spirit-spring-panel__scene :deep(.scene-header__image) {
-  filter: saturate(1.18) contrast(1.05);
-}
-
-.spirit-spring-panel__scene :deep(.scene-header__caption) {
-  color: color-mix(in srgb, var(--scene-water-accent) 55%, white);
-}
-
-.spirit-spring-panel__orb {
-  position: absolute;
-  right: 12%;
-  top: 28%;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--scene-water-accent) 12%, white), var(--scene-water-accent) 35%, color-mix(in srgb, var(--scene-water-accent) 20%, transparent) 72%);
-  box-shadow: 0 0 30px color-mix(in srgb, var(--scene-water-accent) 65%, white), 0 0 70px color-mix(in srgb, var(--scene-water-accent) 50%, transparent);
-  animation: spring-orb 2.2s ease-in-out infinite alternate;
-}
-
 .spirit-spring-panel__description {
-  margin: 14px 0 16px;
+  margin: 0 0 16px;
   color: var(--paper-text-soft);
   line-height: var(--lh-relaxed);
 }
@@ -239,10 +120,6 @@ function convertToThuongPham() {
   border: 1px solid color-mix(in srgb, var(--scene-water-accent) 40%, var(--paper-line));
   border-radius: var(--radius-md);
   background: linear-gradient(110deg, color-mix(in srgb, var(--scene-water-accent) 12%, var(--paper-50)), color-mix(in srgb, var(--scene-water-accent) 5%, var(--paper-100)));
-}
-
-@keyframes spring-orb {
-  to { transform: translateY(-8px) scale(1.08); opacity: .82; }
 }
 
 .spirit-spring-panel__card h3 {
@@ -261,8 +138,7 @@ function convertToThuongPham() {
   --bar-to: var(--jade);
 }
 
-.spirit-spring-panel__collect,
-.spirit-spring-panel__convert-btn {
+.spirit-spring-panel__collect {
   justify-self: start;
   padding: 8px 14px;
   background: var(--scene-water-accent);
@@ -270,22 +146,8 @@ function convertToThuongPham() {
   color: var(--ink-950);
 }
 
-.spirit-spring-panel__collect:disabled,
-.spirit-spring-panel__convert-btn:disabled {
+.spirit-spring-panel__collect:disabled {
   background: var(--paper-200);
   color: var(--paper-text-muted);
-}
-
-.spirit-spring-panel__tiers {
-  display: grid;
-  gap: 4px;
-  color: var(--paper-text-soft);
-  font-size: var(--text-xs);
-}
-
-.spirit-spring-panel__convert {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
 }
 </style>

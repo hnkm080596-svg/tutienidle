@@ -148,11 +148,13 @@ function close() {
   color: var(--paper-text);
 }
 
+/* Số tầng hoàn thành là headline của cả panel — trước đây chìm cùng cỡ
+   với ghi chú bên dưới (2026-08-30 frontend-design pass). */
 .luyen-the-panel__summary {
   display: flex;
   justify-content: space-between;
-  font-size: var(--text-sm);
-  color: var(--paper-text-soft);
+  font: 700 var(--text-title) var(--font-display);
+  color: var(--paper-text);
 }
 
 .luyen-the-panel__note {
@@ -204,7 +206,7 @@ function close() {
 .luyen-the-panel__tier-name {
   font-weight: 600;
   color: var(--chrome-100);
-  font-size: var(--text-body);
+  font-size: var(--text-md);
 }
 
 .luyen-the-panel__tier-stat {
@@ -225,7 +227,9 @@ function close() {
 .luyen-the-panel__tier-progress {
   display: block;
   margin-top: 3px;
-  font-size: var(--text-sm);
-  color: var(--text-muted);
+  font-size: var(--text-md);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
 }
 </style>

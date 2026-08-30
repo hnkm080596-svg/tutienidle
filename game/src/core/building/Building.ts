@@ -23,6 +23,7 @@ export type BuildingFunctionType =
   | 'stage_select'
   | 'exploration'
   | 'spirit_spring'
+  | 'vendor'
 
 /**
  * Template tĩnh (registry entry) — sau rework 2026-08-25 chỉ còn 2 loại:

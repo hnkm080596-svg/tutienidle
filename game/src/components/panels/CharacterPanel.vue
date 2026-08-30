@@ -414,9 +414,12 @@ const pillPermanentRows = computed(() => {
   line-height: 1.1;
 }
 
+/* "Chiến Lực" là con số tổng hợp người chơi quan tâm nhất trên cả panel
+   (frontend-design pass 2026-08-30: "the hero is a thesis") — phóng to
+   hẳn so với các số khác thay vì cùng cỡ text-lg với tên thiên phú. */
 .character-panel__power-value {
   font-family: var(--font-display);
-  font-size: var(--text-lg);
+  font-size: var(--text-display);
   font-weight: 700;
   color: var(--paper-text);
   text-shadow: 0 0 12px color-mix(in srgb, var(--mineral-gold) 35%, transparent);
@@ -545,25 +548,33 @@ const pillPermanentRows = computed(() => {
 
 .character-panel__body::-webkit-scrollbar { display: none; }
 
+/* Mỗi nhóm chỉ số giờ là 1 CARD thật (viền + nền giấy tinting nhẹ) thay
+   vì khối phẳng chỉ phân bằng hairline — cùng ngôn ngữ thị giác với
+   .qi-hall__preview-card/.resource-card đã dùng ở các building panel
+   (frontend-design pass 2026-08-30, đồng bộ toàn app). */
 .stat-group {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--paper-line, rgba(42, 41, 36, 0.42));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--paper-50) 65%, transparent);
 }
 
+/* Tiêu đề nhóm — vạch cinnabar bên trái + cỡ chữ lớn hơn CHÍNH các dòng
+   nó tiêu đề (trước đây tiêu đề 13px lại NHỎ HƠN dòng nội dung 14px bên
+   dưới, đảo ngược tôn ti thị giác). */
 .stat-group__title {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  margin: 0 0 var(--space-1);
-  padding: var(--space-1) 0;
-  background: none;
-  border: none;
-  font-size: var(--text-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  color: var(--paper-eyebrow);
+  margin: 0 0 var(--space-2);
+  padding-left: 9px;
+  border-left: 3px solid var(--paper-eyebrow);
+  font: 700 var(--text-md) var(--font-display);
+  letter-spacing: 0.02em;
+  color: var(--paper-text);
   cursor: default;
-  font-family: var(--font-body);
 }
 
 .stat-list {
@@ -577,8 +588,20 @@ const pillPermanentRows = computed(() => {
   justify-content: space-between;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-1) 0;
+  padding: 7px 0;
   border-bottom: 1px solid var(--ink-line-soft);
+  font-size: var(--text-md);
+}
+
+.stat-list li > span:first-child {
+  color: var(--paper-text-soft);
+}
+
+.stat-list li > span:last-child,
+.stat-list__main-stat {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--paper-text);
 }
 
 .stat-list__main-stat {
@@ -592,6 +615,7 @@ const pillPermanentRows = computed(() => {
   flex-direction: column;
   align-items: flex-end;
   line-height: 1.15;
+  font-size: var(--text-lg);
 }
 
 /* PLAN HOÀN CHỈNH mục 4 — "MAX" màu vàng, nằm NGAY DƯỚI giá trị,
@@ -632,7 +656,7 @@ const pillPermanentRows = computed(() => {
   border-radius: var(--radius-sm);
   background: var(--ink-800);
   border: 1px solid var(--ink-line-soft);
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
 }
 
 .element-chip--fire { left: 50%; top: 0; transform: translateX(-50%); }

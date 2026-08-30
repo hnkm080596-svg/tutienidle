@@ -144,7 +144,7 @@ afterEach(() => {
 })
 
 describe('HomeBuildingIcons — building navigation không dùng chip nổi', () => {
-  it('renders five manifest-ordered building sprites and one shared season overlay', () => {
+  it('renders six manifest-ordered building sprites and one shared season overlay', () => {
     const mounted = mountHomeBuildings(gameManager)
 
     expect(mounted.buildingAnchors().map((node) => node.dataset.buildingId)).toEqual([
@@ -152,6 +152,7 @@ describe('HomeBuildingIcons — building navigation không dùng chip nổi', ()
       'gathering_outpost',
       'teleport_array',
       'equipment_hall',
+      'vendor',
       'spirit_spring',
     ])
     expect(mounted.sprite('pill_room')).not.toBeNull()

@@ -25,8 +25,10 @@ const emit = defineEmits<{ close: [] }>()
         <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
         <header class="overlay-panel__header">
           <div class="overlay-panel__heading">
-            <h3>{{ title }}</h3>
-            <slot name="subtitle" />
+            <slot name="heading">
+              <h3>{{ title }}</h3>
+              <slot name="subtitle" />
+            </slot>
           </div>
           <slot name="header-actions" />
         </header>

@@ -1768,6 +1768,37 @@ export class GameManager {
     return result
   }
 
+  /**
+   * Danh sách material người chơi ĐANG SỞ HỮU và bán được cho Vendor
+   * (Ký Bảo Các, 2026-08-30) — dùng cho VendorPanel.vue liệt kê UI, tách
+   * khỏi sellMaterialToVendor() (hành động) để panel không tự lặp logic
+   * lọc category/giá.
+   */
+  getVendorSellableRows(
+    player: PlayerData,
+  ): Array<{ materialId: string; name: string; owned: number; unitPrice: number }> {
+    const vendorSystem = new VendorSystem(this.materialRegistry, this.getAlchemyRecipes())
+
+    const rows: Array<{ materialId: string; name: string; owned: number; unitPrice: number }> = []
+
+    for (const stack of this.materialBag.getAll()) {
+      const unitPrice = vendorSystem.getUnitSellPrice(stack.material.id, player.realmId)
+
+      if (unitPrice === undefined) {
+        continue
+      }
+
+      rows.push({
+        materialId: stack.material.id,
+        name: stack.material.name,
+        owned: stack.amount,
+        unitPrice,
+      })
+    }
+
+    return rows
+  }
+
   // =========================
   // EQUIPMENT
   // =========================

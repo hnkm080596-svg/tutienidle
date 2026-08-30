@@ -181,12 +181,18 @@ function onUpgrade() {
       </ul>
 
       <div class="node-inspector__actions">
+        <!-- Ẩn NỘI DUNG chi phí khi ĐÃ hiện trong danh sách lý do khoá
+             phía trên (2026-08-30 frontend-design pass: 2 chỗ cùng nói
+             "Cần X Cảm Ngộ" khi node đang khoá vì thiếu điểm) — giữ span
+             rỗng để layout space-between với nút không bị lệch. -->
         <span class="node-inspector__cost">
-          {{ level === 0
-            ? `Chi phí: ${nextCost ?? node.insightCost} Cảm Ngộ`
-            : isMaxed
-              ? 'Đã đạt cấp tối đa.'
-              : `Nâng cấp: ${nextCost} Cảm Ngộ` }}
+          {{ lockedReasons.length > 0 && level === 0
+            ? ''
+            : level === 0
+              ? `Chi phí: ${nextCost ?? node.insightCost} Cảm Ngộ`
+              : isMaxed
+                ? 'Đã đạt cấp tối đa.'
+                : `Nâng cấp: ${nextCost} Cảm Ngộ` }}
         </span>
 
         <GameButton
@@ -234,8 +240,10 @@ function onUpgrade() {
   gap: 8px;
 }
 
+/* Tên node là "hero" của khối inspector — trước đây chỉ 14px, gần như
+   cùng cỡ mô tả bên dưới (2026-08-30 frontend-design pass). */
 .node-inspector__name {
-  font-size: var(--text-body);
+  font-size: var(--text-lg);
   font-weight: 700;
   color: var(--chrome-100);
 }
@@ -294,9 +302,12 @@ function onUpgrade() {
   margin-top: 6px;
 }
 
+/* Dòng chi phí đứng ngay cạnh nút hành động — nâng cỡ để dẫn mắt tới
+   quyết định thay vì chìm cùng cỡ với mô tả (2026-08-30 pass). */
 .node-inspector__cost {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--text-secondary);
 }
 
 .node-inspector__buy {

@@ -127,16 +127,20 @@ const currentKiemTuRoute = computed<KiemTuRoute>(() => {
     </div>
 
     <!-- Kiếm Thế / Kiếm Ý (spec 2026-08-29) — route đã chốt vĩnh viễn
-         lúc chọn path, hiển thị thông tin thay vì UI đổi đường cũ. -->
+         lúc chọn path, hiển thị thông tin thay vì UI đổi đường cũ. Bọc
+         card thật (2026-08-30 frontend-design pass: trước đây chỉ là 2
+         đoạn văn trần, không có khung nào tách khỏi overlay chrome). -->
     <div v-if="isKiemTu" class="quan-khi-panel__card">
-      <p class="quan-khi-panel__hint">
-        Đường Kiếm Tu đã chốt: <strong>{{ currentKiemTuRoute === 'bat_kiem' ? 'Bạt Kiếm (Đơn Kiếm)' : 'Kiếm Trận (Đa Kiếm)' }}</strong> — không thể đổi.
-      </p>
-      <p class="quan-khi-panel__warning">
-        {{ currentKiemTuRoute === 'bat_kiem'
-          ? 'Huy Kiếm đạt tầng 3 (10.000 lần trảm) nên khai mở Bạt Kiếm — một chiêu tụ lực, mạnh dần theo tầng Kiếm Ý diệt boss.'
-          : 'Huy Kiếm chưa đạt tầng 3 nên bước vào Kiếm Trận — kiếm trận tiến hóa theo cảnh giới, mở hiệu ứng on-hit theo cấp trận.' }}
-      </p>
+      <div class="quan-khi-panel__route-card">
+        <p class="quan-khi-panel__hint">
+          Đường Kiếm Tu đã chốt: <strong class="quan-khi-panel__route-name">{{ currentKiemTuRoute === 'bat_kiem' ? 'Bạt Kiếm (Đơn Kiếm)' : 'Kiếm Trận (Đa Kiếm)' }}</strong> — không thể đổi.
+        </p>
+        <p class="quan-khi-panel__warning">
+          {{ currentKiemTuRoute === 'bat_kiem'
+            ? 'Huy Kiếm đạt tầng 3 (10.000 lần trảm) nên khai mở Bạt Kiếm — một chiêu tụ lực, mạnh dần theo tầng Kiếm Ý diệt boss.'
+            : 'Huy Kiếm chưa đạt tầng 3 nên bước vào Kiếm Trận — kiếm trận tiến hóa theo cảnh giới, mở hiệu ứng on-hit theo cấp trận.' }}
+        </p>
+      </div>
     </div>
 
     <ConfirmModal
@@ -160,10 +164,27 @@ const currentKiemTuRoute = computed<KiemTuRoute>(() => {
   color: var(--paper-text);
 }
 
+/* Câu duy nhất trước 1 quyết định vĩnh viễn — xứng đáng cỡ chữ lớn hơn
+   text-sm mặc định (2026-08-30 frontend-design pass). */
 .quan-khi-panel__hint {
   margin: 0;
-  font-size: var(--text-sm);
+  font-size: var(--text-md);
   color: var(--paper-text-muted);
+}
+
+.quan-khi-panel__route-name {
+  color: var(--chrome-100);
+}
+
+/* Khối "đường đã chốt" — card thật thay vì văn bản trần (2026-08-30). */
+.quan-khi-panel__route-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  background: var(--ink-800);
+  border: 1px solid var(--chrome-500);
+  border-radius: var(--radius-md);
 }
 
 .quan-khi-panel__choices {
@@ -193,9 +214,12 @@ const currentKiemTuRoute = computed<KiemTuRoute>(() => {
   opacity: 0.6;
 }
 
+/* Đoạn giải thích thật sự — trước đây nhỏ HƠN dòng hint phía trên nó dù
+   là nội dung payoff chính (2026-08-30 frontend-design pass). */
 .quan-khi-panel__warning {
   margin: 0;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
+  line-height: 1.5;
   color: var(--gold-500);
 }
 </style>

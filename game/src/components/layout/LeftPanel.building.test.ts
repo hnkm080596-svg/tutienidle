@@ -80,29 +80,34 @@ afterEach(() => {
 })
 
 describe('FunctionOverlayPanel — building header và Linh Tuyền', () => {
-  it('render Linh Tuyền trong overlay theo thứ tự Tên → Cấp → Nâng cấp', async () => {
+  it('render Linh Tuyền trong overlay: ảnh + Tên + Cấp CÙNG MỘT dải title bar, nút Nâng cấp neo góc phải (2026-08-30: gộp 2 dải trùng tên/cấp làm 1)', async () => {
     const mounted = mountSpringPanel()
-    const header = mounted.container.querySelector<HTMLElement>('.building-panel-header')!
-    const firstTags = Array.from(header.children)
-      .slice(0, 3)
-      .map((element) => element.tagName)
+    const heading = mounted.container.querySelector<HTMLElement>('.overlay-panel__heading')!
+    const actions = mounted.container.querySelector<HTMLElement>('.overlay-panel__header')!
 
-    expect(firstTags).toEqual(['IMG', 'DIV', 'DIV'])
-    expect(header.querySelector('.building-panel-header__art')).not.toBeNull()
-    expect(header.querySelector('.building-panel-header__identity h2')).not.toBeNull()
-    expect(header.querySelector('.building-panel-header__upgrade-area button')).not.toBeNull()
+    // Tên công trình CHỈ hiện MỘT LẦN DUY NHẤT, trong chính title bar —
+    // không còn dải header con riêng bên dưới (BuildingPanelHeader.vue
+    // đã bị xoá hẳn, thay bằng slot #heading/#header-actions của
+    // OverlayPanel qua useBuildingHeaderState).
+    expect(mounted.container.querySelector('.building-panel-header')).toBeNull()
+    expect(heading.querySelector('.building-heading__art')).not.toBeNull()
+    expect(heading.querySelector('.building-heading__name')?.textContent).toBe('Linh Tuyền')
+    expect(heading.textContent).toContain('Cấp 1 / 3')
+    expect((mounted.container.textContent!.match(/Linh Tuyền/g) ?? []).length).toBe(1)
+
+    const upgradeButton = actions.querySelector<HTMLButtonElement>('.building-heading__upgrade')!
+    expect(upgradeButton).not.toBeNull()
+    expect(actions.textContent).toContain('Nâng công trình')
     expect(mounted.container.querySelector('.construction-gate__upgrade')).toBeNull()
-    expect(mounted.container.querySelectorAll('.building-panel-header__upgrade')).toHaveLength(1)
-    expect(header.textContent).toContain('Nâng công trình')
-    expect(header.textContent).toContain('Linh Tuyền')
-    expect(header.textContent).toContain('Cấp 1 / 3')
+    expect(mounted.container.querySelectorAll('.building-heading__upgrade')).toHaveLength(1)
+
     expect(mounted.container.querySelector('.spirit-spring-panel')).not.toBeNull()
 
-    header.querySelector<HTMLButtonElement>('.building-panel-header__upgrade')!.click()
+    upgradeButton.click()
     await nextTick()
 
     expect(mounted.gameManager.buildingManager.getByBuildingId(SPRING.id)?.level).toBe(2)
-    expect(header.textContent).toContain('Cấp 2 / 3')
+    expect(heading.textContent).toContain('Cấp 2 / 3')
 
     mounted.unmount()
   })

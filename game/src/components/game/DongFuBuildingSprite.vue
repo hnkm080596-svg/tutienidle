@@ -128,7 +128,7 @@ function reportAssetError(): void {
 }
 
 .dong-fu-building-sprite__shadow { z-index: 0; }
-.dong-fu-building-sprite__base { z-index: 2; }
+.dong-fu-building-sprite__base { z-index: 2; transition: filter 150ms ease; }
 .dong-fu-building-sprite__outline {
   z-index: 1;
   opacity: 0;
@@ -151,10 +151,25 @@ function reportAssetError(): void {
   opacity: 0;
 }
 
+/* Hover/focus (2026-08-30 bug report: "hover làm mờ building thay vì rõ
+   hơn") — filter riêng SÁNG hơn mặc định (brightness 0.72 → 1.15) thay vì
+   dùng chung filter tối của outline mặc định, cho cảm giác "sáng lên" chứ
+   không phải quầng vàng xỉn màu phủ lên. */
 :global(.building-hotspot:hover) .dong-fu-building-sprite__outline,
-:global(.building-hotspot:focus-visible) .dong-fu-building-sprite__outline,
+:global(.building-hotspot:focus-visible) .dong-fu-building-sprite__outline {
+  opacity: 0.4;
+  filter: sepia(1) saturate(2.3) hue-rotate(352deg) brightness(1.15) drop-shadow(0 0 5px rgba(255, 205, 110, 0.85));
+}
+
 .dong-fu-building-sprite.is-selected .dong-fu-building-sprite__outline {
-  opacity: 0.34;
+  opacity: 0.52;
+}
+
+/* Ảnh chính SÁNG/RÕ hơn khi hover — trước đây chỉ có quầng viền xỉn màu
+   phủ lên, không có gì làm base rõ hơn nên cảm giác ngược lại (mờ đi). */
+:global(.building-hotspot:hover) .dong-fu-building-sprite__base,
+:global(.building-hotspot:focus-visible) .dong-fu-building-sprite__base {
+  filter: brightness(1.12) saturate(1.08);
 }
 
 :global(.building-hotspot:hover) .dong-fu-building-sprite.has-hover-motion .dong-fu-building-sprite__content,

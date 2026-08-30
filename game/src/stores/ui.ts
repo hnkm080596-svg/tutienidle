@@ -43,6 +43,7 @@ export type LeftPanelMode =
   | 'spirit_spring'
   | 'scripture_pavilion'
   | 'stage_select'
+  | 'vendor'
   | null
 
 // Phù/Trận legacy khai tử — bag chỉ còn 3 tab.

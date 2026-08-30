@@ -186,6 +186,32 @@ export const buildings: Building[] = [
     upgradeCost: [[{ materialId: 'mortal_wood', amount: 3 }]],
   },
 
+  // Ký Bảo Các — building CHUYÊN cho mọi cơ chế "đổi/bán" (2026-08-30,
+  // bug report: exchange bị nhét nhầm vào Linh Tuyền/Sản Xuất — building
+  // không chuyên). Gộp Hóa Bán (VendorSystem) + quy đổi phẩm Linh Thạch +
+  // quy đổi cảnh giới nguyên liệu (xem VendorPanel.vue). Không có tiến
+  // trình nâng cấp ý nghĩa (vendor không "mạnh hơn" theo cấp) nên
+  // maxLevel: 1, giống Truyền Tống Trận.
+  {
+    id: 'vendor',
+
+    name: 'Ký Bảo Các',
+
+    description: 'Nơi trao đổi nguyên liệu dư thừa và quy đổi phẩm cấp Linh Thạch/nguyên liệu.',
+
+    category: 'crafting_station',
+
+    tier: 1,
+
+    maxLevel: 1,
+
+    baseStorageCapacity: 0,
+
+    functionType: 'vendor',
+
+    upgradeCost: [[{ materialId: 'mortal_wood', amount: 3 }]],
+  },
+
   // Sản Xuất — gate panel ba nguồn Lâm/Quáng/Động Thiên; BẮT BUỘC free
   // vì đây là nguồn nguyên liệu DUY NHẤT đầu game.
   {

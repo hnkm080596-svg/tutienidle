@@ -242,7 +242,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 
 .loadout-card--hero .loadout-card__name {
   font-family: var(--font-display);
-  font-size: var(--text-md);
+  font-size: var(--text-title);
   white-space: normal;
 }
 

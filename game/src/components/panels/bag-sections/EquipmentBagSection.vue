@@ -42,11 +42,15 @@ interface EquipmentEntry {
   name: string
 }
 
+// "quality" (Phàm Khí→Thiên Địa Trọng Khí, trần Điểm Rèn) và "rarity"
+// (Hoàng→Tiên, hệ Phẩm hiện ở mọi tooltip) là 2 TRỤC KHÁC NHAU — nhãn
+// "Phẩm chất"/"Phẩm" tách biệt để không gây hiểu nhầm là 1 thứ (2026-08-30
+// bug report: "Rarity"/"Slot" tiếng Anh lọt vào UI toàn tiếng Việt).
 const SORT_OPTIONS: Array<BagSortOption & { value: EquipmentSortMode }> = [
-  { value: 'quality', label: 'Phẩm chất' },
-  { value: 'rarity', label: 'Rarity' },
+  { value: 'quality', label: 'Phẩm' },
+  { value: 'rarity', label: 'Chất' },
   { value: 'realm', label: 'Cảnh giới' },
-  { value: 'slot', label: 'Slot' },
+  { value: 'slot', label: 'Vị trí' },
   { value: 'name', label: 'Tên', ascLabel: 'Tên A–Z', descLabel: 'Tên Z–A' },
   { value: 'forge', label: 'Điểm Rèn' },
 ]

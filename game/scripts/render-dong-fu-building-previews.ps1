@@ -10,11 +10,12 @@ $previewRoot = Join-Path $runtimeRoot 'previews'
 New-Item -ItemType Directory -Force -Path $previewRoot | Out-Null
 
 $placements = @(
-  @{ id = 'teleport_array'; x = 58; y = 58; scale = 0.19; z = 10; baseline = 1049 },
-  @{ id = 'pill_room'; x = 16; y = 63; scale = 0.21; z = 11; baseline = 1032 },
-  @{ id = 'gathering_outpost'; x = 83; y = 62; scale = 0.22; z = 12; baseline = 902 },
-  @{ id = 'equipment_hall'; x = 28; y = 74; scale = 0.27; z = 21; baseline = 941 },
-  @{ id = 'spirit_spring'; x = 74; y = 75; scale = 0.28; z = 22; baseline = 953 }
+  @{ id = 'pill_room'; x = 13; y = 58; scale = 0.10; z = 11; baseline = 1032 },
+  @{ id = 'equipment_hall'; x = 25; y = 45; scale = 0.10; z = 20; baseline = 941 },
+  @{ id = 'spirit_spring'; x = 40; y = 55; scale = 0.10; z = 22; baseline = 953 },
+  @{ id = 'gathering_outpost'; x = 68.5; y = 45.5; scale = 0.05; z = 21; baseline = 902 },
+  @{ id = 'vendor'; x = 80; y = 46; scale = 0.05; z = 15; baseline = 1050 },
+  @{ id = 'teleport_array'; x = 90; y = 80; scale = 0.20; z = 10; baseline = 1049 }
 )
 
 function Add-Buildings([string]$background, [string]$output, [string]$season) {
@@ -64,7 +65,7 @@ foreach ($placement in $placements) {
   $gameplayCells += $cell
 }
 magick montage $gameplayCells -background '#e8dfca' -geometry '320x300+8+8' `
-  -tile '5x1' "PNG32:$(Join-Path $previewRoot 'gameplay-scale.png')"
+  -tile '6x1' "PNG32:$(Join-Path $previewRoot 'gameplay-scale.png')"
 $gameplayCells | ForEach-Object { Remove-Item -LiteralPath $_ }
 
 $stateCells = @()
@@ -91,5 +92,5 @@ foreach ($placement in $placements) {
   }
 }
 magick montage $stateCells -background '#e8dfca' -geometry '250x250+7+7' `
-  -tile '4x5' "PNG32:$(Join-Path $previewRoot 'states.png')"
+  -tile '4x6' "PNG32:$(Join-Path $previewRoot 'states.png')"
 $stateCells | ForEach-Object { Remove-Item -LiteralPath $_ }

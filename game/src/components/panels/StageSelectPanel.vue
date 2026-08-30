@@ -11,7 +11,6 @@ import { useBattleActions } from '@/composables/useBattleActions'
 import BuildingConstructionGate from './BuildingConstructionGate.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import Chip from '@/components/common/primitives/Chip.vue'
-import SceneHeader from '@/components/common/SceneHeader.vue'
 import EmptyState from '@/components/common/primitives/EmptyState.vue'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 
@@ -185,25 +184,11 @@ function start() {
 <template>
   <BuildingConstructionGate building-id="teleport_array">
   <div class="stage-select-shell">
-    <SceneHeader
-      class="stage-select__scene"
-      asset="/assets/buildings/dong-fu/teleport_array.png"
-      scene="portal"
-      height="clamp(72px, 12vh, 118px)"
-      object-position="center 52%"
-      :image-opacity="0.5"
-    >
-      <template #decoration>
-        <div class="stage-select__portal" aria-hidden="true">界</div>
-      </template>
-
-      <div class="stage-select__scene-copy">
-        <small>TRẬN VĂN ĐỊNH VỊ</small>
-        <h3>Chọn địa giới để truyền tống</h3>
-        <p>Xem trước đội hình yêu thú, số lượng và nhịp xuất hiện của từng tầng.</p>
-      </div>
-    </SceneHeader>
-
+    <!-- Banner ảnh teleport_array đã bỏ (2026-08-30, bug report: hình dư
+         thừa). Intro text (eyebrow/h3/mô tả) BỎ LUÔN (2026-08-30, bug
+         report thứ 2: trùng lặp — title bar OverlayPanel đã hiện "Địa
+         Giới", nhãn filter "Địa Giới"/"Cảnh Giới Khu Vực" bên dưới đã tự
+         giải thích, không cần lặp lại bằng câu văn). -->
     <div class="stage-select">
       <nav class="stage-select__filters" aria-label="Chọn địa giới và chương">
         <div class="stage-select__filter-group">
@@ -282,8 +267,11 @@ function start() {
             <span class="stage-select__enemy-sigil">{{ enemy.name.charAt(0) }}</span>
             <span>
               <strong>{{ enemy.name }}</strong>
+              <!-- Bỏ "Trọng số {{enemy.weight}}" (2026-08-30, bug report:
+                   số trọng số RNG nội bộ, không có ngữ cảnh tổng nên
+                   không giúp người chơi quyết định gì). -->
               <small>
-                <template v-if="enemy.level">Lv.{{ enemy.level }} · </template>{{ ARCHETYPE_LABELS[enemy.archetype] ?? enemy.archetype }} · Trọng số {{ enemy.weight }}
+                <template v-if="enemy.level">Lv.{{ enemy.level }} · </template>{{ ARCHETYPE_LABELS[enemy.archetype] ?? enemy.archetype }}
                 <template v-if="enemy.eliteChance > 0"> · {{ Math.round(enemy.eliteChance * 100) }}% Tinh Anh</template>
               </small>
             </span>
@@ -301,7 +289,7 @@ function start() {
         </p>
 
         <div class="stage-select__start-row">
-          <GameButton class="stage-select__build" variant="secondary" size="sm" @click="openBuild">? Build</GameButton>
+          <GameButton class="stage-select__build" variant="secondary" size="sm" @click="openBuild">Chỉnh Build</GameButton>
 
           <GameButton class="stage-select__start" size="sm" :disabled="!canStart" data-testid="stage-start-button" @click="start">
             Bắt Đầu
@@ -327,39 +315,6 @@ function start() {
     var(--paper-grain) 0 0 / 160px 160px repeat,
     radial-gradient(circle at 70% 0, color-mix(in srgb, var(--scene-portal-glow) 10%, transparent), transparent 40%),
     linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 60%, var(--paper-200) 100%);
-}
-
-.stage-select__scene {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  padding: 14px 24px;
-  border-bottom: 1px solid color-mix(in srgb, var(--scene-portal-accent) 30%, transparent);
-}
-
-/* Gradient ngang đặc thù panel Địa Giới — đè scrim dọc mặc định. */
-.stage-select__scene :deep(.scene-header__scrim) {
-  background: linear-gradient(90deg, color-mix(in srgb, var(--scene-portal-deep) 18%, transparent), color-mix(in srgb, var(--scene-portal-deep) 96%, transparent) 62%);
-}
-
-.stage-select__scene-copy {
-  position: relative;
-  z-index: 1;
-}
-
-.stage-select__scene-copy small { color: var(--scene-portal-accent); letter-spacing: .18em; }
-.stage-select__scene-copy h3 { margin: 2px 0; color: var(--scene-portal-text); font: 700 var(--text-lg) var(--font-display); }
-.stage-select__scene-copy p { margin: 0; color: var(--text-secondary); font-size: var(--text-xs); }
-.stage-select__portal {
-  display: grid;
-  flex: 0 0 64px;
-  height: 64px;
-  place-items: center;
-  border: 1px solid color-mix(in srgb, var(--scene-portal-text-soft) 65%, transparent);
-  border-radius: 50%;
-  color: var(--scene-portal-text-soft);
-  font: 700 var(--text-panel-title) var(--font-display);
-  box-shadow: 0 0 22px color-mix(in srgb, var(--scene-portal-glow) 34%, transparent), inset 0 0 20px color-mix(in srgb, var(--scene-portal-glow) 20%, transparent);
 }
 
 .stage-select {
@@ -611,7 +566,6 @@ function start() {
 /* Fit-refactor đợt 2 — đo theo CARD (overlay-panel container), không còn
    viewport; scene clamp tự co nên bỏ flex-basis override. */
 @container overlay-panel (max-width: 900px) {
-  .stage-select__portal { flex-basis: 48px; height: 48px; }
   .stage-select__filters { align-items: flex-start; flex-direction: column; gap: 6px; }
   .stage-select__filter-group { width: 100%; }
   .stage-select__workspace { display: flex; flex-direction: column; }

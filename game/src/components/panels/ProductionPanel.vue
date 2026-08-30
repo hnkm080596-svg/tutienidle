@@ -3,10 +3,6 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { getSpiritStoneMaterialIdForRealmTier } from '@/core/material/SpiritStoneMaterial'
-import {
-  MATERIAL_TIER_CONVERSION_RATIO,
-  getNextTierMaterialId,
-} from '@/core/material/MaterialTierConversionBalance'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
 import BuildingConstructionGate from './BuildingConstructionGate.vue'
 import Bar from '@/components/common/primitives/Bar.vue'
@@ -24,26 +20,12 @@ const KIND_META: Record<string, { label: string; sigil: string }> = {
   grotto: { label: 'Động Thiên', sigil: '藥' },
 }
 
-const TIER_WEIGHT_LABELS: Record<string, readonly string[]> = {
-  low: ['60 / 20 / 10'],
-  middle: ['40 / 40 / 20'],
-  high: ['20 / 40 / 40'],
-}
-
-function tierProfileLabel(realmId: string): string {
-  if (realmId === 'mortal') return '60/20/10'
-
-  if (realmId === 'qi_refining') return '40/40/20'
-
-  return '20/40/40'
-}
-
 function rewardSummary(kind: string): string {
   if (kind === 'forest') return 'Gỗ theo cảnh giới thu thập'
 
-  if (kind === 'mine') return 'Quáng phẩm Hoàng → Tiên'
+  if (kind === 'mine') return 'Quáng Thập Niên → Thượng Cổ'
 
-  return `${PILL_FAMILIES.length} chủ dược: ${PILL_FAMILIES.map((family) => family.herbName).join(' · ')}`
+  return `${PILL_FAMILIES.length} chủ dược`
 }
 
 const player = usePlayerStore()
@@ -210,55 +192,6 @@ function upgrade(siteId: string) {
   }
 }
 
-// =========================
-// Quy đổi cảnh giới Linh Mộc/Linh Khoáng (2026-08-28): gộp 10 bậc thấp →
-// 1 bậc cao theo thang Phàm Nhân → Luyện Khí → Trúc Cơ. Chỉ hiện các
-// nguyên liệu đang sở hữu và còn bậc cao hơn để đổi.
-// =========================
-
-interface TierConversionRow {
-  fromId: string
-
-  fromName: string
-
-  toName: string
-
-  owned: number
-}
-
-const tierConversionRows = computed<TierConversionRow[]>(() => {
-  stateVersion.value
-
-  const rows: TierConversionRow[] = []
-
-  for (const stack of gameManager.materialBag.getAll()) {
-    const fromId = stack.material.id
-
-    const toId = getNextTierMaterialId(fromId)
-
-    if (!toId || !gameManager.materialRegistry.has(toId)) {
-      continue
-    }
-
-    rows.push({
-      fromId,
-
-      fromName: stack.material.name,
-
-      toName: gameManager.materialRegistry.get(toId).name,
-
-      owned: gameManager.materialBag.getAmount(fromId),
-    })
-  }
-
-  return rows
-})
-
-function convertTier(fromId: string) {
-  gameManager.convertMaterialTier(fromId, 1)
-
-  bumpState()
-}
 </script>
 
 <template>
@@ -294,12 +227,9 @@ function convertTier(fromId: string) {
             <span>Nhân công: {{ row.activeWorkerSlots }}</span>
           </div>
 
-          <!-- Trọng số realm tier đã chuẩn hoá (§9.1) -->
-          <p class="site-card__weights">
-            Trọng số tier theo cấp thu thập:
-            <strong>{{ tierProfileLabel(player.$state.realmId) }}</strong>
-          </p>
-
+          <!-- Bỏ dòng "Trọng số tier" (2026-08-30, bug report: thông tin
+               hệ thống — số trọng số RNG nội bộ, người chơi không tác
+               động được nên không giúp ra quyết định gì). -->
           <p class="site-card__reward">{{ rewardSummary(row.kind) }}</p>
 
           <template v-if="row.isProducing">
@@ -327,12 +257,6 @@ function convertTier(fromId: string) {
             Auto lặp lại
           </label>
 
-          <!-- T4 (economy-ecosystem-plan): auto-restart đọc cảnh giới nhân
-               vật tại thời điểm lặp, KHÔNG nhớ cấp thu thập đã chọn. -->
-          <small v-if="row.autoRestart" class="site-card__auto-note">
-            Tự lặp lại dùng cảnh giới hiện tại của nhân vật.
-          </small>
-
           <div v-if="row.level < row.maxLevel" class="site-card__upgrade">
             <ul>
               <li
@@ -356,34 +280,6 @@ function convertTier(fromId: string) {
           </div>
         </article>
       </div>
-
-      <section v-if="tierConversionRows.length" class="tier-conversion">
-        <h3 class="tier-conversion__title">Quy đổi cảnh giới</h3>
-
-        <p class="tier-conversion__note">
-          Gộp {{ MATERIAL_TIER_CONVERSION_RATIO }} nguyên liệu cảnh giới thấp thành 1 cảnh giới cao
-          (Phàm Nhân → Luyện Khí → Trúc Cơ). Quáng giữ nguyên phẩm.
-        </p>
-
-        <div class="tier-conversion__rows">
-          <div v-for="row in tierConversionRows" :key="row.fromId" class="tier-conversion__row">
-            <span class="tier-conversion__label">
-              {{ row.fromName }}
-              <strong>({{ row.owned.toLocaleString('vi-VN') }})</strong>
-              → {{ row.toName }}
-            </span>
-
-            <GameButton
-              class="tier-conversion__button"
-              size="sm"
-              :disabled="row.owned < MATERIAL_TIER_CONVERSION_RATIO"
-              @click="convertTier(row.fromId)"
-            >
-              {{ MATERIAL_TIER_CONVERSION_RATIO }}  1
-            </GameButton>
-          </div>
-        </div>
-      </section>
     </div>
   </BuildingConstructionGate>
 </template>
@@ -490,7 +386,6 @@ function convertTier(fromId: string) {
   color: var(--jade);
 }
 
-.site-card__weights,
 .site-card__reward {
   margin: 0;
   font-size: var(--text-xs);
@@ -524,13 +419,6 @@ function convertTier(fromId: string) {
   cursor: pointer;
 }
 
-.site-card__auto-note {
-  margin: -2px 0 0;
-  font-size: var(--text-xs);
-  color: var(--paper-text-muted);
-  font-style: italic;
-}
-
 .site-card__upgrade ul {
   list-style: none;
   margin: 0 0 6px;
@@ -554,63 +442,4 @@ function convertTier(fromId: string) {
   cursor: not-allowed;
 }
 
-.tier-conversion {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px;
-  background: linear-gradient(145deg, color-mix(in srgb, var(--scene-forest-accent) 10%, var(--paper-50)), color-mix(in srgb, var(--scene-forest-accent) 4%, var(--paper-100)));
-  border: 1px solid color-mix(in srgb, var(--scene-forest-accent) 32%, var(--paper-line));
-  border-radius: var(--radius-md);
-}
-
-.tier-conversion__title {
-  margin: 0;
-  color: var(--paper-eyebrow);
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
-}
-
-.tier-conversion__note {
-  margin: 0;
-  font-size: var(--text-xs);
-  color: var(--paper-text-soft);
-}
-
-.tier-conversion__rows {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.tier-conversion__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 6px 8px;
-  border: 1px solid var(--paper-line);
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--scene-forest-accent) 6%, var(--paper-100));
-}
-
-.tier-conversion__label {
-  font-size: var(--text-xs);
-  color: var(--paper-text);
-}
-
-.tier-conversion__label strong {
-  color: var(--jade);
-}
-
-.tier-conversion__button {
-  padding: 5px 10px;
-  font-size: var(--text-xs);
-  white-space: nowrap;
-}
-
-.tier-conversion__button:disabled {
-  background: var(--paper-200);
-  color: var(--paper-text-muted);
-}
 </style>

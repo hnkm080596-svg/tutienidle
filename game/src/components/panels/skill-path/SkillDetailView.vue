@@ -18,6 +18,23 @@ const props = defineProps<{
   skill: Skill | null
 }>()
 
+// 2026-08-30 frontend-design pass — resourceType trước đây in THẲNG
+// key nội bộ ('mana'/'sword_intent'/'momentum') ra UI. Nhãn khớp thuật
+// ngữ đã dùng ở CombatStatusBar.vue (Linh Lực/Kiếm Ý); "momentum" chưa
+// có nhãn Việt hoá nào trong game nên đặt "Đà Thế" cho nhất quán văn
+// phong 2 chữ Hán Việt như các resource khác.
+const RESOURCE_TYPE_LABELS: Partial<Record<NonNullable<Skill['resourceType']>, string>> = {
+  mana: 'Linh Lực',
+  sword_intent: 'Kiếm Ý',
+  momentum: 'Đà Thế',
+}
+
+const resourceTypeLabel = computed(() => {
+  const type = props.skill?.resourceType
+
+  return type ? RESOURCE_TYPE_LABELS[type] ?? type : ''
+})
+
 const gameManager = useGameManager()
 const player = usePlayerStore()
 const { stateVersion, bumpState } = useStateVersion()
@@ -85,7 +102,7 @@ function onUpgrade() {
           label="Tiêu Hao"
           bordered
         >
-          {{ skill.cost }} {{ skill.resourceType }}
+          {{ skill.cost }} {{ resourceTypeLabel }}
         </StatRow>
 
         <StatRow v-if="skill.execution?.kind === 'attack_speed'" label="Loại" bordered>

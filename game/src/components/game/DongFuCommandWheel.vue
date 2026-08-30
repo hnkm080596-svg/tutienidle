@@ -342,6 +342,12 @@ function activate(slot: CommandWheelSlot) {
 
         <span v-if="isUpgradeable(slot)" class="command-wheel__upgrade-dot" aria-hidden="true" />
 
+        <!-- 2026-08-30 frontend-design pass — slot khóa trước đây CHỈ
+             phân biệt bằng opacity mờ đi, dễ đọc nhầm là "chỉ tối màu"
+             thay vì "chưa bấm được". Thêm icon khóa góc dưới-phải (2 góc
+             kia đã có upgrade-dot/notification-badge). -->
+        <span v-if="disabledReason(slot)" class="command-wheel__lock-badge" aria-hidden="true">🔒</span>
+
         <NotificationBadge
           v-if="hasBreakthroughBadge(slot)"
           variant="dot"
@@ -516,6 +522,15 @@ function activate(slot: CommandWheelSlot) {
   position: absolute;
   left: 6px;
   top: 6px;
+}
+
+.command-wheel__lock-badge {
+  position: absolute;
+  right: 6px;
+  bottom: 4px;
+  font-size: 10px;
+  line-height: 1;
+  opacity: 0.85;
 }
 
 @media (prefers-reduced-motion: reduce) {

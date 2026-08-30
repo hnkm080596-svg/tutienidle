@@ -195,7 +195,13 @@ function hideBrokenImage(event: Event) {
         <template v-else-if="content.kind === 'building'">
           <p class="tooltip__title">{{ content.name }}</p>
           <p v-if="content.functionLabel" class="tooltip__description">{{ content.functionLabel }}</p>
-          <p class="tooltip__building-status">{{ content.statusLabel }}</p>
+          <!-- Màu theo ĐÚNG trạng thái (2026-08-30 frontend-design pass) —
+               trước đây LUÔN jade dù đang nói "Chưa mở" (trông như tích
+               cực nhầm). isBuilt=false (chưa xây/chưa mở) → muted. -->
+          <p
+            class="tooltip__building-status"
+            :class="{ 'tooltip__building-status--locked': content.isBuilt === false }"
+          >{{ content.statusLabel }}</p>
         </template>
 
         <template v-else-if="content.kind === undefined || content.kind === 'plain'">
@@ -236,7 +242,11 @@ function hideBrokenImage(event: Event) {
 .tooltip__header { display: flex; align-items: center; gap: 10px; }
 .tooltip__icon-shell { flex: 0 0 54px; display: grid; place-items: center; width: 54px; height: 54px; border: 1px solid color-mix(in srgb, var(--tooltip-accent) 42%, var(--paper-line, rgba(42,41,36,.42))); border-radius: 2px; background: color-mix(in srgb, var(--paper-100, #ebe3d2) 82%, transparent); overflow: hidden; }
 .tooltip__icon, .tooltip__icon-fallback { grid-area: 1 / 1; } .tooltip__icon { width: 100%; height: 100%; padding: 5px; object-fit: contain; box-sizing: border-box; background: color-mix(in srgb, var(--paper-50, #f5f0e4) 84%, transparent); } .tooltip__icon-fallback { color: var(--tooltip-accent); font: 700 var(--text-panel-title) var(--font-display); }
-.tooltip__heading { min-width: 0; } .tooltip__title { margin: 0 0 3px; color: var(--paper-text, #211f1a); font-family: var(--font-display); font-weight: 700; line-height: 1.25; }
+.tooltip__heading { min-width: 0; }
+/* Title trước đây thừa hưởng font-size 12px của .tooltip gốc — cùng cỡ
+   với meta/description, chỉ khác weight/family (2026-08-30 frontend-
+   design pass: tiêu đề tooltip cần tách bậc rõ khỏi nội dung). */
+.tooltip__title { margin: 0 0 3px; color: var(--paper-text, #211f1a); font-family: var(--font-display); font-size: var(--text-md); font-weight: 700; line-height: 1.25; }
 .tooltip__title-segment--max-rank { color: transparent; background: var(--rank-gradient-9); background-clip: text; -webkit-background-clip: text; } .tooltip__meta { margin: 0; color: var(--paper-text-muted, #8f897c); font-size: var(--text-xs); }
 .tooltip__badges { display: flex; flex-wrap: wrap; gap: 4px; } .tooltip__badge { padding: 1px 5px; border: 1px solid var(--paper-line, rgba(42,41,36,.42)); border-radius: 999px; color: var(--paper-text-soft, #5e5a50); font-size: var(--text-xs); }
 .tooltip__badge--quality { border-color: color-mix(in srgb, var(--tooltip-accent) 55%, var(--paper-line, rgba(42,41,36,.42))); color: var(--tooltip-accent); } .tooltip__badge--rarity { color: var(--paper-text, #211f1a); } .tooltip__badge--muted { color: var(--paper-text-muted, #8f897c); }
@@ -252,6 +262,7 @@ function hideBrokenImage(event: Event) {
 .tooltip__section-row--tier-1 .tooltip__row-label { color: var(--affix-tier-1); } .tooltip__section-row--tier-2 .tooltip__row-label { color: var(--affix-tier-2); }
 .tooltip__section-row--tier-3 .tooltip__row-label { color: var(--affix-tier-3); } .tooltip__section-row--tier-4 .tooltip__row-label { color: var(--affix-tier-4); } .tooltip__section-row--tier-5 .tooltip__row-label { color: transparent; background: var(--rank-gradient-9); background-clip: text; -webkit-background-clip: text; font-weight: 700; }
 .tooltip__building-status { margin: 5px 0 0; color: var(--jade); font-size: var(--text-xs); }
+.tooltip__building-status--locked { color: var(--paper-text-muted, #8f897c); }
 .tooltip-fade-enter-active { transition: opacity 35ms linear; } .tooltip-fade-leave-active { transition: opacity 30ms linear; }
 .tooltip-fade-enter-from, .tooltip-fade-leave-to { opacity: 0; }
 @media (prefers-reduced-motion: reduce) { .tooltip-fade-enter-active, .tooltip-fade-leave-active { transition: opacity 1ms linear; } }

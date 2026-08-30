@@ -214,7 +214,6 @@ function cancelJob(jobId: string) {
       <section class="alchemy-group">
         <p class="alchemy-group__eyebrow">Đan lô hiện tại</p>
         <h4 class="alchemy-group__title">{{ currentGradeLabel }}</h4>
-        <small>8 đan phương · phẩm tự khóa theo cảnh giới</small>
 
         <button
           v-for="(recipe, index) in recipes"
@@ -242,7 +241,7 @@ function cancelJob(jobId: string) {
       <header class="alchemy-detail__header">
         <span>ĐAN PHƯƠNG</span>
         <h3>{{ gameManager.pillRegistry.get(selectedRecipe.pillId).name }}</h3>
-        <small>{{ currentGradeLabel }} · Đan lô cấp {{ gameManager.getAlchemyRoomLevel() || 0 }}</small>
+        <small>{{ currentGradeLabel }}</small>
       </header>
       <!-- §9.3: preview thời gian + tỷ lệ tổng + guaranteed + chance cộng -->
       <section v-if="preview" class="alchemy-detail__block">
@@ -253,9 +252,10 @@ function cancelJob(jobId: string) {
           {{ preview.extraPillChance }}% thêm 1 viên
         </p>
 
+        <!-- Bỏ "— Đan Phòng cấp N" (2026-08-30, bug report: trùng lặp
+             Cấp đã hiện ở header building phía trên panel). -->
         <p class="alchemy-detail__duration">
-          Thời gian: ~{{ Math.ceil(preview.durationSeconds / 60) }} phút — Đan Phòng cấp
-          {{ gameManager.getAlchemyRoomLevel() || 'chưa xây' }}
+          Thời gian: ~{{ Math.ceil(preview.durationSeconds / 60) }} phút
         </p>
       </section>
 
@@ -328,25 +328,6 @@ function cancelJob(jobId: string) {
     var(--paper-grain) 0 0 / 160px 160px repeat,
     radial-gradient(circle at 23% 0%, color-mix(in srgb, var(--scene-fire-glow) 10%, transparent), transparent 40%),
     linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 60%, var(--paper-200) 100%);
-}
-
-/* Ảnh lò luyện đan mờ LÀM NỀN PHỤ thay banner SceneHeader đã bỏ
-   (2026-08-30, bug report: banner "không giá trị" choán chỗ) — ngồi
-   TRÊN nền giấy hiện có, DƯỚI 2 cột nội dung, chỉ phủ khung Luyện Đan
-   này (không phải toàn panel/overlay). */
-.alchemy-view::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background: url('/assets/buildings/dong-fu/pill_room.png') center 55% / 55% no-repeat;
-  opacity: 0.1;
-  pointer-events: none;
-}
-
-.alchemy-view > * {
-  position: relative;
-  z-index: 1;
 }
 
 .alchemy-view__recipes {

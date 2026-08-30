@@ -8,15 +8,16 @@ import {
 } from './DongFuBuildingArt'
 
 describe('DongFuBuildingArt', () => {
-  it('defines exactly five stable building IDs in scene depth order', () => {
+  it('defines exactly six stable building IDs in scene depth order', () => {
     expect(DONG_FU_BUILDING_ART.map((entry) => entry.buildingId)).toEqual([
       'pill_room',
       'gathering_outpost',
       'teleport_array',
       'equipment_hall',
+      'vendor',
       'spirit_spring',
     ])
-    expect(new Set(DONG_FU_BUILDING_ART.map((entry) => entry.scenePlacement.zIndex)).size).toBe(5)
+    expect(new Set(DONG_FU_BUILDING_ART.map((entry) => entry.scenePlacement.zIndex)).size).toBe(6)
   })
 
   it('maps every building to aligned V2 technical assets', () => {

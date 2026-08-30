@@ -34,15 +34,28 @@ function equipmentInstance(instanceId: string, equipped: boolean): EquipmentInst
   }
 }
 
+/** Instance với mainStat tuỳ ý — dùng test hiển thị số thập phân nhỏ. */
+function equipmentInstanceWithStat(
+  instanceId: string,
+  stat: EquipmentInstance['mainStat']['stat'],
+  flat: number,
+): EquipmentInstance {
+  const instance = equipmentInstance(instanceId, true)
+
+  instance.mainStat = { ...instance.mainStat, stat, flat }
+
+  return instance
+}
+
 function mountHall(prepare?: (manager: GameManager) => void) {
   const container = document.createElement('div')
   const pinia = createPinia()
   const manager = new GameManager()
   const version = ref(0)
   manager.registerEquipment(equipment)
-  prepare?.(manager)
   manager.equipmentBag.add(equipmentInstance('equipped', true))
   manager.equipmentBag.add(equipmentInstance('in-bag', false))
+  prepare?.(manager)
 
   const app = createApp({ render: () => h(EquipmentHallPanel) })
   app.use(pinia)
@@ -114,7 +127,7 @@ describe('EquipmentHallPanel — chọn trang bị bằng slot', () => {
     mounted.unmount()
   })
 
-  it('bảng so sánh Trước ⇒ Sau hiện khi chọn item ở Tẩy Luyện — Điểm Rèn cùng hàng', async () => {
+  it('card so sánh Trước ⇒ Sau hiện khi chọn item ở Tẩy Luyện — Điểm Rèn ở dòng chú thích, bảng theo từng dòng phụ (2026-08-30: bọc gọn 1 card, Điểm Rèn không còn là 1 hàng bảng)', async () => {
     const mounted = mountHall((manager) => {
       const ore = materials.find((m) => m.id === 'qi_refining_ore_huyen')!
       manager.materialBag.add(ore, 100)
@@ -131,16 +144,48 @@ describe('EquipmentHallPanel — chọn trang bị bằng slot', () => {
     ;(slots[0] as HTMLElement).click()
     await nextTick()
 
-    const table = mounted.container.querySelector(
-      '[aria-label="So sánh trước và sau Tẩy Luyện"]',
+    const card = mounted.container.querySelector('.qi-hall__preview-card')
+    expect(card).not.toBeNull()
+
+    // Điểm Rèn: trước là 10/20 (forgePoints khởi tạo 10), sau = trước - cost pham_khi (2) —
+    // giờ là dòng chú thích trên đầu card, không còn là 1 hàng trong bảng.
+    const caption = card!.querySelector('.qi-hall__col-title')
+    expect(caption?.textContent).toContain('Điểm Rèn')
+    expect(caption?.textContent).toContain('10/20')
+    expect(caption?.textContent).toContain('8/20')
+
+    // Fixture item không có affix nào (affixes: []) — không có gì để so
+    // sánh theo dòng nên KHÔNG hiện bảng, chỉ hiện thông báo trống.
+    expect(card!.querySelector('[aria-label="So sánh trước và sau Tẩy Luyện"]')).toBeNull()
+    expect(card!.textContent).toContain('Chưa có dòng phụ')
+
+    mounted.unmount()
+  })
+
+  it('Cường Hóa mainStat thập phân nhỏ (tốc đánh 0.015) không bị làm tròn thành 0.0', async () => {
+    // Bug report 2026-08-30: bảng Cường Hóa dùng toFixed(1) → mainStat
+    // attackSpeed nhỏ (0.01–0.02) hiển thị "0.0". formatStat phải
+    // giữ 2 chữ số thập phân cho DECIMAL_STAT_KEYS.
+    const mounted = mountHall((manager) => {
+      manager.equipmentBag.remove('equipped')
+      manager.equipmentBag.add(equipmentInstanceWithStat('fast-weapon', 'attackSpeed', 0.015))
+    })
+
+    // Tab Cường Hóa mặc định — slot weapon đang mặc 'fast-weapon'.
+    const slots = mounted.container.querySelectorAll(
+      '[aria-label="Chọn slot cường hóa"] .slot-view',
     )
+    ;(slots[0] as HTMLElement).click()
+    await nextTick()
+
+    const table = mounted.container.querySelector('[aria-label="So sánh trước và sau Cường Hóa"]')
+
     expect(table).not.toBeNull()
 
-    // Điểm Rèn: trước là 10/20 (forgePoints khởi tạo 10), sau = trước - cost pham_khi (2).
-    const firstRow = table!.querySelectorAll('tbody tr')[0]!
-    expect(firstRow.textContent).toContain('Điểm Rèn')
-    expect(firstRow.textContent).toContain('10/20')
-    expect(firstRow.textContent).toContain('8/20')
+    const cells = Array.from(table!.querySelectorAll('td')).map((cell) => cell.textContent ?? '')
+
+    expect(cells.some((cell) => cell.includes('0.02'))).toBe(true)
+    expect(cells.some((cell) => cell.trim() === '0.0')).toBe(false)
 
     mounted.unmount()
   })

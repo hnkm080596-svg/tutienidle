@@ -58,8 +58,8 @@ function majorBreakthrough() {
       <div class="realm-panel__cultivator">
         <div class="realm-panel__aura" />
         <PlayerPortrait variant="cultivate" :height="150" animated />
-        <strong>{{ player.name }}</strong>
-        <span>{{ realmName }} · Tầng {{ player.realmLevel }}</span>
+        <strong class="realm-panel__name">{{ player.name }}</strong>
+        <span class="realm-panel__realm-line">{{ realmName }} · Tầng {{ player.realmLevel }}</span>
       </div>
 
       <div class="realm-panel__cultivation">
@@ -70,7 +70,7 @@ function majorBreakthrough() {
           pill
           class="realm-panel__cultivation-bar"
         >
-          <template #label>{{ Math.floor(player.cultivation) }} / {{ Math.floor(player.cultivationRequired) }} Tu Vi</template>
+          <template #label><span class="realm-panel__cultivation-label">{{ Math.floor(player.cultivation) }} / {{ Math.floor(player.cultivationRequired) }} Tu Vi</span></template>
         </Bar>
       </div>
 
@@ -105,6 +105,12 @@ function majorBreakthrough() {
 .realm-panel { min-height: 100%; display: flex; flex-direction: column; gap: 18px; padding: 20px; }
 .realm-panel__cultivator { position: relative; display: flex; flex-direction: column; align-items: center; color: var(--paper-text-soft); }
 .realm-panel__cultivator strong { color: var(--paper-text); font-family: var(--font-display); }
+/* Tên/cảnh giới không có cỡ chữ tường minh trước đây (2026-08-30
+   frontend-design pass: dòng nhận diện quan trọng nhất panel lại nhỏ
+   nhất) — nâng lên đúng cỡ CharacterPanel's identity block dùng. */
+.realm-panel__name { font-size: var(--text-title); }
+.realm-panel__realm-line { font-size: var(--text-body); font-weight: 600; color: var(--jade); }
+.realm-panel__cultivation-label { font-size: var(--text-md); font-weight: 700; }
 .realm-panel__aura { position: absolute; width: 190px; height: 190px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--chrome-500) 25%, transparent), transparent 68%); animation: realm-breathe 3s ease-in-out infinite; }
 .realm-panel__actions { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; }
 .realm-panel__actions :deep(button:disabled) { opacity: .38; filter: grayscale(1); }
@@ -124,6 +130,9 @@ function majorBreakthrough() {
 .realm-node small { font-size: var(--text-xs); }
 .realm-panel__passives { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
 .realm-panel__passives article { display: flex; flex-direction: column; gap: 3px; padding: 10px; background: var(--ink-800); border: 1px solid var(--ink-line-soft); border-radius: var(--radius-sm); }
+/* Tên passive trước đây không có cỡ chữ riêng — bằng hệt description,
+   không phân biệt được tiêu đề/nội dung (2026-08-30 frontend-design pass). */
+.realm-panel__passives article strong { font-size: var(--text-md); color: var(--text-primary); }
 .realm-panel__passives article span { color: var(--text-muted); font-size: var(--text-sm); }
 @keyframes realm-breathe { 50% { transform: scale(1.08); opacity: .65; } }
 @container overlay-panel (max-width: 900px) { .realm-node::after { display: none; } }

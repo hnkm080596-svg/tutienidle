@@ -93,8 +93,11 @@ const groups = computed(() => {
   background: color-mix(in srgb, var(--chrome-300) 18%, var(--ink-800));
 }
 
+/* Tên skill là thứ người chơi quét mắt tìm đầu tiên trong danh sách —
+   trước đây cùng cỡ 13px với tiêu đề nhóm phía trên (2026-08-30
+   frontend-design pass). */
 .skill-path-list__label {
-  font-size: var(--text-sm);
+  font-size: var(--text-md);
   font-weight: 700;
 }
 

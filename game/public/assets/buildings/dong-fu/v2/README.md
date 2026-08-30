@@ -9,12 +9,13 @@ This is the intended runtime building set for the modular 2D Dong Fu scene.
 - `pill_room` — Đan Phòng
 - `teleport_array` — Truyền Tống Trận
 - `gathering_outpost` — Khai Vật Đường
+- `vendor` — Ký Bảo Các
 
 `gathering_outpost` keeps its save-facing ID and behavior; only its display name changed.
 
 ## Per-building contract
 
-Each building directory contains four pixel-aligned `1254 × 1254` RGBA PNGs, rendered in this order:
+Each of the six building directories contains four pixel-aligned `1254 × 1254` RGBA PNGs, rendered in this order:
 
 1. `ground-shadow.png`
 2. `base.png`
@@ -30,3 +31,5 @@ Each building directory contains four pixel-aligned `1254 × 1254` RGBA PNGs, re
 Files in `previews/` are deterministic QA composites only. Runtime URL builders must never reference them.
 
 Animated water, forge sparks, alchemy smoke, portal glyphs, command tokens, moving transport lines, and animated seasonal debris are deliberately deferred.
+
+The active bases use the same warm-paper ink density as the Dong Fu landscape. They depict old but regularly maintained sect facilities: swept approaches, cared-for roofs and timber, and only minimal moss. Rebuild them from `art-source/buildings/dong-fu/v2/masters-redesign/` with `scripts/build-dong-fu-building-layers.ps1`.

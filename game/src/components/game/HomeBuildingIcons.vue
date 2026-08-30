@@ -79,6 +79,7 @@ function tooltipFor(building: Building): BuildingTooltipContent {
     statusLabel: presentation.isBuilt
       ? `Đã mở · Cấp ${presentation.level}/${building.maxLevel}`
       : 'Chưa mở · Nhấn để xem yêu cầu',
+    isBuilt: presentation.isBuilt,
   }
 }
 
@@ -137,14 +138,13 @@ onBeforeUnmount(() => {
             @asset-error="markAssetError"
           />
           <span class="building-hotspot__hitbox" />
-          <span class="building-hotspot__hover-label">
-            {{ scene.building.name }}
-            <small>{{ presentationFor(scene.building.id).isBuilt
-              ? `Cấp ${presentationFor(scene.building.id).level}`
-              : 'Chưa mở' }}</small>
-          </span>
         </button>
 
+        <!-- Nameplate LUÔN hiện, style pill/paper-flat dời từ hover-label
+             cũ (2026-08-30 bug report: 2 label cùng vị trí đè lên nhau khi
+             hover — giữ label sẵn, xoá hẳn label hover riêng, mượn style
+             đẹp hơn của nó thay vào đây, kèm luôn "Cấp X/Chưa mở" mà
+             trước đây CHỈ hover mới thấy). -->
         <span
           class="building-nameplate"
           :class="`building-nameplate--${statusFor(scene.building.id)}`"
@@ -155,6 +155,9 @@ onBeforeUnmount(() => {
           <span v-else-if="statusFor(scene.building.id) === 'active'" class="building-nameplate__active" />
           <span v-else-if="statusFor(scene.building.id) === 'upgradeable'" class="building-nameplate__upgradeable" />
           <span class="building-nameplate__text">{{ scene.building.name }}</span>
+          <small class="building-nameplate__level">{{ presentationFor(scene.building.id).isBuilt
+            ? `Cấp ${presentationFor(scene.building.id).level}`
+            : 'Chưa mở' }}</small>
         </span>
       </div>
 
@@ -226,64 +229,33 @@ onBeforeUnmount(() => {
   border-radius: 42%;
 }
 
-.building-hotspot__hover-label {
+/* Nameplate LUÔN hiện — mượn style pill/paper-flat/box-shadow của
+   hover-label cũ (đẹp hơn dải nền-vân-giấy trước đây), hover-label riêng
+   đã bị xoá hẳn (2026-08-30 bug report: 2 label chồng nhau khi hover). */
+.building-nameplate {
   position: absolute;
   left: 50%;
   top: calc(var(--baseline-y) - 2px);
-  z-index: 5;
+  z-index: 6;
   display: flex;
-  flex-direction: column;
-  gap: 1px;
+  align-items: center;
+  gap: 5px;
   min-width: max-content;
+  max-width: 220%;
   padding: 3px 10px;
   border: 1px solid color-mix(in srgb, var(--gold-500) 55%, var(--frame-outer));
   border-radius: 999px;
   background: var(--paper-50);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
-  font: 600 var(--text-xs) var(--font-body);
-  opacity: 0;
-  transform: translate(-50%, 8px);
-  transition: opacity 140ms ease, transform 160ms ease;
-  pointer-events: none;
-}
-
-.building-hotspot__hover-label small {
-  color: var(--paper-text-muted);
-  font-size: var(--text-xs);
-  font-weight: 400;
-}
-
-.building-hotspot:hover .building-hotspot__hover-label,
-.building-hotspot:focus-visible .building-hotspot__hover-label {
-  opacity: 1;
-  transform: translate(-50%, 0);
-}
-
-.building-nameplate {
-  position: absolute;
-  left: 50%;
-  top: var(--baseline-y);
-  z-index: 6;
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  min-width: max-content;
-  max-width: 220%;
-  padding: 2px 8px;
-  border: 1px solid var(--frame-outer);
-  border-radius: var(--radius-sm);
-  background:
-    var(--paper-grain) 0 0 / 100px 100px repeat,
-    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 100%);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
   color: var(--paper-text);
-  font: 500 var(--text-xs) var(--font-body);
+  font: 600 var(--text-xs) var(--font-body);
   line-height: var(--lh-tight);
   transform: translateX(-50%);
   pointer-events: none;
 }
 
 .building-nameplate__text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.building-nameplate__level { color: var(--paper-text-muted); font-size: var(--text-xs); font-weight: 400; }
 .building-nameplate__lock {
   position: relative;
   flex: 0 0 auto;
@@ -328,6 +300,9 @@ onBeforeUnmount(() => {
   width: 100%;
   height: 100%;
   object-fit: fill;
+  /* Giảm 50% (2026-08-30, bug report: khung trúc/lá che building Truyền
+     Tống Trận quá đậm) — vẫn giữ khung trang trí, chỉ nhạt bớt. */
+  opacity: 0.5;
   pointer-events: none;
 }
 

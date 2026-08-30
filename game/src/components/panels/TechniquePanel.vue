@@ -12,10 +12,7 @@ import { useUiStore } from '@/stores/ui'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import TechniqueSlotCard from './loadout-sections/TechniqueSlotCard.vue'
 import { buildTechniqueSections } from '@/composables/useTechniqueSections'
-import { getTechniqueInsightTotalRequired, getTechniqueTierProgress } from '@/core/technique/TechniqueTier'
-import { formatNumber } from '@/core/format/NumberFormatter'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
-import Bar from '@/components/common/primitives/Bar.vue'
 import StatRow from '@/components/common/primitives/StatRow.vue'
 import Eyebrow from '@/components/common/primitives/Eyebrow.vue'
 import EmptyState from '@/components/common/primitives/EmptyState.vue'
@@ -36,40 +33,6 @@ const techniqueSections = computed(() => {
   return technique ? buildTechniqueSections(technique, gameManager, technique.insight ?? 0) : []
 })
 
-const techniqueInsight = computed(() => equippedTechnique.value?.insight ?? 0)
-const tierProgress = computed(() => {
-  const technique = equippedTechnique.value
-  return getTechniqueTierProgress(techniqueInsight.value, technique ? getTechniqueInsightTotalRequired(technique) : undefined)
-})
-
-const tierExpValue = computed(() => {
-  const { lowerBound, nextThreshold } = tierProgress.value
-
-  if (nextThreshold === undefined) {
-    return 1
-  }
-
-  return techniqueInsight.value - lowerBound
-})
-
-const tierExpMax = computed(() => {
-  const { lowerBound, nextThreshold } = tierProgress.value
-
-  if (nextThreshold === undefined) {
-    return 1
-  }
-
-  return nextThreshold - lowerBound
-})
-
-const tierExpLabel = computed(() => {
-  const { nextThreshold } = tierProgress.value
-
-  return nextThreshold === undefined
-    ? 'Viên Mãn'
-    : `${formatNumber(techniqueInsight.value)} / ${formatNumber(nextThreshold)}`
-})
-
 function close() {
   ui.closeHomeOverlays()
 }
@@ -81,11 +44,10 @@ function close() {
         <TechniqueSlotCard label="Tâm Pháp" size="hero" />
       </div>
 
+      <!-- Bỏ thanh tier-exp lặp lại (2026-08-30, frontend-design pass):
+           TechniqueSlotCard's biến thể hero ở trên ĐÃ tự vẽ thanh + nhãn
+           tier-exp giống hệt, không cần vẽ lại lần 2 ở đây. -->
       <div v-if="equippedTechnique" class="technique-panel__detail">
-        <Bar class="technique-panel__tier-bar" :value="tierExpValue" :max="tierExpMax" :height="5" />
-
-        <span class="technique-panel__tier-label">{{ tierExpLabel }}</span>
-
         <div v-for="section in techniqueSections" :key="section.label" class="technique-panel__group">
           <Eyebrow as="h5">{{ section.label }}</Eyebrow>
 
@@ -113,18 +75,6 @@ function close() {
   display: flex;
   flex-direction: column;
   gap: 4px;
-}
-
-.technique-panel__tier-bar {
-  margin: 4px 0 0;
-  border-radius: 3px;
-}
-
-.technique-panel__tier-label {
-  display: block;
-  margin: 0 0 8px;
-  font-size: var(--text-sm);
-  color: var(--paper-text-muted);
 }
 
 .technique-panel__group {

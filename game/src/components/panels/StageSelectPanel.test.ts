@@ -41,10 +41,11 @@ function mountStageSelect() {
 afterEach(() => { document.body.innerHTML = '' })
 
 describe('StageSelectPanel — thông tin Truyền Tống Trận', () => {
-  it('hiện game art, tên quái trên tuyến ải và đội hình của stage đang chọn', () => {
+  it('hiện tên quái trên tuyến ải và đội hình của stage đang chọn (2026-08-30: bỏ banner ảnh dư thừa + intro text trùng lặp title bar)', () => {
     const mounted = mountStageSelect()
 
-    expect(mounted.container.querySelector('.stage-select__scene img')).not.toBeNull()
+    expect(mounted.container.querySelector('.stage-select__intro')).toBeNull()
+    expect(mounted.container.querySelector('.stage-select__scene')).toBeNull()
     expect(mounted.container.querySelectorAll('.stage-select__filter-group--chapters button')).toHaveLength(3)
     expect(mounted.container.querySelectorAll('.stage-map__node')).toHaveLength(10)
     expect(mounted.container.textContent).toContain('Dã Trư')

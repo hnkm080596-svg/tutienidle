@@ -286,9 +286,12 @@ const activeTimedEffects = computed(() => {
       return {
         id: effect.id,
 
+        // 2026-08-30 bug report: fallback cũ hiện thẳng ID nội bộ nếu pill
+        // không còn trong registry — thay bằng nhãn trung tính, không lộ
+        // dữ liệu hệ thống ra UI.
         label: gameManager.pillRegistry.has(effect.sourceItemId)
           ? gameManager.pillRegistry.get(effect.sourceItemId).name
-          : effect.sourceItemId,
+          : 'Đan dược không rõ',
 
         value: `+${hp} HP/s, +${mp} MP/s`,
 

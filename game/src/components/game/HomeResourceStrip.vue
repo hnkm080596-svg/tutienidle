@@ -4,7 +4,7 @@
 // cấp (gỗ + quáng realm hiện tại). Trước đây tài nguyên chính chỉ thấy
 // khi mở panel — bây giờ luôn hiển thị; click mở panel Túi tương ứng
 // (ui.toggleLeft('inventory') → RightPanel mở tab material).
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useGameManager } from '@/composables/useGameState'
 import { useStateVersion } from '@/composables/useGameState'
 import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
@@ -14,6 +14,12 @@ const gameManager = useGameManager()
 const ui = useUiStore()
 
 const { stateVersion } = useStateVersion()
+
+// Bug report 2026-08-30: dải tài nguyên luôn hiện che góc màn hình Động
+// Phủ — thu gọn mặc định thành 1 nút nhỏ, chỉ bung ra khi người chơi
+// chủ động bấm. Transient theo phiên (không lưu save) — mỗi lần vào lại
+// scene mặc định thu gọn.
+const expanded = ref(false)
 
 const spiritStones = computed(() => {
   stateVersion.value
@@ -59,22 +65,36 @@ function openBag() {
 </script>
 
 <template>
-  <div class="home-resource-strip" data-testid="home-resource-strip">
-    <button class="home-resource-strip__item" type="button" @click="openBag">
-      <span class="home-resource-strip__name">Linh Thạch</span>
+  <div class="home-resource-strip" data-testid="home-resource-strip" :class="{ 'is-collapsed': !expanded }">
+    <button
+      v-if="!expanded"
+      class="home-resource-strip__toggle"
+      type="button"
+      aria-label="Hiện tài nguyên"
+      @click="expanded = true"
+    >
       <span class="home-resource-strip__amount">{{ spiritStones }}</span>
     </button>
 
-    <button
-      v-for="material in trackedMaterials"
-      :key="material.materialId"
-      class="home-resource-strip__item"
-      type="button"
-      @click="openBag"
-    >
-      <span class="home-resource-strip__name">{{ material.name }}</span>
-      <span class="home-resource-strip__amount">{{ material.amount }}</span>
-    </button>
+    <template v-else>
+      <button class="home-resource-strip__item" type="button" @click="openBag">
+        <span class="home-resource-strip__name">Linh Thạch</span>
+        <span class="home-resource-strip__amount">{{ spiritStones }}</span>
+      </button>
+
+      <button
+        v-for="material in trackedMaterials"
+        :key="material.materialId"
+        class="home-resource-strip__item"
+        type="button"
+        @click="openBag"
+      >
+        <span class="home-resource-strip__name">{{ material.name }}</span>
+        <span class="home-resource-strip__amount">{{ material.amount }}</span>
+      </button>
+
+      <button class="home-resource-strip__collapse" type="button" aria-label="Ẩn dải tài nguyên" @click="expanded = false">✕</button>
+    </template>
   </div>
 </template>
 
@@ -98,6 +118,48 @@ function openBag() {
     0 4px 12px rgba(0, 0, 0, 0.35);
   border-radius: var(--radius-md);
   pointer-events: auto;
+}
+
+/* Thu gọn mặc định (2026-08-30 bug report) — chỉ còn nút tròn nhỏ hiện
+   số Linh Thạch, bấm để bung ra đầy đủ, không che góc màn hình liên tục. */
+.home-resource-strip.is-collapsed {
+  padding: 4px;
+  border-radius: 999px;
+}
+
+.home-resource-strip__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  color: var(--gold-700);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.home-resource-strip__toggle::before {
+  content: '💰';
+  font-size: var(--text-sm);
+}
+
+.home-resource-strip__collapse {
+  border: none;
+  background: transparent;
+  color: var(--paper-text-soft);
+  cursor: pointer;
+  padding: 2px 4px;
+  margin-left: 2px;
+  font-size: var(--text-xs);
+  border-radius: var(--radius-sm);
+}
+
+.home-resource-strip__collapse:hover {
+  background: color-mix(in srgb, var(--cinnabar) 12%, transparent);
 }
 
 .home-resource-strip__item {
