@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
   EquipmentSystem,
-  getMaxForgePoints,
   calculateEquipmentScale,
   ENHANCE_PERCENT_PER_LEVEL,
   FORGE_PERCENT_PER_POINT,
@@ -111,56 +110,25 @@ describe('Item roll — rarity theo EQUIPMENT_RARITY_DROP_WEIGHT', () => {
   })
 })
 
-describe('Item roll — forgePotential/forgePoints boundaries', () => {
-  it('forgePotential luôn trong [0, 100] (randomInt(0, 100))', () => {
-    for (let i = 0; i < 500; i++) {
-      const potential = rollInstance().forgePotential
-
-      expect(potential).toBeGreaterThanOrEqual(0)
-      expect(potential).toBeLessThanOrEqual(100)
-      expect(Number.isInteger(potential)).toBe(true)
-    }
-  })
-
-  it('forgePoints khởi đầu ĐẦY = getMaxForgePoints(quality, forgePotential), không âm', () => {
+describe('Item roll — forgePoints theo quality (rework 2026-08-30, bỏ potential roll)', () => {
+  it('forgePoints khởi đầu ĐẦY = ĐÚNG trần quality, không còn random', () => {
     for (let i = 0; i < 100; i++) {
       const instance = rollInstance()
 
-      expect(instance.forgePoints).toBe(getMaxForgePoints(instance.quality, instance.forgePotential))
-      expect(instance.forgePoints).toBeGreaterThanOrEqual(0)
+      expect(instance.forgePoints).toBe(EQUIPMENT_QUALITY_MAX_FORGE_POINTS[instance.quality])
     }
   })
 
-  // Edge case thật: randomInt(0, 100) INCLUSIVE của 0 — potential roll 0
-  // → item mới sinh ra đã cạn Điểm Rèn (forgePoints = 0). Comment ở
-  // EquipmentSystem.test.ts ("luôn > 0 với roll 1-100") không khớp miền
-  // roll thật. Test này chốt hành vi hiện tại của code.
-  it('forgePotential roll được 0 (miền [0,100] inclusive) → forgePoints = 0', () => {
-    expect(getMaxForgePoints('pham_khi', 0)).toBe(0)
-  })
-
-  it('forgePoints không vượt trần tuyệt đối của tier quality', () => {
+  it('forgePotential không còn roll ngẫu nhiên — item mới luôn 100 (field giữ cho save cũ)', () => {
     for (let i = 0; i < 100; i++) {
-      const instance = rollInstance()
-
-      expect(instance.forgePoints).toBeLessThanOrEqual(
-        EQUIPMENT_QUALITY_MAX_FORGE_POINTS[instance.quality],
-      )
+      expect(rollInstance().forgePotential).toBe(100)
     }
   })
 
-  it('getMaxForgePoints biên: potential 0 → 0, potential 100 → đúng trần tier, làm tròn đúng', () => {
-    // Phàm Khí trần 20 — potential 50 → 10.
-    expect(getMaxForgePoints('pham_khi', 0)).toBe(0)
-    expect(getMaxForgePoints('pham_khi', 50)).toBe(10)
-    expect(getMaxForgePoints('pham_khi', 100)).toBe(20)
-
-    // Thiên Địa Trọng Khí trần 200.
-    expect(getMaxForgePoints('thien_dia_trong_khi', 0)).toBe(0)
-    expect(getMaxForgePoints('thien_dia_trong_khi', 100)).toBe(200)
-
-    // Làm tròn: Bảo Khí trần 30, potential 50 → 15; potential 33 → 9.9 → 10.
-    expect(getMaxForgePoints('bao_khi', 33)).toBe(10)
+  it('forgePoints Phàm Nhân luôn 20 (trần Phàm Khí — realm này chỉ roll được pham_khi)', () => {
+    for (let i = 0; i < 50; i++) {
+      expect(rollInstance('mortal').forgePoints).toBe(20)
+    }
   })
 
   it('calculateEquipmentScale: 0/0 → 1, tuyến tính theo enhanceLevel và forgePoints', () => {
@@ -170,14 +138,14 @@ describe('Item roll — forgePotential/forgePoints boundaries', () => {
     expect(calculateEquipmentScale(5, 40)).toBe(1 + 5 * ENHANCE_PERCENT_PER_LEVEL + 40 * FORGE_PERCENT_PER_POINT)
   })
 
-  it('2 instance cùng quality có thể có trần rèn khác nhau theo forgePotential roll', () => {
+  it('2 instance cùng quality LUÔN có cùng trần rèn (không còn random theo potential)', () => {
     const seen = new Set<number>()
 
     for (let i = 0; i < 200; i++) {
-      seen.add(getMaxForgePoints('pham_khi', rollInstance().forgePotential))
+      seen.add(rollInstance().forgePoints)
     }
 
-    // Random 0-100 trên trần 20 phải cho nhiều trần rèn khác nhau.
-    expect(seen.size).toBeGreaterThan(5)
+    // Phàm Nhân chỉ roll được pham_khi (trần 20) — mọi instance cùng số.
+    expect(seen.size).toBe(1)
   })
 })

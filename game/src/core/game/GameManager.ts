@@ -70,6 +70,7 @@ import type { EquipmentSlot } from '../equipment/EquipmentTypes'
 import type { EquipmentSlotState } from '../equipment/EquipmentSlotState'
 import type { Equipment } from '../equipment/Equipment'
 import type { EquipmentInstance } from '../equipment/EquipmentInstance'
+import type { EquipmentQuality } from '../equipment/EquipmentQuality'
 import { AffixRegistry } from '../equipment/AffixRegistry'
 import type { Affix } from '../equipment/Affix'
 import { assertValidEquipmentMainStats } from '../equipment/EquipmentStatPolicy'
@@ -2006,18 +2007,18 @@ export class GameManager {
 
   /** W5 â€” cost Táº©y Luyá»‡n sau discount KhÃ­ ÄÆ°á»ng cho UI. realmId cá»§a trang
    * bá»‹ quyáº¿t Ä‘á»‹nh PHáº¨M Linh Tháº¡ch tiÃªu (T2). */
-  getWashCost(realmId?: string) {
+  getWashCost(realmId?: string, quality?: EquipmentQuality) {
     this.syncEquipmentCostDiscount()
 
-    return this.equipmentSystem.getWashCost(realmId)
+    return this.equipmentSystem.getWashCost(realmId, quality)
   }
 
   /** W5 â€” cost Tinh Luyá»‡n sau discount KhÃ­ ÄÆ°á»ng cho UI. realmId cá»§a trang
    * bá»‹ quyáº¿t Ä‘á»‹nh PHáº¨M Linh Tháº¡ch tiÃªu (T2). */
-  getRefineCost(lineCount: number, lockedCount: number, realmId?: string) {
+  getRefineCost(lineCount: number, lockedCount: number, realmId?: string, quality?: EquipmentQuality) {
     this.syncEquipmentCostDiscount()
 
-    return this.equipmentSystem.getRefineCost(lineCount, lockedCount, realmId)
+    return this.equipmentSystem.getRefineCost(lineCount, lockedCount, realmId, quality)
   }
 
   /**
