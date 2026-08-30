@@ -18,3 +18,5 @@ There are four time sets (`morning`, `noon`, `evening`, `night`) and four season
 `DongFuScene.vue` reads the shared combat `ThanhVanVariant`, preloads all ten incoming textures, then swaps and crossfades the stack as one unit. A failed incoming texture leaves the previous complete stack visible.
 
 `previews/<season>-<time>.png` and `previews/all-16-contact-sheet.png` are flattened QA artifacts only. They must not be referenced by runtime code.
+
+`scripts/refine-dong-fu-sect-ground-alpha.ps1` deterministically rebuilds layer `07` from immutable seasonal masters and approved repaired masks in `art-source/backgrounds/dong-fu/layer-masks/`. It removes the center paper matte without moving the buildable baseline or cultivation dais, then regenerates all 16 preview composites and the contact sheet. The asset test samples both the transparent lake above the dais and the opaque dais ink to prevent this color-seam regression.

@@ -191,7 +191,7 @@ export const buildings: Building[] = [
   {
     id: 'gathering_outpost',
 
-    name: 'Điều Phối Nhân Công',
+    name: 'Khai Vật Đường',
 
     description: 'Quản lý nhân công tự động khai thác Lâm, Quáng và Động Thiên trên mọi địa giới.',
 

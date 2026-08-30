@@ -26,4 +26,6 @@ All source and runtime plates use a `1672 × 941` canvas. The approved master is
 
 The generated isolated-ground candidates were rejected because object isolation recentered their baselines. Runtime `07-sect-ground.png` files are therefore masked directly from their aligned seasonal masters with the same fixed coordinate mask, preserving the straight buildable baseline and central dais between seasons.
 
+The approved repaired masks live in `layer-masks/`. Run `scripts/refine-dong-fu-sect-ground-alpha.ps1` to rebuild each runtime layer from its immutable seasonal master plus that season's mask. The masks clear the pale rectangular paper matte around the center dais while keeping the dais and straight baseline. The script never feeds runtime output back into extraction, so repeated runs cannot erode soft ink edges.
+
 Runtime skies are opaque PNG24; every other runtime plate is RGBA with genuine transparency. White extraction plates are converted with a per-pixel white unmatte so pale brush edges do not retain opaque paper or a checkerboard.

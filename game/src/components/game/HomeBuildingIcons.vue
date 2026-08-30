@@ -1,71 +1,59 @@
 <script setup lang="ts">
-// Hotspot layer của Động Phủ (plan Workstream C) — MỘT trong HAI entry
-// point của building thật (entry kia là shortcut ring 3 command wheel).
-// Logic điều hướng KHÔNG còn ở đây nữa: cả hai entry đi qua
-// composables/useBuildingNavigation.ts và popover dùng chung ở GameRoot
-// (ui.activeBuildingPopoverId).
-//
-// Tàng Kinh Các KHÔNG còn là hotspot/pseudo-building (plan) — entry duy
-// nhất của nó là shortcut vòng ngoài command wheel.
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import type { Building } from '@/core/building/Building'
 import { useGameManager } from '@/composables/useGameState'
 import { useStageActive } from '@/composables/useStageActive'
 import { useBuildingNavigation } from '@/composables/useBuildingNavigation'
 import type { BuildingTooltipContent } from '@/composables/useTooltip'
+import { useUiStore } from '@/stores/ui'
+import {
+  DONG_FU_BUILDING_ART,
+  dongFuSeasonOverlayUrl,
+  type DongFuBuildingArtEntry,
+  type DongFuBuildingId,
+} from '@/game/support/DongFuBuildingArt'
+import type { ThanhVanVariant } from '@/game/support/ThanhVanArt'
+import DongFuBuildingSprite from './DongFuBuildingSprite.vue'
+
+interface SceneBuilding {
+  art: DongFuBuildingArtEntry
+  building: Building
+}
+
+const { variant } = defineProps<{
+  variant: ThanhVanVariant
+}>()
 
 const gameManager = useGameManager()
-
 const stageActive = useStageActive()
-
 const navigation = useBuildingNavigation()
+const ui = useUiStore()
+const definitions = computed(() => gameManager.getBuildingDefinitions())
+const reducedMotion = ref(false)
+const assetErrors = ref<Set<DongFuBuildingId>>(new Set())
 
-const buildings = computed(() => gameManager.getBuildingDefinitions())
+let reducedMotionQuery: MediaQueryList | undefined
 
-type HotspotEffect = 'alchemy' | 'forge' | 'portal' | 'spring' | 'gather'
+const sceneBuildings = computed<SceneBuilding[]>(() =>
+  DONG_FU_BUILDING_ART.flatMap((art) => {
+    const building = definitions.value.find((entry) => entry.id === art.buildingId)
+    return building ? [{ art, building }] : []
+  }),
+)
+const seasonOverlayUrl = computed(() => dongFuSeasonOverlayUrl(variant.season))
 
-interface BuildingHotspot {
-  /** Tọa độ tâm theo % của ART (ảnh nền 1672×941, cover-fit). Tăng left = sang phải; tăng top = đi xuống. */
-  left: number
-  top: number
-  /** Kích thước hitbox theo % của art, độc lập với hình nền. */
-  width: number
-  height: number
-  accent: string
-  effect: HotspotEffect
-}
-
-// Điểm duy nhất cần chỉnh khi căn hotspot với background Động Phủ.
-// Background sở hữu toàn bộ kiến trúc; các entry dưới đây chỉ là vùng tương tác.
-const BUILDING_HOTSPOTS: Record<string, BuildingHotspot> = {
-  pill_room: { left: 16, top: 25, width: 15, height: 25, accent: 'var(--el-fire)', effect: 'alchemy' },
-  equipment_hall: { left: 10, top: 48, width: 15, height: 25, accent: 'var(--crimson)', effect: 'forge' },
-  teleport_array: { left: 50, top: 15, width: 15, height: 25, accent: 'var(--chrome-500)', effect: 'portal' },
-  spirit_spring: { left: 87, top: 40, width: 25, height: 35, accent: 'var(--azure)', effect: 'spring' },
-  gathering_outpost: { left: 25, top: 13, width: 15, height: 25, accent: 'var(--text-muted)', effect: 'gather' },
-}
-
-function hotspotFor(buildingId: string, index: number, total: number): BuildingHotspot {
-  const configured = BUILDING_HOTSPOTS[buildingId]
-
-  if (configured) return configured
-
+function anchorStyle(entry: DongFuBuildingArtEntry) {
   return {
-    left: total <= 1 ? 50 : 10 + (index / (total - 1)) * 80,
-    top: 10,
-    width: 12,
-    height: 15,
-    accent: 'var(--text-muted)',
-    effect: 'gather',
-  }
-}
-
-function hotspotStyle(hotspot: BuildingHotspot) {
-  return {
-    left: `${hotspot.left}%`,
-    top: `${hotspot.top}%`,
-    width: `${hotspot.width}%`,
-    height: `${hotspot.height}%`,
-    '--accent': hotspot.accent,
+    left: `${entry.scenePlacement.xPercent}%`,
+    top: `${entry.scenePlacement.yPercent}%`,
+    width: `${entry.scenePlacement.scale * 100}%`,
+    zIndex: entry.scenePlacement.zIndex,
+    '--baseline-y': `${entry.baselineY / entry.canvas.height * 100}%`,
+    '--baseline-offset': `${-entry.baselineY / entry.canvas.height * 100}%`,
+    '--hit-left': `${entry.hitbox.x / entry.canvas.width * 100}%`,
+    '--hit-top': `${entry.hitbox.y / entry.canvas.height * 100}%`,
+    '--hit-width': `${entry.hitbox.width / entry.canvas.width * 100}%`,
+    '--hit-height': `${entry.hitbox.height / entry.canvas.height * 100}%`,
   }
 }
 
@@ -73,16 +61,17 @@ function presentationFor(buildingId: string) {
   return navigation.getBuildingPresentation(buildingId)
 }
 
-// Badge trạng thái nameplate (plan ui-discoverability §3.1) — suy ra từ
-// useBuildingNavigation.getBuildingStatus() (đọc thuần BuildingSystem/
-// AlchemySystem qua GameManager, không state song song).
 function statusFor(buildingId: string) {
   return navigation.getBuildingStatus(buildingId)
 }
 
-function tooltipFor(building: (typeof buildings.value)[number]): BuildingTooltipContent {
-  const presentation = presentationFor(building.id)
+function isSelected(building: Building): boolean {
+  return ui.activeBuildingPopoverId === building.id
+    || (building.functionType !== undefined && ui.leftPanelMode === building.functionType)
+}
 
+function tooltipFor(building: Building): BuildingTooltipContent {
+  const presentation = presentationFor(building.id)
   return {
     kind: 'building',
     name: building.name,
@@ -92,60 +81,91 @@ function tooltipFor(building: (typeof buildings.value)[number]): BuildingTooltip
       : 'Chưa mở · Nhấn để xem yêu cầu',
   }
 }
+
+function markAssetError(buildingId: DongFuBuildingId): void {
+  assetErrors.value = new Set(assetErrors.value).add(buildingId)
+}
+
+function handleReducedMotionChange(event: MediaQueryListEvent): void {
+  reducedMotion.value = event.matches
+}
+
+onMounted(() => {
+  reducedMotionQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)')
+  reducedMotion.value = reducedMotionQuery?.matches ?? false
+  reducedMotionQuery?.addEventListener?.('change', handleReducedMotionChange)
+})
+
+onBeforeUnmount(() => {
+  reducedMotionQuery?.removeEventListener?.('change', handleReducedMotionChange)
+})
 </script>
 
 <template>
   <div v-if="!stageActive" class="home-building-hotspots">
-    <!-- Art-space: box đúng bằng hình chữ nhật cover của ảnh nền 1672×941
-         (aspect-ratio + min-width/min-height 100% = object-fit:cover geometry)
-         để hotspot neo theo art, không trôi khỏi building khi viewport
-         khác 16:9. -->
     <div class="home-building-hotspots__art-space">
       <div
-        v-for="(building, index) in buildings"
-        :key="building.id"
+        v-for="scene in sceneBuildings"
+        :key="scene.art.buildingId"
         class="building-hotspot-anchor"
-        :style="hotspotStyle(hotspotFor(building.id, index, buildings.length))"
-        :data-building-id="building.id"
+        :class="{ 'has-asset-error': assetErrors.has(scene.art.buildingId) }"
+        :style="anchorStyle(scene.art)"
+        :data-building-id="scene.art.buildingId"
       >
         <button
           type="button"
           class="building-hotspot"
-          :class="[
-            `building-hotspot--${hotspotFor(building.id, index, buildings.length).effect}`,
-            {
-              'is-built': presentationFor(building.id).isBuilt,
-              'is-upgradeable': presentationFor(building.id).isUpgradeable,
-            },
-          ]"
-          :aria-label="presentationFor(building.id).isBuilt ? `Mở ${building.name}` : `Xem yêu cầu mở ${building.name}`"
-          v-tooltip="tooltipFor(building)"
-          @click="navigation.openBuilding(building.id)"
+          :class="{
+            'is-built': presentationFor(scene.building.id).isBuilt,
+            'is-upgradeable': presentationFor(scene.building.id).isUpgradeable,
+            'is-selected': isSelected(scene.building),
+          }"
+          :aria-label="presentationFor(scene.building.id).isBuilt
+            ? `Mở ${scene.building.name}`
+            : `Xem yêu cầu mở ${scene.building.name}`"
+          v-tooltip="tooltipFor(scene.building)"
+          @click.stop="navigation.openBuilding(scene.building.id)"
         >
-          <span class="building-hotspot__outline" />
-          <span class="building-hotspot__vfx" aria-hidden="true"><i /><i /><i /></span>
+          <DongFuBuildingSprite
+            :art="scene.art"
+            :status="statusFor(scene.building.id)"
+            :selected="isSelected(scene.building)"
+            :disabled="false"
+            :season="variant.season"
+            :time="variant.time"
+            :reduced-motion="reducedMotion"
+            @asset-error="markAssetError"
+          />
+          <span class="building-hotspot__hitbox" />
           <span class="building-hotspot__hover-label">
-            {{ building.name }}
-            <small>{{ presentationFor(building.id).isBuilt ? `Cấp ${presentationFor(building.id).level}` : 'Chưa mở' }}</small>
+            {{ scene.building.name }}
+            <small>{{ presentationFor(scene.building.id).isBuilt
+              ? `Cấp ${presentationFor(scene.building.id).level}`
+              : 'Chưa mở' }}</small>
           </span>
         </button>
 
         <span
           class="building-nameplate"
-          :class="`building-nameplate--${statusFor(building.id)}`"
+          :class="`building-nameplate--${statusFor(scene.building.id)}`"
           aria-hidden="true"
         >
-          <span
-            v-if="statusFor(building.id) === 'locked'"
-            class="building-nameplate__lock"
-          />
-          <span v-else-if="statusFor(building.id) === 'ready'" class="building-nameplate__ready" />
-          <span v-else-if="statusFor(building.id) === 'active'" class="building-nameplate__active" />
-          <span v-else-if="statusFor(building.id) === 'upgradeable'" class="building-nameplate__upgradeable" />
-          <span class="building-nameplate__text">{{ building.name }}</span>
+          <span v-if="statusFor(scene.building.id) === 'locked'" class="building-nameplate__lock" />
+          <span v-else-if="statusFor(scene.building.id) === 'ready'" class="building-nameplate__ready" />
+          <span v-else-if="statusFor(scene.building.id) === 'active'" class="building-nameplate__active" />
+          <span v-else-if="statusFor(scene.building.id) === 'upgradeable'" class="building-nameplate__upgradeable" />
+          <span class="building-nameplate__text">{{ scene.building.name }}</span>
         </span>
-
       </div>
+
+      <img
+        class="home-building-hotspots__season-overlay"
+        :src="seasonOverlayUrl"
+        :data-season="variant.season"
+        alt=""
+        draggable="false"
+        aria-hidden="true"
+      >
     </div>
   </div>
 </template>
@@ -155,10 +175,10 @@ function tooltipFor(building: (typeof buildings.value)[number]): BuildingTooltip
   position: absolute;
   inset: 0;
   z-index: 5;
-  pointer-events: none;
   display: grid;
   place-items: center;
   overflow: hidden;
+  pointer-events: none;
 }
 
 .home-building-hotspots__art-space {
@@ -171,8 +191,9 @@ function tooltipFor(building: (typeof buildings.value)[number]): BuildingTooltip
 
 .building-hotspot-anchor {
   position: absolute;
-  transform: translate(-50%, -50%);
-  pointer-events: auto;
+  aspect-ratio: 1;
+  transform: translate(-50%, var(--baseline-offset));
+  pointer-events: none;
 }
 
 .building-hotspot {
@@ -182,132 +203,43 @@ function tooltipFor(building: (typeof buildings.value)[number]): BuildingTooltip
   height: 100%;
   padding: 0;
   border: 0;
-  border-radius: 46%;
   background: transparent;
-  color: var(--text-primary);
-  cursor: pointer;
-  pointer-events: auto;
+  color: var(--paper-text);
+  pointer-events: none;
   -webkit-tap-highlight-color: transparent;
 }
 
-.building-hotspot__outline {
+.building-hotspot__hitbox {
   position: absolute;
-  inset: 5%;
-  border: 1px solid color-mix(in srgb, var(--accent) 76%, transparent);
-  border-radius: inherit;
-  background: radial-gradient(ellipse, color-mix(in srgb, var(--accent) 13%, transparent), transparent 70%);
-  box-shadow: inset 0 0 18px color-mix(in srgb, var(--accent) 16%, transparent), 0 0 16px color-mix(in srgb, var(--accent) 22%, transparent);
-  opacity: 0;
-  transform: scale(0.9);
-  transition: opacity 150ms ease, transform 180ms ease;
+  left: var(--hit-left);
+  top: var(--hit-top);
+  width: var(--hit-width);
+  height: var(--hit-height);
+  cursor: pointer;
+  pointer-events: auto;
 }
 
-.building-hotspot__vfx {
-  position: absolute;
-  inset: 8%;
-  opacity: 0;
-  transform: scale(0.88);
-  transition: opacity 150ms ease, transform 180ms ease;
-  pointer-events: none;
-}
-
-.building-hotspot:hover .building-hotspot__outline,
-.building-hotspot:focus-visible .building-hotspot__outline,
-.building-hotspot:hover .building-hotspot__vfx,
-.building-hotspot:focus-visible .building-hotspot__vfx {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.building-hotspot:focus-visible {
-  outline: 2px solid var(--accent);
+.building-hotspot:focus-visible { outline: none; }
+.building-hotspot:focus-visible .building-hotspot__hitbox {
+  outline: 2px solid var(--gold-500);
   outline-offset: 3px;
+  border-radius: 42%;
 }
-
-.building-hotspot__vfx i {
-  position: absolute;
-  display: block;
-  pointer-events: none;
-}
-
-.building-hotspot--portal .building-hotspot__vfx i {
-  inset: 10%;
-  border: 2px solid color-mix(in srgb, var(--accent) 72%, transparent);
-  border-left-color: transparent;
-  border-radius: 50%;
-}
-
-.building-hotspot--portal:hover .building-hotspot__vfx i,
-.building-hotspot--portal:focus-visible .building-hotspot__vfx i {
-  animation: hotspot-spin 1.8s linear infinite;
-}
-
-.building-hotspot--portal .building-hotspot__vfx i:nth-child(2) { inset: 23%; animation-direction: reverse; animation-duration: 1.2s; }
-.building-hotspot--portal .building-hotspot__vfx i:nth-child(3) { inset: 37%; border-width: 3px; box-shadow: 0 0 18px var(--accent); }
-
-.building-hotspot--alchemy .building-hotspot__vfx i,
-.building-hotspot--forge .building-hotspot__vfx i {
-  left: 28%;
-  bottom: 12%;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 8px var(--accent);
-}
-
-.building-hotspot--alchemy .building-hotspot__vfx i:nth-child(2),
-.building-hotspot--forge .building-hotspot__vfx i:nth-child(2) { left: 48%; }
-.building-hotspot--alchemy .building-hotspot__vfx i:nth-child(3),
-.building-hotspot--forge .building-hotspot__vfx i:nth-child(3) { left: 68%; }
-
-.building-hotspot--alchemy:hover .building-hotspot__vfx i,
-.building-hotspot--alchemy:focus-visible .building-hotspot__vfx i,
-.building-hotspot--forge:hover .building-hotspot__vfx i,
-.building-hotspot--forge:focus-visible .building-hotspot__vfx i { animation: hotspot-rise 1.4s ease-out infinite; }
-
-.building-hotspot--alchemy .building-hotspot__vfx i:nth-child(2),
-.building-hotspot--forge .building-hotspot__vfx i:nth-child(2) { animation-delay: 0.35s; }
-.building-hotspot--alchemy .building-hotspot__vfx i:nth-child(3),
-.building-hotspot--forge .building-hotspot__vfx i:nth-child(3) { animation-delay: 0.7s; }
-
-.building-hotspot--spring .building-hotspot__vfx i,
-.building-hotspot--gather .building-hotspot__vfx i {
-  left: 50%;
-  top: 50%;
-  width: 28%;
-  aspect-ratio: 1;
-  border: 1px solid var(--accent);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.building-hotspot--spring:hover .building-hotspot__vfx i,
-.building-hotspot--spring:focus-visible .building-hotspot__vfx i,
-.building-hotspot--gather:hover .building-hotspot__vfx i,
-.building-hotspot--gather:focus-visible .building-hotspot__vfx i { animation: hotspot-ripple 1.8s ease-out infinite; }
-
-.building-hotspot--spring .building-hotspot__vfx i:nth-child(2),
-.building-hotspot--gather .building-hotspot__vfx i:nth-child(2) { animation-delay: 0.55s; }
-.building-hotspot--spring .building-hotspot__vfx i:nth-child(3),
-.building-hotspot--gather .building-hotspot__vfx i:nth-child(3) { animation-delay: 1.1s; }
 
 .building-hotspot__hover-label {
   position: absolute;
   left: 50%;
-  bottom: 0;
+  top: calc(var(--baseline-y) - 2px);
+  z-index: 5;
   display: flex;
   flex-direction: column;
   gap: 1px;
   min-width: max-content;
   padding: 3px 10px;
-  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--frame-outer));
+  border: 1px solid color-mix(in srgb, var(--gold-500) 55%, var(--frame-outer));
   border-radius: 999px;
-  background:
-    var(--paper-grain) 0 0 / 100px 100px repeat,
-    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 100%);
+  background: var(--paper-50);
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
-  color: var(--paper-text);
   font: 600 var(--text-xs) var(--font-body);
   opacity: 0;
   transform: translate(-50%, 8px);
@@ -315,16 +247,23 @@ function tooltipFor(building: (typeof buildings.value)[number]): BuildingTooltip
   pointer-events: none;
 }
 
-.building-hotspot__hover-label small { color: var(--paper-text-muted); font-size: var(--text-xs); font-weight: 400; }
-.building-hotspot:hover .building-hotspot__hover-label,
-.building-hotspot:focus-visible .building-hotspot__hover-label { opacity: 1; transform: translate(-50%, 0); }
+.building-hotspot__hover-label small {
+  color: var(--paper-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 400;
+}
 
-/* Nameplate + badge trạng thái (plan ui-discoverability §3.1) — luôn
-   hiện ở zoom mặc định, đặt phía dưới vùng bấm hotspot. */
+.building-hotspot:hover .building-hotspot__hover-label,
+.building-hotspot:focus-visible .building-hotspot__hover-label {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
 .building-nameplate {
   position: absolute;
   left: 50%;
-  top: 100%;
+  top: var(--baseline-y);
+  z-index: 6;
   display: flex;
   align-items: center;
   gap: var(--space-1);
@@ -344,21 +283,15 @@ function tooltipFor(building: (typeof buildings.value)[number]): BuildingTooltip
   pointer-events: none;
 }
 
-.building-nameplate__text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
+.building-nameplate__text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .building-nameplate__lock {
+  position: relative;
   flex: 0 0 auto;
   width: 0.58em;
   height: 0.5em;
   border: 1px solid currentColor;
   border-radius: 2px;
-  position: relative;
 }
-
 .building-nameplate__lock::before {
   content: '';
   position: absolute;
@@ -371,7 +304,6 @@ function tooltipFor(building: (typeof buildings.value)[number]): BuildingTooltip
   border-radius: 0.36em 0.36em 0 0;
   transform: translateX(-50%);
 }
-
 .building-nameplate__ready,
 .building-nameplate__active,
 .building-nameplate__upgradeable {
@@ -380,74 +312,26 @@ function tooltipFor(building: (typeof buildings.value)[number]): BuildingTooltip
   height: 7px;
   border-radius: 50%;
 }
+.building-nameplate--locked { color: var(--paper-text-muted); opacity: 0.85; }
+.building-nameplate--locked .building-nameplate__lock { border-color: var(--paper-text-muted); }
+.building-nameplate--ready { color: var(--jade-on-paper, var(--jade)); }
+.building-nameplate--ready .building-nameplate__ready { background: var(--jade); box-shadow: 0 0 6px var(--jade); }
+.building-nameplate--active { color: var(--el-fire); }
+.building-nameplate--active .building-nameplate__active { background: var(--el-fire); box-shadow: 0 0 6px var(--el-fire); }
+.building-nameplate--upgradeable { color: var(--gold-700-on-paper, var(--mineral-gold)); }
+.building-nameplate--upgradeable .building-nameplate__upgradeable { background: var(--gold-500); box-shadow: 0 0 6px var(--gold-500); }
 
-.building-nameplate--locked {
-  color: var(--paper-text-muted);
-  opacity: 0.85;
-}
-
-.building-nameplate--locked .building-nameplate__lock {
-  border-color: var(--text-muted);
-}
-
-.building-nameplate--ready {
-  color: var(--jade);
-}
-
-.building-nameplate--ready .building-nameplate__ready {
-  background: var(--jade);
-  box-shadow: 0 0 6px var(--jade);
-}
-
-.building-nameplate--active {
-  color: var(--el-fire);
-}
-
-.building-nameplate--active .building-nameplate__active {
-  background: var(--el-fire);
-  box-shadow: 0 0 6px var(--el-fire);
-  animation: nameplate-pulse 1.4s ease-in-out infinite;
-}
-
-.building-nameplate--upgradeable {
-  color: var(--gold-500);
-}
-
-.building-nameplate--upgradeable .building-nameplate__upgradeable {
-  background: var(--gold-500);
-  box-shadow: 0 0 6px var(--gold-500);
-  animation: nameplate-glow 1.8s ease-in-out infinite;
-}
-
-@keyframes nameplate-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.45; transform: scale(0.8); }
-}
-
-@keyframes nameplate-glow {
-  0%, 100% { box-shadow: 0 0 4px var(--gold-500); }
-  50% { box-shadow: 0 0 10px var(--gold-500); }
+.home-building-hotspots__season-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .building-nameplate__active,
-  .building-nameplate__upgradeable {
-    animation: none !important;
-  }
-}
-
-@keyframes hotspot-spin { to { transform: rotate(360deg); } }
-@keyframes hotspot-rise {
-  0% { opacity: 0; transform: translateY(0) scale(0.7); }
-  30% { opacity: 1; }
-  100% { opacity: 0; transform: translateY(-70px) scale(1.2); }
-}
-@keyframes hotspot-ripple {
-  0% { opacity: 0.8; transform: translate(-50%, -50%) scale(0.45); }
-  100% { opacity: 0; transform: translate(-50%, -50%) scale(2.4); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .building-hotspot__vfx i { animation: none !important; }
+  .building-hotspot__hover-label { transition: none; }
 }
 </style>

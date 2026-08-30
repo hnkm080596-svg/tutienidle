@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
 import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composables/useGameState'
 import { GameManager } from '@/core/game/GameManager'
+import { buildings } from '@/data/building/buildings'
 import { commitThanhVanVariant } from '@/game/support/ThanhVanArt'
 import { useUiStore } from '@/stores/ui'
 import DongFuScene from './DongFuScene.vue'
@@ -90,6 +91,7 @@ function mountDongFuScene() {
   document.body.appendChild(container)
 
   const gameManager = new GameManager()
+  gameManager.registerBuildings(buildings)
   const app = createApp({ render: () => h(DongFuScene) })
   const pinia = createPinia()
 
@@ -113,6 +115,9 @@ function mountDongFuScene() {
         '.home-scene__parallax-stack--previous .home-scene__parallax-layer',
       ),
     ),
+    buildings: () => container.querySelector<HTMLElement>('.home-building-hotspots'),
+    seasonOverlay: () => container.querySelector<HTMLImageElement>('.home-building-hotspots__season-overlay'),
+    firstBuildingSprite: () => container.querySelector<HTMLElement>('.dong-fu-building-sprite'),
     playerTrigger: () => container.querySelector<HTMLButtonElement>('.home-player__trigger'),
     unmount: () => {
       app.unmount()
@@ -151,6 +156,12 @@ describe('DongFuScene seasonal parallax background', () => {
     const children = Array.from(mounted.root()!.children)
     expect(children.indexOf(mounted.activeStack()!)).toBeLessThan(
       children.indexOf(mounted.root()!.querySelector('.home-linhnhan')!),
+    )
+    expect(children.indexOf(mounted.activeStack()!)).toBeLessThan(
+      children.indexOf(mounted.buildings()!),
+    )
+    expect(children.indexOf(mounted.buildings()!)).toBeLessThan(
+      children.indexOf(mounted.root()!.querySelector('.home-player')!),
     )
 
     mounted.unmount()
@@ -192,10 +203,14 @@ describe('DongFuScene seasonal parallax background', () => {
     await nextTick()
 
     expect(pendingImages).toHaveLength(10)
+    expect(mounted.seasonOverlay()!.dataset.season).toBe('spring')
+    expect(mounted.firstBuildingSprite()!.classList).toContain('is-time-morning')
     pendingImages.slice(0, 9).forEach((image) => image.onload?.())
     await flushSwap()
     expect(mounted.activeLayers().map((layer) => layer.getAttribute('src'))).toEqual(SPRING_MORNING_URLS)
     expect(mounted.previousLayers()).toHaveLength(0)
+    expect(mounted.seasonOverlay()!.dataset.season).toBe('spring')
+    expect(mounted.firstBuildingSprite()!.classList).toContain('is-time-morning')
 
     pendingImages[9]!.onload?.()
     await flushSwap()
@@ -212,6 +227,8 @@ describe('DongFuScene seasonal parallax background', () => {
     expect(mounted.previousLayers().map((layer) => layer.getAttribute('src'))).toEqual(
       SPRING_MORNING_URLS,
     )
+    expect(mounted.seasonOverlay()!.dataset.season).toBe('winter')
+    expect(mounted.firstBuildingSprite()!.classList).toContain('is-time-night')
 
     mounted.unmount()
   })
@@ -232,6 +249,8 @@ describe('DongFuScene seasonal parallax background', () => {
 
     expect(mounted.activeLayers().map((layer) => layer.getAttribute('src'))).toEqual(SPRING_MORNING_URLS)
     expect(mounted.previousLayers()).toHaveLength(0)
+    expect(mounted.seasonOverlay()!.dataset.season).toBe('spring')
+    expect(mounted.firstBuildingSprite()!.classList).toContain('is-time-morning')
 
     mounted.unmount()
   })

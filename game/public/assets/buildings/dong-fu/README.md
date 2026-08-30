@@ -1,5 +1,11 @@
 # Động Phủ building art
 
+The `v2/` directory is the intended runtime set for the modular 2D Dong Fu scene. Root-level PNGs and the `master-v1-*` / `separated-v1` directories are legacy reference and rollback assets; they are not the source for new runtime placement.
+
+See `v2/README.md` for the current canvas, layer, season, metadata, and deferred-VFX contracts.
+
+## Legacy V1 reference
+
 All source buildings use a `1254 × 1254` transparent canvas and a consistent elevated three-quarter front view.
 
 Active world objects rendered from the current project data:

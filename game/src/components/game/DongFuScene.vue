@@ -25,6 +25,7 @@ import {
   type ThanhVanVariant,
 } from '@/game/support/ThanhVanArt'
 import { useUiStore } from '@/stores/ui'
+import HomeBuildingIcons from './HomeBuildingIcons.vue'
 import PlayerPortrait from '../common/PlayerPortrait.vue'
 
 interface DongFuRenderStack {
@@ -225,6 +226,10 @@ onBeforeUnmount(() => {
       <span style="left: 50%; top: 66%; --mx: 10px; --my: -22px; animation-delay: 2.8s;" />
       <span style="left: 52%; top: 50%; --mx: -16px; --my: -14px; animation-delay: 4.1s;" />
     </div>
+
+    <!-- Building art shares this scene's stacking context so foreground scenery
+         and the cultivating character can remain in front of it. -->
+    <HomeBuildingIcons :variant="activeStack.variant" />
 
     <div class="home-player">
       <!-- Command wheel trigger (plan Workstream A/B) — ảnh tu luyện
@@ -436,6 +441,7 @@ onBeforeUnmount(() => {
    định vị tâm màn hình và hit target. */
 .home-player {
   position: absolute;
+  z-index: 6;
   left: 50%;
   top: 66%;
   transform: translate(-50%, -50%);
