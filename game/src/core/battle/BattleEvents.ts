@@ -110,11 +110,21 @@ export interface BattleEndEvent {
   state: 'victory' | 'defeat'
 }
 
+/**
+ * kind 'essence' (2026-08-30) — Tinh Hoa Phàm Thể rơi từ quái: chuỗi
+ * particle bay thẳng VỀ NGƯỜI CHƠI (không về hồ lô), mote cuối chạm
+ * người chơi mới nạp tiến độ Luyện Thể (xem combat-essence-stream.ts +
+ * App.vue essenceArrivals drain). Rendering tự hủy khi scene không
+ * active — chỉ là presentation, bỏ qua không mất loot.
+ */
 export interface BattleRewardParticleEvent {
   sourceId: string
-  kind: 'item' | 'insight' | 'currency'
+  kind: 'item' | 'insight' | 'currency' | 'essence'
   color: number
 }
+
+/** Event scene → App.vue khi chuỗi essence hoàn tất (1 lần/drop event). */
+export const ESSENCE_STREAM_ARRIVAL_EVENT = 'essence_stream_arrival'
 
 // ================= Combat Grid Rework (2026-08-24) =================
 

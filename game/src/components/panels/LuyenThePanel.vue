@@ -1,9 +1,10 @@
 <script setup lang="ts">
 // Realm Passive & Pressure System (2026-08-20) — panel Luyện Thể, cùng
 // pattern overlay với SkillPathPanel.vue/TechniquePanel.vue/
-// RealmPanel.vue. Đầu tư Tinh Hoa Phàm Thể (materialBag) vào
-// tầng đang dở qua GameManager.investBodyRefinement() (xem
-// core/realm/BodyRefinementSystem.ts) — tuần tự, đầy 1 tầng mới sang tầng kế.
+// RealmPanel.vue. Tinh Hoa Phàm Thể tự động nạp tiến độ (2026-08-30):
+// quái rơi → stream tím bay về người chơi → App.vue investBodyRefinement()
+// (xem core/realm/BodyRefinementSystem.ts) — tuần tự, đầy 1 tầng mới
+// sang tầng kế. Panel chỉ HIỂN THỊ tiến độ, không còn nút/nắm tay.
 //
 // KHÔNG còn giới hạn riêng Phàm Nhân (2026-08-22) — CẢ truy cập LẪN
 // đầu tư đều hoạt động ở mọi cảnh giới, để Tinh Hoa Phàm Thể còn tồn
@@ -27,25 +28,18 @@ import { computed } from 'vue'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
-import { BODY_REFINEMENT_TIERS, TINH_HOA_PHAM_THE_MATERIAL_ID } from '@/data/realm/BodyRefinement'
+import { BODY_REFINEMENT_TIERS } from '@/data/realm/BodyRefinement'
 import { getActiveTierIndex, getTierCap, isActiveTierUnlocked, isTierRequiredRealmLevelMet } from '@/core/realm/BodyRefinementSystem'
 import { statLabel } from '@/core/stats/StatLabels'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import Bar from '@/components/common/primitives/Bar.vue'
-import GameButton from '@/components/common/GameButton.vue'
 import EmptyState from '@/components/common/primitives/EmptyState.vue'
 
 const ui = useUiStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()
-const { stateVersion, bumpState } = useStateVersion()
-
-const heldTinhHoa = computed(() => {
-  stateVersion.value
-
-  return gameManager.materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)
-})
+const { stateVersion } = useStateVersion()
 
 const activeTierIndex = computed(() => {
   stateVersion.value
@@ -95,17 +89,6 @@ const tierRows = computed(() => {
   })
 })
 
-const canInvest = computed(() => activeTierIndex.value !== undefined && tierUnlocked.value && heldTinhHoa.value > 0)
-
-function invest() {
-  if (!canInvest.value) {
-    return
-  }
-
-  gameManager.investBodyRefinement(player.$state)
-  bumpState()
-}
-
 function close() {
   ui.closeHomeOverlays()
 }
@@ -115,18 +98,12 @@ function close() {
   <OverlayPanel :open="ui.standalonePanel === 'luyen_the'" title="Luyện Thể" width="min(560px, 90vw)" height="85vh" @close="close">
     <div class="luyen-the-panel__card">
       <div class="luyen-the-panel__summary">
-        <span>Tinh Hoa Phàm Thể: {{ formatNumber(heldTinhHoa) }}</span>
         <span>Tầng đã hoàn thành: {{ player.bodyRefinementCompletedTiers }}/6</span>
       </div>
 
-      <label class="luyen-the-panel__auto">
-        <input
-          type="checkbox"
-          :checked="ui.isAutoConsumeTinhHoa"
-          @change="ui.toggleAutoConsumeTinhHoa()"
-        >
-        <span>Tự động nuốt Tinh Hoa</span>
-      </label>
+      <p class="luyen-the-panel__note">
+        Tinh Hoa Phàm Thể từ quái tự bay về và nạp tiến độ — không cần thao tác.
+      </p>
 
       <template v-if="activeTierIndex !== undefined">
         <div class="luyen-the-panel__tiers">
@@ -154,10 +131,6 @@ function close() {
             </span>
           </div>
         </div>
-
-        <GameButton class="luyen-the-panel__invest" variant="secondary" size="sm" :disabled="!canInvest" @click="invest">
-          Đầu Tư Tinh Hoa
-        </GameButton>
       </template>
 
       <EmptyState v-else size="lg">Đã hoàn thành toàn bộ Luyện Thể.</EmptyState>
@@ -172,28 +145,20 @@ function close() {
   gap: 10px;
   padding: 20px 24px;
   font-family: var(--font-body);
-  color: var(--text-primary);
+  color: var(--paper-text);
 }
 
 .luyen-the-panel__summary {
   display: flex;
   justify-content: space-between;
   font-size: var(--text-sm);
-  color: var(--text-secondary);
+  color: var(--paper-text-soft);
 }
 
-.luyen-the-panel__auto {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: fit-content;
+.luyen-the-panel__note {
+  margin: 0;
   font-size: var(--text-sm);
   color: var(--jade);
-  cursor: pointer;
-}
-
-.luyen-the-panel__auto input {
-  accent-color: var(--jade);
 }
 
 .luyen-the-panel__tiers {
@@ -262,14 +227,5 @@ function close() {
   margin-top: 3px;
   font-size: var(--text-sm);
   color: var(--text-muted);
-}
-
-.luyen-the-panel__invest {
-  border-color: var(--chrome-300);
-  color: var(--chrome-100);
-}
-
-.luyen-the-panel__invest:disabled {
-  opacity: 0.4;
 }
 </style>

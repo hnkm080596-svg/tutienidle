@@ -104,7 +104,7 @@ export interface BagSortStateMap {
 }
 
 export const useUiStore = defineStore('ui', {
-  // Automation flags (isAutoConsumeTinhHoa/battleRunMode) được HYDRATE từ localStorage qua
+  // Automation flags (battleRunMode) được HYDRATE từ localStorage qua
   // uiFlagsPersistence.ts — người chơi yêu cầu "lưu lại flag của các
   // trạng thái tự động" nên chúng sống qua reload (2026-08-26). Các
   // flag còn lại vẫn transient theo phiên.
@@ -151,9 +151,8 @@ export const useUiStore = defineStore('ui', {
 
     battleRunMode: automation.battleRunMode ?? 'manual',
 
-    // Tự tiêu Tinh Hoa Phàm Thể vừa nhặt vào tầng Luyện Thể đang mở.
-    // 2026-08-26: ĐƯỢC LƯU qua localStorage — sống qua reload.
-    isAutoConsumeTinhHoa: automation.isAutoConsumeTinhHoa ?? false,
+    // (2026-08-30) isAutoConsumeTinhHoa đã GỠ — Luyện Thể tự đầu tư qua
+    // essence stream (App.vue), không còn flag auto.
 
     // Thám Hiểm rework — Địa Giới + Màn đang chọn để đánh (App.vue's
     // fightStage() đọc 2 field này thay vì hardcode STAGES[0]) + chế
@@ -196,8 +195,6 @@ export const useUiStore = defineStore('ui', {
      */
     persistAutomationFlags() {
       savePersistedUiAutomationFlags({
-        isAutoConsumeTinhHoa: this.isAutoConsumeTinhHoa,
-
         battleRunMode: this.battleRunMode,
       })
     },
@@ -323,12 +320,6 @@ export const useUiStore = defineStore('ui', {
 
     setBattleRunMode(mode: BattleRunMode) {
       this.battleRunMode = mode
-
-      this.persistAutomationFlags()
-    },
-
-    toggleAutoConsumeTinhHoa() {
-      this.isAutoConsumeTinhHoa = !this.isAutoConsumeTinhHoa
 
       this.persistAutomationFlags()
     },

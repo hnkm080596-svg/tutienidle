@@ -3,6 +3,7 @@
 // Ui automation flags persistence (2026-08-26) — người chơi yêu cầu
 // "lưu lại flag của các trạng thái tự động". Test roundtrip qua
 // localStorage + các đường fallback (JSON hỏng/giá trị sai kiểu).
+// (2026-08-30) isAutoConsumeTinhHoa đã GỠ — snapshot chỉ còn battleRunMode.
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useUiStore } from './ui'
@@ -19,26 +20,25 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
     setActivePinia(createPinia())
   })
 
-  it('store mới chưa có save → defaults false/manual', () => {
+  it('store mới chưa có save → default manual', () => {
     const ui = useUiStore()
 
-    expect(ui.isAutoConsumeTinhHoa).toBe(false)
     expect(ui.battleRunMode).toBe('manual')
   })
 
-  it('toggle action tự ghi snapshot vào localStorage', () => {
+  it('setBattleRunMode tự ghi snapshot vào localStorage', () => {
     const ui = useUiStore()
 
-    ui.toggleAutoConsumeTinhHoa()
+    ui.setBattleRunMode('repeat')
 
     const raw = localStorage.getItem(UI_AUTOMATION_STORAGE_KEY)!
 
     expect(JSON.parse(raw)).toMatchObject({
-      isAutoConsumeTinhHoa: true,
+      battleRunMode: 'repeat',
     })
   })
 
-  it('setBattleRunMode cũng được lưu; giá trị sai kiểu bị chặn khi load', () => {
+  it('giá trị sai kiểu bị chặn khi load', () => {
     const ui = useUiStore()
 
     ui.setBattleRunMode('repeat')
@@ -47,12 +47,11 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
     localStorage.setItem(
       UI_AUTOMATION_STORAGE_KEY,
 
-      JSON.stringify({ isAutoConsumeTinhHoa: 'yes', battleRunMode: 'turbo' }),
+      JSON.stringify({ battleRunMode: 'turbo' }),
     )
 
     const loaded = loadPersistedUiAutomationFlags()
 
-    expect(loaded.isAutoConsumeTinhHoa).toBeUndefined()
     expect(loaded.battleRunMode).toBeUndefined()
 
     // Store mới đọc snapshot sạch còn lại trước đó? Không — key đã bị
@@ -66,8 +65,6 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
 
   it('roundtrip hydrate đúng các automation flag còn hiệu lực', () => {
     savePersistedUiAutomationFlags({
-      isAutoConsumeTinhHoa: true,
-
       battleRunMode: 'progress',
     })
 
@@ -75,7 +72,6 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
 
     const ui = useUiStore()
 
-    expect(ui.isAutoConsumeTinhHoa).toBe(true)
     expect(ui.battleRunMode).toBe('progress')
   })
 
@@ -100,8 +96,6 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
 
     ui.$subscribe((_mutation, state) => {
       const snapshot = JSON.stringify({
-        c: state.isAutoConsumeTinhHoa,
-
         m: state.battleRunMode,
       })
 
@@ -112,8 +106,6 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
       lastSnapshot = snapshot
 
       savePersistedUiAutomationFlags({
-        isAutoConsumeTinhHoa: state.isAutoConsumeTinhHoa,
-
         battleRunMode: state.battleRunMode,
       })
     }, { detached: true })

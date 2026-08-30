@@ -279,6 +279,83 @@ describe('CombatScene — reward stream hút về hồ lô (plan §7.2)', () => 
   })
 })
 
+describe('CombatScene — essence stream (2026-08-30, tinh hoa tuôn chảy)', () => {
+  const ESSENCE_EVENT = {
+    type: 'reward_particle' as const,
+
+    sourceId: 'enemy_1',
+
+    kind: 'essence' as const,
+
+    color: 0xc792ea,
+  }
+
+  it('kind essence → KHÔNG pulse hồ lô (bay về player, không về gourd)', () => {
+    const { scene, delayedCalls } = createScene()
+
+    scene.sprites.set('enemy_1', makeEntitySprite(100, 100))
+    scene.sprites.set('player', makeEntitySprite(300, 400))
+
+    scene.onRewardParticle(ESSENCE_EVENT)
+
+    // Gourd pulse chỉ dùng cho item/insight/currency — essence không pulse.
+    expect(delayedCalls).toHaveLength(0)
+  })
+
+  it('kind essence → sinh motes bay về player chest anchor (tele-safe)', () => {
+    const { scene, tweenConfigs, createdObjects } = createScene()
+
+    scene.sprites.set('enemy_1', makeEntitySprite(100, 100))
+    scene.sprites.set('player', makeEntitySprite(300, 400))
+
+    scene.onRewardParticle(ESSENCE_EVENT)
+
+    const flightTween = tweenConfigs.find(
+      (config) => (config.targets as { progress?: number }).progress !== undefined,
+    )
+
+    expect(flightTween).toBeDefined()
+
+    const mote = createdObjects[0]!
+
+    const state = flightTween!.targets as { progress: number }
+
+    // Player "teleport" giữa lúc bay — đích live-resolve vẫn theo player.
+    const playerSprite = scene.sprites.get('player')
+
+    playerSprite.rect.x = 50
+    playerSprite.rect.y = 60
+
+    state.progress = 1
+
+    ;(flightTween!.onUpdate as () => void)()
+
+    const setPositionCalls = mote.__calls.filter((call) => call.method === 'setPosition')
+
+    const lastCall = setPositionCalls.at(-1)!
+
+    // Đích = chest anchor của player profile mortal tại (50, 60) —
+    // KHÔNG phải vị trí cũ (300, 400) hay miệng hồ lô. Chest anchor
+    // lệch nhẹ so với tâm sprite (profile offset) → dung sai 5px.
+    expect(Math.abs(lastCall.args[0] as number - 50)).toBeLessThan(5)
+    expect(Math.abs(lastCall.args[1] as number - 60)).toBeLessThan(30)
+  })
+
+  it('không resolve được nguồn → phát arrival NGAY (không kẹt tinh hoa)', () => {
+    const { scene, tweenConfigs } = createScene()
+
+    scene.onRewardParticle(ESSENCE_EVENT)
+
+    expect(tweenConfigs).toHaveLength(0)
+
+    const emitCalls = (scene.eventBus.emit as ReturnType<typeof vi.fn>).mock.calls as Array<
+      [string, unknown]
+    >
+
+    expect(emitCalls.some(([name]) => name === 'essence_stream_arrival')).toBe(true)
+  })
+})
+
 describe('CombatScene — reward lifecycle (plan §7.4)', () => {
   it('clearSceneState dọn sạch gourd + caches — không rò rỉ qua shutdown', () => {
     const { scene } = createScene()

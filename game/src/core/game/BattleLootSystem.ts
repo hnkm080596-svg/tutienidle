@@ -28,6 +28,9 @@ import { composeItemGradeNameSegments, type ItemGrade } from '../item/ItemGrade'
 import { composeEquipmentNameSegments } from '../equipment/EquipmentNaming'
 import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../data/realm/BodyRefinement'
 import type { PlayerData } from '../player/Player'
+
+/** Màu tím chuỗi Tinh Hoa Phàm Thể (2026-08-30) — bay về người chơi. */
+const ESSENCE_PARTICLE_COLOR = 0xc792ea
 import type { Enemy, EnemyItemDrop, EnemyReward } from '../enemy/Enemy'
 import type { LootNotificationPresentation } from '../notification/NotificationEvent'
 import type { NotificationQueue } from './NotificationQueue'
@@ -375,7 +378,15 @@ export class BattleLootSystem {
               overflowParts.push(`${materialOverflow} ${material.name}`)
             }
 
-            this.emitRewardParticle(sourceId, 'item', 0x6fbf73)
+            // Tinh Hoa Phàm Thể (2026-08-30) — kind 'essence' riêng: stream
+            // tím bay VỀ NGƯỜI CHƠI (combat-essence-stream.ts), mote cuối
+            // chạm player mới nạp tiến độ Luyện Thể (App.vue drain). Loot
+            // đã vào bag ở trên nên presentation bị bỏ qua không mất gì.
+            if (drop.itemId === TINH_HOA_PHAM_THE_MATERIAL_ID) {
+              this.emitRewardParticle(sourceId, 'essence', ESSENCE_PARTICLE_COLOR)
+            } else {
+              this.emitRewardParticle(sourceId, 'item', 0x6fbf73)
+            }
 
             this.pushLootNotification(`+${amount} ${material.name}`, {
               icon: material.icon,
@@ -613,7 +624,7 @@ export class BattleLootSystem {
 
   private emitRewardParticle(
     sourceId: string,
-    kind: 'item' | 'insight' | 'currency',
+    kind: 'item' | 'insight' | 'currency' | 'essence',
     color: number,
   ) {
     this.deps.eventBus.emit('reward_particle', { sourceId, kind, color })

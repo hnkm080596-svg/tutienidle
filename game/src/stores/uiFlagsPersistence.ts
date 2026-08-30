@@ -1,6 +1,7 @@
 // Ui automation flags persistence (2026-08-26) — người chơi yêu cầu
-// "lưu lại flag của các trạng thái tự động" (tự động dùng Tinh Hoa, chế
-// độ auto-refight) nên chúng SỐNG qua reload.
+// "lưu lại flag của các trạng thái tự động" (chế độ auto-refight) nên
+// chúng SỐNG qua reload. (2026-08-30) isAutoConsumeTinhHoa đã GỠ — Luyện
+// Thể tự đầu tư qua essence stream nên không còn là tuỳ chọn người chơi.
 //
 // Lựa chọn storage: localStorage RIÊNG thay vì PlayerData/save chính vì
 // đây là tuỳ chọn THIẾT BỊ (per-device convenience), không thuộc tiến
@@ -14,9 +15,6 @@ export const UI_AUTOMATION_STORAGE_KEY = 'tien-hiep-idle-ui-automation'
 
 /** Nhóm flag tự động được lưu — CHỈ gồm các trạng thái có ý nghĩa dài hạn. */
 export interface UiAutomationFlagSnapshot {
-  /** Tự tiêu Tinh Hoa Phàm Thể vào Luyện Thể (LuyenThePanel). */
-  isAutoConsumeTinhHoa: boolean
-
   /** Chế độ auto-refight đang chọn ở Stage Select (manual/repeat/progress). */
   battleRunMode: BattleRunMode
 }
@@ -46,10 +44,6 @@ export function loadPersistedUiAutomationFlags(): Partial<UiAutomationFlagSnapsh
     const parsed = JSON.parse(raw) as Record<string, unknown>
 
     const snapshot: Partial<UiAutomationFlagSnapshot> = {}
-
-    if (typeof parsed.isAutoConsumeTinhHoa === 'boolean') {
-      snapshot.isAutoConsumeTinhHoa = parsed.isAutoConsumeTinhHoa
-    }
 
     if (isBattleRunMode(parsed.battleRunMode)) {
       snapshot.battleRunMode = parsed.battleRunMode

@@ -93,6 +93,7 @@ import { CombatCastBar } from './combat/combat-cast-bar'
 import { CombatGridView } from './combat/combat-grid-view'
 import { CombatVfxSpawner } from './combat/combat-vfx-spawner'
 import { CombatRewardGourd } from './combat/combat-reward-gourd'
+import { CombatEssenceStream } from './combat/combat-essence-stream'
 
 const PLAYER_COLOR = 0x4a90d9
 const ENEMY_COLOR = 0xd94a4a
@@ -1250,8 +1251,13 @@ export class CombatScene extends Phaser.Scene {
     this.lastKnownScreenPositions.clear()
     this.lastKnownGridPositions.clear()
 
-    // Scene shutdown Ã„â€˜ÃƒÂ£ destroy children cÃ¡Â»Â§a display list Ã¢â‚¬â€ chÃ¡Â»â€° cÃ¡ÂºÂ§n bÃ¡Â»Â
-    // tham chiÃ¡ÂºÂ¿u Ã„â€˜Ã¡Â»Æ’ create() kÃ¡ÂºÂ¿ dÃ¡Â»Â±ng lÃ¡ÂºÂ¡i sÃ¡ÂºÂ¡ch theo mode hiÃ¡Â»â€¡n hÃƒÂ nh.
+    // Essence stream (2026-08-30) — motes là scene children bị destroy
+    // cùng display list; bỏ cache để create() kế dựng lại (arrival
+    // callback giữ nguyên qua closure eventBus).
+    this._essenceStream = undefined
+
+    // Scene shutdown Ä‘ÃƒÂ£ destroy children cÃ¡Â»Â§a display list Ã¢â‚¬â€ chÃ¡Â» cÃ¡ÂºÂ§n bÃ¡Â»
+    // tham chiÃ¡ÂºÂ¿u Ã„â€˜Ã¡Â» create() kÃ¡ÂºÂ¿ dÃ¡Â»Â±ng lÃ¡ÂºÂ¡i sÃ¡ÂºÂ¡ch theo mode hiÃ¡Â»â€¡n hÃƒÂ¬nh.
     this.arenaRect = undefined
     this.gridGraphics = undefined
     this.backdrop = undefined
@@ -1422,7 +1428,34 @@ export class CombatScene extends Phaser.Scene {
    *   pulse theo tÃ¡Â»Â«ng mote (Ã‚Â§6.3).
    */
   private onRewardParticle(event: BattleRewardParticleEvent) {
+    // Tinh Hoa Phàm Thể (2026-08-30) — stream tím bay VỀ NGƯỜI CHƠI thay
+    // vì hồ lô; mote cuối hoàn tất mới phát 'essence_stream_arrival' để
+    // App.vue nạp tiến độ Luyện Thể. Không resolve được điểm phát (sprite
+    // nguồn đã dọn + cache rỗng) → phát arrival NGAY, không bao giờ kẹt
+    // tinh hoa trong bag vì thiếu presentation.
+    if (event.kind === 'essence') {
+      const start = this.resolveRewardSourcePoint(event.sourceId)
+
+      if (start) {
+        this.essenceStream.play(start.x, start.y)
+      } else {
+        this.eventBus?.emit<undefined>('essence_stream_arrival', undefined)
+      }
+
+      return
+    }
+
     this.rewardGourd.onRewardParticle(event)
+  }
+
+  private _essenceStream?: CombatEssenceStream
+
+  private get essenceStream(): CombatEssenceStream {
+    this._essenceStream ??= new CombatEssenceStream(this, () => {
+      this.eventBus?.emit<undefined>('essence_stream_arrival', undefined)
+    })
+
+    return this._essenceStream
   }
 
   /**

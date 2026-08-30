@@ -8,6 +8,7 @@ import { GameManager } from './core/game/GameManager'
 import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from './composables/useGameState'
 import { checkTribulationOutcomeAction } from './composables/useTribulation'
 import { isBattleInProgress } from './core/battle/BattleTypes'
+import { ESSENCE_STREAM_ARRIVAL_EVENT } from './core/battle/BattleEvents'
 import { useBreakthrough } from './composables/useBreakthrough'
 import { useElectronBridge } from './composables/useElectronBridge'
 import { useNotificationStore } from './stores/notification'
@@ -55,12 +56,12 @@ const ui = useUiStore()
 // `ui.battleRunMode = ...` trong CombatVictoryPanel/StageSelectPanel),
 // ghi snapshot vào localStorage. Ghi rẻ (JSON nhỏ), skip khi snapshot
 // không đổi để tránh ghi lặp vô nghĩa mỗi tick.
+// (2026-08-30) isAutoConsumeTinhHoa đã GỠ — Luyện Thể tự đầu tư qua
+// essence stream; chỉ còn battleRunMode.
 let lastAutomationSnapshot = ''
 
 ui.$subscribe((_mutation, state) => {
   const snapshot = JSON.stringify({
-    c: state.isAutoConsumeTinhHoa,
-
     m: state.battleRunMode,
   })
 
@@ -71,8 +72,6 @@ ui.$subscribe((_mutation, state) => {
   lastAutomationSnapshot = snapshot
 
   savePersistedUiAutomationFlags({
-    isAutoConsumeTinhHoa: state.isAutoConsumeTinhHoa,
-
     battleRunMode: state.battleRunMode,
   })
 }, { detached: true })
@@ -140,6 +139,32 @@ let autosaveHandle: number | undefined
 let saveInFlight = false
 let suppressPersistence = false
 const AUTOSAVE_INTERVAL_MS = 15_000
+
+// ================= Tinh hoa tuôn chảy (2026-08-30) =================
+// Tinh Hoa Phàm Thể rơi từ quái phát stream particle bay về người chơi
+// (combat-essence-stream.ts); mote cuối chạm player → scene phát
+// 'essence_stream_arrival' → tick() kế tiếp gọi investBodyRefinement().
+//
+// Headless fallback (farm nền/tab ẩn/không CombatScene): essence event
+// vẫn emit từ core nhưng KHÔNG AI render → không có arrival. Nếu essence
+// được emit mà sau HEADLESS_TIMEOUT_MS vẫn chưa thấy arrival, tick coi
+// scene không render và invest trực tiếp. investBodyRefinement tự gate
+// (hết tầng → consumed 0) nên gọi thừa vô hại.
+let essenceEmitted = false
+let essenceArrivalSeen = false
+let lastEssenceEmitTime = 0
+const HEADLESS_TIMEOUT_MS = 2000
+
+gameManager.eventBus.on<void>(ESSENCE_STREAM_ARRIVAL_EVENT, () => {
+  essenceArrivalSeen = true
+})
+
+gameManager.eventBus.on<{ kind: string }>('reward_particle', (event) => {
+  if (event.kind === 'essence') {
+    essenceEmitted = true
+    lastEssenceEmitTime = performance.now()
+  }
+})
 
 async function persistProgress() {
   if (suppressPersistence || entryStage.value !== 'game' || saveInFlight) {
@@ -261,11 +286,28 @@ function tick() {
       breakthrough()
     }
 
-    if (ui.isAutoConsumeTinhHoa) {
-      // investBodyRefinement tự giữ các gate tầng/cảnh giới và chỉ trừ đúng lượng
-      // thực sự dùng được. Loot được cấp trước đó trong GameManager.update(),
-      // nên Tinh Hoa vừa rơi có thể được hấp thu ngay trong cùng tick.
-      gameManager.investBodyRefinement(player.$state)
+    // === Tinh hoa tuôn chảy (2026-08-30) ===
+    // 1. essenceArrivalSeen → stream hoàn tất → invest ngay.
+    // 2. essenceEmitted lâu quá chưa thấy arrival → headless → invest
+    //    (CombatScene không chạy, hoặc bail vì thiếu nguồn).
+    // 3. Cả hai đều drain qua investBodyRefinement() — tự gate.
+    if (essenceArrivalSeen) {
+      essenceArrivalSeen = false
+      essenceEmitted = false
+      const consumed = gameManager.investBodyRefinement(player.$state)
+
+      if (consumed > 0) {
+        bumpState()
+      }
+    }
+
+    if (!essenceArrivalSeen && essenceEmitted && performance.now() - lastEssenceEmitTime > HEADLESS_TIMEOUT_MS) {
+      essenceEmitted = false
+      const consumed = gameManager.investBodyRefinement(player.$state)
+
+      if (consumed > 0) {
+        bumpState()
+      }
     }
 
     // Đột Phá Trúc Cơ — phản ứng thắng/thua Độ Kiếp NGAY (battle
