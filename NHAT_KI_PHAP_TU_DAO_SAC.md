@@ -38,6 +38,7 @@ Isolation theo quy tắc AGENTS.md: mọi file-changing task trong worktree + br
 | 2 | `5641689` | docs | Implementation plan 17 task (TDD, bite-sized) | `game/docs/superpowers/plans/2026-08-30-phap-tu-dao-sac.md` |
 | 3 | `51d0215` | T1 | Bỏ Phong/Lôi khỏi type system + stats + affixes + vfx | 12 file (chi tiết §4) |
 | 4 | `6dc36c7` | T2 | Xoá ailment `te_dien` + reaction Lôi Viêm + rework fixture phanPhac sang Bốc Hơi | 6 file (chi tiết §4) |
+| 5 | `911478b` | T3 | Field `relation` sinh/khắc cho 10 reaction + Ngưng Lộ + Khai Sơn + 2 buff | 3 file (chi tiết §4) |
 
 *(bảng cập nhật sau mỗi task)*
 
@@ -86,6 +87,26 @@ Isolation theo quy tắc AGENTS.md: mọi file-changing task trong worktree + br
 - Bảng reaction giờ còn 8 cặp sống — Task 3 (commit kế tiếp) sẽ thêm `relation` metadata cho cả 8 + 2 reaction mới Ngưng Lộ/Khai Sơn → tổng 10. Nếu cherry-pick Task 3 mà KHÔNG lấy Task 2, `relation.test` sẽ fail vì thiếu entry — **lấy Task 2 và Task 3 cùng cụm**.
 - File `Skills.ts` chứa nhiều comment mojibake (encoding hỏng từ trước, hiện trạng repo) — comment block Kim Tu được viết lại ASCII-an toàn, phần còn lại của file không đụng.
 
+### Task 3 — Bảng reaction 10 cặp + 2 reaction sinh mới (commit `911478b`)
+
+**Việc đã làm:**
+- `ElementReaction.ts`: thêm field `relation?: 'sinh' | 'khac'` vào `ElementReactionDefinition` (interface) + gán relation cho cả 8 cặp sống; thêm 2 reaction sinh mới:
+  - **Ngưng Lộ** (`chay_mau.te_cong`, Kim sinh Thủy): baseDamage 40, powerScalingRatio 0.5, `appliesBuffId: 'ngung_lo'` — buff nguồn +5 manaRegenPerSecond 6s refresh ("cỗ máy Pháp Lực" nuôi thanh tài nguyên của thiên phú Pháp Lực Thân Hòa).
+  - **Khai Sơn** (`thach_hoa.chay_mau`, Thổ sinh Kim): baseDamage 50, powerScalingRatio 0.5, `appliesBuffId: 'khai_son'` — buff nguồn +8% defense/tầng (max 3, 6s, mirror pattern doc_the).
+- `data/buff/buffs.ts`: thêm 2 buff `ngung_lo` (stackMode refresh, duration 6, flat 5 manaRegenPerSecond) + `khai_son` (stackMode stack, maxStacks 3, duration 6, percent 0.08 defense).
+- Test mới `ElementReaction.relation.test.ts`: 14 case — validate 10 cặp theo ĐÚNG chiều khai bảng (ReactionManager thử 2 chiều nhưng bảng chỉ khai 1 chiều), số liệu 2 reaction mới, tổng đúng 10, mọi entry có relation.
+
+**Lí do (spec §4):** 5 hành = C(5,2) = 10 cặp phân đều 5 sinh + 5 khắc khớp hình học ngôi sao 5 cánh — mỗi cặp đúng 1 reaction, không ô trống. 2 cặp Sinh trống (Kim+Thủy, Thổ+Kim) được thiết kế mới; `relation` metadata là nguồn sự thật cho UI ngôi sao + logic khuếch đại Chế Khắc (Task 14) tra bảng.
+
+**Decision kĩ thuật:** stat "armor" không tồn tại trong StatType (engine map armor→`defense` qua EnemyStatInput) → buff Khai Sơn dùng **`defense`** percent 0.08 thay vì `armorPercent` như plan dự kiến (plan đã dự phòng bước kiểm tra này).
+
+**Kiểm chứng:** element tests 56/56; type-check PASS; full 1425/1426 (1 pre-existing InkWash).
+
+**Ghi chú cherry-pick / conflict:**
+- Task 3 phụ thuộc Task 2 (bảng 8 cặp sạch) — cherry-pick cùng cụm.
+- `manaRegenPerSecond` + `defense` là stat có sẵn — không đụng StatTypes.
+
+
 
 ## 5. Rulings / quyết định controller (mọi quyết định nằm ở đây)
 
@@ -106,6 +127,6 @@ Isolation theo quy tắc AGENTS.md: mọi file-changing task trong worktree + br
 
 ## 7. Trạng thái
 
-- Task 2/17 ✅ (commit `6dc36c7`).
-- Tiếp theo: Task 3 — relation metadata + 2 reaction mới Ngưng Lộ/Khai Sơn + 2 buff.
+- Task 3/17 ✅ (commit `911478b`).
+- Tiếp theo: Task 4 — WuxingRelations (bảng sinh/khắc + isSinhCycle).
 - Cập nhật file này sau mỗi task hoàn thành.
