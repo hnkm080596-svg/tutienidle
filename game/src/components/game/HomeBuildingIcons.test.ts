@@ -24,6 +24,8 @@ import {
 import { vTooltip } from '@/directives/tooltip'
 import { useUiStore } from '@/stores/ui'
 import type { Material } from '@/core/material/Material'
+import { buildings as gameBuildings } from '@/data/building/buildings'
+import type { ThanhVanVariant } from '@/game/support/ThanhVanArt'
 
 const PILL_ROOM_DEF: Building = {
   id: 'pill_room',
@@ -47,9 +49,13 @@ const UPGRADE_MATERIAL: Material = {
   sourceType: 'building',
 }
 
-function mountHomeBuildings(gameManager: GameManager) {
+function mountHomeBuildings(
+  gameManager: GameManager,
+  initialVariant: ThanhVanVariant = { season: 'spring', time: 'morning' },
+) {
   const container = document.createElement('div')
   const stateVersion = ref(0)
+  const renderedVariant = ref(initialVariant)
 
   document.body.appendChild(container)
 
@@ -60,7 +66,7 @@ function mountHomeBuildings(gameManager: GameManager) {
 
       return () =>
         h('div', [
-          h(HomeBuildingIcons),
+          h(HomeBuildingIcons, { variant: renderedVariant.value }),
           ui.activeBuildingPopoverId
             ? h(BuildingDetailPopover, {
                 buildingId: ui.activeBuildingPopoverId,
@@ -89,11 +95,25 @@ function mountHomeBuildings(gameManager: GameManager) {
 
     buildingButtons: () => Array.from(container.querySelectorAll<HTMLButtonElement>('.building-hotspot')),
 
+    buildingAnchors: () =>
+      Array.from(container.querySelectorAll<HTMLElement>('.building-hotspot-anchor')),
+
     buildingButton: (buildingId: string) =>
       container.querySelector<HTMLButtonElement>(`[data-building-id="${buildingId}"] .building-hotspot`),
 
     nameplate: (buildingId: string) =>
       container.querySelector<HTMLElement>(`[data-building-id="${buildingId}"] .building-nameplate`),
+
+    sprite: (buildingId: string) =>
+      container.querySelector<HTMLElement>(`[data-building-id="${buildingId}"] .dong-fu-building-sprite`),
+
+    seasonOverlay: () =>
+      container.querySelector<HTMLImageElement>('.home-building-hotspots__season-overlay'),
+
+    setVariant: async (nextVariant: ThanhVanVariant) => {
+      renderedVariant.value = nextVariant
+      await nextTick()
+    },
 
     scriptureButton: () =>
       container.querySelector<HTMLButtonElement>('[data-building-id="scripture_pavilion"]'),
@@ -114,7 +134,9 @@ beforeEach(() => {
   gameManager = new GameManager()
 
   gameManager.registerMaterials([UPGRADE_MATERIAL])
-  gameManager.registerBuildings([PILL_ROOM_DEF])
+  gameManager.registerBuildings(
+    gameBuildings.map((building) => building.id === PILL_ROOM_DEF.id ? PILL_ROOM_DEF : building),
+  )
 })
 
 afterEach(() => {
@@ -122,6 +144,56 @@ afterEach(() => {
 })
 
 describe('HomeBuildingIcons — building navigation không dùng chip nổi', () => {
+  it('renders five manifest-ordered building sprites and one shared season overlay', () => {
+    const mounted = mountHomeBuildings(gameManager)
+
+    expect(mounted.buildingAnchors().map((node) => node.dataset.buildingId)).toEqual([
+      'pill_room',
+      'gathering_outpost',
+      'teleport_array',
+      'equipment_hall',
+      'spirit_spring',
+    ])
+    expect(mounted.sprite('pill_room')).not.toBeNull()
+    expect(mounted.sprite('pill_room')!.classList).toContain('is-locked')
+    expect(mounted.buildingAnchors()[0]!.style.getPropertyValue('--baseline-offset')).toBe(
+      '-82.29665071770334%',
+    )
+    expect(mounted.buildingButton('pill_room')!.getAttribute('aria-label')).toContain('Đan Phòng')
+    expect(mounted.seasonOverlay()?.getAttribute('src')).toBe(
+      '/assets/buildings/dong-fu/v2/shared/seasons/spring.png',
+    )
+
+    mounted.unmount()
+  })
+
+  it('keeps button and nameplate available when a sprite asset fails', async () => {
+    const mounted = mountHomeBuildings(gameManager)
+    const base = mounted.sprite('pill_room')!.querySelector<HTMLImageElement>('[data-layer="base"]')!
+
+    base.dispatchEvent(new Event('error'))
+    await nextTick()
+
+    expect(mounted.sprite('pill_room')!.classList).toContain('has-asset-error')
+    expect(mounted.buildingButton('pill_room')).not.toBeNull()
+    expect(mounted.nameplate('pill_room')?.textContent).toContain('Đan Phòng')
+
+    mounted.unmount()
+  })
+
+  it('updates building grading from the rendered background variant prop', async () => {
+    const mounted = mountHomeBuildings(gameManager)
+
+    await mounted.setVariant({ season: 'winter', time: 'night' })
+
+    expect(mounted.seasonOverlay()?.getAttribute('src')).toBe(
+      '/assets/buildings/dong-fu/v2/shared/seasons/winter.png',
+    )
+    expect(mounted.sprite('pill_room')!.classList).toContain('is-time-night')
+
+    mounted.unmount()
+  })
+
   it('chưa xây → KHÔNG có chip (popover xây mới mở qua click chính)', () => {
     const mounted = mountHomeBuildings(gameManager)
 
@@ -277,6 +349,14 @@ describe('HomeBuildingIcons — building navigation không dùng chip nổi', ()
 })
 
 describe('HomeBuildingIcons — nameplate + badge trạng thái (plan §3.1)', () => {
+  it('uses the approved Khai Vật Đường display name for gathering_outpost', () => {
+    const mounted = mountHomeBuildings(gameManager)
+
+    expect(mounted.nameplate('gathering_outpost')?.textContent).toContain('Khai Vật Đường')
+
+    mounted.unmount()
+  })
+
   it('nameplate hiển thị đúng tên building từ template', () => {
     const mounted = mountHomeBuildings(gameManager)
 

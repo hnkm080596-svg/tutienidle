@@ -5,6 +5,10 @@ import { BuildingSystem } from '@/core/building/BuildingSystem'
 const buildingSystem = new BuildingSystem()
 
 describe('building 9-tier scaffold', () => {
+  it('giữ ID gathering_outpost nhưng dùng tên hiển thị Khai Vật Đường', () => {
+    expect(buildings.find(entry => entry.id === 'gathering_outpost')?.name).toBe('Khai Vật Đường')
+  })
+
   it.each(['spirit_spring', 'equipment_hall', 'pill_room', 'gathering_outpost'])('%s có đủ 9 cấp và 9 cost bands', (id) => {
     const building = buildings.find(entry => entry.id === id)!
     expect(building.maxLevel).toBe(9)

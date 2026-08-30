@@ -25,7 +25,7 @@ afterEach(() => {
 })
 
 describe('ink-wash shared primitives', () => {
-  it('maps each button variant to the approved XS/S slice', () => {
+  it('maps each rectangular button variant to the approved XS/S slice', () => {
     const cases = [
       ['primary', 'button-s-paper'],
       ['secondary', 'button-s-ink'],
@@ -37,10 +37,14 @@ describe('ink-wash shared primitives', () => {
       const container = mount(GameButton, { variant })
       expect(container.querySelector(`[data-ink-slice="${asset}"]`)).not.toBeNull()
     }
+  })
 
+  it('keeps circular buttons round with their CSS border instead of a rectangular slice', () => {
     const circle = mount(GameButton, { shape: 'circle' })
-    expect(circle.querySelector('[data-ink-slice="frame-xs-ink-line"]')).not.toBeNull()
-    expect(circle.querySelector('[data-ink-slice="button-s-paper"]')).toBeNull()
+    const button = circle.querySelector('button')
+
+    expect(circle.querySelector('[data-ink-slice]')).toBeNull()
+    expect(button?.classList).toContain('game-button--circle')
   })
 
   it('keeps enabled, disabled, and loading click behavior unchanged', () => {
