@@ -37,6 +37,7 @@ Isolation theo quy tắc AGENTS.md: mọi file-changing task trong worktree + br
 | 1 | `741600f` | docs | Spec design doc (11 sections, đã duyệt từng section với user) | `game/docs/superpowers/specs/2026-08-30-phap-tu-dao-sac-design.md` |
 | 2 | `5641689` | docs | Implementation plan 17 task (TDD, bite-sized) | `game/docs/superpowers/plans/2026-08-30-phap-tu-dao-sac.md` |
 | 3 | `51d0215` | T1 | Bỏ Phong/Lôi khỏi type system + stats + affixes + vfx | 12 file (chi tiết §4) |
+| 4 | `6dc36c7` | T2 | Xoá ailment `te_dien` + reaction Lôi Viêm + rework fixture phanPhac sang Bốc Hơi | 6 file (chi tiết §4) |
 
 *(bảng cập nhật sau mỗi task)*
 
@@ -67,6 +68,25 @@ Isolation theo quy tắc AGENTS.md: mọi file-changing task trong worktree + br
 - `TribulationChapters.ts` + `TribulationData.test.ts` dùng `'lightning'` là **TribulationChapterKind** (chương kiếp của hệ Đột Phá) — hệ riêng, GIỮ NGUYÊN, đừng nhầm khi conflict-resolve.
 - `khiem_phong` (skill Kiếm Tu) là tên riêng, KHÔNG phải element wind — giữ nguyên.
 
+### Task 2 — Xoá te_dien + Lôi Viêm (commit `6dc36c7`)
+
+**Việc đã làm:**
+- `AilmentTypes.ts`: xoá `| 'te_dien'` khỏi union `AilmentId` + dọn comment nhắc "marker cho Reaction tương lai của Phong/Lôi" (R5 — cùng chủ đề, cùng file).
+- `data/ailment/ailments.ts`: xoá template Tê Điện (id te_dien) — để lại comment ghi chú sự xóa theo convention.
+- `ElementReaction.ts`: xoá entry `te_dien: { name: 'Lôi Viêm', baseDamage: 70, ... }` khỏi `bong`; thay 3 block comment Phong/Lôi (Đông Lôi/Thủy Lôi/Độc Phong/Mù/Lôi Huyết) bằng ghi chú ngắn "Phong/Lôi đã bỏ toàn hệ (spec §5), không bao giờ mở lại" — giữ lại các comment về reaction SỐNG (Độc Thủy, Độc Thế, Huyết Độc, Định Thổ).
+- `ReactionManager.phanPhac.test.ts`: fixture `bong+te_dien` (Lôi Viêm 75/150 dmg) → `bong+te_cong` (Bốc Hơi 65/130 dmg = 60 + attack 10 × ratio 0.5). Độ phủ cơ chế keepChance (thiên phú Phản Phác) giữ nguyên 6 case. Chú ý: Bốc Hơi có `keepsAilmentId: 'te_cong'` nhưng source fixture không có `waterReactionExtensionSeconds` nên nhánh consume chuẩn vẫn được test đúng.
+- `ReactionManager.test.ts`: xoá block test "Thủy + Kim (Tê Điện) KHÔNG còn phản ứng" (vô nghĩa khi te_dien không tồn tại) — để lại comment ghi chú.
+- `Skills.ts` comment (dòng ~438): cập nhật "te_dien giờ mồ côi" → "đã xoá sạch theo spec §5".
+
+**Lí do (spec §5):** te_dien là ailment mồ côi — skill Kim cũ áp nó đã bị xoá từ đợt redesign trước (comment cũ tự thừa nhận), reaction Lôi Viêm không bao giờ trigger thật trong gameplay. Test phanPhac đang test một reaction chết — rework fixture sang cặp sống giữ nguyên độ phủ cơ chế.
+
+**Kiểm chứng:** 3 file test element 26/26 pass; type-check PASS; full suite 1411/1412 (chỉ InkWashPrimitives pre-existing fail — như Task 1).
+
+**Ghi chú cherry-pick / conflict:**
+- Bảng reaction giờ còn 8 cặp sống — Task 3 (commit kế tiếp) sẽ thêm `relation` metadata cho cả 8 + 2 reaction mới Ngưng Lộ/Khai Sơn → tổng 10. Nếu cherry-pick Task 3 mà KHÔNG lấy Task 2, `relation.test` sẽ fail vì thiếu entry — **lấy Task 2 và Task 3 cùng cụm**.
+- File `Skills.ts` chứa nhiều comment mojibake (encoding hỏng từ trước, hiện trạng repo) — comment block Kim Tu được viết lại ASCII-an toàn, phần còn lại của file không đụng.
+
+
 ## 5. Rulings / quyết định controller (mọi quyết định nằm ở đây)
 
 | # | Ruling | Lí do | Chi phí nếu sai |
@@ -86,6 +106,6 @@ Isolation theo quy tắc AGENTS.md: mọi file-changing task trong worktree + br
 
 ## 7. Trạng thái
 
-- Task 1/17 ✅ (review: spec ✅, quality approved, 2 minors deferred → R3).
-- Tiếp theo: Task 2 (xoá `te_dien` + Lôi Viêm + dọn comment ElementReaction).
+- Task 2/17 ✅ (commit `6dc36c7`).
+- Tiếp theo: Task 3 — relation metadata + 2 reaction mới Ngưng Lộ/Khai Sơn + 2 buff.
 - Cập nhật file này sau mỗi task hoàn thành.
