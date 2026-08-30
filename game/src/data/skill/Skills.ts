@@ -435,15 +435,15 @@ export const SKILLS: Skill[] = [
     equipped: false,
   },
 
-  // Kim Tu (Plans/KimPath, 2026-08-21) â€” THAY Háº²N kit 3-skill+1-passive
-  // cÅ© (thiet_sa_chuong/sa_vu/thiet_sa_bao/passive_thiet_sa_tich_uy, Ä‘Ã£
-  // xoÃ¡ â€” 'te_dien'/"LÃ´i ViÃªm" [bong.te_dien trong ElementReaction.ts]
-  // giá» má»“ cÃ´i, khÃ´ng skill nÃ o Ã¡p te_dien ná»¯a, Ä‘á»ƒ nguyÃªn nhÆ° hoai_tu
-  // sau Ä‘á»£t Thá»•). CÃ¹ng framework 1-Active-Skill/hÃ nh vá»›i Há»a/Thá»§y/Má»™c/
-  // Thá»• â€” chiá»u sÃ¢u Ä‘áº¿n tá»« Node Tree, xem data/progression/PhapTuNodes.ts.
-  // Há»c Sáº´N lÃºc chá»n path. GIá»NG Há»a/Thá»§y (KHÃC Má»™c/Thá»•): ailmentChance
-  // 40% base + node-upgradeable qua elementApplicationPercent (doc má»¥c 2:
-  // "ÄÃ¡nh trÃºng khÃ´ng Ä‘áº£m báº£o Xuáº¥t Huyáº¿t â€” khÃ¡c Äá»™c ChÆ°á»Ÿng").
+  // Kim Tu (Plans/KimPath, 2026-08-21) - THAY HAN kit 3-skill+1-passive
+  // cu (thiet_sa_chuong/sa_vu/thiet_sa_bao/passive_thiet_sa_tich_uy, da
+  // xoa). te_dien/'Loi Viem' [bong.te_dien] da XOA SACH (spec
+  // 2026-08-30-phap-tu-dao-sac M5 - ailment mo coi tu dot Kim cu,
+  // reaction chet theo). Cung framework 1-Active-Skill/hanh voi Hoa/Thuy/
+  // Moc/Tho - chieu sau den tu Node Tree, xem data/progression/PhapTuNodes.ts.
+  // Hoc SAN luc chon path. GIONG Hoa/Thuy (KHAC Moc/Tho): ailmentChance
+  // 40% base + node-upgradeable qua elementApplicationPercent (doc muc 2:
+  // 'Danh trung khong dam bao Xuat Huyet - khac Doc Chuong').
   {
     id: 'diem_kim_thuat',
 

@@ -96,47 +96,37 @@ export interface ElementReactionDefinition {
 // tinh chỉnh qua playtest — không phải số chốt cứng.
 //
 // Plans/waterpath (2026-08-21) — chốt lại bảng reaction của Thủy: XOÁ
-// hẳn Thủy+Kim ("Đông Lôi" cũ, te_cong+te_dien) vì spec Thủy mới nói rõ
-// "💧⚙️ THỦY + KIM: Không Reaction". THÊM Thủy+Mộc ("Độc Thủy",
-// te_cong+trung_doc) — cùng shape burst-damage-1-lần với Bốc Hơi/Lôi
-// Viêm (doc mô tả "tick dày hơn" về flavor, nhưng AilmentSystem hiện
-// mô hình DoT liên tục theo damagePerSecond, không có khái niệm "tick
-// rời rạc" để nhân đôi tần suất — burst damage là cách diễn giải gần
-// nhất với hạ tầng hiện có). Thủy+Lôi ("Thủy Lôi", chain propagation)
-// và Thủy+Phong ("Đóng Băng") CHƯA thêm — chưa có skill Lôi/Phong nào
-// tồn tại để mang ailment tương ứng (cùng lý do Phong/Lôi bị hoãn ở
-// [[tienhiep-phap-tu-magicpath]]), và bản thân "Thủy Lôi" (chain
-// nhiều mục tiêu) cũng cần engine mới (ElementReactionDefinition hiện
-// chỉ hỗ trợ 1 cục true damage, không phải chain) — để dành đợt sau.
-// Thủy+Thổ ("Thủy Thổ", trói chân) cũng hoãn cùng lý do — "Root" (chặn
-// di chuyển nhưng KHÔNG chặn đánh/cast) là 1 CC category hoàn toàn mới,
-// chưa tồn tại (AilmentCcEffect hiện chỉ có 'stun'/'freeze').
+// hẳn Thủy+Kim ("Đông Lôi" cũ) vì spec Thủy mới nói rõ "THỦY + KIM:
+// Không Reaction". THÊM Thủy+Mộc ("Độc Thủy", te_cong+trung_doc) —
+// cùng shape burst-damage-1-lần với Bốc Hơi (doc mô tả "tick dày hơn"
+// về flavor, nhưng AilmentSystem hiện mô hình DoT liên tục theo
+// damagePerSecond, không có khái niệm "tick rời rạc" để nhân đôi tần
+// suất — burst damage là cách diễn giải gần nhất với hạ tầng hiện có).
+//
+// Phong/Lôi đã bỏ toàn hệ (spec 2026-08-30-phap-tu-dao-sac §5) — các
+// cặp reaction cho hệ đó (Đông Lôi/Thủy Lôi/Độc Phong/Mù/Lôi Huyết)
+// không bao giờ mở lại; ailment te_dien (Tê Điện, mồ côi từ đợt Kim
+// cũ) xoá sạch cùng đợt. Bảng reaction giờ hoàn chỉnh 10 cặp thuần
+// Ngũ Hành theo spec §4 (5 sinh + 5 khắc — Task 3 của plan thêm
+// relation metadata + 2 reaction sinh Ngưng Lộ/Khai Sơn).
 //
 // Plans/PoisonPath (2026-08-21) — bảng phản ứng của Mộc (mục 3) có 6
 // cặp, nhưng CHỈ "Độc Viêm" (Mộc+Hỏa) và "Độc Thủy" (Mộc+Thủy, đã có
 // từ đợt Thủy) khớp được model hiện tại (1 cục true damage tức thời).
-// 3 cặp còn lại hoãn — mỗi cái cần 1 mechanic MỚI hoàn toàn, không thể
-// giả lập bằng baseDamage/percentOfTargetCurrentHp mà không sai lệch
-// thiết kế: "Độc Phong" (Mộc+Phong, lan Độc sang mục tiêu khác — cần
-// chain/spread, ElementReactionDefinition chỉ hỗ trợ 1 target; cũng
-// chưa có skill Phong nào tồn tại, cùng lý do Phong/Lôi bị hoãn ở
-// [[tienhiep-phap-tu-magicpath]]). "Độc Thế" (Mộc+Thổ, "Độc → buff
-// BẢN THÂN người chơi" — không phải damage lên target, cần 1 loại
-// Reaction hoàn toàn khác — cấp buff/stack cho SOURCE thay vì trừ HP
-// TARGET; Thổ cũng chưa redesign nên chưa chắc có skill nào áp
-// 'hoai_tu' vào combat thật). "Huyết Độc" (Mộc+Kim, "gộp 2 DoT thành 1
-// DoT MỚI mạnh hơn" — cần thay thế/nâng cấp ailment đang có, khác hẳn
-// "trừ 1 cục rồi xoá cả 2" hiện tại; Kim cũng chưa redesign).
+// "Độc Thế" (Mộc+Thổ, "Độc → buff BẢN THÂN người chơi" — không phải
+// damage lên target, cần 1 loại Reaction hoàn toàn khác — cấp buff/
+// stack cho SOURCE thay vì trừ HP TARGET). "Huyết Độc" (Mộc+Kim, "gộp
+// 2 DoT thành 1 DoT MỚI mạnh hơn" — cần thay thế/nâng cấp ailment
+// đang có, khác hẳn "trừ 1 cục rồi xoá cả 2" hiện tại).
 export const ELEMENT_REACTIONS: Partial<Record<AilmentId, Partial<Record<AilmentId, ElementReactionDefinition>>>> = {
   // Hỏa (Bỏng) + Thủy (Tê Cóng) — "Bốc Hơi". keepsAilmentId: 'te_cong'
   // (Plans/magicpathgeneral Phase 5) — Dẫn Lưu (waterReactionExtensionSeconds)
   // có thể giữ lại Tê Cóng thay vì tiêu, xem ReactionManager.ts.
   bong: {
     te_cong: { name: 'Bốc Hơi', baseDamage: 60, keepsAilmentId: 'te_cong', powerScalingRatio: 0.5 },
-    // Hỏa (Bỏng) + Kim (Tê Điện) — "Lôi Viêm".
-    te_dien: { name: 'Lôi Viêm', baseDamage: 70, powerScalingRatio: 0.5 },
     // Hỏa (Bỏng) + Mộc (Trúng Độc) — "Độc Viêm", damage dựa trên %
     // currentHp của target thay vì flat (xem ElementReactionDefinition).
+    // (Lôi Viêm bong+te_dien đã xoá — te_dien mồ côi, spec §5.)
     trung_doc: { name: 'Độc Viêm', baseDamage: 0, percentOfTargetCurrentHp: 0.1 },
   },
 
@@ -146,12 +136,9 @@ export const ELEMENT_REACTIONS: Partial<Record<AilmentId, Partial<Record<Ailment
     trung_doc: { name: 'Độc Thủy', baseDamage: 65, keepsAilmentId: 'te_cong', powerScalingRatio: 0.5 },
   },
 
-  // Plans/EarthPath mục IV (2026-08-21) — bảng phản ứng của Thổ (chốt
-  // 4/6 cặp, đúng doc mục IX/X: "Lôi+Thổ"/"Kim+Thổ" CHƯA thiết kế,
-  // "không nên ép Reaction chỉ để hoàn thành bảng" — không thêm entry
-  // giả cho 2 cặp đó). "Mù" (Thổ+Phong) cũng chưa thêm — chưa có skill
-  // Phong nào tồn tại để mang ailment tương ứng, cùng lý do Phong/Lôi
-  // bị hoãn khắp nơi khác trong hệ Ngũ Hành.
+  // Plans/EarthPath mục IV (2026-08-21) — bảng phản ứng của Thổ. "Mù"
+  // (Thổ+Phong) không bao giờ thêm — Phong đã bỏ toàn hệ (spec
+  // 2026-08-30-phap-tu-dao-sac §5).
   thach_hoa: {
     // Thổ+Hỏa — "Dung Nham": DoT phần THẬT (ailment 'dung_nham') TRÊN
     // target VẪN GIỮ NGUYÊN + Plans/magicpathgeneral Phase 12
@@ -177,16 +164,11 @@ export const ELEMENT_REACTIONS: Partial<Record<AilmentId, Partial<Record<Ailment
     trung_doc: { name: 'Độc Thế', baseDamage: 0, appliesBuffId: 'doc_the' },
   },
 
-  // Plans/KimPath mục 4 (2026-08-21) — bảng phản ứng của Kim khai đủ
-  // 2/5 cặp khớp được engine hiện tại. Thủy/Phong/Thổ+Kim là "Không
-  // Reaction" CHỦ Ý theo doc (mục 8: "Kim không cần phải tương tác với
-  // mọi hệ") — không thêm entry giả. "Lôi Huyết" (Lôi+Kim, mục 7 —
-  // "mỗi lần Lôi giật +1 Xuất Huyết") hoãn — chưa có skill/ailment Lôi
-  // nào tồn tại, cùng lý do Phong/Lôi bị hoãn khắp nơi khác trong hệ
-  // Ngũ Hành ([[tienhiep-phap-tu-magicpath]]); bản thân mục 7 cũng là 1
-  // mechanic MỚI (Reaction cấp STACK thay vì damage/ailment/buff — 1
-  // dạng effect thứ 4 ngoài baseDamage/appliesAilmentId/appliesBuffId),
-  // để dành đợt Lôi.
+  // Plans/KimPath mục 4 (2026-08-21) — bảng phản ứng của Kim. Thủy+Kim
+  // là "Không Reaction" CHỦ Ý theo doc (mục 8: "Kim không cần phải
+  // tương tác với mọi hệ") — không thêm entry giả. ("Lôi Huyết"
+  // Lôi+Kim không bao giờ thêm — Lôi đã bỏ toàn hệ, spec
+  // 2026-08-30-phap-tu-dao-sac §5.)
   chay_mau: {
     // Kim+Hỏa — "Thiêu Huyết": Reaction Damage + trừ vĩnh viễn % maxHp
     // (trần cộng dồn, xem ElementReactionDefinition's ghi chú). "100%

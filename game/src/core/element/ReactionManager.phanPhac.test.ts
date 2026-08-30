@@ -13,7 +13,11 @@ import type { AilmentTemplate } from '../ailment/AilmentRegistry'
 // Thiên phú Phản Phác (talent-direction-choice-plan §6) — reaction_keep_chance
 // chỉ tác động NHÁNH CONSUME CHUẨN của ReactionManager; nhánh đặc biệt
 // (appliesAilmentId/appliesBuffId/keepsAilmentId) giữ nguyên hành vi.
-// Cặp test: bong + te_dien ("Lôi Viêm", 70 dmg, nhánh chuẩn thuần).
+// Cặp test (spec 2026-08-30-phap-tu-dao-sac §5 — te_dien/Lôi Viêm đã
+// xoá, chuyển fixture sang cặp sống): bong + te_cong ("Bốc Hơi", 60
+// dmg, nhánh chuẩn thuần). Source fixture KHÔNG có
+// waterReactionExtensionSeconds nên keepsAilmentId không kích — reaction
+// tiêu cả 2 như nhánh chuẩn, đúng phạm vi test keepChance.
 function getTemplate(id: string): AilmentTemplate {
   const template = ailments.find((ailment) => ailment.id === id)
 
@@ -85,13 +89,13 @@ describe('ReactionManager — Phản Phác (reaction_keep_chance)', () => {
     const { reactionManager, combatSystem, source, target, ailmentSystem } = createSetup()
 
     ailmentSystem.apply(getTemplate('bong'), source, target)
-    ailmentSystem.apply(getTemplate('te_dien'), source, target)
+    ailmentSystem.apply(getTemplate('te_cong'), source, target)
 
-    reactionManager.checkAndTrigger(ailmentSystem, 'te_dien', source, target, combatSystem)
+    reactionManager.checkAndTrigger(ailmentSystem, 'te_cong', source, target, combatSystem)
 
-    // Combat Balance Pass (2026-08-29) — "Lôi Viêm" powerScalingRatio
-    // 0.5: 70 + attack(10)×0.5 = 75.
-    expect(target.currentHp).toBe(1000 - 75)
+    // Combat Balance Pass (2026-08-29) — "Bốc Hơi" powerScalingRatio
+    // 0.5: 60 + attack(10)×0.5 = 65.
+    expect(target.currentHp).toBe(1000 - 65)
     expect(ailmentSystem.getActiveIds()).toEqual([])
   })
 
@@ -99,15 +103,15 @@ describe('ReactionManager — Phản Phác (reaction_keep_chance)', () => {
     const { reactionManager, combatSystem, source, target, ailmentSystem } = createSetup()
 
     ailmentSystem.apply(getTemplate('bong'), source, target)
-    ailmentSystem.apply(getTemplate('te_dien'), source, target)
+    ailmentSystem.apply(getTemplate('te_cong'), source, target)
 
     reactionManager.checkAndTrigger(
-      ailmentSystem, 'te_dien', source, target, combatSystem,
+      ailmentSystem, 'te_cong', source, target, combatSystem,
       undefined, undefined, undefined, undefined, 1,
     )
 
-    expect(target.currentHp).toBe(1000 - 75)
-    expect(ailmentSystem.getActiveIds().sort()).toEqual(['bong', 'te_dien'])
+    expect(target.currentHp).toBe(1000 - 65)
+    expect(ailmentSystem.getActiveIds().sort()).toEqual(['bong', 'te_cong'])
   })
 
   it('roll trúng ngưỡng 25% (random 0.2) — giữ cả 2 ailment', () => {
@@ -116,14 +120,14 @@ describe('ReactionManager — Phản Phác (reaction_keep_chance)', () => {
     const { reactionManager, combatSystem, source, target, ailmentSystem } = createSetup()
 
     ailmentSystem.apply(getTemplate('bong'), source, target)
-    ailmentSystem.apply(getTemplate('te_dien'), source, target)
+    ailmentSystem.apply(getTemplate('te_cong'), source, target)
 
     reactionManager.checkAndTrigger(
-      ailmentSystem, 'te_dien', source, target, combatSystem,
+      ailmentSystem, 'te_cong', source, target, combatSystem,
       undefined, undefined, undefined, undefined, 0.25,
     )
 
-    expect(ailmentSystem.getActiveIds().sort()).toEqual(['bong', 'te_dien'])
+    expect(ailmentSystem.getActiveIds().sort()).toEqual(['bong', 'te_cong'])
   })
 
   it('roll trượt ngưỡng 25% (random 0.3) — vẫn tiêu cả 2 ailment', () => {
@@ -132,10 +136,10 @@ describe('ReactionManager — Phản Phác (reaction_keep_chance)', () => {
     const { reactionManager, combatSystem, source, target, ailmentSystem } = createSetup()
 
     ailmentSystem.apply(getTemplate('bong'), source, target)
-    ailmentSystem.apply(getTemplate('te_dien'), source, target)
+    ailmentSystem.apply(getTemplate('te_cong'), source, target)
 
     reactionManager.checkAndTrigger(
-      ailmentSystem, 'te_dien', source, target, combatSystem,
+      ailmentSystem, 'te_cong', source, target, combatSystem,
       undefined, undefined, undefined, undefined, 0.25,
     )
 
@@ -146,22 +150,22 @@ describe('ReactionManager — Phản Phác (reaction_keep_chance)', () => {
     const { reactionManager, combatSystem, source, target, ailmentSystem } = createSetup()
 
     ailmentSystem.apply(getTemplate('bong'), source, target)
-    ailmentSystem.apply(getTemplate('te_dien'), source, target)
+    ailmentSystem.apply(getTemplate('te_cong'), source, target)
 
     reactionManager.checkAndTrigger(
-      ailmentSystem, 'te_dien', source, target, combatSystem,
+      ailmentSystem, 'te_cong', source, target, combatSystem,
       undefined, undefined, undefined, undefined, 1,
     )
 
     // Cả 2 ailment còn nguyên — lần kích tiếp theo vẫn khớp cặp.
     reactionManager.checkAndTrigger(
-      ailmentSystem, 'te_dien', source, target, combatSystem,
+      ailmentSystem, 'te_cong', source, target, combatSystem,
       undefined, undefined, undefined, undefined, 1,
     )
 
-    // Combat Balance Pass (2026-08-29) — 2 lần "Lôi Viêm": (70 + 5) × 2.
-    expect(target.currentHp).toBe(1000 - 150)
-    expect(ailmentSystem.getActiveIds().sort()).toEqual(['bong', 'te_dien'])
+    // Combat Balance Pass (2026-08-29) — 2 lần "Bốc Hơi": (60 + 5) × 2.
+    expect(target.currentHp).toBe(1000 - 130)
+    expect(ailmentSystem.getActiveIds().sort()).toEqual(['bong', 'te_cong'])
   })
 
   it('nhánh appliesAilmentId KHÔNG đổi — keepChance 1 vẫn tiêu 2 ailment gốc và áp ailment mới', () => {

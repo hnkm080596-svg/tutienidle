@@ -210,24 +210,9 @@ describe('ReactionManager (Combat Rework Phase 6 — Pháp Tu Reaction)', () => 
     expect(ailmentSystem.getActiveIds()).toEqual([])
   })
 
-  it('Thủy (Tê Cóng) + Kim (Tê Điện) KHÔNG còn phản ứng ("Đông Lôi" đã gỡ khỏi spec Thủy mới)', () => {
-    const eventBus = new EventBus()
-    const reactionManager = new ReactionManager(eventBus)
-    const combatSystem = new CombatSystem(eventBus)
-
-    const source = createCombatant({ id: 'source', type: 'player' })
-    const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
-
-    const ailmentSystem = new AilmentSystem(new AilmentManager())
-
-    ailmentSystem.apply(getTemplate('te_cong'), source, target)
-    ailmentSystem.apply(getTemplate('te_dien'), source, target)
-
-    reactionManager.checkAndTrigger(ailmentSystem, 'te_dien', source, target, combatSystem)
-
-    expect(target.currentHp).toBe(1000)
-    expect(ailmentSystem.getActiveIds().sort()).toEqual(['te_cong', 'te_dien'])
-  })
+  // Test "Thủy + Kim (Tê Điện) không phản ứng" đã XOÁ cùng te_dien
+  // (spec 2026-08-30-phap-tu-dao-sac §5) — ailment mồ côi, không còn
+  // cặp nào để assert.
 
   // Thủy Tu Trúc Cơ Reaction ("Dẫn Lưu" major, Plans/waterpath mục VII)
   it('waterReactionExtensionSeconds — GIỮ LẠI Tê Cóng (gia hạn) thay vì xoá, chỉ xoá vế còn lại', () => {

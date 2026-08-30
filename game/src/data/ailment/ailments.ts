@@ -49,15 +49,9 @@ export const ailments: AilmentTemplate[] = [
     element: 'water',
     dpsRatio: 0.25,
   },
-  {
-    id: 'te_dien',
-    name: 'Tê Điện',
-    category: 'dot',
-    duration: 3,
-    stackMode: 'refresh',
-    element: 'metal',
-    dpsRatio: 0.35,
-  },
+  // te_dien (Tê Điện) đã XOÁ (spec 2026-08-30-phap-tu-dao-sac §5) —
+  // mồ côi từ đợt Kim cũ (không skill nào áp), reaction Lôi Viêm chết
+  // theo. Phong/Lôi bỏ toàn hệ, không mở lại.
   {
     id: 'hoai_tu',
     name: 'Hoại Tử',

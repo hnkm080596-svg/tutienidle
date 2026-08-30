@@ -8,12 +8,12 @@
 // 'alignment' cho phép 1 ailment tồn tại thuần làm marker (0 hiệu
 // ứng thật, vd Thạch Hóa lúc đó). Người dùng phản hồi 2026-08-21 (cùng
 // ngày, sau khi Thạch Hóa được thêm on-hit-proc): MỌI ailment đóng
-// vai trò Alignment (kể cả marker cho Reaction tương lai của Phong/
-// Lôi...) BẮT BUỘC phải tự mang tác dụng cơ chế thật (dot/cc/modifier),
-// KHÔNG được là "ailment có hình nhưng không tác dụng" — category
-// 'alignment' vì vậy bị XOÁ HẲN (không còn cách nào tạo 1 ailment rỗng
-// nữa, ép mọi ailment mới phải chọn đúng 1 trong 3 category có tác
-// dụng thật bên dưới). "Alignment" giờ CHỈ còn là 1 VAI TRÒ mà bất kỳ
+// vai trò Alignment BẮT BUỘC phải tự mang tác dụng cơ chế thật (dot/cc/
+// modifier), KHÔNG được là "ailment có hình nhưng không tác dụng" —
+// category 'alignment' vì vậy bị XOÁ HẲN (không còn cách nào tạo 1
+// ailment rỗng nữa, ép mọi ailment mới phải chọn đúng 1 trong 3
+// category có tác dụng thật bên dưới). "Alignment" giờ CHỈ còn là 1
+// VAI TRÒ mà bất kỳ
 // ailment nào (dot/cc/modifier) cũng có thể đảm nhiệm thêm — Bỏng vừa
 // là DoT vừa là vế "Hỏa" cho Bốc Hơi, Thạch Hóa vừa là modifier
 // (evasionRate) vừa là vế "Thổ" cho Dung Nham/Trói Chân/Độc Thế —
@@ -30,7 +30,6 @@ export type AilmentId =
   | 'trung_doc'   // Trúng Độc — DoT (Mộc)
   | 'chay_mau'    // Chảy Máu — DoT (Kim, xem ghi chú retag trong data/ailment/ailments.ts)
   | 'te_cong'     // Tê Cóng — DoT (Thủy)
-  | 'te_dien'     // Tê Điện — DoT (Kim)
   | 'hoai_tu'     // Hoại Tử — DoT (Thổ)
   | 'choang'      // Choáng — CC (dừng hành động, KHÔNG chặn di chuyển)
   | 'dong_bang'   // Đóng Băng — CC (dừng hoàn toàn, kể cả di chuyển)
