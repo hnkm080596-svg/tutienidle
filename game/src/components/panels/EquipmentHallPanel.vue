@@ -7,6 +7,7 @@ import { usePanelPagination } from '@/composables/usePanelPagination'
 import {
   equipmentEssenceMaterialId,
 } from '@/core/equipment/RefinementBalance'
+import { EQUIPMENT_RARITY_AFFIX_SLOTS } from '@/core/equipment/EquipmentRarity'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import type { EquipmentSlot } from '@/core/equipment/EquipmentTypes'
 import { materialLabel, affixLabel, equipmentSlotLabel, equipmentQualityLabel } from '@/core/presentation/labels'
@@ -26,7 +27,8 @@ import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 // Khí Đường (2026-08-25, resource-professions-rework plan §7/§9.2) —
 // bốn tab ĐÚNG contract: Cường Hóa (slot), Tẩy Luyện (identity substat
 // theo phẩm Quáng), Tinh Luyện (±20% giá trị + khóa dòng N+L), Hóa
-// Luyện (destructive → Tinh Hoa, batch all-or-nothing).
+// Luyện (destructive → Tinh Hoa, batch all-or-nothing). Rework
+// 2026-08-30: bỏ Nạp Điểm Rèn; cost Điểm Rèn Tẩy/Tinh theo quality.
 const TABS = [
   { id: 'enhance', label: 'Cường Hóa' },
   { id: 'wash', label: 'Tẩy Luyện' },
@@ -67,7 +69,9 @@ interface EquippedRow {
 
   realmId: string
 
-  quality: string
+  quality: EquipmentInstance['quality']
+
+  rarity: EquipmentInstance['rarity']
 
   affixCount: number
 
@@ -100,6 +104,8 @@ const equippedRows = computed<EquippedRow[]>(() => {
       realmId: instance.realmId,
 
       quality: instance.quality,
+
+      rarity: instance.rarity,
 
       affixCount: instance.affixes.length,
 
@@ -291,14 +297,23 @@ function doEnhance(row: EnhanceSlotRow) {
 const washCost = computed(() => {
   stateVersion.value
 
-  return gameManager.getWashCost(selectedRow.value?.realmId)
+  return gameManager.getWashCost(selectedRow.value?.realmId, selectedRow.value?.quality)
 })
 
 function canWash(): boolean {
   const ren = itemRenState.value
+  const row = selectedRow.value
+  if (!row) {
+    return false
+  }
+  // Tẩy Luyện guard (2026-08-30) — đồ Hoàng (0 affix slot) không thể
+  // roll được dòng nào; core trả no_eligible_affix nhưng UX kém nếu
+  // đợi player bấm mới biết lỗi. Disable sớm tại UI.
+  const affixSlotCap = EQUIPMENT_RARITY_AFFIX_SLOTS[row.rarity]
+  const hasAffixSlots = affixSlotCap.prefix + affixSlotCap.suffix > 0
 
   return (
-    selectedRow.value !== null &&
+    hasAffixSlots &&
     selectedOreId.value !== null &&
     ren !== null &&
     gameManager.materialBag.getAmount(selectedOreId.value) >= washCost.value.oreAmount &&
@@ -377,6 +392,7 @@ const refineCost = computed(() => {
     selectedAffixes.value.length,
     lockedIndices.value.length,
     selectedRow.value?.realmId,
+    selectedRow.value?.quality,
   )
 })
 
@@ -434,6 +450,88 @@ function doRefine() {
 
   refine(selectedRow.value.instanceId, [...lockedIndices.value])
 }
+
+// =========================
+// Bảng so sánh Trước ⇒ Sau dùng chung Tẩy/Tinh Luyện (rework
+// 2026-08-30) — thông tin trước và sau thao tác nằm CÙNG MỘT HÀNG
+// cho từng chỉ số, thay vì text rời rạc từng tab.
+// =========================
+
+interface CompareRow {
+  key: string
+
+  label: string
+
+  before: string
+
+  after: string
+}
+
+const washPreviewRows = computed<CompareRow[]>(() => {
+  stateVersion.value
+
+  const ren = itemRenState.value
+
+  const row = selectedRow.value
+
+  if (!ren || !row) {
+    return []
+  }
+
+  return [
+    {
+      key: 'ren',
+      label: 'Điểm Rèn',
+      before: `${ren.points}/${ren.max}`,
+      after: `${Math.max(0, ren.points - washCost.value.refinementPoints)}/${ren.max}`,
+    },
+    {
+      key: 'lines',
+      label: 'Số dòng phụ',
+      before: `${row.affixCount}`,
+      after: 'roll lại theo Quáng',
+    },
+    {
+      key: 'tier',
+      label: 'Tier ban đầu',
+      before: `${Math.max(...row.instance.affixes.map((a) => a.tier), 0)}`,
+      after: 'roll lại theo Quáng',
+    },
+  ]
+})
+
+const refinePreviewRows = computed<CompareRow[]>(() => {
+  stateVersion.value
+
+  const ren = itemRenState.value
+
+  const row = selectedRow.value
+
+  if (!ren || !row) {
+    return []
+  }
+
+  return [
+    {
+      key: 'ren',
+      label: 'Điểm Rèn',
+      before: `${ren.points}/${ren.max}`,
+      after: `${Math.max(0, ren.points - refineCost.value.refinementPoints)}/${ren.max}`,
+    },
+    {
+      key: 'locked',
+      label: 'Dòng giữ nguyên',
+      before: `${lockedIndices.value.length}`,
+      after: `${lockedIndices.value.length} (không đổi)`,
+    },
+    {
+      key: 'rerolled',
+      label: 'Dòng roll lại',
+      before: `${row.affixCount - lockedIndices.value.length}`,
+      after: '±20% trong range tier',
+    },
+  ]
+})
 
 // =========================
 // Tab Hóa Luyện (§7.5) — filter + multi-select + preview + confirm
@@ -594,16 +692,16 @@ function doDissolve() {
     <header class="qi-hall__points">
       <template v-if="itemRenState !== null">
         <span>
-          Tình trạng rèn món đang chọn:
+          Điểm Rèn món đang chọn:
           {{ itemRenState.points }}/{{ itemRenState.max }}
         </span>
 
         <small class="qi-hall__points-hint">
-          Điểm Rèn gắn với từng món đồ (cùng ngân sách với Rèn +power) — cạn là hết phát triển.
+          Điểm Rèn gắn với từng món đồ, sinh ra đúng trần theo phẩm — Tẩy/Tinh Luyện tiêu và không thể nạp lại.
         </small>
       </template>
 
-      <span v-else>Chọn một trang bị để xem Tình trạng rèn của nó</span>
+      <span v-else>Chọn một trang bị để xem Điểm Rèn của nó</span>
     </header>
 
     <TabBar
@@ -699,9 +797,29 @@ function doDissolve() {
           <span class="qi-hall__owned">×{{ ore.owned }}</span>
         </label>
 
+        <!-- Trước ⇒ Sau — từng chỉ số cùng một hàng -->
+        <table class="qi-hall__compare-table" aria-label="So sánh trước và sau Tẩy Luyện">
+          <thead>
+            <tr>
+              <th scope="col">Chỉ số</th>
+              <th scope="col">Trước</th>
+              <th scope="col" aria-hidden="true"></th>
+              <th scope="col">Sau</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in washPreviewRows" :key="row.key">
+              <th scope="row">{{ row.label }}</th>
+              <td>{{ row.before }}</td>
+              <td class="qi-hall__compare-arrow" aria-hidden="true">⇒</td>
+              <td>{{ row.after }}</td>
+            </tr>
+          </tbody>
+        </table>
+
         <p class="qi-hall__costline">
-          Chi phí: {{ washCost.refinementPoints }} Điểm Rèn (tình trạng rèn còn
-          {{ itemRenState?.points ?? 0 }}) · {{ washCost.spiritStone }} {{ spiritStoneCostName }}
+          Chi phí: {{ washCost.refinementPoints }} Điểm Rèn · {{ washCost.spiritStone }}
+          {{ spiritStoneCostName }}
         </p>
 
         <GameButton size="sm" :disabled="!canWash()" @click="doWash()">
@@ -750,11 +868,30 @@ function doDissolve() {
           <span>{{ affix.label }} (tier {{ affix.tier }})</span>
         </label>
 
+        <!-- Trước ⇒ Sau — từng chỉ số cùng một hàng -->
+        <table class="qi-hall__compare-table" aria-label="So sánh trước và sau Tinh Luyện">
+          <thead>
+            <tr>
+              <th scope="col">Chỉ số</th>
+              <th scope="col">Trước</th>
+              <th scope="col" aria-hidden="true"></th>
+              <th scope="col">Sau</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in refinePreviewRows" :key="row.key">
+              <th scope="row">{{ row.label }}</th>
+              <td>{{ row.before }}</td>
+              <td class="qi-hall__compare-arrow" aria-hidden="true">⇒</td>
+              <td>{{ row.after }}</td>
+            </tr>
+          </tbody>
+        </table>
+
         <p class="qi-hall__costline">
-          Giá trị từng dòng không khóa roll trong ±20%. Cost hệ số N+L =
-          {{ refineCost.essenceUnits }} Tinh Hoa · {{ refineCost.spiritStone }}
-          {{ spiritStoneCostName }} · {{ refineCost.refinementPoints }} Điểm Rèn (tình trạng rèn còn
-          {{ itemRenState?.points ?? 0 }} · Tinh Hoa đang có {{ refineEssenceOwned }}).
+          Cost hệ số N+L = {{ refineCost.essenceUnits }} Tinh Hoa ·
+          {{ refineCost.spiritStone }} {{ spiritStoneCostName }} ·
+          {{ refineCost.refinementPoints }} Điểm Rèn (Tinh Hoa đang có {{ refineEssenceOwned }}).
         </p>
 
         <GameButton size="sm" :disabled="!canRefine()" @click="doRefine()">
@@ -917,11 +1054,45 @@ function doDissolve() {
 .qi-hall__tabs {
   flex: 0 0 auto;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(var(--tab-columns, 4), 1fr);
   gap: 4px;
   padding: 8px 12px;
   border-bottom: 1px solid color-mix(in srgb, var(--scene-fire-text-soft) 20%, transparent);
   background: color-mix(in srgb, var(--scene-fire-deep) 88%, transparent);
+}
+
+/* Bảng so sánh Trước ⇒ Sau dùng chung Tẩy/Tinh Luyện (rework 2026-08-30)
+   — từng chỉ số nằm CÙNG MỘT HÀNG, hết tình trạng "trước/sau tách rời". */
+.qi-hall__compare-table {
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  font-size: var(--text-xs);
+}
+
+.qi-hall__compare-table th,
+.qi-hall__compare-table td {
+  padding: 4px 6px;
+  border-bottom: 1px solid color-mix(in srgb, var(--paper-line, rgba(42, 41, 36, 0.42)) 60%, transparent);
+  text-align: left;
+  color: var(--paper-text, #211f1a);
+}
+
+.qi-hall__compare-table thead th {
+  font-weight: 600;
+  color: var(--paper-text-soft, #5e5a50);
+}
+
+.qi-hall__compare-table tbody th {
+  font-weight: 500;
+}
+
+.qi-hall__compare-table td.qi-hall__compare-arrow {
+  width: 24px;
+  padding: 4px 2px;
+  text-align: center;
+  color: var(--paper-text-soft, #5e5a50);
+  border-bottom-color: transparent;
 }
 
 /* Fit-refactor đợt 4 — body là ngân sách flex; section nào dài (Hóa Luyện)

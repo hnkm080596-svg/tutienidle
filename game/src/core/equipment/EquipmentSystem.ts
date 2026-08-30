@@ -48,14 +48,12 @@ import { rollWeightedIndex } from '../production/ProductionBalance'
 import {
   DISSOLVE_ESSENCE_RANGE_BY_QUALITY,
   REFINE_MAX_LOCKS,
-  REFINE_REFINEMENT_COST,
+  REFINE_REFINEMENT_COST_BY_QUALITY,
   REFINE_SPIRIT_STONE_PER_UNIT,
   REFINE_VALUE_VARIANCE,
-  rechargeEssenceCost,
-  rechargeSpiritStoneCost,
   WASH_LINE_COUNT_WEIGHTS,
   WASH_ORE_AMOUNT,
-  WASH_REFINEMENT_COST,
+  WASH_REFINEMENT_COST_BY_QUALITY,
   WASH_SPIRIT_STONE_COST,
   WASH_TIER_WEIGHTS,
   equipmentEssenceMaterialId,
@@ -88,15 +86,13 @@ export function calculateEquipmentScale(enhanceLevel: number, forgePoints: numbe
 }
 
 /**
- * "EquipemtnQuality&rarity" pass (2026-08-14) — trần Rèn THẬT của 1
- * instance = % forgePotential của trần chung theo Quality
- * (EQUIPMENT_QUALITY_MAX_FORGE_POINTS), KHÔNG phải chính
- * EQUIPMENT_QUALITY_MAX_FORGE_POINTS[quality] nữa (đó giờ chỉ là trần
- * TUYỆT ĐỐI của cả tier, không phải trần của 1 instance cụ thể). Ví
- * dụ: Phàm Khí trần 20, instance forgePotential 50 -> trần thật 10.
+ * Rework 2026-08-30 — trần Rèn THẬT của 1 instance = trần chung theo
+ * Quality (EQUIPMENT_QUALITY_MAX_FORGE_POINTS[quality]). Con số CHÍNH
+ * XÁC xác định bằng phẩm của item — KHÔNG còn nhân forgePotential.
+ * Tham số forgePotential giữ lại cho save/validation cũ, bị bỏ qua.
  */
-export function getMaxForgePoints(quality: EquipmentQuality, forgePotential: number): number {
-  return Math.round((forgePotential / 100) * EQUIPMENT_QUALITY_MAX_FORGE_POINTS[quality])
+export function getMaxForgePoints(quality: EquipmentQuality, _forgePotential = 100): number {
+  return EQUIPMENT_QUALITY_MAX_FORGE_POINTS[quality]
 }
 
 // Affix có cả miền số nguyên (Attack, HP...) lẫn miền thập phân
@@ -231,12 +227,11 @@ export class EquipmentSystem {
 
     const mainStat = this.rollMainStat(template, player, quality)
 
-    // Điểm Rèn per-item (rework 2026-08-26) — item sinh ra với TÌNH
-    // TRẠNG RÈN ĐẦY (forgePoints = trần theo potential roll). Đây là
-    // ngân sách dùng cho CẢ Rèn (power) LẪN Tẩy/Tinh Luyện; tiêu cạn
-    // là món ngừng phát triển (plan §8 mount review).
-    const forgePotential = this.rollForgePotential()
-
+    // Điểm Rèn per-item (rework 2026-08-26, chốt lại 2026-08-30) — item
+    // sinh ra với TÌNH TRẠNG RÈN ĐẦY = ĐÚNG trần theo quality. Con số
+    // CHÍNH XÁC xác định bằng phẩm của item, KHÔNG còn random theo
+    // forgePotential. Tiêu cạn là món ngừng phát triển (plan §8 mount
+    // review).
     return {
       instanceId: crypto.randomUUID(),
 
@@ -262,20 +257,16 @@ export class EquipmentSystem {
 
       affixes: this.rollAffixes(template, mainStat.stat, rarity, quality, affixRegistry),
 
-      forgePoints: getMaxForgePoints(quality, forgePotential),
+      forgePoints: EQUIPMENT_QUALITY_MAX_FORGE_POINTS[quality],
 
-      forgePotential,
+      // Giữ field cho save/validation cũ — KHÔNG còn được dùng để roll
+      // trần Rèn (rework 2026-08-30). New items luôn full potential.
+      forgePotential: 100,
     }
   }
   private rollIcon(template: Equipment): string | undefined {
     const pool = template.iconPool?.filter(Boolean) ?? []
     return pool.length > 0 ? pool[randomInt(0, pool.length - 1)] : template.icon
-  }
-
-  // "EquipemtnQuality&rarity" pass — roll đều 0-100, độc lập hoàn
-  // toàn với quality/rarity (xem ghi chú EquipmentInstance.forgePotential).
-  private rollForgePotential(): number {
-    return randomInt(0, 100)
   }
 
   private rollQuality(realmId: string): EquipmentQuality {
@@ -721,9 +712,10 @@ export class EquipmentSystem {
   }
 
   /** W5 — cost Tẩy Luyện sau discount Khí Đường (UI và logic dùng chung).
-   * realmId của trang bị quyết định PHẨM Linh Thạch tiêu (T2); không có
-   * realmId → Hạ Phẩm (mặc định tương thích). */
-  getWashCost(realmId?: string): {
+   * realmId của trang bị quyết định PHẨM Linh Thạch tiêu (T2); quality
+   * quyết định cost Điểm Rèn (rework 2026-08-30); không có realmId →
+   * Hạ Phẩm (mặc định tương thích). */
+  getWashCost(realmId?: string, quality?: EquipmentQuality): {
     oreAmount: number
     spiritStone: number
     spiritStoneMaterialId: string
@@ -733,16 +725,20 @@ export class EquipmentSystem {
       oreAmount: this.applyCostDiscount(WASH_ORE_AMOUNT),
       spiritStone: this.applyCostDiscount(WASH_SPIRIT_STONE_COST),
       spiritStoneMaterialId: realmId ? this.spiritStoneIdForRealm(realmId) : SPIRIT_STONE_MATERIAL_ID,
-      refinementPoints: WASH_REFINEMENT_COST,
+      refinementPoints: quality
+        ? WASH_REFINEMENT_COST_BY_QUALITY[quality]
+        : WASH_REFINEMENT_COST_BY_QUALITY[EQUIPMENT_QUALITY_ORDER[0]!],
     }
   }
 
   /** W5 — cost Tinh Luyện sau discount Khí Đường (UI và logic dùng chung).
-   * realmId của trang bị quyết định PHẨM Linh Thạch tiêu (T2). */
+   * realmId của trang bị quyết định PHẨM Linh Thạch tiêu (T2); quality
+   * quyết định cost Điểm Rèn (rework 2026-08-30). */
   getRefineCost(
     lineCount: number,
     lockedCount: number,
     realmId?: string,
+    quality?: EquipmentQuality,
   ): {
     essenceUnits: number
     spiritStone: number
@@ -755,7 +751,9 @@ export class EquipmentSystem {
       essenceUnits: this.applyCostDiscount(baseUnits),
       spiritStone: this.applyCostDiscount(baseUnits * REFINE_SPIRIT_STONE_PER_UNIT),
       spiritStoneMaterialId: realmId ? this.spiritStoneIdForRealm(realmId) : SPIRIT_STONE_MATERIAL_ID,
-      refinementPoints: REFINE_REFINEMENT_COST,
+      refinementPoints: quality
+        ? REFINE_REFINEMENT_COST_BY_QUALITY[quality]
+        : REFINE_REFINEMENT_COST_BY_QUALITY[EQUIPMENT_QUALITY_ORDER[0]!],
     }
   }
   /**
@@ -883,8 +881,11 @@ export class EquipmentSystem {
       return { ok: false, reason: 'missing_ore' }
     }
 
-    // Điểm Rèn PER-ITEM (rework 2026-08-26) — tiêu vào CHÍNH món đồ.
-    if (this.itemRefinementPoints(instance) < WASH_REFINEMENT_COST) {
+    // Điểm Rèn PER-ITEM (rework 2026-08-26) — tiêu vào CHÍNH món đồ,
+    // cost leo thang theo quality (rework 2026-08-30).
+    const washRefinementCost = WASH_REFINEMENT_COST_BY_QUALITY[instance.quality]
+
+    if (this.itemRefinementPoints(instance) < washRefinementCost) {
       return { ok: false, reason: 'missing_refinement_points' }
     }
 
@@ -996,7 +997,7 @@ export class EquipmentSystem {
     // Điểm Rèn trừ vào INSTANCE (per-item), Linh Thạch là MATERIAL
     // trong MaterialBag (plan Workstream F).
 
-    this.spendItemRefinementPoints(instance, WASH_REFINEMENT_COST)
+    this.spendItemRefinementPoints(instance, washRefinementCost)
 
     materialBag.remove(washSpiritStoneId, washSpiritStoneCost)
 
@@ -1072,7 +1073,7 @@ export class EquipmentSystem {
       return { ok: false, reason: 'cannot_lock_all' }
     }
 
-    if (this.itemRefinementPoints(instance) < REFINE_REFINEMENT_COST) {
+    if (this.itemRefinementPoints(instance) < REFINE_REFINEMENT_COST_BY_QUALITY[instance.quality]) {
       return { ok: false, reason: 'missing_refinement_points' }
     }
 
@@ -1126,7 +1127,15 @@ export class EquipmentSystem {
       newValues.set(index, rollAffixRange(Math.min(low, high), Math.max(low, high)))
     }
 
-    this.spendItemRefinementPoints(instance, REFINE_REFINEMENT_COST)
+    // Tinh Luyện atomic (plan §7.4) — nếu KHÔNG có dòng nào roll được giá
+    // trị mới (data cũ / migration có tier ngoài range affix.tiers) thì
+    // trả về no_eligible_affix TRƯỚC khi trừ cost. Tránh mất Tinh Hoa +
+    // Linh Thạch + Điểm Rèn oan khi player không nhận được gì.
+    if (newValues.size === 0) {
+      return { ok: false, reason: 'no_eligible_affix' }
+    }
+
+    this.spendItemRefinementPoints(instance, REFINE_REFINEMENT_COST_BY_QUALITY[instance.quality])
 
     materialBag.remove(refineSpiritStoneId, spiritStoneCost)
 
@@ -1141,64 +1150,6 @@ export class EquipmentSystem {
 
       this.applyModifiers(instance, slotManager, affixRegistry)
     }
-
-    return { ok: true }
-  }
-
-  /**
-   * NẠP ĐIỂM RÈN (economy-fixes-sinks-plan §3.2 B3, 2026-08-29) — item
-   * cạn forgePoints nạp lại về TRẦN THẬT (getMaxForgePoints theo
-   * quality/forgePotential). Chi phí: Tinh Hoa cùng tier cảnh giới item +
-   * Linh Thạch đúng phẩm realm, leo thang ×1.5 theo số lần đã nạp
-   * (rechargeCount). Giao dịch atomic: thiếu bất kỳ nguyên liệu nào →
-   * không trừ gì, không đổi state.
-   */
-  rechargeForgePoints(
-    instanceId: string,
-    inventory: EquipmentBag,
-    materialBag: MaterialBag,
-  ): { ok: boolean; reason?: string } {
-    const instance = inventory.get(instanceId)
-
-    if (!instance) {
-      return { ok: false, reason: 'not_found' }
-    }
-
-    const essenceId = equipmentEssenceMaterialId(instance.realmId)
-
-    if (!essenceId) {
-      return { ok: false, reason: 'no_conversion_rule' }
-    }
-
-    const maxPoints = getMaxForgePoints(instance.quality, instance.forgePotential)
-
-    if (instance.forgePoints >= maxPoints) {
-      return { ok: false, reason: 'forge_points_full' }
-    }
-
-    const rechargeCount = instance.rechargeCount ?? 0
-
-    const essenceCost = rechargeEssenceCost(rechargeCount)
-
-    const stoneCost = rechargeSpiritStoneCost(rechargeCount)
-
-    const stoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(instance.realmId))
-
-    if (!materialBag.has(essenceId, essenceCost)) {
-      return { ok: false, reason: 'missing_essence' }
-    }
-
-    if (!materialBag.has(stoneId, stoneCost)) {
-      return { ok: false, reason: 'missing_spirit_stone' }
-    }
-
-    materialBag.remove(essenceId, essenceCost)
-
-    materialBag.remove(stoneId, stoneCost)
-
-    instance.forgePoints = maxPoints
-
-    instance.rechargeCount = rechargeCount + 1
 
     return { ok: true }
   }

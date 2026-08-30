@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+﻿import { describe, expect, it } from 'vitest'
 import {
   EquipmentSystem,
   rollAffixRange,
@@ -16,6 +16,7 @@ import { EQUIPMENT_RARITY_ORDER, EQUIPMENT_RARITY_AFFIX_SLOTS } from './Equipmen
 import {
   EQUIPMENT_QUALITY_ORDER,
   EQUIPMENT_QUALITY_MAX_AFFIX_TIER,
+  EQUIPMENT_QUALITY_MAX_FORGE_POINTS,
   EQUIPMENT_QUALITY_UNLOCKED_POOLS,
 } from './EquipmentQuality'
 import { affixes } from '../../data/equipment/affixes'
@@ -28,11 +29,9 @@ import {
 } from '../material/SpiritStoneMaterial'
 import { isPercentStat } from '../stats/StatMetadata'
 import {
-  REFINE_REFINEMENT_COST,
+  REFINE_REFINEMENT_COST_BY_QUALITY,
   REFINE_SPIRIT_STONE_PER_UNIT,
   equipmentEssenceMaterialId,
-  rechargeEssenceCost,
-  rechargeSpiritStoneCost,
 } from './RefinementBalance'
 
 const TEMPLATE: Equipment = {
@@ -260,15 +259,16 @@ describe('EquipmentSystem.createInstance — roll pipeline invariants (Equipment
     }
   })
 
-  it('forgePoints khởi đầu ĐẦY theo potential (điểm rèn per-item, rework 2026-08-26)', () => {
+  it('forgePoints khởi đầu ĐẦY = trần theo quality (bỏ potential roll, rework 2026-08-30)', () => {
     const { system, affixRegistry, player } = setup()
 
-    const instance = system.createInstance(TEMPLATE, player, affixRegistry)
+    for (let i = 0; i < 50; i++) {
+      const instance = system.createInstance(TEMPLATE, player, affixRegistry)
 
-    // Full budget = trần theo potential roll; luôn > 0 với roll 1-100.
-    expect(instance.forgePoints).toBe(getMaxForgePoints(instance.quality, instance.forgePotential))
-
-    expect(instance.forgePoints).toBeGreaterThan(0)
+      // Full budget = trần tuyệt đối của quality — con số CHÍNH XÁC
+      // xác định bằng phẩm của item, không còn random.
+      expect(instance.forgePoints).toBe(EQUIPMENT_QUALITY_MAX_FORGE_POINTS[instance.quality])
+    }
   })
 })
 
@@ -383,8 +383,8 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
 
     expect(instance.realmId).toBe('qi_refining')
 
-    // Cost: Điểm Rèn 20 + Linh Thạch 100 + 3 quáng.
-    expect(instance.forgePoints).toBe(pointsBefore - 20)
+    // Cost: Điểm Rèn 2 (pham_khi) + Linh Thạch 100 + 3 quáng.
+    expect(instance.forgePoints).toBe(pointsBefore - 2)
 
     expect(ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(stonesBefore - 100)
 
@@ -409,6 +409,49 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
 
     expect(result.ok).toBe(false)
     expect(instance.affixes.length).toBe(3)
+  })
+
+  it('cost Điểm Rèn theo quality: trần cao hơn tiêu nhiều hơn (2 → 18 theo 9 bậc)', () => {
+    const ctx = washSetup()
+
+    const qualities = [
+      'pham_khi',
+      'bao_khi',
+      'linh_khi',
+      'phap_khi',
+      'phap_bao',
+      'tien_bao',
+      'chi_bao',
+      'hon_don_chi_bao',
+      'thien_dia_trong_khi',
+    ] as const
+
+    const expectedCosts = [2, 4, 6, 8, 10, 12, 14, 16, 18]
+
+    for (let i = 0; i < qualities.length; i++) {
+      const instance = equippedWithAffixes(ctx, {
+        instanceId: `wash-quality-${i}`,
+        quality: qualities[i],
+        rarity: 'tien',
+      })
+
+      const pointsBefore = instance.forgePoints
+
+      const result = ctx.system.washAffixes(
+        instance.instanceId,
+        ORE,
+        ctx.bag,
+        ctx.registry,
+        ctx.materialBag,
+        ctx.slotManager,
+        ctx.affixRegistry,
+        () => 0.99,
+      )
+
+      expect(result.ok, qualities[i]).toBe(true)
+
+      expect(instance.forgePoints, qualities[i]).toBe(pointsBefore - expectedCosts[i]!)
+    }
   })
 
   it('item locked/favorite → từ chối, KHÔNG trừ gì (nhất quán Hóa Luyện)', () => {
@@ -541,7 +584,7 @@ describe('EquipmentSystem — Tinh Luyện (refineAffixValues, plan §7.4)', () 
     ).toBe('invalid_lock')
   })
 
-  it('cost hệ số N+L: 4 dòng khóa 1 → 5 Tinh Hoa + 5×50 Linh Thạch + 10 Điểm Rèn', () => {
+  it('cost hệ số N+L: 4 dòng khóa 1 → 5 Tinh Hoa + 5×50 Linh Thạch + cost Điểm Rèn theo quality', () => {
     const ctx = refineSetup()
 
     const essenceBefore = ctx.materialBag.getAmount(ctx.essenceId)
@@ -569,7 +612,9 @@ describe('EquipmentSystem — Tinh Luyện (refineAffixValues, plan §7.4)', () 
       stonesBefore - 5 * REFINE_SPIRIT_STONE_PER_UNIT,
     )
 
-    expect(ctx.instance.forgePoints).toBe(pointsBefore - REFINE_REFINEMENT_COST)
+    expect(ctx.instance.forgePoints).toBe(
+      pointsBefore - REFINE_REFINEMENT_COST_BY_QUALITY[ctx.instance.quality],
+    )
   })
 
   it('dòng bị khóa GIỮ NGUYÊN value; dòng khác roll trong ±20% clamp tier', () => {
@@ -603,6 +648,38 @@ describe('EquipmentSystem — Tinh Luyện (refineAffixValues, plan §7.4)', () 
 
       expect(rolled.value).toBeLessThanOrEqual(tierDef.max)
     }
+  })
+
+  it('mọi dòng đều tier không khớp → từ chối no_eligible_affix, KHÔNG trừ cost (atomic)', () => {
+    const ctx = refineSetup()
+
+    // Ép tier=99 — chắc chắn không có trong affix.tiers.
+    ctx.instance.affixes = [
+      { affixId: affixes[0]!.id, tier: 99, value: 5 },
+      { affixId: affixes[1]!.id, tier: 99, value: 5 },
+    ]
+    ctx.instance.forgePoints = 50
+
+    const stoneBefore = ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)
+    const renBefore = ctx.instance.forgePoints
+    const essenceBefore = ctx.materialBag.getAmount(ctx.essenceId)
+
+    const result = ctx.system.refineAffixValues(
+      ctx.instance.instanceId,
+      [],
+      ctx.bag,
+      ctx.registry,
+      ctx.materialBag,
+      ctx.slotManager,
+      ctx.affixRegistry,
+      () => 0.5,
+    )
+
+    expect(result.ok).toBe(false)
+    expect(result.reason).toBe('no_eligible_affix')
+    expect(ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(stoneBefore)
+    expect(ctx.materialBag.getAmount(ctx.essenceId)).toBe(essenceBefore)
+    expect(ctx.instance.forgePoints).toBe(renBefore)
   })
 })
 
@@ -831,170 +908,5 @@ describe('EquipmentSystem — phẩm Linh Thạch theo realm (T2, review 2026-08
 
     expect(result.ok).toBe(false)
     expect(result.reason).toBe('missing_spirit_stone')
-  })
-})
-
-// =========================
-// Nạp Điểm Rèn (economy-fixes-sinks-plan §3.2 B3, 2026-08-29)
-// =========================
-describe('EquipmentSystem.rechargeForgePoints — Nạp Điểm Rèn', () => {
-  it('nạp thành công — forgePoints về TRẦN thật, trừ đúng Tinh Hoa + Linh Thạch', () => {
-    const ctx = setup()
-
-    const essenceId = equipmentEssenceMaterialId('qi_refining')!
-
-    const essence = materials.find((material) => material.id === essenceId)!
-
-    ctx.materialBag.add(essence, 100)
-
-    const instance = manualInstance({ instanceId: 'recharge-1', realmId: 'qi_refining' })
-
-    instance.forgePoints = 0
-
-    ctx.bag.add(instance)
-
-    const maxPoints = getMaxForgePoints(instance.quality, instance.forgePotential)
-
-    const essenceCost = rechargeEssenceCost(0)
-    const stoneCost = rechargeSpiritStoneCost(0)
-
-    const result = ctx.system.rechargeForgePoints(instance.instanceId, ctx.bag, ctx.materialBag)
-
-    expect(result.ok).toBe(true)
-    expect(instance.forgePoints).toBe(maxPoints)
-    expect(instance.rechargeCount).toBe(1)
-    expect(ctx.materialBag.getAmount(essenceId)).toBe(100 - essenceCost)
-    expect(ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(1_000_000 - stoneCost)
-  })
-
-  it('lần nạp thứ hai — cost leo thang ×1.5', () => {
-    const ctx = setup()
-
-    const essenceId = equipmentEssenceMaterialId('qi_refining')!
-
-    const essence = materials.find((material) => material.id === essenceId)!
-
-    ctx.materialBag.add(essence, 1000)
-
-    const instance = manualInstance({ instanceId: 'recharge-2', realmId: 'qi_refining' })
-
-    instance.forgePoints = 0
-
-    ctx.bag.add(instance)
-
-    const firstEssence = rechargeEssenceCost(0)
-    const firstStone = rechargeSpiritStoneCost(0)
-
-    expect(ctx.system.rechargeForgePoints(instance.instanceId, ctx.bag, ctx.materialBag).ok).toBe(
-      true,
-    )
-
-    const essenceAfterFirst = ctx.materialBag.getAmount(essenceId)
-    const stoneAfterFirst = ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)
-
-    // Đốt bớt forgePoints để lần nạp kế có gì đó để hồi.
-    instance.forgePoints = 0
-
-    expect(ctx.system.rechargeForgePoints(instance.instanceId, ctx.bag, ctx.materialBag).ok).toBe(
-      true,
-    )
-
-    const secondEssence = rechargeEssenceCost(1)
-    const secondStone = rechargeSpiritStoneCost(1)
-
-    expect(secondEssence).toBeGreaterThan(firstEssence)
-    expect(secondStone).toBeGreaterThan(firstStone)
-    expect(essenceAfterFirst - ctx.materialBag.getAmount(essenceId)).toBe(secondEssence)
-    expect(stoneAfterFirst - ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(secondStone)
-    expect(instance.rechargeCount).toBe(2)
-  })
-
-  it('thiếu Tinh Hoa → từ chối với missing_essence, atomic (không trừ Linh Thạch)', () => {
-    const ctx = setup()
-
-    const essenceId = equipmentEssenceMaterialId('qi_refining')!
-
-    const essence = materials.find((material) => material.id === essenceId)!
-
-    ctx.materialBag.add(essence, 1)
-
-    const instance = manualInstance({ instanceId: 'recharge-3', realmId: 'qi_refining' })
-
-    instance.forgePoints = 0
-
-    ctx.bag.add(instance)
-
-    const stoneBefore = ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)
-
-    const result = ctx.system.rechargeForgePoints(instance.instanceId, ctx.bag, ctx.materialBag)
-
-    expect(result.ok).toBe(false)
-    expect(result.reason).toBe('missing_essence')
-    expect(instance.forgePoints).toBe(0)
-    expect(instance.rechargeCount).toBeUndefined()
-    expect(ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(stoneBefore)
-  })
-
-  it('thiếu Linh Thạch → từ chối với missing_spirit_stone, atomic (không trừ Tinh Hoa)', () => {
-    const ctx = setup()
-
-    const essenceId = equipmentEssenceMaterialId('qi_refining')!
-
-    const essence = materials.find((material) => material.id === essenceId)!
-
-    ctx.materialBag.add(essence, 100)
-
-    const instance = manualInstance({ instanceId: 'recharge-4', realmId: 'qi_refining' })
-
-    instance.forgePoints = 0
-
-    ctx.bag.add(instance)
-
-    // Vét sạch Linh Thạch Hạ (setup nạp 1_000_000).
-    ctx.materialBag.remove(SPIRIT_STONE_MATERIAL_ID, 1_000_000)
-
-    const essenceBefore = ctx.materialBag.getAmount(essenceId)
-
-    const result = ctx.system.rechargeForgePoints(instance.instanceId, ctx.bag, ctx.materialBag)
-
-    expect(result.ok).toBe(false)
-    expect(result.reason).toBe('missing_spirit_stone')
-    expect(instance.forgePoints).toBe(0)
-    expect(ctx.materialBag.getAmount(essenceId)).toBe(essenceBefore)
-  })
-
-  it('forgePoints đã full → từ chối với forge_points_full, không trừ gì', () => {
-    const ctx = setup()
-
-    const essenceId = equipmentEssenceMaterialId('qi_refining')!
-
-    const essence = materials.find((material) => material.id === essenceId)!
-
-    ctx.materialBag.add(essence, 100)
-
-    const instance = manualInstance({ instanceId: 'recharge-5', realmId: 'qi_refining' })
-
-    instance.forgePoints = getMaxForgePoints(instance.quality, instance.forgePotential)
-
-    ctx.bag.add(instance)
-
-    const stoneBefore = ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)
-
-    const result = ctx.system.rechargeForgePoints(instance.instanceId, ctx.bag, ctx.materialBag)
-
-    expect(result.ok).toBe(false)
-    expect(result.reason).toBe('forge_points_full')
-    expect(instance.rechargeCount).toBeUndefined()
-    expect(ctx.materialBag.getAmount(essenceId)).toBe(100)
-    expect(ctx.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(stoneBefore)
-  })
-
-  it('instance không tồn tại → not_found', () => {
-    const ctx = setup()
-
-    const result = ctx.system.rechargeForgePoints('ghost-instance', ctx.bag, ctx.materialBag)
-
-    expect(result.ok).toBe(false)
-    expect(result.reason).toBe('not_found')
   })
 })

@@ -88,6 +88,10 @@ export interface EquipmentInstance {
   // quyết định INSTANCE này thực nhận bao nhiêu % của trần đó — xem
   // EquipmentSystem.getMaxForgePoints(). 2 item CÙNG quality có thể có
   // trần Rèn khác hẳn nhau tuỳ độ may khi rớt.
+  //
+  // DEPRECATED (rework 2026-08-30): trần Rèn = ĐÚNG trần theo quality
+  // (không còn nhân potential). Field giữ lại cho save cũ; item mới
+  // luôn nhận 100.
   forgePotential: number
 
   // Hóa Luyện guards (2026-08-25, resource-professions-rework plan
@@ -95,13 +99,6 @@ export interface EquipmentInstance {
   locked?: boolean
 
   favorite?: boolean
-
-  /**
-   * economy-fixes-sinks-plan §3.2 B3 (2026-08-29) — Điểm Rèn Nạp: số lần
-   * đã nạp lại forgePoints thành công của item này. undefined = chưa nạp
-   * lần nào. Cost leo thang theo số lần nạp.
-   */
-  rechargeCount?: number
 
   // NOTE (rework 2026-08-26): "Điểm Rèn" của món đồ CHÍNH LÀ
   // forgePoints/trần getMaxForgePoints(quality, forgePotential) ở trên

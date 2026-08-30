@@ -1,26 +1,48 @@
 // RefinementBalance (2026-08-25, resource-professions-rework plan §7.2/
 // §7.3/§7.4) — toàn bộ balance của Khí Đường mới nằm tại ĐÂY (balance
-// data, chưa phải số cuối — playtest chỉnh tại đây). Nguồn nhận/cap/hồi
-// Điểm Rèn được chốt baseline: hồi 1 điểm / 5 phút thời gian thực, cap
-// 120; KHÔNG hard-code nguồn từ combat drop (§13.5).
+// data, chưa phải số cuối — playtest chỉnh tại đây).
+// Rework 2026-08-30: Điểm Rèn KHÔNG còn random lúc sinh (bỏ
+// forgePotential roll) — mỗi item có đúng trần theo quality của nó;
+// cost Tẩy/Tinh Luyện leo thang theo quality thay vì phẳng.
+import type { EquipmentQuality } from './EquipmentQuality'
 import type { OreQuality } from '../production/ProductionTypes'
 
 // =========================
-// Điểm Rèn — PER-ITEM (rework 2026-08-26 theo yêu cầu: "điểm rèn là một
-// asset của equipment chứ không phải điểm trong Khí Đường")
+// Điểm Rèn — PER-ITEM (rework 2026-08-26: điểm rèn là asset của
+// equipment; rework 2026-08-30: xác định bằng PHẨM, không random)
 // =========================
-// MỖI món trang bị mang ĐIỂM RÈN RIÊNG (EquipmentInstance.refinementPoints,
+// MỖI món trang bị mang ĐIỂM RÈN RIÊNG (EquipmentInstance.forgePoints,
 // khởi tạo full-cap lúc rớt/tạo đồ). Tẩy Luyện/Tinh Luyện tiêu vào ĐÚNG
 // món đó; cạn điểm = món không phát triển được nữa. KHÔNG còn pool chung
 // người chơi, KHÔNG còn hồi theo thời gian thực.
 
 export const REFINEMENT_POINTS_CAP = 120
 
-/** Cost Điểm Rèn — Tẩy Luyện mỗi lần reroll toàn bộ. */
-export const WASH_REFINEMENT_COST = 20
+/** Cost Điểm Rèn Tẩy Luyện theo quality của item — leo thang 2 → 18. */
+export const WASH_REFINEMENT_COST_BY_QUALITY: Record<EquipmentQuality, number> = {
+  pham_khi: 2,
+  bao_khi: 4,
+  linh_khi: 6,
+  phap_khi: 8,
+  phap_bao: 10,
+  tien_bao: 12,
+  chi_bao: 14,
+  hon_don_chi_bao: 16,
+  thien_dia_trong_khi: 18,
+}
 
-/** Cost Điểm Rèn — Tinh Luyện (phẳng, không theo số dòng khóa). */
-export const REFINE_REFINEMENT_COST = 10
+/** Cost Điểm Rèn Tinh Luyện theo quality của item — leo thang 1 → 9. */
+export const REFINE_REFINEMENT_COST_BY_QUALITY: Record<EquipmentQuality, number> = {
+  pham_khi: 1,
+  bao_khi: 2,
+  linh_khi: 3,
+  phap_khi: 4,
+  phap_bao: 5,
+  tien_bao: 6,
+  chi_bao: 7,
+  hon_don_chi_bao: 8,
+  thien_dia_trong_khi: 9,
+}
 
 // =========================
 // Tẩy Luyện (§7.3): phẩm Quáng quyết định HAI bảng weighted roll —
@@ -96,35 +118,6 @@ export const EQUIPMENT_REALM_ESSENCE_MATERIAL: Record<string, string> = {
  */
 export function equipmentEssenceMaterialId(realmId: string): string | undefined {
   return EQUIPMENT_REALM_ESSENCE_MATERIAL[realmId]
-}
-
-// =========================
-// Nạp Điểm Rèn (economy-fixes-sinks-plan §3.2 B3, 2026-08-29) — item cạn
-// Điểm Rèn có thể nạp lại: tiêu Tinh Hoa cùng tier cảnh giới item +
-// Linh Thạch đúng phẩm realm, khôi phục forgePoints về TRẦN thật của
-// instance (getMaxForgePoints(quality, forgePotential)). Cost leo thang
-// ×1.5 mỗi lần nạp — sink dài hạn cho nguyên liệu Tinh Hoa dư.
-// =========================
-
-/** Tinh Hoa mỗi lần nạp (lần đầu). */
-export const RECHARGE_ESSENCE_BASE = 5
-
-/** Linh Thạch mỗi lần nạp (lần đầu) — hạ tương đương. */
-export const RECHARGE_SPIRIT_STONE_BASE = 100
-
-/** Hệ số leo thang cost theo số lần đã nạp. */
-export const RECHARGE_COST_ESCALATION = 1.5
-
-/** Cost Tinh Hoa của lần nạp thứ rechargeCount + 1 (ceil). */
-export function rechargeEssenceCost(rechargeCount: number): number {
-  return Math.ceil(RECHARGE_ESSENCE_BASE * Math.pow(RECHARGE_COST_ESCALATION, rechargeCount))
-}
-
-/** Cost Linh Thạch của lần nạp thứ rechargeCount + 1 (ceil). */
-export function rechargeSpiritStoneCost(rechargeCount: number): number {
-  return Math.ceil(
-    RECHARGE_SPIRIT_STONE_BASE * Math.pow(RECHARGE_COST_ESCALATION, rechargeCount),
-  )
 }
 
 export const DISSOLVE_ESSENCE_RANGE_BY_QUALITY: Record<string, { min: number; max: number }> = {
