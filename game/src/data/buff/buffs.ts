@@ -150,4 +150,46 @@ export const buffs: Buff[] = [
       },
     ],
   },
+
+  // Spec 2026-08-30-phap-tu-dao-sac §4 — 2 buff nguồn của 2 reaction
+  // sinh mới (Ngưng Lộ Kim+Thủy / Khai Sơn Thổ+Kim), mirror pattern
+  // doc_the (stack + refresh, modifiers % hoặc flat).
+  {
+    id: 'ngung_lo',
+    name: 'Ngưng Lộ',
+    description: 'Sương ngưng trên thép hóa dòng suối tinh khiết — hồi Pháp Lực nhanh hơn.',
+    category: 'buff',
+    stacks: 1,
+    maxStacks: 1,
+    stackMode: 'refresh',
+    duration: 6,
+    modifiers: [
+      {
+        id: 'ngung_lo_mana_regen',
+        sourceId: 'ngung_lo',
+        sourceType: 'buff',
+        stat: 'manaRegenPerSecond',
+        flat: 5,
+      },
+    ],
+  },
+  {
+    id: 'khai_son',
+    name: 'Khai Sơn',
+    description: 'Mỏ kim loại lộ ra từ núi bật gốc — thân thể cứng như quặng.',
+    category: 'buff',
+    stacks: 1,
+    maxStacks: 3,
+    stackMode: 'stack',
+    duration: 6,
+    modifiers: [
+      {
+        id: 'khai_son_defense',
+        sourceId: 'khai_son',
+        sourceType: 'buff',
+        stat: 'defense',
+        percent: 0.08,
+      },
+    ],
+  },
 ]

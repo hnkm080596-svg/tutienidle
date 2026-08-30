@@ -83,12 +83,20 @@ export interface ElementReactionDefinition {
   spawnsLavaZone?: {
     laneRadius: number
 
-  columnRadius: number
+    columnRadius: number
     duration: number
     tickInterval: number
     damagePerTick: number
     element: ElementType | 'physical'
   }
+
+  // Spec 2026-08-30-phap-tu-dao-sac §4 — quan hệ sinh/khắc của cặp vế
+  // (theo vòng Ngũ Hành) cho UI ngôi sao 5 cánh + logic khuếch đại
+  // Chế Khắc của Đa Pháp tra bảng. Bảng 10 cặp: 5 sinh (Mộc→Hỏa→Thổ→
+  // Kim→Thủy→Mộc) + 5 khắc (Mộc⇄Thổ, Thổ⇄Thủy, Thủy⇄Hỏa, Hỏa⇄Kim,
+  // Kim⇄Mộc) — khớp 1-1 hình học ngôi sao (cạnh ngoài = sinh, đường
+  // chéo = khắc).
+  relation?: 'sinh' | 'khac'
 }
 
 // Khoá theo CẶP AilmentId — ReactionManager tự thử cả 2 chiều (A→B và
@@ -123,17 +131,19 @@ export const ELEMENT_REACTIONS: Partial<Record<AilmentId, Partial<Record<Ailment
   // (Plans/magicpathgeneral Phase 5) — Dẫn Lưu (waterReactionExtensionSeconds)
   // có thể giữ lại Tê Cóng thay vì tiêu, xem ReactionManager.ts.
   bong: {
-    te_cong: { name: 'Bốc Hơi', baseDamage: 60, keepsAilmentId: 'te_cong', powerScalingRatio: 0.5 },
+    // Hỏa+Thủy — KHẮC (Thủy khắc Hỏa).
+    te_cong: { name: 'Bốc Hơi', baseDamage: 60, keepsAilmentId: 'te_cong', powerScalingRatio: 0.5, relation: 'khac' },
     // Hỏa (Bỏng) + Mộc (Trúng Độc) — "Độc Viêm", damage dựa trên %
     // currentHp của target thay vì flat (xem ElementReactionDefinition).
+    // Mộc sinh Hỏa — SINH.
     // (Lôi Viêm bong+te_dien đã xoá — te_dien mồ côi, spec §5.)
-    trung_doc: { name: 'Độc Viêm', baseDamage: 0, percentOfTargetCurrentHp: 0.1 },
+    trung_doc: { name: 'Độc Viêm', baseDamage: 0, percentOfTargetCurrentHp: 0.1, relation: 'sinh' },
   },
 
   // Thủy (Tê Cóng) + Mộc (Trúng Độc) — "Độc Thủy". keepsAilmentId:
-  // 'te_cong' cùng lý do như Bốc Hơi ở trên.
+  // 'te_cong' cùng lý do như Bốc Hơi ở trên. Thủy sinh Mộc — SINH.
   te_cong: {
-    trung_doc: { name: 'Độc Thủy', baseDamage: 65, keepsAilmentId: 'te_cong', powerScalingRatio: 0.5 },
+    trung_doc: { name: 'Độc Thủy', baseDamage: 65, keepsAilmentId: 'te_cong', powerScalingRatio: 0.5, relation: 'sinh' },
   },
 
   // Plans/EarthPath mục IV (2026-08-21) — bảng phản ứng của Thổ. "Mù"
@@ -145,23 +155,33 @@ export const ELEMENT_REACTIONS: Partial<Record<AilmentId, Partial<Record<Ailment
     // (2026-08-21) thêm phần AoE persistent theo VỊ TRÍ (LavaZone, xem
     // ElementReactionDefinition/BattleSystem.spawnLavaZone()) — số
     // liệu minh hoạ (bán kính/tick/damage), cần playtest.
+    // Hỏa sinh Thổ — SINH.
     bong: {
       name: 'Dung Nham',
       baseDamage: 0,
       appliesAilmentId: 'dung_nham',
       spawnsLavaZone: { laneRadius: 1, columnRadius: 2, duration: 6, tickInterval: 1, damagePerTick: 20, element: 'fire' },
+      relation: 'sinh',
     },
     // Thổ+Thủy — "Trói Chân": Root thuần, không damage (đúng doc mục
-    // VI, không nhắc gì tới sát thương).
-    te_cong: { name: 'Trói Chân', baseDamage: 0, appliesAilmentId: 'troi_chan' },
+    // VI, không nhắc gì tới sát thương). Thổ khắc Thủy — KHẮC.
+    te_cong: { name: 'Trói Chân', baseDamage: 0, appliesAilmentId: 'troi_chan', relation: 'khac' },
     // Thổ+Mộc — "Độc Thế": KHÔNG áp ailment lên target, chuyển hóa
     // thành buff self-stack trên SOURCE (xem appliesBuffId, data/buff/
-    // buffs.ts's `doc_the`). Doc mục VII còn có "+2% HP Recovery từ
-    // Poison Damage" mỗi tầng — CHƯA làm: AilmentSystem.update()'s DoT
-    // tick loop hiện chỉ có `target: CombatEntity`, không resolve lại
-    // được entity NGUỒN (chỉ có `sourceId` dạng string) để heal — cần
-    // plumbing entity resolution mới vào tick loop, để dành đợt sau.
-    trung_doc: { name: 'Độc Thế', baseDamage: 0, appliesBuffId: 'doc_the' },
+    // buffs.ts's `doc_the`). Mộc khắc Thổ — KHẮC.
+    trung_doc: { name: 'Độc Thế', baseDamage: 0, appliesBuffId: 'doc_the', relation: 'khac' },
+    // Thổ+Kim — "Khai Sơn" (spec 2026-08-30-phap-tu-dao-sac §4 card 2,
+    // SINH — núi bật gốc hé lộ mỏ kim loại): buff nguồn khai_son
+    // +8% defense/tầng (mirror doc_the), max 3, 6s. Pháo đài cho
+    // combo kề Thổ→Kim của build sinh. baseDamage nhẹ vì sinh không
+    // giết. Số liệu khởi điểm playtest.
+    chay_mau: {
+      name: 'Khai Sơn',
+      baseDamage: 50,
+      powerScalingRatio: 0.5,
+      relation: 'sinh',
+      appliesBuffId: 'khai_son',
+    },
   },
 
   // Plans/KimPath mục 4 (2026-08-21) — bảng phản ứng của Kim. Thủy+Kim
@@ -175,12 +195,26 @@ export const ELEMENT_REACTIONS: Partial<Record<AilmentId, Partial<Record<Ailment
     // Skill Power" của doc không literal-scale theo Power nguồn (đúng
     // convention baseDamage flat hiện có, cùng cách xử lý mọi reaction
     // khác) — 85 là số minh hoạ giữa khoảng 60-90 của các reaction cũ.
-    bong: { name: 'Thiêu Huyết', baseDamage: 85, maxHpReductionPercent: 0.03, powerScalingRatio: 0.5 },
+    // Hỏa khắc Kim — KHẮC.
+    bong: { name: 'Thiêu Huyết', baseDamage: 85, maxHpReductionPercent: 0.03, powerScalingRatio: 0.5, relation: 'khac' },
     // Kim+Mộc — "Huyết Độc": Trúng Độc + Chảy Máu "hợp nhất" thành 1
     // DoT MỚI mạnh hơn (ailment 'huyet_doc'), tái dùng appliesAilmentId
     // (đã xây cho Thổ) — closes luôn gap "Huyết Độc" từng bị hoãn ở đợt
     // Mộc ([[tienhiep-poisonpath-moc]]'s ghi chú "cần thay thế/nâng cấp
-    // ailment đang có").
-    trung_doc: { name: 'Huyết Độc', baseDamage: 0, appliesAilmentId: 'huyet_doc' },
+    // ailment đang có"). Kim khắc Mộc — KHẮC.
+    trung_doc: { name: 'Huyết Độc', baseDamage: 0, appliesAilmentId: 'huyet_doc', relation: 'khac' },
+    // Kim+Thủy — "Ngưng Lộ" (spec 2026-08-30-phap-tu-dao-sac §4 card 1,
+    // SINH — lưỡi thép lạnh ngưng sương, máu trên kim loại thành dòng
+    // suối tinh khiết tiếp Pháp Lực cho nguồn): buff nguồn ngung_lo
+    // +5 manaRegen/s, 6s, refresh. Nuôi đúng thanh tài nguyên của thiên
+    // phú Pháp Lực Thân Hòa (spec §3.5). baseDamage nhẹ nhất bảng vì
+    // sinh không giết. Số liệu khởi điểm playtest.
+    te_cong: {
+      name: 'Ngưng Lộ',
+      baseDamage: 40,
+      powerScalingRatio: 0.5,
+      relation: 'sinh',
+      appliesBuffId: 'ngung_lo',
+    },
   },
 }
