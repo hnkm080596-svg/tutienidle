@@ -43,6 +43,7 @@ Isolation theo quy tắc AGENTS.md: mọi file-changing task trong worktree + br
 | 7 | `c68dfe1` | T5 | Slot gate theo bảng realm 1/2/3/4/5 (thay công thức cũ) | 2 file |
 | 8 | `d404f81` | T6 | Thế engine — MAX_THE/gain/consume + field `currentThe` | 4 file |
 | 9 | `2fe556a` | T7 | ChainStateSystem — gate chuỗi + reset-on-kill (pure) | 2 file mới |
+| 10 | `19569ed` | T8 | Wire chain gate + Thế gain + reset-on-kill vào BattleSystem | 2 file |
 
 *(bảng cập nhật sau mỗi task)*
 
@@ -124,6 +125,24 @@ Isolation theo quy tắc AGENTS.md: mọi file-changing task trong worktree + br
 
 **Ghi chú cherry-pick / conflict:** T4–T7 là file MỚI + 2 sửa nhỏ (CombatTypes/CombatEntity thêm block cuối, SkillLoadoutSlots thay hàm) — xung đột thấp, cherry-pick độc lập được trừ khi main worktree cũng đụng cùng file.
 
+### Task 8 — Wire chain vào BattleSystem (commit `19569ed`)
+
+**Việc đã làm (`BattleSystem.ts` ~3100 dòng — sửa 5 chỗ):**
+1. Import ChainStateSystem + TheResourceSystem.
+2. Field `private chain?: { definition; state }` + `setChainDefinition(definition)` public (GameManager sẽ gọi lúc start battle cho Pháp Tu Thuần). KHÔNG reset `currentThe` ở `start()` — Thế xuyên kill trong phiên.
+3. Constructor: hook event `'kill'` (CombatSystem.killIfDead phát cho mọi entity chết) → `resetChainOnKill` khi target ≠ player.
+4. `updatePlayerSkills()`: gate `canCastChainSkill(...)` sau check `canUseInSlot` — skill thuộc chuỗi chỉ cast khi ĐÚNG nextIndex.
+5. `finishPlayerCastTransaction` (instant) + `finishChannelledCastTransaction` (cast_time, CHỈ fraction 1 — fizzle 0.5 không tính) gọi `advanceChainAndGainThe` — advance chuỗi + `gainTheOnChainLink` (+10, finisher cuối chuỗi +20).
+
+**Test `BattleSystem.chain.test.ts` (5 case):** fixture pattern hoaThe.test (skill test-only `execution: 'cooldown'`); đếm cast qua event `'cast'` (Skill KHÔNG có field totalCasts — dùng eventBus recorder lưu thứ tự); case: không set chain → hành vi cũ; cast đầu tiên PHẢI là A (gate); A mở B → Thế ≥20; kill enemy → Thế giữ nguyên xuyên kill; skill ngoài chuỗi tự do.
+
+**Lí do (spec §7):** chain là progression trong trận — gate ở scheduler duyệt loadout, advance ở transaction hoàn tất (không phải lúc bắt đầu cast — hỏng niệm/fizzle không advance), reset qua event kill để bắt MỌI nguồn chết (skill/DoT/lava/tribulation).
+
+**Kiểm chứng:** 5/5 chain test; type-check PASS; full 1455/1456 (1 pre-existing InkWash).
+
+**Ghi chú cherry-pick / conflict:** `BattleSystem.ts` là file nóng — nếu main worktree có commit khác đụng `updatePlayerSkills`/`finishPlayerCastTransaction`/constructor thì conflict sẽ nằm ở 5 điểm chèn nêu trên (đều là block chèn giữa, dễ resolve giữ cả hai).
+
+
 
 
 ## 5. Rulings / quyết định controller (mọi quyết định nằm ở đây)
@@ -145,6 +164,6 @@ Isolation theo quy tắc AGENTS.md: mọi file-changing task trong worktree + br
 
 ## 7. Trạng thái
 
-- Task 7/17 ✅ (commits `c1d379c`, `c68dfe1`, `d404f81`, `2fe556a`).
-- Tiếp theo: Task 8 — wire chain gate + Thế gain + reset-on-kill vào BattleSystem scheduler (task nặng nhất, đụng `BattleSystem.ts` ~3100 dòng).
+- Task 8/17 ✅ (commit `19569ed`).
+- Tiếp theo: Task 9 — data 20 skill chuỗi thần thoại + CHAIN_SKILL_IDS.
 - Cập nhật file này sau mỗi task hoàn thành.
