@@ -71,6 +71,15 @@ import {
   updatePhapTuBattleResources,
 } from './PhapTuBattleResourceSystem'
 import {
+  advanceChain,
+  canCastChainSkill,
+  initChainState,
+  resetChainOnKill,
+  type ChainDefinition,
+  type ChainRuntimeState,
+} from './ChainStateSystem'
+import { gainTheOnChainLink } from './TheResourceSystem'
+import {
   gainKiemTheOnFormationCast,
   gainKiemYTempOnChannelTick,
   gainKiemYTempOnDamageTaken,
@@ -233,6 +242,18 @@ export class BattleSystem {
   private ultAutoCheckTimer = 0
   ultAutoEnabled = true
 
+  // Pháp Tu Đạo Sắc (spec 2026-08-30-phap-tu-dao-sac §7) — chuỗi combo
+  // Thuần hệ: GameManager gọi setChainDefinition() khi start battle cho
+  // Pháp Tu đã chốt Thuần (đọc CHAIN_SKILL_IDS theo hành đã chọn).
+  // undefined = không gate (mọi test/path cũ giữ nguyên hành vi).
+  // KHÔNG reset currentThe ở start() — Thế tích xuyên kill trong phiên
+  // farm (spec §2.3), chỉ tiêu hao qua ult.
+  private chain?: { definition: ChainDefinition; state: ChainRuntimeState }
+
+  setChainDefinition(definition: ChainDefinition | undefined): void {
+    this.chain = definition ? { definition, state: initChainState() } : undefined
+  }
+
   constructor(
     private readonly combat: CombatSystem,
 
@@ -315,6 +336,15 @@ export class BattleSystem {
     this.eventBus.on<EntityVitalsChangedEvent>('entity_vitals_changed', (event) =>
       this.onEntityVitalsChanged(event),
     )
+
+    // Pháp Tu Đạo Sắc (spec §7) — quái chết → chuỗi combo reset về A.
+    // CombatSystem.killIfDead phát 'kill' cho MỌI entity chết; lọc
+    // targetId ≠ player id (player chết thì trận kết thúc, chain vô nghĩa).
+    this.eventBus.on<{ type: 'kill'; sourceId: string; targetId: string }>('kill', (event) => {
+      if (this.chain && this.battle && event.targetId !== this.battle.player.id) {
+        resetChainOnKill(this.chain.state)
+      }
+    })
   }
 
   private onEntityVitalsChanged(event: EntityVitalsChangedEvent) {
@@ -1976,6 +2006,17 @@ export class BattleSystem {
         continue
       }
 
+      // Pháp Tu Đạo Sắc (spec §7) — chuỗi combo Thuần hệ: skill thuộc
+      // chuỗi chỉ cast khi ĐÚNG vị trí next của chain state (cast A mới
+      // mở B). Skill ngoài chuỗi tự do. loadoutEntries.length khóa phần
+      // chuỗi vượt slot mở theo realm (spec §6).
+      if (
+        this.chain &&
+        !canCastChainSkill(this.chain.definition, this.chain.state, skill.id, loadoutEntries.length)
+      ) {
+        continue
+      }
+
       // Primary đã qua range gate chung; skill self-target dùng Player.
       const target = skill.target === 'self' ? battle.player : primary
 
@@ -2147,6 +2188,8 @@ export class BattleSystem {
     if (source.castingSlotIndex === slotIndex && !source.castingSkillId) {
       source.castingSlotIndex = undefined
     }
+
+    this.advanceChainAndGainThe(source, skillId)
   }
 
   private setSlotCadence(player: CombatEntity, slotIndex: number, intervalSeconds: number) {
@@ -2322,6 +2365,37 @@ export class BattleSystem {
     }
 
     player.castingSlotIndex = undefined
+
+    // Pháp Tu Đạo Sắc (spec §2.3) — chỉ lần niệm HOÀN TẤT THẬT (fraction
+    // 1) mới tính là link chuỗi + tích Thế; fizzle (0.5) là cast hỏng,
+    // KHÔNG advance chuỗi.
+    if (cooldownFraction >= 1) {
+      this.advanceChainAndGainThe(player, skillId)
+    }
+  }
+
+  /**
+   * Pháp Tu Đạo Sắc (spec §2.1/§2.3) — 1 link chuỗi cast hoàn tất:
+   * advance chain state (A mở B, E quay về A) + tích Thế (+10 link,
+   * +20 finisher E — skill CUỐI chuỗi). No-op khi không có chain hoặc
+   * skill ngoài chuỗi/sai vị trí.
+   */
+  private advanceChainAndGainThe(source: CombatEntity, skillId: string) {
+    if (!this.chain) {
+      return
+    }
+
+    const { definition, state } = this.chain
+    const wasNext = canCastChainSkill(definition, state, skillId, definition.skillIds.length)
+
+    if (!wasNext) {
+      return
+    }
+
+    advanceChain(definition, state, skillId)
+
+    const isFinisher = skillId === definition.skillIds[definition.skillIds.length - 1]
+    gainTheOnChainLink(source, isFinisher)
   }
 
   /**
