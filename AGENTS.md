@@ -8,28 +8,34 @@
 - Prefer focused changes to rewrites.
 - Never read or expose local secrets such as `APIKey` or `.env` files.
 - Do not commit, push, deploy, or perform destructive Git operations. The user makes the final commit decision.
-- Run relevant tests, `npm.cmd run type-check`, and `npm.cmd run build` before declaring completion.
+- Run verification proportionate to the affected behavior and risk before declaring completion.
 - Fix verification failures caused by the implementation.
 - Summaries must state what changed, what was verified, and any remaining limitations.
 
-## Worktree Isolation and Multi-Agent Coordination
+## UI/UX Skill Requirement
 
-- Before changing any project file, inspect the active Git worktrees and their changed paths. If another active task is changing the same files, stop and report the overlap before proceeding.
-- Perform every file-changing task in a dedicated Git branch and linked worktree created from the intended base branch. Never implement changes directly in the primary/local worktree. Read-only inspection may be performed without creating a worktree.
-- Keep each task isolated in its own worktree and branch. Reuse a worktree only when continuing the same task.
-- Coordinator identity is runtime-based and non-transferable. Only the OpenAI Codex agent whose collaboration task path is exactly `/root` may act as coordinator for this repository workflow. It owns delegation, waits for worker completion notifications, reviews completed work, and decides whether the work is ready for integration or requires another revision.
-- Every OpenCode session, Claude session, other tool session, and Codex agent whose collaboration task path is not exactly `/root` is a worker by default. Being a primary agent in its own product, receiving a prompt directly, running in the primary/local worktree, or spawning subagents does not grant coordinator authority. An agent must never infer or promote itself to coordinator.
-- Only the user may assign or reassign coordinator authority, and the assignment must explicitly identify an OpenAI Codex `/root` session. A message relayed by the coordinator to a worker does not transfer coordinator authority.
-- The user authorizes the coordinator and workers to delegate independent, clearly scoped subtasks when useful. Each parent agent may issue at most 7 subagent requests within any rolling 60-second window, including retries. After reaching this limit, it must wait until enough requests leave the rolling window before issuing another. This is a request-rate limit, not a limit on the total number of subagents used across completed waves. A lower platform limit always takes precedence.
-- Subagents must be launched in waves: wait for enough children to finish before starting another wave. There is no lifetime limit across completed waves. A child subagent must not launch further descendants unless the user explicitly authorizes deeper delegation.
-- A parent worker remains responsible for its delegated work. It must review and aggregate all child results before sending one completion report to the coordinator.
-- Every worker must notify and wake the coordinator when its assigned work is fully complete. Its report must include the worktree path, branch, changed files, verification performed and results, and any remaining limitations. A worker must not integrate its own work merely because implementation is complete.
-- The coordinator must inspect the worker's diff and required verification. It may approve integration, request additional work, or reject the changes.
-- When revisions are required, the coordinator must send the follow-up request to the same worker when practical. That worker must perform the revision in the same task worktree, rerun relevant verification, and notify and wake the coordinator again. Repeat this review loop until the coordinator approves or reports a blocker.
-- Only the coordinator may grant authority to integrate a task worktree into the primary/local worktree. After receiving that explicit authority, the same worker that implemented the task should perform the integration when practical.
-- Before integration, the worker must inspect the target worktree, current branch, changed paths, and potential conflicts. Preserve all unrelated local changes. If the integration would overwrite, conflict with, stash, discard, or otherwise disturb unrelated work, stop and wake the coordinator with a report instead of integrating.
-- Integration authority is not commit authority. Neither the coordinator nor workers may create the final commit; after approved changes are integrated and verified in the primary/local worktree, report the result and leave the final commit decision to the user.
-- Run all relevant tests, `npm.cmd run type-check`, and `npm.cmd run build` in the task worktree. Fix failures caused by the task and rerun the failed checks. After integration, rerun verification affected by the combined local state before reporting completion.
+- For every task that designs, builds, reviews, or changes UI/UX, use the `ui-ux-pro-max` skill before making design or implementation decisions.
+- This requirement includes pages, components, design systems, styling, layout, responsive behavior, accessibility, interactions, animation, typography, color, charts, and any change to how the interface looks, feels, moves, or is used.
+- Read `.agents/skills/ui-ux-pro-max/SKILL.md` and follow its workflow, using the smallest relevant search mode and the detected project stack. For this project, use the Vue stack guidance when stack-specific guidance is needed.
+- Skip this skill only for work that is entirely non-visual and does not affect how users interact with the application.
+- If the skill is unavailable, report the limitation instead of silently substituting an unverified UI/UX workflow.
+
+## Worktree and Multi-Agent Coordination
+
+- Before changing files, check for overlapping uncommitted changes and preserve unrelated user work.
+- Use a dedicated worktree for multi-file features, risky changes, implementation plans, or delegated work. Small focused changes may be performed in the current worktree.
+- Delegated workers must report their worktree, branch, changed files, verification results, and remaining limitations.
+- The coordinator reviews the final diff and verification evidence. Request another review only when evidence is missing, findings remain unresolved, or the change is high-risk.
+- Do not commit, merge, integrate, push, or deploy unless the user explicitly requests it.
+
+## Verification
+
+- Run focused tests covering changed behavior.
+- Run `npm.cmd run type-check` when TypeScript or Vue code changes.
+- Run `npm.cmd run build` for production-affecting code, configuration, dependencies, asset-pipeline, or integration changes.
+- Run the full test suite for broad, shared, or high-risk changes.
+- Do not repeat a successful verification command unless relevant code or environment state has changed.
+- Fix failures introduced by the task before declaring completion.
 
 ## Development Phase
 
