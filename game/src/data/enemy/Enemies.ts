@@ -1436,7 +1436,7 @@ const ENEMY_DEFINITIONS: Enemy[] = [
 // boss thật, không tự cộng dồn ở đây). attackSpeed author theo thang
 // mới (0.8-2.5 đòn/giây, xem EnemyStatInput.normalizeEnemyAttackSpeed).
 // Không material mới (tránh material chết không ai tiêu) — chỉ rơi
-// Bát Phẩm Linh Khoáng (qi_refining_ore_hoang, sink thật qua
+// Thập Niên Linh Khoáng (qi_refining_ore_hoang, sink thật qua
 // Cường Hóa/Tẩy Luyện + quest collect).
 // ============================================================
 

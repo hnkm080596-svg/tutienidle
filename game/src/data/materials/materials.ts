@@ -3,10 +3,6 @@ import { SPIRIT_STONE_MATERIALS } from '@/core/material/SpiritStoneMaterial'
 import type { ProfessionMaterialMeta } from '@/core/profession/ProfessionMaterial'
 import { equipmentEssenceMaterialId } from '@/core/equipment/RefinementBalance'
 import { REALM_TIERS } from '@/core/realm/RealmTierMap'
-import {
-  getProfessionGradeForRealm,
-  PROFESSION_GRADE_NAMES,
-} from '@/core/profession/ProfessionGrade'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
 
 // sourceType (MASTER SPEC Mục II-V) — nhãn nguồn CHÍNH, không ràng
@@ -208,17 +204,26 @@ const PROFESSION_REALM_CELLS: readonly ProfessionRealmCell[] = [
   { realmId: 'foundation_establishment', realmLabel: 'Trúc Cơ' },
 ]
 
+// Nhãn "chất" thống nhất theo hệ TUỔI (2026-08-30, spec
+// 2026-08-30-unify-material-quality-names-design.md): Gỗ/Khoáng bỏ nhãn
+// Hoàng/Huyền/Địa/Thiên/Tiên — dùng cùng hệ tuổi với Linh Thảo. ID
+// quality (`hoang`..`tien`) GIỮ NGUYÊN (save/recipe/quy đổi tier không
+// đổi); chỉ nhãn hiển thị thay. Bậc 5 mở rộng "Thượng Cổ".
 const ORE_QUALITY_LABELS: Record<string, string> = {
-  hoang: 'Hoàng',
-  huyen: 'Huyền',
-  dia: 'Địa',
-  thien: 'Thiên',
-  tien: 'Tiên',
+  hoang: 'Thập Niên',
+  huyen: 'Bách Niên',
+  dia: 'Thiên Niên',
+  thien: 'Vạn Niên',
+  tien: 'Thượng Cổ',
 }
 
-function professionResourceName(realmId: string, kind: 'Linh Mộc' | 'Linh Khoáng'): string {
-  const grade = getProfessionGradeForRealm(realmId)
-  return `${grade ? PROFESSION_GRADE_NAMES[grade] : realmId} ${kind}`
+/** Gỗ thường Lâm (không phẩm) — mức tuổi thấp nhất của hệ thống. */
+const PLAIN_WOOD_AGE_LABEL = 'Thập Niên'
+
+function professionResourceName(realmId: string, kind: 'Linh Mộc' | 'Linh Khoáng', ageLabel?: string): string {
+  const suffix = ageLabel ? ` ${ageLabel}` : ''
+
+  return `${suffix} ${kind}`.trim()
 }
 
 const HERB_AGE_YEARS: Record<string, number> = {
@@ -235,7 +240,7 @@ function buildProfessionMaterials(): Material[] {
   for (const cell of PROFESSION_REALM_CELLS) {
     list.push({
       id: `${cell.realmId}_wood`,
-      name: professionResourceName(cell.realmId, 'Linh Mộc'),
+      name: professionResourceName(cell.realmId, 'Linh Mộc', PLAIN_WOOD_AGE_LABEL),
       category: 'wood',
       element: 'wood',
       sourceType: 'exploration',
@@ -253,7 +258,7 @@ function buildProfessionMaterials(): Material[] {
     for (const quality of ['hoang', 'huyen', 'dia', 'thien', 'tien']) {
       list.push({
         id: `${realmId}_wood_${quality}`,
-        name: professionResourceName(realmId, 'Linh Mộc'),
+        name: professionResourceName(realmId, 'Linh Mộc', ORE_QUALITY_LABELS[quality]),
         category: 'wood',
         element: 'wood',
         sourceType: 'exploration',
@@ -268,7 +273,7 @@ function buildProfessionMaterials(): Material[] {
     for (const quality of ['hoang', 'huyen', 'dia', 'thien', 'tien']) {
       list.push({
         id: `${realmId}_ore_${quality}`,
-        name: professionResourceName(realmId, 'Linh Khoáng'),
+        name: professionResourceName(realmId, 'Linh Khoáng', ORE_QUALITY_LABELS[quality]),
         category: 'ore',
         element: 'metal',
         sourceType: 'exploration',
@@ -283,11 +288,11 @@ function buildProfessionMaterials(): Material[] {
     for (const quality of ['hoang', 'huyen', 'dia', 'thien', 'tien']) {
       list.push({
         id: `${cell.realmId}_ore_${quality}`,
-        name: professionResourceName(cell.realmId, 'Linh Khoáng'),
+        name: professionResourceName(cell.realmId, 'Linh Khoáng', ORE_QUALITY_LABELS[quality]),
         category: 'ore',
         element: 'metal',
         sourceType: 'exploration',
-        description: `Quảng thạch phẩm ${ORE_QUALITY_LABELS[quality]} của ${cell.realmLabel} — nguyên liệu Khí Đường.`,
+        description: `Quảng thạch ${ORE_QUALITY_LABELS[quality]} của ${cell.realmLabel} — nguyên liệu Khí Đường.`,
         profession: {
           resourceKind: 'ore',
           realmId: cell.realmId,
@@ -339,13 +344,22 @@ function buildProfessionMaterials(): Material[] {
 function buildReworkPillHerbs(): Material[] {
   const ages = ['decade', 'century', 'millennium', 'myriad_year'] as const
 
+  // Nhãn tuổi thảo — dùng chung bảng nhãn chất (decade..myriad_year trùng
+  // key với 4 bậc đầu của gỗ/khoáng).
+  const HERB_AGE_LABELS: Record<string, string> = {
+    decade: ORE_QUALITY_LABELS.decade!,
+    century: ORE_QUALITY_LABELS.century!,
+    millennium: ORE_QUALITY_LABELS.millennium!,
+    myriad_year: ORE_QUALITY_LABELS.thien!,
+  }
+
   return REALM_TIERS.flatMap((realmId) =>
     PILL_FAMILIES.flatMap((family) => {
       const herbBaseId = `${family.herbId}_${realmId}`
 
       return ages.map((age) => ({
         id: `${herbBaseId}_${age}`,
-        name: family.herbName,
+        name: `${HERB_AGE_LABELS[age]} ${family.herbName}`,
         category: 'herb' as const,
         years: HERB_AGE_YEARS[age],
         element: 'wood' as const,

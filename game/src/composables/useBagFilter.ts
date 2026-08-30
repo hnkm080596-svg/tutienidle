@@ -1,6 +1,7 @@
 import { computed, type ComputedRef, type Ref } from 'vue'
 import type { Material } from '@/core/material/Material'
 import { REALMS } from '@/data/realms/realm'
+import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
 
 // Filter/search/gộp họ cho MaterialBag (economy-fixes-sinks-plan.md §3.2 B4).
 // Tách thuần function khỏi component để dễ test và tái dùng.
@@ -34,18 +35,17 @@ const AGE_LABELS: Record<string, string> = {
   myriad_year: 'Vạn Niên',
 }
 
-// Quáng/Gỗ phân phẩm (hoang..tien) DÙNG CHUNG TÊN theo realm (xem
-// professionResourceName trong materials.ts — không ghép phẩm vào tên),
-// nên nhiều biến thể phẩm của cùng 1 realm/kind trước đây hiện thành
-// NHIỀU Ô TRÙNG TÊN trong túi đồ (bug report 2026-08-30: "nguyên liệu có
-// nhiều loại stack khác nhau cùng một loại vật phẩm"). Gộp theo cùng cơ
-// chế "họ thảo" bên dưới, badge hiện phẩm cao nhất đang sở hữu.
+// Quáng/Gỗ phân phẩm DÙNG NHÃN TUỔI thống nhất với Linh Thảo (spec
+// 2026-08-30-unify-material-quality-names-design.md — id quality giữ
+// nguyên `hoang..tien`, chỉ nhãn hiển thị đổi sang hệ tuổi). Vẫn gộp
+// theo "họ" gỗ/quáng resourceKind+realmId, badge hiện bậc cao nhất đang
+// sở hữu.
 const QUALITY_LABELS: Record<string, string> = {
-  hoang: 'Hoàng',
-  huyen: 'Huyền',
-  dia: 'Địa',
-  thien: 'Thiên',
-  tien: 'Tiên',
+  hoang: 'Thập Niên',
+  huyen: 'Bách Niên',
+  dia: 'Thiên Niên',
+  thien: 'Vạn Niên',
+  tien: 'Thượng Cổ',
 }
 
 const QUALITY_ORDER = ['hoang', 'huyen', 'dia', 'thien', 'tien']
@@ -114,6 +114,22 @@ function variantLabel(material: Material): string | undefined {
   if (meta?.quality !== undefined) return QUALITY_LABELS[meta.quality]
 
   return undefined
+}
+
+/**
+ * Tên GỐC của họ (bỏ prefix tuổi) — tên material giờ có dạng
+ * "<Tuổi> <Tên gốc>" (spec 2026-08-30-unify-material-quality-names);
+ * ô gộp họ hiển thị tên gốc, tuổi/chất đã có trong badge nên không
+ * lặp. Material legacy không khớp prefix nào giữ nguyên tên.
+ */
+export function baseNameFor(material: Material): string {
+  const label = variantLabel(material)
+
+  if (label && material.name.startsWith(`${label} `)) {
+    return material.name.slice(label.length + 1)
+  }
+
+  return material.name
 }
 
 /** Khoá gộp họ: thảo theo herbBaseId, gỗ/quáng theo resourceKind+realmId — undefined nếu không gộp. */
@@ -238,7 +254,7 @@ export function useBagFilter(
             amount: entry.amount,
             family: {
               herbBaseId: familyKey,
-              name: entry.material.name,
+              name: baseNameFor(entry.material),
               realmId: meta!.realmId,
               variants: [{ material: entry.material, amount: entry.amount }],
               badgeLabel: '',
