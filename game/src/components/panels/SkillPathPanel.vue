@@ -204,12 +204,12 @@ function close() {
 
 .skill-path-panel__subtitle {
   font-size: var(--text-sm);
-  color: var(--text-muted);
+  color: var(--paper-text-muted);
 }
 
 .skill-path-panel__points {
   font-size: var(--text-sm);
-  color: var(--chrome-100);
+  color: var(--gold-700);
 }
 
 .skill-path-panel__body {
@@ -263,6 +263,6 @@ function close() {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: var(--chrome-100);
+  color: var(--paper-eyebrow);
 }
 </style>

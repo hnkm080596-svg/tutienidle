@@ -157,13 +157,13 @@ const currentKiemTuRoute = computed<KiemTuRoute>(() => {
   gap: 10px;
   padding: 20px 24px;
   font-family: var(--font-body);
-  color: var(--text-primary);
+  color: var(--paper-text);
 }
 
 .quan-khi-panel__hint {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--text-muted);
+  color: var(--paper-text-muted);
 }
 
 .quan-khi-panel__choices {

@@ -56,8 +56,8 @@ const label = computed(() => (displayNumber.value > 0 ? String(displayNumber.val
   font-family: var(--font-display);
   font-size: var(--text-hero);
   font-weight: 700;
-  color: var(--chrome-100);
-  text-shadow: 0 0 24px color-mix(in srgb, var(--chrome-100) 60%, transparent), 0 2px 8px rgba(0, 0, 0, 0.8);
+  color: var(--gold-300);
+  text-shadow: 0 0 24px color-mix(in srgb, var(--gold-500) 60%, transparent), 0 2px 8px rgba(0, 0, 0, 0.8);
   animation: combat-countdown-pop 0.3s ease-out;
 }
 

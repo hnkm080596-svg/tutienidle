@@ -368,7 +368,7 @@ watch([searchQuery, activeGroup], () => resetPage())
 }
 
 .bag-section__count {
-  color: var(--text-muted);
+  color: var(--paper-text-muted);
   font-size: var(--text-xs);
   white-space: nowrap;
 }

@@ -324,8 +324,9 @@ function start() {
   height: 100%;
   min-height: 0;
   background:
-    radial-gradient(circle at 70% 0, color-mix(in srgb, var(--scene-portal-glow) 14%, transparent), transparent 38%),
-    linear-gradient(150deg, color-mix(in srgb, var(--scene-portal-deep) 98%, transparent), color-mix(in srgb, var(--scene-portal-deep) 98%, transparent));
+    var(--paper-grain) 0 0 / 160px 160px repeat,
+    radial-gradient(circle at 70% 0, color-mix(in srgb, var(--scene-portal-glow) 10%, transparent), transparent 40%),
+    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 60%, var(--paper-200) 100%);
 }
 
 .stage-select__scene {
@@ -367,7 +368,7 @@ function start() {
   flex: 1;
   min-height: 0;
   font-family: var(--font-body);
-  color: var(--text-primary);
+  color: var(--paper-text);
 }
 
 .stage-select__filters {
@@ -376,8 +377,8 @@ function start() {
   align-items: center;
   gap: 18px;
   padding: 8px 12px;
-  border-bottom: 1px solid var(--ink-line-soft);
-  background: color-mix(in srgb, var(--scene-portal-deep) 82%, transparent);
+  border-bottom: 1px solid var(--paper-line);
+  background: color-mix(in srgb, var(--scene-portal-glow) 6%, var(--paper-100));
 }
 
 .stage-select__filter-group {
@@ -388,7 +389,7 @@ function start() {
 
 .stage-select__filter-group small {
   margin-right: 3px;
-  color: var(--text-muted);
+  color: var(--paper-text-muted);
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: .08em;
@@ -399,12 +400,12 @@ function start() {
   font-weight: 600;
   /* Filter Địa Giới dùng palette portal teal — đè công thức chrome chuẩn
      của Chip bằng CSS var local. */
-  --chip-active-bg: color-mix(in srgb, var(--scene-portal-glow) 22%, transparent);
+  --chip-active-bg: color-mix(in srgb, var(--scene-portal-glow) 20%, var(--paper-50));
 }
 
 .stage-select__filter-chip.is-active {
   border-color: var(--scene-portal-accent);
-  color: var(--scene-portal-text-soft);
+  color: color-mix(in srgb, var(--scene-portal-accent) 55%, var(--brush-950) 45%);
 }
 
 .stage-select__filter-chip.is-locked {
@@ -426,7 +427,7 @@ function start() {
 }
 
 .stage-select__map-panel {
-  border-right: 1px solid var(--ink-line-soft);
+  border-right: 1px solid var(--paper-line);
   overflow-y: auto;
 }
 
@@ -439,12 +440,12 @@ function start() {
 .stage-select__title {
   margin: 0 0 8px;
   font-family: var(--font-display);
-  color: var(--chrome-100);
+  color: var(--paper-text);
   font-size: var(--text-body);
 }
 
 .stage-select .empty-state {
-  color: var(--text-muted);
+  color: var(--paper-text-muted);
   font-size: var(--text-xs);
 }
 
@@ -467,9 +468,9 @@ function start() {
   gap: 4px;
   padding: 7px 5px;
   border-radius: var(--radius-sm);
-  background: linear-gradient(105deg, color-mix(in srgb, var(--scene-portal-deep) 90%, transparent), color-mix(in srgb, var(--scene-portal-deep) 94%, transparent));
-  border: 1px solid color-mix(in srgb, var(--scene-portal-glow) 28%, transparent);
-  color: var(--text-primary);
+  background: linear-gradient(105deg, color-mix(in srgb, var(--scene-portal-glow) 8%, var(--paper-50)), color-mix(in srgb, var(--scene-portal-glow) 4%, var(--paper-100)));
+  border: 1px solid color-mix(in srgb, var(--scene-portal-glow) 30%, var(--paper-line));
+  color: var(--paper-text);
   cursor: pointer;
   text-align: center;
 }
@@ -479,31 +480,31 @@ function start() {
   width: 34px;
   height: 34px;
   place-items: center;
-  border: 1px solid color-mix(in srgb, var(--scene-portal-accent) 44%, transparent);
+  border: 1px solid color-mix(in srgb, var(--scene-portal-accent) 50%, transparent);
   border-radius: 50%;
-  color: var(--scene-portal-text-soft);
+  color: color-mix(in srgb, var(--scene-portal-accent) 55%, var(--brush-950) 45%);
   font: 700 var(--text-sm) var(--font-display);
 }
 .stage-map__copy { width: 100%; min-width: 0; display: flex; flex-direction: column; }
 .stage-map__copy strong { font-size: var(--text-sm); }
-.stage-map__copy small { overflow: hidden; color: var(--text-muted); font-size: var(--text-xs); text-overflow: ellipsis; white-space: nowrap; }
+.stage-map__copy small { overflow: hidden; color: var(--paper-text-muted); font-size: var(--text-xs); text-overflow: ellipsis; white-space: nowrap; }
 .stage-map__boss {
   position: absolute;
   top: 4px;
   right: 4px;
-  color: color-mix(in srgb, var(--crimson) 62%, white);
+  color: var(--crimson);
   font-size: var(--text-xs);
   font-weight: 800;
 }
 
 .stage-map__node:hover {
-  border-color: var(--chrome-300);
+  border-color: var(--scene-portal-glow);
 }
 
 .stage-map__node.is-selected {
-  border-color: var(--chrome-300);
-  background: color-mix(in srgb, var(--chrome-300) 22%, var(--ink-800));
-  box-shadow: 0 0 10px -2px var(--chrome-300);
+  border-color: var(--scene-portal-glow);
+  background: color-mix(in srgb, var(--scene-portal-glow) 18%, var(--paper-50));
+  box-shadow: 0 0 10px -2px var(--scene-portal-glow);
 }
 
 .stage-map__node.is-locked {
@@ -519,7 +520,7 @@ function start() {
 .stage-select__meta {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--text-secondary);
+  color: var(--paper-text-soft);
 }
 
 .stage-select__encounter-summary {
@@ -529,22 +530,22 @@ function start() {
 }
 .stage-select__encounter-summary span {
   padding: 3px 7px;
-  border: 1px solid color-mix(in srgb, var(--scene-portal-glow) 24%, transparent);
+  border: 1px solid color-mix(in srgb, var(--scene-portal-glow) 28%, var(--paper-line));
   border-radius: 999px;
-  background: color-mix(in srgb, var(--scene-portal-deep) 70%, transparent);
-  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--scene-portal-glow) 8%, var(--paper-100));
+  color: var(--paper-text-soft);
   font-size: var(--text-xs);
 }
-.stage-select__encounter-summary .is-boss { border-color: color-mix(in srgb, var(--crimson) 42%, transparent); color: color-mix(in srgb, var(--crimson) 60%, white); }
+.stage-select__encounter-summary .is-boss { border-color: color-mix(in srgb, var(--crimson) 45%, transparent); color: var(--crimson); }
 .stage-select__enemy-list { display: flex; flex-direction: column; gap: 5px; }
 .stage-select__enemy {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 7px;
-  border: 1px solid var(--ink-line-soft);
+  border: 1px solid var(--paper-line);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--scene-portal-deep) 82%, transparent);
+  background: color-mix(in srgb, var(--scene-portal-glow) 5%, var(--paper-100));
 }
 .stage-select__enemy-sigil {
   display: grid;
@@ -552,13 +553,13 @@ function start() {
   height: 30px;
   place-items: center;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--scene-portal-glow) 16%, transparent);
-  color: var(--scene-portal-text-soft);
+  background: color-mix(in srgb, var(--scene-portal-glow) 20%, var(--paper-50));
+  color: color-mix(in srgb, var(--scene-portal-accent) 55%, var(--brush-950) 45%);
   font-family: var(--font-display);
 }
 .stage-select__enemy > span:last-child { min-width: 0; display: flex; flex-direction: column; }
 .stage-select__enemy strong { font-size: var(--text-sm); }
-.stage-select__enemy small { color: var(--text-muted); font-size: var(--text-xs); }
+.stage-select__enemy small { color: var(--paper-text-muted); font-size: var(--text-xs); }
 
 .stage-select__mode {
   display: grid;
@@ -575,7 +576,7 @@ function start() {
 .stage-select__mode-hint {
   margin: 0;
   font-size: var(--text-xs);
-  color: var(--text-muted);
+  color: var(--paper-text-muted);
 }
 
 .stage-select__auto {
@@ -583,7 +584,7 @@ function start() {
   align-items: center;
   gap: 6px;
   font-size: var(--text-sm);
-  color: var(--text-secondary);
+  color: var(--paper-text-soft);
   cursor: pointer;
 }
 
@@ -603,8 +604,8 @@ function start() {
 }
 
 .stage-select__start:disabled {
-  background: var(--ink-700);
-  color: var(--text-muted);
+  background: var(--paper-200);
+  color: var(--paper-text-muted);
 }
 
 /* Fit-refactor đợt 2 — đo theo CARD (overlay-panel container), không còn

@@ -192,7 +192,7 @@ function getSwordCountForBattle(): number {
   justify-content: center;
   gap: 12px;
   background: var(--ink-950);
-  border-top: 1px solid var(--ink-line);
+  border-top: 1px solid color-mix(in srgb, var(--frame-outer) 55%, transparent);
   pointer-events: auto;
 }
 

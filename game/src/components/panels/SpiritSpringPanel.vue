@@ -192,10 +192,11 @@ function convertToThuongPham() {
 .spirit-spring-panel {
   min-height: 100%;
   padding: 18px;
-  color: var(--text-primary);
+  color: var(--paper-text);
   background:
-    radial-gradient(circle at 50% 20%, color-mix(in srgb, var(--scene-water-accent) 13%, transparent), transparent 32%),
-    linear-gradient(150deg, var(--ink-900), var(--ink-950));
+    var(--paper-grain) 0 0 / 160px 160px repeat,
+    radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--scene-water-accent) 10%, transparent), transparent 40%),
+    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 60%, var(--paper-200) 100%);
 }
 
 .spirit-spring-panel__scene {
@@ -227,7 +228,7 @@ function convertToThuongPham() {
 
 .spirit-spring-panel__description {
   margin: 14px 0 16px;
-  color: var(--text-secondary);
+  color: var(--paper-text-soft);
   line-height: var(--lh-relaxed);
 }
 
@@ -235,10 +236,9 @@ function convertToThuongPham() {
   display: grid;
   gap: 10px;
   padding: 16px;
-  border: 1px solid color-mix(in srgb, var(--scene-water-accent) 45%, var(--ink-line));
+  border: 1px solid color-mix(in srgb, var(--scene-water-accent) 40%, var(--paper-line));
   border-radius: var(--radius-md);
-  background: linear-gradient(110deg, color-mix(in srgb, var(--scene-water-accent) 25%, transparent), color-mix(in srgb, var(--ink-950) 86%, transparent));
-  box-shadow: inset 0 0 24px color-mix(in srgb, var(--scene-water-accent) 8%, transparent);
+  background: linear-gradient(110deg, color-mix(in srgb, var(--scene-water-accent) 12%, var(--paper-50)), color-mix(in srgb, var(--scene-water-accent) 5%, var(--paper-100)));
 }
 
 @keyframes spring-orb {
@@ -252,7 +252,7 @@ function convertToThuongPham() {
 }
 
 .spirit-spring-panel__rate {
-  color: var(--text-secondary);
+  color: var(--paper-text-soft);
   font-size: var(--text-xs);
 }
 
@@ -272,14 +272,14 @@ function convertToThuongPham() {
 
 .spirit-spring-panel__collect:disabled,
 .spirit-spring-panel__convert-btn:disabled {
-  background: var(--ink-700);
-  color: var(--text-muted);
+  background: var(--paper-200);
+  color: var(--paper-text-muted);
 }
 
 .spirit-spring-panel__tiers {
   display: grid;
   gap: 4px;
-  color: var(--text-secondary);
+  color: var(--paper-text-soft);
   font-size: var(--text-xs);
 }
 

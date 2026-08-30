@@ -32,11 +32,11 @@ export default { name: 'Eyebrow' }
 }
 
 .eyebrow--chrome {
-  color: var(--chrome-100);
+  color: var(--paper-eyebrow);
 }
 
 .eyebrow--muted {
-  color: var(--text-muted);
+  color: var(--paper-text-muted);
 }
 
 .eyebrow--inherit {

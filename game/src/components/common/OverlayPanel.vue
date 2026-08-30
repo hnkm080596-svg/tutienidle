@@ -29,7 +29,6 @@ const emit = defineEmits<{ close: [] }>()
             <slot name="subtitle" />
           </div>
           <slot name="header-actions" />
-          <button type="button" class="overlay-panel__close" aria-label="Đóng" @click="emit('close')">✕</button>
         </header>
         <div class="overlay-panel__body"><slot /></div>
       </section>
@@ -43,7 +42,6 @@ const emit = defineEmits<{ close: [] }>()
 .overlay-panel__header { position: relative; z-index: 3; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: clamp(32px, 4vw, 48px) clamp(30px, 4vw, 48px) 14px; border-bottom: 1px solid var(--paper-line, rgba(42, 41, 36, 0.42)); }
 .overlay-panel__heading { min-width: 0; margin-right: auto; }
 .overlay-panel__heading h3 { margin: 0; color: var(--paper-text, #211f1a); font: 700 var(--text-title) var(--font-display); letter-spacing: .06em; }
-.overlay-panel__close { width: var(--tap-min); height: var(--tap-min); padding: 0; color: var(--text-secondary); background: var(--ink-800); border: 1px solid var(--ink-line-soft); border-radius: var(--radius-sm); cursor: pointer; }
 /* Fit-engine (2026-08-29) — body là ngân sách flex cho nội dung: con chiếm
    flex thay vì scroll. Con tự paginate khi vượt ngân sách (pattern BagGrid).
    overflow hidden là rào chặn cuối — panel con KHÔNG được dựa vào nó. */

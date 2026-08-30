@@ -7,7 +7,7 @@
    Enhance/Exploration/chrome) dùng token này — panel khác giữ hex cũ,
    sẽ theo sau ở đợt polish riêng. */
 
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,500;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
 
 :root {
   /* Nền — thang mực đen */
@@ -33,7 +33,10 @@
   --mineral-gold: #b79653;
   --paper-text: #211f1a;
   --paper-text-soft: #5e5a50;
+  --paper-text-muted: #8f897c;
+  --paper-eyebrow: var(--cinnabar);
   --paper-line: rgba(42, 41, 36, 0.42);
+  --paper-line-soft: rgba(42, 41, 36, 0.22);
 
   /* Chữ */
   --text-primary: #ebe6d9;
@@ -210,20 +213,30 @@
      inner hairline). Overlay z-index 2 + pointer-events:none nên vẽ
      TRÊN nội dung — nền opaque của child không bao giờ che được viền.
      ============================================================ */
-  --frame-outer: var(--chrome-500);
-  --frame-inner: var(--chrome-300);
-  --frame-corner: var(--chrome-100);
+  --frame-outer: #7a5a28;
+  --frame-inner: var(--mineral-gold);
+  --frame-corner: #e3c47e;
   --frame-ring-w: 1px;
   --frame-gap: 2px;
   --frame-corner-w: 1px;
   --frame-corner-size: 10px;
   --frame-corner-inset: 4px;
 
+  /* Rice-paper grain (2026-08-30 pure-CSS UI pass) — thay ảnh PNG ink-wash
+     đã ẩn (InkNineSlice.vue). Noise SVG cực nhạt (alpha 0.05), dùng làm
+     lớp background trên cùng của mọi bề mặt giấy để tránh cảm giác nhựa
+     phẳng của gradient thuần. */
+  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+
   /* Slot Revamp (tooltip-revamp-plan.md mục 17.6) — token semantic
      riêng cho SlotView, không hardcode màu trong component. */
-  --slot-surface: var(--ink-900);
-  --slot-surface-raised: var(--ink-800);
-  --slot-border: var(--ink-line-soft);
+  /* Slot rỗng — khay giấy nông (paper-toned), KHÔNG phải ô đen: chỉ item
+     THẬT mới "đóng dấu mực" (slot-surface-raised). Tránh cảm giác lưới
+     20 ô trống nhìn như 20 lỗ hổng trên nền giấy sáng. */
+  --slot-surface: linear-gradient(175deg, var(--paper-100), var(--paper-200));
+  --slot-surface-raised: linear-gradient(160deg, var(--brush-800), var(--ink-900));
+  --slot-border: var(--paper-line);
+  --slot-border-filled: var(--ink-line-soft);
   --slot-hover: var(--chrome-300);
   --slot-selected: var(--chrome-300);
   --slot-valid: var(--jade);
@@ -233,7 +246,7 @@
   --slot-caption-bg-strong: rgba(10, 10, 13, 0.82);
   --slot-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
 
-  --font-display: 'Noto Serif', Georgia, serif;
+  --font-display: 'Playfair Display', 'Noto Serif', Georgia, serif;
   --font-body: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   /* ============================================================
@@ -327,6 +340,17 @@
   right: var(--frame-corner-inset);
   border-bottom-width: var(--frame-corner-w);
   border-right-width: var(--frame-corner-w);
+}
+
+/* Paper drawer fill — nền giấy phẳng dùng cho khung chrome LỚN, cố định
+   (LeftPanel/RightPanel drawer) — khác .ink-nine-slice--surface-* (asset
+   theo layer, cần component riêng): đây là 1 class CSS thuần, áp thẳng
+   lên container đã có overflow/position riêng, không cần lớp phủ absolute. */
+.paper-drawer-fill {
+  background:
+    var(--paper-grain) 0 0 / 160px 160px repeat,
+    radial-gradient(120% 60% at 50% -10%, rgba(255, 255, 255, 0.22), transparent 55%),
+    linear-gradient(180deg, var(--paper-50) 0%, var(--paper-100) 100%);
 }
 
 /* Ẩn thanh scrollbar trên toàn app — mọi panel vẫn kéo/scroll được

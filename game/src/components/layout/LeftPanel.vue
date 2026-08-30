@@ -15,7 +15,7 @@ const ui = useUiStore()
 
 <template>
   <Transition name="panel-slide-left">
-    <div v-if="ui.characterOverlayOpen" class="left-panel">
+    <div v-if="ui.characterOverlayOpen" class="left-panel paper-drawer-fill">
       <div class="left-panel__content left-panel__content--full">
         <div class="left-panel__view">
           <CharacterPanel />
@@ -37,8 +37,7 @@ const ui = useUiStore()
      quyết định. height:100% ở đây từng đè lên bottom:72px (over-
      constrained, browser bỏ qua bottom) khiến panel cao tràn hết
      100vh, lấn xuống dưới cả bottom bar. */
-  background: var(--ink-900);
-  border-right: 1px solid var(--ink-line);
+  border-right: 1px solid var(--frame-outer);
   box-shadow: var(--shadow-panel);
   display: flex;
   flex-direction: column;

@@ -1105,6 +1105,7 @@ function doDissolve() {
 .dissolve-preview h4 {
   margin: 0 0 4px;
   font-size: var(--text-sm);
+  color: var(--paper-text, #211f1a);
 }
 
 .dissolve-preview p {

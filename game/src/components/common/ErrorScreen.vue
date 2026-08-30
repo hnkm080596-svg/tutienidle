@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import GameButton from '@/components/common/GameButton.vue'
+import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { useErrorStore } from '@/stores/error'
 
 const errorStore = useErrorStore()
@@ -20,7 +21,8 @@ function returnHome() {
 <template>
   <div v-if="errorStore.current" class="error-screen">
     <div class="error-screen__panel">
-      <span class="ornate-frame" aria-hidden="true" />
+      <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
+      <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
 
       <div class="error-screen__scroll">
         <h2 class="error-screen__title">Đã xảy ra lỗi</h2>
@@ -50,16 +52,20 @@ function returnHome() {
 
 .error-screen__panel {
   position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   max-width: 420px;
   max-height: 90vh;
   padding: 28px 32px;
-  background: linear-gradient(160deg, var(--ink-950), var(--ink-800));
-  border-radius: var(--radius-md);
   box-shadow: var(--shadow-panel);
   text-align: center;
   font-family: var(--font-body);
+}
+
+.error-screen__panel > :not(.ink-nine-slice) {
+  position: relative;
+  z-index: 3;
 }
 
 .error-screen__scroll {
@@ -72,11 +78,12 @@ function returnHome() {
   font-family: var(--font-display);
   color: var(--crimson);
   font-size: var(--text-title);
+  font-weight: 700;
 }
 
 .error-screen__message {
   margin: 0 0 20px;
-  color: var(--text-secondary);
+  color: var(--paper-text-soft);
   font-size: var(--text-sm);
   word-break: break-word;
 }

@@ -25,7 +25,7 @@ export default { name: 'EmptyState' }
 .empty-state {
   margin: 0;
   text-align: center;
-  color: var(--text-muted);
+  color: var(--paper-text-muted);
   font-size: var(--text-sm);
 }
 
@@ -34,7 +34,7 @@ export default { name: 'EmptyState' }
 .empty-state--lg { padding: 24px 8px; font-size: var(--text-body); }
 
 .empty-state--framed {
-  border: 1px dashed var(--ink-line);
+  border: 1px dashed var(--paper-line);
   border-radius: var(--radius-sm);
 }
 </style>

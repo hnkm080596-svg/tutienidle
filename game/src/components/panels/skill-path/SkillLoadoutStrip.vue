@@ -113,7 +113,7 @@ function openSlot(index: number) {
 .skill-loadout-strip__passive-summary {
   margin: 0;
   padding: 8px;
-  color: var(--chrome-100);
+  color: var(--paper-text-soft);
   font-size: var(--text-xs);
 }
 
@@ -177,5 +177,9 @@ function openSlot(index: number) {
   flex: 1 1 auto;
   padding: 3px 6px;
   --chip-active-bg: var(--ink-700);
+}
+
+.loadout-specializations__btn.is-active {
+  color: var(--paper-50);
 }
 </style>

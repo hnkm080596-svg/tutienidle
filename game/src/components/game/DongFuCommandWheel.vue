@@ -398,7 +398,7 @@ function activate(slot: CommandWheelSlot) {
   top: 0;
   width: var(--orbit-diameter);
   height: var(--orbit-diameter);
-  border: 1px solid color-mix(in srgb, var(--chrome-500) 34%, transparent);
+  border: 1px solid color-mix(in srgb, var(--mineral-gold) 40%, transparent);
   border-radius: 50%;
   pointer-events: none;
   opacity: 0;
@@ -423,10 +423,14 @@ function activate(slot: CommandWheelSlot) {
   max-width: 81px;
   min-height: 57px;
   padding: 6px 8px;
-  border: 1px solid var(--ink-line);
+  border: 1px solid var(--frame-outer);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--ink-900) 88%, transparent);
-  color: var(--text-primary);
+  background:
+    var(--paper-grain) 0 0 / 100px 100px repeat,
+    radial-gradient(120% 120% at 50% 20%, rgba(255, 255, 255, 0.35), transparent 60%),
+    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-200) 100%);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+  color: var(--paper-text);
   font-family: var(--font-body);
   font-size: var(--text-xs);
   line-height: var(--lh-tight);
@@ -453,14 +457,13 @@ function activate(slot: CommandWheelSlot) {
 
 .command-wheel__slot:hover,
 .command-wheel__slot:focus-visible {
-  border-color: var(--chrome-300);
-  background: color-mix(in srgb, var(--ink-800) 92%, transparent);
-  color: var(--chrome-100);
+  border-color: var(--cinnabar);
+  color: var(--cinnabar);
 }
 
 .command-wheel__slot:focus-visible {
   outline: none;
-  box-shadow: var(--focus-ring-chrome);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--cinnabar) 55%, transparent);
 }
 
 /* Bản Mệnh Pháp Bảo (2026-08-27) — slot render được nhưng tạm chưa bấm
@@ -473,15 +476,15 @@ function activate(slot: CommandWheelSlot) {
 
 .command-wheel__slot.is-disabled:hover,
 .command-wheel__slot.is-disabled:focus-visible {
-  border-color: var(--ink-line);
-  color: var(--text-primary);
+  border-color: var(--frame-outer);
+  color: var(--paper-text);
 }
 
 /* Active state suy ra từ uiStore (panel/popover đang mở). */
 .command-wheel__slot.is-active {
-  border-color: var(--chrome-300);
-  background: color-mix(in srgb, var(--chrome-300) 14%, transparent);
-  color: var(--chrome-100);
+  border-color: var(--mineral-gold);
+  box-shadow: inset 0 0 0 2px var(--mineral-gold);
+  color: var(--paper-text);
 }
 
 /* Ring màu nhận diện nhẹ theo tầng. */

@@ -59,7 +59,7 @@ function branchLabel(branchTag: string | undefined): string {
 }
 
 function branchColor(branchTag: string | undefined): string {
-  return ELEMENT_COLOR_VARS[branchTag as ElementType] ?? 'var(--text-primary)'
+  return ELEMENT_COLOR_VARS[branchTag as ElementType] ?? 'var(--paper-text)'
 }
 interface TreeEntry {
   node: ProgressionNode
@@ -413,12 +413,12 @@ watch(branches, () => {
 .node-tree__title {
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--paper-text);
 }
 
 .node-tree__points {
   font-size: var(--text-sm);
-  color: var(--chrome-100);
+  color: var(--gold-700);
 }
 
 .node-tree__branch-title {

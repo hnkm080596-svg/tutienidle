@@ -64,7 +64,7 @@ const canAfford = computed(() =>
 }
 
 .artifact-grade .stat-row__value {
-  color: var(--chrome-100);
+  color: var(--gold-700);
   font-weight: 600;
 }
 
@@ -77,12 +77,12 @@ const canAfford = computed(() =>
 .artifact-grade__upgrade:disabled {
   opacity: 0.4;
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--paper-text-muted);
 }
 
 .artifact-grade__hint {
   margin: 0;
   font-size: var(--text-xs);
-  color: var(--text-muted);
+  color: var(--paper-text-muted);
 }
 </style>

@@ -101,7 +101,7 @@ function close() {
 
 <style scoped>
 .quest-panel { display: flex; flex-direction: column; gap: 20px; padding: 16px 18px; }
-.quest-panel__section-title { margin: 0 0 10px; color: var(--chrome-100); font: 700 var(--text-md) var(--font-display); letter-spacing: .04em; }
+.quest-panel__section-title { margin: 0 0 10px; color: var(--paper-eyebrow); font: 700 var(--text-md) var(--font-display); letter-spacing: .04em; }
 .quest-panel__list { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
 .quest-panel__card { display: flex; align-items: center; gap: 14px; padding: 12px 14px; background: var(--ink-800); border: 1px solid var(--ink-line-soft); border-radius: var(--radius-sm); }
 .quest-panel__info { flex: 1 1 auto; min-width: 0; }

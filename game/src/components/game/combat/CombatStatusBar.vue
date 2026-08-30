@@ -187,7 +187,7 @@ const resourceLabel = computed(() => {
   padding: 0 20px;
   background: color-mix(in srgb, var(--ink-950) 55%, transparent);
   backdrop-filter: blur(4px);
-  border-bottom: 1px solid var(--ink-line-soft);
+  border-bottom: 1px solid color-mix(in srgb, var(--frame-outer) 55%, transparent);
   font-family: var(--font-body);
   pointer-events: auto;
 }

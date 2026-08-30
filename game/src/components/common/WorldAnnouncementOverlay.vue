@@ -87,8 +87,8 @@ watch(
   font-family: var(--font-display);
   font-size: var(--text-display-lg);
   letter-spacing: 0.08em;
-  color: var(--chrome-100);
-  text-shadow: 0 0 24px color-mix(in srgb, var(--chrome-100) 50%, transparent);
+  color: var(--gold-300);
+  text-shadow: 0 0 24px color-mix(in srgb, var(--gold-500) 50%, transparent);
 }
 
 .world-announcement__body {

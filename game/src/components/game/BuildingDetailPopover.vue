@@ -10,8 +10,6 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 
 const props = defineProps<{ buildingId: string }>()
 
-const emit = defineEmits<{ close: [] }>()
-
 const player = usePlayerStore()
 
 const ui = useUiStore()
@@ -95,8 +93,6 @@ async function build() {
 
           <p class="building-popover__description">{{ template.description }}</p>
         </div>
-
-        <button type="button" class="building-popover__close" @click="emit('close')">✕</button>
       </div>
 
       <div class="building-popover__section">
@@ -163,18 +159,6 @@ async function build() {
   margin: 4px 0 0;
   font-size: var(--text-xs);
   color: var(--paper-text-soft, #5e5a50);
-}
-
-.building-popover__close {
-  display: inline-grid;
-  place-items: center;
-  min-width: var(--tap-min);
-  min-height: var(--tap-min);
-  background: none;
-  border: none;
-  color: var(--paper-text-soft, #5e5a50);
-  cursor: pointer;
-  font-size: var(--text-body);
 }
 
 .building-popover__section h4 {

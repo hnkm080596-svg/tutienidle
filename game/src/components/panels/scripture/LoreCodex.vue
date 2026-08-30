@@ -114,7 +114,7 @@ const pagedLoreItems = computed(() => loreItems.value.slice(loreRange.value.star
   justify-content: center;
   gap: 10px;
   font-size: var(--text-sm);
-  color: var(--text-secondary);
+  color: var(--paper-text-soft);
   font-variant-numeric: tabular-nums;
 }
 

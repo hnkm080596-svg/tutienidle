@@ -96,7 +96,7 @@ const {
   font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: var(--chrome-100);
+  color: var(--paper-eyebrow);
 }
 
 .technique-codex__grid {
@@ -116,7 +116,7 @@ const {
   justify-content: center;
   gap: 10px;
   font-size: var(--text-sm);
-  color: var(--text-secondary);
+  color: var(--paper-text-soft);
   font-variant-numeric: tabular-nums;
 }
 

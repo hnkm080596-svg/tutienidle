@@ -109,13 +109,13 @@ function onUpgrade() {
   margin: 0 0 6px;
   font-size: var(--text-lg);
   font-weight: 700;
-  color: var(--chrome-100);
+  color: var(--paper-text);
 }
 
 .skill-detail__desc {
   margin: 0 0 10px;
   font-size: var(--text-sm);
-  color: var(--text-secondary);
+  color: var(--paper-text-soft);
 }
 
 .skill-detail__level {
@@ -129,13 +129,13 @@ function onUpgrade() {
 .skill-detail__level-label {
   flex: 0 0 auto;
   font-size: var(--text-sm);
-  color: var(--text-muted);
+  color: var(--paper-text-muted);
 }
 
 .skill-detail__upgrade {
   flex: 0 0 auto;
   border-radius: 4px;
-  color: var(--chrome-100);
+  color: var(--gold-700);
   border-color: var(--chrome-500);
 }
 

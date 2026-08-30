@@ -73,10 +73,7 @@ function closeSidePanels() {
              BuildingDetailPopover cho CẢ hotspot lẫn command wheel,
              điều khiển qua ui.activeBuildingPopoverId. -->
         <div v-if="ui.activeBuildingPopoverId" class="game-root__building-popover-layer">
-          <BuildingDetailPopover
-            :building-id="ui.activeBuildingPopoverId"
-            @close="ui.closeBuildingPopover()"
-          />
+          <BuildingDetailPopover :building-id="ui.activeBuildingPopoverId" />
         </div>
 
         <LeftPanel class="game-root__left-panel" />

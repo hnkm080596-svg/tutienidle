@@ -300,11 +300,14 @@ function tooltipFor(building: (typeof buildings.value)[number]): BuildingTooltip
   flex-direction: column;
   gap: 1px;
   min-width: max-content;
-  padding: 3px 9px;
-  border: 1px solid color-mix(in srgb, var(--accent) 48%, var(--ink-line));
+  padding: 3px 10px;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--frame-outer));
   border-radius: 999px;
-  background: color-mix(in srgb, var(--ink-950) 88%, transparent);
-  color: var(--text-primary);
+  background:
+    var(--paper-grain) 0 0 / 100px 100px repeat,
+    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 100%);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+  color: var(--paper-text);
   font: 600 var(--text-xs) var(--font-body);
   opacity: 0;
   transform: translate(-50%, 8px);
@@ -312,7 +315,7 @@ function tooltipFor(building: (typeof buildings.value)[number]): BuildingTooltip
   pointer-events: none;
 }
 
-.building-hotspot__hover-label small { color: var(--text-muted); font-size: var(--text-xs); font-weight: 400; }
+.building-hotspot__hover-label small { color: var(--paper-text-muted); font-size: var(--text-xs); font-weight: 400; }
 .building-hotspot:hover .building-hotspot__hover-label,
 .building-hotspot:focus-visible .building-hotspot__hover-label { opacity: 1; transform: translate(-50%, 0); }
 
@@ -328,10 +331,13 @@ function tooltipFor(building: (typeof buildings.value)[number]): BuildingTooltip
   min-width: max-content;
   max-width: 220%;
   padding: 2px 8px;
-  border: 1px solid var(--ink-line);
+  border: 1px solid var(--frame-outer);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--ink-950) 82%, transparent);
-  color: var(--text-primary);
+  background:
+    var(--paper-grain) 0 0 / 100px 100px repeat,
+    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 100%);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  color: var(--paper-text);
   font: 500 var(--text-xs) var(--font-body);
   line-height: var(--lh-tight);
   transform: translateX(-50%);
@@ -376,7 +382,7 @@ function tooltipFor(building: (typeof buildings.value)[number]): BuildingTooltip
 }
 
 .building-nameplate--locked {
-  color: var(--text-muted);
+  color: var(--paper-text-muted);
   opacity: 0.85;
 }
 

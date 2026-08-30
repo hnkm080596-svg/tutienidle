@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import GameButton from '@/components/common/GameButton.vue'
+import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { useSaveIssueStore } from '@/stores/saveIssue'
 import { exportSaveToFile, deleteSave, importSaveRaw } from '@/services/save/SaveSystem'
 import ConfirmModal from './ConfirmModal.vue'
@@ -69,7 +70,8 @@ function handleImport(event: Event) {
 <template>
   <div class="save-incompatible">
     <div class="save-incompatible__panel">
-      <span class="ornate-frame" aria-hidden="true" />
+      <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
+      <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
 
       <h2 class="save-incompatible__title">Save không tương thích với phiên bản hiện tại</h2>
 
@@ -123,26 +125,31 @@ function handleImport(event: Event) {
   /* margin:auto — vẫn căn giữa khi vừa màn hình, nhưng khi overflow
      thì panel dạt lên trên để cuộn tới được toàn bộ nội dung. */
   position: relative;
+  isolation: isolate;
   margin: auto;
   max-width: 460px;
   padding: 28px 32px;
-  background: linear-gradient(160deg, var(--ink-950), var(--ink-800));
-  border-radius: var(--radius-md);
   box-shadow: var(--shadow-panel);
   text-align: center;
   font-family: var(--font-body);
 }
 
+.save-incompatible__panel > :not(.ink-nine-slice) {
+  position: relative;
+  z-index: 3;
+}
+
 .save-incompatible__title {
   margin: 0 0 12px;
   font-family: var(--font-display);
-  color: var(--chrome-100);
+  color: var(--paper-text);
   font-size: var(--text-title);
+  font-weight: 700;
 }
 
 .save-incompatible__message {
   margin: 0 0 20px;
-  color: var(--text-secondary);
+  color: var(--paper-text-soft);
   font-size: var(--text-sm);
   line-height: 1.5;
 }

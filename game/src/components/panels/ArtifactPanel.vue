@@ -164,6 +164,6 @@ function close() {
 
 .artifact-panel .empty-state {
   padding: var(--space-6);
-  color: var(--text-secondary);
+  color: var(--paper-text-soft);
 }
 </style>

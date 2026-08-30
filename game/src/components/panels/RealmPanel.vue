@@ -103,8 +103,8 @@ function majorBreakthrough() {
 
 <style scoped>
 .realm-panel { min-height: 100%; display: flex; flex-direction: column; gap: 18px; padding: 20px; }
-.realm-panel__cultivator { position: relative; display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); }
-.realm-panel__cultivator strong { color: var(--chrome-100); font-family: var(--font-display); }
+.realm-panel__cultivator { position: relative; display: flex; flex-direction: column; align-items: center; color: var(--paper-text-soft); }
+.realm-panel__cultivator strong { color: var(--paper-text); font-family: var(--font-display); }
 .realm-panel__aura { position: absolute; width: 190px; height: 190px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--chrome-500) 25%, transparent), transparent 68%); animation: realm-breathe 3s ease-in-out infinite; }
 .realm-panel__actions { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 10px; }
 .realm-panel__actions :deep(button:disabled) { opacity: .38; filter: grayscale(1); }

@@ -108,7 +108,7 @@ function confirmBreakthrough() {
 .breakthrough-requirement__hint {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--text-secondary);
+  color: var(--paper-text-soft);
   text-align: center;
 }
 
@@ -120,7 +120,7 @@ function confirmBreakthrough() {
   border: 1px solid var(--ink-700);
   border-radius: var(--radius-sm);
   font-size: var(--text-body);
-  color: var(--text-primary);
+  color: var(--paper-text);
 }
 
 .breakthrough-requirement__slot--ready {
@@ -141,7 +141,7 @@ function confirmBreakthrough() {
   margin: 0;
   font-size: var(--text-xs);
   font-style: italic;
-  color: var(--text-muted);
+  color: var(--paper-text-muted);
 }
 
 .breakthrough-requirement__actions {

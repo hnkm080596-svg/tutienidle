@@ -535,7 +535,7 @@ const pillPermanentRows = computed(() => {
   font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  color: var(--chrome-500);
+  color: var(--paper-eyebrow);
   cursor: default;
   font-family: var(--font-body);
 }
@@ -573,7 +573,7 @@ const pillPermanentRows = computed(() => {
 .stat-list__max {
   font-size: var(--text-xs);
   font-weight: 700;
-  color: var(--chrome-100);
+  color: var(--gold-700);
 }
 
 .stat-list__allocate {
@@ -666,9 +666,9 @@ const pillPermanentRows = computed(() => {
 .pill-usage__item {
   flex: 0 0 auto;
   padding: 1px 6px;
-  border: 1px solid var(--ink-line);
+  border: 1px solid var(--paper-line);
   border-radius: 3px;
-  color: var(--text-secondary);
+  color: var(--paper-text-soft);
   white-space: nowrap;
 }
 </style>

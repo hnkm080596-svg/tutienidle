@@ -124,7 +124,7 @@ function close() {
   display: block;
   margin: 0 0 8px;
   font-size: var(--text-sm);
-  color: var(--text-muted);
+  color: var(--paper-text-muted);
 }
 
 .technique-panel__group {

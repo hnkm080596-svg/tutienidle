@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import GameButton from '@/components/common/GameButton.vue'
+import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { usePlayerStore } from '@/stores/player'
 import { TUTORIAL_STEPS } from '@/data/tutorial/tutorialSteps'
 
@@ -29,7 +30,8 @@ function next() {
 <template>
   <div v-if="!player.hasSeenTutorial" class="tutorial-overlay">
     <div class="tutorial-overlay__panel">
-      <span class="ornate-frame" aria-hidden="true" />
+      <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
+      <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
 
       <p class="tutorial-overlay__progress">{{ currentIndex + 1 }} / {{ TUTORIAL_STEPS.length }}</p>
 
@@ -61,19 +63,24 @@ function next() {
 
 .tutorial-overlay__panel {
   position: relative;
+  isolation: isolate;
   width: min(420px, 92vw);
-  padding: 24px 28px;
-  background: linear-gradient(160deg, var(--ink-950), var(--ink-800));
+  padding: 28px 32px;
+  color: var(--paper-text);
   box-shadow: var(--shadow-panel);
-  border-radius: var(--radius-md);
   font-family: var(--font-body);
+}
+
+.tutorial-overlay__panel > :not(.ink-nine-slice) {
+  position: relative;
+  z-index: 3;
 }
 
 .tutorial-overlay__progress {
   margin: 0 0 8px;
   font-size: var(--text-xs);
   letter-spacing: 0.05em;
-  color: var(--text-muted);
+  color: var(--paper-eyebrow);
   text-align: right;
 }
 
@@ -81,14 +88,15 @@ function next() {
   margin: 0 0 10px;
   font-family: var(--font-display);
   font-size: var(--text-title);
-  color: var(--chrome-100);
+  font-weight: 700;
+  color: var(--paper-text);
 }
 
 .tutorial-overlay__body {
   margin: 0 0 20px;
   font-size: var(--text-body);
   line-height: 1.55;
-  color: var(--text-primary);
+  color: var(--paper-text-soft);
 }
 
 .tutorial-overlay__actions {

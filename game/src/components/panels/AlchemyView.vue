@@ -335,19 +335,20 @@ function cancelJob(jobId: string) {
   display: flex;
   height: 100%;
   min-height: 0;
-  color: var(--text-primary);
+  color: var(--paper-text);
   font-family: var(--font-body);
   overflow: hidden;
   background:
-    radial-gradient(circle at 23% 28%, color-mix(in srgb, var(--scene-fire-glow) 13%, transparent), transparent 30%),
-    linear-gradient(135deg, color-mix(in srgb, var(--scene-fire-deep) 96%, transparent), color-mix(in srgb, var(--ink-950) 98%, transparent));
+    var(--paper-grain) 0 0 / 160px 160px repeat,
+    radial-gradient(circle at 23% 0%, color-mix(in srgb, var(--scene-fire-glow) 10%, transparent), transparent 40%),
+    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 60%, var(--paper-200) 100%);
 }
 
 .alchemy-view__recipes {
   flex: 0 0 min(39%, 420px);
   overflow-y: auto;
   padding: 14px;
-  border-right: 1px solid color-mix(in srgb, var(--scene-fire-accent) 30%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--scene-fire-accent) 35%, var(--paper-line));
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -382,12 +383,12 @@ function cancelJob(jobId: string) {
   box-shadow: 0 0 22px color-mix(in srgb, var(--scene-fire-glow) 70%, transparent), inset 0 0 12px color-mix(in srgb, var(--scene-fire-text) 25%, transparent);
 }
 
-.alchemy-group__eyebrow { margin: 0; color: var(--scene-fire-text-soft); font-size: var(--text-xs); letter-spacing: .18em; }
-.alchemy-group > small { display: block; margin-bottom: 9px; color: var(--text-muted); }
+.alchemy-group__eyebrow { margin: 0; color: var(--cinnabar); font-size: var(--text-xs); letter-spacing: .18em; }
+.alchemy-group > small { display: block; margin-bottom: 9px; color: var(--paper-text-muted); }
 
 .alchemy-group__title {
   margin: 2px 0;
-  color: var(--scene-fire-text);
+  color: var(--paper-text);
   font: 700 var(--text-lg) var(--font-display);
 }
 
@@ -399,25 +400,25 @@ function cancelJob(jobId: string) {
   gap: 6px;
   margin-bottom: 4px;
   padding: 9px 10px;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--scene-fire-deep) 72%, transparent), color-mix(in srgb, var(--ink-800) 82%, transparent));
-  border: 1px solid color-mix(in srgb, var(--scene-fire-text-soft) 25%, transparent);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--scene-fire-accent) 10%, var(--paper-50)), color-mix(in srgb, var(--scene-fire-accent) 4%, var(--paper-100)));
+  border: 1px solid color-mix(in srgb, var(--scene-fire-accent) 30%, var(--paper-line));
   border-radius: var(--radius-sm);
-  color: var(--text-primary);
+  color: var(--paper-text);
   cursor: pointer;
   font-family: var(--font-body);
 }
 
 .alchemy-row.is-selected {
-  border-color: var(--scene-fire-accent);
-  box-shadow: inset 3px 0 var(--scene-fire-accent), 0 0 14px color-mix(in srgb, var(--scene-fire-text-soft) 12%, transparent);
+  border-color: var(--scene-fire-glow);
+  box-shadow: inset 3px 0 var(--scene-fire-glow), 0 0 14px color-mix(in srgb, var(--scene-fire-glow) 18%, transparent);
 }
 
 .alchemy-row__pill { display: flex; align-items: center; gap: 8px; }
-.alchemy-row__pill b { color: var(--scene-fire-text-soft); font-size: var(--text-xs); }
+.alchemy-row__pill b { color: var(--cinnabar); font-size: var(--text-xs); }
 
 .alchemy-row__herb {
   font-size: var(--text-xs);
-  color: var(--text-secondary);
+  color: var(--paper-text-soft);
 }
 
 .alchemy-detail {
@@ -432,19 +433,19 @@ function cancelJob(jobId: string) {
 
 .alchemy-detail__header {
   padding: 14px 16px;
-  border: 1px solid color-mix(in srgb, var(--scene-fire-accent) 28%, transparent);
+  border: 1px solid color-mix(in srgb, var(--scene-fire-accent) 32%, var(--paper-line));
   border-radius: var(--radius-md);
-  background: linear-gradient(110deg, color-mix(in srgb, var(--scene-fire-deep) 35%, transparent), color-mix(in srgb, var(--ink-900) 80%, transparent));
+  background: linear-gradient(110deg, color-mix(in srgb, var(--scene-fire-accent) 12%, var(--paper-50)), color-mix(in srgb, var(--scene-fire-accent) 4%, var(--paper-100)));
 }
-.alchemy-detail__header span { color: var(--scene-fire-text-soft); font-size: var(--text-xs); letter-spacing: .18em; }
-.alchemy-detail__header h3 { margin: 3px 0; color: var(--scene-fire-text); font: 700 var(--text-panel-title) var(--font-display); }
-.alchemy-detail__header small { color: var(--text-secondary); }
+.alchemy-detail__header span { color: var(--cinnabar); font-size: var(--text-xs); letter-spacing: .18em; }
+.alchemy-detail__header h3 { margin: 3px 0; color: var(--paper-text); font: 700 var(--text-panel-title) var(--font-display); }
+.alchemy-detail__header small { color: var(--paper-text-soft); }
 
 .alchemy-detail__block h4 {
   margin: 0 0 6px;
   font-size: var(--text-xs);
   text-transform: uppercase;
-  color: var(--scene-fire-accent);
+  color: var(--cinnabar);
 }
 
 .alchemy-detail__outcome {
@@ -457,7 +458,7 @@ function cancelJob(jobId: string) {
 .alchemy-detail__duration {
   margin: 0;
   font-size: var(--text-xs);
-  color: var(--text-secondary);
+  color: var(--paper-text-soft);
 }
 
 .alchemy-variant {
@@ -470,12 +471,12 @@ function cancelJob(jobId: string) {
 }
 
 .alchemy-variant:not(.is-enough) {
-  color: var(--text-muted);
+  color: var(--paper-text-muted);
 }
 
 .alchemy-variant__owned {
   margin-left: auto;
-  color: var(--text-secondary);
+  color: var(--paper-text-soft);
 }
 
 .alchemy-costs {

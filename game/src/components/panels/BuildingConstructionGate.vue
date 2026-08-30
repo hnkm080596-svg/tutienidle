@@ -122,7 +122,7 @@ function build() {
   gap: 8px;
   padding: 24px;
   text-align: center;
-  color: var(--text-primary);
+  color: var(--paper-text);
   font-family: var(--font-body);
 }
 
@@ -135,20 +135,20 @@ function build() {
   align-items: center;
   justify-content: center;
   font-family: var(--font-display);
-  color: var(--chrome-100);
+  color: var(--paper-text);
   font-size: var(--text-title);
 }
 
 .construction-gate__name {
   margin: 4px 0 0;
   font-family: var(--font-display);
-  color: var(--chrome-100);
+  color: var(--paper-text);
   font-size: var(--text-lg);
 }
 
 .construction-gate__description {
   margin: 0;
-  color: var(--text-secondary);
+  color: var(--paper-text-soft);
   font-size: var(--text-sm);
   max-width: 280px;
 }
@@ -156,7 +156,7 @@ function build() {
 .construction-gate__cost {
   margin: 4px 0 0;
   font-size: var(--text-xs);
-  color: var(--text-secondary);
+  color: var(--paper-text-soft);
 }
 
 .construction-gate__build {

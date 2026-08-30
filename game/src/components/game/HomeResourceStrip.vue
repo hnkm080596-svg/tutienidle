@@ -88,8 +88,14 @@ function openBag() {
   align-items: center;
   gap: var(--space-2);
   padding: calc(var(--space-1) + 2px) var(--space-3);
-  background: color-mix(in srgb, var(--ink-900) 72%, transparent);
-  border: 1px solid var(--ink-line);
+  background:
+    var(--paper-grain) 0 0 / 140px 140px repeat,
+    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 100%);
+  box-shadow:
+    0 0 0 1px var(--frame-outer),
+    inset 0 0 0 2px transparent,
+    inset 0 0 0 3px var(--frame-inner),
+    0 4px 12px rgba(0, 0, 0, 0.35);
   border-radius: var(--radius-md);
   pointer-events: auto;
 }
@@ -100,7 +106,7 @@ function openBag() {
   gap: var(--space-2);
   border: none;
   background: transparent;
-  color: var(--text-primary);
+  color: var(--paper-text);
   font-family: var(--font-body);
   font-size: var(--text-sm);
   cursor: pointer;
@@ -109,15 +115,20 @@ function openBag() {
 }
 
 .home-resource-strip__item:hover {
-  background: color-mix(in srgb, var(--gold-500, #c9a45c) 16%, transparent);
+  background: color-mix(in srgb, var(--cinnabar) 12%, transparent);
+}
+
+.home-resource-strip__item + .home-resource-strip__item {
+  border-left: 1px solid var(--paper-line-soft);
+  padding-left: calc(var(--space-2) + 2px);
 }
 
 .home-resource-strip__name {
-  color: var(--text-secondary);
+  color: var(--paper-text-soft);
 }
 
 .home-resource-strip__amount {
-  font-weight: 600;
-  color: var(--gold-400, #e3c07f);
+  font-weight: 700;
+  color: var(--gold-700);
 }
 </style>

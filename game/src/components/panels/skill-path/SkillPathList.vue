@@ -65,7 +65,7 @@ const groups = computed(() => {
 .skill-path-list__title {
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--paper-eyebrow);
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }

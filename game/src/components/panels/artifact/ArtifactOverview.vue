@@ -54,12 +54,12 @@ defineProps<{
   font-family: var(--font-display);
   font-size: var(--text-title);
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--paper-text);
 }
 
 .artifact-overview__meta {
   margin: 2px 0 0;
-  color: var(--chrome-500);
+  color: var(--paper-text-muted);
   font-size: var(--text-body);
 }
 </style>

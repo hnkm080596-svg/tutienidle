@@ -397,16 +397,17 @@ function convertTier(fromId: string) {
   min-height: 0;
   padding: 12px;
   overflow-y: auto;
-  color: var(--text-primary);
+  color: var(--paper-text);
   font-family: var(--font-body);
   background:
-    radial-gradient(circle at 50% 0, color-mix(in srgb, var(--jade) 12%, transparent), transparent 38%),
-    linear-gradient(150deg, var(--ink-900), var(--ink-950));
+    var(--paper-grain) 0 0 / 160px 160px repeat,
+    radial-gradient(circle at 50% 0, color-mix(in srgb, var(--jade) 8%, transparent), transparent 40%),
+    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 60%, var(--paper-200) 100%);
 }
 
 .production-panel__summary {
   margin: 0;
-  color: var(--chrome-100);
+  color: var(--paper-eyebrow);
   font-size: var(--text-sm);
 }
 
@@ -421,8 +422,8 @@ function convertTier(fromId: string) {
   flex-direction: column;
   gap: 8px;
   padding: 12px;
-  background: linear-gradient(145deg, color-mix(in srgb, var(--scene-forest-deep) 84%, transparent), color-mix(in srgb, var(--scene-forest-deep-2) 92%, transparent));
-  border: 1px solid color-mix(in srgb, var(--scene-forest-accent) 25%, transparent);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--scene-forest-accent) 10%, var(--paper-50)), color-mix(in srgb, var(--scene-forest-accent) 4%, var(--paper-100)));
+  border: 1px solid color-mix(in srgb, var(--scene-forest-accent) 32%, var(--paper-line));
   border-radius: var(--radius-md);
 }
 
@@ -478,7 +479,7 @@ function convertTier(fromId: string) {
 .site-card__description {
   margin: 0;
   font-size: var(--text-xs);
-  color: var(--text-secondary);
+  color: var(--paper-text-soft);
 }
 
 .site-card__stats {
@@ -493,7 +494,7 @@ function convertTier(fromId: string) {
 .site-card__reward {
   margin: 0;
   font-size: var(--text-xs);
-  color: var(--text-secondary);
+  color: var(--paper-text-soft);
 }
 
 .site-card__progress {
@@ -507,7 +508,7 @@ function convertTier(fromId: string) {
 .site-card__status {
   margin: 0;
   font-size: var(--text-xs);
-  color: var(--text-secondary);
+  color: var(--paper-text-soft);
 }
 
 .site-card__action {
@@ -519,14 +520,14 @@ function convertTier(fromId: string) {
   align-items: center;
   gap: 6px;
   font-size: var(--text-xs);
-  color: var(--text-secondary);
+  color: var(--paper-text-soft);
   cursor: pointer;
 }
 
 .site-card__auto-note {
   margin: -2px 0 0;
   font-size: var(--text-xs);
-  color: var(--text-muted);
+  color: var(--paper-text-muted);
   font-style: italic;
 }
 
@@ -549,7 +550,7 @@ function convertTier(fromId: string) {
 }
 
 .site-card__upgrade-button:disabled {
-  color: var(--text-muted);
+  color: var(--paper-text-muted);
   cursor: not-allowed;
 }
 
@@ -558,14 +559,14 @@ function convertTier(fromId: string) {
   flex-direction: column;
   gap: 8px;
   padding: 12px;
-  background: linear-gradient(145deg, color-mix(in srgb, var(--scene-forest-deep) 84%, transparent), color-mix(in srgb, var(--scene-forest-deep-2) 92%, transparent));
-  border: 1px solid color-mix(in srgb, var(--scene-forest-accent) 25%, transparent);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--scene-forest-accent) 10%, var(--paper-50)), color-mix(in srgb, var(--scene-forest-accent) 4%, var(--paper-100)));
+  border: 1px solid color-mix(in srgb, var(--scene-forest-accent) 32%, var(--paper-line));
   border-radius: var(--radius-md);
 }
 
 .tier-conversion__title {
   margin: 0;
-  color: var(--chrome-100);
+  color: var(--paper-eyebrow);
   font-family: var(--font-display);
   font-size: var(--text-lg);
 }
@@ -573,7 +574,7 @@ function convertTier(fromId: string) {
 .tier-conversion__note {
   margin: 0;
   font-size: var(--text-xs);
-  color: var(--text-secondary);
+  color: var(--paper-text-soft);
 }
 
 .tier-conversion__rows {
@@ -588,14 +589,14 @@ function convertTier(fromId: string) {
   justify-content: space-between;
   gap: 8px;
   padding: 6px 8px;
-  border: 1px solid var(--ink-line);
+  border: 1px solid var(--paper-line);
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--scene-forest-deep-2) 40%, transparent);
+  background: color-mix(in srgb, var(--scene-forest-accent) 6%, var(--paper-100));
 }
 
 .tier-conversion__label {
   font-size: var(--text-xs);
-  color: var(--text-primary);
+  color: var(--paper-text);
 }
 
 .tier-conversion__label strong {
@@ -609,7 +610,7 @@ function convertTier(fromId: string) {
 }
 
 .tier-conversion__button:disabled {
-  background: var(--ink-700);
-  color: var(--text-muted);
+  background: var(--paper-200);
+  color: var(--paper-text-muted);
 }
 </style>

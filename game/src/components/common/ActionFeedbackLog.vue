@@ -10,7 +10,7 @@ const feedback = useActionFeedbackStore()
 
 const TONE_COLOR: Record<ActionFeedbackTone, string> = {
   success: 'var(--jade)',
-  warning: 'var(--chrome-300)',
+  warning: 'var(--gold-700)',
   error: 'var(--crimson)',
 }
 </script>
@@ -72,8 +72,11 @@ const TONE_COLOR: Record<ActionFeedbackTone, string> = {
   justify-content: space-between;
   padding: 4px 8px;
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--ink-900) 85%, transparent);
-  color: var(--text-muted);
+  background:
+    var(--paper-grain) 0 0 / 100px 100px repeat,
+    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 100%);
+  border: 1px solid var(--frame-outer);
+  color: var(--paper-text-soft);
   font-family: var(--font-body);
   font-size: var(--text-xs);
   pointer-events: auto;
@@ -87,13 +90,13 @@ const TONE_COLOR: Record<ActionFeedbackTone, string> = {
 .feedback-log__btn {
   border: none;
   background: none;
-  color: var(--text-muted);
+  color: var(--paper-eyebrow);
   font-size: var(--text-xs);
   cursor: pointer;
 }
 
 .feedback-log__btn:hover {
-  color: var(--text-primary);
+  color: var(--paper-text);
 }
 
 .feedback-log__list {
@@ -108,14 +111,16 @@ const TONE_COLOR: Record<ActionFeedbackTone, string> = {
   justify-content: space-between;
   gap: 8px;
   padding: 6px 10px;
-  border: 1px solid var(--entry-color, var(--ink-line));
-  border-left: 3px solid var(--entry-color, var(--ink-line));
+  border: 1px solid var(--entry-color, var(--frame-outer));
+  border-left: 3px solid var(--entry-color, var(--frame-outer));
   border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--ink-900) 92%, transparent);
-  color: var(--text-primary);
+  background:
+    var(--paper-grain) 0 0 / 100px 100px repeat,
+    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 100%);
+  color: var(--paper-text);
   font-family: var(--font-body);
   font-size: var(--text-xs);
-  opacity: 0.75;
+  opacity: 0.85;
   pointer-events: auto;
 }
 

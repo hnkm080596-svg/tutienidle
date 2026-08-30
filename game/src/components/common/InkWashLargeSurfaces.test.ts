@@ -36,7 +36,7 @@ describe('ink-wash large surfaces', () => {
     expect(ornate.querySelector('[data-ink-slice="frame-xl-ceremony"]')).not.toBeNull()
   })
 
-  it('keeps OverlayPanel dialog and both close paths around the XL shell', () => {
+  it('keeps OverlayPanel dialog and the click-outside close path around the XL shell', () => {
     const onClose = vi.fn()
     const container = mount(OverlayPanel, { open: true, title: 'Đối thoại', onClose })
     const overlay = container.querySelector<HTMLElement>('.overlay-panel')!
@@ -46,8 +46,7 @@ describe('ink-wash large surfaces', () => {
     expect(dialog.querySelector('[data-ink-slice="surface-xl-paper-scroll"]')).not.toBeNull()
     expect(dialog.querySelector('[data-ink-slice="frame-xl-ceremony"]')).not.toBeNull()
     overlay.click()
-    container.querySelector<HTMLButtonElement>('.overlay-panel__close')!.click()
-    expect(onClose).toHaveBeenCalledTimes(2)
+    expect(onClose).toHaveBeenCalledTimes(1)
   })
 
   it('adds ceremonial layers without removing modal and combat actions', () => {

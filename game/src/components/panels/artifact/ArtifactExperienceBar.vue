@@ -57,7 +57,7 @@ const statusMessage = computed(() => {
   display: flex;
   justify-content: space-between;
   margin-bottom: var(--space-1);
-  color: var(--text-primary);
+  color: var(--paper-text);
   font-size: var(--text-body);
 }
 
@@ -81,6 +81,6 @@ const statusMessage = computed(() => {
 .artifact-exp-bar__status {
   margin: var(--space-1) 0 0;
   font-size: var(--text-xs);
-  color: var(--text-muted);
+  color: var(--paper-text-muted);
 }
 </style>

@@ -31,14 +31,14 @@
   font-family: var(--font-display);
   font-size: var(--text-display);
   letter-spacing: 0.12em;
-  color: var(--chrome-100);
+  color: var(--gold-300);
 }
 
 .loading-screen__pulse {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border: 2px solid var(--chrome-100);
+  border: 2px solid var(--mineral-gold);
   opacity: 0.7;
   animation: loading-pulse 1.1s ease-in-out infinite;
 }

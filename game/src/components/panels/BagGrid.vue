@@ -68,7 +68,7 @@ const activeTabCount = computed(() => {
   gap: 8px;
   box-sizing: border-box;
   font-family: var(--font-body);
-  color: var(--text-primary);
+  color: var(--paper-text);
 }
 
 .bag-grid__header {
@@ -82,12 +82,12 @@ const activeTabCount = computed(() => {
   font-family: var(--font-display);
   font-size: var(--text-sm);
   font-weight: 700;
-  color: var(--text-primary);
+  color: var(--paper-text);
 }
 
 .bag-grid__count {
   font-size: var(--text-xs);
-  color: var(--text-muted);
+  color: var(--paper-text-muted);
 }
 
 .bag-grid__body {

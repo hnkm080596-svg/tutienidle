@@ -10,10 +10,10 @@ const notification = useNotificationStore()
 // mới, tái dùng đúng bảng màu game đã có.
 const KIND_COLOR: Record<NotificationKind, string> = {
   loot: 'var(--jade)',
-  craft: 'var(--chrome-300)',
-  upgrade: 'var(--chrome-300)',
+  craft: 'var(--mineral-gold)',
+  upgrade: 'var(--mineral-gold)',
   save: 'var(--azure)',
-  warning: 'var(--chrome-300)',
+  warning: 'var(--gold-700)',
   error: 'var(--crimson)',
 }
 
@@ -104,11 +104,13 @@ onBeforeUnmount(() => {
   min-width: 100px;
   max-width: 160px;
   padding: 5px 7px;
-  background: color-mix(in srgb, var(--ink-900) 96%, transparent);
-  border: 1px solid var(--toast-color, var(--ink-line));
-  border-left: 3px solid var(--toast-color, var(--ink-line));
+  background:
+    var(--paper-grain) 0 0 / 100px 100px repeat,
+    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 100%);
+  border: 1px solid var(--toast-color, var(--frame-outer));
+  border-left: 3px solid var(--toast-color, var(--frame-outer));
   border-radius: var(--radius-sm);
-  color: var(--text-primary);
+  color: var(--paper-text);
   font-family: var(--font-body);
   font-size: var(--text-xs);
   cursor: pointer;
@@ -161,7 +163,7 @@ onBeforeUnmount(() => {
 }
 
 .toast-item__eyebrow {
-  color: var(--text-muted);
+  color: var(--paper-text-muted);
   font-size: var(--text-xs);
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -176,7 +178,7 @@ onBeforeUnmount(() => {
 }
 
 .toast-item__separator {
-  color: var(--text-muted);
+  color: var(--paper-text-muted);
 }
 
 .toast-item__segment--max-rank {

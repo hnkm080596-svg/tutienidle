@@ -2822,6 +2822,16 @@ export class GameManager {
   restoreFromSave(save: GameSave): StatModifier[] {
     for (const technique of save.techniques) {
       if (!this.techniqueManager.has(technique.id)) {
+        // Text-refresh-on-load: cung logic voi skill ben duoi -- name/
+        // description la du lieu hien thi thuan, luon dong bo tu template
+        // dang dang ky thay vi giu nguyen ban da dong bang trong save cu.
+        const template = this.techniqueTemplates.get(technique.id)
+
+        if (template) {
+          technique.name = template.name
+          technique.description = template.description
+        }
+
         this.techniqueManager.add(technique)
       }
     }
@@ -2847,6 +2857,17 @@ export class GameManager {
 
       if (!skill.targeting && template?.targeting) {
         skill.targeting = structuredClone(template.targeting)
+      }
+
+      // Text-refresh-on-load: name/description la du lieu HIEN THI THUAN
+      // (khong phai progression), nen luon dong bo lai tu template dang
+      // dang ky thay vi giu nguyen ban da dong bang trong save cu. Vi du
+      // that da gap: 1 save cu tung luu "Huy Kiem" luc description bi
+      // hong encoding (mojibake) -- sua Skills.ts khong tu hoi phuc cac
+      // save da luu truoc do neu thieu buoc nay.
+      if (template) {
+        skill.name = template.name
+        skill.description = template.description
       }
 
       this.skillManager.add(skill)

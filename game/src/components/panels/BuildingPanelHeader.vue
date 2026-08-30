@@ -117,24 +117,25 @@ function upgrade() {
   gap: 14px;
   min-height: 88px;
   padding: 10px 18px;
-  border-top: 1px solid color-mix(in srgb, var(--paper-100) 30%, transparent);
-  border-bottom: 1px solid color-mix(in srgb, var(--paper-100) 16%, transparent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--ink-900) 88%, var(--paper-100)), color-mix(in srgb, var(--ink-950) 92%, var(--paper-100)));
+  border-bottom: 1px solid var(--paper-line);
+  background:
+    var(--paper-grain) 0 0 / 140px 140px repeat,
+    linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 100%);
 }
 
 .building-panel-header__art {
   width: 74px;
   height: 64px;
   object-fit: cover;
-  border: 1px solid color-mix(in srgb, var(--chrome-500) 40%, transparent);
+  border: 1px solid var(--frame-outer);
   border-radius: 50% 50% var(--radius-sm) var(--radius-sm);
-  background: var(--ink-900);
+  background: var(--paper-200);
   filter: saturate(.9) contrast(1.08);
-  box-shadow: 0 0 18px color-mix(in srgb, var(--chrome-500) 14%, transparent);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--mineral-gold) 18%, transparent);
 }
 
 .building-panel-header__identity { min-width: 0; margin-right: auto; }
-.building-panel-header__identity small { color: var(--chrome-500); font-size: var(--text-xs); letter-spacing: .17em; }
+.building-panel-header__identity small { color: var(--paper-eyebrow); font-size: var(--text-xs); letter-spacing: .17em; }
 .building-panel-header__upgrade-area { display: flex; max-width: 45%; flex-direction: column; align-items: flex-end; gap: 5px; }
 
 .building-panel-header h2,
@@ -143,7 +144,7 @@ function upgrade() {
 }
 
 .building-panel-header h2 {
-  color: var(--chrome-100);
+  color: var(--paper-text);
   font: 700 var(--text-title) var(--font-display);
 }
 
@@ -155,18 +156,16 @@ function upgrade() {
 .building-panel-header__upgrade {
   margin-top: 3px;
   padding: 7px 14px;
-  border: 1px solid var(--chrome-300);
 }
 
 .building-panel-header__upgrade:disabled {
-  border-color: var(--ink-line);
-  background: var(--ink-700);
-  color: var(--text-muted);
+  background: var(--paper-200);
+  color: var(--paper-text-muted);
 }
 
 .building-panel-header__cost {
   text-align: right;
-  color: var(--text-muted);
+  color: var(--paper-text-muted);
   font-size: var(--text-xs);
 }
 
