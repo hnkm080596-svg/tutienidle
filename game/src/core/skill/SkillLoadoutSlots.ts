@@ -1,15 +1,22 @@
-import { getRealmIndex } from '../realm/realmSystem'
-
-// PLAN HOÀN CHỈNH mục 8 — số ô Skill Loadout khả dụng theo cảnh giới.
-// Doc CHỈ chốt cứng đúng 1 mốc ("Luyện Khí chỉ mở 2/5 ô, các ô còn lại
-// khoá dần theo progression") — công thức bên dưới MIRROR NGUYÊN VẸN
-// core/element/ElementSlot.ts's getElementSlotCount() (base 2 tại
-// Luyện Khí, +1 mỗi 2 đại cảnh giới, trần 5) vì đó là đúng precedent
-// "N/5 ô mở dần theo cảnh giới" DUY NHẤT đã có sẵn trong codebase —
-// tái dùng thay vì bịa 1 đường cong khác không có cơ sở.
-const BASE_SKILL_LOADOUT_SLOTS = 2
-
-const SKILL_LOADOUT_SLOT_REALM_GROUP_SIZE = 2
+// PLAN HOÀN CHỈNH mục 8 + Pháp Tu Đạo Sắc (spec 2026-08-30-phap-tu-dao-sac
+// §6) — số ô Skill Loadout mở THEO BẢNG realm gate (thay công thức
+// +1 mỗi 2 đại cảnh giới cũ). Mỗi mốc mở đúng 1 link chuỗi mới của
+// Thuần hệ: Phàm Nhân 1 (Trảm), Luyện Khí/Trúc Cơ 2 (A+B), Kim Đan/
+// Nguyên Anh 3 (+C), Hóa Thần→Đại Thừa 4 (+D), Độ Kiếp 5 (+E — đủ
+// chuỗi). Nội dung hiện dừng ở Trúc Cơ nên thực tế chỉ A+B chơi được;
+// C/D/E là data khóa realm chờ mở (pattern on-hit Kiếm Tu 5-9).
+const REALM_SLOT_TABLE: Record<string, number> = {
+  mortal: 1,
+  qi_refining: 2,
+  foundation_establishment: 2,
+  golden_core: 3,
+  nascent_soul: 3,
+  soul_transformation: 4,
+  void_refinement: 4,
+  body_integration: 4,
+  mahayana: 4,
+  tribulation: 5,
+}
 
 export const MAX_SKILL_LOADOUT_SLOTS = 5
 
@@ -17,24 +24,13 @@ export const MAX_SKILL_LOADOUT_SLOTS = 5
 // chiêu trận Kiếm Trận (kiem_tran_*, xem data/progression/KiemTuNodes.ts),
 // đứng NGOÀI 5 ô loadout chuẩn (getSkillLoadoutSlotCount() ở trên KHÔNG
 // đổi) — mua node trận kế tiếp tự thay chiêu trận cũ ở đúng ô này, không
-// cạnh tranh chỗ với skill người chơi tự chọn qua Loadout UI.
+// cạnh tranh chỗ với skill người chơi tự chọn qua Loadout UI. Pháp Tu
+// Đạo Sắc: 2 path KHÔNG bao giờ tranh slot — chỉ Kiếm Tu dùng slot này
+// (Pháp Tu ult là nút riêng, không loadout slot — spec §2.4).
 export const KIEM_TRAN_SLOT_INDEX = 4
 
 export function getSkillLoadoutSlotCount(realmId: string): number {
-  const ordinal = getRealmIndex(realmId)
-
-  // Phàm Nhân (ordinal 0) hoặc realmId không hợp lệ (ordinal -1) —
-  // execution policy rework (combat-gate-teleport-autocast plan §8.6):
-  // scheduler CHỈ đọc loadout nên Trảm được gán vào ĐÚNG slot mặc định
-  // (slot 0) thay vì "equipped không slot" như trước.
-  if (ordinal < 1) {
-    return 1
-  }
-
-  const realmsPastFirst = ordinal - 1
-
-  return Math.min(
-    MAX_SKILL_LOADOUT_SLOTS,
-    BASE_SKILL_LOADOUT_SLOTS + Math.floor(realmsPastFirst / SKILL_LOADOUT_SLOT_REALM_GROUP_SIZE),
-  )
+  // realmId không hợp lệ → 1 slot (hành vi an toàn cũ cho scheduler —
+  // Trảm của Phàm Nhân luôn có slot 0).
+  return REALM_SLOT_TABLE[realmId] ?? 1
 }
