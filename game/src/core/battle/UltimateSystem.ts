@@ -2,6 +2,8 @@ import type { Battle } from './Battle'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { SwordZone } from './SwordZone'
 import type { KiemTuRoute } from '../player/Player'
+import { consumeTheForUlt } from './TheResourceSystem'
+import { MAX_THE } from '../combat/CombatTypes'
 
 // Ult Kiếm Tu (spec 2026-08-29-kiem-the-kiem-y mục 2/3.4) — 2 ult
 // MANUAL (nút riêng trong CombatControlBar, KHÔNG chiếm loadout slot)
@@ -129,7 +131,6 @@ export function triggerUltimate(
   // đơn mục tiêu ưu tiên boss.
   const burned = battle.player.currentKiemYTemp ?? 0
   battle.player.currentKiemYTemp = 0
-
   const aliveEnemies = battle.enemies.filter((enemy) => enemy.entity.alive)
   const boss = aliveEnemies.find((enemy) => enemy.entity.isBoss === true)
   const target = boss?.entity ?? aliveEnemies[0]?.entity
@@ -157,6 +158,65 @@ export function triggerUltimate(
           enemy.entity.alive = false
         }
       }
+    }
+  }
+
+  return true
+}
+
+// ============================================================================
+// Pháp Tu Đạo Sắc (spec 2026-08-30-phap-tu-dao-sac §2.4) — 5 ult Thuần
+// hệ theo Thế đầy 100, pattern TTKT/KKTM: nút manual riêng
+// (CombatControlBar) + toggle auto mặc định ON (AI bắn khi boss/Độ
+// Kiếp active). KHÔNG chiếm loadout slot. Sát thương đọc qua nuke
+// resolver (GameManager inject pipeline — cùng pattern Kiếm Tu).
+// ============================================================================
+
+export const PHAP_TU_ULTIMATE_IDS = {
+  fire: 'tat_phuong',
+  water: 'bat_thu',
+  wood: 'kien_moc',
+  metal: 'kim_phat',
+  earth: 'thanh_luy',
+} as const
+
+export type PhapTuUltimateElement = keyof typeof PHAP_TU_ULTIMATE_IDS
+
+/** Ult Thuần hệ mở khi Thế đầy MAX_THE (spec §2.3). */
+export function canUsePhapTuUltimate(battle: Battle): boolean {
+  return (battle.player.currentThe ?? 0) >= MAX_THE
+}
+
+/** Auto-AI (spec §2.4): bắn khi có boss/Độ Kiếp trong trận VÀ Thế đầy.
+ * Ưu tiên boss làm mục tiêu — resolver tự xử (pattern KKTM). */
+export function autoPhapTuUltimateDecision(
+  battle: Battle,
+  element: PhapTuUltimateElement,
+): PhapTuUltimateElement | null {
+  if (battle.state !== 'fighting' || !battle.player.alive) {
+    return null
+  }
+
+  return battleHasBoss(battle) && canUsePhapTuUltimate(battle) ? element : null
+}
+
+/** Thực thi ult Pháp Tu: tiêu TOÀN BỘ Thế (reset 0 — spec §2.3 "dùng
+ * xong tích lại"), resolve nuke vào MỌI địch còn sống (AoE — 5 ult đều
+ * diện rộng theo bảng §2.4; hiệu ứng đặc trưng từng hành nằm ở skill
+ * data, resolver pipeline áp). Trả false nếu Thế chưa đầy. */
+export function triggerPhapTuUltimate(
+  battle: Battle,
+  nuke: UltimateNukeResolver,
+): boolean {
+  if (!canUsePhapTuUltimate(battle)) {
+    return false
+  }
+
+  consumeTheForUlt(battle.player)
+
+  for (const enemy of battle.enemies) {
+    if (enemy.entity.alive) {
+      nuke.resolveNuke(enemy.entity)
     }
   }
 
