@@ -26,7 +26,8 @@ This is the compact, durable map for coding agents. Source code remains authorit
 - Search narrowly from symbols and relevant tests; do not scan every source file by default.
 - Preserve architecture and avoid new dependencies unless the task requires them.
 - Never read `APIKey`, `.env`, or other secrets.
-- Do not commit, push, deploy, or destructively modify Git state.
+- Work on each task in a dedicated branch and linked worktree as required by `AGENTS.md`.
+- Do not push, deploy, or destructively modify Git state.
 
 ## Verification
 
@@ -43,6 +44,7 @@ Prefer targeted tests during implementation and the full verification gate befor
 ## Context policy
 
 - Start a new agent session for each new task so stale decisions do not leak across work.
-- Resume the Codex session only for fixes within the same task.
-- Use a fresh Claude reviewer session so review remains independent.
+- The implementing agent leaves a verified commit on its task branch and does not merge it.
+- The user directly assigns Codex or Claude Code to review and merge a completed task branch.
+- The reviewer reruns the verification gate and merges only with a clean primary worktree and no unresolved findings.
 - Treat this file as orientation, then read only task-relevant code and diffs.

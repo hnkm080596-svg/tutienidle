@@ -41,8 +41,7 @@ Thumbs.db
 # meant to be shared — see uncommitted-audit-followup-plan.md).
 .claude/settings.local.json
 
-# Local multi-agent workflow artifacts
-.agent-runs/
+# Isolated agent worktrees
 .agent-worktrees/
 
 # Python tooling caches
