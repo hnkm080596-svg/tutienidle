@@ -2,7 +2,7 @@ import { computed } from 'vue'
 import { useGameManager, useStateVersion } from './useGameState'
 import { usePlayerStore } from '@/stores/player'
 import { REALM_PASSIVES } from '@/data/realm/RealmPassives'
-import { statLabel } from '@/core/stats/StatLabels'
+import { statLabel, formatStat } from '@/core/stats/StatLabels'
 
 export interface RealmStatPassiveRow {
   id: string
@@ -37,7 +37,7 @@ export function useRealmStatPassives() {
 
         const effectLines = modifiers
           .filter(modifier => (modifier.percent ?? 0) !== 0)
-          .map(modifier => `${statLabel(modifier.stat)} +${((modifier.percent ?? 0) * 100).toFixed(1)}%`)
+          .map(modifier => `${statLabel(modifier.stat)} +${formatStat('realmPassivePercent', modifier.percent ?? 0)}`)
 
         return {
           id: passive.id,

@@ -87,6 +87,20 @@ export function createBaseStats(): Stats {
     dotResistancePercent: 0,
     poisonRecoveryPercent: 0,
 
+    // Technique tier effect modifiers (i18n refactor 2026-08-31).
+    maxMpPercent: 0,
+    manaRegenPercent: 0,
+    // Realm passive stat modifier (useRealmStatPassives).
+    realmPassivePercent: 0,
+    // Equipment enhancement delta % (EquipmentHallPanel).
+    affixDeltaPercent: 0,
+    // Production speed multiplier.
+    speedMultiplier: 1,
+    // Artifact grade multiplier.
+    artifactGradeMultiplier: 1,
+    // Pill cultivation percent.
+    cultivationPercent: 0,
+
     // Ngũ hành — mặc định 0, chỉ có giá trị khi được cấp qua
     // StatModifier (equipment/technique/buff...). Xem
     // core/element/ElementStatType.ts. Không còn chu kỳ sinh/khắc —

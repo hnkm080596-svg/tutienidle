@@ -26,6 +26,7 @@ import {
 } from '@/core/artifact/ArtifactProgression'
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import { CULTIVATION_PATH_KITS } from '@/core/player/CultivationPathKit'
+import { formatStat } from '@/core/stats/StatLabels'
 
 const ui = useUiStore()
 const player = usePlayerStore()
@@ -71,7 +72,9 @@ const expStatus = computed(() =>
 const gradeLabel = computed(() => (artifact.value ? ARTIFACT_GRADE_LABELS[artifact.value.grade] : ''))
 
 const multiplierPercentLabel = computed(() =>
-  artifact.value ? `×${getArtifactGradeMultiplier(artifact.value.grade).toFixed(2)}` : '',
+  artifact.value
+    ? `×${formatStat('artifactGradeMultiplier', getArtifactGradeMultiplier(artifact.value.grade))}`
+    : '',
 )
 
 const nextGrade = computed(() => (artifact.value ? getNextArtifactGrade(artifact.value.grade) : undefined))

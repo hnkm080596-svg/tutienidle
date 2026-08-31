@@ -112,6 +112,20 @@ export type StatType =
   // đây chưa resolve được entity NGUỒN). Nền 0.
   | 'poisonRecoveryPercent'
 
+  // Technique tier effects (2026-08-31 refactor) — percent of maxMp/manaRegen.
+  | 'maxMpPercent'
+  | 'manaRegenPercent'
+  // Realm passive stat modifiers.
+  | 'realmPassivePercent'
+  // Equipment enhancement delta (percent change per affix row).
+  | 'affixDeltaPercent'
+  // Production speed multiplier.
+  | 'speedMultiplier'
+  // Artifact grade multiplier.
+  | 'artifactGradeMultiplier'
+  // Pill cultivation percent (relative to realm tier requirement).
+  | 'cultivationPercent'
+
   // Ngũ hành — GIỮ NGUYÊN field code (wood/fire/earth/metal/water),
   // chỉ đổi Ý NGHĨA: không còn chu kỳ sinh/khắc, mỗi hành là 1 damage
   // type độc lập kiểu Last Epoch (xem ElementDamageCalculator.ts).

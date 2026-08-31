@@ -9,6 +9,7 @@ import BuildingConstructionGate from './BuildingConstructionGate.vue'
 import Bar from '@/components/common/primitives/Bar.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
+import { formatStat } from '@/core/stats/StatLabels'
 
 // Sản Xuất (2026-08-25, resource-professions-rework plan §9.1) — thay
 // ExplorationPanel: mỗi Địa Giới hiển thị đúng ba card Lâm/Quáng/
@@ -219,10 +220,10 @@ function upgrade(siteId: string) {
           <div class="site-card__stats">
             <span>Cấp {{ row.level }}/{{ row.maxLevel }}</span>
 
-            <span>×{{ row.speedMultiplier.toFixed(2) }} tốc độ</span>
+            <span>×{{ formatStat('speedMultiplier', row.speedMultiplier) }} tốc độ</span>
 
             <span v-if="row.nextSpeedMultiplier">
-              kế tiếp ×{{ row.nextSpeedMultiplier.toFixed(2) }}
+              kế tiếp ×{{ formatStat('speedMultiplier', row.nextSpeedMultiplier) }}
             </span>
 
             <span>Nhân công: {{ row.activeWorkerSlots }}</span>

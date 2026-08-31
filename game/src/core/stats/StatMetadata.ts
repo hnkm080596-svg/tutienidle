@@ -36,6 +36,20 @@ export const STAT_METADATA: Partial<Record<StatType, StatMetadata>> = {
   poisonRecoveryPercent: { unit: 'percent', min: 0 },
   wardBreakDamagePercent: { unit: 'percent', min: 0 },
   thornsPercent: { unit: 'percent', min: 0 },
+
+  // Technique tier effects (i18n refactor 2026-08-31) — % modifiers
+  // applied to maxMp / manaRegen by technique tier bonuses.
+  maxMpPercent: { unit: 'percent', min: 0 },
+  manaRegenPercent: { unit: 'percent', min: 0 },
+  // Realm passive stat modifier % (useRealmStatPassives).
+  realmPassivePercent: { unit: 'percent' },
+  // Equipment enhancement delta (affix upgrade % growth).
+  affixDeltaPercent: { unit: 'percent' },
+  // Multipliers (production speed, artifact grade).
+  speedMultiplier: { unit: 'multiplier', min: 0 },
+  artifactGradeMultiplier: { unit: 'multiplier', min: 0 },
+  // Pill cultivation % (relative to realm tier requirement).
+  cultivationPercent: { unit: 'percent' },
 }
 
 export function clampStatValue(stat: StatType, value: number): number {

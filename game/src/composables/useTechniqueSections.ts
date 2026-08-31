@@ -1,6 +1,6 @@
 import type { Technique } from '@/core/technique/Technique'
 import { getTechniqueInsightTotalRequired, getTechniqueTier } from '@/core/technique/TechniqueTier'
-import { statLabel } from '@/core/stats/StatLabels'
+import { statLabel, formatStat } from '@/core/stats/StatLabels'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
 import { COMBAT_TECHNIQUE_TYPES } from '@/data/technique/CombatTechniqueTypes'
 import type { TooltipSection } from './useTooltip'
@@ -66,11 +66,11 @@ export function buildTechniqueSections(
     }
 
     if (tierEffect.maxMpPercent !== undefined) {
-      combatRows.push({ label: 'Linh lực tối đa', value: `+${(tierEffect.maxMpPercent * 100).toFixed(1)}%` })
+      combatRows.push({ label: 'Linh lực tối đa', value: `+${formatStat('maxMpPercent', tierEffect.maxMpPercent)}` })
     }
 
     if (tierEffect.manaRegenPercent !== undefined) {
-      combatRows.push({ label: 'Hồi Linh lực', value: `+${(tierEffect.manaRegenPercent * 100).toFixed(2)}%/s` })
+      combatRows.push({ label: 'Hồi Linh lực', value: `+${formatStat('manaRegenPercent', tierEffect.manaRegenPercent)}/s` })
     }
   }
 

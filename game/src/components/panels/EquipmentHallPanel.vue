@@ -372,6 +372,9 @@ interface EnhancePreviewRow {
 
   nextValue: number
 
+  // Percent growth as stat-ratio (0-1), not display-percent (0-100) —
+  // stored as ratio so formatStat('affixDeltaPercent', ...) applies
+  // the ×100.toFixed(1)% logic automatically.
   percent: number
 }
 
@@ -416,7 +419,9 @@ const enhancePreviewRows = computed<EnhancePreviewRow[] | null>(() => {
 
       nextValue,
 
-      percent: currentValue > 0 ? ((nextValue - currentValue) / currentValue) * 100 : 0,
+      // Stat-ratio (0-1) so formatStat() can apply the standard
+      // `×100.toFixed(1)%` percent formatting.
+      percent: currentValue > 0 ? (nextValue - currentValue) / currentValue : 0,
     }
   }
 
@@ -1000,7 +1005,7 @@ function doDissolve() {
                 <td class="qi-hall__compare-arrow" aria-hidden="true">⇒</td>
                 <td>
                   {{ formatAffixValue(statRow.stat, statRow.nextValue) }}
-                  <span class="qi-hall__up-arrow">▲ +{{ statRow.percent.toFixed(1) }}%</span>
+                  <span class="qi-hall__up-arrow">▲ +{{ formatStat('affixDeltaPercent', statRow.percent) }}</span>
                 </td>
               </tr>
             </tbody>
