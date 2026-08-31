@@ -1,0 +1,53 @@
+/* game/src/assets/themes/classical-imperial.css
+   Cổ điển Trung Hoa — đỏ son + vàng kim, hoa văn long phượng */
+
+[data-theme="classical-imperial"] {
+  --ink-950: #f5e6e0;
+  --ink-900: #ecd6cc;
+  --ink-800: #dec0b0;
+  --ink-700: #c8a294;
+  --ink-line: #8b1a1a;
+  --ink-line-soft: #a6796a;
+
+  --paper-50: #f5e6e0;
+  --paper-100: #ecd6cc;
+  --paper-200: #dec0b0;
+  --paper-text: #2c0a0a;
+  --paper-text-soft: #5c2a2a;
+  --paper-text-muted: #8b4a4a;
+  --paper-eyebrow: #8b1a1a;
+  --paper-line: rgba(139, 26, 26, 0.42);
+  --paper-line-soft: rgba(139, 26, 26, 0.22);
+
+  --text-primary: #2c0a0a;
+  --text-secondary: #5c2a2a;
+  --text-muted: #8b4a4a;
+
+  --chrome-100: #d4a017;
+  --chrome-300: #b8860b;
+  --chrome-500: #8b6914;
+  --chrome-700: #5c4a0a;
+
+  --cinnabar: #8b1a1a;
+  --jade: #6b8e23;
+
+  --frame-outer: #8b1a1a;
+  --frame-inner: #d4a017;
+  --frame-corner: #ffd54f;
+
+  --surface-950: #f5e6e0;
+  --surface-900: #ecd6cc;
+  --surface-800: #dec0b0;
+  --surface-700: #c8a294;
+  --surface-600: #b08878;
+  --surface-500: #987060;
+  --surface-line: #8b1a1a;
+  --surface-line-soft: #a6796a;
+  --surface-text: #2c0a0a;
+  --surface-text-soft: #5c2a2a;
+  --surface-text-muted: #8b4a4a;
+  --surface-eyebrow: #8b1a1a;
+
+  --font-display: 'ZCOOL XiaoWei', 'Noto Serif SC', serif;
+  --font-body: 'Noto Sans TC', system-ui, sans-serif;
+}
