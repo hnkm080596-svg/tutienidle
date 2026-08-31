@@ -15,7 +15,7 @@ const ui = useUiStore()
 
 <template>
   <Transition name="panel-slide-left">
-    <div v-if="ui.characterOverlayOpen" class="left-panel paper-drawer-fill">
+    <div v-if="ui.characterOverlayOpen" class="left-panel dark-drawer-fill">
       <div class="left-panel__content left-panel__content--full">
         <div class="left-panel__view">
           <CharacterPanel />
@@ -38,7 +38,7 @@ const ui = useUiStore()
      constrained, browser bỏ qua bottom) khiến panel cao tràn hết
      100vh, lấn xuống dưới cả bottom bar. */
   border-right: 1px solid var(--frame-outer);
-  box-shadow: var(--shadow-panel);
+  box-shadow: var(--surface-shadow-deep);
   display: flex;
   flex-direction: column;
   overflow: hidden;

@@ -8,7 +8,7 @@ const ui = useUiStore()
 
 <template>
   <Transition name="panel-slide-right">
-    <aside v-if="ui.characterOverlayOpen" class="right-panel paper-drawer-fill">
+    <aside v-if="ui.characterOverlayOpen" class="right-panel dark-drawer-fill">
       <div class="right-panel__equipment"><EquipmentPaperdoll /></div>
       <div class="right-panel__inventory"><InventoryPanel /></div>
     </aside>
@@ -16,8 +16,8 @@ const ui = useUiStore()
 </template>
 
 <style scoped>
-.right-panel { position: absolute; z-index: 10; top: 0; right: 0; bottom: 0; width: clamp(340px, 27vw, 440px); display: flex; flex-direction: column; overflow: hidden; border-left: 1px solid var(--frame-outer); box-shadow: var(--shadow-panel); container-type: inline-size; container-name: right-panel; }
-.right-panel__equipment { flex: 0 0 30%; min-height: 0; border-bottom: 1px solid var(--paper-line); }
+.right-panel { position: absolute; z-index: 10; top: 0; right: 0; bottom: 0; width: clamp(340px, 27vw, 440px); display: flex; flex-direction: column; overflow: hidden; border-left: 1px solid var(--frame-outer); box-shadow: var(--surface-shadow-deep); container-type: inline-size; container-name: right-panel; }
+.right-panel__equipment { flex: 0 0 30%; min-height: 0; border-bottom: 1px solid var(--surface-line); }
 .right-panel__inventory { flex: 1; min-height: 0; overflow: auto; }
 .panel-slide-right-enter-active,.panel-slide-right-leave-active { transition: transform .28s ease, opacity .28s ease; }
 .panel-slide-right-enter-from,.panel-slide-right-leave-to { transform: translateX(100%); opacity: 0; }

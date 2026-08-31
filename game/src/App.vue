@@ -578,21 +578,26 @@ onUnmounted(() => {
   </main>
 
   <ErrorBoundary v-else>
-    <LoadingScreen v-if="!isBooted" />
+    <!-- MainMenu là entry screen CHÍNH — CHỈ hiện khi chưa boot game.
+         Khi user click "Bắt đầu" → MainMenu ẩn → bootGame chạy → LoadingScreen → GameRoot.
+         Fixed overlay để cover toàn màn hình. -->
+    <Transition>
+      <MainMenu
+        v-if="showMainMenu"
+        class="main-menu-overlay"
+        @start="handleMenuStart"
+        @settings="handleMenuSettings"
+      />
+    </Transition>
 
-    <GameRoot v-else />
+    <!-- LoadingScreen chỉ hiện TRONG QUÁ TRÌNH boot, SAU KHI user đã click "Bắt đầu" -->
+    <LoadingScreen v-if="!isBooted && !showMainMenu" />
+
+    <!-- GameRoot chỉ hiện khi boot xong -->
+    <GameRoot v-if="isBooted && !showMainMenu" />
   </ErrorBoundary>
 
   <ErrorScreen />
-
-  <Transition>
-    <MainMenu
-      v-if="showMainMenu"
-      class="main-menu-overlay"
-      @start="handleMenuStart"
-      @settings="handleMenuSettings"
-    />
-  </Transition>
 </template>
 
 <style>

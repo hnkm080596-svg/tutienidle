@@ -100,16 +100,17 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
   font-size: var(--text-body);
 }
 
+/* DARK MODE (2026-08-31) — nút trên nền tối */
 .game-button--primary {
-  color: var(--paper-text, #211f1a);
+  color: var(--surface-text);
 }
 
 .game-button--primary:not(:disabled):hover {
-  color: var(--brush-950, #171713);
+  color: var(--chrome-100);
 }
 
 .game-button--secondary {
-  color: var(--paper-50, #f5f0e4);
+  color: var(--chrome-300);
 }
 
 .game-button--secondary:not(:disabled):hover {
@@ -121,15 +122,15 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
 }
 
 .game-button--danger:not(:disabled):hover {
-  color: var(--paper-50, #f5f0e4);
+  color: var(--chrome-300);
 }
 
 .game-button--ghost {
-  color: var(--paper-text-soft, #5e5a50);
+  color: var(--surface-text-soft);
 }
 
 .game-button--ghost:not(:disabled):hover {
-  color: var(--paper-text, #211f1a);
+  color: var(--surface-text);
 }
 
 .game-button:focus-visible {
@@ -142,7 +143,7 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
   min-width: var(--tap-min);
   min-height: var(--tap-min);
   padding: 0;
-  border: 1px solid var(--paper-line, rgba(42, 41, 36, 0.42));
+  border: 1px solid var(--surface-line);
   border-radius: 50%;
 }
 

@@ -51,7 +51,7 @@ const frameAsset = computed(() => (
   height: 100%;
   min-height: 0;
   isolation: isolate;
-  color: var(--paper-text, #211f1a);
+  color: var(--surface-text);
   font-family: var(--font-body);
   background: transparent;
   border: 0;
@@ -80,7 +80,7 @@ const frameAsset = computed(() => (
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--paper-line, rgba(42, 41, 36, 0.42));
+  border-bottom: 1px solid var(--surface-line);
 }
 
 .game-panel__title {
@@ -89,7 +89,7 @@ const frameAsset = computed(() => (
   font-family: var(--font-display);
   font-size: var(--text-panel-title);
   font-weight: 700;
-  color: var(--paper-text, #211f1a);
+  color: var(--surface-text);
   letter-spacing: 0.04em;
 }
 

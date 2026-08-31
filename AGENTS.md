@@ -65,3 +65,11 @@
 
 5. **Confirm before finalizing the plan (if necessary).**
    - Before delivering the final plan, if there is any ambiguity about the idea, ask clarifying questions instead of guessing.
+
+## TutienIdle Adversarial QA
+
+- After implementing a feature or bug fix, use the `tutienidle-adversarial-qa` skill in quick mode before claiming completion.
+- Use deep mode when the user invokes `$tutienidle-adversarial-qa deep` and before milestone or release readiness claims.
+- During a QA run, the skill may write only `game/src/**/*.test.ts`, `game/tests/e2e/**/*.spec.ts`, `game/tests/e2e/helpers.ts`, and `game/docs/qa/**`; it must not modify production code.
+- Treat a defect as confirmed only when a failing reproduction test or direct runtime evidence proves it. Otherwise report it as suspected or as a coverage gap.
+- If quick mode identifies materially broad save/cloud, time/offline, economy/progression, or Vue/Pinia/Phaser lifecycle risk, escalate to deep mode rather than issuing a quick pass verdict.

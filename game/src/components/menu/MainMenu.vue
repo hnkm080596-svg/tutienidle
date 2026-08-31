@@ -34,12 +34,15 @@ const handleExit = () => {
 
 <style scoped>
 .main-menu {
-  position: relative;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
   width: 100vw;
   height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: #08080c;
 }
 
 .main-menu__content {
