@@ -7,7 +7,13 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 // routes hiện đang rỗng, chưa có route/link nào phụ thuộc shape URL.
 const router = createRouter({
   history: createWebHashHistory(),
-  routes: [],
+  routes: [
+    {
+      path: '/',
+      name: 'main-menu',
+      component: () => import('@/components/menu/MainMenu.vue'),
+    },
+  ],
 })
 
 export default router
