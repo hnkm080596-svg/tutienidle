@@ -98,8 +98,8 @@
       "labels": {
         "insight": "Insight",
         "maxLevel": "Max",
-        "unpurchasedCost": "{{ cost }} Insight",
-        "upgradeCost": "Upgrade · {{ cost }} Insight",
+        "unpurchasedCost": "{cost} Insight",
+        "upgradeCost": "Upgrade · {cost} Insight",
         "otherBranch": "Other"
       }
     },
@@ -132,11 +132,11 @@
       "labels": {
         "combatPower": "Combat Power",
         "realmFloor": "Floor",
-        "attributePointsRemaining": "{{ count }} points remaining",
+        "attributePointsRemaining": "{count} points remaining",
         "max": "MAX"
       },
       "tooltips": {
-        "elementStat": "Power {{ power }} · Resistance {{ resistance }} · Penetration {{ penetration }}",
+        "elementStat": "Power {power} · Resistance {resistance} · Penetration {penetration}",
         "primordialTitle": "Primordial",
         "primordialDescription": "Ignores all defenses."
       }
@@ -159,15 +159,15 @@
         }
       },
       "actions": {
-        "enterPath": "Enter {{ name }}"
+        "enterPath": "Enter {name}"
       },
       "messages": {
         "confirmPathTitle": "Confirm Your Path",
-        "confirmPathBody": "Enter {{ name }}? This choice CANNOT be changed."
+        "confirmPathBody": "Enter {name}? This choice CANNOT be changed."
       },
       "world": {
         "ceremonyTitle": "ENTRY CEREMONY",
-        "ceremonyBody": "The cultivator has forsaken their mortal identity and formally entered {{ name }}."
+        "ceremonyBody": "The cultivator has forsaken their mortal identity and formally entered {name}."
       }
     },
     "stageSelect": {
@@ -177,14 +177,14 @@
       "labels": {
         "zoneFilter": "Zone",
         "chapterFilter": "Region Realm",
-        "chapterPrefix": "Chapter {{ chapter }}",
-        "floorPrefix": "Floor {{ floor }}",
+        "chapterPrefix": "Chapter {chapter}",
+        "floorPrefix": "Floor {floor}",
         "boss": "BOSS",
         "enemiesSuffix": "enemies",
         "spawnIntervalPrefix": "Every",
         "bossNamePrefix": "Boss:",
-        "levelPrefix": "Lv.{{ level }}",
-        "eliteChance": "{{ percent }}% Elite"
+        "levelPrefix": "Lv.{level}",
+        "eliteChance": "{percent}% Elite"
       },
       "sections": {
         "selectFloor": "Select Floor"

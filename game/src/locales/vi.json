@@ -98,8 +98,8 @@
       "labels": {
         "insight": "Cảm Ngộ",
         "maxLevel": "Tối đa",
-        "unpurchasedCost": "{{ cost }} Cảm Ngộ",
-        "upgradeCost": "Nâng cấp · {{ cost }} Cảm Ngộ",
+        "unpurchasedCost": "{cost} Cảm Ngộ",
+        "upgradeCost": "Nâng cấp · {cost} Cảm Ngộ",
         "otherBranch": "Khác"
       }
     },
@@ -132,11 +132,11 @@
       "labels": {
         "combatPower": "Chiến Lực",
         "realmFloor": "Tầng",
-        "attributePointsRemaining": "còn {{ count }} điểm",
+        "attributePointsRemaining": "còn {count} điểm",
         "max": "MAX"
       },
       "tooltips": {
-        "elementStat": "Power {{ power }} · Kháng {{ resistance }} · Xuyên {{ penetration }}",
+        "elementStat": "Power {power} · Kháng {resistance} · Xuyên {penetration}",
         "primordialTitle": "Hỗn Nguyên",
         "primordialDescription": "Bỏ qua mọi phòng thủ."
       }
@@ -159,15 +159,15 @@
         }
       },
       "actions": {
-        "enterPath": "Bước Vào {{ name }}"
+        "enterPath": "Bước Vào {name}"
       },
       "messages": {
         "confirmPathTitle": "Xác Nhận Con Đường",
-        "confirmPathBody": "Bước vào {{ name }}? Lựa chọn này KHÔNG thể đổi lại."
+        "confirmPathBody": "Bước vào {name}? Lựa chọn này KHÔNG thể đổi lại."
       },
       "world": {
         "ceremonyTitle": "LỄ NHẬP MÔN",
-        "ceremonyBody": "Đạo hữu đã từ bỏ thân phận phàm nhân, chính thức bước vào {{ name }}."
+        "ceremonyBody": "Đạo hữu đã từ bỏ thân phận phàm nhân, chính thức bước vào {name}."
       }
     },
     "stageSelect": {
@@ -177,14 +177,14 @@
       "labels": {
         "zoneFilter": "Địa Giới",
         "chapterFilter": "Cảnh Giới Khu Vực",
-        "chapterPrefix": "Chương {{ chapter }}",
-        "floorPrefix": "Tầng {{ floor }}",
+        "chapterPrefix": "Chương {chapter}",
+        "floorPrefix": "Tầng {floor}",
         "boss": "BOSS",
         "enemiesSuffix": "quái",
         "spawnIntervalPrefix": "Mỗi",
         "bossNamePrefix": "Boss:",
-        "levelPrefix": "Lv.{{ level }}",
-        "eliteChance": "{{ percent }}% Tinh Anh"
+        "levelPrefix": "Lv.{level}",
+        "eliteChance": "{percent}% Tinh Anh"
       },
       "sections": {
         "selectFloor": "Chọn tầng"
