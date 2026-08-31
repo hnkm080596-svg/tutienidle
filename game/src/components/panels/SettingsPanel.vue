@@ -8,6 +8,7 @@ import { UI_SCALE_OPTIONS, loadUiScale, saveUiScale } from '@/composables/uiScal
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import Chip from '@/components/common/primitives/Chip.vue'
+import ThemeSwitcher from '@/components/settings/ThemeSwitcher.vue'
 
 const player = usePlayerStore()
 const gameManager = useGameManager()
@@ -158,6 +159,12 @@ function handleReset() {
       </div>
     </section>
 
+    <!-- Giao diện — chọn theme (ThemeSwitcher quản lý useTheme + preview card). -->
+    <section class="settings-panel__theme" aria-label="Giao diện">
+      <h4>Giao Diện</h4>
+      <ThemeSwitcher />
+    </section>
+
     <p v-if="lastSavedLabel" class="settings-panel__hint">Đã lưu lúc {{ lastSavedLabel }}</p>
 
     <ConfirmModal
@@ -258,5 +265,17 @@ function handleReset() {
 
 .settings-panel__ui-scale-option:hover {
   border-color: var(--chrome-500);
+}
+
+/* Task 5.6 — chọn theme giao diện (ThemeSwitcher). */
+.settings-panel__theme {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--paper-line);
+}
+
+.settings-panel__theme h4 {
+  margin: 0 0 8px;
+  color: var(--paper-text);
 }
 </style>

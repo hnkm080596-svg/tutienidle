@@ -321,7 +321,7 @@ const pillPermanentRows = computed(() => {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  color: var(--paper-text, #211f1a);
+  color: var(--paper-text);
   font-family: var(--font-body);
 }
 
@@ -476,7 +476,7 @@ const pillPermanentRows = computed(() => {
   border: 1px solid var(--frame-outer);
   border-left: 4px solid var(--talent-tier-color, var(--mineral-gold));
   border-radius: var(--radius-md);
-  background: linear-gradient(175deg, var(--paper-50), #fffdf7);
+  background: linear-gradient(175deg, var(--paper-50), var(--paper-50));
   box-shadow: 0 2px 8px rgba(20, 16, 8, 0.12);
 }
 
@@ -555,7 +555,7 @@ const pillPermanentRows = computed(() => {
 .stat-group {
   margin-bottom: var(--space-3);
   padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--paper-line, rgba(42, 41, 36, 0.42));
+  border: 1px solid var(--paper-line);
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--paper-50) 65%, transparent);
 }

@@ -1,0 +1,59 @@
+/* game/src/assets/themes/xianxia-glow.css
+   Tu tiên huyền ảo — nền tối tím + lam lục glow, rune particle */
+
+[data-theme="xianxia-glow"] {
+  --ink-950: #0d0a14;
+  --ink-900: #14101e;
+  --ink-800: #1c1626;
+  --ink-700: #241c30;
+  --ink-line: #5c3d8f;
+  --ink-line-soft: #3a2858;
+
+  --paper-50: #0d0a14;
+  --paper-100: #14101e;
+  --paper-200: #1c1626;
+  --paper-text: #e8e0ff;
+  --paper-text-soft: #b8a8e0;
+  --paper-text-muted: #8878b0;
+  --paper-eyebrow: #4a7b9d;
+  --paper-line: rgba(92, 61, 143, 0.42);
+  --paper-line-soft: rgba(92, 61, 143, 0.22);
+
+  --text-primary: #e8e0ff;
+  --text-secondary: #b8a8e0;
+  --text-muted: #8878b0;
+
+  --chrome-100: #e8e0ff;
+  --chrome-300: #b8a8e0;
+  --chrome-500: #8878b0;
+  --chrome-700: #5c3d8f;
+
+  --cinnabar: #c95e7a;
+  --jade: #4ade80;
+
+  --frame-outer: #5c3d8f;
+  --frame-inner: #9b7de3;
+  --frame-corner: #c9a8ff;
+
+  --surface-950: #0d0a14;
+  --surface-900: #14101e;
+  --surface-800: #1c1626;
+  --surface-700: #241c30;
+  --surface-600: #2e2440;
+  --surface-500: #382e50;
+  --surface-line: #5c3d8f;
+  --surface-line-soft: #3a2858;
+  --surface-text: #e8e0ff;
+  --surface-text-soft: #b8a8e0;
+  --surface-text-muted: #8878b0;
+  --surface-eyebrow: #4a7b9d;
+  --surface-glow-gold: 0 0 18px rgba(155, 125, 227, 0.42);
+  --surface-glow-jade: 0 0 16px rgba(74, 222, 128, 0.32);
+  --surface-glow-crimson: 0 0 16px rgba(201, 94, 122, 0.42);
+
+  --surface-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.05 0 0 0 0 0.05 0 0 0 0 0.05 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --surface-shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.48);
+
+  --font-display: 'Noto Serif SC', 'Playfair Display', serif;
+  --font-body: 'Noto Sans SC', system-ui, sans-serif;
+}

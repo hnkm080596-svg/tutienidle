@@ -1,0 +1,56 @@
+/* game/src/assets/themes/landscape-shanshui.css
+   Mặc họa phong cảnh — giấy kem + mực nâu, phong cách sơn thủy */
+
+[data-theme="landscape-shanshui"] {
+  --ink-950: #f0ebe0;
+  --ink-900: #e6dcc8;
+  --ink-800: #d8ccb0;
+  --ink-700: #c5b694;
+  --ink-line: #2c1810;
+  --ink-line-soft: #6b5942;
+
+  --paper-50: #f0ebe0;
+  --paper-100: #e6dcc8;
+  --paper-200: #d8ccb0;
+  --paper-text: #2c1810;
+  --paper-text-soft: #4a3424;
+  --paper-text-muted: #6b5942;
+  --paper-eyebrow: #8b1a1a;
+  --paper-line: rgba(44, 24, 16, 0.42);
+  --paper-line-soft: rgba(44, 24, 16, 0.22);
+
+  --text-primary: #2c1810;
+  --text-secondary: #4a3424;
+  --text-muted: #6b5942;
+
+  --chrome-100: #2c1810;
+  --chrome-300: #4a3424;
+  --chrome-500: #6b5942;
+  --chrome-700: #8b6914;
+
+  --cinnabar: #8b1a1a;
+  --jade: #6b8e23;
+
+  --frame-outer: #8b6914;
+  --frame-inner: #d4a557;
+  --frame-corner: #b79653;
+
+  --surface-950: #f0ebe0;
+  --surface-900: #e6dcc8;
+  --surface-800: #d8ccb0;
+  --surface-700: #c5b694;
+  --surface-600: #b0a48a;
+  --surface-500: #9c9078;
+  --surface-line: #6b5942;
+  --surface-line-soft: #8b8978;
+  --surface-text: #2c1810;
+  --surface-text-soft: #4a3424;
+  --surface-text-muted: #6b5942;
+  --surface-eyebrow: #8b6914;
+
+  --surface-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.05 0 0 0 0 0.05 0 0 0 0 0.05 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --surface-shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.48);
+
+  --font-display: 'Ma Shan Zheng', 'Noto Serif SC', serif;
+  --font-body: 'Noto Sans TC', system-ui, sans-serif;
+}

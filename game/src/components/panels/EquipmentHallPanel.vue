@@ -1340,7 +1340,7 @@ function doDissolve() {
   grid-template-columns: repeat(var(--tab-columns, 4), 1fr);
   gap: 4px;
   padding: 10px 12px;
-  border-bottom: 1px solid var(--paper-line, rgba(42, 41, 36, 0.42));
+  border-bottom: 1px solid var(--paper-line);
   background: transparent;
 }
 
@@ -1360,9 +1360,9 @@ function doDissolve() {
 .qi-hall__compare-table th,
 .qi-hall__compare-table td {
   padding: 9px 12px;
-  border-bottom: 1px solid color-mix(in srgb, var(--paper-line, rgba(42, 41, 36, 0.42)) 60%, transparent);
+  border-bottom: 1px solid var(--paper-line);
   text-align: left;
-  color: var(--paper-text, #211f1a);
+  color: var(--paper-text);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1419,12 +1419,12 @@ function doDissolve() {
 
 .qi-hall__body h4 {
   margin: 0 0 4px;
-  color: var(--paper-text, #211f1a);
+  color: var(--paper-text);
   font-size: var(--text-lg);
 }
 
 .qi-hall__option {
-  color: var(--paper-text, #211f1a);
+  color: var(--paper-text);
   font-size: var(--text-sm);
 }
 
@@ -1505,7 +1505,7 @@ function doDissolve() {
   gap: 6px;
   padding: 10px 12px;
   overflow-y: auto;
-  border: 1px solid var(--paper-line, rgba(42, 41, 36, 0.42));
+  border: 1px solid var(--paper-line);
   border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--paper-50) 70%, transparent);
 }
@@ -1530,8 +1530,8 @@ function doDissolve() {
 .qi-hall__empty {
   margin: 0;
   padding: 12px;
-  border: 1px dashed var(--paper-line, rgba(42, 41, 36, 0.42));
-  color: var(--paper-text-soft, #5e5a50);
+  border: 1px dashed var(--paper-line);
+  color: var(--paper-text-soft);
   font-size: var(--text-sm);
   text-align: center;
 }
@@ -1554,13 +1554,13 @@ function doDissolve() {
 
 .qi-hall__owned {
   margin-left: auto;
-  color: var(--paper-text-soft, #5e5a50);
+  color: var(--paper-text-soft);
 }
 
 .qi-hall__costline {
   margin: 0;
   font-size: var(--text-xs);
-  color: var(--paper-text-soft, #5e5a50);
+  color: var(--paper-text-soft);
 }
 
 .qi-hall__compare-arrow {
@@ -1606,7 +1606,7 @@ function doDissolve() {
   padding-left: 10px;
   border-left: 3px solid var(--paper-eyebrow);
   font: 700 var(--text-title) var(--font-display);
-  color: var(--paper-text, #211f1a);
+  color: var(--paper-text);
 }
 
 .qi-hall__up-arrow {
@@ -1706,7 +1706,7 @@ function doDissolve() {
   color: var(--paper-50);
   font-size: 11px;
   font-weight: 700;
-  box-shadow: 0 0 0 2px var(--paper-50), 0 2px 4px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 0 0 2px var(--paper-50), var(--surface-shadow-soft);
 }
 
 .dissolve-pagination {
@@ -1719,7 +1719,7 @@ function doDissolve() {
 
 .dissolve-pagination__label {
   font-size: var(--text-sm);
-  color: var(--paper-text-soft, #5e5a50);
+  color: var(--paper-text-soft);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1730,7 +1730,7 @@ function doDissolve() {
 .dissolve-preview h4 {
   margin: 0 0 4px;
   font-size: var(--text-sm);
-  color: var(--paper-text, #211f1a);
+  color: var(--paper-text);
 }
 
 .dissolve-preview p {
