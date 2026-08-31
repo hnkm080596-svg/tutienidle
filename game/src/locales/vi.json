@@ -2,5 +2,90 @@
   "_meta": {
     "version": 1,
     "language": "vi"
+  },
+  "panels": {
+    "equipmentHall": {
+      "tabs": {
+        "enhance": "Cường Hóa",
+        "wash": "Tẩy Luyện",
+        "refine": "Tinh Luyện",
+        "dissolve": "Hóa Luyện"
+      },
+      "aria": {
+        "enhanceSlots": "Chọn slot cường hóa",
+        "washSlots": "Chọn trang bị để tẩy luyện",
+        "refineSlots": "Chọn trang bị để tinh luyện",
+        "enhanceComparison": "So sánh trước và sau Cường Hóa",
+        "washComparison": "So sánh trước và sau Tẩy Luyện",
+        "refineComparison": "So sánh trước và sau Tinh Luyện"
+      },
+      "table": {
+        "header": {
+          "stat": "Chỉ số",
+          "before": "Trước",
+          "after": "Sau",
+          "lock": "Khóa"
+        }
+      },
+      "empty": {
+        "maxLevel": "Đã đạt cấp tối đa.",
+        "noStats": "Slot trống — không có chỉ số chính để xem trước.",
+        "noAffixes": "Chưa có dòng phụ.",
+        "noAffixesToRefine": "Không có dòng phụ để Tinh Luyện.",
+        "noDissolveCandidates": "Không có món nào đủ điều kiện Hóa Luyện qua filter hiện tại.",
+        "selectItem": "Chọn một trang bị bên trái để xem chi tiết."
+      },
+      "tooltips": {
+        "emptySlotCanEnhance": "Slot trống vẫn có thể Cường Hóa.",
+        "emptySlotNoWash": "Slot trống — không có gì để Tẩy Luyện.",
+        "emptySlotNoRefine": "Slot trống — không có gì để Tinh Luyện."
+      },
+      "buttons": {
+        "enhance": "Cường Hóa",
+        "washPreview": "Tẩy Luyện — roll lại toàn bộ dòng phụ",
+        "keep": "Giữ",
+        "refinePreview": "Tinh Luyện",
+        "selectAll": "Chọn tất cả",
+        "clearAll": "Bỏ chọn hết",
+        "dissolveConfirm": "XÁC NHẬN HÓA LUYỆN"
+      },
+      "labels": {
+        "rowLine": "Dòng",
+        "oreSelection": "Chọn Quáng",
+        "dissolveReward": "Nhận được",
+        "levelPrefix": "Cấp",
+        "levelArrow": "⇒",
+        "forgePoints": "Điểm Rèn",
+        "costPerUse": "Chi phí mỗi lượt:",
+        "maxLockPrefix": "khóa tối đa",
+        "maxLockSuffix": "dòng",
+        "refineRule": "Mỗi dòng không khóa roll lại trong ±20%. Chi phí:",
+        "essenceName": "Tinh Hoa",
+        "ownedPrefix": "đang có"
+      },
+      "status": {
+        "notRolled": "chưa roll",
+        "kept": "giữ nguyên"
+      },
+      "warnings": {
+        "irreversible": "Thao tác KHÔNG thể hoàn tác."
+      },
+      "select": {
+        "anyRealm": "Mọi cảnh giới",
+        "anyQuality": "Mọi phẩm"
+      },
+      "realm": {
+        "mortal": "Phàm Nhân",
+        "qiRefining": "Luyện Khí",
+        "foundationEstablishment": "Trúc Cơ"
+      },
+      "quality": {
+        "hoang": "Hoàng",
+        "huyen": "Huyền",
+        "dia": "Địa",
+        "thien": "Thiên",
+        "tien": "Tiên"
+      }
+    }
   }
 }

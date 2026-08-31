@@ -2,5 +2,90 @@
   "_meta": {
     "version": 1,
     "language": "en"
+  },
+  "panels": {
+    "equipmentHall": {
+      "tabs": {
+        "enhance": "Enhance",
+        "wash": "Wash",
+        "refine": "Refine",
+        "dissolve": "Dissolve"
+      },
+      "aria": {
+        "enhanceSlots": "Select enhancement slot",
+        "washSlots": "Select equipment to wash",
+        "refineSlots": "Select equipment to refine",
+        "enhanceComparison": "Before and after Enhancement comparison",
+        "washComparison": "Before and after Wash comparison",
+        "refineComparison": "Before and after Refine comparison"
+      },
+      "table": {
+        "header": {
+          "stat": "Stat",
+          "before": "Before",
+          "after": "After",
+          "lock": "Lock"
+        }
+      },
+      "empty": {
+        "maxLevel": "Maximum level reached.",
+        "noStats": "Empty slot — no main stat to preview.",
+        "noAffixes": "No affix lines yet.",
+        "noAffixesToRefine": "No affix lines to Refine.",
+        "noDissolveCandidates": "No items match the current filter for Dissolution.",
+        "selectItem": "Select an equipment on the left to view details."
+      },
+      "tooltips": {
+        "emptySlotCanEnhance": "Empty slots can still be Enhanced.",
+        "emptySlotNoWash": "Empty slot — nothing to Wash.",
+        "emptySlotNoRefine": "Empty slot — nothing to Refine."
+      },
+      "buttons": {
+        "enhance": "Enhance",
+        "washPreview": "Wash — reroll all affix lines",
+        "keep": "Keep",
+        "refinePreview": "Refine",
+        "selectAll": "Select All",
+        "clearAll": "Clear All",
+        "dissolveConfirm": "CONFIRM DISSOLUTION"
+      },
+      "labels": {
+        "rowLine": "Line",
+        "oreSelection": "Select Ore",
+        "dissolveReward": "Rewards",
+        "levelPrefix": "Level",
+        "levelArrow": "⇒",
+        "forgePoints": "Forge Points",
+        "costPerUse": "Cost per use:",
+        "maxLockPrefix": "lock at most",
+        "maxLockSuffix": "lines",
+        "refineRule": "Each unlocked line rerolls within ±20%. Cost:",
+        "essenceName": "Essence",
+        "ownedPrefix": "owned"
+      },
+      "status": {
+        "notRolled": "not rolled",
+        "kept": "kept"
+      },
+      "warnings": {
+        "irreversible": "This action CANNOT be undone."
+      },
+      "select": {
+        "anyRealm": "Any Realm",
+        "anyQuality": "Any Quality"
+      },
+      "realm": {
+        "mortal": "Mortal",
+        "qiRefining": "Qi Refining",
+        "foundationEstablishment": "Foundation Establishment"
+      },
+      "quality": {
+        "hoang": "Hoang",
+        "huyen": "Huyen",
+        "dia": "Dia",
+        "thien": "Thien",
+        "tien": "Tien"
+      }
+    }
   }
 }

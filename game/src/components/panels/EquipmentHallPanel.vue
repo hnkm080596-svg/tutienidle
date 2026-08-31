@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useEquipmentActions } from '@/composables/useEquipmentActions'
@@ -42,11 +43,13 @@ import {
 // roll áp thẳng không cho xem trước rồi mới quyết định). Cường Hóa là
 // phép tính XÁC ĐỊNH (không random) nên cột "sau" chỉ hiển thị kết quả
 // tính trước, không cần cơ chế giữ/bỏ.
+const { t } = useI18n({ useScope: 'local' })
+
 const TABS = [
-  { id: 'enhance', label: 'Cường Hóa' },
-  { id: 'wash', label: 'Tẩy Luyện' },
-  { id: 'refine', label: 'Tinh Luyện' },
-  { id: 'dissolve', label: 'Hóa Luyện' },
+  { id: 'enhance', label: t('panels.equipmentHall.tabs.enhance') },
+  { id: 'wash', label: t('panels.equipmentHall.tabs.wash') },
+  { id: 'refine', label: t('panels.equipmentHall.tabs.refine') },
+  { id: 'dissolve', label: t('panels.equipmentHall.tabs.dissolve') },
 ] as const
 
 type TabId = (typeof TABS)[number]['id']
@@ -949,7 +952,7 @@ function doDissolve() {
     <!-- ===== CƯỜNG HÓA (slot-level, §7.1) ===== -->
     <section v-if="activeTab === 'enhance'" class="qi-hall__body qi-hall__split">
       <div class="qi-hall__split-left">
-        <div class="qi-hall__slot-grid" aria-label="Chọn slot cường hóa">
+        <div class="qi-hall__slot-grid" :aria-label="t('panels.equipmentHall.aria.enhanceSlots')">
           <SlotView
             v-for="row in enhanceRows"
             :key="row.slot"
@@ -960,7 +963,7 @@ function doDissolve() {
             :icon="row.equippedRow?.icon"
             :equipment-quality-rank="row.equippedRow?.qualityRank"
             :rarity-rank="row.equippedRow?.rarityRank"
-            :tooltip="row.equippedRow?.tooltip ?? { title: equipmentSlotLabel(row.slot), description: 'Slot trống vẫn có thể Cường Hóa.' }"
+            :tooltip="row.equippedRow?.tooltip ?? { title: equipmentSlotLabel(row.slot), description: t('panels.equipmentHall.tooltips.emptySlotCanEnhance') }"
             :badges="[{ kind: 'enhance', text: `+${row.enhanceLevel}` }]"
             :state="{ interaction: row.slot === selectedEnhanceSlot ? 'selected' : 'idle' }"
             @click="selectEnhanceSlot(row.slot)"
@@ -981,21 +984,21 @@ function doDissolve() {
              xuống 1 dòng chú thích màu chữ thường, dễ đọc. -->
         <div class="qi-hall__preview-card">
           <p v-if="enhancePreviewRows && selectedEnhanceRow.enhanceLevel < selectedEnhanceRow.maxLevel" class="qi-hall__col-title">
-            Cấp +{{ selectedEnhanceRow.enhanceLevel }}/{{ selectedEnhanceRow.maxLevel }}
-            ⇒ +{{ selectedEnhanceRow.enhanceLevel + 1 }}/{{ selectedEnhanceRow.maxLevel }}
+            {{ t('panels.equipmentHall.labels.levelPrefix') }} +{{ selectedEnhanceRow.enhanceLevel }}/{{ selectedEnhanceRow.maxLevel }}
+            {{ t('panels.equipmentHall.labels.levelArrow') }} +{{ selectedEnhanceRow.enhanceLevel + 1 }}/{{ selectedEnhanceRow.maxLevel }}
           </p>
 
           <table
             v-if="enhancePreviewRows && selectedEnhanceRow.enhanceLevel < selectedEnhanceRow.maxLevel"
             class="qi-hall__compare-table"
-            aria-label="So sánh trước và sau Cường Hóa"
+            :aria-label="t('panels.equipmentHall.aria.enhanceComparison')"
           >
             <thead>
               <tr>
-                <th scope="col">Chỉ số</th>
-                <th scope="col">Trước</th>
+                <th scope="col">{{ t('panels.equipmentHall.table.header.stat') }}</th>
+                <th scope="col">{{ t('panels.equipmentHall.table.header.before') }}</th>
                 <th scope="col" aria-hidden="true"></th>
-                <th scope="col">Sau</th>
+                <th scope="col">{{ t('panels.equipmentHall.table.header.after') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -1012,7 +1015,7 @@ function doDissolve() {
           </table>
 
           <p v-else class="qi-hall__empty">
-            {{ enhancePreviewRows ? 'Đã đạt cấp tối đa.' : 'Slot trống — không có chỉ số chính để xem trước.' }}
+            {{ enhancePreviewRows ? t('panels.equipmentHall.empty.maxLevel') : t('panels.equipmentHall.empty.noStats') }}
           </p>
         </div>
 
@@ -1037,7 +1040,7 @@ function doDissolve() {
             :disabled="!canEnhance(selectedEnhanceRow)"
             @click="doEnhance(selectedEnhanceRow)"
           >
-            Cường Hóa
+            {{ t('panels.equipmentHall.buttons.enhance') }}
           </GameButton>
         </div>
       </div>
@@ -1046,7 +1049,7 @@ function doDissolve() {
     <!-- ===== TẨY LUYỆN (§7.3) — preview/giữ/bỏ ===== -->
     <section v-else-if="activeTab === 'wash'" class="qi-hall__body qi-hall__split">
       <div class="qi-hall__split-left">
-        <div class="qi-hall__slot-grid" aria-label="Chọn trang bị để tẩy luyện">
+        <div class="qi-hall__slot-grid" :aria-label="t('panels.equipmentHall.aria.washSlots')">
           <SlotView
             v-for="row in hallSlotRows"
             :key="row.slot"
@@ -1057,7 +1060,7 @@ function doDissolve() {
             :icon="row.equippedRow?.icon"
             :equipment-quality-rank="row.equippedRow?.qualityRank"
             :rarity-rank="row.equippedRow?.rarityRank"
-            :tooltip="row.equippedRow?.tooltip ?? { title: equipmentSlotLabel(row.slot), description: 'Slot trống — không có gì để Tẩy Luyện.' }"
+            :tooltip="row.equippedRow?.tooltip ?? { title: equipmentSlotLabel(row.slot), description: t('panels.equipmentHall.tooltips.emptySlotNoWash') }"
             :state="{ interaction: row.equippedRow?.instanceId === selectedInstanceId ? 'selected' : 'idle', marker: row.equippedRow ? 'equipped' : undefined }"
             @click="selectHallSlotForAction(row)"
           />
@@ -1070,37 +1073,37 @@ function doDissolve() {
              trong bảng, không còn 2 cột flex + bảng meta tách rời. -->
         <div class="qi-hall__preview-card">
           <p v-if="itemRenState" class="qi-hall__col-title">
-            Điểm Rèn {{ itemRenState.points }}/{{ itemRenState.max }} ⇒ {{ washRenAfter }}/{{ itemRenState.max }}
+            {{ t('panels.equipmentHall.labels.forgePoints') }} {{ itemRenState.points }}/{{ itemRenState.max }} {{ t('panels.equipmentHall.labels.levelArrow') }} {{ washRenAfter }}/{{ itemRenState.max }}
           </p>
 
-          <table v-if="washAffixCompareRows.length" class="qi-hall__compare-table" aria-label="So sánh trước và sau Tẩy Luyện">
+          <table v-if="washAffixCompareRows.length" class="qi-hall__compare-table" :aria-label="t('panels.equipmentHall.aria.washComparison')">
             <thead>
               <tr>
-                <th scope="col">Chỉ số</th>
-                <th scope="col">Trước</th>
+                <th scope="col">{{ t('panels.equipmentHall.table.header.stat') }}</th>
+                <th scope="col">{{ t('panels.equipmentHall.table.header.before') }}</th>
                 <th scope="col" aria-hidden="true"></th>
-                <th scope="col">Sau</th>
+                <th scope="col">{{ t('panels.equipmentHall.table.header.after') }}</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="(row, position) in washAffixCompareRows" :key="row.index">
-                <th scope="row">Dòng {{ position + 1 }}</th>
+                <th scope="row">{{ t('panels.equipmentHall.labels.rowLine') }} {{ position + 1 }}</th>
                 <td><span :class="tierClass(row.beforeTier)">{{ row.beforeLabel }}</span></td>
                 <td class="qi-hall__compare-arrow" aria-hidden="true">⇒</td>
                 <td>
                   <span v-if="row.afterLabel" :class="tierClass(row.afterTier!)">{{ row.afterLabel }}</span>
-                  <span v-else class="qi-hall__owned">chưa roll</span>
+                  <span v-else class="qi-hall__owned">{{ t('panels.equipmentHall.status.notRolled') }}</span>
                 </td>
               </tr>
             </tbody>
           </table>
 
-          <p v-else class="qi-hall__empty">Chưa có dòng phụ.</p>
+          <p v-else class="qi-hall__empty">{{ t('panels.equipmentHall.empty.noAffixes') }}</p>
         </div>
 
         <div class="qi-hall__info-row">
           <div class="qi-hall__info-options">
-            <span class="qi-hall__info-label">Chọn Quáng (×{{ washCost.oreAmount }})</span>
+            <span class="qi-hall__info-label">{{ t('panels.equipmentHall.labels.oreSelection') }} (×{{ washCost.oreAmount }})</span>
 
             <label v-for="ore in oreChoices" :key="ore.materialId" class="qi-hall__option">
               <input type="radio" :value="ore.materialId" v-model="selectedOreId" />
@@ -1113,28 +1116,28 @@ function doDissolve() {
                (2026-08-30, bug report: trùng lặp) — costline chỉ còn chi
                phí KHÁC (Linh Thạch) chưa hiện ở đâu. -->
           <p class="qi-hall__costline">
-            Chi phí mỗi lượt: {{ washCost.spiritStone }} {{ spiritStoneCostName }}
+            {{ t('panels.equipmentHall.labels.costPerUse') }} {{ washCost.spiritStone }} {{ spiritStoneCostName }}
           </p>
         </div>
 
         <div class="qi-hall__button-row">
           <GameButton size="lg" :disabled="!canWash()" @click="doWashPreview">
-            Tẩy Luyện — roll lại toàn bộ dòng phụ
+            {{ t('panels.equipmentHall.buttons.washPreview') }}
           </GameButton>
 
           <GameButton v-if="pendingWashAffixes" size="lg" variant="secondary" @click="doWashKeep">
-            Giữ
+            {{ t('panels.equipmentHall.buttons.keep') }}
           </GameButton>
         </div>
       </div>
 
-      <p v-else class="qi-hall__split-right qi-hall__empty qi-hall__empty--centered">Chọn một trang bị bên trái để xem chi tiết.</p>
+      <p v-else class="qi-hall__split-right qi-hall__empty qi-hall__empty--centered">{{ t('panels.equipmentHall.empty.selectItem') }}</p>
     </section>
 
     <!-- ===== TINH LUYỆN (§7.4) — preview/giữ/bỏ ===== -->
     <section v-else-if="activeTab === 'refine'" class="qi-hall__body qi-hall__split">
       <div class="qi-hall__split-left">
-        <div class="qi-hall__slot-grid" aria-label="Chọn trang bị để tinh luyện">
+        <div class="qi-hall__slot-grid" :aria-label="t('panels.equipmentHall.aria.refineSlots')">
           <SlotView
             v-for="row in hallSlotRows"
             :key="row.slot"
@@ -1145,7 +1148,7 @@ function doDissolve() {
             :icon="row.equippedRow?.icon"
             :equipment-quality-rank="row.equippedRow?.qualityRank"
             :rarity-rank="row.equippedRow?.rarityRank"
-            :tooltip="row.equippedRow?.tooltip ?? { title: equipmentSlotLabel(row.slot), description: 'Slot trống — không có gì để Tinh Luyện.' }"
+            :tooltip="row.equippedRow?.tooltip ?? { title: equipmentSlotLabel(row.slot), description: t('panels.equipmentHall.tooltips.emptySlotNoRefine') }"
             :state="{ interaction: row.equippedRow?.instanceId === selectedInstanceId ? 'selected' : 'idle', marker: row.equippedRow ? 'equipped' : undefined }"
             @click="selectHallSlotForAction(row)"
           />
@@ -1158,18 +1161,18 @@ function doDissolve() {
              riêng, Điểm Rèn làm dòng chú thích. -->
         <div class="qi-hall__preview-card">
           <p v-if="itemRenState" class="qi-hall__col-title">
-            Điểm Rèn {{ itemRenState.points }}/{{ itemRenState.max }} ⇒ {{ refineRenAfter }}/{{ itemRenState.max }}
-            · khóa tối đa {{ Math.min(3, Math.max(0, selectedAffixes.length - 1)) }} dòng
+            {{ t('panels.equipmentHall.labels.forgePoints') }} {{ itemRenState.points }}/{{ itemRenState.max }} {{ t('panels.equipmentHall.labels.levelArrow') }} {{ refineRenAfter }}/{{ itemRenState.max }}
+            · {{ t('panels.equipmentHall.labels.maxLockPrefix') }} {{ Math.min(3, Math.max(0, selectedAffixes.length - 1)) }} {{ t('panels.equipmentHall.labels.maxLockSuffix') }}
           </p>
 
-          <table v-if="selectedAffixes.length" class="qi-hall__compare-table" aria-label="So sánh trước và sau Tinh Luyện">
+          <table v-if="selectedAffixes.length" class="qi-hall__compare-table" :aria-label="t('panels.equipmentHall.aria.refineComparison')">
             <thead>
               <tr>
-                <th scope="col">Chỉ số</th>
-                <th scope="col">Trước</th>
+                <th scope="col">{{ t('panels.equipmentHall.table.header.stat') }}</th>
+                <th scope="col">{{ t('panels.equipmentHall.table.header.before') }}</th>
                 <th scope="col" aria-hidden="true"></th>
-                <th scope="col">Sau</th>
-                <th scope="col">Khóa</th>
+                <th scope="col">{{ t('panels.equipmentHall.table.header.after') }}</th>
+                <th scope="col">{{ t('panels.equipmentHall.table.header.lock') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -1178,9 +1181,9 @@ function doDissolve() {
                 <td>{{ currentAffixValue(affix.index) !== null ? formatAffixValue(affix.stat, currentAffixValue(affix.index)!) : '—' }}</td>
                 <td class="qi-hall__compare-arrow" aria-hidden="true">⇒</td>
                 <td>
-                  <span v-if="lockedIndices.includes(affix.index)" class="qi-hall__owned">giữ nguyên</span>
+                  <span v-if="lockedIndices.includes(affix.index)" class="qi-hall__owned">{{ t('panels.equipmentHall.status.kept') }}</span>
                   <strong v-else-if="pendingRefineByIndex.has(affix.index)">{{ formatAffixValue(affix.stat, pendingRefineByIndex.get(affix.index)!) }}</strong>
-                  <span v-else class="qi-hall__owned">chưa roll</span>
+                  <span v-else class="qi-hall__owned">{{ t('panels.equipmentHall.status.notRolled') }}</span>
                 </td>
                 <td>
                   <input
@@ -1193,7 +1196,7 @@ function doDissolve() {
             </tbody>
           </table>
 
-          <p v-else class="qi-hall__empty">Không có dòng phụ để Tinh Luyện.</p>
+          <p v-else class="qi-hall__empty">{{ t('panels.equipmentHall.empty.noAffixesToRefine') }}</p>
         </div>
 
         <!-- Bỏ jargon nội bộ "Cost hệ số N+L" + Điểm Rèn trùng dòng chú
@@ -1201,49 +1204,49 @@ function doDissolve() {
              ±20% (không hiển thị ở đâu khác) và chi phí Tinh Hoa/Linh
              Thạch thật sự chưa có chỗ nào hiện. -->
         <p class="qi-hall__info-row qi-hall__costline">
-          Mỗi dòng không khóa roll lại trong ±20%. Chi phí: {{ refineCost.essenceUnits }} Tinh Hoa
-          (đang có {{ refineEssenceOwned }}) · {{ refineCost.spiritStone }} {{ spiritStoneCostName }}
+          {{ t('panels.equipmentHall.labels.refineRule') }} {{ refineCost.essenceUnits }} {{ t('panels.equipmentHall.labels.essenceName') }}
+          ({{ t('panels.equipmentHall.labels.ownedPrefix') }} {{ refineEssenceOwned }}) · {{ refineCost.spiritStone }} {{ spiritStoneCostName }}
         </p>
 
         <div class="qi-hall__button-row">
           <GameButton size="lg" :disabled="!canRefine()" @click="doRefinePreview">
-            Tinh Luyện
+            {{ t('panels.equipmentHall.buttons.refinePreview') }}
           </GameButton>
 
           <GameButton v-if="pendingRefineValues" size="lg" variant="secondary" @click="doRefineKeep">
-            Giữ
+            {{ t('panels.equipmentHall.buttons.keep') }}
           </GameButton>
         </div>
       </div>
 
-      <p v-else class="qi-hall__split-right qi-hall__empty qi-hall__empty--centered">Chọn một trang bị bên trái để xem chi tiết.</p>
+      <p v-else class="qi-hall__split-right qi-hall__empty qi-hall__empty--centered">{{ t('panels.equipmentHall.empty.selectItem') }}</p>
     </section>
 
     <!-- ===== HÓA LUYỆN (§7.5) — lưới slot + tick chọn ===== -->
     <section v-else class="qi-hall__body qi-hall__dissolve">
       <div class="dissolve-filters">
         <select v-model="dissolveFilterRealm">
-          <option value="any">Mọi cảnh giới</option>
+          <option value="any">{{ t('panels.equipmentHall.select.anyRealm') }}</option>
 
-          <option value="mortal">Phàm Nhân</option>
+          <option value="mortal">{{ t('panels.equipmentHall.realm.mortal') }}</option>
 
-          <option value="qi_refining">Luyện Khí</option>
+          <option value="qi_refining">{{ t('panels.equipmentHall.realm.qiRefining') }}</option>
 
-          <option value="foundation_establishment">Trúc Cơ</option>
+          <option value="foundation_establishment">{{ t('panels.equipmentHall.realm.foundationEstablishment') }}</option>
         </select>
 
         <select v-model="dissolveFilterQuality">
-          <option value="any">Mọi phẩm</option>
+          <option value="any">{{ t('panels.equipmentHall.select.anyQuality') }}</option>
 
-          <option value="hoang">Hoàng</option>
+          <option value="hoang">{{ t('panels.equipmentHall.quality.hoang') }}</option>
 
-          <option value="huyen">Huyền</option>
+          <option value="huyen">{{ t('panels.equipmentHall.quality.huyen') }}</option>
 
-          <option value="dia">Địa</option>
+          <option value="dia">{{ t('panels.equipmentHall.quality.dia') }}</option>
 
-          <option value="thien">Thiên</option>
+          <option value="thien">{{ t('panels.equipmentHall.quality.thien') }}</option>
 
-          <option value="tien">Tiên</option>
+          <option value="tien">{{ t('panels.equipmentHall.quality.tien') }}</option>
         </select>
 
         <button
@@ -1252,7 +1255,7 @@ function doDissolve() {
           :disabled="dissolveCandidates.length === 0"
           @click="selectAllDissolveByFilter"
         >
-          Chọn tất cả ({{ dissolveCandidates.length }})
+          {{ t('panels.equipmentHall.buttons.selectAll') }} ({{ dissolveCandidates.length }})
         </button>
 
         <button
@@ -1261,7 +1264,7 @@ function doDissolve() {
           :disabled="dissolveSelected.size === 0"
           @click="clearDissolveSelection"
         >
-          Bỏ chọn hết
+          {{ t('panels.equipmentHall.buttons.clearAll') }}
         </button>
       </div>
 
@@ -1287,7 +1290,7 @@ function doDissolve() {
           <span v-if="dissolveSelected.has(candidate.instanceId)" class="dissolve-slot-tick" aria-hidden="true">✓</span>
         </div>
 
-        <p v-if="dissolveCandidates.length === 0" class="qi-hall__empty">Không có món nào đủ điều kiện Hóa Luyện qua filter hiện tại.</p>
+        <p v-if="dissolveCandidates.length === 0" class="qi-hall__empty">{{ t('panels.equipmentHall.empty.noDissolveCandidates') }}</p>
       </div>
 
       <div v-if="dissolveTotalPages > 1" class="dissolve-pagination">
@@ -1297,13 +1300,13 @@ function doDissolve() {
       </div>
 
       <div v-if="dissolvePreview.length > 0" class="dissolve-preview">
-        <h4>Nhận được ({{ dissolveSelected.size }} món):</h4>
+        <h4>{{ t('panels.equipmentHall.labels.dissolveReward') }} ({{ dissolveSelected.size }} món):</h4>
 
         <p v-for="entry in dissolvePreview" :key="entry.materialId">
           {{ materialLabel(entry.materialId, gameManager.materialRegistry) }}: {{ entry.minAmount }}–{{ entry.maxAmount }}
         </p>
 
-        <p class="qi-hall__warning">Thao tác KHÔNG thể hoàn tác.</p>
+        <p class="qi-hall__warning">{{ t('panels.equipmentHall.warnings.irreversible') }}</p>
       </div>
 
       <GameButton
@@ -1313,7 +1316,7 @@ function doDissolve() {
         :disabled="dissolveSelected.size === 0"
         @click="doDissolve"
       >
-        {{ dissolveConfirming ? 'XÁC NHẬN HÓA LUYỆN' : `Hóa Luyện (${dissolveSelected.size})` }}
+        {{ dissolveConfirming ? t('panels.equipmentHall.buttons.dissolveConfirm') : `${t('panels.equipmentHall.tabs.dissolve')} (${dissolveSelected.size})` }}
       </GameButton>
     </section>
   </div>
