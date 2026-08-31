@@ -127,7 +127,7 @@ async function build() {
   background: transparent;
   border-radius: 0;
   box-shadow: none;
-  color: var(--paper-text, #211f1a);
+  color: var(--paper-text);
   font-family: var(--font-body);
   min-width: 260px;
   max-width: 320px;
@@ -155,13 +155,13 @@ async function build() {
   margin: 0;
   font-family: var(--font-display);
   font-size: var(--text-lg);
-  color: var(--paper-text, #211f1a);
+  color: var(--paper-text);
 }
 
 .building-popover__description {
   margin: 4px 0 0;
   font-size: var(--text-xs);
-  color: var(--paper-text-soft, #5e5a50);
+  color: var(--paper-text-soft);
 }
 
 .building-popover__section h4 {
