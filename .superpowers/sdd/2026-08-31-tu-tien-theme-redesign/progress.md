@@ -57,12 +57,12 @@
 - [x] Task 2.4: MainMenu + route — complete (commits 1e4a954..f031839, review clean)
 - [x] Task 2.5: OnboardingChapter — complete (commits f031839..8d0fe51, review clean)
 - [x] Task 2.6: Phase 2 verification — complete (1507 tests PASS, typecheck PASS, build PASS)
-- [ ] Task 3.1: phaserThemeBridge
-- [ ] Task 3.2: themePhaserSync
-- [ ] Task 3.3: CombatTopBar refactor
-- [ ] Task 3.4: CombatSkillSlot refactor
-- [ ] Task 3.5: CombatStatusBar/EventBar/ControlBar refactor
-- [ ] Task 3.6: CombatVictory/Defeat/ResultModal refactor
+- [x] Task 3.1: phaserThemeBridge — complete (commits fbba725..c5fd665, fix round 1: import ThemeId from @/assets/themes; concerns 2&3 deferred to Phase 3 visual QA)
+- [x] Task 3.2: themePhaserSync — complete (commits c5fd665..c9cf44a, review clean)
+- [x] Task 3.3: CombatTopBar refactor — already using theme tokens, no changes needed
+- [x] Task 3.4: CombatSkillSlot refactor — already using theme tokens, no changes needed
+- [x] Task 3.5: CombatStatusBar/EventBar/ControlBar refactor — already using theme tokens, no changes needed
+- [x] Task 3.6: CombatVictory/Defeat/ResultModal refactor — already using theme tokens, no changes needed (1510 tests PASS, build PASS)
 - [ ] Task 3.7: Phase 3 verification
 - [ ] Task 4.1: HomeResourceStrip refactor
 - [ ] Task 4.2: DongFuCommandWheel refactor
