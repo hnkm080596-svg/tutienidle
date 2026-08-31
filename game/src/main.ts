@@ -12,6 +12,7 @@ import { vTooltip } from './directives/tooltip'
 import { useErrorStore } from './stores/error'
 import { useThemeStore } from './stores/themeStore'
 import { initUiScale } from './composables/uiScale'
+import { i18n } from './i18n'
 
 // WS8 — áp UI scale người chơi chọn TRƯỚC mount để không nhấp nháy font.
 initUiScale()
@@ -21,6 +22,7 @@ const pinia = createPinia()
 
 app.use(pinia)
 app.use(router)
+app.use(i18n)
 app.directive('tooltip', vTooltip)
 
 // Beta Phase 4 (Global Error Boundary, mục XVIII) — bắt lỗi NGOÀI
