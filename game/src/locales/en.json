@@ -140,6 +140,79 @@
         "primordialTitle": "Primordial",
         "primordialDescription": "Ignores all defenses."
       }
+    },
+    "quanKhi": {
+      "title": "Quán Khí",
+      "routeNames": {
+        "batKiem": "Bạt Kiếm (Single Sword)",
+        "kiemTran": "Kiếm Trận (Multi Sword)"
+      },
+      "sections": {
+        "pathSelection": {
+          "hint": "Choose your cultivation path — this decision CANNOT be changed."
+        },
+        "kiemTuRoute": {
+          "hintPrefix": "Sword Cultivator path locked in:",
+          "hintSuffix": " — cannot be changed.",
+          "batKiemDescription": "Huy Kiếm reached tier 3 (10,000 slashes) so Bạt Kiếm unlocked — a single gathering strike that scales with Sword Intent tiers against bosses.",
+          "kiemTranDescription": "Huy Kiếm has not reached tier 3 so the Sword Formation path is taken — the formation evolves with realm and unlocks on-hit effects by formation level."
+        }
+      },
+      "actions": {
+        "enterPath": "Enter {{ name }}"
+      },
+      "messages": {
+        "confirmPathTitle": "Confirm Your Path",
+        "confirmPathBody": "Enter {{ name }}? This choice CANNOT be changed."
+      },
+      "world": {
+        "ceremonyTitle": "ENTRY CEREMONY",
+        "ceremonyBody": "The cultivator has forsaken their mortal identity and formally entered {{ name }}."
+      }
+    },
+    "stageSelect": {
+      "aria": {
+        "filters": "Select zone and chapter"
+      },
+      "labels": {
+        "zoneFilter": "Zone",
+        "chapterFilter": "Region Realm",
+        "chapterPrefix": "Chapter {{ chapter }}",
+        "floorPrefix": "Floor {{ floor }}",
+        "boss": "BOSS",
+        "enemiesSuffix": "enemies",
+        "spawnIntervalPrefix": "Every",
+        "bossNamePrefix": "Boss:",
+        "levelPrefix": "Lv.{{ level }}",
+        "eliteChance": "{{ percent }}% Elite"
+      },
+      "sections": {
+        "selectFloor": "Select Floor"
+      },
+      "empty": {
+        "noStages": "This region has no combat floors yet.",
+        "selectStage": "Select a floor to view the formation."
+      },
+      "modes": {
+        "manual": "Manual",
+        "repeat": "Repeat",
+        "progress": "Auto Advance"
+      },
+      "modeHints": {
+        "manual": "End the battle and wait for your decision.",
+        "repeat": "Replay the current floor automatically.",
+        "progress": "Advance on win, stop on loss."
+      },
+      "actions": {
+        "editBuild": "Edit Build",
+        "start": "Start"
+      },
+      "archetypes": {
+        "melee": "Melee",
+        "ranged": "Ranged",
+        "caster": "Caster",
+        "tank": "Guardian"
+      }
     }
   }
 }

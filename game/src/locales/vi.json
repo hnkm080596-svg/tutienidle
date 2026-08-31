@@ -140,6 +140,79 @@
         "primordialTitle": "Hỗn Nguyên",
         "primordialDescription": "Bỏ qua mọi phòng thủ."
       }
+    },
+    "quanKhi": {
+      "title": "Quán Khí",
+      "routeNames": {
+        "batKiem": "Bạt Kiếm (Đơn Kiếm)",
+        "kiemTran": "Kiếm Trận (Đa Kiếm)"
+      },
+      "sections": {
+        "pathSelection": {
+          "hint": "Chọn con đường tu luyện — quyết định này KHÔNG thể đổi lại."
+        },
+        "kiemTuRoute": {
+          "hintPrefix": "Đường Kiếm Tu đã chốt:",
+          "hintSuffix": " — không thể đổi.",
+          "batKiemDescription": "Huy Kiếm đạt tầng 3 (10.000 lần trảm) nên khai mở Bạt Kiếm — một chiêu tụ lực, mạnh dần theo tầng Kiếm Ý diệt boss.",
+          "kiemTranDescription": "Huy Kiếm chưa đạt tầng 3 nên bước vào Kiếm Trận — kiếm trận tiến hóa theo cảnh giới, mở hiệu ứng on-hit theo cấp trận."
+        }
+      },
+      "actions": {
+        "enterPath": "Bước Vào {{ name }}"
+      },
+      "messages": {
+        "confirmPathTitle": "Xác Nhận Con Đường",
+        "confirmPathBody": "Bước vào {{ name }}? Lựa chọn này KHÔNG thể đổi lại."
+      },
+      "world": {
+        "ceremonyTitle": "LỄ NHẬP MÔN",
+        "ceremonyBody": "Đạo hữu đã từ bỏ thân phận phàm nhân, chính thức bước vào {{ name }}."
+      }
+    },
+    "stageSelect": {
+      "aria": {
+        "filters": "Chọn địa giới và chương"
+      },
+      "labels": {
+        "zoneFilter": "Địa Giới",
+        "chapterFilter": "Cảnh Giới Khu Vực",
+        "chapterPrefix": "Chương {{ chapter }}",
+        "floorPrefix": "Tầng {{ floor }}",
+        "boss": "BOSS",
+        "enemiesSuffix": "quái",
+        "spawnIntervalPrefix": "Mỗi",
+        "bossNamePrefix": "Boss:",
+        "levelPrefix": "Lv.{{ level }}",
+        "eliteChance": "{{ percent }}% Tinh Anh"
+      },
+      "sections": {
+        "selectFloor": "Chọn tầng"
+      },
+      "empty": {
+        "noStages": "Khu vực này chưa có tầng chiến đấu.",
+        "selectStage": "Chọn một tầng để xem đội hình."
+      },
+      "modes": {
+        "manual": "Thủ Công",
+        "repeat": "Lặp Lại",
+        "progress": "Tự Động Tiến Ải"
+      },
+      "modeHints": {
+        "manual": "Kết thúc trận và chờ bạn quyết định.",
+        "repeat": "Tự đánh lại đúng tầng hiện tại.",
+        "progress": "Thắng thì đi tiếp, thua thì dừng."
+      },
+      "actions": {
+        "editBuild": "Chỉnh Build",
+        "start": "Bắt Đầu"
+      },
+      "archetypes": {
+        "melee": "Cận chiến",
+        "ranged": "Tầm xa",
+        "caster": "Pháp thuật",
+        "tank": "Hộ vệ"
+      }
     }
   }
 }

@@ -4,6 +4,7 @@
 // dùng mô tả: Địa Giới (map lớn) → Màn (trong Địa Giới đó) → chế độ
 // (Lặp Lại Khiêu Chiến / Tự Động Thám Hiểm) → Bắt Đầu.
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useUiStore, type BattleRunMode } from '@/stores/ui'
 import { useGameManager } from '@/composables/useGameState'
@@ -13,6 +14,8 @@ import GameButton from '@/components/common/GameButton.vue'
 import Chip from '@/components/common/primitives/Chip.vue'
 import EmptyState from '@/components/common/primitives/EmptyState.vue'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
+
+const { t } = useI18n({ useScope: 'local' })
 
 const player = usePlayerStore()
 const ui = useUiStore()
@@ -75,7 +78,7 @@ const chapterOptions = computed(() => {
     if (!chapters.has(chapter)) {
       chapters.set(chapter, {
         chapter,
-        label: stage.requiredRealmId ? getCurrentRealm(stage.requiredRealmId).name : `Chương ${chapter}`,
+        label: stage.requiredRealmId ? getCurrentRealm(stage.requiredRealmId).name : t('panels.stageSelect.labels.chapterPrefix', { chapter }),
       })
     }
   }
@@ -143,11 +146,11 @@ const selectedBoss = computed(() => {
   return gameManager.getEnemyTemplate(bossId)
 })
 
-const ARCHETYPE_LABELS: Record<string, string> = {
-  melee: 'Cận chiến',
-  ranged: 'Tầm xa',
-  caster: 'Pháp thuật',
-  tank: 'Hộ vệ',
+const ARCHETYPE_LABEL_KEYS: Record<string, string> = {
+  melee: 'panels.stageSelect.archetypes.melee',
+  ranged: 'panels.stageSelect.archetypes.ranged',
+  caster: 'panels.stageSelect.archetypes.caster',
+  tank: 'panels.stageSelect.archetypes.tank',
 }
 
 const mode = ref<BattleRunMode>('manual')
@@ -190,9 +193,9 @@ function start() {
          Giới", nhãn filter "Địa Giới"/"Cảnh Giới Khu Vực" bên dưới đã tự
          giải thích, không cần lặp lại bằng câu văn). -->
     <div class="stage-select">
-      <nav class="stage-select__filters" aria-label="Chọn địa giới và chương">
+      <nav class="stage-select__filters" :aria-label="t('panels.stageSelect.aria.filters')">
         <div class="stage-select__filter-group">
-          <small>Địa Giới</small>
+          <small>{{ t('panels.stageSelect.labels.zoneFilter') }}</small>
           <Chip
             v-for="zone in zones"
             :key="zone.id"
@@ -207,7 +210,7 @@ function start() {
         </div>
 
         <div class="stage-select__filter-group stage-select__filter-group--chapters">
-          <small>Cảnh Giới Khu Vực</small>
+          <small>{{ t('panels.stageSelect.labels.chapterFilter') }}</small>
           <Chip
             v-for="chapter in chapterOptions"
             :key="chapter.chapter"
@@ -222,9 +225,9 @@ function start() {
 
       <div class="stage-select__workspace">
         <section class="stage-select__map-panel scrollfade">
-          <h4 class="stage-select__title">Chọn tầng</h4>
+          <h4 class="stage-select__title">{{ t('panels.stageSelect.sections.selectFloor') }}</h4>
 
-          <EmptyState v-if="visibleStages.length === 0" size="sm">Khu vực này chưa có tầng chiến đấu.</EmptyState>
+          <EmptyState v-if="visibleStages.length === 0" size="sm">{{ t('panels.stageSelect.empty.noStages') }}</EmptyState>
 
           <div v-else class="stage-map">
             <button
@@ -243,10 +246,10 @@ function start() {
             >
               <span class="stage-map__number">{{ node.stage.floor ?? node.stage.requiredRealmLevel ?? 1 }}</span>
               <span class="stage-map__copy">
-                <strong>Tầng {{ node.stage.floor ?? node.stage.requiredRealmLevel ?? 1 }}</strong>
+                <strong>{{ t('panels.stageSelect.labels.floorPrefix', { floor: node.stage.floor ?? node.stage.requiredRealmLevel ?? 1 }) }}</strong>
                 <small>{{ node.enemies.join(' · ') }}</small>
               </span>
-              <span v-if="node.stage.bossEnemyId" class="stage-map__boss">BOSS</span>
+              <span v-if="node.stage.bossEnemyId" class="stage-map__boss">{{ t('panels.stageSelect.labels.boss') }}</span>
             </button>
           </div>
         </section>
@@ -257,9 +260,9 @@ function start() {
         <p class="stage-select__description">{{ selectedStage.description }}</p>
 
         <div class="stage-select__encounter-summary">
-          <span><strong>{{ selectedStage.totalEnemyCount }}</strong> quái</span>
-          <span>Mỗi <strong>{{ selectedStage.spawnIntervalSeconds }}s</strong> xuất hiện</span>
-          <span v-if="selectedBoss" class="is-boss">Boss: <strong>{{ selectedBoss.name }}</strong></span>
+          <span><strong>{{ selectedStage.totalEnemyCount }}</strong> {{ t('panels.stageSelect.labels.enemiesSuffix') }}</span>
+          <span>{{ t('panels.stageSelect.labels.spawnIntervalPrefix') }} <strong>{{ selectedStage.spawnIntervalSeconds }}s</strong></span>
+          <span v-if="selectedBoss" class="is-boss">{{ t('panels.stageSelect.labels.bossNamePrefix') }} <strong>{{ selectedBoss.name }}</strong></span>
         </div>
 
         <div class="stage-select__enemy-list">
@@ -271,33 +274,33 @@ function start() {
                    số trọng số RNG nội bộ, không có ngữ cảnh tổng nên
                    không giúp người chơi quyết định gì). -->
               <small>
-                <template v-if="enemy.level">Lv.{{ enemy.level }} · </template>{{ ARCHETYPE_LABELS[enemy.archetype] ?? enemy.archetype }}
-                <template v-if="enemy.eliteChance > 0"> · {{ Math.round(enemy.eliteChance * 100) }}% Tinh Anh</template>
+                <template v-if="enemy.level">{{ t('panels.stageSelect.labels.levelPrefix', { level: enemy.level }) }} · </template>{{ t(ARCHETYPE_LABEL_KEYS[enemy.archetype] ?? 'panels.stageSelect.archetypes.melee') }}
+                <template v-if="enemy.eliteChance > 0"> · {{ t('panels.stageSelect.labels.eliteChance', { percent: Math.round(enemy.eliteChance * 100) }) }}</template>
               </small>
             </span>
           </article>
         </div>
 
         <div class="stage-select__mode">
-          <Chip :active="mode === 'manual'" @click="mode = 'manual'">Thủ Công</Chip>
-          <Chip :active="mode === 'repeat'" @click="mode = 'repeat'">Lặp Lại</Chip>
-          <Chip :active="mode === 'progress'" @click="mode = 'progress'">Tự Động Tiến Ải</Chip>
+          <Chip :active="mode === 'manual'" @click="mode = 'manual'">{{ t('panels.stageSelect.modes.manual') }}</Chip>
+          <Chip :active="mode === 'repeat'" @click="mode = 'repeat'">{{ t('panels.stageSelect.modes.repeat') }}</Chip>
+          <Chip :active="mode === 'progress'" @click="mode = 'progress'">{{ t('panels.stageSelect.modes.progress') }}</Chip>
         </div>
 
         <p class="stage-select__mode-hint">
-          {{ mode === 'manual' ? 'Kết thúc trận và chờ bạn quyết định.' : mode === 'repeat' ? 'Tự đánh lại đúng tầng hiện tại.' : 'Thắng thì đi tiếp, thua thì dừng.' }}
+          {{ mode === 'manual' ? t('panels.stageSelect.modeHints.manual') : mode === 'repeat' ? t('panels.stageSelect.modeHints.repeat') : t('panels.stageSelect.modeHints.progress') }}
         </p>
 
         <div class="stage-select__start-row">
-          <GameButton class="stage-select__build" variant="secondary" size="sm" @click="openBuild">Chỉnh Build</GameButton>
+          <GameButton class="stage-select__build" variant="secondary" size="sm" @click="openBuild">{{ t('panels.stageSelect.actions.editBuild') }}</GameButton>
 
           <GameButton class="stage-select__start" size="sm" :disabled="!canStart" data-testid="stage-start-button" @click="start">
-            Bắt Đầu
+            {{ t('panels.stageSelect.actions.start') }}
           </GameButton>
         </div>
       </template>
 
-          <EmptyState v-else size="lg">Chọn một tầng để xem đội hình.</EmptyState>
+          <EmptyState v-else size="lg">{{ t('panels.stageSelect.empty.selectStage') }}</EmptyState>
         </section>
       </div>
     </div>
