@@ -448,13 +448,13 @@
     "victory": {
       "title": "★ VICTORY ★",
       "retry": "Refight",
-      "retryCountdown": "{seconds}s",
+      "retryCountdown": "{duration}",
       "continue": "Continue"
     },
     "defeat": {
       "title": "☠ DEFEAT",
       "retry": "Rematch",
-      "retryCountdown": "{seconds}s",
+      "retryCountdown": "{duration}",
       "returnHome": "Return to Cave"
     },
     "offline": {

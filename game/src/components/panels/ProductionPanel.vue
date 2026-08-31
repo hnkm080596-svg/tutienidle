@@ -11,6 +11,7 @@ import Bar from '@/components/common/primitives/Bar.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
 import { formatStat } from '@/core/stats/StatLabels'
+import { formatDuration } from '@/core/format/formatDuration'
 
 // Sản Xuất (2026-08-25, resource-professions-rework plan §9.1) — thay
 // ExplorationPanel: mỗi Địa Giới hiển thị đúng ba card Lâm/Quáng/
@@ -99,10 +100,6 @@ const rows = computed<SiteRow[]>(() => {
 
     const remainingSeconds = Math.ceil(cycleRemainingMs / 1000)
 
-    const minutes = Math.floor(remainingSeconds / 60)
-
-    const seconds = remainingSeconds % 60
-
     const meta = KIND_META[view.definition.kind]
 
     const kindLabel = meta
@@ -143,7 +140,7 @@ const rows = computed<SiteRow[]>(() => {
       progress: Math.min(1, Math.max(0, 1 - cycleRemainingMs / totalMs)),
 
       remainingLabel:
-        remainingSeconds > 0 ? `${minutes}p ${String(seconds).padStart(2, '0')}s` : t('panels.production.done'),
+        remainingSeconds > 0 ? formatDuration(remainingSeconds) : t('panels.production.done'),
     }
   })
 })

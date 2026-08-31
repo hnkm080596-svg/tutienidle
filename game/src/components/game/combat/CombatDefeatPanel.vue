@@ -5,6 +5,7 @@ import { useGameManager } from '@/composables/useGameState'
 import { useBattleActions } from '@/composables/useBattleActions'
 import { useAutoRetryCountdown } from '@/composables/useAutoRetryCountdown'
 import { useUiStore } from '@/stores/ui'
+import { formatDuration } from '@/core/format/formatDuration'
 import GameButton from '@/components/common/GameButton.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
@@ -98,7 +99,7 @@ onMounted(() => {
         :disabled="isAutoRetrying"
         @click="retryNow"
       >
-        {{ t('combat.defeat.retry') }}<template v-if="isAutoRetrying"> {{ t('combat.defeat.retryCountdown', { seconds: retryCountdown }) }}</template>
+        {{ t('combat.defeat.retry') }}<template v-if="isAutoRetrying"> {{ t('combat.defeat.retryCountdown', { duration: formatDuration(retryCountdown, 'countdown') }) }}</template>
       </GameButton>
 
       <GameButton class="combat-defeat-panel__return" variant="secondary" @click="returnHome">{{ t('combat.defeat.returnHome') }}</GameButton>

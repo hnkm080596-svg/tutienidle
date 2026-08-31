@@ -6,6 +6,7 @@ import { useBattleActions } from '@/composables/useBattleActions'
 import { useAutoRetryCountdown } from '@/composables/useAutoRetryCountdown'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
+import { formatDuration } from '@/core/format/formatDuration'
 import GameButton from '@/components/common/GameButton.vue'
 import { resolveNextProgressStage } from '@/core/stage/ProgressStageResolver'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
@@ -123,7 +124,7 @@ onMounted(() => {
         :disabled="ui.battleRunMode !== 'manual'"
         @click="retryNow"
       >
-        {{ t('combat.victory.retry') }}<template v-if="ui.battleRunMode !== 'manual'"> {{ t('combat.victory.retryCountdown', { seconds: countdown }) }}</template>
+        {{ t('combat.victory.retry') }}<template v-if="ui.battleRunMode !== 'manual'"> {{ t('combat.victory.retryCountdown', { duration: formatDuration(countdown, 'countdown') }) }}</template>
       </GameButton>
 
       <GameButton v-if="ui.battleRunMode === 'manual'" class="combat-victory-panel__continue" variant="secondary" @click="continueToStageSelect">

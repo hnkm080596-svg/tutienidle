@@ -6,6 +6,7 @@
 // XIV có "+ Tài nguyên/+ Progress" nhưng đó là ví dụ minh hoạ, không
 // phải data thật đang có).
 import { formatNumber } from '@/core/format/NumberFormatter'
+import { formatDuration } from '@/core/format/formatDuration'
 import { useI18n } from 'vue-i18n'
 import GameButton from './GameButton.vue'
 import StatRow from './primitives/StatRow.vue'
@@ -20,17 +21,6 @@ const props = defineProps<{
 const emit = defineEmits<{ close: [] }>()
 
 const { t } = useI18n({ useScope: 'local' })
-
-function formatDuration(seconds: number): string {
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
-
-  if (hours === 0) {
-    return `${minutes}p`
-  }
-
-  return `${hours}h ${minutes}p`
-}
 </script>
 
 <template>

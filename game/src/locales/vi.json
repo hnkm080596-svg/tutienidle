@@ -448,13 +448,13 @@
     "victory": {
       "title": "★ THẮNG ★",
       "retry": "Đánh Lại",
-      "retryCountdown": "{seconds}s",
+      "retryCountdown": "{duration}",
       "continue": "Tiếp Tục"
     },
     "defeat": {
       "title": "☠ THẤT BẠI",
       "retry": "Tái Chiến",
-      "retryCountdown": "{seconds}s",
+      "retryCountdown": "{duration}",
       "returnHome": "Về Động Phủ"
     },
     "offline": {
