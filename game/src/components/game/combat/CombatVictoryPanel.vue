@@ -5,11 +5,11 @@ import { useBattleActions } from '@/composables/useBattleActions'
 import { useAutoRetryCountdown } from '@/composables/useAutoRetryCountdown'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
-import { formatNumber } from '@/core/format/NumberFormatter'
 import GameButton from '@/components/common/GameButton.vue'
 import { resolveNextProgressStage } from '@/core/stage/ProgressStageResolver'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
+import RewardList from './RewardList.vue'
 
 // Combat UI Redesign mục 14-19 — thắng thì hiện reward tích luỹ cả
 // trận (xem GameManager.getBattleRewardSummary()). Auto Battle OFF:
@@ -112,13 +112,7 @@ onMounted(() => {
     <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
     <h2 class="combat-victory-panel__title">★ THẮNG ★</h2>
 
-    <div class="combat-victory-panel__rewards scrollfade">
-      <p v-if="summary.techniqueInsight > 0">Cảm Ngộ Tâm Pháp <span>+{{ formatNumber(summary.techniqueInsight) }}</span></p>
-      <p v-if="summary.skillInsight > 0">Cảm Ngộ Kỹ Năng <span>+{{ formatNumber(summary.skillInsight) }}</span></p>
-      <p v-if="summary.artifactInsight > 0">Kinh Nghiệm Pháp Bảo <span>+{{ formatNumber(summary.artifactInsight) }}</span></p>
-      <p v-if="summary.spiritStone > 0">Linh Thạch <span>+{{ formatNumber(summary.spiritStone) }}</span></p>
-      <p v-for="item in summary.items" :key="`${item.kind}-${item.itemId}`">{{ item.name }} <span>+{{ formatNumber(item.amount) }}</span></p>
-    </div>
+    <RewardList :summary="summary" class="combat-victory-panel__rewards scrollfade" />
 
     <div class="combat-victory-panel__actions">
       <GameButton
@@ -165,25 +159,7 @@ onMounted(() => {
 }
 
 .combat-victory-panel__rewards {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-height: min(240px, 30vh);
-  overflow-y: auto;
   margin-bottom: 20px;
-}
-
-.combat-victory-panel__rewards p {
-  margin: 0;
-  display: flex;
-  justify-content: space-between;
-  font-size: var(--text-body);
-  color: var(--paper-text-soft, #5e5a50);
-}
-
-.combat-victory-panel__rewards p span {
-  color: var(--jade);
-  font-weight: 700;
 }
 
 .combat-victory-panel__actions {
