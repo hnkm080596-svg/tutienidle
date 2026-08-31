@@ -6,6 +6,7 @@ import { getRealmTier } from '@/core/realm/RealmTierMap'
 import Bar from '@/components/common/primitives/Bar.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import { getSpiritStoneMaterialIdForRealmTier } from '@/core/material/SpiritStoneMaterial'
+import { SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
 
 const BUILDING_ID = 'spirit_spring'
 
@@ -59,7 +60,7 @@ const displayedCapacity = computed(() => instance.value ? gameManager.getBuildin
 const ratePerMinute = computed(() => instance.value ? gameManager.getBuildingRatePerMinute(instance.value.instanceId) : 0)
 const outputName = computed(() => {
   const id = getSpiritStoneMaterialIdForRealmTier(getRealmTier(player.realmId))
-  return gameManager.materialRegistry.has(id) ? gameManager.materialRegistry.get(id).name : 'Linh Thạch'
+  return gameManager.materialRegistry.has(id) ? gameManager.materialRegistry.get(id).name : SPIRIT_STONE_LABEL
 })
 
 function collect() {

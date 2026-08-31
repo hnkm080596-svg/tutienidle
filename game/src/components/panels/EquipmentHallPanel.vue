@@ -11,7 +11,7 @@ import { EQUIPMENT_RARITY_AFFIX_SLOTS } from '@/core/equipment/EquipmentRarity'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import type { EquipmentSlot } from '@/core/equipment/EquipmentTypes'
 import type { RolledAffix } from '@/core/equipment/RolledAffix'
-import { materialLabel, affixLabel, equipmentSlotLabel, equipmentQualityLabel } from '@/core/presentation/labels'
+import { materialLabel, affixLabel, equipmentSlotLabel, equipmentQualityLabel, SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
 import { statLabel, formatStat } from '@/core/stats/StatLabels'
 import type { Stats } from '@/core/stats/StatBlock'
 import { useActionFeedbackStore } from '@/stores/actionFeedback'
@@ -642,7 +642,7 @@ const spiritStoneCostMaterialId = computed(() => {
 const spiritStoneCostName = computed(() => {
   const id = spiritStoneCostMaterialId.value
 
-  return gameManager.materialRegistry.has(id) ? gameManager.materialRegistry.get(id).name : 'Linh Thạch'
+  return gameManager.materialRegistry.has(id) ? gameManager.materialRegistry.get(id).name : SPIRIT_STONE_LABEL
 })
 
 const spiritStoneOwned = computed(() => {

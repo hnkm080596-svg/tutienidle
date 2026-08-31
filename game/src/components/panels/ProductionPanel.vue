@@ -4,6 +4,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { getSpiritStoneMaterialIdForRealmTier } from '@/core/material/SpiritStoneMaterial'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
+import { SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
 import BuildingConstructionGate from './BuildingConstructionGate.vue'
 import Bar from '@/components/common/primitives/Bar.vue'
 import GameButton from '@/components/common/GameButton.vue'
@@ -170,7 +171,7 @@ function upgradeCostRows(siteId: string, level: number) {
     {
       label: gameManager.materialRegistry.has(spiritStoneId)
         ? gameManager.materialRegistry.get(spiritStoneId).name
-        : 'Linh Thạch',
+        : SPIRIT_STONE_LABEL,
 
       // Plan Workstream F — Linh Thạch đọc từ MaterialBag.
       owned: gameManager.materialBag.getAmount(spiritStoneId),

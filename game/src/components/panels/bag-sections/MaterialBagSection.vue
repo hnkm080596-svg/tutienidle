@@ -23,6 +23,7 @@ import {
   type MaterialGroup,
 } from '@/composables/useBagFilter'
 import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
+import { SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
 import { getProfessionGradeForRealm } from '@/core/profession/ProfessionGrade'
 import { professionGradeRank } from '@/composables/slots/normalizeSlotRank'
 import type { BagCell } from './BagCell'
@@ -41,7 +42,7 @@ const CATEGORY_LABELS: Record<MaterialCategory, string> = {
   wood: 'Linh Mộc',
   ore: 'Linh Thiết',
   monster_core: 'Yêu Đan',
-  spirit_stone: 'Linh Thạch',
+  spirit_stone: SPIRIT_STONE_LABEL,
   essence: 'Yêu Tinh',
   byproduct: 'Phế Liệu',
   other: 'Khác',
