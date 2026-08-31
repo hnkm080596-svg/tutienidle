@@ -1,9 +1,6 @@
-export type ThemeId =
-  | 'default'
-  | 'ink-minimal'
-  | 'landscape-shanshui'
-  | 'xianxia-glow'
-  | 'classical-imperial'
+import type { ThemeId } from '@/assets/themes'
+
+export { type ThemeId }
 
 export const THEME_TINT_MAP: Record<ThemeId, number> = {
   'default': 0xffffff,
