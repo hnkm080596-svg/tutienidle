@@ -50,13 +50,13 @@
 - [x] Task 1.5: mount theme on app startup — complete (commits e2ee685..7ccc061, review clean; pre-mount pattern instead of onMounted to prevent FOUC)
 - [x] Task 1.6: ThemeSwitcher component — complete (commits 7ccc061..81ff8fa, fix round 1 addressed; registry order restored to spec, test uses data-theme-id lookup)
 - [x] Task 1.7: import theme CSS files — complete (commits 81ff8fa..574b855, review clean)
-- [ ] Task 1.8: Phase 1 verification
-- [ ] Task 2.1: MenuButton
-- [ ] Task 2.2: MenuLogo
-- [ ] Task 2.3: MenuBackground
-- [ ] Task 2.4: MainMenu + route
-- [ ] Task 2.5: OnboardingChapter
-- [ ] Task 2.6: Phase 2 verification
+- [x] Task 1.8: Phase 1 verification — complete (1503 tests PASS, typecheck PASS, build PASS, commit a34b622)
+- [x] Task 2.1: MenuButton — complete (commits a34b622..9563797, fix rounds 1-2; final test uses parent-wrapper pattern to verify Vue emit)
+- [x] Task 2.2: MenuLogo — complete (commits 9563797..189cb3a, review clean)
+- [x] Task 2.3: MenuBackground — complete (commits 189cb3a..1e4a954, review clean)
+- [x] Task 2.4: MainMenu + route — complete (commits 1e4a954..f031839, review clean)
+- [x] Task 2.5: OnboardingChapter — complete (commits f031839..8d0fe51, review clean)
+- [x] Task 2.6: Phase 2 verification — complete (1507 tests PASS, typecheck PASS, build PASS)
 - [ ] Task 3.1: phaserThemeBridge
 - [ ] Task 3.2: themePhaserSync
 - [ ] Task 3.3: CombatTopBar refactor
