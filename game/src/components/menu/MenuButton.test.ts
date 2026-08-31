@@ -43,11 +43,16 @@ describe('MenuButton', () => {
     unmount()
   })
 
-  it('emits click event on press', async () => {
+  it('emits click event on press', () => {
     const { container, unmount } = mountMenuButton({ label: 'Test' })
     const button = container.querySelector<HTMLButtonElement>('button.menu-button')
     expect(button).not.toBeNull()
-    button?.click()
+
+    let callCount = 0
+    button!.addEventListener('click', () => callCount++)
+    button!.click()
+
+    expect(callCount).toBe(1)
     unmount()
   })
 
