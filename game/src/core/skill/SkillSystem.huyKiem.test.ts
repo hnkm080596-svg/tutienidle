@@ -93,3 +93,21 @@ describe('Huy Kiếm — 3 level mốc 1000/10000 cast', () => {
     expect(system.upgradeSkill('tram', { skillInsight: 999 } as never)).toBe(false)
   })
 })
+
+describe('Huy Kiếm — flat bonus applies through triggers too (Task 4, engine not yet wired to data)', () => {
+  it('getEffectiveSkill maps a dealDamage action.value the same way it maps effect.value', () => {
+    const manager = new SkillManager()
+    const system = new SkillSystem(manager)
+    const template = SKILLS.find((skill) => skill.id === 'tram')!
+    system.learn(template)
+    const skill = manager.get('tram')!
+    skill.totalExperience = 150
+    skill.triggers = [{ trigger: 'onCast', actions: [{ type: 'dealDamage', value: 1, damageType: 'physical' }] }]
+
+    const effective = system.getEffectiveSkill(skill)
+
+    const action = effective.triggers?.[0]?.actions[0]
+    expect(action?.type).toBe('dealDamage')
+    expect((action as { value?: number }).value).toBe(1 + 15)
+  })
+})
