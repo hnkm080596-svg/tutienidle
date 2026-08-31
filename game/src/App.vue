@@ -21,6 +21,7 @@ import ErrorBoundary from './components/common/ErrorBoundary.vue'
 import ErrorScreen from './components/common/ErrorScreen.vue'
 import SaveIncompatibleScreen from './components/common/SaveIncompatibleScreen.vue'
 import AuthEntryScreen from './components/onboarding/AuthEntryScreen.vue'
+import MainMenu from './components/menu/MainMenu.vue'
 import CharacterCreationScreen, {
   type CharacterCreationPayload,
 } from './components/onboarding/CharacterCreationScreen.vue'
@@ -83,6 +84,20 @@ const saveIssue = useSaveIssueStore()
 // Home. Set true ở cuối onMounted() sau khi mọi thứ (load save/đăng
 // ký data/tick loop) đã sẵn sàng.
 const isBooted = ref(false)
+// MainMenu overlay — App.vue không render <RouterView>, route '/'
+// (MainMenu) không thể tới được qua vue-router. Hiển thị MainMenu
+// như overlay ngay từ mount, đóng khi user bấm "Bắt đầu tu luyện"
+// để load game (bootGame()).
+const showMainMenu = ref(true)
+
+function handleMenuStart() {
+  showMainMenu.value = false
+  void bootGame(false)
+}
+
+function handleMenuSettings() {
+  ui.leftPanelMode = 'settings'
+}
 const bootFlow = useBootFlow()
 const entryStage = bootFlow.stage
 const bootError = ref('')
@@ -569,6 +584,15 @@ onUnmounted(() => {
   </ErrorBoundary>
 
   <ErrorScreen />
+
+  <Transition>
+    <MainMenu
+      v-if="showMainMenu"
+      class="main-menu-overlay"
+      @start="handleMenuStart"
+      @settings="handleMenuSettings"
+    />
+  </Transition>
 </template>
 
 <style>
@@ -610,5 +634,21 @@ body {
   background: var(--paper-100);
   color: var(--paper-text);
   cursor: pointer;
+}
+
+.main-menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+.v-enter-active,
+.v-leave-active {
+  transition: opacity 0.4s ease;
+}
+
+.v-enter-from,
+.v-leave-to {
+  opacity: 0;
 }
 </style>

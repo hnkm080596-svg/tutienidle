@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
 import MenuBackground from './MenuBackground.vue'
 import MenuLogo from './MenuLogo.vue'
 import MenuButton from './MenuButton.vue'
 
-const router = useRouter()
+const emit = defineEmits<{
+  start: []
+  settings: []
+}>()
 
-const handleStart = () => router.push({ name: 'game' })
-const handleContinue = () => router.push({ name: 'game' })
-const handleSettings = () => router.push({ name: 'settings' })
+const handleStart = () => emit('start')
+const handleContinue = () => emit('start')
+const handleSettings = () => emit('settings')
 const handleExit = () => {
   try { window.close() } catch {}
 }
