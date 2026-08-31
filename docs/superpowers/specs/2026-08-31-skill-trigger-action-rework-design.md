@@ -40,10 +40,158 @@ N places.
 - Not building a full scripting DSL (rejected as over-engineering — see
   "Approaches considered").
 - Not changing balance/numbers of any existing skill — this is a structural
-  rework, not a content rebalance.
-- Not extending the system to enemy/boss AI skill authoring in this pass
-  (existing generic Boss Phase/Enrage/Summon system is out of scope; may
-  reuse the trigger vocabulary later).
+  rework, not a content rebalance (does not apply to Phase 2's own new
+  content, since the user has explicitly waived parity for that — see
+  Phase 2 below).
+- ~~Not extending the system to enemy/boss AI skill authoring in this
+  pass~~ — superseded by Phase 2: the whole point of the trigger/action
+  model is one shape for every `CombatEntity`, not one for players and a
+  separate one for enemies.
+
+## Phase 1 (shipped) vs Phase 2 (this section)
+
+Phase 1 (see "Migration plan" below, already implemented and merged) built
+the core engine and proved it end-to-end on exactly one skill (Huy Kiếm),
+with exactly one trigger (`onCast`) and one action (`dealDamage`) wired into
+production. Everything below this point is Phase 2: complete the trigger
+and action vocabulary, and — the part Phase 1 explicitly deferred — make
+`CombatEntity` truly the only unit of account, so enemies stop having a
+parallel, simpler attack system.
+
+## Phase 2 — complete vocabulary + universal entity model
+
+### Why this is one architectural decision, not two
+
+The user's own framing: "không có chuyện mỗi skill mỗi event bao giờ" (no
+skill/mechanic ever gets its own bespoke field or event again). The old
+`SkillEffect` fields (`grantsSwordIntentPerHit`, `grantsHoaThePerCast`, ...)
+were exactly that anti-pattern. The trigger/action registry already fixes
+it in principle — but investigation found the fix is currently incomplete
+in one specific way: **enemies never went through it at all.**
+
+`BattleSystem.updateEnemyAttacks()`/`fireEnemyAttack()` (`BattleSystem.ts`
+~3084-3215) is a second, parallel combat pipeline: enemy data carries
+`specialAttacks: {everyNth, damageMultiplier, presetId?, windupSeconds?}[]`
+on the entity itself, resolved by picking the first `everyNth` match on an
+attack counter and calling `actionImpact.scheduleBasic({damage: {kind,
+multiplier}, presetId, windupSeconds})` directly — bypassing
+`SkillEffectSystem`/`SkillActionRegistry`/`SkillTriggerRunner` entirely. An
+enemy today cannot apply an ailment, grant itself a resource, or use any
+mechanic beyond "one physical hit at a damage multiplier." This is a second
+"mỗi entity một cơ chế riêng" problem sitting right next to the one Phase 1
+solved for skills — so closing it is part of the same architectural goal,
+not a follow-on nice-to-have.
+
+**Decision: enemies get real `Skill[]` (with `triggers`), cast through the
+exact same `resolveSkillEffects()` pipeline the player uses.** No second
+executor, no second registry, no second trigger vocabulary for enemies.
+
+### Trigger vocabulary — the remaining 7
+
+Phase 1 wired `onCast`. This phase wires the rest, but — per the discovery
+made during design — most of them don't need a hand-wired call site added
+to `BattleSystem`/`CombatSystem`; they're emitted *from inside the action
+executor that causes them*, which is itself a small extension to
+`SkillTriggerRunner`'s contract (see "Nested firing" below):
+
+| Trigger | Real firing site | Mechanism |
+|---|---|---|
+| `onHit` / `onCrit` / `onEvade` | `BattleSystem.ts`'s missile-resolve callback (~line 1321, where `grantsSwordIntentPerHit`/`grantsMomentumPerHit`/`breakDamagePerHit` are read today) | Hand-wired call site — this is a genuine external event (a hit resolved), not something an action executor can know about itself. |
+| `onKill` / `onDeath` | `CombatSystem.killIfDead()` (`CombatSystem.ts:418-462`) | Hand-wired call site. This is the **single convergence point** for every death pathway already (direct damage, DoT, ward-break, thorns — it already emits the legacy `'death'`/`'kill'` EventBus events here), so one addition covers all of them. |
+| `onTick` | `BattleSystem.updateChanneling()` | Hand-wired call site — channel skills only; DoT/zone ticks stay on the ailment/zone systems' own tick, not a skill-level trigger, since a DoT already applied and detached from its casting skill's per-cast context. |
+| `onProc` | Inside the new `applyAilment` executor, immediately after a successful chance roll | Nested firing — no separate call site. |
+| `onResourceFull` | Inside the new `grantResource` executor, when the write clamps to the pool's max | Nested firing — no separate call site. |
+| `onBreak` | Inside the new `consumeResource` executor, when a Break-Gauge-targeted consume reaches 0 | Nested firing — no separate call site. |
+
+**Nested firing**: `SkillTriggerRunner.fire()` gains a `triggers:
+TriggerBinding[] | undefined` parameter it already threads through (per
+Phase 1's `EffectiveSkill`-vs-`Skill` fix), and the `ActionExecutor`
+signature gains a `fire: (trigger, context) => void` callback bound to the
+same runner/triggers/source/target/ctx, so `applyAilment`/`grantResource`/
+`consumeResource` can call `runtime.fire('onProc', {...})` etc. without
+needing their own copy of the runner or the skill's trigger list.
+
+### Action vocabulary — the remaining 10
+
+Finalized during design (see conversation): `applyMovement` was proposed in
+the original spec table but investigation found no real per-action
+movement primitive to port — knockback is a **batch-level** field
+(`options.knockbackDistance`, threaded through `resolveOneHit`, set once at
+`beginSkillBatch`), and root is already just the `troi_chan` ailment. Both
+fold into existing actions instead of getting a new one:
+
+| Action | Fields | Replaces / notes |
+|---|---|---|
+| `dealDamage` (Phase 1, extended) | + `knockbackDistance?: number` | batch-level knockback, read at `beginSkillBatch` time same as `earthPureAreaBehavior` today |
+| `heal` | `value?: number`, `healPercentOfDamage?: number` (reads `runtime.consumedDamage`) | `heal` effect. Default scope: source (self-heal) unless the binding declares otherwise |
+| `applyBuff` | `buffId: string` | `buff` effect — applies to `ctx.sourceBuffs` |
+| `applyDebuff` | `buffId: string` | `debuff` effect — applies to `ctx.targetBuffs` |
+| `applyAilment` | `ailmentId: AilmentId`, `chance?: number` | `ailment` effect + `ailmentChance`; fires `onProc` on success (see above); still calls `ctx.reactionManager.checkAndTrigger(...)` unchanged |
+| `grantResource` | `pool: SkillResourcePoolKey`, `amount: number` | `grantsHoaThePerCast`/`grantsSwordIntentPerHit`/`grantsMomentumPerHit`/etc.; max looked up per-pool from existing `MAX_*` constants (`CombatTypes.ts`), fires `onResourceFull` on clamp |
+| `consumeResource` | `pool: SkillResourcePoolKey \| 'breakGauge'`, `amount: number \| 'all'` | writes `runtime.consumedAmount`; `pool: 'breakGauge'` targets the enemy's Break Gauge and fires `onBreak` at 0, replacing `breakDamagePerHit` |
+| `consumeForDamage` | `source: 'ailment' \| 'ward'`, `ailmentId?: AilmentId` (required when `source: 'ailment'`), `damagePerUnit: number`, `healPercentOfDamage?: number` | unifies Detonate (`consumesAilmentId`+`damagePerStack`) and ward-break (`consumesWardForDamage`+`damagePerWardPoint`); writes `runtime.consumedDamage` |
+| `spawnZone` | `zoneKind: 'lava' \| 'sword'`, `charges: number`, `tickInterval: number`, `damageRatio: number`, `position: 'source' \| 'target'` | `grantsSwordZone` + Lava Zone's existing `spawnLavaZone` path — both already exist as `ctx.spawnLavaZone`/`ctx.spawnSwordZone` |
+| `spawnVfx` | `presetId: CombatVfxPresetId`, `target?: 'source' \| 'target'` | emits `eventBus.emit('action_impact', ...)` — reuses the existing pipeline, no new VFX plumbing |
+
+`addStack`/`removeBuff` (from the original `SkillEffectType` union) are
+**not** ported — they were already dead code in `SkillEffectSystem.apply()`
+(a no-op case, real stacking lives entirely in `PassiveSystem`'s separate
+`passiveTrigger`/`passiveModifiers` mechanism). No action needed here.
+
+### Universal entity model — enemies as `Skill[]`
+
+- Enemy data (`game/src/data/enemy/*`) gains a `skills: Skill[]` field,
+  replacing `specialAttacks`. Each entry is a real `Skill` — same type
+  players use, `triggers`-based (no enemy content is written in the old
+  `effects` shape; there is nothing to preserve parity with, since
+  `specialAttacks` never had ailments/buffs/resources to begin with).
+- Windup (`windupSeconds`) maps to `execution: { kind: 'cast_time',
+  castTime: windupSeconds }` — an existing, already-correct policy; no new
+  execution kind needed.
+- Selection: keep the existing `everyNth`-on-attack-counter policy as the
+  enemy "AI" (simpler than the player's Loadout/slot system — enemies don't
+  need cooldown UI or manual slot assignment) but resolve it into a `Skill`
+  from `entity.skills` instead of a raw `{damageMultiplier, presetId}`
+  descriptor; fall back to a default basic-attack `Skill` (mirrors Huy
+  Kiếm's role for players) when no `everyNth` matches.
+- `fireEnemyAttack()` shrinks to: pick the skill (existing `everyNth`
+  logic, new return type) → call `resolveSkillEffects(skill, enemyEntity,
+  player, battle)` — the exact function the player path already calls.
+  `scheduleBasic()`/`ActionImpactSystem`'s basic-attack path is retired for
+  enemies once this lands (`beginSkillBatch`/`endSkillBatch` already covers
+  the VFX side generically, per Phase 1's VFX findings).
+- `resolvePlayerSkillEffects`/`beginPlayerCast`/`finishPlayerCastTransaction`
+  stay player-named and player-only where they truly are (resource
+  consumption via the player's mana/Kiếm Ý/Momentum pools, Loadout slot
+  bookkeeping, cast-count tracking for Huy Kiếm) — only the shared tail,
+  `resolveSkillEffects()` itself, needs to already be (and already is,
+  per its current `source`/`target: CombatEntity` signature) entity-agnostic.
+  No renaming of the player-specific wrapper functions is required.
+
+### Testing strategy (Phase 2)
+
+- Same registry/firing-site-level testing bar as Phase 1: one test per new
+  `SkillActionType` executor (including its nested `onProc`/
+  `onResourceFull`/`onBreak` firing), one test per new hand-wired trigger
+  context shape.
+- No parity tests against old enemy behavior are required — `specialAttacks`
+  never had a numeric contract beyond "1 hit, multiplier, preset," and the
+  user has explicitly waived preserving old numbers for this beta-phase
+  redesign. New enemy `Skill[]` content is designed fresh, not ported.
+- Real end-to-end test: at least one enemy in a real battle test using an
+  `applyAilment`-bound skill, proving ailments now work on the enemy side
+  of combat (something structurally impossible before this phase).
+
+### Out of scope (still, after Phase 2)
+
+- Redesigning/rebalancing actual Ngũ Hành/Kiếm Tu/Thể Tu skill content —
+  Phase 2 completes the engine; migrating existing player skill *data* off
+  `effects` remains its own follow-up work per path (unchanged from Phase
+  1's migration order).
+- Tooltip generic-ization (still deliberately last, per the original
+  migration plan).
+- `CURRENT_SAVE_VERSION` bump (still deferred to when the full rework
+  ships, per the user's explicit no-per-save-migration ruling).
 
 ## Approaches considered
 
