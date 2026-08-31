@@ -87,6 +87,29 @@
         "tien": "Tiên"
       }
     },
+    "nodeTree": {
+      "title": "Node Tree",
+      "aria": {
+        "zoomGroup": "Zoom cây kỹ năng"
+      },
+      "tooltips": {
+        "zoomToFit": "Về vừa khung"
+      },
+      "labels": {
+        "insight": "Cảm Ngộ",
+        "maxLevel": "Tối đa",
+        "unpurchasedCost": "{{ cost }} Cảm Ngộ",
+        "upgradeCost": "Nâng cấp · {{ cost }} Cảm Ngộ",
+        "otherBranch": "Khác"
+      }
+    },
+    "skillPath": {
+      "title": "Kỹ Năng",
+      "subtitle": "Thư viện theo cảnh giới · Con đường Ngũ Hành",
+      "colTitles": {
+        "loadoutActive": "Pháp Thuật Đang Vận Hành"
+      }
+    },
     "character": {
       "tabs": {
         "attribute": "Thuộc Tính",

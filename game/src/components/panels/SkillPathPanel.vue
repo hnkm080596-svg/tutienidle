@@ -17,6 +17,7 @@
 // vận hành trong combat (xem scheduler auto-cast thống nhất của
 // BattleSystem), "equip cả 1 Hành" không cộng thêm ý nghĩa nào khác.
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -31,6 +32,7 @@ import type { ElementType } from '@/core/element/ElementType'
 import type { Skill } from '@/core/skill/Skill'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 
+const { t } = useI18n({ useScope: 'local' })
 const ui = useUiStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()
@@ -155,9 +157,9 @@ function close() {
 </script>
 
 <template>
-  <OverlayPanel :open="ui.standalonePanel === 'skill'" title="Kỹ Năng" width="min(1400px, 94vw)" height="min(760px, 88vh)" @close="close">
-      <template #subtitle><span v-if="showTree" class="skill-path-panel__subtitle">Thư viện theo cảnh giới · Con đường Ngũ Hành</span></template>
-      <template #header-actions><span v-if="showTree" class="skill-path-panel__points">✦ {{ player.skillInsight }} Cảm Ngộ</span></template>
+  <OverlayPanel :open="ui.standalonePanel === 'skill'" :title="t('panels.skillPath.title')" width="min(1400px, 94vw)" height="min(760px, 88vh)" @close="close">
+      <template #subtitle><span v-if="showTree" class="skill-path-panel__subtitle">{{ t('panels.skillPath.subtitle') }}</span></template>
+      <template #header-actions><span v-if="showTree" class="skill-path-panel__points">✦ {{ player.skillInsight }} {{ t('panels.nodeTree.labels.insight') }}</span></template>
       <div class="skill-path-panel">
         <div class="skill-path-panel__body">
           <div class="skill-path-panel__col skill-path-panel__col--left">
@@ -177,7 +179,7 @@ function close() {
           </div>
 
           <div class="skill-path-panel__col skill-path-panel__col--right">
-            <span class="skill-path-panel__col-title">Pháp Thuật Đang Vận Hành</span>
+            <span class="skill-path-panel__col-title">{{ t('panels.skillPath.colTitles.loadoutActive') }}</span>
 
             <SkillLoadoutStrip />
           </div>

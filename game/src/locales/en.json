@@ -87,6 +87,29 @@
         "tien": "Tien"
       }
     },
+    "nodeTree": {
+      "title": "Node Tree",
+      "aria": {
+        "zoomGroup": "Skill tree zoom"
+      },
+      "tooltips": {
+        "zoomToFit": "Fit to panel"
+      },
+      "labels": {
+        "insight": "Insight",
+        "maxLevel": "Max",
+        "unpurchasedCost": "{{ cost }} Insight",
+        "upgradeCost": "Upgrade · {{ cost }} Insight",
+        "otherBranch": "Other"
+      }
+    },
+    "skillPath": {
+      "title": "Skills",
+      "subtitle": "Library by Realm · Five Element Path",
+      "colTitles": {
+        "loadoutActive": "Active Spell Arts"
+      }
+    },
     "character": {
       "tabs": {
         "attribute": "Attributes",
