@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useUiStore } from '@/stores/ui'
 import { getCurrentRealm } from '@/core/realm/realmSystem'
@@ -17,6 +18,7 @@ import { useLoadoutActions } from '@/composables/useLoadoutActions'
 import { getTalentDefinition } from '@/data/talent/Talents'
 import { TALENT_RARITY_LABELS, type TalentDefinition } from '@/core/talent/Talent'
 
+const { t } = useI18n({ useScope: 'local' })
 const player = usePlayerStore()
 const ui = useUiStore()
 const { allocateAttributePoint } = useLoadoutActions()
@@ -70,12 +72,12 @@ const realm = computed(() => getCurrentRealm(player.realmId))
 // BASE_STAT_LABELS/StatCategory trích ra @/core/stats/StatLabels.ts
 // (2026-08-15, tooltip Tâm Pháp dùng chung).
 
-const STAT_CATEGORY_LABELS: Record<StatCategory, string> = {
-  combat: 'Chiến Đấu',
-  survival: 'Sinh Tồn & Tài Nguyên',
-  special: 'Tỉ Lệ Đặc Biệt',
-  attribute: 'Thuộc Tính',
-  defense_advanced: 'Phòng Thủ Nâng Cao',
+const STAT_CATEGORY_KEYS: Record<StatCategory, string> = {
+  combat: 'panels.character.sections.combat',
+  survival: 'panels.character.sections.survival',
+  special: 'panels.character.sections.special',
+  attribute: 'panels.character.sections.attribute',
+  defense_advanced: 'panels.character.sections.defenseAdvanced',
 }
 
 const STAT_CATEGORY_ORDER: StatCategory[] = ['combat', 'survival', 'special', 'attribute', 'defense_advanced']
@@ -84,7 +86,7 @@ const statGroups = computed(() =>
   STAT_CATEGORY_ORDER.map(category => ({
     category,
 
-    label: STAT_CATEGORY_LABELS[category],
+    label: t(STAT_CATEGORY_KEYS[category]),
 
     stats: BASE_STAT_LABELS.filter(stat => stat.category === category),
   })),
@@ -202,11 +204,11 @@ const pillPermanentRows = computed(() => {
         <div class="character-panel__identity-text">
           <h3 class="character-panel__name" data-testid="character-name">{{ player.name }}</h3>
 
-          <p class="character-panel__realm-line" data-testid="character-realm-line">{{ realm.name }} · Tầng {{ player.realmLevel }}</p>
+          <p class="character-panel__realm-line" data-testid="character-realm-line">{{ realm.name }} · {{ t('panels.character.labels.realmFloor') }} {{ player.realmLevel }}</p>
 
           <p class="character-panel__power">
             <span class="character-panel__power-value">{{ formatNumber(combatPower) }}</span>
-            <span class="character-panel__power-label">Chiến Lực</span>
+            <span class="character-panel__power-label">{{ t('panels.character.labels.combatPower') }}</span>
           </p>
 
           <button
@@ -215,7 +217,7 @@ const pillPermanentRows = computed(() => {
             class="character-panel__quan-khi-btn"
             @click="openQuanKhi"
           >
-            Quán Khí
+            {{ t('panels.character.actions.quanKhi') }}
           </button>
         </div>
       </div>
@@ -224,7 +226,7 @@ const pillPermanentRows = computed(() => {
            hướng Đạo duy nhất lúc tạo nhân vật, luôn hiển thị để người
            chơi nhớ mình đang đi đường nào. -->
       <div v-if="selectedTalents.length > 0" class="character-panel__talents">
-        <h4 class="character-panel__talents-title">Thiên Phú</h4>
+        <h4 class="character-panel__talents-title">{{ t('panels.character.sections.talents') }}</h4>
 
         <div
           v-for="talent in selectedTalents"
@@ -243,7 +245,7 @@ const pillPermanentRows = computed(() => {
         <div v-for="group in statGroups" :key="group.category" class="stat-group">
         <h4 class="stat-group__title stat-group__title--static">
           {{ group.label }}
-          <template v-if="group.category === 'attribute' && player.attributePoints > 0">(còn {{ player.attributePoints }} điểm)</template>
+          <template v-if="group.category === 'attribute' && player.attributePoints > 0">({{ t('panels.character.labels.attributePointsRemaining', { count: player.attributePoints }) }})</template>
         </h4>
 
         <ul class="stat-list">
@@ -256,7 +258,7 @@ const pillPermanentRows = computed(() => {
             <span v-if="isMainStat(stat.key)" class="stat-list__main-stat">
               <span class="stat-list__value-col">
                 <span>{{ formatStat(stat.key, player.finalStats[stat.key]) }}</span>
-                <span v-if="isMainStatCapped(stat.key as MainStatKey)" class="stat-list__max">MAX</span>
+                <span v-if="isMainStatCapped(stat.key as MainStatKey)" class="stat-list__max">{{ t('panels.character.labels.max') }}</span>
               </span>
 
               <GameButton
@@ -275,7 +277,7 @@ const pillPermanentRows = computed(() => {
         </ul>
       </div>
       <div class="stat-group">
-        <h4 class="stat-group__title stat-group__title--static">Ngũ Hành</h4>
+        <h4 class="stat-group__title stat-group__title--static">{{ t('panels.character.sections.elements') }}</h4>
 
         <div class="element-chips">
           <div
@@ -285,7 +287,7 @@ const pillPermanentRows = computed(() => {
             :data-element="row.element"
             :class="`element-chip--${row.element}`"
             :style="{ '--chip-color': row.color }"
-            v-tooltip="{ title: row.label, description: `Power ${Math.round(row.power)} · Kháng ${Math.round(row.resistance)} · Xuyên ${Math.round(row.penetration)}` }"
+            v-tooltip="{ title: row.label, description: t('panels.character.tooltips.elementStat', { power: Math.round(row.power), resistance: Math.round(row.resistance), penetration: Math.round(row.penetration) }) }"
           >
             <span class="element-chip__dot" />
             <span class="element-chip__label">{{ row.label }}</span>
@@ -295,10 +297,10 @@ const pillPermanentRows = computed(() => {
           <div
             class="element-chip"
             :style="{ '--chip-color': PRIMORDIAL_COLOR }"
-            v-tooltip="{ title: 'Hỗn Nguyên', description: 'Bỏ qua mọi phòng thủ.' }"
+            v-tooltip="{ title: t('panels.character.tooltips.primordialTitle'), description: t('panels.character.tooltips.primordialDescription') }"
           >
             <span class="element-chip__dot" />
-            <span class="element-chip__label">Hỗn Nguyên</span>
+            <span class="element-chip__label">{{ t('panels.character.tooltips.primordialTitle') }}</span>
             <span class="element-chip__value">{{ formatNumber(Math.round(player.finalStats.primordialPower)) }}</span>
           </div>
         </div>

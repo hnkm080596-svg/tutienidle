@@ -86,6 +86,37 @@
         "thien": "Thiên",
         "tien": "Tiên"
       }
+    },
+    "character": {
+      "tabs": {
+        "attribute": "Thuộc Tính",
+        "combat": "Chiến Đấu",
+        "defenseSurvival": "Phòng Thủ & Sinh Tồn",
+        "elemental": "Ngũ Hành & Khác"
+      },
+      "sections": {
+        "combat": "Chiến Đấu",
+        "survival": "Sinh Tồn & Tài Nguyên",
+        "special": "Tỉ Lệ Đặc Biệt",
+        "attribute": "Thuộc Tính",
+        "defenseAdvanced": "Phòng Thủ Nâng Cao",
+        "elements": "Ngũ Hành",
+        "talents": "Thiên Phú"
+      },
+      "actions": {
+        "quanKhi": "Quán Khí"
+      },
+      "labels": {
+        "combatPower": "Chiến Lực",
+        "realmFloor": "Tầng",
+        "attributePointsRemaining": "còn {{ count }} điểm",
+        "max": "MAX"
+      },
+      "tooltips": {
+        "elementStat": "Power {{ power }} · Kháng {{ resistance }} · Xuyên {{ penetration }}",
+        "primordialTitle": "Hỗn Nguyên",
+        "primordialDescription": "Bỏ qua mọi phòng thủ."
+      }
     }
   }
 }

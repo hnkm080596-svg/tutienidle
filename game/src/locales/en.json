@@ -86,6 +86,37 @@
         "thien": "Thien",
         "tien": "Tien"
       }
+    },
+    "character": {
+      "tabs": {
+        "attribute": "Attributes",
+        "combat": "Combat",
+        "defenseSurvival": "Defense & Survival",
+        "elemental": "Elements & More"
+      },
+      "sections": {
+        "combat": "Combat",
+        "survival": "Survival & Resources",
+        "special": "Special Rates",
+        "attribute": "Attributes",
+        "defenseAdvanced": "Advanced Defense",
+        "elements": "Five Elements",
+        "talents": "Innate Talents"
+      },
+      "actions": {
+        "quanKhi": "Quán Khí"
+      },
+      "labels": {
+        "combatPower": "Combat Power",
+        "realmFloor": "Floor",
+        "attributePointsRemaining": "{{ count }} points remaining",
+        "max": "MAX"
+      },
+      "tooltips": {
+        "elementStat": "Power {{ power }} · Resistance {{ resistance }} · Penetration {{ penetration }}",
+        "primordialTitle": "Primordial",
+        "primordialDescription": "Ignores all defenses."
+      }
     }
   }
 }
