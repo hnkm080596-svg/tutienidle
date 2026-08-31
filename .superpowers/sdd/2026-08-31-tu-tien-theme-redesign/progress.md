@@ -67,7 +67,7 @@
 - [x] Task 4.1: HomeResourceStrip refactor — already using theme tokens, no changes needed
 - [x] Task 4.2: DongFuCommandWheel refactor — already using theme tokens, no changes needed
 - [x] Task 4.3: DongFuBuildingSprite + BuildingDetailPopover refactor — removed hex fallbacks from BuildingDetailPopover (commit dd9aa40, 1510 tests PASS)
-- [ ] Task 4.4: Phase 4 verification
+- [x] Task 4.4: Phase 4 verification — complete (1510 tests PASS, build PASS, commit 0e9d3bd)
 - [ ] Task 5.1: ThemedIcon base
 - [ ] Task 5.2: iconRegistry + 24 icons
 - [ ] Task 5.3: StatRow/TabBar/GameButton/GamePanel refactor
