@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest'
 import { createApp, h } from 'vue'
+import { i18n } from '@/i18n'
 import RewardList from './RewardList.vue'
 import type { BattleRewardSummary } from '@/core/reward/BattleRewardSummary'
 
@@ -17,6 +18,7 @@ function mountRewardList(summary: BattleRewardSummary): MountedRewardList {
   const app = createApp({
     render: () => h(RewardList, { summary }),
   })
+  app.use(i18n)
   app.mount(container)
 
   return {

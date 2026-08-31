@@ -322,7 +322,7 @@ const enhanceRows = computed<EnhanceSlotRow[]>(() => {
 
       itemName: equipped
         ? gameManager.getEquipmentTemplate(equipped.itemId)?.name ?? equipped.itemId
-        : '— trống (vẫn cường hóa được) —',
+        : t('panels.equipmentHall.labels.emptySlotPlaceholder'),
 
       enhanceLevel: slotState.enhanceLevel,
 
@@ -481,13 +481,13 @@ function canWash(): boolean {
 
 function doWashPreview() {
   if (!selectedRow.value) {
-    feedback.warning('Không thể Tẩy Luyện: cần chọn một trang bị.')
+    feedback.warning(t('panels.equipmentHall.messages.refineNeedItem'))
 
     return
   }
 
   if (!selectedOreId.value) {
-    feedback.warning('Không thể Tẩy Luyện: cần chọn Quáng cùng cảnh giới.')
+    feedback.warning(t('panels.equipmentHall.messages.refineNeedOre'))
 
     return
   }
@@ -686,7 +686,7 @@ function canRefine(): boolean {
 
 function doRefinePreview() {
   if (!selectedRow.value) {
-    feedback.warning('Không thể Tinh Luyện: cần chọn một trang bị có ít nhất một dòng phụ.')
+    feedback.warning(t('panels.equipmentHall.messages.polishNeedItem'))
 
     return
   }
@@ -1300,7 +1300,7 @@ function doDissolve() {
       </div>
 
       <div v-if="dissolvePreview.length > 0" class="dissolve-preview">
-        <h4>{{ t('panels.equipmentHall.labels.dissolveReward') }} ({{ dissolveSelected.size }} món):</h4>
+        <h4>{{ t('panels.equipmentHall.labels.dissolveReward') }} ({{ t('panels.equipmentHall.labels.itemCount', { count: dissolveSelected.size }) }}):</h4>
 
         <p v-for="entry in dissolvePreview" :key="entry.materialId">
           {{ materialLabel(entry.materialId, gameManager.materialRegistry) }}: {{ entry.minAmount }}–{{ entry.maxAmount }}

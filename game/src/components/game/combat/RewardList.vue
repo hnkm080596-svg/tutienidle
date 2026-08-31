@@ -1,25 +1,28 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import type { BattleRewardSummary } from '@/core/reward/BattleRewardSummary'
 
 defineProps<{
   summary: BattleRewardSummary
 }>()
+
+const { t } = useI18n({ useScope: 'local' })
 </script>
 
 <template>
   <ul class="reward-list">
     <li v-if="summary.techniqueInsight > 0" class="reward-list__item">
-      Cảm Ngộ Tâm Pháp <span class="reward-list__value">+{{ formatNumber(summary.techniqueInsight) }}</span>
+      {{ t('combat.rewards.techniqueInsight') }} <span class="reward-list__value">+{{ formatNumber(summary.techniqueInsight) }}</span>
     </li>
     <li v-if="summary.skillInsight > 0" class="reward-list__item">
-      Cảm Ngộ Kỹ Năng <span class="reward-list__value">+{{ formatNumber(summary.skillInsight) }}</span>
+      {{ t('combat.rewards.skillInsight') }} <span class="reward-list__value">+{{ formatNumber(summary.skillInsight) }}</span>
     </li>
     <li v-if="summary.artifactInsight > 0" class="reward-list__item">
-      Kinh Nghiệm Pháp Bảo <span class="reward-list__value">+{{ formatNumber(summary.artifactInsight) }}</span>
+      {{ t('combat.rewards.artifactInsight') }} <span class="reward-list__value">+{{ formatNumber(summary.artifactInsight) }}</span>
     </li>
     <li v-if="summary.spiritStone > 0" class="reward-list__item">
-      Linh Thạch <span class="reward-list__value">+{{ formatNumber(summary.spiritStone) }}</span>
+      {{ t('combat.rewards.spiritStone') }} <span class="reward-list__value">+{{ formatNumber(summary.spiritStone) }}</span>
     </li>
     <li v-for="item in summary.items" :key="`${item.kind}-${item.itemId}`" class="reward-list__item">
       {{ item.name }} <span class="reward-list__value">+{{ formatNumber(item.amount) }}</span>

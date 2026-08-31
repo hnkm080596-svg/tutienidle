@@ -61,7 +61,9 @@
         "maxLockSuffix": "lines",
         "refineRule": "Each unlocked line rerolls within ±20%. Cost:",
         "essenceName": "Essence",
-        "ownedPrefix": "owned"
+        "ownedPrefix": "owned",
+        "emptySlotPlaceholder": "— empty (can still be enhanced) —",
+        "itemCount": "{count} item(s)"
       },
       "status": {
         "notRolled": "not rolled",
@@ -85,6 +87,11 @@
         "dia": "Dia",
         "thien": "Thien",
         "tien": "Tien"
+      },
+      "messages": {
+        "refineNeedItem": "Cannot Refine: select an equipment item first.",
+        "refineNeedOre": "Cannot Refine: select an Ore of the same realm.",
+        "polishNeedItem": "Cannot Polish: select an equipment item with at least one affix."
       }
     },
     "nodeTree": {
@@ -464,6 +471,12 @@
         "cultivation": "+ Qi"
       },
       "continue": "Continue"
+    },
+    "rewards": {
+      "techniqueInsight": "Technique Insight",
+      "skillInsight": "Skill Insight",
+      "artifactInsight": "Artifact EXP",
+      "spiritStone": "Spirit Stones"
     }
   },
   "menu": {
@@ -544,11 +557,26 @@
         "finish": "Step onto the immortal path"
       },
       "attributes": {
-        "strength": { "name": "Physique", "hint": "Raw strength of the body" },
-        "dexterity": { "name": "Agility", "hint": "Mobility and evasion" },
-        "intelligence": { "name": "Divine Sense", "hint": "Skill potency" },
-        "attunement": { "name": "Spirit Root", "hint": "Elemental resonance" },
-        "vitality": { "name": "Constitution", "hint": "Vitality and endurance" }
+        "strength": {
+          "name": "Physique",
+          "hint": "Raw strength of the body"
+        },
+        "dexterity": {
+          "name": "Agility",
+          "hint": "Mobility and evasion"
+        },
+        "intelligence": {
+          "name": "Divine Sense",
+          "hint": "Skill potency"
+        },
+        "attunement": {
+          "name": "Spirit Root",
+          "hint": "Elemental resonance"
+        },
+        "vitality": {
+          "name": "Constitution",
+          "hint": "Vitality and endurance"
+        }
       },
       "errors": {
         "rollFailed": "Cannot observe the heavens. Please try again."

@@ -61,7 +61,9 @@
         "maxLockSuffix": "dòng",
         "refineRule": "Mỗi dòng không khóa roll lại trong ±20%. Chi phí:",
         "essenceName": "Tinh Hoa",
-        "ownedPrefix": "đang có"
+        "ownedPrefix": "đang có",
+        "emptySlotPlaceholder": "— trống (vẫn cường hóa được) —",
+        "itemCount": "{count} món"
       },
       "status": {
         "notRolled": "chưa roll",
@@ -85,6 +87,11 @@
         "dia": "Địa",
         "thien": "Thiên",
         "tien": "Tiên"
+      },
+      "messages": {
+        "refineNeedItem": "Không thể Tẩy Luyện: cần chọn một trang bị.",
+        "refineNeedOre": "Không thể Tẩy Luyện: cần chọn Quáng cùng cảnh giới.",
+        "polishNeedItem": "Không thể Tinh Luyện: cần chọn một trang bị có ít nhất một dòng phụ."
       }
     },
     "nodeTree": {
@@ -464,6 +471,12 @@
         "cultivation": "+ Linh lực"
       },
       "continue": "Tiếp Tục"
+    },
+    "rewards": {
+      "techniqueInsight": "Cảm Ngộ Tâm Pháp",
+      "skillInsight": "Cảm Ngộ Kỹ Năng",
+      "artifactInsight": "Kinh Nghiệm Pháp Bảo",
+      "spiritStone": "Linh Thạch"
     }
   },
   "menu": {
@@ -544,11 +557,26 @@
         "finish": "Bước vào tiên đồ"
       },
       "attributes": {
-        "strength": { "name": "Căn Cốt", "hint": "Sức mạnh thể phách" },
-        "dexterity": { "name": "Thân Pháp", "hint": "Linh hoạt và né tránh" },
-        "intelligence": { "name": "Thần Thức", "hint": "Uy lực kỹ năng" },
-        "attunement": { "name": "Linh Căn", "hint": "Cộng hưởng nguyên tố" },
-        "vitality": { "name": "Thể Chất", "hint": "Sinh lực và bền bỉ" }
+        "strength": {
+          "name": "Căn Cốt",
+          "hint": "Sức mạnh thể phách"
+        },
+        "dexterity": {
+          "name": "Thân Pháp",
+          "hint": "Linh hoạt và né tránh"
+        },
+        "intelligence": {
+          "name": "Thần Thức",
+          "hint": "Uy lực kỹ năng"
+        },
+        "attunement": {
+          "name": "Linh Căn",
+          "hint": "Cộng hưởng nguyên tố"
+        },
+        "vitality": {
+          "name": "Thể Chất",
+          "hint": "Sinh lực và bền bỉ"
+        }
       },
       "errors": {
         "rollFailed": "Không thể quan sát thiên cơ. Vui lòng thử lại."
