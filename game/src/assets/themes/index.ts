@@ -23,14 +23,14 @@ export const THEME_REGISTRY: ReadonlyArray<ThemeDefinition> = [
     preview: previewSvg('#fdfbf7', '#1a1a1a', 'Tối giản'),
   },
   {
-    id: 'landscape-shanshui',
-    label: 'Mặc họa phong cảnh',
-    preview: previewSvg('#f0ebe0', '#2c1810', 'Phong cảnh'),
-  },
-  {
     id: 'xianxia-glow',
     label: 'Tu tiên huyền ảo',
     preview: previewSvg('#0d0a14', '#5c3d8f', 'Huyền ảo'),
+  },
+  {
+    id: 'landscape-shanshui',
+    label: 'Mặc họa phong cảnh',
+    preview: previewSvg('#f0ebe0', '#2c1810', 'Phong cảnh'),
   },
   {
     id: 'classical-imperial',
