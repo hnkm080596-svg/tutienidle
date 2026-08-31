@@ -145,7 +145,7 @@ const PRIMORDIAL_COLOR = 'var(--el-primordial)'
 // "Chiến Lực" — chỉ số tổng hợp THUẦN HIỂN THỊ (không dùng ở đâu khác
 // trong game logic/combat thật), lấy cảm hứng từ số "Mastery" tổng
 // trong màn Combat Attributes tham khảo. Hệ số minh hoạ, dễ tinh
-// chỉnh lại sau khi thấy số thực tế qua nhiều mốc cảnh giới.
+// chỉnh lại sau khi thấy số thực tế qua nhiều mốc Cảnh Giới.
 const combatPower = computed(() => {
   const stats = player.finalStats
 
@@ -161,10 +161,10 @@ const combatPower = computed(() => {
 })
 
 // Thay thế pillUsageRows cũ (đếm SỐ LẦN uống mỗi pill) — giờ hiện
-// TIẾN ĐỘ TRẦN thật theo cảnh giới (RealmData.attributeCap): mỗi
+// TIẾN ĐỘ TRẦN thật theo Cảnh Giới (RealmData.attributeCap): mỗi
 // stat có bonus vĩnh viễn cộng dồn từ pill (bucket
 // `pill-permanent:${stat}`, xem PillSystem.ts) hiện "Tên Stat: X/cap".
-// Ẩn hoàn toàn nếu cảnh giới hiện tại chưa thiết kế trần.
+// Ẩn hoàn toàn nếu Cảnh Giới hiện tại chưa thiết kế trần.
 const pillPermanentRows = computed(() => {
   const cap = realm.value.attributeCap
 
@@ -344,7 +344,7 @@ const pillPermanentRows = computed(() => {
     linear-gradient(175deg, var(--paper-50) 0%, var(--paper-100) 100%);
 }
 
-/* WS3 vùng 1 — chân dung + tên/cảnh giới/chiến lực, nằm ngang thoải mái. */
+/* WS3 vùng 1 — chân dung + tên/Cảnh Giới/chiến lực, nằm ngang thoải mái. */
 .character-panel__identity {
   display: flex;
   align-items: center;

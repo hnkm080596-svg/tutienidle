@@ -221,7 +221,7 @@
     },
     "luyenThe": {
       "title": "Luyện Thể",
-      "summary": "Tầng đã hoàn thành: {completed}/6",
+      "summary": "Bậc đã hoàn thành: {completed}/6",
       "note": "Tinh Hoa Phàm Thể từ quái tự bay về và nạp tiến độ — không cần thao tác.",
       "tierLock": "Khóa — cần Phàm Nhân tầng {level}",
       "empty": "Đã hoàn thành toàn bộ Luyện Thể."
@@ -309,7 +309,7 @@
       },
       "sections": {
         "tier": "Đổi Phẩm",
-        "tierRealm": "Đổi Phẩm (cảnh giới)"
+        "tierRealm": "Đổi Phẩm (theo Cảnh Giới)"
       },
       "stone": {
         "upTrung": "{ratio} Hạ → 1 Trung",

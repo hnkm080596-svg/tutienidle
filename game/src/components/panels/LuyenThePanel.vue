@@ -7,7 +7,7 @@
 // sang tầng kế. Panel chỉ HIỂN THỊ tiến độ, không còn nút/nắm tay.
 //
 // KHÔNG còn giới hạn riêng Phàm Nhân (2026-08-22) — CẢ truy cập LẪN
-// đầu tư đều hoạt động ở mọi cảnh giới, để Tinh Hoa Phàm Thể còn tồn
+// đầu tư đều hoạt động ở mọi Cảnh Giới, để Tinh Hoa Phàm Thể còn tồn
 // trong túi (chưa kịp tiêu hết trước khi rời Phàm Nhân) vẫn tiếp tục
 // đổi được thành chỉ số thay vì kẹt vĩnh viễn. requiredRealmLevel (pace theo
 // tầng Phàm Nhân) tự bypass sau khi rời realm — xem
