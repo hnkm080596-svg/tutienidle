@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'
 import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
@@ -12,6 +13,8 @@ const loginId = ref('')
 const password = ref('')
 const submitting = ref(false)
 const error = ref('')
+
+const { t } = useI18n({ useScope: 'local' })
 
 const validId = computed(() => isValidLoginId(loginId.value))
 const canSubmit = computed(() => validId.value && isValidPassword(password.value) && !submitting.value)
@@ -49,37 +52,37 @@ function submit() {
       <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
       <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
       <div class="auth-card__seal">仙</div>
-      <p class="auth-card__eyebrow">NHẤT NIỆM NHẬP ĐẠO</p>
+      <p class="auth-card__eyebrow">{{ t('onboarding.auth.eyebrow') }}</p>
       <h1>Tiên Hiệp Idle</h1>
-      <p class="auth-card__lead">Một đời phàm tục, một niệm cầu tiên.</p>
+      <p class="auth-card__lead">{{ t('onboarding.auth.lead') }}</p>
 
       <div class="auth-tabs" role="tablist">
-        <button :class="{ active: mode === 'login' }" type="button" @click="mode = 'login'">Đăng nhập</button>
-        <button :class="{ active: mode === 'register' }" type="button" @click="mode = 'register'">Đăng ký</button>
+        <button :class="{ active: mode === 'login' }" type="button" @click="mode = 'login'">{{ t('onboarding.auth.tabs.login') }}</button>
+        <button :class="{ active: mode === 'register' }" type="button" @click="mode = 'register'">{{ t('onboarding.auth.tabs.register') }}</button>
       </div>
 
       <form class="auth-form" @submit.prevent="submit">
         <label>
-          <span>ID đạo hữu</span>
-          <input v-model.trim="loginId" autocomplete="username" maxlength="20" placeholder="4–20 ký tự Latin, số hoặc _" />
+          <span>{{ t('onboarding.auth.labels.loginId') }}</span>
+          <input v-model.trim="loginId" autocomplete="username" maxlength="20" :placeholder="t('onboarding.auth.placeholders.loginId')" />
         </label>
-        <p v-if="loginId && !validId" class="auth-form__hint is-error">ID chưa đúng định dạng.</p>
+        <p v-if="loginId && !validId" class="auth-form__hint is-error">{{ t('onboarding.auth.errors.invalidId') }}</p>
         <label>
-          <span>Mật khẩu</span>
-          <input v-model="password" autocomplete="current-password" type="password" placeholder="Tối thiểu 6 ký tự" />
+          <span>{{ t('onboarding.auth.labels.password') }}</span>
+          <input v-model="password" autocomplete="current-password" type="password" :placeholder="t('onboarding.auth.placeholders.password')" />
         </label>
         <p v-if="error" class="auth-form__hint is-error">{{ error }}</p>
         <GameButton class="primary-action" type="submit" variant="primary" size="lg" :disabled="!canSubmit" :loading="submitting">
-          {{ mode === 'login' ? 'Vào động phủ' : 'Lập đạo danh' }}
+          {{ mode === 'login' ? t('onboarding.auth.submit.login') : t('onboarding.auth.submit.register') }}
         </GameButton>
       </form>
 
-      <div class="auth-divider"><span>hoặc</span></div>
+      <div class="auth-divider"><span>{{ t('onboarding.auth.divider') }}</span></div>
       <GameButton class="guest-action" variant="ghost" size="lg" :disabled="submitting" data-testid="auth-guest-button" @click="authenticate('guest')">
-        Chơi ngay
-        <small>Tiến trình khách dừng tại Trúc Cơ</small>
+        {{ t('onboarding.auth.guest.button') }}
+        <small>{{ t('onboarding.auth.guest.note') }}</small>
       </GameButton>
-      <p class="auth-card__status"><i /> Máy chủ thử nghiệm · UI prototype</p>
+      <p class="auth-card__status"><i /> {{ t('onboarding.auth.status') }}</p>
     </section>
   </main>
 </template>

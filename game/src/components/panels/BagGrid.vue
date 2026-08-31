@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useUiStore, type BagTab } from '@/stores/ui'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import EquipmentBagSection from './bag-sections/EquipmentBagSection.vue'
@@ -10,11 +11,7 @@ import TabBar from '@/components/common/TabBar.vue'
 // Hành Trang (2026-08-25, resource-professions-rework plan §10.1) —
 // Phù/Trận khai tử: còn 3 tab (Trang Bị/Nguyên Liệu/Đan Dược), bỏ hẳn
 // luồng pending-select phù/trận liên-panel.
-const BAG_TABS: { tab: BagTab; label: string }[] = [
-  { tab: 'equipment', label: 'Trang Bị' },
-  { tab: 'material', label: 'Nguyên Liệu' },
-  { tab: 'pill', label: 'Đan Dược' },
-]
+const { t } = useI18n({ useScope: 'local' })
 
 const ui = useUiStore()
 const gameManager = useGameManager()
@@ -33,17 +30,23 @@ const activeTabCount = computed(() => {
 
   return BAG_COUNTS[activeTab.value]()
 })
+
+const bagTabs = computed(() => [
+  { id: 'equipment' as BagTab, label: t('panels.bag.tabs.equipment') },
+  { id: 'material' as BagTab, label: t('panels.bag.tabs.material') },
+  { id: 'pill' as BagTab, label: t('panels.bag.tabs.pill') },
+])
 </script>
 
 <template>
   <div class="bag-grid">
     <div class="bag-grid__header">
-      <span class="bag-grid__title">Kho Vật</span>
-      <span class="bag-grid__count">{{ activeTabCount }} món</span>
+      <span class="bag-grid__title">{{ t('panels.bag.title') }}</span>
+      <span class="bag-grid__count">{{ activeTabCount }} {{ t('panels.bag.countSuffix') }}</span>
     </div>
 
     <TabBar
-      :tabs="BAG_TABS.map((entry) => ({ id: entry.tab, label: entry.label }))"
+      :tabs="bagTabs"
       :model-value="ui.activeBagTab"
       @update:model-value="ui.setActiveBagTab($event as BagTab)"
     />

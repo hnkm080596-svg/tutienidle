@@ -2,6 +2,8 @@
 // Tàng Kinh Các (Home Hub Phase 7) — 2 tab con: Công Pháp (catalog
 // đã/chưa học) và Lore (manh mối đã nhặt được, xem mục V/XV.6 tài
 // liệu beta — "Không leak Đại Đạo").
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import TechniqueCodex from './scripture/TechniqueCodex.vue'
 import LoreCodex from './scripture/LoreCodex.vue'
 import TabBar from '@/components/common/TabBar.vue'
@@ -9,10 +11,12 @@ import { useUiStore } from '@/stores/ui'
 
 const ui = useUiStore()
 
-const tabs = [
-  { id: 'technique', label: 'Công Pháp' },
-  { id: 'lore', label: 'Lore' },
-]
+const { t } = useI18n({ useScope: 'local' })
+
+const tabs = computed(() => [
+  { id: 'technique' as const, label: t('panels.scripture.tabs.technique') },
+  { id: 'lore' as const, label: t('panels.scripture.tabs.lore') },
+])
 </script>
 
 <template>

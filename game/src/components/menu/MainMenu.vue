@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import MenuBackground from './MenuBackground.vue'
 import MenuLogo from './MenuLogo.vue'
 import MenuButton from './MenuButton.vue'
+
+const { t } = useI18n({ useScope: 'local' })
 
 const emit = defineEmits<{
   start: []
@@ -22,10 +25,10 @@ const handleExit = () => {
     <div class="main-menu__content">
       <MenuLogo />
       <nav class="main-menu__actions">
-        <MenuButton label="Bắt đầu tu luyện" variant="primary" @click="handleStart" />
-        <MenuButton label="Tiếp tục" variant="secondary" @click="handleContinue" />
-        <MenuButton label="Cài đặt" variant="secondary" @click="handleSettings" />
-        <MenuButton label="Thoát" variant="secondary" @click="handleExit" />
+        <MenuButton :label="t('menu.main.start')" variant="primary" @click="handleStart" />
+        <MenuButton :label="t('menu.main.continue')" variant="secondary" @click="handleContinue" />
+        <MenuButton :label="t('menu.main.settings')" variant="secondary" @click="handleSettings" />
+        <MenuButton :label="t('menu.main.exit')" variant="secondary" @click="handleExit" />
       </nav>
       <div class="main-menu__version">v1.2.3</div>
     </div>

@@ -11,6 +11,7 @@ import {
 } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
 import { useUiStore } from '@/stores/ui'
+import { i18n } from '@/i18n'
 
 function mountRealmPanel() {
   const container = document.createElement('div')
@@ -21,6 +22,7 @@ function mountRealmPanel() {
 
   document.body.appendChild(container)
   app.use(pinia)
+  app.use(i18n)
   app.provide(GAME_MANAGER_KEY, gameManager)
   app.provide(STATE_VERSION_KEY, stateVersion)
   app.provide(BUMP_STATE_KEY, () => {

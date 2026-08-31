@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useGameManager } from '@/composables/useGameState'
 import { useBattleActions } from '@/composables/useBattleActions'
 import { useAutoRetryCountdown } from '@/composables/useAutoRetryCountdown'
@@ -29,6 +30,7 @@ const RETRY_COUNTDOWN_SECONDS = 3
 
 const gameManager = useGameManager()
 const ui = useUiStore()
+const { t } = useI18n({ useScope: 'local' })
 const { startBattle } = useBattleActions()
 
 const summary = computed(() => gameManager.getBattleRewardSummary())
@@ -84,7 +86,7 @@ onMounted(() => {
     <InkWashBackdrop left-mountain bottom-mist :right-mountain="false" />
     <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
     <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" tint-var="--cinnabar" />
-    <h2 class="combat-defeat-panel__title">☠ THẤT BẠI</h2>
+    <h2 class="combat-defeat-panel__title">{{ t('combat.defeat.title') }}</h2>
 
     <RewardList v-if="hasAnyReward" :summary="summary" class="combat-defeat-panel__rewards scrollfade" />
 
@@ -96,10 +98,10 @@ onMounted(() => {
         :disabled="isAutoRetrying"
         @click="retryNow"
       >
-        Tái Chiến<template v-if="isAutoRetrying"> {{ retryCountdown }}s</template>
+        {{ t('combat.defeat.retry') }}<template v-if="isAutoRetrying"> {{ t('combat.defeat.retryCountdown', { seconds: retryCountdown }) }}</template>
       </GameButton>
 
-      <GameButton class="combat-defeat-panel__return" variant="secondary" @click="returnHome">Về Động Phủ</GameButton>
+      <GameButton class="combat-defeat-panel__return" variant="secondary" @click="returnHome">{{ t('combat.defeat.returnHome') }}</GameButton>
     </div>
   </div>
 </template>

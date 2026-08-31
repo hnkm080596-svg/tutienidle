@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
 interface Props {
   chapterNumber: number
   title: string
@@ -9,22 +11,24 @@ interface Props {
 withDefaults(defineProps<Props>(), { isLast: false })
 
 defineEmits<{ (e: 'next'): void; (e: 'skip'): void }>()
+
+const { t } = useI18n({ useScope: 'local' })
 </script>
 
 <template>
   <div class="onboarding-chapter">
     <div class="onboarding-chapter__illustration" aria-hidden="true" />
     <div class="onboarding-chapter__content">
-      <div class="onboarding-chapter__eyebrow">CHƯƠNG {{ chapterNumber }}</div>
+      <div class="onboarding-chapter__eyebrow">{{ t('onboarding.chapter.eyebrow', { number: chapterNumber }) }}</div>
       <h2 class="onboarding-chapter__title">{{ title }}</h2>
       <p class="onboarding-chapter__body">{{ body }}</p>
     </div>
     <div class="onboarding-chapter__actions">
       <button class="onboarding-chapter__btn onboarding-chapter__btn--primary" @click="$emit('next')">
-        {{ isLast ? 'Bắt đầu' : 'Tiếp tục' }}
+        {{ isLast ? t('onboarding.chapter.start') : t('onboarding.chapter.next') }}
       </button>
       <button v-if="!isLast" class="onboarding-chapter__btn onboarding-chapter__btn--ghost" @click="$emit('skip')">
-        Bỏ qua
+        {{ t('onboarding.chapter.skip') }}
       </button>
     </div>
   </div>

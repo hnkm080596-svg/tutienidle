@@ -213,6 +213,346 @@
         "caster": "Caster",
         "tank": "Guardian"
       }
+    },
+    "wheel": {
+      "aria": {
+        "group": "Cave Dwelling Command Wheel"
+      }
+    },
+    "luyenThe": {
+      "title": "Body Refinement",
+      "summary": "Tiers completed: {completed}/6",
+      "note": "Mortal Body Essence from defeated enemies flows back and feeds progress automatically — no action needed.",
+      "tierLock": "Locked — requires Mortal floor {level}",
+      "empty": "All Body Refinement tiers completed."
+    },
+    "bag": {
+      "title": "Inventory",
+      "countSuffix": "items",
+      "countUnitSuffix": "types",
+      "tabs": {
+        "equipment": "Equipment",
+        "material": "Materials",
+        "pill": "Pills"
+      },
+      "search": {
+        "materialPlaceholder": "Search materials...",
+        "materialAria": "Search materials by name"
+      },
+      "filterAria": "Filter by material group",
+      "groups": {
+        "all": "All"
+      },
+      "sort": {
+        "button": "Sort",
+        "tooltip": "Sort: {label}",
+        "default": "Default",
+        "asc": "Ascending ↑",
+        "desc": "Descending ↓",
+        "category": "Category",
+        "years": "Age",
+        "amount": "Amount",
+        "name": "Name",
+        "nameAsc": "Name A–Z",
+        "nameDesc": "Name Z–A",
+        "source": "Main Source"
+      },
+      "tooltip": {
+        "section": "Info",
+        "owned": "Owned: {count}",
+        "category": "Category",
+        "source": "Main Source",
+        "realm": "Realm",
+        "age": "Lifespan",
+        "yearsSuffix": "{count} years",
+        "element": "Element",
+        "sourceTypes": {
+          "boss": "Boss",
+          "monster": "Monster",
+          "building": "Structure",
+          "exploration": "Exploration"
+        },
+        "categories": {
+          "herb": "Spirit Herb",
+          "wood": "Spirit Wood",
+          "ore": "Spirit Ore",
+          "monsterCore": "Demon Core",
+          "essence": "Demon Essence",
+          "byproduct": "Byproduct",
+          "other": "Other"
+        },
+        "ages": {
+          "decade": "Decade",
+          "century": "Century",
+          "millennium": "Millennium",
+          "myriadYear": "Myriad Year"
+        },
+        "realms": {
+          "mortal": "Mortal",
+          "qiRefining": "Qi Refining",
+          "foundationEstablishment": "Foundation Establishment",
+          "goldenCore": "Golden Core",
+          "nascentSoul": "Nascent Soul",
+          "soulTransformation": "Soul Transformation",
+          "voidRefinement": "Void Refinement",
+          "bodyIntegration": "Body Integration",
+          "mahayana": "Mahayana",
+          "tribulation": "Tribulation"
+        }
+      }
+    },
+    "vendor": {
+      "cards": {
+        "spiritStone": "Spirit Stones",
+        "wood": "Spirit Wood",
+        "ore": "Spirit Ore"
+      },
+      "sections": {
+        "tier": "Grade Conversion",
+        "tierRealm": "Grade Conversion (realm)"
+      },
+      "stone": {
+        "upTrung": "{ratio} Lesser → 1 Medium",
+        "upThuong": "{ratio} Medium → 1 Greater"
+      },
+      "tierConvert": "{ratio} → 1",
+      "empty": {
+        "wood": "No Spirit Wood to convert.",
+        "ore": "No Spirit Ore to convert."
+      },
+      "sell": {
+        "title": "Liquidate",
+        "rate": "Sell surplus materials for Spirit Stones at current grade rates.",
+        "unitPriceSuffix": "lesser/unit",
+        "button": "Sell All",
+        "empty": "Nothing can be sold right now."
+      }
+    },
+    "spiritSpring": {
+      "storedTitle": "{name} accumulated",
+      "rateSuffix": "stones/minute",
+      "collect": "Harvest"
+    },
+    "production": {
+      "summary": "Thanh Van Zone — pick a source, start a cycle, receive materials straight into the Bag.",
+      "kinds": {
+        "forest": "Grove",
+        "mine": "Mine",
+        "grotto": "Grotto-Heaven"
+      },
+      "rewards": {
+        "forest": "Realm-tier wood gathered",
+        "mine": "Mine Decade → Primordial",
+        "grotto": "{count} lead herbs"
+      },
+      "level": "Level {level}/{max}",
+      "speedSuffix": "speed",
+      "nextSpeedPrefix": "next ×",
+      "workers": "Workers: {count}",
+      "remaining": "{time}",
+      "statusProducing": "Producing — {time} left",
+      "done": "Done…",
+      "start": "Start",
+      "autoRepeat": "Auto repeat",
+      "upgrade": "Upgrade Source"
+    },
+    "artifact": {
+      "title": "Fate-Bound Artifact",
+      "noPath": "No path chosen",
+      "emptyNoDefinition": "The fate-bound artifact of {path} awaits design.",
+      "emptyNotAwakened": "Not awakened — successfully breaking through to Foundation Establishment will grant {name} automatically."
+    },
+    "realm": {
+      "title": "Realm",
+      "tierLine": "{realm} · Floor {level}",
+      "cultivationUnit": "Cultivation",
+      "labels": {
+        "quanKhi": "Quán Khí",
+        "foundation": "Foundation Establishment",
+        "majorFallback": "Major Realm"
+      },
+      "nodes": {
+        "aria": "Nine realms progress",
+        "comingSoon": "Coming soon",
+        "unlocked": "Attuned",
+        "locked": "Not unlocked"
+      }
+    },
+    "settings": {
+      "autosaveNote": "Progress auto-saves every 15 seconds and when leaving the tab. You can still save manually here.",
+      "actions": {
+        "save": "Save Progress",
+        "reload": "Reload (from last save)",
+        "export": "Export Save (.json)",
+        "import": "Import Save",
+        "reset": "Delete Save & Start New"
+      },
+      "notifications": {
+        "saved": "Progress saved"
+      },
+      "hints": {
+        "savedAt": "Saved at {time}"
+      },
+      "confirm": {
+        "reloadTitle": "Reload",
+        "reloadBody": "Reload from the last save? Unsaved progress will be lost.",
+        "importTitle": "Import Save",
+        "importBody": "Importing this save will REPLACE current progress (1 backup copy is made before overwriting). Continue?",
+        "resetTitle": "Delete Save",
+        "resetBody": "Delete all progress and start a new character? Remember to \"Export Save\" first if you haven't — this action cannot be undone."
+      },
+      "errors": {
+        "invalidSaveFile": "Invalid save file."
+      },
+      "sections": {
+        "uiScaleAria": "Interface font size",
+        "uiScale": "Interface Font Size",
+        "themeAria": "Appearance",
+        "theme": "Appearance"
+      }
+    },
+    "technique": {
+      "title": "Mental Method",
+      "heroLabel": "Mental Method",
+      "emptyNoBonus": "No additional information",
+      "emptyNoTechnique": "No technique yet — complete the Entry Ceremony to receive one automatically"
+    },
+    "quest": {
+      "title": "Quests",
+      "groups": {
+        "daily": "Daily Quests",
+        "once": "Quests"
+      },
+      "anyEnemy": "Any enemy",
+      "actions": {
+        "claimed": "Claimed",
+        "claim": "Claim Reward"
+      },
+      "empty": "No quests available yet."
+    },
+    "scripture": {
+      "tabs": {
+        "technique": "Techniques",
+        "lore": "Lore"
+      }
+    },
+    "buildingPopover": {
+      "costTitle": "Build Cost",
+      "build": "Build"
+    },
+    "common": {
+      "close": "Close"
+    }
+  },
+  "combat": {
+    "victory": {
+      "title": "★ VICTORY ★",
+      "retry": "Refight",
+      "retryCountdown": "{seconds}s",
+      "continue": "Continue"
+    },
+    "defeat": {
+      "title": "☠ DEFEAT",
+      "retry": "Rematch",
+      "retryCountdown": "{seconds}s",
+      "returnHome": "Return to Cave"
+    },
+    "offline": {
+      "title": "CLOSED-DOOR RETREAT ENDED",
+      "labels": {
+        "duration": "Time",
+        "cultivation": "+ Qi"
+      },
+      "continue": "Continue"
+    }
+  },
+  "menu": {
+    "main": {
+      "start": "Begin Cultivation",
+      "continue": "Continue",
+      "settings": "Settings",
+      "exit": "Exit"
+    }
+  },
+  "onboarding": {
+    "chapter": {
+      "eyebrow": "CHAPTER {number}",
+      "next": "Continue",
+      "start": "Start",
+      "skip": "Skip"
+    },
+    "auth": {
+      "eyebrow": "ONE THOUGHT ENTERS THE DAO",
+      "lead": "A lifetime of mortal toil, a single thought seeking immortality.",
+      "tabs": {
+        "login": "Log In",
+        "register": "Register"
+      },
+      "labels": {
+        "loginId": "Cultivator ID",
+        "password": "Password"
+      },
+      "placeholders": {
+        "loginId": "4–20 Latin characters, digits or _",
+        "password": "At least 6 characters"
+      },
+      "errors": {
+        "invalidId": "ID format is invalid."
+      },
+      "submit": {
+        "login": "Enter Cave",
+        "register": "Create Identity"
+      },
+      "divider": "or",
+      "guest": {
+        "button": "Play Now",
+        "note": "Guest progress stops at Foundation Establishment"
+      },
+      "status": "Test server · UI prototype"
+    },
+    "creation": {
+      "back": "← Back",
+      "headerKicker": "DESTINY-BINDING",
+      "headerTitle": "Create Character",
+      "step": "Step {step} / {total}",
+      "stepperAria": "Character creation progress",
+      "nameStep": {
+        "kicker": "DAO NAME",
+        "title": "A title carried through the immortal path",
+        "description": "Character names are unique and cannot be changed in the early phase.",
+        "label": "Character Name",
+        "placeholder": "Enter a dao name…",
+        "minLengthHint": "{length}/20 · Minimum 2 characters",
+        "continue": "Continue"
+      },
+      "talentStep": {
+        "kicker": "DESTINY",
+        "title": "Choose One Innate Talent",
+        "selected": "Selected {count} / 1",
+        "rolling": "Observing the heavens…",
+        "reroll": "↻ Reroll all",
+        "confirm": "Confirm talent"
+      },
+      "attributeStep": {
+        "kicker": "FOUNDATION",
+        "title": "Allocate starting points",
+        "pointsLeft": "{count} points left",
+        "summaryTalent": "1 Talent",
+        "summaryPoints": "5 Foundation Points",
+        "rechooseTalent": "Rechoose talent",
+        "creating": "Binding fate…",
+        "finish": "Step onto the immortal path"
+      },
+      "attributes": {
+        "strength": { "name": "Physique", "hint": "Raw strength of the body" },
+        "dexterity": { "name": "Agility", "hint": "Mobility and evasion" },
+        "intelligence": { "name": "Divine Sense", "hint": "Skill potency" },
+        "attunement": { "name": "Spirit Root", "hint": "Elemental resonance" },
+        "vitality": { "name": "Constitution", "hint": "Vitality and endurance" }
+      },
+      "errors": {
+        "rollFailed": "Cannot observe the heavens. Please try again."
+      }
     }
   }
 }

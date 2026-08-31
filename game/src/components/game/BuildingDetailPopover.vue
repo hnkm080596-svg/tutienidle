@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'
 import StatRow from '@/components/common/primitives/StatRow.vue'
 import Eyebrow from '@/components/common/primitives/Eyebrow.vue'
@@ -15,6 +16,8 @@ const player = usePlayerStore()
 const ui = useUiStore()
 
 const gameManager = useGameManager()
+
+const { t } = useI18n({ useScope: 'local' })
 
 const { stateVersion, bumpState } = useStateVersion()
 
@@ -96,7 +99,7 @@ async function build() {
       </div>
 
       <div class="building-popover__section">
-        <Eyebrow as="h4">Chi phí xây dựng</Eyebrow>
+        <Eyebrow as="h4">{{ t('panels.buildingPopover.costTitle') }}</Eyebrow>
 
         <ul class="building-popover__costs">
           <StatRow
@@ -114,7 +117,7 @@ async function build() {
     <!-- Nút hành động cố định NGOÀI vùng scroll (2026-08-30, bug report:
          popup nhiều chi phí đẩy nút "Xây dựng" xuống dưới, phải cuộn mới
          bấm được) — luôn hiện dù nội dung chi phí dài cỡ nào. -->
-    <GameButton class="building-popover__action" variant="primary" :disabled="!canBuild" @click="build">Xây dựng</GameButton>
+    <GameButton class="building-popover__action" variant="primary" :disabled="!canBuild" @click="build">{{ t('panels.buildingPopover.build') }}</GameButton>
   </div>
 </template>
 

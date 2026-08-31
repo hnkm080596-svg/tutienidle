@@ -5,6 +5,7 @@
 // catalog trên hai quỹ đạo tròn. Slot đi từ tâm theo cung xoắn, hai vòng
 // quay ngược chiều nhau và tăng alpha trong suốt hành trình.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useStageActive } from '@/composables/useStageActive'
@@ -21,6 +22,7 @@ import NotificationBadge from '@/components/common/NotificationBadge.vue'
 
 const ui = useUiStore()
 const player = usePlayerStore()
+const { t } = useI18n({ useScope: 'local' })
 
 const stageActive = useStageActive()
 
@@ -310,7 +312,7 @@ function activate(slot: CommandWheelSlot) {
     <div
       class="command-wheel"
       role="group"
-      aria-label="Bảng lệnh Động Phủ"
+      :aria-label="t('panels.wheel.aria.group')"
       :class="{ 'is-ready': isReady, 'is-closing': isClosing }"
     >
       <span

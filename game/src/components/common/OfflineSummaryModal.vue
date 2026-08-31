@@ -6,6 +6,7 @@
 // XIV có "+ Tài nguyên/+ Progress" nhưng đó là ví dụ minh hoạ, không
 // phải data thật đang có).
 import { formatNumber } from '@/core/format/NumberFormatter'
+import { useI18n } from 'vue-i18n'
 import GameButton from './GameButton.vue'
 import StatRow from './primitives/StatRow.vue'
 import InkNineSlice from './primitives/InkNineSlice.vue'
@@ -17,6 +18,8 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{ close: [] }>()
+
+const { t } = useI18n({ useScope: 'local' })
 
 function formatDuration(seconds: number): string {
   const hours = Math.floor(seconds / 3600)
@@ -36,10 +39,10 @@ function formatDuration(seconds: number): string {
       <InkNineSlice asset-id="surface-m-paper" layer="surface" />
       <InkNineSlice asset-id="frame-m-seal-corner" layer="frame" :thickness="18" />
 
-      <h3 class="offline-summary__title">BẾ QUAN KẾT THÚC</h3>
+      <h3 class="offline-summary__title">{{ t('combat.offline.title') }}</h3>
 
       <ul class="offline-summary__rows">
-        <StatRow label="Thời gian">{{ formatDuration(props.elapsedSeconds) }}</StatRow>
+        <StatRow :label="t('combat.offline.labels.duration')">{{ formatDuration(props.elapsedSeconds) }}</StatRow>
 
         <!-- Chỉ Thời gian + Tu vi — core/idle/OfflineProgressSystem.ts
              CHỈ tính cultivationPerSecond * elapsedSeconds, không có
@@ -47,10 +50,10 @@ function formatDuration(seconds: number): string {
              rộng OfflineSummaryData (stores/offlineSummary.ts) + thêm
              row tương ứng nếu sau này OfflineProgressSystem có nguồn
              thu mới. -->
-        <StatRow label="+ Linh lực" tone="positive">{{ formatNumber(Math.floor(props.cultivation)) }}</StatRow>
+        <StatRow :label="t('combat.offline.labels.cultivation')" tone="positive">{{ formatNumber(Math.floor(props.cultivation)) }}</StatRow>
       </ul>
 
-      <GameButton class="offline-summary__continue" @click="emit('close')">Tiếp Tục</GameButton>
+      <GameButton class="offline-summary__continue" @click="emit('close')">{{ t('combat.offline.continue') }}</GameButton>
     </section>
   </div>
 </template>

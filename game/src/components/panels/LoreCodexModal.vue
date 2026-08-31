@@ -5,6 +5,7 @@
 // trọn mô tả, tự đóng khi bấm ra ngoài/nút đóng, KHÔNG tự ẩn theo
 // chuột như Tooltip. Style nhất quán NavMenuOverlay.vue.
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
+import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'
 
 defineProps<{
@@ -12,6 +13,8 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{ close: [] }>()
+
+const { t } = useI18n({ useScope: 'local' })
 </script>
 
 <template>
@@ -23,7 +26,7 @@ const emit = defineEmits<{ close: [] }>()
 
           <p class="lore-modal__description">{{ content.description }}</p>
 
-          <GameButton class="lore-modal__close" variant="secondary" size="sm" @click="emit('close')">Đóng</GameButton>
+          <GameButton class="lore-modal__close" variant="secondary" size="sm" @click="emit('close')">{{ t('panels.common.close') }}</GameButton>
         </div>
       </div>
     </Transition>

@@ -8,6 +8,7 @@
 // control sát phải. Nút sort hiển thị cả khi chỉ có một trang. Khung
 // hẹp: nút sort chỉ còn icon, tooltip vẫn mang nhãn đầy đủ.
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { SortDirection } from '@/stores/ui'
 
 export interface BagSortOption {
@@ -45,9 +46,11 @@ const emit = defineEmits<{
 
 const activeOption = computed(() => props.sortOptions.find((option) => option.value === props.activeMode))
 
+const { t } = useI18n({ useScope: 'local' })
+
 const sortButtonLabel = computed(() => {
   if (!activeOption.value || props.activeMode === 'default') {
-    return 'Sắp xếp'
+    return t('panels.bag.sort.button')
   }
 
   if (props.activeDirection === 'asc') {
@@ -147,7 +150,7 @@ onBeforeUnmount(() => {
         :class="{ 'is-active': activeMode !== 'default' }"
         aria-haspopup="menu"
         :aria-expanded="isMenuOpen"
-        v-tooltip="`Sắp xếp: ${sortButtonLabel}`"
+        v-tooltip="t('panels.bag.sort.tooltip', { label: sortButtonLabel })"
         @click="toggleMenu"
       >
         <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
@@ -165,7 +168,7 @@ onBeforeUnmount(() => {
           :class="{ 'is-active': activeMode === 'default' }"
           @click="select('default')"
         >
-          Mặc định
+          {{ t('panels.bag.sort.default') }}
         </button>
 
         <button
@@ -186,7 +189,7 @@ onBeforeUnmount(() => {
           class="bag-pagination__menu-direction"
           @click="select('direction')"
         >
-          {{ activeDirection === 'asc' ? 'Tăng dần ↑' : 'Giảm dần ↓' }}
+          {{ activeDirection === 'asc' ? t('panels.bag.sort.asc') : t('panels.bag.sort.desc') }}
         </button>
       </div>
     </div>

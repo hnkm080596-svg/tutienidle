@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { getSpiritStoneMaterialIdForRealmTier } from '@/core/material/SpiritStoneMaterial'
@@ -16,18 +17,20 @@ import { formatStat } from '@/core/stats/StatLabels'
 // Động Thiên với level + speed, trạng thái idle/producing, đồng hồ
 // cycle, trọng số realm tier đã chuẩn hoá, toggle Auto. Nút Start chỉ
 // xuất hiện khi idle; KHÔNG có nút Claim — hoàn thành tự gửi Bag (§4.3).
-const KIND_META: Record<string, { label: string; sigil: string }> = {
-  forest: { label: 'Lâm', sigil: '木' },
-  mine: { label: 'Quáng', sigil: '礦' },
-  grotto: { label: 'Động Thiên', sigil: '藥' },
+const { t } = useI18n({ useScope: 'local' })
+
+const KIND_META: Record<string, { labelKey: 'forest' | 'mine' | 'grotto'; sigil: string }> = {
+  forest: { labelKey: 'forest', sigil: '木' },
+  mine: { labelKey: 'mine', sigil: '礦' },
+  grotto: { labelKey: 'grotto', sigil: '藥' },
 }
 
 function rewardSummary(kind: string): string {
-  if (kind === 'forest') return 'Gỗ theo cảnh giới thu thập'
+  if (kind === 'forest') return t('panels.production.rewards.forest')
 
-  if (kind === 'mine') return 'Quáng Thập Niên → Thượng Cổ'
+  if (kind === 'mine') return t('panels.production.rewards.mine')
 
-  return `${PILL_FAMILIES.length} chủ dược`
+  return t('panels.production.rewards.grotto', { count: PILL_FAMILIES.length })
 }
 
 const player = usePlayerStore()
@@ -100,12 +103,22 @@ const rows = computed<SiteRow[]>(() => {
 
     const seconds = remainingSeconds % 60
 
+    const meta = KIND_META[view.definition.kind]
+
+    const kindLabel = meta
+      ? meta.labelKey === 'forest'
+        ? t('panels.production.kinds.forest')
+        : meta.labelKey === 'mine'
+          ? t('panels.production.kinds.mine')
+          : t('panels.production.kinds.grotto')
+      : view.definition.kind
+
     return {
       siteId: view.definition.siteId,
 
       kind: view.definition.kind,
 
-      kindLabel: KIND_META[view.definition.kind]?.label ?? view.definition.kind,
+      kindLabel,
 
       sigil: KIND_META[view.definition.kind]?.sigil ?? '•',
 
@@ -130,7 +143,7 @@ const rows = computed<SiteRow[]>(() => {
       progress: Math.min(1, Math.max(0, 1 - cycleRemainingMs / totalMs)),
 
       remainingLabel:
-        remainingSeconds > 0 ? `${minutes}p ${String(seconds).padStart(2, '0')}s` : 'Hoàn tất…',
+        remainingSeconds > 0 ? `${minutes}p ${String(seconds).padStart(2, '0')}s` : t('panels.production.done'),
     }
   })
 })
@@ -200,7 +213,7 @@ function upgrade(siteId: string) {
   <BuildingConstructionGate building-id="gathering_outpost">
     <div class="production-panel scrollfade">
       <p class="production-panel__summary">
-        Địa Giới Thanh Vân — chọn nguồn, bắt đầu cycle, nhận thẳng nguyên liệu vào Túi.
+        {{ t('panels.production.summary') }}
       </p>
 
       <div class="production-panel__grid">
@@ -218,15 +231,15 @@ function upgrade(siteId: string) {
           <p class="site-card__description">{{ row.description }}</p>
 
           <div class="site-card__stats">
-            <span>Cấp {{ row.level }}/{{ row.maxLevel }}</span>
+            <span>{{ t('panels.production.level', { level: row.level, max: row.maxLevel }) }}</span>
 
-            <span>×{{ formatStat('speedMultiplier', row.speedMultiplier) }} tốc độ</span>
+            <span>×{{ formatStat('speedMultiplier', row.speedMultiplier) }} {{ t('panels.production.speedSuffix') }}</span>
 
             <span v-if="row.nextSpeedMultiplier">
-              kế tiếp ×{{ formatStat('speedMultiplier', row.nextSpeedMultiplier) }}
+              {{ t('panels.production.nextSpeedPrefix') }}{{ formatStat('speedMultiplier', row.nextSpeedMultiplier) }}
             </span>
 
-            <span>Nhân công: {{ row.activeWorkerSlots }}</span>
+            <span>{{ t('panels.production.workers', { count: row.activeWorkerSlots }) }}</span>
           </div>
 
           <!-- Bỏ dòng "Trọng số tier" (2026-08-30, bug report: thông tin
@@ -237,7 +250,7 @@ function upgrade(siteId: string) {
           <template v-if="row.isProducing">
             <Bar class="site-card__progress" :value="row.progress" :max="1" :height="8" />
 
-            <p class="site-card__status">Đang sản xuất — còn {{ row.remainingLabel }}</p>
+            <p class="site-card__status">{{ t('panels.production.statusProducing', { time: row.remainingLabel }) }}</p>
           </template>
 
           <GameButton
@@ -246,7 +259,7 @@ function upgrade(siteId: string) {
             size="sm"
             @click="start(row.siteId)"
           >
-            Bắt đầu
+            {{ t('panels.production.start') }}
           </GameButton>
 
           <label class="site-card__auto">
@@ -256,7 +269,7 @@ function upgrade(siteId: string) {
               @change="toggleAuto(row)"
             />
 
-            Auto lặp lại
+            {{ t('panels.production.autoRepeat') }}
           </label>
 
           <div v-if="row.level < row.maxLevel" class="site-card__upgrade">
@@ -277,7 +290,7 @@ function upgrade(siteId: string) {
               :disabled="!canUpgrade(row.siteId, row.level)"
               @click="upgrade(row.siteId)"
             >
-              Nâng cấp nguồn
+              {{ t('panels.production.upgrade') }}
             </GameButton>
           </div>
         </article>

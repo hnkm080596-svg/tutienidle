@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
@@ -13,6 +14,8 @@ const BUILDING_ID = 'spirit_spring'
 const player = usePlayerStore()
 
 const gameManager = useGameManager()
+
+const { t } = useI18n({ useScope: 'local' })
 
 const { stateVersion, bumpState } = useStateVersion()
 
@@ -78,7 +81,7 @@ function collect() {
     <p class="spirit-spring-panel__description">{{ template?.description }}</p>
 
     <div class="spirit-spring-panel__card">
-      <h3>{{ outputName }} tích luỹ</h3>
+      <h3>{{ t('panels.spiritSpring.storedTitle', { name: outputName }) }}</h3>
 
       <Bar
         class="spirit-spring-panel__progress"
@@ -90,9 +93,9 @@ function collect() {
 
       <strong>{{ storedAmount.toLocaleString('vi-VN') }} / {{ displayedCapacity.toLocaleString('vi-VN') }}</strong>
 
-      <small class="spirit-spring-panel__rate">+{{ ratePerMinute.toLocaleString('vi-VN', { maximumFractionDigits: 1 }) }} thạch/phút</small>
+      <small class="spirit-spring-panel__rate">+{{ ratePerMinute.toLocaleString('vi-VN', { maximumFractionDigits: 1 }) }} {{ t('panels.spiritSpring.rateSuffix') }}</small>
 
-      <GameButton class="spirit-spring-panel__collect" size="sm" :disabled="storedAmount <= 0" @click="collect">Thu hoạch</GameButton>
+      <GameButton class="spirit-spring-panel__collect" size="sm" :disabled="storedAmount <= 0" @click="collect">{{ t('panels.spiritSpring.collect') }}</GameButton>
     </div>
   </section>
 </template>

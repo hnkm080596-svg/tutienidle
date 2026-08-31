@@ -4,6 +4,7 @@
 // Phải render đúng state "nghề chưa có definition" (Kiếm Tu, doc §4)
 // không crash khi player.artifact undefined.
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -32,6 +33,7 @@ const ui = useUiStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion, bumpState } = useStateVersion()
+const { t } = useI18n({ useScope: 'local' })
 
 const artifactId = computed(() => {
   stateVersion.value
@@ -42,7 +44,7 @@ const artifactId = computed(() => {
 const definition = computed(() => (artifactId.value ? ARTIFACTS[artifactId.value] : undefined))
 
 const cultivationPathLabel = computed(() =>
-  player.cultivationPath ? CULTIVATION_PATH_KITS[player.cultivationPath].name : 'Chưa chọn nghề',
+  player.cultivationPath ? CULTIVATION_PATH_KITS[player.cultivationPath].name : t('panels.artifact.noPath'),
 )
 
 const canChange = computed(() => {
@@ -115,13 +117,13 @@ function close() {
 </script>
 
 <template>
-  <OverlayPanel :open="ui.standalonePanel === 'artifact'" title="Bản Mệnh Pháp Bảo" width="min(560px, 92vw)" height="min(720px, 88vh)" @close="close">
+  <OverlayPanel :open="ui.standalonePanel === 'artifact'" :title="t('panels.artifact.title')" width="min(560px, 92vw)" height="min(720px, 88vh)" @close="close">
     <EmptyState v-if="!definition" size="lg">
-      Bản mệnh pháp bảo của {{ cultivationPathLabel }} đang chờ thiết kế.
+      {{ t('panels.artifact.emptyNoDefinition', { path: cultivationPathLabel }) }}
     </EmptyState>
 
     <EmptyState v-else-if="!artifact" size="lg">
-      Chưa thức tỉnh — đột phá Trúc Cơ thành công sẽ tự động nhận {{ definition.name }}.
+      {{ t('panels.artifact.emptyNotAwakened', { name: definition.name }) }}
     </EmptyState>
 
     <div v-else class="artifact-panel">
