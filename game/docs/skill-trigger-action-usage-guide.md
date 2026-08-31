@@ -26,6 +26,12 @@ on the new `triggers: TriggerBinding[]` shape — never both.
 4. Write a `SkillSystem.*.test.ts`/`BattleSystem.*.test.ts` covering it,
    same as any existing skill.
 
+`hitCountByRealm`/`components` on a `dealDamage` action are honored for
+damage, but `BattleSystem.ts`'s `beginSkillBatch` VFX/AOE batch derivation
+still only reads `effective.effects` — a triggers-based multi-hit or AOE
+skill will deal correct damage with an incorrect (single-hit) VFX batch
+until that derivation is updated to also check `effective.triggers`.
+
 ## Add a new TriggerType
 
 1. Add the literal to `TriggerType` in `game/src/core/skill/SkillTrigger.ts`.
@@ -34,7 +40,10 @@ on the new `triggers: TriggerBinding[]` shape — never both.
 3. Add ONE firing call at the site in the codebase where that moment
    actually happens (e.g. the missile-resolve callback in
    `BattleSystem.ts` for a hit-based trigger, `CombatSystem.ts` for a
-   kill/death trigger) — call `skillTriggerRunner.fire(yourTrigger, context, skill, source, target, ctx)`.
+   kill/death trigger) — call `skillTriggerRunner.fire(yourTrigger, context, triggers, source, target, ctx)`,
+   where `triggers` is the resolved `TriggerBinding[]` for the current
+   skill (e.g. `effective.triggers` in production code, not the
+   `Skill`/`EffectiveSkill` object itself).
    No other file needs to change: `SkillTriggerRunner` is generic over
    `TriggerType` already.
 4. Add a firing-site-level test (see `SkillTriggerRunner.test.ts` for the

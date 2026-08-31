@@ -1108,7 +1108,10 @@ on the new `triggers: TriggerBinding[]` shape — never both.
 3. Add ONE firing call at the site in the codebase where that moment
    actually happens (e.g. the missile-resolve callback in
    `BattleSystem.ts` for a hit-based trigger, `CombatSystem.ts` for a
-   kill/death trigger) — call `skillTriggerRunner.fire(yourTrigger, context, skill, source, target, ctx)`.
+   kill/death trigger) — call `skillTriggerRunner.fire(yourTrigger, context, triggers, source, target, ctx)`,
+   where `triggers` is the resolved `TriggerBinding[]` for the current
+   skill (e.g. `effective.triggers` in production code, not the
+   `Skill`/`EffectiveSkill` object itself).
    No other file needs to change: `SkillTriggerRunner` is generic over
    `TriggerType` already.
 4. Add a firing-site-level test (see `SkillTriggerRunner.test.ts` for the
