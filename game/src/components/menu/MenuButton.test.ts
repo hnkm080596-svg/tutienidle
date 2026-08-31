@@ -44,16 +44,27 @@ describe('MenuButton', () => {
   })
 
   it('emits click event on press', () => {
-    const { container, unmount } = mountMenuButton({ label: 'Test' })
+    let emittedClicks = 0
+
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const app = createApp({
+      components: { MenuButton },
+      template: `<MenuButton label="Test" @click="onClick" />`,
+      methods: {
+        onClick() { emittedClicks++ },
+      },
+    })
+    app.mount(container)
+
     const button = container.querySelector<HTMLButtonElement>('button.menu-button')
     expect(button).not.toBeNull()
-
-    let callCount = 0
-    button!.addEventListener('click', () => callCount++)
     button!.click()
 
-    expect(callCount).toBe(1)
-    unmount()
+    expect(emittedClicks).toBe(1)
+
+    app.unmount()
+    container.remove()
   })
 
   it('applies primary variant class', () => {
