@@ -63,10 +63,10 @@
 - [x] Task 3.4: CombatSkillSlot refactor — already using theme tokens, no changes needed
 - [x] Task 3.5: CombatStatusBar/EventBar/ControlBar refactor — already using theme tokens, no changes needed
 - [x] Task 3.6: CombatVictory/Defeat/ResultModal refactor — already using theme tokens, no changes needed (1510 tests PASS, build PASS)
-- [ ] Task 3.7: Phase 3 verification
-- [ ] Task 4.1: HomeResourceStrip refactor
-- [ ] Task 4.2: DongFuCommandWheel refactor
-- [ ] Task 4.3: DongFuBuildingSprite + BuildingDetailPopover refactor
+- [x] Task 3.7: Phase 3 verification — complete (1510 tests PASS, build PASS, commit bb2e4b3)
+- [x] Task 4.1: HomeResourceStrip refactor — already using theme tokens, no changes needed
+- [x] Task 4.2: DongFuCommandWheel refactor — already using theme tokens, no changes needed
+- [x] Task 4.3: DongFuBuildingSprite + BuildingDetailPopover refactor — removed hex fallbacks from BuildingDetailPopover (commit dd9aa40, 1510 tests PASS)
 - [ ] Task 4.4: Phase 4 verification
 - [ ] Task 5.1: ThemedIcon base
 - [ ] Task 5.2: iconRegistry + 24 icons
