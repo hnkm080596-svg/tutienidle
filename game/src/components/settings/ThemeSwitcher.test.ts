@@ -48,8 +48,8 @@ describe('ThemeSwitcher', () => {
 
   it('clicking a card calls setTheme', async () => {
     const store = useThemeStore()
-    const { cards, unmount } = mountThemeSwitcher()
-    const card = cards[2]
+    const { container, unmount } = mountThemeSwitcher()
+    const card = container.querySelector<HTMLElement>('[data-testid="theme-card"][data-theme-id="xianxia-glow"]')
     expect(card).toBeDefined()
     card?.click()
     expect(store.currentTheme).toBe('xianxia-glow')
