@@ -113,11 +113,11 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
 }
 
 .game-button--secondary:not(:disabled):hover {
-  color: #fff;
+  color: var(--chrome-100);
 }
 
 .game-button--danger {
-  color: #fff;
+  color: var(--chrome-100);
 }
 
 .game-button--danger:not(:disabled):hover {
