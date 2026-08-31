@@ -172,11 +172,21 @@ Sequential, not big-bang, so every step is verifiable before the next:
    `ActionRuntimeContext`, `SkillActionRegistry`, `SkillTriggerRunner`. No
    skill migrated yet — only registry/context-shape unit tests.
 2. **Dual-run firing sites**: the 6 call sites call `SkillTriggerRunner.fire`
-   alongside (not instead of) the old field reads. Verify one sample skill
-   (Hỏa Cầu Thuật) produces identical results through both paths.
-3. **Migrate path by path**, simplest → most complex (mirrors the original
+   alongside (not instead of) the old field reads. Verify against `Huy Kiếm`
+   (`id: 'tram'`, `game/src/data/skill/Skills.ts`) — the first, simplest
+   skill in the game: no resource cost, no ailment, no path-specific
+   mechanic, only a `damage` effect plus its own flat per-cast scaling
+   special case. It exercises exactly `onCast`/`onHit`/`onCrit`/`onEvade`
+   with none of the resource-pool or ailment machinery, making it the
+   cheapest possible proof that the new pipeline reproduces old behavior
+   before any path-specific complexity is introduced.
+3. **Migrate `Huy Kiếm` first** as the pilot skill (same reason as above —
+   smallest surface area, and it belongs to Kiếm Tu, a path migrated later
+   in the path order below; migrating it standalone first decouples "does
+   the new engine work" from "is a full path correctly converted"). Then
+   **migrate path by path**, simplest → most complex (mirrors the original
    Ngũ Hành redesign order in project history): Hỏa Tu → Thủy Tu → Mộc Tu →
-   Thổ Tu → Kim Tu → Kiếm Tu → Thể Tu. Per path: convert
+   Thổ Tu → Kim Tu → Kiếm Tu (remaining skills) → Thể Tu. Per path: convert
    `game/src/data/skill/Skills.ts` / `game/src/data/progression/*.ts`
    entries, delete the old fields that path alone used, rerun that path's
    `SkillSystem.*.test.ts` / `AilmentSystem.*.test.ts`.
