@@ -1,0 +1,7 @@
+interface:
+  display_name: "TutienIdle Adversarial QA"
+  short_description: "Find hidden cross-system game defects"
+  default_prompt: "Use $tutienidle-adversarial-qa to adversarially review this TutienIdle change and produce evidence-backed findings without modifying production code."
+policy:
+  allow_implicit_invocation: true
+
