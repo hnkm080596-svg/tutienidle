@@ -405,7 +405,7 @@ Việc cần làm:
 
 ### Giai đoạn 5 — Balance / stat system (theo data playtest)
 - [x] **T5.1** Evasion vs Accuracy — **HỦY (2026-09-01): không phải bug.** Player evasion 5 vs enemy 25 là data design có chủ đích (player = headroom đầu tư; enemies = premade data per-stage). Công thức `getHitChance` (acc/(acc+eva), clamp 5-100%) hoạt động đúng. Đã revert fix nhầm trước khi commit. Bài học: đừng coi "chỉ số khác nhau giữa player và enemy" là lệch hệ thống.
-- [ ] **T5.2** Realm Pressure test coverage (grade 1 + gap≥1)
+- [x] **T5.2** Realm Pressure test coverage — **XONG (886b9b3): 11/11 tests.** Multi-gap tuyến tính locked; content-proof: stages chặn player đánh lên realm cao hơn nên "tường thành ×0.5" không thể xảy ra trong content (chỉ thưởng ×2.0 khi farm lại). Curve multi-gap giữ tuyến tính cho tới playtest nói khác.
 - [x] **T5.3** MP cost cho skill — **HỦY (2026-09-01): game idle, không cần resource gate.** User + hệ thống thoải mái, skill spam khi cooldown. Không MP cost cho bất kỳ skill nào.
 - [ ] **T5.4** Armor curve playtest tuning (K=50, log 100 rounds)
 - [ ] **T5.5** Stat cap Phàm Nhân (nâng 15-20?), CDR cap review, reaction damage scaling
