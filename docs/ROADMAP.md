@@ -404,7 +404,7 @@ Việc cần làm:
 - [ ] **T4.9** Vendor UI rebuild: 2 tab [Thu mua | Cửa hàng] — tab Cửa hàng để placeholder chờ 6H
 
 ### Giai đoạn 5 — Balance / stat system (theo data playtest)
-- [ ] **T5.1** Evasion vs Accuracy rebase (player evasion 5 → ~20-25 hoặc accuracyFloor)
+- [x] **T5.1** Evasion vs Accuracy — **HỦY (2026-09-01): không phải bug.** Player evasion 5 vs enemy 25 là data design có chủ đích (player = headroom đầu tư; enemies = premade data per-stage). Công thức `getHitChance` (acc/(acc+eva), clamp 5-100%) hoạt động đúng. Đã revert fix nhầm trước khi commit. Bài học: đừng coi "chỉ số khác nhau giữa player và enemy" là lệch hệ thống.
 - [ ] **T5.2** Realm Pressure test coverage (grade 1 + gap≥1)
 - [ ] **T5.3** MP cost cho skill (dựa trên Phase 2A GrantResource/ConsumeResource actions)
 - [ ] **T5.4** Armor curve playtest tuning (K=50, log 100 rounds)
