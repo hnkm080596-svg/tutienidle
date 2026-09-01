@@ -60,7 +60,7 @@ import { MaterialBag } from '../material/MaterialBag'
 import type { Material } from '../material/Material'
 
 import { EquipmentRegistry } from '../equipment/EquipmentRegistry'
-import { EquipmentBag } from '../equipment/EquipmentBag'
+import { EquipmentBag, type AutoDissolveReward } from '../equipment/EquipmentBag'
 import { EquipmentSystem } from '../equipment/EquipmentSystem'
 import type { RefineValueEntry } from '../equipment/EquipmentSystem'
 import type { RolledAffix } from '../equipment/RolledAffix'
@@ -1830,9 +1830,37 @@ export class GameManager {
     const template = this.equipmentRegistry.get(equipmentId)
     const instance = this.equipmentSystem.createInstance(template, player, this.affixRegistry)
 
-    this.equipmentBag.add(instance)
+    this.grantAutoDissolveRewards(this.equipmentBag.add(instance))
 
     return instance
+  }
+
+  /**
+   * Cap mềm túi trang bị (audit 2026-08-31) — EquipmentBag.add() tự Hóa
+   * Luyện item "rác" nhất khi vượt cap và TRẢ rewards Tinh Hoa cho caller
+   * cộng. Null-safe với mock tests (add trả undefined khi bị mock). Cộng
+   * qua materialBag + quest hook (mirror dissolveItems()), toast 1 lần
+   * mỗi batch qua NotificationQueue sẵn có.
+   */
+  private grantAutoDissolveRewards(rewards: AutoDissolveReward[] | undefined) {
+    const autoDissolved = rewards ?? []
+
+    if (autoDissolved.length === 0) {
+      return
+    }
+
+    for (const reward of autoDissolved) {
+      if (this.materialRegistry.has(reward.materialId)) {
+        this.materialBag.add(this.materialRegistry.get(reward.materialId), reward.amount)
+
+        this.notifyQuestMaterialGained(reward.materialId, reward.amount)
+      }
+    }
+
+    this.notifications.push({
+      kind: 'loot',
+      message: `Túi đầy — tự Hóa Luyện ${autoDissolved.length} món thành Tinh Hoa`,
+    })
   }
 
   equipItem(instanceId: string, player: PlayerData): boolean {
@@ -2879,6 +2907,12 @@ export class GameManager {
 
     this.eventBus.emit('battle_end', { type: 'battle_end', state: 'defeat' })
 
+    // Audit fix 2026-08-31 — enemy sống + pending spawn của trận bị bỏ không
+    // qua victory flow (processDefeatedEnemies despawn) → orphan vĩnh viễn
+    // trong EnemyManager. Clear ở ĐÚNG điểm hủy trận, không đụng flow victory
+    // (StageWave auto-repeat spawn trận mới ngay sau victory).
+    this.enemyManager.clear()
+
     return true
   }
 
@@ -2985,12 +3019,33 @@ export class GameManager {
     // PhÃ¹/Tráº­n legacy (plan Â§10.1): save Ä‘Ã£ qua migration v44 cÃ³ máº£ng
     // rá»—ng â€” bá» qua hoÃ n toÃ n, khÃ´ng cÃ²n bag Ä‘á»ƒ náº¡p.
 
+    // Cap mềm (audit 2026-08-31) — restore save quá cap: tự Hóa Luyện
+    // phần tràn, GOM rewards cả batch để cộng material + toast đúng 1
+    // LẦN cuối vòng (auto-dissolve chạy ngay trong từng add() nhưng
+    // người chơi không cần 500 toast). KHÔNG gọi quest hook tại đây —
+    // notifyQuestMaterialGained() phải bỏ qua restore (double-count,
+    // xem ghi chú tại hàm đó).
+    let restoredAutoDissolved: AutoDissolveReward[] = []
+
     for (const instance of save.equipment) {
-      // Item template cÅ© Ä‘Ã£ bá»‹ xoÃ¡ theo equipment rework; bá» háº³n instance
-      // má»“ cÃ´i thay vÃ¬ Ä‘á»ƒ restoreModifiers truy cáº­p registry vÃ  crash.
+      // Item template cũ đã bị xoá theo equipment rework; bỏ hẳn instance
+      // mồ côi thay vì để restoreModifiers truy cập registry và crash.
       if (this.equipmentRegistry.has(instance.itemId)) {
-        this.equipmentBag.add(instance)
+        restoredAutoDissolved = [...restoredAutoDissolved, ...(this.equipmentBag.add(instance) ?? [])]
       }
+    }
+
+    for (const reward of restoredAutoDissolved) {
+      if (this.materialRegistry.has(reward.materialId)) {
+        this.materialBag.add(this.materialRegistry.get(reward.materialId), reward.amount)
+      }
+    }
+
+    if (restoredAutoDissolved.length > 0) {
+      this.notifications.push({
+        kind: 'loot',
+        message: `Túi đầy — tự Hóa Luyện ${restoredAutoDissolved.length} món thành Tinh Hoa`,
+      })
     }
 
     // MASTER SPEC Má»¥c XVI (Phase 9) â€” slot state (enhance) PHáº¢I náº¡p
