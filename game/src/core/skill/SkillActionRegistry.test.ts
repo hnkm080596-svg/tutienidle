@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { runSkillAction, SKILL_ACTION_REGISTRY } from './SkillActionRegistry'
 import type { ActionExecutionHelpers } from './SkillActionRegistry'
-import type { DealDamageAction, SkillActionType } from './SkillAction'
+import type { ActionRuntimeContext, DealDamageAction, SkillActionType } from './SkillAction'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { SkillEffectContext } from './SkillEffectSystem'
 
@@ -233,5 +233,51 @@ describe('grantResource executor', () => {
 
     expect(source.currentHoaThe).toBe(5)
     expect(fireNested).toHaveBeenCalledWith('onResourceFull', { source, resource: 'hoaThe' })
+  })
+})
+
+describe('consumeResource executor', () => {
+  it('subtracts amount from the pool and writes runtime.consumedAmount', () => {
+    const source = makeEntity({ currentKimThe: 5 } as Partial<CombatEntity> as CombatEntity)
+    const target = makeEntity()
+    const runtime: ActionRuntimeContext = {}
+
+    runSkillAction({ type: 'consumeResource', pool: 'kimThe', amount: 2 }, source, target, makeCtx(), runtime, makeHelpers())
+
+    expect(source.currentKimThe).toBe(3)
+    expect(runtime.consumedAmount).toBe(2)
+  })
+
+  it("'all' consumes the entire pool", () => {
+    const source = makeEntity({ currentKimThe: 5 } as Partial<CombatEntity> as CombatEntity)
+    const target = makeEntity()
+    const runtime: ActionRuntimeContext = {}
+
+    runSkillAction({ type: 'consumeResource', pool: 'kimThe', amount: 'all' }, source, target, makeCtx(), runtime, makeHelpers())
+
+    expect(source.currentKimThe).toBe(0)
+    expect(runtime.consumedAmount).toBe(5)
+  })
+
+  it("pool 'breakGauge' subtracts from TARGET and fires onBreak at 0", () => {
+    const source = makeEntity()
+    const target = makeEntity({ currentBreakGauge: 3, breakGaugeMax: 100 } as Partial<CombatEntity> as CombatEntity)
+    const fireNested = vi.fn()
+
+    runSkillAction({ type: 'consumeResource', pool: 'breakGauge', amount: 3 }, source, target, makeCtx(), {}, { fireNested })
+
+    expect(target.currentBreakGauge).toBe(0)
+    expect(fireNested).toHaveBeenCalledWith('onBreak', { source, target })
+  })
+
+  it("pool 'breakGauge' does NOT fire onBreak above 0", () => {
+    const source = makeEntity()
+    const target = makeEntity({ currentBreakGauge: 10, breakGaugeMax: 100 } as Partial<CombatEntity> as CombatEntity)
+    const fireNested = vi.fn()
+
+    runSkillAction({ type: 'consumeResource', pool: 'breakGauge', amount: 3 }, source, target, makeCtx(), {}, { fireNested })
+
+    expect(target.currentBreakGauge).toBe(7)
+    expect(fireNested).not.toHaveBeenCalled()
   })
 })

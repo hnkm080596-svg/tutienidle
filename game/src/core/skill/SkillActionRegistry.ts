@@ -156,6 +156,43 @@ const grantResource: ActionExecutor<Extract<SkillAction, { type: 'grantResource'
   }
 }
 
+const consumeResource: ActionExecutor<Extract<SkillAction, { type: 'consumeResource' }>> = (
+  action,
+  source,
+  target,
+  _ctx,
+  runtime,
+  helpers,
+) => {
+  if (action.pool === 'breakGauge') {
+    const current = target.currentBreakGauge
+
+    if (current === undefined) {
+      return
+    }
+
+    const amount = action.amount === 'all' ? current : action.amount
+    const next = Math.max(0, current - amount)
+
+    target.currentBreakGauge = next
+    runtime.consumedAmount = current - next
+
+    if (next <= 0) {
+      helpers.fireNested('onBreak', { source, target })
+    }
+
+    return
+  }
+
+  const field = RESOURCE_POOL_FIELD[action.pool]
+  const current = (source[field] as number | undefined) ?? 0
+  const amount = action.amount === 'all' ? current : action.amount
+  const next = Math.max(0, current - amount)
+
+  ;(source[field] as number) = next
+  runtime.consumedAmount = current - next
+}
+
 export const SKILL_ACTION_REGISTRY: { [K in SkillActionType]: ActionExecutor<Extract<SkillAction, { type: K }>> } = {
   dealDamage,
   heal,
@@ -163,6 +200,7 @@ export const SKILL_ACTION_REGISTRY: { [K in SkillActionType]: ActionExecutor<Ext
   applyDebuff,
   applyAilment,
   grantResource,
+  consumeResource,
 } as { [K in SkillActionType]: ActionExecutor<Extract<SkillAction, { type: K }>> }
 
 export function runSkillAction(
