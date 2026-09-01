@@ -12,6 +12,13 @@
 - Fix verification failures caused by the implementation.
 - Summaries must state what changed, what was verified, and any remaining limitations.
 
+## Iron Rule: Deletion Requires Explicit Authorization
+
+- Never delete any file or directory, by any method, unless the user has explicitly authorized that specific deletion in advance.
+- This prohibition includes direct deletion and indirect deletion through shell commands, editors, patches, scripts, Git operations, cleanup tools, automation, or any command with deletion as a side effect.
+- Treat deletion exactly like committing: the user retains the final decision and must grant explicit authorization before the deletion is performed.
+- If completing a task appears to require deletion, stop and ask the user for authorization. Do not work around this rule by replacing, emptying, truncating, or moving the target so that it is effectively deleted.
+
 ## UI/UX Skill Requirement
 
 - For every task that designs, builds, reviews, or changes UI/UX, use the `ui-ux-pro-max` skill before making design or implementation decisions.
