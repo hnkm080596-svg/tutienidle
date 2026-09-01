@@ -20,7 +20,7 @@ import { SkillTriggerRunner } from '../skill/SkillTriggerRunner'
 import type { SkillEffectContext } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
 import { BuffSystem } from '../buff/BuffSystem'
-import { BuffManager } from '../buff/BuffManager'
+import { BuffPool } from '../buff/BuffPool'
 import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import { AilmentSystem } from '../ailment/AilmentSystem'
 import { AilmentManager } from '../ailment/AilmentManager'
@@ -563,8 +563,8 @@ export class CombatSystem {
       fireHit: () => ({ landed: true }),
       buffRegistry: this.buffRegistry,
       ailmentRegistry: this.ailmentRegistry,
-      sourceBuffs: new BuffSystem(new BuffManager()),
-      targetBuffs: new BuffSystem(new BuffManager()),
+      sourceBuffs: new BuffSystem(new BuffPool()),
+      targetBuffs: new BuffSystem(new BuffPool()),
       targetAilments: new AilmentSystem(new AilmentManager()),
       reactionManager: this.reactionManager,
     }
