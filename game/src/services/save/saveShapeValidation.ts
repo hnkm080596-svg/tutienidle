@@ -8,6 +8,7 @@
 // thay đổi (round-trip test sẽ đỏ nếu buildGameSave() thiếu field mà
 // validator đòi, và ngược lại).
 import { CURRENT_SAVE_VERSION } from './saveVersion'
+import { REALMS } from '../../data/realms/realm'
 
 export interface ShapeIssue {
   path: string
@@ -115,6 +116,18 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
 
   requireString(player, 'name', 'player', issues)
   requireString(player, 'realmId', 'player', issues)
+
+  // Audit fix 2026-08-31 — realmId rác từng pass shape check (chỉ kiểm
+  // string) rồi crash boot ở getCurrentRealm() throw (white-screen).
+  if (
+    typeof player.realmId === 'string' &&
+    !REALMS.some((realm) => realm.id === player.realmId)
+  ) {
+    issues.push({
+      path: 'player.realmId',
+      message: `không tồn tại trong danh sách cảnh giới: ${player.realmId}`,
+    })
+  }
 
   // realmLevel >= 1 — nền của mọi tính toán progression; NaN/âm ở đây
   // lây sang cultivation curve.

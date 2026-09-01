@@ -97,6 +97,17 @@ describe('validateGameSaveShape — player', () => {
       expect(validateGameSaveShape(save).ok).toBe(false)
     }
   })
+
+  it('từ chối realmId string nhưng không tồn tại trong danh sách cảnh giới', () => {
+    const save = validSave()
+
+    ;(save.player as Record<string, unknown>).realmId = 'khong_ton_tai'
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.realmId')
+  })
 })
 
 describe('validateGameSaveShape — arrays bắt buộc', () => {
