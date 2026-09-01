@@ -157,9 +157,17 @@ export class BuffSystem {
   ): number {
     const ratio = effect.dpsRatio ?? 1
 
+    // Kiếm Tu (Vạn Kiếm Triều Tông) — "bỏ qua 10%-90% giáp/kháng theo cảnh
+    // giới": realmIndex 0 (Luyện Khí) -> 10%, realmIndex 8 (Kiếp Lôi/
+    // tribulation, realm cuối) -> 90% — ported verbatim from
+    // AilmentSystem.calculateDamagePerSecond().
+    const armorIgnoreMultiplier = effect.armorIgnorePercentByRealm
+      ? 1 - Math.min(0.9, 0.1 + source.realmIndex * 0.1)
+      : 1
+
     if (!effect.element || effect.element === 'physical') {
       const power = source.stats.attack
-      const mitigation = getArmorMitigationPercent(target.stats.defense)
+      const mitigation = getArmorMitigationPercent(target.stats.defense) * armorIgnoreMultiplier
       return Math.max(0, power * ratio * (1 - mitigation)) * (1 + source.stats.ailmentPotencyPercent)
     }
 
@@ -169,7 +177,7 @@ export class BuffSystem {
     const power = elementalBasePower(source, effect.element)
     const resistance = target.stats[`${effect.element}Resistance`]
     const penetration = source.stats[`${effect.element}Penetration`]
-    const mitigation = getResistanceMitigationPercent(resistance, penetration)
+    const mitigation = getResistanceMitigationPercent(resistance, penetration) * armorIgnoreMultiplier
 
     // Kim Tu Trúc Cơ Pure ("Kim Thế" major + "Huyết Lưu" minor) — CHỈ
     // nhân cho DoT element 'metal' (Xuất Huyết/Huyết Độc), KHÔNG qua
@@ -225,7 +233,7 @@ export class BuffSystem {
       }
 
       for (const effect of buff.effects) {
-        if (effect.type === 'dot' && target.alive) {
+        if (effect.type === 'dot' && effect.damagePerSecond && target.alive) {
           const rawDamage =
             effect.damagePerSecond * buff.stacks * this.getPoisonRootMultiplier(effect, buff.continuousSeconds) * deltaSeconds
 

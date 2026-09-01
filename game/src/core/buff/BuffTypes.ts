@@ -30,6 +30,12 @@ export interface DotEffectTemplate {
   poisonRootPercentPerStack?: number
   poisonRootMaxStacks?: number
   poisonRootThresholdBonusPercent?: number
+  // Kiếm Tu (Vạn Kiếm Triều Tông) — "bỏ qua 10%-90% giáp/kháng theo cảnh
+  // giới" — ported verbatim from AilmentTemplate.armorIgnorePercentByRealm
+  // (AilmentRegistry.ts). Apply-time-only, consumed once inside
+  // BuffSystem.calculateDamagePerSecond() (same as `dpsRatio` itself) — does
+  // NOT survive onto the resolved runtime DotEffect.
+  armorIgnorePercentByRealm?: boolean
 }
 
 export interface CcEffect {

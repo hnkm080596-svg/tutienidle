@@ -9,6 +9,12 @@ import { createBaseStats } from '../stats/StatBlock'
 
 function makeEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats }
+  // `stats` is destructured out of overrides (and merged into `stats`
+  // above already) so the ...restOverrides spread below can't clobber the
+  // merge with a raw partial (eg. `{ attack: 10 } as CombatEntity['stats']`)
+  // and silently drop base fields (defense, ailmentPotencyPercent, ...)
+  // that calculateDamagePerSecond()/apply() still read.
+  const { stats: _overrideStats, ...restOverrides } = overrides
   return {
     id: 'id',
     name: 'name',
@@ -33,7 +39,7 @@ function makeEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
     x: 0,
     row: 2,
     alive: true,
-    ...overrides,
+    ...restOverrides,
   }
 }
 
@@ -334,6 +340,51 @@ describe('BuffSystem — multi-source coexistence (2026-09-01 unified buff syste
     system.update(1, target, combatSystem)
 
     expect(combatSystem.applyDotDamage).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('BuffSystem — Kiếm Tu armorIgnorePercentByRealm (2026-09-01 review fix)', () => {
+  it('armorIgnorePercentByRealm scales down armor mitigation by source.realmIndex, producing higher DoT damagePerSecond than the same effect without it', () => {
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
+    // realmIndex 8 (Kiếp Lôi/tribulation, realm cuối) -> ignore 90% mitigation.
+    const source = makeEntity({ id: 'source_1', realmIndex: 8, stats: { ...createBaseStats(), attack: 100, defense: 0 } })
+    const target = makeEntity({ id: 'target_1', stats: { ...createBaseStats(), defense: 50 } })
+
+    const withIgnore: BuffDefinition = {
+      id: 'buff_ignore', name: 'Ignore', polarity: 'debuff', duration: 5, stackMode: 'refresh',
+      effects: [{ type: 'dot', dpsRatio: 1, element: 'physical', armorIgnorePercentByRealm: true }],
+    }
+    const withoutIgnore: BuffDefinition = {
+      id: 'buff_no_ignore', name: 'No Ignore', polarity: 'debuff', duration: 5, stackMode: 'refresh',
+      effects: [{ type: 'dot', dpsRatio: 1, element: 'physical' }],
+    }
+
+    system.apply(withIgnore, source, target)
+    system.apply(withoutIgnore, source, target)
+
+    const withIgnoreEffect = pool.getFromSource('buff_ignore', 'source_1')!.effects[0] as Extract<Buff['effects'][number], { type: 'dot' }>
+    const withoutIgnoreEffect = pool.getFromSource('buff_no_ignore', 'source_1')!.effects[0] as Extract<Buff['effects'][number], { type: 'dot' }>
+
+    expect(withIgnoreEffect.damagePerSecond).toBeGreaterThan(withoutIgnoreEffect.damagePerSecond)
+  })
+})
+
+describe('BuffSystem — update() skips DoT tick when damagePerSecond is falsy (2026-09-01 review fix)', () => {
+  it('a dot effect with damagePerSecond: 0 (e.g. a convert() destination with no snapshot yet) does not call combatSystem.applyDotDamage()', () => {
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
+    const target = makeEntity({ id: 'target_1' })
+    const combatSystem = makeCombatSystem()
+
+    pool.add(makeRuntimeBuff({
+      id: 'converted_buff', sourceId: 'source_1', targetId: 'target_1',
+      effects: [{ type: 'dot', damagePerSecond: 0, element: 'physical' }],
+    }))
+
+    system.update(1, target, combatSystem)
+
+    expect(combatSystem.applyDotDamage).not.toHaveBeenCalled()
   })
 })
 
