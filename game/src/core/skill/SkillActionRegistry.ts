@@ -2,6 +2,30 @@ import type { ActionRuntimeContext, SkillAction, SkillActionType } from './Skill
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { SkillEffectContext } from './SkillEffectSystem'
 import type { TriggerContextMap, TriggerType } from './SkillTrigger'
+import { MAX_SWORD_INTENT, MAX_MOMENTUM, MAX_HOA_THE, MAX_THO_THE, MAX_KIM_THE, MAX_HUYET_PHA } from '../combat/CombatTypes'
+import type { SkillResourcePoolKey } from './SkillAction'
+
+// Shared by grantResource (Task 5) and consumeResource (Task 6) — every
+// named pool's CombatEntity field and hard cap. Pools with no cap in
+// today's game (none currently) would map to Infinity; all 6 current
+// pools have one.
+export const RESOURCE_POOL_FIELD: Record<SkillResourcePoolKey, keyof CombatEntity> = {
+  swordIntent: 'currentSwordIntent',
+  momentum: 'currentMomentum',
+  hoaThe: 'currentHoaThe',
+  thoThe: 'currentThoThe',
+  kimThe: 'currentKimThe',
+  huyetPha: 'currentHuyetPha',
+}
+
+export const RESOURCE_POOL_MAX: Record<SkillResourcePoolKey, number> = {
+  swordIntent: MAX_SWORD_INTENT,
+  momentum: MAX_MOMENTUM,
+  hoaThe: MAX_HOA_THE,
+  thoThe: MAX_THO_THE,
+  kimThe: MAX_KIM_THE,
+  huyetPha: MAX_HUYET_PHA,
+}
 
 export interface ActionExecutionHelpers {
   fireNested: <T extends TriggerType>(trigger: T, context: Omit<TriggerContextMap[T], 'skill'>) => void
@@ -111,12 +135,34 @@ const applyAilment: ActionExecutor<Extract<SkillAction, { type: 'applyAilment' }
   )
 }
 
+const grantResource: ActionExecutor<Extract<SkillAction, { type: 'grantResource' }>> = (
+  action,
+  source,
+  _target,
+  _ctx,
+  _runtime,
+  helpers,
+) => {
+  const field = RESOURCE_POOL_FIELD[action.pool]
+  const max = RESOURCE_POOL_MAX[action.pool]
+  const current = (source[field] as number | undefined) ?? 0
+
+  const next = Math.min(max, current + action.amount)
+
+  ;(source[field] as number) = next
+
+  if (next >= max) {
+    helpers.fireNested('onResourceFull', { source, resource: action.pool })
+  }
+}
+
 export const SKILL_ACTION_REGISTRY: { [K in SkillActionType]: ActionExecutor<Extract<SkillAction, { type: K }>> } = {
   dealDamage,
   heal,
   applyBuff,
   applyDebuff,
   applyAilment,
+  grantResource,
 } as { [K in SkillActionType]: ActionExecutor<Extract<SkillAction, { type: K }>> }
 
 export function runSkillAction(

@@ -211,3 +211,27 @@ describe('applyAilment executor', () => {
     vi.restoreAllMocks()
   })
 })
+
+describe('grantResource executor', () => {
+  it('adds amount to the pool field, clamped to the pool max', () => {
+    const source = makeEntity({ currentHoaThe: 3 } as Partial<CombatEntity> as CombatEntity)
+    const target = makeEntity()
+    const fireNested = vi.fn()
+
+    runSkillAction({ type: 'grantResource', pool: 'hoaThe', amount: 1 }, source, target, makeCtx(), {}, { fireNested })
+
+    expect(source.currentHoaThe).toBe(4)
+    expect(fireNested).not.toHaveBeenCalled()
+  })
+
+  it('fires onResourceFull when the write clamps to max', () => {
+    const source = makeEntity({ currentHoaThe: 5 } as Partial<CombatEntity> as CombatEntity) // MAX_HOA_THE = 5
+    const target = makeEntity()
+    const fireNested = vi.fn()
+
+    runSkillAction({ type: 'grantResource', pool: 'hoaThe', amount: 1 }, source, target, makeCtx(), {}, { fireNested })
+
+    expect(source.currentHoaThe).toBe(5)
+    expect(fireNested).toHaveBeenCalledWith('onResourceFull', { source, resource: 'hoaThe' })
+  })
+})
