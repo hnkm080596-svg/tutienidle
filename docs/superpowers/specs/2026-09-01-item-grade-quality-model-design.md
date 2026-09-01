@@ -9,7 +9,7 @@
 
 ## 0. Tổng quan — tại sao rework
 
-> ⚠️ **1 CÂU HỎI MỞ CẦN CHỐT TRƯỚC KHI VIẾT PLAN (§5.2):** `forgeUsesRemaining` là **ngân sách dùng CHUNG** cho Tẩy + Tinh trên item (mỗi lần tẩy/tinh tốn 1 lượt) — hay "rèn" là hành động thứ 3 riêng? Thiết kế hiện hiểu là NGÂN SÁCH CHUNG (rèn không tồn tại như hành động độc lập). Nếu ý bạn khác, chốt ở đây.
+> ✅ **Đã chốt (đối thoại 2026-09-01):** `forgeUsesRemaining` là **ngân sách dùng CHUNG** cho Tẩy + Tinh trên item — "rèn" KHÔNG tồn tại như hành động độc lập. Cường hóa ngược lại là tiến trình của **SLOT** (vĩnh viễn, 100 cấp, tỉ lệ mũ 0.956 + pity 10) — chi tiết §5.1.
 
 Code hiện tại có **3 trục lấn chiếm lẫn nhau** trên trang bị: `realmId` (realm người chơi bắt lên item), `quality` (9 bậc Khí random theo bảng weights 10×9), `rarity` (Ngũ Phẩm 5 random toàn cục). Hệ quả: terminology hiển thị xáo trộn ("Phẩm" cho trục chất), tinh hoa Hóa Luyện là **item chết** (0 consumer — sản xuất mà không gì tiêu thụ), ore Tẩy Luyện tạo bối rối "phải tìm quặng cùng realm", và không có gate phẩm.
 
@@ -45,10 +45,13 @@ Phẩm ↔ cảnh giới (bảng 10:10 — đã tồn tại trong code là `PROF
 grade: ProfessionGrade        // MỚI — thay realmId (10 bậc union có sẵn)
 realmLevel: number            // GIỮ — globalLevel scale cần (grade→realm suy được; realmLevel thì không)
 quality: ItemQuality          // 5 chất (hoang..tien) — nhận vai trò của rarity cũ
-forgeUsesTotal: number        // MỚI — lượt rèn cố định theo chất
-forgeUsesRemaining: number    // MỚI — giảm 1/lượt rèn
+forgeUsesTotal: number        // MỚI — lượt rèn cố định theo chất (5/10/20/40/80)
+forgeUsesRemaining: number    // MỚI — giảm 1/lượt TẨY/TINH (ngân sách item)
 affixes: RolledAffix[]        // số dòng random 0..N theo chất
 
+// Slot state (EquipmentSlotState) — MỚI enhance fields
+enhanceLevel: number          // GIỮ tên — giờ là cấp CƯỜNG HÓA SLOT (vĩnh viễn, 1..100)
+enhanceFailStreak: number     // MỚI — pity counter, reset khi thành công
 // XÓA HẲN
 realmId: string               // → grade
 rarity: EquipmentRarity      // → quality (nhận tất cả vai trò)
@@ -72,9 +75,10 @@ luyen_khi_tinh_hoa: Material  // MỚI — 1 loại duy nhất, category 'essenc
 | 2 | Số dòng substat lúc tạo | **Chất** | **RANDOM khoảng**: Hoang 0–1, Huyền 0–2, Địa 0–3, Thiên 0–4, Tiên 0–5. Roll số dòng; mỗi dòng 50/50 prefix/suffix; trần `GLOBAL_MAX_AFFIXES=8` giữ |
 | 3 | Trần tier affix | **Chất** | mỗi chất +1 tier: T1/T2/T3/T4/T5 |
 | 4 | Pool affix mở | **Chất** | Hoang basic; Huyền +advanced; Địa +specialized; Thiên +supreme; Tiên all |
-| 5 | Lượt rèn | **Chất** | **5/10/20/40/80** (×2 mỗi chất), cố định, chi phí 1 lượt + nguyên liệu (xem #9a). Bỏ FORGE_PERCENT_PER_POINT — rèn KHÔNG còn +% scale |
+| 5 | Điểm Rèn (ngân sách item) | **Chất** | **5/10/20/40/80** (×2 mỗi chất), cố định. Dùng CHUNG cho Tẩy + Tinh: mỗi lần tẩy/tinh tốn 1 lượt + nguyên liệu riêng. Hết lượt → chặn cả 2. Bỏ FORGE_PERCENT_PER_POINT. (Cường hóa slot là tiến trình riêng — xem #7a) |
+| 7a | **Cường Hóa SLOT (mới)** | **Realm** | Cấp cường hóa gắn SLOT (vĩnh viễn, 1..100 = 10 realm×10), KHÔNG theo item. Tỉ lệ `max(1%, 100×0.956^(L-1))` — fail KHÔNG phạt (chỉ mất nguyên liệu), **pity 10 fail liên tiếp = chắc chắn thành công**. Item vào slot được khuếch đại theo cấp slot |
 | 6 | Implicit multiplier (roll mainStat) | **Chất** | 1.00 / 1.15 / 1.30 / 1.50 / 1.75 |
-| 7 | Chi phí cường hóa/tẩy/tinh (nguyên liệu khác) | **Phẩm** | CostCatalog tra qua grade→realm (giữ cấu trúc, đổi nguồn realmId) |
+| 7 | Chi phí nguyên liệu (tẩy/tinh) | **Phẩm item** | CostCatalog tra qua grade→realm của ITEM (giữ cấu trúc, đổi nguồn tra). Chi phí cường hóa slot theo realm của SLOT — xem #7a |
 | 8 | ~~Ore Tẩy Luyện cùng bậc~~ | — | **XÓA** — Tẩy không còn dùng ore (xem #9a) |
 | 9 | Tinh hoa Hóa Luyện — loại | — | **1 loại: `luyen_khi_tinh_hoa`** — bảng 10 essence theo realm xóa |
 | 10 | Tinh hoa Hóa Luyện — lượng | **Chất** | giữ range: 1-3 / 2-4 / 3-5 / 4-6 / 5-7 |
@@ -144,16 +148,38 @@ forgeUsesTotal = QUALITY_FORGE_USES[quality]
 
 ## 5. Thay đổi cơ chế chi tiết
 
-### 5.1 Cường Hóa (enhance)
-- Giữ: `ENHANCE_PERCENT_PER_LEVEL = 0.08`, `DEFAULT_MAX_ENHANCE_LEVEL = 10`, Linh Thạch theo level + cost catalog theo phẩm
-- Scale trang bị = `1 + enhanceLevel × 0.08` (implicit chất ×globalLevel phẩm áp lúc roll — không đổi cách áp, chỉ đổi nguồn tra)
-- Thêm: chi phí tinh hoa theo bảng plan (bắt đầu: 1/lượt mọi level — chốt khi viết plan)
+### 5.1 Cường Hóa (enhance) — REWORK: thuộc SLOT, pity system
+
+**Mô hình mới — Cường hóa là tiến trình của SLOT (vĩnh viễn):**
+- Cấp cường hóa gắn với **slot** (weapon/helmet/...), KHÔNG theo item. Tháo/đổi đồ không mất cấp
+- Item mặc vào slot được **khuếch đại** theo cấp cường hóa slot — item yếu ở slot mạnh vẫn yếu; cường hóa = đầu tư tài khoản
+- 10 cảnh giới × 10 cấp = **100 level cường hóa slot** tổng
+- Tẩy/Tinh ngược lại: hành động trên **item**, tốn **Điểm Rèn của item** (`forgeUsesRemaining`) — tiến trình tạm thời, đi theo item
+
+**Tỉ lệ thành công — đường cong mũ:**
+```
+successRate(level L) = max(1%, round(100 × 0.956^(L-1)))
+```
+- L1=100%, L5≈84%, L10≈64%, L20≈41%, L40≈17%, L60≈7%, L80≈2.8%, L100=floor 1%
+- ×0.956/level, giảm đều ~4.4%, không bậc nhảy; cực đoan có chủ ý (user-approved)
+- Floor 1% — không bao giờ 0%
+
+**Bảo Hiểm (pity) — 10 lần thất bại liên tiếp = chắc chắn thành công:**
+- `enhanceFailStreak: number` per-slot, persist qua save
+- Fail → streak+1; đạt 10 → lần tiếp theo thành công CHẮC CHẮC (bất kể tỉ lệ), reset streak=0; Success → streak=0
+- **Thất bại KHÔNG phạt** — chỉ mất nguyên liệu của lần thử đó (user-approved); không rơi cấp
+- UI bắt buộc: hiển thị counter khi streak ≥ 3 ("Bảo hiểm 4/10") — người chơi thấy ánh sáng cuối đường
+- Hệ quả cân bằng: kỳ vọng end-game ≤ 10 lần thử/slot-level (trần hóa cực đoan); đầu-game pity không bao giờ chạm
+
+**Chi phí:**
+- Nguyên liệu mỗi lần THỬ (kể cả fail): Linh Thạch theo level + cost catalog theo phẩm slot (giữ cấu trúc) — chốt bảng trong plan
+- Đơn vị tinh hoa cho cường hóa: **không dùng** — cường hóa không tốn Điểm Rèn (đó là của tẩy/tinh trên item)
 
 ### 5.2 Rèn (forge) — REWORK
 - `forgeUsesRemaining` giảm 1/lượt; chặn khi 0; hiển thị "x/y lượt"
 - 1 lượt = 1 Luyện Khí Tinh Hoa (cố định mọi chất — khoảng cách chất nằm ở TỔNG lượt)
 - **Bỏ:** `FORGE_PERCENT_PER_POINT`, `calculateEquipmentScale` phần forge (chỉ còn enhance), `getMaxForgePoints`, `forgePotential`/`forgePoints` toàn hệ (UI tooltip, auto-dissolve candidate sort, tests)
-- Rèn không còn ảnh hưởng scale — chỉ còn là "vì sao"? ⚠️ **Câu hỏi mở cho plan:** nếu rèn chỉ tốn lượt mà không đổi gì trang bị thì vô nghĩa — thiết kế này hiểu **rèn = chi phí dùng CHUNG cho tẩy/tinh** (2 hành động đều tốn 1 lượt rèn + nguyên liệu riêng). Xác nhận trong plan: `forgeUsesRemaining` là ngân sách dùng chung của tẩy + tinh trên item đó. *(Nếu ý bạn khác — rèn là hành động thứ 3 riêng — cần chốt trước khi viết plan.)*
+- **Đã chốt:** không có hành động "rèn" độc lập — `forgeUsesRemaining` là ngân sách item dùng CHUNG cho Tẩy + Tinh (mỗi lần tẩy/tinh tốn 1 lượt). Điểm rèn = tài nguyên tạm thời của item, đối cực với cường hóa vĩnh viễn của slot (§5.1)
 
 ### 5.3 Tẩy Luyện (wash) — REWORK
 - Input: trang bị + **Luyện Khí Tinh Hoa** (bảng theo chất) + Linh Thạch giữ — **KHÔNG còn ore**, KHÔNG còn yêu cầu "quặng cùng realm"
@@ -212,13 +238,14 @@ forgeUsesTotal = QUALITY_FORGE_USES[quality]
 1. **Drop chất:** 1000 rolls — phân phối khớp 75/15/8/1.99/0.01 (bin tolerance ±2%); `ITEM_QUALITY_DROP_WEIGHT` tổng = 100 chính xác
 2. **Drop phẩm:** grade luôn = `PROFESSION_GRADE_BY_REALM[realm]` (deterministic, mọi realm)
 3. **Substats:** 1000 items/chất — count ∈ [0, N] hợp lệ, mọi giá trị xuất hiện; ≤ GLOBAL_MAX_AFFIXES=8
-4. **Lượt rèn:** total đúng bảng 5/10/20/40/80; -1/lượt dùng (tẩy/tinh); 0 → chặn cả 2 hành động
+4. **Lượt rèn:** total đúng bảng 5/10/20/40/80; tẩy/tinh mỗi lần -1 (ngân sách chung); 0 → chặn cả 2 hành động
+4a. **Cường hóa slot:** tỉ lệ L1..L100 đúng `max(1%, round(100×0.956^(L-1)))`; fail → streak+1 + mất nguyên liệu, KHÔNG rơi cấp; pity streak 10 → thành công chắc chắn + reset; thành công thường → reset; slot cấp GIỮ khi tháo/đổi item; item mặc vào slot được khuếch đại theo cấp slot
 5. **Tẩy:** random lại count trong khoảng + stat/tier/value mới; mainStat KHÔNG đổi; có thể ít dòng hơn trước
 6. **Tinh:** 1000 lần — chỉ TĂNG; mức tăng từng dòng ∈ [5%, 20%] độc lập; clamp tier; dòng khóa không bị chọn
 7. **Phân Giải:** output = base(phẩm) × hệ_số(chất) × nhân_công đúng bảng; lọc phẩm/chất hoạt động; cycle qua ProductionSystem
 8. **Gate:** phẩm cao/thấp chặn 2 chiều; ngang cho qua; đột phá tháo toàn bộ trang bị
 9. **Hóa Luyện:** output `luyen_khi_tinh_hoa` lượng theo chất range cũ; auto-dissolve giữ hành vi
-10. **Chết sạch:** grep 0 tham chiếu `realmId`/`rarity`/`forgePoints`/`forgePotential` trên instance; 0 `tinh_hoa_pham_khi..thien_dia` (trừ `tinh_hoa_pham_the` Luyện Thể); 0 `FORGE_PERCENT_PER_POINT`; 0 `--grade-`/`--eq-quality-` trong css; 0 "Phẩm" trong label chất
+10. **Chết sạch:** grep 0 tham chiếu `realmId`/`rarity`/`forgePoints`/`forgePotential` trên instance; 0 `tinh_hoa_pham_khi..thien_dia` (trừ `tinh_hoa_pham_the` Luyện Thể); 0 `FORGE_PERCENT_PER_POINT`; 0 `--grade-`/`--eq-quality-` trong css; 0 "Phẩm" trong label chất; 0 `ENHANCE_PERCENT_PER_LEVEL` cũ + 0 `DEFAULT_MAX_ENHANCE_LEVEL = 10` (thay bằng 100 slot levels)
 11. **Cân bằng 6F:** vitest simulation — mỗi cặp khoáng→tinh_hoa→hành động: tốc độ sản xuất ≤ tiêu thụ trên 1 nhân công, cùng phẩm cùng chất
 12. **E2E:** boot → tạo nhân vật → chiến đấu → item rơi hiển thị đúng phẩm/chất → Khí Đường 5 tab hoạt động (ink-wash-ui suite không vỡ)
 13. **Parity vi/en** mọi key mới
@@ -229,6 +256,7 @@ forgeUsesTotal = QUALITY_FORGE_USES[quality]
 **Core — sửa lớn:** `ItemGrade.ts` (→ ItemQuality: union giữ 5 giá trị, labels "Chất", bảng cân bằng mới), `EquipmentInstance.ts` (schema §2), `EquipmentSystem.ts` (drop/wash/refine/forge §5, cost getWashCost bỏ ore), `RefinementBalance.ts` (cost tinh hoa theo chất, essence→luyen_khi_tinh_hoa, tier weights mới), `EquipmentOperationCostCatalog.ts` (tra grade), `EquipmentStatPolicy.ts` (pool theo chất), `EquipmentBag.ts` (auto-dissolve output)
 **Mới:** tab Phân Giải component + settings + ProductionSystem site loại decompose; `canUseItem` (+hook đột phá tháo đồ); material `luyen_khi_tinh_hoa`
 **Hiển thị:** theme.css (+4 themes), labels.ts, normalizeSlotRank.ts, EquipmentNaming.ts, useEquipmentTooltip.ts, EquipmentHallPanel.vue (5 tabs — tách component nếu quá lớn), SlotView, MaterialBagSection (essence hiển thị), vi/en.json
+**Slot enhance:** `EquipmentSlotState.ts` (enhanceLevel 1..100 + enhanceFailStreak, pity logic), EquipmentSystem (roll success/fail, scale áp item trong slot), cost catalog cường hóa theo slot-level
 **Data:** materials.ts (thêm/xóa), affixes.ts (nếu tham chiếu quality cũ — grep trong plan)
 **Save:** saveShapeValidation.ts (schema mới + discard item cũ)
 **Không đổi:** Enemies.ts, StatCalculator pipeline, tinh_hoa_pham_the (Luyện Thể), KiemY
