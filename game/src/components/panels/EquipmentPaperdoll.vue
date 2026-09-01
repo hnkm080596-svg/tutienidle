@@ -57,16 +57,20 @@ const enhanceLevelBySlot = computed<Record<EquipmentSlot, number>>(() => {
   return result
 })
 
+// Audit fix 2026-08-31 — equipmentRegistry.get() THROW với itemId lạ
+// (data edit/save lệch) từng chết cả khối trang bị qua ErrorBoundary;
+// getEquipmentTemplate() tra an toàn trả undefined (GameManager.ts) +
+// fallback hiển thị itemId thô (pattern Task 13 EquipmentBagSection).
 function itemName(instance: EquipmentInstance): string {
-  return gameManager.equipmentRegistry.get(instance.itemId).name
+  return gameManager.getEquipmentTemplate(instance.itemId)?.name ?? instance.itemId
 }
 
 function itemDescription(instance: EquipmentInstance): string | undefined {
-  return gameManager.equipmentRegistry.get(instance.itemId).description
+  return gameManager.getEquipmentTemplate(instance.itemId)?.description
 }
 
 function itemIcon(instance: EquipmentInstance): string | undefined {
-  return instance.icon ?? gameManager.equipmentRegistry.get(instance.itemId).icon
+  return instance.icon ?? gameManager.getEquipmentTemplate(instance.itemId)?.icon
 }
 
 // Tên ghép động (2026-08-15) — Phẩm · Set (nếu có) · Địa Giới+Tên gốc,
@@ -81,12 +85,14 @@ const nameSegmentsBySlot = computed<Record<EquipmentSlot, NameSegment[] | undefi
   for (const entry of SLOT_LAYOUT) {
     const instance = equippedBySlot.value[entry.slot]
 
+    // Audit fix 2026-08-31 — registry miss → hiển thị itemId thô thay vì
+    // chết panel (composeEquipmentNameSegments đòi template thật).
+    const template = instance ? gameManager.getEquipmentTemplate(instance.itemId) : undefined
+
     result[entry.slot] = instance
-      ? composeEquipmentNameSegments(
-          instance,
-          gameManager.equipmentRegistry.get(instance.itemId),
-          gameManager.zoneRegistry,
-        )
+      ? template
+        ? composeEquipmentNameSegments(instance, template, gameManager.zoneRegistry)
+        : [{ text: instance.itemId }]
       : undefined
   }
 
@@ -104,10 +110,14 @@ const tooltipBySlot = computed<Record<EquipmentSlot, EquipmentTooltipContent | u
   for (const entry of SLOT_LAYOUT) {
     const instance = equippedBySlot.value[entry.slot]
 
-    result[entry.slot] = instance
+    // Audit fix 2026-08-31 — registry miss → không tooltip (SlotView
+    // tooltip optional), slot vẫn hiển thị, không chết panel.
+    const template = instance ? gameManager.getEquipmentTemplate(instance.itemId) : undefined
+
+    result[entry.slot] = instance && template
       ? buildEquipmentTooltip(
           instance,
-          gameManager.equipmentRegistry.get(instance.itemId),
+          template,
           gameManager.affixRegistry,
           gameManager.getSlotState(entry.slot),
           gameManager.zoneRegistry,
