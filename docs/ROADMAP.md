@@ -3,6 +3,7 @@
 > Cập nhật: 2026-09-01 (bản 2 — sau khi merge `feat/i18n-string-refactor` — commit `28eec58`)
 > Nguồn: deferred items từ i18n final review, stat-system deep check, e2e trạng thái hiện tại, các plan chưa execute, game-design direction 2026-09-01 (mục 6).
 > **Phạm vi:** Skill rework (Phase 2A) được thực hiện BỞI AGENT NÀY trong chuỗi thực thi — không còn là external blocker. Không có dependency "chờ Claude Code".
+> **Nguyên tắc UI (khóa, đúng cho mọi UI):** layout phải FLEXIBLE / fit-to-container — số cột, kích thước item tự thích ứng theo container thật qua CSS auto-fill/minmax + ResizeObserver đo contentRect (xem AGENTS.md "UI Layout Rule"). Cấm hardcode số cột/px theo màn hình dev. Áp cho mọi task có UI trong roadmap này (6A Combat UI, 6C Chi Hiền Quán, 6G Vendor...).
 
 ---
 
@@ -128,9 +129,27 @@
 - Lưu ý từ plan: `onDodge` bị drop (YAGNI); Phase 2B (universal entity model cho enemies) là plan riêng, phụ thuộc 2A.
 
 ### 4.2 Online-Required Local-Gameplay Foundation
-- Plan: `docs/superpowers/plans/2026-08-31-online-required-local-gameplay-foundation.md` (1759 dòng, Supabase auth/Edge Functions/boot coordinator).
+- Plan: `docs/superpowers/plans/2026-08-31-online-required-local-gameplay-foundation.md` (1273 dòng, 13 tasks, Supabase auth/Edge Functions/boot coordinator).
 - Spec: `docs/superpowers/specs/2026-08-31-online-required-local-gameplay-architecture-design.md`.
-- Lưu ý: plan viết trước khi merge theme-redesign + i18n — Global Constraint 27 ("preserve uncommitted edits in App.vue/MainMenu") đã cũ vì những edit đó đã commit; reconcile khi execute.
+- Cấu trúc 13 tasks:
+  1. Typed boot state machine (`useBootFlow` guarded reducer)
+  2. Guest/account sessions restorable (backend-mode fail-closed: mock | local-supabase | server)
+  3. Server progress schema + idempotency + archive records (SQL migrations, RLS)
+  4. Progress payload validation + adapters (LocalProgressService fake, SupabaseProgressService)
+  5. Recovery cache + serialized sync coordinator
+  6. Authenticated server progress function
+  7. Offline settlement → server authority (server time là nguồn duy nhất)
+  8. **Unified Welcome/Auth Screen — REMOVE competing MainMenu flow** (dùng lại MenuBackground/MenuLogo/MenuButton, xóa MainMenu độc lập)
+  9. Extract game runtime + canonical progress sync
+  10. Guest→account progress comparison + selection (không merge, chọn 1, archive 30 ngày)
+  11. Connectivity monitor + grace period 90s + reconnect UI
+  12. Active session transfer + safe logout
+  13. E2E integration + release-readiness verification
+- Lưu ý reconcile khi execute:
+  - Plan viết trước theme-redesign + i18n + audit-fixes — "preserve uncommitted edits" đã lỗi thời (tất cả đã commit).
+  - **MainMenu overlay hiện tại (App.vue:594-607, `showMainMenu` ref) là kiến trúc tạm — Task 8 của plan này THAY THẾ hoàn toàn nó** bằng WelcomeAuthScreen hợp nhất. Fix T1.4 trong roadmap (e2e MainMenu blocker) chỉ là sửa tạm để e2e xanh; đừng đầu tư thêm UI cho MainMenu.
+  - Constants khóa: autosave 15s, reconnect grace 90s, guest-link token 10 phút, archive 30 ngày, offline cap 86400s.
+  - Prerequisite: Supabase local setup (Task 2-3 cần local-supabase mode để test).
 
 ### 4.3 Adversarial QA infrastructure
 - Plan: `docs/superpowers/plans/2026-08-31-tutienidle-adversarial-qa.md`.
@@ -317,7 +336,7 @@ Việc cần làm:
 5. **Kế tiếp:** 2.1-2.6 (i18n leftovers) → 6C (Chiêu Hiền Quán + nhân công) → 6E (nhiên liệu cùng phẩm) → 6F (cân bằng chuỗi).
 6. **Giai đoạn kinh tế:** 6G-1,2,4 (Vendor thu mua + bỏ quy đổi). Shop VIP (6G-3) chờ 6H.
 7. **Song song/khi có data playtest:** 3.1 → 3.3 → 3.2 → các mục 3.x còn lại.
-8. **Trước khi ra production:** 4.2 (online foundation — cần Supabase setup) → 6H (tiền VIP + chu kỳ sau Độ Kiếp) → 4.3 (Adversarial QA) áp dụng như quy trình thường xuyên.
+8. **Trước khi ra production:** 4.2 online foundation (13 tasks, cần Supabase local setup trước; Task 8 sẽ thay thế MainMenu tạm thời — khi đó xóa e2e MainMenu tạm) → 6H (tiền VIP + chu kỳ sau Độ Kiếp) → 4.3 (Adversarial QA) áp dụng như quy trình thường xuyên.
 
 ---
 
@@ -340,6 +359,7 @@ Việc cần làm:
 - [ ] **T1.3** Verify + drop 4 stashes cũ (stash@{0} check còn thiếu gì so với đã restore; stash@{1..3} drop)
 - [ ] **T1.4** Fix MainMenu e2e blocker: sửa boot flow để `.game-root` xuất hiện đúng trong 5 e2e tests + thêm e2e test cho chính MainMenu
   - Verify: `npx playwright test` pass 6/6+ mới
+  - **LƯU Ý:** đây là fix tạm — Task 8 của plan online-foundation (mục 4.2) sẽ THAY THẾ MainMenu bằng WelcomeAuthScreen hợp nhất. Không đầu tư thêm UI cho MainMenu ngoài việc làm e2e xanh.
 
 ### Giai đoạn 2 — Game design nền tảng
 - [ ] **T2.1** Bugfix Crit Damage % hiển thị (StatLabels unit + display sites)
@@ -391,7 +411,7 @@ Việc cần làm:
 - [ ] **T5.5** Stat cap Phàm Nhân (nâng 15-20?), CDR cap review, reaction damage scaling
 
 ### Giai đoạn 6 — Pre-production
-- [ ] **T6.1** Execute plan online foundation (4.2 — Supabase auth/Edge Functions/boot coordinator; reconcile constraint cũ trước khi chạy)
+- [ ] **T6.1** Execute plan online foundation (mục 4.2 — 13 tasks chi tiết trong plan file; prerequisite: Supabase local setup; Task 8 thay thế MainMenu tạm = xóa e2e MainMenu tạm của T1.4)
 - [ ] **T6.2** Thiết kế tiền VIP (mở 6H: tên, cách kiếm, P2W guardrails) → xong mới làm Shop VIP (6G-3)
 - [ ] **T6.3** Thiết kế chu kỳ sau Độ Kiếp (prestige: khởi động lại phẩm/công trình/vật phẩm)
 - [ ] **T6.4** Bundle code-split (2.17MB → dynamic import Phaser + locales)

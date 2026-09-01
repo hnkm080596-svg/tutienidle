@@ -28,6 +28,13 @@
 - The coordinator reviews the final diff and verification evidence. Request another review only when evidence is missing, findings remain unresolved, or the change is high-risk.
 - Do not commit, merge, integrate, push, or deploy unless the user explicitly requests it.
 
+## UI Layout Rule: Flexible / Fit-to-Container
+
+- Kích thước và số lượng phần tử hiển thị (grid slots, cards, items per row/page) phải FLEXIBLE theo container thật — fit với card/panel chứa nó.
+- Khi window resize, layout phải tự thích ứng: không vỡ, không tràn, không để khoảng trắng chết, không hardcode số cột/px dựa trên màn hình dev.
+- Pattern chuẩn của project: CSS `auto-fill/minmax` cho columns + ResizeObserver đo thật (`usePanelPagination` columnWidth, `useBagGridLayout`) — đo từ `contentRect`, không giả định.
+- Cấm: fixed px width cho vùng chính, số cột hardcode, pagination đếm sai loại layout (list dọc vs grid đa cột).
+
 ## Verification
 
 - Run focused tests covering changed behavior.
