@@ -22,7 +22,7 @@ import {
 import { getAlchemySuccessBonusPercentPoints, getReactionKeepChance } from '../talent/TalentEffects'
 import { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 
-import { BuffManager } from '../buff/BuffManager'
+import { BuffPool } from '../buff/BuffPool'
 import { BuffSystem } from '../buff/BuffSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
 import type { Buff } from '../buff/Buff'
@@ -273,8 +273,8 @@ export class GameManager {
     rollCritical: (s, t) => this.combatSystem.rollCritical(s, t),
   })
 
-  readonly buffManager = new BuffManager()
-  readonly buffSystem = new BuffSystem(this.buffManager)
+  readonly buffPool = new BuffPool()
+  readonly buffSystem = new BuffSystem(this.buffPool)
   readonly buffRegistry = new BuffRegistry()
 
   readonly ailmentRegistry = new AilmentRegistry()
@@ -314,7 +314,6 @@ export class GameManager {
     this.skillSystem,
     this.skillEffectSystem,
     this.buffRegistry,
-    this.ailmentRegistry,
     this.eventBus,
     this.actionImpact,
 

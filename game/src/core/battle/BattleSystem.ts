@@ -2,17 +2,11 @@ import type { Battle, BattleEnemy, PendingEnemySpawn } from './Battle'
 
 import type { CombatSystem } from '../combat/CombatSystem'
 
-import { BuffManager } from '../buff/BuffManager'
+import { BuffPool } from '../buff/BuffPool'
 
 import { BuffSystem } from '../buff/BuffSystem'
 
 import type { BuffRegistry } from '../buff/BuffRegistry'
-
-import { AilmentManager } from '../ailment/AilmentManager'
-
-import { AilmentSystem } from '../ailment/AilmentSystem'
-
-import type { AilmentRegistry } from '../ailment/AilmentRegistry'
 
 import { calculateStats, type StatModifier } from '../stats/StatCalculator'
 
@@ -270,8 +264,6 @@ export class BattleSystem {
 
     private readonly buffRegistry: BuffRegistry,
 
-    private readonly ailmentRegistry: AilmentRegistry,
-
     private readonly eventBus: EventBus,
 
     /** Combat Grid Rework — thay hoàn toàn MissileSystem. */
@@ -421,9 +413,7 @@ export class BattleSystem {
 
       playerMaterialized: false,
 
-      playerBuffs: new BuffManager(),
-
-      playerAilments: new AilmentManager(),
+      playerBuffs: new BuffPool(),
 
       elapsedSeconds: 0,
 
@@ -777,9 +767,7 @@ export class BattleSystem {
 
       attackTimer: 0,
 
-      buffs: new BuffManager(),
-
-      ailments: new AilmentManager(),
+      buffs: new BuffPool(),
 
       rewardGranted: false,
     }
@@ -806,8 +794,7 @@ export class BattleSystem {
   private artifactSystemDeps(): ArtifactSystemDeps {
     return {
       actionImpact: this.actionImpact,
-      ailmentRegistry: this.ailmentRegistry,
-      getAilmentsFor: (battle, entity) => this.getAilmentsFor(battle, entity),
+      buffRegistry: this.buffRegistry,
       getBuffsFor: (battle, entity) => this.getBuffsFor(battle, entity),
       aiStrategy: () => this.aiStrategy(),
     }
@@ -883,15 +870,9 @@ export class BattleSystem {
 
     const dotStatusesBefore = this.snapshotDotStatuses(battle)
 
-    // [4][5] Recompute modifiers → Ailment/DoT/Lava/Regen
+    // [4][5] Recompute modifiers → Buff/DoT/Lava/Regen
 
     this.updateStatsFromModifiers(
-      battle,
-
-      deltaSeconds,
-    )
-
-    this.updateAilments(
       battle,
 
       deltaSeconds,
@@ -930,7 +911,7 @@ export class BattleSystem {
     this.updateSkillCadence(battle, deltaSeconds)
 
     for (const battleEnemy of battle.enemies) {
-      if (!this.isIncapacitated(battleEnemy.ailments)) {
+      if (!this.isIncapacitated(battleEnemy.buffs)) {
         battleEnemy.attackTimer -= deltaSeconds
       }
     }
@@ -1121,8 +1102,8 @@ export class BattleSystem {
     }
   }
 
-  private isIncapacitated(ailments: AilmentManager): boolean {
-    const system = new AilmentSystem(ailments)
+  private isIncapacitated(buffs: BuffPool): boolean {
+    const system = new BuffSystem(buffs)
 
     return system.isStunned() || system.isFrozen()
   }
@@ -1153,7 +1134,7 @@ export class BattleSystem {
         continue
       }
 
-      const battleEnemyAilments = new AilmentSystem(battleEnemy.ailments)
+      const battleEnemyBuffs = new BuffSystem(battleEnemy.buffs)
 
       // Thổ Tu ("Trói Chân", Plans/EarthPath mục VI) — Root chặn di
 
@@ -1161,7 +1142,7 @@ export class BattleSystem {
 
       // isIncapacitated() — cố ý KHÔNG gộp isRooted() vào đó).
 
-      if (battleEnemyAilments.isFrozen() || battleEnemyAilments.isRooted()) {
+      if (battleEnemyBuffs.isFrozen() || battleEnemyBuffs.isRooted()) {
         continue
       }
 
@@ -1248,25 +1229,14 @@ export class BattleSystem {
     return nearest
   }
 
-  private getBuffsFor(battle: Battle, entity: CombatEntity): BuffManager {
+  private getBuffsFor(battle: Battle, entity: CombatEntity): BuffPool {
     if (entity.id === battle.player.id) {
       return battle.playerBuffs
     }
 
     return (
       battle.enemies.find((battleEnemy) => battleEnemy.entity.id === entity.id)?.buffs ??
-      new BuffManager()
-    )
-  }
-
-  private getAilmentsFor(battle: Battle, entity: CombatEntity): AilmentManager {
-    if (entity.id === battle.player.id) {
-      return battle.playerAilments
-    }
-
-    return (
-      battle.enemies.find((battleEnemy) => battleEnemy.entity.id === entity.id)?.ailments ??
-      new AilmentManager()
+      new BuffPool()
     )
   }
 
@@ -1313,20 +1283,20 @@ export class BattleSystem {
 
     // Thổ Tu (Thạch Hóa) — MỌI đòn đánh TRÚNG roll on-hit-proc đang
 
-    // active trên target (AilmentSystem.rollOnHitEffects()).
+    // active trên target (BuffSystem.rollOnHitEffects()).
 
     if (!result.dodged && target.alive) {
-      new AilmentSystem(this.getAilmentsFor(battle, target)).rollOnHitEffects(
+      new BuffSystem(this.getBuffsFor(battle, target)).rollOnHitEffects(
         source,
         target,
-        this.ailmentRegistry,
+        this.buffRegistry,
       )
     }
 
     if (options.skillId) {
       const firedSkill = this.skillManager.get(options.skillId)
 
-      // Chỉ build context (allocate BuffSystem/AilmentSystem/closures) khi
+      // Chỉ build context (allocate BuffSystem/closures) khi
       // skill THỰC SỰ có binding onHit/onCrit/onEvade — tránh allocation vô
       // ích trên mọi hit của basic attack (vd Huy Kiếm/`tram` chỉ có
       // onCast, không nên trả giá allocation của nhánh này).
@@ -1350,10 +1320,8 @@ export class BattleSystem {
             return { landed: true }
           },
           buffRegistry: this.buffRegistry,
-          ailmentRegistry: this.ailmentRegistry,
           sourceBuffs: new BuffSystem(this.getBuffsFor(battle, source)),
           targetBuffs: new BuffSystem(this.getBuffsFor(battle, target)),
-          targetAilments: new AilmentSystem(this.getAilmentsFor(battle, target)),
           reactionManager: this.reactionManager,
           reactionKeepChance: this.getReactionKeepChance(),
           spawnLavaZone: (spec) => this.spawnLavaZone(battle, spec),
@@ -1408,13 +1376,13 @@ export class BattleSystem {
         target.currentBreakGauge -= skill.breakDamagePerHit
 
         if (target.currentBreakGauge <= 0) {
-          const targetAilments = new AilmentSystem(this.getAilmentsFor(battle, target))
+          const targetBuffs = new BuffSystem(this.getBuffsFor(battle, target))
 
-          targetAilments.apply(
-            this.ailmentRegistry.get('choang'),
+          targetBuffs.apply(
+            this.buffRegistry.get('choang'),
             source,
             target,
-            this.ailmentRegistry,
+            this.buffRegistry,
           )
 
           target.currentBreakGauge = target.breakGaugeMax
@@ -1441,7 +1409,7 @@ export class BattleSystem {
 
    * hiệu lực từ `baseStats` + modifier đang active (buff THẬT + Làm
 
-   * Chậm từ AilmentSystem.getActiveModifiers(), hoà chung 1 pool —
+   * Chậm từ BuffSystem.getActiveModifiers(), hoà chung 1 pool —
 
    * xem StatCalculator.calculateStats()) — phải chạy TRƯỚC attack
 
@@ -1452,58 +1420,10 @@ export class BattleSystem {
    */
 
   private updateStatsFromModifiers(battle: Battle, deltaSeconds: number) {
-    const playerBuffSystem = new BuffSystem(battle.playerBuffs)
-
-    playerBuffSystem.update(deltaSeconds)
-
-    const playerAilmentSystem = new AilmentSystem(battle.playerAilments)
-
-    battle.player.stats = calculateStats(
-      battle.player.baseStats,
-
-      [
-        ...this.getPlayerRuntimeModifiers(),
-        ...playerBuffSystem.getActiveModifiers(),
-        ...playerAilmentSystem.getActiveModifiers(),
-      ],
-    )
-
-    for (const battleEnemy of battle.enemies) {
-      if (!battleEnemy.entity.alive) {
-        continue
-      }
-
-      const enemyBuffSystem = new BuffSystem(battleEnemy.buffs)
-
-      enemyBuffSystem.update(deltaSeconds)
-
-      const enemyAilmentSystem = new AilmentSystem(battleEnemy.ailments)
-
-      battleEnemy.entity.stats = calculateStats(
-        battleEnemy.entity.baseStats,
-
-        [...enemyBuffSystem.getActiveModifiers(), ...enemyAilmentSystem.getActiveModifiers()],
-      )
-    }
-  }
-
-  /**
-
-   * Hết hạn + tick DoT cho player + từng quái — gọi NGAY SAU
-
-   * updateStatsFromModifiers() (đã recompute stats mới nhất, DoT tính
-
-   * theo damagePerSecond đã snapshot sẵn lúc áp dụng nên không cần
-
-   * đọc lại stats ở đây, chỉ cần entity còn sống).
-
-   */
-
-  private updateAilments(battle: Battle, deltaSeconds: number) {
     // Combat Grid Rework (§3, 2026-08-24) — DOT là persistent VFX gắn
-    // theo target: dedupe khoá (targetId + ailmentId), reapply = refresh,
+    // theo target: dedupe khoá (targetId + buffId), reapply = refresh,
     // hết/cleanse/chết = remove. Diff BEFORE/AFTER mỗi tick tại ĐÂY (một
-    // điểm phát duy nhất cho mọi nguồn gây ailment). Resolver DoT biết
+    // điểm phát duy nhất cho mọi nguồn gây buff/debuff). Resolver DoT biết
     // entity NGUỒN thật (Kim Thế penetration/Poison Recovery), sourceId
     // có thể không còn tồn tại — trả undefined an toàn.
     const resolveSource = (id: string): CombatEntity | undefined => {
@@ -1514,12 +1434,17 @@ export class BattleSystem {
       return battle.enemies.find((battleEnemy) => battleEnemy.entity.id === id)?.entity
     }
 
-    new AilmentSystem(battle.playerAilments).update(
-      deltaSeconds,
-      battle.player,
-      this.combat,
-      this.ailmentRegistry,
-      resolveSource,
+    const playerBuffSystem = new BuffSystem(battle.playerBuffs)
+
+    playerBuffSystem.update(deltaSeconds, battle.player, this.combat, this.buffRegistry, resolveSource)
+
+    battle.player.stats = calculateStats(
+      battle.player.baseStats,
+
+      [
+        ...this.getPlayerRuntimeModifiers(),
+        ...playerBuffSystem.getActiveModifiers(),
+      ],
     )
 
     for (const battleEnemy of battle.enemies) {
@@ -1527,17 +1452,19 @@ export class BattleSystem {
         continue
       }
 
-      new AilmentSystem(battleEnemy.ailments).update(
-        deltaSeconds,
-        battleEnemy.entity,
-        this.combat,
-        this.ailmentRegistry,
-        resolveSource,
+      const enemyBuffSystem = new BuffSystem(battleEnemy.buffs)
+
+      enemyBuffSystem.update(deltaSeconds, battleEnemy.entity, this.combat, this.buffRegistry, resolveSource)
+
+      battleEnemy.entity.stats = calculateStats(
+        battleEnemy.entity.baseStats,
+
+        [...enemyBuffSystem.getActiveModifiers()],
       )
     }
   }
 
-  /** Snapshot trạng thái DoT toàn trận, khoá `targetId:ailmentId`. */
+  /** Snapshot trạng thái DoT toàn trận, khoá `targetId:buffId`. */
   private snapshotDotStatuses(
     battle: Battle,
   ): Map<string, { targetId: string; dotType: string; stacks: number; remainingTime: number }> {
@@ -1546,25 +1473,25 @@ export class BattleSystem {
       { targetId: string; dotType: string; stacks: number; remainingTime: number }
     >()
 
-    const collect = (manager: AilmentManager, targetId: string) => {
-      for (const ailment of manager.getAll()) {
-        if (ailment.category !== 'dot') {
+    const collect = (pool: BuffPool, targetId: string) => {
+      for (const buff of pool.getAll()) {
+        if (!buff.effects.some((effect) => effect.type === 'dot')) {
           continue
         }
 
-        snapshot.set(`${targetId}:${ailment.id}:${ailment.sourceId}`, {
+        snapshot.set(`${targetId}:${buff.id}:${buff.sourceId}`, {
           targetId,
-          dotType: ailment.id,
-          stacks: ailment.stacks,
-          remainingTime: ailment.remainingTime,
+          dotType: buff.id,
+          stacks: buff.stacks,
+          remainingTime: buff.remainingTime,
         })
       }
     }
 
-    collect(battle.playerAilments, battle.player.id)
+    collect(battle.playerBuffs, battle.player.id)
 
     for (const battleEnemy of battle.enemies) {
-      collect(battleEnemy.ailments, battleEnemy.entity.id)
+      collect(battleEnemy.buffs, battleEnemy.entity.id)
     }
 
     return snapshot
@@ -2006,7 +1933,7 @@ export class BattleSystem {
       return
     }
 
-    if (this.isIncapacitated(battle.playerAilments)) {
+    if (this.isIncapacitated(battle.playerBuffs)) {
       return
     }
 
@@ -2312,7 +2239,7 @@ export class BattleSystem {
   private updateCasting(battle: Battle, deltaSeconds: number) {
     const player = battle.player
 
-    // Audit P0-2 (dead-cast guard) — DoT/Ailment tick CHẠY TRƯỚC
+    // Audit P0-2 (dead-cast guard) — DoT/Buff tick CHẠY TRƯỚC
     // updateCasting() trong cùng frame. Nếu Player chết ở tick đó,
     // cast đang niệm phải HỦY NGAY: clear toàn bộ cast state + phát
     // tín hiệu để CombatScene gỡ cast bar (không kẹt trên unit đã
@@ -2331,7 +2258,7 @@ export class BattleSystem {
     // Timer đúc KHÔNG trừ trong lúc Choáng/Đóng Băng — "dừng nhịp",
     // KHÔNG huỷ cast đang dở.
 
-    if (this.isIncapacitated(battle.playerAilments)) {
+    if (this.isIncapacitated(battle.playerBuffs)) {
       return
     }
 
@@ -2616,28 +2543,28 @@ export class BattleSystem {
         break
       }
       case 'xuat_huyet_dot': {
-        // Chảy máu — tái dùng ailment van_kiem_vu sẵn có.
-        const ailment = this.ailmentRegistry.get('van_kiem_vu')
-        if (ailment) {
-          new AilmentSystem(this.getAilmentsFor(battle, target)).apply(
-            ailment,
+        // Chảy máu — tái dùng buff/debuff van_kiem_vu sẵn có.
+        const buff = this.buffRegistry.get('van_kiem_vu')
+        if (buff) {
+          new BuffSystem(this.getBuffsFor(battle, target)).apply(
+            buff,
             source,
             target,
-            this.ailmentRegistry,
+            this.buffRegistry,
           )
         }
         break
       }
       case 'tran_tru_cc': {
-        // Trói chân/choáng — ailment sẵn có theo roll phụ.
+        // Trói chân/choáng — buff/debuff sẵn có theo roll phụ.
         const ccId = Math.random() < 0.5 ? 'troi_chan' : 'choang'
-        const ailment = this.ailmentRegistry.get(ccId)
-        if (ailment) {
-          new AilmentSystem(this.getAilmentsFor(battle, target)).apply(
-            ailment,
+        const buff = this.buffRegistry.get(ccId)
+        if (buff) {
+          new BuffSystem(this.getBuffsFor(battle, target)).apply(
+            buff,
             source,
             target,
-            this.ailmentRegistry,
+            this.buffRegistry,
           )
         }
         break
@@ -2655,7 +2582,7 @@ export class BattleSystem {
       case 'pha_giap_pen':
       case 'quang_crit':
       case 'than_ngu_hanh': {
-        // Stat-based kinds — buff stack tạm trong trận qua BuffManager
+        // Stat-based kinds — buff stack tạm trong trận qua BuffPool
         // sẵn có (tự hết khi trận kết thúc vì battle buff managers là
         // runtime-per-battle). Modifier pipeline là nguồn tính lại
         // stats (calculateStats chạy mỗi update).
@@ -2781,8 +2708,6 @@ export class BattleSystem {
       let landedHit = false
       const targetBuffs = new BuffSystem(this.getBuffsFor(battle, oneTarget))
 
-      const targetAilments = new AilmentSystem(this.getAilmentsFor(battle, oneTarget))
-
       this.skillEffectSystem.applyAll(effects, source, oneTarget, {
         combatSystem: this.combat,
         fireHit: (hitTarget, damageInfo) => {
@@ -2814,13 +2739,9 @@ export class BattleSystem {
         didLandHit: () => landedHit,
         buffRegistry: this.buffRegistry,
 
-        ailmentRegistry: this.ailmentRegistry,
-
         sourceBuffs,
 
         targetBuffs,
-
-        targetAilments,
 
         reactionManager: this.reactionManager,
 
@@ -2866,7 +2787,6 @@ export class BattleSystem {
       for (const oneTarget of targets) {
         let landedHit = false
         const targetBuffs = new BuffSystem(this.getBuffsFor(battle, oneTarget))
-        const targetAilments = new AilmentSystem(this.getAilmentsFor(battle, oneTarget))
 
         const triggerCtx: SkillEffectContext = {
           combatSystem: this.combat,
@@ -2885,10 +2805,8 @@ export class BattleSystem {
           },
           didLandHit: () => landedHit,
           buffRegistry: this.buffRegistry,
-          ailmentRegistry: this.ailmentRegistry,
           sourceBuffs,
           targetBuffs,
-          targetAilments,
           reactionManager: this.reactionManager,
           reactionKeepChance: this.getReactionKeepChance(),
           spawnLavaZone: (spec) => this.spawnLavaZone(battle, spec),
@@ -2983,9 +2901,9 @@ export class BattleSystem {
       return true
     }
 
-    const ailments = battle.playerAilments
+    const buffs = battle.playerBuffs
 
-    return ailments.has('choang') || ailments.has('thach_hoa') || ailments.has('troi_chan')
+    return buffs.hasAny('choang') || buffs.hasAny('thach_hoa') || buffs.hasAny('troi_chan')
   }
 
   /**
@@ -3067,10 +2985,8 @@ export class BattleSystem {
         combatSystem: this.combat,
         fireHit: () => ({ landed: true }),
         buffRegistry: this.buffRegistry,
-        ailmentRegistry: this.ailmentRegistry,
         sourceBuffs: new BuffSystem(this.getBuffsFor(battle, player)),
         targetBuffs: new BuffSystem(this.getBuffsFor(battle, target)),
-        targetAilments: new AilmentSystem(this.getAilmentsFor(battle, target)),
         reactionManager: this.reactionManager,
         reactionKeepChance: this.getReactionKeepChance(),
         spawnLavaZone: (spec) => this.spawnLavaZone(battle, spec),
@@ -3201,7 +3117,7 @@ export class BattleSystem {
         continue
       }
 
-      if (this.isIncapacitated(battleEnemy.ailments)) {
+      if (this.isIncapacitated(battleEnemy.buffs)) {
         continue
       }
 

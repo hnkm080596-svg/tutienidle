@@ -4,12 +4,10 @@
 import type { Battle } from '../battle/Battle'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { ActionImpactSystem, ActionDamageInfo } from '../battle/ActionImpactSystem'
-import type { AilmentRegistry } from '../ailment/AilmentRegistry'
-import type { AilmentManager } from '../ailment/AilmentManager'
-import type { BuffManager } from '../buff/BuffManager'
+import type { BuffPool } from '../buff/BuffPool'
+import type { BuffRegistry } from '../buff/BuffRegistry'
 import type { CombatAiStrategy } from '../battle/CombatAiStrategy'
 import { selectAttackableTarget } from '../battle/ActionTargetingSystem'
-import { AilmentSystem } from '../ailment/AilmentSystem'
 import { BuffSystem } from '../buff/BuffSystem'
 import { vfxPresetForElement } from '../battle/CombatAction'
 import type { ElementType } from '../element/ElementType'
@@ -18,9 +16,8 @@ import { getArtifactGradeMultiplier } from './ArtifactProgression'
 
 export interface ArtifactSystemDeps {
   actionImpact: ActionImpactSystem
-  ailmentRegistry: AilmentRegistry
-  getAilmentsFor: (battle: Battle, entity: CombatEntity) => AilmentManager
-  getBuffsFor: (battle: Battle, entity: CombatEntity) => BuffManager
+  buffRegistry: BuffRegistry
+  getBuffsFor: (battle: Battle, entity: CombatEntity) => BuffPool
   aiStrategy: () => CombatAiStrategy
 }
 
@@ -390,11 +387,11 @@ function applyKhongOnHitEffects(
     return
   }
 
-  const ailmentSystem = new AilmentSystem(deps.getAilmentsFor(battle, target))
+  const targetBuffs = new BuffSystem(deps.getBuffsFor(battle, target))
 
   // Trệ Khí (tầng 3) — hit áp lam_cham ngắn, dùng đúng duration đã
-  // khai trong AilmentRegistry (không override thủ công ở đây).
-  ailmentSystem.apply(deps.ailmentRegistry.get('lam_cham'), source, target, deps.ailmentRegistry)
+  // khai trong BuffRegistry (không override thủ công ở đây).
+  targetBuffs.apply(deps.buffRegistry.get('lam_cham'), source, target, deps.buffRegistry)
 
   if (level < KHONG_T6_LEVEL) {
     return
@@ -421,7 +418,7 @@ function applyKhongOnHitEffects(
 
   // Ngũ Hành Phược (tầng 6) — đủ 3 hit trong cửa sổ, per-target ICD
   // chặn root-lock (acceptance §15.3).
-  ailmentSystem.apply(deps.ailmentRegistry.get('troi_chan'), source, target, deps.ailmentRegistry)
+  targetBuffs.apply(deps.buffRegistry.get('troi_chan'), source, target, deps.buffRegistry)
   state.hitsInWindow = 0
   state.reapplyCooldownRemainingSeconds = KHONG_T6_REAPPLY_ICD_SECONDS
 
@@ -458,11 +455,11 @@ function applyKhongAreaSlow(battle: Battle, primaryTarget: CombatEntity, deps: A
   )
 
   for (const battleEnemy of nearby) {
-    new AilmentSystem(deps.getAilmentsFor(battle, battleEnemy.entity)).apply(
-      deps.ailmentRegistry.get('lam_cham'),
+    new BuffSystem(deps.getBuffsFor(battle, battleEnemy.entity)).apply(
+      deps.buffRegistry.get('lam_cham'),
       battle.player,
       battleEnemy.entity,
-      deps.ailmentRegistry,
+      deps.buffRegistry,
     )
   }
 }
