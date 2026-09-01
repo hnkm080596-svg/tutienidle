@@ -178,9 +178,9 @@ export const SKILLS: Skill[] = [
       },
 
       {
-        type: 'ailment',
+        type: 'debuff',
 
-        ailmentId: 'bong',
+        buffId: 'bong',
 
         // 2026-08-21 â€” Sá»¬A láº¡i quyáº¿t Ä‘á»‹nh ban Ä‘áº§u ("100% luÃ´n Ã¡p"):
         // Há»a Cáº§u Thuáº­t gá»‘c chá»‰ 50% cÆ¡ há»™i Ã¡p ThiÃªu Äá»‘t, node "Dáº«n
@@ -345,9 +345,9 @@ export const SKILLS: Skill[] = [
 
     effects: [
       {
-        type: 'ailment',
+        type: 'debuff',
 
-        ailmentId: 'trung_doc',
+        buffId: 'trung_doc',
 
         ailmentChance: 1,
       },
@@ -412,9 +412,9 @@ export const SKILLS: Skill[] = [
       },
 
       {
-        type: 'ailment',
+        type: 'debuff',
 
-        ailmentId: 'te_cong',
+        buffId: 'te_cong',
 
         // 2026-08-21 â€” cÃ¹ng quyáº¿t Ä‘á»‹nh vá»›i Há»a Cáº§u Thuáº­t (xem ghi chÃº
         // á»Ÿ Ä‘Ã³): base 50%, KHÃ”NG luÃ´n luÃ´n Ã¡p â€” Thá»§y Dáº«n (Luyá»‡n KhÃ­)
@@ -487,9 +487,9 @@ export const SKILLS: Skill[] = [
       },
 
       {
-        type: 'ailment',
+        type: 'debuff',
 
-        ailmentId: 'chay_mau',
+        buffId: 'chay_mau',
 
         ailmentChance: 0.4,
 
@@ -571,9 +571,9 @@ export const SKILLS: Skill[] = [
       },
 
       {
-        type: 'ailment',
+        type: 'debuff',
 
-        ailmentId: 'thach_hoa',
+        buffId: 'thach_hoa',
 
         ailmentChance: 1,
       },
@@ -1256,7 +1256,7 @@ export const SKILLS: Skill[] = [
     target: 'enemy',
     effects: [
       { type: 'damage', value: 1, components: [{ kind: 'element', element: 'fire', ratio: 1 }] },
-      { type: 'ailment', ailmentId: 'bong', ailmentChance: 0.6 },
+      { type: 'debuff', buffId: 'bong', ailmentChance: 0.6 },
     ],
     resourceType: 'none',
     unlocked: false,
@@ -1276,7 +1276,7 @@ export const SKILLS: Skill[] = [
     target: 'enemy',
     effects: [
       { type: 'damage', value: 1.2, components: [{ kind: 'element', element: 'fire', ratio: 1 }] },
-      { type: 'ailment', ailmentId: 'bong', ailmentChance: 0.8 },
+      { type: 'debuff', buffId: 'bong', ailmentChance: 0.8 },
     ],
     resourceType: 'none',
     unlocked: false,
@@ -1321,7 +1321,7 @@ export const SKILLS: Skill[] = [
     target: 'enemy',
     effects: [
       { type: 'damage', value: 2.5, components: [{ kind: 'element', element: 'fire', ratio: 1 }] },
-      { type: 'ailment', ailmentId: 'bong', ailmentChance: 1 },
+      { type: 'debuff', buffId: 'bong', ailmentChance: 1 },
     ],
     resourceType: 'none',
     unlocked: false,
@@ -1344,7 +1344,7 @@ export const SKILLS: Skill[] = [
     target: 'enemy',
     effects: [
       { type: 'damage', value: 1, components: [{ kind: 'element', element: 'water', ratio: 1 }] },
-      { type: 'ailment', ailmentId: 'te_cong', ailmentChance: 0.6 },
+      { type: 'debuff', buffId: 'te_cong', ailmentChance: 0.6 },
     ],
     resourceType: 'none',
     unlocked: false,
@@ -1381,7 +1381,7 @@ export const SKILLS: Skill[] = [
     target: 'enemy',
     effects: [
       { type: 'damage', value: 1.5, components: [{ kind: 'element', element: 'water', ratio: 1 }] },
-      { type: 'ailment', ailmentId: 'troi_chan', ailmentChance: 0.7 },
+      { type: 'debuff', buffId: 'troi_chan', ailmentChance: 0.7 },
     ],
     resourceType: 'none',
     unlocked: false,
@@ -1401,7 +1401,7 @@ export const SKILLS: Skill[] = [
     target: 'enemy',
     effects: [
       { type: 'damage', value: 2.5, components: [{ kind: 'element', element: 'water', ratio: 1 }] },
-      { type: 'ailment', ailmentId: 'te_cong', ailmentChance: 1 },
+      { type: 'debuff', buffId: 'te_cong', ailmentChance: 1 },
     ],
     resourceType: 'none',
     unlocked: false,
@@ -1425,7 +1425,7 @@ export const SKILLS: Skill[] = [
     target: 'enemy',
     effects: [
       { type: 'damage', value: 1, components: [{ kind: 'element', element: 'wood', ratio: 1 }] },
-      { type: 'ailment', ailmentId: 'trung_doc', ailmentChance: 0.7 },
+      { type: 'debuff', buffId: 'trung_doc', ailmentChance: 0.7 },
     ],
     resourceType: 'none',
     unlocked: false,
@@ -1445,7 +1445,7 @@ export const SKILLS: Skill[] = [
     target: 'enemy',
     effects: [
       { type: 'damage', value: 1.2, components: [{ kind: 'element', element: 'wood', ratio: 1 }] },
-      { type: 'ailment', ailmentId: 'troi_chan', ailmentChance: 0.6 },
+      { type: 'debuff', buffId: 'troi_chan', ailmentChance: 0.6 },
     ],
     resourceType: 'none',
     unlocked: false,
@@ -1491,7 +1491,7 @@ export const SKILLS: Skill[] = [
     target: 'enemy',
     effects: [
       { type: 'damage', value: 2.5, components: [{ kind: 'element', element: 'wood', ratio: 1 }] },
-      { type: 'ailment', ailmentId: 'trung_doc', ailmentChance: 1 },
+      { type: 'debuff', buffId: 'trung_doc', ailmentChance: 1 },
     ],
     resourceType: 'none',
     unlocked: false,
@@ -1516,7 +1516,7 @@ export const SKILLS: Skill[] = [
     target: 'enemy',
     effects: [
       { type: 'damage', value: 1, components: [{ kind: 'element', element: 'metal', ratio: 1 }] },
-      { type: 'ailment', ailmentId: 'chay_mau', ailmentChance: 0.6 },
+      { type: 'debuff', buffId: 'chay_mau', ailmentChance: 0.6 },
     ],
     resourceType: 'none',
     unlocked: false,
@@ -1607,7 +1607,7 @@ export const SKILLS: Skill[] = [
     target: 'enemy',
     effects: [
       { type: 'damage', value: 4, components: [{ kind: 'element', element: 'fire', ratio: 1 }] },
-      { type: 'ailment', ailmentId: 'bong', ailmentChance: 1 },
+      { type: 'debuff', buffId: 'bong', ailmentChance: 1 },
     ],
     resourceType: 'none',
     unlocked: false,
@@ -1627,7 +1627,7 @@ export const SKILLS: Skill[] = [
     target: 'enemy',
     effects: [
       { type: 'damage', value: 4, components: [{ kind: 'element', element: 'water', ratio: 1 }] },
-      { type: 'ailment', ailmentId: 'te_cong', ailmentChance: 1 },
+      { type: 'debuff', buffId: 'te_cong', ailmentChance: 1 },
     ],
     resourceType: 'none',
     unlocked: false,
@@ -1647,8 +1647,8 @@ export const SKILLS: Skill[] = [
     target: 'enemy',
     effects: [
       { type: 'damage', value: 4, components: [{ kind: 'element', element: 'wood', ratio: 1 }] },
-      { type: 'ailment', ailmentId: 'trung_doc', ailmentChance: 1 },
-      { type: 'ailment', ailmentId: 'troi_chan', ailmentChance: 0.8 },
+      { type: 'debuff', buffId: 'trung_doc', ailmentChance: 1 },
+      { type: 'debuff', buffId: 'troi_chan', ailmentChance: 0.8 },
     ],
     resourceType: 'none',
     unlocked: false,
@@ -1693,7 +1693,7 @@ export const SKILLS: Skill[] = [
     target: 'enemy',
     effects: [
       { type: 'damage', value: 4, components: [{ kind: 'element', element: 'earth', ratio: 1 }] },
-      { type: 'ailment', ailmentId: 'troi_chan', ailmentChance: 1 },
+      { type: 'debuff', buffId: 'troi_chan', ailmentChance: 1 },
     ],
     resourceType: 'none',
     unlocked: false,
@@ -1716,7 +1716,7 @@ export const SKILLS: Skill[] = [
     target: 'enemy',
     effects: [
       { type: 'damage', value: 1, components: [{ kind: 'element', element: 'earth', ratio: 1 }] },
-      { type: 'ailment', ailmentId: 'thach_hoa', ailmentChance: 0.6 },
+      { type: 'debuff', buffId: 'thach_hoa', ailmentChance: 0.6 },
     ],
     resourceType: 'none',
     unlocked: false,
@@ -1753,7 +1753,7 @@ export const SKILLS: Skill[] = [
     target: 'enemy',
     effects: [
       { type: 'damage', value: 1.5, components: [{ kind: 'element', element: 'earth', ratio: 1 }] },
-      { type: 'ailment', ailmentId: 'choang', ailmentChance: 0.4 },
+      { type: 'debuff', buffId: 'choang', ailmentChance: 0.4 },
     ],
     resourceType: 'none',
     unlocked: false,
@@ -1773,7 +1773,7 @@ export const SKILLS: Skill[] = [
     target: 'enemy',
     effects: [
       { type: 'damage', value: 2.5, components: [{ kind: 'element', element: 'earth', ratio: 1 }] },
-      { type: 'ailment', ailmentId: 'troi_chan', ailmentChance: 1 },
+      { type: 'debuff', buffId: 'troi_chan', ailmentChance: 1 },
     ],
     resourceType: 'none',
     unlocked: false,

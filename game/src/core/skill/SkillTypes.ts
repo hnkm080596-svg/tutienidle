@@ -16,7 +16,6 @@ export type SkillEffectType =
   | 'heal'
   | 'buff'
   | 'debuff'
-  | 'ailment'
   | 'add_stack'
   | 'remove_buff'
 
