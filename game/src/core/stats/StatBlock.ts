@@ -60,7 +60,11 @@ export function createBaseStats(): Stats {
     // Cơ chế mới (Last Epoch) — xem core/combat/{Armor,Resistance,
     // Endurance}.ts.
     accuracyRating: 100,
-    blockChance: 0,
+    // Block (2026-09-01, T5.5): base 5% — đối xứng 2 chiều với enemy (elite
+    // author được block qua special; player nhận base + affix boots/armor
+    // + sau này Thể Tu skill). Soft cap 0.75 trong StatMetadata chặn nguồn
+    // cộng dồn; HARD cap 0.90 áp tại rollBlock (buff tạm không vượt).
+    blockChance: 0.05,
     blockEffectiveness: 0.25,
     enduranceThreshold: 10,
     endurancePercent: 0.7,
