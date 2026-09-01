@@ -1,5 +1,5 @@
 import type {
-  BuffCategory,
+  BuffPolarity,
   BuffStackMode,
 } from './BuffTypes'
 
@@ -14,7 +14,7 @@ export interface Buff {
 
   description?: string
 
-  category: BuffCategory
+  category: BuffPolarity
 
   duration?: number
 
