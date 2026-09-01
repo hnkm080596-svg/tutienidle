@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue'
-import Phaser from 'phaser'
-import { MainScene } from '@/game/scenes/MainScene'
-import { CombatScene } from '@/game/scenes/CombatScene'
-import { TribulationScene } from '@/game/scenes/TribulationScene'
+import type Phaser from 'phaser'
+import type { MainScene } from '@/game/scenes/MainScene'
+import type { CombatScene } from '@/game/scenes/CombatScene'
+import type { TribulationScene } from '@/game/scenes/TribulationScene'
 import { useGameManager } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
 import type { BattlePositionsEvent } from '@/core/battle/BattleEvents'
@@ -20,11 +20,47 @@ const containerRef = ref<HTMLDivElement | null>(null)
 let game: Phaser.Game | null = null
 let resizeObserver: ResizeObserver | null = null
 let positionsCleanup: (() => void) | null = null
+let isAlive = false
 
 onMounted(() => {
-  if (!containerRef.value) {
+  // T6.4 code-split — Phaser + 3 scene classes load qua dynamic import
+  // (chunk riêng ~1.2MB, không chặn entry). Toàn bộ logic mount chuyển
+  // sang setupGame() async; isAlive guard chống unmount giữa chừng
+  // (async resolve sau khi component đã hủy → không tạo game mồ côi).
+  const container = containerRef.value
+
+  if (!container) {
     return
   }
+
+  isAlive = true
+
+  void (async () => {
+    const [
+      { default: Phaser },
+      { MainScene: MainSceneClass },
+      { CombatScene: CombatSceneClass },
+      { TribulationScene: TribulationSceneClass },
+    ] = await Promise.all([
+      import('phaser'),
+      import('@/game/scenes/MainScene'),
+      import('@/game/scenes/CombatScene'),
+      import('@/game/scenes/TribulationScene'),
+    ])
+
+    if (!isAlive || !containerRef.value) {
+      return
+    }
+
+    setupGame(Phaser, [MainSceneClass, CombatSceneClass, TribulationSceneClass])
+  })()
+})
+
+function setupGame(
+  Phaser: typeof import('phaser'),
+  scenes: [typeof import('@/game/scenes/MainScene').MainScene, typeof import('@/game/scenes/CombatScene').CombatScene, typeof import('@/game/scenes/TribulationScene').TribulationScene],
+) {
+  const container = containerRef.value!
 
   // Canvas Phaser thích ứng với container (ResizeObserver bên dưới,
   // không còn frame 16:9 cố định transform:scale() ở GameRoot) — nhưng
@@ -43,9 +79,9 @@ onMounted(() => {
   // NHẤT cho cả 2 — scene chuyển qua lại KHÔNG destroy/tạo lại Game.
   game = new Phaser.Game({
     type: Phaser.AUTO,
-    parent: containerRef.value,
-    width: containerRef.value.clientWidth,
-    height: containerRef.value.clientHeight,
+    parent: container,
+    width: container.clientWidth,
+    height: container.clientHeight,
     transparent: true,
     // roundPixels (fix "nhân vật đôi khi bị blur", 2026-08-26): sprite
     // đứng giữa pixel lẻ (projection tọa độ thập phân + walk sway/bob)
@@ -55,7 +91,7 @@ onMounted(() => {
       default: 'arcade',
       arcade: { gravity: { x: 0, y: 0 }, debug: false },
     },
-    scene: [MainScene, CombatScene, TribulationScene],
+    scene: scenes,
   })
 
   // Expose cho e2e/visual gate — đọc battlefieldGeometry qua registry
@@ -143,10 +179,12 @@ onMounted(() => {
     }
   })
 
-  resizeObserver.observe(containerRef.value)
-})
+  resizeObserver.observe(container)
+}
 
 onUnmounted(() => {
+  isAlive = false
+
   positionsCleanup?.()
 
   positionsCleanup = null
