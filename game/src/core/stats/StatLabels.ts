@@ -102,18 +102,29 @@ const ELEMENT_STAT_LABELS: Partial<Record<keyof Stats, string>> = {
   primordialPower: 'Hỗn Nguyên Lực',
 }
 
-// attackSpeed/blockEffectiveness là hệ số gần 1 (vd 1.5) — làm tròn
-// nguyên số mất ý nghĩa, giữ tối đa 2 chữ số thập phân.
-// LƯU Ý criticalDamage: unit vẫn là 'multiplier' (CombatSystem nhân
-// TRỰC TIẾP 1.5 × damage — là hệ số công thức, không phải fraction
-// 0..1 như percent stats). Chỉ CÁCH HIỂN THỊ đổi thành dạng %:
-// 1.5 hiển thị "150%" (100% đòn thường + 50% bonus). Bug 2026-09-01:
-// hiển thị thô "1.5" khiến người chơi không hiểu %
-export const DECIMAL_STAT_KEYS: (keyof Stats)[] = ['attackSpeed', 'blockEffectiveness']
+// ================= SYSTEM vs DISPLAY =================
+// System value (StatMetadata.unit + giá trị trong Stats) CHỈ phục vụ
+// tính toán (CombatSystem, ProductionSystem...). Display layer DƯỚI
+// ĐÂY là duy nhất chịu trách nhiệm biến system value thành chuỗi cho
+// UI/tooltip — không UI nào tự format stat.
+//
+// System units (StatMetadata):
+//   percent    — fraction 0..1 trong công thức (0.05 = +5%)
+//   multiplier — hệ số nhân trực tiếp (1.5 = ×1.5 damage/speed)
+//   rating/flat— điểm thuần (accuracy 100, attack 1250)
+//
+// Display rules:
+//   percent    → LUÔN "5.0%" (không ngoại lệ; bug cũ: blockEffectiveness
+//                từng rơi vào DECIMAL hiển thị "0.25")
+//   multiplier → 2 kiểu hiển thị theo ý nghĩa người chơi đọc:
+//                  DISPLAY_AS_PERCENT: hệ số sát thương/phòng thủ đọc
+//                    qua % (crit dmg 1.5 → "150%": 100% đòn thường + 50%)
+//                  mặc định: hệ số throughput đọc qua hệ số (1.25 → "1.25")
+//   rating/flat→ formatNumber
+export const DECIMAL_STAT_KEYS: (keyof Stats)[] = ['attackSpeed']
 
-// Multiplier hiển thị dạng % (×100) — DÀNH RIÊNG cho display, KHÔNG
-// đổi unit semantics của stat trong công thức.
-const MULTIPLIER_AS_PERCENT_DISPLAY: (keyof Stats)[] = ['criticalDamage']
+// Multiplier hệ số ĐỌC qua % — chỉ hiển thị, không đổi unit công thức.
+const MULTIPLIER_DISPLAY_AS_PERCENT: readonly (keyof Stats)[] = ['criticalDamage']
 
 export function statLabel(key: keyof Stats): string {
   return BASE_STAT_LABELS.find(entry => entry.key === key)?.label ?? ELEMENT_STAT_LABELS[key] ?? FORMAT_ADOPTED_STAT_LABELS[key] ?? key
@@ -122,23 +133,26 @@ export function statLabel(key: keyof Stats): string {
 // Trích từ CharacterPanel.vue — dùng chung cho mọi nơi hiện giá trị
 // stat cho người chơi đọc (bảng chỉ số, tooltip Tâm Pháp...).
 export function formatStat(key: keyof Stats, value: number): string {
+  // percent (fraction 0..1) → LUÔN % — không ngoại lệ.
   if (isPercentStat(key)) {
     return `${(value * 100).toFixed(1)}%`
   }
 
+  // multiplier đọc qua % (crit damage 1.5 → "150%").
+  if (MULTIPLIER_DISPLAY_AS_PERCENT.includes(key)) {
+    return `${Math.round(value * 100)}%`
+  }
+
+  // multiplier throughput (attackSpeed 1.25 → "1.25").
   if (DECIMAL_STAT_KEYS.includes(key)) {
     return (Math.round(value * 100) / 100).toString()
   }
 
-  if (MULTIPLIER_AS_PERCENT_DISPLAY.includes(key)) {
-    return `${Math.round(value * 100)}%`
-  }
-
-  // Multiplier (hệ số gần 1, vd 1.50) — không phải %, không phải số
-  // nguyên lớn; giữ 2 chữ số thập phân (vd "1.5" thay vì "2" làm tròn).
+  // Multiplier còn lại (speedMultiplier/artifactGradeMultiplier).
   if (STAT_METADATA[key]?.unit === 'multiplier') {
     return (Math.round(value * 100) / 100).toString()
   }
 
+  // rating/flat.
   return formatNumber(Math.round(value))
 }

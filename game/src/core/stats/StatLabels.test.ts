@@ -27,6 +27,15 @@ describe('formatStat', () => {
     expect(formatStat('criticalDamage', 1.5)).toBe('150%')
     expect(formatStat('criticalDamage', 1.05)).toBe('105%')
     expect(formatStat('criticalDamage', 2.0)).toBe('200%')
+  })
+
+  it('blockEffectiveness is a percent stat — displays %, not raw fraction', () => {
+    // Bug hệ thống: từng rơi vào DECIMAL_STAT_KEYS hiển thị "0.25".
+    expect(formatStat('blockEffectiveness', 0.25)).toBe('25.0%')
+    expect(formatStat('blockEffectiveness', 0.75)).toBe('75.0%')
+  })
+
+  it('attackSpeed multiplier displays raw 2-decimal', () => {
     expect(formatStat('attackSpeed', 1.25)).toBe('1.25')
   })
 
