@@ -3054,6 +3054,44 @@ export class BattleSystem {
     } finally {
       player.stats.finalDamagePercent = originalFinalDamagePercent
     }
+
+    // Trigger/Action rework (2026-08-31 spec, Task 11) — SEPARATE, explicit
+    // onTick firing so a future triggers-based channel skill can tell "the
+    // channel resolved this tick" apart from onCast (resolveSkillEffects()
+    // above already fires onCast unconditionally for any `triggers`-based
+    // skill, even on channel ticks — a harmless Phase 1 side effect this
+    // does not touch). Bạt Kiếm is still on `effects` (triggers undefined),
+    // so this guard is a no-op for all real production content today.
+    if (effectiveSkill.triggers?.length) {
+      const tickCtx: SkillEffectContext = {
+        combatSystem: this.combat,
+        fireHit: () => ({ landed: true }),
+        buffRegistry: this.buffRegistry,
+        ailmentRegistry: this.ailmentRegistry,
+        sourceBuffs: new BuffSystem(this.getBuffsFor(battle, player)),
+        targetBuffs: new BuffSystem(this.getBuffsFor(battle, target)),
+        targetAilments: new AilmentSystem(this.getAilmentsFor(battle, target)),
+        reactionManager: this.reactionManager,
+        reactionKeepChance: this.getReactionKeepChance(),
+        spawnLavaZone: (spec) => this.spawnLavaZone(battle, spec),
+        spawnSwordZone: (spec) => this.spawnSwordZone(battle, spec),
+        skillId: skill.id,
+        skillExperience: skill.totalExperience ?? skill.experience ?? 0,
+        eventBus: this.eventBus,
+      }
+
+      // No per-skill tick counter exists anywhere in BattleSystem (no
+      // `channelTickCounter` field) and no current action reads
+      // OnTickContext.tickIndex — inventing new tracking state for an
+      // unused value would be pure speculation, so this uses the literal
+      // `0` per the plan's own Step 4 guidance.
+      this.skillTriggerRunner.fire(
+        'onTick',
+        { source: player, target, skill: effectiveSkill, tickIndex: 0 },
+        effectiveSkill.triggers,
+        player, target, tickCtx,
+      )
+    }
   }
 
   /**
