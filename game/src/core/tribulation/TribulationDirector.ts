@@ -35,6 +35,8 @@ export interface ActiveTribulationState {
   /** Câu hỏi đang hiện (chỉ chương mind giữa 2 câu nghỉ). */
   currentQuestion: MindQuestion | null
   questionSecondsRemaining: number
+  /** Tổng giây của câu hỏi hiện tại (đứng đầu) — mẫu số cho timer bar. */
+  questionSecondsLimit: number
   /** Tổng thời gian còn lại của CHƯƠNG hiện tại. */
   secondsRemaining: number
   lightningStrikesTaken: number
@@ -143,6 +145,7 @@ export class TribulationDirector {
       state: 'ongoing',
       currentQuestion: null,
       questionSecondsRemaining: 0,
+      questionSecondsLimit: 0,
       secondsRemaining: 0,
       lightningStrikesTaken: 0,
       hp: maxHp,
@@ -262,6 +265,7 @@ export class TribulationDirector {
     mind.currentLimitSeconds = limit
     mind.secondsRemaining = limit
     active.questionSecondsRemaining = limit
+    active.questionSecondsLimit = limit
     mind.restSecondsRemaining = profile.restSecondsBetweenQuestions
   }
 
@@ -434,6 +438,7 @@ export class TribulationDirector {
       this.tank = null
       active.currentQuestion = questions[0] ?? null
       active.questionSecondsRemaining = profile.firstQuestionSeconds
+      active.questionSecondsLimit = profile.firstQuestionSeconds
       active.secondsRemaining = 0
       return
     }
@@ -448,6 +453,7 @@ export class TribulationDirector {
     }
     active.secondsRemaining = tank.durationSeconds
     active.questionSecondsRemaining = 0
+    active.questionSecondsLimit = 0
   }
 
   private emitState() {

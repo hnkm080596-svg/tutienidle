@@ -94,7 +94,11 @@ function collect() {
 
       <strong>{{ formatNumber(storedAmount) }} / {{ formatNumber(displayedCapacity) }}</strong>
 
-      <small class="spirit-spring-panel__rate">+{{ formatNumber(ratePerMinute) }} {{ t('panels.spiritSpring.rateSuffix') }}</small>
+      <!-- Ngoại lệ locale có chủ đích (M9, QA 2026-08-31): rate THẬT là số
+           thập phân (mortal = 5.5, level scaling +20%/level) — formatNumber
+           Math.round phần thập phân dưới 10,000 nên 5.5 hiện "6". Giữ vi-VN
+           1 chữ số thập phân cho ĐÚNG số liệu hơn là nhất quán grouping. -->
+      <small class="spirit-spring-panel__rate">+{{ ratePerMinute.toLocaleString('vi-VN', { maximumFractionDigits: 1 }) }} {{ t('panels.spiritSpring.rateSuffix') }}</small>
 
       <GameButton class="spirit-spring-panel__collect" size="sm" :disabled="storedAmount <= 0" @click="collect">{{ t('panels.spiritSpring.collect') }}</GameButton>
     </div>

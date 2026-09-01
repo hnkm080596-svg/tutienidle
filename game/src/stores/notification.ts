@@ -19,6 +19,12 @@ export interface ToastItem {
 // beta (slide in -> display -> slide out -> destroy).
 const TOAST_DURATION_MS = 3500
 
+// Audit fix 2026-08-31 — cap hàng đợi: farm AoE late-game push >10 toast/s
+// trong khi drain chỉ ~1.4/s (maxVisible / 3.5s); không cap thì queue phình
+// + replay stale toast hàng phút sau. Vượt cap thì BỎ toast MỚI (toast cũ đã
+// chờ lâu hơn, bỏ cũ làm thứ tự loot lệch).
+const MAX_QUEUED_TOASTS = 100
+
 export const useNotificationStore = defineStore('notification', {
   state: () => ({
     // Nhiều toast có thể hiện ĐỒNG THỜI (xếp chồng), tối đa
@@ -41,6 +47,10 @@ export const useNotificationStore = defineStore('notification', {
       const toast: ToastItem = { id: crypto.randomUUID(), kind, message, loot }
 
       if (this.toasts.length >= this.maxVisible) {
+        if (this.queuedToasts.length >= MAX_QUEUED_TOASTS) {
+          return
+        }
+
         this.queuedToasts.push(toast)
         return
       }

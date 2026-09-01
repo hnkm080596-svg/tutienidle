@@ -106,7 +106,10 @@ interface EquippedRow {
 
   nameSegments: ReturnType<typeof composeEquipmentNameSegments>
 
-  tooltip: ReturnType<typeof buildEquipmentTooltip>
+  // Audit fix 2026-08-31 — registry miss (itemId lạ) → không có tooltip
+  // (buildEquipmentTooltip đòi template thật); template consumers đã
+  // fallback `?.tooltip ?? { title/description slot trống }`.
+  tooltip?: ReturnType<typeof buildEquipmentTooltip>
 
   qualityRank: number
 
@@ -117,7 +120,10 @@ const equippedRows = computed<EquippedRow[]>(() => {
   stateVersion.value
 
   return gameManager.equipmentBag.getEquipped().map((instance) => {
-    const template = gameManager.equipmentRegistry.get(instance.itemId)
+    // Audit fix 2026-08-31 — equipmentRegistry.get() THROW với itemId
+    // lạ (data edit/save lệch) từng chết cả panel qua ErrorBoundary;
+    // getEquipmentTemplate() tra an toàn trả undefined (GameManager.ts).
+    const template = gameManager.getEquipmentTemplate(instance.itemId)
 
     return {
       instance,
@@ -138,17 +144,24 @@ const equippedRows = computed<EquippedRow[]>(() => {
 
       icon: instance.icon ?? template?.icon,
 
+      // Registry miss → hiển thị itemId thô (pattern
+      // EquipmentBagSection.vue:82-84); composeEquipmentNameSegments
+      // KHÔNG nhận template nullable nên gọi có điều kiện.
       nameSegments: template
         ? composeEquipmentNameSegments(instance, template, gameManager.zoneRegistry)
         : [{ text: instance.itemId }],
 
-      tooltip: buildEquipmentTooltip(
-        instance,
-        gameManager.equipmentRegistry.get(instance.itemId),
-        gameManager.affixRegistry,
-        gameManager.getSlotState(instance.slot),
-        gameManager.zoneRegistry,
-      ),
+      // buildEquipmentTooltip đòi template thật — registry miss thì
+      // KHÔNG có tooltip (SlotView tooltip optional), không chết panel.
+      tooltip: template
+        ? buildEquipmentTooltip(
+            instance,
+            template,
+            gameManager.affixRegistry,
+            gameManager.getSlotState(instance.slot),
+            gameManager.zoneRegistry,
+          )
+        : undefined,
 
       qualityRank: equipmentQualityRank(instance.quality),
 
@@ -782,7 +795,9 @@ interface DissolveCandidate {
 
   nameSegments: ReturnType<typeof composeEquipmentNameSegments>
 
-  tooltip: ReturnType<typeof buildEquipmentTooltip>
+  // Audit fix 2026-08-31 — registry miss → không tooltip (pattern
+  // EquippedRow.tooltip phía trên).
+  tooltip?: ReturnType<typeof buildEquipmentTooltip>
 
   qualityRank: number
 
@@ -844,13 +859,18 @@ const dissolveCandidates = computed<DissolveCandidate[]>(() => {
           ? composeEquipmentNameSegments(instance, template, gameManager.zoneRegistry)
           : [{ text: instance.itemId }],
 
-        tooltip: buildEquipmentTooltip(
-          instance,
-          gameManager.equipmentRegistry.get(instance.itemId),
-          gameManager.affixRegistry,
-          gameManager.getSlotState(instance.slot),
-          gameManager.zoneRegistry,
-        ),
+        // Audit fix 2026-08-31 — dùng lại template đã tra an toàn ở trên;
+        // registry miss → không tooltip (SlotView tooltip optional),
+        // không chết tab Hóa Luyện qua ErrorBoundary.
+        tooltip: template
+          ? buildEquipmentTooltip(
+              instance,
+              template,
+              gameManager.affixRegistry,
+              gameManager.getSlotState(instance.slot),
+              gameManager.zoneRegistry,
+            )
+          : undefined,
 
         qualityRank: equipmentQualityRank(instance.quality),
 

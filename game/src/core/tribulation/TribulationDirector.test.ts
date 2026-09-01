@@ -90,6 +90,22 @@ describe('TribulationDirector (spec dot-pha-loi-kiep §5)', () => {
     expect(wrongDamage).toBeGreaterThan(rightDamage)
   })
 
+  it('questionSecondsLimit phản ánh limit của câu hỏi hiện tại (mẫu số timer bar)', () => {
+    const { director } = makeDirector()
+    director.start(readyPlayer(), testStats(), false, 'qi_refining')
+    const active = director.getState()
+    expect(active).not.toBeNull()
+    // Câu đầu của Tâm Ma Kiếp qi_refining: limit 12s
+    expect(active!.questionSecondsRemaining).toBeGreaterThan(0)
+    expect(active!.questionSecondsLimit).toBe(12)
+    expect(active!.questionSecondsLimit).toBeGreaterThanOrEqual(active!.questionSecondsRemaining)
+    // Tick trôi 2s → remaining giảm, limit giữ nguyên (mẫu số timer bar)
+    director.update(2)
+    const ticked = director.getState()!
+    expect(ticked.questionSecondsRemaining).toBe(10)
+    expect(ticked.questionSecondsLimit).toBe(12)
+  })
+
   it('answerQuestion khi không có câu hỏi active → false (no-op)', () => {
     const { director } = makeDirector()
     expect(director.answerQuestion(0)).toBe(false)

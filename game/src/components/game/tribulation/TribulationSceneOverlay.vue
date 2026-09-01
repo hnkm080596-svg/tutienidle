@@ -57,7 +57,7 @@ function answer(index: number) {
           {{ answerText }}
         </GameButton>
       </div>
-      <Bar class="tribulation-ui__time-track" :value="active.questionSecondsRemaining" :max="Math.max(1, active.questionSecondsRemaining + 0.001)" :height="6" anchor="right" />
+      <Bar class="tribulation-ui__time-track" :value="active.questionSecondsRemaining" :max="Math.max(1, active.questionSecondsLimit)" :height="6" anchor="right" />
       <div class="tribulation-ui__timer">{{ questionSeconds }}s</div>
     </div>
 

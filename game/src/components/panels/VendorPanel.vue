@@ -4,7 +4,6 @@ import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import GameButton from '@/components/common/GameButton.vue'
-import { formatNumber } from '@/core/format/NumberFormatter'
 import {
   SPIRIT_STONE_CONVERSION_RATIO,
   SPIRIT_STONE_MATERIAL,
@@ -18,6 +17,7 @@ import {
   MATERIAL_TIER_CONVERSION_RATIO,
   getNextTierMaterialId,
 } from '@/core/material/MaterialTierConversionBalance'
+import { formatNumber } from '@/core/format/NumberFormatter'
 
 // Ký Bảo Các (2026-08-25→30) — building CHUYÊN cho mọi cơ chế "đổi/bán",
 // tách khỏi Linh Tuyền/Sản Xuất (building không chuyên). Layout 2026-08-30

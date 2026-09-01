@@ -164,4 +164,12 @@ describe('CombatScene lifecycle — listener không tích lũy qua restart', () 
     expect(combatSceneSource).not.toContain("this.events.on('shutdown'")
     expect(combatSceneSource).not.toMatch(/scale\.on\('resize', \(/)
   })
+
+  it('onBattleStart phải dọn statuses (icon DoT không sót qua auto-refight)', () => {
+    // onBattleStart phải clear statuses — match body method (source-contract,
+    // cùng giới hạn với các case khác trong file này).
+    const onBattleStartBody =
+      combatSceneSource.match(/onBattleStart\(\) \{[\s\S]*?\n  \}/)?.[0] ?? ''
+    expect(onBattleStartBody).toMatch(/statuses/)
+  })
 })

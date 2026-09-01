@@ -114,6 +114,29 @@ export class MainScene extends Phaser.Scene {
     this.updateSpriteDisplaySize()
   }
 
+  // Lifecycle listeners dùng handler ỔN ĐỊNH (audit H3, model theo
+  // CombatScene) — ScaleManager là game-level nên anonymous callback
+  // đăng ký mỗi create() KHÔNG bị gỡ bởi scene shutdown, TÍCH TỤY qua
+  // các lần Home ↔ Combat (N listener chạy trên GameObjects đã destroy
+  // mỗi resize). events.once đảm bảo shutdown handler tự gỡ đúng một
+  // lần mà không tích lũy.
+  private resizeHandler = (gameSize: ResizeSize) => {
+    this.applyBackgroundLayout(gameSize.width, gameSize.height)
+  }
+
+  private shutdownHandler = () => {
+    this.unsubscribeCombatEvents()
+    this.scale.off('resize', this.resizeHandler)
+
+    // Audit fix 2026-08-31 — null refs scene-scoped: (a) resize callback lỡ trúng
+    // giữa shutdown không mutate dead GameObjects (applyBackgroundLayout đã có
+    // null guard), (b) closure không giữ scene state khỏi GC qua các lần restart.
+    this.skyRect = undefined
+    this.groundRect = undefined
+    this.player = undefined
+    this.eventBus = undefined
+  }
+
   private canvasWidth = 0
   private canvasHeight = 0
   private groundY = 0
@@ -159,13 +182,11 @@ export class MainScene extends Phaser.Scene {
 
     this.applyBackgroundLayout(this.scale.width, this.scale.height)
 
-    this.scale.on('resize', (gameSize: ResizeSize) => {
-      this.applyBackgroundLayout(gameSize.width, gameSize.height)
-    })
+    this.scale.on('resize', this.resizeHandler)
 
     this.subscribeCombatEvents()
 
-    this.events.on('shutdown', () => this.unsubscribeCombatEvents())
+    this.events.once('shutdown', this.shutdownHandler)
   }
 
   private applyBackgroundLayout(width: number, height: number) {

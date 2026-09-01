@@ -109,7 +109,11 @@ export const usePlayerStore = defineStore('player', {
       // kế riêng sau này.
       const insightThreshold = getInsightPerCultivation(this.selectedTalentIds)
 
-      if (insightThreshold !== undefined && gained > 0) {
+      // Guard `> 0` (audit fix 2026-08-31): talent data edit đặt
+      // cultivationPerInsight: 0 từng tạo infinite loop (accumulator -= 0
+      // không giảm) — freeze tick 100ms vĩnh viễn. Ngưỡng 0 vô nghĩa, bỏ
+      // hẳn nhánh insight.
+      if (insightThreshold !== undefined && insightThreshold > 0 && gained > 0) {
         this.cultivationInsightAccumulator += gained
 
         while (this.cultivationInsightAccumulator >= insightThreshold) {

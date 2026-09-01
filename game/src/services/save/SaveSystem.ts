@@ -14,7 +14,9 @@ import { CURRENT_SAVE_VERSION } from './saveVersion'
 // import với saveShapeValidation.ts.
 export { CURRENT_SAVE_VERSION }
 
-const SAVE_KEY = 'tien-hiep-idle-save'
+// Export cho test import thay vì hardcode key — nếu key đổi, test fail
+// ngay lúc build thay vì âm thầm ghi/nhầm key khác.
+export const SAVE_KEY = 'tien-hiep-idle-save'
 
 // Phase 5 (Reliability) — bản sao save TRƯỚC lần ghi đè/xoá gần nhất
 // (deleteSave()), không phải lịch sử nhiều bản. Mục đích duy nhất:
@@ -524,12 +526,22 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
   }
 }
 
-export function writeGameSave(save: GameSave): void {
-  localStorage.setItem(SAVE_KEY, JSON.stringify(save))
-}
+export type SaveWriteResult = { status: 'ok' } | { status: 'failed'; reason: 'quota' | 'unknown' }
 
-export function saveGame(player: PlayerData, gameManager: GameManager) {
-  writeGameSave(buildGameSave(player, gameManager))
+export function writeGameSave(save: GameSave): SaveWriteResult {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify(save))
+    return { status: 'ok' }
+  } catch (error: unknown) {
+    // QuotaExceededError (DOMException name) — save vượt ~5MB localStorage.
+    // Không throw: caller (CloudSaveCoordinator → autosave) quyết định cách
+    // báo cho người chơi thay vì chết im lặng giữa tick.
+    const name = error instanceof DOMException ? error.name : String(error)
+    if (name === 'QuotaExceededError' || name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+      return { status: 'failed', reason: 'quota' }
+    }
+    return { status: 'failed', reason: 'unknown' }
+  }
 }
 
 // Phase 5 (Reliability, mục XVI) — trước đây version không khớp hoặc

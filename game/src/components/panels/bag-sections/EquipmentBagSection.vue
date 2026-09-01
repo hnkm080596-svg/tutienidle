@@ -62,14 +62,26 @@ const entries = computed<EquipmentEntry[]>(() => {
   const instances = gameManager.equipmentBag.getAll().filter((instance) => !instance.equipped)
 
   return instances.map((instance) => {
-    const template = gameManager.equipmentRegistry.get(instance.itemId)
+    // Audit fix 2026-08-31 — equipmentRegistry.get() THROW với itemId
+    // lạ (data edit/save lệch) từng chết cả panel qua ErrorBoundary;
+    // getEquipmentTemplate() tra an toàn trả undefined (GameManager.ts).
+    const template = gameManager.getEquipmentTemplate(instance.itemId)
 
     const equippedComparison = gameManager.equipmentBag.getEquippedInSlot(instance.slot)
 
+    // Registry miss → hiển thị itemId thô thay vì chết cả màn hình
+    // (pattern EquipmentHallPanel.vue:126 `template?.name ?? instance.itemId`).
+    const displayName = template?.name ?? instance.itemId
+
     // Tên ghép động (2026-08-15) — Phẩm · Set (nếu có) · Địa Giới+Tên
     // gốc, xem EquipmentNaming.ts. "(đang mặc)" nối thêm làm segment
-    // riêng (màu mặc định), giữ nguyên hành vi cũ.
-    const nameSegments = composeEquipmentNameSegments(instance, template, gameManager.zoneRegistry)
+    // riêng (màu mặc định), giữ nguyên hành vi cũ. Registry miss chỉ
+    // hiện itemId thô — composeEquipmentNameSegments KHÔNG nhận
+    // template nullable nên gọi có điều kiện (pattern
+    // EquipmentHallPanel.vue:138-140).
+    const nameSegments = template
+      ? composeEquipmentNameSegments(instance, template, gameManager.zoneRegistry)
+      : [{ text: instance.itemId }]
 
     if (instance.equipped) {
       nameSegments.push({ text: '(đang mặc)' })
@@ -89,16 +101,16 @@ const entries = computed<EquipmentEntry[]>(() => {
     return {
       instance,
 
-      name: template.name,
+      name: displayName,
 
       cell: {
         key: instance.instanceId,
 
-        label: template.name,
+        label: displayName,
 
         nameSegments,
 
-        description: template.description,
+        description: template?.description,
 
         equipmentQualityRank: equipmentQualityRank(instance.quality),
 
@@ -108,17 +120,21 @@ const entries = computed<EquipmentEntry[]>(() => {
 
         // slotState (Cường Hóa) gắn theo SLOT chứ không theo instance
         // (xem EquipmentSlotState.ts) — chỉ có ý nghĩa THẬT SỰ thuộc về
-        // món đồ này khi nó đang được trang bị.
-        tooltip: buildEquipmentTooltip(
-          instance,
-          template,
-          gameManager.affixRegistry,
-          instance.equipped ? gameManager.getSlotState(instance.slot) : null,
-          gameManager.zoneRegistry,
-          equippedComparison,
-        ),
+        // món đồ này khi nó đang được trang bị. Registry miss → không
+        // tooltip (buildEquipmentTooltip đòi template thật, BagCell.tooltip
+        // optional) — cell vẫn hiển thị, không chết panel.
+        tooltip: template
+          ? buildEquipmentTooltip(
+              instance,
+              template,
+              gameManager.affixRegistry,
+              instance.equipped ? gameManager.getSlotState(instance.slot) : null,
+              gameManager.zoneRegistry,
+              equippedComparison,
+            )
+          : undefined,
 
-        icon: instance.icon ?? template.icon,
+        icon: instance.icon ?? template?.icon,
 
         onClick: () => handleClick(instance.instanceId),
       },

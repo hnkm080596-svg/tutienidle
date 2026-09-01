@@ -181,6 +181,11 @@ gameManager.eventBus.on<{ kind: string }>('reward_particle', (event) => {
   }
 })
 
+// Cảnh báo autosave fail chỉ 1 lần cho mỗi chuỗi fail — autosave chạy
+// mỗi 15s nên nếu toast mỗi tick thì spam; reset cờ khi ghi thành công
+// lại để chuỗi fail kế tiếp vẫn được báo.
+let saveFailureNotified = false
+
 async function persistProgress() {
   if (suppressPersistence || entryStage.value !== 'game' || saveInFlight) {
     return
@@ -191,8 +196,12 @@ async function persistProgress() {
   try {
     const result = await player.save(gameManager)
 
-    if (result.status !== 'ok') {
+    if (result.status !== 'ok' && !saveFailureNotified) {
+      saveFailureNotified = true
+      notification.push('error', 'Không lưu được tiến trình — bộ nhớ trình duyệt đầy. Hãy hóa luyện bớt trang bị.')
       console.warn('[autosave] progress was not saved', result)
+    } else if (result.status === 'ok') {
+      saveFailureNotified = false
     }
   } catch (error: unknown) {
     console.error('[autosave] unexpected save failure', error)

@@ -395,7 +395,10 @@
         "reset": "Xoá Save & Bắt Đầu Mới"
       },
       "notifications": {
-        "saved": "Đã lưu tiến trình"
+        "saved": "Đã lưu tiến trình",
+        "saveFailedShort": "Lưu thất bại",
+        "saveFailed": "Không lưu được — bộ nhớ đầy hoặc bị chặn.",
+        "exportFailed": "Không thể xuất save — ghi dữ liệu thất bại."
       },
       "hints": {
         "savedAt": "Đã lưu lúc {time}"

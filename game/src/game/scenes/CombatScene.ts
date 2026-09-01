@@ -1856,6 +1856,16 @@ export class CombatScene extends Phaser.Scene {
     // DoT accumulator (Ã‚Â§7.2) Ã¢â‚¬â€ trÃ¡ÂºÂ­n mÃ¡Â»â€ºi, dÃ¡Â»Ân bucket cÃ…Â©.
     this.dotAccumulators.clear()
 
+    // Audit fix 2026-08-31 — status VFX icons của trận trước (DoT còn tick khi
+    // battle end, không có status_vfx_removed event) không được dọn ở đây từng
+    // khiến icon cũ đóng băng trên màn qua auto-refight trong cùng scene.
+    for (const status of this.statuses.values()) {
+      status.icon.destroy()
+      status.label.destroy()
+    }
+
+    this.statuses.clear()
+
     const player = this.sprites.get(PLAYER_ID)
 
     if (player) {

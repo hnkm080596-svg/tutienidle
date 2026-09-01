@@ -15,7 +15,7 @@
 - `GameManager.canTriggerRealmBreakthrough()` (`src/core/game/GameManager.ts:1439`) trả `false` cứng; test `GameManager.progressionScope.test.ts` đang khóa hành vi này.
 - `foundationStages` (`src/data/stage/Stages.ts:357-368`) clone nguyên enemy pool Luyện Khí, comment ghi rõ "temporarily reuses".
 - `REALMS` (`src/data/realms/realm.ts:80-85`): `golden_core` là placeholder — `maxLevel: 9`, `realmDurationMultiplier: 90` (cơ chế cũ, không theo đường cong baseCultivationMinutes của 3 realm đầu).
-- `BREAKTHROUGH_REQUIREMENTS` (`src/core/breakthrough/BreakthroughRequirement.ts:23`) đã author sẵn token Kim Đan: `breakthrough_token_golden_core`, 2.000 Linh Thạch.
+- Gate đột phá đại cảnh giới (spec dot-pha-loi-kiep, đã gỡ Đột Phá Lệnh từ save v54): chỉ còn tầng 12 + Linh Thạch trừ trực tiếp khi bấm Độ Kiếp — chi phí theo realm trong `TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM` (`src/data/tribulation/TribulationChapters.ts:55`, fallback 2.000), qua `consumeTribulationSpiritStones()` (`src/core/game/GameManager.ts`).
 - Scaffold vật liệu realm 4+ đã có trong `src/data/materials/materials.ts:349-376` (45 gỗ + 30 quáng) và `extendCosts()` trong `src/data/building/buildings.ts` đòi chúng để nâng công trình — nhưng **không có nguồn sản xuất**.
 - Alchemy recipe đã viết đủ 9 realm (`src/data/alchemy/alchemyRecipes.ts`) nhưng thảo realm 4+ không farm được.
 - Art quái hiện chỉ có tier mortal (`public/assets/characters/` ~20 file `mortal-*`).

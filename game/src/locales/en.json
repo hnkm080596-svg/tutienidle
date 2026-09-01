@@ -395,7 +395,10 @@
         "reset": "Delete Save & Start New"
       },
       "notifications": {
-        "saved": "Progress saved"
+        "saved": "Progress saved",
+        "saveFailedShort": "Save failed",
+        "saveFailed": "Could not save — storage is full or blocked.",
+        "exportFailed": "Could not export save — writing data failed."
       },
       "hints": {
         "savedAt": "Saved at {time}"

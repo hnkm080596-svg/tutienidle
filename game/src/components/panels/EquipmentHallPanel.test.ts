@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
 import EquipmentHallPanel from './EquipmentHallPanel.vue'
@@ -48,6 +48,20 @@ function equipmentInstanceWithStat(
   return instance
 }
 
+/** Instance với itemId tuỳ ý — registry miss (save lệch data, audit fix
+ * 2026-08-31): computed phải tra an toàn thay vì throw chết panel. */
+function equipmentInstanceWithItemId(
+  instanceId: string,
+  itemId: string,
+  equipped: boolean,
+): EquipmentInstance {
+  const instance = equipmentInstance(instanceId, equipped)
+
+  instance.itemId = itemId
+
+  return instance
+}
+
 function mountHall(prepare?: (manager: GameManager) => void) {
   const container = document.createElement('div')
   const pinia = createPinia()
@@ -69,6 +83,18 @@ function mountHall(prepare?: (manager: GameManager) => void) {
 
   return { container, unmount: () => app.unmount() }
 }
+
+// jsdom không có ResizeObserver — usePanelPagination (tab Hóa Luyện)
+// tạo observer khi container render; stub theo pattern InventorySort.test.ts.
+beforeEach(() => {
+  window.ResizeObserver = window.ResizeObserver || (class {
+    observe() {}
+
+    unobserve() {}
+
+    disconnect() {}
+  } as never)
+})
 
 afterEach(() => { document.body.innerHTML = '' })
 
@@ -188,6 +214,55 @@ describe('EquipmentHallPanel — chọn trang bị bằng slot', () => {
 
     expect(cells.some((cell) => cell.includes('0.02'))).toBe(true)
     expect(cells.some((cell) => cell.trim() === '0.0')).toBe(false)
+
+    mounted.unmount()
+  })
+
+  it('itemId lạ (registry miss) không chết panel — trang bị đang mặc vẫn render slot, hiện itemId thô', async () => {
+    // Audit fix 2026-08-31 — equipmentRegistry.get() throw với itemId lạ
+    // (data edit/save lệch) từng chết cả panel qua ErrorBoundary; các
+    // computed phải dùng getEquipmentTemplate() an toàn + fallback hiển
+    // thị (pattern Task 13 EquipmentBagSection.vue).
+    const mounted = mountHall((manager) => {
+      manager.equipmentBag.remove('equipped')
+      manager.equipmentBag.add(equipmentInstanceWithItemId('ghost-item', 'nonexistent_item', true))
+    })
+
+    // Không throw khi render — slot weapon vẫn hiện (caption = itemId thô
+    // vì template không tra được).
+    const slots = mounted.container.querySelectorAll(
+      '[aria-label="Chọn slot cường hóa"] .slot-view',
+    )
+
+    expect(slots).toHaveLength(6)
+
+    mounted.unmount()
+  })
+
+  it('itemId lạ (registry miss) ở đồ trong túi không chết tab Hóa Luyện — ứng viên vẫn liệt kê', async () => {
+    const mounted = mountHall((manager) => {
+      // jsdom không có ResizeObserver → usePanelPagination pageSize tối
+      // thiểu 1; bỏ fixture 'in-bag' để ghost là ứng viên DUY NHẤT hiển
+      // thị trang đầu.
+      manager.equipmentBag.remove('in-bag')
+      manager.equipmentBag.add(equipmentInstanceWithItemId('ghost-bag', 'nonexistent_item', false))
+    })
+
+    const tabs = mounted.container.querySelectorAll<HTMLButtonElement>('.qi-hall__tabs button')
+    const dissolveTab = Array.from(tabs).find((b) => b.textContent?.includes('Hóa Luyện'))
+    dissolveTab!.click()
+    await nextTick()
+
+    // Ứng viên Hóa Luyện render không throw — item lạ hiện itemId thô.
+    const dissolveSlots = mounted.container.querySelectorAll('.dissolve-slot-wrap .slot-view')
+
+    expect(dissolveSlots.length).toBeGreaterThan(0)
+
+    const ghost = Array.from(dissolveSlots).find(
+      (el) => el.getAttribute('aria-label') === 'nonexistent_item',
+    )
+
+    expect(ghost).toBeDefined()
 
     mounted.unmount()
   })

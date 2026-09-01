@@ -17,13 +17,19 @@ function clampToOptions(value: number): number {
 }
 
 export function loadUiScale(): number {
-  const raw = localStorage.getItem(STORAGE_KEY)
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
 
-  if (!raw) {
+    if (!raw) {
+      return DEFAULT_UI_SCALE
+    }
+
+    return clampToOptions(Number(raw))
+  } catch {
+    // Audit fix 2026-08-31 — storage bị chặn (privacy mode/SSR) từng
+    // throw ở boot (main.ts gọi initUiScale() trước app.mount()).
     return DEFAULT_UI_SCALE
   }
-
-  return clampToOptions(Number(raw))
 }
 
 export function applyUiScale(scale: number): void {

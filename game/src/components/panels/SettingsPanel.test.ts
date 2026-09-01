@@ -6,6 +6,7 @@ import SettingsPanel from './SettingsPanel.vue'
 import { GameManager } from '@/core/game/GameManager'
 import { GAME_MANAGER_KEY } from '@/composables/useGameState'
 import { SAVE_RESET_REQUEST_EVENT } from '@/services/save/SaveSystem'
+import { useNotificationStore } from '@/stores/notification'
 import { i18n } from '@/i18n'
 
 afterEach(() => {
@@ -41,5 +42,65 @@ describe('SettingsPanel reset save', () => {
 
     window.removeEventListener(SAVE_RESET_REQUEST_EVENT, requested)
     app.unmount()
+  })
+})
+
+describe('SettingsPanel — toast kind khi save thất bại', () => {
+  afterEach(() => {
+    document.body.innerHTML = ''
+    vi.restoreAllMocks()
+    localStorage.clear()
+  })
+
+  function mountPanel() {
+    const container = document.createElement('div')
+    const app = createApp({ render: () => h(SettingsPanel) })
+
+    document.body.appendChild(container)
+    app.use(createPinia())
+    app.use(i18n)
+    app.provide(GAME_MANAGER_KEY, new GameManager())
+    app.mount(container)
+
+    return {
+      container,
+
+      saveButton: () =>
+        container.querySelector<HTMLButtonElement>('[data-testid="settings-save-button"]')!,
+
+      unmount: () => {
+        app.unmount()
+        container.remove()
+      },
+    }
+  }
+
+  it('Lưu thất bại (quota) → toast kind "error" đỏ, không còn kind "save" xanh', async () => {
+    // Audit fix 2026-08-31 — Task 2 để failure toast kind 'save' (màu
+    // xanh nhạt) trong khi App.vue autosave fail push kind 'error'
+    // (đỏ); thông báo thất bại phải đồng nhất màu đỏ để người chơi
+    // nhận biết mất nguy cơ.
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('quota exceeded', 'QuotaExceededError')
+    })
+
+    const mounted = mountPanel()
+    const notification = useNotificationStore()
+
+    mounted.saveButton().click()
+
+    // handleSave await cả chuỗi coordinator → service → writeGameSave;
+    // setTimeout(0) chờ hết chuỗi microtask trước khi assert.
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    // Failure toast phải là kind 'error' (đỏ), không phải 'save' (xanh).
+    const failureToast = notification.toasts.find(
+      (toast) => toast.message.includes('Không lưu được'),
+    )
+
+    expect(failureToast).toBeDefined()
+    expect(failureToast!.kind).toBe('error')
+
+    mounted.unmount()
   })
 })
