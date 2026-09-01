@@ -10,7 +10,6 @@ import { SkillManager } from '../skill/SkillManager'
 import { SkillSystem } from '../skill/SkillSystem'
 import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
-import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import { EventBus } from '../events/EventBus'
 import { ActionImpactSystem } from './ActionImpactSystem'
 import { createBaseStats } from '../stats/StatBlock'
@@ -27,7 +26,6 @@ function createBattleSystem(eventBus = new EventBus()) {
     new SkillSystem(skillManager),
     new SkillEffectSystem(),
     new BuffRegistry(),
-    new AilmentRegistry(),
     eventBus,
     new ActionImpactSystem({ eventBus, rollCritical: () => false }),
   )

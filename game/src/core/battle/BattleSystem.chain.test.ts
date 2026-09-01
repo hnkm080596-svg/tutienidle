@@ -5,11 +5,9 @@ import { SkillManager } from '../skill/SkillManager'
 import { SkillSystem } from '../skill/SkillSystem'
 import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
-import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import { EventBus } from '../events/EventBus'
 import { ActionImpactSystem } from '../battle/ActionImpactSystem'
 import { createBaseStats } from '../stats/StatBlock'
-import { ailments } from '../../data/ailment/ailments'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
 
@@ -92,19 +90,12 @@ function setup(chainSkillIds: string[] = ['chain_a', 'chain_b']) {
   const eventBus = new EventBus()
   const skillManager = new SkillManager()
   const skillSystem = new SkillSystem(skillManager)
-  const ailmentRegistry = new AilmentRegistry()
-
-  for (const template of ailments) {
-    ailmentRegistry.register(template)
-  }
-
   const system = new BattleSystem(
     new CombatSystem(eventBus),
     skillManager,
     skillSystem,
     new SkillEffectSystem(),
     new BuffRegistry(),
-    ailmentRegistry,
     eventBus,
     new ActionImpactSystem({ eventBus, rollCritical: () => false }),
   )
@@ -130,19 +121,12 @@ describe('BattleSystem — chuỗi combo Thuần hệ (spec §7)', () => {
     const eventBus = new EventBus()
     const skillManager = new SkillManager()
     const skillSystem = new SkillSystem(skillManager)
-    const ailmentRegistry = new AilmentRegistry()
-
-    for (const template of ailments) {
-      ailmentRegistry.register(template)
-    }
-
     const system = new BattleSystem(
       new CombatSystem(eventBus),
       skillManager,
       skillSystem,
       new SkillEffectSystem(),
       new BuffRegistry(),
-      ailmentRegistry,
       eventBus,
       new ActionImpactSystem({ eventBus, rollCritical: () => false }),
     )
@@ -247,19 +231,12 @@ describe('BattleSystem — chuỗi combo Thuần hệ (spec §7)', () => {
     const eventBus = new EventBus()
     const skillManager = new SkillManager()
     const skillSystem = new SkillSystem(skillManager)
-    const ailmentRegistry = new AilmentRegistry()
-
-    for (const template of ailments) {
-      ailmentRegistry.register(template)
-    }
-
     const system = new BattleSystem(
       new CombatSystem(eventBus),
       skillManager,
       skillSystem,
       new SkillEffectSystem(),
       new BuffRegistry(),
-      ailmentRegistry,
       eventBus,
       new ActionImpactSystem({ eventBus, rollCritical: () => false }),
     )

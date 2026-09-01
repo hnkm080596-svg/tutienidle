@@ -5,16 +5,25 @@ import { SkillManager } from '../skill/SkillManager'
 import { SkillSystem } from '../skill/SkillSystem'
 import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
-import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import { EventBus } from '../events/EventBus'
 import { ActionImpactSystem } from '../battle/ActionImpactSystem'
 
 import { createBaseStats } from '../stats/StatBlock'
 import { HERO_LANE_INDEX } from './BattleLane'
+import { buffs } from '../../data/buff/buffs'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
-import { ailments } from '../../data/ailment/ailments'
 import type { StatusVfxAttachedEvent, StatusVfxUpdatedEvent } from './BattleEvents'
+
+function createBuffRegistry(): BuffRegistry {
+  const registry = new BuffRegistry()
+
+  for (const definition of buffs) {
+    registry.register(definition)
+  }
+
+  return registry
+}
 
 // Cast Time (2026-08-21) + execution policy rework (plan §8.2) — policy
 // 'cast_time' hoãn hiệu ứng thật lại (startChannel()/updateCasting())
@@ -101,11 +110,6 @@ function setup(skill: Skill) {
   const eventBus = new EventBus()
   const skillManager = new SkillManager()
   const skillSystem = new SkillSystem(skillManager)
-  const ailmentRegistry = new AilmentRegistry()
-
-  for (const template of ailments) {
-    ailmentRegistry.register(template)
-  }
 
   skillManager.add(skill)
 
@@ -114,8 +118,7 @@ function setup(skill: Skill) {
     skillManager,
     skillSystem,
     new SkillEffectSystem(),
-    new BuffRegistry(),
-    ailmentRegistry,
+    createBuffRegistry(),
     eventBus,
     new ActionImpactSystem({ eventBus, rollCritical: () => false }),
   )
@@ -335,7 +338,7 @@ describe('BattleSystem — Cast Time + execution policy cast_time', () => {
     const skill = createCastTimeSkill({
       execution: { kind: 'cast_time', castTime: 0 },
       cooldown: 0,
-      effects: [{ type: 'ailment', ailmentId: 'bong', ailmentChance: 1 }],
+      effects: [{ type: 'debuff', buffId: 'bong', ailmentChance: 1 }],
     })
     const { system, tick, eventBus } = setup(skill)
     const player = createCombatant({ id: 'player', type: 'player' })

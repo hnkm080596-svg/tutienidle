@@ -5,16 +5,25 @@ import { SkillManager } from '../skill/SkillManager'
 import { SkillSystem } from '../skill/SkillSystem'
 import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
-import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import { EventBus } from '../events/EventBus'
 import { ActionImpactSystem } from '../battle/ActionImpactSystem'
 
 
 import { createBaseStats } from '../stats/StatBlock'
 import { createSkillRuntimeStats } from '../skill/SkillRuntimeStats'
-import { ailments } from '../../data/ailment/ailments'
+import { buffs } from '../../data/buff/buffs'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
+
+function createBuffRegistry(): BuffRegistry {
+  const registry = new BuffRegistry()
+
+  for (const definition of buffs) {
+    registry.register(definition)
+  }
+
+  return registry
+}
 
 // Plans/magicpathgeneral Phase 13 (2026-08-21) — Huyết Phá: charge ĐỘC
 // LẬP với Kim Thế (cùng điều kiện roll, xem BattleSystem.kimPath.test.ts's
@@ -62,7 +71,7 @@ function createDiemKimThuat(): Skill {
     remainingCooldown: 0,
     cost: 0,
     target: 'enemy',
-    effects: [{ type: 'ailment', ailmentId: 'chay_mau', ailmentChance: 1, grantsKimThePerProc: true, grantsHuyetPhaPerProc: true }],
+    effects: [{ type: 'debuff', buffId: 'chay_mau', ailmentChance: 1, grantsKimThePerProc: true, grantsHuyetPhaPerProc: true }],
     execution: { kind: 'attack_speed' },
     loadoutSlot: 0,
     loadoutSlots: [0],
@@ -76,19 +85,12 @@ function setup() {
   const eventBus = new EventBus()
   const skillManager = new SkillManager()
   const skillSystem = new SkillSystem(skillManager)
-  const ailmentRegistry = new AilmentRegistry()
-
-  for (const template of ailments) {
-    ailmentRegistry.register(template)
-  }
-
   const system = new BattleSystem(
     new CombatSystem(eventBus),
     skillManager,
     skillSystem,
     new SkillEffectSystem(),
-    new BuffRegistry(),
-    ailmentRegistry,
+    createBuffRegistry(),
     eventBus,
     new ActionImpactSystem({ eventBus, rollCritical: () => false }),
   )

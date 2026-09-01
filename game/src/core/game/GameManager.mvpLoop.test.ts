@@ -192,7 +192,7 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
           sawBossPhaseTrigger = true
         }
 
-        if (bossEntry.buffs.has('mvp_test_enrage')) {
+        if (bossEntry.buffs.hasAny('mvp_test_enrage')) {
           sawBossEnrageTrigger = true
         }
       }

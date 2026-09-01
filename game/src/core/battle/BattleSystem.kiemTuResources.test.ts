@@ -5,12 +5,10 @@ import { SkillManager } from '../skill/SkillManager'
 import { SkillSystem } from '../skill/SkillSystem'
 import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
-import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import { EventBus } from '../events/EventBus'
 import { ActionImpactSystem } from './ActionImpactSystem'
 import { createBaseStats } from '../stats/StatBlock'
 import { HERO_COLUMN } from './BattleLane'
-import { ailments } from '../../data/ailment/ailments'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
 import type { EntityVitalsChangedEvent } from '../combat/EntityVitalsSystem'
@@ -130,12 +128,6 @@ function setup(opts: SetupOptions) {
   const eventBus = new EventBus()
   const skillManager = new SkillManager()
   const skillSystem = new SkillSystem(skillManager)
-  const ailmentRegistry = new AilmentRegistry()
-
-  for (const template of ailments) {
-    ailmentRegistry.register(template)
-  }
-
   const combat = new CombatSystem(eventBus)
 
   const system = new BattleSystem(
@@ -144,7 +136,6 @@ function setup(opts: SetupOptions) {
     skillSystem,
     new SkillEffectSystem(),
     new BuffRegistry(),
-    ailmentRegistry,
     eventBus,
     new ActionImpactSystem({ eventBus, rollCritical: () => false }),
     undefined,

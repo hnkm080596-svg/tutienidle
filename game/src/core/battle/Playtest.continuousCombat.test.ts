@@ -5,13 +5,11 @@ import { SkillManager } from '../skill/SkillManager'
 import { SkillSystem } from '../skill/SkillSystem'
 import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
-import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import { EventBus } from '../events/EventBus'
 import { ActionImpactSystem } from './ActionImpactSystem'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import { SKILLS } from '../../data/skill/Skills'
-import { ailments } from '../../data/ailment/ailments'
 
 // Combat Balance Pass (2026-08-29) — Task 8 (plan §3.1-note + §5): mô
 // phỏng combat liên tục để xác nhận (a) Pháp Tu idle KHÔNG chết vì hết
@@ -63,12 +61,6 @@ function setupSim() {
   const eventBus = new EventBus()
   const skillManager = new SkillManager()
   const skillSystem = new SkillSystem(skillManager)
-  const ailmentRegistry = new AilmentRegistry()
-
-  for (const template of ailments) {
-    ailmentRegistry.register(template)
-  }
-
   // Full kit Pháp Tu Thủy path — Thủy Tiễn (root) + 4 skill khácrealm.
   for (const id of ['thuy_tien_thuat']) {
     const template = SKILLS.find(skill => skill.id === id)!
@@ -83,7 +75,6 @@ function setupSim() {
     skillSystem,
     new SkillEffectSystem(),
     new BuffRegistry(),
-    ailmentRegistry,
     eventBus,
     new ActionImpactSystem({ eventBus, rollCritical: () => false }),
   )

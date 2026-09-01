@@ -116,18 +116,18 @@ describe('BattleSystem — Bản Mệnh Pháp Bảo tích hợp thật (doc §11
 
     const battle = gameManager.getBattle()!
 
-    battle.playerAilments.add({
+    battle.playerBuffs.add({
       id: 'choang',
-      category: 'cc',
+      polarity: 'debuff',
       sourceId: battle.enemies[0]!.entity.id,
       targetId: battle.player.id,
       duration: 10,
       remainingTime: 10,
       stacks: 1,
       stackMode: 'refresh',
-      ccEffect: 'stun',
       continuousSeconds: 0,
-    } as never)
+      effects: [{ type: 'cc', ccEffect: 'stun' }],
+    })
 
     const hpBefore = battle.enemies[0]!.entity.currentHp
 

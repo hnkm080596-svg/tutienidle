@@ -5,14 +5,12 @@ import { SkillManager } from '../skill/SkillManager'
 import { SkillSystem } from '../skill/SkillSystem'
 import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
-import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import { EventBus } from '../events/EventBus'
 import { ActionImpactSystem } from './ActionImpactSystem'
 import { createBaseStats } from '../stats/StatBlock'
 import { HERO_LANE_INDEX } from './BattleLane'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
-import { ailments } from '../../data/ailment/ailments'
 
 // Combat Balance Pass (2026-08-29) — Task 5 (plan §3.5): fizzle (cast bị
 // hủy vì target chết/ra khỏi tầm — không do người chơi) hoàn 100% tài
@@ -83,11 +81,6 @@ function setup(skill: Skill) {
   const eventBus = new EventBus()
   const skillManager = new SkillManager()
   const skillSystem = new SkillSystem(skillManager)
-  const ailmentRegistry = new AilmentRegistry()
-
-  for (const template of ailments) {
-    ailmentRegistry.register(template)
-  }
 
   skillManager.add(skill)
 
@@ -97,7 +90,6 @@ function setup(skill: Skill) {
     skillSystem,
     new SkillEffectSystem(),
     new BuffRegistry(),
-    ailmentRegistry,
     eventBus,
     new ActionImpactSystem({ eventBus, rollCritical: () => false }),
   )

@@ -22,10 +22,8 @@ function makeCtx(overrides: Partial<SkillEffectContext> = {}): SkillEffectContex
     combatSystem: {} as SkillEffectContext['combatSystem'],
     fireHit: vi.fn(() => ({ landed: true })),
     buffRegistry: { get: (id: string) => ({ id }) } as unknown as SkillEffectContext['buffRegistry'],
-    ailmentRegistry: {} as SkillEffectContext['ailmentRegistry'],
     sourceBuffs: {} as SkillEffectContext['sourceBuffs'],
     targetBuffs: {} as SkillEffectContext['targetBuffs'],
-    targetAilments: {} as SkillEffectContext['targetAilments'],
     reactionManager: { checkAndTrigger: () => {} } as unknown as SkillEffectContext['reactionManager'],
     ...overrides,
   }
