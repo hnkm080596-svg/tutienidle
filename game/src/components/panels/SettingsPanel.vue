@@ -41,12 +41,23 @@ function handleUiScale(scale: number) {
 
 const lastSavedLabel = ref('')
 
-function handleSave() {
-  player.save(gameManager)
+// Lưu thủ công phải await và kiểm tra kết quả — trước đây toast
+// "Đã lưu tiến trình" hiện cả khi writeGameSave fail (quota), người
+// chơi tưởng tiến trình đã an toàn rồi đóng tab mất trắng.
+async function handleSave() {
+  const result = await player.save(gameManager)
 
-  lastSavedLabel.value = new Date().toLocaleTimeString()
+  if (result.status === 'ok') {
+    lastSavedLabel.value = new Date().toLocaleTimeString('vi-VN')
 
-  notification.push('save', 'Đã lưu tiến trình')
+    notification.push('save', 'Đã lưu tiến trình')
+  } else {
+    lastSavedLabel.value = 'Lưu thất bại'
+
+    // Audit fix 2026-08-31 — kind 'error' (đỏ) đồng nhất App.vue autosave
+    // fail; kind 'save' (xanh nhạt) làm người chơi bỏ qua mất nguy cơ.
+    notification.push('error', 'Không lưu được — bộ nhớ đầy hoặc bị chặn.')
+  }
 }
 
 function handleLoad() {
@@ -64,8 +75,16 @@ function handleLoad() {
 
 // Xuất save hiện tại — save() trước để file tải về phản ánh đúng
 // tiến trình tại thời điểm bấm, không phải lần save gần nhất.
-function handleExport() {
-  player.save(gameManager)
+async function handleExport() {
+  // PHẢI await — writeGameSave chạy trong microtask (cloudSaveCoordinator
+  // → LocalCloudSaveService.save đều async); đọc localStorage ngay sau lời
+  // gọi sync sẽ lấy save 15s cũ (bug audit 2026-08-31).
+  const result = await player.save(gameManager)
+
+  if (result.status !== 'ok') {
+    notification.push('error', 'Không thể xuất save — ghi dữ liệu thất bại.')
+    return
+  }
 
   const raw = getRawSave()
 
