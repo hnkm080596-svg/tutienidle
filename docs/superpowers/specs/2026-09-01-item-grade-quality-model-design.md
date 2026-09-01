@@ -51,6 +51,13 @@ forgePotential: number        // xóa (luôn 100, ý nghĩa cũ mất)
 // FORGE_PERCENT_PER_POINT
 ```
 
+**Materials mới/trên data:**
+```ts
+// data/materials — thêm
+luyen_khi_tinh_hoa: { name: 'Luyện Khí Tinh Hoa', category: 'essence', ... }  // 1 loại duy nhất
+// xóa: tinh_hoa_pham_khi..thien_dia_trong_khi (10 essence theo bậc Khí cũ)
+```
+
 ## 3. Bảng phân vai — Phẩm điều khiển gì, Chất điều khiển gì
 
 | # | Cơ chế | Thuộc | Giá trị |
@@ -63,8 +70,10 @@ forgePotential: number        // xóa (luôn 100, ý nghĩa cũ mất)
 | 6 | Implicit multiplier lúc roll mainStat | **Chất** | 1.00 / 1.15 / 1.30 / 1.50 / 1.75 |
 | 7 | Chi phí cường hóa/tẩy/tinh | **Phẩm** | CostCatalog tra qua grade→realm (chi phí Điểm Rèn là 1/lần — xem #5; chỉ chi phí nguyên liệu/khác theo phẩm) |
 | 8 | Ore Tẩy Luyện cùng bậc | **Phẩm** | quặng phải cùng phẩm với item (grade→realm prefix) |
-| 9 | Tinh Hoa hóa luyện — loại | **Phẩm** | essence của realm tương ứng (grade→realm) |
+| 9 | Tinh Hoa hóa luyện — loại | **Phẩm** | ~~essence theo realm~~ → **ĐỔI: 1 loại duy nhất `luyen_khi_tinh_hoa` (Luyện Khí Tinh Hoa)** cho mọi phẩm — bảng 10 essence cũ xóa |
 | 10 | Tinh Hoa hóa luyện — lượng | **Chất** | giữ range hiện: 1-3 / 2-4 / 3-5 / 4-6 / 5-7 |
+| 9a | **Nguyên liệu Tẩy/Tinh/Cường** | — | **KHÔNG còn Linh Khoáng** — mọi hành động tốn **Luyện Khí Tinh Hoa** (1/lần rèn — xem #5; lượng tẩy/tinh giữ theo cơ chế hiện tại nhưng đơn vị = tinh hoa) |
+| 9b | **Tab Phân Giải mới trong Khí Đường** | — | Nguồn DUY NHẤT của Luyện Khí Tinh Hoa: phân giải **Linh Khoáng** (nguyên liệu quặng). Settings tùy chỉnh: phân giải theo phẩm nào / chất nào / tốn nhân công. Đầu ra tuyến tính: phẩm-chất khoáng càng cao → tinh hoa càng nhiều. Xóa logic "chọn ore cùng cảnh giới" khỏi Tẩy Luyện — người chơi không còn bối rối chọn nguyên liệu |
 | 11 | Weight random chất lúc drop | **Chất** | **CỐ ĐỊNH mọi phẩm: 75 / 15 / 8 / 1.99 / 0.01** |
 | 11a | **Tẩy Luyện (wash)** — mục đích | **Chất** | Random lại TOÀN BỘ: số dòng substat (trong khoảng 0–N của chất) + dòng nào + giá trị. Mục đích: **ra nhiều dòng, dòng đúng yêu cầu**. Số dòng mới cũng random trong khoảng — tẩy có thể ra ít dòng hơn trước |
 | 11b | **Tinh Luyện (refine)** — mục đích | **Chất** | **CHẮC CHẮN tăng chất lượng dòng, không bao giờ giảm** (bỏ cơ chế cộng/trừ `REFINE_VALUE_VARIANCE` hiện tại). Mức tăng random hoàn toàn: **+5% đến +20%** giá trị dòng (balance sau bằng playtest). Mỗi lần tinh: random chọn dòng + random mức tăng trong [5%, 20%] |
@@ -98,9 +107,30 @@ forgePotential: number        // xóa (luôn 100, ý nghĩa cũ mất)
 
 **Tinh Luyện (refine):**
 - Đổi từ cơ chế hiện tại (random ±20% `REFINE_VALUE_VARIANCE` có thể GIẢM giá trị): thành **chỉ tăng**
-- Mỗi lần: chọn random 1 dòng hiện có → tăng giá trị `+U(5%, 20%)` (uniform random trong khoảng), clamp trong tier range
+- Mỗi lần: chọn random 1 dòng hiện có → tăng giá trị `+U(5%, 20%)` **độc lập từng dòng** (không phải 5%/20% cho tất cả các dòng — mỗi substat được chọn tăng mức riêng của nó), clamp trong tier range
 - Bỏ `REFINE_VALUE_VARIANCE`; giữ `REFINE_MAX_LOCKS` (khóa dòng khi tinh — xem plan có giữ không)
 - Balance sau bằng playtest (khoảng 5–20% có thể điều chỉnh)
+
+### Luyện Khí Tinh Hoa — nguyên liệu thống nhất (mới)
+
+**1 loại duy nhất: `luyen_khi_tinh_hoa`** — thay thế:
+- Bảng 10 essence theo realm cũ (`tinh_hoa_pham_khi…thien_dia_trong_khi`) — xóa
+- Ore Tẩy Luyện (`${realmId}_ore_` prefix, yêu cầu "quặng cùng cảnh giới") — **xóa khỏi Tẩy Luyện**; ore trở thành nguyên liệu ĐẦU VÀO của tab Phân Giải
+- (Nghiên cứu thêm trong plan: `tinh_hoa_pham_thể` của Luyện Thể — hệ riêng, KHÔNG đụng trong spec này)
+
+**Nguồn duy nhất — Tab Phân Giải (mới, tab thứ 5 trong Khí Đường):**
+- Input: Linh Khoáng (nguyên liệu quặng mọi phẩm/chất)
+- Settings người chơi tùy chỉnh: chọn phân giải khoáng theo **phẩm** nào (hoặc tất cả), theo **chất** nào (hoặc tất cả), bật/tắt + số **nhân công** (từ pool chung — Chiêu Hiền Quán 6C)
+- Chạy như production cycle (tick có chu kỳ, không instant) — khớp kiến trúc ProductionSystem
+- Đầu ra tuyến tính: `output = f(phẩm khoáng, chất khoáng, nhân công)` — phẩm-chất càng cao tinh hoa càng nhiều; bảng hệ số cụ thể trong plan (khởi điểm: nhân công 1 + chất cao ×hệ số, khớp quy tắc cân bằng 6F "tốc độ sản xuất ≤ tiêu thụ trên mỗi nhân công")
+- **Lý do thiết kế:** đơn giản hóa lựa chọn nguyên liệu ở Khí Đường (không còn "phải tìm đúng ore cùng realm"); tạo giá trị cho khoáng phẩm/chất thấp (thường bị bỏ qua) — mọi khoáng đều có đầu ra hữu ích; pattern "phân giải X thành nguyên liệu trung gian thống nhất" có thể áp dụng cho hệ thống khác sau này
+
+**Chuyển đổi consumption:**
+| Hành động | Nguyên liệu cũ | Nguyên liệu mới |
+|---|---|---|
+| Cường Hóa | Linh Thạch theo level | giữ Linh Thạch + **1 Luyện Khí Tinh Hoa/lượt** (lượt theo #5) |
+| Tẩy Luyện | Điểm Rèn theo quality + ore cùng realm | tinh hoa theo lượt (bảng WASH cost mới — đơn vị tinh hoa, giữ cấu trúc số cũ 2→18 đổi theo 5 chất) |
+| Tinh Luyện | Điểm Rèn + Linh Thạch | tinh hoa (bảng REFINE cost mới 1→9 đổi theo 5 chất) + Linh Thạch giữ |
 
 ## 4. Thay đổi chi tiết
 
@@ -162,17 +192,21 @@ mới: grade   = PROFESSION_GRADE_BY_REALM[player.realmId]  // deterministic, kh
 3. Substats: roll 1000 items mỗi chất — số dòng luôn trong khoảng [0, N], mọi giá trị khoảng đều xuất hiện; không vượt GLOBAL_MAX_AFFIXES
 4. Lượt rèn: `forgeUsesTotal` đúng bảng (5/10/20/40/80); mỗi lần rèn `forgeUsesRemaining` -1; hết lượt thì chặn; chi phí 1 lượt + nguyên liệu đúng
 5. Tẩy Luyện: kết quả random số dòng mới trong khoảng chất + stat/tier/value roll lại; giữ nguyên item khác substats
-6. Tinh Luyện: 1000 lần — giá trị dòng chỉ TĂNG; mức tăng ∈ [5%, 20%]; clamp trong tier range
-7. Gate: item phẩm cao/thấp hơn realm đều chặn; ngang phẩm cho qua; đột phá tháo đồ
-8. Không item nào còn field `realmId`/`rarity`/`forgePoints`/`forgePotential`; không còn "Phẩm" trong trục chất (grep label/locale)
-9. theme.css không còn `--grade-*`/`--eq-quality-*`; `--rank-color-10` tồn tại; không còn `FORGE_PERCENT_PER_POINT`
-10. Hóa Luyện: essence loại theo phẩm, lượng theo chất
-11. Parity vi/en cho mọi key locale mới
+6. Tinh Luyện: 1000 lần — giá trị dòng chỉ TĂNG; mỗi dòng được chọn tăng mức RIÊNG ∈ [5%, 20%] (không đồng loạt một mức); clamp trong tier range
+7. Tab Phân Giải: khoáng phẩm P chất Q + nhân công N → output tuyến tính theo bảng hệ số; setting lọc phẩm/chất hoạt động; cycle tick theo ProductionSystem
+8. Gate: item phẩm cao/thấp hơn realm đều chặn; ngang phẩm cho qua; đột phá tháo đồ
+9. Không item nào còn field `realmId`/`rarity`/`forgePoints`/`forgePotential`; không còn "Phẩm" trong trục chất (grep label/locale); không còn ore trong chi phí Tẩy Luyện
+10. Tinh hoa: chỉ còn `luyen_khi_tinh_hoa` — grep không còn tham chiếu `tinh_hoa_pham_khi`..`thien_dia_trong_khi` (trừ `tinh_hoa_pham_thể` Luyện Thể giữ riêng)
+11. theme.css không còn `--grade-*`/`--eq-quality-*`; `--rank-color-10` tồn tại; không còn `FORGE_PERCENT_PER_POINT`
+12. Hóa Luyện: output = Luyện Khí Tinh Hoa, lượng theo chất
+13. Parity vi/en cho mọi key locale mới
 
 ## 7. Phạm vi file (ước lượng)
 
-**Core (xóa/sửa lớn):** `EquipmentQuality.ts` (xóa), `ItemGrade.ts` (→ ItemQuality + label mới + bảng cân bằng 5 chất), `EquipmentRarity.ts` (xóa alias, merge vào ItemQuality; Exalted chuyển thành cơ chế "Tiên +1 roll" nếu giữ), `EquipmentInstance.ts` (schema + forgeUses*), `EquipmentSystem.ts` (drop pipeline + wash random toàn bộ + refine chỉ-tăng + bỏ FORGE_PERCENT), `RefinementBalance.ts` (WASH/REFINE cost theo chất mới, bỏ VARIANCE, giữ MAX_LOCKS), `EquipmentOperationCostCatalog.ts`, `EquipmentStatPolicy.ts` (substat pool theo chất mới), `EquipmentBag.ts` (auto-dissolve essence)
-**Hiển thị:** `theme.css` (+4 theme files check), `labels.ts`, `normalizeSlotRank.ts`, `EquipmentNaming.ts`, `useEquipmentTooltip.ts`, `EquipmentHallPanel.vue` (+tests — 4 tab đều chạm), `SlotView` nếu cần
+**Core (xóa/sửa lớn):** `EquipmentQuality.ts` (xóa), `ItemGrade.ts` (→ ItemQuality + label mới + bảng cân bằng 5 chất), `EquipmentRarity.ts` (xóa alias, merge vào ItemQuality; Exalted chuyển thành cơ chế "Tiên +1 roll" nếu giữ), `EquipmentInstance.ts` (schema + forgeUses*), `EquipmentSystem.ts` (drop pipeline + wash random toàn bộ + refine chỉ-tăng-từng-dòng + bỏ FORGE_PERCENT), `RefinementBalance.ts` (WASH/REFINE cost theo chất mới đơn vị tinh hoa, bỏ VARIANCE, bỏ bảng 10 essence, giữ MAX_LOCKS), `EquipmentOperationCostCatalog.ts`, `EquipmentStatPolicy.ts` (substat pool theo chất mới), `EquipmentBag.ts` (auto-dissolve → luyen_khi_tinh_hoa)
+**Materials data:** `materials.ts` — thêm `luyen_khi_tinh_hoa`, xóa 10 essence bậc Khí cũ; **`ProductionTypes`/ProductionSystem nếu cần loại site phân giải** (xem 6C — tab Phân Giải chạy như production)
+**Tab Phân Giải (mới):** `EquipmentHallPanel.vue` tab 5 (hoặc panel riêng nếu Khí Đường quá lớn — quyết định trong plan) + settings phẩm/chất/nhân công + UI
+**Hiển thị:** `theme.css` (+4 theme files check), `labels.ts`, `normalizeSlotRank.ts`, `EquipmentNaming.ts`, `useEquipmentTooltip.ts`, `EquipmentHallPanel.vue` (+tests — 5 tab chạm), `SlotView` nếu cần
 **Data:** `affixes.ts` (tier mapping nếu tham chiếu quality cũ), `Enemies.ts` không đổi (enemy stats riêng)
 **Save:** `saveShapeValidation.ts` (item schema mới), không migration
 **Mới:** `canUseItem` + bảng realm→phẩm lookup ngược đã có sẵn
