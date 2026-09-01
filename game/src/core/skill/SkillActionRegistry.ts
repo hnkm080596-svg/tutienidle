@@ -4,7 +4,7 @@ import type { SkillEffectContext } from './SkillEffectSystem'
 import type { TriggerContextMap, TriggerType } from './SkillTrigger'
 
 export interface ActionExecutionHelpers {
-  fireNested: <T extends TriggerType>(trigger: T, context: TriggerContextMap[T]) => void
+  fireNested: <T extends TriggerType>(trigger: T, context: Omit<TriggerContextMap[T], 'skill'>) => void
 }
 
 export type ActionExecutor<A extends SkillAction = SkillAction> = (
@@ -74,11 +74,49 @@ const applyDebuff: ActionExecutor<Extract<SkillAction, { type: 'applyDebuff' }>>
   ctx.targetBuffs.apply(ctx.buffRegistry.get(action.buffId))
 }
 
+// Ported from SkillEffectSystem.apply()'s case 'ailment', minus the
+// grantsKimThePerProc/grantsHuyetPhaPerProc flags — those become separate
+// onProc-bound grantResource actions once a skill migrates. The only new
+// responsibility here versus the old code is firing onProc on a successful
+// roll, via helpers.fireNested.
+const applyAilment: ActionExecutor<Extract<SkillAction, { type: 'applyAilment' }>> = (
+  action,
+  source,
+  target,
+  ctx,
+  _runtime,
+  helpers,
+) => {
+  const ailmentChance = Math.min(1, (action.chance ?? 1) + source.stats.elementApplicationPercent)
+
+  if (Math.random() >= ailmentChance) {
+    return
+  }
+
+  ctx.targetAilments.apply(ctx.ailmentRegistry.get(action.ailmentId), source, target, ctx.ailmentRegistry)
+
+  helpers.fireNested('onProc', { source, target, ailmentId: action.ailmentId })
+
+  ctx.reactionManager.checkAndTrigger(
+    ctx.targetAilments,
+    action.ailmentId,
+    source,
+    target,
+    ctx.combatSystem,
+    ctx.ailmentRegistry,
+    ctx.sourceBuffs,
+    ctx.buffRegistry,
+    ctx.spawnLavaZone,
+    ctx.reactionKeepChance ?? 0,
+  )
+}
+
 export const SKILL_ACTION_REGISTRY: { [K in SkillActionType]: ActionExecutor<Extract<SkillAction, { type: K }>> } = {
   dealDamage,
   heal,
   applyBuff,
   applyDebuff,
+  applyAilment,
 } as { [K in SkillActionType]: ActionExecutor<Extract<SkillAction, { type: K }>> }
 
 export function runSkillAction(

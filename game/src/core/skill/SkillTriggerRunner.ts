@@ -1,5 +1,6 @@
 import type { OnHitContext, TriggerBinding, TriggerContextMap, TriggerType } from './SkillTrigger'
 import type { CombatEntity } from '../combat/CombatEntity'
+import type { Skill } from './Skill'
 import type { SkillEffectContext } from './SkillEffectSystem'
 import type { ActionExecutionHelpers } from './SkillActionRegistry'
 import { runSkillAction } from './SkillActionRegistry'
@@ -34,9 +35,18 @@ export class SkillTriggerRunner {
           : {}),
       }
 
+      const skill = (context as Partial<{ skill: Skill }>).skill
+
       const helpers: ActionExecutionHelpers = {
         fireNested: (nestedTrigger, nestedContext) => {
-          this.fire(nestedTrigger, nestedContext, triggers, source, target, ctx)
+          this.fire(
+            nestedTrigger,
+            { ...nestedContext, skill } as TriggerContextMap[typeof nestedTrigger],
+            triggers,
+            source,
+            target,
+            ctx,
+          )
         },
       }
 

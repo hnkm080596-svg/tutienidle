@@ -156,3 +156,58 @@ describe('applyDebuff executor', () => {
     expect(apply).toHaveBeenCalledWith({ id: 'suy_nhuoc' })
   })
 })
+
+describe('applyAilment executor', () => {
+  it('applies the ailment and fires onProc on a successful roll', () => {
+    const source = makeEntity({ stats: { skillDamagePercent: 0, maxMp: 0, attack: 10, elementApplicationPercent: 0 } as CombatEntity['stats'] })
+    const target = makeEntity()
+    const apply = vi.fn()
+    const get = vi.fn(() => ({ id: 'bong' }))
+    const checkAndTrigger = vi.fn()
+    const fireNested = vi.fn()
+    const ctx = makeCtx({
+      targetAilments: { apply } as unknown as SkillEffectContext['targetAilments'],
+      ailmentRegistry: { get } as unknown as SkillEffectContext['ailmentRegistry'],
+      reactionManager: { checkAndTrigger } as unknown as SkillEffectContext['reactionManager'],
+    })
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    runSkillAction(
+      { type: 'applyAilment', ailmentId: 'bong', chance: 1 },
+      source,
+      target,
+      ctx,
+      {},
+      { fireNested },
+    )
+
+    expect(apply).toHaveBeenCalledWith({ id: 'bong' }, source, target, { get })
+    expect(fireNested).toHaveBeenCalledWith('onProc', { source, target, ailmentId: 'bong' })
+    expect(checkAndTrigger).toHaveBeenCalled()
+
+    vi.restoreAllMocks()
+  })
+
+  it('does not apply or fire onProc when the roll fails', () => {
+    const source = makeEntity({ stats: { skillDamagePercent: 0, maxMp: 0, attack: 10, elementApplicationPercent: 0 } as CombatEntity['stats'] })
+    const target = makeEntity()
+    const apply = vi.fn()
+    const fireNested = vi.fn()
+    const ctx = makeCtx({ targetAilments: { apply } as unknown as SkillEffectContext['targetAilments'] })
+    vi.spyOn(Math, 'random').mockReturnValue(0.99)
+
+    runSkillAction(
+      { type: 'applyAilment', ailmentId: 'bong', chance: 0.5 },
+      source,
+      target,
+      ctx,
+      {},
+      { fireNested },
+    )
+
+    expect(apply).not.toHaveBeenCalled()
+    expect(fireNested).not.toHaveBeenCalled()
+
+    vi.restoreAllMocks()
+  })
+})
