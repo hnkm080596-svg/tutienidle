@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+﻿import { describe, expect, it } from 'vitest'
 import { ReactionManager } from './ReactionManager'
 import { AilmentSystem } from '../ailment/AilmentSystem'
 import { AilmentManager } from '../ailment/AilmentManager'
@@ -99,7 +99,7 @@ describe('ReactionManager (Combat Rework Phase 6 — Pháp Tu Reaction)', () => 
 
     reactionManager.checkAndTrigger(ailmentSystem, 'te_cong', source, target, combatSystem)
 
-    expect(target.currentHp).toBe(1000 - 65)
+    expect(target.currentHp).toBe(1000 - 70)
     expect(ailmentSystem.getActiveIds()).toEqual([])
     expect(reactionEvents).toHaveLength(1)
   })
@@ -122,8 +122,8 @@ describe('ReactionManager (Combat Rework Phase 6 — Pháp Tu Reaction)', () => 
 
     reactionManager.checkAndTrigger(ailmentSystem, 'bong', source, target, combatSystem)
 
-    // Combat Balance Pass (2026-08-29) — powerScalingRatio 0.5: 60 + 5.
-    expect(target.currentHp).toBe(1000 - 65)
+    // Combat Balance Pass (2026-08-29) — powerScalingRatio 1.0 (T5.4): 60 + 10.
+    expect(target.currentHp).toBe(1000 - 70)
     expect(ailmentSystem.getActiveIds()).toEqual([])
   })
 
@@ -186,7 +186,7 @@ describe('ReactionManager (Combat Rework Phase 6 — Pháp Tu Reaction)', () => 
 
     // Combat Balance Pass (2026-08-29) — baseDamage 60 + power
     // (attack 10 × 0.5 = 5) = 65, rồi × (1 + 0.5) = 97.5.
-    expect(target.currentHp).toBe(1000 - 97.5)
+    expect(target.currentHp).toBe(1000 - 105)
   })
 
   // Plans/waterpath (2026-08-21) — chốt bảng reaction mới của Thủy.
@@ -206,7 +206,7 @@ describe('ReactionManager (Combat Rework Phase 6 — Pháp Tu Reaction)', () => 
     reactionManager.checkAndTrigger(ailmentSystem, 'trung_doc', source, target, combatSystem)
 
     // Combat Balance Pass (2026-08-29) — powerScalingRatio 0.5: 65 + 5.
-    expect(target.currentHp).toBe(1000 - 70)
+    expect(target.currentHp).toBe(1000 - 75)
     expect(ailmentSystem.getActiveIds()).toEqual([])
   })
 
@@ -237,8 +237,8 @@ describe('ReactionManager (Combat Rework Phase 6 — Pháp Tu Reaction)', () => 
 
     reactionManager.checkAndTrigger(ailmentSystem, 'te_cong', source, target, combatSystem)
 
-    // Combat Balance Pass (2026-08-29) — powerScalingRatio 0.5: 60 + 5.
-    expect(target.currentHp).toBe(1000 - 65)
+    // Combat Balance Pass (2026-08-29) — powerScalingRatio 1.0 (T5.4): 60 + 10.
+    expect(target.currentHp).toBe(1000 - 70)
     // 'bong' bị tiêu như thường, 'te_cong' được GIỮ LẠI (không có trong
     // danh sách xoá) — vẫn active sau Reaction.
     expect(ailmentSystem.getActiveIds()).toEqual(['te_cong'])
@@ -430,10 +430,10 @@ describe('ReactionManager (Combat Rework Phase 6 — Pháp Tu Reaction)', () => 
 
     reactionManager.checkAndTrigger(ailmentSystem, 'bong', source, target, combatSystem)
 
-    // Combat Balance Pass (2026-08-29) — powerScalingRatio 0.5: 85 + 5 = 90
+    // Combat Balance Pass (2026-08-29) — powerScalingRatio 1.0 (T5.4): 85 + 10 = 95
     // trừ currentHp, rồi maxHp bị thu nhỏ 3% (970) — currentHp (910) <
     // maxHp mới nên không bị clamp thêm.
-    expect(target.currentHp).toBe(1000 - 90)
+    expect(target.currentHp).toBe(1000 - 95)
     expect(target.maxHp).toBe(970)
     expect(target.totalMaxHpReductionPercent).toBeCloseTo(0.03, 5)
   })

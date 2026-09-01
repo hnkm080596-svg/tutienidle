@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+﻿import { describe, expect, it } from 'vitest'
 import { ELEMENT_REACTIONS } from './ElementReaction'
 
 // Spec 2026-08-30-phap-tu-dao-sac §4 — bảng reaction hoàn chỉnh 10 cặp
