@@ -1326,10 +1326,29 @@ export class BattleSystem {
     if (options.skillId) {
       const firedSkill = this.skillManager.get(options.skillId)
 
-      if (firedSkill?.triggers?.length) {
+      // Chỉ build context (allocate BuffSystem/AilmentSystem/closures) khi
+      // skill THỰC SỰ có binding onHit/onCrit/onEvade — tránh allocation vô
+      // ích trên mọi hit của basic attack (vd Huy Kiếm/`tram` chỉ có
+      // onCast, không nên trả giá allocation của nhánh này).
+      const hasReactiveTrigger = firedSkill?.triggers?.some(
+        (binding) => binding.trigger === 'onHit' || binding.trigger === 'onCrit' || binding.trigger === 'onEvade',
+      )
+
+      if (firedSkill && hasReactiveTrigger) {
         const hitCtx: SkillEffectContext = {
           combatSystem: this.combat,
-          fireHit: () => ({ landed: true }),
+          // Reactive trigger (onHit/onCrit/onEvade) fire từ BÊN TRONG hit
+          // đang resolve — fireHit ở đây KHÔNG được re-enter applyActionHit
+          // (chính applyActionHit là nơi bắn onHit/onCrit/onEvade, nên
+          // re-enter sẽ đệ quy vô hạn). Action nào cần deal damage phải
+          // gắn vào onCast, không phải các reactive trigger này — cảnh báo
+          // loud thay vì âm thầm no-op nếu bị dùng sai.
+          fireHit: () => {
+            console.warn(
+              '[SkillTriggerRunner] fireHit called from a reactive trigger (onHit/onCrit/onEvade) context — this is a no-op by design; use onCast for damage-dealing actions.',
+            )
+            return { landed: true }
+          },
           buffRegistry: this.buffRegistry,
           ailmentRegistry: this.ailmentRegistry,
           sourceBuffs: new BuffSystem(this.getBuffsFor(battle, source)),
@@ -1345,22 +1364,18 @@ export class BattleSystem {
         }
 
         if (!result.dodged) {
-          this.skillTriggerRunner.fire(
-            'onHit',
-            { source, target, skill: firedSkill, damageDealt: result.finalDamage, isCrit: result.critical },
-            firedSkill.triggers,
-            source, target, hitCtx,
-          )
+          const hitContext = { source, target, skill: firedSkill, damageDealt: result.finalDamage, isCrit: result.critical }
+
+          this.skillTriggerRunner.fire('onHit', hitContext, firedSkill.triggers, source, target, hitCtx)
 
           if (result.critical) {
-            this.skillTriggerRunner.fire(
-              'onCrit',
-              { source, target, skill: firedSkill, damageDealt: result.finalDamage, isCrit: result.critical },
-              firedSkill.triggers,
-              source, target, hitCtx,
-            )
+            this.skillTriggerRunner.fire('onCrit', hitContext, firedSkill.triggers, source, target, hitCtx)
           }
         } else {
+          // onEvade fires trên skill của NGƯỜI TẤN CÔNG khi đòn đánh của
+          // họ bị né ("đòn của tôi bị né") — KHÔNG phải trên skill của
+          // người phòng thủ cho "tôi vừa né được đòn đánh" (chưa có firing
+          // site cho hướng đó).
           this.skillTriggerRunner.fire(
             'onEvade',
             { source, target, skill: firedSkill },
