@@ -1041,7 +1041,7 @@ export class BattleSystem {
       ) {
         const phase = phases[appliedCount]!
 
-        new BuffSystem(battleEnemy.buffs).apply(phase.buff)
+        new BuffSystem(battleEnemy.buffs).apply(phase.buff, battleEnemy.entity, battleEnemy.entity)
 
         // Boss Mechanics (Phase 4) — Attack Pattern: đổi hẳn archetype
 
@@ -1096,7 +1096,7 @@ export class BattleSystem {
         continue
       }
 
-      new BuffSystem(battleEnemy.buffs).apply(enrage.buff)
+      new BuffSystem(battleEnemy.buffs).apply(enrage.buff, battleEnemy.entity, battleEnemy.entity)
 
       battleEnemy.enrageApplied = true
     }
@@ -2595,20 +2595,10 @@ export class BattleSystem {
         }
         const statKey = statByKind[kind] as (typeof statByKind)[string] | undefined
         if (statKey) {
-          const buffManager = this.getBuffsFor(battle, source)
           const buffId = `onhit_${kind}`
-          const existing = buffManager.get(buffId)
-          if (existing) {
-            existing.stacks += 1
-          } else {
-            buffManager.add({
-              id: buffId,
-              name: `On-hit ${kind}`,
-              category: 'buff',
-              stacks: 1,
-              stackMode: 'stack',
-              modifiers: [{ id: `${buffId}:${statKey}`, sourceId: buffId, sourceType: 'buff', stat: statKey, percent: 0.02 }],
-            })
+          const definition = this.buffRegistry.get(buffId)
+          if (definition) {
+            new BuffSystem(this.getBuffsFor(battle, source)).apply(definition, source, source, this.buffRegistry)
           }
         }
         break

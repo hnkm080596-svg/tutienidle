@@ -25,7 +25,7 @@ import { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 import { BuffPool } from '../buff/BuffPool'
 import { BuffSystem } from '../buff/BuffSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
-import type { Buff } from '../buff/Buff'
+import type { BuffDefinition } from '../buff/BuffDefinition'
 
 import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import type { AilmentTemplate } from '../ailment/AilmentRegistry'
@@ -200,6 +200,7 @@ import type { GameSave } from '../../services/save/SaveSystem'
 
 import type { StatModifier } from '../stats/StatCalculator'
 import type { Stats } from '../stats/StatBlock'
+import { createBaseStats } from '../stats/StatBlock'
 
 /**
  * GameManager lÃ  orchestrator (2026-08-24 refactor â€” tÃ¡ch business logic
@@ -552,7 +553,7 @@ export class GameManager {
     }
   }
 
-  registerBuffs(buffs: Buff[]) {
+  registerBuffs(buffs: BuffDefinition[]) {
     for (const buff of buffs) {
       if (!this.buffRegistry.has(buff.id)) {
         this.buffRegistry.register(buff)
@@ -2872,8 +2873,44 @@ export class GameManager {
    * CÃ¹ng buffSystem/buffManager nuÃ´i getAggregatedModifiers() má»—i
    * tick (xem PillSystem's effect 'buff' â€” cÃ¹ng cÆ¡ cháº¿).
    */
-  applyPersistentBuff(buff: Buff) {
-    this.buffSystem.apply(buff)
+  // Unified Buff System (Task 9b) - BuffSystem.apply() now requires a
+  // real source/target CombatEntity (to read ailmentResistPercent /
+  // ailmentDurationPercent for duration scaling), even for a buff with
+  // no dot effect like KIEP_THUONG_DEBUFF. GameManager keeps no
+  // persistent player CombatEntity outside battle (only
+  // playerToCombatEntity() at battle start, which needs a `Stats`
+  // already calculateStats()'d by the Pinia store - GameManager
+  // deliberately avoids calling calculateStats() itself to prevent 2
+  // divergent call sites, see startBattleWithPlayer()'s note). Prefer
+  // the REAL in-battle CombatEntity when one exists; fall back to a
+  // neutral "ghost" CombatEntity (same precedent as
+  // TribulationDirector.ghost) when there is no battle - known
+  // tradeoff: this debuff's resist/duration won't read the player's
+  // real gear when applied outside battle. See task-9b-report.md.
+  applyPersistentBuff(buff: BuffDefinition) {
+    const entity = this.battleSystem.getBattle()?.player ?? this.createPersistentBuffGhostEntity()
+
+    this.buffSystem.apply(buff, entity, entity, this.buffRegistry)
+  }
+
+  // Neutral placeholder CombatEntity (no gear, no active buffs) used
+  // only so BuffSystem.apply()/update() can read
+  // `.stats.ailmentResistPercent`/`.stats.ailmentDurationPercent` when
+  // there is no battle running (see applyPersistentBuff() above and
+  // buffSystem.update() in tick()). Same precedent as
+  // TribulationDirector.ghost (a partial CombatEntity cast used
+  // out-of-battle for vitals-only display).
+  private createPersistentBuffGhostEntity(): CombatEntity {
+    const stats = createBaseStats()
+
+    return {
+      id: 'player',
+      name: this.activePlayer?.name ?? 'player',
+      type: 'player',
+      baseStats: stats,
+      stats,
+      alive: true,
+    } as CombatEntity
   }
 
   giveReward(receiver: RewardReceiver, reward: Reward) {
@@ -3199,7 +3236,17 @@ export class GameManager {
       }
     }
 
-    this.buffSystem.update(deltaSeconds)
+    // Task 9b: BuffSystem.update() now requires a real target:
+    // CombatEntity + combatSystem: CombatSystem (see BuffSystem.update()).
+    // Prefer the real in-battle CombatEntity when one exists; fall back
+    // to the neutral ghost when there is no battle - same tradeoff
+    // documented at applyPersistentBuff()/createPersistentBuffGhostEntity().
+    this.buffSystem.update(
+      deltaSeconds,
+      this.battleSystem.getBattle()?.player ?? this.createPersistentBuffGhostEntity(),
+      this.combatSystem,
+      this.buffRegistry,
+    )
 
     // cooldownReduction Ä‘á»c tá»« battle.player.stats (CombatEntity) Ä‘ang
     // sá»‘ng trong tráº­n náº¿u cÃ³ â€” ngoÃ i combat (menu/mÃ n hÃ¬nh cáº£nh giá»›i)

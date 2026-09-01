@@ -7,7 +7,7 @@ import { TECHNIQUES } from '../../data/technique/Techniques'
 import { SKILLS } from '../../data/skill/Skills'
 import { KIEM_TU_NODES } from '../../data/progression/KiemTuNodes'
 import type { Stage } from '../stage/Stage'
-import type { Buff } from '../buff/Buff'
+import type { BuffDefinition } from '../buff/BuffDefinition'
 import { isBattleInProgress } from '../battle/BattleTypes'
 
 // Math.random là state TOÀN CỤC theo worker thread — file test chạy
@@ -58,22 +58,22 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
     // đăng ký cây node (game thật đăng ký KIEM_TU_NODES qua App.vue).
     gameManager.registerProgressionNodes(KIEM_TU_NODES)
 
-    const enrageBuff: Buff = {
+    const enrageBuff: BuffDefinition = {
       id: 'mvp_test_enrage',
       name: 'Enrage (test)',
-      category: 'buff',
-      stacks: 1,
+      polarity: 'buff',
+      duration: Infinity,
       stackMode: 'stack',
-      modifiers: [],
+      effects: [],
     }
 
-    const phaseBuff: Buff = {
+    const phaseBuff: BuffDefinition = {
       id: 'mvp_test_phase',
       name: 'Phase (test)',
-      category: 'buff',
-      stacks: 1,
+      polarity: 'buff',
+      duration: Infinity,
       stackMode: 'stack',
-      modifiers: [],
+      effects: [],
     }
 
     const mob = defineEnemy({

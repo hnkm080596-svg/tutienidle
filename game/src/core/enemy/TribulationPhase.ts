@@ -1,4 +1,4 @@
-import type { Buff } from '../buff/Buff'
+import type { BuffDefinition } from '../buff/BuffDefinition'
 import type { EnemyArchetype } from './EnemyArchetype'
 
 /**
@@ -19,7 +19,7 @@ import type { EnemyArchetype } from './EnemyArchetype'
 export interface TribulationPhase {
   hpThresholdPercent: number
 
-  buff: Buff
+  buff: BuffDefinition
 
   message?: string
 
@@ -47,5 +47,5 @@ export interface TribulationPhase {
 export interface BossEnrage {
   afterSeconds: number
 
-  buff: Buff
+  buff: BuffDefinition
 }

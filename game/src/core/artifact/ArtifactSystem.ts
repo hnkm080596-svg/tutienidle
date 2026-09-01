@@ -329,51 +329,51 @@ function applyThuOnHitEffects(
   }
 
   if (level >= THU_T6_LEVEL) {
-    new BuffSystem(deps.getBuffsFor(battle, source)).apply({
-      id: 'artifact_ngu_khi_tuan_hoan',
-      name: 'Ngũ Khí Tuần Hoàn',
-      category: 'buff',
-      stacks: 1,
-      stackMode: 'refresh',
-      duration: THU_T6_BUFF_DURATION_SECONDS,
-      modifiers: [
-        {
-          id: 'artifact_ngu_khi_tuan_hoan_fdr',
-          sourceId: 'ngu_hanh_chau',
-          sourceType: 'buff',
-          stat: 'finalDamageReductionPercent',
-          percent: THU_T6_FINAL_DAMAGE_REDUCTION_PERCENT,
-        },
-      ],
-    })
+    new BuffSystem(deps.getBuffsFor(battle, source)).apply(
+      {
+        id: 'artifact_ngu_khi_tuan_hoan',
+        name: 'Ngũ Khí Tuần Hoàn',
+        polarity: 'buff',
+        duration: THU_T6_BUFF_DURATION_SECONDS,
+        stackMode: 'refresh',
+        effects: [
+          {
+            type: 'statModifier',
+            stat: 'finalDamageReductionPercent',
+            percent: THU_T6_FINAL_DAMAGE_REDUCTION_PERCENT,
+          },
+        ],
+      },
+      source,
+      source,
+    )
   }
 }
 
 function applyThuBarrier(battle: Battle, deps: ArtifactSystemDeps): void {
-  new BuffSystem(deps.getBuffsFor(battle, battle.player)).apply({
-    id: 'artifact_ngu_hanh_ho_gioi',
-    name: 'Ngũ Hành Hộ Giới',
-    category: 'buff',
-    stacks: 1,
-    stackMode: 'refresh',
-    duration: THU_T18_BARRIER_DURATION_SECONDS,
-    modifiers: [
-      {
-        id: 'artifact_ho_gioi_ailment_resist',
-        sourceId: 'ngu_hanh_chau',
-        sourceType: 'buff',
-        stat: 'ailmentResistPercent',
-        percent: THU_T18_AILMENT_RESIST_PERCENT,
-      },
-      {
-        id: 'artifact_ho_gioi_crit_avoid',
-        sourceId: 'ngu_hanh_chau',
-        sourceType: 'buff',
-        stat: 'criticalAvoidance',
-        flat: THU_T18_CRITICAL_AVOIDANCE_FLAT,
-      },
-    ],
-  })
+  new BuffSystem(deps.getBuffsFor(battle, battle.player)).apply(
+    {
+      id: 'artifact_ngu_hanh_ho_gioi',
+      name: 'Ngũ Hành Hộ Giới',
+      polarity: 'buff',
+      duration: THU_T18_BARRIER_DURATION_SECONDS,
+      stackMode: 'refresh',
+      effects: [
+        {
+          type: 'statModifier',
+          stat: 'ailmentResistPercent',
+          percent: THU_T18_AILMENT_RESIST_PERCENT,
+        },
+        {
+          type: 'statModifier',
+          stat: 'criticalAvoidance',
+          flat: THU_T18_CRITICAL_AVOIDANCE_FLAT,
+        },
+      ],
+    },
+    battle.player,
+    battle.player,
+  )
 }
 
 function applyKhongOnHitEffects(
@@ -424,23 +424,26 @@ function applyKhongOnHitEffects(
 
   if (level >= KHONG_T12_LEVEL) {
     // Trấn Mạch (tầng 12) — target ĐANG root nhận debuff attack speed ngắn.
-    new BuffSystem(deps.getBuffsFor(battle, target)).apply({
-      id: 'artifact_tran_mach',
-      name: 'Trấn Mạch',
-      category: 'debuff',
-      stacks: 1,
-      stackMode: 'refresh',
-      duration: KHONG_T12_ATTACK_SPEED_DEBUFF_DURATION_SECONDS,
-      modifiers: [
-        {
-          id: 'artifact_tran_mach_attack_speed',
-          sourceId: 'ngu_hanh_chau',
-          sourceType: 'buff',
-          stat: 'attackSpeed',
-          percent: -KHONG_T12_ATTACK_SPEED_DEBUFF_PERCENT,
-        },
-      ],
-    })
+    // source = artifact owner (kẻ vừa đánh trúng), target = quái bị root —
+    // đây KHÔNG phải self-buff (khác với 2 site còn lại trong file này).
+    new BuffSystem(deps.getBuffsFor(battle, target)).apply(
+      {
+        id: 'artifact_tran_mach',
+        name: 'Trấn Mạch',
+        polarity: 'debuff',
+        duration: KHONG_T12_ATTACK_SPEED_DEBUFF_DURATION_SECONDS,
+        stackMode: 'refresh',
+        effects: [
+          {
+            type: 'statModifier',
+            stat: 'attackSpeed',
+            percent: -KHONG_T12_ATTACK_SPEED_DEBUFF_PERCENT,
+          },
+        ],
+      },
+      source,
+      target,
+    )
   }
 }
 

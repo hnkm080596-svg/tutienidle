@@ -10,7 +10,7 @@ import { EventBus } from '../events/EventBus'
 import { ActionImpactSystem } from '../battle/ActionImpactSystem'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
-import type { Buff } from '../buff/Buff'
+import type { BuffDefinition } from '../buff/BuffDefinition'
 import type { BattlePositionsEvent } from './BattleEvents'
 
 function createBattleSystem(eventBus = new EventBus()) {
@@ -62,14 +62,14 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
   }
 }
 
-function createTestBuff(id: string): Buff {
+function createTestBuff(id: string): BuffDefinition {
   return {
     id,
     name: id,
-    category: 'buff',
-    stacks: 1,
+    polarity: 'buff',
+    duration: Infinity,
     stackMode: 'stack',
-    modifiers: [],
+    effects: [],
   }
 }
 
