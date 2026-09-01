@@ -75,9 +75,23 @@ export function usePanelPagination(rowCount: ComputedRef<number>, rowHeight: num
     return Math.max(1, Math.floor(availableWidth.value / columnWidth))
   })
 
+  // Bug 2026-09-01 (T2.3, "chỉ show đúng 1 món"): container nằm trong
+  // v-else tab + panel có thể ẩn (display:none) lúc observer attach —
+  // contentRect.height = 0, budget âm → rows max(1,...) = 1 → pageSize
+  // 1 món, grid overflow:hidden giấu phần còn lại. Khi observer fire
+  // lại với height thật, pageSize nhảy nhưng TRANG đang chứa selection
+  // có thể trống vùng nhìn thấy trong 1 tick.
+  // Fallback: height chưa đo được (0) → dùng 6 hàng mặc định thay vì 1
+  // — sai số hiển thị tạm thời chấp nhận được, KHÔNG chặn content.
+  const FALLBACK_ROWS_WHEN_UNMEASURED = 6
+
   const pageSize = computed(() => {
     const budget = availableHeight.value - padding - headerHeight
-    const rows = Math.min(Math.max(1, Math.floor(budget / rowHeight)), maxRows)
+
+    const rows =
+      budget > 0
+        ? Math.min(Math.max(1, Math.floor(budget / rowHeight)), maxRows)
+        : Math.min(FALLBACK_ROWS_WHEN_UNMEASURED, maxRows)
 
     return rows * columnCount.value
   })

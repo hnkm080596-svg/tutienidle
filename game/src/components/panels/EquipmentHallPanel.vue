@@ -895,10 +895,12 @@ const dissolveCandidates = computed<DissolveCandidate[]>(() => {
     })
 })
 
-// Hóa Luyện phân trang theo ngân sách chiều cao thật của lưới (ước
-// lượng 1 "hàng" ~80px — lưới nhiều cột nên số item hiển thị thực tế
-// mỗi trang thường NHIỀU hơn số hàng tính được, an toàn vì chỉ làm hụt
-// chỗ trống chứ không bao giờ tràn).
+// Hóa Luyện phân trang theo ngân sách chiều cao + CHIỀU RỘNG thật của
+// lưới — bug 2026-09-01 (T2.3, user report "chỉ show đúng 1 món"):
+// usePanelPagination gọi KHÔNG có columnWidth → columnCount cứng 1, khi
+// ResizeObserver chưa fire availableHeight = 0 → pageSize = 1×1 = 1.
+// Grid thật là CSS auto-fill minmax(64px) + gap 8px → columnWidth = 72
+// (64 + 8 gap), pageSize = rows × measured columns.
 const {
   containerEl: dissolveListEl,
   currentPage: dissolvePage,
@@ -908,6 +910,7 @@ const {
 } = usePanelPagination(
   computed(() => dissolveCandidates.value.length),
   80,
+  { columnWidth: 72 },
 )
 
 const dissolveSelected = ref<Set<string>>(new Set())

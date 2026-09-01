@@ -68,14 +68,16 @@ describe('usePanelPagination — attach observer reactive (H4)', () => {
     vi.unstubAllGlobals()
   })
 
-  it('container render SAU mount (v-if): pageSize fallback 1 → attach khi ref gán → callback cập nhật pageSize', async () => {
+  it('container render SAU mount (v-if): pageSize fallback 6 (T2.3 — từng fallback 1 gây "chỉ show đúng 1 món") → attach khi ref gán → callback cập nhật pageSize', async () => {
     vi.stubGlobal('ResizeObserver', MockResizeObserver)
     MockResizeObserver.instances.length = 0
 
     const host = mountHost()
 
-    // Chưa show container → availableHeight = 0 → pageSize fallback 1.
-    expect(host.root.textContent).toBe('1')
+    // Chưa show container → availableHeight = 0 → pageSize fallback 6
+    // (T2.3 2026-09-01: fallback 1 khiến grid overflow:hidden giấu
+    // toàn bộ items ngoài trang 1 khi observer chưa fire).
+    expect(host.root.textContent).toBe('6')
 
     // Show container (như đổi sang tab Hóa Luyện) → ref gán → observer attach.
     host.show.value = true
