@@ -95,6 +95,8 @@ import { CombatVfxSpawner } from './combat/combat-vfx-spawner'
 import { CombatRewardGourd } from './combat/combat-reward-gourd'
 import { CombatEssenceStream } from './combat/combat-essence-stream'
 
+export { formatDotDamageText } from './combat/combatTextFormat'
+
 const PLAYER_COLOR = 0x4a90d9
 const ENEMY_COLOR = 0xd94a4a
 
@@ -129,23 +131,6 @@ const HIT_RECOIL_DURATION_MS = 65
 
 /** DoT text flush 3 lÃ¡ÂºÂ§n/giÃƒÂ¢y (plan Ã‚Â§7.2) Ã¢â‚¬â€ cÃ¡Â»Â­a sÃ¡Â»â€¢ gom 333,33ms. */
 const DOT_TEXT_FLUSH_INTERVAL_MS = 1000 / 3
-
-/**
- * Format sÃ¡Â»â€˜ DoT hiÃ¡Â»Æ’n thÃ¡Â»â€¹ (hÃƒÂ m thuÃ¡ÂºÂ§n, test trÃ¡Â»Â±c tiÃ¡ÂºÂ¿p) Ã¢â‚¬â€ tÃ¡Â»â€¢ng Ã¢â€°Â¥1 lÃƒÂ m trÃƒÂ²n
- * qua formatter chung; 0<x<1 hiÃ¡Â»â€¡n 1 chÃ¡Â»Â¯ sÃ¡Â»â€˜ thÃ¡ÂºÂ­p phÃƒÂ¢n vÃ¡Â»â€ºi sÃƒÂ n 0.1 nÃƒÂªn
- * KHÃƒâ€NG bao giÃ¡Â»Â render "-0.0" (fix 2026-08-26).
- */
-export function formatDotDamageText(value: number): string {
-  const rounded = Math.round(value)
-
-  if (Math.abs(rounded) >= 1) {
-    return `-${formatNumber(rounded)}`
-  }
-
-  const tenth = Math.max(1, Math.round(Math.abs(value) * 10)) / 10
-
-  return `-${tenth.toFixed(1)}`
-}
 
 const HIT_FLASH_COLOR = 0xff6b6b
 const CRITICAL_FLASH_COLOR = 0xffffff

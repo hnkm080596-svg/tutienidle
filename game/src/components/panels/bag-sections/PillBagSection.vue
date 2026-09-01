@@ -62,7 +62,7 @@ function buildTooltip(pill: Pill, owned: number): GradedItemTooltipContent {
         return effect.cultivationPercent !== undefined
           ? {
               label: 'Tu Vi',
-              value: `+${(effect.cultivationPercent * 100).toFixed(1)}% yêu cầu tầng`,
+              value: `+${formatStat('cultivationPercent', effect.cultivationPercent)}% yêu cầu tầng`,
             }
           : { label: 'Tu Vi', value: `+${effect.value ?? 0}` }
 

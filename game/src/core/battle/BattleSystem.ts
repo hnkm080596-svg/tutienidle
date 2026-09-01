@@ -20,7 +20,8 @@ import type { SkillManager } from '../skill/SkillManager'
 
 import type { SkillSystem } from '../skill/SkillSystem'
 
-import type { SkillEffectSystem } from '../skill/SkillEffectSystem'
+import type { SkillEffectSystem, SkillEffectContext } from '../skill/SkillEffectSystem'
+import { SkillTriggerRunner } from '../skill/SkillTriggerRunner'
 
 import type { Skill } from '../skill/Skill'
 import type { SkillExecutionPolicy } from '../skill/Skill'
@@ -235,6 +236,10 @@ export class BattleSystem {
   private channelSkillId: string | undefined
 
   private readonly channelTickSecondsOverrides = new Map<string, number>()
+
+  // Trigger/Action rework (2026-08-31 spec) — engine for skills migrated
+  // to `triggers` (Task 3/4); fired from resolveSkillEffects below.
+  private readonly skillTriggerRunner = new SkillTriggerRunner()
 
   // Ult Kiếm Tu auto-AI (spec 2026-08-29 mục 3.4) — tích giây giữa 2 lần
   // check autoUltimateDecision (1s/lần), reset mỗi trận. ultAutoEnabled
@@ -2786,6 +2791,56 @@ export class BattleSystem {
 
     for (const oneTarget of targets) {
       applyEffects(areaEffects, oneTarget)
+    }
+
+    // Trigger/Action rework (2026-08-31 spec) — skills fully migrated to
+    // `triggers` (effective.effects === []) fire onCast here instead.
+    // Reuses the SAME batch (beginSkillBatch() already ran above) so
+    // ctx.fireHit still lands inside one action_impact VFX event.
+    if (effective.triggers?.length) {
+      for (const oneTarget of targets) {
+        let landedHit = false
+        const targetBuffs = new BuffSystem(this.getBuffsFor(battle, oneTarget))
+        const targetAilments = new AilmentSystem(this.getAilmentsFor(battle, oneTarget))
+
+        const triggerCtx: SkillEffectContext = {
+          combatSystem: this.combat,
+          fireHit: (hitTarget, damageInfo) => {
+            const result = this.actionImpact.fireSkillHit(
+              battle,
+              source,
+              hitTarget,
+              damageInfo,
+              { skillId: skill.id },
+              (battleRef, hitSource, hitTargetEntity, hitDamage, hitOptions) =>
+                this.applyActionHit(battleRef, hitSource, hitTargetEntity, hitDamage, hitOptions),
+            )
+            landedHit ||= result.landed
+            return result
+          },
+          didLandHit: () => landedHit,
+          buffRegistry: this.buffRegistry,
+          ailmentRegistry: this.ailmentRegistry,
+          sourceBuffs,
+          targetBuffs,
+          targetAilments,
+          reactionManager: this.reactionManager,
+          reactionKeepChance: this.getReactionKeepChance(),
+          spawnLavaZone: (spec) => this.spawnLavaZone(battle, spec),
+          spawnSwordZone: (spec) => this.spawnSwordZone(battle, spec),
+          skillId: skill.id,
+          skillExperience: skill.totalExperience ?? skill.experience ?? 0,
+        }
+
+        this.skillTriggerRunner.fire(
+          'onCast',
+          { source, skill },
+          effective.triggers,
+          source,
+          oneTarget,
+          triggerCtx,
+        )
+      }
     }
 
     this.actionImpact.endSkillBatch(battle)

@@ -101,19 +101,20 @@ export const SKILLS: Skill[] = [
 
     target: 'enemy',
 
-    effects: [
+    effects: [],
+
+    triggers: [
       {
-        type: 'damage',
+        trigger: 'onCast',
+        actions: [
+          {
+            type: 'dealDamage',
 
-        value: 1,
+            value: 1,
 
-        damageType: 'physical',
-
-        // Final review fix (Important #3) â€” dead % ratio tá»« thá»i maxLevel
-        // 18 cÅ©. Huy Kiáº¿m rework (spec Â§2) lÃ  skill DUY NHáº¤T Ä‘i flat-only
-        // (+1 dmg/10 cast qua SkillSystem.getEffectiveSkill()); ratio nÃ y
-        // tá»«ng cá»™ng thÃªm 1 lá»›p % nhÃ¢n totalExperience/attack lÃªn trÃªn flat,
-        // double-scale ngoÃ i spec.
+            damageType: 'physical',
+          },
+        ],
       },
     ],
 

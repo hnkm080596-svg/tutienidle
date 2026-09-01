@@ -7,6 +7,10 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 // routes hiện đang rỗng, chưa có route/link nào phụ thuộc shape URL.
 const router = createRouter({
   history: createWebHashHistory(),
+  // Theme redesign (final review fix) — MainMenu không còn là route
+  // nữa: App.vue render MainMenu như overlay (showMainMenu), route cũ
+  // 'main-menu' đã xoá vì App.vue không có <RouterView> nên route
+  // không bao giờ tới được.
   routes: [],
 })
 

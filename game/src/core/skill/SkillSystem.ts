@@ -6,6 +6,8 @@ import type { StatModifier } from '../stats/StatCalculator'
 import type { PassiveTrigger } from './SkillTypes'
 import type { PlayerData } from '../player/Player'
 import { getSkillUpgradeInsightCost } from './SkillUpgradeBalance'
+import type { TriggerBinding } from './SkillTrigger'
+import type { DealDamageAction } from './SkillAction'
 
 import {
   SkillManager,
@@ -52,6 +54,8 @@ export function usesCooldownClockForTest(execution: SkillExecutionPolicy | undef
 export interface EffectiveSkill {
   effects: SkillEffect[]
 
+  triggers?: TriggerBinding[]
+
   passiveModifiers?: StatModifier[]
 
   passiveTrigger?: PassiveTrigger
@@ -96,20 +100,37 @@ export class SkillSystem {
 
     const isHuyKiem = skill.id === 'tram'
 
+    const scaleDamageValue = (value: number): number =>
+      isHuyKiem ? value + getHuyKiemFlatDamageBonus(skill.totalExperience ?? 0) : value * levelMultiplier
+
     const effects = baseEffects.map((effect) => {
       if (effect.type !== 'damage' || effect.value === undefined) {
         return effect
       }
 
-      if (isHuyKiem) {
-        return { ...effect, value: effect.value + getHuyKiemFlatDamageBonus(skill.totalExperience ?? 0) }
-      }
-
-      return { ...effect, value: effect.value * levelMultiplier }
+      return { ...effect, value: scaleDamageValue(effect.value) }
     })
+
+    // Trigger/Action rework (2026-08-31 spec) — mirrors the effects
+    // mapping above for skills already migrated to `triggers`: a
+    // `dealDamage` action's `value` gets the same per-level/flat-bonus
+    // treatment `effect.value` gets. Skills still on `effects` have
+    // `skill.triggers === undefined`, so this is a no-op for them.
+    const triggers = skill.triggers?.map((binding) => ({
+      ...binding,
+      actions: binding.actions.map((action) => {
+        if (action.type !== 'dealDamage' || action.value === undefined) {
+          return action
+        }
+
+        return { ...action, value: scaleDamageValue(action.value) } satisfies DealDamageAction
+      }),
+    }))
 
     return {
       effects,
+
+      triggers,
 
       passiveModifiers: specialization?.passiveModifiersOverride ?? skill.passiveModifiers,
 

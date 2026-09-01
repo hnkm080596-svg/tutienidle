@@ -159,7 +159,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
   border-radius: 0;
   text-align: left;
   font-family: var(--font-body);
-  color: var(--paper-text, #211f1a);
+  color: var(--paper-text);
   width: 100%;
   box-sizing: border-box;
 }
@@ -194,7 +194,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 
 .loadout-card__empty {
   font-size: var(--text-xs);
-  color: var(--paper-text-soft, #5e5a50);
+  color: var(--paper-text-soft);
 }
 
 .loadout-card__tier {
@@ -202,7 +202,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
   padding: 1px 5px;
   font-size: var(--text-xs);
   font-weight: 700;
-  color: var(--mineral-gold, #b79653);
+  color: var(--mineral-gold);
   border: 1px solid currentColor;
   border-radius: 999px;
   white-space: nowrap;
@@ -215,7 +215,7 @@ const tooltipContent = computed<TechniqueTooltipContent | undefined>(() => {
 
 .loadout-card__tier-label {
   font-size: var(--text-xs);
-  color: var(--paper-text-soft, #5e5a50);
+  color: var(--paper-text-soft);
 }
 
 /* Biến thể hero (spec mục 15 "Tâm pháp hiện tại lớn") — layout dọc,

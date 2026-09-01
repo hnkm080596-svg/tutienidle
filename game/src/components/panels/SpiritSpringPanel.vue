@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
 import Bar from '@/components/common/primitives/Bar.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import { getSpiritStoneMaterialIdForRealmTier } from '@/core/material/SpiritStoneMaterial'
+import { SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
 import { formatNumber } from '@/core/format/NumberFormatter'
 
 const BUILDING_ID = 'spirit_spring'
@@ -13,6 +15,8 @@ const BUILDING_ID = 'spirit_spring'
 const player = usePlayerStore()
 
 const gameManager = useGameManager()
+
+const { t } = useI18n({ useScope: 'local' })
 
 const { stateVersion, bumpState } = useStateVersion()
 
@@ -60,7 +64,7 @@ const displayedCapacity = computed(() => instance.value ? gameManager.getBuildin
 const ratePerMinute = computed(() => instance.value ? gameManager.getBuildingRatePerMinute(instance.value.instanceId) : 0)
 const outputName = computed(() => {
   const id = getSpiritStoneMaterialIdForRealmTier(getRealmTier(player.realmId))
-  return gameManager.materialRegistry.has(id) ? gameManager.materialRegistry.get(id).name : 'Linh Thạch'
+  return gameManager.materialRegistry.has(id) ? gameManager.materialRegistry.get(id).name : SPIRIT_STONE_LABEL
 })
 
 function collect() {
@@ -78,7 +82,7 @@ function collect() {
     <p class="spirit-spring-panel__description">{{ template?.description }}</p>
 
     <div class="spirit-spring-panel__card">
-      <h3>{{ outputName }} tích luỹ</h3>
+      <h3>{{ t('panels.spiritSpring.storedTitle', { name: outputName }) }}</h3>
 
       <Bar
         class="spirit-spring-panel__progress"
@@ -90,13 +94,13 @@ function collect() {
 
       <strong>{{ formatNumber(storedAmount) }} / {{ formatNumber(displayedCapacity) }}</strong>
 
-      <!-- Ngoại lệ locale có chủ đích (M9): rate THẬT là số thập phân (mortal
-           = 5.5, level scaling +20%/level) — formatNumber Math.round phần
-           thập phân dưới 10,000 nên 5.5 hiện "6". Giữ vi-VN 1 chữ số thập
-           phân cho ĐÚNG số liệu hơn là nhất quán grouping. -->
-      <small class="spirit-spring-panel__rate">+{{ ratePerMinute.toLocaleString('vi-VN', { maximumFractionDigits: 1 }) }} thạch/phút</small>
+      <!-- Ngoại lệ locale có chủ đích (M9, QA 2026-08-31): rate THẬT là số
+           thập phân (mortal = 5.5, level scaling +20%/level) — formatNumber
+           Math.round phần thập phân dưới 10,000 nên 5.5 hiện "6". Giữ vi-VN
+           1 chữ số thập phân cho ĐÚNG số liệu hơn là nhất quán grouping. -->
+      <small class="spirit-spring-panel__rate">+{{ ratePerMinute.toLocaleString('vi-VN', { maximumFractionDigits: 1 }) }} {{ t('panels.spiritSpring.rateSuffix') }}</small>
 
-      <GameButton class="spirit-spring-panel__collect" size="sm" :disabled="storedAmount <= 0" @click="collect">Thu hoạch</GameButton>
+      <GameButton class="spirit-spring-panel__collect" size="sm" :disabled="storedAmount <= 0" @click="collect">{{ t('panels.spiritSpring.collect') }}</GameButton>
     </div>
   </section>
 </template>

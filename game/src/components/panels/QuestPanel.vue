@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
@@ -12,6 +13,7 @@ import type { QuestProgress } from '@/core/quest/QuestProgress'
 const ui = useUiStore()
 const gameManager = useGameManager()
 const { stateVersion, bumpState } = useStateVersion()
+const { t } = useI18n({ useScope: 'local' })
 
 interface QuestRow {
   quest: Quest
@@ -31,7 +33,7 @@ function targetLabel(quest: Quest): string {
   }
 
   const enemyId = quest.condition.enemyId
-  const enemyName = enemyId ? gameManager.getEnemyTemplate(enemyId)?.name ?? enemyId : 'Bất kỳ quái'
+  const enemyName = enemyId ? gameManager.getEnemyTemplate(enemyId)?.name ?? enemyId : t('panels.quest.anyEnemy')
 
   return enemyName
 }
@@ -48,8 +50,8 @@ const rows = computed<QuestRow[]>(() => {
 })
 
 const groups = computed(() => [
-  { title: 'Nhiệm Vụ Hàng Ngày', rows: rows.value.filter((row) => row.quest.cadence === 'daily') },
-  { title: 'Nhiệm Vụ', rows: rows.value.filter((row) => row.quest.cadence === 'once') },
+  { title: t('panels.quest.groups.daily'), rows: rows.value.filter((row) => row.quest.cadence === 'daily') },
+  { title: t('panels.quest.groups.once'), rows: rows.value.filter((row) => row.quest.cadence === 'once') },
 ])
 
 function onClaim(questId: string) {
@@ -64,7 +66,7 @@ function close() {
 </script>
 
 <template>
-  <OverlayPanel :open="ui.standalonePanel === 'quest'" title="Nhiệm Vụ" width="min(760px, 94vw)" height="min(640px, 88vh)" @close="close">
+  <OverlayPanel :open="ui.standalonePanel === 'quest'" :title="t('panels.quest.title')" width="min(760px, 94vw)" height="min(640px, 88vh)" @close="close">
     <div class="quest-panel">
       <section v-for="group in groups" v-show="group.rows.length" :key="group.title" class="quest-panel__section">
         <h4 class="quest-panel__section-title">{{ group.title }}</h4>
@@ -88,13 +90,13 @@ function close() {
               :disabled="row.progress.claimed || !row.canClaim"
               @click="onClaim(row.quest.id)"
             >
-              {{ row.progress.claimed ? 'Đã Nhận' : 'Nhận Thưởng' }}
+              {{ row.progress.claimed ? t('panels.quest.actions.claimed') : t('panels.quest.actions.claim') }}
             </GameButton>
           </li>
         </ul>
       </section>
 
-      <EmptyState v-if="!rows.length">Chưa có nhiệm vụ nào khả dụng.</EmptyState>
+      <EmptyState v-if="!rows.length">{{ t('panels.quest.empty') }}</EmptyState>
     </div>
   </OverlayPanel>
 </template>

@@ -39,11 +39,11 @@ const emit = defineEmits<{ close: [] }>()
 </template>
 
 <style scoped>
-.overlay-panel { position: absolute; inset: 0; display: grid; place-items: center; padding: 3vh 3vw; background: var(--scrim); backdrop-filter: blur(4px); }
-.overlay-panel__card { position: relative; isolation: isolate; max-width: 100%; max-height: 94vh; min-height: 0; display: flex; flex-direction: column; overflow: hidden; container-type: inline-size; container-name: overlay-panel; color: var(--paper-text, #211f1a); font-family: var(--font-body); background: transparent; border: 0; border-radius: 0; box-shadow: none; }
-.overlay-panel__header { position: relative; z-index: 3; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: clamp(32px, 4vw, 48px) clamp(30px, 4vw, 48px) 14px; border-bottom: 1px solid var(--paper-line, rgba(42, 41, 36, 0.42)); }
+.overlay-panel { position: absolute; inset: 0; display: grid; place-items: center; padding: 3vh 3vw; background: var(--scrim-heavy); backdrop-filter: blur(6px); }
+.overlay-panel__card { position: relative; isolation: isolate; max-width: 100%; max-height: 94vh; min-height: 0; display: flex; flex-direction: column; overflow: hidden; container-type: inline-size; container-name: overlay-panel; color: var(--surface-text); font-family: var(--font-body); background: transparent; border: 0; border-radius: 0; box-shadow: none; }
+.overlay-panel__header { position: relative; z-index: 3; flex: 0 0 auto; display: flex; align-items: center; gap: 12px; padding: clamp(32px, 4vw, 48px) clamp(30px, 4vw, 48px) 14px; border-bottom: 1px solid var(--surface-line); }
 .overlay-panel__heading { min-width: 0; margin-right: auto; }
-.overlay-panel__heading h3 { margin: 0; color: var(--paper-text, #211f1a); font: 700 var(--text-title) var(--font-display); letter-spacing: .06em; }
+.overlay-panel__heading h3 { margin: 0; color: var(--surface-text); font: 700 var(--text-title) var(--font-display); letter-spacing: .06em; }
 /* Fit-engine (2026-08-29) — body là ngân sách flex cho nội dung: con chiếm
    flex thay vì scroll. Con tự paginate khi vượt ngân sách (pattern BagGrid).
    overflow hidden là rào chặn cuối — panel con KHÔNG được dựa vào nó. */

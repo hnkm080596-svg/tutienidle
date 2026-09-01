@@ -15,6 +15,7 @@ import { GameManager } from '@/core/game/GameManager'
 import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composables/useGameState'
 import { useUiStore } from '@/stores/ui'
 import { getCommandWheelOrbitDirection } from '@/game/support/commandWheelOrbit'
+import { i18n } from '@/i18n'
 
 function mountWheel(gameManager: GameManager) {
   const container = document.createElement('div')
@@ -31,6 +32,7 @@ function mountWheel(gameManager: GameManager) {
   const app = createApp({ render: () => h(RootStub) })
 
   app.use(createPinia())
+  app.use(i18n)
 
   app.provide(GAME_MANAGER_KEY, gameManager)
   app.provide(STATE_VERSION_KEY, stateVersion)

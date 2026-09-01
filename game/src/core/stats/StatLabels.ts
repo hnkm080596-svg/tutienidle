@@ -1,6 +1,6 @@
 import type { Stats } from './StatBlock'
 import { formatNumber } from '../format/NumberFormatter'
-import { isPercentStat } from './StatMetadata'
+import { isPercentStat, STAT_METADATA } from './StatMetadata'
 
 export type StatCategory = 'combat' | 'survival' | 'special' | 'attribute' | 'defense_advanced'
 
@@ -66,6 +66,26 @@ export const BASE_STAT_LABELS: StatLabelEntry[] = [
   { key: 'ailmentPotencyPercent', label: 'Uy lực dị thường', description: 'Tăng % hiệu lực (sát thương/giây) của dị thường mình gây ra.', category: 'defense_advanced' },
 ]
 
+// i18n refactor 2026-08-31 — 7 stat key MỚI không thuộc CharacterPanel
+// stat table (đó là các stat per-entity, vd maxHp/attackSpeed); đây là
+// các giá trị "kỹ thuật" hiện qua formatStat() ở UI rải rác
+// (tooltip tầng Tâm Pháp, bảng Đặc Quyền Cảnh Giới, badge Δ affix
+// Cường Hóa, nhãn ×tốc độ Địa Giới, ×phẩm Pháp Bảo, % Tu Vi Đan
+// Dược). Tách riêng khỏi BASE_STAT_LABELS để:
+//   1. Không xuất hiện trong bảng chỉ số nhân vật (stat key không
+//      thuộc nhân vật — vd production speed là hệ số site).
+//   2. statLabel() vẫn trả về label người-đọc-được qua lookup bổ
+//      sung.
+const FORMAT_ADOPTED_STAT_LABELS: Partial<Record<keyof Stats, string>> = {
+  maxMpPercent: 'Linh lực tối đa (Tâm Pháp)',
+  manaRegenPercent: 'Hồi Linh lực (Tâm Pháp)',
+  realmPassivePercent: 'Cộng % Cảnh Giới',
+  affixDeltaPercent: 'Tăng Trưởng Affix',
+  speedMultiplier: 'Hệ số tốc độ',
+  artifactGradeMultiplier: 'Hệ số Pháp Bảo',
+  cultivationPercent: 'Tu Vi (Đan Dược)',
+}
+
 // Ngũ Hành + Hỗn Nguyên — KHÔNG có trong BASE_STAT_LABELS (CharacterPanel.vue
 // hiện thị riêng qua elementRows, xem ELEMENT_LABELS ở đó) nhưng
 // technique.modifiers CÓ THỂ nhắm thẳng các stat này (vd
@@ -88,7 +108,7 @@ const ELEMENT_STAT_LABELS: Partial<Record<keyof Stats, string>> = {
 export const DECIMAL_STAT_KEYS: (keyof Stats)[] = ['attackSpeed', 'criticalDamage', 'blockEffectiveness']
 
 export function statLabel(key: keyof Stats): string {
-  return BASE_STAT_LABELS.find(entry => entry.key === key)?.label ?? ELEMENT_STAT_LABELS[key] ?? key
+  return BASE_STAT_LABELS.find(entry => entry.key === key)?.label ?? ELEMENT_STAT_LABELS[key] ?? FORMAT_ADOPTED_STAT_LABELS[key] ?? key
 }
 
 // Trích từ CharacterPanel.vue — dùng chung cho mọi nơi hiện giá trị
@@ -99,6 +119,12 @@ export function formatStat(key: keyof Stats, value: number): string {
   }
 
   if (DECIMAL_STAT_KEYS.includes(key)) {
+    return (Math.round(value * 100) / 100).toString()
+  }
+
+  // Multiplier (hệ số gần 1, vd 1.50) — không phải %, không phải số
+  // nguyên lớn; giữ 2 chữ số thập phân (vd "1.5" thay vì "2" làm tròn).
+  if (STAT_METADATA[key]?.unit === 'multiplier') {
     return (Math.round(value * 100) / 100).toString()
   }
 

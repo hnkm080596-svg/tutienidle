@@ -21,7 +21,7 @@ describe('Huy Kiếm — flat damage vĩnh viễn theo cast', () => {
     expect(getHuyKiemFlatDamageBonus(9999)).toBe(999)
   })
 
-  it('getEffectiveSkill cộng flat bonus vào effect damage của tram', () => {
+  it('getEffectiveSkill cộng flat bonus vào action dealDamage của tram', () => {
     const manager = new SkillManager()
     const system = new SkillSystem(manager)
     const template = SKILLS.find((skill) => skill.id === 'tram')!
@@ -31,8 +31,9 @@ describe('Huy Kiếm — flat damage vĩnh viễn theo cast', () => {
 
     const effective = system.getEffectiveSkill(skill)
 
-    const damage = effective.effects.find((effect) => effect.type === 'damage')
-    expect(damage?.value).toBe(1 + 15)
+    const action = effective.triggers?.[0]?.actions[0]
+    expect(action?.type).toBe('dealDamage')
+    expect((action as { value?: number }).value).toBe(1 + 15)
   })
 
   // Important #3 review fix — dead `skillExperienceRatio: 1/18` từ
@@ -40,11 +41,11 @@ describe('Huy Kiếm — flat damage vĩnh viễn theo cast', () => {
   // % (skillExperienceRatio * totalExperience / attack, xem
   // SkillEffectSystem.ts's apply()) ĐÈ LÊN flat bonus trên — double-scale
   // ngoài spec §2 ("Huy Kiếm là skill DUY NHẤT đi bằng flat, không %").
-  it('effect damage của tram KHÔNG còn skillExperienceRatio (flat-only, spec §2)', () => {
+  it('action dealDamage của tram KHÔNG còn skillExperienceRatio (flat-only, spec §2)', () => {
     const template = SKILLS.find((skill) => skill.id === 'tram')!
-    const damage = template.effects.find((effect) => effect.type === 'damage')
+    const action = template.triggers?.[0]?.actions[0]
 
-    expect(damage?.skillExperienceRatio).toBeUndefined()
+    expect((action as { skillExperienceRatio?: number })?.skillExperienceRatio).toBeUndefined()
   })
 
   it('skill khác KHÔNG nhận flat bonus', () => {

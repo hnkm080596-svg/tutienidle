@@ -19,6 +19,7 @@ import {
 import { useUiStore } from '@/stores/ui'
 import type { Material } from '@/core/material/Material'
 import { vTooltip } from '@/directives/tooltip'
+import { i18n } from '@/i18n'
 
 const WOOD: Material = {
   id: 'mortal_wood',
@@ -132,6 +133,7 @@ function mountSection(gameManager: GameManager) {
   const app = createApp({ render: () => h(RootStub) })
 
   app.use(createPinia())
+  app.use(i18n)
 
   app.provide(GAME_MANAGER_KEY, gameManager)
   app.provide(STATE_VERSION_KEY, stateVersion)

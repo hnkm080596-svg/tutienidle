@@ -7,16 +7,16 @@
    Enhance/Exploration/chrome) dùng token này — panel khác giữ hex cũ,
    sẽ theo sau ở đợt polish riêng. */
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,500;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,500;1,600&family=Be+Vietnam+Pro:wght@400;500;600;700&family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+SC:wght@400;500&family=Noto+Sans+TC:wght@400;500&family=ZCOOL+XiaoWei&display=swap');
 
 :root {
-  /* Nền — thang mực đen */
-  --ink-950: #0a0a0d;
-  --ink-900: #131318;
-  --ink-800: #1b1b22;
-  --ink-700: #24242e;
-  --ink-line: #33333f;
-  --ink-line-soft: #24242c;
+  /* Nền — thang mực đen (DARK MODE REDESIGN 2026-08-31) */
+  --ink-950: #050507;
+  --ink-900: #08080c;
+  --ink-800: #0d0d12;
+  --ink-700: #141419;
+  --ink-line: #1e1e28;
+  --ink-line-soft: #16161e;
 
   /* Mực & Giấy — bề mặt UI trung tính là giấy tuyên ấm; các scene thế giới
      vẫn tiếp tục dùng token --ink-* và --scene-* riêng ở bên dưới. */
@@ -38,30 +38,31 @@
   --paper-line: rgba(42, 41, 36, 0.42);
   --paper-line-soft: rgba(42, 41, 36, 0.22);
 
-  /* Chữ */
-  --text-primary: #ebe6d9;
-  --text-secondary: #b3ada0;
-  --text-muted: #7c7870;
+  /* Chữ — sáng hơn trên nền tối để tăng contrast */
+  --text-primary: #e8e4dc;
+  --text-secondary: #a8a498;
+  --text-muted: #6b6860;
 
-  /* Vàng — KHÔNG phải màu chrome của khung/nút/tiêu đề. Chỉ giữ vai trò
-     màu DỮ LIỆU:
-     phẩm chất rank 7 'kim', khoảnh khắc đặc biệt. */
-  --gold-100: #fff3c4;
-  --gold-300: #ffe082;
-  --gold-500: #ffd54f;
-  --gold-700: #ffb300;
-  --gold-ink: #221a00;
+  /* Vàng — màu DỮ LIỆU: phẩm chất rank 7 'kim', khoảnh khắc đặc biệt
+     (DARK MODE: tăng saturation + lightness để nổi trên nền tối) */
+  --gold-100: #fffbe6;
+  --gold-300: #ffd54f;
+  --gold-500: #ffca28;
+  --gold-700: #e0a000;
+  --gold-ink: #1a1400;
 
-  /* Alias chrome kế thừa để giữ tương thích component cũ. Đây là thang
-     giấy sáng → nét mực nhạt, không đại diện cho vật liệu bạc kim loại:
-       100 = giấy sáng (corner, hover, nút chính, title)
-       300 = giấy ngà (inner ring, viền đang chọn, focus ring)
-       500 = mực nhạt (outer ring, eyebrow/kicker)
-       700 = mực chìm (disabled, chi tiết phụ) */
-  --chrome-100: #f4f1ea;
-  --chrome-300: #d9d4c7;
-  --chrome-500: #b3ada0;
-  --chrome-700: #7c7870;
+  /* Alias chrome kế thừa để giữ tương thích component cũ. DARK MODE
+     REDESIGN: thang mực tối → nét mực sáng (đảo chiều so với giấy
+     sáng cũ), tăng độ sáng từng bậc để đạt contrast >= 4.5:1 trên
+     nền --ink-* mới:
+        100 = mực sáng (corner, hover, nút chính, title)
+        300 = ngà (inner ring, viền đang chọn, focus ring)
+        500 = mực nhạt (outer ring, eyebrow/kicker)
+        700 = mực chìm (disabled, chi tiết phụ) */
+  --chrome-100: #f2efe6;
+  --chrome-300: #d5d0c4;
+  --chrome-500: #a8a498;
+  --chrome-700: #6b6860;
 
   /* Semantic */
   --jade: #6fbf73;
@@ -213,14 +214,14 @@
      inner hairline). Overlay z-index 2 + pointer-events:none nên vẽ
      TRÊN nội dung — nền opaque của child không bao giờ che được viền.
      ============================================================ */
-  --frame-outer: #7a5a28;
-  --frame-inner: var(--mineral-gold);
-  --frame-corner: #e3c47e;
+  --frame-outer: #8a6a30;
+  --frame-inner: #d4a557;
+  --frame-corner: #f0d28a;
   --frame-ring-w: 1px;
   --frame-gap: 2px;
-  --frame-corner-w: 1px;
-  --frame-corner-size: 10px;
-  --frame-corner-inset: 4px;
+  --frame-corner-w: 1.5px;
+  --frame-corner-size: 12px;
+  --frame-corner-inset: 5px;
 
   /* Rice-paper grain (2026-08-30 pure-CSS UI pass) — thay ảnh PNG ink-wash
      đã ẩn (InkNineSlice.vue). Noise SVG cực nhạt (alpha 0.05), dùng làm
@@ -251,6 +252,56 @@
 
   --font-display: 'Playfair Display', 'Noto Serif', Georgia, serif;
   --font-body: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* ============================================================
+     DARK SURFACE PALETTE (2026-08-31 redesign) — token semantic
+     dùng cho panel/modal/drawer/button trên nền tối. Thay vì dùng
+     --paper-* sáng (giấy tuyên) cho chrome UI, dùng họ --surface-*
+     cùng tone với --ink-900/#08080c nhưng dịch sáng hơn 1-2 bậc để
+     phân lớp. Accent vàng giữ nguyên vai trò data-only; chrome
+     dùng --chrome-100 ngà sáng.
+     --surface-950 = nền ngoài cùng (root canvas, modal scrim)
+     --surface-900 = drawer/panel chính
+     --surface-800 = panel phụ, header
+     --surface-700 = khay item, ô nội bộ
+     --surface-600 = hover/raised
+     --surface-line = viền hairline
+     --surface-line-soft = viền phụ
+     ============================================================ */
+  --surface-950: #050507;
+  --surface-900: #0e0e14;
+  --surface-800: #15151c;
+  --surface-700: #1c1c25;
+  --surface-600: #25252f;
+  --surface-500: #2e2e3a;
+  --surface-line: #2a2a36;
+  --surface-line-soft: #1e1e28;
+  --surface-text: #e8e4dc;
+  --surface-text-soft: #a8a498;
+  --surface-text-muted: #6b6860;
+  --surface-eyebrow: #d4a557;
+  --surface-glow-gold: 0 0 18px rgba(212, 165, 87, 0.28);
+  --surface-glow-jade: 0 0 16px rgba(111, 191, 115, 0.22);
+  --surface-glow-crimson: 0 0 16px rgba(229, 72, 77, 0.28);
+  --surface-shadow-deep: 0 12px 36px rgba(0, 0, 0, 0.72);
+  --surface-shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.48);
+
+  /* Gradient nền cho drawer / modal trên canvas Phaser — tạo depth
+     nhẹ từ surface-950 (đỉnh) → surface-900 (đáy) + vignette đỉnh */
+  --surface-drawer-bg:
+    radial-gradient(120% 40% at 50% -10%, rgba(212, 165, 87, 0.08), transparent 60%),
+    linear-gradient(180deg, var(--surface-900) 0%, var(--surface-950) 100%);
+  --surface-panel-bg:
+    linear-gradient(180deg, var(--surface-800) 0%, var(--surface-900) 100%);
+  --surface-raised-bg:
+    linear-gradient(180deg, var(--surface-700) 0%, var(--surface-800) 100%);
+  --surface-button-bg:
+    linear-gradient(180deg, var(--surface-600) 0%, var(--surface-700) 100%);
+  --surface-button-bg-hover:
+    linear-gradient(180deg, var(--surface-500) 0%, var(--surface-600) 100%);
+  --surface-button-bg-active:
+    linear-gradient(180deg, var(--surface-700) 0%, var(--surface-800) 100%);
+  --surface-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.05 0 0 0 0 0.05 0 0 0 0 0.05 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 
   /* ============================================================
      WS1 Responsive foundation (2026-08-24) — layout chrome theo px
@@ -354,6 +405,33 @@
     var(--paper-grain) 0 0 / 160px 160px repeat,
     radial-gradient(120% 60% at 50% -10%, rgba(255, 255, 255, 0.22), transparent 55%),
     linear-gradient(180deg, var(--paper-50) 0%, var(--paper-100) 100%);
+}
+
+/* DARK DRAWER (DARK MODE 2026-08-31) — thay thế paper-drawer-fill ở
+   panel Left/Right. Nền mực sâu + vignette vàng nhạt phía trên + grain
+   noise cực nhẹ để giữ cảm giác hữu cơ (tránh phẳng như nhựa). */
+.dark-drawer-fill {
+  background:
+    var(--surface-grain) 0 0 / 160px 160px repeat,
+    var(--surface-drawer-bg);
+  color: var(--surface-text);
+}
+
+/* DARK PANEL — dùng cho modal/popover/tooltip body. Sáng hơn drawer
+   1 bậc để tạo contrast với nền canvas. */
+.dark-panel-fill {
+  background:
+    var(--surface-grain) 0 0 / 160px 160px repeat,
+    var(--surface-panel-bg);
+  color: var(--surface-text);
+}
+
+/* DARK RAISED — dùng cho nút / item card / ô nội bộ nổi. */
+.dark-raised-fill {
+  background:
+    var(--surface-grain) 0 0 / 160px 160px repeat,
+    var(--surface-raised-bg);
+  color: var(--surface-text);
 }
 
 /* Ẩn thanh scrollbar trên toàn app — mọi panel vẫn kéo/scroll được

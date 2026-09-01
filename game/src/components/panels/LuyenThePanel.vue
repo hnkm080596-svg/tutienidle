@@ -7,7 +7,7 @@
 // sang tầng kế. Panel chỉ HIỂN THỊ tiến độ, không còn nút/nắm tay.
 //
 // KHÔNG còn giới hạn riêng Phàm Nhân (2026-08-22) — CẢ truy cập LẪN
-// đầu tư đều hoạt động ở mọi cảnh giới, để Tinh Hoa Phàm Thể còn tồn
+// đầu tư đều hoạt động ở mọi Cảnh Giới, để Tinh Hoa Phàm Thể còn tồn
 // trong túi (chưa kịp tiêu hết trước khi rời Phàm Nhân) vẫn tiếp tục
 // đổi được thành chỉ số thay vì kẹt vĩnh viễn. requiredRealmLevel (pace theo
 // tầng Phàm Nhân) tự bypass sau khi rời realm — xem
@@ -25,6 +25,7 @@
 // CỤ THỂ (stat buff thật ở RealmPanel.vue), không thấy con số
 // "bậc X/6" nào để đoán/min-max ngược công thức.
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -40,6 +41,7 @@ const ui = useUiStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
+const { t } = useI18n({ useScope: 'local' })
 
 const activeTierIndex = computed(() => {
   stateVersion.value
@@ -95,14 +97,14 @@ function close() {
 </script>
 
 <template>
-  <OverlayPanel :open="ui.standalonePanel === 'luyen_the'" title="Luyện Thể" width="min(560px, 90vw)" height="85vh" @close="close">
+  <OverlayPanel :open="ui.standalonePanel === 'luyen_the'" :title="t('panels.luyenThe.title')" width="min(560px, 90vw)" height="85vh" @close="close">
     <div class="luyen-the-panel__card">
       <div class="luyen-the-panel__summary">
-        <span>Tầng đã hoàn thành: {{ player.bodyRefinementCompletedTiers }}/6</span>
+        <span>{{ t('panels.luyenThe.summary', { completed: player.bodyRefinementCompletedTiers }) }}</span>
       </div>
 
       <p class="luyen-the-panel__note">
-        Tinh Hoa Phàm Thể từ quái tự bay về và nạp tiến độ — không cần thao tác.
+        {{ t('panels.luyenThe.note') }}
       </p>
 
       <template v-if="activeTierIndex !== undefined">
@@ -121,7 +123,7 @@ function close() {
             <p class="luyen-the-panel__tier-desc">{{ row.description }}</p>
 
             <p v-if="row.status === 'realm_locked'" class="luyen-the-panel__tier-lock">
-              Khóa — cần Phàm Nhân tầng {{ row.requiredRealmLevel }}
+              {{ t('panels.luyenThe.tierLock', { level: row.requiredRealmLevel }) }}
             </p>
 
             <Bar class="luyen-the-panel__tier-bar" :value="row.progress" :max="row.cap" :height="5" />
@@ -133,7 +135,7 @@ function close() {
         </div>
       </template>
 
-      <EmptyState v-else size="lg">Đã hoàn thành toàn bộ Luyện Thể.</EmptyState>
+      <EmptyState v-else size="lg">{{ t('panels.luyenThe.empty') }}</EmptyState>
     </div>
   </OverlayPanel>
 </template>

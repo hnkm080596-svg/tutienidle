@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import SlotView from '../../common/SlotView.vue'
 import Chip from '../../common/primitives/Chip.vue'
 import BagPaginationControls, { type BagSortOption } from './BagPaginationControls.vue'
@@ -23,89 +24,103 @@ import {
   type MaterialGroup,
 } from '@/composables/useBagFilter'
 import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
+import { SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
 import { getProfessionGradeForRealm } from '@/core/profession/ProfessionGrade'
 import { professionGradeRank } from '@/composables/slots/normalizeSlotRank'
 import type { BagCell } from './BagCell'
 import type { Material, MaterialCategory } from '@/core/material/Material'
 import type { GradedItemTooltipContent } from '@/composables/useTooltip'
 
-const SOURCE_LABELS: Record<Material['sourceType'], string> = {
-  boss: 'Thủ Lĩnh',
-  monster: 'Yêu Thú',
-  building: 'Công Trình',
-  exploration: 'Thám Hiểm',
-}
-
-const CATEGORY_LABELS: Record<MaterialCategory, string> = {
-  herb: 'Linh Thảo',
-  wood: 'Linh Mộc',
-  ore: 'Linh Thiết',
-  monster_core: 'Yêu Đan',
-  spirit_stone: 'Linh Thạch',
-  essence: 'Yêu Tinh',
-  byproduct: 'Phế Liệu',
-  other: 'Khác',
-}
+const { t } = useI18n({ useScope: 'local' })
 
 // Thứ tự cố định cho sort theo Phân loại/Nguồn (asc).
 const CATEGORY_ORDER: MaterialCategory[] = [
   'herb', 'wood', 'ore', 'monster_core', 'spirit_stone', 'essence', 'byproduct', 'other',
 ]
 
-const SOURCE_ORDER = Object.keys(SOURCE_LABELS) as Material['sourceType'][]
+const SOURCE_ORDER: Material['sourceType'][] = ['boss', 'monster', 'building', 'exploration']
 
-const SORT_OPTIONS: Array<BagSortOption & { value: MaterialSortMode }> = [
-  { value: 'category', label: 'Phân loại' },
-  { value: 'years', label: 'Niên đại' },
-  { value: 'amount', label: 'Số lượng' },
-  { value: 'name', label: 'Tên', ascLabel: 'Tên A–Z', descLabel: 'Tên Z–A' },
-  { value: 'source', label: 'Nguồn chính' },
-]
+const SOURCE_LABELS = computed<Record<Material['sourceType'], string>>(() => ({
+  boss: t('panels.bag.tooltip.sourceTypes.boss'),
+  monster: t('panels.bag.tooltip.sourceTypes.monster'),
+  building: t('panels.bag.tooltip.sourceTypes.building'),
+  exploration: t('panels.bag.tooltip.sourceTypes.exploration'),
+}))
 
-const AGE_LABELS: Record<string, string> = {
-  decade: 'Thập Niên', century: 'Bách Niên', millennium: 'Thiên Niên', myriad_year: 'Vạn Niên',
-}
+const CATEGORY_LABELS = computed<Record<MaterialCategory, string>>(() => ({
+  herb: t('panels.bag.tooltip.categories.herb'),
+  wood: t('panels.bag.tooltip.categories.wood'),
+  ore: t('panels.bag.tooltip.categories.ore'),
+  monster_core: t('panels.bag.tooltip.categories.monsterCore'),
+  spirit_stone: SPIRIT_STONE_LABEL,
+  essence: t('panels.bag.tooltip.categories.essence'),
+  byproduct: t('panels.bag.tooltip.categories.byproduct'),
+  other: t('panels.bag.tooltip.categories.other'),
+}))
+
+const SORT_OPTIONS = computed<Array<BagSortOption & { value: MaterialSortMode }>>(() => [
+  { value: 'category', label: t('panels.bag.sort.category') },
+  { value: 'years', label: t('panels.bag.sort.years') },
+  { value: 'amount', label: t('panels.bag.sort.amount') },
+  {
+    value: 'name',
+    label: t('panels.bag.sort.name'),
+    ascLabel: t('panels.bag.sort.nameAsc'),
+    descLabel: t('panels.bag.sort.nameDesc'),
+  },
+  { value: 'source', label: t('panels.bag.sort.source') },
+])
 
 // Nhãn cảnh giới cho tooltip — người chơi không phân biệt được màu
 // (color-blind) vẫn đọc được realm trên tooltip (spec §"Cảnh giới").
-const REALM_LABELS: Record<string, string> = {
-  mortal: 'Phàm Nhân',
-  qi_refining: 'Luyện Khí',
-  foundation_establishment: 'Trúc Cơ',
-  golden_core: 'Kim Đan',
-  nascent_soul: 'Nguyên Anh',
-  soul_transformation: 'Hóa Thần',
-  void_refinement: 'Luyện Hư',
-  body_integration: 'Hợp Thể',
-  mahayana: 'Đại Thừa',
-  tribulation: 'Độ Kiếp',
-}
+const REALM_LABELS = computed<Record<string, string>>(() => ({
+  mortal: t('panels.bag.tooltip.realms.mortal'),
+  qi_refining: t('panels.bag.tooltip.realms.qiRefining'),
+  foundation_establishment: t('panels.bag.tooltip.realms.foundationEstablishment'),
+  golden_core: t('panels.bag.tooltip.realms.goldenCore'),
+  nascent_soul: t('panels.bag.tooltip.realms.nascentSoul'),
+  soul_transformation: t('panels.bag.tooltip.realms.soulTransformation'),
+  void_refinement: t('panels.bag.tooltip.realms.voidRefinement'),
+  body_integration: t('panels.bag.tooltip.realms.bodyIntegration'),
+  mahayana: t('panels.bag.tooltip.realms.mahayana'),
+  tribulation: t('panels.bag.tooltip.realms.tribulation'),
+}))
+
+const AGE_LABELS = computed<Record<string, string>>(() => ({
+  decade: t('panels.bag.tooltip.ages.decade'),
+  century: t('panels.bag.tooltip.ages.century'),
+  millennium: t('panels.bag.tooltip.ages.millennium'),
+  myriad_year: t('panels.bag.tooltip.ages.myriadYear'),
+}))
 
 function buildTooltip(material: Material, owned: number): GradedItemTooltipContent {
   const realmId = material.profession?.realmId
-  const realmLabel = realmId ? REALM_LABELS[realmId] : undefined
+  const realmText = realmId ? REALM_LABELS.value[realmId] : undefined
 
   const rows = [
-    { label: 'Phân loại', value: CATEGORY_LABELS[material.category] },
-    { label: 'Nguồn chính', value: SOURCE_LABELS[material.sourceType] },
-    ...(realmLabel ? [{ label: 'Cảnh giới', value: realmLabel }] : []),
+    { label: t('panels.bag.tooltip.category'), value: CATEGORY_LABELS.value[material.category] },
+    { label: t('panels.bag.tooltip.source'), value: SOURCE_LABELS.value[material.sourceType] },
+    ...(realmText ? [{ label: t('panels.bag.tooltip.realm'), value: realmText }] : []),
   ]
 
   if (material.profession?.age) {
-    rows.push({ label: 'Tuổi thọ', value: AGE_LABELS[material.profession.age] ?? `${material.years ?? 0} năm` })
+    rows.push({
+      label: t('panels.bag.tooltip.age'),
+      value: AGE_LABELS.value[material.profession.age] ?? t('panels.bag.tooltip.yearsSuffix', { count: material.years ?? 0 }),
+    })
   } else if (material.years !== undefined) {
-    rows.push({ label: 'Tuổi thọ', value: `${material.years} năm` })
+    rows.push({ label: t('panels.bag.tooltip.age'), value: t('panels.bag.tooltip.yearsSuffix', { count: material.years }) })
   }
   if (material.element !== undefined)
-    rows.push({ label: 'Thuộc tính', value: ELEMENT_LABELS[material.element] })
+    rows.push({ label: t('panels.bag.tooltip.element'), value: ELEMENT_LABELS[material.element] })
 
   return {
     kind: 'material',
     name: material.name,
     imagePath: material.icon,
-    ownedLabel: `Sở hữu: ${owned}`,
+    ownedLabel: t('panels.bag.tooltip.owned', { count: owned }),
     description: material.description,
-    sections: [{ label: 'Thông Tin', rows }],
+    sections: [{ label: t('panels.bag.tooltip.section'), rows }],
   }
 }
 
@@ -253,10 +268,10 @@ function familyCell(item: FilteredMaterial): BagCell {
 
 // Ô filter bar: tìm kiếm theo tên + chip nhóm (bấm lại chip đang chọn
 // để bỏ filter nhóm).
-const GROUP_CHIPS: Array<{ value: MaterialGroup | 'all'; label: string }> = [
-  { value: 'all', label: 'Tất cả' },
+const GROUP_CHIPS = computed<Array<{ value: MaterialGroup | 'all'; label: string }>>(() => [
+  { value: 'all', label: t('panels.bag.groups.all') },
   ...MATERIAL_GROUPS.map((group) => ({ value: group, label: GROUP_LABELS[group] })),
-]
+])
 
 function toggleGroup(value: MaterialGroup | 'all') {
   activeGroup.value = activeGroup.value === value ? 'all' : value
@@ -338,11 +353,11 @@ watch([searchQuery, activeGroup], () => resetPage())
         v-model="searchQuery"
         type="search"
         class="bag-section__search"
-        placeholder="Tìm nguyên liệu..."
-        aria-label="Tìm nguyên liệu theo tên"
+        :placeholder="t('panels.bag.search.materialPlaceholder')"
+        :aria-label="t('panels.bag.search.materialAria')"
       >
 
-      <div class="bag-section__chips" role="group" aria-label="Lọc theo nhóm nguyên liệu">
+      <div class="bag-section__chips" role="group" :aria-label="t('panels.bag.filterAria')">
         <Chip
           v-for="chip in GROUP_CHIPS"
           :key="chip.value"
@@ -353,7 +368,7 @@ watch([searchQuery, activeGroup], () => resetPage())
         </Chip>
       </div>
 
-      <span class="bag-section__count">{{ visibleCount }} loại</span>
+      <span class="bag-section__count">{{ visibleCount }} {{ t('panels.bag.countUnitSuffix') }}</span>
     </div>
 
     <div ref="gridRef" class="bag-section__grid" :style="gridStyle">

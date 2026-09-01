@@ -8,6 +8,7 @@
 // lại điều kiện, chỉ tự đóng ngay sau khi chọn xong (component gọi nó
 // đã gate rồi).
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -19,6 +20,8 @@ import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import ConfirmModal from '@/components/common/ConfirmModal.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
+
+const { t } = useI18n({ useScope: 'local' })
 
 const ui = useUiStore()
 const player = usePlayerStore()
@@ -70,8 +73,8 @@ function confirmChoosePath() {
     // 1 world announcement giống mọi lần đổi đại cảnh giới khác.
     if (realmIdBefore === 'mortal' && player.realmId !== 'mortal') {
       useWorldAnnouncementStore().show(
-        'LỄ NHẬP MÔN',
-        `Đạo hữu đã từ bỏ thân phận phàm nhân, chính thức bước vào ${kit.name}.`,
+        t('panels.quanKhi.world.ceremonyTitle'),
+        t('panels.quanKhi.world.ceremonyBody', { name: kit.name }),
       )
     }
 
@@ -104,12 +107,18 @@ const currentKiemTuRoute = computed<KiemTuRoute>(() => {
 
   return player.kiemTuRoute ?? 'kiem_tran'
 })
+
+const routeNameDisplay = computed(() =>
+  currentKiemTuRoute.value === 'bat_kiem'
+    ? t('panels.quanKhi.routeNames.batKiem')
+    : t('panels.quanKhi.routeNames.kiemTran'),
+)
 </script>
 
 <template>
-  <OverlayPanel :open="ui.standalonePanel === 'quan_khi'" title="Quán Khí" width="min(480px, 90vw)" @close="close">
+  <OverlayPanel :open="ui.standalonePanel === 'quan_khi'" :title="t('panels.quanKhi.title')" width="min(480px, 90vw)" @close="close">
     <div v-if="!player.cultivationPath" class="quan-khi-panel__card">
-      <p class="quan-khi-panel__hint">Chọn con đường tu luyện — quyết định này KHÔNG thể đổi lại.</p>
+      <p class="quan-khi-panel__hint">{{ t('panels.quanKhi.sections.pathSelection.hint') }}</p>
 
       <div class="quan-khi-panel__choices">
         <GameButton
@@ -121,7 +130,7 @@ const currentKiemTuRoute = computed<KiemTuRoute>(() => {
           :disabled="cooldownSeconds > 0"
           @click="choosePath(kit.id)"
         >
-          Bước Vào {{ kit.name }}
+          {{ t('panels.quanKhi.actions.enterPath', { name: kit.name }) }}
         </GameButton>
       </div>
     </div>
@@ -133,20 +142,20 @@ const currentKiemTuRoute = computed<KiemTuRoute>(() => {
     <div v-if="isKiemTu" class="quan-khi-panel__card">
       <div class="quan-khi-panel__route-card">
         <p class="quan-khi-panel__hint">
-          Đường Kiếm Tu đã chốt: <strong class="quan-khi-panel__route-name">{{ currentKiemTuRoute === 'bat_kiem' ? 'Bạt Kiếm (Đơn Kiếm)' : 'Kiếm Trận (Đa Kiếm)' }}</strong> — không thể đổi.
+          {{ t('panels.quanKhi.sections.kiemTuRoute.hintPrefix') }} <strong class="quan-khi-panel__route-name">{{ routeNameDisplay }}</strong>{{ t('panels.quanKhi.sections.kiemTuRoute.hintSuffix') }}
         </p>
         <p class="quan-khi-panel__warning">
           {{ currentKiemTuRoute === 'bat_kiem'
-            ? 'Huy Kiếm đạt tầng 3 (10.000 lần trảm) nên khai mở Bạt Kiếm — một chiêu tụ lực, mạnh dần theo tầng Kiếm Ý diệt boss.'
-            : 'Huy Kiếm chưa đạt tầng 3 nên bước vào Kiếm Trận — kiếm trận tiến hóa theo cảnh giới, mở hiệu ứng on-hit theo cấp trận.' }}
+            ? t('panels.quanKhi.sections.kiemTuRoute.batKiemDescription')
+            : t('panels.quanKhi.sections.kiemTuRoute.kiemTranDescription') }}
         </p>
       </div>
     </div>
 
     <ConfirmModal
       :open="pendingPathId !== null"
-      title="Xác Nhận Con Đường"
-      :message="`Bước vào ${pendingPathName}? Lựa chọn này KHÔNG thể đổi lại.`"
+      :title="t('panels.quanKhi.messages.confirmPathTitle')"
+      :message="t('panels.quanKhi.messages.confirmPathBody', { name: pendingPathName })"
       danger
       @confirm="confirmChoosePath"
       @cancel="cancelChoosePath"

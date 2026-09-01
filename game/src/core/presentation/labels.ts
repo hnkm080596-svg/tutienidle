@@ -13,6 +13,8 @@ import { REALMS } from '@/data/realms/realm'
 
 const UNKNOWN_DATA_LABEL = 'Dữ liệu không hợp lệ'
 
+export const SPIRIT_STONE_LABEL = 'Linh Thạch'
+
 export function materialLabel(id: string, registry: MaterialRegistry): string {
   return registry.has(id) ? registry.get(id).name : UNKNOWN_DATA_LABEL
 }

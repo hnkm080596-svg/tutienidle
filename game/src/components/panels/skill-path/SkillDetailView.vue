@@ -8,6 +8,7 @@
 // đây là nơi NÂNG CẤP skill đã mở.
 import { computed } from 'vue'
 import type { Skill } from '@/core/skill/Skill'
+import { skillResourceTypeLabel } from '@/core/skill/SkillResourceLabels'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
 import GameButton from '@/components/common/GameButton.vue'
@@ -18,21 +19,8 @@ const props = defineProps<{
   skill: Skill | null
 }>()
 
-// 2026-08-30 frontend-design pass — resourceType trước đây in THẲNG
-// key nội bộ ('mana'/'sword_intent'/'momentum') ra UI. Nhãn khớp thuật
-// ngữ đã dùng ở CombatStatusBar.vue (Linh Lực/Kiếm Ý); "momentum" chưa
-// có nhãn Việt hoá nào trong game nên đặt "Đà Thế" cho nhất quán văn
-// phong 2 chữ Hán Việt như các resource khác.
-const RESOURCE_TYPE_LABELS: Partial<Record<NonNullable<Skill['resourceType']>, string>> = {
-  mana: 'Linh Lực',
-  sword_intent: 'Kiếm Ý',
-  momentum: 'Đà Thế',
-}
-
 const resourceTypeLabel = computed(() => {
-  const type = props.skill?.resourceType
-
-  return type ? RESOURCE_TYPE_LABELS[type] ?? type : ''
+  return skillResourceTypeLabel(props.skill?.resourceType)
 })
 
 const gameManager = useGameManager()

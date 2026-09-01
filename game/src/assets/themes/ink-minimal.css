@@ -1,0 +1,59 @@
+/* game/src/assets/themes/ink-minimal.css
+   Mặc họa tối giản — giấy trắng + mực đen, theo e-ink/paper style */
+
+[data-theme="ink-minimal"] {
+  --ink-950: #fdfbf7;
+  --ink-900: #f5f0e8;
+  --ink-800: #ebe3d2;
+  --ink-700: #d9cfbb;
+  --ink-line: #2a2924;
+  --ink-line-soft: #8f897c;
+
+  --paper-50: #fdfbf7;
+  --paper-100: #f5f0e8;
+  --paper-200: #ebe3d2;
+  --paper-text: #1a1a1a;
+  --paper-text-soft: #2a2924;
+  --paper-text-muted: #5e5a50;
+  --paper-eyebrow: #1a1a1a;
+  --paper-line: rgba(26, 26, 26, 0.42);
+  --paper-line-soft: rgba(26, 26, 26, 0.22);
+
+  --text-primary: #1a1a1a;
+  --text-secondary: #2a2924;
+  --text-muted: #5e5a50;
+
+  --chrome-100: #1a1a1a;
+  --chrome-300: #2a2924;
+  --chrome-500: #5e5a50;
+  --chrome-700: #8f897c;
+
+  --cinnabar: #8b1a1a;
+  --jade: #4a8c6f;
+
+  --frame-outer: #1a1a1a;
+  --frame-inner: #2a2924;
+  --frame-corner: #1a1a1a;
+
+  --surface-950: #fdfbf7;
+  --surface-900: #f5f0e8;
+  --surface-800: #ebe3d2;
+  --surface-700: #d9cfbb;
+  --surface-600: #c4b89c;
+  --surface-500: #b0a48a;
+  --surface-line: #2a2924;
+  --surface-line-soft: #8f897c;
+  --surface-text: #1a1a1a;
+  --surface-text-soft: #2a2924;
+  --surface-text-muted: #5e5a50;
+  --surface-eyebrow: #1a1a1a;
+  --surface-drawer-bg:
+    linear-gradient(180deg, var(--surface-900) 0%, var(--surface-950) 100%);
+  --surface-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.05 0 0 0 0 0.05 0 0 0 0 0.05 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --surface-shadow-soft: 0 4px 14px rgba(0, 0, 0, 0.48);
+  --surface-panel-bg:
+    linear-gradient(180deg, var(--paper-50) 0%, var(--paper-100) 100%);
+
+  --font-display: 'Playfair Display', 'Noto Serif', Georgia, serif;
+  --font-body: 'Be Vietnam Pro', system-ui, sans-serif;
+}

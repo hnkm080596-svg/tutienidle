@@ -157,6 +157,16 @@ export function normalizeEnemyStats(input: EnemyStatInput): Stats {
     dotResistancePercent: input.special?.dotResistancePercent ?? 0,
     poisonRecoveryPercent: 0,
 
+    // i18n refactor 2026-08-31 — technique-tier / realm / production /
+    // artifact / pill stats are player-only; enemy gets 0 / baseline.
+    maxMpPercent: 0,
+    manaRegenPercent: 0,
+    realmPassivePercent: 0,
+    affixDeltaPercent: 0,
+    speedMultiplier: 1,
+    artifactGradeMultiplier: 1,
+    cultivationPercent: 0,
+
     woodPower: input.elemental?.element === 'wood' ? input.elemental.power : 0,
     woodResistance: input.resistances?.wood ?? 0,
     woodPenetration: input.elemental?.element === 'wood' ? (input.elemental.penetration ?? 0) : 0,

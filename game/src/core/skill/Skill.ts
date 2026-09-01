@@ -9,6 +9,7 @@ import type { StatModifier } from '../stats/StatCalculator'
 import type { SkillSpecialization } from './SkillSpecialization'
 import type { SkillRuntimeStats } from './SkillRuntimeStats'
 import type { ActionTargeting, CombatVfxPresetId } from '../battle/CombatAction'
+import type { TriggerBinding } from './SkillTrigger'
 export { SKILL_RESOURCE_STAT_KEYS } from './SkillRuntimeStats'
 export type { SkillResourceStatKey } from './SkillRuntimeStats'
 
@@ -193,6 +194,14 @@ export interface Skill extends Partial<SkillRuntimeStats> {
   // (dùng effects/passiveModifiers/passiveTrigger gốc). Xem
   // SkillSystem.selectSpecialization()/getEffectiveSkill().
   selectedSpecializationId?: string
+
+  // Trigger/Action rework (2026-08-31 spec) — a skill fully migrated off
+  // `effects` declares its behavior here instead: each binding pairs a
+  // TriggerType with an ordered SkillAction list, run by
+  // SkillTriggerRunner. A skill is either on `effects` or on `triggers`,
+  // never both — see SkillSystem.getEffectiveSkill()/BattleSystem.
+  // resolveSkillEffects() for how the two paths coexist during migration.
+  triggers?: TriggerBinding[]
 
   // Skill rework (2026-08-21) — Node Tree Pháp Tu trước đây cộng các
   // field "Thế tài nguyên" dưới đây thẳng vào CombatEntity.stats (kho
