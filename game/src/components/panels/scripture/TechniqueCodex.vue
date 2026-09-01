@@ -29,15 +29,15 @@ const techniqueRows = computed(() => {
   }))
 })
 
-// Fit-refactor đợt 5 — catalog phân trang theo ngân sách chiều cao của
-// grid (slot 56px + gap 6px = 62px/hàng), không còn scroll dọc.
+// Fit-refactor đợt 5 — catalog phân trang theo ngân sách chiều cao +
+// chiều rộng của grid (slot 56px + gap 6px = 62px/ô), không còn scroll dọc.
 const {
   containerEl: gridEl,
   currentPage: page,
   totalPages: pages,
   goToPage,
   pageItemsRange,
-} = usePanelPagination(computed(() => techniqueRows.value.length), 62)
+} = usePanelPagination(computed(() => techniqueRows.value.length), 62, { columnWidth: 62 })
 </script>
 
 <template>

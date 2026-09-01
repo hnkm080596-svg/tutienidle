@@ -35,14 +35,14 @@ const loreItems = computed(() => {
 })
 
 // Fit-refactor đợt 5 — grid manh mối phân trang theo ngân sách chiều cao
-// (slot 56px + gap 6px), không scroll.
+// + chiều rộng (slot 56px + gap 6px = 62px/ô), không scroll.
 const {
   containerEl: loreGridEl,
   currentPage: lorePage,
   totalPages: lorePages,
   goToPage: loreGoTo,
   pageItemsRange: loreRange,
-} = usePanelPagination(computed(() => loreItems.value.length), 62)
+} = usePanelPagination(computed(() => loreItems.value.length), 62, { columnWidth: 62 })
 
 const pagedLoreItems = computed(() => loreItems.value.slice(loreRange.value.start, loreRange.value.end))
 </script>

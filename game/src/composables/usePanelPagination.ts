@@ -7,17 +7,36 @@ import { type ComputedRef, computed, onBeforeUnmount, ref, watch } from 'vue'
  * pageSize = floor((height - padding) / rowHeight), tự lùi trang khi
  * container co lại, không mất item.
  *
+ * Fit-refactor đợt 5 (2026-08-29, review fix) — chọn capacity theo LOẠI
+ * layout bằng tùy chọn `columnWidth`:
+ * - KHÔNG truyền (mặc định): list dọc 1 cột — pageSize = số HÀNG thuần,
+ *   đúng Hóa Luyện dissolve-list (EquipmentHallPanel).
+ * - TRUYỀN columnWidth (px, đã gồm gap): flex-wrap grid — pageSize =
+ *   rows × columns, columns = floor(width / columnWidth) đo THẬT từ
+ *   contentRect (responsive theo chiều rộng, giống width-first của
+ *   useBagGridLayout). Trước đó codex grid (Lore/TechniqueCodex) dùng
+ *   pageSize kiểu list dọc nên mỗi trang chỉ lấp đúng 1 cột, trang
+ *   thưa và không tận dụng số cột.
+ *
  * Dùng cho các list vô hạn độ dài trong overlay panel (Hóa Luyện items,
  * codex grid...) —.list giới hạn độ dài (recipes 8 đan phương...) KHÔNG
  * dùng, chúng fit flex tự nhiên.
  */
-export function usePanelPagination(rowCount: ComputedRef<number>, rowHeight: number, options?: { padding?: number; headerHeight?: number; maxRows?: number }) {
+export function usePanelPagination(rowCount: ComputedRef<number>, rowHeight: number, options?: {
+  padding?: number
+  headerHeight?: number
+  maxRows?: number
+  /** Chiều rộng 1 ô (đã gồm gap) của flex-wrap grid — truyền để bật capacity đa cột. */
+  columnWidth?: number
+}) {
   const containerEl = ref<HTMLElement | null>(null)
   const availableHeight = ref(0)
+  const availableWidth = ref(0)
 
   const padding = options?.padding ?? 0
   const headerHeight = options?.headerHeight ?? 0
   const maxRows = options?.maxRows ?? Number.POSITIVE_INFINITY
+  const columnWidth = options?.columnWidth
 
   let observer: ResizeObserver | undefined
 
@@ -33,6 +52,7 @@ export function usePanelPagination(rowCount: ComputedRef<number>, rowHeight: num
       observer = new ResizeObserver(entries => {
         for (const entry of entries) {
           availableHeight.value = entry.contentRect.height
+          availableWidth.value = entry.contentRect.width
         }
       })
 
@@ -45,11 +65,21 @@ export function usePanelPagination(rowCount: ComputedRef<number>, rowHeight: num
     observer?.disconnect()
   })
 
+  // Số cột đo được — 1 khi list dọc (không truyền columnWidth), floor
+  // (width / columnWidth) khi flex-wrap grid. Clamp tối thiểu 1.
+  const columnCount = computed(() => {
+    if (columnWidth === undefined) {
+      return 1
+    }
+
+    return Math.max(1, Math.floor(availableWidth.value / columnWidth))
+  })
+
   const pageSize = computed(() => {
     const budget = availableHeight.value - padding - headerHeight
-    const rows = Math.floor(budget / rowHeight)
+    const rows = Math.min(Math.max(1, Math.floor(budget / rowHeight)), maxRows)
 
-    return Math.min(Math.max(1, rows), maxRows)
+    return rows * columnCount.value
   })
 
   const currentPage = ref(0)
@@ -72,5 +102,5 @@ export function usePanelPagination(rowCount: ComputedRef<number>, rowHeight: num
     return { start, end: start + pageSize.value }
   })
 
-  return { containerEl, currentPage, totalPages, goToPage, pageSize, pageItemsRange }
+  return { containerEl, currentPage, totalPages, goToPage, pageSize, pageItemsRange, columnCount }
 }
