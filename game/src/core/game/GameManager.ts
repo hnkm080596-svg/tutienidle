@@ -357,7 +357,7 @@ export class GameManager {
 
   readonly pillRegistry = new PillRegistry()
   readonly pillBag = new PillBag()
-  readonly pillSystem = new PillSystem(this.buffSystem)
+  readonly pillSystem = new PillSystem()
 
   // PhÃ¹/Tráº­n legacy (2026-08-25, plan Â§10.1.4) â€” registry giá»¯ láº¡i CHá»ˆ
   // Äá»ŒC nhÆ° tombstone Ä‘á»ƒ save cÅ© khÃ´ng crash vÃ¬ registry lookup; KHÃ”NG

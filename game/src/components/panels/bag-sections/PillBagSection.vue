@@ -92,7 +92,8 @@ function buildTooltip(pill: Pill, owned: number): GradedItemTooltipContent {
           return { label: 'Buff', value: '—' }
         }
 
-        const modifierLabel = buff.modifiers
+        const modifierLabel = buff.effects
+          .filter((buffEffect) => buffEffect.type === 'statModifier')
           .map(
             (modifier) =>
               `${statLabel(modifier.stat)} +${formatStat(modifier.stat, modifier.flat ?? modifier.percent ?? 0)}`,
@@ -145,6 +146,23 @@ function drinkPill(pillId: string) {
       if (battle && battle.player.alive) {
         gameManager.combatSystem.applyHealing(battle.player, amount, battle.player.id, 'healing')
       }
+    },
+
+    // Unified Buff System (Task 13b) — trong trận thì áp thẳng lên
+    // CombatEntity thật đang chiến đấu (source = target = player, giống
+    // cách skill tự buff bản thân); ngoài trận không có CombatEntity nào
+    // sống nên đi qua applyPersistentBuff() (đúng pattern Kiếp Thương
+    // debuff dùng, xem GameManager.ts).
+    applyBuff: (definition) => {
+      const battle = gameManager.getBattle()
+
+      if (battle && battle.player.alive) {
+        gameManager.buffSystem.apply(definition, battle.player, battle.player, gameManager.buffRegistry)
+
+        return
+      }
+
+      gameManager.applyPersistentBuff(definition, player.finalStats)
     },
   }
 

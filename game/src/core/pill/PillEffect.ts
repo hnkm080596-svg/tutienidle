@@ -1,4 +1,4 @@
-import type { Buff } from '../buff/Buff'
+import type { BuffDefinition } from '../buff/BuffDefinition'
 import type { StatType } from '../stats/StatTypes'
 
 export type PillEffectType =
@@ -18,9 +18,11 @@ export interface PillEffect {
   value?: number
 
   // Buff đầy đủ, dùng khi type === 'buff'. Pill không có registry
-  // buff riêng để tra theo id (BuffSystem.apply() vẫn nhận thẳng
-  // object Buff), nên effect mang theo definition luôn.
-  buff?: Buff
+  // buff riêng để tra theo id — effect mang theo definition luôn
+  // (BuffDefinition, template/authored data — PillTarget.applyBuff()
+  // resolves it into a runtime Buff via BuffSystem.apply(), giống
+  // GameManager.applyPersistentBuff()).
+  buff?: BuffDefinition
 
   // Dạng khi type === 'permanent_stat'.
   stat?: StatType

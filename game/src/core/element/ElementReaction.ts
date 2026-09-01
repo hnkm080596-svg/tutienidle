@@ -126,7 +126,7 @@ export interface ElementReactionDefinition {
 // stack cho SOURCE thay vì trừ HP TARGET). "Huyết Độc" (Mộc+Kim, "gộp
 // 2 DoT thành 1 DoT MỚI mạnh hơn" — cần thay thế/nâng cấp ailment
 // đang có, khác hẳn "trừ 1 cục rồi xoá cả 2" hiện tại).
-export const ELEMENT_REACTIONS: Partial<Record<AilmentId, Partial<Record<AilmentId, ElementReactionDefinition>>>> = {
+export const ELEMENT_REACTIONS: Partial<Record<string, Partial<Record<string, ElementReactionDefinition>>>> = {
   // Hỏa (Bỏng) + Thủy (Tê Cóng) — "Bốc Hơi". keepsAilmentId: 'te_cong'
   // (Plans/magicpathgeneral Phase 5) — Dẫn Lưu (waterReactionExtensionSeconds)
   // có thể giữ lại Tê Cóng thay vì tiêu, xem ReactionManager.ts.

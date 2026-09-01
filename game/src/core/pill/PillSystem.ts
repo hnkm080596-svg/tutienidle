@@ -1,6 +1,5 @@
 import type { Pill } from './Pill'
 import type { PillEffect } from './PillEffect'
-import { BuffSystem } from '../buff/BuffSystem'
 import type { PlayerData } from '../player/Player'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { PersistentTimedEffect } from '../player/PersistentTimedEffect'
@@ -8,6 +7,7 @@ import { MAIN_STAT_KEYS, type MainStatKey } from '../stats/StatTypes'
 import { getMainStatCap } from '../stats/StatCap'
 import { addCultivation } from '../cultivation/CultivationSystem'
 import { getRequiredCultivation } from '../realm/realmSystem'
+import type { BuffDefinition } from '../buff/BuffDefinition'
 
 export function clampToRealmCap(current: number, increase: number, realmId: string): number {
   return Math.max(0, Math.min(increase, getMainStatCap(realmId) - current))
@@ -23,13 +23,20 @@ export interface PillTarget {
   addCultivation(amount: number): void
 
   heal(amount: number): void
+
+  // Unified Buff System (Task 13b) — trước đây PillSystem tự giữ 1
+  // BuffSystem và gọi thẳng buffSystem.apply(effect.buff), nhưng
+  // apply() giờ đòi hỏi (definition, source: CombatEntity, target:
+  // CombatEntity, registry?) — PillSystem không giữ CombatEntity cụ
+  // thể nào (đúng doc comment ở trên: "PillSystem không giữ
+  // PlayerData/CombatEntity cụ thể"), nên adapter tự resolve entity
+  // phù hợp ngữ cảnh của nó, giống addCultivation/heal.
+  applyBuff(definition: BuffDefinition): void
 }
 
 export type PillUseReason = 'ok' | 'wrong_realm' | 'all_main_stats_capped' | 'requires_phap_tu'
 
 export class PillSystem {
-  constructor(private readonly buffSystem: BuffSystem) {}
-
   /**
    * cap = trần cảnh giới hiện tại (RealmData.attributeCap) — undefined
    * nghĩa là cảnh giới chưa thiết kế trần, không giới hạn. Với mỗi
@@ -95,7 +102,7 @@ export class PillSystem {
 
       case 'buff':
         if (effect.buff) {
-          this.buffSystem.apply(effect.buff)
+          target.applyBuff(effect.buff)
         }
 
         return null
