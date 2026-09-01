@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { getKiemYDamageMultipliers, getKiemYPermanent, getKiemYTier } from './KiemYSystem'
+import {
+  getKiemYDamageMultipliers,
+  getKiemYPermanent,
+  getKiemYTier,
+  MAX_KIEM_Y_TIER,
+} from './KiemYSystem'
 
 // Spec 2026-08-29-kiem-the-kiem-y mục 3.1/3.3 — tầng Kiếm Ý vĩnh viễn
 // theo boss diệt: tầng N cần tổng 10 + 5×(N-1) boss cộng dồn (t1: 10,
@@ -41,5 +46,27 @@ describe('KiemYSystem — tầng kiếm ý vĩnh viễn theo boss diệt', () =>
       criticalRate: 0.05,
       criticalDamage: 0.05,
     })
+  })
+})
+
+// Audit fix 2026-08-31 — ceiling guard: bossKillCount không được validate
+// trong save shape, hand-edit 1e300 từng treo UI thread O(√n) vòng.
+describe('getKiemYTier — ceiling guard (audit 2026-08-31)', () => {
+  it('bossKillCount khổng lồ không treo — trả ceiling', () => {
+    expect(getKiemYTier(1e300)).toBe(MAX_KIEM_Y_TIER)
+  })
+
+  it('giá trị thường vẫn đúng theo công thức cộng dồn', () => {
+    expect(getKiemYTier(0)).toBe(0)
+    expect(getKiemYTier(9)).toBe(0)
+    expect(getKiemYTier(10)).toBe(1) // t1: 10
+    expect(getKiemYTier(25)).toBe(2) // t2: 25
+    expect(getKiemYTier(45)).toBe(3) // t3: 45
+    expect(getKiemYTier(70)).toBe(4) // t4: 70
+  })
+
+  it('âm/NaN không tăng tier', () => {
+    expect(getKiemYTier(-5)).toBe(0)
+    expect(getKiemYTier(Number.NaN)).toBe(0)
   })
 })

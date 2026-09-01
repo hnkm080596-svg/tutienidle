@@ -12,6 +12,11 @@ const TIER_1_BOSS_KILLS = 10
 const TIER_STEP_BOSS_KILLS = 5
 export const KIEM_Y_PER_TIER = 10
 
+// Audit fix 2026-08-31 — ceiling: bossKillCount không được validate trong
+// save shape, hand-edit 1e300 từng treo UI thread O(√n) vòng. Tier > 100
+// không có ý nghĩa balance (0.5%×100 = +50% đã rất lớn).
+export const MAX_KIEM_Y_TIER = 100
+
 const SKILL_DAMAGE_PERCENT_PER_TIER = 0.005
 const CRITICAL_RATE_PER_TIER = 0.005
 const CRITICAL_DAMAGE_PER_TIER = 0.005
@@ -21,9 +26,10 @@ export function getKiemYTier(bossKillCount: number): number {
   let tier = 0
   // threshold(tier+1) = 10×(tier+1) + 5×(tier+1)×tier/2
   while (
+    tier < MAX_KIEM_Y_TIER &&
     bossKillCount >=
-    TIER_1_BOSS_KILLS * (tier + 1) +
-      (TIER_STEP_BOSS_KILLS * (tier + 1) * tier) / 2
+      TIER_1_BOSS_KILLS * (tier + 1) +
+        (TIER_STEP_BOSS_KILLS * (tier + 1) * tier) / 2
   ) {
     tier++
   }
