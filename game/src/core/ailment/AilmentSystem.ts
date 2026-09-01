@@ -206,7 +206,7 @@ export class AilmentSystem {
     if (!template.element || template.element === 'physical') {
       const power = source.stats.attack
 
-      const mitigation = getArmorMitigationPercent(target.stats.defense) * armorIgnoreMultiplier
+      const mitigation = getArmorMitigationPercent(target.stats.defense, target.realmIndex) * armorIgnoreMultiplier
 
       return Math.max(0, power * ratio * (1 - mitigation))
     }

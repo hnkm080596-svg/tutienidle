@@ -34,7 +34,7 @@ export function calculateBaseDamage(
     case 'physical': {
       const raw = source.stats.attack
 
-      const mitigation = ignoreResistance ? 0 : getArmorMitigationPercent(target.stats.defense)
+      const mitigation = ignoreResistance ? 0 : getArmorMitigationPercent(target.stats.defense, target.realmIndex)
 
       return Math.max(0, raw * (1 - mitigation))
     }
