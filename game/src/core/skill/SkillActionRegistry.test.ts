@@ -4,6 +4,7 @@ import type { ActionExecutionHelpers } from './SkillActionRegistry'
 import type { ActionRuntimeContext, DealDamageAction, SkillActionType } from './SkillAction'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { SkillEffectContext } from './SkillEffectSystem'
+import type { EventBus } from '../events/EventBus'
 
 function makeEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
   return {
@@ -347,5 +348,22 @@ describe('spawnZone executor', () => {
     )
 
     expect(spawnSwordZone).toHaveBeenCalledWith(expect.objectContaining({ ownerId: 'p1', row: 2, charges: 3 }))
+  })
+})
+
+describe('spawnVfx executor', () => {
+  it("emits 'action_impact' via ctx.eventBus with the source/target ids and presetId", () => {
+    const source = makeEntity({ id: 'p1' } as Partial<CombatEntity> as CombatEntity)
+    const target = makeEntity({ id: 'e1' } as Partial<CombatEntity> as CombatEntity)
+    const emit = vi.fn()
+    const ctx = makeCtx({ eventBus: { emit } as unknown as EventBus })
+
+    runSkillAction({ type: 'spawnVfx', presetId: 'fire_burst' }, source, target, ctx, {}, makeHelpers())
+
+    expect(emit).toHaveBeenCalledWith('action_impact', expect.objectContaining({
+      sourceId: 'p1',
+      primaryTargetId: 'e1',
+      presetId: 'fire_burst',
+    }))
   })
 })

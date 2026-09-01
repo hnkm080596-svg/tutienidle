@@ -260,6 +260,31 @@ const spawnZone: ActionExecutor<Extract<SkillAction, { type: 'spawnZone' }>> = (
   }
 }
 
+let spawnVfxInstanceCounter = 0
+
+const spawnVfx: ActionExecutor<Extract<SkillAction, { type: 'spawnVfx' }>> = (action, source, target, ctx) => {
+  if (!ctx.eventBus) {
+    return
+  }
+
+  const anchor = action.target === 'source' ? source : target
+
+  ctx.eventBus.emit('action_impact', {
+    type: 'action_impact',
+    actionId: `spawnVfx:${action.presetId}`,
+    actionInstanceId: `spawnvfx-${++spawnVfxInstanceCounter}`,
+    sourceId: source.id,
+    primaryTargetId: anchor.id,
+    anchorCell: { row: anchor.row, column: Math.round(anchor.x) },
+    affectedTargetIds: [anchor.id],
+    landedTargetIds: [anchor.id],
+    dodgedTargetIds: [],
+    affectedArea: { row: anchor.row, columnStart: Math.round(anchor.x), columnEnd: Math.round(anchor.x), shape: 'single' },
+    hitCount: 1,
+    presetId: action.presetId,
+  })
+}
+
 export const SKILL_ACTION_REGISTRY: { [K in SkillActionType]: ActionExecutor<Extract<SkillAction, { type: K }>> } = {
   dealDamage,
   heal,
@@ -270,7 +295,8 @@ export const SKILL_ACTION_REGISTRY: { [K in SkillActionType]: ActionExecutor<Ext
   consumeResource,
   consumeForDamage,
   spawnZone,
-} as { [K in SkillActionType]: ActionExecutor<Extract<SkillAction, { type: K }>> }
+  spawnVfx,
+}
 
 export function runSkillAction(
   action: SkillAction,

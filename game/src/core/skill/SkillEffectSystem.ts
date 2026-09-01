@@ -14,6 +14,8 @@ import type { ActionDamageInfo } from '../battle/ActionImpactSystem'
 export interface SkillEffectContext {
   combatSystem: CombatSystem
 
+  eventBus?: import('../events/EventBus').EventBus
+
   // Combat Grid Rework (2026-08-24) — bắn MỘT
   // hit impact TẠI target (windup đã trôi ở tầng cast). BattleSystem mở
   // batch quanh applyAll() để gom mọi hit thành đúng 1 action_impact.

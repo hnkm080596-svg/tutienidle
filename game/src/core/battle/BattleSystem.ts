@@ -2770,6 +2770,8 @@ export class BattleSystem {
         skillId: skill.id,
 
         skillExperience: skill.totalExperience ?? skill.experience ?? 0,
+
+        eventBus: this.eventBus,
       })
     }
 
@@ -2830,6 +2832,7 @@ export class BattleSystem {
           spawnSwordZone: (spec) => this.spawnSwordZone(battle, spec),
           skillId: skill.id,
           skillExperience: skill.totalExperience ?? skill.experience ?? 0,
+          eventBus: this.eventBus,
         }
 
         this.skillTriggerRunner.fire(
