@@ -5,8 +5,7 @@ import type { BattleState } from './BattleTypes'
 import type { EnemySpawnVfxPresetId, PlayerSpawnVfxPresetId } from './CombatAction'
 import type { GridPosition } from './BattleGrid'
 
-import type { BuffManager } from '../buff/BuffManager'
-import type { AilmentManager } from '../ailment/AilmentManager'
+import type { BuffPool } from '../buff/BuffPool'
 import type { LavaZone } from './LavaZone'
 import type { SwordZone } from './SwordZone'
 import type { ArtifactRuntime } from '../artifact/ArtifactRuntime'
@@ -22,9 +21,7 @@ export interface BattleEnemy {
 
   attackTimer: number
 
-  buffs: BuffManager
-
-  ailments: AilmentManager
+  buffs: BuffPool
 
   // Đánh dấu đã cấp reward cho lần chết này — GameManager set sau
   // khi grantBattleRewardIfNeeded() xử lý xong, rồi mới lọc entry
@@ -102,11 +99,7 @@ export interface Battle {
   // buff lên bản thân, talisman...) — tách khỏi GameManager.buffSystem
   // (buff persistent ngoài trận, ví dụ từ pill). Mỗi quái có buff
   // pool riêng nằm trong BattleEnemy.buffs.
-  playerBuffs: BuffManager
-
-  // Ailment (DoT/CC) TRONG trận — cùng cardinality với playerBuffs
-  // (mỗi quái có pool riêng trong BattleEnemy.ailments).
-  playerAilments: AilmentManager
+  playerBuffs: BuffPool
 
   // Combat Rework Phase 4 (Boss Mechanics) — tổng giây đã trôi qua kể
   // từ start(), dùng cho Enrage (DPS check). Xem BattleSystem.updateEnrage().
