@@ -1,9 +1,9 @@
-import type { Buff } from './Buff'
+import type { BuffDefinition } from './BuffDefinition'
 
 export class BuffRegistry {
-  private readonly buffs = new Map<string, Buff>()
+  private readonly buffs = new Map<string, BuffDefinition>()
 
-  register(buff: Buff): void {
+  register(buff: BuffDefinition): void {
     if (this.buffs.has(buff.id)) {
       throw new Error(`Buff already registered: ${buff.id}`)
     }
@@ -11,7 +11,7 @@ export class BuffRegistry {
     this.buffs.set(buff.id, buff)
   }
 
-  get(buffId: string): Buff {
+  get(buffId: string): BuffDefinition {
     const buff = this.buffs.get(buffId)
 
     if (!buff) {
@@ -25,7 +25,7 @@ export class BuffRegistry {
     return this.buffs.has(buffId)
   }
 
-  getAll(): Buff[] {
+  getAll(): BuffDefinition[] {
     return Array.from(this.buffs.values())
   }
 }
