@@ -1,21 +1,67 @@
 import { describe, expect, it } from 'vitest'
 import { ReactionManager } from './ReactionManager'
-import { AilmentSystem } from '../ailment/AilmentSystem'
-import { AilmentManager } from '../ailment/AilmentManager'
+import { BuffSystem } from '../buff/BuffSystem'
+import { BuffPool } from '../buff/BuffPool'
 import { CombatSystem } from '../combat/CombatSystem'
 import { EventBus } from '../events/EventBus'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import { ailments } from '../../data/ailment/ailments'
+import type { AilmentTemplate } from '../ailment/AilmentRegistry'
+import type { BuffDefinition } from '../buff/BuffDefinition'
+import type { BuffEffectTemplate } from '../buff/BuffTypes'
 
-function getTemplate(id: string) {
+// Unified Buff System (Task 12) — Task 7 (data/buff/buffs.ts port của
+// AilmentTemplate -> BuffDefinition) chưa chạy tại thời điểm task này
+// (dispatch order 12 TRƯỚC 7), nên test tự convert AilmentTemplate hiện
+// có sang BuffDefinition CỤC BỘ trong file test này.
+function toBuffDefinition(template: AilmentTemplate): BuffDefinition {
+  const effects: BuffEffectTemplate[] = []
+
+  if (template.category === 'dot' && template.dpsRatio !== undefined) {
+    effects.push({
+      type: 'dot',
+      dpsRatio: template.dpsRatio,
+      element: template.element,
+      armorIgnorePercentByRealm: template.armorIgnorePercentByRealm,
+    })
+  }
+
+  if (template.ccEffect) {
+    effects.push({ type: 'cc', ccEffect: template.ccEffect })
+  }
+
+  if (template.statModifiers) {
+    for (const modifier of template.statModifiers) {
+      effects.push({ type: 'statModifier', stat: modifier.stat, percent: modifier.percent, flat: modifier.flat })
+    }
+  }
+
+  if (template.onHitChance !== undefined && template.onHitAppliesAilmentId) {
+    effects.push({ type: 'onHitProc', chance: template.onHitChance, appliesBuffId: template.onHitAppliesAilmentId })
+  }
+
+  return {
+    id: template.id,
+    name: template.name,
+    polarity: 'debuff',
+    duration: template.duration,
+    maxStacks: template.maxStacks,
+    stackMode: template.stackMode,
+    convertsToId: template.convertsToOnMaxStacks,
+    convertsAfterContinuousSeconds: template.convertsAfterContinuousSeconds,
+    effects,
+  }
+}
+
+function getBuffDefinition(id: string): BuffDefinition {
   const template = ailments.find(ailment => ailment.id === id)
 
   if (!template) {
     throw new Error(`data/ailment/ailments.ts thiếu '${id}'`)
   }
 
-  return template
+  return toBuffDefinition(template)
 }
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
@@ -52,8 +98,8 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
 // Combat Balance Pass (2026-08-29) — Task 3: reaction scale theo Power
 // nguyên tố của nguồn (plan §3.2). Field `powerScalingRatio` trên
 // ElementReactionDefinition: damage = (baseDamage + sourcePower × ratio)
-// × (1 + reactionEffectPercent). Element lấy từ ailment vừa áp
-// (newAilmentId) — snapshot element trên instance ailment.
+// × (1 + reactionEffectPercent). Element lấy từ buff/debuff vừa áp
+// (newBuffId) — snapshot element trên instance vừa áp.
 describe('ReactionManager — power scaling (Task 3)', () => {
   it('reaction có powerScalingRatio — damage cộng thêm sourcePower × ratio', () => {
     const eventBus = new EventBus()
@@ -62,20 +108,20 @@ describe('ReactionManager — power scaling (Task 3)', () => {
 
     const source = createCombatant({ id: 'source', type: 'player' })
 
-    // te_cong (Tê Cóng, element water) là ailment vừa áp — nguồn Power
+    // te_cong (Tê Cóng, element water) là buff/debuff vừa áp — nguồn Power
     // đọc từ waterPower. createBaseStats attack nền = 10.
     source.stats.waterPower = 200
 
     const target = createCombatant({ id: 'target', currentHp: 100000, maxHp: 100000 })
 
-    const ailmentSystem = new AilmentSystem(new AilmentManager())
+    const targetBuffs = new BuffSystem(new BuffPool())
 
     // bong (element fire) áp trước; te_cong áp sau → cặp "Bốc Hơi"
     // (baseDamage 60, powerScalingRatio 0.5 — data mới của Task 3).
-    ailmentSystem.apply(getTemplate('bong'), source, target)
-    ailmentSystem.apply(getTemplate('te_cong'), source, target)
+    targetBuffs.apply(getBuffDefinition('bong'), source, target)
+    targetBuffs.apply(getBuffDefinition('te_cong'), source, target)
 
-    reactionManager.checkAndTrigger(ailmentSystem, 'te_cong', source, target, combatSystem)
+    reactionManager.checkAndTrigger(targetBuffs, 'te_cong', source, target, combatSystem)
 
     const expectedPowerPart = (source.stats.attack + source.stats.waterPower) * 0.5
 
@@ -96,12 +142,12 @@ describe('ReactionManager — power scaling (Task 3)', () => {
 
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
-    const ailmentSystem = new AilmentSystem(new AilmentManager())
+    const targetBuffs = new BuffSystem(new BuffPool())
 
-    ailmentSystem.apply(getTemplate('bong'), source, target)
-    ailmentSystem.apply(getTemplate('te_cong'), source, target)
+    targetBuffs.apply(getBuffDefinition('bong'), source, target)
+    targetBuffs.apply(getBuffDefinition('te_cong'), source, target)
 
-    reactionManager.checkAndTrigger(ailmentSystem, 'te_cong', source, target, combatSystem)
+    reactionManager.checkAndTrigger(targetBuffs, 'te_cong', source, target, combatSystem)
 
     expect(target.currentHp).toBe(1000 - 60)
   })
@@ -114,17 +160,17 @@ describe('ReactionManager — power scaling (Task 3)', () => {
     const source = createCombatant({ id: 'source', type: 'player' })
 
     source.stats.reactionEffectPercent = 0.5
-    // te_cong (element water) — ailment vừa áp cho test.
+    // te_cong (element water) — buff/debuff vừa áp cho test.
     source.stats.waterPower = 200
 
     const target = createCombatant({ id: 'target', currentHp: 100000, maxHp: 100000 })
 
-    const ailmentSystem = new AilmentSystem(new AilmentManager())
+    const targetBuffs = new BuffSystem(new BuffPool())
 
-    ailmentSystem.apply(getTemplate('bong'), source, target)
-    ailmentSystem.apply(getTemplate('te_cong'), source, target)
+    targetBuffs.apply(getBuffDefinition('bong'), source, target)
+    targetBuffs.apply(getBuffDefinition('te_cong'), source, target)
 
-    reactionManager.checkAndTrigger(ailmentSystem, 'te_cong', source, target, combatSystem)
+    reactionManager.checkAndTrigger(targetBuffs, 'te_cong', source, target, combatSystem)
 
     const expectedPowerPart = (source.stats.attack + source.stats.waterPower) * 0.5
 
