@@ -24,6 +24,11 @@ export const DAMAGE_DEALT_COLOR = '#f4f4f0'
 export const DAMAGE_TAKEN_COLOR = '#ff6b6b'
 export const CRITICAL_DAMAGE_COLOR = '#ffd54f'
 
+// 6A (2026-09-01) — floating kill/heal (spec §2).
+export const KILL_TEXT_COLOR = '#f4f4f0'
+export const KILL_TEXT_STROKE = '#c94b4b'
+export const HEAL_TEXT_COLOR = '#7bd88f'
+
 export const CAST_GLOW_COLOR = 0xffffff
 
 // Cast Time (2026-08-21) — cast bar hiện phía TRÊN đầu unit.

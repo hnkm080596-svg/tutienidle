@@ -84,7 +84,7 @@ import {
 import { attachThanhVanBackdrop, type ThanhVanBackdropHandle } from '@/game/support/ThanhVanBackdrop'
 import { PLAYER_TEXTURE_KEY, queueCombatAssets } from '@/game/support/CombatPreload'
 import type { CombatEvent } from '@/core/combat/CombatEvent'
-import type { EntityVitalsChangedEvent } from '@/core/combat/EntityVitalsSystem'
+import type { CombatHealEvent, EntityVitalsChangedEvent } from '@/core/combat/EntityVitalsSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { getCombatVfxPreset } from '@/data/vfx/CombatVfxPresets'
 import { getStatusVfxPreset } from '@/data/vfx/StatusVfxPresets'
@@ -444,6 +444,23 @@ export class CombatScene extends Phaser.Scene {
   private battleEndHandler = () => this.onBattleEnd()
   private exitHandler = () => this.onExit()
   private damageHandler = (event: CombatEvent) => this.onDamageNumber(event)
+
+  // 6A-T2 (2026-09-01) — floating kill/heal.
+  private killHandler = (event: CombatEvent) => {
+    const sprite = this.spriteFor(event.targetId)
+
+    if (sprite) {
+      this.damageText.showKillText(sprite)
+    }
+  }
+
+  private healHandler = (event: CombatHealEvent) => {
+    const sprite = this.spriteFor(event.targetId)
+
+    if (sprite && event.value > 0) {
+      this.damageText.showHealText(sprite, event.value)
+    }
+  }
   private actionImpactHandler = (event: ActionImpactEvent) => this.onActionImpact(event)
   private statusAttachHandler = (event: StatusVfxAttachedEvent) => this.onStatusAttached(event)
   private statusUpdateHandler = (event: StatusVfxUpdatedEvent) => this.onStatusUpdated(event)
@@ -1370,6 +1387,8 @@ export class CombatScene extends Phaser.Scene {
     eventBus.on<BattleEndEvent>('battle_end', this.battleEndHandler)
     eventBus.on<void>('combat_scene_exit', this.exitHandler)
     eventBus.on<CombatEvent>('damage', this.damageHandler)
+    eventBus.on<CombatEvent>('kill', this.killHandler)
+    eventBus.on<CombatHealEvent>('heal', this.healHandler)
     eventBus.on<ActionImpactEvent>('action_impact', this.actionImpactHandler)
     eventBus.on<StatusVfxAttachedEvent>('status_vfx_attached', this.statusAttachHandler)
     eventBus.on<StatusVfxUpdatedEvent>('status_vfx_updated', this.statusUpdateHandler)
@@ -1394,6 +1413,8 @@ export class CombatScene extends Phaser.Scene {
     this.eventBus.off<BattleEndEvent>('battle_end', this.battleEndHandler)
     this.eventBus.off<void>('combat_scene_exit', this.exitHandler)
     this.eventBus.off<CombatEvent>('damage', this.damageHandler)
+    this.eventBus.off<CombatEvent>('kill', this.killHandler)
+    this.eventBus.off<CombatHealEvent>('heal', this.healHandler)
     this.eventBus.off<ActionImpactEvent>('action_impact', this.actionImpactHandler)
     this.eventBus.off<StatusVfxAttachedEvent>('status_vfx_attached', this.statusAttachHandler)
     this.eventBus.off<StatusVfxUpdatedEvent>('status_vfx_updated', this.statusUpdateHandler)
