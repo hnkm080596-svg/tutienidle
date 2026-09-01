@@ -281,3 +281,71 @@ describe('consumeResource executor', () => {
     expect(fireNested).not.toHaveBeenCalled()
   })
 })
+
+describe('consumeForDamage executor', () => {
+  it("source: 'ailment' consumes stacks for true damage and writes runtime.consumedDamage", () => {
+    const source = makeEntity()
+    const target = makeEntity({ alive: true } as Partial<CombatEntity> as CombatEntity)
+    const getStacks = vi.fn(() => 4)
+    const remove = vi.fn()
+    const applyDirectDamage = vi.fn()
+    const killIfDead = vi.fn()
+    const ctx = makeCtx({
+      targetAilments: { getStacks, remove } as unknown as SkillEffectContext['targetAilments'],
+      combatSystem: { applyDirectDamage, killIfDead } as unknown as SkillEffectContext['combatSystem'],
+    })
+    const runtime: ActionRuntimeContext = {}
+
+    runSkillAction(
+      { type: 'consumeForDamage', source: 'ailment', ailmentId: 'bong', damagePerUnit: 10 },
+      source,
+      target,
+      ctx,
+      runtime,
+      makeHelpers(),
+    )
+
+    expect(applyDirectDamage).toHaveBeenCalledWith(target, 40, source.id, 'damage')
+    expect(remove).toHaveBeenCalledWith('bong')
+    expect(runtime.consumedDamage).toBe(40)
+  })
+
+  it("source: 'ward' consumes source.currentWard for true damage, zeroes it", () => {
+    const source = makeEntity({ currentWard: 20 } as Partial<CombatEntity> as CombatEntity)
+    const target = makeEntity()
+    const applyDirectDamage = vi.fn()
+    const ctx = makeCtx({ combatSystem: { applyDirectDamage } as unknown as SkillEffectContext['combatSystem'] })
+
+    runSkillAction(
+      { type: 'consumeForDamage', source: 'ward', damagePerUnit: 2 },
+      source,
+      target,
+      ctx,
+      {},
+      makeHelpers(),
+    )
+
+    expect(applyDirectDamage).toHaveBeenCalledWith(target, 40, source.id, 'ward_break')
+    expect(source.currentWard).toBe(0)
+  })
+})
+
+describe('spawnZone executor', () => {
+  it("zoneKind 'sword' calls ctx.spawnSwordZone with target position", () => {
+    const source = makeEntity({ id: 'p1' } as Partial<CombatEntity> as CombatEntity)
+    const target = makeEntity({ row: 2, x: 3 } as Partial<CombatEntity> as CombatEntity)
+    const spawnSwordZone = vi.fn()
+    const ctx = makeCtx({ spawnSwordZone })
+
+    runSkillAction(
+      { type: 'spawnZone', zoneKind: 'sword', charges: 3, tickInterval: 1, damageRatio: 0.3, position: 'target' },
+      source,
+      target,
+      ctx,
+      {},
+      makeHelpers(),
+    )
+
+    expect(spawnSwordZone).toHaveBeenCalledWith(expect.objectContaining({ ownerId: 'p1', row: 2, charges: 3 }))
+  })
+})

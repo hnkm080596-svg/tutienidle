@@ -193,6 +193,73 @@ const consumeResource: ActionExecutor<Extract<SkillAction, { type: 'consumeResou
   runtime.consumedAmount = current - next
 }
 
+const consumeForDamage: ActionExecutor<Extract<SkillAction, { type: 'consumeForDamage' }>> = (
+  action,
+  source,
+  target,
+  ctx,
+  runtime,
+) => {
+  if (!target.alive) {
+    return
+  }
+
+  let bonusDamage = 0
+
+  if (action.source === 'ailment' && action.ailmentId) {
+    const stacks = ctx.targetAilments.getStacks(action.ailmentId)
+
+    if (stacks <= 0) {
+      return
+    }
+
+    bonusDamage = stacks * action.damagePerUnit
+
+    ctx.combatSystem.applyDirectDamage(target, bonusDamage, source.id, 'damage')
+    ctx.targetAilments.remove(action.ailmentId)
+    ctx.combatSystem.killIfDead(target, source.id)
+  } else if (action.source === 'ward' && source.currentWard > 0) {
+    bonusDamage = source.currentWard * action.damagePerUnit
+
+    source.currentWard = 0
+
+    ctx.combatSystem.applyDirectDamage(target, bonusDamage, source.id, 'ward_break')
+  } else {
+    return
+  }
+
+  runtime.consumedDamage = bonusDamage
+}
+
+const spawnZone: ActionExecutor<Extract<SkillAction, { type: 'spawnZone' }>> = (action, source, target, ctx) => {
+  const anchor = action.position === 'source' ? source : target
+
+  if (action.zoneKind === 'sword' && ctx.spawnSwordZone) {
+    ctx.spawnSwordZone({
+      ownerId: source.id,
+      row: anchor.row,
+      column: Math.round(anchor.x),
+      laneRadius: 0,
+      columnRadius: 1,
+      charges: action.charges,
+      tickInterval: action.tickInterval,
+      damagePerTick: action.damageRatio * source.stats.attack,
+    })
+  } else if (action.zoneKind === 'lava' && ctx.spawnLavaZone) {
+    ctx.spawnLavaZone({
+      ownerId: source.id,
+      row: anchor.row,
+      column: Math.round(anchor.x),
+      laneRadius: 0,
+      columnRadius: 1,
+      duration: action.charges * action.tickInterval,
+      tickInterval: action.tickInterval,
+      damagePerTick: action.damageRatio * source.stats.attack,
+      element: 'fire',
+    })
+  }
+}
+
 export const SKILL_ACTION_REGISTRY: { [K in SkillActionType]: ActionExecutor<Extract<SkillAction, { type: K }>> } = {
   dealDamage,
   heal,
@@ -201,6 +268,8 @@ export const SKILL_ACTION_REGISTRY: { [K in SkillActionType]: ActionExecutor<Ext
   applyAilment,
   grantResource,
   consumeResource,
+  consumeForDamage,
+  spawnZone,
 } as { [K in SkillActionType]: ActionExecutor<Extract<SkillAction, { type: K }>> }
 
 export function runSkillAction(
