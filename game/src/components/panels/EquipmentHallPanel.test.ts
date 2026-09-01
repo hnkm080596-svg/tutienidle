@@ -62,6 +62,21 @@ function equipmentInstanceWithItemId(
   return instance
 }
 
+/** Instance với rarity (Ngũ Phẩm) + quality (9 bậc Khí) tùy ý — test
+ * bug T2.3 2026-09-01: dropdown "Chất" từng so instance.rarity. */
+function equipmentInstanceWithGrade(
+  instanceId: string,
+  rarity: EquipmentInstance['rarity'],
+  quality: EquipmentInstance['quality'],
+): EquipmentInstance {
+  const instance = equipmentInstance(instanceId, false)
+
+  instance.rarity = rarity
+  instance.quality = quality
+
+  return instance
+}
+
 function mountHall(prepare?: (manager: GameManager) => void) {
   const container = document.createElement('div')
   const pinia = createPinia()
@@ -263,6 +278,57 @@ describe('EquipmentHallPanel — chọn trang bị bằng slot', () => {
     )
 
     expect(ghost).toBeDefined()
+
+    mounted.unmount()
+  })
+
+  it('filter Phẩm (rarity) và Chất (quality) là 2 trục độc lập — bug T2.3 2026-09-01', async () => {
+    const mounted = mountHall((manager) => {
+      // Bỏ fixture mặc định 'in-bag' để ứng viên hoàn toàn do test kiểm soát.
+      manager.equipmentBag.remove('in-bag')
+      // Cùng phẩm khác chất: chọn phẩm Hoang + chất Pháp Bảo → chỉ item 2.
+      manager.equipmentBag.add(equipmentInstanceWithGrade('d1', 'hoang', 'pham_khi'))
+      manager.equipmentBag.add(equipmentInstanceWithGrade('d2', 'hoang', 'phap_bao'))
+    })
+
+    const tabs = mounted.container.querySelectorAll<HTMLButtonElement>('.qi-hall__tabs button')
+    const dissolveTab = Array.from(tabs).find((b) => b.textContent?.includes('Hóa Luyện'))
+    dissolveTab!.click()
+    await nextTick()
+
+    const gradeSelect = mounted.container.querySelector<HTMLSelectElement>(
+      '.dissolve-filters select:nth-of-type(2)',
+    )!
+    const qualitySelect = mounted.container.querySelector<HTMLSelectElement>(
+      '.dissolve-filters select:nth-of-type(3)',
+    )!
+
+    // Realm dropdown phải đủ 10 realm (T2.3: từng chỉ có 3).
+    const realmSelect = mounted.container.querySelector<HTMLSelectElement>(
+      '.dissolve-filters select:nth-of-type(1)',
+    )!
+    expect(realmSelect.options.length).toBe(11) // 10 realm + "Mọi cảnh giới"
+
+    gradeSelect.value = 'hoang'
+    gradeSelect.dispatchEvent(new Event('change'))
+    qualitySelect.value = 'phap_bao'
+    qualitySelect.dispatchEvent(new Event('change'))
+    await nextTick()
+
+    // Cả 2 item cùng tên template ("Kiếm") — phân biệt bằng SỐ LƯỢNG:
+    // lọc phẩm Hoang + chất Pháp Bảo chỉ khớp d2 (d1 là Phàm Khí).
+    const visible = mounted.container.querySelectorAll('.dissolve-slot-wrap .slot-view')
+
+    expect(visible).toHaveLength(1)
+
+    // Đảo chất về Phàm Khí → khớp d1, vẫn 1 item (2 trục độc lập).
+    qualitySelect.value = 'pham_khi'
+    qualitySelect.dispatchEvent(new Event('change'))
+    await nextTick()
+
+    expect(
+      mounted.container.querySelectorAll('.dissolve-slot-wrap .slot-view'),
+    ).toHaveLength(1)
 
     mounted.unmount()
   })

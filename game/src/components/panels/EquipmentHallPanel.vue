@@ -12,7 +12,10 @@ import { EQUIPMENT_RARITY_AFFIX_SLOTS } from '@/core/equipment/EquipmentRarity'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import type { EquipmentSlot } from '@/core/equipment/EquipmentTypes'
 import type { RolledAffix } from '@/core/equipment/RolledAffix'
-import { materialLabel, affixLabel, equipmentSlotLabel, equipmentQualityLabel, SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
+import { materialLabel, affixLabel, equipmentSlotLabel, equipmentQualityLabel, equipmentRarityLabel, realmLabel, SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
+import { REALMS } from '@/data/realms/realm'
+import { ITEM_GRADE_ORDER } from '@/core/item/ItemGrade'
+import { EQUIPMENT_QUALITY_ORDER } from '@/core/equipment/EquipmentQuality'
 import { statLabel, formatStat } from '@/core/stats/StatLabels'
 import type { Stats } from '@/core/stats/StatBlock'
 import { useActionFeedbackStore } from '@/stores/actionFeedback'
@@ -809,6 +812,12 @@ interface DissolveCandidate {
 // ngay lúc mount (test bắt được lỗi này).
 const dissolveFilterRealm = ref<string>('any')
 
+// Bug 2026-09-01 (T2.3): dropdown "Chất" từng so instance.rarity (Ngũ
+// Phẩm) — nhầm chất vs phẩm. Tách đúng 2 trục:
+//   dissolveFilterRarity  — Ngũ Phẩm (hoang..tien)   → instance.rarity
+//   dissolveFilterQuality — 9 bậc Khí (pham_khi..)   → instance.quality
+const dissolveFilterRarity = ref<string>('any')
+
 const dissolveFilterQuality = ref<string>('any')
 
 function passesDissolveFilter(instance: EquipmentInstance): boolean {
@@ -817,8 +826,15 @@ function passesDissolveFilter(instance: EquipmentInstance): boolean {
   }
 
   if (
+    dissolveFilterRarity.value !== 'any' &&
+    instance.rarity !== dissolveFilterRarity.value
+  ) {
+    return false
+  }
+
+  if (
     dissolveFilterQuality.value !== 'any' &&
-    instance.rarity !== dissolveFilterQuality.value
+    instance.quality !== dissolveFilterQuality.value
   ) {
     return false
   }
@@ -1248,25 +1264,27 @@ function doDissolve() {
         <select v-model="dissolveFilterRealm">
           <option value="any">{{ t('panels.equipmentHall.select.anyRealm') }}</option>
 
-          <option value="mortal">{{ t('panels.equipmentHall.realm.mortal') }}</option>
-
-          <option value="qi_refining">{{ t('panels.equipmentHall.realm.qiRefining') }}</option>
-
-          <option value="foundation_establishment">{{ t('panels.equipmentHall.realm.foundationEstablishment') }}</option>
+          <option v-for="realm in REALMS" :key="realm.id" :value="realm.id">
+            {{ realmLabel(realm.id) }}
+          </option>
         </select>
 
+        <!-- Ngũ Phẩm (rarity) — item.rarity -->
+        <select v-model="dissolveFilterRarity">
+          <option value="any">{{ t('panels.equipmentHall.select.anyGrade') }}</option>
+
+          <option v-for="grade in ITEM_GRADE_ORDER" :key="grade" :value="grade">
+            {{ equipmentRarityLabel(grade) }}
+          </option>
+        </select>
+
+        <!-- 9 bậc Khí (quality) — item.quality -->
         <select v-model="dissolveFilterQuality">
           <option value="any">{{ t('panels.equipmentHall.select.anyQuality') }}</option>
 
-          <option value="hoang">{{ t('panels.equipmentHall.quality.hoang') }}</option>
-
-          <option value="huyen">{{ t('panels.equipmentHall.quality.huyen') }}</option>
-
-          <option value="dia">{{ t('panels.equipmentHall.quality.dia') }}</option>
-
-          <option value="thien">{{ t('panels.equipmentHall.quality.thien') }}</option>
-
-          <option value="tien">{{ t('panels.equipmentHall.quality.tien') }}</option>
+          <option v-for="quality in EQUIPMENT_QUALITY_ORDER" :key="quality" :value="quality">
+            {{ equipmentQualityLabel(quality) }}
+          </option>
         </select>
 
         <button

@@ -74,19 +74,8 @@
       },
       "select": {
         "anyRealm": "Mọi cảnh giới",
-        "anyQuality": "Mọi phẩm"
-      },
-      "realm": {
-        "mortal": "Phàm Nhân",
-        "qiRefining": "Luyện Khí",
-        "foundationEstablishment": "Trúc Cơ"
-      },
-      "quality": {
-        "hoang": "Hoàng",
-        "huyen": "Huyền",
-        "dia": "Địa",
-        "thien": "Thiên",
-        "tien": "Tiên"
+        "anyQuality": "Mọi chất (9 bậc Khí)",
+        "anyGrade": "Mọi phẩm (Ngũ Phẩm)"
       },
       "messages": {
         "refineNeedItem": "Không thể Tẩy Luyện: cần chọn một trang bị.",

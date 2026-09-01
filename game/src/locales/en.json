@@ -74,19 +74,8 @@
       },
       "select": {
         "anyRealm": "Any Realm",
-        "anyQuality": "Any Quality"
-      },
-      "realm": {
-        "mortal": "Mortal",
-        "qiRefining": "Qi Refining",
-        "foundationEstablishment": "Foundation Establishment"
-      },
-      "quality": {
-        "hoang": "Hoang",
-        "huyen": "Huyen",
-        "dia": "Dia",
-        "thien": "Thien",
-        "tien": "Tien"
+        "anyQuality": "Any quality (Khí tier)",
+        "anyGrade": "Any grade"
       },
       "messages": {
         "refineNeedItem": "Cannot Refine: select an equipment item first.",
