@@ -21,8 +21,12 @@ describe('formatStat', () => {
     expect(formatStat('speedMultiplier', 1.254)).toBe('1.25')
   })
 
-  it('formatStat existing decimal stat keys work', () => {
-    expect(formatStat('criticalDamage', 1.5)).toBe('1.5')
+  it('criticalDamage displays as % while staying a multiplier in formulas — bug 2026-09-01', () => {
+    // Base 1.5 (multiplier ×1.5 trong CombatSystem) → hiển thị "150%"
+    // (100% đòn thường + 50% bonus). Display-only: unit vẫn multiplier.
+    expect(formatStat('criticalDamage', 1.5)).toBe('150%')
+    expect(formatStat('criticalDamage', 1.05)).toBe('105%')
+    expect(formatStat('criticalDamage', 2.0)).toBe('200%')
     expect(formatStat('attackSpeed', 1.25)).toBe('1.25')
   })
 

@@ -30,7 +30,7 @@ export const BASE_STAT_LABELS: StatLabelEntry[] = [
   { key: 'maxMp', label: 'Linh lực', description: 'Tài nguyên tiêu hao khi dùng skill loại special.', category: 'survival' },
   { key: 'manaRegenPerSecond', label: 'Hồi linh lực', description: 'Linh lực hồi tự nhiên mỗi giây.', category: 'survival' },
   { key: 'criticalRate', label: 'Tỉ lệ bạo kích', description: 'Xác suất một đòn đánh gây sát thương chí mạng.', category: 'special' },
-  { key: 'criticalDamage', label: 'ST bạo kích', description: 'Hệ số nhân sát thương khi đòn đánh chí mạng.', category: 'special' },
+  { key: 'criticalDamage', label: 'ST bạo kích', description: 'Sát thương đòn chí mạng. 150% nghĩa là đòn chí mạng mạnh gấp 1.5 lần đòn thường.', category: 'special' },
   { key: 'criticalAvoidance', label: 'Kháng bạo kích', description: 'Trừ thẳng vào tỉ lệ bạo kích của đối phương khi họ đánh mình.', category: 'special' },
   { key: 'accuracyRating', label: 'Độ chính xác', description: 'Đấu với Tỉ lệ né của đối phương để quyết định đòn có trúng hay không.', category: 'special' },
   { key: 'evasionRate', label: 'Tỉ lệ né', description: 'Đấu với Độ chính xác của đối phương — càng cao càng dễ né hoàn toàn 1 đòn.', category: 'special' },
@@ -102,10 +102,18 @@ const ELEMENT_STAT_LABELS: Partial<Record<keyof Stats, string>> = {
   primordialPower: 'Hỗn Nguyên Lực',
 }
 
-// attackSpeed/criticalDamage/blockEffectiveness là hệ số gần 1 (vd
-// 1.5) — làm tròn nguyên sẽ mất hết ý nghĩa, giữ tối đa 2 chữ số
-// thập phân.
-export const DECIMAL_STAT_KEYS: (keyof Stats)[] = ['attackSpeed', 'criticalDamage', 'blockEffectiveness']
+// attackSpeed/blockEffectiveness là hệ số gần 1 (vd 1.5) — làm tròn
+// nguyên số mất ý nghĩa, giữ tối đa 2 chữ số thập phân.
+// LƯU Ý criticalDamage: unit vẫn là 'multiplier' (CombatSystem nhân
+// TRỰC TIẾP 1.5 × damage — là hệ số công thức, không phải fraction
+// 0..1 như percent stats). Chỉ CÁCH HIỂN THỊ đổi thành dạng %:
+// 1.5 hiển thị "150%" (100% đòn thường + 50% bonus). Bug 2026-09-01:
+// hiển thị thô "1.5" khiến người chơi không hiểu %
+export const DECIMAL_STAT_KEYS: (keyof Stats)[] = ['attackSpeed', 'blockEffectiveness']
+
+// Multiplier hiển thị dạng % (×100) — DÀNH RIÊNG cho display, KHÔNG
+// đổi unit semantics của stat trong công thức.
+const MULTIPLIER_AS_PERCENT_DISPLAY: (keyof Stats)[] = ['criticalDamage']
 
 export function statLabel(key: keyof Stats): string {
   return BASE_STAT_LABELS.find(entry => entry.key === key)?.label ?? ELEMENT_STAT_LABELS[key] ?? FORMAT_ADOPTED_STAT_LABELS[key] ?? key
@@ -120,6 +128,10 @@ export function formatStat(key: keyof Stats, value: number): string {
 
   if (DECIMAL_STAT_KEYS.includes(key)) {
     return (Math.round(value * 100) / 100).toString()
+  }
+
+  if (MULTIPLIER_AS_PERCENT_DISPLAY.includes(key)) {
+    return `${Math.round(value * 100)}%`
   }
 
   // Multiplier (hệ số gần 1, vd 1.50) — không phải %, không phải số
