@@ -51,7 +51,9 @@ function mountModal(gm: MockGameManager, origin: 'stage' | 'tribulation' | null 
   const pinia = createPinia()
 
   app.use(pinia)
-  app.provide(GAME_MANAGER_KEY, gm)
+  // Cast mock thành GameManager — provide typed chặt GameManager;
+  // mock đủ shape modal cần (eventBus.on/off/emit, abandonBattle).
+  app.provide(GAME_MANAGER_KEY, gm as unknown as import('@/core/game/GameManager').GameManager)
 
   app.mount(container)
 
