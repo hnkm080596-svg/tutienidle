@@ -1,6 +1,5 @@
 import type { SkillDamageComponent } from './SkillDamageComponent'
 import type { StatType } from '../stats/StatTypes'
-import type { AilmentId } from '../ailment/AilmentTypes'
 import type { CombatVfxPresetId } from '../battle/CombatAction'
 
 // Trigger/Action rework (2026-08-31 spec, Phase 2A) — replaces the old
@@ -49,18 +48,14 @@ export interface ApplyBuffAction {
   type: 'applyBuff'
 
   buffId: string
+
+  chance?: number
 }
 
 export interface ApplyDebuffAction {
   type: 'applyDebuff'
 
   buffId: string
-}
-
-export interface ApplyAilmentAction {
-  type: 'applyAilment'
-
-  ailmentId: AilmentId
 
   chance?: number
 }
@@ -102,11 +97,15 @@ export interface ConsumeForDamageAction {
   // 'ward' = ward-break (consumesWardForDamage+damagePerWardPoint pattern).
   source: 'ailment' | 'ward'
 
-  ailmentId?: AilmentId
+  buffId?: string
 
   damagePerUnit: number
 
   healPercentOfDamage?: number
+
+  // 'own' (default) — only the executing skill's own source instance.
+  // 'any' — every source's instance, summed, all removed.
+  scope?: 'own' | 'any'
 }
 
 export interface SpawnZoneAction {
@@ -136,7 +135,6 @@ export type SkillAction =
   | HealAction
   | ApplyBuffAction
   | ApplyDebuffAction
-  | ApplyAilmentAction
   | GrantResourceAction
   | ConsumeResourceAction
   | ConsumeForDamageAction

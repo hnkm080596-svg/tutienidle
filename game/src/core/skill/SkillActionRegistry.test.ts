@@ -21,12 +21,12 @@ function makeCtx(overrides: Partial<SkillEffectContext> = {}): SkillEffectContex
   return {
     combatSystem: {} as SkillEffectContext['combatSystem'],
     fireHit: vi.fn(() => ({ landed: true })),
-    buffRegistry: {} as SkillEffectContext['buffRegistry'],
+    buffRegistry: { get: (id: string) => ({ id }) } as unknown as SkillEffectContext['buffRegistry'],
     ailmentRegistry: {} as SkillEffectContext['ailmentRegistry'],
     sourceBuffs: {} as SkillEffectContext['sourceBuffs'],
     targetBuffs: {} as SkillEffectContext['targetBuffs'],
     targetAilments: {} as SkillEffectContext['targetAilments'],
-    reactionManager: {} as SkillEffectContext['reactionManager'],
+    reactionManager: { checkAndTrigger: () => {} } as unknown as SkillEffectContext['reactionManager'],
     ...overrides,
   }
 }
@@ -42,7 +42,6 @@ describe('SKILL_ACTION_REGISTRY', () => {
       'heal',
       'applyBuff',
       'applyDebuff',
-      'applyAilment',
       'grantResource',
       'consumeResource',
       'consumeForDamage',
@@ -134,88 +133,86 @@ describe('heal executor', () => {
 })
 
 describe('applyBuff executor', () => {
-  it('applies buffId to ctx.sourceBuffs via ctx.buffRegistry', () => {
+  it('applies buffId to ctx.sourceBuffs via ctx.buffRegistry, no chance -> no onProc', () => {
     const source = makeEntity()
     const target = makeEntity()
     const apply = vi.fn()
     const get = vi.fn(() => ({ id: 'khiem_phong' }))
+    const fireNested = vi.fn()
     const ctx = makeCtx({
       sourceBuffs: { apply } as unknown as SkillEffectContext['sourceBuffs'],
       buffRegistry: { get } as unknown as SkillEffectContext['buffRegistry'],
     })
 
-    runSkillAction({ type: 'applyBuff', buffId: 'khiem_phong' }, source, target, ctx, {}, makeHelpers())
+    runSkillAction({ type: 'applyBuff', buffId: 'khiem_phong' }, source, target, ctx, {}, { fireNested })
 
     expect(get).toHaveBeenCalledWith('khiem_phong')
-    expect(apply).toHaveBeenCalledWith({ id: 'khiem_phong' })
+    expect(apply).toHaveBeenCalledWith({ id: 'khiem_phong' }, source, source, ctx.buffRegistry)
+    expect(fireNested).not.toHaveBeenCalled()
   })
-})
 
-describe('applyDebuff executor', () => {
-  it('applies buffId to ctx.targetBuffs via ctx.buffRegistry', () => {
+  it('chance specified and roll succeeds -> applies and fires onProc', () => {
     const source = makeEntity()
     const target = makeEntity()
     const apply = vi.fn()
-    const get = vi.fn(() => ({ id: 'suy_nhuoc' }))
+    const get = vi.fn(() => ({ id: 'khiem_phong' }))
+    const fireNested = vi.fn()
+    const ctx = makeCtx({
+      sourceBuffs: { apply } as unknown as SkillEffectContext['sourceBuffs'],
+      buffRegistry: { get } as unknown as SkillEffectContext['buffRegistry'],
+    })
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    runSkillAction({ type: 'applyBuff', buffId: 'khiem_phong', chance: 1 }, source, target, ctx, {}, { fireNested })
+
+    expect(apply).toHaveBeenCalledWith({ id: 'khiem_phong' }, source, source, ctx.buffRegistry)
+    expect(fireNested).toHaveBeenCalledWith('onProc', { source, target, buffId: 'khiem_phong' })
+
+    vi.restoreAllMocks()
+  })
+})
+
+describe('applyDebuff executor — chance roll + fireNested onProc (absorbs old applyAilment)', () => {
+  it('applies and fires onProc on a successful roll', () => {
+    const source = makeEntity({ stats: { elementApplicationPercent: 0 } as CombatEntity['stats'] })
+    const target = makeEntity()
+    const apply = vi.fn()
+    const get = vi.fn(() => ({ id: 'bong' }))
+    const fireNested = vi.fn()
     const ctx = makeCtx({
       targetBuffs: { apply } as unknown as SkillEffectContext['targetBuffs'],
       buffRegistry: { get } as unknown as SkillEffectContext['buffRegistry'],
     })
-
-    runSkillAction({ type: 'applyDebuff', buffId: 'suy_nhuoc' }, source, target, ctx, {}, makeHelpers())
-
-    expect(get).toHaveBeenCalledWith('suy_nhuoc')
-    expect(apply).toHaveBeenCalledWith({ id: 'suy_nhuoc' })
-  })
-})
-
-describe('applyAilment executor', () => {
-  it('applies the ailment and fires onProc on a successful roll', () => {
-    const source = makeEntity({ stats: { skillDamagePercent: 0, maxMp: 0, attack: 10, elementApplicationPercent: 0 } as CombatEntity['stats'] })
-    const target = makeEntity()
-    const apply = vi.fn()
-    const get = vi.fn(() => ({ id: 'bong' }))
-    const checkAndTrigger = vi.fn()
-    const fireNested = vi.fn()
-    const ctx = makeCtx({
-      targetAilments: { apply } as unknown as SkillEffectContext['targetAilments'],
-      ailmentRegistry: { get } as unknown as SkillEffectContext['ailmentRegistry'],
-      reactionManager: { checkAndTrigger } as unknown as SkillEffectContext['reactionManager'],
-    })
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
-    runSkillAction(
-      { type: 'applyAilment', ailmentId: 'bong', chance: 1 },
-      source,
-      target,
-      ctx,
-      {},
-      { fireNested },
-    )
+    runSkillAction({ type: 'applyDebuff', buffId: 'bong', chance: 1 }, source, target, ctx, {}, { fireNested })
 
-    expect(apply).toHaveBeenCalledWith({ id: 'bong' }, source, target, { get })
-    expect(fireNested).toHaveBeenCalledWith('onProc', { source, target, ailmentId: 'bong' })
-    expect(checkAndTrigger).toHaveBeenCalled()
+    expect(apply).toHaveBeenCalledWith({ id: 'bong' }, source, target, ctx.buffRegistry)
+    expect(fireNested).toHaveBeenCalledWith('onProc', { source, target, buffId: 'bong' })
 
     vi.restoreAllMocks()
   })
 
-  it('does not apply or fire onProc when the roll fails', () => {
-    const source = makeEntity({ stats: { skillDamagePercent: 0, maxMp: 0, attack: 10, elementApplicationPercent: 0 } as CombatEntity['stats'] })
+  it('no chance specified — always applies (matches old plain applyDebuff/applyBuff behavior)', () => {
+    const source = makeEntity({ stats: { elementApplicationPercent: 0 } as CombatEntity['stats'] })
+    const target = makeEntity()
+    const apply = vi.fn()
+    const ctx = makeCtx({ targetBuffs: { apply } as unknown as SkillEffectContext['targetBuffs'] })
+
+    runSkillAction({ type: 'applyDebuff', buffId: 'x' }, source, target, ctx, {}, makeHelpers())
+
+    expect(apply).toHaveBeenCalled()
+  })
+
+  it('roll fails — does not apply, does not fire onProc', () => {
+    const source = makeEntity({ stats: { elementApplicationPercent: 0 } as CombatEntity['stats'] })
     const target = makeEntity()
     const apply = vi.fn()
     const fireNested = vi.fn()
-    const ctx = makeCtx({ targetAilments: { apply } as unknown as SkillEffectContext['targetAilments'] })
+    const ctx = makeCtx({ targetBuffs: { apply } as unknown as SkillEffectContext['targetBuffs'] })
     vi.spyOn(Math, 'random').mockReturnValue(0.99)
 
-    runSkillAction(
-      { type: 'applyAilment', ailmentId: 'bong', chance: 0.5 },
-      source,
-      target,
-      ctx,
-      {},
-      { fireNested },
-    )
+    runSkillAction({ type: 'applyDebuff', buffId: 'x', chance: 0.5 }, source, target, ctx, {}, { fireNested })
 
     expect(apply).not.toHaveBeenCalled()
     expect(fireNested).not.toHaveBeenCalled()
@@ -295,33 +292,6 @@ describe('consumeResource executor', () => {
 })
 
 describe('consumeForDamage executor', () => {
-  it("source: 'ailment' consumes stacks for true damage and writes runtime.consumedDamage", () => {
-    const source = makeEntity()
-    const target = makeEntity({ alive: true } as Partial<CombatEntity> as CombatEntity)
-    const getStacks = vi.fn(() => 4)
-    const remove = vi.fn()
-    const applyDirectDamage = vi.fn()
-    const killIfDead = vi.fn()
-    const ctx = makeCtx({
-      targetAilments: { getStacks, remove } as unknown as SkillEffectContext['targetAilments'],
-      combatSystem: { applyDirectDamage, killIfDead } as unknown as SkillEffectContext['combatSystem'],
-    })
-    const runtime: ActionRuntimeContext = {}
-
-    runSkillAction(
-      { type: 'consumeForDamage', source: 'ailment', ailmentId: 'bong', damagePerUnit: 10 },
-      source,
-      target,
-      ctx,
-      runtime,
-      makeHelpers(),
-    )
-
-    expect(applyDirectDamage).toHaveBeenCalledWith(target, 40, source.id, 'damage')
-    expect(remove).toHaveBeenCalledWith('bong')
-    expect(runtime.consumedDamage).toBe(40)
-  })
-
   it("source: 'ward' consumes source.currentWard for true damage, zeroes it", () => {
     const source = makeEntity({ currentWard: 20 } as Partial<CombatEntity> as CombatEntity)
     const target = makeEntity()
@@ -339,6 +309,52 @@ describe('consumeForDamage executor', () => {
 
     expect(applyDirectDamage).toHaveBeenCalledWith(target, 40, source.id, 'ward_break')
     expect(source.currentWard).toBe(0)
+  })
+})
+
+describe('consumeForDamage executor — scope', () => {
+  it("scope 'own' (default) reads/removes only the executing source's instance", () => {
+    const source = makeEntity({ id: 'caster' })
+    const target = makeEntity({ alive: true } as Partial<CombatEntity> as CombatEntity)
+    const getStacks = vi.fn(() => 4)
+    const remove = vi.fn()
+    const applyDirectDamage = vi.fn()
+    const killIfDead = vi.fn()
+    const ctx = makeCtx({
+      targetBuffs: { getStacks, remove } as unknown as SkillEffectContext['targetBuffs'],
+      combatSystem: { applyDirectDamage, killIfDead } as unknown as SkillEffectContext['combatSystem'],
+    })
+
+    runSkillAction(
+      { type: 'consumeForDamage', source: 'ailment', buffId: 'bong', damagePerUnit: 10 },
+      source, target, ctx, {}, makeHelpers(),
+    )
+
+    expect(getStacks).toHaveBeenCalledWith('bong', 'caster')
+    expect(remove).toHaveBeenCalledWith('bong', 'caster')
+    expect(applyDirectDamage).toHaveBeenCalledWith(target, 40, 'caster', 'damage')
+  })
+
+  it("scope 'any' sums/removes every source's instance", () => {
+    const source = makeEntity({ id: 'caster' })
+    const target = makeEntity({ alive: true } as Partial<CombatEntity> as CombatEntity)
+    const getStacks = vi.fn(() => 7)
+    const removeAllById = vi.fn()
+    const applyDirectDamage = vi.fn()
+    const killIfDead = vi.fn()
+    const ctx = makeCtx({
+      targetBuffs: { getStacks, removeAllById } as unknown as SkillEffectContext['targetBuffs'],
+      combatSystem: { applyDirectDamage, killIfDead } as unknown as SkillEffectContext['combatSystem'],
+    })
+
+    runSkillAction(
+      { type: 'consumeForDamage', source: 'ailment', buffId: 'bong', damagePerUnit: 10, scope: 'any' },
+      source, target, ctx, {}, makeHelpers(),
+    )
+
+    expect(getStacks).toHaveBeenCalledWith('bong')
+    expect(removeAllById).toHaveBeenCalledWith('bong')
+    expect(applyDirectDamage).toHaveBeenCalledWith(target, 70, 'caster', 'damage')
   })
 })
 
