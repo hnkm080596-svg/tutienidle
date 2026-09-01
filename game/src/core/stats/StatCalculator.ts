@@ -15,10 +15,7 @@ export type ModifierSourceType =
   | 'talisman'
   // 'attribute': modifier tự sinh ra bởi deriveAttributeModifiers() bên
   // dưới (dẫn xuất từ 5 attribute gốc) — không phải nguồn nào tạo tay.
-  // 'ailment': modifier tổng hợp từ AilmentSystem.getActiveModifiers()
-  // (vd Làm Chậm giảm attackSpeed/movementSpeed) — xem core/ailment/.
   | 'attribute'
-  | 'ailment'
 
 export interface StatModifier {
   id: string
