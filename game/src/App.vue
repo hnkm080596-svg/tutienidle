@@ -84,11 +84,13 @@ const saveIssue = useSaveIssueStore()
 // Home. Set true ở cuối onMounted() sau khi mọi thứ (load save/đăng
 // ký data/tick loop) đã sẵn sàng.
 const isBooted = ref(false)
-// MainMenu overlay — App.vue không render <RouterView>, route '/'
-// (MainMenu) không thể tới được qua vue-router. Hiển thị MainMenu
-// như overlay ngay từ mount, đóng khi user bấm "Bắt đầu tu luyện"
-// để load game (bootGame()).
-const showMainMenu = ref(true)
+// MainMenu overlay — TẠM VÔ HIỆU HÓA (mặc định ẩn). Luồng boot hiện
+// hành là auth-first (AuthEntryScreen), e2e tests khóa contract đó.
+// MainMenu che AuthEntryScreen (fixed overlay z-1000) khiến luồng cũ
+// không dùng được. Task 8 của plan online-foundation thay thế cả
+// MainMenu lẫn AuthEntryScreen bằng WelcomeAuthScreen hợp nhất — khi
+// đó xoá luôn state này, không đầu tư thêm cho MainMenu.
+const showMainMenu = ref(false)
 
 function handleMenuStart() {
   showMainMenu.value = false
@@ -359,6 +361,11 @@ function startTickLoop() {
 }
 
 async function bootGame(createNewCharacter = false) {
+  // MainMenu là entry tạm thời — mọi đường vào game (menu "Bắt đầu",
+  // guest auth, đăng nhập, tạo nhân vật) đều phải tắt nó để GameRoot
+  // hiện được. Idempotent: gọi lại khi menu đã ẩn là no-op.
+  showMainMenu.value = false
+
   bootFlow.startSaveLoad()
 
   // Nhân vật mới không được bỏ qua coordinator — reset() bảo đảm revision
@@ -568,6 +575,20 @@ onUnmounted(() => {
 </script>
 
 <template>
+  <!-- MainMenu overlay tạm (Task 8 online-foundation sẽ thay thế):
+       hiện từ lúc mount phủ trên intro/auth, đóng vĩnh viễn khi
+       bootGame() chạy — qua nút "Bắt đầu tu luyện" hoặc auth flow.
+       z-index 1000 (MainMenu.vue .main-menu-overlay) phủ LoadingScreen
+       3s đầu; user thấy menu thay vì màn loading. -->
+  <Transition>
+    <MainMenu
+      v-if="showMainMenu"
+      class="main-menu-overlay"
+      @start="handleMenuStart"
+      @settings="handleMenuSettings"
+    />
+  </Transition>
+
   <LoadingScreen v-if="entryStage === 'intro'" />
 
   <AuthEntryScreen v-else-if="entryStage === 'auth'" @authenticated="onAuthenticated" />
@@ -587,23 +608,12 @@ onUnmounted(() => {
   </main>
 
   <ErrorBoundary v-else>
-    <!-- MainMenu là entry screen CHÍNH — CHỈ hiện khi chưa boot game.
-         Khi user click "Bắt đầu" → MainMenu ẩn → bootGame chạy → LoadingScreen → GameRoot.
-         Fixed overlay để cover toàn màn hình. -->
-    <Transition>
-      <MainMenu
-        v-if="showMainMenu"
-        class="main-menu-overlay"
-        @start="handleMenuStart"
-        @settings="handleMenuSettings"
-      />
-    </Transition>
-
-    <!-- LoadingScreen chỉ hiện TRONG QUÁ TRÌNH boot, SAU KHI user đã click "Bắt đầu" -->
-    <LoadingScreen v-if="!isBooted && !showMainMenu" />
+    <!-- LoadingScreen chỉ hiện TRONG QUÁ TRÌNH boot (loading_save /
+         initializing), SAU KHI MainMenu đã đóng. -->
+    <LoadingScreen v-if="!isBooted" />
 
     <!-- GameRoot chỉ hiện khi boot xong -->
-    <GameRoot v-if="isBooted && !showMainMenu" />
+    <GameRoot v-if="isBooted" />
   </ErrorBoundary>
 
   <ErrorScreen />
