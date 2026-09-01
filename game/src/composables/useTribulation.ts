@@ -219,7 +219,11 @@ function resolveDefeat(player: PlayerStore, gameManager: GameManager, active: Ac
 
   gameManager.materialBag.remove(spiritStoneId, Math.min(owned, stoneLoss))
 
-  gameManager.applyPersistentBuff(KIEP_THUONG_DEBUFF)
+  // Task 9b (fix round 2) - pass player.finalStats so the debuff's
+  // duration-scaling formula (ailmentResistPercent/ailmentDurationPercent)
+  // reads the player's REAL gear, same `finalStats` already threaded to
+  // startTribulation() above.
+  gameManager.applyPersistentBuff(KIEP_THUONG_DEBUFF, player.finalStats)
 
   // Spec §4.3 — thua kiếp Đại Đạo: mất VĨNH VIỄN cơ hội Đại Đạo, mọi
   // lần xét sau cap ở Thiên Đạo.

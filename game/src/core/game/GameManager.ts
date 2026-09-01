@@ -176,6 +176,7 @@ import type { Reward } from '../reward/Reward'
 import type { BattleRewardSummary } from '../reward/BattleRewardSummary'
 
 import { playerToCombatEntity, createPlayerRewardReceiver } from '../player/Player'
+import { HERO_LANE_INDEX } from '../battle/BattleLane'
 import type { PlayerData, KiemTuRoute } from '../player/Player'
 import type { MainStatKey } from '../stats/StatTypes'
 import { getMainStatCap } from '../stats/StatCap'
@@ -2873,33 +2874,57 @@ export class GameManager {
    * CÃ¹ng buffSystem/buffManager nuÃ´i getAggregatedModifiers() má»—i
    * tick (xem PillSystem's effect 'buff' â€” cÃ¹ng cÆ¡ cháº¿).
    */
-  // Unified Buff System (Task 9b) - BuffSystem.apply() now requires a
-  // real source/target CombatEntity (to read ailmentResistPercent /
-  // ailmentDurationPercent for duration scaling), even for a buff with
-  // no dot effect like KIEP_THUONG_DEBUFF. GameManager keeps no
-  // persistent player CombatEntity outside battle (only
-  // playerToCombatEntity() at battle start, which needs a `Stats`
-  // already calculateStats()'d by the Pinia store - GameManager
-  // deliberately avoids calling calculateStats() itself to prevent 2
-  // divergent call sites, see startBattleWithPlayer()'s note). Prefer
-  // the REAL in-battle CombatEntity when one exists; fall back to a
-  // neutral "ghost" CombatEntity (same precedent as
-  // TribulationDirector.ghost) when there is no battle - known
-  // tradeoff: this debuff's resist/duration won't read the player's
-  // real gear when applied outside battle. See task-9b-report.md.
-  applyPersistentBuff(buff: BuffDefinition) {
-    const entity = this.battleSystem.getBattle()?.player ?? this.createPersistentBuffGhostEntity()
+  // Unified Buff System (Task 9b, fix round 2) - BuffSystem.apply() now
+  // requires a real source/target CombatEntity (to read
+  // ailmentResistPercent/ailmentDurationPercent for duration scaling),
+  // even for a buff with no dot effect like KIEP_THUONG_DEBUFF.
+  // `stats` (the caller's already-calculateStats()'d Stats, same
+  // `player.finalStats` pattern startTribulation()/startBattleWithPlayer()
+  // already use - see useTribulation.ts's resolveDefeat()) lets us build
+  // the REAL player CombatEntity via playerToCombatEntity() (same helper
+  // battle start uses), so this debuff's resist/duration correctly reads
+  // the player's actual gear. Falls back to the in-battle entity if one
+  // somehow exists, then to a fully-populated neutral ghost only if
+  // neither is available (today: only reachable if a caller forgets to
+  // pass `stats` - see resolvePersistentBuffEntity()).
+  applyPersistentBuff(buff: BuffDefinition, stats?: Stats) {
+    const entity = this.resolvePersistentBuffEntity(stats)
 
     this.buffSystem.apply(buff, entity, entity, this.buffRegistry)
   }
 
-  // Neutral placeholder CombatEntity (no gear, no active buffs) used
-  // only so BuffSystem.apply()/update() can read
-  // `.stats.ailmentResistPercent`/`.stats.ailmentDurationPercent` when
-  // there is no battle running (see applyPersistentBuff() above and
-  // buffSystem.update() in tick()). Same precedent as
-  // TribulationDirector.ghost (a partial CombatEntity cast used
-  // out-of-battle for vitals-only display).
+  // Shared entity resolution for applyPersistentBuff() and the per-tick
+  // buffSystem.update() call in tick() - both need 1 CombatEntity to hand
+  // BuffSystem, and neither has one implicitly guaranteed outside battle
+  // (GameManager keeps no persistent player CombatEntity of its own; only
+  // playerToCombatEntity() at battle start, which needs `Stats` already
+  // calculateStats()'d by the Pinia store - GameManager deliberately
+  // avoids calling calculateStats() itself to prevent 2 divergent call
+  // sites, see startBattleWithPlayer()'s note). Preference order: real
+  // in-battle entity > real player entity built from caller-supplied
+  // `stats` (mirrors startBattleWithPlayer()'s own construction) > fully-
+  // populated neutral ghost.
+  private resolvePersistentBuffEntity(stats?: Stats): CombatEntity {
+    const activeBattle = this.battleSystem.getBattle()
+
+    if (activeBattle) {
+      return activeBattle.player
+    }
+
+    if (stats && this.activePlayer) {
+      return playerToCombatEntity(this.activePlayer, stats, this.getSkillRuntimeStats(this.activePlayer))
+    }
+
+    return this.createPersistentBuffGhostEntity()
+  }
+
+  // Fully-populated neutral placeholder CombatEntity (no gear, no active
+  // buffs, every non-optional CombatEntity field explicitly set - NOT an
+  // `as CombatEntity` cast papering over missing fields) used only when
+  // resolvePersistentBuffEntity() has neither a real in-battle entity nor
+  // caller-supplied Stats to build one from. Safe even for a future
+  // persistent buff with a `dot` effect (combatSystem.applyDotDamage()
+  // would read real currentHp/maxHp/alive, not undefined).
   private createPersistentBuffGhostEntity(): CombatEntity {
     const stats = createBaseStats()
 
@@ -2909,8 +2934,25 @@ export class GameManager {
       type: 'player',
       baseStats: stats,
       stats,
+      currentHp: stats.maxHp,
+      maxHp: stats.maxHp,
+      currentMp: stats.maxMp,
+      currentSwordIntent: 0,
+      currentMomentum: 0,
+      currentHoaThe: 0,
+      currentThoThe: 0,
+      currentKimThe: 0,
+      timeSinceLastBleedProc: 0,
+      currentWard: 0,
+      timeSinceLastHitTaken: Infinity,
+      realmIndex: 0,
+      x: 0,
+      row: HERO_LANE_INDEX,
       alive: true,
-    } as CombatEntity
+      tuLucActive: false,
+      tuLucElapsed: 0,
+      tuLucDamageTakenPercent: 0,
+    }
   }
 
   giveReward(receiver: RewardReceiver, reward: Reward) {
@@ -3238,12 +3280,13 @@ export class GameManager {
 
     // Task 9b: BuffSystem.update() now requires a real target:
     // CombatEntity + combatSystem: CombatSystem (see BuffSystem.update()).
-    // Prefer the real in-battle CombatEntity when one exists; fall back
-    // to the neutral ghost when there is no battle - same tradeoff
-    // documented at applyPersistentBuff()/createPersistentBuffGhostEntity().
+    // No `Stats` naturally available in this per-tick scope (see
+    // resolvePersistentBuffEntity()'s note), so this resolves to the
+    // real in-battle entity when one exists, else the fully-populated
+    // neutral ghost.
     this.buffSystem.update(
       deltaSeconds,
-      this.battleSystem.getBattle()?.player ?? this.createPersistentBuffGhostEntity(),
+      this.resolvePersistentBuffEntity(),
       this.combatSystem,
       this.buffRegistry,
     )
