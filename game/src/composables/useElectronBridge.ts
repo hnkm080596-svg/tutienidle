@@ -48,8 +48,20 @@ export function useElectronBridge(gameManagerOverride?: GameManager) {
   // dùng ĐÚNG action save() đã có (SettingsPanel.vue's nút Save gọi cùng
   // hàm này), không tạo cơ chế save mới.
   electronAPI.onBeforeQuitFlush(() => {
-    player.save(gameManager)
-    electronAPI.notifyFlushComplete()
+    // Audit fix 2026-08-31 — PHẢI đợi write xong: player.save chạy async qua
+    // cloudSaveCoordinator → LocalCloudSaveService; flush-complete trước đó
+    // khiến main process đóng app tin rằng đã lưu (silent data loss khi
+    // quota fail). IIFE async vì ipcRenderer.on callback không handle
+    // promise; FLUSH_TIMEOUT_MS (main.ts) vẫn là backstop nếu save treo.
+    void (async () => {
+      try {
+        await player.save(gameManager)
+      } catch (error: unknown) {
+        console.error('[electron] quit flush save failed', error)
+      } finally {
+        electronAPI.notifyFlushComplete()
+      }
+    })()
   })
 
   electronAPI.onSystemSuspend(timestamp => {
