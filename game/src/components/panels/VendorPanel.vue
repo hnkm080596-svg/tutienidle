@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import GameButton from '@/components/common/GameButton.vue'
+import { formatNumber } from '@/core/format/NumberFormatter'
 import {
   SPIRIT_STONE_CONVERSION_RATIO,
   SPIRIT_STONE_MATERIAL,
@@ -33,6 +35,8 @@ const BUILDING_ID = 'vendor'
 const player = usePlayerStore()
 
 const gameManager = useGameManager()
+
+const { t } = useI18n({ useScope: 'local' })
 
 const { stateVersion, bumpState } = useStateVersion()
 
@@ -176,25 +180,25 @@ function sellAll(materialId: string, owned: number) {
         <div class="resource-card__art" aria-hidden="true"><span>石</span></div>
 
         <header class="resource-card__header">
-          <h3 class="resource-card__name">Linh Thạch</h3>
+          <h3 class="resource-card__name">{{ t('panels.vendor.cards.spiritStone') }}</h3>
         </header>
 
         <div class="resource-card__section">
-          <h4>Đổi Phẩm</h4>
+          <h4>{{ t('panels.vendor.sections.tier') }}</h4>
 
           <div class="resource-card__owned">
-            <span>{{ SPIRIT_STONE_MATERIAL.name }}: {{ haPhamOwned.toLocaleString('vi-VN') }}</span>
-            <span>{{ SPIRIT_STONE_TRUNG_PHAM_MATERIAL.name }}: {{ trungPhamOwned.toLocaleString('vi-VN') }}</span>
-            <span>{{ SPIRIT_STONE_THUONG_PHAM_MATERIAL.name }}: {{ thuongPhamOwned.toLocaleString('vi-VN') }}</span>
+            <span>{{ SPIRIT_STONE_MATERIAL.name }}: {{ formatNumber(haPhamOwned) }}</span>
+            <span>{{ SPIRIT_STONE_TRUNG_PHAM_MATERIAL.name }}: {{ formatNumber(trungPhamOwned) }}</span>
+            <span>{{ SPIRIT_STONE_THUONG_PHAM_MATERIAL.name }}: {{ formatNumber(thuongPhamOwned) }}</span>
           </div>
 
           <div class="resource-card__actions">
             <GameButton size="sm" :disabled="haPhamOwned < SPIRIT_STONE_CONVERSION_RATIO" @click="convertToTrungPham">
-              {{ SPIRIT_STONE_CONVERSION_RATIO }} Hạ → 1 Trung
+              {{ t('panels.vendor.stone.upTrung', { ratio: SPIRIT_STONE_CONVERSION_RATIO }) }}
             </GameButton>
 
             <GameButton size="sm" :disabled="trungPhamOwned < SPIRIT_STONE_CONVERSION_RATIO" @click="convertToThuongPham">
-              {{ SPIRIT_STONE_CONVERSION_RATIO }} Trung → 1 Thượng
+              {{ t('panels.vendor.stone.upThuong', { ratio: SPIRIT_STONE_CONVERSION_RATIO }) }}
             </GameButton>
           </div>
         </div>
@@ -205,17 +209,17 @@ function sellAll(materialId: string, owned: number) {
         <div class="resource-card__art" aria-hidden="true"><span>木</span></div>
 
         <header class="resource-card__header">
-          <h3 class="resource-card__name">Linh Mộc</h3>
+          <h3 class="resource-card__name">{{ t('panels.vendor.cards.wood') }}</h3>
         </header>
 
         <div class="resource-card__section">
-          <h4>Đổi Phẩm <small>(cảnh giới)</small></h4>
+          <h4>{{ t('panels.vendor.sections.tierRealm') }}</h4>
 
-          <p v-if="woodTierRows.length === 0" class="resource-card__empty">Chưa có Linh Mộc để đổi phẩm.</p>
+          <p v-if="woodTierRows.length === 0" class="resource-card__empty">{{ t('panels.vendor.empty.wood') }}</p>
 
           <div v-else class="resource-card__rows">
             <div v-for="row in woodTierRows" :key="row.fromId" class="resource-card__row">
-              <span>{{ row.fromName }} <strong>({{ row.owned.toLocaleString('vi-VN') }})</strong> → {{ row.toName }}</span>
+              <span>{{ row.fromName }} <strong>({{ formatNumber(row.owned) }})</strong> → {{ row.toName }}</span>
 
               <GameButton size="sm" :disabled="row.owned < MATERIAL_TIER_CONVERSION_RATIO" @click="convertTier(row.fromId)">
                 {{ MATERIAL_TIER_CONVERSION_RATIO }} → 1
@@ -230,17 +234,17 @@ function sellAll(materialId: string, owned: number) {
         <div class="resource-card__art" aria-hidden="true"><span>礦</span></div>
 
         <header class="resource-card__header">
-          <h3 class="resource-card__name">Linh Khoáng</h3>
+          <h3 class="resource-card__name">{{ t('panels.vendor.cards.ore') }}</h3>
         </header>
 
         <div class="resource-card__section">
-          <h4>Đổi Phẩm <small>(cảnh giới)</small></h4>
+          <h4>{{ t('panels.vendor.sections.tierRealm') }}</h4>
 
-          <p v-if="oreTierRows.length === 0" class="resource-card__empty">Chưa có Linh Khoáng để đổi phẩm.</p>
+          <p v-if="oreTierRows.length === 0" class="resource-card__empty">{{ t('panels.vendor.empty.ore') }}</p>
 
           <div v-else class="resource-card__rows">
             <div v-for="row in oreTierRows" :key="row.fromId" class="resource-card__row">
-              <span>{{ row.fromName }} <strong>({{ row.owned.toLocaleString('vi-VN') }})</strong> → {{ row.toName }}</span>
+              <span>{{ row.fromName }} <strong>({{ formatNumber(row.owned) }})</strong> → {{ row.toName }}</span>
 
               <GameButton size="sm" :disabled="row.owned < MATERIAL_TIER_CONVERSION_RATIO" @click="convertTier(row.fromId)">
                 {{ MATERIAL_TIER_CONVERSION_RATIO }} → 1
@@ -252,24 +256,24 @@ function sellAll(materialId: string, owned: number) {
     </div>
 
     <div class="vendor-panel__card">
-      <h3>Hóa Bán</h3>
+      <h3>{{ t('panels.vendor.sell.title') }}</h3>
 
-      <small class="resource-card__rate">Bán nguyên liệu dư thừa lấy Linh Thạch theo phẩm hiện hành.</small>
+      <small class="resource-card__rate">{{ t('panels.vendor.sell.rate') }}</small>
 
       <div v-if="sellableRows.length" class="resource-card__rows">
         <div v-for="row in sellableRows" :key="row.materialId" class="resource-card__row">
           <span>
-            {{ row.name }} <strong>({{ row.owned.toLocaleString('vi-VN') }})</strong>
-            — {{ row.unitPrice.toLocaleString('vi-VN') }} hạ/đơn vị
+            {{ row.name }} <strong>({{ formatNumber(row.owned) }})</strong>
+            — {{ formatNumber(row.unitPrice) }} {{ t('panels.vendor.sell.unitPriceSuffix') }}
           </span>
 
           <GameButton size="sm" @click="sellAll(row.materialId, row.owned)">
-            Bán hết
+            {{ t('panels.vendor.sell.button') }}
           </GameButton>
         </div>
       </div>
 
-      <p v-else class="resource-card__empty">Không có nguyên liệu nào bán được lúc này.</p>
+      <p v-else class="resource-card__empty">{{ t('panels.vendor.sell.empty') }}</p>
     </div>
   </section>
 </template>

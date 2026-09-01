@@ -9,6 +9,7 @@ import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import type { Building } from '@/core/building/Building'
 import type { Material } from '@/core/material/Material'
+import { i18n } from '@/i18n'
 
 const WOOD: Material = {
   id: 'test_wood',
@@ -55,6 +56,7 @@ function mountSpringPanel() {
   const app = createApp({ render: () => h(FunctionOverlayPanel) })
 
   app.use(pinia)
+  app.use(i18n)
   app.provide(GAME_MANAGER_KEY, gameManager)
   app.provide(STATE_VERSION_KEY, stateVersion)
   app.provide(BUMP_STATE_KEY, () => {

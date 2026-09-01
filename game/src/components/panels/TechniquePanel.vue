@@ -8,6 +8,7 @@
 // LoadoutManager" sang overlay toàn màn hình độc lập, cùng pattern
 // BreakthroughRequirementPanel.vue (panel lớn không thuộc LeftPanel).
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import TechniqueSlotCard from './loadout-sections/TechniqueSlotCard.vue'
@@ -20,6 +21,7 @@ import EmptyState from '@/components/common/primitives/EmptyState.vue'
 const ui = useUiStore()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
+const { t } = useI18n({ useScope: 'local' })
 
 const equippedTechnique = computed(() => {
   stateVersion.value
@@ -39,9 +41,9 @@ function close() {
 </script>
 
 <template>
-  <OverlayPanel :open="ui.standalonePanel === 'technique'" title="Tâm Pháp" width="min(560px, 90vw)" @close="close">
+  <OverlayPanel :open="ui.standalonePanel === 'technique'" :title="t('panels.technique.title')" width="min(560px, 90vw)" @close="close">
       <div class="technique-panel__hero">
-        <TechniqueSlotCard label="Tâm Pháp" size="hero" />
+        <TechniqueSlotCard :label="t('panels.technique.heroLabel')" size="hero" />
       </div>
 
       <!-- Bỏ thanh tier-exp lặp lại (2026-08-30, frontend-design pass):
@@ -58,10 +60,10 @@ function close() {
           </ul>
         </div>
 
-        <EmptyState v-if="techniqueSections.length === 0" size="sm">Không có thông tin bổ sung</EmptyState>
+        <EmptyState v-if="techniqueSections.length === 0" size="sm">{{ t('panels.technique.emptyNoBonus') }}</EmptyState>
       </div>
 
-      <EmptyState v-else size="md">Chưa có công pháp — hoàn thành Lễ Nhập Môn để tự động nhận</EmptyState>
+      <EmptyState v-else size="md">{{ t('panels.technique.emptyNoTechnique') }}</EmptyState>
   </OverlayPanel>
 </template>
 

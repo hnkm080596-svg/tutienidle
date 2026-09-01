@@ -2,7 +2,7 @@ import { computed } from 'vue'
 import { useGameManager, useStateVersion } from './useGameState'
 import { usePlayerStore } from '@/stores/player'
 import { REALM_PASSIVES } from '@/data/realm/RealmPassives'
-import { statLabel } from '@/core/stats/StatLabels'
+import { statLabel, formatStat } from '@/core/stats/StatLabels'
 
 export interface RealmStatPassiveRow {
   id: string
@@ -16,10 +16,10 @@ export interface RealmStatPassiveRow {
 
 /**
  * Realm Passive & Pressure System (2026-08-20) — sibling của
- * usePassiveRows.ts (đó là passive SKILL theo tâm pháp/cảnh giới, cái
+ * usePassiveRows.ts (đó là passive SKILL theo tâm pháp/Cảnh Giới, cái
  * này là stat modifier Nhập Đạo/Kiến Cơ, xem data/realm/RealmPassives.ts).
  * Chỉ liệt kê Realm Passive ĐÃ CẤP (player.grantedRealmPassiveIds) —
- * chưa tới cảnh giới đó thì chưa hiện, tránh lộ nội dung tương lai.
+ * chưa tới Cảnh Giới đó thì chưa hiện, tránh lộ nội dung tương lai.
  */
 export function useRealmStatPassives() {
   useGameManager()
@@ -37,7 +37,7 @@ export function useRealmStatPassives() {
 
         const effectLines = modifiers
           .filter(modifier => (modifier.percent ?? 0) !== 0)
-          .map(modifier => `${statLabel(modifier.stat)} +${((modifier.percent ?? 0) * 100).toFixed(1)}%`)
+          .map(modifier => `${statLabel(modifier.stat)} +${formatStat('realmPassivePercent', modifier.percent ?? 0)}`)
 
         return {
           id: passive.id,

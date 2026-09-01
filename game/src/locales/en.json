@@ -1,0 +1,586 @@
+{
+  "_meta": {
+    "version": 1,
+    "language": "en"
+  },
+  "panels": {
+    "equipmentHall": {
+      "tabs": {
+        "enhance": "Enhance",
+        "wash": "Wash",
+        "refine": "Refine",
+        "dissolve": "Dissolve"
+      },
+      "aria": {
+        "enhanceSlots": "Select enhancement slot",
+        "washSlots": "Select equipment to wash",
+        "refineSlots": "Select equipment to refine",
+        "enhanceComparison": "Before and after Enhancement comparison",
+        "washComparison": "Before and after Wash comparison",
+        "refineComparison": "Before and after Refine comparison"
+      },
+      "table": {
+        "header": {
+          "stat": "Stat",
+          "before": "Before",
+          "after": "After",
+          "lock": "Lock"
+        }
+      },
+      "empty": {
+        "maxLevel": "Maximum level reached.",
+        "noStats": "Empty slot — no main stat to preview.",
+        "noAffixes": "No affix lines yet.",
+        "noAffixesToRefine": "No affix lines to Refine.",
+        "noDissolveCandidates": "No items match the current filter for Dissolution.",
+        "selectItem": "Select an equipment on the left to view details."
+      },
+      "tooltips": {
+        "emptySlotCanEnhance": "Empty slots can still be Enhanced.",
+        "emptySlotNoWash": "Empty slot — nothing to Wash.",
+        "emptySlotNoRefine": "Empty slot — nothing to Refine."
+      },
+      "buttons": {
+        "enhance": "Enhance",
+        "washPreview": "Wash — reroll all affix lines",
+        "keep": "Keep",
+        "refinePreview": "Refine",
+        "selectAll": "Select All",
+        "clearAll": "Clear All",
+        "dissolveConfirm": "CONFIRM DISSOLUTION"
+      },
+      "labels": {
+        "rowLine": "Line",
+        "oreSelection": "Select Ore",
+        "dissolveReward": "Rewards",
+        "levelPrefix": "Level",
+        "levelArrow": "⇒",
+        "forgePoints": "Forge Points",
+        "costPerUse": "Cost per use:",
+        "maxLockPrefix": "lock at most",
+        "maxLockSuffix": "lines",
+        "refineRule": "Each unlocked line rerolls within ±20%. Cost:",
+        "essenceName": "Essence",
+        "ownedPrefix": "owned",
+        "emptySlotPlaceholder": "— empty (can still be enhanced) —",
+        "itemCount": "{count} item(s)"
+      },
+      "status": {
+        "notRolled": "not rolled",
+        "kept": "kept"
+      },
+      "warnings": {
+        "irreversible": "This action CANNOT be undone."
+      },
+      "select": {
+        "anyRealm": "Any Realm",
+        "anyQuality": "Any Quality"
+      },
+      "realm": {
+        "mortal": "Mortal",
+        "qiRefining": "Qi Refining",
+        "foundationEstablishment": "Foundation Establishment"
+      },
+      "quality": {
+        "hoang": "Hoang",
+        "huyen": "Huyen",
+        "dia": "Dia",
+        "thien": "Thien",
+        "tien": "Tien"
+      },
+      "messages": {
+        "refineNeedItem": "Cannot Refine: select an equipment item first.",
+        "refineNeedOre": "Cannot Refine: select an Ore of the same realm.",
+        "polishNeedItem": "Cannot Polish: select an equipment item with at least one affix."
+      }
+    },
+    "nodeTree": {
+      "title": "Node Tree",
+      "aria": {
+        "zoomGroup": "Skill tree zoom"
+      },
+      "tooltips": {
+        "zoomToFit": "Fit to panel"
+      },
+      "labels": {
+        "insight": "Insight",
+        "maxLevel": "Max",
+        "unpurchasedCost": "{cost} Insight",
+        "upgradeCost": "Upgrade · {cost} Insight",
+        "otherBranch": "Other"
+      }
+    },
+    "skillPath": {
+      "title": "Skills",
+      "subtitle": "Library by Realm · Five Element Path",
+      "colTitles": {
+        "loadoutActive": "Active Spell Arts"
+      }
+    },
+    "character": {
+      "tabs": {
+        "attribute": "Attributes",
+        "combat": "Combat",
+        "defenseSurvival": "Defense & Survival",
+        "elemental": "Elements & More"
+      },
+      "sections": {
+        "combat": "Combat",
+        "survival": "Survival & Resources",
+        "special": "Special Rates",
+        "attribute": "Attributes",
+        "defenseAdvanced": "Advanced Defense",
+        "elements": "Five Elements",
+        "talents": "Innate Talents"
+      },
+      "actions": {
+        "quanKhi": "Quán Khí"
+      },
+      "labels": {
+        "combatPower": "Combat Power",
+        "realmFloor": "Floor",
+        "attributePointsRemaining": "{count} points remaining",
+        "max": "MAX"
+      },
+      "tooltips": {
+        "elementStat": "Power {power} · Resistance {resistance} · Penetration {penetration}",
+        "primordialTitle": "Primordial",
+        "primordialDescription": "Ignores all defenses."
+      }
+    },
+    "quanKhi": {
+      "title": "Quán Khí",
+      "routeNames": {
+        "batKiem": "Bạt Kiếm (Single Sword)",
+        "kiemTran": "Kiếm Trận (Multi Sword)"
+      },
+      "sections": {
+        "pathSelection": {
+          "hint": "Choose your cultivation path — this decision CANNOT be changed."
+        },
+        "kiemTuRoute": {
+          "hintPrefix": "Sword Cultivator path locked in:",
+          "hintSuffix": " — cannot be changed.",
+          "batKiemDescription": "Huy Kiếm reached tier 3 (10,000 slashes) so Bạt Kiếm unlocked — a single gathering strike that scales with Sword Intent tiers against bosses.",
+          "kiemTranDescription": "Huy Kiếm has not reached tier 3 so the Sword Formation path is taken — the formation evolves with realm and unlocks on-hit effects by formation level."
+        }
+      },
+      "actions": {
+        "enterPath": "Enter {name}"
+      },
+      "messages": {
+        "confirmPathTitle": "Confirm Your Path",
+        "confirmPathBody": "Enter {name}? This choice CANNOT be changed."
+      },
+      "world": {
+        "ceremonyTitle": "ENTRY CEREMONY",
+        "ceremonyBody": "The cultivator has forsaken their mortal identity and formally entered {name}."
+      }
+    },
+    "stageSelect": {
+      "aria": {
+        "filters": "Select zone and chapter"
+      },
+      "labels": {
+        "zoneFilter": "Zone",
+        "chapterFilter": "Region Realm",
+        "chapterPrefix": "Chapter {chapter}",
+        "floorPrefix": "Floor {floor}",
+        "boss": "BOSS",
+        "enemiesSuffix": "enemies",
+        "spawnIntervalPrefix": "Every",
+        "bossNamePrefix": "Boss:",
+        "levelPrefix": "Lv.{level}",
+        "eliteChance": "{percent}% Elite"
+      },
+      "sections": {
+        "selectFloor": "Select Floor"
+      },
+      "empty": {
+        "noStages": "This region has no combat floors yet.",
+        "selectStage": "Select a floor to view the formation."
+      },
+      "modes": {
+        "manual": "Manual",
+        "repeat": "Repeat",
+        "progress": "Auto Advance"
+      },
+      "modeHints": {
+        "manual": "End the battle and wait for your decision.",
+        "repeat": "Replay the current floor automatically.",
+        "progress": "Advance on win, stop on loss."
+      },
+      "actions": {
+        "editBuild": "Edit Build",
+        "start": "Start"
+      },
+      "archetypes": {
+        "melee": "Melee",
+        "ranged": "Ranged",
+        "caster": "Caster",
+        "tank": "Guardian"
+      }
+    },
+    "wheel": {
+      "aria": {
+        "group": "Cave Dwelling Command Wheel"
+      }
+    },
+    "luyenThe": {
+      "title": "Body Refinement",
+      "summary": "Tiers completed: {completed}/6",
+      "note": "Mortal Body Essence from defeated enemies flows back and feeds progress automatically — no action needed.",
+      "tierLock": "Locked — requires Mortal floor {level}",
+      "empty": "All Body Refinement tiers completed."
+    },
+    "bag": {
+      "title": "Inventory",
+      "countSuffix": "items",
+      "countUnitSuffix": "types",
+      "tabs": {
+        "equipment": "Equipment",
+        "material": "Materials",
+        "pill": "Pills"
+      },
+      "search": {
+        "materialPlaceholder": "Search materials...",
+        "materialAria": "Search materials by name"
+      },
+      "filterAria": "Filter by material group",
+      "groups": {
+        "all": "All"
+      },
+      "sort": {
+        "button": "Sort",
+        "tooltip": "Sort: {label}",
+        "default": "Default",
+        "asc": "Ascending ↑",
+        "desc": "Descending ↓",
+        "category": "Category",
+        "years": "Age",
+        "amount": "Amount",
+        "name": "Name",
+        "nameAsc": "Name A–Z",
+        "nameDesc": "Name Z–A",
+        "source": "Main Source"
+      },
+      "tooltip": {
+        "section": "Info",
+        "owned": "Owned: {count}",
+        "category": "Category",
+        "source": "Main Source",
+        "realm": "Realm",
+        "age": "Lifespan",
+        "yearsSuffix": "{count} years",
+        "element": "Element",
+        "sourceTypes": {
+          "boss": "Boss",
+          "monster": "Monster",
+          "building": "Structure",
+          "exploration": "Exploration"
+        },
+        "categories": {
+          "herb": "Spirit Herb",
+          "wood": "Spirit Wood",
+          "ore": "Spirit Ore",
+          "monsterCore": "Demon Core",
+          "essence": "Demon Essence",
+          "byproduct": "Byproduct",
+          "other": "Other"
+        },
+        "ages": {
+          "decade": "Decade",
+          "century": "Century",
+          "millennium": "Millennium",
+          "myriadYear": "Myriad Year"
+        },
+        "realms": {
+          "mortal": "Mortal",
+          "qiRefining": "Qi Refining",
+          "foundationEstablishment": "Foundation Establishment",
+          "goldenCore": "Golden Core",
+          "nascentSoul": "Nascent Soul",
+          "soulTransformation": "Soul Transformation",
+          "voidRefinement": "Void Refinement",
+          "bodyIntegration": "Body Integration",
+          "mahayana": "Mahayana",
+          "tribulation": "Tribulation"
+        }
+      }
+    },
+    "vendor": {
+      "cards": {
+        "spiritStone": "Spirit Stones",
+        "wood": "Spirit Wood",
+        "ore": "Spirit Ore"
+      },
+      "sections": {
+        "tier": "Grade Conversion",
+        "tierRealm": "Grade Conversion (realm)"
+      },
+      "stone": {
+        "upTrung": "{ratio} Lesser → 1 Medium",
+        "upThuong": "{ratio} Medium → 1 Greater"
+      },
+      "tierConvert": "{ratio} → 1",
+      "empty": {
+        "wood": "No Spirit Wood to convert.",
+        "ore": "No Spirit Ore to convert."
+      },
+      "sell": {
+        "title": "Liquidate",
+        "rate": "Sell surplus materials for Spirit Stones at current grade rates.",
+        "unitPriceSuffix": "lesser/unit",
+        "button": "Sell All",
+        "empty": "Nothing can be sold right now."
+      }
+    },
+    "spiritSpring": {
+      "storedTitle": "{name} accumulated",
+      "rateSuffix": "stones/minute",
+      "collect": "Harvest"
+    },
+    "production": {
+      "summary": "Thanh Van Zone — pick a source, start a cycle, receive materials straight into the Bag.",
+      "kinds": {
+        "forest": "Grove",
+        "mine": "Mine",
+        "grotto": "Grotto-Heaven"
+      },
+      "rewards": {
+        "forest": "Realm-tier wood gathered",
+        "mine": "Mine Decade → Primordial",
+        "grotto": "{count} lead herbs"
+      },
+      "level": "Level {level}/{max}",
+      "speedSuffix": "speed",
+      "nextSpeedPrefix": "next ×",
+      "workers": "Workers: {count}",
+      "remaining": "{time}",
+      "statusProducing": "Producing — {time} left",
+      "done": "Done…",
+      "start": "Start",
+      "autoRepeat": "Auto repeat",
+      "upgrade": "Upgrade Source"
+    },
+    "artifact": {
+      "title": "Fate-Bound Artifact",
+      "noPath": "No path chosen",
+      "emptyNoDefinition": "The fate-bound artifact of {path} awaits design.",
+      "emptyNotAwakened": "Not awakened — successfully breaking through to Foundation Establishment will grant {name} automatically."
+    },
+    "realm": {
+      "title": "Realm",
+      "tierLine": "{realm} · Floor {level}",
+      "cultivationUnit": "Cultivation",
+      "labels": {
+        "quanKhi": "Quán Khí",
+        "foundation": "Foundation Establishment",
+        "majorFallback": "Major Realm"
+      },
+      "nodes": {
+        "aria": "Nine realms progress",
+        "comingSoon": "Coming soon",
+        "unlocked": "Attuned",
+        "locked": "Not unlocked"
+      }
+    },
+    "settings": {
+      "autosaveNote": "Progress auto-saves every 15 seconds and when leaving the tab. You can still save manually here.",
+      "actions": {
+        "save": "Save Progress",
+        "reload": "Reload (from last save)",
+        "export": "Export Save (.json)",
+        "import": "Import Save",
+        "reset": "Delete Save & Start New"
+      },
+      "notifications": {
+        "saved": "Progress saved"
+      },
+      "hints": {
+        "savedAt": "Saved at {time}"
+      },
+      "confirm": {
+        "reloadTitle": "Reload",
+        "reloadBody": "Reload from the last save? Unsaved progress will be lost.",
+        "importTitle": "Import Save",
+        "importBody": "Importing this save will REPLACE current progress (1 backup copy is made before overwriting). Continue?",
+        "resetTitle": "Delete Save",
+        "resetBody": "Delete all progress and start a new character? Remember to \"Export Save\" first if you haven't — this action cannot be undone."
+      },
+      "errors": {
+        "invalidSaveFile": "Invalid save file."
+      },
+      "sections": {
+        "uiScaleAria": "Interface font size",
+        "uiScale": "Interface Font Size",
+        "themeAria": "Appearance",
+        "theme": "Appearance"
+      }
+    },
+    "technique": {
+      "title": "Mental Method",
+      "heroLabel": "Mental Method",
+      "emptyNoBonus": "No additional information",
+      "emptyNoTechnique": "No technique yet — complete the Entry Ceremony to receive one automatically"
+    },
+    "quest": {
+      "title": "Quests",
+      "groups": {
+        "daily": "Daily Quests",
+        "once": "Quests"
+      },
+      "anyEnemy": "Any enemy",
+      "actions": {
+        "claimed": "Claimed",
+        "claim": "Claim Reward"
+      },
+      "empty": "No quests available yet."
+    },
+    "scripture": {
+      "tabs": {
+        "technique": "Techniques",
+        "lore": "Lore"
+      }
+    },
+    "buildingPopover": {
+      "costTitle": "Build Cost",
+      "build": "Build"
+    },
+    "common": {
+      "close": "Close"
+    }
+  },
+  "combat": {
+    "victory": {
+      "title": "★ VICTORY ★",
+      "retry": "Refight",
+      "retryCountdown": "{duration}",
+      "continue": "Continue"
+    },
+    "defeat": {
+      "title": "☠ DEFEAT",
+      "retry": "Rematch",
+      "retryCountdown": "{duration}",
+      "returnHome": "Return to Cave"
+    },
+    "offline": {
+      "title": "CLOSED-DOOR RETREAT ENDED",
+      "labels": {
+        "duration": "Time",
+        "cultivation": "+ Qi"
+      },
+      "continue": "Continue"
+    },
+    "rewards": {
+      "techniqueInsight": "Technique Insight",
+      "skillInsight": "Skill Insight",
+      "artifactInsight": "Artifact EXP",
+      "spiritStone": "Spirit Stones"
+    }
+  },
+  "menu": {
+    "main": {
+      "start": "Begin Cultivation",
+      "continue": "Continue",
+      "settings": "Settings",
+      "exit": "Exit"
+    }
+  },
+  "onboarding": {
+    "chapter": {
+      "eyebrow": "CHAPTER {number}",
+      "next": "Continue",
+      "start": "Start",
+      "skip": "Skip"
+    },
+    "auth": {
+      "eyebrow": "ONE THOUGHT ENTERS THE DAO",
+      "lead": "A lifetime of mortal toil, a single thought seeking immortality.",
+      "tabs": {
+        "login": "Log In",
+        "register": "Register"
+      },
+      "labels": {
+        "loginId": "Cultivator ID",
+        "password": "Password"
+      },
+      "placeholders": {
+        "loginId": "4–20 Latin characters, digits or _",
+        "password": "At least 6 characters"
+      },
+      "errors": {
+        "invalidId": "ID format is invalid."
+      },
+      "submit": {
+        "login": "Enter Cave",
+        "register": "Create Identity"
+      },
+      "divider": "or",
+      "guest": {
+        "button": "Play Now",
+        "note": "Guest progress stops at Foundation Establishment"
+      },
+      "status": "Test server · UI prototype"
+    },
+    "creation": {
+      "back": "← Back",
+      "headerKicker": "DESTINY-BINDING",
+      "headerTitle": "Create Character",
+      "step": "Step {step} / {total}",
+      "stepperAria": "Character creation progress",
+      "nameStep": {
+        "kicker": "DAO NAME",
+        "title": "A title carried through the immortal path",
+        "description": "Character names are unique and cannot be changed in the early phase.",
+        "label": "Character Name",
+        "placeholder": "Enter a dao name…",
+        "minLengthHint": "{length}/20 · Minimum 2 characters",
+        "continue": "Continue"
+      },
+      "talentStep": {
+        "kicker": "DESTINY",
+        "title": "Choose One Innate Talent",
+        "selected": "Selected {count} / 1",
+        "rolling": "Observing the heavens…",
+        "reroll": "↻ Reroll all",
+        "confirm": "Confirm talent"
+      },
+      "attributeStep": {
+        "kicker": "FOUNDATION",
+        "title": "Allocate starting points",
+        "pointsLeft": "{count} points left",
+        "summaryTalent": "1 Talent",
+        "summaryPoints": "5 Foundation Points",
+        "rechooseTalent": "Rechoose talent",
+        "creating": "Binding fate…",
+        "finish": "Step onto the immortal path"
+      },
+      "attributes": {
+        "strength": {
+          "name": "Physique",
+          "hint": "Raw strength of the body"
+        },
+        "dexterity": {
+          "name": "Agility",
+          "hint": "Mobility and evasion"
+        },
+        "intelligence": {
+          "name": "Divine Sense",
+          "hint": "Skill potency"
+        },
+        "attunement": {
+          "name": "Spirit Root",
+          "hint": "Elemental resonance"
+        },
+        "vitality": {
+          "name": "Constitution",
+          "hint": "Vitality and endurance"
+        }
+      },
+      "errors": {
+        "rollFailed": "Cannot observe the heavens. Please try again."
+      }
+    }
+  }
+}

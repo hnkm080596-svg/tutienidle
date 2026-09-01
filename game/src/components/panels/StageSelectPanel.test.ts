@@ -10,6 +10,7 @@ import { ENEMIES } from '@/data/enemy/Enemies'
 import { buildings } from '@/data/building/buildings'
 import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composables/useGameState'
 import { vTooltip } from '@/directives/tooltip'
+import { i18n } from '@/i18n'
 
 function mountStageSelect() {
   const container = document.createElement('div')
@@ -29,6 +30,7 @@ function mountStageSelect() {
 
   const app = createApp({ render: () => h(StageSelectPanel) })
   app.use(pinia)
+  app.use(i18n)
   app.directive('tooltip', vTooltip)
   app.provide(GAME_MANAGER_KEY, manager)
   app.provide(STATE_VERSION_KEY, version)

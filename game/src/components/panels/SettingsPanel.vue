@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager } from '@/composables/useGameState'
 import { useNotificationStore } from '@/stores/notification'
@@ -13,6 +14,7 @@ import ThemeSwitcher from '@/components/settings/ThemeSwitcher.vue'
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const notification = useNotificationStore()
+const { t } = useI18n({ useScope: 'local' })
 
 // Thay window.confirm() native — modal xác nhận đồng bộ hoá bằng
 // pending-action: mở ConfirmModal, hành động thật chỉ chạy khi
@@ -47,7 +49,7 @@ function handleSave() {
 
   lastSavedLabel.value = new Date().toLocaleTimeString()
 
-  notification.push('save', 'Đã lưu tiến trình')
+  notification.push('save', t('panels.settings.notifications.saved'))
 }
 
 function handleLoad() {
@@ -57,8 +59,8 @@ function handleLoad() {
   // dùng đúng luồng onMounted() (đã đúng) thay vì phải viết clear()
   // cho từng Manager — rủi ro thấp hơn nhiều.
   requestConfirm(
-    'Tải Lại',
-    'Tải lại từ lần lưu gần nhất? Tiến trình chưa lưu sẽ mất.',
+    t('panels.settings.confirm.reloadTitle'),
+    t('panels.settings.confirm.reloadBody'),
     () => window.location.reload(),
   )
 }
@@ -86,8 +88,8 @@ function handleImportFile(event: Event) {
   }
 
   requestConfirm(
-    'Nhập Save',
-    'Nhập save này sẽ THAY THẾ tiến trình hiện tại (đã sao lưu 1 bản trước khi ghi đè). Tiếp tục?',
+    t('panels.settings.confirm.importTitle'),
+    t('panels.settings.confirm.importBody'),
     () => {
       const reader = new FileReader()
 
@@ -97,7 +99,7 @@ function handleImportFile(event: Event) {
         if (ok) {
           window.location.reload()
         } else {
-          window.alert('File save không hợp lệ.')
+          window.alert(t('panels.settings.errors.invalidSaveFile'))
         }
       }
 
@@ -108,10 +110,10 @@ function handleImportFile(event: Event) {
 
 function handleReset() {
   requestConfirm(
-    'Xoá Save',
-    'Xoá toàn bộ tiến trình và bắt đầu nhân vật mới? Nhớ "Xuất Save" trước nếu chưa làm — hành động này không thể hoàn tác.',
-    // App phải dừng interval/pagehide autosave TRƯỚC khi xóa; nếu panel tự xóa
-    // rồi reload, pagehide ghi lại chính save vừa xóa.
+    t('panels.settings.confirm.resetTitle'),
+    t('panels.settings.confirm.resetBody'),
+    // App phải dừng interval/pagehide autosave TRƯỚC khi xoá; nếu panel tự
+    // reload, pagehide ghi lại chính save vừa xoá.
     () => window.dispatchEvent(new Event(SAVE_RESET_REQUEST_EVENT)),
     true,
   )
@@ -121,30 +123,30 @@ function handleReset() {
 <template>
   <div class="settings-panel">
     <p class="settings-panel__warning">
-      Tiến trình tự lưu mỗi 15 giây và khi rời tab. Bạn vẫn có thể lưu thủ công tại đây.
+      {{ t('panels.settings.autosaveNote') }}
     </p>
 
     <div class="settings-panel__actions">
-      <GameButton variant="secondary" data-testid="settings-save-button" @click="handleSave">Lưu Tiến Trình</GameButton>
+      <GameButton variant="secondary" data-testid="settings-save-button" @click="handleSave">{{ t('panels.settings.actions.save') }}</GameButton>
 
-      <GameButton variant="secondary" @click="handleLoad">Tải Lại (từ lần lưu gần nhất)</GameButton>
+      <GameButton variant="secondary" @click="handleLoad">{{ t('panels.settings.actions.reload') }}</GameButton>
 
-      <GameButton variant="secondary" @click="handleExport">Xuất Save (.json)</GameButton>
+      <GameButton variant="secondary" @click="handleExport">{{ t('panels.settings.actions.export') }}</GameButton>
 
       <label class="settings-panel__import">
-        Nhập Save
+        {{ t('panels.settings.actions.import') }}
         <input type="file" accept="application/json" @change="handleImportFile" />
       </label>
 
       <GameButton class="settings-panel__danger" variant="danger" @click="handleReset">
-        Xoá Save & Bắt Đầu Mới
+        {{ t('panels.settings.actions.reset') }}
       </GameButton>
     </div>
 
     <!-- WS8 — cỡ chữ giao diện: chỉ scale typography/control tokens,
          không đụng canvas/khung layout. Áp dụng tức thời + lưu local. -->
-    <section class="settings-panel__ui-scale" aria-label="Cỡ chữ giao diện">
-      <h4>Cỡ Chữ Giao Diện</h4>
+    <section class="settings-panel__ui-scale" :aria-label="t('panels.settings.sections.uiScaleAria')">
+      <h4>{{ t('panels.settings.sections.uiScale') }}</h4>
 
       <div class="settings-panel__ui-scale-options">
         <Chip
@@ -160,12 +162,12 @@ function handleReset() {
     </section>
 
     <!-- Giao diện — chọn theme (ThemeSwitcher quản lý useTheme + preview card). -->
-    <section class="settings-panel__theme" aria-label="Giao diện">
-      <h4>Giao Diện</h4>
+    <section class="settings-panel__theme" :aria-label="t('panels.settings.sections.themeAria')">
+      <h4>{{ t('panels.settings.sections.theme') }}</h4>
       <ThemeSwitcher />
     </section>
 
-    <p v-if="lastSavedLabel" class="settings-panel__hint">Đã lưu lúc {{ lastSavedLabel }}</p>
+    <p v-if="lastSavedLabel" class="settings-panel__hint">{{ t('panels.settings.hints.savedAt', { time: lastSavedLabel }) }}</p>
 
     <ConfirmModal
       :open="pendingConfirm !== null"

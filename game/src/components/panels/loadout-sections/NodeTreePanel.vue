@@ -23,6 +23,7 @@
 // hiện có (không có node nào yêu cầu 2 node khác cùng lúc), nên model
 // single-parent này khớp 100% dữ liệu thật.
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch, type ComponentPublicInstance } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { canPurchaseNode, canUpgradeNode, getNodeLevel, getNextLevelCost } from '@/core/progression/NodeSystem'
@@ -46,13 +47,14 @@ const emit = defineEmits<{
   select: [node: ProgressionNode, purchased: boolean, purchasable: boolean]
 }>()
 
+const { t } = useI18n({ useScope: 'local' })
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
 
 function branchLabel(branchTag: string | undefined): string {
   if (!branchTag) {
-    return 'Khác'
+    return t('panels.nodeTree.labels.otherBranch')
   }
 
   return ELEMENT_LABELS[branchTag as ElementType] ?? branchTag
@@ -183,14 +185,14 @@ function onClick(node: ProgressionNode, purchased: boolean, purchasable: boolean
 /** Nhãn cost theo level (plan §6.2/§6.7): Lĩnh Ngộ / Nâng cấp / Tối đa. */
 function costLabel(entry: TreeEntry): string {
   if (entry.level === 0) {
-    return `${entry.nextCost ?? entry.node.insightCost} Cảm Ngộ`
+    return t('panels.nodeTree.labels.unpurchasedCost', { cost: entry.nextCost ?? entry.node.insightCost })
   }
 
   if (entry.level >= entry.maxLevel) {
-    return 'Tối đa'
+    return t('panels.nodeTree.labels.maxLevel')
   }
 
-  return `Nâng cấp · ${entry.nextCost} Cảm Ngộ`
+  return t('panels.nodeTree.labels.upgradeCost', { cost: entry.nextCost })
 }
 
 // ---- Skill Node unlock animation (2026-08-21, Plans/SkillNode) ----
@@ -435,15 +437,15 @@ onBeforeUnmount(() => {
 <template>
   <div class="node-tree">
     <div class="node-tree__header">
-      <span class="node-tree__title">Node Tree</span>
+      <span class="node-tree__title">{{ t('panels.nodeTree.title') }}</span>
 
-      <div class="node-tree__zoom" role="group" aria-label="Zoom cây kỹ năng">
+      <div class="node-tree__zoom" role="group" :aria-label="t('panels.nodeTree.aria.zoomGroup')">
         <button type="button" :disabled="zoom <= ZOOM_MIN" @click="zoomOut">−</button>
-        <button type="button" class="node-tree__zoom-value" title="Về vừa khung" @click="zoomToFit">{{ Math.round(zoom * 100) }}%</button>
+        <button type="button" class="node-tree__zoom-value" :title="t('panels.nodeTree.tooltips.zoomToFit')" @click="zoomToFit">{{ Math.round(zoom * 100) }}%</button>
         <button type="button" :disabled="zoom >= ZOOM_MAX" @click="zoomIn">+</button>
       </div>
 
-      <span class="node-tree__points">{{ player.skillInsight }} Cảm Ngộ</span>
+      <span class="node-tree__points">{{ player.skillInsight }} {{ t('panels.nodeTree.labels.insight') }}</span>
     </div>
 
     <!-- Zoom-to-fit thay cuộn (2026-08-30) — mặc định co vừa khung,

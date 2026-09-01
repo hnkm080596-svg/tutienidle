@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import GameButton from '@/components/common/GameButton.vue'
 import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
@@ -22,10 +23,16 @@ const rolling = ref(false)
 const error = ref('')
 const creating = ref(false)
 const attributes = ref<CharacterCreationPayload['attributes']>({ strength: 0, dexterity: 0, intelligence: 0, attunement: 0, vitality: 0 })
-const attributeLabels: Record<keyof CharacterCreationPayload['attributes'], { name: string; hint: string }> = {
-  strength: { name: 'Căn Cốt', hint: 'Sức mạnh thể phách' }, dexterity: { name: 'Thân Pháp', hint: 'Linh hoạt và né tránh' },
-  intelligence: { name: 'Thần Thức', hint: 'Uy lực kỹ năng' }, attunement: { name: 'Linh Căn', hint: 'Cộng hưởng nguyên tố' }, vitality: { name: 'Thể Chất', hint: 'Sinh lực và bền bỉ' },
-}
+
+const { t } = useI18n({ useScope: 'local' })
+
+const attributeLabels = computed<Record<keyof CharacterCreationPayload['attributes'], { name: string; hint: string }>>(() => ({
+  strength: { name: t('onboarding.creation.attributes.strength.name'), hint: t('onboarding.creation.attributes.strength.hint') },
+  dexterity: { name: t('onboarding.creation.attributes.dexterity.name'), hint: t('onboarding.creation.attributes.dexterity.hint') },
+  intelligence: { name: t('onboarding.creation.attributes.intelligence.name'), hint: t('onboarding.creation.attributes.intelligence.hint') },
+  attunement: { name: t('onboarding.creation.attributes.attunement.name'), hint: t('onboarding.creation.attributes.attunement.hint') },
+  vitality: { name: t('onboarding.creation.attributes.vitality.name'), hint: t('onboarding.creation.attributes.vitality.hint') },
+}))
 const pointsSpent = computed(() => Object.values(attributes.value).reduce((sum, value) => sum + value, 0))
 const pointsLeft = computed(() => 5 - pointsSpent.value)
 const validName = computed(() => isValidCharacterName(name.value))
@@ -43,7 +50,7 @@ async function reroll() {
     talents.value = await characterCreationService.rollTalents()
     selectedTalentIds.value = []
   } catch {
-    error.value = 'Không thể quan sát thiên cơ. Vui lòng thử lại.'
+    error.value = t('onboarding.creation.errors.rollFailed')
   } finally {
     rolling.value = false
   }
@@ -72,49 +79,49 @@ onMounted(() => { void reroll() })
   <main class="creation-screen" data-testid="character-creation-screen">
     <InkWashBackdrop left-mountain right-mountain bottom-mist />
     <header class="creation-header">
-      <GameButton variant="ghost" size="sm" @click="step === 1 ? emit('back') : step--">← Trở lại</GameButton>
-      <div><p>KHAI MỆNH</p><h1>Tạo Nhân Vật</h1></div>
-      <span>Bước {{ step }} / 3</span>
+      <GameButton variant="ghost" size="sm" @click="step === 1 ? emit('back') : step--">{{ t('onboarding.creation.back') }}</GameButton>
+      <div><p>{{ t('onboarding.creation.headerKicker') }}</p><h1>{{ t('onboarding.creation.headerTitle') }}</h1></div>
+      <span>{{ t('onboarding.creation.step', { step, total: 3 }) }}</span>
     </header>
 
-    <nav class="stepper" aria-label="Tiến trình tạo nhân vật">
+    <nav class="stepper" :aria-label="t('onboarding.creation.stepperAria')">
       <i v-for="number in 3" :key="number" :class="{ active: number <= step }"><b>{{ number }}</b></i>
     </nav>
 
     <section v-if="step === 1" class="creation-panel name-step">
       <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
       <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
-      <p class="kicker">ĐẠO DANH</p><h2>Danh xưng theo suốt tiên đồ</h2>
-      <p>Tên nhân vật sẽ là duy nhất và không thể đổi trong giai đoạn đầu.</p>
-      <label><span>Tên nhân vật</span><input v-model="name" maxlength="20" autofocus placeholder="Nhập đạo danh…" data-testid="creation-name-input" /></label>
-      <small :class="{ valid: validName }">{{ name.length }}/20 · Tối thiểu 2 ký tự</small>
-      <GameButton variant="primary" :disabled="!validName" data-testid="creation-continue-name" @click="step = 2">Tiếp tục</GameButton>
+      <p class="kicker">{{ t('onboarding.creation.nameStep.kicker') }}</p><h2>{{ t('onboarding.creation.nameStep.title') }}</h2>
+      <p>{{ t('onboarding.creation.nameStep.description') }}</p>
+      <label><span>{{ t('onboarding.creation.nameStep.label') }}</span><input v-model="name" maxlength="20" autofocus :placeholder="t('onboarding.creation.nameStep.placeholder')" data-testid="creation-name-input" /></label>
+      <small :class="{ valid: validName }">{{ t('onboarding.creation.nameStep.minLengthHint', { length: name.length }) }}</small>
+      <GameButton variant="primary" :disabled="!validName" data-testid="creation-continue-name" @click="step = 2">{{ t('onboarding.creation.nameStep.continue') }}</GameButton>
     </section>
 
     <section v-else-if="step === 2" class="creation-panel talent-step">
       <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
       <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
-      <div class="panel-heading"><div><p class="kicker">THIÊN MỆNH</p><h2>Chọn một Thiên Phú</h2></div><strong>Đã chọn {{ selectedTalentIds.length }} / 1</strong></div>
-      <p v-if="rolling" class="loading-roll">Đang quan sát thiên cơ…</p>
+      <div class="panel-heading"><div><p class="kicker">{{ t('onboarding.creation.talentStep.kicker') }}</p><h2>{{ t('onboarding.creation.talentStep.title') }}</h2></div><strong>{{ t('onboarding.creation.talentStep.selected', { count: selectedTalentIds.length }) }}</strong></div>
+      <p v-if="rolling" class="loading-roll">{{ t('onboarding.creation.talentStep.rolling') }}</p>
       <p v-else-if="error && talents.length === 0" class="loading-roll">{{ error }}</p>
       <div v-else class="talent-grid">
         <button v-for="talent in talents" :key="talent.id" type="button" class="talent-card" :data-testid="`creation-talent-${talent.id}`" :class="[`talent-tier-${talent.rarity}`, { selected: selectedTalentIds.includes(talent.id) }]" @click="toggleTalent(talent)">
           <span class="talent-card__rarity">{{ TALENT_RARITY_LABELS[talent.rarity] }}</span><h3>{{ talent.name }}</h3><p>{{ talent.description }}</p><small>{{ talent.tags[0] }}</small>
         </button>
       </div>
-      <footer class="panel-actions"><GameButton variant="secondary" :disabled="rolling" @click="reroll">↻ Reroll toàn bộ</GameButton><GameButton variant="primary" :disabled="selectedTalentIds.length !== 1" data-testid="creation-confirm-talent" @click="step = 3">Xác nhận thiên phú</GameButton></footer>
+      <footer class="panel-actions"><GameButton variant="secondary" :disabled="rolling" @click="reroll">{{ t('onboarding.creation.talentStep.reroll') }}</GameButton><GameButton variant="primary" :disabled="selectedTalentIds.length !== 1" data-testid="creation-confirm-talent" @click="step = 3">{{ t('onboarding.creation.talentStep.confirm') }}</GameButton></footer>
     </section>
 
     <section v-else class="creation-panel attribute-step">
       <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
       <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
-      <div class="panel-heading"><div><p class="kicker">CĂN CƠ</p><h2>Phân bổ điểm khởi đầu</h2></div><strong class="points">Còn {{ pointsLeft }} điểm</strong></div>
+      <div class="panel-heading"><div><p class="kicker">{{ t('onboarding.creation.attributeStep.kicker') }}</p><h2>{{ t('onboarding.creation.attributeStep.title') }}</h2></div><strong class="points">{{ t('onboarding.creation.attributeStep.pointsLeft', { count: pointsLeft }) }}</strong></div>
       <div class="attribute-list">
         <div v-for="(label, key) in attributeLabels" :key="key" class="attribute-row" :data-testid="`creation-attribute-${key}`"><div><b>{{ label.name }}</b><small>{{ label.hint }}</small></div><div class="counter"><button type="button" @click="changeAttribute(key, -1)">−</button><span>{{ attributes[key] }}</span><button type="button" :data-testid="`creation-attribute-plus-${key}`" @click="changeAttribute(key, 1)">+</button></div></div>
       </div>
-      <div class="creation-summary"><span>{{ name }}</span><span>1 Thiên Phú</span><span>5 Điểm Căn Cơ</span></div>
+      <div class="creation-summary"><span>{{ name }}</span><span>{{ t('onboarding.creation.attributeStep.summaryTalent') }}</span><span>{{ t('onboarding.creation.attributeStep.summaryPoints') }}</span></div>
       <p v-if="error" class="creation-error">{{ error }}</p>
-      <footer class="panel-actions"><GameButton variant="secondary" :disabled="creating" @click="step = 2">Chọn lại thiên phú</GameButton><GameButton variant="primary" :disabled="pointsLeft !== 0 || creating" data-testid="creation-finish" @click="finish">{{ creating ? 'Đang lập mệnh…' : 'Bước vào tiên đồ' }}</GameButton></footer>
+      <footer class="panel-actions"><GameButton variant="secondary" :disabled="creating" @click="step = 2">{{ t('onboarding.creation.attributeStep.rechooseTalent') }}</GameButton><GameButton variant="primary" :disabled="pointsLeft !== 0 || creating" data-testid="creation-finish" @click="finish">{{ creating ? t('onboarding.creation.attributeStep.creating') : t('onboarding.creation.attributeStep.finish') }}</GameButton></footer>
     </section>
   </main>
 </template>

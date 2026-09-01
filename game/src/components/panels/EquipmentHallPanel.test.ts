@@ -9,6 +9,7 @@ import { materials } from '@/data/materials/materials'
 import { SPIRIT_STONE_MATERIAL } from '@/core/material/SpiritStoneMaterial'
 import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composables/useGameState'
 import { vTooltip } from '@/directives/tooltip'
+import { i18n } from '@/i18n'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 
 function equipmentInstance(instanceId: string, equipped: boolean): EquipmentInstance {
@@ -59,6 +60,7 @@ function mountHall(prepare?: (manager: GameManager) => void) {
 
   const app = createApp({ render: () => h(EquipmentHallPanel) })
   app.use(pinia)
+  app.use(i18n)
   app.directive('tooltip', vTooltip)
   app.provide(GAME_MANAGER_KEY, manager)
   app.provide(STATE_VERSION_KEY, version)

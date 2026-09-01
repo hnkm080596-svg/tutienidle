@@ -6,6 +6,7 @@ import SettingsPanel from './SettingsPanel.vue'
 import { GameManager } from '@/core/game/GameManager'
 import { GAME_MANAGER_KEY } from '@/composables/useGameState'
 import { SAVE_RESET_REQUEST_EVENT } from '@/services/save/SaveSystem'
+import { i18n } from '@/i18n'
 
 afterEach(() => {
   document.body.innerHTML = ''
@@ -20,6 +21,7 @@ describe('SettingsPanel reset save', () => {
 
     document.body.appendChild(container)
     app.use(createPinia())
+    app.use(i18n)
     app.provide(GAME_MANAGER_KEY, new GameManager())
     window.addEventListener(SAVE_RESET_REQUEST_EVENT, requested)
     app.mount(container)

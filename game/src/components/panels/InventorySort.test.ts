@@ -21,6 +21,7 @@ import {
 import { useUiStore } from '@/stores/ui'
 import type { Material } from '@/core/material/Material'
 import { vTooltip } from '@/directives/tooltip'
+import { i18n } from '@/i18n'
 
 const HERB_A: Material = { id: 'herb_a', name: 'Bạch Thuật', category: 'herb', sourceType: 'exploration', years: 100 }
 const HERB_B: Material = { id: 'herb_b', name: 'Ám Hương', category: 'herb', sourceType: 'monster', years: 500 }
@@ -46,6 +47,7 @@ function mountSections(gameManager: GameManager) {
   const app = createApp({ render: () => h(RootStub) })
 
   app.use(createPinia())
+  app.use(i18n)
 
   app.provide(GAME_MANAGER_KEY, gameManager)
   app.provide(STATE_VERSION_KEY, stateVersion)

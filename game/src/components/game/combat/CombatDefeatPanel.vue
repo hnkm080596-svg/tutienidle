@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useGameManager } from '@/composables/useGameState'
 import { useBattleActions } from '@/composables/useBattleActions'
 import { useAutoRetryCountdown } from '@/composables/useAutoRetryCountdown'
 import { useUiStore } from '@/stores/ui'
-import { formatNumber } from '@/core/format/NumberFormatter'
+import { formatDuration } from '@/core/format/formatDuration'
 import GameButton from '@/components/common/GameButton.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import InkWashBackdrop from '@/components/common/InkWashBackdrop.vue'
+import RewardList from './RewardList.vue'
 
 // Combat UI Redesign mục 18/23, mở rộng 2026-08-22 — trước đây CHỈ 1
 // nút "Về Động Phủ" (không đánh lại). Giờ thêm "Tái Chiến" (LUÔN đánh
@@ -29,6 +31,7 @@ const RETRY_COUNTDOWN_SECONDS = 3
 
 const gameManager = useGameManager()
 const ui = useUiStore()
+const { t } = useI18n({ useScope: 'local' })
 const { startBattle } = useBattleActions()
 
 const summary = computed(() => gameManager.getBattleRewardSummary())
@@ -84,15 +87,9 @@ onMounted(() => {
     <InkWashBackdrop left-mountain bottom-mist :right-mountain="false" />
     <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
     <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" tint-var="--cinnabar" />
-    <h2 class="combat-defeat-panel__title">☠ THẤT BẠI</h2>
+    <h2 class="combat-defeat-panel__title">{{ t('combat.defeat.title') }}</h2>
 
-    <div v-if="hasAnyReward" class="combat-defeat-panel__rewards scrollfade">
-      <p v-if="summary.techniqueInsight > 0">Cảm Ngộ Tâm Pháp <span>+{{ formatNumber(summary.techniqueInsight) }}</span></p>
-      <p v-if="summary.skillInsight > 0">Cảm Ngộ Kỹ Năng <span>+{{ formatNumber(summary.skillInsight) }}</span></p>
-      <p v-if="summary.artifactInsight > 0">Kinh Nghiệm Pháp Bảo <span>+{{ formatNumber(summary.artifactInsight) }}</span></p>
-      <p v-if="summary.spiritStone > 0">Linh Thạch <span>+{{ formatNumber(summary.spiritStone) }}</span></p>
-      <p v-for="item in summary.items" :key="`${item.kind}-${item.itemId}`">{{ item.name }} <span>+{{ formatNumber(item.amount) }}</span></p>
-    </div>
+    <RewardList v-if="hasAnyReward" :summary="summary" class="combat-defeat-panel__rewards scrollfade" />
 
     <div class="combat-defeat-panel__actions">
       <GameButton
@@ -102,10 +99,10 @@ onMounted(() => {
         :disabled="isAutoRetrying"
         @click="retryNow"
       >
-        Tái Chiến<template v-if="isAutoRetrying"> {{ retryCountdown }}s</template>
+        {{ t('combat.defeat.retry') }}<template v-if="isAutoRetrying"> {{ t('combat.defeat.retryCountdown', { duration: formatDuration(retryCountdown, 'countdown') }) }}</template>
       </GameButton>
 
-      <GameButton class="combat-defeat-panel__return" variant="secondary" @click="returnHome">Về Động Phủ</GameButton>
+      <GameButton class="combat-defeat-panel__return" variant="secondary" @click="returnHome">{{ t('combat.defeat.returnHome') }}</GameButton>
     </div>
   </div>
 </template>
@@ -138,25 +135,7 @@ onMounted(() => {
 }
 
 .combat-defeat-panel__rewards {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-height: min(240px, 30vh);
-  overflow-y: auto;
   margin-bottom: 20px;
-}
-
-.combat-defeat-panel__rewards p {
-  margin: 0;
-  display: flex;
-  justify-content: space-between;
-  font-size: var(--text-body);
-  color: var(--paper-text-soft, #5e5a50);
-}
-
-.combat-defeat-panel__rewards p span {
-  color: var(--jade);
-  font-weight: 700;
 }
 
 .combat-defeat-panel__actions {

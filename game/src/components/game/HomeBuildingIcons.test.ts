@@ -12,6 +12,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { nextTick } from 'vue'
 import { createApp, defineComponent, h, ref } from 'vue'
 import { createPinia } from 'pinia'
+import { i18n } from '@/i18n'
 import HomeBuildingIcons from './HomeBuildingIcons.vue'
 import BuildingDetailPopover from './BuildingDetailPopover.vue'
 import { GameManager } from '@/core/game/GameManager'
@@ -80,6 +81,7 @@ function mountHomeBuildings(
   const app = createApp({ render: () => h(RootStub) })
 
   app.use(createPinia())
+  app.use(i18n)
 
   app.provide(GAME_MANAGER_KEY, gameManager)
   app.provide(STATE_VERSION_KEY, stateVersion)

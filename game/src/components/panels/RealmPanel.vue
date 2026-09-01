@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import PlayerPortrait from '@/components/common/PlayerPortrait.vue'
 import Bar from '@/components/common/primitives/Bar.vue'
@@ -20,6 +21,7 @@ import { useRealmStatPassives } from '@/composables/useRealmStatPassives'
 const ui = useUiStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()
+const { t } = useI18n({ useScope: 'local' })
 const { triggerQuanKhi } = useTribulation()
 const requirement = useBreakthroughRequirementStore()
 const { realmStatPassiveRows } = useRealmStatPassives()
@@ -31,9 +33,9 @@ const canRealm = computed(() => gameManager.canTriggerRealmBreakthrough(player.$
 const nextRealmName = computed(() => getNextRealm(player.realmId)?.name ?? '')
 const realmName = computed(() => getCurrentRealm(player.realmId).name)
 const majorBreakthroughLabel = computed(() => {
-  if (player.realmId === 'mortal') return 'Quán Khí'
-  if (player.realmId === 'qi_refining') return 'Trúc Cơ'
-  return nextRealmName.value || 'Đại Cảnh Giới'
+  if (player.realmId === 'mortal') return t('panels.realm.labels.quanKhi')
+  if (player.realmId === 'qi_refining') return t('panels.realm.labels.foundation')
+  return nextRealmName.value || t('panels.realm.labels.majorFallback')
 })
 const canMajorBreakthrough = computed(() => {
   if (player.realmId === 'mortal') return canChoosePath.value
@@ -53,13 +55,13 @@ function majorBreakthrough() {
 </script>
 
 <template>
-  <OverlayPanel :open="ui.standalonePanel === 'realm'" title="Cảnh Giới" width="min(1120px, 94vw)" height="min(760px, 90vh)" @close="close">
+  <OverlayPanel :open="ui.standalonePanel === 'realm'" :title="t('panels.realm.title')" width="min(1120px, 94vw)" height="min(760px, 90vh)" @close="close">
     <div class="realm-panel">
       <div class="realm-panel__cultivator">
         <div class="realm-panel__aura" />
         <PlayerPortrait variant="cultivate" :height="150" animated />
         <strong class="realm-panel__name">{{ player.name }}</strong>
-        <span class="realm-panel__realm-line">{{ realmName }} · Tầng {{ player.realmLevel }}</span>
+        <span class="realm-panel__realm-line">{{ t('panels.realm.tierLine', { realm: realmName, level: player.realmLevel }) }}</span>
       </div>
 
       <div class="realm-panel__cultivation">
@@ -70,7 +72,7 @@ function majorBreakthrough() {
           pill
           class="realm-panel__cultivation-bar"
         >
-          <template #label><span class="realm-panel__cultivation-label">{{ Math.floor(player.cultivation) }} / {{ Math.floor(player.cultivationRequired) }} Tu Vi</span></template>
+          <template #label><span class="realm-panel__cultivation-label">{{ Math.floor(player.cultivation) }} / {{ Math.floor(player.cultivationRequired) }} {{ t('panels.realm.cultivationUnit') }}</span></template>
         </Bar>
       </div>
 
@@ -78,7 +80,7 @@ function majorBreakthrough() {
         <GameButton :disabled="!canMajorBreakthrough" @click="majorBreakthrough">{{ majorBreakthroughLabel }}</GameButton>
       </div>
 
-      <div class="realm-panel__nodes" aria-label="Tiến trình chín cảnh giới">
+      <div class="realm-panel__nodes" :aria-label="t('panels.realm.nodes.aria')">
         <div
           v-for="(node, index) in REALM_PASSIVE_NODES"
           :key="node.realmId"
@@ -87,8 +89,8 @@ function majorBreakthrough() {
         >
           <span class="realm-node__index">{{ index + 1 }}</span>
           <strong>{{ node.label }}</strong>
-          <small v-if="node.comingSoon">Sắp ra mắt</small>
-          <small v-else>{{ currentTier >= node.unlockTier ? 'Đã lĩnh ngộ' : 'Chưa mở' }}</small>
+          <small v-if="node.comingSoon">{{ t('panels.realm.nodes.comingSoon') }}</small>
+          <small v-else>{{ currentTier >= node.unlockTier ? t('panels.realm.nodes.unlocked') : t('panels.realm.nodes.locked') }}</small>
         </div>
       </div>
 
