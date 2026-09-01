@@ -47,7 +47,7 @@ import type { MaterialBag } from '../material/MaterialBag'
 import type { PillRegistry } from '../pill/PillRegistry'
 import type { PillBag } from '../pill/PillBag'
 import type { EquipmentRegistry } from '../equipment/EquipmentRegistry'
-import type { EquipmentBag } from '../equipment/EquipmentBag'
+import type { EquipmentBag, AutoDissolveReward } from '../equipment/EquipmentBag'
 import type { EquipmentSystem } from '../equipment/EquipmentSystem'
 import type { AffixRegistry } from '../equipment/AffixRegistry'
 import type { QuestSystem } from '../quest/QuestSystem'
@@ -443,7 +443,7 @@ export class BattleLootSystem {
               zoneId,
             )
 
-            this.deps.equipmentBag.add(instance)
+            this.grantAutoDissolveRewards(this.deps.equipmentBag.add(instance))
             this.emitRewardParticle(sourceId, 'item', this.getGradeParticleColor(instance.rarity))
 
             this.pushLootNotification(`+1 ${template.name}`, {
@@ -535,7 +535,7 @@ export class BattleLootSystem {
       zoneId,
     )
 
-    this.deps.equipmentBag.add(instance)
+    this.grantAutoDissolveRewards(this.deps.equipmentBag.add(instance))
     this.emitRewardParticle(sourceId, 'item', this.getGradeParticleColor(instance.rarity))
 
     // Uncommitted audit followup plan, mục "Đồng nhất thông báo trang bị
@@ -632,6 +632,42 @@ export class BattleLootSystem {
 
   private pushLootNotification(message: string, loot: LootNotificationPresentation) {
     this.deps.notifications.push({ kind: 'loot', message, loot })
+  }
+
+  /**
+   * Cap mềm túi trang bị (audit 2026-08-31) — EquipmentBag.add() tự Hóa
+   * Luyện item "rác" nhất khi vượt cap và TRẢ rewards Tinh Hoa cho
+   * caller cộng. Null-safe với mock tests (add trả undefined khi bị
+   * mock). Cộng qua materialBag + quest hook như nhánh 'material',
+   * toast 1 lần mỗi batch qua NotificationQueue sẵn có.
+   */
+  private grantAutoDissolveRewards(rewards: AutoDissolveReward[] | undefined) {
+    const autoDissolved = rewards ?? []
+
+    if (autoDissolved.length === 0) {
+      return
+    }
+
+    for (const reward of autoDissolved) {
+      if (!this.deps.materialRegistry.has(reward.materialId)) {
+        continue
+      }
+
+      this.deps.materialBag.add(this.deps.materialRegistry.get(reward.materialId), reward.amount)
+
+      this.deps.questSystem.onMaterialCollected(
+        this.deps.questRegistry,
+        this.deps.questManager,
+        reward.materialId,
+        reward.amount,
+      )
+    }
+
+    this.pushLootNotification(`Túi đầy — tự Hóa Luyện ${autoDissolved.length} món thành Tinh Hoa`, {
+      nameSegments: [{ text: 'Tự Hóa Luyện' }],
+      amountLabel: `-${autoDissolved.length}`,
+      accentColorVar: '--jade',
+    })
   }
 
   private getGradeParticleColor(grade: ItemGrade): number {

@@ -38,7 +38,9 @@ function createTestSetup(rewards: EnemyReward, talentIds: string[] = []) {
     description: 'test fixture',
   })
   const materialBag = new MaterialBag()
-  const equipmentBag = { add: vi.fn() }
+  // EquipmentBag.add() giờ trả AutoDissolveReward[] (cap mềm audit
+  // 2026-08-31) — mock phải trả array thay vì undefined để khớp hợp đồng thật.
+  const equipmentBag = { add: vi.fn().mockReturnValue([]) }
   const giveReward = vi.fn()
   const applyHealing = vi.fn((target: { currentHp: number; maxHp: number }, amount: number) => {
     const before = target.currentHp

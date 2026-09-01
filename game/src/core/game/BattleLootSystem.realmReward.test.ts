@@ -39,7 +39,8 @@ function createTestSetup(rewards: EnemyReward, realmId: string, talentIds: strin
     pillRegistry: {},
     pillBag: {},
     equipmentRegistry: { getAll: () => [], has: () => false, get: () => undefined },
-    equipmentBag: { add: vi.fn() },
+    // add() trả AutoDissolveReward[] (cap mềm audit 2026-08-31) — mock khớp hợp đồng thật.
+    equipmentBag: { add: vi.fn().mockReturnValue([]) },
     equipmentSystem: {},
     affixRegistry: {},
     zoneRegistry: { has: () => false, getZoneForStage: () => undefined },
