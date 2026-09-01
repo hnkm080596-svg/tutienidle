@@ -56,7 +56,7 @@ describe('buffs.ts — ported ailment definitions match original AilmentTemplate
     expect(docThe.effects).toContainEqual({ type: 'statModifier', stat: 'poisonRecoveryPercent', percent: 0.02 })
   })
 
-  it('all 23 definitions (5 buffs + 18 ported ailments) are present', () => {
-    expect(buffs).toHaveLength(23)
+  it('all 28 definitions (5 buffs + 2 reaction buffs + 5 on-hit proc buffs + 16 ported ailments) are present', () => {
+    expect(buffs).toHaveLength(28)
   })
 })
