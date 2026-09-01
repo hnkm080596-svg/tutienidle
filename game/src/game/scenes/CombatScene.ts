@@ -19,6 +19,7 @@ import {
   type LaneIndex,
 } from '@/core/battle/BattleLane'
 import { getCombatInsets, getFallbackCombatInsets } from '@/game/support/combatInsets'
+import { PlayerHudLayer } from './combat/PlayerHudLayer'
 import type { GridPosition } from '@/core/battle/BattleGrid'
 import {
   createBattleGridProjection,
@@ -298,6 +299,28 @@ export class CombatScene extends Phaser.Scene {
     this._damageText ??= new CombatDamageText(this)
 
     return this._damageText
+  }
+
+  // 6A-T4/T5 — HUD player trong canvas; lazy như damageText để
+  // Object.create(prototype) test không chạy field initializer.
+  // Setter cho test stub (prototype object cho phép gán fake hud).
+  private _playerHud?: PlayerHudLayer
+
+  get playerHud(): PlayerHudLayer | undefined {
+    return this._playerHud
+  }
+
+  set playerHud(hud: PlayerHudLayer | undefined) {
+    this._playerHud = hud
+  }
+
+  private ensurePlayerHud(): PlayerHudLayer {
+    this._playerHud ??= new PlayerHudLayer(this, {
+      width: this.scale.width,
+      height: this.scale.height,
+    })
+
+    return this._playerHud
   }
 
   private _castBar?: CombatCastBar
@@ -580,6 +603,11 @@ export class CombatScene extends Phaser.Scene {
 
     this.subscribeCombatEvents()
 
+    // 6A-T4 — HUD player trong canvas (HP/MP/Kiếm) — tạo một lần cho
+    // đời scene; hiển thị/ẩn theo inBattle qua battle_start/battle_end.
+    this.ensurePlayerHud()
+    this._playerHud?.setVisible(this.inBattle)
+
     // Late-join replay (fix spawn animation lÃ¡ÂºÂ§n Ã„â€˜Ã¡ÂºÂ§u, 2026-08-26): nÃ¡ÂºÂ¿u
     // scene start MUÃ¡Â»ËœN so vÃ¡Â»â€ºi battle_start, phÃƒÂ¡t lÃ¡ÂºÂ¡i snapshot positions
     // mÃ¡Â»â€ºi nhÃ¡ÂºÂ¥t tÃ¡Â»Â« registry (bridge trong PhaserCanvas.vue) Ã„â€˜Ã¡Â»Æ’ reconcile
@@ -603,6 +631,8 @@ export class CombatScene extends Phaser.Scene {
 
   private resizeHandler = (gameSize: ResizeSize) => {
     this.applyBattlefieldLayout(gameSize.width, gameSize.height)
+    // 6A-T5 — HUD re-layout theo viewport mới (flexible rule).
+    this.playerHud?.layout(gameSize.width, gameSize.height)
   }
 
   private shutdownHandler = () => {
@@ -1223,6 +1253,11 @@ export class CombatScene extends Phaser.Scene {
     this.spawnVfxHandles.clear()
     this.materializingIds.clear()
 
+    // 6A-T4/T5 — HUD dọn khi scene shutdown (battle_end KHÔNG destroy —
+    // chỉ shutdown mới hủy; restart scene tạo lại).
+    this._playerHud?.destroy()
+    this._playerHud = undefined
+
     this.playerSpawnHandle?.destroy()
     this.playerSpawnHandle = undefined
     this.playerMaterialized = true
@@ -1489,6 +1524,9 @@ export class CombatScene extends Phaser.Scene {
   private onPositions(event: BattlePositionsEvent) {
     const now = this.time.now
 
+    // 6A-T5 — HUD HP fast-path từ positions (khi chưa có vitals event).
+    this.playerHud?.updateHp(event.playerCurrentHp, event.playerMaxHp)
+
     if (this.lastSnapshotAt !== undefined) {
       this.pendingCadence = Math.min(
         MAX_SEGMENT_DURATION_MS,
@@ -1567,6 +1605,9 @@ export class CombatScene extends Phaser.Scene {
   // presentation tÃ¡ÂºÂ¡i chÃ¡Â»â€”. ViÃ¡Â»â€¡c cÃƒÂ²n lÃ¡ÂºÂ¡i Ã¡Â»Å¸ Ã„â€˜ÃƒÂ¢y: chÃ¡Â»Ân + load trÃ†Â°Ã¡Â»â€ºc variant
   // nÃ¡Â»Ân cho trÃ¡ÂºÂ­n KÃ¡ÂºÂ¾ TIÃ¡ÂºÂ¾P vÃƒÂ  dÃ¡Â»Ân DoT accumulator.
   onBattleEnd() {
+
+    // 6A-T5 — HUD theo dõi battle end.
+    this._playerHud?.setVisible(false)
     this.inBattle = false
 
     // DoT accumulator (Ã‚Â§7.2) Ã¢â‚¬â€ trÃ¡ÂºÂ­n Ã„â€˜ÃƒÂ£ xong, bucket cÃ…Â© khÃƒÂ´ng Ã„â€˜Ã†Â°Ã¡Â»Â£c rÃƒÂ²
@@ -1671,6 +1712,23 @@ export class CombatScene extends Phaser.Scene {
     if (sprite) {
       this.updateEnemyHealthBar(sprite, event.hpAfter, event.maxHp)
     }
+
+    // 6A-T5 — HUD player (entityId === PLAYER_ID) cập nhật từ vitals.
+    if (event.entityId === PLAYER_ID) {
+      this.playerHud?.updateHp(event.hpAfter, event.maxHp)
+
+      if (event.maxMp > 0) {
+        this.playerHud?.updateMp(event.mpAfter, event.maxMp)
+      }
+    }
+  }
+
+  /**
+   * 6A-T5 — exit zone trong canvas click → bridge sang DOM confirm
+   * modal (T6) qua eventBus. KHÔNG mở modal trực tiếp từ scene.
+   */
+  requestCombatExit() {
+    this.eventBus?.emit('combat_exit_request', undefined)
   }
 
   // "NÃ¡ÂºÂ£y sÃ¡Â»â€˜" thÃ¡ÂºÂ­t sÃ¡Â»Â± Ã¢â‚¬â€ pop-in bÃ¡ÂºÂ±ng Back.easeOut (bÃ¡ÂºÂ­t nÃ¡ÂºÂ£y quÃƒÂ¡ cÃ¡Â»Â¡ rÃ¡Â»â€œi
@@ -1867,6 +1925,9 @@ export class CombatScene extends Phaser.Scene {
   // no-op nÃ¡ÂºÂ¿u Ã„â€˜ÃƒÂ£ sÃ¡ÂºÂ¡ch sÃ¡ÂºÂµn).
   onBattleStart() {
     this.inBattle = true
+
+    // 6A-T5 — HUD hiện khi vào trận.
+    this._playerHud?.setVisible(true)
 
     // VÃƒÂ²ng Ã„â€˜Ã¡Â»Âi background (2026-08-26): trÃ¡ÂºÂ­n mÃ¡Â»â€ºi bÃ¡ÂºÂ¯t Ã„â€˜Ã¡ÂºÂ§u Ã¢â‚¬â€ HÃ¡Â»Â¦Y mÃ¡Â»Âi lÃ¡ÂºÂ§n
     // load backdrop cÃƒÂ²n treo cÃ¡Â»Â§a battle_end trÃ†Â°Ã¡Â»â€ºc (generation cÃ…Â©) Ã„â€˜Ã¡Â»Æ’
