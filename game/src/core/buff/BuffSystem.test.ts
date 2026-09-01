@@ -1,54 +1,84 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { BuffSystem } from './BuffSystem'
-import { BuffManager } from './BuffManager'
+import { BuffPool } from './BuffPool'
 import type { Buff } from './Buff'
-import type { StatModifier } from '../stats/StatCalculator'
+import type { BuffDefinition } from './BuffDefinition'
+import type { CombatEntity } from '../combat/CombatEntity'
+import type { CombatSystem } from '../combat/CombatSystem'
+import { createBaseStats } from '../stats/StatBlock'
 
-function makeModifier(overrides: Partial<StatModifier> = {}): StatModifier {
+function makeEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
+  const stats = { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats }
   return {
-    id: 'test_modifier',
-    sourceId: 'test_buff',
-    sourceType: 'buff',
-    stat: 'attack',
-    flat: 5,
+    id: 'id',
+    name: 'name',
+    type: 'enemy',
+    baseStats: stats,
+    stats,
+    currentHp: stats.maxHp,
+    maxHp: stats.maxHp,
+    currentMp: stats.maxMp,
+    currentSwordIntent: 0,
+    currentMomentum: 0,
+    currentHoaThe: 0,
+    currentThoThe: 0,
+    currentKimThe: 0,
+    timeSinceLastBleedProc: 0,
+    tuLucActive: false,
+    tuLucElapsed: 0,
+    tuLucDamageTakenPercent: 0,
+    currentWard: 0,
+    timeSinceLastHitTaken: Infinity,
+    realmIndex: 0,
+    x: 0,
+    row: 2,
+    alive: true,
     ...overrides,
   }
 }
 
-function makeBuff(overrides: Partial<Buff> = {}): Buff {
+function makeRuntimeBuff(overrides: Partial<Buff> = {}): Buff {
   return {
     id: 'test_buff',
-    name: 'Buff thử nghiệm',
-    category: 'buff',
+    sourceId: 'source_1',
+    targetId: 'target_1',
+    polarity: 'debuff',
     duration: 5,
+    remainingTime: 5,
     stacks: 1,
     stackMode: 'refresh',
-    modifiers: [makeModifier()],
+    continuousSeconds: 0,
+    effects: [],
     ...overrides,
   }
 }
 
-function setup() {
-  const manager = new BuffManager()
-  const system = new BuffSystem(manager)
-
-  return { manager, system }
+function makeCombatSystem(): CombatSystem {
+  return { applyDotDamage: vi.fn() } as unknown as CombatSystem
 }
 
 describe('BuffSystem — áp buff và getActiveModifiers()', () => {
   it('buff mới áp vào → modifier xuất hiện trong getActiveModifiers() với stacks đúng', () => {
-    const { manager, system } = setup()
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
+    const source = makeEntity({ id: 'source_1' })
+    const target = makeEntity({ id: 'target_1' })
 
-    system.apply(makeBuff())
+    const definition: BuffDefinition = {
+      id: 'test_buff', name: 'Buff thử nghiệm', polarity: 'buff',
+      duration: 5, stackMode: 'refresh',
+      effects: [{ type: 'statModifier', stat: 'attack', flat: 5 }],
+    }
 
-    expect(manager.has('test_buff')).toBe(true)
+    system.apply(definition, source, target)
+
+    expect(pool.getFromSource('test_buff', 'source_1')).toBeDefined()
 
     const active = system.getActiveModifiers()
 
     expect(active).toHaveLength(1)
     expect(active[0]).toMatchObject({
-      id: 'test_modifier',
-      sourceId: 'test_buff',
+      sourceId: 'source_1',
       sourceType: 'buff',
       stat: 'attack',
       flat: 5,
@@ -56,27 +86,23 @@ describe('BuffSystem — áp buff và getActiveModifiers()', () => {
     })
   })
 
-  it('buff áp vào với stacks: 0 được chuẩn hoá về 1 (buff.stacks || 1)', () => {
-    const { system } = setup()
-
-    system.apply(makeBuff({ stacks: 0 }))
-
-    expect(system.getActiveModifiers()[0]!.stacks).toBe(1)
-  })
-
   it('getActiveModifiers() gắn stacks hiện hành của buff vào TỪNG modifier', () => {
-    const { system } = setup()
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
+    const source = makeEntity({ id: 'source_1' })
+    const target = makeEntity({ id: 'target_1' })
 
-    const buff = makeBuff({
-      stackMode: 'stack',
-      modifiers: [
-        makeModifier({ id: 'mod_a' }),
-        makeModifier({ id: 'mod_b', stat: 'defense', flat: 2 }),
+    const definition: BuffDefinition = {
+      id: 'test_buff', name: 'Buff thử nghiệm', polarity: 'buff',
+      duration: 5, maxStacks: 5, stackMode: 'stack',
+      effects: [
+        { type: 'statModifier', stat: 'attack', flat: 5 },
+        { type: 'statModifier', stat: 'defense', flat: 2 },
       ],
-    })
+    }
 
-    system.apply(buff)
-    system.apply(buff)
+    system.apply(definition, source, target)
+    system.apply(definition, source, target)
 
     const active = system.getActiveModifiers()
 
@@ -87,103 +113,247 @@ describe('BuffSystem — áp buff và getActiveModifiers()', () => {
 
 describe('BuffSystem — áp lại cùng buff theo stackMode', () => {
   it('stackMode stack: cộng tầng tới trần maxStacks và làm mới remainingTime', () => {
-    const { manager, system } = setup()
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
+    const source = makeEntity({ id: 'source_1' })
+    const target = makeEntity({ id: 'target_1' })
+    const combatSystem = makeCombatSystem()
 
-    const buff = makeBuff({ stackMode: 'stack', maxStacks: 2 })
+    const definition: BuffDefinition = {
+      id: 'test_buff', name: 'Buff thử nghiệm', polarity: 'debuff',
+      duration: 5, maxStacks: 2, stackMode: 'stack',
+      effects: [{ type: 'statModifier', stat: 'attack', flat: 5 }],
+    }
 
-    system.apply(buff)
-    system.apply(buff)
-    system.apply(buff)
+    system.apply(definition, source, target)
+    system.apply(definition, source, target)
+    system.apply(definition, source, target)
 
     // 3 lần áp nhưng trần maxStacks 2 → dừng ở 2 tầng.
-    expect(manager.get('test_buff')!.stacks).toBe(2)
+    expect(pool.getFromSource('test_buff', 'source_1')!.stacks).toBe(2)
 
-    system.update(4)
+    system.update(4, target, combatSystem)
 
-    system.apply(buff)
+    system.apply(definition, source, target)
 
-    // re-applied làm mới thời gian về full duration (nguồn: existing.duration).
-    expect(manager.get('test_buff')!.remainingTime).toBe(5)
+    // re-applied làm mới thời gian về full duration.
+    expect(pool.getFromSource('test_buff', 'source_1')!.remainingTime).toBe(5)
   })
 
   it('stackMode refresh: giữ nguyên tầng, remainingTime làm mới theo duration của lần áp MỚI', () => {
-    const { manager, system } = setup()
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
+    const source = makeEntity({ id: 'source_1' })
+    const target = makeEntity({ id: 'target_1' })
+    const combatSystem = makeCombatSystem()
 
-    system.apply(makeBuff({ stackMode: 'refresh', duration: 5 }))
+    const baseDefinition: BuffDefinition = {
+      id: 'test_buff', name: 'Buff thử nghiệm', polarity: 'debuff',
+      stackMode: 'refresh', duration: 5,
+      effects: [{ type: 'statModifier', stat: 'attack', flat: 5 }],
+    }
 
-    system.update(3)
+    system.apply(baseDefinition, source, target)
 
-    expect(manager.get('test_buff')!.remainingTime).toBe(2)
+    system.update(3, target, combatSystem)
 
-    system.apply(makeBuff({ stackMode: 'refresh', duration: 8 }))
+    expect(pool.getFromSource('test_buff', 'source_1')!.remainingTime).toBe(2)
 
-    const stored = manager.get('test_buff')!
+    system.apply({ ...baseDefinition, duration: 8 }, source, target)
+
+    const stored = pool.getFromSource('test_buff', 'source_1')!
 
     expect(stored.remainingTime).toBe(8)
     expect(stored.stacks).toBe(1)
   })
 
-  it('stackMode replace: bản cũ bị xoá, bản mới thêm với duration/stacks tươi', () => {
-    const { manager, system } = setup()
+  it('stackMode replace: bản cũ bị xoá, bản mới thêm với duration tươi (stacks giữ nguyên — ported verbatim từ AilmentSystem.handleExisting())', () => {
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
+    const source = makeEntity({ id: 'source_1' })
+    const target = makeEntity({ id: 'target_1' })
+    const combatSystem = makeCombatSystem()
 
-    const buff = makeBuff({ stackMode: 'replace' })
+    const definition: BuffDefinition = {
+      id: 'test_buff', name: 'Buff thử nghiệm', polarity: 'debuff',
+      duration: 5, stackMode: 'replace',
+      effects: [{ type: 'statModifier', stat: 'attack', flat: 5 }],
+    }
 
-    system.apply(buff)
+    system.apply(definition, source, target)
 
-    // Giả lập tầng đã tích luỹ trên bản cũ — replace KHÔNG mang sang.
-    manager.get('test_buff')!.stacks = 3
+    // Giả lập tầng đã tích luỹ trên bản cũ — replace KHÔNG reset stacks
+    // (verbatim theo AilmentSystem.handleExisting()'s 'replace' case:
+    // `{...existing, ...}` giữ nguyên existing.stacks).
+    pool.getFromSource('test_buff', 'source_1')!.stacks = 3
 
-    system.update(3)
+    system.update(3, target, combatSystem)
 
-    system.apply(buff)
+    system.apply(definition, source, target)
 
-    expect(manager.getAll()).toHaveLength(1)
+    expect(pool.getAll()).toHaveLength(1)
 
-    const stored = manager.get('test_buff')!
+    const stored = pool.getFromSource('test_buff', 'source_1')!
 
-    expect(stored.stacks).toBe(1)
+    expect(stored.stacks).toBe(3)
     expect(stored.remainingTime).toBe(5)
   })
 })
 
 describe('BuffSystem — hết hạn qua update()', () => {
-  it('update() quá duration → buff gỡ khỏi manager và modifier biến mất', () => {
-    const { manager, system } = setup()
+  it('update() quá duration → buff gỡ khỏi pool và modifier biến mất', () => {
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
+    const source = makeEntity({ id: 'source_1' })
+    const target = makeEntity({ id: 'target_1' })
+    const combatSystem = makeCombatSystem()
 
-    system.apply(makeBuff({ duration: 2 }))
+    const definition: BuffDefinition = {
+      id: 'test_buff', name: 'Buff thử nghiệm', polarity: 'debuff',
+      duration: 2, stackMode: 'refresh',
+      effects: [{ type: 'statModifier', stat: 'attack', flat: 5 }],
+    }
 
-    system.update(1)
+    system.apply(definition, source, target)
 
-    expect(manager.has('test_buff')).toBe(true)
+    system.update(1, target, combatSystem)
+
+    expect(pool.getFromSource('test_buff', 'source_1')).toBeDefined()
     expect(system.getActiveModifiers()).toHaveLength(1)
 
-    system.update(1)
+    system.update(1, target, combatSystem)
 
-    expect(manager.has('test_buff')).toBe(false)
+    expect(pool.getFromSource('test_buff', 'source_1')).toBeUndefined()
     expect(system.getActiveModifiers()).toHaveLength(0)
   })
 
-  it('buff vĩnh viễn (không duration) không bị update() xoá', () => {
-    const { manager, system } = setup()
+  it('buff gần như vĩnh viễn (duration cực lớn) không bị update() xoá sớm', () => {
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
+    const source = makeEntity({ id: 'source_1' })
+    const target = makeEntity({ id: 'target_1' })
+    const combatSystem = makeCombatSystem()
 
-    system.apply(makeBuff({ duration: undefined }))
+    const definition: BuffDefinition = {
+      id: 'test_buff', name: 'Buff thử nghiệm', polarity: 'buff',
+      duration: Infinity, stackMode: 'refresh',
+      effects: [{ type: 'statModifier', stat: 'attack', flat: 5 }],
+    }
 
-    system.update(100)
+    system.apply(definition, source, target)
 
-    expect(manager.has('test_buff')).toBe(true)
+    system.update(100, target, combatSystem)
+
+    expect(pool.getFromSource('test_buff', 'source_1')).toBeDefined()
     expect(system.getActiveModifiers()).toHaveLength(1)
   })
 
   it('nhiều buff hết hạn độc lập theo duration riêng', () => {
-    const { manager, system } = setup()
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
+    const source = makeEntity({ id: 'source_1' })
+    const target = makeEntity({ id: 'target_1' })
+    const combatSystem = makeCombatSystem()
 
-    system.apply(makeBuff({ id: 'buff_ngan', duration: 1 }))
-    system.apply(makeBuff({ id: 'buff_dai', duration: 10 }))
+    system.apply(
+      { id: 'buff_ngan', name: 'Ngắn', polarity: 'buff', duration: 1, stackMode: 'refresh', effects: [{ type: 'statModifier', stat: 'attack', flat: 1 }] },
+      source, target,
+    )
+    system.apply(
+      { id: 'buff_dai', name: 'Dài', polarity: 'buff', duration: 10, stackMode: 'refresh', effects: [{ type: 'statModifier', stat: 'attack', flat: 1 }] },
+      source, target,
+    )
 
-    system.update(2)
+    system.update(2, target, combatSystem)
 
-    expect(manager.has('buff_ngan')).toBe(false)
-    expect(manager.has('buff_dai')).toBe(true)
+    expect(pool.getFromSource('buff_ngan', 'source_1')).toBeUndefined()
+    expect(pool.getFromSource('buff_dai', 'source_1')).toBeDefined()
     expect(system.getActiveModifiers()).toHaveLength(1)
+  })
+})
+
+describe('BuffSystem — multi-source coexistence (2026-09-01 unified buff system)', () => {
+  it('two sources applying the same debuff id each get an independent instance', () => {
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
+    const source1 = makeEntity({ id: 'enemy_1' })
+    const source2 = makeEntity({ id: 'enemy_2' })
+    const target = makeEntity({ id: 'player' })
+
+    const definition: BuffDefinition = {
+      id: 'poison_weak', name: 'Poison', polarity: 'debuff',
+      duration: 5, stackMode: 'refresh',
+      effects: [{ type: 'dot', dpsRatio: 1, element: 'physical' }],
+    }
+
+    system.apply(definition, source1, target)
+    system.apply(definition, source2, target)
+
+    expect(pool.getAllById('poison_weak')).toHaveLength(2)
+    expect(pool.getFromSource('poison_weak', 'enemy_1')).toBeDefined()
+    expect(pool.getFromSource('poison_weak', 'enemy_2')).toBeDefined()
+  })
+
+  it('the SAME source re-applying stacks/refreshes/replaces per stackMode without affecting other sources', () => {
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
+    const source1 = makeEntity({ id: 'enemy_1' })
+    const source2 = makeEntity({ id: 'enemy_2' })
+    const target = makeEntity({ id: 'player' })
+
+    const definition: BuffDefinition = {
+      id: 'poison_weak', name: 'Poison', polarity: 'debuff',
+      duration: 5, maxStacks: 3, stackMode: 'stack',
+      effects: [{ type: 'dot', dpsRatio: 1, element: 'physical' }],
+    }
+
+    system.apply(definition, source1, target)
+    system.apply(definition, source2, target)
+    system.apply(definition, source1, target) // source1 re-applies
+
+    expect(pool.getFromSource('poison_weak', 'enemy_1')?.stacks).toBe(2)
+    expect(pool.getFromSource('poison_weak', 'enemy_2')?.stacks).toBe(1)
+  })
+
+  it('update() ticks DoT damage independently per source instance', () => {
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
+    const source1 = makeEntity({ id: 'enemy_1', stats: { attack: 10 } as CombatEntity['stats'] })
+    const source2 = makeEntity({ id: 'enemy_2', stats: { attack: 20 } as CombatEntity['stats'] })
+    const target = makeEntity({ id: 'player' })
+    const combatSystem = { applyDotDamage: vi.fn() } as unknown as CombatSystem
+
+    const definition: BuffDefinition = {
+      id: 'poison_weak', name: 'Poison', polarity: 'debuff',
+      duration: 5, stackMode: 'refresh',
+      effects: [{ type: 'dot', dpsRatio: 1, element: 'physical' }],
+    }
+
+    system.apply(definition, source1, target)
+    system.apply(definition, source2, target)
+    system.update(1, target, combatSystem)
+
+    expect(combatSystem.applyDotDamage).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('BuffSystem — getStacks under multi-source', () => {
+  it('getStacks(id, sourceId) returns that one source instance\'s stacks', () => {
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
+    pool.add(makeRuntimeBuff({ id: 'x', sourceId: 'a', stacks: 2 }))
+    pool.add(makeRuntimeBuff({ id: 'x', sourceId: 'b', stacks: 5 }))
+
+    expect(system.getStacks('x', 'a')).toBe(2)
+    expect(system.getStacks('x', 'b')).toBe(5)
+  })
+
+  it('getStacks(id) with no sourceId sums stacks across every source', () => {
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
+    pool.add(makeRuntimeBuff({ id: 'x', sourceId: 'a', stacks: 2 }))
+    pool.add(makeRuntimeBuff({ id: 'x', sourceId: 'b', stacks: 5 }))
+
+    expect(system.getStacks('x')).toBe(7)
   })
 })
