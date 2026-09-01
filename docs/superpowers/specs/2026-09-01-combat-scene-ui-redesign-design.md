@@ -12,7 +12,7 @@
 1. HP + MP/Kiếm người chơi vẽ **trong canvas Phaser** (PlayerHudLayer) — bỏ CombatStatusBar.vue
 2. Nút Thoát Trận trong canvas (interactive zone góc phải-dưới) — bỏ CombatControlBar.vue; confirm modal DOM giữ nguyên
 3. Bỏ CombatEventBar.vue — thông tin Chí Mạng/Hạ Gục chuyển thành floating text
-4. Floating combat text đầy đủ: sát thương ✓(có), CRIT ✓, Né ✓, cast ✓, DOT ✓, **+ Hạ Gục (mới)**, **+ Hồi máu (mới — event `heal` mới emit)**
+4. Floating combat text đầy đủ: sát thương ✓(có), CRIT ✓, Né ✓, cast ✓, DOT ✓, **+ Hạ Gục (mới)**, **+ Hồi máu (mới — event `heal` mới emit)**. Hiệu ứng đặc biệt (buff/debuff/VFX skill): **kênh đã có sẵn** — `action_impact` + `status_vfx_*` handlers → `vfxSpawner` (tương thích Phase 2A trigger/action engine, giữ nguyên khi dọn bars)
 5. CombatSceneOverlay chỉ còn: TopBar (chrome thông tin — giữ), AI Panel, Build HUD, Result Modal, Countdown Overlay
 6. Insets: top-only (`bottom: 0`) — canvas chiếm full chiều dưới
 
@@ -59,6 +59,12 @@ EntityVitalsSystem.applyHealing → emit 'heal' {type:'heal', sourceId, targetId
 CombatEvent.ts                  → + 'heal' vào union
 ```
 
+**Tương thích skill system mới (Phase 2A trigger/action — worktree Claude Code):**
+- **Heal:** executor `heal` mới (`SkillActionRegistry.ts:88-92`) gọi đúng cổng `CombatSystem.applyHealing(target, value, source.id, 'healing')` → chảy vào `EntityVitalsSystem` → event 'heal' của spec này tự bắt được heal từ skill. KHÔNG cần đường riêng.
+- **Hiệu ứng đặc biệt (VFX):** kênh đã tồn tại — executor `spawnVfx` emit `action_impact` với `presetId` (`SkillActionRegistry.ts:266-287`), CombatScene master ĐÃ subscribe `action_impact` + 3 status_vfx handlers (L1373-1376) delegate vào `vfxSpawner` (`onActionImpact` → `vfxSpawner.onActionImpact`). Spec này KHÔNG xây kênh VFX mới — chỉ đảm bảo các handler này giữ nguyên khi dọn bars.
+- **Kill:** Phase 2A thêm trigger firing trong `killIfDead` (onKill/onDeath) nhưng event 'kill' payload/emit site KHÔNG đổi → floating "Hạ Gục!" subscribe bus như cũ, tương thích.
+- **Ranh giới với Claude Code worktree:** 6A KHÔNG sửa `core/skill/**`, `SkillActionRegistry`, `killIfDead` — chỉ THÊM handler/hàng ở layer scene + vitals emit. Merge Phase 2A trước khi execute 6A để tránh conflict `CombatSystem.ts` (cả 2 đụng file này: Phase 2A thêm trigger firing sites; 6A thêm emit 'heal' trong vitals — vị trí khác nhau, merge được).
+
 **Nút Thoát — cầu nối canvas → DOM modal:** CombatScene không trực tiếp mở DOM modal; emit qua eventBus `'combat_exit_request'` (event mới, payload none); CombatSceneOverlay (hoặc CombatResultModal) nghe và mở confirm modal; confirm flow giữ nguyên logic cũ (abandonBattle → exitCombatScene → `combat_scene_exit`).
 
 ## 4. Phạm vi file
@@ -80,7 +86,7 @@ CombatEvent.ts                  → + 'heal' vào union
 **Xóa hẳn:** `CombatStatusBar.vue` (232), `CombatEventBar.vue` (222), `CombatControlBar.vue` (297) — extract trước phần confirm modal
 **Theme.css:** xóa `--combat-status-h/--combat-event-h/--combat-control-h` (giữ `--combat-topbar-h`)
 
-**Không đụng:** equipment/*, materials, StatCalculator, skill core (Phase 2A của Claude Code — floating "hiệu ứng đặc biệt" defer), TribulationScene
+**Không đụng:** equipment/*, materials, StatCalculator, `core/skill/**` + `SkillActionRegistry` + `killIfDead` (Phase 2A của Claude Code — merge Phase 2A vào master TRƯỚC khi execute 6A), TribulationScene
 
 ## 5. Quyết định đã chốt
 
