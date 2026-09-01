@@ -89,3 +89,70 @@ describe('dealDamage executor', () => {
     expect(ctx.fireHit).toHaveBeenCalledWith(target, { kind: 'physical', multiplier: 4 })
   })
 })
+
+describe('heal executor', () => {
+  it('calls ctx.combatSystem.applyHealing(target, value, source.id, "healing")', () => {
+    const source = makeEntity()
+    const target = makeEntity()
+    const applyHealing = vi.fn()
+    const ctx = makeCtx({ combatSystem: { applyHealing } as unknown as SkillEffectContext['combatSystem'] })
+
+    runSkillAction({ type: 'heal', value: 10 }, source, target, ctx, {}, makeHelpers())
+
+    expect(applyHealing).toHaveBeenCalledWith(target, 10, source.id, 'healing')
+  })
+
+  it('healPercentOfDamage scales off runtime.consumedDamage', () => {
+    const source = makeEntity()
+    const target = makeEntity()
+    const applyHealing = vi.fn()
+    const ctx = makeCtx({ combatSystem: { applyHealing } as unknown as SkillEffectContext['combatSystem'] })
+
+    runSkillAction(
+      { type: 'heal', healPercentOfDamage: 0.5 },
+      source,
+      target,
+      ctx,
+      { consumedDamage: 100 },
+      makeHelpers(),
+    )
+
+    expect(applyHealing).toHaveBeenCalledWith(target, 50, source.id, 'healing')
+  })
+})
+
+describe('applyBuff executor', () => {
+  it('applies buffId to ctx.sourceBuffs via ctx.buffRegistry', () => {
+    const source = makeEntity()
+    const target = makeEntity()
+    const apply = vi.fn()
+    const get = vi.fn(() => ({ id: 'khiem_phong' }))
+    const ctx = makeCtx({
+      sourceBuffs: { apply } as unknown as SkillEffectContext['sourceBuffs'],
+      buffRegistry: { get } as unknown as SkillEffectContext['buffRegistry'],
+    })
+
+    runSkillAction({ type: 'applyBuff', buffId: 'khiem_phong' }, source, target, ctx, {}, makeHelpers())
+
+    expect(get).toHaveBeenCalledWith('khiem_phong')
+    expect(apply).toHaveBeenCalledWith({ id: 'khiem_phong' })
+  })
+})
+
+describe('applyDebuff executor', () => {
+  it('applies buffId to ctx.targetBuffs via ctx.buffRegistry', () => {
+    const source = makeEntity()
+    const target = makeEntity()
+    const apply = vi.fn()
+    const get = vi.fn(() => ({ id: 'suy_nhuoc' }))
+    const ctx = makeCtx({
+      targetBuffs: { apply } as unknown as SkillEffectContext['targetBuffs'],
+      buffRegistry: { get } as unknown as SkillEffectContext['buffRegistry'],
+    })
+
+    runSkillAction({ type: 'applyDebuff', buffId: 'suy_nhuoc' }, source, target, ctx, {}, makeHelpers())
+
+    expect(get).toHaveBeenCalledWith('suy_nhuoc')
+    expect(apply).toHaveBeenCalledWith({ id: 'suy_nhuoc' })
+  })
+})

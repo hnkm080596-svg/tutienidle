@@ -60,8 +60,25 @@ const dealDamage: ActionExecutor<Extract<SkillAction, { type: 'dealDamage' }>> =
   }
 }
 
+const heal: ActionExecutor<Extract<SkillAction, { type: 'heal' }>> = (action, source, target, ctx, runtime) => {
+  const value = (action.value ?? 0) + (action.healPercentOfDamage ? action.healPercentOfDamage * (runtime.consumedDamage ?? 0) : 0)
+
+  ctx.combatSystem.applyHealing(target, value, source.id, 'healing')
+}
+
+const applyBuff: ActionExecutor<Extract<SkillAction, { type: 'applyBuff' }>> = (action, _source, _target, ctx) => {
+  ctx.sourceBuffs.apply(ctx.buffRegistry.get(action.buffId))
+}
+
+const applyDebuff: ActionExecutor<Extract<SkillAction, { type: 'applyDebuff' }>> = (action, _source, _target, ctx) => {
+  ctx.targetBuffs.apply(ctx.buffRegistry.get(action.buffId))
+}
+
 export const SKILL_ACTION_REGISTRY: { [K in SkillActionType]: ActionExecutor<Extract<SkillAction, { type: K }>> } = {
   dealDamage,
+  heal,
+  applyBuff,
+  applyDebuff,
 } as { [K in SkillActionType]: ActionExecutor<Extract<SkillAction, { type: K }>> }
 
 export function runSkillAction(
