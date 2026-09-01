@@ -122,6 +122,8 @@ function createPerspectiveScene(textureExists: true | Set<string>) {
 
   // Stubs tối thiểu cho onBattleEnd/onBattleStart.
   scene.dotAccumulators = new Map()
+  // Audit fix 2026-08-31 — onBattleStart giờ còn dọn status VFX icons.
+  scene.statuses = new Map()
   scene.sprites = new Map()
   scene.interpolations = new Map()
   scene.castBars = new Map()
