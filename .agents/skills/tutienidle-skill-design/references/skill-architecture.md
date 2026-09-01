@@ -52,15 +52,19 @@ instead of `effects`: each binding pairs a `TriggerType` with an ordered
 (`game/src/core/skill/SkillActionRegistry.ts`). A skill is EITHER on
 `effects` OR on `triggers`, never both.
 
-As of this writing only `onCast`/`dealDamage` are implemented — that
-covers a plain-hit active skill (Huy Kiếm/`tram` is the reference
-example). Everything else (ailments, buffs, resource grants, Detonate,
-ward-consume, sword zones, Kiếm Tu multi-hit, Thổ Tu AOE, ...) is still
-only expressible via the old `SkillEffect` fields documented above — check
-`game/src/core/skill/SkillAction.ts`'s `SkillAction` union for the current
-list before assuming an action exists. See
-`game/docs/skill-trigger-action-usage-guide.md` for how to add a new
-trigger, action, or skill using this engine.
+As of this writing the full vocabulary is implemented: 10 triggers
+(`onCast`/`onHit`/`onCrit`/`onEvade`/`onKill`/`onDeath`/`onTick`/`onProc`/
+`onBreak`/`onResourceFull`) and 10 actions (`dealDamage`/`heal`/
+`applyBuff`/`applyDebuff`/`applyAilment`/`grantResource`/
+`consumeResource`/`consumeForDamage`/`spawnZone`/`spawnVfx`) — enough to
+express every mechanic the old `SkillEffect` fields covered. `onProc`/
+`onResourceFull`/`onBreak` fire from inside their causing action's
+executor (no firing site to wire per new skill). Only Huy Kiếm (`tram`) has
+actually migrated its DATA to `triggers` so far — every other skill is
+still on `effects` and behaves identically; enemies still use a separate
+`specialAttacks[]` pipeline pending a follow-up "universal entity model"
+plan. See `game/docs/skill-trigger-action-usage-guide.md` for the current
+trigger/action list and how to add a new skill, trigger, or action.
 
 ## Ailments (`AilmentTypes.ts`, `ElementReaction.ts`)
 

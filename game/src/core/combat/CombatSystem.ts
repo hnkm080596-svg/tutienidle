@@ -15,6 +15,16 @@ import { EntityVitalsSystem, type VitalsChangeReason } from './EntityVitalsSyste
 import { clampStatValue } from '../stats/StatMetadata'
 import { getSkillRuntimeStat } from '../skill/SkillRuntimeStats'
 import type { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
+import type { SkillManager } from '../skill/SkillManager'
+import { SkillTriggerRunner } from '../skill/SkillTriggerRunner'
+import type { SkillEffectContext } from '../skill/SkillEffectSystem'
+import { BuffRegistry } from '../buff/BuffRegistry'
+import { BuffSystem } from '../buff/BuffSystem'
+import { BuffManager } from '../buff/BuffManager'
+import { AilmentRegistry } from '../ailment/AilmentRegistry'
+import { AilmentSystem } from '../ailment/AilmentSystem'
+import { AilmentManager } from '../ailment/AilmentManager'
+import { ReactionManager } from '../element/ReactionManager'
 
 // Thủy Tu Trúc Cơ Pure (Plans/waterpath mục IX, 2026-08-21) — trần %
 // giảm sát thương từ thuyThePercent, cùng tinh thần ARMOR_CAP (Armor.
@@ -56,7 +66,24 @@ export class CombatSystem {
   // thiên phú). GameManager set/reset mỗi lần bắt đầu trận.
   private surviveLethalSession: { playerEntityId: string; guard: SurviveLethalGuard } | null = null
 
-  constructor(private readonly eventBus: EventBus) {
+  // Trigger/Action rework Task 10 (2026-08-31 spec) — onKill firing.
+  // buffRegistry/ailmentRegistry/reactionManager are shared, non-battle-
+  // specific dependencies (same kind BattleSystem itself receives via its
+  // own constructor — see BattleSystem.ts) — injected here as optional
+  // final constructor params so CombatSystem can build a real
+  // SkillEffectContext without crashing on an empty registry `.get()`
+  // miss. `skillManager`/`buffRegistry`/`ailmentRegistry`/
+  // `reactionManager` are all optional; every existing
+  // `new CombatSystem(eventBus)` call site keeps compiling unchanged.
+  private readonly skillTriggerRunner = new SkillTriggerRunner()
+
+  constructor(
+    private readonly eventBus: EventBus,
+    private readonly skillManager?: SkillManager,
+    private readonly buffRegistry?: BuffRegistry,
+    private readonly ailmentRegistry?: AilmentRegistry,
+    private readonly reactionManager?: ReactionManager,
+  ) {
     this.vitals = new EntityVitalsSystem(eventBus)
   }
 
@@ -415,7 +442,11 @@ export class CombatSystem {
    * hiệu ứng theo thời gian cũng emit đúng 'death'/'kill' như chết vì
    * đòn đánh trực tiếp, không lặp code kiểm tra HP<=0 ở 2 nơi.
    */
-  killIfDead(entity: CombatEntity, killerId: string) {
+  killIfDead(
+    entity: CombatEntity,
+    killerId: string,
+    skillContext?: { killer: CombatEntity; skillId: string },
+  ) {
     if (entity.currentHp > 0 || !entity.alive) {
       return
     }
@@ -468,5 +499,83 @@ export class CombatSystem {
 
       targetId: entity.id,
     })
+
+    this.fireKillTriggers(entity, skillContext)
+  }
+
+  // Task 10 — onKill fires on the KILLER's own casting skill (known via
+  // skillContext.skillId, which is always the killer's skill). Only
+  // fires when the caller supplied BOTH a killer CombatEntity and a
+  // skillId (see killIfDead's doc): CombatSystem has no entity registry
+  // to resolve a bare killerId string into a CombatEntity, and no
+  // "currently casting skill" concept on its own — callers that only
+  // have a killerId (applyDirectDamage/applyModifiedDirectDamage/
+  // applyDotDamage today) skip firing, same as non-skill deaths
+  // (DoT ticks, thorns, ward-break).
+  //
+  // onDeath is intentionally NOT fired here (2026-09-01 review ruling,
+  // overriding the original brief's Step 3 snippet): onDeath is meant to
+  // represent "the DYING entity's OWN skill has an onDeath binding",
+  // which requires enumerating the VICTIM's skills for one with an
+  // onDeath trigger — but CombatSystem/SkillManager only expose lookup
+  // by a single known skillId (skillManager.get(id)), not "all skills
+  // belonging to entity X". skillContext.skillId is the KILLER's skill,
+  // so firing onDeath against it here would attribute the trigger to the
+  // wrong entity's skill. Deferred to a future task once a per-entity
+  // skill-list lookup exists; OnDeathContext/the 'onDeath' TriggerType
+  // (Task 1) stay declared, just unfired from this call site for now.
+  //
+  // buffRegistry/ailmentRegistry/reactionManager are shared, non-battle-
+  // specific dependencies — injected via the constructor (2026-09-01
+  // review fix) and used for real here when provided; skip firing
+  // entirely if any is missing rather than constructing an empty
+  // throwaway registry (BuffRegistry.get()/AilmentRegistry.get() both
+  // THROW on a miss, so an empty throwaway registry would crash
+  // killIfDead() mid-battle-tick the first time a bound action looked
+  // one up — not silently no-op).
+  //
+  // sourceBuffs/targetBuffs/targetAilments ARE still throwaway/stubbed
+  // (unchanged from the original design): those are the per-battle
+  // BUFF/AILMENT POOLS for this battle's specific entities (as opposed
+  // to the shared REGISTRIES that define what buffs/ailments exist at
+  // all), and CombatSystem has no access to BattleSystem's real
+  // per-battle pools. An onKill action that only touches CombatEntity
+  // fields directly (grantResource/consumeResource) works correctly
+  // through this path; an onKill action that reads/writes a persistent
+  // buff/ailment POOL (as opposed to just looking up a registry
+  // definition) will not see/affect the real battle-scoped pool.
+  private fireKillTriggers(
+    victim: CombatEntity,
+    skillContext?: { killer: CombatEntity; skillId: string },
+  ): void {
+    if (!skillContext || !this.skillManager || !this.buffRegistry || !this.ailmentRegistry || !this.reactionManager) {
+      return
+    }
+
+    const skill = this.skillManager.get(skillContext.skillId)
+
+    if (!skill?.triggers?.length) {
+      return
+    }
+
+    const ctx: SkillEffectContext = {
+      combatSystem: this,
+      fireHit: () => ({ landed: true }),
+      buffRegistry: this.buffRegistry,
+      ailmentRegistry: this.ailmentRegistry,
+      sourceBuffs: new BuffSystem(new BuffManager()),
+      targetBuffs: new BuffSystem(new BuffManager()),
+      targetAilments: new AilmentSystem(new AilmentManager()),
+      reactionManager: this.reactionManager,
+    }
+
+    this.skillTriggerRunner.fire(
+      'onKill',
+      { source: skillContext.killer, target: victim, skill },
+      skill.triggers,
+      skillContext.killer,
+      victim,
+      ctx,
+    )
   }
 }

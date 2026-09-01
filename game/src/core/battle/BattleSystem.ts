@@ -1323,6 +1323,69 @@ export class BattleSystem {
       )
     }
 
+    if (options.skillId) {
+      const firedSkill = this.skillManager.get(options.skillId)
+
+      // Chỉ build context (allocate BuffSystem/AilmentSystem/closures) khi
+      // skill THỰC SỰ có binding onHit/onCrit/onEvade — tránh allocation vô
+      // ích trên mọi hit của basic attack (vd Huy Kiếm/`tram` chỉ có
+      // onCast, không nên trả giá allocation của nhánh này).
+      const hasReactiveTrigger = firedSkill?.triggers?.some(
+        (binding) => binding.trigger === 'onHit' || binding.trigger === 'onCrit' || binding.trigger === 'onEvade',
+      )
+
+      if (firedSkill && hasReactiveTrigger) {
+        const hitCtx: SkillEffectContext = {
+          combatSystem: this.combat,
+          // Reactive trigger (onHit/onCrit/onEvade) fire từ BÊN TRONG hit
+          // đang resolve — fireHit ở đây KHÔNG được re-enter applyActionHit
+          // (chính applyActionHit là nơi bắn onHit/onCrit/onEvade, nên
+          // re-enter sẽ đệ quy vô hạn). Action nào cần deal damage phải
+          // gắn vào onCast, không phải các reactive trigger này — cảnh báo
+          // loud thay vì âm thầm no-op nếu bị dùng sai.
+          fireHit: () => {
+            console.warn(
+              '[SkillTriggerRunner] fireHit called from a reactive trigger (onHit/onCrit/onEvade) context — this is a no-op by design; use onCast for damage-dealing actions.',
+            )
+            return { landed: true }
+          },
+          buffRegistry: this.buffRegistry,
+          ailmentRegistry: this.ailmentRegistry,
+          sourceBuffs: new BuffSystem(this.getBuffsFor(battle, source)),
+          targetBuffs: new BuffSystem(this.getBuffsFor(battle, target)),
+          targetAilments: new AilmentSystem(this.getAilmentsFor(battle, target)),
+          reactionManager: this.reactionManager,
+          reactionKeepChance: this.getReactionKeepChance(),
+          spawnLavaZone: (spec) => this.spawnLavaZone(battle, spec),
+          spawnSwordZone: (spec) => this.spawnSwordZone(battle, spec),
+          skillId: firedSkill.id,
+          skillExperience: firedSkill.totalExperience ?? firedSkill.experience ?? 0,
+          eventBus: this.eventBus,
+        }
+
+        if (!result.dodged) {
+          const hitContext = { source, target, skill: firedSkill, damageDealt: result.finalDamage, isCrit: result.critical }
+
+          this.skillTriggerRunner.fire('onHit', hitContext, firedSkill.triggers, source, target, hitCtx)
+
+          if (result.critical) {
+            this.skillTriggerRunner.fire('onCrit', hitContext, firedSkill.triggers, source, target, hitCtx)
+          }
+        } else {
+          // onEvade fires trên skill của NGƯỜI TẤN CÔNG khi đòn đánh của
+          // họ bị né ("đòn của tôi bị né") — KHÔNG phải trên skill của
+          // người phòng thủ cho "tôi vừa né được đòn đánh" (chưa có firing
+          // site cho hướng đó).
+          this.skillTriggerRunner.fire(
+            'onEvade',
+            { source, target, skill: firedSkill },
+            firedSkill.triggers,
+            source, target, hitCtx,
+          )
+        }
+      }
+    }
+
     if (!result.dodged && options.skillId) {
       const skill = this.skillManager.get(options.skillId)
 
@@ -2770,6 +2833,8 @@ export class BattleSystem {
         skillId: skill.id,
 
         skillExperience: skill.totalExperience ?? skill.experience ?? 0,
+
+        eventBus: this.eventBus,
       })
     }
 
@@ -2830,6 +2895,7 @@ export class BattleSystem {
           spawnSwordZone: (spec) => this.spawnSwordZone(battle, spec),
           skillId: skill.id,
           skillExperience: skill.totalExperience ?? skill.experience ?? 0,
+          eventBus: this.eventBus,
         }
 
         this.skillTriggerRunner.fire(
@@ -2987,6 +3053,44 @@ export class BattleSystem {
       this.resolveSkillEffects(effectiveSkill, player, target, battle)
     } finally {
       player.stats.finalDamagePercent = originalFinalDamagePercent
+    }
+
+    // Trigger/Action rework (2026-08-31 spec, Task 11) — SEPARATE, explicit
+    // onTick firing so a future triggers-based channel skill can tell "the
+    // channel resolved this tick" apart from onCast (resolveSkillEffects()
+    // above already fires onCast unconditionally for any `triggers`-based
+    // skill, even on channel ticks — a harmless Phase 1 side effect this
+    // does not touch). Bạt Kiếm is still on `effects` (triggers undefined),
+    // so this guard is a no-op for all real production content today.
+    if (effectiveSkill.triggers?.length) {
+      const tickCtx: SkillEffectContext = {
+        combatSystem: this.combat,
+        fireHit: () => ({ landed: true }),
+        buffRegistry: this.buffRegistry,
+        ailmentRegistry: this.ailmentRegistry,
+        sourceBuffs: new BuffSystem(this.getBuffsFor(battle, player)),
+        targetBuffs: new BuffSystem(this.getBuffsFor(battle, target)),
+        targetAilments: new AilmentSystem(this.getAilmentsFor(battle, target)),
+        reactionManager: this.reactionManager,
+        reactionKeepChance: this.getReactionKeepChance(),
+        spawnLavaZone: (spec) => this.spawnLavaZone(battle, spec),
+        spawnSwordZone: (spec) => this.spawnSwordZone(battle, spec),
+        skillId: skill.id,
+        skillExperience: skill.totalExperience ?? skill.experience ?? 0,
+        eventBus: this.eventBus,
+      }
+
+      // No per-skill tick counter exists anywhere in BattleSystem (no
+      // `channelTickCounter` field) and no current action reads
+      // OnTickContext.tickIndex — inventing new tracking state for an
+      // unused value would be pure speculation, so this uses the literal
+      // `0` per the plan's own Step 4 guidance.
+      this.skillTriggerRunner.fire(
+        'onTick',
+        { source: player, target, skill: effectiveSkill, tickIndex: 0 },
+        effectiveSkill.triggers,
+        player, target, tickCtx,
+      )
     }
   }
 

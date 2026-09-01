@@ -1,14 +1,18 @@
 import type { OnHitContext, TriggerBinding, TriggerContextMap, TriggerType } from './SkillTrigger'
 import type { CombatEntity } from '../combat/CombatEntity'
+import type { Skill } from './Skill'
 import type { SkillEffectContext } from './SkillEffectSystem'
-import type { ActionRuntimeContext } from './SkillAction'
+import type { ActionExecutionHelpers } from './SkillActionRegistry'
 import { runSkillAction } from './SkillActionRegistry'
 
 /**
  * Matches a firing TriggerType against skill.triggers and runs the bound
  * actions in declared order, sharing one ActionRuntimeContext scratch
  * object per binding so a later action can read an earlier action's
- * result (e.g. a future consumeForDamage → heal chain).
+ * result. Each action also receives a `fireNested` helper bound to the
+ * SAME triggers/source/target/ctx, so an executor (applyAilment,
+ * grantResource, consumeResource) can fire onProc/onResourceFull/onBreak
+ * on the same skill without needing its own copy of the runner.
  */
 export class SkillTriggerRunner {
   fire<T extends TriggerType>(
@@ -25,13 +29,29 @@ export class SkillTriggerRunner {
 
     for (const binding of bindings) {
       const hitContext = context as Partial<OnHitContext>
-      const runtime: ActionRuntimeContext =
-        hitContext.damageDealt !== undefined
+      const runtime = {
+        ...(hitContext.damageDealt !== undefined
           ? { damageDealt: hitContext.damageDealt, isCrit: hitContext.isCrit }
-          : {}
+          : {}),
+      }
+
+      const skill = (context as Partial<{ skill: Skill }>).skill
+
+      const helpers: ActionExecutionHelpers = {
+        fireNested: (nestedTrigger, nestedContext) => {
+          this.fire(
+            nestedTrigger,
+            { ...nestedContext, skill } as TriggerContextMap[typeof nestedTrigger],
+            triggers,
+            source,
+            target,
+            ctx,
+          )
+        },
+      }
 
       for (const action of binding.actions) {
-        runSkillAction(action, source, target, ctx, runtime)
+        runSkillAction(action, source, target, ctx, runtime, helpers)
       }
     }
   }

@@ -31,7 +31,7 @@
 
 Note on scope vs. the original spec table: the spec's trigger table listed `onDodge` (self evaded an incoming attack) as a candidate. No firing site for it was identified during design (only `onEvade` — the *attacker's* skill reacting to being evaded — has a located call site), and no action in this plan's vocabulary needs it. Per YAGNI, do not add `onDodge` in this task; a future plan adds it when something needs it (one union member + one context type + one firing call, per the engine's own extensibility promise).
 
-- [ ] **Step 1: Add `SkillResourcePoolKey` and the 10 new action interfaces to `game/src/core/skill/SkillAction.ts`**
+- [x] **Step 1: Add `SkillResourcePoolKey` and the 10 new action interfaces to `game/src/core/skill/SkillAction.ts`**
 
 Replace the file's contents with:
 
@@ -201,7 +201,7 @@ export interface ActionRuntimeContext {
 }
 ```
 
-- [ ] **Step 2: Add the 6 new trigger context types to `game/src/core/skill/SkillTrigger.ts`**
+- [x] **Step 2: Add the 6 new trigger context types to `game/src/core/skill/SkillTrigger.ts`**
 
 Replace the file's contents with:
 
@@ -330,7 +330,7 @@ export interface TriggerBinding<T extends TriggerType = TriggerType> {
 }
 ```
 
-- [ ] **Step 3: Type-check**
+- [x] **Step 3: Type-check**
 
 Run: `cd game && npm run type-check`
 Expected: FAIL — `SkillActionRegistry.ts`'s `SKILL_ACTION_REGISTRY` is no
@@ -339,7 +339,7 @@ executors). This is the correct, expected failure — Task 2 fixes it. Do not
 add stub executors here to make it pass; that belongs to Task 2 alongside
 its tests.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add game/src/core/skill/SkillAction.ts game/src/core/skill/SkillTrigger.ts
@@ -366,7 +366,7 @@ executors yet (Tasks 3-8 do). `dealDamage` is the only real executor today;
 it gets the new 6th parameter added to its signature but does not use it
 (it has no nested trigger to fire).
 
-- [ ] **Step 1: Update `game/src/core/skill/SkillActionRegistry.ts`**
+- [x] **Step 1: Update `game/src/core/skill/SkillActionRegistry.ts`**
 
 ```ts
 import type { ActionRuntimeContext, SkillAction, SkillActionType } from './SkillAction'
@@ -456,7 +456,7 @@ by one; the LAST of those tasks (Task 8) removes this cast once the object
 literal is genuinely exhaustive, restoring the compile-time safety net
 (a missing executor becomes a compile error again). Do not skip removing it.
 
-- [ ] **Step 2: Update `game/src/core/skill/SkillTriggerRunner.ts`**
+- [x] **Step 2: Update `game/src/core/skill/SkillTriggerRunner.ts`**
 
 ```ts
 import type { OnHitContext, TriggerBinding, TriggerContextMap, TriggerType } from './SkillTrigger'
@@ -509,7 +509,7 @@ export class SkillTriggerRunner {
 }
 ```
 
-- [ ] **Step 3: Update the 3 existing test files' `runSkillAction`/`ActionExecutor` call sites**
+- [x] **Step 3: Update the 3 existing test files' `runSkillAction`/`ActionExecutor` call sites**
 
 In `game/src/core/skill/SkillActionRegistry.test.ts`, every call to
 `runSkillAction(action, source, target, ctx, runtime)` gains a 6th argument.
@@ -535,13 +535,13 @@ and pass it.
 `SkillTriggerRunner.test.ts` needs no signature changes (its `.fire()` calls
 are unchanged) — just re-run it to confirm.
 
-- [ ] **Step 4: Run all 3 test files**
+- [x] **Step 4: Run all 3 test files**
 
 Run: `cd game && npx vitest run src/core/skill/SkillActionRegistry.test.ts src/core/skill/SkillTriggerRunner.test.ts src/core/skill/SkillEffectParity.test.ts`
 Expected: PASS (all previously-passing tests still pass — this task changes
 signatures, not behavior, for the one executor that exists).
 
-- [ ] **Step 5: Type-check**
+- [x] **Step 5: Type-check**
 
 Run: `cd game && npm run type-check`
 Expected: still FAIL for the same reason as Task 1 Step 3 (the temporary
@@ -549,7 +549,7 @@ cast in Step 1 above suppresses the exhaustiveness error, so this should
 now actually PASS — if it still fails, something in Step 1's cast is wrong;
 fix before proceeding).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add game/src/core/skill/SkillActionRegistry.ts game/src/core/skill/SkillTriggerRunner.ts game/src/core/skill/SkillActionRegistry.test.ts game/src/core/skill/SkillEffectParity.test.ts
@@ -571,7 +571,7 @@ git commit -m "feat(skill): add fireNested plumbing for onProc/onResourceFull/on
 These three are the simplest remaining actions — no nested firing, direct
 ports of `SkillEffectSystem.apply()`'s corresponding cases.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Add to `game/src/core/skill/SkillActionRegistry.test.ts`:
 
@@ -644,7 +644,7 @@ describe('applyDebuff executor', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd game && npx vitest run src/core/skill/SkillActionRegistry.test.ts`
 Expected: FAIL — `SKILL_ACTION_REGISTRY.heal`/`.applyBuff`/`.applyDebuff` are
@@ -652,7 +652,7 @@ Expected: FAIL — `SKILL_ACTION_REGISTRY.heal`/`.applyBuff`/`.applyDebuff` are
 from Task 2 hides it — either way `runSkillAction` throws or no-ops
 incorrectly).
 
-- [ ] **Step 3: Add the 3 executors to `SkillActionRegistry.ts`**
+- [x] **Step 3: Add the 3 executors to `SkillActionRegistry.ts`**
 
 Add above the `SKILL_ACTION_REGISTRY` object literal:
 
@@ -685,12 +685,12 @@ export const SKILL_ACTION_REGISTRY: { [K in SkillActionType]: ActionExecutor<Ext
 
 (the cast stays until Task 8 — see Task 2's note).
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd game && npx vitest run src/core/skill/SkillActionRegistry.test.ts`
 Expected: PASS (all tests in the file, including Phase 1's `dealDamage` ones).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add game/src/core/skill/SkillActionRegistry.ts game/src/core/skill/SkillActionRegistry.test.ts
@@ -716,7 +716,7 @@ this action (per the spec's Actions table). This executor's only new
 responsibility versus the old code is firing `onProc` on a successful roll,
 via `helpers.fireNested`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add to `game/src/core/skill/SkillActionRegistry.test.ts`:
 
@@ -809,12 +809,12 @@ before writing this task's test, and update this test's expected call to
 `fireNested).toHaveBeenCalledWith('onProc', { source, target, ailmentId: 'bong' })`
 (no `skill` key).)
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd game && npx vitest run src/core/skill/SkillActionRegistry.test.ts -t applyAilment`
 Expected: FAIL — executor doesn't exist yet.
 
-- [ ] **Step 3: Fix `SkillTriggerRunner.ts`'s `fireNested` to auto-merge `skill`, then add the executor**
+- [x] **Step 3: Fix `SkillTriggerRunner.ts`'s `fireNested` to auto-merge `skill`, then add the executor**
 
 In `game/src/core/skill/SkillTriggerRunner.ts`, change `ActionExecutionHelpers`'s
 call inside `fire()`:
@@ -879,18 +879,18 @@ const applyAilment: ActionExecutor<Extract<SkillAction, { type: 'applyAilment' }
 
 Add `applyAilment,` to `SKILL_ACTION_REGISTRY`.
 
-- [ ] **Step 4: Update and run the test**
+- [x] **Step 4: Update and run the test**
 
 Fix the test's expected `fireNested` call per Step 1's note (drop `skill`
 key). Run: `cd game && npx vitest run src/core/skill/SkillActionRegistry.test.ts`
 Expected: PASS (all tests).
 
-- [ ] **Step 5: Run `SkillTriggerRunner.test.ts` to confirm no regression from the helpers-type change**
+- [x] **Step 5: Run `SkillTriggerRunner.test.ts` to confirm no regression from the helpers-type change**
 
 Run: `cd game && npx vitest run src/core/skill/SkillTriggerRunner.test.ts`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add game/src/core/skill/SkillActionRegistry.ts game/src/core/skill/SkillTriggerRunner.ts game/src/core/skill/SkillActionRegistry.test.ts
@@ -909,7 +909,7 @@ git commit -m "feat(skill): add applyAilment executor with onProc nested firing"
 - Consumes: `GrantResourceAction`/`SkillResourcePoolKey` (Task 1); `helpers.fireNested` (Task 2/4's corrected shape).
 - Produces: 1 more entry in `SKILL_ACTION_REGISTRY`; a `RESOURCE_POOL_MAX`/`RESOURCE_POOL_FIELD` lookup table (also consumed by Task 6).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Add to `game/src/core/skill/SkillActionRegistry.test.ts`:
 
@@ -939,12 +939,12 @@ describe('grantResource executor', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd game && npx vitest run src/core/skill/SkillActionRegistry.test.ts -t grantResource`
 Expected: FAIL.
 
-- [ ] **Step 3: Add the pool lookup tables and executor to `SkillActionRegistry.ts`**
+- [x] **Step 3: Add the pool lookup tables and executor to `SkillActionRegistry.ts`**
 
 Add the import and lookup tables near the top of the file (below existing imports):
 
@@ -1002,12 +1002,12 @@ const grantResource: ActionExecutor<Extract<SkillAction, { type: 'grantResource'
 
 Add `grantResource,` to `SKILL_ACTION_REGISTRY`.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd game && npx vitest run src/core/skill/SkillActionRegistry.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Type-check**
+- [x] **Step 5: Type-check**
 
 Run: `cd game && npm run type-check`
 Expected: PASS — `(source[field] as number) = next` is a deliberate cast;
@@ -1015,7 +1015,7 @@ confirm it compiles cleanly (if TS rejects assigning through a computed
 `keyof CombatEntity` cast, use `Reflect.set(source, field, next)` instead
 and re-verify).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add game/src/core/skill/SkillActionRegistry.ts game/src/core/skill/SkillActionRegistry.test.ts
@@ -1038,7 +1038,7 @@ Two branches: normal pools (subtract from `source`, write `runtime.consumedAmoun
 and `'breakGauge'` (subtract from `target.currentBreakGauge`, fire `onBreak`
 at 0 — replaces `breakDamagePerHit`).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Add to `game/src/core/skill/SkillActionRegistry.test.ts`:
 
@@ -1090,12 +1090,12 @@ describe('consumeResource executor', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd game && npx vitest run src/core/skill/SkillActionRegistry.test.ts -t consumeResource`
 Expected: FAIL.
 
-- [ ] **Step 3: Add the executor to `SkillActionRegistry.ts`**
+- [x] **Step 3: Add the executor to `SkillActionRegistry.ts`**
 
 ```ts
 const consumeResource: ActionExecutor<Extract<SkillAction, { type: 'consumeResource' }>> = (
@@ -1138,12 +1138,12 @@ const consumeResource: ActionExecutor<Extract<SkillAction, { type: 'consumeResou
 
 Add `consumeResource,` to `SKILL_ACTION_REGISTRY`.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd game && npx vitest run src/core/skill/SkillActionRegistry.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add game/src/core/skill/SkillActionRegistry.ts game/src/core/skill/SkillActionRegistry.test.ts
@@ -1167,7 +1167,7 @@ git commit -m "feat(skill): add consumeResource executor with onBreak nested fir
 `damagePerWardPoint`) mechanics, ported from `SkillEffectSystem.apply()`'s
 matching branches inside `case 'damage'`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Add to `game/src/core/skill/SkillActionRegistry.test.ts`:
 
@@ -1241,12 +1241,12 @@ describe('spawnZone executor', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `cd game && npx vitest run src/core/skill/SkillActionRegistry.test.ts -t "consumeForDamage|spawnZone"`
 Expected: FAIL.
 
-- [ ] **Step 3: Add both executors to `SkillActionRegistry.ts`**
+- [x] **Step 3: Add both executors to `SkillActionRegistry.ts`**
 
 ```ts
 const consumeForDamage: ActionExecutor<Extract<SkillAction, { type: 'consumeForDamage' }>> = (
@@ -1319,12 +1319,12 @@ const spawnZone: ActionExecutor<Extract<SkillAction, { type: 'spawnZone' }>> = (
 
 Add `consumeForDamage,` and `spawnZone,` to `SKILL_ACTION_REGISTRY`.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `cd game && npx vitest run src/core/skill/SkillActionRegistry.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add game/src/core/skill/SkillActionRegistry.ts game/src/core/skill/SkillActionRegistry.test.ts
@@ -1349,7 +1349,7 @@ git commit -m "feat(skill): add consumeForDamage and spawnZone executors"
 original spec ("VFX — reusing the existing pipeline") — no new event bus,
 no Phaser code.
 
-- [ ] **Step 1: Add `eventBus` to `SkillEffectContext` in `game/src/core/skill/SkillEffectSystem.ts`**
+- [x] **Step 1: Add `eventBus` to `SkillEffectContext` in `game/src/core/skill/SkillEffectSystem.ts`**
 
 Add near the top of the `SkillEffectContext` interface (after `combatSystem`):
 
@@ -1360,7 +1360,7 @@ Add near the top of the `SkillEffectContext` interface (after `combatSystem`):
 (optional — most tests construct a partial context and don't need it;
 production call sites in `BattleSystem.ts` always provide it after Step 4).
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 Add to `game/src/core/skill/SkillActionRegistry.test.ts`:
 
@@ -1385,12 +1385,12 @@ describe('spawnVfx executor', () => {
 
 Add `import type { EventBus } from '../events/EventBus'` to the test file's imports.
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run: `cd game && npx vitest run src/core/skill/SkillActionRegistry.test.ts -t spawnVfx`
 Expected: FAIL.
 
-- [ ] **Step 4: Add the executor, remove the temporary cast**
+- [x] **Step 4: Add the executor, remove the temporary cast**
 
 Add to `SkillActionRegistry.ts`:
 
@@ -1441,7 +1441,7 @@ export const SKILL_ACTION_REGISTRY: { [K in SkillActionType]: ActionExecutor<Ext
 (no trailing `as {...}` — if this doesn't compile, an executor from a prior
 task is missing or misnamed; fix that, don't re-add the cast).
 
-- [ ] **Step 5: Add `eventBus` to `BattleSystem.ts`'s two `SkillEffectContext` builders**
+- [x] **Step 5: Add `eventBus` to `BattleSystem.ts`'s two `SkillEffectContext` builders**
 
 In `game/src/core/battle/BattleSystem.ts`, both the `applyEffects` closure's
 object literal (around line 2718-2768, pre-existing) and the `onCast`
@@ -1451,12 +1451,12 @@ BOTH (find them by their shared `skillExperience: skill.totalExperience ??
 skill.experience ?? 0,` closing field and add the new field right after it
 in each).
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 6: Run tests to verify they pass**
 
 Run: `cd game && npx vitest run src/core/skill/SkillActionRegistry.test.ts`
 Expected: PASS (all tests — this is the full, final registry).
 
-- [ ] **Step 7: Type-check and run the full skill + battle suites**
+- [x] **Step 7: Type-check and run the full skill + battle suites**
 
 Run: `cd game && npm run type-check`
 Expected: PASS (registry is exhaustive now, no cast).
@@ -1466,7 +1466,7 @@ Expected: PASS — zero regressions in either the new engine's own tests or
 the untouched `effects`-based skill tests (Huy Kiếm's `onCast` firing still
 works; every other skill is still on the old path entirely).
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add game/src/core/skill/SkillEffectSystem.ts game/src/core/skill/SkillActionRegistry.ts game/src/core/skill/SkillActionRegistry.test.ts game/src/core/battle/BattleSystem.ts
@@ -1494,7 +1494,7 @@ numbers may have shifted since Phase 1). Add trigger firing alongside it
 `effects`; this task only makes the NEW firing available for skills that
 opt in via `triggers`).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `game/src/core/battle/BattleSystem.reactiveTriggers.test.ts`. Reuse
 the harness shape from `BattleSystem.skillTriggers.test.ts` (Phase 1) —
@@ -1589,12 +1589,12 @@ describe('BattleSystem — onHit/onCrit/onEvade trigger wiring', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd game && npx vitest run src/core/battle/BattleSystem.reactiveTriggers.test.ts`
 Expected: FAIL — `player.currentKimThe` stays `0` (no firing site yet).
 
-- [ ] **Step 3: Wire the firing site**
+- [x] **Step 3: Wire the firing site**
 
 In `game/src/core/battle/BattleSystem.ts`, find the block (search for
 `if (!result.dodged && options.skillId)`):
@@ -1666,24 +1666,24 @@ read the full enclosing method before editing, since this plan's line
 reference is approximate (Phase 1's own note about this file applies here
 too: locate by the literal code shown, not by trusting line numbers).
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `cd game && npx vitest run src/core/battle/BattleSystem.reactiveTriggers.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Run the full battle suite**
+- [x] **Step 5: Run the full battle suite**
 
 Run: `cd game && npx vitest run src/core/battle/`
 Expected: PASS — zero regressions (every existing skill has
 `triggers === undefined`, so `firedSkill?.triggers?.length` is falsy for
 all of them, making this new block a guaranteed no-op for current content).
 
-- [ ] **Step 6: Type-check**
+- [x] **Step 6: Type-check**
 
 Run: `cd game && npm run type-check`
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add game/src/core/battle/BattleSystem.ts game/src/core/battle/BattleSystem.reactiveTriggers.test.ts
@@ -1712,7 +1712,7 @@ untouched by this task; `onKill`/`onDeath` are reachable via
 `resolveAttack`'s skill-driven path today, and future callers can pass a
 `skillId` the same way when they have one).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `game/src/core/combat/CombatSystem.triggers.test.ts`:
 
@@ -1766,7 +1766,7 @@ describe('CombatSystem — onKill/onDeath trigger wiring', () => {
 })
 ```
 
-- [ ] **Step 2: Investigate `killIfDead()`'s actual signature and callers before writing Step 3**
+- [x] **Step 2: Investigate `killIfDead()`'s actual signature and callers before writing Step 3**
 
 Read `game/src/core/combat/CombatSystem.ts:418-462` in full (already partially
 quoted during design — re-read the complete function and its 3+ call sites
@@ -1792,7 +1792,7 @@ side effects, not internal calls, wherever the executor is already proven
 correct by its own unit tests). Rewrite Step 1's test using this shape
 before implementing Step 3.
 
-- [ ] **Step 3: Implement `killIfDead()`'s new optional parameter and firing**
+- [x] **Step 3: Implement `killIfDead()`'s new optional parameter and firing**
 
 In `game/src/core/combat/CombatSystem.ts`, change `killIfDead`'s signature
 to accept the new optional bundle and, after the existing
@@ -1848,7 +1848,7 @@ have SOME access to buff/ailment systems already, since `resolveAttack`
 elsewhere reads/writes them — reuse that, do not add new dependencies for
 fields already reachable another way).
 
-- [ ] **Step 4: Update all `killIfDead()` call sites**
+- [x] **Step 4: Update all `killIfDead()` call sites**
 
 `applyDirectDamage`/`applyModifiedDirectDamage`/`applyDotDamage`/`resolveAttack`
 (wherever `killIfDead` is called in this file) keep calling it exactly as
@@ -1865,17 +1865,17 @@ complete, tested via Step 1's direct unit test), noting in your report that
 flagged gap for this task, matching Phase 1's "declare the capability,
 wire the first real site when a concrete skill needs it" pattern).
 
-- [ ] **Step 5: Run tests**
+- [x] **Step 5: Run tests**
 
 Run: `cd game && npx vitest run src/core/combat/CombatSystem.triggers.test.ts src/core/combat/`
 Expected: PASS.
 
-- [ ] **Step 6: Type-check**
+- [x] **Step 6: Type-check**
 
 Run: `cd game && npm run type-check`
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add game/src/core/combat/CombatSystem.ts game/src/core/combat/CombatSystem.triggers.test.ts
@@ -1900,7 +1900,7 @@ harmless side effect of reusing that function for ticks). This task adds a
 SEPARATE, explicit `onTick` firing so a future triggers-based channel skill
 can distinguish "the channel resolved this tick" from "the skill was cast."
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `game/src/core/battle/BattleSystem.onTick.test.ts` reusing the same
 harness as Task 9 (`createCombatant`/`setup` — copy those two helpers
@@ -1983,7 +1983,7 @@ describe('BattleSystem — onTick trigger wiring', () => {
 })
 ```
 
-- [ ] **Step 2: Verify the test's channel-start mechanism against the real code**
+- [x] **Step 2: Verify the test's channel-start mechanism against the real code**
 
 `BattleSystem.startChannel()` (private) is called from the `'channel'`
 execution-kind branch inside the player cast-dispatch switch (not shown in
@@ -1996,12 +1996,12 @@ for the exact pattern and copy it) rather than the placeholder comment
 above. This step exists specifically because the private-field concern is
 real — resolve it with the actual pattern before writing Step 3.
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run: `cd game && npx vitest run src/core/battle/BattleSystem.onTick.test.ts`
 Expected: FAIL — `player.currentKimThe` stays `0`.
 
-- [ ] **Step 4: Wire the firing site in `resolveChannelTick()`**
+- [x] **Step 4: Wire the firing site in `resolveChannelTick()`**
 
 In `game/src/core/battle/BattleSystem.ts`, inside `resolveChannelTick()`
 (search for `private resolveChannelTick(battle: Battle, skill: Skill,
@@ -2046,12 +2046,12 @@ current action reads (`OnTickContext.tickIndex` exists for future actions
 that care about "which tick is this" — Phase 2A has none). Prefer `0` over
 inventing unused tracking state; note this simplification in your report.
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `cd game && npx vitest run src/core/battle/BattleSystem.onTick.test.ts`
 Expected: PASS.
 
-- [ ] **Step 6: Run the full battle suite (Bạt Kiếm is real production content — check carefully)**
+- [x] **Step 6: Run the full battle suite (Bạt Kiếm is real production content — check carefully)**
 
 Run: `cd game && npx vitest run src/core/battle/`
 Expected: PASS — Bạt Kiếm is still on `effects` (`triggers === undefined`),
@@ -2059,12 +2059,12 @@ so the new `if (effectiveSkill.triggers?.length)` guard is a no-op for it;
 confirm the existing `BattleSystem.kiemTuResources.test.ts`/`.batKiem.test.ts`
 suites are unaffected.
 
-- [ ] **Step 7: Type-check**
+- [x] **Step 7: Type-check**
 
 Run: `cd game && npm run type-check`
 Expected: PASS.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add game/src/core/battle/BattleSystem.ts game/src/core/battle/BattleSystem.onTick.test.ts
@@ -2090,7 +2090,7 @@ triggers-based skill using `dealDamage`'s `hitCountByRealm` or the new
 wrong (single-hit, no-knockback) VFX/hit-resolution batch. Close it now that
 `dealDamage` actually has these fields.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add to `game/src/core/battle/BattleSystem.reactiveTriggers.test.ts` (from
 Task 9 — same file, new `describe` block):
@@ -2136,7 +2136,7 @@ describe('BattleSystem — beginSkillBatch reads triggers-based hitCountByRealm 
 })
 ```
 
-- [ ] **Step 2: Investigate the right assertion seam**
+- [x] **Step 2: Investigate the right assertion seam**
 
 `ActionImpactSystem.beginSkillBatch` is called with a `hitCount` field
 (`BattleSystem.ts` ~line 2694-2696 per Phase 1's read). Since it's a private
@@ -2150,12 +2150,12 @@ and return `{ system, actionImpact }`), then `vi.spyOn(actionImpact,
 (realmIndex 2 + 1), not `1`. Rewrite Step 1's test with this real
 assertion before implementing Step 3.
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run: `cd game && npx vitest run src/core/battle/BattleSystem.reactiveTriggers.test.ts -t "beginSkillBatch reads triggers"`
 Expected: FAIL — spied `hitCount` is `1`.
 
-- [ ] **Step 4: Fix the derivation in `BattleSystem.ts`**
+- [x] **Step 4: Fix the derivation in `BattleSystem.ts`**
 
 Find (per Phase 1's plan, ~line 2664-2696):
 
@@ -2196,17 +2196,17 @@ this task actually needs it; if not, note the gap explicitly in your report
 rather than silently leaving it, since it's the same shape of bug this task
 is closing).
 
-- [ ] **Step 5: Run test to verify it passes**
+- [x] **Step 5: Run test to verify it passes**
 
 Run: `cd game && npx vitest run src/core/battle/BattleSystem.reactiveTriggers.test.ts`
 Expected: PASS.
 
-- [ ] **Step 6: Run the full battle suite**
+- [x] **Step 6: Run the full battle suite**
 
 Run: `cd game && npx vitest run src/core/battle/`
 Expected: PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add game/src/core/battle/BattleSystem.ts game/src/core/battle/BattleSystem.reactiveTriggers.test.ts
@@ -2224,7 +2224,7 @@ git commit -m "fix(battle): beginSkillBatch reads triggers-based hitCountByRealm
 **Interfaces:**
 - None (documentation only).
 
-- [ ] **Step 1: Update `game/docs/skill-trigger-action-usage-guide.md`**
+- [x] **Step 1: Update `game/docs/skill-trigger-action-usage-guide.md`**
 
 Replace the "What's NOT migrated yet" section's content with:
 
@@ -2271,7 +2271,7 @@ whenever the causing action runs, on ANY skill, without touching
 related system picks it up automatically."
 ```
 
-- [ ] **Step 2: Update `.agents/skills/tutienidle-skill-design/references/skill-architecture.md`**
+- [x] **Step 2: Update `.agents/skills/tutienidle-skill-design/references/skill-architecture.md`**
 
 In the existing "## Trigger/Action engine" section, replace the paragraph
 starting "As of this writing only `onCast`/`dealDamage` are implemented"
@@ -2293,7 +2293,7 @@ plan. See `game/docs/skill-trigger-action-usage-guide.md` for the current
 trigger/action list and how to add a new skill, trigger, or action.
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add game/docs/skill-trigger-action-usage-guide.md .agents/skills/tutienidle-skill-design/references/skill-architecture.md

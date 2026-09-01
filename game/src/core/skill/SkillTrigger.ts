@@ -1,14 +1,25 @@
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from './Skill'
 import type { SkillAction } from './SkillAction'
+import type { AilmentId } from '../ailment/AilmentTypes'
+import type { SkillResourcePoolKey } from './SkillAction'
 
-// Trigger/Action rework (2026-08-31 spec) — only 'onCast' has a production
-// firing site in this phase (BattleSystem.resolveSkillEffects). 'onHit'/
-// 'onCrit'/'onEvade' are declared now (SkillTriggerRunner is already
-// generic over TriggerType) so a later plan can wire their firing site
-// with zero changes here — adding a NEW trigger member later still only
-// costs one type-union entry + one context interface + one firing call.
-export type TriggerType = 'onCast' | 'onHit' | 'onCrit' | 'onEvade'
+// Trigger/Action rework (2026-08-31 spec, Phase 2A) — full vocabulary.
+// onHit/onCrit/onEvade, onKill/onDeath, and onTick have real hand-wired
+// firing sites (see the plan's Task 9/10/11). onProc/onResourceFull/
+// onBreak fire from INSIDE the action executor that causes them (see
+// SkillActionRegistry.ts's fireNested helper) — no separate firing site.
+export type TriggerType =
+  | 'onCast'
+  | 'onHit'
+  | 'onCrit'
+  | 'onEvade'
+  | 'onKill'
+  | 'onDeath'
+  | 'onTick'
+  | 'onProc'
+  | 'onBreak'
+  | 'onResourceFull'
 
 export interface OnCastContext {
   source: CombatEntity
@@ -38,6 +49,50 @@ export interface OnEvadeContext {
   skill: Skill
 }
 
+export interface OnKillContext {
+  source: CombatEntity
+
+  target: CombatEntity
+
+  skill: Skill
+}
+
+export interface OnDeathContext {
+  source: CombatEntity
+}
+
+export interface OnTickContext {
+  source: CombatEntity
+
+  target: CombatEntity
+
+  skill: Skill
+
+  tickIndex: number
+}
+
+export interface OnProcContext {
+  source: CombatEntity
+
+  target: CombatEntity
+
+  skill: Skill
+
+  ailmentId: AilmentId
+}
+
+export interface OnBreakContext {
+  source: CombatEntity
+
+  target: CombatEntity
+}
+
+export interface OnResourceFullContext {
+  source: CombatEntity
+
+  resource: SkillResourcePoolKey
+}
+
 export interface TriggerContextMap {
   onCast: OnCastContext
 
@@ -46,6 +101,18 @@ export interface TriggerContextMap {
   onCrit: OnCritContext
 
   onEvade: OnEvadeContext
+
+  onKill: OnKillContext
+
+  onDeath: OnDeathContext
+
+  onTick: OnTickContext
+
+  onProc: OnProcContext
+
+  onBreak: OnBreakContext
+
+  onResourceFull: OnResourceFullContext
 }
 
 export interface TriggerBinding<T extends TriggerType = TriggerType> {
