@@ -71,6 +71,28 @@ test.describe('ink-wash UI visual smoke', () => {
       const panel = page.locator('.overlay-panel__card').first()
       await expect(panel).toBeVisible()
       await expect(panel.locator('[data-ink-slice="frame-xl-ceremony"]').first()).toBeVisible()
+
+      // Flake fix (2026-09-01): overlay-fade enter transition chạy
+      // transform .22s sau khi visible — boundingBox đọc ngay làm
+      // heading-offset >= 32 fail ngẫu nhiên (compact/tall dễ miss
+      // timing hơn). Chờ panel transform ổn định trước khi đo.
+      await page.waitForFunction(
+        () => {
+          const card = document.querySelector<HTMLElement>('.overlay-panel__card')
+
+          if (!card) {
+            return false
+          }
+
+          const transform = getComputedStyle(card).transform
+
+          // 'none' hoặc identity matrix = transition đã xong.
+          return transform === 'none' || transform === 'matrix(1, 0, 0, 1, 0, 0)'
+        },
+        undefined,
+        { timeout: 5_000 },
+      )
+
       const panelBox = await panel.boundingBox()
       const headingBox = await panel.locator('.overlay-panel__heading').boundingBox()
       const settingsBox = await panel.locator('.settings-panel').boundingBox()
