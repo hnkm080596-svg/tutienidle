@@ -18,7 +18,16 @@ export class LocalCloudSaveService implements CloudSaveService {
     const currentRevision = readRevision()
     if (currentRevision !== expectedRevision) return { status: 'conflict', currentRevision }
     const revision = currentRevision + 1
-    writeGameSave(save)
+    const write = writeGameSave(save)
+    if (write.status !== 'ok') {
+      // Write fail (quota...) — revision chưa ghi, CAS state nguyên vẹn;
+      // autosave kế tiếp (15s) retry tự nhiên nên retryable: true.
+      return {
+        status: 'unavailable',
+        message: write.reason === 'quota' ? 'localStorage đầy (quota)' : 'ghi save thất bại',
+        retryable: true,
+      }
+    }
     localStorage.setItem(SAVE_REVISION_KEY, String(revision))
     return { status: 'ok', revision }
   }
