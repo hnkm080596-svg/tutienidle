@@ -21,9 +21,6 @@ import type { SkillEffectContext } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
 import { BuffSystem } from '../buff/BuffSystem'
 import { BuffPool } from '../buff/BuffPool'
-import { AilmentRegistry } from '../ailment/AilmentRegistry'
-import { AilmentSystem } from '../ailment/AilmentSystem'
-import { AilmentManager } from '../ailment/AilmentManager'
 import { ReactionManager } from '../element/ReactionManager'
 
 // Thủy Tu Trúc Cơ Pure (Plans/waterpath mục IX, 2026-08-21) — trần %
@@ -67,13 +64,12 @@ export class CombatSystem {
   private surviveLethalSession: { playerEntityId: string; guard: SurviveLethalGuard } | null = null
 
   // Trigger/Action rework Task 10 (2026-08-31 spec) — onKill firing.
-  // buffRegistry/ailmentRegistry/reactionManager are shared, non-battle-
-  // specific dependencies (same kind BattleSystem itself receives via its
-  // own constructor — see BattleSystem.ts) — injected here as optional
-  // final constructor params so CombatSystem can build a real
-  // SkillEffectContext without crashing on an empty registry `.get()`
-  // miss. `skillManager`/`buffRegistry`/`ailmentRegistry`/
-  // `reactionManager` are all optional; every existing
+  // buffRegistry/reactionManager are shared, non-battle-specific
+  // dependencies (same kind BattleSystem itself receives via its own
+  // constructor — see BattleSystem.ts) — injected here as optional final
+  // constructor params so CombatSystem can build a real SkillEffectContext
+  // without crashing on an empty registry `.get()` miss. `skillManager`/
+  // `buffRegistry`/`reactionManager` are all optional; every existing
   // `new CombatSystem(eventBus)` call site keeps compiling unchanged.
   private readonly skillTriggerRunner = new SkillTriggerRunner()
 
@@ -81,7 +77,6 @@ export class CombatSystem {
     private readonly eventBus: EventBus,
     private readonly skillManager?: SkillManager,
     private readonly buffRegistry?: BuffRegistry,
-    private readonly ailmentRegistry?: AilmentRegistry,
     private readonly reactionManager?: ReactionManager,
   ) {
     this.vitals = new EntityVitalsSystem(eventBus)
@@ -525,30 +520,28 @@ export class CombatSystem {
   // skill-list lookup exists; OnDeathContext/the 'onDeath' TriggerType
   // (Task 1) stay declared, just unfired from this call site for now.
   //
-  // buffRegistry/ailmentRegistry/reactionManager are shared, non-battle-
-  // specific dependencies — injected via the constructor (2026-09-01
-  // review fix) and used for real here when provided; skip firing
-  // entirely if any is missing rather than constructing an empty
-  // throwaway registry (BuffRegistry.get()/AilmentRegistry.get() both
-  // THROW on a miss, so an empty throwaway registry would crash
-  // killIfDead() mid-battle-tick the first time a bound action looked
-  // one up — not silently no-op).
+  // buffRegistry/reactionManager are shared, non-battle-specific
+  // dependencies — injected via the constructor (2026-09-01 review fix)
+  // and used for real here when provided; skip firing entirely if either
+  // is missing rather than constructing an empty throwaway registry
+  // (BuffRegistry.get() THROWS on a miss, so an empty throwaway registry
+  // would crash killIfDead() mid-battle-tick the first time a bound
+  // action looked one up — not silently no-op).
   //
-  // sourceBuffs/targetBuffs/targetAilments ARE still throwaway/stubbed
-  // (unchanged from the original design): those are the per-battle
-  // BUFF/AILMENT POOLS for this battle's specific entities (as opposed
-  // to the shared REGISTRIES that define what buffs/ailments exist at
-  // all), and CombatSystem has no access to BattleSystem's real
-  // per-battle pools. An onKill action that only touches CombatEntity
-  // fields directly (grantResource/consumeResource) works correctly
-  // through this path; an onKill action that reads/writes a persistent
-  // buff/ailment POOL (as opposed to just looking up a registry
-  // definition) will not see/affect the real battle-scoped pool.
+  // sourceBuffs/targetBuffs ARE still throwaway/stubbed (unchanged from
+  // the original design): those are the per-battle BUFF POOLS for this
+  // battle's specific entities (as opposed to the shared REGISTRY that
+  // defines what buffs exist at all), and CombatSystem has no access to
+  // BattleSystem's real per-battle pools. An onKill action that only
+  // touches CombatEntity fields directly (grantResource/consumeResource)
+  // works correctly through this path; an onKill action that reads/
+  // writes a persistent buff POOL (as opposed to just looking up a
+  // registry definition) will not see/affect the real battle-scoped pool.
   private fireKillTriggers(
     victim: CombatEntity,
     skillContext?: { killer: CombatEntity; skillId: string },
   ): void {
-    if (!skillContext || !this.skillManager || !this.buffRegistry || !this.ailmentRegistry || !this.reactionManager) {
+    if (!skillContext || !this.skillManager || !this.buffRegistry || !this.reactionManager) {
       return
     }
 
@@ -562,10 +555,8 @@ export class CombatSystem {
       combatSystem: this,
       fireHit: () => ({ landed: true }),
       buffRegistry: this.buffRegistry,
-      ailmentRegistry: this.ailmentRegistry,
       sourceBuffs: new BuffSystem(new BuffPool()),
       targetBuffs: new BuffSystem(new BuffPool()),
-      targetAilments: new AilmentSystem(new AilmentManager()),
       reactionManager: this.reactionManager,
     }
 
