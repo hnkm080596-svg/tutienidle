@@ -1323,6 +1323,54 @@ export class BattleSystem {
       )
     }
 
+    if (options.skillId) {
+      const firedSkill = this.skillManager.get(options.skillId)
+
+      if (firedSkill?.triggers?.length) {
+        const hitCtx: SkillEffectContext = {
+          combatSystem: this.combat,
+          fireHit: () => ({ landed: true }),
+          buffRegistry: this.buffRegistry,
+          ailmentRegistry: this.ailmentRegistry,
+          sourceBuffs: new BuffSystem(this.getBuffsFor(battle, source)),
+          targetBuffs: new BuffSystem(this.getBuffsFor(battle, target)),
+          targetAilments: new AilmentSystem(this.getAilmentsFor(battle, target)),
+          reactionManager: this.reactionManager,
+          reactionKeepChance: this.getReactionKeepChance(),
+          spawnLavaZone: (spec) => this.spawnLavaZone(battle, spec),
+          spawnSwordZone: (spec) => this.spawnSwordZone(battle, spec),
+          skillId: firedSkill.id,
+          skillExperience: firedSkill.totalExperience ?? firedSkill.experience ?? 0,
+          eventBus: this.eventBus,
+        }
+
+        if (!result.dodged) {
+          this.skillTriggerRunner.fire(
+            'onHit',
+            { source, target, skill: firedSkill, damageDealt: result.finalDamage, isCrit: result.critical },
+            firedSkill.triggers,
+            source, target, hitCtx,
+          )
+
+          if (result.critical) {
+            this.skillTriggerRunner.fire(
+              'onCrit',
+              { source, target, skill: firedSkill, damageDealt: result.finalDamage, isCrit: result.critical },
+              firedSkill.triggers,
+              source, target, hitCtx,
+            )
+          }
+        } else {
+          this.skillTriggerRunner.fire(
+            'onEvade',
+            { source, target, skill: firedSkill },
+            firedSkill.triggers,
+            source, target, hitCtx,
+          )
+        }
+      }
+    }
+
     if (!result.dodged && options.skillId) {
       const skill = this.skillManager.get(options.skillId)
 
