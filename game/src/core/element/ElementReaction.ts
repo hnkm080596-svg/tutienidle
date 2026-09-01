@@ -1,4 +1,3 @@
-import type { AilmentId } from '../ailment/AilmentTypes'
 import type { ElementType } from './ElementType'
 
 /**
@@ -44,7 +43,7 @@ export interface ElementReactionDefinition {
   // ReactionManager.checkAndTrigger(). Duration của ailment này được
   // nhân thêm reactionEffectPercent (không phải ailmentDurationPercent
   // thường — ailment này đến từ REACTION, không phải skill trực tiếp).
-  appliesAilmentId?: AilmentId
+  appliesAilmentId?: string
 
   // Thổ Tu (Plans/EarthPath mục VII, "Độc Thế") — Reaction ĐẶC BIỆT:
   // KHÔNG áp gì lên target, mà cấp 1 tầng buff (BuffRegistry id) lên
@@ -72,7 +71,7 @@ export interface ElementReactionDefinition {
   // vẫn bị tiêu như mọi ailment khác (xem ReactionManager.ts). Không
   // áp dụng cho appliesAilmentId/appliesBuffId (2 nhánh đó đã luôn
   // consume-rồi-tạo-mới, tự thân đã đúng invariant Phase 16).
-  keepsAilmentId?: AilmentId
+  keepsAilmentId?: string
 
   // Plans/magicpathgeneral Phase 12 (2026-08-21) — "Lava Zone không
   // phải DoT trên target": ngoài (không thay thế) appliesAilmentId,

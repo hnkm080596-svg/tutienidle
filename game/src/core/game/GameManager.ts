@@ -27,9 +27,6 @@ import { BuffSystem } from '../buff/BuffSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
 import type { BuffDefinition } from '../buff/BuffDefinition'
 
-import { AilmentRegistry } from '../ailment/AilmentRegistry'
-import type { AilmentTemplate } from '../ailment/AilmentRegistry'
-
 import { NodeRegistry } from '../progression/NodeRegistry'
 import type { ProgressionNode } from '../progression/ProgressionNode'
 import {
@@ -278,8 +275,6 @@ export class GameManager {
   readonly buffPool = new BuffPool()
   readonly buffSystem = new BuffSystem(this.buffPool)
   readonly buffRegistry = new BuffRegistry()
-
-  readonly ailmentRegistry = new AilmentRegistry()
 
   readonly skillManager = new SkillManager()
   readonly skillSystem = new SkillSystem(this.skillManager, (skill, levelsGained) => {
@@ -558,14 +553,6 @@ export class GameManager {
     for (const buff of buffs) {
       if (!this.buffRegistry.has(buff.id)) {
         this.buffRegistry.register(buff)
-      }
-    }
-  }
-
-  registerAilments(ailments: AilmentTemplate[]) {
-    for (const ailment of ailments) {
-      if (!this.ailmentRegistry.has(ailment.id)) {
-        this.ailmentRegistry.register(ailment)
       }
     }
   }

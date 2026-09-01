@@ -1,6 +1,5 @@
 import type { SkillEffectType } from  './SkillTypes'
 import type { SkillDamageComponent } from './SkillDamageComponent'
-import type { AilmentId } from '../ailment/AilmentTypes'
 import type { StatType } from '../stats/StatTypes'
 import type { EffectScope } from '../battle/CombatAction'
 
@@ -63,7 +62,7 @@ export interface SkillEffect {
   // ailment đó khỏi target — đổi DOT đang chạy lấy 1 cục burst ngay,
   // xem SkillEffectSystem.ts. Không set = effect 'damage' hoạt động
   // như cũ (chỉ bắn missile thường).
-  consumesAilmentId?: AilmentId
+  consumesAilmentId?: string
 
   damagePerStack?: number
 

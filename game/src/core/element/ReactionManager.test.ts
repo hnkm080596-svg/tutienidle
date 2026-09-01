@@ -7,99 +7,34 @@ import { CombatSystem } from '../combat/CombatSystem'
 import { EventBus } from '../events/EventBus'
 import { createBaseStats } from '../stats/StatBlock'
 import { createSkillRuntimeStats } from '../skill/SkillRuntimeStats'
-import { ailments } from '../../data/ailment/ailments'
+import { buffs } from '../../data/buff/buffs'
 import type { CombatEntity } from '../combat/CombatEntity'
-import type { AilmentTemplate } from '../ailment/AilmentRegistry'
 import type { BuffDefinition } from '../buff/BuffDefinition'
-import type { BuffEffectTemplate } from '../buff/BuffTypes'
 
-// Unified Buff System (Task 12) — Task 7 (data/buff/buffs.ts port của
-// 18 AilmentTemplate -> BuffDefinition) chưa chạy tại thời điểm task
-// này (dispatch order 12 TRƯỚC 7), nên test ở đây tự convert
-// AilmentTemplate hiện có sang BuffDefinition CỤC BỘ (chỉ trong file
-// test này) thay vì phụ thuộc data/buff/buffs.ts — ReactionManager chỉ
-// quan tâm shape BuffDefinition/BuffRegistry, không quan tâm nó đến từ
-// đâu.
-function toBuffDefinition(template: AilmentTemplate): BuffDefinition {
-  const effects: BuffEffectTemplate[] = []
-
-  if (template.category === 'dot' && template.dpsRatio !== undefined) {
-    effects.push({
-      type: 'dot',
-      dpsRatio: template.dpsRatio,
-      element: template.element,
-      armorIgnorePercentByRealm: template.armorIgnorePercentByRealm,
-    })
-  }
-
-  if (template.ccEffect) {
-    effects.push({ type: 'cc', ccEffect: template.ccEffect })
-  }
-
-  if (template.statModifiers) {
-    for (const modifier of template.statModifiers) {
-      effects.push({ type: 'statModifier', stat: modifier.stat, percent: modifier.percent, flat: modifier.flat })
-    }
-  }
-
-  if (template.onHitChance !== undefined && template.onHitAppliesAilmentId) {
-    effects.push({ type: 'onHitProc', chance: template.onHitChance, appliesBuffId: template.onHitAppliesAilmentId })
-  }
-
-  return {
-    id: template.id,
-    name: template.name,
-    polarity: 'debuff',
-    duration: template.duration,
-    maxStacks: template.maxStacks,
-    stackMode: template.stackMode,
-    convertsToId: template.convertsToOnMaxStacks,
-    convertsAfterContinuousSeconds: template.convertsAfterContinuousSeconds,
-    effects,
-  }
-}
-
-function getTemplate(id: string): AilmentTemplate {
-  const template = ailments.find(ailment => ailment.id === id)
-
-  if (!template) {
-    throw new Error(`data/ailment/ailments.ts thiếu '${id}' — kiểm tra lại id`)
-  }
-
-  return template
-}
-
+// Unified Buff System (Task 16-prep, 2026-09-01) — data/buff/buffs.ts
+// giờ đã có sẵn shape BuffDefinition port từ AilmentTemplate (Task 7),
+// nên test lookup thẳng từ đó thay vì tự convert AilmentTemplate cục
+// bộ như trước (xem task-16-report.md/task-16prep-brief.md).
 function getBuffDefinition(id: string): BuffDefinition {
-  return toBuffDefinition(getTemplate(id))
+  const definition = buffs.find(buff => buff.id === id)
+
+  if (!definition) {
+    throw new Error(`data/buff/buffs.ts thiếu '${id}' — kiểm tra lại id`)
+  }
+
+  return definition
 }
 
 // "doc_the" ("Độc Căn") — Reaction Reward Buff cấp cho SOURCE (không
-// phải target, không đến từ AilmentTemplate) — xem
-// ElementReaction.ts's `appliesBuffId: 'doc_the'`. Định nghĩa local
-// khớp data/buff/buffs.ts's entry hiện có (2 modifier: ailmentPotencyPercent
-// 0.05, poisonRecoveryPercent 0.02, stack tối đa 5) cho tới khi Task 7
-// port thật vào BuffDefinition.
-const DOC_THE_BUFF_DEFINITION: BuffDefinition = {
-  id: 'doc_the',
-  name: 'Độc Căn',
-  polarity: 'buff',
-  duration: 999,
-  maxStacks: 5,
-  stackMode: 'stack',
-  effects: [
-    { type: 'statModifier', stat: 'ailmentPotencyPercent', percent: 0.05 },
-    { type: 'statModifier', stat: 'poisonRecoveryPercent', percent: 0.02 },
-  ],
-}
-
+// phải target) — xem ElementReaction.ts's `appliesBuffId: 'doc_the'`.
+// Đã có sẵn trong data/buff/buffs.ts (Task 7 port), nên registry chỉ
+// cần đăng ký cả mảng `buffs` — không cần định nghĩa local riêng nữa.
 function createBuffRegistry(): BuffRegistry {
   const registry = new BuffRegistry()
 
-  for (const template of ailments) {
-    registry.register(toBuffDefinition(template))
+  for (const definition of buffs) {
+    registry.register(definition)
   }
-
-  registry.register(DOC_THE_BUFF_DEFINITION)
 
   return registry
 }

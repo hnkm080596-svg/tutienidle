@@ -29,7 +29,7 @@ import CharacterCreationScreen, {
 import { materials } from './data/materials/materials'
 import { SKILLS } from './data/skill/Skills'
 import { TECHNIQUES } from './data/technique/Techniques'
-import { ENEMIES } from './data/enemy/Enemies'
+import { ENEMIES } from './data/enemy/Enemies'
 import { STAGES } from './data/stage/Stages'
 import { zones } from './data/stage/Zones'
 import { equipment } from './data/equipment/equipment'
@@ -39,7 +39,6 @@ import { talismans } from './data/talisman/talismans'
 import { buffs } from './data/buff/buffs'
 import { formations } from './data/formation/formations'
 import { alchemyRecipes } from './data/alchemy/alchemyRecipes'
-import { ailments } from './data/ailment/ailments'
 import { buildings } from './data/building/buildings'
 import { PHAP_TU_NODES } from './data/progression/PhapTuNodes'
 import { KIEM_TU_NODES } from './data/progression/KiemTuNodes'
@@ -129,7 +128,6 @@ gameManager.registerBuffs(buffs)
 gameManager.registerTalismans(talismans)
 gameManager.registerFormations(formations)
 gameManager.registerAlchemyRecipes(alchemyRecipes)
-gameManager.registerAilments(ailments)
 gameManager.registerBuildings(buildings)
 gameManager.registerProgressionNodes(PHAP_TU_NODES)
 gameManager.registerProgressionNodes(KIEM_TU_NODES)

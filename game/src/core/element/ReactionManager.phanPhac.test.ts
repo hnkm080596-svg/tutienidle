@@ -6,11 +6,9 @@ import { BuffRegistry } from '../buff/BuffRegistry'
 import { CombatSystem } from '../combat/CombatSystem'
 import { EventBus } from '../events/EventBus'
 import { createBaseStats } from '../stats/StatBlock'
-import { ailments } from '../../data/ailment/ailments'
+import { buffs } from '../../data/buff/buffs'
 import type { CombatEntity } from '../combat/CombatEntity'
-import type { AilmentTemplate } from '../ailment/AilmentRegistry'
 import type { BuffDefinition } from '../buff/BuffDefinition'
-import type { BuffEffectTemplate } from '../buff/BuffTypes'
 
 // Thiên phú Phản Phác (talent-direction-choice-plan §6) — reaction_keep_chance
 // chỉ tác động NHÁNH CONSUME CHUẨN của ReactionManager; nhánh đặc biệt
@@ -21,68 +19,25 @@ import type { BuffEffectTemplate } from '../buff/BuffTypes'
 // waterReactionExtensionSeconds nên keepsAilmentId không kích — reaction
 // tiêu cả 2 như nhánh chuẩn, đúng phạm vi test keepChance.
 
-// Unified Buff System (Task 12) — Task 7 (data/buff/buffs.ts port của
-// AilmentTemplate -> BuffDefinition) chưa chạy tại thời điểm task này
-// (dispatch order 12 TRƯỚC 7), nên test tự convert AilmentTemplate hiện
-// có sang BuffDefinition CỤC BỘ trong file test này.
-function toBuffDefinition(template: AilmentTemplate): BuffDefinition {
-  const effects: BuffEffectTemplate[] = []
-
-  if (template.category === 'dot' && template.dpsRatio !== undefined) {
-    effects.push({
-      type: 'dot',
-      dpsRatio: template.dpsRatio,
-      element: template.element,
-      armorIgnorePercentByRealm: template.armorIgnorePercentByRealm,
-    })
-  }
-
-  if (template.ccEffect) {
-    effects.push({ type: 'cc', ccEffect: template.ccEffect })
-  }
-
-  if (template.statModifiers) {
-    for (const modifier of template.statModifiers) {
-      effects.push({ type: 'statModifier', stat: modifier.stat, percent: modifier.percent, flat: modifier.flat })
-    }
-  }
-
-  if (template.onHitChance !== undefined && template.onHitAppliesAilmentId) {
-    effects.push({ type: 'onHitProc', chance: template.onHitChance, appliesBuffId: template.onHitAppliesAilmentId })
-  }
-
-  return {
-    id: template.id,
-    name: template.name,
-    polarity: 'debuff',
-    duration: template.duration,
-    maxStacks: template.maxStacks,
-    stackMode: template.stackMode,
-    convertsToId: template.convertsToOnMaxStacks,
-    convertsAfterContinuousSeconds: template.convertsAfterContinuousSeconds,
-    effects,
-  }
-}
-
-function getTemplate(id: string): AilmentTemplate {
-  const template = ailments.find((ailment) => ailment.id === id)
-
-  if (!template) {
-    throw new Error(`data/ailment/ailments.ts thiếu '${id}' — kiểm tra lại id`)
-  }
-
-  return template
-}
-
+// Unified Buff System (Task 16-prep, 2026-09-01) — data/buff/buffs.ts
+// giờ đã có sẵn shape BuffDefinition port từ AilmentTemplate (Task 7),
+// nên test lookup thẳng từ đó thay vì tự convert AilmentTemplate cục
+// bộ như trước (xem task-16-report.md/task-16prep-brief.md).
 function getBuffDefinition(id: string): BuffDefinition {
-  return toBuffDefinition(getTemplate(id))
+  const definition = buffs.find((buff) => buff.id === id)
+
+  if (!definition) {
+    throw new Error(`data/buff/buffs.ts thiếu '${id}' — kiểm tra lại id`)
+  }
+
+  return definition
 }
 
 function createBuffRegistry(): BuffRegistry {
   const registry = new BuffRegistry()
 
-  for (const template of ailments) {
-    registry.register(toBuffDefinition(template))
+  for (const definition of buffs) {
+    registry.register(definition)
   }
 
   return registry
