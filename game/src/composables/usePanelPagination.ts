@@ -1,4 +1,4 @@
-import { type ComputedRef, computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { type ComputedRef, computed, onBeforeUnmount, ref, watch } from 'vue'
 
 /**
  * Fit-refactor đợt 4 (2026-08-29) — phân trang đo theo NGÂN SÁCH CHIỀU CAO
@@ -21,19 +21,27 @@ export function usePanelPagination(rowCount: ComputedRef<number>, rowHeight: num
 
   let observer: ResizeObserver | undefined
 
-  onMounted(() => {
-    if (containerEl.value) {
+  // Audit fix 2026-08-31: container có thể nằm trong v-else/v-if — chưa tồn
+  // tại lúc onMounted (tab Hóa Luyện của EquipmentHallPanel, lore grid rỗng).
+  // Watch containerEl để attach KHI ref được gán (bất kể lúc nào trong đời
+  // component), thay vì chỉ thử đúng 1 lần ở mount.
+  const stopContainerWatch = watch(containerEl, (el) => {
+    observer?.disconnect()
+    observer = undefined
+
+    if (el) {
       observer = new ResizeObserver(entries => {
         for (const entry of entries) {
           availableHeight.value = entry.contentRect.height
         }
       })
 
-      observer.observe(containerEl.value)
+      observer.observe(el)
     }
-  })
+  }, { immediate: true })
 
   onBeforeUnmount(() => {
+    stopContainerWatch()
     observer?.disconnect()
   })
 
