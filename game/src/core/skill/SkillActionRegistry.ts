@@ -4,6 +4,7 @@ import type { SkillEffectContext } from './SkillEffectSystem'
 import type { TriggerContextMap, TriggerType } from './SkillTrigger'
 import { MAX_SWORD_INTENT, MAX_MOMENTUM, MAX_HOA_THE, MAX_THO_THE, MAX_KIM_THE, MAX_HUYET_PHA } from '../combat/CombatTypes'
 import type { SkillResourcePoolKey } from './SkillAction'
+import type { ActionImpactEvent } from '../battle/BattleEvents'
 
 // Shared by grantResource (Task 5) and consumeResource (Task 6) — every
 // named pool's CombatEntity field and hard cap. Pools with no cap in
@@ -269,7 +270,7 @@ const spawnVfx: ActionExecutor<Extract<SkillAction, { type: 'spawnVfx' }>> = (ac
 
   const anchor = action.target === 'source' ? source : target
 
-  ctx.eventBus.emit('action_impact', {
+  ctx.eventBus.emit<ActionImpactEvent>('action_impact', {
     type: 'action_impact',
     actionId: `spawnVfx:${action.presetId}`,
     actionInstanceId: `spawnvfx-${++spawnVfxInstanceCounter}`,
@@ -279,7 +280,7 @@ const spawnVfx: ActionExecutor<Extract<SkillAction, { type: 'spawnVfx' }>> = (ac
     affectedTargetIds: [anchor.id],
     landedTargetIds: [anchor.id],
     dodgedTargetIds: [],
-    affectedArea: { row: anchor.row, columnStart: Math.round(anchor.x), columnEnd: Math.round(anchor.x), shape: 'single' },
+    affectedArea: { rowStart: anchor.row, rowEnd: anchor.row, colStart: Math.round(anchor.x), colEnd: Math.round(anchor.x), shape: 'single' },
     hitCount: 1,
     presetId: action.presetId,
   })

@@ -37,7 +37,18 @@ function makeHelpers(): ActionExecutionHelpers {
 
 describe('SKILL_ACTION_REGISTRY', () => {
   it('has an executor for every SkillActionType', () => {
-    const types: SkillActionType[] = ['dealDamage']
+    const types: SkillActionType[] = [
+      'dealDamage',
+      'heal',
+      'applyBuff',
+      'applyDebuff',
+      'applyAilment',
+      'grantResource',
+      'consumeResource',
+      'consumeForDamage',
+      'spawnZone',
+      'spawnVfx',
+    ]
     for (const type of types) {
       expect(SKILL_ACTION_REGISTRY[type]).toBeTypeOf('function')
     }
@@ -352,9 +363,9 @@ describe('spawnZone executor', () => {
 })
 
 describe('spawnVfx executor', () => {
-  it("emits 'action_impact' via ctx.eventBus with the source/target ids and presetId", () => {
-    const source = makeEntity({ id: 'p1' } as Partial<CombatEntity> as CombatEntity)
-    const target = makeEntity({ id: 'e1' } as Partial<CombatEntity> as CombatEntity)
+  it("emits 'action_impact' via ctx.eventBus with the source/target ids, presetId, anchorCell and affectedArea", () => {
+    const source = makeEntity({ id: 'p1', row: 1, x: 2 } as Partial<CombatEntity> as CombatEntity)
+    const target = makeEntity({ id: 'e1', row: 3, x: 4 } as Partial<CombatEntity> as CombatEntity)
     const emit = vi.fn()
     const ctx = makeCtx({ eventBus: { emit } as unknown as EventBus })
 
@@ -364,6 +375,8 @@ describe('spawnVfx executor', () => {
       sourceId: 'p1',
       primaryTargetId: 'e1',
       presetId: 'fire_burst',
+      anchorCell: { row: 3, column: 4 },
+      affectedArea: { rowStart: 3, rowEnd: 3, colStart: 4, colEnd: 4, shape: 'single' },
     }))
   })
 })
