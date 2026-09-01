@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+﻿import { describe, expect, it } from 'vitest'
 import { SkillEffectSystem } from './SkillEffectSystem'
 import { CombatSystem } from '../combat/CombatSystem'
 import { BuffSystem } from '../buff/BuffSystem'
@@ -84,9 +84,9 @@ describe('SkillEffectSystem — effect "ailment" trigger Reaction (Combat Rework
     // TỰ kích qua đúng ctx.reactionManager, không cần gọi tay thêm.
     skillEffectSystem.apply({ type: 'ailment', ailmentId: 'te_cong', ailmentChance: 1 }, source, target, ctx)
 
-    // Combat Balance Pass (2026-08-29) — powerScalingRatio 0.5:
-    // 60 + attack(10)×0.5 = 65.
-    expect(target.currentHp).toBe(1000 - 65)
+    // Combat Balance Pass (2026-08-29) — powerScalingRatio 1.0 (T5.4):
+    // 60 + attack(10)×1.0 = 70.
+    expect(target.currentHp).toBe(1000 - 70)
     expect(targetAilments.getActiveIds()).toEqual([])
   })
 

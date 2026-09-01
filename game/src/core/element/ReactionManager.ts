@@ -103,8 +103,14 @@ export class ReactionManager {
           ? elementalBasePower(source, powerElement) * reaction.powerScalingRatio
           : 0
 
+      // T5.4 (2026-09-01, "đầy đủ") — baseDamage nhân realmScalar của
+      // SOURCE: phần "cứng" của reaction sống theo tiến trình (không
+      // chết late-game khi power lấn át). Scalar = 1 + realmIndex × 1.5
+      // (Phàm Nhân ×1 giữ behavior cũ; Kim Đan ×7; Độ Kiếp ×14.5).
+      const realmScalar = 1 + Math.max(0, source.realmIndex) * 1.5
+
       const flatAndPercentDamage =
-        reaction.baseDamage +
+        reaction.baseDamage * realmScalar +
         sourcePower +
         (reaction.percentOfTargetCurrentHp ? target.currentHp * reaction.percentOfTargetCurrentHp : 0)
 

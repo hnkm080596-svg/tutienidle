@@ -1,4 +1,4 @@
-import type { AilmentId } from '../ailment/AilmentTypes'
+﻿import type { AilmentId } from '../ailment/AilmentTypes'
 import type { ElementType } from './ElementType'
 
 /**
@@ -132,7 +132,7 @@ export const ELEMENT_REACTIONS: Partial<Record<AilmentId, Partial<Record<Ailment
   // có thể giữ lại Tê Cóng thay vì tiêu, xem ReactionManager.ts.
   bong: {
     // Hỏa+Thủy — KHẮC (Thủy khắc Hỏa).
-    te_cong: { name: 'Bốc Hơi', baseDamage: 60, keepsAilmentId: 'te_cong', powerScalingRatio: 0.5, relation: 'khac' },
+    te_cong: { name: 'Bốc Hơi', baseDamage: 60, keepsAilmentId: 'te_cong', powerScalingRatio: 1.0, relation: 'khac' },
     // Hỏa (Bỏng) + Mộc (Trúng Độc) — "Độc Viêm", damage dựa trên %
     // currentHp của target thay vì flat (xem ElementReactionDefinition).
     // Mộc sinh Hỏa — SINH.
@@ -143,7 +143,7 @@ export const ELEMENT_REACTIONS: Partial<Record<AilmentId, Partial<Record<Ailment
   // Thủy (Tê Cóng) + Mộc (Trúng Độc) — "Độc Thủy". keepsAilmentId:
   // 'te_cong' cùng lý do như Bốc Hơi ở trên. Thủy sinh Mộc — SINH.
   te_cong: {
-    trung_doc: { name: 'Độc Thủy', baseDamage: 65, keepsAilmentId: 'te_cong', powerScalingRatio: 0.5, relation: 'sinh' },
+    trung_doc: { name: 'Độc Thủy', baseDamage: 65, keepsAilmentId: 'te_cong', powerScalingRatio: 1.0, relation: 'sinh' },
   },
 
   // Plans/EarthPath mục IV (2026-08-21) — bảng phản ứng của Thổ. "Mù"
@@ -196,7 +196,7 @@ export const ELEMENT_REACTIONS: Partial<Record<AilmentId, Partial<Record<Ailment
     // convention baseDamage flat hiện có, cùng cách xử lý mọi reaction
     // khác) — 85 là số minh hoạ giữa khoảng 60-90 của các reaction cũ.
     // Hỏa khắc Kim — KHẮC.
-    bong: { name: 'Thiêu Huyết', baseDamage: 85, maxHpReductionPercent: 0.03, powerScalingRatio: 0.5, relation: 'khac' },
+    bong: { name: 'Thiêu Huyết', baseDamage: 85, maxHpReductionPercent: 0.03, powerScalingRatio: 1.0, relation: 'khac' },
     // Kim+Mộc — "Huyết Độc": Trúng Độc + Chảy Máu "hợp nhất" thành 1
     // DoT MỚI mạnh hơn (ailment 'huyet_doc'), tái dùng appliesAilmentId
     // (đã xây cho Thổ) — closes luôn gap "Huyết Độc" từng bị hoãn ở đợt

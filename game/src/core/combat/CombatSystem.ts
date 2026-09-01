@@ -189,8 +189,15 @@ export class CombatSystem {
     return Math.random() < getHitChance(source.stats.accuracyRating, target.stats.evasionRate)
   }
 
+  // Block hard cap 90% (2026-09-01, T5.5): soft cap 0.75 (StatMetadata)
+  // chặn stat cộng dồn từ affix/talent; buff tạm có thể vượt soft cap
+  // nhưng KHÔNG BAO GIỜ vượt 0.90 tại điểm roll — chặn "bất tử chặn đòn".
+  private static readonly BLOCK_HARD_CAP = 0.9
+
   private rollBlock(target: CombatEntity): boolean {
-    return Math.random() < clampStatValue('blockChance', target.stats.blockChance)
+    const softCapped = clampStatValue('blockChance', target.stats.blockChance)
+
+    return Math.random() < Math.min(CombatSystem.BLOCK_HARD_CAP, softCapped)
   }
 
   /**

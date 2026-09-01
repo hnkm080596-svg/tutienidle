@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+﻿import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ReactionManager } from './ReactionManager'
 import { AilmentSystem } from '../ailment/AilmentSystem'
 import { AilmentManager } from '../ailment/AilmentManager'
@@ -94,8 +94,8 @@ describe('ReactionManager — Phản Phác (reaction_keep_chance)', () => {
     reactionManager.checkAndTrigger(ailmentSystem, 'te_cong', source, target, combatSystem)
 
     // Combat Balance Pass (2026-08-29) — "Bốc Hơi" powerScalingRatio
-    // 0.5: 60 + attack(10)×0.5 = 65.
-    expect(target.currentHp).toBe(1000 - 65)
+    // 1.0 (T5.4): 60 + attack(10)×1.0 = 70.
+    expect(target.currentHp).toBe(1000 - 70)
     expect(ailmentSystem.getActiveIds()).toEqual([])
   })
 
@@ -110,7 +110,7 @@ describe('ReactionManager — Phản Phác (reaction_keep_chance)', () => {
       undefined, undefined, undefined, undefined, 1,
     )
 
-    expect(target.currentHp).toBe(1000 - 65)
+    expect(target.currentHp).toBe(1000 - 70)
     expect(ailmentSystem.getActiveIds().sort()).toEqual(['bong', 'te_cong'])
   })
 
@@ -164,7 +164,7 @@ describe('ReactionManager — Phản Phác (reaction_keep_chance)', () => {
     )
 
     // Combat Balance Pass (2026-08-29) — 2 lần "Bốc Hơi": (60 + 5) × 2.
-    expect(target.currentHp).toBe(1000 - 130)
+    expect(target.currentHp).toBe(1000 - 140)
     expect(ailmentSystem.getActiveIds().sort()).toEqual(['bong', 'te_cong'])
   })
 
