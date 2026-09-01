@@ -20,6 +20,12 @@ export interface EquipmentSlotState {
 
   enhanceLevel: number
 
+  // Task 10 (rework P3, 2026-09-01) — pity counter cường hóa: đếm lần
+  // THẤT BẠI liên tiếp; đạt ENHANCE_PITY_THRESHOLD (10) → lần kế chắc
+  // chắn thành công, reset khi thành công. Persist qua save slot
+  // entries (saveShapeValidation Task 7 đã nhận enhanceFailStreak).
+  enhanceFailStreak: number
+
   // Phù/Trận socket (2026-08-24, resource-professions-rework §7.2) —
   // MỖI slot tối đa 1 Phù + 1 Trận, mỗi item ĐÚNG HAI modifier; chỉ
   // active khi slot đang có equipment. Legacy socketedFormation
@@ -52,6 +58,8 @@ export function createDefaultSlotState(slot: EquipmentSlot): EquipmentSlotState 
     slot,
 
     enhanceLevel: 0,
+
+    enhanceFailStreak: 0,
 
     socketedFormation: undefined,
 
