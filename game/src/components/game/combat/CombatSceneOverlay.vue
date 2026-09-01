@@ -1,35 +1,28 @@
 <script setup lang="ts">
+// 6A-T8 (2026-09-01, spec docs/superpowers/specs/2026-09-01-combat-scene-
+// ui-redesign-design.md) — CombatSceneOverlay top-only: 3 bar DOM dưới
+// (Status/Event/Control) rời DOM — HP/MP/Kiết + exit zone vào canvas
+// (PlayerHudLayer T4/T5), floating text kill/heal (T2), confirm modal
+// extract riêng (T6), slider/ult vào Build HUD (T7).
+//
+// Insets: chỉ TopBar còn là DOM chrome phía trên; publishInsets chỉ
+// đo top (bottom luôn 0 từ T3).
 import { nextTick, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue'
 import CombatTopBar from './CombatTopBar.vue'
-import CombatStatusBar from './CombatStatusBar.vue'
-import CombatEventBar from './CombatEventBar.vue'
-import CombatControlBar from './CombatControlBar.vue'
 import CombatResultModal from './CombatResultModal.vue'
 import CombatCountdownOverlay from './CombatCountdownOverlay.vue'
 import CombatAiPanel from './CombatAiPanel.vue'
 import CombatBuildHud from './hud/CombatBuildHud.vue'
+import CombatExitConfirmModal from './CombatExitConfirmModal.vue'
 import { resetCombatInsets, setCombatInsets } from '@/game/support/combatInsets'
 
-// WS1 Responsive foundation (2026-08-24) — các bar giờ có chiều cao px
-// THỰC theo clamp() (--combat-*-h trong theme.css), không còn đồng nhất
-// tỷ lệ với canvas sau khi bỏ transform-scale toàn game. Vì vậy DOM là
-// nguồn chân truth về khoảng reserved: đo chiều cao render thật của
-// 4 bar rồi cấp xuống CombatScene qua setCombatInsets() (ResizeObserver
-// theo dõi cả thay đổi viewport/DPI sau đó).
 const rootRef = ref<HTMLElement | null>(null)
 
 let insetsObserver: ResizeObserver | null = null
 
-const BAR_CLASSES = [
-  'combat-scene-overlay__top-bar',
-  'combat-scene-overlay__status-bar',
-  'combat-scene-overlay__event-bar',
-  'combat-scene-overlay__control-bar',
-]
+// Chỉ TopBar — chrome DOM duy nhất còn lại phía trên canvas.
+const BAR_CLASSES = ['combat-scene-overlay__top-bar']
 
-// Scoped style giữ nguyên tên class nên querySelector theo class hoạt
-// động; dùng $el gián tiếp qua ref component sẽ mong manh hơn khi cấu
-// trúc con của từng bar thay đổi.
 function barHeight(root: HTMLElement, className: string): number {
   return root.querySelector<HTMLElement>(`:scope > .${className}`)?.offsetHeight ?? 0
 }
@@ -42,19 +35,12 @@ function publishInsets() {
   }
 
   const top = barHeight(root, 'combat-scene-overlay__top-bar')
-    + barHeight(root, 'combat-scene-overlay__status-bar')
-  const bottom = barHeight(root, 'combat-scene-overlay__event-bar')
-    + barHeight(root, 'combat-scene-overlay__control-bar')
 
-  if (top > 0 || bottom > 0) {
-    setCombatInsets({ top, bottom })
+  if (top > 0) {
+    setCombatInsets({ top, bottom: 0 })
   }
 }
 
-// Root inset:0 không đổi kích thước khi con mount/unmount — phải observe
-// từng bar riêng + battlefield (flex:1, luôn tồn tại, co lại khi bar khác
-// đổi chiều cao → bắt được CombatStatusBar vốn dựng theo v-if).
-// observe() trùng target là no-op nên gọi lại ở mỗi callback an toàn.
 function observeBars() {
   const root = rootRef.value
 
@@ -95,95 +81,27 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <!-- Combat UI Redesign mục 5/20 — thay TOÀN BỘ chrome Động Phủ
-       (LeftPanel/TopBar/BottomBar/HomeBuildingIcons, xem GameRoot.vue).
-       KHÔNG chứa canvas riêng — PhaserCanvas.vue vẫn là canvas Phaser
-       DUY NHẤT của cả app (luôn mount trong MainScene.vue), CombatScene.ts
-       tự vẽ battlefield NGAY DƯỚI các thanh này (khoảng reserved được
-       cấp qua combatInsets — xem publishInsets() ở trên). Khoảng giữa
-       (battlefield) để trống/pointer-events:none để canvas hiện xuyên
-       qua và không chặn click. -->
+  <!-- 6A — background chiến đấu là vùng giao diện chính; canvas Phaser
+       duy nhất của app vẫn là PhaserCanvas.vue trong MainScene.vue.
+       Overlay chỉ còn TopBar (thông tin zone/stage), 2 panel phụ
+       (AI/Build HUD) và các modal. Bottom = full canvas. -->
   <div ref="rootRef" class="combat-scene-overlay">
     <CombatTopBar class="combat-scene-overlay__top-bar" />
 
-    <CombatStatusBar class="combat-scene-overlay__status-bar" />
-
     <div class="combat-scene-overlay__battlefield">
-      <!-- Combat AI panel (plan §11.1/§11.2) — góc TRÁI battlefield, lớp
-           overlay riêng: chỉ panel nhận pointer events, không chặn canvas,
-           không đổi insets/không làm co battlefield. -->
+      <!-- Combat AI panel — góc TRÁI battlefield, chỉ panel nhận pointer. -->
       <CombatAiPanel class="combat-scene-overlay__ai-panel" />
 
+      <!-- 6A-T7 — Build HUD bottom-center: route HUD + slider tu-luc +
+           ult (từ ControlBar cũ). -->
       <CombatBuildHud class="combat-scene-overlay__build-hud" />
     </div>
 
-    <CombatEventBar class="combat-scene-overlay__event-bar" />
-
-    <CombatControlBar class="combat-scene-overlay__control-bar" />
+    <!-- 6A-T6 — confirm thoát trận (scene exit zone → bridge event). -->
+    <CombatExitConfirmModal />
 
     <CombatResultModal />
 
     <CombatCountdownOverlay />
   </div>
 </template>
-
-<style scoped>
-.combat-scene-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 15;
-  display: flex;
-  flex-direction: column;
-  pointer-events: none;
-  font-family: var(--font-body);
-}
-
-.combat-scene-overlay__top-bar {
-  flex: 0 0 auto;
-  height: var(--combat-topbar-h);
-}
-
-.combat-scene-overlay__status-bar {
-  flex: 0 0 auto;
-  height: var(--combat-status-h);
-  position: relative;
-  z-index: 11;
-}
-
-.combat-scene-overlay__battlefield {
-  position: relative;
-  flex: 1 1 auto;
-  pointer-events: none;
-}
-
-/* Combat AI panel (plan §11.1) — góc trái battlefield, dưới top/status
-   bar (nằm trong vùng battlefield nên không đụng CombatTopBar). */
-.combat-scene-overlay__ai-panel {
-  position: absolute;
-  left: var(--space-3);
-  top: var(--space-3);
-  z-index: 12;
-}
-
-/* Wrapper full-width + flex-center (thay left:50%/translateX) để HUD con
-   được flex-wrap:wrap vẫn giữ căn giữa trên cửa sổ hẹp. */
-.combat-scene-overlay__build-hud {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: var(--space-4);
-  display: flex;
-  justify-content: center;
-  z-index: 12;
-}
-
-.combat-scene-overlay__event-bar {
-  flex: 0 0 auto;
-  height: var(--combat-event-h);
-}
-
-.combat-scene-overlay__control-bar {
-  flex: 0 0 auto;
-  height: var(--combat-control-h);
-}
-</style>

@@ -1,4 +1,4 @@
-/* "Mực & Giấy Trắng" — bảng token màu/typography dùng chung
+﻿/* "Mực & Giấy Trắng" — bảng token màu/typography dùng chung
    toàn app. Trước đợt này KHÔNG có hệ thống design-token nào (mọi hex
    hardcode rời rạc mỗi component) — file này chính thức hoá bảng màu
    tối giản/sang trọng kiếm hiệp đang dần được áp dụng, bắt đầu từ
@@ -314,9 +314,6 @@
      action bar: --top-bar-h/--bottom-bar-h đã xoá vì hết consumer.
      ============================================================ */
   --combat-topbar-h: clamp(46px, 4.8vh, 72px);
-  --combat-status-h: clamp(44px, 4.6vh, 68px);
-  --combat-event-h: clamp(32px, 3.4vh, 48px);
-  --combat-control-h: clamp(48px, 5.2vh, 76px);
 
   /* ============================================================
      WS2 Typography & interaction tokens (2026-08-24)
