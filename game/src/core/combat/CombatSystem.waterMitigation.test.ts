@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+﻿import { describe, expect, it } from 'vitest'
 import { CombatSystem } from './CombatSystem'
 import { EventBus } from '../events/EventBus'
 import { createBaseStats } from '../stats/StatBlock'
@@ -61,7 +61,7 @@ describe('CombatSystem — Thủy Thế (Plans/waterpath, Tụ Thủy)', () => {
     const withoutMitigation = createCombatant({ id: 'target_a', currentHp: 100000, maxHp: 100000 })
     const rawResult = combat.resolveActionHit(source, withoutMitigation, { kind: 'physical', multiplier: 1 }, false)
 
-    const targetStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0 }
+    const targetStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, blockChance: 0 }
     const target = createCombatant({ id: 'target_b', stats: targetStats, skillStats: { ...createSkillRuntimeStats(), thuyThePercent: 0.1 }, currentHp: 100000, maxHp: 100000 })
 
     const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, false)
@@ -76,7 +76,7 @@ describe('CombatSystem — Thủy Thế (Plans/waterpath, Tụ Thủy)', () => {
     const sourceStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100000 }
     const source = createCombatant({ id: 'source', type: 'player', stats: sourceStats })
 
-    const targetStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0 }
+    const targetStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, blockChance: 0 }
     const target = createCombatant({ id: 'target', stats: targetStats, skillStats: { ...createSkillRuntimeStats(), thuyThePercent: 5 }, currentHp: 1000000, maxHp: 1000000 })
 
     const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, false)

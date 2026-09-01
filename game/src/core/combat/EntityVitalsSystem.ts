@@ -21,6 +21,14 @@ export interface EntityVitalsChangedEvent {
   killed: boolean
 }
 
+/** 6A (2026-09-01) — floating "+N" xanh; emit từ applyHealing (healing/leech). */
+export interface CombatHealEvent {
+  type: 'heal'
+  sourceId?: string
+  targetId?: string
+  value: number
+}
+
 export class EntityVitalsSystem {
   constructor(private readonly eventBus: EventBus) {}
 
@@ -66,6 +74,18 @@ export class EntityVitalsSystem {
 
     target.currentHp = Math.min(target.maxHp, target.currentHp + applied)
     this.emit(target, reason, applied, hpBefore, wardBefore, mpBefore, sourceId)
+
+    // 6A (2026-09-01) — event 'heal' cho floating "+N" xanh trong
+    // CombatScene. CHỈ healing/leech (nguồn có ý nghĩa hiển thị),
+    // KHÔNG regen (spam mỗi tick) và amount > 0.
+    if (applied > 0 && (reason === 'healing' || reason === 'leech')) {
+      this.eventBus.emit<CombatHealEvent>('heal', {
+        type: 'heal',
+        sourceId,
+        targetId: target.id,
+        value: applied,
+      })
+    }
 
     return target.currentHp - hpBefore
   }

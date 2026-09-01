@@ -19,6 +19,7 @@ import {
   type LaneIndex,
 } from '@/core/battle/BattleLane'
 import { getCombatInsets, getFallbackCombatInsets } from '@/game/support/combatInsets'
+import { PlayerHudLayer } from './combat/PlayerHudLayer'
 import type { GridPosition } from '@/core/battle/BattleGrid'
 import {
   createBattleGridProjection,
@@ -84,7 +85,7 @@ import {
 import { attachThanhVanBackdrop, type ThanhVanBackdropHandle } from '@/game/support/ThanhVanBackdrop'
 import { PLAYER_TEXTURE_KEY, queueCombatAssets } from '@/game/support/CombatPreload'
 import type { CombatEvent } from '@/core/combat/CombatEvent'
-import type { EntityVitalsChangedEvent } from '@/core/combat/EntityVitalsSystem'
+import type { CombatHealEvent, EntityVitalsChangedEvent } from '@/core/combat/EntityVitalsSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { getCombatVfxPreset } from '@/data/vfx/CombatVfxPresets'
 import { getStatusVfxPreset } from '@/data/vfx/StatusVfxPresets'
@@ -300,6 +301,28 @@ export class CombatScene extends Phaser.Scene {
     return this._damageText
   }
 
+  // 6A-T4/T5 — HUD player trong canvas; lazy như damageText để
+  // Object.create(prototype) test không chạy field initializer.
+  // Setter cho test stub (prototype object cho phép gán fake hud).
+  private _playerHud?: PlayerHudLayer
+
+  get playerHud(): PlayerHudLayer | undefined {
+    return this._playerHud
+  }
+
+  set playerHud(hud: PlayerHudLayer | undefined) {
+    this._playerHud = hud
+  }
+
+  private ensurePlayerHud(): PlayerHudLayer {
+    this._playerHud ??= new PlayerHudLayer(this, {
+      width: this.scale.width,
+      height: this.scale.height,
+    })
+
+    return this._playerHud
+  }
+
   private _castBar?: CombatCastBar
 
   private get castBar(): CombatCastBar {
@@ -444,6 +467,23 @@ export class CombatScene extends Phaser.Scene {
   private battleEndHandler = () => this.onBattleEnd()
   private exitHandler = () => this.onExit()
   private damageHandler = (event: CombatEvent) => this.onDamageNumber(event)
+
+  // 6A-T2 (2026-09-01) — floating kill/heal.
+  private killHandler = (event: CombatEvent) => {
+    const sprite = this.spriteFor(event.targetId)
+
+    if (sprite) {
+      this.damageText.showKillText(sprite)
+    }
+  }
+
+  private healHandler = (event: CombatHealEvent) => {
+    const sprite = this.spriteFor(event.targetId)
+
+    if (sprite && event.value > 0) {
+      this.damageText.showHealText(sprite, event.value)
+    }
+  }
   private actionImpactHandler = (event: ActionImpactEvent) => this.onActionImpact(event)
   private statusAttachHandler = (event: StatusVfxAttachedEvent) => this.onStatusAttached(event)
   private statusUpdateHandler = (event: StatusVfxUpdatedEvent) => this.onStatusUpdated(event)
@@ -563,6 +603,11 @@ export class CombatScene extends Phaser.Scene {
 
     this.subscribeCombatEvents()
 
+    // 6A-T4 — HUD player trong canvas (HP/MP/Kiếm) — tạo một lần cho
+    // đời scene; hiển thị/ẩn theo inBattle qua battle_start/battle_end.
+    this.ensurePlayerHud()
+    this._playerHud?.setVisible(this.inBattle)
+
     // Late-join replay (fix spawn animation lÃ¡ÂºÂ§n Ã„â€˜Ã¡ÂºÂ§u, 2026-08-26): nÃ¡ÂºÂ¿u
     // scene start MUÃ¡Â»ËœN so vÃ¡Â»â€ºi battle_start, phÃƒÂ¡t lÃ¡ÂºÂ¡i snapshot positions
     // mÃ¡Â»â€ºi nhÃ¡ÂºÂ¥t tÃ¡Â»Â« registry (bridge trong PhaserCanvas.vue) Ã„â€˜Ã¡Â»Æ’ reconcile
@@ -586,6 +631,8 @@ export class CombatScene extends Phaser.Scene {
 
   private resizeHandler = (gameSize: ResizeSize) => {
     this.applyBattlefieldLayout(gameSize.width, gameSize.height)
+    // 6A-T5 — HUD re-layout theo viewport mới (flexible rule).
+    this.playerHud?.layout(gameSize.width, gameSize.height)
   }
 
   private shutdownHandler = () => {
@@ -1206,6 +1253,11 @@ export class CombatScene extends Phaser.Scene {
     this.spawnVfxHandles.clear()
     this.materializingIds.clear()
 
+    // 6A-T4/T5 — HUD dọn khi scene shutdown (battle_end KHÔNG destroy —
+    // chỉ shutdown mới hủy; restart scene tạo lại).
+    this._playerHud?.destroy()
+    this._playerHud = undefined
+
     this.playerSpawnHandle?.destroy()
     this.playerSpawnHandle = undefined
     this.playerMaterialized = true
@@ -1370,6 +1422,8 @@ export class CombatScene extends Phaser.Scene {
     eventBus.on<BattleEndEvent>('battle_end', this.battleEndHandler)
     eventBus.on<void>('combat_scene_exit', this.exitHandler)
     eventBus.on<CombatEvent>('damage', this.damageHandler)
+    eventBus.on<CombatEvent>('kill', this.killHandler)
+    eventBus.on<CombatHealEvent>('heal', this.healHandler)
     eventBus.on<ActionImpactEvent>('action_impact', this.actionImpactHandler)
     eventBus.on<StatusVfxAttachedEvent>('status_vfx_attached', this.statusAttachHandler)
     eventBus.on<StatusVfxUpdatedEvent>('status_vfx_updated', this.statusUpdateHandler)
@@ -1394,6 +1448,8 @@ export class CombatScene extends Phaser.Scene {
     this.eventBus.off<BattleEndEvent>('battle_end', this.battleEndHandler)
     this.eventBus.off<void>('combat_scene_exit', this.exitHandler)
     this.eventBus.off<CombatEvent>('damage', this.damageHandler)
+    this.eventBus.off<CombatEvent>('kill', this.killHandler)
+    this.eventBus.off<CombatHealEvent>('heal', this.healHandler)
     this.eventBus.off<ActionImpactEvent>('action_impact', this.actionImpactHandler)
     this.eventBus.off<StatusVfxAttachedEvent>('status_vfx_attached', this.statusAttachHandler)
     this.eventBus.off<StatusVfxUpdatedEvent>('status_vfx_updated', this.statusUpdateHandler)
@@ -1467,6 +1523,9 @@ export class CombatScene extends Phaser.Scene {
   // [MIN_SEGMENT_DURATION_MS, MAX_SEGMENT_DURATION_MS].
   private onPositions(event: BattlePositionsEvent) {
     const now = this.time.now
+
+    // 6A-T5 — HUD HP fast-path từ positions (khi chưa có vitals event).
+    this.playerHud?.updateHp(event.playerCurrentHp, event.playerMaxHp)
 
     if (this.lastSnapshotAt !== undefined) {
       this.pendingCadence = Math.min(
@@ -1546,6 +1605,9 @@ export class CombatScene extends Phaser.Scene {
   // presentation tÃ¡ÂºÂ¡i chÃ¡Â»â€”. ViÃ¡Â»â€¡c cÃƒÂ²n lÃ¡ÂºÂ¡i Ã¡Â»Å¸ Ã„â€˜ÃƒÂ¢y: chÃ¡Â»Ân + load trÃ†Â°Ã¡Â»â€ºc variant
   // nÃ¡Â»Ân cho trÃ¡ÂºÂ­n KÃ¡ÂºÂ¾ TIÃ¡ÂºÂ¾P vÃƒÂ  dÃ¡Â»Ân DoT accumulator.
   onBattleEnd() {
+
+    // 6A-T5 — HUD theo dõi battle end.
+    this._playerHud?.setVisible(false)
     this.inBattle = false
 
     // DoT accumulator (Ã‚Â§7.2) Ã¢â‚¬â€ trÃ¡ÂºÂ­n Ã„â€˜ÃƒÂ£ xong, bucket cÃ…Â© khÃƒÂ´ng Ã„â€˜Ã†Â°Ã¡Â»Â£c rÃƒÂ²
@@ -1650,6 +1712,23 @@ export class CombatScene extends Phaser.Scene {
     if (sprite) {
       this.updateEnemyHealthBar(sprite, event.hpAfter, event.maxHp)
     }
+
+    // 6A-T5 — HUD player (entityId === PLAYER_ID) cập nhật từ vitals.
+    if (event.entityId === PLAYER_ID) {
+      this.playerHud?.updateHp(event.hpAfter, event.maxHp)
+
+      if (event.maxMp > 0) {
+        this.playerHud?.updateMp(event.mpAfter, event.maxMp)
+      }
+    }
+  }
+
+  /**
+   * 6A-T5 — exit zone trong canvas click → bridge sang DOM confirm
+   * modal (T6) qua eventBus. KHÔNG mở modal trực tiếp từ scene.
+   */
+  requestCombatExit() {
+    this.eventBus?.emit('combat_exit_request', undefined)
   }
 
   // "NÃ¡ÂºÂ£y sÃ¡Â»â€˜" thÃ¡ÂºÂ­t sÃ¡Â»Â± Ã¢â‚¬â€ pop-in bÃ¡ÂºÂ±ng Back.easeOut (bÃ¡ÂºÂ­t nÃ¡ÂºÂ£y quÃƒÂ¡ cÃ¡Â»Â¡ rÃ¡Â»â€œi
@@ -1846,6 +1925,9 @@ export class CombatScene extends Phaser.Scene {
   // no-op nÃ¡ÂºÂ¿u Ã„â€˜ÃƒÂ£ sÃ¡ÂºÂ¡ch sÃ¡ÂºÂµn).
   onBattleStart() {
     this.inBattle = true
+
+    // 6A-T5 — HUD hiện khi vào trận.
+    this._playerHud?.setVisible(true)
 
     // VÃƒÂ²ng Ã„â€˜Ã¡Â»Âi background (2026-08-26): trÃ¡ÂºÂ­n mÃ¡Â»â€ºi bÃ¡ÂºÂ¯t Ã„â€˜Ã¡ÂºÂ§u Ã¢â‚¬â€ HÃ¡Â»Â¦Y mÃ¡Â»Âi lÃ¡ÂºÂ§n
     // load backdrop cÃƒÂ²n treo cÃ¡Â»Â§a battle_end trÃ†Â°Ã¡Â»â€ºc (generation cÃ…Â©) Ã„â€˜Ã¡Â»Æ’

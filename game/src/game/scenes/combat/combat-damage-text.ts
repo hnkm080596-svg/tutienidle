@@ -15,6 +15,9 @@ import {
   DAMAGE_DEALT_COLOR,
   DAMAGE_TAKEN_COLOR,
   DOT_TEXT_FLUSH_INTERVAL_MS,
+  KILL_TEXT_COLOR,
+  KILL_TEXT_STROKE,
+  HEAL_TEXT_COLOR,
   PLAYER_ID,
 } from './combatConstants'
 import type { EntitySprite } from './combatTypes'
@@ -168,6 +171,62 @@ export class CombatDamageText {
         fontSize: '13px',
         fontStyle: 'bold',
         color,
+      })
+      .setOrigin(0.5, 1)
+      .setDepth(DEPTH_OVERLAY_UI + 7)
+
+    this.scene.tweens.add({
+      targets: label,
+      y: label.y - 20,
+      alpha: 0,
+      duration: 620,
+      ease: 'Quad.easeOut',
+      onComplete: () => label.destroy(),
+    })
+  }
+
+  /**
+   * 6A-T2 (2026-09-01) — floating "Hạ Gục!" trên đầu enemy vừa chết.
+   * 18px bold trắng stroke đỏ (spec §2); scene subscribe event 'kill'
+   * và gọi với sprite của targetId — fade của sprite chết không chặn
+   * text (text tự destroy sau tween).
+   */
+  showKillText(sprite: EntitySprite) {
+    const label = this.scene.add
+      .text(sprite.rect.x, this.scene.entityHeadY(sprite) - 12, 'Hạ Gục!', {
+        fontSize: '18px',
+        fontStyle: 'bold',
+        color: KILL_TEXT_COLOR,
+        stroke: KILL_TEXT_STROKE,
+        strokeThickness: 3,
+      })
+      .setOrigin(0.5, 1)
+      .setDepth(DEPTH_OVERLAY_UI + 7)
+
+    this.scene.tweens.add({
+      targets: label,
+      y: label.y - 24,
+      alpha: 0,
+      duration: 500,
+      ease: 'Quad.easeOut',
+      onComplete: () => label.destroy(),
+    })
+  }
+
+  /**
+   * 6A-T2 (2026-09-01) — floating "+N" xanh cho heal (event 'heal' từ
+   * EntityVitalsSystem — healing/leech). formatNumber cho số lớn.
+   */
+  showHealText(sprite: EntitySprite, value: number) {
+    if (!Number.isFinite(value) || value <= 0) {
+      return
+    }
+
+    const label = this.scene.add
+      .text(sprite.rect.x, this.scene.entityHeadY(sprite), `+${formatNumber(Math.round(value))}`, {
+        fontSize: '14px',
+        fontStyle: 'bold',
+        color: HEAL_TEXT_COLOR,
       })
       .setOrigin(0.5, 1)
       .setDepth(DEPTH_OVERLAY_UI + 7)

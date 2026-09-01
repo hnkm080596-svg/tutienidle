@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue'
+﻿import { computed, ref } from 'vue'
 import { useGameManager, useStateVersion } from './useGameState'
 import { usePlayerStore } from '@/stores/player'
 import {
@@ -8,7 +8,7 @@ import {
 import { getSkillLoadoutSlotCount, MAX_SKILL_LOADOUT_SLOTS } from '@/core/skill/SkillLoadoutSlots'
 
 // Task 7 (2026-08-28, kiem-tu-tu-luc plan) — nhịp tụ lực Bạt Kiếm
-// (3-9s) do CombatControlBar.vue's slider điều khiển; ref module-scope
+// (3-9s) do KiemTuCombatHud.vue's slider (6A-T7: ControlBar đã xóa) điều khiển; ref module-scope
 // (chung 1 instance toàn app, giống mọi composable singleton khác ở
 // đây) để KiemTuCombatHud.vue đọc lại đúng số đang áp dụng mà không cần
 // thêm field Player.ts/store — cố ý KHÔNG PERSIST (dev-phase, "không
