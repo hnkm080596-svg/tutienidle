@@ -6,6 +6,7 @@ import { getRealmTier } from '@/core/realm/RealmTierMap'
 import Bar from '@/components/common/primitives/Bar.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import { getSpiritStoneMaterialIdForRealmTier } from '@/core/material/SpiritStoneMaterial'
+import { formatNumber } from '@/core/format/NumberFormatter'
 
 const BUILDING_ID = 'spirit_spring'
 
@@ -87,8 +88,12 @@ function collect() {
         pill
       />
 
-      <strong>{{ storedAmount.toLocaleString('vi-VN') }} / {{ displayedCapacity.toLocaleString('vi-VN') }}</strong>
+      <strong>{{ formatNumber(storedAmount) }} / {{ formatNumber(displayedCapacity) }}</strong>
 
+      <!-- Ngoại lệ locale có chủ đích (M9): rate THẬT là số thập phân (mortal
+           = 5.5, level scaling +20%/level) — formatNumber Math.round phần
+           thập phân dưới 10,000 nên 5.5 hiện "6". Giữ vi-VN 1 chữ số thập
+           phân cho ĐÚNG số liệu hơn là nhất quán grouping. -->
       <small class="spirit-spring-panel__rate">+{{ ratePerMinute.toLocaleString('vi-VN', { maximumFractionDigits: 1 }) }} thạch/phút</small>
 
       <GameButton class="spirit-spring-panel__collect" size="sm" :disabled="storedAmount <= 0" @click="collect">Thu hoạch</GameButton>

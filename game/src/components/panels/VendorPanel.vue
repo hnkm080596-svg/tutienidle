@@ -16,6 +16,7 @@ import {
   MATERIAL_TIER_CONVERSION_RATIO,
   getNextTierMaterialId,
 } from '@/core/material/MaterialTierConversionBalance'
+import { formatNumber } from '@/core/format/NumberFormatter'
 
 // Ký Bảo Các (2026-08-25→30) — building CHUYÊN cho mọi cơ chế "đổi/bán",
 // tách khỏi Linh Tuyền/Sản Xuất (building không chuyên). Layout 2026-08-30
@@ -183,9 +184,9 @@ function sellAll(materialId: string, owned: number) {
           <h4>Đổi Phẩm</h4>
 
           <div class="resource-card__owned">
-            <span>{{ SPIRIT_STONE_MATERIAL.name }}: {{ haPhamOwned.toLocaleString('vi-VN') }}</span>
-            <span>{{ SPIRIT_STONE_TRUNG_PHAM_MATERIAL.name }}: {{ trungPhamOwned.toLocaleString('vi-VN') }}</span>
-            <span>{{ SPIRIT_STONE_THUONG_PHAM_MATERIAL.name }}: {{ thuongPhamOwned.toLocaleString('vi-VN') }}</span>
+            <span>{{ SPIRIT_STONE_MATERIAL.name }}: {{ formatNumber(haPhamOwned) }}</span>
+            <span>{{ SPIRIT_STONE_TRUNG_PHAM_MATERIAL.name }}: {{ formatNumber(trungPhamOwned) }}</span>
+            <span>{{ SPIRIT_STONE_THUONG_PHAM_MATERIAL.name }}: {{ formatNumber(thuongPhamOwned) }}</span>
           </div>
 
           <div class="resource-card__actions">
@@ -215,7 +216,7 @@ function sellAll(materialId: string, owned: number) {
 
           <div v-else class="resource-card__rows">
             <div v-for="row in woodTierRows" :key="row.fromId" class="resource-card__row">
-              <span>{{ row.fromName }} <strong>({{ row.owned.toLocaleString('vi-VN') }})</strong> → {{ row.toName }}</span>
+              <span>{{ row.fromName }} <strong>({{ formatNumber(row.owned) }})</strong> → {{ row.toName }}</span>
 
               <GameButton size="sm" :disabled="row.owned < MATERIAL_TIER_CONVERSION_RATIO" @click="convertTier(row.fromId)">
                 {{ MATERIAL_TIER_CONVERSION_RATIO }} → 1
@@ -240,7 +241,7 @@ function sellAll(materialId: string, owned: number) {
 
           <div v-else class="resource-card__rows">
             <div v-for="row in oreTierRows" :key="row.fromId" class="resource-card__row">
-              <span>{{ row.fromName }} <strong>({{ row.owned.toLocaleString('vi-VN') }})</strong> → {{ row.toName }}</span>
+              <span>{{ row.fromName }} <strong>({{ formatNumber(row.owned) }})</strong> → {{ row.toName }}</span>
 
               <GameButton size="sm" :disabled="row.owned < MATERIAL_TIER_CONVERSION_RATIO" @click="convertTier(row.fromId)">
                 {{ MATERIAL_TIER_CONVERSION_RATIO }} → 1
@@ -259,8 +260,8 @@ function sellAll(materialId: string, owned: number) {
       <div v-if="sellableRows.length" class="resource-card__rows">
         <div v-for="row in sellableRows" :key="row.materialId" class="resource-card__row">
           <span>
-            {{ row.name }} <strong>({{ row.owned.toLocaleString('vi-VN') }})</strong>
-            — {{ row.unitPrice.toLocaleString('vi-VN') }} hạ/đơn vị
+            {{ row.name }} <strong>({{ formatNumber(row.owned) }})</strong>
+            — {{ formatNumber(row.unitPrice) }} hạ/đơn vị
           </span>
 
           <GameButton size="sm" @click="sellAll(row.materialId, row.owned)">
