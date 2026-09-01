@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { runSkillAction, SKILL_ACTION_REGISTRY } from './SkillActionRegistry'
+import type { ActionExecutionHelpers } from './SkillActionRegistry'
 import type { DealDamageAction, SkillActionType } from './SkillAction'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { SkillEffectContext } from './SkillEffectSystem'
@@ -29,6 +30,10 @@ function makeCtx(overrides: Partial<SkillEffectContext> = {}): SkillEffectContex
   }
 }
 
+function makeHelpers(): ActionExecutionHelpers {
+  return { fireNested: () => {} }
+}
+
 describe('SKILL_ACTION_REGISTRY', () => {
   it('has an executor for every SkillActionType', () => {
     const types: SkillActionType[] = ['dealDamage']
@@ -45,7 +50,7 @@ describe('dealDamage executor', () => {
     const ctx = makeCtx()
     const action: DealDamageAction = { type: 'dealDamage', value: 1, damageType: 'physical' }
 
-    runSkillAction(action, source, target, ctx, {})
+    runSkillAction(action, source, target, ctx, {}, makeHelpers())
 
     expect(ctx.fireHit).toHaveBeenCalledTimes(1)
     expect(ctx.fireHit).toHaveBeenCalledWith(target, { kind: 'physical', multiplier: 1 })
@@ -62,7 +67,7 @@ describe('dealDamage executor', () => {
     })
     const action: DealDamageAction = { type: 'dealDamage', value: 1, hitCountByRealm: true }
 
-    runSkillAction(action, source, target, ctx, {})
+    runSkillAction(action, source, target, ctx, {}, makeHelpers())
 
     // realmIndex 2 -> 3 intended hits, but target dies after the first.
     expect(ctx.fireHit).toHaveBeenCalledTimes(1)
@@ -78,7 +83,7 @@ describe('dealDamage executor', () => {
       attributeScaling: [{ attributes: ['attack'], ratioPerPoint: 0.1 }],
     }
 
-    runSkillAction(action, source, target, ctx, {})
+    runSkillAction(action, source, target, ctx, {}, makeHelpers())
 
     // finalMultiplier = 2 * (1 + 0.1*10) * (1 + 0) = 2 * 2 = 4
     expect(ctx.fireHit).toHaveBeenCalledWith(target, { kind: 'physical', multiplier: 4 })

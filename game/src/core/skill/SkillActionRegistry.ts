@@ -1,6 +1,11 @@
 import type { ActionRuntimeContext, SkillAction, SkillActionType } from './SkillAction'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { SkillEffectContext } from './SkillEffectSystem'
+import type { TriggerContextMap, TriggerType } from './SkillTrigger'
+
+export interface ActionExecutionHelpers {
+  fireNested: <T extends TriggerType>(trigger: T, context: TriggerContextMap[T]) => void
+}
 
 export type ActionExecutor<A extends SkillAction = SkillAction> = (
   action: A,
@@ -8,6 +13,7 @@ export type ActionExecutor<A extends SkillAction = SkillAction> = (
   target: CombatEntity,
   ctx: SkillEffectContext,
   runtime: ActionRuntimeContext,
+  helpers: ActionExecutionHelpers,
 ) => void
 
 // Ported verbatim from SkillEffectSystem.apply()'s case 'damage' — same
@@ -56,7 +62,7 @@ const dealDamage: ActionExecutor<Extract<SkillAction, { type: 'dealDamage' }>> =
 
 export const SKILL_ACTION_REGISTRY: { [K in SkillActionType]: ActionExecutor<Extract<SkillAction, { type: K }>> } = {
   dealDamage,
-}
+} as { [K in SkillActionType]: ActionExecutor<Extract<SkillAction, { type: K }>> }
 
 export function runSkillAction(
   action: SkillAction,
@@ -64,7 +70,8 @@ export function runSkillAction(
   target: CombatEntity,
   ctx: SkillEffectContext,
   runtime: ActionRuntimeContext,
+  helpers: ActionExecutionHelpers,
 ): void {
   const executor = SKILL_ACTION_REGISTRY[action.type] as ActionExecutor
-  executor(action, source, target, ctx, runtime)
+  executor(action, source, target, ctx, runtime, helpers)
 }

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { SkillEffectSystem } from './SkillEffectSystem'
 import type { SkillEffectContext } from './SkillEffectSystem'
 import { runSkillAction } from './SkillActionRegistry'
+import type { ActionExecutionHelpers } from './SkillActionRegistry'
 import type { CombatEntity } from '../combat/CombatEntity'
 
 function makeEntity(): CombatEntity {
@@ -23,6 +24,10 @@ function makeCtx(fireHit: SkillEffectContext['fireHit']): SkillEffectContext {
     reactionManager: {} as SkillEffectContext['reactionManager'],
     skillExperience: 200,
   }
+}
+
+function makeHelpers(): ActionExecutionHelpers {
+  return { fireNested: () => {} }
 }
 
 describe('parity — old damage SkillEffect vs new dealDamage SkillAction', () => {
@@ -51,6 +56,7 @@ describe('parity — old damage SkillEffect vs new dealDamage SkillAction', () =
         return { landed: true }
       }),
       {},
+      makeHelpers(),
     )
 
     expect(newCalls).toEqual(oldCalls)
