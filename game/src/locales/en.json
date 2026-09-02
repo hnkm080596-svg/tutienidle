@@ -75,9 +75,8 @@
         "irreversible": "This action CANNOT be undone."
       },
       "select": {
-        "anyRealm": "Any Realm",
         "anyQuality": "Any quality (Khí tier)",
-        "anyGrade": "Any grade"
+        "anyProfessionGrade": "Any grade (Cửu Phẩm)"
       },
       "messages": {
         "refineNeedItem": "Cannot Refine: select an equipment item first.",

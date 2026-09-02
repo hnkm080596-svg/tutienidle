@@ -75,9 +75,8 @@
         "irreversible": "Thao tác KHÔNG thể hoàn tác."
       },
       "select": {
-        "anyRealm": "Mọi cảnh giới",
         "anyQuality": "Mọi chất (9 bậc Khí)",
-        "anyGrade": "Mọi phẩm (Ngũ Phẩm)"
+        "anyProfessionGrade": "Mọi phẩm (Cửu Phẩm)"
       },
       "messages": {
         "refineNeedItem": "Không thể Tẩy Luyện: cần chọn một trang bị.",
