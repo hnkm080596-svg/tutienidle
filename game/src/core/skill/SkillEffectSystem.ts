@@ -279,8 +279,9 @@ export class SkillEffectSystem {
           }
 
           // Biến thể "Lan Độc → Thấm": gia hạn duration primary (không
-          // đổi stacks) — xoá + apply lại cùng nguồn để stackMode
-          // 'stack' giữ nguyên số tầng nhưng remainingTime reset.
+          // đổi stacks) — reset remainingTime về duration đã snapshot
+          // lúc apply (cùng tinh thần renewWithExtension: không tạo
+          // instance mới, không đổi số tầng).
           if (effect.spreadRefreshesPrimary) {
             const primaryInstances = ctx.targetBuffs.getAllById(effect.spreadsAilmentId)
 
@@ -297,11 +298,28 @@ export class SkillEffectSystem {
         ctx.combatSystem.applyHealing(target, effect.value ?? 0, source.id, 'healing')
         break
 
-      case 'buff':
-        if (effect.buffId) {
-          ctx.sourceBuffs.apply(ctx.buffRegistry.get(effect.buffId), source, source, ctx.buffRegistry)
+      case 'buff': {
+        if (!effect.buffId) break
+
+        const definition = ctx.buffRegistry.get(effect.buffId)
+
+        // Pháp Tu Thuần Hệ (E-2, 2026-09-03) — Hậu Thổ Thành Lũy:
+        // stacks = số target còn sống của action (cap maxStacks của
+        // buff — apply() theo stackMode 'stack' tự dừng ở trần).
+        // 0 target → không buff. Không có affectedTargets (ctx cũ) →
+        // 1 lần apply như hành vi cũ.
+        if (effect.stacksPerAffectedTarget) {
+          const hitCount = (ctx.affectedTargets ?? [target]).filter((oneTarget) => oneTarget.alive).length
+
+          for (let i = 0; i < hitCount; i++) {
+            ctx.sourceBuffs.apply(definition, source, source, ctx.buffRegistry)
+          }
+          break
         }
+
+        ctx.sourceBuffs.apply(definition, source, source, ctx.buffRegistry)
         break
+      }
 
       // Unified Buff System (Task 11, 2026-09-01) — absorbs old case
       // 'ailment' entirely: chance roll (incl. elementApplicationPercent),

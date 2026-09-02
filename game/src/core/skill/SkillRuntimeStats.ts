@@ -18,9 +18,18 @@ export interface SkillRuntimeStats {
   metalAilmentPotencyPercent: number
   huyetPhaGainPerProc: number
   huyetPhaBurstDamage: number
+  // Pháp Tu Thuần Hệ (E-2, 2026-09-03) — node "Độc Chướng" (+1 trần
+  // Trúng Độc): buff id → số tầng TRẦN cộng thêm vào maxStacks của
+  // definition khi BuffSystem tạo instance mới (xem BuffSystem.
+  // resolveMaxStacks). Map rỗng/undefined = không đổi hành vi cũ.
+  maxStacksBonusByBuffId?: Record<string, number>
 }
 
-export type SkillResourceStatKey = keyof SkillRuntimeStats
+export type SkillRuntimeNumericStatKey = {
+  [K in keyof SkillRuntimeStats]-?: SkillRuntimeStats[K] extends number ? K : never
+}[keyof SkillRuntimeStats]
+
+export type SkillResourceStatKey = SkillRuntimeNumericStatKey
 
 export const SKILL_RESOURCE_STAT_KEYS = [
   'hoaTheGainPerCast', 'hoaTheDecayReductionPercent',

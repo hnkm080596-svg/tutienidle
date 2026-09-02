@@ -71,7 +71,7 @@ export class BuffSystem {
         duration,
         remainingTime: duration,
         stacks: 1,
-        maxStacks: definition.maxStacks,
+        maxStacks: this.resolveMaxStacks(definition, source),
         stackMode: definition.stackMode,
         continuousSeconds: 0,
         convertsToId: definition.convertsToId,
@@ -82,6 +82,20 @@ export class BuffSystem {
     }
 
     this.handleExisting(existing, definition, source, target, duration, resolvedEffects, registry)
+  }
+
+  // Trần stack của 1 buff definition trên 1 entity — `definition.maxStacks`
+  // là nền, `source.skillStats.maxStacksBonusByBuffId[definition.id]` (nếu
+  // có) cộng thêm (node "Độc Chướng" +1 trần Trúng Độc — Pháp Tu Thuần
+  // Hệ E-2, 2026-09-03). Không truyền skillStats = y hệt hành vi cũ.
+  private resolveMaxStacks(definition: BuffDefinition, source: CombatEntity): number | undefined {
+    if (definition.maxStacks === undefined) {
+      return undefined
+    }
+
+    const bonus = source.skillStats?.maxStacksBonusByBuffId?.[definition.id] ?? 0
+
+    return definition.maxStacks + bonus
   }
 
   private handleExisting(

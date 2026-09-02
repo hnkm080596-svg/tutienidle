@@ -135,6 +135,13 @@ export interface SkillEffect {
   // 9 đại cảnh giới) vào scalingBonus.
   realmDamageRatio?: number
 
+  // Pháp Tu Thuần Hệ (E-2, 2026-09-03) — CHỈ dùng cho effect 'buff'
+  // scope 'source' (Hậu Thổ Thành Lũy): số tầng của buff tự áp = số
+  // target CÒN SỐNG mà action vừa trúng (ctx.affectedTargets, cap trần
+  // maxStacks của buff qua BuffSystem.apply nhiều lần). 0 target →
+  // không buff. Không set = 'buff' hoạt động như cũ (1 lần apply).
+  stacksPerAffectedTarget?: boolean
+
   /** Bonus multiplier theo Linh Lực tối đa của Pháp Tu. */
   manaScalingRatio?: number
 

@@ -11,7 +11,7 @@ import { createBaseStats } from '../stats/StatBlock'
 import { createSkillRuntimeStats } from './SkillRuntimeStats'
 import { buffs } from '../../data/buff/buffs'
 import type { CombatEntity } from '../combat/CombatEntity'
-import type { SkillEffect } from './SkillEffect'
+import type { ActionDamageInfo } from '../battle/ActionImpactSystem'
 
 // Pháp Tu Thuần Hệ (plan 2026-09-03, engine E-1..E-5) — tests cho các
 // mở rộng SkillEffect/SkillEffectSystem: add_stack/remove_buff active
@@ -275,15 +275,20 @@ describe("SkillEffectSystem — E-4: 'hitCount' (N missile cố định)", () =>
     const system = new SkillEffectSystem()
     const source = createCombatant({ id: 'source', type: 'player' })
     const target = createCombatant({ id: 'target' })
-    const fireHit = vi.fn(() => ({ landed: true }))
-    const ctx = createContext({ fireHit })
+    const hitInfos: ActionDamageInfo[] = []
+    const ctx = createContext({
+      fireHit: (_hitTarget, damageInfo) => {
+        hitInfos.push(damageInfo)
+        return { landed: true }
+      },
+    })
 
     system.apply({ type: 'damage', value: 0.6, hitCount: 8 }, source, target, ctx)
 
     // 8 call tách biệt, mỗi call multiplier 0.6 (không phải 1 call 4.8).
-    expect(fireHit).toHaveBeenCalledTimes(8)
-    for (const call of fireHit.mock.calls) {
-      expect((call[1] as { multiplier: number }).multiplier).toBeCloseTo(0.6, 5)
+    expect(hitInfos).toHaveLength(8)
+    for (const damageInfo of hitInfos) {
+      expect(damageInfo.multiplier).toBeCloseTo(0.6, 5)
     }
   })
 
@@ -543,5 +548,85 @@ describe("SkillEffectSystem — E-1: 'spreadsAilmentId' (lan độc)", () => {
     ).not.toThrow()
 
     expect(primaryBuffs.getStacks('trung_doc')).toBe(1)
+  })
+})
+
+describe("SkillEffectSystem — E-2: 'stacksPerAffectedTarget' (buff self theo số địch trúng)", () => {
+  // Test dùng definition 'khai_son' (buff, stack, maxStacks 3) — cùng
+  // shape stack-cap với 'thanh_luy' (§7) mà không cần đụng data file
+  // (ngoài phạm vi task engine này).
+  function buffSetup(aliveCount: number) {
+    const system = new SkillEffectSystem()
+    const source = createCombatant({ id: 'source', type: 'player' })
+    const target = createCombatant({ id: 'primary' })
+    const sourceBuffs = new BuffSystem(new BuffPool())
+
+    const affected = Array.from({ length: aliveCount }, (_, i) =>
+      createCombatant({ id: `enemy_${i}` }),
+    )
+
+    const ctx = createContext({ sourceBuffs, affectedTargets: affected })
+
+    return { system, source, target, sourceBuffs, ctx }
+  }
+
+  it('3 target trúng → buff self 3 tầng', () => {
+    const { system, source, target, sourceBuffs, ctx } = buffSetup(3)
+
+    system.apply({ type: 'buff', buffId: 'khai_son', stacksPerAffectedTarget: true }, source, target, ctx)
+
+    expect(sourceBuffs.getStacks('khai_son')).toBe(3)
+  })
+
+  it('0 target → không buff', () => {
+    const { system, source, target, sourceBuffs, ctx } = buffSetup(0)
+
+    system.apply({ type: 'buff', buffId: 'khai_son', stacksPerAffectedTarget: true }, source, target, ctx)
+
+    expect(sourceBuffs.getActiveIds()).toEqual([])
+  })
+
+  it('cap ở maxStacks của buff (khai_son trần 3, 5 target → 3 tầng)', () => {
+    const { system, source, target, sourceBuffs, ctx } = buffSetup(5)
+
+    system.apply({ type: 'buff', buffId: 'khai_son', stacksPerAffectedTarget: true }, source, target, ctx)
+
+    expect(sourceBuffs.getStacks('khai_son')).toBe(3)
+  })
+
+  it('không khai flag → 1 lần apply như cũ (regression)', () => {
+    const { system, source, target, sourceBuffs, ctx } = buffSetup(3)
+
+    system.apply({ type: 'buff', buffId: 'khai_son' }, source, target, ctx)
+
+    expect(sourceBuffs.getStacks('khai_son')).toBe(1)
+  })
+})
+
+describe('BuffSystem — E-2: maxStacksBonusByBuffId (node Độc Chướng)', () => {
+  it('skillStats bonus +1 → instance mới mang trần maxStacks+1', () => {
+    const source = createCombatant({
+      id: 'source',
+      type: 'player',
+      skillStats: { ...createSkillRuntimeStats(), maxStacksBonusByBuffId: { trung_doc: 1 } },
+    })
+    const target = createCombatant({ id: 'target' })
+    const buffs = new BuffSystem(new BuffPool())
+    const registry = createRegistry()
+
+    buffs.apply(registry.get('trung_doc'), source, target, registry)
+
+    expect(buffs.getFromSource('trung_doc', 'source')!.maxStacks).toBe(6)
+  })
+
+  it('không bonus → trần đúng bằng definition (hành vi cũ)', () => {
+    const source = createCombatant({ id: 'source', type: 'player' })
+    const target = createCombatant({ id: 'target' })
+    const buffs = new BuffSystem(new BuffPool())
+    const registry = createRegistry()
+
+    buffs.apply(registry.get('trung_doc'), source, target, registry)
+
+    expect(buffs.getFromSource('trung_doc', 'source')!.maxStacks).toBe(5)
   })
 })
