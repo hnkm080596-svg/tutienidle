@@ -56,7 +56,7 @@
 - This project is currently in a development build. Save-migration correctness does NOT need to be maintained or verified — it is fine to break compatibility with old saves during this phase. Do not spend effort on save migrations.
 ## Rule: Planning & Idea Preservation
 
-**Trigger:** When the user requests a plan.
+**Trigger:** When the user requests a specification or plan.
 
 **Mandatory Principles:**
 
@@ -69,16 +69,24 @@
    - Proactively research related issues, context, and technical requirements surrounding the idea.
    - Add technical details, implementation steps, risks, and necessary resources **without altering the essence of the original idea**.
 
-3. **The plan must be detailed and stay true to the original idea.**
-   - Every original idea must appear fully in the plan.
+3. **Review all systems related to the task while writing the specification.**
+   - During specification, inspect and account for every system related to the task in addition to the user's original ideas.
+   - Trace relevant architecture, data flows, state ownership, dependencies, integrations, persistence, lifecycle, UI interactions, tests, and cross-system effects as applicable.
+   - Use this system-wide context to produce the most coherent and technically sound specification, while preserving the essence and continuity of the user's original ideas.
+   - Explicitly identify affected systems, assumptions, constraints, risks, and integration points in the specification. Do not infer system behavior from filenames or isolated code snippets when the relevant implementation can be inspected.
+   - Derive the implementation plan from the completed specification and reuse its system analysis instead of repeating the same investigation.
+   - Revisit and update the specification before planning only when the specification is missing, incomplete, outdated, or the task scope has changed.
+
+4. **The specification or plan must be detailed and stay true to the original idea.**
+   - Every original idea must appear fully in the specification or plan.
    - If new sections are needed (e.g., architecture, technology, timeline), ensure they **serve** the original idea, not replace it.
 
-4. **Clearly note any proposed changes.**
+5. **Clearly note any proposed changes.**
    - If the original idea is found to have issues (infeasibility, conflicts, etc.), state them clearly in a separate "Notes / Suggestions" section, with reasons and alternative approaches.
-   - Do not silently modify the original idea in the plan.
+   - Do not silently modify the original idea in the specification or plan.
 
-5. **Confirm before finalizing the plan (if necessary).**
-   - Before delivering the final plan, if there is any ambiguity about the idea, ask clarifying questions instead of guessing.
+6. **Confirm before finalizing the specification or plan (if necessary).**
+   - Before delivering the final specification or plan, if there is any ambiguity about the idea, ask clarifying questions instead of guessing.
 
 ## TutienIdle Adversarial QA
 
