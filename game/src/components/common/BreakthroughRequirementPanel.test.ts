@@ -11,6 +11,11 @@ import { i18n } from '@/i18n'
 
 // Task 9.1 — panel chỉ còn xác nhận "Độ kiếp cũng là độ thân" (2 nút
 // Đã hiểu / Chờ đã). Linh Thạch cost + warning cũ đã dỡ khỏi UI.
+// i18n (2.5 task 8) — panel dùng t() nên assert qua i18n.global.t(key)
+// thay vì raw vi string (pattern HomeResourceStrip).
+function t(key: string): string {
+  return (i18n.global as unknown as { t: (k: string) => string }).t(key)
+}
 function mountPanel() {
   const container = document.createElement('div')
   const pinia = createPinia()
@@ -48,10 +53,10 @@ describe('BreakthroughRequirementPanel — confirm panel (Task 9.1)', () => {
   it('render title "Độ kiếp cũng là độ thân" + subtitle đỏ + 2 nút', () => {
     const { container, unmount } = mountPanel()
 
-    expect(container.textContent).toContain('Độ kiếp cũng là độ thân')
-    expect(container.textContent).toContain('Không thể mặc trang bị khi độ kiếp')
-    expect(container.textContent).toContain('Đã hiểu')
-    expect(container.textContent).toContain('Chờ đã')
+    expect(container.textContent).toContain(t('tribulation.stillEquipped.title'))
+    expect(container.textContent).toContain(t('tribulation.stillEquipped.subtitle'))
+    expect(container.textContent).toContain(t('tribulation.stillEquipped.confirm'))
+    expect(container.textContent).toContain(t('tribulation.stillEquipped.cancel'))
 
     unmount()
   })
@@ -71,7 +76,7 @@ describe('BreakthroughRequirementPanel — confirm panel (Task 9.1)', () => {
 
     const confirmButton = Array.from(
       container.querySelectorAll<HTMLButtonElement>('button'),
-    ).find(button => button.textContent?.trim() === 'Đã hiểu')!
+    ).find(button => button.textContent?.trim() === t('tribulation.stillEquipped.confirm'))!
 
     confirmButton.click()
     await nextTick()

@@ -5,6 +5,12 @@ import { i18n } from '@/i18n'
 import RewardList from './RewardList.vue'
 import type { BattleRewardSummary } from '@/core/reward/BattleRewardSummary'
 
+// i18n (2.5 task 8) — assert qua i18n.global.t(key) thay vì raw vi string
+// (pattern HomeResourceStrip). Tên item thưởng từ dữ liệu summary, không locale.
+function t(key: string): string {
+  return (i18n.global as unknown as { t: (k: string) => string }).t(key)
+}
+
 interface MountedRewardList {
   container: HTMLDivElement
   items: NodeListOf<HTMLElement>
@@ -68,7 +74,7 @@ describe('RewardList', () => {
     }
     const { items, unmount } = mountRewardList(summary)
     expect(items).toHaveLength(1)
-    expect(items[0]?.textContent).toContain('Linh Thạch')
+    expect(items[0]?.textContent).toContain(t('combat.rewards.spiritStone'))
     expect(items[0]?.textContent).toContain('+99')
     unmount()
   })
@@ -83,7 +89,7 @@ describe('RewardList', () => {
     }
     const { items, unmount } = mountRewardList(summary)
     expect(items).toHaveLength(1)
-    expect(items[0]?.textContent).toContain('Cảm Ngộ Kỹ Năng')
+    expect(items[0]?.textContent).toContain(t('combat.rewards.skillInsight'))
     expect(items[0]?.textContent).toContain('+500')
     unmount()
   })
