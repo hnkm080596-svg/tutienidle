@@ -473,43 +473,68 @@ export class CombatScene extends Phaser.Scene {
   readonly maxTrackedSourcePositions = 64
 
   private eventBus?: EventBus
-  private boundHandlers: Array<[string, (event: CombatScenePayload) => void]> = []
-  private positionsHandler = (event: BattlePositionsEvent) => this.onPositions(event)
-  private battleEndHandler = () => this.onBattleEnd()
-  private exitHandler = () => this.onExit()
-  private damageHandler = (event: CombatEvent) => this.onDamageNumber(event)
-
-  // 6A-T2 (2026-09-01) — floating kill/heal.
-  private killHandler = (event: CombatEvent) => {
-    const sprite = this.spriteFor(event.targetId)
-
-    if (sprite) {
-      this.damageText.showKillText(sprite)
-    }
-  }
-
-  private healHandler = (event: CombatHealEvent) => {
-    const sprite = this.spriteFor(event.targetId)
-
-    if (sprite && event.value > 0) {
-      this.damageText.showHealText(sprite, event.value)
-    }
-  }
-  private actionImpactHandler = (event: ActionImpactEvent) => this.onActionImpact(event)
-  private statusAttachHandler = (event: StatusVfxAttachedEvent) => this.onStatusAttached(event)
-  private statusUpdateHandler = (event: StatusVfxUpdatedEvent) => this.onStatusUpdated(event)
-  private statusRemoveHandler = (event: StatusVfxRemovedEvent) => this.onStatusRemoved(event)
-  private vitalsHandler = (event: EntityVitalsChangedEvent) => this.onVitalsChanged(event)
-  private rewardParticleHandler = (event: BattleRewardParticleEvent) => this.onRewardParticle(event)
-  private playerTeleportedHandler = (event: PlayerTeleportedEvent) => this.onPlayerTeleported(event)
-  private playerVisualProfileHandler = (event: CombatScenePayload) => {
-    const profileId = event.profileId as PlayerVisualProfileId | undefined
-
-    if (profileId && PLAYER_VISUAL_PROFILES[profileId]) {
-      this.applyPlayerVisualProfile(profileId)
-    }
-  }
+  // OPT-09 (roadmap.md §8.3): một danh sách [eventName, handler] duy nhất —
+  // subscribe/unsubscribe cùng lặp qua nó nên không thể lệch nhau (trước
+  // đây có 10 entry trong mảng này + 12 dòng on/off thủ công song song,
+  // thêm event vào bên này mà quên bên kia không có gì báo lỗi).
+  private boundHandlers: Array<[string, (event: any) => void]> = []
   private debugAnchorHandler = () => this.drawDebugBodyAnchors()
+
+  private getCombatEventBindings(): Array<[string, (event: any) => void]> {
+    return [
+      ['attack', (event: CombatScenePayload) => this.onAttack(event)],
+      ['critical', (event: CombatScenePayload) => this.onCritical(event)],
+      ['hit', (event: CombatScenePayload) => this.onHit(event)],
+      ['dodge', (event: CombatScenePayload) => this.onDodge(event)],
+      ['cast', (event: CombatScenePayload) => this.onCast(event)],
+      ['cast_start', (event: CombatScenePayload) => this.onCastStart(event)],
+      ['cast_complete', (event: CombatScenePayload) => this.onCastComplete(event)],
+      ['death', (event: CombatScenePayload) => this.onDeath(event)],
+      ['battle_start', () => this.onBattleStart()],
+      [
+        'player_visual_profile_changed',
+        (event: CombatScenePayload) => {
+          const profileId = event.profileId as PlayerVisualProfileId | undefined
+
+          if (profileId && PLAYER_VISUAL_PROFILES[profileId]) {
+            this.applyPlayerVisualProfile(profileId)
+          }
+        },
+      ],
+      ['positions', (event: BattlePositionsEvent) => this.onPositions(event)],
+      ['player_teleported', (event: PlayerTeleportedEvent) => this.onPlayerTeleported(event)],
+      ['battle_end', () => this.onBattleEnd()],
+      ['combat_scene_exit', () => this.onExit()],
+      ['damage', (event: CombatEvent) => this.onDamageNumber(event)],
+      // 6A-T2 (2026-09-01) — floating kill/heal.
+      [
+        'kill',
+        (event: CombatEvent) => {
+          const sprite = this.spriteFor(event.targetId)
+
+          if (sprite) {
+            this.damageText.showKillText(sprite)
+          }
+        },
+      ],
+      [
+        'heal',
+        (event: CombatHealEvent) => {
+          const sprite = this.spriteFor(event.targetId)
+
+          if (sprite && event.value > 0) {
+            this.damageText.showHealText(sprite, event.value)
+          }
+        },
+      ],
+      ['action_impact', (event: ActionImpactEvent) => this.onActionImpact(event)],
+      ['status_vfx_attached', (event: StatusVfxAttachedEvent) => this.onStatusAttached(event)],
+      ['status_vfx_updated', (event: StatusVfxUpdatedEvent) => this.onStatusUpdated(event)],
+      ['status_vfx_removed', (event: StatusVfxRemovedEvent) => this.onStatusRemoved(event)],
+      ['entity_vitals_changed', (event: EntityVitalsChangedEvent) => this.onVitalsChanged(event)],
+      ['reward_particle', (event: BattleRewardParticleEvent) => this.onRewardParticle(event)],
+    ]
+  }
 
   // Internal (module boundary Ã¢â‚¬â€ combat/* Ã„â€˜Ã¡Â»Âc qua scene ref).
   get isPerspective(): boolean {
@@ -1412,37 +1437,11 @@ export class CombatScene extends Phaser.Scene {
     }
 
     this.eventBus = eventBus
-
-    this.boundHandlers = [
-      ['attack', (event) => this.onAttack(event)],
-      ['critical', (event) => this.onCritical(event)],
-      ['hit', (event) => this.onHit(event)],
-      ['dodge', (event) => this.onDodge(event)],
-      ['cast', (event) => this.onCast(event)],
-      ['cast_start', (event) => this.onCastStart(event)],
-      ['cast_complete', (event) => this.onCastComplete(event)],
-      ['death', (event) => this.onDeath(event)],
-      ['battle_start', () => this.onBattleStart()],
-      ['player_visual_profile_changed', (event) => this.playerVisualProfileHandler(event)],
-    ]
+    this.boundHandlers = this.getCombatEventBindings()
 
     for (const [eventName, handler] of this.boundHandlers) {
-      eventBus.on<CombatScenePayload>(eventName, handler)
+      eventBus.on(eventName, handler)
     }
-
-    eventBus.on<BattlePositionsEvent>('positions', this.positionsHandler)
-    eventBus.on<PlayerTeleportedEvent>('player_teleported', this.playerTeleportedHandler)
-    eventBus.on<BattleEndEvent>('battle_end', this.battleEndHandler)
-    eventBus.on<void>('combat_scene_exit', this.exitHandler)
-    eventBus.on<CombatEvent>('damage', this.damageHandler)
-    eventBus.on<CombatEvent>('kill', this.killHandler)
-    eventBus.on<CombatHealEvent>('heal', this.healHandler)
-    eventBus.on<ActionImpactEvent>('action_impact', this.actionImpactHandler)
-    eventBus.on<StatusVfxAttachedEvent>('status_vfx_attached', this.statusAttachHandler)
-    eventBus.on<StatusVfxUpdatedEvent>('status_vfx_updated', this.statusUpdateHandler)
-    eventBus.on<StatusVfxRemovedEvent>('status_vfx_removed', this.statusRemoveHandler)
-    eventBus.on<EntityVitalsChangedEvent>('entity_vitals_changed', this.vitalsHandler)
-    eventBus.on<BattleRewardParticleEvent>('reward_particle', this.rewardParticleHandler)
   }
 
   private unsubscribeCombatEvents() {
@@ -1451,24 +1450,11 @@ export class CombatScene extends Phaser.Scene {
     }
 
     for (const [eventName, handler] of this.boundHandlers) {
-      this.eventBus.off<CombatScenePayload>(eventName, handler)
+      this.eventBus.off(eventName, handler)
     }
 
     this.boundHandlers = []
-
-    this.eventBus.off<BattlePositionsEvent>('positions', this.positionsHandler)
-    this.eventBus.off<PlayerTeleportedEvent>('player_teleported', this.playerTeleportedHandler)
-    this.eventBus.off<BattleEndEvent>('battle_end', this.battleEndHandler)
-    this.eventBus.off<void>('combat_scene_exit', this.exitHandler)
-    this.eventBus.off<CombatEvent>('damage', this.damageHandler)
-    this.eventBus.off<CombatEvent>('kill', this.killHandler)
-    this.eventBus.off<CombatHealEvent>('heal', this.healHandler)
-    this.eventBus.off<ActionImpactEvent>('action_impact', this.actionImpactHandler)
-    this.eventBus.off<StatusVfxAttachedEvent>('status_vfx_attached', this.statusAttachHandler)
-    this.eventBus.off<StatusVfxUpdatedEvent>('status_vfx_updated', this.statusUpdateHandler)
-    this.eventBus.off<StatusVfxRemovedEvent>('status_vfx_removed', this.statusRemoveHandler)
-    this.eventBus.off<EntityVitalsChangedEvent>('entity_vitals_changed', this.vitalsHandler)
-    this.eventBus.off<BattleRewardParticleEvent>('reward_particle', this.rewardParticleHandler)
+    this.eventBus = undefined
   }
 
   /**

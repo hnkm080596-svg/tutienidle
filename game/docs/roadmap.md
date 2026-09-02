@@ -196,7 +196,7 @@ Phase 4:  tech-debt — chạy nền liên tục
 - Unidentify Linh Thảo — HỦY (production rework sẽ đào thải)
 - Hóa Luyện filter — ✅ merged `14cfda0` + `abc82be`
 
-**6C. Chiêu Hiền Quán + hệ thống nhân công** — ⬜ (NEW building + công thức `1 + cấp×2`; đổi nguồn worker capacity; UI phân bổ)
+**6C. Chiêu Hiền Quán + hệ thống nhân công** — 🟡 code xong ở worktree `worktree-chi-hien-quan` (chưa merge), QA quick PASS WITH GAPS, còn thiếu manual smoke — xem 8.5 (NEW building + công thức `1 + cấp×2`; đổi nguồn worker capacity; UI phân bổ)
 
 **6D. Bảng ánh xạ phẩm ↔ cảnh giới** — ✅ item-grade rework Phase 1-4 merged `fd82ed4` + `3c898b0` + `3647cf7`; Phase 5-6 (equip gate, breakthrough unequip, panel tabs, theme, terminology) ✅ merged `a00de32`
 
@@ -223,7 +223,7 @@ Phase 4:  tech-debt — chạy nền liên tục
 | **Giai đoạn 1** — Dọn nhà | untracked docs, skills cleanup, MainMenu e2e | ✅ XONG |
 | **Giai đoạn 2** — Game design nền tảng | crit%, unidentify, luyện filter, item-grade rework, combat UI | ✅ XONG |
 | **Giai đoạn 3** — Skill engine | Phase 2A, floating text, unified buff | ✅ XONG |
-| **Giai đoạn 4** — Sản xuất + kinh tế | i18n leftovers, Chiêu Hiền Quán, UI phân bổ, nhiên liệu, bảng tốc độ, simulation, vendor rework | ⬜ |
+| **Giai đoạn 4** — Sản xuất + kinh tế | i18n leftovers, Chiêu Hiền Quán, UI phân bổ, nhiên liệu, bảng tốc độ, simulation, vendor rework | 🟡 Chiêu Hiền Quán code xong ở worktree (chưa merge, xem 8.5); còn lại (i18n leftovers, nhiên liệu, bảng tốc độ, simulation, vendor) chưa làm |
 | **Giai đoạn 5** — Balance | evasion, MP cost, armor, reaction, block | ✅ XONG |
 | **Giai đoạn 6** — Pre-production | online foundation, VIP, prestige, code-split, QA | 🟡 Một phần |
 | **Giai đoạn 7** — Item rework P5-6 | equip gate, breakthrough unequip, tabs, 10-rank theme, terminology, dọn legacy | ✅ XONG |
@@ -261,7 +261,7 @@ Phase 4:  tech-debt — chạy nền liên tục
 
 | Task | Mô tả | Trạng thái |
 |---|---|---|
-| **9.1** ⬜ | **QA-001 (High, Confirmed) — Kẹt trang bị khi đột phá** | ĐÃ ĐỔI THIẾT KẾ (user 2026-09-02) |
+| **9.1** 🟡 | **QA-001 (High, Confirmed) — Kẹt trang bị khi đột phá** | ĐÃ ĐỔI THIẾT KẾ (user 2026-09-02); **user chốt lại 2026-09-02 (lần 2): giữ theo code worktree** (confirm panel → auto-unequip, KHÔNG chặn cứng — xem note superseded ở 8.2) — 4/6 task đã code ở `worktree-task-9-1` (chưa merge), còn Task 5 (sửa test dở) + Task 6 (dọn dead code) |
 | **9.2** ⬜ | QA-002 (High) — `restoreFromSave` thiếu idempotency guard | |
 | **9.3** ⬜ | QA-003 (High) — `OverlayPanel` thiếu focus trap (H5 Giai đoạn 8) | |
 | **9.4** ⬜ | QA-004 (Medium) — `updateKiem` chưa được gọi từ production (defer lâu, sửa cùng 6A) | |
@@ -276,7 +276,9 @@ Phase 4:  tech-debt — chạy nền liên tục
 
 ### 8.2. Spec chi tiết Task 9.1 — QA-001 panel chặn đột phá khi còn mặc trang bị
 
-**Bối cảnh:** Reproduction test `game/src/core/game/GameManager.realmAdvanceUnequip.test.ts` đã fail. Tuy nhiên, user 2026-09-02 chốt thiết kế mới: thay vì auto-unequip (Task 17 của item-grade rework P5-6), game sẽ **chặn hành động đột phá** + pop panel thông báo.
+> **⚠️ SUPERSEDED (user chốt 2026-09-02, lần 2):** mục 3-4 dưới đây (chặn cứng, KHÔNG auto-tháo) đã bị đảo ngược lại. Quyết định cuối cùng: giữ theo code đã làm ở worktree `worktree-task-9-1` — hiện panel xác nhận "Độ kiếp cũng là độ thân..." (title/subtitle/i18n keys ở mục 3 vẫn đúng), người chơi bấm "Đã hiểu" → `triggerBreakthroughAction()` **tự `unequipAllEquipment()`** trước khi vào kiếp (không chặn cứng, không bắt người chơi tự vào Động Phủ tháo đồ). Áp dụng cho cả 2 đường đột phá (mục 2 vẫn đúng). Panel có 2 nút "Đã hiểu"/"Chờ đã" (không phải chỉ 1 nút đóng như mục 1 mô tả ban đầu). Xem plan `2026-09-02-task-9-1-breakthrough-confirm-panel.md` và mục 8.5 để biết trạng thái merge.
+
+**Bối cảnh (spec gốc, đã superseded — giữ lại để tham khảo lịch sử quyết định):** Reproduction test `game/src/core/game/GameManager.realmAdvanceUnequip.test.ts` đã fail. Tuy nhiên, user 2026-09-02 chốt thiết kế mới: thay vì auto-unequip (Task 17 của item-grade rework P5-6), game sẽ **chặn hành động đột phá** + pop panel thông báo.
 
 **Thiết kế hành vi mới:**
 
@@ -319,14 +321,14 @@ Phase 4:  tech-debt — chạy nền liên tục
 | ID | File:line | Vấn đề | Gợi ý |
 |---|---|---|---|
 | **OPT-01** | `game/src/App.vue:360` | `bumpState()` mỗi tick | Tách `stateVersion` thành "bag/equipment" (manual) + "battle/world" (auto) |
-| **OPT-02** | `game/src/services/save/SaveSystem.ts:575,583` | `structuredClone` + `JSON.stringify` = double serialize mỗi autosave | Serialize một lần |
-| **OPT-03** | `game/src/composables/useCadenceSmoothing.ts:56-68` | rAF loop không tự dừng | Self-terminate khi `displayed <= 0 && total <= 0` |
+| **OPT-02** | `game/src/services/save/SaveSystem.ts:575,583` | `structuredClone` + `JSON.stringify` = double serialize mỗi autosave | ✅ Điều tra xong ở worktree `worktree-perf-optimize-pass` (Task 3) — tiền đề audit sai, chỉ có 1 `JSON.stringify` thật (write-time), `structuredClone` là snapshot cần thiết chống race quest-state. Không sửa code, chỉ thêm test round-trip khoá hành vi. Coi như đóng. |
+| **OPT-03** | `game/src/composables/useCadenceSmoothing.ts:56-68` | rAF loop không tự dừng | ✅ Code xong ở worktree `worktree-perf-optimize-pass` (Task 2, commit `14a8235`) — chưa merge vào master |
 | **OPT-04** | `game/src/core/equipment/EquipmentBag.ts:129-135` | `getEquipped`/`getEquippedInSlot` O(N) | Thêm `Map<EquipmentSlot, EquipmentInstance>` index |
 | **OPT-05** | `game/src/components/panels/EquipmentHallPanel/EnhanceTab.vue:63-111` | `enhanceRows` O(slots × 5) mỗi stateVersion bump | Memoize theo `(stateVersion, selectedSlot)` |
 | **OPT-06** | `game/src/services/save/SaveSystem.ts:661-668` | `loadGame` đọc+remove `IMPORT_HANDOFF_KEY` mỗi boot kể cả khi không import | Lazy read |
-| **OPT-07** | `game/src/App.vue:285-287` | `drainNotifications()` chạy mỗi tick vô điều kiện | Early-return khi `notifications.length === 0` |
+| **OPT-07** | `game/src/App.vue:285-287` | `drainNotifications()` chạy mỗi tick vô điều kiện | ✅ Code xong ở worktree `worktree-perf-optimize-pass` (Task 2, commit `14a8235`, dạng trả mảng rỗng dùng chung thay vì early-return) — chưa merge vào master |
 | **OPT-08** | `game/src/components/game/PhaserCanvas.vue:120-136` | EventBus handler đăng ký trước async game create | Wrap try/catch + cleanup on failure (cũng liên quan 9.5) |
-| **OPT-09** | `game/src/game/scenes/CombatScene.ts:1407-1446` | 11-entry `boundHandlers` array + 14 explicit `on()` | `Map<string, Function>` đối xứng register/unregister |
+| **OPT-09** | `game/src/game/scenes/CombatScene.ts` | 11-entry `boundHandlers` array + 14 explicit `on()` | ✅ Xong 2026-09-02 — gộp thành 1 danh sách `getCombatEventBindings()` (22 entry), subscribe/unsubscribe cùng lặp 1 nguồn nên không thể lệch nhau; `unsubscribeCombatEvents()` idempotent (clear `eventBus`); test mới `CombatScene.eventSubscriptionSymmetry.test.ts` |
 
 ### 8.4. Thứ tự đề xuất
 
@@ -338,7 +340,19 @@ Phase 4:  tech-debt — chạy nền liên tục
 6. **Task 9.4, 9.5, 9.6, 9.9, 9.10, 9.11** — bổ trợ, sắp xếp theo thời gian tiện tay.
 7. **Task 9.12 + OPT-01..09** — cộng dồn cuối, làm theo đợt refactor.
 
-### 8.5. Liên kết QA artifacts
+### 8.5. Worktree đang chạy (2026-09-02, chưa merge — cập nhật sau lần rà soát thực tế)
+
+> 3 worktree song song, không đụng file của nhau (xem ràng buộc "Global Constraints" trong plan `perf-optimize-pass`). Trạng thái dưới đây lấy từ `git log`/`git status` thực tế trong từng worktree, không phải suy đoán.
+
+| Worktree (branch) | Việc | Trạng thái thực tế |
+|---|---|---|
+| `.claude/worktrees/chi-hien-quan` (`worktree-chi-hien-quan`) | Task 6C — Chiêu Hiền Quán (building nhân công mới, công thức `1+level×2`, thay `spirit_spring`) | Code xong cả 6 task trong plan (9 commit) + QA quick review **PASS WITH GAPS** (`game/docs/qa/2026-09-02-chi-hien-quan-quick.md`). Full suite 2096/2096, type-check/build/e2e xanh. Còn thiếu: manual smoke thật (dev server) chưa chạy, 1 e2e smoke file (`chq-smoke.mjs`) chưa commit. **Sẵn sàng review-để-merge**, chưa merge vào `master`. |
+| `.agent-worktrees/task-9-1-breakthrough-equip-panel` (`worktree-task-9-1`) | Task 9.1 — QA-001 panel xác nhận đột phá khi còn trang bị | 4/6 task của plan `2026-09-02-task-9-1-breakthrough-confirm-panel.md` đã commit (gộp `canTriggerBreakthrough`, `triggerBreakthroughAction`, panel xác nhận + i18n keys, dọn RealmPanel). Task 5 đang dở — 2 test file sửa dở chưa commit (`useTribulation.dotPha.test.ts`, `GameManager.realmAdvanceUnequip.test.ts`); Task 6 (dọn dead code) chưa làm. **User chốt 2026-09-02 (lần 2): giữ nguyên hướng code hiện tại** (confirm panel → auto-unequip), spec chặn-cứng ở mục 8.2 đã superseded. Còn lại trước khi merge: hoàn thành Task 5-6, chạy full verify (`test`+`type-check`+`build`). |
+| `.claude/worktrees/perf-optimize-pass` (`worktree-perf-optimize-pass`) | OPT-01..09 (mục 8.3) + tách file lớn | Plan 10 task (`2026-09-02-perf-optimize-pass.md`), đã xong Task 1-3/10: Task 1 safety-net test; Task 2 = **OPT-03** (rAF cadence tự dừng) + **OPT-07** (NotificationQueue trả mảng rỗng dùng chung thay vì alloc mới); Task 3 điều tra **OPT-02** — kết luận audit sai tiền đề (chỉ có 1 `JSON.stringify` thật ở write-time, `structuredClone` là snapshot cần thiết chống race quest-state) → **không cần sửa code**, chỉ thêm test round-trip khoá hành vi. Task 4-10 (PhaserCanvas try/catch = 9.5/OPT-08, dirty-check stateVersion = OPT-01, BattleSystem/CombatScene/EquipmentSystem tách file, bundle chunk) **chưa làm**. Locked worktree, chưa merge. |
+
+Khi merge bất kỳ worktree nào, nhớ cập nhật lại bảng trạng thái tương ứng ở mục 7.4 (6C), 8.1 (9.1) và 8.3 (OPT) — bảng đó vẫn đang ghi "⬜" dù code thực tế đã có ở worktree.
+
+### 8.6. Liên kết QA artifacts
 
 - Báo cáo chính: `game/docs/qa/2026-09-02-full-project-deep.md`
 - Reproduction test QA-001: `game/src/core/game/GameManager.realmAdvanceUnequip.test.ts`
