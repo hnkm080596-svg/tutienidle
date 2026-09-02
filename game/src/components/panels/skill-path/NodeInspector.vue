@@ -104,7 +104,10 @@ const lockedReasons = computed(() => {
   const cost = nextCost.value ?? props.node.insightCost
 
   if (player.skillInsight < cost) {
-    reasons.push(`Cần ${cost} Cảm Ngộ (đang có ${player.skillInsight})`)
+    reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.cost', {
+      cost,
+      current: player.skillInsight,
+    }))
   }
 
   for (const prereq of props.node.prerequisites ?? []) {
@@ -113,24 +116,40 @@ const lockedReasons = computed(() => {
     }
 
     if (prereq.kind === 'node') {
-      reasons.push(`Cần lĩnh ngộ trước: ${gameManager.nodeRegistry.get(prereq.nodeId).name}`)
+      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.prerequisiteNode', {
+        name: gameManager.nodeRegistry.get(prereq.nodeId).name,
+      }))
     } else if (prereq.kind === 'realm') {
-      reasons.push(`Cần đạt cảnh giới yêu cầu`)
+      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.realm'))
     } else if (prereq.kind === 'element') {
-      reasons.push(`Cần mở khoá Hành liên quan`)
+      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.element'))
     } else if (prereq.kind === 'excludesNode') {
-      reasons.push(`Xung khắc với: ${gameManager.nodeRegistry.get(prereq.nodeId).name}`)
+      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.excludesNode', {
+        name: gameManager.nodeRegistry.get(prereq.nodeId).name,
+      }))
     } else if (prereq.kind === 'nodeCount') {
-      reasons.push(`Cần lĩnh ngộ ${prereq.countRequired}/${prereq.nodeIds.length} node liên quan`)
+      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.nodeCount', {
+        required: prereq.countRequired,
+        total: prereq.nodeIds.length,
+      }))
     } else if (prereq.kind === 'skillCastCount') {
       const skillName = gameManager.skillManager.get(prereq.skillId)?.name ?? prereq.skillId
-      const levelPart = prereq.level !== undefined ? `cấp ${prereq.level}` : undefined
-      const countPart = prereq.count !== undefined ? `${prereq.count} lần xuất chiêu` : undefined
-      const requirement = [levelPart, countPart].filter(Boolean).join(' và ')
+      const levelPart = prereq.level !== undefined
+        ? t('panels.skillPath.nodeInspector.lockedReasons.skillLevel', { level: prereq.level })
+        : undefined
+      const countPart = prereq.count !== undefined
+        ? t('panels.skillPath.nodeInspector.lockedReasons.skillCastCount', { count: prereq.count })
+        : undefined
+      const requirement = [levelPart, countPart]
+        .filter(Boolean)
+        .join(t('panels.skillPath.nodeInspector.lockedReasons.skillJoin'))
 
-      reasons.push(`Cần ${skillName} đạt ${requirement}`)
+      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.skill', {
+        skill: skillName,
+        requirement,
+      }))
     } else {
-      reasons.push(`Cần nâng kỹ năng liên quan`)
+      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.skillUpgrade'))
     }
   }
 
@@ -160,7 +179,7 @@ function onUpgrade() {
 
 <template>
   <div class="node-inspector">
-    <EmptyState v-if="!node" size="lg">Chọn một node trong Linh Mạch để xem chi tiết.</EmptyState>
+    <EmptyState v-if="!node" size="lg">{{ t('panels.skillPath.nodeInspector.empty') }}</EmptyState>
 
     <template v-else>
       <div class="node-inspector__header">
@@ -173,7 +192,13 @@ function onUpgrade() {
           class="node-inspector__state"
           :class="{ 'is-purchased': purchased, 'is-purchasable': !purchased && purchasable }"
         >
-          {{ isMaxed ? 'Tối Đa' : purchased ? 'Đã Lĩnh Ngộ' : purchasable ? 'Có Thể Lĩnh Ngộ' : 'Chưa Đủ Điều Kiện' }}
+          {{ isMaxed
+            ? t('panels.skillPath.nodeInspector.status.maxed')
+            : purchased
+              ? t('panels.skillPath.nodeInspector.status.purchased')
+              : purchasable
+                ? t('panels.skillPath.nodeInspector.status.purchasable')
+                : t('panels.skillPath.nodeInspector.status.locked') }}
         </span>
       </div>
 
@@ -204,10 +229,10 @@ function onUpgrade() {
           {{ lockedReasons.length > 0 && level === 0
             ? ''
             : level === 0
-              ? `Chi phí: ${nextCost ?? node.insightCost} Cảm Ngộ`
+              ? t('panels.skillPath.nodeInspector.cost.initial', { cost: nextCost ?? node.insightCost })
               : isMaxed
-                ? 'Đã đạt cấp tối đa.'
-                : `Nâng cấp: ${nextCost} Cảm Ngộ` }}
+                ? t('panels.skillPath.nodeInspector.cost.maxed')
+                : t('panels.skillPath.nodeInspector.cost.upgrade', { cost: nextCost }) }}
         </span>
 
         <GameButton
@@ -217,7 +242,7 @@ function onUpgrade() {
           :disabled="!purchasable"
           @click="onPurchase"
         >
-          Lĩnh Ngộ
+          {{ t('panels.skillPath.nodeInspector.actions.unlock') }}
         </GameButton>
 
         <GameButton
@@ -227,7 +252,7 @@ function onUpgrade() {
           :disabled="!upgradable"
           @click="onUpgrade"
         >
-          Nâng Cấp
+          {{ t('panels.skillPath.nodeInspector.actions.upgrade') }}
         </GameButton>
       </div>
     </template>

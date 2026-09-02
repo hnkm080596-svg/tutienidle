@@ -107,6 +107,46 @@
       "subtitle": "Library by Realm · Five Element Path",
       "colTitles": {
         "loadoutActive": "Active Spell Arts"
+      },
+      "nodeInspector": {
+        "empty": "Select a node in the Spirit Vein to view details.",
+        "status": {
+          "maxed": "Maxed",
+          "purchased": "Enlightened",
+          "purchasable": "Can Enlighten",
+          "locked": "Requirements Not Met"
+        },
+        "cost": {
+          "initial": "Cost: {cost} Insight",
+          "maxed": "Max level reached.",
+          "upgrade": "Upgrade: {cost} Insight"
+        },
+        "actions": {
+          "unlock": "Enlighten",
+          "upgrade": "Upgrade"
+        },
+        "lockedReasons": {
+          "cost": "Requires {cost} Insight (currently have {current} Insight)",
+          "prerequisiteNode": "Enlighten first: {name}",
+          "realm": "Reach the required realm",
+          "element": "Unlock the related Element",
+          "excludesNode": "Conflicts with: {name}",
+          "nodeCount": "Enlighten {required}/{total} related nodes",
+          "skillLevel": "level {level}",
+          "skillCastCount": "{count} casts",
+          "skillJoin": "and",
+          "skill": "Requires {skill} at {requirement}",
+          "skillUpgrade": "Upgrade the related skill"
+        }
+      },
+      "detail": {
+        "empty": "Select a skill to view details.",
+        "upgrade": "Upgrade ({cost} Insight)",
+        "maxed": "Max",
+        "cooldown": "Cooldown",
+        "cost": "Cost",
+        "type": "Type",
+        "attackSpeed": "Scales with Attack Speed"
       }
     },
     "character": {
@@ -489,6 +529,37 @@
       "skillInsight": "Skill Insight",
       "artifactInsight": "Artifact EXP",
       "spiritStone": "Spirit Stones"
+    },
+    "overlay": {
+      "aiPanel": {
+        "title": "Target AI",
+        "ariaGroup": "AI target selection strategy",
+        "strategies": {
+          "nearest": "Nearest",
+          "boss_first": "Boss First",
+          "elite_first": "Elite First",
+          "lowest_hp": "Lowest HP",
+          "highest_hp": "Highest HP"
+        },
+        "hints": {
+          "nearest": "Targets the enemy with the smallest Chebyshev distance.",
+          "boss_first": "Boss first, then sorted by distance.",
+          "elite_first": "Boss → Elite → normal, then sorted by distance.",
+          "lowest_hp": "Targets the enemy with the lowest remaining HP.",
+          "highest_hp": "Targets the enemy with the highest remaining HP."
+        }
+      },
+      "countdown": {
+        "go": "To Battle!"
+      },
+      "exitConfirm": {
+        "message": "Leave the battle and return to the Cave? The current battle will be abandoned.",
+        "stay": "Stay",
+        "exit": "Leave Battle"
+      },
+      "topBar": {
+        "enemiesSuffix": "enemies"
+      }
     }
   },
   "menu": {

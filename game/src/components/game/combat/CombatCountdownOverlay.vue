@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 
 // Countdown 3 giây trước trận (2026-08-22, giống vạch xuất phát đua xe)
@@ -10,6 +11,7 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 // MỌI loại trận (Stage lẫn Tribulation) — khác CombatResultModal.vue
 // (chỉ hiện cho Stage vì Tribulation có luồng kết quả riêng), vì đây
 // chỉ là hiệu ứng chờ vào trận, không phải kết quả.
+const { t } = useI18n()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
 
@@ -32,7 +34,7 @@ const displayNumber = computed(() => {
   return Math.ceil(gameManager.getBattle()?.countdownSecondsRemaining ?? 0)
 })
 
-const label = computed(() => (displayNumber.value > 0 ? String(displayNumber.value) : 'Xuất Trận!'))
+const label = computed(() => (displayNumber.value > 0 ? String(displayNumber.value) : t('combat.overlay.countdown.go')))
 </script>
 
 <template>

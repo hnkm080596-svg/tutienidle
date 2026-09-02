@@ -7,6 +7,7 @@
 // NodeTreePanel.vue/NodeInspector.vue vốn là nơi MỞ node (unlock), còn
 // đây là nơi NÂNG CẤP skill đã mở.
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { Skill } from '@/core/skill/Skill'
 import { skillResourceTypeLabel } from '@/core/skill/SkillResourceLabels'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
@@ -14,6 +15,8 @@ import { usePlayerStore } from '@/stores/player'
 import GameButton from '@/components/common/GameButton.vue'
 import StatRow from '@/components/common/primitives/StatRow.vue'
 import EmptyState from '@/components/common/primitives/EmptyState.vue'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   skill: Skill | null
@@ -58,7 +61,7 @@ function onUpgrade() {
 
 <template>
   <div class="skill-detail">
-    <EmptyState v-if="!skill" size="lg">Chọn một kỹ năng để xem chi tiết.</EmptyState>
+    <EmptyState v-if="!skill" size="lg">{{ t('panels.skillPath.detail.empty') }}</EmptyState>
 
     <template v-else>
       <h4 class="skill-detail__name">{{ skill.name }}</h4>
@@ -76,25 +79,25 @@ function onUpgrade() {
           :disabled="!canUpgrade"
           @click="onUpgrade"
         >
-          Nâng Cấp ({{ upgradeCost }} Cảm Ngộ)
+          {{ t('panels.skillPath.detail.upgrade', { cost: upgradeCost }) }}
         </GameButton>
 
-        <span v-else class="skill-detail__level-label">Tối đa</span>
+        <span v-else class="skill-detail__level-label">{{ t('panels.skillPath.detail.maxed') }}</span>
       </div>
 
       <ul class="skill-detail__rows">
-        <StatRow label="Hồi Chiêu" bordered>{{ skill.cooldown }}s</StatRow>
+        <StatRow :label="t('panels.skillPath.detail.cooldown')" bordered>{{ skill.cooldown }}s</StatRow>
 
         <StatRow
           v-if="skill.resourceType && skill.resourceType !== 'none' && (skill.cost ?? 0) > 0"
-          label="Tiêu Hao"
+          :label="t('panels.skillPath.detail.cost')"
           bordered
         >
           {{ skill.cost }} {{ resourceTypeLabel }}
         </StatRow>
 
-        <StatRow v-if="skill.execution?.kind === 'attack_speed'" label="Loại" bordered>
-          Nhịp theo Tốc Độ Đánh
+        <StatRow v-if="skill.execution?.kind === 'attack_speed'" :label="t('panels.skillPath.detail.type')" bordered>
+          {{ t('panels.skillPath.detail.attackSpeed') }}
         </StatRow>
       </ul>
     </template>
