@@ -8,7 +8,7 @@ import type { EquipmentSlot } from '@/core/equipment/EquipmentTypes'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
-import { equipmentQualityRank, itemGradeRank } from '@/composables/slots/normalizeSlotRank'
+import { itemGradeRank, professionGradeRank } from '@/composables/slots/normalizeSlotRank'
 import type { EquipmentTooltipContent } from '@/composables/useTooltip'
 import type { NameSegment } from '@/core/item/NameSegment'
 import type { SlotBadge } from '@/components/common/SlotTypes'
@@ -138,7 +138,7 @@ const qualityRankBySlot = computed<Record<EquipmentSlot, number | undefined>>(()
   for (const entry of SLOT_LAYOUT) {
     const instance = equippedBySlot.value[entry.slot]
 
-    result[entry.slot] = instance ? equipmentQualityRank(instance.quality) : undefined
+    result[entry.slot] = instance ? professionGradeRank(instance.grade) : undefined
   }
 
   return result
@@ -150,7 +150,7 @@ const rarityRankBySlot = computed<Record<EquipmentSlot, number | undefined>>(() 
   for (const entry of SLOT_LAYOUT) {
     const instance = equippedBySlot.value[entry.slot]
 
-    result[entry.slot] = instance ? itemGradeRank(instance.rarity) : undefined
+    result[entry.slot] = instance ? itemGradeRank(instance.quality) : undefined
   }
 
   return result

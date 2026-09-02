@@ -6,7 +6,7 @@ import { defineEnemy } from '../enemy/Enemy'
 import { TECHNIQUES } from '../../data/technique/Techniques'
 import { SKILLS } from '../../data/skill/Skills'
 import type { Equipment } from '../equipment/Equipment'
-import type { EquipmentInstance } from '../equipment/EquipmentInstance'
+import { makeInstance } from '../equipment/EquipmentInstance.fixture'
 
 const TEST_WEAPON: Equipment = {
   id: 'build_snapshot_test_sword',
@@ -17,20 +17,15 @@ const TEST_WEAPON: Equipment = {
   mainStats: [{ stat: 'attack', min: 50, max: 50 }],
 }
 
-function manualWeaponInstance(): EquipmentInstance {
-  return {
+function manualWeaponInstance() {
+  return makeInstance({
     instanceId: 'build-snapshot-test-1',
     itemId: TEST_WEAPON.id,
-    slot: 'weapon',
-    equipped: false,
-    quality: 'pham_khi',
-    rarity: 'hoang',
-    realmId: 'qi_refining',
+    grade: 'bat_pham',
+    quality: 'hoang',
     mainStat: { id: 'roll-main-attack', sourceId: 'roll-main', sourceType: 'equipment', stat: 'attack', flat: 50 },
-    affixes: [],
-    forgePoints: 0,
-  forgePotential: 100,
-  }
+    forgeUsesRemaining: 0,
+  })
 }
 
 function createTestEnemy() {

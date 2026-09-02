@@ -56,7 +56,7 @@ export const VENDOR_BYPRODUCT_PRICE_BASE = 1
 /** Hệ số nhân giá mỗi bậc realm tier. */
 export const VENDOR_REALM_GROWTH = 3
 
-/** Thứ tự tier của Tinh Hoa — khớp EQUIPMENT_REALM_ESSENCE_MATERIAL. */
+/** Thứ tự realm dùng định giá Luyện Khí Tinh Hoa theo bối cảnh bán. */
 const ESSENCE_REALM_ORDER: readonly string[] = [
   'mortal',
   'qi_refining',

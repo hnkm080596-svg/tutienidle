@@ -9,6 +9,15 @@ import { MaterialBag } from '../material/MaterialBag'
 import { createDefaultPlayer } from '../player/Player'
 import { getRealmRewardMultiplier } from '../reward/RealmRewardScale'
 
+const EQUIPMENT_TEMPLATE = { id: 'eq_realm_drop', name: 'Kiếm Cảnh Giới' }
+const EQUIPMENT_INSTANCE = {
+  instanceId: 'realm-drop-instance',
+  grade: 'bat_pham',
+  quality: 'tien',
+  icon: undefined,
+}
+const PILL = { id: 'pill_grade_drop', name: 'Đan Phẩm', grade: 'tien', icon: undefined }
+
 // Scale thưởng theo cảnh giới stage (balance playtest 2026-08-28) — Trúc Cơ
 // tái sử dụng enemyPool Luyện Khí nên nhân thưởng ×3 để thu nhập không khựng.
 function createDeadEnemy(id: string, rewards: EnemyReward, entity: Partial<CombatEntity> = {}): BattleEnemy {
@@ -19,14 +28,22 @@ function createDeadEnemy(id: string, rewards: EnemyReward, entity: Partial<Comba
   } as BattleEnemy
 }
 
-function createTestSetup(rewards: EnemyReward, realmId: string, talentIds: string[] = []) {
+function createTestSetup(
+  rewards: EnemyReward,
+  realmId: string,
+  talentIds: string[] = [],
+  equipmentDrop = false,
+  pillDrop = false,
+) {
   const materialRegistry = new MaterialRegistry()
   const materialBag = new MaterialBag()
   const giveReward = vi.fn()
+  const eventBus = { emit: vi.fn() }
+  const notifications = { push: vi.fn(), drain: () => [] }
 
   const deps: BattleLootSystemDeps = {
-    eventBus: { emit: vi.fn() },
-    notifications: { push: vi.fn(), drain: () => [] },
+    eventBus,
+    notifications,
     combatSystem: {
       applyHealing: (target: { currentHp: number; maxHp: number }, amount: number) => {
         const before = target.currentHp
@@ -36,12 +53,14 @@ function createTestSetup(rewards: EnemyReward, realmId: string, talentIds: strin
     },
     materialRegistry,
     materialBag,
-    pillRegistry: {},
-    pillBag: {},
-    equipmentRegistry: { getAll: () => [], has: () => false, get: () => undefined },
+    pillRegistry: pillDrop ? { has: () => true, get: () => PILL } : {},
+    pillBag: pillDrop ? { add: vi.fn().mockReturnValue(0) } : {},
+    equipmentRegistry: equipmentDrop
+      ? { getAll: () => [], has: () => true, get: () => EQUIPMENT_TEMPLATE }
+      : { getAll: () => [], has: () => false, get: () => undefined },
     // add() trả AutoDissolveReward[] (cap mềm audit 2026-08-31) — mock khớp hợp đồng thật.
     equipmentBag: { add: vi.fn().mockReturnValue([]) },
-    equipmentSystem: {},
+    equipmentSystem: equipmentDrop ? { createInstance: () => EQUIPMENT_INSTANCE } : {},
     affixRegistry: {},
     zoneRegistry: { has: () => false, getZoneForStage: () => undefined },
     techniqueManager: { getEquipped: () => undefined },
@@ -65,7 +84,7 @@ function createTestSetup(rewards: EnemyReward, realmId: string, talentIds: strin
   player.selectedTalentIds = talentIds
   loot.setSession({} as RewardReceiver, player)
 
-  return { loot, player, giveReward }
+  return { loot, player, giveReward, eventBus, notifications, equipmentBag: deps.equipmentBag }
 }
 
 function createBattle(enemies: BattleEnemy[]): Battle {
@@ -140,5 +159,71 @@ describe('BattleLootSystem — realm reward scaling', () => {
     loot.processDefeatedEnemies(createBattle([createDeadEnemy('mob', rewards)]))
 
     expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 21 })
+  })
+
+  it('equipment drop theo cảnh giới dùng quality cho particle và rank accent', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.99)
+    const rewards: EnemyReward = {
+      techniqueInsight: 0,
+      spiritStone: 0,
+      itemDrops: [{ kind: 'equipment', itemId: EQUIPMENT_TEMPLATE.id, chance: 1 }],
+    }
+    const { loot, equipmentBag, eventBus, notifications } = createTestSetup(
+      rewards,
+      'foundation_establishment',
+      [],
+      true,
+    )
+
+    loot.processDefeatedEnemies(createBattle([createDeadEnemy('mob', rewards)]))
+
+    expect(equipmentBag.add).toHaveBeenCalledTimes(1)
+    expect(equipmentBag.add).toHaveBeenCalledWith(EQUIPMENT_INSTANCE)
+    expect(equipmentBag.add).toHaveBeenCalledWith(
+      expect.objectContaining({ grade: 'bat_pham', quality: 'tien' }),
+    )
+    expect(eventBus.emit).toHaveBeenCalledTimes(1)
+    expect(eventBus.emit).toHaveBeenCalledWith('reward_particle', {
+      sourceId: 'mob',
+      kind: 'item',
+      color: 0xfff6d8,
+    })
+    expect(notifications.push).toHaveBeenCalledTimes(1)
+    expect(notifications.push).toHaveBeenCalledWith({
+      kind: 'loot',
+      message: '+1 Kiếm Cảnh Giới',
+      loot: expect.objectContaining({ accentColorVar: '--rank-color-5' }),
+    })
+  })
+
+  it('pill drop keeps the grade particle and accent presentation', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.99)
+    const rewards: EnemyReward = {
+      techniqueInsight: 0,
+      spiritStone: 0,
+      itemDrops: [{ kind: 'pill', itemId: PILL.id, chance: 1 }],
+    }
+    const { loot, eventBus, notifications } = createTestSetup(
+      rewards,
+      'foundation_establishment',
+      [],
+      false,
+      true,
+    )
+
+    loot.processDefeatedEnemies(createBattle([createDeadEnemy('mob', rewards)]))
+
+    expect(eventBus.emit).toHaveBeenCalledTimes(1)
+    expect(eventBus.emit).toHaveBeenCalledWith('reward_particle', {
+      sourceId: 'mob',
+      kind: 'item',
+      color: 0xfff6d8,
+    })
+    expect(notifications.push).toHaveBeenCalledTimes(1)
+    expect(notifications.push).toHaveBeenCalledWith({
+      kind: 'loot',
+      message: '+1 Đan Phẩm',
+      loot: expect.objectContaining({ accentColorVar: '--grade-tien' }),
+    })
   })
 })

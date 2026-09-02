@@ -2,7 +2,7 @@ import type { Equipment } from './Equipment'
 import type { EquipmentInstance } from './EquipmentInstance'
 import type { ZoneRegistry } from '../stage/ZoneRegistry'
 import type { NameSegment } from '../item/NameSegment'
-import { EQUIPMENT_RARITY_LABELS } from './EquipmentRarity'
+import { EQUIPMENT_RARITY_LABELS } from './ItemGradeRefs'
 
 // Tên vật phẩm ghép động: [Phẩm] · [Địa Giới + Từ loại], mỗi phần tô màu riêng.
 // Dùng chung cho tooltip (useEquipmentTooltip.ts) VÀ caption trên
@@ -14,9 +14,9 @@ export function composeEquipmentNameSegments(
 ): NameSegment[] {
   const segments: NameSegment[] = [
     {
-      text: EQUIPMENT_RARITY_LABELS[instance.rarity],
-      colorVar: `--grade-${instance.rarity}`,
-      tone: instance.rarity,
+      text: EQUIPMENT_RARITY_LABELS[instance.quality],
+      colorVar: `--grade-${instance.quality}`,
+      tone: instance.quality,
     },
   ]
 

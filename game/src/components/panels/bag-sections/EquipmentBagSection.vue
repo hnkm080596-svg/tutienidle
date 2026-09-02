@@ -11,8 +11,8 @@ import { compareNumber, compareText, stableSort, withDirection } from '@/composa
 import type { BagCell } from './BagCell'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
-import { equipmentQualityRank, itemGradeRank } from '@/composables/slots/normalizeSlotRank'
-import { getRealmIndex } from '@/core/realm/realmSystem'
+import { itemGradeRank, professionGradeRank } from '@/composables/slots/normalizeSlotRank'
+import { compareProfessionGrades } from '@/core/profession/ProfessionGrade'
 import { EQUIPMENT_SLOTS } from '@/core/equipment/EquipmentSlotState'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import type { SlotPresentationState } from '@/components/common/SlotTypes'
@@ -42,10 +42,8 @@ interface EquipmentEntry {
   name: string
 }
 
-// "quality" (Phàm Khí→Thiên Địa Trọng Khí, trần Điểm Rèn) và "rarity"
-// (Hoàng→Tiên, hệ Phẩm hiện ở mọi tooltip) là 2 TRỤC KHÁC NHAU — nhãn
-// "Phẩm chất"/"Phẩm" tách biệt để không gây hiểu nhầm là 1 thứ (2026-08-30
-// bug report: "Rarity"/"Slot" tiếng Anh lọt vào UI toàn tiếng Việt).
+// Task 4 schema bridge keeps the two existing sort controls wired to the
+// closest new fields. Task 19 owns their final unified UI contract.
 const SORT_OPTIONS: Array<BagSortOption & { value: EquipmentSortMode }> = [
   { value: 'quality', label: 'Phẩm' },
   { value: 'rarity', label: 'Chất' },
@@ -112,9 +110,9 @@ const entries = computed<EquipmentEntry[]>(() => {
 
         description: template?.description,
 
-        equipmentQualityRank: equipmentQualityRank(instance.quality),
+        equipmentQualityRank: professionGradeRank(instance.grade),
 
-        rarityRank: itemGradeRank(instance.rarity),
+        rarityRank: itemGradeRank(instance.quality),
 
         state,
 
@@ -146,11 +144,11 @@ const entries = computed<EquipmentEntry[]>(() => {
 // realm/slot/name/forge.
 const EQUIPMENT_COMPARATORS: Record<Exclude<EquipmentSortMode, 'default'>, (a: EquipmentEntry, b: EquipmentEntry) => number> = {
   quality: (a, b) =>
-    equipmentQualityRank(a.instance.quality) - equipmentQualityRank(b.instance.quality),
+    professionGradeRank(a.instance.grade) - professionGradeRank(b.instance.grade),
 
-  rarity: (a, b) => itemGradeRank(a.instance.rarity) - itemGradeRank(b.instance.rarity),
+  rarity: (a, b) => itemGradeRank(a.instance.quality) - itemGradeRank(b.instance.quality),
 
-  realm: (a, b) => getRealmIndex(a.instance.realmId) - getRealmIndex(b.instance.realmId),
+  realm: (a, b) => compareProfessionGrades(a.instance.grade, b.instance.grade),
 
   slot: (a, b) => {
     const indexA = EQUIPMENT_SLOTS.indexOf(a.instance.slot)
@@ -163,7 +161,7 @@ const EQUIPMENT_COMPARATORS: Record<Exclude<EquipmentSortMode, 'default'>, (a: E
 
   name: (a, b) => compareText(a.name, b.name),
 
-  forge: (a, b) => compareNumber(a.instance.forgePoints, b.instance.forgePoints),
+  forge: (a, b) => compareNumber(a.instance.forgeUsesRemaining, b.instance.forgeUsesRemaining),
 }
 
 // Sort chạy trên bản copy của TOÀN BỘ list TRƯỚC pagination.

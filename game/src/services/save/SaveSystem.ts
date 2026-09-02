@@ -6,6 +6,8 @@ import type { EquipmentInstance } from '../../core/equipment/EquipmentInstance'
 import type { BuildingInstance } from '../../core/building/BuildingInstance'
 import type { EquipmentSlotState } from '../../core/equipment/EquipmentSlotState'
 import type { QuestManagerState } from '../../core/quest/QuestManager'
+import type { OfflineResult } from '../../core/idle/OfflineProgressSystem'
+import type { StatModifier } from '../../core/stats/StatCalculator'
 import { validateGameSaveShape } from './saveShapeValidation'
 import { CURRENT_SAVE_VERSION } from './saveVersion'
 
@@ -25,6 +27,13 @@ export const SAVE_KEY = 'tien-hiep-idle-save'
 // KHÔNG thay thế Export (export mới là nơi an toàn thật sự, backup
 // này nằm cùng localStorage nên mất theo nếu người dùng xoá site data).
 const BACKUP_KEY = 'tien-hiep-idle-save-backup'
+
+// Import current-version có equipment legacy phải normalize TRƯỚC khi ghi,
+// nên reload sau import không thể tự đếm lại entry đã bỏ. Handoff one-shot
+// này giữ counter cùng CHÍNH XÁC normalized payload để không gán nhầm cho
+// một save khác được ghi xen giữa; nó không nằm trong GameSave schema.
+const IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY =
+  'tien-hiep-idle-import-discarded-equipment-count'
 
 // Revision phục vụ CAS optimistic-concurrency của cloud-save adapter
 // (xem services/cloudSave/). Đặt ở đây (thay vì trong LocalCloudSaveService)
@@ -419,6 +428,47 @@ export interface GameSave {
   quests?: QuestManagerState
 }
 
+export interface GameSessionPlayerOwner {
+  readonly $state: PlayerData
+
+  restoreFromSave(save: GameSave): OfflineResult
+
+  setEquipmentModifiers(modifiers: StatModifier[]): void
+}
+
+export type RestoreGameSessionResult =
+  | { status: 'ok'; offline: OfflineResult }
+  | { status: 'rejected'; message: string }
+
+/**
+ * Exact App restore order. Registry drift is rejected before Pinia, active-player,
+ * or manager state can mutate; valid saves then restore through the existing owners.
+ */
+export function restoreGameSession(
+  player: GameSessionPlayerOwner,
+  gameManager: GameManager,
+  save: GameSave,
+): RestoreGameSessionResult {
+  try {
+    gameManager.preflightSaveRegistryReferences(save)
+  } catch (error: unknown) {
+    return {
+      status: 'rejected',
+      message: error instanceof Error ? error.message : 'Save registry preflight failed',
+    }
+  }
+
+  const offline = player.restoreFromSave(save)
+
+  gameManager.setActivePlayer(player.$state)
+
+  const equipmentModifiers = gameManager.restoreFromSave(save)
+
+  player.setEquipmentModifiers(equipmentModifiers)
+
+  return { status: 'ok', offline }
+}
+
 /** Shape persist của một ProductionCycle — khớp core/production. */
 export interface ProductionCycleSave {
   cycleId: string
@@ -552,7 +602,7 @@ export function writeGameSave(save: GameSave): SaveWriteResult {
 // biết vì sao — xem SaveIncompatibleScreen.vue.
 export type LoadOutcome =
   | { status: 'empty' }
-  | { status: 'ok'; save: GameSave }
+  | { status: 'ok'; save: GameSave; discardedEquipmentCount: number }
   | { status: 'incompatible'; foundVersion: number | undefined; raw: string }
   | { status: 'corrupted'; raw: string }
 
@@ -608,7 +658,46 @@ export function loadGame(): LoadOutcome {
     return { status: 'corrupted', raw }
   }
 
-  return { status: 'ok', save: parsed as GameSave }
+  const importedHandoffRaw = localStorage.getItem(
+    IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY,
+  )
+  let importedDiscardedCount = 0
+
+  // Chỉ consume sau khi save đã parse + validate thành công. Nếu boot
+  // gặp corruption khác, handoff vẫn còn cho lần recovery/load hợp lệ.
+  localStorage.removeItem(IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY)
+
+  if (importedHandoffRaw) {
+    let importedHandoff: unknown
+
+    try {
+      importedHandoff = JSON.parse(importedHandoffRaw)
+    } catch {
+      importedHandoff = undefined
+    }
+
+    if (
+      typeof importedHandoff === 'object' &&
+      importedHandoff !== null &&
+      'normalizedRaw' in importedHandoff &&
+      importedHandoff.normalizedRaw === raw &&
+      'discardedEquipmentCount' in importedHandoff &&
+      Number.isSafeInteger(importedHandoff.discardedEquipmentCount) &&
+      typeof importedHandoff.discardedEquipmentCount === 'number' &&
+      importedHandoff.discardedEquipmentCount > 0
+    ) {
+      importedDiscardedCount = importedHandoff.discardedEquipmentCount
+    }
+  }
+
+  return {
+    status: 'ok',
+    // validateGameSaveShape đã kiểm tra boundary và trả bản normalized;
+    // cast tập trung duy nhất tại cửa load, không giữ field legacy.
+    save: shape.normalizedSave as GameSave,
+    discardedEquipmentCount:
+      shape.discardedEquipmentCount + importedDiscardedCount,
+  }
 }
 
 // Sao lưu save hiện có vào BACKUP_KEY — gọi TRƯỚC mọi thao tác có
@@ -638,6 +727,7 @@ export function restoreBackup(): boolean {
   }
 
   localStorage.setItem(SAVE_KEY, raw)
+  localStorage.removeItem(IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY)
 
   return true
 }
@@ -646,6 +736,7 @@ export function deleteSave() {
   backupCurrentSave()
 
   localStorage.removeItem(SAVE_KEY)
+  localStorage.removeItem(IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY)
 
   // Xoá cả revision — save đã không còn thì revision cũ là rác, và
   // revision tồn dư khiến lần CAS đầu tiên của nhân vật mới fail.
@@ -678,6 +769,8 @@ export function exportSaveToFile(raw: string) {
 // có). Backup save hiện tại (nếu có) trước khi ghi đè.
 export function importSaveRaw(raw: string): boolean {
   let parsed: unknown
+  let normalizedRaw = raw
+  let discardedEquipmentCount = 0
 
   try {
     parsed = JSON.parse(raw)
@@ -696,16 +789,36 @@ export function importSaveRaw(raw: string): boolean {
 
   // Chỉ enforce shape khi đúng version hiện hành — save version khác để
   // loadGame() xử lý 'incompatible' (không chặn đường recovery của user).
-  if (
-    (parsed as { version?: unknown }).version === CURRENT_SAVE_VERSION &&
-    !validateGameSaveShape(parsed).ok
-  ) {
+  if ((parsed as { version?: unknown }).version === CURRENT_SAVE_VERSION) {
+    const shape = validateGameSaveShape(parsed)
+
+    if (!shape.ok) {
+      return false
+    }
+
+    normalizedRaw = JSON.stringify(shape.normalizedSave)
+    discardedEquipmentCount = shape.discardedEquipmentCount
+  }
+
+  // Chuẩn bị handoff TRƯỚC khi đụng backup/save chính. Nếu storage không
+  // nhận được marker thì import thất bại nguyên vẹn thay vì thay save nhưng
+  // làm mất counter. Exact normalizedRaw ràng buộc marker với đúng payload.
+  try {
+    if (discardedEquipmentCount > 0) {
+      localStorage.setItem(
+        IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY,
+        JSON.stringify({ normalizedRaw, discardedEquipmentCount }),
+      )
+    } else {
+      localStorage.removeItem(IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY)
+    }
+  } catch {
     return false
   }
 
   backupCurrentSave()
 
-  localStorage.setItem(SAVE_KEY, raw)
+  localStorage.setItem(SAVE_KEY, normalizedRaw)
 
   return true
 }

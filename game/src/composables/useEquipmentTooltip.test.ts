@@ -3,24 +3,19 @@ import { buildEquipmentTooltip, getEquipmentComparisonTone } from './useEquipmen
 import { AffixRegistry } from '@/core/equipment/AffixRegistry'
 import { affixes } from '@/data/equipment/affixes'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
+import { makeInstance } from '@/core/equipment/EquipmentInstance.fixture'
 import type { Equipment } from '@/core/equipment/Equipment'
 import { ZoneRegistry } from '@/core/stage/ZoneRegistry'
 
 function instance(overrides: Partial<EquipmentInstance> = {}): EquipmentInstance {
-  return {
+  return makeInstance({
     instanceId: 'a',
     itemId: 'test_sword',
-    slot: 'weapon',
-    equipped: false,
-    quality: 'pham_khi',
-    rarity: 'hoang',
-    realmId: 'qi_refining',
+    grade: 'bat_pham',
+    quality: 'hoang',
     mainStat: { id: 'roll-main-attack', sourceId: 'roll-main', sourceType: 'equipment', stat: 'attack', flat: 10 },
-    affixes: [],
-    forgePoints: 0,
-  forgePotential: 100,
     ...overrides,
-  }
+  })
 }
 
 function setup() {
@@ -81,7 +76,7 @@ describe('buildEquipmentTooltip', () => {
   it('dùng tên stat chuẩn và không lặp quality/rarity hay thiên hướng', () => {
     const { affixRegistry } = setup()
     const equipment = instance({
-      rarity: 'dia',
+      quality: 'dia',
       affixes: [
         { affixId: 'prefix_critical_rate', tier: 1, value: 0.02 },
         { affixId: 'suffix_accuracy', tier: 1, value: 4 },
@@ -116,11 +111,11 @@ describe('buildEquipmentTooltip', () => {
   it('hides range/comparison by default and keeps effective range plus delta inline for Alt mode', () => {
     const { affixRegistry } = setup()
     const candidate = instance({
-      instanceId: 'candidate', realmId: 'mortal', realmLevel: 1,
+      instanceId: 'candidate', grade: 'cuu_pham', realmLevel: 1,
       mainStat: { id: 'x', sourceId: 'roll-main', sourceType: 'equipment', stat: 'attack', flat: 14 },
     })
     const equipped = instance({
-      instanceId: 'equipped', realmId: 'mortal', realmLevel: 1,
+      instanceId: 'equipped', grade: 'cuu_pham', realmLevel: 1,
       mainStat: { id: 'y', sourceId: 'roll-main', sourceType: 'equipment', stat: 'attack', flat: 10 },
     })
     const template: Equipment = {

@@ -2,6 +2,7 @@
 // (plan §11: "Mười realm map một-một sang Cửu…Tiên, không trùng/missing").
 import { describe, expect, it } from 'vitest'
 import { REALMS } from '../../data/realms/realm'
+import type { ProfessionGrade } from './ProfessionGrade'
 import {
   PROFESSION_GRADE_BY_REALM,
   PROFESSION_GRADE_NAMES,
@@ -10,6 +11,7 @@ import {
   getProfessionGradeForRealm,
   getRealmIdForProfessionGrade,
   isProfessionGrade,
+  realmFromGrade,
 } from './ProfessionGrade'
 
 describe('ProfessionGrade — mapping realm → phẩm nghề', () => {
@@ -48,6 +50,14 @@ describe('ProfessionGrade — mapping realm → phẩm nghề', () => {
     }
 
     expect(getProfessionGradeForRealm('unknown_realm')).toBeUndefined()
+  })
+
+  it('realmFromGrade trả realm tương ứng và chặn grade runtime không hợp lệ', () => {
+    expect(realmFromGrade('cuu_pham')).toBe('mortal')
+    expect(realmFromGrade('tien_pham')).toBe('tribulation')
+    expect(() => realmFromGrade('invalid_grade' as ProfessionGrade)).toThrow(
+      'Missing realm for profession grade invalid_grade',
+    )
   })
 
   it('compareProfessionGrades theo thứ tự Cửu → Tiên', () => {

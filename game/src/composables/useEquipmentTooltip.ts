@@ -3,12 +3,13 @@ import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import type { EquipmentSlotState } from '@/core/equipment/EquipmentSlotState'
 import type { AffixRegistry } from '@/core/equipment/AffixRegistry'
 import type { ZoneRegistry } from '@/core/stage/ZoneRegistry'
-import { getEffectiveAffixValue, getMaxForgePoints, GLOBAL_MAX_AFFIXES, MAIN_STAT_REALM_SCALE } from '@/core/equipment/EquipmentSystem'
-import { EQUIPMENT_QUALITY_IMPLICIT_MULTIPLIER } from '@/core/equipment/EquipmentQuality'
+import { getEffectiveAffixValue, GLOBAL_MAX_AFFIXES, MAIN_STAT_REALM_SCALE } from '@/core/equipment/EquipmentSystem'
+import { ITEM_QUALITY_IMPLICIT_MULTIPLIER } from '@/core/equipment/ItemQualityBalance'
 import { getGlobalCultivationLevel } from '@/core/realm/realmSystem'
+import { getRealmIdForProfessionGrade } from '@/core/profession/ProfessionGrade'
 import { composeEquipmentDisplayName, composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
 import { EQUIPMENT_SLOT_LABELS } from '@/core/equipment/EquipmentTypes'
-import { EQUIPMENT_RARITY_AFFIX_SLOTS } from '@/core/equipment/EquipmentRarity'
+import { EQUIPMENT_RARITY_AFFIX_SLOTS } from '@/core/equipment/ItemGradeRefs'
 import { statLabel, formatStat } from '@/core/stats/StatLabels'
 import type { SlotComparison } from '@/components/common/SlotTypes'
 import type { EquipmentTooltipContent, TooltipSection } from './useTooltip'
@@ -95,7 +96,7 @@ export function buildEquipmentTooltip(
     },
   ]
 
-  const rarityAffixCap = EQUIPMENT_RARITY_AFFIX_SLOTS[instance.rarity]
+  const rarityAffixCap = EQUIPMENT_RARITY_AFFIX_SLOTS[instance.quality]
   const bonusAffixSlots = slotState?.bonusAffixSlots ?? 0
   const affixCapacity = Math.min(GLOBAL_MAX_AFFIXES, rarityAffixCap.prefix + rarityAffixCap.suffix + bonusAffixSlots)
 
@@ -131,10 +132,10 @@ export function buildEquipmentTooltip(
     forgeRows.push({ label: 'Cường Hóa', value: `+${enhanceLevel}/${template.maxEnhanceLevel}` })
   }
 
-  const maxForgePoints = getMaxForgePoints(instance.quality, instance.forgePotential)
+  const maxForgePoints = instance.forgeUsesTotal
 
   if (maxForgePoints > 0) {
-    forgeRows.push({ label: 'Tình trạng rèn', value: `${instance.forgePoints}/${maxForgePoints}` })
+    forgeRows.push({ label: 'Tình trạng rèn', value: `${instance.forgeUsesRemaining}/${maxForgePoints}` })
   }
 
   if (forgeRows.length > 0) {
@@ -160,8 +161,11 @@ export function buildEquipmentTooltip(
     }
   }
 
-  const realmScale = 1 + getGlobalCultivationLevel(instance.realmId, instance.realmLevel ?? 1) * MAIN_STAT_REALM_SCALE
-  const qualityScale = EQUIPMENT_QUALITY_IMPLICIT_MULTIPLIER[instance.quality]
+  const instanceRealmId = getRealmIdForProfessionGrade(instance.grade)
+  const realmScale = instanceRealmId
+    ? 1 + getGlobalCultivationLevel(instanceRealmId, instance.realmLevel ?? 1) * MAIN_STAT_REALM_SCALE
+    : 1
+  const qualityScale = ITEM_QUALITY_IMPLICIT_MULTIPLIER[instance.quality]
   const effectiveMainRange = rolledRange
     ? `[${formatStat(instance.mainStat.stat, rolledRange.min * qualityScale * realmScale)}–${formatStat(instance.mainStat.stat, rolledRange.max * qualityScale * realmScale)}]`
     : '[—]'

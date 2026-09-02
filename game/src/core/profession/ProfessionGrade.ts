@@ -76,6 +76,16 @@ export function getRealmIdForProfessionGrade(grade: ProfessionGrade): string | u
   )
 }
 
+export function realmFromGrade(grade: ProfessionGrade): string {
+  const realmId = getRealmIdForProfessionGrade(grade)
+
+  if (!realmId) {
+    throw new Error(`Missing realm for profession grade ${grade}`)
+  }
+
+  return realmId
+}
+
 /** So sánh thứ tự phẩm nghề: âm nếu a < b, dương nếu a > b, 0 nếu bằng. */
 export function compareProfessionGrades(a: ProfessionGrade, b: ProfessionGrade): number {
   return PROFESSION_GRADE_ORDER.indexOf(a) - PROFESSION_GRADE_ORDER.indexOf(b)

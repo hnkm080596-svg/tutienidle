@@ -14,7 +14,8 @@ import type { RefineValueEntry } from '../core/equipment/EquipmentSystem'
  *
  * (2026-08-25, resource-professions-rework plan §7) — Khí Đường chỉ còn
  * bốn operation: Cường Hóa (slot), Tẩy Luyện (identity), Tinh Luyện
- * (±20% + khóa), Hóa Luyện (destructive → Tinh Hoa).
+ * (dòng đủ điều kiện tăng 5–20%, clamp trần tier + khóa), Hóa Luyện
+ * (destructive → Tinh Hoa).
  */
 export function useEquipmentActions() {
   const gameManager = useGameManager()
@@ -82,12 +83,9 @@ export function useEquipmentActions() {
     enhance: (slot: EquipmentSlot) =>
       withSyncAndResult(gameManager.enhanceSlot(slot, player.$state), 'Cường Hóa'),
 
-    /** Tẩy Luyện — oreMaterialId phải cùng cảnh giới item (§7.3). */
-    wash: (instanceId: string, oreMaterialId: string) =>
-      withSyncAndResult(
-        gameManager.washItem(instanceId, oreMaterialId, player.$state),
-        'Tẩy Luyện',
-      ),
+    /** Tẩy Luyện — tiêu Tinh Hoa, Linh Thạch và một lượt Rèn. */
+    wash: (instanceId: string) =>
+      withSyncAndResult(gameManager.washItem(instanceId, player.$state), 'Tẩy Luyện'),
 
     /** Tinh Luyện — lockedIndices là các dòng giữ nguyên (§7.4). */
     refine: (instanceId: string, lockedIndices: readonly number[]) =>
@@ -103,8 +101,8 @@ export function useEquipmentActions() {
      * qua Nhật ký thao tác giống mọi action khác — KHÔNG bumpState vì
      * chưa mutate gì nếu fail, có bumpState nếu thành công (cost đã trừ).
      */
-    washPreview: (instanceId: string, oreMaterialId: string): RolledAffix[] | null => {
-      const result = gameManager.previewWashItem(instanceId, oreMaterialId)
+    washPreview: (instanceId: string): RolledAffix[] | null => {
+      const result = gameManager.previewWashItem(instanceId)
 
       if (!result.ok || !result.affixes) {
         feedback.error(`Không thể Tẩy Luyện: ${actionFailureLabel(result.reason)}`)
@@ -143,6 +141,9 @@ export function useEquipmentActions() {
     /** Chốt values đã refinePreview() — không trừ cost lần nữa. */
     refineCommit: (instanceId: string, values: RefineValueEntry[]) =>
       withSyncAndResult(gameManager.commitRefineItem(instanceId, values), 'Tinh Luyện'),
+
+    /** Bỏ preview Refine ở cả UI lẫn capability core; không hoàn lại cost đã roll. */
+    refineDiscard: (instanceId?: string) => gameManager.discardRefinePreview(instanceId),
 
     /** Hóa Luyện batch all-or-nothing (§7.5). */
     dissolve,

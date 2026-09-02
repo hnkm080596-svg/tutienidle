@@ -1,26 +1,33 @@
 // @vitest-environment jsdom
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
 import EquipmentHallPanel from './EquipmentHallPanel.vue'
 import { GameManager } from '@/core/game/GameManager'
 import { equipment } from '@/data/equipment/equipment'
+import { affixes } from '@/data/equipment/affixes'
 import { materials } from '@/data/materials/materials'
 import { SPIRIT_STONE_MATERIAL } from '@/core/material/SpiritStoneMaterial'
 import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composables/useGameState'
 import { vTooltip } from '@/directives/tooltip'
 import { i18n } from '@/i18n'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
+import { makeInstance } from '@/core/equipment/EquipmentInstance.fixture'
+import { ITEM_QUALITY_FORGE_USES } from '@/core/equipment/ItemQualityBalance'
+import { LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
+
+function setLocale(locale: 'vi' | 'en'): void {
+  const global = i18n.global as unknown as { locale: { value: 'vi' | 'en' } }
+  global.locale.value = locale
+}
 
 function equipmentInstance(instanceId: string, equipped: boolean): EquipmentInstance {
-  return {
+  return makeInstance({
     instanceId,
     itemId: 'base_kiem',
-    slot: 'weapon',
     equipped,
-    quality: 'pham_khi',
-    rarity: 'hoang',
-    realmId: 'mortal',
+    grade: 'cuu_pham',
+    quality: 'hoang',
     realmLevel: 1,
     mainStat: {
       id: `${instanceId}:main`,
@@ -29,10 +36,7 @@ function equipmentInstance(instanceId: string, equipped: boolean): EquipmentInst
       stat: 'attack',
       flat: 12,
     },
-    affixes: [],
-    forgePoints: 10,
-    forgePotential: 100,
-  }
+  })
 }
 
 /** Instance với mainStat tuỳ ý — dùng test hiển thị số thập phân nhỏ. */
@@ -62,17 +66,16 @@ function equipmentInstanceWithItemId(
   return instance
 }
 
-/** Instance với rarity (Ngũ Phẩm) + quality (9 bậc Khí) tùy ý — test
- * bug T2.3 2026-09-01: dropdown "Chất" từng so instance.rarity. */
+/** Instance với quality tùy ý cho bộ lọc bridge trước khi UI được tách lại. */
 function equipmentInstanceWithGrade(
   instanceId: string,
-  rarity: EquipmentInstance['rarity'],
   quality: EquipmentInstance['quality'],
 ): EquipmentInstance {
   const instance = equipmentInstance(instanceId, false)
 
-  instance.rarity = rarity
   instance.quality = quality
+  instance.forgeUsesTotal = ITEM_QUALITY_FORGE_USES[quality]
+  instance.forgeUsesRemaining = ITEM_QUALITY_FORGE_USES[quality]
 
   return instance
 }
@@ -82,7 +85,9 @@ function mountHall(prepare?: (manager: GameManager) => void) {
   const pinia = createPinia()
   const manager = new GameManager()
   const version = ref(0)
+  manager.registerMaterials(materials)
   manager.registerEquipment(equipment)
+  manager.registerAffixes(affixes)
   manager.equipmentBag.add(equipmentInstance('equipped', true))
   manager.equipmentBag.add(equipmentInstance('in-bag', false))
   prepare?.(manager)
@@ -96,7 +101,7 @@ function mountHall(prepare?: (manager: GameManager) => void) {
   app.provide(BUMP_STATE_KEY, () => { version.value += 1 })
   app.mount(container)
 
-  return { container, unmount: () => app.unmount() }
+  return { container, manager, unmount: () => app.unmount() }
 }
 
 // jsdom không có ResizeObserver — usePanelPagination (tab Hóa Luyện)
@@ -111,9 +116,143 @@ beforeEach(() => {
   } as never)
 })
 
-afterEach(() => { document.body.innerHTML = '' })
+afterEach(() => {
+  vi.restoreAllMocks()
+  setLocale('vi')
+  document.body.innerHTML = ''
+})
 
 describe('EquipmentHallPanel — chọn trang bị bằng slot', () => {
+  it.each([
+    [
+      'vi',
+      'Mỗi dòng đủ điều kiện và không khóa tăng 5–20%, tối đa đến trần bậc. Chi phí:',
+    ],
+    [
+      'en',
+      'Each eligible unlocked line increases by 5–20%, capped at its tier maximum. Cost:',
+    ],
+  ] as const)('hiển thị đầy đủ quy tắc Tinh Luyện đã trả phí bằng locale %s', async (locale, expectedRule) => {
+    setLocale(locale)
+    const mounted = mountHall()
+
+    const tabs = mounted.container.querySelectorAll<HTMLButtonElement>('.qi-hall__tabs button')
+    tabs[2]!.click()
+    await nextTick()
+
+    const slots = mounted.container.querySelectorAll(
+      `[aria-label="${locale === 'vi' ? 'Chọn trang bị để tinh luyện' : 'Select equipment to refine'}"] .slot-view`,
+    )
+    ;(slots[0] as HTMLElement).click()
+    await nextTick()
+
+    const rule = mounted.container.querySelector('.qi-hall__info-row.qi-hall__costline')
+    expect(rule?.textContent).toContain(expectedRule)
+
+    mounted.unmount()
+  })
+
+  it.each([
+    ['vi', 'Bỏ'],
+    ['en', 'Discard'],
+  ] as const)('nút %s hủy cả preview UI lẫn capability core đã trả phí', async (locale, discardLabel) => {
+    setLocale(locale)
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    const mounted = mountHall((manager) => {
+      const instance = manager.equipmentBag.get('equipped')!
+      instance.affixes = [{ affixId: 'suffix_accuracy', tier: 1, value: 3 }]
+      manager.materialBag.add(manager.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID), 100)
+      manager.materialBag.add(manager.materialRegistry.get(SPIRIT_STONE_MATERIAL.id), 1_000)
+    })
+
+    const tabs = mounted.container.querySelectorAll<HTMLButtonElement>('.qi-hall__tabs button')
+    tabs[2]!.click()
+    await nextTick()
+
+    const slots = mounted.container.querySelectorAll(
+      `[aria-label="${locale === 'vi' ? 'Chọn trang bị để tinh luyện' : 'Select equipment to refine'}"] .slot-view`,
+    )
+    ;(slots[0] as HTMLElement).click()
+    await nextTick()
+
+    const actionButtons = mounted.container.querySelectorAll<HTMLButtonElement>(
+      '.qi-hall__button-row button',
+    )
+    actionButtons[0]!.click()
+    await nextTick()
+
+    const discardButton = Array.from(
+      mounted.container.querySelectorAll<HTMLButtonElement>('.qi-hall__button-row button'),
+    ).find((button) => button.textContent?.trim() === discardLabel)
+    expect(discardButton).toBeDefined()
+
+    discardButton!.click()
+    await nextTick()
+
+    expect(mounted.container.textContent).not.toContain(discardLabel)
+    expect(
+      mounted.manager.commitRefineItem('equipped', [{ index: 0, value: 3.15 }]),
+    ).toEqual({ ok: false, reason: 'invalid_refine_preview' })
+    expect(mounted.manager.equipmentBag.get('equipped')!.affixes[0]!.value).toBe(3)
+
+    mounted.unmount()
+  })
+
+  it('unmount panel hủy capability Refine còn chờ để overlay mới không thể giữ payload cũ', async () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    const mounted = mountHall((manager) => {
+      const instance = manager.equipmentBag.get('equipped')!
+      instance.affixes = [{ affixId: 'suffix_accuracy', tier: 1, value: 3 }]
+      manager.materialBag.add(manager.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID), 100)
+      manager.materialBag.add(manager.materialRegistry.get(SPIRIT_STONE_MATERIAL.id), 1_000)
+    })
+    const tabs = mounted.container.querySelectorAll<HTMLButtonElement>('.qi-hall__tabs button')
+    tabs[2]!.click()
+    await nextTick()
+    const slots = mounted.container.querySelectorAll(
+      '[aria-label="Chọn trang bị để tinh luyện"] .slot-view',
+    )
+    ;(slots[0] as HTMLElement).click()
+    await nextTick()
+    mounted.container.querySelector<HTMLButtonElement>('.qi-hall__button-row button')!.click()
+    await nextTick()
+
+    mounted.unmount()
+
+    expect(
+      mounted.manager.commitRefineItem('equipped', [{ index: 0, value: 3.15 }]),
+    ).toEqual({ ok: false, reason: 'invalid_refine_preview' })
+    expect(mounted.manager.equipmentBag.get('equipped')!.affixes[0]!.value).toBe(3)
+  })
+
+  it('Tinh Luyện đọc số dư từ Luyện Khí Tinh Hoa duy nhất', async () => {
+    const mounted = mountHall((manager) => {
+      manager.materialBag.add(
+        {
+          id: LUYEN_KHI_TINH_HOA_ID,
+          name: 'Luyện Khí Tinh Hoa',
+          category: 'essence',
+          sourceType: 'building',
+        },
+        37,
+      )
+    })
+
+    const tabs = mounted.container.querySelectorAll<HTMLButtonElement>('.qi-hall__tabs button')
+    tabs[2]!.click()
+    await nextTick()
+
+    const slots = mounted.container.querySelectorAll(
+      '[aria-label="Chọn trang bị để tinh luyện"] .slot-view',
+    )
+    ;(slots[0] as HTMLElement).click()
+    await nextTick()
+
+    expect(mounted.container.querySelector('.qi-hall__costline')?.textContent).toContain('37')
+
+    mounted.unmount()
+  })
+
   it('Cường Hóa và Tẩy Luyện đều hiện đủ 6 slot (2026-08-30: ô luôn tồn tại, tham chiếu equip trực tiếp)', async () => {
     const mounted = mountHall()
 
@@ -137,10 +276,10 @@ describe('EquipmentHallPanel — chọn trang bị bằng slot', () => {
     mounted.unmount()
   })
 
-  it('Tẩy Luyện đồ Hoàng (0 affix slot) → nút disabled kể cả khi đủ quáng/điểm rèn/Linh Thạch', async () => {
+  it('Tẩy Luyện đồ Hoàng không cần chọn hoặc sở hữu Quáng', async () => {
     const mounted = mountHall((manager) => {
-      const ore = materials.find((m) => m.id === 'qi_refining_ore_huyen')!
-      manager.materialBag.add(ore, 100)
+      const essence = materials.find((m) => m.id === LUYEN_KHI_TINH_HOA_ID)!
+      manager.materialBag.add(essence, 10)
       manager.materialBag.add(SPIRIT_STONE_MATERIAL, 10_000)
     })
 
@@ -155,17 +294,10 @@ describe('EquipmentHallPanel — chọn trang bị bằng slot', () => {
     ;(slots[0] as HTMLElement).click()
     await nextTick()
 
-    // Tick quáng.
-    const radios = mounted.container.querySelectorAll<HTMLInputElement>('input[type="radio"]')
-    if (radios.length > 0) {
-      ;(radios[0] as HTMLElement).click()
-    }
-    await nextTick()
-
     const buttons = Array.from(mounted.container.querySelectorAll<HTMLButtonElement>('button'))
     const washBtn = buttons.find((b) => b.textContent?.includes('roll lại toàn bộ dòng phụ'))
     expect(washBtn).toBeDefined()
-    expect(washBtn!.disabled).toBe(true)
+    expect(washBtn!.disabled).toBe(false)
 
     mounted.unmount()
   })
@@ -190,12 +322,12 @@ describe('EquipmentHallPanel — chọn trang bị bằng slot', () => {
     const card = mounted.container.querySelector('.qi-hall__preview-card')
     expect(card).not.toBeNull()
 
-    // Điểm Rèn: trước là 10/20 (forgePoints khởi tạo 10), sau = trước - cost pham_khi (2) —
+    // Ngân sách rèn: Hoàng Chất có 5 lượt, mỗi wash trừ 1 lượt.
     // giờ là dòng chú thích trên đầu card, không còn là 1 hàng trong bảng.
     const caption = card!.querySelector('.qi-hall__col-title')
     expect(caption?.textContent).toContain('Điểm Rèn')
-    expect(caption?.textContent).toContain('10/20')
-    expect(caption?.textContent).toContain('8/20')
+    expect(caption?.textContent).toContain('5/5')
+    expect(caption?.textContent).toContain('4/5')
 
     // Fixture item không có affix nào (affixes: []) — không có gì để so
     // sánh theo dòng nên KHÔNG hiện bảng, chỉ hiện thông báo trống.
@@ -282,13 +414,12 @@ describe('EquipmentHallPanel — chọn trang bị bằng slot', () => {
     mounted.unmount()
   })
 
-  it('filter Phẩm (rarity) và Chất (quality) là 2 trục độc lập — bug T2.3 2026-09-01', async () => {
+  it('cả hai filter bridge đọc trục quality đã hợp nhất', async () => {
     const mounted = mountHall((manager) => {
       // Bỏ fixture mặc định 'in-bag' để ứng viên hoàn toàn do test kiểm soát.
       manager.equipmentBag.remove('in-bag')
-      // Cùng phẩm khác chất: chọn phẩm Hoang + chất Pháp Bảo → chỉ item 2.
-      manager.equipmentBag.add(equipmentInstanceWithGrade('d1', 'hoang', 'pham_khi'))
-      manager.equipmentBag.add(equipmentInstanceWithGrade('d2', 'hoang', 'phap_bao'))
+      manager.equipmentBag.add(equipmentInstanceWithGrade('d1', 'hoang'))
+      manager.equipmentBag.add(equipmentInstanceWithGrade('d2', 'dia'))
     })
 
     const tabs = mounted.container.querySelectorAll<HTMLButtonElement>('.qi-hall__tabs button')
@@ -309,26 +440,24 @@ describe('EquipmentHallPanel — chọn trang bị bằng slot', () => {
     )!
     expect(realmSelect.options.length).toBe(11) // 10 realm + "Mọi cảnh giới"
 
-    gradeSelect.value = 'hoang'
+    gradeSelect.value = 'dia'
     gradeSelect.dispatchEvent(new Event('change'))
-    qualitySelect.value = 'phap_bao'
+    qualitySelect.value = 'dia'
     qualitySelect.dispatchEvent(new Event('change'))
     await nextTick()
 
-    // Cả 2 item cùng tên template ("Kiếm") — phân biệt bằng SỐ LƯỢNG:
-    // lọc phẩm Hoang + chất Pháp Bảo chỉ khớp d2 (d1 là Phàm Khí).
     const visible = mounted.container.querySelectorAll('.dissolve-slot-wrap .slot-view')
 
     expect(visible).toHaveLength(1)
 
-    // Đảo chất về Phàm Khí → khớp d1, vẫn 1 item (2 trục độc lập).
-    qualitySelect.value = 'pham_khi'
+    // Hai filter mâu thuẫn thì không còn ứng viên vì cùng đọc quality.
+    qualitySelect.value = 'hoang'
     qualitySelect.dispatchEvent(new Event('change'))
     await nextTick()
 
     expect(
       mounted.container.querySelectorAll('.dissolve-slot-wrap .slot-view'),
-    ).toHaveLength(1)
+    ).toHaveLength(0)
 
     mounted.unmount()
   })
