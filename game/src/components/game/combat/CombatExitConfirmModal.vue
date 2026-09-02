@@ -8,6 +8,7 @@ import { onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { useGameManager } from '@/composables/useGameState'
+import { useDialogFocus } from '@/composables/useDialogFocus'
 import GameButton from '@/components/common/GameButton.vue'
 
 const { t } = useI18n()
@@ -15,6 +16,15 @@ const ui = useUiStore()
 const gameManager = useGameManager()
 
 const visible = ref(false)
+const cardRef = ref<HTMLElement | null>(null)
+
+// Deferred follow-up (2026-09-03) — focus trap dùng chung (QA-003):
+// Escape = HỦY thoát (Ở LẠI trận), KHÔNG BAO GIỜ exit qua Escape.
+useDialogFocus(cardRef, visible, {
+  onEscape: () => {
+    visible.value = false
+  },
+})
 
 function onExitRequest() {
   // Scene chỉ request; Stage gate giữ tại render (v-if) để Tribulation
@@ -49,7 +59,7 @@ onUnmounted(() => {
     class="combat-exit-confirm__overlay"
     @click.self="visible = false"
   >
-    <div class="combat-exit-confirm">
+    <div ref="cardRef" class="combat-exit-confirm">
       <p class="combat-exit-confirm__text">{{ t('combat.overlay.exitConfirm.message') }}</p>
 
       <div class="combat-exit-confirm__actions">
