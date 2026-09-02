@@ -9,7 +9,8 @@
         "enhance": "Cường Hóa",
         "wash": "Tẩy Luyện",
         "refine": "Tinh Luyện",
-        "dissolve": "Hóa Luyện"
+        "dissolve": "Hóa Luyện",
+        "decompose": "Phân Giải"
       },
       "aria": {
         "enhanceSlots": "Chọn slot cường hóa",
@@ -442,6 +443,18 @@
     },
     "common": {
       "close": "Đóng"
+    },
+    "decompose": {
+      "labels": {
+        "gradeFilter": "Phẩm khoáng",
+        "qualityFilter": "Chất khoáng",
+        "workers": "Nhân công"
+      },
+      "select": {
+        "allGrades": "Mọi phẩm",
+        "allQualities": "Mọi chất"
+      },
+      "estimate": "≈ {amount} Luyện Khí Tinh Hoa / lượt"
     }
   },
   "combat": {

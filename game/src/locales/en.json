@@ -9,7 +9,8 @@
         "enhance": "Enhance",
         "wash": "Wash",
         "refine": "Refine",
-        "dissolve": "Dissolve"
+        "dissolve": "Dissolve",
+        "decompose": "Decompose"
       },
       "aria": {
         "enhanceSlots": "Select enhancement slot",
@@ -442,6 +443,18 @@
     },
     "common": {
       "close": "Close"
+    },
+    "decompose": {
+      "labels": {
+        "gradeFilter": "Ore grade",
+        "qualityFilter": "Ore quality",
+        "workers": "Workers"
+      },
+      "select": {
+        "allGrades": "All grades",
+        "allQualities": "All qualities"
+      },
+      "estimate": "≈ {amount} essence / cycle"
     }
   },
   "combat": {

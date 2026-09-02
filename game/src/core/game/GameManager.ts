@@ -62,6 +62,7 @@ import type { Material } from '../material/Material'
 import { EquipmentRegistry } from '../equipment/EquipmentRegistry'
 import { EquipmentBag, type AutoDissolveReward } from '../equipment/EquipmentBag'
 import { EquipmentSystem } from '../equipment/EquipmentSystem'
+import { DecomposeSystem } from '../production/DecomposeSystem'
 import { MAX_SLOT_ENHANCE_LEVEL } from '../equipment/EnhanceCurve'
 import type { RefineValueEntry } from '../equipment/EquipmentSystem'
 import type { RolledAffix } from '../equipment/RolledAffix'
@@ -344,6 +345,9 @@ export class GameManager {
   readonly equipmentRegistry = new EquipmentRegistry()
   readonly equipmentBag = new EquipmentBag()
   readonly equipmentSystem = new EquipmentSystem(createDefaultEquipmentOperationCostCatalog())
+
+  // Task 14 (rework P4) — Tab Phân Giải: khoáng → Luyện Khí Tinh Hoa.
+  readonly decomposeSystem = new DecomposeSystem(this.materialBag, { autoWorkerCapacity: 0 })
 
   // Core Loop Foundation checklist (Phase 3, Má»¥c AFFIX) â€” thay tháº¿
   // hoÃ n toÃ n substatPool cÅ©.
@@ -3203,8 +3207,24 @@ export class GameManager {
         this.notifications.push({
           kind: 'craft',
           message: event.success
-            ? `${pill?.name ?? event.pillId} ×${event.pills}`
+            ? `${pill?.name ?? event.pillId} x${event.pills}`
             : `Luyện ${pill?.name ?? event.pillId} thất bại`,
+        })
+      }
+
+      // Task 14 (rework P4) — Tab Phân Giải cycle: khoáng → tinh hoa.
+      this.decomposeSystem.tick(Date.now())
+
+      for (const entry of this.decomposeSystem.drainOutput()) {
+        const tinhHoa = this.materialRegistry.has(entry.materialId)
+          ? this.materialRegistry.get(entry.materialId)
+          : undefined
+
+        this.materialBag.add(tinhHoa ?? { id: entry.materialId, name: entry.materialId } as never, entry.amount)
+
+        this.notifications.push({
+          kind: 'craft',
+          message: `Phân Giải +${entry.amount} ${(tinhHoa as { name?: string } | undefined)?.name ?? 'Tinh Hoa'}`,
         })
       }
     }

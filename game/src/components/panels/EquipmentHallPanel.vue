@@ -35,6 +35,7 @@ import {
   type RefineValueEntry,
 } from '@/core/equipment/EquipmentSystem'
 import { MAX_SLOT_ENHANCE_LEVEL, enhanceSuccessRate, ENHANCE_PITY_THRESHOLD } from '@/core/equipment/EnhanceCurve'
+import DecomposeTab from './equipment-hall/DecomposeTab.vue'
 
 // Khí Đường (2026-08-25, resource-professions-rework plan §7/§9.2) —
 // bốn tab ĐÚNG contract: Cường Hóa (slot), Tẩy Luyện (identity substat
@@ -55,6 +56,7 @@ const TABS = [
   { id: 'wash', label: t('panels.equipmentHall.tabs.wash') },
   { id: 'refine', label: t('panels.equipmentHall.tabs.refine') },
   { id: 'dissolve', label: t('panels.equipmentHall.tabs.dissolve') },
+  { id: 'decompose', label: t('panels.equipmentHall.tabs.decompose') },
 ] as const
 
 type TabId = (typeof TABS)[number]['id']
@@ -1301,7 +1303,7 @@ function doDissolve() {
     </section>
 
     <!-- ===== HÓA LUYỆN (§7.5) — lưới slot + tick chọn ===== -->
-    <section v-else class="qi-hall__body qi-hall__dissolve">
+    <section v-else-if="activeTab === 'dissolve'" class="qi-hall__body qi-hall__dissolve">
       <div class="dissolve-filters">
         <select v-model="dissolveFilterRealm">
           <option value="any">{{ t('panels.equipmentHall.select.anyRealm') }}</option>
@@ -1398,6 +1400,11 @@ function doDissolve() {
       >
         {{ dissolveConfirming ? t('panels.equipmentHall.buttons.dissolveConfirm') : `${t('panels.equipmentHall.tabs.dissolve')} (${dissolveSelected.size})` }}
       </GameButton>
+    </section>
+
+    <!-- ===== PHÂN GIẢI (Task 14) — khoáng → Luyện Khí Tinh Hoa ===== -->
+    <section v-else-if="activeTab === 'decompose'" class="qi-hall__body qi-hall__decompose">
+      <DecomposeTab />
     </section>
   </div>
 </template>
