@@ -24,8 +24,6 @@ export interface EquippedRow {
 
   quality: EquipmentInstance['quality']
 
-  rarity: EquipmentInstance['quality']
-
   affixCount: number
 
   icon?: string
@@ -37,9 +35,17 @@ export interface EquippedRow {
   // fallback `?.tooltip ?? { title/description slot trống }`.
   tooltip?: ReturnType<typeof buildEquipmentTooltip>
 
-  qualityRank: number
+  // Rework P6 (item-grade-quality-rework, final-review round 2) — renamed
+  // from qualityRank/rarityRank (which held content INVERSE to their
+  // names: qualityRank was actually the GRADE rank, rarityRank was the
+  // QUALITY rank — leftover from the deleted rarity axis). Field names
+  // now match content; SlotView's own props (equipmentQualityRank/
+  // rarityRank) are UNCHANGED — see the template bindings in
+  // WashTab/RefineTab/EnhanceTab/DissolveTab.vue that map gradeRank→
+  // equipment-quality-rank and qualityRank→rarity-rank.
+  gradeRank: number
 
-  rarityRank: number
+  qualityRank: number
 }
 
 export function useEquippedRows() {
@@ -67,8 +73,6 @@ export function useEquippedRows() {
 
         quality: instance.quality,
 
-        rarity: instance.quality,
-
         affixCount: instance.affixes.length,
 
         icon: instance.icon ?? template?.icon,
@@ -92,9 +96,9 @@ export function useEquippedRows() {
             )
           : undefined,
 
-        qualityRank: professionGradeRank(instance.grade),
+        gradeRank: professionGradeRank(instance.grade),
 
-        rarityRank: itemQualityRank(instance.quality),
+        qualityRank: itemQualityRank(instance.quality),
       }
     })
   })

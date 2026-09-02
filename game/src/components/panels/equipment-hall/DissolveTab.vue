@@ -57,9 +57,12 @@ interface DissolveCandidate {
   // EquippedRow.tooltip trong useEquippedRows.ts).
   tooltip?: ReturnType<typeof buildEquipmentTooltip>
 
-  qualityRank: number
+  // Rework P6 (final-review round 2) — renamed from qualityRank/rarityRank
+  // (content was INVERSE to those names, see useEquippedRows.ts's
+  // EquippedRow for the same fix); SlotView's own props stay unchanged.
+  gradeRank: number
 
-  rarityRank: number
+  qualityRank: number
 
   // Task 19 — hint trực quan khi phẩm món KHÔNG khớp cảnh giới hiện tại
   // của người chơi (canUseItemGrade, Task 16 equip gate).
@@ -129,9 +132,9 @@ const dissolveCandidates = computed<DissolveCandidate[]>(() => {
             )
           : undefined,
 
-        qualityRank: professionGradeRank(instance.grade),
+        gradeRank: professionGradeRank(instance.grade),
 
-        rarityRank: itemQualityRank(instance.quality),
+        qualityRank: itemQualityRank(instance.quality),
 
         gradeMismatch: !canUseItemGrade(instance.grade, playerRealmId),
       }
@@ -266,8 +269,8 @@ function doDissolve() {
           :label="candidate.name"
           :name-segments="candidate.nameSegments"
           :icon="candidate.icon"
-          :equipment-quality-rank="candidate.qualityRank"
-          :rarity-rank="candidate.rarityRank"
+          :equipment-quality-rank="candidate.gradeRank"
+          :rarity-rank="candidate.qualityRank"
           :tooltip="candidate.tooltip"
           :state="{ interaction: dissolveSelected.has(candidate.instanceId) ? 'selected' : 'idle' }"
         />

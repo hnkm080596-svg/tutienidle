@@ -195,7 +195,7 @@ function canRefine(): boolean {
 
 function doRefinePreview() {
   if (!selectedRow.value) {
-    feedback.warning(t('panels.equipmentHall.messages.polishNeedItem'))
+    feedback.warning(t('panels.equipmentHall.messages.refineNeedItem'))
 
     return
   }
@@ -254,8 +254,8 @@ const refineRenAfter = computed(() =>
           :label="row.equippedRow?.name ?? equipmentSlotLabel(row.slot)"
           :name-segments="row.equippedRow?.nameSegments"
           :icon="row.equippedRow?.icon"
-          :equipment-quality-rank="row.equippedRow?.qualityRank"
-          :rarity-rank="row.equippedRow?.rarityRank"
+          :equipment-quality-rank="row.equippedRow?.gradeRank"
+          :rarity-rank="row.equippedRow?.qualityRank"
           :tooltip="row.equippedRow?.tooltip ?? { title: equipmentSlotLabel(row.slot), description: t('panels.equipmentHall.tooltips.emptySlotNoRefine') }"
           :state="{ interaction: row.equippedRow?.instanceId === selectedInstanceId ? 'selected' : 'idle', marker: row.equippedRow ? 'equipped' : undefined }"
           @click="selectHallSlotForAction(row)"

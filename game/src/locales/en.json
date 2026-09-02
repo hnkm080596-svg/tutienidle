@@ -82,8 +82,8 @@
         "guaranteed": "Guaranteed success"
       },
       "messages": {
-        "refineNeedItem": "Cannot Refine: select an equipment item first.",
-        "polishNeedItem": "Cannot Polish: select an equipment item with at least one affix."
+        "washNeedItem": "Cannot Wash: select an equipment item first.",
+        "refineNeedItem": "Cannot Refine: select an equipment item with at least one affix."
       }
     },
     "nodeTree": {

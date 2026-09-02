@@ -82,8 +82,8 @@
         "guaranteed": "Chắc chắn thành công"
       },
       "messages": {
-        "refineNeedItem": "Không thể Tẩy Luyện: cần chọn một trang bị.",
-        "polishNeedItem": "Không thể Tinh Luyện: cần chọn một trang bị có ít nhất một dòng phụ."
+        "washNeedItem": "Không thể Tẩy Luyện: cần chọn một trang bị.",
+        "refineNeedItem": "Không thể Tinh Luyện: cần chọn một trang bị có ít nhất một dòng phụ."
       }
     },
     "nodeTree": {
