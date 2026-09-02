@@ -76,6 +76,10 @@ export interface ProductionSiteState {
 
   /** Các cycle bổ sung do worker 2+ vận hành. */
   workerCycles?: ProductionCycle[]
+
+  /** Chi-hien-quan spec (2026-09-02): số slot MANUAL gán cho site.
+   *  undefined = site chạy AUTO (round-robin phần dư capacity). */
+  assignedWorkers?: number
 }
 
 /** Một Lâm/Quáng/Động Thiên của Địa Giới (§3.1). */

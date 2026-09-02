@@ -292,8 +292,14 @@ export class ProductionSystem {
   }
 
   /**
-   * Phân bổ pool worker theo round-robin và vận hành các cycle bổ sung.
-   * Slot đầu tiên vẫn là activeCycle thủ công để không đổi contract UI cũ.
+   * Phân bổ pool worker và vận hành các cycle bổ sung. Slot đầu tiên
+   * vẫn là activeCycle thủ công để không đổi contract UI cũ.
+   *
+   * Chi-hien-quan spec (2026-09-02): `assignments` tùy chọn — Map
+   * siteId → số slot MANUAL. Sites có assignment (và autoRestart) nhận
+   * đúng min(assigned, capacity còn lại) theo thứ tự Map; phần dư
+   * capacity → round-robin cho sites auto KHÔNG có assignment. Không
+   * truyền (hoặc Map rỗng) = auto hoàn toàn — hành vi cũ giữ nguyên.
    */
   tickWorkers(
     nowMs: number,
@@ -301,13 +307,37 @@ export class ProductionSystem {
     registry: MaterialRegistry,
     currentRealmId: string,
     capacity: number,
+    assignments?: Map<string, number>,
   ): void {
     const activeStates = [...this.states.values()].filter(state => state.autoRestart)
     for (const state of this.states.values()) state.activeWorkerSlots = 0
     if (activeStates.length === 0 || capacity <= 0) return
 
-    for (let index = 0; index < Math.floor(capacity); index++) {
-      activeStates[index % activeStates.length]!.activeWorkerSlots++
+    const assignmentMap = assignments ?? new Map<string, number>()
+
+    // 1) Manual sites (thứ tự Map): min(assigned, capacity còn lại).
+    let remaining = Math.floor(capacity)
+    const manualSites: typeof activeStates = []
+
+    for (const state of activeStates) {
+      const assigned = assignmentMap.get(state.siteId)
+
+      if (assigned === undefined || remaining <= 0) {
+        continue
+      }
+
+      const slots = Math.min(Math.max(0, Math.floor(assigned)), remaining)
+
+      state.activeWorkerSlots = slots
+      remaining -= slots
+      manualSites.push(state)
+    }
+
+    // 2) Phần dư → round-robin cho sites auto không assignment.
+    const autoSites = activeStates.filter((state) => !assignmentMap.has(state.siteId))
+
+    for (let index = 0; index < remaining; index++) {
+      autoSites[index % autoSites.length]!.activeWorkerSlots++
     }
 
     for (const state of activeStates) {
@@ -347,7 +377,13 @@ export class ProductionSystem {
     registry: MaterialRegistry,
     currentRealmId: string,
     nowMs: number = Date.now(),
-    options: { workerCapacity?: number; offlineSinceMs?: number } = {},
+    options: {
+      workerCapacity?: number
+      offlineSinceMs?: number
+      /** Chi-hien-quan — assignments snapshot (từ states trước settle) để
+       *  offline khớp online. */
+      workerAssignments?: Map<string, number>
+    } = {},
   ): number {
     let budgetRemainingMs = PRODUCTION_OFFLINE_CAP_SECONDS * 1000
 
@@ -423,6 +459,7 @@ export class ProductionSystem {
       budgetRemainingMs,
       Math.floor(options.workerCapacity ?? 0),
       options.offlineSinceMs,
+      options.workerAssignments,
     )
 
     return settled
@@ -434,6 +471,9 @@ export class ProductionSystem {
    * nối tiếp nhau trong cửa sổ [offlineSinceMs, nowMs], mỗi cycle một
    * seed riêng. Cycle dở dang vượt nowMs được giữ lại cho tickWorkers
    * online; cycle hoàn thành mà hết ngân sách bị forfeit.
+   *
+   * Chi-hien-quan (2026-09-02): `workerAssignments` — cùng phân bổ manual
+   * của tickWorkers để OFFLINE KHỚP ONLINE (spec §6).
    */
   private settleWorkersOffline(
     bag: MaterialBag,
@@ -443,12 +483,14 @@ export class ProductionSystem {
     budgetRemainingMs: number,
     workerCapacity: number,
     offlineSinceMs?: number,
+    workerAssignments?: Map<string, number>,
   ): number {
     if (workerCapacity <= 0 || budgetRemainingMs <= 0) {
       return 0
     }
 
-    // Phân bổ slot round-robin — đúng logic tickWorkers để offline khớp online.
+    // Phân bổ slot — manual assignment trước (giống tickWorkers), phần dư
+    // round-robin: offline khớp online.
     const activeStates = [...this.states.values()].filter((state) => state.autoRestart)
 
     if (activeStates.length === 0) {
@@ -461,7 +503,24 @@ export class ProductionSystem {
       slotsBySite.set(state.siteId, 0)
     }
 
-    for (let index = 0; index < workerCapacity; index++) {
+    let remaining = workerCapacity
+
+    if (workerAssignments) {
+      for (const state of activeStates) {
+        const assigned = workerAssignments.get(state.siteId)
+
+        if (assigned === undefined || remaining <= 0) {
+          continue
+        }
+
+        const slots = Math.min(Math.max(0, Math.floor(assigned)), remaining)
+
+        slotsBySite.set(state.siteId, slots)
+        remaining -= slots
+      }
+    }
+
+    for (let index = 0; index < remaining; index++) {
       const state = activeStates[index % activeStates.length]!
 
       slotsBySite.set(state.siteId, (slotsBySite.get(state.siteId) ?? 0) + 1)

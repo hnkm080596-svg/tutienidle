@@ -2371,6 +2371,23 @@ export class GameManager {
     player.autoWorkerCapacity = getWorkerCapacityForLevel(instance.level)
   }
 
+  /**
+   * Chi-hien-quan (2026-09-02) — assignments snapshot từ production states
+   * (assignedWorkers persist trong save) — truyền vào tickWorkers/
+   * settleOffline để OFFLINE KHỚP ONLINE.
+   */
+  getWorkerAssignments(): Map<string, number> {
+    const assignments = new Map<string, number>()
+
+    for (const state of this.productionSystem.getAllStates()) {
+      if (state.assignedWorkers !== undefined) {
+        assignments.set(state.siteId, state.assignedWorkers)
+      }
+    }
+
+    return assignments
+  }
+
   upgradeBuilding(instanceId: string): boolean {
     const upgraded = this.buildingSystem.upgrade(
       instanceId,
@@ -3204,6 +3221,7 @@ export class GameManager {
           {
             workerCapacity: this.activePlayer.autoWorkerCapacity ?? 0,
             offlineSinceMs: save.player.lastSavedAt ?? Date.now(),
+            workerAssignments: this.getWorkerAssignments(),
           },
         )
       }
@@ -3270,6 +3288,7 @@ export class GameManager {
         this.materialRegistry,
         this.activePlayer.realmId,
         this.activePlayer.autoWorkerCapacity ?? 0,
+        this.getWorkerAssignments(),
       )
 
       for (const event of this.productionSystem.drainSettlementEvents()) {
