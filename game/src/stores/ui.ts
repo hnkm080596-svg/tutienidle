@@ -40,7 +40,7 @@ export type LeftPanelMode =
   | 'settings'
   | 'equipment_hall'
   | 'pill_room'
-  | 'spirit_spring'
+  | 'worker_lodge'
   | 'scripture_pavilion'
   | 'stage_select'
   | 'vendor'

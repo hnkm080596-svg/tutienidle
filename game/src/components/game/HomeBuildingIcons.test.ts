@@ -155,7 +155,7 @@ describe('HomeBuildingIcons — building navigation không dùng chip nổi', ()
       'teleport_array',
       'equipment_hall',
       'vendor',
-      'spirit_spring',
+      'chi_hien_quan',
     ])
     expect(mounted.sprite('pill_room')).not.toBeNull()
     expect(mounted.sprite('pill_room')!.classList).toContain('is-locked')
@@ -319,7 +319,7 @@ describe('HomeBuildingIcons — building navigation không dùng chip nổi', ()
     const springManager = new GameManager()
 
     springManager.registerBuildings([{
-      id: 'spirit_spring',
+      id: 'chi_hien_quan',
       name: 'Linh Tuyền',
       category: 'resource',
       tier: 1,
@@ -328,23 +328,23 @@ describe('HomeBuildingIcons — building navigation không dùng chip nổi', ()
       baseProductionRate: 1,
       producesMaterialId: 'spirit_stone',
       upgradeCost: [[], [], []],
-      functionType: 'spirit_spring',
+      functionType: 'worker_lodge',
     }])
     springManager.buildingManager.add({
       instanceId: 'inst_spring',
-      buildingId: 'spirit_spring',
+      buildingId: 'chi_hien_quan',
       level: 1,
       lastCollectedAt: Date.now() / 1000,
     })
 
     const mounted = mountHomeBuildings(springManager)
 
-    mounted.buildingButton('spirit_spring')!.click()
+    mounted.buildingButton('chi_hien_quan')!.click()
     await nextTick()
 
     const ui = useUiStore()
 
-    expect(ui.leftPanelMode).toBe('spirit_spring')
+    expect(ui.leftPanelMode).toBe('worker_lodge')
     expect(ui.activeBuildingPopoverId).toBeNull()
 
     mounted.unmount()
@@ -425,7 +425,7 @@ describe('HomeBuildingIcons — nameplate + badge trạng thái (plan §3.1)', (
 
     springManager.registerMaterials([UPGRADE_MATERIAL])
     springManager.registerBuildings([{
-      id: 'spirit_spring',
+      id: 'chi_hien_quan',
       name: 'Linh Tuyền',
       category: 'resource',
       tier: 1,
@@ -434,11 +434,11 @@ describe('HomeBuildingIcons — nameplate + badge trạng thái (plan §3.1)', (
       baseProductionRate: 1,
       producesMaterialId: 'spirit_stone',
       upgradeCost: [[], [], []],
-      functionType: 'spirit_spring',
+      functionType: 'worker_lodge',
     }])
     springManager.buildingManager.add({
       instanceId: 'inst_spring',
-      buildingId: 'spirit_spring',
+      buildingId: 'chi_hien_quan',
       level: 1,
       // lastCollectedAt lùi sâu vào quá khứ → stored >= 1.
       lastCollectedAt: Date.now() / 1000 - 3600,
@@ -446,7 +446,7 @@ describe('HomeBuildingIcons — nameplate + badge trạng thái (plan §3.1)', (
 
     const mounted = mountHomeBuildings(springManager)
 
-    const nameplate = mounted.nameplate('spirit_spring')!
+    const nameplate = mounted.nameplate('chi_hien_quan')!
 
     expect(nameplate.classList.contains('building-nameplate--ready')).toBe(true)
     expect(nameplate.querySelector('.building-nameplate__ready')).not.toBeNull()

@@ -15,7 +15,7 @@ describe('DongFuBuildingArt', () => {
       'teleport_array',
       'equipment_hall',
       'vendor',
-      'spirit_spring',
+      'chi_hien_quan',
     ])
     expect(new Set(DONG_FU_BUILDING_ART.map((entry) => entry.scenePlacement.zIndex)).size).toBe(6)
   })

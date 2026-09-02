@@ -166,10 +166,10 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
     available: ALWAYS_AVAILABLE,
   },
   {
-    id: 'spirit_spring',
+    id: 'chi_hien_quan',
     ring: 3,
-    label: 'Linh Tuyền',
-    buildingId: 'spirit_spring',
+    label: 'Chiêu Hiền Quán',
+    buildingId: 'chi_hien_quan',
     available: ALWAYS_AVAILABLE,
   },
   {

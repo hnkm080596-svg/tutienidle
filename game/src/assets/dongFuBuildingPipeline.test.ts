@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
 
 const buildingIds = [
-  'spirit_spring',
+  'chi_hien_quan',
   'equipment_hall',
   'pill_room',
   'teleport_array',

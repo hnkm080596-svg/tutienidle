@@ -20,7 +20,7 @@ describe('ui store', () => {
 
     ui.leftPanelMode = 'pill_room'
     ui.standalonePanel = 'skill'
-    ui.activeBuildingPopoverId = 'spirit_spring'
+    ui.activeBuildingPopoverId = 'chi_hien_quan'
     ui.isCommandWheelOpen = true
 
     ui.closeHomeOverlays()

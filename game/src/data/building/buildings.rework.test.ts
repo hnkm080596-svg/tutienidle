@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { buildings } from './buildings'
 import { BuildingSystem } from '@/core/building/BuildingSystem'
+import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 
 const buildingSystem = new BuildingSystem()
 
@@ -9,17 +10,39 @@ describe('building 9-tier scaffold', () => {
     expect(buildings.find(entry => entry.id === 'gathering_outpost')?.name).toBe('Khai Vật Đường')
   })
 
-  it.each(['spirit_spring', 'equipment_hall', 'pill_room', 'gathering_outpost'])('%s có đủ 9 cấp và 9 cost bands', (id) => {
+  it.each(['chi_hien_quan', 'equipment_hall', 'pill_room', 'gathering_outpost'])('%s có đủ 9 cấp và 9 cost bands', (id) => {
     const building = buildings.find(entry => entry.id === id)!
     expect(building.maxLevel).toBe(9)
     expect(building.upgradeCost).toHaveLength(9)
   })
 
-  it('cấp Kim Đan+ dùng Linh Mộc/Linh Khoáng phân phẩm', () => {
-    const spring = buildings.find(entry => entry.id === 'spirit_spring')!
-    expect(spring.upgradeCost[3]?.map(cost => cost.materialId)).toEqual([
+  it('cấp Kim Đan+ dùng Linh Mộc/Linh Khoáng phân phẩm (linh mạch Khai Vật Đường)', () => {
+    const outpost = buildings.find(entry => entry.id === 'gathering_outpost')!
+    expect(outpost.upgradeCost[3]?.map(cost => cost.materialId)).toEqual([
       'golden_core_wood_huyen', 'golden_core_ore_huyen',
     ])
+  })
+})
+
+// Chiêu Hiền Quán (2026-09-02, spec 2026-09-02-chi-hien-quan-design.md)
+describe('chi_hien_quan + linh mạch Khai Vật Đường', () => {
+  it('chi_hien_quan tồn tại — maxLevel 9 + 9 cost bands + functionType worker_lodge', () => {
+    const chq = buildings.find((entry) => entry.id === 'chi_hien_quan')!
+
+    expect(chq.maxLevel).toBe(9)
+    expect(chq.upgradeCost).toHaveLength(9)
+    expect(chq.functionType).toBe('worker_lodge')
+  })
+
+  it('spirit_spring đã bị XÓA khỏi buildings data', () => {
+    expect(buildings.find((entry) => entry.id === 'spirit_spring')).toBeUndefined()
+  })
+
+  it('gathering_outpost mang linh mạch (producesMaterialId Linh Thạch) nhưng KHÔNG còn workersPerLevel', () => {
+    const outpost = buildings.find((entry) => entry.id === 'gathering_outpost')!
+
+    expect(outpost.producesMaterialId).toBe(SPIRIT_STONE_MATERIAL_ID)
+    expect(outpost.workersPerLevel).toBeUndefined()
   })
 })
 
