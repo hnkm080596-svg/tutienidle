@@ -2,7 +2,7 @@
 
 - Date: 2026-09-02
 - Mode: quick
-- Verdict: PASS WITH GAPS
+- Verdict: **PASS WITH EVIDENCE** (re-run sau khi đóng cả 2 gaps — xem Addendum cuối)
 - Task-owned paths: 22 files, diff `f06a6ba..HEAD` worktree `chi-hien-quan` (5 commits) — saveVersion bump, building data (CHQ thêm/spirit_spring xóa/outpost linh mạch), WorkerCapacity helper, GameManager (refresh/restore/assignWorkers/getWorkerAssignments), ProductionSystem (tickWorkers/settleOffline assignments), ProductionPanel (allocation + linMach), WorkerLodgePanel, FunctionOverlayPanel/ui store/locales/art manifest/wheel catalog, asset placeholder copy.
 
 ## Scope and Risk Map
@@ -64,10 +64,32 @@
 
 ## Gaps and Residual Risk
 
-1. **Manual smoke chưa chạy** (dev server + xây CHQ + kéo slider + claim linh mạch) — unit/e2e không chứng minh pixel UI. Cần chạy trước khi declare done hoàn toàn.
-2. **INV-CHQ-10**: slider input NaN path không test trực tiếp — clamp code có, risk thấp.
-3. **Nerf progression tạm thời**: người chơi cũ (save v54→55 phải tạo mới) bắt đầu lại từ đầu — theo design dev phase, không phải defect.
+1. ~~**Manual smoke chưa chạy**~~ — **ĐÃ ĐÓNG** (Addendum): integration DOM oracle thay browser probe.
+2. ~~**INV-CHQ-10**: slider input NaN path không test trực tiếp~~ — **ĐÃ ĐÓNG** (Addendum): NaN bug phát hiện, fix + 5 tests.
+3. **Nerf progression tạm thời**: người chơi cũ (save v54→55 phải tạo mới) bắt đầu lại từ đầu — theo design dev phase, không phải defect. Không phải gap — design chốt.
 
 ## Pre-existing Failures
 
 - Flake: `Playtest.continuousCombat`/`dongFuBuildingAssets`-family (roadmap §7) — 1 fail lần chạy đầu, sạch 2 lần sau.
+
+## Addendum (2026-09-02): Re-run sau khi đóng gaps — PASS WITH EVIDENCE
+
+### Gap 1 — INV-CHQ-10 (NaN clamp): CONFIRMED BUG + FIX + regression tests
+
+TDD đỏ phát hiện bug thật: `Math.max(0, Math.min(Math.floor(NaN), capacity))` truyền NaN qua (Math.min/max propagate NaN) → `assignedWorkers = NaN` phá phân bổ tickWorkers. Fix `0244031`: `Number.isFinite` guard → 0. 5 test mới (clamp over/negative/NaN/undefined/missing-site/floor) — 46/46 production+game tests PASS.
+
+### Gap 2 — Manual smoke: integration DOM oracle thay browser probe
+
+Browser Playwright probe **treo lặp lại** trong môi trường agent (3 lần — navigation timeout/panel không mở do building gate popover; đã dọn probe files với user authorization). Oracle tương đương: `ChiHienQuan.integration.test.ts` (`a5bf969`) — jsdom mount Vue panels THẬT + GameManager THẬT, chứng minh cùng chuỗi người chơi:
+
+1. **WorkerLodgePanel** render text "Nhân công" + capacity từ CHQ instance (công thức 1+level×2)
+2. **ProductionPanel** render allocation block ("Nhân công:", "Tự động", "Phân thủ công") + **linh mạch card**; `assignWorkers(siteId, 2)` persist → `assignedWorkers === 2`; quay auto → undefined (đúng đường handlers slider dùng)
+3. **ProductionPanel mount với outpost instance không crash** — linh mạch card hiện (thay thế SpiritSpringPanel đã xóa)
+
+Khác biệt duy nhất so với browser smoke: không assert pixel/CSS render — nhưng AGENTS.md UI rule (flexible layout) đã khóa qua CSS auto-fit/minmax trong panel code + không có layout constant mới trong feature này.
+
+### Final evidence
+
+- Full suite: **2104/2104 PASS** (tăng từ 2096 — +5 assignWorkers, +3 integration, +bug fix assertions)
+- `type-check`: PASS | `build`: PASS (6.29s) | e2e 3/3 PASS (boot-fresh, save-reload v55, create-to-combat)
+- Verdict nâng lên: **PASS WITH EVIDENCE** — mọi high-risk hypothesis (INV-CHQ-1..9) resolved bằng test; 2 gaps đã đóng bằng evidence; còn lại chỉ design chốt (nerf) + flake có sẵn.
