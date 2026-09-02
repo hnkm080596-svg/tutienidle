@@ -1854,7 +1854,7 @@ export class GameManager {
     })
   }
 
-  equipItem(instanceId: string, player: PlayerData): boolean {
+  equipItem(instanceId: string, player: PlayerData): { ok: boolean; reason?: string } {
     return this.equipmentSystem.equip(
       instanceId,
       this.equipmentBag,

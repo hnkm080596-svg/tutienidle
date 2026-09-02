@@ -75,7 +75,8 @@ export function useEquipmentActions() {
   }
 
   return {
-    equip: (instanceId: string) => withSync(gameManager.equipItem(instanceId, player.$state)),
+    equip: (instanceId: string) =>
+      withSyncAndResult(gameManager.equipItem(instanceId, player.$state), 'Trang Bị'),
 
     unequip: (instanceId: string) => withSync(gameManager.unequipItem(instanceId)),
 
