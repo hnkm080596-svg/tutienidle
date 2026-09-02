@@ -257,3 +257,91 @@ describe("SkillEffectSystem — E-3: 'remove_buff' cho active skill", () => {
     expect(targetBuffs.getActiveIds()).toEqual(['te_cong'])
   })
 })
+
+describe("SkillEffectSystem — E-4: 'hitCount' (N missile cố định)", () => {
+  it('effect damage hitCount 8 → fireHit gọi đúng 8 lần', () => {
+    const system = new SkillEffectSystem()
+    const source = createCombatant({ id: 'source', type: 'player', realmIndex: 4 })
+    const target = createCombatant({ id: 'target' })
+    const fireHit = vi.fn(() => ({ landed: true }))
+    const ctx = createContext({ fireHit })
+
+    system.apply({ type: 'damage', value: 1, hitCount: 8 }, source, target, ctx)
+
+    expect(fireHit).toHaveBeenCalledTimes(8)
+  })
+
+  it('mỗi hit là 1 fireHit RIÊNG (mỗi hit tự roll crit/dodge ở tầng impact) — không gộp 1 đòn ×8', () => {
+    const system = new SkillEffectSystem()
+    const source = createCombatant({ id: 'source', type: 'player' })
+    const target = createCombatant({ id: 'target' })
+    const fireHit = vi.fn(() => ({ landed: true }))
+    const ctx = createContext({ fireHit })
+
+    system.apply({ type: 'damage', value: 0.6, hitCount: 8 }, source, target, ctx)
+
+    // 8 call tách biệt, mỗi call multiplier 0.6 (không phải 1 call 4.8).
+    expect(fireHit).toHaveBeenCalledTimes(8)
+    for (const call of fireHit.mock.calls) {
+      expect((call[1] as { multiplier: number }).multiplier).toBeCloseTo(0.6, 5)
+    }
+  })
+
+  it('hitCount thắng hitCountByRealm khi cả hai set (loại trừ nhau)', () => {
+    const system = new SkillEffectSystem()
+    const source = createCombatant({ id: 'source', type: 'player', realmIndex: 4 })
+    const target = createCombatant({ id: 'target' })
+    const fireHit = vi.fn(() => ({ landed: true }))
+    const ctx = createContext({ fireHit })
+
+    system.apply({ type: 'damage', value: 1, hitCount: 8, hitCountByRealm: true }, source, target, ctx)
+
+    // realmIndex 4 + hitCountByRealm = 5; hitCount 8 tường minh thắng.
+    expect(fireHit).toHaveBeenCalledTimes(8)
+  })
+
+  it('không hitCount/không hitCountByRealm → 1 hit như cũ', () => {
+    const system = new SkillEffectSystem()
+    const source = createCombatant({ id: 'source', type: 'player', realmIndex: 4 })
+    const target = createCombatant({ id: 'target' })
+    const fireHit = vi.fn(() => ({ landed: true }))
+    const ctx = createContext({ fireHit })
+
+    system.apply({ type: 'damage', value: 1 }, source, target, ctx)
+
+    expect(fireHit).toHaveBeenCalledTimes(1)
+  })
+
+  it('hitCountByRealm một mình vẫn = realmIndex + 1 (regression)', () => {
+    const system = new SkillEffectSystem()
+    const source = createCombatant({ id: 'source', type: 'player', realmIndex: 3 })
+    const target = createCombatant({ id: 'target' })
+    const fireHit = vi.fn(() => ({ landed: true }))
+    const ctx = createContext({ fireHit })
+
+    system.apply({ type: 'damage', value: 1, hitCountByRealm: true }, source, target, ctx)
+
+    expect(fireHit).toHaveBeenCalledTimes(4)
+  })
+
+  it('target chết giữa loạt → dừng hit còn lại (kể cả hitCount tường minh)', () => {
+    const system = new SkillEffectSystem()
+    const source = createCombatant({ id: 'source', type: 'player' })
+    const target = createCombatant({ id: 'target' })
+    let hits = 0
+    const ctx = createContext({
+      fireHit: () => {
+        hits += 1
+        if (hits === 3) {
+          target.currentHp = 0
+          target.alive = false
+        }
+        return { landed: true }
+      },
+    })
+
+    system.apply({ type: 'damage', value: 1, hitCount: 8 }, source, target, ctx)
+
+    expect(hits).toBe(3)
+  })
+})

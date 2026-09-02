@@ -141,7 +141,10 @@ export class SkillEffectSystem {
         // THẬT nhiều hit riêng trong cùng action, số lượng = realmIndex+1;
         // mỗi hit tự roll critical/dodge/Kiếm Ý riêng (fireHit →
         // BattleSystem.applyActionHit), không gộp chung 1 đòn.
-        const hitCount = effect.hitCountByRealm ? source.realmIndex + 1 : 1
+        // Pháp Tu Thuần Hệ (E-4) — hitCount TƯỜNG MINH (số lần cố định,
+        // vd Bát Thuần 8 đợt sóng) ƯU TIÊN hơn hitCountByRealm; cả hai
+        // không set = 1 hit như cũ.
+        const hitCount = effect.hitCount ?? (effect.hitCountByRealm ? source.realmIndex + 1 : 1)
 
         // Thổ Tu Pure — AOE radius/knockback/secondary đã được batch meta
         // phía BattleSystem đọc từ runtime stats (earthPureActive), nên ở

@@ -101,6 +101,13 @@ export interface SkillEffect {
   // 1, mỗi cái tự roll critical/dodge riêng — xem SkillEffectSystem.ts.
   hitCountByRealm?: boolean
 
+  // Pháp Tu Thuần Hệ (E-4, 2026-09-03) — CHỈ dùng cho effect 'damage'.
+  // Bắn SỐ LẦN CỐ ĐỊNH N missile (vd Bát Thuần "8 đợt sóng"), mỗi cái
+  // tự roll critical/dodge riêng — cùng tinh thần hitCountByRealm.
+  // LOẠI TRỪ NHAU: nếu cả hai đều set, hitCount THẮNG (số tường minh
+  // ưu tiên hơn công thức theo cảnh giới) — xem SkillEffectSystem.ts.
+  hitCount?: number
+
   // Kiếm Tu (Kiếm Khai Thiên Môn, 2026-08-15) — "dựa vào số Kiếm Ý
   // đang có": cộng thêm ratioPerPoint × currentSwordIntent (CHỈ ĐỌC,
   // không tiêu Kiếm Ý — khác Vạn Kiếm Triều Tông's `cost`) vào
