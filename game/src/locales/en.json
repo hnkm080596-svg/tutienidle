@@ -328,7 +328,7 @@
       }
     },
     "production": {
-      "summary": "Thanh Van Zone — pick a source, start a cycle, receive materials straight into the Bag.",
+      "summary": "Khai Vật Đường harvests materials for every realm — pick a source, start a cycle, receive them straight into the Bag.",
       "kinds": {
         "forest": "Grove",
         "mine": "Mine",

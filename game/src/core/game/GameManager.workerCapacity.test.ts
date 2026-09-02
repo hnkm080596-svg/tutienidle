@@ -5,6 +5,7 @@
 import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
 import { buildings } from '../../data/building/buildings'
+import { THANH_VAN_PRODUCTION_SITES } from '../production/ProductionCatalog'
 import { createDefaultPlayer } from '../player/Player'
 import type { PlayerData } from '../player/Player'
 
@@ -91,5 +92,67 @@ describe('GameManager — worker capacity nguồn CHQ duy nhất', () => {
     })
 
     expect(player.autoWorkerCapacity).toBe(5)
+  })
+})
+
+describe('GameManager — assignWorkers (UI phân bổ, INV-CHQ-10)', () => {
+  function managerWithChq(capacityLevel: number): { manager: GameManager; player: PlayerData; siteId: string } {
+    const manager = makeManager()
+    const player = createDefaultPlayer()
+
+    manager.setActivePlayer(player)
+
+    const chq = buildInstance('chq_inst', 'chi_hien_quan', capacityLevel)
+
+    manager.buildingManager.add(chq)
+    manager.refreshAutoWorkerCapacity(player, chq)
+
+    // Đăng ký production sites thật (THANH_VAN) để assignWorkers có state.
+    const siteId = THANH_VAN_PRODUCTION_SITES[0]!.siteId
+
+    manager.productionSystem.ensureSiteState(siteId)
+
+    return { manager, player, siteId }
+  }
+
+  it('clamp: count > capacity → gán bằng capacity', () => {
+    const { manager, siteId } = managerWithChq(1) // capacity 3
+
+    manager.assignWorkers(siteId, 99)
+
+    expect(manager.productionSystem.getState(siteId)?.assignedWorkers).toBe(3)
+  })
+
+  it('clamp: count âm → 0; NaN → 0 (UI path an toàn)', () => {
+    const { manager, siteId } = managerWithChq(2) // capacity 5
+
+    manager.assignWorkers(siteId, -7)
+    expect(manager.productionSystem.getState(siteId)?.assignedWorkers).toBe(0)
+
+    manager.assignWorkers(siteId, Number.NaN)
+    expect(manager.productionSystem.getState(siteId)?.assignedWorkers).toBe(0)
+  })
+
+  it('undefined → xóa assignment (về auto)', () => {
+    const { manager, siteId } = managerWithChq(2)
+
+    manager.assignWorkers(siteId, 2)
+    manager.assignWorkers(siteId, undefined)
+
+    expect(manager.productionSystem.getState(siteId)?.assignedWorkers).toBeUndefined()
+  })
+
+  it('site không tồn tại → no-op không crash', () => {
+    const { manager } = managerWithChq(1)
+
+    expect(() => manager.assignWorkers('khong_co_site_nao', 3)).not.toThrow()
+  })
+
+  it('floor: số thập phân → floor', () => {
+    const { manager, siteId } = managerWithChq(3) // capacity 7
+
+    manager.assignWorkers(siteId, 2.9)
+
+    expect(manager.productionSystem.getState(siteId)?.assignedWorkers).toBe(2)
   })
 })

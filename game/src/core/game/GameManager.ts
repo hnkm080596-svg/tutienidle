@@ -2408,7 +2408,11 @@ export class GameManager {
 
     const capacity = this.activePlayer?.autoWorkerCapacity ?? 0
 
-    state.assignedWorkers = Math.max(0, Math.min(Math.floor(count), capacity))
+    // NaN (UI path lỗi) coi như 0 — không để assignedWorkers = NaN
+    // phá regex phân bổ tickWorkers.
+    const safeCount = Number.isFinite(count) ? count : 0
+
+    state.assignedWorkers = Math.max(0, Math.min(Math.floor(safeCount), capacity))
   }
 
   upgradeBuilding(instanceId: string): boolean {

@@ -328,7 +328,7 @@
       }
     },
     "production": {
-      "summary": "Địa Giới Thanh Vân — chọn nguồn, bắt đầu cycle, nhận thẳng nguyên liệu vào Túi.",
+      "summary": "Khai Vật Đường khai thác nguyên liệu mọi cảnh giới — chọn nguồn, bắt đầu cycle, nhận thẳng vào Túi.",
       "kinds": {
         "forest": "Lâm",
         "mine": "Quáng",
