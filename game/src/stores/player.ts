@@ -13,7 +13,7 @@ import {
   unequipElement as unequipElementSystem,
 } from '../core/element/ElementLoadout'
 import type { ElementType } from '../core/element/ElementType'
-import { calculateOfflineProgress } from '../core/idle/OfflineProgressSystem'
+import { calculateOfflineProgress, type OfflineResult } from '../core/idle/OfflineProgressSystem'
 import { calculateOfflineTime } from '../core/idle/GameClock'
 import { buildGameSave, loadGame, type GameSave } from '../services/save/SaveSystem'
 import { cloudSaveCoordinator } from '../services/cloudSave/CloudSaveServiceFactory'
@@ -53,6 +53,24 @@ interface ExternalModifierSnapshot {
 }
 
 const lastExternalModifiers = new WeakMap<object, ExternalModifierSnapshot>()
+
+// QA-002 idempotency (Task 9.2) — payload-identity guard cho
+// restoreFromSave(), cùng pattern lastExternalModifiers phía trên:
+// WeakMap theo store instance, non-reactive, không persist vào save
+// (dev phase — không migration). Lưu kết quả OfflineResult của lần
+// restore gần nhất; cùng payload gọi lại = no-op trả Y HỆT kết quả đó
+// (chống double-credit offline cultivation + double Object.assign khi
+// boot flow bị retry/recovery chạy 2 lần), payload KHÁC = áp đầy đủ
+// (boot lại với save mới hơn vẫn hoạt động). Identity là
+// `lastSavedAt|cultivation` từ save — cặp giá trị này khác hàm ý save
+// đã đổi (lần save sau luôn có lastSavedAt mới hơn).
+interface RestoredPayloadSnapshot {
+  identity: string
+
+  offline: OfflineResult
+}
+
+const lastRestoredPayloads = new WeakMap<object, RestoredPayloadSnapshot>()
 
 // Ký tự điều khiển làm dấu phân cách — không bao giờ xuất hiện trong
 // id/sourceId/stat/tag (toàn chuỗi định danh do code sinh), nên hai mảng
@@ -296,6 +314,18 @@ export const usePlayerStore = defineStore('player', {
     },
 
     restoreFromSave(save: GameSave) {
+      // QA-002 idempotency — payload-identity guard (pattern
+      // lastExternalModifiers): cùng save gọi lại = no-op (chống
+      // double-credit offline cultivation + double Object.assign). Save
+      // KHÁC (boot retry/recovery) vẫn áp đầy đủ. Non-reactive, không
+      // persist (dev phase — không migration).
+      const payloadIdentity = `${save.player.lastSavedAt}|${save.player.cultivation}`
+      const previousRestore = lastRestoredPayloads.get(this)
+
+      if (previousRestore !== undefined && previousRestore.identity === payloadIdentity) {
+        return previousRestore.offline // elapsed 0 — no-op đúng nghĩa, trả lại kết quả lần trước
+      }
+
       // GameClock là nguồn duy nhất tính thời gian offline.
       // lastSavedAt của save file chính là lastOnlineAt của GameClockState.
       const { offlineSeconds } = calculateOfflineTime({
@@ -303,6 +333,8 @@ export const usePlayerStore = defineStore('player', {
       })
 
       const offline = calculateOfflineProgress(offlineSeconds, save.player.cultivationPerSecond)
+
+      lastRestoredPayloads.set(this, { identity: payloadIdentity, offline })
 
       Object.assign(this, save.player)
 
