@@ -8,7 +8,6 @@ import GameButton from '@/components/common/GameButton.vue'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager } from '@/composables/useGameState'
-import { useTribulation } from '@/composables/useTribulation'
 import { useBreakthroughRequirementStore } from '@/stores/breakthroughRequirement'
 import { getCurrentRealm, getNextRealm } from '@/core/realm/realmSystem'
 import { getRealmTier } from '@/core/realm/RealmTierMap'
@@ -22,7 +21,6 @@ const ui = useUiStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { t } = useI18n({ useScope: 'local' })
-const { triggerBreakthrough } = useTribulation()
 const requirement = useBreakthroughRequirementStore()
 const { realmStatPassiveRows } = useRealmStatPassives()
 

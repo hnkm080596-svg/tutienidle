@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest'
-import { createApp, h, ref } from 'vue'
+import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import BreakthroughRequirementPanel from './BreakthroughRequirementPanel.vue'
 import { GameManager } from '@/core/game/GameManager'
@@ -30,9 +30,16 @@ function mountPanel() {
   app.provide(GAME_MANAGER_KEY, manager)
   app.provide(STATE_VERSION_KEY, version)
   app.provide(BUMP_STATE_KEY, () => { version.value += 1 })
+  document.body.appendChild(container)
   app.mount(container)
 
-  return { container, unmount: () => app.unmount() }
+  return {
+    container,
+    unmount: () => {
+      app.unmount()
+      container.remove()
+    },
+  }
 }
 
 afterEach(() => { document.body.innerHTML = '' })
@@ -53,6 +60,23 @@ describe('BreakthroughRequirementPanel — confirm panel (Task 9.1)', () => {
     const { container, unmount } = mountPanel()
 
     expect(container.textContent).not.toContain('Linh Thạch')
+
+    unmount()
+  })
+
+  it('bấm "Đã hiểu" đóng panel (store.isOpen → false)', async () => {
+    const { container, unmount } = mountPanel()
+
+    expect(useBreakthroughRequirementStore().isOpen).toBe(true)
+
+    const confirmButton = Array.from(
+      container.querySelectorAll<HTMLButtonElement>('button'),
+    ).find(button => button.textContent?.trim() === 'Đã hiểu')!
+
+    confirmButton.click()
+    await nextTick()
+
+    expect(useBreakthroughRequirementStore().isOpen).toBe(false)
 
     unmount()
   })
