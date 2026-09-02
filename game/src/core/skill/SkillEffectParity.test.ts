@@ -17,10 +17,8 @@ function makeCtx(fireHit: SkillEffectContext['fireHit']): SkillEffectContext {
     combatSystem: {} as SkillEffectContext['combatSystem'],
     fireHit,
     buffRegistry: {} as SkillEffectContext['buffRegistry'],
-    ailmentRegistry: {} as SkillEffectContext['ailmentRegistry'],
     sourceBuffs: {} as SkillEffectContext['sourceBuffs'],
     targetBuffs: {} as SkillEffectContext['targetBuffs'],
-    targetAilments: {} as SkillEffectContext['targetAilments'],
     reactionManager: {} as SkillEffectContext['reactionManager'],
     skillExperience: 200,
   }

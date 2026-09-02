@@ -95,7 +95,6 @@ function makeBattle(opts: {
     pendingPlayerSpawn: undefined as never,
     playerMaterialized: true,
     playerBuffs: undefined as never,
-    playerAilments: undefined as never,
     elapsedSeconds: 10,
     pendingSummons: [],
     lavaZones: [],

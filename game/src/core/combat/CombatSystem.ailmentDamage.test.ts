@@ -1,23 +1,23 @@
 import { describe, expect, it } from 'vitest'
 import { CombatSystem } from './CombatSystem'
-import { AilmentSystem } from '../ailment/AilmentSystem'
-import { AilmentManager } from '../ailment/AilmentManager'
+import { BuffSystem } from '../buff/BuffSystem'
+import { BuffPool } from '../buff/BuffPool'
 import { EventBus } from '../events/EventBus'
 import { createBaseStats } from '../stats/StatBlock'
 import { createSkillRuntimeStats } from '../skill/SkillRuntimeStats'
-import { ailments } from '../../data/ailment/ailments'
+import { buffs } from '../../data/buff/buffs'
 import type { CombatEntity } from './CombatEntity'
-import type { AilmentTemplate } from '../ailment/AilmentRegistry'
+import type { BuffDefinition } from '../buff/BuffDefinition'
 
 // Plans/magicpathgeneral Phase 9-11 (2026-08-21) — DOT RES + DoT
 // source resolution + Poison Recovery, xem CombatSystem.
-// applyDotDamage()/AilmentSystem.update().
+// applyDotDamage()/BuffSystem.update().
 
-function getTemplate(id: string): AilmentTemplate {
-  const template = ailments.find(ailment => ailment.id === id)
+function getTemplate(id: string): BuffDefinition {
+  const template = buffs.find(buff => buff.id === id)
 
   if (!template) {
-    throw new Error(`data/ailment/ailments.ts thiếu '${id}'`)
+    throw new Error(`data/buff/buffs.ts thiếu '${id}'`)
   }
 
   return template
@@ -67,7 +67,7 @@ describe('CombatSystem.applyDotDamage (Plans/magicpathgeneral Phase 9-11)', () =
 
     target.stats.dotResistancePercent = 0.3
 
-    const ailmentSystem = new AilmentSystem(new AilmentManager())
+    const ailmentSystem = new BuffSystem(new BuffPool())
 
     ailmentSystem.apply(getTemplate('bong'), source, target)
     // bong: dpsRatio 0.3; nguồn Skill Power = ATK + FirePower
@@ -90,7 +90,7 @@ describe('CombatSystem.applyDotDamage (Plans/magicpathgeneral Phase 9-11)', () =
 
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
-    const ailmentSystem = new AilmentSystem(new AilmentManager())
+    const ailmentSystem = new BuffSystem(new BuffPool())
 
     ailmentSystem.apply(getTemplate('bong'), source, target)
 
@@ -115,7 +115,7 @@ describe('CombatSystem.applyDotDamage (Plans/magicpathgeneral Phase 9-11)', () =
 
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
-    const ailmentSystem = new AilmentSystem(new AilmentManager())
+    const ailmentSystem = new BuffSystem(new BuffPool())
 
     const resolveSource = (id: string) => (id === source.id ? source : undefined)
 
@@ -128,7 +128,7 @@ describe('CombatSystem.applyDotDamage (Plans/magicpathgeneral Phase 9-11)', () =
     const hpAfterWood = source.currentHp
 
     // Bỏng (fire) — KHÔNG được hồi máu nguồn dù cùng nguồn/cùng stat.
-    const ailmentSystem2 = new AilmentSystem(new AilmentManager())
+    const ailmentSystem2 = new BuffSystem(new BuffPool())
     ailmentSystem2.apply(getTemplate('bong'), source, target)
     ailmentSystem2.update(1, target, combatSystem, undefined, resolveSource)
 
@@ -154,7 +154,7 @@ describe('CombatSystem.applyDotDamage (Plans/magicpathgeneral Phase 9-11)', () =
 
     // Chảy Máu (metal) — 5 tầng × 10% penetration = 50% xuyên, mitigation
     // hiệu quả về 0 -> full raw damage áp dụng.
-    const metalAilments = new AilmentSystem(new AilmentManager())
+    const metalAilments = new BuffSystem(new BuffPool())
     metalAilments.apply(getTemplate('chay_mau'), source, target)
     const before1 = target.currentHp
     metalAilments.update(1, target, combatSystem, undefined, resolveSource)
@@ -162,7 +162,7 @@ describe('CombatSystem.applyDotDamage (Plans/magicpathgeneral Phase 9-11)', () =
 
     // Trúng Độc (wood) — cùng nguồn/currentKimThe nhưng KHÔNG phải metal,
     // penetration không áp dụng -> vẫn bị mitigation đầy đủ 50%.
-    const woodAilments = new AilmentSystem(new AilmentManager())
+    const woodAilments = new BuffSystem(new BuffPool())
     woodAilments.apply(getTemplate('trung_doc'), source, target)
     const before2 = target.currentHp
     woodAilments.update(1, target, combatSystem, undefined, resolveSource)

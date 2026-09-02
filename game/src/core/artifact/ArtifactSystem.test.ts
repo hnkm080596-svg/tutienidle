@@ -2,14 +2,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Battle, BattleEnemy } from '../battle/Battle'
 import type { CombatEntity } from '../combat/CombatEntity'
 import { ActionImpactSystem } from '../battle/ActionImpactSystem'
-import { AilmentManager } from '../ailment/AilmentManager'
-import { AilmentRegistry } from '../ailment/AilmentRegistry'
-import { BuffManager } from '../buff/BuffManager'
+import { BuffPool } from '../buff/BuffPool'
+import { BuffRegistry } from '../buff/BuffRegistry'
 import { createBaseStats } from '../stats/StatBlock'
 import { createArtifactRuntime } from './ArtifactRuntime'
 import { createDefaultArtifactProgress } from './ArtifactProgression'
 import { onArtifactHitResolved, updateArtifactActivation, type ArtifactSystemDeps } from './ArtifactSystem'
-import { ailments } from '../../data/ailment/ailments'
+import { buffs } from '../../data/buff/buffs'
 
 function createCombatEntity(id: string, overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = { ...createBaseStats(), attack: 0, attackRange: 10, woodPower: 100, firePower: 100 }
@@ -46,36 +45,31 @@ function createBattleEnemy(id: string, overrides: Partial<CombatEntity> = {}): B
   return {
     entity: createCombatEntity(id, { row: 2, x: 0, ...overrides }),
     attackTimer: 0,
-    buffs: new BuffManager(),
-    ailments: new AilmentManager(),
+    buffs: new BuffPool(),
     rewardGranted: false,
   }
 }
 
-function createAilmentRegistry(): AilmentRegistry {
-  const registry = new AilmentRegistry()
+function createBuffRegistry(): BuffRegistry {
+  const registry = new BuffRegistry()
 
-  for (const template of ailments) {
-    registry.register(template)
+  for (const definition of buffs) {
+    registry.register(definition)
   }
 
   return registry
 }
 
 function createDeps(overrides: Partial<ArtifactSystemDeps> = {}): ArtifactSystemDeps {
-  const ailmentRegistry = createAilmentRegistry()
+  const buffRegistry = createBuffRegistry()
 
   return {
     actionImpact: { scheduleBasic: vi.fn() } as unknown as ActionImpactSystem,
-    ailmentRegistry,
-    getAilmentsFor: (battle, entity) =>
-      entity.id === battle.player.id
-        ? battle.playerAilments
-        : (battle.enemies.find((e) => e.entity.id === entity.id)?.ailments ?? new AilmentManager()),
+    buffRegistry,
     getBuffsFor: (battle, entity) =>
       entity.id === battle.player.id
         ? battle.playerBuffs
-        : (battle.enemies.find((e) => e.entity.id === entity.id)?.buffs ?? new BuffManager()),
+        : (battle.enemies.find((e) => e.entity.id === entity.id)?.buffs ?? new BuffPool()),
     aiStrategy: () => 'nearest',
     ...overrides,
   }
@@ -92,8 +86,7 @@ function createBattle(overrides: Partial<Battle> = {}): Battle {
     state: 'fighting',
     playerTeleport: { remainingSeconds: 0 },
     playerMaterialized: true,
-    playerBuffs: new BuffManager(),
-    playerAilments: new AilmentManager(),
+    playerBuffs: new BuffPool(),
     elapsedSeconds: 0,
     pendingSummons: [],
     lavaZones: [],
@@ -152,11 +145,11 @@ describe('ArtifactSystem.updateArtifactActivation — acceptance §15.3', () => 
   it('tick vẫn chạy khi player đang bị CC (isIncapacitated không gate artifact)', () => {
     const runtime = attackArtifactRuntime('attack', 1)
     const battle = createBattle({ artifactRuntime: runtime })
-    // Player "bị stun" — playerAilments có ccEffect stun — nhưng
+    // Player "bị stun" — playerBuffs có ccEffect stun — nhưng
     // updateArtifactActivation() KHÔNG được đọc field này ở đâu cả.
-    battle.playerAilments.add({
-      id: 'choang', category: 'cc', sourceId: 'enemy_1', targetId: 'player', duration: 1, remainingTime: 1, stacks: 1, stackMode: 'refresh', ccEffect: 'stun',
-    } as never)
+    battle.playerBuffs.add({
+      id: 'choang', sourceId: 'enemy_1', targetId: 'player', polarity: 'debuff', duration: 1, remainingTime: 1, stacks: 1, stackMode: 'refresh', continuousSeconds: 0, effects: [{ type: 'cc', ccEffect: 'stun' }],
+    })
     const deps = createDeps()
 
     updateArtifactActivation(battle, 10, deps)
@@ -298,7 +291,7 @@ describe('ArtifactSystem — Khống (doc §8.4), ICD chống root-lock', () => 
 
     onArtifactHitResolved(battle, battle.player, target, true, 'fire', deps)
 
-    expect(battle.enemies[0]!.ailments.has('lam_cham')).toBe(true)
+    expect(battle.enemies[0]!.buffs.hasAny('lam_cham')).toBe(true)
   })
 
   it('tầng 6: đủ 3 hit trong cửa sổ mới áp troi_chan, chưa đủ thì chưa áp', () => {
@@ -308,10 +301,10 @@ describe('ArtifactSystem — Khống (doc §8.4), ICD chống root-lock', () => 
 
     onArtifactHitResolved(battle, battle.player, target, true, 'fire', deps)
     onArtifactHitResolved(battle, battle.player, target, true, 'fire', deps)
-    expect(battle.enemies[0]!.ailments.has('troi_chan')).toBe(false)
+    expect(battle.enemies[0]!.buffs.hasAny('troi_chan')).toBe(false)
 
     onArtifactHitResolved(battle, battle.player, target, true, 'fire', deps)
-    expect(battle.enemies[0]!.ailments.has('troi_chan')).toBe(true)
+    expect(battle.enemies[0]!.buffs.hasAny('troi_chan')).toBe(true)
   })
 
   it('per-target ICD chặn root-lock: áp lại NGAY không được, phải chờ hết ICD', () => {
@@ -322,17 +315,17 @@ describe('ArtifactSystem — Khống (doc §8.4), ICD chống root-lock', () => 
     onArtifactHitResolved(battle, battle.player, target, true, 'fire', deps)
     onArtifactHitResolved(battle, battle.player, target, true, 'fire', deps)
     onArtifactHitResolved(battle, battle.player, target, true, 'fire', deps)
-    expect(battle.enemies[0]!.ailments.has('troi_chan')).toBe(true)
+    expect(battle.enemies[0]!.buffs.hasAny('troi_chan')).toBe(true)
 
     // Gỡ troi_chan thủ công để kiểm tra ICD KHÔNG cho áp lại ngay, dù
     // đủ 3 hit tiếp theo trong cùng window.
-    battle.enemies[0]!.ailments.remove('troi_chan')
+    battle.enemies[0]!.buffs.removeAllById('troi_chan')
 
     onArtifactHitResolved(battle, battle.player, target, true, 'fire', deps)
     onArtifactHitResolved(battle, battle.player, target, true, 'fire', deps)
     onArtifactHitResolved(battle, battle.player, target, true, 'fire', deps)
 
-    expect(battle.enemies[0]!.ailments.has('troi_chan')).toBe(false)
+    expect(battle.enemies[0]!.buffs.hasAny('troi_chan')).toBe(false)
   })
 
   it('tầng 12: target đang root (troi_chan) nhận thêm debuff attack speed', () => {
@@ -344,7 +337,7 @@ describe('ArtifactSystem — Khống (doc §8.4), ICD chống root-lock', () => 
     onArtifactHitResolved(battle, battle.player, target, true, 'fire', deps)
     onArtifactHitResolved(battle, battle.player, target, true, 'fire', deps)
 
-    expect(battle.enemies[0]!.buffs.has('artifact_tran_mach')).toBe(true)
+    expect(battle.enemies[0]!.buffs.hasAny('artifact_tran_mach')).toBe(true)
   })
 
   it('miss (landed=false) không tính vào cửa sổ 3-hit', () => {
@@ -356,7 +349,7 @@ describe('ArtifactSystem — Khống (doc §8.4), ICD chống root-lock', () => 
     onArtifactHitResolved(battle, battle.player, target, false, 'fire', deps)
     onArtifactHitResolved(battle, battle.player, target, false, 'fire', deps)
 
-    expect(battle.enemies[0]!.ailments.has('troi_chan')).toBe(false)
+    expect(battle.enemies[0]!.buffs.hasAny('troi_chan')).toBe(false)
   })
 })
 
@@ -381,10 +374,10 @@ describe('ArtifactSystem — Thủ (doc §8.3), không leak buff qua trận', ()
     const deps = createDeps()
 
     onArtifactHitResolved(battle, battle.player, battle.enemies[0]!.entity, true, 'fire', deps)
-    const firstStacks = battle.playerBuffs.get('artifact_ngu_khi_tuan_hoan')?.stacks
+    const firstStacks = battle.playerBuffs.getFromSource('artifact_ngu_khi_tuan_hoan', battle.player.id)?.stacks
 
     onArtifactHitResolved(battle, battle.player, battle.enemies[0]!.entity, true, 'fire', deps)
-    const secondStacks = battle.playerBuffs.get('artifact_ngu_khi_tuan_hoan')?.stacks
+    const secondStacks = battle.playerBuffs.getFromSource('artifact_ngu_khi_tuan_hoan', battle.player.id)?.stacks
 
     expect(firstStacks).toBe(1)
     expect(secondStacks).toBe(1) // refresh, không cộng dồn stack
@@ -396,13 +389,13 @@ describe('ArtifactSystem — Thủ (doc §8.3), không leak buff qua trận', ()
     const deps = createDeps()
 
     onArtifactHitResolved(battleA, battleA.player, battleA.enemies[0]!.entity, true, 'fire', deps)
-    expect(battleA.playerBuffs.has('artifact_ngu_khi_tuan_hoan')).toBe(true)
+    expect(battleA.playerBuffs.hasAny('artifact_ngu_khi_tuan_hoan')).toBe(true)
 
     // Trận MỚI luôn tạo playerBuffs MỚI (BattleSystem.start()) — mô
     // phỏng bằng cách tạo Battle thứ 2 độc lập, không tái dùng buffs cũ.
     const battleB = createBattle({ artifactRuntime: attackArtifactRuntime('defense', 6) })
 
-    expect(battleB.playerBuffs.has('artifact_ngu_khi_tuan_hoan')).toBe(false)
+    expect(battleB.playerBuffs.hasAny('artifact_ngu_khi_tuan_hoan')).toBe(false)
   })
 })
 

@@ -5,17 +5,26 @@ import { SkillManager } from '../skill/SkillManager'
 import { SkillSystem } from '../skill/SkillSystem'
 import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
-import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import { EventBus } from '../events/EventBus'
 import { ActionImpactSystem } from '../battle/ActionImpactSystem'
 
 
 import { createBaseStats } from '../stats/StatBlock'
 import { createSkillRuntimeStats } from '../skill/SkillRuntimeStats'
-import { ailments } from '../../data/ailment/ailments'
 import { MAX_KIM_THE, KIM_THE_DECAY_INTERVAL_SECONDS } from '../combat/CombatTypes'
+import { buffs } from '../../data/buff/buffs'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
+
+function createBuffRegistry(): BuffRegistry {
+  const registry = new BuffRegistry()
+
+  for (const definition of buffs) {
+    registry.register(definition)
+  }
+
+  return registry
+}
 
 // Kim Tu Trúc Cơ Pure (Plans/KimPath mục 9/11/12, 2026-08-21) — Kim Thế
 // tích theo ROLL THÀNH CÔNG (khác Momentum/Kiếm Ý/Hỏa Thế/Thổ Thế —
@@ -67,7 +76,7 @@ function createDiemKimThuat(): Skill {
     remainingCooldown: 0,
     cost: 0,
     target: 'enemy',
-    effects: [{ type: 'ailment', ailmentId: 'chay_mau', ailmentChance: 1, grantsKimThePerProc: true }],
+    effects: [{ type: 'debuff', buffId: 'chay_mau', ailmentChance: 1, grantsKimThePerProc: true }],
     execution: { kind: 'attack_speed' },
     loadoutSlot: 0,
     loadoutSlots: [0],
@@ -81,19 +90,12 @@ function setup() {
   const eventBus = new EventBus()
   const skillManager = new SkillManager()
   const skillSystem = new SkillSystem(skillManager)
-  const ailmentRegistry = new AilmentRegistry()
-
-  for (const template of ailments) {
-    ailmentRegistry.register(template)
-  }
-
   const system = new BattleSystem(
     new CombatSystem(eventBus),
     skillManager,
     skillSystem,
     new SkillEffectSystem(),
-    new BuffRegistry(),
-    ailmentRegistry,
+    createBuffRegistry(),
     eventBus,
     new ActionImpactSystem({ eventBus, rollCritical: () => false }),
   )

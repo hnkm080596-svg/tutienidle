@@ -1,14 +1,14 @@
 ﻿import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ReactionManager } from './ReactionManager'
-import { AilmentSystem } from '../ailment/AilmentSystem'
-import { AilmentManager } from '../ailment/AilmentManager'
-import { AilmentRegistry } from '../ailment/AilmentRegistry'
+import { BuffSystem } from '../buff/BuffSystem'
+import { BuffPool } from '../buff/BuffPool'
+import { BuffRegistry } from '../buff/BuffRegistry'
 import { CombatSystem } from '../combat/CombatSystem'
 import { EventBus } from '../events/EventBus'
 import { createBaseStats } from '../stats/StatBlock'
-import { ailments } from '../../data/ailment/ailments'
+import { buffs } from '../../data/buff/buffs'
 import type { CombatEntity } from '../combat/CombatEntity'
-import type { AilmentTemplate } from '../ailment/AilmentRegistry'
+import type { BuffDefinition } from '../buff/BuffDefinition'
 
 // Thiên phú Phản Phác (talent-direction-choice-plan §6) — reaction_keep_chance
 // chỉ tác động NHÁNH CONSUME CHUẨN của ReactionManager; nhánh đặc biệt
@@ -18,21 +18,26 @@ import type { AilmentTemplate } from '../ailment/AilmentRegistry'
 // dmg, nhánh chuẩn thuần). Source fixture KHÔNG có
 // waterReactionExtensionSeconds nên keepsAilmentId không kích — reaction
 // tiêu cả 2 như nhánh chuẩn, đúng phạm vi test keepChance.
-function getTemplate(id: string): AilmentTemplate {
-  const template = ailments.find((ailment) => ailment.id === id)
 
-  if (!template) {
-    throw new Error(`data/ailment/ailments.ts thiếu '${id}' — kiểm tra lại id`)
+// Unified Buff System (Task 16-prep, 2026-09-01) — data/buff/buffs.ts
+// giờ đã có sẵn shape BuffDefinition port từ AilmentTemplate (Task 7),
+// nên test lookup thẳng từ đó thay vì tự convert AilmentTemplate cục
+// bộ như trước (xem task-16-report.md/task-16prep-brief.md).
+function getBuffDefinition(id: string): BuffDefinition {
+  const definition = buffs.find((buff) => buff.id === id)
+
+  if (!definition) {
+    throw new Error(`data/buff/buffs.ts thiếu '${id}' — kiểm tra lại id`)
   }
 
-  return template
+  return definition
 }
 
-function createAilmentRegistry(): AilmentRegistry {
-  const registry = new AilmentRegistry()
+function createBuffRegistry(): BuffRegistry {
+  const registry = new BuffRegistry()
 
-  for (const template of ailments) {
-    registry.register(template)
+  for (const definition of buffs) {
+    registry.register(definition)
   }
 
   return registry
@@ -75,9 +80,9 @@ function createSetup() {
   const combatSystem = new CombatSystem(eventBus)
   const source = createCombatant({ id: 'source', type: 'player' })
   const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
-  const ailmentSystem = new AilmentSystem(new AilmentManager())
+  const targetBuffs = new BuffSystem(new BuffPool())
 
-  return { reactionManager, combatSystem, source, target, ailmentSystem }
+  return { reactionManager, combatSystem, source, target, targetBuffs }
 }
 
 describe('ReactionManager — Phản Phác (reaction_keep_chance)', () => {
@@ -85,101 +90,101 @@ describe('ReactionManager — Phản Phác (reaction_keep_chance)', () => {
     vi.restoreAllMocks()
   })
 
-  it('keepChance 0 (mặc định) — reaction tiêu cả 2 ailment như cũ', () => {
-    const { reactionManager, combatSystem, source, target, ailmentSystem } = createSetup()
+  it('keepChance 0 (mặc định) — reaction tiêu cả 2 buff/debuff như cũ', () => {
+    const { reactionManager, combatSystem, source, target, targetBuffs } = createSetup()
 
-    ailmentSystem.apply(getTemplate('bong'), source, target)
-    ailmentSystem.apply(getTemplate('te_cong'), source, target)
+    targetBuffs.apply(getBuffDefinition('bong'), source, target)
+    targetBuffs.apply(getBuffDefinition('te_cong'), source, target)
 
-    reactionManager.checkAndTrigger(ailmentSystem, 'te_cong', source, target, combatSystem)
+    reactionManager.checkAndTrigger(targetBuffs, 'te_cong', source, target, combatSystem)
 
     // Combat Balance Pass (2026-08-29) — "Bốc Hơi" powerScalingRatio
     // 1.0 (T5.4): 60 + attack(10)×1.0 = 70.
     expect(target.currentHp).toBe(1000 - 70)
-    expect(ailmentSystem.getActiveIds()).toEqual([])
+    expect(targetBuffs.getActiveIds()).toEqual([])
   })
 
-  it('keepChance 1 — giữ lại CẢ 2 ailment, damage vẫn gây đủ', () => {
-    const { reactionManager, combatSystem, source, target, ailmentSystem } = createSetup()
+  it('keepChance 1 — giữ lại CẢ 2 buff/debuff, damage vẫn gây đủ', () => {
+    const { reactionManager, combatSystem, source, target, targetBuffs } = createSetup()
 
-    ailmentSystem.apply(getTemplate('bong'), source, target)
-    ailmentSystem.apply(getTemplate('te_cong'), source, target)
+    targetBuffs.apply(getBuffDefinition('bong'), source, target)
+    targetBuffs.apply(getBuffDefinition('te_cong'), source, target)
 
     reactionManager.checkAndTrigger(
-      ailmentSystem, 'te_cong', source, target, combatSystem,
-      undefined, undefined, undefined, undefined, 1,
+      targetBuffs, 'te_cong', source, target, combatSystem,
+      undefined, undefined, undefined, 1,
     )
 
     expect(target.currentHp).toBe(1000 - 70)
-    expect(ailmentSystem.getActiveIds().sort()).toEqual(['bong', 'te_cong'])
+    expect(targetBuffs.getActiveIds().sort()).toEqual(['bong', 'te_cong'])
   })
 
-  it('roll trúng ngưỡng 25% (random 0.2) — giữ cả 2 ailment', () => {
+  it('roll trúng ngưỡng 25% (random 0.2) — giữ cả 2 buff/debuff', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.2)
 
-    const { reactionManager, combatSystem, source, target, ailmentSystem } = createSetup()
+    const { reactionManager, combatSystem, source, target, targetBuffs } = createSetup()
 
-    ailmentSystem.apply(getTemplate('bong'), source, target)
-    ailmentSystem.apply(getTemplate('te_cong'), source, target)
+    targetBuffs.apply(getBuffDefinition('bong'), source, target)
+    targetBuffs.apply(getBuffDefinition('te_cong'), source, target)
 
     reactionManager.checkAndTrigger(
-      ailmentSystem, 'te_cong', source, target, combatSystem,
-      undefined, undefined, undefined, undefined, 0.25,
+      targetBuffs, 'te_cong', source, target, combatSystem,
+      undefined, undefined, undefined, 0.25,
     )
 
-    expect(ailmentSystem.getActiveIds().sort()).toEqual(['bong', 'te_cong'])
+    expect(targetBuffs.getActiveIds().sort()).toEqual(['bong', 'te_cong'])
   })
 
-  it('roll trượt ngưỡng 25% (random 0.3) — vẫn tiêu cả 2 ailment', () => {
+  it('roll trượt ngưỡng 25% (random 0.3) — vẫn tiêu cả 2 buff/debuff', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.3)
 
-    const { reactionManager, combatSystem, source, target, ailmentSystem } = createSetup()
+    const { reactionManager, combatSystem, source, target, targetBuffs } = createSetup()
 
-    ailmentSystem.apply(getTemplate('bong'), source, target)
-    ailmentSystem.apply(getTemplate('te_cong'), source, target)
+    targetBuffs.apply(getBuffDefinition('bong'), source, target)
+    targetBuffs.apply(getBuffDefinition('te_cong'), source, target)
 
     reactionManager.checkAndTrigger(
-      ailmentSystem, 'te_cong', source, target, combatSystem,
-      undefined, undefined, undefined, undefined, 0.25,
+      targetBuffs, 'te_cong', source, target, combatSystem,
+      undefined, undefined, undefined, 0.25,
     )
 
-    expect(ailmentSystem.getActiveIds()).toEqual([])
+    expect(targetBuffs.getActiveIds()).toEqual([])
   })
 
-  it('ailment được giữ lại có thể kích reaction lần nữa (chain)', () => {
-    const { reactionManager, combatSystem, source, target, ailmentSystem } = createSetup()
+  it('buff/debuff được giữ lại có thể kích reaction lần nữa (chain)', () => {
+    const { reactionManager, combatSystem, source, target, targetBuffs } = createSetup()
 
-    ailmentSystem.apply(getTemplate('bong'), source, target)
-    ailmentSystem.apply(getTemplate('te_cong'), source, target)
+    targetBuffs.apply(getBuffDefinition('bong'), source, target)
+    targetBuffs.apply(getBuffDefinition('te_cong'), source, target)
 
     reactionManager.checkAndTrigger(
-      ailmentSystem, 'te_cong', source, target, combatSystem,
-      undefined, undefined, undefined, undefined, 1,
+      targetBuffs, 'te_cong', source, target, combatSystem,
+      undefined, undefined, undefined, 1,
     )
 
-    // Cả 2 ailment còn nguyên — lần kích tiếp theo vẫn khớp cặp.
+    // Cả 2 buff/debuff còn nguyên — lần kích tiếp theo vẫn khớp cặp.
     reactionManager.checkAndTrigger(
-      ailmentSystem, 'te_cong', source, target, combatSystem,
-      undefined, undefined, undefined, undefined, 1,
+      targetBuffs, 'te_cong', source, target, combatSystem,
+      undefined, undefined, undefined, 1,
     )
 
-    // Combat Balance Pass (2026-08-29) — 2 lần "Bốc Hơi": (60 + 5) × 2.
+    // Combat Balance Pass (2026-08-29) — 2 lần "Bốc Hơi": (60 + 10) × 2.
     expect(target.currentHp).toBe(1000 - 140)
-    expect(ailmentSystem.getActiveIds().sort()).toEqual(['bong', 'te_cong'])
+    expect(targetBuffs.getActiveIds().sort()).toEqual(['bong', 'te_cong'])
   })
 
-  it('nhánh appliesAilmentId KHÔNG đổi — keepChance 1 vẫn tiêu 2 ailment gốc và áp ailment mới', () => {
-    const { reactionManager, combatSystem, source, target, ailmentSystem } = createSetup()
+  it('nhánh appliesAilmentId KHÔNG đổi — keepChance 1 vẫn tiêu 2 vế gốc và áp buff/debuff mới', () => {
+    const { reactionManager, combatSystem, source, target, targetBuffs } = createSetup()
 
     // Thổ+Thủy — "Trói Chân": appliesAilmentId 'troi_chan' (nhánh đặc biệt).
-    ailmentSystem.apply(getTemplate('thach_hoa'), source, target)
-    ailmentSystem.apply(getTemplate('te_cong'), source, target)
+    targetBuffs.apply(getBuffDefinition('thach_hoa'), source, target)
+    targetBuffs.apply(getBuffDefinition('te_cong'), source, target)
 
     reactionManager.checkAndTrigger(
-      ailmentSystem, 'te_cong', source, target, combatSystem,
-      createAilmentRegistry(), undefined, undefined, undefined, 1,
+      targetBuffs, 'te_cong', source, target, combatSystem,
+      createBuffRegistry(), undefined, undefined, 1,
     )
 
-    expect(ailmentSystem.getActiveIds()).toEqual(['troi_chan'])
+    expect(targetBuffs.getActiveIds()).toEqual(['troi_chan'])
   })
 })

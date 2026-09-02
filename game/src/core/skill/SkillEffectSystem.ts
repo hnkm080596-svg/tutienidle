@@ -4,8 +4,6 @@ import { getSkillRuntimeStat } from './SkillRuntimeStats'
 import type { CombatSystem } from '../combat/CombatSystem'
 import type { BuffSystem } from '../buff/BuffSystem'
 import type { BuffRegistry } from '../buff/BuffRegistry'
-import type { AilmentSystem } from '../ailment/AilmentSystem'
-import type { AilmentRegistry } from '../ailment/AilmentRegistry'
 import type { ReactionManager } from '../element/ReactionManager'
 import type { ElementType } from '../element/ElementType'
 import { MAX_KIM_THE, MAX_HUYET_PHA } from '../combat/CombatTypes'
@@ -25,20 +23,15 @@ export interface SkillEffectContext {
 
   buffRegistry: BuffRegistry
 
-  ailmentRegistry: AilmentRegistry
-
-  // Buff/Ailment pool của source/target — theo đúng entity đang tham
-  // gia trận (Battle.playerBuffs/enemyBuffs, playerAilments/
-  // BattleEnemy.ailments), không phải buff persistent ngoài trận.
-  // Xem BattleSystem.ts.
+  // Buff/debuff pool của source/target — theo đúng entity đang tham
+  // gia trận (Battle.playerBuffs/enemyBuffs), không phải buff
+  // persistent ngoài trận. Xem BattleSystem.ts.
   sourceBuffs: BuffSystem
 
   targetBuffs: BuffSystem
 
-  targetAilments: AilmentSystem
-
   // Combat Rework Phase 6 (Pháp Tu Reaction) — kiểm tra/kích phản ứng
-  // ngay sau khi effect 'ailment' áp thành công, xem apply() bên dưới.
+  // ngay sau khi effect 'debuff' áp thành công, xem apply() bên dưới.
   reactionManager: ReactionManager
 
   // Thiên phú Phản Phác (talent-direction-choice-plan §6) — xác suất giữ
@@ -107,7 +100,7 @@ export class SkillEffectSystem {
         continue
       }
 
-      if (effect.type === 'ailment' && effects.some(candidate => candidate.type === 'damage') && !(ctx.didLandHit?.() ?? true)) {
+      if (effect.type === 'debuff' && effects.some(candidate => candidate.type === 'damage') && !(ctx.didLandHit?.() ?? true)) {
         continue
       }
 
@@ -194,14 +187,21 @@ export class SkillEffectSystem {
         // sẵn lúc apply ban đầu (xem AilmentSystem.apply()'s snapshot),
         // mitigate thêm lần nữa ở đây là tính trùng.
         if (target.alive && effect.consumesAilmentId && effect.damagePerStack) {
-          const stacks = ctx.targetAilments.getStacks(effect.consumesAilmentId)
+          // Unified Buff System (Task 11, 2026-09-01) — targetAilments/
+          // AilmentSystem gỡ khỏi SkillEffectContext, đọc/xoá qua
+          // ctx.targetBuffs. AilmentSystem cũ KHÔNG phân biệt nguồn (1
+          // pool đơn theo id) nên port trung thực = tổng stacks MỌI
+          // nguồn (không truyền sourceId, xem BuffSystem.getStacks) +
+          // removeAllById (khớp scope 'any' của ConsumeForDamageAction,
+          // xem SkillActionRegistry.ts's consumeForDamage).
+          const stacks = ctx.targetBuffs.getStacks(effect.consumesAilmentId)
 
           if (stacks > 0) {
             const bonusDamage = stacks * effect.damagePerStack
 
             ctx.combatSystem.applyDirectDamage(target, bonusDamage, source.id, 'damage')
 
-            ctx.targetAilments.remove(effect.consumesAilmentId)
+            ctx.targetBuffs.removeAllById(effect.consumesAilmentId)
 
             ctx.combatSystem.killIfDead(target, source.id)
 
@@ -234,87 +234,88 @@ export class SkillEffectSystem {
 
       case 'buff':
         if (effect.buffId) {
-          ctx.sourceBuffs.apply(ctx.buffRegistry.get(effect.buffId))
+          ctx.sourceBuffs.apply(ctx.buffRegistry.get(effect.buffId), source, source, ctx.buffRegistry)
         }
         break
 
-      case 'debuff':
-        if (effect.buffId) {
-          ctx.targetBuffs.apply(ctx.buffRegistry.get(effect.buffId))
-        }
-        break
+      // Unified Buff System (Task 11, 2026-09-01) — absorbs old case
+      // 'ailment' entirely: chance roll (incl. elementApplicationPercent),
+      // Kim Thế/Huyết Phá resource procs, và Reaction check giờ chạy
+      // trên MỌI effect 'debuff' (trước đây tách riêng khỏi 'debuff'
+      // đơn giản — 2 nhánh giờ hợp nhất vì cùng đi qua BuffRegistry/
+      // BuffSystem, không còn AilmentRegistry/AilmentSystem riêng).
+      case 'debuff': {
+        if (!effect.buffId) break
 
-      case 'ailment': {
         // Roll ĐỘC LẬP với dodge/crit của damage chính — 1 skill có
-        // thể vừa gây damage vừa có % riêng gây ailment (2 effect
-        // tách biệt trong cùng skill.effects). Hỏa Tu Trúc Cơ (Plans/
+        // thể vừa gây damage vừa có % riêng gây debuff (2 effect tách
+        // biệt trong cùng skill.effects). Hỏa Tu Trúc Cơ (Plans/
         // FirePath mục 6/8, 2026-08-21) — elementApplicationPercent
         // cộng THẲNG vào tỉ lệ gốc của skill (Dẫn Hỏa/Hỏa Nguyên),
         // clamp tối đa 1 (100%).
-        const ailmentChance = Math.min(1, (effect.ailmentChance ?? 1) + source.stats.elementApplicationPercent)
+        const chance = Math.min(1, (effect.ailmentChance ?? 1) + source.stats.elementApplicationPercent)
 
-        if (effect.ailmentId && Math.random() < ailmentChance) {
-          ctx.targetAilments.apply(ctx.ailmentRegistry.get(effect.ailmentId), source, target, ctx.ailmentRegistry)
+        if (Math.random() >= chance) break
 
-          // Kim Tu Trúc Cơ Pure ("Kim Thế" major, Plans/KimPath mục
-          // 9/11, 2026-08-21) — CHỈ tích khi roll THÀNH CÔNG (đã ở
-          // trong nhánh này), nền 0 nếu chưa mua "Kim Thế".
-          const kimTheGain = getSkillRuntimeStat(source, 'kimTheGainPerProc')
-          if (effect.grantsKimThePerProc && kimTheGain > 0) {
-            source.currentKimThe = Math.min(
-              MAX_KIM_THE + getSkillRuntimeStat(source, 'kimTheMaxStacksBonus'),
-              source.currentKimThe + kimTheGain,
-            )
+        ctx.targetBuffs.apply(ctx.buffRegistry.get(effect.buffId), source, target, ctx.buffRegistry)
 
-            source.timeSinceLastBleedProc = 0
-          }
-
-          // Kim Tu ("Huyết Phá", Plans/magicpathgeneral Phase 13,
-          // 2026-08-21) — charge ĐỘC LẬP với Kim Thế ở trên (cùng điều
-          // kiện roll, 2 counter khác nhau). Chạm MAX_HUYET_PHA thì
-          // consume/reset về 0 (KHÔNG mutate ailment/debuff nào —
-          // đúng invariant Phase 16) rồi trigger 1 burst damage MỘT
-          // LẦN lên target qua ĐÚNG pipeline DOT RES (applyDotDamage()),
-          // effectId 'huyet_pha_burst' để phân biệt với tick DoT thường.
-          const huyetPhaGain = getSkillRuntimeStat(source, 'huyetPhaGainPerProc')
-          if (effect.grantsHuyetPhaPerProc && huyetPhaGain > 0) {
-            const nextCharge = (source.currentHuyetPha ?? 0) + huyetPhaGain
-
-            if (nextCharge >= MAX_HUYET_PHA) {
-              source.currentHuyetPha = 0
-
-              const burstDamage = getSkillRuntimeStat(source, 'huyetPhaBurstDamage')
-              if (burstDamage > 0) {
-                ctx.combatSystem.applyDotDamage({
-                  sourceId: source.id,
-                  source,
-                  target,
-                  rawDamage: burstDamage,
-                  element: 'metal',
-                  effectId: 'huyet_pha_burst',
-                })
-              }
-            } else {
-              source.currentHuyetPha = nextCharge
-            }
-          }
-
-          // Combat Rework Phase 6 — ailment vừa áp có thể phản ứng với
-          // ailment hành KHÁC đang có sẵn trên target, xem
-          // core/element/ReactionManager.ts.
-          ctx.reactionManager.checkAndTrigger(
-            ctx.targetAilments,
-            effect.ailmentId,
-            source,
-            target,
-            ctx.combatSystem,
-            ctx.ailmentRegistry,
-            ctx.sourceBuffs,
-            ctx.buffRegistry,
-            ctx.spawnLavaZone,
-            ctx.reactionKeepChance ?? 0,
+        // Kim Tu Trúc Cơ Pure ("Kim Thế" major, Plans/KimPath mục
+        // 9/11, 2026-08-21) — CHỈ tích khi roll THÀNH CÔNG (đã ở
+        // trong nhánh này), nền 0 nếu chưa mua "Kim Thế".
+        const kimTheGain = getSkillRuntimeStat(source, 'kimTheGainPerProc')
+        if (effect.grantsKimThePerProc && kimTheGain > 0) {
+          source.currentKimThe = Math.min(
+            MAX_KIM_THE + getSkillRuntimeStat(source, 'kimTheMaxStacksBonus'),
+            source.currentKimThe + kimTheGain,
           )
+
+          source.timeSinceLastBleedProc = 0
         }
+
+        // Kim Tu ("Huyết Phá", Plans/magicpathgeneral Phase 13,
+        // 2026-08-21) — charge ĐỘC LẬP với Kim Thế ở trên (cùng điều
+        // kiện roll, 2 counter khác nhau). Chạm MAX_HUYET_PHA thì
+        // consume/reset về 0 (KHÔNG mutate ailment/debuff nào — đúng
+        // invariant Phase 16) rồi trigger 1 burst damage MỘT LẦN lên
+        // target qua ĐÚNG pipeline DOT RES (applyDotDamage()),
+        // effectId 'huyet_pha_burst' để phân biệt với tick DoT thường.
+        const huyetPhaGain = getSkillRuntimeStat(source, 'huyetPhaGainPerProc')
+        if (effect.grantsHuyetPhaPerProc && huyetPhaGain > 0) {
+          const nextCharge = (source.currentHuyetPha ?? 0) + huyetPhaGain
+
+          if (nextCharge >= MAX_HUYET_PHA) {
+            source.currentHuyetPha = 0
+
+            const burstDamage = getSkillRuntimeStat(source, 'huyetPhaBurstDamage')
+            if (burstDamage > 0) {
+              ctx.combatSystem.applyDotDamage({
+                sourceId: source.id,
+                source,
+                target,
+                rawDamage: burstDamage,
+                element: 'metal',
+                effectId: 'huyet_pha_burst',
+              })
+            }
+          } else {
+            source.currentHuyetPha = nextCharge
+          }
+        }
+
+        // Combat Rework Phase 6 — debuff vừa áp có thể phản ứng với
+        // debuff hành KHÁC đang có sẵn trên target, xem
+        // core/element/ReactionManager.ts.
+        ctx.reactionManager.checkAndTrigger(
+          ctx.targetBuffs,
+          effect.buffId,
+          source,
+          target,
+          ctx.combatSystem,
+          ctx.buffRegistry,
+          ctx.sourceBuffs,
+          ctx.spawnLavaZone,
+          ctx.reactionKeepChance ?? 0,
+        )
         break
       }
 

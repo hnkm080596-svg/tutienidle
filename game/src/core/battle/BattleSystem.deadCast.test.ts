@@ -5,8 +5,7 @@ import { SkillManager } from '../skill/SkillManager'
 import { SkillSystem } from '../skill/SkillSystem'
 import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
-import { AilmentRegistry } from '../ailment/AilmentRegistry'
-import { AilmentSystem } from '../ailment/AilmentSystem'
+import { BuffSystem } from '../buff/BuffSystem'
 import { EventBus } from '../events/EventBus'
 import { ActionImpactSystem } from '../battle/ActionImpactSystem'
 
@@ -15,7 +14,7 @@ import { HERO_LANE_INDEX } from './BattleLane'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
 import type { BattleEndEvent } from './BattleEvents'
-import { ailments } from '../../data/ailment/ailments'
+import { buffs } from '../../data/buff/buffs'
 
 // Audit P0-2 (dead-cast guard) — regression test "DoT lethal đúng tick
 // cast hoàn tất": updateCasting() chạy SAU updateAilments() trong cùng
@@ -86,11 +85,6 @@ function setup(skill: Skill) {
   const eventBus = new EventBus()
   const skillManager = new SkillManager()
   const skillSystem = new SkillSystem(skillManager)
-  const ailmentRegistry = new AilmentRegistry()
-
-  for (const template of ailments) {
-    ailmentRegistry.register(template)
-  }
 
   skillManager.add(skill)
 
@@ -100,7 +94,6 @@ function setup(skill: Skill) {
     skillSystem,
     new SkillEffectSystem(),
     new BuffRegistry(),
-    ailmentRegistry,
     eventBus,
     new ActionImpactSystem({ eventBus, rollCritical: () => false }),
   )
@@ -148,8 +141,8 @@ describe('BattleSystem — Player chết bởi DoT giữa lúc niệm (audit P0-
     // TRƯỚC updateCasting() nên Player chết trong cùng tick này.
     const battle = system.getBattle()!
 
-    new AilmentSystem(battle.playerAilments).apply(
-      ailments.find((template) => template.id === 'bong')!,
+    new BuffSystem(battle.playerBuffs).apply(
+      buffs.find((definition) => definition.id === 'bong')!,
       enemy,
       player,
     )

@@ -1,7 +1,6 @@
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from './Skill'
 import type { SkillAction } from './SkillAction'
-import type { AilmentId } from '../ailment/AilmentTypes'
 import type { SkillResourcePoolKey } from './SkillAction'
 
 // Trigger/Action rework (2026-08-31 spec, Phase 2A) — full vocabulary.
@@ -78,7 +77,7 @@ export interface OnProcContext {
 
   skill: Skill
 
-  ailmentId: AilmentId
+  buffId: string
 }
 
 export interface OnBreakContext {

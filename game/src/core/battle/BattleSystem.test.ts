@@ -5,12 +5,11 @@ import { SkillManager } from '../skill/SkillManager'
 import { SkillSystem } from '../skill/SkillSystem'
 import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
-import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import { EventBus } from '../events/EventBus'
 import { ActionImpactSystem } from '../battle/ActionImpactSystem'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
-import type { Buff } from '../buff/Buff'
+import type { BuffDefinition } from '../buff/BuffDefinition'
 import type { BattlePositionsEvent } from './BattleEvents'
 
 function createBattleSystem(eventBus = new EventBus()) {
@@ -22,7 +21,6 @@ function createBattleSystem(eventBus = new EventBus()) {
     new SkillSystem(skillManager),
     new SkillEffectSystem(),
     new BuffRegistry(),
-    new AilmentRegistry(),
     eventBus,
     new ActionImpactSystem({ eventBus, rollCritical: () => false }),
   )
@@ -62,14 +60,14 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
   }
 }
 
-function createTestBuff(id: string): Buff {
+function createTestBuff(id: string): BuffDefinition {
   return {
     id,
     name: id,
-    category: 'buff',
-    stacks: 1,
+    polarity: 'buff',
+    duration: Infinity,
     stackMode: 'stack',
-    modifiers: [],
+    effects: [],
   }
 }
 
@@ -178,7 +176,7 @@ describe('BattleSystem — Boss Mechanics (Combat Rework Phase 4)', () => {
     const battleEnemy = system.getBattle()!.enemies[0]!
 
     expect(battleEnemy.enrageApplied).toBeFalsy()
-    expect(battleEnemy.buffs.get('enrage_buff')).toBeUndefined()
+    expect(battleEnemy.buffs.getFromSource('enrage_buff', battleEnemy.entity.id)).toBeUndefined()
   })
 
   it('Enrage: đủ afterSeconds thì áp buff đúng 1 lần, không áp lại tick sau', () => {
@@ -199,12 +197,12 @@ describe('BattleSystem — Boss Mechanics (Combat Rework Phase 4)', () => {
     const battleEnemy = system.getBattle()!.enemies[0]!
 
     expect(battleEnemy.enrageApplied).toBe(true)
-    expect(battleEnemy.buffs.get('enrage_buff')?.stacks).toBe(1)
+    expect(battleEnemy.buffs.getFromSource('enrage_buff', battleEnemy.entity.id)?.stacks).toBe(1)
 
     system.update(0.6)
 
     // Không stack thêm — apply() lần 2 sẽ handleExistingBuff('stack')
     // cộng thêm stacks nếu lỡ bị gọi lại, enrageApplied phải chặn hẳn.
-    expect(battleEnemy.buffs.get('enrage_buff')?.stacks).toBe(1)
+    expect(battleEnemy.buffs.getFromSource('enrage_buff', battleEnemy.entity.id)?.stacks).toBe(1)
   })
 })

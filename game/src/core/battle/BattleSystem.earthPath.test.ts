@@ -5,14 +5,13 @@ import { SkillManager } from '../skill/SkillManager'
 import { SkillSystem } from '../skill/SkillSystem'
 import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
-import { AilmentRegistry } from '../ailment/AilmentRegistry'
-import { AilmentSystem } from '../ailment/AilmentSystem'
+import { BuffSystem } from '../buff/BuffSystem'
 import { EventBus } from '../events/EventBus'
 import { ActionImpactSystem } from '../battle/ActionImpactSystem'
 
 import { createBaseStats } from '../stats/StatBlock'
 import { createSkillRuntimeStats } from '../skill/SkillRuntimeStats'
-import { ailments } from '../../data/ailment/ailments'
+import { buffs } from '../../data/buff/buffs'
 import { MAX_THO_THE } from '../combat/CombatTypes'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
@@ -97,19 +96,12 @@ function setup() {
   const eventBus = new EventBus()
   const skillManager = new SkillManager()
   const skillSystem = new SkillSystem(skillManager)
-  const ailmentRegistry = new AilmentRegistry()
-
-  for (const template of ailments) {
-    ailmentRegistry.register(template)
-  }
-
   const system = new BattleSystem(
     new CombatSystem(eventBus),
     skillManager,
     skillSystem,
     new SkillEffectSystem(),
     new BuffRegistry(),
-    ailmentRegistry,
     eventBus,
     new ActionImpactSystem({ eventBus, rollCritical: () => false }),
   )
@@ -174,14 +166,14 @@ describe('BattleSystem — Thổ Thế (Plans/EarthPath mục XV, Thổ Thế ma
   })
 })
 
-function applyRoot(source: CombatEntity, target: CombatEntity, ailments_: AilmentSystem) {
-  const registry = new AilmentRegistry()
+function applyRoot(source: CombatEntity, target: CombatEntity, targetBuffs: BuffSystem) {
+  const registry = new BuffRegistry()
 
-  for (const template of ailments) {
-    registry.register(template)
+  for (const definition of buffs) {
+    registry.register(definition)
   }
 
-  ailments_.apply(registry.get('troi_chan'), source, target, registry)
+  targetBuffs.apply(registry.get('troi_chan'), source, target, registry)
 }
 
 describe('BattleSystem — Trói Chân (Plans/EarthPath mục VI, Root)', () => {
@@ -202,7 +194,7 @@ describe('BattleSystem — Trói Chân (Plans/EarthPath mục VI, Root)', () => 
 
     const battleEnemy = system.getBattle()!.enemies[0]!
 
-    applyRoot(player, battleEnemy.entity, new AilmentSystem(battleEnemy.ailments))
+    applyRoot(player, battleEnemy.entity, new BuffSystem(battleEnemy.buffs))
 
     for (let i = 0; i < 100; i++) {
       tick(0.01)
@@ -235,7 +227,7 @@ describe('BattleSystem — Trói Chân (Plans/EarthPath mục VI, Root)', () => 
 
     const battleEnemy = system.getBattle()!.enemies[0]!
 
-    applyRoot(player, battleEnemy.entity, new AilmentSystem(battleEnemy.ailments))
+    applyRoot(player, battleEnemy.entity, new BuffSystem(battleEnemy.buffs))
 
     for (let i = 0; i < 200; i++) {
       tick(0.01)

@@ -22,13 +22,10 @@ import {
 import { getAlchemySuccessBonusPercentPoints, getReactionKeepChance } from '../talent/TalentEffects'
 import { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 
-import { BuffManager } from '../buff/BuffManager'
+import { BuffPool } from '../buff/BuffPool'
 import { BuffSystem } from '../buff/BuffSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
-import type { Buff } from '../buff/Buff'
-
-import { AilmentRegistry } from '../ailment/AilmentRegistry'
-import type { AilmentTemplate } from '../ailment/AilmentRegistry'
+import type { BuffDefinition } from '../buff/BuffDefinition'
 
 import { NodeRegistry } from '../progression/NodeRegistry'
 import type { ProgressionNode } from '../progression/ProgressionNode'
@@ -176,6 +173,7 @@ import type { Reward } from '../reward/Reward'
 import type { BattleRewardSummary } from '../reward/BattleRewardSummary'
 
 import { playerToCombatEntity, createPlayerRewardReceiver } from '../player/Player'
+import { HERO_LANE_INDEX } from '../battle/BattleLane'
 import type { PlayerData, KiemTuRoute } from '../player/Player'
 import type { MainStatKey } from '../stats/StatTypes'
 import { getMainStatCap } from '../stats/StatCap'
@@ -200,6 +198,7 @@ import type { GameSave } from '../../services/save/SaveSystem'
 
 import type { StatModifier } from '../stats/StatCalculator'
 import type { Stats } from '../stats/StatBlock'
+import { createBaseStats } from '../stats/StatBlock'
 
 /**
  * GameManager lÃ  orchestrator (2026-08-24 refactor â€” tÃ¡ch business logic
@@ -273,11 +272,9 @@ export class GameManager {
     rollCritical: (s, t) => this.combatSystem.rollCritical(s, t),
   })
 
-  readonly buffManager = new BuffManager()
-  readonly buffSystem = new BuffSystem(this.buffManager)
+  readonly buffPool = new BuffPool()
+  readonly buffSystem = new BuffSystem(this.buffPool)
   readonly buffRegistry = new BuffRegistry()
-
-  readonly ailmentRegistry = new AilmentRegistry()
 
   readonly skillManager = new SkillManager()
   readonly skillSystem = new SkillSystem(this.skillManager, (skill, levelsGained) => {
@@ -314,7 +311,6 @@ export class GameManager {
     this.skillSystem,
     this.skillEffectSystem,
     this.buffRegistry,
-    this.ailmentRegistry,
     this.eventBus,
     this.actionImpact,
 
@@ -359,7 +355,7 @@ export class GameManager {
 
   readonly pillRegistry = new PillRegistry()
   readonly pillBag = new PillBag()
-  readonly pillSystem = new PillSystem(this.buffSystem)
+  readonly pillSystem = new PillSystem()
 
   // PhÃ¹/Tráº­n legacy (2026-08-25, plan Â§10.1.4) â€” registry giá»¯ láº¡i CHá»ˆ
   // Äá»ŒC nhÆ° tombstone Ä‘á»ƒ save cÅ© khÃ´ng crash vÃ¬ registry lookup; KHÃ”NG
@@ -556,18 +552,10 @@ export class GameManager {
     }
   }
 
-  registerBuffs(buffs: Buff[]) {
+  registerBuffs(buffs: BuffDefinition[]) {
     for (const buff of buffs) {
       if (!this.buffRegistry.has(buff.id)) {
         this.buffRegistry.register(buff)
-      }
-    }
-  }
-
-  registerAilments(ailments: AilmentTemplate[]) {
-    for (const ailment of ailments) {
-      if (!this.ailmentRegistry.has(ailment.id)) {
-        this.ailmentRegistry.register(ailment)
       }
     }
   }
@@ -2872,8 +2860,85 @@ export class GameManager {
    * CÃ¹ng buffSystem/buffManager nuÃ´i getAggregatedModifiers() má»—i
    * tick (xem PillSystem's effect 'buff' â€” cÃ¹ng cÆ¡ cháº¿).
    */
-  applyPersistentBuff(buff: Buff) {
-    this.buffSystem.apply(buff)
+  // Unified Buff System (Task 9b, fix round 2) - BuffSystem.apply() now
+  // requires a real source/target CombatEntity (to read
+  // ailmentResistPercent/ailmentDurationPercent for duration scaling),
+  // even for a buff with no dot effect like KIEP_THUONG_DEBUFF.
+  // `stats` (the caller's already-calculateStats()'d Stats, same
+  // `player.finalStats` pattern startTribulation()/startBattleWithPlayer()
+  // already use - see useTribulation.ts's resolveDefeat()) lets us build
+  // the REAL player CombatEntity via playerToCombatEntity() (same helper
+  // battle start uses), so this debuff's resist/duration correctly reads
+  // the player's actual gear. Falls back to the in-battle entity if one
+  // somehow exists, then to a fully-populated neutral ghost only if
+  // neither is available (today: only reachable if a caller forgets to
+  // pass `stats` - see resolvePersistentBuffEntity()).
+  applyPersistentBuff(buff: BuffDefinition, stats?: Stats) {
+    const entity = this.resolvePersistentBuffEntity(stats)
+
+    this.buffSystem.apply(buff, entity, entity, this.buffRegistry)
+  }
+
+  // Shared entity resolution for applyPersistentBuff() and the per-tick
+  // buffSystem.update() call in tick() - both need 1 CombatEntity to hand
+  // BuffSystem, and neither has one implicitly guaranteed outside battle
+  // (GameManager keeps no persistent player CombatEntity of its own; only
+  // playerToCombatEntity() at battle start, which needs `Stats` already
+  // calculateStats()'d by the Pinia store - GameManager deliberately
+  // avoids calling calculateStats() itself to prevent 2 divergent call
+  // sites, see startBattleWithPlayer()'s note). Preference order: real
+  // in-battle entity > real player entity built from caller-supplied
+  // `stats` (mirrors startBattleWithPlayer()'s own construction) > fully-
+  // populated neutral ghost.
+  private resolvePersistentBuffEntity(stats?: Stats): CombatEntity {
+    const activeBattle = this.battleSystem.getBattle()
+
+    if (activeBattle) {
+      return activeBattle.player
+    }
+
+    if (stats && this.activePlayer) {
+      return playerToCombatEntity(this.activePlayer, stats, this.getSkillRuntimeStats(this.activePlayer))
+    }
+
+    return this.createPersistentBuffGhostEntity()
+  }
+
+  // Fully-populated neutral placeholder CombatEntity (no gear, no active
+  // buffs, every non-optional CombatEntity field explicitly set - NOT an
+  // `as CombatEntity` cast papering over missing fields) used only when
+  // resolvePersistentBuffEntity() has neither a real in-battle entity nor
+  // caller-supplied Stats to build one from. Safe even for a future
+  // persistent buff with a `dot` effect (combatSystem.applyDotDamage()
+  // would read real currentHp/maxHp/alive, not undefined).
+  private createPersistentBuffGhostEntity(): CombatEntity {
+    const stats = createBaseStats()
+
+    return {
+      id: 'player',
+      name: this.activePlayer?.name ?? 'player',
+      type: 'player',
+      baseStats: stats,
+      stats,
+      currentHp: stats.maxHp,
+      maxHp: stats.maxHp,
+      currentMp: stats.maxMp,
+      currentSwordIntent: 0,
+      currentMomentum: 0,
+      currentHoaThe: 0,
+      currentThoThe: 0,
+      currentKimThe: 0,
+      timeSinceLastBleedProc: 0,
+      currentWard: 0,
+      timeSinceLastHitTaken: Infinity,
+      realmIndex: 0,
+      x: 0,
+      row: HERO_LANE_INDEX,
+      alive: true,
+      tuLucActive: false,
+      tuLucElapsed: 0,
+      tuLucDamageTakenPercent: 0,
+    }
   }
 
   giveReward(receiver: RewardReceiver, reward: Reward) {
@@ -3229,7 +3294,18 @@ export class GameManager {
       }
     }
 
-    this.buffSystem.update(deltaSeconds)
+    // Task 9b: BuffSystem.update() now requires a real target:
+    // CombatEntity + combatSystem: CombatSystem (see BuffSystem.update()).
+    // No `Stats` naturally available in this per-tick scope (see
+    // resolvePersistentBuffEntity()'s note), so this resolves to the
+    // real in-battle entity when one exists, else the fully-populated
+    // neutral ghost.
+    this.buffSystem.update(
+      deltaSeconds,
+      this.resolvePersistentBuffEntity(),
+      this.combatSystem,
+      this.buffRegistry,
+    )
 
     // cooldownReduction Ä‘á»c tá»« battle.player.stats (CombatEntity) Ä‘ang
     // sá»‘ng trong tráº­n náº¿u cÃ³ â€” ngoÃ i combat (menu/mÃ n hÃ¬nh cáº£nh giá»›i)

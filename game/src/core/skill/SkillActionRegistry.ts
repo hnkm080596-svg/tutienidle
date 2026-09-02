@@ -91,47 +91,33 @@ const heal: ActionExecutor<Extract<SkillAction, { type: 'heal' }>> = (action, so
   ctx.combatSystem.applyHealing(target, value, source.id, 'healing')
 }
 
-const applyBuff: ActionExecutor<Extract<SkillAction, { type: 'applyBuff' }>> = (action, _source, _target, ctx) => {
-  ctx.sourceBuffs.apply(ctx.buffRegistry.get(action.buffId))
-}
-
-const applyDebuff: ActionExecutor<Extract<SkillAction, { type: 'applyDebuff' }>> = (action, _source, _target, ctx) => {
-  ctx.targetBuffs.apply(ctx.buffRegistry.get(action.buffId))
-}
-
-// Ported from SkillEffectSystem.apply()'s case 'ailment', minus the
-// grantsKimThePerProc/grantsHuyetPhaPerProc flags — those become separate
-// onProc-bound grantResource actions once a skill migrates. The only new
-// responsibility here versus the old code is firing onProc on a successful
-// roll, via helpers.fireNested.
-const applyAilment: ActionExecutor<Extract<SkillAction, { type: 'applyAilment' }>> = (
-  action,
-  source,
-  target,
-  ctx,
-  _runtime,
-  helpers,
+const applyBuff: ActionExecutor<Extract<SkillAction, { type: 'applyBuff' }>> = (
+  action, source, target, ctx, _runtime, helpers,
 ) => {
-  const ailmentChance = Math.min(1, (action.chance ?? 1) + source.stats.elementApplicationPercent)
+  const chance = Math.min(1, action.chance ?? 1)
+  if (Math.random() >= chance) return
 
-  if (Math.random() >= ailmentChance) {
-    return
+  ctx.sourceBuffs.apply(ctx.buffRegistry.get(action.buffId), source, source, ctx.buffRegistry)
+  if (action.chance !== undefined) {
+    helpers.fireNested('onProc', { source, target, buffId: action.buffId })
   }
+}
 
-  ctx.targetAilments.apply(ctx.ailmentRegistry.get(action.ailmentId), source, target, ctx.ailmentRegistry)
+// Absorbs the old applyAilment executor: rolls a chance (incl.
+// elementApplicationPercent), applies via ctx.targetBuffs/ctx.buffRegistry,
+// fires onProc on a successful roll, then hands off to the reaction engine.
+const applyDebuff: ActionExecutor<Extract<SkillAction, { type: 'applyDebuff' }>> = (
+  action, source, target, ctx, _runtime, helpers,
+) => {
+  const chance = Math.min(1, (action.chance ?? 1) + source.stats.elementApplicationPercent)
+  if (Math.random() >= chance) return
 
-  helpers.fireNested('onProc', { source, target, ailmentId: action.ailmentId })
+  ctx.targetBuffs.apply(ctx.buffRegistry.get(action.buffId), source, target, ctx.buffRegistry)
+  helpers.fireNested('onProc', { source, target, buffId: action.buffId })
 
   ctx.reactionManager.checkAndTrigger(
-    ctx.targetAilments,
-    action.ailmentId,
-    source,
-    target,
-    ctx.combatSystem,
-    ctx.ailmentRegistry,
-    ctx.sourceBuffs,
-    ctx.buffRegistry,
-    ctx.spawnLavaZone,
+    ctx.targetBuffs, action.buffId, source, target, ctx.combatSystem,
+    ctx.buffRegistry, ctx.sourceBuffs, ctx.spawnLavaZone,
     ctx.reactionKeepChance ?? 0,
   )
 }
@@ -207,8 +193,9 @@ const consumeForDamage: ActionExecutor<Extract<SkillAction, { type: 'consumeForD
 
   let bonusDamage = 0
 
-  if (action.source === 'ailment' && action.ailmentId) {
-    const stacks = ctx.targetAilments.getStacks(action.ailmentId)
+  if (action.source === 'ailment' && action.buffId) {
+    const scope = action.scope ?? 'own'
+    const stacks = scope === 'own' ? ctx.targetBuffs.getStacks(action.buffId, source.id) : ctx.targetBuffs.getStacks(action.buffId)
 
     if (stacks <= 0) {
       return
@@ -217,7 +204,13 @@ const consumeForDamage: ActionExecutor<Extract<SkillAction, { type: 'consumeForD
     bonusDamage = stacks * action.damagePerUnit
 
     ctx.combatSystem.applyDirectDamage(target, bonusDamage, source.id, 'damage')
-    ctx.targetAilments.remove(action.ailmentId)
+
+    if (scope === 'own') {
+      ctx.targetBuffs.remove(action.buffId, source.id)
+    } else {
+      ctx.targetBuffs.removeAllById(action.buffId)
+    }
+
     ctx.combatSystem.killIfDead(target, source.id)
   } else if (action.source === 'ward' && source.currentWard > 0) {
     bonusDamage = source.currentWard * action.damagePerUnit
@@ -291,7 +284,6 @@ export const SKILL_ACTION_REGISTRY: { [K in SkillActionType]: ActionExecutor<Ext
   heal,
   applyBuff,
   applyDebuff,
-  applyAilment,
   grantResource,
   consumeResource,
   consumeForDamage,

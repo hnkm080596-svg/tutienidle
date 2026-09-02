@@ -60,6 +60,7 @@ function pillTarget() {
   return {
     addCultivation: () => {},
     heal: () => {},
+    applyBuff: () => {},
   }
 }
 

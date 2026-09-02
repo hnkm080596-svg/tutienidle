@@ -1,13 +1,12 @@
 import type { SkillEffectType } from  './SkillTypes'
 import type { SkillDamageComponent } from './SkillDamageComponent'
-import type { AilmentId } from '../ailment/AilmentTypes'
 import type { StatType } from '../stats/StatTypes'
 import type { EffectScope } from '../battle/CombatAction'
 
 export interface SkillEffect {
   type: SkillEffectType
 
-  /** Default: heal/buff -> source; damage/debuff/ailment -> affected_targets. */
+  /** Default: heal/buff -> source; damage/debuff -> affected_targets. */
   scope?: EffectScope
 
   value?: number
@@ -25,21 +24,18 @@ export interface SkillEffect {
   // damageType (xem SkillEffectSystem.ts).
   components?: SkillDamageComponent[]
 
-  // Chỉ dùng cho effect type 'ailment' — tra AilmentRegistry theo id
-  // này để lấy category/duration/dpsRatio/ccEffect mặc định, cùng
-  // pattern effect 'buff'/'debuff' tra BuffRegistry theo buffId.
-  ailmentId?: AilmentId
-
-  // 0..1 — tỉ lệ áp dụng ailment SAU KHI đòn đã trúng, roll ĐỘC LẬP
+  // 0..1 — tỉ lệ áp dụng debuff SAU KHI đòn đã trúng, roll ĐỘC LẬP
   // với dodge/crit của damage chính (không mặc định 100%, phải khai
-  // rõ trong data skill).
+  // rõ trong data skill). Unified Buff System (Task 11, 2026-09-01) —
+  // trước đây riêng cho effect 'ailment' (đi cùng ailmentId), giờ dùng
+  // chung với effect 'debuff' (đi cùng buffId ở trên).
   ailmentChance?: number
 
   // Kim Tu Trúc Cơ Pure ("Kim Thế" major, Plans/KimPath mục 9/11,
-  // 2026-08-21) — CHỈ dùng cho effect 'ailment'. Khi true VÀ roll
+  // 2026-08-21) — CHỈ dùng cho effect 'debuff'. Khi true VÀ roll
   // ailmentChance THÀNH CÔNG, +source.skillStats.kimTheGainPerProc vào
   // CombatEntity.currentKimThe (0 nếu chưa mua "Kim Thế") — xem
-  // SkillEffectSystem.ts's apply(), case 'ailment'. KHÁC hẳn
+  // SkillEffectSystem.ts's apply(), case 'debuff'. KHÁC hẳn
   // Skill.grantsHoaThePerCast/grantsThoThePerCast (gate theo CAST,
   // không phải theo ROLL THÀNH CÔNG).
   grantsKimThePerProc?: boolean
@@ -49,7 +45,7 @@ export interface SkillEffect {
   // ailmentChance THÀNH CÔNG), nhưng tích vào CombatEntity.
   // currentHuyetPha thay vì currentKimThe — 2 counter độc lập, 1 skill
   // có thể cấp cả hai cùng lúc. Chạm MAX_HUYET_PHA thì consume/reset +
-  // burst damage (xem SkillEffectSystem.ts's apply(), case 'ailment').
+  // burst damage (xem SkillEffectSystem.ts's apply(), case 'debuff').
   grantsHuyetPhaPerProc?: boolean
 
   // Chỉ dùng cho effect 'damage' — hệ số scale multiplier theo
@@ -66,7 +62,7 @@ export interface SkillEffect {
   // ailment đó khỏi target — đổi DOT đang chạy lấy 1 cục burst ngay,
   // xem SkillEffectSystem.ts. Không set = effect 'damage' hoạt động
   // như cũ (chỉ bắn missile thường).
-  consumesAilmentId?: AilmentId
+  consumesAilmentId?: string
 
   damagePerStack?: number
 

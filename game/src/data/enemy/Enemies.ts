@@ -1452,12 +1452,12 @@ const FLOOD_DRAGON_PHASES: TribulationPhase[] = [
       id: 'foundation_dragon_phase1',
       name: 'Giao Sủng Cuồng Nộ',
       description: 'Giao Sủng bộc phát sát khí khi mất nửa máu.',
-      category: 'buff' as const,
-      stacks: 1,
+      polarity: 'buff' as const,
+      duration: Infinity,
       stackMode: 'replace' as const,
-      modifiers: [
-        { id: 'foundation_dragon_phase1_attack', sourceId: 'foundation_dragon_phase1', sourceType: 'buff' as const, stat: 'attack' as const, percent: 0.3 },
-        { id: 'foundation_dragon_phase1_speed', sourceId: 'foundation_dragon_phase1', sourceType: 'buff' as const, stat: 'attackSpeed' as const, percent: 0.1 },
+      effects: [
+        { type: 'statModifier' as const, stat: 'attack' as const, percent: 0.3 },
+        { type: 'statModifier' as const, stat: 'attackSpeed' as const, percent: 0.1 },
       ],
     },
     message: 'Giao Sủng cuồng nộ — lôi kích bùng nổ!',
@@ -1468,12 +1468,12 @@ const FLOOD_DRAGON_PHASES: TribulationPhase[] = [
       id: 'foundation_dragon_phase2',
       name: 'Giao Sủng Tuyệt Mệnh',
       description: 'Giao Sủng liều mạng tăng sát thương.',
-      category: 'buff' as const,
-      stacks: 1,
+      polarity: 'buff' as const,
+      duration: Infinity,
       stackMode: 'replace' as const,
-      modifiers: [
-        { id: 'foundation_dragon_phase2_attack', sourceId: 'foundation_dragon_phase2', sourceType: 'buff' as const, stat: 'attack' as const, percent: 0.25 },
-        { id: 'foundation_dragon_phase2_crit', sourceId: 'foundation_dragon_phase2', sourceType: 'buff' as const, stat: 'criticalRate' as const, percent: 0.15 },
+      effects: [
+        { type: 'statModifier' as const, stat: 'attack' as const, percent: 0.25 },
+        { type: 'statModifier' as const, stat: 'criticalRate' as const, percent: 0.15 },
       ],
     },
     message: 'Giao Sủng tuyệt mệnh phản công!',
@@ -1486,12 +1486,12 @@ const FLOOD_DRAGON_ENRAGE: BossEnrage = {
     id: 'foundation_dragon_enrage',
     name: 'Đại Vương Bạo Nộ',
     description: 'Trận đấu kéo dài quá lâu — Giao Sủng điên cuồng.',
-    category: 'buff' as const,
-    stacks: 1,
+    polarity: 'buff' as const,
+    duration: Infinity,
     stackMode: 'replace' as const,
-    modifiers: [
-      { id: 'foundation_dragon_enrage_attack', sourceId: 'foundation_dragon_enrage', sourceType: 'buff' as const, stat: 'attack' as const, percent: 0.5 },
-      { id: 'foundation_dragon_enrage_speed', sourceId: 'foundation_dragon_enrage', sourceType: 'buff' as const, stat: 'attackSpeed' as const, percent: 0.2 },
+    effects: [
+      { type: 'statModifier' as const, stat: 'attack' as const, percent: 0.5 },
+      { type: 'statModifier' as const, stat: 'attackSpeed' as const, percent: 0.2 },
     ],
   },
 }

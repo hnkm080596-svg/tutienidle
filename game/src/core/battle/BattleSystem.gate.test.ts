@@ -5,7 +5,6 @@ import { SkillManager } from '../skill/SkillManager'
 import { SkillSystem } from '../skill/SkillSystem'
 import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
-import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import { EventBus } from '../events/EventBus'
 import { ActionImpactSystem } from './ActionImpactSystem'
 import { createBaseStats, type Stats } from '../stats/StatBlock'
@@ -65,7 +64,6 @@ describe('BattleSystem — cổng phòng thủ và avatar (hai semantics độc 
       new SkillSystem(skillManager),
       new SkillEffectSystem(),
       new BuffRegistry(),
-      new AilmentRegistry(),
       eventBus,
       new ActionImpactSystem({ eventBus, rollCritical: () => false }),
     )

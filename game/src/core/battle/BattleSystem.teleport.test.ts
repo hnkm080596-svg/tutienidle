@@ -5,12 +5,10 @@ import { SkillManager } from '../skill/SkillManager'
 import { SkillSystem } from '../skill/SkillSystem'
 import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
-import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import { EventBus } from '../events/EventBus'
 import { ActionImpactSystem } from './ActionImpactSystem'
 import { createBaseStats } from '../stats/StatBlock'
-import { BuffManager } from '../buff/BuffManager'
-import { AilmentManager } from '../ailment/AilmentManager'
+import { BuffPool } from '../buff/BuffPool'
 import { HERO_COLUMN, HERO_LANE_INDEX } from './BattleLane'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
@@ -93,7 +91,6 @@ function setup() {
     skillSystem,
     new SkillEffectSystem(),
     new BuffRegistry(),
-    new AilmentRegistry(),
     eventBus,
     new ActionImpactSystem({ eventBus, rollCritical: () => false }),
   )
@@ -185,8 +182,7 @@ describe('BattleSystem — Teleport AI (plan §7)', () => {
     battle.enemies.push({
       entity: second,
       attackTimer: 0,
-      buffs: new BuffManager(),
-      ailments: new AilmentManager(),
+      buffs: new BuffPool(),
       rewardGranted: false,
     })
 
@@ -228,7 +224,6 @@ describe('BattleSystem — Teleport AI (plan §7)', () => {
       skillSystem,
       new SkillEffectSystem(),
       new BuffRegistry(),
-      new AilmentRegistry(),
       eventBus,
       new ActionImpactSystem({ eventBus, rollCritical: () => false }),
       () => [],
@@ -250,8 +245,7 @@ describe('BattleSystem — Teleport AI (plan §7)', () => {
     battle.enemies.push({
       entity: mob,
       attackTimer: 0,
-      buffs: new BuffManager(),
-      ailments: new AilmentManager(),
+      buffs: new BuffPool(),
       rewardGranted: false,
     })
 
@@ -292,7 +286,6 @@ describe('BattleSystem — Teleport AI (plan §7)', () => {
       skillSystem,
       new SkillEffectSystem(),
       new BuffRegistry(),
-      new AilmentRegistry(),
       eventBus,
       new ActionImpactSystem({ eventBus, rollCritical: () => false }),
     )

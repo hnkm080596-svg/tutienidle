@@ -4,12 +4,10 @@
 import type { Battle } from '../battle/Battle'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { ActionImpactSystem, ActionDamageInfo } from '../battle/ActionImpactSystem'
-import type { AilmentRegistry } from '../ailment/AilmentRegistry'
-import type { AilmentManager } from '../ailment/AilmentManager'
-import type { BuffManager } from '../buff/BuffManager'
+import type { BuffPool } from '../buff/BuffPool'
+import type { BuffRegistry } from '../buff/BuffRegistry'
 import type { CombatAiStrategy } from '../battle/CombatAiStrategy'
 import { selectAttackableTarget } from '../battle/ActionTargetingSystem'
-import { AilmentSystem } from '../ailment/AilmentSystem'
 import { BuffSystem } from '../buff/BuffSystem'
 import { vfxPresetForElement } from '../battle/CombatAction'
 import type { ElementType } from '../element/ElementType'
@@ -18,9 +16,8 @@ import { getArtifactGradeMultiplier } from './ArtifactProgression'
 
 export interface ArtifactSystemDeps {
   actionImpact: ActionImpactSystem
-  ailmentRegistry: AilmentRegistry
-  getAilmentsFor: (battle: Battle, entity: CombatEntity) => AilmentManager
-  getBuffsFor: (battle: Battle, entity: CombatEntity) => BuffManager
+  buffRegistry: BuffRegistry
+  getBuffsFor: (battle: Battle, entity: CombatEntity) => BuffPool
   aiStrategy: () => CombatAiStrategy
 }
 
@@ -332,51 +329,51 @@ function applyThuOnHitEffects(
   }
 
   if (level >= THU_T6_LEVEL) {
-    new BuffSystem(deps.getBuffsFor(battle, source)).apply({
-      id: 'artifact_ngu_khi_tuan_hoan',
-      name: 'Ngũ Khí Tuần Hoàn',
-      category: 'buff',
-      stacks: 1,
-      stackMode: 'refresh',
-      duration: THU_T6_BUFF_DURATION_SECONDS,
-      modifiers: [
-        {
-          id: 'artifact_ngu_khi_tuan_hoan_fdr',
-          sourceId: 'ngu_hanh_chau',
-          sourceType: 'buff',
-          stat: 'finalDamageReductionPercent',
-          percent: THU_T6_FINAL_DAMAGE_REDUCTION_PERCENT,
-        },
-      ],
-    })
+    new BuffSystem(deps.getBuffsFor(battle, source)).apply(
+      {
+        id: 'artifact_ngu_khi_tuan_hoan',
+        name: 'Ngũ Khí Tuần Hoàn',
+        polarity: 'buff',
+        duration: THU_T6_BUFF_DURATION_SECONDS,
+        stackMode: 'refresh',
+        effects: [
+          {
+            type: 'statModifier',
+            stat: 'finalDamageReductionPercent',
+            percent: THU_T6_FINAL_DAMAGE_REDUCTION_PERCENT,
+          },
+        ],
+      },
+      source,
+      source,
+    )
   }
 }
 
 function applyThuBarrier(battle: Battle, deps: ArtifactSystemDeps): void {
-  new BuffSystem(deps.getBuffsFor(battle, battle.player)).apply({
-    id: 'artifact_ngu_hanh_ho_gioi',
-    name: 'Ngũ Hành Hộ Giới',
-    category: 'buff',
-    stacks: 1,
-    stackMode: 'refresh',
-    duration: THU_T18_BARRIER_DURATION_SECONDS,
-    modifiers: [
-      {
-        id: 'artifact_ho_gioi_ailment_resist',
-        sourceId: 'ngu_hanh_chau',
-        sourceType: 'buff',
-        stat: 'ailmentResistPercent',
-        percent: THU_T18_AILMENT_RESIST_PERCENT,
-      },
-      {
-        id: 'artifact_ho_gioi_crit_avoid',
-        sourceId: 'ngu_hanh_chau',
-        sourceType: 'buff',
-        stat: 'criticalAvoidance',
-        flat: THU_T18_CRITICAL_AVOIDANCE_FLAT,
-      },
-    ],
-  })
+  new BuffSystem(deps.getBuffsFor(battle, battle.player)).apply(
+    {
+      id: 'artifact_ngu_hanh_ho_gioi',
+      name: 'Ngũ Hành Hộ Giới',
+      polarity: 'buff',
+      duration: THU_T18_BARRIER_DURATION_SECONDS,
+      stackMode: 'refresh',
+      effects: [
+        {
+          type: 'statModifier',
+          stat: 'ailmentResistPercent',
+          percent: THU_T18_AILMENT_RESIST_PERCENT,
+        },
+        {
+          type: 'statModifier',
+          stat: 'criticalAvoidance',
+          flat: THU_T18_CRITICAL_AVOIDANCE_FLAT,
+        },
+      ],
+    },
+    battle.player,
+    battle.player,
+  )
 }
 
 function applyKhongOnHitEffects(
@@ -390,11 +387,11 @@ function applyKhongOnHitEffects(
     return
   }
 
-  const ailmentSystem = new AilmentSystem(deps.getAilmentsFor(battle, target))
+  const targetBuffs = new BuffSystem(deps.getBuffsFor(battle, target))
 
   // Trệ Khí (tầng 3) — hit áp lam_cham ngắn, dùng đúng duration đã
-  // khai trong AilmentRegistry (không override thủ công ở đây).
-  ailmentSystem.apply(deps.ailmentRegistry.get('lam_cham'), source, target, deps.ailmentRegistry)
+  // khai trong BuffRegistry (không override thủ công ở đây).
+  targetBuffs.apply(deps.buffRegistry.get('lam_cham'), source, target, deps.buffRegistry)
 
   if (level < KHONG_T6_LEVEL) {
     return
@@ -421,29 +418,32 @@ function applyKhongOnHitEffects(
 
   // Ngũ Hành Phược (tầng 6) — đủ 3 hit trong cửa sổ, per-target ICD
   // chặn root-lock (acceptance §15.3).
-  ailmentSystem.apply(deps.ailmentRegistry.get('troi_chan'), source, target, deps.ailmentRegistry)
+  targetBuffs.apply(deps.buffRegistry.get('troi_chan'), source, target, deps.buffRegistry)
   state.hitsInWindow = 0
   state.reapplyCooldownRemainingSeconds = KHONG_T6_REAPPLY_ICD_SECONDS
 
   if (level >= KHONG_T12_LEVEL) {
     // Trấn Mạch (tầng 12) — target ĐANG root nhận debuff attack speed ngắn.
-    new BuffSystem(deps.getBuffsFor(battle, target)).apply({
-      id: 'artifact_tran_mach',
-      name: 'Trấn Mạch',
-      category: 'debuff',
-      stacks: 1,
-      stackMode: 'refresh',
-      duration: KHONG_T12_ATTACK_SPEED_DEBUFF_DURATION_SECONDS,
-      modifiers: [
-        {
-          id: 'artifact_tran_mach_attack_speed',
-          sourceId: 'ngu_hanh_chau',
-          sourceType: 'buff',
-          stat: 'attackSpeed',
-          percent: -KHONG_T12_ATTACK_SPEED_DEBUFF_PERCENT,
-        },
-      ],
-    })
+    // source = artifact owner (kẻ vừa đánh trúng), target = quái bị root —
+    // đây KHÔNG phải self-buff (khác với 2 site còn lại trong file này).
+    new BuffSystem(deps.getBuffsFor(battle, target)).apply(
+      {
+        id: 'artifact_tran_mach',
+        name: 'Trấn Mạch',
+        polarity: 'debuff',
+        duration: KHONG_T12_ATTACK_SPEED_DEBUFF_DURATION_SECONDS,
+        stackMode: 'refresh',
+        effects: [
+          {
+            type: 'statModifier',
+            stat: 'attackSpeed',
+            percent: -KHONG_T12_ATTACK_SPEED_DEBUFF_PERCENT,
+          },
+        ],
+      },
+      source,
+      target,
+    )
   }
 }
 
@@ -458,11 +458,11 @@ function applyKhongAreaSlow(battle: Battle, primaryTarget: CombatEntity, deps: A
   )
 
   for (const battleEnemy of nearby) {
-    new AilmentSystem(deps.getAilmentsFor(battle, battleEnemy.entity)).apply(
-      deps.ailmentRegistry.get('lam_cham'),
+    new BuffSystem(deps.getBuffsFor(battle, battleEnemy.entity)).apply(
+      deps.buffRegistry.get('lam_cham'),
       battle.player,
       battleEnemy.entity,
-      deps.ailmentRegistry,
+      deps.buffRegistry,
     )
   }
 }

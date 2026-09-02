@@ -5,16 +5,25 @@ import { SkillManager } from '../skill/SkillManager'
 import { SkillSystem } from '../skill/SkillSystem'
 import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
-import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import { EventBus } from '../events/EventBus'
 import { ActionImpactSystem } from '../battle/ActionImpactSystem'
 
 
 import { createBaseStats } from '../stats/StatBlock'
-import { ailments } from '../../data/ailment/ailments'
+import { buffs } from '../../data/buff/buffs'
 import { MAX_MOMENTUM } from '../combat/CombatTypes'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
+
+function createBuffRegistry(): BuffRegistry {
+  const registry = new BuffRegistry()
+
+  for (const definition of buffs) {
+    registry.register(definition)
+  }
+
+  return registry
+}
 
 function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
   // dexterity:0/evasionRate:0 — đảm bảo hit chance 100% xuyên suốt test,
@@ -81,19 +90,12 @@ function setup() {
   const eventBus = new EventBus()
   const skillManager = new SkillManager()
   const skillSystem = new SkillSystem(skillManager)
-  const ailmentRegistry = new AilmentRegistry()
-
-  for (const template of ailments) {
-    ailmentRegistry.register(template)
-  }
-
   const system = new BattleSystem(
     new CombatSystem(eventBus),
     skillManager,
     skillSystem,
     new SkillEffectSystem(),
-    new BuffRegistry(),
-    ailmentRegistry,
+    createBuffRegistry(),
     eventBus,
     new ActionImpactSystem({ eventBus, rollCritical: () => false }),
   )
@@ -158,7 +160,7 @@ describe('BattleSystem — Thể Tu Momentum/Break engine (Combat Rework Phase 7
     const bossAfterOneHit = system.getBattle()!.enemies[0]!
 
     expect(bossAfterOneHit.entity.currentBreakGauge).toBe(20)
-    expect(bossAfterOneHit.ailments.has('choang')).toBe(false)
+    expect(bossAfterOneHit.buffs.hasAny('choang')).toBe(false)
 
     // Phát 2 (cast lại ~t=1.0s sau khi qua mốc cooldown, bay 0.1s nữa)
     // — 20 - 30 <= 0 -> Stagger, reset breakGaugeMax. 80 tick x 0.01s =
@@ -170,6 +172,6 @@ describe('BattleSystem — Thể Tu Momentum/Break engine (Combat Rework Phase 7
     const bossAfterStagger = system.getBattle()!.enemies[0]!
 
     expect(bossAfterStagger.entity.currentBreakGauge).toBe(50)
-    expect(bossAfterStagger.ailments.has('choang')).toBe(true)
+    expect(bossAfterStagger.buffs.hasAny('choang')).toBe(true)
   })
 })

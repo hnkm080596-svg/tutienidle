@@ -5,22 +5,22 @@ import { SkillManager } from '../skill/SkillManager'
 import { SkillSystem } from '../skill/SkillSystem'
 import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
-import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import { EventBus } from '../events/EventBus'
 import { ActionImpactSystem } from '../battle/ActionImpactSystem'
 
 
 import { createBaseStats } from '../stats/StatBlock'
-import { ailments } from '../../data/ailment/ailments'
+import { buffs } from '../../data/buff/buffs'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
 
 // Thổ Tu (Thạch Hóa, Plans/magicpathgeneral, 2026-08-21) — "50% Choáng
 // mỗi đòn đánh trúng trong lúc Thạch Hóa active" đi qua BattleSystem.
 // resolveMissiles() thật (missile bay + trúng), khác
-// AilmentSystem.onHitProc.test.ts (chỉ test rollOnHitEffects() đơn
-// lẻ). onHitChance ép về 1 (registry test-only) để tất định — bản
-// thân roll xác suất đã test riêng ở file kia bằng biên 0/1.
+// BuffSystem.test.ts's on-hit proc / Thạch Hóa describe (chỉ test
+// rollOnHitEffects() đơn lẻ). onHitChance ép về 1 (registry test-only)
+// để tất định — bản thân roll xác suất đã test riêng ở file kia bằng
+// biên 0/1.
 function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
   const stats = { ...createBaseStats(), attack: 100, defense: 0, evasionRate: 0, dexterity: 0, criticalRate: 0 }
 
@@ -66,7 +66,7 @@ function createThoCauThuat(): Skill {
     target: 'enemy',
     effects: [
       { type: 'damage', value: 1, damageType: 'physical' },
-      { type: 'ailment', ailmentId: 'thach_hoa', ailmentChance: 1 },
+      { type: 'debuff', buffId: 'thach_hoa', ailmentChance: 1 },
     ],
     execution: { kind: 'attack_speed' },
     loadoutSlot: 0,
@@ -81,11 +81,18 @@ function setup(onHitChanceOverride: number) {
   const eventBus = new EventBus()
   const skillManager = new SkillManager()
   const skillSystem = new SkillSystem(skillManager)
-  const ailmentRegistry = new AilmentRegistry()
+  const buffRegistry = new BuffRegistry()
 
-  for (const template of ailments) {
-    ailmentRegistry.register(
-      template.id === 'thach_hoa' ? { ...template, onHitChance: onHitChanceOverride } : template,
+  for (const definition of buffs) {
+    buffRegistry.register(
+      definition.id === 'thach_hoa'
+        ? {
+            ...definition,
+            effects: definition.effects.map((effect) =>
+              effect.type === 'onHitProc' ? { ...effect, chance: onHitChanceOverride } : effect,
+            ),
+          }
+        : definition,
     )
   }
 
@@ -94,8 +101,7 @@ function setup(onHitChanceOverride: number) {
     skillManager,
     skillSystem,
     new SkillEffectSystem(),
-    new BuffRegistry(),
-    ailmentRegistry,
+    buffRegistry,
     eventBus,
     new ActionImpactSystem({ eventBus, rollCritical: () => false }),
   )
@@ -131,8 +137,8 @@ describe('BattleSystem — Thạch Hóa on-hit Choáng (Plans/magicpathgeneral)'
 
     const battleEnemy = system.getBattle()!.enemies[0]!
 
-    expect(battleEnemy.ailments.has('thach_hoa')).toBe(true)
-    expect(battleEnemy.ailments.has('choang')).toBe(true)
+    expect(battleEnemy.buffs.hasAny('thach_hoa')).toBe(true)
+    expect(battleEnemy.buffs.hasAny('choang')).toBe(true)
   })
 
   it('onHitChance=0 — dù trúng nhiều lần, KHÔNG BAO GIỜ Choáng', () => {
@@ -152,7 +158,7 @@ describe('BattleSystem — Thạch Hóa on-hit Choáng (Plans/magicpathgeneral)'
 
     const battleEnemy = system.getBattle()!.enemies[0]!
 
-    expect(battleEnemy.ailments.has('thach_hoa')).toBe(true)
-    expect(battleEnemy.ailments.has('choang')).toBe(false)
+    expect(battleEnemy.buffs.hasAny('thach_hoa')).toBe(true)
+    expect(battleEnemy.buffs.hasAny('choang')).toBe(false)
   })
 })

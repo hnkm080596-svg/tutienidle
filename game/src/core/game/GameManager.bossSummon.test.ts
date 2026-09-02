@@ -3,7 +3,7 @@ import { GameManager } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
-import type { Buff } from '../buff/Buff'
+import type { BuffDefinition } from '../buff/BuffDefinition'
 import type { EnemyDefinition } from '../enemy/Enemy'
 
 const MINIMAL_STATS_INPUT = {
@@ -65,13 +65,13 @@ describe('GameManager.updateBossSummons (Combat Rework Phase 4 — Boss Mechanic
 
     gameManager.registerEnemyTemplates([defineEnemy(createSummonTargetDefinition('add_wolf'))])
 
-    const enrageBuff: Buff = {
+    const enrageBuff: BuffDefinition = {
       id: 'unused',
       name: 'unused',
-      category: 'buff',
-      stacks: 1,
+      polarity: 'buff',
+      duration: Infinity,
       stackMode: 'stack',
-      modifiers: [],
+      effects: [],
     }
 
     const boss = defineEnemy({
@@ -116,13 +116,13 @@ describe('GameManager.updateBossSummons (Combat Rework Phase 4 — Boss Mechanic
     const gameManager = new GameManager()
     // Cố tình KHÔNG registerEnemyTemplates() cho 'unknown_enemy'.
 
-    const enrageBuff: Buff = {
+    const enrageBuff: BuffDefinition = {
       id: 'unused',
       name: 'unused',
-      category: 'buff',
-      stacks: 1,
+      polarity: 'buff',
+      duration: Infinity,
       stackMode: 'stack',
-      modifiers: [],
+      effects: [],
     }
 
     const boss = defineEnemy({

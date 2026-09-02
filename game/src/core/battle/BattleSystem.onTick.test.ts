@@ -5,7 +5,6 @@ import { SkillManager } from '../skill/SkillManager'
 import { SkillSystem } from '../skill/SkillSystem'
 import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
-import { AilmentRegistry } from '../ailment/AilmentRegistry'
 import { EventBus } from '../events/EventBus'
 import { ActionImpactSystem } from './ActionImpactSystem'
 import { createBaseStats } from '../stats/StatBlock'
@@ -57,7 +56,7 @@ function setup() {
   const skillSystem = new SkillSystem(skillManager)
   const system = new BattleSystem(
     new CombatSystem(eventBus), skillManager, skillSystem, new SkillEffectSystem(),
-    new BuffRegistry(), new AilmentRegistry(), eventBus,
+    new BuffRegistry(), eventBus,
     new ActionImpactSystem({ eventBus, rollCritical: () => false }),
     undefined, undefined, undefined,
     // getKiemTuRoute must return 'bat_kiem' — initChannelState() gates
