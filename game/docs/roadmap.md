@@ -248,3 +248,99 @@ Phase 4:  tech-debt — chạy nền liên tục
 | Combat overlay layering repair | Styles khôi phục, overlap guards, e2e layout — merged `a5c2c03` |
 | Balance pass | Armor K theo realm, block cap, reaction scaling, realm pressure tests — merged `47042ac` |
 | Code-split | Entry 2231→848KB + phaser chunk riêng — merged `af88cee` |
+
+---
+
+## 8. Giai đoạn 9 — QA Deep Lần 1 (2026-09-02) — ưu tiên sửa trước khi cộng dồn nợ
+
+> Nguồn: `game/docs/qa/2026-09-02-full-project-deep.md` (verdict: FAIL, 1 Confirmed + 11 Suspected/Coverage gap + 9 optimize).
+> Phạm vi: toàn project (7 domain pack).
+> Nguyên tắc thực thi: TDD theo từng item; reproduction test viết trước, production fix viết sau, verify bằng `type-check` + vitest + build + e2e như AGENTS.md.
+
+### 8.1. Bug fix từ QA deep — ưu tiên cao (theo verdict FAIL)
+
+| Task | Mô tả | Trạng thái |
+|---|---|---|
+| **9.1** ⬜ | **QA-001 (High, Confirmed) — Kẹt trang bị khi đột phá** | ĐÃ ĐỔI THIẾT KẾ (user 2026-09-02) |
+| **9.2** ⬜ | QA-002 (High) — `restoreFromSave` thiếu idempotency guard | |
+| **9.3** ⬜ | QA-003 (High) — `OverlayPanel` thiếu focus trap (H5 Giai đoạn 8) | |
+| **9.4** ⬜ | QA-004 (Medium) — `updateKiem` chưa được gọi từ production (defer lâu, sửa cùng 6A) | |
+| **9.5** ⬜ | QA-005 (Medium) — `PhaserCanvas.vue setupGame` leak handler khi throw | |
+| **9.6** ⬜ | QA-006 (Medium) — `CombatDefeatPanel` thiếu 10s auto-return-home | |
+| **9.7** ⬜ | QA-007 (Medium) — `OfflineProgressSystem` thiếu `isFinite(cultivationPerSecond)` guard | |
+| **9.8** ⬜ | QA-008 (Medium) — `MaterialBag.add` overflow bị caller bỏ qua | |
+| **9.9** ⬜ | QA-009 (Medium) — `useAutoRetryCountdown.start()` không clear handle cũ | |
+| **9.10** ⬜ | QA-010 (Medium) — `EquipmentSlotManager.restore` thiếu slot-enum check (defense in depth) | |
+| **9.11** ⬜ | QA-011 (Low) — `LocalCloudSaveService` 2 key không atomic | |
+| **9.12** ⬜ | QA-012 (Low) — `stateVersion` bump mỗi tick dù state không đổi (refactor) | |
+
+### 8.2. Spec chi tiết Task 9.1 — QA-001 panel chặn đột phá khi còn mặc trang bị
+
+**Bối cảnh:** Reproduction test `game/src/core/game/GameManager.realmAdvanceUnequip.test.ts` đã fail. Tuy nhiên, user 2026-09-02 chốt thiết kế mới: thay vì auto-unequip (Task 17 của item-grade rework P5-6), game sẽ **chặn hành động đột phá** + pop panel thông báo.
+
+**Thiết kế hành vi mới:**
+
+1. Khi người chơi bấm "Độ Kiếp" mà vẫn còn trang bị đang mặc:
+   - Hành động đột phá bị **từ chối** (không thay đổi realmId, không chạy tribulation).
+   - Pop một panel thông báo với nội dung:
+     - **Tiêu đề:** "Độ kiếp cũng là độ thân, không gì có thể giúp được ngươi"
+     - **Dòng phụ (màu đỏ):** "Không thể mặc trang bị khi độ kiếp"
+   - Panel đóng khi người chơi bấm xác nhận (hoặc bấm ngoài — tuỳ theo primitive).
+
+2. Áp dụng cho cả 2 đường đột phá:
+   - `useTribulation.ts` (Độ Kiếp Trúc Cơ và các tầng cao hơn).
+   - `GameManager.chooseCultivationPath` (Lễ Nhập Môn mortal → qi_refining).
+
+3. **Quyết định user chốt (2026-09-02):**
+   - Chặn **tại bước xác nhận** (không disable nút — người chơi phải bấm để được thông báo). Hành vi: bấm nút "Độ Kiếp" → core từ chối `{ ok: false, reason: 'still_equipped' }` → pop panel. Phù hợp với user feedback "phải thông báo cho người chơi".
+   - KHÔNG có nút "Tự tháo" trong panel. Người chơi tự vào Động Phủ / trang bị để tháo rồi quay lại.
+   - **Mọi string dùng i18n** (locale JSON, không hardcode). Tạo key mới:
+     - `tribulation.stillEquipped.title` = "Độ kiếp cũng là độ thân, không gì có thể giúp được ngươi"
+     - `tribulation.stillEquipped.subtitle` = "Không thể mặc trang bị khi độ kiếp"
+     - `tribulation.stillEquipped.confirm` (nút đóng panel) — ví dụ: "Đã hiểu" / "Ta biết rồi"
+   - Cả 2 locale `vi.json` và `en.json` đều phải có đủ 3 key.
+
+4. **Đảo ngược spec cũ:** Việc tự `unequipAllEquipment()` trong `useTribulation.ts:164` là **sai thiết kế** theo quyết định mới. Cần:
+   - Dỡ call site `useTribulation.ts:164`.
+   - Giữ method `unequipAllEquipment()` (vẫn cần cho test P5-6 và cho trường hợp người chơi tự tháo).
+   - Cập nhật doc/comment cũ (nhiều nơi) để phản ánh hành vi "chặn + panel" thay vì "auto-unequip".
+
+5. **Trạng thái `chooseCultivationPath`:** Bản thân hàm này cũng không nên auto-unequip. Cần thêm guard "still_equipped" trước khi đổi realmId.
+
+**Phụ thuộc chéo:**
+- Tận dụng `OverlayPanel.vue` primitive (cần kết hợp với Task 9.3 focus trap — làm focus trap trước, dùng cho panel này luôn).
+- i18n: text "Độ kiếp cũng là độ thân..." thuộc nhóm "story/lore", có thể hardcode trong data kit (giống `great_dao_seed` description) HOẶC vào locale JSON. **Cần user chốt.**
+- Test: thêm test trong `useTribulation.test.ts` / `GameManager.cultivationPathRewards.test.ts` cho 2 đường (tribulation + Lễ Nhập Môn).
+
+**Ước lượng:** ~1 session (TDD theo subagent-driven-development pattern đã dùng cho audit-fixes / item-grade rework).
+
+### 8.3. Optimize (ưu tiên thấp — cộng dồn cuối roadmap)
+
+| ID | File:line | Vấn đề | Gợi ý |
+|---|---|---|---|
+| **OPT-01** | `game/src/App.vue:360` | `bumpState()` mỗi tick | Tách `stateVersion` thành "bag/equipment" (manual) + "battle/world" (auto) |
+| **OPT-02** | `game/src/services/save/SaveSystem.ts:575,583` | `structuredClone` + `JSON.stringify` = double serialize mỗi autosave | Serialize một lần |
+| **OPT-03** | `game/src/composables/useCadenceSmoothing.ts:56-68` | rAF loop không tự dừng | Self-terminate khi `displayed <= 0 && total <= 0` |
+| **OPT-04** | `game/src/core/equipment/EquipmentBag.ts:129-135` | `getEquipped`/`getEquippedInSlot` O(N) | Thêm `Map<EquipmentSlot, EquipmentInstance>` index |
+| **OPT-05** | `game/src/components/panels/EquipmentHallPanel/EnhanceTab.vue:63-111` | `enhanceRows` O(slots × 5) mỗi stateVersion bump | Memoize theo `(stateVersion, selectedSlot)` |
+| **OPT-06** | `game/src/services/save/SaveSystem.ts:661-668` | `loadGame` đọc+remove `IMPORT_HANDOFF_KEY` mỗi boot kể cả khi không import | Lazy read |
+| **OPT-07** | `game/src/App.vue:285-287` | `drainNotifications()` chạy mỗi tick vô điều kiện | Early-return khi `notifications.length === 0` |
+| **OPT-08** | `game/src/components/game/PhaserCanvas.vue:120-136` | EventBus handler đăng ký trước async game create | Wrap try/catch + cleanup on failure (cũng liên quan 9.5) |
+| **OPT-09** | `game/src/game/scenes/CombatScene.ts:1407-1446` | 11-entry `boundHandlers` array + 14 explicit `on()` | `Map<string, Function>` đối xứng register/unregister |
+
+### 8.4. Thứ tự đề xuất
+
+1. **Task 9.1** (QA-001 panel chặn đột phá) — làm đầu vì Confirmed + đảo ngược spec cũ; dùng `OverlayPanel` primitive (cần Task 9.3 trước một phần — focus trap).
+2. **Task 9.3** (focus trap OverlayPanel) — bổ trợ cho 9.1.
+3. **Task 9.2** (idempotency restoreFromSave) — bảo vệ save integrity.
+4. **Task 9.7** (OfflineProgressSystem isFinite) — bảo vệ save integrity.
+5. **Task 9.8** (MaterialBag.add overflow caller) — bảo vệ resource conservation.
+6. **Task 9.4, 9.5, 9.6, 9.9, 9.10, 9.11** — bổ trợ, sắp xếp theo thời gian tiện tay.
+7. **Task 9.12 + OPT-01..09** — cộng dồn cuối, làm theo đợt refactor.
+
+### 8.5. Liên kết QA artifacts
+
+- Báo cáo chính: `game/docs/qa/2026-09-02-full-project-deep.md`
+- Reproduction test QA-001: `game/src/core/game/GameManager.realmAdvanceUnequip.test.ts`
+- Exploration reports (subagent): `game/docs/qa/2026-09-02-{combat-tribulation,economy-progression,save-cloud}-*.md`
+- Learned-defect entry: `QA-2026-09-02-001` trong `game/docs/qa/learned-defects.md`
