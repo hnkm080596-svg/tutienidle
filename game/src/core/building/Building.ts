@@ -22,7 +22,7 @@ export type BuildingFunctionType =
   | 'equipment_hall'
   | 'stage_select'
   | 'exploration'
-  | 'spirit_spring'
+  | 'worker_lodge'
   | 'vendor'
 
 /**

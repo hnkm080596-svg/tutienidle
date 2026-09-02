@@ -1,7 +1,7 @@
 import type { ThanhVanSeason, ThanhVanTime } from './ThanhVanArt'
 
 export const DONG_FU_BUILDING_IDS = [
-  'spirit_spring',
+  'chi_hien_quan',
   'equipment_hall',
   'pill_room',
   'teleport_array',
@@ -117,7 +117,9 @@ export const DONG_FU_BUILDING_ART: readonly DongFuBuildingArtEntry[] = [
     },
   },
   {
-    buildingId: 'spirit_spring',
+    // chi_hien_quan — placeholder layout tái dùng entry Linh Tuyền cũ
+    // (art v2 riêng làm theo dong-fu pipeline đợt sau).
+    buildingId: 'chi_hien_quan',
     canvas: { width: 1254, height: 1254 },
     visualBounds: { x: 0, y: 294, width: 1244, height: 659 },
     baselineY: 953,

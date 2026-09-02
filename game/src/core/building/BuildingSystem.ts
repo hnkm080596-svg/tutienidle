@@ -250,7 +250,9 @@ export class BuildingSystem {
   }
 
   private getEffectiveRate(template: Building, level: number, realmId?: string): number {
-    if (template.id === 'spirit_spring') {
+    // Linh mạch (chi-hien-quan spec) — engine Linh Tuyền cũ, nguồn giờ là
+    // gathering_outpost (building spirit_spring đã xóa khỏi data).
+    if (template.id === 'gathering_outpost') {
       return this.getSpiritSpringRatePerSecond(template, level, realmId)
     }
 
@@ -268,7 +270,7 @@ export class BuildingSystem {
   }
 
   private getEffectiveCapacity(template: Building, level: number, realmId?: string): number {
-    if (template.id === 'spirit_spring') {
+    if (template.id === 'gathering_outpost') {
       // Storage = đúng 10h sản lượng ở level/realm đó để offline không bao
       // giờ cap TRƯỚC cap thời gian (2026-08-28 — thay 100^level cũ khiến
       // L1 chỉ chứa 100 thạch, đầy sau ~47 phút). Epsilon chặn float drift
@@ -322,14 +324,14 @@ export class BuildingSystem {
   }
 
   /**
-   * Resolve materialId mà claim() sẽ trả — spirit_spring cấp Linh Thạch
-   * đúng PHẨM theo realm thu thập, building khác dùng template. Tách riêng
-   * để caller (GameManager.collectBuilding) pre-check registry TRƯỚC khi
-   * claim reset mốc thời gian — tránh mất sản lượng nếu id không resolve
-   * được (review 2026-08-28).
+   * Resolve materialId mà claim() sẽ trả — linh mạch Khai Vật Đường cấp
+   * Linh Thạch đúng PHẨM theo realm thu thập, building khác dùng template.
+   * Tách riêng để caller (GameManager.collectBuilding) pre-check registry
+   * TRƯỚC khi claim reset mốc thời gian — tránh mất sản lượng nếu id không
+   * resolve được (review 2026-08-28).
    */
   resolveProducesMaterialId(template: Building, currentRealmId?: string): string | undefined {
-    return template.id === 'spirit_spring' && currentRealmId
+    return template.id === 'gathering_outpost' && currentRealmId
       ? getSpiritStoneMaterialIdForRealmTier(getRealmTier(currentRealmId))
       : template.producesMaterialId
   }

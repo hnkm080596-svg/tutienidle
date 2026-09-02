@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+﻿import { describe, expect, it } from 'vitest'
 import { BuildingSystem } from './BuildingSystem'
 import type { Building } from './Building'
 import type { BuildingInstance } from './BuildingInstance'
@@ -14,7 +14,7 @@ function instanceAt(level: number): BuildingInstance {
 
 const TEMPLATE: Building = {
   id: 'pill_room',
-  name: 'Đan Phòng',
+  name: 'Äan PhÃ²ng',
   category: 'crafting_station',
   tier: 1,
   maxLevel: 5,
@@ -29,8 +29,8 @@ const TEMPLATE: Building = {
   ],
 }
 
-describe('BuildingSystem.getCraftModifiers (BUILDing spec mục 15-16)', () => {
-  it('trả về default (1 slot, không bonus) cho building không có `levels`', () => {
+describe('BuildingSystem.getCraftModifiers (BUILDing spec má»¥c 15-16)', () => {
+  it('tráº£ vá» default (1 slot, khÃ´ng bonus) cho building khÃ´ng cÃ³ `levels`', () => {
     const noLevels: Building = { ...TEMPLATE, levels: undefined }
 
     expect(system.getCraftModifiers(instanceAt(5), noLevels)).toEqual({
@@ -41,7 +41,7 @@ describe('BuildingSystem.getCraftModifiers (BUILDing spec mục 15-16)', () => {
     })
   })
 
-  it('level 1 (chưa đạt level nào có effect) — vẫn 1 slot mặc định', () => {
+  it('level 1 (chÆ°a Ä‘áº¡t level nÃ o cÃ³ effect) â€” váº«n 1 slot máº·c Ä‘á»‹nh', () => {
     expect(system.getCraftModifiers(instanceAt(1), TEMPLATE)).toEqual({
       timeReductionPercent: 0,
       qualityBonusPercent: 0,
@@ -50,14 +50,14 @@ describe('BuildingSystem.getCraftModifiers (BUILDing spec mục 15-16)', () => {
     })
   })
 
-  it('cộng dồn MỌI level đã đạt, không chỉ level hiện tại', () => {
+  it('cá»™ng dá»“n Má»ŒI level Ä‘Ã£ Ä‘áº¡t, khÃ´ng chá»‰ level hiá»‡n táº¡i', () => {
     const modifiers = system.getCraftModifiers(instanceAt(3), TEMPLATE)
 
     expect(modifiers.qualityBonusPercent).toBe(5)
     expect(modifiers.timeReductionPercent).toBe(15)
   })
 
-  it('cộng dồn effect cùng loại ở các mốc khác nhau', () => {
+  it('cá»™ng dá»“n effect cÃ¹ng loáº¡i á»Ÿ cÃ¡c má»‘c khÃ¡c nhau', () => {
     const atLevel4 = system.getCraftModifiers(instanceAt(4), TEMPLATE)
 
     expect(atLevel4.qualityBonusPercent).toBe(10)
@@ -67,7 +67,7 @@ describe('BuildingSystem.getCraftModifiers (BUILDing spec mục 15-16)', () => {
     expect(atLevel5.timeReductionPercent).toBe(25)
   })
 
-  it('không tính effect của level chưa đạt', () => {
+  it('khÃ´ng tÃ­nh effect cá»§a level chÆ°a Ä‘áº¡t', () => {
     const modifiers = system.getCraftModifiers(instanceAt(2), TEMPLATE)
 
     expect(modifiers.qualityBonusPercent).toBe(5)
@@ -77,7 +77,7 @@ describe('BuildingSystem.getCraftModifiers (BUILDing spec mục 15-16)', () => {
 })
 
 describe('BuildingSystem.upgrade realm tier gate', () => {
-  it('không cho cấp building vượt tier cảnh giới hiện tại', () => {
+  it('khÃ´ng cho cáº¥p building vÆ°á»£t tier cáº£nh giá»›i hiá»‡n táº¡i', () => {
     const registry = new BuildingRegistry()
     const manager = new BuildingManager()
     const bag = new MaterialBag()
@@ -90,11 +90,11 @@ describe('BuildingSystem.upgrade realm tier gate', () => {
   })
 })
 
-describe('BuildingSystem Linh Tuyền (engine offline, balance 2026-08-28)', () => {
+describe('BuildingSystem Linh Tuyá»n (engine offline, balance 2026-08-28)', () => {
   function spring(): Building {
     return {
       ...TEMPLATE,
-      id: 'spirit_spring',
+      id: 'gathering_outpost',
       producesMaterialId: 'spirit_stone',
       baseProductionRate: 5.5 / 60 / 2.6,
       maxLevel: 9,
@@ -102,10 +102,10 @@ describe('BuildingSystem Linh Tuyền (engine offline, balance 2026-08-28)', () 
   }
 
   function springInstance(level: number): BuildingInstance {
-    return { ...instanceAt(level), buildingId: 'spirit_spring' }
+    return { ...instanceAt(level), buildingId: 'gathering_outpost' }
   }
 
-  it('rate level MAX = 5% rate farm online của realm (thạch/phút)', () => {
+  it('rate level MAX = 5% rate farm online cá»§a realm (tháº¡ch/phÃºt)', () => {
     const s = spring()
 
     expect(system.getRatePerMinute(springInstance(9), s, 'mortal')).toBeCloseTo(5.5, 5)
@@ -113,7 +113,7 @@ describe('BuildingSystem Linh Tuyền (engine offline, balance 2026-08-28)', () 
     expect(system.getRatePerMinute(springInstance(9), s, 'foundation_establishment')).toBeCloseTo(93, 5)
   })
 
-  it('realm cao hơn rate cao hơn; L1 < L9', () => {
+  it('realm cao hÆ¡n rate cao hÆ¡n; L1 < L9', () => {
     const s = spring()
 
     const mortalL1 = system.getRatePerMinute(springInstance(1), s, 'mortal')
@@ -126,16 +126,16 @@ describe('BuildingSystem Linh Tuyền (engine offline, balance 2026-08-28)', () 
     expect(foundationL9).toBeGreaterThan(qiL9)
   })
 
-  it('storage = đúng 10h sản lượng ở level/realm đó', () => {
+  it('storage = Ä‘Ãºng 10h sáº£n lÆ°á»£ng á»Ÿ level/realm Ä‘Ã³', () => {
     const s = spring()
     const instance = springInstance(9)
 
-    // 10h = 600 phút → capacity ≈ rate/phút × 600
+    // 10h = 600 phÃºt â†’ capacity â‰ˆ rate/phÃºt Ã— 600
     const ratePerMinute = system.getRatePerMinute(instance, s, 'qi_refining')
     expect(system.getCapacity(instance, s, 'qi_refining')).toBeCloseTo(ratePerMinute * 600, 0)
   })
 
-  it('getStoredAmount chạm trần storage sau đúng 10h offline', () => {
+  it('getStoredAmount cháº¡m tráº§n storage sau Ä‘Ãºng 10h offline', () => {
     const s = spring()
     const instance = { ...springInstance(9), lastCollectedAt: 0 }
 
@@ -145,7 +145,7 @@ describe('BuildingSystem Linh Tuyền (engine offline, balance 2026-08-28)', () 
     expect(stored).toBe(capacity)
   })
 
-  it('storage tăng theo realm (foundation > qi > mortal)', () => {
+  it('storage tÄƒng theo realm (foundation > qi > mortal)', () => {
     const s = spring()
 
     const m = system.getCapacity(springInstance(9), s, 'mortal')
@@ -156,7 +156,7 @@ describe('BuildingSystem Linh Tuyền (engine offline, balance 2026-08-28)', () 
     expect(q).toBeGreaterThan(m)
   })
 
-  it('claim giữ PHẦN LẺ: 2 lần claim liên tiếp nhận đúng tổng sản lượng (review 2026-08-28)', () => {
+  it('claim giá»¯ PHáº¦N Láºº: 2 láº§n claim liÃªn tiáº¿p nháº­n Ä‘Ãºng tá»•ng sáº£n lÆ°á»£ng (review 2026-08-28)', () => {
     const s = spring()
     const registry = new BuildingRegistry()
     const manager = new BuildingManager()
@@ -167,23 +167,23 @@ describe('BuildingSystem Linh Tuyền (engine offline, balance 2026-08-28)', () 
 
     manager.add(instance)
 
-    // Rate L1 mortal ≈ 0.03526/s → 100s tích ≈ 3.53 (3 nguyên + 0.53 lẻ).
+    // Rate L1 mortal â‰ˆ 0.03526/s â†’ 100s tÃ­ch â‰ˆ 3.53 (3 nguyÃªn + 0.53 láº»).
     const first = system.claim('i1', registry, manager, 100, 'mortal')
 
     expect(first.amount).toBe(3)
 
-    // Phần lẻ được giữ: mốc lùi về quá khứ, KHÔNG reset về currentTime.
+    // Pháº§n láº» Ä‘Æ°á»£c giá»¯: má»‘c lÃ¹i vá» quÃ¡ khá»©, KHÃ”NG reset vá» currentTime.
     expect(manager.get('i1')!.lastCollectedAt).toBeLessThan(100)
     expect(manager.get('i1')!.lastCollectedAt).toBeGreaterThan(0)
 
-    // Claim lần 2 ở t=200: nhận cả phần lẻ cũ → tổng 2 lần = floor(200 × rate) = 7.
+    // Claim láº§n 2 á»Ÿ t=200: nháº­n cáº£ pháº§n láº» cÅ© â†’ tá»•ng 2 láº§n = floor(200 Ã— rate) = 7.
     const second = system.claim('i1', registry, manager, 200, 'mortal')
 
     expect(second.amount).toBe(4)
     expect(first.amount + second.amount).toBe(7)
   })
 
-  it('claim chưa đủ 1 đơn vị → trả 0 và KHÔNG reset mốc', () => {
+  it('claim chÆ°a Ä‘á»§ 1 Ä‘Æ¡n vá»‹ â†’ tráº£ 0 vÃ  KHÃ”NG reset má»‘c', () => {
     const s = spring()
     const registry = new BuildingRegistry()
     const manager = new BuildingManager()
@@ -194,7 +194,7 @@ describe('BuildingSystem Linh Tuyền (engine offline, balance 2026-08-28)', () 
 
     manager.add(instance)
 
-    // 10s × 0.035 ≈ 0.35 < 1 → chưa claim được.
+    // 10s Ã— 0.035 â‰ˆ 0.35 < 1 â†’ chÆ°a claim Ä‘Æ°á»£c.
     const result = system.claim('i1', registry, manager, 10, 'mortal')
 
     expect(result.amount).toBe(0)

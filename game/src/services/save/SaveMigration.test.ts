@@ -55,7 +55,7 @@ describe('loadGame — retirement của auto-migration (v42–v46)', () => {
     localStorage.clear()
   })
 
-  for (const version of [42, 43, 44, 45, 46]) {
+  for (const version of [42, 43, 44, 45, 46, 54]) {
     it(`version ${version} → incompatible, KHÔNG write nào phát sinh`, () => {
       const raw = writeRawSave(version)
 

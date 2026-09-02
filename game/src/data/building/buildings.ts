@@ -59,44 +59,39 @@ function pillRoomLevels(): BuildingLevelDef[] {
 // liệu khác — sink chính của Lâm (plan §5.2). Tàng Kinh Các KHÔNG phải
 // building (dong-fu-command-wheel plan Workstream C).
 export const buildings: Building[] = [
-  // Linh Tuyền — dòng Linh Thạch thu phụ ổn định (producesMaterialId,
-  // thu hoạch đổ vào MaterialBag như material bình thường, plan
-  // Workstream F; xem BuildingSystem.claim()).
+  // Khai Vật Đường — gate Sản Xuất + LINH MẠCH (chi-hien-quan spec
+  // 2026-09-02): chức năng ngưng tụ Linh Thạch của Linh Tuyền (đã xóa)
+  // chuyển vào đây — cùng engine rate/storage, truy vấn qua
+  // BuildingSystem conditions theo id 'gathering_outpost'.
   {
-    id: 'spirit_spring',
+    id: 'gathering_outpost',
 
-    name: 'Linh Tuyền',
+    name: 'Khai Vật Đường',
 
     description:
-      'Mạch linh tuyền tự nhiên, âm thầm ngưng tụ linh khí trời đất thành Linh Thạch theo thời gian.',
+      'Quản lý nhân công khai thác Lâm, Quáng và Động Thiên trên mọi địa giới. Dưới nền chảy linh mạch ngầm, âm thầm ngưng tụ Linh Thạch.',
 
-    category: 'resource',
+    category: 'crafting_station',
 
     tier: 1,
 
     maxLevel: 9,
 
+    // Linh mạch — engine thạch offline cũ của Linh Tuyền (rate scale
+    // theo realm trong BuildingSystem, level max ≈ 5% farm online).
     producesMaterialId: SPIRIT_STONE_MATERIAL_ID,
 
-    // Engine thạch offline chính (balance 2026-08-28) — rate THẬT scale
-    // theo realm trong BuildingSystem.getSpiritSpringRatePerSecond() (mục
-    // tiêu level max = 5% rate farm online ≈ 30 phút farm/10h offline).
-    // Giá trị dưới đây = rate L1 của Phàm Nhân, chỉ dùng làm mốc/gate;
-    // storage giờ = 10h sản lượng (không còn 100^level).
     baseProductionRate: 5.5 / 60 / 2.6,
 
     baseStorageCapacity: 100,
 
-    functionType: 'spirit_spring',
+    functionType: 'exploration',
 
     upgradeCost: extendCosts([
-      [
-        { materialId: 'mortal_wood', amount: 5 },
-        { materialId: 'mortal_ore_hoang', amount: 2 },
-      ],
+      [],
       [{ materialId: 'qi_refining_wood', amount: 4 }],
-      [{ materialId: 'foundation_establishment_wood', amount: 8 }],
-    ], 6),
+      [{ materialId: 'foundation_establishment_wood', amount: 6 }],
+    ], 4),
   },
 
   // Khí Đường — gate + nâng cấp bốn operation (Cường Hóa/Tẩy Luyện/
@@ -212,14 +207,17 @@ export const buildings: Building[] = [
     upgradeCost: [[{ materialId: 'mortal_wood', amount: 3 }]],
   },
 
-  // Sản Xuất — gate panel ba nguồn Lâm/Quáng/Động Thiên; BẮT BUỘC free
-  // vì đây là nguồn nguyên liệu DUY NHẤT đầu game.
+  // Chiêu Hiền Quán (chi-hien-quan spec 2026-09-02) — NGUỒN NHÂN CÔNG
+  // DUY NHẤT: capacity = 1 + level × 2 (getWorkerCapacityForLevel trong
+  // core/production/WorkerCapacity.ts). Cost bands khởi điểm — tuning
+  // sau playtest.
   {
-    id: 'gathering_outpost',
+    id: 'chi_hien_quan',
 
-    name: 'Khai Vật Đường',
+    name: 'Chiêu Hiền Quán',
 
-    description: 'Quản lý nhân công tự động khai thác Lâm, Quáng và Động Thiên trên mọi địa giới.',
+    description:
+      'Nơi chiêu nạp và quản lý nhân công khai thác toàn cục. Cấp càng cao, càng nhiều hiền sĩ theo về.',
 
     category: 'crafting_station',
 
@@ -227,16 +225,14 @@ export const buildings: Building[] = [
 
     maxLevel: 9,
 
-    workersPerLevel: 1,
-
     baseStorageCapacity: 0,
 
-    functionType: 'exploration',
+    functionType: 'worker_lodge',
 
     upgradeCost: extendCosts([
       [],
-      [{ materialId: 'qi_refining_wood', amount: 4 }],
-      [{ materialId: 'foundation_establishment_wood', amount: 6 }],
+      [{ materialId: 'mortal_ore_hoang', amount: 4 }],
+      [{ materialId: 'qi_refining_wood', amount: 6 }],
     ], 4),
   },
 ]

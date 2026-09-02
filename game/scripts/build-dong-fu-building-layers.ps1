@@ -13,7 +13,7 @@ $runtimeRoot = [IO.Path]::GetFullPath(
 )
 
 $buildingSpecs = [ordered]@{
-  spirit_spring = @{ X = 0; Y = 294; Width = 1244; Height = 659; Baseline = 953 }
+  chi_hien_quan = @{ X = 0; Y = 294; Width = 1244; Height = 659; Baseline = 953 }
   equipment_hall = @{ X = 85; Y = 185; Width = 1133; Height = 756; Baseline = 941 }
   pill_room = @{ X = 114; Y = 118; Width = 1028; Height = 914; Baseline = 1032 }
   teleport_array = @{ X = 86; Y = 167; Width = 1075; Height = 882; Baseline = 1049 }
@@ -170,3 +170,4 @@ finally {
     Remove-Item -LiteralPath $tempRoot -Recurse
   }
 }
+

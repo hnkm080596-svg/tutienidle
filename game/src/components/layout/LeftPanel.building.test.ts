@@ -19,16 +19,14 @@ const WOOD: Material = {
 }
 
 const SPRING: Building = {
-  id: 'spirit_spring',
-  name: 'Linh Tuyền',
-  description: 'Tích luỹ Linh Thạch.',
-  category: 'resource',
+  id: 'chi_hien_quan',
+  name: 'Chiêu Hiền Quán',
+  description: 'Quản lý nhân công toàn cục.',
+  category: 'crafting_station',
   tier: 1,
   maxLevel: 3,
-  baseStorageCapacity: 60,
-  baseProductionRate: 1,
-  producesMaterialId: 'spirit_stone',
-  functionType: 'spirit_spring',
+  baseStorageCapacity: 0,
+  functionType: 'worker_lodge',
   upgradeCost: [
     [{ materialId: WOOD.id, amount: 1 }],
     [{ materialId: WOOD.id, amount: 2 }],
@@ -63,7 +61,7 @@ function mountSpringPanel() {
     stateVersion.value += 1
   })
 
-  useUiStore(pinia).leftPanelMode = 'spirit_spring'
+  useUiStore(pinia).leftPanelMode = 'worker_lodge'
   usePlayerStore(pinia).realmId = 'qi_refining'
   app.mount(container)
 
@@ -81,8 +79,8 @@ afterEach(() => {
   document.body.innerHTML = ''
 })
 
-describe('FunctionOverlayPanel — building header và Linh Tuyền', () => {
-  it('render Linh Tuyền trong overlay: ảnh + Tên + Cấp CÙNG MỘT dải title bar, nút Nâng cấp neo góc phải (2026-08-30: gộp 2 dải trùng tên/cấp làm 1)', async () => {
+describe('FunctionOverlayPanel — building header và Chiêu Hiền Quán', () => {
+  it('render Chiêu Hiền Quán trong overlay: ảnh + Tên + Cấp CÙNG MỘT dải title bar, nút Nâng cấp neo góc phải (2026-08-30: gộp 2 dải trùng tên/cấp làm 1)', async () => {
     const mounted = mountSpringPanel()
     const heading = mounted.container.querySelector<HTMLElement>('.overlay-panel__heading')!
     const actions = mounted.container.querySelector<HTMLElement>('.overlay-panel__header')!
@@ -93,9 +91,9 @@ describe('FunctionOverlayPanel — building header và Linh Tuyền', () => {
     // OverlayPanel qua useBuildingHeaderState).
     expect(mounted.container.querySelector('.building-panel-header')).toBeNull()
     expect(heading.querySelector('.building-heading__art')).not.toBeNull()
-    expect(heading.querySelector('.building-heading__name')?.textContent).toBe('Linh Tuyền')
+    expect(heading.querySelector('.building-heading__name')?.textContent).toBe('Chiêu Hiền Quán')
     expect(heading.textContent).toContain('Cấp 1 / 3')
-    expect((mounted.container.textContent!.match(/Linh Tuyền/g) ?? []).length).toBe(1)
+    expect((mounted.container.textContent!.match(/Chiêu Hiền Quán/g) ?? []).length).toBe(1)
 
     const upgradeButton = actions.querySelector<HTMLButtonElement>('.building-heading__upgrade')!
     expect(upgradeButton).not.toBeNull()
@@ -103,7 +101,7 @@ describe('FunctionOverlayPanel — building header và Linh Tuyền', () => {
     expect(mounted.container.querySelector('.construction-gate__upgrade')).toBeNull()
     expect(mounted.container.querySelectorAll('.building-heading__upgrade')).toHaveLength(1)
 
-    expect(mounted.container.querySelector('.spirit-spring-panel')).not.toBeNull()
+    expect(mounted.container.querySelector('.worker-lodge-panel')).not.toBeNull()
 
     upgradeButton.click()
     await nextTick()

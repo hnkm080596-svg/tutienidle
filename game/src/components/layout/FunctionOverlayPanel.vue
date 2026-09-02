@@ -9,7 +9,7 @@ import PillRoomPanel from '@/components/panels/PillRoomPanel.vue'
 import EquipmentHallPanel from '@/components/panels/EquipmentHallPanel.vue'
 import ScripturePavilionPanel from '@/components/panels/ScripturePavilionPanel.vue'
 import StageSelectPanel from '@/components/panels/StageSelectPanel.vue'
-import SpiritSpringPanel from '@/components/panels/SpiritSpringPanel.vue'
+import WorkerLodgePanel from '@/components/panels/WorkerLodgePanel.vue'
 import VendorPanel from '@/components/panels/VendorPanel.vue'
 import { useUiStore, type LeftPanelMode } from '@/stores/ui'
 
@@ -22,7 +22,7 @@ const TITLES: Record<FunctionMode, string> = {
   settings: 'Cài Đặt',
   equipment_hall: 'Khí Đường',
   pill_room: 'Đan Phòng',
-  spirit_spring: 'Linh Tuyền',
+  worker_lodge: 'Chiêu Hiền Quán',
   scripture_pavilion: 'Tàng Kinh Các',
   stage_select: 'Địa Giới',
   vendor: 'Ký Bảo Các',
@@ -32,7 +32,7 @@ const BUILDINGS: Partial<Record<FunctionMode, string>> = {
   exploration: 'gathering_outpost',
   equipment_hall: 'equipment_hall',
   pill_room: 'pill_room',
-  spirit_spring: 'spirit_spring',
+  worker_lodge: 'chi_hien_quan',
   stage_select: 'teleport_array',
   vendor: 'vendor',
 }
@@ -99,7 +99,7 @@ function close() {
       <SettingsPanel v-else-if="mode === 'settings'" />
       <PillRoomPanel v-else-if="mode === 'pill_room'" />
       <EquipmentHallPanel v-else-if="mode === 'equipment_hall'" />
-      <SpiritSpringPanel v-else-if="mode === 'spirit_spring'" />
+      <WorkerLodgePanel v-else-if="mode === 'worker_lodge'" />
       <ScripturePavilionPanel v-else-if="mode === 'scripture_pavilion'" />
       <StageSelectPanel v-else-if="mode === 'stage_select'" />
       <VendorPanel v-else-if="mode === 'vendor'" />
