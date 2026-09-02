@@ -165,7 +165,13 @@ export class DecomposeSystem {
 
   /** Output = floor(consumed/target × base(grade) × hệ_số(quality) × workers). */
   private outputForOre(oreId: string, consumed: number, workers: number): number {
-    const { quality, grade } = parseOre(oreId)
+    const parsed = parseOre(oreId)
+
+    if (!parsed) {
+      return 0
+    }
+
+    const { quality, grade } = parsed
 
     const target = workers * ORE_PER_WORKER_PER_CYCLE
 
