@@ -401,3 +401,20 @@ Việc cần làm:
 - [ ] **T21** ⬜ Terminology sweep (locale/tooltip/naming + enhance-row tooltip fix từ Task 10 review)
 - [ ] **T22** ⬜ Xóa file legacy (ItemGrade/EquipmentQuality/EquipmentRarity/ItemGradeRefs shim) + dead-reference contract test + dọn patch scripts
 - [ ] **T23** ⬜ Final full verify + ROADMAP update
+
+### Giai đoạn 8 — UI/UX repair (2026-09-02 review + user report)
+> Spec: `docs/superpowers/specs/2026-09-02-combat-overlay-layering-repair-design.md` • Plan: `docs/superpowers/plans/2026-09-02-combat-overlay-layering-repair.md`
+
+- [ ] **T8.1** ⬜ **Khôi phục styles bị mất của CombatSceneOverlay** — ROOT CAUSE đã chứng minh: commit `991ba75` (6A T8) xóa toàn bộ `<style scoped>` (root absolute/inset/z-15, ai-panel neo trái-trên, build-hud neo giữa-dưới, battlefield flex) → "bảng chọn mục tiêu bị lỗi hình ảnh" (user report) + Build HUD mất neo. Kèm style-contract test chống tái diễn.
+- [ ] **T8.2** ⬜ Overlap guards: Build HUD tránh vùng PlayerHudLayer canvas (O1, viewport < 1100px), AiPanel max-height scroll khi viewport thấp (O3, < 700px) — constants dẫn nguồn từ HUD_MARGIN/HP_WIDTH.
+- [ ] **T8.3** ⬜ E2e layout smoke `combat-overlay-layout.spec.ts` — ai-panel/build-hud anchored đúng, không đè nhau, 3 viewports.
+- [ ] **T8.4** ⬜ Dọn 5 file probe `ui-probe*.mjs` (untracked, throwaway — cần user duyệt xóa) + final verify.
+
+**Từ UI/UX review 2026-09-02 (chưa có plan — gắn vào tasks tương ứng):**
+- ⬜ C1 HUD text 12px/10px + contrast (gắn T20 theme/UI pass)
+- ⬜ C3 Pity counter + tỉ lệ cường hóa hiển thị (đã là deferred Task 20)
+- ⬜ C2 E2e Tribulation exit-zone guard (gắn T18 e2e)
+- ⬜ H1/H2 Decompose slider max bind capacity + estimate theo grade filter (gắn T4.2 Chiêu Hiền Quán — cùng đụng capacity)
+- ⬜ H5 Focus-trap modals (3 modals — task nhỏ riêng hoặc gắn T19 UI pass)
+- ⬜ M1/M2/M3/M5 — cleanup tự nhiên trong T19-22 sweep
+- ⬜ L3 PlayerHudLayer setScrollFactor(0) verify (gắn T8.3 e2e cùng lúc)
