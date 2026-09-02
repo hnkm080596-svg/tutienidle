@@ -244,8 +244,7 @@ describe('BattleSystem — Sword Zone (Kiếm Trận keystone, charge-based)', (
     expect(player.currentHp).toBe(1000)
   })
 
-  it('tickInterval = 0 — không vòng lặp vô hạn, zone vẫn hết charge dần chỉ khi có tick thật (không tick vô hạn)', () => {
-    const { system, tick } = setup()
+  it('tickInterval = 0 — không vòng lặp vô hạn, zone vẫn hết charge dần chỉ khi có tick thật (không tick vô hạn)', () => {    const { system, tick } = setup()
 
     const player = createCombatant({ id: 'player', type: 'player' })
     const enemy = createCombatant({ id: 'enemy', x: 8, currentHp: 1000, maxHp: 1000 })
@@ -268,5 +267,55 @@ describe('BattleSystem — Sword Zone (Kiếm Trận keystone, charge-based)', (
     // tickInterval 0 bị guard chặn — không tick, zone vẫn còn nguyên charge.
     expect(system.getBattle()!.swordZones).toHaveLength(1)
     expect(system.getBattle()!.swordZones[0]!.remainingCharges).toBe(2)
+  })
+
+  // Pháp Tu Thuần Hệ (E-5, 2026-09-03) — spawnSwordZone nhận element
+  // override từ spec (grantsZone + zoneElement); không truyền = 'metal'
+  // như cũ (Kiếm Trận).
+  it('spec.element = fire → zone mang element fire (grantsZone tổng quát)', () => {
+    const { system } = setup()
+
+    const player = createCombatant({ id: 'player', type: 'player' })
+    const enemy = createCombatant({ id: 'enemy', x: 8 })
+
+    system.start(player, enemy)
+    system.update(3)
+
+    system.spawnSwordZone(system.getBattle()!, {
+      ownerId: 'player',
+      row: 2,
+      column: 8,
+      laneRadius: 1,
+      columnRadius: 1,
+      charges: 3,
+      tickInterval: 1,
+      damagePerTick: 10,
+      element: 'fire',
+    })
+
+    expect(system.getBattle()!.swordZones[0]!.element).toBe('fire')
+  })
+
+  it('spec không element → zone vẫn metal (Kiếm Tu không đổi hành vi)', () => {
+    const { system } = setup()
+
+    const player = createCombatant({ id: 'player', type: 'player' })
+    const enemy = createCombatant({ id: 'enemy', x: 8 })
+
+    system.start(player, enemy)
+    system.update(3)
+
+    system.spawnSwordZone(system.getBattle()!, {
+      ownerId: 'player',
+      row: 2,
+      column: 8,
+      laneRadius: 1,
+      columnRadius: 1,
+      charges: 3,
+      tickInterval: 1,
+      damagePerTick: 10,
+    })
+
+    expect(system.getBattle()!.swordZones[0]!.element).toBe('metal')
   })
 })

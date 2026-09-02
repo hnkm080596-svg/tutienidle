@@ -68,6 +68,9 @@ export interface SkillEffectContext {
     charges: number
     tickInterval: number
     damagePerTick: number
+    // Pháp Tu Thuần Hệ (E-5, 2026-09-03) — element của zone, mặc định
+    // 'metal' (Kiếm Trận). Optional: caller cũ không truyền vẫn đúng.
+    element?: ElementType
   }) => void
 
   // Kiếm Tu (2026-08-15) — id skill ĐANG cast, gắn vào hit lúc
@@ -169,7 +172,10 @@ export class SkillEffectSystem {
         // TARGET (không phải source — vùng kiếm khí tồn tại độc lập sau
         // khi trận đã bày, cùng tinh thần LavaZone). Chỉ fire nếu target
         // còn sống — mirrors consumesAilmentId's guard bên dưới.
-        if (target.alive && effect.grantsSwordZone && ctx.spawnSwordZone) {
+        // Pháp Tu Thuần Hệ (E-5) — grantsZone là bản tổng quát (mọi
+        // element, zoneElement ?? 'metal'); grantsSwordZone (Kiếm Tu)
+        // giữ nguyên nghĩa metal — resolver gộp OR 2 flag.
+        if (target.alive && (effect.grantsSwordZone || effect.grantsZone) && ctx.spawnSwordZone) {
           ctx.spawnSwordZone({
             ownerId: source.id,
             row: target.row,
@@ -179,6 +185,7 @@ export class SkillEffectSystem {
             charges: effect.swordZoneCharges ?? 3,
             tickInterval: effect.swordZoneTickInterval ?? 1,
             damagePerTick: finalMultiplier * (effect.swordZoneDamageRatio ?? 0.3) * source.stats.attack,
+            element: effect.zoneElement ?? 'metal',
           })
         }
 

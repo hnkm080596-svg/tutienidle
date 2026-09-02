@@ -1771,6 +1771,10 @@ export class BattleSystem {
       tickInterval: number
 
       damagePerTick: number
+
+      // Pháp Tu Thuần Hệ (E-5, 2026-09-03) — element override; không
+      // truyền = 'metal' như cũ (Kiếm Trận).
+      element?: ElementType
     },
   ) {
     battle.swordZones.push({
@@ -1794,9 +1798,9 @@ export class BattleSystem {
 
       damagePerTick: spec.damagePerTick,
 
-      // Kiếm Trận LUÔN metal — không lấy từ spec (SkillEffectContext's
-      // spawnSwordZone không có field element).
-      element: 'metal',
+      // E-5: nhận element từ spec (grantsZone mọi hành), mặc định
+      // 'metal' giữ nguyên hành vi Kiếm Trận cũ.
+      element: spec.element ?? 'metal',
     })
   }
 

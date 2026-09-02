@@ -2,6 +2,7 @@ import type { SkillEffectType } from  './SkillTypes'
 import type { SkillDamageComponent } from './SkillDamageComponent'
 import type { StatType } from '../stats/StatTypes'
 import type { EffectScope } from '../battle/CombatAction'
+import type { ElementType } from '../element/ElementType'
 
 export interface SkillEffect {
   type: SkillEffectType
@@ -143,7 +144,20 @@ export interface SkillEffect {
   // khí tồn tại độc lập sau khi trận đã bày, cùng tinh thần LavaZone),
   // xem SkillEffectSystem.ts + BattleSystem.spawnSwordZone(). Không set
   // = effect 'damage' hoạt động như cũ (chỉ bắn missile thường).
+  // Pháp Tu Thuần Hệ (E-5, 2026-09-03) — GIỮ NGUYÊN cho Kiếm Tu, luôn
+  // zone 'metal'; grantsZone là bản tổng quát (mọi element) — resolver
+  // gộp `grantsSwordZone || grantsZone`.
   grantsSwordZone?: boolean
+
+  // Pháp Tu Thuần Hệ (E-5, 2026-09-03) — CHỈ dùng cho effect 'damage'.
+  // Bản tổng quát của grantsSwordZone: spawn 1 zone tại target với
+  // element từ `zoneElement` (mặc định 'metal' nếu không khai). Dùng
+  // cho Tắt Phương Giông Thổ (fire) / Kiếm Mộc Thông Thiên (wood).
+  // Cùng bộ field swordZone* bên dưới (tick/charges/damageRatio).
+  grantsZone?: boolean
+
+  zoneElement?: ElementType
+
   swordZoneCharges?: number
   swordZoneTickInterval?: number
   swordZoneDamageRatio?: number // × finalMultiplier của effect này = damagePerTick
