@@ -180,6 +180,15 @@ export interface StatusVfxAttachedEvent {
   stacks: number
 
   durationSeconds: number
+
+  /** Buff bar (2026-09-02) — tên hiển thị (tooltip/floating text). */
+  buffName?: string
+
+  /** Buff bar — màu placeholder xanh/đỏ + hình circle/diamond. */
+  polarity?: 'buff' | 'debuff'
+
+  /** Buff bar — duration Infinity (onhit_*) → hàng permanent, không timer. */
+  permanent?: boolean
 }
 
 export interface StatusVfxUpdatedEvent {
