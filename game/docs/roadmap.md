@@ -163,12 +163,12 @@ Phase 4:  tech-debt — chạy nền liên tục
 
 ### 7.2. i18n — Deferred items từ final review (APPROVED_WITH_MINORS)
 
-- **2.1** ⬜ vue-i18n v9 → v11 migration
-- **2.2** ⬜ Hoàn tất nốt string extraction (các file plan bỏ sót)
-- **2.3** ⬜ `formatStat` extension cho `SkillResourceStatLabels`
-- **2.4** ⬜ `CombatStatusBar` `mpLabel` fallback (hardcoded 'Linh Lực')
-- **2.5** ⬜ Bỏ locale-coupled test assertions
-- **2.6** ⬜ Locale parity lint test (`vi.json` ↔ `en.json`)
+- **2.1** ✅ vue-i18n v9.14 → v11.4.10 migration — merged `fc3efa6` (2026-09-03); pure bump, 0 source edits, full matrix xanh (2162 tests, e2e 9/9), QA quick PASS WITH EVIDENCE
+- **2.2** 🟡 Hoàn tất nốt string extraction — batches 1+2 done: ActionAvailability/AlchemyView/HomeResourceStrip + NodeInspector/SkillDetailView/6 combat overlays (`80c441e`, `46b3df9`), SkillResourceStatLabels (`6705982`); còn lại: FunctionOverlayPanel literals, useBagFilter GROUP/AGE_LABELS, HomeBuildingIcons aria, data-layer names (= 2.7)
+- **2.3** ✅ `formatStat` extension cho `SkillResourceStatLabels` — labels/descriptions chuyển sang locale + shared formatter (formatter judgment đã ghi document), `6705982`
+- **2.4** ❌ OBSOLETE — file `CombatStatusBar` xóa trong 6A; field `mpLabel` là dead-code, cleanup `1c7a092`
+- **2.5** ✅ Bỏ locale-coupled test assertions — 3 files converted, 5 files verified data-driven (không cần đổi), `d384e1d`
+- **2.6** ✅ Locale parity lint test — đã có sẵn: `src/i18n/index.test.ts:81-92` (key parity vi↔en), không cần làm mới
 - **2.7** (Lâu dài) Extract data content strings
 
 ### 7.3. Balance / stat system — từ deep-check
@@ -223,7 +223,7 @@ Phase 4:  tech-debt — chạy nền liên tục
 | **Giai đoạn 1** — Dọn nhà | untracked docs, skills cleanup, MainMenu e2e | ✅ XONG |
 | **Giai đoạn 2** — Game design nền tảng | crit%, unidentify, luyện filter, item-grade rework, combat UI | ✅ XONG |
 | **Giai đoạn 3** — Skill engine | Phase 2A, floating text, unified buff | ✅ XONG |
-| **Giai đoạn 4** — Sản xuất + kinh tế | i18n leftovers, Chiêu Hiền Quán, UI phân bổ, nhiên liệu, bảng tốc độ, simulation, vendor rework | 🟡 Chiêu Hiền Quán code xong ở worktree (chưa merge, xem 8.5); còn lại (i18n leftovers, nhiên liệu, bảng tốc độ, simulation, vendor) chưa làm |
+| **Giai đoạn 4** — Sản xuất + kinh tế | i18n leftovers, Chiêu Hiền Quán, UI phân bổ, nhiên liệu, bảng tốc độ, simulation, vendor rework | 🟡 Chiêu Hiền Quán code xong ở worktree (chưa merge, xem 8.5); i18n leftovers phần lớn xong (xem 7.2 — 2.1/2.3/2.5/2.6 ✅, 2.4 obsolete, 2.2 còn ít file, xem QA report 2026-09-03-task-9-followups-i18n-quick.md); còn lại (nhiên liệu, bảng tốc độ, simulation, vendor) chưa làm |
 | **Giai đoạn 5** — Balance | evasion, MP cost, armor, reaction, block | ✅ XONG |
 | **Giai đoạn 6** — Pre-production | online foundation, VIP, prestige, code-split, QA | 🟡 Một phần |
 | **Giai đoạn 7** — Item rework P5-6 | equip gate, breakthrough unequip, tabs, 10-rank theme, terminology, dọn legacy | ✅ XONG |
@@ -262,12 +262,12 @@ Phase 4:  tech-debt — chạy nền liên tục
 | Task | Mô tả | Trạng thái |
 |---|---|---|
 | **9.1** ✅ | **QA-001 (High, Confirmed) — Kẹt trang bị khi đột phá** | XONG 2026-09-02 (branch `worktree-task-9-1`, commits `f5248f4..3a8724a`, merged vào master). Thiết kế cuối (spec v6, user chốt lần 2 — xem note superseded ở 8.2): gộp 3 trigger → `triggerBreakthroughAction` auto-unequip + panel xác nhận "Độ kiếp cũng là độ thân..." cho MỌI đột phá. `chooseCultivationPath` không gate (feature-unlock sau đột phá). QA quick: PASS WITH EVIDENCE. 2 Low deferred: cooldown UX (QA-013), unequip-before-failed-start (QA-014). |
-| **9.2** ⬜ | QA-002 (High) — `restoreFromSave` thiếu idempotency guard | |
-| **9.3** ⬜ | QA-003 (High) — `OverlayPanel` thiếu focus trap (H5 Giai đoạn 8) | |
+| **9.2** ✅ | QA-002 (High) — `restoreFromSave` thiếu idempotency guard | XONG 2026-09-02 (`c2381da`) — payload-identity guard (WeakMap) chống double offline credit; QA quick PASS WITH EVIDENCE |
+| **9.3** ✅ | QA-003 (High) — `OverlayPanel` thiếu focus trap (H5 Giai đoạn 8) | XONG 2026-09-02 (`3dbde61` + test `cfb3b4b`) — useDialogFocus trong OverlayPanel+ConfirmModal, 13 consumers kế thừa; 2 Low deferred: zero-focusable Tab escape, same-tick re-open trigger overwrite |
 | **9.4** ⬜ | QA-004 (Medium) — `updateKiem` chưa được gọi từ production (defer lâu, sửa cùng 6A) | |
 | **9.5** ⬜ | QA-005 (Medium) — `PhaserCanvas.vue setupGame` leak handler khi throw | |
 | **9.6** ⬜ | QA-006 (Medium) — `CombatDefeatPanel` thiếu 10s auto-return-home | |
-| **9.7** ⬜ | QA-007 (Medium) — `OfflineProgressSystem` thiếu `isFinite(cultivationPerSecond)` guard | |
+| **9.7** ✅ | QA-007 (Medium) — `OfflineProgressSystem` thiếu `isFinite(cultivationPerSecond)` guard | XONG 2026-09-02 (`d126008`) — isFinite guard; validator v55 là root guard |
 | **9.8** ⬜ | QA-008 (Medium) — `MaterialBag.add` overflow bị caller bỏ qua | |
 | **9.9** ⬜ | QA-009 (Medium) — `useAutoRetryCountdown.start()` không clear handle cũ | |
 | **9.10** ⬜ | QA-010 (Medium) — `EquipmentSlotManager.restore` thiếu slot-enum check (defense in depth) | |
