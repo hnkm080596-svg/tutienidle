@@ -1,7 +1,7 @@
 import type { Material } from '@/core/material/Material'
 import { SPIRIT_STONE_MATERIALS } from '@/core/material/SpiritStoneMaterial'
 import type { ProfessionMaterialMeta } from '@/core/profession/ProfessionMaterial'
-import { equipmentEssenceMaterialId } from '@/core/equipment/RefinementBalance'
+import { LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
 import { REALM_TIERS } from '@/core/realm/RealmTierMap'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
 
@@ -22,6 +22,18 @@ const legacyMaterials: Material[] = [
     category: 'essence',
     sourceType: 'monster',
     description: 'Tinh hoa ngưng tụ từ thể phách phàm thú, dùng để rèn luyện 6 tầng thân thể.',
+  },
+
+  {
+    id: LUYEN_KHI_TINH_HOA_ID,
+    name: 'Luyện Khí Tinh Hoa',
+    category: 'essence',
+    sourceType: 'building',
+    description: 'Tinh hoa thu được từ phân giải trang bị, dùng cho các thao tác luyện khí.',
+    // Currency-like sink/source shared by every grade. Match Linh Thạch's
+    // effectively unbounded safe-integer convention so normal progression
+    // cannot hit the former reachable 9,999 cap.
+    stackLimit: Number.MAX_SAFE_INTEGER,
   },
 
   // Đột Phá Trúc Cơ (Phase 3) — điều kiện ẩn của Đại Đạo (mục 8/15
@@ -225,42 +237,6 @@ function buildProfessionMaterials(): Material[] {
         },
       })
     }
-  }
-
-  // ---- Tinh Hoa (Khí Đường Hóa Luyện, §7.5): tier theo cảnh giới trang bị ----
-  // ĐỦ 9 realm (review 2026-08-28, economy-ecosystem-plan T1) — tier 4+ là
-  // scaffold data giống Linh Mộc/Linh Khoáng scaffold, chờ nội dung thật.
-  const ESSENCE_TIER_NAMES: Record<string, string> = {
-    mortal: 'Phàm Khí Tinh Hoa',
-    qi_refining: 'Bảo Khí Tinh Hoa',
-    foundation_establishment: 'Linh Khí Tinh Hoa',
-    golden_core: 'Pháp Khí Tinh Hoa',
-    nascent_soul: 'Pháp Bảo Tinh Hoa',
-    soul_transformation: 'Tiên Bảo Tinh Hoa',
-    void_refinement: 'Chí Bảo Tinh Hoa',
-    mahayana: 'Hỗn Độn Chí Bảo Tinh Hoa',
-    tribulation: 'Thiên Địa Trọng Khí Tinh Hoa',
-  }
-
-  for (const realmId of REALM_TIERS) {
-    const essenceId = equipmentEssenceMaterialId(realmId)
-
-    if (!essenceId) {
-      continue
-    }
-
-    list.push({
-      id: essenceId,
-      name: ESSENCE_TIER_NAMES[realmId] ?? essenceId,
-      category: 'essence',
-      sourceType: 'building',
-      description: 'Tinh hoa phân giải từ trang bị cùng cảnh giới — nguyên liệu Tinh Luyện.',
-
-      // Currency-like của Hóa Luyện/Tinh Luyện — batch dissolve lớn
-      // không được phép chạm trần stack mặc định (1000) rồi mất lặng
-      // lẽ; nâng trần riêng cho nhóm này.
-      stackLimit: 9999,
-    })
   }
 
   return list

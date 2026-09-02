@@ -7,13 +7,17 @@ import {
   restoreBackup,
   getRawSave,
   importSaveRaw,
+  writeGameSave,
   SAVE_REVISION_KEY,
   CURRENT_SAVE_VERSION,
+  type GameSave,
 } from './SaveSystem'
 import { createDefaultPlayer } from '../../core/player/Player'
 
 const SAVE_KEY = 'tien-hiep-idle-save'
 const BACKUP_KEY = 'tien-hiep-idle-save-backup'
+const IMPORT_DISCARDED_EQUIPMENT_COUNT_KEY =
+  'tien-hiep-idle-import-discarded-equipment-count'
 
 // vitest.config chạy environment: 'node' — không có localStorage thật,
 // polyfill in-memory tối thiểu đủ cho SaveSystem (chỉ dùng getItem/
@@ -53,10 +57,16 @@ beforeEach(() => {
 // Fixture hợp lệ đầy đủ theo shape GameSave hiện hành — từ
 // save-shape-validation-plan.md, loadGame() giờ validate shape nên
 // fixture tối thiểu { version, player: { name } } không còn đủ.
-function validSave(): Record<string, unknown> {
+function validGameSave(name?: string): GameSave {
+  const player = createDefaultPlayer()
+
+  if (name) {
+    player.name = name
+  }
+
   return {
     version: CURRENT_SAVE_VERSION,
-    player: createDefaultPlayer(),
+    player,
     techniques: [],
     skills: [],
     materials: [],
@@ -67,6 +77,10 @@ function validSave(): Record<string, unknown> {
     buildings: [],
     equipmentSlots: [],
   }
+}
+
+function validSave(): Record<string, unknown> {
+  return { ...validGameSave() }
 }
 
 const VALID_RAW = JSON.stringify(validSave())
@@ -141,6 +155,26 @@ describe('loadGame — shape validation (save-shape-validation-plan.md)', () => 
     expect(loadGame().status).toBe('corrupted')
   })
 
+  it('corrupted khi equipment current thiếu StatModifier identity thay vì để lỗi tới restore', () => {
+    const save = validSave()
+
+    save.equipment = [{
+      instanceId: 'current-equipment',
+      itemId: 'base_kiem',
+      slot: 'weapon',
+      equipped: true,
+      grade: 'cuu_pham',
+      quality: 'hoang',
+      mainStat: { stat: 'attack', flat: 1 },
+      affixes: [{ affixId: 'suffix_accuracy', tier: 1, value: 3 }],
+      forgeUsesTotal: 6,
+      forgeUsesRemaining: 6,
+    }]
+    localStorage.setItem(SAVE_KEY, JSON.stringify(save))
+
+    expect(loadGame().status).toBe('corrupted')
+  })
+
   it('ok với optional fields vắng mặt (productionSites/alchemyJobs/quests)', () => {
     const save = validSave()
 
@@ -151,6 +185,31 @@ describe('loadGame — shape validation (save-shape-validation-plan.md)', () => 
     localStorage.setItem(SAVE_KEY, JSON.stringify(save))
 
     expect(loadGame().status).toBe('ok')
+  })
+
+  it('loại equipment legacy khỏi save nạp, ghi counter và vẫn load phần còn lại', () => {
+    const save = validSave()
+
+    save.equipment = [{
+      instanceId: 'legacy-equipment',
+      itemId: 'legacy-sword',
+      slot: 'weapon',
+      equipped: false,
+      realmId: 'mortal',
+      rarity: 'hoang',
+      mainStat: { stat: 'attack', flat: 1 },
+      affixes: [],
+      forgePoints: 0,
+    }]
+    localStorage.setItem(SAVE_KEY, JSON.stringify(save))
+
+    const outcome = loadGame()
+
+    expect(outcome.status).toBe('ok')
+    if (outcome.status === 'ok') {
+      expect(outcome.save.equipment).toEqual([])
+      expect(outcome.discardedEquipmentCount).toBe(1)
+    }
   })
 })
 
@@ -227,6 +286,7 @@ describe('importSaveRaw', () => {
 
     // Save tốt ban đầu KHÔNG bị ghi đè.
     expect(getRawSave()).toBe(VALID_RAW)
+    expect(localStorage.getItem(BACKUP_KEY)).toBeNull()
   })
 
   it('chấp nhận save nguyên shape đúng version hiện hành', () => {
@@ -234,5 +294,112 @@ describe('importSaveRaw', () => {
 
     expect(importSaveRaw(raw)).toBe(true)
     expect(getRawSave()).toBe(raw)
+  })
+
+  it('đúng normalized payload nhận counter một lần và backup vẫn giữ save cũ', () => {
+    localStorage.setItem(SAVE_KEY, VALID_RAW)
+    const save = validSave()
+
+    save.equipment = [{
+      instanceId: 'legacy-equipment',
+      itemId: 'legacy-sword',
+      slot: 'weapon',
+      equipped: false,
+      realmId: 'mortal',
+      rarity: 'hoang',
+      mainStat: { stat: 'attack', flat: 1 },
+      affixes: [],
+      forgePoints: 0,
+    }]
+
+    expect(importSaveRaw(JSON.stringify(save))).toBe(true)
+
+    const stored = getRawSave()
+
+    expect(stored).not.toBeNull()
+    expect(JSON.parse(stored ?? '{}').equipment).toEqual([])
+    expect(localStorage.getItem(BACKUP_KEY)).toBe(VALID_RAW)
+
+    const firstLoad = loadGame()
+
+    expect(firstLoad.status).toBe('ok')
+    if (firstLoad.status === 'ok') {
+      expect(firstLoad.save.equipment).toEqual([])
+      expect(firstLoad.discardedEquipmentCount).toBe(1)
+    }
+
+    const secondLoad = loadGame()
+
+    expect(secondLoad.status).toBe('ok')
+    if (secondLoad.status === 'ok') {
+      expect(secondLoad.discardedEquipmentCount).toBe(0)
+    }
+  })
+
+  it('không gán counter import cũ cho save khác được ghi trước lần load kế tiếp', () => {
+    const imported = validSave()
+
+    imported.equipment = [{
+      instanceId: 'legacy-equipment',
+      itemId: 'legacy-sword',
+      slot: 'weapon',
+      equipped: false,
+      realmId: 'mortal',
+      rarity: 'hoang',
+      mainStat: { stat: 'attack', flat: 1 },
+      affixes: [],
+      forgePoints: 0,
+    }]
+
+    expect(importSaveRaw(JSON.stringify(imported))).toBe(true)
+    expect(writeGameSave(validGameSave('live-pre-import'))).toEqual({ status: 'ok' })
+
+    const outcome = loadGame()
+
+    expect(outcome.status).toBe('ok')
+    if (outcome.status === 'ok') {
+      expect(outcome.save.player.name).toBe('live-pre-import')
+      expect(outcome.discardedEquipmentCount).toBe(0)
+    }
+  })
+
+  it('marker quota failure không thay main save hoặc backup và trả false', () => {
+    const previousBackup = 'previous-backup'
+
+    localStorage.setItem(SAVE_KEY, VALID_RAW)
+    localStorage.setItem(BACKUP_KEY, previousBackup)
+
+    const imported = validSave()
+
+    imported.equipment = [{
+      instanceId: 'legacy-equipment',
+      itemId: 'legacy-sword',
+      slot: 'weapon',
+      equipped: false,
+      realmId: 'mortal',
+      rarity: 'hoang',
+      mainStat: { stat: 'attack', flat: 1 },
+      affixes: [],
+      forgePoints: 0,
+    }]
+
+    const setItem = localStorage.setItem.bind(localStorage)
+
+    vi.spyOn(localStorage, 'setItem').mockImplementation((key, value) => {
+      if (key === IMPORT_DISCARDED_EQUIPMENT_COUNT_KEY) {
+        throw new DOMException('quota', 'QuotaExceededError')
+      }
+
+      setItem(key, value)
+    })
+
+    let result: boolean | undefined
+
+    expect(() => {
+      result = importSaveRaw(JSON.stringify(imported))
+    }).not.toThrow()
+    expect(result).toBe(false)
+    expect(getRawSave()).toBe(VALID_RAW)
+    expect(localStorage.getItem(BACKUP_KEY)).toBe(previousBackup)
   })
 })

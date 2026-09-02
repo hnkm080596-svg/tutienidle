@@ -7,17 +7,15 @@ import { GameManager } from '@/core/game/GameManager'
 import { equipment } from '@/data/equipment/equipment'
 import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composables/useGameState'
 import { vTooltip } from '@/directives/tooltip'
-import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
+import { makeInstance } from '@/core/equipment/EquipmentInstance.fixture'
 
-function equipmentInstance(instanceId: string, itemId: string): EquipmentInstance {
-  return {
+function equipmentInstance(instanceId: string, itemId: string) {
+  return makeInstance({
     instanceId,
     itemId,
-    slot: 'weapon',
     equipped: true,
-    quality: 'pham_khi',
-    rarity: 'hoang',
-    realmId: 'mortal',
+    grade: 'cuu_pham',
+    quality: 'hoang',
     realmLevel: 1,
     mainStat: {
       id: `${instanceId}:main`,
@@ -26,10 +24,7 @@ function equipmentInstance(instanceId: string, itemId: string): EquipmentInstanc
       stat: 'attack',
       flat: 12,
     },
-    affixes: [],
-    forgePoints: 10,
-    forgePotential: 100,
-  }
+  })
 }
 
 function mountPaperdoll(prepare?: (manager: GameManager) => void) {

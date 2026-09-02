@@ -1,8 +1,9 @@
 import type { EquipmentInstance } from './EquipmentInstance'
 import type { EquipmentSlot } from './EquipmentTypes'
-import { EQUIPMENT_QUALITY_ORDER } from './EquipmentQuality'
-import { ITEM_GRADE_ORDER } from '../item/ItemGrade'
-import { DISSOLVE_ESSENCE_RANGE_BY_QUALITY, equipmentEssenceMaterialId } from './RefinementBalance'
+import { ITEM_QUALITY_ORDER } from '../item/ItemQuality'
+import { PROFESSION_GRADE_ORDER } from '../profession/ProfessionGrade'
+import { ITEM_QUALITY_ESSENCE_RANGE } from './ItemQualityBalance'
+import { LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
 
 /**
  * Cap mềm túi trang bị (audit 2026-08-31) — túi từng KHÔNG giới hạn: mọi
@@ -25,6 +26,10 @@ export interface AutoDissolveReward {
 export class EquipmentBag {
   private instances: EquipmentInstance[] = []
 
+  private readonly membershipGenerationByInstance = new WeakMap<EquipmentInstance, number>()
+
+  private nextMembershipGeneration = 1
+
   add(instance: EquipmentInstance): AutoDissolveReward[] {
     // Dedupe theo instanceId — save import/hand-edit chứa trùng instanceId
     // từng gây nhân bản trang bị + double stat modifier sau
@@ -34,6 +39,8 @@ export class EquipmentBag {
     }
 
     this.instances.push(instance)
+    this.membershipGenerationByInstance.set(instance, this.nextMembershipGeneration)
+    this.nextMembershipGeneration += 1
 
     if (this.instances.length <= EQUIPMENT_BAG_SOFT_CAP) {
       return []
@@ -49,7 +56,7 @@ export class EquipmentBag {
   /**
    * Auto Hóa Luyện đúng số lượng vượt cap. Candidate KHÔNG được
    * equipped/locked/favorite (đồ người chơi chủ động giữ). Item không
-   * có rule chuyển đổi Tinh Hoa (essenceId/range missing) → KHÔNG
+   * có rule chuyển đổi Tinh Hoa (range missing) → KHÔNG
    * dissolve mù — bỏ qua, giữ item (túi được vượt cap trong case bệnh
    * hoạn thay vì mất đồ oan). Amount dùng range.min CỐ ĐỊNH —
    * deterministic; người chơi muốn roll random (range.min..max) phải
@@ -61,9 +68,9 @@ export class EquipmentBag {
       .filter((instance) => !instance.equipped && !instance.locked && !instance.favorite)
       .sort(
         (a, b) =>
-          EQUIPMENT_QUALITY_ORDER.indexOf(a.quality) - EQUIPMENT_QUALITY_ORDER.indexOf(b.quality) ||
-          ITEM_GRADE_ORDER.indexOf(a.rarity) - ITEM_GRADE_ORDER.indexOf(b.rarity) ||
-          a.forgePoints - b.forgePoints,
+          PROFESSION_GRADE_ORDER.indexOf(a.grade) - PROFESSION_GRADE_ORDER.indexOf(b.grade) ||
+          ITEM_QUALITY_ORDER.indexOf(a.quality) - ITEM_QUALITY_ORDER.indexOf(b.quality) ||
+          a.forgeUsesRemaining - b.forgeUsesRemaining,
       )
 
     const rewards: AutoDissolveReward[] = []
@@ -74,15 +81,14 @@ export class EquipmentBag {
         break
       }
 
-      const essenceId = equipmentEssenceMaterialId(candidate.realmId)
-      const range = essenceId ? DISSOLVE_ESSENCE_RANGE_BY_QUALITY[candidate.rarity] : undefined
+      const range = ITEM_QUALITY_ESSENCE_RANGE[candidate.quality]
 
-      if (!essenceId || !range) {
+      if (!range) {
         continue // không có rule chuyển đổi → giữ item, không dissolve mù
       }
 
-      this.instances = this.instances.filter((instance) => instance.instanceId !== candidate.instanceId)
-      rewards.push({ materialId: essenceId, amount: range.min })
+      this.remove(candidate.instanceId)
+      rewards.push({ materialId: LUYEN_KHI_TINH_HOA_ID, amount: range.min })
       remaining -= 1
     }
 
@@ -90,7 +96,26 @@ export class EquipmentBag {
   }
 
   remove(instanceId: string) {
+    for (const instance of this.instances) {
+      if (instance.instanceId === instanceId) {
+        this.membershipGenerationByInstance.delete(instance)
+      }
+    }
+
     this.instances = this.instances.filter((instance) => instance.instanceId !== instanceId)
+  }
+
+  /**
+   * Capability vòng đời của exact object trong bag. Cùng object remove/add lại
+   * nhận generation mới; object thay thế cùng instanceId cũng không thể dùng
+   * generation của bản cũ.
+   */
+  getMembershipGeneration(instance: EquipmentInstance): number | undefined {
+    if (this.get(instance.instanceId) !== instance) {
+      return undefined
+    }
+
+    return this.membershipGenerationByInstance.get(instance)
   }
 
   get(instanceId: string) {

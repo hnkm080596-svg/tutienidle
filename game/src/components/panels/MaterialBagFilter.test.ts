@@ -20,6 +20,7 @@ import { useUiStore } from '@/stores/ui'
 import type { Material } from '@/core/material/Material'
 import { vTooltip } from '@/directives/tooltip'
 import { i18n } from '@/i18n'
+import { LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
 
 const WOOD: Material = {
   id: 'mortal_wood',
@@ -61,8 +62,8 @@ const ORE_HOANG = ore('hoang')
 const ORE_HUYEN = ore('huyen')
 
 const ESSENCE: Material = {
-  id: 'tinh_hoa_pham_khi',
-  name: 'Phàm Khí Tinh Hoa',
+  id: LUYEN_KHI_TINH_HOA_ID,
+  name: 'Luyện Khí Tinh Hoa',
   category: 'essence',
   sourceType: 'building',
 }
@@ -206,7 +207,7 @@ describe('MaterialBag — filter/search/group họ thảo (plan §3.2 B4)', () =
     gameManager.registerMaterials([WOOD, ORE, ESSENCE, OTHER, HERB_DECADE, HERB_CENTURY])
     gameManager.materialBag.add(gameManager.materialRegistry.get('mortal_wood'), 3)
     gameManager.materialBag.add(gameManager.materialRegistry.get('mortal_ore_hoang'), 2)
-    gameManager.materialBag.add(gameManager.materialRegistry.get('tinh_hoa_pham_khi'), 5)
+    gameManager.materialBag.add(gameManager.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID), 5)
     gameManager.materialBag.add(gameManager.materialRegistry.get('doan_bao_thach'), 1)
     gameManager.materialBag.add(gameManager.materialRegistry.get(HERB_DECADE.id), 4)
     gameManager.materialBag.add(gameManager.materialRegistry.get(HERB_CENTURY.id), 7)

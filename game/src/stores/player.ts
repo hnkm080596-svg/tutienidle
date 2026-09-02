@@ -204,7 +204,7 @@ export const usePlayerStore = defineStore('player', {
 
       const offline = this.restoreFromSave(outcome.save)
 
-      return { status: 'ok' as const, offline, save: outcome.save }
+      return { ...outcome, offline }
     },
 
     restoreFromSave(save: GameSave) {

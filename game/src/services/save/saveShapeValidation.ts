@@ -9,6 +9,22 @@
 // validator đòi, và ngược lại).
 import { CURRENT_SAVE_VERSION } from './saveVersion'
 import { REALMS } from '../../data/realms/realm'
+import { ITEM_QUALITY_ORDER, type ItemQuality } from '../../core/item/ItemQuality'
+import { isProfessionGrade } from '../../core/profession/ProfessionGrade'
+import { createBaseStats } from '../../core/stats/StatBlock'
+import { EQUIPMENT_SLOTS } from '../../core/equipment/EquipmentSlotState'
+
+const STAT_TYPES = new Set<string>(Object.keys(createBaseStats()))
+
+const STAT_MODIFIER_NUMERIC_FIELDS = [
+  'flat',
+  'percent',
+  'multiplier',
+  'stacks',
+  'maxStacks',
+  'perLevelFlat',
+  'perLevelPercent',
+] as const
 
 export interface ShapeIssue {
   path: string
@@ -16,11 +32,25 @@ export interface ShapeIssue {
   message: string
 }
 
-export interface ShapeValidationResult {
-  ok: boolean
+export type ShapeValidationResult =
+  | {
+      ok: true
 
-  issues: ShapeIssue[]
-}
+      issues: []
+
+      /** Bản save đã bỏ equipment legacy và điền default optional an toàn. */
+      normalizedSave: unknown
+
+      /** Cầu nối cho UI báo số equipment legacy đã bỏ khi load. */
+      discardedEquipmentCount: number
+    }
+  | {
+      ok: false
+
+      issues: ShapeIssue[]
+
+      discardedEquipmentCount: number
+    }
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -32,6 +62,14 @@ function isFiniteNumber(value: unknown): value is number {
 
 function isNonNegativeFiniteNumber(value: unknown): value is number {
   return isFiniteNumber(value) && value >= 0
+}
+
+function isItemQuality(value: unknown): value is ItemQuality {
+  return typeof value === 'string' && ITEM_QUALITY_ORDER.some((quality) => quality === value)
+}
+
+function isEquipmentSlot(value: unknown): boolean {
+  return typeof value === 'string' && EQUIPMENT_SLOTS.some((slot) => slot === value)
 }
 
 /** Field bắt buộc kiểu array — trả về array nếu hợp lệ để kiểm tra phần tử. */
@@ -206,7 +244,33 @@ function validateIdEntries(entries: unknown[], path: string, issues: ShapeIssue[
   }
 }
 
-function validateEquipmentEntries(entries: unknown[], path: string, issues: ShapeIssue[]) {
+interface EquipmentEntriesValidation {
+  normalizedEntries: unknown[]
+
+  discardedCount: number
+}
+
+function requireNonEmptyString(
+  target: Record<string, unknown>,
+  key: string,
+  path: string,
+  issues: ShapeIssue[],
+) {
+  const value = target[key]
+
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    issues.push({ path: `${path}.${key}`, message: 'phải là string không rỗng' })
+  }
+}
+
+function validateEquipmentEntries(
+  entries: unknown[],
+  path: string,
+  issues: ShapeIssue[],
+): EquipmentEntriesValidation {
+  const normalizedEntries: unknown[] = []
+  let discardedCount = 0
+
   for (let i = 0; i < entries.length; i += 1) {
     const entry = entries[i]
 
@@ -215,6 +279,17 @@ function validateEquipmentEntries(entries: unknown[], path: string, issues: Shap
 
       continue
     }
+
+    // Development build không migrate item schema cũ. Chỉ riêng entry
+    // legacy có realmId/rarity được bỏ có chủ đích; phần save
+    // còn lại vẫn nạp được. Kiểm tra marker TRƯỚC các field
+    // schema mới để entry cũ không bị biến thành lỗi toàn save.
+    if ('realmId' in entry || 'rarity' in entry) {
+      discardedCount += 1
+      continue
+    }
+
+    normalizedEntries.push(entry)
 
     // instanceId trùng trong save là vector nhân bản trang bị + double
     // stat modifier (review 2026-08-28 bug #1c) — id phải tồn tại để
@@ -222,20 +297,112 @@ function validateEquipmentEntries(entries: unknown[], path: string, issues: Shap
     requireString(entry, 'instanceId', `${path}[${i}]`, issues)
     requireString(entry, 'itemId', `${path}[${i}]`, issues)
 
-    // refreshModifiers (EquipmentSystem.applyModifiers) đọc slot/mainStat/
-    // affixes ngay khi boot và calculateEquipmentScale đọc forgePoints —
-    // thiếu field nào cũng gây crash TypeError hoặc scale NaN vĩnh viễn,
-    // đúng lớp bug v47 mà validator được tạo ra để chặn (review 2026-08-28).
-    requireString(entry, 'slot', `${path}[${i}]`, issues)
+    // refreshModifiers (EquipmentSystem.applyModifiers) đọc trực tiếp các
+    // field này khi boot. Thiếu/sai shape sẽ gây TypeError hoặc NaN
+    // lan sang modifier, nên entry schema hiện hành phải fail toàn save.
+    if (!isEquipmentSlot(entry.slot)) {
+      issues.push({
+        path: `${path}[${i}].slot`,
+        message: 'phải thuộc EQUIPMENT_SLOTS',
+      })
+    }
     requireBoolean(entry, 'equipped', `${path}[${i}]`, issues)
+
+    if (!isProfessionGrade(entry.grade)) {
+      issues.push({
+        path: `${path}[${i}].grade`,
+        message: 'phải là ProfessionGrade hợp lệ',
+      })
+    }
+
+    if (!isItemQuality(entry.quality)) {
+      issues.push({
+        path: `${path}[${i}].quality`,
+        message: 'phải thuộc ITEM_QUALITY_ORDER',
+      })
+    }
 
     if (!isObject(entry.mainStat)) {
       issues.push({ path: `${path}[${i}].mainStat`, message: 'phải là object' })
+    } else {
+      const mainStatPath = `${path}[${i}].mainStat`
+
+      requireNonEmptyString(entry.mainStat, 'id', mainStatPath, issues)
+      requireNonEmptyString(entry.mainStat, 'sourceId', mainStatPath, issues)
+
+      if (entry.mainStat.sourceType !== 'equipment') {
+        issues.push({
+          path: `${mainStatPath}.sourceType`,
+          message: 'phải là equipment',
+        })
+      }
+
+      if (
+        typeof entry.mainStat.stat !== 'string' ||
+        !STAT_TYPES.has(entry.mainStat.stat)
+      ) {
+        issues.push({
+          path: `${mainStatPath}.stat`,
+          message: 'phải là StatType hợp lệ',
+        })
+      }
+
+      if (entry.mainStat.tag !== undefined && typeof entry.mainStat.tag !== 'string') {
+        issues.push({ path: `${mainStatPath}.tag`, message: 'phải là string hoặc vắng mặt' })
+      }
+
+      for (const field of STAT_MODIFIER_NUMERIC_FIELDS) {
+        if (entry.mainStat[field] !== undefined && !isFiniteNumber(entry.mainStat[field])) {
+          issues.push({
+            path: `${mainStatPath}.${field}`,
+            message: 'phải là số hữu hạn hoặc vắng mặt',
+          })
+        }
+      }
     }
 
-    requireArray(entry, 'affixes', `${path}[${i}]`, issues)
-    requireNonNegativeNumber(entry, 'forgePoints', `${path}[${i}]`, issues)
+    const equipmentAffixes = requireArray(entry, 'affixes', `${path}[${i}]`, issues)
+
+    if (equipmentAffixes) {
+      for (let affixIndex = 0; affixIndex < equipmentAffixes.length; affixIndex += 1) {
+        const affix = equipmentAffixes[affixIndex]
+        const affixPath = `${path}[${i}].affixes[${affixIndex}]`
+
+        if (!isObject(affix)) {
+          issues.push({ path: affixPath, message: 'phải là object' })
+          continue
+        }
+        requireNonEmptyString(affix, 'affixId', affixPath, issues)
+
+        if (!isFiniteNumber(affix.tier) || !Number.isInteger(affix.tier) || affix.tier <= 0) {
+          issues.push({
+            path: `${affixPath}.tier`,
+            message: 'phải là số nguyên dương hữu hạn',
+          })
+        }
+
+        if (!isFiniteNumber(affix.value)) {
+          issues.push({ path: `${affixPath}.value`, message: 'phải là số hữu hạn' })
+        }
+      }
+    }
+
+    requireNonNegativeNumber(entry, 'forgeUsesTotal', `${path}[${i}]`, issues)
+    requireNonNegativeNumber(entry, 'forgeUsesRemaining', `${path}[${i}]`, issues)
+
+    if (
+      isNonNegativeFiniteNumber(entry.forgeUsesTotal) &&
+      isNonNegativeFiniteNumber(entry.forgeUsesRemaining) &&
+      entry.forgeUsesRemaining > entry.forgeUsesTotal
+    ) {
+      issues.push({
+        path: `${path}[${i}].forgeUsesRemaining`,
+        message: 'không được vượt forgeUsesTotal',
+      })
+    }
   }
+
+  return { normalizedEntries, discardedCount }
 }
 
 /**
@@ -243,7 +410,13 @@ function validateEquipmentEntries(entries: unknown[], path: string, issues: Shap
  * theo entry.slot; thiếu enhanceLevel thì calculateEquipmentScale nhận
  * undefined → NaN lây sang mọi trang bị đang đeo ở slot đó.
  */
-function validateEquipmentSlotEntries(entries: unknown[], path: string, issues: ShapeIssue[]) {
+function validateEquipmentSlotEntries(
+  entries: unknown[],
+  path: string,
+  issues: ShapeIssue[],
+): unknown[] {
+  const normalizedEntries: unknown[] = []
+
   for (let i = 0; i < entries.length; i += 1) {
     const entry = entries[i]
 
@@ -253,16 +426,37 @@ function validateEquipmentSlotEntries(entries: unknown[], path: string, issues: 
       continue
     }
 
-    requireString(entry, 'slot', `${path}[${i}]`, issues)
+    if (!isEquipmentSlot(entry.slot)) {
+      issues.push({
+        path: `${path}[${i}].slot`,
+        message: 'phải thuộc EQUIPMENT_SLOTS',
+      })
+    }
     requireNonNegativeNumber(entry, 'enhanceLevel', `${path}[${i}]`, issues)
+
+    if (entry.enhanceFailStreak !== undefined) {
+      requireNonNegativeNumber(entry, 'enhanceFailStreak', `${path}[${i}]`, issues)
+    }
+
+    normalizedEntries.push(
+      entry.enhanceFailStreak === undefined
+        ? { ...entry, enhanceFailStreak: 0 }
+        : entry,
+    )
   }
+
+  return normalizedEntries
 }
 
 export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
   const issues: ShapeIssue[] = []
 
   if (!isObject(parsed)) {
-    return { ok: false, issues: [{ path: '', message: 'save không phải object' }] }
+    return {
+      ok: false,
+      issues: [{ path: '', message: 'save không phải object' }],
+      discardedEquipmentCount: 0,
+    }
   }
 
   if (parsed.version !== CURRENT_SAVE_VERSION) {
@@ -310,13 +504,26 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
     validateStackEntries(pills, 'pillId', 'pills', issues)
   }
 
-  if (equipment) {
-    validateEquipmentEntries(equipment, 'equipment', issues)
+  const equipmentValidation = equipment
+    ? validateEquipmentEntries(equipment, 'equipment', issues)
+    : undefined
+  const normalizedEquipmentSlots = equipmentSlots
+    ? validateEquipmentSlotEntries(equipmentSlots, 'equipmentSlots', issues)
+    : undefined
+  const discardedEquipmentCount = equipmentValidation?.discardedCount ?? 0
+
+  if (issues.length > 0) {
+    return { ok: false, issues, discardedEquipmentCount }
   }
 
-  if (equipmentSlots) {
-    validateEquipmentSlotEntries(equipmentSlots, 'equipmentSlots', issues)
+  return {
+    ok: true,
+    issues: [],
+    normalizedSave: {
+      ...parsed,
+      equipment: equipmentValidation?.normalizedEntries ?? [],
+      equipmentSlots: normalizedEquipmentSlots ?? [],
+    },
+    discardedEquipmentCount,
   }
-
-  return { ok: issues.length === 0, issues }
 }

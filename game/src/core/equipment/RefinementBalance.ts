@@ -4,8 +4,7 @@
 // Rework 2026-08-30: Điểm Rèn KHÔNG còn random lúc sinh (bỏ
 // forgePotential roll) — mỗi item có đúng trần theo quality của nó;
 // cost Tẩy/Tinh Luyện leo thang theo quality thay vì phẳng.
-import type { EquipmentQuality } from './EquipmentQuality'
-import type { OreQuality } from '../production/ProductionTypes'
+import type { ItemQuality } from '../item/ItemQuality'
 
 // =========================
 // Điểm Rèn — PER-ITEM (rework 2026-08-26: điểm rèn là asset của
@@ -16,51 +15,30 @@ import type { OreQuality } from '../production/ProductionTypes'
 // món đó; cạn điểm = món không phát triển được nữa. KHÔNG còn pool chung
 // người chơi, KHÔNG còn hồi theo thời gian thực.
 
-export const REFINEMENT_POINTS_CAP = 120
-
-/** Cost Điểm Rèn Tẩy Luyện theo quality của item — leo thang 2 → 18. */
-export const WASH_REFINEMENT_COST_BY_QUALITY: Record<EquipmentQuality, number> = {
-  pham_khi: 2,
-  bao_khi: 4,
-  linh_khi: 6,
-  phap_khi: 8,
-  phap_bao: 10,
-  tien_bao: 12,
-  chi_bao: 14,
-  hon_don_chi_bao: 16,
-  thien_dia_trong_khi: 18,
+/** Luyện Khí Tinh Hoa tiêu hao khi Tẩy Luyện theo Chất. */
+export const WASH_TINH_HOA_COST_BY_QUALITY: Record<ItemQuality, number> = {
+  hoang: 2,
+  huyen: 5,
+  dia: 9,
+  thien: 13,
+  tien: 18,
 }
 
-/** Cost Điểm Rèn Tinh Luyện theo quality của item — leo thang 1 → 9. */
-export const REFINE_REFINEMENT_COST_BY_QUALITY: Record<EquipmentQuality, number> = {
-  pham_khi: 1,
-  bao_khi: 2,
-  linh_khi: 3,
-  phap_khi: 4,
-  phap_bao: 5,
-  tien_bao: 6,
-  chi_bao: 7,
-  hon_don_chi_bao: 8,
-  thien_dia_trong_khi: 9,
+/** Luyện Khí Tinh Hoa tiêu hao khi Tinh Luyện theo Chất. */
+export const REFINE_TINH_HOA_COST_BY_QUALITY: Record<ItemQuality, number> = {
+  hoang: 1,
+  huyen: 3,
+  dia: 5,
+  thien: 7,
+  tien: 9,
 }
 
 // =========================
-// Tẩy Luyện (§7.3): phẩm Quáng quyết định HAI bảng weighted roll —
-// số dòng substat và tier ban đầu từng dòng. Phẩm cao thiên về nhiều
-// dòng/tier cao nhưng không bảo đảm kết quả.
+// Tẩy Luyện: Chất của item quyết định trần dòng và trọng số tier.
 // =========================
-
-/** Trọng số roll SỐ DÒNG affix (index 0 → 1 dòng ... index 3 → 4 dòng). */
-export const WASH_LINE_COUNT_WEIGHTS: Record<OreQuality, readonly number[]> = {
-  hoang: [55, 30, 10, 5],
-  huyen: [35, 35, 20, 10],
-  dia: [20, 30, 30, 20],
-  thien: [10, 25, 35, 30],
-  tien: [5, 15, 30, 50],
-}
 
 /** Trọng weight roll TIER BAN ĐẦU của từng dòng (index 0 → tier 1 ...). */
-export const WASH_TIER_WEIGHTS: Record<OreQuality, readonly number[]> = {
+export const WASH_TIER_WEIGHTS_BY_QUALITY: Record<ItemQuality, readonly number[]> = {
   hoang: [70, 25, 5],
   huyen: [50, 35, 15],
   dia: [35, 35, 30],
@@ -68,62 +46,20 @@ export const WASH_TIER_WEIGHTS: Record<OreQuality, readonly number[]> = {
   tien: [10, 35, 55],
 }
 
-/** Số Quáng tiêu thụ mỗi lần Tẩy Luyện. */
-export const WASH_ORE_AMOUNT = 3
-
 /** Linh Thạch mỗi lần Tẩy Luyện. */
 export const WASH_SPIRIT_STONE_COST = 100
 
 // =========================
-// Tinh Luyện (§7.4): giữ identity, roll lại giá trị trong ±20% giá trị
-// hiện tại (clamp range tier). Khóa N dòng → Tinh Hoa/Linh Thạch hệ số
-// N + L; KHÔNG cho khóa toàn bộ.
+// Tinh Luyện (§7.4): giữ identity, mỗi dòng eligible chỉ tăng 5–20%
+// giá trị hiện tại rồi clamp theo range tier. Khóa L dòng chỉ
+// làm tăng chi phí Linh Thạch theo N + L; KHÔNG cho khóa toàn bộ.
 // =========================
 
-export const REFINE_VALUE_VARIANCE = 0.2
+export const REFINE_INCREASE_MIN = 0.05
+
+export const REFINE_INCREASE_MAX = 0.2
 
 export const REFINE_MAX_LOCKS = 3
 
 /** Linh Thạch đơn giá mỗi đơn vị (N + L) của Tinh Luyện. */
 export const REFINE_SPIRIT_STONE_PER_UNIT = 50
-
-// =========================
-// Hóa Luyện (§7.5): số Tinh Hoa theo quality trang bị — mapping realm
-// trang bị → tier Tinh Hoa (chốt §13.6, data material tương ứng nằm ở
-// data/materials generator). ĐỦ 9 realm + body_integration (Hợp Thể
-// dùng chung tier kinh tế với Đại Thừa — RealmTierMap.ts). Id realm 4+
-// đặt theo bậc quality trang bị tương ứng (EquipmentQuality.ts) để
-// thống nhất với truc-co-kim-dan-content-plan (review 2026-08-28,
-// economy-ecosystem-plan T1).
-// =========================
-
-export const EQUIPMENT_REALM_ESSENCE_MATERIAL: Record<string, string> = {
-  mortal: 'tinh_hoa_pham_khi',
-  qi_refining: 'tinh_hoa_bao_khi',
-  foundation_establishment: 'tinh_hoa_linh_khi',
-  golden_core: 'tinh_hoa_phap_khi',
-  nascent_soul: 'tinh_hoa_phap_bao',
-  soul_transformation: 'tinh_hoa_tien_bao',
-  void_refinement: 'tinh_hoa_chi_bao',
-  mahayana: 'tinh_hoa_hon_don_chi_bao',
-  body_integration: 'tinh_hoa_hon_don_chi_bao',
-  tribulation: 'tinh_hoa_thien_dia_trong_khi',
-}
-
-/**
- * Resolve id Tinh Hoa theo realm trang bị. Trả `undefined` khi realm chưa
- * map — caller PHẢI guard và từ chối thao tác (review 2026-08-28: fallback
- * im lặng về pham_khi khiến trang bị realm cao bị phân giải ra Tinh Hoa
- * realm 1, mất giá trị mà không ai biết).
- */
-export function equipmentEssenceMaterialId(realmId: string): string | undefined {
-  return EQUIPMENT_REALM_ESSENCE_MATERIAL[realmId]
-}
-
-export const DISSOLVE_ESSENCE_RANGE_BY_QUALITY: Record<string, { min: number; max: number }> = {
-  hoang: { min: 1, max: 3 },
-  huyen: { min: 2, max: 4 },
-  dia: { min: 3, max: 5 },
-  thien: { min: 4, max: 6 },
-  tien: { min: 5, max: 7 },
-}

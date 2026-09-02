@@ -25,6 +25,7 @@ import {
   type BattleRewardItemKind,
 } from '../reward/BattleRewardSummary'
 import { composeItemGradeNameSegments, type ItemGrade } from '../item/ItemGrade'
+import { ITEM_QUALITY_ORDER, type ItemQuality } from '../item/ItemQuality'
 import { composeEquipmentNameSegments } from '../equipment/EquipmentNaming'
 import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../data/realm/BodyRefinement'
 import type { PlayerData } from '../player/Player'
@@ -444,7 +445,7 @@ export class BattleLootSystem {
             )
 
             this.grantAutoDissolveRewards(this.deps.equipmentBag.add(instance))
-            this.emitRewardParticle(sourceId, 'item', this.getGradeParticleColor(instance.rarity))
+            this.emitRewardParticle(sourceId, 'item', this.getQualityParticleColor(instance.quality))
 
             this.pushLootNotification(`+1 ${template.name}`, {
               icon: instance.icon ?? template.icon,
@@ -454,7 +455,7 @@ export class BattleLootSystem {
                 this.deps.zoneRegistry,
               ),
               amountLabel: '+1',
-              accentColorVar: `--eq-quality-${instance.quality}`,
+              accentColorVar: `--rank-color-${ITEM_QUALITY_ORDER.indexOf(instance.quality) + 1}`,
             })
             this.addBattleRewardItem('equipment', template.id, template.name, 1)
           }
@@ -536,7 +537,7 @@ export class BattleLootSystem {
     )
 
     this.grantAutoDissolveRewards(this.deps.equipmentBag.add(instance))
-    this.emitRewardParticle(sourceId, 'item', this.getGradeParticleColor(instance.rarity))
+    this.emitRewardParticle(sourceId, 'item', this.getQualityParticleColor(instance.quality))
 
     // Uncommitted audit followup plan, mục "Đồng nhất thông báo trang bị
     // rơi ngẫu nhiên" (2026-08-24) — nhánh drop này trước đây thiếu
@@ -548,7 +549,7 @@ export class BattleLootSystem {
       icon: instance.icon ?? template.icon,
       nameSegments: composeEquipmentNameSegments(instance, template, this.deps.zoneRegistry),
       amountLabel: '+1',
-      accentColorVar: `--eq-quality-${instance.quality}`,
+      accentColorVar: `--rank-color-${ITEM_QUALITY_ORDER.indexOf(instance.quality) + 1}`,
     })
     this.addBattleRewardItem('equipment', template.id, template.name, 1)
   }
@@ -680,6 +681,18 @@ export class BattleLootSystem {
     }
 
     return colors[grade]
+  }
+
+  private getQualityParticleColor(quality: ItemQuality): number {
+    const colors: Record<ItemQuality, number> = {
+      hoang: 0x8a877e,
+      huyen: 0x6fbf73,
+      dia: 0x5b9bd5,
+      thien: 0xffd54f,
+      tien: 0xfff6d8,
+    }
+
+    return colors[quality]
   }
 
   // Gộp theo itemId+kind (nhiều wave cùng trận có thể rớt trùng loại)

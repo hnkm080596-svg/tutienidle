@@ -47,7 +47,12 @@ import { QUESTS } from './data/quest/quests'
 import { isCultivationPoseActive } from './core/cultivation/CultivationPose'
 import { useBootFlow } from './composables/useBootFlow'
 import { cloudSaveCoordinator } from './services/cloudSave/CloudSaveServiceFactory'
-import { buildGameSave, deleteSave, SAVE_RESET_REQUEST_EVENT } from './services/save/SaveSystem'
+import {
+  buildGameSave,
+  deleteSave,
+  restoreGameSession,
+  SAVE_RESET_REQUEST_EVENT,
+} from './services/save/SaveSystem'
 
 const player = usePlayerStore()
 const ui = useUiStore()
@@ -407,18 +412,18 @@ async function bootGame(createNewCharacter = false) {
   bootFlow.startInitializing()
 
   if (loaded.status === 'ok') {
-    const offline = player.restoreFromSave(loaded.save)
-
-    // Timed effect authority (2026-08-24): đăng ký player để update()
-    // tick expiry theo Date.now() (load bỏ effect hết hạn ngay).
-    gameManager.setActivePlayer(player.$state)
-
     // registerXxx() ở trên đã chạy trước onMounted (module-level
-    // trong <script setup>) nên registry đã sẵn data để resolve id
-    // - restoreFromSave() PHẢI gọi sau đó, không phải trước.
-    const equipmentModifiers = gameManager.restoreFromSave(loaded.save)
+    // trong <script setup>). Coordinator preflight registry references
+    // TRƯỚC Pinia/active-player/manager mutation, rồi mới restore các owner.
+    const restored = restoreGameSession(player, gameManager, loaded.save)
 
-    player.setEquipmentModifiers(equipmentModifiers)
+    if (restored.status === 'rejected') {
+      bootError.value = restored.message
+      bootFlow.fail()
+      return
+    }
+
+    const { offline } = restored
 
     // Fix (2026-08-20) — "Trảm" trước đây CHỈ được cấp ở nhánh nhân vật
     // mới bên dưới, restoreFromSave() chỉ re-add skill đã CÓ SẴN trong

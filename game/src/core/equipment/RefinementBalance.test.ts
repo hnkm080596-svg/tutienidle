@@ -1,42 +1,46 @@
 import { describe, expect, it } from 'vitest'
 import {
-  EQUIPMENT_REALM_ESSENCE_MATERIAL,
-  equipmentEssenceMaterialId,
+  REFINE_INCREASE_MAX,
+  REFINE_INCREASE_MIN,
+  REFINE_TINH_HOA_COST_BY_QUALITY,
+  WASH_SPIRIT_STONE_COST,
+  WASH_TIER_WEIGHTS_BY_QUALITY,
+  WASH_TINH_HOA_COST_BY_QUALITY,
 } from './RefinementBalance'
-import { REALM_TIERS } from '../realm/RealmTierMap'
-import { materials } from '../../data/materials/materials'
 
-// T1 (economy-ecosystem-plan, review 2026-08-28): mapping Tinh Hoa phải
-// phủ ĐỦ 9 realm, không còn fallback im lặng về tinh_hoa_pham_khi.
-describe('RefinementBalance — mapping Tinh Hoa theo realm (T1)', () => {
-  it('mọi realm trong REALM_TIERS đều có essence materialId', () => {
-    for (const realmId of REALM_TIERS) {
-      expect(equipmentEssenceMaterialId(realmId), realmId).toBeDefined()
-      expect(equipmentEssenceMaterialId(realmId), realmId).not.toBe('')
-    }
+describe('RefinementBalance — five-quality wash contract', () => {
+  it('scales Luyện Khí Tinh Hoa costs across all five qualities', () => {
+    expect(WASH_TINH_HOA_COST_BY_QUALITY).toEqual({
+      hoang: 2,
+      huyen: 5,
+      dia: 9,
+      thien: 13,
+      tien: 18,
+    })
+    expect(WASH_SPIRIT_STONE_COST).toBe(100)
   })
 
-  it('body_integration (Hợp Thể) dùng chung essence với mahayana (Đại Thừa)', () => {
-    expect(equipmentEssenceMaterialId('body_integration')).toBe(
-      equipmentEssenceMaterialId('mahayana'),
-    )
+  it('uses quality-keyed tier 1–3 weights', () => {
+    expect(WASH_TIER_WEIGHTS_BY_QUALITY).toEqual({
+      hoang: [70, 25, 5],
+      huyen: [50, 35, 15],
+      dia: [35, 35, 30],
+      thien: [20, 40, 40],
+      tien: [10, 35, 55],
+    })
   })
+})
 
-  it('realm chưa map trả undefined — KHÔNG fallback im lặng', () => {
-    expect(equipmentEssenceMaterialId('realm_khong_ton_tai')).toBeUndefined()
-  })
-
-  it('mỗi realm một essence id riêng (không realm nào dùng chung, trừ Hợp Thể)', () => {
-    const ids = REALM_TIERS.map((realmId) => EQUIPMENT_REALM_ESSENCE_MATERIAL[realmId])
-
-    expect(new Set(ids).size).toBe(REALM_TIERS.length)
-  })
-
-  it('mọi essence id trong mapping đều được khai báo trong materials', () => {
-    const declared = new Set(materials.map((material) => material.id))
-
-    for (const [realmId, essenceId] of Object.entries(EQUIPMENT_REALM_ESSENCE_MATERIAL)) {
-      expect(declared.has(essenceId), `${realmId} → ${essenceId}`).toBe(true)
-    }
+describe('RefinementBalance — five-quality refine contract', () => {
+  it('charges quality-scaled Luyện Khí Tinh Hoa and only rolls 5–20% increases', () => {
+    expect(REFINE_TINH_HOA_COST_BY_QUALITY).toEqual({
+      hoang: 1,
+      huyen: 3,
+      dia: 5,
+      thien: 7,
+      tien: 9,
+    })
+    expect(REFINE_INCREASE_MIN).toBe(0.05)
+    expect(REFINE_INCREASE_MAX).toBe(0.2)
   })
 })

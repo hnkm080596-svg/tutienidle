@@ -25,10 +25,9 @@ export interface ActionAvailability {
 // mới ở core thì thêm dòng ở đây, không được để lọt codename ra UI.
 const ACTION_FAILURE_LABELS: Record<string, string> = {
   not_found: 'Không tìm thấy trang bị đã chọn.',
-  ore_realm_mismatch: 'Quáng chọn không cùng cảnh giới với món đồ.',
-  ore_invalid: 'Nguyên liệu chọn không hợp lệ để Tẩy Luyện.',
-  missing_ore: 'Không đủ Quáng để Tẩy Luyện.',
   missing_refinement_points: 'Không đủ Điểm Rèn của món đồ.',
+  no_forge_uses: 'Món đồ đã hết lượt Rèn.',
+  missing_tinh_hoa: 'Không đủ Luyện Khí Tinh Hoa.',
   missing_spirit_stone: 'Không đủ Linh Thạch.',
   missing_material: 'Không đủ nguyên liệu.',
   template_not_found: 'Dữ liệu trang bị không hợp lệ.',
@@ -43,6 +42,9 @@ const ACTION_FAILURE_LABELS: Record<string, string> = {
   locked: 'Trang bị đang bị khóa.',
   favorite: 'Trang bị đang được đánh dấu yêu thích.',
   no_conversion_rule: 'Không có quy tắc chuyển đổi cho món đồ này.',
+  invalid_refine_preview: 'Kết quả Tinh Luyện đã cũ hoặc không hợp lệ — hãy xem trước lại.',
+  invalid_affix_value: 'Giá trị dòng phụ không hợp lệ — không thể Tinh Luyện.',
+  invalid_random_roll: 'Kết quả ngẫu nhiên không hợp lệ — Tinh Luyện chưa tiêu hao tài nguyên.',
   max_level: 'Đã đạt cấp tối đa.',
 }
 

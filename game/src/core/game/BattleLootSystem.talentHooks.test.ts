@@ -26,7 +26,13 @@ function createDeadEnemy(
 }
 
 const EQUIPMENT_TEMPLATE = { id: 'eq_test', name: 'Kiếm Test' }
-const EQUIPMENT_INSTANCE = { rarity: 'hoang', quality: 1, zoneId: undefined, icon: undefined }
+const EQUIPMENT_INSTANCE = {
+  instanceId: 'talent-drop-instance',
+  grade: 'bat_pham',
+  quality: 'huyen',
+  zoneId: undefined,
+  icon: undefined,
+}
 
 function createTestSetup(rewards: EnemyReward, talentIds: string[] = []) {
   const materialRegistry = new MaterialRegistry()
@@ -42,6 +48,8 @@ function createTestSetup(rewards: EnemyReward, talentIds: string[] = []) {
   // 2026-08-31) — mock phải trả array thay vì undefined để khớp hợp đồng thật.
   const equipmentBag = { add: vi.fn().mockReturnValue([]) }
   const giveReward = vi.fn()
+  const eventBus = { emit: vi.fn() }
+  const notifications = { push: vi.fn(), drain: () => [] }
   const applyHealing = vi.fn((target: { currentHp: number; maxHp: number }, amount: number) => {
     const before = target.currentHp
     target.currentHp = Math.min(target.maxHp, target.currentHp + Math.max(0, amount))
@@ -49,8 +57,8 @@ function createTestSetup(rewards: EnemyReward, talentIds: string[] = []) {
   })
 
   const deps: BattleLootSystemDeps = {
-    eventBus: { emit: vi.fn() },
-    notifications: { push: vi.fn(), drain: () => [] },
+    eventBus,
+    notifications,
     combatSystem: { applyHealing },
     materialRegistry,
     materialBag,
@@ -84,7 +92,16 @@ function createTestSetup(rewards: EnemyReward, talentIds: string[] = []) {
 
   loot.setSession({} as RewardReceiver, player)
 
-  return { loot, player, materialBag, equipmentBag, giveReward, applyHealing }
+  return {
+    loot,
+    player,
+    materialBag,
+    equipmentBag,
+    giveReward,
+    applyHealing,
+    eventBus,
+    notifications,
+  }
 }
 
 function createBattle(
@@ -250,6 +267,35 @@ describe('BattleLootSystem — Cơ Duyên (equipment_drop_chance)', () => {
 
     expect(withoutTalent.equipmentBag.add).not.toHaveBeenCalled()
     expect(withTalent.equipmentBag.add).toHaveBeenCalledTimes(1)
+  })
+
+  it('boss drop ngẫu nhiên dùng quality cho particle và rank accent', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.4)
+
+    const rewards: EnemyReward = { techniqueInsight: 0, spiritStone: 0 }
+    const { loot, equipmentBag, eventBus, notifications } = createTestSetup(rewards, ['co_duyen'])
+
+    loot.processDefeatedEnemies(
+      createBattle([createDeadEnemy('boss', rewards, { isBoss: true })]),
+    )
+
+    expect(equipmentBag.add).toHaveBeenCalledTimes(1)
+    expect(equipmentBag.add).toHaveBeenCalledWith(EQUIPMENT_INSTANCE)
+    expect(equipmentBag.add).toHaveBeenCalledWith(
+      expect.objectContaining({ grade: 'bat_pham', quality: 'huyen' }),
+    )
+    expect(eventBus.emit).toHaveBeenCalledTimes(1)
+    expect(eventBus.emit).toHaveBeenCalledWith('reward_particle', {
+      sourceId: 'boss',
+      kind: 'item',
+      color: 0x6fbf73,
+    })
+    expect(notifications.push).toHaveBeenCalledTimes(1)
+    expect(notifications.push).toHaveBeenCalledWith({
+      kind: 'loot',
+      message: '+1 Kiếm Test',
+      loot: expect.objectContaining({ accentColorVar: '--rank-color-2' }),
+    })
   })
 })
 

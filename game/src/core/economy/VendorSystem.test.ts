@@ -20,7 +20,7 @@ import type { Material } from '../material/Material'
 import type { AlchemyRecipe } from '../alchemy/AlchemySystem'
 import { VendorSystem } from './VendorSystem'
 import { REALM_TIERS } from '../realm/RealmTierMap'
-import { EQUIPMENT_REALM_ESSENCE_MATERIAL } from '../equipment/RefinementBalance'
+import { LUYEN_KHI_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
 
 function herb(id: string, age: string, realmId = 'mortal'): Material {
   return {
@@ -137,15 +137,26 @@ describe('VendorBalance — bảng giá Hóa Bán', () => {
     expect(getUnitSellPrice(ore('o_tien', 'mortal', 'tien'), 'mortal')).toBe(120)
   })
 
-  it('essence — giá theo index realm trong EQUIPMENT_REALM_ESSENCE_MATERIAL', () => {
-    const realms = Object.keys(EQUIPMENT_REALM_ESSENCE_MATERIAL)
+  it('Luyện Khí Tinh Hoa — giá theo index realm của bối cảnh bán', () => {
+    const realms = [
+      'mortal',
+      'qi_refining',
+      'foundation_establishment',
+      'golden_core',
+      'nascent_soul',
+      'soul_transformation',
+      'void_refinement',
+      'mahayana',
+      'body_integration',
+      'tribulation',
+    ]
 
     for (const realmId of realms) {
       const index = realms.indexOf(realmId)
 
       expect(getUnitSellPrice(
         {
-          id: EQUIPMENT_REALM_ESSENCE_MATERIAL[realmId]!,
+          id: LUYEN_KHI_TINH_HOA_ID,
           name: 'essence',
           category: 'essence',
           sourceType: 'building',

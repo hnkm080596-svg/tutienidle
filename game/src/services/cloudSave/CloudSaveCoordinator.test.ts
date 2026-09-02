@@ -32,11 +32,20 @@ describe('CloudSaveCoordinator', () => {
   it('uses loaded revision for the next write and advances after success', async () => {
     const writes: number[] = []
     const service: CloudSaveService = {
-      async load() { return { status: 'ok', save: snapshot, revision: 4 } },
+      async load() {
+        return { status: 'ok', save: snapshot, revision: 4, discardedEquipmentCount: 2 }
+      },
       async save(_save, expectedRevision) { writes.push(expectedRevision); return { status: 'ok', revision: 5 } },
     }
     const coordinator = new CloudSaveCoordinator(service)
-    await coordinator.load()
+    const load = await coordinator.load()
+
+    expect(load).toEqual({
+      status: 'ok',
+      save: snapshot,
+      revision: 4,
+      discardedEquipmentCount: 2,
+    })
     expect(await coordinator.save(snapshot)).toEqual({ status: 'ok', revision: 5 })
     expect(writes).toEqual([4])
     expect(coordinator.getRevision()).toBe(5)
@@ -47,7 +56,7 @@ describe('CloudSaveCoordinator', () => {
   it('recovers from conflict by re-syncing the latest revision and retrying once', async () => {
     const { service, writes } = mockService(
       [
-        () => ({ status: 'ok', save: snapshot, revision: 4 }),
+        () => ({ status: 'ok', save: snapshot, revision: 4, discardedEquipmentCount: 0 }),
         () => ({ status: 'empty', revision: 0 }),
       ],
       [
@@ -68,7 +77,7 @@ describe('CloudSaveCoordinator', () => {
   it('keeps the conflict result when re-sync cannot read storage, but stays recoverable', async () => {
     const { service, writes } = mockService(
       [
-        () => ({ status: 'ok', save: snapshot, revision: 4 }),
+        () => ({ status: 'ok', save: snapshot, revision: 4, discardedEquipmentCount: 0 }),
         () => ({ status: 'unavailable', message: 'storage broken', retryable: false }),
       ],
       [() => ({ status: 'conflict', currentRevision: 9 })],
@@ -86,7 +95,7 @@ describe('CloudSaveCoordinator', () => {
   it('surfaces a repeated conflict after a failed retry but keeps the fresh revision', async () => {
     const { service, writes } = mockService(
       [
-        () => ({ status: 'ok', save: snapshot, revision: 4 }),
+        () => ({ status: 'ok', save: snapshot, revision: 4, discardedEquipmentCount: 0 }),
         () => ({ status: 'empty', revision: 0 }),
       ],
       [() => ({ status: 'conflict', currentRevision: 9 })],
@@ -104,7 +113,7 @@ describe('CloudSaveCoordinator', () => {
 
   it('reset() starts a fresh revision chain for a new character', async () => {
     const { service, writes } = mockService(
-      [() => ({ status: 'ok', save: snapshot, revision: 7 })],
+      [() => ({ status: 'ok', save: snapshot, revision: 7, discardedEquipmentCount: 0 })],
       [expected => ({ status: 'ok', revision: expected + 1 })],
     )
     const coordinator = new CloudSaveCoordinator(service)
