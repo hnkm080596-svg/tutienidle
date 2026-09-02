@@ -2815,6 +2815,13 @@ export class BattleSystem {
 
         skillExperience: skill.totalExperience ?? skill.experience ?? 0,
 
+        // Pháp Tu Thuần Hệ (E-1/E-2) — spread/self-buff cần biết cả
+        // target set của action, không riêng target hiện tại.
+        affectedTargets: targets,
+
+        secondaryTargetBuffs: (oneEntity) =>
+          this.getBuffSystem(this.getBuffsFor(battle, oneEntity)),
+
         eventBus: this.eventBus,
       })
     }

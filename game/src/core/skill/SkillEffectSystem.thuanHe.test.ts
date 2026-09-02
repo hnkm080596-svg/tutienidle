@@ -429,3 +429,119 @@ describe("SkillEffectSystem — E-5: 'grantsZone' tổng quát (element)", () =>
     expect(spawnSwordZone).not.toHaveBeenCalled()
   })
 })
+
+describe("SkillEffectSystem — E-1: 'spreadsAilmentId' (lan độc)", () => {
+  function spreadSetup(primaryStacks: number) {
+    const system = new SkillEffectSystem()
+    const source = createCombatant({ id: 'source', type: 'player' })
+    const primary = createCombatant({ id: 'primary' })
+    const secondaryA = createCombatant({ id: 'secondary_a' })
+    const secondaryB = createCombatant({ id: 'secondary_b' })
+
+    const primaryBuffs = new BuffSystem(new BuffPool())
+    const pools = new Map<string, BuffSystem>([
+      ['primary', primaryBuffs],
+      ['secondary_a', new BuffSystem(new BuffPool())],
+      ['secondary_b', new BuffSystem(new BuffPool())],
+    ])
+
+    const ctx = createContext({
+      targetBuffs: primaryBuffs,
+      affectedTargets: [primary, secondaryA, secondaryB],
+      secondaryTargetBuffs: (oneTarget) => pools.get(oneTarget.id),
+    })
+
+    for (let i = 0; i < primaryStacks; i++) {
+      primaryBuffs.apply(ctx.buffRegistry.get('trung_doc'), source, primary, ctx.buffRegistry)
+    }
+
+    return { system, source, primary, secondaryA, secondaryB, primaryBuffs, pools, ctx }
+  }
+
+  it('primary 3 tầng, 2 phụ → mỗi phụ nhận 3 tầng (percent 1); primary không đổi', () => {
+    const { system, source, primary, secondaryA, secondaryB, primaryBuffs, pools, ctx } = spreadSetup(3)
+
+    system.apply({ type: 'damage', value: 1, spreadsAilmentId: 'trung_doc' }, source, primary, ctx)
+
+    expect(pools.get('secondary_a')!.getStacks('trung_doc')).toBe(3)
+    expect(pools.get('secondary_b')!.getStacks('trung_doc')).toBe(3)
+    expect(primaryBuffs.getStacks('trung_doc')).toBe(3)
+  })
+
+  it('spreadStackPercent 0.5 → ceil(3 × 0.5) = 2 tầng mỗi phụ', () => {
+    const { system, source, primary, secondaryA, pools, ctx } = spreadSetup(3)
+
+    system.apply(
+      { type: 'damage', value: 1, spreadsAilmentId: 'trung_doc', spreadStackPercent: 0.5 },
+      source,
+      primary,
+      ctx,
+    )
+
+    expect(pools.get('secondary_a')!.getStacks('trung_doc')).toBe(2)
+  })
+
+  it('primary không có ailment → không spread, không crash', () => {
+    const { system, source, primary, secondaryA, pools, ctx } = spreadSetup(0)
+
+    expect(() =>
+      system.apply({ type: 'damage', value: 1, spreadsAilmentId: 'trung_doc' }, source, primary, ctx),
+    ).not.toThrow()
+
+    expect(pools.get('secondary_a')!.getActiveIds()).toEqual([])
+  })
+
+  it('stack cap ở maxStacks của buff (trần 5)', () => {
+    const { system, source, primary, secondaryA, pools, ctx } = spreadSetup(5)
+
+    system.apply({ type: 'damage', value: 1, spreadsAilmentId: 'trung_doc' }, source, primary, ctx)
+
+    expect(pools.get('secondary_a')!.getStacks('trung_doc')).toBe(5)
+  })
+
+  it('target phụ đã chết → không nhận spread', () => {
+    const { system, source, primary, secondaryB, pools, ctx } = spreadSetup(3)
+
+    const secondaryA = ctx.affectedTargets!.find((oneTarget) => oneTarget.id === 'secondary_a')!
+    secondaryA.alive = false
+
+    system.apply({ type: 'damage', value: 1, spreadsAilmentId: 'trung_doc' }, source, primary, ctx)
+
+    expect(pools.get('secondary_a')!.getActiveIds()).toEqual([])
+    expect(pools.get('secondary_b')!.getStacks('trung_doc')).toBe(3)
+    void secondaryB
+  })
+
+  it('spreadRefreshesPrimary → duration primary được gia hạn, stacks giữ nguyên', () => {
+    const { system, source, primary, primaryBuffs, ctx } = spreadSetup(3)
+
+    const instance = primaryBuffs.getFromSource('trung_doc', 'source')!
+    instance.remainingTime = 1
+
+    system.apply(
+      { type: 'damage', value: 1, spreadsAilmentId: 'trung_doc', spreadRefreshesPrimary: true },
+      source,
+      primary,
+      ctx,
+    )
+
+    expect(primaryBuffs.getStacks('trung_doc')).toBe(3)
+    expect(primaryBuffs.getFromSource('trung_doc', 'source')!.remainingTime).toBeGreaterThan(1)
+  })
+
+  it('không affectedTargets (ctx cũ) → không spread, không crash', () => {
+    const system = new SkillEffectSystem()
+    const source = createCombatant({ id: 'source', type: 'player' })
+    const primary = createCombatant({ id: 'primary' })
+    const primaryBuffs = new BuffSystem(new BuffPool())
+    const ctx = createContext({ targetBuffs: primaryBuffs })
+
+    primaryBuffs.apply(ctx.buffRegistry.get('trung_doc'), source, primary, ctx.buffRegistry)
+
+    expect(() =>
+      system.apply({ type: 'damage', value: 1, spreadsAilmentId: 'trung_doc' }, source, primary, ctx),
+    ).not.toThrow()
+
+    expect(primaryBuffs.getStacks('trung_doc')).toBe(1)
+  })
+})

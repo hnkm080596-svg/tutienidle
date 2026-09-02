@@ -80,6 +80,20 @@ export interface SkillEffect {
 
   damagePerStack?: number
 
+  // Pháp Tu Thuần Hệ (E-1, 2026-09-03) — CHỈ dùng cho effect 'damage'
+  // (Vân Mộc Lan Độc + biến thể). SAU KHI missile resolve, đọc TỔNG
+  // stacks của ailment `spreadsAilmentId` trên PRIMARY target, áp lên
+  // MỌI target phụ trong cùng action (scope 'affected_targets', trừ
+  // primary) qua BuffSystem.apply() — mỗi lần apply = +1 stack theo
+  // stackMode của buff, nên số lần apply = ceil(total ×
+  // `spreadStackPercent`) (mặc định 1 = 100%). Primary không đổi (trừ
+  // khi `spreadRefreshesPrimary` → gia hạn duration primary).
+  spreadsAilmentId?: string
+
+  spreadStackPercent?: number
+
+  spreadRefreshesPrimary?: boolean
+
   // Pháp Tu Lifedrain (Mộc Tu) — CHỈ có ý nghĩa cùng consumesAilmentId/
   // damagePerStack. Hồi máu cho SOURCE = healPercentOfDamage × bonus
   // damage Detonate vừa gây. Tách riêng khỏi leechPercent toàn cục vì

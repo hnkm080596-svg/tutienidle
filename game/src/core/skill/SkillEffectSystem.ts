@@ -80,6 +80,18 @@ export interface SkillEffectContext {
   skillId?: string
 
   skillExperience?: number
+
+  // Pháp Tu Thuần Hệ (E-1/E-2, 2026-09-03) — danh sách MỌI entity
+  // trúng trong cùng action (primary đứng đầu — thứ tự do
+  // collectAffected() đảm bảo). Optional: caller cũ (trigger ctx,
+  // test) không truyền = spreadsAilmentId/stacksPerAffectedTarget
+  // coi như chỉ có primary (spread no-op, stacks = 1).
+  affectedTargets?: CombatEntity[]
+
+  // E-1 — resolver pool buff của MỘT target phụ bất kỳ (BattleSystem
+  // bind theo battle; không truyền = spread bỏ qua target phụ không
+  // phải ctx.targetBuffs hiện tại).
+  secondaryTargetBuffs?: (target: CombatEntity) => BuffSystem | undefined
 }
 
 /**
@@ -233,6 +245,49 @@ export class SkillEffectSystem {
           source.currentWard = 0
 
           ctx.combatSystem.applyDirectDamage(target, wardBonusDamage, source.id, 'ward_break')
+        }
+
+        // Pháp Tu Thuần Hệ (E-1, 2026-09-03) — "lan độc": sao chép
+        // stack ailment của PRIMARY target (ctx.targetBuffs ở đây là
+        // pool của target hiện tại) sang MỌI target phụ trong cùng
+        // action. Số lần apply mỗi phụ = ceil(total × percent) — mỗi
+        // lần apply +1 stack theo stackMode của buff (stack) hoặc
+        // refresh (refresh-mode). Target phụ chết giữa action bị bỏ
+        // qua (cùng tinh thần "không áp lên xác" của applyAll).
+        if (target.alive && effect.spreadsAilmentId) {
+          const totalStacks = ctx.targetBuffs.getStacks(effect.spreadsAilmentId)
+
+          if (totalStacks > 0) {
+            const applications = Math.ceil(totalStacks * (effect.spreadStackPercent ?? 1))
+            const secondaryTargets = (ctx.affectedTargets ?? [target]).filter(
+              (oneTarget) => oneTarget.id !== target.id && oneTarget.alive,
+            )
+
+            for (const secondary of secondaryTargets) {
+              const secondaryBuffs = ctx.secondaryTargetBuffs?.(secondary)
+
+              if (!secondaryBuffs) {
+                continue
+              }
+
+              const definition = ctx.buffRegistry.get(effect.spreadsAilmentId)
+
+              for (let i = 0; i < applications; i++) {
+                secondaryBuffs.apply(definition, source, secondary, ctx.buffRegistry)
+              }
+            }
+          }
+
+          // Biến thể "Lan Độc → Thấm": gia hạn duration primary (không
+          // đổi stacks) — xoá + apply lại cùng nguồn để stackMode
+          // 'stack' giữ nguyên số tầng nhưng remainingTime reset.
+          if (effect.spreadRefreshesPrimary) {
+            const primaryInstances = ctx.targetBuffs.getAllById(effect.spreadsAilmentId)
+
+            for (const instance of primaryInstances) {
+              instance.remainingTime = instance.duration
+            }
+          }
         }
 
         break
