@@ -261,7 +261,7 @@ Phase 4:  tech-debt — chạy nền liên tục
 
 | Task | Mô tả | Trạng thái |
 |---|---|---|
-| **9.1** ⬜ | **QA-001 (High, Confirmed) — Kẹt trang bị khi đột phá** | ĐÃ ĐỔI THIẾT KẾ (user 2026-09-02) |
+| **9.1** ✅ | **QA-001 (High, Confirmed) — Kẹt trang bị khi đột phá** | XONG 2026-09-02 (branch `worktree-task-9-1`, commits `f5248f4..3a8724a`). Thiết kế cuối: gộp 3 trigger → `triggerBreakthroughAction` auto-unequip + panel xác nhận "Độ kiếp cũng là độ thân..." cho MỌI đột phá. `chooseCultivationPath` không gate (feature-unlock sau đột phá). QA quick: PASS WITH EVIDENCE. 2 Low deferred: cooldown UX (QA-013), unequip-before-failed-start (QA-014). |
 | **9.2** ⬜ | QA-002 (High) — `restoreFromSave` thiếu idempotency guard | |
 | **9.3** ⬜ | QA-003 (High) — `OverlayPanel` thiếu focus trap (H5 Giai đoạn 8) | |
 | **9.4** ⬜ | QA-004 (Medium) — `updateKiem` chưa được gọi từ production (defer lâu, sửa cùng 6A) | |
