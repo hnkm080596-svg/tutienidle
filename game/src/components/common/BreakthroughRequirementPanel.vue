@@ -81,6 +81,8 @@ function confirmBreakthrough() {
         <p>...kinh mạch thông suốt, thiên kiếp cũng phải nhường ba phần.</p>
       </div>
 
+      <p class="breakthrough-requirement__warning">Đột phá sẽ tháo toàn bộ trang bị (yêu cầu trang bị ngang phẩm mới)</p>
+
       <div class="breakthrough-requirement__actions">
         <GameButton class="breakthrough-requirement__cancel" variant="ghost" size="sm" @click="store.close()">Đóng</GameButton>
 
@@ -142,6 +144,16 @@ function confirmBreakthrough() {
   font-size: var(--text-xs);
   font-style: italic;
   color: var(--paper-text-muted);
+}
+
+.breakthrough-requirement__warning {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: var(--text-xs);
+  text-align: center;
+  color: var(--danger, #c0392b);
+  border: 1px dashed currentColor;
+  border-radius: var(--radius-sm);
 }
 
 .breakthrough-requirement__actions {

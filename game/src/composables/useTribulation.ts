@@ -157,6 +157,13 @@ function resolveVictory(player: PlayerStore, gameManager: GameManager, active: A
   player.realmLevel = 1
   player.cultivation = 0
 
+  // Task 17 (rework P5) — tháo toàn bộ trang bị NGAY sau khi đổi realm,
+  // TRƯỚC mọi sync passive bên dưới — tránh kẹt đồ lệch phẩm mới (Task 16
+  // gate chặn equip lệch phẩm nhưng không tự tháo đồ cũ). Slot state
+  // (enhanceLevel...) không đổi, chỉ equipped flag + modifier.
+  gameManager.unequipAllEquipment()
+  player.setEquipmentModifiers(gameManager.getEquipmentModifiers())
+
   // Spec dot-pha-loi-kiep §4.2/§4.4 — bậc Kiến Cơ công bố SAU khi đạt;
   // highestFoundationAchieved nuôi passive Kiến Cơ (RealmPassives.ts).
   if (active.targetRealmId === 'foundation_establishment') {
