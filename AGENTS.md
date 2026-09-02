@@ -95,3 +95,6 @@
 - During a QA run, the skill may write only `game/src/**/*.test.ts`, `game/tests/e2e/**/*.spec.ts`, `game/tests/e2e/helpers.ts`, and `game/docs/qa/**`; it must not modify production code.
 - Treat a defect as confirmed only when a failing reproduction test or direct runtime evidence proves it. Otherwise report it as suspected or as a coverage gap.
 - If quick mode identifies materially broad save/cloud, time/offline, economy/progression, or Vue/Pinia/Phaser lifecycle risk, escalate to deep mode rather than issuing a quick pass verdict.
+- The allowed QA verdicts are: `PASS WITH EVIDENCE`, `PASS WITH GAPS`, `FAIL`, and `BLOCKED`.
+- A feature or bug-fix task may be declared done only with a `PASS WITH EVIDENCE` verdict. `PASS WITH GAPS`, `FAIL`, and `BLOCKED` are non-completion states and must never be presented as done.
+- When the verdict is below `PASS WITH EVIDENCE`, report the unresolved findings or evidence gaps, return to the development workflow for in-scope remediation, and rerun QA. If completion requires new authorization, user input, or work outside the task scope, stop and request it explicitly instead of lowering the completion standard.
