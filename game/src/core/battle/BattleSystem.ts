@@ -38,7 +38,6 @@ import type { EnemySpawnVfxPresetId } from './CombatAction'
 import { entityGridPosition, worldToGridPosition } from './BattleGrid'
 
 import {
-  canEnemyReachGate,
   canPlayerReachTarget,
   collectAffected,
   findBattleEnemy,
@@ -97,14 +96,11 @@ import type { SwordZone } from './SwordZone'
 import type { ElementType } from '../element/ElementType'
 import type { ArtifactRuntime } from '../artifact/ArtifactRuntime'
 import { onArtifactHitResolved, updateArtifactActivation, type ArtifactSystemDeps } from '../artifact/ArtifactSystem'
+import { EnemyAttackSystem } from './EnemyAttackSystem'
 
 // Skill execution policy rework (plan §8) — windup "đòn thường" của
 // player basic attack KHÔNG CÒN TỒN TẠI: mọi đòn chủ động của Player là
 // skill auto-cast đi qua pipeline impact riêng của skill.
-
-const ENEMY_MELEE_WINDUP_SECONDS = 0.15
-
-const ENEMY_RANGED_WINDUP_SECONDS = 0.3
 
 // Enemy attackRange từ mức này trở lên coi như "ranged" (chọn preset VFX
 
@@ -113,14 +109,12 @@ const ENEMY_RANGED_WINDUP_SECONDS = 0.3
 // Core Loop Foundation checklist (Mục MONSTER) — 'ranged' giữ khoảng
 
 // cách bằng % attackRange (không đứng sát mép tầm đánh như melee).
+//
+// (ENEMY_MELEE_WINDUP_SECONDS/ENEMY_RANGED_WINDUP_SECONDS/
+// CASTER_CAST_DELAY_SECONDS moved to EnemyAttackSystem.ts — Task 7 split,
+// chỉ dùng trong đó.)
 
 const RANGED_PREFERRED_DISTANCE_RATIO = 0.6
-
-// 'caster' có 1 khoảng "khoảng lặng" ngắn trước khi đòn thực sự bắn
-
-// ra (telegraph) — khác melee/ranged bắn ngay khi tới lượt.
-
-const CASTER_CAST_DELAY_SECONDS = 0.6
 
 // Pháp Tu (Thổ Tu, 2026-08-15) — Ward chỉ bắt đầu hồi sau khi không
 
@@ -222,7 +216,39 @@ function scopeForEffect(effect: SkillEffect): EffectScope {
 export class BattleSystem {
   private battle: Battle | null = null
 
+  // Perf (Task 6, 2026-09-02) — BuffSystem là wrapper THUẦN TUÝ STATELESS
+  // quanh 1 BuffPool (chỉ giữ `private readonly pool`, không cache gì
+  // khác — xem BuffSystem.ts constructor/getActiveModifiers()/update()).
+  // Toàn bộ state buff thật nằm trong BuffPool, được mutate tại chỗ, KHÔNG
+  // bao giờ reassign (battle.playerBuffs/battleEnemy.buffs chỉ new 1 lần
+  // lúc tạo — xem Battle.ts). Vì vậy 1 BuffSystem instance/pool là valid
+  // vĩnh viễn trong đời battle: cache theo pool (WeakMap để pool của trận
+  // cũ tự bị GC, không leak) thay vì `new BuffSystem(pool)` lại mỗi lần —
+  // trước đây bị gọi lại ở MỌI fixed-step (10Hz) cho player + từng enemy
+  // (isIncapacitated/updateStatsFromModifiers/resolveMovement) cộng thêm
+  // nhiều call site theo sự kiện (on-hit/cast) — tất cả đều an toàn dùng
+  // chung 1 instance vì instance không giữ state riêng nào cần "làm mới".
+  private readonly buffSystemCache = new WeakMap<BuffPool, BuffSystem>()
+
+  private getBuffSystem(pool: BuffPool): BuffSystem {
+    let system = this.buffSystemCache.get(pool)
+
+    if (!system) {
+      system = new BuffSystem(pool)
+      this.buffSystemCache.set(pool, system)
+    }
+
+    return system
+  }
+
   private readonly reactionManager: ReactionManager
+
+  // Phase 4 mechanical split (Task 7, 2026-09-02) — enemy AI attack firing
+  // (updateEnemyAttacks/fireEnemyAttack/isEnemyInPosition) extracted
+  // verbatim to EnemyAttackSystem.ts; wired here via DI (actionImpact +
+  // isIncapacitated closure, same instances/cache the rest of BattleSystem
+  // uses — see constructor).
+  private readonly enemyAttackSystem: EnemyAttackSystem
 
   // Kiếm Tu Bạt Kiếm (Task 4) — id skill channel đang equip lúc start()
   // (undefined = không có skill channel nào trong loadout, updateChanneling
@@ -324,6 +350,11 @@ export class BattleSystem {
     private readonly getOnHitNodeLevels: () => Record<string, number> = () => ({}),
   ) {
     this.reactionManager = new ReactionManager(eventBus)
+
+    this.enemyAttackSystem = new EnemyAttackSystem({
+      actionImpact,
+      isIncapacitated: (buffs) => this.isIncapacitated(buffs),
+    })
 
     // Kiếm Tu Bạt Kiếm (Task 4) — nguồn DUY NHẤT tích tuLucDamageTakenPercent:
     // bất kỳ đòn nào làm currentHp Player giảm (đánh trúng/DoT/reaction/…)
@@ -975,7 +1006,7 @@ export class BattleSystem {
 
     // [14] Enemy attacks.
 
-    this.updateEnemyAttacks(
+    this.enemyAttackSystem.updateEnemyAttacks(
       battle,
 
       deltaSeconds,
@@ -1042,7 +1073,7 @@ export class BattleSystem {
       ) {
         const phase = phases[appliedCount]!
 
-        new BuffSystem(battleEnemy.buffs).apply(phase.buff, battleEnemy.entity, battleEnemy.entity)
+        this.getBuffSystem(battleEnemy.buffs).apply(phase.buff, battleEnemy.entity, battleEnemy.entity)
 
         // Boss Mechanics (Phase 4) — Attack Pattern: đổi hẳn archetype
 
@@ -1097,14 +1128,14 @@ export class BattleSystem {
         continue
       }
 
-      new BuffSystem(battleEnemy.buffs).apply(enrage.buff, battleEnemy.entity, battleEnemy.entity)
+      this.getBuffSystem(battleEnemy.buffs).apply(enrage.buff, battleEnemy.entity, battleEnemy.entity)
 
       battleEnemy.enrageApplied = true
     }
   }
 
   private isIncapacitated(buffs: BuffPool): boolean {
-    const system = new BuffSystem(buffs)
+    const system = this.getBuffSystem(buffs)
 
     return system.isStunned() || system.isFrozen()
   }
@@ -1135,7 +1166,7 @@ export class BattleSystem {
         continue
       }
 
-      const battleEnemyBuffs = new BuffSystem(battleEnemy.buffs)
+      const battleEnemyBuffs = this.getBuffSystem(battleEnemy.buffs)
 
       // Thổ Tu ("Trói Chân", Plans/EarthPath mục VI) — Root chặn di
 
@@ -1287,7 +1318,7 @@ export class BattleSystem {
     // active trên target (BuffSystem.rollOnHitEffects()).
 
     if (!result.dodged && target.alive) {
-      new BuffSystem(this.getBuffsFor(battle, target)).rollOnHitEffects(
+      this.getBuffSystem(this.getBuffsFor(battle, target)).rollOnHitEffects(
         source,
         target,
         this.buffRegistry,
@@ -1321,8 +1352,8 @@ export class BattleSystem {
             return { landed: true }
           },
           buffRegistry: this.buffRegistry,
-          sourceBuffs: new BuffSystem(this.getBuffsFor(battle, source)),
-          targetBuffs: new BuffSystem(this.getBuffsFor(battle, target)),
+          sourceBuffs: this.getBuffSystem(this.getBuffsFor(battle, source)),
+          targetBuffs: this.getBuffSystem(this.getBuffsFor(battle, target)),
           reactionManager: this.reactionManager,
           reactionKeepChance: this.getReactionKeepChance(),
           spawnLavaZone: (spec) => this.spawnLavaZone(battle, spec),
@@ -1377,7 +1408,7 @@ export class BattleSystem {
         target.currentBreakGauge -= skill.breakDamagePerHit
 
         if (target.currentBreakGauge <= 0) {
-          const targetBuffs = new BuffSystem(this.getBuffsFor(battle, target))
+          const targetBuffs = this.getBuffSystem(this.getBuffsFor(battle, target))
 
           targetBuffs.apply(
             this.buffRegistry.get('choang'),
@@ -1435,7 +1466,7 @@ export class BattleSystem {
       return battle.enemies.find((battleEnemy) => battleEnemy.entity.id === id)?.entity
     }
 
-    const playerBuffSystem = new BuffSystem(battle.playerBuffs)
+    const playerBuffSystem = this.getBuffSystem(battle.playerBuffs)
 
     playerBuffSystem.update(deltaSeconds, battle.player, this.combat, this.buffRegistry, resolveSource)
 
@@ -1453,7 +1484,7 @@ export class BattleSystem {
         continue
       }
 
-      const enemyBuffSystem = new BuffSystem(battleEnemy.buffs)
+      const enemyBuffSystem = this.getBuffSystem(battleEnemy.buffs)
 
       enemyBuffSystem.update(deltaSeconds, battleEnemy.entity, this.combat, this.buffRegistry, resolveSource)
 
@@ -2581,7 +2612,7 @@ export class BattleSystem {
         // Chảy máu — tái dùng buff/debuff van_kiem_vu sẵn có.
         const buff = this.buffRegistry.get('van_kiem_vu')
         if (buff) {
-          new BuffSystem(this.getBuffsFor(battle, target)).apply(
+          this.getBuffSystem(this.getBuffsFor(battle, target)).apply(
             buff,
             source,
             target,
@@ -2595,7 +2626,7 @@ export class BattleSystem {
         const ccId = Math.random() < 0.5 ? 'troi_chan' : 'choang'
         const buff = this.buffRegistry.get(ccId)
         if (buff) {
-          new BuffSystem(this.getBuffsFor(battle, target)).apply(
+          this.getBuffSystem(this.getBuffsFor(battle, target)).apply(
             buff,
             source,
             target,
@@ -2633,7 +2664,7 @@ export class BattleSystem {
           const buffId = `onhit_${kind}`
           const definition = this.buffRegistry.get(buffId)
           if (definition) {
-            new BuffSystem(this.getBuffsFor(battle, source)).apply(definition, source, source, this.buffRegistry)
+            this.getBuffSystem(this.getBuffsFor(battle, source)).apply(definition, source, source, this.buffRegistry)
           }
         }
         break
@@ -2665,7 +2696,7 @@ export class BattleSystem {
       skillName: skill.name,
     })
 
-    const sourceBuffs = new BuffSystem(this.getBuffsFor(battle, source))
+    const sourceBuffs = this.getBuffSystem(this.getBuffsFor(battle, source))
 
     // Đọc qua getEffectiveSkill() để tôn trọng Specialization đã
 
@@ -2731,7 +2762,7 @@ export class BattleSystem {
 
     const applyEffects = (effects: SkillEffect[], oneTarget: CombatEntity) => {
       let landedHit = false
-      const targetBuffs = new BuffSystem(this.getBuffsFor(battle, oneTarget))
+      const targetBuffs = this.getBuffSystem(this.getBuffsFor(battle, oneTarget))
 
       this.skillEffectSystem.applyAll(effects, source, oneTarget, {
         combatSystem: this.combat,
@@ -2811,7 +2842,7 @@ export class BattleSystem {
     if (effective.triggers?.length) {
       for (const oneTarget of targets) {
         let landedHit = false
-        const targetBuffs = new BuffSystem(this.getBuffsFor(battle, oneTarget))
+        const targetBuffs = this.getBuffSystem(this.getBuffsFor(battle, oneTarget))
 
         const triggerCtx: SkillEffectContext = {
           combatSystem: this.combat,
@@ -3010,8 +3041,8 @@ export class BattleSystem {
         combatSystem: this.combat,
         fireHit: () => ({ landed: true }),
         buffRegistry: this.buffRegistry,
-        sourceBuffs: new BuffSystem(this.getBuffsFor(battle, player)),
-        targetBuffs: new BuffSystem(this.getBuffsFor(battle, target)),
+        sourceBuffs: this.getBuffSystem(this.getBuffsFor(battle, player)),
+        targetBuffs: this.getBuffSystem(this.getBuffsFor(battle, target)),
         reactionManager: this.reactionManager,
         reactionKeepChance: this.getReactionKeepChance(),
         spawnLavaZone: (spec) => this.spawnLavaZone(battle, spec),
@@ -3106,158 +3137,9 @@ export class BattleSystem {
     return highest
   }
 
-  /**
-   * Enemy đã ở THẾ ĐỨNG BẮN: trong tầm của chính nó tới cổng VÀ không
-   * còn di chuyển nữa (kiter lùi về preferred thì coi như đang di chuyển).
-   * Yêu cầu sản phẩm 2026-08-26 — KHÔNG bắn khi đang đi bộ; quái chỉ mở
-   * hỏa lực sau khi dừng ở biên range.
-   */
-  private isEnemyInPosition(entity: CombatEntity): boolean {
-    if (!canEnemyReachGate(entity, HERO_COLUMN)) {
-      return false
-    }
-
-    const isKiter = entity.archetype === 'ranged' || entity.archetype === 'caster'
-
-    if (isKiter) {
-      return Math.abs(entity.x - HERO_COLUMN) >= entity.stats.attackRange * RANGED_PREFERRED_DISTANCE_RATIO
-    }
-
-    return true
-  }
-
-  private updateEnemyAttacks(
-    battle: Battle,
-
-    deltaSeconds: number,
-  ) {
-    // Targetability (plan §5.4/§13): Player và enemy ĐỀU phải materialize
-    // + còn sống thì enemy mới có target (cổng) để đánh.
-    if (!battle.playerMaterialized || !battle.player.alive) {
-      return
-    }
-
-    for (const battleEnemy of battle.enemies) {
-      if (!battleEnemy.entity.alive) {
-        continue
-      }
-
-      if (this.isIncapacitated(battleEnemy.buffs)) {
-        continue
-      }
-
-      // Core Loop Foundation checklist (Mục MONSTER) — 'caster' đang
-
-      // trong khoảng lặng telegraph, đếm ngược riêng, KHÔNG đụng
-
-      // attackTimer cho tới khi bắn xong.
-
-      if (battleEnemy.castTimer !== undefined) {
-        battleEnemy.castTimer -= deltaSeconds
-
-        if (battleEnemy.castTimer > 0) {
-          continue
-        }
-
-        battleEnemy.castTimer = undefined
-
-        this.fireEnemyAttack(battleEnemy, battle)
-
-        continue
-      }
-
-      if (battleEnemy.attackTimer > 0) {
-        continue
-      }
-
-      // "Đứng lại rồi mới đánh" (yêu cầu sản phẩm 2026-08-26): quái còn
-      // off-screen hoặc CHƯA dừng ở biên range của chính nó thì KHÔNG tiêu
-      // attack timer, không mở telegraph — di chuyển và tấn công loại trừ
-      // nhau.
-
-      if (
-        !this.isEnemyInPosition(battleEnemy.entity) ||
-        battleEnemy.entity.x > VISIBLE_MAX_COLUMN
-      ) {
-        continue
-      }
-
-      if (battleEnemy.entity.archetype === 'caster') {
-        // Bắt đầu telegraph thay vì bắn ngay — attackTimer CHƯA reset
-
-        // (làm ở nhánh trên khi khoảng lặng kết thúc), tránh 2 lần
-
-        // trừ tempo cho cùng 1 đòn.
-
-        battleEnemy.castTimer = CASTER_CAST_DELAY_SECONDS
-
-        continue
-      }
-
-      this.fireEnemyAttack(battleEnemy, battle)
-    }
-  }
-
-  private fireEnemyAttack(battleEnemy: Battle['enemies'][number], battle: Battle) {
-    const attackSpeed = battleEnemy.entity.stats.attackSpeed
-
-    battleEnemy.attackTimer = getAttackIntervalSeconds(attackSpeed)
-
-    // Combat Grid Rework — enemy attack cũng là action impact: ranged
-
-    // "bắn phép" = impact TẠI target (không vật thể bay), windup dài hơn.
-
-    const isRanged =
-      battleEnemy.entity.archetype === 'ranged' || battleEnemy.entity.archetype === 'caster'
-
-    // Combat Balance Pass (2026-08-29, plan §3.6) — action đặc biệt data-
-    // driven: đếm attack 1-based, mỗi attack MỚI thứ `everyNth` (khớp
-    // spec ĐẦU TIÊN trong danh sách) thay basic bằng impact với
-    // damageMultiplier/presetId riêng. Đếm qua field runtime trên
-    // battleEnemy — không mutate data gốc.
-    const specialCount = (battleEnemy.specialAttackCounter ?? 0) + 1
-
-    battleEnemy.specialAttackCounter = specialCount
-
-    const special = battleEnemy.entity.specialAttacks?.find(
-      candidate => specialCount % candidate.everyNth === 0,
-    )
-
-    if (special) {
-      this.actionImpact.scheduleBasic({
-        actionId: `${battleEnemy.entity.id}:special`,
-        sourceId: battleEnemy.entity.id,
-        targetId: battle.player.id,
-        damage: { kind: 'physical', multiplier: special.damageMultiplier },
-        presetId: special.presetId ?? 'boss_ground_slam',
-        windupSeconds: special.windupSeconds ?? ENEMY_MELEE_WINDUP_SECONDS,
-      })
-
-      return
-    }
-
-    this.actionImpact.scheduleBasic({
-      actionId: `${battleEnemy.entity.id}:basic`,
-
-      sourceId: battleEnemy.entity.id,
-
-      targetId: battle.player.id,
-
-      damage: { kind: 'physical', multiplier: 1 },
-
-      presetId:
-        battleEnemy.entity.archetype === 'caster'
-          ? 'arcane_impact'
-          : isRanged
-            ? 'arcane_impact'
-            : 'claw',
-
-      windupSeconds:
-        battleEnemy.entity.archetype === 'caster' || isRanged
-          ? ENEMY_RANGED_WINDUP_SECONDS
-          : ENEMY_MELEE_WINDUP_SECONDS,
-    })
-  }
+  // isEnemyInPosition/updateEnemyAttacks/fireEnemyAttack moved to
+  // EnemyAttackSystem.ts (Phase 4 split, Task 7) — see this.enemyAttackSystem
+  // above and its call site in update() ([14] Enemy attacks).
 
   /**
 

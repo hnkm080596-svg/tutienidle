@@ -153,4 +153,32 @@ describe('useCadenceSmoothing — resync / pause / cleanup', () => {
 
     vi.unstubAllGlobals()
   })
+
+  it('idle stop: slot không có cadence (total <= 0) và đã về 0 → không tự lên lịch rAF tiếp; resync mới re-arm', async () => {
+    const raf = stubRaf()
+    const sample = ref({ remaining: 0, total: 0 })
+
+    const displayed = useCadenceSmoothing(
+      () => ({ ...sample.value }),
+      () => true,
+    )
+
+    expect(displayed.value).toBe(0)
+    expect(raf.pendingCount()).toBe(1)
+
+    // Chạy frame đầu tiên — vẫn về 0, không có cadence → tự dừng, không
+    // còn callback rAF nào chờ.
+    raf.pump(0)
+
+    expect(displayed.value).toBe(0)
+    expect(raf.pendingCount()).toBe(0)
+
+    // Snapshot mới có cadence thật → watch(getSample) resync, re-arm rAF.
+    sample.value = { remaining: 2, total: 3 }
+    await nextTick()
+
+    expect(raf.pendingCount()).toBe(1)
+
+    vi.unstubAllGlobals()
+  })
 })

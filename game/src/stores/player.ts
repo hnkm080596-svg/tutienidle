@@ -25,6 +25,69 @@ import { calculateStats, type StatModifier } from '@/core/stats/StatCalculator'
 import { getKiemYDamageMultipliers, getKiemYTier } from '@/core/player/KiemYSystem'
 import { normalizeArtifactProgress } from '@/core/artifact/ArtifactProgression'
 
+// Dirty-check cho setExternalModifiers (perf-optimize-pass Task 5).
+// App.vue gọi setExternalModifiers() MỖI TICK (10Hz) với mảng MỚI do
+// GameManager.getAggregatedModifiers() dựng lại; gán reference mới làm
+// getter `finalStats` invalidate mỗi tick dù nội dung buff/technique
+// không đổi -> mọi consumer tính lại vô ích. Ở đây giữ lại "chữ ký" nội
+// dung của lần gán gần nhất để bỏ qua các lần gán trùng nội dung.
+//
+// Vì sao SNAPSHOT theo GIÁ TRỊ (string) chứ không deep-compare với
+// `this.externalModifiers`: nguồn modifier (BuffSystem/SkillSystem) có
+// thể trả về CHÍNH object cũ và mutate tại chỗ (vd stacks đổi). Khi đó
+// hai bên của phép so sánh trỏ cùng object nên deep-compare luôn thấy
+// "giống nhau" và ta sẽ bỏ sót thay đổi thật. Chữ ký copy giá trị ra
+// string nên bắt được đúng trường hợp này.
+//
+// WeakMap theo store instance (KHÔNG phải biến module dùng chung) để
+// mỗi pinia instance — nhất là trong test, mỗi test tạo pinia mới — có
+// snapshot riêng, và snapshot tự thu hồi cùng store. Không đụng vào
+// state/save shape.
+interface ExternalModifierSnapshot {
+  // Đúng giá trị mà state đang giữ sau lần gán gần nhất (proxy reactive
+  // của Pinia). Nếu nơi khác thay mảng này (load save, $reset, $patch)
+  // thì reference lệch -> ta gán lại thay vì tin vào chữ ký cũ.
+  applied: StatModifier[]
+
+  signature: string
+}
+
+const lastExternalModifiers = new WeakMap<object, ExternalModifierSnapshot>()
+
+// Ký tự điều khiển làm dấu phân cách — không bao giờ xuất hiện trong
+// id/sourceId/stat/tag (toàn chuỗi định danh do code sinh), nên hai mảng
+// khác nội dung không thể vô tình trùng chữ ký vì ghép chuỗi.
+const SIGNATURE_SEPARATOR = '\u0001'
+
+// "Nội dung giống hệt" = cùng số lượng, cùng THỨ TỰ, và từng entry khớp
+// TOÀN BỘ field của StatModifier có ảnh hưởng tới calculateStats
+// (id/sourceId/sourceType/stat/tag + 7 field số). Thứ tự được tính vào
+// vì mảng này được spread thẳng vào pipeline; giữ chặt hơn cần thiết ở
+// chỗ này chỉ khiến ta gán lại thừa (an toàn), không bao giờ bỏ sót.
+// `?? ''` phân biệt được 0 ("0") với undefined ("").
+function externalModifierSignature(modifiers: StatModifier[]): string {
+  const parts: (string | number)[] = [modifiers.length]
+
+  for (const modifier of modifiers) {
+    parts.push(
+      modifier.id,
+      modifier.sourceId,
+      modifier.sourceType,
+      modifier.stat,
+      modifier.tag ?? '',
+      modifier.flat ?? '',
+      modifier.percent ?? '',
+      modifier.multiplier ?? '',
+      modifier.stacks ?? '',
+      modifier.maxStacks ?? '',
+      modifier.perLevelFlat ?? '',
+      modifier.perLevelPercent ?? '',
+    )
+  }
+
+  return parts.join(SIGNATURE_SEPARATOR)
+}
+
 export const usePlayerStore = defineStore('player', {
   state: (): PlayerData => createDefaultPlayer(),
 
@@ -148,8 +211,33 @@ export const usePlayerStore = defineStore('player', {
     // Gọi bởi App.vue mỗi tick với kết quả từ
     // GameManager.getAggregatedModifiers(). Store không tự tính
     // buff/technique modifier, chỉ lưu lại để finalStats dùng.
+    // Dirty-check (perf-optimize-pass Task 5, xem ghi chú đầu file):
+    // KHÔNG gán reference mới nếu nội dung y hệt lần gán trước — giữ
+    // nguyên object cũ để getter `finalStats` (và mọi computed phái
+    // sinh) không invalidate 10 lần/giây khi buff/technique không đổi.
     setExternalModifiers(modifiers: StatModifier[]) {
+      const previous = lastExternalModifiers.get(this)
+
+      const signature = externalModifierSignature(modifiers)
+
+      // `previous.applied === this.externalModifiers` bảo đảm chỉ bỏ qua
+      // khi state VẪN đang giữ đúng mảng ta gán lần trước — nếu load
+      // save/$reset/$patch đã thay mảng khác thì chữ ký cũ vô nghĩa,
+      // phải gán lại.
+      if (
+        previous !== undefined &&
+        previous.signature === signature &&
+        previous.applied === this.externalModifiers
+      ) {
+        return
+      }
+
       this.externalModifiers = modifiers
+
+      // Lưu lại ĐÚNG giá trị state trả về (proxy reactive của Pinia),
+      // không phải `modifiers` thô, để phép so sánh reference ở trên
+      // đúng ở tick sau.
+      lastExternalModifiers.set(this, { applied: this.externalModifiers, signature })
     },
 
     // Modifier "tĩnh" từ equipment (xem ghi chú kiểu PlayerData).

@@ -6,6 +6,11 @@ import type { NotificationEvent } from '../notification/NotificationEvent'
 // GameManager.drainNotifications() rồi đẩy vào stores/notification.ts.
 // Nguồn toast khác (upgrade/craft/save) đã ở Vue layer sẵn, gọi thẳng
 // store, không qua hàng đợi này.
+// Hàng rỗng dùng chung — drain() trên queue rỗng (đường phổ biến nhất
+// mỗi tick khi không có loot/toast) trả về hằng số này thay vì alloc
+// mảng [] mới mỗi lần gọi vô ích.
+const EMPTY_EVENTS: NotificationEvent[] = Object.freeze([]) as unknown as NotificationEvent[]
+
 export class NotificationQueue {
   private items: NotificationEvent[] = []
 
@@ -14,6 +19,10 @@ export class NotificationQueue {
   }
 
   drain(): NotificationEvent[] {
+    if (this.items.length === 0) {
+      return EMPTY_EVENTS
+    }
+
     const drained = this.items
 
     this.items = []

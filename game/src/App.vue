@@ -29,7 +29,7 @@ import CharacterCreationScreen, {
 import { materials } from './data/materials/materials'
 import { SKILLS } from './data/skill/Skills'
 import { TECHNIQUES } from './data/technique/Techniques'
-import { ENEMIES } from './data/enemy/Enemies'
+import { ENEMIES } from './data/enemy/Enemies'
 import { STAGES } from './data/stage/Stages'
 import { zones } from './data/stage/Zones'
 import { equipment } from './data/equipment/equipment'
@@ -63,18 +63,17 @@ const ui = useUiStore()
 // không đổi để tránh ghi lặp vô nghĩa mỗi tick.
 // (2026-08-30) isAutoConsumeTinhHoa đã GỠ — Luyện Thể tự đầu tư qua
 // essence stream; chỉ còn battleRunMode.
-let lastAutomationSnapshot = ''
+// battleRunMode là string đơn giản — so sánh trực tiếp thay vì
+// JSON.stringify() (alloc string + object mỗi mutation vô ích cho 1
+// field nguyên thuỷ).
+let lastAutomationSnapshot: string | undefined
 
 ui.$subscribe((_mutation, state) => {
-  const snapshot = JSON.stringify({
-    m: state.battleRunMode,
-  })
-
-  if (snapshot === lastAutomationSnapshot) {
+  if (state.battleRunMode === lastAutomationSnapshot) {
     return
   }
 
-  lastAutomationSnapshot = snapshot
+  lastAutomationSnapshot = state.battleRunMode
 
   savePersistedUiAutomationFlags({
     battleRunMode: state.battleRunMode,
@@ -353,6 +352,14 @@ function tick() {
 
     // Buff/Technique có thể vừa hết hạn hoặc vừa được thêm trong
     // update() ở trên -> đồng bộ lại modifier cho player mỗi tick.
+    //
+    // perf-optimize-pass Task 5: getAggregatedModifiers() vẫn dựng mảng
+    // MỚI mỗi tick (signature GameManager giữ nguyên), nhưng
+    // setExternalModifiers() nay tự dirty-check nội dung và BỎ QUA lần
+    // gán trùng — nên `finalStats` chỉ invalidate khi buff/technique
+    // thật sự đổi, không còn recompute 10 lần/giây. Đây là lý do
+    // bumpState() bên dưới CỐ Ý giữ nguyên (chạy mỗi tick cho đồng hồ/
+    // resource counter): stat đã được tách hẳn khỏi stateVersion.
     player.setExternalModifiers(gameManager.getAggregatedModifiers(player.$state))
   }
 
