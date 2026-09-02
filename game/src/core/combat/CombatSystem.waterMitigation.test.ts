@@ -1,9 +1,19 @@
-﻿import { describe, expect, it } from 'vitest'
+﻿import { afterEach, describe, expect, it, vi } from 'vitest'
 import { CombatSystem } from './CombatSystem'
 import { EventBus } from '../events/EventBus'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from './CombatEntity'
 import { createSkillRuntimeStats } from '../skill/SkillRuntimeStats'
+
+// resolveActionHit roll 3 lần Math.random (hit/dodge, ignoreResistance,
+// block — blockChance default 0.05!). Test so sánh 2 lần gọi phải seed
+// random cố định, nếu không ~10% run lệch do 1 lần block 1 lần không —
+// root cause flaky 2026-09-02 (không phải tải suite).
+function deterministicRandom(): void {
+  // 0.5: > blockChance 0.05 (không block), > dodgeChance (không dodge),
+  // < 1 (không ignoreResistance khi stat 0) — mọi roll ổn định giữa 2 lần.
+  vi.spyOn(Math, 'random').mockReturnValue(0.5)
+}
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0 }
@@ -41,7 +51,13 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
 // không phải resource tích/tiêu theo combat), giảm THẲNG % sát thương
 // cuối cùng nhận vào, không phân biệt loại damage.
 describe('CombatSystem — Thủy Thế (Plans/waterpath, Tụ Thủy)', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('thuyThePercent=0 (mặc định) — không đổi hành vi cũ', () => {
+    deterministicRandom()
+
     const combat = new CombatSystem(new EventBus())
 
     const source = createCombatant({ id: 'source', type: 'player', stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 } })
@@ -53,6 +69,8 @@ describe('CombatSystem — Thủy Thế (Plans/waterpath, Tụ Thủy)', () => {
   })
 
   it('thuyThePercent=0.1 (vd minh hoạ doc) — giảm đúng 10% sát thương cuối cùng', () => {
+    deterministicRandom()
+
     const combat = new CombatSystem(new EventBus())
 
     const sourceStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 }
@@ -71,6 +89,8 @@ describe('CombatSystem — Thủy Thế (Plans/waterpath, Tụ Thủy)', () => {
   })
 
   it('thuyThePercent bị clamp ở WATER_MITIGATION_CAP — không thể giảm sát thương về 0', () => {
+    deterministicRandom()
+
     const combat = new CombatSystem(new EventBus())
 
     const sourceStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100000 }
