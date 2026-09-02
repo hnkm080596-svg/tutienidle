@@ -192,7 +192,7 @@ describe('BattleLootSystem — realm reward scaling', () => {
     expect(notifications.push).toHaveBeenCalledWith({
       kind: 'loot',
       message: '+1 Kiếm Cảnh Giới',
-      loot: expect.objectContaining({ accentColorVar: '--rank-color-5' }),
+      loot: expect.objectContaining({ accentColorVar: '--grade-tien' }),
     })
   })
 

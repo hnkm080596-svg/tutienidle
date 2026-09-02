@@ -294,7 +294,7 @@ describe('BattleLootSystem — Cơ Duyên (equipment_drop_chance)', () => {
     expect(notifications.push).toHaveBeenCalledWith({
       kind: 'loot',
       message: '+1 Kiếm Test',
-      loot: expect.objectContaining({ accentColorVar: '--rank-color-2' }),
+      loot: expect.objectContaining({ accentColorVar: '--grade-huyen' }),
     })
   })
 })
