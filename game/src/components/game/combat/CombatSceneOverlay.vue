@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 // 6A-T8 (2026-09-01, spec docs/superpowers/specs/2026-09-01-combat-scene-
 // ui-redesign-design.md) — CombatSceneOverlay top-only: 3 bar DOM dưới
 // (Status/Event/Control) rời DOM — HP/MP/Kiết + exit zone vào canvas
@@ -105,3 +105,50 @@ onUnmounted(() => {
     <CombatCountdownOverlay />
   </div>
 </template>
+<style scoped>
+/* T8.1 (2026-09-02) — khôi phục styles bị mất trong 6A T8 rewrite
+   (991ba75 đã xóa toàn bộ style scoped): root phủ canvas, AI panel
+   neo trái-trên ("bảng chọn mục tiêu" — user report), Build HUD neo
+   giữa-dưới, battlefield là vùng chứa. Giá trị NGUYÊN BẢN từ
+   71357a1^ — không cải thiện tùy tiện. Status/event/control bar
+   rules KHÔNG khôi phục (đã retire đúng chủ ý). */
+.combat-scene-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+  font-family: var(--font-body);
+}
+
+.combat-scene-overlay__top-bar {
+  flex: 0 0 auto;
+  height: var(--combat-topbar-h);
+}
+
+.combat-scene-overlay__battlefield {
+  position: relative;
+  flex: 1 1 auto;
+  pointer-events: none;
+}
+
+/* Combat AI panel (plan §11.1) — góc trái battlefield, dưới
+   top bar (nằm trong vùng battlefield nên không đụng CombatTopBar). */
+.combat-scene-overlay__ai-panel {
+  position: absolute;
+  left: var(--space-3);
+  top: var(--space-3);
+  z-index: 12;
+}
+
+.combat-scene-overlay__build-hud {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: var(--space-4);
+  display: flex;
+  justify-content: center;
+  z-index: 12;
+}
+</style>
