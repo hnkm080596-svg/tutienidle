@@ -5,8 +5,9 @@
 //   2) lỗi throw SAU khi đã đăng ký EventBus handler (mô phỏng qua
 //      ResizeObserver.observe() throw — statement cuối setupGame()).
 // Cả 2 đều phải: không unhandled rejection, dọn dẹp EventBus handler/
-// resizeObserver/game đã đăng ký (nếu có), set bootError + báo qua
-// errorStore (ErrorScreen.vue toàn app đọc store này).
+// resizeObserver/game/window.__tutienPhaserGame đã đăng ký (nếu có),
+// và set bootError CỤC BỘ (KHÔNG route qua errorStore/ErrorScreen.vue
+// toàn app — xem code review Task 4 finding 2, fix report).
 //
 // import('phaser') reject thẳng (trước khi vào setupGame()) không có
 // pattern mock ổn định trong repo này (vi.doMock cho 1 factory throw
@@ -22,7 +23,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, ref, type App } from 'vue'
 import { createPinia, type Pinia } from 'pinia'
 import { GAME_MANAGER_KEY } from '@/composables/useGameState'
-import { useErrorStore } from '@/stores/error'
 import { usePlayerStore } from '@/stores/player'
 import PhaserCanvas from './PhaserCanvas.vue'
 
@@ -100,6 +100,8 @@ afterEach(() => {
 
   pinia = null
 
+  delete (window as { __tutienPhaserGame?: unknown }).__tutienPhaserGame
+
   vi.unstubAllGlobals()
 })
 
@@ -118,7 +120,7 @@ function mountCanvas(gm: MockGameManager) {
   app.use(pinia)
   app.provide(GAME_MANAGER_KEY, gm as unknown as import('@/core/game/GameManager').GameManager)
 
-  // usePlayerStore()/useErrorStore() cần pinia active trước khi mount.
+  // usePlayerStore() cần pinia active trước khi mount.
   usePlayerStore(pinia)
 
   app.mount(container)
@@ -127,7 +129,7 @@ function mountCanvas(gm: MockGameManager) {
     throw new Error('PhaserCanvas template ref không gắn được sau mount()')
   }
 
-  return { instance: canvasRef.value, errorStore: useErrorStore(pinia) }
+  return { instance: canvasRef.value }
 }
 
 async function waitForBootError(instance: { bootError: string | null }) {
@@ -153,12 +155,11 @@ describe('PhaserCanvas — bootstrap error boundary (Task 4)', () => {
     // việc mountCanvas + waitForBootError chạy xong sạch sẽ tới cuối
     // (không có unhandled rejection nào được vitest báo) đã là bằng
     // chứng gián tiếp đủ mà không cần tự cài process listener.
-    const { instance, errorStore } = mountCanvas(gm)
+    const { instance } = mountCanvas(gm)
 
     await waitForBootError(instance)
 
     expect(instance.bootError).toContain('Phaser.Game khởi tạo thất bại')
-    expect(errorStore.current).toContain('Phaser.Game khởi tạo thất bại')
 
     // new Phaser.Game(...) là dòng ĐẦU TIÊN của setupGame() (xem
     // PhaserCanvas.vue) — throw ở đây nghĩa là chưa có eventBus.on()
@@ -185,21 +186,25 @@ describe('PhaserCanvas — bootstrap error boundary (Task 4)', () => {
 
     const gm = makeGameManager()
 
-    const { instance, errorStore } = mountCanvas(gm)
+    const { instance } = mountCanvas(gm)
 
     await waitForBootError(instance)
 
     expect(instance.bootError).toContain('ResizeObserver.observe thất bại')
-    expect(errorStore.current).toContain('ResizeObserver.observe thất bại')
 
     // setupGame() đã kịp new Phaser.Game() thành công + đăng ký 3
     // EventBus handler (positions/battle_end/combat_scene_exit qua
-    // positionsCleanup) + tạo resizeObserver TRƯỚC khi observe() throw
-    // — catch phải dọn cả 2: off() lại đúng 3 handler VÀ disconnect()
-    // resizeObserver, không để lại state mồ côi nào.
+    // positionsCleanup) + set window.__tutienPhaserGame + tạo
+    // resizeObserver TRƯỚC khi observe() throw — catch phải dọn HẾT:
+    // off() lại đúng 3 handler, disconnect() resizeObserver, VÀ reset
+    // window.__tutienPhaserGame về undefined (code review Task 4
+    // finding 1 — trước fix, global này bị bỏ sót, để lại tham chiếu
+    // mồ côi tới 1 Phaser.Game đã destroy cho tooling e2e/visual-gate
+    // đọc registry qua đó).
     expect(gameCtor).toHaveBeenCalledOnce()
     expect(gm.eventBus.on).toHaveBeenCalledTimes(3)
     expect(gm.eventBus.off).toHaveBeenCalledTimes(3)
     expect(resizeObserverDisconnect).toHaveBeenCalledTimes(1)
+    expect((window as { __tutienPhaserGame?: unknown }).__tutienPhaserGame).toBeUndefined()
   })
 })

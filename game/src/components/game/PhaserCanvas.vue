@@ -6,7 +6,6 @@ import type { CombatScene } from '@/game/scenes/CombatScene'
 import type { TribulationScene } from '@/game/scenes/TribulationScene'
 import { useGameManager } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
-import { useErrorStore } from '@/stores/error'
 import type { BattlePositionsEvent } from '@/core/battle/BattleEvents'
 import {
   resolvePlayerVisualProfileId,
@@ -15,7 +14,6 @@ import {
 
 const gameManager = useGameManager()
 const player = usePlayerStore()
-const errorStore = useErrorStore()
 
 const containerRef = ref<HTMLDivElement | null>(null)
 
@@ -26,8 +24,12 @@ let isAlive = false
 
 // Task 4 (perf-optimize-pass, phần 3) — bootstrap error boundary.
 // bootError expose ra ngoài (defineExpose) cho parent/test kiểm tra;
-// fallback UI hiển thị dùng lại errorStore/ErrorScreen.vue sẵn có của
-// app (KHÔNG thêm overlay riêng) — đúng style tối giản hiện có.
+// fallback UI CHỈ hiển thị CỤC BỘ ngay trong container canvas rỗng
+// (đoạn <p> tối giản dưới template) — KHÔNG route qua errorStore/
+// ErrorScreen.vue toàn app (đó là overlay full-screen chặn CẢ app,
+// dành cho lỗi thật sự chết cây component; bootstrap Phaser lỗi (vd.
+// chunk-load tạm thời) không nên khóa menu/stats/hệ thống khác đang
+// hoạt động bình thường — xem code review Task 4 finding 2).
 const bootError = ref<string | null>(null)
 
 onMounted(() => {
@@ -76,18 +78,19 @@ onMounted(() => {
       // Dọn dẹp mọi thứ có thể đã đăng ký trước khi lỗi xảy ra (ví dụ
       // new Phaser.Game() throw SAU khi setupGame đã kịp gắn
       // positionsCleanup/resizeObserver) — cùng bộ dọn dẹp với
-      // onUnmounted bên dưới, tránh handler/observer mồ côi.
+      // onUnmounted bên dưới, tránh handler/observer/global mồ côi.
       positionsCleanup?.()
       positionsCleanup = null
 
       resizeObserver?.disconnect()
       resizeObserver = null
 
+      ;(window as unknown as { __tutienPhaserGame?: Phaser.Game }).__tutienPhaserGame = undefined
+
       game?.destroy(true)
       game = null
 
       bootError.value = message
-      errorStore.report(message)
     }
   })()
 })
@@ -253,9 +256,9 @@ defineExpose({ bootError })
   height: 100%;
 }
 
-/* Task 4 — tín hiệu tối giản tại chỗ khi bootstrap Phaser lỗi; overlay
-   đầy đủ đã hiện qua errorStore.report() ở trên (ErrorScreen.vue,
-   xem App.vue) — đoạn này chỉ là fallback text ngay trong container
+/* Task 4 — tín hiệu tối giản tại chỗ khi bootstrap Phaser lỗi (KHÔNG
+   route qua errorStore/ErrorScreen.vue toàn app — xem ghi chú ở khai
+   báo bootError phía trên); chỉ là fallback text ngay trong container
    canvas rỗng, không thiết kế UI mới. */
 .phaser-canvas__boot-error {
   margin: 0;
