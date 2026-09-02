@@ -391,7 +391,17 @@ export class CombatScene extends Phaser.Scene {
   // Combat Grid Rework Ã¢â‚¬â€ DOT VFX theo (targetId + ailmentId), bÃƒÂ¡m target.
   statuses = new Map<
     string,
-    { targetId: string; icon: Phaser.GameObjects.Rectangle; label: Phaser.GameObjects.Text }
+    {
+      targetId: string
+      buffId: string
+      polarity: 'buff' | 'debuff'
+      permanent: boolean
+      stacks: number
+      buffName?: string
+      remainingTime?: number
+      icon: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Arc
+      stackLabel: Phaser.GameObjects.Text
+    }
   >()
 
   private dyingIds = new Set<string>()
@@ -1241,10 +1251,11 @@ export class CombatScene extends Phaser.Scene {
   private clearSceneState() {
     for (const status of this.statuses.values()) {
       status.icon.destroy()
-      status.label.destroy()
+      status.stackLabel.destroy()
     }
 
     this.statuses.clear()
+    this.vfxSpawner.statusTooltip?.hide()
 
     for (const entry of this.spawnVfxHandles.values()) {
       entry.handle.destroy()
@@ -1943,10 +1954,11 @@ export class CombatScene extends Phaser.Scene {
     // khiến icon cũ đóng băng trên màn qua auto-refight trong cùng scene.
     for (const status of this.statuses.values()) {
       status.icon.destroy()
-      status.label.destroy()
+      status.stackLabel.destroy()
     }
 
     this.statuses.clear()
+    this.vfxSpawner.statusTooltip?.hide()
 
     const player = this.sprites.get(PLAYER_ID)
 

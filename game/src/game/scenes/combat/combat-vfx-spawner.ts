@@ -23,17 +23,36 @@ import type { CombatScene } from '../CombatScene'
 import {
   PLAYER_ID,
   SHADOW_ALPHA,
+  STATUS_ICON_SIZE,
+  STATUS_ICON_SPACING,
+  STATUS_ROW_GAP,
+  STATUS_MAX_PER_ROW,
+  STATUS_FOOT_ROW_OFFSET_Y,
+  STATUS_PLAYER_ROW_OFFSET_Y,
 } from './combatConstants'
+import { HUD_MARGIN, HUD_HP_HEIGHT, HUD_SUB_HEIGHT, HUD_GAP } from './PlayerHudLayer'
 import type { EntitySprite } from './combatTypes'
 
 interface StatusEntry {
   targetId: string
-  icon: Phaser.GameObjects.Rectangle
-  label: Phaser.GameObjects.Text
+  buffId: string
+  polarity: 'buff' | 'debuff'
+  permanent: boolean
+  stacks: number
+  buffName?: string
+  remainingTime?: number
+  icon: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Arc
+  stackLabel: Phaser.GameObjects.Text
 }
 
 export class CombatVfxSpawner {
   constructor(private readonly scene: CombatScene) {}
+
+  /**
+   * Buff bar (2026-09-02) — tooltip instance; Task 5 gán + wire
+   * setInteractive. Khai báo trước để onStatusRemoved hideFor an toàn.
+   */
+  statusTooltip?: { hideFor(statusInstanceId: string): void; hide(): void }
 
   /**
    * MỘT action_impact = MỘT VFX instance (spawnActionImpactVfx): mọi
@@ -97,7 +116,16 @@ export class CombatVfxSpawner {
     )
   }
 
-  onStatusAttached(event: { statusInstanceId: string; targetId: string; dotType: string; stacks: number }) {
+  onStatusAttached(event: {
+    statusInstanceId: string
+    targetId: string
+    dotType: string
+    stacks: number
+    buffName?: string
+    polarity?: 'buff' | 'debuff'
+    permanent?: boolean
+    durationSeconds?: number
+  }) {
     if (this.scene.statuses.has(event.statusInstanceId)) {
       return
     }
@@ -108,61 +136,168 @@ export class CombatVfxSpawner {
       return
     }
 
-    const headY = this.scene.entityHeadY(target)
-    const icon = this.scene.add.rectangle(
-      target.rect.x,
-      headY - 14,
-      9,
-      9,
-      getStatusVfxPreset(event.dotType).color,
-    )
+    const preset = getStatusVfxPreset(event.dotType, event.polarity)
 
-    icon.setAngle(45)
+    // Buff bar (2026-09-02) — shape taxonomy: circle=buff, diamond=CC/DoT
+    // (kế thừa hình cũ), square=statModifier debuff. Icon tạo tại (0,0) —
+    // updateStatusIconPositions() đặt vị trí row mỗi frame.
+    const icon =
+      preset.shape === 'circle'
+        ? this.scene.add.circle(0, 0, STATUS_ICON_SIZE / 2, preset.color)
+        : this.scene.add.rectangle(0, 0, STATUS_ICON_SIZE, STATUS_ICON_SIZE, preset.color)
+
+    if (preset.shape === 'diamond') {
+      icon.setAngle(45)
+    }
+
     icon.setDepth(DEPTH_OVERLAY_UI + 4)
 
-    const label = this.scene.add.text(icon.x, headY - 27, String(event.stacks), {
+    const stacks = event.stacks ?? 1
+    const stackLabel = this.scene.add.text(0, 0, String(stacks), {
       fontFamily: 'monospace',
-      fontSize: '10px',
+      fontSize: '9px',
       color: '#ffd54f',
     })
 
-    label.setOrigin(0.5, 0.5)
-    label.setDepth(DEPTH_OVERLAY_UI + 5)
+    stackLabel.setOrigin(0.5, 0.5)
+    stackLabel.setDepth(DEPTH_OVERLAY_UI + 5)
+    stackLabel.setVisible(stacks > 1)
 
-    this.scene.statuses.set(event.statusInstanceId, { targetId: event.targetId, icon, label })
+    this.scene.statuses.set(event.statusInstanceId, {
+      targetId: event.targetId,
+      buffId: event.dotType,
+      polarity: event.polarity ?? 'debuff',
+      permanent: event.permanent ?? false,
+      stacks,
+      buffName: event.buffName,
+      remainingTime: event.durationSeconds,
+      icon,
+      stackLabel,
+    })
   }
 
-  onStatusUpdated(event: { statusInstanceId: string; stacks: number }) {
-    const status = this.scene.statuses.get(event.statusInstanceId)
+  onStatusUpdated(event: { statusInstanceId: string; stacks: number; durationSeconds?: number }) {
+    const status = this.scene.statuses.get(event.statusInstanceId) as StatusEntry | undefined
 
-    status?.label.setText(String(event.stacks))
+    if (!status) {
+      return
+    }
+
+    status.stacks = event.stacks
+    status.remainingTime = event.durationSeconds
+    status.stackLabel.setText(String(event.stacks))
+    status.stackLabel.setVisible(event.stacks > 1)
   }
 
   onStatusRemoved(event: { statusInstanceId: string }) {
-    const status = this.scene.statuses.get(event.statusInstanceId)
+    const status = this.scene.statuses.get(event.statusInstanceId) as StatusEntry | undefined
 
     if (!status) {
       return
     }
 
     status.icon.destroy()
-    status.label.destroy()
+    status.stackLabel.destroy()
     this.scene.statuses.delete(event.statusInstanceId)
+    this.statusTooltip?.hideFor(event.statusInstanceId)
   }
 
+  /**
+   * Buff bar (2026-09-02) — vị trí icon THEO ROW mỗi frame (flexible rule:
+   * tính từ sprite/viewport hiện hành, không hardcode màn hình dev).
+   * Enemy: hàng dưới foot (temporary tier 0, permanent tier 1 — xa hơn).
+   * Player: hàng trên cụm sub-bar HUD (temporary tier 0, permanent tier 1 —
+   * cao hơn). >8 icon: icon cuối mang counter "+N", icon dư ẩn.
+   */
   updateStatusIconPositions() {
+    const byTarget = new Map<string, StatusEntry[]>()
+
     for (const status of (this.scene.statuses as Map<string, StatusEntry>).values()) {
-      const sprite = this.scene.spriteFor(status.targetId)
+      const list = byTarget.get(status.targetId) ?? []
+
+      list.push(status)
+      byTarget.set(status.targetId, list)
+    }
+
+    for (const [targetId, entries] of byTarget) {
+      const sprite = this.scene.spriteFor(targetId)
 
       if (!sprite) {
         continue
       }
 
-      const headY = this.scene.entityHeadY(sprite)
+      const isPlayer = targetId === PLAYER_ID
 
-      status.icon.setPosition(sprite.rect.x, headY - 14)
-      status.label.setPosition(sprite.rect.x, headY - 27)
+      this.layoutStatusRow(
+        entries.filter((entry) => !entry.permanent),
+        isPlayer,
+        sprite,
+        0,
+      )
+      this.layoutStatusRow(
+        entries.filter((entry) => entry.permanent),
+        isPlayer,
+        sprite,
+        1,
+      )
     }
+  }
+
+  private layoutStatusRow(
+    entries: StatusEntry[],
+    isPlayer: boolean,
+    sprite: EntitySprite,
+    rowTier: 0 | 1,
+  ) {
+    if (entries.length === 0) {
+      return
+    }
+
+    const visibleCount = Math.min(entries.length, STATUS_MAX_PER_ROW)
+    const rowWidth = visibleCount * (STATUS_ICON_SIZE + STATUS_ICON_SPACING) - STATUS_ICON_SPACING
+
+    let baseY: number
+    let startX: number
+
+    if (isPlayer) {
+      const height = this.scene.scale.height
+      // sub2Y = Y của sub-bar thấp nhất trong PlayerHudLayer.layout() —
+      // công thức mirror (HP bar cụm trái-dưới, MP/Kiếm xếp trên).
+      const sub2Y =
+        height - HUD_MARGIN - HUD_HP_HEIGHT - HUD_GAP - HUD_SUB_HEIGHT - HUD_GAP - HUD_SUB_HEIGHT
+      const temporaryRowY = sub2Y - STATUS_PLAYER_ROW_OFFSET_Y - STATUS_ICON_SIZE
+
+      baseY = rowTier === 0 ? temporaryRowY : temporaryRowY - STATUS_ROW_GAP - STATUS_ICON_SIZE
+      startX = HUD_MARGIN
+    } else {
+      const footY = this.scene.isPerspective
+        ? sprite.rect.y
+        : sprite.rect.y + sprite.rect.displayHeight / 2
+      const temporaryRowY = footY + STATUS_FOOT_ROW_OFFSET_Y
+
+      baseY = rowTier === 0 ? temporaryRowY : temporaryRowY + STATUS_ROW_GAP + STATUS_ICON_SIZE
+      startX = sprite.rect.x - rowWidth / 2 + STATUS_ICON_SIZE / 2
+    }
+
+    const overflow = entries.length - STATUS_MAX_PER_ROW
+
+    entries.forEach((entry, index) => {
+      const slot = Math.min(index, STATUS_MAX_PER_ROW - 1)
+      const x = startX + slot * (STATUS_ICON_SIZE + STATUS_ICON_SPACING)
+
+      entry.icon.setPosition(x, baseY)
+      entry.stackLabel.setPosition(x + STATUS_ICON_SIZE / 2 + 2, baseY + STATUS_ICON_SIZE / 2 - 1)
+
+      if (overflow > 0 && index === STATUS_MAX_PER_ROW - 1) {
+        entry.stackLabel.setText(`+${overflow}`)
+        entry.stackLabel.setVisible(true)
+      }
+
+      if (overflow > 0 && index >= STATUS_MAX_PER_ROW) {
+        entry.icon.setVisible(false)
+        entry.stackLabel.setVisible(false)
+      }
+    })
   }
 
   flashColor(sprite: EntitySprite, color: number, duration: number) {
