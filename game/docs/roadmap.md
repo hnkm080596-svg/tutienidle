@@ -142,3 +142,109 @@ Phase 4:  tech-debt — chạy nền liên tục
 3. Sau mỗi plan: chạy `npm.cmd run test`, `npm.cmd run type-check`, `npm.cmd run build` từ `game/`.
 4. Khi đổi hành vi, cập nhật tài liệu sống trong `docs/` cùng thay đổi code.
 5. Không tạo thêm plan không có đuôi `.md`.
+
+---
+
+## 7. Cập nhật 2026-09-02 — Todolist thực thi (hợp nhất từ bản mới)
+
+> File `docs/ROADMAP.md` (bản 2026-09-01) đã được gộp vào đây. Các spec/plan cũ tham chiếu `docs/ROADMAP.md` đã được chuyển sang `game/docs/roadmap.md`.
+
+### 7.1. Bugfix / ổn định — ƯU TIÊN CAO
+
+**1.1 Fix MainMenu e2e blocker** ✅ (auth-first flow, 6/6 e2e xanh — merge `306d898`; fix tạm, WelcomeAuthScreen thay thế ở T6.1 Task 8)
+
+**1.2 Dọn working tree master** ✅ (untracked docs committed, skills cleanup committed, 4 stashes xử lý)
+
+**1.3 Dọn worktrees cũ** ✅ (audit-fixes merged `6995cf9`, dong-fu-buildings-style-redesign merged `eaa9719`, 4 worktree nhỏ dọn xong)
+
+**1.3a audit-fixes** ✅ — 15 tasks, merged `6995cf9` (review + commit + integrate + docs)
+**1.3b dong-fu-buildings-style-redesign** ✅ — merged `eaa9719`
+**1.3c worktrees nhỏ** ✅ — dọn xong (simplify-agent-rules discard; adversarial-qa trùng master; fix-decimal-format duplicate; material-names merged `a68f641`)
+
+### 7.2. i18n — Deferred items từ final review (APPROVED_WITH_MINORS)
+
+- **2.1** ⬜ vue-i18n v9 → v11 migration
+- **2.2** ⬜ Hoàn tất nốt string extraction (các file plan bỏ sót)
+- **2.3** ⬜ `formatStat` extension cho `SkillResourceStatLabels`
+- **2.4** ⬜ `CombatStatusBar` `mpLabel` fallback (hardcoded 'Linh Lực')
+- **2.5** ⬜ Bỏ locale-coupled test assertions
+- **2.6** ⬜ Locale parity lint test (`vi.json` ↔ `en.json`)
+- **2.7** (Lâu dài) Extract data content strings
+
+### 7.3. Balance / stat system — từ deep-check
+
+- **3.1** (P0) Evasion vs Accuracy lệch base — HỦY (asymmetry là design)
+- **3.2** (P1) MP cost cho skill — ✅ done
+- **3.3** (P1) Realm Pressure test coverage — ✅ done
+- **3.4** (P2) Armor curve playtest — ✅ done (K theo realmIndex)
+- **3.5** (P2) Stat cap Phàm Nhân quá chật — ⬜ chưa chốt
+- **3.6** (P2) CDR cap 300% review — ⬜ hiện vô hại
+- **3.7** (P2) Reaction damage late-game — ✅ done (full scaling)
+
+### 7.4. Plans đã viết nhưng CHƯA execute
+
+- **4.1** Skill Trigger/Action Engine Phase 2A — ✅ merged `a47d129`
+- **4.2** Online-Required Local-Gameplay Foundation — ⬜ (13 tasks, cần Supabase local)
+- **4.3** Adversarial QA infrastructure — ✅ skill có sẵn
+
+### 7.5. Game design direction 2026-09-01
+
+**6A. Combat Scene UI redesign** — ✅ merged `71357a1` (PlayerHudLayer in-canvas, 3 bar DOM xóa, kill/heal floating text). ⚠️ Kiếm Ý/Thế bar chưa có data event (defer)
+
+**6B. Bugfix hiển thị:**
+- Crit Damage % — ✅ merged `8981772` + `0fcb17e`
+- Unidentify Linh Thảo — HỦY (production rework sẽ đào thải)
+- Hóa Luyện filter — ✅ merged `14cfda0` + `abc82be`
+
+**6C. Chiêu Hiền Quán + hệ thống nhân công** — ⬜ (NEW building + công thức `1 + cấp×2`; đổi nguồn worker capacity; UI phân bổ)
+
+**6D. Bảng ánh xạ phẩm ↔ cảnh giới** — ✅ item-grade rework Phase 1-4 merged `fd82ed4` + `3c898b0` + `3647cf7`; Phase 5-6 (equip gate, breakthrough unequip, panel tabs, theme, terminology) ✅ merged `a00de32`
+
+**6E. Linh Mộc trong luyện đan** — ⬜ (siết rule `resolveFuelWood` cùng phẩm-chất)
+
+**6F. Cân bằng thu thập–tiêu thụ** — ⬜ (bảng tốc độ chuẩn per-worker; simulation test 24h)
+
+**6G. Vendor redesign** — ⬜ (bỏ quy đổi, gate thu mua theo phẩm, 2-tab UI)
+
+**6H. Roadmap tương lai** — ⬜ (tiền VIP, Shop VIP, chu kỳ sau Độ Kiếp)
+
+### 7.6. Kỹ thuật nợ nhỏ
+
+- Chunk size warning — ✅ code-split merged `af88cee` (entry 2231→848KB)
+- `_meta` block trong locale JSON — ⬜
+- `termGlossary` chưa được consume — ⬜
+- Known flaky tests — ⬜ (cân nhắc nâng timeout)
+
+### 7.7. Todolist thực thi — trạng thái
+
+| Task | Mô tả | Trạng thái |
+|---|---|---|
+| **Giai đoạn 0** — Cứu work treo | audit-fixes + worktrees + stash | ✅ XONG |
+| **Giai đoạn 1** — Dọn nhà | untracked docs, skills cleanup, MainMenu e2e | ✅ XONG |
+| **Giai đoạn 2** — Game design nền tảng | crit%, unidentify, luyện filter, item-grade rework, combat UI | ✅ XONG |
+| **Giai đoạn 3** — Skill engine | Phase 2A, floating text, unified buff | ✅ XONG |
+| **Giai đoạn 4** — Sản xuất + kinh tế | i18n leftovers, Chiêu Hiền Quán, UI phân bổ, nhiên liệu, bảng tốc độ, simulation, vendor rework | ⬜ |
+| **Giai đoạn 5** — Balance | evasion, MP cost, armor, reaction, block | ✅ XONG |
+| **Giai đoạn 6** — Pre-production | online foundation, VIP, prestige, code-split, QA | 🟡 Một phần |
+| **Giai đoạn 7** — Item rework P5-6 | equip gate, breakthrough unequip, tabs, 10-rank theme, terminology, dọn legacy | ✅ XONG |
+| **Giai đoạn 8** — UI/UX repair | CombatSceneOverlay styles, overlap guards, e2e layout smoke, dọn probe + UI review items | ⬜ |
+
+### 7.8. Thứ tự đề xuất
+
+1. **Giai đoạn 8** — UI/UX repair (T8.1-T8.4 + các item UI review)
+2. **Giai đoạn 4** — Sản xuất + kinh tế: i18n leftovers → Chiêu Hiền Quán → nhiên liệu → bảng tốc độ → simulation → vendor
+3. **Giai đoạn 6** — Pre-production: online foundation → VIP → prestige
+
+### 7.9. Các plan đã execute (thành quả chính)
+
+| Plan | Kết quả |
+|---|---|
+| audit-fixes (15 tasks) | Save quota, notification, auto-dissolve, MainScene lifecycle, pagination — merged `6995cf9` |
+| item-grade rework Phase 1-4 | 2 trục grade/quality, canUseItem gate, rèn/tẩy/tinh slot-level, Luyện Khí Tinh Hoa, tab Phân Giải — merged `fd82ed4` + `3c898b0` + `3647cf7` |
+| item-grade rework Phase 5-6 | Equip gate, breakthrough unequip, 5 tab children, 10-rank theme, terminology sweep, dọn legacy — merged `a00de32` |
+| Combat Scene UI redesign | PlayerHudLayer in-canvas, bỏ 3 bar DOM, kill/heal floating text — merged `71357a1` |
+| Skill Trigger/Action Engine Phase 2A | 10 actions + 7 triggers — merged `a47d129` |
+| Unified buff system | Buff icon rows, tooltip, status presets — merged `f63bd06` |
+| Combat overlay layering repair | Styles khôi phục, overlap guards, e2e layout — merged `a5c2c03` |
+| Balance pass | Armor K theo realm, block cap, reaction scaling, realm pressure tests — merged `47042ac` |
+| Code-split | Entry 2231→848KB + phaser chunk riêng — merged `af88cee` |

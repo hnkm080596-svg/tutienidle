@@ -2,7 +2,7 @@
 
 **Ngày:** 2026-09-01
 **Phạm vi:** 6A roadmap — Combat Scene chỉ còn background làm vùng giao diện chính: HP/MP/Kiếm + nút Thoát vào trong Phaser canvas, bỏ 3 bar DOM dưới, floating text đầy đủ.
-**Roadmap:** `docs/ROADMAP.md` mục 6A. **UI/UX:** ui-ux-pro-max đã chạy (Minimalism & Swiss, ink-wash tokens, motion giữ easing hiện có) — design system phần "Thiết kế" dưới.
+**Roadmap:** `game/docs/roadmap.md` mục 6A. **UI/UX:** ui-ux-pro-max đã chạy (Minimalism & Swiss, ink-wash tokens, motion giữ easing hiện có) — design system phần "Thiết kế" dưới.
 **Ràng buộc:** Inline execution, không subagent; tránh đụng file plan Codex (equipment rework) — phạm vi file dưới đã kiểm không giao nhau.
 
 ---

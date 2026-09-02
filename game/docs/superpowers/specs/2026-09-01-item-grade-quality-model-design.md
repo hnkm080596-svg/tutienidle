@@ -2,7 +2,7 @@
 
 **Ngày:** 2026-09-01 (v2 rewrite cùng ngày — big rework, tổng hợp mọi quyết định đã duyệt)
 **Phạm vi:** Tái cấu trúc toàn bộ trục phẩm/chất trên trang bị + vòng lặp nguyên liệu rèn/tẩy/tinh + tab Phân Giải mới + mở đường gate phẩm (T2.5), Vendor thu mua (6G), chu kỳ Độ Kiếp (6H).
-**Roadmap:** `docs/ROADMAP.md` — thay thế T2.4/T2.5/T2.7 bằng thiết kế thống nhất này.
+**Roadmap:** `game/docs/roadmap.md` — thay thế T2.4/T2.5/T2.7 bằng thiết kế thống nhất này.
 **Lộ trình thực thi:** writing-plans → subagent-driven-development (SDD), từng task TDD.
 
 ---

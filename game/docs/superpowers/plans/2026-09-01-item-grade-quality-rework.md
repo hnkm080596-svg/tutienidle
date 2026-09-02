@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-09-01-item-grade-quality-model-design.md` (v2.1) — plan lập luận từ spec; executors đọc CẢ HAI file.
 
-> **Trạng thái 2026-09-02:** Phase 1-4 (Task 1-15) đã merge vào master (`fd82ed4`, `3c898b0`, `3647cf7`). File plan này đã bị mất khỏi working tree ở đâu đó giữa các lần squash/merge và được khôi phục nguyên văn từ commit `16fb701` để tiếp tục Phase 5-6 (Task 16-23) — xem `docs/ROADMAP.md` mục "Giai đoạn 7". Line number trong các task dưới đây là snapshot lúc viết plan (2026-09-01) — code đã thay đổi từ đó, executor PHẢI đọc lại file thật trước khi sửa, không tin line number mù quáng.
+> **Trạng thái 2026-09-02:** Phase 1-4 (Task 1-15) đã merge vào master (`fd82ed4`, `3c898b0`, `3647cf7`). File plan này đã bị mất khỏi working tree ở đâu đó giữa các lần squash/merge và được khôi phục nguyên văn từ commit `16fb701` để tiếp tục Phase 5-6 (Task 16-23) — xem `game/docs/roadmap.md` mục "Giai đoạn 7". Line number trong các task dưới đây là snapshot lúc viết plan (2026-09-01) — code đã thay đổi từ đó, executor PHẢI đọc lại file thật trước khi sửa, không tin line number mù quáng.
 
 ## Global Constraints
 
