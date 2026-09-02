@@ -173,6 +173,7 @@ import type { Reward } from '../reward/Reward'
 import type { BattleRewardSummary } from '../reward/BattleRewardSummary'
 
 import { playerToCombatEntity, createPlayerRewardReceiver } from '../player/Player'
+import { getWorkerCapacityForLevel } from '../production/WorkerCapacity'
 import { HERO_LANE_INDEX } from '../battle/BattleLane'
 import type { PlayerData, KiemTuRoute } from '../player/Player'
 import type { MainStatKey } from '../stats/StatTypes'
@@ -2357,17 +2358,17 @@ export class GameManager {
   }
 
   /**
-   * gathering_outpost cáº¥p autoWorkerCapacity theo level (workersPerLevel
-   * trÃªn Building template) â€” gá»i láº¡i sau má»i láº§n build/upgrade building
-   * nÃ y Ä‘á»ƒ player.autoWorkerCapacity luÃ´n khá»›p level hiá»‡n táº¡i.
+   * Chiue Hien Quan (chi-hien-quan spec 2026-09-02) - NGUON NHAN CONG
+   * DUY NHAT: capacity = 1 + level*2 (getWorkerCapacityForLevel). Goi
+   * lai sau moi lan build/upgrade CHQ. gathering_outpost KHONG con cap
+   * capacity (nguon cu da go - outpost chi con gate San Xuat + linh mach).
    */
   refreshAutoWorkerCapacity(player: PlayerData, instance: BuildingInstance): void {
-    if (instance.buildingId !== 'gathering_outpost') {
+    if (instance.buildingId !== 'chi_hien_quan') {
       return
     }
 
-    const workersPerLevel = this.buildingRegistry.get(instance.buildingId).workersPerLevel ?? 0
-    player.autoWorkerCapacity = instance.level * workersPerLevel
+    player.autoWorkerCapacity = getWorkerCapacityForLevel(instance.level)
   }
 
   upgradeBuilding(instanceId: string): boolean {
@@ -3161,6 +3162,17 @@ export class GameManager {
     )
 
     this.buildingManager.restore(save.buildings)
+
+    // Chi Hien Quan (chi-hien-quan spec) — re-apply worker capacity từ
+    // instance CHQ trong save (autoWorkerCapacity trong save có thể stale
+    // — công thức là source of truth, không tin field đã lưu).
+    if (this.activePlayer) {
+      const chiHienQuan = this.buildingManager.getByBuildingId('chi_hien_quan')
+
+      if (chiHienQuan) {
+        this.refreshAutoWorkerCapacity(this.activePlayer, chiHienQuan)
+      }
+    }
 
     this.questManager.restore(
       save.quests ?? { active: [], completedOnceIds: [], lastDailyResetAtMs: 0 },
