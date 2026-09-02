@@ -15,10 +15,6 @@ import {
 import { investTinhHoa, computeBreakthroughGrade } from '../realm/BodyRefinementSystem'
 import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../data/realm/BodyRefinement'
 import { grantRealmPassive } from '../realm/RealmPassiveSystem'
-import {
-  TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM,
-  TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_FALLBACK,
-} from '../../data/tribulation/TribulationChapters'
 import { getAlchemySuccessBonusPercentPoints, getReactionKeepChance } from '../talent/TalentEffects'
 import { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 
@@ -1590,38 +1586,6 @@ export class GameManager {
       return player.realmLevel >= CORE_REALM_LEVEL
     }
     return false
-  }
-
-  /**
-
-   * Spec dot-pha-loi-kiep §4.2/§6.3 — Đột Phá Lệnh đã DỠ: gate chỉ còn
-   * tầng 12 + Linh Thạch (trừ trực tiếp khi bấm Độ Kiếp, không qua
-   * token craft). Hàm này check + trừ Linh Thạch đúng loại theo realm —
-   * UI confirm gọi ngay trước startTribulation().
-   */
-  consumeTribulationSpiritStones(targetRealmId: string): boolean {
-    const cost = TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM[targetRealmId] ??
-      TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_FALLBACK
-
-    const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(targetRealmId))
-
-    if (!this.materialBag.remove(spiritStoneId, cost)) {
-      return false
-    }
-
-
-
-    return true
-  }
-
-  /**
-
-   * Chi phí Linh Thạch của gate (UI hiển thị trước khi bấm) — cùng nguồn
-   * sự thật với consumeTribulationSpiritStones.
-   */
-  getTribulationSpiritStoneCost(targetRealmId: string): number {
-    return TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM[targetRealmId] ??
-      TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_FALLBACK
   }
 
   /**

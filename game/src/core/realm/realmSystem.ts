@@ -40,8 +40,7 @@ export const BASE_CULTIVATION_PER_SECOND = 10
 // nhất; các gate/cấp đột phá ẩn khác (ví dụ 4 mức Kiến Cơ cho Luyện Khí
 // → Trúc Cơ) sẽ được thiết kế sau. Dùng lại 1 hằng số duy nhất cho
 // mortal → qi_refining (GameManager.chooseCultivationPath()) VÀ
-// qi_refining → foundation_establishment
-// (GameManager.canTriggerFoundationBreakthrough()).
+// qi_refining → foundation_establishment (GameManager.canTriggerBreakthrough()).
 export const CORE_REALM_LEVEL = 12
 
 export const EXTENDED_REALM_LEVEL = 18
