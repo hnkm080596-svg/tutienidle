@@ -54,6 +54,17 @@ export const BOSS_HP_FILL_COLOR = 0xd4a72c
 export const ENEMY_HP_BAR_HEIGHT = 6
 export const ENEMY_HP_BAR_OFFSET_Y = 12
 
+// Buff bar (2026-09-02) — icon row trên unit: enemy dưới foot,
+// player trên cụm sub-bar HUD. Floating text attach màu theo polarity.
+export const STATUS_ICON_SIZE = 10
+export const STATUS_ICON_SPACING = 4
+export const STATUS_ROW_GAP = 4
+export const STATUS_MAX_PER_ROW = 8
+export const STATUS_FOOT_ROW_OFFSET_Y = 8
+export const STATUS_PLAYER_ROW_OFFSET_Y = 6
+export const BUFF_ATTACH_COLOR = '#7bd88f'
+export const DEBUFF_ATTACH_COLOR = '#ff6b6b'
+
 // Grid projection 2.5D (combat-grid-view) — palette grid lines/border,
 // copy nguyên giá trị từ CombatScene.ts const declarations.
 export const LANE_DIVIDER_COLOR = 0x2a2d38

@@ -95,6 +95,7 @@ import { CombatGridView } from './combat/combat-grid-view'
 import { CombatVfxSpawner } from './combat/combat-vfx-spawner'
 import { CombatRewardGourd } from './combat/combat-reward-gourd'
 import { CombatEssenceStream } from './combat/combat-essence-stream'
+import { BUFF_ATTACH_COLOR, DEBUFF_ATTACH_COLOR } from './combat/combatConstants'
 
 export { formatDotDamageText } from './combat/combatTextFormat'
 
@@ -391,7 +392,17 @@ export class CombatScene extends Phaser.Scene {
   // Combat Grid Rework Ã¢â‚¬â€ DOT VFX theo (targetId + ailmentId), bÃƒÂ¡m target.
   statuses = new Map<
     string,
-    { targetId: string; icon: Phaser.GameObjects.Rectangle; label: Phaser.GameObjects.Text }
+    {
+      targetId: string
+      buffId: string
+      polarity: 'buff' | 'debuff'
+      permanent: boolean
+      stacks: number
+      buffName?: string
+      remainingTime?: number
+      icon: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Arc
+      stackLabel: Phaser.GameObjects.Text
+    }
   >()
 
   private dyingIds = new Set<string>()
@@ -1241,10 +1252,12 @@ export class CombatScene extends Phaser.Scene {
   private clearSceneState() {
     for (const status of this.statuses.values()) {
       status.icon.destroy()
-      status.label.destroy()
+      status.stackLabel.destroy()
     }
 
     this.statuses.clear()
+    this.vfxSpawner.statusTooltip?.hide()
+    this.floatedStatusKeys?.clear()
 
     for (const entry of this.spawnVfxHandles.values()) {
       entry.handle.destroy()
@@ -1943,10 +1956,12 @@ export class CombatScene extends Phaser.Scene {
     // khiến icon cũ đóng băng trên màn qua auto-refight trong cùng scene.
     for (const status of this.statuses.values()) {
       status.icon.destroy()
-      status.label.destroy()
+      status.stackLabel.destroy()
     }
 
     this.statuses.clear()
+    this.vfxSpawner.statusTooltip?.hide()
+    this.floatedStatusKeys?.clear()
 
     const player = this.sprites.get(PLAYER_ID)
 
@@ -2016,7 +2031,32 @@ export class CombatScene extends Phaser.Scene {
     return this.vfxSpawner.resolveUprightVfxDepth(anchorCell)
   }
 
+  // Buff bar (2026-09-02) — floating text tên hiệu ứng CHỈ lần đầu
+  // attach theo (targetId:buffId) — 2 nguồn cùng buff id chỉ floating 1
+  // lần; stack tăng không floating lại. Clear ở 2 cleanup sites.
+  private floatedStatusKeys = new Set<string>()
+
   private onStatusAttached(event: StatusVfxAttachedEvent) {
+    const statusKey = `${event.targetId}:${event.dotType}`
+    // Optional chaining defensive: field initializer KHÔNG chạy với
+    // Object.create(prototype) trong test (xem ghi chú class header) —
+    // undefined coi như "chưa floating lần nào".
+    const firstOnTarget = this.floatedStatusKeys?.has(statusKey) !== true
+
+    this.floatedStatusKeys?.add(statusKey)
+
+    if (firstOnTarget && event.buffName) {
+      const sprite = this.spriteFor(event.targetId)
+
+      if (sprite) {
+        this.showFloatingText(
+          sprite,
+          event.buffName,
+          event.polarity === 'buff' ? BUFF_ATTACH_COLOR : DEBUFF_ATTACH_COLOR,
+        )
+      }
+    }
+
     this.vfxSpawner.onStatusAttached(event)
   }
 
