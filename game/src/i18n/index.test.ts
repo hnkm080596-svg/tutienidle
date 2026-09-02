@@ -2,6 +2,8 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { i18n } from './index'
+import vi from '@/locales/vi.json'
+import en from '@/locales/en.json'
 
 interface I18nGlobalShape {
   locale: { value: string }
@@ -59,5 +61,32 @@ describe('i18n', () => {
     const fallback = g.fallbackLocale
     const fallbackValue = typeof fallback === 'object' ? fallback.value : fallback
     expect(fallbackValue).toBe('en')
+  })
+})
+
+// Task 21 (item-grade-quality-rework, rework P6) — vi.json/en.json phải
+// khớp CẤU TRÚC KEY tuyệt đối (không lệch nhánh nào lệch bên kia), tránh
+// treo missing-key âm thầm khi đổi locale sang en. Không so sánh GIÁ TRỊ
+// (bản dịch dĩ nhiên khác chữ), chỉ so cây key.
+function collectLeafPaths(node: unknown, prefix = ''): string[] {
+  if (node === null || typeof node !== 'object') {
+    return [prefix]
+  }
+
+  return Object.entries(node as Record<string, unknown>).flatMap(([key, value]) =>
+    collectLeafPaths(value, prefix ? `${prefix}.${key}` : key),
+  )
+}
+
+describe('locale parity (vi.json vs en.json)', () => {
+  it('có cùng tập hợp key lá — không key nào chỉ tồn tại ở 1 bên', () => {
+    const viPaths = new Set(collectLeafPaths(vi))
+    const enPaths = new Set(collectLeafPaths(en))
+
+    const missingInEn = [...viPaths].filter((path) => !enPaths.has(path))
+    const missingInVi = [...enPaths].filter((path) => !viPaths.has(path))
+
+    expect(missingInEn).toEqual([])
+    expect(missingInVi).toEqual([])
   })
 })

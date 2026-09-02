@@ -392,15 +392,15 @@ Việc cần làm:
 - [x] **T6.4** Bundle code-split — `af88cee` (entry 2231→848KB + phaser chunk riêng + contract test)
 - [x] **T6.5** Adversarial QA — skill có sẵn, dùng theo AGENTS.md; quy trình thường xuyên khi feature xong
 
-### Giai đoạn 7 — Item rework Phase 5-6 (CÒN TỪ PLAN REWORK)
-- [ ] **T16** ⬜ Equip gate ngang phẩm (`canUseItemGrade` vào `EquipmentSystem.equip` — reason `grade_mismatch`)
-- [ ] **T17** ⬜ Breakthrough unequip toàn bộ + warning UI
-- [ ] **T18** ⬜ Phase 5 gate (type-check + full + build + e2e)
-- [ ] **T19** ⬜ Tách EquipmentHallPanel thành 5 tab children (extract EnhanceTab/WashTab/RefineTab/DissolveTab)
-- [ ] **T20** ⬜ Theme 10-rank màu + dọn biến chết + pity UI keys (deferred Task 10 review)
-- [ ] **T21** ⬜ Terminology sweep (locale/tooltip/naming + enhance-row tooltip fix từ Task 10 review)
-- [ ] **T22** ⬜ Xóa file legacy (ItemGrade/EquipmentQuality/EquipmentRarity/ItemGradeRefs shim) + dead-reference contract test + dọn patch scripts
-- [ ] **T23** ⬜ Final full verify + ROADMAP update
+### Giai đoạn 7 — Item rework Phase 5-6 (CÒN TỪ PLAN REWORK) — ✅ XONG (2026-09-02, qua subagent-driven-development trên worktree `item-grade-rework-p5-p6`)
+- [x] **T16** Equip gate ngang phẩm — `canUseItemGrade` vào `EquipmentSystem.equip`, reason `grade_mismatch`, propagate qua `GameManager.equipItem`/`useEquipmentActions` (`c9abc1e`)
+- [x] **T17** Breakthrough unequip toàn bộ + warning UI — `GameManager.unequipAllEquipment()` gọi từ `useTribulation.resolveVictory` ngay sau gán realm; cảnh báo trong `BreakthroughRequirementPanel.vue` (`ba7297f`)
+- [x] **T18** Phase 5 gate — type-check + vitest full (2008/2009, 1 flaky không liên quan) + build + e2e boot-fresh đều xanh
+- [x] **T19** Tách `EquipmentHallPanel.vue` thành 5 tab children (`EnhanceTab`/`WashTab`/`RefineTab`/`DissolveTab`/`DecomposeTab` đã có từ Task 14) qua `provide`/`inject` selection dùng chung + preview state cục bộ mỗi tab; xóa luôn UI radio ore chết ở Wash (`330b9fe`, fix `51e06f2`)
+- [x] **T20** Theme 10-rank màu (`--rank-color-10`/`--rank-gradient-10`) + `normalizeSlotRank.ts` chuyển hẳn sang `ItemQuality`(1-5)/`ProfessionGrade`(1-10, bỏ clamp 9) + xóa `--eq-quality-*` chết; **ruling:** giữ `--grade-*` (vẫn là consumer sống của trục Chất trang bị/Đan qua `EquipmentNaming`/`PillBagSection`/`BattleLootSystem`, giả định "chết" trong plan sai) (`cc2a0ad`)
+- [x] **T21** Terminology sweep — `labels.ts` (`equipmentRarityLabel` xóa, `equipmentQualityLabel`→`ItemQuality`, thêm `gradeLabel`), tooltip "Phẩm: X (Cảnh Giới Y)" / "Chất: X", `EquipmentNaming.ts` thêm segment phẩm (test mới `EquipmentNaming.test.ts`) (`89dd21c`, fix `8be6221`)
+- [x] **T22** Xóa file legacy `EquipmentQuality.ts`/`EquipmentRarity.ts`/`ItemGradeRefs.ts` (shim) + dead-reference contract test; **ruling:** **KHÔNG xóa `ItemGrade.ts`** — vẫn là trục "Phẩm" sống cho Đan/Phù (`Pill.ts`/`pills.ts`/`ProductionCatalog.ts`/`PillBagSection.vue`/`BattleLootSystem.ts`/`Talisman.ts`), tách biệt có chủ đích khỏi trục "Chất" trang bị (`ItemQuality.ts`) — xóa nhầm sẽ đổi nhãn "Hoàng Phẩm"→"Hoàng Chất" toàn bộ Đan/Phù/Trận; `EQUIPMENT_RARITY_EXALTED_AFFIX_CHANCE`/`EQUIPMENT_RARITY_AFFIX_SLOTS` (còn sống) chuyển vào `ItemQualityBalance.ts` (`a22bd79`)
+- [x] **T23** Final full verify — type-check clean, vitest 308/308 file · 2033/2033 test, build clean, e2e 6/6 (boot-fresh/create-to-combat/ink-wash-ui/save-reload), UI flexible-layout rule xác nhận (Dissolve/Decompose dùng `auto-fill/auto-fit minmax` + `usePanelPagination`)
 
 ### Giai đoạn 8 — UI/UX repair (2026-09-02 review + user report)
 > Spec: `docs/superpowers/specs/2026-09-02-combat-overlay-layering-repair-design.md` • Plan: `docs/superpowers/plans/2026-09-02-combat-overlay-layering-repair.md`

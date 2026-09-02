@@ -2,9 +2,14 @@ import type { Equipment } from './Equipment'
 import type { EquipmentInstance } from './EquipmentInstance'
 import type { ZoneRegistry } from '../stage/ZoneRegistry'
 import type { NameSegment } from '../item/NameSegment'
-import { EQUIPMENT_RARITY_LABELS } from './ItemGradeRefs'
+import { composeItemQualityNameSegments } from '../item/ItemQuality'
+import { PROFESSION_GRADE_NAMES } from '../profession/ProfessionGrade'
+import { professionGradeRank } from '@/composables/slots/normalizeSlotRank'
 
-// Tên vật phẩm ghép động: [Phẩm] · [Địa Giới + Từ loại], mỗi phần tô màu riêng.
+// Tên vật phẩm ghép động (Rework P6, Task 21) — 2 TRỤC riêng biệt, mỗi
+// phần tô màu riêng theo ĐÚNG thang rank của trục đó:
+//   [Phẩm Nghề (ProfessionGrade, 10 bậc)] · [Chất (ItemQuality, 5 bậc)
+//   + Địa Giới/Từ loại]
 // Dùng chung cho tooltip (useEquipmentTooltip.ts) VÀ caption trên
 // SlotView (EquipmentBagSection.vue/EquipmentPaperdoll.vue).
 export function composeEquipmentNameSegments(
@@ -12,26 +17,18 @@ export function composeEquipmentNameSegments(
   template: Equipment,
   zoneRegistry: ZoneRegistry,
 ): NameSegment[] {
-  const segments: NameSegment[] = [
-    {
-      text: EQUIPMENT_RARITY_LABELS[instance.quality],
-      colorVar: `--grade-${instance.quality}`,
-      tone: instance.quality,
-    },
-  ]
+  const gradeSegment: NameSegment = {
+    text: PROFESSION_GRADE_NAMES[instance.grade],
+    colorVar: `--rank-color-${professionGradeRank(instance.grade)}`,
+    tone: instance.grade,
+  }
 
   const zoneName =
     instance.zoneId && zoneRegistry.has(instance.zoneId)
       ? `${zoneRegistry.get(instance.zoneId).name} `
       : ''
 
-  segments.push({
-    text: `${zoneName}${template.name}`,
-    colorVar: `--eq-quality-${instance.quality}`,
-    tone: instance.quality,
-  })
-
-  return segments
+  return [gradeSegment, ...composeItemQualityNameSegments(`${zoneName}${template.name}`, instance.quality)]
 }
 
 // Tên đầy đủ dạng CHUỖI PHẲNG (không màu) — dùng cho chỗ chỉ nhận

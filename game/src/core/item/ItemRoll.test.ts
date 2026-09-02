@@ -11,7 +11,6 @@ import type { EquipmentInstance } from '../equipment/EquipmentInstance'
 import type { PlayerData } from '../player/Player'
 import { ITEM_QUALITY_ORDER } from './ItemQuality'
 import { ITEM_QUALITY_FORGE_USES } from '../equipment/ItemQualityBalance'
-import { ITEM_GRADE_ORDER as EQUIPMENT_RARITY_ORDER } from '../equipment/ItemGradeRefs'
 import { affixes } from '@/data/equipment/affixes'
 
 // Roll logic phẩm chất/độ hiếm sống ở EquipmentSystem (thư mục
@@ -69,7 +68,7 @@ describe('Item roll — EquipmentInstance schema bridge', () => {
 describe('Item roll — quality bridge theo roll rarity cũ', () => {
   it('luôn roll quality hợp lệ trong 5 bậc', () => {
     for (let i = 0; i < 300; i++) {
-      expect(EQUIPMENT_RARITY_ORDER).toContain(rollInstance().quality)
+      expect(ITEM_QUALITY_ORDER).toContain(rollInstance().quality)
     }
   })
 

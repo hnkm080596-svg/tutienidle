@@ -336,9 +336,9 @@ src/data/materials/materials.ts         [+ luyen_khi_tinh_hoa; xóa 10 essence]
 - `equip` thêm guard sau inventory check: `canUseItemGrade(instance.grade, player.realmId)` — false → `{ ok: false, reason: 'grade_mismatch' }`
 - ⚠️ return type đổi từ boolean → object: cập nhật TOÀN BỘ caller (composable, GameManager, tests) — grep `\.equip\(` trong plan task này
 
-- [ ] **Step 1: Failing tests** — item ngang phẩm → ok; cao/thấp 1 bậc → `grade_mismatch`; idempotent (đang mặc) vẫn true; message hiển thị qua composable feedback
-- [ ] **Step 2-4:** FAIL → implement → PASS
-- [ ] **Step 5: Commit** — `feat(equipment): grade gate on equip with reason plumbing (rework P5)`
+- [x] **Step 1: Failing tests** — item ngang phẩm → ok; cao/thấp 1 bậc → `grade_mismatch`; idempotent (đang mặc) vẫn true; message hiển thị qua composable feedback
+- [x] **Step 2-4:** FAIL → implement → PASS
+- [x] **Step 5: Commit** — `feat(equipment): grade gate on equip with reason plumbing (rework P5)`
 
 ### Task 17: Breakthrough unequips all + UI lock hint
 
@@ -348,13 +348,13 @@ src/data/materials/materials.ts         [+ luyen_khi_tinh_hoa; xóa 10 essence]
 - Modify: `game/src/components/common/BreakthroughRequirementPanel.vue` — thêm cảnh báo text "Đột phá sẽ tháo toàn bộ trang bị (yêu cầu trang bị ngang phẩm mới)"
 - Test: `game/src/composables/useTribulation.dotPha.test.ts` (thêm case), `GameManager.unequipAll.test.ts` (mới)
 
-- [ ] **Step 1: Failing tests** — victory → mọi instance equipped=false; modifiers sync rỗng equipment phần; slot states GIỮ enhanceLevel (không reset); cảnh báo text render
-- [ ] **Step 2-4:** FAIL → implement → PASS
-- [ ] **Step 5: Commit** — `feat(breakthrough): unequip all on realm breakthrough + warning (rework P5)`
+- [x] **Step 1: Failing tests** — victory → mọi instance equipped=false; modifiers sync rỗng equipment phần; slot states GIỮ enhanceLevel (không reset); cảnh báo text render
+- [x] **Step 2-4:** FAIL → implement → PASS
+- [x] **Step 5: Commit** — `feat(breakthrough): unequip all on realm breakthrough + warning (rework P5)`
 
 ### Task 18: Phase 5 full verify
 
-- [ ] type-check + full vitest + build + `npx playwright test tests/e2e/boot-fresh.spec.ts` PASS; commit fix nếu văng
+- [x] type-check + full vitest + build + `npx playwright test tests/e2e/boot-fresh.spec.ts` PASS; commit fix nếu văng
 
 ---
 
@@ -371,13 +371,13 @@ src/data/materials/materials.ts         [+ luyen_khi_tinh_hoa; xóa 10 essence]
 - Shared state: `selectedInstanceId` + `selectEquipped` cung qua `provide('hall-selection')` (InjectionKey typed) — children inject; previews là local state mỗi child (v-if unmount tự reset — giữ đúng semantics switchTab)
 - Mỗi child tự import `useGameManager`/`useEquipmentActions`/`stateVersion` như cũ (injection đã có sẵn)
 
-- [ ] **Step 1:** Extract EnhanceTab (di chuyển code nguyên khối + refs liên quan) — chạy test tab enhance PASS
-- [ ] **Step 2:** Extract WashTab (xóa luôn UI radio ore — không còn dùng) — PASS
-- [ ] **Step 3:** Extract RefineTab — PASS
-- [ ] **Step 4:** Extract DissolveTab (giữ pagination + 3 filter: realm → đổi thành **grade** filter dùng PROFESSION_GRADE_ORDER + `canUseItemGrade` cho hint; rarity/quality filter gộp thành 1 dropdown Chất) — PASS
-- [ ] **Step 5:** Shell cleanup — bỏ code đã chuyển, TABS thêm 'decompose' (Task 14 đã wire, giờ đưa vào child đúng chỗ) — full panel tests PASS
-- [ ] **Step 6:** `npm.cmd run type-check` + full vitest PASS
-- [ ] **Step 7: Commit** — `refactor(ui): split EquipmentHallPanel into 5 tab children (rework P6)`
+- [x] **Step 1:** Extract EnhanceTab (di chuyển code nguyên khối + refs liên quan) — chạy test tab enhance PASS
+- [x] **Step 2:** Extract WashTab (xóa luôn UI radio ore — không còn dùng) — PASS
+- [x] **Step 3:** Extract RefineTab — PASS
+- [x] **Step 4:** Extract DissolveTab (giữ pagination + 3 filter: realm → đổi thành **grade** filter dùng PROFESSION_GRADE_ORDER + `canUseItemGrade` cho hint; rarity/quality filter gộp thành 1 dropdown Chất) — PASS
+- [x] **Step 5:** Shell cleanup — bỏ code đã chuyển, TABS thêm 'decompose' (Task 14 đã wire, giờ đưa vào child đúng chỗ) — full panel tests PASS
+- [x] **Step 6:** `npm.cmd run type-check` + full vitest PASS
+- [x] **Step 7: Commit** — `refactor(ui): split EquipmentHallPanel into 5 tab children (rework P6)`
 
 ### Task 20: Theme màu 10 rank + dọn biến chết
 
@@ -388,9 +388,9 @@ src/data/materials/materials.ts         [+ luyen_khi_tinh_hoa; xóa 10 essence]
 - Modify: `game/src/core/item/ItemQuality.ts` — colorVar đã dùng rank (Task 1) — verify
 - Test: `normalizeSlotRank.test.ts` cập nhật
 
-- [ ] **Step 1: Failing tests** — rank 1..10 cho profession; 1..5 cho quality; `isMaxRankTone('tien')` true cho cả 2 trục qua rank max riêng
-- [ ] **Step 2-4:** FAIL → implement css + rank → PASS
-- [ ] **Step 5: Commit** — `refactor(theme): 10-rank color scale, purge dead grade/eq-quality vars (rework P6)`
+- [x] **Step 1: Failing tests** — rank 1..10 cho profession; 1..5 cho quality; `isMaxRankTone('tien')` true cho cả 2 trục qua rank max riêng
+- [x] **Step 2-4:** FAIL → implement css + rank → PASS
+- [x] **Step 5: Commit** — `refactor(theme): 10-rank color scale, purge dead grade/eq-quality vars (rework P6)`
 
 ### Task 21: Terminology sweep — locale, tooltip, naming
 
@@ -402,9 +402,9 @@ src/data/materials/materials.ts         [+ luyen_khi_tinh_hoa; xóa 10 essence]
 - Modify: `BattleLootSystem.ts` accentColorVar (L457/551) → rank color qua quality rank
 - Test: `useEquipmentTooltip.test.ts` cập nhật + parity test locale (mở rộng `src/i18n/index.test.ts` hoặc file parity mới — task 2.6 roadmap có thể gộp đây)
 
-- [ ] **Step 1: Failing tests** — tooltip segments chứa "Phẩm:"/"Chất:" đúng; locale parity vi/en zero diff; grep-check không "Phẩm" cạnh "Chất" nhầm lẫn trong labels chất
-- [ ] **Step 2-4:** FAIL → implement → PASS
-- [ ] **Step 5: Commit** — `refactor(i18n): terminology Phẩm/Chất + tooltip dual-axis + decompose keys (rework P6)`
+- [x] **Step 1: Failing tests** — tooltip segments chứa "Phẩm:"/"Chất:" đúng; locale parity vi/en zero diff; grep-check không "Phẩm" cạnh "Chất" nhầm lẫn trong labels chất
+- [x] **Step 2-4:** FAIL → implement → PASS
+- [x] **Step 5: Commit** — `refactor(i18n): terminology Phẩm/Chất + tooltip dual-axis + decompose keys (rework P6)`
 
 ### Task 22: Dọn chết + xóa shim
 
@@ -417,18 +417,18 @@ src/data/materials/materials.ts         [+ luyen_khi_tinh_hoa; xóa 10 essence]
 - Scan `src/**/*.ts` + `src/**/*.vue`: không chứa `forgePoints`, `forgePotential`, `FORGE_PERCENT_PER_POINT`, `REFINE_VALUE_VARIANCE`, `EQUIPMENT_QUALITY_REALM_WEIGHTS`, `EQUIPMENT_REALM_ESSENCE_MATERIAL`, `equipmentEssenceMaterialId`, `tinh_hoa_pham_khi`..`thien_dia_trong_khi` (whitelist: `tinh_hoa_pham_the`), `--grade-`, `--eq-quality-`, `WASH_ORE_AMOUNT`, `ENHANCE_PERCENT_PER_LEVEL`
 - Instance fields: tạo instance → không có keys `realmId`/`rarity`/`forgePoints`/`forgePotential`
 
-- [ ] **Step 1: Write failing dead-reference test** (chạy fail vì shim + files cũ còn)
-- [ ] **Step 2-4:** Xóa 4 file + sửa imports → type-check PASS → test PASS
-- [ ] **Step 5: Commit** — `refactor(equipment): delete legacy grade/quality/rarity files + dead-reference contract (rework P6)`
+- [x] **Step 1: Write failing dead-reference test** (chạy fail vì shim + files cũ còn)
+- [x] **Step 2-4:** Xóa 4 file + sửa imports → type-check PASS → test PASS
+- [x] **Step 5: Commit** — `refactor(equipment): delete legacy grade/quality/rarity files + dead-reference contract (rework P6)`
 
 ### Task 23: Phase 6 + FINAL full verify
 
-- [ ] `npm.cmd run type-check` PASS
-- [ ] `npx vitest run` full PASS (không regress — baseline hiện tại ~1597+ tests mới)
-- [ ] `npm.cmd run build` PASS
-- [ ] `npx playwright test` — boot-fresh + create-to-combat + ink-wash-ui + save-reload PASS (6/6+)
-- [ ] Quy tắc UI flexible check (AGENTS.md): Dissolve grid + Decompose tab dùng auto-fill/ResizeObserver pattern — không hardcode cột
-- [ ] Commit final: `chore: item grade/quality rework complete — full verification (rework P6)`
+- [x] `npm.cmd run type-check` PASS
+- [x] `npx vitest run` full PASS (không regress — baseline hiện tại ~1597+ tests mới)
+- [x] `npm.cmd run build` PASS
+- [x] `npx playwright test` — boot-fresh + create-to-combat + ink-wash-ui + save-reload PASS (6/6+)
+- [x] Quy tắc UI flexible check (AGENTS.md): Dissolve grid + Decompose tab dùng auto-fill/ResizeObserver pattern — không hardcode cột
+- [x] Commit final: `chore: item grade/quality rework complete — full verification (rework P6)`
 
 ---
 

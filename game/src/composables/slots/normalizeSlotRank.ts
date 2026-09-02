@@ -1,19 +1,34 @@
 // Slot Revamp (tooltip-revamp-plan.md mục 17.5) — SlotView không được
-// biết ID domain (vd 'pham_khi', 'tien'); mọi consumer tự chuẩn hoá về
-// rank 1-9 qua các hàm này TRƯỚC khi truyền prop qualityRank/rarityRank.
-// Cùng thang --rank-color-1..9 (assets/theme.css).
-import { EQUIPMENT_QUALITY_ORDER, type EquipmentQuality } from '@/core/equipment/EquipmentQuality'
-import { ITEM_GRADE_ORDER, type ItemGrade } from '@/core/item/ItemGrade'
+// biết ID domain (vd 'hoang'/'tien_pham'); mọi consumer tự chuẩn hoá về
+// rank số nguyên qua các hàm này TRƯỚC khi truyền prop qualityRank/rarityRank.
+// Cùng thang --rank-color-1..10 (assets/theme.css).
+//
+// Rework P6 (item-grade-quality-rework, Task 20) — mô hình 2 trục CHUẨN:
+//   - "Grade" = Phẩm Nghề (ProfessionGrade, 10 bậc Cửu Phẩm→Tiên Phẩm,
+//     theo đại cảnh giới) → rank 1-10, ánh xạ 1:1, KHÔNG clamp (bậc 10
+//     mới thêm dùng --rank-color-10/--rank-gradient-10 riêng).
+//   - "Quality" = Phẩm Chất vật phẩm (ItemQuality, 5 bậc Hoàng→Tiên) →
+//     rank 1-5, ánh xạ 1:1 (dải riêng, KHÔNG rải đều lên 1-3-5-7-9 như
+//     model cũ — xem ItemQuality.ts's composeItemQualityNameSegments đã
+//     dùng đúng quy ước này từ Task 1).
+// EquipmentQuality.ts (module cũ, 9 bậc) đã bị XOÁ hẳn (Task 22, đã
+// merge). ItemGrade.ts (rải 1-3-5-7-9) KHÔNG bị xoá — nó là trục Phẩm
+// riêng, VĨNH VIỄN, cho Đan/Phù/Trận (Pill/Talisman/Formation), không
+// liên quan gì tới 2 trục equipment-only ở file này (professionGradeRank/
+// itemQualityRank). Không dùng ItemGrade.ts ở đây không phải vì nó
+// "chưa xoá" — nó ở lại vì phục vụ 1 domain hoàn toàn khác.
+import { ITEM_QUALITY_ORDER, type ItemQuality } from '@/core/item/ItemQuality'
 import { PROFESSION_GRADE_ORDER, type ProfessionGrade } from '@/core/profession/ProfessionGrade'
 
-// 9 bậc Quality ánh xạ 1:1 vào rank 1-9.
-export function equipmentQualityRank(quality: EquipmentQuality): number {
-  return EQUIPMENT_QUALITY_ORDER.indexOf(quality) + 1
+// 5 bậc Phẩm Chất vật phẩm (Hoàng/Huyền/Địa/Thiên/Tiên) ánh xạ 1:1 vào rank 1-5.
+export function itemQualityRank(quality: ItemQuality): number {
+  return ITEM_QUALITY_ORDER.indexOf(quality) + 1
 }
 
-// 5 bậc Grade ánh xạ đều vào 1-3-5-7-9.
-export function itemGradeRank(grade: ItemGrade): number {
-  return ITEM_GRADE_ORDER.indexOf(grade) * 2 + 1
+// Phẩm nghề (Cửu Phẩm→Tiên Phẩm, 10 bậc) ánh xạ 1:1 vào rank 1-10 — KHÔNG
+// còn clamp về 9 (bậc 10 "Tiên Phẩm" giờ có màu/gradient riêng, xem theme.css).
+export function professionGradeRank(grade: ProfessionGrade): number {
+  return PROFESSION_GRADE_ORDER.indexOf(grade) + 1
 }
 
 // Cho nơi chỉ có sẵn NameSegment.tone (string, không rõ nguồn) — thử cả
@@ -21,21 +36,13 @@ export function itemGradeRank(grade: ItemGrade): number {
 export function isMaxRankTone(tone?: string): boolean {
   if (!tone) return false
 
-  if ((EQUIPMENT_QUALITY_ORDER as readonly string[]).includes(tone)) {
-    return equipmentQualityRank(tone as EquipmentQuality) === 9
+  if ((ITEM_QUALITY_ORDER as readonly string[]).includes(tone)) {
+    return itemQualityRank(tone as ItemQuality) === ITEM_QUALITY_ORDER.length
   }
 
-  if ((ITEM_GRADE_ORDER as readonly string[]).includes(tone)) {
-    return itemGradeRank(tone as ItemGrade) === 9
+  if ((PROFESSION_GRADE_ORDER as readonly string[]).includes(tone)) {
+    return professionGradeRank(tone as ProfessionGrade) === PROFESSION_GRADE_ORDER.length
   }
 
   return false
-}
-
-// Phẩm nghề (Cửu→Tiên, 10 bậc) — rank 1-10 clamp vào thang 9 màu
-// (Tiên Phẩm đỉnh = rank 9). Khác trục với ItemGrade trang bị.
-export function professionGradeRank(grade: ProfessionGrade): number {
-  const index = PROFESSION_GRADE_ORDER.indexOf(grade)
-
-  return Math.min(9, Math.max(1, index + 1))
 }

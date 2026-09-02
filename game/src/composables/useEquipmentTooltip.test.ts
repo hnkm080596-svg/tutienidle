@@ -108,6 +108,37 @@ describe('buildEquipmentTooltip', () => {
       .toEqual(['Tỉ lệ bạo kích', 'Độ chính xác'])
   })
 
+  // Rework P6 (item-grade-quality-rework, Task 21) — tooltip phải hiển
+  // thị RÕ 2 trục tách biệt: Phẩm (ProfessionGrade, theo đại cảnh giới)
+  // và Chất (ItemQuality, độ hiếm roll) — không còn gộp lẫn như model cũ.
+  it('hiển thị section Phân Loại với dòng Phẩm (kèm Cảnh Giới) và dòng Chất', () => {
+    const { affixRegistry } = setup()
+    const equipment = instance({ grade: 'bat_pham', quality: 'dia' })
+    const template: Equipment = {
+      id: 'test_sword',
+      name: 'Thanh Vân Kiếm',
+      slot: 'weapon',
+      grade: 1,
+      mainStats: [{ stat: 'attack', min: 8, max: 12 }],
+      maxEnhanceLevel: 10,
+    }
+
+    const tooltip = buildEquipmentTooltip(equipment, template, affixRegistry, null, new ZoneRegistry())
+
+    const classificationSection = tooltip.sections.find(section => section.label === 'Phân Loại')
+    expect(classificationSection).toBeDefined()
+
+    const gradeRow = classificationSection?.rows.find(row => row.label === 'Phẩm')
+    expect(gradeRow?.value).toContain('Bát Phẩm')
+    expect(gradeRow?.value).toContain('Luyện Khí')
+
+    const qualityRow = classificationSection?.rows.find(row => row.label === 'Chất')
+    expect(qualityRow?.value).toBe('Địa Chất')
+
+    // sections[0] (Chỉ Số Chính) không được xê dịch bởi section mới.
+    expect(tooltip.sections[0]?.label).toBe('Chỉ Số Chính')
+  })
+
   it('hides range/comparison by default and keeps effective range plus delta inline for Alt mode', () => {
     const { affixRegistry } = setup()
     const candidate = instance({

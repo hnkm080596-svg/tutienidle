@@ -46,6 +46,7 @@ const ACTION_FAILURE_LABELS: Record<string, string> = {
   invalid_affix_value: 'Giá trị dòng phụ không hợp lệ — không thể Tinh Luyện.',
   invalid_random_roll: 'Kết quả ngẫu nhiên không hợp lệ — Tinh Luyện chưa tiêu hao tài nguyên.',
   max_level: 'Đã đạt cấp tối đa.',
+  grade_mismatch: 'Phẩm không khớp cảnh giới.',
 }
 
 /** Không để lọt reason thô ra UI người chơi — luôn qua bảng dịch này. */

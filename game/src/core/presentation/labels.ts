@@ -4,11 +4,11 @@
 import type { MaterialRegistry } from '@/core/material/MaterialRegistry'
 import type { AffixRegistry } from '@/core/equipment/AffixRegistry'
 import type { EquipmentSlot } from '@/core/equipment/EquipmentTypes'
-import type { EquipmentQuality } from '@/core/equipment/EquipmentQuality'
-import type { EquipmentRarity } from '@/core/equipment/EquipmentRarity'
+import type { ItemQuality } from '@/core/item/ItemQuality'
+import type { ProfessionGrade } from '@/core/profession/ProfessionGrade'
 import { EQUIPMENT_SLOT_LABELS } from '@/core/equipment/EquipmentTypes'
-import { EQUIPMENT_QUALITY_LABELS } from '@/core/equipment/EquipmentQuality'
-import { EQUIPMENT_RARITY_LABELS } from '@/core/equipment/EquipmentRarity'
+import { ITEM_QUALITY_LABELS } from '@/core/item/ItemQuality'
+import { PROFESSION_GRADE_NAMES } from '@/core/profession/ProfessionGrade'
 import { REALMS } from '@/data/realms/realm'
 
 const UNKNOWN_DATA_LABEL = 'Dữ liệu không hợp lệ'
@@ -27,12 +27,18 @@ export function equipmentSlotLabel(slot: EquipmentSlot | string): string {
   return (EQUIPMENT_SLOT_LABELS as Record<string, string>)[slot] ?? UNKNOWN_DATA_LABEL
 }
 
-export function equipmentQualityLabel(quality: EquipmentQuality | string): string {
-  return (EQUIPMENT_QUALITY_LABELS as Record<string, string>)[quality] ?? UNKNOWN_DATA_LABEL
+// Rework P6 (item-grade-quality-rework, Task 21) — trục Chất vật phẩm
+// (ItemQuality, 5 bậc Hoàng→Tiên). `equipmentRarityLabel` (trục
+// EquipmentRarity cũ) đã XÓA — mọi call site chuyển sang hàm này, cùng
+// 1 trục Chất duy nhất với ItemQuality.ts's ITEM_QUALITY_LABELS.
+export function equipmentQualityLabel(quality: ItemQuality | string): string {
+  return (ITEM_QUALITY_LABELS as Record<string, string>)[quality] ?? UNKNOWN_DATA_LABEL
 }
 
-export function equipmentRarityLabel(rarity: EquipmentRarity | string): string {
-  return (EQUIPMENT_RARITY_LABELS as Record<string, string>)[rarity] ?? UNKNOWN_DATA_LABEL
+// Trục Phẩm Nghề (ProfessionGrade, 10 bậc Cửu Phẩm→Tiên Phẩm theo đại
+// cảnh giới) — KHÁC trục Chất ở trên, xem ProfessionGrade.ts's header.
+export function gradeLabel(grade: ProfessionGrade | string): string {
+  return (PROFESSION_GRADE_NAMES as Record<string, string>)[grade] ?? UNKNOWN_DATA_LABEL
 }
 
 export function realmLabel(realmId: string): string {

@@ -8,6 +8,8 @@ import { createBaseStats } from '../core/stats/StatBlock'
 import { CHARACTER_CREATION_TALENTS, getTalentDefinition } from '../data/talent/Talents'
 import { pills } from '../data/pill/pills'
 import { MERIDIANS } from '../data/realm/Meridians'
+import { makeInstance } from '../core/equipment/EquipmentInstance.fixture'
+import { PROFESSION_GRADE_BY_REALM } from '../core/profession/ProfessionGrade'
 
 // Snapshot hoàn hảo Phàm Nhân + Phàm Nhân Chi Cốt (spec dot-pha-loi-kiep
 // §4.2/§4.4) — integration qua GameManager + useTribulation thật.
@@ -188,5 +190,77 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
     expect(gameManager.startTribulation(player.$state, stats2, 'foundation_establishment')).toBe(true)
     expect(gameManager.getActiveTribulation()!.grade).toBe('heaven')
+  })
+})
+
+describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('victory realm mới → mọi item equipped=false + modifier equipment sync rỗng; slot state GIỮ enhanceLevel', () => {
+    const gameManager = new GameManager()
+    gameManager.registerPills(pills)
+    const player = usePlayerStore()
+
+    player.selectedTalentIds = ['pham_cot']
+    player.realmLevel = 12
+    player.bodyRefinementCompletedTiers = 6
+    player.mortalPerfectionAchieved = true
+    player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
+    gameManager.chooseCultivationPath('phap_tu', player.$state)
+    expect(player.realmId).toBe('qi_refining')
+
+    // Mặc 1 món đồ ĐÚNG phẩm hiện tại (qi_refining → bat_pham, Task 16 gate).
+    const weapon = makeInstance({
+      instanceId: 'task17-victory-weapon',
+      slot: 'weapon',
+      grade: PROFESSION_GRADE_BY_REALM.qi_refining,
+      equipped: true,
+    })
+    gameManager.equipmentBag.add(weapon)
+    gameManager.equipmentSlotManager.restore([
+      { ...gameManager.equipmentSlotManager.get('weapon'), enhanceLevel: 4, enhanceFailStreak: 2 },
+    ])
+    gameManager.equipmentSystem.refreshModifiers(
+      gameManager.equipmentBag,
+      gameManager.equipmentSlotManager,
+      gameManager.affixRegistry,
+    )
+    player.setEquipmentModifiers(gameManager.getEquipmentModifiers())
+    expect(player.modifiers.some((m) => m.sourceType === 'equipment')).toBe(true)
+
+    // Đầu tư đủ điều kiện Trúc Cơ (nhánh heaven, không cần great_dao).
+    player.realmLevel = 18
+    player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
+    player.openedMeridianIds = MERIDIANS.map((m) => m.id)
+
+    const stats = { ...createBaseStats(), maxHp: 5_000_000, defense: 50_000, hpRegenPerSecond: 0 }
+    expect(gameManager.startTribulation(player.$state, stats, 'foundation_establishment')).toBe(true)
+
+    let guard = 0
+    while (gameManager.getActiveTribulation()?.state === 'ongoing' && guard++ < 5000) {
+      gameManager.update(1)
+      const q = gameManager.getActiveTribulation()!.currentQuestion
+      if (q) gameManager.answerTribulationQuestion(q.correctAnswerIndex)
+    }
+
+    expect(gameManager.getActiveTribulation()!.state).toBe('victory')
+    checkTribulationOutcomeAction(player, gameManager)
+
+    expect(player.realmId).toBe('foundation_establishment')
+    expect(weapon.equipped).toBe(false)
+    expect(gameManager.equipmentBag.getEquipped()).toHaveLength(0)
+    expect(player.modifiers.some((m) => m.sourceType === 'equipment')).toBe(false)
+
+    // Slot state (Cường Hóa) KHÔNG bị reset bởi unequip-all.
+    const slotState = gameManager.equipmentSlotManager.get('weapon')
+    expect(slotState.enhanceLevel).toBe(4)
+    expect(slotState.enhanceFailStreak).toBe(2)
   })
 })

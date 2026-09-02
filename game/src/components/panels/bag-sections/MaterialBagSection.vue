@@ -198,6 +198,12 @@ const entries = computed<MaterialEntry[]>(() => {
 
       rarityRank: professionRankOf(stack.material),
 
+      // Material chỉ có 1 trục rank (Phẩm Nghề, 1-10) — feed vào prop
+      // rarityRank (mặc định trần 5, thang itemQualityRank equipment)
+      // nên PHẢI kèm rarityRankScale: 10, nếu không rank 5 (Ngũ Phẩm,
+      // giữa thang) bị hiểu nhầm là kịch trần (Fix 1, final review).
+      rarityRankScale: 10,
+
       nameSegments: materialNameSegments(stack.material),
     },
   }))
@@ -258,6 +264,8 @@ function familyCell(item: FilteredMaterial): BagCell {
     tooltip: buildTooltip(material, item.amount),
 
     rarityRank: baseRank,
+
+    rarityRankScale: 10,
 
     nameSegments: [
       { text: baseLabel, colorVar: baseRank === undefined ? undefined : `--rank-color-${baseRank}` },
@@ -330,6 +338,7 @@ const cells = computed<BagCell[]>(() => {
           icon: item.material.icon,
           tooltip: buildTooltip(item.material, item.amount),
           rarityRank: professionRankOf(item.material),
+          rarityRankScale: 10,
           nameSegments: materialNameSegments(item.material),
         },
   )
@@ -383,6 +392,7 @@ watch([searchQuery, activeGroup], () => resetPage())
         :icon="cell?.icon"
         :tooltip="cell?.tooltip"
         :rarity-rank="cell?.rarityRank"
+        :rarity-rank-scale="cell?.rarityRankScale"
         :name-segments="cell?.nameSegments"
       />
     </div>

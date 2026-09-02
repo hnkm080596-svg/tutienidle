@@ -11,7 +11,7 @@ import { compareNumber, compareText, stableSort, withDirection } from '@/composa
 import type { BagCell } from './BagCell'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
-import { itemGradeRank, professionGradeRank } from '@/composables/slots/normalizeSlotRank'
+import { itemQualityRank, professionGradeRank } from '@/composables/slots/normalizeSlotRank'
 import { compareProfessionGrades } from '@/core/profession/ProfessionGrade'
 import { EQUIPMENT_SLOTS } from '@/core/equipment/EquipmentSlotState'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
@@ -112,7 +112,7 @@ const entries = computed<EquipmentEntry[]>(() => {
 
         equipmentQualityRank: professionGradeRank(instance.grade),
 
-        rarityRank: itemGradeRank(instance.quality),
+        rarityRank: itemQualityRank(instance.quality),
 
         state,
 
@@ -146,7 +146,7 @@ const EQUIPMENT_COMPARATORS: Record<Exclude<EquipmentSortMode, 'default'>, (a: E
   quality: (a, b) =>
     professionGradeRank(a.instance.grade) - professionGradeRank(b.instance.grade),
 
-  rarity: (a, b) => itemGradeRank(a.instance.quality) - itemGradeRank(b.instance.quality),
+  rarity: (a, b) => itemQualityRank(a.instance.quality) - itemQualityRank(b.instance.quality),
 
   realm: (a, b) => compareProfessionGrades(a.instance.grade, b.instance.grade),
 

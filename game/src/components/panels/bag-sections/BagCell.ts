@@ -23,6 +23,12 @@ export interface BagCell {
 
   rarityRank?: number
 
+  // Trần của thang `rarityRank` — CHỈ MaterialBagSection.vue truyền
+  // (10, vì material feed professionRankOf 1-10 vào rarityRank thay vì
+  // itemQualityRank 1-5); mọi section khác bỏ trống = mặc định 5 ở
+  // SlotView.vue (Fix 1, final review item-grade-quality-rework).
+  rarityRankScale?: 5 | 10
+
   // Marker/comparison (equipped, upgrade/downgrade) — chỉ Equipment
   // bag section dùng, xem SlotView.vue's prop `state`.
   state?: SlotPresentationState

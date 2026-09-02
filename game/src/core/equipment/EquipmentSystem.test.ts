@@ -143,6 +143,98 @@ function productionSlotTemplate(
   }
 }
 
+describe('EquipmentSystem — equip() grade gate (rework P5, Task 16)', () => {
+  it('cùng phẩm với cảnh giới người chơi → equip thành công', () => {
+    const ctx = setup()
+    ctx.player.realmId = 'mortal'
+    const instance = manualInstance({ grade: 'cuu_pham' })
+    ctx.bag.add(instance)
+
+    expect(
+      ctx.system.equip(
+        instance.instanceId,
+        ctx.bag,
+        ctx.registry,
+        ctx.slotManager,
+        ctx.player,
+        ctx.affixRegistry,
+      ),
+    ).toEqual({ ok: true })
+    expect(instance.equipped).toBe(true)
+  })
+
+  it('phẩm cao hơn cảnh giới người chơi 1 bậc → grade_mismatch, không equip', () => {
+    const ctx = setup()
+    ctx.player.realmId = 'mortal'
+    const instance = manualInstance({ grade: 'bat_pham' })
+    ctx.bag.add(instance)
+
+    expect(
+      ctx.system.equip(
+        instance.instanceId,
+        ctx.bag,
+        ctx.registry,
+        ctx.slotManager,
+        ctx.player,
+        ctx.affixRegistry,
+      ),
+    ).toEqual({ ok: false, reason: 'grade_mismatch' })
+    expect(instance.equipped).toBe(false)
+  })
+
+  it('phẩm thấp hơn cảnh giới người chơi 1 bậc → grade_mismatch, không equip', () => {
+    const ctx = setup()
+    ctx.player.realmId = 'qi_refining'
+    const instance = manualInstance({ grade: 'cuu_pham' })
+    ctx.bag.add(instance)
+
+    expect(
+      ctx.system.equip(
+        instance.instanceId,
+        ctx.bag,
+        ctx.registry,
+        ctx.slotManager,
+        ctx.player,
+        ctx.affixRegistry,
+      ),
+    ).toEqual({ ok: false, reason: 'grade_mismatch' })
+    expect(instance.equipped).toBe(false)
+  })
+
+  it('item không tìm thấy trong túi → not_found', () => {
+    const ctx = setup()
+
+    expect(
+      ctx.system.equip(
+        'missing-instance',
+        ctx.bag,
+        ctx.registry,
+        ctx.slotManager,
+        ctx.player,
+        ctx.affixRegistry,
+      ),
+    ).toEqual({ ok: false, reason: 'not_found' })
+  })
+
+  it('idempotent — item đang mặc vẫn trả ok:true kể cả khi phẩm không còn khớp cảnh giới hiện tại', () => {
+    const ctx = setup()
+    ctx.player.realmId = 'mortal'
+    const instance = manualInstance({ grade: 'bat_pham', equipped: true })
+    ctx.bag.add(instance)
+
+    expect(
+      ctx.system.equip(
+        instance.instanceId,
+        ctx.bag,
+        ctx.registry,
+        ctx.slotManager,
+        ctx.player,
+        ctx.affixRegistry,
+      ),
+    ).toEqual({ ok: true })
+  })
+})
+
 describe('EquipmentSystem.createInstance — roll pipeline invariants (Equipment Rework)', () => {
   afterEach(() => {
     vi.restoreAllMocks()
@@ -1029,6 +1121,7 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
     testRegistry.register(newAffix)
     const instance = manualInstance({
       instanceId,
+      grade: 'cuu_pham',
       quality: 'hoang',
       equipped: false,
       forgeUsesTotal: 5,
@@ -1045,7 +1138,7 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
         ctx.player,
         testRegistry,
       ),
-    ).toBe(true)
+    ).toEqual({ ok: true })
 
     return { ...ctx, instance, testRegistry, oldAffix, newAffix }
   }

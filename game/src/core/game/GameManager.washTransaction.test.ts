@@ -41,7 +41,7 @@ describe('GameManager wash transaction', () => {
       affixes: [{ affixId: 'suffix_accuracy', tier: 1, value: 3 }],
     })
     manager.equipmentBag.add(instance)
-    expect(manager.equipItem(instance.instanceId, player)).toBe(true)
+    expect(manager.equipItem(instance.instanceId, player)).toEqual({ ok: true })
 
     const essence = manager.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID)
     const spiritStone = manager.materialRegistry.get(SPIRIT_STONE_MATERIAL_ID)

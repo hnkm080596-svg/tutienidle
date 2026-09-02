@@ -10,11 +10,12 @@ import type { Affix } from '@/core/equipment/Affix'
 //
 // Equipment Rework (2026-08-14) — 9 affix gốc đều gắn `pool: 'basic'`
 // (giữ nguyên hành vi cũ, mọi Quality đều truy cập được — xem
-// EQUIPMENT_QUALITY_UNLOCKED_POOLS trong core/equipment/EquipmentQuality.ts).
-// Thêm 2 affix mới ở pool 'supreme' — trước đây EQUIPMENT_QUALITY_MAX_AFFIX_TIER
+// ITEM_QUALITY_UNLOCKED_POOLS trong core/equipment/ItemQualityBalance.ts).
+// Thêm 2 affix mới ở pool 'supreme' — trước đây ITEM_QUALITY_AFFIX_TIER
 // đã cho phép tier tới 5 nhưng chưa affix nào roll quá tier 3 (data
 // gap), giờ có nội dung thật để pool 'supreme'/roll "Exalted Affix"
-// (thien_duyen rarity, xem EquipmentRarity.ts) không rơi vào no-op.
+// (quality tien cao nhất, xem ITEM_QUALITY_EXALTED_AFFIX_CHANCE trong
+// ItemQualityBalance.ts) không rơi vào no-op.
 export const affixes: Affix[] = [
   {
     id: 'prefix_attack',
@@ -183,7 +184,7 @@ export const affixes: Affix[] = [
 
   // Pháp Tu profession-tier ladder (2026-08-14) — 2 affix Hỏa hệ đầu
   // tiên, pool 'specialized' (mở từ Pháp Bảo/Tiên Bảo Quality trở lên,
-  // xem EQUIPMENT_QUALITY_UNLOCKED_POOLS) — ailmentPotencyPercent nền
+  // xem ITEM_QUALITY_UNLOCKED_POOLS) — ailmentPotencyPercent nền
   // = 0 nên tiers dùng giá trị nhỏ, trực tiếp CỘNG THẲNG vào % (0.03 =
   // +3 điểm %, không phải +3% của 0).
   {

@@ -86,7 +86,7 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
     // đúng kiến trúc thật, xem stores/player.ts's finalStats).
     gameManager.equipmentBag.add(manualWeaponInstance())
 
-    expect(gameManager.equipItem('build-snapshot-test-1', player)).toBe(true)
+    expect(gameManager.equipItem('build-snapshot-test-1', player)).toEqual({ ok: true })
 
     player.modifiers = gameManager.getEquipmentModifiers()
 

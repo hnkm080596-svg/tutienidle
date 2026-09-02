@@ -73,7 +73,7 @@ describe('SlotView — empty/filled + icon fallback', () => {
   })
 })
 
-describe('SlotView — rank 1-9 / 1-3-5-7-9', () => {
+describe('SlotView — rank 1-10 (professionGradeRank) / 1-5 (itemQualityRank)', () => {
   it('equipmentQualityRank ánh xạ đúng --slot-quality-color = --rank-color-N', () => {
     for (const rank of [1, 5, 9]) {
       const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'X', equipmentQualityRank: rank })
@@ -97,8 +97,44 @@ describe('SlotView — rank 1-9 / 1-3-5-7-9', () => {
     unmount()
   })
 
-  it('rarityRank (Phẩm) = 9 gắn class --max-rank (viền gradient bảy màu) — Phẩm quyết định khung, không phải Chất', () => {
+  it('rarityRank (Phẩm) = 5 (Tiên Chất, trần mới sau rework P6) gắn class --max-rank (viền gradient bảy màu) — Phẩm quyết định khung, không phải Chất', () => {
+    const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'X', rarityRank: 5 })
+    expect(button.classList.contains('slot-view--max-rank')).toBe(true)
+    unmount()
+  })
+
+  it('rarityRank = 9 (trần cũ trước rework P6) KHÔNG còn là max — trần mới là 5', () => {
     const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'X', rarityRank: 9 })
+    expect(button.classList.contains('slot-view--max-rank')).toBe(false)
+    unmount()
+  })
+})
+
+describe('SlotView — rarityRankScale (Fix 1, final review item-grade-quality-rework)', () => {
+  it('không truyền rarityRankScale (mặc định 5) — hành vi equipment cũ không đổi: rank 5 = max', () => {
+    const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'X', rarityRank: 5 })
+    expect(button.classList.contains('slot-view--max-rank')).toBe(true)
+    unmount()
+  })
+
+  it('rarityRankScale = 10: material rank 5 (Ngũ Phẩm, GIỮA thang 1-10) KHÔNG được gắn max-rank', () => {
+    const { button, unmount } = mountSlot({
+      item: { id: 1 },
+      label: 'X',
+      rarityRank: 5,
+      rarityRankScale: 10,
+    })
+    expect(button.classList.contains('slot-view--max-rank')).toBe(false)
+    unmount()
+  })
+
+  it('rarityRankScale = 10: material rank 10 (Tiên Phẩm, ĐỈNH thang) ĐƯỢC gắn max-rank', () => {
+    const { button, unmount } = mountSlot({
+      item: { id: 1 },
+      label: 'X',
+      rarityRank: 10,
+      rarityRankScale: 10,
+    })
     expect(button.classList.contains('slot-view--max-rank')).toBe(true)
     unmount()
   })

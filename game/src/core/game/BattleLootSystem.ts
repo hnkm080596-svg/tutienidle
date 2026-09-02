@@ -25,7 +25,7 @@ import {
   type BattleRewardItemKind,
 } from '../reward/BattleRewardSummary'
 import { composeItemGradeNameSegments, type ItemGrade } from '../item/ItemGrade'
-import { ITEM_QUALITY_ORDER, type ItemQuality } from '../item/ItemQuality'
+import type { ItemQuality } from '../item/ItemQuality'
 import { composeEquipmentNameSegments } from '../equipment/EquipmentNaming'
 import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../data/realm/BodyRefinement'
 import type { PlayerData } from '../player/Player'
@@ -455,7 +455,13 @@ export class BattleLootSystem {
                 this.deps.zoneRegistry,
               ),
               amountLabel: '+1',
-              accentColorVar: `--rank-color-${ITEM_QUALITY_ORDER.indexOf(instance.quality) + 1}`,
+              // Fix 2 follow-up (final review, optional minor) — dùng
+              // --grade-${quality} thay vì tự tính lại rank-color-N (dup
+              // logic ITEM_QUALITY_ORDER.indexOf), để nhất quán với
+              // composeEquipmentNameSegments's quality segment (cũng
+              // --grade-* sau Fix 2) thay vì lệch dải màu với chính tên
+              // vừa hiện trên cùng toast.
+              accentColorVar: `--grade-${instance.quality}`,
             })
             this.addBattleRewardItem('equipment', template.id, template.name, 1)
           }
@@ -549,7 +555,9 @@ export class BattleLootSystem {
       icon: instance.icon ?? template.icon,
       nameSegments: composeEquipmentNameSegments(instance, template, this.deps.zoneRegistry),
       amountLabel: '+1',
-      accentColorVar: `--rank-color-${ITEM_QUALITY_ORDER.indexOf(instance.quality) + 1}`,
+      // Fix 2 follow-up (final review, optional minor) — xem comment ở
+      // nhánh 'equipment' của grantItemDrops() phía trên.
+      accentColorVar: `--grade-${instance.quality}`,
     })
     this.addBattleRewardItem('equipment', template.id, template.name, 1)
   }

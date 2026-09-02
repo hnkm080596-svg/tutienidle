@@ -183,7 +183,7 @@ onBeforeUnmount(() => {
 
 .toast-item__segment--max-rank {
   color: transparent !important;
-  background: var(--rank-gradient-9);
+  background: var(--rank-gradient-10);
   background-clip: text;
   -webkit-background-clip: text;
 }

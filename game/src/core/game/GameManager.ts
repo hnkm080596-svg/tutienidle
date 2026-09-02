@@ -1854,7 +1854,7 @@ export class GameManager {
     })
   }
 
-  equipItem(instanceId: string, player: PlayerData): boolean {
+  equipItem(instanceId: string, player: PlayerData): { ok: boolean; reason?: string } {
     return this.equipmentSystem.equip(
       instanceId,
       this.equipmentBag,
@@ -2155,6 +2155,28 @@ export class GameManager {
    */
   getEquipmentModifiers(): StatModifier[] {
     return this.equipmentSystem.getModifiers()
+  }
+
+  /**
+   * Task 17 (rework P5) — Đột Phá đại cảnh giới đổi player.realmId nên
+   * mọi item đang mặc có thể lệch phẩm mới (Task 16 gate canUseItemGrade
+   * chặn re-equip khi lệch, nhưng KHÔNG tự tháo đồ cũ) → tháo TOÀN BỘ
+   * trang bị đang mặc ngay sau khi breakthrough để tránh kẹt trạng thái
+   * "mặc đồ giờ lệch phẩm nhưng không thể equip lại nếu lỡ tháo tay".
+   * Slot state (enhanceLevel/enhanceFailStreak/Formation/Talisman) sống
+   * độc lập theo SLOT (MASTER SPEC Mục XVI) — KHÔNG đụng tới, chỉ đổi
+   * equipped flag + modifier trên từng EquipmentInstance.
+   */
+  unequipAllEquipment(): void {
+    for (const instance of this.equipmentBag.getEquipped()) {
+      this.equipmentSystem.unequip(instance.instanceId, this.equipmentBag)
+    }
+
+    this.equipmentSystem.refreshModifiers(
+      this.equipmentBag,
+      this.equipmentSlotManager,
+      this.affixRegistry,
+    )
   }
 
   // =========================

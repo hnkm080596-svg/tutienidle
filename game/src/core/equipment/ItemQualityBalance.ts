@@ -56,3 +56,28 @@ export const ITEM_QUALITY_ESSENCE_RANGE: Record<ItemQuality, { min: number; max:
   thien: { min: 4, max: 6 },
   tien: { min: 5, max: 7 },
 }
+
+export interface ItemQualityAffixSlots {
+  prefix: number
+  suffix: number
+}
+
+// Số slot Prefix/Suffix tối đa theo quality — bậc giữa (dia) lệch
+// prefix trước suffix (2/1) trước khi đối xứng lại ở thien (2/2) rồi
+// tien (3/3), tránh 1 bước nhảy đột ngột. Chuyển từ
+// EquipmentRarity.ts/ItemGradeRefs.ts (item-grade-quality-rework Task
+// 22) — cùng convention ITEM_QUALITY_* với các bảng balance khác trong
+// module này.
+export const ITEM_QUALITY_AFFIX_SLOTS: Record<ItemQuality, ItemQualityAffixSlots> = {
+  hoang: { prefix: 0, suffix: 0 },
+  huyen: { prefix: 1, suffix: 1 },
+  dia: { prefix: 2, suffix: 1 },
+  thien: { prefix: 2, suffix: 2 },
+  tien: { prefix: 3, suffix: 3 },
+}
+
+// "Exalted Affix" — CHỈ quality tien mới có cơ hội roll thêm 1 affix
+// bonus từ pool 'supreme' (bỏ qua giới hạn slot bình thường ở trên) —
+// vẫn random, không phải item cố định. Chuyển từ EquipmentRarity.ts
+// (item-grade-quality-rework Task 22).
+export const ITEM_QUALITY_EXALTED_AFFIX_CHANCE = 0.15

@@ -133,9 +133,13 @@
   --el-wind: #4dd0e1;
   --el-lightning: #ffca28;
 
-  /* Thang phẩm chất CHUẨN 9 bậc, dùng chung cho mọi hệ thống. Hệ ít
-     bậc hơn ánh xạ đều lên thang này; bậc 9 dùng màu sáng này làm
-     fallback và gradient bảy màu tại component có khả năng render gradient. */
+  /* Thang phẩm chất CHUẨN 10 bậc, dùng chung cho mọi hệ thống. Hệ ít
+     bậc hơn ánh xạ đều lên thang này; bậc 10 (mới, rework P6 — Phẩm
+     Nghề ProfessionGrade giờ có đủ 10 bậc Cửu Phẩm→Tiên Phẩm, xem
+     core/profession/ProfessionGrade.ts) dùng màu sáng vàng-ngà này làm
+     fallback và gradient bảy màu tại component có khả năng render
+     gradient — nâng cấp từ gradient bảy màu cầu vồng cũ (bậc 9) sang
+     tông vàng-kim đậm nét "đỉnh phong" hơn. */
   --rank-color-1: #8a877e; /* xám */
   --rank-color-2: #d8d5cc; /* bạc/trắng */
   --rank-color-3: #6fbf73; /* lục */
@@ -144,32 +148,35 @@
   --rank-color-6: #9b7de3; /* tím */
   --rank-color-7: #ffd54f; /* kim */
   --rank-color-8: #ff6b4a; /* xích */
-  --rank-color-9: #fff6d8; /* fallback cho bảy màu */
-  --rank-gradient-9: linear-gradient(90deg, #ff6b6b, #ffd66b, #7bd88f, #67d8ff, #9e8cff, #ef8cff, #ff6b6b);
+  --rank-color-9: #fff6d8; /* fallback cầu vồng cũ — vẫn dùng bởi --grade-tien/--affix-tier-5 (trục 5 bậc riêng) */
+  --rank-color-10: #ffe9a8; /* fallback vàng-kim cho bậc 10 mới (Tiên Phẩm) */
+  --rank-gradient-10: linear-gradient(90deg, #fff6d8, #ffe9a8, #ffd66b, #ff6b6b, #9e8cff, #67d8ff, #fff6d8);
 
-  /* Equipment Quality có đủ 9 bậc nên ánh xạ 1:1. */
-  --eq-quality-pham_khi: var(--rank-color-1);
-  --eq-quality-bao_khi: var(--rank-color-2);
-  --eq-quality-linh_khi: var(--rank-color-3);
-  --eq-quality-phap_khi: var(--rank-color-4);
-  --eq-quality-phap_bao: var(--rank-color-5);
-  --eq-quality-tien_bao: var(--rank-color-6);
-  --eq-quality-chi_bao: var(--rank-color-7);
-  --eq-quality-hon_don_chi_bao: var(--rank-color-8);
-  --eq-quality-thien_dia_trong_khi: var(--rank-color-9);
+  /* --eq-quality-* (9 vars, thang Equipment Quality cũ 'pham_khi'..
+     'thien_dia_trong_khi') ĐÃ XOÁ (rework P6, Task 20) — cùng với
+     EquipmentQuality.ts (module TS tương ứng, XOÁ HẲN ở Task 22, đã
+     merge). Không còn consumer nào tham chiếu 9 vars này. */
 
-  /* Item Rarity — Core Loop Foundation checklist, trục ĐỘC LẬP với
-     --rarity-* ở trên (trục đó là Quality/tint, giữ nguyên vai trò
-     cũ). Namespace riêng --grade-* để không xung đột, dùng qua
-     SlotView's itemRarity prop (khác prop `rarity` hiện có).
+  /* --grade-* — namespace màu VĨNH VIỄN cho trục "Phẩm" vật phẩm, dùng
+     bởi 2 nơi:
+       1. Đan/Phù/Trận (Pill/Talisman/Formation) qua ItemGrade.ts's
+          composeItemGradeNameSegments (PillBagSection.vue v.v.).
+       2. Equipment's "Chất" (ItemQuality.ts's
+          composeItemQualityNameSegments, Fix 2 final review
+          item-grade-quality-rework) — trước đó hàm này lỡ tô
+          --rank-color-1..5 trùng dải với EquipmentNaming.ts's Phẩm Nghề
+          segment (--rank-color-1..10), vi phạm spec §5.8 ("dải màu chất
+          riêng biệt với phẩm — 2 dải không trùng màu tránh nhầm").
+          --grade-* vốn đã là dải riêng, tách khỏi thang 10 bậc
+          --rank-color-1..10 (Phẩm Nghề, xem composables/slots/
+          normalizeSlotRank.ts) — dùng lại đúng mục đích của nó.
      Naming-principles pass (2026-08-14, "nguyen li dat ten") — 5 bậc
-     Ngũ Phẩm Hoàng/Huyền/Địa/Thiên/Tiên thay 4 bậc "Duyên" cũ (xem
-     core/item/Pham.ts) — màu escalate rõ rệt để nhận diện nhanh:
-     đồng(hoang_pham)/tím thẫm(huyen_pham)/lục bích(dia_pham)/
-     vàng kim(thien_pham)/trắng-kim rực rỡ(tien_pham, DÙNG LẠI hex đỉnh
-     của --eq-quality-thien_dia_trong_khi ở trên — cùng ý niệm "đỉnh phong"
-     dù khác trục). */
-  /* Hệ 5 bậc ánh xạ đều lên 1–3–5–7–9. */
+     Ngũ Phẩm Hoàng/Huyền/Địa/Thiên/Tiên, màu escalate rõ rệt để nhận
+     diện nhanh: đồng(hoang)/tím thẫm(huyen)/lục bích(dia)/vàng kim
+     (thien)/trắng-kim rực rỡ(tien, DÙNG LẠI hex đỉnh cầu vồng cũ
+     --rank-color-9 — cùng ý niệm "đỉnh phong" dù khác trục). Hệ 5 bậc
+     rải đều lên 1–3–5–7–9 CỐ Ý để không trùng bất kỳ giá trị nào trên
+     thang 10 bậc liền kề --rank-color-1..10. */
   --grade-hoang: var(--rank-color-1);
   --grade-huyen: var(--rank-color-3);
   --grade-dia: var(--rank-color-5);

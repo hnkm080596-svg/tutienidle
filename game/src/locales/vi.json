@@ -53,7 +53,6 @@
       },
       "labels": {
         "rowLine": "Dòng",
-        "oreSelection": "Chọn Quáng",
         "dissolveReward": "Nhận được",
         "levelPrefix": "Cấp",
         "levelArrow": "⇒",
@@ -75,14 +74,16 @@
         "irreversible": "Thao tác KHÔNG thể hoàn tác."
       },
       "select": {
-        "anyRealm": "Mọi cảnh giới",
-        "anyQuality": "Mọi chất (9 bậc Khí)",
-        "anyGrade": "Mọi phẩm (Ngũ Phẩm)"
+        "anyQuality": "Mọi chất (Hoàng–Tiên)",
+        "anyProfessionGrade": "Mọi phẩm (Cửu Phẩm–Tiên Phẩm)"
+      },
+      "enhance": {
+        "pityCounter": "Bảo hiểm {streak}/10",
+        "guaranteed": "Chắc chắn thành công"
       },
       "messages": {
-        "refineNeedItem": "Không thể Tẩy Luyện: cần chọn một trang bị.",
-        "refineNeedOre": "Không thể Tẩy Luyện: cần chọn Quáng cùng cảnh giới.",
-        "polishNeedItem": "Không thể Tinh Luyện: cần chọn một trang bị có ít nhất một dòng phụ."
+        "washNeedItem": "Không thể Tẩy Luyện: cần chọn một trang bị.",
+        "refineNeedItem": "Không thể Tinh Luyện: cần chọn một trang bị có ít nhất một dòng phụ."
       }
     },
     "nodeTree": {
