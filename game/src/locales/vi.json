@@ -107,6 +107,46 @@
       "subtitle": "Thư viện theo cảnh giới · Con đường Ngũ Hành",
       "colTitles": {
         "loadoutActive": "Pháp Thuật Đang Vận Hành"
+      },
+      "nodeInspector": {
+        "empty": "Chọn một node trong Linh Mạch để xem chi tiết.",
+        "status": {
+          "maxed": "Tối Đa",
+          "purchased": "Đã Lĩnh Ngộ",
+          "purchasable": "Có Thể Lĩnh Ngộ",
+          "locked": "Chưa Đủ Điều Kiện"
+        },
+        "cost": {
+          "initial": "Chi phí: {cost} Cảm Ngộ",
+          "maxed": "Đã đạt cấp tối đa.",
+          "upgrade": "Nâng cấp: {cost} Cảm Ngộ"
+        },
+        "actions": {
+          "unlock": "Lĩnh Ngộ",
+          "upgrade": "Nâng Cấp"
+        },
+        "lockedReasons": {
+          "cost": "Cần {cost} Cảm Ngộ (đang có {current})",
+          "prerequisiteNode": "Cần lĩnh ngộ trước: {name}",
+          "realm": "Cần đạt cảnh giới yêu cầu",
+          "element": "Cần mở khoá Hành liên quan",
+          "excludesNode": "Xung khắc với: {name}",
+          "nodeCount": "Cần lĩnh ngộ {required}/{total} node liên quan",
+          "skillLevel": "cấp {level}",
+          "skillCastCount": "{count} lần xuất chiêu",
+          "skillJoin": "và",
+          "skill": "Cần {skill} đạt {requirement}",
+          "skillUpgrade": "Cần nâng kỹ năng liên quan"
+        }
+      },
+      "detail": {
+        "empty": "Chọn một kỹ năng để xem chi tiết.",
+        "upgrade": "Nâng Cấp ({cost} Cảm Ngộ)",
+        "maxed": "Tối đa",
+        "cooldown": "Hồi Chiêu",
+        "cost": "Tiêu Hao",
+        "type": "Loại",
+        "attackSpeed": "Nhịp theo Tốc Độ Đánh"
       }
     },
     "character": {
@@ -489,6 +529,37 @@
       "skillInsight": "Cảm Ngộ Kỹ Năng",
       "artifactInsight": "Kinh Nghiệm Pháp Bảo",
       "spiritStone": "Linh Thạch"
+    },
+    "overlay": {
+      "aiPanel": {
+        "title": "AI Mục Tiêu",
+        "ariaGroup": "Chiến lược AI chọn mục tiêu",
+        "strategies": {
+          "nearest": "Gần nhất",
+          "boss_first": "Ưu tiên Boss",
+          "elite_first": "Ưu tiên Elite",
+          "lowest_hp": "HP thấp nhất",
+          "highest_hp": "HP cao nhất"
+        },
+        "hints": {
+          "nearest": "Chọn mục tiêu có khoảng cách Chebyshev nhỏ nhất.",
+          "boss_first": "Boss trước, sau đó xếp theo khoảng cách.",
+          "elite_first": "Boss → Elite → thường, sau đó xếp theo khoảng cách.",
+          "lowest_hp": "Chọn mục tiêu đang còn máu thấp nhất.",
+          "highest_hp": "Chọn mục tiêu đang còn máu cao nhất."
+        }
+      },
+      "countdown": {
+        "go": "Xuất Trận!"
+      },
+      "exitConfirm": {
+        "message": "Thoát trận và về Động Phủ? Trận đấu hiện tại sẽ bị huỷ.",
+        "stay": "Ở Lại",
+        "exit": "Thoát Trận"
+      },
+      "topBar": {
+        "enemiesSuffix": "quái"
+      }
     }
   },
   "menu": {
@@ -595,6 +666,84 @@
       }
     }
   },
+  "skillResource": {
+    "hoaTheGainPerCast": {
+      "label": "Hỏa Thế Tích/Lượt",
+      "description": "Lượng Hỏa Thế nhận mỗi lần thi triển."
+    },
+    "hoaTheDecayReductionPercent": {
+      "label": "Giảm Suy Hỏa Thế",
+      "description": "Giảm % tốc độ Hỏa Thế tự tiêu tán theo thời gian."
+    },
+    "thuyThePercent": {
+      "label": "Thủy Thế",
+      "description": "Giảm thẳng % sát thương cuối cùng phải nhận."
+    },
+    "waterReactionExtensionSeconds": {
+      "label": "Duy Trì Thủy",
+      "description": "Khi Thủy kích hoạt Phản Ứng, gia hạn thêm số giây này thay vì tiêu hao Thủy trên mục tiêu."
+    },
+    "poisonRootPercentPerStack": {
+      "label": "Mộc Thế/Tầng",
+      "description": "Mỗi tầng Mộc Thế cộng thêm % sát thương Độc lên đúng mục tiêu đó."
+    },
+    "poisonRootMaxStacks": {
+      "label": "Trần Mộc Thế",
+      "description": "Số tầng Mộc Thế tối đa 1 mục tiêu có thể tích được."
+    },
+    "poisonRootThresholdBonusPercent": {
+      "label": "Độc Mạch",
+      "description": "Khi mục tiêu có từ 3 tầng Mộc Thế trở lên, cộng thêm % sát thương Độc."
+    },
+    "earthAoeRadius": {
+      "label": "Bán Kính Chấn Địa",
+      "description": "Số ô lan theo mỗi hướng quanh ô mục tiêu."
+    },
+    "earthAoeSecondaryDamagePercent": {
+      "label": "ST Mục Tiêu Phụ",
+      "description": "Sát thương lên mục tiêu phụ (qua Bán Kính Chấn Địa) so với mục tiêu chính."
+    },
+    "earthKnockbackDistance": {
+      "label": "Lực Đẩy Lùi",
+      "description": "Đẩy lùi mục tiêu khỏi nguồn bắn mỗi lần trúng đòn."
+    },
+    "thoTheGainPerCast": {
+      "label": "Thổ Thế Tích/Lượt",
+      "description": "Lượng Thổ Thế nhận mỗi lần thi triển."
+    },
+    "skillImpactPercent": {
+      "label": "Chấn Lực Kỹ Năng",
+      "description": "Stat nền dự phòng cho các cơ chế Thổ Tu tương lai."
+    },
+    "kimTheGainPerProc": {
+      "label": "Kim Thế Tích/Lần",
+      "description": "Lượng Kim Thế nhận mỗi lần áp thành công Xuất Huyết."
+    },
+    "kimTheDotDamagePercentPerStack": {
+      "label": "Kim Thế/Tầng",
+      "description": "Mỗi tầng Kim Thế cộng thêm % sát thương DoT Kim."
+    },
+    "kimTheDotResistancePenetrationPercentPerStack": {
+      "label": "Xuyên Kháng DoT/Tầng",
+      "description": "Stat nền dự phòng cho cơ chế Xuyên Kháng DoT tương lai."
+    },
+    "kimTheMaxStacksBonus": {
+      "label": "Trần Kim Thế",
+      "description": "Cộng thêm số tầng Kim Thế tối đa."
+    },
+    "metalAilmentPotencyPercent": {
+      "label": "Sát Thương Xuất Huyết",
+      "description": "Tăng % sát thương/giây của DoT Kim (Xuất Huyết)."
+    },
+    "huyetPhaGainPerProc": {
+      "label": "Huyết Phá Tích/Lần",
+      "description": "Lượng Huyết Phá charge nhận mỗi lần áp thành công Xuất Huyết."
+    },
+    "huyetPhaBurstDamage": {
+      "label": "Huyết Phá Bạo Phát",
+      "description": "Sát thương bùng nổ 1 lần khi Huyết Phá chạm đủ 5 tầng."
+    }
+  },
   "tribulation": {
     "stillEquipped": {
       "title": "Độ kiếp cũng là độ thân, không gì có thể giúp được ngươi",
@@ -602,5 +751,61 @@
       "confirm": "Đã hiểu",
       "cancel": "Chờ đã"
     }
+  },
+  "actionFailure": {
+    "not_found": "Không tìm thấy trang bị đã chọn.",
+    "missing_refinement_points": "Không đủ Điểm Rèn của món đồ.",
+    "no_forge_uses": "Món đồ đã hết lượt Rèn.",
+    "missing_tinh_hoa": "Không đủ Luyện Khí Tinh Hoa.",
+    "missing_spirit_stone": "Không đủ Linh Thạch.",
+    "missing_material": "Không đủ nguyên liệu.",
+    "template_not_found": "Dữ liệu trang bị không hợp lệ.",
+    "no_eligible_affix": "Món đồ không có dòng phụ phù hợp để thao tác.",
+    "no_affixes": "Món đồ chưa có dòng phụ nào.",
+    "invalid_lock": "Lựa chọn khóa dòng không hợp lệ.",
+    "too_many_locks": "Đã khóa quá nhiều dòng — chừa lại ít nhất một dòng không khóa.",
+    "cannot_lock_all": "Không thể khóa toàn bộ dòng phụ.",
+    "missing_essence": "Không đủ Tinh Hoa cho thao tác này.",
+    "empty_selection": "Chưa chọn món đồ nào.",
+    "equipped": "Không thể thao tác trên trang bị đang mặc.",
+    "locked": "Trang bị đang bị khóa.",
+    "favorite": "Trang bị đang được đánh dấu yêu thích.",
+    "no_conversion_rule": "Không có quy tắc chuyển đổi cho món đồ này.",
+    "invalid_refine_preview": "Kết quả Tinh Luyện đã cũ hoặc không hợp lệ — hãy xem trước lại.",
+    "invalid_affix_value": "Giá trị dòng phụ không hợp lệ — không thể Tinh Luyện.",
+    "invalid_random_roll": "Kết quả ngẫu nhiên không hợp lệ — Tinh Luyện chưa tiêu hao tài nguyên.",
+    "max_level": "Đã đạt cấp tối đa.",
+    "grade_mismatch": "Phẩm không khớp cảnh giới.",
+    "fallback": "Thao tác thất bại.",
+    "unknown": "Thao tác thất bại vì điều kiện chưa đủ."
+  },
+  "actionFeedback": {
+    "ops": {
+      "equip": { "label": "Trang Bị" },
+      "enhance": { "label": "Cường Hóa" },
+      "wash": { "label": "Tẩy Luyện" },
+      "refine": { "label": "Tinh Luyện" },
+      "dissolve": { "label": "Hóa Luyện" }
+    },
+    "success": "{label} thành công",
+    "failed": "Không thể {label}: {reason}"
+  },
+  "alchemy": {
+    "spiritStones": "Linh Thạch",
+    "startBrewing": "Bắt đầu luyện",
+    "reason": {
+      "not_found": "Không tìm thấy đan phương",
+      "room_not_built": "Cần xây Đan Phòng trước",
+      "job_slots_full": "Lò đang bận",
+      "wrong_herb": "Sai Linh Thảo — đan phương chỉ nhận đúng một loại thảo",
+      "missing_herb": "Không đủ Linh Thảo",
+      "missing_fuel_wood": "Không đủ Gỗ nhiên liệu đạt cảnh giới yêu cầu",
+      "missing_spirit_stone": "Không đủ Linh Thạch"
+    }
+  },
+  "resourceStrip": {
+    "show": "Hiện tài nguyên",
+    "hide": "Ẩn dải tài nguyên",
+    "spiritStones": "Linh Thạch"
   }
 }

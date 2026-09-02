@@ -5,10 +5,12 @@
 // giữ NGUYÊN (abandonBattle → manual → exitCombatScene →
 // combat_scene_exit). Gate: chỉ Stage (Tribulation có flow riêng).
 import { onMounted, onUnmounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useUiStore } from '@/stores/ui'
 import { useGameManager } from '@/composables/useGameState'
 import GameButton from '@/components/common/GameButton.vue'
 
+const { t } = useI18n()
 const ui = useUiStore()
 const gameManager = useGameManager()
 
@@ -48,11 +50,11 @@ onUnmounted(() => {
     @click.self="visible = false"
   >
     <div class="combat-exit-confirm">
-      <p class="combat-exit-confirm__text">Thoát trận và về Động Phủ? Trận đấu hiện tại sẽ bị huỷ.</p>
+      <p class="combat-exit-confirm__text">{{ t('combat.overlay.exitConfirm.message') }}</p>
 
       <div class="combat-exit-confirm__actions">
-        <GameButton variant="secondary" size="sm" @click="visible = false">Ở Lại</GameButton>
-        <GameButton variant="danger" size="sm" @click="confirmExit">Thoát Trận</GameButton>
+        <GameButton variant="secondary" size="sm" @click="visible = false">{{ t('combat.overlay.exitConfirm.stay') }}</GameButton>
+        <GameButton variant="danger" size="sm" @click="confirmExit">{{ t('combat.overlay.exitConfirm.exit') }}</GameButton>
       </div>
     </div>
   </div>

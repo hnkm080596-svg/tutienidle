@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
@@ -13,15 +14,9 @@ import { PROFESSION_GRADE_NAMES, getProfessionGradeForRealm } from '@/core/profe
 // thay RecipeCraftingView: mỗi đan phương nhận ĐÚNG MỘT Linh Thảo
 // riêng; chọn biến thể niên đại đang có trong Túi; preview "Chắc chắn
 // N viên, X% thêm 1 viên" (không dùng cụm ">100%").
-const REASON_LABELS: Record<string, string> = {
-  not_found: 'Không tìm thấy đan phương',
-  room_not_built: 'Cần xây Đan Phòng trước',
-  job_slots_full: 'Lò đang bận',
-  wrong_herb: 'Sai Linh Thảo — đan phương chỉ nhận đúng một loại thảo',
-  missing_herb: 'Không đủ Linh Thảo',
-  missing_fuel_wood: 'Không đủ Gỗ nhiên liệu đạt cảnh giới yêu cầu',
-  missing_spirit_stone: 'Không đủ Linh Thạch',
-}
+// i18n (task 2.2 lô 1) — chuỗi UI qua t(); REASON_LABELS cũ (dead const,
+// zero consumers) trích thành alchemy.reason.* trong locales.
+const { t } = useI18n({ useScope: 'local' })
 
 const player = usePlayerStore()
 
@@ -284,13 +279,13 @@ function cancelJob(jobId: string) {
             {{ fuelWoodRow.owned }}/{{ fuelWoodRow.amount }}
           </StatRow>
 
-          <StatRow label="Linh Thạch" :tone="spiritStoneRow.owned < spiritStoneRow.amount ? 'negative' : 'default'">
+          <StatRow :label="t('alchemy.spiritStones')" :tone="spiritStoneRow.owned < spiritStoneRow.amount ? 'negative' : 'default'">
             {{ spiritStoneRow.owned }}/{{ spiritStoneRow.amount }}
           </StatRow>
         </ul>
 
         <GameButton class="alchemy-detail__action" size="sm" accent-var="--scene-fire-text" @click="startJob">
-          Bắt đầu luyện
+          {{ t('alchemy.startBrewing') }}
         </GameButton>
       </section>
 

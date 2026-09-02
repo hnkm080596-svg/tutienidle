@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { computed, ref } from 'vue'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
+import { useDialogFocus } from '@/composables/useDialogFocus'
 import InkNineSlice from './primitives/InkNineSlice.vue'
 
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
   open: boolean
   title: string
   width?: string
@@ -15,12 +17,15 @@ withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{ close: [] }>()
+
+const cardRef = ref<HTMLElement | null>(null)
+useDialogFocus(cardRef, computed(() => props.open), { onEscape: () => emit('close') })
 </script>
 
 <template>
   <Transition name="overlay-fade">
     <div v-if="open" class="overlay-panel" :style="{ zIndex: layer }" @click.self="emit('close')">
-      <section class="overlay-panel__card" :style="{ width, height }" role="dialog" aria-modal="true" :aria-label="title">
+      <section ref="cardRef" class="overlay-panel__card" :style="{ width, height }" role="dialog" aria-modal="true" :aria-label="title">
         <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
         <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
         <header class="overlay-panel__header">

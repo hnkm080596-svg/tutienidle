@@ -7,6 +7,7 @@
 // RIÊNG, chỉ nó nhận pointer events, không chặn battlefield và không
 // làm đổi combat insets (plan §11.2).
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
 import {
@@ -14,24 +15,17 @@ import {
   type CombatAiStrategy,
 } from '@/core/battle/CombatAiStrategy'
 
+const { t } = useI18n()
 const gameManager = useGameManager()
 const player = usePlayerStore()
 const { stateVersion, bumpState } = useStateVersion()
 
-const LABELS: Record<CombatAiStrategy, string> = {
-  nearest: 'Gần nhất',
-  boss_first: 'Ưu tiên Boss',
-  elite_first: 'Ưu tiên Elite',
-  lowest_hp: 'HP thấp nhất',
-  highest_hp: 'HP cao nhất',
+function strategyLabel(strategy: CombatAiStrategy): string {
+  return t(`combat.overlay.aiPanel.strategies.${strategy}`)
 }
 
-const HINTS: Record<CombatAiStrategy, string> = {
-  nearest: 'Chọn mục tiêu có khoảng cách Chebyshev nhỏ nhất.',
-  boss_first: 'Boss trước, sau đó xếp theo khoảng cách.',
-  elite_first: 'Boss → Elite → thường, sau đó xếp theo khoảng cách.',
-  lowest_hp: 'Chọn mục tiêu đang còn máu thấp nhất.',
-  highest_hp: 'Chọn mục tiêu đang còn máu cao nhất.',
+function strategyHint(strategy: CombatAiStrategy): string {
+  return t(`combat.overlay.aiPanel.hints.${strategy}`)
 }
 
 const current = computed<CombatAiStrategy>(() => {
@@ -50,14 +44,14 @@ function select(strategy: CombatAiStrategy) {
 </script>
 
 <template>
-  <div class="combat-ai-panel" role="radiogroup" aria-label="Chiến lược AI chọn mục tiêu">
-    <span class="combat-ai-panel__title">AI Mục Tiêu</span>
+  <div class="combat-ai-panel" role="radiogroup" :aria-label="t('combat.overlay.aiPanel.ariaGroup')">
+    <span class="combat-ai-panel__title">{{ t('combat.overlay.aiPanel.title') }}</span>
 
     <label
       v-for="strategy in COMBAT_AI_STRATEGIES"
       :key="strategy"
       class="combat-ai-panel__option"
-      :title="HINTS[strategy]"
+      :title="strategyHint(strategy)"
     >
       <input
         type="radio"
@@ -67,7 +61,7 @@ function select(strategy: CombatAiStrategy) {
         @change="select(strategy)"
       />
 
-      <span>{{ LABELS[strategy] }}</span>
+      <span>{{ strategyLabel(strategy) }}</span>
     </label>
   </div>
 </template>

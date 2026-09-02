@@ -107,6 +107,46 @@
       "subtitle": "Library by Realm · Five Element Path",
       "colTitles": {
         "loadoutActive": "Active Spell Arts"
+      },
+      "nodeInspector": {
+        "empty": "Select a node in the Spirit Vein to view details.",
+        "status": {
+          "maxed": "Maxed",
+          "purchased": "Enlightened",
+          "purchasable": "Can Enlighten",
+          "locked": "Requirements Not Met"
+        },
+        "cost": {
+          "initial": "Cost: {cost} Insight",
+          "maxed": "Max level reached.",
+          "upgrade": "Upgrade: {cost} Insight"
+        },
+        "actions": {
+          "unlock": "Enlighten",
+          "upgrade": "Upgrade"
+        },
+        "lockedReasons": {
+          "cost": "Requires {cost} Insight (currently have {current} Insight)",
+          "prerequisiteNode": "Enlighten first: {name}",
+          "realm": "Reach the required realm",
+          "element": "Unlock the related Element",
+          "excludesNode": "Conflicts with: {name}",
+          "nodeCount": "Enlighten {required}/{total} related nodes",
+          "skillLevel": "level {level}",
+          "skillCastCount": "{count} casts",
+          "skillJoin": "and",
+          "skill": "Requires {skill} at {requirement}",
+          "skillUpgrade": "Upgrade the related skill"
+        }
+      },
+      "detail": {
+        "empty": "Select a skill to view details.",
+        "upgrade": "Upgrade ({cost} Insight)",
+        "maxed": "Max",
+        "cooldown": "Cooldown",
+        "cost": "Cost",
+        "type": "Type",
+        "attackSpeed": "Scales with Attack Speed"
       }
     },
     "character": {
@@ -489,6 +529,37 @@
       "skillInsight": "Skill Insight",
       "artifactInsight": "Artifact EXP",
       "spiritStone": "Spirit Stones"
+    },
+    "overlay": {
+      "aiPanel": {
+        "title": "Target AI",
+        "ariaGroup": "AI target selection strategy",
+        "strategies": {
+          "nearest": "Nearest",
+          "boss_first": "Boss First",
+          "elite_first": "Elite First",
+          "lowest_hp": "Lowest HP",
+          "highest_hp": "Highest HP"
+        },
+        "hints": {
+          "nearest": "Targets the enemy with the smallest Chebyshev distance.",
+          "boss_first": "Boss first, then sorted by distance.",
+          "elite_first": "Boss → Elite → normal, then sorted by distance.",
+          "lowest_hp": "Targets the enemy with the lowest remaining HP.",
+          "highest_hp": "Targets the enemy with the highest remaining HP."
+        }
+      },
+      "countdown": {
+        "go": "To Battle!"
+      },
+      "exitConfirm": {
+        "message": "Leave the battle and return to the Cave? The current battle will be abandoned.",
+        "stay": "Stay",
+        "exit": "Leave Battle"
+      },
+      "topBar": {
+        "enemiesSuffix": "enemies"
+      }
     }
   },
   "menu": {
@@ -595,6 +666,84 @@
       }
     }
   },
+  "skillResource": {
+    "hoaTheGainPerCast": {
+      "label": "Ember Body Stacks/Cast",
+      "description": "Ember Body gained each time this skill is cast."
+    },
+    "hoaTheDecayReductionPercent": {
+      "label": "Ember Body Decay Reduction",
+      "description": "Reduces the % rate at which Ember Body decays over time."
+    },
+    "thuyThePercent": {
+      "label": "Water Form",
+      "description": "Directly reduces a % of final damage taken."
+    },
+    "waterReactionExtensionSeconds": {
+      "label": "Water Sustain",
+      "description": "When Water triggers a Reaction, extend its duration by this many seconds instead of consuming Water on the target."
+    },
+    "poisonRootPercentPerStack": {
+      "label": "Wood Form/Stack",
+      "description": "Each Wood Form stack adds % Poison damage to that exact target."
+    },
+    "poisonRootMaxStacks": {
+      "label": "Wood Form Cap",
+      "description": "Maximum number of Wood Form stacks a single target can accumulate."
+    },
+    "poisonRootThresholdBonusPercent": {
+      "label": "Poison Meridian",
+      "description": "When the target has 3 or more Wood Form stacks, adds % Poison damage."
+    },
+    "earthAoeRadius": {
+      "label": "Quake Radius",
+      "description": "Number of cells it spreads per direction around the target cell."
+    },
+    "earthAoeSecondaryDamagePercent": {
+      "label": "Secondary Target DMG",
+      "description": "Damage dealt to secondary targets (via Quake Radius) relative to the primary target."
+    },
+    "earthKnockbackDistance": {
+      "label": "Knockback Force",
+      "description": "Pushes the target away from the source on each hit."
+    },
+    "thoTheGainPerCast": {
+      "label": "Mountain Body Stacks/Cast",
+      "description": "Mountain Body gained each time this skill is cast."
+    },
+    "skillImpactPercent": {
+      "label": "Skill Impact",
+      "description": "Placeholder base stat reserved for future Body Cultivation mechanics."
+    },
+    "kimTheGainPerProc": {
+      "label": "Metal Form Stacks/Proc",
+      "description": "Metal Form gained each time Bleed is successfully applied."
+    },
+    "kimTheDotDamagePercentPerStack": {
+      "label": "Metal Form/Stack",
+      "description": "Each Metal Form stack adds % Metal DoT damage."
+    },
+    "kimTheDotResistancePenetrationPercentPerStack": {
+      "label": "DoT Resist Pen/Stack",
+      "description": "Placeholder base stat reserved for the future DoT resistance penetration mechanic."
+    },
+    "kimTheMaxStacksBonus": {
+      "label": "Metal Form Cap",
+      "description": "Adds to the maximum number of Metal Form stacks."
+    },
+    "metalAilmentPotencyPercent": {
+      "label": "Bleed Damage",
+      "description": "Increases the % damage/second of the Metal DoT (Bleed)."
+    },
+    "huyetPhaGainPerProc": {
+      "label": "Blood Shatter Stacks/Proc",
+      "description": "Blood Shatter charges gained each time Bleed is successfully applied."
+    },
+    "huyetPhaBurstDamage": {
+      "label": "Blood Shatter Burst",
+      "description": "One-time explosive damage when Blood Shatter reaches 5 stacks."
+    }
+  },
   "tribulation": {
     "stillEquipped": {
       "title": "Tribulation is also a trial of the self — nothing can aid you",
@@ -602,5 +751,61 @@
       "confirm": "I understand",
       "cancel": "Wait"
     }
+  },
+  "actionFailure": {
+    "not_found": "Selected equipment not found.",
+    "missing_refinement_points": "Not enough Refinement Points on this item.",
+    "no_forge_uses": "This item has no Forge uses left.",
+    "missing_tinh_hoa": "Not enough Qi Refining Essence.",
+    "missing_spirit_stone": "Not enough Spirit Stones.",
+    "missing_material": "Not enough materials.",
+    "template_not_found": "Equipment data is invalid.",
+    "no_eligible_affix": "This item has no eligible affix line for this operation.",
+    "no_affixes": "This item has no affix lines yet.",
+    "invalid_lock": "Invalid affix lock selection.",
+    "too_many_locks": "Too many lines locked — leave at least one line unlocked.",
+    "cannot_lock_all": "Cannot lock every affix line.",
+    "missing_essence": "Not enough Essence for this operation.",
+    "empty_selection": "No item selected.",
+    "equipped": "Cannot operate on equipped gear.",
+    "locked": "The equipment is locked.",
+    "favorite": "The equipment is marked as favorite.",
+    "no_conversion_rule": "No conversion rule for this item.",
+    "invalid_refine_preview": "The Refine preview is stale or invalid — preview again.",
+    "invalid_affix_value": "Invalid affix value — cannot Refine.",
+    "invalid_random_roll": "Invalid random roll — Refine consumed no resources.",
+    "max_level": "Maximum level reached.",
+    "grade_mismatch": "Grade does not match the realm.",
+    "fallback": "The action failed.",
+    "unknown": "The action failed because its conditions are not met."
+  },
+  "actionFeedback": {
+    "ops": {
+      "equip": { "label": "Equip" },
+      "enhance": { "label": "Enhance" },
+      "wash": { "label": "Wash" },
+      "refine": { "label": "Refine" },
+      "dissolve": { "label": "Dissolve" }
+    },
+    "success": "{label} succeeded",
+    "failed": "Cannot {label}: {reason}"
+  },
+  "alchemy": {
+    "spiritStones": "Spirit Stones",
+    "startBrewing": "Start brewing",
+    "reason": {
+      "not_found": "Recipe not found",
+      "room_not_built": "Build the Pill Room first",
+      "job_slots_full": "The furnace is busy",
+      "wrong_herb": "Wrong Spirit Herb — a recipe accepts exactly one herb type",
+      "missing_herb": "Not enough Spirit Herb",
+      "missing_fuel_wood": "Not enough fuel wood of the required realm",
+      "missing_spirit_stone": "Not enough Spirit Stones"
+    }
+  },
+  "resourceStrip": {
+    "show": "Show resources",
+    "hide": "Hide resource strip",
+    "spiritStones": "Spirit Stones"
   }
 }

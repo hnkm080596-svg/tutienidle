@@ -12,6 +12,12 @@ export interface ActionFeedbackEntry {
 
   message: string
 
+  /** Key-form entry (i18n): hiển thị qua t(messageKey, params) — message rỗng. */
+  messageKey?: string
+
+  /** Giá trị param là locale key, được t() tại điểm render (ActionFeedbackLog). */
+  messageParams?: Record<string, string>
+
   count: number
 
   updatedAt: number
@@ -23,6 +29,16 @@ const MAX_VISIBLE_ENTRIES = 5
 // khi người chơi click nhanh lặp lại một action đang thất bại.
 const MERGE_WINDOW_MS = 4000
 
+type KeyPayload = { messageKey: string; messageParams?: Record<string, string> }
+
+/** Bản sắc định danh để gộp entry: entry key-form so sánh key + params
+ *  (locale-independent), entry thường so sánh chuỗi message như cũ. */
+function entryIdentity(entry: Pick<ActionFeedbackEntry, 'message' | 'messageKey' | 'messageParams'>): string {
+  return entry.messageKey
+    ? entry.messageKey + JSON.stringify(entry.messageParams ?? {})
+    : entry.message
+}
+
 export const useActionFeedbackStore = defineStore('actionFeedback', {
   state: () => ({
     entries: [] as ActionFeedbackEntry[],
@@ -30,12 +46,16 @@ export const useActionFeedbackStore = defineStore('actionFeedback', {
   }),
 
   actions: {
-    push(tone: ActionFeedbackTone, message: string) {
+    push(tone: ActionFeedbackTone, message: string, keyPayload?: KeyPayload) {
       const now = Date.now()
 
       const last = this.entries[this.entries.length - 1]
 
-      if (last && last.message === message && last.tone === tone && now - last.updatedAt <= MERGE_WINDOW_MS) {
+      const identity = keyPayload
+        ? entryIdentity({ message: '', ...keyPayload })
+        : message
+
+      if (last && entryIdentity(last) === identity && last.tone === tone && now - last.updatedAt <= MERGE_WINDOW_MS) {
         last.count += 1
         last.updatedAt = now
         return
@@ -45,6 +65,8 @@ export const useActionFeedbackStore = defineStore('actionFeedback', {
         id: crypto.randomUUID(),
         tone,
         message,
+        messageKey: keyPayload?.messageKey,
+        messageParams: keyPayload?.messageParams,
         count: 1,
         updatedAt: now,
       })
@@ -64,6 +86,14 @@ export const useActionFeedbackStore = defineStore('actionFeedback', {
 
     error(message: string) {
       this.push('error', message)
+    },
+
+    successKey(messageKey: string, messageParams?: Record<string, string>) {
+      this.push('success', '', { messageKey, messageParams })
+    },
+
+    errorKey(messageKey: string, messageParams?: Record<string, string>) {
+      this.push('error', '', { messageKey, messageParams })
     },
 
     toggleCollapsed() {

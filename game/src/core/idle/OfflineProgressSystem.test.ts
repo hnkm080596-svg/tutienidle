@@ -44,4 +44,15 @@ describe('calculateOfflineProgress', () => {
     expect(result.elapsedSeconds).toBe(0)
     expect(result.cultivation).toBe(0)
   })
+
+  it('NaN cultivationPerSecond → cultivation 0, không poison kết quả', () => {
+    const result = calculateOfflineProgress(3600, Number.NaN)
+
+    expect(result.cultivation).toBe(0)
+  })
+
+  it('+Infinity / -Infinity cultivationPerSecond → cultivation 0', () => {
+    expect(calculateOfflineProgress(3600, Number.POSITIVE_INFINITY).cultivation).toBe(0)
+    expect(calculateOfflineProgress(3600, Number.NEGATIVE_INFINITY).cultivation).toBe(0)
+  })
 })

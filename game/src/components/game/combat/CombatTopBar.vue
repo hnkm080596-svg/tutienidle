@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useUiStore } from '@/stores/ui'
 
@@ -8,6 +9,7 @@ import { useUiStore } from '@/stores/ui'
 // state nào khác ngoài Play/Pause) hay Settings (chưa có chỗ mở
 // SettingsPanel hợp lý trong lúc Combat Scene chiếm toàn màn hình,
 // tránh dựng nửa vời — xem CLAUDE.md "không tạo tính năng nửa vời").
+const { t } = useI18n()
 const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
 const ui = useUiStore()
@@ -33,7 +35,7 @@ const progress = computed(() => {
   <div class="combat-top-bar">
     <span class="combat-top-bar__title">{{ zoneName }}<template v-if="stage"> • {{ stage.name }}</template></span>
 
-    <span v-if="progress" class="combat-top-bar__progress">{{ progress.spawned }} / {{ progress.total }} quái</span>
+    <span v-if="progress" class="combat-top-bar__progress">{{ progress.spawned }} / {{ progress.total }} {{ t('combat.overlay.topBar.enemiesSuffix') }}</span>
   </div>
 </template>
 

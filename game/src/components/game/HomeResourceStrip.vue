@@ -5,10 +5,13 @@
 // khi mở panel — bây giờ luôn hiển thị; click mở panel Túi tương ứng
 // (ui.toggleLeft('inventory') → RightPanel mở tab material).
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useGameManager } from '@/composables/useGameState'
 import { useStateVersion } from '@/composables/useGameState'
 import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 import { useUiStore } from '@/stores/ui'
+
+const { t } = useI18n({ useScope: 'local' })
 
 const gameManager = useGameManager()
 const ui = useUiStore()
@@ -70,7 +73,7 @@ function openBag() {
       v-if="!expanded"
       class="home-resource-strip__toggle"
       type="button"
-      aria-label="Hiện tài nguyên"
+      :aria-label="t('resourceStrip.show')"
       @click="expanded = true"
     >
       <span class="home-resource-strip__amount">{{ spiritStones }}</span>
@@ -78,7 +81,7 @@ function openBag() {
 
     <template v-else>
       <button class="home-resource-strip__item" type="button" @click="openBag">
-        <span class="home-resource-strip__name">Linh Thạch</span>
+        <span class="home-resource-strip__name">{{ t('resourceStrip.spiritStones') }}</span>
         <span class="home-resource-strip__amount">{{ spiritStones }}</span>
       </button>
 
@@ -93,7 +96,7 @@ function openBag() {
         <span class="home-resource-strip__amount">{{ material.amount }}</span>
       </button>
 
-      <button class="home-resource-strip__collapse" type="button" aria-label="Ẩn dải tài nguyên" @click="expanded = false">✕</button>
+      <button class="home-resource-strip__collapse" type="button" :aria-label="t('resourceStrip.hide')" @click="expanded = false">✕</button>
     </template>
   </div>
 </template>
