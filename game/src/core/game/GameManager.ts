@@ -2388,6 +2388,29 @@ export class GameManager {
     return assignments
   }
 
+  /**
+   * Chi-hien-quan (2026-09-02) — UI phân bổ: gán/xóa số slot manual của
+   * 1 site. `count === undefined` = về AUTO (xóa assignedWorkers).
+   * Clamp [0, capacity] phòng UI gửi sai; không đổi nếu site không tồn tại.
+   */
+  assignWorkers(siteId: string, count: number | undefined): void {
+    const state = this.productionSystem.getState(siteId)
+
+    if (!state) {
+      return
+    }
+
+    if (count === undefined) {
+      delete state.assignedWorkers
+
+      return
+    }
+
+    const capacity = this.activePlayer?.autoWorkerCapacity ?? 0
+
+    state.assignedWorkers = Math.max(0, Math.min(Math.floor(count), capacity))
+  }
+
   upgradeBuilding(instanceId: string): boolean {
     const upgraded = this.buildingSystem.upgrade(
       instanceId,

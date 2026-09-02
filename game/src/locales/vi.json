@@ -327,11 +327,6 @@
         "empty": "Không có nguyên liệu nào bán được lúc này."
       }
     },
-    "spiritSpring": {
-      "storedTitle": "{name} tích luỹ",
-      "rateSuffix": "thạch/phút",
-      "collect": "Thu hoạch"
-    },
     "production": {
       "summary": "Địa Giới Thanh Vân — chọn nguồn, bắt đầu cycle, nhận thẳng nguyên liệu vào Túi.",
       "kinds": {
@@ -348,6 +343,16 @@
       "speedSuffix": "tốc độ",
       "nextSpeedPrefix": "kế tiếp ×",
       "workers": "Nhân công: {count}",
+      "workersHeader": "Nhân công: {used}/{total}",
+      "workerModeAuto": "Tự động",
+      "workerModeManual": "Phân thủ công",
+      "workerAutoHint": "Nhân công tự chia đều các nguồn đang bật lặp lại.",
+      "workerAssignAria": "Phân bổ nhân công cho {name}",
+      "linMach": {
+        "title": "Linh Mạch",
+        "rateSuffix": "/phút",
+        "collect": "Thu hoạch"
+      },
       "remaining": "{time}",
       "statusProducing": "Đang sản xuất — còn {time}",
       "done": "Hoàn tất…",

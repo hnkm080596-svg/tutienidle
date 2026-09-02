@@ -327,11 +327,6 @@
         "empty": "Nothing can be sold right now."
       }
     },
-    "spiritSpring": {
-      "storedTitle": "{name} accumulated",
-      "rateSuffix": "stones/minute",
-      "collect": "Harvest"
-    },
     "production": {
       "summary": "Thanh Van Zone — pick a source, start a cycle, receive materials straight into the Bag.",
       "kinds": {
@@ -348,6 +343,16 @@
       "speedSuffix": "speed",
       "nextSpeedPrefix": "next ×",
       "workers": "Workers: {count}",
+      "workersHeader": "Workers: {used}/{total}",
+      "workerModeAuto": "Auto",
+      "workerModeManual": "Manual",
+      "workerAutoHint": "Workers are evenly split across sites with auto-repeat enabled.",
+      "workerAssignAria": "Assign workers to {name}",
+      "linMach": {
+        "title": "Spirit Vein",
+        "rateSuffix": "/min",
+        "collect": "Collect"
+      },
       "remaining": "{time}",
       "statusProducing": "Producing — {time} left",
       "done": "Done…",

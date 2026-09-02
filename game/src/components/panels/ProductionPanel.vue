@@ -81,6 +81,8 @@ interface SiteRow {
 
   activeWorkerSlots: number
 
+  assignedWorkers?: number
+
   isProducing: boolean
 
   progress: number
@@ -134,6 +136,8 @@ const rows = computed<SiteRow[]>(() => {
       autoRestart: view.state.autoRestart,
 
       activeWorkerSlots: view.state.activeWorkerSlots,
+
+      assignedWorkers: view.state.assignedWorkers,
 
       isProducing: view.state.activeCycle !== undefined,
 
@@ -204,6 +208,81 @@ function upgrade(siteId: string) {
   }
 }
 
+// ================= Chiêu Hiền Quán — phân bổ nhân công (2026-09-02) =================
+
+const workerMode = ref<'auto' | 'manual'>('auto')
+
+const workerCapacity = computed(() => player.autoWorkerCapacity ?? 0)
+
+const assignedTotal = computed(() =>
+  rows.value.reduce((sum, row) => sum + (row.assignedWorkers ?? 0), 0),
+)
+
+function setWorkerMode(mode: 'auto' | 'manual') {
+  workerMode.value = mode
+
+  if (mode === 'auto') {
+    // Về auto: xóa mọi assignment manual.
+    for (const row of rows.value) {
+      gameManager.assignWorkers(row.siteId, undefined)
+    }
+
+    bumpState()
+  }
+}
+
+function assign(row: SiteRow, count: number) {
+  gameManager.assignWorkers(row.siteId, count)
+
+  bumpState()
+}
+
+// ================= Linh mạch Khai Vật Đường (thế Linh Tuyền, 2026-09-02) =================
+
+const OUTPOST_ID = 'gathering_outpost'
+
+const outpostInstance = computed(() => {
+  stateVersion.value
+
+  return gameManager.buildingManager.getByBuildingId(OUTPOST_ID)
+})
+
+const linMachStored = computed(() => {
+  if (!outpostInstance.value) {
+    return 0
+  }
+
+  return Math.floor(
+    gameManager.getBuildingStoredAmount(outpostInstance.value.instanceId, nowMs.value / 1000),
+  )
+})
+
+const linMachCapacity = computed(() =>
+  outpostInstance.value ? gameManager.getBuildingCapacity(outpostInstance.value.instanceId) : 0,
+)
+
+const linMachRatePerMinute = computed(() =>
+  outpostInstance.value ? gameManager.getBuildingRatePerMinute(outpostInstance.value.instanceId) : 0,
+)
+
+const linMachOutputName = computed(() => {
+  const id = getSpiritStoneMaterialIdForRealmTier(getRealmTier(player.realmId))
+
+  return gameManager.materialRegistry.has(id)
+    ? gameManager.materialRegistry.get(id).name
+    : SPIRIT_STONE_LABEL
+})
+
+function collectLinMach() {
+  if (!outpostInstance.value || linMachStored.value <= 0) {
+    return
+  }
+
+  gameManager.collectBuilding(outpostInstance.value.instanceId, player.$state, nowMs.value / 1000)
+
+  bumpState()
+}
+
 </script>
 
 <template>
@@ -212,6 +291,86 @@ function upgrade(siteId: string) {
       <p class="production-panel__summary">
         {{ t('panels.production.summary') }}
       </p>
+
+      <!-- Chiêu Hiền Quán — phân bổ nhân công (2026-09-02) -->
+      <div class="worker-allocation">
+        <header class="worker-allocation__header">
+          <strong>{{ t('panels.production.workersHeader', { used: workerMode === 'manual' ? assignedTotal : workerCapacity, total: workerCapacity }) }}</strong>
+
+          <div class="worker-allocation__mode">
+            <label>
+              <input
+                type="radio"
+                name="worker-mode"
+                :checked="workerMode === 'auto'"
+                @change="setWorkerMode('auto')"
+              />
+              {{ t('panels.production.workerModeAuto') }}
+            </label>
+
+            <label>
+              <input
+                type="radio"
+                name="worker-mode"
+                :checked="workerMode === 'manual'"
+                @change="setWorkerMode('manual')"
+              />
+              {{ t('panels.production.workerModeManual') }}
+            </label>
+          </div>
+        </header>
+
+        <div v-if="workerMode === 'manual'" class="worker-allocation__sliders">
+          <label v-for="row in rows" :key="row.siteId" class="worker-allocation__slider">
+            <span>{{ row.name }}</span>
+
+            <input
+              type="range"
+              min="0"
+              :max="workerCapacity"
+              :value="row.assignedWorkers ?? 0"
+              :aria-label="t('panels.production.workerAssignAria', { name: row.name })"
+              @input="assign(row, Number(($event.target as HTMLInputElement).value))"
+            />
+
+            <span class="worker-allocation__count">
+              {{ row.assignedWorkers ?? 0 }}
+            </span>
+          </label>
+        </div>
+
+        <p v-else class="worker-allocation__auto-hint">
+          {{ t('panels.production.workerAutoHint') }}
+        </p>
+      </div>
+
+      <!-- Linh mạch Khai Vật Đường — claim Linh Thạch (thế Linh Tuyền) -->
+      <div v-if="outpostInstance" class="lin-mach">
+        <h3 class="lin-mach__title">{{ t('panels.production.linMach.title') }}</h3>
+
+        <div class="lin-mach__card">
+          <Bar
+            class="lin-mach__progress"
+            :value="linMachStored"
+            :max="linMachCapacity"
+            :height="8"
+            pill
+          />
+
+          <strong>{{ linMachStored }} / {{ linMachCapacity }} {{ linMachOutputName }}</strong>
+
+          <small class="lin-mach__rate">+{{ linMachRatePerMinute.toLocaleString('vi-VN', { maximumFractionDigits: 1 }) }} {{ t('panels.production.linMach.rateSuffix') }}</small>
+
+          <GameButton
+            class="lin-mach__collect"
+            size="sm"
+            :disabled="linMachStored <= 0"
+            @click="collectLinMach"
+          >
+            {{ t('panels.production.linMach.collect') }}
+          </GameButton>
+        </div>
+      </div>
 
       <div class="production-panel__grid">
         <article v-for="row in rows" :key="row.siteId" class="site-card">
@@ -317,6 +476,101 @@ function upgrade(siteId: string) {
   margin: 0;
   color: var(--paper-eyebrow);
   font-size: var(--text-sm);
+}
+
+/* Chiêu Hiền Quán — phân bổ nhân công */
+.worker-allocation {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--jade) 35%, var(--paper-line));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--jade) 6%, var(--paper-50));
+}
+
+.worker-allocation__header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.worker-allocation__mode {
+  display: flex;
+  gap: 12px;
+  font-size: var(--text-xs);
+}
+
+.worker-allocation__mode label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.worker-allocation__sliders {
+  display: grid;
+  gap: 6px;
+}
+
+.worker-allocation__slider {
+  display: grid;
+  grid-template-columns: minmax(80px, auto) 1fr auto;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--text-xs);
+}
+
+.worker-allocation__count {
+  min-width: 2ch;
+  text-align: right;
+  color: var(--jade);
+}
+
+.worker-allocation__auto-hint {
+  margin: 0;
+  color: var(--paper-text-soft);
+  font-size: var(--text-xs);
+}
+
+/* Linh mạch Khai Vật Đường */
+.lin-mach__title {
+  margin: 0;
+  color: var(--paper-text-soft);
+  font: 700 var(--text-sm) var(--font-display);
+}
+
+.lin-mach__card {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--scene-water-accent) 40%, var(--paper-line));
+  border-radius: var(--radius-md);
+  background: linear-gradient(110deg, color-mix(in srgb, var(--scene-water-accent) 12%, var(--paper-50)), color-mix(in srgb, var(--scene-water-accent) 5%, var(--paper-100)));
+}
+
+.lin-mach__rate {
+  color: var(--paper-text-soft);
+  font-size: var(--text-xs);
+}
+
+.lin-mach__collect {
+  justify-self: start;
+  padding: 6px 12px;
+  background: var(--scene-water-accent);
+  border: 0;
+  color: var(--ink-950);
+}
+
+.lin-mach__collect:disabled {
+  background: var(--paper-200);
+  color: var(--paper-text-muted);
+}
+
+.lin-mach__progress {
+  --bar-from: var(--scene-water-accent);
+  --bar-to: var(--jade);
 }
 
 .production-panel__grid {
