@@ -115,12 +115,9 @@ import {
 import type { ProductionSiteState } from '../production/ProductionTypes'
 import {
   AlchemySystem,
-  alchemySecondsFor,
-  alchemyRoomSuccessBonus,
   type ActiveAlchemyJob,
   type AlchemyRecipe,
 } from '../alchemy/AlchemySystem'
-import { HERB_AGE_BASE_SUCCESS_PERCENT } from '../production/ProductionBalance'
 
 import { BuildingRegistry } from '../building/BuildingRegistry'
 import { BuildingManager } from '../building/BuildingManager'
@@ -146,6 +143,7 @@ import { BattleLootSystem } from './BattleLootSystem'
 import { StageWaveSystem } from './StageWaveSystem'
 import { EquipmentOpsSystem } from './EquipmentOpsSystem'
 import { GameManagerBuildingOps } from './GameManagerBuildingOps'
+import { GameManagerAlchemyOps } from './GameManagerAlchemyOps'
 import { HiddenBeastSystem } from './HiddenBeastSystem'
 import { TribulationDirector, type ActiveTribulationState } from '../tribulation/TribulationDirector'
 
@@ -425,6 +423,7 @@ export class GameManager {
   private readonly tribulationDirector: TribulationDirector
   private readonly equipmentOps: EquipmentOpsSystem
   private readonly buildingOps: GameManagerBuildingOps
+  private readonly alchemyOps: GameManagerAlchemyOps
 
   // Quái ẩn (spec dot-pha-loi-kiep §4.1c) — cửa sổ 1000 kill Luyện Khí.
   readonly hiddenBeastSystem: HiddenBeastSystem
@@ -523,6 +522,16 @@ export class GameManager {
       getActivePlayer: () => this.activePlayer,
       notifyQuestMaterialGained: (materialId, amount) =>
         this.notifyQuestMaterialGained(materialId, amount),
+    })
+
+    this.alchemyOps = new GameManagerAlchemyOps({
+      alchemySystem: this.alchemySystem,
+      alchemyRecipesById: this.alchemyRecipesById,
+      buildingManager: this.buildingManager,
+      buildingRegistry: this.buildingRegistry,
+      buildingSystem: this.buildingSystem,
+      materialBag: this.materialBag,
+      materialRegistry: this.materialRegistry,
     })
   }
 
@@ -2071,86 +2080,39 @@ export class GameManager {
   }
 
   // =========================
-  // ALCHEMY (Äan PhÃ²ng â€” plan Â§8)
+  // ALCHEMY — toàn bộ logic đã chuyển sang GameManagerAlchemyOps (xem
+  // GameManagerAlchemyOps.ts, task 3 — GameManager split). Các method
+  // dưới đây là thin delegate GIỮ public API cho UI/composables/tests.
   // =========================
 
   getAlchemyRecipes(): AlchemyRecipe[] {
-    return Array.from(this.alchemyRecipesById.values())
+    return this.alchemyOps.getAlchemyRecipes()
   }
 
   getAlchemyRecipe(recipeId: string): AlchemyRecipe | undefined {
-    return this.alchemyRecipesById.get(recipeId)
+    return this.alchemyOps.getAlchemyRecipe(recipeId)
   }
 
-  /** Level Äan PhÃ²ng (pill_room) hiá»‡n hÃ nh â€” chÆ°a xÃ¢y = 0. */
   getAlchemyRoomLevel(): number {
-    return this.buildingManager.getByBuildingId('pill_room')?.level ?? 0
+    return this.alchemyOps.getAlchemyRoomLevel()
   }
 
   getAlchemyJobs(): ActiveAlchemyJob[] {
-    return this.alchemySystem.getJobs()
+    return this.alchemyOps.getAlchemyJobs()
   }
 
-  /**
-   * Báº¯t Ä‘áº§u luyá»‡n Ä‘an â€” reserve nguyÃªn liá»‡u ATOMIC (Â§8.2); slot job theo
-   * concurrent_job_slots effect cá»§a pill_room (máº·c Ä‘á»‹nh 1).
-   */
   startAlchemyJob(
     recipeId: string,
     herbMaterialId: string,
-    _player: PlayerData,
+    player: PlayerData,
   ): { ok: boolean; reason?: string } {
-    const recipe = this.alchemyRecipesById.get(recipeId)
-
-    if (!recipe) {
-      return { ok: false, reason: 'not_found' }
-    }
-
-    const instance = this.buildingManager.getByBuildingId('pill_room')
-
-    if (!instance) {
-      return { ok: false, reason: 'room_not_built' }
-    }
-
-    const template = this.buildingRegistry.get('pill_room')
-    const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(recipe.realmId))
-
-    const maxSlots = this.buildingSystem.getCraftModifiers(instance, template).concurrentJobSlots
-
-    const started = this.alchemySystem.startJob(
-      recipe,
-
-      herbMaterialId,
-
-      this.materialBag,
-
-      this.materialRegistry,
-
-      this.materialBag.getAmount(spiritStoneId),
-
-      instance.level,
-
-      Date.now(),
-
-      maxSlots,
-    )
-
-    // Bugfix (review 2026-08-26) â€” Linh Tháº¡ch Ä‘Æ°á»£c CHECK á»Ÿ startJob
-    // nhÆ°ng chÆ°a tá»«ng Ä‘Æ°á»£c TRá»ª: luyá»‡n Ä‘an miá»…n phÃ­. Trá»« sau khi reserve
-    // nguyÃªn liá»‡u thÃ nh cÃ´ng (all-or-nothing nhÆ° má»i sink khÃ¡c).
-    // Plan Workstream F â€” trá»« trÃªn MaterialBag.
-    if (started.ok && recipe.spiritStoneCost > 0) {
-      this.materialBag.remove(spiritStoneId, recipe.spiritStoneCost)
-    }
-
-    return started
+    return this.alchemyOps.startAlchemyJob(recipeId, herbMaterialId, player)
   }
 
   cancelAlchemyJob(jobId: string): boolean {
-    return this.alchemySystem.cancelJob(jobId)
+    return this.alchemyOps.cancelAlchemyJob(jobId)
   }
 
-  /** Preview tá»•ng tá»· lá»‡ thÃ nh + guaranteed + chance viÃªn cá»™ng thÃªm (Â§9.3). */
   previewAlchemyOutcome(
     recipeId: string,
     herbMaterialId: string,
@@ -2164,30 +2126,7 @@ export class GameManager {
 
     durationSeconds: number
   } | null {
-    const recipe = this.alchemyRecipesById.get(recipeId)
-
-    const variant = recipe?.herbVariants.find(
-      (candidate) => candidate.materialId === herbMaterialId,
-    )
-
-    if (!recipe || !variant) {
-      return null
-    }
-
-    const totalPercent = Math.min(
-      (HERB_AGE_BASE_SUCCESS_PERCENT[variant.age] ?? 0) + alchemyRoomSuccessBonus(roomLevel),
-      300,
-    )
-
-    return {
-      totalPercent,
-
-      guaranteedPills: Math.floor(totalPercent / 100),
-
-      extraPillChance: totalPercent % 100,
-
-      durationSeconds: alchemySecondsFor(recipe, roomLevel),
-    }
+    return this.alchemyOps.previewAlchemyOutcome(recipeId, herbMaterialId, roomLevel)
   }
 
   // =========================
