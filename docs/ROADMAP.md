@@ -363,10 +363,10 @@ Việc cần làm:
 - [x] **T2.8-T2.10** Combat Scene UI — merged `71357a1` (6A plan: PlayerHudLayer in-canvas, 3 bar DOM xóa, kill/heal floating text)
   - ⚠️ Kiếm Ý/Thế bar chưa có data event (defer — cần emit từ BattleSystem, ghi trong commit a7bb7a0)
 
-### Giai đoạn 3 — Skill engine — ✅ XONG
+### Giai đoạn 3 — Skill engine — ✅ XONG (2026-09-02)
 - [x] **T3.1** Phase 2A merged `a47d129` (10 actions + 7 triggers; usage guide Task 13 hoàn tất)
-- [x] **T3.2** Floating "hiệu ứng đặc biệt" — kênh có sẵn (action_impact + status_vfx → vfxSpawner); consumer UI pending buff-system merge
-- [ ] **T3.3** ⬜ Merge unified-buff worktree (24 commits sẵn, 6 real conflicts vs master: 5 reaction-tests + App.vue — giải theo hướng giữ realm-scalar balance của master, cập nhật assertions)
+- [x] **T3.2** Floating "hiệu ứng đặc biệt" — kênh có sẵn (action_impact + status_vfx → vfxSpawner); buff-system merge `f63bd06` khép kín chuỗi
+- [x] **T3.3** Merge unified-buff worktree — merged `f63bd06` (7 conflicts + 2 semantic T5.4 fixes: armor realmIndex vào BuffSystem, powerScalingRatio 1.0; re-verified 1993 tests + build + e2e; QA report `game/docs/qa/2026-09-02-unified-buff-quick.md`)
 
 ### Giai đoạn 4 — Sản xuất + kinh tế
 - [ ] **T4.1** ⬜ i18n leftovers (v11 migration chưa — vẫn 9.14.5; extract sót; SkillResourceStatLabels formatStat; CombatStatusBar fallback; locale-coupled tests; parity lint test)
