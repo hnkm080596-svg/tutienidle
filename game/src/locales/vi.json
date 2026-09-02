@@ -595,6 +595,84 @@
       }
     }
   },
+  "skillResource": {
+    "hoaTheGainPerCast": {
+      "label": "Hỏa Thế Tích/Lượt",
+      "description": "Lượng Hỏa Thế nhận mỗi lần thi triển."
+    },
+    "hoaTheDecayReductionPercent": {
+      "label": "Giảm Suy Hỏa Thế",
+      "description": "Giảm % tốc độ Hỏa Thế tự tiêu tán theo thời gian."
+    },
+    "thuyThePercent": {
+      "label": "Thủy Thế",
+      "description": "Giảm thẳng % sát thương cuối cùng phải nhận."
+    },
+    "waterReactionExtensionSeconds": {
+      "label": "Duy Trì Thủy",
+      "description": "Khi Thủy kích hoạt Phản Ứng, gia hạn thêm số giây này thay vì tiêu hao Thủy trên mục tiêu."
+    },
+    "poisonRootPercentPerStack": {
+      "label": "Mộc Thế/Tầng",
+      "description": "Mỗi tầng Mộc Thế cộng thêm % sát thương Độc lên đúng mục tiêu đó."
+    },
+    "poisonRootMaxStacks": {
+      "label": "Trần Mộc Thế",
+      "description": "Số tầng Mộc Thế tối đa 1 mục tiêu có thể tích được."
+    },
+    "poisonRootThresholdBonusPercent": {
+      "label": "Độc Mạch",
+      "description": "Khi mục tiêu có từ 3 tầng Mộc Thế trở lên, cộng thêm % sát thương Độc."
+    },
+    "earthAoeRadius": {
+      "label": "Bán Kính Chấn Địa",
+      "description": "Số ô lan theo mỗi hướng quanh ô mục tiêu."
+    },
+    "earthAoeSecondaryDamagePercent": {
+      "label": "ST Mục Tiêu Phụ",
+      "description": "Sát thương lên mục tiêu phụ (qua Bán Kính Chấn Địa) so với mục tiêu chính."
+    },
+    "earthKnockbackDistance": {
+      "label": "Lực Đẩy Lùi",
+      "description": "Đẩy lùi mục tiêu khỏi nguồn bắn mỗi lần trúng đòn."
+    },
+    "thoTheGainPerCast": {
+      "label": "Thổ Thế Tích/Lượt",
+      "description": "Lượng Thổ Thế nhận mỗi lần thi triển."
+    },
+    "skillImpactPercent": {
+      "label": "Chấn Lực Kỹ Năng",
+      "description": "Stat nền dự phòng cho các cơ chế Thổ Tu tương lai."
+    },
+    "kimTheGainPerProc": {
+      "label": "Kim Thế Tích/Lần",
+      "description": "Lượng Kim Thế nhận mỗi lần áp thành công Xuất Huyết."
+    },
+    "kimTheDotDamagePercentPerStack": {
+      "label": "Kim Thế/Tầng",
+      "description": "Mỗi tầng Kim Thế cộng thêm % sát thương DoT Kim."
+    },
+    "kimTheDotResistancePenetrationPercentPerStack": {
+      "label": "Xuyên Kháng DoT/Tầng",
+      "description": "Stat nền dự phòng cho cơ chế Xuyên Kháng DoT tương lai."
+    },
+    "kimTheMaxStacksBonus": {
+      "label": "Trần Kim Thế",
+      "description": "Cộng thêm số tầng Kim Thế tối đa."
+    },
+    "metalAilmentPotencyPercent": {
+      "label": "Sát Thương Xuất Huyết",
+      "description": "Tăng % sát thương/giây của DoT Kim (Xuất Huyết)."
+    },
+    "huyetPhaGainPerProc": {
+      "label": "Huyết Phá Tích/Lần",
+      "description": "Lượng Huyết Phá charge nhận mỗi lần áp thành công Xuất Huyết."
+    },
+    "huyetPhaBurstDamage": {
+      "label": "Huyết Phá Bạo Phát",
+      "description": "Sát thương bùng nổ 1 lần khi Huyết Phá chạm đủ 5 tầng."
+    }
+  },
   "tribulation": {
     "stillEquipped": {
       "title": "Độ kiếp cũng là độ thân, không gì có thể giúp được ngươi",

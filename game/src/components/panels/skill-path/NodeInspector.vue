@@ -5,6 +5,7 @@
 // + tổng đang nhận, chi phí cấp kế; nút "Lĩnh Ngộ" ở level 0, "Nâng
 // Cấp" từ level 1, trạng thái "Tối đa" khi đạt maxLevel.
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useLoadoutActions } from '@/composables/useLoadoutActions'
@@ -18,7 +19,10 @@ import {
   canUpgradeNode,
 } from '@/core/progression/NodeSystem'
 import { getActiveSkillResourceStats } from '@/core/skill/SkillResourceStatLabels'
+import type { ActiveSkillResourceStat } from '@/core/skill/SkillResourceStatLabels'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
+
+const { t } = useI18n({ useScope: 'local' })
 
 const props = defineProps<{
   node: ProgressionNode | null
@@ -62,7 +66,8 @@ const isMaxed = computed(() => level.value >= maxLevel.value && maxLevel.value >
 
 // Skill rework — node cấp "Thế tài nguyên" nhắm THẲNG 1 Skill qua
 // effect.skillModifiers — hiện TỔNG hiện tại của skill đó (đã gồm phần
-// node suy ra từ getSkillRuntimeStats(player)).
+// node suy ra từ getSkillRuntimeStats(player)). Task 4 (i18n followups
+// 2.3) — label/description là locale key, render qua t() ở đây.
 const affectedSkillStats = computed(() => {
   stateVersion.value
 
@@ -76,6 +81,16 @@ const affectedSkillStats = computed(() => {
 
   return skill ? getActiveSkillResourceStats(skill) : []
 })
+
+// Tham chiếu t() trong getter để reactivity locale theo computed —
+// không t() trực tiếp trong template (key động từ data core).
+function statLabel(stat: ActiveSkillResourceStat): string {
+  return t(stat.labelKey)
+}
+
+function statDescription(stat: ActiveSkillResourceStat): string {
+  return t(stat.descriptionKey)
+}
 
 // Lý do khoá — thuần suy ra từ hasPrerequisite() đã có (không đụng
 // core), chỉ để hiện gợi ý, KHÔNG phải nguồn sự thật.
@@ -171,9 +186,9 @@ function onUpgrade() {
       <ul v-if="affectedSkillStats.length > 0" class="node-inspector__skill-stats">
         <StatRow
           v-for="stat in affectedSkillStats"
-          :key="stat.label"
-          v-tooltip="stat.description"
-          :label="stat.label"
+          :key="stat.labelKey"
+          v-tooltip="statDescription(stat)"
+          :label="statLabel(stat)"
           bordered
         >
           <span class="node-inspector__stat-value">{{ stat.formatted }}</span>

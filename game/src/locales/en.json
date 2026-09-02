@@ -595,6 +595,84 @@
       }
     }
   },
+  "skillResource": {
+    "hoaTheGainPerCast": {
+      "label": "Ember Body Stacks/Cast",
+      "description": "Ember Body gained each time this skill is cast."
+    },
+    "hoaTheDecayReductionPercent": {
+      "label": "Ember Body Decay Reduction",
+      "description": "Reduces the % rate at which Ember Body decays over time."
+    },
+    "thuyThePercent": {
+      "label": "Water Form",
+      "description": "Directly reduces a % of final damage taken."
+    },
+    "waterReactionExtensionSeconds": {
+      "label": "Water Sustain",
+      "description": "When Water triggers a Reaction, extend its duration by this many seconds instead of consuming Water on the target."
+    },
+    "poisonRootPercentPerStack": {
+      "label": "Wood Form/Stack",
+      "description": "Each Wood Form stack adds % Poison damage to that exact target."
+    },
+    "poisonRootMaxStacks": {
+      "label": "Wood Form Cap",
+      "description": "Maximum number of Wood Form stacks a single target can accumulate."
+    },
+    "poisonRootThresholdBonusPercent": {
+      "label": "Poison Meridian",
+      "description": "When the target has 3 or more Wood Form stacks, adds % Poison damage."
+    },
+    "earthAoeRadius": {
+      "label": "Quake Radius",
+      "description": "Number of cells it spreads per direction around the target cell."
+    },
+    "earthAoeSecondaryDamagePercent": {
+      "label": "Secondary Target DMG",
+      "description": "Damage dealt to secondary targets (via Quake Radius) relative to the primary target."
+    },
+    "earthKnockbackDistance": {
+      "label": "Knockback Force",
+      "description": "Pushes the target away from the source on each hit."
+    },
+    "thoTheGainPerCast": {
+      "label": "Mountain Body Stacks/Cast",
+      "description": "Mountain Body gained each time this skill is cast."
+    },
+    "skillImpactPercent": {
+      "label": "Skill Impact",
+      "description": "Placeholder base stat reserved for future Body Cultivation mechanics."
+    },
+    "kimTheGainPerProc": {
+      "label": "Metal Form Stacks/Proc",
+      "description": "Metal Form gained each time Bleed is successfully applied."
+    },
+    "kimTheDotDamagePercentPerStack": {
+      "label": "Metal Form/Stack",
+      "description": "Each Metal Form stack adds % Metal DoT damage."
+    },
+    "kimTheDotResistancePenetrationPercentPerStack": {
+      "label": "DoT Resist Pen/Stack",
+      "description": "Placeholder base stat reserved for the future DoT resistance penetration mechanic."
+    },
+    "kimTheMaxStacksBonus": {
+      "label": "Metal Form Cap",
+      "description": "Adds to the maximum number of Metal Form stacks."
+    },
+    "metalAilmentPotencyPercent": {
+      "label": "Bleed Damage",
+      "description": "Increases the % damage/second of the Metal DoT (Bleed)."
+    },
+    "huyetPhaGainPerProc": {
+      "label": "Blood Shatter Stacks/Proc",
+      "description": "Blood Shatter charges gained each time Bleed is successfully applied."
+    },
+    "huyetPhaBurstDamage": {
+      "label": "Blood Shatter Burst",
+      "description": "One-time explosive damage when Blood Shatter reaches 5 stacks."
+    }
+  },
   "tribulation": {
     "stillEquipped": {
       "title": "Tribulation is also a trial of the self — nothing can aid you",
