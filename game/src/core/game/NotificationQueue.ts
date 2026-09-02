@@ -9,7 +9,7 @@ import type { NotificationEvent } from '../notification/NotificationEvent'
 // Hàng rỗng dùng chung — drain() trên queue rỗng (đường phổ biến nhất
 // mỗi tick khi không có loot/toast) trả về hằng số này thay vì alloc
 // mảng [] mới mỗi lần gọi vô ích.
-const EMPTY_EVENTS: NotificationEvent[] = []
+const EMPTY_EVENTS: NotificationEvent[] = Object.freeze([]) as unknown as NotificationEvent[]
 
 export class NotificationQueue {
   private items: NotificationEvent[] = []

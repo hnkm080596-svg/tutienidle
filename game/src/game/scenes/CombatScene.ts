@@ -35,11 +35,7 @@ import {
   spawnEnemySpawnVfx,
   type EnemySpawnVfxHandle,
 } from '@/game/support/EnemySpawnVfx'
-import {
-  ENEMY_SOURCE_SIZE,
-  enemyTextureUrl,
-  resolveEnemyTextureKey,
-} from '@/game/support/EnemyArt'
+import { enemyTextureUrl } from '@/game/support/EnemyArt'
 import {
   PLAYER_VISUAL_PROFILES,
   resolvePlayerVisualProfileId,
@@ -63,7 +59,6 @@ import {
   DEPTH_BACKGROUND,
   DEPTH_GROUND_GRID,
   DEPTH_GROUND_VFX,
-  DEPTH_ENTITY_SHADOW,
   DEPTH_UPRIGHT_VFX,
   DEPTH_OVERLAY_UI,
   entitySpriteDepth,
@@ -81,7 +76,7 @@ import {
   type ThanhVanVariant,
 } from '@/game/support/ThanhVanArt'
 import { attachThanhVanBackdrop, type ThanhVanBackdropHandle } from '@/game/support/ThanhVanBackdrop'
-import { PLAYER_TEXTURE_KEY, queueCombatAssets } from '@/game/support/CombatPreload'
+import { queueCombatAssets } from '@/game/support/CombatPreload'
 import type { CombatEvent } from '@/core/combat/CombatEvent'
 import type { CombatHealEvent, EntityVitalsChangedEvent } from '@/core/combat/EntityVitalsSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
@@ -116,8 +111,6 @@ const PERSPECTIVE_BORDER_ALPHA = 0.3
 
 // BÃƒÂ³ng ellipse dÃ†Â°Ã¡Â»â€ºi chÃƒÂ¢n Ã¢â‚¬â€ dÃ¡ÂºÂ¹t theo trÃ¡Â»Â¥c sÃƒÂ¢u, Ã„â€˜Ã¡ÂºÂ­m vÃ¡Â»Â«a Ã„â€˜Ã¡Â»Æ’ tÃƒÂ¡ch unit khÃ¡Â»Âi
 // mÃ¡ÂºÂ·t Ã„â€˜Ã¡ÂºÂ¥t; luÃƒÂ´n nÃ¡ÂºÂ±m Ã¡Â»Å¸ lÃ¡Â»â€ºp ENTITY_SHADOW dÃ†Â°Ã¡Â»â€ºi MÃ¡Â»Å’I sprite.
-const SHADOW_COLOR = 0x000000
-const SHADOW_ALPHA = 0.32
 const SHADOW_WIDTH_RATIO = 1.12
 const SHADOW_HEIGHT_RATIO = 0.34
 
@@ -158,11 +151,6 @@ const CAST_NAME_COLOR = '#f4c542'
 // GÃƒâ€šY RA (target lÃƒÂ  quÃƒÂ¡i), vÃƒÂ ng riÃƒÂªng cho Ã„â€˜ÃƒÂ²n ChÃƒÂ­ MÃ¡ÂºÂ¡ng bÃ¡ÂºÂ¥t kÃ¡Â»Æ’ chiÃ¡Â»Âu.
 const DAMAGE_DEALT_COLOR = '#f4f4f0'
 const DAMAGE_TAKEN_COLOR = '#ff6b6b'
-const ENEMY_HP_BG_COLOR = 0x241b1b
-const ENEMY_HP_FILL_COLOR = 0xc94b4b
-const BOSS_HP_FILL_COLOR = 0xd4a72c
-const ENEMY_HP_BAR_HEIGHT = 6
-
 // TÃ¡Â»â€° lÃ¡Â»â€¡ theo CHIÃ¡Â»â‚¬U CAO 1 HÃƒâ‚¬NG lane (khÃƒÂ´ng phÃ¡ÂºÂ£i cÃ¡ÂºÂ£ battlefield nhÃ†Â° side-
 // view cÃ…Â©) Ã¢â‚¬â€ 5 lane top-down (2026-08-22), nhÃƒÂ¢n vÃ¡ÂºÂ­t phÃ¡ÂºÂ£i nhÃ¡Â»Â hÃ†Â¡n hÃ¡ÂºÂ³n
 // hÃƒÂ ng cÃ¡Â»Â§a nÃƒÂ³ Ã„â€˜Ã¡Â»Æ’ cÃƒÂ²n chÃ¡Â»Â«a lÃ¡Â»Â trÃƒÂªn/dÃ†Â°Ã¡Â»â€ºi, khÃƒÂ´ng Ã„â€˜ÃƒÂ¨ hÃƒÂ ng kÃ¡ÂºÂ¿ bÃƒÂªn.
@@ -171,15 +159,11 @@ const CHARACTER_WIDTH_RATIO = 0.45 // tỉ lệ so với chiều cao nhân vật
 // Combat AI rework (plan Ã‚Â§12.1) Ã¢â‚¬â€ avatar Player LÃ¡Â»Å¡N GÃ¡ÂºÂ¤P Ã„ÂÃƒâ€I enemy: chÃ¡Â»â€°
 // nhÃƒÂ¢n lÃƒÂªn PLAYER sprite, khÃƒÂ´ng Ã„â€˜Ã¡Â»Â¥ng enemy/VFX footprint. KÃƒÂ­ch thÃ†Â°Ã¡Â»â€ºc cuÃ¡Â»â€˜i
 // = source aspect ratio Ãƒâ€” base character size Ãƒâ€” multiplier Ãƒâ€” depth scale.
-const PLAYER_DISPLAY_SCALE_MULTIPLIER = 2
-
 // Enemy art x2 (yÃƒÂªu cÃ¡ÂºÂ§u 2026-08-26) Ã¢â‚¬â€ PNG quÃƒÂ¡i hiÃ¡Â»Æ’n thÃ¡Â»â€¹ GÃ¡ÂºÂ¤P Ã„ÂÃƒâ€I: nhÃƒÂ¢n
 // Ã„â€˜ÃƒÂºng MÃ¡Â»ËœT LÃ¡ÂºÂ¦N tÃ¡ÂºÂ¡i sizeMultiplier, KHÃƒâ€NG cÃ¡Â»â„¢ng dÃ¡Â»â€œn vÃƒÂ o depth scale hay
 // spawn tween (boost). ÃƒÂp cho enemy DÃƒâ„¢NG PNG (kind='sprite', kÃ¡Â»Æ’ cÃ¡ÂºÂ£ Boss
 // Ã¢â‚¬â€ cÃƒÂ¹ng quy tÃ¡ÂºÂ¯c); fallback Rectangle giÃ¡Â»Â¯ kÃƒÂ­ch thÃ†Â°Ã¡Â»â€ºc cÃ…Â© vÃƒÂ¬ khÃƒÂ´ng phÃ¡ÂºÂ£i
 // "hÃƒÂ¬nh Ã¡ÂºÂ£nh enemy".
-const ENEMY_DISPLAY_SCALE_MULTIPLIER = 2
-
 // Hero cÃ¡Â»â€˜ Ã„â€˜Ã¡Â»â€¹nh sÃƒÂ¡t mÃƒÂ©p trÃƒÂ¡i battlefield (top-down 5-lane, 2026-08-22 Ã¢â‚¬â€
 // thay layout side-view cÃ…Â© cÃƒÂ³ layout side-view cÃ…Â©) Ã¢â‚¬â€ chÃ¡Â»Â«a 1
 // lÃ¡Â»Â nhÃ¡Â»Â Ã„â€˜Ã¡Â»Æ’ sprite khÃƒÂ´ng bÃ¡Â»â€¹ cÃ¡ÂºÂ¯t viÃ¡Â»Ân trÃƒÂ¡i.
