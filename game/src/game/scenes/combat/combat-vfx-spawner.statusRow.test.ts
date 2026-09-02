@@ -204,7 +204,6 @@ describe('CombatVfxSpawner — status icon row (buff bar)', () => {
     const createdBefore = scene.created.length
 
     spawner.onStatusUpdated({
-      type: 'status_vfx_updated',
       statusInstanceId: 'enemy:bong:src',
       stacks: 2,
       durationSeconds: 5,
@@ -227,7 +226,7 @@ describe('CombatVfxSpawner — status icon row (buff bar)', () => {
   it('remove → destroy icon + label, entry khỏi map', () => {
     spawner.onStatusAttached(makeEvent())
 
-    spawner.onStatusRemoved({ type: 'status_vfx_removed', statusInstanceId: 'enemy:bong:src', reason: 'expired' })
+    spawner.onStatusRemoved({ statusInstanceId: 'enemy:bong:src' })
 
     const entry = scene.statuses.get('enemy:bong:src') as { icon: FakeGameObject; stackLabel: FakeGameObject }
 

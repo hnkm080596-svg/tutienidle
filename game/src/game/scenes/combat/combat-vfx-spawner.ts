@@ -31,6 +31,7 @@ import {
   STATUS_PLAYER_ROW_OFFSET_Y,
 } from './combatConstants'
 import { HUD_MARGIN, HUD_HP_HEIGHT, HUD_SUB_HEIGHT, HUD_GAP } from './PlayerHudLayer'
+import { StatusTooltip } from './combat-status-tooltip'
 import type { EntitySprite } from './combatTypes'
 
 interface StatusEntry {
@@ -49,17 +50,40 @@ export class CombatVfxSpawner {
   constructor(private readonly scene: CombatScene) {}
 
   /**
-   * Buff bar (2026-09-02) — tooltip instance; Task 5 gán + wire
-   * setInteractive. Khai báo trước để onStatusRemoved hideFor an toàn.
+   * Buff bar (2026-09-02) — tooltip instance (lazy-create tại
+   * onStatusAttached/showTooltipFor); onStatusRemoved/cleanup gọi hideFor.
    */
-  statusTooltip?: { hideFor(statusInstanceId: string): void; hide(): void }
+  statusTooltip?: StatusTooltip
 
-  /**
-   * MỘT action_impact = MỘT VFX instance (spawnActionImpactVfx): mọi
-   * pulse/hit sống trong cùng 1 cặp Graphics + 1 timeline, không bao giờ
-   * sinh GameObject theo hitCount/target. preset.space quyết định không
-   * gian; polygon footprint CHỈ trình bày — damage do core quyết định.
-   */
+  private showTooltipFor(statusInstanceId: string) {
+    this.statusTooltip ??= new StatusTooltip(this.scene)
+
+    const entry = this.scene.statuses.get(statusInstanceId) as StatusEntry | undefined
+
+    if (!entry) {
+      return
+    }
+
+    const anchor = this.scene.spriteFor(entry.targetId)
+
+    if (!anchor) {
+      return
+    }
+
+    this.statusTooltip.show(
+      entry.icon.x,
+      entry.icon.y - STATUS_ICON_SIZE,
+      statusInstanceId,
+      {
+        name: entry.buffName ?? entry.buffId,
+        polarity: entry.polarity,
+        stacks: entry.stacks,
+        remainingTime: entry.remainingTime,
+        permanent: entry.permanent,
+      },
+    )
+  }
+
   onActionImpact(event: ActionImpactEvent) {
     const projection = this.scene.projection
 
@@ -173,6 +197,23 @@ export class CombatVfxSpawner {
       remainingTime: event.durationSeconds,
       icon,
       stackLabel,
+    })
+
+    // Buff bar — tooltip wire (Task 5): hover/tap. Scene input mặc định
+    // enabled; icon nhỏ nên dùng hitArea mở rộng nhẹ qua square size.
+    this.statusTooltip ??= new StatusTooltip(this.scene)
+
+    icon.setInteractive({ useHandCursor: true })
+    icon.on('pointerover', () => this.showTooltipFor(event.statusInstanceId))
+    icon.on('pointerout', () => this.statusTooltip?.hide())
+    icon.on('pointerdown', () => {
+      if (this.statusTooltip?.isOpenFor(event.statusInstanceId)) {
+        this.statusTooltip.hide()
+
+        return
+      }
+
+      this.showTooltipFor(event.statusInstanceId)
     })
   }
 
