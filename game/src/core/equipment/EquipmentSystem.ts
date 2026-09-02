@@ -2,22 +2,19 @@ import type { Equipment, RecipeMaterialCost } from './Equipment'
 import type { EquipmentInstance } from './EquipmentInstance'
 import { EquipmentBag } from './EquipmentBag'
 import { EquipmentRegistry } from './EquipmentRegistry'
-import {
-  EQUIPMENT_QUALITY_ORDER,
-  EQUIPMENT_QUALITY_MAX_AFFIX_TIER,
-  EQUIPMENT_QUALITY_MAX_FORGE_POINTS,
-  EQUIPMENT_QUALITY_IMPLICIT_MULTIPLIER,
-  EQUIPMENT_QUALITY_UNLOCKED_POOLS,
-  EQUIPMENT_QUALITY_REALM_WEIGHTS,
-} from './EquipmentQuality'
+import { EQUIPMENT_QUALITY_MAX_FORGE_POINTS } from './EquipmentQuality'
 import type { EquipmentQuality } from './EquipmentQuality'
+import { EQUIPMENT_RARITY_EXALTED_AFFIX_CHANCE } from './EquipmentRarity'
+import { ITEM_QUALITY_ORDER, type ItemQuality } from '../item/ItemQuality'
 import {
-  EQUIPMENT_RARITY_ORDER,
-  EQUIPMENT_RARITY_DROP_WEIGHT,
-  EQUIPMENT_RARITY_AFFIX_SLOTS,
-  EQUIPMENT_RARITY_EXALTED_AFFIX_CHANCE,
-} from './EquipmentRarity'
-import type { EquipmentRarity } from './EquipmentRarity'
+  ITEM_QUALITY_AFFIX_TIER,
+  ITEM_QUALITY_DROP_WEIGHT,
+  ITEM_QUALITY_ESSENCE_RANGE,
+  ITEM_QUALITY_FORGE_USES,
+  ITEM_QUALITY_IMPLICIT_MULTIPLIER,
+  ITEM_QUALITY_SUBSTATS_RANGE,
+  ITEM_QUALITY_UNLOCKED_POOLS,
+} from './ItemQualityBalance'
 import type { EquipmentSlot } from './EquipmentTypes'
 import { EquipmentSlotManager } from './EquipmentSlotManager'
 import { AffixRegistry } from './AffixRegistry'
@@ -34,7 +31,11 @@ import {
 } from '../material/SpiritStoneMaterial'
 import { getRealmTier } from '../realm/RealmTierMap'
 import type { PlayerData } from '../player/Player'
-import { getGlobalCultivationLevel, getRealmIndex } from '../realm/realmSystem'
+import { getGlobalCultivationLevel } from '../realm/realmSystem'
+import {
+  getProfessionGradeForRealm,
+  realmFromGrade,
+} from '../profession/ProfessionGrade'
 import { randomInt, weightedRandom, rollChance } from '../reward/DropRoll'
 import { assertValidEquipmentMainStats, isValidEquipmentSubstat } from './EquipmentStatPolicy'
 import type {
@@ -43,46 +44,41 @@ import type {
   EquipmentOperationCostCatalog,
   EquipmentOperationCostContext,
 } from './EquipmentOperationCostCatalog'
-import type { OreQuality } from '../production/ProductionTypes'
 import { rollWeightedIndex } from '../production/ProductionBalance'
 import {
-  DISSOLVE_ESSENCE_RANGE_BY_QUALITY,
+  REFINE_INCREASE_MAX,
+  REFINE_INCREASE_MIN,
   REFINE_MAX_LOCKS,
-  REFINE_REFINEMENT_COST_BY_QUALITY,
   REFINE_SPIRIT_STONE_PER_UNIT,
-  REFINE_VALUE_VARIANCE,
-  WASH_LINE_COUNT_WEIGHTS,
-  WASH_ORE_AMOUNT,
-  WASH_REFINEMENT_COST_BY_QUALITY,
+  REFINE_TINH_HOA_COST_BY_QUALITY,
   WASH_SPIRIT_STONE_COST,
-  WASH_TIER_WEIGHTS,
-  equipmentEssenceMaterialId,
+  WASH_TIER_WEIGHTS_BY_QUALITY,
+  WASH_TINH_HOA_COST_BY_QUALITY,
 } from './RefinementBalance'
+import { LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
 
 // Hệ số nhân thêm mỗi bậc cường hóa. Export để UI (EquipmentHallPanel's
 // Enhance preview) tính trước giá trị SAU khi cường hóa mà không phải
 // lặp lại công thức.
-export const ENHANCE_PERCENT_PER_LEVEL = 0.08
+//
+// Task 10 (rework P3, 2026-09-01) — ENHANCE_PERCENT_PER_LEVEL (0.08) và
+// FORGE_PERCENT_PER_POINT ĐÃ XÓA: scale giờ slot-only `1 + level ×
+// ENHANCE_SLOT_SCALE (0.06)` — forgeUses là ngân sách tẩy/tinh của
+// item, KHÔNG scale. Curve mũ 0.956 + pity 10 ở EnhanceCurve.ts.
+import {
+  ENHANCE_PITY_THRESHOLD,
+  ENHANCE_SLOT_SCALE,
+  MAX_SLOT_ENHANCE_LEVEL,
+  enhanceSuccessRate,
+} from './EnhanceCurve'
 
 /**
- * Slot-level rework (yêu cầu 2026-08-26) — SLOT TRỐNG vẫn cường hóa
- * được: trần mặc định khi không tra được template của item đang mặc.
+ * Hệ số nhân hiệu lực của 1 instance theo SLOT enhanceLevel — dùng lại
+ * y hệt trong applyModifiers() lẫn UI preview (Enhance tab), đảm bảo 2
+ * nơi luôn khớp công thức.
  */
-export const DEFAULT_MAX_ENHANCE_LEVEL = 10
-
-// Equipment Rework (2026-08-14) — trần forgePoints cao hơn nhiều
-// enhanceLevel (tới 200, xem EQUIPMENT_QUALITY_MAX_FORGE_POINTS) nên
-// hệ số/điểm phải nhỏ hơn nhiều REFINE_PERCENT_PER_LEVEL cũ (0.05/level)
-// để không vượt quá enhanceLevel về độ ảnh hưởng ở cùng mức đầu tư.
-export const FORGE_PERCENT_PER_POINT = 0.005
-
-/**
- * Hệ số nhân hiệu lực của 1 instance theo enhanceLevel/forgePoints —
- * dùng lại y hệt trong applyModifiers() lẫn UI preview (Enhance tab),
- * đảm bảo 2 nơi luôn khớp công thức.
- */
-export function calculateEquipmentScale(enhanceLevel: number, forgePoints: number): number {
-  return 1 + enhanceLevel * ENHANCE_PERCENT_PER_LEVEL + forgePoints * FORGE_PERCENT_PER_POINT
+export function calculateEquipmentScale(enhanceLevel: number): number {
+  return 1 + enhanceLevel * ENHANCE_SLOT_SCALE
 }
 
 /**
@@ -98,20 +94,129 @@ export function getMaxForgePoints(quality: EquipmentQuality, _forgePotential = 1
 // Affix có cả miền số nguyên (Attack, HP...) lẫn miền thập phân
 // (criticalRate, cooldownReduction...). randomInt trực tiếp làm miền 0.01–0.09
 // co lại sai thành 1, nên mọi đường roll affix phải đi qua hàm này.
-export function rollAffixRange(min: number, max: number): number {
+export function rollAffixRange(
+  min: number,
+  max: number,
+  random: () => number = Math.random,
+): number {
   const precision = 10_000
-  return randomInt(Math.round(min * precision), Math.round(max * precision)) / precision
+  const low = Math.round(min * precision)
+  const high = Math.round(max * precision)
+  return (Math.floor(random() * (high - low + 1)) + low) / precision
 }
 
 /**
  * 1 dòng giá trị Tinh Luyện đã roll (preview/commit — 2026-08-30, UI
  * "giữ/bỏ") — index trỏ vào instance.affixes, value là giá trị mới đã
- * roll trong khoảng ±20% cho dòng đó.
+ * roll tăng 5–20% cho dòng đó, clamp theo trần tier.
  */
 export interface RefineValueEntry {
   index: number
 
   value: number
+}
+
+interface RefineAffixSnapshot {
+  affixId: string
+
+  tier: number
+
+  value: number
+}
+
+interface RefineInstanceSnapshot {
+  instanceId: string
+
+  itemId: string
+
+  slot: EquipmentSlot
+
+  equipped: boolean
+
+  locked: boolean | undefined
+
+  favorite: boolean | undefined
+
+  grade: EquipmentInstance['grade']
+
+  quality: EquipmentInstance['quality']
+
+  realmLevel: number | undefined
+
+  zoneId: string | undefined
+
+  icon: string | undefined
+
+  forgeUsesTotal: number
+
+  forgeUsesRemaining: number
+
+  mainStat: StatModifier
+
+  affixes: RefineAffixSnapshot[]
+}
+
+interface PendingRefinePreview {
+  instance: EquipmentInstance
+
+  membershipGeneration: number
+
+  snapshot: RefineInstanceSnapshot
+
+  values: RefineValueEntry[]
+}
+
+function cloneRefineMainStat(mainStat: StatModifier): StatModifier {
+  return {
+    id: mainStat.id,
+    sourceId: mainStat.sourceId,
+    sourceType: mainStat.sourceType,
+    stat: mainStat.stat,
+    tag: mainStat.tag,
+    flat: mainStat.flat,
+    percent: mainStat.percent,
+    multiplier: mainStat.multiplier,
+    stacks: mainStat.stacks,
+    maxStacks: mainStat.maxStacks,
+    perLevelFlat: mainStat.perLevelFlat,
+    perLevelPercent: mainStat.perLevelPercent,
+  }
+}
+
+function refineMainStatMatches(current: StatModifier, expected: StatModifier): boolean {
+  return (
+    current.id === expected.id &&
+    current.sourceId === expected.sourceId &&
+    current.sourceType === expected.sourceType &&
+    current.stat === expected.stat &&
+    current.tag === expected.tag &&
+    current.flat === expected.flat &&
+    current.percent === expected.percent &&
+    current.multiplier === expected.multiplier &&
+    current.stacks === expected.stacks &&
+    current.maxStacks === expected.maxStacks &&
+    current.perLevelFlat === expected.perLevelFlat &&
+    current.perLevelPercent === expected.perLevelPercent
+  )
+}
+
+function isExactRefineValueEntry(value: unknown): value is RefineValueEntry {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false
+  }
+
+  const candidate = value as Record<string, unknown>
+  const keys = Object.keys(candidate)
+
+  return (
+    keys.length === 2 &&
+    keys.includes('index') &&
+    keys.includes('value') &&
+    typeof candidate.index === 'number' &&
+    Number.isInteger(candidate.index) &&
+    typeof candidate.value === 'number' &&
+    Number.isFinite(candidate.value)
+  )
 }
 
 export function normalizeRolledAffixValue(value: number, min: number, max: number): number {
@@ -157,14 +262,17 @@ export const MAIN_STAT_REALM_SCALE = 0.05
  * -> player store) đọc lại qua getModifiers() và tự gán vào
  * player.modifiers sau mỗi hành động.
  *
- * Core Loop Foundation checklist (Mục AFFIX/RARITY) — chỉ số phụ giờ
- * là Affix (Prefix/Suffix có Tier, xem Affix.ts) thay vì substat roll
- * ngẫu nhiên phẳng cũ. Quality (9 bậc) đổi vai trò thành GATE tier
- * affix cao nhất roll được; Rarity (trục mới, xem EquipmentRarity.ts)
- * quyết định SỐ LƯỢNG affix.
+ * Chỉ số phụ là Affix (Prefix/Suffix có Tier, xem Affix.ts). Grade cố
+ * định theo realm; quality Ngũ Chất quyết định số lượng/tier/pool affix
+ * và hệ số implicit của item.
  */
 export class EquipmentSystem {
   private readonly modifierSystem = new ModifierSystem()
+
+  // Khí Đường chỉ hiển thị một Refine preview tại một thời điểm. Một capability
+  // duy nhất vừa chặn provenance tích lũy vô hạn, vừa bảo đảm attempt mới (kể cả
+  // thất bại) vô hiệu hóa payload trả phí trước đó ở bất kỳ item nào.
+  private pendingRefinePreview: PendingRefinePreview | null = null
 
   constructor(costCatalog?: EquipmentOperationCostCatalog) {
     this.costCatalog = costCatalog
@@ -218,11 +326,9 @@ export class EquipmentSystem {
   }
 
   /**
-   * Roll 1 instance mới từ template: phẩm chất + độ hiếm (2 trục độc
-   * lập, trọng số giảm dần theo bậc), affix (số lượng theo rarity,
-   * tier theo quality), và chỉ số chính (scale theo cảnh giới hiện
-   * tại của player). Cùng 1 template có thể sinh nhiều instance hoàn
-   * toàn khác nhau — đúng tinh thần "roll đồ" thay vì đồ cố định.
+   * Roll 1 instance mới từ template. Grade theo realm của người chơi;
+   * quality roll độc lập theo trọng số cố định và quyết định implicit,
+   * số lượng/tier/pool substat cùng ngân sách Rèn.
    */
   createInstance(
     template: Equipment,
@@ -232,17 +338,18 @@ export class EquipmentSystem {
   ): EquipmentInstance {
     assertValidEquipmentMainStats(template)
 
-    const quality = this.rollQuality(player.realmId)
+    const grade = getProfessionGradeForRealm(player.realmId)
+    if (!grade) {
+      throw new Error(`Missing profession grade for equipment realm ${player.realmId}`)
+    }
 
-    const rarity = this.rollRarity()
+    const quality = this.rollItemQuality()
 
-    const mainStat = this.rollMainStat(template, player, quality)
+    const mainStat = this.rollMainStat(template, grade, player, quality)
 
-    // Điểm Rèn per-item (rework 2026-08-26, chốt lại 2026-08-30) — item
-    // sinh ra với TÌNH TRẠNG RÈN ĐẦY = ĐÚNG trần theo quality. Con số
-    // CHÍNH XÁC xác định bằng phẩm của item, KHÔNG còn random theo
-    // forgePotential. Tiêu cạn là món ngừng phát triển (plan §8 mount
-    // review).
+    const forgeUses = ITEM_QUALITY_FORGE_USES[quality]
+
+    // New drops start with their full quality-defined forge-use budget.
     return {
       instanceId: crypto.randomUUID(),
 
@@ -252,11 +359,9 @@ export class EquipmentSystem {
 
       equipped: false,
 
+      grade,
+
       quality,
-
-      rarity,
-
-      realmId: player.realmId,
 
       realmLevel: player.realmLevel,
 
@@ -266,13 +371,11 @@ export class EquipmentSystem {
 
       mainStat,
 
-      affixes: this.rollAffixes(template, mainStat.stat, rarity, quality, affixRegistry),
+      affixes: this.rollAffixes(template, mainStat.stat, quality, affixRegistry),
 
-      forgePoints: EQUIPMENT_QUALITY_MAX_FORGE_POINTS[quality],
+      forgeUsesTotal: forgeUses,
 
-      // Giữ field cho save/validation cũ — KHÔNG còn được dùng để roll
-      // trần Rèn (rework 2026-08-30). New items luôn full potential.
-      forgePotential: 100,
+      forgeUsesRemaining: forgeUses,
     }
   }
   private rollIcon(template: Equipment): string | undefined {
@@ -280,27 +383,11 @@ export class EquipmentSystem {
     return pool.length > 0 ? pool[randomInt(0, pool.length - 1)] : template.icon
   }
 
-  private rollQuality(realmId: string): EquipmentQuality {
-    const realmIndex = Math.max(0, getRealmIndex(realmId))
-    const weights =
-      EQUIPMENT_QUALITY_REALM_WEIGHTS[
-        Math.min(realmIndex, EQUIPMENT_QUALITY_REALM_WEIGHTS.length - 1)
-      ]!
-
+  private rollItemQuality(): ItemQuality {
     return weightedRandom(
-      EQUIPMENT_QUALITY_ORDER.map((quality, index) => ({
+      ITEM_QUALITY_ORDER.map((quality) => ({
         value: quality,
-        weight: weights[index] ?? 0,
-      })).filter((entry) => entry.weight > 0),
-    )
-  }
-
-  private rollRarity(): EquipmentRarity {
-    return weightedRandom(
-      EQUIPMENT_RARITY_ORDER.map((rarity) => ({
-        value: rarity,
-
-        weight: EQUIPMENT_RARITY_DROP_WEIGHT[rarity],
+        weight: ITEM_QUALITY_DROP_WEIGHT[quality],
       })),
     )
   }
@@ -315,8 +402,9 @@ export class EquipmentSystem {
   // mạnh chung của người chơi lúc rớt đồ).
   private rollMainStat(
     template: Equipment,
+    grade: EquipmentInstance['grade'],
     player: PlayerData,
-    quality: EquipmentQuality,
+    quality: ItemQuality,
     retainedStat?: StatType,
   ): StatModifier {
     const range = retainedStat
@@ -326,11 +414,11 @@ export class EquipmentSystem {
       throw new Error(`Missing main stat range ${retainedStat ?? ''} for equipment ${template.id}`)
     }
     const stat = range.stat
-    const qualityMultiplier = EQUIPMENT_QUALITY_IMPLICIT_MULTIPLIER[quality]
+    const qualityMultiplier = ITEM_QUALITY_IMPLICIT_MULTIPLIER[quality]
 
     const base = rollAffixRange(range.min * qualityMultiplier, range.max * qualityMultiplier)
 
-    const globalLevel = getGlobalCultivationLevel(player.realmId, player.realmLevel)
+    const globalLevel = getGlobalCultivationLevel(realmFromGrade(grade), player.realmLevel)
 
     const scaled = base * (1 + globalLevel * MAIN_STAT_REALM_SCALE)
 
@@ -350,29 +438,32 @@ export class EquipmentSystem {
   }
 
   /**
-   * Roll đủ bộ Affix cho 1 instance mới — N prefix + M suffix theo
-   * EQUIPMENT_RARITY_AFFIX_SLOTS, mỗi affix roll tier ngẫu nhiên trong
-   * giới hạn EQUIPMENT_QUALITY_MAX_AFFIX_TIER và pool mở theo
-   * EQUIPMENT_QUALITY_UNLOCKED_POOLS.
+   * Roll số substat trong miền của quality; số lẻ ưu tiên prefix.
    *
-   * Equipment Rework mục 2 ("Exalted Affix") — rarity cao nhất
-   * (tien_pham) có thêm EQUIPMENT_RARITY_EXALTED_AFFIX_CHANCE cơ hội
+   * Equipment Rework mục 2 ("Exalted Affix") — quality cao nhất
+   * (tien) có thêm EQUIPMENT_RARITY_EXALTED_AFFIX_CHANCE cơ hội
    * roll 1 affix BONUS từ pool 'supreme' — bỏ qua giới hạn pool theo
-   * Quality của chính item (đặc quyền của rarity, không phải quality),
+   * Quality của chính item,
    * vẫn random hoàn toàn (không phải item cố định kiểu Unique cũ).
    */
   private rollAffixes(
     template: Equipment,
     mainStat: StatType,
-    rarity: EquipmentRarity,
-    quality: EquipmentQuality,
+    quality: ItemQuality,
     affixRegistry: AffixRegistry,
   ): RolledAffix[] {
-    const slots = EQUIPMENT_RARITY_AFFIX_SLOTS[rarity]
+    const countRange = ITEM_QUALITY_SUBSTATS_RANGE[quality]
+    const count = randomInt(countRange.min, countRange.max)
+    const prefixCount = Math.ceil(count / 2)
+    const suffixCount = Math.floor(count / 2)
+    const requestedKinds: AffixKind[] = [
+      ...Array<AffixKind>(prefixCount).fill('prefix'),
+      ...Array<AffixKind>(suffixCount).fill('suffix'),
+    ]
 
-    const maxTier = EQUIPMENT_QUALITY_MAX_AFFIX_TIER[quality]
+    const maxTier = ITEM_QUALITY_AFFIX_TIER[quality]
 
-    const unlockedPools = EQUIPMENT_QUALITY_UNLOCKED_POOLS[quality]
+    const unlockedPools = ITEM_QUALITY_UNLOCKED_POOLS[quality]
 
     // Mảng dùng CHUNG, mutate qua từng lượt roll — đảm bảo prefix và
     // suffix không bao giờ trùng STAT với nhau lẫn với Implicit
@@ -380,52 +471,42 @@ export class EquipmentSystem {
     // trùng lặp.
     const excludeStats: StatType[] = [mainStat]
 
-    const prefixes = this.rollAffixesOfKind(
-      template,
-      'prefix',
-      slots.prefix,
-      maxTier,
-      unlockedPools,
-      excludeStats,
-      affixRegistry,
-    )
-
-    const suffixes = this.rollAffixesOfKind(
-      template,
-      'suffix',
-      slots.suffix,
-      maxTier,
-      unlockedPools,
-      excludeStats,
-      affixRegistry,
-    )
-
-    const result = [...prefixes, ...suffixes]
-
-    if (rarity === 'tien' && rollChance(EQUIPMENT_RARITY_EXALTED_AFFIX_CHANCE)) {
-      const exaltedKind: AffixKind = rollChance(0.5) ? 'prefix' : 'suffix'
-
-      const exalted = this.rollEligibleAffix(
+    // Resolve and reserve the compatible bonus before base rolls so a
+    // supreme base candidate cannot consume the only valid Exalted stat.
+    let exalted: RolledAffix | null = null
+    if (quality === 'tien' && rollChance(EQUIPMENT_RARITY_EXALTED_AFFIX_CHANCE)) {
+      exalted = this.rollEligibleAffixAtTier(
         template,
-        exaltedKind,
-        EQUIPMENT_QUALITY_MAX_AFFIX_TIER.thien_dia_trong_khi,
+        ITEM_QUALITY_AFFIX_TIER.tien,
         ['supreme'],
         excludeStats,
         affixRegistry,
       )
 
       if (exalted) {
-        result.push(exalted)
+        excludeStats.push(affixRegistry.get(exalted.affixId).stat)
       }
+    }
+
+    const result = this.rollAffixesWithKindFallback(
+      template,
+      requestedKinds,
+      maxTier,
+      unlockedPools,
+      excludeStats,
+      affixRegistry,
+    )
+
+    if (exalted) {
+      result.push(exalted)
     }
 
     return result
   }
 
-  private rollAffixesOfKind(
+  private rollAffixesWithKindFallback(
     template: Equipment,
-    kind: AffixKind,
-    count: number,
+    requestedKinds: readonly AffixKind[],
     maxTier: number,
     pools: AffixPool[],
     excludeStats: StatType[],
@@ -433,15 +514,20 @@ export class EquipmentSystem {
   ): RolledAffix[] {
     const result: RolledAffix[] = []
 
-    for (let i = 0; i < count; i++) {
-      const rolled = this.rollEligibleAffix(
-        template,
-        kind,
-        maxTier,
-        pools,
-        excludeStats,
-        affixRegistry,
-      )
+    // Preserve the prefix-first target split whenever that kind has a
+    // candidate; otherwise use the opposite kind to realize the rolled count.
+    for (const requestedKind of requestedKinds) {
+      const fallbackKind: AffixKind = requestedKind === 'prefix' ? 'suffix' : 'prefix'
+      const rolled =
+        this.rollEligibleAffix(
+          template,
+          requestedKind,
+          maxTier,
+          pools,
+          excludeStats,
+          affixRegistry,
+        ) ??
+        this.rollEligibleAffix(template, fallbackKind, maxTier, pools, excludeStats, affixRegistry)
 
       if (!rolled) {
         break
@@ -453,6 +539,35 @@ export class EquipmentSystem {
     }
 
     return result
+  }
+
+  private rollEligibleAffixAtTier(
+    template: Equipment,
+    tier: number,
+    pools: AffixPool[],
+    excludeStats: StatType[],
+    affixRegistry: AffixRegistry,
+    random: () => number = Math.random,
+  ): RolledAffix | null {
+    const candidates = this.filterEligibleAffixes(
+      affixRegistry.getAll(),
+      template,
+      pools,
+      excludeStats,
+    ).filter((affix) => affix.tiers.some((tierDef) => tierDef.tier === tier))
+
+    if (candidates.length === 0) {
+      return null
+    }
+
+    const affix = candidates[Math.floor(random() * candidates.length)]!
+    const tierDef = affix.tiers.find((candidate) => candidate.tier === tier)!
+
+    return {
+      affixId: affix.id,
+      tier: tierDef.tier,
+      value: rollAffixRange(tierDef.min, tierDef.max, random),
+    }
   }
 
   /**
@@ -482,7 +597,7 @@ export class EquipmentSystem {
   /**
    * Roll 1 affix hợp lệ (đúng kind, đúng slot, đúng pool, chưa trùng
    * stat) — primitive dùng chung cho roll hàng loạt lúc tạo instance
-   * (rollAffixesOfKind), roll Exalted Affix (rollAffixes) VÀ Tẩy
+   * (rollAffixesWithKindFallback) VÀ Tẩy
    * Luyện. Trả về null nếu không còn candidate hợp lệ. `maxTier` dùng
    * làm TRẦN roll được (Exalted Affix roll truyền trần cao nhất toàn
    * hệ thống để không tự giới hạn oan tier 4-5 của chính pool
@@ -501,7 +616,7 @@ export class EquipmentSystem {
       template,
       pools,
       excludeStats,
-    )
+    ).filter((affix) => affix.tiers.some((tierDef) => tierDef.tier <= maxTier))
 
     if (candidates.length === 0) {
       return null
@@ -512,13 +627,14 @@ export class EquipmentSystem {
     return this.rollAffixValue(affix, maxTier)
   }
 
-  private rollAffixValue(affix: Affix, maxTier: number): RolledAffix {
+  private rollAffixValue(affix: Affix, maxTier: number): RolledAffix | null {
     const eligibleTiers = affix.tiers.filter((tierDef) => tierDef.tier <= maxTier)
 
-    const tierDef =
-      eligibleTiers.length > 0
-        ? eligibleTiers[randomInt(0, eligibleTiers.length - 1)]!
-        : affix.tiers[0]!
+    if (eligibleTiers.length === 0) {
+      return null
+    }
+
+    const tierDef = eligibleTiers[randomInt(0, eligibleTiers.length - 1)]!
 
     return {
       affixId: affix.id,
@@ -547,8 +663,8 @@ export class EquipmentSystem {
 
     // Equipment KHÔNG có requiredRealmId trên template (khác Recipe/
     // Building/Skill) — không gate trang bị theo cảnh giới. Sức mạnh
-    // theo cảnh giới nằm ở instance.realmId (set lúc rớt đồ), không
-    // phải điều kiện equip.
+    // theo cảnh giới nằm ở instance.grade (set lúc rớt đồ), không phải
+    // điều kiện equip.
     const current = inventory.getEquippedInSlot(instance.slot)
 
     if (current) {
@@ -577,17 +693,17 @@ export class EquipmentSystem {
   }
 
   /**
-   * ĐIỂM RÈN của món đồ (rework 2026-08-26) = forgePoints hiện tại —
+   * ĐIỂM RÈN của món đồ = forgeUsesRemaining hiện tại —
    * CHÍNH LÀ "Tình trạng rèn x/y" trong tooltip, KHÔNG phải pool nào
    * khác. Tẩy Luyện/Tinh Luyện tiêu thụ tài nguyên này; item sinh ra
    * với tình trạng ĐẦY (xem createInstance).
    */
   itemRefinementPoints(instance: EquipmentInstance): number {
-    return instance.forgePoints
+    return instance.forgeUsesRemaining
   }
 
   private spendItemRefinementPoints(instance: EquipmentInstance, amount: number) {
-    instance.forgePoints = Math.max(0, instance.forgePoints - amount)
+    instance.forgeUsesRemaining = Math.max(0, instance.forgeUsesRemaining - amount)
   }
 
   /** registry.get() ném lỗi khi thiếu template — wrapper an toàn cho dữ liệu dev cũ. */
@@ -604,11 +720,7 @@ export class EquipmentSystem {
    * cần item trong slot mới được cường hóa. Trần mặc định + chi phí
    * fallback khi không tra được catalog/template.
    */
-  getMaxEnhanceLevel(template?: Equipment): number {
-    return template?.maxEnhanceLevel ?? DEFAULT_MAX_ENHANCE_LEVEL
-  }
-
-  /** Một nguồn resolve cost Cường Hóa: catalog nghề → template → fallback. */
+  /** Một nguồn resolve cost Cường Hóa: catalog nghi�m  template  fallback. */
   private resolveEnhanceCost(
     realmId: string,
 
@@ -722,34 +834,19 @@ export class EquipmentSystem {
     return this.resolveEnhanceCost(realmId, enhanceLevel, template).spiritStone
   }
 
-  /** W5 — cost Tẩy Luyện sau discount Khí Đường (UI và logic dùng chung).
-   * realmId của trang bị quyết định PHẨM Linh Thạch tiêu (T2); quality
-   * quyết định cost Điểm Rèn (rework 2026-08-30); không có realmId →
-   * Hạ Phẩm (mặc định tương thích). */
-  getWashCost(realmId?: string, quality?: EquipmentQuality): {
-    oreAmount: number
-    spiritStone: number
-    spiritStoneMaterialId: string
-    refinementPoints: number
-  } {
+  /** Cost Tẩy Luyện sau discount Khí Đường; UI và transaction dùng chung. */
+  getWashCost(quality: ItemQuality): { tinhHoa: number; spiritStone: number } {
     return {
-      oreAmount: this.applyCostDiscount(WASH_ORE_AMOUNT),
+      tinhHoa: this.applyCostDiscount(WASH_TINH_HOA_COST_BY_QUALITY[quality]),
       spiritStone: this.applyCostDiscount(WASH_SPIRIT_STONE_COST),
-      spiritStoneMaterialId: realmId ? this.spiritStoneIdForRealm(realmId) : SPIRIT_STONE_MATERIAL_ID,
-      refinementPoints: quality
-        ? WASH_REFINEMENT_COST_BY_QUALITY[quality]
-        : WASH_REFINEMENT_COST_BY_QUALITY[EQUIPMENT_QUALITY_ORDER[0]!],
     }
   }
 
-  /** W5 — cost Tinh Luyện sau discount Khí Đường (UI và logic dùng chung).
-   * realmId của trang bị quyết định PHẨM Linh Thạch tiêu (T2); quality
-   * quyết định cost Điểm Rèn (rework 2026-08-30). */
+  /** Cost Tinh Luyện sau discount Khí Đường; UI và transaction dùng chung. */
   getRefineCost(
     lineCount: number,
     lockedCount: number,
-    realmId?: string,
-    quality?: EquipmentQuality,
+    quality: ItemQuality = ITEM_QUALITY_ORDER[0]!,
   ): {
     essenceUnits: number
     spiritStone: number
@@ -759,12 +856,10 @@ export class EquipmentSystem {
     const baseUnits = Math.max(0, lineCount) + Math.max(0, lockedCount)
 
     return {
-      essenceUnits: this.applyCostDiscount(baseUnits),
+      essenceUnits: this.applyCostDiscount(REFINE_TINH_HOA_COST_BY_QUALITY[quality]),
       spiritStone: this.applyCostDiscount(baseUnits * REFINE_SPIRIT_STONE_PER_UNIT),
-      spiritStoneMaterialId: realmId ? this.spiritStoneIdForRealm(realmId) : SPIRIT_STONE_MATERIAL_ID,
-      refinementPoints: quality
-        ? REFINE_REFINEMENT_COST_BY_QUALITY[quality]
-        : REFINE_REFINEMENT_COST_BY_QUALITY[EQUIPMENT_QUALITY_ORDER[0]!],
+      spiritStoneMaterialId: SPIRIT_STONE_MATERIAL_ID,
+      refinementPoints: 1,
     }
   }
   /**
@@ -788,6 +883,8 @@ export class EquipmentSystem {
     slotManager: EquipmentSlotManager,
 
     affixRegistry: AffixRegistry,
+
+    random: () => number = Math.random,
   ): { ok: boolean; reason?: string } {
     const slotState = slotManager.get(slot)
 
@@ -795,9 +892,7 @@ export class EquipmentSystem {
 
     const template = equipped ? this.tryGetTemplate(registry, equipped.itemId) : undefined
 
-    const maxLevel = this.getMaxEnhanceLevel(template)
-
-    if (slotState.enhanceLevel >= maxLevel) {
+    if (slotState.enhanceLevel >= MAX_SLOT_ENHANCE_LEVEL) {
       return { ok: false, reason: 'max_level' }
     }
 
@@ -825,7 +920,21 @@ export class EquipmentSystem {
       materialBag.remove(entry.materialId, entry.amount)
     }
 
+    // Task 10 pity roll: rate theo level ke + 1; streak cham nguong
+    // -> chac chan thanh cong bat chap random. FAIL chi mat nguyen
+    // lieu lan thu (da tru o tren), KHONG doi level.
+    const successRate = enhanceSuccessRate(enhanceLevel + 1)
+    const pityGuaranteed = slotState.enhanceFailStreak >= ENHANCE_PITY_THRESHOLD
+    const success = pityGuaranteed || random() * 100 < successRate
+
+    if (!success) {
+      slotState.enhanceFailStreak += 1
+
+      return { ok: false, reason: 'enhance_failed' }
+    }
+
     slotState.enhanceLevel++
+    slotState.enhanceFailStreak = 0
 
     if (equipped?.equipped) {
       this.modifierSystem.removeBySource(equipped.instanceId)
@@ -838,18 +947,15 @@ export class EquipmentSystem {
 
   /**
    * TẦY LUYỆN (2026-08-25, resource-professions-rework plan §7.3) —
-   * reroll TOÀN BỘ identity substat: số dòng (weighted theo phẩm Quáng,
-   * cap theo rarity/quality của item), identity từ pool hợp lệ, tier
-   * ban đầu (weighted theo phẩm Quáng, cap quality gate). KHÔNG đổi
+   * reroll TOÀN BỘ identity substat: số dòng trong trần Chất,
+   * identity từ pool hợp lệ, tier weighted theo Chất. KHÔNG đổi
    * main stat, quality, realm, cấp Cường Hóa slot.
    *
-   * Chi phí bắt buộc: Điểm Rèn + Quáng CÙNG cảnh giới item (1 stack
-   * cùng material/phẩm — MVP chống trộn phẩm, §5.3) + Linh Thạch.
+   * Chi phí bắt buộc: 1 lượt Rèn + Luyện Khí Tinh Hoa + Linh Thạch.
    * Validation trước, trừ toàn bộ sau khi thành công.
    */
   washAffixes(
     instanceId: string,
-    oreMaterialId: string,
     inventory: EquipmentBag,
     registry: EquipmentRegistry,
     materialBag: MaterialBag,
@@ -857,7 +963,14 @@ export class EquipmentSystem {
     affixRegistry: AffixRegistry,
     random: () => number = Math.random,
   ): { ok: boolean; reason?: string } {
-    const result = this.rollWashAffixes(instanceId, oreMaterialId, inventory, registry, materialBag, affixRegistry, random)
+    const result = this.rollWashAffixes(
+      instanceId,
+      inventory,
+      registry,
+      materialBag,
+      affixRegistry,
+      random,
+    )
 
     if (!result.ok) {
       return result
@@ -875,14 +988,20 @@ export class EquipmentSystem {
    */
   previewWashAffixes(
     instanceId: string,
-    oreMaterialId: string,
     inventory: EquipmentBag,
     registry: EquipmentRegistry,
     materialBag: MaterialBag,
     affixRegistry: AffixRegistry,
     random: () => number = Math.random,
   ): { ok: boolean; reason?: string; affixes?: RolledAffix[] } {
-    return this.rollWashAffixes(instanceId, oreMaterialId, inventory, registry, materialBag, affixRegistry, random)
+    return this.rollWashAffixes(
+      instanceId,
+      inventory,
+      registry,
+      materialBag,
+      affixRegistry,
+      random,
+    )
   }
 
   /** Chốt kết quả đã preview (previewWashAffixes) — không kiểm tra/trừ cost lần nữa. */
@@ -912,7 +1031,6 @@ export class EquipmentSystem {
 
   private rollWashAffixes(
     instanceId: string,
-    oreMaterialId: string,
     inventory: EquipmentBag,
     registry: EquipmentRegistry,
     materialBag: MaterialBag,
@@ -935,35 +1053,8 @@ export class EquipmentSystem {
       return { ok: false, reason: 'favorite' }
     }
 
-    // Quáng phải cùng cảnh giới item và có meta nghề đầy đủ.
-    const oreMeta = this.oreQualityOf(oreMaterialId)
-
-    if (!this.canUseOreForInstance(oreMaterialId, instance.realmId)) {
-      return { ok: false, reason: 'ore_realm_mismatch' }
-    }
-
-    if (!oreMeta) {
-      return { ok: false, reason: 'ore_invalid' }
-    }
-
-    const oreAmount = this.applyCostDiscount(WASH_ORE_AMOUNT)
-    const washSpiritStoneCost = this.applyCostDiscount(WASH_SPIRIT_STONE_COST)
-    const washSpiritStoneId = this.spiritStoneIdForRealm(instance.realmId)
-
-    if (!materialBag.has(oreMaterialId, oreAmount)) {
-      return { ok: false, reason: 'missing_ore' }
-    }
-
-    // Điểm Rèn PER-ITEM (rework 2026-08-26) — tiêu vào CHÍNH món đồ,
-    // cost leo thang theo quality (rework 2026-08-30).
-    const washRefinementCost = WASH_REFINEMENT_COST_BY_QUALITY[instance.quality]
-
-    if (this.itemRefinementPoints(instance) < washRefinementCost) {
-      return { ok: false, reason: 'missing_refinement_points' }
-    }
-
-    if (!materialBag.has(washSpiritStoneId, washSpiritStoneCost)) {
-      return { ok: false, reason: 'missing_spirit_stone' }
+    if (instance.forgeUsesRemaining <= 0) {
+      return { ok: false, reason: 'no_forge_uses' }
     }
 
     const template = this.tryGetTemplate(registry, instance.itemId)
@@ -972,49 +1063,65 @@ export class EquipmentSystem {
       return { ok: false, reason: 'template_not_found' }
     }
 
-    const rarityCap = EQUIPMENT_RARITY_AFFIX_SLOTS[instance.rarity]
+    const cost = this.getWashCost(instance.quality)
+
+    if (!materialBag.has(LUYEN_KHI_TINH_HOA_ID, cost.tinhHoa)) {
+      return { ok: false, reason: 'missing_tinh_hoa' }
+    }
+
+    if (!materialBag.has(SPIRIT_STONE_MATERIAL_ID, cost.spiritStone)) {
+      return { ok: false, reason: 'missing_spirit_stone' }
+    }
 
     const maxLines = Math.min(
-      GLOBAL_MAX_AFFIXES,
-      rarityCap.prefix + rarityCap.suffix,
-      WASH_LINE_COUNT_WEIGHTS[oreMeta].length,
+      GLOBAL_MAX_AFFIXES - 1,
+      ITEM_QUALITY_SUBSTATS_RANGE[instance.quality].max,
     )
-
-    // Roll SỐ DÒNG weighted theo phẩm Quáng (§7.3 bảng 1).
-    const lineWeights = WASH_LINE_COUNT_WEIGHTS[oreMeta].slice(0, maxLines)
-
-    // maxLines = 0 (đồ phẩm Hoàng, 0 affix slot theo thiết kế) → không
-    // có gì để roll, lineCount PHẢI là 0 — sàn Math.max(1, ...) chỉ áp
-    // dụng khi thật sự có slot (maxLines > 0).
-    const lineCount = maxLines <= 0 ? 0 : Math.max(1, rollWeightedIndex(lineWeights, random) + 1)
-
-    const maxTier = EQUIPMENT_QUALITY_MAX_AFFIX_TIER[instance.quality]
-
-    const unlockedPools = EQUIPMENT_QUALITY_UNLOCKED_POOLS[instance.quality]
-
-    const prefixCap = rarityCap.prefix
-
-    const suffixCap = rarityCap.suffix
-
-    let prefixCount = 0
-
-    let suffixCount = 0
+    const lineCount = Math.floor(random() * (maxLines + 1))
+    const maxTier = Math.min(
+      ITEM_QUALITY_AFFIX_TIER[instance.quality],
+      WASH_TIER_WEIGHTS_BY_QUALITY[instance.quality].length,
+    )
+    const unlockedPools = ITEM_QUALITY_UNLOCKED_POOLS[instance.quality]
+    const prefixCount = Math.ceil(lineCount / 2)
+    const suffixCount = Math.floor(lineCount / 2)
+    const requestedKinds: AffixKind[] = [
+      ...Array<AffixKind>(prefixCount).fill('prefix'),
+      ...Array<AffixKind>(suffixCount).fill('suffix'),
+    ]
 
     const excludeStats: StatType[] = [instance.mainStat.stat]
 
     const rolled: RolledAffix[] = []
 
-    for (let index = 0; index < lineCount; index++) {
-      const kind: AffixKind =
-        prefixCount < prefixCap ? 'prefix' : suffixCount < suffixCap ? 'suffix' : 'prefix'
+    // Reserve a compatible Tiên Chất Exalted line before base rolls so
+    // another affix cannot consume its stat.
+    let exalted: RolledAffix | null = null
+    if (instance.quality === 'tien' && random() < EQUIPMENT_RARITY_EXALTED_AFFIX_CHANCE) {
+      exalted = this.rollEligibleAffixAtTier(
+        template,
+        ITEM_QUALITY_AFFIX_TIER.tien,
+        ['supreme'],
+        excludeStats,
+        affixRegistry,
+        random,
+      )
 
-      // P2 cleanup — cùng predicate với roll thường qua filterEligibleAffixes().
+      if (exalted) {
+        excludeStats.push(affixRegistry.get(exalted.affixId).stat)
+      }
+    }
+
+    for (const kind of requestedKinds) {
+      const hasEligibleTier = (candidate: Affix) =>
+        candidate.tiers.some((tierDef) => tierDef.tier <= maxTier)
+
       const candidates = this.filterEligibleAffixes(
         affixRegistry.getByKind(kind),
         template,
         unlockedPools,
         excludeStats,
-      )
+      ).filter(hasEligibleTier)
 
       const fallbackCandidates =
         candidates.length > 0
@@ -1024,13 +1131,13 @@ export class EquipmentSystem {
               template,
               unlockedPools,
               excludeStats,
-            )
+            ).filter(hasEligibleTier)
 
       if (fallbackCandidates.length === 0) {
         break
       }
 
-      const affix = fallbackCandidates[randomInt(0, fallbackCandidates.length - 1)]!
+      const affix = fallbackCandidates[Math.floor(random() * fallbackCandidates.length)]!
 
       const eligibleTiers = affix.tiers.filter((tierDef) => tierDef.tier <= maxTier)
 
@@ -1038,9 +1145,8 @@ export class EquipmentSystem {
         break
       }
 
-      // Roll TIER BAN ĐẦU weighted theo phẩm Quáng (§7.3 bảng 2).
       const tierWeights = eligibleTiers.map(
-        (tierDef) => WASH_TIER_WEIGHTS[oreMeta][tierDef.tier - 1] ?? 1,
+        (tierDef) => WASH_TIER_WEIGHTS_BY_QUALITY[instance.quality][tierDef.tier - 1] ?? 0,
       )
 
       const chosenTier = eligibleTiers[rollWeightedIndex(tierWeights, random)]!
@@ -1050,45 +1156,40 @@ export class EquipmentSystem {
 
         tier: chosenTier.tier,
 
-        value: rollAffixRange(chosenTier.min, chosenTier.max),
+        value: rollAffixRange(chosenTier.min, chosenTier.max, random),
       })
-
-      if (kind === 'prefix') {
-        prefixCount += 1
-      } else {
-        suffixCount += 1
-      }
 
       excludeStats.push(affix.stat)
     }
 
-    if (rolled.length === 0) {
+    if (rolled.length !== lineCount) {
       return { ok: false, reason: 'no_eligible_affix' }
     }
 
-    // Validation xong — trừ toàn bộ cost NGAY (mỗi lần roll/preview đều
-    // trả phí, xem ghi chú previewWashAffixes) — KHÔNG ghi affixes vào
-    // instance ở đây nữa, commitWashAffixes() làm việc đó khi người
-    // chơi bấm "Giữ". Điểm Rèn trừ vào INSTANCE (per-item), cost leo
-    // thang theo quality (rework 2026-08-30).
-    this.spendItemRefinementPoints(instance, washRefinementCost)
+    if (exalted) {
+      rolled.push(exalted)
+    }
 
-    materialBag.remove(washSpiritStoneId, washSpiritStoneCost)
+    // Every failure path exits before this transaction mutates resources.
+    // Preview pays here; commit only applies the already-paid roll.
+    this.spendItemRefinementPoints(instance, 1)
 
-    materialBag.remove(oreMaterialId, oreAmount)
+    materialBag.remove(LUYEN_KHI_TINH_HOA_ID, cost.tinhHoa)
+
+    materialBag.remove(SPIRIT_STONE_MATERIAL_ID, cost.spiritStone)
 
     return { ok: true, affixes: rolled }
   }
 
   /**
    * TINH LUYỆN (2026-08-25, resource-professions-rework plan §7.4) —
-   * giữ NGUYÊN identity của mọi substat, roll lại GIÁ TRỊ từng dòng
-   * KHÔNG khóa trong khoảng ±20% so với giá trị hiện tại (clamp trong
-   * min/max hợp lệ của tier). Khóa L dòng → cost hệ số N + L; KHÔNG
+   * giữ NGUYÊN identity của mọi substat, tăng GIÁ TRỊ từng dòng
+   * KHÔNG khóa trong khoảng 5–20% (clamp trong min/max hợp lệ của
+   * tier). Khóa L dòng → cost Linh Thạch hệ số N + L; KHÔNG
    * cho khóa toàn bộ.
    *
-   * Chi phí bắt buộc: Điểm Rèn + Tinh Hoa cùng tier/cảnh giới item
-   * (N + L) + Linh Thạch (đơn giá × N + L).
+   * Chi phí bắt buộc: 1 lượt Rèn + Luyện Khí Tinh Hoa theo Chất
+   * + Linh Thạch phổ thông (đơn giá × N + L).
    */
   refineAffixValues(
     instanceId: string,
@@ -1100,7 +1201,15 @@ export class EquipmentSystem {
     affixRegistry: AffixRegistry,
     _random: () => number = Math.random,
   ): { ok: boolean; reason?: string } {
-    const result = this.rollRefineValues(instanceId, lockedIndices, inventory, registry, materialBag, affixRegistry, _random)
+    const result = this.rollRefineValues(
+      instanceId,
+      lockedIndices,
+      inventory,
+      registry,
+      materialBag,
+      affixRegistry,
+      _random,
+    )
 
     if (!result.ok) {
       return result
@@ -1123,10 +1232,28 @@ export class EquipmentSystem {
     affixRegistry: AffixRegistry,
     random: () => number = Math.random,
   ): { ok: boolean; reason?: string; values?: RefineValueEntry[] } {
-    return this.rollRefineValues(instanceId, lockedIndices, inventory, registry, materialBag, affixRegistry, random)
+    return this.rollRefineValues(
+      instanceId,
+      lockedIndices,
+      inventory,
+      registry,
+      materialBag,
+      affixRegistry,
+      random,
+    )
   }
 
-  /** Chốt kết quả đã preview (previewRefineValues) — không kiểm tra/trừ cost lần nữa. */
+  /** Hủy capability Refine đang chờ; UI gọi khi người chơi bấm Bỏ/đổi context. */
+  discardRefinePreview(instanceId?: string): void {
+    if (
+      instanceId === undefined ||
+      this.pendingRefinePreview?.instance.instanceId === instanceId
+    ) {
+      this.pendingRefinePreview = null
+    }
+  }
+
+  /** Chốt đúng một lần payload do previewRefineValues/refineAffixValues vừa tạo. */
   commitRefineValues(
     instanceId: string,
     values: readonly RefineValueEntry[],
@@ -1134,10 +1261,67 @@ export class EquipmentSystem {
     slotManager: EquipmentSlotManager,
     affixRegistry: AffixRegistry,
   ): { ok: boolean; reason?: string } {
+    const pending = this.pendingRefinePreview
+
+    // Một commit attempt luôn tiêu capability nội bộ, kể cả item đã biến mất.
+    this.pendingRefinePreview = null
+
     const instance = inventory.get(instanceId)
 
     if (!instance) {
       return { ok: false, reason: 'not_found' }
+    }
+
+    if (!pending) {
+      return { ok: false, reason: 'invalid_refine_preview' }
+    }
+
+    const snapshot = pending.snapshot
+    const snapshotMatches =
+      pending.instance === instance &&
+      inventory.getMembershipGeneration(instance) === pending.membershipGeneration &&
+      instance.instanceId === snapshot.instanceId &&
+      instance.itemId === snapshot.itemId &&
+      instance.slot === snapshot.slot &&
+      instance.equipped === snapshot.equipped &&
+      instance.locked === snapshot.locked &&
+      instance.favorite === snapshot.favorite &&
+      instance.grade === snapshot.grade &&
+      instance.quality === snapshot.quality &&
+      instance.realmLevel === snapshot.realmLevel &&
+      instance.zoneId === snapshot.zoneId &&
+      instance.icon === snapshot.icon &&
+      instance.forgeUsesTotal === snapshot.forgeUsesTotal &&
+      instance.forgeUsesRemaining === snapshot.forgeUsesRemaining &&
+      refineMainStatMatches(instance.mainStat, snapshot.mainStat) &&
+      instance.affixes.length === snapshot.affixes.length &&
+      instance.affixes.every((affix, index) => {
+        const expected = snapshot.affixes[index]
+
+        return (
+          expected !== undefined &&
+          affix.affixId === expected.affixId &&
+          affix.tier === expected.tier &&
+          affix.value === expected.value
+        )
+      })
+
+    const payloadMatches =
+      Array.isArray(values) &&
+      values.length === pending.values.length &&
+      values.every((entry, index) => {
+        const expected = pending.values[index]
+
+        return (
+          expected !== undefined &&
+          isExactRefineValueEntry(entry) &&
+          entry.index === expected.index &&
+          entry.value === expected.value
+        )
+      })
+
+    if (!snapshotMatches || !payloadMatches) {
+      return { ok: false, reason: 'invalid_refine_preview' }
     }
 
     for (const entry of values) {
@@ -1164,6 +1348,10 @@ export class EquipmentSystem {
     affixRegistry: AffixRegistry,
     _random: () => number = Math.random,
   ): { ok: true; values: RefineValueEntry[] } | { ok: false; reason: string } {
+    // Mọi attempt mới thay thế capability cũ, kể cả attempt này bị từ chối.
+    // Vì vậy preview lỗi không thể làm sống lại một payload đã trả phí trước đó.
+    this.pendingRefinePreview = null
+
     const instance = inventory.get(instanceId)
 
     if (!instance || !registry.has(instance.itemId)) {
@@ -1203,35 +1391,20 @@ export class EquipmentSystem {
       return { ok: false, reason: 'cannot_lock_all' }
     }
 
-    if (this.itemRefinementPoints(instance) < REFINE_REFINEMENT_COST_BY_QUALITY[instance.quality]) {
-      return { ok: false, reason: 'missing_refinement_points' }
+    if (instance.affixes.some((rolled) => !Number.isFinite(rolled.value))) {
+      return { ok: false, reason: 'invalid_affix_value' }
     }
 
-    const essenceUnits = this.applyCostDiscount(lineCount + uniqueLocks.length)
-
-    const essenceId = equipmentEssenceMaterialId(instance.realmId)
-
-    if (!essenceId) {
-      return { ok: false, reason: 'no_conversion_rule' }
+    if (this.itemRefinementPoints(instance) <= 0) {
+      return { ok: false, reason: 'no_forge_uses' }
     }
 
-    if (!materialBag.has(essenceId, essenceUnits)) {
-      return { ok: false, reason: 'missing_essence' }
-    }
-
-    const spiritStoneCost = this.applyCostDiscount(
-      (lineCount + uniqueLocks.length) * REFINE_SPIRIT_STONE_PER_UNIT,
-    )
-
-    const refineSpiritStoneId = this.spiritStoneIdForRealm(instance.realmId)
-
-    if (!materialBag.has(refineSpiritStoneId, spiritStoneCost)) {
-      return { ok: false, reason: 'missing_spirit_stone' }
-    }
-
-    // Roll giá trị mới cho từng dòng KHÔNG khóa — ±20% hiện tại, clamp
-    // range tier. Kết quả thu thập trước, áp sau khi mọi thứ pass.
-    const newValues = new Map<number, number>()
+    const eligibleLines: Array<{
+      index: number
+      current: number
+      tierMin: number
+      tierMax: number
+    }> = []
 
     for (let index = 0; index < lineCount; index++) {
       if (uniqueLocks.includes(index)) {
@@ -1239,46 +1412,110 @@ export class EquipmentSystem {
       }
 
       const rolled = instance.affixes[index]!
-
       const affix = affixRegistry.get(rolled.affixId)
-
       const tierDef = affix.tiers.find((candidate) => candidate.tier === rolled.tier)
 
       if (!tierDef) {
         continue
       }
 
-      const current = getEffectiveAffixValue(rolled, affix)
+      const current = rolled.value
 
-      const low = Math.max(tierDef.min, current * (1 - REFINE_VALUE_VARIANCE))
+      if (current >= tierDef.max) {
+        continue
+      }
 
-      const high = Math.min(tierDef.max, current * (1 + REFINE_VALUE_VARIANCE))
-
-      newValues.set(index, rollAffixRange(Math.min(low, high), Math.max(low, high)))
+      eligibleLines.push({
+        index,
+        current,
+        tierMin: tierDef.min,
+        tierMax: tierDef.max,
+      })
     }
 
-    // Tinh Luyện atomic (plan §7.4) — nếu KHÔNG có dòng nào roll được giá
-    // trị mới (data cũ / migration có tier ngoài range affix.tiers) thì
-    // trả về no_eligible_affix TRƯỚC khi trừ cost. Tránh mất Tinh Hoa +
-    // Linh Thạch + Điểm Rèn oan khi player không nhận được gì.
-    if (newValues.size === 0) {
+    if (eligibleLines.length === 0) {
       return { ok: false, reason: 'no_eligible_affix' }
+    }
+
+    const essenceUnits = this.applyCostDiscount(
+      REFINE_TINH_HOA_COST_BY_QUALITY[instance.quality],
+    )
+
+    if (!materialBag.has(LUYEN_KHI_TINH_HOA_ID, essenceUnits)) {
+      return { ok: false, reason: 'missing_essence' }
+    }
+
+    const spiritStoneCost = this.applyCostDiscount(
+      (lineCount + uniqueLocks.length) * REFINE_SPIRIT_STONE_PER_UNIT,
+    )
+
+    if (!materialBag.has(SPIRIT_STONE_MATERIAL_ID, spiritStoneCost)) {
+      return { ok: false, reason: 'missing_spirit_stone' }
+    }
+
+    // Roll giá trị mới cho từng dòng eligible KHÔNG khóa. Mỗi dòng
+    // tăng 5–20% từ giá trị hiệu lực riêng rồi clamp theo tier.
+    const newValues = new Map<number, number>()
+
+    for (const { index, current, tierMin, tierMax } of eligibleLines) {
+      const roll = _random()
+
+      if (!Number.isFinite(roll) || roll < 0 || roll > 1) {
+        return { ok: false, reason: 'invalid_random_roll' }
+      }
+
+      const increase = REFINE_INCREASE_MIN + roll * (REFINE_INCREASE_MAX - REFINE_INCREASE_MIN)
+      const increased = current * (1 + increase)
+      const value = Math.min(tierMax, Math.max(tierMin, increased))
+
+      newValues.set(index, value)
+    }
+
+    const membershipGeneration = inventory.getMembershipGeneration(instance)
+
+    // Lookup đã chứng minh instance đang là exact live object trong bag. Guard
+    // này nằm trước transaction để một EquipmentBag sai contract vẫn không
+    // thể làm mất tài nguyên.
+    if (membershipGeneration === undefined) {
+      return { ok: false, reason: 'not_found' }
     }
 
     // Trừ cost NGAY (mỗi lần roll/preview đều trả phí, xem ghi chú
     // previewRefineValues) — KHÔNG ghi value vào instance ở đây nữa,
     // commitRefineValues() làm việc đó khi người chơi bấm "Giữ". Cost
-    // leo thang theo quality (rework 2026-08-30).
-    this.spendItemRefinementPoints(instance, REFINE_REFINEMENT_COST_BY_QUALITY[instance.quality])
+    // Tinh Hoa leo thang theo Chất; lượt Rèn luôn trừ đúng 1.
+    this.spendItemRefinementPoints(instance, 1)
 
-    materialBag.remove(refineSpiritStoneId, spiritStoneCost)
+    materialBag.remove(SPIRIT_STONE_MATERIAL_ID, spiritStoneCost)
 
-    materialBag.remove(essenceId, essenceUnits)
+    materialBag.remove(LUYEN_KHI_TINH_HOA_ID, essenceUnits)
 
-    return {
-      ok: true,
-      values: Array.from(newValues, ([index, value]) => ({ index, value })),
+    const values = Array.from(newValues, ([index, value]) => ({ index, value }))
+
+    this.pendingRefinePreview = {
+      instance,
+      membershipGeneration,
+      snapshot: {
+        instanceId: instance.instanceId,
+        itemId: instance.itemId,
+        slot: instance.slot,
+        equipped: instance.equipped,
+        locked: instance.locked,
+        favorite: instance.favorite,
+        grade: instance.grade,
+        quality: instance.quality,
+        realmLevel: instance.realmLevel,
+        zoneId: instance.zoneId,
+        icon: instance.icon,
+        forgeUsesTotal: instance.forgeUsesTotal,
+        forgeUsesRemaining: instance.forgeUsesRemaining,
+        mainStat: cloneRefineMainStat(instance.mainStat),
+        affixes: instance.affixes.map(({ affixId, tier, value }) => ({ affixId, tier, value })),
+      },
+      values: values.map(({ index, value }) => ({ index, value })),
     }
+
+    return { ok: true, values }
   }
 
   /**
@@ -1288,8 +1525,8 @@ export class EquipmentSystem {
    * reward thất bại. Không tiêu hao Điểm Rèn.
    *
    * Guards (§7.5): item đang trang bị / locked / favorite bị từ chối.
-   * Số Tinh Hoa theo bảng DISSOLVE_ESSENCE_RANGE_BY_QUALITY; tier
-   * Tinh Hoa theo realm của item.
+   * Số Tinh Hoa theo bảng ITEM_QUALITY_ESSENCE_RANGE; mọi Phẩm trang bị
+   * cùng trả một loại Luyện Khí Tinh Hoa.
    */
   dissolveInstances(
     instanceIds: readonly string[],
@@ -1329,13 +1566,7 @@ export class EquipmentSystem {
         return { ok: false, reason: 'favorite' }
       }
 
-      const essenceId = equipmentEssenceMaterialId(instance.realmId)
-
-      if (!essenceId) {
-        return { ok: false, reason: 'no_conversion_rule' }
-      }
-
-      const range = DISSOLVE_ESSENCE_RANGE_BY_QUALITY[instance.rarity]
+      const range = ITEM_QUALITY_ESSENCE_RANGE[instance.quality]
 
       if (!range) {
         return { ok: false, reason: 'no_conversion_rule' }
@@ -1345,32 +1576,17 @@ export class EquipmentSystem {
 
       instances.push(instance)
 
-      rewards.push({ materialId: essenceId, amount })
+      rewards.push({ materialId: LUYEN_KHI_TINH_HOA_ID, amount })
     }
 
     // Pass 2 — all-or-nothing transaction: xoá đúng item rồi cộng
     // Tinh Hoa trong cùng thao tác (§7.5).
     for (const instance of instances) {
+      this.discardRefinePreview(instance.instanceId)
       inventory.remove(instance.instanceId)
     }
 
     return { ok: true, rewards }
-  }
-
-  /** Meta phẩm Quáng của material id — null nếu không phải quáng nghề. */
-  private oreQualityOf(materialId: string): OreQuality | null {
-    const match =
-      /^(mortal|qi_refining|foundation_establishment)_ore_(hoang|huyen|dia|thien|tien)$/.exec(
-        materialId,
-      )
-
-    return match ? (match[2] as OreQuality) : null
-  }
-
-  private canUseOreForInstance(oreMaterialId: string, instanceRealmId: string): boolean {
-    const match = /^(mortal|qi_refining|foundation_establishment)_ore_/.exec(oreMaterialId)
-
-    return match !== null && match[1] === instanceRealmId
   }
 
   getModifiers(): StatModifier[] {
@@ -1409,7 +1625,7 @@ export class EquipmentSystem {
   ) {
     const enhanceLevel = slotManager.get(instance.slot).enhanceLevel
 
-    const scale = calculateEquipmentScale(enhanceLevel, instance.forgePoints)
+    const scale = calculateEquipmentScale(enhanceLevel)
 
     this.applyScaledModifier(
       instance.instanceId,

@@ -62,6 +62,7 @@ import type { Material } from '../material/Material'
 import { EquipmentRegistry } from '../equipment/EquipmentRegistry'
 import { EquipmentBag, type AutoDissolveReward } from '../equipment/EquipmentBag'
 import { EquipmentSystem } from '../equipment/EquipmentSystem'
+import { MAX_SLOT_ENHANCE_LEVEL } from '../equipment/EnhanceCurve'
 import type { RefineValueEntry } from '../equipment/EquipmentSystem'
 import type { RolledAffix } from '../equipment/RolledAffix'
 import { createDefaultEquipmentOperationCostCatalog } from '../equipment/EquipmentOperationCostCatalog'
@@ -70,7 +71,7 @@ import type { EquipmentSlot } from '../equipment/EquipmentTypes'
 import type { EquipmentSlotState } from '../equipment/EquipmentSlotState'
 import type { Equipment } from '../equipment/Equipment'
 import type { EquipmentInstance } from '../equipment/EquipmentInstance'
-import type { EquipmentQuality } from '../equipment/EquipmentQuality'
+import type { ItemQuality } from '../item/ItemQuality'
 import { AffixRegistry } from '../equipment/AffixRegistry'
 import type { Affix } from '../equipment/Affix'
 import { assertValidEquipmentMainStats } from '../equipment/EquipmentStatPolicy'
@@ -127,10 +128,8 @@ import {
   type AlchemyRecipe,
 } from '../alchemy/AlchemySystem'
 import { HERB_AGE_BASE_SUCCESS_PERCENT } from '../production/ProductionBalance'
-import {
-  DISSOLVE_ESSENCE_RANGE_BY_QUALITY,
-  equipmentEssenceMaterialId,
-} from '../equipment/RefinementBalance'
+import { ITEM_QUALITY_ESSENCE_RANGE } from '../equipment/ItemQualityBalance'
+import { LUYEN_KHI_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
 
 import { BuildingRegistry } from '../building/BuildingRegistry'
 import { BuildingManager } from '../building/BuildingManager'
@@ -1931,12 +1930,13 @@ export class GameManager {
     )
   }
 
-  getSlotMaxEnhanceLevel(slot: EquipmentSlot, _realmId: string): number {
-    const equipped = this.equipmentBag.getEquippedInSlot(slot)
-
-    const template = equipped ? this.getEquipmentTemplate(equipped.itemId) : undefined
-
-    return this.equipmentSystem.getMaxEnhanceLevel(template)
+  /**
+   * Task 10 (rework P3) — slot-level enhance: trần là MAX_SLOT_ENHANCE_LEVEL
+   * (100 = 10 realm × 10 cấp), KHÔNG còn theo template. Giữ method cho API
+   * ổn định; tham số legacy bỏ qua.
+   */
+  getSlotMaxEnhanceLevel(_slot: EquipmentSlot, _realmId: string): number {
+    return MAX_SLOT_ENHANCE_LEVEL
   }
 
   /** Template tra an toÃ n â€” registry.get() nÃ©m lá»—i vá»›i id láº¡, UI cáº§n undefined. */
@@ -1948,18 +1948,17 @@ export class GameManager {
     }
   }
 
-  /** Äiá»ƒm RÃ¨n per-item hiá»‡n táº¡i cá»§a 1 instance (= forgePoints, "TÃ¬nh tráº¡ng rÃ¨n x/y"). */
+  /** Remaining per-item forge uses (`forgeUsesRemaining`, shown as the forge condition). */
   itemRefinementPoints(instance: EquipmentInstance): number {
     return this.equipmentSystem.itemRefinementPoints(instance)
   }
 
   /**
-   * Táº¦Y LUYá»†N (plan Â§7.3) â€” reroll identity substat báº±ng QuÃ¡ng cÃ¹ng
-   * cáº£nh giá»›i + Äiá»ƒm RÃ¨n + Linh Tháº¡ch. Tráº£ vá» reason lá»—i cho UI.
+   * Wash all affixes using one forge use, quality-scaled equipment essence,
+   * and generic spirit stones. Returns a domain reason for presentation.
    */
   washItem(
     instanceId: string,
-    oreMaterialId: string,
     player: PlayerData,
   ): { ok: boolean; reason?: string } {
     void player
@@ -1968,7 +1967,6 @@ export class GameManager {
 
     return this.equipmentSystem.washAffixes(
       instanceId,
-      oreMaterialId,
       this.equipmentBag,
       this.equipmentRegistry,
       this.materialBag,
@@ -1978,8 +1976,8 @@ export class GameManager {
   }
 
   /**
-   * TINH LUYá»†N (plan Â§7.4) â€” reroll giÃ¡ trá»‹ substat Â±20%, khÃ³a dÃ²ng
-   * tÃ¹y chá»n (cost há»‡ sá»‘ N+L). Tráº£ vá» reason lá»—i cho UI.
+   * TINH LUYỆN (plan §7.4) — mỗi dòng eligible không khóa tăng 5–20%
+   * rồi clamp theo trần tier; tối đa khóa 3 dòng. Trả về reason lỗi cho UI.
    */
   refineItem(
     instanceId: string,
@@ -2006,15 +2004,11 @@ export class GameManager {
    * KHÔNG ghi affixes mới vào instance. UI giữ affixes trả về ở state
    * tạm, gọi commitWashItem() khi người chơi bấm "Giữ".
    */
-  previewWashItem(
-    instanceId: string,
-    oreMaterialId: string,
-  ): { ok: boolean; reason?: string; affixes?: RolledAffix[] } {
+  previewWashItem(instanceId: string): { ok: boolean; reason?: string; affixes?: RolledAffix[] } {
     this.syncEquipmentCostDiscount()
 
     return this.equipmentSystem.previewWashAffixes(
       instanceId,
-      oreMaterialId,
       this.equipmentBag,
       this.equipmentRegistry,
       this.materialBag,
@@ -2064,20 +2058,27 @@ export class GameManager {
     )
   }
 
-  /** W5 â€” cost Táº©y Luyá»‡n sau discount KhÃ­ ÄÆ°á»ng cho UI. realmId cá»§a trang
-   * bá»‹ quyáº¿t Ä‘á»‹nh PHáº¨M Linh Tháº¡ch tiÃªu (T2). */
-  getWashCost(realmId?: string, quality?: EquipmentQuality) {
-    this.syncEquipmentCostDiscount()
-
-    return this.equipmentSystem.getWashCost(realmId, quality)
+  /** Hủy Refine preview đã trả phí khi UI bỏ kết quả hoặc đổi context. */
+  discardRefinePreview(instanceId?: string): void {
+    this.equipmentSystem.discardRefinePreview(instanceId)
   }
 
-  /** W5 â€” cost Tinh Luyá»‡n sau discount KhÃ­ ÄÆ°á»ng cho UI. realmId cá»§a trang
-   * bá»‹ quyáº¿t Ä‘á»‹nh PHáº¨M Linh Tháº¡ch tiÃªu (T2). */
-  getRefineCost(lineCount: number, lockedCount: number, realmId?: string, quality?: EquipmentQuality) {
+  /** Discounted Wash cost for UI, keyed by the item's quality. */
+  getWashCost(quality: ItemQuality) {
     this.syncEquipmentCostDiscount()
 
-    return this.equipmentSystem.getRefineCost(lineCount, lockedCount, realmId, quality)
+    return this.equipmentSystem.getWashCost(quality)
+  }
+
+  /** Discounted Refine cost for UI, keyed by the item's quality. */
+  getRefineCost(
+    lineCount: number,
+    lockedCount: number,
+    quality?: ItemQuality,
+  ) {
+    this.syncEquipmentCostDiscount()
+
+    return this.equipmentSystem.getRefineCost(lineCount, lockedCount, quality)
   }
 
   /**
@@ -2117,25 +2118,19 @@ export class GameManager {
         continue
       }
 
-      const essenceId = equipmentEssenceMaterialId(instance.realmId)
-
-      if (!essenceId) {
-        continue
-      }
-
-      const range = DISSOLVE_ESSENCE_RANGE_BY_QUALITY[instance.rarity]
+      const range = ITEM_QUALITY_ESSENCE_RANGE[instance.quality]
 
       if (!range) {
         continue
       }
 
-      const entry = totals.get(essenceId) ?? { min: 0, max: 0 }
+      const entry = totals.get(LUYEN_KHI_TINH_HOA_ID) ?? { min: 0, max: 0 }
 
       entry.min += range.min
 
       entry.max += range.max
 
-      totals.set(essenceId, entry)
+      totals.set(LUYEN_KHI_TINH_HOA_ID, entry)
     }
 
     return Array.from(totals, ([materialId, value]) => ({
@@ -2940,17 +2935,35 @@ export class GameManager {
   // =========================
 
   /**
-   * Náº¡p láº¡i toÃ n bá»™ state Ä‘Ã£ lÆ°u vÃ o cÃ¡c Manager tÆ°Æ¡ng á»©ng. PHáº¢I
-   * gá»i sau khi registerMaterials/registerEquipment/registerPills/
-   * registerTalismans/registerSkillTemplates/registerTechniqueTemplates
-   * Ä‘Ã£ cháº¡y â€” materials/pills/talismans resolve theo id qua registry,
-   * cáº§n registry Ä‘Ã£ cÃ³ data trÆ°á»›c.
+   * Validate registry-backed save references without mutating any restore owner.
+   * App calls this before Pinia restore; restoreFromSave repeats it defensively.
+   */
+  preflightSaveRegistryReferences(save: GameSave): void {
+    for (const instance of save.equipment) {
+      if (!this.equipmentRegistry.has(instance.itemId)) {
+        throw new Error(`Unknown equipment template in save: ${instance.itemId}`)
+      }
+
+      for (const affix of instance.affixes) {
+        if (!this.affixRegistry.has(affix.affixId)) {
+          throw new Error(`Unknown equipment affix in save: ${affix.affixId}`)
+        }
+      }
+    }
+  }
+
+  /**
+   * Restore persisted state into the corresponding managers. Call only after
+   * registerMaterials/registerEquipment/registerAffixes/registerPills/
+   * registerTalismans/registerSkillTemplates/registerTechniqueTemplates have
+   * populated every ID-backed registry.
    *
-   * Tráº£ vá» modifier equipment má»›i nháº¥t Ä‘á»ƒ caller Ä‘á»“ng bá»™ vÃ o
-   * player.modifiers (equipmentSystem.getModifiers() khÃ´ng tá»± biáº¿t
-   * gá»i player.setEquipmentModifiers()).
+   * Returns the latest equipment modifiers so the caller can synchronize them
+   * into player.modifiers; EquipmentSystem does not own the player store.
    */
   restoreFromSave(save: GameSave): StatModifier[] {
+    this.preflightSaveRegistryReferences(save)
+
     for (const technique of save.techniques) {
       if (!this.techniqueManager.has(technique.id)) {
         // Text-refresh-on-load: cung logic voi skill ben duoi -- name/
@@ -3028,11 +3041,7 @@ export class GameManager {
     let restoredAutoDissolved: AutoDissolveReward[] = []
 
     for (const instance of save.equipment) {
-      // Item template cũ đã bị xoá theo equipment rework; bỏ hẳn instance
-      // mồ côi thay vì để restoreModifiers truy cập registry và crash.
-      if (this.equipmentRegistry.has(instance.itemId)) {
-        restoredAutoDissolved = [...restoredAutoDissolved, ...(this.equipmentBag.add(instance) ?? [])]
-      }
+      restoredAutoDissolved = [...restoredAutoDissolved, ...(this.equipmentBag.add(instance) ?? [])]
     }
 
     for (const reward of restoredAutoDissolved) {

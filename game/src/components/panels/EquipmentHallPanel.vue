@@ -1,43 +1,45 @@
-<script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+﻿<script setup lang="ts">
+import { computed, onBeforeUnmount, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useEquipmentActions } from '@/composables/useEquipmentActions'
 import { usePanelPagination } from '@/composables/usePanelPagination'
-import {
-  equipmentEssenceMaterialId,
-} from '@/core/equipment/RefinementBalance'
-import { EQUIPMENT_RARITY_AFFIX_SLOTS } from '@/core/equipment/EquipmentRarity'
+import { LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
+import { ITEM_GRADE_ORDER } from '@/core/equipment/ItemGradeRefs'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import type { EquipmentSlot } from '@/core/equipment/EquipmentTypes'
 import type { RolledAffix } from '@/core/equipment/RolledAffix'
-import { materialLabel, affixLabel, equipmentSlotLabel, equipmentQualityLabel, equipmentRarityLabel, realmLabel, SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
+import { materialLabel, affixLabel, equipmentSlotLabel, equipmentRarityLabel, realmLabel, SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
 import { REALMS } from '@/data/realms/realm'
-import { ITEM_GRADE_ORDER } from '@/core/item/ItemGrade'
-import { EQUIPMENT_QUALITY_ORDER } from '@/core/equipment/EquipmentQuality'
+import { ITEM_QUALITY_ORDER } from '@/core/item/ItemQuality'
+import { getRealmIdForProfessionGrade } from '@/core/profession/ProfessionGrade'
 import { statLabel, formatStat } from '@/core/stats/StatLabels'
 import type { Stats } from '@/core/stats/StatBlock'
 import { useActionFeedbackStore } from '@/stores/actionFeedback'
-import { getSpiritStoneMaterialIdForEnhanceLevel } from '@/core/material/SpiritStoneMaterial'
+import {
+  getSpiritStoneMaterialIdForEnhanceLevel,
+  SPIRIT_STONE_MATERIAL_ID,
+} from '@/core/material/SpiritStoneMaterial'
 import SlotView from '@/components/common/SlotView.vue'
 import { EQUIPMENT_SLOTS } from '@/core/equipment/EquipmentSlotState'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
-import { equipmentQualityRank, itemGradeRank } from '@/composables/slots/normalizeSlotRank'
+import { itemGradeRank, professionGradeRank } from '@/composables/slots/normalizeSlotRank'
 import GameButton from '@/components/common/GameButton.vue'
 import TabBar from '@/components/common/TabBar.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import {
-  getMaxForgePoints,
   calculateEquipmentScale,
   getEffectiveAffixValue,
   type RefineValueEntry,
 } from '@/core/equipment/EquipmentSystem'
+import { MAX_SLOT_ENHANCE_LEVEL, enhanceSuccessRate, ENHANCE_PITY_THRESHOLD } from '@/core/equipment/EnhanceCurve'
 
 // Khí Đường (2026-08-25, resource-professions-rework plan §7/§9.2) —
 // bốn tab ĐÚNG contract: Cường Hóa (slot), Tẩy Luyện (identity substat
-// theo phẩm Quáng), Tinh Luyện (±20% giá trị + khóa dòng N+L), Hóa
+// theo phẩm Quáng), Tinh Luyện (dòng đủ điều kiện tăng 5–20%, clamp
+// trần tier + khóa dòng N+L), Hóa
 // Luyện (destructive → Tinh Hoa, batch all-or-nothing). Rework
 // 2026-08-30: bỏ Nạp Điểm Rèn; cost Điểm Rèn Tẩy/Tinh theo quality.
 //
@@ -63,7 +65,15 @@ const gameManager = useGameManager()
 
 const { stateVersion, bumpState } = useStateVersion()
 
-const { enhance, washPreview, washCommit, refinePreview, refineCommit, dissolve } = useEquipmentActions()
+const {
+  enhance,
+  washPreview,
+  washCommit,
+  refinePreview,
+  refineCommit,
+  refineDiscard,
+  dissolve,
+} = useEquipmentActions()
 
 const feedback = useActionFeedbackStore()
 
@@ -76,12 +86,18 @@ const pendingWashAffixes = ref<RolledAffix[] | null>(null)
 
 const pendingRefineValues = ref<RefineValueEntry[] | null>(null)
 
+function clearPendingRefinePreview() {
+  refineDiscard(selectedInstanceId.value ?? undefined)
+
+  pendingRefineValues.value = null
+}
+
 function switchTab(tab: TabId) {
+  clearPendingRefinePreview()
+
   activeTab.value = tab
 
   pendingWashAffixes.value = null
-
-  pendingRefineValues.value = null
 }
 
 // =========================
@@ -101,7 +117,7 @@ interface EquippedRow {
 
   quality: EquipmentInstance['quality']
 
-  rarity: EquipmentInstance['rarity']
+  rarity: EquipmentInstance['quality']
 
   affixCount: number
 
@@ -117,6 +133,16 @@ interface EquippedRow {
   qualityRank: number
 
   rarityRank: number
+}
+
+function equipmentRealmId(instance: EquipmentInstance): string {
+  const realmId = getRealmIdForProfessionGrade(instance.grade)
+
+  if (!realmId) {
+    throw new Error(`Missing realm for equipment grade ${instance.grade}`)
+  }
+
+  return realmId
 }
 
 const equippedRows = computed<EquippedRow[]>(() => {
@@ -137,11 +163,11 @@ const equippedRows = computed<EquippedRow[]>(() => {
 
       name: template?.name ?? instance.itemId,
 
-      realmId: instance.realmId,
+      realmId: equipmentRealmId(instance),
 
       quality: instance.quality,
 
-      rarity: instance.rarity,
+      rarity: instance.quality,
 
       affixCount: instance.affixes.length,
 
@@ -166,9 +192,9 @@ const equippedRows = computed<EquippedRow[]>(() => {
           )
         : undefined,
 
-      qualityRank: equipmentQualityRank(instance.quality),
+      qualityRank: professionGradeRank(instance.grade),
 
-      rarityRank: itemGradeRank(instance.rarity),
+      rarityRank: itemGradeRank(instance.quality),
     }
   })
 })
@@ -181,7 +207,7 @@ const selectedRow = computed(
 
 // =========================
 // Điểm Rèn PER-ITEM (rework 2026-08-26) = "Tình trạng rèn" trong
-// tooltip — forgePoints / getMaxForgePoints(quality, forgePotential).
+// tooltip — forgeUsesRemaining / forgeUsesTotal.
 // Tẩy/Tinh Luyện tiêu thụ ngân sách này của CHÍNH món đồ.
 // =========================
 
@@ -201,11 +227,13 @@ const itemRenState = computed<{ points: number; max: number } | null>(() => {
   return {
     points: gameManager.itemRefinementPoints(instance),
 
-    max: getMaxForgePoints(instance.quality, instance.forgePotential),
+    max: instance.forgeUsesTotal,
   }
 })
 
 function selectEquipped(instanceId: string) {
+  clearPendingRefinePreview()
+
   selectedInstanceId.value = instanceId
 
   lockedIndices.value = []
@@ -213,11 +241,11 @@ function selectEquipped(instanceId: string) {
   selectedOreId.value = null
 
   pendingWashAffixes.value = null
-
-  pendingRefineValues.value = null
 }
 
 function clearSelection() {
+  clearPendingRefinePreview()
+
   selectedInstanceId.value = null
 
   lockedIndices.value = []
@@ -225,8 +253,6 @@ function clearSelection() {
   selectedOreId.value = null
 
   pendingWashAffixes.value = null
-
-  pendingRefineValues.value = null
 }
 
 /**
@@ -279,10 +305,6 @@ const oreChoices = computed(() => {
 
 const selectedOreId = ref<string | null>(null)
 
-watch(selectedOreId, () => {
-  pendingWashAffixes.value = null
-})
-
 // =========================
 // Tab Cường Hóa
 // =========================
@@ -331,7 +353,7 @@ const enhanceRows = computed<EnhanceSlotRow[]>(() => {
     const spiritStone = gameManager.getEnhanceSpiritStoneCost(slotState.slot, realmId)
     const spiritStoneMaterialId = getSpiritStoneMaterialIdForEnhanceLevel(slotState.enhanceLevel)
 
-    const maxLevel = gameManager.getSlotMaxEnhanceLevel(slotState.slot, realmId)
+    const maxLevel = MAX_SLOT_ENHANCE_LEVEL
 
     return {
       slot: slotState.slot,
@@ -418,9 +440,8 @@ const enhancePreviewRows = computed<EnhancePreviewRow[] | null>(() => {
     return null
   }
 
-  const currentScale = calculateEquipmentScale(row.enhanceLevel, instance.forgePoints)
-
-  const nextScale = calculateEquipmentScale(row.enhanceLevel + 1, instance.forgePoints)
+  const currentScale = calculateEquipmentScale(row.enhanceLevel)
+  const nextScale = calculateEquipmentScale(row.enhanceLevel + 1)
 
   function toRow(key: string, label: string, stat: keyof Stats | undefined, baseFlat: number): EnhancePreviewRow {
     const currentValue = baseFlat * currentScale
@@ -470,7 +491,7 @@ const enhancePreviewRows = computed<EnhancePreviewRow[] | null>(() => {
 const washCost = computed(() => {
   stateVersion.value
 
-  return gameManager.getWashCost(selectedRow.value?.realmId, selectedRow.value?.quality)
+  return gameManager.getWashCost(selectedRow.value?.quality ?? ITEM_QUALITY_ORDER[0]!)
 })
 
 function canWash(): boolean {
@@ -479,19 +500,11 @@ function canWash(): boolean {
   if (!row) {
     return false
   }
-  // Tẩy Luyện guard (2026-08-30) — đồ Hoàng (0 affix slot) không thể
-  // roll được dòng nào; core trả no_eligible_affix nhưng UX kém nếu
-  // đợi player bấm mới biết lỗi. Disable sớm tại UI.
-  const affixSlotCap = EQUIPMENT_RARITY_AFFIX_SLOTS[row.rarity]
-  const hasAffixSlots = affixSlotCap.prefix + affixSlotCap.suffix > 0
-
   return (
-    hasAffixSlots &&
-    selectedOreId.value !== null &&
     ren !== null &&
-    gameManager.materialBag.getAmount(selectedOreId.value) >= washCost.value.oreAmount &&
-    ren.points >= washCost.value.refinementPoints &&
-    spiritStoneOwned.value >= washCost.value.spiritStone
+    ren.points > 0 &&
+    washEssenceOwned.value >= washCost.value.tinhHoa &&
+    washSpiritStoneOwned.value >= washCost.value.spiritStone
   )
 }
 
@@ -502,13 +515,7 @@ function doWashPreview() {
     return
   }
 
-  if (!selectedOreId.value) {
-    feedback.warning(t('panels.equipmentHall.messages.refineNeedOre'))
-
-    return
-  }
-
-  const affixes = washPreview(selectedRow.value.instanceId, selectedOreId.value)
+  const affixes = washPreview(selectedRow.value.instanceId)
 
   if (affixes) {
     pendingWashAffixes.value = affixes
@@ -640,7 +647,7 @@ function toggleLock(index: number) {
     }
   }
 
-  pendingRefineValues.value = null
+  clearPendingRefinePreview()
 }
 
 const refineCost = computed(() => {
@@ -649,30 +656,46 @@ const refineCost = computed(() => {
   return gameManager.getRefineCost(
     selectedAffixes.value.length,
     lockedIndices.value.length,
-    selectedRow.value?.realmId,
     selectedRow.value?.quality,
   )
 })
 
-// Plan Workstream F — số dư Linh Thạch đọc từ MaterialBag. T2 (review
-// 2026-08-28): phẩm Linh Thạch cần cho Tẩy/Tinh Luyện resolve theo realm
-// trang bị đang chọn — số dư hiển thị đúng phẩm đó.
-const spiritStoneCostMaterialId = computed(() => {
+// Refine consumes the generic spirit-stone stack; keep this as computed
+// derived state so stateVersion refreshes the displayed owned amount.
+const refineSpiritStoneCostMaterialId = computed(() => {
   stateVersion.value
 
-  return washCost.value.spiritStoneMaterialId
+  return refineCost.value.spiritStoneMaterialId
 })
 
-const spiritStoneCostName = computed(() => {
-  const id = spiritStoneCostMaterialId.value
+const washSpiritStoneCostName = computed(() =>
+  gameManager.materialRegistry.has(SPIRIT_STONE_MATERIAL_ID)
+    ? gameManager.materialRegistry.get(SPIRIT_STONE_MATERIAL_ID).name
+    : SPIRIT_STONE_LABEL,
+)
+
+const refineSpiritStoneCostName = computed(() => {
+  const id = refineSpiritStoneCostMaterialId.value
 
   return gameManager.materialRegistry.has(id) ? gameManager.materialRegistry.get(id).name : SPIRIT_STONE_LABEL
 })
 
-const spiritStoneOwned = computed(() => {
+const washSpiritStoneOwned = computed(() => {
   stateVersion.value
 
-  return gameManager.materialBag.getAmount(spiritStoneCostMaterialId.value)
+  return gameManager.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)
+})
+
+const washEssenceOwned = computed(() => {
+  stateVersion.value
+
+  return gameManager.materialBag.getAmount(LUYEN_KHI_TINH_HOA_ID)
+})
+
+const refineSpiritStoneOwned = computed(() => {
+  stateVersion.value
+
+  return gameManager.materialBag.getAmount(refineSpiritStoneCostMaterialId.value)
 })
 
 const refineEssenceOwned = computed(() => {
@@ -682,9 +705,7 @@ const refineEssenceOwned = computed(() => {
     return 0
   }
 
-  const essenceId = equipmentEssenceMaterialId(selectedRow.value.realmId)
-
-  return essenceId ? gameManager.materialBag.getAmount(essenceId) : 0
+  return gameManager.materialBag.getAmount(LUYEN_KHI_TINH_HOA_ID)
 })
 
 function canRefine(): boolean {
@@ -694,7 +715,7 @@ function canRefine(): boolean {
     selectedAffixes.value.length > 0 &&
     lockedIndices.value.length < selectedAffixes.value.length &&
     refineEssenceOwned.value >= refineCost.value.essenceUnits &&
-    spiritStoneOwned.value >= refineCost.value.spiritStone &&
+    refineSpiritStoneOwned.value >= refineCost.value.spiritStone &&
     ren !== null &&
     ren.points >= refineCost.value.refinementPoints
   )
@@ -706,6 +727,8 @@ function doRefinePreview() {
 
     return
   }
+
+  clearPendingRefinePreview()
 
   const values = refinePreview(selectedRow.value.instanceId, [...lockedIndices.value])
 
@@ -719,10 +742,20 @@ function doRefineKeep() {
     return
   }
 
-  if (refineCommit(selectedRow.value.instanceId, pendingRefineValues.value)) {
-    pendingRefineValues.value = null
-  }
+  const instanceId = selectedRow.value.instanceId
+  const values = pendingRefineValues.value
+
+  // commit attempt luôn tiêu capability core, nên local preview cũng phải biến
+  // mất kể cả commit bị từ chối do state vừa thay đổi.
+  pendingRefineValues.value = null
+  refineCommit(instanceId, values)
 }
+
+function doRefineDiscard() {
+  clearPendingRefinePreview()
+}
+
+onBeforeUnmount(clearPendingRefinePreview)
 
 const pendingRefineByIndex = computed(() => {
   const map = new Map<number, number>()
@@ -772,7 +805,7 @@ const washAffixCompareRows = computed<AffixCompareRow[]>(() => {
 })
 
 const washRenAfter = computed(() =>
-  itemRenState.value ? Math.max(0, itemRenState.value.points - washCost.value.refinementPoints) : 0,
+  itemRenState.value ? Math.max(0, itemRenState.value.points - 1) : 0,
 )
 
 const refineRenAfter = computed(() =>
@@ -812,22 +845,22 @@ interface DissolveCandidate {
 // ngay lúc mount (test bắt được lỗi này).
 const dissolveFilterRealm = ref<string>('any')
 
-// Bug 2026-09-01 (T2.3): dropdown "Chất" từng so instance.rarity (Ngũ
-// Phẩm) — nhầm chất vs phẩm. Tách đúng 2 trục:
-//   dissolveFilterRarity  — Ngũ Phẩm (hoang..tien)   → instance.rarity
-//   dissolveFilterQuality — 9 bậc Khí (pham_khi..)   → instance.quality
+// Task 4 bridge: cả hai control cũ tạm đọc chung ItemQuality. Task 19 sẽ
+// hợp nhất UI/filter contract sau khi các bước gameplay trung gian hoàn tất.
 const dissolveFilterRarity = ref<string>('any')
 
 const dissolveFilterQuality = ref<string>('any')
 
 function passesDissolveFilter(instance: EquipmentInstance): boolean {
-  if (dissolveFilterRealm.value !== 'any' && instance.realmId !== dissolveFilterRealm.value) {
+  const instanceRealmId = getRealmIdForProfessionGrade(instance.grade)
+
+  if (dissolveFilterRealm.value !== 'any' && instanceRealmId !== dissolveFilterRealm.value) {
     return false
   }
 
   if (
     dissolveFilterRarity.value !== 'any' &&
-    instance.rarity !== dissolveFilterRarity.value
+    instance.quality !== dissolveFilterRarity.value
   ) {
     return false
   }
@@ -865,9 +898,9 @@ const dissolveCandidates = computed<DissolveCandidate[]>(() => {
 
         slotLabel: equipmentSlotLabel(instance.slot),
 
-        quality: equipmentQualityLabel(instance.quality),
+        quality: equipmentRarityLabel(instance.quality),
 
-        realmId: instance.realmId,
+        realmId: equipmentRealmId(instance),
 
         icon: instance.icon ?? template?.icon,
 
@@ -888,9 +921,9 @@ const dissolveCandidates = computed<DissolveCandidate[]>(() => {
             )
           : undefined,
 
-        qualityRank: equipmentQualityRank(instance.quality),
+        qualityRank: professionGradeRank(instance.grade),
 
-        rarityRank: itemGradeRank(instance.rarity),
+        rarityRank: itemGradeRank(instance.quality),
       }
     })
 })
@@ -1142,7 +1175,7 @@ function doDissolve() {
 
         <div class="qi-hall__info-row">
           <div class="qi-hall__info-options">
-            <span class="qi-hall__info-label">{{ t('panels.equipmentHall.labels.oreSelection') }} (×{{ washCost.oreAmount }})</span>
+            <span class="qi-hall__info-label">{{ t('panels.equipmentHall.labels.oreSelection') }}</span>
 
             <label v-for="ore in oreChoices" :key="ore.materialId" class="qi-hall__option">
               <input type="radio" :value="ore.materialId" v-model="selectedOreId" />
@@ -1155,7 +1188,8 @@ function doDissolve() {
                (2026-08-30, bug report: trùng lặp) — costline chỉ còn chi
                phí KHÁC (Linh Thạch) chưa hiện ở đâu. -->
           <p class="qi-hall__costline">
-            {{ t('panels.equipmentHall.labels.costPerUse') }} {{ washCost.spiritStone }} {{ spiritStoneCostName }}
+            {{ t('panels.equipmentHall.labels.costPerUse') }} {{ washCost.tinhHoa }} {{ t('panels.equipmentHall.labels.essenceName') }}
+            ({{ t('panels.equipmentHall.labels.ownedPrefix') }} {{ washEssenceOwned }}) · {{ washCost.spiritStone }} {{ washSpiritStoneCostName }}
           </p>
         </div>
 
@@ -1240,11 +1274,12 @@ function doDissolve() {
 
         <!-- Bỏ jargon nội bộ "Cost hệ số N+L" + Điểm Rèn trùng dòng chú
              thích đầu card (2026-08-30, bug report) — chỉ còn quy tắc
-             ±20% (không hiển thị ở đâu khác) và chi phí Tinh Hoa/Linh
+             tăng 5–20% cho dòng đủ điều kiện, không khóa, clamp trần tier
+             (không hiển thị ở đâu khác) và chi phí Tinh Hoa/Linh
              Thạch thật sự chưa có chỗ nào hiện. -->
         <p class="qi-hall__info-row qi-hall__costline">
           {{ t('panels.equipmentHall.labels.refineRule') }} {{ refineCost.essenceUnits }} {{ t('panels.equipmentHall.labels.essenceName') }}
-          ({{ t('panels.equipmentHall.labels.ownedPrefix') }} {{ refineEssenceOwned }}) · {{ refineCost.spiritStone }} {{ spiritStoneCostName }}
+          ({{ t('panels.equipmentHall.labels.ownedPrefix') }} {{ refineEssenceOwned }}) · {{ refineCost.spiritStone }} {{ refineSpiritStoneCostName }}
         </p>
 
         <div class="qi-hall__button-row">
@@ -1254,6 +1289,10 @@ function doDissolve() {
 
           <GameButton v-if="pendingRefineValues" size="lg" variant="secondary" @click="doRefineKeep">
             {{ t('panels.equipmentHall.buttons.keep') }}
+          </GameButton>
+
+          <GameButton v-if="pendingRefineValues" size="lg" variant="secondary" @click="doRefineDiscard">
+            {{ t('panels.equipmentHall.buttons.discard') }}
           </GameButton>
         </div>
       </div>
@@ -1272,7 +1311,7 @@ function doDissolve() {
           </option>
         </select>
 
-        <!-- Ngũ Phẩm (rarity) — item.rarity -->
+        <!-- Legacy grade filter temporarily reads unified item.quality. -->
         <select v-model="dissolveFilterRarity">
           <option value="any">{{ t('panels.equipmentHall.select.anyGrade') }}</option>
 
@@ -1285,8 +1324,8 @@ function doDissolve() {
         <select v-model="dissolveFilterQuality">
           <option value="any">{{ t('panels.equipmentHall.select.anyQuality') }}</option>
 
-          <option v-for="quality in EQUIPMENT_QUALITY_ORDER" :key="quality" :value="quality">
-            {{ equipmentQualityLabel(quality) }}
+          <option v-for="quality in ITEM_QUALITY_ORDER" :key="quality" :value="quality">
+            {{ equipmentRarityLabel(quality) }}
           </option>
         </select>
 
@@ -1489,6 +1528,7 @@ function doDissolve() {
 .qi-hall__button-row {
   flex: 0 0 auto;
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
 }
