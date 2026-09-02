@@ -47,6 +47,15 @@ const props = defineProps<{
    * theo đúng quy ước "Phẩm = khung, Chất = chữ/badge phụ"). */
   rarityRank?: number
 
+  /** Trần (max) của thang `rarityRank` — mặc định 5 (itemQualityRank,
+   * Hoàng→Tiên) cho MỌI caller equipment hiện có. Material chỉ có 1 trục
+   * rank (professionRankOf, 1-10) nên khi feed rank đó vào `rarityRank`
+   * phải truyền kèm `rarityRankScale: 10`, nếu không rank=5 (Ngũ Phẩm,
+   * giữa thang) sẽ bị hiểu nhầm là kịch trần (Fix 1, final review
+   * item-grade-quality-rework — MaterialBagSection.vue từng feed rank
+   * 1-10 vào prop 1-5 này). */
+  rarityRankScale?: 5 | 10
+
   state?: SlotPresentationState
 
   badges?: readonly SlotBadge[]
@@ -105,8 +114,11 @@ const rarityColor = computed(() => {
 // Trần professionGradeRank = 10 (Tiên Phẩm).
 const isMaxRank = computed(() => clampRank(props.equipmentQualityRank) === 10)
 // Trần itemQualityRank = 5 (Tiên Chất) — KHÔNG còn 9 (model cũ rải
-// 1-3-5-7-9 đã bỏ, xem normalizeSlotRank.ts).
-const isMaxRarityRank = computed(() => clampRank(props.rarityRank) === 5)
+// 1-3-5-7-9 đã bỏ, xem normalizeSlotRank.ts). rarityRankScale cho phép
+// caller feed 1 thang rank KHÁC (vd Material professionRankOf 1-10) vào
+// cùng prop `rarityRank` mà vẫn so đúng trần của thang đó — mặc định 5
+// giữ nguyên hành vi mọi caller equipment hiện có (Fix 1, final review).
+const isMaxRarityRank = computed(() => clampRank(props.rarityRank) === (props.rarityRankScale ?? 5))
 
 // ============================================================
 // PRECEDENCE (mục 17.2) — locked chặn interaction+validation; disabled
@@ -508,8 +520,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
   pointer-events: none;
 }
 
-.slot-view__caption [data-name-tone='tien'],
-.slot-view__caption [data-name-tone='thien_dia_trong_khi'] {
+.slot-view__caption [data-name-tone='tien'] {
   color: transparent !important;
   background: var(--rank-gradient-10);
   background-clip: text;

@@ -110,6 +110,36 @@ describe('SlotView — rank 1-10 (professionGradeRank) / 1-5 (itemQualityRank)',
   })
 })
 
+describe('SlotView — rarityRankScale (Fix 1, final review item-grade-quality-rework)', () => {
+  it('không truyền rarityRankScale (mặc định 5) — hành vi equipment cũ không đổi: rank 5 = max', () => {
+    const { button, unmount } = mountSlot({ item: { id: 1 }, label: 'X', rarityRank: 5 })
+    expect(button.classList.contains('slot-view--max-rank')).toBe(true)
+    unmount()
+  })
+
+  it('rarityRankScale = 10: material rank 5 (Ngũ Phẩm, GIỮA thang 1-10) KHÔNG được gắn max-rank', () => {
+    const { button, unmount } = mountSlot({
+      item: { id: 1 },
+      label: 'X',
+      rarityRank: 5,
+      rarityRankScale: 10,
+    })
+    expect(button.classList.contains('slot-view--max-rank')).toBe(false)
+    unmount()
+  })
+
+  it('rarityRankScale = 10: material rank 10 (Tiên Phẩm, ĐỈNH thang) ĐƯỢC gắn max-rank', () => {
+    const { button, unmount } = mountSlot({
+      item: { id: 1 },
+      label: 'X',
+      rarityRank: 10,
+      rarityRankScale: 10,
+    })
+    expect(button.classList.contains('slot-view--max-rank')).toBe(true)
+    unmount()
+  })
+})
+
 describe('SlotView — precedence (mục 17.2)', () => {
   it('locked: chặn click, chặn validation, vẫn aria-disabled + tooltip hoạt động', () => {
     const onClick = vi.fn()
