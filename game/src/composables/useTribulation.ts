@@ -28,61 +28,40 @@ type PlayerStore = ReturnType<typeof usePlayerStore>
 // Phạt thất bại giờ chuẩn hóa theo realm (spec dot-pha-loi-kiep §5.7,
 // data/tribulation/TribulationChapters.ts) — hằng số cứng cũ đã dỡ.
 
-/**
- * Bấm nút "TRÚC CƠ" — vào thẳng Độ Kiếp Trúc Cơ, KHÔNG hỏi lại/hiện
- * điều kiện gì (mục 10 — hard rule). (2026-08-27) Thiết kế hiện tại:
- * mốc 12 tầng là Nhân Đạo baseline; các cấp đột phá ẩn khác (ví dụ 4
- * mức Kiến Cơ cho Luyện Khí → Trúc Cơ) sẽ được thiết kế sau, nên dùng
- * thẳng foundationType cố định 'human' (baseline, 0% bonus Kiến Cơ —
- * xem data/realm/RealmPassives.ts's KIEN_CO_MAIN_STAT_PERCENT). Hàm
- * THUẦN (nhận player/gameManager qua tham số) — dùng được cả từ
- * component con (qua useTribulation() bên dưới) lẫn App.vue's tick()
- * (App.vue tự provide GameManager cho cây con, provide()/inject()
- * KHÔNG hoạt động khi component tự inject() giá trị CHÍNH NÓ vừa
- * provide, nên App.vue không thể gọi useGameManager()/useTribulation()
- * — phải gọi thẳng hàm này với gameManager/player nó đã có sẵn).
- */
-export function triggerFoundationBreakthroughAction(player: PlayerStore, gameManager: GameManager): boolean {
-  if (!gameManager.canTriggerFoundationBreakthrough(player.$state)) {
-    return false
-  }
-
-  const battle = gameManager.getBattle()
-
-  if (battle && isBattleInProgress(battle.state)) {
-    return false
-  }
-
-  // Spec dot-pha-loi-kiep — bậc Kiến Cơ do TribulationDirector resolve
-  // nội bộ (từ đầu tư trước kiếp + Trúc Cơ Đan trong túi), không còn
-  // foundationType truyền tay ở đây.
-  const started = gameManager.startTribulation(player.$state, player.finalStats, 'foundation_establishment')
-
-  if (started) {
-    useUiStore().enterTribulationScene()
-  }
-
-  return started
+function resolveNextBreakthroughRealm(currentRealmId: string): string | null {
+  if (currentRealmId === 'mortal') return 'qi_refining'
+  if (currentRealmId === 'qi_refining') return 'foundation_establishment'
+  return null
 }
 
 /**
- * Đột Phá tổng quát (2026-08-16) — MỌI đại cảnh giới còn lại (Kim Đan
- * trở đi) dùng đường này thay vì hệ Căn Cơ 4-tier riêng của Trúc Cơ.
- * Không có resolveFoundation nào cả — enemy Kiếp cố định theo
- * targetRealmId (xem GameManager.ts's TRIBULATION_ENEMY_ID_BY_REALM).
- * `targetRealmId` LUÔN là `getNextRealm(player.realmId)?.id` — caller
- * (BreakthroughRequirementPanel.vue) tự resolve trước khi gọi.
+ * Bấm nút đột phá (Quán Khí / Trúc Cơ / Độ Kiếp sau Trúc Cơ). Tự
+ * resolve target realm từ player.realmId hiện tại.
+ *
+ * Luôn auto-unequip TRƯỚC khi vào kiếp (idempotent — không có đồ thì
+ * không tháo gì). Caller hiện panel xác nhận "Độ kiếp cũng là độ thân"
+ * trước khi gọi hàm này.
  */
-export function triggerRealmBreakthroughAction(targetRealmId: string, player: PlayerStore, gameManager: GameManager): boolean {
-  if (!gameManager.canTriggerRealmBreakthrough(player.$state)) {
+export function triggerBreakthroughAction(
+  player: PlayerStore,
+  gameManager: GameManager,
+): boolean {
+  if (!gameManager.canTriggerBreakthrough(player.$state)) {
     return false
   }
 
   const battle = gameManager.getBattle()
-
   if (battle && isBattleInProgress(battle.state)) {
     return false
   }
+
+  const targetRealmId = resolveNextBreakthroughRealm(player.realmId)
+  if (!targetRealmId) {
+    return false
+  }
+
+  gameManager.unequipAllEquipment()
+  player.setEquipmentModifiers(gameManager.getEquipmentModifiers())
 
   const started = gameManager.startTribulation(player.$state, player.finalStats, targetRealmId)
 
@@ -90,23 +69,6 @@ export function triggerRealmBreakthroughAction(targetRealmId: string, player: Pl
     useUiStore().enterTribulationScene()
   }
 
-  return started
-}
-
-export function triggerQuanKhiAction(player: PlayerStore, gameManager: GameManager): boolean {
-  if (player.realmId !== 'mortal' || player.cultivationPath || player.realmLevel < 12) {
-    return false
-  }
-
-  const battle = gameManager.getBattle()
-  if (battle && isBattleInProgress(battle.state)) {
-    return false
-  }
-
-  const started = gameManager.startTribulation(player.$state, player.finalStats, 'qi_refining')
-  if (started) {
-    useUiStore().enterTribulationScene()
-  }
   return started
 }
 
@@ -245,19 +207,16 @@ function resolveDefeat(player: PlayerStore, gameManager: GameManager, active: Ac
 }
 
 /**
- * Đột Phá Trúc Cơ (Phase 5) — cầu nối Vue cho component CON (đọc
- * player/gameManager qua injection bình thường, xem useGameState.ts).
- * App.vue tự gọi thẳng *Action() ở trên thay vì composable này (lý do
- * xem doc triggerFoundationBreakthroughAction()).
+ * Cầu nối Vue cho component CON (đọc player/gameManager qua injection
+ * bình thường, xem useGameState.ts). App.vue tự gọi thẳng *Action() ở
+ * trên thay vì composable này.
  */
 export function useTribulation() {
   const player = usePlayerStore()
   const gameManager = useGameManager()
 
   return {
-    triggerFoundationBreakthrough: () => triggerFoundationBreakthroughAction(player, gameManager),
-    triggerRealmBreakthrough: (targetRealmId: string) => triggerRealmBreakthroughAction(targetRealmId, player, gameManager),
-    triggerQuanKhi: () => triggerQuanKhiAction(player, gameManager),
+    triggerBreakthrough: () => triggerBreakthroughAction(player, gameManager),
     checkTribulationOutcome: () => checkTribulationOutcomeAction(player, gameManager),
   }
 }

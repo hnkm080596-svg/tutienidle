@@ -9,13 +9,9 @@ import { GameManager } from '../core/game/GameManager'
 import { getTribulationChapters } from '../data/tribulation/TribulationChapters'
 import {
   checkTribulationOutcomeAction,
-  triggerFoundationBreakthroughAction,
-  triggerQuanKhiAction,
+  triggerBreakthroughAction,
 } from './useTribulation'
 
-// Tổng thời gian trôi để KẾT THÚC kiếp (mind + tank đều hết) — đủ dư
-// để mọi chương chạy xong bất kể tốc độ trả lời (hết giờ = sai vẫn
-// trôi chương).
 function tribulationTotalSeconds(targetRealmId: string): number {
   return getTribulationChapters(targetRealmId)!.reduce((total, chapter) => {
     if (chapter.mind) {
@@ -30,7 +26,7 @@ describe('chuỗi nghi lễ tu luyện Pháp Tu', () => {
     setActivePinia(createPinia())
   })
 
-  it('Phàm Nhân → Quán Khí → chọn Pháp Tu → Độ Kiếp Trúc Cơ giữ đúng state và reward', () => {
+  it('Phàm Nhân → Quán Khí → chọn Pháp Tu → Trúc Cơ giữ đúng state và reward', () => {
     const gameManager = new GameManager()
     const player = usePlayerStore()
 
@@ -40,11 +36,9 @@ describe('chuỗi nghi lễ tu luyện Pháp Tu', () => {
 
     player.realmLevel = 12
     player.baseStats.defense = 10_000
-    // HP đủ cao để sống sót kiếp khi KHÔNG trả lời câu nào (hết giờ =
-    // sai → debuff stack, nhưng tổng lôi Nhân Đạo ~ 35% maxHp).
     player.baseStats.maxHp = 500_000
 
-    expect(triggerQuanKhiAction(player, gameManager)).toBe(true)
+    expect(triggerBreakthroughAction(player, gameManager)).toBe(true)
     gameManager.update(tribulationTotalSeconds('qi_refining'))
     expect(checkTribulationOutcomeAction(player, gameManager)).toBe(true)
     expect(player.realmId).toBe('mortal')
@@ -56,7 +50,7 @@ describe('chuỗi nghi lễ tu luyện Pháp Tu', () => {
 
     player.realmLevel = 12
 
-    expect(triggerFoundationBreakthroughAction(player, gameManager)).toBe(true)
+    expect(triggerBreakthroughAction(player, gameManager)).toBe(true)
     gameManager.update(tribulationTotalSeconds('foundation_establishment'))
     expect(checkTribulationOutcomeAction(player, gameManager)).toBe(true)
 
