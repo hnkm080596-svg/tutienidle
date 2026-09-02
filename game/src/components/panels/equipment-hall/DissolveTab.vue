@@ -25,7 +25,7 @@ import { canUseItemGrade } from '@/core/equipment/canUseItem'
 import SlotView from '@/components/common/SlotView.vue'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
-import { itemGradeRank, professionGradeRank } from '@/composables/slots/normalizeSlotRank'
+import { itemQualityRank, professionGradeRank } from '@/composables/slots/normalizeSlotRank'
 import GameButton from '@/components/common/GameButton.vue'
 
 const { t } = useI18n({ useScope: 'local' })
@@ -131,7 +131,7 @@ const dissolveCandidates = computed<DissolveCandidate[]>(() => {
 
         qualityRank: professionGradeRank(instance.grade),
 
-        rarityRank: itemGradeRank(instance.quality),
+        rarityRank: itemQualityRank(instance.quality),
 
         gradeMismatch: !canUseItemGrade(instance.grade, playerRealmId),
       }

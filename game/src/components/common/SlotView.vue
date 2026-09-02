@@ -36,14 +36,15 @@ const props = defineProps<{
    * tiên HƠN `label` (chuỗi đơn) nếu có truyền vào. */
   nameSegments?: NameSegment[]
 
-  /** Rank chuẩn hoá 1-9 (xem composables/slots/normalizeSlotRank.ts) —
-   * SlotView KHÔNG biết ID domain như 'pham_khi'/'tien'. Hiện thành chấm
-   * nhỏ góc phải (tín hiệu PHỤ — Chất/Tiềm Năng Rèn đang luyện). */
+  /** Rank chuẩn hoá 1-10 (professionGradeRank, xem
+   * composables/slots/normalizeSlotRank.ts) — SlotView KHÔNG biết ID
+   * domain như 'cuu_pham'/'tien_pham'. Hiện thành chấm nhỏ góc phải
+   * (tín hiệu PHỤ — Chất/Tiềm Năng Rèn đang luyện). */
   equipmentQualityRank?: number
 
-  /** Rank chuẩn hoá 1/3/5/7/9 (5 bậc Phẩm ánh xạ đều lên thang 1-9).
-   * Tín hiệu CHÍNH — quyết định khung/glow của cả ô (2026-08-30, theo
-   * đúng quy ước "Phẩm = khung, Chất = chữ/badge phụ"). */
+  /** Rank chuẩn hoá 1-5 (itemQualityRank, 5 bậc Phẩm Hoàng→Tiên ánh xạ
+   * 1:1). Tín hiệu CHÍNH — quyết định khung/glow của cả ô (2026-08-30,
+   * theo đúng quy ước "Phẩm = khung, Chất = chữ/badge phụ"). */
   rarityRank?: number
 
   state?: SlotPresentationState
@@ -80,9 +81,15 @@ function onIconError() {
   failedIconSrc.value = props.icon ?? null
 }
 
+// Rework P6 (Task 20) — 2 trục rank độc lập, mỗi trục có TRẦN riêng:
+// equipmentQualityRank (chip phụ) nhận professionGradeRank 1-10 (Cửu
+// Phẩm→Tiên Phẩm); rarityRank (khung/glow chính) nhận itemQualityRank
+// 1-5 (Hoàng→Tiên). clampRank chỉ chặn giá trị ngoài biên hợp lệ chung
+// (1-10) — SlotView không biết trần THẬT của từng trục nên "max" được
+// tính riêng ở dưới theo đúng trần của từng prop.
 function clampRank(rank: number | undefined): number | undefined {
   if (rank === undefined) return undefined
-  return Math.min(9, Math.max(1, Math.round(rank)))
+  return Math.min(10, Math.max(1, Math.round(rank)))
 }
 
 const qualityColor = computed(() => {
@@ -95,8 +102,11 @@ const rarityColor = computed(() => {
   return rank ? `var(--rank-color-${rank})` : undefined
 })
 
-const isMaxRank = computed(() => clampRank(props.equipmentQualityRank) === 9)
-const isMaxRarityRank = computed(() => clampRank(props.rarityRank) === 9)
+// Trần professionGradeRank = 10 (Tiên Phẩm).
+const isMaxRank = computed(() => clampRank(props.equipmentQualityRank) === 10)
+// Trần itemQualityRank = 5 (Tiên Chất) — KHÔNG còn 9 (model cũ rải
+// 1-3-5-7-9 đã bỏ, xem normalizeSlotRank.ts).
+const isMaxRarityRank = computed(() => clampRank(props.rarityRank) === 5)
 
 // ============================================================
 // PRECEDENCE (mục 17.2) — locked chặn interaction+validation; disabled
@@ -244,18 +254,19 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 }
 
 .slot-view--filled.slot-view--max-rank {
-  box-shadow: var(--slot-shadow), 0 0 12px var(--rank-color-9);
+  box-shadow: var(--slot-shadow), 0 0 12px var(--slot-rarity-color, var(--rank-color-5));
 }
 
-/* Bậc 9 — gradient bảy màu ở viền TRÊN (mục 17.4 "solid fallback +
-   gradient"), border-color solid ở trên vẫn là fallback chính. */
+/* Bậc cao nhất (rarityRank = 5, Tiên Chất) — gradient bảy màu ở viền
+   TRÊN (mục 17.4 "solid fallback + gradient"), border-color solid ở
+   trên vẫn là fallback chính. */
 .slot-view--filled.slot-view--max-rank::before {
   content: '';
   position: absolute;
   inset: 0 0 auto;
   height: 2px;
   z-index: 3;
-  background: var(--rank-gradient-9);
+  background: var(--rank-gradient-10);
   pointer-events: none;
 }
 
@@ -388,7 +399,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 }
 
 .slot-view__quality-chip--max {
-  background: var(--rank-gradient-9);
+  background: var(--rank-gradient-10);
 }
 
 .slot-view__marker {
@@ -500,7 +511,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 .slot-view__caption [data-name-tone='tien'],
 .slot-view__caption [data-name-tone='thien_dia_trong_khi'] {
   color: transparent !important;
-  background: var(--rank-gradient-9);
+  background: var(--rank-gradient-10);
   background-clip: text;
   -webkit-background-clip: text;
   font-weight: 700;

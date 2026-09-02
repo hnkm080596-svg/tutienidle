@@ -515,7 +515,7 @@ const refineRenAfter = computed(() =>
 .qi-hall__tier-4 { color: var(--affix-tier-4); }
 .qi-hall__tier-5 {
   color: transparent;
-  background: var(--rank-gradient-9);
+  background: var(--rank-gradient-10);
   background-clip: text;
   -webkit-background-clip: text;
   font-weight: 700;
