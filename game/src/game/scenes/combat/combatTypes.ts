@@ -53,3 +53,13 @@ export interface CastBarSprite {
   fill: Phaser.GameObjects.Rectangle
   widthPx: number
 }
+
+export interface PositionInterpolation {
+  fromX: number
+  toX: number
+  segmentStart: number
+  segmentDuration: number
+
+  // Thời điểm snapshot tạo segment (cadence đo từ đây).
+  lastSnapshotAt: number
+}

@@ -42,13 +42,11 @@ import {
 } from '@/game/support/EnemyArt'
 import {
   PLAYER_VISUAL_PROFILES,
-  getBodyAnchors,
   resolvePlayerVisualProfileId,
   type PlayerBodyAnchorId,
   type PlayerVisualProfile,
   type PlayerVisualProfileId,
 } from '@/game/support/PlayerVisualProfiles'
-import { resolveSpriteBodyAnchor } from '@/game/support/SpriteBodyAnchor'
 import {
   GOURD_MOUTH_ANCHOR,
   GOURD_PLACEHOLDER_SIZE,
@@ -95,7 +93,10 @@ import { CombatGridView } from './combat/combat-grid-view'
 import { CombatVfxSpawner } from './combat/combat-vfx-spawner'
 import { CombatRewardGourd } from './combat/combat-reward-gourd'
 import { CombatEssenceStream } from './combat/combat-essence-stream'
+import { CombatPositionInterpolation } from './combat/combat-position-interpolation'
+import { CombatPlayerVisual } from './combat/combat-player-visual'
 import { BUFF_ATTACH_COLOR, DEBUFF_ATTACH_COLOR } from './combat/combatConstants'
+import type { PositionInterpolation } from './combat/combatTypes'
 
 export { formatDotDamageText } from './combat/combatTextFormat'
 
@@ -183,9 +184,8 @@ const ENEMY_DISPLAY_SCALE_MULTIPLIER = 2
 // thay layout side-view cÃ…Â© cÃƒÂ³ layout side-view cÃ…Â©) Ã¢â‚¬â€ chÃ¡Â»Â«a 1
 // lÃ¡Â»Â nhÃ¡Â»Â Ã„â€˜Ã¡Â»Æ’ sprite khÃƒÂ´ng bÃ¡Â»â€¹ cÃ¡ÂºÂ¯t viÃ¡Â»Ân trÃƒÂ¡i.
 
-// SÃƒÂ n thÃ¡Â»Âi lÃ†Â°Ã¡Â»Â£ng 1 Ã„â€˜oÃ¡ÂºÂ¡n nÃ¡Â»â„¢i suy Ã¢â‚¬â€ trÃƒÂ¡nh chia gÃ¡ÂºÂ§n 0 nÃ¡ÂºÂ¿u 2 lÃ¡ÂºÂ§n cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t
-// vÃ¡Â»â€¹ trÃƒÂ­ liÃƒÂªn tiÃ¡ÂºÂ¿p tÃ¡Â»â€ºi quÃƒÂ¡ sÃƒÂ¡t nhau.
-const MIN_SEGMENT_DURATION_MS = 16
+// Trần thời lượng 1 đoạn nội suy — catch-up sau khi trễ lâu không tạo
+// đoạn nội suy dài bất thường (sàn MIN_SEGMENT_DURATION_MS ở combatConstants).
 const MAX_SEGMENT_DURATION_MS = 200
 
 const PLAYER_ID = 'player'
@@ -258,16 +258,6 @@ interface EnemyHealthBar {
   currentHp: number
   maxHp: number
   isBoss: boolean
-}
-
-interface PositionInterpolation {
-  fromX: number
-  toX: number
-  segmentStart: number
-  segmentDuration: number
-
-  // ThÃ¡Â»Âi Ã„â€˜iÃ¡Â»Æ’m snapshot tÃ¡ÂºÂ¡o segment (cadence Ã„â€˜o tÃ¡Â»Â« Ã„â€˜ÃƒÂ¢y).
-  lastSnapshotAt: number
 }
 
 interface CastBarSprite {
@@ -355,6 +345,24 @@ export class CombatScene extends Phaser.Scene {
 
     return this._rewardGourd
   }
+
+  // Task 8 (perf-optimize-pass phần 2) — nội suy vị trí X + hình thái
+  // Player/body-anchor, cùng pattern lazy getter với các module trên.
+  private _positionInterp?: CombatPositionInterpolation
+
+  private get positionInterp(): CombatPositionInterpolation {
+    this._positionInterp ??= new CombatPositionInterpolation(this)
+
+    return this._positionInterp
+  }
+
+  private _playerVisual?: CombatPlayerVisual
+
+  private get playerVisual(): CombatPlayerVisual {
+    this._playerVisual ??= new CombatPlayerVisual(this)
+
+    return this._playerVisual
+  }
   // ChÃ¡Â»â€° tÃ¡Â»â€œn tÃ¡ÂºÂ¡i Ã¡Â»Å¸ chÃ¡ÂºÂ¿ Ã„â€˜Ã¡Â»â„¢ 'flat' (renderer legacy cÃ¡ÂºÂ§n nÃ¡Â»Ân phÃ¡ÂºÂ³ng Ã„â€˜Ã¡ÂºÂ·c);
   // 'perspective' thay bÃ¡ÂºÂ±ng BattlefieldBackdrop hÃ¡Â»â„¢i tÃ¡Â»Â¥ hÃ¡ÂºÂ­u cÃ¡ÂºÂ£nh.
   arenaRect?: Phaser.GameObjects.Rectangle
@@ -425,7 +433,8 @@ export class CombatScene extends Phaser.Scene {
   // ================= Player visual profile (body-anchor plan Ã‚Â§4) ======
   // Profile hiÃ¡Â»â€¡n hÃƒÂ nh Ã¢â‚¬â€ Ã„â€˜Ã¡Â»Âc tÃ¡Â»Â« Phaser registry lÃƒÂºc create() vÃƒÂ  cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t
   // qua event 'player_visual_profile_changed' (bridge Ã¡Â»Å¸ PhaserCanvas.vue).
-  private playerProfileId: PlayerVisualProfileId = 'mortal'
+  // Task 8 — public: combat-player-visual.ts ghi trực tiếp qua scene ref.
+  playerProfileId: PlayerVisualProfileId = 'mortal'
   playerProfile: PlayerVisualProfile = PLAYER_VISUAL_PROFILES.mortal
 
   /** KÃƒÂ­ch thÃ†Â°Ã¡Â»â€ºc nguÃ¡Â»â€œn cÃ¡Â»Â§a texture combat Ã„â€˜ang gÃ¡ÂºÂ¯n trÃƒÂªn player sprite. */
@@ -435,7 +444,8 @@ export class CombatScene extends Phaser.Scene {
    * Static texture thay atlas idle Ã¢â‚¬â€ art profile lÃƒÂ  PNG tÃ„Â©nh, KHÃƒâ€NG play
    * animation; resetVisual() phÃ¡ÂºÂ£i bÃ¡Â»Â qua .play().
    */
-  private playerUsesStaticTexture = true
+  // Task 8 — public: combat-player-visual.ts ghi trực tiếp qua scene ref.
+  playerUsesStaticTexture = true
 
   // Debug body anchors (plan Ã‚Â§5.4) Ã¢â‚¬â€ dev-only, bÃ¡ÂºÂ­t qua
   // localStorage['debug.playerBodyAnchors']='1'; khÃƒÂ´ng cÃƒÂ³ UI production.
@@ -907,79 +917,20 @@ export class CombatScene extends Phaser.Scene {
 
   // ================= Player visual profile + body anchors =============
 
-  /**
-   * Ã„ÂÃ¡Â»â€¢i hÃƒÂ¬nh thÃƒÂ¡i Player (plan Ã‚Â§4.3): thay texture + kÃƒÂ­ch thÃ†Â°Ã¡Â»â€ºc nguÃ¡Â»â€œn +
-   * bÃ¡ÂºÂ£ng anchor nhÃ†Â°ng GIÃ¡Â»Â® NGUYÃƒÅ N entity, position interpolation, HP/VFX
-   * state Ã¢â‚¬â€ chÃ¡Â»â€° "lÃ¡Â»â„¢t xÃƒÂ¡c" presentation.
-   */
+  // Task 8 (perf-optimize-pass phần 2) — logic đầy đủ chuyển sang
+  // combat/combat-player-visual.ts (đổi hình thái Player + resolver
+  // body-anchor); wrapper giữ nguyên chữ ký public cho combat-vfx-spawner.ts.
   private applyPlayerVisualProfile(profileId: PlayerVisualProfileId) {
-    const profile = PLAYER_VISUAL_PROFILES[profileId] ?? PLAYER_VISUAL_PROFILES.mortal
-
-    this.playerProfileId = profile.id
-
-    this.playerProfile = profile
-
-    this.playerSourceSize = { ...profile.combatSourceSize }
-
-    this.playerUsesStaticTexture = true
-
-    const sprite = this.sprites.get(PLAYER_ID)
-
-    if (sprite && sprite.kind === 'sprite') {
-      const gameSprite = sprite.rect as Phaser.GameObjects.Sprite
-
-      if (this.textures.exists(profile.combatTextureKey)) {
-        gameSprite.setTexture(profile.combatTextureKey)
-      }
-
-      this.applySpriteSize(sprite)
-    }
-  }
-
-  /** Snapshot transform hiÃ¡Â»â€¡n hÃƒÂ nh cÃ¡Â»Â§a player sprite cho anchor resolver. */
-  private playerTransformSnapshot():
-    | Parameters<typeof resolveSpriteBodyAnchor>[1]
-    | undefined {
-    const sprite = this.sprites.get(PLAYER_ID)
-
-    if (!sprite || sprite.kind !== 'sprite') {
-      return undefined
-    }
-
-    return {
-      x: sprite.rect.x,
-
-      y: sprite.rect.y,
-
-      displayWidth: sprite.rect.displayWidth,
-
-      displayHeight: sprite.rect.displayHeight,
-
-      originX: 0.5,
-
-      originY: this.isPerspective ? 1 : 0.5,
-
-      flipX: false,
-
-      rotation: sprite.rect.rotation,
-    }
+    this.playerVisual.applyPlayerVisualProfile(profileId)
   }
 
   /**
-   * Body anchor Ã¢â€ â€™ screen point (plan Ã‚Â§5.2). One-shot VFX gÃ¡Â»Âi Ã„â€˜ÃƒÂºng lÃƒÂºc
-   * spawn; sustained VFX gÃ¡Â»Âi lÃ¡ÂºÂ¡i mÃ¡Â»â€”i frame Ã„â€˜Ã¡Â»Æ’ bÃƒÂ¡m tay khi bob/lunge/
-   * recoil (transform snapshot Ã„â€˜Ã¡Â»Âc live).
+   * Body anchor → screen point (plan §5.2). One-shot VFX gọi đúng lúc
+   * spawn; sustained VFX gọi lại mỗi frame để bám tay khi bob/lunge/
+   * recoil (transform snapshot đọc live).
    */
-  getPlayerBodyAnchorScreen(
-    anchorId: PlayerBodyAnchorId,
-  ): { x: number; y: number } | undefined {
-    const transform = this.playerTransformSnapshot()
-
-    if (!transform) {
-      return undefined
-    }
-
-    return resolveSpriteBodyAnchor(getBodyAnchors(this.playerProfile, 'combat')[anchorId], transform)
+  getPlayerBodyAnchorScreen(anchorId: PlayerBodyAnchorId): { x: number; y: number } | undefined {
+    return this.playerVisual.getPlayerBodyAnchorScreen(anchorId)
   }
 
   /**
@@ -1031,9 +982,7 @@ export class CombatScene extends Phaser.Scene {
   // thuÃ¡Â»â„¢c origin (foot anchor Ã¡Â»Å¸ perspective, center anchor Ã¡Â»Å¸ flat).
   // Internal (module boundary).
   entityHeadY(sprite: EntitySprite): number {
-    const displayHeight = sprite.rect.displayHeight
-
-    return this.isPerspective ? sprite.rect.y - displayHeight : sprite.rect.y - displayHeight / 2
+    return this.gridView.entityHeadY(sprite)
   }
 
   trackSourceScreenPosition(id: string, sprite: EntitySprite) {
@@ -1048,6 +997,9 @@ export class CombatScene extends Phaser.Scene {
     this.gridView.positionSprite(sprite, worldColumn, _id)
   }
 
+  // Task 8 (perf-optimize-pass phần 2) — logic đầy đủ chuyển sang
+  // combat/combat-grid-view.ts (đã có sẵn getOrCreateSprite tương đương
+  // — chỉ còn thiếu wiring); wrapper giữ nguyên chữ ký public.
   getOrCreateSprite(
     id: string,
     color: number,
@@ -1055,190 +1007,7 @@ export class CombatScene extends Phaser.Scene {
     row: LaneIndex = HERO_LANE_INDEX,
     health?: { currentHp: number; maxHp: number; isBoss: boolean },
   ): EntitySprite {
-    const existing = this.sprites.get(id)
-
-    if (existing) {
-      return existing
-    }
-
-    const label = this.add
-      .text(0, 0, labelText, { fontSize: '14px', color: '#ffffff' })
-      .setOrigin(0.5, 0)
-      .setDepth(DEPTH_OVERLAY_UI + 1)
-
-    // Player dÃƒÂ¹ng artwork theo PROFILE hiÃ¡Â»â€¡n hÃƒÂ nh (body-anchor plan Ã‚Â§4.3);
-    // enemy chÃ†Â°a cÃƒÂ³ atlas riÃƒÂªng, vÃ¡ÂºÂ«n dÃƒÂ¹ng Rectangle mÃƒÂ u nhÃ†Â° cÃ…Â© (xem
-    // EntitySprite.kind's ghi chÃƒÂº).
-    if (id === PLAYER_ID) {
-      const textureKey = this.textures.exists(this.playerProfile.combatTextureKey)
-        ? this.playerProfile.combatTextureKey
-        : PLAYER_TEXTURE_KEY
-
-      const gameSprite = this.add.sprite(0, 0, textureKey)
-
-      this.physics.add.existing(gameSprite)
-
-      if (this.isPerspective) {
-        gameSprite.setOrigin(0.5, 1)
-      }
-
-      const sprite: EntitySprite = {
-        kind: 'sprite',
-        rect: gameSprite,
-        label,
-        color,
-        offsetX: 0,
-        row,
-        sizeMultiplier: PLAYER_DISPLAY_SCALE_MULTIPLIER,
-        boost: { value: 1 },
-        footY: 0,
-        columnFloat: 0,
-      }
-
-      if (this.isPerspective) {
-        sprite.shadow = this.add
-          .ellipse(0, 0, 10, 4, SHADOW_COLOR, SHADOW_ALPHA)
-          .setDepth(DEPTH_ENTITY_SHADOW)
-      }
-
-      this.applySpriteSize(sprite)
-      this.sprites.set(id, sprite)
-
-      return sprite
-    }
-
-    // Enemy: Sprite art batch Mortal khi cÃƒÂ³ texture khÃ¡Â»â€ºp id (mortal-
-    // enemy-art-batch-plan.md), fallback Rectangle mÃƒÂ u cho id ngoÃƒÂ i
-    // batch (test fixture / realm khÃƒÂ¡c chÃ†Â°a cÃƒÂ³ art).
-    const enemyTextureKey = resolveEnemyTextureKey(id)
-
-    if (enemyTextureKey && this.textures.exists(enemyTextureKey)) {
-      const gameSprite = this.add.sprite(0, 0, enemyTextureKey)
-
-      this.physics.add.existing(gameSprite)
-
-      if (this.isPerspective) {
-        gameSprite.setOrigin(0.5, 1)
-      }
-
-      const healthBarWidth = this.characterWidth * (health?.isBoss ? 1.45 : 1.05)
-      const background = this.add
-        .rectangle(0, 0, healthBarWidth, ENEMY_HP_BAR_HEIGHT, ENEMY_HP_BG_COLOR)
-        .setOrigin(0.5)
-        .setStrokeStyle(1, health?.isBoss ? BOSS_HP_FILL_COLOR : 0x6b4545)
-        .setDepth(DEPTH_OVERLAY_UI + 2)
-      const fill = this.add
-        .rectangle(
-          0,
-          0,
-          healthBarWidth,
-          ENEMY_HP_BAR_HEIGHT - 2,
-          health?.isBoss ? BOSS_HP_FILL_COLOR : ENEMY_HP_FILL_COLOR,
-        )
-        .setOrigin(0, 0.5)
-        .setDepth(DEPTH_OVERLAY_UI + 2)
-      const healthBar: EnemyHealthBar = {
-        background,
-        fill,
-        width: healthBarWidth,
-        currentHp: health?.currentHp ?? 1,
-        maxHp: health?.maxHp ?? 1,
-        isBoss: health?.isBoss ?? false,
-      }
-
-      const sprite: EntitySprite = {
-        kind: 'sprite',
-        rect: gameSprite,
-        label,
-        color,
-        offsetX: 0,
-        row,
-        sourceSize: { ...ENEMY_SOURCE_SIZE },
-        // Enemy art x2 Ã¢â‚¬â€ PNG quÃƒÂ¡i hiÃ¡Â»Æ’n thÃ¡Â»â€¹ gÃ¡ÂºÂ¥p Ã„â€˜ÃƒÂ´i (kÃ¡Â»Æ’ cÃ¡ÂºÂ£ Boss); bÃƒÂ³ng
-        // ellipse dÃ†Â°Ã¡Â»â€ºi chÃƒÂ¢n nhÃƒÂ¢n theo cÃƒÂ¹ng multiplier trong
-        // applyEntityDepthScale().
-        sizeMultiplier: ENEMY_DISPLAY_SCALE_MULTIPLIER,
-        boost: { value: 1 },
-        footY: 0,
-        columnFloat: 0,
-        healthBar,
-      }
-
-      if (this.isPerspective) {
-        sprite.shadow = this.add
-          .ellipse(0, 0, 10, 4, SHADOW_COLOR, SHADOW_ALPHA)
-          .setDepth(DEPTH_ENTITY_SHADOW)
-      }
-
-      this.sprites.set(id, sprite)
-      this.applySpriteSize(sprite)
-      this.updateEnemyHealthBar(sprite, healthBar.currentHp, healthBar.maxHp)
-
-      return sprite
-    }
-
-    const rect = this.add
-      .rectangle(0, 0, this.characterWidth, this.characterHeight, color)
-      .setOrigin(0.5)
-
-    this.physics.add.existing(rect)
-
-    // QuÃƒÂ¡i hiÃ¡Â»â€¡n vÃ¡ÂºÂ«n lÃƒÂ  Rectangle mÃƒÂ u (chÃ†Â°a cÃƒÂ³ atlas Ã„â€˜Ã¡Â»â€¹nh hÃ†Â°Ã¡Â»â€ºng) Ã¢â‚¬â€ khi
-    // cÃƒÂ³ sprite riÃƒÂªng chÃ¡Â»â€° cÃ¡ÂºÂ§n setFlipX(true) Ã¡Â»Å¸ Ã„â€˜ÃƒÂ¢y, khÃƒÂ´ng cÃ¡ÂºÂ§n spritesheet
-    // mÃ¡Â»â€ºi cho chiÃ¡Â»Âu ngÃ†Â°Ã¡Â»Â£c (plan: flip bÃ¡ÂºÂ±ng Phaser).
-    if (this.isPerspective) {
-      rect.setOrigin(0.5, 1)
-    }
-
-    const healthBarWidth = this.characterWidth * (health?.isBoss ? 1.45 : 1.05)
-    const background = this.add
-      .rectangle(0, 0, healthBarWidth, ENEMY_HP_BAR_HEIGHT, ENEMY_HP_BG_COLOR)
-      .setOrigin(0.5)
-      .setStrokeStyle(1, health?.isBoss ? BOSS_HP_FILL_COLOR : 0x6b4545)
-      .setDepth(DEPTH_OVERLAY_UI + 2)
-    const fill = this.add
-      .rectangle(
-        0,
-        0,
-        healthBarWidth,
-        ENEMY_HP_BAR_HEIGHT - 2,
-        health?.isBoss ? BOSS_HP_FILL_COLOR : ENEMY_HP_FILL_COLOR,
-      )
-      .setOrigin(0, 0.5)
-      .setDepth(DEPTH_OVERLAY_UI + 2)
-    const healthBar: EnemyHealthBar = {
-      background,
-      fill,
-      width: healthBarWidth,
-      currentHp: health?.currentHp ?? 1,
-      maxHp: health?.maxHp ?? 1,
-      isBoss: health?.isBoss ?? false,
-    }
-
-    const sprite: EntitySprite = {
-      kind: 'rect',
-      rect,
-      label,
-      color,
-      offsetX: 0,
-      row,
-      sizeMultiplier: 1,
-      boost: { value: 1 },
-      footY: 0,
-      columnFloat: 0,
-      healthBar,
-    }
-
-    if (this.isPerspective) {
-      sprite.shadow = this.add
-        .ellipse(0, 0, 10, 4, SHADOW_COLOR, SHADOW_ALPHA)
-        .setDepth(DEPTH_ENTITY_SHADOW)
-    }
-
-    this.sprites.set(id, sprite)
-    this.updateEnemyHealthBar(sprite, healthBar.currentHp, healthBar.maxHp)
-
-    return sprite
+    return this.gridView.getOrCreateSprite(id, color, labelText, row, health)
   }
 
   updateEnemyHealthBar(sprite: EntitySprite, currentHp: number, maxHp: number) {
@@ -1314,65 +1083,28 @@ export class CombatScene extends Phaser.Scene {
     this.projection = undefined
   }
 
+  // Task 8 (perf-optimize-pass phần 2) — logic đầy đủ chuyển sang
+  // combat/combat-position-interpolation.ts; wrapper giữ nguyên chữ ký
+  // (+ private, vì chỉ dùng nội bộ CombatScene) cho các call site cũ.
   private setInterpolationTarget(
     id: string,
     worldX: number,
     cadenceMs?: number,
     snapshotAt?: number,
   ) {
-    const existing = this.interpolations.get(id)
-
-    if (!existing) {
-      this.snapInterpolationTarget(id, worldX, snapshotAt)
-
-      return
-    }
-
-    if (worldX === existing.toX) {
-      return
-    }
-
-    const now = this.time.now
-    const currentVisualX = this.interpolate(existing, now)
-    // Cadence Ã†Â°u tiÃƒÂªn tÃ¡Â»Â« snapshot (khoÃ¡ÂºÂ£ng cÃƒÂ¡ch 2 event 'positions'),
-    // fallback: khoÃ¡ÂºÂ£ng cÃƒÂ¡ch tÃ¡Â»Â« segment trÃ†Â°Ã¡Â»â€ºc, clamp sÃƒÂ n.
-    const segmentDuration = Math.max(cadenceMs ?? MIN_SEGMENT_DURATION_MS, MIN_SEGMENT_DURATION_MS)
-
-    this.interpolations.set(id, {
-      fromX: currentVisualX,
-      toX: worldX,
-      segmentStart: now,
-      segmentDuration,
-      lastSnapshotAt: snapshotAt ?? now,
-    })
+    this.positionInterp.setInterpolationTarget(id, worldX, cadenceMs, snapshotAt)
   }
 
   private snapInterpolationTarget(id: string, worldX: number, snapshotAt?: number) {
-    const now = this.time.now
-
-    this.interpolations.set(id, {
-      fromX: worldX,
-      toX: worldX,
-      segmentStart: now,
-      segmentDuration: 1,
-      lastSnapshotAt: snapshotAt ?? now,
-    })
+    this.positionInterp.snapInterpolationTarget(id, worldX, snapshotAt)
   }
 
   private interpolate(entry: PositionInterpolation, now: number): number {
-    const progress = Phaser.Math.Clamp((now - entry.segmentStart) / entry.segmentDuration, 0, 1)
-
-    return Phaser.Math.Linear(entry.fromX, entry.toX, progress)
+    return this.positionInterp.interpolate(entry, now)
   }
 
   private getInterpolatedX(id: string): number | undefined {
-    const entry = this.interpolations.get(id)
-
-    if (!entry) {
-      return undefined
-    }
-
-    return this.interpolate(entry, this.time.now)
+    return this.positionInterp.getInterpolatedX(id)
   }
 
   reconcileEnemySprites(enemies: BattlePositionsEvent['enemies']) {

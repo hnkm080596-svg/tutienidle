@@ -88,3 +88,7 @@ export const ENEMY_NEUTRAL_BODY_ANCHOR = { x: 0.5, y: 0.4 } as const
 
 export const CHARACTER_HEIGHT_RATIO = 0.7
 export const CHARACTER_WIDTH_RATIO = 0.45
+
+// Sàn thời lượng 1 đoạn nội suy — tránh chia gần 0 nếu 2 lần cập nhật vị
+// trí liên tiếp tới quá sát nhau (combat-position-interpolation).
+export const MIN_SEGMENT_DURATION_MS = 16
