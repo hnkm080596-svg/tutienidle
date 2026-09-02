@@ -22,14 +22,12 @@ const ui = useUiStore()
 const player = usePlayerStore()
 const gameManager = useGameManager()
 const { t } = useI18n({ useScope: 'local' })
-const { triggerQuanKhi } = useTribulation()
+const { triggerBreakthrough } = useTribulation()
 const requirement = useBreakthroughRequirementStore()
 const { realmStatPassiveRows } = useRealmStatPassives()
 
 const currentTier = computed(() => getRealmTier(player.realmId))
-const canChoosePath = computed(() => !player.cultivationPath && player.realmId === 'mortal' && player.realmLevel >= 12)
-const canFoundation = computed(() => gameManager.canTriggerFoundationBreakthrough(player.$state))
-const canRealm = computed(() => gameManager.canTriggerRealmBreakthrough(player.$state))
+const canBreakthrough = computed(() => gameManager.canTriggerBreakthrough(player.$state))
 const nextRealmName = computed(() => getNextRealm(player.realmId)?.name ?? '')
 const realmName = computed(() => getCurrentRealm(player.realmId).name)
 const majorBreakthroughLabel = computed(() => {
@@ -37,19 +35,10 @@ const majorBreakthroughLabel = computed(() => {
   if (player.realmId === 'qi_refining') return t('panels.realm.labels.foundation')
   return nextRealmName.value || t('panels.realm.labels.majorFallback')
 })
-const canMajorBreakthrough = computed(() => {
-  if (player.realmId === 'mortal') return canChoosePath.value
-  if (player.realmId === 'qi_refining') return canFoundation.value
-  return canRealm.value
-})
 
 function close() { ui.closeHomeOverlays() }
 function majorBreakthrough() {
-  if (!canMajorBreakthrough.value) return
-  if (player.realmId === 'mortal') {
-    triggerQuanKhi()
-    return
-  }
+  if (!canBreakthrough.value) return
   requirement.open()
 }
 </script>
@@ -77,7 +66,7 @@ function majorBreakthrough() {
       </div>
 
       <div class="realm-panel__actions">
-        <GameButton :disabled="!canMajorBreakthrough" @click="majorBreakthrough">{{ majorBreakthroughLabel }}</GameButton>
+        <GameButton :disabled="!canBreakthrough" @click="majorBreakthrough">{{ majorBreakthroughLabel }}</GameButton>
       </div>
 
       <div class="realm-panel__nodes" :aria-label="t('panels.realm.nodes.aria')">

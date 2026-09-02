@@ -7,10 +7,10 @@ import { GameManager } from '@/core/game/GameManager'
 import { usePlayerStore } from '@/stores/player'
 import { useBreakthroughRequirementStore } from '@/stores/breakthroughRequirement'
 import { GAME_MANAGER_KEY, BUMP_STATE_KEY, STATE_VERSION_KEY } from '@/composables/useGameState'
+import { i18n } from '@/i18n'
 
-// Task 17 (rework P5) — cảnh báo "Đột phá sẽ tháo toàn bộ trang bị" phải
-// hiện SẴN trong panel xác nhận (không chờ tương tác) — verbatim wording
-// theo brief, đúng chính tả và dấu câu.
+// Task 9.1 — panel chỉ còn xác nhận "Độ kiếp cũng là độ thân" (2 nút
+// Đã hiểu / Chờ đã). Linh Thạch cost + warning cũ đã dỡ khỏi UI.
 function mountPanel() {
   const container = document.createElement('div')
   const pinia = createPinia()
@@ -18,16 +18,15 @@ function mountPanel() {
 
   const manager = new GameManager()
   const player = usePlayerStore()
-  player.realmId = 'mortal'
+  player.realmId = 'qi_refining'
   player.realmLevel = 12
-  player.bodyRefinementCompletedTiers = 6
-  player.mortalPerfectionAchieved = true
   useBreakthroughRequirementStore().open()
 
   const version = ref(0)
 
   const app = createApp({ render: () => h(BreakthroughRequirementPanel) })
   app.use(pinia)
+  app.use(i18n)
   app.provide(GAME_MANAGER_KEY, manager)
   app.provide(STATE_VERSION_KEY, version)
   app.provide(BUMP_STATE_KEY, () => { version.value += 1 })
@@ -38,13 +37,22 @@ function mountPanel() {
 
 afterEach(() => { document.body.innerHTML = '' })
 
-describe('BreakthroughRequirementPanel — cảnh báo tháo trang bị (rework P5, Task 17)', () => {
-  it('render đúng text cảnh báo tháo toàn bộ trang bị', () => {
+describe('BreakthroughRequirementPanel — confirm panel (Task 9.1)', () => {
+  it('render title "Độ kiếp cũng là độ thân" + subtitle đỏ + 2 nút', () => {
     const { container, unmount } = mountPanel()
 
-    expect(container.textContent).toContain(
-      'Đột phá sẽ tháo toàn bộ trang bị (yêu cầu trang bị ngang phẩm mới)',
-    )
+    expect(container.textContent).toContain('Độ kiếp cũng là độ thân')
+    expect(container.textContent).toContain('Không thể mặc trang bị khi độ kiếp')
+    expect(container.textContent).toContain('Đã hiểu')
+    expect(container.textContent).toContain('Chờ đã')
+
+    unmount()
+  })
+
+  it('KHÔNG còn hiển thị Linh Thạch cost', () => {
+    const { container, unmount } = mountPanel()
+
+    expect(container.textContent).not.toContain('Linh Thạch')
 
     unmount()
   })

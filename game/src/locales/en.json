@@ -589,5 +589,13 @@
         "rollFailed": "Cannot observe the heavens. Please try again."
       }
     }
+  },
+  "tribulation": {
+    "stillEquipped": {
+      "title": "Tribulation is also a trial of the self — nothing can aid you",
+      "subtitle": "Cannot wear equipment during tribulation",
+      "confirm": "I understand",
+      "cancel": "Wait"
+    }
   }
 }
