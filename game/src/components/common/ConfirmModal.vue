@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { computed, ref } from 'vue'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
+import { useDialogFocus } from '@/composables/useDialogFocus'
 import GameButton from './GameButton.vue'
 import InkNineSlice from './primitives/InkNineSlice.vue'
 
@@ -7,7 +9,7 @@ import InkNineSlice from './primitives/InkNineSlice.vue'
 // window.confirm() native còn sót ở SettingsPanel.vue/QuanKhiPanel.vue.
 // Modal, không đóng khi click nền (hành động cần xác nhận rõ ràng, khác
 // OverlayPanel.vue vốn cho phép click-outside-đóng).
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
   open: boolean
   title: string
   message: string
@@ -21,12 +23,15 @@ withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{ confirm: []; cancel: [] }>()
+
+const cardRef = ref<HTMLElement | null>(null)
+useDialogFocus(cardRef, computed(() => props.open), { onEscape: () => emit('cancel') })
 </script>
 
 <template>
   <Transition name="confirm-modal-fade">
     <div v-if="open" class="confirm-modal" :style="{ zIndex: OVERLAY_LAYERS.panel }">
-      <section class="confirm-modal__card" role="alertdialog" aria-modal="true" :aria-label="title">
+      <section ref="cardRef" class="confirm-modal__card" role="alertdialog" aria-modal="true" :aria-label="title">
         <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
         <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
         <h3 class="confirm-modal__title">{{ title }}</h3>
