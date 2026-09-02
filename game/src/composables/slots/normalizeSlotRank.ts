@@ -11,9 +11,12 @@
 //     rank 1-5, ánh xạ 1:1 (dải riêng, KHÔNG rải đều lên 1-3-5-7-9 như
 //     model cũ — xem ItemQuality.ts's composeItemQualityNameSegments đã
 //     dùng đúng quy ước này từ Task 1).
-// Hai module cũ EquipmentQuality.ts (9 bậc)/ItemGrade.ts (rải 1-3-5-7-9)
-// KHÔNG còn được dùng ở đây nữa — chúng vẫn tồn tại (chưa xoá, xem Task 22)
-// nhưng chỉ còn được tham chiếu bởi chính chúng + các shim khác.
+// EquipmentQuality.ts (module cũ, 9 bậc) đã bị XOÁ hẳn (Task 22, đã
+// merge). ItemGrade.ts (rải 1-3-5-7-9) KHÔNG bị xoá — nó là trục Phẩm
+// riêng, VĨNH VIỄN, cho Đan/Phù/Trận (Pill/Talisman/Formation), không
+// liên quan gì tới 2 trục equipment-only ở file này (professionGradeRank/
+// itemQualityRank). Không dùng ItemGrade.ts ở đây không phải vì nó
+// "chưa xoá" — nó ở lại vì phục vụ 1 domain hoàn toàn khác.
 import { ITEM_QUALITY_ORDER, type ItemQuality } from '@/core/item/ItemQuality'
 import { PROFESSION_GRADE_ORDER, type ProfessionGrade } from '@/core/profession/ProfessionGrade'
 
