@@ -344,75 +344,60 @@ Việc cần làm:
 
 > Mỗi mục: việc → verify. Quy ước verify chuẩn: `npm.cmd run type-check` + vitest liên quan (full suite cho việc lớn) + `npm.cmd run build` khi đụng production code. Commit sau mỗi việc, KHÔNG push/merge nếu không có lệnh.
 
-### Giai đoạn 0 — Cứu work đang treo
-- [ ] **T0.1** Review 42-file diff trong `.agent-worktrees/audit-fixes` theo 15 tasks trong plan (chia nhỏ, đọc từng nhóm)
-- [ ] **T0.2** Commit 15 nhóm tasks trên branch `agent/audit-fixes` (Task 14 DROP phần trùng i18n Task 9, chỉ giữ `toLocaleTimeString('vi-VN')`)
-- [ ] **T0.3** Integrate `agent/audit-fixes` lên master (merge, giải conflict 6 file trùng i18n: giữ `t()` keys + áp logic audit-fixes)
-  - Verify: type-check + full vitest + build + boot-fresh e2e trên kết quả integrated
-- [ ] **T0.4** Copy plan file + QA report từ worktree về master docs, xóa worktree `audit-fixes` + branch
-- [ ] **T0.5** Xử lý `dong-fu-buildings-style-redesign` (38 dirty: art assets + scripts + 1 test mới) → quyết giữ/discard → dọn worktree
-- [ ] **T0.6** Dọn 4 worktree nhỏ (simplify-agent-rules, tutienidle-adversarial-qa, fix-decimal-format — cherry-pick nếu chưa merge, material-names — merge nếu chưa, rồi xóa)
+### Giai đoạn 0 — Cứu work đang treo — ✅ TOÀN BỘ XONG (2026-09-01/02)
+- [x] **T0.1-T0.4** audit-fixes 15 tasks — merged `6995cf9` (review + commit + integrate + docs)
+- [x] **T0.5** dong-fu-buildings-style-redesign — merged `eaa9719`
+- [x] **T0.6** 4 worktree nhỏ — dọn xong (simplify-agent-rules discard; adversarial-qa trùng master; fix-decimal-format duplicate; material-names merged `a68f641`)
 
-### Giai đoạn 1 — Dọn nhà
-- [ ] **T1.1** Commit untracked docs (plans + specs + `game/docs/qa/` + `.agents/skills/tutienidle-adversarial-qa/`) lên master
-- [ ] **T1.2** Quyết định skills cleanup (`.claude/skills` deletions + `skills-lock.json`): commit hoặc restore
-- [ ] **T1.3** Verify + drop 4 stashes cũ (stash@{0} check còn thiếu gì so với đã restore; stash@{1..3} drop)
-- [ ] **T1.4** Fix MainMenu e2e blocker: sửa boot flow để `.game-root` xuất hiện đúng trong 5 e2e tests + thêm e2e test cho chính MainMenu
-  - Verify: `npx playwright test` pass 6/6+ mới
-  - **LƯU Ý:** đây là fix tạm — Task 8 của plan online-foundation (mục 4.2) sẽ THAY THẾ MainMenu bằng WelcomeAuthScreen hợp nhất. Không đầu tư thêm UI cho MainMenu ngoài việc làm e2e xanh.
+### Giai đoạn 1 — Dọn nhà — ✅ XONG
+- [x] **T1.1** Untracked docs committed (vào merge `a68f641`)
+- [x] **T1.2** Skills cleanup committed
+- [x] **T1.3** 4 stashes — 1 apply (columnWidth `fd68a0e`), 3 drop (dead-end WIP)
+- [x] **T1.4** MainMenu e2e blocker — `306d898` (auth-first flow, 6/6 e2e xanh; fix tạm — WelcomeAuthScreen thay thế ở T6.1 Task 8)
 
-### Giai đoạn 2 — Game design nền tảng
-- [ ] **T2.1** Bugfix Crit Damage % hiển thị (StatLabels unit + display sites)
-  - Verify: focused vitest StatLabels + visual check CharacterPanel/tooltip
-- [ ] **T2.2** Bugfix "Unidentify" Linh Thảo — repro trong game, tìm display path rơi vào fallback, sửa nguồn (KHÔNG thiết kế cơ chế identify)
-  - Verify: repro script/test xác nhận hiển thị đúng tên linh thảo
-- [ ] **T2.3** Bugfix Hóa Luyện filter: sửa mismatch chất vs phẩm (`EquipmentHallPanel.vue:799-826`) + mở realm dropdown đủ 10 realm
-  - Verify: focused vitest EquipmentHallPanel + test filter mỗi realm
-- [ ] **T2.4** Chuẩn hóa phẩm/chất/màu: audit 3 trục (ItemGrade/EquipmentQuality/ProfessionGrade), thống nhất bộ màu, ghi nhãn rõ "Phẩm cảnh giới" vs "Chất lượng"
-- [ ] **T2.5** Áp bảng ánh xạ phẩm ↔ cảnh giới: NEW gate `canUseItem(item, playerRealm)` (đúng phẩm mới dùng) — áp cho trang bị + vật phẩm tiêu dùng
-  - Verify: vitest gate mapping đủ 10 bậc + case sai phẩm 2 chiều (cao/thấp)
-- [ ] **T2.6** NEW rule đột phá tháo toàn bộ trang bị (hook breakthrough flow)
-  - Verify: vitest breakthrough + UI flow
-- [ ] **T2.7** Tách 2 trường `realmGrade` vs `quality` trong data model (khắc phục xung đột "Tiên phẩm" 2 nghĩa) + sửa display/tooltip toàn bộ
-  - Verify: full vitest + grep không còn nhầm lẫn 2 khái niệm
-- [ ] **T2.8** Combat Scene UI: HP player + HP enemy vào background Phaser, nút thoát trận vào background
-  - Verify: visual check + scene tests
-- [ ] **T2.9** Combat Scene UI: bỏ 2 bottom bar + khung nền bao ngoài, xóa measured insets
-  - Verify: `npx playwright test` ink-wash-ui suite
-- [ ] **T2.10** Floating combat text đầy đủ: emit `heal` trong core, thêm floating text cho heal/kill/miss/né (damage/crit/Chí Mạng!/Né! đã có)
-  - Verify: combat scene tests + e2e create-to-combat
+### Giai đoạn 2 — Game design nền tảng — ✅ XONG
+- [x] **T2.1** Crit Damage % — `8981772` + SYSTEM/DISPLAY boundary `0fcb17e`
+- [x] **T2.2** Unidentify Linh Thảo — HỦY (production rework sẽ đào thải; user quyết 2026-09-01)
+- [x] **T2.3** Hóa Luyện filter chất/phẩm tách 2 trục + 10 realms — `14cfda0` + grid pagination `abc82be`
+- [x] **T2.4-T2.7** → THAY BẰNG item-grade rework (spec riêng `2026-09-01-item-grade-quality-model-design.md`): 2 trục grade/quality + canUseItem gate + tách trường — Phase 1-4 core merged `fd82ed4` (T1-9+12) + `3c898b0` (T10 enhance/pity) + `3647cf7` (Phase 4 Decompose tab). CÒN: Task 16-23 (equip gate + breakthrough unequip + panel tách + theme + dọn chết) — Phase 5-6 của plan rework
+- [x] **T2.8-T2.10** Combat Scene UI — merged `71357a1` (6A plan: PlayerHudLayer in-canvas, 3 bar DOM xóa, kill/heal floating text)
+  - ⚠️ Kiếm Ý/Thế bar chưa có data event (defer — cần emit từ BattleSystem, ghi trong commit a7bb7a0)
 
-### Giai đoạn 3 — Skill engine (plan có sẵn)
-- [ ] **T3.1** Execute plan Phase 2A: `docs/superpowers/plans/2026-08-31-skill-trigger-action-engine-phase2a.md` (10 actions + 7 triggers, TDD từng task, dùng subagent-driven-development)
-  - Verify: theo plan (type-check + vitest từng task + full sweep cuối)
-- [ ] **T3.2** Floating text "hiệu ứng đặc biệt" (buff/debuff/trigger visual) — dựa trên action/trigger vocabulary của Phase 2A
-  - Verify: scene tests
+### Giai đoạn 3 — Skill engine — ✅ XONG
+- [x] **T3.1** Phase 2A merged `a47d129` (10 actions + 7 triggers; usage guide Task 13 hoàn tất)
+- [x] **T3.2** Floating "hiệu ứng đặc biệt" — kênh có sẵn (action_impact + status_vfx → vfxSpawner); consumer UI pending buff-system merge
+- [ ] **T3.3** ⬜ Merge unified-buff worktree (24 commits sẵn, 6 real conflicts vs master: 5 reaction-tests + App.vue — giải theo hướng giữ realm-scalar balance của master, cập nhật assertions)
 
 ### Giai đoạn 4 — Sản xuất + kinh tế
-- [ ] **T4.1** i18n leftovers 2.1-2.6 (v11 migration, extract sót, formatStat SkillResourceStatLabels, CombatStatusBar fallback, locale-coupled tests, parity lint test)
-- [ ] **T4.2** Chiêu Hiền Quán: NEW building + công thức `1 + cấp×2` + đổi nguồn worker capacity + quyết số phận Linh Tuyền (hỏi user nếu chưa chốt)
-  - Verify: building + production vitest + offline settle tests
-- [ ] **T4.3** UI phân bổ nhân công: chia/nhóm per site + auto toggle (đủ nguyên liệu + nhân công)
-  - Verify: ProductionPanel tests
-- [ ] **T4.4** Siết rule nhiên liệu luyện đan cùng phẩm-chất (`resolveFuelWood` không còn cheapest-first)
-  - Verify: AlchemySystem tests đủ case phẩm-chất khớp/lệch
-- [ ] **T4.5** Bảng tốc độ chuẩn per-worker/per-quality cho mọi source + sink (tài liệu + constants)
-- [ ] **T4.6** NEW simulation test: 24h idle mỗi chuỗi (1 worker mỗi bên) assert sản xuất ≤ tiêu thụ — vĩnh viễn chống regression
-- [ ] **T4.7** Vendor: REMOVE 2 cơ chế đổi phẩm (spirit-stone + material tier conversion, xóa cả UI + core + balance files)
-- [ ] **T4.8** Vendor: Hóa Bán → Thu mua với gate phẩm < phẩm cảnh giới hiện tại (dùng bảng 6D)
-  - Verify: vendor tests + gate mapping tests
-- [ ] **T4.9** Vendor UI rebuild: 2 tab [Thu mua | Cửa hàng] — tab Cửa hàng để placeholder chờ 6H
+- [ ] **T4.1** ⬜ i18n leftovers (v11 migration chưa — vẫn 9.14.5; extract sót; SkillResourceStatLabels formatStat; CombatStatusBar fallback; locale-coupled tests; parity lint test)
+- [ ] **T4.2** ⬜ Chiêu Hiền Quán (NEW building + `1 + cấp×2`; đổi nguồn worker capacity — DecomposeSystem đã nhận capacity qua constructor, chỉ cần swap nguồn)
+- [ ] **T4.3** ⬜ UI phân bổ nhân công per-site + auto toggle
+- [ ] **T4.4** ⬜ Nhiên liệu luyện đan cùng phẩm-chất (`resolveFuelWood` bỏ cheapest-first)
+- [ ] **T4.5** ⬜ Bảng tốc độ chuẩn per-worker/per-quality
+- [ ] **T4.6** ⬜ Simulation test 24h idle (sản xuất ≤ tiêu thụ)
+- [ ] **T4.7-T4.9** ⬜ Vendor rework (bỏ quy đổi, gate thu mua theo phẩm, 2-tab UI)
 
-### Giai đoạn 5 — Balance / stat system (theo data playtest)
-- [x] **T5.1** Evasion vs Accuracy — **HỦY (2026-09-01): không phải bug.** Player evasion 5 vs enemy 25 là data design có chủ đích (player = headroom đầu tư; enemies = premade data per-stage). Công thức `getHitChance` (acc/(acc+eva), clamp 5-100%) hoạt động đúng. Đã revert fix nhầm trước khi commit. Bài học: đừng coi "chỉ số khác nhau giữa player và enemy" là lệch hệ thống.
-- [x] **T5.2** Realm Pressure test coverage — **XONG (886b9b3): 11/11 tests.** Multi-gap tuyến tính locked; content-proof: stages chặn player đánh lên realm cao hơn nên "tường thành ×0.5" không thể xảy ra trong content (chỉ thưởng ×2.0 khi farm lại). Curve multi-gap giữ tuyến tính cho tới playtest nói khác.
-- [x] **T5.3** MP cost cho skill — **HỦY (2026-09-01): game idle, không cần resource gate.** User + hệ thống thoải mái, skill spam khi cooldown. Không MP cost cho bất kỳ skill nào.
-- [ ] **T5.4** Armor curve playtest tuning (K=50, log 100 rounds)
-- [ ] **T5.5** Stat cap Phàm Nhân (nâng 15-20?), CDR cap review, reaction damage scaling
+### Giai đoạn 5 — Balance — ✅ XONG (2026-09-01)
+- [x] **T5.1** HỦY — asymmetry là design
+- [x] **T5.2** `886b9b3` 11/11 tests
+- [x] **T5.3** HỦY — idle game
+- [x] **T5.4** Armor K theo realmIndex — merged `47042ac` (K = 50×(1+realmIndex×0.8))
+- [x] **T5.5** Block base 5% + soft 75% + hard 90% + reaction full scaling — merged `47042ac`
+  - ⬜ Stat cap Phàm Nhân + CDR cap — CHƯA làm (user chưa chốt; CDR hiện không có nguồn vượt 100% — cap vô hại)
 
 ### Giai đoạn 6 — Pre-production
-- [ ] **T6.1** Execute plan online foundation (mục 4.2 — 13 tasks chi tiết trong plan file; prerequisite: Supabase local setup; Task 8 thay thế MainMenu tạm = xóa e2e MainMenu tạm của T1.4)
-- [ ] **T6.2** Thiết kế tiền VIP (mở 6H: tên, cách kiếm, P2W guardrails) → xong mới làm Shop VIP (6G-3)
-- [ ] **T6.3** Thiết kế chu kỳ sau Độ Kiếp (prestige: khởi động lại phẩm/công trình/vật phẩm)
-- [ ] **T6.4** Bundle code-split (2.17MB → dynamic import Phaser + locales)
-- [ ] **T6.5** Adversarial QA thành quy trình thường xuyên (skill đã có sau T1.1)
+- [ ] **T6.1** ⬜ Online foundation (plan có sẵn; prerequisite Supabase local; Task 8 thay MainMenu tạm)
+- [ ] **T6.2** ⬜ Thiết kế tiền VIP → mở Shop VIP
+- [ ] **T6.3** ⬜ Chu kỳ sau Độ Kiếp (prestige)
+- [x] **T6.4** Bundle code-split — `af88cee` (entry 2231→848KB + phaser chunk riêng + contract test)
+- [x] **T6.5** Adversarial QA — skill có sẵn, dùng theo AGENTS.md; quy trình thường xuyên khi feature xong
+
+### Giai đoạn 7 — Item rework Phase 5-6 (CÒN TỪ PLAN REWORK)
+- [ ] **T16** ⬜ Equip gate ngang phẩm (`canUseItemGrade` vào `EquipmentSystem.equip` — reason `grade_mismatch`)
+- [ ] **T17** ⬜ Breakthrough unequip toàn bộ + warning UI
+- [ ] **T18** ⬜ Phase 5 gate (type-check + full + build + e2e)
+- [ ] **T19** ⬜ Tách EquipmentHallPanel thành 5 tab children (extract EnhanceTab/WashTab/RefineTab/DissolveTab)
+- [ ] **T20** ⬜ Theme 10-rank màu + dọn biến chết + pity UI keys (deferred Task 10 review)
+- [ ] **T21** ⬜ Terminology sweep (locale/tooltip/naming + enhance-row tooltip fix từ Task 10 review)
+- [ ] **T22** ⬜ Xóa file legacy (ItemGrade/EquipmentQuality/EquipmentRarity/ItemGradeRefs shim) + dead-reference contract test + dọn patch scripts
+- [ ] **T23** ⬜ Final full verify + ROADMAP update
