@@ -61,7 +61,7 @@ describe('GameManager — chooseCultivationPath realm advance và trang bị đa
 
     // Sau realm advance, weapon vẫn equipped:false (nếu bug còn) và player
     // ở qi_refining nên cuu_pham bị chặn — người chơi không thể mặc lại.
-    manager.unequipItem(weapon.instanceId, player)
+    manager.unequipItem(weapon.instanceId)
 
     expect(manager.equipItem(weapon.instanceId, player)).toEqual({
       ok: false,
