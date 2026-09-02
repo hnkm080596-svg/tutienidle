@@ -144,6 +144,7 @@ import { StageWaveSystem } from './StageWaveSystem'
 import { EquipmentOpsSystem } from './EquipmentOpsSystem'
 import { GameManagerBuildingOps } from './GameManagerBuildingOps'
 import { GameManagerAlchemyOps } from './GameManagerAlchemyOps'
+import { GameManagerQuestOps } from './GameManagerQuestOps'
 import { HiddenBeastSystem } from './HiddenBeastSystem'
 import { TribulationDirector, type ActiveTribulationState } from '../tribulation/TribulationDirector'
 
@@ -424,6 +425,7 @@ export class GameManager {
   private readonly equipmentOps: EquipmentOpsSystem
   private readonly buildingOps: GameManagerBuildingOps
   private readonly alchemyOps: GameManagerAlchemyOps
+  private readonly questOps: GameManagerQuestOps
 
   // Quái ẩn (spec dot-pha-loi-kiep §4.1c) — cửa sổ 1000 kill Luyện Khí.
   readonly hiddenBeastSystem: HiddenBeastSystem
@@ -532,6 +534,20 @@ export class GameManager {
       buildingSystem: this.buildingSystem,
       materialBag: this.materialBag,
       materialRegistry: this.materialRegistry,
+    })
+
+    this.questOps = new GameManagerQuestOps({
+      questSystem: this.questSystem,
+      questRegistry: this.questRegistry,
+      questManager: this.questManager,
+      rewardSystem: this.rewardSystem,
+      materialRegistry: this.materialRegistry,
+      materialBag: this.materialBag,
+      pillRegistry: this.pillRegistry,
+      pillBag: this.pillBag,
+      notifications: this.notifications,
+      getActivePlayer: () => this.activePlayer,
+      buildPlayerRewardReceiver: (player) => this.buildPlayerRewardReceiver(player),
     })
   }
 
@@ -2255,73 +2271,31 @@ export class GameManager {
   // QUEST (Nhiá»‡m Vá»¥)
   // =========================
 
-  /**
-   * Collect-quest hook (review 2026-08-28 bug #3) â€” gá»i Má»–I KHI material
-   * vÃ o tÃºi ngÆ°á»i chÆ¡i Ä‘á»ƒ tÄƒng progress collect-quest Ä‘ang active. KHÃ”NG
-   * gá»i khi restore tá»« save (double-count). BattleLootSystem tá»± gá»i trá»±c
-   * tiáº¿p (cÃ³ deps quest); cÃ¡c Ä‘Æ°á»ng cá»™ng material cÃ²n láº¡i cá»§a GameManager
-   * (production settle, claim toÃ  nhÃ , HÃ³a Luyá»‡n, Linh Tháº¡ch reward...)
-   * Ä‘i qua helper nÃ y.
-   */
+  // Tách khỏi GameManager (2026-09-03, task 4 — GameManager split) — logic
+  // thật nằm trong GameManagerQuestOps (xem GameManagerQuestOps.ts). Các
+  // method dưới đây là thin delegate GIỮ NGUYÊN public API để call site
+  // ngoài GameManager.ts (QuestPanel.vue...) không phải đổi.
   private notifyQuestMaterialGained(materialId: string, amount: number): void {
-    this.questSystem.onMaterialCollected(this.questRegistry, this.questManager, materialId, amount)
+    this.questOps.notifyQuestMaterialGained(materialId, amount)
   }
 
   getActiveQuests(): { quest: Quest; progress: QuestProgress }[] {
-    if (!this.activePlayer) {
-      return []
-    }
-
-    return this.questSystem.getActiveQuests(
-      this.questRegistry,
-      this.questManager,
-      this.activePlayer,
-    )
+    return this.questOps.getActiveQuests()
   }
 
   canClaimQuest(questId: string): boolean {
-    return this.questSystem.canClaim(
-      this.questRegistry,
-      this.questManager,
-      {
-        materialRegistry: this.materialRegistry,
-        materialBag: this.materialBag,
-        pillRegistry: this.pillRegistry,
-        pillBag: this.pillBag,
-      },
-      questId,
-    )
+    return this.questOps.canClaimQuest(questId)
   }
 
   claimQuest(questId: string): boolean {
-    if (!this.activePlayer) {
-      return false
-    }
-
-    const receiver = this.buildPlayerRewardReceiver(this.activePlayer)
-
-    const claimed = this.questSystem.claim(
-      this.questRegistry,
-      this.questManager,
-      this.rewardSystem,
-      receiver,
-      {
-        materialRegistry: this.materialRegistry,
-        materialBag: this.materialBag,
-        pillRegistry: this.pillRegistry,
-        pillBag: this.pillBag,
-      },
-      questId,
-    )
-
-    if (claimed) {
-      const quest = this.questRegistry.get(questId)
-      this.notifications.push({ kind: 'loot', message: `Hoàn thành: ${quest.name}` })
-    }
-
-    return claimed
+    return this.questOps.claimQuest(questId)
   }
 
+  // gainEquippedTechniqueInsight() sits inside the // QUEST comment block
+  // (task 4 brief scope) but is unrelated to quests — it advances Pháp Tu
+  // technique insight, used by buildPlayerRewardReceiver() below (battle
+  // victory + quest claim rewards alike). Left in place, same pattern as
+  // task 2's getEnemyTemplate() finding.
   gainEquippedTechniqueInsight(amount: number): number {
     const technique = this.techniqueManager.getEquipped()
 
