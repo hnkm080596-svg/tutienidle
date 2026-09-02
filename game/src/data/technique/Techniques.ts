@@ -33,8 +33,6 @@ export const TECHNIQUES: Technique[] = [
 
     resourceLabel: 'Pháp Lực',
 
-    mpLabel: 'Linh Lực',
-
     // PLAN HOÀN CHỈNH mục 5.2 — Đại Ngũ Hành: %Linh lực tối đa
     // 3→4→5→10, %Hồi Linh (Increased manaRegenPerSecond, KHÔNG phải %
     // maxMp — xem Technique.ts's TechniqueTierEffect) 0.5→0.75→1.5→2,
@@ -73,7 +71,6 @@ export const TECHNIQUES: Technique[] = [
     description: 'Bản Trúc Cơ kế thừa Tiểu Ngũ Hành Quyết, dung nạp linh lực sâu hơn và điều động ngũ hành mạnh hơn.',
     requiredRealmId: 'foundation_establishment',
     resourceLabel: 'Pháp Lực',
-    mpLabel: 'Linh Lực',
     tierEffects: {
       so_nhap: { maxMpPercent: 0.05, manaRegenPercent: 0.01, hpRegenFlat: 1, mpRegenFlat: 1 },
       tieu_thanh: { maxMpPercent: 0.07, manaRegenPercent: 0.015, hpRegenFlat: 1.5, mpRegenFlat: 1.5 },
@@ -110,8 +107,6 @@ export const TECHNIQUES: Technique[] = [
     element: 'metal',
 
     resourceLabel: 'Kiếm Ý',
-
-    mpLabel: 'Niệm Lực',
 
     // Kiếm Ý CHIẾN ĐẤU dùng pool riêng (currentSwordIntent), không
     // phải Nộ Khí relabel như Pháp Tu — xem CombatHud.vue.
