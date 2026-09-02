@@ -5,8 +5,7 @@ import { useTooltip } from '@/composables/useTooltip'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import type { EquipmentTooltipContent, GradedItemTooltipContent, TechniqueTooltipContent } from '@/composables/useTooltip'
-import { itemQualityRank, isMaxRankTone } from '@/composables/slots/normalizeSlotRank'
-import type { ItemQuality } from '@/core/item/ItemQuality'
+import { isMaxRankTone } from '@/composables/slots/normalizeSlotRank'
 
 const { content, reference } = useTooltip()
 const floating = ref<HTMLElement | null>(null)
@@ -95,14 +94,19 @@ const richContent = computed<TechniqueTooltipContent | GradedItemTooltipContent 
   }
 })
 
-// Quality/Pham → 1 màu accent qua thang --rank-color-1..9 dùng CHUNG với
-// SlotView.vue (normalizeSlotRank.ts) — thay vì tự liệt kê lại từng ID
-// quality/pham thành 1 rule CSS[data-quality=...]/[data-rarity=...] riêng
-// (dễ sót khi thêm bậc mới, xem git history). --rarity-*/--grade-*
-// trong theme.css vốn CHỈ LÀ alias của cùng thang --rank-color-N này.
+// Quality/Pham → 1 màu accent qua namespace --grade-* (5 vars riêng,
+// rải 1-3-5-7-9 trên thang --rank-color, xem assets/theme.css) — KHÔNG
+// còn `--rank-color-${itemQualityRank(...)}` (1-5) như trước Fix 2
+// (final review, item-grade-quality-rework): equipment tooltip còn hiện
+// grade segment (ProfessionGrade, 10 bậc, tô --rank-color-1..10) cạnh
+// quality accent này, nên quality PHẢI dùng dải màu riêng --grade-*
+// (không trùng --rank-color-1..10) để tránh nhầm, đúng spec §5.8. Dùng
+// isMaxRankTone thay vì tự liệt kê lại từng ID quality/pham thành 1
+// rule CSS[data-quality=...]/[data-rarity=...] riêng (dễ sót khi thêm
+// bậc mới, xem git history).
 const qualityAccentColor = computed(() => {
   if (content.value?.kind !== 'equipment') return undefined
-  return `var(--rank-color-${itemQualityRank(content.value.qualityKey as ItemQuality)})`
+  return `var(--grade-${content.value.qualityKey})`
 })
 
 const isMaxQualityRank = computed(() =>
@@ -111,7 +115,7 @@ const isMaxQualityRank = computed(() =>
 
 const rarityAccentColor = computed(() => {
   const gradeKey = gradedContent.value?.gradeKey
-  return gradeKey ? `var(--rank-color-${itemQualityRank(gradeKey as ItemQuality)})` : undefined
+  return gradeKey ? `var(--grade-${gradeKey})` : undefined
 })
 
 const isMaxPhamRank = computed(() => {

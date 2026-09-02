@@ -25,7 +25,7 @@ function setup() {
 }
 
 describe('composeEquipmentNameSegments', () => {
-  it('cuu_pham (bậc thấp nhất) + hoang (chất thấp nhất) — 3 segment [grade, quality, name], rank-color-1 cho cả hai', () => {
+  it('cuu_pham (bậc thấp nhất) + hoang (chất thấp nhất) — 3 segment [grade, quality, name], mỗi trục 1 namespace màu riêng', () => {
     const { zoneRegistry } = setup()
     const instance = makeInstance({ grade: 'cuu_pham', quality: 'hoang' })
 
@@ -39,16 +39,18 @@ describe('composeEquipmentNameSegments', () => {
       tone: 'cuu_pham',
     })
 
+    // Fix 2 (final review) — quality dùng --grade-* (namespace riêng),
+    // KHÔNG còn --rank-color-N như grade segment ở trên (spec §5.8).
     expect(segments[1]).toMatchObject({
       text: 'Hoàng Chất',
-      colorVar: '--rank-color-1',
+      colorVar: '--grade-hoang',
       tone: 'hoang',
     })
 
     expect(segments[2]).toMatchObject({ text: 'Thanh Vân Kiếm' })
   })
 
-  it('tien_pham (bậc cao nhất, rank 10) + tien (chất cao nhất, rank 5) — colorVar tách đúng thang riêng, không lẫn nhau', () => {
+  it('tien_pham (bậc cao nhất, rank 10) + tien (chất cao nhất) — colorVar tách đúng namespace riêng, không lẫn nhau', () => {
     const { zoneRegistry } = setup()
     const instance = makeInstance({ grade: 'tien_pham', quality: 'tien' })
 
@@ -64,16 +66,17 @@ describe('composeEquipmentNameSegments', () => {
 
     expect(segments[1]).toMatchObject({
       text: 'Tiên Chất',
-      colorVar: '--rank-color-5',
+      colorVar: '--grade-tien',
       tone: 'tien',
     })
   })
 
-  it('trường hợp lệch bậc (grade cao, quality thấp) — mỗi segment tô màu theo ĐÚNG trục của nó, không rơi vào rank của trục kia', () => {
+  it('trường hợp lệch bậc (grade cao, quality thấp) — mỗi segment tô màu theo ĐÚNG namespace của trục nó, không rơi vào thang của trục kia', () => {
     const { zoneRegistry } = setup()
-    // Phẩm nghề cao (ngu_pham, rank 5 trên thang 10 bậc) nhưng Chất thấp
-    // (huyen, rank 2 trên thang 5 bậc) — 2 trục độc lập, không suy ra
-    // lẫn nhau (đúng ý đồ tách trục của Task 20/21).
+    // Phẩm nghề cao (ngu_pham, rank 5 trên thang 10 bậc, --rank-color-5)
+    // nhưng Chất thấp (huyen, --grade-huyen) — 2 trục độc lập, 2 namespace
+    // màu khác nhau, không suy ra lẫn nhau (đúng ý đồ tách trục của
+    // Task 20/21 + Fix 2 final review).
     const instance = makeInstance({ grade: 'ngu_pham', quality: 'huyen' })
 
     const segments = composeEquipmentNameSegments(instance, TEMPLATE, zoneRegistry)
@@ -86,7 +89,7 @@ describe('composeEquipmentNameSegments', () => {
 
     expect(segments[1]).toMatchObject({
       text: 'Huyền Chất',
-      colorVar: '--rank-color-2',
+      colorVar: '--grade-huyen',
       tone: 'huyen',
     })
   })
