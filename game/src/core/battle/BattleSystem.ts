@@ -3,6 +3,7 @@ import type { Battle, BattleEnemy, PendingEnemySpawn } from './Battle'
 import type { CombatSystem } from '../combat/CombatSystem'
 
 import { BuffPool } from '../buff/BuffPool'
+import type { BuffPolarity } from '../buff/BuffTypes'
 
 import { BuffSystem } from '../buff/BuffSystem'
 
@@ -868,7 +869,7 @@ export class BattleSystem {
 
     this.updateEnrage(battle, deltaSeconds)
 
-    const dotStatusesBefore = this.snapshotDotStatuses(battle)
+      const statusesBefore = this.snapshotStatuses(battle)
 
     // [4][5] Recompute modifiers → Buff/DoT/Lava/Regen
 
@@ -993,7 +994,7 @@ export class BattleSystem {
 
     // [16] Status VFX diff.
 
-    this.emitStatusVfxDiff(battle, dotStatusesBefore)
+      this.emitStatusVfxDiff(battle, statusesBefore)
 
     // [17] Check defeat.
 
@@ -1464,18 +1465,38 @@ export class BattleSystem {
     }
   }
 
-  /** Snapshot trạng thái DoT toàn trận, khoá `targetId:buffId`. */
-  private snapshotDotStatuses(
+  /** Snapshot trạng thái status toàn trận, khoá `targetId:buffId:sourceId`.
+   *  Buff bar (2026-09-02) — MỌI buff visible (không chỉ dot): CC/statModifier/
+   *  DoT đều vào snapshot; hidden loại (defensive — data hiện tại không dùng).
+   *  permanent = duration Infinity (onhit_*) — hàng icon riêng không timer. */
+  private snapshotStatuses(
     battle: Battle,
-  ): Map<string, { targetId: string; dotType: string; stacks: number; remainingTime: number }> {
+  ): Map<
+    string,
+    {
+      targetId: string
+      dotType: string
+      stacks: number
+      remainingTime: number
+      polarity: BuffPolarity
+      permanent: boolean
+    }
+  > {
     const snapshot = new Map<
       string,
-      { targetId: string; dotType: string; stacks: number; remainingTime: number }
+      {
+        targetId: string
+        dotType: string
+        stacks: number
+        remainingTime: number
+        polarity: BuffPolarity
+        permanent: boolean
+      }
     >()
 
     const collect = (pool: BuffPool, targetId: string) => {
       for (const buff of pool.getAll()) {
-        if (!buff.effects.some((effect) => effect.type === 'dot')) {
+        if (buff.hidden) {
           continue
         }
 
@@ -1484,6 +1505,8 @@ export class BattleSystem {
           dotType: buff.id,
           stacks: buff.stacks,
           remainingTime: buff.remainingTime,
+          polarity: buff.polarity,
+          permanent: buff.duration === Infinity,
         })
       }
     }
@@ -1502,10 +1525,17 @@ export class BattleSystem {
     battle: Battle,
     before: Map<
       string,
-      { targetId: string; dotType: string; stacks: number; remainingTime: number }
+      {
+        targetId: string
+        dotType: string
+        stacks: number
+        remainingTime: number
+        polarity: BuffPolarity
+        permanent: boolean
+      }
     >,
   ) {
-    const after = this.snapshotDotStatuses(battle)
+    const after = this.snapshotStatuses(battle)
 
     for (const [key, current] of after) {
       const previous = before.get(key)
@@ -1517,6 +1547,11 @@ export class BattleSystem {
           dotType: current.dotType,
           stacks: current.stacks,
           durationSeconds: current.remainingTime,
+          buffName: this.buffRegistry.has(current.dotType)
+            ? this.buffRegistry.get(current.dotType).name
+            : current.dotType,
+          polarity: current.polarity,
+          permanent: current.permanent,
         })
       } else if (
         current.stacks !== previous.stacks ||
