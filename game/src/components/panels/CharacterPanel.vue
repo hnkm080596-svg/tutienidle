@@ -23,13 +23,12 @@ const player = usePlayerStore()
 const ui = useUiStore()
 const { allocateAttributePoint } = useLoadoutActions()
 
-// Entry point Quán Khí (Task 7 review fix, Critical) — QuanKhiPanel.vue chỉ
-// dùng đường mở duy nhất từ trước là useTribulation.ts's triggerQuanKhi(),
-// bắn 1 lần lúc Phàm Nhân đột phá lên Kiếm Tu/Pháp Tu. Sau đó không còn nút
-// nào mở lại panel (commandWheelCatalog.ts đã bỏ slot quan_khi với comment
-// hứa "mở qua nút riêng trong Character Panel" nhưng chưa ai làm) — khiến
-// UI đổi đường Kiếm Tu (Kiếm Trận/Bạt Kiếm) mới thêm ở Task 7 không ai bấm
-// tới được. Chỉ hiện khi đã chọn Kiếm Tu (route switch chỉ có ý nghĩa ở đó).
+// Entry point Quán Khí (Task 7 review fix, Critical) — nút riêng trong
+// Character Panel này (openQuanKhi → ui.openStandalonePanel('quan_khi'))
+// là đường mở lại panel sau khi Quán Khí; flow đột phá thống nhất đi qua
+// triggerBreakthroughAction() trong useTribulation.ts (commandWheelCatalog.ts
+// đã bỏ slot quan_khi). Chỉ hiện khi đã chọn Kiếm Tu (route switch chỉ có
+// ý nghĩa ở đó).
 const showQuanKhiEntry = computed(() => player.cultivationPath === 'kiem_tu')
 
 function openQuanKhi() {

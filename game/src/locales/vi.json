@@ -594,5 +594,13 @@
         "rollFailed": "Không thể quan sát thiên cơ. Vui lòng thử lại."
       }
     }
+  },
+  "tribulation": {
+    "stillEquipped": {
+      "title": "Độ kiếp cũng là độ thân, không gì có thể giúp được ngươi",
+      "subtitle": "Không thể mặc trang bị khi độ kiếp",
+      "confirm": "Đã hiểu",
+      "cancel": "Chờ đã"
+    }
   }
 }
