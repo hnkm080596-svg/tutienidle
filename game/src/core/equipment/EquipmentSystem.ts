@@ -6,7 +6,6 @@ import { ITEM_QUALITY_ORDER, type ItemQuality } from '../item/ItemQuality'
 import {
   ITEM_QUALITY_AFFIX_TIER,
   ITEM_QUALITY_DROP_WEIGHT,
-  ITEM_QUALITY_ESSENCE_RANGE,
   ITEM_QUALITY_EXALTED_AFFIX_CHANCE,
   ITEM_QUALITY_FORGE_USES,
   ITEM_QUALITY_IMPLICIT_MULTIPLIER,
@@ -55,6 +54,7 @@ import {
 } from './RefinementBalance'
 import { LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
 import { canUseItemGrade } from './canUseItem'
+import { dissolveInstances as dissolveInstancesImpl } from './EquipmentDissolve'
 
 // Hệ số nhân thêm mỗi bậc cường hóa. Export để UI (EquipmentHallPanel's
 // Enhance preview) tính trước giá trị SAU khi cường hóa mà không phải
@@ -1531,60 +1531,12 @@ export class EquipmentSystem {
     inventory: EquipmentBag,
     random: () => number = Math.random,
   ): { ok: boolean; reason?: string; rewards?: Array<{ materialId: string; amount: number }> } {
-    if (instanceIds.length === 0) {
-      return { ok: false, reason: 'empty_selection' }
-    }
-
-    // Dedupe — selection trùng id (UI double-submit/race) từng khiến pass 1
-    // tính reward 2 lần trong khi pass 2 chỉ remove 1 lần → nhân bản Tinh
-    // Hoa (review 2026-08-28).
-    const uniqueIds = Array.from(new Set(instanceIds))
-
-    const instances: EquipmentInstance[] = []
-
-    const rewards: Array<{ materialId: string; amount: number }> = []
-
-    // Pass 1 — validate TOÀN BỘ selection + tính trước rewards.
-    for (const instanceId of uniqueIds) {
-      const instance = inventory.get(instanceId)
-
-      if (!instance) {
-        return { ok: false, reason: 'not_found' }
-      }
-
-      if (instance.equipped) {
-        return { ok: false, reason: 'equipped' }
-      }
-
-      if (instance.locked) {
-        return { ok: false, reason: 'locked' }
-      }
-
-      if (instance.favorite) {
-        return { ok: false, reason: 'favorite' }
-      }
-
-      const range = ITEM_QUALITY_ESSENCE_RANGE[instance.quality]
-
-      if (!range) {
-        return { ok: false, reason: 'no_conversion_rule' }
-      }
-
-      const amount = Math.floor(range.min + random() * (range.max - range.min + 1))
-
-      instances.push(instance)
-
-      rewards.push({ materialId: LUYEN_KHI_TINH_HOA_ID, amount })
-    }
-
-    // Pass 2 — all-or-nothing transaction: xoá đúng item rồi cộng
-    // Tinh Hoa trong cùng thao tác (§7.5).
-    for (const instance of instances) {
-      this.discardRefinePreview(instance.instanceId)
-      inventory.remove(instance.instanceId)
-    }
-
-    return { ok: true, rewards }
+    return dissolveInstancesImpl(
+      instanceIds,
+      inventory,
+      (instanceId) => this.discardRefinePreview(instanceId),
+      random,
+    )
   }
 
   getModifiers(): StatModifier[] {
