@@ -4,11 +4,10 @@
 // plus the "6 slots always exist" row shape shared by Wash/Refine.
 // Kept as an importable composable (not provide/inject) per Task 19 brief
 // item 6 — each tab imports what it needs itself.
-import { computed, type ComputedRef } from 'vue'
+import { computed, type ComputedRef, type Ref } from 'vue'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import type { EquipmentSlot } from '@/core/equipment/EquipmentTypes'
-import { getRealmIdForProfessionGrade } from '@/core/profession/ProfessionGrade'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
 import { itemGradeRank, professionGradeRank } from '@/composables/slots/normalizeSlotRank'
@@ -22,8 +21,6 @@ export interface EquippedRow {
   slot: EquipmentSlot
 
   name: string
-
-  realmId: string
 
   quality: EquipmentInstance['quality']
 
@@ -43,16 +40,6 @@ export interface EquippedRow {
   qualityRank: number
 
   rarityRank: number
-}
-
-export function equipmentRealmId(instance: EquipmentInstance): string {
-  const realmId = getRealmIdForProfessionGrade(instance.grade)
-
-  if (!realmId) {
-    throw new Error(`Missing realm for equipment grade ${instance.grade}`)
-  }
-
-  return realmId
 }
 
 export function useEquippedRows() {
@@ -77,8 +64,6 @@ export function useEquippedRows() {
         slot: instance.slot,
 
         name: template?.name ?? instance.itemId,
-
-        realmId: equipmentRealmId(instance),
 
         quality: instance.quality,
 
@@ -139,7 +124,7 @@ export function useHallSlotRows(equippedRows: ComputedRef<EquippedRow[]>) {
 /** Điểm Rèn PER-ITEM (rework 2026-08-26) = "Tình trạng rèn" trong tooltip
  * — forgeUsesRemaining / forgeUsesTotal. Tẩy/Tinh Luyện tiêu thụ ngân
  * sách này của CHÍNH món đồ. Dùng chung cho Wash/Refine tab. */
-export function useItemRenState(selectedInstanceId: ComputedRef<string | null> | { value: string | null }) {
+export function useItemRenState(selectedInstanceId: Ref<string | null> | ComputedRef<string | null>) {
   const gameManager = useGameManager()
 
   const { stateVersion } = useStateVersion()

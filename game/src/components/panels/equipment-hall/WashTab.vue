@@ -51,8 +51,6 @@ const selectedRow = computed(
 // reset khi đổi tab, giữ đúng semantics switchTab() cũ).
 const pendingWashAffixes = ref<RolledAffix[] | null>(null)
 
-const selectedOreId = ref<string | null>(null)
-
 function selectHallSlotForAction(row: HallSlotRow) {
   if (row.equippedRow) {
     selectEquipped(row.equippedRow.instanceId)
@@ -61,31 +59,7 @@ function selectHallSlotForAction(row: HallSlotRow) {
   }
 
   pendingWashAffixes.value = null
-
-  selectedOreId.value = null
 }
-
-/** Chọn ore cùng realm cho Tẩy Luyện — chỉ hiện stack người chơi có. */
-const oreChoices = computed(() => {
-  stateVersion.value
-
-  if (!selectedRow.value) {
-    return []
-  }
-
-  const prefix = `${selectedRow.value.realmId}_ore_`
-
-  return gameManager.materialBag
-    .getAll()
-    .filter((stack) => stack.material.id.startsWith(prefix))
-    .map((stack) => ({
-      materialId: stack.material.id,
-
-      name: stack.material.name,
-
-      owned: stack.amount,
-    }))
-})
 
 const washCost = computed(() => {
   stateVersion.value
@@ -272,16 +246,6 @@ const washRenAfter = computed(() =>
       </div>
 
       <div class="qi-hall__info-row">
-        <div class="qi-hall__info-options">
-          <span class="qi-hall__info-label">{{ t('panels.equipmentHall.labels.oreSelection') }}</span>
-
-          <label v-for="ore in oreChoices" :key="ore.materialId" class="qi-hall__option">
-            <input type="radio" :value="ore.materialId" v-model="selectedOreId" />
-
-            <span>{{ ore.name }} ×{{ ore.owned }}</span>
-          </label>
-        </div>
-
         <!-- Điểm Rèn tốn mỗi lượt đã hiện ở dòng chú thích đầu card
              (2026-08-30, bug report: trùng lặp) — costline chỉ còn chi
              phí KHÁC (Linh Thạch) chưa hiện ở đâu. -->
@@ -446,16 +410,6 @@ const washRenAfter = computed(() =>
   justify-content: center;
 }
 
-.qi-hall__option {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 0;
-  min-height: var(--tap-min);
-  font-size: var(--text-sm);
-  cursor: pointer;
-}
-
 .qi-hall__owned {
   margin-left: auto;
   color: var(--paper-text-soft);
@@ -475,21 +429,6 @@ const washRenAfter = computed(() =>
   gap: 6px 16px;
   padding: 6px 0;
   border-top: 1px solid color-mix(in srgb, var(--scene-fire-text-soft) 22%, transparent);
-}
-
-.qi-hall__info-options {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 12px;
-}
-
-.qi-hall__info-label {
-  font-size: var(--text-xs);
-  font-weight: 600;
-  color: var(--paper-eyebrow);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
 }
 
 .qi-hall__button-row {

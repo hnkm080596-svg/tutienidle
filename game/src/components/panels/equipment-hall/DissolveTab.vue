@@ -18,7 +18,7 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useEquipmentActions } from '@/composables/useEquipmentActions'
 import { usePanelPagination } from '@/composables/usePanelPagination'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
-import { materialLabel, equipmentSlotLabel, equipmentRarityLabel } from '@/core/presentation/labels'
+import { materialLabel, equipmentRarityLabel } from '@/core/presentation/labels'
 import { ITEM_QUALITY_ORDER } from '@/core/item/ItemQuality'
 import { PROFESSION_GRADE_ORDER, PROFESSION_GRADE_NAMES } from '@/core/profession/ProfessionGrade'
 import { canUseItemGrade } from '@/core/equipment/canUseItem'
@@ -46,10 +46,6 @@ interface DissolveCandidate {
   instanceId: string
 
   name: string
-
-  slotLabel: string
-
-  quality: string
 
   grade: EquipmentInstance['grade']
 
@@ -111,10 +107,6 @@ const dissolveCandidates = computed<DissolveCandidate[]>(() => {
         instanceId: instance.instanceId,
 
         name: template?.name ?? instance.itemId,
-
-        slotLabel: equipmentSlotLabel(instance.slot),
-
-        quality: equipmentRarityLabel(instance.quality),
 
         grade: instance.grade,
 

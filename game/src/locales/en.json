@@ -53,7 +53,6 @@
       },
       "labels": {
         "rowLine": "Line",
-        "oreSelection": "Select Ore",
         "dissolveReward": "Rewards",
         "levelPrefix": "Level",
         "levelArrow": "⇒",
@@ -80,7 +79,6 @@
       },
       "messages": {
         "refineNeedItem": "Cannot Refine: select an equipment item first.",
-        "refineNeedOre": "Cannot Refine: select an Ore of the same realm.",
         "polishNeedItem": "Cannot Polish: select an equipment item with at least one affix."
       }
     },

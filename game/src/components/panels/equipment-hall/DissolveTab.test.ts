@@ -128,9 +128,10 @@ afterEach(() => {
 describe('DissolveTab — Hóa Luyện', () => {
   it('itemId lạ (registry miss) ở đồ trong túi không chết tab Hóa Luyện — ứng viên vẫn liệt kê', async () => {
     const mounted = mountTab((manager) => {
-      // jsdom không có ResizeObserver → usePanelPagination pageSize tối
-      // thiểu 1; bỏ fixture 'in-bag' để ghost là ứng viên DUY NHẤT hiển
-      // thị trang đầu.
+      // jsdom không có ResizeObserver → contentRect chưa đo được →
+      // usePanelPagination dùng FALLBACK_ROWS_WHEN_UNMEASURED (6 hàng);
+      // bỏ fixture 'in-bag' để ghost là ứng viên DUY NHẤT, chắc chắn nằm
+      // trong trang đầu bất kể pageSize thật là bao nhiêu.
       manager.equipmentBag.remove('in-bag')
       manager.equipmentBag.add(equipmentInstanceWithItemId('ghost-bag', 'nonexistent_item', false))
     })
