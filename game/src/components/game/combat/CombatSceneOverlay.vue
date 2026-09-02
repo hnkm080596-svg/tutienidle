@@ -151,4 +151,26 @@ onUnmounted(() => {
   justify-content: center;
   z-index: 12;
 }
+
+/* T8.2 — O1 overlap guard: viewport hẹp, Build HUD flex-center có thể
+   đè PlayerHudLayer (canvas góc trái-dưới, x ≈ HUD_MARGIN 16 +
+   HP width 180 + sub-gap ≈ 14 → 210px). Dịch nội dung ra khỏi vùng
+   HUD thay vì cho đè số HP. Media query theo viewport thật
+   (AGENTS.md flexible rule — KHÔNG hardcode cột). Đổi khi HUD đổi
+   (nguồn: PlayerHudLayer.ts HUD_MARGIN/HUD_HP_WIDTH). */
+@media (max-width: 1100px) {
+  .combat-scene-overlay__build-hud {
+    padding-left: 210px;
+  }
+}
+
+/* T8.2 — O3 vertical guard: viewport thấp, AI panel dọc cao
+   (topbar ~64 + title + 5 options × --tap-min ~44) có thể chạm
+   vùng HUD dưới-trái. Cho scroll trong panel thay vì đè. */
+@media (max-height: 700px) {
+  .combat-scene-overlay__ai-panel {
+    max-height: calc(100% - 180px);
+    overflow-y: auto;
+  }
+}
 </style>
