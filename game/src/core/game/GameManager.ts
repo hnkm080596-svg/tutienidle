@@ -1579,29 +1579,16 @@ export class GameManager {
   }
 
   /**
-   * Äá»™t PhÃ¡ TrÃºc CÆ¡: má»‘c tá»‘i thiá»ƒu Ä‘á»ƒ nÃºt "TRÃšC CÆ " xuáº¥t hiá»‡n song song
-   * nÃºt "Äá»™t PhÃ¡" thÆ°á»ng. Thiáº¿t káº¿ hiá»‡n táº¡i (2026-08-27): má»‘c 12 táº§ng á»Ÿ
-   * qi_refining lÃ  NhÃ¢n Äáº¡o baseline; cÃ¡c cáº¥p Ä‘á»™t phÃ¡ áº©n khÃ¡c sáº½ Ä‘Æ°á»£c
-   * thiáº¿t káº¿ sau, cÃ¹ng háº±ng sá»‘ vá»›i mortal â†’ qi_refining
-   * (chooseCultivationPath()).
+   * Gate đột phá unified — 1 hàm cho MỌI cảnh giới. Trả về true nếu
+   * người chơi đủ điều kiện bấm nút Đột Phá (Quán Khí / Trúc Cơ / ...).
+   *
+   * PRODUCT SCOPE: game hiện chỉ thiết kế tới Trúc Cơ tầng 18. Các realm
+   * placeholder (Kim Đan+) trả false cho tới khi có content pass tương ứng.
    */
-  canTriggerFoundationBreakthrough(player: PlayerData): boolean {
-    return player.realmId === 'qi_refining' && player.realmLevel >= CORE_REALM_LEVEL
-  }
-
-  /**
-   * Gate dÃ nh cho Ä‘á»™t phÃ¡ Ä‘áº¡i cáº£nh giá»›i sau TrÃºc CÆ¡. Ná»™i dung hiá»‡n káº¿t thÃºc
-   * táº¡i TrÃºc CÆ¡ táº§ng 18 nÃªn gate Ä‘Ã³ng hoÃ n toÃ n; chá»‰ má»Ÿ láº¡i cÃ¹ng má»™t content
-   * pass thiáº¿t káº¿ Kim Äan vÃ  cÃ¡c requirement/Tribulation tÆ°Æ¡ng á»©ng.
-   */
-  canTriggerRealmBreakthrough(player: PlayerData): boolean {
-    // PRODUCT SCOPE: game hiá»‡n chá»‰ thiáº¿t káº¿ tá»›i TrÃºc CÆ¡ táº§ng 18. HÃ m tá»•ng
-    // quÃ¡t nÃ y lÃ  pháº§n má»Ÿ rá»™ng chÆ°a hoÃ n thiá»‡n; khÃ´ng Ä‘Æ°á»£c má»Ÿ Ä‘Æ°á»ng sang cÃ¡c
-    // realm placeholder (Kim Äan+) trÆ°á»›c khi cÃ³ thiáº¿t káº¿ progression tÆ°Æ¡ng á»©ng.
-    // TrÃºc CÆ¡ táº§ng 18 lÃ  Ä‘iá»ƒm cuá»‘i ná»™i dung hiá»‡n táº¡i. Giá»¯ tham sá»‘ Ä‘á»ƒ API/UI
-    // á»•n Ä‘á»‹nh nhÆ°ng khÃ´ng cho má»Ÿ Tribulation sang cÃ¡c realm placeholder.
-    void player
-
+  canTriggerBreakthrough(player: PlayerData): boolean {
+    if (player.realmId === 'mortal' || player.realmId === 'qi_refining') {
+      return player.realmLevel >= CORE_REALM_LEVEL
+    }
     return false
   }
 
