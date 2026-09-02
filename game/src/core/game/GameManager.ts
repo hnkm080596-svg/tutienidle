@@ -56,7 +56,6 @@ import { EquipmentRegistry } from '../equipment/EquipmentRegistry'
 import { EquipmentBag, type AutoDissolveReward } from '../equipment/EquipmentBag'
 import { EquipmentSystem } from '../equipment/EquipmentSystem'
 import { DecomposeSystem } from '../production/DecomposeSystem'
-import { MAX_SLOT_ENHANCE_LEVEL } from '../equipment/EnhanceCurve'
 import type { RefineValueEntry } from '../equipment/EquipmentSystem'
 import type { RolledAffix } from '../equipment/RolledAffix'
 import { createDefaultEquipmentOperationCostCatalog } from '../equipment/EquipmentOperationCostCatalog'
@@ -122,8 +121,6 @@ import {
   type AlchemyRecipe,
 } from '../alchemy/AlchemySystem'
 import { HERB_AGE_BASE_SUCCESS_PERCENT } from '../production/ProductionBalance'
-import { ITEM_QUALITY_ESSENCE_RANGE } from '../equipment/ItemQualityBalance'
-import { LUYEN_KHI_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
 
 import { BuildingRegistry } from '../building/BuildingRegistry'
 import { BuildingManager } from '../building/BuildingManager'
@@ -147,6 +144,7 @@ import { TemplateRegistry } from './TemplateRegistry'
 import { NotificationQueue } from './NotificationQueue'
 import { BattleLootSystem } from './BattleLootSystem'
 import { StageWaveSystem } from './StageWaveSystem'
+import { EquipmentOpsSystem } from './EquipmentOpsSystem'
 import { HiddenBeastSystem } from './HiddenBeastSystem'
 import { TribulationDirector, type ActiveTribulationState } from '../tribulation/TribulationDirector'
 
@@ -425,6 +423,7 @@ export class GameManager {
   private readonly battleLoot: BattleLootSystem
   private readonly stageWaves: StageWaveSystem
   private readonly tribulationDirector: TribulationDirector
+  private readonly equipmentOps: EquipmentOpsSystem
 
   // Quái ẩn (spec dot-pha-loi-kiep §4.1c) — cửa sổ 1000 kill Luyện Khí.
   readonly hiddenBeastSystem: HiddenBeastSystem
@@ -494,6 +493,22 @@ export class GameManager {
 
     this.tribulationDirector = new TribulationDirector({
       eventBus: this.eventBus,
+    })
+
+    this.equipmentOps = new EquipmentOpsSystem({
+      equipmentSystem: this.equipmentSystem,
+      equipmentBag: this.equipmentBag,
+      equipmentRegistry: this.equipmentRegistry,
+      equipmentSlotManager: this.equipmentSlotManager,
+      affixRegistry: this.affixRegistry,
+      materialBag: this.materialBag,
+      materialRegistry: this.materialRegistry,
+      buildingManager: this.buildingManager,
+      buildingRegistry: this.buildingRegistry,
+      buildingSystem: this.buildingSystem,
+      notifications: this.notifications,
+      notifyQuestMaterialGained: (materialId, amount) =>
+        this.notifyQuestMaterialGained(materialId, amount),
     })
   }
 
@@ -1746,389 +1761,118 @@ export class GameManager {
   // EQUIPMENT
   // =========================
 
-  /**
-   * W5 (2026-08-27) â€” level KhÃ­ ÄÆ°á»ng giáº£m chi phÃ­ CÆ°á»ng HÃ³a/Táº©y Luyá»‡n/
-   * Tinh Luyá»‡n. Äá»“ng bá»™ discount vÃ o EquipmentSystem trÆ°á»›c má»—i query/spend.
-   */
-  private syncEquipmentCostDiscount() {
-    const instance = this.buildingManager.getByBuildingId('equipment_hall')
-
-    if (!instance) {
-      this.equipmentSystem.setCostDiscountPercent(0)
-      return
-    }
-
-    const template = this.buildingRegistry.get('equipment_hall')
-
-    this.equipmentSystem.setCostDiscountPercent(
-      this.buildingSystem.getCraftModifiers(instance, template).equipmentCostDiscountPercent / 100,
-    )
-  }
+  // Tách khỏi GameManager (2026-09-02, task 1 — GameManager split) —
+  // toàn bộ logic đã chuyển sang EquipmentOpsSystem (xem
+  // EquipmentOpsSystem.ts). Các method dưới đây là thin delegate GIỮ
+  // NGUYÊN public API để call site ngoài GameManager.ts không phải đổi.
 
   obtainEquipment(equipmentId: string, player: PlayerData): EquipmentInstance | null {
-    if (!this.equipmentRegistry.has(equipmentId)) {
-      return null
-    }
-
-    const template = this.equipmentRegistry.get(equipmentId)
-    const instance = this.equipmentSystem.createInstance(template, player, this.affixRegistry)
-
-    this.grantAutoDissolveRewards(this.equipmentBag.add(instance))
-
-    return instance
-  }
-
-  /**
-   * Cap mềm túi trang bị (audit 2026-08-31) — EquipmentBag.add() tự Hóa
-   * Luyện item "rác" nhất khi vượt cap và TRẢ rewards Tinh Hoa cho caller
-   * cộng. Null-safe với mock tests (add trả undefined khi bị mock). Cộng
-   * qua materialBag + quest hook (mirror dissolveItems()), toast 1 lần
-   * mỗi batch qua NotificationQueue sẵn có.
-   */
-  private grantAutoDissolveRewards(rewards: AutoDissolveReward[] | undefined) {
-    const autoDissolved = rewards ?? []
-
-    if (autoDissolved.length === 0) {
-      return
-    }
-
-    for (const reward of autoDissolved) {
-      if (this.materialRegistry.has(reward.materialId)) {
-        this.materialBag.add(this.materialRegistry.get(reward.materialId), reward.amount)
-
-        this.notifyQuestMaterialGained(reward.materialId, reward.amount)
-      }
-    }
-
-    this.notifications.push({
-      kind: 'loot',
-      message: `Túi đầy — tự Hóa Luyện ${autoDissolved.length} món thành Tinh Hoa`,
-    })
+    return this.equipmentOps.obtainEquipment(equipmentId, player)
   }
 
   equipItem(instanceId: string, player: PlayerData): { ok: boolean; reason?: string } {
-    return this.equipmentSystem.equip(
-      instanceId,
-      this.equipmentBag,
-      this.equipmentRegistry,
-      this.equipmentSlotManager,
-      player,
-      this.affixRegistry,
-    )
+    return this.equipmentOps.equipItem(instanceId, player)
   }
 
   unequipItem(instanceId: string): boolean {
-    return this.equipmentSystem.unequip(instanceId, this.equipmentBag)
+    return this.equipmentOps.unequipItem(instanceId)
   }
 
-  /** CÆ°á»ng HÃ³a gáº¯n SLOT â€” slot trá»‘ng váº«n nÃ¢ng Ä‘Æ°á»£c (slot-level rework). */
   enhanceSlot(slot: EquipmentSlot, player: PlayerData): { ok: boolean; reason?: string } {
-    this.syncEquipmentCostDiscount()
-
-    return this.equipmentSystem.enhance(
-      slot,
-
-      player.realmId,
-
-      this.equipmentBag,
-
-      this.equipmentRegistry,
-
-      this.materialBag,
-
-      this.equipmentSlotManager,
-
-      this.affixRegistry,
-    )
+    return this.equipmentOps.enhanceSlot(slot, player)
   }
 
   getEnhanceCost(slot: EquipmentSlot, realmId: string) {
-    this.syncEquipmentCostDiscount()
-
-    return this.equipmentSystem.getEnhanceCost(
-      slot,
-
-      realmId,
-
-      this.equipmentBag,
-
-      this.equipmentRegistry,
-
-      this.equipmentSlotManager,
-    )
+    return this.equipmentOps.getEnhanceCost(slot, realmId)
   }
 
   getEnhanceSpiritStoneCost(slot: EquipmentSlot, realmId: string): number {
-    this.syncEquipmentCostDiscount()
-
-    return this.equipmentSystem.getEnhanceSpiritStoneCost(
-      slot,
-
-      realmId,
-
-      this.equipmentBag,
-
-      this.equipmentRegistry,
-
-      this.equipmentSlotManager,
-    )
+    return this.equipmentOps.getEnhanceSpiritStoneCost(slot, realmId)
   }
 
-  /**
-   * Task 10 (rework P3) — slot-level enhance: trần là MAX_SLOT_ENHANCE_LEVEL
-   * (100 = 10 realm × 10 cấp), KHÔNG còn theo template. Giữ method cho API
-   * ổn định; tham số legacy bỏ qua.
-   */
-  getSlotMaxEnhanceLevel(_slot: EquipmentSlot, _realmId: string): number {
-    return MAX_SLOT_ENHANCE_LEVEL
+  getSlotMaxEnhanceLevel(slot: EquipmentSlot, realmId: string): number {
+    return this.equipmentOps.getSlotMaxEnhanceLevel(slot, realmId)
   }
 
-  /** Template tra an toÃ n â€” registry.get() nÃ©m lá»—i vá»›i id láº¡, UI cáº§n undefined. */
   getEquipmentTemplate(itemId: string): Equipment | undefined {
-    try {
-      return this.equipmentRegistry.get(itemId)
-    } catch {
-      return undefined
-    }
+    return this.equipmentOps.getEquipmentTemplate(itemId)
   }
 
-  /** Remaining per-item forge uses (`forgeUsesRemaining`, shown as the forge condition). */
   itemRefinementPoints(instance: EquipmentInstance): number {
-    return this.equipmentSystem.itemRefinementPoints(instance)
+    return this.equipmentOps.itemRefinementPoints(instance)
   }
 
-  /**
-   * Wash all affixes using one forge use, quality-scaled equipment essence,
-   * and generic spirit stones. Returns a domain reason for presentation.
-   */
-  washItem(
-    instanceId: string,
-    player: PlayerData,
-  ): { ok: boolean; reason?: string } {
-    void player
-
-    this.syncEquipmentCostDiscount()
-
-    return this.equipmentSystem.washAffixes(
-      instanceId,
-      this.equipmentBag,
-      this.equipmentRegistry,
-      this.materialBag,
-      this.equipmentSlotManager,
-      this.affixRegistry,
-    )
+  washItem(instanceId: string, player: PlayerData): { ok: boolean; reason?: string } {
+    return this.equipmentOps.washItem(instanceId, player)
   }
 
-  /**
-   * TINH LUYỆN (plan §7.4) — mỗi dòng eligible không khóa tăng 5–20%
-   * rồi clamp theo trần tier; tối đa khóa 3 dòng. Trả về reason lỗi cho UI.
-   */
   refineItem(
     instanceId: string,
     lockedIndices: readonly number[],
     player: PlayerData,
   ): { ok: boolean; reason?: string } {
-    void player
-
-    this.syncEquipmentCostDiscount()
-
-    return this.equipmentSystem.refineAffixValues(
-      instanceId,
-      lockedIndices,
-      this.equipmentBag,
-      this.equipmentRegistry,
-      this.materialBag,
-      this.equipmentSlotManager,
-      this.affixRegistry,
-    )
+    return this.equipmentOps.refineItem(instanceId, lockedIndices, player)
   }
 
-  /**
-   * Xem trước Tẩy Luyện (2026-08-30, UI "giữ/bỏ") — roll + trừ cost NGAY,
-   * KHÔNG ghi affixes mới vào instance. UI giữ affixes trả về ở state
-   * tạm, gọi commitWashItem() khi người chơi bấm "Giữ".
-   */
   previewWashItem(instanceId: string): { ok: boolean; reason?: string; affixes?: RolledAffix[] } {
-    this.syncEquipmentCostDiscount()
-
-    return this.equipmentSystem.previewWashAffixes(
-      instanceId,
-      this.equipmentBag,
-      this.equipmentRegistry,
-      this.materialBag,
-      this.affixRegistry,
-    )
+    return this.equipmentOps.previewWashItem(instanceId)
   }
 
-  /** Chốt affixes đã preview (previewWashItem) — không trừ cost lần nữa. */
   commitWashItem(instanceId: string, affixes: RolledAffix[]): { ok: boolean; reason?: string } {
-    return this.equipmentSystem.commitWashAffixes(
-      instanceId,
-      affixes,
-      this.equipmentBag,
-      this.equipmentSlotManager,
-      this.affixRegistry,
-    )
+    return this.equipmentOps.commitWashItem(instanceId, affixes)
   }
 
-  /**
-   * Xem trước Tinh Luyện (2026-08-30, UI "giữ/bỏ") — cùng cơ chế với
-   * previewWashItem/commitWashItem.
-   */
   previewRefineItem(
     instanceId: string,
     lockedIndices: readonly number[],
   ): { ok: boolean; reason?: string; values?: RefineValueEntry[] } {
-    this.syncEquipmentCostDiscount()
-
-    return this.equipmentSystem.previewRefineValues(
-      instanceId,
-      lockedIndices,
-      this.equipmentBag,
-      this.equipmentRegistry,
-      this.materialBag,
-      this.affixRegistry,
-    )
+    return this.equipmentOps.previewRefineItem(instanceId, lockedIndices)
   }
 
-  /** Chốt values đã preview (previewRefineItem) — không trừ cost lần nữa. */
   commitRefineItem(instanceId: string, values: RefineValueEntry[]): { ok: boolean; reason?: string } {
-    return this.equipmentSystem.commitRefineValues(
-      instanceId,
-      values,
-      this.equipmentBag,
-      this.equipmentSlotManager,
-      this.affixRegistry,
-    )
+    return this.equipmentOps.commitRefineItem(instanceId, values)
   }
 
-  /** Hủy Refine preview đã trả phí khi UI bỏ kết quả hoặc đổi context. */
   discardRefinePreview(instanceId?: string): void {
-    this.equipmentSystem.discardRefinePreview(instanceId)
+    this.equipmentOps.discardRefinePreview(instanceId)
   }
 
-  /** Discounted Wash cost for UI, keyed by the item's quality. */
   getWashCost(quality: ItemQuality) {
-    this.syncEquipmentCostDiscount()
-
-    return this.equipmentSystem.getWashCost(quality)
+    return this.equipmentOps.getWashCost(quality)
   }
 
-  /** Discounted Refine cost for UI, keyed by the item's quality. */
-  getRefineCost(
-    lineCount: number,
-    lockedCount: number,
-    quality?: ItemQuality,
-  ) {
-    this.syncEquipmentCostDiscount()
-
-    return this.equipmentSystem.getRefineCost(lineCount, lockedCount, quality)
+  getRefineCost(lineCount: number, lockedCount: number, quality?: ItemQuality) {
+    return this.equipmentOps.getRefineCost(lineCount, lockedCount, quality)
   }
 
-  /**
-   * HÃ“A LUYá»†N (plan Â§7.5) â€” phÃ¢n giáº£i batch trang bá»‹ thÃ nh Tinh Hoa,
-   * all-or-nothing. KhÃ´ng tiÃªu hao Äiá»ƒm RÃ¨n.
-   */
   dissolveItems(instanceIds: readonly string[]): {
     ok: boolean
     reason?: string
     rewards?: Array<{ materialId: string; amount: number }>
   } {
-    const result = this.equipmentSystem.dissolveInstances(instanceIds, this.equipmentBag)
-
-    if (result.ok && result.rewards) {
-      for (const reward of result.rewards) {
-        if (this.materialRegistry.has(reward.materialId)) {
-          this.materialBag.add(this.materialRegistry.get(reward.materialId), reward.amount)
-
-          this.notifyQuestMaterialGained(reward.materialId, reward.amount)
-        }
-      }
-    }
-
-    return result
+    return this.equipmentOps.dissolveItems(instanceIds)
   }
 
-  /** Preview Tinh Hoa nháº­n Ä‘Æ°á»£c khi HÃ³a Luyá»‡n selection hiá»‡n táº¡i (Â§9.2). */
   previewDissolveRewards(
     instanceIds: readonly string[],
   ): Array<{ materialId: string; minAmount: number; maxAmount: number }> {
-    const totals = new Map<string, { min: number; max: number }>()
-
-    for (const instanceId of instanceIds) {
-      const instance = this.equipmentBag.get(instanceId)
-
-      if (!instance || instance.equipped || instance.locked || instance.favorite) {
-        continue
-      }
-
-      const range = ITEM_QUALITY_ESSENCE_RANGE[instance.quality]
-
-      if (!range) {
-        continue
-      }
-
-      const entry = totals.get(LUYEN_KHI_TINH_HOA_ID) ?? { min: 0, max: 0 }
-
-      entry.min += range.min
-
-      entry.max += range.max
-
-      totals.set(LUYEN_KHI_TINH_HOA_ID, entry)
-    }
-
-    return Array.from(totals, ([materialId, value]) => ({
-      materialId,
-
-      minAmount: value.min,
-
-      maxAmount: value.max,
-    }))
+    return this.equipmentOps.previewDissolveRewards(instanceIds)
   }
 
-  /**
-   * State cÆ°á»ng hÃ³a/formation/bonus affix slots cá»§a 1 slot cá»¥ thá»ƒ â€”
-   * dÃ¹ng cho UI hiá»‡n thÃ´ng tin NGAY Cáº¢ KHI slot Ä‘ang trá»‘ng (MASTER
-   * SPEC Má»¥c XVI, Phase 9).
-   */
   getSlotState(slot: EquipmentSlot): EquipmentSlotState {
-    return this.equipmentSlotManager.get(slot)
+    return this.equipmentOps.getSlotState(slot)
   }
 
   getAllSlotStates(): EquipmentSlotState[] {
-    return this.equipmentSlotManager.getAll()
+    return this.equipmentOps.getAllSlotStates()
   }
 
-  /**
-   * Modifier "tÄ©nh" tá»« equipment â€” xem ghi chÃº trong Player.ts vÃ 
-   * EquipmentSystem. Chá»‰ Ä‘á»•i khi equip/unequip/enhance, caller
-   * (player store) tá»± gÃ¡n láº¡i vÃ o player.modifiers sau má»—i hÃ nh
-   * Ä‘á»™ng, KHÃ”NG gá»i má»—i tick nhÆ° getAggregatedModifiers().
-   */
   getEquipmentModifiers(): StatModifier[] {
-    return this.equipmentSystem.getModifiers()
+    return this.equipmentOps.getEquipmentModifiers()
   }
 
-  /**
-   * Task 17 (rework P5) — Đột Phá đại cảnh giới đổi player.realmId nên
-   * mọi item đang mặc có thể lệch phẩm mới (Task 16 gate canUseItemGrade
-   * chặn re-equip khi lệch, nhưng KHÔNG tự tháo đồ cũ) → tháo TOÀN BỘ
-   * trang bị đang mặc ngay sau khi breakthrough để tránh kẹt trạng thái
-   * "mặc đồ giờ lệch phẩm nhưng không thể equip lại nếu lỡ tháo tay".
-   * Slot state (enhanceLevel/enhanceFailStreak/Formation/Talisman) sống
-   * độc lập theo SLOT (MASTER SPEC Mục XVI) — KHÔNG đụng tới, chỉ đổi
-   * equipped flag + modifier trên từng EquipmentInstance.
-   */
   unequipAllEquipment(): void {
-    for (const instance of this.equipmentBag.getEquipped()) {
-      this.equipmentSystem.unequip(instance.instanceId, this.equipmentBag)
-    }
-
-    this.equipmentSystem.refreshModifiers(
-      this.equipmentBag,
-      this.equipmentSlotManager,
-      this.affixRegistry,
-    )
+    this.equipmentOps.unequipAllEquipment()
   }
 
   // =========================
