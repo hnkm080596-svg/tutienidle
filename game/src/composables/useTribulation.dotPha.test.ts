@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { usePlayerStore } from '../stores/player'
 import { GameManager } from '../core/game/GameManager'
-import { checkTribulationOutcomeAction } from './useTribulation'
+import { checkTribulationOutcomeAction, triggerBreakthroughAction } from './useTribulation'
 import { getTribulationChapters } from '../data/tribulation/TribulationChapters'
 import { createBaseStats } from '../core/stats/StatBlock'
 import { CHARACTER_CREATION_TALENTS, getTalentDefinition } from '../data/talent/Talents'
@@ -262,5 +262,38 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
     const slotState = gameManager.equipmentSlotManager.get('weapon')
     expect(slotState.enhanceLevel).toBe(4)
     expect(slotState.enhanceFailStreak).toBe(2)
+  })
+
+  it('triggerBreakthroughAction auto-unequip TRƯỚC khi vào kiếp', () => {
+    const gameManager = new GameManager()
+    gameManager.registerPills(pills)
+    const player = usePlayerStore()
+
+    player.realmId = 'qi_refining'
+    player.realmLevel = 12
+    player.baseStats.defense = 10_000
+    player.baseStats.maxHp = 500_000
+
+    const weapon = makeInstance({
+      instanceId: 'trigger-unequip-weapon',
+      slot: 'weapon',
+      grade: PROFESSION_GRADE_BY_REALM.qi_refining,
+      equipped: true,
+    })
+    gameManager.equipmentBag.add(weapon)
+    gameManager.equipmentSystem.refreshModifiers(
+      gameManager.equipmentBag,
+      gameManager.equipmentSlotManager,
+      gameManager.affixRegistry,
+    )
+    player.setEquipmentModifiers(gameManager.getEquipmentModifiers())
+    expect(player.modifiers.some((m) => m.sourceType === 'equipment')).toBe(true)
+
+    expect(triggerBreakthroughAction(player, gameManager)).toBe(true)
+    expect(weapon.equipped).toBe(false)
+    expect(gameManager.equipmentBag.getEquipped()).toHaveLength(0)
+    // Modifier equipment đã sync rỗng NGAY lúc trigger (trước cả resolveVictory).
+    expect(player.modifiers.some((m) => m.sourceType === 'equipment')).toBe(false)
+    expect(gameManager.getActiveTribulation()).not.toBeNull()
   })
 })
