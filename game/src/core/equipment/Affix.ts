@@ -4,11 +4,12 @@ import type { EquipmentSlot } from './EquipmentTypes'
 export type AffixKind = 'prefix' | 'suffix'
 
 // Equipment Rework (2026-08-14) — chia affix thành 4 tầng, mở dần theo
-// Quality (EQUIPMENT_QUALITY_UNLOCKED_POOLS trong EquipmentQuality.ts).
+// Quality (ITEM_QUALITY_UNLOCKED_POOLS trong ItemQualityBalance.ts).
 // 'supreme' còn là pool DUY NHẤT "Exalted Affix" (roll bonus của
-// thien_duyen rarity, xem EquipmentRarity.ts) được phép rút ra, bất kể
-// Quality của item đó có tự mở pool 'supreme' hay không — phần
-// thưởng may mắn của rarity cao nhất, không phụ thuộc quality.
+// quality tien cao nhất, xem ITEM_QUALITY_EXALTED_AFFIX_CHANCE trong
+// ItemQualityBalance.ts) được phép rút ra, bất kể Quality của item đó
+// có tự mở pool 'supreme' hay không — phần thưởng may mắn của quality
+// cao nhất, không phụ thuộc trần Tier thường.
 export type AffixPool = 'basic' | 'advanced' | 'specialized' | 'supreme'
 
 export interface AffixTierDef {
@@ -23,10 +24,10 @@ export interface AffixTierDef {
  * Core Loop Foundation checklist (Mục AFFIX) — thay thế HOÀN TOÀN
  * substatPool cũ (roll ngẫu nhiên N cái, không phân loại, không có
  * tier). 1 Affix template roll ra 1 RolledAffix trên instance (xem
- * RolledAffix.ts) — số lượng Affix 1 item mang được do RARITY quyết
- * định (EQUIPMENT_RARITY_AFFIX_SLOTS), tier cao nhất roll được do
- * QUALITY quyết định (EQUIPMENT_QUALITY_MAX_AFFIX_TIER) — 2 trục độc
- * lập cùng gate 1 hệ thống duy nhất.
+ * RolledAffix.ts) — số lượng Affix 1 item mang được do QUALITY quyết
+ * định (ITEM_QUALITY_AFFIX_SLOTS), tier cao nhất roll được do QUALITY
+ * quyết định (ITEM_QUALITY_AFFIX_TIER) — cùng 1 trục ItemQuality gate
+ * cả 2 chiều (số lượng lẫn sức mạnh affix).
  */
 export interface Affix {
   id: string

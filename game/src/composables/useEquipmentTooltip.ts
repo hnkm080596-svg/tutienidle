@@ -4,12 +4,11 @@ import type { EquipmentSlotState } from '@/core/equipment/EquipmentSlotState'
 import type { AffixRegistry } from '@/core/equipment/AffixRegistry'
 import type { ZoneRegistry } from '@/core/stage/ZoneRegistry'
 import { getEffectiveAffixValue, GLOBAL_MAX_AFFIXES, MAIN_STAT_REALM_SCALE } from '@/core/equipment/EquipmentSystem'
-import { ITEM_QUALITY_IMPLICIT_MULTIPLIER } from '@/core/equipment/ItemQualityBalance'
+import { ITEM_QUALITY_AFFIX_SLOTS, ITEM_QUALITY_IMPLICIT_MULTIPLIER } from '@/core/equipment/ItemQualityBalance'
 import { getGlobalCultivationLevel } from '@/core/realm/realmSystem'
 import { realmFromGrade } from '@/core/profession/ProfessionGrade'
 import { composeEquipmentDisplayName, composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
 import { EQUIPMENT_SLOT_LABELS } from '@/core/equipment/EquipmentTypes'
-import { EQUIPMENT_RARITY_AFFIX_SLOTS } from '@/core/equipment/ItemGradeRefs'
 import { statLabel, formatStat } from '@/core/stats/StatLabels'
 import { equipmentQualityLabel, gradeLabel, realmLabel } from '@/core/presentation/labels'
 import type { SlotComparison } from '@/components/common/SlotTypes'
@@ -97,7 +96,7 @@ export function buildEquipmentTooltip(
     },
   ]
 
-  const rarityAffixCap = EQUIPMENT_RARITY_AFFIX_SLOTS[instance.quality]
+  const rarityAffixCap = ITEM_QUALITY_AFFIX_SLOTS[instance.quality]
   const bonusAffixSlots = slotState?.bonusAffixSlots ?? 0
   const affixCapacity = Math.min(GLOBAL_MAX_AFFIXES, rarityAffixCap.prefix + rarityAffixCap.suffix + bonusAffixSlots)
 

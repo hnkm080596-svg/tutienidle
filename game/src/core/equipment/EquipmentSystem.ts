@@ -2,14 +2,12 @@ import type { Equipment, RecipeMaterialCost } from './Equipment'
 import type { EquipmentInstance } from './EquipmentInstance'
 import { EquipmentBag } from './EquipmentBag'
 import { EquipmentRegistry } from './EquipmentRegistry'
-import { EQUIPMENT_QUALITY_MAX_FORGE_POINTS } from './EquipmentQuality'
-import type { EquipmentQuality } from './EquipmentQuality'
-import { EQUIPMENT_RARITY_EXALTED_AFFIX_CHANCE } from './EquipmentRarity'
 import { ITEM_QUALITY_ORDER, type ItemQuality } from '../item/ItemQuality'
 import {
   ITEM_QUALITY_AFFIX_TIER,
   ITEM_QUALITY_DROP_WEIGHT,
   ITEM_QUALITY_ESSENCE_RANGE,
+  ITEM_QUALITY_EXALTED_AFFIX_CHANCE,
   ITEM_QUALITY_FORGE_USES,
   ITEM_QUALITY_IMPLICIT_MULTIPLIER,
   ITEM_QUALITY_SUBSTATS_RANGE,
@@ -80,16 +78,6 @@ import {
  */
 export function calculateEquipmentScale(enhanceLevel: number): number {
   return 1 + enhanceLevel * ENHANCE_SLOT_SCALE
-}
-
-/**
- * Rework 2026-08-30 — trần Rèn THẬT của 1 instance = trần chung theo
- * Quality (EQUIPMENT_QUALITY_MAX_FORGE_POINTS[quality]). Con số CHÍNH
- * XÁC xác định bằng phẩm của item — KHÔNG còn nhân forgePotential.
- * Tham số forgePotential giữ lại cho save/validation cũ, bị bỏ qua.
- */
-export function getMaxForgePoints(quality: EquipmentQuality, _forgePotential = 100): number {
-  return EQUIPMENT_QUALITY_MAX_FORGE_POINTS[quality]
 }
 
 // Affix có cả miền số nguyên (Attack, HP...) lẫn miền thập phân
@@ -442,7 +430,7 @@ export class EquipmentSystem {
    * Roll số substat trong miền của quality; số lẻ ưu tiên prefix.
    *
    * Equipment Rework mục 2 ("Exalted Affix") — quality cao nhất
-   * (tien) có thêm EQUIPMENT_RARITY_EXALTED_AFFIX_CHANCE cơ hội
+   * (tien) có thêm ITEM_QUALITY_EXALTED_AFFIX_CHANCE cơ hội
    * roll 1 affix BONUS từ pool 'supreme' — bỏ qua giới hạn pool theo
    * Quality của chính item,
    * vẫn random hoàn toàn (không phải item cố định kiểu Unique cũ).
@@ -475,7 +463,7 @@ export class EquipmentSystem {
     // Resolve and reserve the compatible bonus before base rolls so a
     // supreme base candidate cannot consume the only valid Exalted stat.
     let exalted: RolledAffix | null = null
-    if (quality === 'tien' && rollChance(EQUIPMENT_RARITY_EXALTED_AFFIX_CHANCE)) {
+    if (quality === 'tien' && rollChance(ITEM_QUALITY_EXALTED_AFFIX_CHANCE)) {
       exalted = this.rollEligibleAffixAtTier(
         template,
         ITEM_QUALITY_AFFIX_TIER.tien,
@@ -1107,7 +1095,7 @@ export class EquipmentSystem {
     // Reserve a compatible Tiên Chất Exalted line before base rolls so
     // another affix cannot consume its stat.
     let exalted: RolledAffix | null = null
-    if (instance.quality === 'tien' && random() < EQUIPMENT_RARITY_EXALTED_AFFIX_CHANCE) {
+    if (instance.quality === 'tien' && random() < ITEM_QUALITY_EXALTED_AFFIX_CHANCE) {
       exalted = this.rollEligibleAffixAtTier(
         template,
         ITEM_QUALITY_AFFIX_TIER.tien,
