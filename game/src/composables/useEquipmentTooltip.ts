@@ -6,11 +6,12 @@ import type { ZoneRegistry } from '@/core/stage/ZoneRegistry'
 import { getEffectiveAffixValue, GLOBAL_MAX_AFFIXES, MAIN_STAT_REALM_SCALE } from '@/core/equipment/EquipmentSystem'
 import { ITEM_QUALITY_IMPLICIT_MULTIPLIER } from '@/core/equipment/ItemQualityBalance'
 import { getGlobalCultivationLevel } from '@/core/realm/realmSystem'
-import { getRealmIdForProfessionGrade } from '@/core/profession/ProfessionGrade'
+import { realmFromGrade } from '@/core/profession/ProfessionGrade'
 import { composeEquipmentDisplayName, composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
 import { EQUIPMENT_SLOT_LABELS } from '@/core/equipment/EquipmentTypes'
 import { EQUIPMENT_RARITY_AFFIX_SLOTS } from '@/core/equipment/ItemGradeRefs'
 import { statLabel, formatStat } from '@/core/stats/StatLabels'
+import { equipmentQualityLabel, gradeLabel, realmLabel } from '@/core/presentation/labels'
 import type { SlotComparison } from '@/components/common/SlotTypes'
 import type { EquipmentTooltipContent, TooltipSection } from './useTooltip'
 
@@ -144,6 +145,22 @@ export function buildEquipmentTooltip(
 
   // Phù/Trận legacy đã khai tử (plan §10.1) — không còn socket rows.
 
+  const instanceRealmId = realmFromGrade(instance.grade)
+
+  // Rework P6 (item-grade-quality-rework, Task 21) — hiển thị RÕ 2
+  // trục riêng biệt của item, tránh lẫn lộn Phẩm (ProfessionGrade,
+  // theo đại cảnh giới) với Chất (ItemQuality, độ hiếm roll). Đặt SAU
+  // "Rèn" để sections[0] (Chỉ Số Chính) giữ nguyên vị trí — advancedSections
+  // dưới đây tự nhặt lại section này qua filter loại "Chỉ Số Chính"/"Chỉ Số Phụ".
+  sections.push({
+    label: 'Phân Loại',
+
+    rows: [
+      { label: 'Phẩm', value: `${gradeLabel(instance.grade)} (${realmLabel(instanceRealmId)})` },
+      { label: 'Chất', value: equipmentQualityLabel(instance.quality) },
+    ],
+  })
+
   const deltas = comparedInstance && comparedInstance.instanceId !== instance.instanceId
     ? computeEquipmentStatDeltas(instance, comparedInstance, affixRegistry)
     : []
@@ -161,10 +178,7 @@ export function buildEquipmentTooltip(
     }
   }
 
-  const instanceRealmId = getRealmIdForProfessionGrade(instance.grade)
-  const realmScale = instanceRealmId
-    ? 1 + getGlobalCultivationLevel(instanceRealmId, instance.realmLevel ?? 1) * MAIN_STAT_REALM_SCALE
-    : 1
+  const realmScale = 1 + getGlobalCultivationLevel(instanceRealmId, instance.realmLevel ?? 1) * MAIN_STAT_REALM_SCALE
   const qualityScale = ITEM_QUALITY_IMPLICIT_MULTIPLIER[instance.quality]
   const effectiveMainRange = rolledRange
     ? `[${formatStat(instance.mainStat.stat, rolledRange.min * qualityScale * realmScale)}–${formatStat(instance.mainStat.stat, rolledRange.max * qualityScale * realmScale)}]`

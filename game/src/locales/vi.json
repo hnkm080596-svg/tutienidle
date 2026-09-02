@@ -74,8 +74,12 @@
         "irreversible": "Thao tác KHÔNG thể hoàn tác."
       },
       "select": {
-        "anyQuality": "Mọi chất (9 bậc Khí)",
-        "anyProfessionGrade": "Mọi phẩm (Cửu Phẩm)"
+        "anyQuality": "Mọi chất (Hoàng–Tiên)",
+        "anyProfessionGrade": "Mọi phẩm (Cửu Phẩm–Tiên Phẩm)"
+      },
+      "enhance": {
+        "pityCounter": "Bảo hiểm {streak}/10",
+        "guaranteed": "Chắc chắn thành công"
       },
       "messages": {
         "refineNeedItem": "Không thể Tẩy Luyện: cần chọn một trang bị.",

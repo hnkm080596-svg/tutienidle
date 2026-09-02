@@ -18,7 +18,7 @@ import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useEquipmentActions } from '@/composables/useEquipmentActions'
 import { usePanelPagination } from '@/composables/usePanelPagination'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
-import { materialLabel, equipmentRarityLabel } from '@/core/presentation/labels'
+import { materialLabel, equipmentQualityLabel } from '@/core/presentation/labels'
 import { ITEM_QUALITY_ORDER } from '@/core/item/ItemQuality'
 import { PROFESSION_GRADE_ORDER, PROFESSION_GRADE_NAMES } from '@/core/profession/ProfessionGrade'
 import { canUseItemGrade } from '@/core/equipment/canUseItem'
@@ -229,7 +229,7 @@ function doDissolve() {
         <option value="any">{{ t('panels.equipmentHall.select.anyQuality') }}</option>
 
         <option v-for="quality in ITEM_QUALITY_ORDER" :key="quality" :value="quality">
-          {{ equipmentRarityLabel(quality) }}
+          {{ equipmentQualityLabel(quality) }}
         </option>
       </select>
 

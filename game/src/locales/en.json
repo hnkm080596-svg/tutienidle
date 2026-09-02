@@ -74,8 +74,12 @@
         "irreversible": "This action CANNOT be undone."
       },
       "select": {
-        "anyQuality": "Any quality (Khí tier)",
-        "anyProfessionGrade": "Any grade (Cửu Phẩm)"
+        "anyQuality": "Any quality (Hoàng–Tiên)",
+        "anyProfessionGrade": "Any grade (Cửu Phẩm–Tiên Phẩm)"
+      },
+      "enhance": {
+        "pityCounter": "Insurance {streak}/10",
+        "guaranteed": "Guaranteed success"
       },
       "messages": {
         "refineNeedItem": "Cannot Refine: select an equipment item first.",
