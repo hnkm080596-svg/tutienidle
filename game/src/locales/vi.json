@@ -126,7 +126,7 @@
           "upgrade": "Nâng Cấp"
         },
         "lockedReasons": {
-          "cost": "Cần {cost} Cảm Ngộ (đang có {current} Cảm Ngộ)",
+          "cost": "Cần {cost} Cảm Ngộ (đang có {current})",
           "prerequisiteNode": "Cần lĩnh ngộ trước: {name}",
           "realm": "Cần đạt cảnh giới yêu cầu",
           "element": "Cần mở khoá Hành liên quan",
