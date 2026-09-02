@@ -145,6 +145,7 @@ import { NotificationQueue } from './NotificationQueue'
 import { BattleLootSystem } from './BattleLootSystem'
 import { StageWaveSystem } from './StageWaveSystem'
 import { EquipmentOpsSystem } from './EquipmentOpsSystem'
+import { GameManagerBuildingOps } from './GameManagerBuildingOps'
 import { HiddenBeastSystem } from './HiddenBeastSystem'
 import { TribulationDirector, type ActiveTribulationState } from '../tribulation/TribulationDirector'
 
@@ -167,7 +168,6 @@ import type { Reward } from '../reward/Reward'
 import type { BattleRewardSummary } from '../reward/BattleRewardSummary'
 
 import { playerToCombatEntity, createPlayerRewardReceiver } from '../player/Player'
-import { getWorkerCapacityForLevel } from '../production/WorkerCapacity'
 import { HERO_LANE_INDEX } from '../battle/BattleLane'
 import type { PlayerData, KiemTuRoute } from '../player/Player'
 import type { MainStatKey } from '../stats/StatTypes'
@@ -424,6 +424,7 @@ export class GameManager {
   private readonly stageWaves: StageWaveSystem
   private readonly tribulationDirector: TribulationDirector
   private readonly equipmentOps: EquipmentOpsSystem
+  private readonly buildingOps: GameManagerBuildingOps
 
   // Quái ẩn (spec dot-pha-loi-kiep §4.1c) — cửa sổ 1000 kill Luyện Khí.
   readonly hiddenBeastSystem: HiddenBeastSystem
@@ -507,6 +508,19 @@ export class GameManager {
       buildingRegistry: this.buildingRegistry,
       buildingSystem: this.buildingSystem,
       notifications: this.notifications,
+      notifyQuestMaterialGained: (materialId, amount) =>
+        this.notifyQuestMaterialGained(materialId, amount),
+    })
+
+    this.buildingOps = new GameManagerBuildingOps({
+      buildingRegistry: this.buildingRegistry,
+      buildingManager: this.buildingManager,
+      buildingSystem: this.buildingSystem,
+      productionSystem: this.productionSystem,
+      materialBag: this.materialBag,
+      materialRegistry: this.materialRegistry,
+      notifications: this.notifications,
+      getActivePlayer: () => this.activePlayer,
       notifyQuestMaterialGained: (materialId, amount) =>
         this.notifyQuestMaterialGained(materialId, amount),
     })
@@ -1982,272 +1996,78 @@ export class GameManager {
   // =========================
 
   // =========================
-  // BUILDING
+  // BUILDING + PRODUCTION — toàn bộ logic đã chuyển sang
+  // GameManagerBuildingOps (xem GameManagerBuildingOps.ts, task 2 —
+  // GameManager split). Các method dưới đây là thin delegate GIỮ public
+  // API cho UI/composables/tests.
   // =========================
 
   getBuildingDefinitions(): Building[] {
-    return this.buildingRegistry.getAll()
+    return this.buildingOps.getBuildingDefinitions()
   }
 
-  /** Gate UI xÃ¢y má»›i â€” delegate BuildingSystem.canBuild (Â§ popover). */
   canBuildBuilding(buildingId: string, player: PlayerData): boolean {
-    return this.buildingSystem.canBuild(
-      buildingId,
-      this.buildingRegistry,
-      this.buildingManager,
-      player,
-      this.materialBag,
-    )
+    return this.buildingOps.canBuildBuilding(buildingId, player)
   }
 
   buildBuilding(buildingId: string, player: PlayerData, currentTime = Date.now() / 1000) {
-    const instance = this.buildingSystem.build(
-      buildingId,
-      this.buildingRegistry,
-      this.buildingManager,
-      player,
-      this.materialBag,
-      currentTime,
-    )
-
-    // Fix (review 2026-08-26) â€” build tháº¥t báº¡i trÆ°á»›c Ä‘Ã¢y IM Láº¶NG (null
-    // khÃ´ng ai Ä‘á»c): giá» push toast lÃ½ do cá»¥ thá»ƒ Ä‘á»ƒ ngÆ°á»i chÆ¡i biáº¿t pháº£i
-    // lÃ m gÃ¬ tiáº¿p (thiáº¿u nguyÃªn liá»‡u/cáº£nh giá»›i...).
-    if (!instance) {
-      const check = this.buildingSystem.canBuildDetailed(
-        buildingId,
-
-        this.buildingRegistry,
-
-        this.buildingManager,
-
-        player,
-
-        this.materialBag,
-      )
-
-      this.notifications.push({
-        kind: 'error',
-
-        message: `Xây ${this.buildingName(buildingId)} thất bại (${check.reason ?? 'unknown'})`,
-      })
-    } else {
-      this.refreshAutoWorkerCapacity(player, instance)
-      this.notifications.push({
-        kind: 'upgrade',
-
-        message: `Đã xây ${this.buildingName(buildingId)} · Cấp 1`,
-      })
-    }
-
-    return instance
+    return this.buildingOps.buildBuilding(buildingId, player, currentTime)
   }
 
-  /** TÃªn building hiá»ƒn thá»‹ cho toast â€” fallback id khi registry thiáº¿u. */
-  private buildingName(buildingId: string): string {
-    try {
-      return this.buildingRegistry.get(buildingId).name
-    } catch {
-      return buildingId
-    }
-  }
-
-  /**
-   * Chiue Hien Quan (chi-hien-quan spec 2026-09-02) - NGUON NHAN CONG
-   * DUY NHAT: capacity = 1 + level*2 (getWorkerCapacityForLevel). Goi
-   * lai sau moi lan build/upgrade CHQ. gathering_outpost KHONG con cap
-   * capacity (nguon cu da go - outpost chi con gate San Xuat + linh mach).
-   */
   refreshAutoWorkerCapacity(player: PlayerData, instance: BuildingInstance): void {
-    if (instance.buildingId !== 'chi_hien_quan') {
-      return
-    }
-
-    player.autoWorkerCapacity = getWorkerCapacityForLevel(instance.level)
+    this.buildingOps.refreshAutoWorkerCapacity(player, instance)
   }
 
-  /**
-   * Chi-hien-quan (2026-09-02) — assignments snapshot từ production states
-   * (assignedWorkers persist trong save) — truyền vào tickWorkers/
-   * settleOffline để OFFLINE KHỚP ONLINE.
-   */
   getWorkerAssignments(): Map<string, number> {
-    const assignments = new Map<string, number>()
-
-    for (const state of this.productionSystem.getAllStates()) {
-      if (state.assignedWorkers !== undefined) {
-        assignments.set(state.siteId, state.assignedWorkers)
-      }
-    }
-
-    return assignments
+    return this.buildingOps.getWorkerAssignments()
   }
 
-  /**
-   * Chi-hien-quan (2026-09-02) — UI phân bổ: gán/xóa số slot manual của
-   * 1 site. `count === undefined` = về AUTO (xóa assignedWorkers).
-   * Clamp [0, capacity] phòng UI gửi sai; không đổi nếu site không tồn tại.
-   */
   assignWorkers(siteId: string, count: number | undefined): void {
-    const state = this.productionSystem.getState(siteId)
-
-    if (!state) {
-      return
-    }
-
-    if (count === undefined) {
-      delete state.assignedWorkers
-
-      return
-    }
-
-    const capacity = this.activePlayer?.autoWorkerCapacity ?? 0
-
-    // NaN (UI path lỗi) coi như 0 — không để assignedWorkers = NaN
-    // phá regex phân bổ tickWorkers.
-    const safeCount = Number.isFinite(count) ? count : 0
-
-    state.assignedWorkers = Math.max(0, Math.min(Math.floor(safeCount), capacity))
+    this.buildingOps.assignWorkers(siteId, count)
   }
 
   upgradeBuilding(instanceId: string): boolean {
-    const upgraded = this.buildingSystem.upgrade(
-      instanceId,
-      this.buildingRegistry,
-      this.buildingManager,
-      this.materialBag,
-      this.activePlayer?.realmId,
-    )
-    const instance = this.buildingManager.get(instanceId)
-    if (upgraded && instance && this.activePlayer) {
-      this.refreshAutoWorkerCapacity(this.activePlayer, instance)
-    }
-    return upgraded
+    return this.buildingOps.upgradeBuilding(instanceId)
   }
 
   getEnemyTemplate(enemyId: string): Enemy | undefined {
     return this.enemyTemplates.get(enemyId)
   }
-  // Linh Tuyá»n (producesMaterialId) â€” thu hoáº¡ch Ä‘á»• vÃ o MaterialBag nhÆ°
-  // material bÃ¬nh thÆ°á»ng (plan Workstream F); claim() tráº£ amount +
-  // materialId, GameManager resolve template vÃ  cá»™ng bag.
+
   collectBuilding(instanceId: string, player: PlayerData, currentTime = Date.now() / 1000): number {
-    // Pre-check registry TRÆ¯á»šC khi claim reset má»‘c thá»i gian (review
-    // 2026-08-28): náº¿u materialId khÃ´ng resolve Ä‘Æ°á»£c mÃ  váº«n claim, sáº£n
-    // lÆ°á»£ng bá»‹ máº¥t tráº¯ng (má»‘c Ä‘Ã£ reset, bag khÃ´ng Ä‘Æ°á»£c cá»™ng).
-    const instance = this.buildingManager.get(instanceId)
-
-    const template = instance ? this.buildingRegistry.get(instance.buildingId) : undefined
-
-    const expectedMaterialId = template
-      ? this.buildingSystem.resolveProducesMaterialId(template, player.realmId)
-      : undefined
-
-    if (!expectedMaterialId || !this.materialRegistry.has(expectedMaterialId)) {
-      return 0
-    }
-
-    const claimed = this.buildingSystem.claim(
-      instanceId,
-      this.buildingRegistry,
-      this.buildingManager,
-      currentTime,
-      player.realmId,
-    )
-
-    if (claimed.amount > 0 && claimed.materialId && this.materialRegistry.has(claimed.materialId)) {
-      this.materialBag.add(this.materialRegistry.get(claimed.materialId), claimed.amount)
-
-      this.notifyQuestMaterialGained(claimed.materialId, claimed.amount)
-    }
-
-    return claimed.amount
+    return this.buildingOps.collectBuilding(instanceId, player, currentTime)
   }
 
   getBuildingStoredAmount(instanceId: string, currentTime = Date.now() / 1000): number {
-    const instance = this.buildingManager.get(instanceId)
-
-    if (!instance) {
-      return 0
-    }
-
-    return this.buildingSystem.getStoredAmount(
-      instance,
-      this.buildingRegistry.get(instance.buildingId),
-      currentTime,
-      this.activePlayer?.realmId,
-    )
+    return this.buildingOps.getBuildingStoredAmount(instanceId, currentTime)
   }
 
   getBuildingCapacity(instanceId: string): number {
-    const instance = this.buildingManager.get(instanceId)
-
-    if (!instance) {
-      return 0
-    }
-
-    return this.buildingSystem.getCapacity(
-      instance,
-      this.buildingRegistry.get(instance.buildingId),
-      this.activePlayer?.realmId,
-    )
+    return this.buildingOps.getBuildingCapacity(instanceId)
   }
 
   getBuildingRatePerMinute(instanceId: string): number {
-    const instance = this.buildingManager.get(instanceId)
-
-    if (!instance) {
-      return 0
-    }
-
-    return this.buildingSystem.getRatePerMinute(
-      instance,
-      this.buildingRegistry.get(instance.buildingId),
-      this.activePlayer?.realmId,
-    )
+    return this.buildingOps.getBuildingRatePerMinute(instanceId)
   }
-
-  // =========================
-  // PRODUCTION (2026-08-25 â€” LÃ¢m/QuÃ¡ng/Äá»™ng ThiÃªn, plan Â§4/Â§9)
-  // =========================
 
   getProductionViews(nowMs = Date.now()) {
-    return this.productionSystem.getSiteDefinitions().map((definition) => {
-      const view = this.productionSystem.getSiteView(definition.siteId, nowMs)!
-
-      return {
-        definition,
-
-        state: view.state,
-
-        speedMultiplier: view.speedMultiplier,
-
-        nextSpeedMultiplier: view.nextSpeedMultiplier,
-
-        cycleRemainingMs: view.cycleRemainingMs,
-
-        cycleTotalMs: view.cycleTotalMs,
-      }
-    })
+    return this.buildingOps.getProductionViews(nowMs)
   }
 
-  /** Báº¯t Ä‘áº§u cycle táº¡i cáº£nh giá»›i HIá»†N Táº I cá»§a player (snapshot Â§4.1). */
   startProductionCycle(siteId: string, player: PlayerData): boolean {
-    return this.productionSystem.startCycle(siteId, player.realmId, Date.now())
+    return this.buildingOps.startProductionCycle(siteId, player)
   }
 
   setProductionAutoRestart(siteId: string, enabled: boolean): boolean {
-    return this.productionSystem.setAutoRestart(siteId, enabled)
+    return this.buildingOps.setProductionAutoRestart(siteId, enabled)
   }
 
-  /** NÃ¢ng level nguá»“n â€” cost Gá»— + Linh Tháº¡ch (sink chÃ­nh cá»§a LÃ¢m, Â§5.2). */
   upgradeProductionSite(siteId: string, player: PlayerData): boolean {
-    // Plan Workstream F â€” Linh Tháº¡ch check/trá»« trá»±c tiáº¿p trÃªn MaterialBag.
-    return this.productionSystem.upgradeSite(siteId, this.materialBag, getRealmTier(player.realmId))
+    return this.buildingOps.upgradeProductionSite(siteId, player)
   }
 
   getProductionUpgradeCost(siteId: string) {
-    return this.productionSystem.getSiteDefinition(siteId)?.upgradeCosts
+    return this.buildingOps.getProductionUpgradeCost(siteId)
   }
 
   // =========================
