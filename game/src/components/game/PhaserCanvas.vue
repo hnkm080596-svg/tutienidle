@@ -6,6 +6,7 @@ import type { CombatScene } from '@/game/scenes/CombatScene'
 import type { TribulationScene } from '@/game/scenes/TribulationScene'
 import { useGameManager } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
+import { useErrorStore } from '@/stores/error'
 import type { BattlePositionsEvent } from '@/core/battle/BattleEvents'
 import {
   resolvePlayerVisualProfileId,
@@ -14,6 +15,7 @@ import {
 
 const gameManager = useGameManager()
 const player = usePlayerStore()
+const errorStore = useErrorStore()
 
 const containerRef = ref<HTMLDivElement | null>(null)
 
@@ -21,6 +23,12 @@ let game: Phaser.Game | null = null
 let resizeObserver: ResizeObserver | null = null
 let positionsCleanup: (() => void) | null = null
 let isAlive = false
+
+// Task 4 (perf-optimize-pass, phần 3) — bootstrap error boundary.
+// bootError expose ra ngoài (defineExpose) cho parent/test kiểm tra;
+// fallback UI hiển thị dùng lại errorStore/ErrorScreen.vue sẵn có của
+// app (KHÔNG thêm overlay riêng) — đúng style tối giản hiện có.
+const bootError = ref<string | null>(null)
 
 onMounted(() => {
   // T6.4 code-split — Phaser + 3 scene classes load qua dynamic import
@@ -36,23 +44,51 @@ onMounted(() => {
   isAlive = true
 
   void (async () => {
-    const [
-      { default: Phaser },
-      { MainScene: MainSceneClass },
-      { CombatScene: CombatSceneClass },
-      { TribulationScene: TribulationSceneClass },
-    ] = await Promise.all([
-      import('phaser'),
-      import('@/game/scenes/MainScene'),
-      import('@/game/scenes/CombatScene'),
-      import('@/game/scenes/TribulationScene'),
-    ])
+    try {
+      const [
+        { default: Phaser },
+        { MainScene: MainSceneClass },
+        { CombatScene: CombatSceneClass },
+        { TribulationScene: TribulationSceneClass },
+      ] = await Promise.all([
+        import('phaser'),
+        import('@/game/scenes/MainScene'),
+        import('@/game/scenes/CombatScene'),
+        import('@/game/scenes/TribulationScene'),
+      ])
 
-    if (!isAlive || !containerRef.value) {
-      return
+      if (!isAlive || !containerRef.value) {
+        return
+      }
+
+      setupGame(Phaser, [MainSceneClass, CombatSceneClass, TribulationSceneClass])
+    } catch (error) {
+      // Component đã unmount trước khi bootstrap xong (cleanup thật đã
+      // chạy ở onUnmounted) — không báo lỗi/không đụng state nữa.
+      if (!isAlive) {
+        return
+      }
+
+      const message = error instanceof Error ? error.message : String(error)
+
+      console.error('[PhaserCanvas] Bootstrap thất bại:', error)
+
+      // Dọn dẹp mọi thứ có thể đã đăng ký trước khi lỗi xảy ra (ví dụ
+      // new Phaser.Game() throw SAU khi setupGame đã kịp gắn
+      // positionsCleanup/resizeObserver) — cùng bộ dọn dẹp với
+      // onUnmounted bên dưới, tránh handler/observer mồ côi.
+      positionsCleanup?.()
+      positionsCleanup = null
+
+      resizeObserver?.disconnect()
+      resizeObserver = null
+
+      game?.destroy(true)
+      game = null
+
+      bootError.value = message
+      errorStore.report(message)
     }
-
-    setupGame(Phaser, [MainSceneClass, CombatSceneClass, TribulationSceneClass])
   })()
 })
 
@@ -198,15 +234,34 @@ onUnmounted(() => {
 
   game = null
 })
+
+// Expose cho test/parent — bootError null nghĩa là bootstrap OK hoặc
+// đang chạy; khác null nghĩa là import('phaser')/scenes hoặc
+// new Phaser.Game() đã throw và đã dọn dẹp xong.
+defineExpose({ bootError })
 </script>
 
 <template>
-  <div ref="containerRef" class="phaser-canvas" />
+  <div ref="containerRef" class="phaser-canvas">
+    <p v-if="bootError" class="phaser-canvas__boot-error">{{ bootError }}</p>
+  </div>
 </template>
 
 <style scoped>
 .phaser-canvas {
   width: 100%;
   height: 100%;
+}
+
+/* Task 4 — tín hiệu tối giản tại chỗ khi bootstrap Phaser lỗi; overlay
+   đầy đủ đã hiện qua errorStore.report() ở trên (ErrorScreen.vue,
+   xem App.vue) — đoạn này chỉ là fallback text ngay trong container
+   canvas rỗng, không thiết kế UI mới. */
+.phaser-canvas__boot-error {
+  margin: 0;
+  padding: 12px;
+  color: var(--paper-text-soft, #8a8a8a);
+  font-size: var(--text-sm, 0.85rem);
+  text-align: center;
 }
 </style>
