@@ -1,17 +1,36 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { useActionFeedbackStore } from '@/stores/actionFeedback'
-import type { ActionFeedbackTone } from '@/stores/actionFeedback'
+import type { ActionFeedbackEntry, ActionFeedbackTone } from '@/stores/actionFeedback'
 
 // Workstream A §4.3 — "Nhật ký thao tác": phản hồi cho action gameplay
 // (Cường Hóa/Tẩy Luyện/Tinh Luyện/Hóa Luyện, xây công trình, đột phá...),
 // tách khỏi toast loot (ToastContainer.vue) neo góc trên phải. Neo góc
 // dưới phải, không che combat control/modal (z-index thấp hơn modal).
+// i18n (task 2.2 lô 1) — entry key-form render qua t(messageKey, params);
+// giá trị param cũng là locale key nên được t() lồng trước khi ghép.
+const { t } = useI18n()
+
 const feedback = useActionFeedbackStore()
 
 const TONE_COLOR: Record<ActionFeedbackTone, string> = {
   success: 'var(--jade)',
   warning: 'var(--gold-700)',
   error: 'var(--crimson)',
+}
+
+function entryText(entry: ActionFeedbackEntry): string {
+  if (!entry.messageKey) {
+    return entry.message
+  }
+
+  const params: Record<string, unknown> = {}
+
+  for (const [name, paramKey] of Object.entries(entry.messageParams ?? {})) {
+    params[name] = t(paramKey)
+  }
+
+  return t(entry.messageKey, params)
 }
 </script>
 
@@ -45,7 +64,7 @@ const TONE_COLOR: Record<ActionFeedbackTone, string> = {
           :class="{ 'is-latest': index === feedback.entries.length - 1 }"
           :style="{ '--entry-color': TONE_COLOR[entry.tone] }"
         >
-          <span class="feedback-log__message">{{ entry.message }}</span>
+          <span class="feedback-log__message">{{ entryText(entry) }}</span>
           <span v-if="entry.count > 1" class="feedback-log__count">×{{ entry.count }}</span>
         </div>
       </TransitionGroup>

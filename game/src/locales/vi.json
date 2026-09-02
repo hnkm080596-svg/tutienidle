@@ -680,5 +680,61 @@
       "confirm": "Đã hiểu",
       "cancel": "Chờ đã"
     }
+  },
+  "actionFailure": {
+    "not_found": "Không tìm thấy trang bị đã chọn.",
+    "missing_refinement_points": "Không đủ Điểm Rèn của món đồ.",
+    "no_forge_uses": "Món đồ đã hết lượt Rèn.",
+    "missing_tinh_hoa": "Không đủ Luyện Khí Tinh Hoa.",
+    "missing_spirit_stone": "Không đủ Linh Thạch.",
+    "missing_material": "Không đủ nguyên liệu.",
+    "template_not_found": "Dữ liệu trang bị không hợp lệ.",
+    "no_eligible_affix": "Món đồ không có dòng phụ phù hợp để thao tác.",
+    "no_affixes": "Món đồ chưa có dòng phụ nào.",
+    "invalid_lock": "Lựa chọn khóa dòng không hợp lệ.",
+    "too_many_locks": "Đã khóa quá nhiều dòng — chừa lại ít nhất một dòng không khóa.",
+    "cannot_lock_all": "Không thể khóa toàn bộ dòng phụ.",
+    "missing_essence": "Không đủ Tinh Hoa cho thao tác này.",
+    "empty_selection": "Chưa chọn món đồ nào.",
+    "equipped": "Không thể thao tác trên trang bị đang mặc.",
+    "locked": "Trang bị đang bị khóa.",
+    "favorite": "Trang bị đang được đánh dấu yêu thích.",
+    "no_conversion_rule": "Không có quy tắc chuyển đổi cho món đồ này.",
+    "invalid_refine_preview": "Kết quả Tinh Luyện đã cũ hoặc không hợp lệ — hãy xem trước lại.",
+    "invalid_affix_value": "Giá trị dòng phụ không hợp lệ — không thể Tinh Luyện.",
+    "invalid_random_roll": "Kết quả ngẫu nhiên không hợp lệ — Tinh Luyện chưa tiêu hao tài nguyên.",
+    "max_level": "Đã đạt cấp tối đa.",
+    "grade_mismatch": "Phẩm không khớp cảnh giới.",
+    "fallback": "Thao tác thất bại.",
+    "unknown": "Thao tác thất bại vì điều kiện chưa đủ."
+  },
+  "actionFeedback": {
+    "ops": {
+      "equip": { "label": "Trang Bị" },
+      "enhance": { "label": "Cường Hóa" },
+      "wash": { "label": "Tẩy Luyện" },
+      "refine": { "label": "Tinh Luyện" },
+      "dissolve": { "label": "Hóa Luyện" }
+    },
+    "success": "{label} thành công",
+    "failed": "Không thể {label}: {reason}"
+  },
+  "alchemy": {
+    "spiritStones": "Linh Thạch",
+    "startBrewing": "Bắt đầu luyện",
+    "reason": {
+      "not_found": "Không tìm thấy đan phương",
+      "room_not_built": "Cần xây Đan Phòng trước",
+      "job_slots_full": "Lò đang bận",
+      "wrong_herb": "Sai Linh Thảo — đan phương chỉ nhận đúng một loại thảo",
+      "missing_herb": "Không đủ Linh Thảo",
+      "missing_fuel_wood": "Không đủ Gỗ nhiên liệu đạt cảnh giới yêu cầu",
+      "missing_spirit_stone": "Không đủ Linh Thạch"
+    }
+  },
+  "resourceStrip": {
+    "show": "Hiện tài nguyên",
+    "hide": "Ẩn dải tài nguyên",
+    "spiritStones": "Linh Thạch"
   }
 }

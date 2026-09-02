@@ -680,5 +680,61 @@
       "confirm": "I understand",
       "cancel": "Wait"
     }
+  },
+  "actionFailure": {
+    "not_found": "Selected equipment not found.",
+    "missing_refinement_points": "Not enough Refinement Points on this item.",
+    "no_forge_uses": "This item has no Forge uses left.",
+    "missing_tinh_hoa": "Not enough Qi Refining Essence.",
+    "missing_spirit_stone": "Not enough Spirit Stones.",
+    "missing_material": "Not enough materials.",
+    "template_not_found": "Equipment data is invalid.",
+    "no_eligible_affix": "This item has no eligible affix line for this operation.",
+    "no_affixes": "This item has no affix lines yet.",
+    "invalid_lock": "Invalid affix lock selection.",
+    "too_many_locks": "Too many lines locked — leave at least one line unlocked.",
+    "cannot_lock_all": "Cannot lock every affix line.",
+    "missing_essence": "Not enough Essence for this operation.",
+    "empty_selection": "No item selected.",
+    "equipped": "Cannot operate on equipped gear.",
+    "locked": "The equipment is locked.",
+    "favorite": "The equipment is marked as favorite.",
+    "no_conversion_rule": "No conversion rule for this item.",
+    "invalid_refine_preview": "The Refine preview is stale or invalid — preview again.",
+    "invalid_affix_value": "Invalid affix value — cannot Refine.",
+    "invalid_random_roll": "Invalid random roll — Refine consumed no resources.",
+    "max_level": "Maximum level reached.",
+    "grade_mismatch": "Grade does not match the realm.",
+    "fallback": "The action failed.",
+    "unknown": "The action failed because its conditions are not met."
+  },
+  "actionFeedback": {
+    "ops": {
+      "equip": { "label": "Equip" },
+      "enhance": { "label": "Enhance" },
+      "wash": { "label": "Wash" },
+      "refine": { "label": "Refine" },
+      "dissolve": { "label": "Dissolve" }
+    },
+    "success": "{label} succeeded",
+    "failed": "Cannot {label}: {reason}"
+  },
+  "alchemy": {
+    "spiritStones": "Spirit Stones",
+    "startBrewing": "Start brewing",
+    "reason": {
+      "not_found": "Recipe not found",
+      "room_not_built": "Build the Pill Room first",
+      "job_slots_full": "The furnace is busy",
+      "wrong_herb": "Wrong Spirit Herb — a recipe accepts exactly one herb type",
+      "missing_herb": "Not enough Spirit Herb",
+      "missing_fuel_wood": "Not enough fuel wood of the required realm",
+      "missing_spirit_stone": "Not enough Spirit Stones"
+    }
+  },
+  "resourceStrip": {
+    "show": "Show resources",
+    "hide": "Hide resource strip",
+    "spiritStones": "Spirit Stones"
   }
 }
