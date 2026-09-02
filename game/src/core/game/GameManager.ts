@@ -53,7 +53,7 @@ import { MaterialBag } from '../material/MaterialBag'
 import type { Material } from '../material/Material'
 
 import { EquipmentRegistry } from '../equipment/EquipmentRegistry'
-import { EquipmentBag, type AutoDissolveReward } from '../equipment/EquipmentBag'
+import { EquipmentBag } from '../equipment/EquipmentBag'
 import { EquipmentSystem } from '../equipment/EquipmentSystem'
 import { DecomposeSystem } from '../production/DecomposeSystem'
 import type { RefineValueEntry } from '../equipment/EquipmentSystem'
@@ -112,7 +112,6 @@ import {
   THANH_VAN_MINE_REWARDS,
   THANH_VAN_GROTTO_HERBS,
 } from '../production/ProductionCatalog'
-import type { ProductionSiteState } from '../production/ProductionTypes'
 import {
   AlchemySystem,
   type ActiveAlchemyJob,
@@ -145,6 +144,7 @@ import { EquipmentOpsSystem } from './EquipmentOpsSystem'
 import { GameManagerBuildingOps } from './GameManagerBuildingOps'
 import { GameManagerAlchemyOps } from './GameManagerAlchemyOps'
 import { GameManagerQuestOps } from './GameManagerQuestOps'
+import { GameManagerSaveRestore } from './GameManagerSaveRestore'
 import { HiddenBeastSystem } from './HiddenBeastSystem'
 import { TribulationDirector, type ActiveTribulationState } from '../tribulation/TribulationDirector'
 
@@ -426,6 +426,7 @@ export class GameManager {
   private readonly buildingOps: GameManagerBuildingOps
   private readonly alchemyOps: GameManagerAlchemyOps
   private readonly questOps: GameManagerQuestOps
+  private readonly saveRestore: GameManagerSaveRestore
 
   // Quái ẩn (spec dot-pha-loi-kiep §4.1c) — cửa sổ 1000 kill Luyện Khí.
   readonly hiddenBeastSystem: HiddenBeastSystem
@@ -548,6 +549,31 @@ export class GameManager {
       notifications: this.notifications,
       getActivePlayer: () => this.activePlayer,
       buildPlayerRewardReceiver: (player) => this.buildPlayerRewardReceiver(player),
+    })
+
+    this.saveRestore = new GameManagerSaveRestore({
+      skillManager: this.skillManager,
+      skillTemplates: this.skillTemplates,
+      techniqueManager: this.techniqueManager,
+      techniqueTemplates: this.techniqueTemplates,
+      materialRegistry: this.materialRegistry,
+      materialBag: this.materialBag,
+      pillRegistry: this.pillRegistry,
+      pillBag: this.pillBag,
+      equipmentRegistry: this.equipmentRegistry,
+      equipmentBag: this.equipmentBag,
+      equipmentSystem: this.equipmentSystem,
+      equipmentSlotManager: this.equipmentSlotManager,
+      affixRegistry: this.affixRegistry,
+      buildingManager: this.buildingManager,
+      questManager: this.questManager,
+      productionSystem: this.productionSystem,
+      alchemySystem: this.alchemySystem,
+      notifications: this.notifications,
+      getActivePlayer: () => this.activePlayer,
+      refreshAutoWorkerCapacity: (player, instance) =>
+        this.refreshAutoWorkerCapacity(player, instance),
+      getWorkerAssignments: () => this.getWorkerAssignments(),
     })
   }
 
@@ -2503,17 +2529,7 @@ export class GameManager {
    * App calls this before Pinia restore; restoreFromSave repeats it defensively.
    */
   preflightSaveRegistryReferences(save: GameSave): void {
-    for (const instance of save.equipment) {
-      if (!this.equipmentRegistry.has(instance.itemId)) {
-        throw new Error(`Unknown equipment template in save: ${instance.itemId}`)
-      }
-
-      for (const affix of instance.affixes) {
-        if (!this.affixRegistry.has(affix.affixId)) {
-          throw new Error(`Unknown equipment affix in save: ${affix.affixId}`)
-        }
-      }
-    }
+    this.saveRestore.preflightSaveRegistryReferences(save)
   }
 
   /**
@@ -2526,173 +2542,7 @@ export class GameManager {
    * into player.modifiers; EquipmentSystem does not own the player store.
    */
   restoreFromSave(save: GameSave): StatModifier[] {
-    this.preflightSaveRegistryReferences(save)
-
-    for (const technique of save.techniques) {
-      if (!this.techniqueManager.has(technique.id)) {
-        // Text-refresh-on-load: cung logic voi skill ben duoi -- name/
-        // description la du lieu hien thi thuan, luon dong bo tu template
-        // dang dang ky thay vi giu nguyen ban da dong bang trong save cu.
-        const template = this.techniqueTemplates.get(technique.id)
-
-        if (template) {
-          technique.name = template.name
-          technique.description = template.description
-        }
-
-        this.techniqueManager.add(technique)
-      }
-    }
-
-    for (const skill of save.skills) {
-      if (this.skillManager.has(skill.id)) {
-        continue
-      }
-
-      // Execution policy rework + development-build no-migration (2026-
-      // 08-26): save cá»§a nhÃ¢n váº­t CÅ¨ lÆ°u skill object nguyÃªn tráº¡ng trÆ°á»›c
-      // khi cÃ³ field `execution` báº¯t buá»™c â€” scheduler thá»‘ng nháº¥t Bá»Ž QUA
-      // má»i active thiáº¿u execution ("khÃ´ng cast gÃ¬" dÃ¹ tele/di chuyá»ƒn
-      // váº«n cháº¡y). Äá»‘i chiáº¿u template Ä‘Ã£ Ä‘Äƒng kÃ½ Ä‘á»ƒ há»“i phá»¥c AUTHORED
-      // combat data (execution/targeting/AOE/VFX preset), giá»¯ NGUYÃŠN
-      // progression state cá»§a instance (level/equipped/slot/cooldown/
-      // specialization). Template thiáº¿u thÃ¬ giá»¯ nguyÃªn object save.
-      const template = this.skillTemplates.get(skill.id)
-
-      if (!skill.execution && template?.execution) {
-        skill.execution = structuredClone(template.execution)
-      }
-
-      if (!skill.targeting && template?.targeting) {
-        skill.targeting = structuredClone(template.targeting)
-      }
-
-      // Text-refresh-on-load: name/description la du lieu HIEN THI THUAN
-      // (khong phai progression), nen luon dong bo lai tu template dang
-      // dang ky thay vi giu nguyen ban da dong bang trong save cu. Vi du
-      // that da gap: 1 save cu tung luu "Huy Kiem" luc description bi
-      // hong encoding (mojibake) -- sua Skills.ts khong tu hoi phuc cac
-      // save da luu truoc do neu thieu buoc nay.
-      if (template) {
-        skill.name = template.name
-        skill.description = template.description
-      }
-
-      this.skillManager.add(skill)
-    }
-
-    for (const entry of save.materials) {
-      if (this.materialRegistry.has(entry.materialId)) {
-        this.materialBag.add(this.materialRegistry.get(entry.materialId), entry.amount)
-      }
-    }
-
-    for (const entry of save.pills) {
-      if (this.pillRegistry.has(entry.pillId)) {
-        this.pillBag.add(this.pillRegistry.get(entry.pillId), entry.amount)
-      }
-    }
-
-    // PhÃ¹/Tráº­n legacy (plan Â§10.1): save Ä‘Ã£ qua migration v44 cÃ³ máº£ng
-    // rá»—ng â€” bá» qua hoÃ n toÃ n, khÃ´ng cÃ²n bag Ä‘á»ƒ náº¡p.
-
-    // Cap mềm (audit 2026-08-31) — restore save quá cap: tự Hóa Luyện
-    // phần tràn, GOM rewards cả batch để cộng material + toast đúng 1
-    // LẦN cuối vòng (auto-dissolve chạy ngay trong từng add() nhưng
-    // người chơi không cần 500 toast). KHÔNG gọi quest hook tại đây —
-    // notifyQuestMaterialGained() phải bỏ qua restore (double-count,
-    // xem ghi chú tại hàm đó).
-    let restoredAutoDissolved: AutoDissolveReward[] = []
-
-    for (const instance of save.equipment) {
-      restoredAutoDissolved = [...restoredAutoDissolved, ...(this.equipmentBag.add(instance) ?? [])]
-    }
-
-    for (const reward of restoredAutoDissolved) {
-      if (this.materialRegistry.has(reward.materialId)) {
-        this.materialBag.add(this.materialRegistry.get(reward.materialId), reward.amount)
-      }
-    }
-
-    if (restoredAutoDissolved.length > 0) {
-      this.notifications.push({
-        kind: 'loot',
-        message: `Túi đầy — tự Hóa Luyện ${restoredAutoDissolved.length} món thành Tinh Hoa`,
-      })
-    }
-
-    // MASTER SPEC Má»¥c XVI (Phase 9) â€” slot state (enhance) PHáº¢I náº¡p
-    // trÆ°á»›c refreshModifiers() bÃªn dÆ°á»›i.
-    this.equipmentSlotManager.restore(save.equipmentSlots)
-
-    // ModifierSystem ná»™i bá»™ cá»§a equipmentSystem khÃ´ng tá»± phá»¥c há»“i
-    // theo EquipmentBag vá»«a náº¡p â€” pháº£i build láº¡i thá»§ cÃ´ng.
-    this.equipmentSystem.refreshModifiers(
-      this.equipmentBag,
-      this.equipmentSlotManager,
-      this.affixRegistry,
-    )
-
-    this.buildingManager.restore(save.buildings)
-
-    // Chi Hien Quan (chi-hien-quan spec) — re-apply worker capacity từ
-    // instance CHQ trong save (autoWorkerCapacity trong save có thể stale
-    // — công thức là source of truth, không tin field đã lưu).
-    if (this.activePlayer) {
-      const chiHienQuan = this.buildingManager.getByBuildingId('chi_hien_quan')
-
-      if (chiHienQuan) {
-        this.refreshAutoWorkerCapacity(this.activePlayer, chiHienQuan)
-      }
-    }
-
-    this.questManager.restore(
-      save.quests ?? { active: [], completedOnceIds: [], lastDailyResetAtMs: 0 },
-    )
-
-    // Production (plan Â§4.3) â€” restore state + offline settle tuáº§n tá»±
-    // trong cap; Má»–I auto-cycle má»™t seed/roll riÃªng.
-    this.productionSystem.restoreStates((save.productionSites ?? []) as ProductionSiteState[])
-
-    for (const definition of this.productionSystem.getSiteDefinitions()) {
-      this.productionSystem.ensureSiteState(definition.siteId)
-    }
-
-    if (this.activePlayer) {
-      const elapsedOfflineSeconds = Math.max(
-        0,
-        (Date.now() - (save.player.lastSavedAt ?? Date.now())) / 1000,
-      )
-
-      if (elapsedOfflineSeconds > 60) {
-        // T3 (economy-ecosystem-plan) â€” worker cháº¡y offline nhÆ° slot tay
-        // trong cap: truyá»n capacity + má»‘c báº¯t Ä‘áº§u váº¯ng máº·t Ä‘á»ƒ settle
-        // Ä‘Ãºng cá»­a sá»•.
-        this.productionSystem.settleOffline(
-          this.materialBag,
-          this.materialRegistry,
-          this.activePlayer.realmId,
-          Date.now(),
-          {
-            workerCapacity: this.activePlayer.autoWorkerCapacity ?? 0,
-            offlineSinceMs: save.player.lastSavedAt ?? Date.now(),
-            workerAssignments: this.getWorkerAssignments(),
-          },
-        )
-      }
-    }
-
-    // Äan PhÃ²ng offline settle (Â§8.2).
-    this.alchemySystem.restoreJobs((save.alchemyJobs ?? []) as ActiveAlchemyJob[])
-
-    this.alchemySystem.settleOffline(
-      this.pillBag,
-      (pillId) => (this.pillRegistry.has(pillId) ? this.pillRegistry.get(pillId) : undefined),
-      Date.now(),
-      getAlchemySuccessBonusPercentPoints(this.activePlayer?.selectedTalentIds ?? []),
-    )
-
-    return this.equipmentSystem.getModifiers()
+    return this.saveRestore.restoreFromSave(save)
   }
 
   // =========================
