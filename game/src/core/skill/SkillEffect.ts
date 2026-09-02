@@ -17,6 +17,19 @@ export interface SkillEffect {
 
   buffId?: string
 
+  // Pháp Tu Thuần Hệ (E-3, 2026-09-03) — CHỈ dùng cho effect
+  // 'add_stack'/'remove_buff' (trước đây 2 type này là no-op trong
+  // SkillEffectSystem, thuộc PassiveSystem). 'add_stack': số tầng cộng
+  // thêm lên buff ĐANG CHẠY (mặc định 1; không tạo mới nếu chưa có);
+  // 'refresh' = true gia hạn duration các instance vừa cộng.
+  // 'remove_buff': 'polarity' lọc theo hướng buff/debuff, 'count' số
+  // instance gỡ tối đa (mặc định 1, theo thứ tự pool).
+  refresh?: boolean
+
+  polarity?: 'buff' | 'debuff'
+
+  count?: number
+
   damageType?: 'physical' | 'primordial'
 
   // Dùng cho effect 'damage' khi skill pha trộn nhiều loại damage

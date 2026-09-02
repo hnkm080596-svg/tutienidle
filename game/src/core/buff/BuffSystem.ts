@@ -402,6 +402,13 @@ export class BuffSystem {
     return this.pool.getAll().map((buff) => buff.id)
   }
 
+  // Bản sao theo lịch sử của BuffPool.getAll() — cần cho các consumer
+  // quét TOÀN BỘ instance (vd SkillEffectSystem's 'remove_buff' lọc
+  // theo polarity/count) mà không đụng tới pool nội bộ.
+  getAll(): Buff[] {
+    return this.pool.getAll()
+  }
+
   remove(id: string, sourceId: string): void {
     this.pool.removeInstance(id, sourceId)
   }

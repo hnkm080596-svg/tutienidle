@@ -319,11 +319,78 @@ export class SkillEffectSystem {
         break
       }
 
-      case 'add_stack':
-      case 'remove_buff':
-        // Thuộc về PassiveSystem (stack passive theo trigger riêng,
-        // không phải effect của skill chủ động) — không xử lý ở đây.
+      // Pháp Tu Thuần Hệ (E-3, 2026-09-03) — 2 type này trước đây là
+      // no-op ở đây (thuộc về PassiveSystem — stack passive theo trigger
+      // riêng). PassiveSystem KHÔNG đi qua switch này (nó mutate
+      // passiveModifiers trực tiếp, xem PassiveSystem.ts) nên xử lý
+      // thật ở đây không ảnh hưởng path passive cũ.
+      case 'add_stack': {
+        if (!effect.buffId) break
+
+        // 'target' (mặc định) hay 'source' — pool nào nhận stack.
+        const pool = effect.scope === 'source' ? ctx.sourceBuffs : ctx.targetBuffs
+        const instances = pool.getAllById(effect.buffId)
+
+        // "tăng N stack trên buff đang chạy" — chưa có buff = no-op,
+        // KHÔNG tạo mới (khác 'debuff' apply). Chia đều N stack cho MỌI
+        // instance (multi-source) rồi cap theo maxStacks của instance
+        // (cùng tinh thần StatCalculator.addStack) — tổng không vượt
+        // trần của buff definition.
+        if (instances.length === 0) {
+          break
+        }
+
+        const perInstance = Math.floor((effect.stacks ?? 1) / instances.length)
+        let remainder = (effect.stacks ?? 1) % instances.length
+
+        for (const instance of instances) {
+          const bonus = perInstance + (remainder > 0 ? 1 : 0)
+
+          if (remainder > 0) {
+            remainder -= 1
+          }
+
+          const nextStacks = instance.stacks + bonus
+
+          instance.stacks = instance.maxStacks !== undefined
+            ? Math.min(nextStacks, instance.maxStacks)
+            : nextStacks
+
+          if (effect.refresh) {
+            instance.remainingTime = instance.duration
+          }
+        }
+
+        // Trần tổng theo maxStacks của definition (multi-instance):
+        // cắt bớt từ instance cuối ngược lên nếu tổng vượt trần.
+        const cap = instances[0]?.maxStacks
+        if (cap !== undefined) {
+          let overflow = instances.reduce((sum, instance) => sum + instance.stacks, 0) - cap
+
+          for (let i = instances.length - 1; i >= 0 && overflow > 0; i--) {
+            const cut = Math.min(overflow, instances[i]!.stacks)
+
+            instances[i]!.stacks -= cut
+            overflow -= cut
+          }
+        }
         break
+      }
+
+      case 'remove_buff': {
+        const pool = effect.scope === 'source' ? ctx.sourceBuffs : ctx.targetBuffs
+        const candidates = pool.getAll().filter((buff) => {
+          if (effect.buffId !== undefined && buff.id !== effect.buffId) return false
+          if (effect.polarity !== undefined && buff.polarity !== effect.polarity) return false
+          return true
+        })
+
+        // Gỡ tối đa `count` instance (mặc định 1) theo thứ tự pool.
+        for (const buff of candidates.slice(0, effect.count ?? 1)) {
+          pool.remove(buff.id, buff.sourceId)
+        }
+        break
+      }
     }
   }
 }
