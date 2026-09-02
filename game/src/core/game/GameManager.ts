@@ -169,6 +169,7 @@ import type { Reward } from '../reward/Reward'
 import type { BattleRewardSummary } from '../reward/BattleRewardSummary'
 
 import { playerToCombatEntity, createPlayerRewardReceiver } from '../player/Player'
+import { getKiemYPermanent } from '../player/KiemYSystem'
 import { getWorkerCapacityForLevel } from '../production/WorkerCapacity'
 import { HERO_LANE_INDEX } from '../battle/BattleLane'
 import type { PlayerData, KiemTuRoute } from '../player/Player'
@@ -327,7 +328,48 @@ export class GameManager {
     // kÃ­ch hoáº¡t channel Báº¡t Kiáº¿m, khá»›p Ä‘Ãºng Ä‘iá»u kiá»‡n channel UI Ä‘ang
     // Ä‘á»c (player.kiemTuRoute === 'bat_kiem').
     () => this.activePlayer?.kiemTuRoute,
+
+    // Kiếm Ý vĩnh viễn (spec 2026-08-29-kiem-the-kiem-y mục 3) — closure
+    // ĐÃ khai báo trong BattleSystem nhưng chưa từng được inject ở đây
+    // (profile kiem-tu §4.7): thiếu nó → Kiếm Ý tạm đầu trận = 0, nerf
+    // Bạt Kiếm mắc kẹt 0.6, on-hit không roll. Đọc LIVE từ bossKillCount.
+    () => (this.activePlayer ? getKiemYPermanent(this.activePlayer.bossKillCount) : 0),
+
+    // Hấp thụ Huy Kiếm (spec mục 3.4) — tổng cast của tram, đọc LIVE từ
+    // skillManager (flat bonus floor(casts/10) vào Bạt Kiếm tick).
+    () => this.skillManager.get('tram')?.totalExperience ?? 0,
+
+    // On-hit Kiếm Trận (spec mục 4) — cấp node on-hit đã mua, lọc qua
+    // nodeRegistry (chỉ node có effect.onHitEffect).
+    () => this.getOnHitNodeLevelsSnapshot(),
   )
+
+  /**
+   * Snapshot cấp các node on-hit Kiếm Trận đã mua (đọc từ
+   * PlayerData.nodeLevels qua registry — node là nguồn sự thật của
+   * `effect.onHitEffect`). Trả `{}` khi chưa có player/chưa mua node.
+   */
+  getOnHitNodeLevelsSnapshot(): Record<string, number> {
+    const levels: Record<string, number> = {}
+
+    if (!this.activePlayer) {
+      return levels
+    }
+
+    for (const [nodeId, level] of Object.entries(this.activePlayer.nodeLevels)) {
+      if (level <= 0 || !this.nodeRegistry.has(nodeId)) {
+        continue
+      }
+
+      const node = this.nodeRegistry.get(nodeId)
+
+      if (node.effect.onHitEffect) {
+        levels[nodeId] = level
+      }
+    }
+
+    return levels
+  }
 
   readonly techniqueManager = new TechniqueManager()
   readonly techniqueSystem = new TechniqueSystem(this.techniqueManager)
