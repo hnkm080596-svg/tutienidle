@@ -32,12 +32,16 @@ export function isArtifactGrade(value: unknown): value is ArtifactGrade {
   return typeof value === 'string' && (ARTIFACT_GRADE_ORDER as readonly string[]).includes(value)
 }
 
+// Terminology align (2026-09-02, user schema chốt): pháp bảo 5 bậc này
+// là trục CHẤT — nhãn "Phàm Chất→Tiên Chất" (trước gọi "Phẩm"). Trục
+// Phẩm (cảnh giới tương quan) của pháp bảo hiện chưa có trục riêng —
+// thêm sau nếu design cần. Type/values giữ nguyên, chỉ label text.
 export const ARTIFACT_GRADE_LABELS: Record<ArtifactGrade, string> = {
-  pham: 'Phàm Phẩm',
-  linh: 'Linh Phẩm',
-  dia: 'Địa Phẩm',
-  thien: 'Thiên Phẩm',
-  tien: 'Tiên Phẩm',
+  pham: 'Phàm Chất',
+  linh: 'Linh Chất',
+  dia: 'Địa Chất',
+  thien: 'Thiên Chất',
+  tien: 'Tiên Chất',
 }
 
 export interface ArtifactMilestone {

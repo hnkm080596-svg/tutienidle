@@ -15,12 +15,14 @@
 
 ## Hai trục phẩm chất — PHÂN BIỆT BẮT BUỘC
 
-| Trục | Type | Values | CSS var | Ý nghĩa |
-|---|---|---|---|---|
-| Quality (9 bậc "khí") | `EquipmentQuality` | `pham_khi…thien_dia_trong_khi` | `--eq-quality-{value}` | Gate tiềm năng: trần affix tier, pool, forge point, implicit multiplier |
-| Grade (5 phẩm) | `ItemGrade` | `hoang/huyen/dia/thien/tien` | `--grade-{value}` | Thang phẩm chung Đan/Phù/Trận; với trang bị = mật độ affix (field `rarity`) |
+Terminology chốt (2026-09-02, user schema): **"Phẩm" = bậc cảnh giới tương quan của item (10 bậc, Cửu→Tiên Phẩm)**; **"Chất" = chất lượng (5 bậc)**. Mỗi trục có thể mang tên riêng theo loại item (Phẩm: cảnh giới nhân vật / Phàm Khí trang bị / Cửu Phẩm đan; Chất: cấp đột phá nhân vật / Hoàng→Tiên Chất trang bị / Thập niên nguyên liệu) — nhưng KHÔNG BAO GIỜ gắn nhãn 5-bậc chất lượng bằng từ "Phẩm".
 
-Cấm dùng từ "pham"/"rarity" để chỉ quality, và ngược lại.
+| Trục | Type | Bậc | Ý nghĩa |
+|---|---|---|---|
+| Phẩm | `ProfessionGrade` (10: Cửu→Tiên Phẩm) | 10 | Cảnh giới tương quan — trang bị (`equip` gate), Phù/Trận (`Talisman.grade`/`Formation.grade`), Đan có thể mang thêm (`Pill.professionGrade`, UI ưu tiên) |
+| Chất | `ItemQuality` (trang bị, "Hoàng→Tiên Chất") • `ItemGrade` (Đan, "Hoàng→Tiên Chất" — labels đồng bộ 2026-09-02) • `ArtifactGrade` (pháp bảo, "Phàm→Tiên Chất") • age axis nguyên liệu (Thập/Bách/Bách niên...) | 5 | Chất lượng trong cùng phẩm |
+
+Cấm dùng từ "phẩm" để chỉ trục 5-bậc chất lượng, và ngược lại.
 
 ## Family language map
 
