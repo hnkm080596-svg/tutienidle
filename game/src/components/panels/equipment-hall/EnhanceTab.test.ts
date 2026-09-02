@@ -82,7 +82,7 @@ function mountTab(prepare?: (manager: GameManager) => void) {
   app.provide(BUMP_STATE_KEY, () => { version.value += 1 })
   app.mount(container)
 
-  return { container, manager, unmount: () => app.unmount() }
+  return { container, manager, version, unmount: () => app.unmount() }
 }
 
 afterEach(() => {
@@ -144,6 +144,35 @@ describe('EnhanceTab — Cường Hóa', () => {
     )
 
     expect(slots).toHaveLength(6)
+
+    mounted.unmount()
+  })
+
+  it('Task 1 (perf-optimize-pass, Phase 0 safety-net): equip trang bị mới vào 1 slot → enhanceRows phản ánh đúng slot đó sau lần recompute kế tiếp', async () => {
+    // Khóa hành vi HIỆN TẠI của enhanceRows (đọc gameManager.equipmentBag
+    // qua stateVersion) trước khi Task 4/5 đụng vào cách nó recompute —
+    // nếu Task 4/5 phá reactivity, test này đỏ ngay.
+    const mounted = mountTab()
+
+    const slots = () =>
+      mounted.container.querySelectorAll('[aria-label="Chọn slot cường hóa"] .slot-view')
+
+    // Slot helmet (index 1 trong EQUIPMENT_SLOTS) ban đầu trống — chưa có
+    // equipment nào trong bag mang slot 'helmet'.
+    expect(slots()[1]!.classList.contains('slot-view--empty')).toBe(true)
+
+    // Equip trang bị mới vào slot helmet, rồi bump stateVersion — đúng
+    // pattern app thật (useEquipmentActions gọi bumpState sau khi mutate
+    // gameManager); enhanceRows đọc `stateVersion.value` làm dependency
+    // tường minh (xem EnhanceTab.vue) nên PHẢI bump version mới recompute.
+    mounted.manager.equipmentBag.add(equipmentInstance('new-helmet', true))
+    mounted.manager.equipmentBag.get('new-helmet')!.slot = 'helmet'
+    mounted.manager.equipmentBag.get('new-helmet')!.itemId = 'base_quan'
+
+    mounted.version.value += 1
+    await nextTick()
+
+    expect(slots()[1]!.classList.contains('slot-view--filled')).toBe(true)
 
     mounted.unmount()
   })
