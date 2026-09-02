@@ -87,7 +87,11 @@ function setupSim() {
 }
 
 describe('Playtest — combat liên tục 10 phút (Task 8)', () => {
-  it('Pháp Tu idle 10 phút — mana (Linh lực hộ thể) không cạn chết đứng, reaction kích được', () => {
+  // Flaky fix (2026-09-02, user-approved) — standalone ~0.6s nhưng dưới
+  // tải full suite (310+ file tranh CPU) vòng 6000-tick phình ~9× vượt
+  // timeout default 5s không deterministic. Nâng ngân sách lên 30s:
+  // mô phỏng 10 phút vẫn chạy đúng, chỉ là budget cho máy đang bận.
+  it('Pháp Tu idle 10 phút — mana (Linh lực hộ thể) không cạn chết đứng, reaction kích được', { timeout: 30_000 }, () => {
     const { system, getReactionCount } = setupSim()
 
     const player = createCombatant({
