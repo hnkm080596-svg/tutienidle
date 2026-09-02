@@ -37,10 +37,17 @@ export function useCadenceSmoothing(
 
   let rafHandle: number | undefined
 
+  // Tổng chu kỳ của snapshot gần nhất — dùng để phát hiện slot KHÔNG
+  // có cadence (total <= 0, vd Loadout slot rỗng), lúc đó displayed
+  // đứng yên ở 0 vĩnh viễn nên không cần rAF nào nữa.
+  let lastTotal = 0
+
   function resync() {
     const sample = getSample()
 
     baseRemaining = Math.max(0, sample.remaining)
+
+    lastTotal = sample.total
 
     elapsedSinceSyncMs = 0
 
@@ -63,6 +70,13 @@ export function useCadenceSmoothing(
     lastFrameTimeMs = nowMs
 
     displayed.value = Math.max(0, baseRemaining - elapsedSinceSyncMs / 1000)
+
+    // Idle stop: không còn gì để đếm (đã về 0 và slot không có cadence)
+    // → dừng vòng lặp rAF thay vì chạy vô ích mỗi frame. resync() (watch
+    // getSample ở dưới) sẽ tự re-arm rAF khi có snapshot mới cần advance.
+    if (displayed.value <= 0 && lastTotal <= 0) {
+      return
+    }
 
     rafHandle = window.requestAnimationFrame(frame)
   }

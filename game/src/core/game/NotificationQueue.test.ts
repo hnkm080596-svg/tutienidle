@@ -72,6 +72,16 @@ describe('NotificationQueue — push/drain', () => {
     expect(queue.drain()).toHaveLength(2)
   })
 
+  it('drain trên hàng rỗng không alloc mảng mới mỗi lần — trả về cùng 1 tham chiếu', () => {
+    const queue = new NotificationQueue()
+
+    const first = queue.drain()
+    const second = queue.drain()
+
+    expect(first).toBe(second)
+    expect(first).toEqual([])
+  })
+
   it('giữ nguyên loot presentation payload khi qua queue', () => {
     const queue = new NotificationQueue()
     const event: NotificationEvent = {
