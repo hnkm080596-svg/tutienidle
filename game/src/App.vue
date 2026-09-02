@@ -352,6 +352,14 @@ function tick() {
 
     // Buff/Technique có thể vừa hết hạn hoặc vừa được thêm trong
     // update() ở trên -> đồng bộ lại modifier cho player mỗi tick.
+    //
+    // perf-optimize-pass Task 5: getAggregatedModifiers() vẫn dựng mảng
+    // MỚI mỗi tick (signature GameManager giữ nguyên), nhưng
+    // setExternalModifiers() nay tự dirty-check nội dung và BỎ QUA lần
+    // gán trùng — nên `finalStats` chỉ invalidate khi buff/technique
+    // thật sự đổi, không còn recompute 10 lần/giây. Đây là lý do
+    // bumpState() bên dưới CỐ Ý giữ nguyên (chạy mỗi tick cho đồng hồ/
+    // resource counter): stat đã được tách hẳn khỏi stateVersion.
     player.setExternalModifiers(gameManager.getAggregatedModifiers(player.$state))
   }
 

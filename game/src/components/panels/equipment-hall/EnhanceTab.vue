@@ -60,6 +60,16 @@ interface EnhanceSlotRow {
   equippedRow?: (typeof equippedRows.value)[number]
 }
 
+// perf-optimize-pass Task 5 — `stateVersion.value` đọc vô điều kiện ở
+// đây KHÔNG cần cổng visibility riêng: EnhanceTab chỉ TỒN TẠI khi tab
+// đang hiện. Chuỗi v-if (không có <KeepAlive> nào trong app):
+//   FunctionOverlayPanel `v-if="mode"` (bên trong OverlayPanel
+//   `v-if="open"`) -> EquipmentHallPanel `v-if="activeTab === 'enhance'"`.
+// Đổi tab hoặc đóng panel là unmount hẳn component, effect scope của
+// computed bị stop nên nó không recompute theo tick nữa. Khi tab ĐANG
+// hiện thì recompute mỗi tick là ĐÚNG YÊU CẦU (cột "sở hữu" nguyên
+// liệu/linh thạch phải chạy theo thời gian thật). Thêm cờ visibility
+// cục bộ ở đây chỉ là code chết — xem task-5-report.md.
 const enhanceRows = computed<EnhanceSlotRow[]>(() => {
   stateVersion.value
 
