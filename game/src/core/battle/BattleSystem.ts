@@ -222,6 +222,31 @@ function scopeForEffect(effect: SkillEffect): EffectScope {
 export class BattleSystem {
   private battle: Battle | null = null
 
+  // Perf (Task 6, 2026-09-02) — BuffSystem là wrapper THUẦN TUÝ STATELESS
+  // quanh 1 BuffPool (chỉ giữ `private readonly pool`, không cache gì
+  // khác — xem BuffSystem.ts constructor/getActiveModifiers()/update()).
+  // Toàn bộ state buff thật nằm trong BuffPool, được mutate tại chỗ, KHÔNG
+  // bao giờ reassign (battle.playerBuffs/battleEnemy.buffs chỉ new 1 lần
+  // lúc tạo — xem Battle.ts). Vì vậy 1 BuffSystem instance/pool là valid
+  // vĩnh viễn trong đời battle: cache theo pool (WeakMap để pool của trận
+  // cũ tự bị GC, không leak) thay vì `new BuffSystem(pool)` lại mỗi lần —
+  // trước đây bị gọi lại ở MỌI fixed-step (10Hz) cho player + từng enemy
+  // (isIncapacitated/updateStatsFromModifiers/resolveMovement) cộng thêm
+  // nhiều call site theo sự kiện (on-hit/cast) — tất cả đều an toàn dùng
+  // chung 1 instance vì instance không giữ state riêng nào cần "làm mới".
+  private readonly buffSystemCache = new WeakMap<BuffPool, BuffSystem>()
+
+  private getBuffSystem(pool: BuffPool): BuffSystem {
+    let system = this.buffSystemCache.get(pool)
+
+    if (!system) {
+      system = new BuffSystem(pool)
+      this.buffSystemCache.set(pool, system)
+    }
+
+    return system
+  }
+
   private readonly reactionManager: ReactionManager
 
   // Kiếm Tu Bạt Kiếm (Task 4) — id skill channel đang equip lúc start()
@@ -1042,7 +1067,7 @@ export class BattleSystem {
       ) {
         const phase = phases[appliedCount]!
 
-        new BuffSystem(battleEnemy.buffs).apply(phase.buff, battleEnemy.entity, battleEnemy.entity)
+        this.getBuffSystem(battleEnemy.buffs).apply(phase.buff, battleEnemy.entity, battleEnemy.entity)
 
         // Boss Mechanics (Phase 4) — Attack Pattern: đổi hẳn archetype
 
@@ -1097,14 +1122,14 @@ export class BattleSystem {
         continue
       }
 
-      new BuffSystem(battleEnemy.buffs).apply(enrage.buff, battleEnemy.entity, battleEnemy.entity)
+      this.getBuffSystem(battleEnemy.buffs).apply(enrage.buff, battleEnemy.entity, battleEnemy.entity)
 
       battleEnemy.enrageApplied = true
     }
   }
 
   private isIncapacitated(buffs: BuffPool): boolean {
-    const system = new BuffSystem(buffs)
+    const system = this.getBuffSystem(buffs)
 
     return system.isStunned() || system.isFrozen()
   }
@@ -1135,7 +1160,7 @@ export class BattleSystem {
         continue
       }
 
-      const battleEnemyBuffs = new BuffSystem(battleEnemy.buffs)
+      const battleEnemyBuffs = this.getBuffSystem(battleEnemy.buffs)
 
       // Thổ Tu ("Trói Chân", Plans/EarthPath mục VI) — Root chặn di
 
@@ -1287,7 +1312,7 @@ export class BattleSystem {
     // active trên target (BuffSystem.rollOnHitEffects()).
 
     if (!result.dodged && target.alive) {
-      new BuffSystem(this.getBuffsFor(battle, target)).rollOnHitEffects(
+      this.getBuffSystem(this.getBuffsFor(battle, target)).rollOnHitEffects(
         source,
         target,
         this.buffRegistry,
@@ -1321,8 +1346,8 @@ export class BattleSystem {
             return { landed: true }
           },
           buffRegistry: this.buffRegistry,
-          sourceBuffs: new BuffSystem(this.getBuffsFor(battle, source)),
-          targetBuffs: new BuffSystem(this.getBuffsFor(battle, target)),
+          sourceBuffs: this.getBuffSystem(this.getBuffsFor(battle, source)),
+          targetBuffs: this.getBuffSystem(this.getBuffsFor(battle, target)),
           reactionManager: this.reactionManager,
           reactionKeepChance: this.getReactionKeepChance(),
           spawnLavaZone: (spec) => this.spawnLavaZone(battle, spec),
@@ -1377,7 +1402,7 @@ export class BattleSystem {
         target.currentBreakGauge -= skill.breakDamagePerHit
 
         if (target.currentBreakGauge <= 0) {
-          const targetBuffs = new BuffSystem(this.getBuffsFor(battle, target))
+          const targetBuffs = this.getBuffSystem(this.getBuffsFor(battle, target))
 
           targetBuffs.apply(
             this.buffRegistry.get('choang'),
@@ -1435,7 +1460,7 @@ export class BattleSystem {
       return battle.enemies.find((battleEnemy) => battleEnemy.entity.id === id)?.entity
     }
 
-    const playerBuffSystem = new BuffSystem(battle.playerBuffs)
+    const playerBuffSystem = this.getBuffSystem(battle.playerBuffs)
 
     playerBuffSystem.update(deltaSeconds, battle.player, this.combat, this.buffRegistry, resolveSource)
 
@@ -1453,7 +1478,7 @@ export class BattleSystem {
         continue
       }
 
-      const enemyBuffSystem = new BuffSystem(battleEnemy.buffs)
+      const enemyBuffSystem = this.getBuffSystem(battleEnemy.buffs)
 
       enemyBuffSystem.update(deltaSeconds, battleEnemy.entity, this.combat, this.buffRegistry, resolveSource)
 
@@ -2581,7 +2606,7 @@ export class BattleSystem {
         // Chảy máu — tái dùng buff/debuff van_kiem_vu sẵn có.
         const buff = this.buffRegistry.get('van_kiem_vu')
         if (buff) {
-          new BuffSystem(this.getBuffsFor(battle, target)).apply(
+          this.getBuffSystem(this.getBuffsFor(battle, target)).apply(
             buff,
             source,
             target,
@@ -2595,7 +2620,7 @@ export class BattleSystem {
         const ccId = Math.random() < 0.5 ? 'troi_chan' : 'choang'
         const buff = this.buffRegistry.get(ccId)
         if (buff) {
-          new BuffSystem(this.getBuffsFor(battle, target)).apply(
+          this.getBuffSystem(this.getBuffsFor(battle, target)).apply(
             buff,
             source,
             target,
@@ -2633,7 +2658,7 @@ export class BattleSystem {
           const buffId = `onhit_${kind}`
           const definition = this.buffRegistry.get(buffId)
           if (definition) {
-            new BuffSystem(this.getBuffsFor(battle, source)).apply(definition, source, source, this.buffRegistry)
+            this.getBuffSystem(this.getBuffsFor(battle, source)).apply(definition, source, source, this.buffRegistry)
           }
         }
         break
@@ -2665,7 +2690,7 @@ export class BattleSystem {
       skillName: skill.name,
     })
 
-    const sourceBuffs = new BuffSystem(this.getBuffsFor(battle, source))
+    const sourceBuffs = this.getBuffSystem(this.getBuffsFor(battle, source))
 
     // Đọc qua getEffectiveSkill() để tôn trọng Specialization đã
 
@@ -2731,7 +2756,7 @@ export class BattleSystem {
 
     const applyEffects = (effects: SkillEffect[], oneTarget: CombatEntity) => {
       let landedHit = false
-      const targetBuffs = new BuffSystem(this.getBuffsFor(battle, oneTarget))
+      const targetBuffs = this.getBuffSystem(this.getBuffsFor(battle, oneTarget))
 
       this.skillEffectSystem.applyAll(effects, source, oneTarget, {
         combatSystem: this.combat,
@@ -2811,7 +2836,7 @@ export class BattleSystem {
     if (effective.triggers?.length) {
       for (const oneTarget of targets) {
         let landedHit = false
-        const targetBuffs = new BuffSystem(this.getBuffsFor(battle, oneTarget))
+        const targetBuffs = this.getBuffSystem(this.getBuffsFor(battle, oneTarget))
 
         const triggerCtx: SkillEffectContext = {
           combatSystem: this.combat,
@@ -3010,8 +3035,8 @@ export class BattleSystem {
         combatSystem: this.combat,
         fireHit: () => ({ landed: true }),
         buffRegistry: this.buffRegistry,
-        sourceBuffs: new BuffSystem(this.getBuffsFor(battle, player)),
-        targetBuffs: new BuffSystem(this.getBuffsFor(battle, target)),
+        sourceBuffs: this.getBuffSystem(this.getBuffsFor(battle, player)),
+        targetBuffs: this.getBuffSystem(this.getBuffsFor(battle, target)),
         reactionManager: this.reactionManager,
         reactionKeepChance: this.getReactionKeepChance(),
         spawnLavaZone: (spec) => this.spawnLavaZone(battle, spec),
