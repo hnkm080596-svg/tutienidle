@@ -1549,7 +1549,10 @@ export const SKILLS: Skill[] = [
             attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
           },
           { type: 'debuff', buffId: 'troi_chan', ailmentChance: 0.5 },
-          { type: 'buff', buffId: 'hoi_luu', stacks: 2, duration: 5 },
+          // Spec §2.2: leech +35%, 5s — buff định nghĩa 0.20/tầng, 2
+          // tầng = 0.40 (over-tuned); thay bằng 1 tầng + duration 5s
+          // đúng số liệu spec (xem ghi chú report).
+          { type: 'buff', buffId: 'hoi_luu', duration: 5 },
         ],
       },
     ],
