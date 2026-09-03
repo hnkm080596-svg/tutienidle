@@ -1,10 +1,13 @@
 import type { ElementType } from '../../core/element/ElementType'
 import type {
   NodeEffect,
+  NodePrerequisite,
   ProgressionNode,
   SkillModifier,
 } from '../../core/progression/ProgressionNode'
 import type { StatModifier } from '../../core/stats/StatCalculator'
+import { CHAIN_SKILL_IDS, SKILLS } from '../skill/Skills'
+import { PHAP_TU_ULTIMATE_IDS } from '../../core/battle/UltimateSystem'
 
 // Pháp Tu Node Tree — REWORK theo combat-skill-flow-element-power-dot-plan.md
 // §6.3-§6.7 (2026-08-26): mỗi hành dùng CÙNG một bộ khung, giữ identity/
@@ -267,6 +270,397 @@ function powerLabel(statKey: string): string {
     default:
       return 'Thổ Lực'
   }
+}
+
+// ====================================================================
+// Pháp Tu Thuần Hệ (spec 2026-09-03 §5, Task 11) — factory nhánh Thuần
+// per-hành (13 node): Lập Đạo Thuần (mutex 4 Thuần khác + Đa Pháp),
+// unlock B/C/D/E (id `linh_ngo_<skill id>` — N2b, realm gate C=Kim Đan
+// /D=Hóa Thần/E=Độ Kiếp khớp REALM_SLOT_TABLE), biến thể C1/C2 +
+// D1/D2 (selectsSpecialization E-8 + excludesNode đối diện), ult
+// (prereq B — N5), Tụ Thế/Trường Thế/Thế Mãn (skillModifiers lên skill
+// A — E-7). Số liệu §4: Tụ Thế +1/link/cấp (cấp 5: link 15, finisher
+// 25), Trường Thế +4 trần/cấp (cấp 5: 120), Thế Mãn 1 cấp.
+// ====================================================================
+
+const THUAN_REALM_GATE: Record<'c' | 'd' | 'e', string> = {
+  c: 'golden_core',
+  d: 'soul_transformation',
+  e: 'tribulation',
+}
+
+interface ThuanVariantSpec {
+  nodeId: string
+
+  name: string
+
+  description: string
+
+  specializationId: string
+}
+
+interface ThuanChainSpec {
+  /** Skill id B–E theo thứ tự chuỗi (CHAIN_SKILL_IDS, bỏ A). */
+  skillId: string
+
+  /** Tên hiển thị node unlock ("Lĩnh ngộ <tên skill>"). */
+  unlockName: string
+
+  realmGate?: string
+
+  /** 2 biến thể (chỉ C/D). */
+  variants?: [ThuanVariantSpec, ThuanVariantSpec]
+}
+
+function thuanUnlockName(skillId: string): string {
+  const skillName = SKILL_NAMES_BY_ID[skillId]
+
+  if (!skillName) {
+    throw new Error(`PhapTuNodes: skill ${skillId} không có trong SKILLS (mất tên node unlock)`)
+  }
+
+  return `Lĩnh ngộ ${skillName}`
+}
+
+function buildThuanBranch(element: ElementType): ProgressionNode[] {
+  const chain = CHAIN_SKILL_IDS[element]
+  const [bId, cId, dId, eId] = chain.slice(1) as [string, string, string, string]
+  const skillA = chain[0] as string
+  const tag = `thuan_${element}`
+  const lapDaoId = `lap_dao_thuan_${element}`
+  const ultId = PHAP_TU_ULTIMATE_IDS[element as keyof typeof PHAP_TU_ULTIMATE_IDS]
+
+  const otherThuan = (Object.keys(CHAIN_SKILL_IDS) as ElementType[])
+    .filter((other) => other !== element)
+    .map((other) => `lap_dao_thuan_${other}`)
+
+  const nodes: ProgressionNode[] = []
+
+  // ── Lập Đạo Thuần (major, cost 2, mutex mọi nhánh khác) ──
+  nodes.push({
+    id: lapDaoId,
+    name: `Lập Đạo Thuần (${powerLabel(`${element}Power` as `${ElementType}Power`).replace(' Lực', '')})`,
+    description:
+      'Chọn một hành duy nhất mà đi tới tận cùng — các đạo Thuần hành khác và Đa Pháp bị đóng.',
+    type: 'major',
+    role: 'keystone',
+    insightCost: 2,
+    prerequisites: [
+      { kind: 'node', nodeId: 'phap_tu_lap_dao' },
+      ...otherThuan.map((nodeId): NodePrerequisite => ({ kind: 'excludesNode', nodeId })),
+      { kind: 'excludesNode', nodeId: 'phap_tu_lap_dao_da_phap' },
+    ],
+    effect: {},
+    branchTag: tag,
+  })
+
+  // ── 4 node unlock B/C/D/E + biến thể C/D ──
+  const chainSpecs: ThuanChainSpec[] = [
+    { skillId: bId, unlockName: thuanUnlockName(bId) },
+    {
+      skillId: cId,
+      unlockName: thuanUnlockName(cId),
+      realmGate: THUAN_REALM_GATE.c,
+      variants: THUAN_VARIANTS[element].c,
+    },
+    {
+      skillId: dId,
+      unlockName: thuanUnlockName(dId),
+      realmGate: THUAN_REALM_GATE.d,
+      variants: THUAN_VARIANTS[element].d,
+    },
+    { skillId: eId, unlockName: thuanUnlockName(eId), realmGate: THUAN_REALM_GATE.e },
+  ]
+
+  for (const [index, spec] of chainSpecs.entries()) {
+    const unlockNodeId = `linh_ngo_${spec.skillId}`
+    const prereqs: NodePrerequisite[] = [{ kind: 'node', nodeId: lapDaoId }]
+
+    if (index > 0) {
+      const previous = chainSpecs[index - 1]!
+
+      prereqs.push({ kind: 'node', nodeId: `linh_ngo_${previous.skillId}` })
+    }
+
+    if (spec.realmGate) {
+      prereqs.push({ kind: 'realm', realmId: spec.realmGate })
+    }
+
+    nodes.push({
+      id: unlockNodeId,
+      name: spec.unlockName,
+      description: `Lĩnh ngộ ${SKILL_NAMES_BY_ID[spec.skillId]} — mở khoá kỹ năng chuỗi.`,
+      type: 'major',
+      role: 'keystone',
+      insightCost: 2,
+      prerequisites: prereqs,
+      effect: { unlocksSkillIds: [spec.skillId] },
+      branchTag: tag,
+    })
+
+    if (spec.variants) {
+      const [v1, v2] = spec.variants
+
+      for (const [self, opposite] of [[v1, v2], [v2, v1]] as const) {
+        nodes.push({
+          id: self.nodeId,
+          name: self.name,
+          description: self.description,
+          type: 'minor',
+          role: 'specialization',
+          insightCost: 2,
+          prerequisites: [
+            { kind: 'node', nodeId: unlockNodeId },
+            { kind: 'excludesNode', nodeId: opposite.nodeId },
+          ],
+          effect: {
+            selectsSpecialization: { skillId: spec.skillId, specializationId: self.specializationId },
+          },
+          branchTag: tag,
+        })
+      }
+    }
+  }
+
+  // ── Node ult (major, prereq B — N5: Thế có đầu ra sớm) ──
+  nodes.push({
+    id: `linh_ngo_${ultId}`,
+    name: `Lĩnh ngộ ${SKILL_NAMES_BY_ID[ultId]}`,
+    description: 'Đạo sắc ngưng tụ thành pháp tướng — mở Ultimate của hành (đốt toàn bộ Thế).',
+    type: 'major',
+    role: 'keystone',
+    insightCost: 2,
+    prerequisites: [{ kind: 'node', nodeId: `linh_ngo_${bId}` }],
+    effect: { unlocksSkillIds: [ultId] },
+    branchTag: tag,
+  })
+
+  // ── Thế: Tụ Thế (5) → Trường Thế (5) → Thế Mãn (1) ──
+  nodes.push({
+    id: `tu_the_${element}`,
+    name: 'Tụ Thế',
+    description: '+1 Thế mỗi link chuỗi mỗi cấp (cấp 5: link 15, finisher 25).',
+    type: 'minor',
+    role: 'growth',
+    insightCost: 1,
+    maxLevel: 5,
+    upgradeCost: { base: 1, perLevel: 2 },
+    prerequisites: [{ kind: 'node', nodeId: lapDaoId }],
+    effect: {
+      skillModifiers: skillMod(skillA, [
+        { stat: 'theGainPerLinkBonus', flat: 1, perLevelFlat: 1 },
+      ]),
+    },
+    branchTag: tag,
+  })
+
+  nodes.push({
+    id: `truong_the_${element}`,
+    name: 'Trường Thế',
+    description: '+4 trần Thế mỗi cấp (cấp 5: 120) — ult chậm hơn nhưng Thế Mãn kéo dài hơn.',
+    type: 'minor',
+    role: 'growth',
+    insightCost: 1,
+    maxLevel: 5,
+    upgradeCost: { base: 1, perLevel: 2 },
+    prerequisites: [{ kind: 'node', nodeId: `tu_the_${element}` }],
+    effect: {
+      skillModifiers: skillMod(skillA, [
+        { stat: 'theMaxBonus', flat: 4, perLevelFlat: 4 },
+      ]),
+    },
+    branchTag: tag,
+  })
+
+  nodes.push({
+    id: `the_man_${element}`,
+    name: 'Thế Mãn',
+    description: THE_MAN_DESCRIPTION[element],
+    type: 'minor',
+    role: 'growth',
+    insightCost: 2,
+    prerequisites: [{ kind: 'node', nodeId: `truong_the_${element}` }],
+    // Engine (E-7) ÁP/GỠ buff the_man_<el> theo trạng thái Thế đầy —
+    // unlocksSkillIds chỉ để UI hiển thị "nội dung mở khoá" (buff là
+    // data/buff, không phải skill; xem TheResourceSystem.updateTheManBuff).
+    effect: { unlocksSkillIds: [`the_man_${element}`] },
+    branchTag: tag,
+  })
+
+  return nodes
+}
+
+// Tên hiển thị skill (node unlock/ult) — tra từ data skill, KHÔNG
+// hard-code trùng (nguồn sự thật tên là Skills.ts).
+const SKILL_NAMES_BY_ID: Record<string, string> = Object.fromEntries(
+  SKILLS.map((skill) => [skill.id, skill.name]),
+)
+
+// Biến thể C/D per-hành (spec §2) — nodeId đặt theo tên biến thể (N2b,
+// bỏ dấu), specializationId KHỚP id trong Skills.ts specializations.
+const THUAN_VARIANTS: Record<
+  ElementType,
+  { c: [ThuanVariantSpec, ThuanVariantSpec]; d: [ThuanVariantSpec, ThuanVariantSpec] }
+> = {
+  fire: {
+    c: [
+      {
+        nodeId: 'tam_muoi_tu_diem',
+        name: 'Tam Muội · Tụ Diễm',
+        description: 'Ba ngọn lửa tụ một điểm — đắp 2 tầng Bỏng mỗi cast.',
+        specializationId: 'tam_muoi_tu_diem',
+      },
+      {
+        nodeId: 'tam_muoi_tan_diem',
+        name: 'Tam Muội · Tán Diễm',
+        description: 'Lửa tán thành vùng — Bỏng phủ mọi mục tiêu xung quanh.',
+        specializationId: 'tam_muoi_tan_diem',
+      },
+    ],
+    d: [
+      {
+        nodeId: 'dan_no_liet_bao',
+        name: 'Dẫn Nộ · Liệt Bạo',
+        description: 'Nộ hỏa bùng nổ — mỗi tầng Bỏng nổ 50 (burst tối đa).',
+        specializationId: 'dan_no_liet_bao',
+      },
+      {
+        nodeId: 'dan_no_du_hoa',
+        name: 'Dẫn Nộ · Dư Hỏa',
+        description: 'Kích nổ xong còn than hồng — giữ 1 tầng Bỏng để lặp chuỗi nhanh.',
+        specializationId: 'dan_no_du_hoa',
+      },
+    ],
+  },
+  water: {
+    c: [
+      {
+        nodeId: 'duong_linh_tuyen',
+        name: 'Dưỡng Linh · Tuyền',
+        description: 'Mạch suối dồi dào — hồi Pháp Lực mạnh và lâu hơn (+12, 8s).',
+        specializationId: 'duong_linh_tuyen',
+      },
+      {
+        nodeId: 'duong_linh_bang_giap',
+        name: 'Dưỡng Linh · Băng Giáp',
+        description: 'Nước đóng băng giáp — Thủy thiên về phòng thủ.',
+        specializationId: 'duong_linh_bang_giap',
+      },
+    ],
+    d: [
+      {
+        nodeId: 'thon_no_cam_tuc',
+        name: 'Thôn Nộ · Cấm Túc',
+        description: 'Nước xiềng chặt chân — trói 100%, bỏ hấp thụ.',
+        specializationId: 'thon_no_cam_tuc',
+      },
+      {
+        nodeId: 'thon_no_hap_luu',
+        name: 'Thôn Nộ · Hấp Lưu',
+        description: 'Dòng hút xoáy sâu — leech mạnh hơn, lâu hơn.',
+        specializationId: 'thon_no_hap_luu',
+      },
+    ],
+  },
+  wood: {
+    c: [
+      {
+        nodeId: 'can_tri_cam_bo',
+        name: 'Căn Trì · Cấm Bộ',
+        description: 'Rễ xiết chặt — root bản dài 4s, 100%.',
+        specializationId: 'can_tri_cam_bo',
+      },
+      {
+        nodeId: 'can_tri_tham_doc',
+        name: 'Căn Trì · Thâm Độc',
+        description: 'Độc ngấm tận rễ — bỏ root, đắp +2 tầng Trúng Độc.',
+        specializationId: 'can_tri_tham_doc',
+      },
+    ],
+    d: [
+      {
+        nodeId: 'lan_doc_quang',
+        name: 'Lan Độc · Quảng',
+        description: 'Độc bay khắp chiến trường — all_lanes, spread 50%.',
+        specializationId: 'lan_doc_quang',
+      },
+      {
+        nodeId: 'lan_doc_tham',
+        name: 'Lan Độc · Thâm',
+        description: 'Độc ngấm thấu xương — spread 100% + refresh nguồn.',
+        specializationId: 'lan_doc_tham',
+      },
+    ],
+  },
+  metal: {
+    c: [
+      {
+        nodeId: 'kim_lang_toan_vuc',
+        name: 'Kim Lang · Toàn Vực',
+        description: 'Vụn thép phủ trọn một vùng.',
+        specializationId: 'kim_lang_toan_vuc',
+      },
+      {
+        nodeId: 'kim_lang_xuyen_liet',
+        name: 'Kim Lang · Xuyên Liệt',
+        description: 'Lưỡi bão xuyên thẳng một hàng.',
+        specializationId: 'kim_lang_xuyen_liet',
+      },
+    ],
+    d: [
+      {
+        nodeId: 'cong_huong_tich_huyet',
+        name: 'Cộng Hưởng · Tích Huyết',
+        description: 'Tiếng chuông dồn máu — Xuất Huyết +3 tầng.',
+        specializationId: 'cong_huong_tich_huyet',
+      },
+      {
+        nodeId: 'cong_huong_chan_huyet',
+        name: 'Cộng Hưởng · Chấn Huyết',
+        description: 'Chuông chấn đến choáng váng — +1 tầng, 30% Choáng.',
+        specializationId: 'cong_huong_chan_huyet',
+      },
+    ],
+  },
+  earth: {
+    c: [
+      {
+        nodeId: 'dia_tru_bich',
+        name: 'Địa Trụ · Bích',
+        description: 'Tường đất vững chãi — khiên thuần nuôi E nổ to.',
+        specializationId: 'dia_tru_bich',
+      },
+      {
+        nodeId: 'dia_tru_thu',
+        name: 'Địa Trụ · Thứ',
+        description: 'Đất hóa gai nhọn — phản đòn.',
+        specializationId: 'dia_tru_thu',
+      },
+    ],
+    d: [
+      {
+        nodeId: 'chan_dia_tran',
+        name: 'Chấn Địa · Trấn',
+        description: 'Trấn xuống đúng một điểm — dmg 1.7, choáng 70%.',
+        specializationId: 'chan_dia_tran',
+      },
+      {
+        nodeId: 'chan_dia_quang',
+        name: 'Chấn Địa · Quảng',
+        description: 'Động đất lan rộng — area rộng, choáng 25%.',
+        specializationId: 'chan_dia_quang',
+      },
+    ],
+  },
+}
+
+// Hiệu lực Thế Mãn per-hành (spec §4 bảng).
+const THE_MAN_DESCRIPTION: Record<ElementType, string> = {
+  fire: 'Khi Thế đầy: +15% potency ailment.',
+  water: 'Khi Thế đầy: +6 Pháp Lực hồi mỗi giây.',
+  wood: 'Khi Thế đầy: +20% thời gian hiệu lực ailment.',
+  metal: 'Khi Thế đầy: +8% chí mạng.',
+  earth: 'Khi Thế đầy: +10% phòng thủ.',
 }
 
 export const PHAP_TU_NODES: ProgressionNode[] = [
@@ -888,4 +1282,48 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
       },
     ],
   }),
+
+  // ==================================================================
+  // Pháp Tu Thuần Hệ (spec 2026-09-03 §5, Task 11) — nhánh Thuần: gate
+  // Lập Đạo chung → Lập Đạo Thuần per-hành (loại trừ đa pháp) → unlock
+  // B/C/D/E (realm gate khớp REALM_SLOT_TABLE: C=golden_core,
+  // D=soul_transformation, E=tribulation) → biến thể C/D (2 chọn 1,
+  // selectsSpecialization E-8) → ult (prereq B — N5) → Thế (Tụ/Trường/
+  // Mãn). 13 node mới × 5 hành + 2 node chung = 67. Keystone Trúc Cơ
+  // CŨ KHÔNG xoá (N4 — dọn riêng sau Đa Pháp).
+  // ==================================================================
+
+  // Cổng chung mọi nhánh Đạo — gate Trúc Cơ, cost 0 (spec §5.1).
+  {
+    id: 'phap_tu_lap_dao',
+    name: 'Lập Đạo',
+    description:
+      'Đứng trên Trúc Cơ, nhìn khắp Ngũ Hành mà lập đạo — cổng chung cho nhánh Thuần lẫn Đa Pháp.',
+    type: 'major',
+    role: 'keystone',
+    insightCost: 0,
+    prerequisites: [FOUNDATION],
+    effect: {},
+    branchTag: 'lap_dao',
+  },
+
+  // Placeholder ĐA PHÁP — chỉ khai để lap_dao_thuan_* trỏ excludesNode
+  // tới; nội dung nhánh Đa Pháp theo plan cha Task 11 phần còn lại.
+  {
+    id: 'phap_tu_lap_dao_da_phap',
+    name: 'Lập Đạo · Đa Pháp',
+    description: 'Đạo của kẻ thu phục nhiều hành — nội dung khai sau (plan cha).',
+    type: 'major',
+    role: 'keystone',
+    insightCost: 0,
+    prerequisites: [FOUNDATION],
+    effect: {},
+    branchTag: 'da_phap',
+  },
+
+  ...buildThuanBranch('fire'),
+  ...buildThuanBranch('water'),
+  ...buildThuanBranch('wood'),
+  ...buildThuanBranch('metal'),
+  ...buildThuanBranch('earth'),
 ]
