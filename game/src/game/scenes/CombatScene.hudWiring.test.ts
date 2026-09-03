@@ -229,4 +229,16 @@ describe('CombatScene — Kiếm bar poll per-tick (9.4)', () => {
     expect(hud.kiemCalls).toHaveLength(1)
     expect(hud.kiemCalls[0]).toEqual({ current: 0, max: 0, label: '' })
   })
+
+  it('scene KHÔNG có registry (stub) → ẩn bar, không throw (regression 9.4)', () => {
+    const hud = makeFakeHud()
+    const { scene } = createScene(hud)
+
+    scene.registry = undefined
+
+    scene.pollKiemBar()
+
+    expect(hud.kiemCalls).toHaveLength(1)
+    expect(hud.kiemCalls[0]).toEqual({ current: 0, max: 0, label: '' })
+  })
 })

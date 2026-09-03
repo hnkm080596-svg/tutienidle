@@ -731,8 +731,9 @@ export class CombatScene extends Phaser.Scene {
 
   // 9.4 — Kiếm bar poll mỗi frame từ reader đăng ký trong PhaserCanvas
   // (chỉ nơi có gameManager — xem kiemBarBridge.ts). null = ẩn bar.
+  // registry thiếu (stub/scene chưa init) coi như "không có reader".
   private pollKiemBar(): void {
-    const kiem = readKiemBar(this.registry)
+    const kiem = this.registry ? readKiemBar(this.registry) : null
 
     if (kiem) {
       this.playerHud?.updateKiem(kiem.current, kiem.max, kiem.label)
