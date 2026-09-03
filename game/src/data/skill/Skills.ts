@@ -1322,7 +1322,7 @@ export const SKILLS: Skill[] = [
         description: 'Lửa tán thành vùng — Bỏng phủ mọi mục tiêu xung quanh.',
         // Spec §2.1: Tán Diễm là AoE — base skill không khai targeting
         // (single) nên specialization PHẢI tự mang vùng (laneRadius 1).
-        targeting: { shape: 'area', laneRadius: 1 },
+        targeting: { shape: 'square', laneRadius: 1 },
         effectsOverride: [
           {
             type: 'damage',
@@ -1695,7 +1695,7 @@ export const SKILLS: Skill[] = [
     castTime: 1.4,
     execution: { kind: 'cast_time', castTime: 1.4 },
     target: 'enemy',
-    targeting: { shape: 'area', laneRadius: 1, columnRadius: 1 },
+    targeting: { shape: 'square', laneRadius: 1, columnRadius: 1 },
     effects: [
       {
         type: 'damage',
@@ -1819,7 +1819,7 @@ export const SKILLS: Skill[] = [
     castTime: 1.2,
     execution: { kind: 'cast_time', castTime: 1.2 },
     target: 'enemy',
-    targeting: { shape: 'area', laneRadius: 1 },
+    targeting: { shape: 'square', laneRadius: 1 },
     effects: [
       {
         type: 'damage',
@@ -1838,7 +1838,7 @@ export const SKILLS: Skill[] = [
         name: 'Kim Lang · Toàn Vực',
         description: 'Vụn thép phủ trọn một vùng.',
         // Spec §2.4: Toàn Vực = area laneRadius 1 columnRadius 1.
-        targeting: { shape: 'area', laneRadius: 1, columnRadius: 1 },
+        targeting: { shape: 'square', laneRadius: 1, columnRadius: 1 },
         effectsOverride: [
           {
             type: 'damage',
@@ -2039,7 +2039,7 @@ export const SKILLS: Skill[] = [
     castTime: 1.4,
     execution: { kind: 'cast_time', castTime: 1.4 },
     target: 'enemy',
-    targeting: { shape: 'area', laneRadius: 1, columnRadius: 1 },
+    targeting: { shape: 'square', laneRadius: 1, columnRadius: 1 },
     effects: [
       {
         type: 'damage',
@@ -2073,7 +2073,7 @@ export const SKILLS: Skill[] = [
         name: 'Chấn Địa · Quảng',
         description: 'Động đất lan rộng — choáng nhẹ nhưng trúng nhiều.',
         // Spec §2.5: Quảng = area laneRadius 2 columnRadius 1.
-        targeting: { shape: 'area', laneRadius: 2, columnRadius: 1 },
+        targeting: { shape: 'square', laneRadius: 2, columnRadius: 1 },
         effectsOverride: [
           {
             type: 'damage',

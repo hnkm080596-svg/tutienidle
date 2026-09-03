@@ -304,7 +304,7 @@ describe('BattleSystem — Cast Time + execution policy cast_time', () => {
   it('AOE áp damage lên nhiều target nhưng effect source chỉ chạy đúng một lần', () => {
     const skill = createCastTimeSkill({
       execution: { kind: 'cast_time', castTime: 0 },
-      targeting: { shape: 'area', laneRadius: 1, columnRadius: 1 },
+      targeting: { shape: 'square', laneRadius: 1, columnRadius: 1 },
       effects: [
         { type: 'damage', value: 1, damageType: 'physical' },
         { type: 'heal', value: 10 },

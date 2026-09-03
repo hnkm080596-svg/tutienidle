@@ -137,9 +137,9 @@ describe('selectAttackableTarget + selectTeleportTarget (plan §7.2 + sản ph�
 })
 
 describe('collectAffected — shape theo grid, clamp biên', () => {
-  const base: ActionTargeting = { shape: 'area', laneRadius: 1, columnRadius: 1 }
+  const base: ActionTargeting = { shape: 'square', laneRadius: 1, columnRadius: 1 }
 
-  it("shape 'area': anchor ở GÓC trên-phải (row 0, col 15) — chỉ ô trong grid", () => {
+  it("shape 'square': anchor ở GÓC trên-phải (row 0, col 15) — chỉ ô trong grid", () => {
     const inCell = entity('in', 14.6, 1) // col 15, row 1
     const outRow = entity('outRow', 14.2, 3) // row 3 > 0+1
     const outCol = entity('outCol', 11.2, 0) // col 11 < 15-1
@@ -157,7 +157,7 @@ describe('collectAffected — shape theo grid, clamp biên', () => {
     expect(affected.map(e => e.id).sort()).toEqual(['in', 'primary'])
   })
 
-  it("shape 'area': anchor góc dưới-trái (row 9, col 0)", () => {
+  it("shape 'square': anchor góc dưới-trái (row 9, col 0)", () => {
     const inCell = entity('in', 0.2, 9)
     const outAbove = entity('outAbove', 0.4, 7)
     const primary = entity('primary', 1.4, 9)
@@ -221,7 +221,7 @@ describe('collectAffected — shape theo grid, clamp biên', () => {
       'primary',
       2,
       5,
-      { shape: 'area', laneRadius: 0, columnRadius: 1, maxTargets: 2 },
+      { shape: 'square', laneRadius: 0, columnRadius: 1, maxTargets: 2 },
     )
 
     expect(affected).toHaveLength(2)

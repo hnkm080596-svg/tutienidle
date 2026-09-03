@@ -313,7 +313,7 @@ export class SkillEffectResolver {
       : (baseTargeting.laneRadius ?? 0)
     const columnRadius = earthPureActive ? laneRadius : (baseTargeting.columnRadius ?? 0)
     const targeting = earthPureActive
-      ? { ...baseTargeting, shape: 'area' as const, laneRadius, columnRadius }
+      ? { ...baseTargeting, shape: 'square' as const, laneRadius, columnRadius }
       : baseTargeting
     const anchorCell = worldToGridPosition(target.x, target.row + 0.5)
     const affectedArea = areaFor(target.row, anchorCell.column, targeting)
