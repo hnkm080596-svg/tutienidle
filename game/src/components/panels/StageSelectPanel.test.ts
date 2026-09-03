@@ -58,7 +58,7 @@ describe('StageSelectPanel — thông tin Truyền Tống Trận', () => {
     expect(mounted.container.querySelectorAll('.stage-map__node')).toHaveLength(10)
     expect(mounted.container.textContent).toContain('Dã Trư')
     expect(mounted.container.textContent).toContain('Sơn Khấu')
-    expect(mounted.container.textContent).toContain(t('panels.stageSelect.labels.enemiesSuffix'))
+    expect(mounted.container.textContent).toContain(`10 ${t('panels.stageSelect.labels.enemiesSuffix')}`)
     expect(mounted.container.textContent).toContain(`${t('panels.stageSelect.labels.bossNamePrefix')} Sơn Khấu`)
 
     mounted.unmount()
