@@ -12,6 +12,8 @@
 
 **Worktree:** `E:/tutienidle/.claude/worktrees/phap-tu-thuan-he` (branch `worktree-phap-tu-thuan-he`).
 
+> **CẬP NHẬT 2026-09-03 (sau QA):** Task 1–13 xong, QA quick **PASS WITH GAPS** (gap: thiếu nút ult HUD — QA-2026-09-03-001). User chốt: **merge fast-forward vào master (không conflict)**; nút ult + panel AI "khi nào dùng ult" đặt cạnh AI target → **Task 14 DEFERRED** ở cuối plan, xử lý sau merge.
+
 ## Global Constraints
 
 - Không thêm `SkillEffectType` mới, không thêm execution policy mới, không thêm `SkillResourceType` (spec §6).
@@ -243,7 +245,22 @@
 - [x] QA quick mode (`tutienidle-adversarial-qa`) — **PASS WITH GAPS** (`game/docs/qa/2026-09-03-phap-tu-thuan-he-task12-quick.md`); không escalate deep (rủi ro bound được bằng code inspection — xem mục Scope and Risk Map trong report). Gap: thiếu nút ult thủ công trong `PhapTuCombatHud.vue` (Coverage gap Medium — chờ user quyết phạm vi, engine `tryPlayerUltimate()` đã sẵn branch Pháp Tu).
 - [x] Update `game/docs/newPhapTuDesignSpec.md` trạng thái → IMPLEMENTED (§0.b bảng trạng thái, rewrite 2026-09-03)
 - [x] Update `game/docs/roadmap.md` 7.4/8.5 — ghi worktree `phap-tu-thuan-he` + trạng thái Task 1–12b commit + QA verdict
-- [x] Sau Task 12b commit: chạy lại focused test (tooltip) trước khi khai hoàn tất; QA verdict `PASS WITH GAPS` — theo AGENTS.md đây là non-completion state cho tới khi gap được user chấp nhận là ngoài phạm vi hoặc được xử lý. **Chờ user quyết.**
+- [x] Sau Task 12b commit: chạy lại focused test (tooltip) trước khi khai hoàn tất; QA verdict `PASS WITH GAPS` — gap UI ult HUD được user quyết định 2026-09-03: DEFER thành Task 14 (nút ult manual + panel AI cạnh AI target), merge vẫn thực hiện (fast-forward, không conflict).
+
+### Task 14: Ult HUD Pháp Tu — nút manual + panel AI (DEFERRED — user chốt 2026-09-03)
+
+> Quyết định user sau QA gap QA-2026-09-03-001 (`game/docs/qa/2026-09-03-phap-tu-thuan-he-task12-quick.md`): cho người chơi **1 nút để dùng ult** + **1 bảng AI "khi nào dùng ult" đặt CẠNH AI target** hiện có. Xử lý SAU merge — task độc lập với chuỗi.
+
+**Files:**
+- Modify: `game/src/components/game/combat/hud/PhapTuCombatHud.vue` — thêm nút ult (disabled khi `!canUsePhapTuUltimate(battle)`), reuse pattern `KiemTuCombatHud.vue:122` (nút gọi `gameManager.battleSystem.tryPlayerUltimate()`)
+- Modify: `game/src/components/game/combat/CombatAiPanel.vue` — thêm mục "AI ult" cạnh mục AI target: toggle auto (`ultAutoEnabled` đã có ở BattleSystem) + điều kiện bắn (boss/Độ Kiếp + Thế đầy — hiển thị trạng thái `currentThe`/trần)
+- Test: component test cho nút (disabled/enabled theo Thế, gọi đúng `tryPlayerUltimate`) + panel AI (toggle persist, hiển thị điều kiện)
+
+- [ ] **Step 1: Failing test** nút ult trong `PhapTuCombatHud` (render + disabled theo `canUsePhapTuUltimate` + click gọi `tryPlayerUltimate`).
+- [ ] **Step 2:** FAIL → implement → PASS.
+- [ ] **Step 3: Panel AI ult** cạnh AI target (toggle + điều kiện hiển thị) + test.
+- [ ] **Step 4:** type-check + focused tests + QA quick cho UI change.
+- [ ] **Step 5: Commit** `feat(ui): phap tu ult manual button + ult AI panel (thuan-he Task 14)`
 
 ## Execution Notes
 
