@@ -807,5 +807,53 @@
     "show": "Hiện tài nguyên",
     "hide": "Ẩn dải tài nguyên",
     "spiritStones": "Linh Thạch"
+  },
+  "layout": {
+    "functionOverlay": {
+      "titles": {
+        "exploration": "Sản Xuất",
+        "settings": "Cài Đặt",
+        "equipment_hall": "Khí Đường",
+        "pill_room": "Đan Phòng",
+        "worker_lodge": "Chiêu Hiền Quán",
+        "scripture_pavilion": "Tàng Kinh Các",
+        "stage_select": "Địa Giới",
+        "vendor": "Ký Bảo Các"
+      },
+      "levelRange": "Cấp {level} / {max}",
+      "requiredRealm": "Cần đạt {realm}",
+      "upgrade": "Nâng công trình",
+      "noUpgradeCost": "Không có chi phí nâng cấp được cấu hình"
+    }
+  },
+  "bag": {
+    "filter": {
+      "group": {
+        "wood": "Gỗ",
+        "ore": "Quặng",
+        "herb": "Thảo",
+        "essence": "Tinh Hoa",
+        "other": "Khác"
+      },
+      "age": {
+        "decade": "Thập Niên",
+        "century": "Bách Niên",
+        "millennium": "Thiên Niên",
+        "myriadYear": "Vạn Niên"
+      },
+      "quality": {
+        "hoang": "Thập Niên",
+        "huyen": "Bách Niên",
+        "dia": "Thiên Niên",
+        "thien": "Vạn Niên",
+        "tien": "Thượng Cổ"
+      }
+    }
+  },
+  "homeBuildings": {
+    "aria": {
+      "open": "Mở {name}",
+      "viewRequirements": "Xem yêu cầu mở {name}"
+    }
   }
 }

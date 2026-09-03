@@ -807,5 +807,53 @@
     "show": "Show resources",
     "hide": "Hide resource strip",
     "spiritStones": "Spirit Stones"
+  },
+  "layout": {
+    "functionOverlay": {
+      "titles": {
+        "exploration": "Production",
+        "settings": "Settings",
+        "equipment_hall": "Equipment Hall",
+        "pill_room": "Pill Room",
+        "worker_lodge": "Worker Lodge",
+        "scripture_pavilion": "Scripture Pavilion",
+        "stage_select": "Zone",
+        "vendor": "Treasure Pavilion"
+      },
+      "levelRange": "Level {level} / {max}",
+      "requiredRealm": "Requires {realm}",
+      "upgrade": "Upgrade building",
+      "noUpgradeCost": "No upgrade cost configured"
+    }
+  },
+  "bag": {
+    "filter": {
+      "group": {
+        "wood": "Wood",
+        "ore": "Ore",
+        "herb": "Herb",
+        "essence": "Essence",
+        "other": "Other"
+      },
+      "age": {
+        "decade": "Decade",
+        "century": "Century",
+        "millennium": "Millennium",
+        "myriadYear": "Myriad Year"
+      },
+      "quality": {
+        "hoang": "Decade",
+        "huyen": "Century",
+        "dia": "Millennium",
+        "thien": "Myriad Year",
+        "tien": "Primordial"
+      }
+    }
+  },
+  "homeBuildings": {
+    "aria": {
+      "open": "Open {name}",
+      "viewRequirements": "View unlock requirements for {name}"
+    }
   }
 }

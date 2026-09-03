@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import { useBuildingHeaderState } from '@/composables/useBuildingHeaderState'
@@ -13,19 +14,21 @@ import WorkerLodgePanel from '@/components/panels/WorkerLodgePanel.vue'
 import VendorPanel from '@/components/panels/VendorPanel.vue'
 import { useUiStore, type LeftPanelMode } from '@/stores/ui'
 
+const { t } = useI18n()
+
 const ui = useUiStore()
 
 type FunctionMode = Exclude<LeftPanelMode, 'character' | 'inventory' | null>
 
-const TITLES: Record<FunctionMode, string> = {
-  exploration: 'Sản Xuất',
-  settings: 'Cài Đặt',
-  equipment_hall: 'Khí Đường',
-  pill_room: 'Đan Phòng',
-  worker_lodge: 'Chiêu Hiền Quán',
-  scripture_pavilion: 'Tàng Kinh Các',
-  stage_select: 'Địa Giới',
-  vendor: 'Ký Bảo Các',
+const TITLE_KEYS: Record<FunctionMode, string> = {
+  exploration: 'layout.functionOverlay.titles.exploration',
+  settings: 'layout.functionOverlay.titles.settings',
+  equipment_hall: 'layout.functionOverlay.titles.equipment_hall',
+  pill_room: 'layout.functionOverlay.titles.pill_room',
+  worker_lodge: 'layout.functionOverlay.titles.worker_lodge',
+  scripture_pavilion: 'layout.functionOverlay.titles.scripture_pavilion',
+  stage_select: 'layout.functionOverlay.titles.stage_select',
+  vendor: 'layout.functionOverlay.titles.vendor',
 }
 
 const BUILDINGS: Partial<Record<FunctionMode, string>> = {
@@ -54,7 +57,7 @@ function close() {
 <template>
   <OverlayPanel
     :open="mode !== null"
-    :title="mode ? TITLES[mode] : ''"
+    :title="mode ? t(TITLE_KEYS[mode]) : ''"
     width="min(1120px, 94vw)"
     height="min(820px, 92vh)"
     data-testid="function-overlay-panel"
@@ -69,7 +72,7 @@ function close() {
         <img class="building-heading__art" :src="header.artPath.value" alt="" />
         <div class="building-heading__text">
           <p class="building-heading__name">{{ header.template.value.name }}</p>
-          <small class="building-heading__level">Cấp {{ header.instance.value?.level }} / {{ header.template.value.maxLevel }}</small>
+          <small class="building-heading__level">{{ t('layout.functionOverlay.levelRange', { level: header.instance.value?.level ?? 0, max: header.template.value.maxLevel }) }}</small>
         </div>
       </div>
     </template>
@@ -81,14 +84,14 @@ function close() {
           class="building-heading__upgrade"
           size="sm"
           :disabled="!header.meetsRealmRequirement.value || !header.canAffordUpgrade.value"
-          :title="!header.meetsRealmRequirement.value ? `Cần đạt ${header.requiredRealmName.value}` : header.upgradeCostLabel.value || 'Không có chi phí nâng cấp được cấu hình'"
+          :title="!header.meetsRealmRequirement.value ? t('layout.functionOverlay.requiredRealm', { realm: header.requiredRealmName.value }) : header.upgradeCostLabel.value || t('layout.functionOverlay.noUpgradeCost')"
           @click="header.upgrade"
         >
-          Nâng công trình
+          {{ t('layout.functionOverlay.upgrade') }}
         </GameButton>
 
         <small v-if="header.hasNextLevel.value" class="building-heading__cost">
-          <template v-if="!header.meetsRealmRequirement.value">Cần đạt {{ header.requiredRealmName.value }}</template>
+          <template v-if="!header.meetsRealmRequirement.value">{{ t('layout.functionOverlay.requiredRealm', { realm: header.requiredRealmName.value }) }}</template>
           <template v-else-if="header.upgradeCostLabel.value">{{ header.upgradeCostLabel.value }}</template>
         </small>
       </div>
