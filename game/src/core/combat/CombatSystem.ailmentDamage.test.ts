@@ -70,14 +70,15 @@ describe('CombatSystem.applyDotDamage (Plans/magicpathgeneral Phase 9-11)', () =
     const ailmentSystem = new BuffSystem(new BuffPool())
 
     ailmentSystem.apply(getTemplate('bong'), source, target)
-    // bong: dpsRatio 0.3; nguồn Skill Power = ATK + FirePower
+    // bong: dpsRatio 0.15/tầng (N1 — stackable, spec 2026-09-03 §2.1);
+    // nguồn Skill Power = ATK + FirePower
     // (plan §3.2) = 10 + 10 = 20 ->
-    // damagePerSecond = 20*0.3 = 6.
+    // damagePerSecond = 20*0.15 = 3.
 
     ailmentSystem.update(1, target, combatSystem)
 
-    // 6 raw damage × (1 - 0.3) = 4.2.
-    expect(target.currentHp).toBeCloseTo(1000 - 4.2, 5)
+    // 3 raw damage × (1 - 0.3) = 2.1.
+    expect(target.currentHp).toBeCloseTo(1000 - 2.1, 5)
   })
 
   it('emit event damage với effectId đúng, sourceId đúng nguồn gây DoT', () => {

@@ -180,16 +180,22 @@ export const buffs: BuffDefinition[] = [
   // --- Ported from data/ailment/ailments.ts (Task 7, Unified Buff
   // System, 2026-09-01) — field-for-field, no balance changes. ---
 
+  // Pháp Tu Thuần Hệ (spec 2026-09-03 §2.1/§7, N1 đã duyệt) — `bong`
+  // ĐỔI refresh → stack max 5, dpsRatio 0.3 → 0.15/tầng: "chồng Thiêu
+  // Đốt" của chuỗi Hỏa (A/B/C đắp, D kích nổ ×stack) mới có nghĩa.
+  // 1 tầng yếu hơn bản cũ, 5 tầng = 0.75 mạnh hơn. Ảnh hưởng Bạo Viêm/
+  // Hỏa Cầu cũ — chấp nhận theo N1 (dev phase, không migration).
   {
     id: 'bong',
     name: 'Bỏng',
     polarity: 'debuff',
     duration: 4,
-    stackMode: 'refresh',
+    stackMode: 'stack',
+    maxStacks: 5,
     effects: [
       {
         type: 'dot',
-        dpsRatio: 0.3,
+        dpsRatio: 0.15,
         element: 'fire',
       },
     ],
@@ -544,5 +550,156 @@ export const buffs: BuffDefinition[] = [
     duration: Infinity,
     stackMode: 'stack',
     effects: [{ type: 'statModifier', stat: 'metalPower', percent: 0.02 }],
+  },
+
+  // ==================================================================
+  // Pháp Tu Thuần Hệ (spec 2026-09-03 §7) — buff mới của 5 chuỗi Thuần.
+  // Ailment chuỗi TÁI DÙNG engine cũ (bong/te_cong/trung_doc/chay_mau/
+  // thach_hoa/troi_chan/choang) — buff mới chỉ ở đây, không thêm vào
+  // bảng reaction.
+  // ==================================================================
+
+  // Thủy C "Thanh Tuyền Dưỡng Linh" — hồi Pháp Lực.
+  {
+    id: 'thanh_tuyen',
+    name: 'Thanh Tuyền',
+    description: 'Suối thiêng Thanh Tuyền nuôi linh khí — Pháp Lực hồi nhanh hơn.',
+    polarity: 'buff',
+    duration: 6,
+    stackMode: 'refresh',
+    effects: [
+      { type: 'statModifier', stat: 'manaRegenPerSecond', flat: 8 },
+      { type: 'statModifier', stat: 'manaRegenPercent', percent: 0.1 },
+    ],
+  },
+
+  // Biến thể Thủy C2 "Dưỡng Linh · Băng Giáp" — Thủy phòng thủ.
+  {
+    id: 'bang_giap',
+    name: 'Băng Giáp',
+    description: 'Giáp băng kết tụ — khiên bền hơn, hồi khiên nhanh hơn.',
+    polarity: 'buff',
+    duration: 6,
+    stackMode: 'refresh',
+    effects: [
+      { type: 'statModifier', stat: 'wardMax', flat: 50 },
+      { type: 'statModifier', stat: 'wardRegenPerSecond', flat: 5 },
+    ],
+  },
+
+  // Thủy D "Hồi Lưu Thôn Nộ" — tự buff hấp thụ (leech). leechPercent
+  // không áp cho true damage Detonate (N7) — Thủy không có Detonate nên OK.
+  {
+    id: 'hoi_luu',
+    name: 'Hồi Lưu',
+    description: 'Vòng nước hồi lưu cuốn sinh lực về bản thân — đòn đánh hút máu.',
+    polarity: 'buff',
+    duration: 4,
+    stackMode: 'refresh',
+    effects: [{ type: 'statModifier', stat: 'leechPercent', flat: 0.2 }],
+  },
+
+  // Biến thể Mộc C1 "Căn Trì · Cấm Bộ" — root BẢN DÀI của troi_chan
+  // (2.5s → 4s), chỉ dùng cho biến thể này.
+  {
+    id: 'cau_mang_can',
+    name: 'Câu Mang Căn',
+    description: 'Rễ Câu Mang quấn chặt — không thể di chuyển.',
+    polarity: 'debuff',
+    duration: 4,
+    stackMode: 'refresh',
+    effects: [{ type: 'cc', ccEffect: 'root' }],
+  },
+
+  // Kim B "Thu Giáp Kim Thân" — tự hoá thép, phản đòn.
+  {
+    id: 'kim_giap',
+    name: 'Kim Giáp',
+    description: 'Thép Nhục Thu bọc thân — phòng ngự và phản đòn cùng tăng.',
+    polarity: 'buff',
+    duration: 6,
+    stackMode: 'refresh',
+    effects: [
+      { type: 'statModifier', stat: 'defense', percent: 0.15 },
+      { type: 'statModifier', stat: 'thornsPercent', flat: 0.15 },
+    ],
+  },
+
+  // Thổ C "Địa Trụ Thừa Thiên" — cột đất đỡ đòn.
+  {
+    id: 'dia_tru',
+    name: 'Địa Trụ',
+    description: 'Cột đất thiêng chống trời — khiên dày, hồi khiên, phản đòn.',
+    polarity: 'buff',
+    duration: 6,
+    stackMode: 'refresh',
+    effects: [
+      { type: 'statModifier', stat: 'wardMax', flat: 60 },
+      { type: 'statModifier', stat: 'wardRegenPerSecond', flat: 6 },
+      { type: 'statModifier', stat: 'thornsPercent', flat: 0.1 },
+    ],
+  },
+
+  // Ult Thổ "Hậu Thổ Thành Lũy" — +6% defense/tầng, tầng = số địch bị
+  // nhốt (stacksPerAffectedTarget E-2), max 8.
+  {
+    id: 'thanh_luy',
+    name: 'Thành Lũy',
+    description: 'Thành đất Hậu Thổ vây quanh — mỗi địch bị nhốt thêm 6% phòng thủ.',
+    polarity: 'buff',
+    duration: 8,
+    stackMode: 'stack',
+    maxStacks: 8,
+    effects: [{ type: 'statModifier', stat: 'defense', percent: 0.06 }],
+  },
+
+  // Node Thế Mãn (spec §4/E-7) — engine ÁP/GỠ theo trạng thái Thế đầy
+  // (TheResourceSystem.updateTheManBuff / UltimateSystem trigger reset).
+  // duration Infinity: buff KHÔNG tự hết hạn; id phải khớp chính xác
+  // theManBuffId(element) = `the_man_<element>` (TheResourceSystem.ts).
+  {
+    id: 'the_man_fire',
+    name: 'Thế Mãn (Hỏa)',
+    description: 'Hỏa Thế tràn đầy — Thiêu Đốt lan potency mạnh hơn.',
+    polarity: 'buff',
+    duration: Infinity,
+    stackMode: 'refresh',
+    effects: [{ type: 'statModifier', stat: 'ailmentPotencyPercent', percent: 0.15 }],
+  },
+  {
+    id: 'the_man_water',
+    name: 'Thế Mãn (Thủy)',
+    description: 'Thủy Thế tràn đầy — Pháp Lực tuôn trào.',
+    polarity: 'buff',
+    duration: Infinity,
+    stackMode: 'refresh',
+    effects: [{ type: 'statModifier', stat: 'manaRegenPerSecond', flat: 6 }],
+  },
+  {
+    id: 'the_man_wood',
+    name: 'Thế Mãn (Mộc)',
+    description: 'Mộc Thế tràn đầy — độc tố bám lâu hơn.',
+    polarity: 'buff',
+    duration: Infinity,
+    stackMode: 'refresh',
+    effects: [{ type: 'statModifier', stat: 'ailmentDurationPercent', percent: 0.2 }],
+  },
+  {
+    id: 'the_man_metal',
+    name: 'Thế Mãn (Kim)',
+    description: 'Kim Thế tràn đầy — sát khí bén hơn, chí mạng cao hơn.',
+    polarity: 'buff',
+    duration: Infinity,
+    stackMode: 'refresh',
+    effects: [{ type: 'statModifier', stat: 'criticalRate', percent: 0.08 }],
+  },
+  {
+    id: 'the_man_earth',
+    name: 'Thế Mãn (Thổ)',
+    description: 'Thổ Thế tràn đầy — thân thể vững như núi.',
+    polarity: 'buff',
+    duration: Infinity,
+    stackMode: 'refresh',
+    effects: [{ type: 'statModifier', stat: 'defense', percent: 0.1 }],
   },
 ]
