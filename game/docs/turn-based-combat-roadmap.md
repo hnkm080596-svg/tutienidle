@@ -25,9 +25,17 @@ Mục tiêu: dựng các primitive thuần (pure function), test riêng, KHÔNG 
 
 **Quyết định người dùng 2026-09-04**: không tách "Core System Conversion" thành milestone riêng nữa — không đáng phân biệt. Mọi hệ dưới đây làm CHUNG một đợt lớn xoay quanh việc thay `BattleSystem.update(deltaSeconds)`. Trong đợt này vẫn viết plan riêng cho từng hệ khi đến lượt (không gộp 1 plan khổng lồ), nhưng không còn khái niệm "làm sớm trước BattleSystem" nữa — trọng tâm hiện tại là chính bản thân BattleSystem Replacement.
 
+### BattleSystem Replacement — chia slice (2026-09-04)
+
+`update(deltaSeconds)` (18-bước pipeline, ~2400 dòng) quá lớn cho 1 spec/plan — chia thành các slice dọc, mỗi slice lớp thêm 1 phần hành vi thật lên trên slice trước, mỗi slice có spec+plan riêng.
+
+| Slice | Nội dung | Spec | Plan | Trạng thái |
+|---|---|---|---|---|
+| Slice 1 — Core Turn Loop | Class mới `TurnBattleSystem` độc lập, headless: 1 player vs N enemy cố định, ATB turn order + targeting §4 (gần nhất-trước-mặt) + basic attack qua `CombatSystem.resolveActionHit` có sẵn. KHÔNG skill/buff/reaction/hazard/wave/UI/Stat speed thật (speed truyền tay qua constructor, tách khỏi quyết định Stat còn treo) | [2026-09-04-turn-battle-system-slice1-core-loop-design.md](../../docs/superpowers/specs/2026-09-04-turn-battle-system-slice1-core-loop-design.md) | _(chưa viết)_ | ⚪ Spec đã duyệt, chưa viết plan |
+| Slice 2+ | StageWaveSystem (wave theo lượt), HazardZone, Boss afterTurns, Resource hooks, MomentumBreak, BuffSystem, AOE Shape/skill loadout thật, GameManager contract, manual UI | — | _(chưa viết)_ | 🔴 Chưa khảo sát — quyết định sau khi Slice 1 xong |
+
 | Hạng mục | Quyết định | Plan | Trạng thái |
 |---|---|---|---|
-| **BattleSystem Replacement** — thay `update(deltaSeconds)` (18-bước pipeline, ~2400 dòng) bằng vòng lặp turn-based thật (ActionGauge/TurnQueue/ChannelQueue) | — | _(chưa viết)_ | 🔴 **Đang brainstorm — trọng tâm hiện tại** |
 | AOE Shape extension — thêm `'cross'` vào `ActionTargetingSystem.ts`/`CombatAction.ts` hiện có (KHÔNG giữ `AoeShape.ts` làm hệ song song), wire Bounce/TrueShot vào đó | [Đã chốt hướng](../../docs/superpowers/specs/2026-09-04-turn-based-combat-survey-and-stat-decisions.md); trình tự: gộp chung đợt BattleSystem Replacement (2026-09-04) | _(chưa viết)_ | ⚪ Đã quyết định, chưa có plan |
 | Ultimate-as-loadout-slot — `SkillLoadoutSlots.ts` dành slot index 5 cho skill gắn tag `ultimate`, retire `UltimateSystem.ts` | [Đã chốt](../../docs/superpowers/specs/2026-09-04-turn-based-combat-survey-and-stat-decisions.md) | _(chưa viết)_ | ⚪ Đã quyết định, chưa có plan |
 | BuffSystem turn-duration — chuyển HẲN duration sang theo lượt cho combat buff, không giữ field giây song song | [Đã chốt](../../docs/superpowers/specs/2026-09-04-turn-based-combat-survey-and-stat-decisions.md) | _(chưa viết)_ | ⚪ Đã quyết định, chưa có plan (blast radius cao nhất toàn bộ rework) |
