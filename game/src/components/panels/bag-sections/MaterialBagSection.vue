@@ -18,7 +18,7 @@ import {
   useBagFilter,
   variantRank,
   baseNameFor,
-  GROUP_LABELS,
+  groupLabelKey,
   MATERIAL_GROUPS,
   type FilteredMaterial,
   type MaterialGroup,
@@ -239,16 +239,28 @@ function representativeMaterial(item: FilteredMaterial): Material {
   { material: variants[0]!.material, amount: 0 }).material
 }
 
+// Badge họ: composable ghép sẵn "{realmVi} · {badgeKey}" — tách lấy KEY
+// bậc tuổi rồi t() (realm ghép sẵn là tên data vi; các realm đã có đủ
+// nhãn trong locale nếu cần tách sau).
+function familyBadgeLabel(item: FilteredMaterial): string {
+  const badge = item.family?.badgeLabel ?? ''
+  const separator = badge.indexOf(' · ')
+
+  if (separator === -1) return badge
+
+  return `${badge.slice(0, separator)} · ${t(badge.slice(separator + 3))}`
+}
+
 function familyCell(item: FilteredMaterial): BagCell {
   const material = representativeMaterial(item)
-
-  const badge = item.family?.badgeLabel
 
   // Ô họ hiển thị TÊN GỐC (không prefix tuổi — badge đã ghi
   // realm · bậc cao nhất, tránh lặp tuổi hai lần trên cùng ô).
   const baseLabel = baseNameFor(material)
 
   const baseRank = professionRankOf(material)
+
+  const badge = familyBadgeLabel(item)
 
   return {
     key: item.key,
@@ -275,10 +287,11 @@ function familyCell(item: FilteredMaterial): BagCell {
 }
 
 // Ô filter bar: tìm kiếm theo tên + chip nhóm (bấm lại chip đang chọn
-// để bỏ filter nhóm).
+// để bỏ filter nhóm). Nhãn chip qua key-mapping composable (useBagFilter
+// không import i18n) → t(key).
 const GROUP_CHIPS = computed<Array<{ value: MaterialGroup | 'all'; label: string }>>(() => [
   { value: 'all', label: t('panels.bag.groups.all') },
-  ...MATERIAL_GROUPS.map((group) => ({ value: group, label: GROUP_LABELS[group] })),
+  ...MATERIAL_GROUPS.map((group) => ({ value: group, label: t(groupLabelKey(group)) })),
 ])
 
 function toggleGroup(value: MaterialGroup | 'all') {

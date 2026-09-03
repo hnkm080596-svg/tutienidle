@@ -104,4 +104,53 @@ describe('useDialogFocus adversarial invariants', () => {
     const dialog = container.querySelector('[role="dialog"]')!
     expect(document.activeElement).toBe(dialog.querySelector('.slot-enabled'))
   })
+
+  it('zero-focusable dialog: Tab is contained (preventDefault before empty-list early return)', async () => {
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+    const app = createApp({ render: () => h(OverlayPanel, { open: true, title: 'Đối thoại' }, {
+      default: () => h('p', { class: 'plain-text', tabindex: '-1' }, 'Chỉ chữ, không focusable'),
+    }) })
+    app.mount(container)
+    mounted.push({ app, container })
+    await nextTick()
+
+    const dialog = container.querySelector('[role="dialog"]')!
+    const text = dialog.querySelector('.plain-text') as HTMLElement
+    text.focus()
+    expect(dialog.contains(document.activeElement)).toBe(true)
+
+    const tabEvent = new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true })
+    text.dispatchEvent(tabEvent)
+
+    expect(tabEvent.defaultPrevented).toBe(true)
+    expect(dialog.contains(document.activeElement)).toBe(true)
+  })
+
+  it('same-tick false→true re-open with focus inside dialog: original body trigger restored on final close', async () => {
+    const trigger = document.createElement('button')
+    document.body.appendChild(trigger)
+    trigger.focus()
+
+    const open = ref(false)
+    mountOverlayPanel(open)
+    await nextTick()
+
+    open.value = true
+    await nextTick()
+    await nextTick()
+    const dialog = document.querySelector('[role="dialog"]')!
+    expect(dialog.contains(document.activeElement)).toBe(true)
+
+    open.value = false
+    open.value = true
+    await nextTick()
+    await nextTick()
+
+    open.value = false
+    await nextTick()
+    await nextTick()
+
+    expect(document.activeElement).toBe(trigger)
+  })
 })

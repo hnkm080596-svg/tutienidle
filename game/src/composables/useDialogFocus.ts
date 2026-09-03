@@ -21,7 +21,13 @@ export function useDialogFocus(
 
   const stopWatch = watch(() => toValue(open), async (isOpen) => {
     if (isOpen) {
-      lastTrigger = document.activeElement instanceof HTMLElement ? document.activeElement : null
+      const activeElement = document.activeElement
+      const activeInCard = activeElement instanceof HTMLElement && cardRef.value?.contains(activeElement) === true
+      // Re-open guard: focus đã nằm trong card (same-tick bounce) → giữ trigger gốc,
+      // không ghi đè bằng phần tử trong dialog (restore sẽ bị skip vì contains guard).
+      if (lastTrigger === null || !activeInCard) {
+        lastTrigger = activeElement instanceof HTMLElement ? activeElement : null
+      }
       await nextTick()
       if (!toValue(open)) return
       const items = focusables()
@@ -33,9 +39,11 @@ export function useDialogFocus(
           return
         }
         if (event.key !== 'Tab') return
+        // Tab luôn bị chặn native trước early-return: dialog không có focusable
+        // cũng KHÔNG cho Tab thoát containment (focus giữ nguyên tại chỗ).
+        event.preventDefault()
         const list = focusables()
         if (list.length === 0) return
-        event.preventDefault()
         if (list.length === 1) {
           list[0]!.focus()
           return

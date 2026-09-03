@@ -668,12 +668,12 @@
   },
   "skillResource": {
     "hoaTheGainPerCast": {
-      "label": "Ember Body Stacks/Cast",
-      "description": "Ember Body gained each time this skill is cast."
+      "label": "Ember Form Stacks/Cast",
+      "description": "Ember Form gained each time this skill is cast."
     },
     "hoaTheDecayReductionPercent": {
-      "label": "Ember Body Decay Reduction",
-      "description": "Reduces the % rate at which Ember Body decays over time."
+      "label": "Ember Form Decay Reduction",
+      "description": "Reduces the % rate at which Ember Form decays over time."
     },
     "thuyThePercent": {
       "label": "Water Form",
@@ -708,8 +708,8 @@
       "description": "Pushes the target away from the source on each hit."
     },
     "thoTheGainPerCast": {
-      "label": "Mountain Body Stacks/Cast",
-      "description": "Mountain Body gained each time this skill is cast."
+      "label": "Mountain Form Stacks/Cast",
+      "description": "Mountain Form gained each time this skill is cast."
     },
     "skillImpactPercent": {
       "label": "Skill Impact",
@@ -807,5 +807,53 @@
     "show": "Show resources",
     "hide": "Hide resource strip",
     "spiritStones": "Spirit Stones"
+  },
+  "layout": {
+    "functionOverlay": {
+      "titles": {
+        "exploration": "Production",
+        "settings": "Settings",
+        "equipment_hall": "Equipment Hall",
+        "pill_room": "Pill Room",
+        "worker_lodge": "Worker Lodge",
+        "scripture_pavilion": "Scripture Pavilion",
+        "stage_select": "Zone",
+        "vendor": "Treasure Pavilion"
+      },
+      "levelRange": "Level {level} / {max}",
+      "requiredRealm": "Requires {realm}",
+      "upgrade": "Upgrade building",
+      "noUpgradeCost": "No upgrade cost configured"
+    }
+  },
+  "bag": {
+    "filter": {
+      "group": {
+        "wood": "Wood",
+        "ore": "Ore",
+        "herb": "Herb",
+        "essence": "Essence",
+        "other": "Other"
+      },
+      "age": {
+        "decade": "Decade",
+        "century": "Century",
+        "millennium": "Millennium",
+        "myriadYear": "Myriad Year"
+      },
+      "quality": {
+        "hoang": "Decade",
+        "huyen": "Century",
+        "dia": "Millennium",
+        "thien": "Myriad Year",
+        "tien": "Primordial"
+      }
+    }
+  },
+  "homeBuildings": {
+    "aria": {
+      "open": "Open {name}",
+      "viewRequirements": "View unlock requirements for {name}"
+    }
   }
 }
