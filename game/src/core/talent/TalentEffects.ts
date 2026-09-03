@@ -5,23 +5,53 @@ import { getTalentDefinition } from '@/data/talent/Talents'
 // Mọi nơi tiêu thụ gọi đúng getter của kind mình — KHÔNG nơi nào tự lặp
 // vòng lặp đọc effect. Id lạ trong save cũ bị bỏ qua an toàn
 // (getTalentDefinition trả undefined).
+//
+// Catalog v4 (spec 2026-09-03 §3.2) — mỗi nhân vật sở hữu ĐÚNG 1 talent
+// cả đời; save edit/cũ chứa nhiều id KHÔNG được phép cộng dồn effect
+// (vượt ngân sách ngoài ý định). collectTalentEffects chỉ đọc id ĐẦU
+// TIÊN — hành vi có chủ đích, test TalentsV4Wiring khóa.
 
 export function collectTalentEffects(
   selectedTalentIds: readonly string[] | undefined,
 ): TalentEffect[] {
   const effects: TalentEffect[] = []
 
-  for (const talentId of selectedTalentIds ?? []) {
-    const talent = getTalentDefinition(talentId)
+  const [firstTalentId] = selectedTalentIds ?? []
 
-    if (!talent) {
-      continue
+  if (firstTalentId !== undefined) {
+    const talent = getTalentDefinition(firstTalentId)
+
+    if (talent) {
+      effects.push(...talent.effects)
     }
-
-    effects.push(...talent.effects)
   }
 
   return effects
+}
+
+/** Talent v4 — helper dùng chung: player có talent id này không. */
+export function hasTalent(
+  selectedTalentIds: readonly string[] | undefined,
+  talentId: string,
+): boolean {
+  return (selectedTalentIds ?? []).includes(talentId)
+}
+
+/**
+ * Talent v4 — id hidden passive skill (data/skill/TalentPassives.ts) của
+ * talent combat đang chọn, undefined nếu talent không có/không phải
+ * combat. GameManager grant/revoke passive theo id này khi vào game.
+ */
+export function getTalentCombatPassiveSkillId(
+  selectedTalentIds: readonly string[] | undefined,
+): string | undefined {
+  for (const effect of collectTalentEffects(selectedTalentIds)) {
+    if (effect.kind === 'combat_passive') {
+      return effect.passiveSkillId
+    }
+  }
+
+  return undefined
 }
 
 function sumPercent(

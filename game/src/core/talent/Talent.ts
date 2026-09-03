@@ -16,6 +16,9 @@ export type TalentTag =
 // luật chơi" được tiêu thụ tại đúng một điểm hook — xem
 // core/talent/TalentEffects.ts cho getter tập trung theo kind. KHÔNG thêm
 // kind cộng chỉ số thuần (nguyên tắc thiết kế đã chốt với tác giả).
+// Catalog v4 (spec 2026-09-03-talent-catalog-v4-design.md): nhóm combat
+// dùng combat_passive (hidden passive skill theo E2); tu luyện/sản xuất
+// (M2/M3) thêm kind luật-bẻ riêng tại hệ thống sở hữu.
 export type TalentEffect =
   | { kind: 'cultivation_speed'; percent: number }
   | { kind: 'insight_gain'; percent: number }
@@ -27,6 +30,9 @@ export type TalentEffect =
   | { kind: 'survive_lethal'; usesPerBattle: number }
   | { kind: 'reaction_keep_chance'; percent: number }
   | { kind: 'heal_on_kill'; maxHpPercent: number }
+  // Talent v4 — talent cấp 1 hidden passive skill (data/skill/
+  // TalentPassives.ts); GameManager grant/revoke theo talent đang chọn.
+  | { kind: 'combat_passive'; passiveSkillId: string }
 
 export interface TalentDefinition {
   id: string
