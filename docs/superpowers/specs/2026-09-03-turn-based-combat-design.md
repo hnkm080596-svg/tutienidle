@@ -112,6 +112,35 @@ on the skill that ignores Dodge/Evasion at resolution. The target must
 still be selected through the normal targeting rules above; TrueShot does
 not bypass line-of-sight/blocking, only evasion.
 
+## 4.5 Skill Loadout & Manual Input
+
+Each combatant has **5 freely-assignable skill slots**, plus a 6th slot
+reserved for the **Ultimate**, which is always the default granted by the
+character's path (not player-chosen, not swappable) — this mirrors the
+existing "5 element paths each grant a starter skill" pattern, extended
+with one more fixed slot on top. 5 + 1 = 6 total equipped skills per
+combatant, matching the Loadout concept already in the codebase
+([[tienhiep-phap-tu-system]] unified this from 3-slot to 1-slot for the
+old real-time system — this spec re-expands it to 6 for turn-based).
+
+**Manual (non-Auto) input:** when it's the player's turn and Auto is off,
+the player only **picks which of the 6 equipped skills to use** — they do
+**not** pick a target. Targeting is always resolved automatically by the
+engine using the rules in Section 4 (nearest-ahead-in-row, else
+nearest-overall) and the skill's own AOE shape/bounce/TrueShot properties.
+This keeps manual play fast (one tap per turn) and means the AI
+action-policy for Auto mode (spec §9) only has to decide *which skill*,
+never *which target* — targeting logic is shared and identical between
+manual and Auto play, one source of truth.
+
+**Main character vs. other party members (forward-compat note only —
+party system itself stays out of scope per Section 2/7):** the main
+character's 5 regular slots are freely reassignable by the player at any
+time. Any other party member (once that system exists) has a **fixed,
+pre-set skill list** the player cannot rearrange — but is still capped at
+the same 5-slot + Ultimate structure, so the turn engine and UI never need
+to distinguish "main" from "ally" beyond who owns the loadout data.
+
 ## 5. Resource Economy, Reaction Engine, Boss Mechanics, Momentum/Break
 
 **Resource regen/decay** (Ngũ Hành Thế, Kiếm Thế/Kiếm Ý, Kim Thế decay,
