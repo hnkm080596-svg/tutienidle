@@ -61,10 +61,10 @@
 - Consumes: `useAutoRetryCountdown` (A1), `returnHome()` (:70-75 — exit pattern chuẩn)
 - Produces: 10s không tương tác → returnHome tự động
 
-- [ ] **Step 1: Failing test** — mount panel → advance 10s (fake timers) → `ui.exitCombatScene` / `combat_scene_exit` emit đúng (spy); advance 3s KHÔNG trigger returnHome (chỉ refight prep). Nếu panel hiện test qua refight count — assert theo oracle có sẵn.
-- [ ] **Step 2: FAIL → Implement:** `const returnCountdown = useAutoRetryCountdown(10, returnHome)`; start trong onMounted cạnh retry countdown; clear trong `clearTimers()` + đầu `retryNow()`/`returnHome()`. Comment 9.6.
-- [ ] **Step 3: PASS** + regression tests combat panels + type-check.
-- [ ] **Step 4: Commit** `feat(combat): CombatDefeatPanel 10s auto-return-home fallback (9.6)`
+- [x] **Step 1: Failing test** — mount panel → advance 10s (fake timers) → `ui.exitCombatScene` / `combat_scene_exit` emit đúng (spy); advance 3s KHÔNG trigger returnHome (chỉ refight prep). Nếu panel hiện test qua refight count — assert theo oracle có sẵn.
+- [x] **Step 2: FAIL → Implement:** `const returnCountdown = useAutoRetryCountdown(10, returnHome)`; start trong onMounted cạnh retry countdown; clear trong `clearTimers()` + đầu `retryNow()`/`returnHome()`. Comment 9.6.
+- [x] **Step 3: PASS** + regression tests combat panels + type-check.
+- [x] **Step 4: Commit** `feat(combat): CombatDefeatPanel 10s auto-return-home fallback (9.6)`
 
 ### Task A4: 9.4 Kiếm bar poll per-tick
 
