@@ -265,14 +265,14 @@ Phase 4:  tech-debt — chạy nền liên tục
 | **9.2** ✅ | QA-002 (High) — `restoreFromSave` thiếu idempotency guard | XONG 2026-09-02 (`c2381da`) — payload-identity guard (WeakMap) chống double offline credit; QA quick PASS WITH EVIDENCE |
 | **9.3** ✅ | QA-003 (High) — `OverlayPanel` thiếu focus trap (H5 Giai đoạn 8) | XONG 2026-09-02 (`3dbde61` + test `cfb3b4b`) — useDialogFocus trong OverlayPanel+ConfirmModal, 13 consumers kế thừa; 2 Low deferred: zero-focusable Tab escape, same-tick re-open trigger overwrite |
 | **9.4** ⬜ | QA-004 (Medium) — `updateKiem` chưa được gọi từ production (defer lâu, sửa cùng 6A) | |
-| **9.5** ⬜ | QA-005 (Medium) — `PhaserCanvas.vue setupGame` leak handler khi throw | |
+| **9.5** ✅ | QA-005 (Medium) — `PhaserCanvas.vue setupGame` leak handler khi throw | XONG — qua perf-optimize-pass Task 4 (merged `8b59045`): try/catch bootstrap + `bootError` ref + cleanup on failure (verify grep `a390f93`: catch tại PhaserCanvas.vue:67, expose :244) |
 | **9.6** ⬜ | QA-006 (Medium) — `CombatDefeatPanel` thiếu 10s auto-return-home | |
 | **9.7** ✅ | QA-007 (Medium) — `OfflineProgressSystem` thiếu `isFinite(cultivationPerSecond)` guard | XONG 2026-09-02 (`d126008`) — isFinite guard; validator v55 là root guard |
 | **9.8** ⬜ | QA-008 (Medium) — `MaterialBag.add` overflow bị caller bỏ qua | |
 | **9.9** ⬜ | QA-009 (Medium) — `useAutoRetryCountdown.start()` không clear handle cũ | |
 | **9.10** ⬜ | QA-010 (Medium) — `EquipmentSlotManager.restore` thiếu slot-enum check (defense in depth) | |
 | **9.11** ⬜ | QA-011 (Low) — `LocalCloudSaveService` 2 key không atomic | |
-| **9.12** ⬜ | QA-012 (Low) — `stateVersion` bump mỗi tick dù state không đổi (refactor) | |
+| **9.12** 🟡 | QA-012 (Low) — `stateVersion` bump mỗi tick dù state không đổi (refactor) | MỘT PHẦN — perf-optimize-pass Task 5 (merged `b16c3d0`): dirty-check `setExternalModifiers` chặn recompute `finalStats` mỗi tick. Phần còn lại: `bumpState()` vẫn chạy mỗi tick (plan perf chọn hướng (a) decouple — bước 1+2 đủ theo report; hướng (b) dirty-check `bumpState` không cần) |
 
 ### 8.2. Spec chi tiết Task 9.1 — QA-001 panel chặn đột phá khi còn mặc trang bị
 
@@ -322,11 +322,11 @@ Phase 4:  tech-debt — chạy nền liên tục
 |---|---|---|---|
 | **OPT-01** | `game/src/App.vue:360` | `bumpState()` mỗi tick | Tách `stateVersion` thành "bag/equipment" (manual) + "battle/world" (auto) |
 | **OPT-02** | `game/src/services/save/SaveSystem.ts:575,583` | `structuredClone` + `JSON.stringify` = double serialize mỗi autosave | ✅ Điều tra xong ở worktree `worktree-perf-optimize-pass` (Task 3) — tiền đề audit sai, chỉ có 1 `JSON.stringify` thật (write-time), `structuredClone` là snapshot cần thiết chống race quest-state. Không sửa code, chỉ thêm test round-trip khoá hành vi. Coi như đóng. |
-| **OPT-03** | `game/src/composables/useCadenceSmoothing.ts:56-68` | rAF loop không tự dừng | ✅ Code xong ở worktree `worktree-perf-optimize-pass` (Task 2, commit `14a8235`) — chưa merge vào master |
+| **OPT-03** | `game/src/composables/useCadenceSmoothing.ts:56-68` | rAF loop không tự dừng | ✅ Xong — perf-optimize-pass Task 2 (`14a8235`), ĐÃ MERGE (`8b59045`) |
 | **OPT-04** | `game/src/core/equipment/EquipmentBag.ts:129-135` | `getEquipped`/`getEquippedInSlot` O(N) | Thêm `Map<EquipmentSlot, EquipmentInstance>` index |
 | **OPT-05** | `game/src/components/panels/EquipmentHallPanel/EnhanceTab.vue:63-111` | `enhanceRows` O(slots × 5) mỗi stateVersion bump | Memoize theo `(stateVersion, selectedSlot)` |
 | **OPT-06** | `game/src/services/save/SaveSystem.ts:661-668` | `loadGame` đọc+remove `IMPORT_HANDOFF_KEY` mỗi boot kể cả khi không import | Lazy read |
-| **OPT-07** | `game/src/App.vue:285-287` | `drainNotifications()` chạy mỗi tick vô điều kiện | ✅ Code xong ở worktree `worktree-perf-optimize-pass` (Task 2, commit `14a8235`, dạng trả mảng rỗng dùng chung thay vì early-return) — chưa merge vào master |
+| **OPT-07** | `game/src/App.vue:285-287` | `drainNotifications()` chạy mỗi tick vô điều kiện | ✅ Xong — perf-optimize-pass Task 2 (`14a8235`, trả mảng rỗng dùng chung), ĐÃ MERGE (`8b59045`) |
 | **OPT-08** | `game/src/components/game/PhaserCanvas.vue:120-136` | EventBus handler đăng ký trước async game create | Wrap try/catch + cleanup on failure (cũng liên quan 9.5) |
 | **OPT-09** | `game/src/game/scenes/CombatScene.ts` | 11-entry `boundHandlers` array + 14 explicit `on()` | ✅ Xong 2026-09-02 — gộp thành 1 danh sách `getCombatEventBindings()` (22 entry), subscribe/unsubscribe cùng lặp 1 nguồn nên không thể lệch nhau; `unsubscribeCombatEvents()` idempotent (clear `eventBus`); test mới `CombatScene.eventSubscriptionSymmetry.test.ts` |
 
