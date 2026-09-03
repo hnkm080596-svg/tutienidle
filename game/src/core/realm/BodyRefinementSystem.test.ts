@@ -60,9 +60,12 @@ describe('BodyRefinementSystem — đầu tư xuyên cảnh giới', () => {
   })
 })
 
-// Thiên phú Luyện Thể Kỳ Tài (talent-direction-choice-plan §6) — progress
-// nhân đôi, tiêu nửa Tinh Hoa; clamp đúng phần còn thiếu để không lãng phí.
-describe('BodyRefinementSystem — thiên phú Luyện Thể Kỳ Tài', () => {
+// Thiên phú Luyện Thể Kỳ Tài — RETIRED ở catalog v4 (spec 2026-09-03
+// §4.4: talent không gắn 1 cảnh giới). BodyRefinementSystem vẫn đọc
+// getBodyRefinementProgressMultiplier — file này khóa: (1) pipeline đầu
+// tư nền không đổi, (2) id retired không còn nhân đôi progress (effect
+// rỗng → multiplier 1), phòng đường M2 tái dùng getter.
+describe('BodyRefinementSystem — thiên phú Luyện Thể Kỳ Tài (retired v4)', () => {
   function playerWithTalent(): ReturnType<typeof createDefaultPlayer> {
     const player = createDefaultPlayer()
 
@@ -72,27 +75,27 @@ describe('BodyRefinementSystem — thiên phú Luyện Thể Kỳ Tài', () => {
     return player
   }
 
-  it('đầu tư 1 Tinh Hoa được tính 2 progress', () => {
+  it('id retired — đầu tư 1 Tinh Hoa chỉ tính 1 progress (không nhân đôi)', () => {
     const player = playerWithTalent()
 
     const consumed = investTinhHoa(player, 1)
 
     expect(consumed).toBe(1)
-    expect(player.bodyRefinementCurrentTierProgress).toBe(2)
+    expect(player.bodyRefinementCurrentTierProgress).toBe(1)
   })
 
-  it('đầu tư đúng nửa cap — hoàn thành tầng với nửa Tinh Hoa', () => {
+  it('id retired — đầu tư hết cap vẫn hoàn thành tầng bình thường', () => {
     const player = playerWithTalent()
 
     const cap = BODY_REFINEMENT_TIERS[0]!.cap
-    const consumed = investTinhHoa(player, Math.ceil(cap / 2))
+    const consumed = investTinhHoa(player, cap)
 
-    expect(consumed).toBe(Math.ceil(cap / 2))
+    expect(consumed).toBe(cap)
     expect(player.bodyRefinementCompletedTiers).toBe(1)
     expect(player.bodyRefinementCurrentTierProgress).toBe(0)
   })
 
-  it('phần còn thiếu lẻ — clamp progress đúng remaining, không tràn cap', () => {
+  it('phần còn thiếu — clamp progress đúng remaining, không tràn cap', () => {
     const player = playerWithTalent()
 
     const cap = BODY_REFINEMENT_TIERS[0]!.cap
@@ -101,7 +104,7 @@ describe('BodyRefinementSystem — thiên phú Luyện Thể Kỳ Tài', () => {
 
     const consumed = investTinhHoa(player, 100)
 
-    expect(consumed).toBe(3) // ceil(5 / 2)
+    expect(consumed).toBe(5) // không multiplier — tiêu đúng phần thiếu
     expect(player.bodyRefinementCompletedTiers).toBe(1)
     expect(player.bodyRefinementCurrentTierProgress).toBe(0)
   })

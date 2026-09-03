@@ -27,7 +27,27 @@ Trong chiến đấu, `RealmPressure` so chênh lệch **đại cảnh giới**.
 
 ## Thiên Phú
 
-Thiên Phú là quyết định chọn hướng Đạo duy nhất lúc tạo nhân vật: roll 9 thẻ, chọn đúng 1 (`CharacterCreationService.ts`, catalog `src/data/talent/Talents.ts`). Mỗi thiên phú là một ngoại lệ của luật chơi — không có talent cộng chỉ số; effect được tiêu thụ qua getter tập trung tại `src/core/talent/TalentEffects.ts` (tốc độ tu luyện, Cảm Ngộ Kỹ năng, Linh Thạch, rơi trang bị, Luyện Thể, luyện đan, sống sót đòn chí mạng, giữ ailment khi Reaction, hồi máu khi diệt quái). Cảm Ngộ Kỹ năng vì vậy mặc định đến từ chiến đấu, riêng thiên phú Ngộ Đạo đổi tu vi tu luyện online lấy Cảm Ngộ — cố ý, là bản sắc talent. Thiên phú đã chọn hiển thị trong panel Nhân Vật.
+Thiên Phú là quyết định chọn hướng Đạo duy nhất lúc tạo nhân vật: roll 9 thẻ, chọn đúng 1, giữ cả đời (`CharacterCreationService.ts`, catalog `src/data/talent/Talents.ts`, spec `docs/specs/2026-09-03-talent-catalog-v4-design.md`). Mỗi thiên phú là một ngoại lệ của luật chơi — không có talent cộng chỉ số thuần; mọi talent cùng một ngân sách sức mạnh (~+20-30% công suất cuối Trúc Cơ) nhưng khác HÌNH DẠNG: rủi ro cao được thưởng cao hơn, đầu tư nông nghiệp/ rèn đan được công suất theo đúng phần bỏ ra, còn talent "nhàn" cho giá trị nhỏ nhưng ổn định. Mọi lợi thế đều có chi phí đối trọng ghi rõ trong mô tả.
+
+Catalog v4 chia 3 nhóm (M1 ship nhóm chiến đấu; tu luyện + sản xuất ở các milestone sau):
+
+**Chiến đấu (11 talent)** — mỗi talent nuôi đúng 1 chỉ số bằng nhịp "tích → ngưỡng → bùng nổ → tích lại" trên engine buff/passive có sẵn:
+
+- **Kiếm Quang** (chí mạng): mỗi crit +1% chí mạng (tối đa 10 tầng), chạm ngưỡng hóa Kiếm Vực 8s — mọi đòn chí mạng. *Ví dụ: bạn vừa crit 10 phát liên tiếp — phát thứ 10 mở Kiếm Vực, 8 giây sau mọi đòn đều nổ đỏ.*
+- **Phá Giáp** (xuyên giáp): mỗi đòn trúng +2% xuyên (tối đa 5 tầng trong trận).
+- **Tật Phong** (tốc đánh): mỗi kill +2% tốc đánh không giới hạn trong trận — nhưng trúng MỘT đòn là mất sạch.
+- **Trọng Kích** (sát thương chí mạng): mỗi crit +2% crit damage (3 tầng) rồi bùng +30% sát thương cuối 8s.
+- **Hấp Linh** (hút máu): hút máu ×2.5 hiệu lực thường — nhưng chỉ khi HP dưới 50%.
+- **Thạch Giáp** (phòng thủ): mỗi lần chặn đòn +2% phòng thủ (10 tầng), chạm ngưỡng hóa Thạch Nham 5s (−50% sát thương nhận).
+- **Vô Ảnh** (né): mỗi lần né +2% né (5 tầng), chạm ngưỡng hóa Sát Na 6s (+30% chí mạng + 20% tốc đánh).
+- **Cẩn Thận** (endurance): dưới 35% HP giảm 10% sát thương nhận — trên ngưỡng dễ chủ quan, nhận thêm 5%.
+- **Hộ Thể** (Hộ Thuẫn): khiên vỡ nổ AoE 30% dung lượng đã mất + khiên hồi nhanh trong 5s.
+- **Thứ Phạt** (gai): bị đánh +30% gai, mỗi phản +1 tầng Hận Thứ (5 tầng), không bị đánh 3s thì gai lụi dần.
+- **Bất Tử Thể**: mỗi trận 1 lần đòn chí mạng không chết (giữ 1 HP), tẩy sạch debuff + Tử Sinh Ngộ 10s (+30% sát thương cuối, +20% né chí mạng). Độ Kiếp là nghi lễ thật — không áp dụng.
+
+Easter egg **Phàm Cốt** (Dị, hiếm): −75% tốc độ tu luyện cả đời — gate bí ẩn của Đại Đạo Trúc Cơ; thắng kiếp Đại Đạo chuyển hóa thành Phàm Nhân Chi Cốt (+75% tốc tu vĩnh viễn).
+
+Effect được tiêu thụ qua getter tập trung tại `src/core/talent/TalentEffects.ts`; talent chiến đấu cấp hidden passive (`data/skill/TalentPassives.ts`) do GameManager grant/revoke; save edit chứa nhiều id chỉ đọc id ĐẦU (không cộng dồn). Thiên phú đã chọn hiển thị trong panel Nhân Vật.
 
 ## Con đường tu luyện hiện có
 

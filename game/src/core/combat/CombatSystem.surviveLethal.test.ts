@@ -45,7 +45,13 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   }
 }
 
-function createSession(talentIds: string[]) {
+interface SessionShape {
+  guard: SurviveLethalGuard
+  playerEntityId: string
+  surviveEffects?: { buffSystem: BuffSystem; registry: BuffRegistry }
+}
+
+function createSession(talentIds: string[]): SessionShape {
   const guard = new SurviveLethalGuard()
 
   guard.beginBattle(talentIds)

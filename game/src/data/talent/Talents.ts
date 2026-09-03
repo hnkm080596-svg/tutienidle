@@ -162,6 +162,22 @@ export const PARKED_TALENTS: TalentDefinition[] = [
   },
 ]
 
+// M2 PENDING (spec §4.3 — nhóm tu luyện về pool ở milestone M2) —
+// definition giữ sẵn để save cũ resolve + test hiện hành không gãy;
+// weight 0 → KHÔNG thuộc roll M1. M2 nâng cấp hiệu ứng (Ngộ Đạo offline,
+// Hậu Tích Bạt Phát, Lôi Kiếp, Vấn Đạo, Hải Nạp) rồi đưa vào pool.
+export const M2_PENDING_TALENTS: TalentDefinition[] = [
+  {
+    id: 'ngo_dao',
+    name: 'Ngộ Đạo',
+    description: 'Đạo ở khắp nơi, chẳng riêng gì trong chém giết. Mỗi 2.000 tu vi tích lũy được chuyển hóa thành 1 điểm Cảm Ngộ.',
+    rarity: 'linh',
+    weight: 0,
+    tags: ['resource', 'mechanic'],
+    effects: [{ kind: 'insight_per_cultivation', cultivationPerInsight: 2000 }],
+  },
+]
+
 // RETIRED v4 (spec §4.4) — 13 talent v3 rời pool roll. getTalentDefinition
 // vẫn resolve được để save cũ hiển thị đúng tên (TALENTS_BY_ID gồm cả
 // mảng này), nhưng collectTalentEffects chỉ đọc id ĐẦU nên save edit chứa
@@ -310,6 +326,7 @@ const TALENTS_BY_ID = new Map(
   [
     ...CHARACTER_CREATION_TALENTS,
     ...PARKED_TALENTS,
+    ...M2_PENDING_TALENTS,
     ...RETIRED_V4_TALENTS,
     ...GREAT_DAO_REWARD_TALENTS,
   ].map(talent => [talent.id, talent]),

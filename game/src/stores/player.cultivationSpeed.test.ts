@@ -28,40 +28,51 @@ describe('player store — tốc độ tu luyện theo thiên phú', () => {
     expect(store.cultivationPerSecond).toBeCloseTo(2.5)
   })
 
-  it('Tiên Thiên Đạo Thể — cultivationPerSecond đúng 20', () => {
+  it('Tiên Thiên Đạo Thể (retired v4) — không còn +100%, về nền 10/s', () => {
     const store = usePlayerStore()
 
     store.selectedTalentIds = ['tien_thien_dao_the']
     store.cultivate(1)
 
-    expect(store.cultivationPerSecond).toBeCloseTo(20)
+    expect(store.cultivationPerSecond).toBeCloseTo(10)
   })
 
-  it('Đại Trí Nhược Ngu — tu luyện 7.5/s', () => {
+  it('Đại Trí Nhược Ngu (retired v4) — không còn −25%, về nền 10/s', () => {
     const store = usePlayerStore()
 
     store.selectedTalentIds = ['dai_tri_nhuoc_ngu']
     store.cultivate(1)
 
-    expect(store.cultivationPerSecond).toBeCloseTo(7.5)
+    expect(store.cultivationPerSecond).toBeCloseTo(10)
   })
 
-  it('Nghịch Thiên — tu luyện 15/s', () => {
+  it('Nghịch Thiên (retired v4) — không còn +50%, về nền 10/s', () => {
     const store = usePlayerStore()
 
     store.selectedTalentIds = ['nghich_thien']
     store.cultivate(1)
 
-    expect(store.cultivationPerSecond).toBeCloseTo(15)
+    expect(store.cultivationPerSecond).toBeCloseTo(10)
   })
 
-  it('save cũ nhiều percent âm — guard 0.01, không bao giờ ≤ 0', () => {
+  it('Phàm Nhân Chi Cốt (thưởng Đại Đạo v4) — tu luyện 17.5/s', () => {
+    const store = usePlayerStore()
+
+    store.selectedTalentIds = ['pham_nhan_chi_cot']
+    store.cultivate(1)
+
+    expect(store.cultivationPerSecond).toBeCloseTo(17.5)
+  })
+
+  it('save edit nhiều id (v4 siết id đầu) — chỉ Phàm Cốt đầu được đọc, 2.5/s', () => {
     const store = usePlayerStore()
 
     store.selectedTalentIds = ['pham_cot', 'pham_cot', 'pham_cot', 'pham_cot']
     store.cultivate(1)
 
-    expect(store.cultivationPerSecond).toBeCloseTo(0.1) // 10 × 0.01
+    // v4 (spec §3.2): chỉ id ĐẦU được đọc — 4 lần pham_cot không cộng
+    // dồn thành −300% (kéo về 0), giữ đúng −75% của 1 talent.
+    expect(store.cultivationPerSecond).toBeCloseTo(2.5)
   })
 
   // Tụ Linh Trận (economy-fixes-sinks-plan §3.2 B1) — effect active nhân
