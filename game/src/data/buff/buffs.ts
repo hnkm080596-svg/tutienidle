@@ -653,6 +653,37 @@ export const buffs: BuffDefinition[] = [
     effects: [{ type: 'statModifier', stat: 'defense', percent: 0.06 }],
   },
 
+  // Biến thể Thổ C "Địa Trụ · Bích" (spec §2.5, review round 1) — khiên
+  // THUẦN nuôi E nổ to: +100 wardMax/+8 regen, KHÔNG thorns. Buff riêng
+  // (không mượn bang_giap của Thủy — sai số liệu + đụng tên đa hành).
+  {
+    id: 'dia_tru_bich',
+    name: 'Địa Trụ · Bích',
+    description: 'Tường đất vững chãi — khiên dày và hồi nhanh, đổi lại không phản đòn.',
+    polarity: 'buff',
+    duration: 6,
+    stackMode: 'refresh',
+    effects: [
+      { type: 'statModifier', stat: 'wardMax', flat: 100 },
+      { type: 'statModifier', stat: 'wardRegenPerSecond', flat: 8 },
+    ],
+  },
+
+  // Biến thể Thổ C "Địa Trụ · Thứ" (spec §2.5, review round 1) — phản
+  // đòn: +40 wardMax/+25% thornsPercent. Buff riêng, cùng lý do trên.
+  {
+    id: 'dia_tru_thu',
+    name: 'Địa Trụ · Thứ',
+    description: 'Đất hóa gai nhọn — khiên mỏng hơn nhưng ai chạm vào cũng đau.',
+    polarity: 'buff',
+    duration: 6,
+    stackMode: 'refresh',
+    effects: [
+      { type: 'statModifier', stat: 'wardMax', flat: 40 },
+      { type: 'statModifier', stat: 'thornsPercent', flat: 0.25 },
+    ],
+  },
+
   // Node Thế Mãn (spec §4/E-7) — engine ÁP/GỠ theo trạng thái Thế đầy
   // (TheResourceSystem.updateTheManBuff / UltimateSystem trigger reset).
   // duration Infinity: buff KHÔNG tự hết hạn; id phải khớp chính xác

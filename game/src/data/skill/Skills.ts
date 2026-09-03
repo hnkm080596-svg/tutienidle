@@ -1552,6 +1552,10 @@ export const SKILLS: Skill[] = [
           // Spec §2.2: leech +35%, 5s — buff định nghĩa 0.20/tầng, 2
           // tầng = 0.40 (over-tuned); thay bằng 1 tầng + duration 5s
           // đúng số liệu spec (xem ghi chú report).
+          // Review round 1 (Finding 2) — coordinator ruling: GIỮ 0.20
+          // (hoi_luu = +0.20/stack refresh; +35% không biểu diễn được
+          // nếu không thêm buff mới — deviation có chủ đích, đã ghi
+          // chú report).
           { type: 'buff', buffId: 'hoi_luu', duration: 5 },
         ],
       },
@@ -2001,21 +2005,22 @@ export const SKILLS: Skill[] = [
     execution: { kind: 'cast_time', castTime: 1.2 },
     target: 'self',
     effects: [{ type: 'buff', buffId: 'dia_tru' }],
-    // Biến thể C (§2.5): Bích = khiên thuần nuôi E nổ to (buff riêng
-    // bang_giap +50 ward/+5 regen — §7); Thứ = phản đòn (buff riêng
-    // kim_giap +15% def/+15% thorns — §7).
+    // Biến thể C (§2.5, review round 1): Bích = khiên THUẦN nuôi E nổ
+    // to (buff riêng dia_tru_bich +100 ward/+8 regen, không thorns);
+    // Thứ = phản đòn (buff riêng dia_tru_thu +40 ward/+25% thorns).
+    // Không mượn bang_giap/kim_giap — sai số liệu + đụng tên đa hành.
     specializations: [
       {
         id: 'dia_tru_bich',
         name: 'Địa Trụ · Bích',
         description: 'Tường đất vững chãi — khiên dày để dồn cho đòn chót.',
-        effectsOverride: [{ type: 'buff', buffId: 'bang_giap' }],
+        effectsOverride: [{ type: 'buff', buffId: 'dia_tru_bich' }],
       },
       {
         id: 'dia_tru_thu',
         name: 'Địa Trụ · Thứ',
         description: 'Đất hóa gai nhọn — ai chạm vào cũng đau.',
-        effectsOverride: [{ type: 'buff', buffId: 'kim_giap' }],
+        effectsOverride: [{ type: 'buff', buffId: 'dia_tru_thu' }],
       },
     ],
     resourceType: 'none',

@@ -127,6 +127,34 @@ describe('buffs.ts — buff mới chuỗi Thuần (spec §7)', () => {
     expect(ngungLo.effects).toContainEqual({ type: 'statModifier', stat: 'manaRegenPerSecond', flat: 5 })
     expect(khaiSon.effects).toContainEqual({ type: 'statModifier', stat: 'defense', percent: 0.08 })
   })
+
+  // Review round 1 (Finding 1) — biến thể Thổ C không được mượn buff
+  // hành khác (bang_giap/kim_giap → sai số liệu + đụng tên đa hành):
+  // buff riêng theo đúng bảng §2.5.
+  it('dia_tru_bich — buff 6s refresh, wardMax +100 + wardRegenPerSecond +8, KHÔNG thorns', () => {
+    const b = byId('dia_tru_bich')!
+
+    expect(b.polarity).toBe('buff')
+    expect(b.duration).toBe(6)
+    expect(b.stackMode).toBe('refresh')
+    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardMax', flat: 100 })
+    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardRegenPerSecond', flat: 8 })
+    expect(b.effects.some((e) => e.type === 'statModifier' && e.stat === 'thornsPercent')).toBe(false)
+  })
+
+  it('dia_tru_thu — buff 6s refresh, wardMax +40 + thornsPercent +0.25', () => {
+    const b = byId('dia_tru_thu')!
+
+    expect(b.polarity).toBe('buff')
+    expect(b.duration).toBe(6)
+    expect(b.stackMode).toBe('refresh')
+    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'wardMax', flat: 40 })
+    expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'thornsPercent', flat: 0.25 })
+  })
+
+  it('all 42 definitions (5 buffs + 2 reaction buffs + 5 on-hit proc buffs + 16 ported ailments + 14 thuan-he chain buffs) are present', () => {
+    expect(buffs).toHaveLength(42)
+  })
 })
 
   it('choang (cc) — ccEffect port nguyên vẹn', () => {
@@ -171,9 +199,5 @@ describe('buffs.ts — buff mới chuỗi Thuần (spec §7)', () => {
     expect(docThe.stackMode).toBe('stack')
     expect(docThe.effects).toContainEqual({ type: 'statModifier', stat: 'ailmentPotencyPercent', percent: 0.05 })
     expect(docThe.effects).toContainEqual({ type: 'statModifier', stat: 'poisonRecoveryPercent', percent: 0.02 })
-  })
-
-  it('all 40 definitions (5 buffs + 2 reaction buffs + 5 on-hit proc buffs + 16 ported ailments + 12 thuan-he chain buffs) are present', () => {
-    expect(buffs).toHaveLength(40)
   })
 })

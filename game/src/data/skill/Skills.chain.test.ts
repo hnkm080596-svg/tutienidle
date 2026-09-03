@@ -108,8 +108,18 @@ describe('Data 5 chuỗi thần thoại (spec §2.2, bảng §2 mới)', () => {
     }
   })
 
-  it('placeholder cũ KHÔNG còn tồn tại (đã thay bằng id mới)', () => {
-    const oldIds = [
+  // Review round 1 (Finding 1) — biến thể Thổ C dùng buff RIÊNG đúng số
+  // liệu §2.5, không mượn buff hành khác (bang_giap = Thủy, kim_giap = Kim).
+  it('dia_tru variants dùng buff riêng dia_tru_bich/dia_tru_thu, không mượn buff hành khác', () => {
+    const diaTru = SKILLS.find((s) => s.id === 'dia_tru_thua_thien')!
+    const bich = diaTru.specializations?.find((s) => s.id === 'dia_tru_bich')!
+    const thu = diaTru.specializations?.find((s) => s.id === 'dia_tru_thu')!
+
+    expect(bich.effectsOverride).toEqual([{ type: 'buff', buffId: 'dia_tru_bich' }])
+    expect(thu.effectsOverride).toEqual([{ type: 'buff', buffId: 'dia_tru_thu' }])
+  })
+
+  it('placeholder cũ KHÔNG còn tồn tại (đã thay bằng id mới)', () => {    const oldIds = [
       'chuc_dung_b', 'chuc_dung_c', 'chuc_dung_d', 'chuc_dung_e',
       'thien_ngo_b', 'thien_ngo_c', 'thien_ngo_d', 'thien_ngo_e',
       'cau_mang_b', 'cau_mang_c', 'cau_mang_d', 'cau_mang_e',
