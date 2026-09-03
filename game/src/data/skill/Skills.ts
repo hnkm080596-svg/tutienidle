@@ -1320,6 +1320,9 @@ export const SKILLS: Skill[] = [
         id: 'tam_muoi_tan_diem',
         name: 'Tam Muội · Tán Diễm',
         description: 'Lửa tán thành vùng — Bỏng phủ mọi mục tiêu xung quanh.',
+        // Spec §2.1: Tán Diễm là AoE — base skill không khai targeting
+        // (single) nên specialization PHẢI tự mang vùng (laneRadius 1).
+        targeting: { shape: 'area', laneRadius: 1 },
         effectsOverride: [
           {
             type: 'damage',
@@ -1710,6 +1713,8 @@ export const SKILLS: Skill[] = [
         id: 'lan_doc_quang',
         name: 'Lan Độc · Quảng',
         description: 'Độc theo gió bay khắp chiến trường.',
+        // Spec §2.3: Quảng = all_lanes columnRadius 1.
+        targeting: { shape: 'all_lanes', columnRadius: 1 },
         effectsOverride: [
           {
             type: 'damage',
@@ -1825,6 +1830,8 @@ export const SKILLS: Skill[] = [
         id: 'kim_lang_toan_vuc',
         name: 'Kim Lang · Toàn Vực',
         description: 'Vụn thép phủ trọn một vùng.',
+        // Spec §2.4: Toàn Vực = area laneRadius 1 columnRadius 1.
+        targeting: { shape: 'area', laneRadius: 1, columnRadius: 1 },
         effectsOverride: [
           {
             type: 'damage',
@@ -1840,6 +1847,8 @@ export const SKILLS: Skill[] = [
         id: 'kim_lang_xuyen_liet',
         name: 'Kim Lang · Xuyên Liệt',
         description: 'Lưỡi bão xuyên thẳng một hàng.',
+        // Spec §2.4: Xuyên Liệt = line.
+        targeting: { shape: 'line' },
         effectsOverride: [
           {
             type: 'damage',
@@ -2055,6 +2064,8 @@ export const SKILLS: Skill[] = [
         id: 'chan_dia_quang',
         name: 'Chấn Địa · Quảng',
         description: 'Động đất lan rộng — choáng nhẹ nhưng trúng nhiều.',
+        // Spec §2.5: Quảng = area laneRadius 2 columnRadius 1.
+        targeting: { shape: 'area', laneRadius: 2, columnRadius: 1 },
         effectsOverride: [
           {
             type: 'damage',

@@ -14,6 +14,7 @@ import {
 } from './SkillManager'
 
 import type { CombatEntity } from '../combat/CombatEntity'
+import type { ActionTargeting } from '../battle/CombatAction'
 import { getRealmIndex } from '../realm/realmSystem'
 
 // Core Loop Foundation checklist (Mục SKILL, "Skill modifier") — mỗi
@@ -59,6 +60,10 @@ export interface EffectiveSkill {
   passiveModifiers?: StatModifier[]
 
   passiveTrigger?: PassiveTrigger
+
+  // Pháp Tu Thuần Hệ (Task 10) — specialization.targetingOverride: có
+  // thì thay targeting skill gốc (xem SkillSpecialization).
+  targeting?: ActionTargeting
 }
 
 export class SkillSystem {
@@ -135,6 +140,8 @@ export class SkillSystem {
       passiveModifiers: specialization?.passiveModifiersOverride ?? skill.passiveModifiers,
 
       passiveTrigger: specialization?.passiveTriggerOverride ?? skill.passiveTrigger,
+
+      targeting: specialization?.targeting ?? skill.targeting,
     }
   }
 

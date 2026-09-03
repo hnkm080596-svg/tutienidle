@@ -2775,7 +2775,9 @@ export class BattleSystem {
       effective.effects.some((effect) => effect.earthPureAreaBehavior === true) &&
       getSkillRuntimeStat(source, 'earthAoeRadius') > 0
 
-    const baseTargeting = targetingForSkill(skill)
+    // effective (không skill gốc): specialization.targeting override
+    // vùng tác động của biến thể C/D (Task 10, spec §2).
+    const baseTargeting = targetingForSkill({ ...skill, targeting: effective.targeting })
     const laneRadius = earthPureActive
       ? Math.max(1, Math.round(getSkillRuntimeStat(source, 'earthAoeRadius')))
       : (baseTargeting.laneRadius ?? 0)
