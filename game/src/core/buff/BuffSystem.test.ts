@@ -926,3 +926,90 @@ describe('BuffSystem — conversion chain, Làm Chậm -> Đóng Băng (ported f
     expect(system.isFrozen()).toBe(false)
   })
 })
+
+// E1 — convert-on-max (spec talent v4 2026-09-03 §3.3): buff
+// stackMode 'stack' CÓ convertsToId chạm maxStacks → buff cũ bị remove,
+// buff convert được apply với stacks = 1 (nhịp "tích → ngưỡng → bùng nổ
+// → tích lại" của talent v4). Khóa hành vi có sẵn ở handleExisting()
+// case 'stack' — không đổi production code, chỉ chốt không hồi quy.
+describe('BuffSystem — E1 convert-on-max (spec talent v4 §3.3)', () => {
+  const tangTich: BuffDefinition = {
+    id: 'tang_tich', name: 'Tích Tầng', polarity: 'buff',
+    duration: 6, maxStacks: 3, stackMode: 'stack',
+    convertsToId: 'bung_no',
+    effects: [{ type: 'statModifier', stat: 'criticalRate', percent: 0.01 }],
+  }
+  const bungNo: BuffDefinition = {
+    id: 'bung_no', name: 'Bùng Nổ', polarity: 'buff',
+    duration: 8, stackMode: 'refresh',
+    effects: [{ type: 'statModifier', stat: 'finalDamagePercent', percent: 0.3 }],
+  }
+  const khongConvert: BuffDefinition = {
+    id: 'khong_convert', name: 'Không Convert', polarity: 'buff',
+    duration: 6, maxStacks: 3, stackMode: 'stack',
+    effects: [{ type: 'statModifier', stat: 'defense', percent: 0.02 }],
+  }
+
+  function makeConvertRegistry(): BuffRegistry {
+    const registry = new BuffRegistry()
+    registry.register(tangTich)
+    registry.register(bungNo)
+    registry.register(khongConvert)
+    return registry
+  }
+
+  it('buff stack chạm maxStacks → remove buff cũ, apply convertsToId với stacks = 1', () => {
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
+    const registry = makeConvertRegistry()
+    const source = makeEntity({ id: 'source', type: 'player' })
+    const target = makeEntity({ id: 'target' })
+
+    system.apply(tangTich, source, target, registry) // stacks 1
+    system.apply(tangTich, source, target, registry) // stacks 2
+    system.apply(tangTich, source, target, registry) // stacks 3 = maxStacks → convert
+
+    expect(pool.getFromSource('tang_tich', 'source')).toBeUndefined()
+    expect(pool.getFromSource('bung_no', 'source')).toBeDefined()
+    expect(pool.getFromSource('bung_no', 'source')!.stacks).toBe(1)
+    expect(system.getActiveIds()).toEqual(['bung_no'])
+  })
+
+  it('buff KHÔNG khai convertsToId → chạm maxStacks vẫn giữ nguyên (không convert)', () => {
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
+    const registry = makeConvertRegistry()
+    const source = makeEntity({ id: 'source', type: 'player' })
+    const target = makeEntity({ id: 'target' })
+
+    for (let i = 0; i < 5; i++) {
+      system.apply(khongConvert, source, target, registry)
+    }
+
+    const stored = pool.getFromSource('khong_convert', 'source')
+
+    expect(stored).toBeDefined()
+    expect(stored!.stacks).toBe(3)
+    expect(pool.getFromSource('bung_no', 'source')).toBeUndefined()
+  })
+
+  it('2 đường convert độc lập: on-max chỉ cần maxStacks, theo-thời-gian chỉ cần convertsAfterContinuousSeconds', () => {
+    // Guard kiến trúc — convert-on-max fire trong handleExisting() case
+    // 'stack' (nextStacks >= maxStacks); convert theo thời gian fire
+    // trong update() (continuousSeconds >= convertsAfterContinuousSeconds).
+    // Đường thời gian đã được đo ở 3 describe Làm Chậm phía trên — ở đây
+    // chỉ chốt 2 template khai báo đúng đường của mình (template thời gian
+    // là refresh, không maxStacks; template on-max không có ngưỡng thời gian).
+    const thoiGian: BuffDefinition = {
+      id: 'thoi_gian', name: 'Theo Thời Gian', polarity: 'debuff',
+      duration: 4, stackMode: 'refresh',
+      convertsToId: 'dong_bang', convertsAfterContinuousSeconds: 2,
+      effects: [{ type: 'statModifier', stat: 'attackSpeed', percent: -0.3 }],
+    }
+
+    expect(thoiGian.maxStacks).toBeUndefined()
+    expect(thoiGian.convertsAfterContinuousSeconds).toBe(2)
+    expect(tangTich.convertsAfterContinuousSeconds).toBeUndefined()
+    expect(tangTich.maxStacks).toBe(3)
+  })
+})
