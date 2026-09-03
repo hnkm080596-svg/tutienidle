@@ -7,6 +7,10 @@ import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
 import { BuffSystem } from '../buff/BuffSystem'
 import { EventBus } from '../events/EventBus'
+import {
+  DEFAULT_COMBAT_AI_STRATEGY,
+  type CombatAiStrategy,
+} from './CombatAiStrategy'
 import { ActionImpactSystem } from '../battle/ActionImpactSystem'
 import { createBaseStats } from '../stats/StatBlock'
 import { createSkillRuntimeStats } from '../skill/SkillRuntimeStats'
@@ -405,5 +409,161 @@ describe('BattleSystem — chuỗi combo Thuần hệ (spec §7)', () => {
 
     expect(battle.player.currentThe).toBe(100)
     expect(new BuffSystem(battle.playerBuffs).getActiveIds()).toContain('the_man_fire')
+  })
+
+  // Task 12 (2026-09-03) — glue ult Pháp Tu trong BattleSystem:
+  // getPhapTuUltimateElement closure (GameManager inject) →
+  // tryPlayerUltimate trả 'ult' + resolve effects skill ult qua
+  // resolveSkillEffects (ĐÚNG đường cast thường, ctx đủ như skill
+  // thường); auto-check 1s/lần khi boss + Thế đầy (spec §2.4).
+  it('Task 12: tryPlayerUltimate — Thế đầy → tiêu Thế + resolve effects skill ult theo element', () => {
+    const eventBus = new EventBus()
+    const skillManager = new SkillManager()
+    const skillSystem = new SkillSystem(skillManager)
+    const system = new BattleSystem(
+      new CombatSystem(eventBus),
+      skillManager,
+      skillSystem,
+      new SkillEffectSystem(),
+      new BuffRegistry(),
+      eventBus,
+      new ActionImpactSystem({ eventBus, rollCritical: () => false }),
+      () => [],
+      () => DEFAULT_COMBAT_AI_STRATEGY,
+      () => 0,
+      () => undefined,
+      () => 0,
+      () => 0,
+      () => ({}),
+      () => 'fire',
+    )
+
+    const ultSkill = chainSkill('tat_phuong_giang_the', 9)
+    ultSkill.equipped = false
+    ultSkill.effects = [{ type: 'damage', value: 7, damageType: 'physical' }]
+    skillManager.add(ultSkill)
+
+    const player = createCombatant({ id: 'player', type: 'player', x: 0, currentThe: 100 })
+    const enemy = createCombatant({ id: 'enemy', maxHp: 100000, currentHp: 100000 })
+
+    system.start(player, enemy)
+    system.update(3)
+    enemy.x = 2
+    enemy.row = 4
+
+    const recorder = makeCastRecorder(eventBus)
+
+    expect(system.tryPlayerUltimate()).toBe('ult')
+    expect(player.currentThe).toBe(0)
+    expect(recorder.count('tat_phuong_giang_the')).toBe(1)
+  })
+
+  it('Task 12: tryPlayerUltimate — Thế chưa đầy → null, không cast', () => {
+    const eventBus = new EventBus()
+    const skillManager = new SkillManager()
+    const skillSystem = new SkillSystem(skillManager)
+    const system = new BattleSystem(
+      new CombatSystem(eventBus),
+      skillManager,
+      skillSystem,
+      new SkillEffectSystem(),
+      new BuffRegistry(),
+      eventBus,
+      new ActionImpactSystem({ eventBus, rollCritical: () => false }),
+      () => [],
+      () => DEFAULT_COMBAT_AI_STRATEGY,
+      () => 0,
+      () => undefined,
+      () => 0,
+      () => 0,
+      () => ({}),
+      () => 'fire',
+    )
+
+    skillManager.add(chainSkill('tat_phuong_giang_the', 9))
+
+    const player = createCombatant({ id: 'player', type: 'player', x: 0, currentThe: 99 })
+    const enemy = createCombatant({ id: 'enemy', maxHp: 100000, currentHp: 100000 })
+
+    system.start(player, enemy)
+    system.update(3)
+    enemy.x = 2
+    enemy.row = 4
+
+    const recorder = makeCastRecorder(eventBus)
+
+    expect(system.tryPlayerUltimate()).toBeNull()
+    expect(player.currentThe).toBe(99)
+    expect(recorder.count('tat_phuong_giang_the')).toBe(0)
+  })
+
+  it('Task 12: auto — boss + Thế đầy → ult tự nổ sau ≥1s; không boss → giữ Thế', () => {
+    const eventBus = new EventBus()
+    const skillManager = new SkillManager()
+    const skillSystem = new SkillSystem(skillManager)
+    const system = new BattleSystem(
+      new CombatSystem(eventBus),
+      skillManager,
+      skillSystem,
+      new SkillEffectSystem(),
+      new BuffRegistry(),
+      eventBus,
+      new ActionImpactSystem({ eventBus, rollCritical: () => false }),
+      () => [],
+      () => DEFAULT_COMBAT_AI_STRATEGY,
+      () => 0,
+      () => undefined,
+      () => 0,
+      () => 0,
+      () => ({}),
+      () => 'fire',
+    )
+
+    skillManager.add(chainSkill('tat_phuong_giang_the', 9))
+
+    const player = createCombatant({ id: 'player', type: 'player', x: 0, currentThe: 100 })
+    const boss = createCombatant({ id: 'boss', isBoss: true, maxHp: 100000, currentHp: 100000 })
+
+    system.start(player, boss)
+    system.update(3)
+    boss.x = 2
+    boss.row = 4
+
+    // Boss telegraph 1.4s + countdown 3s → cần > 4.4s để boss materialize
+    // rồi ult auto check (1s/lần) mới thấy boss + Thế đầy.
+    for (let i = 0; i < 800; i++) {
+      skillSystem.update(0.01, 0)
+      system.update(0.01)
+    }
+
+    expect(player.currentThe).toBe(0)
+  })
+
+  it('Task 12: không có element (closure default) → ult Pháp Tu không nổ, Kiếm Tu path giữ nguyên', () => {
+    const eventBus = new EventBus()
+    const skillManager = new SkillManager()
+    const skillSystem = new SkillSystem(skillManager)
+    const system = new BattleSystem(
+      new CombatSystem(eventBus),
+      skillManager,
+      skillSystem,
+      new SkillEffectSystem(),
+      new BuffRegistry(),
+      eventBus,
+      new ActionImpactSystem({ eventBus, rollCritical: () => false }),
+    )
+
+    skillManager.add(chainSkill('tat_phuong_giang_the', 9))
+
+    const player = createCombatant({ id: 'player', type: 'player', x: 0, currentThe: 100 })
+    const enemy = createCombatant({ id: 'enemy', maxHp: 100000, currentHp: 100000 })
+
+    system.start(player, enemy)
+    system.update(3)
+    enemy.x = 2
+    enemy.row = 4
+
+    expect(system.tryPlayerUltimate()).toBeNull()
+    expect(player.currentThe).toBe(100)
   })
 })

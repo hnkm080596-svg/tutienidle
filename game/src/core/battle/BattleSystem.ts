@@ -71,7 +71,14 @@ import {
   gainKiemYTempOnDamageTaken,
   initKiemTuBattleResources,
 } from './KiemTuResourceSystem'
-import { autoUltimateDecision, triggerUltimate } from './UltimateSystem'
+import {
+  autoUltimateDecision,
+  autoPhapTuUltimateDecision,
+  triggerUltimate,
+  triggerPhapTuUltimate,
+  PHAP_TU_ULTIMATE_IDS,
+  type PhapTuUltimateElement,
+} from './UltimateSystem'
 import { getFormationSwordCount } from '../../data/progression/KiemTuNodes'
 import { getHuyKiemFlatDamageBonus } from '../skill/SkillSystem'
 
@@ -347,6 +354,16 @@ export class BattleSystem {
      * PlayerData.nodeLevels lọc qua registry), inject bởi GameManager.
      */
     private readonly getOnHitNodeLevels: () => Record<string, number> = () => ({}),
+
+    /**
+     * Pháp Tu Thuần Hệ (Task 12, 2026-09-03) — hành Thuần ĐANG CHỌN của
+     * Pháp Tu (GameManager đọc node `lap_dao_thuan_<el>` đã mua từ
+     * PlayerData.nodeLevels). undefined = không phải Pháp Tu Thuần →
+     * ult Pháp Tu không nổ, chain không gate. Đọc LIVE như mọi closure
+     * PlayerData khác ở trên.
+     */
+    private readonly getPhapTuUltimateElement: () => PhapTuUltimateElement | undefined =
+      () => undefined,
   ) {
     this.reactionManager = new ReactionManager(eventBus)
 
@@ -1018,6 +1035,14 @@ export class BattleSystem {
       if (route) {
         const decision = autoUltimateDecision(battle, route, this.getHighestFormationSwordCount())
         if (decision) {
+          this.tryPlayerUltimate()
+        }
+      } else {
+        // Pháp Tu Thuần (Task 12, spec §2.4) — auto bắn khi boss/Độ Kiếp
+        // có mặt + Thế đầy; không phải Pháp Tu Thuần → element undefined
+        // → decision null.
+        const element = this.getPhapTuUltimateElement()
+        if (element && autoPhapTuUltimateDecision(battle, element)) {
           this.tryPlayerUltimate()
         }
       }
@@ -2403,7 +2428,6 @@ export class BattleSystem {
     target: CombatEntity,
     battle: Battle,
   ) {
-  ) {
     this.skillEffectResolver.resolveSkillEffects(skill, source, target, battle)
   }
 
@@ -2606,44 +2630,83 @@ export class BattleSystem {
   }
 
   /**
-   * Ult Kiếm Tu (spec 2026-08-29 mục 2/3.4) — nút manual từ UI gọi
-   * trực tiếp; auto-check 1 lần/giây từ update() (timer riêng dưới).
-   * Trả 'ttkt'/'kktm' nếu ult đã nổ, null nếu không đủ điều kiện.
-   * Ult KHÔNG đi qua loadout scheduler (như channel).
+   * Ult (spec 2026-08-29 mục 2/3.4 Kiếm Tu + spec 2026-09-03 Task 12
+   * Pháp Tu Thuần) — nút manual từ UI gọi trực tiếp; auto-check 1
+   * lần/giây từ update(). Trả 'ttkt'/'kktm'/'ult' nếu đã nổ, null nếu
+   * không đủ điều kiện. Ult KHÔNG đi qua loadout scheduler (như channel).
    */
-  tryPlayerUltimate(): 'ttkt' | 'kktm' | null {
+  tryPlayerUltimate(): 'ttkt' | 'kktm' | 'ult' | null {
     const battle = this.battle
+
+    if (!battle || battle.state !== 'fighting') {
+      return null
+    }
+
     const route = this.getKiemTuRoute()
 
-    if (!battle || battle.state !== 'fighting' || !route) {
-      return null
-    }
+    if (route) {
+      const swordCount = this.getHighestFormationSwordCount()
 
-    const swordCount = this.getHighestFormationSwordCount()
+      const nukeResolver = (target: CombatEntity) => {
+        // Đòn nuke đơn giản: dùng effective stats + resolveSkillEffects
+        // với ult skill tương ứng route (đã đăng ký qua node unlock).
+        const ultSkillId = route === 'kiem_tran' ? 'tru_tien_kiem_tran' : 'kiem_khai_thien_mon'
+        const ultSkill = this.skillManager.get(ultSkillId)
 
-    const nukeResolver = (target: CombatEntity) => {
-      // Đòn nuke đơn giản: dùng effective stats + resolveSkillEffects
-      // với ult skill tương ứng route (đã đăng ký qua node unlock).
-      const ultSkillId = route === 'kiem_tran' ? 'tru_tien_kiem_tran' : 'kiem_khai_thien_mon'
-      const ultSkill = this.skillManager.get(ultSkillId)
+        const targetHpBefore = target.currentHp
 
-      const targetHpBefore = target.currentHp
+        if (ultSkill) {
+          this.resolveSkillEffects(ultSkill, battle.player, target, battle)
+        }
 
-      if (ultSkill) {
-        this.resolveSkillEffects(ultSkill, battle.player, target, battle)
+        // Ước lượng total damage cho overkill KKTM: phần HP target mất.
+        return targetHpBefore - Math.max(0, target.currentHp)
       }
 
-      // Ước lượng total damage cho overkill KKTM: phần HP target mất.
-      return targetHpBefore - Math.max(0, target.currentHp)
+      const triggered = triggerUltimate(battle, route, swordCount, { resolveNuke: nukeResolver })
+
+      if (!triggered) {
+        return null
+      }
+
+      return route === 'kiem_tran' ? 'ttkt' : 'kktm'
     }
 
-    const triggered = triggerUltimate(battle, route, swordCount, { resolveNuke: nukeResolver })
+    // Pháp Tu Thuần (Task 12, E-6 seam) — resolve effects skill ult qua
+    // ĐÚNG đường cast thường (resolveSkillEffects, ctx đủ buffRegistry/
+    // reactionManager như skill thường). Profile/target set do
+    // UltimateSystem quyết; đây chỉ là executor.
+    const element = this.getPhapTuUltimateElement()
 
-    if (!triggered) {
+    if (!element) {
       return null
     }
 
-    return route === 'kiem_tran' ? 'ttkt' : 'kktm'
+    const ultSkillId = PHAP_TU_ULTIMATE_IDS[element]
+
+    // Ult KHÔNG chiếm loadout slot (spec §2.4) — skill ult chỉ được HỌC
+    // (unlocked), không equip, nên KHÔNG gate qua canUseInSlot/beginCast
+    // (đòi equipped). Điều kiện nổ duy nhất là Thế đầy — do
+    // triggerPhapTuUltimate tự kiểm (canUsePhapTuUltimate + consume).
+    const triggered = triggerPhapTuUltimate(
+      battle,
+      { resolveNuke: () => 0 },
+      element,
+      {
+        getUltSkill: () => this.skillManager.get(ultSkillId),
+        runUltimateEffects: (skill, source, targets) => {
+          const primary = targets[0]
+
+          if (!primary) {
+            return
+          }
+
+          this.resolveSkillEffects(skill, source, primary, battle)
+        },
+      },
+    )
+
+    return triggered ? 'ult' : null
   }
 
   /** Cấp trận cao nhất đã mở (số kiếm cho cost ult TTKT). */

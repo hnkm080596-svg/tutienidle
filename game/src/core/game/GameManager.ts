@@ -174,6 +174,8 @@ import type { MainStatKey } from '../stats/StatTypes'
 import { getMainStatCap } from '../stats/StatCap'
 import { MAIN_STAT_KEYS } from '../stats/StatTypes'
 import { BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
+import { CHAIN_SKILL_IDS } from '../../data/skill/Skills'
+import type { ElementType } from '../element/ElementType'
 import { getTechniqueInsightTotalRequired, getTechniqueTier } from '../technique/TechniqueTier'
 import { getSkillLoadoutSlotCount, KIEM_TRAN_SLOT_INDEX } from '../skill/SkillLoadoutSlots'
 import { CULTIVATION_PATH_KITS } from '../player/CultivationPathKit'
@@ -339,6 +341,10 @@ export class GameManager {
     // On-hit Kiếm Trận (spec mục 4) — cấp node on-hit đã mua, lọc qua
     // nodeRegistry (chỉ node có effect.onHitEffect).
     () => this.getOnHitNodeLevelsSnapshot(),
+
+    // Pháp Tu Thuần Hệ (Task 12, 2026-09-03) — hành Thuần đang chọn, đọc
+    // LIVE từ node lap_dao_thuan_<el> đã mua (PlayerData là authority).
+    () => this.getPhapTuThuanElement(),
   )
 
   /**
@@ -366,6 +372,28 @@ export class GameManager {
     }
 
     return levels
+  }
+
+  /**
+   * Pháp Tu Thuần Hệ (Task 12, 2026-09-03) — hành Thuần ĐANG CHỌN của
+   * player hoạt động: node `lap_dao_thuan_<el>` (keystone mutex — data
+   * đảm bảo tối đa 1 hành) đã mua level ≥ 1. undefined = chưa Lập Đạo
+   * Thuần / không phải Pháp Tu → chain không gate, ult không nổ.
+   */
+  getPhapTuThuanElement(): ElementType | undefined {
+    if (!this.activePlayer) {
+      return undefined
+    }
+
+    for (const element of Object.keys(CHAIN_SKILL_IDS) as ElementType[]) {
+      const level = this.activePlayer.nodeLevels[`lap_dao_thuan_${element}`]
+
+      if (level !== undefined && level > 0) {
+        return element
+      }
+    }
+
+    return undefined
   }
 
   readonly techniqueManager = new TechniqueManager()
@@ -2315,6 +2343,20 @@ export class GameManager {
             playerEntity.currentWard,
           )
         : undefined,
+    )
+
+    // Pháp Tu Thuần Hệ (Task 12, spec §7) — gate chuỗi A→B→C→D→E cho
+    // Pháp Tu đã Lập Đạo Thuần: setChainDefinition theo hành đọc từ node
+    // lap_dao_thuan_<el> (đọc LIVE, cùng nguồn với closure ult).
+    // undefined = không gate (mọi path cũ/Kiếm Tu/guest giữ nguyên).
+    // Session-scoped: chain là state của BattleSystem (sống qua stop()),
+    // set MỖI lần start để trận kế không thừa hưởng definition của player
+    // trước (multi-player session).
+    const thuanElement =
+      player.cultivationPath === 'phap_tu' ? this.getPhapTuThuanElement() : undefined
+
+    this.battleSystem.setChainDefinition(
+      thuanElement ? { skillIds: [...CHAIN_SKILL_IDS[thuanElement]] } : undefined,
     )
   }
 
