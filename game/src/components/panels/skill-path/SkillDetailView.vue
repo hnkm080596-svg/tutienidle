@@ -10,6 +10,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Skill } from '@/core/skill/Skill'
 import { skillResourceTypeLabel } from '@/core/skill/SkillResourceLabels'
+import { describeSkillMechanics } from '@/core/skill/SkillMechanicDescriptions'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
 import GameButton from '@/components/common/GameButton.vue'
@@ -31,6 +32,16 @@ const player = usePlayerStore()
 const { stateVersion, bumpState } = useStateVersion()
 
 const isMaxLevel = computed(() => !!props.skill && props.skill.level >= props.skill.maxLevel)
+
+// Task 12 (2026-09-03) — dòng cơ chế engine (hitCount/spread/zone/
+// add_stack/remove_buff/stacksPerAffectedTarget) không có trong
+// description tự do; helper thuần core-no-i18n trả text qua buff
+// registry labels (buff name + ELEMENT_LABELS — cùng nguồn nhãn data).
+const mechanicLines = computed(() => {
+  stateVersion.value
+
+  return props.skill ? describeSkillMechanics(props.skill, gameManager.buffRegistry) : []
+})
 
 const upgradeCost = computed(() => {
   stateVersion.value
@@ -67,6 +78,10 @@ function onUpgrade() {
       <h4 class="skill-detail__name">{{ skill.name }}</h4>
 
       <p v-if="skill.description" class="skill-detail__desc">{{ skill.description }}</p>
+
+      <ul v-if="mechanicLines.length > 0" class="skill-detail__mechanics">
+        <li v-for="line in mechanicLines" :key="line.key">{{ line.text }}</li>
+      </ul>
 
       <div class="skill-detail__level">
         <span class="skill-detail__level-label">Lv. {{ skill.level }}/{{ skill.maxLevel }}</span>
@@ -124,6 +139,13 @@ function onUpgrade() {
   margin: 0 0 10px;
   font-size: var(--text-sm);
   color: var(--paper-text-soft);
+}
+
+.skill-detail__mechanics {
+  margin: 0 0 10px;
+  padding-left: 18px;
+  font-size: var(--text-sm);
+  color: var(--paper-text-muted);
 }
 
 .skill-detail__level {
