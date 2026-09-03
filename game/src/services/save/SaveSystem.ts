@@ -663,10 +663,6 @@ export function loadGame(): LoadOutcome {
   )
   let importedDiscardedCount = 0
 
-  // Chỉ consume sau khi save đã parse + validate thành công. Nếu boot
-  // gặp corruption khác, handoff vẫn còn cho lần recovery/load hợp lệ.
-  localStorage.removeItem(IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY)
-
   if (importedHandoffRaw) {
     let importedHandoff: unknown
 
@@ -688,6 +684,14 @@ export function loadGame(): LoadOutcome {
     ) {
       importedDiscardedCount = importedHandoff.discardedEquipmentCount
     }
+
+    // OPT-06 — removeItem chạy SAU khi đọc + consume xong (trước đây
+    // xóa ngay trước khi parse). Chỉ chạm storage khi key thực sự tồn
+    // tại; handoff không còn giá trị sử dụng sau load hợp lệ nên vẫn
+    // bị xóa kể cả khi marker lệch normalizedRaw (rác). Ý đồ cũ giữ
+    // nguyên: mọi đường return trước (parse fail, version, shape) nằm
+    // TRƯỚC block này nên handoff còn nguyên cho lần load hợp lệ.
+    localStorage.removeItem(IMPORT_DISCARDED_EQUIPMENT_HANDOFF_KEY)
   }
 
   return {
