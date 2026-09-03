@@ -19,31 +19,24 @@ Mục tiêu: dựng các primitive thuần (pure function), test riêng, KHÔNG 
 
 | Hạng mục | Plan | Trạng thái |
 |---|---|---|
-| ActionGauge, TurnQueue, ChannelQueue, AoeShape*, BounceChain, TrueShot, BossTurnTriggers, MomentumBreak, ResourceTurnHook — 9 file mới dưới `game/src/core/battle/turn/` | [2026-09-03-turn-based-combat-foundation.md](../../docs/superpowers/plans/2026-09-03-turn-based-combat-foundation.md) | 🟡 Đang thực thi (agent khác, branch `feat/turn-combat-foundation`, worktree `.agent-worktrees/turn-combat-foundation`) |
+| ActionGauge, TurnQueue, ChannelQueue, AoeShape*, BounceChain, TrueShot, BossTurnTriggers, MomentumBreak, ResourceTurnHook — 9 file mới dưới `game/src/core/battle/turn/` | [2026-09-03-turn-based-combat-foundation.md](../../docs/superpowers/plans/2026-09-03-turn-based-combat-foundation.md) | 🟢 Xong, merge master 2026-09-04 (merge commit `aee253b`; 50/50 test turn/ suite, type-check sạch; QA quick report: [2026-09-04-turn-combat-foundation-quick.md](qa/2026-09-04-turn-combat-foundation-quick.md) PASS WITH EVIDENCE) |
 
-*⚠️ Task 4 (`AoeShape.ts`) của plan này cần sửa hướng trước/khi thực thi — xem Milestone 2 hạng mục "AOE Shape extension" bên dưới; logic thuần (`isCellInShape`/`boundingBoxForShape`) vẫn dùng được, chỉ đổi chỗ ở.
+## Milestone 2 — BattleSystem Replacement (gộp mọi hệ liên quan, 2026-09-04)
 
-## Milestone 2 — Core System Conversion (mỗi hệ 1 plan riêng)
-
-Mục tiêu: chuyển từng hệ thống thật (không phải primitive) sang mô hình turn-based, xây trên Milestone 1. **Chỉ bắt đầu sau khi Milestone 1 merge xong** — các hạng mục dưới đây tái dùng trực tiếp file Foundation làm code đã hoàn thiện, không phải tài liệu tham khảo.
+**Quyết định người dùng 2026-09-04**: không tách "Core System Conversion" thành milestone riêng nữa — không đáng phân biệt. Mọi hệ dưới đây làm CHUNG một đợt lớn xoay quanh việc thay `BattleSystem.update(deltaSeconds)`. Trong đợt này vẫn viết plan riêng cho từng hệ khi đến lượt (không gộp 1 plan khổng lồ), nhưng không còn khái niệm "làm sớm trước BattleSystem" nữa — trọng tâm hiện tại là chính bản thân BattleSystem Replacement.
 
 | Hạng mục | Quyết định | Plan | Trạng thái |
 |---|---|---|---|
-| AOE Shape extension — thêm `'cross'` vào `ActionTargetingSystem.ts`/`CombatAction.ts` hiện có (KHÔNG giữ `AoeShape.ts` làm hệ song song), wire Bounce/TrueShot vào đó | [Đã chốt](../../docs/superpowers/specs/2026-09-04-turn-based-combat-survey-and-stat-decisions.md) | _(chưa viết)_ | ⚪ Đã quyết định, chưa có plan |
+| **BattleSystem Replacement** — thay `update(deltaSeconds)` (18-bước pipeline, ~2400 dòng) bằng vòng lặp turn-based thật (ActionGauge/TurnQueue/ChannelQueue) | — | _(chưa viết)_ | 🔴 **Đang brainstorm — trọng tâm hiện tại** |
+| AOE Shape extension — thêm `'cross'` vào `ActionTargetingSystem.ts`/`CombatAction.ts` hiện có (KHÔNG giữ `AoeShape.ts` làm hệ song song), wire Bounce/TrueShot vào đó | [Đã chốt hướng](../../docs/superpowers/specs/2026-09-04-turn-based-combat-survey-and-stat-decisions.md); trình tự: gộp chung đợt BattleSystem Replacement (2026-09-04) | _(chưa viết)_ | ⚪ Đã quyết định, chưa có plan |
 | Ultimate-as-loadout-slot — `SkillLoadoutSlots.ts` dành slot index 5 cho skill gắn tag `ultimate`, retire `UltimateSystem.ts` | [Đã chốt](../../docs/superpowers/specs/2026-09-04-turn-based-combat-survey-and-stat-decisions.md) | _(chưa viết)_ | ⚪ Đã quyết định, chưa có plan |
 | BuffSystem turn-duration — chuyển HẲN duration sang theo lượt cho combat buff, không giữ field giây song song | [Đã chốt](../../docs/superpowers/specs/2026-09-04-turn-based-combat-survey-and-stat-decisions.md) | _(chưa viết)_ | ⚪ Đã quyết định, chưa có plan (blast radius cao nhất toàn bộ rework) |
 | HazardZoneSystem N-turn — Lava Zone/Sword Zone chuyển sang "persists N lượt", tick 1 lần mỗi lượt của chủ zone | [Đã chốt](../../docs/superpowers/specs/2026-09-04-turn-based-combat-survey-and-stat-decisions.md) | _(chưa viết)_ | ⚪ Đã quyết định, chưa có plan |
 | Resource turn-hooks wiring — `PhapTuBattleResourceSystem`/`KiemTuResourceSystem` chuyển khỏi `deltaSeconds`, dùng `ResourceTurnHook.ts` | [Đã chốt](../../docs/superpowers/specs/2026-09-04-turn-based-combat-survey-and-stat-decisions.md) | _(chưa viết)_ | ⚪ Đã quyết định, chưa có plan |
 | MomentumBreak real wiring — nối `MomentumBreak.ts` vào call site thật trong `BattleSystem.ts` (~L1452-1475); **decay là cơ chế MỚI** (chưa từng tồn tại), không phải migrate | [Đã chốt](../../docs/superpowers/specs/2026-09-04-turn-based-combat-survey-and-stat-decisions.md) | _(chưa viết)_ | ⚪ Đã quyết định, chưa có plan |
 | Boss `afterTurns` conversion — `TribulationPhase.ts`'s `BossEnrage.afterSeconds` → `afterTurns`, update data `Enemies.ts` | [Đã chốt](../../docs/superpowers/specs/2026-09-04-turn-based-combat-survey-and-stat-decisions.md) | _(chưa viết)_ | ⚪ Đã quyết định, chưa có plan |
-
-## Milestone 3 — BattleSystem Replacement (khối lớn nhất, downstream của mọi thứ trên)
-
-| Hạng mục | Quyết định | Plan | Trạng thái |
-|---|---|---|---|
-| Thay `BattleSystem.update(deltaSeconds)` (18-bước pipeline, ~2400 dòng) bằng vòng lặp turn-based thật | Chưa bàn chi tiết | _(chưa viết)_ | 🔴 Chưa khảo sát/quyết định |
 | GameManager external contract — thay `updateBattleFixedStep`/`StageWaveSystem.update(deltaSeconds)` bằng entry point turn-based; sửa `KiemTuCombatHud.vue` (đang gọi thẳng `ultAutoEnabled`/`tryPlayerUltimate`/`setChannelTickSeconds`) | Chưa bàn chi tiết | _(chưa viết)_ | 🔴 Chưa khảo sát/quyết định |
-| Stat System conversion — `attackSpeed`→`speed`, retire `castSpeedPercent`/`cooldownReduction`, xóa `movementSpeed` | [Trình tự đã chốt: BẮT BUỘC làm chung với Milestone 3, không tách riêng làm sớm](../../docs/superpowers/specs/2026-09-04-turn-based-combat-survey-and-stat-decisions.md) — cách dexterity/intelligence derive ra `speed` **còn mở**, để bàn khi thiết kế tổng thể 5 main stat | _(chưa viết)_ | 🔴 Trình tự đã chốt, thiết kế chi tiết chưa xong |
+| Stat System conversion — `attackSpeed`→`speed`, retire `castSpeedPercent`/`cooldownReduction`, xóa `movementSpeed` | [Trình tự đã chốt: bắt buộc làm chung đợt BattleSystem Replacement](../../docs/superpowers/specs/2026-09-04-turn-based-combat-survey-and-stat-decisions.md) — cách dexterity/intelligence derive ra `speed` **còn mở**, để bàn khi thiết kế tổng thể 5 main stat | _(chưa viết)_ | 🔴 Trình tự đã chốt, thiết kế chi tiết chưa xong |
 | Manual tap-to-cast UI (`CombatSkillSlot.vue` và liên quan) — hiện HOÀN TOÀN chưa tồn tại (0 UI thủ công), người chơi chỉ chọn skill, không chọn target (targeting luôn tự động — [spec §4.5](../../docs/superpowers/specs/2026-09-03-turn-based-combat-design.md)) | Đã chốt về hành vi (spec §4.5), UI cụ thể chưa thiết kế | _(chưa viết)_ | 🔴 Chưa khảo sát/quyết định |
 | StageWaveSystem turn conversion — trigger spawn wave kế theo lượt thay vì `spawnCountdown -= deltaSeconds` | Chưa bàn chi tiết | _(chưa viết)_ | 🔴 Chưa khảo sát/quyết định |
 | Rewrite ~16 file `BattleSystem.*.test.ts` đang pin hành vi real-time | Kỳ vọng: viết lại, không giữ (big-bang) | _(chưa viết)_ | 🔴 Chưa khảo sát/quyết định |
