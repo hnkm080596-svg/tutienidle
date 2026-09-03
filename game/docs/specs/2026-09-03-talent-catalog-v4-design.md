@@ -66,7 +66,24 @@ Hai dạng implement:
   EquipmentSystem, BattleLootSystem, OfflineProgressSystem) qua getter
   `getXyz(selectedTalentIds)` — pattern đã có.
 
-### 3.2 Engine extensions (nhỏ, có giới hạn)
+### 3.2 Luật sở hữu (minh xác theo code hiện hành, không đổi)
+
+- Mỗi nhân vật sở hữu **đúng 1 talent, cả đời** — chọn 1 lần khi tạo nhân vật
+  (roll 9 chọn 1, `CHARACTER_CREATION_TALENT_COUNT = 1` tại
+  `services/character/CharacterCreationService.ts:45`). Không re-roll, không
+  đổi, không tích lũy thêm — roll xảy ra đúng 1 lần trong lifetime nhân vật nên
+  câu hỏi "giữ talent cũ khi roll mới" không tồn tại.
+- **Hệ quả 1 — không có cộng hưởng talent**: các talent KHÔNG BAO GIỜ tương tác
+  với nhau qua chơi bình thường (Kiếm Quang + Võ Ảnh + Trọng Kích không thể cùng
+  xuất hiện trên 1 nhân vật). Ngân sách §5 vì thế được đảm bảo NGẮN VIỆN —
+  không cần test tổ hợp talent.
+- **Hệ quả 2 — save legacy đa talent (pre-v47)**: code phòng thủ cũ
+  (`collectTalentEffects` sum mọi id) cho phép save edit/cũ chứa nhiều talent
+  → vượt ngân sách ngoài ý định. v4 siết: `collectTalentEffects` **clamp lấy id
+  ĐẦU TIÊN**, bỏ qua id còn lại (hành vi có chủ đích, test khóa). Development
+  phase — không migration.
+
+### 3.3 Engine extensions (nhỏ, có giới hạn)
 
 | Ext | Nội dung | Nơi | Độ phức tạp |
 |---|---|---|---|
@@ -96,7 +113,7 @@ chỉ hiệu lực trong trận (reset mỗi trận theo `PassiveSystem.resetSta
 | # | Id (N2b) | Tên | Chỉ số | Nhịp |
 |---|---|---|---|---|
 | 1 | `kiem_quang` | Kiếm Quang | chí mạng | onCrit +1 tầng Kiếm Mạch (max 10, +1% crit/tầng); chạm 10 → **Kiếm Vực** 8s: đòn đánh guaranteed crit. E1 convert |
-| 2 | `pha_giap` | Phá Giáp | xuyên giáp (metalPenetration) | onHit +1 tầng Mổ Tạc (max 5, +2%/tầng); kill giữ 50% tầng sang trận sau |
+| 2 | `pha_giap` | Phá Giáp | xuyên giáp (metalPenetration) | onHit +1 tầng Mổ Tạc (max 5, +2%/tầng). *(M1: trong trận — reset mỗi trận; M2 thêm "kill giữ 50% tầng sang trận sau" qua `phaGiapCarryStacks` trên PlayerData kèm save bump — carry là cross-battle nên thuộc milestone save)* |
 | 3 | `tai_phong` | Tật Phong | tốc đánh | onKill +2% attackSpeed stack vô hạn trong trận; bị trúng đòn reset về 0 |
 | 4 | `trong_kich` | Trọng Kích | sát thương chí mạng | 3 crit liên tiếp (không bị chặn giữa) → phát kế +30% finalDamagePercent; +2% criticalDamage vĩnh viễn trong trận, mỗi lần bùng +1 mốc |
 | 5 | `hap_linh` | Hấp Linh | hút máu | leechPercent ×2.5 nhưng chỉ hiệu lực khi HP < 50% — dao đôi sinh tử |
@@ -194,10 +211,18 @@ Trường mới trên PlayerData:
 
 - `cultivationOvercharge: number` (Hải Nạp, mặc định 0)
 - `tribulationBonusStacks: number` (Lôi Kiếp, mặc định 0)
-- `nodeFreePurchaseRecord: Record<nodeId, number>` (Vấn Đao — số lần đã được
+- `nodeFreePurchaseRecord: Record<nodeId, number>` (Vấn Đạo — số lần đã được
   miễn phí theo node, lưu KỂ CẢ với talent không còn (retire/save edit) để
   `devResetBranch` refund dựa vào số Cảm Ngộ THẬT đã trả, không exploitable
   hoàn đầy tiền mua free)
+- `phaGiapCarryStacks: number` (Phá Giáp — "kill giữ 50% tầng sang trận sau",
+  stack carry cross-battle, mặc định 0; decay về 0 khi qua cảnh giới — cột mốc
+  mới xóa vết kiếm cũ; **thuộc M2** vì cần save bump, M1 chỉ làm nhịp trong
+  trận)
+
+Kiểm toán cross-battle cho 18 talent: chỉ Phá Giáp cần lưu (Tật Phong/Thứ
+Phạt/Kiếm Quang/Thạch Giáp/Võ Ảnh... đều reset mỗi trận theo
+`PassiveSystem.resetStacks()` — chủ đích; Bất Tử Th thể battle-scoped sẵn).
 
 Không lưu state trong trận (reset mỗi trận như PassiveSystem). Save shape
 validation cập nhật theo `save-shape-validation` hiện có.
@@ -212,13 +237,37 @@ validation cập nhật theo `save-shape-validation` hiện có.
 - **Ngân sách/invariant**: catalog test — mọi talent id pool có effect, mọi
   buffId tham chiếu tồn tại trong BuffRegistry, mọi talent có chi phí đối trọng
   được khai báo trong description.
-- **Save round-trip**: 3 trường mới; save cũ không crash.
-- **Balance sim** (first-pass guardrail): simulation cuối Trúc Cơ 40h cho 3 đại
-  diện (Lôi Kiếp / Hỏa Hầu / Hậu Tích) — chạm cùng băng công suất.
+- **Đa talent (save edit/cũ)**: `collectTalentEffects` chỉ nhận id đầu tiên —
+  test khóa hành vi siết này.
+- **Save round-trip**: 4 trường mới; save cũ không crash.
+- **Cross-battle carry**: Phá Giáp giữ 50% tầng qua trận + decay khi đổi cảnh
+  giới — test riêng.
+- **Balance sim (first-pass guardrail)**: simulation cuối Trúc Cơ 40h cho 3 đại
+  diện (Lôi Kiếp / Hỏa Hầu / Hậu Tích) — chạm cùng băng công suất. Guardrail
+  bổ sung:
+  - **Lôi Kiếp late-game**: sim phải chạy tới 9 stack (mahayana) — tổng +90%
+    toàn chỉ số là CỐ Ý vượt dải (thù lao cho 9 lần đánh cược mạng sống qua
+    toàn game), nhưng phải kê đơn: mỗi stack một mình đáng giá < 1/3 talent
+    cùng bậc ở mốc đo tương ứng. Nếu sim cho thấy vượt, giảm +10% → +7%.
+  - **Hậu Tích Bạt Phát tầng 1-2**: sim thời gian "kẹt" — tầng 1 chậm −50%
+    KHÔNG được vượt 2× thời gian tầng 1 của baseline ở realm đầu (Luyện Khí);
+    nếu vượt, nới −50% → −35% hoặc dịch +10%/tầng → +12%/tầng.
+  - **Hỏa Hầu/Bách Luyện chi phí ×2/×3**: sim thu nhập nguyên liệu 10h đầu
+    — nếu người chơi talent này còn lạich nguyên liệu < 40% so với baseline
+    sau khi duy trì cùng công suất, giảm ×3 → ×2.5.
 
-## 9. Docs đồng bộ
+## 9. Docs đồng bộ & UX mô tả talent
 
-- `game-guide.md` mục thiên phú viết lại theo catalog v4.
+- **Mô tả in-game**: mọi talent v4 có cơ chế phức tạp (tích tầng/ngưỡng/decay/
+  convert) — description PHẢI theo template 3 phần: (1) một câu hình ảnh đúng
+  chất tiên hiệp, (2) cơ chế viết bằng số rõ ràng ("mỗi lần chặn +2% phòng thủ,
+  tối đa 10 tầng"), (3) chi phí đối trọng nêu rõ ("mỗi mẻ tốn gấp đôi gỗ và
+  Linh Thạch"). Không giấu số — người chơi đọc mô tả là tính được giá trị
+  (nguyên tắc budget §5 công khai). Nguồn: description trong `data/talent/
+  Talents.ts` (giữ pattern hiển thị `CharacterCreationScreen` hiện có).
+- `game-guide.md` mục thiên phú viết lại theo catalog v4 + **ví dụ minh họa
+  từng talent** (1 tình huống chơi thật: "đến tầng 12 của realm, Hậu Tích Bạt
+  Phát đang cho bạn +60% tốc độ tu so với người thường").
 - `roadmap.md`: thêm mục catalog v4 (thay dòng "thiên phú đã giải quyết" của v3).
 - `Talents.ts` header comment cập nhật (catalog v4, tham chiếu spec này).
 
