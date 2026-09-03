@@ -11,6 +11,7 @@ import {
   resolvePlayerVisualProfileId,
   type PlayerVisualProfileId,
 } from '@/game/support/PlayerVisualProfiles'
+import { makeKiemBarReader, KIEM_BAR_READER_KEY } from '@/game/support/kiemBarBridge'
 
 const gameManager = useGameManager()
 const player = usePlayerStore()
@@ -167,6 +168,13 @@ function setupGame(
   gameManager.eventBus.on<void>('battle_end', clearPositionsSnapshot)
 
   gameManager.eventBus.on<void>('combat_scene_exit', clearPositionsSnapshot)
+
+  // 9.4 — Kiếm bar reader (Kiếm Thế / Kiếm Ý tạm) đăng ký từ đây (có
+  // gameManager + player store) vào registry; CombatScene poll mỗi frame.
+  game.registry.set(
+    KIEM_BAR_READER_KEY,
+    makeKiemBarReader(gameManager, () => usePlayerStore()),
+  )
 
   positionsCleanup = () => {
     gameManager.eventBus.off<BattlePositionsEvent>('positions', positionsHandler)

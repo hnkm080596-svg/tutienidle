@@ -20,6 +20,7 @@ import {
 } from '@/core/battle/BattleLane'
 import { getCombatInsets, getFallbackCombatInsets } from '@/game/support/combatInsets'
 import { PlayerHudLayer } from './combat/PlayerHudLayer'
+import { readKiemBar } from '@/game/support/kiemBarBridge'
 import type { GridPosition } from '@/core/battle/BattleGrid'
 import {
   createBattleGridProjection,
@@ -722,6 +723,21 @@ export class CombatScene extends Phaser.Scene {
 
       this.pendingPositions = undefined
       this.applyPendingPositions(event)
+    }
+
+    // 9.4 - Kiem bar (Kiem The / Kiem Y tam) poll MOI frame.
+    this.pollKiemBar()
+  }
+
+  // 9.4 — Kiếm bar poll mỗi frame từ reader đăng ký trong PhaserCanvas
+  // (chỉ nơi có gameManager — xem kiemBarBridge.ts). null = ẩn bar.
+  private pollKiemBar(): void {
+    const kiem = readKiemBar(this.registry)
+
+    if (kiem) {
+      this.playerHud?.updateKiem(kiem.current, kiem.max, kiem.label)
+    } else {
+      this.playerHud?.updateKiem(0, 0, '')
     }
   }
 
