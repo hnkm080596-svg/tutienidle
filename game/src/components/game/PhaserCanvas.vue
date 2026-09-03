@@ -11,7 +11,7 @@ import {
   resolvePlayerVisualProfileId,
   type PlayerVisualProfileId,
 } from '@/game/support/PlayerVisualProfiles'
-import { makeKiemBarReader, KIEM_BAR_READER_KEY } from '@/game/support/kiemBarBridge'
+import { makeKiemBarReader, registerKiemBarReader } from '@/game/support/kiemBarBridge'
 
 const gameManager = useGameManager()
 const player = usePlayerStore()
@@ -171,8 +171,8 @@ function setupGame(
 
   // 9.4 — Kiếm bar reader (Kiếm Thế / Kiếm Ý tạm) đăng ký từ đây (có
   // gameManager + player store) vào registry; CombatScene poll mỗi frame.
-  game.registry.set(
-    KIEM_BAR_READER_KEY,
+  registerKiemBarReader(
+    game.registry,
     makeKiemBarReader(gameManager, () => usePlayerStore()),
   )
 

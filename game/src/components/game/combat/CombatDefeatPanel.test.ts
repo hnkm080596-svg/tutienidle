@@ -90,10 +90,6 @@ describe('CombatDefeatPanel — 9.6 10s auto-return-home fallback', () => {
     expect(exitSpy).toHaveBeenCalledOnce()
     expect(gm.eventBus.emit).toHaveBeenCalledWith('combat_scene_exit', undefined)
 
-    expect(panel.ui.battleRunMode).toBe('manual')
-    expect(exitSpy).toHaveBeenCalledOnce()
-    expect(gm.eventBus.emit).toHaveBeenCalledWith('combat_scene_exit', undefined)
-
     panel.unmount()
   })
 
