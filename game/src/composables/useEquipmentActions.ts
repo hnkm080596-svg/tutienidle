@@ -1,7 +1,7 @@
 import { useGameManager, useStateVersion } from './useGameState'
 import { usePlayerStore } from '../stores/player'
 import { useActionFeedbackStore } from '../stores/actionFeedback'
-import { actionFailureLabel } from '../core/presentation/ActionAvailability'
+import { actionFailureKey, ACTION_FAILURE_FALLBACK_KEY } from '../core/presentation/ActionAvailability'
 import type { EquipmentSlot } from '../core/equipment/EquipmentTypes'
 import type { RolledAffix } from '../core/equipment/RolledAffix'
 import type { RefineValueEntry } from '../core/equipment/EquipmentSystem'
@@ -26,6 +26,26 @@ export function useEquipmentActions() {
 
   const feedback = useActionFeedbackStore()
 
+  // i18n (task 2.2 lô 1) — composable KHÔNG import i18n: chỉ đẩy locale key
+  // vào feedback store, ActionFeedbackLog t() tại điểm render. successKey/
+  // errorKey gửi messageKey + params (giá trị param cũng là locale key).
+  const OP_LABEL_KEYS = {
+    equip: 'actionFeedback.ops.equip.label',
+    enhance: 'actionFeedback.ops.enhance.label',
+    wash: 'actionFeedback.ops.wash.label',
+    refine: 'actionFeedback.ops.refine.label',
+    dissolve: 'actionFeedback.ops.dissolve.label',
+  } as const
+
+  type OpId = keyof typeof OP_LABEL_KEYS
+
+  function reportFailure(op: OpId, reason: string | undefined) {
+    feedback.errorKey('actionFeedback.failed', {
+      label: OP_LABEL_KEYS[op],
+      reason: actionFailureKey(reason) ?? ACTION_FAILURE_FALLBACK_KEY,
+    })
+  }
+
   function syncEquipmentModifiers() {
     player.setEquipmentModifiers(gameManager.getEquipmentModifiers())
   }
@@ -41,12 +61,12 @@ export function useEquipmentActions() {
   }
 
   // Workstream A §3.3 — thất bại KHÔNG mutate state, thành công/thất bại
-  // đều báo qua "Nhật ký thao tác" với lý do đã dịch tiếng Việt cụ thể.
-  function withSyncAndResult(result: { ok: boolean; reason?: string }, label: string): boolean {
+  // đều báo qua "Nhật ký thao tác" với lý do đã dịch cụ thể (key + t()).
+  function withSyncAndResult(result: { ok: boolean; reason?: string }, op: OpId): boolean {
     if (withSync(result.ok)) {
-      feedback.success(`${label} thành công`)
+      feedback.successKey('actionFeedback.success', { label: OP_LABEL_KEYS[op] })
     } else {
-      feedback.error(`Không thể ${label}: ${actionFailureLabel(result.reason)}`)
+      reportFailure(op, result.reason)
     }
 
     return result.ok
@@ -61,6 +81,7 @@ export function useEquipmentActions() {
           ? gameManager.materialRegistry.get(reward.materialId)
           : undefined
 
+        // Tên nguyên liệu là data-layer (loạt 2.7) — đẩy chuỗi thường.
         feedback.success(`Hóa Luyện: ${material?.name ?? 'Nguyên liệu không xác định'} ×${reward.amount}`)
       }
 
@@ -68,7 +89,7 @@ export function useEquipmentActions() {
 
       bumpState()
     } else if (!result.ok) {
-      feedback.error(`Không thể Hóa Luyện: ${actionFailureLabel(result.reason)}`)
+      reportFailure('dissolve', result.reason)
     }
 
     return result.ok
@@ -76,24 +97,21 @@ export function useEquipmentActions() {
 
   return {
     equip: (instanceId: string) =>
-      withSyncAndResult(gameManager.equipItem(instanceId, player.$state), 'Trang Bị'),
+      withSyncAndResult(gameManager.equipItem(instanceId, player.$state), 'equip'),
 
     unequip: (instanceId: string) => withSync(gameManager.unequipItem(instanceId)),
 
     // Cường Hóa gắn SLOT (slot-level rework) — slot trống vẫn nâng được.
     enhance: (slot: EquipmentSlot) =>
-      withSyncAndResult(gameManager.enhanceSlot(slot, player.$state), 'Cường Hóa'),
+      withSyncAndResult(gameManager.enhanceSlot(slot, player.$state), 'enhance'),
 
     /** Tẩy Luyện — tiêu Tinh Hoa, Linh Thạch và một lượt Rèn. */
     wash: (instanceId: string) =>
-      withSyncAndResult(gameManager.washItem(instanceId, player.$state), 'Tẩy Luyện'),
+      withSyncAndResult(gameManager.washItem(instanceId, player.$state), 'wash'),
 
     /** Tinh Luyện — lockedIndices là các dòng giữ nguyên (§7.4). */
     refine: (instanceId: string, lockedIndices: readonly number[]) =>
-      withSyncAndResult(
-        gameManager.refineItem(instanceId, lockedIndices, player.$state),
-        'Tinh Luyện',
-      ),
+      withSyncAndResult(gameManager.refineItem(instanceId, lockedIndices, player.$state), 'refine'),
 
     /**
      * Xem trước Tẩy Luyện (2026-08-30, UI "giữ/bỏ") — roll + TRỪ COST NGAY
@@ -106,7 +124,7 @@ export function useEquipmentActions() {
       const result = gameManager.previewWashItem(instanceId)
 
       if (!result.ok || !result.affixes) {
-        feedback.error(`Không thể Tẩy Luyện: ${actionFailureLabel(result.reason)}`)
+        reportFailure('wash', result.reason)
 
         return null
       }
@@ -120,14 +138,14 @@ export function useEquipmentActions() {
 
     /** Chốt affixes đã washPreview() — không trừ cost lần nữa. */
     washCommit: (instanceId: string, affixes: RolledAffix[]) =>
-      withSyncAndResult(gameManager.commitWashItem(instanceId, affixes), 'Tẩy Luyện'),
+      withSyncAndResult(gameManager.commitWashItem(instanceId, affixes), 'wash'),
 
     /** Xem trước Tinh Luyện (2026-08-30, UI "giữ/bỏ") — cùng cơ chế washPreview. */
     refinePreview: (instanceId: string, lockedIndices: readonly number[]): RefineValueEntry[] | null => {
       const result = gameManager.previewRefineItem(instanceId, lockedIndices)
 
       if (!result.ok || !result.values) {
-        feedback.error(`Không thể Tinh Luyện: ${actionFailureLabel(result.reason)}`)
+        reportFailure('refine', result.reason)
 
         return null
       }
@@ -141,7 +159,7 @@ export function useEquipmentActions() {
 
     /** Chốt values đã refinePreview() — không trừ cost lần nữa. */
     refineCommit: (instanceId: string, values: RefineValueEntry[]) =>
-      withSyncAndResult(gameManager.commitRefineItem(instanceId, values), 'Tinh Luyện'),
+      withSyncAndResult(gameManager.commitRefineItem(instanceId, values), 'refine'),
 
     /** Bỏ preview Refine ở cả UI lẫn capability core; không hoàn lại cost đã roll. */
     refineDiscard: (instanceId?: string) => gameManager.discardRefinePreview(instanceId),

@@ -7,6 +7,7 @@ import { GameManager } from '@/core/game/GameManager'
 import { buildings } from '@/data/building/buildings'
 import { commitThanhVanVariant } from '@/game/support/ThanhVanArt'
 import { useUiStore } from '@/stores/ui'
+import { i18n } from '@/i18n'
 import DongFuScene from './DongFuScene.vue'
 
 const SPRING_MORNING_URLS = [
@@ -96,6 +97,7 @@ function mountDongFuScene() {
   const pinia = createPinia()
 
   app.use(pinia)
+  app.use(i18n)
   app.provide(GAME_MANAGER_KEY, gameManager)
   app.provide(STATE_VERSION_KEY, ref(0))
   app.provide(BUMP_STATE_KEY, () => {})

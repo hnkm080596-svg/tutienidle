@@ -5,11 +5,18 @@ import { createPinia } from 'pinia'
 import { GameManager } from '@/core/game/GameManager'
 import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composables/useGameState'
 import { SPIRIT_STONE_MATERIAL } from '@/core/material/SpiritStoneMaterial'
+import { i18n } from '@/i18n'
 import HomeResourceStrip from './HomeResourceStrip.vue'
 
 // ui-discoverability-refactor-plan.md §3.5 (2026-08-29) — dải tài nguyên
 // thường trực ở home: Linh Thạch luôn hiện; vật liệu nâng cấp theo dữ
 // liệu building thật; click mở túi đồ.
+// i18n (task 2.2 lô 1) — component dùng t() nên mount phải cài i18n;
+// assertion qua i18n.global.t(key) thay vì raw vi string.
+function t(key: string): string {
+  return (i18n.global as unknown as { t: (k: string) => string }).t(key)
+}
+
 function mountWith(manager: GameManager) {
   const pinia = createPinia()
   const stateVersion = ref(0)
@@ -23,6 +30,7 @@ function mountWith(manager: GameManager) {
   })
 
   app.use(pinia)
+  app.use(i18n)
   app.provide(GAME_MANAGER_KEY, manager)
   app.provide(STATE_VERSION_KEY, stateVersion)
   app.provide(BUMP_STATE_KEY, () => { stateVersion.value++ })
@@ -48,19 +56,23 @@ describe('HomeResourceStrip (ui-discoverability-refactor-plan §3.5)', () => {
     const { root } = mountWith(manager)
 
     // Thu gọn: số vẫn thấy được (đủ hữu ích), tên "Linh Thạch" thì KHÔNG
-    // hiện (đó là phần "che màn hình" gây khó chịu).
+    // hiện (đó là phần "che màn hình" gây khó chịu). aria-label qua key.
     expect(root.textContent).toContain('1234')
-    expect(root.textContent).not.toContain('Linh Thạch')
+    expect(root.textContent).not.toContain(t('resourceStrip.spiritStones'))
 
-    root.querySelector<HTMLButtonElement>('.home-resource-strip__toggle')!.click()
+    const toggle = root.querySelector<HTMLButtonElement>('.home-resource-strip__toggle')!
+    expect(toggle.getAttribute('aria-label')).toBe(t('resourceStrip.show'))
+    toggle.click()
     await nextTick()
 
-    expect(root.textContent).toContain('Linh Thạch')
+    expect(root.textContent).toContain(t('resourceStrip.spiritStones'))
     expect(root.textContent).toContain('1234')
 
-    root.querySelector<HTMLButtonElement>('.home-resource-strip__collapse')!.click()
+    const collapse = root.querySelector<HTMLButtonElement>('.home-resource-strip__collapse')!
+    expect(collapse.getAttribute('aria-label')).toBe(t('resourceStrip.hide'))
+    collapse.click()
     await nextTick()
 
-    expect(root.textContent).not.toContain('Linh Thạch')
+    expect(root.textContent).not.toContain(t('resourceStrip.spiritStones'))
   })
 })

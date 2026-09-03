@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { Building } from '@/core/building/Building'
 import { useGameManager } from '@/composables/useGameState'
 import { useStageActive } from '@/composables/useStageActive'
@@ -24,6 +25,7 @@ const { variant } = defineProps<{
   variant: ThanhVanVariant
 }>()
 
+const { t } = useI18n()
 const gameManager = useGameManager()
 const stageActive = useStageActive()
 const navigation = useBuildingNavigation()
@@ -122,8 +124,8 @@ onBeforeUnmount(() => {
             'is-selected': isSelected(scene.building),
           }"
           :aria-label="presentationFor(scene.building.id).isBuilt
-            ? `Mở ${scene.building.name}`
-            : `Xem yêu cầu mở ${scene.building.name}`"
+            ? t('homeBuildings.aria.open', { name: scene.building.name })
+            : t('homeBuildings.aria.viewRequirements', { name: scene.building.name })"
           v-tooltip="tooltipFor(scene.building)"
           @click.stop="navigation.openBuilding(scene.building.id)"
         >

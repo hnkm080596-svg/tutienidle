@@ -5,6 +5,7 @@
 // + tổng đang nhận, chi phí cấp kế; nút "Lĩnh Ngộ" ở level 0, "Nâng
 // Cấp" từ level 1, trạng thái "Tối đa" khi đạt maxLevel.
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { useLoadoutActions } from '@/composables/useLoadoutActions'
@@ -18,7 +19,10 @@ import {
   canUpgradeNode,
 } from '@/core/progression/NodeSystem'
 import { getActiveSkillResourceStats } from '@/core/skill/SkillResourceStatLabels'
+import type { ActiveSkillResourceStat } from '@/core/skill/SkillResourceStatLabels'
 import type { ProgressionNode } from '@/core/progression/ProgressionNode'
+
+const { t } = useI18n({ useScope: 'local' })
 
 const props = defineProps<{
   node: ProgressionNode | null
@@ -62,7 +66,8 @@ const isMaxed = computed(() => level.value >= maxLevel.value && maxLevel.value >
 
 // Skill rework — node cấp "Thế tài nguyên" nhắm THẲNG 1 Skill qua
 // effect.skillModifiers — hiện TỔNG hiện tại của skill đó (đã gồm phần
-// node suy ra từ getSkillRuntimeStats(player)).
+// node suy ra từ getSkillRuntimeStats(player)). Task 4 (i18n followups
+// 2.3) — label/description là locale key, render qua t() ở đây.
 const affectedSkillStats = computed(() => {
   stateVersion.value
 
@@ -77,6 +82,16 @@ const affectedSkillStats = computed(() => {
   return skill ? getActiveSkillResourceStats(skill) : []
 })
 
+// Tham chiếu t() trong getter để reactivity locale theo computed —
+// không t() trực tiếp trong template (key động từ data core).
+function statLabel(stat: ActiveSkillResourceStat): string {
+  return t(stat.labelKey)
+}
+
+function statDescription(stat: ActiveSkillResourceStat): string {
+  return t(stat.descriptionKey)
+}
+
 // Lý do khoá — thuần suy ra từ hasPrerequisite() đã có (không đụng
 // core), chỉ để hiện gợi ý, KHÔNG phải nguồn sự thật.
 const lockedReasons = computed(() => {
@@ -89,7 +104,10 @@ const lockedReasons = computed(() => {
   const cost = nextCost.value ?? props.node.insightCost
 
   if (player.skillInsight < cost) {
-    reasons.push(`Cần ${cost} Cảm Ngộ (đang có ${player.skillInsight})`)
+    reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.cost', {
+      cost,
+      current: player.skillInsight,
+    }))
   }
 
   for (const prereq of props.node.prerequisites ?? []) {
@@ -98,24 +116,40 @@ const lockedReasons = computed(() => {
     }
 
     if (prereq.kind === 'node') {
-      reasons.push(`Cần lĩnh ngộ trước: ${gameManager.nodeRegistry.get(prereq.nodeId).name}`)
+      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.prerequisiteNode', {
+        name: gameManager.nodeRegistry.get(prereq.nodeId).name,
+      }))
     } else if (prereq.kind === 'realm') {
-      reasons.push(`Cần đạt cảnh giới yêu cầu`)
+      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.realm'))
     } else if (prereq.kind === 'element') {
-      reasons.push(`Cần mở khoá Hành liên quan`)
+      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.element'))
     } else if (prereq.kind === 'excludesNode') {
-      reasons.push(`Xung khắc với: ${gameManager.nodeRegistry.get(prereq.nodeId).name}`)
+      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.excludesNode', {
+        name: gameManager.nodeRegistry.get(prereq.nodeId).name,
+      }))
     } else if (prereq.kind === 'nodeCount') {
-      reasons.push(`Cần lĩnh ngộ ${prereq.countRequired}/${prereq.nodeIds.length} node liên quan`)
+      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.nodeCount', {
+        required: prereq.countRequired,
+        total: prereq.nodeIds.length,
+      }))
     } else if (prereq.kind === 'skillCastCount') {
       const skillName = gameManager.skillManager.get(prereq.skillId)?.name ?? prereq.skillId
-      const levelPart = prereq.level !== undefined ? `cấp ${prereq.level}` : undefined
-      const countPart = prereq.count !== undefined ? `${prereq.count} lần xuất chiêu` : undefined
-      const requirement = [levelPart, countPart].filter(Boolean).join(' và ')
+      const levelPart = prereq.level !== undefined
+        ? t('panels.skillPath.nodeInspector.lockedReasons.skillLevel', { level: prereq.level })
+        : undefined
+      const countPart = prereq.count !== undefined
+        ? t('panels.skillPath.nodeInspector.lockedReasons.skillCastCount', { count: prereq.count })
+        : undefined
+      const requirement = [levelPart, countPart]
+        .filter(Boolean)
+        .join(t('panels.skillPath.nodeInspector.lockedReasons.skillJoin'))
 
-      reasons.push(`Cần ${skillName} đạt ${requirement}`)
+      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.skill', {
+        skill: skillName,
+        requirement,
+      }))
     } else {
-      reasons.push(`Cần nâng kỹ năng liên quan`)
+      reasons.push(t('panels.skillPath.nodeInspector.lockedReasons.skillUpgrade'))
     }
   }
 
@@ -145,7 +179,7 @@ function onUpgrade() {
 
 <template>
   <div class="node-inspector">
-    <EmptyState v-if="!node" size="lg">Chọn một node trong Linh Mạch để xem chi tiết.</EmptyState>
+    <EmptyState v-if="!node" size="lg">{{ t('panels.skillPath.nodeInspector.empty') }}</EmptyState>
 
     <template v-else>
       <div class="node-inspector__header">
@@ -158,7 +192,13 @@ function onUpgrade() {
           class="node-inspector__state"
           :class="{ 'is-purchased': purchased, 'is-purchasable': !purchased && purchasable }"
         >
-          {{ isMaxed ? 'Tối Đa' : purchased ? 'Đã Lĩnh Ngộ' : purchasable ? 'Có Thể Lĩnh Ngộ' : 'Chưa Đủ Điều Kiện' }}
+          {{ isMaxed
+            ? t('panels.skillPath.nodeInspector.status.maxed')
+            : purchased
+              ? t('panels.skillPath.nodeInspector.status.purchased')
+              : purchasable
+                ? t('panels.skillPath.nodeInspector.status.purchasable')
+                : t('panels.skillPath.nodeInspector.status.locked') }}
         </span>
       </div>
 
@@ -171,9 +211,9 @@ function onUpgrade() {
       <ul v-if="affectedSkillStats.length > 0" class="node-inspector__skill-stats">
         <StatRow
           v-for="stat in affectedSkillStats"
-          :key="stat.label"
-          v-tooltip="stat.description"
-          :label="stat.label"
+          :key="stat.labelKey"
+          v-tooltip="statDescription(stat)"
+          :label="statLabel(stat)"
           bordered
         >
           <span class="node-inspector__stat-value">{{ stat.formatted }}</span>
@@ -189,10 +229,10 @@ function onUpgrade() {
           {{ lockedReasons.length > 0 && level === 0
             ? ''
             : level === 0
-              ? `Chi phí: ${nextCost ?? node.insightCost} Cảm Ngộ`
+              ? t('panels.skillPath.nodeInspector.cost.initial', { cost: nextCost ?? node.insightCost })
               : isMaxed
-                ? 'Đã đạt cấp tối đa.'
-                : `Nâng cấp: ${nextCost} Cảm Ngộ` }}
+                ? t('panels.skillPath.nodeInspector.cost.maxed')
+                : t('panels.skillPath.nodeInspector.cost.upgrade', { cost: nextCost }) }}
         </span>
 
         <GameButton
@@ -202,7 +242,7 @@ function onUpgrade() {
           :disabled="!purchasable"
           @click="onPurchase"
         >
-          Lĩnh Ngộ
+          {{ t('panels.skillPath.nodeInspector.actions.unlock') }}
         </GameButton>
 
         <GameButton
@@ -212,7 +252,7 @@ function onUpgrade() {
           :disabled="!upgradable"
           @click="onUpgrade"
         >
-          Nâng Cấp
+          {{ t('panels.skillPath.nodeInspector.actions.upgrade') }}
         </GameButton>
       </div>
     </template>

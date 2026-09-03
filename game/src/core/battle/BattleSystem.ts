@@ -20,8 +20,6 @@ import { SkillTriggerRunner } from '../skill/SkillTriggerRunner'
 
 import type { Skill } from '../skill/Skill'
 import type { SkillExecutionPolicy } from '../skill/Skill'
-import type { SkillEffect } from '../skill/SkillEffect'
-import { getSkillRuntimeStat } from '../skill/SkillRuntimeStats'
 
 import type { CombatEntity } from '../combat/CombatEntity'
 
@@ -35,15 +33,13 @@ import { HERO_COLUMN, HERO_LANE_INDEX, SPAWN_COLUMN, VISIBLE_MAX_COLUMN } from '
 
 import { resolveEnemySpawnPosition } from './EnemySpawnPlacement'
 import type { EnemySpawnVfxPresetId } from './CombatAction'
-import { entityGridPosition, worldToGridPosition } from './BattleGrid'
+import { entityGridPosition } from './BattleGrid'
 
 import {
   canPlayerReachTarget,
-  collectAffected,
   findBattleEnemy,
   selectAttackableTarget,
   selectTeleportTarget,
-  areaFor,
 } from './ActionTargetingSystem'
 import {
   DEFAULT_COMBAT_AI_STRATEGY,
@@ -56,15 +52,11 @@ import {
   type HitResolveOptions,
 } from './ActionImpactSystem'
 
-import { targetingForSkill, vfxPresetForSkill, type EffectScope } from './CombatAction'
 import {
   MAX_SWORD_INTENT,
   MAX_MOMENTUM,
 } from '../combat/CombatTypes'
-import {
-  gainPhapTuCastResources,
-  updatePhapTuBattleResources,
-} from './PhapTuBattleResourceSystem'
+import { updatePhapTuBattleResources } from './PhapTuBattleResourceSystem'
 import {
   advanceChain,
   canCastChainSkill,
@@ -75,14 +67,11 @@ import {
 } from './ChainStateSystem'
 import { gainTheOnChainLink, theMaxWithBonus, updateTheManBuff } from './TheResourceSystem'
 import {
-  gainKiemTheOnFormationCast,
   gainKiemYTempOnChannelTick,
   gainKiemYTempOnDamageTaken,
   initKiemTuBattleResources,
-  kiemTheDamageBonusPercent,
 } from './KiemTuResourceSystem'
 import { autoUltimateDecision, triggerUltimate } from './UltimateSystem'
-import { resolveOnHitEffects } from './KiemTranOnHitSystem'
 import { getFormationSwordCount } from '../../data/progression/KiemTuNodes'
 import { getHuyKiemFlatDamageBonus } from '../skill/SkillSystem'
 
@@ -90,13 +79,13 @@ import { getAttackIntervalSeconds } from '../combat/AttackTiming'
 
 import type { BattlePositionsEvent, PlayerTeleportedEvent } from './BattleEvents'
 
-import type { LavaZone } from './LavaZone'
-import type { SwordZone } from './SwordZone'
 
 import type { ElementType } from '../element/ElementType'
 import type { ArtifactRuntime } from '../artifact/ArtifactRuntime'
 import { onArtifactHitResolved, updateArtifactActivation, type ArtifactSystemDeps } from '../artifact/ArtifactSystem'
 import { EnemyAttackSystem } from './EnemyAttackSystem'
+import { SkillEffectResolver } from './SkillEffectResolver'
+import { HazardZoneSystem } from './HazardZoneSystem'
 
 // Skill execution policy rework (plan §8) — windup "đòn thường" của
 // player basic attack KHÔNG CÒN TỒN TẠI: mọi đòn chủ động của Player là
@@ -205,14 +194,6 @@ function spawnPresetId(entity: Pick<CombatEntity, 'isBoss' | 'isElite'>): EnemyS
   return 'enemy_spawn'
 }
 
-function scopeForEffect(effect: SkillEffect): EffectScope {
-  if (effect.scope) {
-    return effect.scope
-  }
-
-  return effect.type === 'heal' || effect.type === 'buff' ? 'source' : 'affected_targets'
-}
-
 export class BattleSystem {
   private battle: Battle | null = null
 
@@ -249,6 +230,24 @@ export class BattleSystem {
   // isIncapacitated closure, same instances/cache the rest of BattleSystem
   // uses — see constructor).
   private readonly enemyAttackSystem: EnemyAttackSystem
+
+  // Phase 7 mechanical split (Task 6, 2026-09-02) — resolveSkillEffects/
+  // resolvePlayerSkillEffects (+ on-hit kiếm trận dispatch) extracted
+  // verbatim to SkillEffectResolver.ts. DI qua deps object dựng 1 lần ở
+  // constructor: mọi field là CHÍNH instance/closure BattleSystem đang
+  // dùng (kể cả cache BuffSystem qua buffSystemFor) — không nhân bản
+  // state nào. FSM cast/channel Ở LẠI đây vì nó đọc/ghi private field
+  // mutable của BattleSystem (channelSkillId/channelTickSecondsOverrides/
+  // chain/battle).
+  private readonly skillEffectResolver: SkillEffectResolver
+
+  // Phase 7 mechanical split (Task 7, 2026-09-02) — spawnLavaZone/
+  // updateLavaZones/tickLavaZone + spawnSwordZone/updateSwordZones/
+  // tickSwordZone extracted verbatim to HazardZoneSystem.ts (chỉ 1
+  // dependency: combat.applyDotDamage). BattleSystem giữ nguyên các public/
+  // private method cũ như thin wrapper delegate vào đây — call site không
+  // đổi (SkillEffectContext closures, update() loop, test file).
+  private readonly hazardZoneSystem: HazardZoneSystem
 
   // Kiếm Tu Bạt Kiếm (Task 4) — id skill channel đang equip lúc start()
   // (undefined = không có skill channel nào trong loadout, updateChanneling
@@ -351,9 +350,31 @@ export class BattleSystem {
   ) {
     this.reactionManager = new ReactionManager(eventBus)
 
+    this.hazardZoneSystem = new HazardZoneSystem({ combat })
+
     this.enemyAttackSystem = new EnemyAttackSystem({
       actionImpact,
       isIncapacitated: (buffs) => this.isIncapacitated(buffs),
+    })
+
+    this.skillEffectResolver = new SkillEffectResolver({
+      combat,
+      skillSystem,
+      skillEffectSystem,
+      buffRegistry,
+      eventBus,
+      actionImpact,
+      reactionManager: this.reactionManager,
+      skillTriggerRunner: this.skillTriggerRunner,
+      getReactionKeepChance: () => this.getReactionKeepChance(),
+      getKiemTuRoute: () => this.getKiemTuRoute(),
+      getOnHitNodeLevels: () => this.getOnHitNodeLevels(),
+      getCurrentBattle: () => this.battle,
+      buffSystemFor: (battle, entity) => this.getBuffSystem(this.getBuffsFor(battle, entity)),
+      applyActionHit: (battle, source, target, damage, options) =>
+        this.applyActionHit(battle, source, target, damage, options),
+      spawnLavaZone: (battle, spec) => this.spawnLavaZone(battle, spec),
+      spawnSwordZone: (battle, spec) => this.spawnSwordZone(battle, spec),
     })
 
     // Kiếm Tu Bạt Kiếm (Task 4) — nguồn DUY NHẤT tích tuLucDamageTakenPercent:
@@ -1617,159 +1638,43 @@ export class BattleSystem {
   }
 
   /**
-
-   * Plans/magicpathgeneral Phase 12 (2026-08-21) — Lava Zone, xem
-
-   * LavaZone.ts. Gọi bởi Reaction (thach_hoa+bong "Dung Nham", xem
-
-   * ReactionManager.ts) qua context truyền vào SkillEffectSystem —
-
-   * `battle` bind sẵn ở call site (castSkill()), zone tồn tại ĐỘC LẬP
-
-   * với entity đã kích hoạt nó sau khi spawn.
-
+   * Phase 7 mechanical split (Task 7, 2026-09-02) — spawnLavaZone/
+   * updateLavaZones/tickLavaZone + spawnSwordZone/updateSwordZones/
+   * tickSwordZone extracted verbatim to HazardZoneSystem.ts. Các method
+   * dưới đây chỉ còn là thin wrapper giữ nguyên public API/call site
+   * (SkillEffectContext closures, update() loop, BattleSystem.*.test.ts).
    */
-
   spawnLavaZone(
     battle: Battle,
-
     spec: {
       ownerId: string
       row: number
       column: number
       laneRadius: number
       columnRadius: number
-
       duration: number
-
       tickInterval: number
-
       damagePerTick: number
-
       element: ElementType | 'physical'
     },
   ) {
-    battle.lavaZones.push({
-      id: crypto.randomUUID(),
-
-      ownerId: spec.ownerId,
-
-      row: spec.row,
-
-      column: spec.column,
-
-      laneRadius: spec.laneRadius,
-
-      columnRadius: spec.columnRadius,
-
-      remainingTime: spec.duration,
-
-      tickInterval: spec.tickInterval,
-
-      timeSinceLastTick: 0,
-
-      damagePerTick: spec.damagePerTick,
-
-      element: spec.element,
-    })
+    this.hazardZoneSystem.spawnLavaZone(battle, spec)
   }
-
-  /**
-
-   * Tick từng Lava Zone — vòng lặp `while` (không phải `if`) để bắt
-
-   * kịp nếu 1 deltaSeconds bất thường lớn hơn tickInterval, cùng gotcha
-
-   * đã gặp ở Kim Thế decay ([[tienhiep-kimpath-kim]]). Entity phe đối
-
-   * lập với `zone.ownerId` đứng trong bán kính LÚC TICK đều bị trúng,
-
-   * kể cả entity spawn sau khi zone đã tồn tại — không snapshot danh
-
-   * sách mục tiêu lúc spawn.
-
-   */
 
   private updateLavaZones(battle: Battle, deltaSeconds: number) {
-    for (const zone of battle.lavaZones) {
-      zone.remainingTime -= deltaSeconds
-
-      zone.timeSinceLastTick += deltaSeconds
-
-      // Guard tickInterval > 0 — interval 0/âm làm timeSinceLastTick không
-      // bao giờ giảm dưới ngưỡng, vòng lặp thành vô hạn.
-      while (zone.tickInterval > 0 && zone.timeSinceLastTick >= zone.tickInterval) {
-        zone.timeSinceLastTick -= zone.tickInterval
-
-        this.tickLavaZone(battle, zone)
-      }
-    }
-
-    battle.lavaZones = battle.lavaZones.filter((zone) => zone.remainingTime > 0)
+    this.hazardZoneSystem.updateLavaZones(battle, deltaSeconds)
   }
 
-  private tickLavaZone(battle: Battle, zone: LavaZone) {
-    const isPlayerOwned = zone.ownerId === battle.player.id
-
-    const owner = isPlayerOwned
-      ? battle.player
-      : battle.enemies.find((battleEnemy) => battleEnemy.entity.id === zone.ownerId)?.entity
-
-    const targets: CombatEntity[] = isPlayerOwned
-      ? battle.enemies
-          .filter((battleEnemy) => battleEnemy.entity.alive)
-          .map((battleEnemy) => battleEnemy.entity)
-      : battle.player.alive
-        ? [battle.player]
-        : []
-
-    for (const target of targets) {
-      const inArea =
-        target.row >= zone.row - zone.laneRadius &&
-        target.row <= zone.row + zone.laneRadius &&
-        Math.round(target.x) >= zone.column - zone.columnRadius &&
-        Math.round(target.x) <= zone.column + zone.columnRadius
-
-      if (!inArea) {
-        continue
-      }
-
-      this.combat.applyDotDamage({
-        sourceId: zone.ownerId,
-
-        source: owner,
-
-        target,
-
-        rawDamage: zone.damagePerTick,
-
-        element: zone.element,
-
-        effectId: zone.id,
-      })
-    }
-  }
-
-  /**
-   * Task 8 (Kiếm Trận keystone, 2026-08-28) — spawn SwordZone. KHÁC
-   * spawnLavaZone: gọi trực tiếp từ SkillEffectSystem's case 'damage'
-   * (SkillEffect.grantsSwordZone), KHÔNG đi qua ReactionManager. Element
-   * luôn 'metal' (Kiếm Trận).
-   */
   spawnSwordZone(
     battle: Battle,
-
     spec: {
       ownerId: string
       row: number
       column: number
       laneRadius: number
       columnRadius: number
-
       charges: number
-
       tickInterval: number
-
       damagePerTick: number
 
       // Pháp Tu Thuần Hệ (E-5, 2026-09-03) — element override; không
@@ -1777,101 +1682,11 @@ export class BattleSystem {
       element?: ElementType
     },
   ) {
-    battle.swordZones.push({
-      id: crypto.randomUUID(),
-
-      ownerId: spec.ownerId,
-
-      row: spec.row,
-
-      column: spec.column,
-
-      laneRadius: spec.laneRadius,
-
-      columnRadius: spec.columnRadius,
-
-      remainingCharges: spec.charges,
-
-      tickInterval: spec.tickInterval,
-
-      timeSinceLastTick: 0,
-
-      damagePerTick: spec.damagePerTick,
-
-      // E-5: nhận element từ spec (grantsZone mọi hành), mặc định
-      // 'metal' giữ nguyên hành vi Kiếm Trận cũ.
-      element: spec.element ?? 'metal',
-    })
+    this.hazardZoneSystem.spawnSwordZone(battle, spec)
   }
 
-  /**
-   * Tick từng Sword Zone — vòng lặp `while` (bắt kịp overshoot, cùng
-   * pattern updateLavaZones()), nhưng mỗi tick THẬT SỰ trôi qua trừ 1
-   * `remainingCharges` thay vì trừ `deltaSeconds` khỏi remainingTime —
-   * zone hết hạn theo SỐ TICK ĐÃ LAND, không theo thời gian.
-   */
   private updateSwordZones(battle: Battle, deltaSeconds: number) {
-    for (const zone of battle.swordZones) {
-      zone.timeSinceLastTick += deltaSeconds
-
-      // Guard tickInterval > 0 — interval 0/âm làm timeSinceLastTick không
-      // bao giờ giảm dưới ngưỡng, vòng lặp thành vô hạn.
-      while (
-        zone.tickInterval > 0 &&
-        zone.timeSinceLastTick >= zone.tickInterval &&
-        zone.remainingCharges > 0
-      ) {
-        zone.timeSinceLastTick -= zone.tickInterval
-
-        zone.remainingCharges -= 1
-
-        this.tickSwordZone(battle, zone)
-      }
-    }
-
-    battle.swordZones = battle.swordZones.filter((zone) => zone.remainingCharges > 0)
-  }
-
-  private tickSwordZone(battle: Battle, zone: SwordZone) {
-    const isPlayerOwned = zone.ownerId === battle.player.id
-
-    const owner = isPlayerOwned
-      ? battle.player
-      : battle.enemies.find((battleEnemy) => battleEnemy.entity.id === zone.ownerId)?.entity
-
-    const targets: CombatEntity[] = isPlayerOwned
-      ? battle.enemies
-          .filter((battleEnemy) => battleEnemy.entity.alive)
-          .map((battleEnemy) => battleEnemy.entity)
-      : battle.player.alive
-        ? [battle.player]
-        : []
-
-    for (const target of targets) {
-      const inArea =
-        target.row >= zone.row - zone.laneRadius &&
-        target.row <= zone.row + zone.laneRadius &&
-        Math.round(target.x) >= zone.column - zone.columnRadius &&
-        Math.round(target.x) <= zone.column + zone.columnRadius
-
-      if (!inArea) {
-        continue
-      }
-
-      this.combat.applyDotDamage({
-        sourceId: zone.ownerId,
-
-        source: owner,
-
-        target,
-
-        rawDamage: zone.damagePerTick,
-
-        element: zone.element,
-
-        effectId: zone.id,
-      })
-    }
+    this.hazardZoneSystem.updateSwordZones(battle, deltaSeconds)
   }
 
   /**
@@ -2559,19 +2374,11 @@ export class BattleSystem {
   }
 
 
-  /**
-
-   * Phần "hiệu ứng thật" của 1 lần cast — TÁCH khỏi castSkill() (Cast
-
-   * Time, 2026-08-21) để beginCast()/updateCasting() dùng chung: skill
-
-   * castTime=0 gọi NGAY qua castSkill(), skill castTime>0 gọi hàm này
-
-   * SAU khi đếm ngược xong (use() đã chạy từ lúc beginCast(), KHÔNG gọi
-
-   * lại ở đây để tránh trừ cooldown/resource 2 lần).
-
-   */
+  // Phase 7 mechanical split (Task 6, 2026-09-02) — thân thật của
+  // resolveSkillEffects()/resolvePlayerSkillEffects() (+ resolveOnHitForBattle()/
+  // dispatchOnHitEffect() + helper scopeForEffect()) đã chuyển VERBATIM sang
+  // SkillEffectResolver.ts; 2 hàm dưới đây chỉ còn là điểm vào giữ nguyên mọi
+  // call site trong FSM cast/channel bên trên.
 
   /**
    * Kiếm Thế (spec 2026-08-29-kiem-the-kiem-y mục 2) — wrapper cho
@@ -2587,148 +2394,7 @@ export class BattleSystem {
     target: CombatEntity,
     battle: Battle,
   ) {
-    const isFormation = skill.id.startsWith('kiem_tran_')
-    const route = this.getKiemTuRoute()
-
-    if (!isFormation || route !== 'kiem_tran') {
-      this.resolveSkillEffects(skill, source, target, battle)
-      return
-    }
-
-    const swordCount = getFormationSwordCount(skill.id) ?? 0
-
-    const originalFinalDamagePercent = source.stats.finalDamagePercent
-
-    // +1% mỗi 2 điểm Kiếm Thế (đầy 100 = +50%) — quy về FRACTION cùng
-    // thang finalDamagePercent (0.5 = +50%).
-    const kiemTheBonus = kiemTheDamageBonusPercent(source.currentKiemThe ?? 0) / 100
-
-    if (kiemTheBonus > 0) {
-      source.stats.finalDamagePercent = originalFinalDamagePercent + kiemTheBonus
-    }
-
-    try {
-      this.resolveSkillEffects(skill, source, target, battle)
-    } finally {
-      source.stats.finalDamagePercent = originalFinalDamagePercent
-    }
-
-    // On-hit kiếm trận (spec 2026-08-29 mục 4) — roll sau mỗi cast,
-    // áp lên MỌI địch còn sống trong trận (hit kiếm trận là AoE theo
-    // targeting; ult TTKT nuke/zone cũng đi qua wrapper này).
-    if (battle.enemies.some((enemy) => enemy.entity.alive)) {
-      this.resolveOnHitForBattle(battle, source, swordCount)
-    }
-
-    // Gain SAU resolve: pool tăng theo cast vừa tung, hưởng từ cast kế.
-    gainKiemTheOnFormationCast(source, swordCount)
-  }
-
-  /** Roll + dispatch on-hit kiếm trận lên mọi địch còn sống. */
-  private resolveOnHitForBattle(battle: Battle, source: CombatEntity, swordCount: number) {
-    const nodeLevels = this.getOnHitNodeLevels()
-    if (Object.keys(nodeLevels).length === 0) {
-      return
-    }
-
-    for (const enemy of battle.enemies) {
-      if (!enemy.entity.alive) {
-        continue
-      }
-
-      resolveOnHitEffects(
-        nodeLevels,
-        Math.random,
-        source,
-        enemy.entity,
-        swordCount,
-        (kind, _source, target, swords) => this.dispatchOnHitEffect(kind, _source, target, swords),
-      )
-    }
-  }
-
-  /** Map từng kind on-hit vào hệ thống sẵn có (spec mục 4 — qua pipeline). */
-  private dispatchOnHitEffect(
-    kind: import('../progression/ProgressionNode').OnHitEffectKind,
-    source: CombatEntity,
-    target: CombatEntity,
-    swordCount: number,
-  ) {
-    const battle = this.battle
-    if (!battle) {
-      return
-    }
-
-    switch (kind) {
-      case 'khiem_khi_dmg': {
-        // Kiếm khí bổ sung — bonus damage kim qua applyModifiedDirectDamage
-        // (pipeline CombatSystem sẵn có, KHÔNG hack trực tiếp).
-        const bonus = 0.5 * swordCount * source.stats.attack
-        this.combat.applyModifiedDirectDamage(target, bonus, source, 'damage')
-        break
-      }
-      case 'xuat_huyet_dot': {
-        // Chảy máu — tái dùng buff/debuff van_kiem_vu sẵn có.
-        const buff = this.buffRegistry.get('van_kiem_vu')
-        if (buff) {
-          this.getBuffSystem(this.getBuffsFor(battle, target)).apply(
-            buff,
-            source,
-            target,
-            this.buffRegistry,
-          )
-        }
-        break
-      }
-      case 'tran_tru_cc': {
-        // Trói chân/choáng — buff/debuff sẵn có theo roll phụ.
-        const ccId = Math.random() < 0.5 ? 'troi_chan' : 'choang'
-        const buff = this.buffRegistry.get(ccId)
-        if (buff) {
-          this.getBuffSystem(this.getBuffsFor(battle, target)).apply(
-            buff,
-            source,
-            target,
-            this.buffRegistry,
-          )
-        }
-        break
-      }
-      case 'hap_linh_leech': {
-        // Hút máu theo sát thương ước lượng (leechPercent pipeline).
-        const heal = source.stats.attack * 0.2 * swordCount * 0.1
-        if (heal > 0 && source.alive) {
-          this.combat.applyHealing(source, heal, source.id, 'healing')
-        }
-        break
-      }
-      case 'khiem_phong_haste':
-      case 'phan_kich_dodge':
-      case 'pha_giap_pen':
-      case 'quang_crit':
-      case 'than_ngu_hanh': {
-        // Stat-based kinds — buff stack tạm trong trận qua BuffPool
-        // sẵn có (tự hết khi trận kết thúc vì battle buff managers là
-        // runtime-per-battle). Modifier pipeline là nguồn tính lại
-        // stats (calculateStats chạy mỗi update).
-        const statByKind: Record<string, StatModifier['stat']> = {
-          khiem_phong_haste: 'attackSpeed',
-          phan_kich_dodge: 'evasionRate',
-          pha_giap_pen: 'metalPenetration',
-          quang_crit: 'criticalRate',
-          than_ngu_hanh: 'metalPower',
-        }
-        const statKey = statByKind[kind] as (typeof statByKind)[string] | undefined
-        if (statKey) {
-          const buffId = `onhit_${kind}`
-          const definition = this.buffRegistry.get(buffId)
-          if (definition) {
-            this.getBuffSystem(this.getBuffsFor(battle, source)).apply(definition, source, source, this.buffRegistry)
-          }
-        }
-        break
-      }
-    }
+    this.skillEffectResolver.resolvePlayerSkillEffects(skill, source, target, battle)
   }
 
   private resolveSkillEffects(
@@ -2737,221 +2403,8 @@ export class BattleSystem {
     target: CombatEntity,
     battle: Battle,
   ) {
-    gainPhapTuCastResources(skill, source)
-
-    // Nguồn duy nhất emit 'cast' — PassiveSystem dùng event này cho
-
-    // passive có trigger 'cast'.
-
-    this.eventBus.emit('cast', {
-      type: 'cast',
-
-      sourceId: source.id,
-
-      targetId: target.id,
-
-      skillId: skill.id,
-
-      skillName: skill.name,
-    })
-
-    const sourceBuffs = this.getBuffSystem(this.getBuffsFor(battle, source))
-
-    // Đọc qua getEffectiveSkill() để tôn trọng Specialization đã
-
-    // chọn (behavior-changing node) + effect 'damage' đã scale theo
-
-    // level hiện tại.
-
-    const effective = this.skillSystem.getEffectiveSkill(skill, source.skillLevels?.[skill.id])
-
-    // Combat Grid Rework — MỘT action = MỘT impact VFX: mở batch trước
-
-    // vòng lặp, đóng sau; mọi fireHit trong lúc đó đăng ký target vào
-
-    // cùng event action_impact neo tại ô PRIMARY target.
-
-    const earthPureActive =
-      effective.effects.some((effect) => effect.earthPureAreaBehavior === true) &&
-      getSkillRuntimeStat(source, 'earthAoeRadius') > 0
-
-    // effective (không skill gốc): specialization.targeting override
-    // vùng tác động của biến thể C/D (Task 10, spec §2).
-    const baseTargeting = targetingForSkill({ ...skill, targeting: effective.targeting })
-    const laneRadius = earthPureActive
-      ? Math.max(1, Math.round(getSkillRuntimeStat(source, 'earthAoeRadius')))
-      : (baseTargeting.laneRadius ?? 0)
-    const columnRadius = earthPureActive ? laneRadius : (baseTargeting.columnRadius ?? 0)
-    const targeting = earthPureActive
-      ? { ...baseTargeting, shape: 'area' as const, laneRadius, columnRadius }
-      : baseTargeting
-    const anchorCell = worldToGridPosition(target.x, target.row + 0.5)
-    const affectedArea = areaFor(target.row, anchorCell.column, targeting)
-
-    if (!affectedArea) {
-      return
-    }
-
-    this.actionImpact.beginSkillBatch({
-      actionId: skill.id,
-
-      sourceId: source.id,
-
-      primaryTargetId: target.id,
-
-      presetId: vfxPresetForSkill(skill),
-
-      anchorCell,
-      area: { ...affectedArea, shape: targeting.shape },
-      hitCount: effective.effects.some((effect) => effect.hitCountByRealm)
-        ? source.realmIndex + 1
-        : 1,
-
-      secondaryPercent: earthPureActive
-        ? getSkillRuntimeStat(source, 'earthAoeSecondaryDamagePercent')
-        : undefined,
-
-      knockbackDistance: earthPureActive
-        ? getSkillRuntimeStat(source, 'earthKnockbackDistance')
-        : undefined,
-    })
-
-    const targets =
-      skill.target === 'self'
-        ? [source]
-        : collectAffected(battle, source, target.id, target.row, anchorCell.column, targeting)
-
-    const applyEffects = (effects: SkillEffect[], oneTarget: CombatEntity) => {
-      let landedHit = false
-      const targetBuffs = this.getBuffSystem(this.getBuffsFor(battle, oneTarget))
-
-      this.skillEffectSystem.applyAll(effects, source, oneTarget, {
-        combatSystem: this.combat,
-        fireHit: (hitTarget, damageInfo) => {
-          const result = this.actionImpact.fireSkillHit(
-            battle,
-
-            source,
-
-            hitTarget,
-
-            damageInfo,
-
-            { skillId: skill.id },
-
-            (battleRef, hitSource, hitTargetEntity, hitDamage, hitOptions) => {
-              return this.applyActionHit(
-                battleRef,
-                hitSource,
-                hitTargetEntity,
-                hitDamage,
-                hitOptions,
-              )
-            },
-          )
-
-          landedHit ||= result.landed
-          return result
-        },
-        didLandHit: () => landedHit,
-        buffRegistry: this.buffRegistry,
-
-        sourceBuffs,
-
-        targetBuffs,
-
-        reactionManager: this.reactionManager,
-
-        reactionKeepChance: this.getReactionKeepChance(),
-
-        spawnLavaZone: (spec) => this.spawnLavaZone(battle, spec),
-
-        spawnSwordZone: (spec) => this.spawnSwordZone(battle, spec),
-
-        skillId: skill.id,
-
-        skillExperience: skill.totalExperience ?? skill.experience ?? 0,
-
-        // Pháp Tu Thuần Hệ (E-1/E-2) — spread/self-buff cần biết cả
-        // target set của action, không riêng target hiện tại.
-        affectedTargets: targets,
-
-        secondaryTargetBuffs: (oneEntity) =>
-          this.getBuffSystem(this.getBuffsFor(battle, oneEntity)),
-
-        eventBus: this.eventBus,
-      })
-    }
-
-    const sourceEffects = effective.effects.filter((effect) => scopeForEffect(effect) === 'source')
-    const primaryEffects = effective.effects.filter(
-      (effect) => scopeForEffect(effect) === 'primary_target',
-    )
-    const areaEffects = effective.effects.filter(
-      (effect) => scopeForEffect(effect) === 'affected_targets',
-    )
-
-    if (sourceEffects.length > 0) {
-      applyEffects(sourceEffects, source)
-    }
-
-    if (primaryEffects.length > 0) {
-      applyEffects(primaryEffects, target)
-    }
-
-    for (const oneTarget of targets) {
-      applyEffects(areaEffects, oneTarget)
-    }
-
-    // Trigger/Action rework (2026-08-31 spec) — skills fully migrated to
-    // `triggers` (effective.effects === []) fire onCast here instead.
-    // Reuses the SAME batch (beginSkillBatch() already ran above) so
-    // ctx.fireHit still lands inside one action_impact VFX event.
-    if (effective.triggers?.length) {
-      for (const oneTarget of targets) {
-        let landedHit = false
-        const targetBuffs = this.getBuffSystem(this.getBuffsFor(battle, oneTarget))
-
-        const triggerCtx: SkillEffectContext = {
-          combatSystem: this.combat,
-          fireHit: (hitTarget, damageInfo) => {
-            const result = this.actionImpact.fireSkillHit(
-              battle,
-              source,
-              hitTarget,
-              damageInfo,
-              { skillId: skill.id },
-              (battleRef, hitSource, hitTargetEntity, hitDamage, hitOptions) =>
-                this.applyActionHit(battleRef, hitSource, hitTargetEntity, hitDamage, hitOptions),
-            )
-            landedHit ||= result.landed
-            return result
-          },
-          didLandHit: () => landedHit,
-          buffRegistry: this.buffRegistry,
-          sourceBuffs,
-          targetBuffs,
-          reactionManager: this.reactionManager,
-          reactionKeepChance: this.getReactionKeepChance(),
-          spawnLavaZone: (spec) => this.spawnLavaZone(battle, spec),
-          spawnSwordZone: (spec) => this.spawnSwordZone(battle, spec),
-          skillId: skill.id,
-          skillExperience: skill.totalExperience ?? skill.experience ?? 0,
-          eventBus: this.eventBus,
-        }
-
-        this.skillTriggerRunner.fire(
-          'onCast',
-          { source, skill },
-          effective.triggers,
-          source,
-          oneTarget,
-          triggerCtx,
-        )
-      }
-    }
-
-    this.actionImpact.endSkillBatch(battle)
+  ) {
+    this.skillEffectResolver.resolveSkillEffects(skill, source, target, battle)
   }
 
   /**

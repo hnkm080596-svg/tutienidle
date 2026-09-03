@@ -102,13 +102,6 @@ export interface Technique {
 
   resourceLabel?: string
 
-  // Pháp Tu Redesign (magicpath) — đổi TÊN HIỂN THỊ của thanh MP
-  // (CombatHud.vue), KHÔNG đổi cấu trúc/nguồn số liệu (vẫn currentMp/
-  // stats.maxMp) — cùng tinh thần resourceLabel ở trên nhưng cho MP
-  // thay vì Rage. "Linh lực" (Pháp Tu) / "Niệm lực" (Kiếm Tu) / "Thể
-  // lực" (Thể Tu, chưa có Technique thật — xem [[tienhiep-phap-tu-magicpath]]).
-  mpLabel?: string
-
   // Kiếm Tu (2026-08-15) — true = thanh tài nguyên trong CombatHud.vue
   // đổi hẳn NGUỒN SỐ LIỆU sang currentSwordIntent/MAX_SWORD_INTENT
   // (pool RIÊNG, xem CombatEntity.ts) thay vì currentRage/MAX_RAGE mặc

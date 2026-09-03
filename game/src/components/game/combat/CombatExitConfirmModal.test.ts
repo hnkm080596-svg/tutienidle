@@ -11,6 +11,13 @@ import { createPinia } from 'pinia'
 import CombatExitConfirmModal from './CombatExitConfirmModal.vue'
 import { useUiStore } from '@/stores/ui'
 import { GAME_MANAGER_KEY } from '@/composables/useGameState'
+import { i18n } from '@/i18n'
+
+// i18n (2.2 lô 2) — component dùng t() nên mount phải cài i18n; assert
+// qua i18n.global.t(key) thay vì raw vi string (pattern HomeResourceStrip).
+function t(key: string): string {
+  return (i18n.global as unknown as { t: (k: string) => string }).t(key)
+}
 
 interface MockGameManager {
   abandonBattle: ReturnType<typeof vi.fn>
@@ -51,6 +58,7 @@ function mountModal(gm: MockGameManager, origin: 'stage' | 'tribulation' | null 
   const pinia = createPinia()
 
   app.use(pinia)
+  app.use(i18n)
   // Cast mock thành GameManager — provide typed chặt GameManager;
   // mock đủ shape modal cần (eventBus.on/off/emit, abandonBattle).
   app.provide(GAME_MANAGER_KEY, gm as unknown as import('@/core/game/GameManager').GameManager)
@@ -129,7 +137,7 @@ describe('CombatExitConfirmModal — extract (6A-T6)', () => {
     gm.capturedRequestHandler?.()
     await nextTick()
 
-    await modal.clickButton('Thoát Trận')
+    await modal.clickButton(t('combat.overlay.exitConfirm.exit'))
 
     expect(gm.abandonBattle).toHaveBeenCalledOnce()
     expect(modal.ui.battleRunMode).toBe('manual')
@@ -149,7 +157,7 @@ describe('CombatExitConfirmModal — extract (6A-T6)', () => {
     gm.capturedRequestHandler?.()
     await nextTick()
 
-    await modal.clickButton('Ở Lại')
+    await modal.clickButton(t('combat.overlay.exitConfirm.stay'))
 
     expect(gm.abandonBattle).not.toHaveBeenCalled()
     expect(exitSpy).not.toHaveBeenCalled()

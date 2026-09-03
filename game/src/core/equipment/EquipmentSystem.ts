@@ -41,7 +41,6 @@ import type {
   EquipmentOperationCostCatalog,
   EquipmentOperationCostContext,
 } from './EquipmentOperationCostCatalog'
-import { rollWeightedIndex } from '../production/ProductionBalance'
 import {
   REFINE_INCREASE_MAX,
   REFINE_INCREASE_MIN,
@@ -49,12 +48,31 @@ import {
   REFINE_SPIRIT_STONE_PER_UNIT,
   REFINE_TINH_HOA_COST_BY_QUALITY,
   WASH_SPIRIT_STONE_COST,
-  WASH_TIER_WEIGHTS_BY_QUALITY,
   WASH_TINH_HOA_COST_BY_QUALITY,
 } from './RefinementBalance'
 import { LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
 import { canUseItemGrade } from './canUseItem'
 import { dissolveInstances as dissolveInstancesImpl } from './EquipmentDissolve'
+import {
+  GLOBAL_MAX_AFFIXES,
+  filterEligibleAffixes,
+  getEffectiveAffixValue,
+  normalizeRolledAffixValue,
+  rollAffixRange,
+  rollEligibleAffixAtTier,
+} from './EquipmentRollPrimitives'
+import {
+  commitWashAffixes as commitWashAffixesImpl,
+  previewWashAffixes as previewWashAffixesImpl,
+  washAffixes as washAffixesImpl,
+  type WashDeps,
+} from './EquipmentWash'
+
+// Task 8 (phase7-gamemanager-split) — rollAffixRange/normalizeRolledAffixValue/
+// getEffectiveAffixValue/GLOBAL_MAX_AFFIXES sống ở EquipmentRollPrimitives.ts
+// (dùng chung với EquipmentWash.ts); re-export lại ở đây để mọi import site
+// cũ (`from './EquipmentSystem'`) không phải đổi.
+export { GLOBAL_MAX_AFFIXES, getEffectiveAffixValue, normalizeRolledAffixValue, rollAffixRange }
 
 // Hệ số nhân thêm mỗi bậc cường hóa. Export để UI (EquipmentHallPanel's
 // Enhance preview) tính trước giá trị SAU khi cường hóa mà không phải
@@ -78,20 +96,6 @@ import {
  */
 export function calculateEquipmentScale(enhanceLevel: number): number {
   return 1 + enhanceLevel * ENHANCE_SLOT_SCALE
-}
-
-// Affix có cả miền số nguyên (Attack, HP...) lẫn miền thập phân
-// (criticalRate, cooldownReduction...). randomInt trực tiếp làm miền 0.01–0.09
-// co lại sai thành 1, nên mọi đường roll affix phải đi qua hàm này.
-export function rollAffixRange(
-  min: number,
-  max: number,
-  random: () => number = Math.random,
-): number {
-  const precision = 10_000
-  const low = Math.round(min * precision)
-  const high = Math.round(max * precision)
-  return (Math.floor(random() * (high - low + 1)) + low) / precision
 }
 
 /**
@@ -207,33 +211,6 @@ function isExactRefineValueEntry(value: unknown): value is RefineValueEntry {
     Number.isFinite(candidate.value)
   )
 }
-
-export function normalizeRolledAffixValue(value: number, min: number, max: number): number {
-  if (value >= min && value <= max) return value
-
-  // Dữ liệu cũ từng lưu percent theo điểm nguyên hoặc bị randomInt ép thành
-  // 1. Ưu tiên phục hồi theo /100, sau đó mới clamp vào tier hiện tại.
-  const legacyPercent = value / 100
-  if (legacyPercent >= min && legacyPercent <= max) return legacyPercent
-  return Math.min(max, Math.max(min, legacyPercent))
-}
-
-// Dùng chung bởi applyModifiers() (áp modifier thật lúc equip) VÀ
-// useEquipmentTooltip.ts (hiện số trong tooltip) — 1 nguồn tính "giá trị
-// hiệu lực" của 1 RolledAffix duy nhất, tránh combat và tooltip lệch số
-// nếu sau này đổi cách xử lý tier không khớp (vd data cũ thiếu tier).
-export function getEffectiveAffixValue(rolled: RolledAffix, affix: Affix): number {
-  const tier = affix.tiers.find((candidate) => candidate.tier === rolled.tier)
-  return tier ? normalizeRolledAffixValue(rolled.value, tier.min, tier.max) : rolled.value
-}
-
-// Trần TUYỆT ĐỐI số Affix 1 item có thể mang (base rarity cap + Exalted
-// Affix bonus + Yểm Phù tích luỹ trên slot) — cao hơn mức cap tự nhiên
-// của thien_duyen (3 prefix + 3 suffix + 1 exalted = 7) để Yểm Phù vẫn
-// có giá trị thật ngay cả trên đồ thien_duyen đã có Exalted Affix.
-// Export (2026-08-15) — tooltip Equipment (useEquipmentTooltip.ts) cần
-// hiện đúng dung lượng Affix tối đa, không được tự lặp lại số "8".
-export const GLOBAL_MAX_AFFIXES = 8
 
 // Chỉ số chính scale thêm theo cảnh giới người chơi lúc rớt/tạo đồ
 // — quy đổi qua getGlobalCultivationLevel() (xuyên suốt 9 đại cảnh
@@ -464,7 +441,7 @@ export class EquipmentSystem {
     // supreme base candidate cannot consume the only valid Exalted stat.
     let exalted: RolledAffix | null = null
     if (quality === 'tien' && rollChance(ITEM_QUALITY_EXALTED_AFFIX_CHANCE)) {
-      exalted = this.rollEligibleAffixAtTier(
+      exalted = rollEligibleAffixAtTier(
         template,
         ITEM_QUALITY_AFFIX_TIER.tien,
         ['supreme'],
@@ -530,59 +507,6 @@ export class EquipmentSystem {
     return result
   }
 
-  private rollEligibleAffixAtTier(
-    template: Equipment,
-    tier: number,
-    pools: AffixPool[],
-    excludeStats: StatType[],
-    affixRegistry: AffixRegistry,
-    random: () => number = Math.random,
-  ): RolledAffix | null {
-    const candidates = this.filterEligibleAffixes(
-      affixRegistry.getAll(),
-      template,
-      pools,
-      excludeStats,
-    ).filter((affix) => affix.tiers.some((tierDef) => tierDef.tier === tier))
-
-    if (candidates.length === 0) {
-      return null
-    }
-
-    const affix = candidates[Math.floor(random() * candidates.length)]!
-    const tierDef = affix.tiers.find((candidate) => candidate.tier === tier)!
-
-    return {
-      affixId: affix.id,
-      tier: tierDef.tier,
-      value: rollAffixRange(tierDef.min, tierDef.max, random),
-    }
-  }
-
-  /**
-   * P2 cleanup (plan "Audit findings") — predicate chọn affix hợp lệ
-   * (đúng slot/pool, chưa trùng excluded stat, stat hợp lệ trên slot)
-   * dùng CHUNG cho roll thường (rollEligibleAffix) và Tẩy Luyện
-   * (washAffixes candidates + fallback) — một rule duy nhất, không lặp.
-   */
-  private filterEligibleAffixes(
-    affixes: readonly Affix[],
-
-    template: Equipment,
-
-    pools: readonly AffixPool[],
-
-    excludeStats: readonly StatType[],
-  ): Affix[] {
-    return affixes.filter(
-      (affix) =>
-        pools.includes(affix.pool) &&
-        !excludeStats.includes(affix.stat) &&
-        (!affix.slots || affix.slots.includes(template.slot)) &&
-        isValidEquipmentSubstat(template.slot, affix.stat),
-    )
-  }
-
   /**
    * Roll 1 affix hợp lệ (đúng kind, đúng slot, đúng pool, chưa trùng
    * stat) — primitive dùng chung cho roll hàng loạt lúc tạo instance
@@ -600,7 +524,7 @@ export class EquipmentSystem {
     excludeStats: StatType[],
     affixRegistry: AffixRegistry,
   ): RolledAffix | null {
-    const candidates = this.filterEligibleAffixes(
+    const candidates = filterEligibleAffixes(
       affixRegistry.getByKind(kind),
       template,
       pools,
@@ -951,6 +875,12 @@ export class EquipmentSystem {
    *
    * Chi phí bắt buộc: 1 lượt Rèn + Luyện Khí Tinh Hoa + Linh Thạch.
    * Validation trước, trừ toàn bộ sau khi thành công.
+   *
+   * Task 8 (phase7-gamemanager-split) — logic thật tách sang
+   * EquipmentWash.ts (roll-affix primitives dùng chung với
+   * createInstance ở EquipmentRollPrimitives.ts); EquipmentSystem chỉ
+   * còn bind state riêng (cost discount, ModifierSystem) qua
+   * washDeps().
    */
   washAffixes(
     instanceId: string,
@@ -961,20 +891,16 @@ export class EquipmentSystem {
     affixRegistry: AffixRegistry,
     random: () => number = Math.random,
   ): { ok: boolean; reason?: string } {
-    const result = this.rollWashAffixes(
+    return washAffixesImpl(
       instanceId,
       inventory,
       registry,
       materialBag,
+      slotManager,
       affixRegistry,
+      this.washDeps(),
       random,
     )
-
-    if (!result.ok) {
-      return result
-    }
-
-    return this.commitWashAffixes(instanceId, result.affixes, inventory, slotManager, affixRegistry)
   }
 
   /**
@@ -992,12 +918,13 @@ export class EquipmentSystem {
     affixRegistry: AffixRegistry,
     random: () => number = Math.random,
   ): { ok: boolean; reason?: string; affixes?: RolledAffix[] } {
-    return this.rollWashAffixes(
+    return previewWashAffixesImpl(
       instanceId,
       inventory,
       registry,
       materialBag,
       affixRegistry,
+      this.washDeps(),
       random,
     )
   }
@@ -1010,173 +937,34 @@ export class EquipmentSystem {
     slotManager: EquipmentSlotManager,
     affixRegistry: AffixRegistry,
   ): { ok: boolean; reason?: string } {
-    const instance = inventory.get(instanceId)
-
-    if (!instance) {
-      return { ok: false, reason: 'not_found' }
-    }
-
-    instance.affixes = affixes
-
-    if (instance.equipped) {
-      this.modifierSystem.removeBySource(instance.instanceId)
-
-      this.applyModifiers(instance, slotManager, affixRegistry)
-    }
-
-    return { ok: true }
+    return commitWashAffixesImpl(
+      instanceId,
+      affixes,
+      inventory,
+      slotManager,
+      affixRegistry,
+      this.washDeps(),
+    )
   }
 
-  private rollWashAffixes(
-    instanceId: string,
-    inventory: EquipmentBag,
-    registry: EquipmentRegistry,
-    materialBag: MaterialBag,
-    affixRegistry: AffixRegistry,
-    random: () => number = Math.random,
-  ): { ok: true; affixes: RolledAffix[] } | { ok: false; reason: string } {
-    const instance = inventory.get(instanceId)
+  /** Deps injection cho EquipmentWash.ts — xem ghi chú washAffixes(). */
+  private washDeps(): WashDeps {
+    return {
+      tryGetTemplate: (registry, itemId) => this.tryGetTemplate(registry, itemId),
 
-    if (!instance || !registry.has(instance.itemId)) {
-      return { ok: false, reason: 'not_found' }
+      getWashCost: (quality) => this.getWashCost(quality),
+
+      spendItemRefinementPoints: (instance, amount) =>
+        this.spendItemRefinementPoints(instance, amount),
+
+      refreshEquippedModifiers: (instance, slotManager, affixRegistry) => {
+        if (instance.equipped) {
+          this.modifierSystem.removeBySource(instance.instanceId)
+
+          this.applyModifiers(instance, slotManager, affixRegistry)
+        }
+      },
     }
-
-    // Guard nhất quán với Hóa Luyện (§7.5) — item locked/favorite
-    // không được Tẩy Luyện.
-    if (instance.locked) {
-      return { ok: false, reason: 'locked' }
-    }
-
-    if (instance.favorite) {
-      return { ok: false, reason: 'favorite' }
-    }
-
-    if (instance.forgeUsesRemaining <= 0) {
-      return { ok: false, reason: 'no_forge_uses' }
-    }
-
-    const template = this.tryGetTemplate(registry, instance.itemId)
-
-    if (!template) {
-      return { ok: false, reason: 'template_not_found' }
-    }
-
-    const cost = this.getWashCost(instance.quality)
-
-    if (!materialBag.has(LUYEN_KHI_TINH_HOA_ID, cost.tinhHoa)) {
-      return { ok: false, reason: 'missing_tinh_hoa' }
-    }
-
-    if (!materialBag.has(SPIRIT_STONE_MATERIAL_ID, cost.spiritStone)) {
-      return { ok: false, reason: 'missing_spirit_stone' }
-    }
-
-    const maxLines = Math.min(
-      GLOBAL_MAX_AFFIXES - 1,
-      ITEM_QUALITY_SUBSTATS_RANGE[instance.quality].max,
-    )
-    const lineCount = Math.floor(random() * (maxLines + 1))
-    const maxTier = Math.min(
-      ITEM_QUALITY_AFFIX_TIER[instance.quality],
-      WASH_TIER_WEIGHTS_BY_QUALITY[instance.quality].length,
-    )
-    const unlockedPools = ITEM_QUALITY_UNLOCKED_POOLS[instance.quality]
-    const prefixCount = Math.ceil(lineCount / 2)
-    const suffixCount = Math.floor(lineCount / 2)
-    const requestedKinds: AffixKind[] = [
-      ...Array<AffixKind>(prefixCount).fill('prefix'),
-      ...Array<AffixKind>(suffixCount).fill('suffix'),
-    ]
-
-    const excludeStats: StatType[] = [instance.mainStat.stat]
-
-    const rolled: RolledAffix[] = []
-
-    // Reserve a compatible Tiên Chất Exalted line before base rolls so
-    // another affix cannot consume its stat.
-    let exalted: RolledAffix | null = null
-    if (instance.quality === 'tien' && random() < ITEM_QUALITY_EXALTED_AFFIX_CHANCE) {
-      exalted = this.rollEligibleAffixAtTier(
-        template,
-        ITEM_QUALITY_AFFIX_TIER.tien,
-        ['supreme'],
-        excludeStats,
-        affixRegistry,
-        random,
-      )
-
-      if (exalted) {
-        excludeStats.push(affixRegistry.get(exalted.affixId).stat)
-      }
-    }
-
-    for (const kind of requestedKinds) {
-      const hasEligibleTier = (candidate: Affix) =>
-        candidate.tiers.some((tierDef) => tierDef.tier <= maxTier)
-
-      const candidates = this.filterEligibleAffixes(
-        affixRegistry.getByKind(kind),
-        template,
-        unlockedPools,
-        excludeStats,
-      ).filter(hasEligibleTier)
-
-      const fallbackCandidates =
-        candidates.length > 0
-          ? candidates
-          : this.filterEligibleAffixes(
-              affixRegistry.getByKind(kind === 'prefix' ? 'suffix' : 'prefix'),
-              template,
-              unlockedPools,
-              excludeStats,
-            ).filter(hasEligibleTier)
-
-      if (fallbackCandidates.length === 0) {
-        break
-      }
-
-      const affix = fallbackCandidates[Math.floor(random() * fallbackCandidates.length)]!
-
-      const eligibleTiers = affix.tiers.filter((tierDef) => tierDef.tier <= maxTier)
-
-      if (eligibleTiers.length === 0) {
-        break
-      }
-
-      const tierWeights = eligibleTiers.map(
-        (tierDef) => WASH_TIER_WEIGHTS_BY_QUALITY[instance.quality][tierDef.tier - 1] ?? 0,
-      )
-
-      const chosenTier = eligibleTiers[rollWeightedIndex(tierWeights, random)]!
-
-      rolled.push({
-        affixId: affix.id,
-
-        tier: chosenTier.tier,
-
-        value: rollAffixRange(chosenTier.min, chosenTier.max, random),
-      })
-
-      excludeStats.push(affix.stat)
-    }
-
-    if (rolled.length !== lineCount) {
-      return { ok: false, reason: 'no_eligible_affix' }
-    }
-
-    if (exalted) {
-      rolled.push(exalted)
-    }
-
-    // Every failure path exits before this transaction mutates resources.
-    // Preview pays here; commit only applies the already-paid roll.
-    this.spendItemRefinementPoints(instance, 1)
-
-    materialBag.remove(LUYEN_KHI_TINH_HOA_ID, cost.tinhHoa)
-
-    materialBag.remove(SPIRIT_STONE_MATERIAL_ID, cost.spiritStone)
-
-    return { ok: true, affixes: rolled }
   }
 
   /**

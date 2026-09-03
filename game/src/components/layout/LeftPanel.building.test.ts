@@ -11,6 +11,12 @@ import type { Building } from '@/core/building/Building'
 import type { Material } from '@/core/material/Material'
 import { i18n } from '@/i18n'
 
+// i18n (task 2.2 lô 3) — component render qua t() nên assertion qua
+// i18n.global.t(key) thay vì raw vi string (pattern HomeResourceStrip.test).
+function t(key: string, params?: Record<string, unknown>): string {
+  return (i18n.global as unknown as { t: (k: string, p?: Record<string, unknown>) => string }).t(key, params)
+}
+
 const WOOD: Material = {
   id: 'test_wood',
   name: 'Linh Mộc Test',
@@ -92,12 +98,12 @@ describe('FunctionOverlayPanel — building header và Chiêu Hiền Quán', () 
     expect(mounted.container.querySelector('.building-panel-header')).toBeNull()
     expect(heading.querySelector('.building-heading__art')).not.toBeNull()
     expect(heading.querySelector('.building-heading__name')?.textContent).toBe('Chiêu Hiền Quán')
-    expect(heading.textContent).toContain('Cấp 1 / 3')
+    expect(heading.textContent).toContain(t('layout.functionOverlay.levelRange', { level: 1, max: 3 }))
     expect((mounted.container.textContent!.match(/Chiêu Hiền Quán/g) ?? []).length).toBe(1)
 
     const upgradeButton = actions.querySelector<HTMLButtonElement>('.building-heading__upgrade')!
     expect(upgradeButton).not.toBeNull()
-    expect(actions.textContent).toContain('Nâng công trình')
+    expect(actions.textContent).toContain(t('layout.functionOverlay.upgrade'))
     expect(mounted.container.querySelector('.construction-gate__upgrade')).toBeNull()
     expect(mounted.container.querySelectorAll('.building-heading__upgrade')).toHaveLength(1)
 
@@ -107,7 +113,7 @@ describe('FunctionOverlayPanel — building header và Chiêu Hiền Quán', () 
     await nextTick()
 
     expect(mounted.gameManager.buildingManager.getByBuildingId(SPRING.id)?.level).toBe(2)
-    expect(heading.textContent).toContain('Cấp 2 / 3')
+    expect(heading.textContent).toContain(t('layout.functionOverlay.levelRange', { level: 2, max: 3 }))
 
     mounted.unmount()
   })

@@ -12,6 +12,12 @@ import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composabl
 import { vTooltip } from '@/directives/tooltip'
 import { i18n } from '@/i18n'
 
+// i18n (2.5 task 8) — assert qua i18n.global.t(key) thay vì raw vi string
+// (pattern HomeResourceStrip). Tên quái/boss từ dữ liệu core, không locale.
+function t(key: string): string {
+  return (i18n.global as unknown as { t: (k: string) => string }).t(key)
+}
+
 function mountStageSelect() {
   const container = document.createElement('div')
   const pinia = createPinia()
@@ -52,8 +58,8 @@ describe('StageSelectPanel — thông tin Truyền Tống Trận', () => {
     expect(mounted.container.querySelectorAll('.stage-map__node')).toHaveLength(10)
     expect(mounted.container.textContent).toContain('Dã Trư')
     expect(mounted.container.textContent).toContain('Sơn Khấu')
-    expect(mounted.container.textContent).toContain('10 quái')
-    expect(mounted.container.textContent).toContain('Boss: Sơn Khấu')
+    expect(mounted.container.textContent).toContain(`10 ${t('panels.stageSelect.labels.enemiesSuffix')}`)
+    expect(mounted.container.textContent).toContain(`${t('panels.stageSelect.labels.bossNamePrefix')} Sơn Khấu`)
 
     mounted.unmount()
   })

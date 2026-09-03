@@ -163,12 +163,12 @@ Phase 4:  tech-debt — chạy nền liên tục
 
 ### 7.2. i18n — Deferred items từ final review (APPROVED_WITH_MINORS)
 
-- **2.1** ⬜ vue-i18n v9 → v11 migration
-- **2.2** ⬜ Hoàn tất nốt string extraction (các file plan bỏ sót)
-- **2.3** ⬜ `formatStat` extension cho `SkillResourceStatLabels`
-- **2.4** ⬜ `CombatStatusBar` `mpLabel` fallback (hardcoded 'Linh Lực')
-- **2.5** ⬜ Bỏ locale-coupled test assertions
-- **2.6** ⬜ Locale parity lint test (`vi.json` ↔ `en.json`)
+- **2.1** ✅ vue-i18n v9.14 → v11.4.10 migration — merged `fc3efa6` (2026-09-03); pure bump, 0 source edits, full matrix xanh (2162 tests, e2e 9/9), QA quick PASS WITH EVIDENCE
+- **2.2** ✅ Hoàn tất string extraction — batches 1+2 done: ActionAvailability/AlchemyView/HomeResourceStrip + NodeInspector/SkillDetailView/6 combat overlays (`80c441e`, `46b3df9`), SkillResourceStatLabels (`6705982`); final batch FunctionOverlayPanel + useBagFilter GROUP/AGE_LABELS (`912b1f3`). Chỉ còn data-layer names (= 2.7)
+- **2.3** ✅ `formatStat` extension cho `SkillResourceStatLabels` — labels/descriptions chuyển sang locale + shared formatter (formatter judgment đã ghi document), `6705982`
+- **2.4** ❌ OBSOLETE — file `CombatStatusBar` xóa trong 6A; field `mpLabel` là dead-code, cleanup `1c7a092`
+- **2.5** ✅ Bỏ locale-coupled test assertions — 3 files converted, 5 files verified data-driven (không cần đổi), `d384e1d`
+- **2.6** ✅ Locale parity lint test — đã có sẵn: `src/i18n/index.test.ts:81-92` (key parity vi↔en), không cần làm mới
 - **2.7** (Lâu dài) Extract data content strings
 
 ### 7.3. Balance / stat system — từ deep-check
@@ -223,7 +223,7 @@ Phase 4:  tech-debt — chạy nền liên tục
 | **Giai đoạn 1** — Dọn nhà | untracked docs, skills cleanup, MainMenu e2e | ✅ XONG |
 | **Giai đoạn 2** — Game design nền tảng | crit%, unidentify, luyện filter, item-grade rework, combat UI | ✅ XONG |
 | **Giai đoạn 3** — Skill engine | Phase 2A, floating text, unified buff | ✅ XONG |
-| **Giai đoạn 4** — Sản xuất + kinh tế | i18n leftovers, Chiêu Hiền Quán, UI phân bổ, nhiên liệu, bảng tốc độ, simulation, vendor rework | 🟡 Chiêu Hiền Quán ✅ merged `84d28bb`; còn lại (i18n leftovers, nhiên liệu, bảng tốc độ, simulation, vendor) chưa làm |
+| **Giai đoạn 4** — Sản xuất + kinh tế | i18n leftovers, Chiêu Hiền Quán, UI phân bổ, nhiên liệu, bảng tốc độ, simulation, vendor rework | 🟡 Chiêu Hiền Quán ✅ merged `84d28bb`; i18n leftovers phần lớn xong (xem 7.2 — 2.1/2.3/2.5/2.6 ✅, 2.4 obsolete, 2.2 còn ít file, xem QA report 2026-09-03-task-9-followups-i18n-quick.md); còn lại (nhiên liệu, bảng tốc độ, simulation, vendor) chưa làm |
 | **Giai đoạn 5** — Balance | evasion, MP cost, armor, reaction, block | ✅ XONG |
 | **Giai đoạn 6** — Pre-production | online foundation, VIP, prestige, code-split, QA | 🟡 Một phần |
 | **Giai đoạn 7** — Item rework P5-6 | equip gate, breakthrough unequip, tabs, 10-rank theme, terminology, dọn legacy | ✅ XONG |
@@ -262,17 +262,17 @@ Phase 4:  tech-debt — chạy nền liên tục
 | Task | Mô tả | Trạng thái |
 |---|---|---|
 | **9.1** ✅ | **QA-001 (High, Confirmed) — Kẹt trang bị khi đột phá** | XONG 2026-09-02 (branch `worktree-task-9-1`, commits `f5248f4..3a8724a`, merged vào master). Thiết kế cuối (spec v6, user chốt lần 2 — xem note superseded ở 8.2): gộp 3 trigger → `triggerBreakthroughAction` auto-unequip + panel xác nhận "Độ kiếp cũng là độ thân..." cho MỌI đột phá. `chooseCultivationPath` không gate (feature-unlock sau đột phá). QA quick: PASS WITH EVIDENCE. 2 Low deferred: cooldown UX (QA-013), unequip-before-failed-start (QA-014). |
-| **9.2** ⬜ | QA-002 (High) — `restoreFromSave` thiếu idempotency guard | |
-| **9.3** ⬜ | QA-003 (High) — `OverlayPanel` thiếu focus trap (H5 Giai đoạn 8) | |
+| **9.2** ✅ | QA-002 (High) — `restoreFromSave` thiếu idempotency guard | XONG 2026-09-02 (`c2381da`) — payload-identity guard (WeakMap) chống double offline credit; QA quick PASS WITH EVIDENCE |
+| **9.3** ✅ | QA-003 (High) — `OverlayPanel` thiếu focus trap (H5 Giai đoạn 8) | XONG 2026-09-02 (`3dbde61` + test `cfb3b4b`) — useDialogFocus trong OverlayPanel+ConfirmModal, 13 consumers kế thừa; 2 Low deferred: zero-focusable Tab escape, same-tick re-open trigger overwrite |
 | **9.4** ⬜ | QA-004 (Medium) — `updateKiem` chưa được gọi từ production (defer lâu, sửa cùng 6A) | |
-| **9.5** ⬜ | QA-005 (Medium) — `PhaserCanvas.vue setupGame` leak handler khi throw | |
+| **9.5** ✅ | QA-005 (Medium) — `PhaserCanvas.vue setupGame` leak handler khi throw | XONG — qua perf-optimize-pass Task 4 (merged `8b59045`): try/catch bootstrap + `bootError` ref + cleanup on failure (verify grep `a390f93`: catch tại PhaserCanvas.vue:67, expose :244) |
 | **9.6** ⬜ | QA-006 (Medium) — `CombatDefeatPanel` thiếu 10s auto-return-home | |
-| **9.7** ⬜ | QA-007 (Medium) — `OfflineProgressSystem` thiếu `isFinite(cultivationPerSecond)` guard | |
+| **9.7** ✅ | QA-007 (Medium) — `OfflineProgressSystem` thiếu `isFinite(cultivationPerSecond)` guard | XONG 2026-09-02 (`d126008`) — isFinite guard; validator v55 là root guard |
 | **9.8** ⬜ | QA-008 (Medium) — `MaterialBag.add` overflow bị caller bỏ qua | |
 | **9.9** ⬜ | QA-009 (Medium) — `useAutoRetryCountdown.start()` không clear handle cũ | |
 | **9.10** ⬜ | QA-010 (Medium) — `EquipmentSlotManager.restore` thiếu slot-enum check (defense in depth) | |
 | **9.11** ⬜ | QA-011 (Low) — `LocalCloudSaveService` 2 key không atomic | |
-| **9.12** ⬜ | QA-012 (Low) — `stateVersion` bump mỗi tick dù state không đổi (refactor) | |
+| **9.12** 🟡 | QA-012 (Low) — `stateVersion` bump mỗi tick dù state không đổi (refactor) | MỘT PHẦN — perf-optimize-pass Task 5 (merged `b16c3d0`): dirty-check `setExternalModifiers` chặn recompute `finalStats` mỗi tick. Phần còn lại: `bumpState()` vẫn chạy mỗi tick (plan perf chọn hướng (a) decouple — bước 1+2 đủ theo report; hướng (b) dirty-check `bumpState` không cần) |
 
 ### 8.2. Spec chi tiết Task 9.1 — QA-001 panel chặn đột phá khi còn mặc trang bị
 
@@ -322,11 +322,11 @@ Phase 4:  tech-debt — chạy nền liên tục
 |---|---|---|---|
 | **OPT-01** | `game/src/App.vue:360` | `bumpState()` mỗi tick | Tách `stateVersion` thành "bag/equipment" (manual) + "battle/world" (auto) |
 | **OPT-02** | `game/src/services/save/SaveSystem.ts:575,583` | `structuredClone` + `JSON.stringify` = double serialize mỗi autosave | ✅ Điều tra xong ở worktree `worktree-perf-optimize-pass` (Task 3) — tiền đề audit sai, chỉ có 1 `JSON.stringify` thật (write-time), `structuredClone` là snapshot cần thiết chống race quest-state. Không sửa code, chỉ thêm test round-trip khoá hành vi. Coi như đóng. |
-| **OPT-03** | `game/src/composables/useCadenceSmoothing.ts:56-68` | rAF loop không tự dừng | ✅ Code xong ở worktree `worktree-perf-optimize-pass` (Task 2, commit `14a8235`) — chưa merge vào master |
+| **OPT-03** | `game/src/composables/useCadenceSmoothing.ts:56-68` | rAF loop không tự dừng | ✅ Xong — perf-optimize-pass Task 2 (`14a8235`), ĐÃ MERGE (`8b59045`) |
 | **OPT-04** | `game/src/core/equipment/EquipmentBag.ts:129-135` | `getEquipped`/`getEquippedInSlot` O(N) | Thêm `Map<EquipmentSlot, EquipmentInstance>` index |
 | **OPT-05** | `game/src/components/panels/EquipmentHallPanel/EnhanceTab.vue:63-111` | `enhanceRows` O(slots × 5) mỗi stateVersion bump | Memoize theo `(stateVersion, selectedSlot)` |
 | **OPT-06** | `game/src/services/save/SaveSystem.ts:661-668` | `loadGame` đọc+remove `IMPORT_HANDOFF_KEY` mỗi boot kể cả khi không import | Lazy read |
-| **OPT-07** | `game/src/App.vue:285-287` | `drainNotifications()` chạy mỗi tick vô điều kiện | ✅ Code xong ở worktree `worktree-perf-optimize-pass` (Task 2, commit `14a8235`, dạng trả mảng rỗng dùng chung thay vì early-return) — chưa merge vào master |
+| **OPT-07** | `game/src/App.vue:285-287` | `drainNotifications()` chạy mỗi tick vô điều kiện | ✅ Xong — perf-optimize-pass Task 2 (`14a8235`, trả mảng rỗng dùng chung), ĐÃ MERGE (`8b59045`) |
 | **OPT-08** | `game/src/components/game/PhaserCanvas.vue:120-136` | EventBus handler đăng ký trước async game create | Wrap try/catch + cleanup on failure (cũng liên quan 9.5) |
 | **OPT-09** | `game/src/game/scenes/CombatScene.ts` | 11-entry `boundHandlers` array + 14 explicit `on()` | ✅ Xong 2026-09-02 — gộp thành 1 danh sách `getCombatEventBindings()` (22 entry), subscribe/unsubscribe cùng lặp 1 nguồn nên không thể lệch nhau; `unsubscribeCombatEvents()` idempotent (clear `eventBus`); test mới `CombatScene.eventSubscriptionSymmetry.test.ts` |
 
@@ -348,7 +348,9 @@ Phase 4:  tech-debt — chạy nền liên tục
 |---|---|---|
 | `.claude/worktrees/chi-hien-quan` (`worktree-chi-hien-quan`) | Task 6C — Chiêu Hiền Quán (building nhân công mới, công thức `1+level×2`, thay `spirit_spring`) | ✅ **ĐÃ MERGE vào master 2026-09-02** (`84d28bb`, 0 conflict; re-verify 2104/2104 + type-check + build + e2e 3/3). QA re-run **PASS WITH EVIDENCE** (`game/docs/qa/2026-09-02-chi-hien-quan-quick.md` — 2 gaps đóng: NaN clamp bug fix `0244031`, integration DOM oracle `a5bf969` thay browser probe treo). Worktree + branch đã dọn. |
 | `.agent-worktrees/task-9-1-breakthrough-equip-panel` (`worktree-task-9-1`) | Task 9.1 — QA-001 panel xác nhận đột phá khi còn trang bị | ✅ **ĐÃ MERGE vào master 2026-09-02** — 6/6 task xong + spec/plan/QA report (`game/docs/qa/2026-09-02-task-9-1-breakthrough-confirm-panel-quick.md`, PASS WITH EVIDENCE). 2 Low deferred: cooldown UX (QA-013), unequip-before-failed-start (QA-014). |
-| `.claude/worktrees/perf-optimize-pass` (`worktree-perf-optimize-pass`) | OPT-01..09 (mục 8.3) + tách file lớn | Plan 10 task (`2026-09-02-perf-optimize-pass.md`), đã xong Task 1-3/10: Task 1 safety-net test; Task 2 = **OPT-03** (rAF cadence tự dừng) + **OPT-07** (NotificationQueue trả mảng rỗng dùng chung thay vì alloc mới); Task 3 điều tra **OPT-02** — kết luận audit sai tiền đề (chỉ có 1 `JSON.stringify` thật ở write-time, `structuredClone` là snapshot cần thiết chống race quest-state) → **không cần sửa code**, chỉ thêm test round-trip khoá hành vi. Task 4-10 (PhaserCanvas try/catch = 9.5/OPT-08, dirty-check stateVersion = OPT-01, BattleSystem/CombatScene/EquipmentSystem tách file, bundle chunk) **chưa làm**. Locked worktree, chưa merge. |
+| `.claude/worktrees/perf-optimize-pass` (`worktree-perf-optimize-pass`) | OPT-01..09 (mục 8.3) + tách file lớn | ✅ **ĐÃ MERGE 10/10 tasks vào master** (`8b59045`) + flake root-cause fix (`79bab1c`). OPT-02 đóng (audit sai tiền đề — không cần sửa code), OPT-03/07 xong (Task 2 `14a8235`), OPT-08/09/01 xong qua các task 4-10. BattleSystem/CombatScene/EquipmentSystem tách file + manualChunks đã ship. Worktree đã dọn. |
+| `.agent-worktrees/task-9-followups-i18n` (`worktree-task-9-followups-i18n`) | Task 9.2/9.3/9.7 + T4.1 i18n leftovers (vue-i18n v11, 2.2 batches 1+2, 2.3, 2.5) | ✅ **ĐÃ MERGE vào master 2026-09-03** (`2910247`). QA quick **PASS WITH EVIDENCE** (`game/docs/qa/2026-09-03-task-9-followups-i18n-quick.md`). Worktree đã dọn. |
+| `.agent-worktrees/deferred-cleanup-followups` (`worktree-deferred-cleanup`) | 5 deferred follow-ups: useDialogFocus edges (`8ccf350`), CombatExitConfirmModal focus trap (`659c0b3`), i18n 2.2 final batch FunctionOverlayPanel/useBagFilter (`912b1f3`), StageSelect numeric + en Form (`db9b5ac`) | ✅ Hoàn tất 5/5 + docs sync (task 5). Full verify matrix xanh: 2172/2172 unit tests (336 files), type-check, build, e2e 9/9. QA quick **PASS WITH EVIDENCE** (`game/docs/qa/2026-09-03-deferred-cleanup-quick.md`). |
 
 Khi merge bất kỳ worktree nào, nhớ cập nhật lại bảng trạng thái tương ứng ở mục 7.4 (6C), 8.1 (9.1) và 8.3 (OPT) — bảng đó vẫn đang ghi "⬜" dù code thực tế đã có ở worktree.
 
