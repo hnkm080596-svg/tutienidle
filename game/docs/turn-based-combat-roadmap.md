@@ -31,7 +31,7 @@ Mục tiêu: dựng các primitive thuần (pure function), test riêng, KHÔNG 
 
 | Slice | Nội dung | Spec | Plan | Trạng thái |
 |---|---|---|---|---|
-| Slice 1 — Core Turn Loop | Class mới `TurnBattleSystem` độc lập, headless: 1 player vs N enemy cố định, ATB turn order + targeting §4 (gần nhất-trước-mặt) + basic attack qua `CombatSystem.resolveActionHit` có sẵn. KHÔNG skill/buff/reaction/hazard/wave/UI/Stat speed thật (speed truyền tay qua constructor, tách khỏi quyết định Stat còn treo) | [2026-09-04-turn-battle-system-slice1-core-loop-design.md](../../docs/superpowers/specs/2026-09-04-turn-battle-system-slice1-core-loop-design.md) | _(chưa viết)_ | ⚪ Spec đã duyệt, chưa viết plan |
+| Slice 1 — Core Turn Loop | Class mới `TurnBattleSystem` độc lập, headless: 1 player vs N enemy cố định, ATB turn order + targeting §4 (gần nhất-trước-mặt) + basic attack qua `CombatSystem.resolveActionHit` có sẵn. KHÔNG skill/buff/reaction/hazard/wave/UI/Stat speed thật (speed truyền tay qua constructor, tách khỏi quyết định Stat còn treo) | [2026-09-04-turn-battle-system-slice1-core-loop-design.md](../../docs/superpowers/specs/2026-09-04-turn-battle-system-slice1-core-loop-design.md) | [2026-09-04-turn-battle-system-slice1-core-loop.md](../../docs/superpowers/plans/2026-09-04-turn-battle-system-slice1-core-loop.md) | 🟡 Plan viết xong 2026-09-04, sẵn sàng giao agent thực thi |
 | Slice 2+ | StageWaveSystem (wave theo lượt), HazardZone, Boss afterTurns, Resource hooks, MomentumBreak, BuffSystem, AOE Shape/skill loadout thật, GameManager contract, manual UI | — | _(chưa viết)_ | 🔴 Chưa khảo sát — quyết định sau khi Slice 1 xong |
 
 | Hạng mục | Quyết định | Plan | Trạng thái |
