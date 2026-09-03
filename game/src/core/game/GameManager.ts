@@ -138,6 +138,7 @@ import type { Zone } from '../stage/Zone'
 
 import { TemplateRegistry } from './TemplateRegistry'
 import { NotificationQueue } from './NotificationQueue'
+import { createBagOverflowEvent } from '../notification/bagOverflow'
 import { BattleLootSystem } from './BattleLootSystem'
 import { StageWaveSystem } from './StageWaveSystem'
 import { EquipmentOpsSystem } from './EquipmentOpsSystem'
@@ -2327,9 +2328,16 @@ export class GameManager {
         const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(player.realmId))
 
         if (amount > 0 && this.materialRegistry.has(spiritStoneId)) {
-          this.materialBag.add(this.materialRegistry.get(spiritStoneId), amount)
+          // 9.8 — Linh Thạch tràn túi: quest chỉ tính delivered + toast.
+          const overflow = this.materialBag.add(this.materialRegistry.get(spiritStoneId), amount)
 
-          this.notifyQuestMaterialGained(spiritStoneId, amount)
+          this.notifyQuestMaterialGained(spiritStoneId, amount - overflow)
+
+          if (overflow > 0) {
+            this.notifications.push(
+              createBagOverflowEvent(this.materialRegistry.get(spiritStoneId).name, overflow),
+            )
+          }
         }
       },
     )
@@ -2685,12 +2693,30 @@ export class GameManager {
           ? this.materialRegistry.get(entry.materialId)
           : undefined
 
-        this.materialBag.add(tinhHoa ?? { id: entry.materialId, name: entry.materialId } as never, entry.amount)
+        // 9.8 — toast craft hiển thị lượng DELIVERED (trừ tràn); tràn
+        // thì push bag.overflow. delivered === 0 → bỏ toast craft.
+        const overflow = this.materialBag.add(
+          tinhHoa ?? { id: entry.materialId, name: entry.materialId } as never,
+          entry.amount,
+        )
 
-        this.notifications.push({
-          kind: 'craft',
-          message: `Phân Giải +${entry.amount} ${(tinhHoa as { name?: string } | undefined)?.name ?? 'Tinh Hoa'}`,
-        })
+        const delivered = entry.amount - overflow
+
+        if (delivered > 0) {
+          this.notifications.push({
+            kind: 'craft',
+            message: `Phân Giải +${delivered} ${(tinhHoa as { name?: string } | undefined)?.name ?? 'Tinh Hoa'}`,
+          })
+        }
+
+        if (overflow > 0) {
+          this.notifications.push(
+            createBagOverflowEvent(
+              (tinhHoa as { name?: string } | undefined)?.name ?? entry.materialId,
+              overflow,
+            ),
+          )
+        }
       }
     }
 

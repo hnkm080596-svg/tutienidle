@@ -103,6 +103,8 @@ export class GameManagerQuestOps {
         materialBag: this.deps.materialBag,
         pillRegistry: this.deps.pillRegistry,
         pillBag: this.deps.pillBag,
+        // 9.8 — quest reward material tràn túi → push toast qua sink.
+        notifications: this.deps.notifications,
       },
       questId,
     )

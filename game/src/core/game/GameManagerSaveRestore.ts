@@ -22,6 +22,7 @@ import type { PlayerData } from '../player/Player'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { GameSave } from '../../services/save/SaveSystem'
 import { NotificationQueue } from './NotificationQueue'
+import { createBagOverflowEvent } from '../notification/bagOverflow'
 import { TemplateRegistry } from './TemplateRegistry'
 
 export interface GameManagerSaveRestoreDeps {
@@ -149,9 +150,20 @@ export class GameManagerSaveRestore {
       this.deps.skillManager.add(skill)
     }
 
+    // 9.8 — add() tràn stack trả lượng bị mất; gom MỖI LOẠI material
+    // một event duy nhất (cả 2 loop materials + auto-dissolve rewards).
+    const restoreOverflows = new Map<string, number>()
+
     for (const entry of save.materials) {
       if (this.deps.materialRegistry.has(entry.materialId)) {
-        this.deps.materialBag.add(this.deps.materialRegistry.get(entry.materialId), entry.amount)
+        const overflow = this.deps.materialBag.add(
+          this.deps.materialRegistry.get(entry.materialId),
+          entry.amount,
+        )
+
+        if (overflow > 0) {
+          restoreOverflows.set(entry.materialId, (restoreOverflows.get(entry.materialId) ?? 0) + overflow)
+        }
       }
     }
 
@@ -181,8 +193,21 @@ export class GameManagerSaveRestore {
 
     for (const reward of restoredAutoDissolved) {
       if (this.deps.materialRegistry.has(reward.materialId)) {
-        this.deps.materialBag.add(this.deps.materialRegistry.get(reward.materialId), reward.amount)
+        const overflow = this.deps.materialBag.add(
+          this.deps.materialRegistry.get(reward.materialId),
+          reward.amount,
+        )
+
+        if (overflow > 0) {
+          restoreOverflows.set(reward.materialId, (restoreOverflows.get(reward.materialId) ?? 0) + overflow)
+        }
       }
+    }
+
+    for (const [materialId, lostAmount] of restoreOverflows) {
+      const template = this.deps.materialRegistry.get(materialId)
+
+      this.deps.notifications.push(createBagOverflowEvent(template.name, lostAmount))
     }
 
     if (restoredAutoDissolved.length > 0) {

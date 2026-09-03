@@ -827,6 +827,7 @@
     }
   },
   "bag": {
+    "overflow": "Túi đầy — mất {amount} {name}",
     "filter": {
       "group": {
         "wood": "Gỗ",

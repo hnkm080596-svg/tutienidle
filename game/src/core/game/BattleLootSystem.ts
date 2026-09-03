@@ -35,6 +35,7 @@ const ESSENCE_PARTICLE_COLOR = 0xc792ea
 import type { Enemy, EnemyItemDrop, EnemyReward } from '../enemy/Enemy'
 import type { LootNotificationPresentation } from '../notification/NotificationEvent'
 import type { NotificationQueue } from './NotificationQueue'
+import { createBagOverflowEvent } from '../notification/bagOverflow'
 import type { TemplateRegistry } from './TemplateRegistry'
 import type { StageManager } from '../stage/StageManager'
 import type { Stage } from '../stage/Stage'
@@ -662,14 +663,21 @@ export class BattleLootSystem {
         continue
       }
 
-      this.deps.materialBag.add(this.deps.materialRegistry.get(reward.materialId), reward.amount)
+      // 9.8 — tràn túi: quest chỉ tính delivered + toast bag.overflow.
+      const overflow = this.deps.materialBag.add(this.deps.materialRegistry.get(reward.materialId), reward.amount)
 
       this.deps.questSystem.onMaterialCollected(
         this.deps.questRegistry,
         this.deps.questManager,
         reward.materialId,
-        reward.amount,
+        reward.amount - overflow,
       )
+
+      if (overflow > 0) {
+        this.deps.notifications.push(
+          createBagOverflowEvent(this.deps.materialRegistry.get(reward.materialId).name, overflow),
+        )
+      }
     }
 
     this.pushLootNotification(`Túi đầy — tự Hóa Luyện ${autoDissolved.length} món thành Tinh Hoa`, {

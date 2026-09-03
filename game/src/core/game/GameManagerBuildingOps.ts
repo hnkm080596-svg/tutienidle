@@ -10,6 +10,7 @@ import { getWorkerCapacityForLevel } from '../production/WorkerCapacity'
 import { getRealmTier } from '../realm/RealmTierMap'
 import type { PlayerData } from '../player/Player'
 import { NotificationQueue } from './NotificationQueue'
+import { createBagOverflowEvent } from '../notification/bagOverflow'
 
 export interface GameManagerBuildingOpsDeps {
   buildingRegistry: BuildingRegistry
@@ -208,9 +209,17 @@ export class GameManagerBuildingOps {
     )
 
     if (claimed.amount > 0 && claimed.materialId && this.deps.materialRegistry.has(claimed.materialId)) {
-      this.deps.materialBag.add(this.deps.materialRegistry.get(claimed.materialId), claimed.amount)
+      // 9.8 — bag clamp tại stackLimit; quest chỉ tính delivered, tràn
+      // đẩy toast thay vì mất lặng lẽ.
+      const overflow = this.deps.materialBag.add(this.deps.materialRegistry.get(claimed.materialId), claimed.amount)
 
-      this.deps.notifyQuestMaterialGained(claimed.materialId, claimed.amount)
+      this.deps.notifyQuestMaterialGained(claimed.materialId, claimed.amount - overflow)
+
+      if (overflow > 0) {
+        this.deps.notifications.push(
+          createBagOverflowEvent(this.deps.materialRegistry.get(claimed.materialId).name, overflow),
+        )
+      }
     }
 
     return claimed.amount

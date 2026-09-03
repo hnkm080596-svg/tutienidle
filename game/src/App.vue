@@ -12,6 +12,7 @@ import { ESSENCE_STREAM_ARRIVAL_EVENT } from './core/battle/BattleEvents'
 import { useBreakthrough } from './composables/useBreakthrough'
 import { useElectronBridge } from './composables/useElectronBridge'
 import { useNotificationStore } from './stores/notification'
+import { useI18n } from 'vue-i18n'
 import { useOfflineSummaryStore } from './stores/offlineSummary'
 import { useSaveIssueStore } from './stores/saveIssue'
 import { savePersistedUiAutomationFlags } from './stores/uiFlagsPersistence'
@@ -80,6 +81,7 @@ ui.$subscribe((_mutation, state) => {
   })
 }, { detached: true })
 const notification = useNotificationStore()
+const { t } = useI18n()
 const offlineSummary = useOfflineSummaryStore()
 const saveIssue = useSaveIssueStore()
 
@@ -281,7 +283,11 @@ function tick() {
     // GameManager (hiện chỉ loot, xem GameManager.grantItemDrops())
     // mỗi tick, đẩy vào notificationStore để ToastContainer hiện.
     for (const event of gameManager.drainNotifications()) {
-      notification.push(event.kind, event.message, event.loot)
+      notification.push(
+        event.kind,
+        event.messageKey ? t(event.messageKey, event.messageParams ?? {}) : event.message,
+        event.loot,
+      )
     }
 
     // Đang trong trận thì không cộng tu vi — 2 việc loại trừ nhau.
