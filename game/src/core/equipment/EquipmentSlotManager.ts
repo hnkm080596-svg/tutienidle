@@ -30,6 +30,11 @@ export class EquipmentSlotManager {
    */
   restore(entries: EquipmentSlotState[]) {
     for (const entry of entries) {
+      // 9.10 defense-in-depth (validator v55 là gate chính) — entry với
+      // slot id lạ (save cũ/lỗi data) bị bỏ qua, không thêm slot mới vào
+      // map cố định 6 slot.
+      if (!EQUIPMENT_SLOTS.includes(entry.slot)) continue
+
       this.slots.set(entry.slot, entry)
     }
   }
