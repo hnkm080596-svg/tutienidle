@@ -4,7 +4,10 @@
 // đúng end-to-end trước khi lớp thêm skill/buff/reaction/hazard zone ở
 // slice sau.
 import type { CombatEntity } from '../../combat/CombatEntity'
+import type { CombatSystem } from '../../combat/CombatSystem'
 import { entityGridPosition, getChebyshevDistance } from '../BattleGrid'
+import { consumeGaugeAfterAction } from './ActionGauge'
+import { resolveNextTurn } from './TurnQueue'
 
 export type TurnBattleState = 'fighting' | 'victory' | 'defeat'
 
@@ -52,4 +55,53 @@ export function selectTarget(
 
     return candidateDistance < nearestDistance ? candidate : nearest
   })
+}
+
+const DEFAULT_MAX_TURNS = 10_000
+
+export class TurnBattleSystem {
+  constructor(
+    private readonly combat: CombatSystem,
+    private readonly maxTurns: number = DEFAULT_MAX_TURNS,
+  ) {}
+
+  runToCompletion(battle: TurnBattle): TurnBattleState {
+    const allParticipants = [battle.player, ...battle.enemies]
+
+    for (let turn = 0; turn < this.maxTurns; turn++) {
+      for (const participant of allParticipants) {
+        participant.alive = participant.entity.alive
+      }
+
+      const resolved = resolveNextTurn(allParticipants)
+
+      if (!resolved) {
+        battle.state = 'defeat'
+        return battle.state
+      }
+
+      const actor = resolved.actor
+      const opposingSide = actor === battle.player ? battle.enemies : [battle.player]
+      const target = selectTarget(actor, opposingSide)
+
+      if (target) {
+        this.combat.resolveActionHit(actor.entity, target.entity, { kind: 'physical', multiplier: 1 })
+      }
+
+      consumeGaugeAfterAction(actor)
+
+      if (!battle.player.entity.alive) {
+        battle.state = 'defeat'
+        return battle.state
+      }
+
+      if (battle.enemies.every((enemy) => !enemy.entity.alive)) {
+        battle.state = 'victory'
+        return battle.state
+      }
+    }
+
+    battle.state = 'defeat'
+    return battle.state
+  }
 }

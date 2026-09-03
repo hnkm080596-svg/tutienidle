@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { selectTarget, type TurnBattleParticipant } from './TurnBattleSystem'
+import { selectTarget, TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
 import type { CombatEntity } from '../../combat/CombatEntity'
+import { CombatSystem } from '../../combat/CombatSystem'
+import { EventBus } from '../../events/EventBus'
+import { createBaseStats } from '../../stats/StatBlock'
 
 // Fixture giống hệt quy ước đã dùng trong ActionTargetingSystem.test.ts —
 // selectTarget chỉ đọc id/x/row/alive, không cần Stats đầy đủ.
@@ -52,5 +55,170 @@ describe('selectTarget', () => {
     const dead = participant('dead', entity('dead', 1, 4, false))
 
     expect(selectTarget(actor, [dead])).toBeUndefined()
+  })
+})
+
+// Fixture giống hệt quy ước CombatSystem.damageFloor.test.ts — cần Stats
+// đầy đủ vì runToCompletion gọi thật CombatSystem.resolveActionHit().
+function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
+  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0 }
+
+  return {
+    id: 'id',
+    name: 'name',
+    type: 'enemy',
+    baseStats: stats,
+    stats,
+    currentHp: stats.maxHp,
+    maxHp: stats.maxHp,
+    currentMp: stats.maxMp,
+    currentSwordIntent: 0,
+    currentMomentum: 0,
+    currentHoaThe: 0,
+    currentThoThe: 0,
+    currentKimThe: 0,
+    timeSinceLastBleedProc: 0,
+    tuLucActive: false,
+    tuLucElapsed: 0,
+    tuLucDamageTakenPercent: 0,
+    currentWard: 0,
+    timeSinceLastHitTaken: Infinity,
+    realmIndex: 0,
+    x: 0,
+    row: 2,
+    alive: true,
+    ...overrides,
+  } as CombatEntity
+}
+
+function makeParticipant(
+  id: string,
+  combatEntity: CombatEntity,
+  speed: number,
+  priority: number,
+): TurnBattleParticipant {
+  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive }
+}
+
+describe('TurnBattleSystem.runToCompletion', () => {
+  it('đòn trúng làm giảm HP, trận kết thúc đúng trạng thái khi enemy chết', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1,
+      maxHp: 1,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    const result = system.runToCompletion(battle)
+
+    expect(result).toBe('victory')
+    expect(battle.state).toBe('victory')
+  })
+
+  it('player chết trước => defeat', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      currentHp: 1,
+      maxHp: 1,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    const result = system.runToCompletion(battle)
+
+    expect(result).toBe('defeat')
+  })
+
+  it('nhiều enemy: target chuyển sang enemy gần kế tiếp sau khi enemy gần nhất chết', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      row: 4,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 50 },
+    })
+    const near = createCombatant({
+      id: 'near',
+      row: 4,
+      x: 1,
+      currentHp: 1,
+      maxHp: 1,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+    const far = createCombatant({
+      id: 'far',
+      row: 4,
+      x: 5,
+      currentHp: 10,
+      maxHp: 10,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('near', near, 5, 1), makeParticipant('far', far, 5, 2)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    const result = system.runToCompletion(battle)
+
+    expect(result).toBe('victory')
+    expect(near.alive).toBe(false)
+    expect(far.alive).toBe(false)
+    expect(far.currentHp).toBeLessThan(10)
+  })
+
+  it('vượt quá số lượt tối đa: dừng an toàn ở defeat, không treo', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1 },
+    })
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 3)
+    const result = system.runToCompletion(battle)
+
+    expect(result).toBe('defeat')
+    expect(player.alive).toBe(true)
+    expect(enemyEntity.alive).toBe(true)
   })
 })
