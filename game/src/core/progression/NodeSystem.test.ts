@@ -172,6 +172,22 @@ describe('purchaseNode / upgradeNode (plan §6.1)', () => {
     expect(player.unlockedElements).toEqual(['fire'])
   })
 
+  // E-8 (2026-09-03) — selectsSpecialization là effect THUẦN DATA (wire
+  // SkillSystem ở GameManager.purchaseNode, không phải NodeSystem thuần)
+  // — NodeSystem chỉ cần mua được node mang effect này.
+  it('node có selectsSpecialization mua bình thường (effect data-only)', () => {
+    const player = playerWith({ skillInsight: 5 })
+
+    const node = minorNode({
+      id: 'test_spec',
+      insightCost: 1,
+      effect: { selectsSpecialization: { skillId: 'hoa_cau_thuat', specializationId: 'spec_a' } },
+    })
+
+    expect(purchaseNode(player, node)).toBe(true)
+    expect(getNodeLevel(player, 'test_spec')).toBe(1)
+  })
+
   it('nâng nhiều cấp trừ ĐÚNG cost từng cấp; không vượt maxLevel; thất bại không mutate', () => {
     const player = playerWith({ skillInsight: 100 })
 

@@ -855,6 +855,18 @@ export class GameManager {
       }
     }
 
+    // Pháp Tu Thuần Hệ (E-8, 2026-09-03) — node biến thể: mua node là CHỌN
+    // specialization của skill qua SkillSystem (cùng đường
+    // selectSkillSpecialization của UI). Skill chưa học / spec không tồn
+    // tại → selectSpecialization trả false, KHÔNG rollback purchase (data
+    // Task 8 tự đảm bảo prereq unlocksSkillIds chạy trước trong vòng lặp
+    // trên).
+    const selectsSpec = node.effect.selectsSpecialization
+
+    if (selectsSpec) {
+      this.skillSystem.selectSpecialization(selectsSpec.skillId, selectsSpec.specializationId)
+    }
+
     return true
   }
 

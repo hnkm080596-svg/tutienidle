@@ -70,4 +70,85 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
     expect(gameManager.skillManager.has('tru_tien_kiem_tran')).toBe(false)
     expect(player.skillInsight).toBe(5)
   })
+
+  // E-8 (2026-09-03) — node biến thể: effect.selectsSpecialization wire
+  // thẳng SkillSystem.selectSpecialization sau khi mua thành công.
+  // Fixture: skill template TỰ KHAI specializations (data Task 8 sẽ
+  // khai trên skill thật) + node unlock skill TRƯỚC rồi chọn spec —
+  // đúng thứ tự purchaseNode chạy (vòng unlocksSkillIds → selectsSpec).
+  function specSkillTemplate() {
+    return {
+      id: 'test_spec_skill',
+      name: 'Test Spec Skill',
+      description: '',
+      type: 'active' as const,
+      level: 1,
+      maxLevel: 10,
+      cooldown: 1,
+      remainingCooldown: 0,
+      cost: 0,
+      target: 'enemy' as const,
+      effects: [],
+      execution: { kind: 'cooldown' as const },
+      resourceType: 'none' as const,
+      unlocked: false,
+      equipped: false,
+      specializations: [
+        { id: 'hoa_long', name: 'Hỏa Long' },
+        { id: 'hoa_phung', name: 'Hỏa Phụng' },
+      ],
+    }
+  }
+
+  it('node có selectsSpecialization → mua xong skill.selectedSpecializationId đổi', () => {
+    const gameManager = new GameManager()
+
+    gameManager.registerSkillTemplates([specSkillTemplate()])
+
+    const node: ProgressionNode = {
+      id: 'test_spec_node',
+      name: 'Test Spec',
+      type: 'major',
+      insightCost: 1,
+      effect: {
+        unlocksSkillIds: ['test_spec_skill'],
+        selectsSpecialization: { skillId: 'test_spec_skill', specializationId: 'hoa_long' },
+      },
+    }
+
+    gameManager.registerProgressionNodes([node])
+
+    const player = createDefaultPlayer()
+
+    player.skillInsight = 5
+
+    expect(gameManager.purchaseNode('test_spec_node', player)).toBe(true)
+    expect(gameManager.skillManager.get('test_spec_skill')?.selectedSpecializationId).toBe('hoa_long')
+  })
+
+  it('node selectsSpecialization specialization không tồn tại → vẫn mua được, không đổi', () => {
+    const gameManager = new GameManager()
+
+    gameManager.registerSkillTemplates([specSkillTemplate()])
+
+    const node: ProgressionNode = {
+      id: 'test_spec_node_bad',
+      name: 'Test Spec Bad',
+      type: 'major',
+      insightCost: 1,
+      effect: {
+        unlocksSkillIds: ['test_spec_skill'],
+        selectsSpecialization: { skillId: 'test_spec_skill', specializationId: 'khong_ton_tai' },
+      },
+    }
+
+    gameManager.registerProgressionNodes([node])
+
+    const player = createDefaultPlayer()
+
+    player.skillInsight = 5
+
+    expect(gameManager.purchaseNode('test_spec_node_bad', player)).toBe(true)
+    expect(gameManager.skillManager.get('test_spec_skill')?.selectedSpecializationId).toBeUndefined()
+  })
 })

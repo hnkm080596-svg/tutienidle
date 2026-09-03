@@ -86,6 +86,13 @@ export interface NodeEffect {
     baseChancePercent: number
     perLevelChancePercent: number
   }
+
+  // Pháp Tu Thuần Hệ (E-8, 2026-09-03) — "node biến thể": mua node là
+  // CHỌN HẲN 1 specialization của 1 skill (SkillSystem.
+  // selectSpecialization — wire ở GameManager.purchaseNode, effect này
+  // THUẦN DATA trong NodeSystem). Data (Task 8) tự đảm bảo mutex: 2
+  // node biến thể đối diện gate nhau bằng prerequisite excludesNode.
+  selectsSpecialization?: { skillId: string; specializationId: string }
 }
 
 /** 9 loại on-hit kiếm trận (spec mục 4) — mở theo cấp trận 2→9. */
