@@ -101,6 +101,18 @@ All shapes route through the existing `getCellsInArea` helper via a
 shape-preset → `(laneRadius, columnRadius)` mapping layered on top —
 `BattleGrid.ts` itself does not need to change.
 
+**Correction (post-Foundation-plan survey, 2026-09-04):** `MissileSystem`
+does not exist in the current codebase — it was already deleted and
+replaced by `game/src/core/battle/CombatAction.ts` +
+`ActionTargetingSystem.ts` (windup→impact model, already grid-based, no
+projectile flight) in a prior "Combat Grid Rework." That system already
+has a shape enum (`ActionTargetingShape: 'single' | 'area' | 'line' |
+'all_lanes'`) and `areaFor()`/`collectAffected()` helpers used by 68 call
+sites. **This spec's AOE shapes above are implemented by extending
+`CombatAction.ts`/`ActionTargetingSystem.ts` directly — adding `'cross'`
+to the existing shape enum and wiring Bounce/TrueShot into it — not by
+building a second, parallel shape system.**
+
 **Bounce (replaces Projectile Bounce):** not an AOE shape — a separate
 targeting resolver. From the current target, repeatedly jump to the
 nearest living entity within `bounceArea` that hasn't been hit yet in this
