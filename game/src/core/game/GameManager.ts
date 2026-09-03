@@ -15,7 +15,8 @@ import {
 import { investTinhHoa, computeBreakthroughGrade } from '../realm/BodyRefinementSystem'
 import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../data/realm/BodyRefinement'
 import { grantRealmPassive } from '../realm/RealmPassiveSystem'
-import { getAlchemySuccessBonusPercentPoints, getReactionKeepChance } from '../talent/TalentEffects'
+import { getAlchemySuccessBonusPercentPoints, getReactionKeepChance, collectTalentEffects } from '../talent/TalentEffects'
+import { TALENT_PASSIVE_SKILLS, getTalentPassiveSkill } from '../../data/skill/TalentPassives'
 import { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 
 import { BuffPool } from '../buff/BuffPool'
@@ -284,7 +285,37 @@ export class GameManager {
     })
   })
   readonly skillEffectSystem = new SkillEffectSystem()
-  readonly passiveSystem = new PassiveSystem(this.eventBus, this.skillManager, this.skillSystem)
+  readonly passiveSystem = new PassiveSystem(
+    this.eventBus,
+    this.skillManager,
+    this.skillSystem,
+    // Talent v4 (spec 2026-09-03 §3.3 E2) — buffApplier: apply buff
+    // "bùng nổ" của passiveConvertsTo lên PLAYER trong trận hiện tại
+    // (pool của player, source = player; ngoài trận thì bỏ qua —
+    // passive combat chỉ chạy trong trận).
+    (buffId) => {
+      const battle = this.battleSystem.getBattle()
+      const definition = this.buffRegistry.get(buffId)
+
+      if (!battle || !definition) {
+        return
+      }
+
+      const buffs = new BuffSystem(battle.playerBuffs)
+      buffs.apply(definition, battle.player, battle.player, this.buffRegistry)
+    },
+    // hpReader — HP ratio của player entity trong trận; ngoài trận
+    // undefined (passiveCondition coi như thông qua).
+    () => {
+      const battle = this.battleSystem.getBattle()
+
+      if (!battle || battle.player.maxHp <= 0) {
+        return undefined
+      }
+
+      return battle.player.currentHp / battle.player.maxHp
+    },
+  )
 
   // PhÃ¡p Tu Redesign (magicpath) â€” Node Tree, háº¡ táº§ng CHUNG cho má»i
   // path, xem core/progression/.
@@ -294,6 +325,40 @@ export class GameManager {
     for (const node of nodes) {
       if (!this.nodeRegistry.has(node.id)) {
         this.nodeRegistry.register(node)
+      }
+    }
+  }
+
+  /**
+   * Talent v4 (spec 2026-09-03 §4.1, plan M1 Task 4) — grant/revoke
+   * hidden passive skill của talent combat đang chọn vào SkillManager.
+   * Idempotent: revoke mọi talent passive cũ trước khi grant (đổi
+   * talent qua save edit không nhân đôi, không leak giữa player).
+   * Gọi sau setActivePlayer/restore + sau khi App.vue ghi
+   * selectedTalentIds lúc tạo nhân vật.
+   */
+  syncTalentCombatPassive(player: PlayerData) {
+    const allTalentPassiveIds = TALENT_PASSIVE_SKILLS.map((skill) => skill.id)
+
+    // Revoke mọi talent passive hiện có (dù đúng talent — grant lại
+    // ngay sau, đảm bảo idempotent + không kẹt passive cũ khi đổi).
+    for (const passiveId of allTalentPassiveIds) {
+      if (this.skillManager.get(passiveId)) {
+        this.skillManager.remove(passiveId)
+      }
+    }
+
+    // Grant theo talent ĐẦU TIÊN (collectTalentEffects siết id đầu —
+    // spec §3.2): mỗi talent combat khai 1-2 combat_passive effect.
+    for (const effect of collectTalentEffects(player.selectedTalentIds)) {
+      if (effect.kind === 'combat_passive') {
+        const template = getTalentPassiveSkill(effect.passiveSkillId)
+
+        if (template) {
+          // Copy shallow — passiveModifiers stacks là state runtime
+          // per-battle, không chia sẻ object với template data.
+          this.skillManager.add({ ...template, passiveModifiers: template.passiveModifiers?.map((modifier) => ({ ...modifier })) })
+        }
       }
     }
   }
@@ -1433,8 +1498,13 @@ export class GameManager {
   setActivePlayer(player: PlayerData) {
     this.activePlayer = player
 
-    // Load save: bá» effect Ä‘Ã£ háº¿t háº¡n ngay (plan Â§9).
+    // Load save: bỏ effect đã hết hạn ngay (plan §9).
     this.tickTimedEffects(player)
+
+    // Talent v4 (spec 2026-09-03 §4.1) — grant hidden passive của
+    // talent combat ngay khi active player đổi (load save / restore /
+    // sau Lễ Nhập Môn tạo nhân vật).
+    this.syncTalentCombatPassive(player)
   }
 
   getActiveTimedModifiers(player: PlayerData, now = Date.now()): StatModifier[] {
@@ -2329,6 +2399,14 @@ export class GameManager {
     this.combatSystem.setSurviveLethalSession({
       playerEntityId: playerEntity.id,
       guard: this.surviveLethalGuard,
+      // v4 (spec 2026-09-03 §4.1) — Bất Tử Th thể: tẩy debuff + Tử
+      // Sinh Ngộ khi guard cứu sống. BuffSystem bọc pool của PLAYER
+      // trong trận này (getBuffSystem đã có của BattleSystem cùng pool
+      // — tự dựng để không lộ internal map).
+      surviveEffects: {
+        buffSystem: new BuffSystem(this.battleSystem.getPlayerBuffs() ?? new BuffPool()),
+        registry: this.buffRegistry,
+      },
     })
 
     // Báº£n Má»‡nh PhÃ¡p Báº£o â€” snapshot level/grade/path/equippedElements

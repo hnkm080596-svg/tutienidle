@@ -848,6 +848,15 @@ export class BattleSystem {
   }
 
   /**
+   * Talent v4 (spec 2026-09-03 §3.3 E2) — public wrapper cho
+   * GameManager's PassiveSystem closures: BuffPool của PLAYER trong
+   * trận hiện tại (null nếu không có trận).
+   */
+  getPlayerBuffs(): BuffPool | null {
+    return this.battle ? this.battle.playerBuffs : null
+  }
+
+  /**
    * Bản Mệnh Pháp Bảo — GameManager gọi ngay sau start()/startBattle()
    * (cùng pattern battleLoot.setSession()), truyền undefined nếu
    * player không có artifact (Kiếm Tu/chưa Trúc Cơ) — no-op an toàn

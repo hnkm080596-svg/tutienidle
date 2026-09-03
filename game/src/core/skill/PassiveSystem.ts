@@ -2,7 +2,9 @@ import type { EventBus } from '../events/EventBus'
 import type { SkillManager } from './SkillManager'
 import type { SkillSystem } from './SkillSystem'
 import type { PassiveTrigger } from './SkillTypes'
+import type { Skill } from './Skill'
 import { addStack } from '../stats/StatCalculator'
+import type { StatModifier } from '../stats/StatCalculator'
 
 export interface CombatEventPayload {
   type: string
@@ -56,10 +58,50 @@ export class PassiveSystem {
     eventBus: EventBus,
     private readonly skillManager: SkillManager,
     private readonly skillSystem: SkillSystem,
+    // Talent v4 (spec 2026-09-03 §3.3 E2) — 2 closure do GameManager
+    // cung cấp, optional theo pattern CombatSystem (mọi call site hiện
+    // có compile không đổi): buffApplier áp buff "bùng nổ" lên player
+    // entity trong trận; hpReader trả HP ratio hiện tại của player
+    // (undefined ngoài trận → passiveCondition coi như thoả).
+    private readonly buffApplier?: (buffId: string) => void,
+    private readonly hpReader?: () => number | undefined,
   ) {
     for (const eventName of Object.keys(EVENT_TO_TRIGGER)) {
       eventBus.on<CombatEventPayload>(eventName, event => this.handleEvent(eventName, event))
     }
+  }
+
+  // Talent v4 E2 — passiveCondition chỉ có 1 kind hiện nay ('hpBelow'),
+  // để union mở được sau này mà không đổi call site. Vắng condition hoặc
+  // vắng reader → luôn true (không chặn passive cũ).
+  private meetsCondition(condition: Skill['passiveCondition']): boolean {
+    if (!condition || condition.kind !== 'hpBelow') {
+      return true
+    }
+
+    const hpRatio = this.hpReader?.()
+
+    return hpRatio === undefined ? true : hpRatio < condition.percent
+  }
+
+  // Talent v4 E2 — modifier vừa tích chạm maxStacks: áp buff bùng nổ
+  // (nếu có applier) rồi reset stack về 0. Vắng passiveConvertsTo thì
+  // giữ hành vi cũ (stack kẹt ở trần).
+  private tryConvertAtThreshold(
+    modifier: StatModifier,
+    convertsTo: Skill['passiveConvertsTo'],
+  ): void {
+    if (!convertsTo) {
+      return
+    }
+
+    if (modifier.maxStacks === undefined || (modifier.stacks ?? 0) < modifier.maxStacks) {
+      return
+    }
+
+    this.buffApplier?.(convertsTo.buffId)
+
+    modifier.stacks = 0
   }
 
   private handleEvent(eventName: string, event: CombatEventPayload) {
@@ -89,8 +131,15 @@ export class PassiveSystem {
         continue
       }
 
+      // Talent v4 E2 — điều kiện HP chặn TRƯỚC khi tích stack.
+      if (!this.meetsCondition(effective.passiveCondition)) {
+        continue
+      }
+
       for (const modifier of effective.passiveModifiers ?? []) {
         addStack(modifier)
+
+        this.tryConvertAtThreshold(modifier, effective.passiveConvertsTo)
       }
     }
   }
@@ -137,8 +186,18 @@ export class PassiveSystem {
         continue
       }
 
+      // Talent v4 E2 — per_second chịu cùng passiveCondition như passive
+      // theo event (chặn trước khi tích, phần lẻ accumulator giữ nguyên).
+      if (!this.meetsCondition(effective.passiveCondition)) {
+        this.perSecondAccumulator.set(skill.id, accumulated)
+
+        continue
+      }
+
       for (const modifier of effective.passiveModifiers ?? []) {
         addStack(modifier, wholeSeconds)
+
+        this.tryConvertAtThreshold(modifier, effective.passiveConvertsTo)
       }
 
       this.perSecondAccumulator.set(skill.id, accumulated - wholeSeconds)

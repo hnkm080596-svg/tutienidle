@@ -61,7 +61,17 @@ export class CombatSystem {
   // battle-scoped: id entity player + guard giữ lượt sống sót. null =
   // không bảo vệ (trận Độ Kiếp, trận không có PlayerData, hoặc không có
   // thiên phú). GameManager set/reset mỗi lần bắt đầu trận.
-  private surviveLethalSession: { playerEntityId: string; guard: SurviveLethalGuard } | null = null
+  //
+  // v4 (spec 2026-09-03 §4.1): surviveEffects mở rộng cho Bất Tử Th thể
+  // — khi guard cứu sống: tẩy mọi debuff trên player + áp Tử Sinh Ngộ.
+  // buffSystem/registry là pool + registry của PLAYER trong trận hiện
+  // tại (GameManager set từ battle.playerBuffs), optional để mọi session
+  // cũ/wiring ngoài trận không đổi hành vi.
+  private surviveLethalSession: {
+    playerEntityId: string
+    guard: SurviveLethalGuard
+    surviveEffects?: { buffSystem: BuffSystem; registry: BuffRegistry }
+  } | null = null
 
   // Trigger/Action rework Task 10 (2026-08-31 spec) — onKill firing.
   // buffRegistry/reactionManager are shared, non-battle-specific
@@ -83,7 +93,11 @@ export class CombatSystem {
   }
 
   setSurviveLethalSession(
-    session: { playerEntityId: string; guard: SurviveLethalGuard } | null,
+    session: {
+      playerEntityId: string
+      guard: SurviveLethalGuard
+      surviveEffects?: { buffSystem: BuffSystem; registry: BuffRegistry }
+    } | null,
   ): void {
     this.surviveLethalSession = session
   }
@@ -464,6 +478,29 @@ export class CombatSystem {
       surviveSession.guard.tryConsumeUse()
     ) {
       entity.currentHp = 1
+
+      // v4 (spec 2026-09-03 §4.1) — "độ thân cũng là độ tâm": tẩy mọi
+      // debuff đang bám trên player + áp Tử Sinh Ngộ. Chỉ chạy khi
+      // session mang surviveEffects (GameManager wiring set từ battle
+      // hiện tại — BuffSystem của PLAYER, không phải của địch).
+      const effects = surviveSession.surviveEffects
+
+      if (effects) {
+        for (const buff of effects.buffSystem.getAll()) {
+          if (buff.polarity === 'debuff' && buff.targetId === entity.id) {
+            effects.buffSystem.remove(buff.id, buff.sourceId)
+          }
+        }
+
+        const tuSinhNgo = effects.registry.get('tu_sinh_ngo')
+
+        if (tuSinhNgo) {
+          // Player vừa tự cứu mình — source của Tử Sinh Ngộ chính là
+          // player (không phải kẻ đánh), để các nhánh clean-up theo
+          // source không nhầm lẫn.
+          effects.buffSystem.apply(tuSinhNgo, entity, entity, effects.registry)
+        }
+      }
 
       // Event vitals của đòn damage (emit TRƯỚC killIfDead) đã mang
       // killed = true vì HP chạm 0 — phát thêm event hiệu chỉnh SAU khi

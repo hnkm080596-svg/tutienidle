@@ -136,6 +136,18 @@ export interface Skill extends Partial<SkillRuntimeStats> {
   // Bắt buộc khi type === 'passive' — xem PassiveSystem.
   passiveTrigger?: PassiveTrigger
 
+  // Talent v4 (spec 2026-09-03 §3.3 E2) — passive chỉ tích stack khi
+  // điều kiện này đúng (PassiveSystem đọc HP ratio của player qua
+  // hpReader closure; vắng reader thì coi như điều kiện thoả —
+  // defensive cho PassiveSystem dựng kiểu cũ ngoài combat).
+  passiveCondition?: { kind: 'hpBelow'; percent: number }
+
+  // Talent v4 — khi 1 modifier chạm maxStacks: apply buff này lên
+  // player qua buffApplier closure rồi reset stack của modifier về 0
+  // (nhịp "tích → ngưỡng → bùng nổ → tích lại"). Vắng applier thì
+  // bùng nổ bị bỏ qua nhưng stack vẫn reset — không tích kẹt ở trần.
+  passiveConvertsTo?: { buffId: string }
+
   // Pháp Tu profession-tier ladder (2026-08-14) — nhãn PHÂN LOẠI thuần
   // UI cho passive skill (Skill.ts's Tâm Pháp summary panel nhóm
   // passive theo hướng build) — không ảnh hưởng runtime, chỉ tổ chức

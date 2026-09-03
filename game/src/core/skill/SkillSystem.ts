@@ -61,6 +61,13 @@ export interface EffectiveSkill {
 
   passiveTrigger?: PassiveTrigger
 
+  // Talent v4 (spec 2026-09-03 §3.3 E2) — 2 field passive mở rộng
+  // phải xuyên qua getEffectiveSkill() để PassiveSystem đọc được từ
+  // EffectiveSkill (không đọc thẳng Skill instance).
+  passiveCondition?: Skill['passiveCondition']
+
+  passiveConvertsTo?: Skill['passiveConvertsTo']
+
   // Pháp Tu Thuần Hệ (Task 10) — specialization.targetingOverride: có
   // thì thay targeting skill gốc (xem SkillSpecialization).
   targeting?: ActionTargeting
@@ -140,6 +147,13 @@ export class SkillSystem {
       passiveModifiers: specialization?.passiveModifiersOverride ?? skill.passiveModifiers,
 
       passiveTrigger: specialization?.passiveTriggerOverride ?? skill.passiveTrigger,
+
+      // Talent v4 E2 — condition/convert không thuộc specialization
+      // override (đúng theo spec: 2 field này là ngữ nghĩa talent,
+      // luôn xuyên qua từ Skill gốc).
+      passiveCondition: skill.passiveCondition,
+
+      passiveConvertsTo: skill.passiveConvertsTo,
 
       targeting: specialization?.targeting ?? skill.targeting,
     }
