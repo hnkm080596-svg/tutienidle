@@ -3,6 +3,7 @@
 > Tài liệu định hướng tổng hợp, lập ngày 2026-08-27 sau đợt rà soát toàn diện 5 mảng: Chiến đấu, Tiến trình, Kinh tế, UI/UX, Kỹ thuật & Nội dung.
 > Mỗi hạng mục lớn có plan chi tiết riêng (dẫn link bên dưới). Khi plan và roadmap lệch nhau, plan chi tiết là nguồn sự thật cho hạng mục đó.
 > Audit toàn diện mới nhất (bug list + trạng thái từng plan, verify theo file:line): [project-review-2026-08-28.md](./project-review-2026-08-28.md).
+> Rework combat real-time → turn-based (2026-09-03, đang ở Milestone 1): xem roadmap riêng [turn-based-combat-roadmap.md](./turn-based-combat-roadmap.md).
 
 ## 1. Nhận định hiện trạng
 
