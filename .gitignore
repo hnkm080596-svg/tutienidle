@@ -6,6 +6,10 @@ APIKey
 .env.*
 !.env.example
 
+# Local MCP/AI tool configs — có Bearer token nhúng, per-machine only
+.mcp.json
+.kilo/
+
 # =========================
 # Node / build artifacts
 # =========================
