@@ -54,15 +54,15 @@
 - Consumes: `BuffSystem.getAllById/getStacks/remove/removeAllById`, `BuffPool` qua `ctx.targetBuffs`/`ctx.sourceBuffs`.
 - Produces: effect `{ type: 'add_stack', buffId, stacks?, refresh? }` — tăng N stack trên buff đang chạy (không tạo mới nếu chưa có); `{ type: 'remove_buff', buffId?, polarity?, count?, scope: 'target'|'source' }` — gỡ tối đa `count` instance (mặc định 1; `polarity` gỡ nhiều nhất `count` theo thứ tự pool).
 
-- [ ] **Step 1: Đọc kỹ** `SkillEffect.ts` quanh `add_stack`/`remove_buff` + `PassiveSystem` xử lý hiện tại để tái dùng shape field (không đổi type union nếu đã có).
-- [ ] **Step 2: Failing tests** (SkillEffectSystem.thuanHe.test.ts):
+- [x] **Step 1: Đọc kỹ** `SkillEffect.ts` quanh `add_stack`/`remove_buff` + `PassiveSystem` xử lý hiện tại để tái dùng shape field (không đổi type union nếu đã có).
+- [x] **Step 2: Failing tests** (SkillEffectSystem.thuanHe.test.ts):
   - `add_stack` trên target có `trung_doc` 2 tầng → 4 tầng (stacks +2); chưa có buff → không tạo mới (no-op).
   - `remove_buff` scope source, polarity 'debuff', count 8 → gỡ tối đa 8 debuff trên source; count lớn hơn số có → gỡ hết, không crash.
   - `remove_buff` có `buffId` cụ thể → chỉ gỡ id đó.
-- [ ] **Step 3:** `npx vitest run src/core/skill/SkillEffectSystem.thuanHe.test.ts` → FAIL.
-- [ ] **Step 4: Implement** case `add_stack`/`remove_buff` trong `SkillEffectSystem.apply()` (scope target/source theo effect.scope mặc định 'target').
-- [ ] **Step 5:** PASS + regression `npx vitest run src/core/skill src/core/battle/BattleSystem.passive.test.ts` (PassiveSystem path không đổi).
-- [ ] **Step 6: Commit** `feat(skill): add_stack/remove_buff active-skill effects (thuan-he E-3)`
+- [x] **Step 3:** `npx vitest run src/core/skill/SkillEffectSystem.thuanHe.test.ts` → FAIL.
+- [x] **Step 4: Implement** case `add_stack`/`remove_buff` trong `SkillEffectSystem.apply()` (scope target/source theo effect.scope mặc định 'target').
+- [x] **Step 5:** PASS + regression `npx vitest run src/core/skill src/core/battle/BattleSystem.passive.test.ts` (PassiveSystem path không đổi).
+- [x] **Step 6: Commit** `feat(skill): add_stack/remove_buff active-skill effects (thuan-he E-3)` — `4f7477f`
 
 ---
 
@@ -73,10 +73,10 @@
 - Modify: `game/src/core/skill/SkillEffectSystem.ts:144` (`const hitCount = effect.hitCountByRealm ? ... : 1` → ưu tiên `effect.hitCount ?? (hitCountByRealm ? realmIndex+1 : 1)`)
 - Test: mở rộng `SkillEffectSystem.thuanHe.test.ts`
 
-- [ ] **Step 1: Failing test:** effect damage `hitCount: 8` → `ctx.fireHit` gọi 8 lần, mỗi lần roll crit độc lập (mock random).
-- [ ] **Step 2:** FAIL → implement → PASS.
-- [ ] **Step 3: Regression:** `hitCountByRealm` tests cũ không đổi.
-- [ ] **Step 4: Commit** `feat(skill): fixed hitCount effect (thuan-he E-4)`
+- [x] **Step 1: Failing test:** effect damage `hitCount: 8` → `ctx.fireHit` gọi 8 lần, mỗi lần roll crit độc lập (mock random).
+- [x] **Step 2:** FAIL → implement → PASS.
+- [x] **Step 3: Regression:** `hitCountByRealm` tests cũ không đổi.
+- [x] **Step 4: Commit** `feat(skill): fixed hitCount effect (thuan-he E-4)` — `02a16fb`
 
 ---
 
@@ -88,9 +88,9 @@
 - Modify: `game/src/core/battle/BattleSystem.ts` (`spawnSwordZone` ctx builder — nhận element override)
 - Test: `SkillEffectSystem.thuanHe.test.ts` + `BattleSystem.swordZone.test.ts` (mở rộng)
 
-- [ ] **Step 1: Failing test:** skill `grantsZone: true, zoneElement: 'fire'` → zone spawn element fire, damageRatio/tick giữ công thức cũ.
-- [ ] **Step 2:** FAIL → implement → PASS; Kiếm Tu `grantsSwordZone` không đổi behavior (metal).
-- [ ] **Step 3: Commit** `feat(skill): generalized grantsZone with element (thuan-he E-5)`
+- [x] **Step 1: Failing test:** skill `grantsZone: true, zoneElement: 'fire'` → zone spawn element fire, damageRatio/tick giữ công thức cũ.
+- [x] **Step 2:** FAIL → implement → PASS; Kiếm Tu `grantsSwordZone` không đổi behavior (metal).
+- [x] **Step 3: Commit** `feat(skill): generalized grantsZone with element (thuan-he E-5)` — `9200d49`
 
 ---
 
@@ -101,12 +101,12 @@
 - Modify: `game/src/core/skill/SkillEffectSystem.ts` case `damage` — sau resolve, nếu effect có `spreadsAilmentId`: đọc `ctx.targetBuffs.getAllById(id)` của primary → tổng stacks → áp lên MỌI enemy trong `affectedTargets` (trừ primary) qua `ctx.targetBuffs.apply(registry.get(id), source, each, registry)` với stacks = ceil(total × percent); `spreadRefreshesPrimary` → refresh duration primary.
 - Test: `SkillEffectSystem.thuanHe.test.ts`
 
-- [ ] **Step 1: Failing tests:**
+- [x] **Step 1: Failing tests:**
   - Primary có `trung_doc` 3 stacks, 2 enemy phụ → mỗi phụ nhận 3 stacks (percent 1); primary không đổi.
   - `spreadStackPercent: 0.5` → ceil(3×0.5)=2.
   - Primary không có ailment → không spread, không crash.
-- [ ] **Step 2:** FAIL → implement → PASS.
-- [ ] **Step 3: Commit** `feat(skill): spreadsAilmentId copies stacks to affected targets (thuan-he E-1)`
+- [x] **Step 2:** FAIL → implement → PASS.
+- [x] **Step 3: Commit** `feat(skill): spreadsAilmentId copies stacks to affected targets (thuan-he E-1)` — `a5fe4b6`
 
 ---
 
@@ -117,9 +117,9 @@
 - Modify: `game/src/core/skill/SkillEffectSystem.ts` case `buff` — flag này + scope source: stacks = số `affectedTargets` còn sống (cap maxStacks buff)
 - Test: `SkillEffectSystem.thuanHe.test.ts`
 
-- [ ] **Step 1: Failing test:** buff `thanh_luy` với 3 target trúng → stacks 3; 0 target → không buff.
-- [ ] **Step 2:** FAIL → implement → PASS.
-- [ ] **Step 3: Commit** `feat(skill): stacksPerAffectedTarget for self-buff from hit count (thuan-he E-2)`
+- [x] **Step 1: Failing test:** buff `thanh_luy` với 3 target trúng → stacks 3; 0 target → không buff.
+- [x] **Step 2:** FAIL → implement → PASS.
+- [x] **Step 3: Commit** `feat(skill): stacksPerAffectedTarget for self-buff from hit count (thuan-he E-2)` — `df08d1e`
 
 ---
 
@@ -132,11 +132,11 @@
 - Modify: `game/src/core/battle/BattleSystem.ts` — chỗ gọi `gainTheOnChainLink` (advanceChainAndGainThe ~2444) truyền runtime stats skill A (`getSkillRuntimeStat(player, 'theGainPerLinkBonus')` — đọc từ `player.skillStats`)
 - Test: `game/src/core/battle/TheResourceSystem.test.ts` (mới)
 
-- [ ] **Step 1: Failing tests:** bonus +5/link → link 15, finisher 25; maxBonus +20 → cap 120, ult chỉ nổ khi ≥120; không bonus → y hệt hiện tại.
-- [ ] **Step 2:** FAIL → implement → PASS.
-- [ ] **Step 3: Thế Mãn hook:** buff `the_man_<el>` (duration Infinity, engine áp/gỡ) — implement trong `advanceChainAndGainThe` + `consumeTheForUlt`: khi `currentThe >= max` và chưa có buff → `apply` buff `the_man_<el>` (source=target=player); khi ult reset → `remove`. Element suy từ `chainDefinition`/ult id — truyền vào qua tham số `element` mới của 2 hàm (BattleSystem glue ở Task 12).
-- [ ] **Step 4:** test áp/gỡ the_man; PASS.
-- [ ] **Step 5: Commit** `feat(the): node-driven gain/max bonuses + The-Man buff (thuan-he E-7)`
+- [x] **Step 1: Failing tests:** bonus +5/link → link 15, finisher 25; maxBonus +20 → cap 120, ult chỉ nổ khi ≥120; không bonus → y hệt hiện tại.
+- [x] **Step 2:** FAIL → implement → PASS.
+- [x] **Step 3: Thế Mãn hook:** buff `the_man_<el>` (duration Infinity, engine áp/gỡ) — implement trong `advanceChainAndGainThe` + `consumeTheForUlt`: khi `currentThe >= max` và chưa có buff → `apply` buff `the_man_<el>` (source=target=player); khi ult reset → `remove`. Element suy từ `chainDefinition`/ult id — truyền vào qua tham số `element` mới của 2 hàm (BattleSystem glue ở Task 12).
+- [x] **Step 4:** test áp/gỡ the_man; PASS.
+- [x] **Step 5: Commit** `feat(the): node-driven gain/max bonuses + The-Man buff (thuan-he E-7)` — `9923860`
 
 ---
 
@@ -147,9 +147,9 @@
 - Modify: `game/src/core/game/GameManager.ts` `purchaseNode` — sau purchase, nếu effect có `selectsSpecialization` → `skillSystem.selectSpecialization(skillId, specializationId)`
 - Test: `game/src/core/progression/NodeSystem.test.ts` (mở rộng) + GameManager test
 
-- [ ] **Step 1: Failing test:** mua node biến thể → skill.selectedSpecializationId đổi; mua node excludes → không cho mua cả 2.
-- [ ] **Step 2:** FAIL → implement → PASS.
-- [ ] **Step 3: Commit** `feat(nodes): selectsSpecialization node effect wires SkillSystem (thuan-he E-8)`
+- [x] **Step 1: Failing test:** mua node biến thể → skill.selectedSpecializationId đổi; mua node excludes → không cho mua cả 2.
+- [x] **Step 2:** FAIL → implement → PASS.
+- [x] **Step 3: Commit** `feat(nodes): selectsSpecialization node effect wires SkillSystem (thuan-he E-8)` — `6b89296`
 
 ---
 
@@ -160,9 +160,9 @@
 - Modify: `game/src/core/game/GameManager.ts` — chỗ gọi trigger ult (auto + manual) build ctx đủ (buffRegistry, reactionManager như skill thường).
 - Test: `UltimateSystem.phapTu.test.ts` (mở rộng — id mới ở Task 10 sẽ cập nhật Task 10)
 
-- [ ] **Step 1: Failing tests:** Kim Phạt → chỉ 1 target (boss ưu tiên), không tràn overkill; 4 ult kia → all_lanes.
-- [ ] **Step 2:** FAIL → implement → PASS.
-- [ ] **Step 3: Commit** `feat(ult): per-element phap tu ultimate profiles + effect-driven resolution (thuan-he E-6)`
+- [x] **Step 1: Failing tests:** Kim Phạt → chỉ 1 target (boss ưu tiên), không tràn overkill; 4 ult kia → all_lanes.
+- [x] **Step 2:** FAIL → implement → PASS.
+- [x] **Step 3: Commit** `feat(ult): per-element phap tu ultimate profiles + effect-driven resolution (thuan-he E-6)` — `0d4bff1`
 
 ---
 
@@ -172,10 +172,10 @@
 - Modify: `game/src/data/buff/buffs.ts` — thêm 8 buff §7 (`thanh_tuyen`, `bang_giap`, `hoi_luu`, `cau_mang_can`, `kim_giap`, `dia_tru`, `thanh_luy`, `the_man_fire/water/wood/metal/earth`); `bong`: `stackMode: 'stack'`, `maxStacks: 5`, `dpsRatio: 0.15`; `ngung_lo`/`khai_son` giữ nguyên (chỉ gỡ khỏi placeholder skill — Task 10).
 - Test: `game/src/data/buff/buffs.test.ts` (mở rộng: count mới, bong stack shape)
 
-- [ ] **Step 1: Failing test:** bong stack 5 max, dpsRatio 0.15; 8 buff id mới tồn tại, đúng polarity/duration/effects.
-- [ ] **Step 2:** FAIL → implement → PASS.
-- [ ] **Step 3: Regression:** `BuffSystem.test.ts` (DoT tests dùng bong — cập nhật expectation dps nếu có), `BattleSystem.hoaThe.test.ts`.
-- [ ] **Step 4: Commit** `feat(buffs): thuan-he chain buffs + bong stackable (N1)`
+- [x] **Step 1: Failing test:** bong stack 5 max, dpsRatio 0.15; 8 buff id mới tồn tại, đúng polarity/duration/effects.
+- [x] **Step 2:** FAIL → implement → PASS.
+- [x] **Step 3: Regression:** `BuffSystem.test.ts` (DoT tests dùng bong — cập nhật expectation dps nếu có), `BattleSystem.hoaThe.test.ts`.
+- [x] **Step 4: Commit** `feat(buffs): thuan-he chain buffs + bong stackable (N1)` — `60ace5e` (+ fix `9ac033b` dia_tru biến thể)
 
 ---
 
@@ -186,11 +186,11 @@
 - Modify: `game/src/core/battle/UltimateSystem.ts` `PHAP_TU_ULTIMATE_IDS` (id mới).
 - Test: `Skills.chain.test.ts` (id mới), `Skills.costInvariant.test.ts` (tự quét — phải PASS vì mọi skill mới có scaling), `UltimateSystem.phapTu.test.ts`.
 
-- [ ] **Step 1: Cập nhật test trước (red):** `Skills.chain.test.ts` trỏ id mới + assert id N2b (không `_b/_c`), damage effect nào cũng có `manaScalingRatio` + `attributeScaling`; ult có `buildTag: 'ult'`.
-- [ ] **Step 2:** FAIL.
-- [ ] **Step 3: Implement data** — 5 chuỗi × 4 skill + 5 ult theo spec §2/§3 tables (Hỏa: nam_minh_liet_hoa/tam_muoi_chan_hoa/chuc_dung_dan_no/hoa_ha_cuu_thien; Thủy: bat_dau_tran_thuy/thanh_tuyen_duong_linh/hoi_luu_thon_no/bac_hai_cuong_lan; Mộc: xuan_sanh_doc_duc/cau_mang_can_tri/van_moc_lan_doc/doc_vien_bao_can; Kim: thu_giap_kim_than/kim_lang_toan_phong/kim_chung_cong_huong/kim_luan_tran_ap; Thổ: hau_tho_tran_ach/dia_tru_thua_thien/con_lon_chan_dia/cuu_tru_dia_lao; Ult: tat_phuong_giang_the/bat_thu_can_quet/kien_moc_thong_thien/kim_phat_thu_sat/hau_tho_thanh_luy).
-- [ ] **Step 4:** PASS focused + `npx vitest run src/data/skill src/core/skill`.
-- [ ] **Step 5: Commit** `feat(skills): 20 thuan-he chain skills + 5 ultimates replace placeholders`
+- [x] **Step 1: Cập nhật test trước (red):** `Skills.chain.test.ts` trỏ id mới + assert id N2b (không `_b/_c`), damage effect nào cũng có `manaScalingRatio` + `attributeScaling`; ult có `buildTag: 'ult'`.
+- [x] **Step 2:** FAIL.
+- [x] **Step 3: Implement data** — 5 chuỗi × 4 skill + 5 ult theo spec §2/§3 tables (Hỏa: nam_minh_liet_hoa/tam_muoi_chan_hoa/chuc_dung_dan_no/hoa_ha_cuu_thien; Thủy: bat_dau_tran_thuy/thanh_tuyen_duong_linh/hoi_luu_thon_no/bac_hai_cuong_lan; Mộc: xuan_sanh_doc_duc/cau_mang_can_tri/van_moc_lan_doc/doc_vien_bao_can; Kim: thu_giap_kim_than/kim_lang_toan_phong/kim_chung_cong_huong/kim_luan_tran_ap; Thổ: hau_tho_tran_ach/dia_tru_thua_thien/con_lon_chan_dia/cuu_tru_dia_lao; Ult: tat_phuong_giang_the/bat_thu_can_quet/kien_moc_thong_thien/kim_phat_thu_sat/hau_tho_thanh_luy).
+- [x] **Step 4:** PASS focused + `npx vitest run src/data/skill src/core/skill`.
+- [x] **Step 5: Commit** `feat(skills): 20 thuan-he chain skills + 5 ultimates replace placeholders` — `b7fd4ab` (+ fix leech `9c094e3`)
 
 ---
 
@@ -201,9 +201,9 @@
 - **KHÔNG xóa** keystone cũ (N4).
 - Test: `game/src/data/progression/PhapTuNodes.dao.test.ts` (mới)
 
-- [ ] **Step 1: Failing tests:** mỗi hành đủ 17 node; chain prereq đúng thứ tự; biến thể excludes nhau; realm gate khớp REALM_SLOT_TABLE; Thế node `skillModifiers` lên skill A; `lap_dao_thuan` excludes 4 cái kia.
-- [ ] **Step 2:** FAIL → implement → PASS.
-- [ ] **Step 3: Commit** `feat(nodes): thuan-he chain node tree (lap dao, unlock, variants, the)`
+- [x] **Step 1: Failing tests:** mỗi hành đủ 17 node; chain prereq đúng thứ tự; biến thể excludes nhau; realm gate khớp REALM_SLOT_TABLE; Thế node `skillModifiers` lên skill A; `lap_dao_thuan` excludes 4 cái kia.
+- [x] **Step 2:** FAIL → implement → PASS.
+- [x] **Step 3: Commit** `feat(nodes): thuan-he chain node tree (lap dao, unlock, variants, the)` — `3abec26` (+ targeting override `22c8007`)
 
 ---
 
@@ -214,26 +214,44 @@
 - Modify: `game/src/composables/useEquipmentTooltip.ts`? — KHÔNG: tooltip skill ở `skill-path/SkillDetailView.vue`/`NodeInspector.vue` — thêm dòng render hitCount/spread/zone/add_stack/remove_buff/stacksPerAffectedTarget (mỗi nhánh nhỏ, có test).
 - Test: `GameManager.phapTuChain.test.ts` (mới): mua `lap_dao_thuan_fire` + B/C/D/E → start battle → chain gate hoạt động (B không cast được trước A); ult Thế đầy → nổ đúng profile.
 
-- [ ] **Step 1: Failing test** chain glue + ult glue.
-- [ ] **Step 2:** FAIL → implement → PASS.
-- [ ] **Step 3: Tooltip branches** + component tests.
-- [ ] **Step 4: Commit** `feat(game): wire thuan-he chain definition + ult resolution + tooltip`
+- [x] **Step 1: Failing test** chain glue + ult glue.
+- [x] **Step 2:** FAIL → implement → PASS.
+- [x] **Step 3: Tooltip branches** + component tests — commit `38b5bdb` (2026-09-03 19:01, 4 file: helper + test, component + test; session song song của user — nội dung khớp Task 12b)
+- [x] **Step 4: Commit** chain/ult `666bf1f` + tooltip `38b5bdb`
 
 ---
 
-### Task 13: Final verification
+### Task 12b: Commit tooltip còn lại (✅ DONE 2026-09-03 — commit `38b5bdb` tạo từ session song song của user, nội dung đúng 4 file dự kiến; focused tests 11/11 PASS được verify lại 19:16)
 
-- [ ] `npm.cmd run type-check` PASS
-- [ ] `npx vitest run` full PASS (baseline 2134+, không regress)
-- [ ] `npm.cmd run build` PASS
-- [ ] `npx playwright test tests/e2e/boot-fresh.spec.ts tests/e2e/create-to-combat.spec.ts` PASS (guest không có node → không chain → không vỡ)
-- [ ] QA quick mode (`tutienidle-adversarial-qa`) — **bắt buộc**; nếu chạm lifecycle Thế/ult sâu → cân nhắc deep
-- [ ] Update `game/docs/newPhapTuDesignSpec.md` trạng thái → APPROVED/IMPLEMENTED + roadmap 7.4/8.5
+**Files:**
+- Commit 3 file đã có trên disk (KHÔNG viết lại):
+  - Create: `game/src/core/skill/SkillMechanicDescriptions.ts` (helper core-no-i18n, đã có test `SkillMechanicDescriptions.test.ts` — 142 dòng, PASS trong full suite)
+  - Create: `game/src/components/panels/skill-path/SkillDetailView.test.ts` (85 dòng, PASS)
+  - Modify: `game/src/components/panels/skill-path/SkillDetailView.vue` (thêm `mechanicLines` computed + `<ul class="skill-detail__mechanics">`)
+
+- [x] **Step 1:** `npx vitest run src/core/skill/SkillMechanicDescriptions.test.ts src/components/panels/skill-path/SkillDetailView.test.ts` → PASS (11/11, 2026-09-03 19:16).
+- [x] **Step 2: Commit** `feat(ui): skill-detail mechanic lines for thuan-he engine effects (thuan-he Task 12 tooltip)` — DONE với commit id khác: `38b5bdb` "feat(ui): skill mechanic tooltip lines..." (4 file, 369 insertions).
+
+---
+
+### Task 13: Final verification (REMAINING — rewritten 2026-09-03)
+
+- [x] `npm.cmd run type-check` PASS (2026-09-03)
+- [x] `npx vitest run` full PASS — 2318/2318 (baseline 2134+, không regress)
+- [x] `npm.cmd run build` PASS (2026-09-03)
+- [x] `npx playwright test tests/e2e/boot-fresh.spec.ts tests/e2e/create-to-combat.spec.ts` PASS (guest không có node → không chain → không vỡ)
+- [x] QA quick mode (`tutienidle-adversarial-qa`) — **PASS WITH GAPS** (`game/docs/qa/2026-09-03-phap-tu-thuan-he-task12-quick.md`); không escalate deep (rủi ro bound được bằng code inspection — xem mục Scope and Risk Map trong report). Gap: thiếu nút ult thủ công trong `PhapTuCombatHud.vue` (Coverage gap Medium — chờ user quyết phạm vi, engine `tryPlayerUltimate()` đã sẵn branch Pháp Tu).
+- [x] Update `game/docs/newPhapTuDesignSpec.md` trạng thái → IMPLEMENTED (§0.b bảng trạng thái, rewrite 2026-09-03)
+- [x] Update `game/docs/roadmap.md` 7.4/8.5 — ghi worktree `phap-tu-thuan-he` + trạng thái Task 1–12b commit + QA verdict
+- [x] Sau Task 12b commit: chạy lại focused test (tooltip) trước khi khai hoàn tất; QA verdict `PASS WITH GAPS` — theo AGENTS.md đây là non-completion state cho tới khi gap được user chấp nhận là ngoài phạm vi hoặc được xử lý. **Chờ user quyết.**
 
 ## Execution Notes
 
-- Task 1-8 (engine) độc lập tương đối — có thể song song trong phase nhưng tuần tự theo số để dễ review; Task 9-10 (data) sau engine; 11 sau 10 (node unlock trỏ id mới); 12 sau 11.
-- Mỗi task 1 commit; KHÔNG merge master giữa chừng; user quyết merge.
+> **Rewrite note (2026-09-03, giữa chừng):** plan gốc viết khi chưa có code. Bản này được rà lại giữa chừng: Task 1–12 (chain/ult glue) đã commit; merge master `0239f3f` port E-5 vào HazardZoneSystem + E-1/E-2 ctx vào SkillEffectResolver sau Phase 7 split — chi tiết hiện trạng cuối xem `game/docs/newPhapTuDesignSpec.md` §0.b.
+
+- Task 1-8 (engine) độc lập tương đối — có thể song song trong phase nhưng tuần tự theo số để dễ review; Task 9-10 (data) sau engine; 11 sau 10 (node unlock trỏ id mới); 12 sau 11. *(Thực tế: đúng trình tự này, trừ Task 12 tooltip tách thành 12b còn lại.)*
+- Mỗi task 1 commit; KHÔNG merge master giữa chừng; user quyết merge. *(Thực tế: có 1 merge master → thuan-he `0239f3f` để port engine theo Phase 7 split — do user chấp nhận trong review round.)*
 - Số liệu skill/buff/node là KHỞI ĐIỂM playtest — test khóa cấu trúc (id, shape, prereq), không khóa số tuyệt đối trừ spec đã ghi (cd/cast bảng §1.2).
 - `bong` stack (N1) ảnh hưởng cảm giác Hỏa cũ — chấp nhận theo spec đã duyệt; nếu playtest phản đối, chỉ đổi `dpsRatio`/`maxStacks` (data-only).
 - `phapTuDao` + refund + Đa Pháp + Thân Hòa + adjacency + UI sao 5 cánh = plan cha Task 12-16, KHÔNG thuộc plan này.
+- Untracked `buffs-report.json` ở root worktree là QA artifact (18/18 pass) — KHÔNG commit, KHÔNG xóa (Iron Rule), chờ user quyết.

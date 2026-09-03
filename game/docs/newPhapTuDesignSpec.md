@@ -1,9 +1,28 @@
 #Design: Pháp Tu Thuần Hệ — Chi tiết 20 skill chuỗi B–E, 5 Ultimate, node chuỗi + biến thể C/D
 
-> Ngày: 2026-09-03 · Trạng thái: DRAFT chờ duyệt
+> Ngày: 2026-09-03 · Trạng thái: **IMPLEMENTED** (Task 1–12 commit trên worktree `worktree-phap-tu-thuan-he`; verification đầu cuối PASS 2026-09-03 — xem "0.b Trạng thái triển khai")
 > Spec cha: `2026-08-30-phap-tu-dao-sac-design.md` (§2.1–§2.4, §1.2, §6, §7). Spec này KHÔNG thay đổi quyết định nào của spec cha — chỉ chi tiết hóa phần spec cha để lại cho plan ("Skill B–E chi tiết", "số liệu ult", "node biến thể C/D").
 > Phạm vi: (1) 20 skill B–E của 5 chuỗi Thuần — tên/id mới, cơ chế, số liệu; (2) 5 Ultimate theo Thế — hiệu ứng đặc trưng thật thay AoE thuần; (3) node chuỗi trong `PhapTuNodes.ts` — Lập Đạo Thuần, unlock B–E, ult, chuyên sâu Thế, biến thể C/D (2 chọn 1).
 > Ngoài phạm vi: nhánh Đa Pháp, Thân Hòa, Sinh/Khắc adjacency, `PlayerData.phapTuDao` + refund, UI ngôi sao — vẫn theo plan cha Task 12–16.
+
+## 0.b Trạng thái triển khai (2026-09-03)
+
+Triển khai theo plan `docs/superpowers/plans/2026-09-03-phap-tu-thuan-he.md`, branch `worktree-phap-tu-thuan-he` (worktree `E:/tutienidle/.claude/worktrees/phap-tu-thuan-he`).
+
+| Phần spec | Trạng thái | Commit / bằng chứng |
+|---|---|---|
+| E-1 spread · E-2 stacksPerAffectedTarget · E-3 add_stack/remove_buff · E-4 hitCount · E-5 grantsZone+zoneElement (§6) | ✅ Xong | `4f7477f` `02a16fb` `9200d49` `a5fe4b6` `df08d1e` — `SkillEffectSystem.thuanHe.test.ts` (632 dòng) |
+| E-7 Thế bonus + buff Thế Mãn (§4) | ✅ Xong | `9923860` — `TheResourceSystem.test.ts` |
+| E-8 node selectsSpecialization (§6) | ✅ Xong | `6b89296` — `GameManager.purchaseNode.test.ts`, `NodeSystem.test.ts` |
+| E-6 ult profile per-element (§3) | ✅ Xong | `0d4bff1` — `UltimateSystem.phapTu.test.ts` |
+| Buff mới + `bong` stack N1 (§7) | ✅ Xong | `60ace5e` + round-1 fix `9ac033b` (dia_tru biến thể) — `buffs.test.ts` 42 definitions |
+| 20 skill B–E + 5 ult (§2, §3) | ✅ Xong | `b7fd4ab` + leech fix `9c094e3` (thon_no_hap_luu 0.35/5s đúng §2.2) — `Skills.chain.test.ts`, `Skills.costInvariant.test.ts` |
+| Node tree Thuần 17 node/hành (§5) | ✅ Xong | `3abec26` + targeting override `22c8007` — `PhapTuNodes.dao.test.ts` (289 dòng) |
+| Glue chain definition + ult resolution (§8 GameManager) | ✅ Xong | merge master `0239f3f` (port HazardZoneSystem/SkillEffectResolver sau Phase 7 split) + `666bf1f` — `GameManager.phapTuChain.test.ts` |
+| Tooltip cơ chế (§8 "Tooltip") | ✅ Xong | `38b5bdb` — `SkillMechanicDescriptions.test.ts` (7), `SkillDetailView.test.ts` (4) |
+| Verification cuối (plan Task 13) | ✅ Xong | type-check PASS · full suite 2318/2318 PASS · build PASS · e2e boot-fresh + create-to-combat PASS · QA quick **PASS WITH GAPS** (`game/docs/qa/2026-09-03-phap-tu-thuan-he-task12-quick.md`) — gap: thiếu nút ult thủ công trong `PhapTuCombatHud.vue` (engine sẵn, UI chưa nối — chờ user quyết phạm vi) |
+
+Điểm khác data so với spec (đều nằm trong cơ chế đã duyệt): `bong` maxStacks 5/dpsRatio 0.15 theo N1; Thủy D biến thể `thon_no_hap_luu` leech 0.35/5s theo §2.2; Thổ C biến thể buff riêng `dia_tru_bich`/`dia_tru_thu` (round-1 review). Dev phase — không save migration (AGENTS.md).
 
 ## 0. Hiện trạng hệ thống (đã khảo sát mã)
 
