@@ -2,6 +2,8 @@ import type { Battle } from './Battle'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { SwordZone } from './SwordZone'
 import type { KiemTuRoute } from '../player/Player'
+import type { Skill } from '../skill/Skill'
+import type { ElementType } from '../element/ElementType'
 import { consumeTheForUlt, theManBuffId, theMaxWithBonus } from './TheResourceSystem'
 import { BuffSystem } from '../buff/BuffSystem'
 
@@ -182,6 +184,63 @@ export const PHAP_TU_ULTIMATE_IDS = {
 
 export type PhapTuUltimateElement = keyof typeof PHAP_TU_ULTIMATE_IDS
 
+/** E-6 (plan 2026-09-03-thuan-he) — targeting profile per hành:
+ * 'all' = mọi địch còn sống (diện rộng — 4 ult), 'single_boss_priority'
+ * = ĐÚNG 1 target, boss trước, không boss → HP HIỆN TẠI cao nhất,
+ * KHÔNG splash overkill (Kim Phạt là "hình phạt" đơn — khác KKTM). */
+export type PhapTuUltimateProfile = 'all' | 'single_boss_priority'
+
+export const PHAP_TU_ULTIMATE_PROFILES: Record<ElementType, PhapTuUltimateProfile> = {
+  fire: 'all',
+  water: 'all',
+  wood: 'all',
+  metal: 'single_boss_priority',
+  earth: 'all',
+}
+
+/** Seam effect-driven (E-6): UltimateSystem KHÔNG tự biết
+ * SkillEffectSystem/ctx — GameManager glue (Task 12) inject:
+ * - getUltSkill: tra skill ult theo id (`PHAP_TU_ULTIMATE_IDS[element]`)
+ *   từ SkillManager — undefined (chưa đăng ký) = không resolve.
+ * - runUltimateEffects: resolve effects của skill ult vào target set
+ *   qua ĐÚNG đường cast thường (ctx đủ buffRegistry/reactionManager
+ *   như skill thường — pattern BattleSystem.resolveSkillEffects).
+ *   Shape diện rộng (all_lanes) do targeting của skill tự quyết theo
+ *   target set đã chọn, không phải vòng lặp ở đây. */
+export interface PhapTuUltimateDeps {
+  getUltSkill: (element: PhapTuUltimateElement) => Skill | undefined
+  runUltimateEffects: (
+    skill: Skill,
+    source: CombatEntity,
+    targets: CombatEntity[],
+  ) => void
+}
+
+/** Target set theo profile — MỘT lần resolve cho cả set (không loop
+ * nuke từng con như bản cũ). */
+function selectPhapTuUltimateTargets(
+  battle: Battle,
+  profile: PhapTuUltimateProfile,
+): CombatEntity[] {
+  const aliveEnemies = battle.enemies
+    .filter((enemy) => enemy.entity.alive)
+    .map((enemy) => enemy.entity)
+
+  if (profile === 'all') {
+    return aliveEnemies
+  }
+
+  const boss = aliveEnemies.find((enemy) => enemy.isBoss === true)
+  const single =
+    boss ??
+    aliveEnemies.reduce<CombatEntity | undefined>(
+      (best, enemy) => (best === undefined || enemy.currentHp > best.currentHp ? enemy : best),
+      undefined,
+    )
+
+  return single ? [single] : []
+}
+
 /** Ult Thuần hệ mở khi Thế đầy MAX_THE + node bonus theMaxBonus của
  * skill A (E-7, 2026-09-03 — đọc qua player.skillStats do GameManager
  * snapshot; không bonus = y hệt MAX_THE cũ). */
@@ -203,9 +262,11 @@ export function autoPhapTuUltimateDecision(
 }
 
 /** Thực thi ult Pháp Tu: tiêu TOÀN BỘ Thế (reset 0 — spec §2.3 "dùng
- * xong tích lại"), resolve nuke vào MỌI địch còn sống (AoE — 5 ult đều
- * diện rộng theo bảng §2.4; hiệu ứng đặc trưng từng hành nằm ở skill
- * data, resolver pipeline áp). Trả false nếu Thế chưa đầy.
+ * xong tích lại"), resolve theo PROFILE E-6 (plan 2026-09-03-thuan-he):
+ * có `deps` → chạy EFFECTS của skill ult qua `runUltimateEffects` một
+ * lần cho target set của profile (zone/debuff/single-boss/ward nằm
+ * trong skill data — Task 10); không `deps` (caller cũ/test) → fallback
+ * nuke resolver từng target trong cùng set. Trả false nếu Thế chưa đầy.
  * E-7 (2026-09-03): trần so theo `theMaxWithBonus(player.skillStats)`;
  * truyền `element` (ult vừa bắn) → gỡ buff `the_man_<el>` trên player
  * khi reset (engine gỡ theo id — no-op nếu data chưa đăng ký). */
@@ -213,6 +274,7 @@ export function triggerPhapTuUltimate(
   battle: Battle,
   nuke: UltimateNukeResolver,
   element?: PhapTuUltimateElement,
+  deps?: PhapTuUltimateDeps,
 ): boolean {
   if (!canUsePhapTuUltimate(battle)) {
     return false
@@ -222,11 +284,28 @@ export function triggerPhapTuUltimate(
 
   if (element) {
     new BuffSystem(battle.playerBuffs).removeAllById(theManBuffId(element))
-  }
 
-  for (const enemy of battle.enemies) {
-    if (enemy.entity.alive) {
-      nuke.resolveNuke(enemy.entity)
+    const profile = PHAP_TU_ULTIMATE_PROFILES[element]
+    const targets = selectPhapTuUltimateTargets(battle, profile)
+
+    if (deps) {
+      const skill = deps.getUltSkill(element)
+
+      if (skill && targets.length > 0) {
+        deps.runUltimateEffects(skill, battle.player, targets)
+      }
+    } else {
+      for (const target of targets) {
+        nuke.resolveNuke(target)
+      }
+    }
+  } else {
+    // Caller cũ không truyền element (Kiếm Tu path / test E-7 cũ):
+    // giữ nguyên hành vi nuke AoE đồng nhất mọi địch còn sống.
+    for (const enemy of battle.enemies) {
+      if (enemy.entity.alive) {
+        nuke.resolveNuke(enemy.entity)
+      }
     }
   }
 

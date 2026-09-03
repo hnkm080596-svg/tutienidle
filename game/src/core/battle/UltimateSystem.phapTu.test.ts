@@ -1,14 +1,16 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   autoPhapTuUltimateDecision,
   canUsePhapTuUltimate,
   PHAP_TU_ULTIMATE_IDS,
+  PHAP_TU_ULTIMATE_PROFILES,
   triggerPhapTuUltimate,
 } from './UltimateSystem'
 import { MAX_THE } from '../combat/CombatTypes'
 import type { Battle } from './Battle'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { SkillRuntimeStats } from '../skill/SkillRuntimeStats'
+import type { Skill } from '../skill/Skill'
 import { BuffPool } from '../buff/BuffPool'
 import { BuffSystem } from '../buff/BuffSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
@@ -68,6 +70,49 @@ function makeBattle(
     playerBuffs: new BuffPool(),
     enemies: [{ entity: enemy } as Battle['enemies'][number]],
   } as unknown as Battle
+}
+
+function makeMultiEnemyBattle(
+  the: number,
+  enemies: Array<{ id: string; isBoss?: boolean; hp?: number; alive?: boolean }>,
+): Battle {
+  const player = makeEntity({ id: 'player', type: 'player', currentThe: the })
+
+  return {
+    state: 'fighting',
+    player,
+    playerBuffs: new BuffPool(),
+    enemies: enemies.map(
+      (e) =>
+        ({
+          entity: makeEntity({
+            id: e.id,
+            isBoss: e.isBoss === true,
+            currentHp: e.hp ?? 100,
+            alive: e.alive ?? true,
+          }),
+        }) as Battle['enemies'][number],
+    ),
+  } as unknown as Battle
+}
+
+function makeUltSkill(id: string): Skill {
+  return {
+    id,
+    name: id,
+    type: 'active',
+    level: 1,
+    maxLevel: 5,
+    cooldown: 0,
+    remainingCooldown: 0,
+    castTime: 1.5,
+    execution: { kind: 'cast_time', castTime: 1.5 },
+    target: 'enemy',
+    effects: [{ type: 'damage', value: 4 }],
+    resourceType: 'none',
+    unlocked: false,
+    equipped: false,
+  } as unknown as Skill
 }
 
 describe('Pháp Tu ult theo Thế (spec §2.4)', () => {
@@ -175,5 +220,158 @@ describe('Pháp Tu ult theo Thế (spec §2.4)', () => {
     const battle = makeBattle({ the: MAX_THE })
     expect(triggerPhapTuUltimate(battle, { resolveNuke: () => 100 })).toBe(true)
     expect(battle.player.currentThe).toBe(0)
+  })
+})
+
+// E-6 (plan 2026-09-03-thuan-he Task 8) — 5 ult Thuần KHÔNG còn nuke
+// đồng nhất: trigger resolve EFFECTS của skill ult qua callback
+// runUltimateEffects (GameManager glue Task 12 build ctx đủ như skill
+// thường); profile per-element quyết target set: 'all' = mọi địch sống,
+// 'single_boss_priority' (Kim) = boss trước, không boss → HP cao nhất,
+// ĐÚNG 1 target, không splash overkill (khác KKTM).
+describe('Pháp Tu ult E-6 — profiles per-element + effect-driven resolution', () => {
+  it('PHAP_TU_ULTIMATE_PROFILES: metal single_boss_priority, 4 hành kia all', () => {
+    expect(PHAP_TU_ULTIMATE_PROFILES).toEqual({
+      fire: 'all',
+      water: 'all',
+      wood: 'all',
+      metal: 'single_boss_priority',
+      earth: 'all',
+    })
+  })
+
+  it('trigger chạy effects skill ult qua runUltimateEffects (không raw nuke)', () => {
+    const battle = makeBattle({ the: MAX_THE })
+    const skill = makeUltSkill('tat_phuong')
+    const runUltimateEffects = vi.fn()
+
+    expect(
+      triggerPhapTuUltimate(battle, { resolveNuke: () => 100 }, 'fire', {
+        getUltSkill: () => skill,
+        runUltimateEffects,
+      }),
+    ).toBe(true)
+
+    expect(runUltimateEffects).toHaveBeenCalledTimes(1)
+    expect(runUltimateEffects).toHaveBeenCalledWith(skill, battle.player, [battle.enemies[0]!.entity])
+  })
+
+  it('profile all: resolve MỘT lần với MỌI địch còn sống (all_lanes do targeting skill lo)', () => {
+    const battle = makeMultiEnemyBattle(MAX_THE, [
+      { id: 'e1' },
+      { id: 'e2', alive: false },
+      { id: 'e3' },
+    ])
+    const runUltimateEffects = vi.fn()
+
+    expect(
+      triggerPhapTuUltimate(battle, { resolveNuke: () => 100 }, 'fire', {
+        getUltSkill: () => makeUltSkill('tat_phuong'),
+        runUltimateEffects,
+      }),
+    ).toBe(true)
+
+    expect(runUltimateEffects).toHaveBeenCalledTimes(1)
+    const [, source, targets] = runUltimateEffects.mock.calls[0]!
+    expect(source).toBe(battle.player)
+    expect((targets as CombatEntity[]).map((t) => t.id)).toEqual(['e1', 'e3'])
+  })
+
+  it('Kim Phạt single_boss_priority: ĐÚNG 1 target là boss, không splash', () => {
+    const battle = makeMultiEnemyBattle(MAX_THE, [
+      { id: 'e1', hp: 500 },
+      { id: 'boss', isBoss: true, hp: 100 },
+      { id: 'e3', hp: 300 },
+    ])
+    const runUltimateEffects = vi.fn()
+
+    expect(
+      triggerPhapTuUltimate(battle, { resolveNuke: () => 100 }, 'metal', {
+        getUltSkill: () => makeUltSkill('kim_phat'),
+        runUltimateEffects,
+      }),
+    ).toBe(true)
+
+    expect(runUltimateEffects).toHaveBeenCalledTimes(1)
+    const [, , targets] = runUltimateEffects.mock.calls[0]!
+    expect((targets as CombatEntity[]).map((t) => t.id)).toEqual(['boss'])
+  })
+
+  it('Kim Phạt không boss: chọn HP HIỆN TẠI cao nhất (không theo maxHp)', () => {
+    const battle = makeMultiEnemyBattle(MAX_THE, [
+      { id: 'e1', hp: 900 },
+      { id: 'e2', hp: 1000 },
+      { id: 'e3', hp: 10 },
+    ])
+    const runUltimateEffects = vi.fn()
+
+    triggerPhapTuUltimate(battle, { resolveNuke: () => 100 }, 'metal', {
+      getUltSkill: () => makeUltSkill('kim_phat'),
+      runUltimateEffects,
+    })
+
+    expect(runUltimateEffects).toHaveBeenCalledTimes(1)
+    const [, , targets] = runUltimateEffects.mock.calls[0]!
+    expect((targets as CombatEntity[]).map((t) => t.id)).toEqual(['e2'])
+  })
+
+  it('Kim Phạt: không có địch sống → không resolve, vẫn tiêu Thế, trả true', () => {
+    const battle = makeMultiEnemyBattle(MAX_THE, [{ id: 'e1', alive: false }])
+    const runUltimateEffects = vi.fn()
+
+    expect(
+      triggerPhapTuUltimate(battle, { resolveNuke: () => 100 }, 'metal', {
+        getUltSkill: () => makeUltSkill('kim_phat'),
+        runUltimateEffects,
+      }),
+    ).toBe(true)
+
+    expect(battle.player.currentThe).toBe(0)
+    expect(runUltimateEffects).not.toHaveBeenCalled()
+  })
+
+  it('không deps (caller cũ) → fallback nuke AoE mọi địch sống', () => {
+    const battle = makeMultiEnemyBattle(MAX_THE, [{ id: 'e1' }, { id: 'e2', alive: false }, { id: 'e3' }])
+    const nuked: string[] = []
+    const resolveNuke = vi.fn((target: CombatEntity) => {
+      nuked.push(target.id)
+      return 100
+    })
+
+    expect(triggerPhapTuUltimate(battle, { resolveNuke }, 'fire')).toBe(true)
+    expect(resolveNuke).toHaveBeenCalledTimes(2)
+    expect(nuked).toEqual(['e1', 'e3'])
+  })
+
+  it('không deps + metal → fallback nuke ĐÚNG 1 target (boss ưu tiên), không splash', () => {
+    const battle = makeMultiEnemyBattle(MAX_THE, [
+      { id: 'e1', hp: 500 },
+      { id: 'boss', isBoss: true, hp: 100 },
+      { id: 'e3', hp: 300 },
+    ])
+    const nuked: string[] = []
+    const resolveNuke = vi.fn((target: CombatEntity) => {
+      nuked.push(target.id)
+      return 100
+    })
+
+    expect(triggerPhapTuUltimate(battle, { resolveNuke }, 'metal')).toBe(true)
+    expect(resolveNuke).toHaveBeenCalledTimes(1)
+    expect(nuked).toEqual(['boss'])
+  })
+
+  it('deps nhưng skill ult chưa đăng ký → không resolve, vẫn tiêu Thế, trả true', () => {
+    const battle = makeBattle({ the: MAX_THE })
+    const runUltimateEffects = vi.fn()
+
+    expect(
+      triggerPhapTuUltimate(battle, { resolveNuke: () => 100 }, 'fire', {
+        getUltSkill: () => undefined,
+        runUltimateEffects,
+      }),
+    ).toBe(true)
+
+    expect(battle.player.currentThe).toBe(0)
+    expect(runUltimateEffects).not.toHaveBeenCalled()
   })
 })
