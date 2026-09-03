@@ -798,3 +798,8 @@ export const buffs: BuffDefinition[] = [
     ],
   },
 ]
+
+// Talent v4 — named exports cho consumer test/wiring (pattern
+// KIEP_THUONG_DEBUFF): định nghĩa Tử Sinh Ngộ nằm trong mảng `buffs` ở
+// trên; export này tra lại CHÍNH xác object đó (không định nghĩa lần 2).
+export const TU_SINH_NGO_BUFF: BuffDefinition = buffs.find((buff) => buff.id === 'tu_sinh_ngo')!

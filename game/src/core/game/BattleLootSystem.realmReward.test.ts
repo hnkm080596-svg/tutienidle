@@ -132,14 +132,15 @@ describe('BattleLootSystem — realm reward scaling', () => {
     expect(loot.getSummary().spiritStone).toBe(30)
   })
 
-  it('Trúc Cơ ×3 + Tụ Bảo ×1.5 — Linh Thạch ×4.5, Cảm Ngộ chỉ ×3', () => {
+  it('Trúc Cơ ×3 + talent v3 retired (tu_bao) — không còn bonus ×1.5 (effect rỗng, spec v4 §4.4)', () => {
     const rewards: EnemyReward = { techniqueInsight: 40, spiritStone: 10 }
     const { loot, giveReward } = createTestSetup(rewards, 'foundation_establishment', ['tu_bao'])
 
     loot.processDefeatedEnemies(createBattle([createDeadEnemy('mob', rewards)]))
 
-    expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 45, techniqueInsight: 120 })
-    expect(loot.getSummary().spiritStone).toBe(45)
+    // Tụ Bảo retired — chỉ còn realm ×3, đúng hành vi "save cũ an toàn".
+    expect(giveReward.mock.calls[0]?.[1]).toMatchObject({ spiritStone: 30, techniqueInsight: 120 })
+    expect(loot.getSummary().spiritStone).toBe(30)
   })
 
   it('Trúc Cơ — Cảm Ngộ Kỹ năng suy ra từ techniqueInsight cũng ×3', () => {
