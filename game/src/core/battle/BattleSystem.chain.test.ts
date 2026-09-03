@@ -5,9 +5,11 @@ import { SkillManager } from '../skill/SkillManager'
 import { SkillSystem } from '../skill/SkillSystem'
 import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'
+import { BuffSystem } from '../buff/BuffSystem'
 import { EventBus } from '../events/EventBus'
 import { ActionImpactSystem } from '../battle/ActionImpactSystem'
 import { createBaseStats } from '../stats/StatBlock'
+import { createSkillRuntimeStats } from '../skill/SkillRuntimeStats'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
 
@@ -227,8 +229,7 @@ describe('BattleSystem — chuỗi combo Thuần hệ (spec §7)', () => {
     expect(system.getBattle()!.player.currentThe).toBeGreaterThanOrEqual(10)
   })
 
-  it('skill ngoài chuỗi không bị gate — cast tự do khi chain đã set', () => {
-    const eventBus = new EventBus()
+  it('skill ngoài chuỗi không bị gate — cast tự do khi chain đã set', () => {    const eventBus = new EventBus()
     const skillManager = new SkillManager()
     const skillSystem = new SkillSystem(skillManager)
     const system = new BattleSystem(
@@ -260,5 +261,149 @@ describe('BattleSystem — chuỗi combo Thuần hệ (spec §7)', () => {
     }
 
     expect(recorder.count('outside_skill')).toBeGreaterThanOrEqual(1)
+  })
+
+  // E-7 (2026-09-03) — glue: BattleSystem đọc runtime stats của skill A
+  // (chain đầu tiên) qua player.skillStats (nguồn: GameManager
+  // getSkillRuntimeStats → playerToCombatEntity) rồi TRUYỀN VÀO tham số
+  // 3 của gainTheOnChainLink; buff the_man_<el> (element = hành skill A)
+  // áp khi Thế chạm trần. Fixture: chain 2 skill nhưng CHỈ đăng ký A
+  // (cooldown 10) → đúng 1 link duy nhất trong 1s → số đo deterministic.
+  it('E-7: bonus theGainPerLinkBonus của skill A cộng vào mỗi link qua glue', () => {
+    const eventBus = new EventBus()
+    const skillManager = new SkillManager()
+    const skillSystem = new SkillSystem(skillManager)
+    const system = new BattleSystem(
+      new CombatSystem(eventBus),
+      skillManager,
+      skillSystem,
+      new SkillEffectSystem(),
+      new BuffRegistry(),
+      eventBus,
+      new ActionImpactSystem({ eventBus, rollCritical: () => false }),
+    )
+
+    const skillA = chainSkill('chain_a', 0)
+    skillA.cooldown = 10
+    skillManager.add(skillA)
+
+    system.setChainDefinition({ skillIds: ['chain_a', 'chain_b'] })
+
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      x: 0,
+      skillStats: { ...createSkillRuntimeStats(), theGainPerLinkBonus: 5 },
+    })
+    const enemy = createCombatant({ id: 'enemy', maxHp: 100000, currentHp: 100000 })
+
+    system.start(player, enemy)
+    system.update(3)
+    enemy.x = 2
+    enemy.row = 4
+
+    for (let i = 0; i < 100; i++) {
+      skillSystem.update(0.01, 0)
+      system.update(0.01)
+    }
+
+    // 1 link qua glue: 10 + 5 (bonus đọc từ player.skillStats, truyền
+    // xuống TheResourceSystem) — không phải 10.
+    expect(system.getBattle()!.player.currentThe).toBe(15)
+  })
+
+  it('E-7: theMaxBonus của skill A nới trần Thế qua glue', () => {
+    const eventBus = new EventBus()
+    const skillManager = new SkillManager()
+    const skillSystem = new SkillSystem(skillManager)
+    const system = new BattleSystem(
+      new CombatSystem(eventBus),
+      skillManager,
+      skillSystem,
+      new SkillEffectSystem(),
+      new BuffRegistry(),
+      eventBus,
+      new ActionImpactSystem({ eventBus, rollCritical: () => false }),
+    )
+
+    const skillA = chainSkill('chain_a', 0)
+    skillA.cooldown = 10
+    skillManager.add(skillA)
+
+    system.setChainDefinition({ skillIds: ['chain_a', 'chain_b'] })
+
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      x: 0,
+      currentThe: 110,
+      skillStats: { ...createSkillRuntimeStats(), theMaxBonus: 20 },
+    })
+    const enemy = createCombatant({ id: 'enemy', maxHp: 100000, currentHp: 100000 })
+
+    system.start(player, enemy)
+    system.update(3)
+    enemy.x = 2
+    enemy.row = 4
+
+    for (let i = 0; i < 100; i++) {
+      skillSystem.update(0.01, 0)
+      system.update(0.01)
+    }
+
+    // 110 + 10 = 120 — vượt MAX_THE 100 cũ, chứng minh trần bonus áp
+    // qua glue (không bonus sẽ cap ở 100).
+    expect(system.getBattle()!.player.currentThe).toBe(120)
+  })
+
+  it('E-7: Thế chạm trần qua glue → áp buff the_man_<el> theo hành skill A', () => {
+    const eventBus = new EventBus()
+    const skillManager = new SkillManager()
+    const skillSystem = new SkillSystem(skillManager)
+    const buffRegistry = new BuffRegistry()
+
+    buffRegistry.register({
+      id: 'the_man_fire',
+      name: 'Thế Mãn (Hỏa)',
+      polarity: 'buff',
+      duration: Infinity,
+      stackMode: 'refresh',
+      effects: [],
+    })
+
+    const system = new BattleSystem(
+      new CombatSystem(eventBus),
+      skillManager,
+      skillSystem,
+      new SkillEffectSystem(),
+      buffRegistry,
+      eventBus,
+      new ActionImpactSystem({ eventBus, rollCritical: () => false }),
+    )
+
+    const skillA = chainSkill('chain_a', 0)
+    skillA.cooldown = 10
+    skillA.effects = [{ type: 'damage', value: 1, components: [{ kind: 'element', element: 'fire', ratio: 1 }] }]
+    skillManager.add(skillA)
+
+    system.setChainDefinition({ skillIds: ['chain_a', 'chain_b'] })
+
+    const player = createCombatant({ id: 'player', type: 'player', x: 0, currentThe: 95 })
+    const enemy = createCombatant({ id: 'enemy', maxHp: 100000, currentHp: 100000 })
+
+    system.start(player, enemy)
+    system.update(3)
+    enemy.x = 2
+    enemy.row = 4
+
+    for (let i = 0; i < 100; i++) {
+      skillSystem.update(0.01, 0)
+      system.update(0.01)
+    }
+
+    const battle = system.getBattle()!
+
+    expect(battle.player.currentThe).toBe(100)
+    expect(new BuffSystem(battle.playerBuffs).getActiveIds()).toContain('the_man_fire')
   })
 })

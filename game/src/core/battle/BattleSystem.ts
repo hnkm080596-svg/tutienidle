@@ -73,7 +73,7 @@ import {
   type ChainDefinition,
   type ChainRuntimeState,
 } from './ChainStateSystem'
-import { gainTheOnChainLink } from './TheResourceSystem'
+import { gainTheOnChainLink, theMaxWithBonus, updateTheManBuff } from './TheResourceSystem'
 import {
   gainKiemTheOnFormationCast,
   gainKiemYTempOnChannelTick,
@@ -2444,6 +2444,16 @@ export class BattleSystem {
    * advance chain state (A mở B, E quay về A) + tích Thế (+10 link,
    * +20 finisher E — skill CUỐI chuỗi). No-op khi không có chain hoặc
    * skill ngoài chuỗi/sai vị trí.
+   *
+   * E-7 (2026-09-03) — node Thế: bonus (`theGainPerLinkBonus`/
+   * `theMaxBonus`) đọc từ runtime stats của skill A (đầu chuỗi) mà
+   * GameManager đã snapshot vào `source.skillStats`
+   * (getSkillRuntimeStats → playerToCombatEntity) — cùng kênh
+   * getSkillRuntimeStat cho mọi stat tài nguyên khác. Thế chạm trần →
+   * áp buff `the_man_<el>` (element = hành skill A, suy từ damage
+   * component đầu tiên — pattern resolveSkillEffects ~1310); buff gỡ
+   * khi ult reset (UltimateSystem). Registry chưa có definition (Task
+   * 9) → no-op an toàn.
    */
   private advanceChainAndGainThe(source: CombatEntity, skillId: string) {
     if (!this.chain) {
@@ -2460,7 +2470,52 @@ export class BattleSystem {
     advanceChain(definition, state, skillId)
 
     const isFinisher = skillId === definition.skillIds[definition.skillIds.length - 1]
-    gainTheOnChainLink(source, isFinisher)
+    const skillAStats = source.skillStats
+    const max = theMaxWithBonus(skillAStats)
+
+    gainTheOnChainLink(source, isFinisher, skillAStats)
+
+    const battle = this.battle
+
+    if (battle && source.type === 'player') {
+      const element = this.chainSkillElement(definition.skillIds[0])
+
+      if (element) {
+        updateTheManBuff(
+          this.getBuffSystem(battle.playerBuffs),
+          this.buffRegistry,
+          source,
+          element,
+          source.currentThe ?? 0,
+          max,
+        )
+      }
+    }
+  }
+
+  /** E-7 — hành của 1 skill trong chuỗi: damage component đầu tiên có
+   * `kind: 'element'` (pattern resolveSkillEffects). undefined = skill
+   * chưa học/không có element → không áp buff Thế Mãn. */
+  private chainSkillElement(skillId: string | undefined): ElementType | undefined {
+    if (!skillId) {
+      return undefined
+    }
+
+    const skill = this.skillManager.get(skillId)
+
+    if (!skill) {
+      return undefined
+    }
+
+    for (const effect of skill.effects) {
+      const component = effect.components?.find(entry => entry.kind === 'element')
+
+      if (component && component.kind === 'element') {
+        return component.element
+      }
+    }
+
+    return undefined
   }
 
   /**

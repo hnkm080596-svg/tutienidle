@@ -8,6 +8,10 @@ import {
 import { MAX_THE } from '../combat/CombatTypes'
 import type { Battle } from './Battle'
 import type { CombatEntity } from '../combat/CombatEntity'
+import type { SkillRuntimeStats } from '../skill/SkillRuntimeStats'
+import { BuffPool } from '../buff/BuffPool'
+import { BuffSystem } from '../buff/BuffSystem'
+import { BuffRegistry } from '../buff/BuffRegistry'
 import { createBaseStats } from '../stats/StatBlock'
 
 // Spec 2026-08-30-phap-tu-dao-sac §2.4 — ult Thuần hệ mở khi Thế đầy
@@ -44,8 +48,15 @@ function makeEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
   } as CombatEntity
 }
 
-function makeBattle(opts: { the?: number; boss?: boolean; state?: Battle['state'] } = {}): Battle {
-  const player = makeEntity({ id: 'player', type: 'player', currentThe: opts.the })
+function makeBattle(
+  opts: { the?: number; boss?: boolean; state?: Battle['state']; skillStats?: Partial<SkillRuntimeStats> } = {},
+): Battle {
+  const player = makeEntity({
+    id: 'player',
+    type: 'player',
+    currentThe: opts.the,
+    skillStats: opts.skillStats as SkillRuntimeStats | undefined,
+  })
   const enemy = makeEntity({
     id: 'enemy',
     isBoss: opts.boss === true,
@@ -54,6 +65,7 @@ function makeBattle(opts: { the?: number; boss?: boolean; state?: Battle['state'
   return {
     state: opts.state ?? 'fighting',
     player,
+    playerBuffs: new BuffPool(),
     enemies: [{ entity: enemy } as Battle['enemies'][number]],
   } as unknown as Battle
 }
@@ -124,5 +136,44 @@ describe('Pháp Tu ult theo Thế (spec §2.4)', () => {
     })
 
     expect(nukeCount).toBe(1)
+  })
+
+  // E-7 (2026-09-03) — gate ult đọc TRẦN có bonus từ player.skillStats
+  // (theMaxBonus — cùng nguồn skill A mà BattleSystem glue dùng); trigger
+  // reset Thế về 0 ĐỒNG THỜI gỡ buff the_man_<el> (element = ult vừa bắn).
+  it('E-7: canUse với theMaxBonus — 100 chưa đủ khi cap 120, 120 thì đủ', () => {
+    const withBonus = makeBattle({ the: 100, skillStats: { theMaxBonus: 20 } })
+    expect(canUsePhapTuUltimate(withBonus)).toBe(false)
+
+    const atCap = makeBattle({ the: 120, skillStats: { theMaxBonus: 20 } })
+    expect(canUsePhapTuUltimate(atCap)).toBe(true)
+  })
+
+  it('E-7: trigger thành công → gỡ buff the_man_<el> theo ult id', () => {
+    const battle = makeBattle({ the: MAX_THE })
+    const registry = new BuffRegistry()
+
+    registry.register({
+      id: 'the_man_fire',
+      name: 'Thế Mãn (Hỏa)',
+      polarity: 'buff',
+      duration: Infinity,
+      stackMode: 'refresh',
+      effects: [],
+    })
+
+    const buffs = new BuffSystem(battle.playerBuffs)
+    buffs.apply(registry.get('the_man_fire'), battle.player, battle.player, registry)
+    expect(buffs.getActiveIds()).toContain('the_man_fire')
+
+    expect(triggerPhapTuUltimate(battle, { resolveNuke: () => 100 }, 'fire')).toBe(true)
+    expect(battle.player.currentThe).toBe(0)
+    expect(buffs.getActiveIds()).not.toContain('the_man_fire')
+  })
+
+  it('E-7: trigger không element → vẫn reset Thế, không crash', () => {
+    const battle = makeBattle({ the: MAX_THE })
+    expect(triggerPhapTuUltimate(battle, { resolveNuke: () => 100 })).toBe(true)
+    expect(battle.player.currentThe).toBe(0)
   })
 })

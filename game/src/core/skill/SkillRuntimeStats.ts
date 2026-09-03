@@ -23,6 +23,13 @@ export interface SkillRuntimeStats {
   // definition khi BuffSystem tạo instance mới (xem BuffSystem.
   // resolveMaxStacks). Map rỗng/undefined = không đổi hành vi cũ.
   maxStacksBonusByBuffId?: Record<string, number>
+  // Pháp Tu Thuần Hệ (E-7, 2026-09-03) — node Thế: cộng thêm vào lượng
+  // Thế tích mỗi link chuỗi (theGainPerLinkBonus, áp cả finisher) và
+  // vào trần MAX_THE (theMaxBonus). REQUIRED (nền 0 từ factory) để
+  // nằm trong SkillRuntimeNumericStatKey → SKILL_RESOURCE_STAT_KEYS →
+  // aggregateNodeSkillModifiers/GameManager.getSkillRuntimeStats.
+  theGainPerLinkBonus: number
+  theMaxBonus: number
 }
 
 export type SkillRuntimeNumericStatKey = {
@@ -40,6 +47,7 @@ export const SKILL_RESOURCE_STAT_KEYS = [
   'kimTheGainPerProc', 'kimTheDotDamagePercentPerStack',
   'kimTheDotResistancePenetrationPercentPerStack', 'kimTheMaxStacksBonus',
   'metalAilmentPotencyPercent', 'huyetPhaGainPerProc', 'huyetPhaBurstDamage',
+  'theGainPerLinkBonus', 'theMaxBonus',
 ] as const satisfies readonly SkillResourceStatKey[]
 
 export function createSkillRuntimeStats(): SkillRuntimeStats {

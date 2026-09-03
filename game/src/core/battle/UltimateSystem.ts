@@ -2,8 +2,8 @@ import type { Battle } from './Battle'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { SwordZone } from './SwordZone'
 import type { KiemTuRoute } from '../player/Player'
-import { consumeTheForUlt } from './TheResourceSystem'
-import { MAX_THE } from '../combat/CombatTypes'
+import { consumeTheForUlt, theManBuffId, theMaxWithBonus } from './TheResourceSystem'
+import { BuffSystem } from '../buff/BuffSystem'
 
 // Ult Kiếm Tu (spec 2026-08-29-kiem-the-kiem-y mục 2/3.4) — 2 ult
 // MANUAL (nút riêng trong CombatControlBar, KHÔNG chiếm loadout slot)
@@ -182,9 +182,11 @@ export const PHAP_TU_ULTIMATE_IDS = {
 
 export type PhapTuUltimateElement = keyof typeof PHAP_TU_ULTIMATE_IDS
 
-/** Ult Thuần hệ mở khi Thế đầy MAX_THE (spec §2.3). */
+/** Ult Thuần hệ mở khi Thế đầy MAX_THE + node bonus theMaxBonus của
+ * skill A (E-7, 2026-09-03 — đọc qua player.skillStats do GameManager
+ * snapshot; không bonus = y hệt MAX_THE cũ). */
 export function canUsePhapTuUltimate(battle: Battle): boolean {
-  return (battle.player.currentThe ?? 0) >= MAX_THE
+  return (battle.player.currentThe ?? 0) >= theMaxWithBonus(battle.player.skillStats)
 }
 
 /** Auto-AI (spec §2.4): bắn khi có boss/Độ Kiếp trong trận VÀ Thế đầy.
@@ -203,16 +205,24 @@ export function autoPhapTuUltimateDecision(
 /** Thực thi ult Pháp Tu: tiêu TOÀN BỘ Thế (reset 0 — spec §2.3 "dùng
  * xong tích lại"), resolve nuke vào MỌI địch còn sống (AoE — 5 ult đều
  * diện rộng theo bảng §2.4; hiệu ứng đặc trưng từng hành nằm ở skill
- * data, resolver pipeline áp). Trả false nếu Thế chưa đầy. */
+ * data, resolver pipeline áp). Trả false nếu Thế chưa đầy.
+ * E-7 (2026-09-03): trần so theo `theMaxWithBonus(player.skillStats)`;
+ * truyền `element` (ult vừa bắn) → gỡ buff `the_man_<el>` trên player
+ * khi reset (engine gỡ theo id — no-op nếu data chưa đăng ký). */
 export function triggerPhapTuUltimate(
   battle: Battle,
   nuke: UltimateNukeResolver,
+  element?: PhapTuUltimateElement,
 ): boolean {
   if (!canUsePhapTuUltimate(battle)) {
     return false
   }
 
-  consumeTheForUlt(battle.player)
+  consumeTheForUlt(battle.player, theMaxWithBonus(battle.player.skillStats))
+
+  if (element) {
+    new BuffSystem(battle.playerBuffs).removeAllById(theManBuffId(element))
+  }
 
   for (const enemy of battle.enemies) {
     if (enemy.entity.alive) {
