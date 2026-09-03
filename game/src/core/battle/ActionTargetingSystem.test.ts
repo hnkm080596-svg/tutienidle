@@ -228,3 +228,39 @@ describe('collectAffected — shape theo grid, clamp biên', () => {
     expect(affected[0]!.id).toBe('primary')
   })
 })
+
+describe('collectAffected — new shapes (cross/row/column)', () => {
+  it("shape 'cross': includes arm cells, excludes corner cells of the bounding box", () => {
+    const armUp = entity('arm-up', 1, 2) // same column (1), 2 rows up from anchor row 4 — in cross arm
+    const armRight = entity('arm-right', 3, 4) // same row (4), 2 cols right from anchor col 1 — in cross arm
+    const corner = entity('corner', 3, 2) // diagonal from anchor — NOT in cross; a rectangle filter would wrongly include it
+    const battle = battleWith(PLAYER, [armUp, armRight, corner])
+    const targeting: ActionTargeting = { shape: 'cross', laneRadius: 2, columnRadius: 2 }
+
+    const affected = collectAffected(battle, PLAYER, 'arm-up', 4, 1, targeting)
+
+    expect(affected.map(e => e.id).sort()).toEqual(['arm-right', 'arm-up'])
+  })
+
+  it("shape 'row': includes every enemy on the anchor's row regardless of column", () => {
+    const sameRowFar = entity('same-row-far', 15, 4)
+    const otherRow = entity('other-row', 1, 6)
+    const battle = battleWith(PLAYER, [sameRowFar, otherRow])
+    const targeting: ActionTargeting = { shape: 'row' }
+
+    const affected = collectAffected(battle, PLAYER, 'same-row-far', 4, 1, targeting)
+
+    expect(affected.map(e => e.id)).toEqual(['same-row-far'])
+  })
+
+  it("shape 'column': includes every enemy on the anchor's column regardless of row", () => {
+    const sameColFar = entity('same-col-far', 1, 9)
+    const otherCol = entity('other-col', 3, 4)
+    const battle = battleWith(PLAYER, [sameColFar, otherCol])
+    const targeting: ActionTargeting = { shape: 'column' }
+
+    const affected = collectAffected(battle, PLAYER, 'same-col-far', 4, 1, targeting)
+
+    expect(affected.map(e => e.id)).toEqual(['same-col-far'])
+  })
+})

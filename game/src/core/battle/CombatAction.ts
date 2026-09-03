@@ -6,8 +6,8 @@
 // preset để diễn xuất.
 import { GRID_COLUMN_COUNT } from './BattleGrid'
 
-/** Hình dạng chọn vùng ảnh hưởng (decision 2026-08-24: shape union). */
-export type ActionTargetingShape = 'single' | 'area' | 'line' | 'all_lanes'
+/** Hình dạng chọn vùng ảnh hưởng (decision 2026-08-24: shape union; 2026-09-04: mở rộng cross/row/column, đổi 'area' → 'square'). */
+export type ActionTargetingShape = 'single' | 'square' | 'cross' | 'line' | 'row' | 'column' | 'all_lanes'
 
 export type TargetSelectionMode = 'nearest' | 'lowest_hp' | 'highest_hp'
 
@@ -16,7 +16,7 @@ export type TargetSelectionMode = 'nearest' | 'lowest_hp' | 'highest_hp'
  * còn targeting range riêng cho skill, tầm thi triển thực tế luôn là
  * `attackRange` của entity (Chebyshev với Player, column tới cổng với
  * enemy). Interface này CHỈ chuẩn hoá shape/AOE quanh primary target:
- * - shape 'area' dùng laneRadius/columnRadius quanh primary target
+ * - shape 'square' dùng laneRadius/columnRadius quanh primary target
  *   (radius 0 = chỉ hàng/cột của anchor; n = mở rộng n ô mỗi phía, clamp biên).
  * - shape 'line'  = toàn bộ hàng của primary target.
  * - shape 'all_lanes' = dải cột [anchor.col ± columnRadius] trên MỌI hàng.
@@ -48,7 +48,7 @@ export function targetingForSkill(skill: {
   const columnRadius = skill.columnRadius ?? 0
 
   return {
-    shape: laneRadius > 0 || columnRadius > 0 ? 'area' : 'single',
+    shape: laneRadius > 0 || columnRadius > 0 ? 'square' : 'single',
     laneRadius,
     columnRadius,
   }
@@ -162,7 +162,7 @@ export interface SkillVfxHint {
 
   vfxPresetId?: CombatVfxPresetId
 
-  /** AOE lan theo hàng quanh primary target (shape 'area' mặc định). */
+  /** AOE lan theo hàng quanh primary target (shape 'square' mặc định). */
   laneRadius?: number
 
   columnRadius?: number

@@ -18,6 +18,7 @@ import {
   type LaneIndex,
 } from './BattleGrid'
 import { rankTargetsByStrategy, type CombatAiStrategy, DEFAULT_COMBAT_AI_STRATEGY } from './CombatAiStrategy'
+import { isCellInShape, type AoeShapeSpec } from './turn/AoeShape'
 
 /** Hero là CỔNG chặn ngang mọi hàng — targetable từ bất kỳ row nào. */
 export function isHeroGate(entity: CombatEntity, playerId: string): boolean {
@@ -151,14 +152,22 @@ export function areaFor(anchorRow: LaneIndex, anchorColumn: number, targeting: A
   switch (targeting.shape) {
     case 'single':
       return getCellsInArea({ row: anchorRow, column: anchorColumn }, 0, 0)
-    case 'area':
+    case 'square':
       return getCellsInArea(
         { row: anchorRow, column: anchorColumn },
         targeting.laneRadius ?? 0,
         targeting.columnRadius ?? 0,
       )
+    case 'cross':
+      // No single rectangle describes a cross — collectAffected() filters
+      // per-cell via isCellInShape() instead of using this bounding area.
+      return null
     case 'line':
       return { rowStart: anchorRow, rowEnd: anchorRow, colStart: 0, colEnd: GRID_COLUMN_COUNT - 1 }
+    case 'row':
+      return { rowStart: anchorRow, rowEnd: anchorRow, colStart: 0, colEnd: GRID_COLUMN_COUNT - 1 }
+    case 'column':
+      return { rowStart: 0, rowEnd: GRID_ROW_COUNT - 1, colStart: anchorColumn, colEnd: anchorColumn }
     case 'all_lanes':
       return getCellsInArea(
         { row: anchorRow, column: anchorColumn },
@@ -188,26 +197,28 @@ export function collectAffected(
     return battle.player.alive && battle.playerMaterialized ? [battle.player] : []
   }
 
-  const area = areaFor(anchorRow, anchorColumn, targeting)
-
-  if (!area) {
-    return []
-  }
-
   const selection: TargetSelectionMode = targeting.selection ?? 'nearest'
+
+  const isInRange = (row: LaneIndex, column: number): boolean => {
+    if (targeting.shape === 'cross') {
+      const spec: AoeShapeSpec = { shape: 'cross', radius: targeting.laneRadius ?? 0 }
+      return isCellInShape(
+        { row: anchorRow, column: anchorColumn },
+        spec,
+        { row, column },
+      )
+    }
+
+    const area = areaFor(anchorRow, anchorColumn, targeting)
+    if (!area) {
+      return false
+    }
+    return row >= area.rowStart && row <= area.rowEnd && column >= area.colStart && column <= area.colEnd
+  }
 
   const affected = battle.enemies
     .filter(enemy => enemy.entity.alive)
-    .filter(enemy => {
-      const column = getColumnFromWorldX(enemy.entity.x)
-
-      return (
-        enemy.entity.row >= area!.rowStart &&
-        enemy.entity.row <= area!.rowEnd &&
-        column >= area!.colStart &&
-        column <= area!.colEnd
-      )
-    })
+    .filter(enemy => isInRange(enemy.entity.row, getColumnFromWorldX(enemy.entity.x)))
     .map(enemy => ({
       entity: enemy.entity,
       columnDistance: Math.abs(getColumnFromWorldX(enemy.entity.x) - anchorColumn),
