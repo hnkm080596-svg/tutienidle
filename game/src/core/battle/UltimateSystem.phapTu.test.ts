@@ -19,6 +19,7 @@ import { createBaseStats } from '../stats/StatBlock'
 // Spec 2026-08-30-phap-tu-dao-sac §2.4 — ult Thuần hệ mở khi Thế đầy
 // 100, auto-AI bắn khi boss active + Thế đầy, KHÔNG chiếm loadout slot.
 // Fixture theo pattern UltimateSystem.test.ts hiện có.
+// Task 10 (spec 2026-09-03 §3) — id ult mới thay placeholder cũ.
 function makeEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = { ...createBaseStats(), attack: 10, evasionRate: 0, dexterity: 0 }
 
@@ -118,11 +119,11 @@ function makeUltSkill(id: string): Skill {
 describe('Pháp Tu ult theo Thế (spec §2.4)', () => {
   it('PHAP_TU_ULTIMATE_IDS đủ 5 hành đúng id', () => {
     expect(PHAP_TU_ULTIMATE_IDS).toEqual({
-      fire: 'tat_phuong',
-      water: 'bat_thu',
-      wood: 'kien_moc',
-      metal: 'kim_phat',
-      earth: 'thanh_luy',
+      fire: 'tat_phuong_giang_the',
+      water: 'bat_thu_can_quet',
+      wood: 'kien_moc_thong_thien',
+      metal: 'kim_phat_thu_sat',
+      earth: 'hau_tho_thanh_luy',
     })
   })
 
@@ -242,7 +243,7 @@ describe('Pháp Tu ult E-6 — profiles per-element + effect-driven resolution',
 
   it('trigger chạy effects skill ult qua runUltimateEffects (không raw nuke)', () => {
     const battle = makeBattle({ the: MAX_THE })
-    const skill = makeUltSkill('tat_phuong')
+    const skill = makeUltSkill('tat_phuong_giang_the')
     const runUltimateEffects = vi.fn()
 
     expect(
@@ -266,7 +267,7 @@ describe('Pháp Tu ult E-6 — profiles per-element + effect-driven resolution',
 
     expect(
       triggerPhapTuUltimate(battle, { resolveNuke: () => 100 }, 'fire', {
-        getUltSkill: () => makeUltSkill('tat_phuong'),
+        getUltSkill: () => makeUltSkill('tat_phuong_giang_the'),
         runUltimateEffects,
       }),
     ).toBe(true)
@@ -287,7 +288,7 @@ describe('Pháp Tu ult E-6 — profiles per-element + effect-driven resolution',
 
     expect(
       triggerPhapTuUltimate(battle, { resolveNuke: () => 100 }, 'metal', {
-        getUltSkill: () => makeUltSkill('kim_phat'),
+        getUltSkill: () => makeUltSkill('kim_phat_thu_sat'),
         runUltimateEffects,
       }),
     ).toBe(true)
@@ -321,7 +322,7 @@ describe('Pháp Tu ult E-6 — profiles per-element + effect-driven resolution',
 
     expect(
       triggerPhapTuUltimate(battle, { resolveNuke: () => 100 }, 'metal', {
-        getUltSkill: () => makeUltSkill('kim_phat'),
+        getUltSkill: () => makeUltSkill('kim_phat_thu_sat'),
         runUltimateEffects,
       }),
     ).toBe(true)

@@ -174,12 +174,14 @@ export function triggerUltimate(
 // resolver (GameManager inject pipeline — cùng pattern Kiếm Tu).
 // ============================================================================
 
+// Pháp Tu Thuần Hệ (spec 2026-09-03 §3, Task 10) — id ult MỚI thay
+// placeholder cũ (tat_phuong/bat_thu/kien_moc/kim_phat/thanh_luy).
 export const PHAP_TU_ULTIMATE_IDS = {
-  fire: 'tat_phuong',
-  water: 'bat_thu',
-  wood: 'kien_moc',
-  metal: 'kim_phat',
-  earth: 'thanh_luy',
+  fire: 'tat_phuong_giang_the',
+  water: 'bat_thu_can_quet',
+  wood: 'kien_moc_thong_thien',
+  metal: 'kim_phat_thu_sat',
+  earth: 'hau_tho_thanh_luy',
 } as const
 
 export type PhapTuUltimateElement = keyof typeof PHAP_TU_ULTIMATE_IDS
