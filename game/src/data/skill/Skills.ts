@@ -2280,14 +2280,16 @@ export const SKILLS: Skill[] = [
   },
 ]
 
-// Pháp Tu Thuần Hệ (spec 2026-09-03 §2) — ánh xạ chuỗi 5 skill theo
-// hành cho ChainDefinition (BattleSystem.setChainDefinition) + node
-// unlock (PhapTuNodes Task 11). A là root hiện có của hành; B–E là 20
-// skill mới bên trên (id N2b — không hậu tố _b/_c).
-export const CHAIN_SKILL_IDS: Record<ElementType, readonly string[]> = {
-  fire: ['hoa_cau_thuat', 'nam_minh_liet_hoa', 'tam_muoi_chan_hoa', 'chuc_dung_dan_no', 'hoa_ha_cuu_thien'],
-  water: ['thuy_tien_thuat', 'bat_dau_tran_thuy', 'thanh_tuyen_duong_linh', 'hoi_luu_thon_no', 'bac_hai_cuong_lan'],
-  wood: ['doc_chuong', 'xuan_sanh_doc_duc', 'cau_mang_can_tri', 'van_moc_lan_doc', 'doc_vien_bao_can'],
-  metal: ['diem_kim_thuat', 'thu_giap_kim_than', 'kim_lang_toan_phong', 'kim_chung_cong_huong', 'kim_luan_tran_ap'],
-  earth: ['tho_cau_thuat', 'hau_tho_tran_ach', 'dia_tru_thua_thien', 'con_lon_chan_dia', 'cuu_tru_dia_lao'],
+// Pháp Tu Thuần Hệ (spec 2026-09-03 §2; Future Systems Task 1, 2026-09-04)
+// — chuỗi 3 skill/hành khớp mô hình 3-skill role (Slice 2): [basic, special,
+// ultimate]. Mapping giữ vị trí A/C/E của chuỗi 5 cũ (A = root no-cooldown
+// khớp yêu cầu basic; C = tier giữa; E = tier đỉnh) — 2 skill vị trí B/D
+// không mất, chỉ rời khỏi chuỗi mặc định (data vẫn tồn tại trong SKILLS
+// cho nội dung tương lai).
+export const CHAIN_SKILL_IDS: Record<ElementType, readonly [string, string, string]> = {
+  fire: ['hoa_cau_thuat', 'tam_muoi_chan_hoa', 'hoa_ha_cuu_thien'],
+  water: ['thuy_tien_thuat', 'thanh_tuyen_duong_linh', 'bac_hai_cuong_lan'],
+  wood: ['doc_chuong', 'cau_mang_can_tri', 'doc_vien_bao_can'],
+  metal: ['diem_kim_thuat', 'kim_lang_toan_phong', 'kim_luan_tran_ap'],
+  earth: ['tho_cau_thuat', 'dia_tru_thua_thien', 'cuu_tru_dia_lao'],
 }

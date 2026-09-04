@@ -56,19 +56,19 @@ function makeParticipant(
 describe('TurnBattleSystem adversarial (QA probes)', () => {
   it('INV-S1-2: maxTurns=0 terminate ngay với state defeat, không hang', () => {
     const battle: TurnBattle = {
-      player: makeParticipant(
+      players: [makeParticipant(
         'player',
         createCombatant({ id: 'player', type: 'player' }),
         10,
         0,
-      ),
+      ),],
       enemies: [makeParticipant('enemy', createCombatant({ id: 'enemy' }), 10, 1)],
       state: 'fighting',
     }
 
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 0)
     expect(system.runToCompletion(battle)).toBe('defeat')
-    expect(battle.player.entity.alive).toBe(true)
+    expect(battle.players[0]!.entity.alive).toBe(true)
   })
 
   it('INV-S1-3: selectTarget tie khoảng cách — winner cố định theo thứ tự mảng (first-min)', () => {
@@ -140,7 +140,7 @@ describe('TurnBattleSystem adversarial (QA probes)', () => {
     })
 
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemyA', enemyA, 10, 1), makeParticipant('enemyB', enemyB, 10, 2)],
       state: 'fighting',
     }

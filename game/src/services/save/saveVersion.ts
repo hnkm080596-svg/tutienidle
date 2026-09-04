@@ -12,4 +12,10 @@
 // chi_hien_quan (nguồn nhân công duy nhất, capacity 1+level×2), thêm
 // field productionSiteStates[].assignedWorkers (phân bổ nhân công
 // manual). Save v54 bị từ chối (dev phase, không migration).
-export const CURRENT_SAVE_VERSION = 55 as const
+// v56 (2026-09-04, stage-auto-farm spec): 3 field PlayerData mới —
+// perfectClearStageIds (stage đã đạt điều kiện Hoàn Mỹ),
+// perfectClearSeconds (wall-clock giây lần đạt đầu tiên, dùng làm cơ
+// sở cycleSeconds cho auto-farm), autoFarmStage (slot auto-farm đang
+// chạy, null nếu không có). Save v55 bị từ chối (dev phase, không
+// migration).
+export const CURRENT_SAVE_VERSION = 56 as const

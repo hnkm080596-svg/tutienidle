@@ -98,7 +98,7 @@ function startManualBattle(): GameManager {
   }
 
   gameManager.getTurnBattle()!.enemies[0]!.entity.x = 2
-  gameManager.getTurnBattle()!.player.entity.x = 0
+  gameManager.getTurnBattle()!.players[0]!.entity.x = 0
 
   return gameManager
 }

@@ -27,7 +27,7 @@ export function peekUpcomingActors(
   count: number,
 ): TurnBattleParticipant[] {
   const cloned: TurnBattleParticipant[] = [
-    cloneGaugeActor(battle.player),
+    ...battle.players.map(cloneGaugeActor),
     ...battle.enemies.map(cloneGaugeActor),
   ]
 
@@ -41,9 +41,8 @@ export function peekUpcomingActors(
     }
 
     const real =
-      resolved.actor.id === battle.player.id
-        ? battle.player
-        : battle.enemies.find((enemy) => enemy.id === resolved.actor.id)
+      battle.players.find((member) => member.id === resolved.actor.id) ??
+      battle.enemies.find((enemy) => enemy.id === resolved.actor.id)
 
     if (!real) {
       break

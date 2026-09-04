@@ -101,12 +101,25 @@ function slotEntry(
 export function buildTurnSkillPresentation(
   battle: TurnBattle,
   isPlayerTurnPaused: boolean,
+  participantOverride?: TurnBattleParticipant,
 ): {
   basic: TurnSkillPresentationEntry
   special: TurnSkillPresentationEntry
   ultimate: TurnSkillPresentationEntry
 } {
-  const player = battle.player
+  // Party (Future Systems Task 9/10): presentation theo participant được
+  // chỉ định — mặc định players[0] (main character); GameManager truyền
+  // paused actor khi manual pause là party member khác players[0].
+  const player =
+    participantOverride ?? battle.players[0]
+
+  if (!player) {
+    return {
+      basic: EMPTY_ENTRY,
+      special: EMPTY_ENTRY,
+      ultimate: EMPTY_ENTRY,
+    }
+  }
 
   return {
     basic: basicEntry(player.basic, isPlayerTurnPaused),

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { buildTurnSkillPresentation, type TurnSkillPresentationEntry } from './CombatSkillPresentation'
-import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
+import type { TurnBattle, TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
 import { TurnBuffPool } from '../battle/turn/TurnBuffPool'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
@@ -33,7 +33,7 @@ function battle(overrides: {
 } = {}): TurnBattle {
   const playerEntity = entity({ currentMp: overrides.mp ?? 50 })
 
-  const player: TurnBattle['player'] = {
+  const player: TurnBattleParticipant = {
     id: 'player',
     entity: playerEntity,
     speed: 100,
@@ -80,7 +80,7 @@ function battle(overrides: {
   }
 
   return {
-    player,
+    players: [player],
     enemies: [],
     state: 'fighting',
   }

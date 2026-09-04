@@ -55,7 +55,7 @@ describe('Slice 5 adversarial (QA probes)', () => {
 
     const wave = { totalEnemyCount: 50, spawnedCount: 1 }
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
       state: 'fighting',
       wave,
@@ -82,7 +82,7 @@ describe('Slice 5 adversarial (QA probes)', () => {
 
     const wave = { totalEnemyCount: 2, spawnedCount: 1 }
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
       state: 'fighting',
       wave,
@@ -107,7 +107,7 @@ describe('Slice 5 adversarial (QA probes)', () => {
     const player = createCombatant({ id: 'player', type: 'player' as never, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 10 } })
 
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [],
       state: 'fighting',
       wave: { totalEnemyCount: 0, spawnedCount: 0 },

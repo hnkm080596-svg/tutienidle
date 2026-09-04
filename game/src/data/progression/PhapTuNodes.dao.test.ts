@@ -68,20 +68,18 @@ describe('PhapTuNodes — gate Lập Đạo chung + placeholder Đa Pháp', () =
   })
 })
 
-describe('PhapTuNodes — nhánh Thuần per-hành (spec §5)', () => {
+describe('PhapTuNodes — nhánh Thuần per-hành (spec §5 + Future Systems Task 1: chuỗi 3)', () => {
   for (const el of ELEMENTS) {
     describe(`hành ${el}`, () => {
-      const [bId, cId, dId, eId] = chainSkillIds(el)
+      const [specialId, ultimateId] = chainSkillIds(el)
       const lapDaoId = `lap_dao_thuan_${el}`
-      const unlockB = `linh_ngo_${bId}`
-      const unlockC = `linh_ngo_${cId}`
-      const unlockD = `linh_ngo_${dId}`
-      const unlockE = `linh_ngo_${eId}`
+      const unlockSpecial = `linh_ngo_${specialId}`
+      const unlockUltimate = `linh_ngo_${ultimateId}`
 
-      it('đủ 13 node MỚI branchTag thuan_<el> (cộng 4 node cũ = 17/hành theo spec §5.1)', () => {
+      it('đủ 9 node MỚI branchTag thuan_<el> (2 unlock + 2 biến thể + ult node + 3 Thế + lap_dao keystone... theo Future Systems Task 1)', () => {
         const nodes = PHAP_TU_NODES.filter((n) => n.branchTag === `thuan_${el}`)
 
-        expect(nodes).toHaveLength(13)
+        expect(nodes).toHaveLength(9)
       })
 
       it('lap_dao_thuan: major cost 2, prereq gate chung, excludes 4 Thuần khác + da_phap', () => {
@@ -101,13 +99,11 @@ describe('PhapTuNodes — nhánh Thuần per-hành (spec §5)', () => {
         expect(excludes(node!)).toContain('phap_tu_lap_dao_da_phap')
       })
 
-      it('4 node unlock B/C/D/E: major keystone cost 2, unlocksSkillIds đúng skill, chain prereq đúng thứ tự', () => {
-        const b = nodeById(unlockB)!
-        const c = nodeById(unlockC)!
-        const d = nodeById(unlockD)!
-        const e = nodeById(unlockE)!
+      it('2 node unlock special/ultimate: major keystone cost 2, unlocksSkillIds đúng skill, chain prereq đúng thứ tự', () => {
+        const special = nodeById(unlockSpecial)!
+        const ultimate = nodeById(unlockUltimate)!
 
-        for (const [node, skillId] of [[b, bId], [c, cId], [d, dId], [e, eId]] as const) {
+        for (const [node, skillId] of [[special, specialId], [ultimate, ultimateId]] as const) {
           expect(node, `thiếu node ${skillId}`).toBeDefined()
           expect(node.type).toBe('major')
           expect(node.role).toBe('keystone')
@@ -115,16 +111,13 @@ describe('PhapTuNodes — nhánh Thuần per-hành (spec §5)', () => {
           expect(node.effect.unlocksSkillIds).toEqual([skillId])
         }
 
-        expect(nodePrereqs(b)).toContain(lapDaoId)
-        expect(nodePrereqs(c)).toContain(unlockB)
-        expect(nodePrereqs(d)).toContain(unlockC)
-        expect(nodePrereqs(e)).toContain(unlockD)
+        expect(nodePrereqs(special)).toContain(lapDaoId)
+        expect(nodePrereqs(ultimate)).toContain(unlockSpecial)
       })
 
-      it('realm gate C/D/E khớp REALM_SLOT_TABLE (golden_core / soul_transformation / tribulation)', () => {
-        expect(realmPrereq(nodeById(unlockC)!)).toBe('golden_core')
-        expect(realmPrereq(nodeById(unlockD)!)).toBe('soul_transformation')
-        expect(realmPrereq(nodeById(unlockE)!)).toBe('tribulation')
+      it('realm gate special/ultimate khớp REALM_SLOT_TABLE (golden_core / tribulation)', () => {
+        expect(realmPrereq(nodeById(unlockSpecial)!)).toBe('golden_core')
+        expect(realmPrereq(nodeById(unlockUltimate)!)).toBe('tribulation')
 
         // "mua được là lắp được": slot mở đúng từ cảnh giới gate.
         const slotTable: Record<string, number> = {
@@ -141,9 +134,8 @@ describe('PhapTuNodes — nhánh Thuần per-hành (spec §5)', () => {
         }
 
         for (const [node, slotNeeded] of [
-          [nodeById(unlockC)!, 3],
-          [nodeById(unlockD)!, 4],
-          [nodeById(unlockE)!, 5],
+          [nodeById(unlockSpecial)!, 3],
+          [nodeById(unlockUltimate)!, 5],
         ] as const) {
           const gate = realmPrereq(node)!
 
@@ -158,7 +150,7 @@ describe('PhapTuNodes — nhánh Thuần per-hành (spec §5)', () => {
         }
       })
 
-      it('node ult: major, prereq B node, unlocks đúng ult id của hành', async () => {
+      it('node ult: major, prereq special node, unlocks đúng ult id của hành', async () => {
         const { PHAP_TU_ULTIMATE_IDS } = await import('../../core/battle/UltimateSystem')
         const node = nodeById(`linh_ngo_${PHAP_TU_ULTIMATE_IDS[el as (typeof ELEMENT_ORDER)[number]]}`)
 
@@ -167,23 +159,21 @@ describe('PhapTuNodes — nhánh Thuần per-hành (spec §5)', () => {
         expect(node!.effect.unlocksSkillIds).toEqual([
           PHAP_TU_ULTIMATE_IDS[el as (typeof ELEMENT_ORDER)[number]],
         ])
-        expect(nodePrereqs(node!)).toContain(unlockB)
+        expect(nodePrereqs(node!)).toContain(unlockSpecial)
       })
 
-      it('biến thể C/D: minor specialization cost 2, selectsSpecialization trỏ specialization TỒN TẠI trong skill data, excludes nhau', async () => {
+      it('biến thể special: minor specialization cost 2, selectsSpecialization trỏ specialization TỒN TẠI trong skill data, excludes nhau', async () => {
         const { SKILLS } = await import('../skill/Skills')
 
-        const cSkill = SKILLS.find((s) => s.id === cId)!
-        const dSkill = SKILLS.find((s) => s.id === dId)!
+        const specialSkill = SKILLS.find((s) => s.id === specialId)!
 
-        expect(cSkill.specializations?.map((s) => s.id)).toHaveLength(2)
-        expect(dSkill.specializations?.map((s) => s.id)).toHaveLength(2)
+        expect(specialSkill.specializations?.map((s) => s.id)).toHaveLength(2)
 
         const variantNodes = PHAP_TU_NODES.filter(
           (n) => n.branchTag === `thuan_${el}` && n.effect.selectsSpecialization,
         )
 
-        expect(variantNodes).toHaveLength(4)
+        expect(variantNodes).toHaveLength(2)
 
         for (const node of variantNodes) {
           expect(node.type).toBe('minor')
@@ -200,25 +190,19 @@ describe('PhapTuNodes — nhánh Thuần per-hành (spec §5)', () => {
           ).toBe(true)
         }
 
-        // C1 excludes C2 và ngược lại; D1 excludes D2 và ngược lại.
-        const cNodes = variantNodes.filter((n) => n.effect.selectsSpecialization!.skillId === cId)
-        const dNodes = variantNodes.filter((n) => n.effect.selectsSpecialization!.skillId === dId)
+        // Special variant 1 excludes variant 2 và ngược lại.
+        const specialNodes = variantNodes.filter(
+          (n) => n.effect.selectsSpecialization!.skillId === specialId,
+        )
 
-        expect(cNodes).toHaveLength(2)
-        expect(dNodes).toHaveLength(2)
+        expect(specialNodes).toHaveLength(2)
 
-        expect(excludes(cNodes[0]!)).toContain(cNodes[1]!.id)
-        expect(excludes(cNodes[1]!)).toContain(cNodes[0]!.id)
-        expect(excludes(dNodes[0]!)).toContain(dNodes[1]!.id)
-        expect(excludes(dNodes[1]!)).toContain(dNodes[0]!.id)
+        expect(excludes(specialNodes[0]!)).toContain(specialNodes[1]!.id)
+        expect(excludes(specialNodes[1]!)).toContain(specialNodes[0]!.id)
 
-        // prereq: biến thể C sau node C, biến thể D sau node D.
-        for (const node of cNodes) {
-          expect(nodePrereqs(node)).toContain(unlockC)
-        }
-
-        for (const node of dNodes) {
-          expect(nodePrereqs(node)).toContain(unlockD)
+        // prereq: biến thể special sau node special.
+        for (const node of specialNodes) {
+          expect(nodePrereqs(node)).toContain(unlockSpecial)
         }
       })
 
@@ -283,7 +267,43 @@ describe('PhapTuNodes — nhánh Thuần per-hành (spec §5)', () => {
     }
   })
 
-  it('tổng cây = 121 node (5×11 cũ + 5×13 Thuần + 2 chung)', () => {
-    expect(PHAP_TU_NODES).toHaveLength(121)
+  it('tổng cây = 106 node (5×11 cũ + 5×9 Thuần + 5 Reaction Path unlock + 2 chung)', () => {
+    expect(PHAP_TU_NODES).toHaveLength(106)
+  })
+
+  it('Reaction Path unlock node (Future Systems Task 2): mỗi hành 1, dưới keystone Reaction Trúc Cơ, unlocks 2 skill reaction path', () => {
+    // 5 keystone Reaction Trúc Cơ (reaction-side) — danh sách khớp test
+    // "KHÔNG xoá keystone cũ" phía dưới.
+    const KEYSTONE_REACTION_BY_ELEMENT: Record<string, string> = {
+      fire: 'hoa_truc_co_dan_hoa',
+      wood: 'moc_truc_co_doc_dan',
+      water: 'thuy_truc_co_dan_luu',
+      metal: 'kim_truc_co_huyet_dan',
+      earth: 'tho_truc_co_dinh_tho',
+    }
+
+    for (const el of ELEMENTS) {
+      const node = nodeById(`reaction_path_unlock_${el}`)
+
+      expect(node, `thiếu reaction_path_unlock_${el}`).toBeDefined()
+      expect(node!.role).toBe('keystone')
+      expect(node!.effect.unlocksSkillIds).toEqual([
+        'phap_tu_reaction_special',
+        'phap_tu_reaction_ultimate',
+      ])
+
+      // Parent = node specialization Reaction ĐẦU TIÊN (role specialization,
+      // prereq keystone Reaction của hành).
+      const keystoneId = KEYSTONE_REACTION_BY_ELEMENT[el]!
+
+      const parent = PHAP_TU_NODES.find(
+        (n) => n.branchTag === el && n.role === 'specialization' && nodePrereqs(n).includes(keystoneId),
+      )
+
+      expect(parent, `hành ${el}: phải có node specialization Reaction`).toBeDefined()
+      // Node unlock nằm TRỰC TIẾP dưới keystone Reaction (plan Task 2 —
+      // "directly under the Reaction keystone").
+      expect(nodePrereqs(node!)).toContain(keystoneId)
+    }
   })
 })

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+﻿import { describe, expect, it } from 'vitest'
 import { CHAIN_SKILL_IDS, SKILLS } from './Skills'
 import { ELEMENT_ORDER } from '../../core/element/ElementLabels'
 
@@ -6,12 +6,15 @@ import { ELEMENT_ORDER } from '../../core/element/ElementLabels'
 // mỗi hành root A (skill hiện có) + 4 skill B/C/D/E TÊN MỚI đúng bảng
 // spec (id N2b: không hậu tố _b/_c). Data validation pattern test data
 // hiện có: id duy nhất, type active, có effects.
+// Future Systems Task 1 (2026-09-04) — chuỗi 3 skill/hành khớp mô hình
+// 3-skill role (Slice 2): giữ vị trí A/C/E của chuỗi 5 cũ. B/D không mất
+// — data vẫn trong SKILLS, chỉ rời chuỗi mặc định.
 const NEW_CHAIN_IDS: Record<string, string[]> = {
-  fire: ['hoa_cau_thuat', 'nam_minh_liet_hoa', 'tam_muoi_chan_hoa', 'chuc_dung_dan_no', 'hoa_ha_cuu_thien'],
-  water: ['thuy_tien_thuat', 'bat_dau_tran_thuy', 'thanh_tuyen_duong_linh', 'hoi_luu_thon_no', 'bac_hai_cuong_lan'],
-  wood: ['doc_chuong', 'xuan_sanh_doc_duc', 'cau_mang_can_tri', 'van_moc_lan_doc', 'doc_vien_bao_can'],
-  metal: ['diem_kim_thuat', 'thu_giap_kim_than', 'kim_lang_toan_phong', 'kim_chung_cong_huong', 'kim_luan_tran_ap'],
-  earth: ['tho_cau_thuat', 'hau_tho_tran_ach', 'dia_tru_thua_thien', 'con_lon_chan_dia', 'cuu_tru_dia_lao'],
+  fire: ['hoa_cau_thuat', 'tam_muoi_chan_hoa', 'hoa_ha_cuu_thien'],
+  water: ['thuy_tien_thuat', 'thanh_tuyen_duong_linh', 'bac_hai_cuong_lan'],
+  wood: ['doc_chuong', 'cau_mang_can_tri', 'doc_vien_bao_can'],
+  metal: ['diem_kim_thuat', 'kim_lang_toan_phong', 'kim_luan_tran_ap'],
+  earth: ['tho_cau_thuat', 'dia_tru_thua_thien', 'cuu_tru_dia_lao'],
 }
 
 const NEW_ULT_IDS = [
@@ -22,8 +25,8 @@ const NEW_ULT_IDS = [
   'hau_tho_thanh_luy',
 ]
 
-describe('Data 5 chuỗi thần thoại (spec §2.2, bảng §2 mới)', () => {
-  it('CHAIN_SKILL_IDS đủ 5 hành × 5 slot, ĐÚNG id bảng spec §2', () => {
+describe('Data chuỗi thần thoại 3-skill (Future Systems Task 1)', () => {
+  it('CHAIN_SKILL_IDS đủ 5 hành × 3 slot (Future Systems Task 1), ĐÚNG id chuỗi 3', () => {
     expect(Object.keys(CHAIN_SKILL_IDS).sort()).toEqual([...ELEMENT_ORDER].sort())
 
     for (const element of ELEMENT_ORDER) {

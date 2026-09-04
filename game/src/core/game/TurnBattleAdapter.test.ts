@@ -43,3 +43,21 @@ describe('toTurnBattleParticipant adapter', () => {
     expect(participant.alive).toBe(false)
   })
 })
+
+
+describe('Future Systems Task 8 â€” Kiáº¿m Tu special = Báº¡t Kiáº¿m Thuáº­t (2-phase charge)', () => {
+  it('kiem_tu participant nháº­n special bat_kiem_thuat vá»›i chargeTurns 3 + multiplier 3', () => {
+    const participant = toTurnBattleParticipant(entity(), 0, BASIC, 'kiem_tu')
+
+    expect(participant.special?.skill.id).toBe('bat_kiem_thuat')
+    expect(participant.special?.skill.chargeTurns).toBe(3)
+    expect(participant.special?.skill.damage).toEqual({ kind: 'physical', multiplier: 3 })
+    expect(participant.special?.remainingCooldownTurns).toBe(0)
+  })
+
+  it('build khÃ¡c (pham_nhan) KHÃ”NG cÃ³ special', () => {
+    const participant = toTurnBattleParticipant(entity(), 0, BASIC, 'pham_nhan')
+
+    expect(participant.special).toBeUndefined()
+  })
+})

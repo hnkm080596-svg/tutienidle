@@ -37,11 +37,23 @@ export interface TurnOnHitProcEffect {
   appliesBuffId: string
 }
 
+/**
+ * Future Systems Task 6 (2026-09-04) — haste/slow đẩy TRỰC TIẾP ATB: bắn
+ * 1 LẦN tức thì lúc buff được áp (khác statModifier trên speed — hiệu ứng
+ * liên tục), cộng/trừ % GAUGE_MAX vào actionGauge qua refundGauge() có
+ * sẵn (đã clamp [0, GAUGE_MAX]).
+ */
+export interface TurnGaugeDeltaEffect {
+  type: 'gaugeDelta'
+  percentOfMax: number
+}
+
 export type TurnBuffEffectTemplate =
   | TurnStatModifierEffect
   | TurnDotEffectTemplate
   | TurnCcEffect
   | TurnOnHitProcEffect
+  | TurnGaugeDeltaEffect
 
 // --- Runtime shapes (TurnBuff.effects) ---
 
@@ -54,7 +66,7 @@ export interface TurnDotEffect {
   poisonRootThresholdBonusPercent?: number
 }
 
-export type TurnBuffEffect = TurnStatModifierEffect | TurnDotEffect | TurnCcEffect | TurnOnHitProcEffect
+export type TurnBuffEffect = TurnStatModifierEffect | TurnDotEffect | TurnCcEffect | TurnOnHitProcEffect | TurnGaugeDeltaEffect
 
 export interface TurnBuffDefinition {
   id: string

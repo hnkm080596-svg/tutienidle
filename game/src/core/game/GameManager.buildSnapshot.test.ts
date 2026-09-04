@@ -52,11 +52,11 @@ function createTestEnemy() {
 // (static modifier) + Pre-Battle Upgrade (Skill Specialization) đều
 // ĐÃ có sẵn hạ tầng riêng (audit xác nhận, không phải xây mới) —
 // test này là "acceptance test" DUY NHẤT xác nhận CẢ 3 nguồn thật sự
-// cộng dồn đúng vào 1 build snapshot rồi flow đúng vào battle.player.stats
+// cộng dồn đúng vào 1 build snapshot rồi flow đúng vào battle.players[0].stats
 // khi vào trận, mirror finalStats getter thật của stores/player.ts
 // (calculateStats(baseStats, [...modifiers, ...externalModifiers])).
 describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade → Combat (Combat Rework Phase 8)', () => {
-  it('cả 3 nguồn build cộng dồn đúng vào finalStats, rồi flow đúng vào battle.player.stats lúc vào trận', () => {
+  it('cả 3 nguồn build cộng dồn đúng vào finalStats, rồi flow đúng vào battle.players[0].stats lúc vào trận', () => {
     const gameManager = new GameManager()
 
     gameManager.registerTechniqueTemplates(TECHNIQUES)
@@ -110,7 +110,7 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
 
     // --- Build Snapshot -> Combat: finalStats CUỐI CÙNG (đủ cả 3
     // nguồn: Class + Equipment + Upgrade) phải flow ĐÚNG vào
-    // battle.player.stats khi bắt đầu trận — không tính lại gì khác.
+    // battle.players[0].stats khi bắt đầu trận — không tính lại gì khác.
     const finalStats = calculateStats(player.baseStats, [
       ...player.modifiers,
       ...gameManager.getAggregatedModifiers(),
@@ -120,7 +120,7 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
 
     gameManager.startBattleWithPlayer(player, finalStats, createTestEnemy())
 
-    expect(gameManager.getTurnBattle()!.player.entity.stats.attack).toBe(finalStats.attack)
+    expect(gameManager.getTurnBattle()!.players[0]!.entity.stats.attack).toBe(finalStats.attack)
   })
 
   it('giữ nguyên skill runtime stats trong trận và chỉ nhận thay đổi ở trận kế tiếp', () => {
@@ -135,16 +135,16 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
 
     const stats = calculateStats(player.baseStats, [])
     gameManager.startBattleWithPlayer(player, stats, createTestEnemy())
-    expect(gameManager.getTurnBattle()!.player.entity.skillStats?.hoaTheGainPerCast).toBe(1)
-    expect(gameManager.getTurnBattle()!.player.entity.skillLevels?.snapshot_runtime_skill).toBe(runtimeSkill.level)
+    expect(gameManager.getTurnBattle()!.players[0]!.entity.skillStats?.hoaTheGainPerCast).toBe(1)
+    expect(gameManager.getTurnBattle()!.players[0]!.entity.skillLevels?.snapshot_runtime_skill).toBe(runtimeSkill.level)
 
     runtimeSkill.hoaTheGainPerCast = 5
     runtimeSkill.level = 5
-    expect(gameManager.getTurnBattle()!.player.entity.skillStats?.hoaTheGainPerCast).toBe(1)
-    expect(gameManager.getTurnBattle()!.player.entity.skillLevels?.snapshot_runtime_skill).toBe(1)
+    expect(gameManager.getTurnBattle()!.players[0]!.entity.skillStats?.hoaTheGainPerCast).toBe(1)
+    expect(gameManager.getTurnBattle()!.players[0]!.entity.skillLevels?.snapshot_runtime_skill).toBe(1)
 
     gameManager.startBattleWithPlayer(player, stats, createTestEnemy())
-    expect(gameManager.getTurnBattle()!.player.entity.skillStats?.hoaTheGainPerCast).toBe(5)
-    expect(gameManager.getTurnBattle()!.player.entity.skillLevels?.snapshot_runtime_skill).toBe(5)
+    expect(gameManager.getTurnBattle()!.players[0]!.entity.skillStats?.hoaTheGainPerCast).toBe(5)
+    expect(gameManager.getTurnBattle()!.players[0]!.entity.skillLevels?.snapshot_runtime_skill).toBe(5)
   })
 })

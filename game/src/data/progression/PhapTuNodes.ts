@@ -7,7 +7,7 @@ import type {
 } from '../../core/progression/ProgressionNode'
 import type { StatModifier } from '../../core/stats/StatCalculator'
 import { CHAIN_SKILL_IDS, SKILLS } from '../skill/Skills'
-import { PHAP_TU_ULTIMATE_IDS } from '../../core/battle/UltimateSystem'
+import { PHAP_TU_ULTIMATE_IDS } from '../skill/PhapTuUltimates'
 
 // Pháp Tu Node Tree — REWORK theo combat-skill-flow-element-power-dot-plan.md
 // §6.3-§6.7 (2026-08-26): mỗi hành dùng CÙNG một bộ khung, giữ identity/
@@ -248,6 +248,39 @@ function buildBranch(spec: BranchSpec): ProgressionNode[] {
 
       branchTag: spec.tag,
     })
+
+    // Future Systems Task 2 (2026-09-04) — node ĐẦU TIÊN của nhánh
+    // specialization Reaction mở khoá luôn Reaction Path ẩn (special +
+    // ultimate `phap_tu_reaction_*`, Task 4) — nhánh Reaction giờ là
+    // lối vào hidden path thay vì chỉ buff stat. Chỉ node specialization
+    // Reaction ĐẦU TIÊN mang unlock (các node sau giữ vai trò stat buff).
+    if (entry.parent === spec.keystoneReaction.id && entry.item === spec.reactionSpecs[0]) {
+      nodes.push({
+        id: `reaction_path_unlock_${spec.tag}`,
+
+        name: 'Lĩnh Ngộ Đa Hành Cộng Minh',
+
+        description:
+          'Thuần hóa phản ứng giữa các hành — mở khoá Reaction Path ẩn: special triệu hồi 2 hành ngẫu nhiên cộng minh, ultimate tự thân cường hóa dmg phản ứng (Future Systems §3).',
+
+        type: 'major',
+
+        role: 'keystone',
+
+        insightCost: 2,
+
+        prerequisites: [{ kind: 'node', nodeId: spec.keystoneReaction.id }],
+
+        effect: {
+          unlocksSkillIds: [
+            'phap_tu_reaction_special',
+            'phap_tu_reaction_ultimate',
+          ],
+        },
+
+        branchTag: spec.tag,
+      })
+    }
   }
 
   return nodes
@@ -323,8 +356,12 @@ function thuanUnlockName(skillId: string): string {
 }
 
 function buildThuanBranch(element: ElementType): ProgressionNode[] {
+  // Future Systems Task 1 (2026-09-04) — chuỗi 3 skill/hành: [basic, special,
+  // ultimate]. basic = root có sẵn (không node unlock); 2 node unlock cho
+  // special (realm gate Kim Đan) + ultimate (Độ Kiếp); biến thể gắn special
+  // (C cũ). Node ult riêng (PHAP_TU_ULTIMATE_IDS) giữ nguyên prereq special.
   const chain = CHAIN_SKILL_IDS[element]
-  const [bId, cId, dId, eId] = chain.slice(1) as [string, string, string, string]
+  const [, specialId, ultimateId] = chain
   const skillA = chain[0] as string
   const tag = `thuan_${element}`
   const lapDaoId = `lap_dao_thuan_${element}`
@@ -354,22 +391,15 @@ function buildThuanBranch(element: ElementType): ProgressionNode[] {
     branchTag: tag,
   })
 
-  // ── 4 node unlock B/C/D/E + biến thể C/D ──
+  // ── 2 node unlock special/ultimate + biến thể special ──
   const chainSpecs: ThuanChainSpec[] = [
-    { skillId: bId, unlockName: thuanUnlockName(bId) },
     {
-      skillId: cId,
-      unlockName: thuanUnlockName(cId),
+      skillId: specialId,
+      unlockName: thuanUnlockName(specialId),
       realmGate: THUAN_REALM_GATE.c,
       variants: THUAN_VARIANTS[element].c,
     },
-    {
-      skillId: dId,
-      unlockName: thuanUnlockName(dId),
-      realmGate: THUAN_REALM_GATE.d,
-      variants: THUAN_VARIANTS[element].d,
-    },
-    { skillId: eId, unlockName: thuanUnlockName(eId), realmGate: THUAN_REALM_GATE.e },
+    { skillId: ultimateId, unlockName: thuanUnlockName(ultimateId), realmGate: THUAN_REALM_GATE.e },
   ]
 
   for (const [index, spec] of chainSpecs.entries()) {
@@ -422,7 +452,7 @@ function buildThuanBranch(element: ElementType): ProgressionNode[] {
     }
   }
 
-  // ── Node ult (major, prereq B — N5: Thế có đầu ra sớm) ──
+  // ── Node ult (major, prereq special — N5: Thế có đầu ra sớm) ──
   nodes.push({
     id: `linh_ngo_${ultId}`,
     name: `Lĩnh ngộ ${SKILL_NAMES_BY_ID[ultId]}`,
@@ -430,7 +460,7 @@ function buildThuanBranch(element: ElementType): ProgressionNode[] {
     type: 'major',
     role: 'keystone',
     insightCost: 2,
-    prerequisites: [{ kind: 'node', nodeId: `linh_ngo_${bId}` }],
+    prerequisites: [{ kind: 'node', nodeId: `linh_ngo_${specialId}` }],
     effect: { unlocksSkillIds: [ultId] },
     branchTag: tag,
   })
@@ -687,7 +717,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
 
       description: '+3% Tốc Độ Niệm mỗi cấp.',
 
-      effect: { statModifiers: [stat('minor_fire_haste', 'speed', 0.03, 0.03)] },
+      effect: { statModifiers: [stat('minor_fire_haste', 'speed', 3, 3)] },
     },
 
     mechanic: {
@@ -810,7 +840,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
 
       description: '+3% Tốc Độ Niệm mỗi cấp.',
 
-      effect: { statModifiers: [stat('minor_wood_threshold', 'speed', 0.03, 0.03)] },
+      effect: { statModifiers: [stat('minor_wood_threshold', 'speed', 3, 3)] },
     },
 
     mechanic: {
@@ -929,7 +959,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
 
       description: '+3% Tốc Độ Niệm mỗi cấp.',
 
-      effect: { statModifiers: [stat('minor_water_haste', 'speed', 0.03, 0.03)] },
+      effect: { statModifiers: [stat('minor_water_haste', 'speed', 3, 3)] },
     },
 
     mechanic: {
@@ -939,7 +969,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
 
       description: '+2% Giảm Cooldown kỹ năng mỗi cấp.',
 
-      effect: { statModifiers: [stat('minor_water_cast_speed', 'speed', 0.02, 0.02)] },
+      effect: { statModifiers: [stat('minor_water_cast_speed', 'speed', 2, 2)] },
     },
 
     keystoneReaction: {
@@ -1052,7 +1082,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
 
       description: '+3% Tốc Độ Niệm mỗi cấp.',
 
-      effect: { statModifiers: [stat('minor_metal_burst', 'speed', 0.03, 0.03)] },
+      effect: { statModifiers: [stat('minor_metal_burst', 'speed', 3, 3)] },
     },
 
     mechanic: {
@@ -1186,7 +1216,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
 
       description: '+3% Tốc Độ Niệm mỗi cấp.',
 
-      effect: { statModifiers: [stat('minor_earth_haste', 'speed', 0.03, 0.03)] },
+      effect: { statModifiers: [stat('minor_earth_haste', 'speed', 3, 3)] },
     },
 
     mechanic: {

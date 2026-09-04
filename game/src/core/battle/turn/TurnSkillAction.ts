@@ -27,6 +27,8 @@ export interface TurnSkillDefinition {
   damage: ActionDamageInfo
   targeting: ActionTargeting
   appliesBuff?: { definitionId: string; target: 'self' | 'target' }
+  /** Future Systems Task 7 — skill charge N lượt (Thế) rồi tự resolve (Trảm). */
+  chargeTurns?: number
 }
 
 export interface TurnSkillSlot {
@@ -192,6 +194,29 @@ export function selectForcedAction(
   }
 
   return selectAction(participant)
+}
+
+/**
+ * Future Systems Task 4 — Reaction Path: chọn ngẫu nhiên 2 skill KHÁC
+ * nhau từ pool (đảm bảo mỗi lần cast special đều có cơ hội kích reaction
+ * — spec §3). Fisher-Yates 2 bước thay vì sort-random (không ổn định).
+ */
+export function selectRandomDistinctElementPair(
+  pool: TurnSkillDefinition[],
+): [TurnSkillDefinition, TurnSkillDefinition] {
+  if (pool.length < 2) {
+    throw new Error('selectRandomDistinctElementPair requires at least 2 skills in the pool')
+  }
+
+  const firstIndex = Math.floor(Math.random() * pool.length)
+
+  let secondIndex = Math.floor(Math.random() * (pool.length - 1))
+
+  if (secondIndex >= firstIndex) {
+    secondIndex += 1
+  }
+
+  return [pool[firstIndex]!, pool[secondIndex]!]
 }
 
 /** Sets the used slot on cooldown and consumes its resource — call AFTER a successful cast (a target was actually hit). No-op for the basic fallback (slot is null). */

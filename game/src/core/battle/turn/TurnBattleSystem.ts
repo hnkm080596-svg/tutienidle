@@ -20,6 +20,26 @@ import { shouldSpawnNextEnemy, isStageComplete } from './WaveSpawnTrigger'
 import { scaleActionDamage } from '../ActionImpactSystem'
 import { recomputeEffectiveStats } from './TurnStatsRecompute'
 import type { BattleLogEntry } from './TurnOrderPreview'
+import { selectRandomDistinctElementPair } from './TurnSkillAction'
+import { REACTION_PATH_SPECIAL_ID } from '../../../data/skill/TurnReactionPathSkills'
+import { refundGauge, GAUGE_MAX } from './ActionGauge'
+import type { TurnBuffDefinition } from './TurnBuffTypes'
+
+/**
+ * Future Systems Task 6 — gauge-delta effect: bắn 1 LẦN ngay khi buff
+ * được áp, đẩy % GAUGE_MAX vào actionGauge của participant nhận buff
+ * (refundGauge đã clamp [0, GAUGE_MAX]). Không phải tick liên tục.
+ */
+function applyGaugeDeltaEffects(
+  definition: TurnBuffDefinition,
+  participant: TurnBattleParticipant,
+): void {
+  for (const effect of definition.effects) {
+    if (effect.type === 'gaugeDelta') {
+      refundGauge(participant, GAUGE_MAX * (effect.percentOfMax / 100))
+    }
+  }
+}
 
 export interface TurnResourcePool {
   values: Record<string, number>
@@ -49,10 +69,18 @@ export interface TurnBattleParticipant {
   ultimate?: TurnSkillSlot
   resources?: TurnResourcePool
   bossTrigger?: TurnBossTrigger
+  /** Future Systems Task 7 — charge state (Thế→Trảm). CỐ Ý tách biệt counter CC Bá Thể. */
+  chargingTurnsRemaining?: number
+  pendingChargedSkillId?: string
 }
 
 export interface TurnBattle {
-  player: TurnBattleParticipant
+  /**
+   * Future Systems Task 9 (2026-09-04) — party: mảng player-side units,
+   * chung 1 ATB queue với enemy (TurnQueue tái dùng nguyên vẹn); thua khi
+   * TOÀN BỘ party chết (đối xứng điều kiện thắng — spec §6).
+   */
+  players: TurnBattleParticipant[]
   enemies: TurnBattleParticipant[]
   state: TurnBattleState
   totalTurnsElapsed?: number
@@ -123,6 +151,7 @@ export class TurnBattleSystem {
     private readonly maxTurns: number = DEFAULT_MAX_TURNS,
     private readonly registry?: TurnBuffRegistry,
     private readonly spawnEnemy?: () => TurnBattleParticipant,
+    private readonly reactionPathPool?: readonly TurnSkillDefinition[],
   ) {}
 
   /**
@@ -163,7 +192,7 @@ export class TurnBattleSystem {
       return null
     }
 
-    const allParticipants = [battle.player, ...battle.enemies]
+    const allParticipants = [...battle.players, ...battle.enemies]
 
     for (const participant of allParticipants) {
       participant.alive = participant.entity.alive
@@ -191,6 +220,68 @@ export class TurnBattleSystem {
     battle.totalTurnsElapsed = (battle.totalTurnsElapsed ?? 0) + 1
 
     const actorBuffSystem = new TurnBuffSystem(actor.buffs)
+
+    let skillId = ''
+
+    const targetIds: string[] = []
+
+    // Future Systems Task 6 — gauge-delta deferral: appliesBuff block ghi
+    // candidate vào đây, apply SAU consumeGaugeAfterAction (xem cuối turn).
+    const pendingGaugeDeltaTargets: TurnBattleParticipant[] = []
+    let pendingGaugeDeltaDefinition: TurnBuffDefinition | undefined
+
+    // Future Systems Task 7 — charge state (Thế→Trảm). Charging takes
+    // precedence: KHÔNG đụng CC counter Bá Thể (đã bất động tự nhiên,
+    // không double penalty); buff tick/hpRegen/resource vẫn chạy (actor
+    // vẫn sống); action resolution bị thay thế bởi charge tick/resolve;
+    // wave-spawn + win-condition tail CHUNG ở cuối (không return sớm).
+    const isCharging = (actor.chargingTurnsRemaining ?? 0) > 0
+    let chargedSkillId = ''
+    let chargeResolved = false
+
+    if (isCharging) {
+      actor.chargingTurnsRemaining = (actor.chargingTurnsRemaining ?? 0) - 1
+
+      if (actor.chargingTurnsRemaining === 0) {
+        const chargedId = actor.pendingChargedSkillId
+        const chargedSkill =
+          chargedId !== undefined && actor.special?.skill.id === chargedId
+            ? actor.special.skill
+            : chargedId !== undefined && actor.ultimate?.skill.id === chargedId
+              ? actor.ultimate.skill
+              : undefined
+
+        actor.pendingChargedSkillId = undefined
+
+        if (chargedId) {
+          chargedSkillId = chargedId
+        }
+
+        if (chargedSkill) {
+          const opposingSide = battle.players.includes(actor) ? battle.enemies : battle.players
+          const primaryTarget = selectTarget(actor, opposingSide)
+
+          if (primaryTarget) {
+            const affected = collectTurnTargets(primaryTarget, opposingSide, chargedSkill.targeting)
+
+            const suddenDeathMultiplier = this.suddenDeathDamageMultiplier(battle.totalTurnsElapsed ?? 0)
+            const chargedDamage = suddenDeathMultiplier === 1
+              ? chargedSkill.damage
+              : scaleActionDamage(chargedSkill.damage, suddenDeathMultiplier)
+
+            for (const target of affected) {
+              if (!target.entity.alive) continue
+
+              this.combat.resolveActionHit(actor.entity, target.entity, chargedDamage)
+              targetIds.push(target.id)
+            }
+          }
+        }
+
+        actor.chargingTurnsRemaining = undefined
+        chargeResolved = true
+      }
+    }
 
     // CC check TRƯỚC tick: buff stun/freeze duration=N phải block đúng N
     // lượt của holder (áp ở lượt N-1, block lượt N..N+1, hết sau khi block
@@ -237,11 +328,11 @@ export class TurnBattleSystem {
       actor.bossTrigger.firedAlready = true
     }
 
-    let skillId = ''
-
-    const targetIds: string[] = []
-
-    if (actor.entity.alive && !ccBlocked) {
+    // Charging turn (tick hoặc resolve): action resolution BỊ THAY THẾ
+    // hoàn toàn bởi charge block (tick → không hit; resolve → hits đã push
+    // ở charge block). Cooldown của special đã commit ở charge-init lượt
+    // trước, không commit lại ở đây.
+    if (actor.entity.alive && !ccBlocked && !isCharging) {
       tickCooldowns(actor)
 
       // Stats recompute (Completion Task 4): fold statModifier buffs đang
@@ -255,43 +346,107 @@ export class TurnBattleSystem {
 
       skillId = action.skillId
 
-      const opposingSide = actor === battle.player ? battle.enemies : [battle.player]
+      const isChargeInit = (action.skill?.chargeTurns ?? 0) > 0
+
+      if (isChargeInit) {
+        // Future Systems Task 7 — charge INITIATION (Thế): KHÔNG resolve
+        // ngay — ghi charge state, đòn tự resolve khi charge xong (Trảm).
+        // Cooldown/resource vẫn commit như cast thường (commitAction).
+        actor.chargingTurnsRemaining = action.skill!.chargeTurns
+        actor.pendingChargedSkillId = action.skillId
+      }
+
+      const opposingSide = battle.players.includes(actor) ? battle.enemies : battle.players
       const primaryTarget = selectTarget(actor, opposingSide)
 
-      if (primaryTarget) {
+      if (primaryTarget && !isChargeInit) {
         const affected = collectTurnTargets(primaryTarget, opposingSide, action.targeting)
 
         const suddenDeathMultiplier = this.suddenDeathDamageMultiplier(battle.totalTurnsElapsed ?? 0)
         const scaledDamage = suddenDeathMultiplier === 1 ? action.damage : scaleActionDamage(action.damage, suddenDeathMultiplier)
 
-        for (const target of affected) {
-          if (!target.entity.alive) continue
+        // Future Systems Task 5 — Reaction Path marker: special cast 2 hành
+        // random KHÁC nhau (mỗi pick 1 hit qua từng target). Marker KHÔNG
+        // bao giờ resolve damage placeholder trực tiếp; không có pool →
+        // 0 hit (cooldown/resource vẫn tiêu — lượt bị "miss" an toàn).
+        if (action.skillId === REACTION_PATH_SPECIAL_ID && this.reactionPathPool) {
+          const [first, second] = selectRandomDistinctElementPair([...this.reactionPathPool])
 
-          this.combat.resolveActionHit(actor.entity, target.entity, scaledDamage)
-          targetIds.push(target.id)
+          for (const pickedSkill of [first, second]) {
+            const pickedDamage = suddenDeathMultiplier === 1
+              ? pickedSkill.damage
+              : scaleActionDamage(pickedSkill.damage, suddenDeathMultiplier)
 
-          if (this.registry) {
-            new TurnBuffSystem(actor.buffs).rollOnHitEffects(actor.entity, target.entity, this.registry)
+            for (const target of affected) {
+              if (!target.entity.alive) continue
+
+              this.combat.resolveActionHit(actor.entity, target.entity, pickedDamage)
+              targetIds.push(target.id)
+            }
+          }
+        } else if (action.skillId === REACTION_PATH_SPECIAL_ID) {
+          // Marker equipped nhưng pool chưa inject — placeholder damage
+          // vô nghĩa, bỏ qua hit hoàn toàn (không crash, không hit).
+        } else {
+          for (const target of affected) {
+            if (!target.entity.alive) continue
+
+            this.combat.resolveActionHit(actor.entity, target.entity, scaledDamage)
+            targetIds.push(target.id)
+
+            if (this.registry) {
+              new TurnBuffSystem(actor.buffs).rollOnHitEffects(actor.entity, target.entity, this.registry)
+            }
           }
         }
 
-        commitAction(actor.entity, action)
+        if (isChargeInit) {
+          // Charge-init: không hit — vẫn commit cooldown/resource (giá
+          // cast của lượt bắt đầu Thế).
+          commitAction(actor.entity, action)
+        } else {
+          commitAction(actor.entity, action)
 
-        if (action.skill?.appliesBuff && this.registry) {
+          if (action.skill?.appliesBuff && this.registry) {
           const definition = this.registry.get(action.skill.appliesBuff.definitionId)
 
+          // gaugeDelta là ONE-SHOT push SAU consume (consume đặt gauge về 0,
+          // delta cộng lên trên — nếu áp trước sẽ bị consume ghi đè).
           if (action.skill.appliesBuff.target === 'self') {
             new TurnBuffSystem(actor.buffs).apply(definition, actor.entity, actor.entity, this.registry)
+            pendingGaugeDeltaTargets.push(actor)
           } else {
             for (const target of affected) {
               new TurnBuffSystem(target.buffs).apply(definition, actor.entity, target.entity, this.registry)
+              pendingGaugeDeltaTargets.push(target)
             }
+          }
+
+          pendingGaugeDeltaDefinition = definition
           }
         }
       }
     }
 
+    // Charging turn: skillId phản ánh charge state (bắt đầu/tick → pending
+    // id; resolve → charged id đã push hits vào targetIds ở charge block).
+    if (isCharging && !chargeResolved) {
+      skillId = actor.pendingChargedSkillId ?? chargedSkillId
+    } else if (chargeResolved) {
+      skillId = chargedSkillId
+    }
+
     consumeGaugeAfterAction(actor)
+
+    // Future Systems Task 6 — gauge-delta one-shot push SAU consume
+    // (consume đặt gauge về 0; delta cộng lên trên, không bị ghi đè).
+    if (pendingGaugeDeltaTargets.length > 0) {
+      for (const participant of pendingGaugeDeltaTargets) {
+        applyGaugeDeltaEffects(pendingGaugeDeltaDefinition!, participant)
+      }
+
+      pendingGaugeDeltaTargets.length = 0
+    }
 
     if (battle.wave && this.spawnEnemy) {
       const aliveEnemyCount = battle.enemies.filter((enemy) => enemy.entity.alive).length
@@ -304,7 +459,7 @@ export class TurnBattleSystem {
 
     const finalAliveEnemyCount = battle.enemies.filter((enemy) => enemy.entity.alive).length
 
-    if (!battle.player.entity.alive) {
+    if (battle.players.every((member) => !member.entity.alive)) {
       battle.state = 'defeat'
     } else if (
       battle.wave
