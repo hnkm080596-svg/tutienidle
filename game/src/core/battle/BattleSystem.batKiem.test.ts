@@ -39,8 +39,7 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     // đi qua beginPlayerCast — attackRange=0 chỉ để tránh nhiễu thêm),
     // và enemy archetype mặc định không tự bước vào tầm bắn.
     attackRange: 0,
-    attackSpeed: 0,
-    movementSpeed: 0,
+    speed: 0,
   }
 
   return {

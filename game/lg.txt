@@ -1,0 +1,41 @@
+﻿
+ RUN  v4.1.10 E:/tutienidle/.agent-worktrees/stat-conversion/game
+
+ Γ¥» src/core/battle/BattleSystem.attackRangeVisibility.test.ts (4 tests | 1 failed) 75ms
+     ├ù mob/boss ß╗ƒ off-screen (x > VISIBLE_MAX_COLUMN) KH├öNG tß║Ñn c├┤ng player ─æ╞░ß╗úc d├╣ ─æß╗º range 26ms
+node.exe : 
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 1 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/core/battle/BattleSystem.attackRangeVisibility.test.ts > BattleSystem ΓÇö Enemy visible gate khi tß║Ñn 
+c├┤ng cß╗òng (giß╗» tß╗½ 2026-08-22) > mob/boss ß╗ƒ off-screen (x > VISIBLE_MAX_COLUMN) KH├öNG tß║Ñn c├┤ng player 
+─æ╞░ß╗úc d├╣ ─æß╗º range
+AssertionError: expected 940.589332129963 to be 1000 // Object.is equality
+
+- Expected
++ Received
+
+- 1000
++ 940.589332129963
+
+ Γ¥» src/core/battle/BattleSystem.attackRangeVisibility.test.ts:178:30
+    176|     }
+    177|
+    178|     expect(player.currentHp).toBe(player.maxHp)
+       |                              ^
+    179|   })
+    180|
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/1]ΓÄ»
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 9 passed (10)
+   Start at  11:04:57
+   Duration  798ms (transform 756ms, setup 0ms, import 985ms, tests 203ms, environment 1ms)
+

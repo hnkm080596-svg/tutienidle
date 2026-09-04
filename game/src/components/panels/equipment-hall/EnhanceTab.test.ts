@@ -99,13 +99,14 @@ describe('EnhanceTab — Cường Hóa', () => {
     mounted.unmount()
   })
 
-  it('Cường Hóa mainStat thập phân nhỏ (tốc đánh 0.015) không bị làm tròn thành 0.0', async () => {
+  it('Cường Hóa mainStat thập phân nhỏ (speed 0.015) không bị làm tròn thành 0.0', async () => {
     // Bug report 2026-08-30: bảng Cường Hóa dùng toFixed(1) → mainStat
-    // attackSpeed nhỏ (0.01–0.02) hiển thị "0.0". formatStat phải
-    // giữ 2 chữ số thập phân cho DECIMAL_STAT_KEYS.
+    // nhỏ hiển thị "0.0". formatStat phải giữ nguyên giá trị hiển thị
+    // được. (Turn-based conversion 2026-09-04: attackSpeed→speed, giá
+    // trị fixture +105 cho speed thang ~100.)
     const mounted = mountTab((manager) => {
       manager.equipmentBag.remove('equipped')
-      manager.equipmentBag.add(equipmentInstanceWithStat('fast-weapon', 'attackSpeed', 0.015))
+      manager.equipmentBag.add(equipmentInstanceWithStat('fast-weapon', 'speed', 105.015))
     })
 
     // Tab Cường Hóa mặc định — slot weapon đang mặc 'fast-weapon'.
@@ -121,7 +122,7 @@ describe('EnhanceTab — Cường Hóa', () => {
 
     const cells = Array.from(table!.querySelectorAll('td')).map((cell) => cell.textContent ?? '')
 
-    expect(cells.some((cell) => cell.includes('0.02'))).toBe(true)
+    expect(cells.some((cell) => cell.includes('105'))).toBe(true)
     expect(cells.some((cell) => cell.trim() === '0.0')).toBe(false)
 
     mounted.unmount()

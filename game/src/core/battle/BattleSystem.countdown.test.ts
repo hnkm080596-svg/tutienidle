@@ -39,9 +39,8 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     ...createBaseStats(),
     evasionRate: 0,
     dexterity: 0,
-    attackSpeed: 1,
+    speed: 1,
     attackRange: 60,
-    movementSpeed: 60,
     attack: 100,
   }
 

@@ -687,7 +687,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
 
       description: '+3% Tốc Độ Niệm mỗi cấp.',
 
-      effect: { statModifiers: [stat('minor_fire_haste', 'castSpeedPercent', 0.03, 0.03)] },
+      effect: { statModifiers: [stat('minor_fire_haste', 'speed', 0.03, 0.03)] },
     },
 
     mechanic: {
@@ -810,7 +810,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
 
       description: '+3% Tốc Độ Niệm mỗi cấp.',
 
-      effect: { statModifiers: [stat('minor_wood_threshold', 'castSpeedPercent', 0.03, 0.03)] },
+      effect: { statModifiers: [stat('minor_wood_threshold', 'speed', 0.03, 0.03)] },
     },
 
     mechanic: {
@@ -929,7 +929,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
 
       description: '+3% Tốc Độ Niệm mỗi cấp.',
 
-      effect: { statModifiers: [stat('minor_water_haste', 'castSpeedPercent', 0.03, 0.03)] },
+      effect: { statModifiers: [stat('minor_water_haste', 'speed', 0.03, 0.03)] },
     },
 
     mechanic: {
@@ -939,7 +939,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
 
       description: '+2% Giảm Cooldown kỹ năng mỗi cấp.',
 
-      effect: { statModifiers: [stat('minor_water_cast_speed', 'cooldownReduction', 0.02, 0.02)] },
+      effect: { statModifiers: [stat('minor_water_cast_speed', 'speed', 0.02, 0.02)] },
     },
 
     keystoneReaction: {
@@ -1052,7 +1052,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
 
       description: '+3% Tốc Độ Niệm mỗi cấp.',
 
-      effect: { statModifiers: [stat('minor_metal_burst', 'castSpeedPercent', 0.03, 0.03)] },
+      effect: { statModifiers: [stat('minor_metal_burst', 'speed', 0.03, 0.03)] },
     },
 
     mechanic: {
@@ -1186,7 +1186,7 @@ export const PHAP_TU_NODES: ProgressionNode[] = [
 
       description: '+3% Tốc Độ Niệm mỗi cấp.',
 
-      effect: { statModifiers: [stat('minor_earth_haste', 'castSpeedPercent', 0.03, 0.03)] },
+      effect: { statModifiers: [stat('minor_earth_haste', 'speed', 0.03, 0.03)] },
     },
 
     mechanic: {

@@ -22,9 +22,8 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     dexterity: 0,
     criticalRate: 0,
     attackRange: 0,
-    attackSpeed: 0,
+    speed: 0,
     vitality: 0,
-    movementSpeed: 0,
   }
 
   return {

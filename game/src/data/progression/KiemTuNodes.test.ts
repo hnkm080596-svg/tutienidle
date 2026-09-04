@@ -71,7 +71,7 @@ describe('KiemTuNodes data validation', () => {
     // + node công năng kiếm ý.
     const allowedStats = new Set([
       'skillDamagePercent', 'wardMax', 'ailmentResistPercent', 'finalDamageReductionPercent', 'metalPower',
-      'blockChance', 'blockEffectiveness', 'criticalRate', 'criticalDamage', 'evasionRate', 'attackSpeed',
+      'blockChance', 'blockEffectiveness', 'criticalRate', 'criticalDamage', 'evasionRate', 'speed',
     ])
 
     for (const node of bonusNodes) {

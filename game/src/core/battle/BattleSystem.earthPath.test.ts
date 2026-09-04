@@ -35,6 +35,9 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     // Knockback" describe).
     enduranceThreshold: 0,
     endurancePercent: 0,
+    // Turn-based conversion (2026-09-04) — pin cadence 1 đòn/s như
+    // attackSpeed mặc định cũ mà timing các test này giả định.
+    speed: 1,
   }
 
   return {
@@ -184,7 +187,8 @@ describe('BattleSystem — Trói Chân (Plans/EarthPath mục VI, Root)', () => 
     const enemy = createCombatant({ id: 'enemy' })
 
     enemy.stats.attackRange = 10
-    enemy.stats.movementSpeed = 1000
+    // Turn-based conversion (2026-09-04) — movementSpeed retired; enemy
+    // movement giờ là LEGACY_ENEMY_MOVEMENT_STEP_PER_SECOND cố định.
 
     // start() TỰ SET x = ENEMY_SPAWN_X (400) bất kể fixture truyền vào
     // — ghi đè lại SAU start() để mô phỏng "ngoài tầm, lẽ ra phải tiến".
@@ -259,18 +263,14 @@ describe('BattleSystem — AOE + Knockback (Plans/EarthPath mục XVI, Thổ Th�
     // start()/spawnEnemyInto() đặt vị trí qua telegraph resolver — ghi
     // đè lại SAU mỗi lệnh để dựng đúng hàng/cột cho AOE (enemy2 cách
     // enemy1 2 cột, cùng row 2, trong bán kính columnRadius 2).
-    // movementSpeed=0 (CẢ baseStats — recompute mỗi tick) để knockback
-    // là thay đổi vị trí DUY NHẤT, đo đếm được chính xác.
+    // (2026-09-04) movementSpeed retired — enemy movement giờ là constant,
+    // không cần zero-out để knockback đo được.
     system.start(player, enemy1)
     system.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
-    enemy1.baseStats = { ...enemy1.baseStats, movementSpeed: 0 }
-    enemy1.stats = { ...enemy1.stats, movementSpeed: 0 }
     enemy1.x = 2
     enemy1.row = 2
 
     system.spawnEnemyInto(system.getBattle()!, enemy2)
-    enemy2.baseStats = { ...enemy2.baseStats, movementSpeed: 0 }
-    enemy2.stats = { ...enemy2.stats, movementSpeed: 0 }
     enemy2.x = 4
 
     // (MISSILE_SPEED=500 -> 0.1s) rồi trúng cả 2.

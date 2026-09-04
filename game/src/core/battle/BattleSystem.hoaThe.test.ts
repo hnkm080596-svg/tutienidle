@@ -20,7 +20,7 @@ import type { Skill } from '../skill/Skill'
 // BattleSystem.theTu.test.ts), nên test này KHÔNG cần chờ missile bay
 // tới đích — gain xảy ra ngay trong castSkill().
 function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
-  const stats = { ...createBaseStats(), attack: 0, evasionRate: 0, dexterity: 0 }
+  const stats = { ...createBaseStats(), attack: 0, evasionRate: 0, dexterity: 0, speed: 1 }
 
   return {
     id: 'id',

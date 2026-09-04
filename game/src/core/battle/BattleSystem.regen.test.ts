@@ -20,9 +20,8 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     dexterity: 0,
     criticalRate: 0,
     attackRange: 0,
-    attackSpeed: 0,
+    speed: 0,
     vitality: 0,
-    movementSpeed: 0,
     // Tắt regen phái sinh để phép đo chỉ đến từ field set tường minh.
     intelligence: 0,
     hpRegenPerSecond: 0,

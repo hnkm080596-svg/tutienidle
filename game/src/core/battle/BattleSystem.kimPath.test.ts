@@ -32,7 +32,7 @@ function createBuffRegistry(): BuffRegistry {
 // nhiên bên trong effect 'ailment'), nên test dùng ailmentChance: 1 để
 // khử tính ngẫu nhiên (gain LUÔN xảy ra khi kimTheGainPerProc > 0).
 function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
-  const stats = { ...createBaseStats(), attack: 0, evasionRate: 0, dexterity: 0 }
+  const stats = { ...createBaseStats(), attack: 0, evasionRate: 0, dexterity: 0, speed: 1 }
 
   return {
     id: 'id',

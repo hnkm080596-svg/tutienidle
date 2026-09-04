@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { afterEach, vi } from 'vitest'
 import { EquipmentSystem, rollAffixRange, type RefineValueEntry } from './EquipmentSystem'
 import { EquipmentBag } from './EquipmentBag'
@@ -113,7 +113,7 @@ const PRODUCTION_SLOT_CASES = [
   ['armor', 'defense', 'prefix', 1, 4, 0],
   ['boots', 'evasionRate', 'suffix', 0, 5, 0],
   ['ring', 'criticalRate', 'prefix', 3, 2, 0.99],
-  ['necklace', 'attackSpeed', 'prefix', 2, 3, 0],
+  ['necklace', 'speed', 'prefix', 2, 3, 0],
 ] as const satisfies readonly [
   EquipmentSlot,
   Equipment['mainStats'][number]['stat'],
@@ -341,7 +341,7 @@ describe('EquipmentSystem.createInstance — roll pipeline invariants (Equipment
 
   it.each([
     ['ring', 'criticalRate', 0.02, 0.05],
-    ['necklace', 'attackSpeed', 0.03, 0.08],
+    ['necklace', 'speed', 0.03, 0.08],
   ] as const)('giữ main stat tỉ lệ khác 0 cho slot %s', (slot, stat, min, max) => {
     const { system, affixRegistry, player } = setup()
     const template: Equipment = {

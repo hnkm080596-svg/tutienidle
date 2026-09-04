@@ -44,10 +44,10 @@ describe('GameManager — Pháp Tu WaterPath (Thủy Node Tree)', () => {
       ...gameManager.getAggregatedModifiers(player),
     ])
 
-    // Thủy Linh +2 Thủy Lực; Thủy Tốc +3% cast speed; Lưu Tốc +2% CDR.
+    // Thủy Linh +2 Thủy Lực; Thủy Tốc +0.03 speed + Lưu Tốc +0.02 speed
+    // (turn-based conversion 2026-09-04 — cả 2 node giờ cấp flat speed).
     expect(finalStats.waterPower).toBeGreaterThanOrEqual(2)
-    expect(finalStats.castSpeedPercent).toBeGreaterThanOrEqual(0.03)
-    expect(finalStats.cooldownReduction).toBeGreaterThanOrEqual(0.02)
+    expect(finalStats.speed).toBeGreaterThanOrEqual(100.05)
   })
 
   it('Thủy Trúc Cơ: Keystone cần Power ≥ 1 + Trúc Cơ, loại trừ lẫn nhau', () => {

@@ -39,7 +39,6 @@ function createTestEnemy() {
       maxHp: 100,
       attack: 1,
       attackSpeed: 1,
-      movementSpeed: 60,
       attackRangeRanks: 9,
       criticalRate: 0,
       criticalDamage: 1.5,

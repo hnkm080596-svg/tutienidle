@@ -95,7 +95,7 @@ describe('calculateStats — cộng dồn base + StatModifier', () => {
 
     // pass1 vitality = 1 + 10 = 11 → +88 maxHp, +1.1 hpRegen, +11 endurance.
     expect(result.maxHp).toBeCloseTo(188, 5)
-    expect(result.hpRegenPerSecond).toBeCloseTo(1.1, 5)
+    expect(result.hpRegenPerTurn).toBeCloseTo(1.1, 5)
     expect(result.enduranceThreshold).toBeCloseTo(21, 5)
   })
 
@@ -116,7 +116,6 @@ describe('clampStatValue — tôn trọng min/max trong StatMetadata', () => {
     expect(clampStatValue('blockChance', 2)).toBe(0.75)
     expect(clampStatValue('manaShieldPercent', 2)).toBe(0.8)
     expect(clampStatValue('leechPercent', 2)).toBe(0.25)
-    expect(clampStatValue('cooldownReduction', 10)).toBe(3)
   })
 
   it('giá trị dưới min bị kẹp lên min', () => {

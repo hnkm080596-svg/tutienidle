@@ -19,7 +19,6 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
   const stats: Stats = {
     ...createBaseStats(),
     attackRange: 3,
-    movementSpeed: 0,
     attack: 0,
     evasionRate: 0,
     dexterity: 0,

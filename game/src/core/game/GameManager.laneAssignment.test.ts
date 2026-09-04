@@ -13,7 +13,6 @@ const MINIMAL_STATS_INPUT = {
   maxHp: 100,
   attack: 0,
   attackSpeed: 1,
-  movementSpeed: 60,
   attackRangeRanks: 8,
   criticalRate: 0,
   criticalDamage: 1.5,

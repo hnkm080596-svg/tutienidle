@@ -168,8 +168,9 @@ describe('buffs.ts — buff mới chuỗi Thuần (spec §7)', () => {
     expect(lamCham.duration).toBe(4)
     expect(lamCham.convertsToId).toBe('dong_bang')
     expect(lamCham.convertsAfterContinuousSeconds).toBe(2)
-    expect(lamCham.effects).toContainEqual({ type: 'statModifier', stat: 'attackSpeed', percent: -0.3 })
-    expect(lamCham.effects).toContainEqual({ type: 'statModifier', stat: 'movementSpeed', percent: -0.3 })
+    // Turn-based conversion (2026-09-04) — movementSpeed retired, chỉ còn
+    // modifier speed (giá trị -0.3 giữ nguyên).
+    expect(lamCham.effects).toContainEqual({ type: 'statModifier', stat: 'speed', percent: -0.3 })
   })
 
   it('thach_hoa — carries BOTH its statModifier AND onHitProc effect in one definition', () => {

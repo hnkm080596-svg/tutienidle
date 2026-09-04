@@ -23,7 +23,7 @@ import type { Skill } from '../skill/Skill'
 // for the private channelSkillId field.
 
 function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
-  const stats = { ...createBaseStats(), attack: 0, defense: 0, evasionRate: 0, criticalRate: 0, blockChance: 0, dexterity: 0, attackRange: 0, attackSpeed: 0, movementSpeed: 0 }
+  const stats = { ...createBaseStats(), attack: 0, defense: 0, evasionRate: 0, criticalRate: 0, blockChance: 0, dexterity: 0, attackRange: 0, speed: 0 }
   return {
     id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
     currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,

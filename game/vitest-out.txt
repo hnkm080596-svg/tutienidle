@@ -1,0 +1,66 @@
+﻿
+ RUN  v4.1.10 E:/tutienidle/.agent-worktrees/stat-conversion/game
+
+ Γ¥» src/core/equipment/deadReferences.test.ts (3 tests | 2 failed) 14894ms
+     ├ù kh├┤ng c├▓n file n├áo chß╗⌐a k├╜ hiß╗çu equipment c┼⌐ (forgePoints/forgePotential/EquipmentQuality 9-bß║¡c) 6537ms
+     ├ù kh├┤ng c├▓n file n├áo import tß╗½ EquipmentQuality.ts/EquipmentRarity.ts/ItemGradeRefs.ts (─æ├ú x├│a) 8351ms
+ Γ¥» src/core/battle/BattleSystem.earthPath.test.ts (6 tests | 1 failed) 511ms
+     ├ù sau khi mua "Thß╗ò Thß║┐": mß╗Ñc ti├¬u ch├¡nh 100% damage + ─æß║⌐y l├╣i, mß╗Ñc ti├¬u phß╗Ñ (trong b├ín k├¡nh) ─ân % damage giß║úm + c┼⌐ng bß╗ï ─æß║⌐y l├╣i 37ms
+node.exe : 
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Program Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ» Failed Tests 3 ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»
+
+ FAIL  src/core/battle/BattleSystem.earthPath.test.ts > BattleSystem ΓÇö AOE + Knockback (Plans/EarthPath mß╗Ñc XVI, 
+Thß╗ò Thß║┐ Pure) > sau khi mua "Thß╗ò Thß║┐": mß╗Ñc ti├¬u ch├¡nh 100% damage + ─æß║⌐y l├╣i, mß╗Ñc ti├¬u phß╗Ñ (trong 
+b├ín k├¡nh) ─ân % damage giß║úm + c┼⌐ng bß╗ï ─æß║⌐y l├╣i
+AssertionError: expected 37.396595237980364 to be close to 49.88629365073575, received difference is 
+12.489698412755388, but expected 0.05
+ Γ¥» src/core/battle/BattleSystem.earthPath.test.ts:287:26
+    285|     // Mß╗Ñc ti├¬u phß╗Ñ ─ân ─É├ÜNG 50% damage cß╗ºa mß╗Ñc ti├¬u ch├¡nh (defense=0 cß║ú
+    286|     // 2 b├¬n n├¬n mitigation=0, tß╗ë lß╗ç tuyß║┐n t├¡nh ─æ├║ng theo multiplier).
+    287|     expect(enemy2Damage).toBeCloseTo(enemy1Damage * 0.5, 1)
+       |                          ^
+    288|
+    289|     // Cß║ú 2 ─æß╗üu bß╗ï ─æß║⌐y l├╣i xa player (x t─âng, v├¼ x ban ─æß║ºu > player.x=ΓÇª
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[1/3]ΓÄ»
+
+ FAIL  src/core/equipment/deadReferences.test.ts > dead equipment-model references (item-grade-quality-rework Task 22) 
+> kh├┤ng c├▓n file n├áo chß╗⌐a k├╜ hiß╗çu equipment c┼⌐ (forgePoints/forgePotential/EquipmentQuality 9-bß║¡c)
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ Γ¥» src/core/equipment/deadReferences.test.ts:86:3
+     84|     .filter((file) => !file.endsWith(join('equipment', 'deadReferencesΓÇª
+     85|
+     86|   it('kh├┤ng c├▓n file n├áo chß╗⌐a k├╜ hiß╗çu equipment c┼⌐ (forgePoints/forgePΓÇª
+       |   ^
+     87|     const offenders: string[] = []
+     88|
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[2/3]ΓÄ»
+
+ FAIL  src/core/equipment/deadReferences.test.ts > dead equipment-model references (item-grade-quality-rework Task 22) 
+> kh├┤ng c├▓n file n├áo import tß╗½ EquipmentQuality.ts/EquipmentRarity.ts/ItemGradeRefs.ts (─æ├ú x├│a)
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ Γ¥» src/core/equipment/deadReferences.test.ts:102:3
+    100|   })
+    101|
+    102|   it('kh├┤ng c├▓n file n├áo import tß╗½ EquipmentQuality.ts/EquipmentRarityΓÇª
+       |   ^
+    103|     const offenders: string[] = []
+    104|
+
+ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»ΓÄ»[3/3]ΓÄ»
+
+
+ Test Files  2 failed | 368 passed (370)
+      Tests  3 failed | 2478 passed (2481)
+   Start at  11:13:01
+   Duration  90.93s (transform 68.76s, setup 0ms, import 277.76s, tests 146.94s, environment 241.89s)
+

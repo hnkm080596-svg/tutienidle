@@ -22,7 +22,6 @@ function bigHpEnemyDefinition(id: string): EnemyDefinition {
       maxHp: 1_000_000,
       attack: 0,
       attackSpeed: 0,
-      movementSpeed: 0,
       attackRangeRanks: 0, // không tự đánh lại, cô lập damage của artifact
       criticalRate: 0,
       criticalDamage: 1.5,

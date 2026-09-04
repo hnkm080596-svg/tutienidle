@@ -49,7 +49,7 @@ describe('GameManager — Pháp Tu PoisonPath (Mộc Node Tree)', () => {
     // Độc Nguyên +2 Mộc Lực; Độc Tức +4% duration; Độc Mạch +3% cast speed.
     expect(finalStats.woodPower).toBeGreaterThanOrEqual(2)
     expect(finalStats.ailmentDurationPercent).toBeGreaterThanOrEqual(0.04)
-    expect(finalStats.castSpeedPercent).toBeGreaterThanOrEqual(0.03)
+    expect(finalStats.speed).toBeGreaterThanOrEqual(100.03)
   })
 
   it('Mộc Trúc Cơ: Keystone cần Power ≥ 1 + Trúc Cơ, loại trừ lẫn nhau', () => {

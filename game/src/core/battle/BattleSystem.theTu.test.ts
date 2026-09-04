@@ -28,7 +28,7 @@ function createBuffRegistry(): BuffRegistry {
 function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
   // dexterity:0/evasionRate:0 — đảm bảo hit chance 100% xuyên suốt test,
   // xem ghi chú tương tự trong BattleSystem.kiemTu.test.ts.
-  const stats = { ...createBaseStats(), attack: 0, evasionRate: 0, dexterity: 0 }
+  const stats = { ...createBaseStats(), attack: 0, evasionRate: 0, dexterity: 0, speed: 1 }
 
   return {
     id: 'id',

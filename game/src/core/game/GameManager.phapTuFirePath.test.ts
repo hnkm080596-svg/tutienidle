@@ -113,7 +113,7 @@ describe('GameManager — Pháp Tu FirePath (chọn path tự cấp basic + Hỏ
     // Hỏa Linh +2 Hỏa Lực/cấp; Xích Viêm potency 4%; Tật Hỏa cast speed 3%.
     expect(finalStats.firePower).toBeGreaterThanOrEqual(2)
     expect(finalStats.ailmentPotencyPercent).toBeGreaterThanOrEqual(0.04)
-    expect(finalStats.castSpeedPercent).toBeGreaterThanOrEqual(0.03)
+    expect(finalStats.speed).toBeGreaterThanOrEqual(100.03)
   })
 
   it('Power node nâng nhiều cấp cộng dồn +2/cấp qua aggregator', () => {

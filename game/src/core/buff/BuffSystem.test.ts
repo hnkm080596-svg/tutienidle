@@ -848,8 +848,7 @@ describe('BuffSystem — conversion chain, Làm Chậm -> Đóng Băng (ported f
     duration: 4, stackMode: 'refresh',
     convertsToId: 'dong_bang', convertsAfterContinuousSeconds: 2,
     effects: [
-      { type: 'statModifier', stat: 'attackSpeed', percent: -0.3 },
-      { type: 'statModifier', stat: 'movementSpeed', percent: -0.3 },
+      { type: 'statModifier', stat: 'speed', percent: -0.3 },
     ],
   }
   const dongBang: BuffDefinition = {
@@ -1004,7 +1003,7 @@ describe('BuffSystem — E1 convert-on-max (spec talent v4 §3.3)', () => {
       id: 'thoi_gian', name: 'Theo Thời Gian', polarity: 'debuff',
       duration: 4, stackMode: 'refresh',
       convertsToId: 'dong_bang', convertsAfterContinuousSeconds: 2,
-      effects: [{ type: 'statModifier', stat: 'attackSpeed', percent: -0.3 }],
+      effects: [{ type: 'statModifier', stat: 'speed', percent: -0.3 }],
     }
 
     expect(thoiGian.maxStacks).toBeUndefined()

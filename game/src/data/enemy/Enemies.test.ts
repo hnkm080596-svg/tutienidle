@@ -35,13 +35,13 @@ describe('foundation enemy data', () => {
     expect(foundation.every((enemy) => enemy.realmId === 'foundation_establishment')).toBe(true)
   })
 
-  it('enemy foundation có stat hợp lệ (HP/ATK > 0, attackSpeed 0.8-2.5)', () => {
+  it('enemy foundation có stat hợp lệ (HP/ATK > 0, speed 0.8-2.5)', () => {
     const foundation = ENEMIES.filter((enemy) => enemy.id.startsWith('foundation_'))
     for (const enemy of foundation) {
       expect(enemy.stats.maxHp).toBeGreaterThan(0)
       expect(enemy.stats.attack).toBeGreaterThan(0)
-      expect(enemy.stats.attackSpeed).toBeGreaterThanOrEqual(0.8)
-      expect(enemy.stats.attackSpeed).toBeLessThanOrEqual(2.5)
+      expect(enemy.stats.speed).toBeGreaterThanOrEqual(0.8)
+      expect(enemy.stats.speed).toBeLessThanOrEqual(2.5)
     }
   })
 
