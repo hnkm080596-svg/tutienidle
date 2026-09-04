@@ -159,6 +159,10 @@ export class TurnBattleSystem {
 
     actorBuffSystem.update(actor.entity, this.combat, this.registry)
 
+    if (actor.entity.stats.hpRegenPerTurn > 0) {
+      actor.entity.currentHp = Math.min(actor.entity.maxHp, actor.entity.currentHp + actor.entity.stats.hpRegenPerTurn)
+    }
+
     if (actor.resources) {
       actor.resources.values = applyTurnStartDeltas(actor.resources.values, actor.resources.deltasPerTurn)
     }

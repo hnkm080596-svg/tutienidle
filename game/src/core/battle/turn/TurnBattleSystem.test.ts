@@ -1351,3 +1351,59 @@ describe('TurnBattleSystem multi-target death-mid-resolution hardening', () => {
     expect(step.targetIds.filter((id) => id === 'enemyA')).toHaveLength(1)
   })
 })
+
+describe('TurnBattleSystem hpRegenPerTurn', () => {
+  it("regenerates HP by the actor's hpRegenPerTurn stat at the start of their own turn, clamped to maxHp", () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      currentHp: 50,
+      maxHp: 100,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0, hpRegenPerTurn: 10 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    system.resolveNextStep(battle)
+
+    expect(player.currentHp).toBe(60)
+  })
+
+  it('clamps regen to maxHp, never overhealing', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      currentHp: 95,
+      maxHp: 100,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0, hpRegenPerTurn: 10 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    system.resolveNextStep(battle)
+
+    expect(player.currentHp).toBe(100)
+  })
+})
