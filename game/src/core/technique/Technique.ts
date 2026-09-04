@@ -30,9 +30,9 @@ export interface TechniqueTierEffect {
 
   manaRegenPercent?: number
 
-  // Yêu cầu 2026-08-26 — Tâm pháp cộng thêm 2 chỉ số MẶC ĐỊNH HP/s và
-  // MP/s: flat TỰU TRỰC lên stats hpRegenPerSecond/manaRegenPerSecond
-  // (không phải percent — giá trị tuyệt đối hồi/giây theo tier).
+  // Yêu cầu 2026-08-26 — Tâm pháp cộng thêm 2 chỉ số MẶC ĐỊNH HP/lượt và
+  // MP/s: flat TỰU TRỰC lên stats hpRegenPerTurn/manaRegenPerSecond
+  // (không phải percent — giá trị tuyệt đối hồi theo tier).
   hpRegenFlat?: number
 
   mpRegenFlat?: number

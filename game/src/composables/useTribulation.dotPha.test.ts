@@ -124,7 +124,7 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     gameManager.pillBag.add(trucCoDan, 1)
 
     // Stats đủ trụ kiếp Đại Đạo (×1.85 khó hơn)
-    const stats = { ...createBaseStats(), maxHp: 5_000_000, defense: 50_000, hpRegenPerSecond: 0 }
+    const stats = { ...createBaseStats(), maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 }
 
     expect(gameManager.startTribulation(player.$state, stats, 'foundation_establishment')).toBe(true)
     expect(gameManager.getActiveTribulation()!.grade).toBe('great_dao')
@@ -164,7 +164,7 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
 
     // HP thấp → thua kiếp Đại Đạo
-    const stats = { ...createBaseStats(), maxHp: 1, defense: 0, hpRegenPerSecond: 0 }
+    const stats = { ...createBaseStats(), maxHp: 1, defense: 0, hpRegenPerTurn: 0 }
 
     expect(gameManager.startTribulation(player.$state, stats, 'foundation_establishment')).toBe(true)
     expect(gameManager.getActiveTribulation()!.grade).toBe('great_dao')
@@ -186,7 +186,7 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     // Lần xét sau: cap Thiên (resolver test đã khóa; ở đây kiểm qua
     // Director). Bỏ qua cooldown 5 phút bằng cách đẩy system time.
     vi.setSystemTime(Date.now() + 6 * 60 * 1000)
-    const stats2 = { ...createBaseStats(), maxHp: 5_000_000, defense: 50_000, hpRegenPerSecond: 0 }
+    const stats2 = { ...createBaseStats(), maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 }
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
     expect(gameManager.startTribulation(player.$state, stats2, 'foundation_establishment')).toBe(true)
     expect(gameManager.getActiveTribulation()!.grade).toBe('heaven')
@@ -240,7 +240,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
     player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
     player.openedMeridianIds = MERIDIANS.map((m) => m.id)
 
-    const stats = { ...createBaseStats(), maxHp: 5_000_000, defense: 50_000, hpRegenPerSecond: 0 }
+    const stats = { ...createBaseStats(), maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 }
     expect(gameManager.startTribulation(player.$state, stats, 'foundation_establishment')).toBe(true)
 
     let guard = 0

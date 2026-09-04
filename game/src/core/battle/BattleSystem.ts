@@ -1731,7 +1731,8 @@ export class BattleSystem {
 
   /**
 
-   * HP/Mana/Ward regen mỗi tick — `hpRegenPerSecond` đã có field từ
+   * HP/Mana/Ward regen mỗi tick — `hpRegenPerTurn` (đổi tên từ
+   * hpRegenPerSecond, 2026-09-04) đã có field từ
 
    * đợt revamp trước nhưng chưa từng được tick ở đâu (dead stat), giờ
 

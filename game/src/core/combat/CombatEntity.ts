@@ -152,7 +152,8 @@ export interface CombatEntity {
   // wardRegenPerSecond (chỉ hồi Ward sau khi không bị đánh trúng đủ
   // lâu, xem BattleSystem.updateRegen()'s WARD_REGEN_DELAY_SECONDS).
   // wardRegenPerSecond từng là "dead stat" (có field, chưa từng được
-  // tick ở đâu) — cùng tình trạng hpRegenPerSecond đã gặp trước đó.
+  // tick ở đâu) — cùng tình trạng hpRegenPerTurn (đổi tên từ
+  // hpRegenPerSecond, 2026-09-04) đã gặp trước đó.
   timeSinceLastHitTaken: number
 
   // Vị trí (0-based) trong REALMS — dùng để tính Realm Pressure giữa
