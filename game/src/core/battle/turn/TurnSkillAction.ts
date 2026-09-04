@@ -7,6 +7,9 @@ import type { SkillResourceType } from '../../skill/SkillTypes'
 import type { ActionDamageInfo } from '../ActionImpactSystem'
 import type { ActionTargeting } from '../CombatAction'
 import type { TurnBattleParticipant } from './TurnBattleSystem'
+import { areaFor } from '../ActionTargetingSystem'
+import { entityGridPosition, type GridPosition } from '../BattleGrid'
+import { isCellInShape, type AoeShapeSpec } from './AoeShape'
 
 /**
  * Slice 2 skill shape — deliberately NOT the live `Skill` interface
@@ -154,4 +157,53 @@ export function commitAction(entity: CombatEntity, action: SelectedAction): void
   if (action.skill) {
     consumeResourceFor(entity, action.skill)
   }
+}
+
+/**
+ * AOE target collection for TurnBattle — mirrors ActionTargetingSystem.
+ * collectAffected()'s shape-filter logic, but over TurnBattleParticipant[]
+ * instead of a live Battle (Slice 1/2 stays standalone, no Battle
+ * coupling). The primary target is always included even when the shape
+ * math would exclude it, matching live collectAffected()'s "primary
+ * always hits" guarantee.
+ */
+export function collectTurnTargets(
+  primaryTarget: TurnBattleParticipant,
+  opposingSide: TurnBattleParticipant[],
+  targeting: ActionTargeting,
+): TurnBattleParticipant[] {
+  const anchor = entityGridPosition(primaryTarget.entity)
+
+  const inShape = (position: GridPosition): boolean => {
+    if (targeting.shape === 'cross') {
+      const spec: AoeShapeSpec = { shape: 'cross', radius: targeting.laneRadius ?? 0 }
+
+      return isCellInShape(anchor, spec, position)
+    }
+
+    const area = areaFor(anchor.row, anchor.column, targeting)
+
+    if (!area) {
+      return false
+    }
+
+    return (
+      position.row >= area.rowStart &&
+      position.row <= area.rowEnd &&
+      position.column >= area.colStart &&
+      position.column <= area.colEnd
+    )
+  }
+
+  const living = opposingSide.filter((participant) => participant.entity.alive)
+
+  const affected = living.filter((participant) => {
+    if (participant.id === primaryTarget.id) {
+      return true
+    }
+
+    return inShape(entityGridPosition(participant.entity))
+  })
+
+  return affected.length > 0 ? affected : [primaryTarget]
 }

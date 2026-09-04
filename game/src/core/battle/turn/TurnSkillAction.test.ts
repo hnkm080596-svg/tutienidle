@@ -5,6 +5,7 @@ import {
   selectAction,
   tickCooldowns,
   commitAction,
+  collectTurnTargets,
   type TurnSkillDefinition,
 } from './TurnSkillAction'
 import type { TurnBattleParticipant } from './TurnBattleSystem'
@@ -203,5 +204,64 @@ describe('commitAction', () => {
     commitAction(actor, selectAction(participant({ entity: actor })))
 
     expect(actor.currentMp).toBe(50)
+  })
+})
+
+describe('collectTurnTargets', () => {
+  it('single shape: only the primary target', () => {
+    const primary = participant({ id: 'primary', entity: entity({ id: 'primary', x: 2, row: 2 }) })
+    const other = participant({ id: 'other', entity: entity({ id: 'other', x: 5, row: 2 }) })
+
+    const affected = collectTurnTargets(primary, [primary, other], { shape: 'single' })
+
+    expect(affected.map((p) => p.id)).toEqual(['primary'])
+  })
+
+  it('square shape: includes participants within laneRadius/columnRadius of the primary', () => {
+    const primary = participant({ id: 'primary', entity: entity({ id: 'primary', x: 2, row: 2 }) })
+    const near = participant({ id: 'near', entity: entity({ id: 'near', x: 3, row: 2 }) })
+    const far = participant({ id: 'far', entity: entity({ id: 'far', x: 10, row: 2 }) })
+
+    const affected = collectTurnTargets(primary, [primary, near, far], {
+      shape: 'square',
+      laneRadius: 1,
+      columnRadius: 1,
+    })
+
+    expect(affected.map((p) => p.id).sort()).toEqual(['near', 'primary'])
+  })
+
+  it('cross shape: includes same row/column within radius, excludes diagonal', () => {
+    const primary = participant({ id: 'primary', entity: entity({ id: 'primary', x: 4, row: 4 }) })
+    const sameRow = participant({ id: 'sameRow', entity: entity({ id: 'sameRow', x: 5, row: 4 }) })
+    const diagonal = participant({ id: 'diagonal', entity: entity({ id: 'diagonal', x: 5, row: 5 }) })
+
+    const affected = collectTurnTargets(primary, [primary, sameRow, diagonal], {
+      shape: 'cross',
+      laneRadius: 2,
+    })
+
+    expect(affected.map((p) => p.id).sort()).toEqual(['primary', 'sameRow'])
+  })
+
+  it('excludes dead participants even if inside the shape', () => {
+    const primary = participant({ id: 'primary', entity: entity({ id: 'primary', x: 2, row: 2 }) })
+    const dead = participant({
+      id: 'dead',
+      entity: entity({ id: 'dead', x: 2, row: 2, alive: false }),
+      alive: false,
+    })
+
+    const affected = collectTurnTargets(primary, [primary, dead], { shape: 'square', laneRadius: 2, columnRadius: 2 })
+
+    expect(affected.map((p) => p.id)).toEqual(['primary'])
+  })
+
+  it('always includes the primary target even outside the shape bounds (defensive)', () => {
+    const primary = participant({ id: 'primary', entity: entity({ id: 'primary', x: 2, row: 2 }) })
+
+    const affected = collectTurnTargets(primary, [primary], { shape: 'column' })
+
+    expect(affected.map((p) => p.id)).toEqual(['primary'])
   })
 })
