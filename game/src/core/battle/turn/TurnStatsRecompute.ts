@@ -3,7 +3,7 @@
 // pipeline sống StatCalculator.calculateStats() (read-only reuse, không
 // nhân bản công thức). Đây là bridge "buff turn-based → stats hiệu lực"
 // thay cho BuffSystem.getActiveModifiers() của hệ real-time.
-import type { Stats } from '../../stats/StatTypes'
+import type { Stats } from '../../stats/StatBlock'
 import type { StatModifier } from '../../stats/StatCalculator'
 import { calculateStats } from '../../stats/StatCalculator'
 import type { TurnBuffPool } from './TurnBuffPool'

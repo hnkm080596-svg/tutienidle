@@ -197,6 +197,10 @@ import type { GameSave } from '../../services/save/SaveSystem'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { Stats } from '../stats/StatBlock'
 import { createBaseStats } from '../stats/StatBlock'
+import { TurnBattleSystem, type TurnBattle } from '../battle/turn/TurnBattleSystem'
+import type { TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
+import { toTurnBattleParticipant } from './TurnBattleAdapter'
+import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
 
 /**
  * GameManager lÃ  orchestrator (2026-08-24 refactor â€” tÃ¡ch business logic
@@ -411,6 +415,15 @@ export class GameManager {
     // LIVE từ node lap_dao_thuan_<el> đã mua (PlayerData là authority).
     () => this.getPhapTuThuanElement(),
   )
+
+  // =========================
+  // TURN-BASED COMBAT (Slice 6 cutover) — engine thật điều khiển combat.
+  // BattleSystem.ts vẫn giữ field tới khi mọi consumer nội bộ flip xong
+  // (legacy battle state dùng bởi passiveSystem/tribulation side).
+  // =========================
+  private turnBattleSystem = new TurnBattleSystem(this.combatSystem)
+
+  private turnBattle: TurnBattle | null = null
 
   /**
    * Snapshot cấp các node on-hit Kiếm Trận đã mua (đọc từ
@@ -2354,6 +2367,54 @@ export class GameManager {
     this.combatSystem.setSurviveLethalSession(null)
 
     this.battleSystem.start(player, enemyEntity)
+
+    // Slice 6 cutover: dựng đồng thời TurnBattle — engine turn-based chạy
+    // SONG SONG với real-time battle (vẫn là nguồn sự thật cho các consumer
+    // nội bộ chưa flip). resolveNextStep() drive qua updateBattleFixedStep.
+    this.turnBattle = this.buildTurnBattle(player, [enemyEntity])
+  }
+
+  /**
+   * Chọn basic attack theo cultivation path của player (Completion Task 5
+   * mapping — 8 builds). Chưa chọn đạo/Thể Tu = generic physical.
+   */
+  private resolvePlayerBasicAttack(player: PlayerData): TurnSkillDefinition {
+    if (player.cultivationPath === 'kiem_tu') {
+      return BASIC_ATTACKS_BY_BUILD.kiem_tu!
+    }
+
+    if (player.cultivationPath === 'phap_tu') {
+      const element = this.getPhapTuThuanElement() ?? 'fire'
+      return BASIC_ATTACKS_BY_BUILD[`phap_tu_${element}`] ?? GENERIC_PHYSICAL_BASIC
+    }
+
+    return GENERIC_PHYSICAL_BASIC
+  }
+
+  private buildTurnBattle(playerEntity: CombatEntity, enemyEntities: CombatEntity[]): TurnBattle {
+    const playerPath = this.activePlayer
+
+    const playerParticipant = toTurnBattleParticipant(
+      playerEntity,
+      0,
+      playerPath ? this.resolvePlayerBasicAttack(playerPath) : GENERIC_PHYSICAL_BASIC,
+    )
+
+    const enemyParticipants = enemyEntities.map((enemyEntity, index) =>
+      toTurnBattleParticipant(enemyEntity, index + 1, GENERIC_PHYSICAL_BASIC),
+    )
+
+    return {
+      player: playerParticipant,
+      enemies: enemyParticipants,
+      state: 'fighting',
+      totalTurnsElapsed: 0,
+    }
+  }
+
+  /** Trạng thái turn-based hiện tại — consumer nội bộ flip dần sang đây. */
+  getTurnBattle(): TurnBattle | null {
+    return this.turnBattle
   }
 
   getBattleRewardSummary(): BattleRewardSummary {
@@ -2877,6 +2938,13 @@ export class GameManager {
       this.grantBattleRewardIfNeeded()
       this.stageWaves.update(step)
       this.stageWaves.resolveBossSummons()
+
+      // Slice 6 cutover: turn-based engine chạy SONG SONG, pacing display
+      // (mỗi fixed step 0.1s = 1 turn resolution) — turn resolution là
+      // instant nên pacing chỉ ảnh hưởng tốc độ hiển thị, không gameplay.
+      if (this.turnBattle && this.turnBattle.state === 'fighting') {
+        this.turnBattleSystem.resolveNextStep(this.turnBattle)
+      }
     }
 
 
