@@ -206,4 +206,60 @@ export class TurnBuffSystem {
       ),
     })
   }
+
+  update(
+    target: CombatEntity,
+    combatSystem: CombatSystem,
+    registry?: TurnBuffRegistry,
+    resolveSource?: (sourceId: string) => CombatEntity | undefined,
+  ) {
+    const expired: TurnBuff[] = []
+
+    for (const buff of this.pool.getAll()) {
+      buff.continuousTurns += 1
+
+      if (
+        registry &&
+        buff.convertsToId &&
+        buff.convertsAfterContinuousTurns !== undefined &&
+        buff.continuousTurns >= buff.convertsAfterContinuousTurns
+      ) {
+        this.convert(buff, registry, target, resolveSource?.(buff.sourceId))
+        continue
+      }
+
+      for (const effect of buff.effects) {
+        if (effect.type === 'dot' && effect.damagePerTurn && target.alive) {
+          const rawDamage =
+            effect.damagePerTurn * buff.stacks * this.getPoisonRootMultiplier(effect, buff.continuousTurns)
+
+          combatSystem.applyDotDamage({
+            sourceId: buff.sourceId,
+            source: resolveSource?.(buff.sourceId),
+            target,
+            rawDamage,
+            element: effect.element,
+            effectId: buff.id,
+          })
+        }
+      }
+
+      buff.remainingTurns -= 1
+      if (buff.remainingTurns <= 0) {
+        expired.push(buff)
+      }
+    }
+
+    for (const buff of expired) {
+      this.pool.removeInstance(buff.id, buff.sourceId)
+    }
+  }
+
+  isStunned(): boolean {
+    return this.pool.getAll().some((buff) => buff.effects.some((e) => e.type === 'cc' && e.ccEffect === 'stun'))
+  }
+
+  isFrozen(): boolean {
+    return this.pool.getAll().some((buff) => buff.effects.some((e) => e.type === 'cc' && e.ccEffect === 'freeze'))
+  }
 }

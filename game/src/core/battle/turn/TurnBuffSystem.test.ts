@@ -221,3 +221,136 @@ describe('TurnBuffSystem — DoT resolution at apply time', () => {
     expect(dotEffect.damagePerTurn).toBeGreaterThan(0)
   })
 })
+
+describe('TurnBuffSystem.update — turn tick', () => {
+  it('one update() call decrements remainingTurns by 1 and increments continuousTurns by 1', () => {
+    const pool = new TurnBuffPool()
+    const system = new TurnBuffSystem(pool)
+    const source = makeEntity({ id: 'source_1' })
+    const target = makeEntity({ id: 'target_1' })
+    system.apply(
+      { id: 'test_buff', name: 'Test', polarity: 'debuff', duration: 3, stackMode: 'refresh', effects: [] },
+      source,
+      target,
+    )
+
+    system.update(target, makeCombatSystem())
+
+    const instance = pool.getFromSource('test_buff', 'source_1')!
+    expect(instance.remainingTurns).toBe(2)
+    expect(instance.continuousTurns).toBe(1)
+  })
+
+  it('buff is removed from the pool once remainingTurns reaches 0', () => {
+    const pool = new TurnBuffPool()
+    const system = new TurnBuffSystem(pool)
+    const source = makeEntity({ id: 'source_1' })
+    const target = makeEntity({ id: 'target_1' })
+    system.apply(
+      { id: 'test_buff', name: 'Test', polarity: 'debuff', duration: 2, stackMode: 'refresh', effects: [] },
+      source,
+      target,
+    )
+
+    system.update(target, makeCombatSystem())
+    system.update(target, makeCombatSystem())
+
+    expect(pool.getFromSource('test_buff', 'source_1')).toBeUndefined()
+  })
+
+  it('a dot effect calls combatSystem.applyDotDamage with damagePerTurn * stacks, no deltaSeconds factor', () => {
+    const pool = new TurnBuffPool()
+    const system = new TurnBuffSystem(pool)
+    const source = makeEntity({ id: 'source_1' })
+    const target = makeEntity({ id: 'target_1' })
+    system.apply(
+      {
+        id: 'bleed', name: 'Bleed', polarity: 'debuff', duration: 3, maxStacks: 5, stackMode: 'stack',
+        effects: [{ type: 'dot', dpsRatio: 1 }],
+      },
+      source,
+      target,
+    )
+    system.apply(
+      {
+        id: 'bleed', name: 'Bleed', polarity: 'debuff', duration: 3, maxStacks: 5, stackMode: 'stack',
+        effects: [{ type: 'dot', dpsRatio: 1 }],
+      },
+      source,
+      target,
+    ) // 2 stacks now
+
+    const combatSystem = makeCombatSystem()
+    system.update(target, combatSystem)
+
+    const instance = pool.getFromSource('bleed', 'source_1')!
+    const dotEffect = instance.effects[0] as { type: 'dot'; damagePerTurn: number }
+    expect(combatSystem.applyDotDamage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceId: 'source_1',
+        target,
+        rawDamage: dotEffect.damagePerTurn * 2,
+        effectId: 'bleed',
+      }),
+    )
+  })
+
+  it('continuousTurns reaching convertsAfterContinuousTurns triggers conversion to the target definition', () => {
+    const pool = new TurnBuffPool()
+    const system = new TurnBuffSystem(pool)
+    const source = makeEntity({ id: 'source_1' })
+    const target = makeEntity({ id: 'target_1' })
+    const slow: TurnBuffDefinition = {
+      id: 'slow', name: 'Slow', polarity: 'debuff', duration: 10, stackMode: 'refresh',
+      convertsToId: 'frozen', convertsAfterContinuousTurns: 2, effects: [],
+    }
+    const frozen: TurnBuffDefinition = {
+      id: 'frozen', name: 'Frozen', polarity: 'debuff', duration: 2, stackMode: 'refresh',
+      effects: [{ type: 'cc', ccEffect: 'freeze' }],
+    }
+    const registry: TurnBuffRegistry = { get: (id) => (id === 'slow' ? slow : frozen) }
+
+    system.apply(slow, source, target, registry)
+    system.update(target, makeCombatSystem(), registry, () => source)
+    system.update(target, makeCombatSystem(), registry, () => source)
+
+    expect(pool.getFromSource('slow', 'source_1')).toBeUndefined()
+    expect(pool.getFromSource('frozen', 'source_1')).toBeDefined()
+  })
+})
+
+describe('TurnBuffSystem — CC checks', () => {
+  it('isStunned() is true only while a cc:stun effect is active on the pool', () => {
+    const pool = new TurnBuffPool()
+    const system = new TurnBuffSystem(pool)
+    const source = makeEntity({ id: 'source_1' })
+    const target = makeEntity({ id: 'target_1' })
+
+    expect(system.isStunned()).toBe(false)
+
+    system.apply(
+      { id: 'stun', name: 'Stun', polarity: 'debuff', duration: 1, stackMode: 'refresh', effects: [{ type: 'cc', ccEffect: 'stun' }] },
+      source,
+      target,
+    )
+
+    expect(system.isStunned()).toBe(true)
+    expect(system.isFrozen()).toBe(false)
+  })
+
+  it('isFrozen() is true only while a cc:freeze effect is active on the pool', () => {
+    const pool = new TurnBuffPool()
+    const system = new TurnBuffSystem(pool)
+    const source = makeEntity({ id: 'source_1' })
+    const target = makeEntity({ id: 'target_1' })
+
+    system.apply(
+      { id: 'frozen', name: 'Frozen', polarity: 'debuff', duration: 1, stackMode: 'refresh', effects: [{ type: 'cc', ccEffect: 'freeze' }] },
+      source,
+      target,
+    )
+
+    expect(system.isFrozen()).toBe(true)
+    expect(system.isStunned()).toBe(false)
+  })
+})
