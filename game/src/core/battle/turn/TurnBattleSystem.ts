@@ -8,6 +8,7 @@ import type { CombatSystem } from '../../combat/CombatSystem'
 import { entityGridPosition, getChebyshevDistance } from '../BattleGrid'
 import { consumeGaugeAfterAction } from './ActionGauge'
 import { resolveNextTurn } from './TurnQueue'
+import type { TurnSkillDefinition, TurnSkillSlot } from './TurnSkillAction'
 
 export type TurnBattleState = 'fighting' | 'victory' | 'defeat'
 
@@ -18,6 +19,9 @@ export interface TurnBattleParticipant {
   priority: number
   actionGauge: number
   alive: boolean
+  basic?: TurnSkillDefinition
+  special?: TurnSkillSlot
+  ultimate?: TurnSkillSlot
 }
 
 export interface TurnBattle {

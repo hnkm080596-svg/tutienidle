@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { hasResourceFor, consumeResourceFor, type TurnSkillDefinition } from './TurnSkillAction'
+import {
+  hasResourceFor,
+  consumeResourceFor,
+  selectAction,
+  tickCooldowns,
+  commitAction,
+  type TurnSkillDefinition,
+} from './TurnSkillAction'
+import type { TurnBattleParticipant } from './TurnBattleSystem'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { createBaseStats } from '../../stats/StatBlock'
 
@@ -87,5 +95,113 @@ describe('consumeResourceFor', () => {
     consumeResourceFor(source, skill())
 
     expect(source.currentMp).toBe(50)
+  })
+})
+
+function participant(overrides: Partial<TurnBattleParticipant> = {}): TurnBattleParticipant {
+  return {
+    id: 'actor',
+    entity: entity(),
+    speed: 10,
+    priority: 0,
+    actionGauge: 0,
+    alive: true,
+    ...overrides,
+  }
+}
+
+describe('selectAction priority', () => {
+  it('falls back to the hardcoded basic attack when no skill fields are set', () => {
+    const action = selectAction(participant())
+
+    expect(action.skillId).toBe('basic_attack')
+    expect(action.damage).toEqual({ kind: 'physical', multiplier: 1 })
+    expect(action.slot).toBeNull()
+  })
+
+  it('uses the basic skill when set and no special/ultimate are ready', () => {
+    const basic = skill({ id: 'basic_skill' })
+
+    const action = selectAction(participant({ basic }))
+
+    expect(action.skillId).toBe('basic_skill')
+    expect(action.slot).toBeNull()
+  })
+
+  it('prefers special over basic when special is off cooldown and affordable', () => {
+    const basic = skill({ id: 'basic_skill' })
+    const special = { skill: skill({ id: 'special_skill' }), remainingCooldownTurns: 0 }
+
+    const action = selectAction(participant({ basic, special }))
+
+    expect(action.skillId).toBe('special_skill')
+    expect(action.slot).toBe(special)
+  })
+
+  it('prefers ultimate over special and basic when ultimate is ready', () => {
+    const basic = skill({ id: 'basic_skill' })
+    const special = { skill: skill({ id: 'special_skill' }), remainingCooldownTurns: 0 }
+    const ultimate = { skill: skill({ id: 'ultimate_skill' }), remainingCooldownTurns: 0 }
+
+    const action = selectAction(participant({ basic, special, ultimate }))
+
+    expect(action.skillId).toBe('ultimate_skill')
+  })
+
+  it('falls through to special when ultimate is still on cooldown', () => {
+    const special = { skill: skill({ id: 'special_skill' }), remainingCooldownTurns: 0 }
+    const ultimate = { skill: skill({ id: 'ultimate_skill' }), remainingCooldownTurns: 3 }
+
+    const action = selectAction(participant({ special, ultimate }))
+
+    expect(action.skillId).toBe('special_skill')
+  })
+
+  it('falls through to basic when special cannot afford its resource cost', () => {
+    const basic = skill({ id: 'basic_skill' })
+    const special = {
+      skill: skill({ id: 'special_skill', resourceType: 'mana', resourceCost: 999 }),
+      remainingCooldownTurns: 0,
+    }
+
+    const action = selectAction(participant({ basic, special, entity: entity({ currentMp: 10 }) }))
+
+    expect(action.skillId).toBe('basic_skill')
+  })
+})
+
+describe('tickCooldowns', () => {
+  it('decrements special/ultimate remaining cooldown by 1, floored at 0', () => {
+    const special = { skill: skill({ id: 's' }), remainingCooldownTurns: 2 }
+    const ultimate = { skill: skill({ id: 'u' }), remainingCooldownTurns: 0 }
+    const actor = participant({ special, ultimate })
+
+    tickCooldowns(actor)
+
+    expect(special.remainingCooldownTurns).toBe(1)
+    expect(ultimate.remainingCooldownTurns).toBe(0)
+  })
+})
+
+describe('commitAction', () => {
+  it('sets the used slot on cooldown and consumes its resource', () => {
+    const special = {
+      skill: skill({ id: 's', cooldownTurns: 4, resourceType: 'mana', resourceCost: 20 }),
+      remainingCooldownTurns: 0,
+    }
+    const actor = entity({ currentMp: 50 })
+
+    commitAction(actor, selectAction(participant({ special, entity: actor })))
+
+    expect(special.remainingCooldownTurns).toBe(4)
+    expect(actor.currentMp).toBe(30)
+  })
+
+  it('is a no-op for the basic-attack fallback (slot is null)', () => {
+    const actor = entity({ currentMp: 50 })
+
+    commitAction(actor, selectAction(participant({ entity: actor })))
+
+    expect(actor.currentMp).toBe(50)
   })
 })
