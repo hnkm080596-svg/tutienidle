@@ -7,7 +7,7 @@ import type {
 } from '../../core/progression/ProgressionNode'
 import type { StatModifier } from '../../core/stats/StatCalculator'
 import { CHAIN_SKILL_IDS, SKILLS } from '../skill/Skills'
-import { PHAP_TU_ULTIMATE_IDS } from '../../core/battle/UltimateSystem'
+import { PHAP_TU_ULTIMATE_IDS } from '../skill/PhapTuUltimates'
 
 // Pháp Tu Node Tree — REWORK theo combat-skill-flow-element-power-dot-plan.md
 // §6.3-§6.7 (2026-08-26): mỗi hành dùng CÙNG một bộ khung, giữ identity/

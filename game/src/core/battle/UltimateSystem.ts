@@ -174,31 +174,23 @@ export function triggerUltimate(
 // resolver (GameManager inject pipeline — cùng pattern Kiếm Tu).
 // ============================================================================
 
-// Pháp Tu Thuần Hệ (spec 2026-09-03 §3, Task 10) — id ult MỚI thay
-// placeholder cũ (tat_phuong/bat_thu/kien_moc/kim_phat/thanh_luy).
-export const PHAP_TU_ULTIMATE_IDS = {
-  fire: 'tat_phuong_giang_the',
-  water: 'bat_thu_can_quet',
-  wood: 'kien_moc_thong_thien',
-  metal: 'kim_phat_thu_sat',
-  earth: 'hau_tho_thanh_luy',
-} as const
+// Future Systems dọn dẹp (2026-09-04) — data PHAP_TU_ULTIMATE_* chuyển
+// sang data/skill/PhapTuUltimates.ts (data location đúng; UltimateSystem
+// là engine shell đã chết từ Slice 6 cutover). Import nội bộ + re-export
+// compat cho consumer cũ chưa migrate.
+import {
+  PHAP_TU_ULTIMATE_IDS,
+  PHAP_TU_ULTIMATE_PROFILES,
+  type PhapTuUltimateElement,
+  type PhapTuUltimateProfile,
+} from '../../data/skill/PhapTuUltimates'
 
-export type PhapTuUltimateElement = keyof typeof PHAP_TU_ULTIMATE_IDS
-
-/** E-6 (plan 2026-09-03-thuan-he) — targeting profile per hành:
- * 'all' = mọi địch còn sống (diện rộng — 4 ult), 'single_boss_priority'
- * = ĐÚNG 1 target, boss trước, không boss → HP HIỆN TẠI cao nhất,
- * KHÔNG splash overkill (Kim Phạt là "hình phạt" đơn — khác KKTM). */
-export type PhapTuUltimateProfile = 'all' | 'single_boss_priority'
-
-export const PHAP_TU_ULTIMATE_PROFILES: Record<ElementType, PhapTuUltimateProfile> = {
-  fire: 'all',
-  water: 'all',
-  wood: 'all',
-  metal: 'single_boss_priority',
-  earth: 'all',
-}
+export {
+  PHAP_TU_ULTIMATE_IDS,
+  PHAP_TU_ULTIMATE_PROFILES,
+  type PhapTuUltimateElement,
+  type PhapTuUltimateProfile,
+} from '../../data/skill/PhapTuUltimates'
 
 /** Seam effect-driven (E-6): UltimateSystem KHÔNG tự biết
  * SkillEffectSystem/ctx — GameManager glue (Task 12) inject:
