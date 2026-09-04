@@ -13,6 +13,7 @@ import type { TurnSkillDefinition, TurnSkillSlot } from './TurnSkillAction'
 import { TurnBuffPool } from './TurnBuffPool'
 import { TurnBuffSystem } from './TurnBuffSystem'
 import type { TurnBuffRegistry } from './TurnBuffTypes'
+import { applyTurnStartDeltas } from './ResourceTurnHook'
 import type { TurnResourceDelta } from './ResourceTurnHook'
 
 export interface TurnResourcePool {
@@ -120,6 +121,8 @@ export class TurnBattleSystem {
 
     const actor = resolved.actor
 
+    battle.totalTurnsElapsed = (battle.totalTurnsElapsed ?? 0) + 1
+
     const actorBuffSystem = new TurnBuffSystem(actor.buffs)
 
     // CC check TRƯỚC tick: buff stun/freeze duration=N phải block đúng N
@@ -128,6 +131,10 @@ export class TurnBattleSystem {
     const ccBlocked = actorBuffSystem.isStunned() || actorBuffSystem.isFrozen()
 
     actorBuffSystem.update(actor.entity, this.combat, this.registry)
+
+    if (actor.resources) {
+      actor.resources.values = applyTurnStartDeltas(actor.resources.values, actor.resources.deltasPerTurn)
+    }
 
     let skillId = ''
 

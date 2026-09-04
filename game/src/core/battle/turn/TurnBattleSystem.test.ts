@@ -615,3 +615,121 @@ describe('TurnBattleSystem.resolveNextStep appliesBuff (zone-as-dot proof)', () 
     expect(enemyParticipant.buffs.getAll()).toEqual([])
   })
 })
+
+describe('TurnBattleSystem.resolveNextStep resource tick + totalTurnsElapsed', () => {
+  it('increments totalTurnsElapsed by 1 on every step', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    system.resolveNextStep(battle)
+    expect(battle.totalTurnsElapsed).toBe(1)
+
+    system.resolveNextStep(battle)
+    expect(battle.totalTurnsElapsed).toBe(2)
+  })
+
+  it('applies resource deltas to the acting participant at the start of their own turn', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const playerParticipant = makeParticipant('player', player, 10, 0)
+    const resources = {
+      values: { fixture_resource: 5 },
+      deltasPerTurn: [{ stat: 'fixture_resource', amount: 2, min: 0, max: 10 }],
+    }
+    playerParticipant.resources = resources
+
+    const battle: TurnBattle = {
+      player: playerParticipant,
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    system.resolveNextStep(battle)
+
+    expect(resources.values.fixture_resource).toBe(7)
+  })
+
+  it('clamps the resource delta at max', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const playerParticipant = makeParticipant('player', player, 10, 0)
+    const resources = {
+      values: { fixture_resource: 9 },
+      deltasPerTurn: [{ stat: 'fixture_resource', amount: 5, min: 0, max: 10 }],
+    }
+    playerParticipant.resources = resources
+
+    const battle: TurnBattle = {
+      player: playerParticipant,
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    system.resolveNextStep(battle)
+
+    expect(resources.values.fixture_resource).toBe(10)
+  })
+
+  it('does not tick a resource pool the participant does not have', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    expect(() => system.resolveNextStep(battle)).not.toThrow()
+  })
+})
