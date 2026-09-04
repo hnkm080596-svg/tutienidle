@@ -13,6 +13,18 @@ import type { TurnSkillDefinition, TurnSkillSlot } from './TurnSkillAction'
 import { TurnBuffPool } from './TurnBuffPool'
 import { TurnBuffSystem } from './TurnBuffSystem'
 import type { TurnBuffRegistry } from './TurnBuffTypes'
+import type { TurnResourceDelta } from './ResourceTurnHook'
+
+export interface TurnResourcePool {
+  values: Record<string, number>
+  deltasPerTurn: TurnResourceDelta[]
+}
+
+export interface TurnBossTrigger {
+  afterTurns: number
+  buffDefinitionId: string
+  firedAlready: boolean
+}
 
 export type TurnBattleState = 'fighting' | 'victory' | 'defeat'
 
@@ -27,12 +39,15 @@ export interface TurnBattleParticipant {
   basic?: TurnSkillDefinition
   special?: TurnSkillSlot
   ultimate?: TurnSkillSlot
+  resources?: TurnResourcePool
+  bossTrigger?: TurnBossTrigger
 }
 
 export interface TurnBattle {
   player: TurnBattleParticipant
   enemies: TurnBattleParticipant[]
   state: TurnBattleState
+  totalTurnsElapsed?: number
 }
 
 /**
