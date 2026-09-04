@@ -754,9 +754,99 @@ git commit -m "feat(party): TurnBattle.player -> players[] — engine-level mult
 
 ---
 
+### Task 10: Update Slice 7's manual UI for multi-player-unit (party) support
+
+**Why this task exists**: Slice 7 (manual tap-to-cast UI, turn-order
+preview, battle log — `docs/superpowers/plans/2026-09-04-turn-based-combat-completion.md`'s
+Task 10-11) gets BUILT before Task 9 lands, because this whole plan's
+Phase E is gated behind the entire Completion plan merging first (see
+Global Constraints). That means every place Slice 7's UI/engine glue
+assumed a single `battle.player` is now stale the moment Task 9 lands
+— this task is the required follow-up, not optional cleanup, and must
+be done in the same work session as Task 9 (do not leave `players[]`
+merged with Slice 7 silently broken in between).
+
+**Files:**
+- Modify: `game/src/core/battle/turn/TurnBattleSystem.ts` (`peekNextActor()`/`resolveActorTurn()`, per Slice 7's design spec §2 — read whatever Completion Task 10 actually built, this plan doesn't know the exact final shape since it wasn't executed at this plan's writing time)
+- Modify: `game/src/core/game/GameManager.ts` (the manual-mode pause check, Slice 7 design spec §3)
+- Modify: `game/src/components/combat/CombatSkillSlot.vue` and/or its container component (whichever component Completion Task 10 wired the 3 fixed buttons into)
+- Modify: whatever component Completion Task 11 built for turn-order preview / battle log
+- Test: corresponding test files for each of the above
+
+- [ ] **Step 1: Read the real, already-merged Slice 7 implementation in full**
+
+Do not guess — Completion plan's Task 10-11 will have picked concrete
+names/shapes this plan cannot predict. Read `TurnBattleSystem.ts`'s
+real `peekNextActor()`/`resolveActorTurn()`, `GameManager.ts`'s real
+manual-mode pause logic, and the real UI component(s) before writing
+any diff below.
+
+- [ ] **Step 2: Fix `peekNextActor()`'s "is this the player" check**
+
+Wherever the merged Slice 7 code checks "is the paused/next actor the
+player" (almost certainly something like `actor === battle.player`,
+written before Task 9 existed), change it to
+`battle.players.includes(actor)` — a party member's turn should pause
+for manual input exactly the same way the old singular player's turn
+did, for EVERY party member, not just `players[0]`.
+
+- [ ] **Step 3: Write failing tests for multi-unit manual pause**
+
+Prove that when it becomes `players[1]`'s (a companion's) turn under
+manual mode, the engine pauses exactly as it would for `players[0]`
+(the main character), and `resolveActorTurn()` correctly resolves
+whichever party member is currently paused, not always `players[0]`.
+
+- [ ] **Step 4: Update the 3-button skill UI to track the CURRENTLY PAUSED party member, not a fixed player reference**
+
+Whatever state Completion Task 10's UI reads (`GameManager.getBattle()`'s
+player reference, most likely) needs to become "the specific
+`TurnBattleParticipant` currently paused waiting for input" — which
+may be any entry in `players[]`, and changes across turns. The 3
+buttons (basic/special/ultimate) must reflect THAT participant's
+skills/cooldowns/resources, not always the main character's.
+
+- [ ] **Step 5: Update turn-order preview + battle log for party entries**
+
+`peekUpcomingActors()` (Completion Task 11) already iterates whatever
+`resolveNextTurn()`-equivalent logic exists over `allParticipants` —
+once Task 9's `allParticipants = [...battle.players, ...battle.enemies]`
+change lands, this should already work correctly with ZERO changes
+needed here, since it was written generically over an array from the
+start (verify this is actually true by reading the real code — if
+Completion Task 11 hard-coded any `battle.player` reference instead of
+iterating the general participant list, fix it here). Same check for
+the battle log's per-entry `actorId` — already generic, should need no
+change, verify only.
+
+- [ ] **Step 6: Add a minimal party-status indicator (HP/alive per member)**
+
+Not strictly required by the engine change, but necessary for the
+manual UI to be usable with >1 player-side unit at all — a player
+manually choosing which of their party members to act for needs to see
+who's alive/who's up. Keep this minimal (a small HP-bar row, reusing
+whatever presentational pattern `CombatTopBar.vue` or similar already
+establishes) — full party UI polish is still Party's own future
+content/UI spec (§6.2 of the design spec), this is only the bare
+minimum to keep Slice 7 functionally correct, not a redesign.
+
+- [ ] **Step 7: Run tests, typecheck, manual smoke test, commit**
+
+Per this plan's established pattern for anything touching
+`GameManager.ts`/UI — start the dev server, play through at least one
+battle with a 2+ member party in manual mode, confirm each member's
+turn pauses correctly and shows that member's real skills.
+
+```bash
+git add -A
+git commit -m "fix(party): update Slice 7 manual UI (pause check, skill buttons, party status) for players[] support"
+```
+
+---
+
 # Final Task: Full-suite verification
 
-### Task 10: Full-suite verification
+### Task 11: Full-suite verification
 
 - [ ] **Step 1: Run the full test suite**
 
