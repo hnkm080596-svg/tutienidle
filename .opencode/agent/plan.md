@@ -28,6 +28,22 @@ permission:
     "tail *": allow
     "find *": allow
     "wc *": allow
+    # pipeline cmdlets — compound commands are split on ';' and pipes and
+    # each segment is evaluated; blocked segments force ask prompts
+    "Select-Object*": allow
+    "Where-Object*": allow
+    "ForEach-Object*": allow
+    "Sort-Object*": allow
+    "Group-Object*": allow
+    "Measure-Object*": allow
+    "Out-String*": allow
+    "Get-Command*": allow
+    "Get-Member*": allow
+  # outside-worktree reads: opencode config/logs/storage. Writes outside the
+  # worktree stay denied (edit: deny + P1).
+  external_directory:
+    "~/.config/opencode/**": allow
+    "~/.local/share/opencode/**": allow
 ---
 
 You are the **plan** agent for the TutienIdle project. Your job is to read, research, brainstorm, and produce specifications and implementation plans. You do not edit production code.

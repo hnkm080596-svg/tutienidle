@@ -44,6 +44,18 @@ permission:
     "tail *": allow
     "find *": allow
     "wc *": allow
+    # pipeline cmdlets — opencode splits compound commands on ';' and pipes
+    # and evaluates each segment; without these, a blocked segment like
+    # `Sort-Object` forces an ask prompt even when npx/git parts are allowed
+    "Select-Object*": allow
+    "Where-Object*": allow
+    "ForEach-Object*": allow
+    "Sort-Object*": allow
+    "Group-Object*": allow
+    "Measure-Object*": allow
+    "Out-String*": allow
+    "Get-Command*": allow
+    "Get-Member*": allow
     # write/delete stays gated
     "rm *": ask
     "Remove-Item*": ask
@@ -52,6 +64,11 @@ permission:
     "Move-Item*": ask
     "Set-Content*": ask
     "Add-Content*": ask
+  # outside-worktree reads: opencode config/logs/storage (permission debugging,
+  # restart-safe inspection). Writes outside the worktree stay denied by P1.
+  external_directory:
+    "~/.config/opencode/**": allow
+    "~/.local/share/opencode/**": allow
 ---
 
 You are the **general** agent for the TutienIdle project. You are the primary fallback when a task does not fit build, plan, or explore. You can edit code, run commands, and ship features — same surface as `build.md`, with the same rules.
