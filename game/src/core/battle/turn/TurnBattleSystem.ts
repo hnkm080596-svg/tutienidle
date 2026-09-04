@@ -50,6 +50,10 @@ export interface TurnBattle {
   enemies: TurnBattleParticipant[]
   state: TurnBattleState
   totalTurnsElapsed?: number
+  wave?: {
+    totalEnemyCount: number
+    spawnedCount: number
+  }
 }
 
 /**
@@ -98,6 +102,7 @@ export class TurnBattleSystem {
     private readonly combat: CombatSystem,
     private readonly maxTurns: number = DEFAULT_MAX_TURNS,
     private readonly registry?: TurnBuffRegistry,
+    private readonly spawnEnemy?: () => TurnBattleParticipant,
   ) {}
 
   /**
