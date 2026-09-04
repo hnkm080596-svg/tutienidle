@@ -92,7 +92,7 @@ describe('GameManager.updateBossSummons (Combat Rework Phase 4 — Boss Mechanic
     gameManager.startBattle(createPlayer(), boss)
     gameManager.update(3) // Countdown 3s trước trận (2026-08-22) - bỏ qua để test chạy combat logic ngay
 
-    expect(gameManager.getBattle()!.enemies).toHaveLength(1)
+    expect(gameManager.getTurnBattle()!.enemies).toHaveLength(1)
 
     gameManager.update(0.016)
 
@@ -142,6 +142,6 @@ describe('GameManager.updateBossSummons (Combat Rework Phase 4 — Boss Mechanic
 
     expect(() => gameManager.update(0.016)).not.toThrow()
 
-    expect(gameManager.getBattle()!.enemies).toHaveLength(1)
+    expect(gameManager.getTurnBattle()!.enemies).toHaveLength(1)
   })
 })

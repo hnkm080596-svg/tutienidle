@@ -59,7 +59,7 @@ describe('GameManager.grantRandomEquipmentDrop — toast đồng nhất với gr
     // Giết quái trực tiếp — không cần chờ player tự đánh (không equip
     // skill nào trong test này), grantBattleRewardIfNeeded() chỉ đọc
     // battleEnemy.entity.alive.
-    const battleEnemy = gameManager.getBattle()!.enemies[0]!
+    const battleEnemy = gameManager.getTurnBattle()!.enemies[0]!
     battleEnemy.entity.currentHp = 0
     battleEnemy.entity.alive = false
 
