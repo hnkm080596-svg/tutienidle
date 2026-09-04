@@ -16,6 +16,7 @@ import type { TurnBuffRegistry } from './TurnBuffTypes'
 import { applyTurnStartDeltas } from './ResourceTurnHook'
 import type { TurnResourceDelta } from './ResourceTurnHook'
 import { isTurnTriggerReady } from './BossTurnTriggers'
+import { shouldSpawnNextEnemy, isStageComplete } from './WaveSpawnTrigger'
 
 export interface TurnResourcePool {
   values: Record<string, number>
@@ -195,9 +196,24 @@ export class TurnBattleSystem {
 
     consumeGaugeAfterAction(actor)
 
+    if (battle.wave && this.spawnEnemy) {
+      const aliveEnemyCount = battle.enemies.filter((enemy) => enemy.entity.alive).length
+
+      if (shouldSpawnNextEnemy(battle.wave.spawnedCount, battle.wave.totalEnemyCount, aliveEnemyCount)) {
+        battle.enemies.push(this.spawnEnemy())
+        battle.wave.spawnedCount += 1
+      }
+    }
+
+    const finalAliveEnemyCount = battle.enemies.filter((enemy) => enemy.entity.alive).length
+
     if (!battle.player.entity.alive) {
       battle.state = 'defeat'
-    } else if (battle.enemies.every((enemy) => !enemy.entity.alive)) {
+    } else if (
+      battle.wave
+        ? isStageComplete(battle.wave.spawnedCount, battle.wave.totalEnemyCount, finalAliveEnemyCount)
+        : battle.enemies.every((enemy) => !enemy.entity.alive)
+    ) {
       battle.state = 'victory'
     }
 
