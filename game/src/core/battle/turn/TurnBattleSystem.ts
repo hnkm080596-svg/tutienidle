@@ -31,7 +31,7 @@ export interface TurnBossTrigger {
   firedAlready: boolean
 }
 
-export type TurnBattleState = 'fighting' | 'victory' | 'defeat'
+export type TurnBattleState = 'countdown' | 'fighting' | 'victory' | 'defeat'
 
 export interface TurnBattleParticipant {
   id: string
@@ -55,6 +55,14 @@ export interface TurnBattle {
   enemies: TurnBattleParticipant[]
   state: TurnBattleState
   totalTurnsElapsed?: number
+  /**
+   * Countdown phase (flow: Countdown → Spawn → Gauge combat → Wave →
+   * Result) — số lượt-pacing còn lại trước khi state chuyển 'fighting'.
+   * GameManager pacing loop tick giảm; engine `resolveNextStep()` KHÔNG
+   * resolve combat trong pha này (chỉ tick countdown khi được gọi qua
+   * `tickCountdown()`), enemies đã spawn đứng yên chờ.
+   */
+  countdownTurnsRemaining?: number
   wave?: {
     totalEnemyCount: number
     spawnedCount: number
@@ -111,12 +119,43 @@ export class TurnBattleSystem {
   ) {}
 
   /**
+   * Countdown phase pacing (flow: Countdown → Spawn → Gauge combat →
+   * Wave → Result): giảm countdownTurnsRemaining 1 đơn vị/call. Đến 0 →
+   * state chuyển 'fighting' (gauge bắt đầu chạy; enemies đã spawn đứng
+   * sẵn). Gọi từ GameManager pacing loop theo fixed-step, KHÔNG gọi
+   * resolveNextStep trong pha countdown.
+   */
+  tickCountdown(battle: TurnBattle): TurnBattleState {
+    if (battle.state !== 'countdown') {
+      return battle.state
+    }
+
+    const remaining = (battle.countdownTurnsRemaining ?? 0) - 1
+
+    if (remaining <= 0) {
+      battle.countdownTurnsRemaining = 0
+      battle.state = 'fighting'
+    } else {
+      battle.countdownTurnsRemaining = remaining
+    }
+
+    return battle.state
+  }
+
+  /**
    * Resolves exactly ONE actor's turn. Production entry point from Slice
    * 3 onward — GameManager/UI call this repeatedly instead of running a
    * battle to completion in one call (needed once Slice 5 adds wave
    * pauses and Slice 7 adds manual input waits).
    */
   resolveNextStep(battle: TurnBattle): TurnStepResult {
+    // Countdown phase: combat chưa bắt đầu — no-op an toàn (gauge không
+    // chạy, không ai hành động; GameManager tick countdown qua
+    // tickCountdown() thay vì gọi method này).
+    if (battle.state === 'countdown') {
+      return { state: 'countdown', actorId: '', skillId: '', targetIds: [], ccBlocked: false }
+    }
+
     const allParticipants = [battle.player, ...battle.enemies]
 
     for (const participant of allParticipants) {

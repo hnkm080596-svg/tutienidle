@@ -198,6 +198,7 @@ import type { StatModifier } from '../stats/StatCalculator'
 import type { Stats } from '../stats/StatBlock'
 import { createBaseStats } from '../stats/StatBlock'
 import { TurnBattleSystem, type TurnBattle } from '../battle/turn/TurnBattleSystem'
+import { resolveEnemySpawnPosition } from '../battle/EnemySpawnPlacement'
 import type { TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
 import { toTurnBattleParticipant } from './TurnBattleAdapter'
 import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
@@ -2403,14 +2404,28 @@ export class GameManager {
       playerPath ? this.resolvePlayerBasicAttack(playerPath) : GENERIC_PHYSICAL_BASIC,
     )
 
-    const enemyParticipants = enemyEntities.map((enemyEntity, index) =>
-      toTurnBattleParticipant(enemyEntity, index + 1, GENERIC_PHYSICAL_BASIC),
-    )
+    // Spawn placement (unified flow: Spawn đứng yên tại vị trí resolve —
+    // không di chuyển) — tái dùng đúng resolveEnemySpawnPosition của hệ
+    // sống: Boss luôn HERO_LANE (row 4), thường random [0, GRID_ROW_COUNT),
+    // column cột 7-15 (spawn từ mép phải).
+    const enemyParticipants = enemyEntities.map((enemyEntity, index) => {
+      const position = resolveEnemySpawnPosition({
+        isBoss: enemyEntity.isBoss ?? false,
+        random: Math.random,
+      })
+
+      enemyEntity.row = position.row
+      enemyEntity.x = position.column
+
+      return toTurnBattleParticipant(enemyEntity, index + 1, GENERIC_PHYSICAL_BASIC)
+    })
 
     return {
       player: playerParticipant,
       enemies: enemyParticipants,
-      state: 'fighting',
+      state: 'countdown',
+      // 3s countdown hệ sống → 30 pacing ticks (BATTLE_FIXED_STEP 0.1s).
+      countdownTurnsRemaining: 30,
       totalTurnsElapsed: 0,
     }
   }
@@ -2436,6 +2451,8 @@ export class GameManager {
     this.turnBattle = {
       player: previous.player,
       enemies: [],
+      // Auto-repeat cycle giữa stage KHÔNG countdown lại (countdown chỉ ở
+      // đầu trận/bắt đầu stage — hệ sống restartCycle giữ fighting ngay).
       state: 'fighting',
       totalTurnsElapsed: 0,
       wave: { totalEnemyCount: stageRef.totalEnemyCount, spawnedCount: 0 },
@@ -2553,7 +2570,19 @@ export class GameManager {
 
   }
 
+  /**
+   * Slice 6 cutover (unified flow): getBattle() trả TurnBattle khi có trận
+   * turn-based — là NGUỒN SỰ THẬT DUY NHẤT cho mọi consumer (tests + 7 UI
+   * sites). Shape TurnBattle có `state` ('countdown' khớp isBattleInProgress
+   * hệ sống), `player`, `enemies[]` — đủ cho read-only consumers.
+   * Legacy Battle (real-time) chỉ trả khi KHÔNG có turnBattle (tribulation
+   * side chưa cutover).
+   */
   getBattle(): Battle | null {
+    if (this.turnBattle) {
+      return this.turnBattle as unknown as Battle
+    }
+
     return this.battleSystem.getBattle()
   }
 
@@ -3048,11 +3077,15 @@ export class GameManager {
 
       remaining -= step
 
-      // Slice 6 cutover: TurnBattle l� engine DUY NH?T � m?i fixed step
-      // 0.1s = 1 turn resolution (display pacing; turn resolution instant).
-      // Real-time BattleSystem.update() KH�NG c�n ch?y.
-      if (this.turnBattle && this.turnBattle.state === 'fighting') {
-        this.restartTurnBattleCycle()
+      // Slice 6 cutover — unified flow: Countdown → Spawn (đã có sẵn) →
+      // Gauge combat → Wave spawn khi sân trống → Result khi hết wave.
+      // Mỗi fixed step 0.1s = 1 pacing tick; turn resolution instant.
+      if (this.turnBattle) {
+        if (this.turnBattle.state === 'countdown') {
+          this.turnBattleSystem.tickCountdown(this.turnBattle)
+        } else if (this.turnBattle.state === 'fighting') {
+          this.turnBattleSystem.resolveNextStep(this.turnBattle)
+        }
       }
 
       this.syncLegacyBattleState()
@@ -3068,12 +3101,23 @@ export class GameManager {
     ) {
       this.turnBattleEndEmitted = true
       this.eventBus.emit('battle_end', { type: 'battle_end', state: 'victory' })
+
+      // Stage completion (StageWaveSystem.update cũ): push completedStageIds
+      // ĐÚNG 1 LẦN — auto-repeat vẫn push (player hoàn thành stage này dù
+      // đánh tiếp cycle mới).
+      if (
+        this.playerDataForTurnBattle &&
+        this.activeStageForTurnBattle &&
+        !this.playerDataForTurnBattle.completedStageIds.includes(this.activeStageForTurnBattle.id)
+      ) {
+        this.playerDataForTurnBattle.completedStageIds.push(this.activeStageForTurnBattle.id)
+      }
     }
 
     // Auto-repeat: victory + repeat bật → restart NGAY trong cùng call
-    // (không chờ step kế) để getBattle()?.state quay lại 'fighting' tức thì
-    // sau khi rewards đã grant — khớp semantics hệ sống (StageWaveSystem
-    // restartCycle chạy ngay trong cùng tick victory).
+    // (không chờ step kế) để getBattle()?.state quay lại countdown →
+    // fighting tức thì sau khi rewards đã grant — khớp semantics hệ sống
+    // (StageWaveSystem restartCycle chạy ngay trong cùng tick victory).
     if (
       this.turnBattle &&
       this.turnBattle.state === 'victory' &&
@@ -3084,13 +3128,10 @@ export class GameManager {
       this.restartTurnBattleCycle()
     }
 
-
-    // Ngo�i v�ng fixed-step � TribulationDirector t? c� catch-up d?ng
-    // d�ng (spec dot-pha-loi-kiep �5.6), chia nh? s? c?ng d?n sai s? float.
+    // Ngoài vòng fixed-step — TribulationDirector tự có catch-up dạng
+    // đóng (spec dot-pha-loi-kiep §5.6), chia nhỏ sẽ cộng dồn sai số float.
     this.tribulationDirector.update(deltaSeconds)
-
   }
-
   private grantBattleRewardIfNeeded() {
     // Slice 6 cutover: rewards d?c t? TurnBattle (engine duy nh?t). Shim
     // Battle-shape { enemies: [{ entity, rewardGranted }], player } gi?
@@ -3151,6 +3192,17 @@ export class GameManager {
 
       if (turnBattle.state === 'victory') {
         this.eventBus.emit('battle_end', { type: 'battle_end', state: 'victory' })
+
+        // Stage completion (StageWaveSystem.update cũ): push completedStageIds
+        // ĐÚNG 1 LẦN mỗi stage — auto-repeat vẫn push (player hoàn thành
+        // stage này dù đánh tiếp cycle mới).
+        if (
+          this.playerDataForTurnBattle &&
+          this.activeStageForTurnBattle &&
+          !this.playerDataForTurnBattle.completedStageIds.includes(this.activeStageForTurnBattle.id)
+        ) {
+          this.playerDataForTurnBattle.completedStageIds.push(this.activeStageForTurnBattle.id)
+        }
       }
     }
   }
@@ -3171,12 +3223,8 @@ export class GameManager {
       return
     }
 
-    if (turnBattle.state === 'fighting' && legacy.state !== 'fighting') {
-      legacy.state = 'fighting'
-    } else if (turnBattle.state === 'victory' && legacy.state !== 'victory') {
-      legacy.state = 'victory'
-    } else if (turnBattle.state === 'defeat' && legacy.state !== 'defeat') {
-      legacy.state = 'defeat'
+    if (legacy.state !== turnBattle.state) {
+      legacy.state = turnBattle.state
     }
   }  /** Repeat-continuously flag từ startStage — driver cho auto-repeat cycle của TurnBattle. */
   private turnBattleRepeatContinuously = false

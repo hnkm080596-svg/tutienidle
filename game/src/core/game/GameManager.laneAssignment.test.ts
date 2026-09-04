@@ -70,8 +70,9 @@ describe('GameManager — spawnedLane assignment (top-down 5-spawnedLane, 2026-0
 
       gameManager.startBattle(createPlayer(), boss)
 
-      // Spawn telegraph (2026-08-24): row gán lúc materialize — đọc row ĐÃ RESOLVE từ pending position (cùng giá trị sẽ gán cho entity).
-      expect(gameManager.getBattle()!.pendingEnemySpawns[0]!.position.row).toBe(CENTER_LANE_INDEX)
+      // Slice 6 cutover: spawn TỨC THỜI trong TurnBattle (không còn telegraph
+      // pendingSpawns của hệ real-time) — đọc row từ enemy participant.
+      expect(gameManager.getTurnBattle()!.enemies[0]!.entity.row).toBe(CENTER_LANE_INDEX)
     }
   })
 
@@ -93,7 +94,7 @@ describe('GameManager — spawnedLane assignment (top-down 5-spawnedLane, 2026-0
     for (let i = 0; i < 100; i++) {
       gameManager.startBattle(createPlayer(), mobTemplate)
 
-      const row = gameManager.getBattle()!.pendingEnemySpawns[0]!.position.row
+      const row = gameManager.getTurnBattle()!.enemies[0]!.entity.row
 
       expect(row).toBeGreaterThanOrEqual(0)
       expect(row).toBeLessThan(GRID_ROW_COUNT)

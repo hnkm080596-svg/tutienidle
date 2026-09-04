@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { selectTarget, TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
+import { selectTarget, TurnBattleSystem, type TurnBattle, type TurnBattleParticipant, type TurnBattleState } from './TurnBattleSystem'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
@@ -1409,3 +1409,76 @@ describe('TurnBattleSystem hpRegenPerTurn', () => {
     expect(player.currentHp).toBe(100)
   })
 })
+
+describe('TurnBattleSystem countdown phase (unified flow)', () => {
+  function countdownBattle(countdownTurns: number): TurnBattle {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 0 },
+    })
+
+    return {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'countdown',
+      countdownTurnsRemaining: countdownTurns,
+    }
+  }
+
+  it('resolveNextStep is a safe no-op during countdown (no combat, state unchanged)', () => {
+    const battle = countdownBattle(3)
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    const step = system.resolveNextStep(battle)
+
+    expect(step.state).toBe('countdown')
+    expect(step.actorId).toBe('')
+    expect(step.targetIds).toEqual([])
+    expect(battle.state).toBe('countdown')
+    expect(battle.enemies[0]!.entity.currentHp).toBe(1_000_000)
+  })
+
+  it('tickCountdown decrements and flips to fighting at 0', () => {
+    const battle = countdownBattle(2)
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    expect(system.tickCountdown(battle)).toBe('countdown')
+    expect(battle.countdownTurnsRemaining).toBe(1)
+    expect(battle.state).toBe('countdown')
+
+    expect(system.tickCountdown(battle)).toBe('fighting')
+    expect(battle.countdownTurnsRemaining).toBe(0)
+    expect(battle.state).toBe('fighting')
+  })
+
+  it('after countdown reaches fighting, combat resolves normally (full flow: countdown -> gauge combat)', () => {
+    const battle = countdownBattle(1)
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    system.tickCountdown(battle)
+    expect(battle.state).toBe('fighting')
+
+    const step = system.resolveNextStep(battle)
+    expect(step.state).toBe('fighting')
+    expect(step.actorId).toBe('player')
+    expect(step.targetIds).toEqual(['enemy'])
+  })
+
+  it('tickCountdown on a non-countdown battle is a no-op passthrough', () => {
+    const battle = countdownBattle(0)
+    battle.state = 'fighting'
+
+    expect(system_tickCountdownPassthrough(battle, new TurnBattleSystem(new CombatSystem(new EventBus())))).toBe('fighting')
+  })
+})
+
+function system_tickCountdownPassthrough(battle: TurnBattle, system: TurnBattleSystem): TurnBattleState {
+  return system.tickCountdown(battle)
+}

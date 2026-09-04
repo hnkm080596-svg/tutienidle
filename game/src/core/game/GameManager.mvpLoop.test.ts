@@ -169,11 +169,12 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
     expect(gameManager.startStage(player, finalStats, stage)).toBe(true)
 
     let sawBossSpawn = false
-    let sawBossPhaseTrigger = false
-    let sawBossEnrageTrigger = false
 
-    // Countdown 3 giây trước trận (2026-08-22) — startStage() giờ bắt
-    // đầu ở 'countdown' chứ không 'fighting' ngay, xem BattleSystem.start().
+    // Slice 6 cutover: unified flow (Countdown → Spawn → Gauge → Wave →
+    // Result). Boss Phase (archetype override) + Enrage theo giây là cơ
+    // chế real-time KHÔNG migrate (Deep Review §2 — boss chỉ là quái +
+    // buff, sẽ thiết kế lại bằng BossTurnTriggers khi content thật tới) —
+    // chỉ giữ assertions core: spawn qua wave + victory + loop terminate.
     for (let i = 0; i < 4000 && isBattleInProgress(gameManager.getBattle()?.state); i++) {
       gameManager.update(0.05)
 
@@ -185,27 +186,16 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
 
       if (bossEntry) {
         sawBossSpawn = true
-
-        if (bossEntry.entity.archetype === 'ranged') {
-          sawBossPhaseTrigger = true
-        }
-
-        if (bossEntry.buffs.hasAny('mvp_test_enrage')) {
-          sawBossEnrageTrigger = true
-        }
       }
     }
 
-    // COMBAT + PLAYER + ENEMY: trận phải THẮNG thật (không phải hết
-    // tick mà vẫn 'fighting' — nghĩa là Damage Engine/Targeting/
-    // Collision/Death của TOÀN BỘ vòng lặp hoạt động đúng).
+    // COMBAT + PLAYER + ENEMY: trận phải THẮNG thật (không phải hết tick
+    // mà vẫn 'fighting' — nghĩa là Damage Engine/Targeting/Wave spawn/
+    // Death của TOÀN BỘ vòng lặp turn-based hoạt động đúng).
     expect(gameManager.getBattle()!.state).toBe('victory')
 
-    // BOSS: quái Boss thật đã spawn (Stage→wave spawn hoạt động), và
-    // cả Phase (archetype đổi) lẫn Enrage (buff áp) đều trigger được
-    // trong 1 trận thật — không chỉ ở test cô lập BattleSystem.
+    // BOSS: quái Boss thật đã spawn (wave spawn floor-10 boss-final hoạt
+    // động trong turn-based flow).
     expect(sawBossSpawn).toBe(true)
-    expect(sawBossPhaseTrigger).toBe(true)
-    expect(sawBossEnrageTrigger).toBe(true)
   })
 })
