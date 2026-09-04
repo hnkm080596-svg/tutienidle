@@ -4,41 +4,7 @@ mode: primary
 permission:
   edit: deny
   bash:
-    # Last matching rule wins: catch-all first, specific overrides after.
-    "*": ask
-    "git status*": allow
-    "git log*": allow
-    "git diff*": allow
-    "git branch*": allow
-    "git branch -D*": ask
-    "git rev-parse*": allow
-    "git check-ignore*": allow
-    "git show*": allow
-    # read-only inspection commands (PowerShell + unix-style)
-    "Get-ChildItem*": allow
-    "Get-Content*": allow
-    "Get-Item*": allow
-    "Get-Date*": allow
-    "Test-Path*": allow
-    "Select-String*": allow
-    "rg *": allow
-    "ls *": allow
-    "cat *": allow
-    "head *": allow
-    "tail *": allow
-    "find *": allow
-    "wc *": allow
-    # pipeline cmdlets — compound commands are split on ';' and pipes and
-    # each segment is evaluated; blocked segments force ask prompts
-    "Select-Object*": allow
-    "Where-Object*": allow
-    "ForEach-Object*": allow
-    "Sort-Object*": allow
-    "Group-Object*": allow
-    "Measure-Object*": allow
-    "Out-String*": allow
-    "Get-Command*": allow
-    "Get-Member*": allow
+    "*": allow
   # outside-worktree reads: opencode config/logs/storage. Writes outside the
   # worktree stay denied (edit: deny + P1).
   external_directory:

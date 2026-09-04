@@ -4,66 +4,7 @@ mode: primary
 permission:
   edit: allow
   bash:
-    # Last matching rule wins: catch-all first, specific overrides after.
-    "*": ask
-    "git *": allow
-    "git commit*": ask
-    "git push*": ask
-    "git stash*": ask
-    "git clean*": ask
-    "git reset*": ask
-    "git checkout*": ask
-    "git restore*": ask
-    "git branch*": allow
-    "git branch -D*": ask
-    # npm/npx: only safe read/verify subcommands; install/uninstall/publish/
-    # arbitrary npx package execution stays gated via the "*": ask catch-all
-    "npm run*": allow
-    "npm.cmd run*": allow
-    "npm test*": allow
-    "npm.cmd test*": allow
-    "npm view*": allow
-    "npm.cmd view*": allow
-    "npm ls*": allow
-    "npm.cmd ls*": allow
-    "npx vitest*": allow
-    "npx.cmd vitest*": allow
-    "npx tsc*": allow
-    "npx.cmd tsc*": allow
-    # read-only inspection commands (PowerShell + unix-style)
-    "Get-ChildItem*": allow
-    "Get-Content*": allow
-    "Get-Item*": allow
-    "Get-Date*": allow
-    "Test-Path*": allow
-    "Select-String*": allow
-    "rg *": allow
-    "ls *": allow
-    "cat *": allow
-    "head *": allow
-    "tail *": allow
-    "find *": allow
-    "wc *": allow
-    # pipeline cmdlets — opencode splits compound commands on ';' and pipes
-    # and evaluates each segment; without these, a blocked segment like
-    # `Sort-Object` forces an ask prompt even when npx/git parts are allowed
-    "Select-Object*": allow
-    "Where-Object*": allow
-    "ForEach-Object*": allow
-    "Sort-Object*": allow
-    "Group-Object*": allow
-    "Measure-Object*": allow
-    "Out-String*": allow
-    "Get-Command*": allow
-    "Get-Member*": allow
-    # write/delete stays gated
-    "rm *": ask
-    "Remove-Item*": ask
-    "New-Item*": ask
-    "Copy-Item*": ask
-    "Move-Item*": ask
-    "Set-Content*": ask
-    "Add-Content*": ask
+    "*": allow
   # outside-worktree reads: opencode config/logs/storage (permission debugging,
   # restart-safe inspection). Writes outside the worktree stay denied by P1.
   external_directory:
