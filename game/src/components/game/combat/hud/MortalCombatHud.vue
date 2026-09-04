@@ -1,57 +1,61 @@
 <script setup lang="ts">
-// skill-insight-and-auto-combat-hud-plan.md mục 7 + execution policy
-// rework (combat-gate-teleport-autocast plan §11.3) — Phàm Nhân CHỈ có
-// đúng 1 ô lớn cho Trảm, giờ ĐỌC TỪ scheduler thống nhất (slot 0 của
-// loadout — Trảm được gán slot mặc định, xem SkillLoadoutSlots/App.vue).
-// KHÔNG dựng 5 ô trống, KHÔNG hiện slot khóa.
-//
-// Ô này thể hiện NHỊP CADENCE theo Attack Speed (policy 'attack_speed'),
-// không phải hồi chiêu Skill.cooldown.
-import { computed } from 'vue'
+// Slice 7 (master plan Task 8, 2026-09-04) — Phàm Nhân: đúng 3 slot cố
+// định basic/special/ultimate qua useCombatSkillPresentation (bản cũ
+// render 1 slot từ N-slot loadout model đã retire). Bấm chọn skill khi
+// là lượt player paused (manual mode).
 import CombatSkillSlot from './CombatSkillSlot.vue'
 import { useCombatSkillPresentation } from '@/composables/useCombatSkillPresentation'
-import { useCadenceSmoothing } from '@/composables/useCadenceSmoothing'
-import { useGameManager } from '@/composables/useGameState'
-import { isBattleInProgress } from '@/core/battle/BattleTypes'
 
-const { loadout, skillFor } = useCombatSkillPresentation()
-
-const primary = computed(() => loadout.value.find(entry => entry.slotIndex === 0))
-
-// Audit P1-4 — mask/số đếm nội suy mượt giữa hai snapshot thay vì nhảy
-// theo nhịp tick; đóng băng khi không có trận đang chạy.
-const gameManager = useGameManager()
-
-const cadenceRemaining = useCadenceSmoothing(
-  () => ({
-    remaining: primary.value?.cadenceRemaining ?? 0,
-    total: primary.value?.cadenceTotal ?? 0,
-  }),
-  () => {
-    const battle = gameManager.getBattle()
-
-    return battle !== null && isBattleInProgress(battle.state)
-  },
-)
+const { basic, special, ultimate, chooseSkill } = useCombatSkillPresentation()
 </script>
 
 <template>
   <div class="mortal-combat-hud">
     <CombatSkillSlot
-      v-if="primary && primary.skillId"
+      v-if="basic && basic.skillId"
       class="mortal-combat-hud__slot"
-      :skill="skillFor(primary)"
-      :remaining="cadenceRemaining"
-      :total="primary.cadenceTotal ?? 0"
-      :is-masked="cadenceRemaining > 0"
+      :empty-label="basic.skillId"
+      :remaining="basic.cooldownRemaining"
+      :total="basic.cooldownTotal"
+      :is-masked="basic.state === 'cooldown'"
+      :resource-cost="basic.resourceCost"
+      :is-insufficient-resource="basic.state === 'blocked_resource'"
+      :is-tappable="basic.state === 'ready'"
+      @click="chooseSkill('basic')"
+    />
+
+    <CombatSkillSlot
+      v-if="special && special.skillId"
+      class="mortal-combat-hud__slot"
+      :empty-label="special.skillId"
+      :remaining="special.cooldownRemaining"
+      :total="special.cooldownTotal"
+      :is-masked="special.state === 'cooldown'"
+      :resource-cost="special.resourceCost"
+      :is-insufficient-resource="special.state === 'blocked_resource'"
+      :is-tappable="special.state === 'ready'"
+      @click="chooseSkill('special')"
+    />
+
+    <CombatSkillSlot
+      v-if="ultimate && ultimate.skillId"
+      class="mortal-combat-hud__slot"
+      :empty-label="ultimate.skillId"
+      :remaining="ultimate.cooldownRemaining"
+      :total="ultimate.cooldownTotal"
+      :is-masked="ultimate.state === 'cooldown'"
+      :resource-cost="ultimate.resourceCost"
+      :is-insufficient-resource="ultimate.state === 'blocked_resource'"
+      :is-tappable="ultimate.state === 'ready'"
+      @click="chooseSkill('ultimate')"
     />
   </div>
 </template>
 
 <style scoped>
-/* WS7 — phóng slot đòn thường (đọc cadence trong chuyển động). */
 .mortal-combat-hud {
-  width: 88px;
+  display: flex;
+  gap: var(--space-2);
 }
 
 .mortal-combat-hud__slot {

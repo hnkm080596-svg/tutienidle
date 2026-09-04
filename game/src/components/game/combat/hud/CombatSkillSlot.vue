@@ -1,16 +1,18 @@
 <script setup lang="ts">
 // skill-insight-and-auto-combat-hud-plan.md mục 6/8 — component nhỏ
 // DÙNG CHUNG cho mọi renderer theo path (icon/cooldown mask/resource
-// cost/cast indicator), nhưng KHÔNG có nút bấm/hotkey/manual cast —
-// thuần trình bày, đọc snapshot chỉ-đọc.
+// cost/cast indicator), thuần trình bày, đọc snapshot chỉ-đọc.
+//
+// Slice 7 (2026-09-04) — THAY ĐỔI thiết kế cũ "không có nút bấm": thêm
+// isTappable prop + click emit (plan Task 6). Emit CHỈ khi tappable
+// (call site quyết định điều kiện — đang là lượt player paused + slot
+// ready); keyboard accessibility qua role="button"/tabindex.
 //
 // electron-combat-timing-smoothing-plan.md mục 7 — prop shape CỐ Ý
 // dùng tên trung lập (remaining/total/isMasked): component phục vụ cả
 // cooldown thật lẫn cadence Attack Speed — 2 clock khác nhau ở tầng dữ
 // liệu core, KHÔNG được hợp nhất lại thành 1 semantic ở đây. Mỗi call
-// site tự map state CỦA MÌNH sang prop trung lập bên dưới. Execution
-// policy rework (plan §11.3) — thêm is-out-of-range cho trạng thái
-// thống nhất 'out_of_range'.
+// site tự map state CỦA MÌNH sang prop trung lập bên dưới.
 import { computed } from 'vue'
 import SlotView from '@/components/common/SlotView.vue'
 import Bar from '@/components/common/primitives/Bar.vue'
@@ -24,7 +26,7 @@ const props = withDefaults(defineProps<{
 
   // Thời gian còn lại/tổng của "vòng phủ" đang hiện — cooldown thật
   // (policy cooldown/cast_time) hoặc cadence Attack Speed (policy
-  // attack_speed), tuỳ call site.
+  // attack_speed), tuỳ call site. Turn-based: SỐ LƯỢT.
   remaining: number
   total: number
 
@@ -46,6 +48,9 @@ const props = withDefaults(defineProps<{
   isUnreleased?: boolean
   isLocked?: boolean
 
+  // Slice 7 — true = slot bấm được LÚC NÀY (player paused turn + ready).
+  isTappable?: boolean
+
   tooltipOverride?: TooltipContent
 }>(), {
   isMasked: false,
@@ -55,7 +60,16 @@ const props = withDefaults(defineProps<{
   isOutOfRange: false,
   isUnreleased: false,
   isLocked: false,
+  isTappable: false,
 })
+
+const emit = defineEmits<{ click: [] }>()
+
+function onClick() {
+  if (props.isTappable) {
+    emit('click')
+  }
+}
 
 const label = computed(() => props.skill?.name ?? props.emptyLabel ?? 'Trống')
 
@@ -107,7 +121,13 @@ const tooltip = computed<TooltipContent | undefined>(() => {
       'is-insufficient': isInsufficientResource,
       'is-out-of-range': isOutOfRange,
       'is-unreleased': isUnreleased,
+      'is-tappable': isTappable,
     }"
+    :role="isTappable ? 'button' : undefined"
+    :tabindex="isTappable ? 0 : undefined"
+    @click="onClick"
+    @keydown.enter="onClick"
+    @keydown.space.prevent="onClick"
   >
     <SlotView
       :item="skill ?? null"
@@ -142,6 +162,16 @@ const tooltip = computed<TooltipContent | undefined>(() => {
 .combat-skill-slot {
   position: relative;
   pointer-events: auto;
+}
+
+/* Slice 7 — affordance cho slot bấm được (cursor + hover ring). */
+.combat-skill-slot.is-tappable {
+  cursor: pointer;
+}
+
+.combat-skill-slot.is-tappable:hover {
+  outline: 2px solid var(--jade);
+  outline-offset: 1px;
 }
 
 .combat-skill-slot__mask {

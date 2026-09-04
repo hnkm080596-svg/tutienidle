@@ -1,27 +1,69 @@
 <script setup lang="ts">
-// Slice 7 (Completion Task 10) — 3 nút cố định basic/special/ultimate cho
-// turn-based manual cast. Tái dùng CombatSkillSlot.vue thuần presentational
-// (icon/mask/resource badge — props remaining/total unit-agnostic, ở đây là
-// LƯỢT không phải giây). Slot không sẵn sàng bị DISABLE (chặn trước, spec
-// Slice 7 §4 — không cho bấm rồi xử lý lỗi ở engine).
+// Slice 7 (2026-09-04) — 3 nút cố định basic/special/ultimate cho
+// turn-based manual cast. Entry thứ tự [basic, special, ultimate] từ
+// buildTurnSkillPresentation (slotList). Slot không sẵn sàng bị DISABLE
+// (chặn trước, spec Slice 7 §4). Targeting vẫn hoàn toàn tự động.
 //
-// Targeting vẫn hoàn toàn tự động (spec gốc §4.5) — bấm chỉ chọn SKILL.
-import { computed } from 'vue'
+// Tên skill hiển thị: TurnSkillDefinition không phải Skill object sống —
+// hiển thị nhãn role cố định (Thường/Đặc Biệt/Tuyệt Kỹ), icon/name thật
+// là gap content hiển thị follow-up (không âm thầm bỏ qua).
+import { computed, onMounted } from 'vue'
 import CombatSkillSlot from './CombatSkillSlot.vue'
 import { useTurnCombatManual } from '@/composables/useTurnCombatManual'
-import type { TurnSkillPresentationState } from '@/core/combat/CombatSkillPresentation'
+import { useGameManager } from '@/composables/useGameState'
+import { useUiStore } from '@/stores/ui'
+import type { TurnSkillPresentationEntry } from '@/core/combat/CombatSkillPresentation'
+import type { TurnSkillSlotRole } from '@/core/battle/turn/TurnSkillAction'
 
-const { slots, isAwaitingChoice, isManualMode, isBattleFighting, chooseSlot, setManualMode } =
-  useTurnCombatManual()
+const ROLE_ORDER: readonly TurnSkillSlotRole[] = ['basic', 'special', 'ultimate']
+
+const ROLE_LABELS: Record<TurnSkillSlotRole, string> = {
+  basic: 'Thường',
+  special: 'Đặc Biệt',
+  ultimate: 'Tuyệt Kỹ',
+}
+
+// Slice 7 master plan Task 9 — mode toggle đọc/ghi ui.combatInputMode
+// (persist per-device), đồng bộ GameManager flag (plain class, không
+// import Pinia — UI layer gọi setter, cùng pattern battleRunMode).
+const ui = useUiStore()
+const gameManager = useGameManager()
+const { isAwaitingChoice, isBattleFighting, slotList, chooseSlot } = useTurnCombatManual()
+
+const isManualMode = computed(() => ui.combatInputMode === 'manual')
+
+function setManualMode(enabled: boolean): void {
+  ui.setCombatInputMode(enabled ? 'manual' : 'auto')
+
+  gameManager.setBattleManualMode(enabled)
+}
+
+// Sync persisted mode → GameManager khi bar mount lần đầu (reload page:
+// ui flag persist, GameManager flag mặc định false).
+onMounted(() => {
+  gameManager.setBattleManualMode(ui.combatInputMode === 'manual')
+})
 
 const visible = computed(() => isBattleFighting.value)
 
-function tapSlot(entry: TurnSkillPresentationState): void {
-  if (!entry.isTappable) {
-    return
-  }
+const SLOT_EMPTY: TurnSkillPresentationEntry = {
+  skillId: '',
+  cooldownRemaining: 0,
+  cooldownTotal: 0,
+  resourceCost: 0,
+  state: 'empty',
+}
 
-  chooseSlot(entry.role)
+function entryAt(index: number): TurnSkillPresentationEntry {
+  return slotList.value[index] ?? SLOT_EMPTY
+}
+
+function isTappable(entry: TurnSkillPresentationEntry): boolean {
+  return entry.state === 'ready' && isAwaitingChoice.value
+}
+
+function tapSlot(role: TurnSkillSlotRole): void {
+  chooseSlot(role)
 }
 </script>
 
@@ -29,21 +71,22 @@ function tapSlot(entry: TurnSkillPresentationState): void {
   <div v-if="visible" class="turn-combat-skill-bar">
     <div class="turn-combat-skill-bar__slots">
       <button
-        v-for="entry in slots"
-        :key="entry.role"
+        v-for="(role, index) in ROLE_ORDER"
+        :key="role"
         type="button"
         class="turn-combat-skill-bar__slot-button"
-        :class="{ 'is-tappable': entry.isTappable }"
-        :disabled="!entry.isTappable"
-        :aria-label="`Dùng ${entry.role}`"
-        @click="tapSlot(entry)"
+        :class="{ 'is-tappable': isTappable(entryAt(index)) }"
+        :disabled="!isTappable(entryAt(index))"
+        :aria-label="`Dùng ${ROLE_LABELS[role]}`"
+        @click="tapSlot(role)"
       >
         <CombatSkillSlot
-          :remaining="entry.cooldownRemaining"
-          :total="entry.cooldownTotal"
-          :is-masked="entry.state === 'cooldown'"
-          :resource-cost="entry.resourceCost"
-          :is-insufficient-resource="entry.state === 'blocked_resource'"
+          :empty-label="ROLE_LABELS[role]"
+          :remaining="entryAt(index).cooldownRemaining"
+          :total="entryAt(index).cooldownTotal"
+          :is-masked="entryAt(index).state === 'cooldown'"
+          :resource-cost="entryAt(index).resourceCost"
+          :is-insufficient-resource="entryAt(index).state === 'blocked_resource'"
         />
       </button>
     </div>

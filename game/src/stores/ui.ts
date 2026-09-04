@@ -77,6 +77,15 @@ export type StandalonePanel =
 
 export type BattleRunMode = 'manual' | 'repeat' | 'progress'
 
+/**
+ * Slice 7 (2026-09-04) — chế độ input giữa trận: 'auto' = engine không
+ * bao giờ pause (auto-priority như thường); 'manual' = pause khi tới
+ * lượt player chờ chọn skill qua 3 nút. Trục RIÊNG khỏi `BattleRunMode`
+ * (flag đó governs hành vi ranh giới stage: auto-refight/auto-progress —
+ * KHÔNG tái sử dụng ý nghĩa chuỗi 'manual' giữa 2 flag).
+ */
+export type CombatInputMode = 'manual' | 'auto'
+
 // ================= Sort Hành Trang (plan Workstream E) =================
 export type SortDirection = 'asc' | 'desc'
 
@@ -152,6 +161,9 @@ export const useUiStore = defineStore('ui', {
 
     battleRunMode: automation.battleRunMode ?? 'manual',
 
+    // Slice 7 — combat input mode, persist cùng nhóm automation flags.
+    combatInputMode: automation.combatInputMode ?? 'auto',
+
     // (2026-08-30) isAutoConsumeTinhHoa đã GỠ — Luyện Thể tự đầu tư qua
     // essence stream (App.vue), không còn flag auto.
 
@@ -197,6 +209,7 @@ export const useUiStore = defineStore('ui', {
     persistAutomationFlags() {
       savePersistedUiAutomationFlags({
         battleRunMode: this.battleRunMode,
+        combatInputMode: this.combatInputMode,
       })
     },
 
@@ -321,6 +334,12 @@ export const useUiStore = defineStore('ui', {
 
     setBattleRunMode(mode: BattleRunMode) {
       this.battleRunMode = mode
+
+      this.persistAutomationFlags()
+    },
+
+    setCombatInputMode(mode: CombatInputMode) {
+      this.combatInputMode = mode
 
       this.persistAutomationFlags()
     },

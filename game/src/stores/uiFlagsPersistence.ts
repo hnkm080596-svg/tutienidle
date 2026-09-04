@@ -9,7 +9,7 @@
 // save. Development build: hỏng/quota → fallback giá trị mặc định, không
 // throw.
 
-import type { BattleRunMode } from './ui'
+import type { BattleRunMode, CombatInputMode } from './ui'
 
 export const UI_AUTOMATION_STORAGE_KEY = 'tien-hiep-idle-ui-automation'
 
@@ -17,12 +17,21 @@ export const UI_AUTOMATION_STORAGE_KEY = 'tien-hiep-idle-ui-automation'
 export interface UiAutomationFlagSnapshot {
   /** Chế độ auto-refight đang chọn ở Stage Select (manual/repeat/progress). */
   battleRunMode: BattleRunMode
+
+  /** Slice 7 (2026-09-04) — chế độ input combat (auto = engine không pause; manual = pause chờ chọn skill tại lượt player). Trục RIÊNG khỏi battleRunMode. */
+  combatInputMode: CombatInputMode
 }
 
 const BATTLE_RUN_MODES: readonly BattleRunMode[] = ['manual', 'repeat', 'progress']
 
 export function isBattleRunMode(value: unknown): value is BattleRunMode {
   return typeof value === 'string' && (BATTLE_RUN_MODES as readonly string[]).includes(value)
+}
+
+const COMBAT_INPUT_MODES: readonly CombatInputMode[] = ['manual', 'auto']
+
+export function isCombatInputMode(value: unknown): value is CombatInputMode {
+  return typeof value === 'string' && (COMBAT_INPUT_MODES as readonly string[]).includes(value)
 }
 
 /**
@@ -47,6 +56,10 @@ export function loadPersistedUiAutomationFlags(): Partial<UiAutomationFlagSnapsh
 
     if (isBattleRunMode(parsed.battleRunMode)) {
       snapshot.battleRunMode = parsed.battleRunMode
+    }
+
+    if (isCombatInputMode(parsed.combatInputMode)) {
+      snapshot.combatInputMode = parsed.combatInputMode
     }
 
     return snapshot

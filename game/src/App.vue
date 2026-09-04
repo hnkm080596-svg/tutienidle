@@ -77,6 +77,7 @@ ui.$subscribe((_mutation, state) => {
 
   savePersistedUiAutomationFlags({
     battleRunMode: state.battleRunMode,
+    combatInputMode: state.combatInputMode,
   })
 }, { detached: true })
 const notification = useNotificationStore()

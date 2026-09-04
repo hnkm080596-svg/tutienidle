@@ -1,229 +1,142 @@
 import { describe, expect, it } from 'vitest'
-import { GameManager } from '../game/GameManager'
-import { createDefaultPlayer } from '../player/Player'
+import { buildTurnSkillPresentation, type TurnSkillPresentationEntry } from './CombatSkillPresentation'
+import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
+import { TurnBuffPool } from '../battle/turn/TurnBuffPool'
 import { createBaseStats } from '../stats/StatBlock'
-import { defineEnemy } from '../enemy/Enemy'
-import type { Skill } from '../skill/Skill'
-import { buildLoadoutPresentation } from './CombatSkillPresentation'
-import { HERO_LANE_INDEX } from '../battle/BattleLane'
+import type { CombatEntity } from '../combat/CombatEntity'
 
-// Execution policy rework (plan §11.3) — KHÔNG còn basic attack
-// presentation: mọi slot đọc từ scheduler thống nhất qua
-// buildLoadoutPresentation với các trạng thái ready/cadence/cooldown/
-// casting/blocked_resource/out_of_range.
-function attackSpeedSkill(overrides: Partial<Skill> = {}): Skill {
+// Slice 7 plan Task 4 — rewrite CombatSkillPresentation against the REAL
+// TurnBattle shape (the old real-time implementation was dead code since
+// the Slice 6 cutover: it read fields that never existed on
+// TurnBattleParticipant and drove the 6 pre-existing test failures).
+
+function entity(overrides: Partial<CombatEntity> = {}): CombatEntity {
+  const stats = { ...createBaseStats(), evasionRate: 0, criticalRate: 0 }
+
   return {
-    id: 'test_cadence',
-    name: 'Test Cadence Skill',
-    description: '',
-    type: 'active',
-    level: 1,
-    maxLevel: 10,
-    cooldown: 0,
-    remainingCooldown: 0,
-    cost: 0,
-    target: 'enemy',
-    effects: [{ type: 'damage', value: 1, damageType: 'physical' }],
-    execution: { kind: 'attack_speed' },
-    resourceType: 'none',
-    unlocked: true,
-    equipped: false,
-    loadoutSlot: 0,
-    loadoutSlots: [0],
+    id: 'p', name: 'p', type: 'player', baseStats: stats, stats,
+    currentHp: 100, maxHp: 100, currentMp: 50, maxMp: 50,
+    currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
+    timeSinceLastBleedProc: 0, tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
+    currentWard: 0, timeSinceLastHitTaken: Infinity, realmIndex: 0, x: 0, row: 4, alive: true,
     ...overrides,
+  } as CombatEntity
+}
+
+function battle(overrides: {
+  basicCooldown?: number
+  specialCooldown?: number
+  ultimateCooldown?: number
+  mp?: number
+  noUltimate?: boolean
+  noBasic?: boolean
+} = {}): TurnBattle {
+  const playerEntity = entity({ currentMp: overrides.mp ?? 50 })
+
+  const player: TurnBattle['player'] = {
+    id: 'player',
+    entity: playerEntity,
+    speed: 100,
+    priority: 0,
+    actionGauge: 0,
+    alive: true,
+    buffs: new TurnBuffPool(),
+    consecutiveHardCcTurns: 0,
   }
-}
 
-function loadoutSkill(overrides: Partial<Skill> = {}): Skill {
-  return {
-    id: 'test_loadout',
-    name: 'Test Loadout Skill',
-    description: '',
-    type: 'active',
-    level: 1,
-    maxLevel: 10,
-    cooldown: 5,
-    remainingCooldown: 0,
-    cost: 10,
-    resourceType: 'mana',
-    target: 'enemy',
-    effects: [{ type: 'damage', value: 1, damageType: 'physical' }],
-    execution: { kind: 'cooldown' },
-    unlocked: true,
-    equipped: false,
-    loadoutSlot: 0,
-    loadoutSlots: [0],
-    ...overrides,
-  }
-}
-
-function makeEnemy() {
-  return defineEnemy({
-    id: 'presentation_test_enemy',
-    name: 'Quái',
-    level: 1,
-    realmId: 'mortal',
-    lane: 'ground',
-    statsInput: {
-      maxHp: 999, attack: 0, attackSpeed: 1,
-      attackRangeRanks: 999999, criticalRate: 0, criticalDamage: 1.5, armor: 0,
-    },
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
-  })
-}
-
-/**
- * Bỏ qua countdown: update(3) vừa materialize hai phía vừa chuyển
- * 'fighting' — quái đầu tiên đã nằm trong battle.enemies ở vị trí resolver
- * roll; đưa nó về ô kề avatar để các test điều khiển khoảng cách tường minh.
- */
-function startFighting(gameManager: GameManager) {
-  gameManager.update(3)
-
-  const battle = gameManager.getBattle()!
-
-  battle.playerMaterialized = true
-
-  for (const entry of battle.enemies) {
-    entry.entity.x = 2
-    entry.entity.row = HERO_LANE_INDEX as never
-  }
-}
-
-describe('buildLoadoutPresentation', () => {
-  it('slot ngoài unlockedSlotCount thì state locked', () => {
-    const gameManager = new GameManager()
-    const player = createDefaultPlayer()
-
-    gameManager.startBattleWithPlayer(player, createBaseStats(), makeEnemy())
-    startFighting(gameManager)
-
-    const entries = buildLoadoutPresentation(gameManager.getBattle()!, gameManager.skillManager, 5, 2)
-
-    expect(entries).toHaveLength(5)
-    expect(entries[0]!.state).toBe('empty')
-    expect(entries[1]!.state).toBe('empty')
-    expect(entries[2]!.state).toBe('locked')
-    expect(entries[3]!.state).toBe('locked')
-    // Final review fix (Important #7) — slot 4 (KIEM_TRAN_SLOT_INDEX)
-    // đứng NGOÀI đường cong unlockedSlotCount theo realm (chiêu trận
-    // Kiếm Trận bắn mọi cadence bất kể realm, xem SkillLoadoutSlots.ts);
-    // trống thì 'empty', KHÔNG BAO GIỜ 'locked' như 4 slot chuẩn còn lại.
-    expect(entries[4]!.state).toBe('empty')
-  })
-
-  it('slot 4 (KIEM_TRAN_SLOT_INDEX) miễn khoá realm — có skill equip thì hiện ready dù unlockedSlotCount thấp (Important #7)', () => {
-    const gameManager = new GameManager()
-    const player = createDefaultPlayer()
-
-    gameManager.skillSystem.learn(attackSpeedSkill({ id: 'kiem_tran_test' }))
-    gameManager.skillSystem.equipToSlot('kiem_tran_test', 4)
-
-    gameManager.startBattleWithPlayer(player, createBaseStats(), makeEnemy())
-    startFighting(gameManager)
-
-    const entries = buildLoadoutPresentation(gameManager.getBattle()!, gameManager.skillManager, 5, 2)
-
-    expect(entries[4]!.skillId).toBe('kiem_tran_test')
-    expect(entries[4]!.state).not.toBe('locked')
-  })
-
-  it("policy attack_speed: cadenceRemaining/cadenceTotal theo getAttackIntervalSeconds(attackSpeed), state 'cadence' khi đang chờ nhịp", () => {
-    const gameManager = new GameManager()
-    const player = createDefaultPlayer()
-
-    gameManager.skillSystem.learn(attackSpeedSkill())
-    gameManager.skillSystem.equipToSlot('test_cadence', 0)
-
-    const stats = createBaseStats()
-    stats.speed = 2 // interval 0.5s
-
-    gameManager.startBattleWithPlayer(player, stats, makeEnemy())
-    startFighting(gameManager)
-
-    const battle = gameManager.getBattle()!
-    battle.player.skillCadenceRemainingBySlot = { 0: 0.25 }
-
-    const entries = buildLoadoutPresentation(battle, gameManager.skillManager, 5, 5)
-
-    expect(entries[0]!.skillId).toBe('test_cadence')
-    expect(entries[0]!.cadenceTotal).toBe(0.5)
-    expect(entries[0]!.cadenceRemaining).toBe(0.25)
-    expect(entries[0]!.state).toBe('cadence')
-
-    // Hết cadence → sẵn sàng.
-    battle.player.skillCadenceRemainingBySlot = { 0: 0 }
-
-    expect(buildLoadoutPresentation(battle, gameManager.skillManager, 5, 5)[0]!.state).toBe('ready')
-  })
-
-  it("policy cooldown: skill đang cooldown thì state cooldown, remaining khớp remainingCooldownBySlot", () => {
-    const gameManager = new GameManager()
-    const player = createDefaultPlayer()
-
-    gameManager.skillSystem.learn(loadoutSkill())
-    gameManager.skillSystem.equipToSlot('test_loadout', 0)
-
-    gameManager.startBattleWithPlayer(player, createBaseStats(), makeEnemy())
-    startFighting(gameManager)
-
-    const skill = gameManager.skillManager.get('test_loadout')!
-    skill.remainingCooldownBySlot = { 0: 3 }
-
-    const entries = buildLoadoutPresentation(gameManager.getBattle()!, gameManager.skillManager, 5, 5)
-
-    expect(entries[0]!.state).toBe('cooldown')
-    expect(entries[0]!.cooldownRemaining).toBe(3)
-    expect(entries[0]!.cooldownTotal).toBe(5)
-  })
-
-  it('thiếu resource thì state blocked_resource (đổi tên từ insufficient_resource)', () => {
-    const gameManager = new GameManager()
-    const player = createDefaultPlayer()
-
-    gameManager.skillSystem.learn(loadoutSkill())
-    gameManager.skillSystem.equipToSlot('test_loadout', 0)
-
-    const stats = createBaseStats()
-    stats.maxMp = 0
-
-    gameManager.startBattleWithPlayer(player, stats, makeEnemy())
-    startFighting(gameManager)
-
-    const entries = buildLoadoutPresentation(gameManager.getBattle()!, gameManager.skillManager, 5, 5)
-
-    expect(entries[0]!.skillId).toBe('test_loadout')
-    expect(entries[0]!.state).toBe('blocked_resource')
-  })
-
-  it('không có target trong attack range thì state out_of_range; có target thì ready', () => {
-    const gameManager = new GameManager()
-    const player = createDefaultPlayer()
-
-    gameManager.skillSystem.learn(loadoutSkill({ cost: 0 }))
-    gameManager.skillSystem.equipToSlot('test_loadout', 0)
-
-    const stats = createBaseStats()
-    stats.attackRange = 1
-
-    gameManager.startBattleWithPlayer(player, stats, makeEnemy())
-    startFighting(gameManager)
-
-    const battle = gameManager.getBattle()!
-
-    // Quái đang ở xa (chưa vào range 1).
-    for (const entry of battle.enemies) {
-      entry.entity.x = 14
+  if (!overrides.noBasic) {
+    player.basic = {
+      id: 'fixture_basic',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'single' },
     }
+  }
 
-    expect(buildLoadoutPresentation(battle, gameManager.skillManager, 5, 5)[0]!.state).toBe(
-      'out_of_range',
+  player.special = {
+    skill: {
+      id: 'fixture_special',
+      cooldownTurns: 4,
+      resourceType: 'mana',
+      resourceCost: 10,
+      damage: { kind: 'physical', multiplier: 2 },
+      targeting: { shape: 'single' },
+    },
+    remainingCooldownTurns: overrides.specialCooldown ?? 0,
+  }
+
+  if (!overrides.noUltimate) {
+    player.ultimate = {
+      skill: {
+        id: 'fixture_ultimate',
+        cooldownTurns: 6,
+        resourceType: 'mana',
+        resourceCost: 30,
+        damage: { kind: 'physical', multiplier: 5 },
+        targeting: { shape: 'single' },
+      },
+      remainingCooldownTurns: overrides.ultimateCooldown ?? 0,
+    }
+  }
+
+  return {
+    player,
+    enemies: [],
+    state: 'fighting',
+  }
+}
+
+describe('buildTurnSkillPresentation (Slice 7 Task 4)', () => {
+  it('basic luôn ready khi là lượt player paused (no cooldown/resource)', () => {
+    const result = buildTurnSkillPresentation(battle(), true)
+
+    expect(result.basic.state).toBe('ready')
+  })
+
+  it('special/ultimate báo cooldown với remainingCooldownTurns là số LƯỢT nguyên, không phải giây', () => {
+    const result = buildTurnSkillPresentation(
+      battle({ specialCooldown: 3, ultimateCooldown: 5 }),
+      true,
     )
 
-    for (const entry of battle.enemies) {
-      entry.entity.x = 2
-    }
+    expect(result.special.state).toBe('cooldown')
+    expect(result.special.cooldownRemaining).toBe(3)
+    expect(result.ultimate.state).toBe('cooldown')
+    expect(result.ultimate.cooldownRemaining).toBe(5)
+  })
 
-    expect(buildLoadoutPresentation(battle, gameManager.skillManager, 5, 5)[0]!.state).toBe('ready')
+  it('special/ultimate báo blocked_resource khi không đủ resource', () => {
+    const result = buildTurnSkillPresentation(battle({ mp: 5 }), true)
+
+    expect(result.special.state).toBe('blocked_resource')
+    expect(result.ultimate.state).toBe('blocked_resource')
+  })
+
+  it('slot participant không có → empty', () => {
+    const result = buildTurnSkillPresentation(battle({ noUltimate: true }), true)
+
+    expect(result.ultimate.state).toBe('empty')
+    expect(result.ultimate.skillId).toBe('')
+  })
+
+  it('không có basic slot nào → empty', () => {
+    const result = buildTurnSkillPresentation(battle({ noBasic: true }), true)
+
+    expect(result.basic.state).toBe('empty')
+  })
+
+  it('mọi slot usable báo not_your_turn khi KHÔNG phải lượt player paused', () => {
+    const result = buildTurnSkillPresentation(battle(), false)
+
+    expect(result.basic.state).toBe('not_your_turn')
+    expect(result.special.state).toBe('not_your_turn')
+    expect(result.ultimate.state).toBe('not_your_turn')
+  })
+
+  it('cooldown vẫn hiển thị khi not your turn (state ưu tiên cooldown, không sẵn sàng)', () => {
+    const result = buildTurnSkillPresentation(battle({ specialCooldown: 2 }), false)
+
+    expect(result.special.state).toBe('not_your_turn')
+    expect(result.special.cooldownRemaining).toBe(2)
   })
 })

@@ -1,35 +1,56 @@
 <script setup lang="ts">
-// skill-insight-and-auto-combat-hud-plan.md mục 7 — Pháp Tu: năm ô là
-// trung tâm build HUD, LUÔN dựng đủ 5 vị trí (trống/khóa hiện rõ ràng
-// qua CombatSkillSlot/SlotView, không ẩn đi).
+// Slice 7 (master plan Task 8, 2026-09-04) — Pháp Tu: 3 slot cố định
+// basic/special/ultimate (mô hình 3-skill Slice 2 thay N-slot loadout 5 ô
+// cũ), giữ ArtifactCombatSlot riêng của path. Bấm chọn skill khi là lượt
+// player paused (manual mode) qua useCombatSkillPresentation.
 import CombatSkillSlot from './CombatSkillSlot.vue'
 import ArtifactCombatSlot from './ArtifactCombatSlot.vue'
 import { useCombatSkillPresentation } from '@/composables/useCombatSkillPresentation'
 import { useArtifactCombatPresentation } from '@/composables/useArtifactCombatPresentation'
 
-const { loadout, skillFor } = useCombatSkillPresentation()
+const { basic, special, ultimate, chooseSkill } = useCombatSkillPresentation()
 const { presentation: artifactPresentation } = useArtifactCombatPresentation()
 </script>
 
 <template>
   <div class="phap-tu-combat-hud">
     <CombatSkillSlot
-      v-for="entry in loadout"
-      :key="entry.slotIndex"
+      v-if="basic && basic.skillId"
       class="phap-tu-combat-hud__slot"
-      :skill="skillFor(entry)"
-      :empty-label="entry.state === 'locked' ? 'Chưa Mở' : 'Trống'"
-      :remaining="entry.cooldownRemaining"
-      :total="entry.cooldownTotal"
-      :is-masked="entry.state === 'cooldown'"
-      :cast-remaining="entry.castRemaining"
-      :cast-total="entry.castTotal"
-      :is-casting="entry.state === 'casting'"
-      :resource-cost="entry.resourceCost"
-      :is-insufficient-resource="entry.state === 'blocked_resource'"
-      :is-out-of-range="entry.state === 'out_of_range'"
-      :is-unreleased="entry.state === 'unreleased'"
-      :is-locked="entry.state === 'locked'"
+      :empty-label="basic.skillId"
+      :remaining="basic.cooldownRemaining"
+      :total="basic.cooldownTotal"
+      :is-masked="basic.state === 'cooldown'"
+      :resource-cost="basic.resourceCost"
+      :is-insufficient-resource="basic.state === 'blocked_resource'"
+      :is-tappable="basic.state === 'ready'"
+      @click="chooseSkill('basic')"
+    />
+
+    <CombatSkillSlot
+      v-if="special && special.skillId"
+      class="phap-tu-combat-hud__slot"
+      :empty-label="special.skillId"
+      :remaining="special.cooldownRemaining"
+      :total="special.cooldownTotal"
+      :is-masked="special.state === 'cooldown'"
+      :resource-cost="special.resourceCost"
+      :is-insufficient-resource="special.state === 'blocked_resource'"
+      :is-tappable="special.state === 'ready'"
+      @click="chooseSkill('special')"
+    />
+
+    <CombatSkillSlot
+      v-if="ultimate && ultimate.skillId"
+      class="phap-tu-combat-hud__slot"
+      :empty-label="ultimate.skillId"
+      :remaining="ultimate.cooldownRemaining"
+      :total="ultimate.cooldownTotal"
+      :is-masked="ultimate.state === 'cooldown'"
+      :resource-cost="ultimate.resourceCost"
+      :is-insufficient-resource="ultimate.state === 'blocked_resource'"
+      :is-tappable="ultimate.state === 'ready'"
+      @click="chooseSkill('ultimate')"
     />
 
     <ArtifactCombatSlot :state="artifactPresentation" />
@@ -45,8 +66,6 @@ const { presentation: artifactPresentation } = useArtifactCombatPresentation()
   gap: var(--space-2);
 }
 
-/* WS7 — slot 60px quá nhỏ khi đọc trong chuyển động sau khi bỏ global
-   scale; 72px giữ tổng bề ngang 5 slot hợp lý (~400px). */
 .phap-tu-combat-hud__slot {
   width: 72px;
 }

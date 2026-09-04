@@ -66,6 +66,7 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
   it('roundtrip hydrate đúng các automation flag còn hiệu lực', () => {
     savePersistedUiAutomationFlags({
       battleRunMode: 'progress',
+      combatInputMode: 'auto',
     })
 
     setActivePinia(createPinia())
@@ -107,6 +108,7 @@ describe('ui automation flags — persistence (plan yêu cầu người chơi)',
 
       savePersistedUiAutomationFlags({
         battleRunMode: state.battleRunMode,
+        combatInputMode: state.combatInputMode,
       })
     }, { detached: true })
 

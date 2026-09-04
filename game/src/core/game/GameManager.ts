@@ -200,6 +200,7 @@ import { createBaseStats } from '../stats/StatBlock'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
 import { resolveEnemySpawnPosition } from '../battle/EnemySpawnPlacement'
 import type { TurnSkillDefinition, TurnSkillSlotRole } from '../battle/turn/TurnSkillAction'
+import { buildTurnSkillPresentation, type TurnSkillPresentationEntry } from '../combat/CombatSkillPresentation'
 import { toTurnBattleParticipant } from './TurnBattleAdapter'
 import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
 
@@ -2543,6 +2544,22 @@ export class GameManager {
    */
   consumeAwaitedActorId(): string | null {
     return this.awaitedManualActor?.id ?? null
+  }
+
+  /**
+   * Slice 7 — presentation facade: buildTurnSkillPresentation cho trận
+   * turn hiện tại (isPlayerTurnPaused = manual pause đang chờ choice).
+   * Delegate thuần — GameManager không giữ presentation logic.
+   */
+  buildTurnSkillPresentation(
+    battle: TurnBattle,
+    isPlayerTurnPaused: boolean,
+  ): {
+    basic: TurnSkillPresentationEntry
+    special: TurnSkillPresentationEntry
+    ultimate: TurnSkillPresentationEntry
+  } {
+    return buildTurnSkillPresentation(battle, isPlayerTurnPaused)
   }
 
   getBattleRewardSummary(): BattleRewardSummary {
