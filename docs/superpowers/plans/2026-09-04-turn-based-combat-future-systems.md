@@ -565,42 +565,61 @@ git commit -m "feat(channel-skill): chargingTurnsRemaining primitive — Thế/T
 
 ---
 
-### Task 8: Kiếm Tu real content — "Thế" (basic, resource-building) + "Trảm" (special, resource-gated + charge)
+### Task 8: Kiếm Tu real content — "Thế" (auto on-battle-start, NOT a skill slot) + "Trảm" (special, resource-gated + charge)
+
+**Correction (2026-09-04, resolved with user directly)**: an earlier
+draft of this task assigned "Thế" to Kiếm Tu's `basic` role, which
+directly conflicts with Completion plan's Task 5 survey finding that
+Kiếm Tu's real `basic` is `tram` ("Huy Kiếm") — an already-existing
+skill this plan must not silently overwrite. **Resolved**: `tram`
+stays `basic`, completely untouched by this task. "Thế" does **not**
+occupy any of the 3 named skill roles at all — it's a one-time
+resource-grant effect that fires automatically when a Kiếm Tu battle
+starts (matching "logic vẫn như cũ" — the original real-time Bạt Kiếm
+Thuật never touched the basic attack either; channeling was always a
+separate, additional mechanic layered on top of normal combat, not a
+replacement for it).
 
 **Files:**
-- Create/modify: wherever Kiếm Tu's real skill content lives (`game/src/data/skill/Skills.ts` or a Kiếm Tu-specific file — check Task 1's survey findings for the real Kiếm Tu basic id `tram` before creating a new file).
+- Modify: wherever `TurnBattleAdapter`/battle-start construction lives (Completion plan's Task 8 creates `toTurnBattleParticipant()` — this task adds a small Kiếm-Tu-specific post-construction step there, or wherever the equivalent battle-setup hook ends up after Completion lands).
+- Create/modify: wherever Kiếm Tu's real skill content lives, for "Trảm" only (`game/src/data/skill/Skills.ts` or a Kiếm Tu-specific file).
 - Test: corresponding test file.
 
-- [ ] **Step 1: Define "Thế" as Kiếm Tu's `basic`**
+- [ ] **Step 1: Grant Thế's resource once at battle start (not a cast)**
 
-A `TurnSkillDefinition` with `resourceType`/`resourceCost` unset (basic
-never costs resource per the 3-skill model) but which, when resolved,
-also feeds the existing Kiếm Tu resource pool via
-`ResourceTurnHook`-compatible deltas (Slice 4's mechanism) — or, if
-resource gain is on-cast rather than per-turn-tick, this needs a small
-new hook at the hit-resolution point specifically for Thế (read
-`ResourceTurnHook.ts`'s real shape before deciding which mechanism
-fits; per-turn-tick resource gain doesn't naturally represent
-"gain resource FROM CASTING Thế" — this may need
-`consumeResourceFor`'s inverse, a `grantResourceFor`, as a new small
-function in `TurnSkillAction.ts`).
+When constructing a Kiếm Tu `TurnBattleParticipant`, initialize its
+`resources` pool with the Thế-equivalent starting value already
+applied (a flat grant, not a per-turn tick and not a `TurnSkillDefinition`
+at all) — e.g. `resources: { values: { kiemThe: STARTING_VALUE }, deltasPerTurn: [...] }`.
+If "Thế" is meant to keep granting resource passively every turn (not
+just once), reuse Slice 4's existing `ResourceTurnHook`/`deltasPerTurn`
+mechanism directly — read `ResourceTurnHook.ts`'s real shape before
+deciding between "one-time grant at battle start" vs "passive per-turn
+gain," and confirm which one the user meant with "vào trận tự động
+dùng thế" if genuinely ambiguous at execution time (lean toward
+per-turn passive gain via the existing Slice 4 mechanism if forced to
+pick without asking again, since it requires zero new primitives,
+matching this session's simplicity bias).
 
 - [ ] **Step 2: Define "Trảm" as Kiếm Tu's `special`**
 
-`resourceType`/`resourceCost` gated on Thế's resource pool reaching a
-real cap value (content decision — pick a real number matching
-whatever the live Kiếm Ý/Kiếm Thế cap is, per the Completion plan's
-Item A survey of real resource content if that's landed by now; if
-not, use a placeholder cap and flag it for a follow-up content pass),
-`chargeTurns` set (content decision — pick a real number, e.g. 2-3
-turns, matching the live channel skill's rough real-time channel
+`resourceType`/`resourceCost` gated on the Thế-granted resource pool
+reaching a real cap value (content decision — pick a real number
+matching whatever the live Kiếm Ý/Kiếm Thế cap is, per the Completion
+plan's Item A survey of real resource content if that's landed by now;
+if not, use a placeholder cap and flag it for a follow-up content
+pass), `chargeTurns` set (content decision — pick a real number, e.g.
+2-3 turns, matching the live channel skill's rough real-time channel
 duration converted to turns per the "no rebalance" policy where
-possible).
+possible). Kiếm Tu's `ultimate` role is left unmapped by this task (no
+regression — Slice 2's existing priority-fallback already handles an
+unmapped ultimate gracefully, same as every build that hasn't had its
+ultimate content authored yet).
 
 - [ ] **Step 3: Run tests, typecheck, commit**
 
 ```bash
-git commit -m "feat(channel-skill): Kiếm Tu real content — Thế (basic) + Trảm (special, charge+resource-gated)"
+git commit -m "feat(channel-skill): Kiếm Tu real content — Thế (auto resource grant, not a skill slot) + Trảm (special, charge+resource-gated); tram stays basic unchanged"
 ```
 
 ---
