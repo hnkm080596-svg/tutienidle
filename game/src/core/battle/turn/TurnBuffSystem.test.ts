@@ -370,7 +370,7 @@ describe('TurnBuffSystem ported BuffSystem methods', () => {
   }
 
   const ATTACK_MODIFIER_DEF: TurnBuffDefinition = {
-    id: 'port_attack_up', name: 'Attack Up', polarity: 'buff', duration: 3, stackMode: 'refresh',
+    id: 'port_attack_up', name: 'Attack Up', polarity: 'buff', duration: 3, maxStacks: 5, stackMode: 'stack',
     effects: [{ type: 'statModifier', stat: 'attack', flat: 50 }],
   }
 
@@ -433,8 +433,8 @@ describe('TurnBuffSystem ported BuffSystem methods', () => {
       get: (id) => (id === 'port_proc' ? PROC_DEF : PROC_RESULT_DEF),
     }
 
-    // 'port_proc' dang active TRÊN TARGET (target b? dính buff có onHitProc,
-    // k? dánh source roll proc -> target dính port_proc_result).
+    // 'port_proc' dang active TRï¿½N TARGET (target b? dï¿½nh buff cï¿½ onHitProc,
+    // k? dï¿½nh source roll proc -> target dï¿½nh port_proc_result).
     system.apply(PROC_DEF, source, target, registry)
 
     system.rollOnHitEffects(source, target, registry)
@@ -442,7 +442,7 @@ describe('TurnBuffSystem ported BuffSystem methods', () => {
     expect(pool.hasAny('port_proc_result')).toBe(true)
   })
 
-  it('getStacks: t?ng stacks trên m?i ngu?n khi không truy?n sourceId, dúng 1 ngu?n khi truy?n', () => {
+  it('getStacks: t?ng stacks trï¿½n m?i ngu?n khi khï¿½ng truy?n sourceId, dï¿½ng 1 ngu?n khi truy?n', () => {
     const pool = new TurnBuffPool()
     const system = new TurnBuffSystem(pool)
     const sourceA = portedEntity({ id: 'src_a' })
