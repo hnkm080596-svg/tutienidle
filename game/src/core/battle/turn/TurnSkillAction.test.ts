@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+﻿import { describe, expect, it } from 'vitest'
 import {
   hasResourceFor,
   consumeResourceFor,
@@ -6,6 +6,7 @@ import {
   tickCooldowns,
   commitAction,
   collectTurnTargets,
+  selectRandomDistinctElementPair,
   type TurnSkillDefinition,
 } from './TurnSkillAction'
 import type { TurnBattleParticipant } from './TurnBattleSystem'
@@ -265,5 +266,47 @@ describe('collectTurnTargets', () => {
     const affected = collectTurnTargets(primary, [primary], { shape: 'column' })
 
     expect(affected.map((p) => p.id)).toEqual(['primary'])
+  })
+})
+
+
+// ---------------------------------------------------------------------------
+// Future Systems Task 4 â€” Reaction Path random-2-distinct-element selector
+// ---------------------------------------------------------------------------
+
+describe('selectRandomDistinctElementPair', () => {
+  const pool: TurnSkillDefinition[] = [
+    {
+      id: 'fire_bolt', cooldownTurns: 0,
+      damage: { kind: 'elemental', multiplier: 1, components: [{ kind: 'element', element: 'fire', ratio: 1 }] },
+      targeting: { shape: 'single' },
+    },
+    {
+      id: 'water_bolt', cooldownTurns: 0,
+      damage: { kind: 'elemental', multiplier: 1, components: [{ kind: 'element', element: 'water', ratio: 1 }] },
+      targeting: { shape: 'single' },
+    },
+    {
+      id: 'wood_bolt', cooldownTurns: 0,
+      damage: { kind: 'elemental', multiplier: 1, components: [{ kind: 'element', element: 'wood', ratio: 1 }] },
+      targeting: { shape: 'single' },
+    },
+  ]
+
+  it('tráº£ 2 skill id KHÃC nhau tá»« pool, luÃ´n thuá»™c pool', () => {
+    for (let i = 0; i < 50; i++) {
+      const [a, b] = selectRandomDistinctElementPair(pool)
+
+      expect(a.id).not.toBe(b.id)
+      expect(pool).toContain(a)
+      expect(pool).toContain(b)
+    }
+  })
+
+  it('nÃ©m lá»—i khi pool cÃ³ Ã­t hÆ¡n 2 pháº§n tá»­', () => {
+    const single = pool.slice(0, 1)
+
+    expect(() => selectRandomDistinctElementPair(single)).toThrow()
+    expect(() => selectRandomDistinctElementPair([])).toThrow()
   })
 })

@@ -1779,3 +1779,82 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
     expect(step.actorId).toBe('player')
   })
 })
+
+
+// ---------------------------------------------------------------------------
+// Future Systems Task 5 — Reaction Path double-cast (special marker)
+// ---------------------------------------------------------------------------
+
+describe('TurnBattleSystem special role — Reaction Path double-cast', () => {
+  function reactionBattleFixture() {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      currentMp: 100,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100, maxMp: 100 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const playerParticipant = makeParticipant('player', player, 10, 0)
+
+    playerParticipant.special = {
+      skill: {
+        id: 'phap_tu_reaction_special',
+        cooldownTurns: 4,
+        resourceType: 'mana',
+        resourceCost: 10,
+        damage: { kind: 'physical', multiplier: 0 },
+        targeting: { shape: 'single' },
+      },
+      remainingCooldownTurns: 0,
+    }
+
+    playerParticipant.basic = {
+      id: 'fixture_basic',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'single' },
+    }
+
+    const battle: TurnBattle = {
+      player: playerParticipant,
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    return { battle, enemyEntity }
+  }
+
+  it('special marker → 2 resolveActionHit với 2 element KHÁC nhau (pool inject qua constructor)', () => {
+    const { battle } = reactionBattleFixture()
+
+    const pool: TurnSkillDefinition[] = [
+      { id: 'p_fire', cooldownTurns: 0, damage: { kind: 'elemental', multiplier: 1, components: [{ kind: 'element', element: 'fire', ratio: 1 }] }, targeting: { shape: 'single' } },
+      { id: 'p_water', cooldownTurns: 0, damage: { kind: 'elemental', multiplier: 1, components: [{ kind: 'element', element: 'water', ratio: 1 }] }, targeting: { shape: 'single' } },
+    ]
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10_000, undefined, undefined, pool)
+
+    const step = system.resolveNextStep(battle)
+
+    expect(step.skillId).toBe('phap_tu_reaction_special')
+    // Double-cast: 2 hit push 2 targetIds (cùng target — single targeting)
+    expect(step.targetIds).toEqual(['enemy', 'enemy'])
+  })
+
+  it('marker mà KHÔNG có pool → fallback 0 hit (placeholder damage, không crash)', () => {
+    const { battle } = reactionBattleFixture()
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    const step = system.resolveNextStep(battle)
+
+    expect(step.skillId).toBe('phap_tu_reaction_special')
+    expect(step.targetIds).toEqual([])
+  })
+})

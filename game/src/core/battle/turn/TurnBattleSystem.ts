@@ -20,6 +20,8 @@ import { shouldSpawnNextEnemy, isStageComplete } from './WaveSpawnTrigger'
 import { scaleActionDamage } from '../ActionImpactSystem'
 import { recomputeEffectiveStats } from './TurnStatsRecompute'
 import type { BattleLogEntry } from './TurnOrderPreview'
+import { selectRandomDistinctElementPair } from './TurnSkillAction'
+import { REACTION_PATH_SPECIAL_ID } from '../../../data/skill/TurnReactionPathSkills'
 
 export interface TurnResourcePool {
   values: Record<string, number>
@@ -123,6 +125,7 @@ export class TurnBattleSystem {
     private readonly maxTurns: number = DEFAULT_MAX_TURNS,
     private readonly registry?: TurnBuffRegistry,
     private readonly spawnEnemy?: () => TurnBattleParticipant,
+    private readonly reactionPathPool?: readonly TurnSkillDefinition[],
   ) {}
 
   /**
@@ -264,14 +267,38 @@ export class TurnBattleSystem {
         const suddenDeathMultiplier = this.suddenDeathDamageMultiplier(battle.totalTurnsElapsed ?? 0)
         const scaledDamage = suddenDeathMultiplier === 1 ? action.damage : scaleActionDamage(action.damage, suddenDeathMultiplier)
 
-        for (const target of affected) {
-          if (!target.entity.alive) continue
+        // Future Systems Task 5 — Reaction Path marker: special cast 2 hành
+        // random KHÁC nhau (mỗi pick 1 hit qua từng target). Marker KHÔNG
+        // bao giờ resolve damage placeholder trực tiếp; không có pool →
+        // 0 hit (cooldown/resource vẫn tiêu — lượt bị "miss" an toàn).
+        if (action.skillId === REACTION_PATH_SPECIAL_ID && this.reactionPathPool) {
+          const [first, second] = selectRandomDistinctElementPair([...this.reactionPathPool])
 
-          this.combat.resolveActionHit(actor.entity, target.entity, scaledDamage)
-          targetIds.push(target.id)
+          for (const pickedSkill of [first, second]) {
+            const pickedDamage = suddenDeathMultiplier === 1
+              ? pickedSkill.damage
+              : scaleActionDamage(pickedSkill.damage, suddenDeathMultiplier)
 
-          if (this.registry) {
-            new TurnBuffSystem(actor.buffs).rollOnHitEffects(actor.entity, target.entity, this.registry)
+            for (const target of affected) {
+              if (!target.entity.alive) continue
+
+              this.combat.resolveActionHit(actor.entity, target.entity, pickedDamage)
+              targetIds.push(target.id)
+            }
+          }
+        } else if (action.skillId === REACTION_PATH_SPECIAL_ID) {
+          // Marker equipped nhưng pool chưa inject — placeholder damage
+          // vô nghĩa, bỏ qua hit hoàn toàn (không crash, không hit).
+        } else {
+          for (const target of affected) {
+            if (!target.entity.alive) continue
+
+            this.combat.resolveActionHit(actor.entity, target.entity, scaledDamage)
+            targetIds.push(target.id)
+
+            if (this.registry) {
+              new TurnBuffSystem(actor.buffs).rollOnHitEffects(actor.entity, target.entity, this.registry)
+            }
           }
         }
 
