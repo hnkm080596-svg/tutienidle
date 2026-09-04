@@ -294,7 +294,7 @@ const activeTimedEffects = computed(() => {
       const remainingSeconds = Math.ceil((effect.expiresAtMs - now) / 1000)
 
       const hp =
-        effect.modifiers.find((modifier) => modifier.stat === 'hpRegenPerSecond')?.flat ?? 0
+        effect.modifiers.find((modifier) => modifier.stat === 'hpRegenPerTurn')?.flat ?? 0
       const mp =
         effect.modifiers.find((modifier) => modifier.stat === 'manaRegenPerSecond')?.flat ?? 0
 

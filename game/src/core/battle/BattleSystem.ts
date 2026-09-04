@@ -112,6 +112,12 @@ import { HazardZoneSystem } from './HazardZoneSystem'
 
 const RANGED_PREFERRED_DISTANCE_RATIO = 0.6
 
+// Turn-based conversion (2026-09-04) — movementSpeed đã retire khỏi
+// Stats; engine real-time doomed (Slice 6 xóa) vẫn cần 1 bước di chuyển
+// để compile. Giá trị 2 cột/giây = movementSpeed authored phổ biến nhất
+// của quái cũ (Enemies.ts). KHÔNG phải quyết định cân bằng.
+const LEGACY_ENEMY_MOVEMENT_STEP_PER_SECOND = 2
+
 // Pháp Tu (Thổ Tu, 2026-08-15) — Ward chỉ bắt đầu hồi sau khi không
 
 // bị đánh trúng liên tục đủ số giây này, xem updateRegen().
@@ -1249,7 +1255,7 @@ export class BattleSystem {
 
       if (battleEnemy.entity.x > VISIBLE_MAX_COLUMN) {
         const step = Math.min(
-          battleEnemy.entity.stats.movementSpeed * deltaSeconds,
+          LEGACY_ENEMY_MOVEMENT_STEP_PER_SECOND * deltaSeconds,
           Math.max(battleEnemy.entity.x - VISIBLE_MAX_COLUMN, 0.5),
         )
 
@@ -1267,7 +1273,7 @@ export class BattleSystem {
 
       if (isKiter && distance < range * RANGED_PREFERRED_DISTANCE_RATIO) {
         const step = Math.min(
-          battleEnemy.entity.stats.movementSpeed * deltaSeconds,
+          LEGACY_ENEMY_MOVEMENT_STEP_PER_SECOND * deltaSeconds,
           range * RANGED_PREFERRED_DISTANCE_RATIO - distance,
         )
 
@@ -1281,7 +1287,7 @@ export class BattleSystem {
 
       if (distance > range) {
         const step = Math.min(
-          battleEnemy.entity.stats.movementSpeed * deltaSeconds,
+          LEGACY_ENEMY_MOVEMENT_STEP_PER_SECOND * deltaSeconds,
           distance - range,
         )
 
@@ -1761,7 +1767,7 @@ export class BattleSystem {
    * có manaRegenPerSecond/wardRegenPerSecond, tránh noise mỗi tick.
    */
   private regenEntityVitals(entity: CombatEntity, deltaSeconds: number) {
-    const hpRegen = entity.stats.hpRegenPerSecond * deltaSeconds
+    const hpRegen = entity.stats.hpRegenPerTurn * deltaSeconds
 
     if (hpRegen > 0) {
       this.combat.applyHealing(entity, hpRegen, entity.id, 'regen')
@@ -2181,8 +2187,7 @@ export class BattleSystem {
       return
     }
 
-    player.castTimeRemaining -=
-      deltaSeconds * (1 + Math.min(3, Math.max(0, player.stats.castSpeedPercent)))
+    player.castTimeRemaining -= deltaSeconds
 
     if (player.castTimeRemaining > 0) {
       return

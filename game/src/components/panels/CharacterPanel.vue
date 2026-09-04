@@ -155,7 +155,7 @@ const combatPower = computed(() => {
     stats.maxMp * 0.05 +
     stats.criticalRate * 500 +
     stats.criticalDamage * 300 +
-    stats.attackSpeed * 200,
+    stats.speed * 200,
   )
 })
 

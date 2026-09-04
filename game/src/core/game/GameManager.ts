@@ -1718,7 +1718,7 @@ export class GameManager {
         id: `technique-tier:${technique!.id}:hpRegen`,
         sourceId: technique!.id,
         sourceType: 'technique',
-        stat: 'hpRegenPerSecond',
+        stat: 'hpRegenPerTurn',
         flat: effect.hpRegenFlat,
       })
     }
@@ -2839,12 +2839,10 @@ export class GameManager {
       this.buffRegistry,
     )
 
-    // cooldownReduction Ä‘á»c tá»« battle.player.stats (CombatEntity) Ä‘ang
-    // sá»‘ng trong tráº­n náº¿u cÃ³ â€” ngoÃ i combat (menu/mÃ n hÃ¬nh cáº£nh giá»›i)
-    // khÃ´ng cÃ³ battle nÃ o thÃ¬ máº·c Ä‘á»‹nh 0, khá»›p hÃ nh vi cÅ©.
-    const activeBattle = this.battleSystem.getBattle()
 
-    this.skillSystem.update(deltaSeconds, activeBattle?.player.stats.cooldownReduction ?? 0)
+    // Turn-based conversion (2026-09-04) — cooldownReduction retired;
+    // SkillSystem (engine doomed) nhận 0 thay vì đọc stat đã xóa.
+    this.skillSystem.update(deltaSeconds, 0)
 
     this.passiveSystem.tick(deltaSeconds)
 

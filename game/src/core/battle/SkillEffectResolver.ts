@@ -242,7 +242,7 @@ export class SkillEffectResolver {
         // runtime-per-battle). Modifier pipeline là nguồn tính lại
         // stats (calculateStats chạy mỗi update).
         const statByKind: Record<string, StatModifier['stat']> = {
-          khiem_phong_haste: 'attackSpeed',
+          khiem_phong_haste: 'speed',
           phan_kich_dodge: 'evasionRate',
           pha_giap_pen: 'metalPenetration',
           quang_crit: 'criticalRate',
