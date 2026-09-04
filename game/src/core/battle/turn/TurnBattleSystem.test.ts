@@ -1214,16 +1214,18 @@ describe('TurnBattleSystem.resolveNextStep B� Th? (CC-lock guard)', () => {
 
 describe('TurnBattleSystem.resolveNextStep Sudden Death escalation', () => {
   function bareBattle(totalTurnsElapsed: number) {
+    // blockChance: 0 — test so sánh damage tuyệt đối giữa 2 runs; block
+    // là roll 5% ngẫu nhiên (blockChance base 0.05) sẽ làm test flaky.
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 },
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 100 },
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0, defense: 0 },
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 0, defense: 0 },
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
@@ -1302,5 +1304,108 @@ describe('TurnBattleSystem.resolveNextStep Sudden Death escalation', () => {
 
     const enduranceFlat = (10 * 0.7)
     expect(scaledDamage).toBeCloseTo((baseDamage + enduranceFlat) * 2.5 - enduranceFlat, 1)
+  })
+})
+
+describe('TurnBattleSystem multi-target death-mid-resolution hardening', () => {
+  it('does not apply a second hit to a target already killed by an earlier hit in the same AOE skill', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      row: 4,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999999 },
+    })
+    const enemyA = createCombatant({
+      id: 'enemyA',
+      row: 4,
+      x: 1,
+      currentHp: 1,
+      maxHp: 1,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+    const enemyB = createCombatant({
+      id: 'enemyB',
+      row: 4,
+      x: 2,
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const playerParticipant = makeParticipant('player', player, 10, 0)
+    playerParticipant.basic = {
+      id: 'fixture_aoe_basic',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'row' },
+    }
+    const battle: TurnBattle = {
+      player: playerParticipant,
+      enemies: [makeParticipant('enemyA', enemyA, 10, 1), makeParticipant('enemyB', enemyB, 10, 2)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    const step = system.resolveNextStep(battle)
+
+    expect(enemyA.currentHp).toBe(0)
+    expect(enemyA.alive).toBe(false)
+    expect(step.targetIds.filter((id) => id === 'enemyA')).toHaveLength(1)
+  })
+})
+
+describe('TurnBattleSystem hpRegenPerTurn', () => {
+  it("regenerates HP by the actor's hpRegenPerTurn stat at the start of their own turn, clamped to maxHp", () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      currentHp: 50,
+      maxHp: 100,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0, hpRegenPerTurn: 10 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    system.resolveNextStep(battle)
+
+    expect(player.currentHp).toBe(60)
+  })
+
+  it('clamps regen to maxHp, never overhealing', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      currentHp: 95,
+      maxHp: 100,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0, hpRegenPerTurn: 10 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    system.resolveNextStep(battle)
+
+    expect(player.currentHp).toBe(100)
   })
 })

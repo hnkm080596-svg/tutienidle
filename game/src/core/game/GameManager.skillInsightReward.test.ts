@@ -33,7 +33,7 @@ describe('GameManager — Cảm ngộ Kỹ năng khi hạ quái', () => {
     gameManager.startBattleWithPlayer(player, stats, makeEnemy(10))
     gameManager.update(3) // bỏ qua countdown
 
-    const battleEnemy = gameManager.getBattle()!.enemies[0]!
+    const battleEnemy = gameManager.getTurnBattle()!.enemies[0]!
     battleEnemy.entity.currentHp = 0
     battleEnemy.entity.alive = false
 
@@ -52,7 +52,7 @@ describe('GameManager — Cảm ngộ Kỹ năng khi hạ quái', () => {
     gameManager.startBattleWithPlayer(player, stats, makeEnemy(10))
     gameManager.update(3)
 
-    const battleEnemy = gameManager.getBattle()!.enemies[0]!
+    const battleEnemy = gameManager.getTurnBattle()!.enemies[0]!
     battleEnemy.entity.currentHp = 0
     battleEnemy.entity.alive = false
 

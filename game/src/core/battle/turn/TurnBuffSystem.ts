@@ -11,6 +11,7 @@ import { getArmorMitigationPercent } from '../../combat/Armor'
 import { getResistanceMitigationPercent } from '../../combat/Resistance'
 import { elementalBasePower } from '../../combat/ElementDamageCalculator'
 import { getSkillRuntimeStat } from '../../skill/SkillRuntimeStats'
+import type { StatModifier } from '../../stats/StatCalculator'
 import { TurnBuffPool } from './TurnBuffPool'
 import type {
   TurnBuff,
@@ -261,5 +262,67 @@ export class TurnBuffSystem {
 
   isFrozen(): boolean {
     return this.pool.getAll().some((buff) => buff.effects.some((e) => e.type === 'cc' && e.ccEffect === 'freeze'))
+  }
+
+  // Thổ Tu ("Trói Chân") — Root: CHỈ chặn di chuyển (turn-based engine
+  // không có movement liên tục — giữ method cho parity + future use).
+  isRooted(): boolean {
+    return this.pool.getAll().some((buff) => buff.effects.some((e) => e.type === 'cc' && e.ccEffect === 'root'))
+  }
+
+  /**
+   * Port verbatim từ BuffSystem.getActiveModifiers() (BuffSystem.ts:336-356):
+   * gom mọi statModifier effect đang active thành StatModifier[] (giữ
+   * provenance + stacks) — đầu vào cho StatCalculator.calculateStats()
+   * (xem TurnStatsRecompute.ts). Đổi field time-based theo quy ước file.
+   */
+  getActiveModifiers(): StatModifier[] {
+    const modifiers: StatModifier[] = []
+
+    for (const buff of this.pool.getAll()) {
+      for (const effect of buff.effects) {
+        if (effect.type === 'statModifier') {
+          modifiers.push({
+            id: `buff:${buff.id}:${buff.sourceId}:${effect.stat}`,
+            sourceId: buff.sourceId,
+            sourceType: buff.polarity,
+            stat: effect.stat,
+            flat: effect.flat,
+            percent: effect.percent,
+            stacks: buff.stacks,
+          })
+        }
+      }
+    }
+
+    return modifiers
+  }
+
+  /**
+   * Port verbatim từ BuffSystem.rollOnHitEffects() (BuffSystem.ts:383-391):
+   * quét MỌI buff active trên pool (pool của TARGET vừa bị đánh trúng),
+   * roll ĐỘC LẬP từng onHitProc effect, thắng roll thì áp appliesBuffId
+   * (buff mới có source = kẻ vừa đánh trúng).
+   */
+  rollOnHitEffects(source: CombatEntity, target: CombatEntity, registry: TurnBuffRegistry) {
+    for (const buff of this.pool.getAll()) {
+      for (const effect of buff.effects) {
+        if (effect.type === 'onHitProc' && Math.random() < effect.chance) {
+          this.apply(registry.get(effect.appliesBuffId), source, target, registry)
+        }
+      }
+    }
+  }
+
+  /**
+   * Port verbatim từ BuffSystem.getStacks() (BuffSystem.ts:397-402):
+   * không sourceId = tổng stacks trên MỌI nguồn; có sourceId = đúng 1
+   * instance của nguồn đó.
+   */
+  getStacks(id: string, sourceId?: string): number {
+    if (sourceId !== undefined) {
+      return this.pool.getFromSource(id, sourceId)?.stacks ?? 0
+    }
+    return this.pool.getAllById(id).reduce((sum, buff) => sum + buff.stacks, 0)
   }
 }

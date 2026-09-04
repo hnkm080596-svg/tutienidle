@@ -290,4 +290,14 @@ export class StageWaveSystem {
 
     return applyStageRealm(template)
   }
+
+  /**
+   * Slice 6 cutover (Completion Task 8): public wrapper cho TurnBattle's
+   * spawnEnemy factory — dùng chung nguyên logic roll thật (boss-at-10 +
+   * pool roll + elite chance + hidden beast + realm override). KHÔNG đổi
+   * logic, chỉ expose pickEnemyForSpawn cho adapter ngoài.
+   */
+  pickEnemyForTurnSpawn(stage: Stage, isFinalSpawn: boolean): Enemy | undefined {
+    return this.pickEnemyForSpawn(stage, isFinalSpawn)
+  }
 }

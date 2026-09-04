@@ -354,3 +354,113 @@ describe('TurnBuffSystem — CC checks', () => {
     expect(system.isStunned()).toBe(false)
   })
 })
+
+describe('TurnBuffSystem ported BuffSystem methods', () => {
+  function portedEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
+    const stats = { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats }
+    const { stats: _drop, ...rest } = overrides
+    return {
+      id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
+      currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
+      currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
+      timeSinceLastBleedProc: 0, tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
+      currentWard: 0, timeSinceLastHitTaken: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
+      ...rest,
+    } as CombatEntity
+  }
+
+  const ATTACK_MODIFIER_DEF: TurnBuffDefinition = {
+    id: 'port_attack_up', name: 'Attack Up', polarity: 'buff', duration: 3, maxStacks: 5, stackMode: 'stack',
+    effects: [{ type: 'statModifier', stat: 'attack', flat: 50 }],
+  }
+
+  const ROOT_DEF: TurnBuffDefinition = {
+    id: 'port_root', name: 'Root', polarity: 'debuff', duration: 3, stackMode: 'refresh',
+    effects: [{ type: 'cc', ccEffect: 'root' }],
+  }
+
+  const PROC_DEF: TurnBuffDefinition = {
+    id: 'port_proc', name: 'Proc', polarity: 'debuff', duration: 3, maxStacks: 1, stackMode: 'refresh',
+    effects: [{ type: 'onHitProc', chance: 1, appliesBuffId: 'port_proc_result' }],
+  }
+
+  const PROC_RESULT_DEF: TurnBuffDefinition = {
+    id: 'port_proc_result', name: 'ProcResult', polarity: 'debuff', duration: 2, stackMode: 'refresh',
+    effects: [{ type: 'dot', dpsRatio: 1, element: 'physical' }],
+  }
+
+  it('getActiveModifiers: folds statModifier effects into StatModifier[] with buff provenance + stacks', () => {
+    const pool = new TurnBuffPool()
+    const system = new TurnBuffSystem(pool)
+    const source = portedEntity({ id: 'src' })
+    const target = portedEntity({ id: 'tgt' })
+    const registry: TurnBuffRegistry = { get: (id) => (id === 'port_attack_up' ? ATTACK_MODIFIER_DEF : ATTACK_MODIFIER_DEF) }
+
+    system.apply(ATTACK_MODIFIER_DEF, source, target, registry)
+    system.apply(ATTACK_MODIFIER_DEF, source, target, registry) // stacks -> 2
+
+    const modifiers = system.getActiveModifiers()
+
+    expect(modifiers).toHaveLength(1)
+    expect(modifiers[0]!.stat).toBe('attack')
+    expect(modifiers[0]!.flat).toBe(50)
+    expect(modifiers[0]!.stacks).toBe(2)
+    expect(modifiers[0]!.sourceId).toBe('src')
+    expect(modifiers[0]!.sourceType).toBe('buff')
+    expect(modifiers[0]!.id).toBe('buff:port_attack_up:src:attack')
+  })
+
+  it('isRooted: true only while a cc:root effect is active', () => {
+    const pool = new TurnBuffPool()
+    const system = new TurnBuffSystem(pool)
+    const source = portedEntity({ id: 'src' })
+    const target = portedEntity({ id: 'tgt' })
+    const registry: TurnBuffRegistry = { get: (id) => (id === 'port_root' ? ROOT_DEF : ROOT_DEF) }
+
+    expect(system.isRooted()).toBe(false)
+
+    system.apply(ROOT_DEF, source, target, registry)
+
+    expect(system.isRooted()).toBe(true)
+  })
+
+  it('rollOnHitEffects: rolls chance per onHitProc buff and applies the resulting buff on hit', () => {
+    const pool = new TurnBuffPool()
+    const system = new TurnBuffSystem(pool)
+    const source = portedEntity({ id: 'src' })
+    const target = portedEntity({ id: 'tgt' })
+    const registry: TurnBuffRegistry = {
+      get: (id) => (id === 'port_proc' ? PROC_DEF : PROC_RESULT_DEF),
+    }
+
+    // 'port_proc' dang active TR�N TARGET (target b? d�nh buff c� onHitProc,
+    // k? d�nh source roll proc -> target d�nh port_proc_result).
+    system.apply(PROC_DEF, source, target, registry)
+
+    system.rollOnHitEffects(source, target, registry)
+
+    expect(pool.hasAny('port_proc_result')).toBe(true)
+  })
+
+  it('getStacks: t?ng stacks tr�n m?i ngu?n khi kh�ng truy?n sourceId, d�ng 1 ngu?n khi truy?n', () => {
+    const pool = new TurnBuffPool()
+    const system = new TurnBuffSystem(pool)
+    const sourceA = portedEntity({ id: 'src_a' })
+    const sourceB = portedEntity({ id: 'src_b' })
+    const target = portedEntity({ id: 'tgt' })
+    const stackDef: TurnBuffDefinition = {
+      id: 'port_stack', name: 'Stack', polarity: 'debuff', duration: 5, maxStacks: 5, stackMode: 'stack',
+      effects: [],
+    }
+    const registry: TurnBuffRegistry = { get: () => stackDef }
+
+    system.apply(stackDef, sourceA, target, registry)
+    system.apply(stackDef, sourceA, target, registry)
+    system.apply(stackDef, sourceB, target, registry)
+
+    expect(system.getStacks('port_stack')).toBe(3)
+    expect(system.getStacks('port_stack', 'src_a')).toBe(2)
+    expect(system.getStacks('port_stack', 'src_b')).toBe(1)
+    expect(system.getStacks('missing', 'src_a')).toBe(0)
+  })
+})

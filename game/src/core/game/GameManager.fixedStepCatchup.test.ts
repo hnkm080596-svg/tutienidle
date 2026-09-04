@@ -116,7 +116,7 @@ describe('GameManager — fixed-step catch-up cho combat (uncommitted audit foll
     // Materialize gán vị trí từ resolver — đặt quái trong tầm teleport
     // (col 2: sau khi đổi row về hàng quái, Chebyshev = 1) để player
     // đánh được ngay khi 'fighting' bắt đầu.
-    gameManager.getBattle()!.enemies[0]!.entity.x = 2
+    gameManager.getTurnBattle()!.enemies[0]!.entity.x = 2
 
     let attackCount = 0
 
@@ -163,10 +163,10 @@ describe('GameManager — fixed-step catch-up cho combat (uncommitted audit foll
 
     gameManager.startBattle(player, createStubbornEnemy())
     gameManager.update(3)
-    gameManager.getBattle()!.enemies[0]!.entity.x = 2
+    gameManager.getTurnBattle()!.enemies[0]!.entity.x = 2
 
     // Giả lập máy ngủ nhiều giờ rồi resume — deltaSeconds cực lớn.
     expect(() => gameManager.update(6 * 60 * 60)).not.toThrow()
-    expect(gameManager.getBattle()!.enemies[0]!.entity.alive).toBe(true)
+    expect(gameManager.getTurnBattle()!.enemies[0]!.entity.alive).toBe(true)
   })
 })
