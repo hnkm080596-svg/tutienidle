@@ -137,6 +137,18 @@ export class TurnBattleSystem {
         }
 
         commitAction(actor.entity, action)
+
+        if (action.skill?.appliesBuff && this.registry) {
+          const definition = this.registry.get(action.skill.appliesBuff.definitionId)
+
+          if (action.skill.appliesBuff.target === 'self') {
+            new TurnBuffSystem(actor.buffs).apply(definition, actor.entity, actor.entity, this.registry)
+          } else {
+            for (const target of affected) {
+              new TurnBuffSystem(target.buffs).apply(definition, actor.entity, target.entity, this.registry)
+            }
+          }
+        }
       }
     }
 

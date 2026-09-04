@@ -442,3 +442,176 @@ describe('TurnBattleSystem.resolveNextStep buff/CC wiring', () => {
     expect(step.targetIds).toEqual(['enemy'])
   })
 })
+
+const BURN_DEFINITION: TurnBuffDefinition = {
+  id: 'fixture_burn',
+  name: 'Fixture Burn',
+  polarity: 'debuff',
+  duration: 3,
+  stackMode: 'refresh',
+  effects: [{ type: 'dot', dpsRatio: 0.5, element: 'physical' }],
+}
+
+describe('TurnBattleSystem.resolveNextStep appliesBuff (zone-as-dot proof)', () => {
+  it("applies the skill's buff to the target it hit", () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const playerParticipant = makeParticipant('player', player, 10, 0)
+    playerParticipant.basic = {
+      id: 'fixture_burning_strike',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'single' },
+      appliesBuff: { definitionId: 'fixture_burn', target: 'target' },
+    }
+
+    const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
+
+    const battle: TurnBattle = {
+      player: playerParticipant,
+      enemies: [enemyParticipant],
+      state: 'fighting',
+    }
+
+    const registry = new FixtureBuffRegistry([BURN_DEFINITION])
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
+    system.resolveNextStep(battle)
+
+    const applied = enemyParticipant.buffs.getAll()
+
+    expect(applied).toHaveLength(1)
+    expect(applied[0]!.id).toBe('fixture_burn')
+    expect(applied[0]!.sourceId).toBe('player')
+  })
+
+  it("applies the skill's buff to self when target is 'self'", () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const playerParticipant = makeParticipant('player', player, 10, 0)
+    playerParticipant.basic = {
+      id: 'fixture_self_burn',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'single' },
+      appliesBuff: { definitionId: 'fixture_burn', target: 'self' },
+    }
+
+    const battle: TurnBattle = {
+      player: playerParticipant,
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const registry = new FixtureBuffRegistry([BURN_DEFINITION])
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
+    system.resolveNextStep(battle)
+
+    expect(playerParticipant.buffs.getAll()).toHaveLength(1)
+  })
+
+  it('AOE skill applies the buff to every hit target (zone-as-dot: no positional zone entity needed)', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      row: 4,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyA = createCombatant({
+      id: 'enemyA',
+      row: 4,
+      x: 1,
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+    const enemyB = createCombatant({
+      id: 'enemyB',
+      row: 4,
+      x: 2,
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const playerParticipant = makeParticipant('player', player, 10, 0)
+    playerParticipant.basic = {
+      id: 'fixture_burning_field',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'row' },
+      appliesBuff: { definitionId: 'fixture_burn', target: 'target' },
+    }
+
+    const enemyAParticipant = makeParticipant('enemyA', enemyA, 10, 1)
+    const enemyBParticipant = makeParticipant('enemyB', enemyB, 10, 2)
+
+    const battle: TurnBattle = {
+      player: playerParticipant,
+      enemies: [enemyAParticipant, enemyBParticipant],
+      state: 'fighting',
+    }
+
+    const registry = new FixtureBuffRegistry([BURN_DEFINITION])
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
+    system.resolveNextStep(battle)
+
+    expect(enemyAParticipant.buffs.getAll()).toHaveLength(1)
+    expect(enemyBParticipant.buffs.getAll()).toHaveLength(1)
+  })
+
+  it('does not throw and applies no buff when appliesBuff is set but no registry was provided', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const playerParticipant = makeParticipant('player', player, 10, 0)
+    playerParticipant.basic = {
+      id: 'fixture_burning_strike',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'single' },
+      appliesBuff: { definitionId: 'fixture_burn', target: 'target' },
+    }
+
+    const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
+
+    const battle: TurnBattle = {
+      player: playerParticipant,
+      enemies: [enemyParticipant],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    expect(() => system.resolveNextStep(battle)).not.toThrow()
+    expect(enemyParticipant.buffs.getAll()).toEqual([])
+  })
+})
