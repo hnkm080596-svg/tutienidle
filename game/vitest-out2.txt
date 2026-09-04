@@ -1,9 +1,0 @@
-﻿
- RUN  v4.1.10 E:/tutienidle/.agent-worktrees/stat-conversion/game
-
-
- Test Files  370 passed (370)
-      Tests  2481 passed (2481)
-   Start at  11:16:51
-   Duration  87.24s (transform 67.37s, setup 0ms, import 250.65s, tests 136.07s, environment 235.44s)
-
