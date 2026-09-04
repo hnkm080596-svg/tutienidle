@@ -26,6 +26,7 @@ export interface TurnSkillDefinition {
   resourceCost?: number
   damage: ActionDamageInfo
   targeting: ActionTargeting
+  appliesBuff?: { definitionId: string; target: 'self' | 'target' }
 }
 
 export interface TurnSkillSlot {

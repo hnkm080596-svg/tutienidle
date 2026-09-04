@@ -11,6 +11,7 @@ import {
 import type { TurnBattleParticipant } from './TurnBattleSystem'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { createBaseStats } from '../../stats/StatBlock'
+import { TurnBuffPool } from './TurnBuffPool'
 
 function entity(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats()
@@ -107,6 +108,7 @@ function participant(overrides: Partial<TurnBattleParticipant> = {}): TurnBattle
     priority: 0,
     actionGauge: 0,
     alive: true,
+    buffs: new TurnBuffPool(),
     ...overrides,
   }
 }

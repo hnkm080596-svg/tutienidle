@@ -10,6 +10,24 @@ import { consumeGaugeAfterAction } from './ActionGauge'
 import { resolveNextTurn } from './TurnQueue'
 import { tickCooldowns, selectAction, commitAction, collectTurnTargets } from './TurnSkillAction'
 import type { TurnSkillDefinition, TurnSkillSlot } from './TurnSkillAction'
+import { TurnBuffPool } from './TurnBuffPool'
+import { TurnBuffSystem } from './TurnBuffSystem'
+import type { TurnBuffRegistry } from './TurnBuffTypes'
+import { applyTurnStartDeltas } from './ResourceTurnHook'
+import type { TurnResourceDelta } from './ResourceTurnHook'
+import { isTurnTriggerReady } from './BossTurnTriggers'
+import { shouldSpawnNextEnemy, isStageComplete } from './WaveSpawnTrigger'
+
+export interface TurnResourcePool {
+  values: Record<string, number>
+  deltasPerTurn: TurnResourceDelta[]
+}
+
+export interface TurnBossTrigger {
+  afterTurns: number
+  buffDefinitionId: string
+  firedAlready: boolean
+}
 
 export type TurnBattleState = 'fighting' | 'victory' | 'defeat'
 
@@ -20,15 +38,23 @@ export interface TurnBattleParticipant {
   priority: number
   actionGauge: number
   alive: boolean
+  buffs: TurnBuffPool
   basic?: TurnSkillDefinition
   special?: TurnSkillSlot
   ultimate?: TurnSkillSlot
+  resources?: TurnResourcePool
+  bossTrigger?: TurnBossTrigger
 }
 
 export interface TurnBattle {
   player: TurnBattleParticipant
   enemies: TurnBattleParticipant[]
   state: TurnBattleState
+  totalTurnsElapsed?: number
+  wave?: {
+    totalEnemyCount: number
+    spawnedCount: number
+  }
 }
 
 /**
@@ -69,12 +95,15 @@ export interface TurnStepResult {
   actorId: string
   skillId: string
   targetIds: string[]
+  ccBlocked: boolean
 }
 
 export class TurnBattleSystem {
   constructor(
     private readonly combat: CombatSystem,
     private readonly maxTurns: number = DEFAULT_MAX_TURNS,
+    private readonly registry?: TurnBuffRegistry,
+    private readonly spawnEnemy?: () => TurnBattleParticipant,
   ) {}
 
   /**
@@ -94,40 +123,101 @@ export class TurnBattleSystem {
 
     if (!resolved) {
       battle.state = 'defeat'
-      return { state: 'defeat', actorId: '', skillId: '', targetIds: [] }
+      return { state: 'defeat', actorId: '', skillId: '', targetIds: [], ccBlocked: false }
     }
 
     const actor = resolved.actor
 
-    tickCooldowns(actor)
+    battle.totalTurnsElapsed = (battle.totalTurnsElapsed ?? 0) + 1
 
-    const action = selectAction(actor)
+    const actorBuffSystem = new TurnBuffSystem(actor.buffs)
 
-    const opposingSide = actor === battle.player ? battle.enemies : [battle.player]
-    const primaryTarget = selectTarget(actor, opposingSide)
+    // CC check TRƯỚC tick: buff stun/freeze duration=N phải block đúng N
+    // lượt của holder (áp ở lượt N-1, block lượt N..N+1, hết sau khi block
+    // lượt cuối). Tick trước sẽ làm duration-1 expire trước khi kịp block.
+    const ccBlocked = actorBuffSystem.isStunned() || actorBuffSystem.isFrozen()
+
+    actorBuffSystem.update(actor.entity, this.combat, this.registry)
+
+    if (actor.resources) {
+      actor.resources.values = applyTurnStartDeltas(actor.resources.values, actor.resources.deltasPerTurn)
+    }
+
+    if (
+      actor.bossTrigger &&
+      !actor.bossTrigger.firedAlready &&
+      this.registry &&
+      isTurnTriggerReady({ afterTurns: actor.bossTrigger.afterTurns }, battle.totalTurnsElapsed ?? 0)
+    ) {
+      const definition = this.registry.get(actor.bossTrigger.buffDefinitionId)
+
+      new TurnBuffSystem(actor.buffs).apply(definition, actor.entity, actor.entity, this.registry)
+
+      actor.bossTrigger.firedAlready = true
+    }
+
+    let skillId = ''
 
     const targetIds: string[] = []
 
-    if (primaryTarget) {
-      const affected = collectTurnTargets(primaryTarget, opposingSide, action.targeting)
+    if (actor.entity.alive && !ccBlocked) {
+      tickCooldowns(actor)
 
-      for (const target of affected) {
-        this.combat.resolveActionHit(actor.entity, target.entity, action.damage)
-        targetIds.push(target.id)
+      const action = selectAction(actor)
+
+      skillId = action.skillId
+
+      const opposingSide = actor === battle.player ? battle.enemies : [battle.player]
+      const primaryTarget = selectTarget(actor, opposingSide)
+
+      if (primaryTarget) {
+        const affected = collectTurnTargets(primaryTarget, opposingSide, action.targeting)
+
+        for (const target of affected) {
+          this.combat.resolveActionHit(actor.entity, target.entity, action.damage)
+          targetIds.push(target.id)
+        }
+
+        commitAction(actor.entity, action)
+
+        if (action.skill?.appliesBuff && this.registry) {
+          const definition = this.registry.get(action.skill.appliesBuff.definitionId)
+
+          if (action.skill.appliesBuff.target === 'self') {
+            new TurnBuffSystem(actor.buffs).apply(definition, actor.entity, actor.entity, this.registry)
+          } else {
+            for (const target of affected) {
+              new TurnBuffSystem(target.buffs).apply(definition, actor.entity, target.entity, this.registry)
+            }
+          }
+        }
       }
-
-      commitAction(actor.entity, action)
     }
 
     consumeGaugeAfterAction(actor)
 
+    if (battle.wave && this.spawnEnemy) {
+      const aliveEnemyCount = battle.enemies.filter((enemy) => enemy.entity.alive).length
+
+      if (shouldSpawnNextEnemy(battle.wave.spawnedCount, battle.wave.totalEnemyCount, aliveEnemyCount)) {
+        battle.enemies.push(this.spawnEnemy())
+        battle.wave.spawnedCount += 1
+      }
+    }
+
+    const finalAliveEnemyCount = battle.enemies.filter((enemy) => enemy.entity.alive).length
+
     if (!battle.player.entity.alive) {
       battle.state = 'defeat'
-    } else if (battle.enemies.every((enemy) => !enemy.entity.alive)) {
+    } else if (
+      battle.wave
+        ? isStageComplete(battle.wave.spawnedCount, battle.wave.totalEnemyCount, finalAliveEnemyCount)
+        : battle.enemies.every((enemy) => !enemy.entity.alive)
+    ) {
       battle.state = 'victory'
     }
 
-    return { state: battle.state, actorId: actor.id, skillId: action.skillId, targetIds }
+    return { state: battle.state, actorId: actor.id, skillId, targetIds, ccBlocked }
   }
 
   /** Thin wrapper for tests/dev tooling — loops resolveNextStep() to completion. */

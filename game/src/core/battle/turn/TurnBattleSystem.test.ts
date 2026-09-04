@@ -5,6 +5,7 @@ import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
 import type { TurnSkillDefinition } from './TurnSkillAction'
+import { TurnBuffPool } from './TurnBuffPool'
 
 // Fixture giống hệt quy ước đã dùng trong ActionTargetingSystem.test.ts —
 // selectTarget chỉ đọc id/x/row/alive, không cần Stats đầy đủ.
@@ -23,7 +24,7 @@ function participant(
   speed = 10,
   priority = 0,
 ): TurnBattleParticipant {
-  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive }
+  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new TurnBuffPool() }
 }
 
 describe('selectTarget', () => {
@@ -98,7 +99,7 @@ function makeParticipant(
   speed: number,
   priority: number,
 ): TurnBattleParticipant {
-  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive }
+  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new TurnBuffPool() }
 }
 
 describe('TurnBattleSystem.runToCompletion', () => {
@@ -316,5 +317,781 @@ describe('TurnBattleSystem.resolveNextStep', () => {
     const result = system.runToCompletion(battle)
 
     expect(result).toBe('victory')
+  })
+})
+
+import { TurnBuffSystem } from './TurnBuffSystem'
+import type { TurnBuffDefinition, TurnBuffRegistry } from './TurnBuffTypes'
+
+class FixtureBuffRegistry implements TurnBuffRegistry {
+  private readonly definitions = new Map<string, TurnBuffDefinition>()
+
+  constructor(definitions: TurnBuffDefinition[]) {
+    for (const definition of definitions) {
+      this.definitions.set(definition.id, definition)
+    }
+  }
+
+  get(id: string): TurnBuffDefinition {
+    const definition = this.definitions.get(id)
+
+    if (!definition) {
+      throw new Error(`fixture buff not found: ${id}`)
+    }
+
+    return definition
+  }
+}
+
+const STUN_DEFINITION: TurnBuffDefinition = {
+  id: 'fixture_stun',
+  name: 'Fixture Stun',
+  polarity: 'debuff',
+  duration: 1,
+  stackMode: 'refresh',
+  effects: [{ type: 'cc', ccEffect: 'stun' }],
+}
+
+describe('TurnBattleSystem.resolveNextStep buff/CC wiring', () => {
+  it('ticks the acting participant own buffs down by 1 turn before acting', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const playerParticipant = makeParticipant('player', player, 10, 0)
+
+    const registry = new FixtureBuffRegistry([STUN_DEFINITION])
+    new TurnBuffSystem(playerParticipant.buffs).apply(STUN_DEFINITION, enemyEntity, player, registry)
+
+    const battle: TurnBattle = {
+      player: playerParticipant,
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
+    const step = system.resolveNextStep(battle)
+
+    expect(step.ccBlocked).toBe(true)
+    expect(playerParticipant.buffs.getAll()).toEqual([])
+  })
+
+  it('a stunned actor deals no damage this step but the battle continues', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const playerParticipant = makeParticipant('player', player, 10, 0)
+
+    const registry = new FixtureBuffRegistry([STUN_DEFINITION])
+    new TurnBuffSystem(playerParticipant.buffs).apply(STUN_DEFINITION, enemyEntity, player, registry)
+
+    const battle: TurnBattle = {
+      player: playerParticipant,
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
+    const step = system.resolveNextStep(battle)
+
+    expect(step.targetIds).toEqual([])
+    expect(enemyEntity.currentHp).toBe(1_000_000)
+    expect(battle.state).toBe('fighting')
+  })
+
+  it('a non-stunned actor is unaffected (ccBlocked false, acts normally)', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    const step = system.resolveNextStep(battle)
+
+    expect(step.ccBlocked).toBe(false)
+    expect(step.targetIds).toEqual(['enemy'])
+  })
+})
+
+const BURN_DEFINITION: TurnBuffDefinition = {
+  id: 'fixture_burn',
+  name: 'Fixture Burn',
+  polarity: 'debuff',
+  duration: 3,
+  stackMode: 'refresh',
+  effects: [{ type: 'dot', dpsRatio: 0.5, element: 'physical' }],
+}
+
+describe('TurnBattleSystem.resolveNextStep appliesBuff (zone-as-dot proof)', () => {
+  it("applies the skill's buff to the target it hit", () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const playerParticipant = makeParticipant('player', player, 10, 0)
+    playerParticipant.basic = {
+      id: 'fixture_burning_strike',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'single' },
+      appliesBuff: { definitionId: 'fixture_burn', target: 'target' },
+    }
+
+    const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
+
+    const battle: TurnBattle = {
+      player: playerParticipant,
+      enemies: [enemyParticipant],
+      state: 'fighting',
+    }
+
+    const registry = new FixtureBuffRegistry([BURN_DEFINITION])
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
+    system.resolveNextStep(battle)
+
+    const applied = enemyParticipant.buffs.getAll()
+
+    expect(applied).toHaveLength(1)
+    expect(applied[0]!.id).toBe('fixture_burn')
+    expect(applied[0]!.sourceId).toBe('player')
+  })
+
+  it("applies the skill's buff to self when target is 'self'", () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const playerParticipant = makeParticipant('player', player, 10, 0)
+    playerParticipant.basic = {
+      id: 'fixture_self_burn',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'single' },
+      appliesBuff: { definitionId: 'fixture_burn', target: 'self' },
+    }
+
+    const battle: TurnBattle = {
+      player: playerParticipant,
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const registry = new FixtureBuffRegistry([BURN_DEFINITION])
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
+    system.resolveNextStep(battle)
+
+    expect(playerParticipant.buffs.getAll()).toHaveLength(1)
+  })
+
+  it('AOE skill applies the buff to every hit target (zone-as-dot: no positional zone entity needed)', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      row: 4,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyA = createCombatant({
+      id: 'enemyA',
+      row: 4,
+      x: 1,
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+    const enemyB = createCombatant({
+      id: 'enemyB',
+      row: 4,
+      x: 2,
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const playerParticipant = makeParticipant('player', player, 10, 0)
+    playerParticipant.basic = {
+      id: 'fixture_burning_field',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'row' },
+      appliesBuff: { definitionId: 'fixture_burn', target: 'target' },
+    }
+
+    const enemyAParticipant = makeParticipant('enemyA', enemyA, 10, 1)
+    const enemyBParticipant = makeParticipant('enemyB', enemyB, 10, 2)
+
+    const battle: TurnBattle = {
+      player: playerParticipant,
+      enemies: [enemyAParticipant, enemyBParticipant],
+      state: 'fighting',
+    }
+
+    const registry = new FixtureBuffRegistry([BURN_DEFINITION])
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
+    system.resolveNextStep(battle)
+
+    expect(enemyAParticipant.buffs.getAll()).toHaveLength(1)
+    expect(enemyBParticipant.buffs.getAll()).toHaveLength(1)
+  })
+
+  it('does not throw and applies no buff when appliesBuff is set but no registry was provided', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const playerParticipant = makeParticipant('player', player, 10, 0)
+    playerParticipant.basic = {
+      id: 'fixture_burning_strike',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'single' },
+      appliesBuff: { definitionId: 'fixture_burn', target: 'target' },
+    }
+
+    const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
+
+    const battle: TurnBattle = {
+      player: playerParticipant,
+      enemies: [enemyParticipant],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    expect(() => system.resolveNextStep(battle)).not.toThrow()
+    expect(enemyParticipant.buffs.getAll()).toEqual([])
+  })
+})
+
+describe('TurnBattleSystem.resolveNextStep resource tick + totalTurnsElapsed', () => {
+  it('increments totalTurnsElapsed by 1 on every step', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    system.resolveNextStep(battle)
+    expect(battle.totalTurnsElapsed).toBe(1)
+
+    system.resolveNextStep(battle)
+    expect(battle.totalTurnsElapsed).toBe(2)
+  })
+
+  it('applies resource deltas to the acting participant at the start of their own turn', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const playerParticipant = makeParticipant('player', player, 10, 0)
+    const resources = {
+      values: { fixture_resource: 5 },
+      deltasPerTurn: [{ stat: 'fixture_resource', amount: 2, min: 0, max: 10 }],
+    }
+    playerParticipant.resources = resources
+
+    const battle: TurnBattle = {
+      player: playerParticipant,
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    system.resolveNextStep(battle)
+
+    expect(resources.values.fixture_resource).toBe(7)
+  })
+
+  it('clamps the resource delta at max', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const playerParticipant = makeParticipant('player', player, 10, 0)
+    const resources = {
+      values: { fixture_resource: 9 },
+      deltasPerTurn: [{ stat: 'fixture_resource', amount: 5, min: 0, max: 10 }],
+    }
+    playerParticipant.resources = resources
+
+    const battle: TurnBattle = {
+      player: playerParticipant,
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    system.resolveNextStep(battle)
+
+    expect(resources.values.fixture_resource).toBe(10)
+  })
+
+  it('does not tick a resource pool the participant does not have', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    expect(() => system.resolveNextStep(battle)).not.toThrow()
+  })
+})
+
+const ENRAGE_DEFINITION: TurnBuffDefinition = {
+  id: 'fixture_enrage',
+  name: 'Fixture Enrage',
+  polarity: 'buff',
+  duration: 999,
+  stackMode: 'refresh',
+  effects: [{ type: 'dot', dpsRatio: 0.1, element: 'physical' }],
+}
+
+describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
+  it('fires the boss trigger and applies the buff to self once totalTurnsElapsed reaches afterTurns', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
+    const bossTrigger = { afterTurns: 1, buffDefinitionId: 'fixture_enrage', firedAlready: false }
+    enemyParticipant.bossTrigger = bossTrigger
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [enemyParticipant],
+      state: 'fighting',
+    }
+
+    const registry = new FixtureBuffRegistry([ENRAGE_DEFINITION])
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
+
+    // Turn 1: player acts (totalTurnsElapsed becomes 1). Turn 2: enemy acts
+    // (totalTurnsElapsed becomes 2, already >= afterTurns 1 by then).
+    system.resolveNextStep(battle)
+    system.resolveNextStep(battle)
+
+    expect(bossTrigger.firedAlready).toBe(true)
+    expect(enemyParticipant.buffs.getAll().some((buff) => buff.id === 'fixture_enrage')).toBe(true)
+  })
+
+  it('does not fire twice even after many more of the boss own turns', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
+    enemyParticipant.bossTrigger = { afterTurns: 1, buffDefinitionId: 'fixture_enrage', firedAlready: false }
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [enemyParticipant],
+      state: 'fighting',
+    }
+
+    const registry = new FixtureBuffRegistry([ENRAGE_DEFINITION])
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
+
+    for (let i = 0; i < 6; i++) {
+      system.resolveNextStep(battle)
+    }
+
+    const afterBuffs = enemyParticipant.buffs.getAll().filter((buff) => buff.id === 'fixture_enrage')
+
+    expect(afterBuffs).toHaveLength(1)
+  })
+
+  it('does not fire before totalTurnsElapsed reaches afterTurns', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
+    const bossTrigger = { afterTurns: 999, buffDefinitionId: 'fixture_enrage', firedAlready: false }
+    enemyParticipant.bossTrigger = bossTrigger
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [enemyParticipant],
+      state: 'fighting',
+    }
+
+    const registry = new FixtureBuffRegistry([ENRAGE_DEFINITION])
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
+
+    system.resolveNextStep(battle)
+    system.resolveNextStep(battle)
+
+    expect(bossTrigger.firedAlready).toBe(false)
+    expect(enemyParticipant.buffs.getAll()).toEqual([])
+  })
+
+  it('does not throw and does not fire when no registry was provided', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
+    const bossTrigger = { afterTurns: 1, buffDefinitionId: 'fixture_enrage', firedAlready: false }
+    enemyParticipant.bossTrigger = bossTrigger
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [enemyParticipant],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    expect(() => {
+      system.resolveNextStep(battle)
+      system.resolveNextStep(battle)
+    }).not.toThrow()
+
+    expect(bossTrigger.firedAlready).toBe(false)
+  })
+})
+
+describe('TurnBattleSystem.resolveNextStep multi-wave spawning', () => {
+  it('spawns the next wave enemy once the arena is empty, but does not win yet', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyA = createCombatant({
+      id: 'enemyA',
+      currentHp: 1,
+      maxHp: 1,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const wave = { totalEnemyCount: 2, spawnedCount: 1 }
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
+      state: 'fighting',
+      wave,
+    }
+
+    const spawnEnemy = (): TurnBattleParticipant => {
+      const enemyB = createCombatant({
+        id: 'enemyB',
+        currentHp: 1_000_000,
+        maxHp: 1_000_000,
+        stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      })
+
+      return makeParticipant('enemyB', enemyB, 10, 2)
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 20, undefined, spawnEnemy)
+    system.resolveNextStep(battle)
+
+    expect(battle.enemies).toHaveLength(2)
+    expect(battle.enemies[1]!.id).toBe('enemyB')
+    expect(wave.spawnedCount).toBe(2)
+    expect(battle.state).toBe('fighting')
+  })
+
+  it('does not spawn while an enemy is still alive', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1 },
+    })
+    const enemyA = createCombatant({
+      id: 'enemyA',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const wave = { totalEnemyCount: 2, spawnedCount: 1 }
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
+      state: 'fighting',
+      wave,
+    }
+
+    let spawnCalls = 0
+    const spawnEnemy = (): TurnBattleParticipant => {
+      spawnCalls += 1
+
+      const enemyB = createCombatant({
+        id: 'enemyB',
+        currentHp: 1,
+        maxHp: 1,
+        stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      })
+
+      return makeParticipant('enemyB', enemyB, 10, 2)
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 20, undefined, spawnEnemy)
+    system.resolveNextStep(battle)
+
+    expect(spawnCalls).toBe(0)
+    expect(wave.spawnedCount).toBe(1)
+    expect(battle.enemies).toHaveLength(1)
+  })
+
+  it('reaches victory via isStageComplete once every wave enemy has spawned and died', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyA = createCombatant({
+      id: 'enemyA',
+      currentHp: 1,
+      maxHp: 1,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const wave = { totalEnemyCount: 1, spawnedCount: 1 }
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
+      state: 'fighting',
+      wave,
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 20)
+    system.resolveNextStep(battle)
+
+    expect(battle.state).toBe('victory')
+    expect(battle.enemies).toHaveLength(1)
+  })
+
+  it('does not declare victory until every wave enemy has spawned and died (multi-step)', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyA = createCombatant({
+      id: 'enemyA',
+      currentHp: 1,
+      maxHp: 1,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const wave = { totalEnemyCount: 2, spawnedCount: 1 }
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
+      state: 'fighting',
+      wave,
+    }
+
+    const spawnEnemy = (): TurnBattleParticipant => {
+      const enemyB = createCombatant({
+        id: 'enemyB',
+        currentHp: 1,
+        maxHp: 1,
+        stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      })
+
+      return makeParticipant('enemyB', enemyB, 10, 2)
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 20, undefined, spawnEnemy)
+
+    // Step 1: player kills enemyA. Arena empties -> enemyB spawns this same
+    // step, but enemyB is alive so victory does not fire yet.
+    system.resolveNextStep(battle)
+    expect(battle.state).toBe('fighting')
+    expect(battle.enemies).toHaveLength(2)
+
+    // Step 2: player (same speed, lower priority, wins the tie) kills
+    // enemyB. Arena empties, spawnedCount already equals totalEnemyCount ->
+    // no further spawn, victory fires.
+    system.resolveNextStep(battle)
+    expect(battle.state).toBe('victory')
+  })
+
+  it('behaves exactly like Slices 1-4 when wave is not set (no regression)', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1,
+      maxHp: 1,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    system.resolveNextStep(battle)
+
+    expect(battle.state).toBe('victory')
+    expect(battle.enemies).toHaveLength(1)
+  })
+
+  it('does not throw and does not spawn when wave is set but no spawnEnemy factory was provided', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyA = createCombatant({
+      id: 'enemyA',
+      currentHp: 1,
+      maxHp: 1,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const wave = { totalEnemyCount: 2, spawnedCount: 1 }
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
+      state: 'fighting',
+      wave,
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 20)
+
+    expect(() => system.resolveNextStep(battle)).not.toThrow()
+    expect(battle.enemies).toHaveLength(1)
+    expect(wave.spawnedCount).toBe(1)
+    expect(battle.state).toBe('fighting')
   })
 })
