@@ -4,6 +4,7 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
+import type { TurnSkillDefinition } from './TurnSkillAction'
 
 // Fixture giống hệt quy ước đã dùng trong ActionTargetingSystem.test.ts —
 // selectTarget chỉ đọc id/x/row/alive, không cần Stats đầy đủ.
@@ -220,5 +221,100 @@ describe('TurnBattleSystem.runToCompletion', () => {
     expect(result).toBe('defeat')
     expect(player.alive).toBe(true)
     expect(enemyEntity.alive).toBe(true)
+  })
+})
+
+function fixtureSkill(overrides: Partial<TurnSkillDefinition> = {}): TurnSkillDefinition {
+  return {
+    id: 'fixture_skill',
+    cooldownTurns: 0,
+    damage: { kind: 'physical', multiplier: 1 },
+    targeting: { shape: 'single' },
+    ...overrides,
+  }
+}
+
+describe('TurnBattleSystem.resolveNextStep', () => {
+  it('reports the acting participant, chosen skillId, and hit target for one step', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    const step = system.resolveNextStep(battle)
+
+    expect(step.state).toBe('fighting')
+    expect(step.actorId).toBe('player')
+    expect(step.skillId).toBe('basic_attack')
+    expect(step.targetIds).toEqual(['enemy'])
+    expect(enemyEntity.currentHp).toBeLessThan(1_000_000)
+  })
+
+  it('uses the special skill when set instead of the hardcoded basic attack', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const playerParticipant = makeParticipant('player', player, 10, 0)
+    playerParticipant.special = { skill: fixtureSkill({ id: 'special_skill', cooldownTurns: 2 }), remainingCooldownTurns: 0 }
+
+    const battle: TurnBattle = {
+      player: playerParticipant,
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    const step = system.resolveNextStep(battle)
+
+    expect(step.skillId).toBe('special_skill')
+    expect(playerParticipant.special.remainingCooldownTurns).toBe(2)
+  })
+
+  it('runToCompletion still resolves a full battle to victory using resolveNextStep under the hood', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1,
+      maxHp: 1,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    const result = system.runToCompletion(battle)
+
+    expect(result).toBe('victory')
   })
 })

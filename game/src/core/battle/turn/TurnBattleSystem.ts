@@ -8,6 +8,8 @@ import type { CombatSystem } from '../../combat/CombatSystem'
 import { entityGridPosition, getChebyshevDistance } from '../BattleGrid'
 import { consumeGaugeAfterAction } from './ActionGauge'
 import { resolveNextTurn } from './TurnQueue'
+import { tickCooldowns, selectAction, commitAction, collectTurnTargets } from './TurnSkillAction'
+import type { TurnSkillDefinition, TurnSkillSlot } from './TurnSkillAction'
 
 export type TurnBattleState = 'fighting' | 'victory' | 'defeat'
 
@@ -18,6 +20,9 @@ export interface TurnBattleParticipant {
   priority: number
   actionGauge: number
   alive: boolean
+  basic?: TurnSkillDefinition
+  special?: TurnSkillSlot
+  ultimate?: TurnSkillSlot
 }
 
 export interface TurnBattle {
@@ -59,45 +64,79 @@ export function selectTarget(
 
 const DEFAULT_MAX_TURNS = 10_000
 
+export interface TurnStepResult {
+  state: TurnBattleState
+  actorId: string
+  skillId: string
+  targetIds: string[]
+}
+
 export class TurnBattleSystem {
   constructor(
     private readonly combat: CombatSystem,
     private readonly maxTurns: number = DEFAULT_MAX_TURNS,
   ) {}
 
-  runToCompletion(battle: TurnBattle): TurnBattleState {
+  /**
+   * Resolves exactly ONE actor's turn. Production entry point from Slice
+   * 3 onward — GameManager/UI call this repeatedly instead of running a
+   * battle to completion in one call (needed once Slice 5 adds wave
+   * pauses and Slice 7 adds manual input waits).
+   */
+  resolveNextStep(battle: TurnBattle): TurnStepResult {
     const allParticipants = [battle.player, ...battle.enemies]
 
+    for (const participant of allParticipants) {
+      participant.alive = participant.entity.alive
+    }
+
+    const resolved = resolveNextTurn(allParticipants)
+
+    if (!resolved) {
+      battle.state = 'defeat'
+      return { state: 'defeat', actorId: '', skillId: '', targetIds: [] }
+    }
+
+    const actor = resolved.actor
+
+    tickCooldowns(actor)
+
+    const action = selectAction(actor)
+
+    const opposingSide = actor === battle.player ? battle.enemies : [battle.player]
+    const primaryTarget = selectTarget(actor, opposingSide)
+
+    const targetIds: string[] = []
+
+    if (primaryTarget) {
+      const affected = collectTurnTargets(primaryTarget, opposingSide, action.targeting)
+
+      for (const target of affected) {
+        this.combat.resolveActionHit(actor.entity, target.entity, action.damage)
+        targetIds.push(target.id)
+      }
+
+      commitAction(actor.entity, action)
+    }
+
+    consumeGaugeAfterAction(actor)
+
+    if (!battle.player.entity.alive) {
+      battle.state = 'defeat'
+    } else if (battle.enemies.every((enemy) => !enemy.entity.alive)) {
+      battle.state = 'victory'
+    }
+
+    return { state: battle.state, actorId: actor.id, skillId: action.skillId, targetIds }
+  }
+
+  /** Thin wrapper for tests/dev tooling — loops resolveNextStep() to completion. */
+  runToCompletion(battle: TurnBattle): TurnBattleState {
     for (let turn = 0; turn < this.maxTurns; turn++) {
-      for (const participant of allParticipants) {
-        participant.alive = participant.entity.alive
-      }
+      const step = this.resolveNextStep(battle)
 
-      const resolved = resolveNextTurn(allParticipants)
-
-      if (!resolved) {
-        battle.state = 'defeat'
-        return battle.state
-      }
-
-      const actor = resolved.actor
-      const opposingSide = actor === battle.player ? battle.enemies : [battle.player]
-      const target = selectTarget(actor, opposingSide)
-
-      if (target) {
-        this.combat.resolveActionHit(actor.entity, target.entity, { kind: 'physical', multiplier: 1 })
-      }
-
-      consumeGaugeAfterAction(actor)
-
-      if (!battle.player.entity.alive) {
-        battle.state = 'defeat'
-        return battle.state
-      }
-
-      if (battle.enemies.every((enemy) => !enemy.entity.alive)) {
-        battle.state = 'victory'
-        return battle.state
+      if (step.state !== 'fighting') {
+        return step.state
       }
     }
 
