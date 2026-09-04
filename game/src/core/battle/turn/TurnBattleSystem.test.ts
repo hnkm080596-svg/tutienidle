@@ -24,7 +24,7 @@ function participant(
   speed = 10,
   priority = 0,
 ): TurnBattleParticipant {
-  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new TurnBuffPool() }
+  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0 }
 }
 
 describe('selectTarget', () => {
@@ -99,7 +99,7 @@ function makeParticipant(
   speed: number,
   priority: number,
 ): TurnBattleParticipant {
-  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new TurnBuffPool() }
+  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0 }
 }
 
 describe('TurnBattleSystem.runToCompletion', () => {
@@ -1093,5 +1093,121 @@ describe('TurnBattleSystem.resolveNextStep multi-wave spawning', () => {
     expect(battle.enemies).toHaveLength(1)
     expect(wave.spawnedCount).toBe(1)
     expect(battle.state).toBe('fighting')
+  })
+})
+
+const LONG_STUN_DEFINITION: TurnBuffDefinition = {
+  id: 'fixture_long_stun',
+  name: 'Fixture Long Stun',
+  polarity: 'debuff',
+  duration: 100,
+  stackMode: 'refresh',
+  effects: [{ type: 'cc', ccEffect: 'stun' }],
+}
+
+describe('TurnBattleSystem.resolveNextStep Bá Th? (CC-lock guard)', () => {
+  function stunnedBattle() {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const playerParticipant = makeParticipant('player', player, 10, 0)
+    playerParticipant.basic = {
+      id: 'fixture_basic',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'single' },
+    }
+
+    const registry = new FixtureBuffRegistry([LONG_STUN_DEFINITION])
+    const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
+
+    const battle: TurnBattle = {
+      player: playerParticipant,
+      enemies: [enemyParticipant],
+      state: 'fighting',
+    }
+
+    // Applied ONCE — duration 100 means it cannot expire within this
+    // test's turn count, so every subsequent player turn stays hard-CC'd
+    // without needing to reason about Slice 3's tick/expiry ordering.
+    new TurnBuffSystem(playerParticipant.buffs).apply(LONG_STUN_DEFINITION, enemyEntity, player, registry)
+
+    return { player, playerParticipant, enemyEntity, enemyParticipant, battle, registry }
+  }
+
+  it('blocks normally for the first 3 consecutive hard-CC turns, incrementing the counter', () => {
+    const { playerParticipant, battle } = stunnedBattle()
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, undefined)
+
+    for (let i = 0; i < 3; i++) {
+      const step = system.resolveNextStep(battle) // player's turn (speed tie broken by priority: player priority 0 < enemy 1)
+      expect(step.ccBlocked).toBe(true)
+      expect(playerParticipant.consecutiveHardCcTurns).toBe(i + 1)
+      system.resolveNextStep(battle) // enemy's turn, consumes the enemy's gauge tick
+    }
+  })
+
+  it('fires Bá Th? on the 4th consecutive blocked turn: clears CC, actor acts, counter resets', () => {
+    const { playerParticipant, battle } = stunnedBattle()
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, undefined)
+
+    for (let i = 0; i < 3; i++) {
+      system.resolveNextStep(battle) // player blocked, counter -> i+1
+      system.resolveNextStep(battle) // enemy turn
+    }
+
+    const step = system.resolveNextStep(battle) // 4th consecutive blocked attempt — Bá Th? should fire here
+
+    expect(step.ccBlocked).toBe(false)
+    expect(step.targetIds).toEqual(['enemy'])
+    expect(playerParticipant.consecutiveHardCcTurns).toBe(0)
+    expect(playerParticipant.buffs.getAll()).toEqual([])
+    expect(playerParticipant.baTheTriggeredAtTurn).toBeDefined()
+  })
+
+  it('resets the counter to 0 the moment the actor is not CC-blocked on its own turn', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const playerParticipant = makeParticipant('player', player, 10, 0)
+    playerParticipant.basic = {
+      id: 'fixture_basic',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'single' },
+    }
+    // Simulates "already had 2 consecutive blocked turns" WITHOUT applying
+    // any CC buff — isolates the reset behavior from buff-timing entirely.
+    playerParticipant.consecutiveHardCcTurns = 2
+
+    const battle: TurnBattle = {
+      player: playerParticipant,
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    const step = system.resolveNextStep(battle) // player's turn, not CC'd (no buff applied)
+
+    expect(step.ccBlocked).toBe(false)
+    expect(playerParticipant.consecutiveHardCcTurns).toBe(0)
   })
 })
