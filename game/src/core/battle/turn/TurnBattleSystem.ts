@@ -17,6 +17,7 @@ import { applyTurnStartDeltas } from './ResourceTurnHook'
 import type { TurnResourceDelta } from './ResourceTurnHook'
 import { isTurnTriggerReady } from './BossTurnTriggers'
 import { shouldSpawnNextEnemy, isStageComplete } from './WaveSpawnTrigger'
+import { scaleActionDamage } from '../ActionImpactSystem'
 
 export interface TurnResourcePool {
   values: Record<string, number>
@@ -192,8 +193,11 @@ export class TurnBattleSystem {
       if (primaryTarget) {
         const affected = collectTurnTargets(primaryTarget, opposingSide, action.targeting)
 
+        const suddenDeathMultiplier = this.suddenDeathDamageMultiplier(battle.totalTurnsElapsed ?? 0)
+        const scaledDamage = suddenDeathMultiplier === 1 ? action.damage : scaleActionDamage(action.damage, suddenDeathMultiplier)
+
         for (const target of affected) {
-          this.combat.resolveActionHit(actor.entity, target.entity, action.damage)
+          this.combat.resolveActionHit(actor.entity, target.entity, scaledDamage)
           targetIds.push(target.id)
         }
 
@@ -251,5 +255,11 @@ export class TurnBattleSystem {
 
     battle.state = 'defeat'
     return battle.state
+  }
+
+  private suddenDeathDamageMultiplier(totalTurnsElapsed: number): number {
+    const turnsPastGrace = totalTurnsElapsed - 10
+
+    return turnsPastGrace > 0 ? 1 + 0.3 * turnsPastGrace : 1
   }
 }

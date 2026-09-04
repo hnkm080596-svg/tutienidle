@@ -1105,7 +1105,7 @@ const LONG_STUN_DEFINITION: TurnBuffDefinition = {
   effects: [{ type: 'cc', ccEffect: 'stun' }],
 }
 
-describe('TurnBattleSystem.resolveNextStep B� Th? (CC-lock guard)', () => {
+describe('TurnBattleSystem.resolveNextStep B� Th? (CC-lock guard)', () => {
   function stunnedBattle() {
     const player = createCombatant({
       id: 'player',
@@ -1136,7 +1136,7 @@ describe('TurnBattleSystem.resolveNextStep B� Th? (CC-lock guard)', () => {
       state: 'fighting',
     }
 
-    // Applied ONCE � duration 100 means it cannot expire within this
+    // Applied ONCE � duration 100 means it cannot expire within this
     // test's turn count, so every subsequent player turn stays hard-CC'd
     // without needing to reason about Slice 3's tick/expiry ordering.
     new TurnBuffSystem(playerParticipant.buffs).apply(LONG_STUN_DEFINITION, enemyEntity, player, registry)
@@ -1156,7 +1156,7 @@ describe('TurnBattleSystem.resolveNextStep B� Th? (CC-lock guard)', () => {
     }
   })
 
-  it('fires B� Th? on the 4th consecutive blocked turn: clears CC, actor acts, counter resets', () => {
+  it('fires B� Th? on the 4th consecutive blocked turn: clears CC, actor acts, counter resets', () => {
     const { playerParticipant, battle } = stunnedBattle()
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, undefined)
 
@@ -1165,7 +1165,7 @@ describe('TurnBattleSystem.resolveNextStep B� Th? (CC-lock guard)', () => {
       system.resolveNextStep(battle) // enemy turn
     }
 
-    const step = system.resolveNextStep(battle) // 4th consecutive blocked attempt � B� Th? should fire here
+    const step = system.resolveNextStep(battle) // 4th consecutive blocked attempt � B� Th? should fire here
 
     expect(step.ccBlocked).toBe(false)
     expect(step.targetIds).toEqual(['enemy'])
@@ -1195,7 +1195,7 @@ describe('TurnBattleSystem.resolveNextStep B� Th? (CC-lock guard)', () => {
       targeting: { shape: 'single' },
     }
     // Simulates "already had 2 consecutive blocked turns" WITHOUT applying
-    // any CC buff � isolates the reset behavior from buff-timing entirely.
+    // any CC buff � isolates the reset behavior from buff-timing entirely.
     playerParticipant.consecutiveHardCcTurns = 2
 
     const battle: TurnBattle = {
@@ -1209,5 +1209,98 @@ describe('TurnBattleSystem.resolveNextStep B� Th? (CC-lock guard)', () => {
 
     expect(step.ccBlocked).toBe(false)
     expect(playerParticipant.consecutiveHardCcTurns).toBe(0)
+  })
+})
+
+describe('TurnBattleSystem.resolveNextStep Sudden Death escalation', () => {
+  function bareBattle(totalTurnsElapsed: number) {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0, defense: 0 },
+    })
+
+    const playerParticipant = makeParticipant('player', player, 10, 0)
+    playerParticipant.basic = {
+      id: 'fixture_basic',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'single' },
+    }
+
+    const battle: TurnBattle = {
+      player: playerParticipant,
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+      totalTurnsElapsed,
+    }
+
+    return { player, enemyEntity, battle }
+  }
+
+  it('deals unscaled damage (x1) when totalTurnsElapsed is 10 or below', () => {
+    const { enemyEntity, battle } = bareBattle(9) // becomes 10 after this step's own increment
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    const hpBefore = enemyEntity.currentHp
+
+    system.resolveNextStep(battle)
+
+    const rawDamageDealt = hpBefore - enemyEntity.currentHp
+    expect(battle.totalTurnsElapsed).toBe(10)
+    // At exactly turn 10, Sudden Death has not started yet (starts turn 11) � damage is the normal, unscaled amount.
+    // (Exact expected HP delta depends on calculateBaseDamage's real formula � assert only that it's the SAME
+    // as a control run at turn 1, not a hardcoded number, to avoid coupling this test to damage-formula internals.)
+    const { enemyEntity: controlEnemy, battle: controlBattle } = bareBattle(0)
+    const controlHpBefore = controlEnemy.currentHp
+    system.resolveNextStep(controlBattle)
+    const controlDamage = controlHpBefore - controlEnemy.currentHp
+
+    expect(rawDamageDealt).toBe(controlDamage)
+  })
+
+  it('scales damage by x1.3 at turn 11 (first Sudden Death turn)', () => {
+    const { enemyEntity, battle } = bareBattle(10) // becomes 11 after this step's own increment
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    const hpBefore = enemyEntity.currentHp
+
+    system.resolveNextStep(battle)
+
+    const scaledDamage = hpBefore - enemyEntity.currentHp
+
+    const { enemyEntity: controlEnemy, battle: controlBattle } = bareBattle(0)
+    const controlHpBefore = controlEnemy.currentHp
+    system.resolveNextStep(controlBattle)
+    const baseDamage = controlHpBefore - controlEnemy.currentHp
+
+    expect(battle.totalTurnsElapsed).toBe(11)
+    // Endurance của hệ sống trừ PHẲNG threshold×percent = 10×0.7 = 7 SAU
+    // scale (mọi đòn > threshold), nên scaled = base×m − 7, không phải
+    // base×m nguyên vẹn (plan test gốc đã bỏ qua tầng endurance này).
+    const enduranceFlat = (10 * 0.7)
+    expect(scaledDamage).toBeCloseTo((baseDamage + enduranceFlat) * 1.3 - enduranceFlat, 1)
+  })
+
+  it('scales damage by x2.5 at turn 15 (linear, additive: 1 + 0.3*(15-10))', () => {
+    const { enemyEntity, battle } = bareBattle(14) // becomes 15 after this step's own increment
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    const hpBefore = enemyEntity.currentHp
+
+    system.resolveNextStep(battle)
+
+    const scaledDamage = hpBefore - enemyEntity.currentHp
+
+    const { enemyEntity: controlEnemy, battle: controlBattle } = bareBattle(0)
+    const controlHpBefore = controlEnemy.currentHp
+    system.resolveNextStep(controlBattle)
+    const baseDamage = controlHpBefore - controlEnemy.currentHp
+
+    const enduranceFlat = (10 * 0.7)
+    expect(scaledDamage).toBeCloseTo((baseDamage + enduranceFlat) * 2.5 - enduranceFlat, 1)
   })
 })
