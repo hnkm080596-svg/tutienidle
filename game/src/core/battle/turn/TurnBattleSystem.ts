@@ -11,6 +11,8 @@ import { resolveNextTurn } from './TurnQueue'
 import { tickCooldowns, selectAction, commitAction, collectTurnTargets } from './TurnSkillAction'
 import type { TurnSkillDefinition, TurnSkillSlot } from './TurnSkillAction'
 import { TurnBuffPool } from './TurnBuffPool'
+import { TurnBuffSystem } from './TurnBuffSystem'
+import type { TurnBuffRegistry } from './TurnBuffTypes'
 
 export type TurnBattleState = 'fighting' | 'victory' | 'defeat'
 
@@ -71,12 +73,14 @@ export interface TurnStepResult {
   actorId: string
   skillId: string
   targetIds: string[]
+  ccBlocked: boolean
 }
 
 export class TurnBattleSystem {
   constructor(
     private readonly combat: CombatSystem,
     private readonly maxTurns: number = DEFAULT_MAX_TURNS,
+    private readonly registry?: TurnBuffRegistry,
   ) {}
 
   /**
@@ -96,29 +100,44 @@ export class TurnBattleSystem {
 
     if (!resolved) {
       battle.state = 'defeat'
-      return { state: 'defeat', actorId: '', skillId: '', targetIds: [] }
+      return { state: 'defeat', actorId: '', skillId: '', targetIds: [], ccBlocked: false }
     }
 
     const actor = resolved.actor
 
-    tickCooldowns(actor)
+    const actorBuffSystem = new TurnBuffSystem(actor.buffs)
 
-    const action = selectAction(actor)
+    // CC check TRƯỚC tick: buff stun/freeze duration=N phải block đúng N
+    // lượt của holder (áp ở lượt N-1, block lượt N..N+1, hết sau khi block
+    // lượt cuối). Tick trước sẽ làm duration-1 expire trước khi kịp block.
+    const ccBlocked = actorBuffSystem.isStunned() || actorBuffSystem.isFrozen()
 
-    const opposingSide = actor === battle.player ? battle.enemies : [battle.player]
-    const primaryTarget = selectTarget(actor, opposingSide)
+    actorBuffSystem.update(actor.entity, this.combat, this.registry)
+
+    let skillId = ''
 
     const targetIds: string[] = []
 
-    if (primaryTarget) {
-      const affected = collectTurnTargets(primaryTarget, opposingSide, action.targeting)
+    if (actor.entity.alive && !ccBlocked) {
+      tickCooldowns(actor)
 
-      for (const target of affected) {
-        this.combat.resolveActionHit(actor.entity, target.entity, action.damage)
-        targetIds.push(target.id)
+      const action = selectAction(actor)
+
+      skillId = action.skillId
+
+      const opposingSide = actor === battle.player ? battle.enemies : [battle.player]
+      const primaryTarget = selectTarget(actor, opposingSide)
+
+      if (primaryTarget) {
+        const affected = collectTurnTargets(primaryTarget, opposingSide, action.targeting)
+
+        for (const target of affected) {
+          this.combat.resolveActionHit(actor.entity, target.entity, action.damage)
+          targetIds.push(target.id)
+        }
+
+        commitAction(actor.entity, action)
       }
-
-      commitAction(actor.entity, action)
     }
 
     consumeGaugeAfterAction(actor)
@@ -129,7 +148,7 @@ export class TurnBattleSystem {
       battle.state = 'victory'
     }
 
-    return { state: battle.state, actorId: actor.id, skillId: action.skillId, targetIds }
+    return { state: battle.state, actorId: actor.id, skillId, targetIds, ccBlocked }
   }
 
   /** Thin wrapper for tests/dev tooling — loops resolveNextStep() to completion. */

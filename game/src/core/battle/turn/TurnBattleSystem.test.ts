@@ -319,3 +319,126 @@ describe('TurnBattleSystem.resolveNextStep', () => {
     expect(result).toBe('victory')
   })
 })
+
+import { TurnBuffSystem } from './TurnBuffSystem'
+import type { TurnBuffDefinition, TurnBuffRegistry } from './TurnBuffTypes'
+
+class FixtureBuffRegistry implements TurnBuffRegistry {
+  private readonly definitions = new Map<string, TurnBuffDefinition>()
+
+  constructor(definitions: TurnBuffDefinition[]) {
+    for (const definition of definitions) {
+      this.definitions.set(definition.id, definition)
+    }
+  }
+
+  get(id: string): TurnBuffDefinition {
+    const definition = this.definitions.get(id)
+
+    if (!definition) {
+      throw new Error(`fixture buff not found: ${id}`)
+    }
+
+    return definition
+  }
+}
+
+const STUN_DEFINITION: TurnBuffDefinition = {
+  id: 'fixture_stun',
+  name: 'Fixture Stun',
+  polarity: 'debuff',
+  duration: 1,
+  stackMode: 'refresh',
+  effects: [{ type: 'cc', ccEffect: 'stun' }],
+}
+
+describe('TurnBattleSystem.resolveNextStep buff/CC wiring', () => {
+  it('ticks the acting participant own buffs down by 1 turn before acting', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const playerParticipant = makeParticipant('player', player, 10, 0)
+
+    const registry = new FixtureBuffRegistry([STUN_DEFINITION])
+    new TurnBuffSystem(playerParticipant.buffs).apply(STUN_DEFINITION, enemyEntity, player, registry)
+
+    const battle: TurnBattle = {
+      player: playerParticipant,
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
+    const step = system.resolveNextStep(battle)
+
+    expect(step.ccBlocked).toBe(true)
+    expect(playerParticipant.buffs.getAll()).toEqual([])
+  })
+
+  it('a stunned actor deals no damage this step but the battle continues', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const playerParticipant = makeParticipant('player', player, 10, 0)
+
+    const registry = new FixtureBuffRegistry([STUN_DEFINITION])
+    new TurnBuffSystem(playerParticipant.buffs).apply(STUN_DEFINITION, enemyEntity, player, registry)
+
+    const battle: TurnBattle = {
+      player: playerParticipant,
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
+    const step = system.resolveNextStep(battle)
+
+    expect(step.targetIds).toEqual([])
+    expect(enemyEntity.currentHp).toBe(1_000_000)
+    expect(battle.state).toBe('fighting')
+  })
+
+  it('a non-stunned actor is unaffected (ccBlocked false, acts normally)', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    const step = system.resolveNextStep(battle)
+
+    expect(step.ccBlocked).toBe(false)
+    expect(step.targetIds).toEqual(['enemy'])
+  })
+})
