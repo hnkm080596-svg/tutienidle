@@ -26,7 +26,7 @@ export const COMBAT_TECHNIQUE_TYPES: CombatTechniqueTypeConfig[] = [
 
     mainStats: ['criticalRate', 'criticalDamage'],
 
-    substatPool: ['attack', 'attackSpeed', 'criticalAvoidance'],
+    substatPool: ['attack', 'speed', 'criticalAvoidance'],
   },
 
   {
@@ -44,9 +44,9 @@ export const COMBAT_TECHNIQUE_TYPES: CombatTechniqueTypeConfig[] = [
 
     name: 'Tốc Chiến',
 
-    mainStats: ['attackSpeed', 'accuracyRating'],
+    mainStats: ['speed', 'accuracyRating'],
 
-    substatPool: ['attack', 'movementSpeed', 'cooldownReduction'],
+    substatPool: ['attack'],
   },
 
   {
@@ -54,7 +54,7 @@ export const COMBAT_TECHNIQUE_TYPES: CombatTechniqueTypeConfig[] = [
 
     name: 'Trường Chiến',
 
-    mainStats: ['leechPercent', 'hpRegenPerSecond'],
+    mainStats: ['leechPercent', 'hpRegenPerTurn'],
 
     substatPool: ['maxHp', 'wardMax', 'wardRegenPerSecond'],
   },

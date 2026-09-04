@@ -382,12 +382,7 @@ export const buffs: BuffDefinition[] = [
     effects: [
       {
         type: 'statModifier',
-        stat: 'attackSpeed',
-        percent: -0.3,
-      },
-      {
-        type: 'statModifier',
-        stat: 'movementSpeed',
+        stat: 'speed',
         percent: -0.3,
       },
     ],
@@ -405,12 +400,7 @@ export const buffs: BuffDefinition[] = [
     effects: [
       {
         type: 'statModifier',
-        stat: 'attackSpeed',
-        percent: -0.06,
-      },
-      {
-        type: 'statModifier',
-        stat: 'movementSpeed',
+        stat: 'speed',
         percent: -0.06,
       },
     ],
@@ -426,13 +416,8 @@ export const buffs: BuffDefinition[] = [
     effects: [
       {
         type: 'statModifier',
-        stat: 'attackSpeed',
+        stat: 'speed',
         percent: 0.25,
-      },
-      {
-        type: 'statModifier',
-        stat: 'movementSpeed',
-        percent: 0.15,
       },
     ],
   },
@@ -517,7 +502,7 @@ export const buffs: BuffDefinition[] = [
     polarity: 'buff',
     duration: Infinity,
     stackMode: 'stack',
-    effects: [{ type: 'statModifier', stat: 'attackSpeed', percent: 0.02 }],
+    effects: [{ type: 'statModifier', stat: 'speed', percent: 0.02 }],
   },
   {
     id: 'onhit_phan_kich_dodge',
@@ -780,7 +765,7 @@ export const buffs: BuffDefinition[] = [
     stackMode: 'refresh',
     effects: [
       { type: 'statModifier', stat: 'criticalRate', percent: 0.3 },
-      { type: 'statModifier', stat: 'attackSpeed', percent: 0.2 },
+      { type: 'statModifier', stat: 'speed', percent: 0.2 },
     ],
   },
   // Bất Tử Th thể v4 — Tử Sinh Ngộ 10s sau khi guard cứu sống:

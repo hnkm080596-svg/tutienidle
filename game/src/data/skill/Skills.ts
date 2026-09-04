@@ -962,12 +962,12 @@ export const SKILLS: Skill[] = [
 
     passiveModifiers: [
       {
-        id: 'passive_luyen_hu_bo_attack_speed',
+        id: 'passive_luyen_hu_bo_speed',
 
         sourceId: 'passive_luyen_hu_bo',
         sourceType: 'skill',
 
-        stat: 'attackSpeed',
+        stat: 'speed',
 
         percent: 0.01,
 

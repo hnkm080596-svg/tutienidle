@@ -121,10 +121,10 @@ const KIEM_TRAN_GROWTH: ProgressionNode[] = [
     prerequisites: [{ kind: 'node', nodeId: 'kiem_tran_luong_nghi' }],
     effect: {
       statModifiers: [{
-        id: 'node:minor_tran_kiem_toc:attackSpeed',
+        id: 'node:minor_tran_kiem_toc:speed',
         sourceId: 'minor_tran_kiem_toc',
         sourceType: 'talent',
-        stat: 'attackSpeed',
+        stat: 'speed',
         percent: 0.02,
         perLevelPercent: 0.02,
       }],
@@ -402,7 +402,7 @@ const CONVERTED_PASSIVE_NODES: ProgressionNode[] = [
     effect: {
       statModifiers: [
         { id: 'node:passive_phieu_van_bo:evasionRate', sourceId: 'passive_phieu_van_bo', sourceType: 'talent', stat: 'evasionRate', percent: 0.02, perLevelPercent: 0.02 },
-        { id: 'node:passive_phieu_van_bo:attackSpeed', sourceId: 'passive_phieu_van_bo', sourceType: 'talent', stat: 'attackSpeed', percent: 0.02, perLevelPercent: 0.02 },
+        { id: 'node:passive_phieu_van_bo:speed', sourceId: 'passive_phieu_van_bo', sourceType: 'talent', stat: 'speed', percent: 0.02, perLevelPercent: 0.02 },
       ],
     },
     branchTag: 'bat_kiem',

@@ -83,7 +83,7 @@ export const TALENT_PASSIVE_SKILLS: Skill[] = [
     'Tật Phong',
     'Nội tại Tật Phong của thiên phú — tích tốc đánh bằng mỗi lần diệt địch.',
     'kill',
-    [stat('attackSpeed', 0.02)],
+    [stat('speed', 0.02)],
   ),
   // 4. Trọng Kích — sát thương chí mạng: crit damage +2% mỗi crit
   // (stack vô hạn trong trận, ngưỡng bùng +30% finalDamagePercent 8s
