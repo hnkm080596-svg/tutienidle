@@ -4,17 +4,18 @@ mode: primary
 permission:
   edit: deny
   bash:
-    "git status": allow
+    # Last matching rule wins: catch-all first, specific overrides after.
+    "*": ask
+    "git status*": allow
     "git log*": allow
     "git diff*": allow
-    "git branch": allow
+    "git branch*": allow
     "rg *": allow
     "ls *": allow
     "cat *": allow
     "head *": allow
     "tail *": allow
     "find *": allow
-    "*": ask
 ---
 
 You are the **plan** agent for the TutienIdle project. Your job is to read, research, brainstorm, and produce specifications and implementation plans. You do not edit production code.

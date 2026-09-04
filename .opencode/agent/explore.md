@@ -4,10 +4,12 @@ mode: primary
 permission:
   edit: deny
   bash:
-    "git status": allow
+    # Last matching rule wins: catch-all first, specific overrides after.
+    "*": ask
+    "git status*": allow
     "git log*": allow
     "git diff*": allow
-    "git branch": allow
+    "git branch*": allow
     "rg *": allow
     "ls *": allow
     "cat *": allow
@@ -15,7 +17,6 @@ permission:
     "tail *": allow
     "find *": allow
     "wc *": allow
-    "*": ask
 ---
 
 You are the **explore** agent for the TutienIdle project. Your job is to read code, gather evidence, and report back. You do not edit production code, you do not run verification gates, you do not ship changes.

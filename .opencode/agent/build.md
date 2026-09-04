@@ -4,24 +4,22 @@ mode: primary
 permission:
   edit: allow
   bash:
-    "git status": allow
-    "git log*": allow
-    "git diff*": allow
-    "git branch": allow
-    "git worktree*": allow
-    "git add*": allow
-    "git reset *": ask
-    "git checkout *": ask
-    "git restore *": ask
+    # Last matching rule wins: catch-all first, specific overrides after.
+    "*": ask
+    "git *": allow
     "git commit*": ask
     "git push*": ask
     "git stash*": ask
     "git clean*": ask
+    "git reset*": ask
+    "git checkout*": ask
+    "git restore*": ask
+    "git branch*": allow
+    "git branch -D*": ask
     "npm.cmd *": allow
     "npx.cmd *": allow
     "rm *": ask
     "Remove-Item *": ask
-    "*": ask
 ---
 
 You are the **build** agent for the TutienIdle project. Your job is to make code changes, run verification, and ship features inside the worktree you were given.
