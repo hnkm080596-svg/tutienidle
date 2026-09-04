@@ -27,6 +27,8 @@ export interface TurnSkillDefinition {
   damage: ActionDamageInfo
   targeting: ActionTargeting
   appliesBuff?: { definitionId: string; target: 'self' | 'target' }
+  /** Future Systems Task 7 — skill charge N lượt (Thế) rồi tự resolve (Trảm). */
+  chargeTurns?: number
 }
 
 export interface TurnSkillSlot {

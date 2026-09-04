@@ -2403,6 +2403,7 @@ export class GameManager {
       playerEntity,
       0,
       playerPath ? this.resolvePlayerBasicAttack(playerPath) : GENERIC_PHYSICAL_BASIC,
+      playerPath?.cultivationPath,
     )
 
     // Spawn placement (unified flow: Spawn đứng yên tại vị trí resolve —
