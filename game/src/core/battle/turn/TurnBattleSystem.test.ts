@@ -1214,16 +1214,18 @@ describe('TurnBattleSystem.resolveNextStep B� Th? (CC-lock guard)', () => {
 
 describe('TurnBattleSystem.resolveNextStep Sudden Death escalation', () => {
   function bareBattle(totalTurnsElapsed: number) {
+    // blockChance: 0 — test so sánh damage tuyệt đối giữa 2 runs; block
+    // là roll 5% ngẫu nhiên (blockChance base 0.05) sẽ làm test flaky.
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 },
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 100 },
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0, defense: 0 },
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 0, defense: 0 },
     })
 
     const playerParticipant = makeParticipant('player', player, 10, 0)
