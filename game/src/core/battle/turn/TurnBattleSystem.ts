@@ -18,6 +18,7 @@ import type { TurnResourceDelta } from './ResourceTurnHook'
 import { isTurnTriggerReady } from './BossTurnTriggers'
 import { shouldSpawnNextEnemy, isStageComplete } from './WaveSpawnTrigger'
 import { scaleActionDamage } from '../ActionImpactSystem'
+import { recomputeEffectiveStats } from './TurnStatsRecompute'
 
 export interface TurnResourcePool {
   values: Record<string, number>
@@ -187,6 +188,11 @@ export class TurnBattleSystem {
     if (actor.entity.alive && !ccBlocked) {
       tickCooldowns(actor)
 
+      // Stats recompute (Completion Task 4): fold statModifier buffs đang
+      // active vào entity stats TRƯỚC khi chọn/hành động — luôn tính TỪ
+      // baseStats để không double-apply các recompute trước đó.
+      actor.entity.stats = recomputeEffectiveStats(actor.entity.baseStats ?? actor.entity.stats, actor.buffs)
+
       const action = selectAction(actor)
 
       skillId = action.skillId
@@ -205,6 +211,10 @@ export class TurnBattleSystem {
 
           this.combat.resolveActionHit(actor.entity, target.entity, scaledDamage)
           targetIds.push(target.id)
+
+          if (this.registry) {
+            new TurnBuffSystem(actor.buffs).rollOnHitEffects(actor.entity, target.entity, this.registry)
+          }
         }
 
         commitAction(actor.entity, action)
