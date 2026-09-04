@@ -64,11 +64,17 @@ describe.skip('GameManager — Hoàn Mỹ condition on turn-based victory', () =
   it('ghi perfectClearStageIds + perfectClearSeconds khi đủ điều kiện', () => {
     const { gameManager, player } = harness(stage({ perfectClearTurnLimit: 10 }))
 
-    for (let i = 0; i < 400 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
-      gameManager.update(0.05)
+    try {
+      for (let i = 0; i < 400 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
+        gameManager.update(0.05)
+      }
+    } catch (error) {
+      console.error('[PC-TEST-CAUGHT]', error instanceof Error ? error.stack?.split('\n').slice(0, 10).join(' | ') : String(error))
     }
 
+    console.error('[PC-TEST-PROBE]', gameManager.getTurnBattle()?.state)
     expect(gameManager.getTurnBattle()?.state).toBe('victory')
+    expect({ pc: JSON.stringify(player.perfectClearStageIds), cs: JSON.stringify(player.completedStageIds) }).toEqual({ pc: JSON.stringify(['perfect_stage']), cs: JSON.stringify(['perfect_stage']) })
     expect(player.perfectClearStageIds).toContain('perfect_stage')
     expect(player.perfectClearSeconds['perfect_stage']).toBeGreaterThan(0)
   })

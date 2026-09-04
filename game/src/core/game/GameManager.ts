@@ -3202,6 +3202,11 @@ export class GameManager {
       this.turnBattleEndEmitted = true
       this.eventBus.emit('battle_end', { type: 'battle_end', state: 'victory' })
 
+      // Auto-farm spec Task 3 — record at the REAL victory terminal (this
+      // block is the one that actually fires; the in-while grant block's
+      // own `!emitted` gate loses the race to this one after the loop).
+      this.recordPerfectClearIfEligible(this.turnBattle)
+
       // Stage completion (StageWaveSystem.update cÃ…Â©): push completedStageIds
       // Ã„ÂÃƒÅ¡NG 1 LÃ¡ÂºÂ¦N Ã¢â‚¬â€ auto-repeat vÃ¡ÂºÂ«n push (player hoÃƒÂ n thÃƒÂ nh stage nÃƒÂ y dÃƒÂ¹
       // Ã„â€˜ÃƒÂ¡nh tiÃ¡ÂºÂ¿p cycle mÃ¡Â»â€ºi).
@@ -3266,6 +3271,7 @@ export class GameManager {
       return
     }
 
+
     // Slice 6 cutover: dÃ¡Â»Â±ng shim Battle-shape tÃ¡Â»Â« TurnBattle Ã„â€˜Ã¡Â»Æ’
     // processDefeatedEnemies xÃ¡Â»Â­ lÃƒÂ½ bounty/heal-on-kill/talent Ã„â€˜ÃƒÂºng nhÃ†Â° hÃ¡Â»â€¡
     // cÃ…Â© mÃƒÂ  khÃƒÂ´ng sÃ¡Â»Â­a BattleLootSystem. rewardGranted flag shim-side.
@@ -3302,6 +3308,7 @@ export class GameManager {
       if (turnBattle.state === 'victory') {
         this.eventBus.emit('battle_end', { type: 'battle_end', state: 'victory' })
 
+
         this.recordPerfectClearIfEligible(turnBattle)
 
         // Stage completion (StageWaveSystem.update cÃ…Â©): push completedStageIds
@@ -3336,7 +3343,6 @@ export class GameManager {
     const player = this.playerDataForTurnBattle
 
     if (!stage || !player || stage.perfectClearTurnLimit === undefined) {
-      console.log('[PC-DEBUG] early return: no stage/player/limit', { stage: !!stage, player: !!player, limit: stage?.perfectClearTurnLimit })
       return
     }
 
