@@ -10,12 +10,24 @@ permission:
     "git log*": allow
     "git diff*": allow
     "git branch*": allow
+    "git branch -D*": ask
+    "git rev-parse*": allow
+    "git check-ignore*": allow
+    "git show*": allow
+    # read-only inspection commands (PowerShell + unix-style)
+    "Get-ChildItem*": allow
+    "Get-Content*": allow
+    "Get-Item*": allow
+    "Get-Date*": allow
+    "Test-Path*": allow
+    "Select-String*": allow
     "rg *": allow
     "ls *": allow
     "cat *": allow
     "head *": allow
     "tail *": allow
     "find *": allow
+    "wc *": allow
 ---
 
 You are the **plan** agent for the TutienIdle project. Your job is to read, research, brainstorm, and produce specifications and implementation plans. You do not edit production code.

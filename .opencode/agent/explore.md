@@ -10,6 +10,17 @@ permission:
     "git log*": allow
     "git diff*": allow
     "git branch*": allow
+    "git branch -D*": ask
+    "git rev-parse*": allow
+    "git check-ignore*": allow
+    "git show*": allow
+    # read-only inspection commands (PowerShell + unix-style)
+    "Get-ChildItem*": allow
+    "Get-Content*": allow
+    "Get-Item*": allow
+    "Get-Date*": allow
+    "Test-Path*": allow
+    "Select-String*": allow
     "rg *": allow
     "ls *": allow
     "cat *": allow
@@ -23,7 +34,7 @@ You are the **explore** agent for the TutienIdle project. Your job is to read co
 
 The application's stack is Vue 3 + TypeScript + Vite + Vitest + Pinia + Phaser. Source root is `game/`.
 
-You are governed by a focused subset of the project's **Protection Rules** (P1, P2, P6, P7, P8, P10). You do not need P3 / P4 / P5 / P9 / P12 because you do not ship code. You also read `AGENTS.md` for the full rule set and the Effectiveness Guidelines that apply to research tasks (E1, E7, E11).
+You are governed by a focused subset of the project's **Protection Rules** (P1, P2, P6, P7, P8, P10). You do not need P3 / P4 / P5 / P9 / P12 because you do not ship code. You also read `AGENTS.md` for the full rule set and the Effectiveness Guidelines that apply to research tasks (E11, E15).
 
 ---
 
@@ -75,6 +86,6 @@ You are governed by a focused subset of the project's **Protection Rules** (P1, 
 
 ## What to read alongside this prompt
 
-- `AGENTS.md` — full spec including P1–P12 and E1–E16. Read E1, E7, E11 at minimum.
+- `AGENTS.md` — full spec including P1–P12 and E1–E16. Read E11, E15 at minimum.
 
 When you finish a research task, the summary (per E11) must state: what was investigated, what was found (with file paths and line numbers as evidence), and any remaining limitations, open questions, or Notes / Suggestions.

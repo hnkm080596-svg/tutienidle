@@ -16,10 +16,42 @@ permission:
     "git restore*": ask
     "git branch*": allow
     "git branch -D*": ask
-    "npm.cmd *": allow
-    "npx.cmd *": allow
+    # npm/npx: only safe read/verify subcommands; install/uninstall/publish/
+    # arbitrary npx package execution stays gated via the "*": ask catch-all
+    "npm run*": allow
+    "npm.cmd run*": allow
+    "npm test*": allow
+    "npm.cmd test*": allow
+    "npm view*": allow
+    "npm.cmd view*": allow
+    "npm ls*": allow
+    "npm.cmd ls*": allow
+    "npx vitest*": allow
+    "npx.cmd vitest*": allow
+    "npx tsc*": allow
+    "npx.cmd tsc*": allow
+    # read-only inspection commands (PowerShell + unix-style)
+    "Get-ChildItem*": allow
+    "Get-Content*": allow
+    "Get-Item*": allow
+    "Get-Date*": allow
+    "Test-Path*": allow
+    "Select-String*": allow
+    "rg *": allow
+    "ls *": allow
+    "cat *": allow
+    "head *": allow
+    "tail *": allow
+    "find *": allow
+    "wc *": allow
+    # write/delete stays gated
     "rm *": ask
-    "Remove-Item *": ask
+    "Remove-Item*": ask
+    "New-Item*": ask
+    "Copy-Item*": ask
+    "Move-Item*": ask
+    "Set-Content*": ask
+    "Add-Content*": ask
 ---
 
 You are the **general** agent for the TutienIdle project. You are the primary fallback when a task does not fit build, plan, or explore. You can edit code, run commands, and ship features — same surface as `build.md`, with the same rules.
