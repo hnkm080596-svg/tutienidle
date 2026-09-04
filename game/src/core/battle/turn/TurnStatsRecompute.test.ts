@@ -52,7 +52,7 @@ describe('recomputeEffectiveStats', () => {
 
     const effective = recomputeEffectiveStats(base, pool)
 
-    // calculateStats() pass-2 (deriveAttributeModifiers) c?ng strength×0.6:
+    // calculateStats() pass-2 (deriveAttributeModifiers) c?ng strengthï¿½0.6:
     // 100 (base) + 50 (flat buff) + 0.6 (strength 1) = 150.6.
     expect(effective.attack).toBeCloseTo(150.6, 5)
   })
@@ -63,7 +63,7 @@ describe('recomputeEffectiveStats', () => {
 
     const effective = recomputeEffectiveStats(base, pool)
 
-    // Không buff: ch? attribute-derived t? strength 1 (+0.6).
+    // Khï¿½ng buff: ch? attribute-derived t? strength 1 (+0.6).
     expect(effective.attack).toBeCloseTo(100.6, 5)
   })
 
@@ -80,7 +80,7 @@ describe('recomputeEffectiveStats', () => {
 
     const effective = recomputeEffectiveStats(base, pool)
 
-    // percent tang theo dúng pipeline: (100 + 0.6 attr) × (1 + 0.5) = 150.9.
+    // percent tang theo dï¿½ng pipeline: (100 + 0.6 attr) ï¿½ (1 + 0.5) = 150.9.
     expect(effective.attack).toBeCloseTo(150.9, 5)
   })
 })

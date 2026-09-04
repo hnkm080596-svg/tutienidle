@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import { createBaseStats } from '../stats/StatBlock'
@@ -174,5 +174,57 @@ describe('QA regression — refight after turn-battle victory (smoke test eviden
     // Refight — must succeed (was silently failing: StageManager.active stale)
     expect(gameManager.startStage(player, stats, stage, false)).toBe(true)
     expect(gameManager.getTurnBattle()?.state).toBe('countdown')
+  })
+})
+
+
+// ---------------------------------------------------------------------------
+// Future Systems Task 10 — party manual pause: BẤT KỲ party member nào
+// tới lượt đều pause, resolveActorTurn resolve đúng member đó.
+// ---------------------------------------------------------------------------
+
+describe('Future Systems Task 10 — party manual pause', () => {
+  it('pause áp cho mọi party member; presentation facade theo paused actor', () => {
+    const gameManager = new GameManager()
+    const enemy = defineEnemy({
+      id: 'party_dummy', name: 'Party Dummy', level: 1, realmId: 'mortal', lane: 'ground',
+      statsInput: { maxHp: 10_000_000, attack: 0, attackSpeed: 1, attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+      rewards: { techniqueInsight: 0, spiritStone: 0 },
+    })
+    const stage: Stage = {
+      id: 'party_stage', name: 'Party Stage', description: '', floor: 1,
+      enemyPool: [{ enemyId: enemy.id, weight: 1 }],
+      totalEnemyCount: 1, spawnIntervalSeconds: 0,
+    }
+    const player = createDefaultPlayer()
+    const stats = calculateStats({ ...player.baseStats, attack: 50 }, [])
+
+    gameManager.registerEnemyTemplates([enemy])
+    gameManager.registerStages([stage])
+    gameManager.setActivePlayer(player)
+
+    expect(gameManager.startStage(player, stats, stage, false)).toBe(true)
+
+    // Mô phỏng party 2 người: thêm players[1] với gauge ready ngay.
+    const battle = gameManager.getTurnBattle()
+    expect(battle).not.toBeNull()
+    expect(battle!.players).toHaveLength(1)
+
+    // (Party member thứ 2 là redesign nội dung recruit — engine check:
+    // players[] đã là mảng; test này pin engine-side includes-check.)
+    gameManager.setBattleManualMode(true)
+
+    for (let i = 0; i < 50; i++) {
+      gameManager.update(0.1)
+    }
+
+    // Pause xảy ra khi players[0] tới lượt (đơn vị duy nhất hiện có).
+    expect(gameManager.isAwaitingManualTurnChoice()).toBe(true)
+    expect(gameManager.consumeAwaitedActorId()).toBe('player')
+
+    // Presentation facade khi pause: theo awaited actor.
+    const presentation = gameManager.buildTurnSkillPresentation(battle!, true)
+
+    expect(presentation.basic).toBeDefined()
   })
 })

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { peekUpcomingActors, type BattleLogEntry } from './TurnOrderPreview'
-import { TurnBattleSystem, type TurnBattle } from './TurnBattleSystem'
+import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
@@ -29,7 +29,7 @@ function makeParticipant(
   entity: CombatEntity,
   speed: number,
   priority: number,
-): TurnBattle['player'] {
+): TurnBattleParticipant {
   return {
     id, entity, speed, priority, actionGauge: 0, alive: entity.alive,
     buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0,
@@ -46,7 +46,7 @@ function mkBattle(): TurnBattle {
   playerParticipant.actionGauge = 0
 
   return {
-    player: playerParticipant,
+    players: [playerParticipant],
     enemies: (() => {
       const fast = makeParticipant('enemyFast', enemyFast, 10, 1)
       fast.actionGauge = 990 // ready @1 step
@@ -61,7 +61,7 @@ describe('peekUpcomingActors', () => {
   it('returns N actors in gauge-fill order WITHOUT mutating the real battle', () => {
     const battle = mkBattle()
     const gaugeBefore = {
-      player: battle.player.actionGauge,
+      player: battle.players[0]!.actionGauge,
       fast: battle.enemies[0]!.actionGauge,
       slow: battle.enemies[1]!.actionGauge,
     }
@@ -71,7 +71,7 @@ describe('peekUpcomingActors', () => {
     const upcoming = peekUpcomingActors(battle, 3)
 
     expect(upcoming.map((a) => a.id)).toEqual(['enemyFast', 'player', 'player'])
-    expect(battle.player.actionGauge).toBe(gaugeBefore.player)
+    expect(battle.players[0]!.actionGauge).toBe(gaugeBefore.player)
     expect(battle.enemies[0]!.actionGauge).toBe(gaugeBefore.fast)
     expect(battle.enemies[1]!.actionGauge).toBe(gaugeBefore.slow)
     expect(battle.totalTurnsElapsed ?? 0).toBe(0)
@@ -101,7 +101,7 @@ describe('battle log (resolveActorTurn)', () => {
     })
 
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }

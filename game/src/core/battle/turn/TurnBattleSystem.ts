@@ -75,7 +75,12 @@ export interface TurnBattleParticipant {
 }
 
 export interface TurnBattle {
-  player: TurnBattleParticipant
+  /**
+   * Future Systems Task 9 (2026-09-04) — party: mảng player-side units,
+   * chung 1 ATB queue với enemy (TurnQueue tái dùng nguyên vẹn); thua khi
+   * TOÀN BỘ party chết (đối xứng điều kiện thắng — spec §6).
+   */
+  players: TurnBattleParticipant[]
   enemies: TurnBattleParticipant[]
   state: TurnBattleState
   totalTurnsElapsed?: number
@@ -187,7 +192,7 @@ export class TurnBattleSystem {
       return null
     }
 
-    const allParticipants = [battle.player, ...battle.enemies]
+    const allParticipants = [...battle.players, ...battle.enemies]
 
     for (const participant of allParticipants) {
       participant.alive = participant.entity.alive
@@ -253,7 +258,7 @@ export class TurnBattleSystem {
         }
 
         if (chargedSkill) {
-          const opposingSide = actor === battle.player ? battle.enemies : [battle.player]
+          const opposingSide = battle.players.includes(actor) ? battle.enemies : battle.players
           const primaryTarget = selectTarget(actor, opposingSide)
 
           if (primaryTarget) {
@@ -351,7 +356,7 @@ export class TurnBattleSystem {
         actor.pendingChargedSkillId = action.skillId
       }
 
-      const opposingSide = actor === battle.player ? battle.enemies : [battle.player]
+      const opposingSide = battle.players.includes(actor) ? battle.enemies : battle.players
       const primaryTarget = selectTarget(actor, opposingSide)
 
       if (primaryTarget && !isChargeInit) {
@@ -454,7 +459,7 @@ export class TurnBattleSystem {
 
     const finalAliveEnemyCount = battle.enemies.filter((enemy) => enemy.entity.alive).length
 
-    if (!battle.player.entity.alive) {
+    if (battle.players.every((member) => !member.entity.alive)) {
       battle.state = 'defeat'
     } else if (
       battle.wave

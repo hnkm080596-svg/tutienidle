@@ -2423,7 +2423,7 @@ export class GameManager {
     })
 
     return {
-      player: playerParticipant,
+      players: [playerParticipant],
       enemies: enemyParticipants,
       state: 'countdown',
       // 3s countdown hệ sống → 30 pacing ticks (BATTLE_FIXED_STEP 0.1s).
@@ -2452,7 +2452,7 @@ export class GameManager {
     this.awaitedManualActor = null
 
     this.turnBattle = {
-      player: previous.player,
+      players: previous.players,
       enemies: [],
       // Auto-repeat cycle giữa stage KHÔNG countdown lại (countdown chỉ ở
       // đầu trận/bắt đầu stage — hệ sống restartCycle giữ fighting ngay).
@@ -2550,7 +2550,8 @@ export class GameManager {
   /**
    * Slice 7 — presentation facade: buildTurnSkillPresentation cho trận
    * turn hiện tại (isPlayerTurnPaused = manual pause đang chờ choice).
-   * Delegate thuần — GameManager không giữ presentation logic.
+   * Party (Task 10): khi pause, presentation theo PAUSED ACTOR (bất kỳ
+   * party member nào), không cố định players[0].
    */
   buildTurnSkillPresentation(
     battle: TurnBattle,
@@ -2560,7 +2561,11 @@ export class GameManager {
     special: TurnSkillPresentationEntry
     ultimate: TurnSkillPresentationEntry
   } {
-    return buildTurnSkillPresentation(battle, isPlayerTurnPaused)
+    return buildTurnSkillPresentation(
+      battle,
+      isPlayerTurnPaused,
+      isPlayerTurnPaused ? (this.awaitedManualActor ?? undefined) : undefined,
+    )
   }
 
   getBattleRewardSummary(): BattleRewardSummary {
@@ -3169,7 +3174,7 @@ export class GameManager {
           } else if (this.battleManualMode) {
             const actor = this.turnBattleSystem.peekNextActor(this.turnBattle)
 
-            if (actor !== null && actor === this.turnBattle.player) {
+            if (actor !== null && this.turnBattle.players.includes(actor)) {
               this.awaitedManualActor = actor
             } else if (actor !== null) {
               this.turnBattleSystem.resolveActorTurn(this.turnBattle, actor)
@@ -3266,7 +3271,7 @@ export class GameManager {
     }))
 
     const shimBattle = {
-      player: turnBattle.player.entity,
+        player: turnBattle.players[0]?.entity,
       enemies: shimEnemies,
     } as unknown as Battle
 

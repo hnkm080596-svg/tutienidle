@@ -80,7 +80,7 @@ describe('Slice 4 adversarial (QA probes)', () => {
       deltasPerTurn: [{ stat: 'kim_the', amount: -5, min: 0 }],
     }
 
-    const battle: TurnBattle = { player: playerP, enemies: [makeParticipant('enemy', enemy, 5, 1)], state: 'fighting' }
+    const battle: TurnBattle = { players: [playerP], enemies: [makeParticipant('enemy', enemy, 5, 1)], state: 'fighting' }
 
     new TurnBattleSystem(new CombatSystem(new EventBus())).resolveNextStep(battle)
 
@@ -99,7 +99,7 @@ describe('Slice 4 adversarial (QA probes)', () => {
     const registry = new FixtureRegistry([stun])
     new TurnBuffSystem(playerP.buffs).apply(stun, enemy, player, registry)
 
-    const battle: TurnBattle = { player: playerP, enemies: [makeParticipant('enemy', enemy, 5, 1)], state: 'fighting' }
+    const battle: TurnBattle = { players: [playerP], enemies: [makeParticipant('enemy', enemy, 5, 1)], state: 'fighting' }
 
     new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry).resolveNextStep(battle)
 
@@ -113,7 +113,7 @@ describe('Slice 4 adversarial (QA probes)', () => {
     const enemyP = makeParticipant('enemy', enemy, 5, 1)
     enemyP.bossTrigger = { afterTurns: 1, buffDefinitionId: 'qa_enrage', firedAlready: false }
 
-    const battle: TurnBattle = { player: makeParticipant('player', player, 10, 0), enemies: [enemyP], state: 'fighting' }
+    const battle: TurnBattle = { players: [makeParticipant('player', player, 10, 0)], enemies: [enemyP], state: 'fighting' }
     const registry = new FixtureRegistry([ENRAGE])
 
     // Chờ enemy thật sự tới lượt — ATB gauge: player speed 10 tích nhanh
@@ -141,7 +141,7 @@ describe('Slice 4 adversarial (QA probes)', () => {
       deltasPerTurn: [{ stat: 'mana_pool', amount: 3, min: 0, max: 20 }],
     }
 
-    const battle: TurnBattle = { player: playerP, enemies: [makeParticipant('enemy', enemy, 100, 1)], state: 'fighting' }
+    const battle: TurnBattle = { players: [playerP], enemies: [makeParticipant('enemy', enemy, 100, 1)], state: 'fighting' }
 
     // Enemy speed 100 đi trước — player resources KHÔNG được tick ở step này.
     new TurnBattleSystem(new CombatSystem(new EventBus())).resolveNextStep(battle)

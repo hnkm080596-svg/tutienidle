@@ -1,4 +1,4 @@
-﻿import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { selectTarget, TurnBattleSystem, type TurnBattle, type TurnBattleParticipant, type TurnBattleState } from './TurnBattleSystem'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
@@ -118,7 +118,7 @@ describe('TurnBattleSystem.runToCompletion', () => {
     })
 
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -146,7 +146,7 @@ describe('TurnBattleSystem.runToCompletion', () => {
     })
 
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -182,7 +182,7 @@ describe('TurnBattleSystem.runToCompletion', () => {
     })
 
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('near', near, 5, 1), makeParticipant('far', far, 5, 2)],
       state: 'fighting',
     }
@@ -212,7 +212,7 @@ describe('TurnBattleSystem.runToCompletion', () => {
     })
 
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -251,7 +251,7 @@ describe('TurnBattleSystem.resolveNextStep', () => {
     })
 
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -283,7 +283,7 @@ describe('TurnBattleSystem.resolveNextStep', () => {
     playerParticipant.special = { skill: fixtureSkill({ id: 'special_skill', cooldownTurns: 2 }), remainingCooldownTurns: 0 }
 
     const battle: TurnBattle = {
-      player: playerParticipant,
+      players: [playerParticipant],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -309,7 +309,7 @@ describe('TurnBattleSystem.resolveNextStep', () => {
     })
 
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -373,7 +373,7 @@ describe('TurnBattleSystem.resolveNextStep buff/CC wiring', () => {
     new TurnBuffSystem(playerParticipant.buffs).apply(STUN_DEFINITION, enemyEntity, player, registry)
 
     const battle: TurnBattle = {
-      player: playerParticipant,
+      players: [playerParticipant],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -404,7 +404,7 @@ describe('TurnBattleSystem.resolveNextStep buff/CC wiring', () => {
     new TurnBuffSystem(playerParticipant.buffs).apply(STUN_DEFINITION, enemyEntity, player, registry)
 
     const battle: TurnBattle = {
-      player: playerParticipant,
+      players: [playerParticipant],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -431,7 +431,7 @@ describe('TurnBattleSystem.resolveNextStep buff/CC wiring', () => {
     })
 
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -479,7 +479,7 @@ describe('TurnBattleSystem.resolveNextStep appliesBuff (zone-as-dot proof)', () 
     const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
 
     const battle: TurnBattle = {
-      player: playerParticipant,
+      players: [playerParticipant],
       enemies: [enemyParticipant],
       state: 'fighting',
     }
@@ -518,7 +518,7 @@ describe('TurnBattleSystem.resolveNextStep appliesBuff (zone-as-dot proof)', () 
     }
 
     const battle: TurnBattle = {
-      player: playerParticipant,
+      players: [playerParticipant],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -567,7 +567,7 @@ describe('TurnBattleSystem.resolveNextStep appliesBuff (zone-as-dot proof)', () 
     const enemyBParticipant = makeParticipant('enemyB', enemyB, 10, 2)
 
     const battle: TurnBattle = {
-      player: playerParticipant,
+      players: [playerParticipant],
       enemies: [enemyAParticipant, enemyBParticipant],
       state: 'fighting',
     }
@@ -605,7 +605,7 @@ describe('TurnBattleSystem.resolveNextStep appliesBuff (zone-as-dot proof)', () 
     const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
 
     const battle: TurnBattle = {
-      player: playerParticipant,
+      players: [playerParticipant],
       enemies: [enemyParticipant],
       state: 'fighting',
     }
@@ -632,7 +632,7 @@ describe('TurnBattleSystem.resolveNextStep resource tick + totalTurnsElapsed', (
     })
 
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -667,7 +667,7 @@ describe('TurnBattleSystem.resolveNextStep resource tick + totalTurnsElapsed', (
     playerParticipant.resources = resources
 
     const battle: TurnBattle = {
-      player: playerParticipant,
+      players: [playerParticipant],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -699,7 +699,7 @@ describe('TurnBattleSystem.resolveNextStep resource tick + totalTurnsElapsed', (
     playerParticipant.resources = resources
 
     const battle: TurnBattle = {
-      player: playerParticipant,
+      players: [playerParticipant],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -724,7 +724,7 @@ describe('TurnBattleSystem.resolveNextStep resource tick + totalTurnsElapsed', (
     })
 
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -763,7 +763,7 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
     enemyParticipant.bossTrigger = bossTrigger
 
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [enemyParticipant],
       state: 'fighting',
     }
@@ -797,7 +797,7 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
     enemyParticipant.bossTrigger = { afterTurns: 1, buffDefinitionId: 'fixture_enrage', firedAlready: false }
 
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [enemyParticipant],
       state: 'fighting',
     }
@@ -832,7 +832,7 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
     enemyParticipant.bossTrigger = bossTrigger
 
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [enemyParticipant],
       state: 'fighting',
     }
@@ -865,7 +865,7 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
     enemyParticipant.bossTrigger = bossTrigger
 
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [enemyParticipant],
       state: 'fighting',
     }
@@ -897,7 +897,7 @@ describe('TurnBattleSystem.resolveNextStep multi-wave spawning', () => {
 
     const wave = { totalEnemyCount: 2, spawnedCount: 1 }
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
       state: 'fighting',
       wave,
@@ -938,7 +938,7 @@ describe('TurnBattleSystem.resolveNextStep multi-wave spawning', () => {
 
     const wave = { totalEnemyCount: 2, spawnedCount: 1 }
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
       state: 'fighting',
       wave,
@@ -981,7 +981,7 @@ describe('TurnBattleSystem.resolveNextStep multi-wave spawning', () => {
 
     const wave = { totalEnemyCount: 1, spawnedCount: 1 }
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
       state: 'fighting',
       wave,
@@ -1009,7 +1009,7 @@ describe('TurnBattleSystem.resolveNextStep multi-wave spawning', () => {
 
     const wave = { totalEnemyCount: 2, spawnedCount: 1 }
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
       state: 'fighting',
       wave,
@@ -1055,7 +1055,7 @@ describe('TurnBattleSystem.resolveNextStep multi-wave spawning', () => {
     })
 
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -1082,7 +1082,7 @@ describe('TurnBattleSystem.resolveNextStep multi-wave spawning', () => {
 
     const wave = { totalEnemyCount: 2, spawnedCount: 1 }
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
       state: 'fighting',
       wave,
@@ -1132,7 +1132,7 @@ describe('TurnBattleSystem.resolveNextStep Bï¿½ Th? (CC-lock guard)', () => {
     const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
 
     const battle: TurnBattle = {
-      player: playerParticipant,
+      players: [playerParticipant],
       enemies: [enemyParticipant],
       state: 'fighting',
     }
@@ -1200,7 +1200,7 @@ describe('TurnBattleSystem.resolveNextStep Bï¿½ Th? (CC-lock guard)', () => {
     playerParticipant.consecutiveHardCcTurns = 2
 
     const battle: TurnBattle = {
-      player: playerParticipant,
+      players: [playerParticipant],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -1238,7 +1238,7 @@ describe('TurnBattleSystem.resolveNextStep Sudden Death escalation', () => {
     }
 
     const battle: TurnBattle = {
-      player: playerParticipant,
+      players: [playerParticipant],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
       totalTurnsElapsed,
@@ -1341,7 +1341,7 @@ describe('TurnBattleSystem multi-target death-mid-resolution hardening', () => {
       targeting: { shape: 'row' },
     }
     const battle: TurnBattle = {
-      player: playerParticipant,
+      players: [playerParticipant],
       enemies: [makeParticipant('enemyA', enemyA, 10, 1), makeParticipant('enemyB', enemyB, 10, 2)],
       state: 'fighting',
     }
@@ -1372,7 +1372,7 @@ describe('TurnBattleSystem hpRegenPerTurn', () => {
     })
 
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -1399,7 +1399,7 @@ describe('TurnBattleSystem hpRegenPerTurn', () => {
     })
 
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -1426,7 +1426,7 @@ describe('TurnBattleSystem countdown phase (unified flow)', () => {
     })
 
     return {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'countdown',
       countdownTurnsRemaining: countdownTurns,
@@ -1503,7 +1503,7 @@ describe('TurnBattleSystem.peekNextActor', () => {
     })
 
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -1531,7 +1531,7 @@ describe('TurnBattleSystem.peekNextActor', () => {
     })
 
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -1556,7 +1556,7 @@ describe('TurnBattleSystem.peekNextActor', () => {
     })
 
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -1582,7 +1582,7 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
     })
 
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -1610,7 +1610,7 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
     })
 
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -1680,7 +1680,7 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
     }
 
     const battle: TurnBattle = {
-      player: playerParticipant,
+      players: [playerParticipant],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -1738,7 +1738,7 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
     }
 
     const battle: TurnBattle = {
-      player: playerParticipant,
+      players: [playerParticipant],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -1768,7 +1768,7 @@ describe('TurnBattleSystem.resolveActorTurn', () => {
     })
 
     const battle: TurnBattle = {
-      player: makeParticipant('player', player, 10, 0),
+      players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -1823,7 +1823,7 @@ describe('TurnBattleSystem special role â€” Reaction Path double-cast', () 
     }
 
     const battle: TurnBattle = {
-      player: playerParticipant,
+      players: [playerParticipant],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -1889,7 +1889,7 @@ describe('TurnBattleSystem gauge-delta buff (one-shot)', () => {
     }
 
     const battle: TurnBattle = {
-      player: playerParticipant,
+      players: [playerParticipant],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -1917,7 +1917,7 @@ describe('TurnBattleSystem gauge-delta buff (one-shot)', () => {
 
     system.resolveNextStep(battle)
 
-    expect(battle.player.actionGauge).toBeCloseTo(GAUGE_MAX * 0.3, 0)
+    expect(battle.players[0]!.actionGauge).toBeCloseTo(GAUGE_MAX * 0.3, 0)
   })
 
   it('percentOfMax lá»›n clamp táº¡i GAUGE_MAX, khÃ´ng overshoot', () => {
@@ -1926,7 +1926,7 @@ describe('TurnBattleSystem gauge-delta buff (one-shot)', () => {
 
     system.resolveNextStep(battle)
 
-    expect(battle.player.actionGauge).toBe(GAUGE_MAX)
+    expect(battle.players[0]!.actionGauge).toBe(GAUGE_MAX)
   })
 })
 
@@ -1970,7 +1970,7 @@ describe('TurnBattleSystem charge skill (Thế/Trảm)', () => {
     }
 
     const battle: TurnBattle = {
-      player: playerParticipant,
+      players: [playerParticipant],
       enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
       state: 'fighting',
     }
@@ -1987,8 +1987,8 @@ describe('TurnBattleSystem charge skill (Thế/Trảm)', () => {
 
     expect(step1.skillId).toBe('fixture_charge')
     expect(step1.targetIds).toEqual([])
-    expect(battle.player.chargingTurnsRemaining).toBe(2)
-    expect(battle.player.pendingChargedSkillId).toBe('fixture_charge')
+    expect(battle.players[0]!.chargingTurnsRemaining).toBe(2)
+    expect(battle.players[0]!.pendingChargedSkillId).toBe('fixture_charge')
 
     // Lượt 2 (enemy tự chạy) — player chưa tới lượt
     system.resolveNextStep(battle)
@@ -1996,7 +1996,7 @@ describe('TurnBattleSystem charge skill (Thế/Trảm)', () => {
     // Lượt 3 (player): charge đếm 2→1 — vẫn không hit
     const step3 = system.resolveNextStep(battle)
 
-    expect(battle.player.chargingTurnsRemaining).toBe(1)
+    expect(battle.players[0]!.chargingTurnsRemaining).toBe(1)
     expect(step3.targetIds).toEqual([])
 
     // Lượt 4 (enemy)
@@ -2009,7 +2009,7 @@ describe('TurnBattleSystem charge skill (Thế/Trảm)', () => {
     expect(step5.skillId).toBe('fixture_charge')
     expect(step5.targetIds).toEqual(['enemy'])
     expect(enemyEntity.currentHp).toBeLessThan(hpBefore)
-    expect(battle.player.chargingTurnsRemaining).toBeUndefined()
+    expect(battle.players[0]!.chargingTurnsRemaining).toBeUndefined()
   })
 
   it('charge KHÔNG đụng consecutiveHardCcTurns (tách biệt CC Bá Thể)', () => {
@@ -2020,6 +2020,6 @@ describe('TurnBattleSystem charge skill (Thế/Trảm)', () => {
     system.resolveNextStep(battle) // enemy
     system.resolveNextStep(battle) // charge tick 1
 
-    expect(battle.player.consecutiveHardCcTurns).toBe(0)
+    expect(battle.players[0]!.consecutiveHardCcTurns).toBe(0)
   })
 })

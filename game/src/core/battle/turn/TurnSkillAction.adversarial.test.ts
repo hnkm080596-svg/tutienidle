@@ -130,7 +130,7 @@ describe('Slice 2 adversarial (QA probes)', () => {
     }
 
     const battle: TurnBattle = {
-      player: playerParticipant,
+      players: [playerParticipant],
       enemies: [
         participant({ id: 'enemyA', entity: enemyA, speed: 1, priority: 1 }),
         participant({ id: 'enemyB', entity: enemyB, speed: 1, priority: 2 }),
@@ -160,7 +160,7 @@ describe('Slice 2 adversarial (QA probes)', () => {
     }
 
     const battle: TurnBattle = {
-      player: playerParticipant,
+      players: [playerParticipant],
       enemies: [participant({ id: 'enemy', entity: enemy, speed: 5, priority: 1 })],
       state: 'fighting',
     }

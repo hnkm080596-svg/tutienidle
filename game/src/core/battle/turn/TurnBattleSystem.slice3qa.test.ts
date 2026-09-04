@@ -84,7 +84,7 @@ describe('Slice 3 adversarial (QA probes)', () => {
     new TurnBuffSystem(playerP.buffs).apply(STUN, enemy, player, registry)
 
     const battle: TurnBattle = {
-      player: playerP,
+      players: [playerP],
       enemies: [makeParticipant('enemy', enemy, 5, 1)],
       state: 'fighting',
     }
@@ -113,7 +113,7 @@ describe('Slice 3 adversarial (QA probes)', () => {
     const registry = new FixtureRegistry([BURN])
     new TurnBuffSystem(enemyP.buffs).apply(BURN, player, enemy, registry)
 
-    const battle: TurnBattle = { player: playerP, enemies: [enemyP], state: 'fighting' }
+    const battle: TurnBattle = { players: [playerP], enemies: [enemyP], state: 'fighting' }
     const hpBefore = enemy.currentHp
 
     new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry).resolveNextStep(battle)
@@ -133,7 +133,7 @@ describe('Slice 3 adversarial (QA probes)', () => {
     const registry = new FixtureRegistry([BURN])
     new TurnBuffSystem(dyingP.buffs).apply(BURN, player, dying, registry)
 
-    const battle: TurnBattle = { player: playerP, enemies: [dyingP], state: 'fighting' }
+    const battle: TurnBattle = { players: [playerP], enemies: [dyingP], state: 'fighting' }
 
     const step = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry).resolveNextStep(battle)
 
@@ -154,7 +154,7 @@ describe('Slice 3 adversarial (QA probes)', () => {
     const registry = new FixtureRegistry([stunDot])
     new TurnBuffSystem(playerP.buffs).apply(stunDot, enemy, player, registry)
 
-    const battle: TurnBattle = { player: playerP, enemies: [makeParticipant('enemy', enemy, 5, 1)], state: 'fighting' }
+    const battle: TurnBattle = { players: [playerP], enemies: [makeParticipant('enemy', enemy, 5, 1)], state: 'fighting' }
     const hpBefore = player.currentHp
 
     const step = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry).resolveNextStep(battle)
@@ -177,7 +177,7 @@ describe('Slice 3 adversarial (QA probes)', () => {
     }
 
     const registry = new FixtureRegistry([BURN])
-    const battle: TurnBattle = { player: playerP, enemies: [makeParticipant('enemy', enemy, 5, 1)], state: 'fighting' }
+    const battle: TurnBattle = { players: [playerP], enemies: [makeParticipant('enemy', enemy, 5, 1)], state: 'fighting' }
 
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
     system.resolveNextStep(battle)
