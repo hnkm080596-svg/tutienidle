@@ -19,8 +19,6 @@ export interface EnemyStatInput {
 
   attackSpeed: number
 
-  movementSpeed: number
-
   /** Go Board (plan §4): tầm đánh theo HÀNH (rank) — data author trực tiếp, không heuristic runtime. */
   attackRangeRanks: number
 
@@ -55,7 +53,6 @@ export interface EnemyStatInput {
     enduranceThreshold?: number
     endurancePercent?: number
     primordialPower?: number
-    cooldownReduction?: number
     criticalAvoidance?: number
     chanceToIgnoreResistance?: number
     ailmentResistPercent?: number
@@ -109,8 +106,7 @@ export function normalizeEnemyStats(input: EnemyStatInput): Stats {
     // EnemyStatInput.special (không có pool MP để hấp thụ/hồi vào).
     maxMp: 0,
 
-    attackSpeed: normalizeEnemyAttackSpeed(input.attackSpeed),
-    movementSpeed: input.movementSpeed,
+    speed: normalizeEnemyAttackSpeed(input.attackSpeed),
 
     // Balance pass — clamp Trần 5 (xem MAX_ENEMY_ATTACK_RANGE_RANKS):
     // data author > 5 tự hạ về 5, mọi quái spawn qua funnel này đều
@@ -140,10 +136,8 @@ export function normalizeEnemyStats(input: EnemyStatInput): Stats {
     manaShieldPercent: 0,
     leechPercent: input.special?.leechPercent ?? 0,
     thornsPercent: input.special?.thornsPercent ?? 0,
-    hpRegenPerSecond: input.hpRegenPerSecond ?? 0,
+    hpRegenPerTurn: input.hpRegenPerSecond ?? 0,
     manaRegenPerSecond: 0,
-    cooldownReduction: input.special?.cooldownReduction ?? 0,
-    castSpeedPercent: 0,
     finalDamagePercent: 0,
     finalDamageReductionPercent: 0,
     criticalAvoidance: input.special?.criticalAvoidance ?? 0,
