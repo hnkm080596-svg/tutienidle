@@ -1,17 +1,77 @@
 {
   "version": 1,
   "skills": {
+    "balance-check": {
+      "source": "donchitos/claude-code-game-studios",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/balance-check/SKILL.md",
+      "computedHash": "53b58c0aa1875d6b6ddade3752ef808681535deff8c44cb0ba60ea2ef58f6682"
+    },
     "brainstorming": {
       "source": "obra/superpowers",
       "sourceType": "github",
       "skillPath": "skills/brainstorming/SKILL.md",
       "computedHash": "0eb8e9ba100985eb4da20c46807268cafd72ec1c4ea58132edf9be6c469867fe"
     },
+    "code-review": {
+      "source": "anthropics/knowledge-work-plugins",
+      "sourceType": "github",
+      "skillPath": "engineering/skills/code-review/SKILL.md",
+      "computedHash": "2b1ac29c8d03ecdd6dbb9d0ebc8cdb05965151bedceed36f262546785b3123bc"
+    },
+    "code-simplifier": {
+      "source": "simonwong/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/code-simplifier/SKILL.md",
+      "computedHash": "5cfc112afc798b43c5d28275cd0a26378c7f7ca00e7f2a783b0bad2b6031fc7c"
+    },
     "find-skills": {
       "source": "vercel-labs/skills",
       "sourceType": "github",
       "skillPath": "skills/find-skills/SKILL.md",
       "computedHash": "b146008599c31057cef1c145774cea5d5afb30e8f43fa802e47a4b461419aaaf"
+    },
+    "game-qa": {
+      "source": "playableintelligence/game-creator",
+      "sourceType": "github",
+      "skillPath": "skills/game-qa/SKILL.md",
+      "computedHash": "db82414223e6c25758e3861c16b09ffdb2a3e6c93baedf28f0631d116d6b45e9"
+    },
+    "improve-game": {
+      "source": "playableintelligence/game-creator",
+      "sourceType": "github",
+      "skillPath": "skills/improve-game/SKILL.md",
+      "computedHash": "b07a0967b4de766eff01a2e5009e7f1a39c392399d37200d48f3136b3fa0f4d2"
+    },
+    "performance": {
+      "source": "addyosmani/web-quality-skills",
+      "sourceType": "github",
+      "skillPath": "skills/performance/SKILL.md",
+      "computedHash": "25074989a0bbf636fd92e9079270b262a1c63422ed72a854494a8241dea0fcc5"
+    },
+    "phaser-arcade-physics": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/web-engines/phaser-arcade-physics/SKILL.md",
+      "computedHash": "5e01f84e7d8c07d7de424b9734de8431446c4a6fb555bdbc965ab622f375b324"
+    },
+    "phaser-core": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/web-engines/phaser-core/SKILL.md",
+      "computedHash": "44ce9ffd8700dea87d532b2315aaac8f7c3b56ab7cf6e9380829dac7af9b5076"
+    },
+    "playwright-best-practices": {
+      "source": "currents-dev/playwright-best-practices-skill",
+      "sourceType": "github",
+      "skillPath": "playwright-best-practices/SKILL.md",
+      "computedHash": "88623575c97314e115f0e361a7d942e31d3b7a4e8925832257e1ad33f52096e4"
+    },
+    "playwright-cli": {
+      "source": "microsoft/playwright-cli",
+      "sourceType": "github",
+      "skillPath": "skills/playwright-cli/SKILL.md",
+      "computedHash": "235fc46cba70822cb151893d1819314f6eedcd263434272f9d8341e92fdbd29e"
     },
     "skill-creator": {
       "source": "anthropics/skills",
@@ -42,6 +102,24 @@
       "sourceType": "github",
       "skillPath": "skills/react-best-practices/SKILL.md",
       "computedHash": "ca7b0c0c6e5f2750043f7f0cd72d16ac4e2abc48f9b5500d047a4b77a2506212"
+    },
+    "vue": {
+      "source": "antfu/skills",
+      "sourceType": "github",
+      "skillPath": "skills/vue/SKILL.md",
+      "computedHash": "f72b54618560c53d65740515ded5bb833750c4574dbe961fd21f022bd2b31a74"
+    },
+    "vue-best-practices": {
+      "source": "vuejs-ai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/vue-best-practices/SKILL.md",
+      "computedHash": "21132f6c11c765bd11d0d6ad081122dd858630073e2123b651e58f17b399b131"
+    },
+    "vue-pinia-best-practices": {
+      "source": "vuejs-ai/skills",
+      "sourceType": "github",
+      "skillPath": "skills/vue-pinia-best-practices/SKILL.md",
+      "computedHash": "ab191c9cc34d755e5e2133bbedc56bd5f9ba0841e242a7b54c818780a5c78a9c"
     }
   }
 }
