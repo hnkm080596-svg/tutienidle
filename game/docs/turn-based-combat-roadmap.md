@@ -166,6 +166,21 @@ Slice 4's `BossTurnTriggers` (turn-count only, single-fire buff) và bảng "Bos
 
 Nội dung cụ thể từng mục (Slice 6 content prerequisites, Slice 6 cutover, Slice 7 mở rộng turn-order-preview+battle-log, battle-speed-toggle, BuffSystem port+migrate+presentation, ReactionManager/SkillEffectSystem conversion, stats-recompute cho TurnStatModifierEffect/TurnOnHitProcEffect, dpsRatio thật, hpRegenPerTurn wiring, multi-target hardening) — xem spec/plan trên, không lặp lại ở đây để tránh 2 nguồn sự thật lệch nhau.
 
+## Rủi ro liên-plan & vấn đề còn mở (2026-09-04, sau khi viết Future Systems plan)
+
+3 plan lớn hiện đang tồn tại song song ([Combat Fairness Guards](../../docs/superpowers/plans/2026-09-04-combat-fairness-guards.md), [Completion](../../docs/superpowers/plans/2026-09-04-turn-based-combat-completion.md), [Future Systems](../../docs/superpowers/plans/2026-09-04-turn-based-combat-future-systems.md)) — dù mỗi plan tự nó đã self-review, khi xếp CHUNG với nhau vẫn lộ ra vài điểm cần các agent thực thi lưu ý, vì không plan nào tự thấy được xung đột với plan khác khi viết riêng lẻ.
+
+**Đã tìm thấy và SỬA XONG (không cần hành động thêm)**:
+- Future Systems' Task 8 (Channel skill nội dung Kiếm Tu) ban đầu gán "Thế" vào vai trò `basic` của Kiếm Tu — xung đột trực tiếp với Completion plan's Task 5 (đã khảo sát: Kiếm Tu `basic` thật là `tram`/"Huy Kiếm"). Đã sửa: `tram` giữ nguyên basic, "Thế" không chiếm slot nào cả (chỉ là hiệu ứng tự động cấp resource lúc vào trận/mỗi lượt, tùy quyết định lúc thực thi), "Trảm" chiếm `special` như đã chốt. Xem commit sửa plan.
+
+**CÒN MỞ — cần agent thực thi Future Systems lưu ý khi tới Task 9 (Party)**:
+- Future Systems' Phase B-E (gồm cả Task 9 — Party migration `player`→`players[]`) bị khóa tới khi **toàn bộ** Completion plan merge xong. Nghĩa là Slice 7 (manual UI, Completion Task 10-11) sẽ được XÂY XONG trước khi Party tồn tại — UI đó lúc đó chỉ biết `battle.player` số ít. Khi Party (Future Systems Task 9) đổi `TurnBattle.player`→`players[]` SAU ĐÓ, Slice 7's UI cần 1 bản cập nhật follow-up (biết đang là lượt của unit nào trong party, hiển thị đúng skill của unit đó) — **chưa plan nào bao gồm việc này**, cần 1 task nhỏ bổ sung vào Slice 7 hoặc Future Systems khi tới lúc, không phải bug nhưng là 1 gap thứ tự thực thi cần biết trước.
+
+**Nội dung/cân bằng còn để placeholder, cần 1 lượt tune thật sau khi cơ chế chạy được**:
+- Reaction Path's ultimate — %/số lượt cường hóa dmg reaction (Future Systems Task 4).
+- Channel skill's resource cap cho "Thế"/số lượt charge của "Trảm" (Future Systems Task 8).
+- Node Tree's 3 skill cụ thể thay cho chain 5 skill cũ, mỗi hành (Future Systems Task 1) — quyết định nội dung để lúc thực thi, ghi vào commit message theo yêu cầu của Task 1's Step 2.
+
 ## Cách cập nhật roadmap này
 
 Sau mỗi lần khảo sát/brainstorm/viết plan cho một hạng mục:
