@@ -733,3 +733,149 @@ describe('TurnBattleSystem.resolveNextStep resource tick + totalTurnsElapsed', (
     expect(() => system.resolveNextStep(battle)).not.toThrow()
   })
 })
+
+const ENRAGE_DEFINITION: TurnBuffDefinition = {
+  id: 'fixture_enrage',
+  name: 'Fixture Enrage',
+  polarity: 'buff',
+  duration: 999,
+  stackMode: 'refresh',
+  effects: [{ type: 'dot', dpsRatio: 0.1, element: 'physical' }],
+}
+
+describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
+  it('fires the boss trigger and applies the buff to self once totalTurnsElapsed reaches afterTurns', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
+    const bossTrigger = { afterTurns: 1, buffDefinitionId: 'fixture_enrage', firedAlready: false }
+    enemyParticipant.bossTrigger = bossTrigger
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [enemyParticipant],
+      state: 'fighting',
+    }
+
+    const registry = new FixtureBuffRegistry([ENRAGE_DEFINITION])
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
+
+    // Turn 1: player acts (totalTurnsElapsed becomes 1). Turn 2: enemy acts
+    // (totalTurnsElapsed becomes 2, already >= afterTurns 1 by then).
+    system.resolveNextStep(battle)
+    system.resolveNextStep(battle)
+
+    expect(bossTrigger.firedAlready).toBe(true)
+    expect(enemyParticipant.buffs.getAll().some((buff) => buff.id === 'fixture_enrage')).toBe(true)
+  })
+
+  it('does not fire twice even after many more of the boss own turns', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
+    enemyParticipant.bossTrigger = { afterTurns: 1, buffDefinitionId: 'fixture_enrage', firedAlready: false }
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [enemyParticipant],
+      state: 'fighting',
+    }
+
+    const registry = new FixtureBuffRegistry([ENRAGE_DEFINITION])
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
+
+    for (let i = 0; i < 6; i++) {
+      system.resolveNextStep(battle)
+    }
+
+    const afterBuffs = enemyParticipant.buffs.getAll().filter((buff) => buff.id === 'fixture_enrage')
+
+    expect(afterBuffs).toHaveLength(1)
+  })
+
+  it('does not fire before totalTurnsElapsed reaches afterTurns', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
+    const bossTrigger = { afterTurns: 999, buffDefinitionId: 'fixture_enrage', firedAlready: false }
+    enemyParticipant.bossTrigger = bossTrigger
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [enemyParticipant],
+      state: 'fighting',
+    }
+
+    const registry = new FixtureBuffRegistry([ENRAGE_DEFINITION])
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
+
+    system.resolveNextStep(battle)
+    system.resolveNextStep(battle)
+
+    expect(bossTrigger.firedAlready).toBe(false)
+    expect(enemyParticipant.buffs.getAll()).toEqual([])
+  })
+
+  it('does not throw and does not fire when no registry was provided', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
+    const bossTrigger = { afterTurns: 1, buffDefinitionId: 'fixture_enrage', firedAlready: false }
+    enemyParticipant.bossTrigger = bossTrigger
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [enemyParticipant],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    expect(() => {
+      system.resolveNextStep(battle)
+      system.resolveNextStep(battle)
+    }).not.toThrow()
+
+    expect(bossTrigger.firedAlready).toBe(false)
+  })
+})

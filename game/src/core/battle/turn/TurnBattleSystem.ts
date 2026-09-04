@@ -15,6 +15,7 @@ import { TurnBuffSystem } from './TurnBuffSystem'
 import type { TurnBuffRegistry } from './TurnBuffTypes'
 import { applyTurnStartDeltas } from './ResourceTurnHook'
 import type { TurnResourceDelta } from './ResourceTurnHook'
+import { isTurnTriggerReady } from './BossTurnTriggers'
 
 export interface TurnResourcePool {
   values: Record<string, number>
@@ -134,6 +135,19 @@ export class TurnBattleSystem {
 
     if (actor.resources) {
       actor.resources.values = applyTurnStartDeltas(actor.resources.values, actor.resources.deltasPerTurn)
+    }
+
+    if (
+      actor.bossTrigger &&
+      !actor.bossTrigger.firedAlready &&
+      this.registry &&
+      isTurnTriggerReady({ afterTurns: actor.bossTrigger.afterTurns }, battle.totalTurnsElapsed ?? 0)
+    ) {
+      const definition = this.registry.get(actor.bossTrigger.buffDefinitionId)
+
+      new TurnBuffSystem(actor.buffs).apply(definition, actor.entity, actor.entity, this.registry)
+
+      actor.bossTrigger.firedAlready = true
     }
 
     let skillId = ''
