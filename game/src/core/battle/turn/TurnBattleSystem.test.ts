@@ -1304,3 +1304,50 @@ describe('TurnBattleSystem.resolveNextStep Sudden Death escalation', () => {
     expect(scaledDamage).toBeCloseTo((baseDamage + enduranceFlat) * 2.5 - enduranceFlat, 1)
   })
 })
+
+describe('TurnBattleSystem multi-target death-mid-resolution hardening', () => {
+  it('does not apply a second hit to a target already killed by an earlier hit in the same AOE skill', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      row: 4,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999999 },
+    })
+    const enemyA = createCombatant({
+      id: 'enemyA',
+      row: 4,
+      x: 1,
+      currentHp: 1,
+      maxHp: 1,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+    const enemyB = createCombatant({
+      id: 'enemyB',
+      row: 4,
+      x: 2,
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const playerParticipant = makeParticipant('player', player, 10, 0)
+    playerParticipant.basic = {
+      id: 'fixture_aoe_basic',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'row' },
+    }
+    const battle: TurnBattle = {
+      player: playerParticipant,
+      enemies: [makeParticipant('enemyA', enemyA, 10, 1), makeParticipant('enemyB', enemyB, 10, 2)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    const step = system.resolveNextStep(battle)
+
+    expect(enemyA.currentHp).toBe(0)
+    expect(enemyA.alive).toBe(false)
+    expect(step.targetIds.filter((id) => id === 'enemyA')).toHaveLength(1)
+  })
+})

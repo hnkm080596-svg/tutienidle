@@ -197,6 +197,8 @@ export class TurnBattleSystem {
         const scaledDamage = suddenDeathMultiplier === 1 ? action.damage : scaleActionDamage(action.damage, suddenDeathMultiplier)
 
         for (const target of affected) {
+          if (!target.entity.alive) continue
+
           this.combat.resolveActionHit(actor.entity, target.entity, scaledDamage)
           targetIds.push(target.id)
         }
