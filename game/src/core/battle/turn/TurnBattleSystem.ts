@@ -17,6 +17,7 @@ import { applyTurnStartDeltas } from './ResourceTurnHook'
 import type { TurnResourceDelta } from './ResourceTurnHook'
 import { isTurnTriggerReady } from './BossTurnTriggers'
 import { shouldSpawnNextEnemy, isStageComplete } from './WaveSpawnTrigger'
+import { scaleActionDamage } from '../ActionImpactSystem'
 
 export interface TurnResourcePool {
   values: Record<string, number>
@@ -39,6 +40,8 @@ export interface TurnBattleParticipant {
   actionGauge: number
   alive: boolean
   buffs: TurnBuffPool
+  consecutiveHardCcTurns: number
+  baTheTriggeredAtTurn?: number
   basic?: TurnSkillDefinition
   special?: TurnSkillSlot
   ultimate?: TurnSkillSlot
@@ -135,7 +138,24 @@ export class TurnBattleSystem {
     // CC check TRƯỚC tick: buff stun/freeze duration=N phải block đúng N
     // lượt của holder (áp ở lượt N-1, block lượt N..N+1, hết sau khi block
     // lượt cuối). Tick trước sẽ làm duration-1 expire trước khi kịp block.
-    const ccBlocked = actorBuffSystem.isStunned() || actorBuffSystem.isFrozen()
+    // Bá Thể: bị hard-CC liên tục >= 3 lượt thì lượt thứ 4 tự gỡ CC và
+    // hành động (fairness guard — không ai bị khóa vĩnh viễn).
+    const hardCcActive = actorBuffSystem.isStunned() || actorBuffSystem.isFrozen()
+
+    let ccBlocked: boolean
+
+    if (hardCcActive && actor.consecutiveHardCcTurns >= 3) {
+      actor.buffs.clearCcEffects()
+      actor.consecutiveHardCcTurns = 0
+      actor.baTheTriggeredAtTurn = battle.totalTurnsElapsed
+      ccBlocked = false
+    } else if (hardCcActive) {
+      actor.consecutiveHardCcTurns += 1
+      ccBlocked = true
+    } else {
+      actor.consecutiveHardCcTurns = 0
+      ccBlocked = false
+    }
 
     actorBuffSystem.update(actor.entity, this.combat, this.registry)
 
@@ -173,8 +193,11 @@ export class TurnBattleSystem {
       if (primaryTarget) {
         const affected = collectTurnTargets(primaryTarget, opposingSide, action.targeting)
 
+        const suddenDeathMultiplier = this.suddenDeathDamageMultiplier(battle.totalTurnsElapsed ?? 0)
+        const scaledDamage = suddenDeathMultiplier === 1 ? action.damage : scaleActionDamage(action.damage, suddenDeathMultiplier)
+
         for (const target of affected) {
-          this.combat.resolveActionHit(actor.entity, target.entity, action.damage)
+          this.combat.resolveActionHit(actor.entity, target.entity, scaledDamage)
           targetIds.push(target.id)
         }
 
@@ -232,5 +255,11 @@ export class TurnBattleSystem {
 
     battle.state = 'defeat'
     return battle.state
+  }
+
+  private suddenDeathDamageMultiplier(totalTurnsElapsed: number): number {
+    const turnsPastGrace = totalTurnsElapsed - 10
+
+    return turnsPastGrace > 0 ? 1 + 0.3 * turnsPastGrace : 1
   }
 }

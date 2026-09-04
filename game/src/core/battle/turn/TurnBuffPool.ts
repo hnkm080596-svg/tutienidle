@@ -37,4 +37,9 @@ export class TurnBuffPool {
   clear(): void {
     this.buffs = []
   }
+
+  /** Removes every active buff that carries a cc:stun/cc:freeze effect — used by the Bá Thể CC-lock guard. */
+  clearCcEffects(): void {
+    this.buffs = this.buffs.filter((buff) => !buff.effects.some((effect) => effect.type === 'cc'))
+  }
 }

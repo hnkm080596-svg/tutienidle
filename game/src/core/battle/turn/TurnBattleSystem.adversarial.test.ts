@@ -50,7 +50,7 @@ function makeParticipant(
   speed: number,
   priority: number,
 ): TurnBattleParticipant {
-  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new TurnBuffPool() }
+  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0 }
 }
 
 describe('TurnBattleSystem adversarial (QA probes)', () => {

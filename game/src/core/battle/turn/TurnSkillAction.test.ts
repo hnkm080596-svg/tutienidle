@@ -108,7 +108,7 @@ function participant(overrides: Partial<TurnBattleParticipant> = {}): TurnBattle
     priority: 0,
     actionGauge: 0,
     alive: true,
-    buffs: new TurnBuffPool(),
+    buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0,
     ...overrides,
   }
 }

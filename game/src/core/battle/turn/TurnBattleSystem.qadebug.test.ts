@@ -13,7 +13,7 @@ function entity(id: string, column: number, row: number): CombatEntity {
 }
 
 function participant(id: string, e: CombatEntity): TurnBattleParticipant {
-  return { id, entity: e, speed: 10, priority: 0, actionGauge: 0, alive: e.alive, buffs: new TurnBuffPool() }
+  return { id, entity: e, speed: 10, priority: 0, actionGauge: 0, alive: e.alive, buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0 }
 }
 
 describe('selectTarget probe hygiene (QA)', () => {
