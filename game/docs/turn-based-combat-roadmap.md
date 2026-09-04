@@ -153,6 +153,18 @@ Slice 4's `BossTurnTriggers` (turn-count only, single-fire buff) và bảng "Bos
 | Enemy targeting theo archetype (melee/ranged/caster) | Trung bình→Đã khảo sát | 🟢 Khảo sát sâu xong — KHÔNG phải gap (archetype chỉ chi phối real-time positioning, không ảnh hưởng target selection) |
 | `CombatAiStrategy` (nearest/boss_first/elite_first/lowest_hp/highest_hp) bị mất — phát hiện MỚI từ khảo sát archetype | Trung bình (tính năng thật bị mất) | 🟢 **CHẤP NHẬN MẤT** — giữ cố định "gần nhất-trước-mặt" cho mọi build, không mang strategy-choice trở lại |
 
+## Turn-Based Combat Completion — spec+plan gộp (2026-09-04)
+
+**Theo yêu cầu người dùng**, toàn bộ phần còn lại để hoàn thành rework (trừ Combat Fairness Guards đang thực thi riêng, và trừ Party/Pháp Tu Reaction Path/Node Tree/Channel skill vẫn để spec riêng sau) đã được gộp thành **1 spec** + **1 plan** duy nhất: [2026-09-04-turn-based-combat-completion-design.md](../../docs/superpowers/specs/2026-09-04-turn-based-combat-completion-design.md) + [2026-09-04-turn-based-combat-completion.md](../../docs/superpowers/plans/2026-09-04-turn-based-combat-completion.md) — 14 task, 6 phase theo đúng thứ tự phụ thuộc thật (độc lập trước, Slice 6 cutover ở giữa, hậu-cutover sau cùng).
+
+**2 phát hiện sửa sai lệch roadmap trong lúc khảo sát**:
+- `SkillEffectResolver.ts`'s `grantsSwordZone` (dòng 52 dưới) — **không tồn tại**, field thật là `SkillEffect.grantsSwordZone` xử lý ở `SkillEffectSystem.ts`, không phải `SkillEffectResolver.ts`.
+- Số file `BattleSystem.*.test.ts` cần viết lại là **27, không phải ~16** như spec Slice 6 gốc ước tính.
+
+**1 mục đã HOÀN THÀNH ngoài dự kiến**: 3 buff ghép `movementSpeed`+`attackSpeed` (dòng 79 dưới) — khảo sát xác nhận Stat System conversion's Task 6 (compiler-navigated fixup) đã tự dọn sạch `movementSpeed` khỏi các buff này như một tác dụng phụ để giữ build pass. Không còn việc gì cần làm — xóa khỏi phạm vi plan mới.
+
+Nội dung cụ thể từng mục (Slice 6 content prerequisites, Slice 6 cutover, Slice 7 mở rộng turn-order-preview+battle-log, battle-speed-toggle, BuffSystem port+migrate+presentation, ReactionManager/SkillEffectSystem conversion, stats-recompute cho TurnStatModifierEffect/TurnOnHitProcEffect, dpsRatio thật, hpRegenPerTurn wiring, multi-target hardening) — xem spec/plan trên, không lặp lại ở đây để tránh 2 nguồn sự thật lệch nhau.
+
 ## Cách cập nhật roadmap này
 
 Sau mỗi lần khảo sát/brainstorm/viết plan cho một hạng mục:
