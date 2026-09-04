@@ -265,6 +265,7 @@ const PHAP_TU_STARTER_SKILL_ID = 'hoa_cau_thuat'
 export class GameManager {
   readonly eventBus = new EventBus()
 
+
   readonly combatSystem = new CombatSystem(this.eventBus)
 
   // ThiÃƒÂªn phÃƒÂº BÃ¡ÂºÂ¥t TÃ¡Â»Â­ ThÃ¡Â»Æ’ (talent-direction-choice-plan Ã‚Â§6) Ã¢â‚¬â€ guard giÃ¡Â»Â¯ lÃ†Â°Ã¡Â»Â£t
@@ -3360,31 +3361,10 @@ export class GameManager {
     }
 
     // Victory event cho stage/turn flow Ã¢â‚¬â€ emit Ã„ÂÃƒÅ¡NG 1 LÃ¡ÂºÂ¦N mÃ¡Â»â€”i cycle.
-    if (
-      this.turnBattle &&
-      this.turnBattle.state === 'victory' &&
-      !this.turnBattleEndEmitted
-    ) {
-      this.turnBattleEndEmitted = true
-      this.eventBus.emit('battle_end', { type: 'battle_end', state: 'victory' })
-
-      // Auto-farm spec Task 3 — record at the REAL victory terminal (this
-      // block is the one that actually fires; the in-while grant block's
-      // own `!emitted` gate loses the race to this one after the loop).
-      this.recordPerfectClearIfEligible(this.turnBattle)
-
-      // Stage completion (StageWaveSystem.update cÃ…Â©): push completedStageIds
-      // Ã„ÂÃƒÅ¡NG 1 LÃ¡ÂºÂ¦N Ã¢â‚¬â€ auto-repeat vÃ¡ÂºÂ«n push (player hoÃƒÂ n thÃƒÂ nh stage nÃƒÂ y dÃƒÂ¹
-      // Ã„â€˜ÃƒÂ¡nh tiÃ¡ÂºÂ¿p cycle mÃ¡Â»â€ºi).
-      if (
-        this.playerDataForTurnBattle &&
-        this.activeStageForTurnBattle &&
-        !this.playerDataForTurnBattle.completedStageIds.includes(this.activeStageForTurnBattle.id)
-      ) {
-        this.playerDataForTurnBattle.completedStageIds.push(this.activeStageForTurnBattle.id)
-      }
-
-    }
+    // Single victory terminal: grantTurnBattleRewards() (trong while) la diem
+    // duy nhat emit 'battle_end' + record perfect-clear + push completedStageIds.
+    // (Block victory trung lap o day da bi XOA 2026-09-04: 2 terminal tranh
+    // nhau flag !emitted tung lam record miss — perfect-clear debug evidence.)
 
     // Auto-repeat: victory + repeat bÃ¡ÂºÂ­t Ã¢â€ â€™ restart NGAY trong cÃƒÂ¹ng call
     // (khÃƒÂ´ng chÃ¡Â»Â step kÃ¡ÂºÂ¿) Ã„â€˜Ã¡Â»Æ’ getBattle()?.state quay lÃ¡ÂºÂ¡i countdown Ã¢â€ â€™
@@ -3451,7 +3431,11 @@ export class GameManager {
       enemies: shimEnemies,
     } as unknown as Battle
 
-    this.battleLoot.processDefeatedEnemies(shimBattle)
+    try {
+      this.battleLoot.processDefeatedEnemies(shimBattle)
+    } catch (error) {
+      throw error
+    }
 
 
     for (const enemyId of killedIds) {
@@ -3464,7 +3448,10 @@ export class GameManager {
     // PHÃ¡ÂºÂ¢I Ã„â€˜Ã†Â°Ã¡Â»Â£c release tÃ¡ÂºÂ¡i Ã„â€˜ÃƒÂ¢y: nÃ¡ÂºÂ¿u khÃƒÂ´ng, startStage() kÃ¡ÂºÂ¿ tiÃ¡ÂºÂ¿p (Ã„ÂÃƒÂ¡nh LÃ¡ÂºÂ¡i)
     // return false vÃ„Â©nh viÃ¡Â»â€¦n trong session (smoke-test regression 2026-09-04).
     // Auto-repeat KHÃƒâ€NG stop Ã¢â‚¬â€ restartTurnBattleCycle tÃƒÂ¡i dÃƒÂ¹ng active.
-    if (turnBattle.state !== 'fighting' && !this.turnBattleEndEmitted) {
+    if (
+      (turnBattle.state === 'victory' || turnBattle.state === 'defeat') &&
+      !this.turnBattleEndEmitted
+    ) {
       this.turnBattleEndEmitted = true
 
       if (!this.turnBattleRepeatContinuously) {
@@ -3507,6 +3494,7 @@ export class GameManager {
   private recordPerfectClearIfEligible(turnBattle: TurnBattle) {
     const stage = this.activeStageForTurnBattle
     const player = this.playerDataForTurnBattle
+
 
     if (!stage || !player || stage.perfectClearTurnLimit === undefined) {
       return

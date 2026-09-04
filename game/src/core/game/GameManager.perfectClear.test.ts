@@ -15,7 +15,7 @@ import type { Stage } from '../stage/Stage'
 // block chạy (emitted=true) nhưng record không ghi — 1 subtle flow issue
 // chưa root-cause sau nhiều hypothesis (systematic-debugging rule: >3
 // attempts → stop). Follow-up: debug riêng với victory-block tracing.
-describe.skip('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
+describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
   const DUMMY_ENEMY = defineEnemy({
     id: 'perfect_dummy',
     name: 'Perfect Dummy',
@@ -83,7 +83,12 @@ describe.skip('GameManager — Hoàn Mỹ condition on turn-based victory', () =
     const { gameManager, player } = harness(stage())
 
     for (let i = 0; i < 400 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
-      gameManager.update(0.05)
+      try {
+        gameManager.update(0.05)
+      } catch (error) {
+        console.error('[PC-LOOP-THREW]', i, error instanceof Error ? error.message : String(error))
+        break
+      }
     }
 
     expect(gameManager.getTurnBattle()?.state).toBe('victory')
@@ -95,7 +100,12 @@ describe.skip('GameManager — Hoàn Mỹ condition on turn-based victory', () =
     const stats = calculateStats({ ...player.baseStats, attack: 100 }, [])
 
     for (let i = 0; i < 400 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
-      gameManager.update(0.05)
+      try {
+        gameManager.update(0.05)
+      } catch (error) {
+        console.error('[PC-LOOP-THREW]', i, error instanceof Error ? error.message : String(error))
+        break
+      }
     }
 
     const firstSeconds = player.perfectClearSeconds['perfect_stage']
@@ -105,7 +115,12 @@ describe.skip('GameManager — Hoàn Mỹ condition on turn-based victory', () =
     gameManager.startStage(player, stats, stageDef, false)
 
     for (let i = 0; i < 400 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
-      gameManager.update(0.05)
+      try {
+        gameManager.update(0.05)
+      } catch (error) {
+        console.error('[PC-LOOP-THREW]', i, error instanceof Error ? error.message : String(error))
+        break
+      }
     }
 
     expect(player.perfectClearSeconds['perfect_stage']).toBe(firstSeconds)
