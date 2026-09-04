@@ -51,6 +51,9 @@ export interface GameManagerSaveRestoreDeps {
   // gọi lại chúng, không sở hữu logic, nên nhận qua closure.
   refreshAutoWorkerCapacity: (player: PlayerData, instance: BuildingInstance) => void
   getWorkerAssignments: () => Map<string, number>
+  // Auto-farm Task 5 (2026-09-04) — offline catch-up closure (logic sống
+  // trên GameManager, SaveRestore chỉ gọi lại — cùng pattern trên).
+  settleAutoFarmOffline: (player: PlayerData, elapsedOfflineSeconds: number) => void
 }
 
 /**
@@ -254,6 +257,11 @@ export class GameManagerSaveRestore {
             workerAssignments: this.deps.getWorkerAssignments(),
           },
         )
+
+        // Auto-farm Task 5 (2026-09-04) — NGOẠI LỆ DUY NHẤT combat nhận
+        // reward offline: roll các chu kỳ auto-farm đã trôi trong cửa sổ
+        // offline (cùng gate >60s với Production catch-up).
+        this.deps.settleAutoFarmOffline(offlinePlayer, elapsedOfflineSeconds)
       }
     }
 

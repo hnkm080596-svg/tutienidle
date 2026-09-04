@@ -727,6 +727,8 @@ export class GameManager {
       refreshAutoWorkerCapacity: (player, instance) =>
         this.refreshAutoWorkerCapacity(player, instance),
       getWorkerAssignments: () => this.getWorkerAssignments(),
+      settleAutoFarmOffline: (player, elapsedSeconds) =>
+        this.settleAutoFarmOffline(player, elapsedSeconds),
     })
   }
 
@@ -3022,6 +3024,47 @@ export class GameManager {
 
     player.autoFarmStage = null
     this.stageManager.stop()
+  }
+
+  /**
+   * Auto-farm Task 5 — offline catch-up khi restore save: roll reward cho
+   * các chu kỳ đã trôi ngoài tuyến tính (offline) — NGOẠI LỆ DUY NHẤT
+   * combat được nhận reward offline (chùng nguyên tắc Production catch-up).
+   * Cùng chu kỳ online (perfectClearSeconds/2); leftover dư giữ lại qua
+   * lastCheckedMs tiến đúng phần đã settle.
+   */
+  settleAutoFarmOffline(player: PlayerData, elapsedOfflineSeconds: number): void {
+    const autoFarm = player.autoFarmStage
+
+    if (!autoFarm) {
+      return
+    }
+
+    const cycleSeconds = player.perfectClearSeconds[autoFarm.stageId]
+
+    if (cycleSeconds === undefined) {
+      return
+    }
+
+    const cycleMs = (cycleSeconds / 2) * 1000
+    const elapsedMs = elapsedOfflineSeconds * 1000
+    const completedCycles = Math.floor(elapsedMs / cycleMs)
+
+    if (completedCycles <= 0) {
+      return
+    }
+
+    const stage = this.stageTemplates.get(autoFarm.stageId)
+
+    if (!stage) {
+      return
+    }
+
+    for (let i = 0; i < completedCycles; i++) {
+      this.rollAutoFarmCycleReward(player, stage)
+    }
+
+    autoFarm.lastCheckedMs += completedCycles * cycleMs
   }
 
   /**
