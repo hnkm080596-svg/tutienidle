@@ -439,7 +439,12 @@ git commit -m "feat(turn-combat): gauge-delta buff effect — one-shot ATB push 
 
 # Phase D — Channel Skill Support (gated — see Global Constraints)
 
-### Task 7: "Thế"/"Trảm" resource-gated skills + the `chargingTurnsRemaining` primitive
+### Task 7: Generic charge-skill primitive (`chargingTurnsRemaining`)
+
+**Note**: this task builds a generic engine primitive, not Kiếm-Tu-specific
+content — Task 8 is where Bạt Kiếm Thuật's real 2-phase design
+("Thế" to start charging, becomes "Trảm" on completion, damage scales
+with `chargeTurns`) actually gets authored using this primitive.
 
 **Files:**
 - Modify: `game/src/core/battle/turn/TurnSkillAction.ts` (add `chargeTurns?: number` to `TurnSkillDefinition`)
@@ -447,8 +452,8 @@ git commit -m "feat(turn-combat): gauge-delta buff effect — one-shot ATB push 
 - Test: `game/src/core/battle/turn/TurnBattleSystem.test.ts`
 
 **Interfaces:**
-- Consumes: `TurnResourcePool`/`applyTurnStartDeltas` (Slice 4, merged) for Thế's resource accumulation.
-- Produces: `TurnBattleParticipant.chargingTurnsRemaining?: number`, `TurnSkillDefinition.chargeTurns?: number` — self-contained, nothing consumed by a later task in this plan.
+- Consumes: nothing new.
+- Produces: `TurnBattleParticipant.chargingTurnsRemaining?: number`, `TurnSkillDefinition.chargeTurns?: number` — consumed by Task 8's real content.
 
 - [ ] **Step 1: Add `chargeTurns` to `TurnSkillDefinition`**
 
@@ -565,61 +570,75 @@ git commit -m "feat(channel-skill): chargingTurnsRemaining primitive — Thế/T
 
 ---
 
-### Task 8: Kiếm Tu real content — "Thế" (auto on-battle-start, NOT a skill slot) + "Trảm" (special, resource-gated + charge)
+### Task 8: Kiếm Tu real content — Bạt Kiếm Thuật as a single 2-phase charge skill on `special`
 
-**Correction (2026-09-04, resolved with user directly)**: an earlier
-draft of this task assigned "Thế" to Kiếm Tu's `basic` role, which
-directly conflicts with Completion plan's Task 5 survey finding that
-Kiếm Tu's real `basic` is `tram` ("Huy Kiếm") — an already-existing
-skill this plan must not silently overwrite. **Resolved**: `tram`
-stays `basic`, completely untouched by this task. "Thế" does **not**
-occupy any of the 3 named skill roles at all — it's a one-time
-resource-grant effect that fires automatically when a Kiếm Tu battle
-starts (matching "logic vẫn như cũ" — the original real-time Bạt Kiếm
-Thuật never touched the basic attack either; channeling was always a
-separate, additional mechanic layered on top of normal combat, not a
-replacement for it).
+**Final design (2026-09-04, resolved directly with the user — supersedes both earlier drafts of this task)**:
+"Trảm" is not a new skill — it's the user's name for Kiếm Tu's
+EXISTING `basic` (`tram`/"Huy Kiếm", per Completion plan's Task 5
+survey), which **stays completely untouched, no change, no task
+needed for it**. Bạt Kiếm Thuật is redesigned as **one single skill**
+occupying the `special` role, with 2 phases baked into Task 7's
+`chargeTurns`/`chargingTurnsRemaining` primitive exactly as already
+built — NO separate "Thế" skill, NO resource pool, NO new engine
+mechanism beyond what Task 7 already provides:
+
+- **Phase 1 ("Thế")**: casting Bạt Kiếm Thuật starts the charge —
+  handled entirely by Task 7's existing `chargeTurns` field triggering
+  `chargingTurnsRemaining`, nothing new to build.
+- **Phase 2 ("Trảm" — same NAME as the coincidentally-already-existing
+  basic attack, but a DIFFERENT skill/effect, not to be confused)**:
+  when the charge completes, Task 7's existing auto-resolve branch
+  fires this skill's `damage` — **the content decision this task makes
+  is authoring that damage value to reflect the number of turns
+  charged** ("tùy thuộc vào lượt charge mà gây sát thương"), e.g. a
+  flat multiplier proportional to `chargeTurns` (`multiplier: BASE *
+  chargeTurns`, or any similar formula) baked into the single
+  `TurnSkillDefinition`'s `damage` field at content-authoring time —
+  since `chargeTurns` itself is a fixed, author-set number (not
+  player-variable at cast time in this design), this is pure content
+  tuning, not a new runtime mechanic.
 
 **Files:**
-- Modify: wherever `TurnBattleAdapter`/battle-start construction lives (Completion plan's Task 8 creates `toTurnBattleParticipant()` — this task adds a small Kiếm-Tu-specific post-construction step there, or wherever the equivalent battle-setup hook ends up after Completion lands).
-- Create/modify: wherever Kiếm Tu's real skill content lives, for "Trảm" only (`game/src/data/skill/Skills.ts` or a Kiếm Tu-specific file).
+- Create/modify: wherever Kiếm Tu's real skill content lives (`game/src/data/skill/Skills.ts` or a Kiếm Tu-specific file — do NOT touch `tram`).
 - Test: corresponding test file.
 
-- [ ] **Step 1: Grant Thế's resource once at battle start (not a cast)**
+- [ ] **Step 1: Define Bạt Kiếm Thuật as a single `TurnSkillDefinition` for Kiếm Tu's `special`**
 
-When constructing a Kiếm Tu `TurnBattleParticipant`, initialize its
-`resources` pool with the Thế-equivalent starting value already
-applied (a flat grant, not a per-turn tick and not a `TurnSkillDefinition`
-at all) — e.g. `resources: { values: { kiemThe: STARTING_VALUE }, deltasPerTurn: [...] }`.
-If "Thế" is meant to keep granting resource passively every turn (not
-just once), reuse Slice 4's existing `ResourceTurnHook`/`deltasPerTurn`
-mechanism directly — read `ResourceTurnHook.ts`'s real shape before
-deciding between "one-time grant at battle start" vs "passive per-turn
-gain," and confirm which one the user meant with "vào trận tự động
-dùng thế" if genuinely ambiguous at execution time (lean toward
-per-turn passive gain via the existing Slice 4 mechanism if forced to
-pick without asking again, since it requires zero new primitives,
-matching this session's simplicity bias).
+```typescript
+export const BAT_KIEM_THUAT: TurnSkillDefinition = {
+  id: 'bat_kiem_thuat',
+  cooldownTurns: /* real content number */,
+  resourceType: /* real content — likely 'sword_intent' per the live resource, or unset if this design drops the resource-cost gate entirely in favor of just the charge-turns cost */,
+  resourceCost: /* real content number, if kept */,
+  chargeTurns: /* real content number, e.g. 2-3, matching the live channel's rough real-time duration converted to turns per the no-rebalance policy where a reasonable equivalent exists */,
+  damage: { kind: 'physical', multiplier: /* BASE_MULTIPLIER * chargeTurns, a real authored number reflecting "N turns charged = N× stronger" */ },
+  targeting: { shape: 'single' },
+}
+```
 
-- [ ] **Step 2: Define "Trảm" as Kiếm Tu's `special`**
+(Verify the real live Bạt Kiếm Thuật's resource cost/cooldown/damage
+scaling — grep `game/src/core/battle/BattleSystem.batKiem.test.ts`'s
+`createBatKiemThuat()` fixture and the real skill definition it's
+based on — before finalizing these numbers; do not invent them from
+scratch when real reference values exist.)
 
-`resourceType`/`resourceCost` gated on the Thế-granted resource pool
-reaching a real cap value (content decision — pick a real number
-matching whatever the live Kiếm Ý/Kiếm Thế cap is, per the Completion
-plan's Item A survey of real resource content if that's landed by now;
-if not, use a placeholder cap and flag it for a follow-up content
-pass), `chargeTurns` set (content decision — pick a real number, e.g.
-2-3 turns, matching the live channel skill's rough real-time channel
-duration converted to turns per the "no rebalance" policy where
-possible). Kiếm Tu's `ultimate` role is left unmapped by this task (no
-regression — Slice 2's existing priority-fallback already handles an
-unmapped ultimate gracefully, same as every build that hasn't had its
-ultimate content authored yet).
+- [ ] **Step 2: Assign it to Kiếm Tu's `special` slot**
 
-- [ ] **Step 3: Run tests, typecheck, commit**
+Kiếm Tu's `basic` stays `tram` (Completion Task 5, unchanged). Kiếm
+Tu's `ultimate` is left unmapped by this task — no regression, Slice
+2's existing priority-fallback already handles an unmapped ultimate
+gracefully, same as every build without ultimate content authored yet.
+
+- [ ] **Step 3: Write tests proving damage scales with `chargeTurns`**
+
+A test asserting the resolved hit's damage (via a spy on
+`resolveActionHit`) reflects the authored `chargeTurns`-proportional
+multiplier once Task 7's charge-completion branch fires.
+
+- [ ] **Step 4: Run tests, typecheck, commit**
 
 ```bash
-git commit -m "feat(channel-skill): Kiếm Tu real content — Thế (auto resource grant, not a skill slot) + Trảm (special, charge+resource-gated); tram stays basic unchanged"
+git commit -m "feat(channel-skill): Bạt Kiếm Thuật as a single 2-phase charge skill on Kiếm Tu's special; tram stays basic unchanged"
 ```
 
 ---
