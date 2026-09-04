@@ -52,6 +52,10 @@ describe('GameManager continuous repeat stage', () => {
     const rewardParticles: BattleRewardParticleEvent[] = []
     gameManager.eventBus.on<BattleRewardParticleEvent>('reward_particle', event => rewardParticles.push(event))
 
+    // Slice 6 cutover: turn engine pacing đọc battle-context qua activePlayer
+    // (syncLegacyBattleState/grant flow) — tương đương boot flow thật.
+    gameManager.setActivePlayer(player)
+
     expect(gameManager.startStage(player, stats, stage, true)).toBe(true)
 
     // Plan Workstream F — Linh Thạch credit vào MaterialBag.

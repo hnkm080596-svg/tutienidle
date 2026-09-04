@@ -109,22 +109,22 @@ describe('GameManager — fixed-step catch-up cho combat (uncommitted audit foll
 
     gameManager.startBattle(player, createStubbornEnemy())
 
-    // Bỏ qua countdown 3s trước trận (BattleSystem.start()) — chưa cần
-    // đếm đòn đánh ở giai đoạn này.
-    gameManager.update(3)
+    // Slice 6 cutover: countdown là phase của TurnBattle (30 pacing ticks
+    // = 3s hệ sống) — chạy hết countdown trước khi đếm turn.
+    for (let i = 0; i < 30; i++) {
+      gameManager.update(0.1)
+    }
 
     // Materialize gán vị trí từ resolver — đặt quái trong tầm teleport
     // (col 2: sau khi đổi row về hàng quái, Chebyshev = 1) để player
     // đánh được ngay khi 'fighting' bắt đầu.
     gameManager.getTurnBattle()!.enemies[0]!.entity.x = 2
 
+    // Slice 6 cutover: 'attack' event là cơ chế real-time (BattleSystem cũ
+    // emit) — turn-based đếm TỔNG TURNS đã resolve qua totalTurnsElapsed.
+    // Invariant đang bảo vệ giữ nguyên: cùng tổng thời gian → cùng số
+    // bước, bất kể chia nhỏ hay dồn 1 delta lớn (fixed-step loop).
     let attackCount = 0
-
-    gameManager.eventBus.on<{ sourceId?: string }>('attack', event => {
-      if (event.sourceId === player.id) {
-        attackCount++
-      }
-    })
 
     if (stepSeconds === null) {
       // Kịch bản "tab bị throttle": TOÀN BỘ thời gian dồn vào 1 lần
@@ -141,7 +141,7 @@ describe('GameManager — fixed-step catch-up cho combat (uncommitted audit foll
       }
     }
 
-    return attackCount
+    return gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0
   }
 
   it('tổng số đòn đánh giống nhau dù chia nhiều delta nhỏ (0.1s/lần) hay dồn 1 delta lớn (throttle tab)', () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { selectTarget, TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
+import { selectTarget, TurnBattleSystem, type TurnBattle, type TurnBattleParticipant, type TurnBattleState } from './TurnBattleSystem'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'

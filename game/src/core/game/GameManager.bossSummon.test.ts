@@ -1,147 +1,25 @@
 import { describe, expect, it } from 'vitest'
-import { GameManager } from './GameManager'
-import { defineEnemy } from '../enemy/Enemy'
-import { createBaseStats } from '../stats/StatBlock'
-import type { CombatEntity } from '../combat/CombatEntity'
-import type { BuffDefinition } from '../buff/BuffDefinition'
-import type { EnemyDefinition } from '../enemy/Enemy'
 
-const MINIMAL_STATS_INPUT = {
-  maxHp: 100,
-  attack: 0,
-  attackSpeed: 1,
-  attackRangeRanks: 999999,
-  criticalRate: 0,
-  criticalDamage: 1.5,
-  armor: 0,
-}
+// RETIRED (Completion Task 9, 2026-09-04) â€” category (b) dropped mechanic.
+//
+// Test nÃ y pin co ch? boss summon qua TribulationPhase
+// (hpThresholdPercent + summonEnemyIds + pendingSummons telegraph) c?a
+// BattleSystem real-time. Quy?t d?nh Deep Review Â§2 (roadmap, dÃ£ duy?t):
+// KHÃ”NG xÃ¢y Boss Phase System â€” HP-threshold phase/archetype override/
+// summon KHÃ”NG migrate nguyÃªn b?n sang turn-based. Khi c?n hi?u ?ng
+// tuong t?, thi?t k? b?ng primitive dÃ£ cÃ³: BossTurnTriggers
+// (afterTurns ? t? Ã¡p buff, dÃ£ cÃ³ test riÃªng t?i
+// core/battle/turn/BossTurnTriggers.test.ts) + TurnBuffSystem dot â€”
+// vi?c n?i dung boss th?t lÃ  vi?c thi?t k? riÃªng trong tuong lai.
+//
+// ToÃ n b? n?i dung cu c?a file nÃ y n?m trong git history
+// (git log --follow -- file nÃ y).
 
-function createPlayer(): CombatEntity {
-  const stats = { ...createBaseStats(), attack: 0 }
+export {}
 
-  return {
-    id: 'player',
-    name: 'Player',
-    type: 'player',
-    baseStats: stats,
-    stats,
-    currentHp: stats.maxHp,
-    maxHp: stats.maxHp,
-    currentMp: stats.maxMp,
-    currentSwordIntent: 0,
-    currentMomentum: 0,
-    currentHoaThe: 0,
-    currentThoThe: 0,
-    currentKimThe: 0,
-    timeSinceLastBleedProc: 0,
-    tuLucActive: false,
-    tuLucElapsed: 0,
-    tuLucDamageTakenPercent: 0,
-    currentWard: 0,
-    timeSinceLastHitTaken: Infinity,
-    realmIndex: 0,
-    x: 0,
-    row: 2,
-    alive: true,
-  }
-}
 
-function createSummonTargetDefinition(id: string): EnemyDefinition {
-  return {
-    id,
-    name: 'Sói Triệu Hồi',
-    level: 1,
-    realmId: 'mortal',
-    lane: 'ground',
-    statsInput: MINIMAL_STATS_INPUT,
-    rewards: { techniqueInsight: 0, spiritStone: 0 },
-  }
-}
-
-describe('GameManager.updateBossSummons (Combat Rework Phase 4 — Boss Mechanics)', () => {
-  it('boss trigger summonEnemyIds thì spawn thật quái mới vào battle.enemies, rồi dọn sạch pendingSummons', () => {
-    const gameManager = new GameManager()
-
-    gameManager.registerEnemyTemplates([defineEnemy(createSummonTargetDefinition('add_wolf'))])
-
-    const enrageBuff: BuffDefinition = {
-      id: 'unused',
-      name: 'unused',
-      polarity: 'buff',
-      duration: Infinity,
-      stackMode: 'stack',
-      effects: [],
-    }
-
-    const boss = defineEnemy({
-      id: 'boss_test',
-      name: 'Boss Test',
-      level: 1,
-      realmId: 'mortal',
-      lane: 'ground',
-      statsInput: MINIMAL_STATS_INPUT,
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
-      isBoss: true,
-      tribulationPhases: [
-        // hpThresholdPercent 1 -> HP đầy (100%) vẫn <= 1, trigger NGAY
-        // tick đầu tiên, khỏi phải giả lập damage để hạ HP trong test.
-        { hpThresholdPercent: 1, buff: enrageBuff, summonEnemyIds: ['add_wolf'] },
-      ],
-    })
-
-    gameManager.startBattle(createPlayer(), boss)
-    gameManager.update(3) // Countdown 3s trước trận (2026-08-22) - bỏ qua để test chạy combat logic ngay
-
-    expect(gameManager.getTurnBattle()!.enemies).toHaveLength(1)
-
-    gameManager.update(0.016)
-
-    const battle = gameManager.getBattle()!
-
-    // Spawn telegraph (2026-08-24): summon được ĐẶT LỊCH qua pending
-    // queue rồi materialize sau 0.75s — flush telegraph để assertions
-    // đọc trạng thái cuối (resolveBossSummons đã rút sạch pendingSummons).
-    gameManager.update(1)
-
-    expect(battle.enemies).toHaveLength(2)
-    expect(
-      battle.enemies.some((battleEnemy) => battleEnemy.entity.id.startsWith('add_wolf_')),
-    ).toBe(true)
-    expect(battle.pendingSummons).toEqual([])
-    expect(battle.pendingEnemySpawns).toEqual([])
-  })
-
-  it('không có template khớp id thì bỏ qua summon đó, không throw', () => {
-    const gameManager = new GameManager()
-    // Cố tình KHÔNG registerEnemyTemplates() cho 'unknown_enemy'.
-
-    const enrageBuff: BuffDefinition = {
-      id: 'unused',
-      name: 'unused',
-      polarity: 'buff',
-      duration: Infinity,
-      stackMode: 'stack',
-      effects: [],
-    }
-
-    const boss = defineEnemy({
-      id: 'boss_test',
-      name: 'Boss Test',
-      level: 1,
-      realmId: 'mortal',
-      lane: 'ground',
-      statsInput: MINIMAL_STATS_INPUT,
-      rewards: { techniqueInsight: 0, spiritStone: 0 },
-      tribulationPhases: [
-        { hpThresholdPercent: 1, buff: enrageBuff, summonEnemyIds: ['unknown_enemy'] },
-      ],
-    })
-
-    gameManager.startBattle(createPlayer(), boss)
-    gameManager.update(3) // Countdown 3s trước trận (2026-08-22) — bỏ qua để test chạy combat logic ngay
-
-    expect(() => gameManager.update(0.016)).not.toThrow()
-
-    expect(gameManager.getTurnBattle()!.enemies).toHaveLength(1)
+describe('RETIRED: boss summon (real-time TribulationPhase) â€” xem comment Ä‘áº§u file', () => {
+  it('mechanic retired per Deep Review Â§2 â€” no turn-based equivalent by design', () => {
+    expect(true).toBe(true)
   })
 })
