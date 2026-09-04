@@ -2983,6 +2983,123 @@ export class GameManager {
   }
 
   // =========================
+  // AUTO-FARM HOÀN MỸ (spec 2026-09-04-stage-auto-farm, Task 4)
+  // =========================
+
+  /**
+   * Bật auto-farm cho 1 stage đã đạt Hoàn Mỹ. Chiếm CÙNG single-slot
+   * StageManager với manual/repeat/progress (exclusivity uniform) — không
+   * chạy TurnBattleSystem, không hoạt ảnh; reward roll theo wall-clock.
+   */
+  startAutoFarm(player: PlayerData, stageId: string): boolean {
+    if (!player.perfectClearStageIds.includes(stageId)) {
+      return false
+    }
+
+    if (this.stageManager.get() !== null) {
+      return false
+    }
+
+    const stage = this.stageTemplates.get(stageId)
+
+    if (!stage) {
+      return false
+    }
+
+    if (!this.stageManager.start(stage)) {
+      return false
+    }
+
+    player.autoFarmStage = { stageId, lastCheckedMs: Date.now() }
+
+    return true
+  }
+
+  stopAutoFarm(player: PlayerData): void {
+    if (player.autoFarmStage === null) {
+      return
+    }
+
+    player.autoFarmStage = null
+    this.stageManager.stop()
+  }
+
+  /**
+   * Tick auto-farm từ fixed-step loop: mỗi chu kỳ hoàn thành roll thẳng
+   * reward qua BattleLootSystem shim (không simulation). Leftover partial
+   * cycle carry-over qua lastCheckedMs cộng đúng phần đã roll.
+   */
+  private tickAutoFarm(player: PlayerData) {
+    const autoFarm = player.autoFarmStage
+
+    if (!autoFarm) {
+      return
+    }
+
+    const cycleSeconds = player.perfectClearSeconds[autoFarm.stageId]
+
+    if (cycleSeconds === undefined) {
+      return
+    }
+
+    const cycleMs = (cycleSeconds / 2) * 1000
+    const now = Date.now()
+    const elapsedMs = now - autoFarm.lastCheckedMs
+    const completedCycles = Math.floor(elapsedMs / cycleMs)
+
+    if (completedCycles <= 0) {
+      return
+    }
+
+    const stage = this.stageTemplates.get(autoFarm.stageId)
+
+    if (!stage) {
+      return
+    }
+
+    for (let i = 0; i < completedCycles; i++) {
+      this.rollAutoFarmCycleReward(player, stage)
+    }
+
+    autoFarm.lastCheckedMs += completedCycles * cycleMs
+  }
+
+  /**
+   * Roll 1 chu kỳ auto-farm: dựng shim "quái đã chết" theo enemyPool rồi
+   * tái dùng processDefeatedEnemies (bounty/heal-on-kill/talent đúng như
+   * trận thật) — KHÔNG chạy TurnBattleSystem, không hoạt ảnh.
+   */
+  private rollAutoFarmCycleReward(player: PlayerData, stage: Stage) {
+    this.battleLoot.beginBattle()
+    this.battleLoot.setSession(this.buildPlayerRewardReceiver(player), player)
+
+    const killedEntities: { entity: CombatEntity; rewardGranted: boolean }[] = []
+
+    for (let i = 0; i < stage.totalEnemyCount; i++) {
+      const isFinalSpawn = i === stage.totalEnemyCount - 1
+      const template = this.stageWaves.pickEnemyForTurnSpawn(stage, isFinalSpawn)
+
+      if (!template) {
+        continue
+      }
+
+      const entity = enemyToCombatEntity(this.enemySystem.spawn(template))
+      entity.alive = false
+
+      killedEntities.push({ entity, rewardGranted: false })
+    }
+
+    // player shim: chỉ processDefeatedEnemies's heal-on-kill branch đọc —
+    // entity không alive là placeholder inert (heal-on-kill math inert).
+    const shimBattle = {
+      player: killedEntities[0]?.entity,
+      enemies: killedEntities,
+    } as unknown as Battle
+
+    this.battleLoot.processDefeatedEnemies(shimBattle)
+  }
+
+  // =========================
   // SAVE / LOAD
   // =========================
 
@@ -3189,6 +3306,12 @@ export class GameManager {
       }
 
       this.syncLegacyBattleState()
+
+      // Auto-farm Task 4 — roll reward theo wall-clock (trước reward flow
+      // thường; auto-farm không có turnBattle nên hai đường không giao).
+      if (this.activePlayer) {
+        this.tickAutoFarm(this.activePlayer)
+      }
 
       this.grantBattleRewardIfNeeded()
     }
