@@ -17,7 +17,7 @@ describe('EquipmentStatPolicy', () => {
     expect(isValidEquipmentMainStat('armor', 'defense')).toBe(true)
     expect(isValidEquipmentMainStat('boots', 'evasionRate')).toBe(true)
     expect(isValidEquipmentMainStat('ring', 'criticalDamage')).toBe(true)
-    expect(isValidEquipmentMainStat('necklace', 'castSpeedPercent')).toBe(true)
+    expect(isValidEquipmentMainStat('necklace', 'speed')).toBe(true)
     expect(isValidEquipmentMainStat('boots', 'attack')).toBe(false)
   })
 
@@ -36,13 +36,7 @@ describe('EquipmentStatPolicy', () => {
     }
   })
 
-  it('không còn Movement Speed vô dụng và pool advanced có nội dung thật', () => {
-    expect(
-      Object.values(EQUIPMENT_SLOT_STAT_POLICY).some((policy) =>
-        policy.substats.includes('movementSpeed'),
-      ),
-    ).toBe(false)
-
+  it('pool advanced có nội dung thật', () => {
     const registry = new AffixRegistry()
     for (const affix of affixes) registry.register(affix)
     expect(registry.getAll().some((affix) => affix.pool === 'advanced')).toBe(true)

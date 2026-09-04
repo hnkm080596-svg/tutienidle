@@ -59,7 +59,7 @@ export const affixes: Affix[] = [
   {
     id: 'suffix_attack_speed',
     name: 'Nhanh Nhẹn',
-    stat: 'attackSpeed',
+    stat: 'speed',
     kind: 'suffix',
     pool: 'basic',
     tiers: [
@@ -246,10 +246,12 @@ export const affixes: Affix[] = [
 
   // Thủy/Kim/Thổ Tu (2026-08-15) — mỗi hành thêm 1 affix Power (song
   // hành prefix_fire_power/prefix_wood_power) + 1 affix theo ĐÚNG cơ
-  // chế riêng của hành đó (Thủy: cooldownReduction cho lối chơi tung
-  // chiêu liên tục giữ Làm Chậm; Thổ: thornsPercent cho Thạch Giáp —
-  // Kim tái dùng thẳng suffix_ailment_potency có sẵn ở trên, khuếch
-  // đại Chảy Máu, không cần thêm affix riêng).
+  // chế riêng của hành đó (Thủy: speed cho lối chơi ra đòn nhanh hơn
+  // giữ Làm Chậm; Thổ: thornsPercent cho Thạch Giáp — Kim tái dùng
+  // thẳng suffix_ailment_potency có sẵn ở trên, khuếch đại Chảy Máu,
+  // không cần thêm affix riêng).
+  // Turn-based conversion (2026-09-04): cooldownReduction retired —
+  // affix Lưu Thủy chuyển sang speed, cùng cơ chế giữ nhịp.
   {
     id: 'prefix_water_power',
     name: 'Thủy Uy',
@@ -266,7 +268,7 @@ export const affixes: Affix[] = [
   {
     id: 'suffix_cooldown_reduction',
     name: 'Lưu Thủy',
-    stat: 'cooldownReduction',
+    stat: 'speed',
     kind: 'suffix',
     pool: 'specialized',
     tiers: [
