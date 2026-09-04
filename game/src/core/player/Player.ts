@@ -199,6 +199,21 @@ export interface PlayerData {
   // Màn chỉ mở tuần tự: thắng một màn mới mở màn kế tiếp.
   completedStageIds: string[]
 
+  // Auto-farm Hoàn Mỹ (2026-09-04 spec) — stage đã đạt điều kiện "Hoàn
+  // Mỹ" (HP đội mất <=75% + turn < stage.perfectClearTurnLimit). Ghi 1
+  // LẦN lúc đạt lần đầu, không cập nhật lại sau đó.
+  perfectClearStageIds: string[]
+
+  // Wall-clock giây của lần đạt Hoàn Mỹ đầu tiên cho stage đó — dùng
+  // làm cycleSeconds = giá trị này / 2 cho auto-farm. Đây là 1 trong
+  // đúng 2-3 chỗ combat được phép đọc Date.now() (xem plan
+  // 2026-09-04-stage-auto-farm.md's Global Constraints).
+  perfectClearSeconds: Record<string, number>
+
+  // Stage đang auto-farm (chỉ 1 tại 1 thời điểm, khớp StageManager's
+  // single-active cardinality). null = không có auto-farm nào đang chạy.
+  autoFarmStage: { stageId: string; lastCheckedMs: number } | null
+
   // Luyện Thể (Realm Passive & Pressure System, 2026-08-20) — 6 tầng
   // rèn thể Phàm Nhân, xem data/realm/LuyenThe.ts. bodyRefinementCompletedTiers
   // đếm số tầng ĐÃ HOÀN THÀNH (0-6, tuần tự), bodyRefinementCurrentTierProgress
@@ -273,6 +288,9 @@ export function createDefaultPlayer(): PlayerData {
 
     selectedTalentIds: [],
     completedStageIds: [],
+    perfectClearStageIds: [],
+    perfectClearSeconds: {},
+    autoFarmStage: null,
     unlockedRealmEnhancements: [],
     hasSeenTutorial: false,
     isCultivating: false,

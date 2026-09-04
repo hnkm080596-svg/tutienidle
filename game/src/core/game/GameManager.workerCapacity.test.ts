@@ -4,6 +4,7 @@
 // - restore save có CHQ instance → capacity khôi phục đúng
 import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
+import { CURRENT_SAVE_VERSION } from '../../services/save/saveVersion'
 import { buildings } from '../../data/building/buildings'
 import { THANH_VAN_PRODUCTION_SITES } from '../production/ProductionCatalog'
 import { createDefaultPlayer } from '../player/Player'
@@ -76,7 +77,7 @@ describe('GameManager — worker capacity nguồn CHQ duy nhất', () => {
 
     // save.buildings chứa CHQ level 2 — restore phải re-apply capacity 5.
     manager.restoreFromSave({
-      version: 55,
+      version: CURRENT_SAVE_VERSION,
       player: { ...player, autoWorkerCapacity: 0 },
       techniques: [],
       skills: [],
