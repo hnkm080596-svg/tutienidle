@@ -3431,11 +3431,7 @@ export class GameManager {
       enemies: shimEnemies,
     } as unknown as Battle
 
-    try {
-      this.battleLoot.processDefeatedEnemies(shimBattle)
-    } catch (error) {
-      throw error
-    }
+    this.battleLoot.processDefeatedEnemies(shimBattle)
 
 
     for (const enemyId of killedIds) {
