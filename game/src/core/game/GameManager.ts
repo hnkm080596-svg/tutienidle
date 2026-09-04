@@ -197,9 +197,9 @@ import type { GameSave } from '../../services/save/SaveSystem'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { Stats } from '../stats/StatBlock'
 import { createBaseStats } from '../stats/StatBlock'
-import { TurnBattleSystem, type TurnBattle } from '../battle/turn/TurnBattleSystem'
+import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
 import { resolveEnemySpawnPosition } from '../battle/EnemySpawnPlacement'
-import type { TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
+import type { TurnSkillDefinition, TurnSkillSlotRole } from '../battle/turn/TurnSkillAction'
 import { toTurnBattleParticipant } from './TurnBattleAdapter'
 import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
 
@@ -2447,6 +2447,7 @@ export class GameManager {
 
     this.turnBattleRewardsGranted.clear()
     this.turnBattleEndEmitted = false
+    this.awaitedManualActor = null
 
     this.turnBattle = {
       player: previous.player,
@@ -2485,6 +2486,63 @@ export class GameManager {
 
   getTurnBattle(): TurnBattle | null {
     return this.turnBattle
+  }
+
+  // --- Slice 7 (Completion Task 10) — manual mode --------------------------
+
+  private battleManualMode = false
+
+  /**
+   * Actor phe player đang bị PAUSE chờ manual choice (manual mode), hoặc
+   * null khi không pause (auto mode, lượt enemy, hoặc chưa tới lượt).
+   * Reset khi battle kết thúc/restart.
+   */
+  private awaitedManualActor: TurnBattleParticipant | null = null
+
+  /** Bật/tắt manual mode. Tắt giữa lúc đang chờ choice → hủy pause, engine tự chạy tiếp. */
+  setBattleManualMode(enabled: boolean): void {
+    this.battleManualMode = enabled
+
+    if (!enabled) {
+      this.awaitedManualActor = null
+    }
+  }
+
+  isBattleManualMode(): boolean {
+    return this.battleManualMode
+  }
+
+  /** Đang pause chờ player chọn skill cho lượt của chính mình? */
+  isAwaitingManualTurnChoice(): boolean
+  {
+    return this.awaitedManualActor !== null
+  }
+
+  /**
+   * UI submit choice cho lượt đang pause. Trả false nếu không có pause
+   * (no-op an toàn — choice bị bỏ, không crash).
+   */
+  submitTurnChoice(role: TurnSkillSlotRole): boolean {
+    if (!this.awaitedManualActor || !this.turnBattle) {
+      return false
+    }
+
+    const actor = this.awaitedManualActor
+    this.awaitedManualActor = null
+
+    this.turnBattleSystem.resolveActorTurn(this.turnBattle, actor, role)
+
+    this.syncLegacyBattleState()
+
+    return true
+  }
+
+  /**
+   * Dành cho UI: id của actor đang pause (luôn là 'player' ở engine hiện
+   * tại — party nhiều người là redesign tương lai), null khi không pause.
+   */
+  consumeAwaitedActorId(): string | null {
+    return this.awaitedManualActor?.id ?? null
   }
 
   getBattleRewardSummary(): BattleRewardSummary {
@@ -3084,7 +3142,23 @@ export class GameManager {
         if (this.turnBattle.state === 'countdown') {
           this.turnBattleSystem.tickCountdown(this.turnBattle)
         } else if (this.turnBattle.state === 'fighting') {
-          this.turnBattleSystem.resolveNextStep(this.turnBattle)
+          // Slice 7 manual mode: trước khi resolve step kế, peek actor —
+          // nếu là player VÀ manual mode bật → PAUSE (không resolve, gauge
+          // đã advance đúng tới ngưỡng ready bởi peek). Enemy turn và auto
+          // mode resolve như thường (auto = cùng engine, không pause).
+          if (this.awaitedManualActor) {
+            // Vẫn đang pause — không resolve gì (chờ submitTurnChoice).
+          } else if (this.battleManualMode) {
+            const actor = this.turnBattleSystem.peekNextActor(this.turnBattle)
+
+            if (actor !== null && actor === this.turnBattle.player) {
+              this.awaitedManualActor = actor
+            } else if (actor !== null) {
+              this.turnBattleSystem.resolveActorTurn(this.turnBattle, actor)
+            }
+          } else {
+            this.turnBattleSystem.resolveNextStep(this.turnBattle)
+          }
         }
       }
 
@@ -3186,9 +3260,17 @@ export class GameManager {
     }
 
     // Victory/defeat terminal: bắn battle_end (StageWaveSystem.update cũ
-    // không chạy nữa — victory event phải phát từ đây).
+    // không chạy nữa — syncLegacyBattleState() set legacy.state trực tiếp
+    // khiến update() return sớm trước victory branch). StageManager.active
+    // PHẢI được release tại đây: nếu không, startStage() kế tiếp (Đánh Lại)
+    // return false vĩnh viễn trong session (smoke-test regression 2026-09-04).
+    // Auto-repeat KHÔNG stop — restartTurnBattleCycle tái dùng active.
     if (turnBattle.state !== 'fighting' && !this.turnBattleEndEmitted) {
       this.turnBattleEndEmitted = true
+
+      if (!this.turnBattleRepeatContinuously) {
+        this.stageWaves.stopRepeat()
+      }
 
       if (turnBattle.state === 'victory') {
         this.eventBus.emit('battle_end', { type: 'battle_end', state: 'victory' })

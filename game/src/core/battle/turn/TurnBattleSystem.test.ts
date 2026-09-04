@@ -1482,3 +1482,300 @@ describe('TurnBattleSystem countdown phase (unified flow)', () => {
 function system_tickCountdownPassthrough(battle: TurnBattle, system: TurnBattleSystem): TurnBattleState {
   return system.tickCountdown(battle)
 }
+
+// ---------------------------------------------------------------------------
+// Slice 7 (Completion Task 10) — peekNextActor / resolveActorTurn split
+// ---------------------------------------------------------------------------
+
+describe('TurnBattleSystem.peekNextActor', () => {
+  it('returns the next ready actor WITHOUT resolving anything (no turn consumed, state unchanged)', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    const actor = system.peekNextActor(battle)
+
+    expect(actor?.id).toBe('player')
+    expect(battle.totalTurnsElapsed ?? 0).toBe(0)
+    expect(battle.state).toBe('fighting')
+    expect(enemyEntity.currentHp).toBe(1_000_000)
+  })
+
+  it('peek is idempotent until resolved — calling twice returns the same actor', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    expect(system.peekNextActor(battle)?.id).toBe('player')
+    expect(system.peekNextActor(battle)?.id).toBe('player')
+  })
+
+  it('returns null when no living combatant remains', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      alive: false,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      alive: false,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    expect(system.peekNextActor(battle)).toBeNull()
+  })
+})
+
+describe('TurnBattleSystem.resolveActorTurn', () => {
+  it('resolveNextStep sau khi battle kết thúc (victory) giữ nguyên state, KHÔNG ghi đè thành defeat', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1,
+      maxHp: 1,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    expect(system.resolveNextStep(battle).state).toBe('victory')
+
+    // Caller gọi thừa 1 lần sau victory (fixed-step loop có thể trôi 1 tick
+    // trước khi GameManager dừng) — state phải giữ nguyên victory.
+    expect(system.resolveNextStep(battle).state).toBe('victory')
+    expect(battle.state).toBe('victory')
+  })
+  it('resolves the given actor exactly like resolveNextStep would (buff tick, action, gauge consume, wave spawn)', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1,
+      maxHp: 1,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    const actor = system.peekNextActor(battle)
+
+    expect(actor).not.toBeNull()
+
+    const step = system.resolveActorTurn(battle, actor!)
+
+    expect(step.state).toBe('victory')
+    expect(step.actorId).toBe('player')
+    expect(enemyEntity.currentHp).toBe(0)
+    expect(battle.totalTurnsElapsed).toBe(1)
+  })
+
+  it('forcedSkillSlot overrides auto priority when the slot is ready (special instead of ultimate)', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      currentMp: 100,
+      stats: {
+        ...createBaseStats(),
+        evasionRate: 0,
+        dexterity: 0,
+        criticalRate: 0,
+        attack: 999,
+        maxMp: 100,
+      },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 10_000,
+      maxHp: 10_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const playerParticipant = makeParticipant('player', player, 10, 0)
+    playerParticipant.basic = {
+      id: 'fixture_basic',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'single' },
+    }
+    playerParticipant.special = {
+      skill: {
+        id: 'fixture_special',
+        cooldownTurns: 5,
+        resourceType: 'mana',
+        resourceCost: 10,
+        damage: { kind: 'physical', multiplier: 2 },
+        targeting: { shape: 'single' },
+      },
+      remainingCooldownTurns: 0,
+    }
+    playerParticipant.ultimate = {
+      skill: {
+        id: 'fixture_ultimate',
+        cooldownTurns: 5,
+        resourceType: 'mana',
+        resourceCost: 10,
+        damage: { kind: 'physical', multiplier: 9 },
+        targeting: { shape: 'single' },
+      },
+      remainingCooldownTurns: 0,
+    }
+
+    const battle: TurnBattle = {
+      player: playerParticipant,
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    const actor = system.peekNextActor(battle)
+
+    expect(actor).not.toBeNull()
+
+    const step = system.resolveActorTurn(battle, actor!, 'special')
+
+    expect(step.skillId).toBe('fixture_special')
+    // resource consumed by the forced cast
+    expect(player.currentMp).toBe(90)
+  })
+
+  it('an UNREADY forced slot is silently ignored in favor of normal priority (defensive backstop, not an error)', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      currentMp: 100,
+      stats: {
+        ...createBaseStats(),
+        evasionRate: 0,
+        dexterity: 0,
+        criticalRate: 0,
+        attack: 999,
+        maxMp: 100,
+      },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 10_000,
+      maxHp: 10_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const playerParticipant = makeParticipant('player', player, 10, 0)
+    playerParticipant.basic = {
+      id: 'fixture_basic',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'single' },
+    }
+    playerParticipant.special = {
+      skill: {
+        id: 'fixture_special',
+        cooldownTurns: 5,
+        resourceType: 'mana',
+        resourceCost: 10,
+        damage: { kind: 'physical', multiplier: 2 },
+        targeting: { shape: 'single' },
+      },
+      remainingCooldownTurns: 2, // ON cooldown — unready
+    }
+
+    const battle: TurnBattle = {
+      player: playerParticipant,
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    const actor = system.peekNextActor(battle)
+
+    const step = system.resolveActorTurn(battle, actor!, 'special')
+
+    // special unready → forced slot ignored → normal priority → basic
+    expect(step.skillId).toBe('fixture_basic')
+    // resource NOT consumed (special was never cast)
+    expect(player.currentMp).toBe(100)
+  })
+
+  it('resolveNextStep still behaves identically (thin wrapper: peek + resolve with no forced slot)', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1,
+      maxHp: 1,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const battle: TurnBattle = {
+      player: makeParticipant('player', player, 10, 0),
+      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    const step = system.resolveNextStep(battle)
+
+    expect(step.state).toBe('victory')
+    expect(step.actorId).toBe('player')
+  })
+})

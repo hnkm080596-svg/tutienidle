@@ -149,6 +149,51 @@ export function selectAction(participant: TurnBattleParticipant): SelectedAction
   }
 }
 
+/**
+ * Slice 7 — 3 skill role cố định mà manual UI ép cast được. Basic luôn
+ * ready (no cooldown/cost by construction); special/ultimate đi qua đúng
+ * readiness checks của selectAction() (cooldown + resource) — slot không
+ * sẵn sàng bị BỎ QUA im lặng (UI disable nút không sẵn sàng trước, đây
+ * chỉ là defensive backstop, không phải error path — spec Slice 7 §2).
+ */
+export type TurnSkillSlotRole = 'basic' | 'special' | 'ultimate'
+
+/**
+ * Ép 1 slot role cụ thể khi role đó ready; ngược lại rơi về priority
+ * thường (selectAction). Basic = participant.basic (hoặc fallback khi
+ * không set), luôn ready by construction.
+ */
+export function selectForcedAction(
+  participant: TurnBattleParticipant,
+  role: TurnSkillSlotRole,
+): SelectedAction {
+  if (role === 'basic') {
+    if (participant.basic) {
+      return {
+        skillId: participant.basic.id,
+        skill: participant.basic,
+        damage: participant.basic.damage,
+        targeting: participant.basic.targeting,
+        slot: null,
+      }
+    }
+
+    return selectAction(participant)
+  }
+
+  const slot = role === 'special' ? participant.special : participant.ultimate
+
+  if (
+    slot &&
+    slot.remainingCooldownTurns === 0 &&
+    hasResourceFor(participant.entity, slot.skill)
+  ) {
+    return slotAction(slot)
+  }
+
+  return selectAction(participant)
+}
+
 /** Sets the used slot on cooldown and consumes its resource — call AFTER a successful cast (a target was actually hit). No-op for the basic fallback (slot is null). */
 export function commitAction(entity: CombatEntity, action: SelectedAction): void {
   if (action.slot) {

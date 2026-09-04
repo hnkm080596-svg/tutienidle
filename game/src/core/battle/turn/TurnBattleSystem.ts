@@ -8,8 +8,8 @@ import type { CombatSystem } from '../../combat/CombatSystem'
 import { entityGridPosition, getChebyshevDistance } from '../BattleGrid'
 import { consumeGaugeAfterAction } from './ActionGauge'
 import { resolveNextTurn } from './TurnQueue'
-import { tickCooldowns, selectAction, commitAction, collectTurnTargets } from './TurnSkillAction'
-import type { TurnSkillDefinition, TurnSkillSlot } from './TurnSkillAction'
+import { tickCooldowns, selectAction, selectForcedAction, commitAction, collectTurnTargets } from './TurnSkillAction'
+import type { TurnSkillDefinition, TurnSkillSlot, TurnSkillSlotRole } from './TurnSkillAction'
 import { TurnBuffPool } from './TurnBuffPool'
 import { TurnBuffSystem } from './TurnBuffSystem'
 import type { TurnBuffRegistry } from './TurnBuffTypes'
@@ -19,6 +19,7 @@ import { isTurnTriggerReady } from './BossTurnTriggers'
 import { shouldSpawnNextEnemy, isStageComplete } from './WaveSpawnTrigger'
 import { scaleActionDamage } from '../ActionImpactSystem'
 import { recomputeEffectiveStats } from './TurnStatsRecompute'
+import type { BattleLogEntry } from './TurnOrderPreview'
 
 export interface TurnResourcePool {
   values: Record<string, number>
@@ -67,6 +68,12 @@ export interface TurnBattle {
     totalEnemyCount: number
     spawnedCount: number
   }
+  /**
+   * Slice 7 extension (Completion Task 11) — battle log: 1 entry mỗi lượt
+   * resolveActorTurn (append-only, ephemeral — không persist vào save,
+   * combat ephemeral theo nguyên tắc rework).
+   */
+  log?: BattleLogEntry[]
 }
 
 /**
@@ -143,17 +150,17 @@ export class TurnBattleSystem {
   }
 
   /**
-   * Resolves exactly ONE actor's turn. Production entry point from Slice
-   * 3 onward — GameManager/UI call this repeatedly instead of running a
-   * battle to completion in one call (needed once Slice 5 adds wave
-   * pauses and Slice 7 adds manual input waits).
+   * Slice 7 (Completion Task 10) — tìm actor kế tiếp SẴN SÀNG hành động
+   * mà KHÔNG resolve gì cả. Gauge advancement chạy thật (mutation để
+   * tìm ai tới lượt là thật và GIỮ NGUYÊN), nhưng dừng trước buff tick /
+   * action resolution / turn-counter increment. GameManager manual mode
+   * gọi method này trước để biết có cần pause chờ input player không;
+   * resume sau đó bằng resolveActorTurn(battle, actor, chosenSlot).
    */
-  resolveNextStep(battle: TurnBattle): TurnStepResult {
-    // Countdown phase: combat chưa bắt đầu — no-op an toàn (gauge không
-    // chạy, không ai hành động; GameManager tick countdown qua
-    // tickCountdown() thay vì gọi method này).
-    if (battle.state === 'countdown') {
-      return { state: 'countdown', actorId: '', skillId: '', targetIds: [], ccBlocked: false }
+  peekNextActor(battle: TurnBattle): TurnBattleParticipant | null {
+    // Countdown phase: combat chưa bắt đầu — không ai tới lượt.
+    if (battle.state !== 'fighting') {
+      return null
     }
 
     const allParticipants = [battle.player, ...battle.enemies]
@@ -164,13 +171,23 @@ export class TurnBattleSystem {
 
     const resolved = resolveNextTurn(allParticipants)
 
-    if (!resolved) {
-      battle.state = 'defeat'
-      return { state: 'defeat', actorId: '', skillId: '', targetIds: [], ccBlocked: false }
-    }
+    return resolved?.actor ?? null
+  }
 
-    const actor = resolved.actor
-
+  /**
+   * Slice 7 (Completion Task 10) — resolve lượt của MỘT actor ĐÃ peek:
+   * toàn bộ phần sau-phát-hiện-actor của resolveNextStep cũ (buff tick,
+   * resource tick, boss trigger, CC check, action selection, gauge
+   * consume, wave spawn, victory/defeat check). forcedSkillSlot ép skill
+   * role cụ thể (manual UI); slot KHÔNG sẵn sàng (cooldown/resource) bị
+   * bỏ qua im lặng theo priority thường — UI disable nút không sẵn sàng
+   * nên đây chỉ là backstop, không phải error path.
+   */
+  resolveActorTurn(
+    battle: TurnBattle,
+    actor: TurnBattleParticipant,
+    forcedSkillSlot?: TurnSkillSlotRole,
+  ): TurnStepResult {
     battle.totalTurnsElapsed = (battle.totalTurnsElapsed ?? 0) + 1
 
     const actorBuffSystem = new TurnBuffSystem(actor.buffs)
@@ -232,7 +249,9 @@ export class TurnBattleSystem {
       // baseStats để không double-apply các recompute trước đó.
       actor.entity.stats = recomputeEffectiveStats(actor.entity.baseStats ?? actor.entity.stats, actor.buffs)
 
-      const action = selectAction(actor)
+      const action = forcedSkillSlot
+        ? selectForcedAction(actor, forcedSkillSlot)
+        : selectAction(actor)
 
       skillId = action.skillId
 
@@ -295,7 +314,49 @@ export class TurnBattleSystem {
       battle.state = 'victory'
     }
 
+    // Slice 7 extension — battle log: 1 entry/lượt, append-only.
+    const logEntry: BattleLogEntry = {
+      turn: battle.totalTurnsElapsed ?? 0,
+      actorId: actor.id,
+      skillId,
+      targetIds,
+      ccBlocked,
+    }
+
+    battle.log = battle.log ?? []
+    battle.log.push(logEntry)
+
     return { state: battle.state, actorId: actor.id, skillId, targetIds, ccBlocked }
+  }
+
+  /**
+   * Thin wrapper (Slice 7): peekNextActor() + resolveActorTurn() không
+   * forced slot — giữ nguyên signature/hành vi cho mọi caller Slice 1-6
+   * (auto mode, runToCompletion(), mọi test cũ).
+   */
+  resolveNextStep(battle: TurnBattle): TurnStepResult {
+    // Countdown phase: combat chưa bắt đầu — no-op an toàn (gauge không
+    // chạy, không ai hành động; GameManager tick countdown qua
+    // tickCountdown() thay vì gọi method này).
+    if (battle.state === 'countdown') {
+      return { state: 'countdown', actorId: '', skillId: '', targetIds: [], ccBlocked: false }
+    }
+
+    // Trận đã kết thúc (victory/defeat) — KHÔNG ghi đè state thành defeat
+    // (code-review fix: peekNextActor trả null cho state != fighting, nhánh
+    // dưới chỉ được phép set defeat khi trận thực sự không còn ai sống).
+    if (battle.state !== 'fighting') {
+      return { state: battle.state, actorId: '', skillId: '', targetIds: [], ccBlocked: false }
+    }
+
+    const actor = this.peekNextActor(battle)
+
+    if (!actor) {
+      battle.state = 'defeat'
+      return { state: 'defeat', actorId: '', skillId: '', targetIds: [], ccBlocked: false }
+    }
+
+    return this.resolveActorTurn(battle, actor)
   }
 
   /** Thin wrapper for tests/dev tooling — loops resolveNextStep() to completion. */
