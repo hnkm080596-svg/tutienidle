@@ -62,7 +62,7 @@ Mục tiêu: dựng các primitive thuần (pure function), test riêng, KHÔNG 
 
 | Hạng mục | Ghi chú |
 |---|---|
-| Hệ nhân vật phụ (party/companion: main + tối đa 4, recruit, skill riêng, nâng cấp theo bậc/phẩm) | [spec §2/§7](../../docs/superpowers/specs/2026-09-03-turn-based-combat-design.md) — kiến trúc turn engine đã tổng quát cho N combatant/phe, nhưng recruitment/UI/nội dung để spec riêng |
+| Hệ nhân vật phụ (party/companion: main + tối đa 4, recruit, skill riêng, nâng cấp theo bậc/phẩm) | ~~kiến trúc turn engine đã tổng quát cho N combatant/phe~~ **SAI, đã sửa (2026-09-04, phiên Deep Review)**: khảo sát thật cho thấy `TurnBattle.player` là 1 field số ít (không phải mảng), targeting/priority chỉ giả định 1 unit phe player — khi Party spec tới sẽ cần REDESIGN cấu trúc `TurnBattle`/`TurnBattleSystem`, không phải bổ sung đơn thuần. Xem Deep Review §1 |
 | Equipment/Affix content ngoài 3 buff ghép `movementSpeed`+`attackSpeed` | [Ghi nhận](../../docs/superpowers/specs/2026-09-04-turn-based-combat-survey-and-stat-decisions.md) — chưa quyết định phạm vi |
 | Enemy data (`Enemies.ts`) cần giá trị `speed` cho từng enemy | [Ghi nhận](../../docs/superpowers/specs/2026-09-04-turn-based-combat-survey-and-stat-decisions.md) — công việc nội dung, làm sau khi Stat System chốt xong |
 | **Pháp Tu Reaction Path (hidden path, như Bạt Kiếm Thuật)** — cơ chế "book" (1 slot chứa nhiều sub-skill cùng hệ Ngũ Hành, bấm chọn 1 hành lúc cast) + AI tình huống (đọc debuff/hành đang áp trên địch để tự chọn hành kích reaction, vd auto Thủy vào Hỏa để kích Bốc Hơi) | [Ghi nhận](../../docs/superpowers/specs/2026-09-04-turn-battle-system-slice2-skill-actions-design.md) §5 — ý tưởng gốc của user cho Slice 2, dời thành 1 path ẩn riêng biệt (không phải mainline Pháp Tu Thuần), chưa thiết kế |
@@ -78,6 +78,65 @@ Mục tiêu: dựng các primitive thuần (pure function), test riêng, KHÔNG 
 | Wire `hpRegenPerTurn` vào `TurnBattleSystem` — chưa có call site nào (Slice 4's ResourceTurnHook chỉ generic/fixture, không riêng cho HP) | [Ghi nhận](../../docs/superpowers/specs/2026-09-04-stat-system-turn-based-conversion-design.md) §6 |
 | 3 buff ghép `movementSpeed`+`attackSpeed` (haste/slow) cần sửa bỏ phần `movementSpeed`, chỉ giữ `speed` | [Ghi nhận](../../docs/superpowers/specs/2026-09-04-stat-system-turn-based-conversion-design.md) §6 — cùng 3 buff đã ghi nhận từ khảo sát trước |
 | Channel skill support (`chargeSteps`/channel execution policy) — Bạt Kiếm Thuật (Kiếm Tu) mất tạm sau flip Slice 6, chưa có model turn-based nào cho channel | [Ghi nhận](../../docs/superpowers/specs/2026-09-04-turn-battle-system-slice6-gamemanager-cutover-design.md) §3/§6 — gap đã biết từ phiên Slice 2, giờ xác nhận là regression THẬT SỰ chấp nhận được lúc flip, không phải quên |
+
+## Deep Review — Rà soát toàn diện & đối chiếu turn-based kinh điển (2026-09-04, phiên review max-effort)
+
+Phiên này rà lại toàn bộ roadmap so với (a) hệ thống SỐNG hiện tại (khảo sát thật, không đoán) và (b) quy ước phổ biến ở các game turn-based/ATB nổi tiếng (Honkai: Star Rail, Final Fantasy ATB, Persona, XCOM, các game gacha idle turn-based như AFK Arena/Epic Seven) để tìm thiếu sót/rủi ro chưa được ghi nhận. Không có quyết định mới nào bị chốt ở đây — mọi mục dưới đây là **phát hiện cần user duyệt** trước khi đưa vào slice/plan nào.
+
+### 1. Sai lệch cần sửa ngay: turn engine KHÔNG hề tổng quát cho N player-side unit
+
+Dòng "Hệ nhân vật phụ" ở bảng Ngoài phạm vi (bên dưới) trích spec gốc nói kiến trúc turn engine "đã tổng quát cho N combatant/phe" — khảo sát thật phiên này cho thấy **điều này SAI với code đã build**: `TurnBattle` có field `player: TurnBattleParticipant` (số ít, không phải mảng) cạnh `enemies: TurnBattleParticipant[]` (`game/src/core/battle/turn/TurnBattleSystem.ts:28-32`); toàn bộ `selectTarget`/`collectTurnTargets` chỉ lặp 1 mảng đối phương cho đúng 1 actor phe kia — không có chỗ nào giả định phe player có >1 đơn vị. Khi Party system thật sự được thiết kế (spec riêng), đây sẽ là một **redesign cấu trúc dữ liệu** của `TurnBattle`/`TurnBattleSystem` (đổi `player` thành mảng, targeting/priority phải chọn giữa nhiều unit phe mình), không phải một bổ sung nhỏ lên trên nền đã tổng quát sẵn. Đã sửa ghi chú ở dòng "Hệ nhân vật phụ" bên dưới.
+
+### 2. Gap thật: TribulationPhase (HP-threshold phase + archetype override + summon) chưa được Slice 4 tính đến
+
+Khảo sát `game/src/core/enemy/TribulationPhase.ts:19-51` + `BattleSystem.ts:946-1172` cho thấy boss AI sống hiện tại phức tạp hơn nhiều so với những gì Slice 4 (Resource/Boss Triggers) đã thiết kế:
+- **HP-threshold phase** (`hpThresholdPercent`, không phải turn-count) — boss đổi hành vi khi tụt xuống dưới X% HP, không phải "sau N lượt" như `BossTurnTriggers.isTurnTriggerReady()` (chỉ dùng bộ đếm `totalTurnsElapsed` toàn trận).
+- **`archetypeOverride`** — đổi hẳn kiểu hành vi (melee/ranged/caster) khi vào phase mới, ảnh hưởng cách chọn skill/target, KHÔNG chỉ là "tự áp buff" như Slice 4 model.
+- **`summonEnemyIds`** — boss triệu hồi thêm quái giữa trận theo HP-threshold, một cơ chế hoàn toàn khác spawn-khi-sân-trống của Slice 5.
+Slice 4's `BossTurnTriggers` (turn-count only, single-fire buff) và bảng "Boss enrage content migration" hiện tại (dòng dưới) chỉ nói tới `afterSeconds→afterTurns` — **chưa hề nhắc tới HP-threshold, archetype override, hay summon**. Đây là thiếu sót thật, không phải việc nội dung đơn thuần — cần một quyết định kiến trúc riêng (HP-threshold trigger là 1 loại `BossTurnTriggers` khác hẳn turn-count trigger đã build) trước khi migrate nội dung boss thật. **Đề xuất**: thêm 1 mục riêng vào Slice 6 prerequisite hoặc 1 slice/plan nhỏ "Boss Phase System (HP-threshold + archetype + summon)" — chưa quyết định, cần hỏi user.
+
+### 3. Rủi ro correctness: multi-target resolution không re-check tử vong giữa các lượt hit trong cùng 1 skill
+
+`collectTurnTargets` (`game/src/core/battle/turn/TurnSkillAction.ts:198-208`) lọc `opposingSide` theo `entity.alive` MỘT LẦN lúc thu thập target, TRƯỚC khi vòng lặp resolve từng hit chạy — không tìm thấy chỗ nào re-validate `isAlive`/`hp<=0` giữa các hit trong cùng vòng lặp resolution của `TurnBattleSystem.ts`. Với skill AOE nhiều target hoặc (tương lai) bounce-chain, một target có thể đã chết từ hit trước đó trong CÙNG skill nhưng vẫn nhận thêm hit sau — nguy cơ: overkill âm HP, double kill-trigger fire (onKill đã có action engine — [tienhiep-skill-trigger-action-engine.md] memory), double loot nếu onKill gắn loot. **Chưa xảy ra ở Slice 1-2** (basic attack, single target chủ yếu) nhưng sẽ lộ rõ khi Slice 3 wire AOE+buff thật. Đề xuất: thêm 1 test case + fix (filter lại target còn sống ngay trước mỗi hit, không chỉ lúc collect) — có thể fold vào Slice 3's self-review hoặc 1 task hardening riêng, chưa quyết định.
+
+### 4. Thiếu cơ chế genre-chuẩn: không có CC diminishing-returns/miễn nhiễm tạm thời
+
+`TurnBuffSystem.isStunned()`/`isFrozen()` (`TurnBuffSystem.ts:258-262`) block hành động tuyệt đối khi có `cc:stun`/`cc:freeze` — không tìm thấy cơ chế giảm-tác-dụng-CC-liên-tiếp (tenacity/diminishing returns) hay cửa sổ miễn nhiễm sau khi bị CC (immunity window), khác với hầu hết game turn-based hiện đại (Persona/HSR/XCOM đều có cơ chế chống combo-CC-khóa-cứng để giữ fairness). Với model hiện tại, nếu enemy có ≥2 nguồn CC nối tiếp, player có thể bị khóa hành động vô thời hạn, 0 counterplay — không phải bug, nhưng là 1 lỗ hổng thiết kế cần quyết định trước khi migrate nội dung CC thật (chưa có buff CC thật nào migrate, chỉ fixture — còn kịp quyết định). Đề xuất: thêm dòng "Ngoài phạm vi" theo dõi, chưa quyết định cơ chế cụ thể.
+
+### 5. UX cơ hội (không bắt buộc): không có turn-order preview / battle log — 2 tính năng chuẩn của thể loại
+
+- **Turn-order preview** (dải hiện "ai sắp tới lượt" — đặc trưng HSR/FF ATB hiện đại): `TurnQueue.resolveNextTurn()` (`TurnQueue.ts:23-50`) chỉ trả về ĐÚNG 1 actor kế tiếp mỗi lần gọi, không có API "peek N lượt tới" nào, và không UI nào tham chiếu khái niệm này. Với ATB gauge-fill-rate (không phải fixed initiative order), preview chính xác 100% là khó (gauge có thể đổi do buff/CC giữa chừng) nhưng vẫn làm được xấp xỉ. Đáng cân nhắc cho Slice 7 (Manual UI) vì đúng lúc UI cần cho player thấy "lượt của ai" — nhưng KHÔNG bắt buộc cho MVP tap-to-cast.
+- **Battle log** (nhật ký text từng lượt): không tồn tại ở cả hệ sống lẫn thiết kế mới — `ActionFeedbackLog.vue` là log riêng cho crafting/building, không phải combat. Turn-based (khác real-time) rất hợp với log dạng text vì hành động rời rạc, dễ đọc. Cân nhắc bổ sung cho Slice 7 như 1 UI phụ, không bắt buộc.
+Cả 2 mục này: đề xuất, KHÔNG phải blocker, chưa quyết định có làm hay không.
+
+### 6. Thiếu cơ chế genre-chuẩn khác (ghi nhận, không hành động ngay)
+
+- **Gauge-delta buff effect** (haste/slow đẩy trực tiếp thanh ATB, khác với speed stat modifier) — `TurnBuffTypes.ts` hiện chỉ có `dot`/`cc`/`statModifier`/`onHitProc`, không có kiểu "cộng/trừ thẳng vào actionGauge". Đây là cơ chế phổ biến (Haste/Slow tức thời) ở FF/HSR. Không cần ngay (statModifier chưa wire — Slice 3 deferred), nhưng đáng ghi nhận cho lúc thiết kế buff effect types đầy đủ.
+- **Extra-turn/revival**: không tồn tại ở hệ sống, không phải thiếu sót (chưa từng có), chỉ ghi nhận là không gian thiết kế tương lai (HSR "Action Advance", Persona "One More") — không cần quyết định gì bây giờ.
+- **Flee/retreat/round-cap**: hệ sống KHÔNG có flee, turn-based mới CÓ safety-net `DEFAULT_MAX_TURNS = 10_000` (`TurnBattleSystem.ts:65`) — khi chạm trần, `runToCompletion()` tự trả `'defeat'` (`TurnBattleSystem.ts:143-144`), tức là stalemate im lặng tính là THUA. Hợp lý làm safety net kỹ thuật, nhưng cần lưu ý: build "rùa" (defense/regen rất cao, damage rất thấp cả 2 bên) có thể thua trận 1 cách khó hiểu với người chơi (không có cảnh báo/log). Ghi nhận, chưa cần fix.
+
+### 7. Idle-speed: không có battle speed-up, và đây là cơ hội bị bỏ ngỏ chứ không phải gap
+
+`game/src/core/idle/SpeedSettings.ts:1-14` xác nhận tính năng x1/x2/x4 speed ĐÃ BỊ BỎ theo yêu cầu trước đây (quyết định cũ, không phải thiếu sót phiên này). Combat driven bởi `window.setInterval` 100ms cố định (`App.vue:370`) + catch-up trần 30s (`GameManager.ts:243`) — không có khái niệm "resolve nhiều trận/giây" nào cho idle progression. Vì turn-based mới resolve XONG 1 lượt tức thời (không phụ thuộc animation liên tục như real-time), đây là **cơ hội tự nhiên** để hỏi lại user có muốn tái xét battle-speed-toggle sau khi Slice 6 cutover hay không — không đề xuất làm ngay, chỉ ghi nhận là câu hỏi đáng hỏi lại đúng lúc (không phải bây giờ).
+
+### 8. Không hành động — chỉ ghi nhận
+
+- **RNG không seed** (`Math.random()` trực tiếp, không có RNG abstraction trong `game/src/core/battle/`) — chỉ quan trọng nếu sau này cần replay/determinism; không phải vấn đề bây giờ.
+- **Save/serialization**: xác nhận combat hoàn toàn ephemeral (không có field battle nào trong `GameManagerSaveRestoreDeps`) — nhất quán với nguyên tắc "không mô phỏng offline" đã có, KHÔNG phải gap.
+- **Enemy targeting AI**: Slice 1 dùng "gần nhất-trước-mặt" cố định; hệ sống có archetype melee/ranged/caster khả năng ảnh hưởng hành vi target/vị trí (chưa xác nhận chi tiết targeting logic theo archetype). Đề xuất: cần 1 lượt verify trước khi Slice 6 migrate content thật, đặc biệt nếu boss phase đổi archetype giữa trận (xem mục 2) — chưa khảo sát sâu, không có action item cụ thể lúc này.
+
+| Hạng mục phát hiện phiên review | Mức độ | Trạng thái |
+|---|---|---|
+| Party turn engine KHÔNG tổng quát N-unit như spec cũ khẳng định — sửa ghi chú, cần redesign thật khi Party spec tới | Cao (sai lệch tài liệu) | 🔴 Đã sửa ghi chú ở bảng dưới, chưa thiết kế redesign |
+| TribulationPhase HP-threshold + archetypeOverride + summon chưa nằm trong Slice 4/Boss migration design | Cao (gap kiến trúc, không chỉ nội dung) | 🔴 Chưa khảo sát/quyết định — cần hỏi user trước Slice 6 |
+| Multi-target resolution không re-check tử vong giữa các hit cùng skill (overkill/double-kill-trigger) | Trung bình (correctness bug tiềm ẩn, chưa lộ vì Slice 1-2 chủ yếu single-target) | 🔴 Chưa khảo sát sâu/fix — nên làm trước khi Slice 3 AOE+buff thật lên hình |
+| Không có CC diminishing-returns/miễn nhiễm tạm thời — nguy cơ CC-lock vô thời hạn | Trung bình (fairness, chưa có nội dung CC thật nên còn kịp) | 🔴 Chưa quyết định |
+| Turn-order preview UI (như HSR/FF) | Thấp (UX opportunity, không bắt buộc) | ⚪ Đề xuất cho Slice 7, chưa quyết định |
+| Battle log/nhật ký combat theo lượt | Thấp (UX opportunity, không bắt buộc) | ⚪ Đề xuất cho Slice 7, chưa quyết định |
+| Gauge-delta buff effect type (haste/slow đẩy trực tiếp ATB) | Thấp (thiếu tính năng genre-chuẩn, chưa cần) | ⚪ Ghi nhận cho lúc thiết kế đầy đủ buff effect types |
+| Stalemate ở `DEFAULT_MAX_TURNS=10_000` im lặng tính THUA | Thấp (edge case, đã có safety net) | ⚪ Ghi nhận, chưa cần fix |
+| Battle-speed-toggle (x1/x2/x4) — cơ hội tái xét hậu turn-based, không phải thiếu sót | Thấp (câu hỏi tương lai) | ⚪ Ghi nhận, hỏi lại sau Slice 6 nếu user muốn |
+| Enemy targeting theo archetype (melee/ranged/caster) chưa verify khớp "gần nhất-trước-mặt" của Slice 1 | Trung bình (cần verify trước migrate content) | 🔴 Chưa khảo sát sâu |
 
 ## Cách cập nhật roadmap này
 
