@@ -8,8 +8,7 @@ export type StatType =
   | 'defense'
   | 'maxHp'
   | 'maxMp'
-  | 'attackSpeed'
-  | 'movementSpeed'
+  | 'speed'
   | 'attackRange'
   | 'criticalRate'
   | 'criticalDamage'
@@ -50,17 +49,8 @@ export type StatType =
   | 'manaShieldPercent'
   | 'leechPercent'
   | 'thornsPercent'
-  | 'hpRegenPerSecond'
+  | 'hpRegenPerTurn'
   | 'manaRegenPerSecond'
-  | 'cooldownReduction'
-  // Cast Time (2026-08-21) — % rút ngắn Cast Time hiệu lực của skill có
-  // Skill.castTime > 0 (xem BattleSystem.updateCasting()), TÁCH KHỎI
-  // attackSpeed/cooldownReduction hoàn toàn (Cast Time là khoảng "niệm"
-  // TRƯỚC khi hiệu ứng thi triển, Cooldown là khoảng CHỜ SAU khi đã thi
-  // triển — 2 khái niệm độc lập). Cùng công thức nhân với
-  // cooldownReduction (effectiveDelta = deltaSeconds * (1 + percent)).
-  // Nền 0 — chưa skill/node nào cấp field này.
-  | 'castSpeedPercent'
   | 'finalDamagePercent'
   | 'finalDamageReductionPercent'
   | 'criticalAvoidance'
