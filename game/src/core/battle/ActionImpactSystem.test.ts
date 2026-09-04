@@ -162,7 +162,7 @@ describe('ActionImpactSystem — skill batch (§3 một action một VFX)', () =
       primaryTargetId: 'primary',
       presetId: 'fire_burst',
       anchorCell: { row: 2 as never, column: 5 },
-      area: { rowStart: 1, rowEnd: 3, colStart: 4, colEnd: 6, shape: 'area' },
+      area: { rowStart: 1, rowEnd: 3, colStart: 4, colEnd: 6, shape: 'square' },
       hitCount: 1,
     })
 
@@ -225,7 +225,7 @@ describe('ActionImpactSystem — skill batch (§3 một action một VFX)', () =
       primaryTargetId: 'primary',
       presetId: 'earth_shockwave',
       anchorCell: { row: 2 as never, column: 5 },
-      area: { rowStart: 0, rowEnd: 4, colStart: 3, colEnd: 7, shape: 'area' },
+      area: { rowStart: 0, rowEnd: 4, colStart: 3, colEnd: 7, shape: 'square' },
       hitCount: 1,
       secondaryPercent: 0.5,
       knockbackDistance: 2,

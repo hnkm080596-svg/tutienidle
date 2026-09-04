@@ -137,9 +137,9 @@ describe('selectAttackableTarget + selectTeleportTarget (plan §7.2 + sản ph�
 })
 
 describe('collectAffected — shape theo grid, clamp biên', () => {
-  const base: ActionTargeting = { shape: 'area', laneRadius: 1, columnRadius: 1 }
+  const base: ActionTargeting = { shape: 'square', laneRadius: 1, columnRadius: 1 }
 
-  it("shape 'area': anchor ở GÓC trên-phải (row 0, col 15) — chỉ ô trong grid", () => {
+  it("shape 'square': anchor ở GÓC trên-phải (row 0, col 15) — chỉ ô trong grid", () => {
     const inCell = entity('in', 14.6, 1) // col 15, row 1
     const outRow = entity('outRow', 14.2, 3) // row 3 > 0+1
     const outCol = entity('outCol', 11.2, 0) // col 11 < 15-1
@@ -157,7 +157,7 @@ describe('collectAffected — shape theo grid, clamp biên', () => {
     expect(affected.map(e => e.id).sort()).toEqual(['in', 'primary'])
   })
 
-  it("shape 'area': anchor góc dưới-trái (row 9, col 0)", () => {
+  it("shape 'square': anchor góc dưới-trái (row 9, col 0)", () => {
     const inCell = entity('in', 0.2, 9)
     const outAbove = entity('outAbove', 0.4, 7)
     const primary = entity('primary', 1.4, 9)
@@ -221,10 +221,46 @@ describe('collectAffected — shape theo grid, clamp biên', () => {
       'primary',
       2,
       5,
-      { shape: 'area', laneRadius: 0, columnRadius: 1, maxTargets: 2 },
+      { shape: 'square', laneRadius: 0, columnRadius: 1, maxTargets: 2 },
     )
 
     expect(affected).toHaveLength(2)
     expect(affected[0]!.id).toBe('primary')
+  })
+})
+
+describe('collectAffected — new shapes (cross/row/column)', () => {
+  it("shape 'cross': includes arm cells, excludes corner cells of the bounding box", () => {
+    const armUp = entity('arm-up', 1, 2) // same column (1), 2 rows up from anchor row 4 — in cross arm
+    const armRight = entity('arm-right', 3, 4) // same row (4), 2 cols right from anchor col 1 — in cross arm
+    const corner = entity('corner', 3, 2) // diagonal from anchor — NOT in cross; a rectangle filter would wrongly include it
+    const battle = battleWith(PLAYER, [armUp, armRight, corner])
+    const targeting: ActionTargeting = { shape: 'cross', laneRadius: 2, columnRadius: 2 }
+
+    const affected = collectAffected(battle, PLAYER, 'arm-up', 4, 1, targeting)
+
+    expect(affected.map(e => e.id).sort()).toEqual(['arm-right', 'arm-up'])
+  })
+
+  it("shape 'row': includes every enemy on the anchor's row regardless of column", () => {
+    const sameRowFar = entity('same-row-far', 15, 4)
+    const otherRow = entity('other-row', 1, 6)
+    const battle = battleWith(PLAYER, [sameRowFar, otherRow])
+    const targeting: ActionTargeting = { shape: 'row' }
+
+    const affected = collectAffected(battle, PLAYER, 'same-row-far', 4, 1, targeting)
+
+    expect(affected.map(e => e.id)).toEqual(['same-row-far'])
+  })
+
+  it("shape 'column': includes every enemy on the anchor's column regardless of row", () => {
+    const sameColFar = entity('same-col-far', 1, 9)
+    const otherCol = entity('other-col', 3, 4)
+    const battle = battleWith(PLAYER, [sameColFar, otherCol])
+    const targeting: ActionTargeting = { shape: 'column' }
+
+    const affected = collectAffected(battle, PLAYER, 'same-col-far', 4, 1, targeting)
+
+    expect(affected.map(e => e.id)).toEqual(['same-col-far'])
   })
 })

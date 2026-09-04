@@ -39,7 +39,7 @@ describe('SkillSystem.getEffectiveSkill — specialization targeting override (2
 
     const effective = system.getEffectiveSkill(skill)
 
-    expect(effective.targeting).toEqual({ shape: 'area', laneRadius: 1 })
+    expect(effective.targeting).toEqual({ shape: 'square', laneRadius: 1 })
   })
 
   it('skill không khai targeting → effective.targeting undefined (single mặc định)', () => {
@@ -82,7 +82,7 @@ describe('SkillSystem.getEffectiveSkill — specialization targeting override (2
     expect(system.selectSpecialization(skill.id, 'chan_dia_quang')).toBe(true)
 
     expect(system.getEffectiveSkill(skill).targeting).toEqual({
-      shape: 'area',
+      shape: 'square',
       laneRadius: 2,
       columnRadius: 1,
     })
@@ -98,7 +98,7 @@ describe('SkillSystem.getEffectiveSkill — specialization targeting override (2
 
     // Không override = giữ nguyên vùng gốc (area 1×1) — behavior
     // fallback `specialization?.targeting ?? skill.targeting`.
-    expect(effective.targeting).toEqual({ shape: 'area', laneRadius: 1, columnRadius: 1 })
+    expect(effective.targeting).toEqual({ shape: 'square', laneRadius: 1, columnRadius: 1 })
   })
 
   it('mọi specialization biến thể C/D chuỗi Thuần có targeting override đều là ActionTargeting hợp lệ', () => {
@@ -109,7 +109,7 @@ describe('SkillSystem.getEffectiveSkill — specialization targeting override (2
       'kim_lang_toan_phong',
       'con_lon_chan_dia',
     ]
-    const shapes = new Set(['single', 'area', 'line', 'all_lanes'])
+    const shapes = new Set(['single', 'square', 'cross', 'line', 'row', 'column', 'all_lanes'])
     let overrideCount = 0
 
     for (const id of variantSkillIds) {
