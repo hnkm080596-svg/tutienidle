@@ -13,6 +13,9 @@ import CombatResultModal from './CombatResultModal.vue'
 import CombatCountdownOverlay from './CombatCountdownOverlay.vue'
 import CombatAiPanel from './CombatAiPanel.vue'
 import CombatBuildHud from './hud/CombatBuildHud.vue'
+import TurnCombatSkillBar from './hud/TurnCombatSkillBar.vue'
+import TurnOrderStrip from './TurnOrderStrip.vue'
+import BattleLogPanel from './BattleLogPanel.vue'
 import CombatExitConfirmModal from './CombatExitConfirmModal.vue'
 import { resetCombatInsets, setCombatInsets } from '@/game/support/combatInsets'
 
@@ -95,7 +98,18 @@ onUnmounted(() => {
       <!-- 6A-T7 — Build HUD bottom-center: route HUD + slider tu-luc +
            ult (từ ControlBar cũ). -->
       <CombatBuildHud class="combat-scene-overlay__build-hud" />
+
+      <!-- Slice 7 (2026-09-04) - turn-based manual cast: 3 fixed buttons
+           basic/special/ultimate + manual/auto toggle. Self-guarded
+           (chi hien khi turn battle fighting). -->
+      <TurnCombatSkillBar class="combat-scene-overlay__turn-skill-bar" />
     </div>
+
+    <!-- Slice 7 extension - turn-order preview (top, dưới TopBar) + battle
+         log (góc phải-dưới, self-guarded khi không fighting). -->
+    <TurnOrderStrip class="combat-scene-overlay__turn-order-strip" />
+
+    <BattleLogPanel />
 
     <!-- 6A-T6 — confirm thoát trận (scene exit zone → bridge event). -->
     <CombatExitConfirmModal />
@@ -147,6 +161,28 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   bottom: var(--space-4);
+  display: flex;
+  justify-content: center;
+  z-index: 12;
+}
+
+/* Slice 7 - turn-based manual skill bar: hàng trên Build HUD, giữa-duỗi. */
+.combat-scene-overlay__turn-skill-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--space-4) + 96px);
+  display: flex;
+  justify-content: center;
+  z-index: 12;
+}
+
+/* Slice 7 extension - turn-order strip: neo dưới TopBar, giữa. */
+.combat-scene-overlay__turn-order-strip {
+  position: absolute;
+  top: 60px;
+  left: 0;
+  right: 0;
   display: flex;
   justify-content: center;
   z-index: 12;
