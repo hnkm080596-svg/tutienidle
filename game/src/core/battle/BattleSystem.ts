@@ -1829,7 +1829,7 @@ export class BattleSystem {
     player: CombatEntity,
     execution: Extract<SkillExecutionPolicy, { kind: 'attack_speed' | 'attack_speed_cast' }>,
   ): number {
-    return getAttackIntervalSeconds(player.stats.attackSpeed * (execution.attackSpeedMultiplier ?? 1))
+    return getAttackIntervalSeconds(player.stats.speed * (execution.attackSpeedMultiplier ?? 1))
   }
 
   /**
