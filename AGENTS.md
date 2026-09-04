@@ -2,99 +2,250 @@
 
 - The application root is `game/`.
 - The stack is Vue 3, TypeScript, Vite, Vitest, Pinia, and Phaser.
-- Do not use `any` unless it is genuinely necessary.
-- Do not change architecture or add dependencies unless the task requires it.
-- Do not edit files outside the task scope.
-- Prefer focused changes to rewrites.
-- Never read or expose local secrets such as `APIKey` or `.env` files.
-- Do not commit, push, deploy, or perform destructive Git operations. The user makes the final commit decision.
-- Run verification proportionate to the affected behavior and risk before declaring completion.
-- Fix verification failures caused by the implementation.
-- Summaries must state what changed, what was verified, and any remaining limitations.
 
-## Iron Rule: Deletion Requires Explicit Authorization
+This document is the human-readable spec for all project rules. Two categories:
 
-- Never delete any file or directory, by any method, unless the user has explicitly authorized that specific deletion in advance.
-- This prohibition includes direct deletion and indirect deletion through shell commands, editors, patches, scripts, Git operations, cleanup tools, automation, or any command with deletion as a side effect.
-- Treat deletion exactly like committing: the user retains the final decision and must grant explicit authorization before the deletion is performed.
-- If completing a task appears to require deletion, stop and ask the user for authorization. Do not work around this rule by replacing, emptying, truncating, or moving the target so that it is effectively deleted.
+- **Part 1 — Protection Rules** (P1–P12): hard rules the agent must NOT bypass. Also baked into `.opencode/agent/<name>.md` system prompts so the agent "lives in" them.
+- **Part 2 — Effectiveness Guidelines** (E1–E16): suggestions the agent reads and applies when relevant. May skip with reason.
+- **Part 3 — Opencode Agent Wiring**: technical note about how Part 1 is replicated into the four agent files.
 
-## UI/UX Skill Requirement
+When a rule below says "the agent", it means whichever opencode agent is currently active (`build`, `plan`, `general`, `explore`).
+
+---
+
+## Part 1 — Protection Rules (Enforced)
+
+### P1. Worktree Boundary + Safe Deletion
+
+- Operate strictly inside the worktree you were given. All file edits, scripts, and tests must run inside it.
+- File or directory deletion (`rm`, `Remove-Item`, editor delete, or any indirect form) is allowed **inside the worktree** without further authorization — the worktree is a sandbox, deletion there is not dangerous.
+- For any action **outside the worktree** (other branches, the main checkout, sibling worktrees), you must obtain explicit user authorization first.
+- The Iron Rule's "no destructive action without explicit user auth" still applies to actions that leave the worktree boundary. Treat crossing the worktree boundary the same as committing: the user decides.
+
+### P2. Worktree MUST (except docs)
+
+- Multi-file features, risky changes, implementation plans, architectural changes, and delegated work MUST be done in a dedicated worktree.
+- Create the worktree via the `using-git-worktrees` skill. Project convention: path `<repo-root>/.agent-worktrees/<task-name>` (kebab-case from the user request), branch auto-prefixed by the skill (`feat/`, `fix/`, `chore/`).
+- Small focused changes (single small file, 1-line typo, comment-only) may be performed in the current worktree, but if the user has explicitly asked for isolation, follow the request.
+- **Exception — documentation edits:** editing `*.md` files (including this `AGENTS.md` and `game/docs/**`) is allowed without a worktree. For any doc edit made without a worktree, note clearly in the summary: **reason**, **time** (date or turn), and **line(s) changed**. Example: "Edited AGENTS.md L5 at 2026-09-04 to fix P3 wording — 1 line."
+- Never create a worktree via raw `git worktree add` directly. Always go through the `using-git-worktrees` skill so placement, branch, and cleanup are consistent.
+
+### P3. Smart Verification (2 modes: `quick` or `full`)
+
+- Verification is binary. Do not invent intermediate modes.
+- **`quick`** = `npm.cmd run type-check` + `npx.cmd vitest run` (focused on changed files / modules). Default for normal code changes.
+- **`full`** = `npm.cmd run type-check` + `npm.cmd run build` + `npx.cmd vitest run` (no filter, full suite).
+- Use **`full`** when the change touches:
+  - Config files: `vite.config.ts`, `tsconfig.json`, `vitest.config.ts`, `package.json`, `package-lock.json`
+  - Dependencies (added/removed/upgraded)
+  - Asset pipeline: `assets/`, `public/`, Vite plugins, build scripts
+  - Shared / broad code: Pinia root store, router, Phaser scene manager
+  - Pre-milestone or pre-release verification
+  - The user explicitly asks for full verification
+- Otherwise, use **`quick`**.
+- Stop on the first failure. Fix, then rerun the same mode. Do not let all steps run and then collect a failure list at the end.
+- Do not repeat a successful verification unless the code or environment has materially changed.
+- Failures introduced by the task must be fixed before declaring complete (see P12).
+
+### P4. Adversarial QA Gate (FAIL with reason is acceptable)
+
+- After implementing a feature or bug fix, run the `tutienidle-adversarial-qa` skill in quick mode before claiming completion.
+- Use deep mode when the user invokes `$tutienidle-adversarial-qa deep`, or before milestone / release readiness claims.
+- During a QA run, the skill may write **only** to: `game/src/**/*.test.ts`, `game/tests/e2e/**/*.spec.ts`, `game/tests/e2e/helpers.ts`, `game/docs/qa/**`. Production code under `game/src/**` (non-test) MUST NOT be modified during a QA run. If the QA pass uncovers a production bug, exit QA, fix in development workflow, then re-run QA.
+- Treat a defect as confirmed only when a failing reproduction test or direct runtime evidence proves it. Otherwise report it as suspected or as a coverage gap.
+- If quick mode identifies materially broad risk (save/cloud, time/offline, economy/progression, Vue/Pinia/Phaser lifecycle), escalate to deep mode rather than issuing a quick pass verdict.
+- **Verdict rules (overriding the skill's defaults where this project is concerned):**
+  - `PASS WITH EVIDENCE` — the task may be declared done.
+  - `FAIL WITH REASON` — the task may be declared done **if** the reason is legitimate (example: "system is in development, requires later phases to complete"; "out of task scope, requires new authorization"; "blocked on external dependency, requires user input"). The reason must be specific, not generic.
+  - `PASS WITH GAPS` and `BLOCKED` — non-completion. Report unresolved findings, return to development workflow, re-run QA.
+- When the verdict is below `PASS WITH EVIDENCE` and is not a legitimate `FAIL WITH REASON`, do not present the work as done.
+
+### P5. Code-Review Hard-Block
+
+- Before declaring a non-trivial change complete, run the `code-review` skill (from `anthropics/knowledge-work-plugins`) over the diff.
+- Non-trivial = roughly 5+ lines of production code changed OR any new file OR any touched file that is not a pure rename / comment / whitespace.
+- The skill scores each issue 0–100 for confidence. Filter out anything below 80 (treat as false positive).
+- Issues at or above 80 confidence MUST be fixed before declaring done. The task is not done while any such issue is open, unless the user explicitly accepts it.
+- Skip this rule for 1-line typo fixes, comment-only edits, and pure formatting.
+
+### P6. Multi-Agent Coordination
+
+- Before editing files (including via a subagent), run `git status` to check for overlapping uncommitted changes. If overlap exists with work you did not author, stop and notify the user before proceeding.
+- When dispatching a subagent (via the `task` tool, or any parallel delegation), require the subagent to report back in this exact format:
+  - **Worktree path** (absolute)
+  - **Branch**
+  - **Files changed** (list)
+  - **Verification evidence** (which verification mode ran, pass/fail summary)
+  - **Remaining limitations** (anything not done, anything needing follow-up)
+- The coordinator (the agent that delegated) must aggregate the subagent reports and the diff, and re-verify before declaring done.
+- Only request another review pass when evidence is missing, findings are unresolved, or the change is high-risk. Do not loop reviews for low-signal issues.
+- Subagents and coordinators MUST NOT commit, merge, integrate, push, or deploy — see P7.
+- Use the `subagent-driven-development` and `dispatching-parallel-agents` superpowers skills to plan and execute multi-agent work.
+
+### P7. No Commit / Push / Deploy + Specific Destructive Git List
+
+- The user is the final authority for commit, merge, integrate, push, and deploy. Never perform any of these without explicit user authorization in the current turn.
+- The following destructive Git commands always require explicit user authorization, **even inside a worktree** (they can still lose uncommitted work and history):
+  - `git reset --hard`
+  - `git clean -fd` / `git clean -fdx`
+  - `git push --force` / `git push -f`
+  - `git branch -D` (uppercase force-delete)
+  - `git stash drop` / `git stash clear`
+  - `git checkout .` / `git checkout -- <path>` (silent overwrite of working tree)
+  - `git restore .` / `git restore --staged .` without per-file confirmation
+- Normal Git operations are allowed inside a worktree: `git status`, `git log`, `git diff`, `git branch` (list), `git worktree *`, `git add`, `git commit` (only when user authorized, see above), `git checkout <existing-branch>`, `git switch`.
+- File deletion (`rm`, `Remove-Item`) is governed by P1, not by this rule.
+
+### P8. No `any` Unless Genuinely Necessary
+
+- Do not use TypeScript `any` unless the type is genuinely untyped (e.g., untyped third-party API, dynamic JSON, JSON-schema-driven parsing) and a typed alternative is not reasonably available.
+- Prefer `unknown` + a type guard, or a proper interface. Each `any` introduced is a debt item; if you add one, mention it in the summary.
+
+### P9. No Architecture or Dependency Change Without Task Requirement
+
+- Do not change architecture (folder layout, module boundaries, public API surface of stores/services, Phaser scene topology) or add / remove / upgrade dependencies unless the task explicitly requires it.
+- If you believe a change is needed, surface it in the summary as a "Note / Suggestion" rather than silently making it.
+
+### P10. No Edit Outside Task Scope
+
+- Edit only files that are required to complete the current task. Touching unrelated files is a scope violation.
+- If a file outside scope appears to need a change, stop and ask the user, or include it as a `Note / Suggestion` in the summary.
+
+### P11. No Secrets Exposure
+
+- Never read, log, print, or commit the contents of `APIKey`, `.env`, `.env.*`, `.mcp.json`, or any file containing Bearer tokens, credentials, or other secrets.
+- These files are listed in `.gitignore` and exist locally. Treat them as opaque identifiers, not as readable content.
+- If a task appears to require reading a secret, stop and ask the user to provide the value through a safe channel.
+
+### P12. Fix Verification Failures Caused by the Implementation
+
+- If verification (any mode in P3) fails and the failure was introduced or worsened by the current task, the agent must fix it before declaring complete.
+- Pre-existing failures in unrelated code are not the agent's responsibility to fix; report them as suspected or coverage gaps instead.
+
+---
+
+## Part 2 — Effectiveness Guidelines (Read & Apply When Relevant)
+
+The agent reads these rules and applies them when the task matches the trigger. Skipping is allowed with a reason stated in the summary.
+
+### E1. UI/UX Skill Requirement
 
 - For every task that designs, builds, reviews, or changes UI/UX, use the `ui-ux-pro-max` skill before making design or implementation decisions.
-- This requirement includes pages, components, design systems, styling, layout, responsive behavior, accessibility, interactions, animation, typography, color, charts, and any change to how the interface looks, feels, moves, or is used.
+- This includes pages, components, design systems, styling, layout, responsive behavior, accessibility, interactions, animation, typography, color, charts, and any change to how the interface looks, feels, moves, or is used.
 - Read `.agents/skills/ui-ux-pro-max/SKILL.md` and follow its workflow, using the smallest relevant search mode and the detected project stack. For this project, use the Vue stack guidance when stack-specific guidance is needed.
 - Skip this skill only for work that is entirely non-visual and does not affect how users interact with the application.
 - If the skill is unavailable, report the limitation instead of silently substituting an unverified UI/UX workflow.
 
-## Worktree and Multi-Agent Coordination
+### E2. Stack Reference Skills (read-before-write)
 
-- Before changing files, check for overlapping uncommitted changes and preserve unrelated user work.
-- Use a dedicated worktree for multi-file features, risky changes, implementation plans, or delegated work. Small focused changes may be performed in the current worktree.
-- Delegated workers must report their worktree, branch, changed files, verification results, and remaining limitations.
-- The coordinator reviews the final diff and verification evidence. Request another review only when evidence is missing, findings remain unresolved, or the change is high-risk.
-- Do not commit, merge, integrate, push, or deploy unless the user explicitly requests it.
+- Edit or create `.vue` files in `game/src/**` → load the `vue-best-practices` skill (and `vue-pinia-best-practices` if touching a Pinia store).
+- Edit or create files in `game/src/**` that import Phaser or instantiate `new Phaser.*` → load the `phaser-core` skill (and `phaser-arcade-physics` if using Arcade physics bodies, colliders, or velocity).
+- The `vue` skill (from `antfu/skills`) is a general Vue reference; load it alongside `vue-best-practices` for project-style guidance.
+- Skip for 1-line typo fixes, comment-only edits, or pure formatting changes.
 
-## UI Layout Rule: Flexible / Fit-to-Container
+### E3. Code-Simplifier (auto, soft)
 
-- Kích thước và số lượng phần tử hiển thị (grid slots, cards, items per row/page) phải FLEXIBLE theo container thật — fit với card/panel chứa nó.
-- Khi window resize, layout phải tự thích ứng: không vỡ, không tràn, không để khoảng trắng chết, không hardcode số cột/px dựa trên màn hình dev.
-- Pattern chuẩn của project: CSS `auto-fill/minmax` cho columns + ResizeObserver đo thật (`usePanelPagination` columnWidth, `useBagGridLayout`) — đo từ `contentRect`, không giả định.
-- Cấm: fixed px width cho vùng chính, số cột hardcode, pagination đếm sai loại layout (list dọc vs grid đa cột).
+- After writing or substantially editing a file (≥5 lines of production-code change, or a new file), load the `code-simplifier` skill and apply it.
+- Simplification is refactor only — behavior must not change. If a candidate simplification would change behavior, skip it and explain why.
+- The user may say "skip simplify" for a given turn. Honor that and note it in the summary.
 
-## Verification
+### E4. Game System Skills
 
-- Run focused tests covering changed behavior.
-- Run `npm.cmd run type-check` when TypeScript or Vue code changes.
-- Run `npm.cmd run build` for production-affecting code, configuration, dependencies, asset-pipeline, or integration changes.
-- Run the full test suite for broad, shared, or high-risk changes.
-- Do not repeat a successful verification command unless relevant code or environment state has changed.
-- Fix failures introduced by the task before declaring completion.
+- Changing economy / progression / difficulty / reward / skill tree / cultivation curve → load `balance-check`.
+- Adding a new gameplay feature or redesigning an existing flow → load `improve-game`.
+- Fixing a player-reported bug, or running regression / bug-hunt on existing code → load `game-qa`.
+- **Designing or implementing a combat skill (kỹ năng, chiêu thức, passive), a SkillEffect, a ProgressionNode, an ailment or reaction, or any element-skill change → load `tutienidle-skill-design`.** This is project-specific and must be triggered for any change to combat data files in `game/src/data/skill` or `game/src/data/progression`, or to the SkillEffect / Skill / ProgressionNode type definitions.
 
-## Development Phase
+### E5. Performance Skill
 
-- This project is currently in a development build. Save-migration correctness does NOT need to be maintained or verified — it is fine to break compatibility with old saves during this phase. Do not spend effort on save migrations.
-## Rule: Planning & Idea Preservation
+- Before shipping a feature that affects runtime (FPS, save size, large scenes, heavy animation, long sessions) → load the `performance` skill (from `addyosmani/web-quality-skills`).
+- This is not a verification gate; it is a review pass to catch obvious runtime cliffs before they ship.
 
-**Trigger:** When the user requests a specification or plan.
+### E6. E2E Testing Skills
 
-**Mandatory Principles:**
+- Writing e2e tests in `game/tests/e2e/**` → load the `playwright-best-practices` skill.
+- Running browser-based UI checks inside a session → load the `playwright-cli` skill.
+- Vitest remains the default for unit and integration tests; Playwright is for end-to-end browser behavior.
 
-1. **Absolutely respect the writer's original ideas.**
-   - Do not arbitrarily omit any ideas.
-   - Do not split original ideas into separate parts that lose the original continuity.
-   - Do not replace, modify, or "improve" original ideas without prior consent.
+### E7. Planning & Idea Preservation
 
-2. **Research and expand with control.**
-   - Proactively research related issues, context, and technical requirements surrounding the idea.
-   - Add technical details, implementation steps, risks, and necessary resources **without altering the essence of the original idea**.
+**Trigger:** when the user requests a specification or plan.
 
-3. **Review all systems related to the task while writing the specification.**
-   - During specification, inspect and account for every system related to the task in addition to the user's original ideas.
-   - Trace relevant architecture, data flows, state ownership, dependencies, integrations, persistence, lifecycle, UI interactions, tests, and cross-system effects as applicable.
-   - Use this system-wide context to produce the most coherent and technically sound specification, while preserving the essence and continuity of the user's original ideas.
-   - Explicitly identify affected systems, assumptions, constraints, risks, and integration points in the specification. Do not infer system behavior from filenames or isolated code snippets when the relevant implementation can be inspected.
-   - Derive the implementation plan from the completed specification and reuse its system analysis instead of repeating the same investigation.
-   - Revisit and update the specification before planning only when the specification is missing, incomplete, outdated, or the task scope has changed.
+**Mandatory principles:**
 
-4. **The specification or plan must be detailed and stay true to the original idea.**
-   - Every original idea must appear fully in the specification or plan.
-   - If new sections are needed (e.g., architecture, technology, timeline), ensure they **serve** the original idea, not replace it.
+1. **Absolutely respect the writer's original ideas.** Do not omit, split, replace, or "improve" ideas without prior consent.
+2. **Research and expand with control.** Proactively research related context, add technical detail, implementation steps, risks, and resources — without altering the essence of the original idea.
+3. **Review all systems related to the task while writing the specification.** Trace architecture, data flow, state ownership, dependencies, integrations, persistence, lifecycle, UI interactions, tests, and cross-system effects. Use system-wide context to produce a coherent spec while preserving the writer's intent. Explicitly identify affected systems, assumptions, constraints, risks, and integration points.
+4. **Detailed and stay true.** Every original idea must appear fully in the spec. New sections serve the original idea, never replace it.
+5. **Clearly note proposed changes.** If the original idea has issues (infeasibility, conflicts, etc.), put them in a separate "Notes / Suggestions" section with reasons and alternatives. Do not silently modify the original idea.
+6. **Confirm before finalizing** if the idea is ambiguous. Ask clarifying questions instead of guessing.
 
-5. **Clearly note any proposed changes.**
-   - If the original idea is found to have issues (infeasibility, conflicts, etc.), state them clearly in a separate "Notes / Suggestions" section, with reasons and alternative approaches.
-   - Do not silently modify the original idea in the specification or plan.
+### E8. Development Phase
 
-6. **Confirm before finalizing the specification or plan (if necessary).**
-   - Before delivering the final specification or plan, if there is any ambiguity about the idea, ask clarifying questions instead of guessing.
+- The project is in a development build. Save-migration correctness does NOT need to be maintained or verified — breaking compatibility with old saves is acceptable in this phase. Do not spend effort on save migrations.
 
-## TutienIdle Adversarial QA
+### E9. UI Layout Rule: Flexible / Fit-to-Container
 
-- After implementing a feature or bug fix, use the `tutienidle-adversarial-qa` skill in quick mode before claiming completion.
-- Use deep mode when the user invokes `$tutienidle-adversarial-qa deep` and before milestone or release readiness claims.
-- During a QA run, the skill may write only `game/src/**/*.test.ts`, `game/tests/e2e/**/*.spec.ts`, `game/tests/e2e/helpers.ts`, and `game/docs/qa/**`; it must not modify production code.
-- Treat a defect as confirmed only when a failing reproduction test or direct runtime evidence proves it. Otherwise report it as suspected or as a coverage gap.
-- If quick mode identifies materially broad save/cloud, time/offline, economy/progression, or Vue/Pinia/Phaser lifecycle risk, escalate to deep mode rather than issuing a quick pass verdict.
-- The allowed QA verdicts are: `PASS WITH EVIDENCE`, `PASS WITH GAPS`, `FAIL`, and `BLOCKED`.
-- A feature or bug-fix task may be declared done only with a `PASS WITH EVIDENCE` verdict. `PASS WITH GAPS`, `FAIL`, and `BLOCKED` are non-completion states and must never be presented as done.
-- When the verdict is below `PASS WITH EVIDENCE`, report the unresolved findings or evidence gaps, return to the development workflow for in-scope remediation, and rerun QA. If completion requires new authorization, user input, or work outside the task scope, stop and request it explicitly instead of lowering the completion standard.
+- Grid slots, cards, items per row / page must be FLEXIBLE based on the actual container — fit the card or panel that contains them.
+- On window resize, the layout must self-adapt: no breakage, no overflow, no dead whitespace, no hard-coded column counts or pixel widths from the dev screen.
+- The project's standard pattern: CSS `auto-fill / minmax` for columns + `ResizeObserver` measuring `contentRect` (see `usePanelPagination` columnWidth, `useBagGridLayout`). Measure, do not assume.
+- Forbidden: fixed `px` width for the main region, hard-coded column counts, paginating across the wrong layout type (vertical list vs multi-column grid).
+
+### E10. Focused Changes Over Rewrites
+
+- Prefer small, targeted edits to large rewrites. Rewrites are higher risk and harder to review.
+
+### E11. Summary Format
+
+- Every task summary must state:
+  - What changed (files, sections, behavior).
+  - What was verified (which verification mode from P3, results; QA verdict from P4 if applicable; code-review verdict from P5 if applicable).
+  - Any remaining limitations, follow-ups, or Notes / Suggestions.
+
+### E12. Worktree Workflow
+
+- When P2 triggers a worktree, load the `using-git-worktrees` skill to follow the project's create-isolated-workspace workflow (detection, placement, branch, setup, baseline).
+- When closing a worktree (merge done, branch cleanup, release), load the `finishing-a-development-branch` skill to follow the project's wrap-up workflow.
+
+### E13. Verification Meta-Skill
+
+- Before applying any verification gate (P3, P4, or P5), load the `verification-before-completion` superpowers skill for the cross-cutting checklist (evidence collection, claim qualification, common gaps).
+- The meta-skill does not replace P3 / P4 / P5; it is the umbrella that frames them.
+
+### E14. Code-Review Workflow
+
+- When the user explicitly requests a review of a change, load the `requesting-code-review` superpowers skill to structure the request.
+- When responding to feedback from a reviewer (human or AI), load the `receiving-code-review` superpowers skill to evaluate and act on each item.
+- These complement P5 (which is about proactively running the `code-review` skill before declaring done).
+
+### E15. Systematic Debugging
+
+- When a bug, exception, or unexpected behavior appears, load the `systematic-debugging` superpowers skill before guessing at a fix.
+- Reproduce first, isolate, then diagnose. The skill's order is intentional; do not skip to a fix because the cause seems obvious.
+
+### E16. Test-Driven Development
+
+- When writing new tests or fixing a bug, load the `test-driven-development` superpowers skill and follow its red-green-refactor cycle.
+- Prefer to express the intended behavior as a failing test before writing the production code. Existing tests that already cover the area may be reused.
+
+---
+
+## Part 3 — Opencode Agent Wiring
+
+Opencode supports per-agent system prompts via `.opencode/agent/<name>.md` files. The file body becomes the agent's prompt, which is higher priority than `AGENTS.md` (treated as instructions). To make the Protection Rules reliably trigger, the rules in Part 1 are also embedded into the four built-in agent prompts.
+
+### Agent files
+
+- `.opencode/agent/build.md` — primary agent that edits code. Embeds all 12 Protection rules.
+- `.opencode/agent/plan.md` — primary agent for spec / planning without edits. Embeds P1, P2, P6, P7, P8, P9, P10, P11. Does not need P3 / P4 / P5 / P12 because it does not ship code.
+- `.opencode/agent/general.md` — primary fallback agent with the same Protection surface as `build.md`.
+- `.opencode/agent/explore.md` — primary read-only research agent. Embeds P1, P2, P6, P7, P8, P10. Does not need P3 / P4 / P5 / P9 / P12.
+
+### Sync rule
+
+- Part 1 is the source of truth for humans. The four agent files mirror Part 1 into each agent's system prompt.
+- When Part 1 changes, update the relevant agent files in the same change. Drift between Part 1 and the agent prompts is a bug.
+
+### Restart
+
+- After creating or editing any agent file or `AGENTS.md`, the user must quit and restart opencode. Config is loaded once on startup and is not hot-reloaded.
