@@ -21,8 +21,6 @@ export const STAT_METADATA: Partial<Record<StatType, StatMetadata>> = {
   endurancePercent: { unit: 'percent', min: 0, max: 0.75 },
   manaShieldPercent: { unit: 'percent', min: 0, max: 0.8 },
   leechPercent: { unit: 'percent', min: 0, max: 0.25 },
-  cooldownReduction: { unit: 'percent', min: 0, max: 3 },
-  castSpeedPercent: { unit: 'percent', min: 0, max: 3 },
   finalDamagePercent: { unit: 'percent', min: -1 },
   finalDamageReductionPercent: { unit: 'percent', min: 0, max: 0.75 },
   chanceToIgnoreResistance: { unit: 'percent', min: 0, max: 1 },

@@ -55,11 +55,14 @@ export interface StatModifier {
 // hợp lý, cần tinh chỉnh qua playtest, không phải số chốt cứng.
 const ATTRIBUTE_ATTACK_PER_POINT = 0.6
 const ATTRIBUTE_DEFENSE_PER_POINT = 0.4
-const ATTRIBUTE_ATTACK_SPEED_PERCENT_PER_POINT = 0.0015
+// Turn-based conversion (2026-09-04) — quy đổi thuần đơn vị từ
+// ATTRIBUTE_ATTACK_SPEED_PERCENT_PER_POINT cũ (0.0015): base 1→100 và
+// rate 0.0015→0.15 cùng nhân 100, giữ đúng % tăng trưởng tương đối —
+// KHÔNG phải cân bằng lại.
+const ATTRIBUTE_SPEED_PER_POINT = 0.15
 const ATTRIBUTE_ACCURACY_PER_POINT = 1.5
 const ATTRIBUTE_EVASION_PER_POINT = 1.0
 const ATTRIBUTE_CRIT_RATE_PERCENT_PER_POINT = 0.0005
-const ATTRIBUTE_COOLDOWN_REDUCTION_PER_POINT = 0.001
 const ATTRIBUTE_AILMENT_RESIST_PER_POINT = 0.002
 const ATTRIBUTE_CRIT_DAMAGE_PERCENT_PER_POINT = 0.003
 const ATTRIBUTE_ELEMENT_POWER_PER_POINT = 0.5
@@ -121,10 +124,10 @@ function deriveAttributeModifiers(finalized: Stats): StatModifier[] {
     flatAttributeModifier('strength', 'attack', finalized.strength * ATTRIBUTE_ATTACK_PER_POINT),
     flatAttributeModifier('strength', 'defense', finalized.strength * ATTRIBUTE_DEFENSE_PER_POINT),
 
-    percentAttributeModifier(
+    flatAttributeModifier(
       'dexterity',
-      'attackSpeed',
-      finalized.dexterity * ATTRIBUTE_ATTACK_SPEED_PERCENT_PER_POINT,
+      'speed',
+      finalized.dexterity * ATTRIBUTE_SPEED_PER_POINT,
     ),
     flatAttributeModifier(
       'dexterity',
@@ -142,11 +145,6 @@ function deriveAttributeModifiers(finalized: Stats): StatModifier[] {
       finalized.dexterity * ATTRIBUTE_CRIT_RATE_PERCENT_PER_POINT,
     ),
 
-    flatAttributeModifier(
-      'intelligence',
-      'cooldownReduction',
-      finalized.intelligence * ATTRIBUTE_COOLDOWN_REDUCTION_PER_POINT,
-    ),
     percentAttributeModifier(
       'intelligence',
       'criticalDamage',
@@ -161,7 +159,7 @@ function deriveAttributeModifiers(finalized: Stats): StatModifier[] {
     flatAttributeModifier('vitality', 'maxHp', finalized.vitality * ATTRIBUTE_MAX_HP_PER_POINT),
     flatAttributeModifier(
       'vitality',
-      'hpRegenPerSecond',
+      'hpRegenPerTurn',
       finalized.vitality * ATTRIBUTE_HP_REGEN_PER_POINT,
     ),
     flatAttributeModifier(
