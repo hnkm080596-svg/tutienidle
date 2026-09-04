@@ -4,6 +4,12 @@ import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
 import type { CombatEntity } from '../../combat/CombatEntity'
 
+// QA regression evidence (2026-09-04, Combat Fairness Guards) — ghi nhận
+// hành vi endurance pipeline của hệ sống: đòn damage > enduranceThreshold
+// bị trừ PHẲNG threshold×percent SAU mọi multiplier (applyEndurance trong
+// CombatSystem). Đây là lý do Sudden Death test phải khống chế endurance:
+// scaled = (base + flat) × m − flat, KHÔNG phải base × m.
+
 function mk(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, ...overrides.stats }
   return {
@@ -31,7 +37,11 @@ describe('debug damage scaling pipeline', () => {
     const d10 = run(1)
     const d13 = run(1.3)
     const d25 = run(2.5)
-    console.log('d1.0=', d10, 'd1.3=', d13, 'd2.5=', d25, 'ratios=', d13 / d10, d25 / d10)
-    expect(d10).toBeGreaterThan(0)
+
+    // Endurance flat-subtract model: damage(m) = (base + flat) × m − flat
+    // với base = 93 (đo tại m=1), flat = threshold(10) × percent(0.7) = 7.
+    const flat = 10 * 0.7
+    expect(d13).toBeCloseTo((d10 + flat) * 1.3 - flat, 1)
+    expect(d25).toBeCloseTo((d10 + flat) * 2.5 - flat, 1)
   })
 })
