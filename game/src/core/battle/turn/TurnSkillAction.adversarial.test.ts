@@ -11,6 +11,7 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
+import { TurnBuffPool } from './TurnBuffPool'
 
 // QA adversarial probes (2026-09-04 quick review) — Slice 2 skill actions.
 
@@ -63,6 +64,7 @@ function participant(overrides: Partial<TurnBattleParticipant> = {}): TurnBattle
     priority: 0,
     actionGauge: 0,
     alive: true,
+    buffs: new TurnBuffPool(),
     ...overrides,
   }
 }

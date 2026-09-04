@@ -5,6 +5,7 @@ import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
 import type { TurnSkillDefinition } from './TurnSkillAction'
+import { TurnBuffPool } from './TurnBuffPool'
 
 // Fixture giống hệt quy ước đã dùng trong ActionTargetingSystem.test.ts —
 // selectTarget chỉ đọc id/x/row/alive, không cần Stats đầy đủ.
@@ -23,7 +24,7 @@ function participant(
   speed = 10,
   priority = 0,
 ): TurnBattleParticipant {
-  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive }
+  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new TurnBuffPool() }
 }
 
 describe('selectTarget', () => {
@@ -98,7 +99,7 @@ function makeParticipant(
   speed: number,
   priority: number,
 ): TurnBattleParticipant {
-  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive }
+  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new TurnBuffPool() }
 }
 
 describe('TurnBattleSystem.runToCompletion', () => {

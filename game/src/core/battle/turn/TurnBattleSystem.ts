@@ -10,6 +10,7 @@ import { consumeGaugeAfterAction } from './ActionGauge'
 import { resolveNextTurn } from './TurnQueue'
 import { tickCooldowns, selectAction, commitAction, collectTurnTargets } from './TurnSkillAction'
 import type { TurnSkillDefinition, TurnSkillSlot } from './TurnSkillAction'
+import { TurnBuffPool } from './TurnBuffPool'
 
 export type TurnBattleState = 'fighting' | 'victory' | 'defeat'
 
@@ -20,6 +21,7 @@ export interface TurnBattleParticipant {
   priority: number
   actionGauge: number
   alive: boolean
+  buffs: TurnBuffPool
   basic?: TurnSkillDefinition
   special?: TurnSkillSlot
   ultimate?: TurnSkillSlot
