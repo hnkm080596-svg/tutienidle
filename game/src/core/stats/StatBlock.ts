@@ -24,12 +24,12 @@ export function createBaseStats(): Stats {
     maxHp: 100,
     maxMp: 0,
 
-    attackSpeed: 1,
-
-    // Player là tower cố định, không dùng movementSpeed cho bản thân
-    // nữa (xem BattleSystem.resolveMovement()) — vẫn giữ stat này vì
-    // enemy dùng chung Stats shape, chỉ enemy còn thật sự di chuyển.
-    movementSpeed: 60,
+    // Turn-based conversion (2026-09-04) — nền 100, ATB gauge-fill-rate
+    // stat (ActionGauge.advanceGauge() đọc trực tiếp). Neo giá trị 100
+    // theo quy ước SPD của Honkai: Star Rail (baseline ~100-115) — chỉ
+    // là chọn đơn vị dễ đọc, GAUGE_MAX=1000 không quan tâm độ lớn tuyệt
+    // đối, chỉ quan tâm tỉ lệ speed giữa các actor.
+    speed: 100,
 
     // Avatar Player tấn công bằng Chebyshev range quanh ô đang đứng
     // (plan §2.3/§2.4) — base 1; enemy dùng chung Stats shape với
@@ -74,10 +74,8 @@ export function createBaseStats(): Stats {
     manaShieldPercent: 0,
     leechPercent: 0,
     thornsPercent: 0,
-    hpRegenPerSecond: 0,
+    hpRegenPerTurn: 0,
     manaRegenPerSecond: 0,
-    cooldownReduction: 0,
-    castSpeedPercent: 0,
     finalDamagePercent: 0,
     finalDamageReductionPercent: 0,
     criticalAvoidance: 0,

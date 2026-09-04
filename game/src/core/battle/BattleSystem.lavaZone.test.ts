@@ -24,9 +24,8 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     criticalRate: 0,
     // Chặn đòn thường tự động 2 phía — test này CHỈ đo Lava Zone.
     attackRange: 0,
-    attackSpeed: 0,
+    speed: 0,
     vitality: 0,
-    movementSpeed: 0,
   }
 
   return {

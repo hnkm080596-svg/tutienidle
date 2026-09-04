@@ -29,8 +29,7 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     blockChance: 0,
     dexterity: 0,
     attackRange: 0,
-    attackSpeed: 0,
-    movementSpeed: 0,
+    speed: 0,
   }
 
   return {
@@ -214,7 +213,7 @@ describe('BattleSystem — Kiếm Thế / Kiếm Ý wiring (spec 2026-08-29)', (
     })
 
     const player = createPlayer({})
-    player.stats.attackSpeed = 10
+    player.stats.speed = 10
     player.stats.attackRange = 999999
     const enemy = makeTankEnemy('enemy', 100000)
 
@@ -297,7 +296,7 @@ describe('BattleSystem — Kiếm Thế / Kiếm Ý wiring (spec 2026-08-29)', (
     const { system } = setup({ route: 'kiem_tran', skill: createKiemTranSkill('kiem_tran_luong_nghi', 1) })
 
     const player = createPlayer({})
-    player.stats.attackSpeed = 10
+    player.stats.speed = 10
     player.stats.attackRange = 999999
     const enemy = makeTankEnemy('enemy', 10000000)
 

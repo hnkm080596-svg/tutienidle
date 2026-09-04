@@ -225,7 +225,7 @@ export class PillSystem {
 
               sourceType: 'pill',
 
-              stat: 'hpRegenPerSecond',
+              stat: 'hpRegenPerTurn',
 
               flat: effect.hpPerSecond ?? 0,
             },

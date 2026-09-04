@@ -39,11 +39,10 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
     attack: 0,
     evasionRate: 0,
     dexterity: 0,
-    attackSpeed: 0,
+    speed: 0,
     // Tầm đánh của player = Chebyshev quanh avatar (plan §2.3) — cho 16
     // để test tập trung vào timing thay vì biên range (có test riêng).
     attackRange: 16,
-    movementSpeed: 0,
   }
 
   return {
@@ -221,34 +220,6 @@ describe('BattleSystem — Cast Time + execution policy cast_time', () => {
     // 3 tick liên tiếp trong lúc đang niệm — vẫn CHỈ đúng 1 'cast_start'
     // (không bắt đầu cast chồng cast).
     expect(events.filter((event) => event.type === 'cast_start')).toHaveLength(1)
-  })
-
-  it('castSpeedPercent rút ngắn Cast Time thật — cùng 1 khoảng deltaSeconds, cast xong sớm hơn', () => {
-    const skill = createCastTimeSkill()
-    const { system, tick } = setup(skill)
-
-    const player = createCombatant({ id: 'player', type: 'player', x: 0 })
-    const enemy = createCombatant({ id: 'enemy', currentHp: 1000, maxHp: 1000 })
-
-    player.stats.attack = 100
-    player.stats.castSpeedPercent = 1 // +100% tốc độ niệm — 2s còn 1s thật.
-
-    system.start(player, enemy)
-    system.update(3)
-    placeAdjacent(enemy)
-
-    // Tick đầu chỉ BẮT ĐẦU niệm (updateCasting() chạy TRƯỚC scheduler
-    // trong cùng tick — castTimeRemaining=2 raw chưa bị trừ tick này).
-    tick(0.1)
-    // effectiveDelta = 0.9 * (1+1) = 1.8 -> remaining 2 - 1.8 = 0.2, CHƯA xong.
-    tick(0.9)
-    expect(enemy.currentHp).toBe(1000)
-    // effectiveDelta = 0.2 * (1+1) = 0.4 -> remaining 0.2 - 0.4 < 0, xong.
-    tick(0.2)
-    expect(player.castingSkillId).toBeUndefined()
-
-    tick(IMPACT_WAIT_SECONDS)
-    expect(enemy.currentHp).toBeLessThan(1000)
   })
 
   it('completion validate lại range: target ra khỏi tầm giữa lúc niệm → cast fizzle, KHÔNG resolve', () => {

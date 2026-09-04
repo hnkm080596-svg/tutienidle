@@ -73,7 +73,7 @@ describe('GameManager — facade TribulationDirector', () => {
     const stats = createBaseStats()
     stats.maxHp = 5000
     stats.defense = 0
-    stats.hpRegenPerSecond = 0
+    stats.hpRegenPerTurn = 0
 
     gameManager.startTribulation(player, stats, 'qi_refining')
 

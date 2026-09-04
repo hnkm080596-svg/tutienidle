@@ -159,7 +159,7 @@ export function buildLoadoutPresentation(
       cadenceRemaining: cadencePolicy ? Math.max(0, cadenceRemaining) : undefined,
       cadenceTotal: cadencePolicy
         ? getAttackIntervalSeconds(
-            battle.player.stats.attackSpeed * (cadencePolicy.attackSpeedMultiplier ?? 1),
+            battle.player.stats.speed * (cadencePolicy.attackSpeedMultiplier ?? 1),
           )
         : undefined,
       castRemaining: isCasting ? battle.player.castTimeRemaining : undefined,

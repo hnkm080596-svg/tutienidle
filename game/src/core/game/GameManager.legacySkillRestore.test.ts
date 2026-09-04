@@ -75,7 +75,9 @@ describe('GameManager — restore skill legacy thiếu execution (bugfix 2026-08
     }
 
     const player = createDefaultPlayer()
-    const stats = calculateStats({ ...player.baseStats, attack: 100 }, [])
+    // (2026-09-04) pin speed 1 như attackSpeed cũ — không pin thì cadence
+    // 100 đòn/s khiến enemy chết hết trước khi assert.
+    const stats = calculateStats({ ...player.baseStats, attack: 100, speed: 1 }, [])
 
     const enemy = defineEnemy({
       id: 'legacy_restore_dummy',
@@ -87,7 +89,6 @@ describe('GameManager — restore skill legacy thiếu execution (bugfix 2026-08
         maxHp: 1000,
         attack: 0,
         attackSpeed: 1,
-        movementSpeed: 0,
         attackRangeRanks: 5,
         criticalRate: 0,
         criticalDamage: 1.5,

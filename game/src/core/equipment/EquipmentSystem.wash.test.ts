@@ -348,7 +348,10 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
       const decoy: Affix = {
         id: `wash-decoy-${quality}`,
         name: 'Wash decoy',
-        stat: lockedPool ? 'criticalDamage' : 'castSpeedPercent',
+        // Decoy non-locked phải hợp lệ ở boots nhưng khác stat compatible
+        // (criticalRate ở weapon) — dùng wardRegenPerSecond (boots substat)
+        // vì castSpeedPercent cũ đã retire (2026-09-04).
+        stat: lockedPool ? 'criticalDamage' : 'wardRegenPerSecond',
         kind: 'prefix',
         pool: lockedPool ?? expectedPool,
         slots: lockedPool ? ['weapon'] : ['boots'],
@@ -470,7 +473,9 @@ describe('EquipmentSystem — Tẩy Luyện (washAffixes, plan §7.3)', () => {
     incompatibleRegistry.register({
       id: 'wash-incompatible-only',
       name: 'Wash incompatible only',
-      stat: 'castSpeedPercent',
+      // (2026-09-04) castSpeedPercent cũ retire — dùng wardRegenPerSecond
+      // (boots substat) giữ ý "hợp lệ boots, không hợp lệ weapon".
+      stat: 'wardRegenPerSecond',
       kind: 'prefix',
       pool: 'basic',
       slots: ['boots'],

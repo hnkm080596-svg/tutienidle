@@ -123,7 +123,7 @@ export class EnemyAttackSystem {
   }
 
   private fireEnemyAttack(battleEnemy: Battle['enemies'][number], battle: Battle) {
-    const attackSpeed = battleEnemy.entity.stats.attackSpeed
+    const attackSpeed = battleEnemy.entity.stats.speed
 
     battleEnemy.attackTimer = getAttackIntervalSeconds(attackSpeed)
 

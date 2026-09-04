@@ -44,10 +44,11 @@ describe('GameManager — Pháp Tu EarthPath (Thổ Node Tree)', () => {
       ...gameManager.getAggregatedModifiers(player),
     ])
 
-    // Thổ Nguyên +2 Thổ Lực; Thổ Tốc +3% cast speed; Chấn Lúc là
+    // Thổ Nguyên +2 Thổ Lực; Thổ Tốc +3% speed (turn-based conversion
+    // 2026-09-04 — node cấp speed thay castSpeedPercent); Chấn Lúc là
     // skillModifier (skillImpactPercent) — kiểm qua runtime stats.
     expect(finalStats.earthPower).toBeGreaterThanOrEqual(2)
-    expect(finalStats.castSpeedPercent).toBeGreaterThanOrEqual(0.03)
+    expect(finalStats.speed).toBeGreaterThanOrEqual(100.03)
 
     const runtimeStats = gameManager.getSkillRuntimeStats(player)
 

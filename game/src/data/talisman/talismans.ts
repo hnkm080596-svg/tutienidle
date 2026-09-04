@@ -42,7 +42,7 @@ export const talismans: Talisman[] = REALM_IDS.flatMap((realmId) =>
         allowedSlots: SLOTS,
         modifiers: [
           modifier(`${id}_max_hp`, id, 'maxHp', Math.round(60 * scale)),
-          modifier(`${id}_hp_regen`, id, 'hpRegenPerSecond', Number((0.8 * scale).toFixed(2))),
+          modifier(`${id}_hp_regen`, id, 'hpRegenPerTurn', Number((0.8 * scale).toFixed(2))),
         ],
       },
     ]

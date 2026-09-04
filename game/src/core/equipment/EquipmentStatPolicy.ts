@@ -47,8 +47,7 @@ export const EQUIPMENT_SLOT_STAT_POLICY: Record<EquipmentSlot, EquipmentSlotStat
     substats: [
       'criticalRate',
       'criticalDamage',
-      'attackSpeed',
-      'castSpeedPercent',
+      'speed',
       'accuracyRating',
       'skillDamagePercent',
       'ailmentPotencyPercent',
@@ -83,7 +82,7 @@ export const EQUIPMENT_SLOT_STAT_POLICY: Record<EquipmentSlot, EquipmentSlotStat
       'criticalAvoidance',
       'dotResistancePercent',
       'thornsPercent',
-      'hpRegenPerSecond',
+      'hpRegenPerTurn',
       'finalDamageReductionPercent',
       ...ELEMENT_RESISTANCE_STATS,
     ],
@@ -94,12 +93,10 @@ export const EQUIPMENT_SLOT_STAT_POLICY: Record<EquipmentSlot, EquipmentSlotStat
     substats: [
       'criticalAvoidance',
       'ailmentResistPercent',
-      'hpRegenPerSecond',
+      'hpRegenPerTurn',
       'wardRegenPerSecond',
       'endurancePercent',
       'finalDamageReductionPercent',
-      'cooldownReduction',
-      'castSpeedPercent',
       ...ELEMENT_RESISTANCE_STATS,
     ],
   },
@@ -108,8 +105,7 @@ export const EQUIPMENT_SLOT_STAT_POLICY: Record<EquipmentSlot, EquipmentSlotStat
     mainStats: ['criticalRate', 'criticalDamage'],
     substats: [
       'attack',
-      'attackSpeed',
-      'castSpeedPercent',
+      'speed',
       'accuracyRating',
       'skillDamagePercent',
       'ailmentPotencyPercent',
@@ -120,9 +116,8 @@ export const EQUIPMENT_SLOT_STAT_POLICY: Record<EquipmentSlot, EquipmentSlotStat
   },
   necklace: {
     tendency: 'Utility',
-    mainStats: ['attackSpeed', 'castSpeedPercent'],
+    mainStats: ['speed'],
     substats: [
-      'cooldownReduction',
       'wardMax',
       'wardRegenPerSecond',
       'maxHp',

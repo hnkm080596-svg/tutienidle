@@ -29,7 +29,7 @@ function createBuffRegistry(): BuffRegistry {
 // LẬP với Kim Thế (cùng điều kiện roll, xem BattleSystem.kimPath.test.ts's
 // ghi chú), chạm MAX_HUYET_PHA thì consume/reset + burst damage.
 function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
-  const stats = { ...createBaseStats(), attack: 0, evasionRate: 0, dexterity: 0, criticalRate: 0 }
+  const stats = { ...createBaseStats(), attack: 0, evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 1 }
 
   return {
     id: 'id',

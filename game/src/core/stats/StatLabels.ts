@@ -22,11 +22,10 @@ export interface StatLabelEntry {
 export const BASE_STAT_LABELS: StatLabelEntry[] = [
   { key: 'attack', label: 'Công kích', description: 'Sát thương vật lý cơ bản gây ra khi tấn công.', category: 'combat' },
   { key: 'defense', label: 'Phòng ngự (Giáp)', description: 'Giảm % sát thương vật lý phải nhận theo đường cong (Armor) — càng cao càng giảm dần, có trần.', category: 'combat' },
-  { key: 'attackSpeed', label: 'Tốc đánh', description: 'Số đòn đánh cơ bản mỗi giây.', category: 'combat' },
-  { key: 'movementSpeed', label: 'Tốc độ di chuyển', description: 'Tốc độ di chuyển trên chiến trường.', category: 'combat' },
+  { key: 'speed', label: 'Thân Pháp (Tốc Độ)', description: 'Tốc độ lấp đầy thanh hành động — càng cao càng sớm được ra đòn trong chiến đấu theo lượt.', category: 'combat' },
 
   { key: 'maxHp', label: 'Khí huyết', description: 'Lượng máu tối đa — về 0 thì gục ngã.', category: 'survival' },
-  { key: 'hpRegenPerSecond', label: 'Hồi khí huyết', description: 'Máu hồi tự nhiên mỗi giây.', category: 'survival' },
+  { key: 'hpRegenPerTurn', label: 'Hồi khí huyết', description: 'Máu hồi tự nhiên mỗi lượt.', category: 'survival' },
   { key: 'maxMp', label: 'Linh lực', description: 'Tài nguyên tiêu hao khi dùng skill loại special.', category: 'survival' },
   { key: 'manaRegenPerSecond', label: 'Hồi linh lực', description: 'Linh lực hồi tự nhiên mỗi giây.', category: 'survival' },
   { key: 'criticalRate', label: 'Tỉ lệ bạo kích', description: 'Xác suất một đòn đánh gây sát thương chí mạng.', category: 'special' },
@@ -34,8 +33,6 @@ export const BASE_STAT_LABELS: StatLabelEntry[] = [
   { key: 'criticalAvoidance', label: 'Kháng bạo kích', description: 'Trừ thẳng vào tỉ lệ bạo kích của đối phương khi họ đánh mình.', category: 'special' },
   { key: 'accuracyRating', label: 'Độ chính xác', description: 'Đấu với Tỉ lệ né của đối phương để quyết định đòn có trúng hay không.', category: 'special' },
   { key: 'evasionRate', label: 'Tỉ lệ né', description: 'Đấu với Độ chính xác của đối phương — càng cao càng dễ né hoàn toàn 1 đòn.', category: 'special' },
-  { key: 'cooldownReduction', label: 'Giảm hồi chiêu', description: 'Giảm % thời gian hồi chiêu của mọi skill.', category: 'special' },
-  { key: 'castSpeedPercent', label: 'Tốc Độ Thi Triển', description: 'Rút ngắn % Cast Time của skill cần niệm chú (Cast Time), độc lập với Tốc đánh/Giảm hồi chiêu.', category: 'special' },
   { key: 'finalDamagePercent', label: 'Sát thương cuối', description: 'Tăng toàn bộ sát thương sau các bước tính cơ bản.', category: 'special' },
   { key: 'skillDamagePercent', label: 'Sát thương kỹ năng', description: 'Tăng sát thương gây ra bởi kỹ năng.', category: 'special' },
   { key: 'finalDamageReductionPercent', label: 'Giảm sát thương cuối', description: 'Giảm toàn bộ sát thương nhận vào ở bước cuối.', category: 'defense_advanced' },
@@ -47,8 +44,8 @@ export const BASE_STAT_LABELS: StatLabelEntry[] = [
   { key: 'poisonRecoveryPercent', label: 'Hồi Sinh Lực Từ Độc', description: 'Hồi % sát thương Trúng Độc gây ra về Khí huyết bản thân.', category: 'special' },
 
   { key: 'strength', label: 'Căn Cốt', description: 'Cộng thẳng Công kích + Phòng ngự.', category: 'attribute' },
-  { key: 'dexterity', label: 'Thân Pháp', description: 'Cộng Tốc đánh, Độ chính xác, Tỉ lệ né, Tỉ lệ bạo kích.', category: 'attribute' },
-  { key: 'intelligence', label: 'Thần Thức', description: 'Cộng Giảm hồi chiêu, Kháng dị thường và ST bạo kích.', category: 'attribute' },
+  { key: 'dexterity', label: 'Thân Pháp', description: 'Cộng Tốc Độ (Thân Pháp), Độ chính xác, Tỉ lệ né, Tỉ lệ bạo kích.', category: 'attribute' },
+  { key: 'intelligence', label: 'Thần Thức', description: 'Cộng Kháng dị thường và ST bạo kích.', category: 'attribute' },
   { key: 'attunement', label: 'Linh Căn', description: 'Cộng đều Power cả 6 hành (Ngũ Hành + Hỗn Nguyên).', category: 'attribute' },
   { key: 'vitality', label: 'Thể Chất', description: 'Cộng Khí huyết tối đa, Hồi khí huyết, Ngưỡng Kiên Cường.', category: 'attribute' },
 
@@ -121,7 +118,7 @@ const ELEMENT_STAT_LABELS: Partial<Record<keyof Stats, string>> = {
 //                    qua % (crit dmg 1.5 → "150%": 100% đòn thường + 50%)
 //                  mặc định: hệ số throughput đọc qua hệ số (1.25 → "1.25")
 //   rating/flat→ formatNumber
-export const DECIMAL_STAT_KEYS: (keyof Stats)[] = ['attackSpeed']
+export const DECIMAL_STAT_KEYS: (keyof Stats)[] = []
 
 // Multiplier hệ số ĐỌC qua % — chỉ hiển thị, không đổi unit công thức.
 const MULTIPLIER_DISPLAY_AS_PERCENT: readonly (keyof Stats)[] = ['criticalDamage']

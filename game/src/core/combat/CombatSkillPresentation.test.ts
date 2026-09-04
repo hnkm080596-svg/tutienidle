@@ -65,7 +65,7 @@ function makeEnemy() {
     realmId: 'mortal',
     lane: 'ground',
     statsInput: {
-      maxHp: 999, attack: 0, attackSpeed: 1, movementSpeed: 0,
+      maxHp: 999, attack: 0, attackSpeed: 1,
       attackRangeRanks: 999999, criticalRate: 0, criticalDamage: 1.5, armor: 0,
     },
     rewards: { techniqueInsight: 0, spiritStone: 0 },
@@ -136,7 +136,7 @@ describe('buildLoadoutPresentation', () => {
     gameManager.skillSystem.equipToSlot('test_cadence', 0)
 
     const stats = createBaseStats()
-    stats.attackSpeed = 2 // interval 0.5s
+    stats.speed = 2 // interval 0.5s
 
     gameManager.startBattleWithPlayer(player, stats, makeEnemy())
     startFighting(gameManager)

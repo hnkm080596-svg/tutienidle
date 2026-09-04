@@ -126,7 +126,7 @@ describe('Pill nghề — gate + atomic consumption', () => {
 })
 
 describe('Regen timed effect — thời gian thực, hết hạn trong combat', () => {
-  it('uống regen → timed effect deadline tuyệt đối; trong combat hpRegenPerSecond tăng; hết hạn giữa trận về baseline + effect bị xoá', async () => {
+  it('uống regen → timed effect deadline tuyệt đối; trong combat hpRegenPerTurn tăng; hết hạn giữa trận về baseline + effect bị xoá', async () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date('2026-01-01T00:00:00Z'))
 
@@ -145,7 +145,7 @@ describe('Regen timed effect — thời gian thực, hết hạn trong combat', 
     gameManager.update(0.1)
 
     const battle = gameManager.getBattle()!
-    const baselineRegen = battle.player.stats.hpRegenPerSecond
+    const baselineRegen = battle.player.stats.hpRegenPerTurn
 
     expect(gameManager.usePillDetailed(REGEN_PILL, pillTarget(), player).ok).toBe(true)
 
@@ -156,7 +156,7 @@ describe('Regen timed effect — thời gian thực, hết hạn trong combat', 
     // Tick combat — provider đọc timed effect → regen stat tăng.
     gameManager.update(0.1)
 
-    expect(battle.player.stats.hpRegenPerSecond).toBeGreaterThan(baselineRegen)
+    expect(battle.player.stats.hpRegenPerTurn).toBeGreaterThan(baselineRegen)
 
     // Thời gian trôi qua hết deadline (thời gian THỰC, không phải game
     // delta) — tick kế effect rơi khỏi recompute + bị xoá khỏi player.
@@ -164,7 +164,7 @@ describe('Regen timed effect — thời gian thực, hết hạn trong combat', 
 
     gameManager.update(0.1)
 
-    expect(battle.player.stats.hpRegenPerSecond).toBe(baselineRegen)
+    expect(battle.player.stats.hpRegenPerTurn).toBe(baselineRegen)
     expect(player.persistentTimedEffects).toHaveLength(0)
   })
 

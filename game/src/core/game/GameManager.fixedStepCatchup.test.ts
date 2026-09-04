@@ -22,7 +22,6 @@ const ATTACKER_STATS_INPUT = {
   maxHp: 500,
   attack: 50,
   attackSpeed: 2, // interval = 1 / attackSpeed = 0.5s
-  movementSpeed: 0,
   attackRangeRanks: 9,
   criticalRate: 0,
   criticalDamage: 1.5,
@@ -30,7 +29,7 @@ const ATTACKER_STATS_INPUT = {
 }
 
 function createAttackerPlayer(): CombatEntity {
-  const stats = { ...createBaseStats(), attack: 50, attackSpeed: 2, criticalRate: 0 }
+  const stats = { ...createBaseStats(), attack: 50, speed: 2, criticalRate: 0 }
 
   return {
     id: 'player',

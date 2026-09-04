@@ -12,7 +12,6 @@ function baseEnemyStats() {
     maxHp: 100,
     attack: 20,
     attackSpeed: 5,
-    movementSpeed: 2,
     attackRangeRanks: 2,
     criticalRate: 0.05,
     criticalDamage: 1.5,
@@ -31,7 +30,6 @@ describe('enemy combat stat normalization', () => {
   })
 
   it('go board: data author truc tiep theo rank, khong heuristic', () => {
-    expect(baseEnemyStats().movementSpeed).toBe(2)
     expect(baseEnemyStats().attackRange).toBe(2)
   })
 
@@ -40,7 +38,6 @@ describe('enemy combat stat normalization', () => {
       maxHp: 100,
       attack: 20,
       attackSpeed: 1,
-      movementSpeed: 2,
       attackRangeRanks: 9,
       criticalRate: 0,
       criticalDamage: 1.5,

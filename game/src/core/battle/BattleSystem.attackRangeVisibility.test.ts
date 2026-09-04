@@ -59,17 +59,16 @@ function createBattleSystem(eventBus = new EventBus()) {
 }
 
 // evasionRate/dexterity=0 đảm bảo hit chance 100%, cùng quy ước các
-// file BattleSystem.*.test.ts khác. movementSpeed=0 để x không trôi
-// ngoài dự đoán — test này CỐ TÌNH đặt x thủ công sau start() để kiểm
-// tra ĐÚNG biên giới range/visibility, không muốn resolveMovement() can thiệp.
+// file BattleSystem.*.test.ts khác. (2026-09-04) movementSpeed retired —
+// test này CỐ TÌNH đặt x thủ công sau start() để kiểm tra ĐÚNG biên giới
+// range/visibility; các test cần x đứng yên tự ghim lại sau mỗi tick.
 function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
   const stats = {
     ...createBaseStats(),
     evasionRate: 0,
     dexterity: 0,
-    attackSpeed: 1,
+    speed: 1,
     attackRange: 999999,
-    movementSpeed: 0,
     attack: 100,
   }
 
@@ -168,10 +167,17 @@ describe('BattleSystem — Enemy visible gate khi tấn công cổng (giữ từ
     system.start(player, enemy)
     system.update(3)
 
+    // Turn-based conversion (2026-09-04) — movementSpeed retired; enemy
+    // movement giờ là constant nên enemy NGOÀI MÀN sẽ tự tiến vào sau
+    // nhiều tick. Tick đủ nhỏ (0.01s → 0.02 cột) để enemy VẪN còn
+    // off-screen trong suốt vòng lặp — test đúng chủ thể: visible gate
+    // chặn đánh, không phải movement kéo enemy vào màn.
     system.getBattle()!.enemies[0]!.entity.x = VISIBLE_MAX_COLUMN + 1
 
-    for (let i = 0; i < 200; i++) {
-      system.update(0.05)
+    for (let i = 0; i < 20; i++) {
+      system.update(0.01)
+      // Ghim lại mỗi tick: chắc chắn KHÔNG BAO GIỜ vượt ngưỡng vào màn.
+      system.getBattle()!.enemies[0]!.entity.x = VISIBLE_MAX_COLUMN + 1
     }
 
     expect(player.currentHp).toBe(player.maxHp)

@@ -436,7 +436,7 @@ function applyKhongOnHitEffects(
         effects: [
           {
             type: 'statModifier',
-            stat: 'attackSpeed',
+            stat: 'speed',
             percent: -KHONG_T12_ATTACK_SPEED_DEBUFF_PERCENT,
           },
         ],

@@ -46,7 +46,7 @@ describe('GameManager — Pháp Tu MetalPath (Kim Node Tree)', () => {
 
     // Kim Khí +2 Kim Lực; Huyết Bạo +3% cast speed; Huyết Ấn +4% potency.
     expect(finalStats.metalPower).toBeGreaterThanOrEqual(2)
-    expect(finalStats.castSpeedPercent).toBeGreaterThanOrEqual(0.03)
+    expect(finalStats.speed).toBeGreaterThanOrEqual(100.03)
     expect(finalStats.ailmentPotencyPercent).toBeGreaterThanOrEqual(0.04)
   })
 

@@ -28,7 +28,7 @@ const NHAP_DAO_PERCENT_PER_GRADE = 0.03
 function buildNhapDaoModifiers(player: PlayerData): StatModifier[] {
   const percent = player.breakthroughGrade * NHAP_DAO_PERCENT_PER_GRADE
 
-  const stats: StatModifier['stat'][] = ['maxHp', 'maxMp', 'hpRegenPerSecond', 'manaRegenPerSecond']
+  const stats: StatModifier['stat'][] = ['maxHp', 'maxMp', 'hpRegenPerTurn', 'manaRegenPerSecond']
 
   return stats.map((stat) => ({
     id: `realm-passive:nhap_dao:${stat}`,

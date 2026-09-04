@@ -35,8 +35,10 @@ describe('formatStat', () => {
     expect(formatStat('blockEffectiveness', 0.75)).toBe('75.0%')
   })
 
-  it('attackSpeed multiplier displays raw 2-decimal', () => {
-    expect(formatStat('attackSpeed', 1.25)).toBe('1.25')
+  it('speed is a flat rating stat — displays via formatNumber, not 2-decimal', () => {
+    // Turn-based conversion (2026-09-04): speed ~100 scale (HSR SPD),
+    // không còn multiplier 2-chữ-số như attackSpeed cũ.
+    expect(formatStat('speed', 115)).toBe('115')
   })
 
   it('formatStat existing flat stat keys use formatNumber', () => {

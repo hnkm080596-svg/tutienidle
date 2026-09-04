@@ -16,7 +16,7 @@ function createCombatant(overrides: Partial<CombatEntity>): CombatEntity {
   const stats = {
     ...createBaseStats(),
     attack: 0, defense: 0, evasionRate: 0, criticalRate: 0, blockChance: 0,
-    dexterity: 0, attackRange: 0, attackSpeed: 0, movementSpeed: 0,
+    dexterity: 0, attackRange: 0, speed: 0,
   }
 
   return {
@@ -87,7 +87,7 @@ describe('BattleSystem — onCast trigger wiring', () => {
     const { system } = setup(skill)
 
     const player = createCombatant({ id: 'player', type: 'player' })
-    player.stats.attackSpeed = 10
+    player.stats.speed = 10
     player.stats.attackRange = 999999
     const enemy = createCombatant({ id: 'enemy' })
     enemy.stats.maxHp = 100000

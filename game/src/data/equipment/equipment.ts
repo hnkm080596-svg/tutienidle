@@ -11,8 +11,7 @@ const MAIN_STATS: Record<EquipmentSlot, readonly EquipmentStatRange[]> = {
     { stat: 'criticalDamage', min: 0.1, max: 0.2 },
   ],
   necklace: [
-    { stat: 'attackSpeed', min: 0.03, max: 0.08 },
-    { stat: 'castSpeedPercent', min: 0.03, max: 0.08 },
+    { stat: 'speed', min: 0.03, max: 0.08 },
   ],
 }
 
