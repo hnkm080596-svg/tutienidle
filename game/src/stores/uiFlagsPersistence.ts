@@ -22,7 +22,7 @@ export interface UiAutomationFlagSnapshot {
   combatInputMode: CombatInputMode
 }
 
-const BATTLE_RUN_MODES: readonly BattleRunMode[] = ['manual', 'repeat', 'progress']
+const BATTLE_RUN_MODES: readonly BattleRunMode[] = ['manual', 'repeat', 'progress', 'perfect_farm']
 
 export function isBattleRunMode(value: unknown): value is BattleRunMode {
   return typeof value === 'string' && (BATTLE_RUN_MODES as readonly string[]).includes(value)

@@ -75,7 +75,7 @@ export type ScripturePavilionTab = 'technique' | 'lore'
 export type StandalonePanel =
   'skill' | 'technique' | 'realm' | 'luyen_the' | 'quan_khi' | 'quest' | 'artifact' | null
 
-export type BattleRunMode = 'manual' | 'repeat' | 'progress'
+export type BattleRunMode = 'manual' | 'repeat' | 'progress' | 'perfect_farm'
 
 /**
  * Slice 7 (2026-09-04) — chế độ input giữa trận: 'auto' = engine không

@@ -235,12 +235,14 @@
       "modes": {
         "manual": "Thủ Công",
         "repeat": "Lặp Lại",
-        "progress": "Tự Động Tiến Ải"
+        "progress": "Tự Động Tiến Ải",
+        "perfectFarm": "Tự Động Hoàn Mỹ"
       },
       "modeHints": {
         "manual": "Kết thúc trận và chờ bạn quyết định.",
         "repeat": "Tự đánh lại đúng tầng hiện tại.",
-        "progress": "Thắng thì đi tiếp, thua thì dừng."
+        "progress": "Thắng thì đi tiếp, thua thì dừng.",
+        "perfectFarm": "Chỉ lặp lại các màn đã đạt Hoàn Mỹ — nửa thời gian, không hoạt ảnh."
       },
       "actions": {
         "editBuild": "Chỉnh Build",

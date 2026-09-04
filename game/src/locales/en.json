@@ -235,12 +235,14 @@
       "modes": {
         "manual": "Manual",
         "repeat": "Repeat",
-        "progress": "Auto Advance"
+        "progress": "Auto Advance",
+        "perfectFarm": "Perfect Clear Farm"
       },
       "modeHints": {
         "manual": "End the battle and wait for your decision.",
         "repeat": "Replay the current floor automatically.",
-        "progress": "Advance on win, stop on loss."
+        "progress": "Advance on win, stop on loss.",
+        "perfectFarm": "Only replays stages that reached Perfect Clear — half the time, no animation."
       },
       "actions": {
         "editBuild": "Edit Build",

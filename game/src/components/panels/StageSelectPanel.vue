@@ -155,6 +155,11 @@ const ARCHETYPE_LABEL_KEYS: Record<string, string> = {
 
 const mode = ref<BattleRunMode>('manual')
 
+// Auto-farm Task 6 — chip thứ 4 chỉ bật khi stage đang chọn đã Hoàn Mỹ.
+const isSelectedStagePerfectClear = computed(() =>
+  Boolean(selectedStage.value && player.$state.perfectClearStageIds.includes(selectedStage.value.id)),
+)
+
 const canStart = computed(() => {
   if (!selectedZone.value || !selectedStage.value) {
     return false
@@ -177,6 +182,15 @@ function selectStage(stageId: string) {
 
 function start() {
   if (!selectedZone.value || !selectedStage.value || !canStart.value) {
+    return
+  }
+
+  // Auto-farm Task 6 (2026-09-04) — perfect_farm KHÔNG start trận thật:
+  // gọi startAutoFarm trực tiếp (roll reward theo wall-clock, không
+  // hoạt ảnh) — khác mọi mode khác đều qua startSelectedStage.
+  if (mode.value === 'perfect_farm') {
+    gameManager.startAutoFarm(player.$state, selectedStage.value.id)
+    ui.leftPanelMode = null
     return
   }
 
@@ -285,10 +299,15 @@ function start() {
           <Chip :active="mode === 'manual'" @click="mode = 'manual'">{{ t('panels.stageSelect.modes.manual') }}</Chip>
           <Chip :active="mode === 'repeat'" @click="mode = 'repeat'">{{ t('panels.stageSelect.modes.repeat') }}</Chip>
           <Chip :active="mode === 'progress'" @click="mode = 'progress'">{{ t('panels.stageSelect.modes.progress') }}</Chip>
+          <Chip
+            :active="mode === 'perfect_farm'"
+            :disabled="!isSelectedStagePerfectClear"
+            @click="isSelectedStagePerfectClear && (mode = 'perfect_farm')"
+          >{{ t('panels.stageSelect.modes.perfectFarm') }}</Chip>
         </div>
 
         <p class="stage-select__mode-hint">
-          {{ mode === 'manual' ? t('panels.stageSelect.modeHints.manual') : mode === 'repeat' ? t('panels.stageSelect.modeHints.repeat') : t('panels.stageSelect.modeHints.progress') }}
+          {{ mode === 'manual' ? t('panels.stageSelect.modeHints.manual') : mode === 'repeat' ? t('panels.stageSelect.modeHints.repeat') : mode === 'progress' ? t('panels.stageSelect.modeHints.progress') : t('panels.stageSelect.modeHints.perfectFarm') }}
         </p>
 
         <div class="stage-select__start-row">
