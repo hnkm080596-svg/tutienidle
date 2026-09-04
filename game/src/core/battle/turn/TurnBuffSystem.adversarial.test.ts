@@ -114,7 +114,7 @@ describe('TurnBuffSystem adversarial (QA probes)', () => {
     const system = new TurnBuffSystem(pool)
     const source = makeEntity({
       id: 'source_1',
-      skillStats: { maxStacksBonusByBuffId: { test: 2 } } as CombatEntity['skillStats'],
+      skillStats: { maxStacksBonusByBuffId: { test: 2 } } as unknown as CombatEntity['skillStats'],
     })
     const target = makeEntity({ id: 'target_1' })
     const definition: TurnBuffDefinition = {
