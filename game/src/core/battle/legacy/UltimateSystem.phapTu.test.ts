@@ -6,15 +6,15 @@ import {
   PHAP_TU_ULTIMATE_PROFILES,
   triggerPhapTuUltimate,
 } from './UltimateSystem'
-import { MAX_THE } from '../combat/CombatTypes'
-import type { Battle } from './Battle'
-import type { CombatEntity } from '../combat/CombatEntity'
-import type { SkillRuntimeStats } from '../skill/SkillRuntimeStats'
-import type { Skill } from '../skill/Skill'
-import { BuffPool } from '../buff/BuffPool'
-import { BuffSystem } from '../buff/BuffSystem'
-import { BuffRegistry } from '../buff/BuffRegistry'
-import { createBaseStats } from '../stats/StatBlock'
+import { MAX_THE } from '../../combat/CombatTypes'
+import type { Battle } from '../Battle'
+import type { CombatEntity } from '../../combat/CombatEntity'
+import type { SkillRuntimeStats } from '../../skill/SkillRuntimeStats'
+import type { Skill } from '../../skill/Skill'
+import { BuffPool } from '../../buff/BuffPool'
+import { BuffSystem } from '../../buff/BuffSystem'
+import { BuffRegistry } from '../../buff/BuffRegistry'
+import { createBaseStats } from '../../stats/StatBlock'
 
 // Spec 2026-08-30-phap-tu-dao-sac §2.4 — ult Thuần hệ mở khi Thế đầy
 // 100, auto-AI bắn khi boss active + Thế đầy, KHÔNG chiếm loadout slot.

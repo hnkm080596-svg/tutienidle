@@ -1,4 +1,4 @@
-import type { ElementType } from '../element/ElementType'
+import type { ElementType } from '../../element/ElementType'
 
 /**
  * Plans/magicpathgeneral Phase 12 (2026-08-21) — "Lava Zone không phải

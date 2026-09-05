@@ -6,10 +6,10 @@ import {
   KIEM_THE_PER_ULT_SWORD,
   triggerUltimate,
 } from './UltimateSystem'
-import type { Battle } from './Battle'
-import type { CombatEntity } from '../combat/CombatEntity'
-import { createBaseStats } from '../stats/StatBlock'
-import type { Enemy } from '../enemy/Enemy'
+import type { Battle } from '../Battle'
+import type { CombatEntity } from '../../combat/CombatEntity'
+import { createBaseStats } from '../../stats/StatBlock'
+import type { Enemy } from '../../enemy/Enemy'
 
 // Ult Kiếm Tu (spec 2026-08-29-kiem-the-kiem-y mục 2/3.4):
 // TTKT — nuke AoE + zone 6s, cost 10×số kiếm trận, manual + auto.

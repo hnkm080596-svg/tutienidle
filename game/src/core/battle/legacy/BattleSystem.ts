@@ -1,62 +1,62 @@
-import type { Battle, BattleEnemy, PendingEnemySpawn } from './Battle'
+import type { Battle, BattleEnemy, PendingEnemySpawn } from '../Battle'
 
-import type { CombatSystem } from '../combat/CombatSystem'
+import type { CombatSystem } from '../../combat/CombatSystem'
 
-import { BuffPool } from '../buff/BuffPool'
-import type { BuffPolarity } from '../buff/BuffTypes'
+import { BuffPool } from '../../buff/BuffPool'
+import type { BuffPolarity } from '../../buff/BuffTypes'
 
-import { BuffSystem } from '../buff/BuffSystem'
+import { BuffSystem } from '../../buff/BuffSystem'
 
-import type { BuffRegistry } from '../buff/BuffRegistry'
+import type { BuffRegistry } from '../../buff/BuffRegistry'
 
-import { calculateStats, type StatModifier } from '../stats/StatCalculator'
+import { calculateStats, type StatModifier } from '../../stats/StatCalculator'
 
-import type { SkillManager } from '../skill/SkillManager'
+import type { SkillManager } from '../../skill/SkillManager'
 
-import type { SkillSystem } from '../skill/SkillSystem'
+import type { SkillSystem } from '../../skill/SkillSystem'
 
-import type { SkillEffectSystem, SkillEffectContext } from '../skill/SkillEffectSystem'
-import { SkillTriggerRunner } from '../skill/SkillTriggerRunner'
+import type { SkillEffectSystem, SkillEffectContext } from '../../skill/SkillEffectSystem'
+import { SkillTriggerRunner } from '../../skill/SkillTriggerRunner'
 
-import type { Skill } from '../skill/Skill'
-import type { SkillExecutionPolicy } from '../skill/Skill'
+import type { Skill } from '../../skill/Skill'
+import type { SkillExecutionPolicy } from '../../skill/Skill'
 
-import type { CombatEntity } from '../combat/CombatEntity'
+import type { CombatEntity } from '../../combat/CombatEntity'
 
-import type { EntityVitalsChangedEvent } from '../combat/EntityVitalsSystem'
+import type { EntityVitalsChangedEvent } from '../../combat/EntityVitalsSystem'
 
-import type { EventBus } from '../events/EventBus'
+import type { EventBus } from '../../events/EventBus'
 
-import { ReactionManager } from '../element/ReactionManager'
+import { ReactionManager } from '../../element/ReactionManager'
 
-import { HERO_COLUMN, HERO_LANE_INDEX, SPAWN_COLUMN, VISIBLE_MAX_COLUMN } from './BattleLane'
+import { HERO_COLUMN, HERO_LANE_INDEX, SPAWN_COLUMN, VISIBLE_MAX_COLUMN } from '../BattleLane'
 
-import { resolveEnemySpawnPosition } from './EnemySpawnPlacement'
-import type { EnemySpawnVfxPresetId } from './CombatAction'
-import { entityGridPosition } from './BattleGrid'
+import { resolveEnemySpawnPosition } from '../EnemySpawnPlacement'
+import type { EnemySpawnVfxPresetId } from '../CombatAction'
+import { entityGridPosition } from '../BattleGrid'
 
 import {
   canPlayerReachTarget,
   findBattleEnemy,
   selectAttackableTarget,
   selectTeleportTarget,
-} from './ActionTargetingSystem'
+} from '../ActionTargetingSystem'
 import {
   DEFAULT_COMBAT_AI_STRATEGY,
   type CombatAiStrategy,
-} from './CombatAiStrategy'
+} from '../CombatAiStrategy'
 
 import {
   ActionImpactSystem,
   type ActionDamageInfo,
   type HitResolveOptions,
-} from './ActionImpactSystem'
+} from '../ActionImpactSystem'
 
 import {
   MAX_SWORD_INTENT,
   MAX_MOMENTUM,
-} from '../combat/CombatTypes'
-import { updatePhapTuBattleResources } from './PhapTuBattleResourceSystem'
+} from '../../combat/CombatTypes'
+import { updatePhapTuBattleResources } from '../PhapTuBattleResourceSystem'
 import {
   advanceChain,
   canCastChainSkill,
@@ -64,13 +64,13 @@ import {
   resetChainOnKill,
   type ChainDefinition,
   type ChainRuntimeState,
-} from './ChainStateSystem'
-import { gainTheOnChainLink, theMaxWithBonus, updateTheManBuff } from './TheResourceSystem'
+} from '../ChainStateSystem'
+import { gainTheOnChainLink, theMaxWithBonus, updateTheManBuff } from '../TheResourceSystem'
 import {
   gainKiemYTempOnChannelTick,
   gainKiemYTempOnDamageTaken,
   initKiemTuBattleResources,
-} from './KiemTuResourceSystem'
+} from '../KiemTuResourceSystem'
 import {
   autoUltimateDecision,
   autoPhapTuUltimateDecision,
@@ -79,19 +79,19 @@ import {
   PHAP_TU_ULTIMATE_IDS,
   type PhapTuUltimateElement,
 } from './UltimateSystem'
-import { getFormationSwordCount } from '../../data/progression/KiemTuNodes'
-import { getHuyKiemFlatDamageBonus } from '../skill/SkillSystem'
+import { getFormationSwordCount } from '../../../data/progression/KiemTuNodes'
+import { getHuyKiemFlatDamageBonus } from '../../skill/SkillSystem'
 
-import { getAttackIntervalSeconds } from '../combat/AttackTiming'
+import { getAttackIntervalSeconds } from '../../combat/AttackTiming'
 
-import type { BattlePositionsEvent, PlayerTeleportedEvent } from './BattleEvents'
+import type { BattlePositionsEvent, PlayerTeleportedEvent } from '../BattleEvents'
 
 
-import type { ElementType } from '../element/ElementType'
-import type { ArtifactRuntime } from '../artifact/ArtifactRuntime'
-import { onArtifactHitResolved, updateArtifactActivation, type ArtifactSystemDeps } from '../artifact/ArtifactSystem'
-import { EnemyAttackSystem } from './EnemyAttackSystem'
-import { SkillEffectResolver } from './SkillEffectResolver'
+import type { ElementType } from '../../element/ElementType'
+import type { ArtifactRuntime } from '../../artifact/ArtifactRuntime'
+import { onArtifactHitResolved, updateArtifactActivation, type ArtifactSystemDeps } from '../../artifact/ArtifactSystem'
+import { EnemyAttackSystem } from '../EnemyAttackSystem'
+import { SkillEffectResolver } from '../SkillEffectResolver'
 import { HazardZoneSystem } from './HazardZoneSystem'
 
 // Skill execution policy rework (plan §8) — windup "đòn thường" của

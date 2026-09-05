@@ -1,9 +1,9 @@
-import type { Battle } from './Battle'
+import type { Battle } from '../Battle'
 
-import type { CombatEntity } from '../combat/CombatEntity'
-import type { CombatSystem } from '../combat/CombatSystem'
+import type { CombatEntity } from '../../combat/CombatEntity'
+import type { CombatSystem } from '../../combat/CombatSystem'
 
-import type { ElementType } from '../element/ElementType'
+import type { ElementType } from '../../element/ElementType'
 
 import type { LavaZone } from './LavaZone'
 import type { SwordZone } from './SwordZone'

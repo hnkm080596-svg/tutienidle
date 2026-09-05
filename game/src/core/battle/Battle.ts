@@ -6,8 +6,8 @@ import type { EnemySpawnVfxPresetId, PlayerSpawnVfxPresetId } from './CombatActi
 import type { GridPosition } from './BattleGrid'
 
 import type { BuffPool } from '../buff/BuffPool'
-import type { LavaZone } from './LavaZone'
-import type { SwordZone } from './SwordZone'
+import type { LavaZone } from './legacy/LavaZone'
+import type { SwordZone } from './legacy/SwordZone'
 import type { ArtifactRuntime } from '../artifact/ArtifactRuntime'
 
 /**

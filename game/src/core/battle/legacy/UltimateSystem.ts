@@ -1,11 +1,11 @@
-import type { Battle } from './Battle'
-import type { CombatEntity } from '../combat/CombatEntity'
+import type { Battle } from '../Battle'
+import type { CombatEntity } from '../../combat/CombatEntity'
 import type { SwordZone } from './SwordZone'
-import type { KiemTuRoute } from '../player/Player'
-import type { Skill } from '../skill/Skill'
-import type { ElementType } from '../element/ElementType'
-import { consumeTheForUlt, theManBuffId, theMaxWithBonus } from './TheResourceSystem'
-import { BuffSystem } from '../buff/BuffSystem'
+import type { KiemTuRoute } from '../../player/Player'
+import type { Skill } from '../../skill/Skill'
+import type { ElementType } from '../../element/ElementType'
+import { consumeTheForUlt, theManBuffId, theMaxWithBonus } from '../TheResourceSystem'
+import { BuffSystem } from '../../buff/BuffSystem'
 
 // Ult Kiếm Tu (spec 2026-08-29-kiem-the-kiem-y mục 2/3.4) — 2 ult
 // MANUAL (nút riêng trong CombatControlBar, KHÔNG chiếm loadout slot)
@@ -183,14 +183,14 @@ import {
   PHAP_TU_ULTIMATE_PROFILES,
   type PhapTuUltimateElement,
   type PhapTuUltimateProfile,
-} from '../../data/skill/PhapTuUltimates'
+} from '../../../data/skill/PhapTuUltimates'
 
 export {
   PHAP_TU_ULTIMATE_IDS,
   PHAP_TU_ULTIMATE_PROFILES,
   type PhapTuUltimateElement,
   type PhapTuUltimateProfile,
-} from '../../data/skill/PhapTuUltimates'
+} from '../../../data/skill/PhapTuUltimates'
 
 /** Seam effect-driven (E-6): UltimateSystem KHÔNG tự biết
  * SkillEffectSystem/ctx — GameManager glue (Task 12) inject:
