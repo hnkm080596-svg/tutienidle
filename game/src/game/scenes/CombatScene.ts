@@ -90,6 +90,8 @@ import { CombatPositionInterpolation } from './combat/combat-position-interpolat
 import { CombatPlayerVisual } from './combat/combat-player-visual'
 import { BUFF_ATTACH_COLOR, DEBUFF_ATTACH_COLOR } from './combat/combatConstants'
 import type { PositionInterpolation } from './combat/combatTypes'
+import { planCombatantSpriteReconciliation } from './combat/combat-entity-reconciliation'
+import type { TurnBattleEntitySnapshotEvent } from '@/core/battle/turn/TurnActionPresentationEvents'
 
 export { formatDotDamageText } from './combat/combatTextFormat'
 
@@ -398,6 +400,14 @@ export class CombatScene extends Phaser.Scene {
   private dyingIds = new Set<string>()
   private playerDying = false
 
+  // Combat Art Pipeline Task 5 (2026-09-05) — id sprite ĐÃ BIẾT theo phe,
+  // riêng cho luồng 'turn_battle_entity_snapshot' (KHÔNG dùng chung với
+  // reconcileEnemySprites()/this.sprites — nếu dùng chung, side này có thể
+  // xóa nhầm sprite của side kia vì cả hai đều lưu chung trong `this.sprites`).
+  // Cập nhật lại sau mỗi lần planCombatantSpriteReconciliation() chạy.
+  private knownTurnBattlePlayerIds = new Set<string>()
+  private knownTurnBattleEnemyIds = new Set<string>()
+
   // Spawn telegraph (2026-08-24) Ã¢â‚¬â€ VFX handle theo pending enemy id:
   // reconcile tÃ¡Â»Â« SNAPSHOT positions.spawningEnemies (id biÃ¡ÂºÂ¿n mÃ¡ÂºÂ¥t =
   // materialize Ã¢â€ â€™ flash + fade-in enemy sprite). Flat mode khÃƒÂ´ng chÃ¡ÂºÂ¡y
@@ -503,6 +513,10 @@ export class CombatScene extends Phaser.Scene {
         },
       ],
       ['positions', (event: BattlePositionsEvent) => this.onPositions(event)],
+      [
+        'turn_battle_entity_snapshot',
+        (event: TurnBattleEntitySnapshotEvent) => this.onTurnBattleEntitySnapshot(event),
+      ],
       ['player_teleported', (event: PlayerTeleportedEvent) => this.onPlayerTeleported(event)],
       ['battle_end', () => this.onBattleEnd()],
       ['combat_scene_exit', () => this.onExit()],
@@ -1151,6 +1165,84 @@ export class CombatScene extends Phaser.Scene {
       this.destroyEntitySprite(sprite)
       this.sprites.delete(id)
       this.interpolations.delete(id)
+    }
+  }
+
+  // Combat Art Pipeline Task 5 (2026-09-05) — thay thế snapshot ĐÔNG CỨNG
+  // (chỉ seed một lần từ 'positions' của legacy engine lúc battle start) bằng
+  // dữ liệu SỐNG mỗi fixed step từ turn engine (xem TurnActionPresentationEvents.ts).
+  // Tổng quát hoá đúng tinh thần reconcileEnemySprites() cho CẢ HAI phe.
+  private onTurnBattleEntitySnapshot(event: TurnBattleEntitySnapshotEvent) {
+    this.reconcileCombatantSprites('player', event.players, PLAYER_COLOR)
+    this.reconcileCombatantSprites('enemy', event.enemies, ENEMY_COLOR)
+  }
+
+  private reconcileCombatantSprites(
+    side: 'player' | 'enemy',
+    states: TurnBattleEntitySnapshotEvent['players'],
+    color: number,
+  ) {
+    const knownIds =
+      side === 'player' ? this.knownTurnBattlePlayerIds : this.knownTurnBattleEnemyIds
+    const actions = planCombatantSpriteReconciliation(knownIds, states)
+
+    for (const action of actions) {
+      if (action.type === 'create') {
+        const sprite = this.getOrCreateSprite(
+          action.state.id,
+          color,
+          action.state.id,
+          action.state.row as LaneIndex,
+          { currentHp: action.state.currentHp, maxHp: action.state.maxHp, isBoss: false },
+        )
+
+        this.snapInterpolationTarget(action.state.id, action.state.column)
+        this.positionSprite(sprite, action.state.column, action.state.id)
+        continue
+      }
+
+      if (action.type === 'update') {
+        const sprite = this.sprites.get(action.state.id)
+
+        if (!sprite) {
+          continue
+        }
+
+        sprite.row = action.state.row as LaneIndex
+        this.snapInterpolationTarget(action.state.id, action.state.column)
+        this.positionSprite(sprite, action.state.column, action.state.id)
+        this.updateEnemyHealthBar(sprite, action.state.currentHp, action.state.maxHp)
+        continue
+      }
+
+      // 'remove' — Task 9 sẽ thay bằng animation chết (sprite.play('death'))
+      // trước khi xóa; tạm thời XÓA NGAY, ĐÚNG cách reconcileEnemySprites()/
+      // onDeath() đã dùng (không tạo cơ chế xóa thứ hai). Nếu onDeath() đang
+      // chạy tween chết cho id này (dyingIds/playerDying) thì BỎ QUA — tween
+      // đó tự lo xóa sprite khi xong, xóa thêm ở đây là double-destroy.
+      const isDying = action.id === PLAYER_ID ? this.playerDying : this.dyingIds.has(action.id)
+
+      if (isDying) {
+        continue
+      }
+
+      const sprite = this.sprites.get(action.id)
+
+      if (!sprite) {
+        continue
+      }
+
+      this.destroyEntitySprite(sprite)
+      this.sprites.delete(action.id)
+      this.interpolations.delete(action.id)
+    }
+
+    const nextKnownIds = new Set(states.map((state) => state.id))
+
+    if (side === 'player') {
+      this.knownTurnBattlePlayerIds = nextKnownIds
+    } else {
+      this.knownTurnBattleEnemyIds = nextKnownIds
     }
   }
 
