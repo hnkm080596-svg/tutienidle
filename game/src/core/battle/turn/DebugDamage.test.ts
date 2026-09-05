@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
@@ -9,6 +9,13 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 // bị trừ PHẲNG threshold×percent SAU mọi multiplier (applyEndurance trong
 // CombatSystem). Đây là lý do Sudden Death test phải khống chế endurance:
 // scaled = (base + flat) × m − flat, KHÔNG phải base × m.
+//
+// Flaky-hygiene (2026-09-05): test đo d10 rồi d13/d25 ở 3 lần resolveActionHit
+// riêng — pipeline roll Math.random 4 lần/hit (rollHit/ignoreResistance/block/
+// crit). Stats fixture đã neutralize mọi rate, nhưng để test KHÔNG phụ thuộc
+// worker state/offset khi chạy full suite, seed Math.random deterministic:
+// roll nào cũng trả 0 → "không trúng mọi概率 roll" (hit roll < hitChance=1 vẫn
+// pass, các概率 khác đều false). Kết quả: damage 100% xác định giữa các run.
 
 function mk(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, ...overrides.stats }
@@ -23,7 +30,15 @@ function mk(overrides: Partial<CombatEntity> = {}): CombatEntity {
 }
 
 describe('debug damage scaling pipeline', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('measures damage at multipliers 1.0 / 1.3 / 2.5', () => {
+    // 0 < mọi threshold có ý nghĩa: rollHit (hitChance = 1.0 → 0 < 1 = hit);
+    // ignoreResistance/block/crit (chance = 0 → 0 < 0 = false).
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
     const combat = new CombatSystem(new EventBus())
 
     const run = (multiplier: number): number => {

@@ -83,12 +83,16 @@ describe('dead equipment-model references (item-grade-quality-rework Task 22)', 
     // ở trên — loại nó khỏi vòng quét để không tự bắt chính mình.
     .filter((file) => !file.endsWith(join('equipment', 'deadReferences.test.ts')))
 
+  // Flaky-hygiene (2026-09-05): 2 test đầu đọc TOÀN BỘ src/ qua fs — dưới full
+  // suite chạy parallel, I/O contention từng kéo test tới 24s và vướng default
+  // timeout 5s → flake luân phiên. Fix: (1) cache nội dung file 1 LẦN dùng
+  // chung cho cả 2 test, (2) timeout riêng 60s cho các test scan.
+  const contentsByFile = new Map(files.map((file) => [file, readFileSync(file, 'utf-8')]))
+
   it('không còn file nào chứa ký hiệu equipment cũ (forgePoints/forgePotential/EquipmentQuality 9-bậc)', () => {
     const offenders: string[] = []
 
-    for (const file of files) {
-      const content = readFileSync(file, 'utf-8')
-
+    for (const [file, content] of contentsByFile) {
       for (const symbol of DEAD_SYMBOLS) {
         if (content.includes(symbol)) {
           offenders.push(`${file}: "${symbol}"`)
@@ -97,14 +101,12 @@ describe('dead equipment-model references (item-grade-quality-rework Task 22)', 
     }
 
     expect(offenders, `còn tham chiếu ký hiệu cũ:\n${offenders.join('\n')}`).toEqual([])
-  })
+  }, 60_000)
 
   it('không còn file nào import từ EquipmentQuality.ts/EquipmentRarity.ts/ItemGradeRefs.ts (đã xóa)', () => {
     const offenders: string[] = []
 
-    for (const file of files) {
-      const content = readFileSync(file, 'utf-8')
-
+    for (const [file, content] of contentsByFile) {
       for (const specifier of DEAD_IMPORT_SPECIFIERS) {
         // Chỉ bắt specifier trong dấu nháy của import/export thật, tránh
         // false-positive từ comment nhắc tên file cũ (nhiều file cố ý giữ
@@ -118,7 +120,7 @@ describe('dead equipment-model references (item-grade-quality-rework Task 22)', 
     }
 
     expect(offenders, `còn import từ file đã xóa:\n${offenders.join('\n')}`).toEqual([])
-  })
+  }, 60_000)
 
   it('EquipmentInstance fixture không còn key thừa realmId/rarity/forgePoints/forgePotential', () => {
     const instance = makeInstance()
