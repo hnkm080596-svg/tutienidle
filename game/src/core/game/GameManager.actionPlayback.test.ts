@@ -180,3 +180,53 @@ describe('GameManager — presentation orchestration (presentationActive=true)',
     expect(gameManager.isActionPlaybackWaiting()).toBe(true)
   })
 })
+
+
+// --- Remediation Task 1: tokenized playback + idempotent teardown ---
+
+describe('Remediation Task 1 — playback token + idempotent teardown', () => {
+  it('teardown ở ready-phase: setPresentationActive(false) drain xong isActionPlaybackWaiting = false', () => {
+    const gameManager = battleReady()
+    gameManager.setPresentationActive(true)
+    for (let i = 0; i < 20; i++) { gameManager.update(0.1) }
+    expect(gameManager.isActionPlaybackWaiting()).toBe(true)
+    gameManager.setPresentationActive(false)
+    expect(gameManager.isActionPlaybackWaiting()).toBe(false)
+  })
+
+  it('teardown idempotent: gọi false 2 lần không gây thêm damage/turn/event', () => {
+    const gameManager = battleReady()
+    gameManager.setPresentationActive(true)
+    for (let i = 0; i < 20; i++) { gameManager.update(0.1) }
+    gameManager.setPresentationActive(false)
+    const turnsAfterFirst = gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0
+    const logAfterFirst = gameManager.getTurnBattle()?.log?.length ?? 0
+    const enemyHpAfterFirst = gameManager.getTurnBattle()!.enemies[0]!.entity.currentHp
+    gameManager.setPresentationActive(false)
+    expect(gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0).toBe(turnsAfterFirst)
+    expect(gameManager.getTurnBattle()?.log?.length ?? 0).toBe(logAfterFirst)
+    expect(gameManager.getTurnBattle()!.enemies[0]!.entity.currentHp).toBe(enemyHpAfterFirst)
+  })
+
+  it('stale ack: token cũ không đụng action mới (generation-based invalidation)', () => {
+    const gameManager = battleReady()
+    gameManager.setPresentationActive(true)
+    for (let i = 0; i < 20; i++) { gameManager.update(0.1) }
+    const oldToken = gameManager.getPendingPlaybackToken()
+    gameManager.setPresentationActive(false)
+
+    gameManager.setPresentationActive(true)
+    for (let i = 0; i < 20; i++) { gameManager.update(0.1) }
+    const newWaiting = gameManager.isActionPlaybackWaiting()
+    const turnsBeforeStaleAck = gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0
+    const logBeforeStaleAck = gameManager.getTurnBattle()?.log?.length ?? 0
+
+    gameManager.acknowledgeActionImpact(oldToken ?? undefined)
+    gameManager.acknowledgeActionComplete(oldToken ?? undefined)
+    gameManager.acknowledgeTurnReady(oldToken ?? undefined)
+
+    expect(gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0).toBe(turnsBeforeStaleAck)
+    expect(gameManager.getTurnBattle()?.log?.length ?? 0).toBe(logBeforeStaleAck)
+    expect(gameManager.isActionPlaybackWaiting()).toBe(newWaiting)
+  })
+})

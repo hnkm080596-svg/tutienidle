@@ -2563,6 +2563,26 @@ export class GameManager {
   /** Đã áp damage, chờ acknowledgeActionComplete(). */
   private pendingImpact: { actor: TurnBattleParticipant; declared: TurnDeclaredAction; targetIds: string[] } | null = null
 
+  // Remediation Task 1 (2026-09-05) — playback token: mỗi lần phase tiến
+  // tới 'ready' sinh 1 token mới; stale ack (token cũ) là no-op, chặn
+  // callback Phaser muộn đụng action/battle khác (cross-battle mutation).
+  private playbackToken = ''
+  private playbackTokenSeq = 0
+
+  private nextPlaybackToken(): string {
+    this.playbackTokenSeq += 1
+    this.playbackToken = `playback-${this.playbackTokenSeq}`
+
+    return this.playbackToken
+  }
+
+  /** Test/UI đọc token hiện tại của phase đang chờ (null nếu không pending). */
+  getPendingPlaybackToken(): string | null {
+    return this.pendingReadyActor !== null || this.pendingDeclaredAction !== null || this.pendingImpact !== null
+      ? this.playbackToken
+      : null
+  }
+
   setPresentationActive(active: boolean): void {
     this.presentationActive = active
 
@@ -2609,7 +2629,12 @@ export class GameManager {
   }
 
   /** Phaser gọi khi ready flourish xong → declare action, phát 'attack'. */
-  acknowledgeTurnReady(): void {
+  acknowledgeTurnReady(token?: string): void {
+    // Remediation Task 1 — stale token (khớp token của action cũ) là no-op.
+    if (token !== undefined && token !== this.playbackToken) {
+      return
+    }
+
     if (!this.pendingReadyActor || !this.turnBattle) {
       return
     }
@@ -2630,7 +2655,12 @@ export class GameManager {
   }
 
   /** Phaser gọi tại impact frame (lunge tween xong) → áp damage, phát VFX. */
-  acknowledgeActionImpact(): void {
+  acknowledgeActionImpact(token?: string): void {
+    // Remediation Task 1 — stale token là no-op.
+    if (token !== undefined && token !== this.playbackToken) {
+      return
+    }
+
     if (!this.pendingDeclaredAction || !this.turnBattle) {
       return
     }
@@ -2674,7 +2704,12 @@ export class GameManager {
   }
 
   /** Phaser gọi khi VFX tween xong → turn cleanup, phát standby tail. */
-  acknowledgeActionComplete(): void {
+  acknowledgeActionComplete(token?: string): void {
+    // Remediation Task 1 — stale token là no-op.
+    if (token !== undefined && token !== this.playbackToken) {
+      return
+    }
+
     if (!this.pendingImpact || !this.turnBattle) {
       return
     }
@@ -3538,7 +3573,10 @@ export class GameManager {
             const readyActor = this.turnBattleSystem.tickPacing(this.turnBattle, !this.presentationActive)
 
             if (readyActor !== null && this.presentationActive) {
+              // Remediation Task 1 — token mới cho phase ready mới; mọi
+              // callback cũ giữ token này sẽ trở thành stale (no-op).
               this.pendingReadyActor = readyActor
+              this.playbackToken = this.nextPlaybackToken()
 
               emitTurnReady(this.eventBus, readyActor.id)
             } else if (readyActor !== null && this.turnBattle.players.includes(readyActor) && this.battleManualMode && !this.awaitedManualActor) {
