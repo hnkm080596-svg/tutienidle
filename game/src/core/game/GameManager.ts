@@ -2456,6 +2456,9 @@ export class GameManager {
     this.turnBattleRewardsGranted.clear()
     this.turnBattleEndEmitted = false
     this.awaitedManualActor = null
+    this.pendingReadyActor = null
+    this.pendingDeclaredAction = null
+    this.pendingImpact = null
 
     this.turnBattle = {
       players: previous.players,
@@ -3122,6 +3125,9 @@ export class GameManager {
       this.turnBattleRewardsGranted.clear()
       this.turnBattleEndEmitted = false
       this.awaitedManualActor = null
+      this.pendingReadyActor = null
+      this.pendingDeclaredAction = null
+      this.pendingImpact = null
       this.turnBattleStartedAtMs = Date.now()
 
 

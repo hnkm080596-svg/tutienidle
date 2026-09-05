@@ -4,6 +4,9 @@ import { defineEnemy } from '../enemy/Enemy'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
+import type { Stage } from '../stage/Stage'
+import { createDefaultPlayer } from '../player/Player'
+import { calculateStats } from '../stats/StatCalculator'
 
 // Defect Task 3 — PresentationGate boot-race fix: real app (App.vue) calls
 // expectPresentationLayer() once at boot; CombatScene calls
@@ -105,3 +108,14 @@ describe('GameManager — setPresentationActive(false) respects manual choice (D
     expect(gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0).toBe(0)
   })
 })
+
+// --- Defect Task 6: stale pending-phase reset on stage restart ---
+
+function stageFixture(id: string): Stage {
+  return {
+    id, name: id, description: '', floor: 1,
+    enemyPool: [{ enemyId: id + '_enemy', weight: 1 }],
+    totalEnemyCount: 1,
+    spawnIntervalSeconds: 0,
+  }
+}
