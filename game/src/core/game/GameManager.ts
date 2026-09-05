@@ -2414,10 +2414,11 @@ export class GameManager {
       playerPath?.cultivationPath,
     )
 
-    // Spawn placement (unified flow: Spawn Ã„â€˜Ã¡Â»Â©ng yÃƒÂªn tÃ¡ÂºÂ¡i vÃ¡Â»â€¹ trÃƒÂ­ resolve Ã¢â‚¬â€
-    // khÃƒÂ´ng di chuyÃ¡Â»Æ’n) Ã¢â‚¬â€ tÃƒÂ¡i dÃƒÂ¹ng Ã„â€˜ÃƒÂºng resolveEnemySpawnPosition cÃ¡Â»Â§a hÃ¡Â»â€¡
-    // sÃ¡Â»â€˜ng: Boss luÃƒÂ´n HERO_LANE (row 4), thÃ†Â°Ã¡Â»Âng random [0, GRID_ROW_COUNT),
-    // column cÃ¡Â»â„¢t 7-15 (spawn tÃ¡Â»Â« mÃƒÂ©p phÃ¡ÂºÂ£i).
+    // Spawn placement (Combat Art Pipeline §6/§7, 2026-09-05) — vị trí spawn
+    // đứng yên tại resolve, không di chuyển. Tái dùng đúng
+    // resolveEnemySpawnPosition() của hệ sống: quái giới hạn trong
+    // ENEMY_SIDE_REGION, Boss LUÔN ở trung tâm vùng địch (center), quái
+    // thường random đều trong vùng.
     const enemyParticipants = enemyEntities.map((enemyEntity, index) => {
       const position = resolveEnemySpawnPosition({
         isBoss: enemyEntity.isBoss ?? false,
@@ -2477,7 +2478,7 @@ export class GameManager {
       10_000,
       undefined,
       () => {
-        const isFinalSpawn = (this.turnBattle?.wave?.spawnedCount ?? 0) + 1 >= stageRef.totalEnemyCount
+        const isFinalSpawn = (this.turnBattle?.wave?.spawnedCount ?? 0) + 1 >= effectiveTotalEnemyCount(stageRef)
         const template =
           this.stageWaves.pickEnemyForTurnSpawn(stageRef, isFinalSpawn) ??
           this.lastStageEnemyTemplate
