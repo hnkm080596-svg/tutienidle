@@ -2940,8 +2940,16 @@ export class GameManager {
     // (spec Ã‚Â§5.3 thin adapter). Enemy Ã„â€˜Ã¡ÂºÂ§u tiÃƒÂªn Ã„â€˜ÃƒÂ£ spawn qua launchBattle
     // Ã¢â€ â€™ startBattle Ã¢â€ â€™ buildTurnBattle; bÃ¡Â»â€¢ sung wave state vÃƒÂ o TurnBattle.
     if (this.turnBattle) {
-      // Auto-farm spec Task 3 Ã¢â‚¬â€ mÃ¡Â»â€˜c wall-clock bÃ¡ÂºÂ¯t Ã„â€˜Ã¡ÂºÂ§u stage (clearSeconds).
+      // Gameplay fixes (2026-09-05): reset per-battle flags at every fresh
+      // startStage (NOT just restartTurnBattleCycle) — without this, the
+      // 2nd refight inherits turnBattleEndEmitted=true from the previous
+      // battle and its victory terminal never fires (stopRepeat never
+      // releases StageManager -> 3rd refight startStage fails).
+      this.turnBattleRewardsGranted.clear()
+      this.turnBattleEndEmitted = false
+      this.awaitedManualActor = null
       this.turnBattleStartedAtMs = Date.now()
+
 
       this.turnBattle.wave = {
         totalEnemyCount: stage.totalEnemyCount,
@@ -3334,17 +3342,21 @@ export class GameManager {
           // Ã„â€˜ÃƒÂ£ advance Ã„â€˜ÃƒÂºng tÃ¡Â»â€ºi ngÃ†Â°Ã¡Â»Â¡ng ready bÃ¡Â»Å¸i peek). Enemy turn vÃƒÂ  auto
           // mode resolve nhÃ†Â° thÃ†Â°Ã¡Â»Âng (auto = cÃƒÂ¹ng engine, khÃƒÂ´ng pause).
           if (this.awaitedManualActor) {
-            // VÃ¡ÂºÂ«n Ã„â€˜ang pause Ã¢â‚¬â€ khÃƒÂ´ng resolve gÃƒÂ¬ (chÃ¡Â»Â submitTurnChoice).
-          } else if (this.battleManualMode) {
-            const actor = this.turnBattleSystem.peekNextActor(this.turnBattle)
-
-            if (actor !== null && this.turnBattle.players.includes(actor)) {
-              this.awaitedManualActor = actor
-            } else if (actor !== null) {
-              this.turnBattleSystem.resolveActorTurn(this.turnBattle, actor)
-            }
+            // Paused — still waiting for submitTurnChoice.
           } else {
-            this.turnBattleSystem.resolveNextStep(this.turnBattle)
+            // Gameplay fixes (2026-09-05) — wall-clock pacing: 1 tick = 1
+            // gauge-step (tickPacing); actor ready -> resolve immediately,
+            // manual mode pauses when the ready actor is on the player side.
+            const readyActor = this.turnBattleSystem.tickPacing(this.turnBattle)
+
+            if (
+              readyActor !== null &&
+              this.turnBattle.players.includes(readyActor) &&
+              this.battleManualMode &&
+              !this.awaitedManualActor
+            ) {
+              this.awaitedManualActor = readyActor
+            }
           }
         }
       }

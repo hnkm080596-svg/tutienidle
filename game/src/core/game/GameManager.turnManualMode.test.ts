@@ -20,7 +20,7 @@ const ENEMY_STATS_INPUT = {
 }
 
 function createPlayer(): CombatEntity {
-  const stats = { ...createBaseStats(), attack: 50, speed: 2, criticalRate: 0 }
+  const stats = { ...createBaseStats(), attack: 50, speed: 100, criticalRate: 0 }
 
   return {
     id: 'player',
@@ -104,20 +104,22 @@ function startManualBattle(): GameManager {
 }
 
 describe('GameManager — manual mode pause-on-player-turn (Slice 7)', () => {
-  it('bật manual mode → engine dừng khi tới lượt player, không resolve gì cho tới khi submit', () => {
+  it('bật manual mode → khi gauge player đầy, engine pause chờ choice (không tự resolve tiếp các lượt sau)', () => {
     const gameManager = startManualBattle()
 
     gameManager.setBattleManualMode(true)
 
     const turnsBefore = gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0
 
-    // Nhiều pacing tick — player turn phải pause, KHÔNG auto-resolve.
+    // Pacing mới (2026-09-05): tick đầu đủ gauge → resolve turn đầu NGAY
+    // (đó là tick "player tới lượt"), các tick kế tiếp PAUSE chờ choice —
+    // tổng turns sau 50 ticks phải đứng yên ở đúng turn đầu.
     for (let i = 0; i < 50; i++) {
       gameManager.update(0.1)
     }
 
     expect(gameManager.isAwaitingManualTurnChoice()).toBe(true)
-    expect(gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0).toBe(turnsBefore)
+    expect(gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0).toBe(turnsBefore + 1)
   })
 
   it('submitTurnChoice basic → engine resume, dùng skill được chọn, sau đó tới lượt enemy tự chạy', () => {

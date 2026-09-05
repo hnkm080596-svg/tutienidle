@@ -106,7 +106,12 @@ export function normalizeEnemyStats(input: EnemyStatInput): Stats {
     // EnemyStatInput.special (không có pool MP để hấp thụ/hồi vào).
     maxMp: 0,
 
-    speed: normalizeEnemyAttackSpeed(input.attackSpeed),
+    // Gameplay fixes (2026-09-05) — turn-based pacing: hệ sống author
+    // attackSpeed theo ĐÒN/GIÂY (0.8-2.5 đòn/s) → turn engine cần gauge
+    // rate tương đương: 1 đòn = 1 turn = GAUGE_MAX đầy mỗi (1/attackSpeed)
+    // giây → speed stat = 100 × attackSpeed (thang chung với player
+    // speed=100+dex×0.15, 1 turn/giây tại speed 100).
+    speed: normalizeEnemyAttackSpeed(input.attackSpeed) * 100,
 
     // Balance pass — clamp Trần 5 (xem MAX_ENEMY_ATTACK_RANGE_RANKS):
     // data author > 5 tự hạ về 5, mọi quái spawn qua funnel này đều

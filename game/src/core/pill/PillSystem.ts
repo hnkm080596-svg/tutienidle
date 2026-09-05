@@ -218,18 +218,9 @@ export class PillSystem {
           expiresAtMs: now + (effect.durationSeconds ?? 0) * 1000,
 
           modifiers: [
-            {
-              id: `pill-regen-hp:${pill.id}`,
-
-              sourceId: pill.id,
-
-              sourceType: 'pill',
-
-              stat: 'hpRegenPerTurn',
-
-              flat: effect.hpPerSecond ?? 0,
-            },
-
+            // Gameplay fixes (2026-09-05): removed the hpRegenPerTurn pill
+            // modifier — drinking a pill for HP regen is meaningless under
+            // the turn-based engine (user request). MP regen pill unaffected.
             {
               id: `pill-regen-mp:${pill.id}`,
 
