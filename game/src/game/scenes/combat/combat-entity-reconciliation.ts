@@ -24,8 +24,10 @@ export type CombatantSpriteReconciliationAction =
  *     bản fix này, id này lọt qua nhánh 'create' rồi bị 'remove' ở tick kế,
  *     gây flash một frame.
  * - id đã biết, còn `alive` → 'update' (đồng bộ vị trí/thanh máu).
- * - id đã biết nhưng `alive: false` → 'remove' (Task 9 sẽ thay bằng animation
- *   chết trước khi xóa; task này xóa ngay theo đúng cách enemy-death hiện có).
+ * - id đã biết nhưng `alive: false` → 'remove'. Hàm THUẦN này chỉ trả action,
+ *   KHÔNG tự xóa gì — caller (CombatScene.reconcileCombatantSprites(), Task 9
+ *   2026-09-05) đi qua beginDeathSequence() để phát animation '-death' và
+ *   hoãn destroy thật tới khi animation/tween xong, thay vì xóa ngay.
  * - id đã biết nhưng KHÔNG còn xuất hiện trong snapshot mới (vd. companion bị
  *   đổi giữa trận) → 'remove' ngay, dù không có state để trả kèm.
  */

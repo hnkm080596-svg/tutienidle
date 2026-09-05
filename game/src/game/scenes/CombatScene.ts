@@ -35,7 +35,7 @@ import {
   spawnEnemySpawnVfx,
   type EnemySpawnVfxHandle,
 } from '@/game/support/EnemySpawnVfx'
-import { enemyTextureUrl } from '@/game/support/EnemyArt'
+import { enemyTextureUrl, resolveEnemyTextureKey } from '@/game/support/EnemyArt'
 import {
   PLAYER_VISUAL_PROFILES,
   resolvePlayerVisualProfileId,
@@ -76,7 +76,12 @@ import {
   type ThanhVanVariant,
 } from '@/game/support/ThanhVanArt'
 import { attachThanhVanBackdrop, type ThanhVanBackdropHandle } from '@/game/support/ThanhVanBackdrop'
-import { queueCombatAssets } from '@/game/support/CombatPreload'
+import { queueCombatAssets, allCombatAnimationSets } from '@/game/support/CombatPreload'
+import {
+  combatAnimationKey,
+  type CombatAnimationName,
+  type CombatAnimationSet,
+} from '@/game/support/CombatAnimationSet'
 import type { CombatEvent } from '@/core/combat/CombatEvent'
 import type { CombatHealEvent, EntityVitalsChangedEvent } from '@/core/combat/EntityVitalsSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
@@ -618,6 +623,16 @@ export class CombatScene extends Phaser.Scene {
       this.applyPlayerVisualProfile(registryProfileId)
     }
 
+    // Combat Art Pipeline Task 9 (2026-09-05) — đăng ký animation placeholder
+    // cho MỌI entity combat (player theo mọi profile + enemy theo mọi
+    // template Mortal), CÙNG danh sách allCombatAnimationSets() mà
+    // queueCombatAssets() (preload()) dùng để load spritesheet — 2 nơi
+    // không bao giờ lệch key. preload() → loader COMPLETE → create() là thứ
+    // tự chuẩn của Phaser Scene nên texture các sheetKey này đã sẵn sàng.
+    for (const { entityKey, animationSet } of allCombatAnimationSets()) {
+      this.registerCombatAnimations(entityKey, animationSet)
+    }
+
     // Reward gourd (plan Ã‚Â§6 + Ã‚Â§8) Ã¢â‚¬â€ art thÃ¡ÂºÂ­t nÃ¡ÂºÂ¿u texture sÃ¡ÂºÂµn sÃƒÂ ng,
     // fallback Graphics placeholder. DÃ¡Â»Â±ng MÃ¡Â»ËœT LÃ¡ÂºÂ¦N mÃ¡Â»â€”i create();
     // auto-refight KHÃƒâ€NG tÃ¡ÂºÂ¡o lÃ¡ÂºÂ¡i hÃ¡Â»â€œ lÃƒÂ´ vÃƒÂ  streams cÃ…Â© tÃ¡Â»Â± hoÃƒÂ n tÃ¡ÂºÂ¥t vÃƒÂ o
@@ -1033,6 +1048,15 @@ export class CombatScene extends Phaser.Scene {
   // Task 8 (perf-optimize-pass phần 2) — logic đầy đủ chuyển sang
   // combat/combat-grid-view.ts (đã có sẵn getOrCreateSprite tương đương
   // — chỉ còn thiếu wiring); wrapper giữ nguyên chữ ký public.
+  //
+  // Combat Art Pipeline Task 9 (2026-09-05) — id CHẾT rồi TÁI XUẤT HIỆN
+  // (spawn lại) trong lúc sprite cũ còn đang chờ death animation hoàn tất
+  // (deferred cleanup, xem beginDeathSequence()): finalize NGAY sprite cũ ở
+  // ĐÂY trước khi tạo sprite mới. Không có bước này, gridView.getOrCreateSprite()
+  // sẽ thấy `this.sprites.has(id)` vẫn true (sprite cũ chưa bị xóa) và TRẢ VỀ
+  // NGUYÊN sprite đang chết cho entity mới — rồi callback ANIMATION_COMPLETE/
+  // tween của lần chết trước destroy() NHẦM sprite của entity mới (orphan/
+  // double-destroy đúng như review Task 5 cảnh báo).
   getOrCreateSprite(
     id: string,
     color: number,
@@ -1040,7 +1064,35 @@ export class CombatScene extends Phaser.Scene {
     row: LaneIndex = HERO_LANE_INDEX,
     health?: { currentHp: number; maxHp: number; isBoss: boolean },
   ): EntitySprite {
+    if (this.dyingIds.has(id)) {
+      this.forceFinalizeDeath(id)
+    }
+
     return this.gridView.getOrCreateSprite(id, color, labelText, row, health)
+  }
+
+  /**
+   * Dọn NGAY sprite đang ở giữa death sequence (animation/tween chưa xong) —
+   * dùng khi id đó tái xuất hiện (xem getOrCreateSprite()) để tránh
+   * beginDeathSequence() cũ đóng cửa nhầm sprite mới sau này. Đơn giản hơn
+   * beginDeathSequence(): không cần chờ gì cả, huỷ NGAY.
+   */
+  private forceFinalizeDeath(id: string): void {
+    const sprite = this.sprites.get(id)
+
+    this.dyingIds.delete(id)
+
+    if (!sprite) {
+      return
+    }
+
+    this.tweens.killTweensOf(sprite.rect)
+    this.tweens.killTweensOf(sprite)
+    this.tweens.killTweensOf(sprite.boost)
+
+    this.destroyEntitySprite(sprite)
+    this.sprites.delete(id)
+    this.interpolations.delete(id)
   }
 
   updateEnemyHealthBar(sprite: EntitySprite, currentHp: number, maxHp: number) {
@@ -1049,6 +1101,77 @@ export class CombatScene extends Phaser.Scene {
 
   destroyEntitySprite(sprite: EntitySprite) {
     this.gridView.destroyEntitySprite(sprite)
+  }
+
+  /**
+   * Combat Art Pipeline Task 9 (2026-09-05) — đăng ký Phaser
+   * Animation cho MỘT entity (player theo profile, hoặc enemy theo texture
+   * key) từ animation set đã build sẵn. `this.anims` là AnimationManager
+   * DÙNG CHUNG toàn Game (không riêng theo scene) nên guard `exists()` bắt
+   * buộc — gọi lại nhiều lần qua các trận/scene KHÔNG được tạo trùng key.
+   */
+  // `entityKey` không dùng trực tiếp trong thân hàm (mỗi clip đã tự mang
+  // đủ key/sheetKey) — giữ tham số vì chữ ký khớp cách gọi tại create() và
+  // để log/mở rộng sau này (vd. gắn nhãn lỗi khi generateFrameNumbers rỗng).
+  private registerCombatAnimations(_entityKey: string, animationSet: CombatAnimationSet): void {
+    for (const clip of Object.values(animationSet)) {
+      if (this.anims.exists(clip.key)) {
+        continue
+      }
+
+      this.anims.create({
+        key: clip.key,
+        frames: this.anims.generateFrameNumbers(clip.sheetKey, { start: 0, end: clip.frameCount - 1 }),
+        frameRate: clip.frameRate,
+        repeat: clip.repeat,
+      })
+    }
+  }
+
+  /**
+   * Map id RUNTIME (PLAYER_ID hoặc enemy id dạng '<templateId>_<uuid>')
+   * sang ENTITY KEY dùng làm tiền tố animation clip — khớp ĐÚNG cách
+   * CombatPreload.ts build animation set (player theo profile hiện hành,
+   * enemy theo resolveEnemyTextureKey()). undefined khi actor không có
+   * animation set nào (enemy ngoài batch Mortal, vẫn Rectangle) — caller
+   * PHẢI guard trước khi gọi sprite.play().
+   */
+  private entityAnimationKeyPrefix(actorId: string): string | undefined {
+    if (actorId === PLAYER_ID) {
+      return this.playerProfile.combatTextureKey
+    }
+
+    return resolveEnemyTextureKey(actorId)
+  }
+
+  /**
+   * Phát 1 animation clip cho actor NẾU sprite là Sprite thật (kind ===
+   * 'sprite') VÀ clip đó đã được registerCombatAnimations() đăng ký —
+   * no-op an toàn cho Rectangle fallback (enemy ngoài batch) hoặc clip
+   * chưa/không tồn tại (test fixture không stub this.anims đầy đủ).
+   */
+  private playCombatAnimation(
+    sprite: EntitySprite,
+    actorId: string | undefined,
+    name: CombatAnimationName,
+  ): void {
+    if (sprite.kind !== 'sprite' || actorId === undefined) {
+      return
+    }
+
+    const prefix = this.entityAnimationKeyPrefix(actorId)
+
+    if (!prefix) {
+      return
+    }
+
+    const key = combatAnimationKey(prefix, name)
+
+    if (!this.anims.exists(key)) {
+      return
+    }
+
+    ;(sprite.rect as Phaser.GameObjects.Sprite).play(key)
   }
 
   private clearSceneState() {
@@ -1228,11 +1351,10 @@ export class CombatScene extends Phaser.Scene {
         continue
       }
 
-      // 'remove' — Task 9 sẽ thay bằng animation chết (sprite.play('death'))
-      // trước khi xóa; tạm thời XÓA NGAY, ĐÚNG cách reconcileEnemySprites()/
-      // onDeath() đã dùng (không tạo cơ chế xóa thứ hai). Nếu onDeath() đang
-      // chạy tween chết cho id này (dyingIds/playerDying) thì BỎ QUA — tween
-      // đó tự lo xóa sprite khi xong, xóa thêm ở đây là double-destroy.
+      // 'remove' — id alive:false hoặc biến mất khỏi snapshot mà KHÔNG đi
+      // qua event 'death' riêng (race/fallback). Nếu onDeath() đang chạy
+      // death sequence cho id này (dyingIds/playerDying) thì BỎ QUA — sequence
+      // đó tự lo xóa sprite khi xong, chạy thêm ở đây là double-destroy.
       const isDying = action.id === PLAYER_ID ? this.playerDying : this.dyingIds.has(action.id)
 
       if (isDying) {
@@ -1245,9 +1367,11 @@ export class CombatScene extends Phaser.Scene {
         continue
       }
 
-      this.destroyEntitySprite(sprite)
-      this.sprites.delete(action.id)
-      this.interpolations.delete(action.id)
+      // Combat Art Pipeline Task 9 (2026-09-05) — đi qua CÙNG death sequence
+      // với onDeath() (phát '-death' + hoãn destroy tới khi animation/tween
+      // xong) thay vì xóa ngay, để entity chết theo đường fallback này cũng
+      // được chơi animation chết đầy đủ (spec §9).
+      this.beginDeathSequence(sprite, action.id)
     }
 
     const nextKnownIds = new Set(states.map((state) => state.id))
@@ -1525,6 +1649,11 @@ export class CombatScene extends Phaser.Scene {
       const isPlayer = event.sourceId === PLAYER_ID
       const dx = isPlayer ? ATTACK_LUNGE_PX : -ATTACK_LUNGE_PX
 
+      // Combat Art Pipeline Task 9 (2026-09-05) — phát clip '-cast' TRƯỚC
+      // tween lunge (đòn đánh niệm/vung trước khi lao vào), cạnh tween vị
+      // trí hiện có (không thay thế).
+      this.playCombatAnimation(attacker, event.sourceId, 'cast')
+
       this.playHorizontalImpulse(attacker, dx, ATTACK_LUNGE_DURATION_MS)
 
       // Action Playback Task 7 (2026-09-05) — impact frame tại midpoint
@@ -1738,6 +1867,24 @@ export class CombatScene extends Phaser.Scene {
       return
     }
 
+    this.beginDeathSequence(sprite, id)
+  }
+
+  /**
+   * Combat Art Pipeline Task 9 (2026-09-05) — dùng chung bởi onDeath() (event
+   * 'death' thật) và reconcileCombatantSprites() (fallback khi entity mất
+   * khỏi snapshot mà không có event riêng): đánh dấu dying, dọn DoT/cast bar,
+   * phát animation '-death' NẾU sprite là Sprite thật + clip đã đăng ký, và
+   * HOÃN destroy tới khi CẢ tween xoay/mờ CŨ lẫn animation (nếu có) đều xong
+   * — spec §9: cleanup không được cắt ngang animation chết. Không có
+   * animation hợp lệ → animDone giữ true ngay từ đầu, hành vi y hệt trước
+   * Task 9 (chỉ chờ tween).
+   *
+   * Player KHÔNG BAO GIỜ bị destroy ở đây (giữ vị trí cuối dưới overlay kết
+   * quả, xem onBattleEnd) — chỉ tween/animation chạy, isPlayer chặn nhánh
+   * destroy trong finalize().
+   */
+  private beginDeathSequence(sprite: EntitySprite, id: string): void {
     const isPlayer = id === PLAYER_ID
 
     if (isPlayer) {
@@ -1746,7 +1893,7 @@ export class CombatScene extends Phaser.Scene {
       this.dyingIds.add(id)
     }
 
-    // DoT accumulator (Ã‚Â§7.2) Ã¢â‚¬â€ xÃƒÂ³a bucket cÃ¡Â»Â§a target chÃ¡ÂºÂ¿t.
+    // DoT accumulator — xóa bucket của target chết.
     for (const key of [...this.dotAccumulators.keys()]) {
       if (key.split('|')[0] === id) {
         this.dotAccumulators.delete(key)
@@ -1760,6 +1907,51 @@ export class CombatScene extends Phaser.Scene {
     this.tweens.killTweensOf(sprite.boost)
     sprite.offsetX = 0
 
+    let tweenDone = false
+    let animDone = true
+
+    const finalize = () => {
+      if (!tweenDone || !animDone) {
+        return
+      }
+
+      // isPlayer: không destroy (xem doc). Identity check chặn double-
+      // destroy/orphan khi id này đã bị forceFinalizeDeath() dọn sớm (tái
+      // xuất hiện giữa lúc animation/tween cũ còn chạy, xem getOrCreateSprite()).
+      if (isPlayer || this.sprites.get(id) !== sprite) {
+        return
+      }
+
+      this.destroyEntitySprite(sprite)
+      this.sprites.delete(id)
+      this.dyingIds.delete(id)
+      this.interpolations.delete(id)
+    }
+
+    if (sprite.kind === 'sprite') {
+      const prefix = this.entityAnimationKeyPrefix(id)
+      const deathKey = prefix ? combatAnimationKey(prefix, 'death') : undefined
+
+      if (deathKey && this.anims.exists(deathKey)) {
+        animDone = false
+
+        const gameSprite = sprite.rect as Phaser.GameObjects.Sprite
+
+        gameSprite.play(deathKey)
+        gameSprite.once(
+          Phaser.Animations.Events.ANIMATION_COMPLETE,
+          (anim: Phaser.Animations.Animation) => {
+            if (anim.key !== deathKey) {
+              return
+            }
+
+            animDone = true
+            finalize()
+          },
+        )
+      }
+    }
+
     this.tweens.add({
       targets: sprite.rect,
       rotation: Math.PI / 2,
@@ -1767,14 +1959,8 @@ export class CombatScene extends Phaser.Scene {
       duration: 500,
       ease: 'Quad.easeIn',
       onComplete: () => {
-        if (isPlayer) {
-          return
-        }
-
-        this.destroyEntitySprite(sprite)
-        this.sprites.delete(id)
-        this.dyingIds.delete(id)
-        this.interpolations.delete(id)
+        tweenDone = true
+        finalize()
       },
     })
 
@@ -1913,6 +2099,10 @@ export class CombatScene extends Phaser.Scene {
       return
     }
 
+    // Combat Art Pipeline Task 9 (2026-09-05) — phát clip '-ready' CẠNH pulse
+    // scale hiện có (không thay thế).
+    this.playCombatAnimation(sprite, event.actorId, 'ready')
+
     // Pulse đơn giản: scale bump rồi trở lại (tween trên rect/sprite GameObject
     // — EntitySprite wrapper không expose scale, projection ghi mỗi frame).
     const visual = sprite.rect
@@ -1943,6 +2133,10 @@ export class CombatScene extends Phaser.Scene {
     const sprite = this.spriteFor(event.actorId)
 
     if (sprite) {
+      // Combat Art Pipeline Task 9 (2026-09-05) — quay lại clip '-standby'
+      // (idle-adjacent) khi kết thúc lượt.
+      this.playCombatAnimation(sprite, event.actorId, 'standby')
+
       this.tweens.killTweensOf(sprite.rect)
 
       sprite.rect.setScale(1)

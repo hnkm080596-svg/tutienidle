@@ -16,6 +16,9 @@ describe('CombatPreload.queueCombatAssets — dedupe theo texture key', () => {
         image(key: string, url: string) {
           queued.set(key, url)
         },
+        // Task 9 (2026-09-05) — queueCombatAssets giờ CŨNG load spritesheet
+        // placeholder cho từng entity; stub no-op để không throw.
+        spritesheet() {},
       },
     } as never
 
@@ -37,6 +40,7 @@ describe('CombatPreload.queueCombatAssets — dedupe theo texture key', () => {
         image(key: string, _url: string) {
           queued.push(key)
         },
+        spritesheet() {},
       },
     } as never
 

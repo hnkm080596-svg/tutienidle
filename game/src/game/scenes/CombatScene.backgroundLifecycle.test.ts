@@ -154,6 +154,9 @@ describe('CombatScene â€” vÃ²ng Ä‘á»i background (battle_end)', ()
         image(key: string) {
           queued.push(key)
         },
+        // Task 9 (2026-09-05) — queueCombatAssets giờ CŨNG load spritesheet
+        // placeholder cho từng entity; stub no-op để không throw.
+        spritesheet() {},
       },
     } as never
 

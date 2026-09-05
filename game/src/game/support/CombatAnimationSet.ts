@@ -26,6 +26,17 @@ const ONE_SHOT_NAMES: readonly CombatAnimationName[] = ['cast', 'death']
 
 const ALL_NAMES: readonly CombatAnimationName[] = [...LOOPING_NAMES, ...ONE_SHOT_NAMES]
 
+// Task 9 (2026-09-05) — nguồn DUY NHẤT cho format key/sheetKey, để
+// CombatScene.ts tính đúng animation key khi gọi sprite.play() mà không
+// phải dựng lại cả CombatAnimationSet chỉ để đọc 1 field .key.
+export function combatAnimationKey(entityKey: string, name: CombatAnimationName): string {
+  return `${entityKey}-${name}`
+}
+
+export function combatAnimationSheetKey(entityKey: string, name: CombatAnimationName): string {
+  return `${combatAnimationKey(entityKey, name)}-sheet`
+}
+
 export function buildPlaceholderAnimationSet(
   entityKey: string,
   staticTextureUrl: string,
@@ -33,8 +44,8 @@ export function buildPlaceholderAnimationSet(
 ): CombatAnimationSet {
   const entries = ALL_NAMES.map((name) => {
     const clip: CombatAnimationClip = {
-      key: `${entityKey}-${name}`,
-      sheetKey: `${entityKey}-${name}-sheet`,
+      key: combatAnimationKey(entityKey, name),
+      sheetKey: combatAnimationSheetKey(entityKey, name),
       sheetUrl: staticTextureUrl,
       frameWidth: frameSize.width,
       frameHeight: frameSize.height,

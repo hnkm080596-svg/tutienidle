@@ -66,17 +66,20 @@ test.describe('Combat overlay layout (T8.3)', () => {
       expect(aiBox!.x + aiBox!.width).toBeLessThanOrEqual(viewport.width)
       expect(aiBox!.y + aiBox!.height).toBeLessThanOrEqual(viewport.height)
 
-      // Vùng HUD canvas trái-dưới: chỉ content-có-chứa (con build-hud
-      // thực — skill slot) mới cần né, còn container full-width
-      // (left:0 right:0) đè vùng đó là bình thường vì transparent.
-      // Đo con đầu tiên thay vì container.
-      const buildHud = page.locator('.combat-scene-overlay__build-hud')
-      await expect(buildHud).toBeVisible()
-      const hudBox = await buildHud.boundingBox()
+      // Combat Art Pipeline Task 7 (2026-09-05) — Build HUD + skill bar rời
+      // slot bottom-center cũ (class `combat-scene-overlay__build-hud`, đã
+      // XÓA) vào CombatSkillDockPanel.vue (`.combat-skill-dock-panel`), dock
+      // full-height neo MÉP PHẢI (top:0/right:0/bottom:0). Vùng HUD canvas
+      // trái-dưới: chỉ content-có-chứa (con dock thực — CombatBuildHud) mới
+      // cần né, còn container tự nó đã ở bên phải nên không đè trái-dưới —
+      // đo con đầu tiên thay vì container.
+      const skillDock = page.locator('.combat-skill-dock-panel')
+      await expect(skillDock).toBeVisible()
+      const hudBox = await skillDock.boundingBox()
       expect(hudBox).not.toBeNull()
       expect(hudBox!.y + hudBox!.height).toBeLessThanOrEqual(viewport.height)
 
-      const contentBox = await buildHud.locator('*').first().boundingBox()
+      const contentBox = await skillDock.locator('*').first().boundingBox()
       expect(contentBox).not.toBeNull()
       const canvasHudZoneRight = 210
       const canvasHudZoneTop = viewport.height - 100
@@ -84,7 +87,7 @@ test.describe('Combat overlay layout (T8.3)', () => {
         contentBox!.x < canvasHudZoneRight &&
         contentBox!.x + contentBox!.width > 0 &&
         contentBox!.y + contentBox!.height > canvasHudZoneTop
-      expect(overlapsCanvasHud, 'Build HUD content must not overlap canvas HUD zone (bottom-left)').toBe(false)
+      expect(overlapsCanvasHud, 'Skill dock content must not overlap canvas HUD zone (bottom-left)').toBe(false)
 
       await page.screenshot({
         path: testInfo.outputPath(`overlay-${viewport.name}.png`),
