@@ -7,23 +7,27 @@ const { currentTheme, themes, setTheme } = useTheme()
 
 <template>
   <div class="theme-switcher" data-testid="theme-switcher">
-    <div
+    <!-- Remediation Task 6 (2026-09-05) — native <button type="button">:
+         Enter/Space kích hoạt free từ browser (bỏ role="button" +
+         keydown.enter thủ công vốn thiếu Space); aria-pressed thể hiện
+         trạng thái chọn thay cho data-selected. Giữ nguyên class hooks +
+         data-testid cho test/style hiện có. -->
+    <button
       v-for="theme in themes"
       :key="theme.id"
+      type="button"
       class="theme-card"
       :class="{ 'theme-card--selected': theme.id === currentTheme }"
       :data-testid="'theme-card'"
       :data-theme-id="theme.id"
       :data-selected="theme.id === currentTheme ? 'true' : 'false'"
-      role="button"
-      tabindex="0"
+      :aria-pressed="theme.id === currentTheme"
       :aria-label="theme.label"
       @click="setTheme(theme.id)"
-      @keydown.enter="setTheme(theme.id)"
     >
       <img :src="theme.preview" :alt="theme.label" class="theme-card__preview" />
       <span class="theme-card__label">{{ theme.label }}</span>
-    </div>
+    </button>
   </div>
 </template>
 
@@ -44,6 +48,8 @@ const { currentTheme, themes, setTheme } = useTheme()
   border: 1px solid var(--surface-line-soft);
   border-radius: 8px;
   background: var(--surface-800);
+  color: inherit;
+  font: inherit;
   cursor: pointer;
   transition: transform 200ms ease, border-color 200ms ease;
 }

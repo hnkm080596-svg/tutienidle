@@ -80,8 +80,6 @@ import { queueCombatAssets } from '@/game/support/CombatPreload'
 import type { CombatEvent } from '@/core/combat/CombatEvent'
 import type { CombatHealEvent, EntityVitalsChangedEvent } from '@/core/combat/EntityVitalsSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
-import { getCombatVfxPreset } from '@/data/vfx/CombatVfxPresets'
-import { getStatusVfxPreset } from '@/data/vfx/StatusVfxPresets'
 import { CombatDamageText } from './combat/combat-damage-text'
 import { CombatCastBar } from './combat/combat-cast-bar'
 import { CombatGridView } from './combat/combat-grid-view'
@@ -479,7 +477,8 @@ export class CombatScene extends Phaser.Scene {
     setPresentationActive: (active: boolean) => void
     acknowledgeTurnReady: () => void
     acknowledgeActionImpact: () => void
-    acknowledgeActionComplete: () => void
+    acknowledgeActionComplete: (token?: string) => void
+    getPendingPlaybackToken: () => string | null
   }
 
   private getCombatEventBindings(): Array<[string, (event: any) => void]> {
@@ -1172,8 +1171,16 @@ export class CombatScene extends Phaser.Scene {
     // Action Playback Task 7 (2026-09-05) — bật presentation mode: turn
     // engine chờ Phaser ack qua 3 signal (ready flourish → impact frame →
     // VFX tween complete) thay vì resolve instant headless.
+    // Remediation Task 1+2 — bridge cũng expose token getter; ack từ VFX
+    // completion gắn token để stale callback bị engine từ chối.
     this.gameManagerRef = this.registry.get('gameManager') as
-      | { setPresentationActive: (active: boolean) => void; acknowledgeTurnReady: () => void; acknowledgeActionImpact: () => void; acknowledgeActionComplete: () => void }
+      | {
+          setPresentationActive: (active: boolean) => void
+          acknowledgeTurnReady: () => void
+          acknowledgeActionImpact: () => void
+          acknowledgeActionComplete: (token?: string) => void
+          getPendingPlaybackToken: () => string | null
+        }
       | undefined
 
     this.gameManagerRef?.setPresentationActive(true)
@@ -1760,24 +1767,30 @@ export class CombatScene extends Phaser.Scene {
 
   /**
    * MÃ¡Â»ËœT action_impact = MÃ¡Â»ËœT VFX instance (spawnActionImpactVfx): mÃ¡Â»Âi
-   * pulse/hit sÃ¡Â»â€˜ng trong cÃƒÂ¹ng 1 cÃ¡ÂºÂ·p Graphics + 1 timeline, khÃƒÂ´ng bao giÃ¡Â»Â
-   * sinh GameObject theo hitCount/target. preset.space quyÃ¡ÂºÂ¿t Ã„â€˜Ã¡Â»â€¹nh khÃƒÂ´ng
-   * gian; polygon footprint CHÃ¡Â»Ë† trÃƒÂ¬nh bÃƒÂ y Ã¢â‚¬â€ damage do core quyÃ¡ÂºÂ¿t Ã„â€˜Ã¡Â»â€¹nh.
+   * pulse/hit sÃ¡»â€˜ng trong cÃƒÂ¹ng 1 cÃ¡ÂºÂ·p Graphics + 1 timeline, khÃƒÂ´ng bao giÃ¡»Â
+   * sinh GameObject theo hitCount/target. preset.space quyÃ¡Âº¿t Ã„â€˜Ã¡»â€¹nh khÃƒÂ´ng
+   * gian; polygon footprint CHÃ¡»ˆ trÃƒÂ¬nh bÃƒÂ y Ã¢â‚¬â€ damage do core quyÃ¡Âº¿t Ã„â€˜Ã¡»â€¹nh.
+   *
+   * Remediation Task 2 — ack engine từ completion THỰC của VFX tween qua
+   * handle, không còn delayedCall tự tính duration trùng lặp. Token
+   * CAPTURE TẠI SPAWN (plan Task 1 Step 5): callback muộn giữ token cũ —
+   * engine đã sang phase/action khác (token mới) thì ack cũ thành stale
+   * no-op ở GameManager, chặn cross-battle mutation. Không spawn được VFX
+   * (projection miss) → ack ngay để engine không treo.
    */
   private onActionImpact(event: ActionImpactEvent) {
-    this.vfxSpawner.onActionImpact(event)
+    const token = this.gameManagerRef?.getPendingPlaybackToken() ?? null
+    const acknowledge = () => {
+      if (token !== null) {
+        this.gameManagerRef?.acknowledgeActionComplete(token)
+      }
+    }
 
-    // Action Playback Task 7 (2026-09-05) — "VFX fully finished" moment:
-    // duration = preset.durationMs × hitCount pulses (khớp tween trong
-    // spawnActionImpactVfx) → acknowledgeActionComplete() để engine sang
-    // actor kế. Fallback duration 230ms nếu preset lookup miss.
-    const preset = getCombatVfxPreset(event.presetId)
-    const pulses = Math.max(1, Math.min(6, event.hitCount))
-    const totalMs = Math.max(1, preset.durationMs) * pulses
+    const handle = this.vfxSpawner.onActionImpact(event, acknowledge)
 
-    this.time.delayedCall(totalMs, () => {
-      this.gameManagerRef?.acknowledgeActionComplete()
-    })
+    if (!handle) {
+      acknowledge()
+    }
   }
 
   /**

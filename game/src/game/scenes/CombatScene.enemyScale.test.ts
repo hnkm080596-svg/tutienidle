@@ -1,16 +1,16 @@
-// @vitest-environment jsdom
+﻿// @vitest-environment jsdom
 //
-// Enemy art x2 (yêu cầu 2026-08-26): PNG quái hiển thị GẤP ĐÔI — chiều
-// cao cuối = base × depthScale × ENEMY_DISPLAY_SCALE_MULTIPLIER (2),
-// ÁP CẢ CHO BOSS. Multiplier chỉ nhân MỘT LẦN tại applyEntityDepthScale
-// (resize gọi lại không cộng dồn), spawn fade-in tween kết thúc đúng
-// kích thước x2. Fallback Rectangle giữ kích thước cũ (×1).
+// Enemy art x2 (yÃªu cáº§u 2026-08-26): PNG quÃ¡i hiá»ƒn thá»‹ Gáº¤P ÄÃ”I â€” chiá»u
+// cao cuá»‘i = base Ã— depthScale Ã— ENEMY_DISPLAY_SCALE_MULTIPLIER (2),
+// ÃP Cáº¢ CHO BOSS. Multiplier chá»‰ nhÃ¢n Má»˜T Láº¦N táº¡i applyEntityDepthScale
+// (resize gá»i láº¡i khÃ´ng cá»™ng dá»“n), spawn fade-in tween káº¿t thÃºc Ä‘Ãºng
+// kÃ­ch thÆ°á»›c x2. Fallback Rectangle giá»¯ kÃ­ch thÆ°á»›c cÅ© (Ã—1).
 import { describe, expect, it } from 'vitest'
-import { CombatScene } from './CombatScene'
+import { createTestScene } from './combat/combatTestHarness'
 import { ENEMY_SOURCE_SIZE } from '../support/EnemyArt'
 
 function createScene() {
-  const scene = Object.create(CombatScene.prototype) as any
+  const scene = createTestScene('bare')
 
   scene.renderMode = 'perspective'
   scene.projection = undefined
@@ -46,14 +46,14 @@ function makeEnemySprite(kind: 'sprite' | 'rect') {
     },
   }
 
-  // any-có-chủ đích: stub EntitySprite cho method private any-typed
-  // (Object.create pattern) — không cần khớp interface đầy đủ.
+  // any-cÃ³-chá»§ Ä‘Ã­ch: stub EntitySprite cho method private any-typed
+  // (Object.create pattern) â€” khÃ´ng cáº§n khá»›p interface Ä‘áº§y Ä‘á»§.
   const sprite: any = {
     kind,
     rect,
     row: 4,
     sourceSize: kind === 'sprite' ? { ...ENEMY_SOURCE_SIZE } : undefined,
-    // ENEMY_DISPLAY_SCALE_MULTIPLIER — giá trị production của enemy PNG.
+    // ENEMY_DISPLAY_SCALE_MULTIPLIER â€” giÃ¡ trá»‹ production cá»§a enemy PNG.
     sizeMultiplier: kind === 'sprite' ? 2 : 1,
     boost: { value: 1 },
     shadow: undefined,
@@ -63,8 +63,8 @@ function makeEnemySprite(kind: 'sprite' | 'rect') {
   return { sprite, calls }
 }
 
-describe('CombatScene — ENEMY_DISPLAY_SCALE_MULTIPLIER ×2', () => {
-  it('enemy PNG cao đúng base × depthScale × 2', () => {
+describe('CombatScene â€” ENEMY_DISPLAY_SCALE_MULTIPLIER Ã—2', () => {
+  it('enemy PNG cao Ä‘Ãºng base Ã— depthScale Ã— 2', () => {
     const scene = createScene()
     const { sprite, calls } = makeEnemySprite('sprite')
 
@@ -73,11 +73,11 @@ describe('CombatScene — ENEMY_DISPLAY_SCALE_MULTIPLIER ×2', () => {
     expect(calls).toHaveLength(1)
     expect(calls[0]![1]).toBeCloseTo(50 * 0.8 * 2, 5)
 
-    // Aspect ratio nguồn giữ nguyên (PNG vuông 1254² → width === height).
+    // Aspect ratio nguá»“n giá»¯ nguyÃªn (PNG vuÃ´ng 1254Â² â†’ width === height).
     expect(calls[0]![0]).toBeCloseTo(calls[0]![1], 5)
   })
 
-  it('Boss áp CÙNG quy tắc ×2', () => {
+  it('Boss Ã¡p CÃ™NG quy táº¯c Ã—2', () => {
     const scene = createScene()
     const { sprite, calls } = makeEnemySprite('sprite')
 
@@ -110,11 +110,11 @@ describe('CombatScene — ENEMY_DISPLAY_SCALE_MULTIPLIER ×2', () => {
 
     scene.applyEntityDepthScale(sprite, 1)
 
-    // Kích thước sprite không phân biệt boss/thường — cùng ×2.
+    // KÃ­ch thÆ°á»›c sprite khÃ´ng phÃ¢n biá»‡t boss/thÆ°á»ng â€” cÃ¹ng Ã—2.
     expect(calls[0]![1]).toBeCloseTo(50 * 1 * 2, 5)
   })
 
-  it('resize gọi lại KHÔNG cộng multiplier lặp — cùng input ra cùng kích thước', () => {
+  it('resize gá»i láº¡i KHÃ”NG cá»™ng multiplier láº·p â€” cÃ¹ng input ra cÃ¹ng kÃ­ch thÆ°á»›c', () => {
     const scene = createScene()
     const { sprite, calls } = makeEnemySprite('sprite')
 
@@ -127,7 +127,7 @@ describe('CombatScene — ENEMY_DISPLAY_SCALE_MULTIPLIER ×2', () => {
     expect(calls[0]![1]).toBeCloseTo(80, 5)
   })
 
-  it('spawn fade-in tween (boost 0.7→1) kết thúc đúng kích thước ×2', () => {
+  it('spawn fade-in tween (boost 0.7â†’1) káº¿t thÃºc Ä‘Ãºng kÃ­ch thÆ°á»›c Ã—2', () => {
     const scene = createScene()
     const { sprite, calls } = makeEnemySprite('sprite')
 
@@ -141,8 +141,8 @@ describe('CombatScene — ENEMY_DISPLAY_SCALE_MULTIPLIER ×2', () => {
       },
     }
 
-    // playMaterializeFadeIn đặt boost 0.7 rồi tween về 1 — mỗi bước
-    // projection ghi lại kích thước tuyệt đối (không nhân dồn).
+    // playMaterializeFadeIn Ä‘áº·t boost 0.7 rá»“i tween vá» 1 â€” má»—i bÆ°á»›c
+    // projection ghi láº¡i kÃ­ch thÆ°á»›c tuyá»‡t Ä‘á»‘i (khÃ´ng nhÃ¢n dá»“n).
     sprite.boost.value = 0.7
     scene.applyEntityDepthScale(sprite, 0.8)
     expect(calls[0]![1]).toBeCloseTo(50 * 0.8 * 0.7 * 2, 5)
@@ -151,11 +151,11 @@ describe('CombatScene — ENEMY_DISPLAY_SCALE_MULTIPLIER ×2', () => {
     scene.applyEntityDepthScale(sprite, 0.8)
     expect(calls.at(-1)![1]).toBeCloseTo(50 * 0.8 * 2, 5)
 
-    // Bóng ellipse co giãn theo cùng nhân số ×2 (SHADOW_WIDTH_RATIO 1.12).
+    // BÃ³ng ellipse co giÃ£n theo cÃ¹ng nhÃ¢n sá»‘ Ã—2 (SHADOW_WIDTH_RATIO 1.12).
     expect(sprite.shadow.sizes.at(-1)![0]).toBeCloseTo(40 * 0.8 * 2 * 1.12, 5)
   })
 
-  it('fallback Rectangle giữ kích thước cũ ×1', () => {
+  it('fallback Rectangle giá»¯ kÃ­ch thÆ°á»›c cÅ© Ã—1', () => {
     const scene = createScene()
 
     const updates: Array<{ width?: number; height?: number }> = []

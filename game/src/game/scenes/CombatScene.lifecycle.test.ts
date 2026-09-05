@@ -1,21 +1,21 @@
-// Lifecycle regression (migration gate P1/P5): listener resize đăng ký
-// trên ScaleManager (game-level) bằng anonymous callback từng TÍCH TỤC
-// qua mỗi lần Home → Combat — N listener cùng chạy mỗi resize, scene bị
-// giữ bởi ScaleManager. create() phải dùng handler ổn định + events.once
-// để 10 lần vào/ra vẫn đúng 1 listener active tại mọi thời điểm.
+﻿// Lifecycle regression (migration gate P1/P5): listener resize Ä‘Äƒng kÃ½
+// trÃªn ScaleManager (game-level) báº±ng anonymous callback tá»«ng TÃCH Tá»¤C
+// qua má»—i láº§n Home â†’ Combat â€” N listener cÃ¹ng cháº¡y má»—i resize, scene bá»‹
+// giá»¯ bá»Ÿi ScaleManager. create() pháº£i dÃ¹ng handler á»•n Ä‘á»‹nh + events.once
+// Ä‘á»ƒ 10 láº§n vÃ o/ra váº«n Ä‘Ãºng 1 listener active táº¡i má»i thá»i Ä‘iá»ƒm.
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
-import { CombatScene } from './CombatScene'
-// ?raw import (vite/client types) — đọc source không cần @types/node.
+import { createTestScene } from './combat/combatTestHarness'
+// ?raw import (vite/client types) â€” Ä‘á»c source khÃ´ng cáº§n @types/node.
 import combatSceneSource from './CombatScene.ts?raw'
 
 const VIEWPORT = { width: 1600, height: 900 }
 
 function createSceneWithStubs() {
-  // new CombatScene() (không phải Object.create) — PHẢI chạy constructor
-  // để class field resizeHandler/shutdownHandler có identity thật: test
-  // này verify chính tính "cùng 1 reference qua các lần create" của chúng.
-  const scene = new CombatScene() as any
+  // new CombatScene() (khÃ´ng pháº£i Object.create) â€” PHáº¢I cháº¡y constructor
+  // Ä‘á»ƒ class field resizeHandler/shutdownHandler cÃ³ identity tháº­t: test
+  // nÃ y verify chÃ­nh tÃ­nh "cÃ¹ng 1 reference qua cÃ¡c láº§n create" cá»§a chÃºng.
+  const scene = createTestScene()
 
   const activeResizeListeners = new Set<unknown>()
   const inputOn = vi.fn()
@@ -65,8 +65,8 @@ function createSceneWithStubs() {
   return { scene, activeResizeListeners, inputOn, inputOff, shutdownHandlers }
 }
 
-describe('CombatScene lifecycle — listener không tích lũy qua restart', () => {
-  it('10 lần create → shutdown: mỗi lúc sau create đúng 1 resize listener, sau shutdown về 0', () => {
+describe('CombatScene lifecycle â€” listener khÃ´ng tÃ­ch lÅ©y qua restart', () => {
+  it('10 láº§n create â†’ shutdown: má»—i lÃºc sau create Ä‘Ãºng 1 resize listener, sau shutdown vá» 0', () => {
     const { scene, activeResizeListeners, inputOn, inputOff, shutdownHandlers } =
       createSceneWithStubs()
 
@@ -75,11 +75,11 @@ describe('CombatScene lifecycle — listener không tích lũy qua restart', () 
 
       expect(activeResizeListeners.size).toBe(1)
 
-      // Combat tự động hoàn toàn (yêu cầu 2026-08-26) — KHÔNG đăng ký
-      // bất kỳ input listener nào nữa (hover circle đã gỡ).
+      // Combat tá»± Ä‘á»™ng hoÃ n toÃ n (yÃªu cáº§u 2026-08-26) â€” KHÃ”NG Ä‘Äƒng kÃ½
+      // báº¥t ká»³ input listener nÃ o ná»¯a (hover circle Ä‘Ã£ gá»¡).
       expect(inputOn).not.toHaveBeenCalled()
 
-      // Kích hoạt shutdown handler mà events.once đã đăng ký.
+      // KÃ­ch hoáº¡t shutdown handler mÃ  events.once Ä‘Ã£ Ä‘Äƒng kÃ½.
       const shutdownHandler = shutdownHandlers.at(-1)
 
       expect(shutdownHandler).toBeDefined()
@@ -89,12 +89,12 @@ describe('CombatScene lifecycle — listener không tích lũy qua restart', () 
       expect(inputOff).not.toHaveBeenCalled()
     }
 
-    // 10 chu kỳ = vẫn KHÔNG có input listener nào tích lũy.
+    // 10 chu ká»³ = váº«n KHÃ”NG cÃ³ input listener nÃ o tÃ­ch lÅ©y.
     expect(inputOn).not.toHaveBeenCalled()
     expect(inputOff).not.toHaveBeenCalled()
   })
 
-  it('resize bắn N lần sau khi vào combat — layout chỉ chạy qua listener duy nhất', () => {
+  it('resize báº¯n N láº§n sau khi vÃ o combat â€” layout chá»‰ cháº¡y qua listener duy nháº¥t', () => {
     const { scene, activeResizeListeners } = createSceneWithStubs()
 
     scene.create()
@@ -108,11 +108,11 @@ describe('CombatScene lifecycle — listener không tích lũy qua restart', () 
     listener({ width: 1280, height: 720 })
     listener({ width: 1440, height: 810 })
 
-    // 1 listener × 2 lần bắn = đúng 2 lần layout (không nhân đôi).
+    // 1 listener Ã— 2 láº§n báº¯n = Ä‘Ãºng 2 láº§n layout (khÃ´ng nhÃ¢n Ä‘Ã´i).
     expect(layoutSpy).toHaveBeenCalledTimes(2)
   })
 
-  it('depth là hệ tọa độ ổn định — updateEntityDepths không remap min/max road bounds', () => {
+  it('depth lÃ  há»‡ tá»a Ä‘á»™ á»•n Ä‘á»‹nh â€” updateEntityDepths khÃ´ng remap min/max road bounds', () => {
     const { scene } = createSceneWithStubs()
 
     scene.create()
@@ -120,7 +120,7 @@ describe('CombatScene lifecycle — listener không tích lũy qua restart', () 
     const minBefore = scene.entityFootMinY
     const maxBefore = scene.entityFootMaxY
 
-    // Giả lập spawn/death: sprites thêm/bớt rồi sort lại nhiều frame.
+    // Giáº£ láº­p spawn/death: sprites thÃªm/bá»›t rá»“i sort láº¡i nhiá»u frame.
     scene.sprites.set('a', { footY: 500, columnFloat: 3, rect: { setDepth: vi.fn() } })
     scene.updateEntityDepths()
 
@@ -134,7 +134,7 @@ describe('CombatScene lifecycle — listener không tích lũy qua restart', () 
     expect(scene.entityFootMaxY).toBe(maxBefore)
   })
 
-  it('geometry snapshot cho e2e được ghi vào registry mỗi layout', () => {
+  it('geometry snapshot cho e2e Ä‘Æ°á»£c ghi vÃ o registry má»—i layout', () => {
     const { scene } = createSceneWithStubs()
 
     scene.create()
@@ -154,10 +154,10 @@ describe('CombatScene lifecycle — listener không tích lũy qua restart', () 
     expect(snapshot.roadBottomY).toBeGreaterThan(snapshot.horizonY)
   })
 
-  it('source khóa lifecycle đúng: scale.on/off cùng handler ổn định + events.once', () => {
-    // Stub không mô phỏng được auto-remove của events.once — khóa bằng
-    // source assertion: cấm .on('shutdown') (tích lũy) và anonymous
-    // resize callback (mỗi create một reference mới).
+  it('source khÃ³a lifecycle Ä‘Ãºng: scale.on/off cÃ¹ng handler á»•n Ä‘á»‹nh + events.once', () => {
+    // Stub khÃ´ng mÃ´ phá»ng Ä‘Æ°á»£c auto-remove cá»§a events.once â€” khÃ³a báº±ng
+    // source assertion: cáº¥m .on('shutdown') (tÃ­ch lÅ©y) vÃ  anonymous
+    // resize callback (má»—i create má»™t reference má»›i).
     expect(combatSceneSource).toContain("this.scale.on('resize', this.resizeHandler)")
     expect(combatSceneSource).toContain("this.scale.off('resize', this.resizeHandler)")
     expect(combatSceneSource).toContain("this.events.once('shutdown', this.shutdownHandler)")
@@ -165,9 +165,9 @@ describe('CombatScene lifecycle — listener không tích lũy qua restart', () 
     expect(combatSceneSource).not.toMatch(/scale\.on\('resize', \(/)
   })
 
-  it('onBattleStart phải dọn statuses (icon DoT không sót qua auto-refight)', () => {
-    // onBattleStart phải clear statuses — match body method (source-contract,
-    // cùng giới hạn với các case khác trong file này).
+  it('onBattleStart pháº£i dá»n statuses (icon DoT khÃ´ng sÃ³t qua auto-refight)', () => {
+    // onBattleStart pháº£i clear statuses â€” match body method (source-contract,
+    // cÃ¹ng giá»›i háº¡n vá»›i cÃ¡c case khÃ¡c trong file nÃ y).
     const onBattleStartBody =
       combatSceneSource.match(/onBattleStart\(\) \{[\s\S]*?\n  \}/)?.[0] ?? ''
     expect(onBattleStartBody).toMatch(/statuses/)

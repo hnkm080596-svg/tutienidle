@@ -1,14 +1,14 @@
-// @vitest-environment jsdom
+﻿// @vitest-environment jsdom
 //
-// Renderer 2.5D (plan §12.1): avatar Player LỚN GẤP ĐÔI enemy — cùng
-// depth scale thì kích thước cuối = baseline × depthScale × sizeMultiplier,
-// với sizeMultiplier chỉ áp lên PLAYER sprite (enemy/VFX footprint giữ
-// nguyên), bóng ellipse dưới chân co giãn theo nhân số nhân.
+// Renderer 2.5D (plan Â§12.1): avatar Player Lá»šN Gáº¤P ÄÃ”I enemy â€” cÃ¹ng
+// depth scale thÃ¬ kÃ­ch thÆ°á»›c cuá»‘i = baseline Ã— depthScale Ã— sizeMultiplier,
+// vá»›i sizeMultiplier chá»‰ Ã¡p lÃªn PLAYER sprite (enemy/VFX footprint giá»¯
+// nguyÃªn), bÃ³ng ellipse dÆ°á»›i chÃ¢n co giÃ£n theo nhÃ¢n sá»‘ nhÃ¢n.
 import { describe, expect, it } from 'vitest'
-import { CombatScene } from './CombatScene'
+import { createTestScene } from './combat/combatTestHarness'
 
 function createScene() {
-  const scene = Object.create(CombatScene.prototype) as any
+  const scene = createTestScene('bare')
 
   scene.renderMode = 'perspective'
   scene.projection = undefined
@@ -20,8 +20,8 @@ function createScene() {
   return scene
 }
 
-describe('CombatScene — PLAYER_DISPLAY_SCALE_MULTIPLIER (plan §12.1)', () => {
-  it('player sprite ×2: chiều cao = characterHeight × depthScale × 2', () => {
+describe('CombatScene â€” PLAYER_DISPLAY_SCALE_MULTIPLIER (plan Â§12.1)', () => {
+  it('player sprite Ã—2: chiá»u cao = characterHeight Ã— depthScale Ã— 2', () => {
     const scene = createScene()
 
     const setSizeCalls: Array<[number, number]> = []
@@ -48,7 +48,7 @@ describe('CombatScene — PLAYER_DISPLAY_SCALE_MULTIPLIER (plan §12.1)', () => 
     expect(setSizeCalls[0]![1]).toBeCloseTo(50 * 0.8 * 2, 5)
   })
 
-  it('enemy rectangle ×1: KHÔNG bị nhân đôi footprint', () => {
+  it('enemy rectangle Ã—1: KHÃ”NG bá»‹ nhÃ¢n Ä‘Ã´i footprint', () => {
     const scene = createScene()
 
     const updates: Array<{ width?: number; height?: number }> = []
@@ -77,7 +77,7 @@ describe('CombatScene — PLAYER_DISPLAY_SCALE_MULTIPLIER (plan §12.1)', () => 
     expect(enemyRect.height).toBeCloseTo(50 * 0.8 * 1, 5)
   })
 
-  it('shadow ellipse của player co giãn theo ×2, của enemy giữ ×1', () => {
+  it('shadow ellipse cá»§a player co giÃ£n theo Ã—2, cá»§a enemy giá»¯ Ã—1', () => {
     const scene = createScene()
 
     const setSizeCalls: Array<[number, number]> = []

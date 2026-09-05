@@ -3,18 +3,17 @@ import { onMounted, onUnmounted, provide, ref } from 'vue'
 import { usePlayerStore } from './stores/player'
 import { useUiStore } from './stores/ui'
 import { GameClock, DEFAULT_MAX_OFFLINE_SECONDS } from './core/idle/GameClock'
-import { TICK_INTERVAL_MS } from './core/idle/SpeedSettings'
 import { GameManager } from './core/game/GameManager'
 import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from './composables/useGameState'
 import { checkTribulationOutcomeAction } from './composables/useTribulation'
 import { isBattleInProgress } from './core/battle/BattleTypes'
-import { ESSENCE_STREAM_ARRIVAL_EVENT } from './core/battle/BattleEvents'
 import { useBreakthrough } from './composables/useBreakthrough'
 import { useElectronBridge } from './composables/useElectronBridge'
 import { useNotificationStore } from './stores/notification'
 import { useOfflineSummaryStore } from './stores/offlineSummary'
 import { useSaveIssueStore } from './stores/saveIssue'
 import { savePersistedUiAutomationFlags } from './stores/uiFlagsPersistence'
+import { useAppLifecycle } from './composables/useAppLifecycle'
 import GameRoot from './components/layout/GameRoot.vue'
 import LoadingScreen from './components/common/LoadingScreen.vue'
 import ErrorBoundary from './components/common/ErrorBoundary.vue'
@@ -160,53 +159,44 @@ provide(GAME_MANAGER_KEY, gameManager)
 provide(STATE_VERSION_KEY, stateVersion)
 provide(BUMP_STATE_KEY, bumpState)
 
-let tickHandle: number | undefined
-let autosaveHandle: number | undefined
-let saveInFlight = false
-let suppressPersistence = false
-const AUTOSAVE_INTERVAL_MS = 15_000
-
-// ================= Tinh hoa tuôn chảy (2026-08-30) =================
-// Tinh Hoa Phàm Thể rơi từ quái phát stream particle bay về người chơi
-// (combat-essence-stream.ts); mote cuối chạm player → scene phát
-// 'essence_stream_arrival' → tick() kế tiếp gọi investBodyRefinement().
-//
-// Headless fallback (farm nền/tab ẩn/không CombatScene): essence event
-// vẫn emit từ core nhưng KHÔNG AI render → không có arrival. Nếu essence
-// được emit mà sau HEADLESS_TIMEOUT_MS vẫn chưa thấy arrival, tick coi
-// scene không render và invest trực tiếp. investBodyRefinement tự gate
-// (hết tầng → consumed 0) nên gọi thừa vô hại.
-let essenceEmitted = false
-let essenceArrivalSeen = false
-let lastEssenceEmitTime = 0
-const HEADLESS_TIMEOUT_MS = 2000
-
-gameManager.eventBus.on<void>(ESSENCE_STREAM_ARRIVAL_EVENT, () => {
-  essenceArrivalSeen = true
-})
-
-gameManager.eventBus.on<{ kind: string }>('reward_particle', (event) => {
-  if (event.kind === 'essence') {
-    essenceEmitted = true
-    lastEssenceEmitTime = performance.now()
-  }
-})
-
-// Cảnh báo autosave fail chỉ 1 lần cho mỗi chuỗi fail — autosave chạy
-// mỗi 15s nên nếu toast mỗi tick thì spam; reset cờ khi ghi thành công
-// lại để chuỗi fail kế tiếp vẫn được báo.
-let saveFailureNotified = false
-
-async function persistProgress() {
-  if (suppressPersistence || entryStage.value !== 'game' || saveInFlight) {
-    return
-  }
-
-  saveInFlight = true
-
-  try {
+// Remediation Task 5 (2026-09-05) — lifecycle idempotence extract sang
+// useAppLifecycle.ts (tick/autosave interval guard, bootInFlight guard,
+// symmetric event-bus/DOM listener cleanup). App.vue giữ phần tick có
+// phụ thuộc UI (cultivate/bumpState/notification dedupe).
+const lifecycle = useAppLifecycle({
+  clock,
+  scheduleInterval: (callback, timeoutMs) => window.setInterval(callback, timeoutMs),
+  clearHandle: (handle) => window.clearInterval(handle),
+  addEventListener: (type, handler) => {
+    if (type === 'visibilitychange') {
+      document.addEventListener(type, handler as EventListener)
+    } else {
+      window.addEventListener(type, handler as EventListener)
+    }
+  },
+  removeEventListener: (type, handler) => {
+    if (type === 'visibilitychange') {
+      document.removeEventListener(type, handler as EventListener)
+    } else {
+      window.removeEventListener(type, handler as EventListener)
+    }
+  },
+  boot: bootFlow,
+  coordinator: cloudSaveCoordinator,
+  player,
+  gameManager,
+  offlineSummary,
+  saveIssue,
+  entryStage,
+  // Composable giữ player dạng loose (không import Pinia store type vào
+  // core-facing signature) — cast TẠI BIÊN này khớp đúng loại thật.
+  restoreGameSession: (playerOwner, manager, save) =>
+    restoreGameSession(playerOwner as Parameters<typeof restoreGameSession>[0], manager, save as Parameters<typeof restoreGameSession>[2]),
+  persistPlayer: async () => {
     const result = await player.save(gameManager)
 
+    // Cảnh báo autosave fail chỉ 1 lần cho mỗi chuỗi fail — reset cờ khi
+    // ghi thành công lại để chuỗi fail kế tiếp vẫn được báo.
     if (result.status !== 'ok' && !saveFailureNotified) {
       saveFailureNotified = true
       notification.push('error', 'Không lưu được tiến trình — bộ nhớ trình duyệt đầy. Hãy hóa luyện bớt trang bị.')
@@ -214,46 +204,25 @@ async function persistProgress() {
     } else if (result.status === 'ok') {
       saveFailureNotified = false
     }
-  } catch (error: unknown) {
-    console.error('[autosave] unexpected save failure', error)
-  } finally {
-    saveInFlight = false
-  }
-}
 
-function onVisibilityChange() {
-  if (document.visibilityState === 'hidden') {
-    void persistProgress()
-  }
-}
+    return result
+  },
+  onError: (message) => {
+    bootError.value = message
+  },
+})
 
-function onPageHide() {
-  void persistProgress()
-}
+// Cảnh báo autosave fail chỉ 1 lần cho mỗi chuỗi fail — autosave chạy
+// mỗi 15s nên nếu toast mỗi tick thì spam; reset cờ khi ghi thành công
+// lại để chuỗi fail kế tiếp vẫn được báo.
+let saveFailureNotified = false
 
-function startAutosave() {
-  if (autosaveHandle !== undefined) {
-    return
-  }
-
-  autosaveHandle = window.setInterval(() => void persistProgress(), AUTOSAVE_INTERVAL_MS)
-  document.addEventListener('visibilitychange', onVisibilityChange)
-  window.addEventListener('pagehide', onPageHide)
-}
-
-function stopAutosave() {
-  if (autosaveHandle !== undefined) {
-    clearInterval(autosaveHandle)
-    autosaveHandle = undefined
-  }
-
-  document.removeEventListener('visibilitychange', onVisibilityChange)
-  window.removeEventListener('pagehide', onPageHide)
+function persistProgress() {
+  void lifecycle.persistProgress()
 }
 
 function resetSaveFromSettings() {
-  suppressPersistence = true
-  stopAutosave()
+  lifecycle.suppressPersistence()
   deleteSave()
   window.location.reload()
 }
@@ -326,9 +295,9 @@ function tick() {
     // 2. essenceEmitted lâu quá chưa thấy arrival → headless → invest
     //    (CombatScene không chạy, hoặc bail vì thiếu nguồn).
     // 3. Cả hai đều drain qua investBodyRefinement() — tự gate.
-    if (essenceArrivalSeen) {
-      essenceArrivalSeen = false
-      essenceEmitted = false
+    // State sống trong lifecycle composable (handlers đăng ký một lần);
+    // tick đọc + reset qua getter/setter expose.
+    if (lifecycle.consumeEssenceArrival()) {
       const consumed = gameManager.investBodyRefinement(player.$state)
 
       if (consumed > 0) {
@@ -336,8 +305,8 @@ function tick() {
       }
     }
 
-    if (!essenceArrivalSeen && essenceEmitted && performance.now() - lastEssenceEmitTime > HEADLESS_TIMEOUT_MS) {
-      essenceEmitted = false
+    if (lifecycle.isEssenceHeadlessTimedOut()) {
+      lifecycle.clearEssenceEmitted()
       const consumed = gameManager.investBodyRefinement(player.$state)
 
       if (consumed > 0) {
@@ -374,7 +343,9 @@ function tick() {
 }
 
 function startTickLoop() {
-  tickHandle = window.setInterval(tick, TICK_INTERVAL_MS)
+  // Remediation Task 5 — composable guard: gọi lại khi interval đã chạy
+  // là no-op (không leak interval cũ như trước đây).
+  lifecycle.startTickLoop(tick)
 }
 
 async function bootGame(createNewCharacter = false) {
@@ -383,159 +354,75 @@ async function bootGame(createNewCharacter = false) {
   // hiện được. Idempotent: gọi lại khi menu đã ẩn là no-op.
   showMainMenu.value = false
 
-  bootFlow.startSaveLoad()
+  // Remediation Task 5 — bootInFlight guard trong composable: boot thứ 2
+  // khi boot đầu còn pending bị skip; guard reset khi fail để retry chạy
+  // được. Phần dưới chỉ xử lý UI hiển thị theo outcome.
+  const outcome = await lifecycle.bootGame({
+    createNewCharacter,
+    onRestoreOk: (offline) => {
+      // Fix (2026-08-20) — grant "Trảm" save cũ (idempotent).
+      if (!gameManager.skillManager.has('tram')) {
+        gameManager.learnSkill('tram')
+        gameManager.setSkillLoadoutSlot(player.$state, 0, 'tram')
+      } else if (!gameManager.skillManager.getEquippedInSlot(0)) {
+        gameManager.setSkillLoadoutSlot(player.$state, 0, 'tram')
+      }
 
-  // Nhân vật mới không được bỏ qua coordinator — reset() bảo đảm revision
-  // nội bộ về 0 khớp với storage (deleteSave() đã xoá revision key), nếu
-  // không lần save đầu tiên có thể CAS-fail với revision cũ tồn dư.
-  let loaded
-  if (createNewCharacter) {
-    cloudSaveCoordinator.reset()
-    loaded = { status: 'empty' as const, revision: 0 as const }
-  } else {
-    loaded = await cloudSaveCoordinator.load()
-  }
-
-  if (loaded.status === 'unavailable') {
-    bootError.value = loaded.message
-    bootFlow.fail()
-    return
-  }
-
-  // Phase 5 (Reliability, mục XVI) — save đọc được nhưng version
-  // không khớp / JSON hỏng KHÔNG được coi như "chưa từng có save".
-  // Chặn boot lại đây, để SaveIncompatibleScreen quyết thay vì âm
-  // thầm tạo nhân vật mới đè lên tiến trình cũ ở lần save() kế tiếp.
-  if (loaded.status === 'incompatible' || loaded.status === 'corrupted') {
-    saveIssue.report(
-      loaded.status,
-      loaded.raw,
-      loaded.status === 'incompatible' ? loaded.foundVersion : undefined,
-    )
-    bootFlow.fail()
-    return
-  }
-
-  if (loaded.status === 'empty' && !createNewCharacter) {
-    bootFlow.requireCharacter()
-    return
-  }
-
-  bootFlow.startInitializing()
-
-  if (loaded.status === 'ok') {
-    // registerXxx() ở trên đã chạy trước onMounted (module-level
-    // trong <script setup>). Coordinator preflight registry references
-    // TRƯỚC Pinia/active-player/manager mutation, rồi mới restore các owner.
-    const restored = restoreGameSession(player, gameManager, loaded.save)
-
-    if (restored.status === 'rejected') {
-      bootError.value = restored.message
-      bootFlow.fail()
-      return
-    }
-
-    const { offline } = restored
-
-    // Fix (2026-08-20) — "Trảm" trước đây CHỈ được cấp ở nhánh nhân vật
-    // mới bên dưới, restoreFromSave() chỉ re-add skill đã CÓ SẴN trong
-    // save.skills. Save tạo trước khi grant này tồn tại (hoặc bất kỳ lý
-    // do gì thiếu tram) sẽ kẹt ở Phàm Nhân không có đòn đánh nào — Phàm
-    // Nhân chưa có Skill Loadout UI để tự sửa. Idempotent, an toàn no-op
-    // với save đã có sẵn skill này.
-    // Execution policy rework (combat-gate-teleport-autocast plan §8.6):
-    // scheduler chỉ đọc loadout → Trảm được GÁN VÀO slot mặc định (slot
-    // 0) thay vì equip không slot như trước.
-    if (!gameManager.skillManager.has('tram')) {
+      // Beta Phase 4 (mục XIV) — chỉ hiện modal nếu offline đủ dài.
+      if (offline.elapsedSeconds > 60) {
+        offlineSummary.show({
+          elapsedSeconds: offline.elapsedSeconds,
+          cultivation: offline.cultivation,
+        })
+      }
+    },
+    onNewCharacter: () => {
+      // Nhân vật mới: học sẵn tâm pháp + skill + grant khởi đầu.
+      gameManager.learnTechnique('tu_linh_quyet')
+      gameManager.equipTechnique('tu_linh_quyet')
       gameManager.learnSkill('tram')
       gameManager.setSkillLoadoutSlot(player.$state, 0, 'tram')
-    } else if (!gameManager.skillManager.getEquippedInSlot(0)) {
-      gameManager.setSkillLoadoutSlot(player.$state, 0, 'tram')
-    }
 
-    // Beta Phase 4 (mục XIV) — chỉ hiện modal nếu offline đủ dài
-    // (>60s, tránh phiền khi refresh nhanh) — thay console.log cũ.
-    if (offline.elapsedSeconds > 60) {
-      offlineSummary.show({
-        elapsedSeconds: offline.elapsedSeconds,
-        cultivation: offline.cultivation,
-      })
-    }
-  } else {
-    // Nhân vật mới: học sẵn + trang bị tâm pháp tu luyện cơ bản, nếu
-    // không sẽ không có công pháp nào ở slot tu luyện để
-    // syncRealmPassive() tra passiveSkillIdsByRealm khi đột phá.
-    gameManager.learnTechnique('tu_linh_quyet')
-    gameManager.equipTechnique('tu_linh_quyet')
+      for (const buildingId of ['teleport_array', 'gathering_outpost']) {
+        const instance = {
+          instanceId: crypto.randomUUID(),
+          buildingId,
+          level: 1,
+          lastCollectedAt: clock.nowSeconds(),
+        }
 
-    // Phàm Nhân (2026-08-16) — Tụ Linh Quyết không mang theo skill
-    // chiến đấu nào (thuần tu luyện), nhưng nhân vật vẫn cần đánh được
-    // 10 Động trước khi chọn Pháp Tu/Kiếm Tu — cấp sẵn "Trảm" làm đòn
-    // đánh mặc định. Execution policy rework (plan §8.6): gán vào slot
-    // mặc định 0; sau khi chọn path, skill slot 0 của kit tự GHI ĐÈ qua
-    // equipToSlot() (dời skill cũ khỏi slot).
-    gameManager.learnSkill('tram')
-    gameManager.setSkillLoadoutSlot(player.$state, 0, 'tram')
-
-    // Truyền Tống Trận/Khai Thác rework (theo yêu cầu — "mặc định có,
-    // không thì làm sao có nguyên liệu") — 2 Building này giờ granted
-    // SẴN cho nhân vật mới, không cần build() thủ công (khác 4 building
-    // Tứ Nghệ và các resource building khác, vẫn phải xây bình thường).
-    // Add THẲNG qua buildingManager (bỏ qua canBuild/cost) — đây là
-    // grant khởi tạo, không phải hành động build của người chơi.
-    for (const buildingId of ['teleport_array', 'gathering_outpost']) {
-      const instance = {
-        instanceId: crypto.randomUUID(),
-        buildingId,
-        level: 1,
-        lastCollectedAt: clock.nowSeconds(),
+        gameManager.buildingManager.add(instance)
+        gameManager.refreshAutoWorkerCapacity(player.$state, instance)
       }
 
-      gameManager.buildingManager.add(instance)
-      // Grant thẳng bỏ qua buildBuilding() nên KHÔNG tự chạy
-      // refreshAutoWorkerCapacity() như đường build bình thường — gọi
-      // tay ở đây, nếu không gathering_outpost cấp 1 để lại
-      // autoWorkerCapacity = 0 (nhân vật mới có outpost nhưng 0 công nhân).
-      gameManager.refreshAutoWorkerCapacity(player.$state, instance)
-    }
-
-    // Fix "không có cách nào để xây Linh Tuyền/Khí Đường/Đan Phòng"
-    // (yêu cầu 2026-08-26): 3 công trình này tốn mortal_wood/mortal_ore_hoang
-    // mà nhân vật mới bắt đầu với bag RỖNG — người chơi không thể có
-    // nguyên liệu nếu chưa biết phải vào Sản Xuất bấm chu kỳ thủ công.
-    // (1) Starter pack đủ xây cả 3 base (13 gỗ + 4 quáng cần thiết):
-    for (const [materialId, amount] of [
-      ['mortal_wood', 15],
-      ['mortal_ore_hoang', 6],
-    ] as const) {
-      if (gameManager.materialRegistry.has(materialId)) {
-        gameManager.materialBag.add(gameManager.materialRegistry.get(materialId), amount)
+      // Starter pack đủ xây 3 base (Linh Tuyền/Khí Đường/Đan Phòng).
+      for (const [materialId, amount] of [
+        ['mortal_wood', 15],
+        ['mortal_ore_hoang', 6],
+      ] as const) {
+        if (gameManager.materialRegistry.has(materialId)) {
+          gameManager.materialBag.add(gameManager.materialRegistry.get(materialId), amount)
+        }
       }
-    }
 
-    // (2) Ba nguồn Thanh Vân tự chạy + autoRestart — nguyên liệu trickle
-    // về bag liên tục thay vì đợi người chơi khởi động từng chu kỳ.
-    for (const definition of gameManager.productionSystem.getSiteDefinitions()) {
-      gameManager.setProductionAutoRestart(definition.siteId, true)
+      // 3 nguồn Thanh Vân tự chạy + autoRestart.
+      for (const definition of gameManager.productionSystem.getSiteDefinitions()) {
+        gameManager.setProductionAutoRestart(definition.siteId, true)
+        gameManager.startProductionCycle(definition.siteId, player.$state)
+      }
 
-      gameManager.startProductionCycle(definition.siteId, player.$state)
-    }
+      gameManager.setActivePlayer(player.$state)
+    },
+  })
 
-    // Nhân vật mới — đăng ký player cho timed effect authority.
-    gameManager.setActivePlayer(player.$state)
+  if (outcome.status === 'entered') {
+    // No-op ngay nếu không chạy trong Electron (window.electronAPI không
+    // tồn tại ở bản web) — xem composables/useElectronBridge.ts.
+    useElectronBridge(gameManager)
+
+    isBooted.value = true
+    lifecycle.startAutosave()
   }
-
-  clock.start()
-
-  startTickLoop()
-
-  // No-op ngay nếu không chạy trong Electron (window.electronAPI không
-  // tồn tại ở bản web) — xem composables/useElectronBridge.ts.
-  useElectronBridge(gameManager)
-
-  isBooted.value = true
-  bootFlow.enterGame()
-  startAutosave()
 }
 
 function onAuthenticated() {
@@ -572,21 +459,19 @@ onMounted(() => {
 onUnmounted(() => {
   // Vite HMR also unmounts this component. Persist first so a development
   // reload cannot roll the player back to an old manual save.
-  if (!suppressPersistence) {
+  if (!lifecycle.isPersistenceSuppressed()) {
     void persistProgress()
   }
 
   clock.stop()
 
-  if (tickHandle) {
-    clearInterval(tickHandle)
-  }
-
   if (introHandle) {
     clearTimeout(introHandle)
   }
 
-  stopAutosave()
+  // Remediation Task 5 — symmetric cleanup: event-bus handlers, DOM
+  // listeners, tick + autosave intervals (idempotent, gọi lại an toàn).
+  lifecycle.stopAll()
   window.removeEventListener(SAVE_RESET_REQUEST_EVENT, resetSaveFromSettings)
 })
 </script>

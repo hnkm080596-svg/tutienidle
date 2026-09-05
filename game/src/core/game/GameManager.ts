@@ -18,6 +18,7 @@ import { grantRealmPassive } from '../realm/RealmPassiveSystem'
 import { getAlchemySuccessBonusPercentPoints, getReactionKeepChance, collectTalentEffects } from '../talent/TalentEffects'
 import { TALENT_PASSIVE_SKILLS, getTalentPassiveSkill } from '../../data/skill/TalentPassives'
 import { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
+import { DEFAULT_MAX_OFFLINE_SECONDS } from '../idle/GameClock'
 
 import { BuffPool } from '../buff/BuffPool'
 import { BuffSystem } from '../buff/BuffSystem'
@@ -2563,6 +2564,26 @@ export class GameManager {
   /** Đã áp damage, chờ acknowledgeActionComplete(). */
   private pendingImpact: { actor: TurnBattleParticipant; declared: TurnDeclaredAction; targetIds: string[] } | null = null
 
+  // Remediation Task 1 (2026-09-05) — playback token: mỗi lần phase tiến
+  // tới 'ready' sinh 1 token mới; stale ack (token cũ) là no-op, chặn
+  // callback Phaser muộn đụng action/battle khác (cross-battle mutation).
+  private playbackToken = ''
+  private playbackTokenSeq = 0
+
+  private nextPlaybackToken(): string {
+    this.playbackTokenSeq += 1
+    this.playbackToken = `playback-${this.playbackTokenSeq}`
+
+    return this.playbackToken
+  }
+
+  /** Test/UI đọc token hiện tại của phase đang chờ (null nếu không pending). */
+  getPendingPlaybackToken(): string | null {
+    return this.pendingReadyActor !== null || this.pendingDeclaredAction !== null || this.pendingImpact !== null
+      ? this.playbackToken
+      : null
+  }
+
   setPresentationActive(active: boolean): void {
     this.presentationActive = active
 
@@ -2609,7 +2630,12 @@ export class GameManager {
   }
 
   /** Phaser gọi khi ready flourish xong → declare action, phát 'attack'. */
-  acknowledgeTurnReady(): void {
+  acknowledgeTurnReady(token?: string): void {
+    // Remediation Task 1 — stale token (khớp token của action cũ) là no-op.
+    if (token !== undefined && token !== this.playbackToken) {
+      return
+    }
+
     if (!this.pendingReadyActor || !this.turnBattle) {
       return
     }
@@ -2630,7 +2656,12 @@ export class GameManager {
   }
 
   /** Phaser gọi tại impact frame (lunge tween xong) → áp damage, phát VFX. */
-  acknowledgeActionImpact(): void {
+  acknowledgeActionImpact(token?: string): void {
+    // Remediation Task 1 — stale token là no-op.
+    if (token !== undefined && token !== this.playbackToken) {
+      return
+    }
+
     if (!this.pendingDeclaredAction || !this.turnBattle) {
       return
     }
@@ -2674,7 +2705,12 @@ export class GameManager {
   }
 
   /** Phaser gọi khi VFX tween xong → turn cleanup, phát standby tail. */
-  acknowledgeActionComplete(): void {
+  acknowledgeActionComplete(token?: string): void {
+    // Remediation Task 1 — stale token là no-op.
+    if (token !== undefined && token !== this.playbackToken) {
+      return
+    }
+
     if (!this.pendingImpact || !this.turnBattle) {
       return
     }
@@ -3221,6 +3257,12 @@ export class GameManager {
    * combat được nhận reward offline (chùng nguyên tắc Production catch-up).
    * Cùng chu kỳ online (perfectClearSeconds/2); leftover dư giữ lại qua
    * lastCheckedMs tiến đúng phần đã settle.
+   *
+   * Remediation Task 3 (2026-09-05) — BOUNDED settlement:
+   * - elapsedOfflineSeconds clamp theo DEFAULT_MAX_OFFLINE_SECONDS (24h —
+   *   NGUỒN DUY NHẤT GameClock, không tự chế cap thứ hai).
+   * - cycleSeconds <= 0 / non-finite → no-op an toàn (chặn Infinity cycles
+   *   từ malformed save — evidence: infinite-loop timeout trong test).
    */
   settleAutoFarmOffline(player: PlayerData, elapsedOfflineSeconds: number): void {
     const autoFarm = player.autoFarmStage
@@ -3231,12 +3273,18 @@ export class GameManager {
 
     const cycleSeconds = player.perfectClearSeconds[autoFarm.stageId]
 
-    if (cycleSeconds === undefined) {
+    if (cycleSeconds === undefined || !(cycleSeconds > 0) || !Number.isFinite(cycleSeconds)) {
       return
     }
 
+    // Clamp theo trần offline chuẩn của game (GameClock 24h).
+    const cappedElapsedSeconds = Math.min(
+      Math.max(0, elapsedOfflineSeconds),
+      DEFAULT_MAX_OFFLINE_SECONDS,
+    )
+
     const cycleMs = (cycleSeconds / 2) * 1000
-    const elapsedMs = elapsedOfflineSeconds * 1000
+    const elapsedMs = cappedElapsedSeconds * 1000
     const completedCycles = Math.floor(elapsedMs / cycleMs)
 
     if (completedCycles <= 0) {
@@ -3538,7 +3586,10 @@ export class GameManager {
             const readyActor = this.turnBattleSystem.tickPacing(this.turnBattle, !this.presentationActive)
 
             if (readyActor !== null && this.presentationActive) {
+              // Remediation Task 1 — token mới cho phase ready mới; mọi
+              // callback cũ giữ token này sẽ trở thành stale (no-op).
               this.pendingReadyActor = readyActor
+              this.playbackToken = this.nextPlaybackToken()
 
               emitTurnReady(this.eventBus, readyActor.id)
             } else if (readyActor !== null && this.turnBattle.players.includes(readyActor) && this.battleManualMode && !this.awaitedManualActor) {

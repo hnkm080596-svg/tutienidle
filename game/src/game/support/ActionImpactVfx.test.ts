@@ -3,7 +3,7 @@
 // (ground + upright) và ĐÚNG 1 tween timeline. Multi-hit là state bên
 // trong instance, không phải thêm GameObject.
 // @vitest-environment jsdom
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { createBattleGridProjection } from './BattleGridProjection'
 import { computeUprightRadius, spawnActionImpactVfx } from './ActionImpactVfx'
 import { COMBAT_VFX_PRESETS } from '@/data/vfx/CombatVfxPresets'
@@ -169,5 +169,130 @@ describe('spawnActionImpactVfx — một action = một VFX instance', () => {
     // Footprint polygon thuần từ projection + area — KHÔNG phụ thuộc
     // preset/areaScale (decal phải khớp vùng damage gameplay 1:1).
     expect(PROJECTION.footprintPolygon(AREA)).toEqual(PROJECTION.footprintPolygon(AREA))
+  })
+})
+
+// Remediation Task 2 — spawnActionImpactVfx exposes a completion handle:
+// the caller (CombatScene) acknowledges the engine from the TWEEN's
+// onComplete — not from a duplicated duration calculation. destroy() đúng
+// 1 lần cho MỖI graphics (ground/upright), callback fire đúng 1 lần.
+describe('spawnActionImpactVfx — completion handle (Remediation Task 2)', () => {
+  it('trả về completion handle; onComplete fires từ tween onComplete (đúng 1 lần)', () => {
+    const { scene, tweens } = createSceneStub()
+
+    let completed = 0
+    const handle = spawnActionImpactVfx(
+      {
+        scene,
+        projection: PROJECTION,
+        area: AREA,
+        anchorCell: ANCHOR,
+        preset: COMBAT_VFX_PRESETS.slash,
+        pulses: 1,
+        uprightDepth: 450,
+      },
+      () => {
+        completed += 1
+      },
+    )
+
+    expect(handle).toBeDefined()
+    expect(typeof handle.complete).toBe('function')
+    expect(completed).toBe(0)
+
+    // Tween của Phaser gọi onComplete khi timeline xong — mô phỏng.
+    ;(tweens[0]!.onComplete as () => void)()
+
+    expect(completed).toBe(1)
+  })
+
+  it('handle.complete() gọi thủ công cũng complete đúng 1 lần (idempotent, destroy đúng 1 lần)', () => {
+    const { scene, tweens } = createSceneStub()
+
+    const destroyCalls: string[] = []
+    const sceneWithDestroyTracking = {
+      add: {
+        graphics: () => {
+          const gfx = chainableGraphics() as Record<string, unknown> & { destroy: () => void }
+
+          gfx.destroy = () => {
+            destroyCalls.push('destroy')
+          }
+
+          return gfx
+        },
+      },
+      tweens: { add: (config: Record<string, unknown>) => tweens.push(config) },
+    } as unknown as import('phaser').Scene
+
+    let completed = 0
+    const handle = spawnActionImpactVfx(
+      {
+        scene: sceneWithDestroyTracking,
+        projection: PROJECTION,
+        area: AREA,
+        anchorCell: ANCHOR,
+        preset: COMBAT_VFX_PRESETS.fire_burst, // hybrid → ground + upright
+        pulses: 1,
+        uprightDepth: 450,
+      },
+      () => {
+        completed += 1
+      },
+    )
+
+    handle.complete()
+    handle.complete()
+
+    // Tween onComplete chạy SAU handle.complete() — vẫn không fire lại.
+    ;(tweens[0]!.onComplete as () => void)()
+
+    expect(completed).toBe(1)
+    // hybrid = 2 Graphics (ground + upright), mỗi cái destroy ĐÚNG 1 lần.
+    expect(destroyCalls).toHaveLength(2)
+  })
+
+  it('không có callback — handle vẫn hoạt động, graphics vẫn destroy', () => {
+    const { scene, tweens } = createSceneStub()
+
+    const handle = spawnActionImpactVfx({
+      scene,
+      projection: PROJECTION,
+      area: AREA,
+      anchorCell: ANCHOR,
+      preset: COMBAT_VFX_PRESETS.earth_shockwave,
+      pulses: 1,
+      uprightDepth: 450,
+    })
+
+    expect(() => handle.complete()).not.toThrow()
+    expect(tweens).toHaveLength(1)
+  })
+
+  it('vi.handle.complete() trước khi tween xong → tween onComplete sau đó KHÔNG fire lại callback', () => {
+    const { scene, tweens } = createSceneStub()
+
+    let completed = 0
+    const handle = spawnActionImpactVfx(
+      {
+        scene,
+        projection: PROJECTION,
+        area: AREA,
+        anchorCell: ANCHOR,
+        preset: COMBAT_VFX_PRESETS.slash,
+        pulses: 1,
+        uprightDepth: 450,
+      },
+      () => {
+        completed += 1
+      },
+    )
+
+    handle.complete()
+    expect(completed).toBe(1)
+
+    // Giả lập tween vẫn chạy xong sau đó.
+    ;(tweens[0]!.onComplete as () => void)()
+    expect(completed).toBe(1)
   })
 })

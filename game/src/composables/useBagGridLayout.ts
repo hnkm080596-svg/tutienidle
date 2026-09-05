@@ -1,4 +1,4 @@
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { calculateBagGridLayout, GRID_GAP, MIN_COLUMNS, MIN_ROWS, type BagGridLayout } from '@/core/ui/SlotSizes'
 
 /**
@@ -8,6 +8,13 @@ import { calculateBagGridLayout, GRID_GAP, MIN_COLUMNS, MIN_ROWS, type BagGridLa
  * đổi kích thước (resize cửa sổ, panel, ...), KHÔNG chỉ tính 1 lần lúc
  * mount. Trước khi ResizeObserver bắn lần đầu, layout tạm dùng
  * MIN_COLUMNS/MIN_ROWS làm fallback (không NaN/0 cột).
+ *
+ * Remediation Task 4 (2026-09-05) — grid có thể nằm trong v-if/tab nên
+ * KHÔNG tồn tại lúc onMounted (bag section chỉ render khi tab active).
+ * Watch `gridRef` (immediate) để attach KHI ref được gán — bất kể lúc
+ * nào trong đời component; observer cũ disconnect khi ref đổi (grid
+ * unmount/remount), cleanup cả watcher + observer khi unmount. Cùng
+ * pattern usePanelPagination (audit H4 2026-08-31).
  */
 export function useBagGridLayout() {
   const gridRef = ref<HTMLElement | null>(null)
@@ -16,8 +23,9 @@ export function useBagGridLayout() {
 
   let observer: ResizeObserver | null = null
 
-  onMounted(() => {
-    const el = gridRef.value
+  const stopGridWatch = watch(gridRef, (el) => {
+    observer?.disconnect()
+    observer = null
 
     if (!el) {
       return
@@ -34,9 +42,10 @@ export function useBagGridLayout() {
     })
 
     observer.observe(el)
-  })
+  }, { immediate: true })
 
   onBeforeUnmount(() => {
+    stopGridWatch()
     observer?.disconnect()
     observer = null
   })

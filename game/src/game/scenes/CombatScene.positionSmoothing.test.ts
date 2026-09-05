@@ -1,21 +1,21 @@
-// @vitest-environment jsdom
+﻿// @vitest-environment jsdom
 //
-// electron-combat-timing-smoothing-plan.md mục 4/5/11 — BattleSystem có
-// thể emit nhiều event 'positions' ĐỒNG BỘ trong 1 outer tick (fixed-step
-// catch-up + snapshot-trước-attack/snapshot-cuối-update). Trước đây
-// onPositions() gọi setInterpolationTarget() NGAY cho mọi event, khiến
-// đoạn nội suy cuối cùng ghi đè các đoạn trước bằng cadence gần 0ms
-// (this.time.now không đổi giữa các lệnh gọi đồng bộ trong cùng 1 frame
-// Phaser). Test này gọi THẲNG method private thật (cùng pattern
-// CombatScene.projectile.test.ts) để bug tương tự tái diễn sẽ bị bắt lại.
+// electron-combat-timing-smoothing-plan.md má»¥c 4/5/11 â€” BattleSystem cÃ³
+// thá»ƒ emit nhiá»u event 'positions' Äá»’NG Bá»˜ trong 1 outer tick (fixed-step
+// catch-up + snapshot-trÆ°á»›c-attack/snapshot-cuá»‘i-update). TrÆ°á»›c Ä‘Ã¢y
+// onPositions() gá»i setInterpolationTarget() NGAY cho má»i event, khiáº¿n
+// Ä‘oáº¡n ná»™i suy cuá»‘i cÃ¹ng ghi Ä‘Ã¨ cÃ¡c Ä‘oáº¡n trÆ°á»›c báº±ng cadence gáº§n 0ms
+// (this.time.now khÃ´ng Ä‘á»•i giá»¯a cÃ¡c lá»‡nh gá»i Ä‘á»“ng bá»™ trong cÃ¹ng 1 frame
+// Phaser). Test nÃ y gá»i THáº²NG method private tháº­t (cÃ¹ng pattern
+// CombatScene.projectile.test.ts) Ä‘á»ƒ bug tÆ°Æ¡ng tá»± tÃ¡i diá»…n sáº½ bá»‹ báº¯t láº¡i.
 import { describe, expect, it, vi } from 'vitest'
-import { CombatScene } from './CombatScene'
+import { createTestScene } from './combat/combatTestHarness'
 import type { BattlePositionsEvent } from '@/core/battle/BattleEvents'
 
 // Stub Phaser GameObject chainable API (setOrigin/setPosition/setSize/
-// updateDisplayOrigin/setStrokeStyle/setDisplaySize/play...) mà không
-// cần liệt kê từng method — mọi method trả về CHÍNH object đó (chainable),
-// property gán/đọc được như object thường (width/height/x/y/active...).
+// updateDisplayOrigin/setStrokeStyle/setDisplaySize/play...) mÃ  khÃ´ng
+// cáº§n liá»‡t kÃª tá»«ng method â€” má»i method tráº£ vá» CHÃNH object Ä‘Ã³ (chainable),
+// property gÃ¡n/Ä‘á»c Ä‘Æ°á»£c nhÆ° object thÆ°á»ng (width/height/x/y/active...).
 function chainable(): any {
   const target: Record<string, unknown> = {}
   const proxy: any = new Proxy(target, {
@@ -33,7 +33,7 @@ function chainable(): any {
 }
 
 function createScene() {
-  const scene = Object.create(CombatScene.prototype) as any
+  const scene = createTestScene('bare')
 
   scene.sprites = new Map()
   scene.interpolations = new Map()
@@ -90,8 +90,8 @@ function positionsEvent(overrides: Partial<BattlePositionsEvent> = {}): BattlePo
   }
 }
 
-describe('CombatScene — coalesce positions event (Phaser-driven)', () => {
-  it('nhiều event positions đồng bộ trước 1 frame chỉ áp target cuối cùng, đúng 1 lần', () => {
+describe('CombatScene â€” coalesce positions event (Phaser-driven)', () => {
+  it('nhiá»u event positions Ä‘á»“ng bá»™ trÆ°á»›c 1 frame chá»‰ Ã¡p target cuá»‘i cÃ¹ng, Ä‘Ãºng 1 láº§n', () => {
     const { scene } = createScene()
     const reconcileSpy = vi.spyOn(scene, 'reconcileEnemySprites')
 
@@ -105,7 +105,7 @@ describe('CombatScene — coalesce positions event (Phaser-driven)', () => {
     expect(scene.interpolations.get('player').toX).toBe(3)
   })
 
-  it('không có event mới thì update() không áp gì cả (reconcile không chạy)', () => {
+  it('khÃ´ng cÃ³ event má»›i thÃ¬ update() khÃ´ng Ã¡p gÃ¬ cáº£ (reconcile khÃ´ng cháº¡y)', () => {
     const { scene } = createScene()
     const reconcileSpy = vi.spyOn(scene, 'reconcileEnemySprites')
 
@@ -114,12 +114,12 @@ describe('CombatScene — coalesce positions event (Phaser-driven)', () => {
     expect(reconcileSpy).not.toHaveBeenCalled()
   })
 
-  it('cadence đo bằng lastSnapshotAt, không phải segmentStart — 2 event trong cùng millisecond không tạo đoạn nội suy gần 0ms', () => {
+  it('cadence Ä‘o báº±ng lastSnapshotAt, khÃ´ng pháº£i segmentStart â€” 2 event trong cÃ¹ng millisecond khÃ´ng táº¡o Ä‘oáº¡n ná»™i suy gáº§n 0ms', () => {
     const { scene } = createScene()
 
     scene.time.now = 0
     scene.onPositions(positionsEvent({ playerX: 0 }))
-    scene.update() // snap ban đầu
+    scene.update() // snap ban Ä‘áº§u
 
     scene.time.now = 100
     scene.onPositions(positionsEvent({ playerX: 10 }))
@@ -131,7 +131,7 @@ describe('CombatScene — coalesce positions event (Phaser-driven)', () => {
     expect(entry.lastSnapshotAt).toBe(100)
   })
 
-  it('cadence bị clamp sàn 50ms', () => {
+  it('cadence bá»‹ clamp sÃ n 50ms', () => {
     const { scene } = createScene()
 
     scene.time.now = 0
@@ -145,7 +145,7 @@ describe('CombatScene — coalesce positions event (Phaser-driven)', () => {
     expect(scene.interpolations.get('player').segmentDuration).toBe(50)
   })
 
-  it('cadence bị clamp trần 200ms (catch-up sau khi trễ lâu không tạo đoạn nội suy dài bất thường)', () => {
+  it('cadence bá»‹ clamp tráº§n 200ms (catch-up sau khi trá»… lÃ¢u khÃ´ng táº¡o Ä‘oáº¡n ná»™i suy dÃ i báº¥t thÆ°á»ng)', () => {
     const { scene } = createScene()
 
     scene.time.now = 0
@@ -159,13 +159,13 @@ describe('CombatScene — coalesce positions event (Phaser-driven)', () => {
     expect(scene.interpolations.get('player').segmentDuration).toBe(200)
   })
 
-  it('entity mới (enemy chưa từng thấy) snap đúng vị trí spawn — fromX === toX', () => {
+  it('entity má»›i (enemy chÆ°a tá»«ng tháº¥y) snap Ä‘Ãºng vá»‹ trÃ­ spawn â€” fromX === toX', () => {
     const { scene } = createScene()
 
     scene.onPositions(
       positionsEvent({
         enemies: [
-          { id: 'enemy_a', name: 'Quái', x: 42, row: 2, currentHp: 10, maxHp: 10, isBoss: false },
+          { id: 'enemy_a', name: 'QuÃ¡i', x: 42, row: 2, currentHp: 10, maxHp: 10, isBoss: false },
         ],
       }),
     )
@@ -178,14 +178,14 @@ describe('CombatScene — coalesce positions event (Phaser-driven)', () => {
     expect(scene.sprites.has('enemy_a')).toBe(true)
   })
 
-  it('entity đang di chuyển không teleport — vẫn nội suy dần từ fromX cũ, không nhảy thẳng tới toX', () => {
+  it('entity Ä‘ang di chuyá»ƒn khÃ´ng teleport â€” váº«n ná»™i suy dáº§n tá»« fromX cÅ©, khÃ´ng nháº£y tháº³ng tá»›i toX', () => {
     const { scene } = createScene()
 
     scene.time.now = 0
     scene.onPositions(
       positionsEvent({
         enemies: [
-          { id: 'enemy_a', name: 'Quái', x: 0, row: 2, currentHp: 10, maxHp: 10, isBoss: false },
+          { id: 'enemy_a', name: 'QuÃ¡i', x: 0, row: 2, currentHp: 10, maxHp: 10, isBoss: false },
         ],
       }),
     )
@@ -195,21 +195,21 @@ describe('CombatScene — coalesce positions event (Phaser-driven)', () => {
     scene.onPositions(
       positionsEvent({
         enemies: [
-          { id: 'enemy_a', name: 'Quái', x: 100, row: 2, currentHp: 10, maxHp: 10, isBoss: false },
+          { id: 'enemy_a', name: 'QuÃ¡i', x: 100, row: 2, currentHp: 10, maxHp: 10, isBoss: false },
         ],
       }),
     )
     scene.update()
 
-    // Ngay tại thời điểm áp snapshot mới — visual X bắt đầu từ vị trí
-    // CŨ (0, chưa nhảy tới 100), tiến dần theo interpolate() ở update() sau.
+    // Ngay táº¡i thá»i Ä‘iá»ƒm Ã¡p snapshot má»›i â€” visual X báº¯t Ä‘áº§u tá»« vá»‹ trÃ­
+    // CÅ¨ (0, chÆ°a nháº£y tá»›i 100), tiáº¿n dáº§n theo interpolate() á»Ÿ update() sau.
     scene.time.now = 100
     const entry = scene.interpolations.get('enemy_a')
     expect(entry.fromX).toBe(0)
     expect(entry.toX).toBe(100)
   })
 
-  it('entity dừng lại (snapshot kế tiếp cùng x) — không tạo đoạn nội suy mới, giữ nguyên target', () => {
+  it('entity dá»«ng láº¡i (snapshot káº¿ tiáº¿p cÃ¹ng x) â€” khÃ´ng táº¡o Ä‘oáº¡n ná»™i suy má»›i, giá»¯ nguyÃªn target', () => {
     const { scene } = createScene()
 
     scene.time.now = 0
@@ -227,13 +227,13 @@ describe('CombatScene — coalesce positions event (Phaser-driven)', () => {
     expect(afterEntry.segmentStart).toBe(beforeEntry.segmentStart)
   })
 
-  it('death/removal — enemy vắng mặt trong snapshot mới bị dọn khỏi sprites/interpolations, không hồi sinh', () => {
+  it('death/removal â€” enemy váº¯ng máº·t trong snapshot má»›i bá»‹ dá»n khá»i sprites/interpolations, khÃ´ng há»“i sinh', () => {
     const { scene } = createScene()
 
     scene.onPositions(
       positionsEvent({
         enemies: [
-          { id: 'enemy_a', name: 'Quái', x: 10, row: 2, currentHp: 10, maxHp: 10, isBoss: false },
+          { id: 'enemy_a', name: 'QuÃ¡i', x: 10, row: 2, currentHp: 10, maxHp: 10, isBoss: false },
         ],
       }),
     )
@@ -241,8 +241,8 @@ describe('CombatScene — coalesce positions event (Phaser-driven)', () => {
 
     expect(scene.sprites.has('enemy_a')).toBe(true)
 
-    // Quái chết — emitPositions() của core CHỈ liệt kê quái còn alive,
-    // nên snapshot kế tiếp không còn 'enemy_a' trong mảng enemies.
+    // QuÃ¡i cháº¿t â€” emitPositions() cá»§a core CHá»ˆ liá»‡t kÃª quÃ¡i cÃ²n alive,
+    // nÃªn snapshot káº¿ tiáº¿p khÃ´ng cÃ²n 'enemy_a' trong máº£ng enemies.
     scene.onPositions(positionsEvent({ enemies: [] }))
     scene.update()
 
