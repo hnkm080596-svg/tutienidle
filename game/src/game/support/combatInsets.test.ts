@@ -14,7 +14,7 @@ afterEach(() => {
 
 describe('combatInsets — top-only (6A-T3)', () => {
   it('setCombatInsets ép bottom = 0 bất kể giá trị传入', () => {
-    setCombatInsets({ top: 100, bottom: 999 })
+    setCombatInsets({ top: 100, bottom: 999, right: 0 })
 
     const insets = getCombatInsets()
 
@@ -24,7 +24,7 @@ describe('combatInsets — top-only (6A-T3)', () => {
   })
 
   it('bottom âm cũng kẹp 0; top âm kẹp 0', () => {
-    setCombatInsets({ top: -5, bottom: -3 })
+    setCombatInsets({ top: -5, bottom: -3, right: 0 })
 
     const insets = getCombatInsets()
 
@@ -37,15 +37,26 @@ describe('combatInsets — top-only (6A-T3)', () => {
 
     expect(fallback.top).toBe((1080 * (64 + 56)) / 1440)
     expect(fallback.bottom).toBe(0)
+    expect(fallback.right).toBe(0)
   })
 
   it('reset về measured=false để scene dùng fallback', () => {
-    setCombatInsets({ top: 10, bottom: 0 })
+    setCombatInsets({ top: 10, bottom: 0, right: 0 })
     resetCombatInsets()
 
     const insets = getCombatInsets()
 
     expect(insets.measured).toBe(false)
     expect(insets.top).toBe(0)
+  })
+
+  it('right: đo được truyền thẳng, kẹp âm về 0', () => {
+    setCombatInsets({ top: 0, bottom: 0, right: 320 })
+
+    expect(getCombatInsets().right).toBe(320)
+
+    setCombatInsets({ top: 0, bottom: 0, right: -10 })
+
+    expect(getCombatInsets().right).toBe(0)
   })
 })

@@ -40,7 +40,9 @@ function publishInsets() {
   const top = barHeight(root, 'combat-scene-overlay__top-bar')
 
   if (top > 0) {
-    setCombatInsets({ top, bottom: 0 })
+    // right: skill dock panel đo/publish riêng ở Task 7 (Combat Art
+    // Pipeline §7.5) — overlay này chưa có dock nên luôn 0.
+    setCombatInsets({ top, bottom: 0, right: 0 })
   }
 }
 

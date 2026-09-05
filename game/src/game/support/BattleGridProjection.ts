@@ -97,6 +97,12 @@ export interface ProjectionViewport {
   topInset: number
   /** Khoảng reserved phía dưới cho DOM chrome (Event+Control bar). */
   bottomInset: number
+  /**
+   * Khoảng reserved phía PHẢI cho skill dock panel mới (Combat Art
+   * Pipeline spec §7.5) — mặc định 0 khi bỏ qua để mọi call site cũ
+   * (chưa biết dock) không phải sửa gì.
+   */
+  rightInset?: number
 }
 
 export interface GridScreenPoint {
@@ -172,12 +178,13 @@ function clamp01(value: number): number {
   return value < 0 ? 0 : value > 1 ? 1 : value
 }
 
-function makeViewport(viewport: ProjectionViewport): ProjectionViewport {
+function makeViewport(viewport: ProjectionViewport): Required<ProjectionViewport> {
   return {
     width: Math.max(1, viewport.width),
     height: Math.max(1, viewport.height),
     topInset: Math.max(0, viewport.topInset),
     bottomInset: Math.max(0, viewport.bottomInset),
+    rightInset: Math.max(0, viewport.rightInset ?? 0),
   }
 }
 
@@ -230,16 +237,19 @@ class FlatGridProjection implements BattleGridProjection {
   //   gridLeft = width/2 - gridPixelWidth/2
   //   gridTop  = battlefieldTop + (availHeight - gridPixelHeight)/2
   private recalculate(): void {
+    // rightInset trừ thẳng vào bề rộng khả dụng — cùng cách xử lý insets
+    // trên/dưới đã có, không đụng công thức chiều cao (parity legacy).
+    const availableWidth = Math.max(0, this.viewport.width - this.viewport.rightInset)
     const availableHeight = Math.max(
       0,
       this.viewport.height - this.viewport.topInset - this.viewport.bottomInset,
     )
 
     this.cellSizePx = Math.min(
-      (this.viewport.width - 24) / GRID_COLUMN_COUNT,
+      (availableWidth - 24) / GRID_COLUMN_COUNT,
       availableHeight / GRID_ROW_COUNT,
     )
-    this.gridLeft = this.viewport.width / 2 - (this.cellSizePx * GRID_COLUMN_COUNT) / 2
+    this.gridLeft = availableWidth / 2 - (this.cellSizePx * GRID_COLUMN_COUNT) / 2
     this.gridTop = this.viewport.topInset + (availableHeight - this.cellSizePx * GRID_ROW_COUNT) / 2
   }
 
@@ -330,8 +340,15 @@ class PerspectiveGridProjection implements BattleGridProjection {
 
     this.bandTop = geometry.horizonY
     this.bandHeight = Math.max(1, geometry.roadHeight)
-    this.nearWidth = Math.max(1, this.viewport.width - PERSPECTIVE_SIDE_MARGIN * 2)
-    this.centerX = this.viewport.width / 2
+
+    // rightInset trừ vào bề rộng khả dụng TRƯỚC khi trừ margin hai bên —
+    // cùng pattern availableWidth với flat; geometry chiều cao ở trên
+    // không đụng tới (computePerspectiveGeometry chỉ nhận topInset/
+    // bottomInset).
+    const availableWidth = Math.max(0, this.viewport.width - this.viewport.rightInset)
+
+    this.nearWidth = Math.max(1, availableWidth - PERSPECTIVE_SIDE_MARGIN * 2)
+    this.centerX = availableWidth / 2
   }
 
   private denominatorAt(v: number): number {

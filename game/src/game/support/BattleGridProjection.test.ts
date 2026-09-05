@@ -235,7 +235,12 @@ describe('BattleGridProjection — perspective', () => {
 
     projection.resize(resized)
 
-    expect(projection.viewport).toEqual({ ...resized, topInset: 120, bottomInset: 90 })
+    expect(projection.viewport).toEqual({
+      ...resized,
+      topInset: 120,
+      bottomInset: 90,
+      rightInset: 0,
+    })
 
     for (const row of [0, 3.3, 5, 7.75, 9]) {
       for (const column of [0, 5.5, 11.2, 15]) {
@@ -281,6 +286,36 @@ describe('BattleGridProjection — perspective', () => {
     expect(polygon[0]!.y).toBeCloseTo(topLeft.y, 9)
     expect(polygon[2]!.x).toBeCloseTo(bottomRight.x, 9)
     expect(polygon[2]!.y).toBeCloseTo(bottomRight.y, 9)
+  })
+})
+
+describe('rightInset — reserves screen space on the right without changing height math', () => {
+  it('flat mode: grid narrows and shifts left when rightInset is set', () => {
+    const noInset = createBattleGridProjection('flat', { width: 1600, height: 900, topInset: 0, bottomInset: 0, rightInset: 0 })
+    const withInset = createBattleGridProjection('flat', { width: 1600, height: 900, topInset: 0, bottomInset: 0, rightInset: 400 })
+
+    const boundsNoInset = noInset.bounds()
+    const boundsWithInset = withInset.bounds()
+
+    expect(boundsWithInset.right).toBeLessThanOrEqual(1600 - 400)
+    expect(boundsWithInset.right).toBeLessThan(boundsNoInset.right)
+  })
+
+  it('perspective mode: centerX shifts left when rightInset is set', () => {
+    const noInset = createBattleGridProjection('perspective', { width: 1600, height: 900, topInset: 0, bottomInset: 0, rightInset: 0 })
+    const withInset = createBattleGridProjection('perspective', { width: 1600, height: 900, topInset: 0, bottomInset: 0, rightInset: 400 })
+
+    const pointNoInset = noInset.gridToScreen(9, 8) // near row, mid column
+    const pointWithInset = withInset.gridToScreen(9, 8)
+
+    expect(pointWithInset.x).toBeLessThan(pointNoInset.x)
+  })
+
+  it('defaults rightInset to 0 when omitted (backward compatible)', () => {
+    const withDefault = createBattleGridProjection('flat', { width: 1600, height: 900, topInset: 0, bottomInset: 0 } as never)
+    const explicitZero = createBattleGridProjection('flat', { width: 1600, height: 900, topInset: 0, bottomInset: 0, rightInset: 0 })
+
+    expect(withDefault.bounds()).toEqual(explicitZero.bounds())
   })
 })
 

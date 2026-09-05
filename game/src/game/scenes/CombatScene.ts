@@ -803,6 +803,7 @@ export class CombatScene extends Phaser.Scene {
       height,
       topInset: measuredInsets.measured ? measuredInsets.top : fallbackInsets.top,
       bottomInset: measuredInsets.measured ? measuredInsets.bottom : fallbackInsets.bottom,
+      rightInset: measuredInsets.measured ? measuredInsets.right : fallbackInsets.right,
     }
 
     if (!this.projection) {

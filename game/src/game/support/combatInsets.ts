@@ -9,12 +9,19 @@
 // DOM để vào canvas (PlayerHudLayer T4) — bottom inset LUÔN 0; interface
 // giữ trường bottom cho tương thích call-site, giá trị bị ép 0.
 // Fallback: trước lần đo đầu tiên scene dùng công thức tỷ lệ top-only.
+//
+// Combat Art Pipeline (2026-09-05) — thêm `right`: chiều rộng thực (px)
+// của skill dock panel mới bám mép phải màn hình (spec §7.5). Cùng pattern
+// đo-DOM-thật với `top` — KHÔNG suy từ tỉ lệ trừ khi chưa đo được lần nào.
 export interface CombatInsets {
   /** Chiều cao thực (px) của Top Bar phía trên. */
   top: number
 
   /** LUÔN 0 từ 6A — chỉ giữ cho tương thích call-site. */
   bottom: number
+
+  /** Chiều rộng thực (px) của skill dock panel bám mép phải. */
+  right: number
 }
 
 interface MeasuredCombatInsets extends CombatInsets {
@@ -22,11 +29,12 @@ interface MeasuredCombatInsets extends CombatInsets {
   measured: boolean
 }
 
-const current: MeasuredCombatInsets = { top: 0, bottom: 0, measured: false }
+const current: MeasuredCombatInsets = { top: 0, bottom: 0, right: 0, measured: false }
 
 export function setCombatInsets(insets: CombatInsets): void {
   current.top = Math.max(0, insets.top)
   current.bottom = 0
+  current.right = Math.max(0, insets.right)
   current.measured = true
 }
 
@@ -34,6 +42,7 @@ export function setCombatInsets(insets: CombatInsets): void {
 export function resetCombatInsets(): void {
   current.top = 0
   current.bottom = 0
+  current.right = 0
   current.measured = false
 }
 
@@ -53,5 +62,6 @@ export function getFallbackCombatInsets(height: number): CombatInsets {
   return {
     top: (height * (FALLBACK_TOP_BAR + FALLBACK_STATUS_BAR)) / DESIGN_HEIGHT,
     bottom: 0,
+    right: 0,
   }
 }
