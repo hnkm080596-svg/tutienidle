@@ -1,7 +1,7 @@
-// Battlefield region redesign (2026-09-05, Combat Art Pipeline spec §6) —
-// battlefield is two 6x6 boxes (player/enemy), sharing rows 3-8, split by
-// a neutral divider column neither side may occupy. Distance/targeting/AoE
-// math is UNCHANGED — this only constrains WHERE entities may be placed.
+// Battlefield region redesign (spec §6) — hai hộp 6×6 (nhân vật/quái)
+// chia sẻ hàng 3-8, ngăn cách bằng cột divider trung lập không bên nào
+// được chiếm. Math về khoảng cách/targeting/AoE KHÔNG ĐỔI — chỉ ràng buộc
+// NƠI entity được đặt.
 import type { GridPosition, LaneIndex } from './BattleGrid'
 
 export interface BattlefieldUsableRegion {
@@ -27,7 +27,7 @@ export const ENEMY_SIDE_REGION: BattlefieldUsableRegion = {
   columnMax: 12,
 }
 
-/** Bounding box of both sides + the divider — for camera/projection fit, NOT entity placement. */
+/** Bounding box (hộp giới hạn) của cả hai bên + divider — dùng cho camera/projection fit, KHÔNG phải entity placement. */
 export const DEFAULT_BATTLEFIELD_USABLE_REGION: BattlefieldUsableRegion = {
   ...BATTLEFIELD_ROW_RANGE,
   columnMin: 0,
