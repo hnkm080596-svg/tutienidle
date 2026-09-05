@@ -10,9 +10,11 @@ ATB turn-based) từ Slice 6 cutover. Toàn bộ folder được GIỮ NGUYÊN �
 
 ## Không có gì trong folder này được import vào production code
 TRỪ 2 consumer thời gian chuyển tiếp:
-- `core/game/GameManager.ts` — `legacy/BattleSystem` instance vẫn giữ làm
-  legacy shim (getPlayerBuffs/setArtifactRuntime/setChainDefinition/start —
-  no-op trong turn engine; getBattle() shim đọc qua TurnBattle).
+- `core/game/GameManager.ts` — vẫn giữ 1 instance legacy/BattleSystem làm
+  shim: `start()` vẫn tạo Battle object thật (nhưng KHÔNG còn gì drive nó —
+  updateBattleFixedStep chỉ chạy TurnBattleSystem), `getBattle()` shim đọc
+  TurnBattle, `getPlayerBuffs()`/`setArtifactRuntime()`/`setChainDefinition()`
+  vẫn lưu state nội bộ vô hại (turn engine không đọc).
 - `core/game/StageWaveSystem.ts` — deps typing `BattleSystem` (chỉ type import).
 
 ## Việc dọn dẹp tiếp theo (khi Slice legacy retirement thật sự cần)
