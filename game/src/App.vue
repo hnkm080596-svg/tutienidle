@@ -115,6 +115,12 @@ let introHandle: number | undefined
 const clock = new GameClock()
 const gameManager = new GameManager()
 
+// Defect Task 3 (2026-09-05) — boot-race gate: real app WILL mount a Phaser
+// presentation layer (PhaserCanvas async bootstrap). Combat ticking pauses
+// until CombatScene mounts (setPresentationActive(true) → markReady) or the
+// 15s safety-net trips (Phaser bootstrap failure fallback).
+gameManager.expectPresentationLayer()
+
 gameManager.registerMaterials(materials)
 gameManager.registerSkillTemplates(SKILLS)
 gameManager.registerTechniqueTemplates(TECHNIQUES)

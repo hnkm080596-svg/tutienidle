@@ -103,8 +103,18 @@ export interface TurnBattle {
    * combat ephemeral theo nguyên tắc rework).
    */
   log?: BattleLogEntry[]
-  /** Action Playback (2026-09-05) — counter/follow-up (§6 spec): actor này nhảy thẳng vào 'ready' ngay sau standby, bỏ qua idle. */
-  queuedFollowUpActorId?: string
+  /**
+   * Action Playback (2026-09-05) — counter/follow-up (§6 spec): actors queued
+   * here jump straight to 'ready' after the current turn's standby, bypassing
+   * gauge. FIFO queue (not a single id) so an AOE hit that triggers multiple
+   * counters doesn't drop all but the last one. Defect-fix Task 1: đổi từ
+   * singular — tickPacing (production loop) giờ đọc queue này.
+   */
+  queuedFollowUpActorIds?: string[]
+  /** Defect-fix Task 1 — reciprocity guard: đếm consecutive bypass turns qua
+   * queue, reset khi 1 normal gauge turn resolve; cap trong dequeueFollowUpActor()
+   * để 2 entity counter-buff không bounce follow-up lẫn nhau vô hạn. */
+  followUpChainDepth?: number
 }
 
 /**
@@ -139,6 +149,11 @@ export function selectTarget(
 }
 
 const DEFAULT_MAX_TURNS = 10_000
+
+/** Defect-fix Task 1 (2026-09-05) — reciprocity cap: 2 entity cùng holding
+ * counter buff không được bounce follow-up lẫn nhau quá 4 nhịp liên tiếp
+ * (không có normal turn xen vào) — chặn chain vô hạn starving turn order. */
+const MAX_FOLLOW_UP_CHAIN_DEPTH = 4
 
 export interface TurnStepResult {
   state: TurnBattleState
@@ -187,6 +202,11 @@ export interface TurnDeclaredAction {
   suddenDeathMultiplier: number
 
   reactionPathPicks: [TurnSkillDefinition, TurnSkillDefinition] | null
+
+  /** Defect-fix Task 1 — turn này được grant qua follow-up/counter bypass
+   * queue thay vì normal gauge readiness — completeAction bỏ consume gauge
+   * cho các turn này (bypass không tốn progress của lượt kế tiếp). */
+  isFollowUpBypass: boolean
 }
 
 export class TurnBattleSystem {
@@ -204,6 +224,51 @@ export class TurnBattleSystem {
   // presentationActive, nên state phải sống trên instance).
   private pendingGaugeDeltaTargets: TurnBattleParticipant[] = []
   private pendingGaugeDeltaDefinition: TurnBuffDefinition | undefined
+
+  // Defect-fix Task 1 (2026-09-05) — bridge dequeueFollowUpActor() →
+  // declareActorAction(): set ngay trước khi trả bypass actor, đọc 1 lần
+  // trong declare để populate TurnDeclaredAction.isFollowUpBypass rồi clear.
+  private pendingFollowUpBypassActorId: string | null = null
+
+  /**
+   * Defect-fix Task 1 — shared bởi tickPacing() và peekNextActor():
+   * dequeue follow-up actor kế tiếp từ queue (nếu có, còn sống, dưới
+   * reciprocity cap). Bỏ qua id của actor chết không tốn chain-depth.
+   */
+  private dequeueFollowUpActor(battle: TurnBattle): TurnBattleParticipant | null {
+    const queue = battle.queuedFollowUpActorIds
+
+    if (!queue || queue.length === 0) {
+      return null
+    }
+
+    if ((battle.followUpChainDepth ?? 0) >= MAX_FOLLOW_UP_CHAIN_DEPTH) {
+      // Reciprocity guard tripped — drop phần còn lại của queue, quay về
+      // normal gauge order thay vì bounce vô hạn.
+      battle.queuedFollowUpActorIds = undefined
+      battle.followUpChainDepth = 0
+      return null
+    }
+
+    const queuedId = queue.shift()
+
+    if (queue.length === 0) {
+      battle.queuedFollowUpActorIds = undefined
+    }
+
+    const queued =
+      battle.players.find((member) => member.id === queuedId) ??
+      battle.enemies.find((enemy) => enemy.id === queuedId)
+
+    if (!queued || !queued.alive) {
+      return this.dequeueFollowUpActor(battle)
+    }
+
+    battle.followUpChainDepth = (battle.followUpChainDepth ?? 0) + 1
+    this.pendingFollowUpBypassActorId = queued.id
+
+    return queued
+  }
 
   /**
    * Countdown phase pacing (flow: Countdown → Spawn → Gauge combat →
@@ -246,6 +311,20 @@ export class TurnBattleSystem {
       return null
     }
 
+    // Defect-fix Task 1 — follow-up/counter queue TRƯỚC gauge order: queue
+    // là production path duy nhất đọc (peekNextActor không chạy trong loop).
+    const followUpActor = this.dequeueFollowUpActor(battle)
+
+    if (followUpActor) {
+      if (!resolve) {
+        return followUpActor
+      }
+
+      this.resolveActorTurn(battle, followUpActor)
+
+      return followUpActor
+    }
+
     const allParticipants = [...battle.players, ...battle.enemies]
 
     for (const participant of allParticipants) {
@@ -276,6 +355,9 @@ export class TurnBattleSystem {
       return null
     }
 
+    // Normal gauge-ready turn reset reciprocity chain (Defect-fix Task 1).
+    battle.followUpChainDepth = 0
+
     if (!resolve) {
       return actor
     }
@@ -299,20 +381,12 @@ export class TurnBattleSystem {
       return null
     }
 
-    // Action Playback Task 5 — queued follow-up (counter/proc): actor này
-    // nhảy thẳng vào 'ready' ngay sau standby, BYPASS gauge (spec §4.5).
-    if (battle.queuedFollowUpActorId) {
-      const queuedId = battle.queuedFollowUpActorId
+    // Defect-fix Task 1 — dùng chung dequeue helper với tickPacing (queue
+    // FIFO + reciprocity guard thay vì single-id overwrite cũ).
+    const followUpActor = this.dequeueFollowUpActor(battle)
 
-      battle.queuedFollowUpActorId = undefined
-
-      const queued =
-        battle.players.find((member) => member.id === queuedId) ??
-        battle.enemies.find((enemy) => enemy.id === queuedId)
-
-      if (queued && queued.alive) {
-        return queued
-      }
+    if (followUpActor) {
+      return followUpActor
     }
 
     const allParticipants = [...battle.players, ...battle.enemies]
@@ -377,13 +451,9 @@ export class TurnBattleSystem {
           if (primaryTarget) {
             const affected = collectTurnTargets(primaryTarget, opposingSide, chargedSkill.targeting)
 
-            const suddenDeathMultiplier = this.suddenDeathDamageMultiplier(battle.totalTurnsElapsed ?? 0)
-            const chargedDamage = suddenDeathMultiplier === 1
-              ? chargedSkill.damage
-              : scaleActionDamage(chargedSkill.damage, suddenDeathMultiplier)
-
-            // Action Playback Task 3 — DEFERRED: damage apply tại
-            // applyActionImpact (capture picks thay vì resolve ngay).
+            // Defect Task 8 (2026-09-05): damage tính lại ở applyActionImpact()
+            // (đọc declared.chargedSkill + totalTurnsElapsed độc lập) — không
+            // cần tính trùng ở đây.
             chargeTargetIds = affected.filter((target) => target.entity.alive).map((target) => target.id)
             chargedSkillCaptured = chargedSkill
           }
@@ -406,21 +476,32 @@ export class TurnBattleSystem {
     // lượt cuối). Tick trước sẽ làm duration-1 expire trước khi kịp block.
     // Bá Thể: bị hard-CC liên tục >= 3 lượt thì lượt thứ 4 tự gỡ CC và
     // hành động (fairness guard — không ai bị khóa vĩnh viễn).
-    const hardCcActive = actorBuffSystem.isStunned() || actorBuffSystem.isFrozen()
-
+    //
+    // isCharging skip hoàn toàn khối này (Defect-fix Task 2, 2026-09-05):
+    // charging đã có hành động thay thế riêng (charge tick/resolve, xem
+    // khối phía trên) — actor không hề bị "chặn" bởi CC trong lượt này,
+    // nên KHÔNG tính vào consecutiveHardCcTurns (tránh Bá Thể clear sớm
+    // sai) và ccBlocked phải là false (tránh log mâu thuẫn: ccBlocked=true
+    // kèm skillId/damage thật của charge resolve).
     let ccBlocked: boolean
 
-    if (hardCcActive && actor.consecutiveHardCcTurns >= 3) {
-      actor.buffs.clearCcEffects()
-      actor.consecutiveHardCcTurns = 0
-      actor.baTheTriggeredAtTurn = battle.totalTurnsElapsed
+    if (isCharging) {
       ccBlocked = false
-    } else if (hardCcActive) {
-      actor.consecutiveHardCcTurns += 1
-      ccBlocked = true
     } else {
-      actor.consecutiveHardCcTurns = 0
-      ccBlocked = false
+      const hardCcActive = actorBuffSystem.isStunned() || actorBuffSystem.isFrozen()
+
+      if (hardCcActive && actor.consecutiveHardCcTurns >= 3) {
+        actor.buffs.clearCcEffects()
+        actor.consecutiveHardCcTurns = 0
+        actor.baTheTriggeredAtTurn = battle.totalTurnsElapsed
+        ccBlocked = false
+      } else if (hardCcActive) {
+        actor.consecutiveHardCcTurns += 1
+        ccBlocked = true
+      } else {
+        actor.consecutiveHardCcTurns = 0
+        ccBlocked = false
+      }
     }
 
     actorBuffSystem.update(actor.entity, this.combat, this.registry)
@@ -513,6 +594,14 @@ export class TurnBattleSystem {
         ? actor.pendingChargedSkillId ?? chargedSkillId
         : (action?.skillId ?? '')
 
+    // Defect-fix Task 1 — bypass flag: turn này đến từ follow-up queue
+    // (đọc từ bridge field, clear sau khi đọc).
+    const isFollowUpBypass = this.pendingFollowUpBypassActorId === actor.id
+
+    if (isFollowUpBypass) {
+      this.pendingFollowUpBypassActorId = null
+    }
+
     return {
       actorId: actor.id,
       skillId,
@@ -529,6 +618,7 @@ export class TurnBattleSystem {
       isReactionPath,
       suddenDeathMultiplier: suddenDeathMultiplierCaptured,
       reactionPathPicks,
+      isFollowUpBypass,
     }
   }
 
@@ -608,7 +698,10 @@ export class TurnBattleSystem {
             const { firedFollowUp } = new TurnBuffSystem(target.buffs).rollReactiveTrigger(target.entity, 'onImpactLanded', this.registry)
 
             if (firedFollowUp) {
-              battle.queuedFollowUpActorId = target.id
+              // Defect-fix Task 1 — FIFO queue: AOE hit trigger counter trên
+              // nhiều target không drop tất cả trừ cái cuối.
+              battle.queuedFollowUpActorIds = battle.queuedFollowUpActorIds ?? []
+              battle.queuedFollowUpActorIds.push(target.id)
             }
           }
         }
@@ -660,7 +753,9 @@ export class TurnBattleSystem {
     declared: TurnDeclaredAction,
     targetIds: string[],
   ): TurnStepResult {
-    consumeGaugeAfterAction(actor)
+    // Defect-fix Task 1 — bypass turn KHÔNG consume gauge (counter-reactor
+    // không mất progress của lượt kế tiếp vì side effect của phản ứng).
+    consumeGaugeAfterAction(actor, declared.isFollowUpBypass ? 0 : 1)
 
     // Future Systems Task 6 — gauge-delta one-shot push SAU consume
     // (consume đặt gauge về 0; delta cộng lên trên, không bị ghi đè).

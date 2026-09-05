@@ -70,5 +70,11 @@ function cloneGaugeActor(participant: TurnBattleParticipant): TurnBattleParticip
     resources: undefined,
     bossTrigger: undefined,
     // buffs là reference chung — resolveNextTurn chỉ đọc, an toàn.
+    //
+    // Defect Task 8 (2026-09-05): clone participant vẫn TRỎ CHUNG entity sống
+    // (không deep-copy CombatEntity) — an toàn vì preview chỉ đọc, không
+    // mutate. Nếu sau này preview logic cần mô phỏng trạng thái giả định
+    // (vd. "nếu X chết thì thứ tự đổi thế nào"), phải deep-copy entity ở đây
+    // trước, không sửa trực tiếp.
   }
 }

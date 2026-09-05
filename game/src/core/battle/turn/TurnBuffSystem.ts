@@ -202,6 +202,10 @@ export class TurnBuffSystem {
       continuousTurns: 0,
       convertsToId: nextDefinition.convertsToId,
       convertsAfterContinuousTurns: nextDefinition.convertsAfterContinuousTurns,
+      // Defect Task 8 (2026-09-05): Convert-to-id chains hiện KHÔNG mang theo
+      // dot damage của buff gốc (hardcode 0) — nếu tương lai cần 1 chain
+      // convert dựa trên dot (vd. Độc → Cháy giữ % sát thương gốc), phải sửa
+      // Ở ĐÂY, không giả định giá trị tự động carry qua.
       effects: nextDefinition.effects.map((effect) =>
         effect.type === 'dot' ? { ...effect, damagePerTurn: 0 } : effect,
       ),
@@ -216,6 +220,12 @@ export class TurnBuffSystem {
   ) {
     const expired: TurnBuff[] = []
 
+    // Defect Task 8 (2026-09-05): duration/remainingTurns có thể là số thập
+    // phân (resist%/duration-bonus% scale) — hệ tick nguyên lượt nên 1 buff
+    // duration=2.3 thực tế tồn tại hết lượt thứ 3 (làm tròn lên), KHÔNG hết
+    // đúng giữa lượt 2 và 3. Đây là hành vi đã biết (không phải bug) —
+    // balance pass cần tính theo số lượt NGUYÊN thực tế, không phải giá trị
+    // duration thô.
     for (const buff of this.pool.getAll()) {
       buff.continuousTurns += 1
 
