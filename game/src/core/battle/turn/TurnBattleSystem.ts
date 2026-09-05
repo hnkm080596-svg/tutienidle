@@ -236,11 +236,12 @@ export class TurnBattleSystem {
    * mỗi tick — inner-loop advance tới ready trong CÙNG call khiến 1 turn
    * = 1 tick (trận chớp mắt, không còn ai kịp thấy gì).
    *
-   * Trả về actor vừa resolve (nếu có) để GameManager manual mode pause
-   * đúng actor phe player ngay tại tick ready. CC check/buff tick
-   * (resolveActorTurn) chạy như thường; turn counter +1 đúng mỗi turn.
+   * Trả về actor ready (hoặc vừa resolve). `resolve` = true: turn đã chạy
+   * hoàn tất headless (default path); `resolve` = false: CHỈ advance gauge
+   * và trả ready actor — GameManager presentation path sẽ điều phối
+   * declare/impact/complete qua 3 acknowledge (Action Playback Task 6).
    */
-  tickPacing(battle: TurnBattle): TurnBattleParticipant | null {
+  tickPacing(battle: TurnBattle, resolve = true): TurnBattleParticipant | null {
     if (battle.state !== 'fighting') {
       return null
     }
@@ -273,6 +274,10 @@ export class TurnBattleSystem {
 
     if (!actor) {
       return null
+    }
+
+    if (!resolve) {
+      return actor
     }
 
     this.resolveActorTurn(battle, actor)
