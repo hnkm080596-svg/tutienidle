@@ -26,7 +26,7 @@
 5. **Save không validate shape** *(đã giải quyết 2026-08-28 — save-shape-validation Wave 1 + bổ sung equipment/slot shape khi review)*: chỉ kiểm tra version, tiền lệ crash boot v47 có thể tái diễn.
 6. **Tài liệu lệch code** *(đã giải quyết 2026-08-28 — docs-sync viết lại game-guide.md + item-design-reference.md, dọn comment MissileSystem, xóa `Plans .md`)*: `game-guide.md` và `item-design-reference.md` mô tả hệ thống đã xóa.
 7. **Nợ kỹ thuật** *(cập nhật 2026-09-05)*: `GameManager.ts` **2.939 dòng** (tách Ops 2026-09-03 xong lại phình do wiring turn-based — cần tách tiếp, xem mục 10); `CombatScene.ts` còn **1.539 dòng** (đã tách `PlayerHudLayer` + HUD rewrite, không còn god-class 2.922 dòng như trước); nhiều hệ thống core 0 test; **lint đã có** (`eslint.config.js` + script `lint`); **E2E đã có 6 spec** (`boot-fresh`, `combat-overlay-layout`, `create-to-combat`, `ink-wash-ui`, `save-reload`, `turn-combat-hud`). Hai plan audit mới về code/lifecycle và UI/UX/browser QA đã được lập, xem mục 7.10.
-8. **Việc đang bay (chưa merge, 2026-09-05)** — xem chi tiết mục 8.6: branch `worktree-gp123` (QA 9.4/9.6/9.8/9.9/9.10/9.11 + OPT-04/06 đã commit; Group 3 = 6E/6F/6G đang làm dở, 47 file uncommitted) và branch `feat/action-playback` (Action Playback Task 2/8 đã commit). Cả hai đều fork sạch, không đụng roadmap — merge theo thứ tự ở mục 10.
+8. **Việc đang bay (2026-09-05)** — worktree-gp123 Group 1+2 (QA 9.4/9.6/9.8/9.9/9.10/9.11 + OPT-04/06) ✅ **ĐÃ MERGE** 318083; Group 3 (6E/6F/6G) code uncommitted đã hủy — làm lại từ spec (xem 8.6). eat/combat-art-roster-tranphap đang chạy SDD 21-task. Action Playback đã merge qua remediation Tasks 1–8.
 
 ## 2. Nguyên tắc ưu tiên
 
@@ -198,7 +198,7 @@ In-flight: gp123 (Group 1+2 xong chờ merge; Group 3 đang làm) → action-pla
 
 ### 7.5. Game design direction 2026-09-01
 
-**6A. Combat Scene UI redesign** — ✅ merged `71357a1` (PlayerHudLayer in-canvas, 3 bar DOM xóa, kill/heal floating text). ⚠️ Kiếm Ý/Thế bar: wiring per-tick poll nằm trong branch `worktree-gp123` (Group 1 — worktree đã dọn 2026-09-05, xem 8.6) — **cần re-apply thủ công** (verify: master 0 reference `pollKiemBar`).
+**6A. Combat Scene UI redesign** — ✅ merged `71357a1` (PlayerHudLayer in-canvas, 3 bar DOM xóa, kill/heal floating text). ✅ Kiếm Ý/Thế bar: wiring per-tick poll đã merge `6318083` (`kiemBarBridge.ts` + `pollKiemBar()` — QA-004/9.4 xong).
 
 **6B. Bugfix hiển thị:**
 - Crit Damage % — ✅ merged `8981772` + `0fcb17e`
@@ -240,7 +240,7 @@ In-flight: gp123 (Group 1+2 xong chờ merge; Group 3 đang làm) → action-pla
 
 ### 7.8. Thứ tự đề xuất
 
-1. **Merge `worktree-gp123`** (Group 1+2 — QA 9.4/9.6/9.8/9.9/9.10/9.11 + OPT-04/06) rồi tới Group 3 (6E/6F/6G) — ⚠️ lưu ý save-version v55→v57 khi merge (mục 10).
+1. ~~Merge `worktree-gp123`~~ — ✅ XONG `6318083` (0 conflict thật; 2 hunk resolve tay GameManager overflow toast + hudWiring test; save-version hiện hành v56 giữ nguyên — Group 3 mới bump v57).
 2. **Action Playback** (Task 2/8 đang chạy ở `feat/action-playback`) — việc combat #1 ở bảng 9.5.
 3. **Giai đoạn 8 còn lại** — nameplate/emoji (Phase 2).
 4. **Bảng 9.5** — content/wiring turn-based còn lại theo thứ tự tiên quyết.
@@ -290,14 +290,14 @@ In-flight: gp123 (Group 1+2 xong chờ merge; Group 3 đang làm) → action-pla
 | **9.1** ✅ | **QA-001 (High, Confirmed) — Kẹt trang bị khi đột phá** | XONG 2026-09-02 (branch `worktree-task-9-1`, commits `f5248f4..3a8724a`, merged vào master). Thiết kế cuối (spec v6, user chốt lần 2 — xem note superseded ở 8.2): gộp 3 trigger → `triggerBreakthroughAction` auto-unequip + panel xác nhận "Độ kiếp cũng là độ thân..." cho MỌI đột phá. `chooseCultivationPath` không gate (feature-unlock sau đột phá). QA quick: PASS WITH EVIDENCE. 2 Low deferred: cooldown UX (QA-013), unequip-before-failed-start (QA-014). |
 | **9.2** ✅ | QA-002 (High) — `restoreFromSave` thiếu idempotency guard | XONG 2026-09-02 (`c2381da`) — payload-identity guard (WeakMap) chống double offline credit; QA quick PASS WITH EVIDENCE |
 | **9.3** ✅ | QA-003 (High) — `OverlayPanel` thiếu focus trap (H5 Giai đoạn 8) | XONG 2026-09-02 (`3dbde61` + test `cfb3b4b`) — useDialogFocus trong OverlayPanel+ConfirmModal, 13 consumers kế thừa; 2 Low deferred: zero-focusable Tab escape, same-tick re-open trigger overwrite |
-| **9.4** 🔴 | QA-004 (Medium) — `updateKiem` chưa được gọi từ production (defer lâu, sửa cùng 6A) | **Worktree `worktree-gp123` đã dọn 2026-09-05 (branch giữ lại, code chưa merge) — CẦN RE-APPLY thủ công**: fix gốc (2026-09-03) `044ff4f` wire Kiếm bar vào PlayerHudLayer qua per-tick poll (`kiemBarBridge.ts` mới) + `b7bf131` guard missing Phaser registry + `d553ccb` coverage; đúng spec user chốt (poll, không event). Verify 2026-09-05: master 0 reference `pollKiemBar`/`kiemBarBridge` — vẫn thiếu |
+| **9.4** ✅ | QA-004 (Medium) — `updateKiem` chưa được gọi từ production (defer lâu, sửa cùng 6A) | ✅ **MERGED 2026-09-05** (`6318083` — merge `worktree-gp123`): `kiemBarBridge.ts` (KIEM_BAR_READER_KEY) + CombatScene per-tick `pollKiemBar()` + guard registry + coverage trong `CombatScene.hudWiring.test.ts`. Đúng spec user chốt (poll, không event). |
 | **9.5** ✅ | QA-005 (Medium) — `PhaserCanvas.vue setupGame` leak handler khi throw | XONG — qua perf-optimize-pass Task 4 (merged `8b59045`): try/catch bootstrap + `bootError` ref + cleanup on failure (verify grep `a390f93`: catch tại PhaserCanvas.vue:67, expose :244) |
-| **9.6** 🔴 | QA-006 (Medium) — `CombatDefeatPanel` thiếu 10s auto-return-home | **Worktree `worktree-gp123` đã dọn 2026-09-05 — CẦN RE-APPLY thủ công**: fix gốc (2026-09-03, `859302b`) `useAutoRetryCountdown(10, returnHome)` song song 3s refight + test mới; verify trên master 2026-09-05: code master CHƯA có timer này (comment mô tả nhưng chưa implement) |
+| **9.6** ✅ | QA-006 (Medium) — `CombatDefeatPanel` thiếu 10s auto-return-home | ✅ **MERGED 2026-09-05** (`6318083`): `useAutoRetryCountdown(10, returnHome)` fallback song song 3s refight + `CombatDefeatPanel.test.ts` coverage. |
 | **9.7** ✅ | QA-007 (Medium) — `OfflineProgressSystem` thiếu `isFinite(cultivationPerSecond)` guard | XONG 2026-09-02 (`d126008`) — isFinite guard; validator v55 là root guard |
-| **9.8** 🔴 | QA-008 (Medium) — `MaterialBag.add` overflow bị caller bỏ qua | **Worktree `worktree-gp123` đã dọn 2026-09-05 — CẦN RE-APPLY thủ công**: fix gốc (2026-09-03, `18e6969`) surface overflow tại mọi reward caller (App/GameManager/BuildingOps/QuestOps/SaveRestore/EquipmentOps + `bagOverflow.ts` notification) + test `GameManager.overflowSurfacing.test.ts` + key locale `bag.overflow`; verify 2026-09-05: master 0 reference `bagOverflow`, `App.vue` vẫn push message thô |
-| **9.9** 🔴 | QA-009 (Medium) — `useAutoRetryCountdown.start()` không clear handle cũ | **Worktree `worktree-gp123` đã dọn 2026-09-05 — CẦN RE-APPLY thủ công**: fix gốc (2026-09-03, `9ce2400`) `stop()` đầu `start()` + test; verify trên master 2026-09-05: `start()` vẫn gán `handle = setInterval` trực tiếp, chưa fix |
-| **9.10** 🔴 | QA-010 (Medium) — `EquipmentSlotManager.restore` thiếu slot-enum check (defense in depth) | **Worktree `worktree-gp123` đã dọn 2026-09-05 — CẦN RE-APPLY thủ công**: fix gốc (2026-09-03, `a880498`) skip entry lạ + test; verify trên master: `restore()` vẫn `set` thẳng, chưa check |
-| **9.11** 🔴 | QA-011 (Low) — `LocalCloudSaveService` 2 key không atomic | **Worktree `worktree-gp123` đã dọn 2026-09-05 — CẦN RE-APPLY thủ công**: fix gốc (2026-09-03, `8fae21d`) revision-first write + rollback on failure + test; verify 2026-09-05: master vẫn ghi save-trước-revision-sau; self-healing nên Low |
+| **9.8** ✅ | QA-008 (Medium) — `MaterialBag.add` overflow bị caller bỏ qua | ✅ **MERGED 2026-09-05** (`6318083`): surface overflow tại mọi reward caller + `bagOverflow.ts` notification + test `GameManager.overflowSurfacing.test.ts` + key locale `bag.overflow`. |
+| **9.9** ✅ | QA-009 (Medium) — `useAutoRetryCountdown.start()` không clear handle cũ | ✅ **MERGED 2026-09-05** (`6318083`): `stop()` đầu `start()` + test. |
+| **9.10** ✅ | QA-010 (Medium) — `EquipmentSlotManager.restore` thiếu slot-enum check (defense in depth) | ✅ **MERGED 2026-09-05** (`6318083`): skip entry lạ + test. |
+| **9.11** ✅ | QA-011 (Low) — `LocalCloudSaveService` 2 key không atomic | ✅ **MERGED 2026-09-05** (`6318083`): revision-first write + rollback on failure + test. |
 | **9.12** ✅ | QA-012 (Low) — `stateVersion` bump mỗi tick dù state không đổi (refactor) | **ĐÓNG BY-DESIGN** — perf-optimize-pass Task 5 (merged `b16c3d0`): dirty-check `setExternalModifiers` chặn recompute `finalStats` mỗi tick (phần tốn kém đã xong); `bumpState()` mỗi tick được giữ có chủ đích theo plan perf hướng (a) decouple — không làm thêm |
 
 ### 8.2. Spec chi tiết Task 9.1 — QA-001 panel chặn đột phá khi còn mặc trang bị
@@ -349,16 +349,16 @@ In-flight: gp123 (Group 1+2 xong chờ merge; Group 3 đang làm) → action-pla
 | **OPT-01** | `game/src/App.vue:360` | `bumpState()` mỗi tick | Tách `stateVersion` thành "bag/equipment" (manual) + "battle/world" (auto) |
 | **OPT-02** | `game/src/services/save/SaveSystem.ts:575,583` | `structuredClone` + `JSON.stringify` = double serialize mỗi autosave | ✅ Điều tra xong ở worktree `worktree-perf-optimize-pass` (Task 3) — tiền đề audit sai, chỉ có 1 `JSON.stringify` thật (write-time), `structuredClone` là snapshot cần thiết chống race quest-state. Không sửa code, chỉ thêm test round-trip khoá hành vi. Coi như đóng. |
 | **OPT-03** | `game/src/composables/useCadenceSmoothing.ts:56-68` | rAF loop không tự dừng | ✅ Xong — perf-optimize-pass Task 2 (`14a8235`), ĐÃ MERGE (`8b59045`) |
-| **OPT-04** | `game/src/core/equipment/EquipmentBag.ts:129-135` | `getEquipped`/`getEquippedInSlot` O(N) | 🔴 **Worktree `worktree-gp123` đã dọn 2026-09-05 — CẦN RE-APPLY thủ công**: fix gốc (2026-09-03, `ef19bc8`) slot index `Map` + test; verify 2026-09-05: master 0 reference `slotIndex`/`setEquippedInternal` |
+| **OPT-04** | `game/src/core/equipment/EquipmentBag.ts:129-135` | `getEquipped`/`getEquippedInSlot` O(N) |  ✅ **MERGED 318083 2026-09-05** — slot index O(1) getEquippedInSlot + test |
 | **OPT-05** | `game/src/components/panels/EquipmentHallPanel/EnhanceTab.vue:63-111` | `enhanceRows` O(slots × 5) mỗi stateVersion bump | ✅ Đóng per gp123 spec v2 §2 (file spec hiện chỉ có trong branch `worktree-gp123`, chưa có trên master — không cần làm) |
-| **OPT-06** | `game/src/services/save/SaveSystem.ts:661-668` | `loadGame` đọc+remove `IMPORT_HANDOFF_KEY` mỗi boot kể cả khi không import | 🔴 **Worktree `worktree-gp123` đã dọn 2026-09-05 — CẦN RE-APPLY thủ công**: fix gốc (2026-09-03, `aabe375`) defer handoff removal past consume; verify 2026-09-05: master vẫn `removeItem` unconditional trước khi consume |
+| **OPT-06** | `game/src/services/save/SaveSystem.ts:661-668` | `loadGame` đọc+remove `IMPORT_HANDOFF_KEY` mỗi boot kể cả khi không import |  ✅ **MERGED 318083 2026-09-05** — removeItem dịch sau consume, chỉ chạm storage khi key tồn tại |
 | **OPT-07** | `game/src/App.vue:285-287` | `drainNotifications()` chạy mỗi tick vô điều kiện | ✅ Xong — perf-optimize-pass Task 2 (`14a8235`, trả mảng rỗng dùng chung), ĐÃ MERGE (`8b59045`) |
 | **OPT-08** | `game/src/components/game/PhaserCanvas.vue:120-136` | EventBus handler đăng ký trước async game create | Wrap try/catch + cleanup on failure (cũng liên quan 9.5) |
 | **OPT-09** | `game/src/game/scenes/CombatScene.ts` | 11-entry `boundHandlers` array + 14 explicit `on()` | ✅ Xong 2026-09-02 — gộp thành 1 danh sách `getCombatEventBindings()` (22 entry), subscribe/unsubscribe cùng lặp 1 nguồn nên không thể lệch nhau; `unsubscribeCombatEvents()` idempotent (clear `eventBus`); test mới `CombatScene.eventSubscriptionSymmetry.test.ts` |
 
 ### 8.4. Thứ tự đề xuất
 
-1. **Re-apply thủ công Group 1+2 gp123** (9.4/9.6/9.8/9.9/9.10/9.11 + OPT-04/06 — code gốc nằm trong branch `worktree-gp123`, worktree đã dọn 2026-09-05, KHÔNG merge thẳng vì conflict + fork cũ) — từng fix một commit nhỏ lên master mới, ưu tiên giữ code turn-based; rủi ro save-version ở mục 10.
+1. ~~Re-apply thủ công Group 1+2 gp123~~ — ✅ **XONG: merge trực tiếp `6318083` 2026-09-05, 0 conflict thật (2 hunk resolve tay), full verify 2621/2621 + type-check/build/E2E pass — nhanh hơn và an toàn hơn re-apply từng commit như dự kiến; rủi ro save-version ở mục 10.
 2. **Group 3 gp123** (6E/6F/6G — spec+plan còn trong branch `worktree-gp123`, implementation chưa commit ĐÃ BỊ HỦY cùng worktree 2026-09-05) — làm lại từ spec trên branch mới từ master, bump save v57.
 3. **Task 9.12** — đã đóng by-design (không làm thêm).
 4. **OPT còn lại (OPT-01/OPT-08)** — cộng dồn cuối, làm theo đợt refactor.
@@ -380,7 +380,7 @@ In-flight: gp123 (Group 1+2 xong chờ merge; Group 3 đang làm) → action-pla
 
 | Worktree (branch, fork-point) | Việc | Trạng thái thực tế (verify 2026-09-05) |
 |---|---|---|
-| `worktree-gp123` (branch giữ lại, **worktree đã dọn 2026-09-05**) | gp123 spec v2 + plan Groups 1-3: Group 1 (9.4/9.6/9.8/9.9/9.10/9.11) + Group 2 (OPT-04/06) + Group 3 (6E age-axis migration/6F/6G) | 🔴 **Worktree ĐÃ DỌN theo lệnh user 2026-09-05** (verify cùng ngày: cả 8 fix + Group 3 đều vẫn vắng mặt trên master — không mục nào lỗi thời). Branch `worktree-gp123` GIỮ LẠI: 12 commits Group 1+2 (`b104177` spec+plan → `ef19bc8` OPT-04) + spec/plan còn đọc được từ branch. **Code Group 3 chưa commit (39 files + 8 ảnh herb) ĐÃ HỦY cùng worktree** — làm lại từ spec. KHÔNG merge thẳng (conflict thật ở `GameManager.ts` + 6 file `changed in both`, fork cũ `fe49848`): re-apply từng fix nhỏ, bump save lên **v57** khi chạm save (master v56 = auto-farm, gp123 v56 = 6E — đụng số, xem mục 10) |
+| `worktree-gp123` (branch giữ lại, **worktree đã dọn 2026-09-05**) | gp123 spec v2 + plan Groups 1-3: Group 1 (9.4/9.6/9.8/9.9/9.10/9.11) + Group 2 (OPT-04/06) + Group 3 (6E age-axis migration/6F/6G) | 🟢 **Group 1+2 ĐÃ MERGE 318083 2026-09-05** — đánh giá lại trước merge: verify từng fix (9.4/9.6/9.8/9.9/9.10/9.11 + OPT-04/06) đều còn thiếu trên master, merge-tree lúc đầu báo 0 conflict nhưng master tiến tiếp sinh 2 hunk thật — resolve tay xong, full verify 2621/2621 + type-check/build/E2E pass. Group 3 (6E/6F/6G) code uncommitted đã hủy — làm lại từ spec (docs đã có trên master qua merge); save v57 do Group 3 mới bump (master v56) |
 | `.agent-worktrees/action-playback` (`feat/action-playback`, fork `887701c` = master tip) | Action Playback plan 8 task (việc combat #1, bảng 9.5) | 🟡 **Task 2/8 đã commit** (`40868dc`: `TurnSkillDefinition.presetId` + `TurnBattle.queuedFollowUpActorId`); worktree sạch — đang thực thi |
 | `.agent-worktrees/slice7-hud-completion` (`feat/slice7-hud-completion` @ `bd69e0d`) | Slice 7 master plan Tasks 3-10 (HUD rewrite) | ✅ Đã merge qua `70cb22e` — **worktree stale, chờ dọn** |
 | `.agent-worktrees/talent-v4-m1` (`worktree-talent-v4-m1` @ `8dde70c`) | Talent v4 M1 | ✅ Đã merge qua `660034d` — **worktree stale, chờ dọn** |
@@ -493,7 +493,7 @@ Dựng các primitive thuần (pure function), test riêng, KHÔNG đụng `Batt
 
 ### 10.1. Thứ tự merge đề xuất (tránh conflict)
 
-1. **Re-apply Group 1+2 gp123 trước** (branch `worktree-gp123` giữ lại 12 commits để tham khảo, worktree đã dọn 2026-09-05 — KHÔNG merge thẳng) — từng fix một commit nhỏ lên master mới. Lưu ý 10.2.
+1. ~~Re-apply Group 1+2 gp123 trước~~ — ✅ **XONG: merge thẳng `6318083`** (đánh giá lại: 0 conflict thật sau khi master tiến, verify từng fix còn thiếu trước khi merge — mọi fix đều còn giá trị). Lưu ý 10.2 không còn áp dụng (save version không đổi trong merge này).
 2. **`feat/action-playback`** — đang Task 2/8, fork từ master tip nên merge sạch khi xong.
 3. Dọn 2 worktree stale: `slice7-hud-completion`, `talent-v4-m1` (code đã merge, chỉ còn worktree + branch).
 4. Sau đó mới làm các việc bảng 9.5 theo tiên quyết.
