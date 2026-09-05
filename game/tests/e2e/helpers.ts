@@ -34,6 +34,10 @@ export async function createCharacterThroughUi(page: Page, name: string): Promis
 
   // Step 1: name
   await page.getByTestId('creation-name-input').fill(name)
+  // Validation chạy theo input event — fill() set value qua input event,
+  // nhưng nút enable computed có thể lệch 1 tick; expect-enabled thay vì
+  // click-retry (best practice: explicit state assertion).
+  await expect(page.getByTestId('creation-continue-name')).toBeEnabled({ timeout: 5_000 })
   await page.getByTestId('creation-continue-name').click()
 
   // Step 2: talent selection — pick the first available talent card.
