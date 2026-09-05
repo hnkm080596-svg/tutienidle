@@ -201,6 +201,7 @@ import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from '.
 import { resolveEnemySpawnPosition } from '../battle/EnemySpawnPlacement'
 import type { TurnSkillDefinition, TurnSkillSlotRole } from '../battle/turn/TurnSkillAction'
 import { buildTurnSkillPresentation, type TurnSkillPresentationEntry } from '../combat/CombatSkillPresentation'
+import { PresentationGate } from '../battle/turn/PresentationGate'
 import { emitTurnReady, emitTurnCastStart, emitTurnActionImpact, emitTurnStandbyComplete } from '../battle/turn/TurnActionPresentationEvents'
 import type { TurnDeclaredAction } from '../battle/turn/TurnBattleSystem'
 import { toTurnBattleParticipant } from './TurnBattleAdapter'
@@ -2535,6 +2536,21 @@ export class GameManager {
    */
   private presentationActive = false
 
+  /** Defect Task 3 (2026-09-05) — boot-race gate: chờ CombatScene mount lần
+  * đầu (hoặc safety-net timeout) trước khi tick battle — chặn headless-
+  * resolve toàn bộ trận 1 trước Phaser kịp mount. */
+  private readonly presentationGate = new PresentationGate()
+
+  /** Called once at real-app boot ONLY (App.vue) — never from test fixtures. */
+  expectPresentationLayer(): void {
+    this.presentationGate.expect()
+  }
+
+  /** True while the very first Phaser boot hasn't finished mounting CombatScene yet. */
+  isAwaitingPresentationLayer(): boolean {
+    return this.presentationGate.isBlocking()
+  }
+
   /** Tick đã peek actor ready, chờ acknowledgeTurnReady(). */
   private pendingReadyActor: TurnBattleParticipant | null = null
 
@@ -2547,7 +2563,10 @@ export class GameManager {
   setPresentationActive(active: boolean): void {
     this.presentationActive = active
 
-    if (!active) {
+    if (active) {
+      // Defect Task 3 — Phaser mounted lần đầu: mở boot-race gate (sticky).
+      this.presentationGate.markReady()
+    } else {
       // Rời CombatScene giữa chừng — hoàn tất pending phases ngay lập tức
       // (headless path) để trận không bị treo.
       if (this.pendingReadyActor && this.turnBattle) {
@@ -3479,7 +3498,11 @@ export class GameManager {
       // Gauge combat Ã¢â€ â€™ Wave spawn khi sÃƒÂ¢n trÃ¡Â»â€˜ng Ã¢â€ â€™ Result khi hÃ¡ÂºÂ¿t wave.
       // MÃ¡Â»â€”i fixed step 0.1s = 1 pacing tick; turn resolution instant.
       if (this.turnBattle) {
-        if (this.turnBattle.state === 'countdown') {
+        if (this.presentationGate.isBlocking()) {
+          // Defect Task 3 — chờ Phaser mount lần đầu (PresentationGate):
+          // không tick countdown/fighting cho tới khi presentation layer
+          // sẵn sàng hoặc safety-net timeout trôi qua.
+        } else if (this.turnBattle.state === 'countdown') {
           this.turnBattleSystem.tickCountdown(this.turnBattle)
         } else if (this.turnBattle.state === 'fighting') {
           // Slice 7 manual mode: trÃ†Â°Ã¡Â»â€ºc khi resolve step kÃ¡ÂºÂ¿, peek actor Ã¢â‚¬â€
