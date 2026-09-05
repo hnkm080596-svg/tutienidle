@@ -79,6 +79,11 @@ export const ENEMY_COLOR = 0xd94a4a
 export const PLAYER_DISPLAY_SCALE_MULTIPLIER = 2
 export const ENEMY_DISPLAY_SCALE_MULTIPLIER = 2
 
+// Boss to gấp 2 lần một enemy THƯỜNG (2026-09-05, Combat Art Pipeline spec
+// §7 addendum) — thay đổi có chủ đích so với hành vi cũ "boss dùng CÙNG
+// multiplier ×2 như enemy thường" (xem CombatScene.enemyScale.test.ts).
+export const BOSS_DISPLAY_SCALE_MULTIPLIER = ENEMY_DISPLAY_SCALE_MULTIPLIER * 2
+
 export const SHADOW_COLOR = 0x000000
 export const SHADOW_ALPHA = 0.32
 export const SHADOW_WIDTH_RATIO = 1.12

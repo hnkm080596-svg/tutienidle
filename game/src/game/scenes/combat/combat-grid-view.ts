@@ -13,6 +13,7 @@ import { DEPTH_ENTITY_SHADOW, DEPTH_OVERLAY_UI, entitySpriteDepth } from '@/game
 
 import type { CombatScene } from '../CombatScene'
 import {
+  BOSS_DISPLAY_SCALE_MULTIPLIER,
   BOSS_HP_FILL_COLOR,
   ENEMY_DISPLAY_SCALE_MULTIPLIER,
   ENEMY_HP_BAR_HEIGHT,
@@ -354,10 +355,11 @@ export class CombatGridView {
         offsetX: 0,
         row,
         sourceSize: { ...ENEMY_SOURCE_SIZE },
-        // Enemy art x2 — PNG quái hiển thị gấp đôi (kể cả Boss); bóng
-        // ellipse dưới chân nhân theo cùng multiplier trong
-        // applyEntityDepthScale().
-        sizeMultiplier: ENEMY_DISPLAY_SCALE_MULTIPLIER,
+        // Enemy art x2; Boss ×2 quy tắc enemy thường (2026-09-05) — không
+        // còn dùng CÙNG multiplier như trước (xem
+        // CombatScene.enemyScale.test.ts). Bóng ellipse dưới chân nhân
+        // theo cùng multiplier trong applyEntityDepthScale().
+        sizeMultiplier: health?.isBoss ? BOSS_DISPLAY_SCALE_MULTIPLIER : ENEMY_DISPLAY_SCALE_MULTIPLIER,
         boost: { value: 1 },
         footY: 0,
         columnFloat: 0,

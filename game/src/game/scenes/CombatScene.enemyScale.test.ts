@@ -77,7 +77,7 @@ describe('CombatScene â€” ENEMY_DISPLAY_SCALE_MULTIPLIER Ã—2', () => {
     expect(calls[0]![0]).toBeCloseTo(calls[0]![1], 5)
   })
 
-  it('Boss Ã¡p CÃ™NG quy táº¯c Ã—2', () => {
+  it("Boss renders at 2× a regular enemy's size (2026-09-05: no longer the same ×2 rule)", () => {
     const scene = createScene()
     const { sprite, calls } = makeEnemySprite('sprite')
 
@@ -107,11 +107,14 @@ describe('CombatScene â€” ENEMY_DISPLAY_SCALE_MULTIPLIER Ã—2', () => {
       maxHp: 100,
       isBoss: true,
     }
+    // BOSS_DISPLAY_SCALE_MULTIPLIER — set tại thời điểm tạo sprite trong
+    // combat-grid-view.ts, không phải bên trong applyEntityDepthScale()
+    // (hàm này chỉ nhân lại giá trị sizeMultiplier có sẵn trên sprite).
+    sprite.sizeMultiplier = 4
 
     scene.applyEntityDepthScale(sprite, 1)
 
-    // KÃ­ch thÆ°á»›c sprite khÃ´ng phÃ¢n biá»‡t boss/thÆ°á»ng â€” cÃ¹ng Ã—2.
-    expect(calls[0]![1]).toBeCloseTo(50 * 1 * 2, 5)
+    expect(calls[0]![1]).toBeCloseTo(50 * 1 * 4, 5)
   })
 
   it('resize gá»i láº¡i KHÃ”NG cá»™ng multiplier láº·p â€” cÃ¹ng input ra cÃ¹ng kÃ­ch thÆ°á»›c', () => {
