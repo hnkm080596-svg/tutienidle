@@ -11,6 +11,7 @@ import type { Stage } from '../stage/Stage'
 import type { EnemySystem } from '../enemy/EnemySystem'
 import type { TemplateRegistry } from './TemplateRegistry'
 import type { HiddenBeastSystem } from './HiddenBeastSystem'
+import { effectiveTotalEnemyCount } from '../stage/EffectiveEnemyCount'
 
 export interface StageWaveSystemDeps {
   eventBus: EventBus
@@ -65,7 +66,7 @@ export class StageWaveSystem {
 
     // Stage chỉ 1 quái + có bossEnemyId -> quái đầu tiên (spawnedCount
     // 0) CŨNG là quái CUỐI, phải là Boss ngay từ đầu.
-    const firstEnemyTemplate = this.pickEnemyForSpawn(stage, stage.totalEnemyCount === 1)
+    const firstEnemyTemplate = this.pickEnemyForSpawn(stage, effectiveTotalEnemyCount(stage) === 1)
 
     if (!firstEnemyTemplate) {
       this.deps.stageManager.stop()
@@ -117,7 +118,7 @@ export class StageWaveSystem {
     // chạy (migration spawn telegraph 2026-08-24).
     const aliveCount = battle.enemies.length + battle.pendingEnemySpawns.length
 
-    if (active.spawnedCount >= stage.totalEnemyCount) {
+    if (active.spawnedCount >= effectiveTotalEnemyCount(stage)) {
       if (aliveCount === 0) {
         if (
           this.activeStagePlayer &&
@@ -154,7 +155,7 @@ export class StageWaveSystem {
 
     const nextEnemyTemplate = this.pickEnemyForSpawn(
       stage,
-      active.spawnedCount === stage.totalEnemyCount - 1,
+      active.spawnedCount === effectiveTotalEnemyCount(stage) - 1,
     )
 
     if (!nextEnemyTemplate) {
@@ -197,7 +198,11 @@ export class StageWaveSystem {
     return {
       spawned: active.spawnedCount,
 
-      total: stage.totalEnemyCount,
+      // Đọc effectiveTotalEnemyCount thay vì stage.totalEnemyCount thô —
+      // progress hiển thị (CombatTopBar.vue) phải khớp con số THẬT dùng
+      // để quyết định victory (xem update() ở trên), không thì stage
+      // Boss hiện "1/5" thay vì "1/1" dù trận đã thắng.
+      total: effectiveTotalEnemyCount(stage),
 
       alive: this.deps.battleSystem.getBattle()?.enemies.length ?? 0,
     }

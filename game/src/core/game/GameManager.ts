@@ -135,6 +135,7 @@ import type { NotificationEvent } from '../notification/NotificationEvent'
 import { StageManager } from '../stage/StageManager'
 import { StageSystem } from '../stage/StageSystem'
 import type { Stage } from '../stage/Stage'
+import { effectiveTotalEnemyCount } from '../stage/EffectiveEnemyCount'
 import { ZoneRegistry } from '../stage/ZoneRegistry'
 import type { Zone } from '../stage/Zone'
 
@@ -2468,7 +2469,7 @@ export class GameManager {
       // Ã„â€˜Ã¡ÂºÂ§u trÃ¡ÂºÂ­n/bÃ¡ÂºÂ¯t Ã„â€˜Ã¡ÂºÂ§u stage Ã¢â‚¬â€ hÃ¡Â»â€¡ sÃ¡Â»â€˜ng restartCycle giÃ¡Â»Â¯ fighting ngay).
       state: 'fighting',
       totalTurnsElapsed: 0,
-      wave: { totalEnemyCount: stageRef.totalEnemyCount, spawnedCount: 0 },
+      wave: { totalEnemyCount: effectiveTotalEnemyCount(stageRef), spawnedCount: 0 },
     }
 
     this.turnBattleSystem = new TurnBattleSystem(
@@ -3168,7 +3169,7 @@ export class GameManager {
 
 
       this.turnBattle.wave = {
-        totalEnemyCount: stage.totalEnemyCount,
+        totalEnemyCount: effectiveTotalEnemyCount(stage),
         spawnedCount: 1,
       }
 
@@ -3182,7 +3183,7 @@ export class GameManager {
           // isFinalSpawn: lÃ†Â°Ã¡Â»Â£t spawn cuÃ¡Â»â€˜i lÃƒÂ  boss (tÃ¡ÂºÂ§ng 10) Ã¢â‚¬â€ factory chÃ¡ÂºÂ¡y
           // TRÃ†Â¯Ã¡Â»Å¡C khi resolveNextStep tÃ„Æ’ng spawnedCount, nÃƒÂªn tÃ¡Â»â€¢ng Ã„â€˜ÃƒÂ£-spawn
           // sau lÃ¡ÂºÂ§n nÃƒÂ y = spawnedCount + 1.
-          const isFinalSpawn = (this.turnBattle?.wave?.spawnedCount ?? 0) + 1 >= stageRef.totalEnemyCount
+          const isFinalSpawn = (this.turnBattle?.wave?.spawnedCount ?? 0) + 1 >= effectiveTotalEnemyCount(stageRef)
           const template =
             this.stageWaves.pickEnemyForTurnSpawn(stageRef, isFinalSpawn) ??
             this.lastStageEnemyTemplate
@@ -3355,8 +3356,10 @@ export class GameManager {
 
     const killedEntities: { entity: CombatEntity; rewardGranted: boolean }[] = []
 
-    for (let i = 0; i < stage.totalEnemyCount; i++) {
-      const isFinalSpawn = i === stage.totalEnemyCount - 1
+    const rollTotalEnemyCount = effectiveTotalEnemyCount(stage)
+
+    for (let i = 0; i < rollTotalEnemyCount; i++) {
+      const isFinalSpawn = i === rollTotalEnemyCount - 1
       const template = this.stageWaves.pickEnemyForTurnSpawn(stage, isFinalSpawn)
 
       if (!template) {

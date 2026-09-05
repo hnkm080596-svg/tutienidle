@@ -46,7 +46,12 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
     vi.restoreAllMocks()
   })
 
-  it('Class thật (Kiếm Tu) đánh xuyên 1 Stage 2 quái (mob + Boss có Phase/Enrage) tới Victory', () => {
+  // Boss stages are always solo (Combat Art Pipeline spec §7 addendum,
+  // 2026-09-05, effectiveTotalEnemyCount()) — totalEnemyCount:2 ở stage
+  // fixture dưới đây CỐ TÌNH giữ nguyên như content-author cũ để chứng
+  // minh guarantee hệ thống: dù data khai 2, mob KHÔNG BAO GIỜ spawn,
+  // quái ĐẦU TIÊN (và DUY NHẤT) luôn là Boss.
+  it('Class thật (Kiếm Tu) đánh xuyên 1 Stage Boss-solo (Phase/Enrage) tới Victory — mob trong enemyPool không bao giờ spawn', () => {
     vi.spyOn(Math, 'random').mockImplementation(mulberry32(MVP_LOOP_SEED))
 
     const gameManager = new GameManager()
@@ -169,6 +174,7 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
     expect(gameManager.startStage(player, finalStats, stage)).toBe(true)
 
     let sawBossSpawn = false
+    let sawMobSpawn = false
 
     // Slice 6 cutover: unified flow (Countdown → Spawn → Gauge → Wave →
     // Result). Boss Phase (archetype override) + Enrage theo giây là cơ
@@ -187,6 +193,10 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
       if (bossEntry) {
         sawBossSpawn = true
       }
+
+      if (battle?.enemies.some((enemy) => enemy.entity.id.startsWith('mvp_test_mob_'))) {
+        sawMobSpawn = true
+      }
     }
 
     // COMBAT + PLAYER + ENEMY: trận phải THẮNG thật (không phải hết tick
@@ -197,5 +207,10 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
     // BOSS: quái Boss thật đã spawn (wave spawn floor-10 boss-final hoạt
     // động trong turn-based flow).
     expect(sawBossSpawn).toBe(true)
+
+    // Boss stages are always solo — mob của enemyPool KHÔNG BAO GIỜ được
+    // roll dù stage.totalEnemyCount (data thô) khai 2, vì
+    // effectiveTotalEnemyCount() ép quái ĐẦU TIÊN đã là lượt spawn CUỐI.
+    expect(sawMobSpawn).toBe(false)
   })
 })
