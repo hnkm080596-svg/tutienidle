@@ -1422,6 +1422,11 @@ export class CombatScene extends Phaser.Scene {
           this.gameManagerRef?.acknowledgeActionImpact()
         })
       }
+    } else if (this.gameManagerRef && this.isActionPlaybackActive()) {
+      // Defect Task 5 (2026-09-05) — không có sprite (late-join miss/cleanup
+      // race) — ack ngay để engine không treo vĩnh viễn ở
+      // pendingDeclaredAction (cùng fallback pattern với onTurnReady()).
+      this.gameManagerRef.acknowledgeActionImpact()
     }
   }
 
