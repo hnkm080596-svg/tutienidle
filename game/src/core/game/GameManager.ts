@@ -207,6 +207,7 @@ import { PresentationGate } from '../battle/turn/PresentationGate'
 import { emitTurnReady, emitTurnCastStart, emitTurnActionImpact, emitTurnStandbyComplete } from '../battle/turn/TurnActionPresentationEvents'
 import type { TurnDeclaredAction } from '../battle/turn/TurnBattleSystem'
 import { toTurnBattleParticipant } from './TurnBattleAdapter'
+import { DEFAULT_PARTY_FORMATION } from './PartyFormation'
 import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
 
 /**
@@ -2406,6 +2407,21 @@ export class GameManager {
 
   private buildTurnBattle(playerEntity: CombatEntity, enemyEntities: CombatEntity[]): TurnBattle {
     const playerPath = this.activePlayer
+
+    // Party placement (Combat Art Pipeline §7, 2026-09-05) — vị trí party đọc
+    // từ DEFAULT_PARTY_FORMATION thay vì phó mặc cho placeholder x/row do
+    // playerToCombatEntity()/BattleSystem.start() gán trước đó (trùng giá trị
+    // hiện tại nhưng KHÔNG phải nguồn sự thật). Task 16+ (Trận Pháp) thay
+    // formation cố định này bằng player.formationLoadout-driven resolution —
+    // giữ nguyên chỗ tra cứu này để chỉ cần đổi 1 dòng khi tới lúc.
+    const formation = DEFAULT_PARTY_FORMATION
+
+    const playerSlot = formation.find((slot) => slot.combatantId === 'player')
+
+    if (playerSlot) {
+      playerEntity.row = playerSlot.row
+      playerEntity.x = playerSlot.column
+    }
 
     const playerParticipant = toTurnBattleParticipant(
       playerEntity,
