@@ -5,11 +5,13 @@ import type { TurnBattleEntityVisualState } from '@/core/battle/turn/TurnActionP
 function state(overrides: Partial<TurnBattleEntityVisualState> = {}): TurnBattleEntityVisualState {
   return {
     id: 'enemy-1',
+    name: 'Enemy',
     row: 4,
     column: 10,
     currentHp: 50,
     maxHp: 100,
     alive: true,
+    isBoss: false,
     ...overrides,
   }
 }
@@ -101,5 +103,23 @@ describe('planCombatantSpriteReconciliation', () => {
 
   it('returns no actions for an empty snapshot with no known ids', () => {
     expect(planCombatantSpriteReconciliation(new Set(), [])).toEqual([])
+  })
+
+  it('skips create entirely for an unknown id that is already dead on first sight (Fix round 1, Minor 1)', () => {
+    const actions = planCombatantSpriteReconciliation(new Set(), [state({ id: 'enemy-1', alive: false })])
+
+    expect(actions).toEqual([])
+  })
+
+  it('does not let a dead-on-arrival id suppress actions for other ids in the same snapshot', () => {
+    const known = new Set(['enemy-2'])
+    const states = [
+      state({ id: 'enemy-1', alive: false }), // unknown + dead → no action
+      state({ id: 'enemy-2', currentHp: 10 }), // known + alive → update
+    ]
+
+    const actions = planCombatantSpriteReconciliation(known, states)
+
+    expect(actions).toEqual([{ type: 'update', state: states[1] }])
   })
 })

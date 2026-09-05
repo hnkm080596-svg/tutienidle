@@ -85,11 +85,13 @@ export function emitTurnStandbyComplete(eventBus: EventBus, actorId: string): vo
 
 export interface TurnBattleEntityVisualState {
   id: string
+  name: string
   row: number
   column: number
   currentHp: number
   maxHp: number
   alive: boolean
+  isBoss: boolean
 }
 
 export interface TurnBattleEntitySnapshotEvent {
@@ -102,11 +104,17 @@ function toVisualState(participant: TurnBattleParticipant): TurnBattleEntityVisu
 
   return {
     id: participant.id,
+    name: participant.entity.name,
     row: position.row,
     column: position.column,
     currentHp: participant.entity.currentHp,
     maxHp: participant.entity.maxHp,
     alive: participant.entity.alive,
+    // Fix round 1 (Task 5 review) — CombatEntity.isBoss là optional (chỉ set
+    // cho enemy spawn qua legacy spawner); mặc định false khớp với cách
+    // legacy/BattleSystem.ts (dòng 621/810/831) đã coerce isBoss ?? false
+    // khi build EnemySpawnedEvent, giữ nhất quán 2 nguồn dữ liệu.
+    isBoss: participant.entity.isBoss ?? false,
   }
 }
 

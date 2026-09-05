@@ -1188,12 +1188,22 @@ export class CombatScene extends Phaser.Scene {
 
     for (const action of actions) {
       if (action.type === 'create') {
+        // Fix round 1 (Task 5 review, Important) — dùng name/isBoss THẬT từ
+        // schema (TurnActionPresentationEvents.toVisualState()) thay vì
+        // hardcode false/id. Đây chính là đường tạo sprite ĐẦU TIÊN cho enemy
+        // các wave sau wave 1 (getOrCreateSprite no-op nếu id đã có trong
+        // this.sprites) — hardcode isBoss:false ở đây từng làm mất luôn HP
+        // bar boss (1.45x width + BOSS_HP_FILL_COLOR, xem combat-grid-view.ts)
+        // cho đúng những boss mà task này sinh ra để fix.
+        // `action.state.row` đến từ entityGridPosition() — nguồn DUY NHẤT
+        // sản xuất LaneIndex hợp lệ cho luồng turn-based này, nên cast an
+        // toàn ở biên; không thêm runtime validation (per brief).
         const sprite = this.getOrCreateSprite(
           action.state.id,
           color,
-          action.state.id,
+          action.state.name,
           action.state.row as LaneIndex,
-          { currentHp: action.state.currentHp, maxHp: action.state.maxHp, isBoss: false },
+          { currentHp: action.state.currentHp, maxHp: action.state.maxHp, isBoss: action.state.isBoss },
         )
 
         this.snapInterpolationTarget(action.state.id, action.state.column)
@@ -1208,6 +1218,8 @@ export class CombatScene extends Phaser.Scene {
           continue
         }
 
+        // `action.state.row` — cùng trust boundary như nhánh 'create' ở trên
+        // (entityGridPosition() là nguồn duy nhất).
         sprite.row = action.state.row as LaneIndex
         this.snapInterpolationTarget(action.state.id, action.state.column)
         this.positionSprite(sprite, action.state.column, action.state.id)

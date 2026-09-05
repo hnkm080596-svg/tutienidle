@@ -141,16 +141,33 @@ describe('TurnActionPresentationEvents', () => {
       eventBus.on<TurnBattleEntitySnapshotEvent>('turn_battle_entity_snapshot', (event) => received.push(event))
 
       const battle: TurnBattle = {
-        players: [makeParticipant('player', createCombatant({ id: 'player', row: 4, x: 1, currentHp: 80, maxHp: 100 }), 100, 0)],
-        enemies: [makeParticipant('enemy', createCombatant({ id: 'enemy', row: 5, x: 9, currentHp: 0, maxHp: 50, alive: false }), 100, 1)],
+        players: [makeParticipant('player', createCombatant({ id: 'player', name: 'Player', row: 4, x: 1, currentHp: 80, maxHp: 100 }), 100, 0)],
+        enemies: [makeParticipant('enemy', createCombatant({ id: 'enemy', name: 'Boss Enemy', row: 5, x: 9, currentHp: 0, maxHp: 50, alive: false, isBoss: true }), 100, 1)],
         state: 'fighting',
       }
 
       emitTurnBattleEntitySnapshot(eventBus, battle)
 
       expect(received).toHaveLength(1)
-      expect(received[0]!.players).toEqual([{ id: 'player', row: 4, column: 1, currentHp: 80, maxHp: 100, alive: true }])
-      expect(received[0]!.enemies).toEqual([{ id: 'enemy', row: 5, column: 9, currentHp: 0, maxHp: 50, alive: false }])
+      expect(received[0]!.players).toEqual([{ id: 'player', name: 'Player', row: 4, column: 1, currentHp: 80, maxHp: 100, alive: true, isBoss: false }])
+      expect(received[0]!.enemies).toEqual([{ id: 'enemy', name: 'Boss Enemy', row: 5, column: 9, currentHp: 0, maxHp: 50, alive: false, isBoss: true }])
+    })
+
+    it('defaults isBoss to false when CombatEntity.isBoss is undefined', () => {
+      const eventBus = new EventBus()
+      const received: TurnBattleEntitySnapshotEvent[] = []
+
+      eventBus.on<TurnBattleEntitySnapshotEvent>('turn_battle_entity_snapshot', (event) => received.push(event))
+
+      const battle: TurnBattle = {
+        players: [makeParticipant('player', createCombatant({ id: 'player', name: 'Player' }), 100, 0)],
+        enemies: [],
+        state: 'fighting',
+      }
+
+      emitTurnBattleEntitySnapshot(eventBus, battle)
+
+      expect(received[0]!.players[0]!.isBoss).toBe(false)
     })
   })
 })

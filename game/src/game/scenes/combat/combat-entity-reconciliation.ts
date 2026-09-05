@@ -16,7 +16,13 @@ export type CombatantSpriteReconciliationAction =
 /**
  * So sánh danh sách id sprite ĐÃ BIẾT (từ lần snapshot trước) với danh sách
  * state MỚI NHẤT để quyết định action cho từng sprite:
- * - id chưa từng biết → 'create'.
+ * - id chưa từng biết:
+ *   - còn `alive` → 'create'.
+ *   - đã `alive: false` ngay từ lần đầu thấy (chết-trước-khi-thấy, vd. entity
+ *     bị one-shot cùng fixed step nó xuất hiện) → KHÔNG action gì cả (Fix
+ *     round 1, Minor 1). Không tạo sprite chỉ để xóa ngay tick sau — trước
+ *     bản fix này, id này lọt qua nhánh 'create' rồi bị 'remove' ở tick kế,
+ *     gây flash một frame.
  * - id đã biết, còn `alive` → 'update' (đồng bộ vị trí/thanh máu).
  * - id đã biết nhưng `alive: false` → 'remove' (Task 9 sẽ thay bằng animation
  *   chết trước khi xóa; task này xóa ngay theo đúng cách enemy-death hiện có).
@@ -34,6 +40,10 @@ export function planCombatantSpriteReconciliation(
     incomingIds.add(state.id)
 
     if (!knownIds.has(state.id)) {
+      if (!state.alive) {
+        continue
+      }
+
       actions.push({ type: 'create', state })
       continue
     }
