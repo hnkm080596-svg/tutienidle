@@ -268,6 +268,175 @@ git add game/src/core/battle/EnemySpawnPlacement.ts game/src/core/battle/EnemySp
 git commit -m "feat(combat-art): confine enemy spawn to ENEMY_SIDE_REGION, force boss to region center"
 ```
 
+## Task 2.5: Boss always fights solo — `effectiveTotalEnemyCount()`
+
+**Files:**
+- Create: `game/src/core/stage/EffectiveEnemyCount.ts`
+- Test: `game/src/core/stage/EffectiveEnemyCount.test.ts`
+- Modify: `game/src/core/game/StageWaveSystem.ts` (every read of `stage.totalEnemyCount` — confirmed sites: `start()` line 68's `stage.totalEnemyCount === 1` check, `update()` line 157's `active.spawnedCount === stage.totalEnemyCount - 1` check, and the win-condition check inside `update()` — read the full file fresh, there may be more than these two)
+- Modify: `game/src/core/game/GameManager.ts` (wave config setup for the turn-based path — `this.turnBattle.wave = { totalEnemyCount: stage.totalEnemyCount, ... }` at `~3099-3102`, and `buildTurnBattle()`'s own wave object construction)
+
+**Interfaces:**
+- Produces: `effectiveTotalEnemyCount(stage: Stage): number`.
+- Consumes: `Stage` from `game/src/core/stage/Stage.ts`.
+
+**The bug this closes:** `StageWaveSystem.pickEnemyForSpawn()` (`StageWaveSystem.ts:260`) only actually spawns a boss when `isFinalSpawn && floor === 10 && stage.bossEnemyId` — but nothing today guarantees a floor-10 boss stage's OWN `totalEnemyCount` content value is 1. If a content author sets `totalEnemyCount: 5` on a floor-10 boss stage, 4 regular enemies spawn (in parallel, per `StageWaveSystem`'s own "spawn theo nhịp SONG SONG, không đợi quái cũ chết" design) BEFORE/ALONGSIDE the boss — violating "boss always solo." This task makes the guarantee systemic instead of a content-authoring convention that could silently be violated.
+
+- [ ] **Step 1: Write the failing test**
+
+```ts
+import { describe, expect, it } from 'vitest'
+import { effectiveTotalEnemyCount } from './EffectiveEnemyCount'
+import type { Stage } from './Stage'
+
+function stageFixture(overrides: Partial<Stage> = {}): Stage {
+  return {
+    id: 'test_stage', name: 'Test', description: '',
+    enemyPool: [{ enemyId: 'dummy', weight: 1 }],
+    totalEnemyCount: 5,
+    spawnIntervalSeconds: 1,
+    ...overrides,
+  }
+}
+
+describe('effectiveTotalEnemyCount', () => {
+  it('a floor-10 stage with bossEnemyId is ALWAYS 1, regardless of the raw totalEnemyCount', () => {
+    const stage = stageFixture({ floor: 10, bossEnemyId: 'test_boss', totalEnemyCount: 5 })
+
+    expect(effectiveTotalEnemyCount(stage)).toBe(1)
+  })
+
+  it('a floor-10 stage WITHOUT bossEnemyId keeps its raw totalEnemyCount (metadata-only bossEnemyId on non-final floors, per pickEnemyForSpawn\'s own floor===10 gate)', () => {
+    const stage = stageFixture({ floor: 10, totalEnemyCount: 5 })
+
+    expect(effectiveTotalEnemyCount(stage)).toBe(5)
+  })
+
+  it('a non-floor-10 stage WITH bossEnemyId keeps its raw totalEnemyCount (bossEnemyId is reserved/metadata on floors 1-9, per Stage.ts\'s own comment)', () => {
+    const stage = stageFixture({ floor: 3, bossEnemyId: 'test_boss', totalEnemyCount: 5 })
+
+    expect(effectiveTotalEnemyCount(stage)).toBe(5)
+  })
+
+  it('already-1 stages are unaffected', () => {
+    const stage = stageFixture({ floor: 10, bossEnemyId: 'test_boss', totalEnemyCount: 1 })
+
+    expect(effectiveTotalEnemyCount(stage)).toBe(1)
+  })
+})
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `npx vitest run EffectiveEnemyCount.test.ts`
+Expected: FAIL with "Cannot find module './EffectiveEnemyCount'".
+
+- [ ] **Step 3: Implement**
+
+Create `game/src/core/stage/EffectiveEnemyCount.ts`:
+
+```ts
+// EffectiveEnemyCount (Combat Art Pipeline spec §7 addendum, 2026-09-05) —
+// a boss stage has EXACTLY ONE enemy, ever (the boss). Mirrors
+// StageWaveSystem.pickEnemyForSpawn()'s own boss-gate condition
+// (floor === 10 && stage.bossEnemyId — bossEnemyId is reserved/metadata
+// on floors 1-9, per Stage.ts's own comment) so wave/spawn/win-condition
+// config can never drift out of sync with which stage actually spawns a
+// boss. Isolated in its own file so both StageWaveSystem (legacy-bridge
+// path) and GameManager (turn-based path) read the SAME single source of
+// truth rather than duplicating the floor===10 condition inline twice.
+import type { Stage } from './Stage'
+
+export function effectiveTotalEnemyCount(stage: Stage): number {
+  if (stage.floor === 10 && stage.bossEnemyId) {
+    return 1
+  }
+
+  return stage.totalEnemyCount
+}
+```
+
+- [ ] **Step 4: Run test to verify it passes**
+
+Run: `npx vitest run EffectiveEnemyCount.test.ts`
+Expected: PASS.
+
+- [ ] **Step 5: Wire into `StageWaveSystem.ts`**
+
+Read the full file fresh (it's short, under 305 lines) and replace EVERY read of `stage.totalEnemyCount` used for spawn/win-condition logic with `effectiveTotalEnemyCount(stage)` — confirmed sites from this plan's own review: `start()`'s `stage.totalEnemyCount === 1` (line 68) and `update()`'s `active.spawnedCount === stage.totalEnemyCount - 1` (line 157), plus the win-condition check further in `update()` (read it fresh — this plan's earlier review did not capture its exact line). Add the import:
+
+```ts
+import { effectiveTotalEnemyCount } from '../stage/EffectiveEnemyCount'
+```
+
+- [ ] **Step 6: Wire into `GameManager.ts`'s turn-based wave config**
+
+Read `GameManager.ts:~3099-3102` and `buildTurnBattle()`'s own `wave: { totalEnemyCount: ..., spawnedCount: ... }` construction fresh (both places currently read `stage.totalEnemyCount`/`stageRef.totalEnemyCount` directly). Replace both with `effectiveTotalEnemyCount(stage)`/`effectiveTotalEnemyCount(stageRef)`. Add the import:
+
+```ts
+import { effectiveTotalEnemyCount } from '../stage/EffectiveEnemyCount'
+```
+
+- [ ] **Step 7: Regression test — a boss stage's wave never spawns a regular enemy**
+
+Add to `game/src/core/game/GameManager.partyFormation.test.ts` (or a new small file `GameManager.bossSolo.test.ts` if that file is getting crowded):
+
+```ts
+describe('boss stage — GameManager.buildTurnBattle wave config never allows a regular enemy alongside the boss', () => {
+  it('a floor-10 boss stage with totalEnemyCount:5 in its content data still only ever has 1 enemy total', () => {
+    const gameManager = new GameManager()
+    const player = createPlayer()
+    const stats = { ...createBaseStats(), attack: 100, speed: 100 }
+
+    const bossTemplate = defineEnemy({
+      id: 'test_boss_solo', name: 'Test Boss', level: 1, realmId: 'mortal', lane: 'ground', isBoss: true,
+      statsInput: { maxHp: 1000, attack: 0, attackSpeed: 1, attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+      rewards: { techniqueInsight: 0, spiritStone: 0 },
+    })
+    const regularTemplate = defineEnemy({
+      id: 'test_regular_should_not_spawn', name: 'Regular', level: 1, realmId: 'mortal', lane: 'ground',
+      statsInput: { maxHp: 1, attack: 0, attackSpeed: 1, attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+      rewards: { techniqueInsight: 0, spiritStone: 0 },
+    })
+
+    const stage = {
+      id: 'boss_solo_stage', name: 'Boss Solo Stage', description: '',
+      floor: 10, bossEnemyId: 'test_boss_solo',
+      enemyPool: [{ enemyId: 'test_regular_should_not_spawn', weight: 1 }],
+      totalEnemyCount: 5, // content author mistake — should still be forced to 1 effectively
+      spawnIntervalSeconds: 0,
+    }
+
+    gameManager.registerEnemyTemplates([bossTemplate, regularTemplate])
+    gameManager.registerStages([stage])
+    gameManager.setActivePlayer(player)
+
+    expect(gameManager.startStage(player, stats, stage, false)).toBe(true)
+
+    expect(gameManager.getTurnBattle()!.wave?.totalEnemyCount).toBe(1)
+  })
+})
+```
+
+(Adjust `defineEnemy`'s exact `isBoss` field placement if the real signature differs — read `Enemy.ts`'s `defineEnemy()` fresh, since this plan's guess at `isBoss: true` being a top-level input field vs. something `createBossVariant()` applies separately needs confirming against the real function before finalizing this test.)
+
+- [ ] **Step 8: Run test to verify it passes**
+
+Run: `npx vitest run GameManager.partyFormation.test.ts EffectiveEnemyCount.test.ts`
+Expected: PASS.
+
+- [ ] **Step 9: Full regression**
+
+Run: `npx vitest run`
+Expected: PASS — confirm no existing test asserts a boss stage with `totalEnemyCount > 1` actually spawning multiple enemies (that would be a test pinning the old, now-intentionally-changed behavior — update it, don't leave it contradicting the new guarantee).
+
+- [ ] **Step 10: Commit**
+
+```bash
+git add game/src/core/stage/EffectiveEnemyCount.ts game/src/core/stage/EffectiveEnemyCount.test.ts game/src/core/game/StageWaveSystem.ts game/src/core/game/GameManager.ts game/src/core/game/GameManager.partyFormation.test.ts
+git commit -m "feat(combat-art): boss stages are always solo — effectiveTotalEnemyCount() overrides content-data totalEnemyCount"
+```
+
 ## Task 3: `PartyFormationSlot`/`DEFAULT_PARTY_FORMATION` + `buildTurnBattle()` reads from it
 
 **Files:**
@@ -1208,11 +1377,112 @@ git add game/src/game/support/CombatPreload.ts game/src/game/scenes/CombatScene.
 git commit -m "feat(combat-art): wire placeholder sprite-sheet animations into CombatPreload + Action Playback phase transitions"
 ```
 
-## Task 9.5: Part A verification + roadmap update
+## Task 9.5: Boss sprite renders at 2× a regular enemy's size
+
+**Files:**
+- Modify: `game/src/game/scenes/combat/combatConstants.ts` (`ENEMY_DISPLAY_SCALE_MULTIPLIER = 2` at line 80 — add a new constant alongside it)
+- Modify: `game/src/game/scenes/combat/combat-grid-view.ts` (enemy sprite creation, `~349-365`, currently `sizeMultiplier: ENEMY_DISPLAY_SCALE_MULTIPLIER` unconditionally)
+- Modify: `game/src/game/scenes/CombatScene.enemyScale.test.ts` (existing test "Boss áp CÙNG quy tắc ×2", `~80-115` — this is a DELIBERATE behavior change, the locked assertion must be updated, not left contradicting the new behavior)
+
+**Interfaces:**
+- Produces: `BOSS_DISPLAY_SCALE_MULTIPLIER` in `combatConstants.ts`.
+
+**Context:** confirmed via `combat-grid-view.ts:360` that `health?.isBoss` is already in scope at the exact line that sets `sizeMultiplier` (used one statement earlier to pick the HP bar's fill color) — this is a small, well-contained change at an already-identified line, not a new lookup path.
+
+- [ ] **Step 1: Update the locked test to assert the NEW intended behavior**
+
+Replace the `'Boss áp CÙNG quy tắc ×2'` test in `CombatScene.enemyScale.test.ts` (`~80-115`):
+
+```ts
+  it('Boss renders at 2× a regular enemy\'s size (2026-09-05: no longer the same ×2 rule)', () => {
+    const scene = createScene()
+    const { sprite, calls } = makeEnemySprite('sprite')
+
+    const barPart = () => {
+      const part = {
+        setScale() { return part },
+        setSize() { return part },
+        updateDisplayOrigin() { return part },
+      }
+
+      return part
+    }
+
+    sprite.healthBar = {
+      background: barPart(),
+      fill: barPart(),
+      width: 42,
+      currentHp: 100,
+      maxHp: 100,
+      isBoss: true,
+    }
+    sprite.sizeMultiplier = 4 // BOSS_DISPLAY_SCALE_MULTIPLIER, set at sprite-creation time (combat-grid-view.ts), not inside applyEntityDepthScale
+
+    scene.applyEntityDepthScale(sprite, 1)
+
+    expect(calls[0]![1]).toBeCloseTo(50 * 1 * 4, 5)
+  })
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `npx vitest run CombatScene.enemyScale.test.ts`
+Expected: FAIL — `sprite.sizeMultiplier` is a test-fixture field, not yet driven by real `isBoss`-aware production code, so this specific test now just exercises `applyEntityDepthScale()`'s existing multiplier-passthrough with a manually-set `4` — it should actually PASS already, since `applyEntityDepthScale()` doesn't hardcode the multiplier value itself (confirmed by the pre-existing "resize gọi lại KHÔNG cộng multiplier" test using `sizeMultiplier: 2` generically). The real gap this task closes is in `combat-grid-view.ts`'s sprite-CREATION code (Step 3below), not `applyEntityDepthScale()`. Run this to confirm: if it already passes, that's expected — proceed to Step 3 to close the actual production gap, then Step 4 adds the real regression test for `combat-grid-view.ts` itself.
+
+- [ ] **Step 3: Add `BOSS_DISPLAY_SCALE_MULTIPLIER`, wire it at sprite-creation time**
+
+In `game/src/game/scenes/combat/combatConstants.ts`, alongside `ENEMY_DISPLAY_SCALE_MULTIPLIER` (line 80):
+
+```ts
+export const ENEMY_DISPLAY_SCALE_MULTIPLIER = 2
+
+// Boss is 2x a REGULAR enemy's size (2026-09-05, Combat Art Pipeline spec
+// §7 addendum) — deliberate change from the prior "boss uses the same ×2
+// as everyone" behavior.
+export const BOSS_DISPLAY_SCALE_MULTIPLIER = ENEMY_DISPLAY_SCALE_MULTIPLIER * 2
+```
+
+In `game/src/game/scenes/combat/combat-grid-view.ts`, replace line 360:
+
+```ts
+        // Boss ×2 quy tắc enemy thường (2026-09-05) — không còn dùng
+        // CÙNG multiplier như trước (xem CombatScene.enemyScale.test.ts).
+        sizeMultiplier: health?.isBoss ? BOSS_DISPLAY_SCALE_MULTIPLIER : ENEMY_DISPLAY_SCALE_MULTIPLIER,
+```
+
+Add `BOSS_DISPLAY_SCALE_MULTIPLIER` to the file's existing `combatConstants` import.
+
+- [ ] **Step 4: Add the real regression test for sprite-creation**
+
+Find (or create, if this file doesn't already exist) `game/src/game/scenes/combat/combat-grid-view.test.ts` — check first via Glob whether enemy-sprite-creation already has a dedicated test file; if creation logic is only covered indirectly through `CombatScene.*.test.ts` files, add there instead, matching this codebase's existing test-location convention for this exact function. Assert that creating an enemy sprite with `health.isBoss = true` produces `sizeMultiplier === BOSS_DISPLAY_SCALE_MULTIPLIER` (4), and with `isBoss = false`/absent produces `ENEMY_DISPLAY_SCALE_MULTIPLIER` (2).
+
+- [ ] **Step 5: Run all affected tests**
+
+Run: `npx vitest run CombatScene.enemyScale.test.ts combat-grid-view.test.ts`
+Expected: PASS.
+
+- [ ] **Step 6: Manual verification**
+
+Run: `npm run dev`, fight a floor-10 boss stage, confirm the boss sprite visibly renders larger than a regular enemy would (compare against a non-boss stage in the same session).
+
+- [ ] **Step 7: Full regression + typecheck**
+
+Run: `npx vitest run`
+Run: `npx vue-tsc --noEmit`
+Expected: both clean.
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add game/src/game/scenes/combat/combatConstants.ts game/src/game/scenes/combat/combat-grid-view.ts game/src/game/scenes/CombatScene.enemyScale.test.ts
+git commit -m "feat(combat-art): boss sprite renders at 2x a regular enemy's size (BOSS_DISPLAY_SCALE_MULTIPLIER)"
+```
+
+## Task 9.9: Part A verification + roadmap update
 
 - [ ] Run `npx vitest run` — full suite green.
 - [ ] Run `npx vue-tsc --noEmit` — zero errors.
-- [ ] Manual playtest: enter 3 stage battles back-to-back, confirm enemies visibly spawn/update/die correctly (Task 4/5), skill dock sits on the right (Task 7), boss (if the current stage pool has one) spawns centered in the enemy box rather than aligned to the player's row (Task 2).
+- [ ] Manual playtest: enter 3 stage battles back-to-back, confirm enemies visibly spawn/update/die correctly (Task 4/5), skill dock sits on the right (Task 7), boss (if the current stage pool has one) spawns centered in the enemy box rather than aligned to the player's row (Task 2), boss fights alone with a visibly larger sprite (Task 2.5/9.5).
 - [ ] Update `game/docs/roadmap.md` (or `game/docs/turn-based-combat-roadmap.md`, whichever this project is currently using — check both, the earlier session's memory notes the index moved once already) with a section noting Part A shipped, linking this plan file and the Combat Art Pipeline spec.
 - [ ] Commit the roadmap update: `git commit -m "docs: roadmap — Combat Art Pipeline (Part A) shipped"`.
 
