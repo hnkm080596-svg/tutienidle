@@ -216,7 +216,11 @@ function buildFootprint(
 class FlatGridProjection implements BattleGridProjection {
   readonly mode = 'flat' as const
 
-  viewport: ProjectionViewport
+  // makeViewport() chuẩn hóa mọi trường (default 0 cho rightInset) nên
+  // instance lưu sẵn là bản Required — khai báo Required<ProjectionViewport>
+  // thay vì interface gốc (rightInset? optional) để caller nội bộ không phải
+  // xử lý undefined (TS2532 khi trừ thẳng vào availableWidth).
+  viewport: Required<ProjectionViewport>
 
   private cellSizePx = 0
   private gridLeft = 0
@@ -321,7 +325,8 @@ class FlatGridProjection implements BattleGridProjection {
 class PerspectiveGridProjection implements BattleGridProjection {
   readonly mode = 'perspective' as const
 
-  viewport: ProjectionViewport
+  // Cùng lý do với FlatGridProjection ở trên — bản lưu sẵn luôn Required.
+  viewport: Required<ProjectionViewport>
 
   private q = 1 + PERSPECTIVE_STRENGTH
   private bandTop = 0
