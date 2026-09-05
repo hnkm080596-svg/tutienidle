@@ -25,7 +25,7 @@
 4. **Bug và drop chết trong kinh tế** *(đã giải quyết 2026-08-28 — economy-ecosystem hoàn thành: T1–T6+T8+T9, T7 bỏ vì linh thảo giữ hoàn toàn random)*: mapping Tinh Hoa sai cho realm 4+ (`RefinementBalance.ts:74-81`); vật liệu legacy vẫn rơi nhưng không còn sink.
 5. **Save không validate shape** *(đã giải quyết 2026-08-28 — save-shape-validation Wave 1 + bổ sung equipment/slot shape khi review)*: chỉ kiểm tra version, tiền lệ crash boot v47 có thể tái diễn.
 6. **Tài liệu lệch code** *(đã giải quyết 2026-08-28 — docs-sync viết lại game-guide.md + item-design-reference.md, dọn comment MissileSystem, xóa `Plans .md`)*: `game-guide.md` và `item-design-reference.md` mô tả hệ thống đã xóa.
-7. **Nợ kỹ thuật** *(cập nhật 2026-09-05)*: `GameManager.ts` **2.939 dòng** (tách Ops 2026-09-03 xong lại phình do wiring turn-based — cần tách tiếp, xem mục 10); `CombatScene.ts` còn **1.539 dòng** (đã tách `PlayerHudLayer` + HUD rewrite, không còn god-class 2.922 dòng như trước); nhiều hệ thống core 0 test; **lint đã có** (`eslint.config.js` + script `lint`); **E2E đã có 6 spec** (`boot-fresh`, `combat-overlay-layout`, `create-to-combat`, `ink-wash-ui`, `save-reload`, `turn-combat-hud`).
+7. **Nợ kỹ thuật** *(cập nhật 2026-09-05)*: `GameManager.ts` **2.939 dòng** (tách Ops 2026-09-03 xong lại phình do wiring turn-based — cần tách tiếp, xem mục 10); `CombatScene.ts` còn **1.539 dòng** (đã tách `PlayerHudLayer` + HUD rewrite, không còn god-class 2.922 dòng như trước); nhiều hệ thống core 0 test; **lint đã có** (`eslint.config.js` + script `lint`); **E2E đã có 6 spec** (`boot-fresh`, `combat-overlay-layout`, `create-to-combat`, `ink-wash-ui`, `save-reload`, `turn-combat-hud`). Hai plan audit mới về code/lifecycle và UI/UX/browser QA đã được lập, xem mục 7.10.
 8. **Việc đang bay (chưa merge, 2026-09-05)** — xem chi tiết mục 8.6: branch `worktree-gp123` (QA 9.4/9.6/9.8/9.9/9.10/9.11 + OPT-04/06 đã commit; Group 3 = 6E/6F/6G đang làm dở, 47 file uncommitted) và branch `feat/action-playback` (Action Playback Task 2/8 đã commit). Cả hai đều fork sạch, không đụng roadmap — merge theo thứ tự ở mục 10.
 
 ## 2. Nguyên tắc ưu tiên
@@ -260,6 +260,20 @@ In-flight: gp123 (Group 1+2 xong chờ merge; Group 3 đang làm) → action-pla
 | Balance pass | Armor K theo realm, block cap, reaction scaling, realm pressure tests — merged `47042ac` |
 | Code-split | Entry 2231→848KB + phaser chunk riêng — merged `af88cee` |
 | Turn-based combat rework (M1→Slice 7 + Fairness + Stat + Future Systems + Auto-farm) | Engine duy nhất + manual UI + party + auto-farm — xem mục 9 (toàn bộ slice 🟢) |
+
+### 7.10. Plans audit remediation — CHƯA EXECUTE (2026-09-05)
+
+| Plan | Phạm vi | Trạng thái |
+|---|---|---|
+| [System code review remediation](../../docs/superpowers/plans/2026-09-05-system-code-review-remediation.md) | Action playback token/generation, idempotent presentation teardown, VFX completion, offline auto-farm cap, App/composable lifecycle, playback edge-case tests và typed test fixtures | 🔴 **Chưa bắt đầu** — agent khác phụ trách implementation |
+| [UI/UX and browser QA remediation](../../docs/superpowers/plans/2026-09-05-ui-ux-qa-remediation.md) | Accessibility/focus/dialogs, keyboard/touch, responsive container-fit layout, localization, reduced motion, combat HUD UX, error/recovery flows và Playwright matrix | 🔴 **Chưa bắt đầu** — agent khác phụ trách implementation; có baseline E2E failure cần xử lý ở Task 13 |
+
+**Thứ tự đề xuất:**
+
+1. Điều tra và khóa baseline failures trước: `GameManager.actionPlayback.test.ts:140` và `turn-combat-hud.spec.ts:45`.
+2. Thực hiện các hạng mục P0/P1 của [system code review remediation](../../docs/superpowers/plans/2026-09-05-system-code-review-remediation.md), đặc biệt action playback/offline settlement.
+3. Thực hiện [UI/UX and browser QA remediation](../../docs/superpowers/plans/2026-09-05-ui-ux-qa-remediation.md), ưu tiên modal/focus, locked actions, responsive combat và Playwright diagnostics.
+4. Chỉ chuyển trạng thái sang 🟢 khi có focused tests, type-check/build, Vitest và browser evidence phù hợp; không coi static review là bằng chứng fix.
 
 ---
 
