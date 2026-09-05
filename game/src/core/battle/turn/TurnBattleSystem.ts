@@ -480,21 +480,32 @@ export class TurnBattleSystem {
     // lượt cuối). Tick trước sẽ làm duration-1 expire trước khi kịp block.
     // Bá Thể: bị hard-CC liên tục >= 3 lượt thì lượt thứ 4 tự gỡ CC và
     // hành động (fairness guard — không ai bị khóa vĩnh viễn).
-    const hardCcActive = actorBuffSystem.isStunned() || actorBuffSystem.isFrozen()
-
+    //
+    // isCharging skip hoàn toàn khối này (Defect-fix Task 2, 2026-09-05):
+    // charging đã có hành động thay thế riêng (charge tick/resolve, xem
+    // khối phía trên) — actor không hề bị "chặn" bởi CC trong lượt này,
+    // nên KHÔNG tính vào consecutiveHardCcTurns (tránh Bá Thể clear sớm
+    // sai) và ccBlocked phải là false (tránh log mâu thuẫn: ccBlocked=true
+    // kèm skillId/damage thật của charge resolve).
     let ccBlocked: boolean
 
-    if (hardCcActive && actor.consecutiveHardCcTurns >= 3) {
-      actor.buffs.clearCcEffects()
-      actor.consecutiveHardCcTurns = 0
-      actor.baTheTriggeredAtTurn = battle.totalTurnsElapsed
+    if (isCharging) {
       ccBlocked = false
-    } else if (hardCcActive) {
-      actor.consecutiveHardCcTurns += 1
-      ccBlocked = true
     } else {
-      actor.consecutiveHardCcTurns = 0
-      ccBlocked = false
+      const hardCcActive = actorBuffSystem.isStunned() || actorBuffSystem.isFrozen()
+
+      if (hardCcActive && actor.consecutiveHardCcTurns >= 3) {
+        actor.buffs.clearCcEffects()
+        actor.consecutiveHardCcTurns = 0
+        actor.baTheTriggeredAtTurn = battle.totalTurnsElapsed
+        ccBlocked = false
+      } else if (hardCcActive) {
+        actor.consecutiveHardCcTurns += 1
+        ccBlocked = true
+      } else {
+        actor.consecutiveHardCcTurns = 0
+        ccBlocked = false
+      }
     }
 
     actorBuffSystem.update(actor.entity, this.combat, this.registry)
