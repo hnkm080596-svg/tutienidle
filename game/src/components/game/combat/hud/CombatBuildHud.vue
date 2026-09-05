@@ -1,38 +1,27 @@
 <script setup lang="ts">
-// skill-insight-and-auto-combat-hud-plan.md mục 6 — chọn renderer theo
-// trạng thái nhân vật. Path MỚI phải đăng ký renderer riêng ở đây;
-// không tự rơi về giao diện năm ô của Pháp Tu (mặc định = Phàm Nhân,
-// đúng hành vi hiện tại — undefined cultivationPath luôn đi kèm
-// realmId === 'mortal', xem Player.ts's ghi chú cultivationPath).
+// Slice 7 HUD dedup fix (Defect Task 7, 2026-09-05) — KiemTuCombatHud/
+// MortalCombatHud deleted (were pure duplicates of TurnCombatSkillBar.vue's
+// skill slots, see CombatSceneOverlay.vue). PhapTuCombatHud kept (has
+// ArtifactCombatSlot, unique to that path). kiem_tu/mortal now render
+// nothing here — their skill input lives solely in TurnCombatSkillBar.
 import { computed } from 'vue'
-import MortalCombatHud from './MortalCombatHud.vue'
 import PhapTuCombatHud from './PhapTuCombatHud.vue'
-import KiemTuCombatHud from './KiemTuCombatHud.vue'
 import { usePlayerStore } from '@/stores/player'
 import { useStateVersion } from '@/composables/useGameState'
 
 const player = usePlayerStore()
 const { stateVersion } = useStateVersion()
 
-const renderer = computed(() => {
+const showPhapTuHud = computed(() => {
   stateVersion.value
 
-  switch (player.cultivationPath) {
-    case 'phap_tu':
-      return PhapTuCombatHud
-
-    case 'kiem_tu':
-      return KiemTuCombatHud
-
-    default:
-      return MortalCombatHud
-  }
+  return player.cultivationPath === 'phap_tu'
 })
 </script>
 
 <template>
   <div class="combat-build-hud">
-    <component :is="renderer" />
+    <PhapTuCombatHud v-if="showPhapTuHud" />
   </div>
 </template>
 
