@@ -197,6 +197,19 @@ Nội dung cụ thể từng mục (Slice 6 content prerequisites, Slice 6 cutov
 - Channel skill's `chargeTurns` thật + hệ số sát thương tỉ lệ theo số lượt charge cho Bạt Kiếm Thuật (Future Systems Task 8 — cần đối chiếu số liệu thật từ `BattleSystem.batKiem.test.ts`'s `createBatKiemThuat()` trước khi bịa số).
 - Node Tree's 3 skill cụ thể thay cho chain 5 skill cũ, mỗi hành (Future Systems Task 1) — quyết định nội dung để lúc thực thi, ghi vào commit message theo yêu cầu của Task 1's Step 2.
 
+## Action Playback layer — spec+plan viết xong (2026-09-05)
+
+**Phát hiện live (2026-09-05, không nằm trong scope rework ban đầu)**: người dùng báo "chiến đấu kết thúc quá nhanh, không có hoạt ảnh/VFX". Khảo sát xác nhận: `CombatSystem.resolveActionHit()` (đã được `TurnBattleSystem` gọi trực tiếp) tự emit `hit`/`critical`/`dodge`/`block`/`damage`/`death`/`kill` — phần này ĐÃ chạy đúng. Cái thiếu là `attack`/`action_impact` (từ `ActionImpactSystem.ts`, chỉ được engine real-time cũ gọi — file này vẫn sống, đang phục vụ `ArtifactSystem.ts`/`EnemyAttackSystem.ts`/`SkillEffectResolver.ts`/`legacy/BattleSystem.ts` nên KHÔNG được sửa) và **hoàn toàn không có nhịp nghỉ giữa các lượt** — `GameManager` gọi `resolveActorTurn()` tức thời mỗi 0.1s fixed-step.
+
+**Thiết kế đã chốt**: state machine 5 pha mỗi actor (`idle → ready → cast → standby → idle/ready`), damage chỉ thật sự áp dụng lúc Phaser báo tín hiệu "impact" (không phải lúc quyết định hành động) — `presentationActive: boolean` flag do `CombatScene` bật/tắt lúc mount/unmount, mặc định `false` nên MỌI test hiện có không cần sửa gì. Thêm 1 effect-kind mới `reactiveTrigger` trong `TurnBuffTypes.ts` (gộp cơ chế punish-on-cast + counter/follow-up thành 1 mechanism, chưa gán nội dung cụ thể).
+
+Spec: [2026-09-05-turn-combat-action-playback-design.md](../../docs/superpowers/specs/2026-09-05-turn-combat-action-playback-design.md)
+Plan: [2026-09-05-turn-combat-action-playback.md](../../docs/superpowers/plans/2026-09-05-turn-combat-action-playback.md) — 8 task.
+
+**Trạng thái**: 🟡 Plan viết xong (2026-09-05) — chờ thực thi. `TurnBattleSystem` giữ nguyên headless/pure (mọi orchestration "chờ tín hiệu" sống ở `GameManager`, mirror đúng pattern `awaitedManualActor` Slice 7 đã có). Rủi ro cao nhất đã ghi trong plan: `resolveActorTurn()` đã phình to hơn nhiều so với lúc spec được viết (charge mechanic Bạt Kiếm Thuật, Reaction Path double-cast, gauge-delta, party) — Task 3 phải tách cẩn thận, không giả định method đơn giản như spec mô tả ban đầu.
+
+**Nội dung ngoài phạm vi**: `reactiveTrigger` content thật (skill/enemy nào có punish-on-cast/counter) — chỉ xây cơ chế, chưa gán nội dung. Camera focus/turn-banner/hit-stop và các nâng cấp trình chiếu khác chưa được yêu cầu, có thể lớp thêm sau mà không đổi contract event đã chốt.
+
 ## Cách cập nhật roadmap này
 
 Sau mỗi lần khảo sát/brainstorm/viết plan cho một hạng mục:
