@@ -102,6 +102,8 @@ export interface TurnBattle {
    * combat ephemeral theo nguyên tắc rework).
    */
   log?: BattleLogEntry[]
+  /** Action Playback (2026-09-05) — counter/follow-up (§6 spec): actor này nhảy thẳng vào 'ready' ngay sau standby, bỏ qua idle. */
+  queuedFollowUpActorId?: string
 }
 
 /**

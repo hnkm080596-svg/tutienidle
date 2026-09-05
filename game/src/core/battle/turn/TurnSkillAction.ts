@@ -5,7 +5,7 @@
 import type { CombatEntity } from '../../combat/CombatEntity'
 import type { SkillResourceType } from '../../skill/SkillTypes'
 import type { ActionDamageInfo } from '../ActionImpactSystem'
-import type { ActionTargeting } from '../CombatAction'
+import type { ActionTargeting, CombatVfxPresetId } from '../CombatAction'
 import type { TurnBattleParticipant } from './TurnBattleSystem'
 import { areaFor } from '../ActionTargetingSystem'
 import { entityGridPosition, type GridPosition } from '../BattleGrid'
@@ -29,6 +29,8 @@ export interface TurnSkillDefinition {
   appliesBuff?: { definitionId: string; target: 'self' | 'target' }
   /** Future Systems Task 7 — skill charge N lượt (Thế) rồi tự resolve (Trảm). */
   chargeTurns?: number
+  /** Action Playback (2026-09-05) — VFX preset cho action_impact. undefined = fallback preset mặc định (Task 4). */
+  presetId?: CombatVfxPresetId
 }
 
 export interface TurnSkillSlot {
