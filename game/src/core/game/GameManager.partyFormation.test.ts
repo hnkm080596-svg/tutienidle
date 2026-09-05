@@ -1,10 +1,29 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { GameManager } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import { createBaseStats } from '../stats/StatBlock'
 import { HERO_LANE_INDEX, HERO_COLUMN } from '../battle/BattleLane'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
+
+// Formation slot deliberately DISTINCT from HERO_LANE_INDEX(4)/HERO_COLUMN(1)
+// so this test can only pass if buildTurnBattle() actually reads
+// DEFAULT_PARTY_FORMATION. Legacy BattleSystem.start() unconditionally
+// writes HERO_LANE_INDEX/HERO_COLUMN onto the same CombatEntity right before
+// buildTurnBattle() runs, so without the formation-lookup block the entity
+// would still land on HERO_LANE_INDEX/HERO_COLUMN — a formation-agnostic
+// buildTurnBattle() would fail the assertions below instead of coincidentally
+// passing. MOCK_ROW/MOCK_COLUMN stay inside PLAYER_SIDE_REGION (rows 3-8,
+// columns 0-5).
+vi.mock('./PartyFormation', () => ({
+  DEFAULT_PARTY_FORMATION: [{ combatantId: 'player', row: 6, column: 3 }],
+}))
+
+// Mirror of the literals baked into the vi.mock factory above — vi.mock is
+// hoisted above top-level const declarations, so the factory cannot close
+// over named constants; keep these in sync with the object literal above.
+const MOCK_ROW = 6
+const MOCK_COLUMN = 3
 
 function createPlayer(): CombatEntity {
   const stats = { ...createBaseStats(), attack: 50, speed: 100, criticalRate: 0 }
@@ -37,7 +56,7 @@ function createDummy() {
 }
 
 describe('GameManager.buildTurnBattle — reads DEFAULT_PARTY_FORMATION when no formation is configured', () => {
-  it('places the single player participant at HERO_LANE_INDEX/HERO_COLUMN, id "player"', () => {
+  it('places the player at the MOCKED formation slot, not at HERO_LANE_INDEX/HERO_COLUMN — proves buildTurnBattle() is driven by DEFAULT_PARTY_FORMATION', () => {
     const gameManager = new GameManager()
     const player = createPlayer()
 
@@ -50,7 +69,11 @@ describe('GameManager.buildTurnBattle — reads DEFAULT_PARTY_FORMATION when no 
 
     expect(battle.players).toHaveLength(1)
     expect(battle.players[0]!.id).toBe('player')
-    expect(battle.players[0]!.entity.row).toBe(HERO_LANE_INDEX)
-    expect(battle.players[0]!.entity.x).toBe(HERO_COLUMN)
+    expect(battle.players[0]!.entity.row).toBe(MOCK_ROW)
+    expect(battle.players[0]!.entity.x).toBe(MOCK_COLUMN)
+    // Sanity: the mocked slot really is different from the legacy default —
+    // otherwise this assertion would pass for the wrong reason.
+    expect(MOCK_ROW).not.toBe(HERO_LANE_INDEX)
+    expect(MOCK_COLUMN).not.toBe(HERO_COLUMN)
   })
 })

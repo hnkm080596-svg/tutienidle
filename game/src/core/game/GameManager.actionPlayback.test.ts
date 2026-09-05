@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import { createBaseStats } from '../stats/StatBlock'
@@ -17,6 +17,9 @@ const ENEMY_STATS = {
   criticalRate: 0,
   criticalDamage: 1.5,
   armor: 0,
+  // Determinism fix (fix round 1) — see root-cause note in battleReady()
+  // below. Guarantees the player's attack always hits this dummy.
+  evasionRate: 0,
 }
 
 function createPlayer(): CombatEntity {
@@ -56,6 +59,7 @@ function battleReady(): GameManager {
   gameManager.registerSkillTemplates([createBasicSkill()])
   gameManager.learnSkill('basic_test')
   gameManager.skillSystem.equipToSlot('basic_test', 0)
+
   gameManager.startBattle(player, createDummy())
 
   // Countdown 30 ticks.
@@ -63,7 +67,26 @@ function battleReady(): GameManager {
     gameManager.update(0.1)
   }
 
-  gameManager.getTurnBattle()!.enemies[0]!.entity.x = 2
+  // True root cause of the ~4/15 flake (fix round 1 — the previously
+  // reported diagnosis, "enemy spawn row randomized out of the player's
+  // targeting row," does NOT hold: selectTarget() in TurnBattleSystem.ts
+  // falls back to the nearest living opponent on ANY row when nobody
+  // shares the actor's row (`pool = sameRow.length > 0 ? sameRow : living`),
+  // so a target is always found regardless of spawn row).
+  //
+  // The actual cause is CombatSystem.rollHit(): every resolveActionHit()
+  // call rolls `Math.random() < getHitChance(accuracy, evasion)` (see
+  // combat/CombatSystem.ts, combat/Accuracy.ts). EnemyStatInput's default
+  // evasionRate is 25 (EnemyStatInput.ts) against the player's default
+  // accuracyRating of 100 → hitChance = 100/125 = 0.80, i.e. a genuine ~20%
+  // chance any single acknowledged attack MISSES and leaves currentHp
+  // unchanged — exactly the "expected 1000000 to be less than 1000000"
+  // failure observed. ENEMY_STATS.evasionRate is now pinned to 0 above so
+  // hitChance = 100/100 = 1.0 (always hits), making every single-attack
+  // damage assertion in this file deterministic without touching Math.random
+  // or weakening any assertion.
+  const enemyEntity = gameManager.getTurnBattle()!.enemies[0]!.entity
+  enemyEntity.x = 2
 
   return gameManager
 }
