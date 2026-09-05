@@ -4,6 +4,12 @@
 // jsdom/vitest KHÔNG apply scoped CSS runtime → assert SOURCE SFC
 // (pattern source-contract, đọc file thật qua import query — vitest
 // hỗ trợ ?raw): 4 selector + properties chính, chống regression tái diễn.
+//
+// Combat Art Pipeline Task 7 (2026-09-05, spec §7.5) — Build HUD +
+// TurnCombatSkillBar rời battlefield slot vào CombatSkillDockPanel
+// (dock mép phải). Rules __build-hud/__turn-skill-bar + media guard
+// padding-left 210px KHÔNG còn ở overlay — contract cập nhật theo;
+// dock tự bảo quản style của nó.
 import { describe, expect, it } from 'vitest'
 import source from './CombatSceneOverlay.vue?raw'
 
@@ -67,14 +73,10 @@ describe('CombatSceneOverlay — style contract (T8.1)', () => {
     expect(rule).toContain('z-index: 12')
   })
 
-  it('Build HUD: absolute + left/right 0 + bottom + center + z-12', () => {
-    const rule = ruleOf('.combat-scene-overlay__build-hud')
+  it('Build HUD + turn skill bar KHÔNG còn ở overlay (Task 7 — đã vào dock)', () => {
+    const style = styleBlock()
 
-    expect(rule).toContain('position: absolute')
-    expect(rule).toContain('left: 0')
-    expect(rule).toContain('right: 0')
-    expect(rule).toContain('bottom: var(--space-4)')
-    expect(rule).toContain('justify-content: center')
-    expect(rule).toContain('z-index: 12')
+    expect(style).not.toContain('.combat-scene-overlay__build-hud')
+    expect(style).not.toContain('.combat-scene-overlay__turn-skill-bar')
   })
 })

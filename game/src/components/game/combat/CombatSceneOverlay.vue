@@ -7,17 +7,22 @@
 //
 // Insets: chỉ TopBar còn là DOM chrome phía trên; publishInsets chỉ
 // đo top (bottom luôn 0 từ T3).
+//
+// Combat Art Pipeline Task 7 (2026-09-05, spec §7.5) — Build HUD +
+// TurnCombatSkillBar rời battlefield slot vào CombatSkillDockPanel
+// (dock mép phải, publish `right` riêng). Overlay này giờ chỉ publish
+// `top` (publishTopBarHeight — giữ nguyên `right` của dock), không còn
+// giữ import cho 2 component đã dời.
 import { nextTick, onBeforeUnmount, onMounted, onUnmounted, ref } from 'vue'
 import CombatTopBar from './CombatTopBar.vue'
 import CombatResultModal from './CombatResultModal.vue'
 import CombatCountdownOverlay from './CombatCountdownOverlay.vue'
 import CombatAiPanel from './CombatAiPanel.vue'
-import CombatBuildHud from './hud/CombatBuildHud.vue'
-import TurnCombatSkillBar from './hud/TurnCombatSkillBar.vue'
+import CombatSkillDockPanel from './CombatSkillDockPanel.vue'
 import TurnOrderStrip from './TurnOrderStrip.vue'
 import BattleLogPanel from './BattleLogPanel.vue'
 import CombatExitConfirmModal from './CombatExitConfirmModal.vue'
-import { resetCombatInsets, setCombatInsets } from '@/game/support/combatInsets'
+import { publishTopBarHeight, resetCombatInsets } from '@/game/support/combatInsets'
 
 const rootRef = ref<HTMLElement | null>(null)
 
@@ -40,9 +45,9 @@ function publishInsets() {
   const top = barHeight(root, 'combat-scene-overlay__top-bar')
 
   if (top > 0) {
-    // right: skill dock panel đo/publish riêng ở Task 7 (Combat Art
-    // Pipeline §7.5) — overlay này chưa có dock nên luôn 0.
-    setCombatInsets({ top, bottom: 0, right: 0 })
+    // Chỉ ghi `top` (publishTopBarHeight giữ `right` của dock) — setCombatInsets
+    // thô ghi đè cả 3 trường, sẽ xóa width dock vừa publish.
+    publishTopBarHeight(top)
   }
 }
 
@@ -76,35 +81,31 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  resetCombatInsets()
+  insetsObserver?.disconnect()
+  insetsObserver = null
 })
 
 onUnmounted(() => {
-  insetsObserver?.disconnect()
-  insetsObserver = null
+  // onUnmounted (KHÔNG onBeforeUnmount) — Vue teardown cha-trước-con:
+  // dock (con) clear `right` của nó trong onBeforeUnmount trước khi hook
+  // này chạy, resetCombatInsets() ở đây xóa phần còn lại sau cùng.
+  resetCombatInsets()
 })
 </script>
 
 <template>
   <!-- 6A — background chiến đấu là vùng giao diện chính; canvas Phaser
        duy nhất của app vẫn là PhaserCanvas.vue trong MainScene.vue.
-       Overlay chỉ còn TopBar (thông tin zone/stage), 2 panel phụ
-       (AI/Build HUD) và các modal. Bottom = full canvas. -->
+       Overlay chỉ còn TopBar (thông tin zone/stage), AI panel, dock
+       kỹ năng mép phải và các modal. Bottom = full canvas. -->
   <div ref="rootRef" class="combat-scene-overlay">
     <CombatTopBar class="combat-scene-overlay__top-bar" />
+
+    <CombatSkillDockPanel />
 
     <div class="combat-scene-overlay__battlefield">
       <!-- Combat AI panel — góc TRÁI battlefield, chỉ panel nhận pointer. -->
       <CombatAiPanel class="combat-scene-overlay__ai-panel" />
-
-      <!-- 6A-T7 — Build HUD bottom-center: route HUD + slider tu-luc +
-           ult (từ ControlBar cũ). -->
-      <CombatBuildHud class="combat-scene-overlay__build-hud" />
-
-      <!-- Slice 7 (2026-09-04) - turn-based manual cast: 3 fixed buttons
-           basic/special/ultimate + manual/auto toggle. Self-guarded
-           (chi hien khi turn battle fighting). -->
-      <TurnCombatSkillBar class="combat-scene-overlay__turn-skill-bar" />
     </div>
 
     <!-- Slice 7 extension - turn-order preview (top, dưới TopBar) + battle
@@ -124,10 +125,10 @@ onUnmounted(() => {
 <style scoped>
 /* T8.1 (2026-09-02) — khôi phục styles bị mất trong 6A T8 rewrite
    (991ba75 đã xóa toàn bộ style scoped): root phủ canvas, AI panel
-   neo trái-trên ("bảng chọn mục tiêu" — user report), Build HUD neo
-   giữa-dưới, battlefield là vùng chứa. Giá trị NGUYÊN BẢN từ
-   71357a1^ — không cải thiện tùy tiện. Status/event/control bar
-   rules KHÔNG khôi phục (đã retire đúng chủ ý). */
+   neo trái-trên ("bảng chọn mục tiêu" — user report), battlefield
+   là vùng chứa. Giá trị NGUYÊN BẢN từ 71357a1^ — không cải thiện
+   tùy tiện. Status/event/control bar rules KHÔNG khôi phục (đã
+   retire đúng chủ ý). */
 .combat-scene-overlay {
   position: absolute;
   inset: 0;
@@ -158,27 +159,6 @@ onUnmounted(() => {
   z-index: 12;
 }
 
-.combat-scene-overlay__build-hud {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: var(--space-4);
-  display: flex;
-  justify-content: center;
-  z-index: 12;
-}
-
-/* Slice 7 - turn-based manual skill bar: hàng trên Build HUD, giữa-duỗi. */
-.combat-scene-overlay__turn-skill-bar {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: calc(var(--space-4) + 96px);
-  display: flex;
-  justify-content: center;
-  z-index: 12;
-}
-
 /* Slice 7 extension - turn-order strip: neo dưới TopBar, giữa. */
 .combat-scene-overlay__turn-order-strip {
   position: absolute;
@@ -188,18 +168,6 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   z-index: 12;
-}
-
-/* T8.2 — O1 overlap guard: viewport hẹp, Build HUD flex-center có thể
-   đè PlayerHudLayer (canvas góc trái-dưới, x ≈ HUD_MARGIN 16 +
-   HP width 180 + sub-gap ≈ 14 → 210px). Dịch nội dung ra khỏi vùng
-   HUD thay vì cho đè số HP. Media query theo viewport thật
-   (AGENTS.md flexible rule — KHÔNG hardcode cột). Đổi khi HUD đổi
-   (nguồn: PlayerHudLayer.ts HUD_MARGIN/HUD_HP_WIDTH). */
-@media (max-width: 1100px) {
-  .combat-scene-overlay__build-hud {
-    padding-left: 210px;
-  }
 }
 
 /* T8.2 — O3 vertical guard: viewport thấp, AI panel dọc cao

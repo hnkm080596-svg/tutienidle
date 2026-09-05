@@ -50,6 +50,27 @@ export function getCombatInsets(): MeasuredCombatInsets {
   return current
 }
 
+// Combat Art Pipeline Task 7 (2026-09-05, spec §7.5) — 2 publisher
+// chuyên biệt cho kiến trúc inset 2 nguồn: CombatSceneOverlay (TopBar)
+// và CombatSkillDockPanel (dock phải) mỗi bên đo/publish riêng một
+// trường, KHÔNG đè trường của bên kia (setCombatInsets thô sẽ ghi đè
+// cả 3 trường mỗi lần gọi). `bottom` luôn 0 từ 6A.
+
+/** Overlay publish chiều cao TopBar đo được — giữ nguyên `right` hiện có. */
+export function publishTopBarHeight(top: number): void {
+  setCombatInsets({ top, bottom: 0, right: current.right })
+}
+
+/** Dock publish chiều rộng thực đo được — giữ nguyên `top` hiện có. */
+export function publishSkillDockWidth(right: number): void {
+  setCombatInsets({ top: current.top, bottom: 0, right })
+}
+
+/** Dock unmount — right về 0 (chưa đo) nhưng giữ `top` của TopBar. */
+export function clearSkillDockWidth(): void {
+  setCombatInsets({ top: current.top, bottom: 0, right: 0 })
+}
+
 // Fallback insets TỈ LỆ — chỉ dùng khi chưa đo được DOM (mounted/
 // ResizeObserver chưa kịp chạy); frame thiết kế 16:9. Từ 6A bottom
 // fallback = 0 (chỉ còn Top Bar phía trên).
