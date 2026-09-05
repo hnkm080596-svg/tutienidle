@@ -1,18 +1,21 @@
-# Roadmap Phát Triển — Tiên Hiệp Idle
+# Roadmap Phát Triển — Tiên Hiệp Idle (Single Source of Truth)
 
-> Tài liệu định hướng tổng hợp, lập ngày 2026-08-27 sau đợt rà soát toàn diện 5 mảng: Chiến đấu, Tiến trình, Kinh tế, UI/UX, Kỹ thuật & Nội dung.
+> Tài liệu định hướng tổng hợp DUY NHẤT của project.
+> Lập ngày 2026-08-27 sau đợt rà soát toàn diện 5 mảng: Chiến đấu, Tiến trình, Kinh tế, UI/UX, Kỹ thuật & Nội dung.
+> **Gộp 2026-09-05**: roadmap riêng `turn-based-combat-roadmap.md` đã được GỘP TOÀN BỘ vào đây (mục 9) — file cũ giờ chỉ còn là con trỏ, không phải nguồn sự thật thứ hai.
 > Mỗi hạng mục lớn có plan chi tiết riêng (dẫn link bên dưới). Khi plan và roadmap lệch nhau, plan chi tiết là nguồn sự thật cho hạng mục đó.
 > Audit toàn diện mới nhất (bug list + trạng thái từng plan, verify theo file:line): [project-review-2026-08-28.md](./project-review-2026-08-28.md).
-> Rework combat real-time → turn-based (2026-09-03, đang ở Milestone 1): xem roadmap riêng [turn-based-combat-roadmap.md](./turn-based-combat-roadmap.md).
+> Baseline verify gần nhất (2026-09-05, main checkout): `type-check` sạch + full suite **2510/2510 pass (390 files)** + `build` pass.
 
 ## 1. Nhận định hiện trạng
 
 **Điểm mạnh cần giữ:**
 
 - Kiến trúc sạch: Vue 3 (UI) + Phaser (canvas) + Pinia, core/data tách biệt, data-driven nhất quán.
-- Pipeline damage duy nhất, test phủ dày ở combat (~30 file battle/combat/skill, tổng 154 file test).
+- Pipeline damage duy nhất, test phủ dày ở combat (~30 file battle/combat/skill, tổng 390 file test / 2510 tests — 2026-09-05).
 - Vòng lặp tu luyện → Độ Kiếp → chọn đường đã có cá tính riêng.
 - Kinh tế có file balance tách riêng, giao dịch atomic chống nhân bản.
+- Combat turn-based ATB đã thay hẳn engine real-time cũ (mục 9) — `TurnBattleSystem` là engine duy nhất, engine cũ nằm nguyên trong `battle/legacy/` chờ xóa.
 
 **Vấn đề lớn nhất, theo thứ tự rủi ro:**
 
@@ -22,7 +25,8 @@
 4. **Bug và drop chết trong kinh tế** *(đã giải quyết 2026-08-28 — economy-ecosystem hoàn thành: T1–T6+T8+T9, T7 bỏ vì linh thảo giữ hoàn toàn random)*: mapping Tinh Hoa sai cho realm 4+ (`RefinementBalance.ts:74-81`); vật liệu legacy vẫn rơi nhưng không còn sink.
 5. **Save không validate shape** *(đã giải quyết 2026-08-28 — save-shape-validation Wave 1 + bổ sung equipment/slot shape khi review)*: chỉ kiểm tra version, tiền lệ crash boot v47 có thể tái diễn.
 6. **Tài liệu lệch code** *(đã giải quyết 2026-08-28 — docs-sync viết lại game-guide.md + item-design-reference.md, dọn comment MissileSystem, xóa `Plans .md`)*: `game-guide.md` và `item-design-reference.md` mô tả hệ thống đã xóa.
-7. **Nợ kỹ thuật**: `GameManager.ts` 2.504 dòng (giảm từ 2.703 sau khi tách TribulationSystem/StageWaveSystem); nhiều hệ thống core 0 test; 0 E2E spec (spec cũ đã xóa ở commit `e265e5c`); không có lint.
+7. **Nợ kỹ thuật** *(cập nhật 2026-09-05)*: `GameManager.ts` **2.939 dòng** (tách Ops 2026-09-03 xong lại phình do wiring turn-based — cần tách tiếp, xem mục 10); `CombatScene.ts` còn **1.539 dòng** (đã tách `PlayerHudLayer` + HUD rewrite, không còn god-class 2.922 dòng như trước); nhiều hệ thống core 0 test; **lint đã có** (`eslint.config.js` + script `lint`); **E2E đã có 6 spec** (`boot-fresh`, `combat-overlay-layout`, `create-to-combat`, `ink-wash-ui`, `save-reload`, `turn-combat-hud`).
+8. **Việc đang bay (chưa merge, 2026-09-05)** — xem chi tiết mục 8.6: branch `worktree-gp123` (QA 9.4/9.6/9.8/9.9/9.10/9.11 + OPT-04/06 đã commit; Group 3 = 6E/6F/6G đang làm dở, 47 file uncommitted) và branch `feat/action-playback` (Action Playback Task 2/8 đã commit). Cả hai đều fork sạch, không đụng roadmap — merge theo thứ tự ở mục 10.
 
 ## 2. Nguyên tắc ưu tiên
 
@@ -42,7 +46,7 @@ Chi tiết từng bug/file:line trong [project-review-2026-08-28.md](./project-r
 - **Wave 4 — Nốt Phase 0** ✅: T6 drop chết + material mồ côi ✅ (migrate drop sang `qi_refining_ore_hoang`, xóa 11 material legacy, drop-sink invariant test); HUD `out_of_range` ✅; T9 docs-sync ✅ (viết lại game-guide/item-design-reference, xóa `Plans .md`); T7 Chọn Thảo ⛔ bỏ (linh thảo hoàn toàn random).
 - **Ngoài plan (mới)** ✅: quy đổi cảnh giới linh mộc/linh khoáng 10:1 (`MaterialTierConversionBalance` + `GameManager.convertMaterialTier` + UI `ProductionPanel`).
 - **Review fixes 2026-08-28** ✅: false-negative save shape (equipment/slot), `craftBreakthroughToken` all-or-nothing, PillBag NaN guard, `convertAilment` dedupe.
-- **Wave 5 — Tech debt** ❌: eslint, phủ test hệ thống 0 test, E2E spec, GameManager extraction.
+- **Wave 5 — Tech debt** 🟡 (cập nhật 2026-09-05): ~~eslint, phủ test hệ thống 0 test, E2E spec, GameManager extraction~~ → **eslint ✅ đã có, E2E ✅ 6 spec đã có**; còn lại: GameManager tách tiếp (2.939 dòng), phủ test hệ 0-test.
 - **Kiếm Tu Tự Lực (ngoài plan, merged 2026-08-29)** ✅: node tree Kiếm Tu 2 nhánh (`KiemTuNodes.ts`), 9 skill Kiếm Trận + Bát Kiếm, tự lực combat state (auto-channel tick AoE, Huy Kiếm flat per-cast, skillCastCount prereq), route selection UI + slot auto-replace — phần lớn nằm trong phạm vi [progression-depth-plan.md](./progression-depth-plan.md) (xem Phase 3).
 - **UI primitives (ngoài plan, 2026-08-29)** ✅: Bar/Chip/Eyebrow/StatRow/EmptyState/SceneHeader primitives + GameButton mở rộng, migrate ~25+ button/19 progress bar — one bước chuẩn bị cho [ui-discoverability-refactor-plan.md](./ui-discoverability-refactor-plan.md).
 - **Pháp Tu ritual progression (ngoài plan, 2026-08-28)** ✅: bỏ nút tiểu đột phá — tự advance khi tu đầy; keystone kim/thổ mở stat The-Gain tương ứng.
@@ -69,7 +73,7 @@ Mục tiêu: phá tường nội dung Trúc Cơ và biến thiên phú thành qu
 | Hạng mục | Plan | Trạng thái |
 |---|---|---|
 | Thiên phú chọn hướng Đạo (roll 9 chọn 1) + easter egg Phàm Cốt | talent-direction-choice-plan (đã dọn sau khi hoàn thành) | ✅ Xong (v3, thay bởi v4 ở dòng dưới) |
-| **Talent Catalog v4 — "thiên phú là luật chơi"** (11 combat + 5 tu luyện + 2+2 sản xuất, power budget chung, siết đa talent) | [spec 2026-09-03-talent-catalog-v4-design.md](./specs/2026-09-03-talent-catalog-v4-design.md) + [plan M1](./plans/2026-09-03-talent-catalog-v4-m1-combat.md) | 🟡 **M1 combat xong** (branch `worktree-talent-v4-m1`, 2026-09-03): E1 convert-on-max khóa test, E2 passiveCondition/passiveConvertsTo, catalog 12 roll (11 combat + Phàm Cốt) + 13 retired + 2 PARKED M3, 5 buff E1, hidden passives `TalentPassives.ts`, GameManager grant/revoke + Bất Tử Thể v4 (cleanse + Tử Sinh Ngộ), collectTalentEffects siết id đầu. Full suite 2338 xanh + type-check + build pass. **M2 (tu luyện — Hậu Tích Bạt Phát, Lôi Kiếp, Vấn Đạo, Hải Nạp, Ngộ Đạo offline) + M3 (sản xuất — Hỏa Hầu Thông Thần, Bách Luyện Thành Khí, +2 PARKED Trận/Phù) chưa làm** |
+| **Talent Catalog v4 — "thiên phú là luật chơi"** (11 combat + 5 tu luyện + 2+2 sản xuất, power budget chung, siết đa talent) | [spec 2026-09-03-talent-catalog-v4-design.md](./specs/2026-09-03-talent-catalog-v4-design.md) + [plan M1](./plans/2026-09-03-talent-catalog-v4-m1-combat.md) | 🟡 **M1 combat xong** (2026-09-03): E1 convert-on-max khóa test, E2 passiveCondition/passiveConvertsTo, catalog 12 roll (11 combat + Phàm Cốt) + 13 retired + 2 PARKED M3, 5 buff E1, hidden passives `TalentPassives.ts`, GameManager grant/revoke + Bất Tử Thể v4 (cleanse + Tử Sinh Ngộ), collectTalentEffects siết id đầu. **M2 (tu luyện — Hậu Tích Bạt Phát, Lôi Kiếp, Vấn Đạo, Hải Nạp, Ngộ Đạo offline) + M3 (sản xuất — Hỏa Hầu Thông Thần, Bách Luyện Thành Khí, +2 PARKED Trận/Phù) chưa làm** — ⚠️ M2/M3 thiết kế sau rework combat nên phải target `TurnBuffDefinition` (không phải legacy `BuffDefinition`), xem mục 10 |
 | Nội dung Trúc Cơ thật | [truc-co-kim-dan-content-plan.md](./truc-co-kim-dan-content-plan.md) | ✅ M1 xong (2026-08-29) — 10 stage Trúc Cơ thật (`foundation_floor_1..10`) + 20 enemy `foundation_*` + boss 2-phase/enrage + 5 quest. **Kim Đan (M2 gate + M3 đời sống) BỎ khỏi roadmap 2026-08-29 (quyết định người dùng)** — plan đóng ở M1; các phụ thuộc Kim Đan trong plan khác chuyển thành parked/khóa vĩnh viễn đến khi người dùng mở lại |
 | Reaction scale theo Power, đa dạng nhịp skill, fizzle refund, nền boss skill | [combat-balance-pass-plan.md](./combat-balance-pass-plan.md) | ✅ Xong 2026-08-29 — 8/8 task (xem "Kết quả playtest" cuối plan): dọn cost chết + invariant; reaction `powerScalingRatio 0.5` qua `elementalBasePower`; nhịp 5 skill Pháp Tu riêng biệt (Hỏa 1.6/4, Thủy 0.9/1, Mộc 1.2/2, Kim 1.0/2.5, Thổ 1.4/5); fizzle hoàn 100% resource + 50% cooldown; boss `foundation_ferocious_flood_dragon_whelp` có special attack data-driven; dọn `canUseInSlot`/`use()`/emoji reaction. **Mana giữ nguyên vai trò Linh lực hộ thể** (`manaShieldPercent`), không thêm cost cast (quyết định người dùng). Giữ lại có chủ đích: `attack_speed_cast`, `Skill.castTime` legacy |
 
@@ -81,7 +85,7 @@ Mục tiêu: game "có hồn" và dễ khám phá hơn.
 
 | Hạng mục | Plan | Trạng thái |
 |---|---|---|
-| Nameplate công trình, tách CombatScene, dọn placeholder/emoji | [ui-discoverability-refactor-plan.md](./ui-discoverability-refactor-plan.md) | 🟡 Chuẩn bị một phần — layer UI primitives (Bar/Chip/Eyebrow/StatRow/EmptyState/SceneHeader, GameButton mở rộng) đã landed 2026-08-29; CombatScene vẫn 2.922 dòng god-class, chưa nameplate, chưa dọn emoji |
+| Nameplate công trình, tách CombatScene, dọn placeholder/emoji | [ui-discoverability-refactor-plan.md](./ui-discoverability-refactor-plan.md) | 🟡 Một phần lớn đã xong ngoài plan: UI primitives landed 2026-08-29; `CombatScene` 2.922→**1.539 dòng** (`PlayerHudLayer` tách riêng, HUD rewrite + gỡ legacy controls qua Slice 7 master plan 2026-09-05); CombatSceneOverlay + TurnCombatSkillBar + TurnOrderStrip + BattleLogPanel đã có. **Còn lại**: nameplate công trình, dọn placeholder/emoji |
 
 Tiêu chí hoàn thành: hotspot công trình tự giải thích không cần tooltip; CombatScene không còn là god-class. *(2026-08-29: Âm thanh là asset — tạm bỏ qua khỏi roadmap theo quyết định người dùng; plan [audio-game-feel-plan.md](./audio-game-feel-plan.md) giữ nguyên như tài liệu tham khảo.)*
 
@@ -92,7 +96,7 @@ Mục tiêu: mở rộng các trục progression đang bỏ hoang.
 | Hạng mục | Plan | Trạng thái |
 |---|---|---|
 | Kiến Cơ 4 bậc, node tree Kiếm Tu, chiều sâu idle (Cảm Ngộ offline, nguồn tăng tốc tu luyện) | [progression-depth-plan.md](./progression-depth-plan.md) | 🟡 Một phần — node tree Kiếm Tu (2 nhánh `KiemTuNodes.ts`, 9 skill Kiếm Trận, Bát Kiếm, tự lực combat) ✅ xong qua kiem-tu-tu-luc; **Kiếm Thế / Kiếm Ý (2026-08-29)** ✅ — route chốt vĩnh viễn lúc chọn path (tram Lv3), 2 tài nguyên (Kiếm Thế pool trận KT / Kiếm Ý tầng boss vĩnh viễn BK), mỗi route 1 skill + 2 ult manual, 9 on-hit node, 6 node chuyển skill cũ, gỡ Nộ; **Đột Phá / Bậc Ẩn / Lôi Kiếp (2026-08-29, spec dot-pha-loi-kiep)** ✅ — Kiến Cơ 4 bậc un-park qua resolver `BreakthroughGrades.ts` (Địa: Trúc Cơ Đan + 3 tầng Luyện Th thể; Thiên: 6/6 + 6/8 kinh mạch; Đại Đạo ẩn hoàn toàn — thua kiếp siêu cấp mất vĩnh viễn, thắng chuyển Phàm Cốt → Phàm Nhân Chi Cốt), Kỳ Kinh Bát Mạch 9 đường (MeridianSystem), quái ẩn Huyết Mông cửa sổ 1000 kill drop Thiên Địa Chi Kiều, Thông Mạch Đan/Trúc Cơ Đan (alchemy specialIngredients), TribulationDirector chương kiếp mới (Tâm Ma hỏi đáp + tank lôi, bỏ quái Kiếp + Đột Phá Lệnh + TribulationSystem cũ), caps Luyện Th thể ×3.5, save v54 — số liệu first-pass chờ playtest; Cảm Ngộ offline chưa làm (Ngộ Đạo chỉ online) |
-| Sink Linh Thạch hậu kỳ, vendor, Điểm Rèn, filter túi đồ | [economy-fixes-sinks-plan.md](./economy-fixes-sinks-plan.md) (Phần B — Phần A đã gộp vào economy-ecosystem-plan, đã dọn sau khi hoàn thành) | 🟡 Một phần — Điểm Rèn per-item (forgePoints) đã có trong `EquipmentSystem` (rework 2026-08-26); chưa vendor, chưa filter túi đồ |
+| Sink Linh Thạch hậu kỳ, vendor, Điểm Rèn, filter túi đồ | [economy-fixes-sinks-plan.md](./economy-fixes-sinks-plan.md) (Phần B — Phần A đã gộp vào economy-ecosystem-plan, đã dọn sau khi hoàn thành) | 🟡 Một phần — Điểm Rèn per-item (forgePoints) đã có trong `EquipmentSystem` (rework 2026-08-26); vendor redesign + filter túi đồ → chuyển sang Group 3 của gp123 spec v2 (`2026-09-03-gp123-bugfix-optimize-design.md` — file spec+plan hiện chỉ có trong branch `worktree-gp123`, chưa có trên master, xem mục 8.6) |
 
 Tiêu chí hoàn thành: gate đột phá có chất lượng khác nhau; Kiếm Tu có chiều sâu build tương đương Pháp Tu; idle có đường nâng cấp.
 
@@ -100,8 +104,8 @@ Tiêu chí hoàn thành: gate đột phá có chất lượng khác nhau; Kiếm
 
 | Hạng mục | Plan | Trạng thái |
 |---|---|---|
-| Tách dần GameManager, phủ test hệ kinh tế, thêm E2E + lint | [tech-debt-test-coverage-plan.md](./tech-debt-test-coverage-plan.md) | 🟡 Một phần — GameManager 2.703→2.504 dòng (tách `TribulationSystem`, `StageWaveSystem`, `TemplateRegistry`); test file tăng 154→191 (1093 test ~); vẫn chưa lint, chưa E2E spec (spec cũ đã xóa) |
-| Cloud save / online (plan riêng đã có) | [online-login-cloud-save-plan.md](./online-login-cloud-save-plan.md) | 🟡 Một phần — auth Supabase + migration SQL; cloud-save layer có rồi nhưng chỉ là local adapter (`LocalCloudSaveService`), chưa Supabase adapter thật |
+| Tách dần GameManager, phủ test hệ kinh tế, thêm E2E + lint | [tech-debt-test-coverage-plan.md](./tech-debt-test-coverage-plan.md) | 🟡 Một phần — GameManager tách Ops (SaveRestore/QuestOps/AlchemyOps/BuildingOps/EquipmentOps) nhưng đã phình lại **2.939 dòng** (wiring turn-based) → cần đợt tách tiếp (mục 10); **lint ✅ đã có** (`eslint.config.js` + `npm run lint`); **E2E ✅ 6 spec** (`game/tests/e2e/`); test 390 files / 2510 tests (2026-09-05); còn lại: phủ test các hệ 0-test |
+| Cloud save / online (plan riêng đã có) | [online-login-cloud-save-plan.md](./online-login-cloud-save-plan.md) | 🟡 Một phần — auth Supabase + migration SQL; cloud-save layer có rồi nhưng chỉ là local adapter (`LocalCloudSaveService`), chưa Supabase adapter thật; QA-011 (atomic 2-key) đã fix trong branch `worktree-gp123` (revision-first + rollback), chờ merge |
 
 Tiêu chí hoàn thành: không file nào quá ~1.000 dòng trong core/game; mọi hệ thống core có test; luồng boot → tạo nhân vật → combat có E2E.
 
@@ -117,8 +121,10 @@ Phase 2:  ui-refactor — độc lập, chạy song song Phase 1
 Phase 3:  progression-depth — Kiến Cơ 4 bậc parked chờ gate cảnh giới mới
           kiem-tu-design  — node tree Kiếm Tu đã xong; thang trận Tứ Tượng+
                             data ghi sẵn, khóa chờ (không còn gate Kim Đan)
-          economy-fixes-sinks Phần B — độc lập
+          economy-fixes-sinks Phần B — chuyển sang gp123 Group 3 (spec+plan đã có trong branch worktree-gp123)
 Phase 4:  tech-debt — chạy nền liên tục
+Mục 9:    turn-based rework — CƠ CHẾ XONG (engine duy nhất); còn content/wiring/playback (bảng 9.5)
+In-flight: gp123 (Group 1+2 xong chờ merge; Group 3 đang làm) → action-playback (Task 2/8) — thứ tự merge ở mục 10
 ```
 
 - `docs-sync-audit` nên hoàn thành sớm để mọi plan sau tham chiếu tài liệu đúng.
@@ -136,12 +142,13 @@ Phase 4:  tech-debt — chạy nền liên tục
 - **World map**: `src/core/world-map/` mới có hạ tầng (hex layout, validator), chưa có dữ liệu bản đồ thật. Với Kim Đan đã bỏ, chờ quyết định riêng về Thanh Vân: chuyển sang biểu diễn world-map hay giữ stage list.
 - **Tutorial động**: tutorial hiện là carousel 9 bước thuần thông tin (`src/data/tutorial/tutorialSteps.ts`). Việc instrument theo dõi hành động thật của người chơi mới chỉ ghi nhận, chưa lập plan.
 - **Kiếm Tu node tree (đã chuyển vào phạm vi)**: từng nằm ngoài, nay đã làm xong qua `worktree-kiem-tu-tu-luc` — xem Phase 3 / progression-depth.
+- **Hệ nhân vật phụ — party/companion recruit + UI/nội dung** (engine `players[]` đã xong 2026-09-04): spec riêng sau, là việc content/feature lớn — xem bảng 9.5 việc #8.
 
 ## 6. Quy trình thực hiện
 
 1. Mỗi plan được thực hiện bởi một phiên agent riêng (theo Context policy trong PROJECT_CONTEXT.md).
 2. Trước khi chạy plan: đọc plan + các file được dẫn trong plan.
-3. Sau mỗi plan: chạy `npm.cmd run test`, `npm.cmd run type-check`, `npm.cmd run build` từ `game/`.
+3. Sau mỗi plan: chạy `npm.cmd run type-check`, `npx.cmd vitest run`, `npm.cmd run build` (+ `npm.cmd run test:e2e` và `npm.cmd run lint` khi chạm UI/luồng boot) từ `game/`.
 4. Khi đổi hành vi, cập nhật tài liệu sống trong `docs/` cùng thay đổi code.
 5. Không tạo thêm plan không có đuôi `.md`.
 
@@ -191,7 +198,7 @@ Phase 4:  tech-debt — chạy nền liên tục
 
 ### 7.5. Game design direction 2026-09-01
 
-**6A. Combat Scene UI redesign** — ✅ merged `71357a1` (PlayerHudLayer in-canvas, 3 bar DOM xóa, kill/heal floating text). ⚠️ Kiếm Ý/Thế bar chưa có data event (defer)
+**6A. Combat Scene UI redesign** — ✅ merged `71357a1` (PlayerHudLayer in-canvas, 3 bar DOM xóa, kill/heal floating text). ⚠️ Kiếm Ý/Thế bar: **đã có `PlayerHudLayer.updateKiem` + wiring per-tick poll trong branch `worktree-gp123`** (Group 1, xem 8.6) — chờ merge.
 
 **6B. Bugfix hiển thị:**
 - Crit Damage % — ✅ merged `8981772` + `0fcb17e`
@@ -202,19 +209,19 @@ Phase 4:  tech-debt — chạy nền liên tục
 
 **6D. Bảng ánh xạ phẩm ↔ cảnh giới** — ✅ item-grade rework Phase 1-4 merged `fd82ed4` + `3c898b0` + `3647cf7`; Phase 5-6 (equip gate, breakthrough unequip, panel tabs, theme, terminology) ✅ merged `a00de32`
 
-**6E. Linh Mộc trong luyện đan** — ⬜ (siết rule `resolveFuelWood` cùng phẩm-chất)
+**6E. Linh Mộc trong luyện đan** — 🟡 spec+plan v2 trong branch `worktree-gp123` (`game/docs/superpowers/specs/2026-09-03-gp123-bugfix-optimize-design.md` + `game/docs/superpowers/plans/2026-09-03-gp123-bugfix-optimize.md` — 2 file hiện chỉ có trong branch, chưa có trên master): user chốt Mộc/Khoáng đổi CẢ ID lẫn tên sang age-axis, bỏ plain wood; Group 3 implementation đang làm dở (47 file uncommitted) — xem 8.6.
 
-**6F. Cân bằng thu thập–tiêu thụ** — ⬜ (bảng tốc độ chuẩn per-worker; simulation test 24h)
+**6F. Cân bằng thu thập–tiêu thụ** — 🟡 cùng Group 3 gp123 (bảng tốc độ chuẩn per-worker + simulation test 24h) — đang làm dở, xem 8.6.
 
-**6G. Vendor redesign** — ⬜ (bỏ quy đổi, gate thu mua theo phẩm, 2-tab UI)
+**6G. Vendor redesign** — 🟡 cùng Group 3 gp123 (user chốt: ẩn tab Cửa hàng chờ 6H; ui-ux-pro-max chạy riêng cho Vendor UI khi viết plan) — đang làm dở, xem 8.6.
 
 **6H. Roadmap tương lai** — ⬜ (tiền VIP, Shop VIP, chu kỳ sau Độ Kiếp)
 
 ### 7.6. Kỹ thuật nợ nhỏ
 
-- Chunk size warning — ✅ code-split merged `af88cee` (entry 2231→848KB)
-- `_meta` block trong locale JSON — ⬜
-- `termGlossary` chưa được consume — ⬜
+- Chunk size warning — ✅ code-split merged `af88cee` (entry 2231→848KB; build 2026-09-05 vẫn còn warning ở chunk phaser ESM ~1.3MB — known, không chặn)
+- `_meta` block trong locale JSON — ⬜ (vẫn tồn tại ở cả vi/en, chưa dùng)
+- `termGlossary` chưa được consume — ⬜ (verify 2026-09-05: chỉ test file tự import nó)
 - Known flaky tests — ✅ XONG (2026-09-02, root-caused cả 3): `dongFuBuildingAssets` xóa test spawn ImageMagick `79bab1c`; `Playtest.continuousCombat` budget 30s `12e3677`; `CombatSystem.waterMitigation` seed Math.random (blockChance 0.05 unseeded — không phải load-flake) `59a71c8`. Full suite 2130/2130 deterministic.
 
 ### 7.7. Todolist thực thi — trạng thái
@@ -225,17 +232,19 @@ Phase 4:  tech-debt — chạy nền liên tục
 | **Giai đoạn 1** — Dọn nhà | untracked docs, skills cleanup, MainMenu e2e | ✅ XONG |
 | **Giai đoạn 2** — Game design nền tảng | crit%, unidentify, luyện filter, item-grade rework, combat UI | ✅ XONG |
 | **Giai đoạn 3** — Skill engine | Phase 2A, floating text, unified buff | ✅ XONG |
-| **Giai đoạn 4** — Sản xuất + kinh tế | i18n leftovers, Chiêu Hiền Quán, UI phân bổ, nhiên liệu, bảng tốc độ, simulation, vendor rework | 🟡 Chiêu Hiền Quán ✅ merged `84d28bb`; i18n leftovers phần lớn xong (xem 7.2 — 2.1/2.3/2.5/2.6 ✅, 2.4 obsolete, 2.2 còn ít file, xem QA report 2026-09-03-task-9-followups-i18n-quick.md); còn lại (nhiên liệu, bảng tốc độ, simulation, vendor) chưa làm |
+| **Giai đoạn 4** — Sản xuất + kinh tế | i18n leftovers, Chiêu Hiền Quán, UI phân bổ, nhiên liệu, bảng tốc độ, simulation, vendor rework | 🟡 Chiêu Hiền Quán ✅ merged `84d28bb`; i18n leftovers phần lớn xong (xem 7.2 — 2.1/2.3/2.5/2.6 ✅, 2.4 obsolete, 2.2 còn ít file, xem QA report 2026-09-03-task-9-followups-i18n-quick.md); **6E/6F/6G → Group 3 gp123 đang làm dở (xem 8.6)** |
 | **Giai đoạn 5** — Balance | evasion, MP cost, armor, reaction, block | ✅ XONG |
 | **Giai đoạn 6** — Pre-production | online foundation, VIP, prestige, code-split, QA | 🟡 Một phần |
 | **Giai đoạn 7** — Item rework P5-6 | equip gate, breakthrough unequip, tabs, 10-rank theme, terminology, dọn legacy | ✅ XONG |
-| **Giai đoạn 8** — UI/UX repair | CombatSceneOverlay styles, overlap guards, e2e layout smoke, dọn probe + UI review items | ⬜ |
+| **Giai đoạn 8** — UI/UX repair | CombatSceneOverlay styles, overlap guards, e2e layout smoke, dọn probe + UI review items | 🟡 Một phần lớn xong qua Slice 7 HUD rewrite (2026-09-05) — còn nameplate/emoji (Phase 2) |
 
 ### 7.8. Thứ tự đề xuất
 
-1. **Giai đoạn 8** — UI/UX repair (T8.1-T8.4 + các item UI review)
-2. **Giai đoạn 4** — Sản xuất + kinh tế: i18n leftovers → Chiêu Hiền Quán → nhiên liệu → bảng tốc độ → simulation → vendor
-3. **Giai đoạn 6** — Pre-production: online foundation → VIP → prestige
+1. **Merge `worktree-gp123`** (Group 1+2 — QA 9.4/9.6/9.8/9.9/9.10/9.11 + OPT-04/06) rồi tới Group 3 (6E/6F/6G) — ⚠️ lưu ý save-version v55→v57 khi merge (mục 10).
+2. **Action Playback** (Task 2/8 đang chạy ở `feat/action-playback`) — việc combat #1 ở bảng 9.5.
+3. **Giai đoạn 8 còn lại** — nameplate/emoji (Phase 2).
+4. **Bảng 9.5** — content/wiring turn-based còn lại theo thứ tự tiên quyết.
+5. **Giai đoạn 6** — Pre-production: online foundation → VIP → prestige.
 
 ### 7.9. Các plan đã execute (thành quả chính)
 
@@ -250,6 +259,7 @@ Phase 4:  tech-debt — chạy nền liên tục
 | Combat overlay layering repair | Styles khôi phục, overlap guards, e2e layout — merged `a5c2c03` |
 | Balance pass | Armor K theo realm, block cap, reaction scaling, realm pressure tests — merged `47042ac` |
 | Code-split | Entry 2231→848KB + phaser chunk riêng — merged `af88cee` |
+| Turn-based combat rework (M1→Slice 7 + Fairness + Stat + Future Systems + Auto-farm) | Engine duy nhất + manual UI + party + auto-farm — xem mục 9 (toàn bộ slice 🟢) |
 
 ---
 
@@ -266,15 +276,15 @@ Phase 4:  tech-debt — chạy nền liên tục
 | **9.1** ✅ | **QA-001 (High, Confirmed) — Kẹt trang bị khi đột phá** | XONG 2026-09-02 (branch `worktree-task-9-1`, commits `f5248f4..3a8724a`, merged vào master). Thiết kế cuối (spec v6, user chốt lần 2 — xem note superseded ở 8.2): gộp 3 trigger → `triggerBreakthroughAction` auto-unequip + panel xác nhận "Độ kiếp cũng là độ thân..." cho MỌI đột phá. `chooseCultivationPath` không gate (feature-unlock sau đột phá). QA quick: PASS WITH EVIDENCE. 2 Low deferred: cooldown UX (QA-013), unequip-before-failed-start (QA-014). |
 | **9.2** ✅ | QA-002 (High) — `restoreFromSave` thiếu idempotency guard | XONG 2026-09-02 (`c2381da`) — payload-identity guard (WeakMap) chống double offline credit; QA quick PASS WITH EVIDENCE |
 | **9.3** ✅ | QA-003 (High) — `OverlayPanel` thiếu focus trap (H5 Giai đoạn 8) | XONG 2026-09-02 (`3dbde61` + test `cfb3b4b`) — useDialogFocus trong OverlayPanel+ConfirmModal, 13 consumers kế thừa; 2 Low deferred: zero-focusable Tab escape, same-tick re-open trigger overwrite |
-| **9.4** ⬜ | QA-004 (Medium) — `updateKiem` chưa được gọi từ production (defer lâu, sửa cùng 6A) | |
+| **9.4** 🟡 | QA-004 (Medium) — `updateKiem` chưa được gọi từ production (defer lâu, sửa cùng 6A) | **XONG TRONG BRANCH `worktree-gp123`, chờ merge** (2026-09-03): `044ff4f` wire Kiếm bar vào PlayerHudLayer qua per-tick poll (`kiemBarBridge.ts` mới) + `b7bf131` guard missing Phaser registry + `d553ccb` coverage; đúng spec user chốt (poll, không event) |
 | **9.5** ✅ | QA-005 (Medium) — `PhaserCanvas.vue setupGame` leak handler khi throw | XONG — qua perf-optimize-pass Task 4 (merged `8b59045`): try/catch bootstrap + `bootError` ref + cleanup on failure (verify grep `a390f93`: catch tại PhaserCanvas.vue:67, expose :244) |
-| **9.6** ⬜ | QA-006 (Medium) — `CombatDefeatPanel` thiếu 10s auto-return-home | |
+| **9.6** 🟡 | QA-006 (Medium) — `CombatDefeatPanel` thiếu 10s auto-return-home | **XONG TRONG BRANCH `worktree-gp123`, chờ merge** (2026-09-03, `859302b`): `useAutoRetryCountdown(10, returnHome)` song song 3s refight + test mới; verify trên master 2026-09-05: code master CHƯA có setTimeout này (comment mô tả nhưng chưa implement) |
 | **9.7** ✅ | QA-007 (Medium) — `OfflineProgressSystem` thiếu `isFinite(cultivationPerSecond)` guard | XONG 2026-09-02 (`d126008`) — isFinite guard; validator v55 là root guard |
-| **9.8** ⬜ | QA-008 (Medium) — `MaterialBag.add` overflow bị caller bỏ qua | |
-| **9.9** ⬜ | QA-009 (Medium) — `useAutoRetryCountdown.start()` không clear handle cũ | |
-| **9.10** ⬜ | QA-010 (Medium) — `EquipmentSlotManager.restore` thiếu slot-enum check (defense in depth) | |
-| **9.11** ⬜ | QA-011 (Low) — `LocalCloudSaveService` 2 key không atomic | |
-| **9.12** 🟡 | QA-012 (Low) — `stateVersion` bump mỗi tick dù state không đổi (refactor) | MỘT PHẦN — perf-optimize-pass Task 5 (merged `b16c3d0`): dirty-check `setExternalModifiers` chặn recompute `finalStats` mỗi tick. Phần còn lại: `bumpState()` vẫn chạy mỗi tick (plan perf chọn hướng (a) decouple — bước 1+2 đủ theo report; hướng (b) dirty-check `bumpState` không cần) |
+| **9.8** 🟡 | QA-008 (Medium) — `MaterialBag.add` overflow bị caller bỏ qua | **XONG TRONG BRANCH `worktree-gp123`, chờ merge** (2026-09-03, `18e6969`): surface overflow tại mọi reward caller (App/GameManager/BuildingOps/QuestOps/SaveRestore/EquipmentOps + `bagOverflow.ts` notification) + test `GameManager.overflowSurfacing.test.ts`; trên master loot path đã tự xử lý (`BattleLootSystem.ts:367`), dissolve path vẫn bỏ qua |
+| **9.9** 🟡 | QA-009 (Medium) — `useAutoRetryCountdown.start()` không clear handle cũ | **XONG TRONG BRANCH `worktree-gp123`, chờ merge** (2026-09-03, `9ce2400`): `stop()` đầu `start()` + test; verify trên master 2026-09-05: vẫn chưa fix |
+| **9.10** 🟡 | QA-010 (Medium) — `EquipmentSlotManager.restore` thiếu slot-enum check (defense in depth) | **XONG TRONG BRANCH `worktree-gp123`, chờ merge** (2026-09-03, `a880498`): skip entry lạ + test; verify trên master: vẫn chưa check |
+| **9.11** 🟡 | QA-011 (Low) — `LocalCloudSaveService` 2 key không atomic | **XONG TRONG BRANCH `worktree-gp123`, chờ merge** (2026-09-03, `8fae21d`): revision-first write + rollback on failure + test; self-healing nên Low |
+| **9.12** ✅ | QA-012 (Low) — `stateVersion` bump mỗi tick dù state không đổi (refactor) | **ĐÓNG BY-DESIGN** — perf-optimize-pass Task 5 (merged `b16c3d0`): dirty-check `setExternalModifiers` chặn recompute `finalStats` mỗi tick (phần tốn kém đã xong); `bumpState()` mỗi tick được giữ có chủ đích theo plan perf hướng (a) decouple — không làm thêm |
 
 ### 8.2. Spec chi tiết Task 9.1 — QA-001 panel chặn đột phá khi còn mặc trang bị
 
@@ -285,29 +295,29 @@ Phase 4:  tech-debt — chạy nền liên tục
 **Thiết kế hành vi mới:**
 
 1. Khi người chơi bấm "Độ Kiếp" mà vẫn còn trang bị đang mặc:
-   - Hành động đột phá bị **từ chối** (không thay đổi realmId, không chạy tribulation).
-   - Pop một panel thông báo với nội dung:
-     - **Tiêu đề:** "Độ kiếp cũng là độ thân, không gì có thể giúp được ngươi"
-     - **Dòng phụ (màu đỏ):** "Không thể mặc trang bị khi độ kiếp"
-   - Panel đóng khi người chơi bấm xác nhận (hoặc bấm ngoài — tuỳ theo primitive).
+    - Hành động đột phá bị **từ chối** (không thay đổi realmId, không chạy tribulation).
+    - Pop một panel thông báo với nội dung:
+      - **Tiêu đề:** "Độ kiếp cũng là độ thân, không gì có thể giúp được ngươi"
+      - **Dòng phụ (màu đỏ):** "Không thể mặc trang bị khi độ kiếp"
+    - Panel đóng khi người chơi bấm xác nhận (hoặc bấm ngoài — tuỳ theo primitive).
 
 2. Áp dụng cho cả 2 đường đột phá:
-   - `useTribulation.ts` (Độ Kiếp Trúc Cơ và các tầng cao hơn).
-   - `GameManager.chooseCultivationPath` (Lễ Nhập Môn mortal → qi_refining).
+    - `useTribulation.ts` (Độ Kiếp Trúc Cơ và các tầng cao hơn).
+    - `GameManager.chooseCultivationPath` (Lễ Nhập Môn mortal → qi_refining).
 
 3. **Quyết định user chốt (2026-09-02):**
-   - Chặn **tại bước xác nhận** (không disable nút — người chơi phải bấm để được thông báo). Hành vi: bấm nút "Độ Kiếp" → core từ chối `{ ok: false, reason: 'still_equipped' }` → pop panel. Phù hợp với user feedback "phải thông báo cho người chơi".
-   - KHÔNG có nút "Tự tháo" trong panel. Người chơi tự vào Động Phủ / trang bị để tháo rồi quay lại.
-   - **Mọi string dùng i18n** (locale JSON, không hardcode). Tạo key mới:
-     - `tribulation.stillEquipped.title` = "Độ kiếp cũng là độ thân, không gì có thể giúp được ngươi"
-     - `tribulation.stillEquipped.subtitle` = "Không thể mặc trang bị khi độ kiếp"
-     - `tribulation.stillEquipped.confirm` (nút đóng panel) — ví dụ: "Đã hiểu" / "Ta biết rồi"
-   - Cả 2 locale `vi.json` và `en.json` đều phải có đủ 3 key.
+    - Chặn **tại bước xác nhận** (không disable nút — người chơi phải bấm để được thông báo). Hành vi: bấm nút "Độ Kiếp" → core từ chối `{ ok: false, reason: 'still_equipped' }` → pop panel. Phù hợp với user feedback "phải thông báo cho người chơi".
+    - KHÔNG có nút "Tự tháo" trong panel. Người chơi tự vào Động Phủ / trang bị để tháo rồi quay lại.
+    - **Mọi string dùng i18n** (locale JSON, không hardcode). Tạo key mới:
+      - `tribulation.stillEquipped.title` = "Độ kiếp cũng là độ thân, không gì có thể giúp được ngươi"
+      - `tribulation.stillEquipped.subtitle` = "Không thể mặc trang bị khi độ kiếp"
+      - `tribulation.stillEquipped.confirm` (nút đóng panel) — ví dụ: "Đã hiểu" / "Ta biết rồi"
+    - Cả 2 locale `vi.json` và `en.json` đều phải có đủ 3 key.
 
 4. **Đảo ngược spec cũ:** Việc tự `unequipAllEquipment()` trong `useTribulation.ts:164` là **sai thiết kế** theo quyết định mới. Cần:
-   - Dỡ call site `useTribulation.ts:164`.
-   - Giữ method `unequipAllEquipment()` (vẫn cần cho test P5-6 và cho trường hợp người chơi tự tháo).
-   - Cập nhật doc/comment cũ (nhiều nơi) để phản ánh hành vi "chặn + panel" thay vì "auto-unequip".
+    - Dỡ call site `useTribulation.ts:164`.
+    - Giữ method `unequipAllEquipment()` (vẫn cần cho test P5-6 và cho trường hợp người chơi tự tháo).
+    - Cập nhật doc/comment cũ (nhiều nơi) để phản ánh hành vi "chặn + panel" thay vì "auto-unequip".
 
 5. **Trạng thái `chooseCultivationPath`:** Bản thân hàm này cũng không nên auto-unequip. Cần thêm guard "still_equipped" trước khi đổi realmId.
 
@@ -325,26 +335,23 @@ Phase 4:  tech-debt — chạy nền liên tục
 | **OPT-01** | `game/src/App.vue:360` | `bumpState()` mỗi tick | Tách `stateVersion` thành "bag/equipment" (manual) + "battle/world" (auto) |
 | **OPT-02** | `game/src/services/save/SaveSystem.ts:575,583` | `structuredClone` + `JSON.stringify` = double serialize mỗi autosave | ✅ Điều tra xong ở worktree `worktree-perf-optimize-pass` (Task 3) — tiền đề audit sai, chỉ có 1 `JSON.stringify` thật (write-time), `structuredClone` là snapshot cần thiết chống race quest-state. Không sửa code, chỉ thêm test round-trip khoá hành vi. Coi như đóng. |
 | **OPT-03** | `game/src/composables/useCadenceSmoothing.ts:56-68` | rAF loop không tự dừng | ✅ Xong — perf-optimize-pass Task 2 (`14a8235`), ĐÃ MERGE (`8b59045`) |
-| **OPT-04** | `game/src/core/equipment/EquipmentBag.ts:129-135` | `getEquipped`/`getEquippedInSlot` O(N) | Thêm `Map<EquipmentSlot, EquipmentInstance>` index |
-| **OPT-05** | `game/src/components/panels/EquipmentHallPanel/EnhanceTab.vue:63-111` | `enhanceRows` O(slots × 5) mỗi stateVersion bump | Memoize theo `(stateVersion, selectedSlot)` |
-| **OPT-06** | `game/src/services/save/SaveSystem.ts:661-668` | `loadGame` đọc+remove `IMPORT_HANDOFF_KEY` mỗi boot kể cả khi không import | Lazy read |
+| **OPT-04** | `game/src/core/equipment/EquipmentBag.ts:129-135` | `getEquipped`/`getEquippedInSlot` O(N) | 🟡 **Xong trong branch `worktree-gp123`, chờ merge** (2026-09-03, `ef19bc8`): slot index `Map` + 129-line test |
+| **OPT-05** | `game/src/components/panels/EquipmentHallPanel/EnhanceTab.vue:63-111` | `enhanceRows` O(slots × 5) mỗi stateVersion bump | ✅ Đóng per gp123 spec v2 §2 (file spec hiện chỉ có trong branch `worktree-gp123`, chưa có trên master — không cần làm) |
+| **OPT-06** | `game/src/services/save/SaveSystem.ts:661-668` | `loadGame` đọc+remove `IMPORT_HANDOFF_KEY` mỗi boot kể cả khi không import | 🟡 **Xong trong branch `worktree-gp123`, chờ merge** (2026-09-03, `aabe375`): defer handoff removal past consume |
 | **OPT-07** | `game/src/App.vue:285-287` | `drainNotifications()` chạy mỗi tick vô điều kiện | ✅ Xong — perf-optimize-pass Task 2 (`14a8235`, trả mảng rỗng dùng chung), ĐÃ MERGE (`8b59045`) |
 | **OPT-08** | `game/src/components/game/PhaserCanvas.vue:120-136` | EventBus handler đăng ký trước async game create | Wrap try/catch + cleanup on failure (cũng liên quan 9.5) |
 | **OPT-09** | `game/src/game/scenes/CombatScene.ts` | 11-entry `boundHandlers` array + 14 explicit `on()` | ✅ Xong 2026-09-02 — gộp thành 1 danh sách `getCombatEventBindings()` (22 entry), subscribe/unsubscribe cùng lặp 1 nguồn nên không thể lệch nhau; `unsubscribeCombatEvents()` idempotent (clear `eventBus`); test mới `CombatScene.eventSubscriptionSymmetry.test.ts` |
 
 ### 8.4. Thứ tự đề xuất
 
-1. **Task 9.1** (QA-001 panel chặn đột phá) — làm đầu vì Confirmed + đảo ngược spec cũ; dùng `OverlayPanel` primitive (cần Task 9.3 trước một phần — focus trap).
-2. **Task 9.3** (focus trap OverlayPanel) — bổ trợ cho 9.1.
-3. **Task 9.2** (idempotency restoreFromSave) — bảo vệ save integrity.
-4. **Task 9.7** (OfflineProgressSystem isFinite) — bảo vệ save integrity.
-5. **Task 9.8** (MaterialBag.add overflow caller) — bảo vệ resource conservation.
-6. **Task 9.4, 9.5, 9.6, 9.9, 9.10, 9.11** — bổ trợ, sắp xếp theo thời gian tiện tay.
-7. **Task 9.12 + OPT-01..09** — cộng dồn cuối, làm theo đợt refactor.
+1. **Merge `worktree-gp123` Group 1+2** (9.4/9.6/9.8/9.9/9.10/9.11 + OPT-04/06 — đã commit, chờ merge) — xem 8.6 + rủi ro save-version ở mục 10.
+2. **Group 3 gp123** (6E/6F/6G — spec+plan xong, implementation đang dở) — xong trong cùng branch rồi merge một lần.
+3. **Task 9.12** — đã đóng by-design (không làm thêm).
+4. **OPT còn lại (OPT-01/OPT-08)** — cộng dồn cuối, làm theo đợt refactor.
 
-### 8.5. Worktree đang chạy (2026-09-02, chưa merge — cập nhật sau lần rà soát thực tế)
+### 8.5. Worktree đã merge — lịch sử (đóng, chỉ để tra cứu)
 
-> 3 worktree song song, không đụng file của nhau (xem ràng buộc "Global Constraints" trong plan `perf-optimize-pass`). Trạng thái dưới đây lấy từ `git log`/`git status` thực tế trong từng worktree, không phải suy đoán.
+> Toàn bộ worktree dưới đây đã merge + dọn (trừ 2 worktree stale ở mục 8.6 chờ dọn). Không dùng bảng này để theo dõi việc đang chạy nữa.
 
 | Worktree (branch) | Việc | Trạng thái thực tế |
 |---|---|---|
@@ -353,13 +360,161 @@ Phase 4:  tech-debt — chạy nền liên tục
 | `.claude/worktrees/perf-optimize-pass` (`worktree-perf-optimize-pass`) | OPT-01..09 (mục 8.3) + tách file lớn | ✅ **ĐÃ MERGE 10/10 tasks vào master** (`8b59045`) + flake root-cause fix (`79bab1c`). OPT-02 đóng (audit sai tiền đề — không cần sửa code), OPT-03/07 xong (Task 2 `14a8235`), OPT-08/09/01 xong qua các task 4-10. BattleSystem/CombatScene/EquipmentSystem tách file + manualChunks đã ship. Worktree đã dọn. |
 | `.agent-worktrees/task-9-followups-i18n` (`worktree-task-9-followups-i18n`) | Task 9.2/9.3/9.7 + T4.1 i18n leftovers (vue-i18n v11, 2.2 batches 1+2, 2.3, 2.5) | ✅ **ĐÃ MERGE vào master 2026-09-03** (`2910247`). QA quick **PASS WITH EVIDENCE** (`game/docs/qa/2026-09-03-task-9-followups-i18n-quick.md`). Worktree đã dọn. |
 | `.agent-worktrees/deferred-cleanup-followups` (`worktree-deferred-cleanup`) | 5 deferred follow-ups: useDialogFocus edges (`8ccf350`), CombatExitConfirmModal focus trap (`659c0b3`), i18n 2.2 final batch FunctionOverlayPanel/useBagFilter (`912b1f3`), StageSelect numeric + en Form (`db9b5ac`) | ✅ Hoàn tất 5/5 + docs sync (task 5). Full verify matrix xanh: 2172/2172 unit tests (336 files), type-check, build, e2e 9/9. QA quick **PASS WITH EVIDENCE** (`game/docs/qa/2026-09-03-deferred-cleanup-quick.md`). |
-| `.claude/worktrees/phap-tu-thuan-he` (`worktree-phap-tu-thuan-he`) | Pháp Tu Thuần Hệ — 20 skill chuỗi B–E + 5 ult per-element + node tree 17 node/hành + 8 engine ext (E-1..E-8) + glue chain/ult + tooltip cơ chế (plan `2026-09-03-phap-tu-thuan-he.md`, spec `newPhapTuDesignSpec.md` §0.b) | ✅ **ĐÃ MERGE vào master 2026-09-03** (fast-forward `fe49848→08ed91b`, 21 commits, 0 conflict; re-verify sau merge: type-check + full suite 2318/2318 + build). QA quick **PASS WITH GAPS** (`game/docs/qa/2026-09-03-phap-tu-thuan-he-task12-quick.md` + rerun độc lập `...-quick.md`). Gap duy nhất (thiếu nút ult thủ công trong `PhapTuCombatHud.vue`) user DEFER thành plan **Task 14** — nút ult manual + panel AI "khi nào dùng ult" cạnh AI target. Worktree còn, chờ dọn. |
+| `.claude/worktrees/phap-tu-thuan-he` (`worktree-phap-tu-thuan-he`) | Pháp Tu Thuần Hệ — 20 skill chuỗi B–E + 5 ult per-element + node tree 17 node/hành + 8 engine ext (E-1..E-8) + glue chain/ult + tooltip cơ chế (plan `2026-09-03-phap-tu-thuan-he.md`, spec `newPhapTuDesignSpec.md` §0.b) | ✅ **ĐÃ MERGE vào master 2026-09-03** (fast-forward `fe49848→08ed91b`, 21 commits, 0 conflict; re-verify sau merge: type-check + full suite 2318/2318 + build). QA quick **PASS WITH GAPS** (`game/docs/qa/2026-09-03-phap-tu-thuan-he-task12-quick.md` + rerun độc lập `...-quick.md`). Gap duy nhất (thiếu nút ult thủ công trong `PhapTuCombatHud.vue`) user DEFER thành plan **Task 14** — nút ult manual + panel AI "khi nào dùng ult" cạnh AI target. |
 
-Khi merge bất kỳ worktree nào, nhớ cập nhật lại bảng trạng thái tương ứng ở mục 7.4 (6C), 8.1 (9.1) và 8.3 (OPT) — bảng đó vẫn đang ghi "⬜" dù code thực tế đã có ở worktree.
+### 8.6. Worktree/branch đang bay (2026-09-05) — THEO DÕI TẠI ĐÂY, không phải 8.5
 
-### 8.6. Liên kết QA artifacts
+| Worktree (branch, fork-point) | Việc | Trạng thái thực tế (verify 2026-09-05) |
+|---|---|---|
+| `.agent-worktrees/gp123-bugfix-optimize-economy` (`worktree-gp123`, fork `fe49848` 2026-09-03) | gp123 spec v2 + plan Groups 1-3: Group 1 (9.4/9.6/9.8/9.9/9.10/9.11) + Group 2 (OPT-04/06) + Group 3 (6E age-axis migration/6F/6G) | 🟡 **12 commits Group 1+2 + spec/plan** (`b104177` spec+plan → `ef19bc8` OPT-04); **Group 3 implementation đang dở — 47 file uncommitted** (AlchemySystem, VendorBalance, MaterialTierConversionBalance, Decompose/WashTab, useBagFilter…). ⚠️ Rủi ro merge: fork cũ (trước talent-v4 + turn-rework merge), save `CURRENT_SAVE_VERSION` vẫn v55 trong khi master đã v56 → khi merge bump lên **v57** (mục 10). Spec+plan (`game/docs/superpowers/specs/2026-09-03-gp123-bugfix-optimize-design.md` + `game/docs/superpowers/plans/2026-09-03-gp123-bugfix-optimize.md`) hiện chỉ có trong branch, merge xong link mới sống lại |
+| `.agent-worktrees/action-playback` (`feat/action-playback`, fork `887701c` = master tip) | Action Playback plan 8 task (việc combat #1, bảng 9.5) | 🟡 **Task 2/8 đã commit** (`40868dc`: `TurnSkillDefinition.presetId` + `TurnBattle.queuedFollowUpActorId`); worktree sạch — đang thực thi |
+| `.agent-worktrees/slice7-hud-completion` (`feat/slice7-hud-completion` @ `bd69e0d`) | Slice 7 master plan Tasks 3-10 (HUD rewrite) | ✅ Đã merge qua `70cb22e` — **worktree stale, chờ dọn** |
+| `.agent-worktrees/talent-v4-m1` (`worktree-talent-v4-m1` @ `8dde70c`) | Talent v4 M1 | ✅ Đã merge qua `660034d` — **worktree stale, chờ dọn** |
+
+### 8.7. Liên kết QA artifacts
 
 - Báo cáo chính: `game/docs/qa/2026-09-02-full-project-deep.md`
 - Reproduction test QA-001: `game/src/core/game/GameManager.realmAdvanceUnequip.test.ts`
 - Exploration reports (subagent): `game/docs/qa/2026-09-02-{combat-tribulation,economy-progression,save-cloud}-*.md`
 - Learned-defect entry: `QA-2026-09-02-001` trong `game/docs/qa/learned-defects.md`
+
+---
+
+## 9. Rework combat real-time → turn-based (ATB) — CƠ CHẾ XONG, CÒN CONTENT/WIRING
+
+> **Gộp từ `turn-based-combat-roadmap.md` ngày 2026-09-05** — file cũ giờ chỉ là con trỏ về mục này. Toàn bộ quyết định/slice/spec/plan dưới đây được giữ nguyên ý.
+> Tài liệu gốc: [2026-09-03-turn-based-combat-design.md](../../docs/superpowers/specs/2026-09-03-turn-based-combat-design.md) (spec thiết kế đã duyệt) + [2026-09-04-turn-based-combat-survey-and-stat-decisions.md](../../docs/superpowers/specs/2026-09-04-turn-based-combat-survey-and-stat-decisions.md) (khảo sát hệ thống thật + sửa sai lệch + quyết định Stat).
+> Mỗi hạng mục khi đến lượt làm: khảo sát codebase hiện tại → brainstorm/chốt với người dùng → viết plan riêng (`docs/superpowers/plans/...`) → cập nhật dòng trạng thái ở đây kèm link plan. KHÔNG gộp nhiều hệ thống vào một plan (quyết định người dùng, 2026-09-04).
+> Khi plan chi tiết và mục này lệch nhau, plan chi tiết là nguồn sự thật.
+
+### 9.1. Nguyên tắc (giữ nguyên từ rework)
+
+- Dev phase — big-bang, không giữ tương thích ngược save.
+- Sản xuất/tu luyện (idle) **không đổi** — rework thuần combat.
+- Combat không bao giờ mô phỏng offline; "Auto" là chính engine turn-based chạy nhanh hơn, không phải công thức riêng.
+- Hệ nhân vật phụ (party/companion) **ngoài phạm vi** rework — engine `players[]` đã xong, recruit/UI/content là spec riêng sau (việc #8, bảng 9.5).
+
+### 9.2. Milestone 1 — Foundation (primitives độc lập) ✅
+
+Dựng các primitive thuần (pure function), test riêng, KHÔNG đụng `BattleSystem.ts`/`CombatSystem.ts` cũ.
+
+| Hạng mục | Plan | Trạng thái |
+|---|---|---|
+| ActionGauge, TurnQueue, ChannelQueue, AoeShape*, BounceChain, TrueShot, BossTurnTriggers, MomentumBreak, ResourceTurnHook — 9 file mới dưới `game/src/core/battle/turn/` | [2026-09-03-turn-based-combat-foundation.md](../../docs/superpowers/plans/2026-09-03-turn-based-combat-foundation.md) | 🟢 Xong, merge master 2026-09-04 (`aee253b`; 50/50 test turn/ suite; QA [report](qa/2026-09-04-turn-combat-foundation-quick.md) PASS WITH EVIDENCE). ⚠️ `MomentumBreak.ts` sau đó bị **bỏ khỏi design** (Slice 4) nhưng file+tests vẫn tồn tại, 0 consumer — dọn ở việc #14, bảng 9.5 |
+
+### 9.3. Milestone 2 — BattleSystem Replacement ✅ (trọng tâm duy nhất từ 2026-09-04, không tách milestone con)
+
+**Quyết định người dùng 2026-09-04**: không tách "Core System Conversion" thành milestone riêng — mọi hệ làm CHUNG một đợt lớn xoay quanh việc thay `BattleSystem.update(deltaSeconds)`. Mỗi hệ vẫn plan riêng khi đến lượt, nhưng trọng tâm là chính BattleSystem Replacement.
+
+| Slice | Nội dung (tóm tắt — chi tiết xem spec/plan link) | Trạng thái |
+|---|---|---|
+| Slice 1 — Core Turn Loop | `TurnBattleSystem` headless: 1 player vs N enemy, ATB + targeting gần-nhất-trước-mặt + basic attack qua `CombatSystem.resolveActionHit` | 🟢 Xong 2026-09-04 (`72eec64`; turn/ 63/63; QA PASS WITH EVIDENCE) |
+| Slice 2 — 3-Skill Action Model | **THAY hẳn loadout 6-slot**: mọi combatant đúng 3 skill role (`basic`/`special`/`ultimate`, cooldown-lượt + resource-gate); Pháp Tu Thuần map vào chuỗi 1-hành; `resolveNextStep()` step-oriented | 🟢 Xong 2026-09-04 (`e3ade36`; turn/ 131/131; QA PASS WITH EVIDENCE) |
+| Slice 3 — Buff/CC Wiring + Zone-as-dot | `TurnBuffPool`/holder + `appliesBuff`; CC block; zone-as-dot thay Lava/Sword Zone (không `TurnHazardZoneSystem`) | 🟢 Xong 2026-09-04 (branch slice345; turn/ 138/138; QA PASS WITH EVIDENCE — CC check TRƯỚC buff tick) |
+| Slice 4 — Resource/Boss Triggers | `ResourceTurnHook` + `BossTurnTriggers` (turn-count, single-fire); **BỎ HẲN MomentumBreak** — boss chỉ là quái + buff | 🟢 Xong 2026-09-04 (turn/ 151/151; QA PASS WITH EVIDENCE) |
+| Slice 5 — Wave/Stage | `wave{total,spawned}` + `spawnEnemy` factory; spawn ngay khi sân trống; thắng = `isStageComplete()` | 🟢 Xong 2026-09-04 (turn/ 161/161; QA PASS WITH EVIDENCE) |
+| Slice 6 — GameManager Cutover | **FLIP THẬT**: thay `startBattle`/`startStage`/`updateBattleFixedStep`/`getBattle`, retire 27-28 file test real-time thành stub RETIRED; unified flow Countdown→Spawn→Gauge→Wave→Result; Bạt Kiếm Thuật channel mất tạm lúc flip | 🟢 Xong 2026-09-04 (`3982621`) |
+| Slice 7 — Manual UI | `peekNextActor()` + `resolveActorTurn()`; `TurnCombatSkillBar` 3 nút + toggle Thủ công/Tự động (persist `ui.combatInputMode`); turn-order preview (`peekUpcomingActors` + `TurnOrderStrip`) + battle log (`BattleLogPanel`); HUD rewrite + gỡ legacy (master plan Tasks 3-10, `bd69e0d`) | 🟢 Xong 2026-09-04/05 (`70cb22e`; turn/ 199/199; QA PASS WITH EVIDENCE) |
+| AOE Shape extension | `'cross'`/`'row'`/`'column'`, `'area'`→`'square'` | 🟢 Xong (`35c958f`; 2408/2408; QA PASS WITH EVIDENCE) |
+| BuffSystem turn-duration | `TurnBuffSystem.ts` mới (port verbatim, giây→lượt) + port nốt 4 method (`getActiveModifiers`/`isRooted`/`rollOnHitEffects`/`getStacks`) | 🟢 Xong (`8545866` + Completion Task 3/4: stats recompute `TurnStatsRecompute.ts`) |
+| Buff content migrate | Converter `toTurnBuffDefinition()` + `TURN_BUFF_REGISTRY` (46 buff) | 🟡 Converter xong; **registry 0 consumer + TribulationPhase/equipment/talent buff chưa migrate** → việc #6, bảng 9.5 |
+| Buff turn-count policy | Giữ nguyên số (X giây → X lượt) | 🟢 Đã chốt policy |
+| Buff presentation theo lượt | Tooltip/VFX duration | 🔴 Chưa — chờ UI buff turn thật → việc #7 |
+| ReactionManager conversion | Event-triggered sẵn; `spawnLavaZone` → dot buff; **turn engine CHƯA gọi ReactionManager/SkillEffectSystem** (không có call site để swap) | 🔴 Chưa wire → việc #2 (definitions `dung_nham_burn`/`kiem_tran_burn` đã sẵn) |
+| HazardZoneSystem | **ĐẢO NGƯỢC: KHÔNG xây `TurnHazardZoneSystem`** — zone = DoT qua AOE + buff | 🟢 Đã quyết định (không có gì để build) |
+| Stat System conversion | 5 main stat fit nguyên; `speed = 100 + dexterity×0.15` (HSR-SPD); bỏ `cooldownReduction`/`castSpeedPercent`/`movementSpeed`; `hpRegenPerSecond`→`hpRegenPerTurn` (giữ số); ~76 file qua compiler-navigated fixup | 🟢 Xong (`a0ca18b`+`b1251ed`; 2522/2523; QA PASS WITH EVIDENCE — gỡ blocker Slice 6) |
+| Manual tap-to-cast UI | Khảo sát `CombatSkillSlot` tái dùng được; `buildTurnSkillPresentation()` union turn-based; skill name/icon gap (TurnSkillDefinition không phải Skill sống) | 🟢 Engine+UI xong; **display metadata gap** → việc #5 |
+| StageWaveSystem turn conversion | `WaveSpawnTrigger.ts` (bỏ `spawnCountdown`/`spawnIntervalSeconds` — spawn ngay khi sân trống) | 🟢 Xong (`90f9cf5`; turn/ 100/100; QA PASS WITH EVIDENCE) |
+| Rewrite `BattleSystem.*.test.ts` | 27 file → stub RETIRED (phân loại migrated/dropped-by-design/chờ-content) | 🟢 Xong (Completion Task 9, `3982621`) |
+| GameManager external contract | Khảo sát driver/call site/UI read-only | 🟢 Khảo sát xong (không tách standalone — chính là Slice 6) |
+| Legacy real-time engine | **KHÔNG xóa** — `git mv` vào `battle/legacy/` (BattleSystem/HazardZoneSystem/UltimateSystem/LavaZone/SwordZone + tests pin), giữ history; BuffSystem/SkillEffectSystem/ReactionManager/BattleLootSystem… vẫn sống vì đang chạy | 🟢 Xong 2026-09-05 (`e928a44`): type-check 0, 2506/2506, build pass, e2e 10/10. **Xóa hẳn** → việc #9 (chờ #2+#6) |
+| Gameplay fixes (pacing/refight/pill) | 1 pacing tick = 1 gauge-step (không còn 1 tick = 1 turn); enemy speed ×100 khớp thang player; reset per-battle flags ở `startStage`; bỏ Pill `hpRegenPerTurn` (user request) | 🟢 Xong 2026-09-05 (`2ef3be6`; QA PASS WITH EVIDENCE) |
+
+### 9.4. Quyết định design lớn đã chốt (giữ làm hồ sơ — không mở lại nếu không có yêu cầu mới)
+
+- **Combat Fairness Guards** ✅ (`4356858`): **Bá Thể** (dính hard-CC 3 lượt liên tiếp → clear CC + miễn nhiễm 1 lượt, qua `consecutiveHardCcTurns` + `clearCcEffects()`, không buff mới) + **Sudden Death** (từ lượt 11: dmg +30%/lượt cộng dồn, heal/khiên −30%/lượt; damage-side xong, heal-side chờ cơ chế heal — plan ghi Not Covered).
+- **Party engine** ✅ (2026-09-04, cùng merge Future Systems): `TurnBattle.player` → `players[]`, chung ATB queue, thua khi toàn party chết; Slice 7 UI party support (pause mọi member, party status row). Recruit/UI/companion content → việc #8.
+- **Pháp Tu Reaction Path** ✅ cơ chế (cùng merge): bỏ book/AI — `special` cast 2 hành random khác nhau (Fisher-Yates-2), `ultimate` self-buff `reaction_empowerment` 4 lượt +25% (functionally-inert chờ reaction cutover → việc #12); unlock qua keystone node `reaction_path_unlock_<el>`.
+- **Node Tree 3-skill** ✅ (cùng merge): `CHAIN_SKILL_IDS` 5→3 (giữ A/C/E); 9 node/hành + keystone Reaction/Pure; 6 cadence node → speed flat (đúng ngữ nghĩa speed=100 sau conversion). Tổng 121→106 node.
+- **Channel skill (Bạt Kiếm Thuật)** ✅ cơ chế (cùng merge): Kiếm Tu `basic` (`tram` = "Trảm", giữ nguyên); Bạt Kiếm Thuật là 1 skill `special` duy nhất, primitive `chargingTurnsRemaining` (3 lượt, multiplier 3, cooldown 5 authored), tách biệt counter Bá Thể.
+- **Gauge-delta buff effect** ✅ (cùng merge): `gaugeDelta` one-shot lúc áp buff (deferred targets — sau `consumeGaugeAfterAction`), clamp `[0, GAUGE_MAX]`.
+- **Auto-farm Hoàn Mỹ** ✅ 7/7 (2026-09-04): 3 cơ chế auto riêng biệt (vượt ải `progress` + repeat + perfect_farm — giữ nguyên 2 cũ); Hoàn Mỹ = `teamHpLossPercent ≤ 75 && turns < stage.perfectClearTurnLimit`; farm = nửa thời gian, không trận thật, DUY NHẤT được reward offline; save v56. ⚠️ **0/30 stage có `perfectClearTurnLimit`** → chip disabled trong UI thật → việc #4.
+- **Battle-speed x1/x2/x4**: 🟢 HỦY hẳn (thay bằng 3 cơ chế auto trên).
+- **`CombatAiStrategy`** (nearest/boss_first/…): 🟢 CHẤP NHẬN MẤT — cố định "gần nhất-trước-mặt".
+- **Boss Phase System** (HP-threshold/archetypeOverride/summon của `TribulationPhase.ts`): 🟢 KHÔNG xây — boss = quái + buff thiết kế thủ công.
+- **Không có CC diminishing-returns riêng**: đã bao bởi Bá Thể.
+- **Turn-order preview + battle log**: ✅ xong (Slice 7 mở rộng).
+- **Multi-target death-mid-resolution**: ✅ XONG (`d22ed4e` + `TurnBattleSystem.ts:324/432/443` skip target đã chết) — đóng gap Deep Review §3.
+- **Enemy `speed` content**: ✅ XONG — không cần author tay: `EnemyStatInput.ts` tự suy `speed = normalizeEnemyAttackSpeed(attackSpeed) × 100` (+ `speedMultiplier`), khớp thang player (80–250, xem gameplay-fixes).
+- **Action Playback layer**: spec+plan 8 task xong 2026-09-05 ([design](../../docs/superpowers/specs/2026-09-05-turn-combat-action-playback-design.md) + [plan](../../docs/superpowers/plans/2026-09-05-turn-combat-action-playback.md)) — state machine 5 pha/actor, damage áp lúc VFX land, `presentationActive` flag (test cũ không cần sửa), + effect-kind `reactiveTrigger` (chỉ cơ chế). 🟡 **Task 2/8 đang chạy** ở `feat/action-playback` → việc #1.
+
+### 9.5. VIỆC CÒN LẠI — turn-based (re-verify bằng code 2026-09-05, sắp theo tiên quyết)
+
+| # | Việc | Loại | Trạng thái 2026-09-05 |
+|---|---|---|---|
+| 1 | **Action playback + VFX** - damage luc VFX land, engine cho presentation xong moi qua actor ke ([plan 8 task](../../docs/superpowers/plans/2026-09-05-turn-combat-action-playback.md), user report 2026-09-05) | Engine split + Phaser wiring | GREEN **DA THUC THI + MERGE (2026-09-05, 8/8 task, branch feat/action-playback, commits 40868dc→acc7b8b + merge)**: TurnDeclaredAction split (engine headless giu nguyen); emitter 4 signals; reactiveTrigger effect (co che xong, content chua assign); GameManager orchestration (presentationActive + 3 ack); CombatScene handshake (ready pulse → impact frame → VFX complete). presentationActive default false — 2529/2529 pass khong sua test cu. |
+| 2 | **Wire ReactionManager/SkillEffectSystem vào TurnBattleSystem** — reaction thật kích trong turn combat | Engine wiring lớn (spec riêng) | 🔴 Chưa — `turn/` zero reference tới 2 system này; cần thiết kế skill content thật trước |
+| 3 | **Skill content thật**: special/ultimate các build + `Enemy.specialAttacks[]` → `TurnSkillDefinition` | Content data | 🟡 Basic 8 build xong (`TurnBasicAttacks.ts`); special/ultimate chỉ Kiếm Tu (`BAT_KIEM_THUAT` qua `SPECIALS_BY_BUILD`); `specialAttacks[]` mới 1 enemy dùng (`water_surge` boss) |
+| 4 | **perfectClearTurnLimit cho stage content** — chip perfect_farm đang disabled | Content data (1 field/stage) | 🔴 **0/30 stage** có field (type + record + UI đã sẵn) |
+| 5 | **Skill name/icon/tooltip trong HUD turn** — mapping id → display metadata | Content mapping nhỏ | 🔴 `TurnSkillDefinition` không name/icon (gap đã ghi trong `KiemTuCombatHud.vue`/`TurnCombatSkillBar.vue`) |
+| 6 | **Buff content migrate TribulationPhase/equipment/talent passive** + wire registry vào TurnBattleSystem | Content + wiring | 🔴 Converter + registry 46 buff xong nhưng **0 consumer production** |
+| 7 | **Buff duration presentation theo lượt** (tooltip/VFX) | UI nhỏ | 🔴 Chờ #6 |
+| 8 | **Party recruit/UI/companion content** (engine `players[]` đã xong) | Feature lớn — spec riêng | 🔴 Chưa lên lịch |
+| 9 | **Xoá `battle/legacy/`** + gỡ shim GameManager/StageWaveSystem (checklist trong `legacy/README.md`) | Cleanup — spec riêng | 🔴 Chờ #2 + #6 |
+| 10 | ~~Multi-target death-mid-resolution hardening~~ | — | ✅ **XONG** (`d22ed4e`) — gạch khỏi danh sách việc |
+| 11 | **Boss enrage/tribulation content** bằng buff thủ công (KHÔNG phase-system) | Content | 🔴 Chờ #6 |
+| 12 | **Pháp Tu Reaction Path content thật** (pool element skills + ultimate % buff) | Content | 🟡 Cơ chế xong, `reaction_empowerment` inert — số liệu để implement-time |
+| 13 | **hpRegenPerTurn** — pills đã bỏ (user request 2026-09-05); techniques/equipment/realm vẫn có stat, engine đã wire (`TurnBattleSystem.ts:361-362`) | Quyết định design | 🟡 **Cần user chốt: giữ stat chung (đã chạy) hay bỏ hẳn** (mục 10) |
+| 14 | **Xóa `MomentumBreak.ts` dead code** (+ 2 test files) — mechanic đã bỏ ở Slice 4 nhưng file còn, 0 consumer từ M1 | Cleanup nhỏ | 🔴 Mới phát hiện khi gộp roadmap (verify 2026-09-05) |
+
+### 9.6. Rủi ro liên-plan đã đóng (hồ sơ)
+
+- Conflict Kiếm Tu basic-slot (Completion Task 5 vs Future Systems Task 8): sửa 2 lần, chốt cuối `67de5db` — `tram` = "Trảm", giữ nguyên basic; Bạt Kiếm Thuật = 1 skill `special` charge (xem 9.4).
+- Gap "Slice 7 UI xây trước Party": thêm Task 10 vào Future Systems plan (chạy cùng phiên Task 9) — đã merge.
+- Placeholder cần 1 lượt tune sau khi cơ chế chạy: Reaction Path ultimate %/số lượt; Bạt Kiếm Thuật `chargeTurns` + hệ số (đối chiếu `BattleSystem.batKiem.test.ts` legacy trước khi bịa số); 3 skill/hành của Node Tree (quyết định lúc thực thi, ghi commit message).
+
+---
+
+## 10. Ghi chú / Đề xuất / Rủi ro merge (cập nhật khi gộp roadmap 2026-09-05)
+
+### 10.1. Thứ tự merge đề xuất (tránh conflict)
+
+1. **`worktree-gp123` trước** — Group 1+2 (12 commits) + Group 3 (đang dở, 47 file uncommitted — commit nốt rồi merge một lần). Lưu ý 10.2.
+2. **`feat/action-playback`** — đang Task 2/8, fork từ master tip nên merge sạch khi xong.
+3. Dọn 2 worktree stale: `slice7-hud-completion`, `talent-v4-m1` (code đã merge, chỉ còn worktree + branch).
+4. Sau đó mới làm các việc bảng 9.5 theo tiên quyết.
+
+### 10.2. Rủi ro merge đã biết trước
+
+- **Save version**: master `CURRENT_SAVE_VERSION = 56` (auto-farm); branch gp123 vẫn v55 (spec v2 từng dự kiến v55→v56 cho migration 6E age-axis). **Khi merge gp123: bump lên v57**, không giữ v56 của branch (dev phase — save cũ reject theo policy, không migration).
+- **gp123 fork cũ** (`fe49848`, 2026-09-03 — trước talent-v4 merge + toàn bộ turn-rework merge): merge sẽ mang Group 1/2/3 vào sau; Group 1 sửa các file combat/UI mà turn-rework cũng chạm (CombatScene, PhaserCanvas, CombatDefeatPanel) → **review conflict thủ công**, ưu tiên giữ code turn-based master, re-apply fix gp123 lên trên.
+- 6E đổi ID/tên Mộc+Khoáng sang age-axis + bỏ plain wood: chạm `MaterialTierConversionBalance`, AlchemySystem, VendorBalance, Decompose/WashTab — sau merge phải chạy full matrix (type-check + 2510 tests + build + e2e) vì đổi data ID diện rộng.
+
+### 10.3. Cần user chốt (chưa quyết — không tự làm)
+
+- **Bảng 9.5 #4**: giá trị `perfectClearTurnLimit` cho từng stage (hiện 0/30 stage có) — cần bảng số hoặc quy tắc (vd theo `totalEnemyCount`).
+- **Bảng 9.5 #13**: giữ `hpRegenPerTurn` làm stat chung (engine đã wire) hay bỏ hẳn khỏi StatType.
+- **Bảng 9.5 #14**: xóa `MomentumBreak.ts` + tests luôn, hay giữ làm tài liệu tham khảo (đề xuất: xóa — git history còn).
+- **3.5/3.6** (Stat cap Phàm Nhân, CDR cap 300%): chưa chốt từ 7.3.
+- **Talent v4 M2/M3**: khi làm, target phải là `TurnBuffDefinition`/turn engine (không phải legacy `BuffDefinition`) — cần ghi rõ trong plan M2/M3 lúc viết.
+- **World map vs stage list** (mục 5), **tutorial động** (mục 5): chờ quyết định riêng.
+- **Task 14 cũ** (nút ult manual + panel AI trong `PhapTuCombatHud.vue`, defer từ thuan-he QA): sau rework 3-skill, "ult manual" đã bao bởi `TurnCombatSkillBar` — **đề xuất đóng Task 14**, trừ khi user muốn panel AI riêng.
+
+### 10.4. Đề xuất kỹ thuật (không làm lặng lẽ — chờ task yêu cầu, theo P9)
+
+- **GameManager 2.939 dòng**: đợt tách Ops mới — ứng viên: turn-battle wiring (~300 dòng quanh `startStage`/rewards/auto-farm/perfect-clear) thành `GameManagerTurnBattleOps`; `convertMaterialTier`/spirit-stone convert thành `GameManagerConvertOps`.
+- **StageSelectPanel còn hiện `spawnIntervalSeconds`** (dòng ~278): field này turn-based không dùng (spawn ngay khi sân trống) — ẩn khỏi UI khi dọn display (kèm việc #5).
+- **`termGlossary` + `_meta` locale**: hoặc consume thật (dùng trong tooltip/validation) hoặc xóa — hiện chỉ tốn chỗ.
+- **E2E**: đã có 6 spec — bổ sung luồng auto-farm Hoàn Mỹ + manual tap-to-cast khi 2 tính năng này ổn định.
+
+---
+
+## Cách cập nhật roadmap này (giữ từ bản turn-based cũ, áp cho toàn file)
+
+Sau mỗi lần khảo sát/brainstorm/viết plan/merge cho một hạng mục:
+
+1. Đổi cột **Trạng thái** (🔴 chưa quyết định → ⚪ đã quyết định chưa có plan → 🟡 đang thực thi/chờ merge → 🟢 xong, kèm ngày + commit/branch).
+2. Điền/đổi link **Plan** sang file plan thật vừa viết (`game/docs/superpowers/plans/...` hoặc `docs/superpowers/plans/...` — kiểm tra file tồn tại ở đâu trước khi link).
+3. Nếu quyết định mới làm lệch mô tả, cập nhật luôn dòng đó — không để roadmap nói khác plan chi tiết.
+4. Việc đang bay ở branch khác ghi rõ **branch + fork-point + trạng thái commit/uncommitted** (mẫu ở mục 8.6) — khi merge xong chuyển vào bảng lịch sử.
+5. Lịch sử merge trong mục 8.5/9.x chỉ để tra cứu — không dùng để theo dõi việc đang chạy.
