@@ -6,7 +6,7 @@
 import type { CombatEntity } from '../../combat/CombatEntity'
 import type { CombatSystem } from '../../combat/CombatSystem'
 import { entityGridPosition, getChebyshevDistance } from '../BattleGrid'
-import { consumeGaugeAfterAction } from './ActionGauge'
+import { consumeGaugeAfterAction, advanceGauge, isGaugeReady } from './ActionGauge'
 import { resolveNextTurn } from './TurnQueue'
 import { tickCooldowns, selectAction, selectForcedAction, commitAction, collectTurnTargets } from './TurnSkillAction'
 import type { TurnSkillDefinition, TurnSkillSlot, TurnSkillSlotRole } from './TurnSkillAction'
@@ -176,6 +176,57 @@ export class TurnBattleSystem {
     }
 
     return battle.state
+  }
+
+  /**
+   * Gameplay fixes (2026-09-05) — wall-clock pacing: mỗi pacing tick (0.1s
+   * hệ sống) chỉ advance gauge MỘT step cho mọi actor; actor resolve CHỈ
+   * khi gauge đầy. Trước đây updateBattleFixedStep gọi resolveNextStep()
+   * mỗi tick — inner-loop advance tới ready trong CÙNG call khiến 1 turn
+   * = 1 tick (trận chớp mắt, không còn ai kịp thấy gì).
+   *
+   * Trả về actor vừa resolve (nếu có) để GameManager manual mode pause
+   * đúng actor phe player ngay tại tick ready. CC check/buff tick
+   * (resolveActorTurn) chạy như thường; turn counter +1 đúng mỗi turn.
+   */
+  tickPacing(battle: TurnBattle): TurnBattleParticipant | null {
+    if (battle.state !== 'fighting') {
+      return null
+    }
+
+    const allParticipants = [...battle.players, ...battle.enemies]
+
+    for (const participant of allParticipants) {
+      participant.alive = participant.entity.alive
+    }
+
+    const living = allParticipants.filter((actor) => actor.alive)
+
+    if (living.length === 0) {
+      return null
+    }
+
+    // MỘT gauge-step duy nhất cho mọi actor trong tick này.
+    for (const actor of living) {
+      advanceGauge(actor, 1)
+    }
+
+    const ready = living.filter(isGaugeReady).sort((a, b) => {
+      if (a.speed !== b.speed) {
+        return b.speed - a.speed
+      }
+      return a.priority - b.priority
+    })
+
+    const actor = ready[0]
+
+    if (!actor) {
+      return null
+    }
+
+    this.resolveActorTurn(battle, actor)
+
+    return actor
   }
 
   /**

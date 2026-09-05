@@ -125,73 +125,17 @@ describe('Pill nghề — gate + atomic consumption', () => {
   })
 })
 
-describe('Regen timed effect — thời gian thực, hết hạn trong combat', () => {
-  it('uống regen → timed effect deadline tuyệt đối; trong combat hpRegenPerTurn tăng; hết hạn giữa trận về baseline + effect bị xoá', async () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date('2026-01-01T00:00:00Z'))
-
+// Gameplay fixes (2026-09-05): hpRegenPerTurn pill modifier REMOVED per user request —
+// uong thuoc nhan HP regen vo nghia trong turn engine. 2 test pin cu (regen stat tang
+// trong combat + stack policy HP/s) da retire cung tinh nang. MP regen pill giu nguyen.
+describe('Regen timed effect — hpRegen pill REMOVED (user request 2026-09-05)', () => {
+  it('uong Hoi Xuan Dan KHONG con cap modifier hpRegenPerTurn', async () => {
     const { gameManager, player } = setup()
-
     await registerPill(gameManager, REGEN_PILL)
-
-    // Truyền baseStats THÔ (không calculated) — recompute trong battle
-    // derive lại từ vitality; tránh double-derive làm nhiễu assertion.
-    gameManager.startBattleWithPlayer(player, player.baseStats, makeEnemyData())
-
-    gameManager.update(3) // bỏ countdown (telegraph materialize luôn)
-
-    // Một tick fighting để recompute baseline (derive hpRegen từ
-    // vitality = 0.1) TRƯỚC khi uống.
-    gameManager.update(0.1)
-
-    const battle = gameManager.getBattle()!
-    const baselineRegen = battle.player.stats.hpRegenPerTurn
-
-    expect(gameManager.usePillDetailed(REGEN_PILL, pillTarget(), player).ok).toBe(true)
-
-    expect(player.persistentTimedEffects).toHaveLength(1)
-
-    const expiresAtMs = player.persistentTimedEffects[0]!.expiresAtMs
-
-    // Tick combat — provider đọc timed effect → regen stat tăng.
-    gameManager.update(0.1)
-
-    expect(battle.player.stats.hpRegenPerTurn).toBeGreaterThan(baselineRegen)
-
-    // Thời gian trôi qua hết deadline (thời gian THỰC, không phải game
-    // delta) — tick kế effect rơi khỏi recompute + bị xoá khỏi player.
-    vi.setSystemTime(new Date(expiresAtMs + 1000))
-
-    gameManager.update(0.1)
-
-    expect(battle.player.stats.hpRegenPerTurn).toBe(baselineRegen)
-    expect(player.persistentTimedEffects).toHaveLength(0)
-  })
-
-  it('stack policy: uống lại cùng effectGroup refresh deadline, KHÔNG cộng dồn HP/s', async () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date('2026-01-01T00:00:00Z'))
-
-    const { gameManager, player } = setup()
-
-    await registerPill(gameManager, REGEN_PILL, 2)
-
     gameManager.usePillDetailed(REGEN_PILL, pillTarget(), player)
-
-    const first = player.persistentTimedEffects[0]!
-    const firstExpiresAt = first.expiresAtMs
-    const firstModifiers = first.modifiers.map((modifier) => modifier.flat)
-
-    // 30s sau uống lần nữa — deadline refresh, HP/s KHÔNG cộng đôi.
-    vi.setSystemTime(new Date(Date.now() + 30_000))
-
-    gameManager.usePillDetailed(REGEN_PILL, pillTarget(), player)
-
-    expect(player.persistentTimedEffects).toHaveLength(1)
-
-    const refreshed = player.persistentTimedEffects[0]!
-
-    expect(refreshed.expiresAtMs).toBeGreaterThan(firstExpiresAt)
-    expect(refreshed.modifiers.map((modifier) => modifier.flat)).toEqual(firstModifiers)
+    const effects = player.persistentTimedEffects
+    const hpModifiers = effects.flatMap((e) => e.modifiers).filter((m) => m.stat === 'hpRegenPerTurn')
+    expect(hpModifiers).toHaveLength(0)
+    expect(effects.length).toBeGreaterThan(0)
   })
 })

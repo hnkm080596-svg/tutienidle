@@ -22,7 +22,7 @@ const ENEMY_STATS = {
 }
 
 function createPlayer(): CombatEntity {
-  const stats = { ...createBaseStats(), attack: 50, speed: 2, criticalRate: 0 }
+  const stats = { ...createBaseStats(), attack: 50, speed: 100, criticalRate: 0 }
 
   return {
     id: 'player', name: 'Player', type: 'player', baseStats: stats, stats,
@@ -226,5 +226,49 @@ describe('Future Systems Task 10 — party manual pause', () => {
     const presentation = gameManager.buildTurnSkillPresentation(battle!, true)
 
     expect(presentation.basic).toBeDefined()
+  })
+})
+
+
+// ---------------------------------------------------------------------------
+// Gameplay fixes (2026-09-05) — refight chain: Đánh Lại phải hoạt động
+// LẶP LẠI nhiều lần (user report: lần 2 lỗi).
+// ---------------------------------------------------------------------------
+
+describe('Gameplay fixes — refight chain', () => {
+  it('startStage Victory loop 3 rounds lian tiep (Refight repeat)', () => {
+    const gameManager = new GameManager()
+    const enemy = defineEnemy({
+      id: 'refight3_dummy', name: 'Refight3', level: 1, realmId: 'mortal', lane: 'ground',
+      statsInput: { maxHp: 1, attack: 0, attackSpeed: 1, attackRangeRanks: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+      rewards: { techniqueInsight: 0, spiritStone: 0 },
+    })
+    const stage: Stage = {
+      id: 'refight3_stage', name: 'Refight3 Stage', description: '', floor: 1,
+      enemyPool: [{ enemyId: enemy.id, weight: 1 }],
+      totalEnemyCount: 1, spawnIntervalSeconds: 0,
+    }
+    const player = createDefaultPlayer()
+    const stats = calculateStats({ ...player.baseStats, attack: 100, speed: 100 }, [])
+
+    gameManager.registerEnemyTemplates([enemy])
+    gameManager.registerStages([stage])
+    gameManager.setActivePlayer(player)
+
+    for (let round = 1; round <= 3; round++) {
+      const started = gameManager.startStage(player, stats, stage, false)
+
+      expect(started, `round ${round}: startStage failed`).toBe(true)
+
+      const battle = gameManager.getTurnBattle()
+
+      expect(battle, `round ${round}: no turnBattle`).not.toBeNull()
+
+      for (let i = 0; i < 600 && battle!.state !== 'victory'; i++) {
+        gameManager.update(0.05)
+      }
+
+      expect(battle!.state, `round ${round}: not victory`).toBe('victory')
+    }
   })
 })

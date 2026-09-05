@@ -2023,3 +2023,106 @@ describe('TurnBattleSystem charge skill (Thế/Trảm)', () => {
     expect(battle.players[0]!.consecutiveHardCcTurns).toBe(0)
   })
 })
+
+
+// ---------------------------------------------------------------------------
+// Gameplay fixes (2026-09-05) — wall-clock pacing: 1 tick = 1 gauge-step,
+// KHÔNG resolve-scan trong cùng tick (bug: trận chớp mắt vì mỗi 0.1s tick
+// resolve cả 1 turn nguyên).
+// ---------------------------------------------------------------------------
+
+describe('TurnBattleSystem.tickPacing — wall-clock pacing', () => {
+  it('1 tick chỉ advance gauge speed điểm; actor KHÔNG resolve khi gauge chưa đầy', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 0 },
+    })
+
+    const battle: TurnBattle = {
+      players: [makeParticipant('player', player, 100, 0)],
+      enemies: [makeParticipant('enemy', enemyEntity, 100, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    // 5 ticks × speed 100 = gauge 500 < GAUGE_MAX 1000 — chưa ai tới lượt.
+    for (let i = 0; i < 5; i++) {
+      system.tickPacing(battle)
+    }
+
+    expect(battle.totalTurnsElapsed ?? 0).toBe(0)
+    expect(enemyEntity.currentHp).toBe(1_000_000)
+  })
+
+  it('đúng 10 ticks × speed 100 → player turn resolve (1 turn/giây — pacing hệ sống)', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 0 },
+    })
+
+    const battle: TurnBattle = {
+      players: [makeParticipant('player', player, 100, 0)],
+      enemies: [makeParticipant('enemy', enemyEntity, 100, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    for (let i = 0; i < 9; i++) {
+      system.tickPacing(battle)
+    }
+
+    expect(battle.totalTurnsElapsed ?? 0).toBe(0)
+
+    system.tickPacing(battle)
+
+    expect(battle.totalTurnsElapsed).toBe(1)
+    expect(enemyEntity.currentHp).toBeLessThan(1_000_000)
+  })
+
+  it('đồng thời trả actor ready (cho GameManager pause-on-player-turn)', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 999 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 0 },
+    })
+
+    const battle: TurnBattle = {
+      players: [makeParticipant('player', player, 100, 0)],
+      enemies: [makeParticipant('enemy', enemyEntity, 100, 1)],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    for (let i = 0; i < 9; i++) {
+      system.tickPacing(battle)
+    }
+
+    const readyActor = system.tickPacing(battle)
+
+    expect(readyActor?.id).toBe('player')
+    expect(battle.totalTurnsElapsed).toBe(1)
+  })
+})
