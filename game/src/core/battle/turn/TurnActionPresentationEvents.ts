@@ -1,6 +1,8 @@
 import type { EventBus } from '../../events/EventBus'
 import type { GridPosition, CellArea } from '../BattleGrid'
+import { entityGridPosition } from '../BattleGrid'
 import type { CombatVfxPresetId, ActionTargetingShape } from '../CombatAction'
+import type { TurnBattle, TurnBattleParticipant } from './TurnBattleSystem'
 
 // Action Playback Task 4 (2026-09-05) — presentation event emitter cho
 // turn-based combat. GameManager là SOLE caller (Task 6), CombatScene là
@@ -79,4 +81,43 @@ export function emitTurnActionImpact(eventBus: EventBus, params: TurnActionImpac
 
 export function emitTurnStandbyComplete(eventBus: EventBus, actorId: string): void {
   eventBus.emit('turn_standby_complete', { actorId })
+}
+
+export interface TurnBattleEntityVisualState {
+  id: string
+  row: number
+  column: number
+  currentHp: number
+  maxHp: number
+  alive: boolean
+}
+
+export interface TurnBattleEntitySnapshotEvent {
+  players: TurnBattleEntityVisualState[]
+  enemies: TurnBattleEntityVisualState[]
+}
+
+function toVisualState(participant: TurnBattleParticipant): TurnBattleEntityVisualState {
+  const position = entityGridPosition(participant.entity)
+
+  return {
+    id: participant.id,
+    row: position.row,
+    column: position.column,
+    currentHp: participant.entity.currentHp,
+    maxHp: participant.entity.maxHp,
+    alive: participant.entity.alive,
+  }
+}
+
+// Combat Art Pipeline (2026-09-05) — thay thế bridge 'positions' đã chết của
+// legacy real-time engine (legacy/BattleSystem.ts không còn được tick cho
+// turn-based combat). Đọc TRỰC TIẾP từ TurnBattle.players/enemies mỗi fixed
+// step trong lúc 'fighting' — không phụ thuộc emitPositions()/update() của
+// legacy engine. GameManager gọi hàm này (Task 5 sẽ nối CombatScene nghe).
+export function emitTurnBattleEntitySnapshot(eventBus: EventBus, battle: TurnBattle): void {
+  eventBus.emit('turn_battle_entity_snapshot', {
+    players: battle.players.map(toVisualState),
+    enemies: battle.enemies.map(toVisualState),
+  })
 }

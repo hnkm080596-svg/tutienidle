@@ -204,7 +204,7 @@ import { resolveEnemySpawnPosition } from '../battle/EnemySpawnPlacement'
 import type { TurnSkillDefinition, TurnSkillSlotRole } from '../battle/turn/TurnSkillAction'
 import { buildTurnSkillPresentation, type TurnSkillPresentationEntry } from '../combat/CombatSkillPresentation'
 import { PresentationGate } from '../battle/turn/PresentationGate'
-import { emitTurnReady, emitTurnCastStart, emitTurnActionImpact, emitTurnStandbyComplete } from '../battle/turn/TurnActionPresentationEvents'
+import { emitTurnReady, emitTurnCastStart, emitTurnActionImpact, emitTurnStandbyComplete, emitTurnBattleEntitySnapshot } from '../battle/turn/TurnActionPresentationEvents'
 import type { TurnDeclaredAction } from '../battle/turn/TurnBattleSystem'
 import { toTurnBattleParticipant } from './TurnBattleAdapter'
 import { DEFAULT_PARTY_FORMATION } from './PartyFormation'
@@ -3616,6 +3616,14 @@ export class GameManager {
               this.awaitedManualActor = readyActor
             }
           }
+
+          // Combat Art Pipeline (2026-09-05) — emit LIVE entity snapshot mỗi
+          // fixed step trong lúc 'fighting', bất kể nhánh con nào ở trên vừa
+          // chạy (pause chờ manual input / chờ Phaser acknowledge / pacing
+          // bình thường). Đây là nguồn thay thế bridge 'positions' đã chết
+          // của legacy real-time engine — đặt ở CUỐI block 'fighting' để
+          // không phụ thuộc nhánh nào bên trên có resolve turn hay không.
+          emitTurnBattleEntitySnapshot(this.eventBus, this.turnBattle)
         }
       }
 

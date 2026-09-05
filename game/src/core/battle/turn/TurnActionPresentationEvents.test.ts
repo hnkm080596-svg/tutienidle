@@ -5,7 +5,34 @@ import {
   emitTurnCastStart,
   emitTurnActionImpact,
   emitTurnStandbyComplete,
+  emitTurnBattleEntitySnapshot,
+  type TurnBattleEntitySnapshotEvent,
 } from './TurnActionPresentationEvents'
+import { TurnBuffPool } from './TurnBuffPool'
+import type { TurnBattle, TurnBattleParticipant } from './TurnBattleSystem'
+import type { CombatEntity } from '../../combat/CombatEntity'
+import { createBaseStats } from '../../stats/StatBlock'
+
+// Fixture helpers — copy y hệt shape dùng trong TurnBattleSystem.followUpQueue.test.ts
+// (per-file fixture convention của test suite này).
+function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
+  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0 }
+  return {
+    id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
+    currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
+    currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
+    timeSinceLastBleedProc: 0, tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
+    currentWard: 0, timeSinceLastHitTaken: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
+    ...overrides,
+  } as CombatEntity
+}
+
+function makeParticipant(id: string, entity: CombatEntity, speed: number, priority: number): TurnBattleParticipant {
+  return {
+    id, entity, speed, priority, actionGauge: 0, alive: entity.alive,
+    buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0,
+  }
+}
 
 // Action Playback Task 4 — presentation event emitter: GameManager là sole
 // caller; CombatScene là sole listener. Reuse 'attack'/'action_impact' event
@@ -104,5 +131,26 @@ describe('TurnActionPresentationEvents', () => {
     emitTurnStandbyComplete(bus, 'player-1')
 
     expect(handler).toHaveBeenCalledWith({ actorId: 'player-1' })
+  })
+
+  describe('emitTurnBattleEntitySnapshot', () => {
+    it('emits a snapshot with every living/dead players and enemies participant', () => {
+      const eventBus = new EventBus()
+      const received: TurnBattleEntitySnapshotEvent[] = []
+
+      eventBus.on<TurnBattleEntitySnapshotEvent>('turn_battle_entity_snapshot', (event) => received.push(event))
+
+      const battle: TurnBattle = {
+        players: [makeParticipant('player', createCombatant({ id: 'player', row: 4, x: 1, currentHp: 80, maxHp: 100 }), 100, 0)],
+        enemies: [makeParticipant('enemy', createCombatant({ id: 'enemy', row: 5, x: 9, currentHp: 0, maxHp: 50, alive: false }), 100, 1)],
+        state: 'fighting',
+      }
+
+      emitTurnBattleEntitySnapshot(eventBus, battle)
+
+      expect(received).toHaveLength(1)
+      expect(received[0]!.players).toEqual([{ id: 'player', row: 4, column: 1, currentHp: 80, maxHp: 100, alive: true }])
+      expect(received[0]!.enemies).toEqual([{ id: 'enemy', row: 5, column: 9, currentHp: 0, maxHp: 50, alive: false }])
+    })
   })
 })
