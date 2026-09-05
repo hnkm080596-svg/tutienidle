@@ -20,6 +20,7 @@ import { BuildingRegistry } from '../building/BuildingRegistry'
 import { BuildingManager } from '../building/BuildingManager'
 import { BuildingSystem } from '../building/BuildingSystem'
 import { NotificationQueue } from './NotificationQueue'
+import { createBagOverflowEvent } from '../notification/bagOverflow'
 
 export interface EquipmentOpsSystemDeps {
   equipmentSystem: EquipmentSystem
@@ -97,9 +98,16 @@ export class EquipmentOpsSystem {
 
     for (const reward of autoDissolved) {
       if (this.deps.materialRegistry.has(reward.materialId)) {
-        this.deps.materialBag.add(this.deps.materialRegistry.get(reward.materialId), reward.amount)
+        // 9.8 — tràn túi: quest chỉ tính delivered + toast bag.overflow.
+        const overflow = this.deps.materialBag.add(this.deps.materialRegistry.get(reward.materialId), reward.amount)
 
-        this.deps.notifyQuestMaterialGained(reward.materialId, reward.amount)
+        this.deps.notifyQuestMaterialGained(reward.materialId, reward.amount - overflow)
+
+        if (overflow > 0) {
+          this.deps.notifications.push(
+            createBagOverflowEvent(this.deps.materialRegistry.get(reward.materialId).name, overflow),
+          )
+        }
       }
     }
 
@@ -342,9 +350,17 @@ export class EquipmentOpsSystem {
     if (result.ok && result.rewards) {
       for (const reward of result.rewards) {
         if (this.deps.materialRegistry.has(reward.materialId)) {
-          this.deps.materialBag.add(this.deps.materialRegistry.get(reward.materialId), reward.amount)
+          // 9.8 — tràn túi: quest chỉ tính delivered + toast (contract
+          // result.rewards GIỮ NGUYÊN — tổng Tinh Hoa phân giải).
+          const overflow = this.deps.materialBag.add(this.deps.materialRegistry.get(reward.materialId), reward.amount)
 
-          this.deps.notifyQuestMaterialGained(reward.materialId, reward.amount)
+          this.deps.notifyQuestMaterialGained(reward.materialId, reward.amount - overflow)
+
+          if (overflow > 0) {
+            this.deps.notifications.push(
+              createBagOverflowEvent(this.deps.materialRegistry.get(reward.materialId).name, overflow),
+            )
+          }
         }
       }
     }

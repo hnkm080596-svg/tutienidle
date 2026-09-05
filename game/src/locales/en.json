@@ -837,6 +837,7 @@
     }
   },
   "bag": {
+    "overflow": "Bag full — lost {amount} {name}",
     "filter": {
       "group": {
         "wood": "Wood",

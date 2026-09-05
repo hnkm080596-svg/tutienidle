@@ -10,6 +10,42 @@ import { useAutoRetryCountdown } from './useAutoRetryCountdown'
 // trừ 1, khiến countdown kéo dài lâu hơn thời gian thực đã hứa. Giờ mỗi
 // callback tính lại remaining từ deadline = timestamp thực, nên callback
 // trễ bao lâu cũng resolve đúng ngay lần fire đó.
+// 9.9 — start() gọi khi countdown đang chạy phải clear interval cũ TRƯỚC
+// khi lập lịch mới, nếu không interval cũ bị orphan: vẫn tick mãi, đuỵ
+// cùng deadline/completed dùng chung (stop() thủ công không dừng được nó).
+describe('useAutoRetryCountdown — 9.9 restart an toàn', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('start() khi đang chạy clear interval cũ — không orphan, onComplete đúng 1 lần, stop() sau đó không còn interval nào', () => {
+    vi.useFakeTimers()
+
+    const clearSpy = vi.spyOn(globalThis, 'clearInterval')
+    const onComplete = vi.fn()
+    const { start, stop, remaining } = useAutoRetryCountdown(3, onComplete)
+
+    start()
+    vi.advanceTimersByTime(500)
+    start()
+
+    // 9.9 — restart phải clear ngay interval đầu tiên (handle cũ).
+    expect(clearSpy).toHaveBeenCalledTimes(1)
+
+    vi.advanceTimersByTime(5000)
+
+    expect(onComplete).toHaveBeenCalledTimes(1)
+    expect(remaining.value).toBe(0)
+
+    // Hoàn tất rồi thì không interval nào còn — clearInterval lần 2 nhận
+    // handle của interval mới (lập ở start thứ 2), advance thêm không đổi gì.
+    expect(clearSpy).toHaveBeenCalledTimes(2)
+    stop()
+    vi.advanceTimersByTime(10000)
+    expect(onComplete).toHaveBeenCalledTimes(1)
+  })
+})
+
 describe('useAutoRetryCountdown — deadline thực (uncommitted audit followup plan)', () => {
   afterEach(() => {
     vi.useRealTimers()

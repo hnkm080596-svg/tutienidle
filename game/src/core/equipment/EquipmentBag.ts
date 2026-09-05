@@ -30,6 +30,13 @@ export class EquipmentBag {
 
   private nextMembershipGeneration = 1
 
+  // OPT-04 — index O(1) cho equipped lookups. Bất biến: với mọi instance
+  // đang ở trong bag, slotIndex.get(slot) === instance khi và chỉ khi
+  // instance.equipped === true (và là instance equipped duy nhất của
+  // slot). MỌI flip của `equipped` phải đi qua setEquippedInternal() —
+  // EquipmentSystem.equip/unequip là writer duy nhất trong production.
+  private readonly slotIndex = new Map<EquipmentSlot, EquipmentInstance>()
+
   add(instance: EquipmentInstance): AutoDissolveReward[] {
     // Dedupe theo instanceId — save import/hand-edit chứa trùng instanceId
     // từng gây nhân bản trang bị + double stat modifier sau
@@ -41,6 +48,10 @@ export class EquipmentBag {
     this.instances.push(instance)
     this.membershipGenerationByInstance.set(instance, this.nextMembershipGeneration)
     this.nextMembershipGeneration += 1
+
+    if (instance.equipped) {
+      this.indexEquipped(instance)
+    }
 
     if (this.instances.length <= EQUIPMENT_BAG_SOFT_CAP) {
       return []
@@ -99,6 +110,10 @@ export class EquipmentBag {
     for (const instance of this.instances) {
       if (instance.instanceId === instanceId) {
         this.membershipGenerationByInstance.delete(instance)
+
+        if (instance.equipped && this.slotIndex.get(instance.slot) === instance) {
+          this.slotIndex.delete(instance.slot)
+        }
       }
     }
 
@@ -127,11 +142,49 @@ export class EquipmentBag {
   }
 
   getEquipped(): EquipmentInstance[] {
-    return this.instances.filter((instance) => instance.equipped)
+    return [...this.slotIndex.values()]
   }
 
   getEquippedInSlot(slot: EquipmentSlot) {
-    return this.instances.find((instance) => instance.equipped && instance.slot === slot)
+    return this.slotIndex.get(slot)
+  }
+
+  /**
+   * OPT-04 — writer DUY NHẤT của `instance.equipped` cho instance đang
+   * trong bag: flip flag + giữ slotIndex nhất quán. Idempotent.
+   */
+  setEquippedInternal(instanceId: string, equipped: boolean): boolean {
+    const instance = this.get(instanceId)
+
+    if (!instance) {
+      return false
+    }
+
+    if (instance.equipped === equipped) {
+      return true
+    }
+
+    instance.equipped = equipped
+
+    if (equipped) {
+      this.indexEquipped(instance)
+    } else if (this.slotIndex.get(instance.slot) === instance) {
+      this.slotIndex.delete(instance.slot)
+    }
+
+    return true
+  }
+
+  private indexEquipped(instance: EquipmentInstance): void {
+    const current = this.slotIndex.get(instance.slot)
+
+    if (current && current !== instance && current.equipped) {
+      // Không bao giờ xảy ra qua API chuẩn (equip luôn unequip đồ cũ
+      // trước) — phòng hờ writer ngoài luồng, giữ index đúng 1 mục/slot.
+      current.equipped = false
+    }
+
+    this.slotIndex.set(instance.slot, instance)
   }
 
   has(instanceId: string): boolean {
