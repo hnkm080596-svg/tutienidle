@@ -338,3 +338,124 @@ describe('Remediation Task 7 — duplicate + out-of-order acknowledgements', () 
     expect(gameManager.isActionPlaybackWaiting()).toBe(true)
   })
 })
+
+// --- Fix round 1 (Task 4 review) — turn_battle_entity_snapshot must fire on
+// EVERY updateBattleFixedStep() 'fighting' tick, regardless of which of the
+// 3 inner sub-branches ran that tick (normal pacing / awaitedManualActor
+// pause / presentationActive pending-acknowledgement wait). A regression
+// that moves emitTurnBattleEntitySnapshot() inside the pacing `else` branch
+// would freeze combat art only while paused on manual input or a Phaser
+// acknowledgement — exactly the bug this task exists to prevent, just
+// subtler. These tests drive each of the 3 states through the real public
+// surface (update()/acknowledgeTurnReady()/acknowledgeActionImpact()) —
+// see GameManager.actionPlayback.test.ts header for the battleReady()
+// determinism note (evasionRate: 0).
+
+describe('GameManager — turn_battle_entity_snapshot fires every fixed-step tick (all 3 sub-branches)', () => {
+  it('sub-branch 1: normal pacing (no manual actor, no pending ack) — snapshot fires', () => {
+    const gameManager = battleReady()
+
+    expect(gameManager.getTurnBattle()?.state).toBe('fighting')
+
+    const snapshots: unknown[] = []
+    gameManager.eventBus.on('turn_battle_entity_snapshot', (event) => snapshots.push(event))
+
+    gameManager.update(0.1)
+
+    expect(snapshots).toHaveLength(1)
+  })
+
+  it('sub-branch 2: awaitedManualActor set (paused waiting for submitTurnChoice) — snapshot still fires', () => {
+    const gameManager = battleReady()
+    gameManager.setPresentationActive(true)
+    gameManager.setBattleManualMode(true)
+
+    for (let i = 0; i < 50; i++) {
+      gameManager.update(0.1)
+    }
+
+    // Declares the manual player's ready phase into awaitedManualActor —
+    // same flow as the existing 'submitTurnChoice khi presentationActive'
+    // test above.
+    gameManager.acknowledgeTurnReady()
+
+    expect(gameManager.isAwaitingManualTurnChoice()).toBe(true)
+
+    const snapshots: unknown[] = []
+    gameManager.eventBus.on('turn_battle_entity_snapshot', (event) => snapshots.push(event))
+
+    // This tick takes the `if (this.awaitedManualActor)` branch (still
+    // paused — no submitTurnChoice yet), NOT the tick that just set it.
+    gameManager.update(0.1)
+
+    expect(snapshots).toHaveLength(1)
+  })
+
+  it('sub-branch 3a: presentationActive + pendingReadyActor outstanding — snapshot still fires', () => {
+    const gameManager = battleReady()
+    gameManager.setPresentationActive(true)
+
+    for (let i = 0; i < 20; i++) {
+      gameManager.update(0.1)
+    }
+
+    // pendingReadyActor is now set (turn_ready emitted, PAUSE per the
+    // existing 'tick có actor ready' test above) and stays set until
+    // acknowledgeTurnReady() is called.
+    expect(gameManager.isActionPlaybackWaiting()).toBe(true)
+
+    const snapshots: unknown[] = []
+    gameManager.eventBus.on('turn_battle_entity_snapshot', (event) => snapshots.push(event))
+
+    // This tick takes the presentationActive-pending `else if` branch
+    // (no-op — waiting on Phaser's ready-flourish acknowledgement).
+    gameManager.update(0.1)
+
+    expect(snapshots).toHaveLength(1)
+  })
+
+  it('sub-branch 3b: presentationActive + pendingDeclaredAction outstanding — snapshot still fires', () => {
+    const gameManager = battleReady()
+    gameManager.setPresentationActive(true)
+
+    for (let i = 0; i < 20; i++) {
+      gameManager.update(0.1)
+    }
+
+    gameManager.acknowledgeTurnReady()
+
+    // pendingDeclaredAction is now set ('attack' emitted); waiting on
+    // acknowledgeActionImpact().
+    expect(gameManager.isActionPlaybackWaiting()).toBe(true)
+
+    const snapshots: unknown[] = []
+    gameManager.eventBus.on('turn_battle_entity_snapshot', (event) => snapshots.push(event))
+
+    gameManager.update(0.1)
+
+    expect(snapshots).toHaveLength(1)
+  })
+
+  it('sub-branch 3c: presentationActive + pendingImpact outstanding — snapshot still fires', () => {
+    const gameManager = battleReady()
+    gameManager.setPresentationActive(true)
+
+    for (let i = 0; i < 20; i++) {
+      gameManager.update(0.1)
+    }
+
+    gameManager.acknowledgeTurnReady()
+    gameManager.acknowledgeActionImpact()
+
+    // pendingImpact is now set ('action_impact' emitted); waiting on
+    // acknowledgeActionComplete().
+    expect(gameManager.isActionPlaybackWaiting()).toBe(true)
+
+    const snapshots: unknown[] = []
+    gameManager.eventBus.on('turn_battle_entity_snapshot', (event) => snapshots.push(event))
+
+    gameManager.update(0.1)
+
+    expect(snapshots).toHaveLength(1)
+  })
+})
