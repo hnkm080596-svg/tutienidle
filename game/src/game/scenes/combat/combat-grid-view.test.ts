@@ -98,4 +98,36 @@ describe('CombatGridView.getOrCreateSprite() — Task 9.5 boss sizeMultiplier', 
 
     expect(sprite.sizeMultiplier).toBe(ENEMY_DISPLAY_SCALE_MULTIPLIER)
   })
+
+  it('nhánh fallback Rectangle (chưa có texture): Boss vẫn KHÔNG được nhỏ hơn enemy thường có texture — round 1 review, tránh inversion', () => {
+    // resolveEnemyTextureKey() trả falsy cho id không nằm trong batch art
+    // (id không khớp pattern quái Mortal) → rơi vào nhánh `rect` cuối cùng
+    // của getOrCreateSprite(), chỗ trước đây hardcode sizeMultiplier: 1 cho
+    // MỌI trường hợp kể cả Boss.
+    const { gridView } = createFakeScene()
+
+    const bossSprite = gridView.getOrCreateSprite('unknown_id_no_art_boss', 0xd94a4a, 'Boss X', 4, {
+      currentHp: 100,
+      maxHp: 100,
+      isBoss: true,
+    })
+
+    expect(bossSprite.kind).toBe('rect')
+    expect(bossSprite.sizeMultiplier).toBe(BOSS_DISPLAY_SCALE_MULTIPLIER)
+    // Không được nhỏ hơn enemy thường CÓ texture (nhánh sprite, ×2) — đây
+    // chính là bug bị lật ngược mà review round 1 tìm ra.
+    expect(bossSprite.sizeMultiplier).toBeGreaterThanOrEqual(ENEMY_DISPLAY_SCALE_MULTIPLIER)
+
+    // Enemy thường rơi cùng nhánh fallback vẫn giữ nguyên size 1 như trước —
+    // lựa chọn bảo thủ (conservative), không đổi hình ảnh enemy thường hiện
+    // có khi chưa có art.
+    const regularSprite = gridView.getOrCreateSprite('unknown_id_no_art_regular', 0xd94a4a, 'Regular X', 4, {
+      currentHp: 100,
+      maxHp: 100,
+      isBoss: false,
+    })
+
+    expect(regularSprite.kind).toBe('rect')
+    expect(regularSprite.sizeMultiplier).toBe(1)
+  })
 })

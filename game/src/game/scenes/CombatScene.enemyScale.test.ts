@@ -77,6 +77,15 @@ describe('CombatScene â€” ENEMY_DISPLAY_SCALE_MULTIPLIER Ã—2', () => {
     expect(calls[0]![0]).toBeCloseTo(calls[0]![1], 5)
   })
 
+  // LƯU Ý (review round 1, task 9.5): test dưới đây gán sizeMultiplier = 4
+  // thủ công vào fixture — nó chỉ khoá math pass-through của
+  // applyEntityDepthScale() (nhân số có sẵn), KHÔNG chạm production code
+  // chọn ra giá trị 4 đó (getOrCreateSprite() trong combat-grid-view.ts).
+  // Revert cờ isBoss trong nhánh tạo sprite thật sẽ KHÔNG làm test này đỏ.
+  // Regression thật cho việc production code chọn đúng sizeMultiplier theo
+  // isBoss (kể cả nhánh fallback Rectangle chưa có texture) nằm ở
+  // combat-grid-view.test.ts — xem file đó để biết test nào thực sự bảo vệ
+  // tính năng Boss to hơn.
   it("Boss renders at 2× a regular enemy's size (2026-09-05: no longer the same ×2 rule)", () => {
     const scene = createScene()
     const { sprite, calls } = makeEnemySprite('sprite')

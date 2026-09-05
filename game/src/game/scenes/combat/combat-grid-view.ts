@@ -424,7 +424,11 @@ export class CombatGridView {
       color,
       offsetX: 0,
       row,
-      sizeMultiplier: 1,
+      // Fallback Rectangle: giữ nguyên size 1 cho quái thường (chưa có art) để
+      // không đổi hình ảnh hiện tại; nhưng Boss vẫn phải to hơn quái thường dù
+      // rơi vào nhánh fallback — nếu không sẽ NHỎ HƠN quái thường có texture
+      // (2x), ngược hẳn ý đồ "Boss to hơn" (review round 1, task 9.5).
+      sizeMultiplier: health?.isBoss ? BOSS_DISPLAY_SCALE_MULTIPLIER : 1,
       boost: { value: 1 },
       footY: 0,
       columnFloat: 0,
