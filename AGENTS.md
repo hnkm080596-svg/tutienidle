@@ -63,6 +63,7 @@ When a rule below says "the agent", it means whichever opencode agent is current
 ### P5. Code-Review Hard-Block
 
 - Before declaring a non-trivial change complete, run the `code-review` skill (from `anthropics/knowledge-work-plugins`) over the diff.
+- The diff under review must already be simplified: the E3 code-simplifier pass is a prerequisite for P5, and P5 reviews the post-simplify code. Do not run P5 on un-simplified code, and do not simplify after P5 on the same code (that would invalidate the review); if a post-review change is non-trivial, re-run E3 on it and re-review per the E3 fix clause.
 - Non-trivial = roughly 5+ lines of production code changed OR any new file OR any touched file that is not a pure rename / comment / whitespace.
 - The skill scores each issue 0–100 for confidence. Filter out anything below 80 (treat as false positive).
 - Issues at or above 80 confidence MUST be fixed before declaring done. The task is not done while any such issue is open, unless the user explicitly accepts it.
@@ -143,11 +144,13 @@ The agent reads these rules and applies them when the task matches the trigger. 
 - The `vue` skill (from `antfu/skills`) is a general Vue reference; load it alongside `vue-best-practices` for project-style guidance.
 - Skip for 1-line typo fixes, comment-only edits, or pure formatting changes.
 
-### E3. Code-Simplifier (auto, soft)
+### E3. Code-Simplifier (mandatory, before P5 review)
 
-- After writing or substantially editing a file (≥5 lines of production-code change, or a new file), load the `code-simplifier` skill and apply it.
-- Simplification is refactor only — behavior must not change. If a candidate simplification would change behavior, skip it and explain why.
-- The user may say "skip simplify" for a given turn. Honor that and note it in the summary.
+- After writing or substantially editing production code (≥5 lines of production-code change, or a new file), the `code-simplifier` skill is MANDATORY — it must run on the session diff **before** the P5 code-review gate, so the reviewer sees the final, simplified form of the code.
+- Pipeline order: implement → simplify → verify (P3 quick) → code-review (P5) → done.
+- Simplification is refactor only — behavior must not change. If a candidate simplification would change behavior, skip that item and list it in the summary so the P5 reviewer knows what was left as-is.
+- Fixes arising from P5 findings are considered already-simplified if they reuse existing patterns; if a fix adds ≥5 new lines of production code, run a local simplify pass on the fix and re-review only that fix.
+- The user may still say "skip simplify" for a given turn. Honor that and note it in the summary.
 
 ### E4. Game System Skills
 

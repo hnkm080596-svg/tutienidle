@@ -61,6 +61,7 @@ When a task is clearly an edit / ship task, defer to the `build` agent's instinc
 ### P5. Code-Review Hard-Block
 
 - Before declaring a non-trivial change complete, run the `code-review` skill (from `anthropics/knowledge-work-plugins`) over the diff.
+- The diff under review must already be simplified: the E3 code-simplifier pass is a prerequisite for P5, and P5 reviews the post-simplify code. Do not run P5 on un-simplified code, and do not simplify after P5 on the same code (that would invalidate the review); if a post-review change is non-trivial, re-run E3 on it and re-review only that fix.
 - Non-trivial = roughly 5+ lines of production code changed OR any new file OR any touched file that is not a pure rename / comment / whitespace.
 - Filter out issues below 80 confidence. Issues at or above 80 confidence MUST be fixed before declaring done, unless the user explicitly accepts them.
 - Skip for 1-line typo fixes, comment-only edits, pure formatting.
