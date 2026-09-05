@@ -1,13 +1,13 @@
-// @vitest-environment jsdom
+﻿// @vitest-environment jsdom
 //
-// Reward stream integration (player-body-anchor-reward-gourd-plan §9):
-// - Điểm phát theo priority chest-anchor → screen cache → grid cache.
-// - Điểm hút LUÔN là miệng hồ lô, KHÔNG phải Player — teleport Player
-//   giữa tween không đổi đích.
-// - Pulse hồ lô đúng MỘT nhịp mỗi reward event.
-// - clearSceneState dọn sạch gourd + caches (không rò rỉ qua shutdown).
+// Reward stream integration (player-body-anchor-reward-gourd-plan Â§9):
+// - Äiá»ƒm phÃ¡t theo priority chest-anchor â†’ screen cache â†’ grid cache.
+// - Äiá»ƒm hÃºt LUÃ”N lÃ  miá»‡ng há»“ lÃ´, KHÃ”NG pháº£i Player â€” teleport Player
+//   giá»¯a tween khÃ´ng Ä‘á»•i Ä‘Ã­ch.
+// - Pulse há»“ lÃ´ Ä‘Ãºng Má»˜T nhá»‹p má»—i reward event.
+// - clearSceneState dá»n sáº¡ch gourd + caches (khÃ´ng rÃ² rá»‰ qua shutdown).
 import { describe, expect, it, vi } from 'vitest'
-import { CombatScene } from './CombatScene'
+import { createTestScene } from './combat/combatTestHarness'
 import { PLAYER_VISUAL_PROFILES } from '../support/PlayerVisualProfiles'
 import {
   computeGourdPlacement,
@@ -61,7 +61,7 @@ function makeEntitySprite(x: number, y: number, displayHeight = 64) {
 }
 
 function createScene() {
-  const scene = Object.create(CombatScene.prototype) as any
+  const scene = createTestScene('bare')
 
   const tweenConfigs: Array<Record<string, unknown>> = []
   const delayedCalls: Array<{ delay: number; callback: () => void }> = []
@@ -151,11 +151,11 @@ const REWARD_EVENT = {
   color: 0xffd54f,
 }
 
-describe('CombatScene — reward stream điểm phát (plan §7.1)', () => {
-  it('mức 1: enemy dùng anchor thân trung tính từ bounds sprite, KHÔNG mượn anchor Player', () => {
+describe('CombatScene â€” reward stream Ä‘iá»ƒm phÃ¡t (plan Â§7.1)', () => {
+  it('má»©c 1: enemy dÃ¹ng anchor thÃ¢n trung tÃ­nh tá»« bounds sprite, KHÃ”NG mÆ°á»£n anchor Player', () => {
     const { scene } = createScene()
 
-    // rect(500,400) h=64 → neutral y=0.4: start = (500, 400+(0.4-0.5)*64).
+    // rect(500,400) h=64 â†’ neutral y=0.4: start = (500, 400+(0.4-0.5)*64).
     scene.sprites.set('enemy_1', makeEntitySprite(500, 400))
 
     const point = scene.resolveRewardSourcePoint('enemy_1')
@@ -164,14 +164,14 @@ describe('CombatScene — reward stream điểm phát (plan §7.1)', () => {
     expect(point?.y).toBeCloseTo(400 - 0.1 * 64, 5)
   })
 
-  it('audit P0-3: điểm phát enemy KHÔNG đổi khi Player visual profile đổi', () => {
+  it('audit P0-3: Ä‘iá»ƒm phÃ¡t enemy KHÃ”NG Ä‘á»•i khi Player visual profile Ä‘á»•i', () => {
     const { scene } = createScene()
 
     scene.sprites.set('enemy_1', makeEntitySprite(500, 400))
 
     const before = scene.resolveRewardSourcePoint('enemy_1')!
 
-    // Đổi Player sang profile khác — enemy particle phải giữ nguyên.
+    // Äá»•i Player sang profile khÃ¡c â€” enemy particle pháº£i giá»¯ nguyÃªn.
     scene.playerProfile = PLAYER_VISUAL_PROFILES.phap_tu
     scene.playerProfileId = 'phap_tu'
 
@@ -180,7 +180,7 @@ describe('CombatScene — reward stream điểm phát (plan §7.1)', () => {
     expect(after.x).toBeCloseTo(before.x, 5)
     expect(after.y).toBeCloseTo(before.y, 5)
 
-    // Đối chứng: Player DÙNG catalog anchor chest của profile.
+    // Äá»‘i chá»©ng: Player DÃ™NG catalog anchor chest cá»§a profile.
     scene.sprites.set('player', makeEntitySprite(200, 300))
 
     const playerPoint = scene.resolveRewardSourcePoint('player')!
@@ -188,7 +188,7 @@ describe('CombatScene — reward stream điểm phát (plan §7.1)', () => {
     expect(playerPoint.y).not.toBeCloseTo(after.y, 3)
   })
 
-  it('mức 2: sprite đã bị dọn → dùng last-known screen cache', () => {
+  it('má»©c 2: sprite Ä‘Ã£ bá»‹ dá»n â†’ dÃ¹ng last-known screen cache', () => {
     const { scene } = createScene()
 
     scene.lastKnownScreenPositions.set('enemy_1', { x: 333, y: 444 })
@@ -196,12 +196,12 @@ describe('CombatScene — reward stream điểm phát (plan §7.1)', () => {
     expect(scene.resolveRewardSourcePoint('enemy_1')).toEqual({ x: 333, y: 444 })
   })
 
-  it('mức 3: chỉ còn grid cache → chiếu qua projection hiện hành', () => {
+  it('má»©c 3: chá»‰ cÃ²n grid cache â†’ chiáº¿u qua projection hiá»‡n hÃ nh', () => {
     const { scene } = createScene()
 
     scene.lastKnownGridPositions.set('enemy_1', { row: 2, column: 3 })
 
-    // Chưa có projection → không tạo được nguồn (bail an toàn).
+    // ChÆ°a cÃ³ projection â†’ khÃ´ng táº¡o Ä‘Æ°á»£c nguá»“n (bail an toÃ n).
     expect(scene.resolveRewardSourcePoint('enemy_1')).toBeUndefined()
 
     scene.projection = {
@@ -215,7 +215,7 @@ describe('CombatScene — reward stream điểm phát (plan §7.1)', () => {
     expect(scene.resolveRewardSourcePoint('enemy_1')).toEqual({ x: 30, y: 40 })
   })
 
-  it('không có nguồn nào cả → KHÔNG sinh mote/tween', () => {
+  it('khÃ´ng cÃ³ nguá»“n nÃ o cáº£ â†’ KHÃ”NG sinh mote/tween', () => {
     const { scene, tweenConfigs } = createScene()
 
     scene.onRewardParticle(REWARD_EVENT)
@@ -224,8 +224,8 @@ describe('CombatScene — reward stream điểm phát (plan §7.1)', () => {
   })
 })
 
-describe('CombatScene — reward stream hút về hồ lô (plan §7.2)', () => {
-  it('target lock: p=1 chạm ĐÚNG miệng hồ lô; Player "teleport" không đổi đích', () => {
+describe('CombatScene â€” reward stream hÃºt vá» há»“ lÃ´ (plan Â§7.2)', () => {
+  it('target lock: p=1 cháº¡m ÄÃšNG miá»‡ng há»“ lÃ´; Player "teleport" khÃ´ng Ä‘á»•i Ä‘Ã­ch', () => {
     const { scene, tweenConfigs, createdObjects } = createScene()
 
     scene.sprites.set('player', makeEntitySprite(999, 888))
@@ -243,13 +243,13 @@ describe('CombatScene — reward stream hút về hồ lô (plan §7.2)', () => 
 
     const state = flightTween!.targets as { progress: number }
 
-    // Player "teleport" tới vị trí khác giữa lúc bay.
+    // Player "teleport" tá»›i vá»‹ trÃ­ khÃ¡c giá»¯a lÃºc bay.
     const playerSprite = scene.sprites.get('player')
 
     playerSprite.rect.x = 50
     playerSprite.rect.y = 60
 
-    // Chạy onUpdate tới cuối quỹ đạo.
+    // Cháº¡y onUpdate tá»›i cuá»‘i quá»¹ Ä‘áº¡o.
     state.progress = 1
 
     ;(flightTween!.onUpdate as () => void)()
@@ -264,7 +264,7 @@ describe('CombatScene — reward stream hút về hồ lô (plan §7.2)', () => 
     expect(lastCall.args[1]).toBeCloseTo(mouth.y, 4)
   })
 
-  it('pulse hồ lô ĐÚNG MỘT nhịp mỗi reward event', () => {
+  it('pulse há»“ lÃ´ ÄÃšNG Má»˜T nhá»‹p má»—i reward event', () => {
     const { scene, delayedCalls } = createScene()
 
     scene.sprites.set('enemy_1', makeEntitySprite(100, 100))
@@ -279,7 +279,7 @@ describe('CombatScene — reward stream hút về hồ lô (plan §7.2)', () => 
   })
 })
 
-describe('CombatScene — essence stream (2026-08-30, tinh hoa tuôn chảy)', () => {
+describe('CombatScene â€” essence stream (2026-08-30, tinh hoa tuÃ´n cháº£y)', () => {
   const ESSENCE_EVENT = {
     type: 'reward_particle' as const,
 
@@ -290,7 +290,7 @@ describe('CombatScene — essence stream (2026-08-30, tinh hoa tuôn chảy)', (
     color: 0xc792ea,
   }
 
-  it('kind essence → KHÔNG pulse hồ lô (bay về player, không về gourd)', () => {
+  it('kind essence â†’ KHÃ”NG pulse há»“ lÃ´ (bay vá» player, khÃ´ng vá» gourd)', () => {
     const { scene, delayedCalls } = createScene()
 
     scene.sprites.set('enemy_1', makeEntitySprite(100, 100))
@@ -298,11 +298,11 @@ describe('CombatScene — essence stream (2026-08-30, tinh hoa tuôn chảy)', (
 
     scene.onRewardParticle(ESSENCE_EVENT)
 
-    // Gourd pulse chỉ dùng cho item/insight/currency — essence không pulse.
+    // Gourd pulse chá»‰ dÃ¹ng cho item/insight/currency â€” essence khÃ´ng pulse.
     expect(delayedCalls).toHaveLength(0)
   })
 
-  it('kind essence → sinh motes bay về player chest anchor (tele-safe)', () => {
+  it('kind essence â†’ sinh motes bay vá» player chest anchor (tele-safe)', () => {
     const { scene, tweenConfigs, createdObjects } = createScene()
 
     scene.sprites.set('enemy_1', makeEntitySprite(100, 100))
@@ -320,7 +320,7 @@ describe('CombatScene — essence stream (2026-08-30, tinh hoa tuôn chảy)', (
 
     const state = flightTween!.targets as { progress: number }
 
-    // Player "teleport" giữa lúc bay — đích live-resolve vẫn theo player.
+    // Player "teleport" giá»¯a lÃºc bay â€” Ä‘Ã­ch live-resolve váº«n theo player.
     const playerSprite = scene.sprites.get('player')
 
     playerSprite.rect.x = 50
@@ -334,14 +334,14 @@ describe('CombatScene — essence stream (2026-08-30, tinh hoa tuôn chảy)', (
 
     const lastCall = setPositionCalls.at(-1)!
 
-    // Đích = chest anchor của player profile mortal tại (50, 60) —
-    // KHÔNG phải vị trí cũ (300, 400) hay miệng hồ lô. Chest anchor
-    // lệch nhẹ so với tâm sprite (profile offset) → dung sai 5px.
+    // ÄÃ­ch = chest anchor cá»§a player profile mortal táº¡i (50, 60) â€”
+    // KHÃ”NG pháº£i vá»‹ trÃ­ cÅ© (300, 400) hay miá»‡ng há»“ lÃ´. Chest anchor
+    // lá»‡ch nháº¹ so vá»›i tÃ¢m sprite (profile offset) â†’ dung sai 5px.
     expect(Math.abs(lastCall.args[0] as number - 50)).toBeLessThan(5)
     expect(Math.abs(lastCall.args[1] as number - 60)).toBeLessThan(30)
   })
 
-  it('không resolve được nguồn → phát arrival NGAY (không kẹt tinh hoa)', () => {
+  it('khÃ´ng resolve Ä‘Æ°á»£c nguá»“n â†’ phÃ¡t arrival NGAY (khÃ´ng káº¹t tinh hoa)', () => {
     const { scene, tweenConfigs } = createScene()
 
     scene.onRewardParticle(ESSENCE_EVENT)
@@ -356,8 +356,8 @@ describe('CombatScene — essence stream (2026-08-30, tinh hoa tuôn chảy)', (
   })
 })
 
-describe('CombatScene — reward lifecycle (plan §7.4)', () => {
-  it('clearSceneState dọn sạch gourd + caches — không rò rỉ qua shutdown', () => {
+describe('CombatScene â€” reward lifecycle (plan Â§7.4)', () => {
+  it('clearSceneState dá»n sáº¡ch gourd + caches â€” khÃ´ng rÃ² rá»‰ qua shutdown', () => {
     const { scene } = createScene()
 
     const destroyed: string[] = []

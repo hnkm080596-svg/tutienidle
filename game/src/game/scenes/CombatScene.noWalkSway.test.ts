@@ -1,13 +1,13 @@
-// @vitest-environment jsdom
+﻿// @vitest-environment jsdom
 //
-// Walk sway đã XÓA HẴN (yêu cầu 2026-08-26 — "không dùng flag tạm thời,
-// xóa hẳn để tránh quay lại lỗi cũ"): positionSprite chỉ còn tọa độ
-// projection/interpolation + action offset (lunge/recoil) + rotation của
-// death animation. Test này khóa hành vi: di chuyển bình thường KHÔNG
-// BAO GIỜ sinh offset/bob/tilt — rotation luôn 0, vị trí bám đúng điểm
-// chiếu.
+// Walk sway Ä‘Ã£ XÃ“A Háº´N (yÃªu cáº§u 2026-08-26 â€” "khÃ´ng dÃ¹ng flag táº¡m thá»i,
+// xÃ³a háº³n Ä‘á»ƒ trÃ¡nh quay láº¡i lá»—i cÅ©"): positionSprite chá»‰ cÃ²n tá»a Ä‘á»™
+// projection/interpolation + action offset (lunge/recoil) + rotation cá»§a
+// death animation. Test nÃ y khÃ³a hÃ nh vi: di chuyá»ƒn bÃ¬nh thÆ°á»ng KHÃ”NG
+// BAO GIá»œ sinh offset/bob/tilt â€” rotation luÃ´n 0, vá»‹ trÃ­ bÃ¡m Ä‘Ãºng Ä‘iá»ƒm
+// chiáº¿u.
 import { describe, expect, it } from 'vitest'
-import { CombatScene } from './CombatScene'
+import { createTestScene } from './combat/combatTestHarness'
 
 function chainableRect() {
   const state = {
@@ -40,12 +40,12 @@ function chainableRect() {
 }
 
 function createScene(renderMode: 'flat' | 'perspective') {
-  const scene = Object.create(CombatScene.prototype) as any
+  const scene = createTestScene('bare')
 
   scene.renderMode = renderMode
   scene.projection = {
     gridToScreen(row: number, column: number) {
-      // Điểm chiếu tuyến tính theo column — mô phỏng unit đang đi.
+      // Äiá»ƒm chiáº¿u tuyáº¿n tÃ­nh theo column â€” mÃ´ phá»ng unit Ä‘ang Ä‘i.
       return { x: 100 + column * 10, y: 200 + row * 5, scale: 1 }
     },
   }
@@ -72,11 +72,11 @@ function createScene(renderMode: 'flat' | 'perspective') {
   return { scene, sprite, rect }
 }
 
-describe('CombatScene — walk sway bị xóa hoàn toàn', () => {
-  it('di chuyển liên tục: rotation giữ nguyên, không bao giờ bị xoay', () => {
+describe('CombatScene â€” walk sway bá»‹ xÃ³a hoÃ n toÃ n', () => {
+  it('di chuyá»ƒn liÃªn tá»¥c: rotation giá»¯ nguyÃªn, khÃ´ng bao giá» bá»‹ xoay', () => {
     const { scene, sprite, rect } = createScene('perspective')
 
-    // Sentinel 123 rad — mọi lệnh setRotation ngoài death tween đều lộ.
+    // Sentinel 123 rad â€” má»i lá»‡nh setRotation ngoÃ i death tween Ä‘á»u lá»™.
     for (let frame = 0; frame < 40; frame++) {
       scene.positionSprite(sprite, frame * 0.25, 'enemy_walk')
     }
@@ -84,7 +84,7 @@ describe('CombatScene — walk sway bị xóa hoàn toàn', () => {
     expect(rect.rotation).toBe(123)
   })
 
-  it('vị trí bám đúng điểm chiếu (không cộng sway/bob), footY cập nhật', () => {
+  it('vá»‹ trÃ­ bÃ¡m Ä‘Ãºng Ä‘iá»ƒm chiáº¿u (khÃ´ng cá»™ng sway/bob), footY cáº­p nháº­t', () => {
     const { scene, sprite, rect } = createScene('perspective')
 
     for (let column = -3; column <= 3; column += 0.5) {
@@ -102,7 +102,7 @@ describe('CombatScene — walk sway bị xóa hoàn toàn', () => {
     expect(sprite.columnFloat).toBe(3)
   })
 
-  it('action offset (lunge) vẫn hoạt động — nhân depth scale, vẫn không xoay', () => {
+  it('action offset (lunge) váº«n hoáº¡t Ä‘á»™ng â€” nhÃ¢n depth scale, váº«n khÃ´ng xoay', () => {
     const { scene, sprite, rect } = createScene('perspective')
 
     sprite.offsetX = 8
@@ -114,7 +114,7 @@ describe('CombatScene — walk sway bị xóa hoàn toàn', () => {
     expect(rect.rotation).toBe(123)
   })
 
-  it('flat mode: vị trí thẳng, không xoay, boost áp qua setScale', () => {
+  it('flat mode: vá»‹ trÃ­ tháº³ng, khÃ´ng xoay, boost Ã¡p qua setScale', () => {
     const { scene, sprite, rect } = createScene('flat')
 
     const scales: number[] = []

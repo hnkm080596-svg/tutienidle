@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, useId } from 'vue'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import InkNineSlice from './primitives/InkNineSlice.vue'
@@ -20,18 +20,29 @@ const emit = defineEmits<{ close: [] }>()
 
 const cardRef = ref<HTMLElement | null>(null)
 useDialogFocus(cardRef, computed(() => props.open), { onEscape: () => emit('close') })
+
+// Remediation Task 6 (2026-09-05) — aria-labelledby tham chiếu heading
+// thật (per-instance useId) thay vì aria-label duplicate.
+const headingId = useId()
 </script>
 
 <template>
   <Transition name="overlay-fade">
     <div v-if="open" class="overlay-panel" :style="{ zIndex: layer }" @click.self="emit('close')">
-      <section ref="cardRef" class="overlay-panel__card" :style="{ width, height }" role="dialog" aria-modal="true" :aria-label="title">
+      <section
+        ref="cardRef"
+        class="overlay-panel__card"
+        :style="{ width, height }"
+        role="dialog"
+        aria-modal="true"
+        :aria-labelledby="headingId"
+      >
         <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
         <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
         <header class="overlay-panel__header">
           <div class="overlay-panel__heading">
             <slot name="heading">
-              <h3>{{ title }}</h3>
+              <h3 :id="headingId">{{ title }}</h3>
               <slot name="subtitle" />
             </slot>
           </div>

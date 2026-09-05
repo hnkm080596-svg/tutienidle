@@ -1,9 +1,9 @@
-// @vitest-environment jsdom
-// 6A-T5 (2026-09-01) — CombatScene wiring PlayerHudLayer: HUD hiện khi
-// battle, vitals/positions events update HP/MP, exit zone click phát
-// 'combat_exit_request' qua eventBus, shutdown dọn sạch (không leak).
+﻿// @vitest-environment jsdom
+// 6A-T5 (2026-09-01) â€” CombatScene wiring PlayerHudLayer: HUD hiá»‡n khi
+// battle, vitals/positions events update HP/MP, exit zone click phÃ¡t
+// 'combat_exit_request' qua eventBus, shutdown dá»n sáº¡ch (khÃ´ng leak).
 import { describe, expect, it, vi } from 'vitest'
-import { CombatScene } from './CombatScene'
+import { createTestScene } from './combat/combatTestHarness'
 import type { EntityVitalsChangedEvent } from '@/core/combat/EntityVitalsSystem'
 import type { BattlePositionsEvent } from '@/core/battle/BattleEvents'
 
@@ -46,7 +46,7 @@ function makeFakeHud(): FakeHud {
 }
 
 function createScene(fakeHud: FakeHud) {
-  const scene = Object.create(CombatScene.prototype) as any
+  const scene = createTestScene('bare')
 
   scene.playerHud = fakeHud
   scene.time = { now: 0 }
@@ -99,8 +99,8 @@ const POSITIONS = (over: Partial<BattlePositionsEvent>): BattlePositionsEvent =>
   ...over,
 })
 
-describe('CombatScene — PlayerHudLayer wiring (6A-T5)', () => {
-  it('vitals của player (entityId === PLAYER_ID) → updateHp; enemy vitals bỏ qua', () => {
+describe('CombatScene â€” PlayerHudLayer wiring (6A-T5)', () => {
+  it('vitals cá»§a player (entityId === PLAYER_ID) â†’ updateHp; enemy vitals bá» qua', () => {
     const hud = makeFakeHud()
     const { scene } = createScene(hud)
 
@@ -111,7 +111,7 @@ describe('CombatScene — PlayerHudLayer wiring (6A-T5)', () => {
     expect(hud.hpCalls[0]).toEqual({ current: 90, max: 100 })
   })
 
-  it('vitals mpAfter/maxMp > 0 → updateMp (player MP pool)', () => {
+  it('vitals mpAfter/maxMp > 0 â†’ updateMp (player MP pool)', () => {
     const hud = makeFakeHud()
     const { scene } = createScene(hud)
 
@@ -121,7 +121,7 @@ describe('CombatScene — PlayerHudLayer wiring (6A-T5)', () => {
     expect(hud.mpCalls[0]).toEqual({ current: 30, max: 60 })
   })
 
-  it('positions event cập nhật HP (nguồn thứ hai — fast-path khi chưa có vitals)', () => {
+  it('positions event cáº­p nháº­t HP (nguá»“n thá»© hai â€” fast-path khi chÆ°a cÃ³ vitals)', () => {
     const hud = makeFakeHud()
     const { scene } = createScene(hud)
 
@@ -131,7 +131,7 @@ describe('CombatScene — PlayerHudLayer wiring (6A-T5)', () => {
     expect(hud.hpCalls[0]).toEqual({ current: 77, max: 120 })
   })
 
-  it('exit zone click → emit combat_exit_request qua eventBus (bridge sang DOM modal T6)', () => {
+  it('exit zone click â†’ emit combat_exit_request qua eventBus (bridge sang DOM modal T6)', () => {
     const hud = makeFakeHud()
     const { scene, emitted } = createScene(hud)
 

@@ -1,9 +1,9 @@
-// CombatScene reconcile spawn telegraph (2026-08-24): snapshot
-// spawningEnemies → ĐÚNG MỘT VFX handle mỗi id; id rời snapshot →
-// complete + fade-in sprite; battle reset/shutdown dọn sạch.
+﻿// CombatScene reconcile spawn telegraph (2026-08-24): snapshot
+// spawningEnemies â†’ ÄÃšNG Má»˜T VFX handle má»—i id; id rá»i snapshot â†’
+// complete + fade-in sprite; battle reset/shutdown dá»n sáº¡ch.
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
-import { CombatScene } from './CombatScene'
+import { createTestScene } from './combat/combatTestHarness'
 import {
   createBattleGridProjection,
   type BattleGridProjection,
@@ -39,7 +39,7 @@ function chainableRecorder() {
 }
 
 function createScene() {
-  const scene = new CombatScene() as any
+  const scene = createTestScene()
 
   const graphicsCreated: Array<
     Record<string, unknown> & { __calls: Array<{ method: string; args: unknown[] }> }
@@ -94,13 +94,13 @@ function positionsEvent(
 }
 
 describe('CombatScene reconcileSpawnVfx', () => {
-  it('một pending spawn → đúng 2 Graphics (ground + cột), snapshot lặp không nhân bản', () => {
+  it('má»™t pending spawn â†’ Ä‘Ãºng 2 Graphics (ground + cá»™t), snapshot láº·p khÃ´ng nhÃ¢n báº£n', () => {
     const { scene, graphicsCreated } = createScene()
 
     const spawning = [
       {
         id: 'enemy_1',
-        name: 'Quái',
+        name: 'QuÃ¡i',
         row: 4 as const,
         column: 8,
         progress: 0,
@@ -119,13 +119,13 @@ describe('CombatScene reconcileSpawnVfx', () => {
     expect(scene.spawnVfxHandles.get('enemy_1')!.progress).toBeCloseTo(0.4, 5)
   })
 
-  it('id rời snapshot → complete (flash tween) + enemy mới tạo được fade-in scale 0.7→1', () => {
+  it('id rá»i snapshot â†’ complete (flash tween) + enemy má»›i táº¡o Ä‘Æ°á»£c fade-in scale 0.7â†’1', () => {
     const { scene, tweenConfigs } = createScene()
 
     const spawning = [
       {
         id: 'enemy_1',
-        name: 'Quái',
+        name: 'QuÃ¡i',
         row: 4 as const,
         column: 8,
         progress: 0,
@@ -137,16 +137,16 @@ describe('CombatScene reconcileSpawnVfx', () => {
     scene.applyPendingPositions(positionsEvent(spawning))
     scene.update()
 
-    // Snapshot kế: telegraph xong → enemy materialize.
+    // Snapshot káº¿: telegraph xong â†’ enemy materialize.
     scene.applyPendingPositions(
       positionsEvent(
         [],
-        [{ id: 'enemy_1', name: 'Quái', x: 8, row: 4, currentHp: 100, maxHp: 100, isBoss: false }],
+        [{ id: 'enemy_1', name: 'QuÃ¡i', x: 8, row: 4, currentHp: 100, maxHp: 100, isBoss: false }],
       ),
     )
 
-    // Fade-in gồm 2 tween: boost scale 0.7→1 + alpha proxy 0→1 (setAlpha
-    // per-target). Flash tween của handle là tween thứ 3 (target {fade}).
+    // Fade-in gá»“m 2 tween: boost scale 0.7â†’1 + alpha proxy 0â†’1 (setAlpha
+    // per-target). Flash tween cá»§a handle lÃ  tween thá»© 3 (target {fade}).
     const boostTween = tweenConfigs.find(
       (config) => (config.targets as { value?: number }).value !== undefined,
     )
@@ -167,10 +167,10 @@ describe('CombatScene reconcileSpawnVfx', () => {
     expect(scene.materializingIds.has('enemy_1')).toBe(false)
     expect(scene.spawnVfxHandles.has('enemy_1')).toBe(false)
 
-    // Chạy alpha tween tới cuối → mọi target về alpha cuối (rect=1,
+    // Cháº¡y alpha tween tá»›i cuá»‘i â†’ má»i target vá» alpha cuá»‘i (rect=1,
     // shadow=SHADOW_ALPHA).
-    // Chạy alpha tween tới cuối — onUpdate đọc state.t từ targets object
-    // (giống Phaser tween ghi giá trị vào targets khi chạy).
+    // Cháº¡y alpha tween tá»›i cuá»‘i â€” onUpdate Ä‘á»c state.t tá»« targets object
+    // (giá»‘ng Phaser tween ghi giÃ¡ trá»‹ vÃ o targets khi cháº¡y).
     ;(alphaTween!.targets as { t: number }).t = 1
 
     const alphaOnUpdate = alphaTween!.onUpdate as () => void
@@ -184,14 +184,14 @@ describe('CombatScene reconcileSpawnVfx', () => {
     expect(rectAlpha).toBe(1)
   })
 
-  it('battle reset (onBattleStart) dọn sạch handle + materializingIds, không để telegraph cũ sang trận mới', () => {
+  it('battle reset (onBattleStart) dá»n sáº¡ch handle + materializingIds, khÃ´ng Ä‘á»ƒ telegraph cÅ© sang tráº­n má»›i', () => {
     const { scene, graphicsCreated } = createScene()
 
     scene.applyPendingPositions(
       positionsEvent([
         {
           id: 'enemy_1',
-          name: 'Quái',
+          name: 'QuÃ¡i',
           row: 4 as const,
           column: 8,
           progress: 0,
@@ -208,12 +208,12 @@ describe('CombatScene reconcileSpawnVfx', () => {
     expect(scene.spawnVfxHandles.size).toBe(0)
     expect(scene.materializingIds.size).toBe(0)
 
-    // Trận mới snapshot pending mới → tạo handle MỚI (không dùng lại cũ).
+    // Tráº­n má»›i snapshot pending má»›i â†’ táº¡o handle Má»šI (khÃ´ng dÃ¹ng láº¡i cÅ©).
     scene.applyPendingPositions(
       positionsEvent([
         {
           id: 'enemy_2',
-          name: 'Quái Mới',
+          name: 'QuÃ¡i Má»›i',
           row: 2 as const,
           column: 5,
           progress: 0,
@@ -224,10 +224,10 @@ describe('CombatScene reconcileSpawnVfx', () => {
     )
 
     expect(scene.spawnVfxHandles.has('enemy_2')).toBe(true)
-    expect(graphicsCreated.length).toBeGreaterThanOrEqual(4) // 2 cũ (destroyed) + 2 mới
+    expect(graphicsCreated.length).toBeGreaterThanOrEqual(4) // 2 cÅ© (destroyed) + 2 má»›i
   })
 
-  it('flat mode: không tạo telegraph VFX (renderer legacy giữ hành vi cũ)', () => {
+  it('flat mode: khÃ´ng táº¡o telegraph VFX (renderer legacy giá»¯ hÃ nh vi cÅ©)', () => {
     const { scene, graphicsCreated } = createScene()
 
     scene.renderMode = 'flat'
@@ -236,7 +236,7 @@ describe('CombatScene reconcileSpawnVfx', () => {
       positionsEvent([
         {
           id: 'enemy_1',
-          name: 'Quái',
+          name: 'QuÃ¡i',
           row: 4 as const,
           column: 8,
           progress: 0,

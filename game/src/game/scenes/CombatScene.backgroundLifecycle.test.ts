@@ -1,17 +1,17 @@
-// @vitest-environment jsdom
+﻿// @vitest-environment jsdom
 //
-// Vòng đời background mới (yêu cầu 2026-08-26):
-// - Boot/trận ĐẦU dùng preset cố định (peekThanhVanVariant — mặc định
-//   spring/morning, override QA cụ thể vẫn khóa): MainScene.preload()
-//   eager-load ĐÚNG preset đó qua queueCombatAssets().
-// - KHÔNG còn rotate ở create()/onBattleStart().
-// - battle_end: chọn variant KẾ TIẾP khác hiện tại → thiếu texture thì
-//   queue load NGAY (đúng lúc overlay kết quả đang hiện) → chỉ swap sau
-//   COMPLETE, giữ nền cũ trong lúc tải (không flash).
-// - Trận mới bắt đầu trước khi load xong → KHÔNG swap giữa trận
-//   (generation token vô hiệu callback cũ).
+// VÃ²ng Ä‘á»i background má»›i (yÃªu cáº§u 2026-08-26):
+// - Boot/tráº­n Äáº¦U dÃ¹ng preset cá»‘ Ä‘á»‹nh (peekThanhVanVariant â€” máº·c Ä‘á»‹nh
+//   spring/morning, override QA cá»¥ thá»ƒ váº«n khÃ³a): MainScene.preload()
+//   eager-load ÄÃšNG preset Ä‘Ã³ qua queueCombatAssets().
+// - KHÃ”NG cÃ²n rotate á»Ÿ create()/onBattleStart().
+// - battle_end: chá»n variant Káº¾ TIáº¾P khÃ¡c hiá»‡n táº¡i â†’ thiáº¿u texture thÃ¬
+//   queue load NGAY (Ä‘Ãºng lÃºc overlay káº¿t quáº£ Ä‘ang hiá»‡n) â†’ chá»‰ swap sau
+//   COMPLETE, giá»¯ ná»n cÅ© trong lÃºc táº£i (khÃ´ng flash).
+// - Tráº­n má»›i báº¯t Ä‘áº§u trÆ°á»›c khi load xong â†’ KHÃ”NG swap giá»¯a tráº­n
+//   (generation token vÃ´ hiá»‡u callback cÅ©).
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { CombatScene } from './CombatScene'
+import { createTestScene } from './combat/combatTestHarness'
 import combatSceneSource from './CombatScene.ts?raw'
 import { PLAYER_TEXTURE_KEY, queueCombatAssets } from '../support/CombatPreload'
 import { peekThanhVanVariant, thanhVanLoadList } from '../support/ThanhVanArt'
@@ -49,19 +49,19 @@ function chainableView() {
 }
 
 /**
- * @param textureExists — true: mọi texture có sẵn (nhánh swap tức thời);
- *   Set: chỉ các key trong Set tồn tại (mọi key khác đều thiếu).
+ * @param textureExists â€” true: má»i texture cÃ³ sáºµn (nhÃ¡nh swap tá»©c thá»i);
+ *   Set: chá»‰ cÃ¡c key trong Set tá»“n táº¡i (má»i key khÃ¡c Ä‘á»u thiáº¿u).
  */
 function createPerspectiveScene(textureExists: true | Set<string>) {
-  const scene = Object.create(CombatScene.prototype) as any
+  const scene = createTestScene('bare')
 
   const addedImages: string[] = []
   const destroyedHandles: Array<unknown> = []
 
   scene.renderMode = 'perspective'
   scene.inBattle = true
-  // Object.create bỏ qua class field initializers — phải tự khởi tạo
-  // token generation để ++ hoạt động đúng.
+  // Object.create bá» qua class field initializers â€” pháº£i tá»± khá»Ÿi táº¡o
+  // token generation Ä‘á»ƒ ++ hoáº¡t Ä‘á»™ng Ä‘Ãºng.
   scene.backdropGeneration = 0
   scene.thanhVanVariant = { season: 'spring', time: 'morning' }
   scene.canvasWidth = 1600
@@ -109,8 +109,8 @@ function createPerspectiveScene(textureExists: true | Set<string>) {
     },
 
     start() {
-      // Loader thật bắn COMPLETE bất đồng bộ — test tự quyết thời điểm
-      // qua flushComplete() để mô phỏng "load xong trước/sau trận mới".
+      // Loader tháº­t báº¯n COMPLETE báº¥t Ä‘á»“ng bá»™ â€” test tá»± quyáº¿t thá»i Ä‘iá»ƒm
+      // qua flushComplete() Ä‘á»ƒ mÃ´ phá»ng "load xong trÆ°á»›c/sau tráº­n má»›i".
     },
 
     flushComplete() {
@@ -120,9 +120,9 @@ function createPerspectiveScene(textureExists: true | Set<string>) {
     },
   }
 
-  // Stubs tối thiểu cho onBattleEnd/onBattleStart.
+  // Stubs tá»‘i thiá»ƒu cho onBattleEnd/onBattleStart.
   scene.dotAccumulators = new Map()
-  // Audit fix 2026-08-31 — onBattleStart giờ còn dọn status VFX icons.
+  // Audit fix 2026-08-31 â€” onBattleStart giá» cÃ²n dá»n status VFX icons.
   scene.statuses = new Map()
   scene.sprites = new Map()
   scene.interpolations = new Map()
@@ -139,8 +139,8 @@ function createPerspectiveScene(textureExists: true | Set<string>) {
   return { scene, addedImages, destroyedHandles }
 }
 
-describe('CombatScene — vòng đời background (battle_end)', () => {
-  it('boot preload ĐÚNG preset peek (override QA khóa được) — không queue variant khác', () => {
+describe('CombatScene â€” vÃ²ng Ä‘á»i background (battle_end)', () => {
+  it('boot preload ÄÃšNG preset peek (override QA khÃ³a Ä‘Æ°á»£c) â€” khÃ´ng queue variant khÃ¡c', () => {
     setOverride('dev.thanhvanSeason', 'winter')
 
     setOverride('dev.thanhvanTime', 'night')
@@ -165,24 +165,24 @@ describe('CombatScene — vòng đời background (battle_end)', () => {
       expect(queued).toContain(key)
     }
 
-    // Player/enemy/gourd/profile vẫn được queue cùng lượt.
+    // Player/enemy/gourd/profile váº«n Ä‘Æ°á»£c queue cÃ¹ng lÆ°á»£t.
     expect(queued).toContain(PLAYER_TEXTURE_KEY)
 
-    // Không queue key tv-* nào ngoài preset peek.
+    // KhÃ´ng queue key tv-* nÃ o ngoÃ i preset peek.
     expect(queued.filter((key) => key.startsWith('tv-'))).toEqual(expected)
   })
 
-  it('battle_end đủ texture → swap NGAY sang variant khác hiện tại', () => {
+  it('battle_end Ä‘á»§ texture â†’ swap NGAY sang variant khÃ¡c hiá»‡n táº¡i', () => {
     const { scene, addedImages, destroyedHandles } = createPerspectiveScene(true)
 
     scene.onBattleEnd()
 
     expect(scene.inBattle).toBe(false)
 
-    // Variant mới KHÁC variant cũ (selectNext tránh trùng từng chiều).
+    // Variant má»›i KHÃC variant cÅ© (selectNext trÃ¡nh trÃ¹ng tá»«ng chiá»u).
     expect(scene.thanhVanVariant).not.toEqual({ season: 'spring', time: 'morning' })
 
-    // Backdrop cũ bị huỷ, ảnh của variant MỚI gắn đủ 7 key.
+    // Backdrop cÅ© bá»‹ huá»·, áº£nh cá»§a variant Má»šI gáº¯n Ä‘á»§ 7 key.
     expect(destroyedHandles).toHaveLength(1)
 
     expect(addedImages).toHaveLength(7)
@@ -191,26 +191,26 @@ describe('CombatScene — vòng đời background (battle_end)', () => {
 
     expect(addedImages).toEqual(newKeys)
 
-    // Cache phiên cập nhật theo variant vừa swap — lần vào combat kế
-    // preload đúng bộ đang hiển thị.
+    // Cache phiÃªn cáº­p nháº­t theo variant vá»«a swap â€” láº§n vÃ o combat káº¿
+    // preload Ä‘Ãºng bá»™ Ä‘ang hiá»ƒn thá»‹.
     expect(peekThanhVanVariant()).toEqual(scene.thanhVanVariant)
 
     expect(scene.usingArtBackdrop).toBe(true)
   })
 
-  it('battle_end thiếu texture → queue load, CHỈ swap sau COMPLETE', () => {
+  it('battle_end thiáº¿u texture â†’ queue load, CHá»ˆ swap sau COMPLETE', () => {
     const { scene, addedImages } = createPerspectiveScene(new Set())
 
     scene.onBattleEnd()
 
-    // 7 key của variant kế được queue — nền cũ GIỮ NGUYÊN trong lúc tải.
+    // 7 key cá»§a variant káº¿ Ä‘Æ°á»£c queue â€” ná»n cÅ© GIá»® NGUYÃŠN trong lÃºc táº£i.
     expect(scene.load.queued).toHaveLength(7)
 
     expect(addedImages).toHaveLength(0)
 
     expect(scene.thanhVanVariant).toEqual({ season: 'spring', time: 'morning' })
 
-    // Load xong khi CHƯA có trận mới → swap nguyên khối, không flash.
+    // Load xong khi CHÆ¯A cÃ³ tráº­n má»›i â†’ swap nguyÃªn khá»‘i, khÃ´ng flash.
     scene.load.flushComplete()
 
     expect(scene.thanhVanVariant).not.toEqual({ season: 'spring', time: 'morning' })
@@ -218,26 +218,26 @@ describe('CombatScene — vòng đời background (battle_end)', () => {
     expect(addedImages).toHaveLength(7)
   })
 
-  it('trận mới bắt đầu TRƯỚC khi load xong → KHÔNG swap giữa trận', () => {
+  it('tráº­n má»›i báº¯t Ä‘áº§u TRÆ¯á»šC khi load xong â†’ KHÃ”NG swap giá»¯a tráº­n', () => {
     const { scene, addedImages } = createPerspectiveScene(new Set())
 
     scene.onBattleEnd()
 
     expect(scene.load.queued).toHaveLength(7)
 
-    // Auto-refight bắt đầu trận kế khi tải chưa xong.
+    // Auto-refight báº¯t Ä‘áº§u tráº­n káº¿ khi táº£i chÆ°a xong.
     scene.onBattleStart()
 
     expect(scene.inBattle).toBe(true)
 
     scene.load.flushComplete()
 
-    // Callback cũ bị generation token vô hiệu — nền giữ nguyên.
+    // Callback cÅ© bá»‹ generation token vÃ´ hiá»‡u â€” ná»n giá»¯ nguyÃªn.
     expect(scene.thanhVanVariant).toEqual({ season: 'spring', time: 'morning' })
 
     expect(addedImages).toHaveLength(0)
 
-    // battle_end KẾ TIẾP chọn lại variant và swap bình thường.
+    // battle_end Káº¾ TIáº¾P chá»n láº¡i variant vÃ  swap bÃ¬nh thÆ°á»ng.
     scene.onBattleEnd()
 
     scene.load.flushComplete()
@@ -247,7 +247,7 @@ describe('CombatScene — vòng đời background (battle_end)', () => {
     expect(addedImages).toHaveLength(7)
   })
 
-  it('flat mode: battle_end không đụng loader/backdrop', () => {
+  it('flat mode: battle_end khÃ´ng Ä‘á»¥ng loader/backdrop', () => {
     const { scene } = createPerspectiveScene(new Set())
 
     scene.renderMode = 'flat'
@@ -259,9 +259,9 @@ describe('CombatScene — vòng đời background (battle_end)', () => {
     expect(scene.thanhVanVariant).toEqual({ season: 'spring', time: 'morning' })
   })
 
-  it('create() và onBattleStart() KHÔNG còn rotate background', () => {
-    // Khóa bằng source assertion — điểm rotate cũ phải biến mất hẳn;
-    // prepareThanhVanBackdropForNextBattle chỉ được gọi từ onBattleEnd.
+  it('create() vÃ  onBattleStart() KHÃ”NG cÃ²n rotate background', () => {
+    // KhÃ³a báº±ng source assertion â€” Ä‘iá»ƒm rotate cÅ© pháº£i biáº¿n máº¥t háº³n;
+    // prepareThanhVanBackdropForNextBattle chá»‰ Ä‘Æ°á»£c gá»i tá»« onBattleEnd.
     expect(combatSceneSource).not.toContain('refreshThanhVanBackdropForBattle')
 
     expect(combatSceneSource).toContain('prepareThanhVanBackdropForNextBattle')

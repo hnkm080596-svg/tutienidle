@@ -1,19 +1,20 @@
-// @vitest-environment jsdom
+﻿// @vitest-environment jsdom
 //
-// DoT presentation (combat-skill-flow-element-power-dot-plan.md §7) —
-// bộ gom damage text 3 lần/giây: nhiều fixed tick trong cửa sổ
-// 333,33ms chỉ sinh MỘT text/khóa; tổng hiển thị bằng tổng event đã
-// gom; direct hit KHÔNG đi qua accumulator; dọn khi target chết.
+// DoT presentation (combat-skill-flow-element-power-dot-plan.md Â§7) â€”
+// bá»™ gom damage text 3 láº§n/giÃ¢y: nhiá»u fixed tick trong cá»­a sá»•
+// 333,33ms chá»‰ sinh Má»˜T text/khÃ³a; tá»•ng hiá»ƒn thá»‹ báº±ng tá»•ng event Ä‘Ã£
+// gom; direct hit KHÃ”NG Ä‘i qua accumulator; dá»n khi target cháº¿t.
 import { describe, expect, it } from 'vitest'
-import { CombatScene, formatDotDamageText } from './CombatScene'
+import { formatDotDamageText } from './CombatScene'
+import { createTestScene } from './combat/combatTestHarness'
 
 function createScene() {
-  const scene = Object.create(CombatScene.prototype) as any
+  const scene = createTestScene('bare')
 
   scene.time = { now: 0 }
   scene.dotAccumulators = new Map()
 
-  // Sprite registry tối thiểu cho spriteFor().
+  // Sprite registry tá»‘i thiá»ƒu cho spriteFor().
   const sprites = new Map<string, unknown>()
 
   scene.sprites = sprites
@@ -51,13 +52,13 @@ const EFFECT_EVENT = (over: Partial<Record<string, unknown>>) => ({
   ...over,
 })
 
-describe('CombatScene — DoT accumulator 3 lần/giây (plan §7)', () => {
-  it('nhiều tick trong 333ms chỉ flush ĐÚNG 1 text cho mỗi khóa', () => {
+describe('CombatScene â€” DoT accumulator 3 láº§n/giÃ¢y (plan Â§7)', () => {
+  it('nhiá»u tick trong 333ms chá»‰ flush ÄÃšNG 1 text cho má»—i khÃ³a', () => {
     const { scene, shown, addSprite } = createScene()
 
     addSprite('enemy_1')
 
-    // 5 tick trong cùng cửa sổ đầu tiên (mỗi tick 50ms < 333ms).
+    // 5 tick trong cÃ¹ng cá»­a sá»• Ä‘áº§u tiÃªn (má»—i tick 50ms < 333ms).
     for (let i = 0; i < 5; i++) {
       scene.time.now = i * 50
 
@@ -66,7 +67,7 @@ describe('CombatScene — DoT accumulator 3 lần/giây (plan §7)', () => {
 
     expect(shown).toHaveLength(0)
 
-    // Quá cửa sổ — frame kế flush đúng 1 text.
+    // QuÃ¡ cá»­a sá»• â€” frame káº¿ flush Ä‘Ãºng 1 text.
     scene.time.now = 400
 
     scene.flushDueDotTexts()
@@ -75,7 +76,7 @@ describe('CombatScene — DoT accumulator 3 lần/giây (plan §7)', () => {
     expect(shown[0]!.id).toBe('enemy_1')
   })
 
-  it('tổng text bằng tổng event đã gom trong cửa sổ', () => {
+  it('tá»•ng text báº±ng tá»•ng event Ä‘Ã£ gom trong cá»­a sá»•', () => {
     const { scene, shown, addSprite } = createScene()
 
     addSprite('enemy_1')
@@ -91,7 +92,7 @@ describe('CombatScene — DoT accumulator 3 lần/giây (plan §7)', () => {
     expect(shown[0]!.value).toBeCloseTo(7.5, 6)
   })
 
-  it('khác khóa (effectId hoặc target khác nhau) flush RIÊNG mỗi khóa', () => {
+  it('khÃ¡c khÃ³a (effectId hoáº·c target khÃ¡c nhau) flush RIÃŠNG má»—i khÃ³a', () => {
     const { scene, shown, addSprite } = createScene()
 
     addSprite('enemy_1')
@@ -108,32 +109,32 @@ describe('CombatScene — DoT accumulator 3 lần/giây (plan §7)', () => {
     expect(shown).toHaveLength(3)
   })
 
-  it('direct hit (không effectId) KHÔNG đi qua accumulator', () => {
+  it('direct hit (khÃ´ng effectId) KHÃ”NG Ä‘i qua accumulator', () => {
     const { scene, addSprite } = createScene()
 
     addSprite('enemy_1')
 
-    // onDamageNumber với event không effectId phải rẽ nhánh direct path —
-    // direct path gọi showDamageNumber (không stub ở đây) nên chỉ cần
-    // chắc chắn accumulator TRỐNG là đủ cho hợp đồng accumulator.
+    // onDamageNumber vá»›i event khÃ´ng effectId pháº£i ráº½ nhÃ¡nh direct path â€”
+    // direct path gá»i showDamageNumber (khÃ´ng stub á»Ÿ Ä‘Ã¢y) nÃªn chá»‰ cáº§n
+    // cháº¯c cháº¯n accumulator TRá»NG lÃ  Ä‘á»§ cho há»£p Ä‘á»“ng accumulator.
     try {
       scene.onDamageNumber({ type: 'damage', targetId: 'enemy_1', value: 10 })
     } catch {
-      // showDamageNumber thật cần Phaser objects — jsdom không có;
-      // quan trọng là KHÔNG có bucket nào được tạo.
+      // showDamageNumber tháº­t cáº§n Phaser objects â€” jsdom khÃ´ng cÃ³;
+      // quan trá»ng lÃ  KHÃ”NG cÃ³ bucket nÃ o Ä‘Æ°á»£c táº¡o.
     }
 
     expect(scene.dotAccumulators.size).toBe(0)
   })
 
-  it('bucket của target chết bị xóa, không flush text mồ côi', () => {
+  it('bucket cá»§a target cháº¿t bá»‹ xÃ³a, khÃ´ng flush text má»“ cÃ´i', () => {
     const { scene, shown, addSprite } = createScene()
 
     addSprite('enemy_1')
 
     scene.onDamageNumber(EFFECT_EVENT({}))
 
-    // Mô phỏng purge khi chết (cùng logic onDeath dùng).
+    // MÃ´ phá»ng purge khi cháº¿t (cÃ¹ng logic onDeath dÃ¹ng).
     for (const key of [...scene.dotAccumulators.keys()]) {
       if (key.split('|')[0] === 'enemy_1') {
         scene.dotAccumulators.delete(key)
@@ -149,7 +150,7 @@ describe('CombatScene — DoT accumulator 3 lần/giây (plan §7)', () => {
     expect(shown).toHaveLength(0)
   })
 
-  it('battle_end dọn TOÀN BỘ accumulator — bucket cũ không rò sang trận kế', () => {
+  it('battle_end dá»n TOÃ€N Bá»˜ accumulator â€” bucket cÅ© khÃ´ng rÃ² sang tráº­n káº¿', () => {
     const { scene, addSprite } = createScene()
 
     addSprite('enemy_1')
@@ -160,8 +161,8 @@ describe('CombatScene — DoT accumulator 3 lần/giây (plan §7)', () => {
 
     expect(scene.dotAccumulators.size).toBeGreaterThan(0)
 
-    // renderMode 'flat' → prepareThanhVanBackdropForNextBattle no-op,
-    // onBattleEnd chạy an toàn với stub tối thiểu.
+    // renderMode 'flat' â†’ prepareThanhVanBackdropForNextBattle no-op,
+    // onBattleEnd cháº¡y an toÃ n vá»›i stub tá»‘i thiá»ƒu.
     scene.renderMode = 'flat'
     scene.inBattle = true
 
@@ -171,11 +172,11 @@ describe('CombatScene — DoT accumulator 3 lần/giây (plan §7)', () => {
     expect(scene.inBattle).toBe(false)
   })
 
-  it('format số nhỏ: 0<x<1 hiện 1 chữ số thập phân, sàn 0.1 — KHÔNG bao giờ -0.0', () => {
+  it('format sá»‘ nhá»: 0<x<1 hiá»‡n 1 chá»¯ sá»‘ tháº­p phÃ¢n, sÃ n 0.1 â€” KHÃ”NG bao giá» -0.0', () => {
     expect(formatDotDamageText(0.4)).toBe('-0.4')
     expect(formatDotDamageText(0.04)).toBe('-0.1')
 
-    // Kỳ vọng SAI cũ (đã sửa): 0.04 từng bị kỳ vọng thành '-0.0'.
+    // Ká»³ vá»ng SAI cÅ© (Ä‘Ã£ sá»­a): 0.04 tá»«ng bá»‹ ká»³ vá»ng thÃ nh '-0.0'.
     expect(formatDotDamageText(0.04)).not.toBe('-0.0')
     expect(formatDotDamageText(-0)).not.toContain('-0.0')
 

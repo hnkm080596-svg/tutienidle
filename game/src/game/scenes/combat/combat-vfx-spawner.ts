@@ -8,7 +8,10 @@ import Phaser from 'phaser'
 
 import type { ActionImpactEvent, BattlePositionsEvent } from '@/core/battle/BattleEvents'
 import type { GridPosition } from '@/core/battle/BattleGrid'
-import { spawnActionImpactVfx } from '@/game/support/ActionImpactVfx'
+import {
+  spawnActionImpactVfx,
+  type ActionImpactVfxHandle,
+} from '@/game/support/ActionImpactVfx'
 import { spawnEnemySpawnVfx } from '@/game/support/EnemySpawnVfx'
 import { getCombatVfxPreset } from '@/data/vfx/CombatVfxPresets'
 import { getStatusVfxPreset } from '@/data/vfx/StatusVfxPresets'
@@ -84,26 +87,39 @@ export class CombatVfxSpawner {
     )
   }
 
-  onActionImpact(event: ActionImpactEvent) {
+  /**
+   * Remediation Task 2 — nhận sẵn `onComplete` (đã capture token từ
+   * CombatScene) rồi truyền thẳng vào spawnActionImpactVfx: ack engine từ
+   * completion TỰ THỰC của tween, không tự tính duration trùng lặp.
+   * Trả ActionImpactVfxHandle; undefined khi không spawn được (projection
+   * miss) — caller phải complete ngay theo fallback path.
+   */
+  onActionImpact(
+    event: ActionImpactEvent,
+    onComplete?: () => void,
+  ): ActionImpactVfxHandle | undefined {
     const projection = this.scene.projection
 
     if (!projection) {
-      return
+      return undefined
     }
 
     const preset = getCombatVfxPreset(event.presetId)
     // MỘT action = MỘT VFX chính; multi-hit chỉ thêm pulse (spec mục 8).
     const pulses = Math.max(1, Math.min(6, event.hitCount))
 
-    spawnActionImpactVfx({
-      scene: this.scene,
-      projection,
-      area: event.affectedArea,
-      anchorCell: event.anchorCell,
-      preset,
-      pulses,
-      uprightDepth: this.resolveUprightVfxDepth(event.anchorCell),
-    })
+    const handle = spawnActionImpactVfx(
+      {
+        scene: this.scene,
+        projection,
+        area: event.affectedArea,
+        anchorCell: event.anchorCell,
+        preset,
+        pulses,
+        uprightDepth: this.resolveUprightVfxDepth(event.anchorCell),
+      },
+      onComplete,
+    )
 
     if (preset.screenShake) {
       this.scene.cameras.main.shake(preset.screenShake.durationMs, preset.screenShake.intensity)
@@ -117,6 +133,8 @@ export class CombatVfxSpawner {
         this.flashColor(sprite, preset.color, 90)
       }
     }
+
+    return handle
   }
 
   /**

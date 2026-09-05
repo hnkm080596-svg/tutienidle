@@ -261,17 +261,17 @@ In-flight: gp123 (Group 1+2 xong chờ merge; Group 3 đang làm) → action-pla
 | Code-split | Entry 2231→848KB + phaser chunk riêng — merged `af88cee` |
 | Turn-based combat rework (M1→Slice 7 + Fairness + Stat + Future Systems + Auto-farm) | Engine duy nhất + manual UI + party + auto-farm — xem mục 9 (toàn bộ slice 🟢) |
 
-### 7.10. Plans audit remediation — CHƯA EXECUTE (2026-09-05)
+### 7.10. Plans audit remediation — SYSTEM CODE REVIEW: TASKS 1–8 XONG (2026-09-05)
 
 | Plan | Phạm vi | Trạng thái |
 |---|---|---|
-| [System code review remediation](../../docs/superpowers/plans/2026-09-05-system-code-review-remediation.md) | Action playback token/generation, idempotent presentation teardown, VFX completion, offline auto-farm cap, App/composable lifecycle, playback edge-case tests và typed test fixtures | 🔴 **Chưa bắt đầu** — agent khác phụ trách implementation |
-| [UI/UX and browser QA remediation](../../docs/superpowers/plans/2026-09-05-ui-ux-qa-remediation.md) | Accessibility/focus/dialogs, keyboard/touch, responsive container-fit layout, localization, reduced motion, combat HUD UX, error/recovery flows và Playwright matrix | 🔴 **Chưa bắt đầu** — agent khác phụ trách implementation; có baseline E2E failure cần xử lý ở Task 13 |
+| [System code review remediation](../../docs/superpowers/plans/2026-09-05-system-code-review-remediation.md) | Action playback token/generation, idempotent presentation teardown, VFX completion, offline auto-farm cap, App/composable lifecycle, playback edge-case tests và typed test fixtures | 🟢 **Tasks 1–8 XONG** (worktree `feat/remediation-batch`): Task 1 token playback `fbf9e49`; Tasks 2–8 VFX completion ownership, bounded offline auto-farm (fix infinite-loop cycleSeconds≤0 + cap 24h), bag-grid conditional mount, App lifecycle idempotence (`useAppLifecycle.ts`), theme/dialog a11y (native button + aria-labelledby/describedby per-instance), playback edge-case suite (13+7 tests), typed `combatTestHarness` (12 file, 0 `as any`). Full verify 2588/2588 + build pass; QA quick `PASS WITH EVIDENCE` (`game/docs/qa/2026-09-05-remediation-tasks-2-8-quick.md`). Task 9 (bundle/E2E hygiene) còn mở — cần user approve scope |
+| [UI/UX and browser QA remediation](../../docs/superpowers/plans/2026-09-05-ui-ux-qa-remediation.md) | Accessibility/focus/dialogs, keyboard/touch, responsive container-fit layout, localization, reduced motion, combat HUD UX, error/recovery flows và Playwright matrix | 🔴 **Chưa bắt đầu** — một phần dialog a11y đã xử lý sớm trong Task 6 của system remediation; còn lại chờ kế hoạch riêng; có baseline E2E failure cần xử lý ở Task 13 |
 
 **Thứ tự đề xuất:**
 
-1. Điều tra và khóa baseline failures trước: `GameManager.actionPlayback.test.ts:140` và `turn-combat-hud.spec.ts:45`.
-2. Thực hiện các hạng mục P0/P1 của [system code review remediation](../../docs/superpowers/plans/2026-09-05-system-code-review-remediation.md), đặc biệt action playback/offline settlement.
+1. ~~Điều tra và khóa baseline failures trước: `GameManager.actionPlayback.test.ts:140`~~ — đã xác nhận flaky RNG pre-existing (stash-verified trên HEAD sạch), deterministic dodge test đã thêm trong Task 7; root fix RNG seed là follow-up riêng.
+2. ~~Thực hiện các hạng mục P0/P1 của [system code review remediation](../../docs/superpowers/plans/2026-09-05-system-code-review-remediation.md)~~ — 🟢 Tasks 1–8 xong (Task 9 chờ approve).
 3. Thực hiện [UI/UX and browser QA remediation](../../docs/superpowers/plans/2026-09-05-ui-ux-qa-remediation.md), ưu tiên modal/focus, locked actions, responsive combat và Playwright diagnostics.
 4. Chỉ chuyển trạng thái sang 🟢 khi có focused tests, type-check/build, Vitest và browser evidence phù hợp; không coi static review là bằng chứng fix.
 

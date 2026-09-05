@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, useId } from 'vue'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import GameButton from './GameButton.vue'
@@ -26,17 +26,31 @@ const emit = defineEmits<{ confirm: []; cancel: [] }>()
 
 const cardRef = ref<HTMLElement | null>(null)
 useDialogFocus(cardRef, computed(() => props.open), { onEscape: () => emit('cancel') })
+
+// Remediation Task 6 (2026-09-05) — screen reader cần dialog được tham
+// chiếu tới title/description thật (aria-labelledby/describedby), không
+// chỉ aria-label. useId() đảm bảo ID per-instance — nhiều modal đồng
+// thời không trùng ID tĩnh.
+const titleId = useId()
+const messageId = useId()
 </script>
 
 <template>
   <Transition name="confirm-modal-fade">
     <div v-if="open" class="confirm-modal" :style="{ zIndex: OVERLAY_LAYERS.panel }">
-      <section ref="cardRef" class="confirm-modal__card" role="alertdialog" aria-modal="true" :aria-label="title">
+      <section
+        ref="cardRef"
+        class="confirm-modal__card"
+        role="alertdialog"
+        aria-modal="true"
+        :aria-labelledby="titleId"
+        :aria-describedby="messageId"
+      >
         <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
         <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
-        <h3 class="confirm-modal__title">{{ title }}</h3>
+        <h3 :id="titleId" class="confirm-modal__title">{{ title }}</h3>
 
-        <p class="confirm-modal__message">{{ message }}</p>
+        <p :id="messageId" class="confirm-modal__message">{{ message }}</p>
 
         <div class="confirm-modal__actions">
           <GameButton class="confirm-modal__cancel" variant="ghost" @click="emit('cancel')">{{ cancelLabel }}</GameButton>

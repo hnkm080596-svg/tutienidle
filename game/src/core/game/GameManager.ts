@@ -18,6 +18,7 @@ import { grantRealmPassive } from '../realm/RealmPassiveSystem'
 import { getAlchemySuccessBonusPercentPoints, getReactionKeepChance, collectTalentEffects } from '../talent/TalentEffects'
 import { TALENT_PASSIVE_SKILLS, getTalentPassiveSkill } from '../../data/skill/TalentPassives'
 import { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
+import { DEFAULT_MAX_OFFLINE_SECONDS } from '../idle/GameClock'
 
 import { BuffPool } from '../buff/BuffPool'
 import { BuffSystem } from '../buff/BuffSystem'
@@ -3256,6 +3257,12 @@ export class GameManager {
    * combat được nhận reward offline (chùng nguyên tắc Production catch-up).
    * Cùng chu kỳ online (perfectClearSeconds/2); leftover dư giữ lại qua
    * lastCheckedMs tiến đúng phần đã settle.
+   *
+   * Remediation Task 3 (2026-09-05) — BOUNDED settlement:
+   * - elapsedOfflineSeconds clamp theo DEFAULT_MAX_OFFLINE_SECONDS (24h —
+   *   NGUỒN DUY NHẤT GameClock, không tự chế cap thứ hai).
+   * - cycleSeconds <= 0 / non-finite → no-op an toàn (chặn Infinity cycles
+   *   từ malformed save — evidence: infinite-loop timeout trong test).
    */
   settleAutoFarmOffline(player: PlayerData, elapsedOfflineSeconds: number): void {
     const autoFarm = player.autoFarmStage
@@ -3266,12 +3273,18 @@ export class GameManager {
 
     const cycleSeconds = player.perfectClearSeconds[autoFarm.stageId]
 
-    if (cycleSeconds === undefined) {
+    if (cycleSeconds === undefined || !(cycleSeconds > 0) || !Number.isFinite(cycleSeconds)) {
       return
     }
 
+    // Clamp theo trần offline chuẩn của game (GameClock 24h).
+    const cappedElapsedSeconds = Math.min(
+      Math.max(0, elapsedOfflineSeconds),
+      DEFAULT_MAX_OFFLINE_SECONDS,
+    )
+
     const cycleMs = (cycleSeconds / 2) * 1000
-    const elapsedMs = elapsedOfflineSeconds * 1000
+    const elapsedMs = cappedElapsedSeconds * 1000
     const completedCycles = Math.floor(elapsedMs / cycleMs)
 
     if (completedCycles <= 0) {

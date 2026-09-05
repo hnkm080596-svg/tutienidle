@@ -34,6 +34,16 @@ export interface ActionImpactVfxParams {
   uprightDepth: number
 }
 
+/**
+ * Remediation Task 2 (2026-09-05) — completion handle: caller (CombatScene)
+ * acknowledge engine từ handle này thay vì tự tính duration (bị trùng).
+ * complete() idempotent — tween onComplete và caller gọi ai trước cũng chỉ
+ * fire đúng 1 lần.
+ */
+export interface ActionImpactVfxHandle {
+  complete: () => void
+}
+
 /** Graphics.fillPoints/strokePoints muốn Vector2[] — quy đổi tại biên. */
 export function toVector2Points(points: Array<{ x: number; y: number }>): Phaser.Math.Vector2[] {
   return points.map((point) => new Phaser.Math.Vector2(point.x, point.y))
@@ -44,7 +54,10 @@ export function computeUprightRadius(cellWidth: number, areaScale: number): numb
   return Math.max(16, cellWidth * 0.55 * Math.max(0.25, areaScale))
 }
 
-export function spawnActionImpactVfx(params: ActionImpactVfxParams): void {
+export function spawnActionImpactVfx(
+  params: ActionImpactVfxParams,
+  onComplete?: () => void,
+): ActionImpactVfxHandle {
   const { scene, projection, area, anchorCell, preset, pulses, uprightDepth } = params
 
   const space = preset.space
@@ -110,15 +123,33 @@ export function spawnActionImpactVfx(params: ActionImpactVfxParams): void {
 
   const state = { t: 0 }
 
+  // Remediation Task 2 — idempotent completion: tween onComplete và
+  // handle.complete() gọi ai trước cũng fire callback đúng 1 lần.
+  let completed = false
+
+  const finish = () => {
+    if (completed) {
+      return
+    }
+
+    completed = true
+
+    ground?.destroy()
+    upright?.destroy()
+
+    onComplete?.()
+  }
+
   scene.tweens.add({
     targets: state,
     t: 1,
     duration: Math.max(1, preset.durationMs) * pulseCount,
     ease: 'Linear',
     onUpdate: () => paint(state.t),
-    onComplete: () => {
-      ground?.destroy()
-      upright?.destroy()
-    },
+    onComplete: finish,
   })
+
+  return {
+    complete: finish,
+  }
 }
