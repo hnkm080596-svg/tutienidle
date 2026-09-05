@@ -315,6 +315,42 @@ export class TurnBuffSystem {
   }
 
   /**
+   * Action Playback Task 5 (2026-09-05) — roll reactiveTrigger effects trên
+   * pool của `entity` (mirror rollOnHitEffects conventions). Trả về
+   * firedFollowUp khi 1 onImpactLanded trigger có queuesFollowUp thắng roll
+   * (GameManager/TurnBattleSystem đặt battle.queuedFollowUpActorId).
+   */
+  rollReactiveTrigger(
+    entity: CombatEntity,
+    trigger: 'onCastBegin' | 'onImpactLanded',
+    registry: TurnBuffRegistry,
+  ): { firedFollowUp: boolean } {
+    let firedFollowUp = false
+
+    for (const buff of this.pool.getAll()) {
+      for (const effect of buff.effects) {
+        if (effect.type !== 'reactiveTrigger' || effect.trigger !== trigger) {
+          continue
+        }
+
+        if (Math.random() >= effect.chance) {
+          continue
+        }
+
+        if (effect.appliesDefinitionId) {
+          this.apply(registry.get(effect.appliesDefinitionId), entity, entity, registry)
+        }
+
+        if (effect.queuesFollowUp) {
+          firedFollowUp = true
+        }
+      }
+    }
+
+    return { firedFollowUp }
+  }
+
+  /**
    * Port verbatim từ BuffSystem.getStacks() (BuffSystem.ts:397-402):
    * không sourceId = tổng stacks trên MỌI nguồn; có sourceId = đúng 1
    * instance của nguồn đó.

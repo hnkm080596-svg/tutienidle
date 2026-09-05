@@ -473,6 +473,14 @@ export class CombatScene extends Phaser.Scene {
   // thêm event vào bên này mà quên bên kia không có gì báo lỗi).
   private boundHandlers: Array<[string, (event: any) => void]> = []
   private debugAnchorHandler = () => this.drawDebugBodyAnchors()
+  // Action Playback Task 7 (2026-09-05) — GameManager bridge (set trong
+  // subscribeCombatEvents từ registry; scene KHÔNG import trực tiếp).
+  private gameManagerRef?: {
+    setPresentationActive: (active: boolean) => void
+    acknowledgeTurnReady: () => void
+    acknowledgeActionImpact: () => void
+    acknowledgeActionComplete: () => void
+  }
 
   private getCombatEventBindings(): Array<[string, (event: any) => void]> {
     return [
@@ -522,6 +530,8 @@ export class CombatScene extends Phaser.Scene {
         },
       ],
       ['action_impact', (event: ActionImpactEvent) => this.onActionImpact(event)],
+      ['turn_ready', (event: { actorId: string }) => this.onTurnReady(event)],
+      ['turn_standby_complete', (event: { actorId: string }) => this.onTurnStandbyComplete(event)],
       ['status_vfx_attached', (event: StatusVfxAttachedEvent) => this.onStatusAttached(event)],
       ['status_vfx_updated', (event: StatusVfxUpdatedEvent) => this.onStatusUpdated(event)],
       ['status_vfx_removed', (event: StatusVfxRemovedEvent) => this.onStatusRemoved(event)],
@@ -1158,6 +1168,15 @@ export class CombatScene extends Phaser.Scene {
     for (const [eventName, handler] of this.boundHandlers) {
       eventBus.on(eventName, handler)
     }
+
+    // Action Playback Task 7 (2026-09-05) — bật presentation mode: turn
+    // engine chờ Phaser ack qua 3 signal (ready flourish → impact frame →
+    // VFX tween complete) thay vì resolve instant headless.
+    this.gameManagerRef = this.registry.get('gameManager') as
+      | { setPresentationActive: (active: boolean) => void; acknowledgeTurnReady: () => void; acknowledgeActionImpact: () => void; acknowledgeActionComplete: () => void }
+      | undefined
+
+    this.gameManagerRef?.setPresentationActive(true)
   }
 
   private unsubscribeCombatEvents() {
@@ -1171,6 +1190,11 @@ export class CombatScene extends Phaser.Scene {
 
     this.boundHandlers = []
     this.eventBus = undefined
+
+    // Action Playback Task 7 — headless drain mọi pending phase (trận không
+    // treo nếu scene unmount giữa turn).
+    this.gameManagerRef?.setPresentationActive(false)
+    this.gameManagerRef = undefined
   }
 
   /**
@@ -1390,7 +1414,23 @@ export class CombatScene extends Phaser.Scene {
       const dx = isPlayer ? ATTACK_LUNGE_PX : -ATTACK_LUNGE_PX
 
       this.playHorizontalImpulse(attacker, dx, ATTACK_LUNGE_DURATION_MS)
+
+      // Action Playback Task 7 (2026-09-05) — impact frame tại midpoint
+      // lunge: damage áp đúng lúc đòn "trúng" trên màn hình (spec §4.3).
+      if (this.gameManagerRef && this.isActionPlaybackActive()) {
+        this.time.delayedCall(ATTACK_LUNGE_DURATION_MS / 2, () => {
+          this.gameManagerRef?.acknowledgeActionImpact()
+        })
+      }
     }
+  }
+
+  /**
+   * Action Playback Task 7 — presentationActive đang bật? Dùng registry
+   * gameManagerRef presence làm proxy (set/unmount cùng subscribe lifecycle).
+   */
+  private isActionPlaybackActive(): boolean {
+    return this.gameManagerRef !== undefined
   }
 
   playHorizontalImpulse(sprite: EntitySprite, distance: number, duration: number) {
@@ -1721,6 +1761,69 @@ export class CombatScene extends Phaser.Scene {
    */
   private onActionImpact(event: ActionImpactEvent) {
     this.vfxSpawner.onActionImpact(event)
+
+    // Action Playback Task 7 (2026-09-05) — "VFX fully finished" moment:
+    // duration = preset.durationMs × hitCount pulses (khớp tween trong
+    // spawnActionImpactVfx) → acknowledgeActionComplete() để engine sang
+    // actor kế. Fallback duration 230ms nếu preset lookup miss.
+    const preset = getCombatVfxPreset(event.presetId)
+    const pulses = Math.max(1, Math.min(6, event.hitCount))
+    const totalMs = Math.max(1, preset.durationMs) * pulses
+
+    this.time.delayedCall(totalMs, () => {
+      this.gameManagerRef?.acknowledgeActionComplete()
+    })
+  }
+
+  /**
+   * Action Playback Task 7 (2026-09-05) — 'turn_ready': short flash/pulse
+   * trên sprite actor rồi acknowledgeTurnReady() trong onComplete (5-phase
+   * machine bước 1 → 2). Placeholder visual đơn giản theo plan (không
+   * designed visual — polish sau).
+   */
+  private onTurnReady(event: { actorId: string }) {
+    const sprite = this.spriteFor(event.actorId)
+
+    if (!sprite) {
+      // Không có sprite (late-join miss) — ack ngay để engine không treo.
+      this.gameManagerRef?.acknowledgeTurnReady()
+      return
+    }
+
+    // Pulse đơn giản: scale bump rồi trở lại (tween trên rect/sprite GameObject
+    // — EntitySprite wrapper không expose scale, projection ghi mỗi frame).
+    const visual = sprite.rect
+
+    this.tweens.killTweensOf(visual)
+
+    this.tweens.add({
+      targets: visual,
+      scaleX: 1.15,
+      scaleY: 1.15,
+      duration: 90,
+      yoyo: true,
+      ease: 'Quad.easeOut',
+      onComplete: () => {
+        visual.setScale(1)
+
+        this.gameManagerRef?.acknowledgeTurnReady()
+      },
+    })
+  }
+
+  /**
+   * Action Playback Task 7 (2026-09-05) — 'turn_standby_complete': tail
+   * event (completeAction ĐÃ chạy trước khi event tới) — presentation-only
+   * bookkeeping, KHÔNG ack gì (không còn wait-gate).
+   */
+  private onTurnStandbyComplete(event: { actorId: string }) {
+    const sprite = this.spriteFor(event.actorId)
+
+    if (sprite) {
+      this.tweens.killTweensOf(sprite.rect)
+
+      sprite.rect.setScale(1)
+    }
   }
 
   /**

@@ -142,6 +142,10 @@ function setupGame(
   // cần (vị trí player/quái, animation attack/critical/hit/dodge/cast/
   // death/battle_start/battle_end/combat_scene_exit) đều tới qua đây.
   game.registry.set('eventBus', gameManager.eventBus)
+  // Action Playback Task 7 (2026-09-05) — CombatScene cần ack lại
+  // GameManager (presentationActive + 3 acknowledge methods) — cùng bridge
+  // registry pattern với eventBus; scene không import trực tiếp GameManager.
+  game.registry.set('gameManager', gameManager)
 
   // Late-join replay (fix spawn animation lần đầu, lớp bảo hiểm thứ 2
   // bên cạnh eager preload) — giữ snapshot 'positions' MỚI NHẤT trong
