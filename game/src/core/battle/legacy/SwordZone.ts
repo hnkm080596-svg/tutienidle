@@ -1,4 +1,4 @@
-import type { ElementType } from '../element/ElementType'
+import type { ElementType } from '../../element/ElementType'
 
 /**
  * Task 8 (Kiếm Trận keystone, 2026-08-28) — clone của LavaZone.ts nhưng

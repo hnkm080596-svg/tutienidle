@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { BattleSystem } from './BattleSystem'
+import { BattleSystem } from './legacy/BattleSystem'
 import { CombatSystem } from '../combat/CombatSystem'
 import { SkillManager } from '../skill/SkillManager'
 import { SkillSystem } from '../skill/SkillSystem'

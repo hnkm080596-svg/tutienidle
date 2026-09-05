@@ -151,7 +151,7 @@ describe('PhapTuNodes — nhánh Thuần per-hành (spec §5 + Future Systems Ta
       })
 
       it('node ult: major, prereq special node, unlocks đúng ult id của hành', async () => {
-        const { PHAP_TU_ULTIMATE_IDS } = await import('../../core/battle/UltimateSystem')
+        const { PHAP_TU_ULTIMATE_IDS } = await import('../../core/battle/legacy/UltimateSystem')
         const node = nodeById(`linh_ngo_${PHAP_TU_ULTIMATE_IDS[el as (typeof ELEMENT_ORDER)[number]]}`)
 
         expect(node).toBeDefined()

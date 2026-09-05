@@ -3,7 +3,7 @@ import { EventBus } from '../events/EventBus'
 import { CombatSystem } from '../combat/CombatSystem'
 import type { CombatEntity } from '../combat/CombatEntity'
 
-import { BattleSystem } from '../battle/BattleSystem'
+import { BattleSystem } from '../battle/legacy/BattleSystem'
 import type { Battle } from '../battle/Battle'
 import { ActionImpactSystem } from '../battle/ActionImpactSystem'
 import {
