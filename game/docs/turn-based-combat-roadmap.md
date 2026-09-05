@@ -220,3 +220,10 @@ Sau mỗi lần khảo sát/brainstorm/viết plan cho một hạng mục:
 ## Legacy real-time engine — chuyển vào attle/legacy/ (2026-09-05)
 
 **Quyết định người dùng (2026-09-05)**: KHÔNG xoá engine cũ — chuyển toàn bộ vào game/src/core/battle/legacy/ qua git mv (giữ git history 96-97% similarity). Đã chuyển: BattleSystem.ts, HazardZoneSystem.ts, UltimateSystem.ts, LavaZone.ts, SwordZone.ts + tests pin (BattleSystem.test.ts, UltimateSystem*.test.ts). Import fixes: GameManager/StageWaveSystem trỏ legacy/BattleSystem; Battle.ts LavaZone/SwordZone types → ./legacy/; PhapTuNodes.dao.test dynamic import → legacy/UltimateSystem (PHAP_TU_ULTIMATE_IDS re-export giữ). README.md trong legacy/ ghi rõ scope + checklist retirement tương lai. **KHÔNG chuyển** (vẫn sống): BuffSystem/BuffPool/BuffRegistry (buff/), Battle.ts, TheResourceSystem, ChainStateSystem, EnemyAttackSystem, SkillEffectResolver, KiemTuResourceSystem, BattleLane, BattleGrid, ActionTargetingSystem, ActionImpactSystem — consumed bởi CombatSystem/SkillEffectSystem/ReactionManager/ArtifactSystem/BattleLootSystem đang chạy. Verify: type-check 0, full suite 2506/2506 (1 pre-existing PillSystem), build pass, e2e 10/10, scan 0 stale references. Merge e928a44, branch eat/retire-realtime-combat.
+## Gameplay fixes — pacing/refight/pill (2026-09-05, merge 2ef3be6, branch eat/gameplay-fixes)
+
+4 bug player report + 1 removal, tat ca co repro test truoc/sau (QA quick PASS WITH EVIDENCE: [2026-09-05-gameplay-fixes-quick.md](qa/2026-09-05-gameplay-fixes-quick.md)):
+1. **Battle chom mat** — root cause: 1 pacing tick = 1 full turn (resolveNextStep inner-loop). Fix: 	ickPacing() 1 tick = 1 gauge-step; enemy speed x100 (80-250) khop thang player.
+2. **Refight lan 2 loi** — root cause: per-battle flags chi reset trong restartTurnBattleCycle, khong reset trong startStage. Fix: reset o startStage; repro test refight chain 3 rounds.
+3. **Pill hpRegen bo** (user request) — PillSystem khong con dang ky hpRegenPerTurn modifier; MP regen giu nguyen.
+Con lai: spawn/countdown VFX animation la feature gap (roadmap ghi tu Slice 6) — pacing fix cho tran co thoi gian thuc, VFX hien co gio co thoi gian render.
