@@ -48,9 +48,11 @@ Separately from the logical grid restriction above (§1.3 doesn't shrink the *sc
 1. **Entity sync**: retire dependence on the legacy `'positions'` bridge for turn-based combat. `GameManager` emits a new event directly from `TurnBattle` state every fixed step while `fighting` (see §4).
 2. **Animation granularity**: 5 separate named animation clips per entity — `idle`, `ready`, `cast`, `standby`, `death` — one-to-one with the Action Playback phase machine.
 3. **Asset readiness**: no real sprite sheets exist yet. The pipeline (frame metadata, loading, `AnimationManager` wiring) is built now; entities without a real sheet use an auto-generated placeholder sheet so nothing blocks on art delivery. Real sheets drop in later via the existing asset-drop workflow (see memory `tienhiep-asset-manifest`) with no code changes beyond the manifest entry.
-4. **Battlefield region**: a new `BattlefieldUsableRegion` concept constrains WHERE entities may be placed/spawned. It does NOT change `GRID_ROW_COUNT`/`GRID_COLUMN_COUNT` or any distance/targeting/AoE formula — those keep operating on the full 10×16 coordinate space. Real bounds: `rowMin=3, rowMax=8, columnMin=0, columnMax=12` (see §1.3).
-5. **Multi-player rendering**: `CombatScene` renders exactly as many player sprites as `turnBattle.players.length` at any given moment, using a new formation-position helper. Today this is always 1 (matches current behavior exactly); the helper is structured to place additional members if/when real party content ships (a separate, later feature) — this spec does not add that content.
-6. **Screen layout**: the combat skill UI (`TurnCombatSkillBar`/`CombatBuildHud`) moves into a new right-docked panel component, independent of `RightPanel.vue`. `combatInsets.ts`/`ProjectionViewport` gain a `right` inset (mirroring the existing `top` inset's measure-real-DOM-height pattern), and the battlefield projection (`BattleGridProjection.ts`, both flat and perspective modes) shrinks its available width by that inset instead of always centering across the full canvas width.
+4. **Battlefield region**: two 6×6 side boxes (`PLAYER_SIDE_REGION` columns 0–5, `ENEMY_SIDE_REGION` columns 7–12), sharing rows 3–8, with column 6 as a neutral divider used by neither side. Does NOT change `GRID_ROW_COUNT`/`GRID_COLUMN_COUNT` or any distance/targeting/AoE formula — those keep operating on the full 10×16 coordinate space (see §1.3, §6).
+5. **Enemy placement**: regular enemies randomize within `ENEMY_SIDE_REGION`; boss is forced to that region's exact center (`{ row: 5, column: 9 }`), decoupled from the player's row (a deliberate change from today's boss-aligns-to-`HERO_LANE_INDEX` behavior).
+6. **Player/party placement**: preset per-member positions, not an automatic formation algorithm — the actual preset-editing UI is a separate future feature; this spec only makes the position DATA-driven (`PartyFormationSlot[]`) instead of hardcoded, defaulting to today's exact single-player position.
+7. **Multi-player rendering**: `CombatScene` renders exactly as many player sprites as `turnBattle.players.length` at any given moment. Today this is always 1 (matches current behavior exactly).
+8. **Screen layout**: the combat skill UI (`TurnCombatSkillBar`/`CombatBuildHud`) moves into a new right-docked panel component, independent of `RightPanel.vue`. `combatInsets.ts`/`ProjectionViewport` gain a `right` inset (mirroring the existing `top` inset's measure-real-DOM-height pattern), and the battlefield projection (`BattleGridProjection.ts`, both flat and perspective modes) shrinks its available width by that inset instead of always centering across the full canvas width.
 
 ## 4. Design — Entity Sync Event
 
@@ -109,7 +111,9 @@ Phase-to-animation wiring: `CombatScene`'s existing Action Playback event handle
 
 **Placeholder generation** (since no real sheets exist yet): a small helper generates a placeholder `CombatAnimationSet` for any entity lacking real art — reusing the entity's current static PNG, sliced into a trivial N-frame sheet (or a single repeated frame if slicing isn't meaningful) so the SAME code path (`AnimationManager`, `sprite.play()`) runs end-to-end today. When real sheets are dropped in later (asset-drop workflow), only the manifest entry changes — no code path changes.
 
-## 6. Design — Battlefield Usable Region
+## 6. Design — Battlefield Usable Region (two 6×6 side boxes + a neutral divider column)
+
+Confirmed with the user (2026-09-05): rows stay shared (3–8, 6 rows total) for BOTH sides — the split is along COLUMNS. Each side gets its own 6×6 box; column 6 (the exact middle of the 0–12 range) is a neutral no-man's-land column, never used for placement by either side.
 
 ```ts
 export interface BattlefieldUsableRegion {
@@ -119,40 +123,66 @@ export interface BattlefieldUsableRegion {
   columnMax: number
 }
 
-// Real bounds (user, 2026-09-05) — rectangle, row 0 = nearest/bottom.
-// Excludes rows 0-2 (nearest) and row 9 (farthest); excludes columns 13-15
-// (rightmost 3, freed for the screen-layout dock in §7.5 — NOT the same
-// thing as the region itself, see §1.4).
+export const BATTLEFIELD_ROW_RANGE = { rowMin: 3 as LaneIndex, rowMax: 8 as LaneIndex } // shared by both sides
+
+export const PLAYER_SIDE_REGION: BattlefieldUsableRegion = {
+  ...BATTLEFIELD_ROW_RANGE,
+  columnMin: 0,
+  columnMax: 5,
+}
+
+export const NEUTRAL_DIVIDER_COLUMN = 6
+
+export const ENEMY_SIDE_REGION: BattlefieldUsableRegion = {
+  ...BATTLEFIELD_ROW_RANGE,
+  columnMin: 7,
+  columnMax: 12,
+}
+
+/** Bounding box of both side regions + the divider — for anything that needs
+ *  "the whole usable rectangle" rather than a specific side (e.g. camera/
+ *  projection fit in §7.5). Not used for entity placement directly. */
 export const DEFAULT_BATTLEFIELD_USABLE_REGION: BattlefieldUsableRegion = {
-  rowMin: 3,
-  rowMax: 8,
+  ...BATTLEFIELD_ROW_RANGE,
   columnMin: 0,
   columnMax: 12,
 }
+
+export function centerOfRegion(region: BattlefieldUsableRegion): GridPosition {
+  return {
+    row: Math.floor((region.rowMin + region.rowMax) / 2) as LaneIndex, // (3+8)/2 = 5
+    column: Math.floor((region.columnMin + region.columnMax) / 2), // enemy side: (7+12)/2 = 9
+  }
+}
 ```
 
-The rectangle is split in half for the two sides per the user's description ("chia 2 cho 2 bên") — this matches the existing left/right split already implicit in the engine (player fixed near `HERO_COLUMN = 1`, enemies occupy the rest of the region toward `columnMax`). No new "side" field is needed: `resolveEnemySpawnPosition()`'s existing boss/regular column-banding logic already roughly does this (boss/regular roll toward the far side from the player) — the plan should verify its current column band still makes sense inside `columnMin..columnMax = 0..12` and adjust the band's numbers, not invent a new halving mechanism.
+`HERO_COLUMN = 1` already falls inside `PLAYER_SIDE_REGION` (0–5) — no constant needs to move.
 
-Consumers, both constrained to roll/clamp within the region instead of the full grid:
-- `resolveEnemySpawnPosition()` (`EnemySpawnPlacement.ts`) — gains a `region` parameter (default `DEFAULT_BATTLEFIELD_USABLE_REGION`), random row/column rolled within it instead of `[0, GRID_ROW_COUNT)`/the fixed column band.
-- Player/party fixed position (§7) — `HERO_LANE_INDEX`/`HERO_COLUMN` become the DEFAULT formation anchor; if the real region excludes them once bounds are supplied, that's a follow-up constant change, not an architecture change.
+No change to `getChebyshevDistance()`, `entityGridPosition()`, `collectTurnTargets()`, `selectTarget()`, or any AoE shape logic — all keep operating on the full 10×16 coordinate space exactly as today. `NEUTRAL_DIVIDER_COLUMN` is purely a placement exclusion, not a targeting rule — an attack's range/AoE math can still "reach across" column 6 normally (e.g. a ranged skill hitting from column 5 to column 7 is unaffected); only spawn/preset placement avoids putting an entity ON column 6.
 
-No change to `getChebyshevDistance()`, `entityGridPosition()`, `collectTurnTargets()`, `selectTarget()`, or any AoE shape logic — all keep operating on the full 10×16 coordinate space exactly as today.
+## 7. Design — Enemy Placement (random within side + boss forced to center) and Player Placement (preset, future feature)
 
-## 7. Design — Multi-Player Rendering
+**Enemy side (`resolveEnemySpawnPosition()`, `EnemySpawnPlacement.ts`)** — changes from today's "boss always `HERO_LANE_INDEX`, regular enemies roll `[0, GRID_ROW_COUNT)`" to:
+- Regular enemies: row and column both randomized within `ENEMY_SIDE_REGION` (row 3–8, column 7–12).
+- Boss: forced to `centerOfRegion(ENEMY_SIDE_REGION)` = `{ row: 5, column: 9 }` — no longer aligned to the player's row (`HERO_LANE_INDEX`). This is a deliberate behavior change per the user's explicit "boss phải ở trung tâm" (center of the enemy box, not center of the whole battlefield or aligned to the player).
 
-New helper, mirroring `resolveEnemySpawnPosition()`'s shape:
+**Player/party side** — the user explicitly wants a dedicated, separately-designed feature ("một chức năng sắp thiết kế") for players to preset each party member's entry position before a fight — NOT an automatic formation algorithm. This spec does not design that feature; it only makes today's single-player placement data-driven instead of hardcoded, so that feature has something to plug into later:
 
 ```ts
-export function resolvePartyMemberPosition(
-  index: number,
-  region: BattlefieldUsableRegion = DEFAULT_BATTLEFIELD_USABLE_REGION,
-): GridPosition
+export interface PartyFormationSlot {
+  memberIndex: number
+  row: LaneIndex
+  column: number
+}
+
+// Placeholder default until the real preset-formation feature ships —
+// byte-identical to today's actual (and only) case.
+export const DEFAULT_PARTY_FORMATION: PartyFormationSlot[] = [
+  { memberIndex: 0, row: HERO_LANE_INDEX, column: HERO_COLUMN },
+]
 ```
 
-`index === 0` MUST return exactly `{ row: HERO_LANE_INDEX, column: HERO_COLUMN }` — today's real (and only) case, byte-identical to current behavior. `index >= 1` places additional members adjacent to the anchor within `region` (exact offset pattern is an implementation detail for the plan, not a gameplay-content decision — no real content uses it yet).
-
-`GameManager.buildTurnBattle()` changes from hardcoding `players: [playerParticipant]` to mapping over whatever party list it's given (today still always length 1 — this spec does not add multi-character content, only removes the hardcoded assumption from the rendering path). `CombatScene` renders exactly `snapshot.players.length` sprites (from §4's event), never assuming exactly one.
+`GameManager.buildTurnBattle()` changes from hardcoding `players: [playerParticipant]` (with the entity's row/x set elsewhere to `HERO_LANE_INDEX`/`HERO_COLUMN`) to reading each party member's row/x from a `PartyFormationSlot[]` list (today always `DEFAULT_PARTY_FORMATION`, length 1 — this spec does not add multi-character content or a formation-editing UI, only removes the hardcoded single-player assumption from the data path). `CombatScene` renders exactly `snapshot.players.length` sprites (from §4's event), never assuming exactly one.
 
 ## 7.5. Design — Screen Layout: Right-Side Skill Dock
 
@@ -181,4 +211,5 @@ This is a SCREEN-space change, independent of the grid-space change in §6 — t
 - `death` animation timing must coordinate with the existing win/loss check and reward-grant flow (`completeAction()`'s `battle.state = 'defeat'/'victory'` transition, `grantTurnBattleRewards`) so a dying entity's animation isn't cut off by an immediate state-driven cleanup.
 - Perspective-mode projection (`BattleGridProjection.ts`'s second `resize()` implementation, `PERSPECTIVE_SIDE_MARGIN`-based) has different horizontal math from flat mode — the plan must read it fresh and design its own `rightInset` handling, not assume flat mode's fix transfers directly.
 - The new skill dock is unconditionally visible during combat (no open/close toggle, unlike `RightPanel.vue`) — confirm this doesn't visually collide with `CombatAiPanel` (left corner) or `TurnOrderStrip`/`BattleLogPanel` (top/bottom-right per `CombatSceneOverlay.vue`'s existing layout) before finalizing the dock's exact placement/z-index.
-- Moving `resolveEnemySpawnPosition()`'s column band into `columnMin..columnMax = 0..12` may shrink the effective "approach distance" enemies travel before reaching the player compared to today's full 16-column band — acceptable per the region redesign's intent, but worth a quick playtest after implementation, not just a unit-test check.
+- Confining enemy spawn to `ENEMY_SIDE_REGION` (columns 7–12, was up to column 16 offscreen-to-visible) shrinks the effective "approach distance" enemies travel before reaching the player compared to today — acceptable per the region redesign's intent, but worth a quick playtest after implementation, not just a unit-test check. `SPAWN_COLUMN`/`VISIBLE_MAX_COLUMN` (`BattleGrid.ts:18-22`, used for the offscreen-entry visual) should be re-examined against the new region — the plan must check whether enemies still need an offscreen entry animation at all now that they spawn inside a much smaller, on-screen box, or whether that entry effect should be simplified/removed.
+- `EnemySpawnPlacement.test.ts` currently asserts the OLD behavior (boss at `HERO_LANE_INDEX`, regular enemies over the full `[0, GRID_ROW_COUNT)` band) — the plan must update these assertions to match `ENEMY_SIDE_REGION`/boss-at-center, not just add new tests alongside stale ones.
