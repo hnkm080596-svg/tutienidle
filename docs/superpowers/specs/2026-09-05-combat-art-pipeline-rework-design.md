@@ -166,23 +166,23 @@ No change to `getChebyshevDistance()`, `entityGridPosition()`, `collectTurnTarge
 - Regular enemies: row and column both randomized within `ENEMY_SIDE_REGION` (row 3–8, column 7–12).
 - Boss: forced to `centerOfRegion(ENEMY_SIDE_REGION)` = `{ row: 5, column: 9 }` — no longer aligned to the player's row (`HERO_LANE_INDEX`). This is a deliberate behavior change per the user's explicit "boss phải ở trung tâm" (center of the enemy box, not center of the whole battlefield or aligned to the player).
 
-**Player/party side** — the user explicitly wants a dedicated, separately-designed feature ("một chức năng sắp thiết kế") for players to preset each party member's entry position before a fight — NOT an automatic formation algorithm. This spec does not design that feature; it only makes today's single-player placement data-driven instead of hardcoded, so that feature has something to plug into later:
+**Player/party side** — the user explicitly wants a dedicated, separately-designed feature ("một chức năng sắp thiết kế") for players to preset each party member's entry position before a fight — NOT an automatic formation algorithm. This spec does not design that feature; it only makes today's single-player placement data-driven instead of hardcoded, so that feature has something to plug into later. **Superseded/finalized by `docs/superpowers/specs/2026-09-05-tran-phap-formation-system-design.md`** (written after this spec, once the preset feature was actually designed) — that spec is the source of truth for the real shape; it identifies combatants by `combatantId: string` (`'player'` or a companion's `definitionId`) rather than a numeric index, since the real feature mixes the player with companions, not just an ordered list of interchangeable "party members":
 
 ```ts
 export interface PartyFormationSlot {
-  memberIndex: number
+  combatantId: string // 'player' or a companion definitionId — see the Trận Pháp spec
   row: LaneIndex
   column: number
 }
 
-// Placeholder default until the real preset-formation feature ships —
+// Placeholder default until a player has ever configured a Trận Pháp —
 // byte-identical to today's actual (and only) case.
 export const DEFAULT_PARTY_FORMATION: PartyFormationSlot[] = [
-  { memberIndex: 0, row: HERO_LANE_INDEX, column: HERO_COLUMN },
+  { combatantId: 'player', row: HERO_LANE_INDEX, column: HERO_COLUMN },
 ]
 ```
 
-`GameManager.buildTurnBattle()` changes from hardcoding `players: [playerParticipant]` (with the entity's row/x set elsewhere to `HERO_LANE_INDEX`/`HERO_COLUMN`) to reading each party member's row/x from a `PartyFormationSlot[]` list (today always `DEFAULT_PARTY_FORMATION`, length 1 — this spec does not add multi-character content or a formation-editing UI, only removes the hardcoded single-player assumption from the data path). `CombatScene` renders exactly `snapshot.players.length` sprites (from §4's event), never assuming exactly one.
+`GameManager.buildTurnBattle()` changes from hardcoding `players: [playerParticipant]` (with the entity's row/x set elsewhere to `HERO_LANE_INDEX`/`HERO_COLUMN`) to reading each party member's row/x from a `PartyFormationSlot[]` list (today always `DEFAULT_PARTY_FORMATION`, length 1 until the Trận Pháp panel ships — this spec does not add multi-character content or the formation-editing UI itself, only removes the hardcoded single-player assumption from the data path). `CombatScene` renders exactly `snapshot.players.length` sprites (from §4's event), never assuming exactly one.
 
 ## 7.5. Design — Screen Layout: Right-Side Skill Dock
 
