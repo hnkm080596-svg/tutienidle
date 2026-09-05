@@ -234,7 +234,7 @@ Mọi CƠ CHẾ turn-based đã hoàn tất (engine + 3-skill + manual UI + prev
 
 | # | Việc | Loại | Tiên quyết |
 |---|---|---|---|
-| 1 | **Spawn/countdown VFX animation** — turn engine spawn đứng yên, không có telegraph/animation (player report 2026-09-05) | Feature mới (Phaser scene layer) | Không — làm được ngay, cần spec UI/animation |
+| 1 | **Action playback + VFX** — damage lúc VFX land, engine chờ presentation xong mới qua actor kế (plan ĐÃ CÓ: [2026-09-05-turn-combat-action-playback.md](../../docs/superpowers/plans/2026-09-05-turn-combat-action-playback.md), 8 task — giải quyết trực tiếp player report 2026-09-05) | Engine split + Phaser wiring (plan chi tiết sẵn) | Không — thực thi được ngay |
 | 2 | **Wire ReactionManager/SkillEffectSystem vào TurnBattleSystem** — reaction thật kích trong turn combat (dung_nham_burn/kiem_tran_burn definitions đã sẵn, call site swap) | Engine wiring lớn (spec riêng) | Không — nhưng cần thiết kế skill content thật trước |
 | 3 | **Skill content thật**: special/ultimate cho 8 build + Enemy.specialAttacks[] + hpRegenPerTurn pills/techniques mapping → TurnSkillDefinition/TurnBuffDefinition | Content data | Không — làm được ngay theo mẫu TurnBasicAttacks.ts |
 | 4 | **perfectClearTurnLimit cho stage content** — chip perfect_farm đang disabled (không stage nào có limit) | Content data (1 field/stage) | Không |
