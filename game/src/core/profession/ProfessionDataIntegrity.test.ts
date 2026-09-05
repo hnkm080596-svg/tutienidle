@@ -3,6 +3,8 @@
 // khớp nhau — lỗi authoring bị bắt ngay tại test.
 import { describe, expect, it } from 'vitest'
 import { materials } from '../../data/materials/materials'
+import { HERB_AGE_WEIGHTS } from '../production/ProductionBalance'
+import { HERB_AGES } from '../production/ProductionTypes'
 import {
   TERRITORY_THANH_VAN,
   THANH_VAN_FOREST_REWARDS,
@@ -38,6 +40,64 @@ describe('Du lieu nghe that trong repo (data-integrity gate)', () => {
     const result = validateProfessionMaterialCatalog(professionMaterials)
 
     expect(result.errors).toEqual([])
+  })
+
+  // gp123 6E (task C1): trục tuổi thống nhất 5 bậc — thuong_co là bậc
+  // trên cùng của Linh Thảo, dùng chung bảng nhãn chất (Thượng Cổ).
+  it('HERB_AGES du 5 bac ket thuc bang thuong_co', () => {
+    expect(HERB_AGES).toEqual(['decade', 'century', 'millennium', 'myriad_year', 'thuong_co'])
+  })
+
+  it('trong so tuoi thao giam dan: decade > ... > thuong_co', () => {
+    for (let index = 1; index < HERB_AGES.length; index++) {
+      const previous = HERB_AGE_WEIGHTS[HERB_AGES[index - 1]!]
+
+      const current = HERB_AGE_WEIGHTS[HERB_AGES[index]!]
+
+      expect(current).toBeLessThan(previous)
+    }
+
+    expect(HERB_AGE_WEIGHTS.thuong_co).toBe(2)
+  })
+
+  it('thao sinh du 5 bien the tuoi moi ho dan; ten dung nhan Thuong Co', () => {
+    for (const family of PILL_FAMILIES) {
+      for (const realmId of REALM_TIERS) {
+        for (const age of HERB_AGES) {
+          const id = `${family.herbId}_${realmId}_${age}`
+
+          const material = materials.find((entry) => entry.id === id)
+
+          expect(material, id).toBeDefined()
+
+          expect(material!.years).toBeGreaterThan(0)
+        }
+      }
+    }
+
+    const herbId = PILL_FAMILIES[0]!.herbId
+
+    const herbName = PILL_FAMILIES[0]!.herbName
+
+    // Nhãn tuổi theo bảng nhãn chất thống nhất (Thập Niên..Thượng Cổ) —
+    // không nhãn nào được tra ra undefined (regression guard).
+    const expectedNames: Record<string, string> = {
+      decade: 'Thập Niên',
+      century: 'Bách Niên',
+      millennium: 'Thiên Niên',
+      myriad_year: 'Vạn Niên',
+      thuong_co: 'Thượng Cổ',
+    }
+
+    for (const age of HERB_AGES) {
+      const material = materials.find((entry) => entry.id === `${herbId}_mortal_${age}`)
+
+      expect(material!.name).toBe(`${expectedNames[age]} ${herbName}`)
+    }
+
+    const thuongCo = materials.find((entry) => entry.id === `${herbId}_mortal_thuong_co`)
+
+    expect(thuongCo!.icon).toBe(`/assets/materials/herbs/${herbId}/thuong_co.png`)
   })
 
   it('Dia Gioi Thanh Van hop le: dung 1 Lam/Quang/Dong Thien + rewards phu 3 tier', () => {
@@ -97,7 +157,7 @@ describe('Du lieu nghe that trong repo (data-integrity gate)', () => {
     for (const material of materials) {
       if (material.category === 'herb') {
         expect(material.icon).toMatch(
-          /^\/assets\/materials\/herbs\/.+\/(decade|century|millennium|myriad_year)\.png$/,
+          /^\/assets\/materials\/herbs\/.+\/(decade|century|millennium|myriad_year|thuong_co)\.png$/,
         )
       } else if (material.category === 'wood') {
         expect(material.icon).toBe('/assets/materials/linh_moc.png')

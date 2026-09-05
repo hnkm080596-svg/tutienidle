@@ -50,7 +50,8 @@ describe('Economy simulation — yield → sink', () => {
     const herbs = materials.filter(material => material.category === 'herb')
     const legacyIds = ['linh_chi', 'que', 'cuc_hoa', 'linh_thao_chung', 'huyet_tham_decade']
 
-    expect(herbs).toHaveLength(8 * 9 * 4)
+    // 8 họ × 9 realm × 5 tuổi (gp123 6E C1: thêm thuong_co).
+    expect(herbs).toHaveLength(8 * 9 * 5)
     expect(legacyIds.every(id => !materials.some(material => material.id === id))).toBe(true)
   })
 

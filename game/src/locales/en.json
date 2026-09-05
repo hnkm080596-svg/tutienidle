@@ -326,7 +326,8 @@
           "decade": "Decade",
           "century": "Century",
           "millennium": "Millennium",
-          "myriadYear": "Myriad Year"
+          "myriadYear": "Myriad Year",
+          "thuongCo": "Primeval"
         },
         "realms": {
           "mortal": "Mortal",
@@ -850,7 +851,8 @@
         "decade": "Decade",
         "century": "Century",
         "millennium": "Millennium",
-        "myriadYear": "Myriad Year"
+        "myriadYear": "Myriad Year",
+        "thuongCo": "Primeval"
       },
       "quality": {
         "hoang": "Decade",

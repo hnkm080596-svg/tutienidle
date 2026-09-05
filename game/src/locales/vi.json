@@ -326,7 +326,8 @@
           "decade": "Thập Niên",
           "century": "Bách Niên",
           "millennium": "Thiên Niên",
-          "myriadYear": "Vạn Niên"
+          "myriadYear": "Vạn Niên",
+          "thuongCo": "Thượng Cổ"
         },
         "realms": {
           "mortal": "Phàm Nhân",
@@ -850,7 +851,8 @@
         "decade": "Thập Niên",
         "century": "Bách Niên",
         "millennium": "Thiên Niên",
-        "myriadYear": "Vạn Niên"
+        "myriadYear": "Vạn Niên",
+        "thuongCo": "Thượng Cổ"
       },
       "quality": {
         "hoang": "Thập Niên",

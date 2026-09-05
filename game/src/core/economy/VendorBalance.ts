@@ -21,12 +21,13 @@ export const VENDOR_SELLABLE_CATEGORIES = [
 
 export type VendorSellableCategory = (typeof VENDOR_SELLABLE_CATEGORIES)[number]
 
-/** Giá herb (hạ tương đương) theo biến thể niên đại. */
+/** Giá herb (hạ tương đương) theo biến thể niên đại — thuong_co bậc 6E. */
 export const VENDOR_HERB_PRICES: Record<string, number> = {
   decade: 2,
   century: 4,
   millennium: 8,
   myriad_year: 16,
+  thuong_co: 32,
 }
 
 /** Giá gỗ (hạ tương đương) theo phẩm. */

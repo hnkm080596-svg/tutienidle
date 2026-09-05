@@ -39,6 +39,7 @@ const AGE_LABEL_KEYS: Record<string, string> = {
   century: 'bag.filter.age.century',
   millennium: 'bag.filter.age.millennium',
   myriad_year: 'bag.filter.age.myriadYear',
+  thuong_co: 'bag.filter.age.thuongCo',
 }
 
 export function ageLabelKey(age: string | undefined): string | null {
@@ -87,6 +88,7 @@ export function ageRank(age: string | undefined): number {
     case 'century': return 1
     case 'millennium': return 2
     case 'myriad_year': return 3
+    case 'thuong_co': return 4
     default: return -1
   }
 }
@@ -133,6 +135,7 @@ const DATA_AGE_LABELS: Record<string, string> = {
   century: 'Bách Niên',
   millennium: 'Thiên Niên',
   myriad_year: 'Vạn Niên',
+  thuong_co: 'Thượng Cổ',
 }
 
 function dataAgeLabel(age: string, years: number | undefined): string | undefined {

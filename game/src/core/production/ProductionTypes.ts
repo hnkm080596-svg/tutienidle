@@ -26,17 +26,27 @@ export function isOreQuality(value: unknown): value is OreQuality {
   )
 }
 
-/** Niên đại Linh Thảo (plan §6.1). */
-export type HerbAge = 'decade' | 'century' | 'millennium' | 'myriad_year'
+/**
+ * Niên đại Linh Thảo (plan §6.1 + gp123 6E task C1) — trục tuổi 5 bậc:
+ * thuong_co là bậc trên cùng, trùng nhãn "Thượng Cổ" của hệ chất thống nhất.
+ */
+export type HerbAge = 'decade' | 'century' | 'millennium' | 'myriad_year' | 'thuong_co'
 
-export const HERB_AGES: readonly HerbAge[] = ['decade', 'century', 'millennium', 'myriad_year']
+export const HERB_AGES: readonly HerbAge[] = [
+  'decade',
+  'century',
+  'millennium',
+  'myriad_year',
+  'thuong_co',
+]
 
 export function isHerbAge(value: unknown): value is HerbAge {
   return (
     value === 'decade' ||
     value === 'century' ||
     value === 'millennium' ||
-    value === 'myriad_year'
+    value === 'myriad_year' ||
+    value === 'thuong_co'
   )
 }
 

@@ -91,6 +91,7 @@ const AGE_LABELS = computed<Record<string, string>>(() => ({
   century: t('panels.bag.tooltip.ages.century'),
   millennium: t('panels.bag.tooltip.ages.millennium'),
   myriad_year: t('panels.bag.tooltip.ages.myriadYear'),
+  thuong_co: t('panels.bag.tooltip.ages.thuongCo'),
 }))
 
 function buildTooltip(material: Material, owned: number): GradedItemTooltipContent {

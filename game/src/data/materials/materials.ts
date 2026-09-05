@@ -123,7 +123,7 @@ const legacyMaterials: Material[] = [
 // - Lâm: 3 gỗ `<realm>_wood` — xây/nâng công trình + nhiên liệu đan lò.
 // - Quáng: `<realm>_ore_<quality>` — sink Khí Đường (Cường Hóa/Tẩy
 //   Luyện), phẩm là metadata material.
-// - Động Thiên: mỗi đan phương một thảo riêng × 4 niên đại
+// - Động Thiên: mỗi đan phương một thảo riêng × 5 niên đại
 //   `<herbBase>_<age>` — sink Đan Phòng.
 // Tất cả sinh bằng generator để tránh author tay 66 entry lệch chuẩn;
 // tên hiển thị đặt TRẦN ở đây (không parse từ id).
@@ -168,6 +168,7 @@ const HERB_AGE_YEARS: Record<string, number> = {
   century: 100,
   millennium: 1000,
   myriad_year: 10000,
+  thuong_co: 100000,
 }
 
 function buildProfessionMaterials(): Material[] {
@@ -243,15 +244,21 @@ function buildProfessionMaterials(): Material[] {
 }
 
 function buildReworkPillHerbs(): Material[] {
-  const ages = ['decade', 'century', 'millennium', 'myriad_year'] as const
+  // gp123 6E (task C1): trục tuổi 5 bậc — thuong_co mở bậc "Thượng Cổ".
+  const ages = ['decade', 'century', 'millennium', 'myriad_year', 'thuong_co'] as const
 
-  // Nhãn tuổi thảo — dùng chung bảng nhãn chất (decade..myriad_year trùng
-  // key với 4 bậc đầu của gỗ/khoáng).
+  // Nhãn tuổi thảo — dùng bảng nhãn chất thống nhất. Ghi chú (C1): bảng
+  // cũ tra ORE_QUALITY_LABELS bằng KEY TUỔI (decade/century/…) trong khi
+  // bảng đó đánh chỉ số bằng KEY PHẨM (hoang..tien) → 3/4 nhãn là
+  // "undefined" tại runtime. Bảng nhãn tuổi giờ tự chứa đủ 5 nhãn
+  // (giống giá trị của ORE_QUALITY_LABELS); C2 sẽ gộp thành
+  // MATERIAL_AGE_LABELS dùng chung.
   const HERB_AGE_LABELS: Record<string, string> = {
-    decade: ORE_QUALITY_LABELS.decade!,
-    century: ORE_QUALITY_LABELS.century!,
-    millennium: ORE_QUALITY_LABELS.millennium!,
-    myriad_year: ORE_QUALITY_LABELS.thien!,
+    decade: 'Thập Niên',
+    century: 'Bách Niên',
+    millennium: 'Thiên Niên',
+    myriad_year: 'Vạn Niên',
+    thuong_co: 'Thượng Cổ',
   }
 
   return REALM_TIERS.flatMap((realmId) =>

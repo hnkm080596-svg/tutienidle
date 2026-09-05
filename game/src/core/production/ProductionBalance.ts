@@ -84,7 +84,7 @@ export const ORE_QUALITY_AMOUNTS: Record<OreQuality, number> = {
 
 // =========================
 // Linh Thảo (§6.1/§6.2): niên đại cao trọng số thấp; baseline
-// 55/28/12/5 là simulation khởi điểm (§13.4).
+// 55/28/12/5/2 là simulation khởi điểm (§13.4) — thuong_co siêu hiếm.
 // =========================
 
 export const HERB_AGE_WEIGHTS: Record<HerbAge, number> = {
@@ -92,6 +92,7 @@ export const HERB_AGE_WEIGHTS: Record<HerbAge, number> = {
   century: 28,
   millennium: 12,
   myriad_year: 5,
+  thuong_co: 2,
 }
 
 /** Tỷ lệ thành đan cơ sở theo niên đại (§6.2) — trước bonus Đan Phòng. */
@@ -100,6 +101,7 @@ export const HERB_AGE_BASE_SUCCESS_PERCENT: Record<HerbAge, number> = {
   century: 50,
   millennium: 75,
   myriad_year: 100,
+  thuong_co: 100,
 }
 
 /** Số thảo nhận được mỗi cycle Động Thiên (balance data). */
