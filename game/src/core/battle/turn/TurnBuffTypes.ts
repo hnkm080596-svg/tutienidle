@@ -38,6 +38,20 @@ export interface TurnOnHitProcEffect {
 }
 
 /**
+ * Action Playback Task 5 (2026-09-05) — reactive trigger: buff phản ứng
+ * theo sự kiện — 'onCastBegin' punish người cast (áp hard-CC block turn),
+ * 'onImpactLanded' counter trên target bị hit (queuesFollowUp = actor
+ * nhảy thẳng vào 'ready' ngay sau standby, bỏ qua idle gauge).
+ */
+export interface TurnReactiveTriggerEffect {
+  type: 'reactiveTrigger'
+  trigger: 'onCastBegin' | 'onImpactLanded'
+  chance: number
+  appliesDefinitionId?: string
+  queuesFollowUp?: boolean
+}
+
+/**
  * Future Systems Task 6 (2026-09-04) — haste/slow đẩy TRỰC TIẾP ATB: bắn
  * 1 LẦN tức thì lúc buff được áp (khác statModifier trên speed — hiệu ứng
  * liên tục), cộng/trừ % GAUGE_MAX vào actionGauge qua refundGauge() có
@@ -54,6 +68,7 @@ export type TurnBuffEffectTemplate =
   | TurnCcEffect
   | TurnOnHitProcEffect
   | TurnGaugeDeltaEffect
+  | TurnReactiveTriggerEffect
 
 // --- Runtime shapes (TurnBuff.effects) ---
 
@@ -66,7 +81,13 @@ export interface TurnDotEffect {
   poisonRootThresholdBonusPercent?: number
 }
 
-export type TurnBuffEffect = TurnStatModifierEffect | TurnDotEffect | TurnCcEffect | TurnOnHitProcEffect | TurnGaugeDeltaEffect
+export type TurnBuffEffect =
+  | TurnStatModifierEffect
+  | TurnDotEffect
+  | TurnCcEffect
+  | TurnOnHitProcEffect
+  | TurnGaugeDeltaEffect
+  | TurnReactiveTriggerEffect
 
 export interface TurnBuffDefinition {
   id: string

@@ -294,6 +294,22 @@ export class TurnBattleSystem {
       return null
     }
 
+    // Action Playback Task 5 — queued follow-up (counter/proc): actor này
+    // nhảy thẳng vào 'ready' ngay sau standby, BYPASS gauge (spec §4.5).
+    if (battle.queuedFollowUpActorId) {
+      const queuedId = battle.queuedFollowUpActorId
+
+      battle.queuedFollowUpActorId = undefined
+
+      const queued =
+        battle.players.find((member) => member.id === queuedId) ??
+        battle.enemies.find((enemy) => enemy.id === queuedId)
+
+      if (queued && queued.alive) {
+        return queued
+      }
+    }
+
     const allParticipants = [...battle.players, ...battle.enemies]
 
     for (const participant of allParticipants) {
@@ -371,6 +387,13 @@ export class TurnBattleSystem {
         actor.chargingTurnsRemaining = undefined
         chargeResolved = true
       }
+    }
+
+    // Action Playback Task 5 — onCastBegin reactive trigger TRƯỚC CC-check:
+    // punish-on-cast áp hard-CC buff lên actor, CC-check kế tiếp đọc state
+    // mới → ccBlocked đúng theo spec §4.2 ordering.
+    if (this.registry) {
+      actorBuffSystem.rollReactiveTrigger(actor.entity, 'onCastBegin', this.registry)
     }
 
     // CC check TRƯỚC tick: buff stun/freeze duration=N phải block đúng N
@@ -574,6 +597,14 @@ export class TurnBattleSystem {
 
           if (this.registry) {
             new TurnBuffSystem(actor.buffs).rollOnHitEffects(actor.entity, target.entity, this.registry)
+
+            // Action Playback Task 5 — onImpactLanded counter trigger trên
+            // TARGET bị hit; queuesFollowUp → battle.queuedFollowUpActorId.
+            const { firedFollowUp } = new TurnBuffSystem(target.buffs).rollReactiveTrigger(target.entity, 'onImpactLanded', this.registry)
+
+            if (firedFollowUp) {
+              battle.queuedFollowUpActorId = target.id
+            }
           }
         }
       }
