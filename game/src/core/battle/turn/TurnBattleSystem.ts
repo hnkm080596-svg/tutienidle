@@ -451,13 +451,9 @@ export class TurnBattleSystem {
           if (primaryTarget) {
             const affected = collectTurnTargets(primaryTarget, opposingSide, chargedSkill.targeting)
 
-            const suddenDeathMultiplier = this.suddenDeathDamageMultiplier(battle.totalTurnsElapsed ?? 0)
-            const chargedDamage = suddenDeathMultiplier === 1
-              ? chargedSkill.damage
-              : scaleActionDamage(chargedSkill.damage, suddenDeathMultiplier)
-
-            // Action Playback Task 3 — DEFERRED: damage apply tại
-            // applyActionImpact (capture picks thay vì resolve ngay).
+            // Defect Task 8 (2026-09-05): damage tính lại ở applyActionImpact()
+            // (đọc declared.chargedSkill + totalTurnsElapsed độc lập) — không
+            // cần tính trùng ở đây.
             chargeTargetIds = affected.filter((target) => target.entity.alive).map((target) => target.id)
             chargedSkillCaptured = chargedSkill
           }
