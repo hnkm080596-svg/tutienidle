@@ -148,7 +148,7 @@ describe('TurnBuffSystem — reactiveTrigger effect', () => {
     const { targetIds } = system.applyActionImpact(battle, declared)
 
     expect(targetIds).toEqual(['enemy'])
-    expect(battle.queuedFollowUpActorId).toBe('enemy')
+    expect(battle.queuedFollowUpActorIds).toEqual(['enemy'])
   })
 
   it('chance=0 không bao giờ fire', () => {
@@ -167,7 +167,7 @@ describe('TurnBuffSystem — reactiveTrigger effect', () => {
     const declared = system.declareActorAction(battle, actor)
     system.applyActionImpact(battle, declared)
 
-    expect(battle.queuedFollowUpActorId).toBeUndefined()
+    expect(battle.queuedFollowUpActorIds).toBeUndefined()
   })
 
   it('queuedFollowUpActorId → peekNextActor lần KẾ trả actor đó trực tiếp (bypass gauge)', () => {
@@ -175,18 +175,22 @@ describe('TurnBuffSystem — reactiveTrigger effect', () => {
 
     const actor = system.peekNextActor(battle)!
     const declared = system.declareActorAction(battle, actor)
-    system.applyActionImpact(battle, declared)
-    system.completeAction(battle, actor, declared, targetIdsHelper(declared, battle, system))
+    const { targetIds } = system.applyActionImpact(battle, declared)
+    system.completeAction(battle, actor, declared, targetIds)
 
-    expect(battle.queuedFollowUpActorId).toBe('enemy')
+    expect(battle.queuedFollowUpActorIds).toEqual(['enemy'])
 
     const next = system.peekNextActor(battle)
 
     expect(next?.id).toBe('enemy')
-    expect(battle.queuedFollowUpActorId).toBeUndefined()
+    expect(battle.queuedFollowUpActorIds).toBeUndefined()
   })
 })
 
+// Defect-fix Task 1 — helper cũ chạy applyActionImpact lần 2 (re-apply →
+// push queue 2 entry). Đã inline tại call site, helper giữ chỉ để không
+// vỡ signature cũ nếu test khác tham chiếu.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function targetIdsHelper(
   declared: Parameters<TurnBattleSystem['applyActionImpact']>[1],
   battle: TurnBattle,
