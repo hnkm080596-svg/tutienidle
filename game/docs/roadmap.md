@@ -487,6 +487,36 @@ Dựng các primitive thuần (pure function), test riêng, KHÔNG đụng `Batt
 - Gap "Slice 7 UI xây trước Party": thêm Task 10 vào Future Systems plan (chạy cùng phiên Task 9) — đã merge.
 - Placeholder cần 1 lượt tune sau khi cơ chế chạy: Reaction Path ultimate %/số lượt; Bạt Kiếm Thuật `chargeTurns` + hệ số (đối chiếu `BattleSystem.batKiem.test.ts` legacy trước khi bịa số); 3 skill/hành của Node Tree (quyết định lúc thực thi, ghi commit message).
 
+### 9.7. Combat Art Pipeline rework — Part A SHIPPED (2026-09-05, verify 2026-09-06)
+
+Plan: [`2026-09-05-combat-art-roster-tranphap.md`](../../docs/superpowers/plans/2026-09-05-combat-art-roster-tranphap.md) · Spec: [`2026-09-05-combat-art-pipeline-rework-design.md`](../../docs/superpowers/specs/2026-09-05-combat-art-pipeline-rework-design.md).
+
+Part A (Tasks 1–9.5, 22 commits) 🟢 **XONG** — verify Task 9.9 (2026-09-06):
+
+- Battlefield: 2 hộp 6×6 trái/phải (cột 6 là dải phân cách), enemy spawn giới hạn trong hộp địch, boss spawn đúng tâm hộp + luôn đấu solo (1 enemy/stage boss).
+- Player spawn theo formation data (không còn hardcode).
+- **Fix cốt lõi:** combat art render live trở lại qua event `turn_battle_entity_snapshot` (bắn mỗi fixed step) thay bridge `positions` đã chết của engine real-time cũ.
+- Skill UI dời vào dock mép phải (`CombatSkillDockPanel.vue`); Phaser projection chừa chỗ cho dock.
+- Sprite-sheet animation thật (idle/ready/cast/standby/death) qua Phaser AnimationManager — hiện là placeholder 1-frame, chờ content drop thật; death chờ animation xong mới remove sprite.
+- Boss render ×2 kích thước quái thường (×4 nguồn art).
+
+**Gate tự động (2026-09-06):**
+- `npm run type-check` — sạch (vue-tsc --build, 0 lỗi).
+- `npx vitest run` — **413 file / 2651 test PASS**, khớp baseline.
+- `npx playwright test` (7 spec, 10 test) — **4 pass / 6 fail**. 3/6 fail (`combat-overlay-layout.spec.ts` cả 3 viewport) là `.combat-skill-dock-panel` không kịp mount trong 5s khi 6 spec chạy song song (nghi ngờ CPU contention — chạy đơn lẻ dock mount ngay lập tức, xem defect bên dưới). **3/6 fail còn lại là defect thật, không phải flake.**
+
+**🔴 DEFECT THẬT PHÁT HIỆN KHI PLAYTEST (chưa fix — theo đúng chỉ thị Task 9.9, không tự sửa):**
+
+Trận đấu **treo vĩnh viễn ở màn hình đếm ngược "Xuất Trận!"**, không bao giờ chuyển sang `state: 'fighting'`, khi chạy qua **browser thật với wall-clock timer thật** (Playwright headed/headless Chromium) — dù `npx vitest run` (headless, gọi thẳng `BattleSystem`/`TurnBattleSystem`, không qua vòng lặp `setInterval` thật của `App.vue`) vẫn xanh 100%. Verify độc lập 2 lần: (1) `npx playwright test` chính thức — `create-to-combat.spec.ts`, `save-reload.spec.ts`, `turn-combat-hud.spec.ts` đều timeout (120–210s) chờ `.combat-victory-panel`/`.combat-defeat-panel`; (2) script Playwright thủ công riêng (1 instance, không chạy song song) — treo y hệt ở "Xuất Trận!" sau 30s+ theo dõi, không có exception nào trong console.
+
+Nghi vấn cao nhất: `PresentationGate` (Defect Task 3, `src/core/battle/turn/PresentationGate.ts`) + wiring `setPresentationActive(true)` từ `CombatScene.subscribeCombatEvents()` (`src/game/scenes/CombatScene.ts:1415`, gọi qua optional-chaining `this.gameManagerRef?.setPresentationActive(true)` — nếu `registry.get('gameManager')` sai key/undefined thì no-op ÊM, không throw). Nếu `markReady()` không bao giờ chạy, `GameManager.updateBattleFixedStep()` (dòng ~3585) mãi mãi không gọi `tickCountdown()` vì `presentationGate.isBlocking()` luôn true — safety-net 15s (tính từ `expectPresentationLayer()` gọi ở **module-scope App.vue lúc page load**, KHÔNG phải lúc battle start) lẽ ra phải trôi qua nhưng thực tế không thấy trận nhúc nhích sau 30–50s kể từ page load. Cần điều tra thêm bằng cách nào `setPresentationActive(true)` thực sự có chạy hay không (thêm log tạm/breakpoint) — **chưa xác định được root cause chính xác, chỉ xác định được TRIỆU CHỨNG và khu vực nghi vấn**.
+
+Hệ quả: **không thể playtest trực quan** phần lớn nội dung Task 9.9 yêu cầu (sprite sống động giữa trận, boss to gấp đôi, 3 concern layout dock/TopBar/BattleLogPanel/TurnOrderStrip khi đang fighting) — chỉ chụp được màn hình đếm ngược đứng yên. 3 câu hỏi layout (dock che TopBar counter phải / che BattleLogPanel / TurnOrderStrip đè lên dock) được xác nhận **bằng đọc code CSS** (không phải bằng mắt lúc fighting): cả 3 đều **CÓ xảy ra** theo cấu trúc `position/z-index` hiện tại (`CombatSkillDockPanel.vue` `top:0/right:0/bottom:0/z-index:12` che `.combat-top-bar` phần bên phải + `BattleLogPanel.vue` (`right:8px/bottom:8px`, không z-index → nằm dưới dock theo stacking); `TurnOrderStrip` (`top:60px`, full-width, cùng z-index:12, DOM sau dock) đè lên phần trên của dock).
+
+Screenshots: `.superpowers/sdd/2026-09-05-combat-art-roster-tranphap/screenshots/` (không commit — scratch, git-ignored).
+
+**Chưa bắt đầu:** Part B (`COMPANIONS` — companion roster) và Part C (`TRAN_PHAP_FORMATIONS`) của plan — theo đúng phạm vi Task 9.9 (chỉ verify Part A).
+
 ---
 
 ## 10. Ghi chú / Đề xuất / Rủi ro merge (cập nhật khi gộp roadmap 2026-09-05)
