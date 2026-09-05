@@ -245,9 +245,15 @@ class FlatGridProjection implements BattleGridProjection {
       this.viewport.height - this.viewport.topInset - this.viewport.bottomInset,
     )
 
-    this.cellSizePx = Math.min(
-      (availableWidth - 24) / GRID_COLUMN_COUNT,
-      availableHeight / GRID_ROW_COUNT,
+    // Clamp dưới 1px: availableWidth - 24 có thể ÂM khi rightInset rộng
+    // + viewport hẹp (dock chiếm gần hết bề ngang) — nếu không chặn, số
+    // âm này thắng Math.min trước số dương của chiều cao, cellSizePx ra
+    // âm và gridToScreen() đảo ngược trục x (cột tăng → x giảm) thay vì
+    // co lưới lại một cách hợp lý. Đồng bộ pattern Math.max(1, ...) đã
+    // dùng ở nhánh perspective (xem nearWidth bên dưới).
+    this.cellSizePx = Math.max(
+      1,
+      Math.min((availableWidth - 24) / GRID_COLUMN_COUNT, availableHeight / GRID_ROW_COUNT),
     )
     this.gridLeft = availableWidth / 2 - (this.cellSizePx * GRID_COLUMN_COUNT) / 2
     this.gridTop = this.viewport.topInset + (availableHeight - this.cellSizePx * GRID_ROW_COUNT) / 2
@@ -302,7 +308,10 @@ class FlatGridProjection implements BattleGridProjection {
       top: this.gridTop,
       right: this.gridLeft + this.cellSizePx * GRID_COLUMN_COUNT,
       bottom: this.gridTop + this.cellSizePx * GRID_ROW_COUNT,
-      centerX: this.viewport.width / 2,
+      // rightInset-aware: tâm của chính khoảng [left, right] đã bị co/dịch
+      // ở trên — KHÔNG dùng viewport.width/2 (bỏ qua rightInset), khớp
+      // pattern derive-từ-centerX đã đúng ở PerspectiveGridProjection.
+      centerX: this.gridLeft + (this.cellSizePx * GRID_COLUMN_COUNT) / 2,
     }
   }
 }

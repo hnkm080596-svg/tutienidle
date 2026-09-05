@@ -299,9 +299,18 @@ describe('rightInset — reserves screen space on the right without changing hei
 
     expect(boundsWithInset.right).toBeLessThanOrEqual(1600 - 400)
     expect(boundsWithInset.right).toBeLessThan(boundsNoInset.right)
+
+    // bounds().centerX phải phản ánh khoảng [left, right] ĐÃ co/dịch —
+    // KHÔNG được báo tâm full-viewport (regression Important #1: centerX
+    // trước đây tính thẳng từ viewport.width, bỏ qua rightInset).
+    expect(boundsWithInset.centerX).toBeCloseTo(
+      (boundsWithInset.left + boundsWithInset.right) / 2,
+      9,
+    )
+    expect(boundsWithInset.centerX).toBeLessThan(boundsNoInset.centerX)
   })
 
-  it('perspective mode: centerX shifts left when rightInset is set', () => {
+  it('perspective mode: centerX shifts left AND nearWidth narrows when rightInset is set', () => {
     const noInset = createBattleGridProjection('perspective', { width: 1600, height: 900, topInset: 0, bottomInset: 0, rightInset: 0 })
     const withInset = createBattleGridProjection('perspective', { width: 1600, height: 900, topInset: 0, bottomInset: 0, rightInset: 400 })
 
@@ -309,6 +318,35 @@ describe('rightInset — reserves screen space on the right without changing hei
     const pointWithInset = withInset.gridToScreen(9, 8)
 
     expect(pointWithInset.x).toBeLessThan(pointNoInset.x)
+
+    // Important #3: điểm giữa lệch KHÔNG chứng minh nearWidth co lại — chỉ
+    // cần centerX dịch trái đã đủ làm x giảm ở cột 8/16 (hệ số +0.03125).
+    // Đo SẢI NGANG giữa 2 cột biên (0 và 15) cùng hàng: nếu chỉ centerX
+    // dịch mà nearWidth KHÔNG co (regression giả định trong review), span
+    // này giữ nguyên. Phải THU HẸP thật sự khi rightInset có mặt.
+    const spanNoInset = Math.abs(
+      noInset.gridToScreen(GRID_ROW_COUNT - 1, GRID_COLUMN_COUNT - 1).x -
+        noInset.gridToScreen(GRID_ROW_COUNT - 1, 0).x,
+    )
+    const spanWithInset = Math.abs(
+      withInset.gridToScreen(GRID_ROW_COUNT - 1, GRID_COLUMN_COUNT - 1).x -
+        withInset.gridToScreen(GRID_ROW_COUNT - 1, 0).x,
+    )
+
+    expect(spanWithInset).toBeLessThan(spanNoInset)
+
+    // Khớp chính xác công thức kỳ vọng: nearWidth = availableWidth - 2*margin,
+    // span đo ở row GRID_ROW_COUNT-1 nên còn nhân thêm scale(v=0.95) — chưa
+    // = 1 (chỉ = 1 đúng tại mép dưới band v=1, xem test "foot anchor" phía
+    // trên) — phải nhân đúng hệ số scale mới khớp gridToScreen thật.
+    const q = 1 + PERSPECTIVE_STRENGTH
+    const v = (GRID_ROW_COUNT - 1 + 0.5) / GRID_ROW_COUNT
+    const scaleAtNearRow = 1 / (q + (1 - q) * v) ** 2
+    const expectedNearWidthWithInset = 1600 - 400 - PERSPECTIVE_SIDE_MARGIN * 2
+    const expectedSpanWithInset =
+      (expectedNearWidthWithInset * scaleAtNearRow * (GRID_COLUMN_COUNT - 1)) / GRID_COLUMN_COUNT
+
+    expect(spanWithInset).toBeCloseTo(expectedSpanWithInset, 6)
   })
 
   it('defaults rightInset to 0 when omitted (backward compatible)', () => {
@@ -316,6 +354,81 @@ describe('rightInset — reserves screen space on the right without changing hei
     const explicitZero = createBattleGridProjection('flat', { width: 1600, height: 900, topInset: 0, bottomInset: 0, rightInset: 0 })
 
     expect(withDefault.bounds()).toEqual(explicitZero.bounds())
+  })
+})
+
+describe('degenerate rightInset — width khả dụng gần/bằng 0 vẫn ra hình học hợp lệ', () => {
+  it('flat: rightInset gần bằng viewport width vẫn cho cellSizePx dương, hữu hạn', () => {
+    // availableWidth = 1600 - 1590 = 10 < 24 ⇒ (availableWidth - 24) ÂM
+    // trước khi có clamp Math.max(1, ...) (Important #2) — cellSizePx sẽ
+    // ra âm và đảo trục x thay vì co lưới hợp lý.
+    const projection = createBattleGridProjection('flat', {
+      width: 1600,
+      height: 900,
+      topInset: 0,
+      bottomInset: 0,
+      rightInset: 1590,
+    })
+    const cell = projection.cellSizeAt(0)
+
+    expect(cell.width).toBeGreaterThan(0)
+    expect(Number.isFinite(cell.width)).toBe(true)
+    expect(cell.height).toBeGreaterThan(0)
+    expect(Number.isFinite(cell.height)).toBe(true)
+
+    // Trục x KHÔNG được đảo ngược: cột tăng ⇒ x phải tăng (hoặc giữ
+    // nguyên ở size sàn 1px), không bao giờ giảm.
+    const left = projection.gridToScreen(0, 0)
+    const right = projection.gridToScreen(0, GRID_COLUMN_COUNT - 1)
+
+    expect(right.x).toBeGreaterThanOrEqual(left.x)
+
+    const bounds = projection.bounds()
+
+    expect(Number.isFinite(bounds.left)).toBe(true)
+    expect(Number.isFinite(bounds.right)).toBe(true)
+    expect(bounds.right).toBeGreaterThanOrEqual(bounds.left)
+  })
+
+  it('perspective: rightInset gần bằng viewport width vẫn cho nearWidth dương, hữu hạn', () => {
+    const projection = createBattleGridProjection('perspective', {
+      width: 1600,
+      height: 900,
+      topInset: 0,
+      bottomInset: 0,
+      rightInset: 1590,
+    })
+    const cell = projection.cellSizeAt(GRID_ROW_COUNT - 1)
+
+    expect(cell.width).toBeGreaterThan(0)
+    expect(Number.isFinite(cell.width)).toBe(true)
+    expect(cell.height).toBeGreaterThan(0)
+    expect(Number.isFinite(cell.height)).toBe(true)
+
+    const left = projection.gridToScreen(GRID_ROW_COUNT - 1, 0)
+    const right = projection.gridToScreen(GRID_ROW_COUNT - 1, GRID_COLUMN_COUNT - 1)
+
+    expect(right.x).toBeGreaterThanOrEqual(left.x)
+
+    const bounds = projection.bounds()
+
+    expect(Number.isFinite(bounds.left)).toBe(true)
+    expect(Number.isFinite(bounds.right)).toBe(true)
+    expect(bounds.right).toBeGreaterThanOrEqual(bounds.left)
+  })
+
+  it('flat: rightInset == viewport width (availableWidth = 0) không throw và vẫn dương', () => {
+    const projection = createBattleGridProjection('flat', {
+      width: 1600,
+      height: 900,
+      topInset: 0,
+      bottomInset: 0,
+      rightInset: 1600,
+    })
+    const cell = projection.cellSizeAt(0)
+
+    expect(cell.width).toBeGreaterThan(0)
+    expect(Number.isFinite(cell.width)).toBe(true)
   })
 })
 
