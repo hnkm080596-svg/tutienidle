@@ -2573,9 +2573,19 @@ export class GameManager {
         const actor = this.pendingReadyActor
         this.pendingReadyActor = null
 
-        const declared = this.turnBattleSystem.declareActorAction(this.turnBattle, actor)
-        const { targetIds } = this.turnBattleSystem.applyActionImpact(this.turnBattle, declared)
-        this.turnBattleSystem.completeAction(this.turnBattle, actor, declared, targetIds)
+        // Defect Task 4 (2026-09-05) — manual player ở ready-phase KHÔNG
+        // được auto-resolve bằng AI khi rời scene: chuyển vào
+        // awaitedManualActor giữ choice chờ submitTurnChoice (cùng nhánh
+        // với acknowledgeTurnReady()).
+        const isManualActor = this.battleManualMode && this.turnBattle.players.includes(actor)
+
+        if (isManualActor) {
+          this.awaitedManualActor = actor
+        } else {
+          const declared = this.turnBattleSystem.declareActorAction(this.turnBattle, actor)
+          const { targetIds } = this.turnBattleSystem.applyActionImpact(this.turnBattle, declared)
+          this.turnBattleSystem.completeAction(this.turnBattle, actor, declared, targetIds)
+        }
       } else if (this.pendingDeclaredAction && this.turnBattle) {
         const { actor, declared } = this.pendingDeclaredAction
         this.pendingDeclaredAction = null
