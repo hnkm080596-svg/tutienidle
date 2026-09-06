@@ -542,6 +542,21 @@ Fix cấu trúc: `bootGame()` trong `useAppLifecycle.ts` TỰ gọi `startTickLo
 
 **Toàn bộ 3 phần (Combat Art Pipeline, Companion Roster, Trận Pháp) đã shipped ở mức cơ chế.** `COMPANIONS`/`TRAN_PHAP_FORMATIONS` vẫn là mảng rỗng — nội dung roster/trận pháp thật là các content pass riêng, chưa làm trong phạm vi plan này.
 
+### 9.9. Hỗn Độn Trận visual test tooling — SHIPPED (2026-09-06)
+
+Bịt nốt lỗ hổng ghi ở cuối mục 9.8 (dòng "cần playtest trực quan thật khi có nội dung Trận Pháp đầu tiên"): `COMPANIONS`/`TRAN_PHAP_FORMATIONS` rỗng nên tới lúc đó chưa ai từng NHÌN THẤY cơ chế Trận Pháp/Companion Roster chạy thật trên màn hình. Plan: [`2026-09-06-hon-don-tran-visual-test.md`](../../docs/superpowers/plans/2026-09-06-hon-don-tran-visual-test.md), spec cùng ngày. 6 task, tất cả đã merge:
+
+- **Task 1** — placeholder spritesheet 32-frame dùng chung toàn cục thay `buildPlaceholderAnimationSet()` (1 frame tĩnh cũ), áp dụng cho **MỌI** combat entity không phân biệt test hay thật. **Hệ quả chủ đích (không phải regression):** trận đấu thật (`CombatScene`) từ nay cũng hiện sprite animate đánh số 0→31 thay vì ảnh tĩnh đứng yên, cho tới khi có sprite-sheet nghệ thuật thật thay thế.
+- **Task 2** — formation `hon_don_tran` (36/36 ô, phủ toàn bộ lưới 6×6) + 1 buff test-only đi kèm, thêm vào `TRAN_PHAP_FORMATIONS` (trước đó rỗng).
+- **Task 3** — 5 companion test-only `test_companion_1`..`test_companion_5` (grade `hoang`), thêm vào `COMPANIONS` (trước đó rỗng).
+- **Task 4** — `TranPhapPreviewScene`: scene Phaser lưới 6×6 phẳng, tự vẽ sprite animate tại từng ô đã gán.
+- **Task 5** — wire scene đó vào `TranPhapPanel.vue`, vẽ NGAY DƯỚI lưới CSS kéo-thả cũ (thuần hiển thị, không phải drop target — logic D&D 100% giữ nguyên).
+- **Task 6 (mục này)** — verify cuối: full suite xanh (428 file / 2744 test), `type-check` sạch, `EnemySpawnPlacement.ts` xác nhận **0 dòng diff** (Non-Goal "enemy spawn không đổi" giữ vững), playtest trực quan thật qua Playwright (msedge) — chọn Hỗn Độn Trận, xác nhận 36/36 ô sáng, kéo player + 3/5 companion test vào ô, sprite hiện đúng ô và animate thật (frame số đổi 5→21 trong ~1s, có ảnh chụp màn hình đối chiếu), 0 console error, đóng/mở lại panel không leak canvas/không duplicate `Phaser.Game` (đếm DOM: luôn đúng 1 `<canvas>`). Vào 1 trận Động 1 thật xác nhận lại side-effect Task 1 (enemy "Tinh Anh Sơn Khấu" animate đánh số y hệt).
+
+**TEST-ONLY, sẽ bị thay/xóa khi có nội dung thật:** `hon_don_tran` (và buff kèm theo), 5 `test_companion_*`, cùng cách chúng lấp đầy `TRAN_PHAP_FORMATIONS`/`COMPANIONS` chỉ để có dữ liệu bấm-thử — content pass thật (trận pháp/companion thật) sẽ thay thế toàn bộ, không phải bổ sung thêm. Sprite-sheet placeholder toàn cục của Task 1 cũng tạm thời — vẫn hiện diện ở CẢ trận thật lẫn panel test cho tới khi có art thật.
+
+**Quyết định Asset Manifest (không phải thiếu sót):** `game/public/assets/characters/placeholder/combat-anim-32frame.png` **không** được thêm vào Asset Manifest tracking Artifact, theo đúng tiền lệ `scripts/generate-vendor-placeholder-art.mjs` (asset placeholder/tạm cũng không được manifest hoá) — cả hai đều là art tạm sẽ bị xoá/thay khi có nội dung thật nên không đáng để theo dõi trong manifest sống.
+
 ---
 
 ## 10. Ghi chú / Đề xuất / Rủi ro merge (cập nhật khi gộp roadmap 2026-09-05)
