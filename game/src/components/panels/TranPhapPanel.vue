@@ -22,6 +22,12 @@ import type { TranPhapDefinition } from '@/data/formation/TranPhap'
 import type { FormationSlotAssignment } from '@/core/player/Player'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import { PREVIEW_CELL_SIZE, PREVIEW_GRID_SIZE } from '@/game/scenes/TranPhapCombatPreviewScene'
+// Battlefield Perspective Panel (2026-09-06) — canvas Phaser to hơn kích
+// thước lưới thuần (PREVIEW_CELL_SIZE * PREVIEW_GRID_SIZE = 360x360) để có
+// không gian thể hiện chiều sâu phối cảnh (xem spec §3). Không đổi CSS
+// layout của formation cards/roster queue xung quanh — chỉ canvas Phaser.
+const PANEL_CANVAS_WIDTH = 420
+const PANEL_CANVAS_HEIGHT = 480
 import type { TranPhapCombatPreviewScene } from '@/game/scenes/TranPhapCombatPreviewScene'
 import type { SlotState } from '@/game/support/SlotState'
 
@@ -209,8 +215,8 @@ watch(
       previewGame = new Phaser.Game({
         type: Phaser.AUTO,
         parent: previewContainerRef.value,
-        width: PREVIEW_CELL_SIZE * PREVIEW_GRID_SIZE,
-        height: PREVIEW_CELL_SIZE * PREVIEW_GRID_SIZE,
+        width: PANEL_CANVAS_WIDTH,
+        height: PANEL_CANVAS_HEIGHT,
         transparent: true,
         scene: [TranPhapCombatPreviewSceneClass],
       })
