@@ -17,6 +17,13 @@ import { bootToGuestHome, createCharacterThroughUi, enterHome } from './helpers'
  * thể không kịp render trước khi trận xong — assertion chấp nhận b HEẾ
  * slot HUD (render ngay khi battle mount) thay vì bar (cần fighting state
  * render window).
+ *
+ * Outcome (fix round 1, freeze-fix review, 2026-09-06): trận Tầng 1 CÓ
+ * THỂ kết thúc Thắng hoặc Thua (giống create-to-combat.spec.ts đã ghi
+ * nhận từ 2026-08-29 — nhân vật phàm nhân mới tạo trên Tầng 1 thường
+ * Thua sau ~100s). Assertion chấp nhận cả 2 kết quả — chỉ khẳng định
+ * trận ĐÃ kết thúc (result panel hiện) + HUD hoạt động đúng, không còn
+ * giả định "luôn Thắng" (gate flaky trước đây).
  */
 test.describe('Slice 7 — turn combat HUD', () => {
   test('battle runs, combat slots render, legacy controls gone, refight works', async ({ page }) => {
@@ -40,17 +47,24 @@ test.describe('Slice 7 — turn combat HUD', () => {
     await expect(startButton).toBeEnabled({ timeout: 10_000 })
     await startButton.click()
 
-    // Battle 1 runs to a result panel (victory expected on stage 1).
+    // Battle 1 runs to a result panel (victory OR defeat — stage 1 can
+    // legitimately end either way, see note above).
     const victory = page.locator('.combat-victory-panel')
-    await expect(victory).toBeVisible({ timeout: 120_000 })
+    const defeat = page.locator('.combat-defeat-panel')
+    await expect(victory.or(defeat)).toBeVisible({ timeout: 120_000 })
 
     // Legacy Kiếm Tu controls must be GONE (retired in Task 7).
     await expect(page.locator('.kiem-tu-combat-hud__ult')).toHaveCount(0)
     await expect(page.getByText('Nhịp Tụ Lực')).toHaveCount(0)
 
-    // Refight — regression guard for the StageManager-release fix.
-    await page.locator('.combat-victory-panel__retry').click()
-    await expect(victory).toBeHidden({ timeout: 15_000 })
+    // Refight — regression guard for the StageManager-release fix. Both
+    // outcome panels have a `__retry` button (same class suffix) — click
+    // whichever is visible.
+    const retryButton = (await victory.isVisible())
+      ? page.locator('.combat-victory-panel__retry')
+      : page.locator('.combat-defeat-panel__retry')
+    await retryButton.click()
+    await expect(victory.or(defeat)).toBeHidden({ timeout: 15_000 })
 
     // During battle 2, scan for combat skill slots (HUD mounts with the
     // battle — independent of the fast fighting window).
@@ -67,7 +81,7 @@ test.describe('Slice 7 — turn combat HUD', () => {
         break
       }
 
-      if ((await victory.isVisible().catch(() => false)) === true) {
+      if ((await victory.isVisible().catch(() => false)) === true || (await defeat.isVisible().catch(() => false)) === true) {
         break
       }
 
@@ -77,7 +91,7 @@ test.describe('Slice 7 — turn combat HUD', () => {
     expect(sawSlot, 'Ít nhất 1 combat skill slot phải render trong trận 2').toBe(true)
 
     // Battle 2 eventually resolves (no crash, no error screen).
-    await expect(victory.or(page.locator('.combat-defeat-panel'))).toBeVisible({
+    await expect(victory.or(defeat)).toBeVisible({
       timeout: 120_000,
     })
 
