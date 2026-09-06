@@ -137,7 +137,7 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
       description: '',
       floor: 10,
       enemyPool: [{ enemyId: 'mvp_test_mob', weight: 1 }],
-      totalEnemyCount: 2,
+      totalEnemyCount: 2, waves: [2],
       spawnIntervalSeconds: 0.1,
       bossEnemyId: 'mvp_test_boss',
     }

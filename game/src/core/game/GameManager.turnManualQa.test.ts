@@ -153,7 +153,7 @@ describe('QA regression — refight after turn-battle victory (smoke test eviden
     const stage: Stage = {
       id: 'refight_stage', name: 'Refight Stage', description: '', floor: 1,
       enemyPool: [{ enemyId: enemy.id, weight: 1 }],
-      totalEnemyCount: 1, spawnIntervalSeconds: 0,
+      totalEnemyCount: 1, waves: [1], spawnIntervalSeconds: 0,
     }
     const player = createDefaultPlayer()
     const stats = calculateStats({ ...player.baseStats, attack: 100 }, [])
@@ -194,7 +194,7 @@ describe('Future Systems Task 10 — party manual pause', () => {
     const stage: Stage = {
       id: 'party_stage', name: 'Party Stage', description: '', floor: 1,
       enemyPool: [{ enemyId: enemy.id, weight: 1 }],
-      totalEnemyCount: 1, spawnIntervalSeconds: 0,
+      totalEnemyCount: 1, waves: [1], spawnIntervalSeconds: 0,
     }
     const player = createDefaultPlayer()
     const stats = calculateStats({ ...player.baseStats, attack: 50 }, [])
@@ -246,7 +246,7 @@ describe('Gameplay fixes — refight chain', () => {
     const stage: Stage = {
       id: 'refight3_stage', name: 'Refight3 Stage', description: '', floor: 1,
       enemyPool: [{ enemyId: enemy.id, weight: 1 }],
-      totalEnemyCount: 1, spawnIntervalSeconds: 0,
+      totalEnemyCount: 1, waves: [1], spawnIntervalSeconds: 0,
     }
     const player = createDefaultPlayer()
     const stats = calculateStats({ ...player.baseStats, attack: 100, speed: 100 }, [])

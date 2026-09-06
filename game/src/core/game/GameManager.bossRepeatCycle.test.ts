@@ -42,7 +42,7 @@ describe('boss stage — restartTurnBattleCycle() repeat cycle keeps spawning th
       enemyPool: [{ enemyId: 'repeat_test_mob_should_not_spawn', weight: 1 }],
       // content author "sai" totalEnemyCount, giống GameManager.bossSolo.test.ts —
       // đây CHÍNH LÀ con số mà code cũ (chưa fix) so sánh nhầm trong isFinalSpawn.
-      totalEnemyCount: 5,
+      totalEnemyCount: 5, waves: [5],
       spawnIntervalSeconds: 0,
     }
 

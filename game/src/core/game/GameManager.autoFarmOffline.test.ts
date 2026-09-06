@@ -31,7 +31,7 @@ const OFFLINE_STAGE = {
   description: '',
   floor: 1,
   enemyPool: [{ enemyId: 'offline_dummy', weight: 1 }],
-  totalEnemyCount: 2,
+  totalEnemyCount: 2, waves: [2],
   spawnIntervalSeconds: 0,
 }
 

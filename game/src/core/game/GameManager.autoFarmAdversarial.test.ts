@@ -10,7 +10,7 @@ const DUMMY = defineEnemy({
 })
 const STAGE = {
   id: 'adv_stage', name: 'Adv Stage', description: '', floor: 1,
-  enemyPool: [{ enemyId: 'adv_dummy', weight: 1 }], totalEnemyCount: 2, spawnIntervalSeconds: 0,
+  enemyPool: [{ enemyId: 'adv_dummy', weight: 1 }], totalEnemyCount: 2, waves: [2], spawnIntervalSeconds: 0,
 }
 
 describe('Adversarial — offline auto-farm invariants (QA quick)', () => {

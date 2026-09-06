@@ -9,7 +9,7 @@ function stageFixture(id: string, enemyId: string): Stage {
   return {
     id, name: id, description: '', floor: 1,
     enemyPool: [{ enemyId, weight: 1 }],
-    totalEnemyCount: 1,
+    totalEnemyCount: 1, waves: [1],
     spawnIntervalSeconds: 0,
   }
 }

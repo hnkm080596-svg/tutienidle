@@ -41,7 +41,7 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
       description: '',
       floor: 1,
       enemyPool: [{ enemyId: DUMMY_ENEMY.id, weight: 1 }],
-      totalEnemyCount: 1,
+      totalEnemyCount: 1, waves: [1],
       spawnIntervalSeconds: 0,
       ...overrides,
     }

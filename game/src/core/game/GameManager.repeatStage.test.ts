@@ -37,7 +37,7 @@ describe('GameManager continuous repeat stage', () => {
       description: '',
       floor: 1,
       enemyPool: [{ enemyId: enemy.id, weight: 1 }],
-      totalEnemyCount: 1,
+      totalEnemyCount: 1, waves: [1],
       spawnIntervalSeconds: 0,
     }
     const player = createDefaultPlayer()
@@ -81,7 +81,7 @@ describe('GameManager continuous repeat stage', () => {
     })
     const stage: Stage = {
       id: 'countdown_stage', name: 'Countdown Stage', description: '', floor: 1,
-      enemyPool: [{ enemyId: enemy.id, weight: 1 }], totalEnemyCount: 1, spawnIntervalSeconds: 1,
+      enemyPool: [{ enemyId: enemy.id, weight: 1 }], totalEnemyCount: 1, waves: [1], spawnIntervalSeconds: 1,
     }
     const player = createDefaultPlayer()
     const stats = calculateStats(player.baseStats, [])

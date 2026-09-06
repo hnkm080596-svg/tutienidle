@@ -13,7 +13,7 @@ const stages: Stage[] = [5, 6, 10].map(floor => ({
   requiredRealmId: 'mortal',
   requiredRealmLevel: floor,
   enemyPool: [],
-  totalEnemyCount: 1,
+  totalEnemyCount: 1, waves: [1],
   spawnIntervalSeconds: 0,
 }))
 

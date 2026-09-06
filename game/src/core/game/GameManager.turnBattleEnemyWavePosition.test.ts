@@ -51,7 +51,7 @@ describe('GameManager — turn-based wave spawn position (bug fix 2026-09-06)', 
       enemyPool: [{ enemyId: mob.id, weight: 1 }],
       // KHÔNG có bossEnemyId — effectiveTotalEnemyCount() giữ nguyên 5,
       // đủ để quan sát quái thứ 2+ (yêu cầu tối thiểu để bug lộ ra).
-      totalEnemyCount: 5,
+      totalEnemyCount: 5, waves: [5],
       spawnIntervalSeconds: 0,
     }
 

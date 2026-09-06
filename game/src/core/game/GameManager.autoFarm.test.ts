@@ -22,7 +22,7 @@ const FARM_STAGE: Stage = {
   description: '',
   floor: 1,
   enemyPool: [{ enemyId: DUMMY.id, weight: 1 }],
-  totalEnemyCount: 2,
+  totalEnemyCount: 2, waves: [2],
   spawnIntervalSeconds: 0,
 }
 

@@ -35,7 +35,7 @@ function createDeps(battle: Battle) {
     description: '',
     floor: 1,
     enemyPool: [{ enemyId: 'mob', weight: 1 }],
-    totalEnemyCount: 2,
+    totalEnemyCount: 2, waves: [2],
     spawnIntervalSeconds: 1,
   }
 

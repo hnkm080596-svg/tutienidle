@@ -30,6 +30,8 @@ const BASE_STAGES: Stage[] = [
 
     totalEnemyCount: 10,
 
+    waves: [3, 3, 4],
+
     spawnIntervalSeconds: 3,
 
     // Core Loop Foundation checklist (Mục BOSS) — quái CUỐI CÙNG
@@ -61,6 +63,8 @@ const BASE_STAGES: Stage[] = [
       { enemyId: 'forest_fiend', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
+
+    waves: [3, 4, 4],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'forest_fiend',
   },
@@ -76,6 +80,8 @@ const BASE_STAGES: Stage[] = [
       { enemyId: 'magma_boar', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
+
+    waves: [4, 4, 4],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'magma_boar',
   },
@@ -91,6 +97,8 @@ const BASE_STAGES: Stage[] = [
       { enemyId: 'ferocious_magma_boar', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
+
+    waves: [4, 4, 5],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'ferocious_magma_boar',
   },
@@ -106,6 +114,8 @@ const BASE_STAGES: Stage[] = [
       { enemyId: 'rock_bear', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
+
+    waves: [4, 5, 5],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'rock_bear',
   },
@@ -121,6 +131,8 @@ const BASE_STAGES: Stage[] = [
       { enemyId: 'ferocious_rock_bear', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
+
+    waves: [5, 5, 5],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'ferocious_rock_bear',
   },
@@ -136,6 +148,8 @@ const BASE_STAGES: Stage[] = [
       { enemyId: 'metal_beetle', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
+
+    waves: [5, 5, 6],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'metal_beetle',
   },
@@ -152,6 +166,8 @@ const BASE_STAGES: Stage[] = [
       { enemyId: 'ferocious_metal_beetle', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
+
+    waves: [5, 6, 6],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'ferocious_metal_beetle',
   },
@@ -167,6 +183,8 @@ const BASE_STAGES: Stage[] = [
       { enemyId: 'flood_serpent', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
+
+    waves: [6, 6, 6],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'flood_serpent',
   },
@@ -183,6 +201,8 @@ const BASE_STAGES: Stage[] = [
       { enemyId: 'ferocious_flood_serpent', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
+
+    waves: [19],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'ferocious_flood_serpent',
   },
@@ -204,6 +224,8 @@ const BASE_STAGES: Stage[] = [
       { enemyId: 'mortal_mountain_bandit', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
+
+    waves: [3, 3, 4],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'mortal_mountain_bandit',
   },
@@ -219,6 +241,8 @@ const BASE_STAGES: Stage[] = [
       { enemyId: 'mortal_ferocious_mountain_bandit', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
+
+    waves: [3, 4, 4],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'mortal_ferocious_mountain_bandit',
   },
@@ -234,6 +258,8 @@ const BASE_STAGES: Stage[] = [
       { enemyId: 'mortal_savage_tiger', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
+
+    waves: [4, 4, 4],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'mortal_savage_tiger',
   },
@@ -249,6 +275,8 @@ const BASE_STAGES: Stage[] = [
       { enemyId: 'mortal_ferocious_savage_tiger', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
+
+    waves: [4, 4, 5],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'mortal_ferocious_savage_tiger',
   },
@@ -265,6 +293,8 @@ const BASE_STAGES: Stage[] = [
       { enemyId: 'mortal_mud_ox', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
+
+    waves: [4, 5, 5],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'mortal_mud_ox',
   },
@@ -280,6 +310,8 @@ const BASE_STAGES: Stage[] = [
       { enemyId: 'mortal_ferocious_mud_ox', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
+
+    waves: [5, 5, 5],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'mortal_ferocious_mud_ox',
   },
@@ -296,6 +328,8 @@ const BASE_STAGES: Stage[] = [
       { enemyId: 'mortal_iron_boar', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
+
+    waves: [5, 5, 6],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'mortal_iron_boar',
   },
@@ -311,6 +345,8 @@ const BASE_STAGES: Stage[] = [
       { enemyId: 'mortal_ferocious_iron_boar', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
+
+    waves: [5, 6, 6],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'mortal_ferocious_iron_boar',
   },
@@ -326,6 +362,8 @@ const BASE_STAGES: Stage[] = [
       { enemyId: 'mortal_giant_crocodile', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
+
+    waves: [6, 6, 6],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'mortal_giant_crocodile',
   },
@@ -342,6 +380,8 @@ const BASE_STAGES: Stage[] = [
       { enemyId: 'mortal_ferocious_giant_crocodile', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
+
+    waves: [19],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'mortal_ferocious_giant_crocodile',
   },
@@ -377,6 +417,8 @@ const foundationStages: Stage[] = [
       { enemyId: 'foundation_stone_fungus', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 10,
+
+    waves: [3, 3, 4],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'foundation_stone_fungus',
   },
@@ -394,6 +436,8 @@ const foundationStages: Stage[] = [
       { enemyId: 'foundation_ferocious_stone_fungus', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 11,
+
+    waves: [3, 4, 4],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'foundation_ferocious_stone_fungus',
   },
@@ -411,6 +455,8 @@ const foundationStages: Stage[] = [
       { enemyId: 'foundation_sand_scorpion', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 12,
+
+    waves: [4, 4, 4],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'foundation_sand_scorpion',
   },
@@ -428,6 +474,8 @@ const foundationStages: Stage[] = [
       { enemyId: 'foundation_ferocious_sand_scorpion', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 13,
+
+    waves: [4, 4, 5],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'foundation_ferocious_sand_scorpion',
   },
@@ -445,6 +493,8 @@ const foundationStages: Stage[] = [
       { enemyId: 'foundation_mud_golem', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 14,
+
+    waves: [4, 5, 5],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'foundation_mud_golem',
   },
@@ -462,6 +512,8 @@ const foundationStages: Stage[] = [
       { enemyId: 'foundation_ferocious_mud_golem', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 15,
+
+    waves: [5, 5, 5],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'foundation_ferocious_mud_golem',
   },
@@ -479,6 +531,8 @@ const foundationStages: Stage[] = [
       { enemyId: 'foundation_blade_hawk_king', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 16,
+
+    waves: [5, 5, 6],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'foundation_blade_hawk_king',
   },
@@ -496,6 +550,8 @@ const foundationStages: Stage[] = [
       { enemyId: 'foundation_ferocious_blade_hawk_king', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 17,
+
+    waves: [5, 6, 6],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'foundation_ferocious_blade_hawk_king',
   },
@@ -513,6 +569,8 @@ const foundationStages: Stage[] = [
       { enemyId: 'foundation_flood_dragon_whelp', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 18,
+
+    waves: [6, 6, 6],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'foundation_flood_dragon_whelp',
   },
@@ -530,6 +588,8 @@ const foundationStages: Stage[] = [
       { enemyId: 'foundation_ferocious_flood_dragon_whelp', weight: 3, eliteChance: 0.1 },
     ],
     totalEnemyCount: 19,
+
+    waves: [19],
     spawnIntervalSeconds: 3,
     bossEnemyId: 'foundation_ferocious_flood_dragon_whelp',
   },

@@ -895,7 +895,7 @@ describe('TurnBattleSystem.resolveNextStep multi-wave spawning', () => {
       stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
     })
 
-    const wave = { totalEnemyCount: 2, spawnedCount: 1 }
+    const wave = { totalEnemyCount: 2, waves: [2], spawnedCount: 1 }
     const battle: TurnBattle = {
       players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
@@ -936,7 +936,7 @@ describe('TurnBattleSystem.resolveNextStep multi-wave spawning', () => {
       stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
     })
 
-    const wave = { totalEnemyCount: 2, spawnedCount: 1 }
+    const wave = { totalEnemyCount: 2, waves: [2], spawnedCount: 1 }
     const battle: TurnBattle = {
       players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
@@ -979,7 +979,7 @@ describe('TurnBattleSystem.resolveNextStep multi-wave spawning', () => {
       stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
     })
 
-    const wave = { totalEnemyCount: 1, spawnedCount: 1 }
+    const wave = { totalEnemyCount: 1, waves: [1], spawnedCount: 1 }
     const battle: TurnBattle = {
       players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
@@ -1007,7 +1007,7 @@ describe('TurnBattleSystem.resolveNextStep multi-wave spawning', () => {
       stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
     })
 
-    const wave = { totalEnemyCount: 2, spawnedCount: 1 }
+    const wave = { totalEnemyCount: 2, waves: [2], spawnedCount: 1 }
     const battle: TurnBattle = {
       players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
@@ -1080,7 +1080,7 @@ describe('TurnBattleSystem.resolveNextStep multi-wave spawning', () => {
       stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
     })
 
-    const wave = { totalEnemyCount: 2, spawnedCount: 1 }
+    const wave = { totalEnemyCount: 2, waves: [2], spawnedCount: 1 }
     const battle: TurnBattle = {
       players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemyA', enemyA, 10, 1)],

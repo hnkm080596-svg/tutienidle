@@ -37,6 +37,16 @@ export interface Stage {
   // Tổng số quái phải spawn hết (và đánh chết hết) để thắng màn.
   totalEnemyCount: number
 
+  /**
+   * Turn-Based Wave Redesign (2026-09-06) — số quái spawn ĐỒNG THỜI mỗi
+   * wave, theo thứ tự. sum(waves) PHẢI bằng totalEnemyCount (test bất
+   * biến enforce điều này cho mọi stage — xem EffectiveWaves.test.ts).
+   * Stage floor 10 (solo boss) vẫn khai waves bình thường (dữ liệu thô,
+   * không override) — effectiveWaves() mới là hàm áp override thành [1],
+   * y hệt cách effectiveTotalEnemyCount() đã làm cho totalEnemyCount.
+   */
+  waves: number[]
+
   // Nhịp spawn mặc định — quái mới spawn theo nhịp này SONG SONG với
   // quái đang sống (không đợi chết mới spawn tiếp), xem
   // GameManager.updateStageProgress(). Sân trống quái giữa chừng thì

@@ -6,7 +6,7 @@ function stageFixture(overrides: Partial<Stage> = {}): Stage {
   return {
     id: 'test_stage', name: 'Test', description: '',
     enemyPool: [{ enemyId: 'dummy', weight: 1 }],
-    totalEnemyCount: 5,
+    totalEnemyCount: 5, waves: [5],
     spawnIntervalSeconds: 1,
     ...overrides,
   }

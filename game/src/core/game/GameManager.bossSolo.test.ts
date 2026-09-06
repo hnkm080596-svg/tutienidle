@@ -27,7 +27,7 @@ describe('boss stage — GameManager.buildTurnBattle wave config never allows a 
       id: 'boss_solo_stage', name: 'Boss Solo Stage', description: '',
       floor: 10, bossEnemyId: 'test_boss_solo',
       enemyPool: [{ enemyId: 'test_regular_should_not_spawn', weight: 1 }],
-      totalEnemyCount: 5, // content author mistake — should still be forced to 1 effectively
+      totalEnemyCount: 5, waves: [5], // content author mistake — should still be forced to 1 effectively
       spawnIntervalSeconds: 0,
     }
 

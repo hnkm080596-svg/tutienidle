@@ -123,7 +123,7 @@ describe('abandonBattle — EnemyManager cleanup (audit 2026-08-31, M1)', () => 
       description: '',
       floor: 1,
       enemyPool: [{ enemyId: enemy.id, weight: 1 }],
-      totalEnemyCount: 1,
+      totalEnemyCount: 1, waves: [1],
       spawnIntervalSeconds: 0,
     }
     const player = createDefaultPlayer()
