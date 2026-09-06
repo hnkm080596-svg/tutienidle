@@ -6,6 +6,7 @@ import '@/assets/themes/ink-minimal.css'
 import '@/assets/themes/landscape-shanshui.css'
 import '@/assets/themes/xianxia-glow.css'
 import '@/assets/themes/classical-imperial.css'
+import '@/assets/artTestMode.css'
 import App from './App.vue'
 import router from './router'
 import { vTooltip } from './directives/tooltip'
@@ -13,9 +14,16 @@ import { useErrorStore } from './stores/error'
 import { useThemeStore } from './stores/themeStore'
 import { initUiScale } from './composables/uiScale'
 import { i18n } from './i18n'
+import { isArtTestMode } from '@/core/dev/DevMode'
 
 // WS8 — áp UI scale người chơi chọn TRƯỚC mount để không nhấp nháy font.
 initUiScale()
+
+// Art test mode (xem core/dev/DevMode.ts) — áp class TRƯỚC mount để
+// không nhấp nháy style gốc rồi mới tắt.
+if (isArtTestMode()) {
+  document.documentElement.classList.add('dev-art-test-mode')
+}
 
 const app = createApp(App)
 const pinia = createPinia()

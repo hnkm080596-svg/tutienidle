@@ -265,6 +265,21 @@ function hasBreakthroughBadge(slot: CommandWheelSlot): boolean {
   return slot.id === 'character' && player.cultivationProgress >= 1
 }
 
+// Icon riêng từng slot (2026-09-06, user muốn mỗi nút wheel 1 icon khác
+// nhau) — path suy thẳng từ slot.id, KHÔNG cần thêm field `icon` vào
+// catalog (catalog vẫn thuần data tối giản). Asset chưa có thì @error
+// ẩn <img> đi, chỉ còn label chữ như hiện tại — không vỡ layout khi
+// art chưa được thả vào (xem asset-drop/README.md để biết tên file cần thả).
+function wheelIconPath(slot: CommandWheelSlot): string {
+  return `/assets/ui/wheel/${slot.id}.png`
+}
+
+function onIconError(event: Event) {
+  const img = event.target as HTMLImageElement
+
+  img.style.display = 'none'
+}
+
 // Chọn shortcut: đóng wheel TRƯỚC rồi mới mở panel/overlay tương ứng.
 function activate(slot: CommandWheelSlot) {
   if (disabledReason(slot)) {
@@ -340,6 +355,15 @@ function activate(slot: CommandWheelSlot) {
         v-tooltip="disabledReason(slot) ?? undefined"
         @click="activate(slot)"
       >
+        <img
+          class="command-wheel__icon"
+          :src="wheelIconPath(slot)"
+          alt=""
+          aria-hidden="true"
+          draggable="false"
+          @error="onIconError"
+        >
+
         <span class="command-wheel__label">{{ slot.label }}</span>
 
         <span v-if="isUpgradeable(slot)" class="command-wheel__upgrade-dot" aria-hidden="true" />
@@ -461,6 +485,13 @@ function activate(slot: CommandWheelSlot) {
   opacity: 1;
   transform: rotate(var(--end-angle)) translateY(calc(-1 * var(--orbit-radius)))
     rotate(var(--end-counter-angle)) translate(-50%, -50%);
+}
+
+.command-wheel__icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  pointer-events: none;
 }
 
 .command-wheel__slot:hover,

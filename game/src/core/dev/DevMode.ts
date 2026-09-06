@@ -27,3 +27,26 @@ export function isTestModeUnlockAll(): boolean {
     return false
   }
 }
+
+// Art test mode (2026-09-06) — tắt CSS trang trí (background/border/
+// box-shadow/text-shadow/outline) trên MỌI component qua 1 class gốc
+// (xem assets/artTestMode.css), GIỮ NGUYÊN layout (width/height/flex/
+// grid/position không đụng tới) để lắp art thật vào xem đúng khung có
+// sẵn mà không bị style cũ đè/che. Bật:
+//   localStorage.setItem('dev.artTestMode', '1')  → reload trang
+// Tắt: removeItem('dev.artTestMode') hoặc set giá trị khác '1'.
+export function isArtTestMode(): boolean {
+  if (!import.meta.env.DEV) {
+    return false
+  }
+
+  if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+    return false
+  }
+
+  try {
+    return window.localStorage.getItem('dev.artTestMode') === '1'
+  } catch {
+    return false
+  }
+}

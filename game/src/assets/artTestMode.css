@@ -1,0 +1,17 @@
+/* Art test mode (2026-09-06, xem core/dev/DevMode.ts isArtTestMode) —
+   tắt CSS trang trí trên MỌI component để lắp art thật vào xem đúng
+   khung có sẵn. CHỈ xoá màu sắc/viền/bóng — layout (display, position,
+   width/height, flex/grid, padding/margin, gap) giữ nguyên 100% để bố
+   cục không vỡ. !important bắt buộc vì phải thắng specificity của mọi
+   style scoped (data-v-xxx) trong ~90 component. */
+html.dev-art-test-mode * {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  outline-color: transparent !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+}

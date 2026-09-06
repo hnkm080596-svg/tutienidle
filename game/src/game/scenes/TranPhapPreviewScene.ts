@@ -34,7 +34,14 @@ export function previewCellTopLeft(row: number, column: number): { x: number; y:
 }
 
 export class TranPhapPreviewScene extends Phaser.Scene {
-  private sprites: Phaser.GameObjects.Sprite[] = []
+  // Bug fix (2026-09-06, user report "animation reset về 0 mỗi lần kéo-
+  // thả 1 entity") — key theo combatantId thay vì mảng phẳng: sprite của
+  // NHỮNG entity KHÔNG đổi (vẫn còn trong assignment mới, dù đổi ô hay
+  // không) được GIỮ NGUYÊN object (chỉ reposition nếu đổi ô) thay vì
+  // destroy() + tạo lại + play() lại từ đầu — animation chỉ thật sự reset
+  // khi 1 entity MỚI xuất hiện hoặc panel đóng/mở lại (component re-mount
+  // Phaser.Game mới, xem TranPhapPanel.vue).
+  private spritesByCombatantId = new Map<string, Phaser.GameObjects.Sprite>()
 
   constructor() {
     super('TranPhapPreviewScene')
@@ -73,21 +80,41 @@ export class TranPhapPreviewScene extends Phaser.Scene {
     }
   }
 
-  /** Xoá hết sprite cũ, dựng lại đúng theo assignment hiện tại — đơn giản, đủ dùng cho panel test (không cần diff tối ưu như combat thật). */
+  /**
+   * Diff theo combatantId (KHÔNG xoá-dựng-lại toàn bộ như trước fix):
+   * entity còn trong assignment mới → GIỮ sprite cũ, chỉ reposition nếu
+   * đổi ô (animation KHÔNG bị ngắt/reset); entity biến mất → destroy;
+   * entity mới xuất hiện → tạo sprite mới, play() từ frame 0 (đúng —
+   * chưa từng animate trong panel này).
+   */
   syncAssignments(assignments: FormationSlotAssignment[]): void {
-    for (const sprite of this.sprites) {
-      sprite.destroy()
+    const nextIds = new Set(assignments.map((a) => a.combatantId))
+
+    for (const [combatantId, sprite] of this.spritesByCombatantId) {
+      if (!nextIds.has(combatantId)) {
+        sprite.destroy()
+        this.spritesByCombatantId.delete(combatantId)
+      }
     }
 
-    this.sprites = assignments.map((assignment) => {
+    for (const assignment of assignments) {
       const { x, y } = previewCellTopLeft(assignment.row, assignment.column)
+      const centerX = x + PREVIEW_CELL_SIZE / 2
+      const centerY = y + PREVIEW_CELL_SIZE / 2
 
-      const sprite = this.add.sprite(x + PREVIEW_CELL_SIZE / 2, y + PREVIEW_CELL_SIZE / 2, PLACEHOLDER_SHEET_KEY)
+      const existing = this.spritesByCombatantId.get(assignment.combatantId)
+
+      if (existing) {
+        existing.setPosition(centerX, centerY)
+        continue
+      }
+
+      const sprite = this.add.sprite(centerX, centerY, PLACEHOLDER_SHEET_KEY)
 
       sprite.setDisplaySize(PREVIEW_CELL_SIZE * 0.8, PREVIEW_CELL_SIZE * 0.8)
       sprite.play(PREVIEW_IDLE_ANIMATION_KEY)
 
-      return sprite
-    })
+      this.spritesByCombatantId.set(assignment.combatantId, sprite)
+    }
   }
 }

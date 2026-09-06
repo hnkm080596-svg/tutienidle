@@ -83,7 +83,11 @@ function onDrop(row: number, column: number, combatantId: string) {
 
   // Gỡ combatant khỏi vị trí cũ (nếu có) VÀ gỡ bất kỳ ai đang chiếm ô
   // đích, rồi gán lại — đảm bảo mỗi ô + mỗi combatant chỉ xuất hiện
-  // đúng 1 lần trong danh sách assignment.
+  // đúng 1 lần trong danh sách assignment. Nhờ filter "gỡ vị trí cũ" này,
+  // hàm cũng TỰ ĐỘNG đúng cho việc kéo từ Ô SANG Ô (không chỉ từ hàng
+  // chờ) — bug fix 2026-09-06: chỉ cần cho ô đã gán trở thành draggable
+  // (xem template, :draggable + @dragstart trên .tran-phap-panel__cell),
+  // không cần sửa gì ở đây.
   currentAssignments.value = [
     ...currentAssignments.value.filter(
       (a) => a.combatantId !== combatantId && !(a.row === row && a.column === column),
@@ -230,6 +234,8 @@ onUnmounted(() => {
                 :key="column"
                 class="tran-phap-panel__cell"
                 :class="{ 'tran-phap-panel__cell--lit': isLitCell(row - 1, column - 1) }"
+                :draggable="!!assignmentAt(row - 1, column - 1)"
+                @dragstart="(event) => { const occupant = assignmentAt(row - 1, column - 1); if (occupant) (event as DragEvent).dataTransfer?.setData('text/plain', occupant.combatantId) }"
                 @dragover.prevent
                 @drop="(event) => onDrop(row - 1, column - 1, (event as DragEvent).dataTransfer?.getData('text/plain') ?? '')"
                 @click="() => { const occupant = assignmentAt(row - 1, column - 1); if (occupant) removeAssignment(occupant.combatantId) }"
