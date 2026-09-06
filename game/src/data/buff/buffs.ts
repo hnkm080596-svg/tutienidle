@@ -34,6 +34,21 @@ export const KIEP_THUONG_DEBUFF: BuffDefinition = {
   ],
 }
 
+// Hỗn Độn Trận visual test tooling (2026-09-06) — buff TEST-ONLY, vô hại
+// (+1% attack, gần như không ảnh hưởng cân bằng), tồn tại DUY NHẤT để
+// formation test hon_don_tran có 1 buff.definitionId resolve được thật
+// trong TURN_BUFF_REGISTRY thay vì luôn rơi vào nhánh skip-an-toàn (Task
+// 19's fix) — xoá khi có buff Trận Pháp thật thay thế.
+export const HON_DON_TRAN_TEST_BUFF: BuffDefinition = {
+  id: 'hon_don_tran_test_buff',
+  name: 'Hỗn Độn Khí Tức (test)',
+  description: 'Buff test-only của Hỗn Độn Trận — không dùng cho nội dung thật.',
+  polarity: 'buff',
+  duration: Infinity,
+  stackMode: 'refresh',
+  effects: [{ type: 'statModifier', stat: 'attack', percent: 1 }],
+}
+
 // Buff/debuff mà skill effect tham chiếu qua buffId (xem
 // SkillEffectSystem, data/skill/Skills.ts). Áp lên buff pool riêng
 // theo entity trong trận (Battle.playerBuffs/enemyBuffs) — không
@@ -53,6 +68,7 @@ export const KIEP_THUONG_DEBUFF: BuffDefinition = {
 // chuyển hẳn sang BuffRegistry).
 export const buffs: BuffDefinition[] = [
   KIEP_THUONG_DEBUFF,
+  HON_DON_TRAN_TEST_BUFF,
 
   // Pháp Tu (Thổ Tu, 2026-08-15) — Thạch Giáp Trận (special skill,
   // xem data/skill/Skills.ts) tự buff wardMax/thornsPercent tạm thời

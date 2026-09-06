@@ -19,3 +19,22 @@ describe('Trận Pháp content file', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 })
+
+describe('hon_don_tran (TEST-ONLY stress-test formation)', () => {
+  it('unlocks all 36 cells of the local 6x6 space, each exactly once', () => {
+    const formation = TRAN_PHAP_FORMATIONS.find((f) => f.id === 'hon_don_tran')
+
+    expect(formation).toBeDefined()
+    expect(formation!.cellPattern).toHaveLength(36)
+
+    const seen = new Set(formation!.cellPattern.map((cell) => `${cell.row},${cell.column}`))
+
+    expect(seen.size).toBe(36)
+
+    for (let row = 0; row <= 5; row++) {
+      for (let column = 0; column <= 5; column++) {
+        expect(seen.has(`${row},${column}`)).toBe(true)
+      }
+    }
+  })
+})
