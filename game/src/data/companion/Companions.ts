@@ -1,9 +1,10 @@
-// Companions (Companion Roster spec, 2026-09-05) — gacha-recruited
-// combatants with a FIXED skill kit (no Ngũ Hành node-tree/loadout) and NO
-// equipment (stats scale from grade + level only, see companionStatsAtLevel
-// in CompanionCombat.ts). Reuses ItemGrade (Hoàng/Huyền/Địa/Thiên/Tiên
-// Chất) for rarity — the SAME 5-tier ladder as Equipment/Pill/Talisman/
-// Formation, not the unrelated 10-tier ProfessionGrade.
+// Companions (Companion Roster spec, 2026-09-05) — đồng đội chiêu mộ qua
+// gacha, có bộ kỹ năng CỐ ĐỊNH (không có node-tree/loadout Ngũ Hành riêng
+// từng nhân vật) và KHÔNG mang trang bị — chỉ số scale hoàn toàn từ
+// grade + level (xem companionStatsAtLevel trong CompanionCombat.ts).
+// Dùng lại ItemGrade (Hoàng/Huyền/Địa/Thiên/Tiên Chất) làm hệ độ hiếm —
+// CÙNG một thang 5 bậc với Equipment/Pill/Talisman/Formation, khác hoàn
+// toàn ProfessionGrade 10 bậc (không liên quan).
 import type { ItemGrade } from '@/core/item/ItemGrade'
 import type { TurnSkillDefinition } from '@/core/battle/turn/TurnSkillAction'
 
@@ -30,6 +31,6 @@ export interface CompanionInstance {
 }
 
 export const COMPANIONS: readonly CompanionDefinition[] = [
-  // Content added in a later balance/content pass — this file ships the
-  // mechanism only (Companion Roster spec §8, out of scope: roster content).
+  // Nội dung roster thêm ở pass balance/content sau — file này chỉ ship
+  // cơ chế (Companion Roster spec §8, nội dung roster nằm ngoài scope).
 ]
