@@ -97,6 +97,62 @@ describe('TalentPassives v4 — shape & nhịp engine của 11 passive', () => {
 
     expect(skill.passiveCondition).toEqual({ kind: 'hpBelow', percent: 0.5 })
     expect(skill.passiveModifiers![0]!.maxStacks).toBeUndefined()
+    expect(skill.passiveModifiers![0]!.stat).toBe('leechPercent')
+  })
+
+  it('Trọng Kích — trigger critical, 3 tầng crit damage → bùng trong_kich_burst', () => {
+    const skill = passiveById.get('talent_passive_trong_kich')!
+
+    expect(skill.passiveTrigger).toBe('critical')
+    expect(skill.passiveModifiers![0]!.stat).toBe('criticalDamage')
+    expect(skill.passiveModifiers![0]!.percent).toBeCloseTo(0.02)
+    expect(skill.passiveModifiers![0]!.maxStacks).toBe(3)
+    expect(skill.passiveConvertsTo).toEqual({ buffId: 'trong_kich_burst' })
+  })
+
+  it('Thạch Giáp — trigger block, 10 tầng defense → bùng thach_nham', () => {
+    const skill = passiveById.get('talent_passive_thach_giap')!
+
+    expect(skill.passiveTrigger).toBe('block')
+    expect(skill.passiveModifiers![0]!.stat).toBe('defense')
+    expect(skill.passiveModifiers![0]!.percent).toBeCloseTo(0.02)
+    expect(skill.passiveModifiers![0]!.maxStacks).toBe(10)
+    expect(skill.passiveConvertsTo).toEqual({ buffId: 'thach_nham' })
+  })
+
+  it('Vô Ảnh — trigger dodge, 5 tầng evasion → bùng sat_na', () => {
+    const skill = passiveById.get('talent_passive_vo_anh')!
+
+    expect(skill.passiveTrigger).toBe('dodge')
+    expect(skill.passiveModifiers![0]!.stat).toBe('evasionRate')
+    expect(skill.passiveModifiers![0]!.percent).toBeCloseTo(0.02)
+    expect(skill.passiveModifiers![0]!.maxStacks).toBe(5)
+    expect(skill.passiveConvertsTo).toEqual({ buffId: 'sat_na' })
+  })
+
+  it('Hộ Thể — trigger damage_taken, hồi ward theo tầng (nhịp ward vỡ thuộc CombatSystem — không convert)', () => {
+    const skill = passiveById.get('talent_passive_ho_the')!
+
+    expect(skill.passiveTrigger).toBe('damage_taken')
+    expect(skill.passiveModifiers![0]!.stat).toBe('wardRegenPerSecond')
+    expect(skill.passiveModifiers![0]!.maxStacks).toBe(5)
+    expect(skill.passiveConvertsTo).toBeUndefined()
+  })
+
+  it('Thứ Phạt — trigger damage_taken, gai theo tầng Hận Thứ (decay thuộc consumer — không convert)', () => {
+    const skill = passiveById.get('talent_passive_thu_phat')!
+
+    expect(skill.passiveTrigger).toBe('damage_taken')
+    expect(skill.passiveModifiers![0]!.stat).toBe('thornsPercent')
+    expect(skill.passiveModifiers![0]!.maxStacks).toBe(5)
+    expect(skill.passiveConvertsTo).toBeUndefined()
+  })
+
+  it('Bất Tử Thể — passive anchor data (buff Tử Sinh Ngộ áp qua CombatSystem survive, không convert)', () => {
+    const skill = passiveById.get('talent_passive_bat_tu_the')!
+
+    expect(skill.passiveTrigger).toBe('damage_taken')
+    expect(skill.passiveConvertsTo).toBeUndefined()
   })
 
   it('mọi passive equipped + unlocked (PassiveSystem chỉ quét equipped)', () => {
