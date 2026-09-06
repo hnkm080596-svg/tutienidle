@@ -276,17 +276,17 @@ export interface PlayerData {
   // này cần trên PlayerData.
   companions: CompanionInstance[]
 
-  // Trận Pháp (2026-09-05) — currently active formation + per-cell
-  // assignment. null = player has never configured one; buildTurnBattle()
-  // falls back to DEFAULT_PARTY_FORMATION (Combat Art Pipeline spec §7).
+  // Trận Pháp (2026-09-05) — trận pháp đang active + vị trí gán từng ô.
+  // null = người chơi chưa từng cấu hình trận pháp nào; buildTurnBattle()
+  // sẽ fallback về DEFAULT_PARTY_FORMATION (Combat Art Pipeline spec §7).
   formationLoadout: FormationLoadout | null
 
   lastSavedAt: number
 }
 
-// Trận Pháp (2026-09-05) — small enough to inline directly (no other
-// consumer needs its own module), giống cách CompanionInstance được import
-// riêng cho Task 11.
+// Trận Pháp (2026-09-05) — type đủ nhỏ nên khai báo inline luôn ở đây
+// (chưa có consumer nào khác cần tách riêng module), khác với
+// CompanionInstance ở Task 11 phải tách file vì có nhiều consumer dùng lại.
 export interface FormationSlotAssignment {
   row: number
   column: number
