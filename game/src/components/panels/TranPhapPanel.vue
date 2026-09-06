@@ -188,9 +188,9 @@ onUnmounted(() => {
           <div ref="previewContainerRef" class="tran-phap-panel__preview-canvas"></div>
 
           <div class="tran-phap-panel__grid tran-phap-panel__grid--overlay">
-            <div v-for="row in 6" :key="row" class="tran-phap-panel__row">
+            <div v-for="row in PREVIEW_GRID_SIZE" :key="row" class="tran-phap-panel__row">
               <div
-                v-for="column in 6"
+                v-for="column in PREVIEW_GRID_SIZE"
                 :key="column"
                 class="tran-phap-panel__cell"
                 :class="{ 'tran-phap-panel__cell--lit': isLitCell(row - 1, column - 1) }"
@@ -260,6 +260,10 @@ onUnmounted(() => {
   position: absolute;
   inset: 0;
   z-index: 0;
+  /* Canvas Phaser tổng (PREVIEW_CELL_SIZE * PREVIEW_GRID_SIZE = 360px)
+     dư 4px so với lưới CSS thật (356px, vì ô cuối không có gap theo
+     sau) — cắt phần tràn rìa phải/dưới, tránh canvas ló ra ngoài panel. */
+  overflow: hidden;
 }
 
 .tran-phap-panel__grid {

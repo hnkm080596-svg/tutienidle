@@ -20,7 +20,11 @@ import {
 } from '@/game/support/CombatAnimationSet'
 import type { FormationSlotAssignment } from '@/core/player/Player'
 
-export const PREVIEW_CELL_SIZE = 64
+// 60 = khớp CHÍNH XÁC pitch giữa các ô CSS thật trong TranPhapPanel.vue
+// (.tran-phap-panel__cell rộng 56px + gap 4px giữa các ô = 60px/ô) —
+// nhờ vậy previewCellTopLeft() dưới đây trùng khít góc trái-trên của
+// từng ô overlay HTML, không lệch dần theo index nữa.
+export const PREVIEW_CELL_SIZE = 60
 export const PREVIEW_GRID_SIZE = 6
 
 const PREVIEW_IDLE_ANIMATION_KEY = 'tran-phap-preview-idle'
