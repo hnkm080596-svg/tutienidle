@@ -267,6 +267,12 @@ In-flight: gp123 (Group 1+2 xong chờ merge; Group 3 đang làm) → action-pla
 |---|---|
 | [Battlefield Slot / shared CombatGridView](../../docs/superpowers/plans/2026-09-06-battlefield-slot-shared-gridview.md) | CombatGridView dùng chung combat thật + panel Trận Pháp qua CombatGridViewHost interface; TranPhapCombatPreviewScene thay TranPhapPreviewScene (render qua đúng CombatGridView — animation-reset fix theo kiến trúc, không phải bản vá); SlotState vocabulary introduced (panel consumes today). Real combat zero behavior change (host fallback branch unreachable — CombatScene trả undefined, regression-tested). 6 tasks inline, 2760/2760 tests + type-check + build + targeted e2e pass. Part 2 (2.5D perspective panel — BLOCKING prerequisite này đã thỏa), Part 3 (wave spawn redesign), Part 4 (spawn VFX wiring) chưa bắt đầu. |
 
+### 7.9.2. Battlefield Perspective Panel — Part 2 of 4 XONG (2026-09-06)
+
+| Plan | Kết quả |
+|---|---|
+| [Battlefield Perspective Panel](../../docs/superpowers/plans/2026-09-06-battlefield-perspective-panel.md) | BattleGridProjection + edrawGridLines() giờ grid-size-agnostic (rows/columns/minRoadHeight parameterized, default giữ nguyên hành vi combat thật 10x16); cổng phòng thủ HERO_COLUMN obsolete XÓA khỏi grid rendering (turn-based không còn cơ chế này); panel Trận Pháp (TranPhapCombatPreviewScene) render 2.5D perspective 420x480 với 2 lớp nền sky/ground — sprite xa nhỏ hơn gần (depth scale hoạt động). Zero behavior change combat thật (default params parity + regression tests). 5 tasks inline, 2770/2770 tests + type-check + build + targeted e2e pass. Part 3 (wave spawn redesign) + Part 4 (spawn VFX wiring) chưa bắt đầu. |
+
 ### 7.10. Plans audit remediation — SYSTEM CODE REVIEW: TASKS 1–8 XONG (2026-09-05)
 
 | Plan | Phạm vi | Trạng thái |
