@@ -344,24 +344,7 @@
       }
     },
     "vendor": {
-      "cards": {
-        "spiritStone": "Linh Thạch",
-        "wood": "Linh Mộc",
-        "ore": "Linh Khoáng"
-      },
-      "sections": {
-        "tier": "Đổi Phẩm",
-        "tierRealm": "Đổi Phẩm (theo Cảnh Giới)"
-      },
-      "stone": {
-        "upTrung": "{ratio} Hạ → 1 Trung",
-        "upThuong": "{ratio} Trung → 1 Thượng"
-      },
-      "tierConvert": "{ratio} → 1",
-      "empty": {
-        "wood": "Chưa có Linh Mộc để đổi phẩm.",
-        "ore": "Chưa có Linh Khoáng để đổi phẩm."
-      },
+      "gateNotBelow": "Chỉ thu mua vật phẩm phẩm thấp hơn cảnh giới hiện tại",
       "sell": {
         "title": "Hóa Bán",
         "rate": "Bán nguyên liệu dư thừa lấy Linh Thạch theo phẩm hiện hành.",

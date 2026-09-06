@@ -87,14 +87,8 @@ import { ItemRegistry } from '../item/ItemRegistry'
 
 import { validateProfessionMaterialEntry } from '../profession/ProfessionValidators'
 import {
-  SPIRIT_STONE_CONVERSION_RATIO,
-  getNextSpiritStoneMaterialId,
   getSpiritStoneMaterialIdForRealmTier,
 } from '../material/SpiritStoneMaterial'
-import {
-  MATERIAL_TIER_CONVERSION_RATIO,
-  getNextTierMaterialId,
-} from '../material/MaterialTierConversionBalance'
 import { getRealmTier } from '../realm/RealmTierMap'
 import type { PersistentTimedEffect } from '../player/PersistentTimedEffect'
 import {
@@ -1845,104 +1839,6 @@ export class GameManager {
       return player.realmLevel >= CORE_REALM_LEVEL
     }
     return false
-  }
-
-  /**
-   * Quy d?i Linh Th?ch LÃ¯Â¿Â½N ph?m k? ti?p (review 2026-08-28,
-   * economy-ecosystem-plan T2): 100 H? ? 1 Trung, 100 Trung ? 1 Thu?ng.
-   * CH? cÃ¯Â¿Â½ chi?u lÃ¯Â¿Â½n Ã¯Â¿Â½ khÃ¯Â¿Â½ng cÃ¯Â¿Â½ quy d?i ngu?c (gi? sink). Giao d?ch
-   * atomic: check d? ? tr? ? c?ng; tr? th?t b?i thÃ¯Â¿Â½ khÃ¯Â¿Â½ng c?ng.
-
-   */
-  convertSpiritStonesUp(
-    fromMaterialId: string,
-    times = 1,
-  ): { ok: boolean; reason?: string; gained?: number } {
-    const targetId = getNextSpiritStoneMaterialId(fromMaterialId)
-
-    if (!targetId) {
-      return { ok: false, reason: 'no_higher_tier' }
-    }
-
-    if (!Number.isInteger(times) || times <= 0) {
-      return { ok: false, reason: 'invalid_amount' }
-    }
-
-    if (!this.materialRegistry.has(fromMaterialId) || !this.materialRegistry.has(targetId)) {
-      return { ok: false, reason: 'unknown_material' }
-    }
-
-    const cost = SPIRIT_STONE_CONVERSION_RATIO * times
-
-    if (!this.materialBag.remove(fromMaterialId, cost)) {
-      return { ok: false, reason: 'insufficient' }
-    }
-
-    const overflow = this.materialBag.add(this.materialRegistry.get(targetId), times)
-
-    if (overflow > 0) {
-      // TrÃ¡ÂºÂ§n stack Linh ThÃ¡ÂºÂ¡ch lÃƒÂ  MAX_SAFE_INTEGER nÃƒÂªn thÃ¡Â»Â±c tÃ¡ÂºÂ¿ khÃƒÂ´ng xÃ¡ÂºÂ£y
-      // ra; nÃ¡ÂºÂ¿u xÃ¡ÂºÂ£y ra thÃƒÂ¬ hoÃƒÂ n lÃ¡ÂºÂ¡i phÃ¡ÂºÂ©m thÃ¡ÂºÂ¥p Ã„â€˜Ã¡Â»Æ’ khÃƒÂ´ng mÃ¡ÂºÂ¥t trÃ¡ÂºÂ¯ng.
-      this.materialBag.add(
-        this.materialRegistry.get(fromMaterialId),
-        overflow * SPIRIT_STONE_CONVERSION_RATIO,
-      )
-
-      return { ok: false, reason: 'bag_full' }
-    }
-
-    this.notifyQuestMaterialGained(targetId, times)
-
-    return { ok: true, gained: times }
-  }
-
-  /**
-   * Quy đổi cảnh giới Linh Mộc/Linh Khoáng LÊN bậc kế (2026-08-28): gộp
-   * 10 bậc thấp → 1 bậc cao theo thang Phàm Nhân → Luyện Khí → Trúc Cơ.
-   * gp123 6E C2: gỗ `<realm>_wood_<age>` → `<nextRealm>_wood_<age>`; quáng
-   * giữ TUỔI khi lên cảnh giới `<realm>_ore_<age>` → `<nextRealm>_ore_<age>`.
-   * CHỈ có chiều lên (giữ sink). Giao dịch atomic: check đủ → trừ → cộng;
-   * trừ thất bại thì không cộng.
-   * NOTE (plan 6E): tính năng này sẽ bị XÓA ở task E2.
-   */
-  convertMaterialTier(
-    fromMaterialId: string,
-    times = 1,
-  ): { ok: boolean; reason?: string; gained?: number } {
-    const targetId = getNextTierMaterialId(fromMaterialId)
-
-    if (!targetId) {
-      return { ok: false, reason: 'no_higher_tier' }
-    }
-
-    if (!Number.isInteger(times) || times <= 0) {
-      return { ok: false, reason: 'invalid_amount' }
-    }
-
-    if (!this.materialRegistry.has(fromMaterialId) || !this.materialRegistry.has(targetId)) {
-      return { ok: false, reason: 'unknown_material' }
-    }
-
-    const cost = MATERIAL_TIER_CONVERSION_RATIO * times
-
-    if (!this.materialBag.remove(fromMaterialId, cost)) {
-      return { ok: false, reason: 'insufficient' }
-    }
-
-    const overflow = this.materialBag.add(this.materialRegistry.get(targetId), times)
-
-    if (overflow > 0) {
-      this.materialBag.add(
-        this.materialRegistry.get(fromMaterialId),
-        overflow * MATERIAL_TIER_CONVERSION_RATIO,
-      )
-
-      return { ok: false, reason: 'bag_full' }
-    }
-
-    this.notifyQuestMaterialGained(targetId, times)
-
-    return { ok: true, gained: times }
   }
 
   /**

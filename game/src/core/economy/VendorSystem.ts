@@ -2,15 +2,57 @@
 // bán nguyên liệu thừa (herb/wood/ore/essence/byproduct) lấy Linh Thạch
 // đúng phẩm theo realm. Giao dịch atomic: trừ material → nếu cộng Linh
 // Thạch tràn stack thì hoàn lại material và từ chối.
+// gp123 6G (2026-09-06): thu mua chỉ nhận material phẩm NGHỀ THẤP HƠN
+// cảnh giới người chơi (gate sell-by-grade) — phẩm suy từ meta nghề
+// profession.realmId qua PROFESSION_GRADE_BY_REALM, so bằng
+// PROFESSION_GRADE_ORDER. Đồng phẩm hoặc cao hơn → grade_not_below.
 import type { MaterialRegistry } from '../material/MaterialRegistry'
 import type { MaterialBag } from '../material/MaterialBag'
+import type { Material } from '../material/Material'
 import { getUnitSellPrice } from './VendorBalance'
 import { getRealmTier } from '../realm/RealmTierMap'
 import { getSpiritStoneMaterialIdForRealmTier } from '../material/SpiritStoneMaterial'
+import {
+  PROFESSION_GRADE_ORDER,
+  PROFESSION_GRADE_BY_REALM,
+  type ProfessionGrade,
+} from '../profession/ProfessionGrade'
 
 /** Thảo DUY NHẤT của một đan phương — bán hết thì đan phương mất nguyên liệu. */
 interface RecipeHerbVariant {
   materialId: string
+}
+
+/**
+ * Phẩm nghề của material suy từ meta nghề (nguồn sự thật
+ * PROFESSION_GRADE_BY_REALM — cùng pattern DecomposeSystem.parseOre).
+ * Essence/byproduct không có meta nghề đủ tốt → undefined, không thể
+ * chứng minh "phẩm thấp hơn" → bị gate loại.
+ */
+function getMaterialGrade(material: Material): ProfessionGrade | undefined {
+  return material.profession?.realmId !== undefined
+    ? PROFESSION_GRADE_BY_REALM[material.profession.realmId]
+    : undefined
+}
+
+/**
+ * Gate 6G: material chỉ bán được khi phẩm nghề NGHIÊM NGẶT thấp hơn phẩm
+ * suy từ cảnh giới người chơi. Material không suy được phẩm → false.
+ */
+function isGradeBelowPlayer(material: Material, playerRealmId: string): boolean {
+  const itemGrade = getMaterialGrade(material)
+
+  if (itemGrade === undefined) {
+    return false
+  }
+
+  const playerGrade = PROFESSION_GRADE_BY_REALM[playerRealmId]
+
+  if (playerGrade === undefined) {
+    return false
+  }
+
+  return PROFESSION_GRADE_ORDER.indexOf(itemGrade) < PROFESSION_GRADE_ORDER.indexOf(playerGrade)
 }
 
 export class VendorSystem {
@@ -30,12 +72,24 @@ export class VendorSystem {
     return getUnitSellPrice(this.registry.get(materialId), 'mortal') !== undefined
   }
 
+  /**
+   * gp123 6G: getUnitSellPrice nhận realmId = CẢNH GIỚI NGƯỜI CHƠI (từ
+   * GameManager thread player.$state.realmId). Trả undefined khi phẩm
+   * material KHÔNG thấp hơn — caller dùng nó để lọc rows nên gate tự
+   * áp cho mọi đường liệt kê.
+   */
   getUnitSellPrice(materialId: string, realmId: string): number | undefined {
     if (!this.registry.has(materialId)) {
       return undefined
     }
 
-    return getUnitSellPrice(this.registry.get(materialId), realmId)
+    const material = this.registry.get(materialId)
+
+    if (!isGradeBelowPlayer(material, realmId)) {
+      return undefined
+    }
+
+    return getUnitSellPrice(material, realmId)
   }
 
   /**
@@ -78,6 +132,13 @@ export class VendorSystem {
 
     if (unitPrice === undefined) {
       return { ok: false, reason: 'not_sellable' }
+    }
+
+    // gp123 6G — gate phẩm: đồng phẩm hoặc cao hơn cảnh giới người chơi
+    // → từ chối. Đặt SAU price check để Linh Thạch (spirit_stone) vẫn
+    // trả not_sellable như cũ, không đổi reason của danh mục ngoài gate.
+    if (!isGradeBelowPlayer(material, realmId)) {
+      return { ok: false, reason: 'grade_not_below' }
     }
 
     const owned = bag.getAmount(materialId)

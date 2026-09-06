@@ -344,24 +344,7 @@
       }
     },
     "vendor": {
-      "cards": {
-        "spiritStone": "Spirit Stones",
-        "wood": "Spirit Wood",
-        "ore": "Spirit Ore"
-      },
-      "sections": {
-        "tier": "Grade Conversion",
-        "tierRealm": "Grade Conversion (realm)"
-      },
-      "stone": {
-        "upTrung": "{ratio} Lesser → 1 Medium",
-        "upThuong": "{ratio} Medium → 1 Greater"
-      },
-      "tierConvert": "{ratio} → 1",
-      "empty": {
-        "wood": "No Spirit Wood to convert.",
-        "ore": "No Spirit Ore to convert."
-      },
+      "gateNotBelow": "Only items of a grade below your current realm can be sold",
       "sell": {
         "title": "Liquidate",
         "rate": "Sell surplus materials for Spirit Stones at current grade rates.",
