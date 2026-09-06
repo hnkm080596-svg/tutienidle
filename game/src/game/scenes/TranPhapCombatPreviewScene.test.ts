@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest'
-import { PREVIEW_CELL_SIZE, previewCellTopLeft } from './TranPhapPreviewScene'
+import { PREVIEW_CELL_SIZE, previewCellTopLeft } from './TranPhapCombatPreviewScene'
 
 describe('previewCellTopLeft', () => {
   it('maps local (0,0) to the pixel origin', () => {
