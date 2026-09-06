@@ -3,7 +3,8 @@
 // playtest chỉnh tại đây, không sửa system). Engine chỉ enforce THỨ TỰ
 // (phẩm cao trọng số thấp hơn), không tự gán con số (§5.3).
 
-import type { HerbAge } from './ProductionTypes'
+import { PRODUCTION_SITE_KINDS } from './ProductionTypes'
+import type { HerbAge, ProductionSiteKind } from './ProductionTypes'
 
 /**
  * Thời gian cơ sở theo cảnh giới đang thu thập (§4.2) — baseline tăng
@@ -116,6 +117,101 @@ export const FOREST_WOOD_AMOUNTS_BY_TIER_INDEX: readonly number[] = [3, 2, 1]
 // =========================
 
 export const PRODUCTION_OFFLINE_CAP_SECONDS = 10 * 60 * 60
+
+// =========================
+// Bảng tổng hợp suất sản xuất (gp123 6F) — PURE DERIVATION từ các bảng
+// balance phía trên, KHÔNG có con số mới: mỗi hàng = một site-kind trong
+// một cảnh giới thu thập, tổng hợp cycle seconds + yield + trọng số
+// tuổi + worker model để simulation test (ProductionBalance.simulation
+// .test.ts) khoá bất đẳng thức "sản xuất ≤ tiêu thụ trên mỗi nhân công".
+// Tune balance → sửa các bảng nguồn ở trên, bảng này tự động cập nhật.
+// =========================
+
+/** Worker model vận hành một chuỗi (6F): site slots / Đan Phòng / Phân Giải. */
+export type ProductionWorkerModel =
+  | 'manual_or_worker_slots'
+  | 'dan_phong_jobs'
+  | 'decompose_workers'
+
+/** Một hàng của PRODUCTION_RATE_TABLE — suất của 1 site-kind/realm (mỗi cycle). */
+export interface ProductionRateRow {
+  /** Site kind (forest/mine/grotto). */
+  kind: ProductionSiteKind
+
+  /** Cảnh giới đang thu thập — quyết định cycle seconds. */
+  collectionRealmId: string
+
+  /** Giây/cycle level 1 = ceil(base / speed level 1). */
+  cycleSeconds: number
+
+  /**
+   * Id material thu được — `<realm>_wood_<age>` / `<realm>_ore_<age>`;
+   * grotto là `<herbBase>_<age>` (herbBase theo đan phương, §6.1).
+   */
+  yieldMaterialIdPattern: string
+
+  /** Số lượng mỗi cycle theo tuổi (wood/ore: MATERIAL_AGE_AMOUNTS; grotto: GROTTO_HERB_AMOUNT). */
+  yieldAmountByAge: Readonly<Record<HerbAge, number>>
+
+  /** Trọng số roll tuổi của site (grotto dùng HERB_AGE_WEIGHTS, còn lại MATERIAL_AGE_WEIGHTS). */
+  ageRollWeights: Readonly<Record<HerbAge, number>>
+
+  /** Worker model của chuỗi vận hành hàng này. */
+  workerModel: ProductionWorkerModel
+}
+
+/** GROTTO_HERB_AMOUNT trải đều mọi tuổi (mỗi cycle Động Thiên nhận đúng 1 thảo). */
+const GROTTO_HERB_AMOUNT_RECORD: Readonly<Record<HerbAge, number>> = {
+  decade: GROTTO_HERB_AMOUNT,
+  century: GROTTO_HERB_AMOUNT,
+  millennium: GROTTO_HERB_AMOUNT,
+  myriad_year: GROTTO_HERB_AMOUNT,
+  thuong_co: GROTTO_HERB_AMOUNT,
+}
+
+/** Trục realm của bảng — từ chính bảng cycle seconds (thứ tự giữ nguyên). */
+const RATE_TABLE_REALM_IDS: readonly string[] = Object.keys(CYCLE_BASE_SECONDS_BY_REALM)
+
+function buildRateRow(kind: ProductionSiteKind, collectionRealmId: string): ProductionRateRow {
+  const baseSeconds = CYCLE_BASE_SECONDS_BY_REALM[collectionRealmId]
+
+  if (!baseSeconds) {
+    throw new Error(`ProductionBalance: CYCLE_BASE_SECONDS_BY_REALM thiếu realm ${collectionRealmId}`)
+  }
+
+  if (kind === 'grotto') {
+    return {
+      kind,
+      collectionRealmId,
+      cycleSeconds: computeCycleSeconds(baseSeconds, 1),
+      yieldMaterialIdPattern: '<herbBase>_<age>',
+      yieldAmountByAge: GROTTO_HERB_AMOUNT_RECORD,
+      ageRollWeights: HERB_AGE_WEIGHTS,
+      workerModel: 'manual_or_worker_slots',
+    }
+  }
+
+  return {
+    kind,
+    collectionRealmId,
+    cycleSeconds: computeCycleSeconds(baseSeconds, 1),
+    yieldMaterialIdPattern:
+      kind === 'forest' ? `${collectionRealmId}_wood_<age>` : `${collectionRealmId}_ore_<age>`,
+    yieldAmountByAge: MATERIAL_AGE_AMOUNTS,
+    ageRollWeights: MATERIAL_AGE_WEIGHTS,
+    workerModel: 'manual_or_worker_slots',
+  }
+}
+
+/**
+ * Bảng xuất ra cho simulation test — flatten mọi realm × 3 site-kind.
+ * Đơn vị: số lượng mỗi cycle/worker. Số liệu tiêu thụ Đan Phòng/Phân
+ * Giải nằm ở data/alchemy + DecomposeSystem (bảng này chỉ tổng hợp
+ * chuỗi nguồn Lâm/Quáng/Động Thiên).
+ */
+export const PRODUCTION_RATE_TABLE: readonly ProductionRateRow[] = RATE_TABLE_REALM_IDS.flatMap(
+  (realmId) => PRODUCTION_SITE_KINDS.map((kind) => buildRateRow(kind, realmId)),
+)
 
 // =========================
 // Weighted roll helpers — seeded (mulberry32) để roll SAU khi hoàn
