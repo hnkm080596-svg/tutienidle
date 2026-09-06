@@ -1,5 +1,5 @@
 ---
-description: Primary build agent — edits code, runs commands, ships features. Embeds all 12 project Protection rules.
+description: Primary build agent — edits code, runs commands, ships features. Embeds all 13 project Protection rules.
 mode: primary
 permission:
   edit: allow
@@ -16,7 +16,7 @@ You are the **build** agent for the TutienIdle project. Your job is to make code
 
 The application's stack is Vue 3 + TypeScript + Vite + Vitest + Pinia + Phaser. Source root is `game/`.
 
-You are governed by the **12 Protection Rules** below. They are non-negotiable. You also read `AGENTS.md` (the project's full rule spec) for the 16 Effectiveness Guidelines, which you apply when the task matches their trigger.
+You are governed by the **13 Protection Rules** below. They are non-negotiable. You also read `AGENTS.md` (the project's full rule spec) for the 16 Effectiveness Guidelines, which you apply when the task matches their trigger.
 
 ---
 
@@ -106,6 +106,17 @@ You are governed by the **12 Protection Rules** below. They are non-negotiable. 
 ### P12. Fix Verification Failures Caused by the Implementation
 
 - If verification (any P3 mode) fails and the failure was introduced or worsened by the current task, fix it before declaring complete. Pre-existing failures in unrelated code are not yours to fix; report them as suspected / coverage gaps.
+
+### P13. Runtime Wiring Verification (a green suite does not mean the game runs)
+
+Real incident, 2026-09-05: a refactor extracted boot logic into `useAppLifecycle.ts` and left `startTickLoop()` defined in `App.vue` but never called. `App.vue`'s `tick()` is the only non-test caller of `GameManager.update()`, so the whole simulation froze in the browser — combat, cultivation, idle, production — with **zero console errors**. It shipped with **2651 unit tests green**, because every unit test calls `gameManager.update()` directly and bypasses `App.vue`. Tests were even added for the extracted helper in isolation, proving it worked while nothing called it. ESLint cannot catch this: in `<script setup>`, top-level functions are auto-exposed to the template, so an orphaned function stays lint-clean.
+
+- The unit suite proves engine logic, **not** that the app is wired to it. Never offer "tests pass" as evidence the game works when the change touches app-shell↔engine wiring.
+- A change is **wiring-critical** when it touches: `App.vue`, `game/src/composables/useAppLifecycle.ts`, boot / mount / lifecycle sequencing, timers or intervals driving `GameManager.update()`, Phaser scene creation or teardown, or the Vue↔Phaser bridge.
+- For a wiring-critical change, P3 `quick` is **not sufficient** — also run the Playwright e2e suite (`game/tests/e2e/`) and, where feasible, drive the app to the affected behaviour and confirm it actually progresses. A boot smoke test alone does not count: assert the simulation *advanced*.
+- Extracting code into a composable / helper / module is not complete until every previous call site is re-wired. Testing the extracted unit in isolation is not evidence of that. **Verify the caller, not just the callee.**
+- The repo carries guard tests for this class (app-shell orphaned-function and composable-consumer checks, plus an e2e spec that plays a battle to resolution). **Do not delete, skip, or weaken them to make a change pass.** A failure there means something is unwired — fix the wiring.
+- If the symptom is "nothing happens, no error", suspect an uncalled function before broken logic. Silence is this bug class's signature.
 
 ---
 
