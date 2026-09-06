@@ -21,8 +21,9 @@ import { TEST_COMPANIONS } from '@/data/companion/Companions'
 import type { TranPhapDefinition } from '@/data/formation/TranPhap'
 import type { FormationSlotAssignment } from '@/core/player/Player'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
-import { PREVIEW_CELL_SIZE, PREVIEW_GRID_SIZE } from '@/game/scenes/TranPhapPreviewScene'
-import type { TranPhapPreviewScene } from '@/game/scenes/TranPhapPreviewScene'
+import { PREVIEW_CELL_SIZE, PREVIEW_GRID_SIZE } from '@/game/scenes/TranPhapCombatPreviewScene'
+import type { TranPhapCombatPreviewScene } from '@/game/scenes/TranPhapCombatPreviewScene'
+import type { SlotState } from '@/game/support/SlotState'
 
 const ui = useUiStore()
 const player = usePlayerStore()
@@ -42,9 +43,30 @@ function isLitCell(row: number, column: number): boolean {
   return selectedFormation.value?.cellPattern.some((cell) => cell.row === row && cell.column === column) ?? false
 }
 
-function assignmentAt(row: number, column: number): FormationSlotAssignment | undefined {
-  return currentAssignments.value.find((a) => a.row === row && a.column === column)
-}
+    function assignmentAt(row: number, column: number): FormationSlotAssignment | undefined {
+      return currentAssignments.value.find((a) => a.row === row && a.column === column)
+    }
+
+    // Battlefield Slot spec (2026-09-06) — thay boolean rời (--lit) bằng
+    // SlotState dùng chung, để nếu sau này combat thật cần state tương tự
+    // (targeting thủ công, tooltip theo ô) không phải bịa lại tên khác.
+    const hoveredCell = ref<{ row: number; column: number } | null>(null)
+
+    function slotStateAt(row: number, column: number): SlotState {
+      if (!isLitCell(row, column)) {
+        return 'locked'
+      }
+
+      if (assignmentAt(row, column)) {
+        return 'occupied'
+      }
+
+      if (hoveredCell.value?.row === row && hoveredCell.value?.column === column) {
+        return 'hover'
+      }
+
+      return 'enabled'
+    }
 
 // Danh sách quân "chưa được xếp vào ô nào" — kéo từ đây vào lưới.
 // Player luôn là 1 lá bài cố định (id 'player'), cộng thêm mọi
@@ -156,7 +178,7 @@ function close() {
 const previewContainerRef = ref<HTMLDivElement | null>(null)
 
 let previewGame: Phaser.Game | null = null
-let previewScene: TranPhapPreviewScene | null = null
+let previewScene: TranPhapCombatPreviewScene | null = null
 
 // Bootstrap Phaser CHỈ khi panel thật sự mở — container ref (bên trong
 // slot của OverlayPanel) chỉ tồn tại trong DOM lúc `open`, nên onMounted
@@ -172,9 +194,9 @@ watch(
         return
       }
 
-      const [{ default: Phaser }, { TranPhapPreviewScene: TranPhapPreviewSceneClass }] = await Promise.all([
+      const [{ default: Phaser }, { TranPhapCombatPreviewScene: TranPhapCombatPreviewSceneClass }] = await Promise.all([
         import('phaser'),
-        import('@/game/scenes/TranPhapPreviewScene'),
+        import('@/game/scenes/TranPhapCombatPreviewScene'),
       ])
 
       // Panel có thể đã đóng lại trong lúc 2 dynamic import trên đang
@@ -190,11 +212,11 @@ watch(
         width: PREVIEW_CELL_SIZE * PREVIEW_GRID_SIZE,
         height: PREVIEW_CELL_SIZE * PREVIEW_GRID_SIZE,
         transparent: true,
-        scene: [TranPhapPreviewSceneClass],
+        scene: [TranPhapCombatPreviewSceneClass],
       })
 
       previewGame.events.once('ready', () => {
-        previewScene = (previewGame?.scene.getScene('TranPhapPreviewScene') as TranPhapPreviewScene | undefined) ?? null
+        previewScene = (previewGame?.scene.getScene('TranPhapCombatPreviewScene') as TranPhapCombatPreviewScene | undefined) ?? null
         previewScene?.syncAssignments(currentAssignments.value)
       })
     } else {
@@ -232,12 +254,13 @@ onUnmounted(() => {
               <div
                 v-for="column in PREVIEW_GRID_SIZE"
                 :key="column"
-                class="tran-phap-panel__cell"
-                :class="{ 'tran-phap-panel__cell--lit': isLitCell(row - 1, column - 1) }"
+                :class="['tran-phap-panel__cell', `tran-phap-panel__cell--${slotStateAt(row - 1, column - 1)}`]"
                 :draggable="!!assignmentAt(row - 1, column - 1)"
                 @dragstart="(event) => { const occupant = assignmentAt(row - 1, column - 1); if (occupant) (event as DragEvent).dataTransfer?.setData('text/plain', occupant.combatantId) }"
+                @dragenter="hoveredCell = { row: row - 1, column: column - 1 }"
+                @dragleave="() => { if (hoveredCell?.row === row - 1 && hoveredCell?.column === column - 1) hoveredCell = null }"
                 @dragover.prevent
-                @drop="(event) => onDrop(row - 1, column - 1, (event as DragEvent).dataTransfer?.getData('text/plain') ?? '')"
+                @drop="(event) => { onDrop(row - 1, column - 1, (event as DragEvent).dataTransfer?.getData('text/plain') ?? ''); hoveredCell = null }"
                 @click="() => { const occupant = assignmentAt(row - 1, column - 1); if (occupant) removeAssignment(occupant.combatantId) }"
               >
                 {{ assignmentAt(row - 1, column - 1)?.combatantId ?? '' }}
@@ -347,13 +370,28 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   border: 1px solid var(--surface-line);
-  opacity: 0.35;
   font-size: var(--text-xs, 11px);
 }
 
-.tran-phap-panel__cell--lit {
+/* SlotState (Battlefield Slot spec, 2026-09-06) — 'locked' giữ đúng look
+   mờ cũ (--lit trước đây = false); 'enabled'/'occupied' giữ đúng look
+   sáng cũ (--lit trước đây = true); 'hover' thêm viền nhấn khi đang kéo
+   một quân TỚI ô này (chỉ hiện trên ô enabled, chưa có ai chiếm — xem
+   slotStateAt()'s thứ tự ưu tiên locked > occupied > hover > enabled). */
+.tran-phap-panel__cell--locked {
+  opacity: 0.35;
+}
+
+.tran-phap-panel__cell--enabled,
+.tran-phap-panel__cell--occupied {
   opacity: 1;
   border-color: var(--jade, #4caf50);
+}
+
+.tran-phap-panel__cell--hover {
+  opacity: 1;
+  border-color: var(--jade, #4caf50);
+  box-shadow: 0 0 0 2px var(--jade, #4caf50) inset;
 }
 
 .tran-phap-panel__formation-list {
