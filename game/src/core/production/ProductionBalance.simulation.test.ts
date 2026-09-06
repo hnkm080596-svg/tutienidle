@@ -1,6 +1,6 @@
 // ProductionBalance.simulation.test.ts (gp123 6F, task D1) — simulation
 // 24h × 1 worker × 3 chuỗi kinh tế với seed cố định, khoá bất đẳng thức
-// "sản xuất ≤ tiêu thụ trên mỗi nhân công, cùng tuổi" bằng số liệu thực
+// theo từng chuỗi (mỗi chuỗi bất đẳng thức riêng, nêu chi tiết bên dưới) bằng số liệu thực
 // của engine (ProductionSystem/AlchemySystem/DecomposeSystem) — không
 // dùng mô hình rút gọn:
 //
@@ -457,6 +457,11 @@ describe('Simulation 24h × 1 worker — cân bằng từng chuỗi (gp123 6F)',
       `[6F Khoáng] SX=${chain.oreProduced} tràn=${chain.oreOverflow} ` +
       `tồn=${chain.oreRemaining} TT=${chain.oreConsumed} tinh_hoa=${chain.tinhHoaProduced}`,
     )
+
+    // Bất đẳng thức SX ≥ TT trên là hằng đẳng thức bảo toàn (tràn + tồn ≥ 0
+    // luôn đúng) — khoá FALSIFIABLE nằm ở tồn cuối: Phân Giải phải theo kịp
+    // Quáng, không để khoáng tồn đọng cuối 24h.
+    expect(chain.oreRemaining).toBe(0)
 
     expect(chain.oreProduced).toBeGreaterThanOrEqual(chain.oreConsumed)
   })
