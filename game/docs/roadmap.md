@@ -261,6 +261,12 @@ In-flight: gp123 (Group 1+2 xong chờ merge; Group 3 đang làm) → action-pla
 | Code-split | Entry 2231→848KB + phaser chunk riêng — merged `af88cee` |
 | Turn-based combat rework (M1→Slice 7 + Fairness + Stat + Future Systems + Auto-farm) | Engine duy nhất + manual UI + party + auto-farm — xem mục 9 (toàn bộ slice 🟢) |
 
+### 7.9.1. Battlefield Slot / shared CombatGridView — Part 1 of 4 XONG (2026-09-06)
+
+| Plan | Kết quả |
+|---|---|
+| [Battlefield Slot / shared CombatGridView](../../docs/superpowers/plans/2026-09-06-battlefield-slot-shared-gridview.md) | CombatGridView dùng chung combat thật + panel Trận Pháp qua CombatGridViewHost interface; TranPhapCombatPreviewScene thay TranPhapPreviewScene (render qua đúng CombatGridView — animation-reset fix theo kiến trúc, không phải bản vá); SlotState vocabulary introduced (panel consumes today). Real combat zero behavior change (host fallback branch unreachable — CombatScene trả undefined, regression-tested). 6 tasks inline, 2760/2760 tests + type-check + build + targeted e2e pass. Part 2 (2.5D perspective panel — BLOCKING prerequisite này đã thỏa), Part 3 (wave spawn redesign), Part 4 (spawn VFX wiring) chưa bắt đầu. |
+
 ### 7.10. Plans audit remediation — SYSTEM CODE REVIEW: TASKS 1–8 XONG (2026-09-05)
 
 | Plan | Phạm vi | Trạng thái |
