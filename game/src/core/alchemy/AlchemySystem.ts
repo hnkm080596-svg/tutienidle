@@ -11,6 +11,7 @@
 import type { PillBag } from '../pill/PillBag'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
+import type { HerbAge } from '../production/ProductionTypes'
 import { HERB_AGE_BASE_SUCCESS_PERCENT } from '../production/ProductionBalance'
 import { mulberry32 } from '../production/ProductionBalance'
 
@@ -19,8 +20,8 @@ export interface AlchemyHerbVariant {
   /** Material id đầy đủ (kèm hậu tố niên đại hoặc biến thể legacy). */
   materialId: string
 
-  /** Khóa tra HERB_AGE_BASE_SUCCESS_PERCENT. */
-  age: 'decade' | 'century' | 'millennium' | 'myriad_year'
+  /** Khóa tra HERB_AGE_BASE_SUCCESS_PERCENT — trục HerbAge 5 bậc (6E C1). */
+  age: HerbAge
 
   /** Nhãn hiển thị biến thể (vd "Bách Niên"). */
   label: string

@@ -480,12 +480,12 @@
     "decompose": {
       "labels": {
         "gradeFilter": "Phẩm khoáng",
-        "qualityFilter": "Chất khoáng",
+        "ageFilter": "Tuổi khoáng",
         "workers": "Nhân công"
       },
       "select": {
         "allGrades": "Mọi phẩm",
-        "allQualities": "Mọi chất"
+        "allAges": "Mọi tuổi"
       },
       "estimate": "≈ {amount} Luyện Khí Tinh Hoa / lượt"
     }

@@ -1,5 +1,5 @@
 ﻿// @vitest-environment jsdom
-// Task 14-UI (rework P4) — DecomposeTab: settings UI (grade/quality
+// Task 14-UI (rework P4) — DecomposeTab: settings UI (grade/age
 // select + worker slider) + output preview, mount qua createApp+provide
 // (project pattern, KHÔNG @vue/test-utils).
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest'

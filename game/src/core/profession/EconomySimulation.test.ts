@@ -116,13 +116,13 @@ describe('Economy simulation — yield → sink', () => {
     expect(decadePerHour).toBeGreaterThan(10)
   })
 
-  it('thao: moi dan phuong nghe co dung mot thao rieng du 4 tuoi; sink ton tai', () => {
+  it('thao: moi dan phuong nghe co dung mot thao rieng du 5 tuoi; sink ton tai', () => {
     const grottoRecipeIds = alchemyRecipes.filter((recipe) => recipe.realmId === 'mortal')
 
     expect(grottoRecipeIds.length).toBe(8)
 
     for (const recipe of grottoRecipeIds) {
-      expect(recipe.herbVariants.length).toBe(4)
+      expect(recipe.herbVariants.length).toBe(5)
 
       // Moi variant material phai ton tai trong materials data.
       for (const variant of recipe.herbVariants) {

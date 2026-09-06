@@ -35,15 +35,18 @@ export const TERRITORY_THANH_VAN: TerritoryDefinition = {
 // =========================
 
 const SITE_UPGRADE_COSTS = (): ProductionSiteDefinition['upgradeCosts'] => {
+  // Thang tuổi theo tier — KHỚP 1:1 với AGE_BY_TIER của
+  // data/building/buildings.ts (tier 2=decade, 3-4=century,
+  // 5-6=millennium, 7-8=myriad_year, 9=thuong_co).
   const ageByTier: Record<number, (typeof HERB_AGES)[number]> = {
     2: 'decade',
-    3: 'decade',
+    3: 'century',
     4: 'century',
-    5: 'century',
+    5: 'millennium',
     6: 'millennium',
-    7: 'millennium',
+    7: 'myriad_year',
     8: 'myriad_year',
-    9: 'myriad_year',
+    9: 'thuong_co',
   }
   return REALM_TIERS.slice(1).map((realmId, index) => {
     const targetTier = index + 2

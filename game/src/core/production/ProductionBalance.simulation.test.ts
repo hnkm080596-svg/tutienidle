@@ -67,8 +67,8 @@ const GROTTO_SITE_ID = TERRITORY_THANH_VAN.productionSiteIds.grotto
 /** Đan phương mô hình hoá: 1 trong 8 đan phẩm Phàm Nhân (chain Thảo/Gỗ). */
 const HERB_RECIPE = alchemyRecipes.find((recipe) => recipe.id === 'alchemy_tu_linh_dan_mortal')!
 
-/** Đan Phòng chỉ nhận thảo decade..myriad_year (recipe không có biến thể thuong_co). */
-const CRAFTABLE_AGES: readonly HerbAge[] = ['decade', 'century', 'millennium', 'myriad_year']
+/** Đan Phòng nhận thảo ĐỦ trục HerbAge 5 bậc (recipes sinh từ HERB_AGES). */
+const CRAFTABLE_AGES: readonly HerbAge[] = HERB_AGES
 
 /** Level Đan Phòng 1 — bonus 0, success % đúng bằng bảng base theo tuổi. */
 const ALCHEMY_ROOM_LEVEL = 1

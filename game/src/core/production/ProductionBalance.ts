@@ -109,9 +109,6 @@ export const HERB_AGE_BASE_SUCCESS_PERCENT: Record<HerbAge, number> = {
 /** Số thảo nhận được mỗi cycle Động Thiên (balance data). */
 export const GROTTO_HERB_AMOUNT = 1
 
-/** Số gỗ nhận được theo tier (balance data §13.2). */
-export const FOREST_WOOD_AMOUNTS_BY_TIER_INDEX: readonly number[] = [3, 2, 1]
-
 // =========================
 // Offline (§4.3): settle tuần tự trong cap; mỗi auto-cycle seed riêng.
 // =========================

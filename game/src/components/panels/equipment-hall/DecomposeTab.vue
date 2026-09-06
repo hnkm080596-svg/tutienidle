@@ -77,10 +77,10 @@ function onWorkersInput(event: Event) {
       </label>
 
       <label class="decompose-tab__filter">
-        <span>{{ t('panels.decompose.labels.qualityFilter') }}</span>
+        <span>{{ t('panels.decompose.labels.ageFilter') }}</span>
 
         <select :value="settingsMirror.ageFilter" @change="onAgeChange">
-          <option value="all">{{ t('panels.decompose.select.allQualities') }}</option>
+          <option value="all">{{ t('panels.decompose.select.allAges') }}</option>
 
           <option v-for="age in HERB_AGES" :key="age" :value="age">
             {{ MATERIAL_AGE_LABELS[age] }}

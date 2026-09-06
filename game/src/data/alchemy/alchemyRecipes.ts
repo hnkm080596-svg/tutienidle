@@ -1,14 +1,16 @@
 import type { AlchemyHerbVariant, AlchemyRecipe } from '@/core/alchemy/AlchemySystem'
+import { HERB_AGES } from '@/core/production/ProductionTypes'
 import { REALM_TIERS } from '@/core/realm/RealmTierMap'
+import { MATERIAL_AGE_LABELS } from '@/data/materials/materials'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
 
+/** Biến thể phủ ĐỦ trục HerbAge (5 bậc — gp123 6E C1, thuong_co craftable). */
 function grottoVariants(baseId: string): AlchemyHerbVariant[] {
-  return [
-    { materialId: `${baseId}_decade`, age: 'decade', label: 'Thập Niên' },
-    { materialId: `${baseId}_century`, age: 'century', label: 'Bách Niên' },
-    { materialId: `${baseId}_millennium`, age: 'millennium', label: 'Thiên Niên' },
-    { materialId: `${baseId}_myriad_year`, age: 'myriad_year', label: 'Vạn Niên' },
-  ]
+  return HERB_AGES.map((age) => ({
+    materialId: `${baseId}_${age}`,
+    age,
+    label: MATERIAL_AGE_LABELS[age],
+  }))
 }
 
 /** Tám đan phương mỗi phẩm; UI chỉ hiện tám công thức của phẩm hiện tại. */

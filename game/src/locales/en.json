@@ -480,12 +480,12 @@
     "decompose": {
       "labels": {
         "gradeFilter": "Ore grade",
-        "qualityFilter": "Ore quality",
+        "ageFilter": "Ore age",
         "workers": "Workers"
       },
       "select": {
         "allGrades": "All grades",
-        "allQualities": "All qualities"
+        "allAges": "All ages"
       },
       "estimate": "≈ {amount} essence / cycle"
     }
