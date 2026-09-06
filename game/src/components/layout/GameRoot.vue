@@ -16,6 +16,7 @@ import LuyenThePanel from '../panels/LuyenThePanel.vue'
 import QuanKhiPanel from '../panels/QuanKhiPanel.vue'
 import QuestPanel from '../panels/QuestPanel.vue'
 import ArtifactPanel from '../panels/ArtifactPanel.vue'
+import TranPhapPanel from '../panels/TranPhapPanel.vue'
 import Tooltip from '../common/Tooltip.vue'
 import ToastContainer from '../common/ToastContainer.vue'
 import ActionFeedbackLog from '../common/ActionFeedbackLog.vue'
@@ -92,6 +93,8 @@ function closeSidePanels() {
         <QuestPanel />
 
         <ArtifactPanel />
+
+        <TranPhapPanel />
 
         <!-- Command wheel nhiều tầng — trigger là nhân vật tu luyện
              giữa Động Phủ (DongFuScene.vue). -->

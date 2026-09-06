@@ -107,10 +107,10 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
     target: { kind: 'standalone', panel: 'quest' },
     available: ALWAYS_AVAILABLE,
   },
-  // Bản Mệnh Pháp Bảo (2026-08-27) — SHIPPED (khác talisman_slot/
-  // formation_slot bên dưới, vẫn future). Render ngay cả trước Trúc Cơ/
-  // với nghề chưa có definition — disabledReason() chặn bấm + giải
-  // thích lý do, đúng doc §12.1 (khác ẩn hẳn nút).
+  // Bản Mệnh Pháp Bảo (2026-08-27) — SHIPPED (khác talisman_slot bên
+  // dưới, vẫn future). Render ngay cả trước Trúc Cơ/ với nghề chưa có
+  // definition — disabledReason() chặn bấm + giải thích lý do, đúng
+  // doc §12.1 (khác ẩn hẳn nút).
   {
     id: 'phap_bao',
     ring: 2,
@@ -129,18 +129,21 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
       return null
     },
   },
-  // Future slots — tồn tại trong catalog nhưng KHÔNG render nút.
+  // Future slot — tồn tại trong catalog nhưng KHÔNG render nút.
   {
     id: 'talisman_slot',
     ring: 2,
     label: 'Phù',
     available: NEVER_AVAILABLE,
   },
+  // Trận Pháp (Combat Art Roster spec, 2026-09-05) — SHIPPED, mở
+  // TranPhapPanel.vue để kéo-thả gán player/companion vào lưới 6x6.
   {
     id: 'formation_slot',
     ring: 2,
     label: 'Trận',
-    available: NEVER_AVAILABLE,
+    target: { kind: 'standalone', panel: 'tran_phap' },
+    available: ALWAYS_AVAILABLE,
   },
 
   // ---- Ring 3 — building thật (dual-entry với hotspot background) ----

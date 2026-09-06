@@ -123,20 +123,30 @@ describe('DongFuCommandWheel', () => {
     expect(wheel.classList.contains('is-ready')).toBe(true)
   })
 
-  it('future slot (Phù/Trận) KHÔNG render nút', async () => {
+  it('future slot (Phù) KHÔNG render nút', async () => {
     await mounted.open()
 
     expect(mounted.slot('talisman_slot')).toBeNull()
-    expect(mounted.slot('formation_slot')).toBeNull()
 
     // Slot thật vẫn render đủ.
     expect(mounted.slot('character')).not.toBeNull()
     expect(mounted.slot('scripture_pavilion')).not.toBeNull()
   })
 
+  // Trận Pháp (Combat Art Roster spec, 2026-09-05) — SHIPPED: formation_slot
+  // không còn future, render nút mở TranPhapPanel.vue ngay (không có gate
+  // disabledReason như phap_bao, mọi trận pháp mở sẵn từ đầu).
+  it('slot Trận render và mở được ngay từ đầu', async () => {
+    await mounted.open()
+
+    const slot = mounted.slot('formation_slot')
+
+    expect(slot).not.toBeNull()
+  })
+
   // Bản Mệnh Pháp Bảo (2026-08-27) — SHIPPED: slot render ngay (khác
-  // talisman_slot/formation_slot vẫn future) nhưng disabled trước Trúc
-  // Cơ, xem commandWheelCatalog.ts's phap_bao.disabledReason().
+  // talisman_slot vẫn future) nhưng disabled trước Trúc Cơ, xem
+  // commandWheelCatalog.ts's phap_bao.disabledReason().
   it('slot Pháp Bảo render nhưng disabled trước Trúc Cơ (Phàm Nhân mặc định)', async () => {
     await mounted.open()
 

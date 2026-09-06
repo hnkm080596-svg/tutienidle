@@ -72,8 +72,11 @@ export type ScripturePavilionTab = 'technique' | 'lore'
 // 'artifact' (ArtifactPanel.vue, Bản Mệnh Pháp Bảo, 2026-08-27) — cùng
 // pattern các panel standalone trên, mở qua command wheel khi player
 // đạt Trúc Cơ (xem game/support/commandWheelCatalog.ts's slot phap_bao).
+// 'tran_phap' (TranPhapPanel.vue, Trận Pháp — Combat Art Roster spec,
+// 2026-09-05) — panel kéo-thả gán companion/player vào lưới 6x6 cục bộ
+// của trận pháp đang chọn, mở qua command wheel slot formation_slot.
 export type StandalonePanel =
-  'skill' | 'technique' | 'realm' | 'luyen_the' | 'quan_khi' | 'quest' | 'artifact' | null
+  'skill' | 'technique' | 'realm' | 'luyen_the' | 'quan_khi' | 'quest' | 'artifact' | 'tran_phap' | null
 
 export type BattleRunMode = 'manual' | 'repeat' | 'progress' | 'perfect_farm'
 
