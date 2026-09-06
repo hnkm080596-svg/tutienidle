@@ -4,8 +4,8 @@
 // nguy cơ đụng key dù dùng lại ĐÚNG PLACEHOLDER_SHEET_KEY), nhưng giờ
 // implements CombatGridViewHost và dùng ĐÚNG CombatGridView mà combat
 // thật dùng (spec §4) — thay vì tự viết lại logic sprite/animation. Vẽ
-// lưới 6x6 PHẲNG (isPerspective: false — 2.5D là spec riêng sau này,
-// KHÔNG làm ở đây) + 1 layer background dự phòng cho art thật sau này.
+// lưới 6x6 ở 2.5D perspective (isPerspective: true — Battlefield
+// Perspective Panel 2026-09-06) + 2 lớp nền sky/ground cho art thật sau này.
 // Tương tác kéo-thả KHÔNG nằm ở đây — canvas này thuần hiển thị, overlay
 // HTML trong suốt (TranPhapPanel.vue, không đổi) mới là drop target thật.
 import Phaser from 'phaser'
@@ -17,7 +17,11 @@ import {
   PLACEHOLDER_FRAME_COUNT,
   PLACEHOLDER_FRAME_RATE,
 } from '@/game/support/CombatAnimationSet'
-import type { BattleGridProjection } from '@/game/support/BattleGridProjection'
+import {
+  createBattleGridProjection,
+  computePerspectiveGeometry,
+  type BattleGridProjection,
+} from '@/game/support/BattleGridProjection'
 import type { FormationSlotAssignment } from '@/core/player/Player'
 import type { LaneIndex } from '@/core/battle/BattleLane'
 import { CombatGridView } from './combat/combat-grid-view'
@@ -26,6 +30,17 @@ import type { EntitySprite } from './combat/combatTypes'
 
 export const PREVIEW_CELL_SIZE = 60
 export const PREVIEW_GRID_SIZE = 6
+// PHẢI khớp CHÍNH XÁC với PANEL_CANVAS_WIDTH/HEIGHT trong TranPhapPanel.vue
+// (Task 3, cùng plan) — 2 nơi định nghĩa vì .vue component và scene này
+// không chia sẻ được scope; đổi 1 bên PHẢI đổi bên kia. Nếu lệch, canvas
+// Phaser thật sẽ khác kích thước scene tự tính (méo layout nhưng không
+// crash — an toàn nhưng sai hình).
+export const PANEL_WIDTH = 420
+export const PANEL_HEIGHT = 480
+export const PERSPECTIVE_MIN_ROAD_HEIGHT_PANEL = 140
+
+const PANEL_SKY_COLOR = 0x22283a
+const PANEL_GROUND_COLOR = 0x1a1a1a
 
 const PREVIEW_IDLE_ANIMATION_KEY = 'tran-phap-preview-idle'
 
@@ -34,11 +49,21 @@ export function previewCellTopLeft(row: number, column: number): { x: number; y:
 }
 
 export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGridViewHost {
-  readonly isPerspective = false
+  // Battlefield Perspective Panel (2026-09-06) — chuyển từ flat sang
+  // perspective; combat-grid-view.ts's applySpriteSize()/positionSprite()
+  // tự rẽ nhánh áp dụng applyEntityDepthScale() khi cờ này true (đã build
+  // sẵn từ Part 1, không cần sửa gì thêm ở 2 hàm đó).
+  readonly isPerspective = true
   projection: BattleGridProjection | undefined
   gridGraphics: Phaser.GameObjects.Graphics | undefined
   readonly usingArtBackdrop = false
+  // arenaRect luôn undefined ở panel (chỉ combat thật's flat mode dùng nó
+  // để CombatGridView.redrawGridLines() phân biệt flat/perspective qua
+  // Boolean(this.host.arenaRect) — panel LUÔN perspective nên giữ
+  // undefined là đúng, KHÔNG gán Rectangle nào vào field này).
   arenaRect: Phaser.GameObjects.Rectangle | undefined
+  private skyLayer: Phaser.GameObjects.Rectangle | undefined
+  private groundLayer: Phaser.GameObjects.Rectangle | undefined
   // 0.8 × cell (KHÔNG bằng PREVIEW_CELL_SIZE thẳng) — characterWidth/Height
   // ở đây LÀ kích thước sprite hiển thị mong muốn (applySpriteSize()'s
   // flat formula: displayHeight = characterHeight × sizeMultiplier, và
@@ -80,20 +105,30 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
   create(): void {
     this.gridView = new CombatGridView(this)
 
-    // Layer background — hiện tại chỉ 1 màu phẳng, để dành gắn ảnh thật
-    // sau này mà không cần đổi cấu trúc scene.
-    this.add
-      .rectangle(0, 0, PREVIEW_CELL_SIZE * PREVIEW_GRID_SIZE, PREVIEW_CELL_SIZE * PREVIEW_GRID_SIZE, 0x1a1a1a)
+    const geometry = computePerspectiveGeometry(
+      { width: PANEL_WIDTH, height: PANEL_HEIGHT, topInset: 0, bottomInset: 0 },
+      PERSPECTIVE_MIN_ROAD_HEIGHT_PANEL,
+    )
+
+    // 2 lớp nền phẳng (sky/ground) — KHÔNG dùng attachBattlefieldBackdrop()
+    // của combat thật (sao/trăng/núi/đá quá cầu kỳ cho panel test, và
+    // cũng hardcode GRID_ROW_COUNT/COLUMN_COUNT). Đặt tên rõ ràng để sau
+    // này thay Rectangle bằng Image thật chỉ cần đổi loại GameObject, giữ
+    // nguyên vị trí gọi.
+    this.skyLayer = this.add.rectangle(0, 0, PANEL_WIDTH, geometry.horizonY, PANEL_SKY_COLOR).setOrigin(0, 0)
+    this.groundLayer = this.add
+      .rectangle(0, geometry.horizonY, PANEL_WIDTH, geometry.roadHeight, PANEL_GROUND_COLOR)
       .setOrigin(0, 0)
 
-    const grid = this.add.graphics()
-
-    grid.lineStyle(1, 0x4caf50, 0.6)
-
-    for (let i = 0; i <= PREVIEW_GRID_SIZE; i++) {
-      grid.lineBetween(0, i * PREVIEW_CELL_SIZE, PREVIEW_CELL_SIZE * PREVIEW_GRID_SIZE, i * PREVIEW_CELL_SIZE)
-      grid.lineBetween(i * PREVIEW_CELL_SIZE, 0, i * PREVIEW_CELL_SIZE, PREVIEW_CELL_SIZE * PREVIEW_GRID_SIZE)
-    }
+    this.projection = createBattleGridProjection(
+      'perspective',
+      { width: PANEL_WIDTH, height: PANEL_HEIGHT, topInset: 0, bottomInset: 0 },
+      PREVIEW_GRID_SIZE,
+      PREVIEW_GRID_SIZE,
+      PERSPECTIVE_MIN_ROAD_HEIGHT_PANEL,
+    )
+    this.gridGraphics = this.add.graphics()
+    this.gridView.redrawGridLines()
 
     if (!this.anims.exists(PREVIEW_IDLE_ANIMATION_KEY)) {
       this.anims.create({
