@@ -28,11 +28,30 @@ const visible = computed(() => {
   return gameManager.getBattle()?.state === 'countdown'
 })
 
-const displayNumber = computed(() => {
+// Fix (2026-09-06) — countdownSecondsRemaining chỉ tồn tại trên trận
+// legacy (BattleSystem.ts, giây thật). Trận turn-based (TurnBattleSystem.ts
+// — đường DUY NHẤT còn dùng cho Stage) đếm bằng countdownTurnsRemaining,
+// đơn vị LƯỢT pacing dài BATTLE_FIXED_STEP_SECONDS = 0.1s (GameManager.ts)
+// — thiếu nhánh này khiến overlay đọc field không tồn tại → luôn 0 →
+// nhảy thẳng "Xuất Trận!" thay vì đếm 3, 2, 1. Ưu tiên field giây thật
+// (legacy) nếu có, quy đổi /10 khi chỉ có field lượt (turn-based).
+const countdownSeconds = computed(() => {
   stateVersion.value
 
-  return Math.ceil(gameManager.getBattle()?.countdownSecondsRemaining ?? 0)
+  const battle = gameManager.getBattle()
+
+  if (!battle) {
+    return 0
+  }
+
+  if (battle.countdownSecondsRemaining !== undefined) {
+    return battle.countdownSecondsRemaining
+  }
+
+  return (battle.countdownTurnsRemaining ?? 0) / 10
 })
+
+const displayNumber = computed(() => Math.ceil(countdownSeconds.value))
 
 const label = computed(() => (displayNumber.value > 0 ? String(displayNumber.value) : t('combat.overlay.countdown.go')))
 </script>

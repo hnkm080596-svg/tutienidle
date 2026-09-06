@@ -187,6 +187,10 @@ const lifecycle = useAppLifecycle({
   coordinator: cloudSaveCoordinator,
   player,
   gameManager,
+  // Fix (2026-09-06) — bootGame() tự startTickLoop(tick) khi boot thành
+  // công (xem useAppLifecycle.ts). `tick` là function declaration nên đã
+  // hoisted, tham chiếu được ở đây dù định nghĩa vật lý nằm sau (dưới).
+  tick,
   offlineSummary,
   saveIssue,
   entryStage,
@@ -346,12 +350,6 @@ function tick() {
   }
 
   bumpState()
-}
-
-function startTickLoop() {
-  // Remediation Task 5 — composable guard: gọi lại khi interval đã chạy
-  // là no-op (không leak interval cũ như trước đây).
-  lifecycle.startTickLoop(tick)
 }
 
 async function bootGame(createNewCharacter = false) {

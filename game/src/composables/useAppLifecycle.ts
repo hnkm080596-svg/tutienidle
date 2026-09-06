@@ -40,6 +40,16 @@ export interface UseAppLifecycleDeps {
     $state: object
   }
   gameManager: GameManager
+  /**
+   * Callback tick mỗi giây (deltaSeconds, cultivate, bumpState... — phụ
+   * thuộc UI nên vẫn sống ở App.vue). bootGame() TỰ khởi động interval
+   * này khi boot thành công (xem bootGame() bên dưới) — composable đã sở
+   * hữu clock.start()/startAutosave() nên gộp luôn startTickLoop() vào
+   * cùng một chỗ, tránh lặp lại đúng lớp bug đã gây freeze toàn bộ game
+   * (extract composable nhưng quên rewire lời gọi startTickLoop() ở nơi
+   * gọi — xem freeze-rootcause.md 2026-09-06).
+   */
+  tick: () => void
   offlineSummary: { show: (summary: { elapsedSeconds: number; cultivation: number }) => void }
   saveIssue: {
     report: (status: 'incompatible' | 'corrupted', raw: string, foundVersion?: number) => void
@@ -77,6 +87,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
     coordinator,
     player,
     gameManager,
+    tick,
     offlineSummary,
     saveIssue,
     entryStage,
@@ -244,6 +255,18 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
       }
 
       clock.start()
+
+      // Fix (2026-09-06) — bootGame() TỰ start tick loop thay vì nhờ
+      // caller nhớ gọi startTickLoop() sau khi boot xong. Đây chính là
+      // lời gọi từng bị rớt khi Task 5 extract inline boot logic của
+      // App.vue sang composable này (commit d6d9a1d) — kết quả:
+      // GameManager.update() không bao giờ chạy trong browser thật, toàn
+      // bộ game (combat/tu luyện/sản xuất...) đứng hình vô thời hạn dù
+      // 2651 unit test vẫn xanh (test gọi thẳng gameManager.update(), bỏ
+      // qua đúng lớp wiring này). Gộp vào bootGame() — nơi đã sở hữu
+      // clock.start()/startAutosave() — để "extract composable, quên
+      // rewire" không còn khả năng lặp lại được nữa.
+      startTickLoop(tick)
       boot.enterGame()
 
       return { status: 'entered' }
