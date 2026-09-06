@@ -515,7 +515,19 @@ Hệ quả: **không thể playtest trực quan** phần lớn nội dung Task 9
 
 Screenshots: `.superpowers/sdd/2026-09-05-combat-art-roster-tranphap/screenshots/` (không commit — scratch, git-ignored).
 
-**Chưa bắt đầu:** Part B (`COMPANIONS` — companion roster) và Part C (`TRAN_PHAP_FORMATIONS`) của plan — theo đúng phạm vi Task 9.9 (chỉ verify Part A).
+**Chưa bắt đầu (tại thời điểm viết mục 9.7):** Part B (`COMPANIONS` — companion roster) và Part C (`TRAN_PHAP_FORMATIONS`) của plan — theo đúng phạm vi Task 9.9 (chỉ verify Part A).
+
+### 9.8. Defect treo "Xuất Trận!" (mục 9.7 trên) — ĐÃ FIX (2026-09-06), Part B SHIPPED
+
+**Root cause thật** (khác giả thuyết `PresentationGate` ở 9.7 — điều tra sâu hơn tìm ra nguyên nhân khác): `App.vue` định nghĩa `startTickLoop()` nhưng **không có nơi nào gọi nó** — refactor `useAppLifecycle.ts` (commit `d6d9a1d`, "lifecycle idempotence") đã làm rớt lời gọi này khi extract boot logic. `App.vue`'s `tick()` là nơi DUY NHẤT gọi `GameManager.update()` ngoài test, nên toàn bộ simulation (combat/tu luyện/idle/sản xuất) đứng hình vô thời hạn, zero console error. **Có sẵn trên `master`, không phải do branch này gây ra** — verify bằng cách tái hiện trên clean master checkout.
+
+Fix cấu trúc: `bootGame()` trong `useAppLifecycle.ts` TỰ gọi `startTickLoop(tick)` ngay trong success path của chính nó — loại bỏ hoàn toàn khả năng "extract composable, quên rewire" lặp lại (App.vue không còn giữ wrapper riêng, boot thành công CHÍNH LÀ tick loop đã chạy). Kèm: guard tĩnh 2 lớp `App.wiring.test.ts` (bắt hàm top-level mồ côi trong App.vue + member composable không ai tiêu thụ) + coverage cho 1 lỗi phụ phát hiện cùng lúc (countdown overlay đọc field không tồn tại `countdownSecondsRemaining`). Rule mới **P13 (Runtime Wiring Verification)** đã thêm vào `AGENTS.md` + mirror vào `.opencode/agent/build.md`/`general.md`.
+
+Đã cherry-pick 4 commit fix này lên `master` trực tiếp (không chỉ trên branch) vì bug ảnh hưởng người chơi thật ngay lập tức. Verify trên `master`: 410 file/2650 test xanh, type-check sạch, `npm run build` sạch, e2e `create-to-combat.spec.ts` chạy trọn 1 trận tới kết quả thật. Sau đó merge `master` vào branch này (`0ce12f8`) trước khi tiếp Part B/C — mang theo luôn 40 file phân kỳ cũ (EquipmentBag, GameManager, CombatScene, kiemBarBridge...) đã ghi ở HANDOFF "integrate at finish time". Verify sau merge: 425 file/2728 test xanh, build sạch.
+
+**Part B — Companion Roster: SHIPPED (mechanism only, 2026-09-06).** Tasks 10-14: `CompanionDefinition`/`CompanionInstance` (dùng lại thang `ItemGrade` 5 bậc Hoàng/Huyền/Địa/Thiên/Tiên), `PlayerData.companions` (save v57), `companionToCombatEntity()`/`companionStatsAtLevel()` (scale tuyến tính 8%/level, speed không scale), exp/level curve tách riêng file cho balance pass sau, gacha pull với duplicate-to-exp. `COMPANIONS: []` — nội dung roster thật là 1 pass content riêng sau, chưa làm ở đây. Xác nhận không đụng `GameManager.activePlayer`/`EquipmentSlotManager`/`SkillLoadoutSlots.ts` (đúng ý đồ design tách biệt của spec §2).
+
+**Phát hiện phụ khi chuẩn bị Task 19 (Part C):** `GameManager.ts` khởi tạo `TurnBattleSystem` với `registry: undefined` ở CẢ 2 nơi — nghĩa là boss enrage buff/reactive trigger/on-hit proc/`skill.appliesBuff` qua turn-based combat đang **no-op âm thầm trong game thật** dù registry thật (`TURN_BUFF_REGISTRY`, 46 buff đã convert) đã tồn tại sẵn ở `data/buff/TurnBuffRegistry.ts`, chỉ chưa wire. Sẽ sửa khi làm Task 19 (wire registry thật vào cả 2 constructor site).
 
 ---
 
