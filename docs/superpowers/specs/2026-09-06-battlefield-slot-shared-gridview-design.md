@@ -128,6 +128,14 @@ export interface CombatGridViewHost {
   entityFootMinY: number
   entityFootMaxY: number
 
+  // resetVisual() only — Phaser.Scene subclasses get `tweens` for free
+  // (TranPhapCombatPreviewScene extends Phaser.Scene, no extra work);
+  // `interpolations` the panel provides as a trivial empty Map (it does
+  // not interpolate positions) — resetVisual()'s `.get(PLAYER_ID)` on an
+  // empty map returns undefined, already guarded by `if (entry)`.
+  readonly tweens: Phaser.Tweens.TweenManager
+  readonly interpolations: Map<string, unknown>
+
   /**
    * Texture key dùng cho sprite khi id không phải PLAYER_ID và không khớp
    * resolveEnemyTextureKey() — combat thật trả undefined (Rectangle
@@ -159,14 +167,18 @@ constructor(private readonly host: CombatGridViewHost) {}
 ```
 
 Every `this.scene.x` inside `combat-grid-view.ts` becomes `this.host.x`,
-**except** the four self-referential delegate calls
+**except** the five self-referential delegate calls
 (`this.scene.applySpriteSize(...)`, `this.scene.applyEntityDepthScale(...)`,
-`this.scene.updateEnemyHealthBar(...)`, `this.scene.entityHeadY(...)`),
-which become direct calls to the method already defined on
-`CombatGridView` itself (`this.applySpriteSize(...)`, etc.) — removing a
-round-trip through a host that, for the panel, will not define matching
+`this.scene.updateEnemyHealthBar(...)`, `this.scene.entityHeadY(...)`,
+`this.scene.positionSprite(...)` — the last one appears once, inside
+`resetVisual()`), which become direct calls to the method already defined
+on `CombatGridView` itself (`this.applySpriteSize(...)`, etc.) — removing
+a round-trip through a host that, for the panel, will not define matching
 delegate methods (the panel calls `CombatGridView`'s methods directly, it
 is not itself a "scene with delegates" the way `CombatScene` is).
+`this.scene.tweens`/`this.scene.interpolations` (both only inside
+`resetVisual()`) become `this.host.tweens`/`this.host.interpolations` —
+plain field reads, not delegates.
 
 `CombatScene.ts`'s own `_gridView` lazy getter changes from
 `new CombatGridView(this)` to `new CombatGridView(this)` — **unchanged**,
@@ -214,6 +226,8 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
   sprites = new Map<string, EntitySprite>()
   entityFootMinY = 0
   entityFootMaxY = 1
+  readonly interpolations = new Map<string, unknown>() // resetVisual() không dùng ở panel — Map rỗng thỏa mãn type, .get() luôn undefined.
+  // `tweens` KHÔNG khai ở đây — Phaser.Scene đã có sẵn `this.tweens`, lớp con thỏa mãn CombatGridViewHost tự động.
 
   private gridView!: CombatGridView
 
@@ -329,8 +343,8 @@ shipped 2026-09-06 are untouched.
   `combat-grid-view.ts`'s behavior for every existing call site
   (`getOrCreateSprite`, `positionSprite`, `applySpriteSize`,
   `applyEntityDepthScale`, `updateEnemyHealthBar`, `destroyEntitySprite`,
-  `updateEntityDepths`, `redrawGridLines`) before/after, not just run the
-  test suite.
+  `updateEntityDepths`, `redrawGridLines`, `resetVisual`) before/after,
+  not just run the test suite.
 - The new `else if` branch in `getOrCreateSprite()` (texture-override
   fallback) is the one piece of *real combat's* production code this spec
   actually edits (everything else in `combat-grid-view.ts` is a rename,
