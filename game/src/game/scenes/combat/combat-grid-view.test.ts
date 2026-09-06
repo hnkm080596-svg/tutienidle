@@ -5,18 +5,23 @@
 // entity spawn, KHÔNG phải giá trị fixture gán tay như
 // CombatScene.enemyScale.test.ts (test đó chỉ khoá applyEntityDepthScale()
 // pass-through, không chạm production creation code — xem task-9-brief.md).
+//
+// Battlefield Slot (2026-09-06) — constructor giờ nhận CombatGridViewHost
+// (không còn CombatScene cụ thể) nên fake host phải khai đủ
+// fallbackSpriteTextureKey() — combat thật LUÔN trả undefined, xem
+// CombatScene.fallbackSpriteTextureKey().
 import { describe, expect, it, vi } from 'vitest'
 import { CombatGridView } from './combat-grid-view'
 import { BOSS_DISPLAY_SCALE_MULTIPLIER, ENEMY_DISPLAY_SCALE_MULTIPLIER } from './combatConstants'
-import type { CombatScene } from '../CombatScene'
+import type { CombatGridViewHost } from './CombatGridViewHost'
 
 /**
- * Fake scene tối giản — chỉ implement đúng bề mặt API mà
+ * Fake host tối giản — chỉ implement đúng bề mặt API mà
  * CombatGridView.getOrCreateSprite() (nhánh enemy CÓ texture thật) chạm
  * tới. applySpriteSize/updateEnemyHealthBar gán SAU khi gridView đã tồn
- * tại vì getOrCreateSprite() gọi ngược `this.scene.applySpriteSize(...)`
- * (CombatScene thật cũng uỷ quyền vòng lại gridView y hệt — xem
- * CombatScene.ts dòng 1013-1014).
+ * tại vì getOrCreateSprite() gọi ngược `this.applySpriteSize(...)` (các
+ * method của CHÍNH CombatGridView — trước đây uỷ quyền qua CombatScene,
+ * xem Battlefield Slot Task 2).
  */
 function createFakeScene() {
   const chainable = () => {
@@ -49,9 +54,10 @@ function createFakeScene() {
     },
     physics: { add: { existing: vi.fn() } },
     textures: { exists: () => true },
+    fallbackSpriteTextureKey: () => undefined,
   }
 
-  const gridView = new CombatGridView(scene as unknown as CombatScene)
+  const gridView = new CombatGridView(scene as unknown as CombatGridViewHost)
 
   scene.applySpriteSize = (sprite: Parameters<CombatGridView['applySpriteSize']>[0]) =>
     gridView.applySpriteSize(sprite)
@@ -99,7 +105,7 @@ describe('CombatGridView.getOrCreateSprite() — Task 9.5 boss sizeMultiplier', 
     expect(sprite.sizeMultiplier).toBe(ENEMY_DISPLAY_SCALE_MULTIPLIER)
   })
 
-  it('nhánh fallback Rectangle (chưa có texture): Boss vẫn KHÔNG được nhỏ hơn enemy thường có texture — round 1 review, tránh inversion', () => {
+  it('nhánh fallback Rectangle (chưa có texture, host.fallbackSpriteTextureKey() = undefined): Boss vẫn KHÔNG được nhỏ hơn enemy thường có texture — round 1 review, tránh inversion', () => {
     // resolveEnemyTextureKey() trả falsy cho id không nằm trong batch art
     // (id không khớp pattern quái Mortal) → rơi vào nhánh `rect` cuối cùng
     // của getOrCreateSprite(), chỗ trước đây hardcode sizeMultiplier: 1 cho
@@ -129,5 +135,40 @@ describe('CombatGridView.getOrCreateSprite() — Task 9.5 boss sizeMultiplier', 
 
     expect(regularSprite.kind).toBe('rect')
     expect(regularSprite.sizeMultiplier).toBe(1)
+  })
+})
+
+describe('CombatGridView.getOrCreateSprite() — host.fallbackSpriteTextureKey() (Battlefield Slot, 2026-09-06)', () => {
+  it('host trả về 1 texture key hợp lệ (fallbackSpriteTextureKey + textures.exists đều true) → sprite kind "sprite", KHÔNG phải Rectangle', () => {
+    const { scene, gridView } = createFakeScene()
+
+    scene.fallbackSpriteTextureKey = () => 'shared-placeholder-sheet'
+
+    const sprite = gridView.getOrCreateSprite('any_non_enemy_non_player_id', 0x4caf50, 'Test', 0)
+
+    expect(sprite.kind).toBe('sprite')
+  })
+
+  it('host trả undefined (như CombatScene thật) → vẫn rơi về Rectangle fallback y hệt trước khi có branch mới — KHÔNG regression cho combat thật', () => {
+    const { gridView } = createFakeScene()
+
+    const sprite = gridView.getOrCreateSprite('some_enemy_outside_mortal_batch', 0xd94a4a, 'Test', 0, {
+      currentHp: 10,
+      maxHp: 10,
+      isBoss: false,
+    })
+
+    expect(sprite.kind).toBe('rect')
+  })
+
+  it('gọi getOrCreateSprite 2 lần cùng id → trả về CÙNG object sprite (không destroy/tạo lại) — đây là cơ chế fix bug animation-reset của panel Trận Pháp (Task 4)', () => {
+    const { scene, gridView } = createFakeScene()
+
+    scene.fallbackSpriteTextureKey = () => 'shared-placeholder-sheet'
+
+    const first = gridView.getOrCreateSprite('stable_id', 0x4caf50, 'Test', 0)
+    const second = gridView.getOrCreateSprite('stable_id', 0x4caf50, 'Test', 0)
+
+    expect(second).toBe(first)
   })
 })
