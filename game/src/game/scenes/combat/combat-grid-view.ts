@@ -5,7 +5,7 @@
 import Phaser from 'phaser'
 
 import type { LaneIndex } from '@/core/battle/BattleLane'
-import { GRID_ROW_COUNT, GRID_COLUMN_COUNT, HERO_COLUMN, HERO_LANE_INDEX } from '@/core/battle/BattleLane'
+import { HERO_LANE_INDEX } from '@/core/battle/BattleLane'
 import { toVector2Points } from '@/game/support/ActionImpactVfx'
 import { ENEMY_SOURCE_SIZE, resolveEnemyTextureKey } from '@/game/support/EnemyArt'
 import { PLAYER_TEXTURE_KEY } from '@/game/support/CombatPreload'
@@ -25,7 +25,6 @@ import {
   PERSPECTIVE_BORDER_COLOR,
   PERSPECTIVE_GRID_ALPHA,
   PERSPECTIVE_GRID_COLOR,
-  PLAYER_COLOR,
   PLAYER_DISPLAY_SCALE_MULTIPLIER,
   PLAYER_ID,
   SHADOW_ALPHA,
@@ -65,10 +64,10 @@ export class CombatGridView {
       isFlat ? 0.55 : PERSPECTIVE_GRID_ALPHA,
     )
 
-    for (let boundaryRow = 0; boundaryRow <= GRID_ROW_COUNT; boundaryRow++) {
+    for (let boundaryRow = 0; boundaryRow <= projection.rows; boundaryRow++) {
       const rowFloat = boundaryRow - 0.5
       const left = projection.gridToScreen(rowFloat, -0.5)
-      const right = projection.gridToScreen(rowFloat, GRID_COLUMN_COUNT - 0.5)
+      const right = projection.gridToScreen(rowFloat, projection.columns - 0.5)
 
       graphics.beginPath()
       graphics.moveTo(left.x, left.y)
@@ -76,10 +75,10 @@ export class CombatGridView {
       graphics.strokePath()
     }
 
-    for (let boundaryColumn = 0; boundaryColumn <= GRID_COLUMN_COUNT; boundaryColumn++) {
+    for (let boundaryColumn = 0; boundaryColumn <= projection.columns; boundaryColumn++) {
       const columnFloat = boundaryColumn - 0.5
       const far = projection.gridToScreen(-0.5, columnFloat)
-      const near = projection.gridToScreen(GRID_ROW_COUNT - 0.5, columnFloat)
+      const near = projection.gridToScreen(projection.rows - 0.5, columnFloat)
 
       graphics.beginPath()
       graphics.moveTo(far.x, far.y)
@@ -91,24 +90,17 @@ export class CombatGridView {
       // Viá»n ngoÃ i + vÃ¹ng cá»•ng hero nháº¥n nháº¹ mÃ u phe ta.
       const corners = [
         projection.gridToScreen(-0.5, -0.5),
-        projection.gridToScreen(-0.5, GRID_COLUMN_COUNT - 0.5),
-        projection.gridToScreen(GRID_ROW_COUNT - 0.5, GRID_COLUMN_COUNT - 0.5),
-        projection.gridToScreen(GRID_ROW_COUNT - 0.5, -0.5),
+        projection.gridToScreen(-0.5, projection.columns - 0.5),
+        projection.gridToScreen(projection.rows - 0.5, projection.columns - 0.5),
+        projection.gridToScreen(projection.rows - 0.5, -0.5),
       ]
 
       graphics.lineStyle(1.5, PERSPECTIVE_BORDER_COLOR, PERSPECTIVE_BORDER_ALPHA)
       graphics.strokePoints(toVector2Points(corners), true, true)
 
-      // Cá»•ng phÃ²ng thá»§ phá»§ Má»ŒI hÃ ng Táº I Cá»˜NG cá»•ng (plan Â§2.2).
-      const gatePolygon = projection.footprintPolygon({
-        rowStart: 0,
-        rowEnd: GRID_ROW_COUNT - 1,
-        colStart: HERO_COLUMN,
-        colEnd: HERO_COLUMN,
-      })
-
-      graphics.fillStyle(PLAYER_COLOR, 0.05)
-      graphics.fillPoints(toVector2Points(gatePolygon), true)
+      // Viền ngoài lưới perspective — dùng chung cho combat thật lẫn panel.
+      // (Cổng phòng thủ HERO_COLUMN đã XÓA 2026-09-06: obsolete, cơ chế
+      // real-time cũ "quái tiếp cận cổng" không còn tồn tại dưới turn-based.)
     }
   }
 

@@ -172,3 +172,71 @@ describe('CombatGridView.getOrCreateSprite() — host.fallbackSpriteTextureKey()
     expect(second).toBe(first)
   })
 })
+
+
+describe('CombatGridView.redrawGridLines() — kích thước lưới lấy từ projection (Battlefield Perspective Panel, 2026-09-06)', () => {
+  function createFakeGraphics() {
+    return {
+      clear: vi.fn(),
+      lineStyle: vi.fn(),
+      beginPath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      strokePath: vi.fn(),
+      strokePoints: vi.fn(),
+      fillStyle: vi.fn(),
+      fillPoints: vi.fn(),
+    }
+  }
+
+  function createFakeProjection(rows: number, columns: number) {
+    return {
+      rows,
+      columns,
+      gridToScreen: (row: number, column: number) => ({ x: column, y: row, scale: 1 }),
+      footprintPolygon: () => [],
+    }
+  }
+
+  it('lưới 6x6 (panel) → 7 đường ngang + 7 đường dọc (rows+1, columns+1), KHÔNG phải 11/17 của lưới thật', () => {
+    const { scene, gridView } = createFakeScene()
+    const graphics = createFakeGraphics()
+
+    scene.gridGraphics = graphics
+    scene.projection = createFakeProjection(6, 6)
+    scene.usingArtBackdrop = false
+    scene.arenaRect = undefined
+
+    gridView.redrawGridLines()
+
+    expect(graphics.moveTo).toHaveBeenCalledTimes(7 + 7)
+  })
+
+  it('KHÔNG còn gọi fillPoints (cổng phòng thủ HERO_COLUMN đã bị xóa — obsolete với turn-based)', () => {
+    const { scene, gridView } = createFakeScene()
+    const graphics = createFakeGraphics()
+
+    scene.gridGraphics = graphics
+    scene.projection = createFakeProjection(10, 16)
+    scene.usingArtBackdrop = false
+    scene.arenaRect = undefined
+
+    gridView.redrawGridLines()
+
+    expect(graphics.fillPoints).not.toHaveBeenCalled()
+  })
+
+  it('perspective mode (arenaRect undefined) vẫn vẽ viền ngoài qua strokePoints (viền KHÔNG bị xóa, chỉ gate polygon bị xóa)', () => {
+    const { scene, gridView } = createFakeScene()
+    const graphics = createFakeGraphics()
+
+    scene.gridGraphics = graphics
+    scene.projection = createFakeProjection(10, 16)
+    scene.usingArtBackdrop = false
+    scene.arenaRect = undefined
+
+    gridView.redrawGridLines()
+
+    expect(graphics.strokePoints).toHaveBeenCalledTimes(1)
+  })
+})
