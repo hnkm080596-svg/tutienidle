@@ -159,10 +159,20 @@ onUnmounted(() => {
   z-index: 12;
 }
 
-/* Slice 7 extension - turn-order strip: neo dưới TopBar, giữa. */
+/* Slice 7 extension - turn-order strip: neo dưới TopBar, giữa.
+   Layout fix (2026-09-06) — trước dùng hardcode top: 60px (xấp xỉ chiều
+   cao TopBar), nay đổi sang đúng token --combat-topbar-h mà TopBar và
+   CombatSkillDockPanel đều dùng để trỏ height/top của chính nó. Strip và
+   dock giờ neo CÙNG một mép dưới TopBar thay vì 2 giá trị lệch nhau —
+   giảm khả năng strip "cắt" vào phần trên của dock. Strip vẫn full-width
+   + justify-content: center nên nội dung thực tế (party/turn badges) nằm
+   giữa màn hình; ở viewport rất hẹp nội dung căn giữa có thể vẫn chạm mép
+   trái của dock — pointer-events: none nên không chặn thao tác, nhưng
+   overlap hình ảnh trong trường hợp cực hẹp chưa được xử lý triệt để ở
+   task này (xem báo cáo). */
 .combat-scene-overlay__turn-order-strip {
   position: absolute;
-  top: 60px;
+  top: var(--combat-topbar-h);
   left: 0;
   right: 0;
   display: flex;

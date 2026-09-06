@@ -69,15 +69,25 @@ test.describe('Combat overlay layout (T8.3)', () => {
       // Combat Art Pipeline Task 7 (2026-09-05) — Build HUD + skill bar rời
       // slot bottom-center cũ (class `combat-scene-overlay__build-hud`, đã
       // XÓA) vào CombatSkillDockPanel.vue (`.combat-skill-dock-panel`), dock
-      // full-height neo MÉP PHẢI (top:0/right:0/bottom:0). Vùng HUD canvas
-      // trái-dưới: chỉ content-có-chứa (con dock thực — CombatBuildHud) mới
-      // cần né, còn container tự nó đã ở bên phải nên không đè trái-dưới —
-      // đo con đầu tiên thay vì container.
+      // neo MÉP PHẢI. Vùng HUD canvas trái-dưới: chỉ content-có-chứa (con
+      // dock thực — CombatBuildHud) mới cần né, còn container tự nó đã ở
+      // bên phải nên không đè trái-dưới — đo con đầu tiên thay vì container.
+      //
+      // Layout fix (2026-09-06) — dock KHÔNG còn full-height (top:0) như
+      // comment cũ mô tả: đè lên enemy counter mép phải của TopBar là bug
+      // đã được review phát hiện. Nay `top: var(--combat-topbar-h)` — dock
+      // bắt đầu ngay dưới TopBar. Assert thêm: dock không còn bắt đầu ở
+      // y=0 mà bắt đầu từ (hoặc sau) mép dưới TopBar thật.
+      const combatTopBar = page.locator('.combat-top-bar')
+      const topBarBox = await combatTopBar.boundingBox()
+      expect(topBarBox).not.toBeNull()
+
       const skillDock = page.locator('.combat-skill-dock-panel')
       await expect(skillDock).toBeVisible()
       const hudBox = await skillDock.boundingBox()
       expect(hudBox).not.toBeNull()
       expect(hudBox!.y + hudBox!.height).toBeLessThanOrEqual(viewport.height)
+      expect(hudBox!.y).toBeGreaterThanOrEqual(topBarBox!.y + topBarBox!.height)
 
       const contentBox = await skillDock.locator('*').first().boundingBox()
       expect(contentBox).not.toBeNull()

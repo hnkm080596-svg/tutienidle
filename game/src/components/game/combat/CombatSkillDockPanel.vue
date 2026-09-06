@@ -8,6 +8,17 @@
 // Insets: dock chỉ publish `right` (publishSkillDockWidth — giữ nguyên
 // `top` của CombatSceneOverlay), cùng pattern đo-DOM-thật + ResizeObserver
 // với overlay. Unmount: clear `right` về 0 nhưng giữ `top`.
+//
+// Layout fix (2026-09-06) — dock trước đó `top: 0` nên full-height, đè lên
+// enemy counter mép phải của TopBar (TopBar và dock là 2 sibling absolute
+// riêng, dock không nằm trong luồng flex của overlay). Đổi `top` sang
+// `var(--combat-topbar-h)` — ĐÚNG token TopBar dùng để set height của nó
+// (CombatSceneOverlay.vue, theme.css) — để dock bắt đầu ngay dưới TopBar
+// thay vì đè lên. Không hardcode 60px dù TurnOrderStrip từng dùng số đó —
+// token thật là clamp(46px, 4.8vh, 72px), 60px chỉ là xấp xỉ giữa dải.
+// `bottom: 0` giữ nguyên nên height tự co theo top mới, không cần khai
+// báo height tường minh. Không đổi `width`/measuring logic — publishWidth
+// đo `offsetWidth` (chiều ngang), không phụ thuộc `top`.
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import TurnCombatSkillBar from './hud/TurnCombatSkillBar.vue'
 import CombatBuildHud from './hud/CombatBuildHud.vue'
@@ -51,7 +62,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .combat-skill-dock-panel {
   position: absolute;
-  top: 0;
+  top: var(--combat-topbar-h);
   right: 0;
   bottom: 0;
   width: clamp(340px, 27vw, 440px);
