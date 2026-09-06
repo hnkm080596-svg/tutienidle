@@ -209,6 +209,12 @@ import { emitTurnReady, emitTurnCastStart, emitTurnActionImpact, emitTurnStandby
 import type { TurnDeclaredAction } from '../battle/turn/TurnBattleSystem'
 import { toTurnBattleParticipant } from './TurnBattleAdapter'
 import { DEFAULT_PARTY_FORMATION } from './PartyFormation'
+import { resolvePartyFormation } from './FormationPlacement'
+import { companionToCombatEntity } from '../companion/CompanionCombat'
+import { COMPANIONS } from '../../data/companion/Companions'
+import { TRAN_PHAP_FORMATIONS } from '../../data/formation/TranPhap'
+import { TURN_BUFF_REGISTRY } from '../../data/buff/TurnBuffRegistry'
+import { TurnBuffSystem } from '../battle/turn/TurnBuffSystem'
 import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
 
 /**
@@ -2409,13 +2415,12 @@ export class GameManager {
   private buildTurnBattle(playerEntity: CombatEntity, enemyEntities: CombatEntity[]): TurnBattle {
     const playerPath = this.activePlayer
 
-    // Party placement (Combat Art Pipeline §7, 2026-09-05) — vị trí party đọc
-    // từ DEFAULT_PARTY_FORMATION thay vì phó mặc cho placeholder x/row do
-    // playerToCombatEntity()/BattleSystem.start() gán trước đó (trùng giá trị
-    // hiện tại nhưng KHÔNG phải nguồn sự thật). Task 16+ (Trận Pháp) thay
-    // formation cố định này bằng player.formationLoadout-driven resolution —
-    // giữ nguyên chỗ tra cứu này để chỉ cần đổi 1 dòng khi tới lúc.
-    const formation = DEFAULT_PARTY_FORMATION
+    // Party placement (Trận Pháp spec §6-7, 2026-09-05) — vị trí party đọc
+    // từ player.formationLoadout THẬT qua resolvePartyFormation() (Task 18),
+    // fallback về DEFAULT_PARTY_FORMATION khi player chưa cấu hình trận
+    // pháp nào (chưa có playerPath, hoặc formationLoadout === null — xử lý
+    // ngay trong resolvePartyFormation()).
+    const formation = playerPath ? resolvePartyFormation(playerPath) : DEFAULT_PARTY_FORMATION
 
     const playerSlot = formation.find((slot) => slot.combatantId === 'player')
 
@@ -2430,6 +2435,53 @@ export class GameManager {
       playerPath ? this.resolvePlayerBasicAttack(playerPath) : GENERIC_PHYSICAL_BASIC,
       playerPath?.cultivationPath,
     )
+
+    // Companion Roster (2026-09-05) — mỗi companion trong player.companions
+    // được dựng lại thành CombatEntity/TurnBattleParticipant TƯƠI MỚI mỗi
+    // trận (companionToCombatEntity, Task 12), đặt tại đúng ô mà
+    // formationLoadout đã gán cho combatantId của nó. Companion thiếu
+    // definition (roster đã đổi) hoặc thiếu slot (chưa gán ô trong trận
+    // pháp hiện tại) bị bỏ qua thay vì làm crash cả trận.
+    const companionParticipants = (playerPath?.companions ?? []).flatMap((instance, index) => {
+      const definition = COMPANIONS.find((candidate) => candidate.id === instance.definitionId)
+      const slot = formation.find((entry) => entry.combatantId === instance.definitionId)
+
+      if (!definition || !slot) {
+        return []
+      }
+
+      const entity = companionToCombatEntity(instance, definition)
+
+      entity.row = slot.row
+      entity.x = slot.column
+
+      return [toTurnBattleParticipant(entity, index + 100, definition.basic)]
+    })
+
+    // Trận Pháp buff (2026-09-05) — trận pháp đang active áp MỘT buff đồng
+    // nhất cho toàn bộ party (player + companion) ngay khi trận bắt đầu.
+    // Dùng thẳng TURN_BUFF_REGISTRY thật (không phải field riêng trên
+    // GameManager) — registry này cũng chính là registry truyền vào cả 2
+    // nơi khởi tạo TurnBattleSystem bên dưới, nên buff áp ở đây tương thích
+    // với convertsToId/stack logic mà TurnBattleSystem xử lý trong trận.
+    if (playerPath?.formationLoadout) {
+      const formationDefinition = TRAN_PHAP_FORMATIONS.find(
+        (candidate) => candidate.id === playerPath.formationLoadout!.formationId,
+      )
+
+      if (formationDefinition) {
+        const buffDefinition = TURN_BUFF_REGISTRY.get(formationDefinition.buff.definitionId)
+
+        for (const participant of [playerParticipant, ...companionParticipants]) {
+          new TurnBuffSystem(participant.buffs).apply(
+            buffDefinition,
+            participant.entity,
+            participant.entity,
+            TURN_BUFF_REGISTRY,
+          )
+        }
+      }
+    }
 
     // Spawn placement (Combat Art Pipeline §6/§7, 2026-09-05) — vị trí spawn
     // đứng yên tại resolve, không di chuyển. Tái dùng đúng
@@ -2449,10 +2501,10 @@ export class GameManager {
     })
 
     return {
-      players: [playerParticipant],
+      players: [playerParticipant, ...companionParticipants],
       enemies: enemyParticipants,
       state: 'countdown',
-      // 3s countdown hÃ¡Â»â€¡ sÃ¡Â»â€˜ng Ã¢â€ â€™ 30 pacing ticks (BATTLE_FIXED_STEP 0.1s).
+      // 3s countdown hết số → 30 pacing ticks (BATTLE_FIXED_STEP 0.1s).
       countdownTurnsRemaining: 30,
       totalTurnsElapsed: 0,
     }
@@ -2493,7 +2545,7 @@ export class GameManager {
     this.turnBattleSystem = new TurnBattleSystem(
       this.combatSystem,
       10_000,
-      undefined,
+      TURN_BUFF_REGISTRY,
       () => {
         const isFinalSpawn = (this.turnBattle?.wave?.spawnedCount ?? 0) + 1 >= effectiveTotalEnemyCount(stageRef)
         const template =
@@ -3203,7 +3255,7 @@ export class GameManager {
       this.turnBattleSystem = new TurnBattleSystem(
         this.combatSystem,
         10_000,
-        undefined,
+        TURN_BUFF_REGISTRY,
         () => {
           // isFinalSpawn: lÃ†Â°Ã¡Â»Â£t spawn cuÃ¡Â»â€˜i lÃƒÂ  boss (tÃ¡ÂºÂ§ng 10) Ã¢â‚¬â€ factory chÃ¡ÂºÂ¡y
           // TRÃ†Â¯Ã¡Â»Å¡C khi resolveNextStep tÃ„Æ’ng spawnedCount, nÃƒÂªn tÃ¡Â»â€¢ng Ã„â€˜ÃƒÂ£-spawn

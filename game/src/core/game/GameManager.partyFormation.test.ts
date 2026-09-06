@@ -3,8 +3,10 @@ import { GameManager } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import { createBaseStats } from '../stats/StatBlock'
 import { HERO_LANE_INDEX, HERO_COLUMN } from '../battle/BattleLane'
+import { createDefaultPlayer } from '../player/Player'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
+import { COMPANIONS } from '../../data/companion/Companions'
 
 // Formation slot deliberately DISTINCT from HERO_LANE_INDEX(4)/HERO_COLUMN(1)
 // so this test can only pass if buildTurnBattle() actually reads
@@ -75,5 +77,72 @@ describe('GameManager.buildTurnBattle — reads DEFAULT_PARTY_FORMATION when no 
     // otherwise this assertion would pass for the wrong reason.
     expect(MOCK_ROW).not.toBe(HERO_LANE_INDEX)
     expect(MOCK_COLUMN).not.toBe(HERO_COLUMN)
+  })
+})
+
+// Task 19 — buildTurnBattle() phải đọc player.formationLoadout THẬT (qua
+// resolvePartyFormation(), Task 18) khi có, thay vì luôn fallback về
+// DEFAULT_PARTY_FORMATION (mocked ở trên); đồng thời phải tạo participant
+// cho companion đã gán vào 1 ô của formationLoadout.
+const TEST_COMPANION_DEFINITION = {
+  id: 'test_companion_for_formation',
+  name: 'Formation Test Companion',
+  grade: 'hoang' as const,
+  baseStats: { maxHp: 100, attack: 10, speed: 100 },
+  basic: {
+    id: 'test_companion_for_formation_basic',
+    cooldownTurns: 0,
+    damage: { kind: 'physical' as const, multiplier: 1 },
+    targeting: { shape: 'single' as const },
+  },
+}
+
+describe('GameManager.buildTurnBattle — resolves a real FormationLoadout, includes companions', () => {
+  it('places player + a companion at their configured cells, both in turnBattle.players', () => {
+    // COMPANIONS rỗng ở giai đoạn này của plan (nội dung roster ship sau) —
+    // đẩy tạm 1 definition test-only vào mảng cho thời lượng test này,
+    // giống cách các test khác trong codebase đăng ký fixture dùng-1-lần
+    // thay vì phụ thuộc vào nội dung thật.
+    ;(COMPANIONS as unknown as (typeof COMPANIONS)[number][]).push(TEST_COMPANION_DEFINITION)
+
+    try {
+      const gameManager = new GameManager()
+      const playerEntity = createPlayer()
+      const playerData = createDefaultPlayer()
+
+      gameManager.registerSkillTemplates([createBasicSkill()])
+      gameManager.learnSkill('basic_test')
+      gameManager.skillSystem.equipToSlot('basic_test', 0)
+
+      // formationLoadout phải set TRƯỚC setActivePlayer/startBattle —
+      // GameManager.setActivePlayer() giữ THAM CHIẾU TRỰC TIẾP tới
+      // PlayerData (không copy), nên buildTurnBattle() (chạy trong
+      // startBattle()) đọc thấy đúng object đã mutate ở đây.
+      playerData.formationLoadout = {
+        formationId: 'test_formation',
+        assignments: [
+          { row: 0, column: 0, combatantId: 'player' },
+          { row: 1, column: 1, combatantId: 'test_companion_for_formation' },
+        ],
+      }
+      playerData.companions = [{ definitionId: 'test_companion_for_formation', level: 1, exp: 0 }]
+
+      gameManager.setActivePlayer(playerData)
+      gameManager.startBattle(playerEntity, createDummy())
+
+      const battle = gameManager.getTurnBattle()!
+
+      expect(battle.players).toHaveLength(2)
+      expect(battle.players.map((p) => p.id)).toEqual(
+        expect.arrayContaining(['player', 'test_companion_for_formation']),
+      )
+    } finally {
+      // Dọn fixture khỏi mảng module-level dùng chung — tránh rò rỉ sang
+      // test khác chạy sau trong cùng process (vitest có thể share module).
+      const index = COMPANIONS.findIndex((c) => c.id === TEST_COMPANION_DEFINITION.id)
+      if (index >= 0) {
+        ;(COMPANIONS as unknown as (typeof COMPANIONS)[number][]).splice(index, 1)
+      }
+    }
   })
 })
