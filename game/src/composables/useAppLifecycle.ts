@@ -271,7 +271,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
 
       return { status: 'entered' }
     } finally {
-      // Reset guard KẂ CẢ khi fail — boot lại (auth retry) vẫn chạy được.
+      // Reset guard KỂ CẢ khi fail — boot lại (auth retry) vẫn chạy được.
       bootInFlight = false
     }
   }

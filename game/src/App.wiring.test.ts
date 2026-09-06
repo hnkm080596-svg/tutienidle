@@ -27,6 +27,18 @@
 // Nếu một class bug tương tự xuất hiện ở composable/SFC khác trong
 // tương lai, hãy viết guard riêng cho ranh giới đó thay vì nới rộng
 // file này.
+//
+// GIỚI HẠN QUAN TRỌNG — đọc trước khi tin tưởng file này: chính DÒNG SỬA
+// lỗi freeze (`startTickLoop(tick)` nằm BÊN TRONG bootGame() ở
+// useAppLifecycle.ts) KHÔNG được guard tĩnh này che. Layer 1 chỉ soi hàm
+// top-level của App.vue; Layer 2 chỉ hỏi "member mà useAppLifecycle()
+// TRẢ VỀ có ai tiêu thụ không" — một lời gọi nội bộ trong thân composable
+// không rơi vào cả hai. Nếu ai xoá dòng đó, file này vẫn xanh (entry
+// allowlist của `startTickLoop` ở dưới cũng vẫn xanh, vì nó chưa bao giờ
+// kiểm tra lời gọi ấy). Thứ duy nhất bắt được là test HÀNH VI
+// 'bootGame thành công → tick loop tự khởi động' trong
+// useAppLifecycle.test.ts. Hai file phải cùng tồn tại mới đủ lưới —
+// đừng xoá test bên đó vì nghĩ rằng guard này đã lo.
 
 // @ts-expect-error project omits Node ambient types by design (pattern: deadReferences.test.ts)
 import { readFileSync } from 'node:fs'
