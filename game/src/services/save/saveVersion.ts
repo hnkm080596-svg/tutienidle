@@ -21,4 +21,7 @@
 // v57 (2026-09-05, companion-roster spec): 1 field mới — companions
 // (CompanionInstance[] sở hữu, definitionId/level/exp). Save v56 bị từ
 // chối (dev phase, không migration).
-export const CURRENT_SAVE_VERSION = 57 as const
+// v58 (2026-09-05, tran-phap spec): 1 field mới — formationLoadout
+// (FormationLoadout | null, Trận Pháp đang active + vị trí từng
+// combatant). Save v57 bị từ chối (dev phase, không migration).
+export const CURRENT_SAVE_VERSION = 58 as const

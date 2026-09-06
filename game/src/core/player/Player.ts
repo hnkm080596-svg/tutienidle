@@ -276,7 +276,26 @@ export interface PlayerData {
   // này cần trên PlayerData.
   companions: CompanionInstance[]
 
+  // Trận Pháp (2026-09-05) — currently active formation + per-cell
+  // assignment. null = player has never configured one; buildTurnBattle()
+  // falls back to DEFAULT_PARTY_FORMATION (Combat Art Pipeline spec §7).
+  formationLoadout: FormationLoadout | null
+
   lastSavedAt: number
+}
+
+// Trận Pháp (2026-09-05) — small enough to inline directly (no other
+// consumer needs its own module), giống cách CompanionInstance được import
+// riêng cho Task 11.
+export interface FormationSlotAssignment {
+  row: number
+  column: number
+  combatantId: string
+}
+
+export interface FormationLoadout {
+  formationId: string
+  assignments: FormationSlotAssignment[]
 }
 
 export function createDefaultPlayer(): PlayerData {
@@ -353,6 +372,8 @@ export function createDefaultPlayer(): PlayerData {
     combatAiStrategy: DEFAULT_COMBAT_AI_STRATEGY,
 
     companions: [],
+
+    formationLoadout: null,
 
     lastSavedAt: Date.now(),
   }

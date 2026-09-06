@@ -8,3 +8,11 @@ describe('createDefaultPlayer — companions field', () => {
     expect(player.companions).toEqual([])
   })
 })
+
+describe('createDefaultPlayer — formationLoadout field', () => {
+  it('initializes formationLoadout as null (no Trận Pháp configured yet)', () => {
+    const player = createDefaultPlayer()
+
+    expect(player.formationLoadout).toBeNull()
+  })
+})
