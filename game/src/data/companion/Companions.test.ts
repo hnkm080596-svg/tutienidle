@@ -17,3 +17,16 @@ describe('Companions content file', () => {
     expect(new Set(ids).size).toBe(ids.length)
   })
 })
+
+describe('TEST-ONLY placeholder companions (Hỗn Độn Trận visual test tooling)', () => {
+  it('has at least 5 test companions, each with a valid grade and basic skill', () => {
+    const testCompanions = COMPANIONS.filter((c) => c.id.startsWith('test_companion_'))
+
+    expect(testCompanions.length).toBeGreaterThanOrEqual(5)
+
+    for (const companion of testCompanions) {
+      expect(ITEM_GRADE_ORDER).toContain(companion.grade)
+      expect(companion.basic.id).toBeTruthy()
+    }
+  })
+})
