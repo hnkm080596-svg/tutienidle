@@ -96,6 +96,7 @@ import { CombatPositionInterpolation } from './combat/combat-position-interpolat
 import { CombatPlayerVisual } from './combat/combat-player-visual'
 import { BUFF_ATTACH_COLOR, DEBUFF_ATTACH_COLOR } from './combat/combatConstants'
 import type { PositionInterpolation } from './combat/combatTypes'
+import type { CombatGridViewHost } from './combat/CombatGridViewHost'
 import { planCombatantSpriteReconciliation } from './combat/combat-entity-reconciliation'
 import type { TurnBattleEntitySnapshotEvent } from '@/core/battle/turn/TurnActionPresentationEvents'
 
@@ -270,7 +271,7 @@ interface CastBarSprite {
  * MainScene.ts, xem ghi chÃƒÂº Ã¡Â»Å¸ Ã„â€˜ÃƒÂ³ cho lÃƒÂ½ do kÃ¡Â»Â¹ thuÃ¡ÂºÂ­t (nÃ¡Â»â„¢i suy vÃ¡Â»â€¹ trÃƒÂ­,
  * animation rÃ¡Â»Âi rÃ¡ÂºÂ¡c...).
  */
-export class CombatScene extends Phaser.Scene {
+export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // ui-discoverability-refactor-plan.md Ã‚Â§3.2 Ã¢â‚¬â€ module tÃƒÂ¡ch khÃ¡Â»Âi god-class,
   // khÃ¡Â»Å¸i tÃ¡ÂºÂ¡o LAZY (Object.create(CombatScene.prototype) trong test KHÃƒâ€NG
   // chÃ¡ÂºÂ¡y field initializer Ã¢â‚¬â€ getter an toÃƒÂ n cho cÃ¡ÂºÂ£ test lÃ¡ÂºÂ«n runtime).
@@ -355,13 +356,19 @@ export class CombatScene extends Phaser.Scene {
   }
   // ChÃ¡Â»â€° tÃ¡Â»â€œn tÃ¡ÂºÂ¡i Ã¡Â»Å¸ chÃ¡ÂºÂ¿ Ã„â€˜Ã¡Â»â„¢ 'flat' (renderer legacy cÃ¡ÂºÂ§n nÃ¡Â»Ân phÃ¡ÂºÂ³ng Ã„â€˜Ã¡ÂºÂ·c);
   // 'perspective' thay bÃ¡ÂºÂ±ng BattlefieldBackdrop hÃ¡Â»â„¢i tÃ¡Â»Â¥ hÃ¡ÂºÂ­u cÃ¡ÂºÂ£nh.
-  arenaRect?: Phaser.GameObjects.Rectangle
+  // Battlefield Slot (2026-09-06) — required-property `| undefined` để
+  // thoả CombatGridViewHost (ngữ nghĩa giữ nguyên, CombatGridView tự guard).
+  arenaRect: Phaser.GameObjects.Rectangle | undefined
 
   // Projection layer Ã¢â‚¬â€ nguÃ¡Â»â€œn DUY NHÃ¡ÂºÂ¤T cho mÃ¡Â»Âi quy Ã„â€˜Ã¡Â»â€¢i gridÃ¢â€ â€screen kÃ¡Â»Æ’ cÃ¡ÂºÂ£
   // flat (2 mode cÃƒÂ¹ng interface BattleGridProjection nÃƒÂªn phÃ¡ÂºÂ§n cÃƒÂ²n lÃ¡ÂºÂ¡i cÃ¡Â»Â§a
   // scene khÃƒÂ´ng cÃ¡ÂºÂ§n biÃ¡ÂºÂ¿t mode Ã„â€˜ang chÃ¡ÂºÂ¡y).
   private renderMode: BattlefieldRenderMode = getBattlefieldRenderMode()
-  projection?: BattleGridProjection
+  // Battlefield Slot (2026-09-06) — khai báo required-property kiểu
+  // `| undefined` (thay `?:`) để thoả CombatGridViewHost: ngữ nghĩa giống
+  // hệt (có lúc undefined), chỉ khác chỗ interface yêu cầu property luôn
+  // TỒN TẠI trên type (CombatGridView tự guard trước khi đọc).
+  projection: BattleGridProjection | undefined
   private backdrop?: BattlefieldBackdropHandle
 
   /** Variant Thanh VÃƒÂ¢n Ã„â€˜ang dÃƒÂ¹ng (season/time, override qua localStorage). */
@@ -381,7 +388,9 @@ export class CombatScene extends Phaser.Scene {
 
   /** true khi nÃ¡Â»Ân lÃƒÂ  art modular Ã¢â‚¬â€ grid lines/border khÃƒÂ´ng vÃ¡ÂºÂ½ Ã„â€˜ÃƒÂ¨ lÃƒÂªn art. */
   usingArtBackdrop = false
-  gridGraphics?: Phaser.GameObjects.Graphics
+  // Battlefield Slot (2026-09-06) — required-property `| undefined` để
+  // thoả CombatGridViewHost (ngữ nghĩa giữ nguyên, CombatGridView tự guard).
+  gridGraphics: Phaser.GameObjects.Graphics | undefined
 
   sprites = new Map<string, EntitySprite>()
   interpolations = new Map<string, PositionInterpolation>()
@@ -1048,6 +1057,15 @@ export class CombatScene extends Phaser.Scene {
   // Internal (module boundary).
   entityHeadY(sprite: EntitySprite): number {
     return this.gridView.entityHeadY(sprite)
+  }
+
+  // CombatGridViewHost (Battlefield Slot spec §1) — combat thật KHÔNG BAO
+  // GIỜ fallback sang texture khác cho enemy ngoài batch Mortal (giữ
+  // nguyên Rectangle như trước fix này) — chỉ panel Trận Pháp
+  // (TranPhapCombatPreviewScene) override hàm này để trả về sheet
+  // placeholder dùng chung.
+  fallbackSpriteTextureKey(_id: string): string | undefined {
+    return undefined
   }
 
   trackSourceScreenPosition(id: string, sprite: EntitySprite) {
