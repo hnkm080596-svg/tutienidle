@@ -123,6 +123,17 @@ When a rule below says "the agent", it means whichever opencode agent is current
 - If verification (any mode in P3) fails and the failure was introduced or worsened by the current task, the agent must fix it before declaring complete.
 - Pre-existing failures in unrelated code are not the agent's responsibility to fix; report them as suspected or coverage gaps instead.
 
+### P13. Runtime Wiring Verification (a green suite does not mean the game runs)
+
+**Why this rule exists.** On 2026-09-05 a refactor extracted boot logic into `useAppLifecycle.ts` and left `startTickLoop()` defined in `App.vue` but never called. Since `App.vue`'s `tick()` is the only non-test caller of `GameManager.update()`, the entire simulation froze in the browser — combat, cultivation, idle progression, production — with **zero console errors**. It shipped to master with **2651 unit tests green**, because every unit test calls `gameManager.update()` directly and bypasses `App.vue`. The refactor even added tests for the extracted helper in isolation, proving it worked while nothing called it. ESLint could not catch it either: in `<script setup>`, top-level functions are auto-exposed to the template, so an orphaned function stays lint-clean.
+
+- **The unit suite proves engine logic, not that the app is wired to it.** Never present "tests pass" as evidence the game works when the change touches the wiring between app shell and engine.
+- A change is **wiring-critical** when it touches any of: `App.vue`, `game/src/composables/useAppLifecycle.ts`, boot / mount / lifecycle sequencing, timers or intervals driving `GameManager.update()`, Phaser scene creation or teardown, or the Vue↔Phaser bridge.
+- For a wiring-critical change, P3's `quick` mode is **not sufficient**. Additionally run runtime verification: the Playwright e2e suite (`game/tests/e2e/`), and where feasible actually drive the app to the affected behaviour and confirm it progresses. A boot smoke test alone does not count — assert that the simulation *advanced*.
+- **Extracting code into a composable, helper, or module is not complete until every previous call site is re-wired.** Testing the extracted unit in isolation is not evidence of that. Verify the caller, not just the callee.
+- The repo carries guard tests for this class of failure (app-shell orphaned-function and composable-consumer checks, plus an e2e spec that plays a battle to resolution). **Do not delete, skip, or weaken them to make a change pass.** If one fails, it is telling you something is unwired — fix the wiring.
+- If a symptom is "nothing happens, no error", suspect an uncalled function before suspecting broken logic. Silence is the signature of this bug class.
+
 ---
 
 ## Part 2 — Effectiveness Guidelines (Read & Apply When Relevant)
@@ -239,10 +250,10 @@ Opencode supports per-agent system prompts via `.opencode/agent/<name>.md` files
 
 ### Agent files
 
-- `.opencode/agent/build.md` — primary agent that edits code. Embeds all 12 Protection rules.
-- `.opencode/agent/plan.md` — primary agent for spec / planning without edits. Embeds P1, P2, P6, P7, P8, P9, P10, P11. Does not need P3 / P4 / P5 / P12 because it does not ship code.
+- `.opencode/agent/build.md` — primary agent that edits code. Embeds all 13 Protection rules.
+- `.opencode/agent/plan.md` — primary agent for spec / planning without edits. Embeds P1, P2, P6, P7, P8, P9, P10, P11. Does not need P3 / P4 / P5 / P12 / P13 because it does not ship code.
 - `.opencode/agent/general.md` — primary fallback agent with the same Protection surface as `build.md`.
-- `.opencode/agent/explore.md` — primary read-only research agent. Embeds P1, P2, P6, P7, P8, P10. Does not need P3 / P4 / P5 / P9 / P12.
+- `.opencode/agent/explore.md` — primary read-only research agent. Embeds P1, P2, P6, P7, P8, P10. Does not need P3 / P4 / P5 / P9 / P12 / P13.
 
 ### Sync rule
 

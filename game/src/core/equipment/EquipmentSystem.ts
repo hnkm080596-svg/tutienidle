@@ -593,7 +593,8 @@ export class EquipmentSystem {
       this.unequip(current.instanceId, inventory)
     }
 
-    instance.equipped = true
+    // OPT-04 — flip qua bag API để giữ slotIndex nhất quán.
+    inventory.setEquippedInternal(instance.instanceId, true)
 
     this.applyModifiers(instance, slotManager, affixRegistry)
 
@@ -607,7 +608,8 @@ export class EquipmentSystem {
       return false
     }
 
-    instance.equipped = false
+    // OPT-04 — flip qua bag API để giữ slotIndex nhất quán.
+    inventory.setEquippedInternal(instance.instanceId, false)
 
     this.modifierSystem.removeBySource(instance.instanceId)
 

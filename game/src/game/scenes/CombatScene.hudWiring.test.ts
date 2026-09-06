@@ -6,10 +6,12 @@ import { describe, expect, it, vi } from 'vitest'
 import { createTestScene } from './combat/combatTestHarness'
 import type { EntityVitalsChangedEvent } from '@/core/combat/EntityVitalsSystem'
 import type { BattlePositionsEvent } from '@/core/battle/BattleEvents'
+import { KIEM_BAR_READER_KEY, type KiemBarReader } from '@/game/support/kiemBarBridge'
 
 interface FakeHud {
   hpCalls: Array<{ current: number; max: number }>
   mpCalls: Array<{ current: number; max: number }>
+  kiemCalls: Array<{ current: number; max: number; label: string }>
   visible: boolean | null
   destroyed: boolean
   updateHp(current: number, max: number): void
@@ -24,6 +26,7 @@ function makeFakeHud(): FakeHud {
   const hud: FakeHud = {
     hpCalls: [],
     mpCalls: [],
+    kiemCalls: [],
     visible: null,
     destroyed: false,
     updateHp(current, max) {
@@ -32,7 +35,9 @@ function makeFakeHud(): FakeHud {
     updateMp(current, max) {
       hud.mpCalls.push({ current, max })
     },
-    updateKiem() {},
+    updateKiem(current, max, label) {
+      hud.kiemCalls.push({ current, max, label })
+    },
     layout() {},
     setVisible(v) {
       hud.visible = v
@@ -45,7 +50,27 @@ function makeFakeHud(): FakeHud {
   return hud
 }
 
-function createScene(fakeHud: FakeHud) {
+interface FakeRegistry {
+  map: Map<string, unknown>
+  set(key: string, value: unknown): void
+  get(key: string): unknown
+}
+
+function makeFakeRegistry(): FakeRegistry {
+  const map = new Map<string, unknown>()
+
+  return {
+    map,
+    set(key, value) {
+      map.set(key, value)
+    },
+    get(key) {
+      return map.get(key)
+    },
+  }
+}
+
+function createScene(fakeHud: FakeHud, registry: FakeRegistry = makeFakeRegistry()) {
   const scene = createTestScene('bare')
 
   scene.playerHud = fakeHud
@@ -61,7 +86,7 @@ function createScene(fakeHud: FakeHud) {
     }),
   }
 
-  scene.registry = new Map()
+  scene.registry = registry
 
   scene.sprites = new Map()
   scene.spriteForRaw = (id?: string) => (id ? scene.sprites.get(id) : undefined)
@@ -139,5 +164,81 @@ describe('CombatScene â€” PlayerHudLayer wiring (6A-T5)', () => {
 
     expect(emitted).toHaveLength(1)
     expect(emitted[0]).toMatchObject({ type: 'combat_exit_request' })
+  })
+})
+
+describe('CombatScene — Kiếm bar poll per-tick (9.4)', () => {
+  function sceneWithKiemReader(reader: KiemBarReader) {
+    const hud = makeFakeHud()
+    const registry = makeFakeRegistry()
+
+    registry.set(KIEM_BAR_READER_KEY, reader)
+
+    const { scene } = createScene(hud, registry)
+
+    return { hud, scene }
+  }
+
+  it('route kiem_tran → updateKiem(currentKiemThe, MAX_KIEM_THE, "Kiếm Thế") mỗi poll', () => {
+    const reader = vi.fn((): ReturnType<KiemBarReader> => ({
+      current: 30,
+      max: 100,
+      label: 'Kiếm Thế',
+    }))
+    const { hud, scene } = sceneWithKiemReader(reader)
+
+    scene.pollKiemBar()
+    scene.pollKiemBar()
+
+    expect(reader).toHaveBeenCalledTimes(2)
+    expect(hud.kiemCalls).toHaveLength(2)
+    expect(hud.kiemCalls[0]).toEqual({ current: 30, max: 100, label: 'Kiếm Thế' })
+  })
+
+  it('route bat_kiem → updateKiem(temp + permanent, max, "Kiếm Ý T.2")', () => {
+    const reader = vi.fn((): ReturnType<KiemBarReader> => ({
+      current: 40,
+      max: 920,
+      label: 'Kiếm Ý T.2',
+    }))
+    const { hud, scene } = sceneWithKiemReader(reader)
+
+    scene.pollKiemBar()
+
+    expect(hud.kiemCalls).toHaveLength(1)
+    expect(hud.kiemCalls[0]).toEqual({ current: 40, max: 920, label: 'Kiếm Ý T.2' })
+  })
+
+  it('reader trả null (battle null / route không phải Kiếm Tu) → ẩn bar updateKiem(0, 0, "")', () => {
+    const reader = vi.fn((): ReturnType<KiemBarReader> => null)
+    const { hud, scene } = sceneWithKiemReader(reader)
+
+    scene.pollKiemBar()
+
+    expect(hud.kiemCalls).toHaveLength(1)
+    expect(hud.kiemCalls[0]).toEqual({ current: 0, max: 0, label: '' })
+  })
+
+  it('KHÔNG có reader đăng ký → ẩn bar (an toàn, không throw)', () => {
+    const hud = makeFakeHud()
+    const registry = makeFakeRegistry()
+    const { scene } = createScene(hud, registry)
+
+    scene.pollKiemBar()
+
+    expect(hud.kiemCalls).toHaveLength(1)
+    expect(hud.kiemCalls[0]).toEqual({ current: 0, max: 0, label: '' })
+  })
+
+  it('scene KHÔNG có registry (stub) → ẩn bar, không throw (regression 9.4)', () => {
+    const hud = makeFakeHud()
+    const { scene } = createScene(hud)
+
+    scene.registry = undefined
+
+    scene.pollKiemBar()
+
+    expect(hud.kiemCalls).toHaveLength(1)
+    expect(hud.kiemCalls[0]).toEqual({ current: 0, max: 0, label: '' })
   })
 })

@@ -23,5 +23,11 @@ export interface NotificationEvent {
 
   message: string
 
+  // i18n (9.8) — key + params để App.vue render qua t(); message vi
+  // ở trên là fallback khi key chưa có trong locale.
+  messageKey?: string
+
+  messageParams?: Record<string, string>
+
   loot?: LootNotificationPresentation
 }

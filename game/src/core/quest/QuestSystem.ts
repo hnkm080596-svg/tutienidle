@@ -9,6 +9,10 @@ import type { MaterialRegistry } from '../material/MaterialRegistry'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { PillRegistry } from '../pill/PillRegistry'
 import type { PillBag } from '../pill/PillBag'
+// 9.8 — CHỈ import TYPE (không runtime import core/game) tránh dependency
+// cycle: NotificationQueue sống ở core/game nhưng event type thuần.
+import type { NotificationEvent } from '../notification/NotificationEvent'
+import type { Material } from '../material/Material'
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000
 
@@ -17,6 +21,10 @@ export interface QuestBagDeps {
   materialBag: MaterialBag
   pillRegistry: PillRegistry
   pillBag: PillBag
+
+  // 9.8 (optional) — caller có notification sink thì push toast khi
+  // reward material tràn túi; không có thì bỏ qua (test/mock path).
+  notifications?: { push: (event: NotificationEvent) => void }
 }
 
 function isUnlocked(quest: Quest, player: PlayerData): boolean {
@@ -126,12 +134,32 @@ export class QuestSystem {
       const amount = drop.amount ?? 1
 
       if (drop.kind === 'material' && bags.materialRegistry.has(drop.itemId)) {
-        bags.materialBag.add(bags.materialRegistry.get(drop.itemId), amount)
+        // 9.8 — tràn túi: quest chỉ tính delivered; push toast khi có sink.
+        const template: Material = bags.materialRegistry.get(drop.itemId)
+        const overflow = bags.materialBag.add(template, amount)
+
+        const delivered = amount - overflow
 
         // Item turn-in của quest này cũng là material thu thập — tính
         // progress cho collect-quest khác đang active (cùng hook với
         // mọi đường material vào túi).
-        this.onMaterialCollected(registry, manager, drop.itemId, amount)
+        this.onMaterialCollected(registry, manager, drop.itemId, delivered)
+
+        if (overflow > 0 && bags.notifications) {
+          // Event dựng inline (fallback message vi — convention core):
+          // chỉ import TYPE NotificationEvent, không runtime import.
+          const overflowEvent: NotificationEvent = {
+            kind: 'warning',
+
+            message: `Túi đầy — mất ${overflow} ${template.name}`,
+
+            messageKey: 'bag.overflow',
+
+            messageParams: { amount: String(overflow), name: template.name },
+          }
+
+          bags.notifications.push(overflowEvent)
+        }
       }
 
       if (drop.kind === 'pill' && bags.pillRegistry.has(drop.itemId)) {

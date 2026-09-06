@@ -12,6 +12,7 @@
     "type-check": "vue-tsc --build",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "check:bundle-split": "node scripts/check-bundle-split.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write --experimental-cli src/",

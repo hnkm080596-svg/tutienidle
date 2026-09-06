@@ -48,6 +48,11 @@ export function useAutoRetryCountdown(seconds: number, onComplete: () => void) {
   }
 
   function start() {
+    // 9.9 — restart an toàn, không orphan interval: start() gọi khi đang
+    // chạy phải clear interval cũ trước khi lập lịch mới (interval cũ nếu
+    // giữ lại sẽ tick mãi, dùng chung deadline/completed với interval mới).
+    stop()
+
     completed = false
     deadline = Date.now() + seconds * 1000
     remaining.value = seconds

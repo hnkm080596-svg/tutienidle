@@ -27,7 +27,14 @@ import RewardList from './RewardList.vue'
 //     chỉ chạy khi nhánh 3s KHÔNG chạy).
 // Nút "Về Động Phủ" LUÔN hiện (khác Victory panel ẩn "Tiếp Tục" khi
 // isAuto) — người chơi phải huỷ được auto-countdown bất cứ lúc nào.
+// 9.6 — fallback 10s (đã hứa trong comment trên nhưng CHƯA BAO GIỜ được
+// implement trước 2026-09-03): 10 giây không bấm gì thì tự về Động Phủ,
+// bất kể nhánh 3s có chạy hay không (repeat → refight ở 3s sẽ unmount
+// panel; manual → chỉ mình 10s chạy). Chạy song song nhánh 3s qua
+// useAutoRetryCountdown thay vì setTimeout riêng để dùng chung cơ chế
+// deadline thực + stop() dọn interval (xem useAutoRetryCountdown.ts).
 const RETRY_COUNTDOWN_SECONDS = 3
+const RETURN_COUNTDOWN_SECONDS = 10
 
 const gameManager = useGameManager()
 const ui = useUiStore()
@@ -58,8 +65,12 @@ function refight() {
 
 const { remaining: retryCountdown, start: startAutoRetryCountdown, stop: stopAutoRetryCountdown } = useAutoRetryCountdown(RETRY_COUNTDOWN_SECONDS, refight)
 
+// 9.6 — countdown fallback 10s về Động Phủ; clear chung với nhánh 3s.
+const { start: startReturnCountdown, stop: stopReturnCountdown } = useAutoRetryCountdown(RETURN_COUNTDOWN_SECONDS, returnHome)
+
 function clearTimers() {
   stopAutoRetryCountdown()
+  stopReturnCountdown()
 }
 
 function retryNow() {
@@ -75,6 +86,8 @@ function returnHome() {
 }
 
 onMounted(() => {
+  startReturnCountdown()
+
   if (ui.battleRunMode === 'repeat') {
     isAutoRetrying.value = true
     startAutoRetryCountdown()
