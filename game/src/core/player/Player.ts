@@ -14,6 +14,7 @@ import type { CultivationPathId } from './CultivationPathKit'
 import type { PersistentTimedEffect } from './PersistentTimedEffect'
 import type { ElementType } from '../element/ElementType'
 import type { ArtifactProgress } from '../artifact/Artifact'
+import type { CompanionInstance } from '../../data/companion/Companions'
 
 /** Kiếm Tu tự lực (2026-08-28) — 2 nhánh song song, xem PlayerData.kiemTuRoute. */
 export type KiemTuRoute = 'kiem_tran' | 'bat_kiem'
@@ -268,6 +269,13 @@ export interface PlayerData {
 
   skillLevels?: Record<string, number>
 
+  // Companion Roster (2026-09-05) — gacha-recruited combatants owned by
+  // the player. Không có equipment/node-tree kỹ năng riêng từng nhân vật
+  // (bộ kỹ năng cố định trong CompanionDefinition, xem
+  // data/companion/Companions.ts) — đây là field mới DUY NHẤT feature
+  // này cần trên PlayerData.
+  companions: CompanionInstance[]
+
   lastSavedAt: number
 }
 
@@ -343,6 +351,8 @@ export function createDefaultPlayer(): PlayerData {
 
 
     combatAiStrategy: DEFAULT_COMBAT_AI_STRATEGY,
+
+    companions: [],
 
     lastSavedAt: Date.now(),
   }

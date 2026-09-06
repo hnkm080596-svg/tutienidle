@@ -18,4 +18,7 @@
 // sở cycleSeconds cho auto-farm), autoFarmStage (slot auto-farm đang
 // chạy, null nếu không có). Save v55 bị từ chối (dev phase, không
 // migration).
-export const CURRENT_SAVE_VERSION = 56 as const
+// v57 (2026-09-05, companion-roster spec): 1 field mới — companions
+// (CompanionInstance[] sở hữu, definitionId/level/exp). Save v56 bị từ
+// chối (dev phase, không migration).
+export const CURRENT_SAVE_VERSION = 57 as const
