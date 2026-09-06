@@ -71,6 +71,14 @@ export interface Battle {
   // state khác.
   countdownSecondsRemaining?: number
 
+  // Fix (2026-09-06) — GameManager.getBattle() trả `turnBattle as unknown
+  // as Battle` khi có trận turn-based (xem GameManager.ts). Engine đó
+  // đếm ngược countdown bằng SỐ LƯỢT pacing (countdownTurnsRemaining,
+  // TurnBattleSystem.ts), không phải giây thật như legacy BattleSystem.ts
+  // — khai field ở đây để CombatCountdownOverlay.vue đọc được cả 2 shape
+  // qua đúng 1 type, không phải cast ngầm.
+  countdownTurnsRemaining?: number
+
   /**
    * Teleport AI (plan §7.3) — internal cooldown (ICD) của Player: đúng
    * 1 giây sau mỗi lần đổi row. Trong ICD Player vẫn cast/đánh mục tiêu

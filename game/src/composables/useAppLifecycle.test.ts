@@ -86,6 +86,7 @@ function makeStubs() {
       refreshAutoWorkerCapacity: vi.fn(),
       restoreFromSave: vi.fn(),
     } as unknown as GameManager,
+    tick: vi.fn(),
     offlineSummary: { show: vi.fn() },
     saveIssue: { report: vi.fn() },
     entryStage: ref('game'),
@@ -108,6 +109,7 @@ function makeLifecycle(stubs: Stubs) {
     coordinator: stubs.coordinator,
     player: stubs.player,
     gameManager: stubs.gameManager,
+    tick: stubs.tick,
     offlineSummary: stubs.offlineSummary,
     saveIssue: stubs.saveIssue,
     entryStage: stubs.entryStage,
@@ -179,6 +181,34 @@ describe('useAppLifecycle — boot idempotence (Remediation Task 5)', () => {
     expect(stubs.boot.startSaveLoad).toHaveBeenCalledTimes(1)
     expect(stubs.coordinator.load).toHaveBeenCalledTimes(1)
     expect(stubs.boot.enterGame).toHaveBeenCalledTimes(1)
+
+    lifecycle.stopAll()
+  })
+
+  // Fix (2026-09-06) — regression test cho lớp bug đã làm freeze TOÀN BỘ
+  // game: bootGame() thành công phải TỰ khởi động tick loop, không phụ
+  // thuộc caller nhớ gọi startTickLoop() riêng (đúng lỗi đã xảy ra ở
+  // commit d6d9a1d — extract composable, quên rewire lời gọi). Khác với
+  // 2 test "startTickLoop 2 lần" ở trên (chỉ test HELPER khi được gọi thủ
+  // công với callback tự tạo), test này đi qua đúng con đường sản xuất
+  // (bootGame() → startTickLoop(deps.tick)) — nếu ai xoá dòng gọi đó
+  // trong useAppLifecycle.ts, test này FAIL trong khi 2 test kia vẫn xanh.
+  it('bootGame thành công → tick loop tự khởi động (KHÔNG cần caller gọi startTickLoop riêng)', async () => {
+    const stubs = makeStubs()
+    const lifecycle = makeLifecycle(stubs)
+
+    expect(lifecycle.getTickHandle()).toBeUndefined()
+
+    const outcome = await lifecycle.bootGame({ createNewCharacter: true })
+
+    expect(outcome.status).toBe('entered')
+    expect(lifecycle.getTickHandle()).not.toBeUndefined()
+    expect(stubs.intervals).toHaveLength(1)
+
+    // Interval đã đăng ký đúng là tick — bấm thủ công phải gọi tick(),
+    // không phải một no-op nào khác.
+    stubs.intervals[0]?.()
+    expect(stubs.tick).toHaveBeenCalledTimes(1)
 
     lifecycle.stopAll()
   })
@@ -313,6 +343,7 @@ describe('useAppLifecycle — entry smoke qua createApp (pattern usePanelPaginat
             coordinator: stubs.coordinator,
             player: stubs.player,
             gameManager: stubs.gameManager,
+            tick: stubs.tick,
             offlineSummary: stubs.offlineSummary,
             saveIssue: stubs.saveIssue,
             entryStage: stubs.entryStage,
