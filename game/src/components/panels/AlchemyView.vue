@@ -117,7 +117,7 @@ const preview = computed(() => {
   return gameManager.previewAlchemyOutcome(selectedRecipe.value.id, selectedHerbId.value)
 })
 
-/** Gỗ nhiên liệu rẻ nhất đạt realm tối thiểu của recipe (hiển thị cost). */
+/** Gỗ nhiên liệu rẻ nhất đạt realm tối thiểu của recipe (hiển thị cost) — gp123 6E C2: id gỗ theo trục tuổi, ưu tiên decade. */
 const fuelWoodRow = computed(() => {
   stateVersion.value
 
@@ -127,26 +127,41 @@ const fuelWoodRow = computed(() => {
 
   const realms = ['mortal', 'qi_refining', 'foundation_establishment']
 
+  const ages = ['decade', 'century', 'millennium', 'myriad_year', 'thuong_co'] as const
+
   const minIndex = Math.max(0, realms.indexOf(selectedRecipe.value.fuelWoodRealmId))
 
   for (let index = minIndex; index < realms.length; index++) {
-    const woodId = `${realms[index]}_wood`
+    for (const age of ages) {
+      const woodId = `${realms[index]}_wood_${age}`
 
-    const name =
-      gameManager.materialRegistry.has(woodId)
-        ? gameManager.materialRegistry.get(woodId).name
-        : woodId
+      if (!gameManager.materialRegistry.has(woodId)) {
+        continue
+      }
 
-    return {
-      label: name,
+      return {
+        label: gameManager.materialRegistry.get(woodId).name,
 
-      owned: gameManager.materialBag.getAmount(woodId),
+        owned: gameManager.materialBag.getAmount(woodId),
 
-      amount: selectedRecipe.value.fuelWoodAmount,
+        amount: selectedRecipe.value.fuelWoodAmount,
+      }
     }
   }
 
-  return null
+  // Không tìm thấy stack (cả registry fallback) — hiện id decade đầu tiên
+  // để row không biến mất hoàn toàn.
+  const fallbackId = `${realms[minIndex]}_wood_decade`
+
+  return {
+    label: gameManager.materialRegistry.has(fallbackId)
+      ? gameManager.materialRegistry.get(fallbackId).name
+      : fallbackId,
+
+    owned: gameManager.materialBag.getAmount(fallbackId),
+
+    amount: selectedRecipe.value.fuelWoodAmount,
+  }
 })
 
 // Plan Workstream F — Linh Thạch đọc từ MaterialBag.

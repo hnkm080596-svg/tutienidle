@@ -1897,12 +1897,13 @@ export class GameManager {
   }
 
   /**
-   * Quy Ã„â€˜Ã¡Â»â€¢i cÃ¡ÂºÂ£nh giÃ¡Â»â€ºi Linh MÃ¡Â»â„¢c/Linh KhoÃƒÂ¡ng LÃƒÅ N bÃ¡ÂºÂ­c kÃ¡ÂºÂ¿ (2026-08-28): gÃ¡Â»â„¢p
-   * 10 bÃ¡ÂºÂ­c thÃ¡ÂºÂ¥p Ã¢â€ â€™ 1 bÃ¡ÂºÂ­c cao theo thang PhÃƒÂ m NhÃƒÂ¢n Ã¢â€ â€™ LuyÃ¡Â»â€¡n KhÃƒÂ­ Ã¢â€ â€™ TrÃƒÂºc CÃ†Â¡.
-   * GÃ¡Â»â€” `<realm>_wood` Ã¢â€ â€™ `<nextRealm>_wood`; quÃƒÂ¡ng giÃ¡Â»Â¯ PHÃ¡ÂºÂ¨M khi lÃƒÂªn cÃ¡ÂºÂ£nh
-   * giÃ¡Â»â€ºi `<realm>_ore_<quality>` Ã¢â€ â€™ `<nextRealm>_ore_<quality>`. CHÃ¡Â»Ë† cÃƒÂ³
-   * chiÃ¡Â»Âu lÃƒÂªn (giÃ¡Â»Â¯ sink). Giao dÃ¡Â»â€¹ch atomic: check Ã„â€˜Ã¡Â»Â§ Ã¢â€ â€™ trÃ¡Â»Â« Ã¢â€ â€™ cÃ¡Â»â„¢ng; trÃ¡Â»Â«
-   * thÃ¡ÂºÂ¥t bÃ¡ÂºÂ¡i thÃƒÂ¬ khÃƒÂ´ng cÃ¡Â»â„¢ng.
+   * Quy đổi cảnh giới Linh Mộc/Linh Khoáng LÊN bậc kế (2026-08-28): gộp
+   * 10 bậc thấp → 1 bậc cao theo thang Phàm Nhân → Luyện Khí → Trúc Cơ.
+   * gp123 6E C2: gỗ `<realm>_wood_<age>` → `<nextRealm>_wood_<age>`; quáng
+   * giữ TUỔI khi lên cảnh giới `<realm>_ore_<age>` → `<nextRealm>_ore_<age>`.
+   * CHỈ có chiều lên (giữ sink). Giao dịch atomic: check đủ → trừ → cộng;
+   * trừ thất bại thì không cộng.
+   * NOTE (plan 6E): tính năng này sẽ bị XÓA ở task E2.
    */
   convertMaterialTier(
     fromMaterialId: string,

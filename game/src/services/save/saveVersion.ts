@@ -18,4 +18,10 @@
 // sở cycleSeconds cho auto-farm), autoFarmStage (slot auto-farm đang
 // chạy, null nếu không có). Save v55 bị từ chối (dev phase, không
 // migration).
-export const CURRENT_SAVE_VERSION = 56 as const
+// v57 (2026-09-05, gp123 6E task C2 — unification of the age axes):
+// material wood/ore đổi id sang trục tuổi thống nhất —
+// `<realm>_wood_<age>` / `<realm>_ore_<age>` (age decade..thuong_co);
+// plain `<realm>_wood` và hậu tố phẩm cũ hoang..tien KHÔNG TỒN TẠI nữa
+// (meta profession.quality → profession.age). Save v56 bị từ chối (dev
+// phase, không migration).
+export const CURRENT_SAVE_VERSION = 57 as const

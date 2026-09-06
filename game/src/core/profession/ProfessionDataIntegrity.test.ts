@@ -100,6 +100,90 @@ describe('Du lieu nghe that trong repo (data-integrity gate)', () => {
     expect(thuongCo!.icon).toBe(`/assets/materials/herbs/${herbId}/thuong_co.png`)
   })
 
+  // gp123 6E (task C2): trục tuổi thống nhất MỞ RỘNG cho gỗ/khoáng —
+  // id `<realm>_wood_<age>` / `<realm>_ore_<age>`; plain wood và hậu tố
+  // phẩm cũ (hoang..tien) KHÔNG TỒN TẠI nữa.
+  it('wood/ore chi dung hau to _<age>; khong con id pham cu', () => {
+    const ageSuffix = new RegExp(`_(${HERB_AGES.join('|')})$`)
+
+    for (const material of professionMaterials) {
+      if (material.category !== 'wood' && material.category !== 'ore') {
+        continue
+      }
+
+      expect(material.id, material.id).toMatch(ageSuffix)
+      expect(material.id, material.id).not.toMatch(/_(hoang|huyen|dia|thien|tien)$/)
+    }
+  })
+
+  it('khong ton tai plain <realm>_wood', () => {
+    for (const realmId of REALM_TIERS) {
+      expect(
+        materials.some((material) => material.id === `${realmId}_wood`),
+        `${realmId}_wood`,
+      ).toBe(false)
+    }
+  })
+
+  it('wood/ore du 9 realm x 5 tuoi, moi entry co years > 0', () => {
+    const yearsByAge: Record<string, number> = {
+      decade: 10,
+      century: 100,
+      millennium: 1000,
+      myriad_year: 10000,
+      thuong_co: 100000,
+    }
+
+    for (const realmId of REALM_TIERS) {
+      for (const age of HERB_AGES) {
+        for (const kind of ['wood', 'ore'] as const) {
+          const material = materials.find(
+            (entry) => entry.id === `${realmId}_${kind}_${age}`,
+          )
+
+          expect(material, `${realmId}_${kind}_${age}`).toBeDefined()
+
+          expect(material!.years, `${realmId}_${kind}_${age}`).toBe(yearsByAge[age])
+        }
+      }
+    }
+  })
+
+  it('wood/ore meta dung age (5 bac), khong con quality', () => {
+    for (const material of professionMaterials) {
+      if (material.category !== 'wood' && material.category !== 'ore') {
+        continue
+      }
+
+      const meta = material.profession!
+
+      expect(
+        HERB_AGES,
+        `${material.id}: age ${meta.age}`,
+      ).toContain(meta.age as (typeof HERB_AGES)[number])
+
+      // gp123 6E C2: field quality đã bị XÓA khỏi ProfessionMaterialMeta —
+      // material data mới không được còn nhái field này.
+      expect(
+        'quality' in meta,
+        `${material.id} còn quality`,
+      ).toBe(false)
+    }
+  })
+
+  it('wood/ore ten hien thi gom nhan realm (thap nien..thuong co)', () => {
+    const expectedNames: Array<[string, string]> = [
+      ['mortal_wood_decade', 'Thập Niên Linh Mộc Phàm Nhân'],
+      ['mortal_ore_decade', 'Thập Niên Linh Khoáng Phàm Nhân'],
+      ['mahayana_wood_millennium', 'Thiên Niên Linh Mộc Đại Thừa'],
+      ['tribulation_ore_thuong_co', 'Thượng Cổ Linh Khoáng Độ Kiếp'],
+    ]
+
+    for (const [id, name] of expectedNames) {
+      expect(materials.find((material) => material.id === id)?.name, id).toBe(name)
+    }
+  })
+
   it('Dia Gioi Thanh Van hop le: dung 1 Lam/Quang/Dong Thien + rewards phu 3 tier', () => {
     const result = validateTerritory(
       TERRITORY_THANH_VAN,

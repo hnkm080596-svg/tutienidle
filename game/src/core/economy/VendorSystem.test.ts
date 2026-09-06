@@ -18,11 +18,12 @@ import {
 } from '../material/SpiritStoneMaterial'
 import type { Material } from '../material/Material'
 import type { AlchemyRecipe } from '../alchemy/AlchemySystem'
+import type { HerbAge } from '../production/ProductionTypes'
 import { VendorSystem } from './VendorSystem'
 import { REALM_TIERS } from '../realm/RealmTierMap'
 import { LUYEN_KHI_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
 
-function herb(id: string, age: string, realmId = 'mortal'): Material {
+function herb(id: string, age: HerbAge, realmId = 'mortal'): Material {
   return {
     id,
 
@@ -46,7 +47,7 @@ function herb(id: string, age: string, realmId = 'mortal'): Material {
   }
 }
 
-function wood(id: string, realmId: string, quality?: string): Material {
+function wood(id: string, realmId: string, age: HerbAge): Material {
   return {
     id,
 
@@ -56,13 +57,11 @@ function wood(id: string, realmId: string, quality?: string): Material {
 
     sourceType: 'exploration',
 
-    profession: quality
-      ? { resourceKind: 'wood', realmId, quality }
-      : { resourceKind: 'wood', realmId },
+    profession: { resourceKind: 'wood', realmId, age },
   }
 }
 
-function ore(id: string, realmId: string, quality: string): Material {
+function ore(id: string, realmId: string, age: HerbAge): Material {
   return {
     id,
 
@@ -72,7 +71,7 @@ function ore(id: string, realmId: string, quality: string): Material {
 
     sourceType: 'exploration',
 
-    profession: { resourceKind: 'ore', realmId, quality },
+    profession: { resourceKind: 'ore', realmId, age },
   }
 }
 
@@ -86,7 +85,7 @@ function byproduct(id: string, realmId: string): Material {
 
     sourceType: 'building',
 
-    profession: { resourceKind: 'wood', realmId },
+    profession: { resourceKind: 'wood', realmId, age: 'decade' },
   }
 }
 
@@ -120,21 +119,21 @@ describe('VendorBalance — bảng giá Hóa Bán', () => {
     expect(getUnitSellPrice(decade, 'mortal')).toBe(2 * 3)
   })
 
-  it('wood — bảng theo phẩm, nhân realmGrowth theo realm của material', () => {
-    expect(getUnitSellPrice(wood('w_hoang', 'mortal', 'hoang'), 'mortal')).toBe(2)
-    expect(getUnitSellPrice(wood('w_huyen', 'mortal', 'huyen'), 'mortal')).toBe(5)
-    expect(getUnitSellPrice(wood('w_dia', 'mortal', 'dia'), 'mortal')).toBe(12)
-    expect(getUnitSellPrice(wood('w_thien', 'mortal', 'thien'), 'mortal')).toBe(30)
-    expect(getUnitSellPrice(wood('w_tien', 'mortal', 'tien'), 'mortal')).toBe(75)
-    expect(getUnitSellPrice(wood('w_hoang_qr', 'qi_refining', 'hoang'), 'qi_refining')).toBe(6)
+  it('wood — bảng theo tuổi, nhân realmGrowth theo realm của material (gp123 6E C2)', () => {
+    expect(getUnitSellPrice(wood('w_decade', 'mortal', 'decade'), 'mortal')).toBe(2)
+    expect(getUnitSellPrice(wood('w_century', 'mortal', 'century'), 'mortal')).toBe(5)
+    expect(getUnitSellPrice(wood('w_millennium', 'mortal', 'millennium'), 'mortal')).toBe(12)
+    expect(getUnitSellPrice(wood('w_myriad', 'mortal', 'myriad_year'), 'mortal')).toBe(30)
+    expect(getUnitSellPrice(wood('w_thuong_co', 'mortal', 'thuong_co'), 'mortal')).toBe(75)
+    expect(getUnitSellPrice(wood('w_decade_qr', 'qi_refining', 'decade'), 'qi_refining')).toBe(6)
   })
 
-  it('ore — bảng theo phẩm, nhân realmGrowth theo realm của material', () => {
-    expect(getUnitSellPrice(ore('o_hoang', 'mortal', 'hoang'), 'mortal')).toBe(3)
-    expect(getUnitSellPrice(ore('o_huyen', 'mortal', 'huyen'), 'mortal')).toBe(8)
-    expect(getUnitSellPrice(ore('o_dia', 'mortal', 'dia'), 'mortal')).toBe(20)
-    expect(getUnitSellPrice(ore('o_thien', 'mortal', 'thien'), 'mortal')).toBe(50)
-    expect(getUnitSellPrice(ore('o_tien', 'mortal', 'tien'), 'mortal')).toBe(120)
+  it('ore — bảng theo tuổi, nhân realmGrowth theo realm của material (gp123 6E C2)', () => {
+    expect(getUnitSellPrice(ore('o_decade', 'mortal', 'decade'), 'mortal')).toBe(3)
+    expect(getUnitSellPrice(ore('o_century', 'mortal', 'century'), 'mortal')).toBe(8)
+    expect(getUnitSellPrice(ore('o_millennium', 'mortal', 'millennium'), 'mortal')).toBe(20)
+    expect(getUnitSellPrice(ore('o_myriad', 'mortal', 'myriad_year'), 'mortal')).toBe(50)
+    expect(getUnitSellPrice(ore('o_thuong_co', 'mortal', 'thuong_co'), 'mortal')).toBe(120)
   })
 
   it('Luyện Khí Tinh Hoa — giá theo index realm của bối cảnh bán', () => {

@@ -4,11 +4,15 @@
 // raw|processed (plan §2). Optional field trên Material nên save cũ /
 // material legacy không có metadata vẫn load bình thường.
 //
-// ID convention:
-// - Gỗ: `<realm>_wood`
-// - Quáng: `<realm>_ore_<quality>` (quality ∈ hoang..tien)
-// - Linh thảo Động Thiên: `<herbBase>_<age>` (age ∈ decade..myriad_year)
+// ID convention (gp123 6E task C2 — trục tuổi thống nhất):
+// - Gỗ: `<realm>_wood_<age>` (age ∈ decade..thuong_co; plain
+//   `<realm>_wood` và hậu tố phẩm hoang..tien đã XÓA)
+// - Quáng: `<realm>_ore_<age>`
+// - Linh thảo Động Thiên: `<herbBase>_<age>`
 // TÊN HIỂN THỊ nằm trong catalog data, KHÔNG parse từ id để lấy tên.
+
+import type { HerbAge } from '../production/ProductionTypes'
+import { HERB_AGES } from '../production/ProductionTypes'
 
 export type ResourceKind = 'herb' | 'wood' | 'ore'
 
@@ -29,17 +33,14 @@ export const SUPPORTED_PROFESSION_REALMS: readonly string[] = [
   'foundation_establishment',
 ]
 
-/** Metadata nghề trên Material — shape tuỳ kind (§5.3 phẩm Quáng, §6.1 niên đại thảo). */
+/** Metadata nghề trên Material — shape tuỳ kind (§5.3/§6.1 + 6E C2: gỗ/khoáng dùng `age`). */
 export interface ProfessionMaterialMeta {
   resourceKind: ResourceKind
 
   realmId: string
 
-  /** Chỉ Quáng (§5.3) — metadata phẩm, không đổi thời gian cycle. */
-  quality?: string
-
-  /** Chỉ Linh thảo Động Thiên (§6.1) — biến thể niên đại. */
-  age?: string
+  /** gp123 6E C2: gỗ/khoáng/thảo đều dùng trục tuổi thống nhất. */
+  age?: HerbAge
 
   /** Chỉ Linh thảo — đan phương DUY NHẤT mà thảo này nuôi (§6.1). */
   pillRecipeId?: string
@@ -48,12 +49,12 @@ export interface ProfessionMaterialMeta {
   herbBaseId?: string
 }
 
-/** Guard đầy đủ cho meta Quáng. */
-export function isOreProfessionMeta(meta: ProfessionMaterialMeta): boolean {
+/** Guard đầy đủ cho meta Gỗ/Khoáng — trục tuổi 5 bậc thống nhất (6E C2). */
+export function isProfessionResourceMeta(meta: ProfessionMaterialMeta): boolean {
   return (
-    meta.resourceKind === 'ore' &&
-    typeof meta.quality === 'string' &&
-    ['hoang', 'huyen', 'dia', 'thien', 'tien'].includes(meta.quality)
+    (meta.resourceKind === 'wood' || meta.resourceKind === 'ore') &&
+    typeof meta.age === 'string' &&
+    HERB_AGES.includes(meta.age)
   )
 }
 

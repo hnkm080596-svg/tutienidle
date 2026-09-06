@@ -3,7 +3,7 @@
 // playtest chỉnh tại đây, không sửa system). Engine chỉ enforce THỨ TỰ
 // (phẩm cao trọng số thấp hơn), không tự gán con số (§5.3).
 
-import type { HerbAge, OreQuality } from './ProductionTypes'
+import type { HerbAge } from './ProductionTypes'
 
 /**
  * Thời gian cơ sở theo cảnh giới đang thu thập (§4.2) — baseline tăng
@@ -61,25 +61,26 @@ export function getTierWeightProfile(collectionRealmId: string, territoryRealmId
 }
 
 // =========================
-// Quáng (§5.3): phẩm cao trọng số thấp — engine enforce thứ tự
-// hoang > huyen > dia > thien > tien về xác suất.
+// Gỗ/Khoáng (gp123 6E task C2): trục tuổi thống nhất — bảng này TRƯỚC
+// đây là ORE_QUALITY_WEIGHTS/AMOUNTS keyed hoang..tien; giá trị giữ
+// nguyên 1:1, chỉ trục key đổi sang HerbAge (decade..thuong_co).
 // =========================
 
-export const ORE_QUALITY_WEIGHTS: Record<OreQuality, number> = {
-  hoang: 50,
-  huyen: 25,
-  dia: 14,
-  thien: 8,
-  tien: 3,
+export const MATERIAL_AGE_WEIGHTS: Record<HerbAge, number> = {
+  decade: 50,
+  century: 25,
+  millennium: 14,
+  myriad_year: 8,
+  thuong_co: 3,
 }
 
-/** Số Quáng nhận được theo phẩm (balance data §13.2). */
-export const ORE_QUALITY_AMOUNTS: Record<OreQuality, number> = {
-  hoang: 3,
-  huyen: 2,
-  dia: 2,
-  thien: 1,
-  tien: 1,
+/** Số Gỗ/Khoáng nhận được theo tuổi (balance data §13.2). */
+export const MATERIAL_AGE_AMOUNTS: Record<HerbAge, number> = {
+  decade: 3,
+  century: 2,
+  millennium: 2,
+  myriad_year: 1,
+  thuong_co: 1,
 }
 
 // =========================

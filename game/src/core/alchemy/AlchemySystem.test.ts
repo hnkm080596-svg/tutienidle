@@ -201,10 +201,10 @@ function buildContext(
   const registry = new MaterialRegistry()
 
   registry.register(material('herb_decade'))
-  registry.register(material('mortal_wood'))
+  registry.register(material('mortal_wood_decade'))
 
   if (herbOnHand > 0) bag.add(registry.get('herb_decade'), herbOnHand)
-  if (woodOnHand > 0) bag.add(registry.get('mortal_wood'), woodOnHand)
+  if (woodOnHand > 0) bag.add(registry.get('mortal_wood_decade'), woodOnHand)
 
   const system = new AlchemySystem()
 
@@ -218,26 +218,26 @@ describe('AlchemySystem — resolveFuelWood chọn gỗ đạt realm tối thi�
     expect(resolveFuelWood(bag, 'mortal', 1)).toBeNull()
   })
 
-  it('chọn gỗ đạt realm tối thiểu (mortal_wood)', () => {
+  it('chọn gỗ đạt realm tối thiểu (mortal_wood_decade)', () => {
     const bag = new MaterialBag()
     const registry = new MaterialRegistry()
 
     registry.register(material('herb_decade'))
-    registry.register(material('mortal_wood'))
+    registry.register(material('mortal_wood_decade'))
 
     bag.add(registry.get('herb_decade'), 3)
-    bag.add(registry.get('mortal_wood'), 3)
+    bag.add(registry.get('mortal_wood_decade'), 3)
 
-    expect(resolveFuelWood(bag, 'mortal', 1)).toBe('mortal_wood')
+    expect(resolveFuelWood(bag, 'mortal', 1)).toBe('mortal_wood_decade')
   })
 
   it('nhu cầu vượt lượng có → không trả stack thiếu (kiểm tra bag.has amount)', () => {
     const bag = new MaterialBag()
     const registry = new MaterialRegistry()
 
-    registry.register(material('mortal_wood'))
+    registry.register(material('mortal_wood_decade'))
 
-    bag.add(registry.get('mortal_wood'), 2)
+    bag.add(registry.get('mortal_wood_decade'), 2)
 
     expect(resolveFuelWood(bag, 'mortal', 5)).toBeNull()
   })
@@ -252,7 +252,7 @@ describe('AlchemySystem — reserve nguyên liệu ATOMIC khi bắt đầu job (
     expect(result.ok).toBe(true)
 
     expect(bag.getAmount('herb_decade')).toBe(0)
-    expect(bag.getAmount('mortal_wood')).toBe(0)
+    expect(bag.getAmount('mortal_wood_decade')).toBe(0)
 
     const jobs = system.getJobs()
     expect(jobs).toHaveLength(1)
@@ -270,7 +270,7 @@ describe('AlchemySystem — reserve nguyên liệu ATOMIC khi bắt đầu job (
     const result = system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 1_000, maxConcurrentJobs)
 
     expect(result).toEqual({ ok: false, reason: 'missing_herb' })
-    expect(bag.getAmount('mortal_wood')).toBe(WOOD_AMOUNT)
+    expect(bag.getAmount('mortal_wood_decade')).toBe(WOOD_AMOUNT)
     expect(system.getJobs()).toHaveLength(0)
   })
 
@@ -296,7 +296,7 @@ describe('AlchemySystem — reserve nguyên liệu ATOMIC khi bắt đầu job (
 
     expect(result).toEqual({ ok: false, reason: 'missing_spirit_stone' })
     expect(bag.getAmount('herb_decade')).toBe(1)
-    expect(bag.getAmount('mortal_wood')).toBe(WOOD_AMOUNT)
+    expect(bag.getAmount('mortal_wood_decade')).toBe(WOOD_AMOUNT)
     expect(system.getJobs()).toHaveLength(0)
   })
 
@@ -319,7 +319,7 @@ describe('AlchemySystem — reserve nguyên liệu ATOMIC khi bắt đầu job (
 
     expect(result).toEqual({ ok: false, reason: 'wrong_herb' })
     expect(bag.getAmount('herb_decade')).toBe(1)
-    expect(bag.getAmount('mortal_wood')).toBe(WOOD_AMOUNT)
+    expect(bag.getAmount('mortal_wood_decade')).toBe(WOOD_AMOUNT)
   })
 
   it('vượt slot tối đa — job_slots_full, không trừ gì', () => {
@@ -359,7 +359,7 @@ describe('AlchemySystem — cancel job (lò đã khởi động, không hoàn tr
     expect(system.cancelJob(jobId)).toBe(true)
     expect(system.getJobs()).toHaveLength(0)
     expect(bag.getAmount('herb_decade')).toBe(3 - 1)
-    expect(bag.getAmount('mortal_wood')).toBe(WOOD_AMOUNT - WOOD_AMOUNT)
+    expect(bag.getAmount('mortal_wood_decade')).toBe(WOOD_AMOUNT - WOOD_AMOUNT)
   })
 
   it('cancel id không tồn tại — trả false, không throw', () => {

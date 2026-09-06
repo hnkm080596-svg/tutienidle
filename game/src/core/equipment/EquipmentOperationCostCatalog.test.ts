@@ -41,7 +41,7 @@ describe('EquipmentOperationCostCatalog', () => {
 
     const cost = catalog.resolve('enhance', 'mortal')!
 
-    expect(cost.materials.some((entry) => entry.materialId === 'mortal_ore_hoang')).toBe(true)
+    expect(cost.materials.some((entry) => entry.materialId === 'mortal_ore_decade')).toBe(true)
 
     expect(cost.spiritStone).toBeGreaterThan(0)
 

@@ -12,10 +12,9 @@ import type {
   ProductionSiteDefinition,
   TerritoryDefinition,
 } from './ProductionTypes'
-import { HERB_AGES, ORE_QUALITIES, PRODUCTION_SITE_KINDS } from './ProductionTypes'
-import { HERB_AGE_WEIGHTS, ORE_QUALITY_WEIGHTS } from './ProductionBalance'
+import { HERB_AGES, PRODUCTION_SITE_KINDS } from './ProductionTypes'
+import { HERB_AGE_WEIGHTS, MATERIAL_AGE_WEIGHTS } from './ProductionBalance'
 import { REALM_TIERS } from '../realm/RealmTierMap'
-import { ITEM_GRADE_ORDER } from '../item/ItemGrade'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
 
 export const TERRITORY_THANH_VAN: TerritoryDefinition = {
@@ -36,13 +35,20 @@ export const TERRITORY_THANH_VAN: TerritoryDefinition = {
 // =========================
 
 const SITE_UPGRADE_COSTS = (): ProductionSiteDefinition['upgradeCosts'] => {
-  const qualityByTier = ITEM_GRADE_ORDER.flatMap((grade) => [grade, grade]).slice(0, 9)
+  const ageByTier: Record<number, (typeof HERB_AGES)[number]> = {
+    2: 'decade',
+    3: 'decade',
+    4: 'century',
+    5: 'century',
+    6: 'millennium',
+    7: 'millennium',
+    8: 'myriad_year',
+    9: 'myriad_year',
+  }
   return REALM_TIERS.slice(1).map((realmId, index) => {
     const targetTier = index + 2
     return {
-      woodMaterialId: targetTier <= 3
-        ? `${realmId}_wood`
-        : `${realmId}_wood_${qualityByTier[targetTier - 1]}`,
+      woodMaterialId: `${realmId}_wood_${ageByTier[targetTier] ?? 'decade'}`,
       woodAmount: Math.round(5 * Math.pow(1.65, index)),
       spiritStone: Math.round(100 * Math.pow(2.2, index)),
     }
@@ -95,26 +101,28 @@ export const THANH_VAN_PRODUCTION_SITES: readonly ProductionSiteDefinition[] = [
 // Reward catalogs (§5.2/§5.3/§6.1)
 // =========================
 
-/** Lâm: đúng ba loại gỗ, mỗi loại gắn một realm tier (§5.2). */
-export const THANH_VAN_FOREST_REWARDS: readonly ForestRewardDefinition[] = [
-  { materialId: 'mortal_wood', realmId: 'mortal', amount: 3 },
-  { materialId: 'qi_refining_wood', realmId: 'qi_refining', amount: 2 },
-  {
-    materialId: 'foundation_establishment_wood',
-    realmId: 'foundation_establishment',
-    amount: 1,
-  },
-]
-
-/** Quáng: ba realm tier × năm phẩm (§5.3). */
-export const THANH_VAN_MINE_REWARDS: readonly MineRewardDefinition[] = ORE_QUALITIES.flatMap(
-  (quality) =>
-    TERRITORY_THANH_VAN.realmIds.map((realmId) => ({
-      materialId: `${realmId}_ore_${quality}`,
+/** Lâm: đúng một loại gỗ theo realm × 5 tuổi (§5.2 + gp123 6E C2). */
+export const THANH_VAN_FOREST_REWARDS: readonly ForestRewardDefinition[] = TERRITORY_THANH_VAN.realmIds.flatMap(
+  (realmId) =>
+    HERB_AGES.map((age) => ({
+      materialId: `${realmId}_wood_${age}`,
       realmId,
-      quality,
-      // Số lượng theo phẩm nằm ở balance; definition giữ 0 để resolver
-      // tra ORE_QUALITY_AMOUNTS — tránh lệch hai nguồn sự thật.
+      age,
+      // Số lượng theo tuổi nằm ở balance; definition giữ 0 để resolver
+      // tra MATERIAL_AGE_AMOUNTS — tránh lệch hai nguồn sự thật.
+      amount: 0,
+    })),
+)
+
+/** Quáng: ba realm tier × năm tuổi (§5.3 + gp123 6E C2). */
+export const THANH_VAN_MINE_REWARDS: readonly MineRewardDefinition[] = HERB_AGES.flatMap(
+  (age) =>
+    TERRITORY_THANH_VAN.realmIds.map((realmId) => ({
+      materialId: `${realmId}_ore_${age}`,
+      realmId,
+      age,
+      // Số lượng theo tuổi nằm ở balance; definition giữ 0 để resolver
+      // tra MATERIAL_AGE_AMOUNTS — tránh lệch hai nguồn sự thật.
       amount: 0,
     })),
 )
@@ -234,13 +242,13 @@ export function validateTerritory(
 export function validateWeightOrdering(): string[] {
   const errors: string[] = []
 
-  for (let index = 1; index < ORE_QUALITIES.length; index++) {
-    const previous = ORE_QUALITY_WEIGHTS[ORE_QUALITIES[index - 1]!]
+  for (let index = 1; index < HERB_AGES.length; index++) {
+    const previous = MATERIAL_AGE_WEIGHTS[HERB_AGES[index - 1]!]
 
-    const current = ORE_QUALITY_WEIGHTS[ORE_QUALITIES[index]!]
+    const current = MATERIAL_AGE_WEIGHTS[HERB_AGES[index]!]
 
     if (current >= previous) {
-      errors.push(`Phẩm Quáng ${ORE_QUALITIES[index]} phải có trọng số thấp hơn ${ORE_QUALITIES[index - 1]}`)
+      errors.push(`Tuổi Gỗ/Khoáng ${HERB_AGES[index]} phải có trọng số thấp hơn ${HERB_AGES[index - 1]}`)
     }
   }
 

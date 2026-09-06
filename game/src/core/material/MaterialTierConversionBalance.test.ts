@@ -9,29 +9,34 @@ describe('MaterialTierConversionBalance — getNextTierMaterialId', () => {
     expect(MATERIAL_TIER_CONVERSION_RATIO).toBe(10)
   })
 
-  it('gỗ lên cảnh giới kế: mortal_wood → qi_refining_wood → foundation_establishment_wood', () => {
-    expect(getNextTierMaterialId('mortal_wood')).toBe('qi_refining_wood')
-    expect(getNextTierMaterialId('qi_refining_wood')).toBe('foundation_establishment_wood')
+  it('gỗ lên cảnh giới kế GIỮ TUỔI (gp123 6E C2: id theo trục tuổi)', () => {
+    expect(getNextTierMaterialId('mortal_wood_decade')).toBe('qi_refining_wood_decade')
+    expect(getNextTierMaterialId('qi_refining_wood_decade')).toBe(
+      'foundation_establishment_wood_decade',
+    )
+    expect(getNextTierMaterialId('mortal_wood_century')).toBe('qi_refining_wood_century')
   })
 
   it('gỗ Trúc Cơ là trần → undefined', () => {
-    expect(getNextTierMaterialId('foundation_establishment_wood')).toBeUndefined()
+    expect(getNextTierMaterialId('foundation_establishment_wood_decade')).toBeUndefined()
+    expect(getNextTierMaterialId('foundation_establishment_wood_thuong_co')).toBeUndefined()
   })
 
-  it('quáng lên cảnh giới kế GIỮ PHẨM', () => {
-    expect(getNextTierMaterialId('mortal_ore_hoang')).toBe('qi_refining_ore_hoang')
-    expect(getNextTierMaterialId('qi_refining_ore_huyen')).toBe('foundation_establishment_ore_huyen')
-    expect(getNextTierMaterialId('mortal_ore_tien')).toBe('qi_refining_ore_tien')
+  it('quáng lên cảnh giới kế GIỮ TUỔI', () => {
+    expect(getNextTierMaterialId('mortal_ore_decade')).toBe('qi_refining_ore_decade')
+    expect(getNextTierMaterialId('qi_refining_ore_century')).toBe('foundation_establishment_ore_century')
+    expect(getNextTierMaterialId('mortal_ore_thuong_co')).toBe('qi_refining_ore_thuong_co')
   })
 
   it('quáng Trúc Cơ là trần → undefined', () => {
-    expect(getNextTierMaterialId('foundation_establishment_ore_hoang')).toBeUndefined()
-    expect(getNextTierMaterialId('foundation_establishment_ore_dia')).toBeUndefined()
+    expect(getNextTierMaterialId('foundation_establishment_ore_decade')).toBeUndefined()
+    expect(getNextTierMaterialId('foundation_establishment_ore_millennium')).toBeUndefined()
   })
 
-  it('biến thể phẩm của gỗ KHÔNG quy đổi → undefined', () => {
+  it('id gỗ/khoáng sai age (không thuộc trục tuổi) → undefined', () => {
     expect(getNextTierMaterialId('mortal_wood_huyen')).toBeUndefined()
-    expect(getNextTierMaterialId('qi_refining_wood_tien')).toBeUndefined()
+    expect(getNextTierMaterialId('qi_refining_ore_tien')).toBeUndefined()
+    expect(getNextTierMaterialId('mortal_wood')).toBeUndefined()
   })
 
   it('material không phải gỗ/quáng → undefined', () => {
@@ -40,7 +45,7 @@ describe('MaterialTierConversionBalance — getNextTierMaterialId', () => {
     expect(getNextTierMaterialId('great_dao_seed')).toBeUndefined()
   })
 
-  it('id quáng thiếu phẩm (kết thúc bằng _ore_) → undefined', () => {
+  it('id quáng thiếu age (kết thúc bằng _ore_) → undefined', () => {
     expect(getNextTierMaterialId('mortal_ore_')).toBeUndefined()
   })
 })

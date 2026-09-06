@@ -29,81 +29,81 @@ describe('GameManager — quy đổi cảnh giới Linh Mộc/Linh Khoáng', () 
   it('10 gỗ Phàm Nhân đổi đúng 1 gỗ Luyện Khí, trừ đúng 10', () => {
     const gameManager = setup()
 
-    gameManager.materialBag.add(materialById('mortal_wood'), MATERIAL_TIER_CONVERSION_RATIO)
+    gameManager.materialBag.add(materialById('mortal_wood_decade'), MATERIAL_TIER_CONVERSION_RATIO)
 
-    const result = gameManager.convertMaterialTier('mortal_wood', 1)
+    const result = gameManager.convertMaterialTier('mortal_wood_decade', 1)
 
     expect(result.ok).toBe(true)
     expect(result.gained).toBe(1)
-    expect(gameManager.materialBag.getAmount('mortal_wood')).toBe(0)
-    expect(gameManager.materialBag.getAmount('qi_refining_wood')).toBe(1)
+    expect(gameManager.materialBag.getAmount('mortal_wood_decade')).toBe(0)
+    expect(gameManager.materialBag.getAmount('qi_refining_wood_decade')).toBe(1)
   })
 
   it('10 gỗ Luyện Khí đổi đúng 1 gỗ Trúc Cơ', () => {
     const gameManager = setup()
 
-    gameManager.materialBag.add(materialById('qi_refining_wood'), MATERIAL_TIER_CONVERSION_RATIO)
+    gameManager.materialBag.add(materialById('qi_refining_wood_decade'), MATERIAL_TIER_CONVERSION_RATIO)
 
-    const result = gameManager.convertMaterialTier('qi_refining_wood', 1)
+    const result = gameManager.convertMaterialTier('qi_refining_wood_decade', 1)
 
     expect(result.ok).toBe(true)
-    expect(gameManager.materialBag.getAmount('qi_refining_wood')).toBe(0)
-    expect(gameManager.materialBag.getAmount('foundation_establishment_wood')).toBe(1)
+    expect(gameManager.materialBag.getAmount('qi_refining_wood_decade')).toBe(0)
+    expect(gameManager.materialBag.getAmount('foundation_establishment_wood_decade')).toBe(1)
   })
 
   it('gỗ Trúc Cơ là trần — không có cảnh giới cao hơn để đổi', () => {
     const gameManager = setup()
 
     gameManager.materialBag.add(
-      materialById('foundation_establishment_wood'),
+      materialById('foundation_establishment_wood_decade'),
       MATERIAL_TIER_CONVERSION_RATIO,
     )
 
-    const result = gameManager.convertMaterialTier('foundation_establishment_wood', 1)
+    const result = gameManager.convertMaterialTier('foundation_establishment_wood_decade', 1)
 
     expect(result.ok).toBe(false)
     expect(result.reason).toBe('no_higher_tier')
-    expect(gameManager.materialBag.getAmount('foundation_establishment_wood')).toBe(
+    expect(gameManager.materialBag.getAmount('foundation_establishment_wood_decade')).toBe(
       MATERIAL_TIER_CONVERSION_RATIO,
     )
   })
 
-  it('quáng lên cảnh giới GIỮ PHẨM: 10 mortal_ore_huyen → 1 qi_refining_ore_huyen', () => {
+  it('quáng lên cảnh giới GIỮ PHẨM: 10 mortal_ore_century → 1 qi_refining_ore_century', () => {
     const gameManager = setup()
 
-    gameManager.materialBag.add(materialById('mortal_ore_huyen'), MATERIAL_TIER_CONVERSION_RATIO)
+    gameManager.materialBag.add(materialById('mortal_ore_century'), MATERIAL_TIER_CONVERSION_RATIO)
 
-    const result = gameManager.convertMaterialTier('mortal_ore_huyen', 1)
+    const result = gameManager.convertMaterialTier('mortal_ore_century', 1)
 
     expect(result.ok).toBe(true)
-    expect(gameManager.materialBag.getAmount('mortal_ore_huyen')).toBe(0)
-    expect(gameManager.materialBag.getAmount('qi_refining_ore_huyen')).toBe(1)
+    expect(gameManager.materialBag.getAmount('mortal_ore_century')).toBe(0)
+    expect(gameManager.materialBag.getAmount('qi_refining_ore_century')).toBe(1)
   })
 
-  it('quáng phẩm hoang: 10 qi_refining_ore_hoang → 1 foundation_establishment_ore_hoang', () => {
+  it('quáng phẩm hoang: 10 qi_refining_ore_decade → 1 foundation_establishment_ore_decade', () => {
     const gameManager = setup()
 
     gameManager.materialBag.add(
-      materialById('qi_refining_ore_hoang'),
+      materialById('qi_refining_ore_decade'),
       MATERIAL_TIER_CONVERSION_RATIO,
     )
 
-    const result = gameManager.convertMaterialTier('qi_refining_ore_hoang', 1)
+    const result = gameManager.convertMaterialTier('qi_refining_ore_decade', 1)
 
     expect(result.ok).toBe(true)
-    expect(gameManager.materialBag.getAmount('qi_refining_ore_hoang')).toBe(0)
-    expect(gameManager.materialBag.getAmount('foundation_establishment_ore_hoang')).toBe(1)
+    expect(gameManager.materialBag.getAmount('qi_refining_ore_decade')).toBe(0)
+    expect(gameManager.materialBag.getAmount('foundation_establishment_ore_decade')).toBe(1)
   })
 
   it('quáng Trúc Cơ là trần — không đổi lên được nữa', () => {
     const gameManager = setup()
 
     gameManager.materialBag.add(
-      materialById('foundation_establishment_ore_dia'),
+      materialById('foundation_establishment_ore_millennium'),
       MATERIAL_TIER_CONVERSION_RATIO,
     )
 
-    const result = gameManager.convertMaterialTier('foundation_establishment_ore_dia', 1)
+    const result = gameManager.convertMaterialTier('foundation_establishment_ore_millennium', 1)
 
     expect(result.ok).toBe(false)
     expect(result.reason).toBe('no_higher_tier')
@@ -112,57 +112,55 @@ describe('GameManager — quy đổi cảnh giới Linh Mộc/Linh Khoáng', () 
   it('không đủ 10 → từ chối, KHÔNG trừ gì (atomic)', () => {
     const gameManager = setup()
 
-    gameManager.materialBag.add(materialById('mortal_wood'), MATERIAL_TIER_CONVERSION_RATIO - 1)
+    gameManager.materialBag.add(materialById('mortal_wood_decade'), MATERIAL_TIER_CONVERSION_RATIO - 1)
 
-    const result = gameManager.convertMaterialTier('mortal_wood', 1)
+    const result = gameManager.convertMaterialTier('mortal_wood_decade', 1)
 
     expect(result.ok).toBe(false)
     expect(result.reason).toBe('insufficient')
-    expect(gameManager.materialBag.getAmount('mortal_wood')).toBe(
+    expect(gameManager.materialBag.getAmount('mortal_wood_decade')).toBe(
       MATERIAL_TIER_CONVERSION_RATIO - 1,
     )
-    expect(gameManager.materialBag.getAmount('qi_refining_wood')).toBe(0)
+    expect(gameManager.materialBag.getAmount('qi_refining_wood_decade')).toBe(0)
   })
 
   it('times > 1 đổi theo lô: 30 gỗ Phàm Nhân → 3 gỗ Luyện Khí', () => {
     const gameManager = setup()
 
-    gameManager.materialBag.add(materialById('mortal_wood'), MATERIAL_TIER_CONVERSION_RATIO * 3)
+    gameManager.materialBag.add(materialById('mortal_wood_decade'), MATERIAL_TIER_CONVERSION_RATIO * 3)
 
-    const result = gameManager.convertMaterialTier('mortal_wood', 3)
+    const result = gameManager.convertMaterialTier('mortal_wood_decade', 3)
 
     expect(result.ok).toBe(true)
-    expect(gameManager.materialBag.getAmount('mortal_wood')).toBe(0)
-    expect(gameManager.materialBag.getAmount('qi_refining_wood')).toBe(3)
+    expect(gameManager.materialBag.getAmount('mortal_wood_decade')).toBe(0)
+    expect(gameManager.materialBag.getAmount('qi_refining_wood_decade')).toBe(3)
   })
 
   it('times không hợp lệ (0/âm/lẻ/NaN) → từ chối, không đổi gì', () => {
     const gameManager = setup()
 
-    gameManager.materialBag.add(materialById('mortal_wood'), MATERIAL_TIER_CONVERSION_RATIO * 5)
+    gameManager.materialBag.add(materialById('mortal_wood_decade'), MATERIAL_TIER_CONVERSION_RATIO * 5)
 
     for (const times of [0, -1, 1.5, Number.NaN]) {
-      expect(gameManager.convertMaterialTier('mortal_wood', times).ok).toBe(false)
+      expect(gameManager.convertMaterialTier('mortal_wood_decade', times).ok).toBe(false)
     }
 
-    expect(gameManager.materialBag.getAmount('mortal_wood')).toBe(
+    expect(gameManager.materialBag.getAmount('mortal_wood_decade')).toBe(
       MATERIAL_TIER_CONVERSION_RATIO * 5,
     )
-    expect(gameManager.materialBag.getAmount('qi_refining_wood')).toBe(0)
+    expect(gameManager.materialBag.getAmount('qi_refining_wood_decade')).toBe(0)
   })
 
-  it('biến thể phẩm của gỗ (mortal_wood_huyen) KHÔNG quy đổi', () => {
+  it('gỗ Bách Niên quy đổi GIỮ TUỔI (gp123 6E C2: mọi gỗ đều theo trục tuổi)', () => {
     const gameManager = setup()
 
-    gameManager.materialBag.add(materialById('mortal_wood_huyen'), MATERIAL_TIER_CONVERSION_RATIO)
+    gameManager.materialBag.add(materialById('mortal_wood_century'), MATERIAL_TIER_CONVERSION_RATIO)
 
-    const result = gameManager.convertMaterialTier('mortal_wood_huyen', 1)
+    const result = gameManager.convertMaterialTier('mortal_wood_century', 1)
 
-    expect(result.ok).toBe(false)
-    expect(result.reason).toBe('no_higher_tier')
-    expect(gameManager.materialBag.getAmount('mortal_wood_huyen')).toBe(
-      MATERIAL_TIER_CONVERSION_RATIO,
-    )
+    expect(result.ok).toBe(true)
+    expect(gameManager.materialBag.getAmount('mortal_wood_century')).toBe(0)
+    expect(gameManager.materialBag.getAmount('qi_refining_wood_century')).toBe(1)
   })
 
   it('material không phải gỗ/quáng (tinh_hoa_pham_the) → từ chối', () => {
@@ -179,15 +177,15 @@ describe('GameManager — quy đổi cảnh giới Linh Mộc/Linh Khoáng', () 
   it('đổi liên tiếp 2 bậc KHÔNG tạo nhân bản (100 gỗ Phàm → 1 gỗ Trúc Cơ)', () => {
     const gameManager = setup()
 
-    gameManager.materialBag.add(materialById('mortal_wood'), MATERIAL_TIER_CONVERSION_RATIO ** 2)
+    gameManager.materialBag.add(materialById('mortal_wood_decade'), MATERIAL_TIER_CONVERSION_RATIO ** 2)
 
-    expect(gameManager.convertMaterialTier('mortal_wood', MATERIAL_TIER_CONVERSION_RATIO).ok).toBe(
+    expect(gameManager.convertMaterialTier('mortal_wood_decade', MATERIAL_TIER_CONVERSION_RATIO).ok).toBe(
       true,
     )
-    expect(gameManager.convertMaterialTier('qi_refining_wood', 1).ok).toBe(true)
+    expect(gameManager.convertMaterialTier('qi_refining_wood_decade', 1).ok).toBe(true)
 
-    expect(gameManager.materialBag.getAmount('mortal_wood')).toBe(0)
-    expect(gameManager.materialBag.getAmount('qi_refining_wood')).toBe(0)
-    expect(gameManager.materialBag.getAmount('foundation_establishment_wood')).toBe(1)
+    expect(gameManager.materialBag.getAmount('mortal_wood_decade')).toBe(0)
+    expect(gameManager.materialBag.getAmount('qi_refining_wood_decade')).toBe(0)
+    expect(gameManager.materialBag.getAmount('foundation_establishment_wood_decade')).toBe(1)
   })
 })

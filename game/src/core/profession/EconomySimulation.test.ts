@@ -8,11 +8,11 @@ import { alchemyRecipes } from '../../data/alchemy/alchemyRecipes'
 import {
   CYCLE_BASE_SECONDS_BY_REALM,
   HERB_AGE_WEIGHTS,
-  ORE_QUALITY_AMOUNTS,
-  ORE_QUALITY_WEIGHTS,
+  MATERIAL_AGE_AMOUNTS,
+  MATERIAL_AGE_WEIGHTS,
   TIER_WEIGHT_PROFILES,
 } from '../production/ProductionBalance'
-import { ORE_QUALITIES } from '../production/ProductionTypes'
+import { HERB_AGES } from '../production/ProductionTypes'
 import { SUPPORTED_PROFESSION_REALMS } from '../profession/ProfessionMaterial'
 
 const REALM_IDS = SUPPORTED_PROFESSION_REALMS
@@ -36,14 +36,14 @@ function expectedWoodPerHour(profileKey: 'low' | 'middle' | 'high'): number[] {
 }
 
 describe('Economy simulation — yield → sink', () => {
-  it('Linh Mộc và Linh Khoáng dùng tên tuổi + tên gốc (spec 2026-08-30)', () => {
+  it('Linh Mộc và Linh Khoáng dùng tên tuổi + tên gốc + realm (gp123 6E C2)', () => {
     const materialName = (id: string) => materials.find((material) => material.id === id)?.name
 
-    expect(materialName('mortal_wood')).toBe('Thập Niên Linh Mộc')
-    expect(materialName('mortal_ore_hoang')).toBe('Thập Niên Linh Khoáng')
-    expect(materialName('mahayana_wood_dia')).toBe('Thiên Niên Linh Mộc')
-    expect(materialName('mahayana_ore_dia')).toBe('Thiên Niên Linh Khoáng')
-    expect(materialName('mortal_ore_tien')).toBe('Thượng Cổ Linh Khoáng')
+    expect(materialName('mortal_wood_decade')).toBe('Thập Niên Linh Mộc Phàm Nhân')
+    expect(materialName('mortal_ore_decade')).toBe('Thập Niên Linh Khoáng Phàm Nhân')
+    expect(materialName('mahayana_wood_millennium')).toBe('Thiên Niên Linh Mộc Đại Thừa')
+    expect(materialName('mahayana_ore_millennium')).toBe('Thiên Niên Linh Khoáng Đại Thừa')
+    expect(materialName('mortal_ore_thuong_co')).toBe('Thượng Cổ Linh Khoáng Phàm Nhân')
   })
 
   it('registry chỉ còn linh thảo của đúng 8 họ đan mới', () => {
@@ -61,20 +61,20 @@ describe('Economy simulation — yield → sink', () => {
     }
   })
 
-  it('trong so tier/pham/tuoi deu chuan hoa duoc (tong > 0)', () => {
+  it('trong so tier/tuoi deu chuan hoa duoc (tong > 0)', () => {
     for (const key of ['low', 'middle', 'high'] as const) {
       const total = TIER_WEIGHT_PROFILES[key].reduce((sum, weight) => sum + weight, 0)
 
       expect(total).toBeGreaterThan(0)
     }
 
-    expect(ORE_QUALITY_WEIGHTS.hoang).toBeGreaterThan(ORE_QUALITY_WEIGHTS.tien)
+    expect(MATERIAL_AGE_WEIGHTS.decade).toBeGreaterThan(MATERIAL_AGE_WEIGHTS.thuong_co)
 
     expect(HERB_AGE_WEIGHTS.decade).toBeGreaterThan(HERB_AGE_WEIGHTS.myriad_year)
   })
 
   it('go: moi tier deu co sink (xay nang building dung wood cung realm)', () => {
-    // Data buildings da rewrite: upgradeCost dung <realm>_wood.
+    // Data buildings da rewrite: upgradeCost dung <realm>_wood_<age> (6E C2).
     void materials
 
     // Simulation: muc tieu thu nang cap site (wood 5-16/cap) phai dat
@@ -90,30 +90,30 @@ describe('Economy simulation — yield → sink', () => {
     expect(perHourLow[0]!).toBeGreaterThan(50)
   })
 
-  it('quang: expected ore/gio theo tung pham duong; sink Khi Duong ton tai', () => {
-    const probs = normalized(ORE_QUALITIES.map((quality) => ORE_QUALITY_WEIGHTS[quality]))
+  it('quang: expected ore/gio theo tung tuoi duong; sink Khi Duong ton tai', () => {
+    const probs = normalized(HERB_AGES.map((age) => MATERIAL_AGE_WEIGHTS[age]))
 
     const baseSeconds = CYCLE_BASE_SECONDS_BY_REALM.mortal!
 
     const cyclesPerHour = 3600 / baseSeconds
 
-    let hoangPerHour = 0
+    let decadePerHour = 0
 
-    let tienPerHour = 0
+    let thuongCoPerHour = 0
 
-    ORE_QUALITIES.forEach((_quality, index) => {
-      const amount = ORE_QUALITY_AMOUNTS[ORE_QUALITIES[index]!]
+    HERB_AGES.forEach((_age, index) => {
+      const amount = MATERIAL_AGE_AMOUNTS[HERB_AGES[index]!]
 
-      if (index === 0) hoangPerHour = probs[index]! * amount * cyclesPerHour
+      if (index === 0) decadePerHour = probs[index]! * amount * cyclesPerHour
 
-      if (index === ORE_QUALITIES.length - 1) tienPerHour = probs[index]! * amount * cyclesPerHour
+      if (index === HERB_AGES.length - 1) thuongCoPerHour = probs[index]! * amount * cyclesPerHour
     })
 
-    // Pham Hoang phai cho nhieu hon Tien rat nhieu (engine enforce thu tu).
-    expect(hoangPerHour).toBeGreaterThan(tienPerHour * 5)
+    // Tuổi thấp phải cho nhiều hơn thuong_co rất nhiều (engine enforce thứ tự).
+    expect(decadePerHour).toBeGreaterThan(thuongCoPerHour * 5)
 
-    // Sink: Cuong Hoa an 2 ore hoang / lan, Wash an 3 → nhu cau hop ly.
-    expect(hoangPerHour).toBeGreaterThan(10)
+    // Sink: Cuong Hoa an 2 ore decade / lan, Wash an 3 → nhu cau hop ly.
+    expect(decadePerHour).toBeGreaterThan(10)
   })
 
   it('thao: moi dan phuong nghe co dung mot thao rieng du 4 tuoi; sink ton tai', () => {

@@ -147,6 +147,11 @@ function nextJobId(): string {
  * Chọn stack gỗ nhiên liệu rẻ nhất đạt realm tối thiểu (realm index
  * tăng dần theo SUPPORTED_PROFESSION_REALMS).
  */
+/**
+ * Gỗ nhiên liệu rẻ nhất ĐẠT realm tối thiểu (gp123 6E C2: mọi gỗ đều có
+ * hậu tố tuổi — candidate `<realm>_wood_<age>`, Ưu tiên tuổi thấp nhất
+ * decade vì rẻ nhất).
+ */
 export function resolveFuelWood(
   bag: MaterialBag,
   minRealmId: string,
@@ -159,22 +164,15 @@ export function resolveFuelWood(
     return null
   }
 
-  if (realmIndex >= SUPPORTED_PROFESSION_REALMS.length) {
-    const qualities = ['hoang', 'huyen', 'dia', 'thien', 'tien'] as const
-    for (let index = realmIndex; index < REALM_TIERS.length; index++) {
-      for (const quality of qualities) {
-        const candidate = `${REALM_TIERS[index]}_wood_${quality}`
-        if (bag.has(candidate, amount)) return candidate
-      }
-    }
-    return null
-  }
+  const startRealm = realmIndex >= 0 ? realmIndex : minIndex
 
-  for (let index = minIndex; index < SUPPORTED_PROFESSION_REALMS.length; index++) {
-    const candidate = `${SUPPORTED_PROFESSION_REALMS[index]}_wood`
+  const ages = ['decade', 'century', 'millennium', 'myriad_year', 'thuong_co'] as const
 
-    if (bag.has(candidate, amount)) {
-      return candidate
+  for (let index = startRealm; index < REALM_TIERS.length; index++) {
+    for (const age of ages) {
+      const candidate = `${REALM_TIERS[index]}_wood_${age}`
+
+      if (bag.has(candidate, amount)) return candidate
     }
   }
 
