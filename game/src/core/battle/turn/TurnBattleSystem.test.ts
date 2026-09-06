@@ -881,65 +881,18 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
   })
 })
 
-describe('TurnBattleSystem.resolveNextStep multi-wave spawning', () => {
-  it('spawns the next wave enemy once the arena is empty, but does not win yet', () => {
+describe('TurnBattleSystem.tickPacing wave-batch spawning', () => {
+  it('spawns an entire wave as pending telegraphs once the arena is empty, not one at a time', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
-    })
-    const enemyA = createCombatant({
-      id: 'enemyA',
-      currentHp: 1,
-      maxHp: 1,
       stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
     })
 
-    const wave = { totalEnemyCount: 2, waves: [2], spawnedCount: 1 }
+    const wave = { totalEnemyCount: 3, spawnedCount: 0, waves: [3], waveIndex: 0, pendingEnemySpawns: [] }
     const battle: TurnBattle = {
       players: [makeParticipant('player', player, 10, 0)],
-      enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
-      state: 'fighting',
-      wave,
-    }
-
-    const spawnEnemy = (): TurnBattleParticipant => {
-      const enemyB = createCombatant({
-        id: 'enemyB',
-        currentHp: 1_000_000,
-        maxHp: 1_000_000,
-        stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
-      })
-
-      return makeParticipant('enemyB', enemyB, 10, 2)
-    }
-
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 20, undefined, spawnEnemy)
-    system.resolveNextStep(battle)
-
-    expect(battle.enemies).toHaveLength(2)
-    expect(battle.enemies[1]!.id).toBe('enemyB')
-    expect(wave.spawnedCount).toBe(2)
-    expect(battle.state).toBe('fighting')
-  })
-
-  it('does not spawn while an enemy is still alive', () => {
-    const player = createCombatant({
-      id: 'player',
-      type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1 },
-    })
-    const enemyA = createCombatant({
-      id: 'enemyA',
-      currentHp: 1_000_000,
-      maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
-    })
-
-    const wave = { totalEnemyCount: 2, waves: [2], spawnedCount: 1 }
-    const battle: TurnBattle = {
-      players: [makeParticipant('player', player, 10, 0)],
-      enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
+      enemies: [],
       state: 'fighting',
       wave,
     }
@@ -948,97 +901,111 @@ describe('TurnBattleSystem.resolveNextStep multi-wave spawning', () => {
     const spawnEnemy = (): TurnBattleParticipant => {
       spawnCalls += 1
 
-      const enemyB = createCombatant({
-        id: 'enemyB',
-        currentHp: 1,
-        maxHp: 1,
+      const enemy = createCombatant({
+        id: `enemy${spawnCalls}`,
+        currentHp: 10,
+        maxHp: 10,
         stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
       })
 
-      return makeParticipant('enemyB', enemyB, 10, 2)
+      return makeParticipant(`enemy${spawnCalls}`, enemy, 10, 1)
     }
 
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 20, undefined, spawnEnemy)
-    system.resolveNextStep(battle)
 
-    expect(spawnCalls).toBe(0)
-    expect(wave.spawnedCount).toBe(1)
-    expect(battle.enemies).toHaveLength(1)
+    system.tickPacing(battle)
+
+    expect(spawnCalls).toBe(3)
+    expect(wave.spawnedCount).toBe(3)
+    expect(wave.waveIndex).toBe(1)
+    expect(wave.pendingEnemySpawns).toHaveLength(3)
+    expect(battle.enemies).toHaveLength(0)
   })
 
-  it('reaches victory via isStageComplete once every wave enemy has spawned and died', () => {
+  it('materializes a pending enemy into battle.enemies only after its telegraph ticks reach 0', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
-    })
-    const enemyA = createCombatant({
-      id: 'enemyA',
-      currentHp: 1,
-      maxHp: 1,
       stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
     })
+    const enemy = createCombatant({
+      id: 'enemy1',
+      currentHp: 10,
+      maxHp: 10,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+    const pendingParticipant = makeParticipant('enemy1', enemy, 10, 1)
 
-    const wave = { totalEnemyCount: 1, waves: [1], spawnedCount: 1 }
+    const wave = {
+      totalEnemyCount: 1,
+      spawnedCount: 1,
+      waves: [1],
+      waveIndex: 1,
+      pendingEnemySpawns: [{ participant: pendingParticipant, ticksRemaining: 2, totalTicks: 8 }],
+    }
     const battle: TurnBattle = {
       players: [makeParticipant('player', player, 10, 0)],
-      enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
+      enemies: [],
       state: 'fighting',
       wave,
     }
 
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 20)
-    system.resolveNextStep(battle)
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
 
-    expect(battle.state).toBe('victory')
+    system.tickPacing(battle)
+    expect(battle.enemies).toHaveLength(0)
+    expect(wave.pendingEnemySpawns[0]!.ticksRemaining).toBe(1)
+
+    system.tickPacing(battle)
     expect(battle.enemies).toHaveLength(1)
+    expect(battle.enemies[0]!.id).toBe('enemy1')
+    expect(wave.pendingEnemySpawns).toHaveLength(0)
   })
 
-  it('does not declare victory until every wave enemy has spawned and died (multi-step)', () => {
+  it('does not start wave 2 until wave 1 is both dead AND fully materialized (no pending left)', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
-    })
-    const enemyA = createCombatant({
-      id: 'enemyA',
-      currentHp: 1,
-      maxHp: 1,
       stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
     })
 
-    const wave = { totalEnemyCount: 2, waves: [2], spawnedCount: 1 }
+    const wave = { totalEnemyCount: 2, spawnedCount: 1, waves: [1, 1], waveIndex: 1, pendingEnemySpawns: [] }
     const battle: TurnBattle = {
       players: [makeParticipant('player', player, 10, 0)],
-      enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
+      enemies: [],
       state: 'fighting',
       wave,
     }
 
+    let spawnCalls = 0
     const spawnEnemy = (): TurnBattleParticipant => {
-      const enemyB = createCombatant({
-        id: 'enemyB',
-        currentHp: 1,
-        maxHp: 1,
+      spawnCalls += 1
+
+      const enemy = createCombatant({
+        id: `enemy${spawnCalls}`,
+        currentHp: 10,
+        maxHp: 10,
         stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
       })
 
-      return makeParticipant('enemyB', enemyB, 10, 2)
+      return makeParticipant(`enemy${spawnCalls}`, enemy, 10, 1)
     }
 
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 20, undefined, spawnEnemy)
 
-    // Step 1: player kills enemyA. Arena empties -> enemyB spawns this same
-    // step, but enemyB is alive so victory does not fire yet.
-    system.resolveNextStep(battle)
-    expect(battle.state).toBe('fighting')
-    expect(battle.enemies).toHaveLength(2)
+    // Arena empty, waveIndex=1 < waveCount=2 -> wave 2 starts immediately
+    // (nothing from wave 1 was ever pushed into battle.enemies here, so
+    // this simulates "wave 1 already fully cleared before this tick").
+    system.tickPacing(battle)
 
-    // Step 2: player (same speed, lower priority, wins the tie) kills
-    // enemyB. Arena empties, spawnedCount already equals totalEnemyCount ->
-    // no further spawn, victory fires.
-    system.resolveNextStep(battle)
-    expect(battle.state).toBe('victory')
+    expect(spawnCalls).toBe(1)
+    expect(wave.waveIndex).toBe(2)
+    expect(wave.pendingEnemySpawns).toHaveLength(1)
+
+    // waveIndex now 2 === waveCount 2 -> no further wave starts even
+    // though arena is still empty (pending just queued, not yet alive).
+    system.tickPacing(battle)
+    expect(spawnCalls).toBe(1)
   })
 
   it('behaves exactly like Slices 1-4 when wave is not set (no regression)', () => {
@@ -1066,36 +1033,6 @@ describe('TurnBattleSystem.resolveNextStep multi-wave spawning', () => {
     expect(battle.state).toBe('victory')
     expect(battle.enemies).toHaveLength(1)
   })
-
-  it('does not throw and does not spawn when wave is set but no spawnEnemy factory was provided', () => {
-    const player = createCombatant({
-      id: 'player',
-      type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
-    })
-    const enemyA = createCombatant({
-      id: 'enemyA',
-      currentHp: 1,
-      maxHp: 1,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
-    })
-
-    const wave = { totalEnemyCount: 2, waves: [2], spawnedCount: 1 }
-    const battle: TurnBattle = {
-      players: [makeParticipant('player', player, 10, 0)],
-      enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
-      state: 'fighting',
-      wave,
-    }
-
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 20)
-
-    expect(() => system.resolveNextStep(battle)).not.toThrow()
-    expect(battle.enemies).toHaveLength(1)
-    expect(wave.spawnedCount).toBe(1)
-    expect(battle.state).toBe('fighting')
-  })
-})
 
 const LONG_STUN_DEFINITION: TurnBuffDefinition = {
   id: 'fixture_long_stun',
@@ -2125,4 +2062,5 @@ describe('TurnBattleSystem.tickPacing — wall-clock pacing', () => {
     expect(readyActor?.id).toBe('player')
     expect(battle.totalTurnsElapsed).toBe(1)
   })
+})
 })

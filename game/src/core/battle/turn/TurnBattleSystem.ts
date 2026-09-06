@@ -17,7 +17,7 @@ import type { TurnBuffRegistry } from './TurnBuffTypes'
 import { applyTurnStartDeltas } from './ResourceTurnHook'
 import type { TurnResourceDelta } from './ResourceTurnHook'
 import { isTurnTriggerReady } from './BossTurnTriggers'
-import { shouldSpawnNextEnemy, isStageComplete } from './WaveSpawnTrigger'
+import { shouldStartNextWave, isStageComplete } from './WaveSpawnTrigger'
 import { scaleActionDamage } from '../ActionImpactSystem'
 import { recomputeEffectiveStats } from './TurnStatsRecompute'
 import type { BattleLogEntry } from './TurnOrderPreview'
@@ -51,6 +51,35 @@ export interface TurnBossTrigger {
   afterTurns: number
   buffDefinitionId: string
   firedAlready: boolean
+}
+
+export interface PendingEnemySpawn {
+  /** Đã build đầy đủ (roll template/elite/boss xong) — chỉ chờ hết telegraph. */
+  participant: TurnBattleParticipant
+  ticksRemaining: number
+  totalTicks: number
+}
+
+// Turn-Based Wave Redesign (2026-09-06) — quy đổi TRỰC TIẾP từ
+// SPAWN_TELEGRAPH_SECONDS của legacy/BattleSystem.ts (0.75s/1.0s/1.4s)
+// sang tick (0.1s/tick, khớp BATTLE_FIXED_STEP mà GameManager gọi
+// tickPacing() mỗi lần) để giữ đúng cảm giác thời gian người chơi đã quen.
+const SPAWN_TELEGRAPH_TICKS = {
+  normal: 8,
+  elite: 10,
+  boss: 14,
+} as const
+
+function spawnTelegraphTicks(entity: Pick<CombatEntity, 'isBoss' | 'isElite'>): number {
+  if (entity.isBoss) {
+    return SPAWN_TELEGRAPH_TICKS.boss
+  }
+
+  if (entity.isElite) {
+    return SPAWN_TELEGRAPH_TICKS.elite
+  }
+
+  return SPAWN_TELEGRAPH_TICKS.normal
 }
 
 export type TurnBattleState = 'countdown' | 'fighting' | 'victory' | 'defeat'
@@ -96,6 +125,12 @@ export interface TurnBattle {
   wave?: {
     totalEnemyCount: number
     spawnedCount: number
+    /** effectiveWaves(stage) snapshot, taken once at battle start. */
+    waves: number[]
+    /** 0-based index into `waves` — which wave is currently spawning/active. */
+    waveIndex: number
+    /** Quái đã spawn (dạng pending) nhưng CHƯA vào trận thật (battle.enemies). */
+    pendingEnemySpawns: PendingEnemySpawn[]
   }
   /**
    * Slice 7 extension (Completion Task 11) — battle log: 1 entry mỗi lượt
@@ -309,6 +344,54 @@ export class TurnBattleSystem {
   tickPacing(battle: TurnBattle, resolve = true): TurnBattleParticipant | null {
     if (battle.state !== 'fighting') {
       return null
+    }
+
+    // Turn-Based Wave Redesign (2026-09-06) — wave-batch spawn/telegraph
+    // chạy MỖI tick (không gate sau completeAction như cơ chế 1-quái-lần
+    // trước đây): pending telegraph đếm ngược → materialize khi hết; sân
+    // trống + hết pending + còn wave → queue cả wave mới đồng loạt.
+    // Pending telegraph decrement KHÔNG phụ thuộc spawnEnemy factory —
+    // materialize là việc hệ thống (đã build xong participant), chỉ wave-
+    // start MỚI cần factory. Test 2 của plan chạy tickPacing không factory
+    // mà vẫn kỳ vọng pending đếm ngược — đúng ngữ nghĩa này.
+    if (battle.wave) {
+      const stillPending: PendingEnemySpawn[] = []
+
+      for (const pending of battle.wave.pendingEnemySpawns) {
+        const ticksRemaining = pending.ticksRemaining - 1
+
+        if (ticksRemaining <= 0) {
+          battle.enemies.push(pending.participant)
+        } else {
+          stillPending.push({ ...pending, ticksRemaining })
+        }
+      }
+
+      battle.wave.pendingEnemySpawns = stillPending
+
+      const aliveEnemyCount = battle.enemies.filter((enemy) => enemy.entity.alive).length
+
+      if (
+        this.spawnEnemy &&
+        shouldStartNextWave(
+          aliveEnemyCount,
+          battle.wave.pendingEnemySpawns.length,
+          battle.wave.waveIndex,
+          battle.wave.waves.length,
+        )
+      ) {
+        const waveSize = battle.wave.waves[battle.wave.waveIndex]!
+
+        for (let index = 0; index < waveSize; index++) {
+          const participant = this.spawnEnemy()
+          const totalTicks = spawnTelegraphTicks(participant.entity)
+
+          battle.wave.pendingEnemySpawns.push({ participant, ticksRemaining: totalTicks, totalTicks })
+          battle.wave.spawnedCount += 1
+        }
+
+        battle.wave.waveIndex += 1
+      }
     }
 
     // Defect-fix Task 1 — follow-up/counter queue TRƯỚC gauge order: queue
@@ -768,22 +851,14 @@ export class TurnBattleSystem {
       this.pendingGaugeDeltaDefinition = undefined
     }
 
-    if (battle.wave && this.spawnEnemy) {
-      const aliveEnemyCount = battle.enemies.filter((enemy) => enemy.entity.alive).length
-
-      if (shouldSpawnNextEnemy(battle.wave.spawnedCount, battle.wave.totalEnemyCount, aliveEnemyCount)) {
-        battle.enemies.push(this.spawnEnemy())
-        battle.wave.spawnedCount += 1
-      }
-    }
-
-    const finalAliveEnemyCount = battle.enemies.filter((enemy) => enemy.entity.alive).length
+    const currentAliveEnemyCount = battle.enemies.filter((enemy) => enemy.entity.alive).length
+    const currentPendingCount = battle.wave?.pendingEnemySpawns.length ?? 0
 
     if (battle.players.every((member) => !member.entity.alive)) {
       battle.state = 'defeat'
     } else if (
       battle.wave
-        ? isStageComplete(battle.wave.spawnedCount, battle.wave.totalEnemyCount, finalAliveEnemyCount)
+        ? isStageComplete(battle.wave.spawnedCount, battle.wave.totalEnemyCount, currentAliveEnemyCount, currentPendingCount)
         : battle.enemies.every((enemy) => !enemy.entity.alive)
     ) {
       battle.state = 'victory'
