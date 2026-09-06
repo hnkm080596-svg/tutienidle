@@ -503,7 +503,7 @@ describe('VendorSystem — Hóa Bán (economy-fixes-sinks-plan §3.2 B2)', () =>
   })
 
   it('giá herb tăng theo tuổi và realm tier — sanity bảng', () => {
-    const realms = REALM_TIERS.slice(0, 2)
+    const realms = REALM_TIERS.slice(0, 3)
 
     let previous = 0
 

@@ -345,6 +345,7 @@
     },
     "vendor": {
       "gateNotBelow": "Only items of a grade below your current realm can be sold",
+      "sellRejected": "This item cannot be sold.",
       "sell": {
         "title": "Liquidate",
         "rate": "Sell surplus materials for Spirit Stones at current grade rates.",

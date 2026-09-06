@@ -64,14 +64,6 @@ export class VendorSystem {
     }[],
   ) {}
 
-  isSellable(materialId: string): boolean {
-    if (!this.registry.has(materialId)) {
-      return false
-    }
-
-    return getUnitSellPrice(this.registry.get(materialId), 'mortal') !== undefined
-  }
-
   /**
    * gp123 6G: getUnitSellPrice nhận realmId = CẢNH GIỚI NGƯỜI CHƠI (từ
    * GameManager thread player.$state.realmId). Trả undefined khi phẩm

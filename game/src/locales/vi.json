@@ -344,7 +344,8 @@
       }
     },
     "vendor": {
-      "gateNotBelow": "Chỉ thu mua vật phẩm phẩm thấp hơn cảnh giới hiện tại",
+      "gateNotBelow": "Chỉ thu mua vật phẩm có phẩm thấp hơn cảnh giới hiện tại",
+      "sellRejected": "Không bán được vật phẩm này.",
       "sell": {
         "title": "Hóa Bán",
         "rate": "Bán nguyên liệu dư thừa lấy Linh Thạch theo phẩm hiện hành.",

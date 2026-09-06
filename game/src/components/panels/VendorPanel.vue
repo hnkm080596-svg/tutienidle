@@ -47,10 +47,16 @@ function sellAll(materialId: string, owned: number) {
 
   const result = gameManager.sellMaterialToVendor(materialId, owned, player.$state)
 
-  // gp123 6G — gate từ chối phải báo rõ (reason channel, cùng pattern
-  // PillBagSection) thay vì fail im lặng sau khi danh sách đã render.
+  // gp123 6G fix round 1 — gate message CHỈ khi reason là grade_not_below;
+  // reason khác (sole_recipe_ingredient, bag_full, ...) nhận message
+  // generic để không nói sai sự thật.
   if (!result.ok) {
-    useNotificationStore().push('warning', t('panels.vendor.gateNotBelow'))
+    useNotificationStore().push(
+      'warning',
+      result.reason === 'grade_not_below'
+        ? t('panels.vendor.gateNotBelow')
+        : t('panels.vendor.sellRejected'),
+    )
 
     return
   }
