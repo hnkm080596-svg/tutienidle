@@ -971,7 +971,26 @@ describe('BuffSystem — E1 convert-on-max (spec talent v4 §3.3)', () => {
     expect(pool.getFromSource('tang_tich', 'source')).toBeUndefined()
     expect(pool.getFromSource('bung_no', 'source')).toBeDefined()
     expect(pool.getFromSource('bung_no', 'source')!.stacks).toBe(1)
+    expect(pool.getFromSource('bung_no', 'source')!.remainingTime).toBe(bungNo.duration)
     expect(system.getActiveIds()).toEqual(['bung_no'])
+  })
+
+  it('buff stack CHƯA chạm maxStacks → không convert, buff gốc giữ nguyên stacks', () => {
+    const pool = new BuffPool()
+    const system = new BuffSystem(pool)
+    const registry = makeConvertRegistry()
+    const source = makeEntity({ id: 'source', type: 'player' })
+    const target = makeEntity({ id: 'target' })
+
+    system.apply(tangTich, source, target, registry) // stacks 1
+    system.apply(tangTich, source, target, registry) // stacks 2 < maxStacks 3
+
+    const stored = pool.getFromSource('tang_tich', 'source')
+
+    expect(stored).toBeDefined()
+    expect(stored!.stacks).toBe(2)
+    expect(pool.getFromSource('bung_no', 'source')).toBeUndefined()
+    expect(system.getActiveIds()).toEqual(['tang_tich'])
   })
 
   it('buff KHÔNG khai convertsToId → chạm maxStacks vẫn giữ nguyên (không convert)', () => {
