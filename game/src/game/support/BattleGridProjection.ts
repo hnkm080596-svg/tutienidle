@@ -76,10 +76,13 @@ export interface BattlefieldGeometrySnapshot extends PerspectiveGeometry {
  * thích ứng: desired = 50% băng trống, nhưng road luôn giữ tối thiểu
  * PERSPECTIVE_MIN_ROAD_HEIGHT. Hàm thuần — test được không cần canvas.
  */
-export function computePerspectiveGeometry(viewport: ProjectionViewport): PerspectiveGeometry {
+export function computePerspectiveGeometry(
+  viewport: ProjectionViewport,
+  minRoadHeight: number = PERSPECTIVE_MIN_ROAD_HEIGHT,
+): PerspectiveGeometry {
   const availableHeight = Math.max(1, viewport.height - viewport.topInset - viewport.bottomInset)
   const desiredScenery = availableHeight * PERSPECTIVE_SCENERY_RATIO
-  const maxScenery = Math.max(0, availableHeight - PERSPECTIVE_MIN_ROAD_HEIGHT)
+  const maxScenery = Math.max(0, availableHeight - minRoadHeight)
   const sceneryHeight = Math.min(desiredScenery, maxScenery)
 
   return {
@@ -140,6 +143,12 @@ export interface FootprintPoint {
 export interface BattleGridProjection {
   readonly mode: BattlefieldRenderMode
   readonly viewport: ProjectionViewport
+  // Battlefield Perspective Panel (2026-09-06) — nguồn sự thật DUY NHẤT
+  // cho kích thước lưới; combat-grid-view.ts's redrawGridLines() đọc trực
+  // tiếp 2 field này thay vì import hằng số cứng, nên panel Trận Pháp
+  // (6x6) và combat thật (10x16) dùng chung được 1 hàm vẽ lưới.
+  readonly rows: number
+  readonly columns: number
 
   gridToScreen(row: number, column: number): GridScreenPoint
 
@@ -221,13 +230,17 @@ class FlatGridProjection implements BattleGridProjection {
   // thay vì interface gốc (rightInset? optional) để caller nội bộ không phải
   // xử lý undefined (TS2532 khi trừ thẳng vào availableWidth).
   viewport: Required<ProjectionViewport>
+  readonly rows: number
+  readonly columns: number
 
   private cellSizePx = 0
   private gridLeft = 0
   private gridTop = 0
 
-  constructor(viewport: ProjectionViewport) {
+  constructor(viewport: ProjectionViewport, rows: number = GRID_ROW_COUNT, columns: number = GRID_COLUMN_COUNT) {
     this.viewport = makeViewport(viewport)
+    this.rows = rows
+    this.columns = columns
     this.recalculate()
   }
 
@@ -257,10 +270,10 @@ class FlatGridProjection implements BattleGridProjection {
     // dùng ở nhánh perspective (xem nearWidth bên dưới).
     this.cellSizePx = Math.max(
       1,
-      Math.min((availableWidth - 24) / GRID_COLUMN_COUNT, availableHeight / GRID_ROW_COUNT),
+      Math.min((availableWidth - 24) / this.columns, availableHeight / this.rows),
     )
-    this.gridLeft = availableWidth / 2 - (this.cellSizePx * GRID_COLUMN_COUNT) / 2
-    this.gridTop = this.viewport.topInset + (availableHeight - this.cellSizePx * GRID_ROW_COUNT) / 2
+    this.gridLeft = availableWidth / 2 - (this.cellSizePx * this.columns) / 2
+    this.gridTop = this.viewport.topInset + (availableHeight - this.cellSizePx * this.rows) / 2
   }
 
   gridToScreen(row: number, column: number): GridScreenPoint {
@@ -279,7 +292,7 @@ class FlatGridProjection implements BattleGridProjection {
   }
 
   screenToGridUnclamped(x: number, y: number): GridFloatPosition | null {
-    const bottom = this.gridTop + this.cellSizePx * GRID_ROW_COUNT
+    const bottom = this.gridTop + this.cellSizePx * this.rows
 
     if (y < this.gridTop || y > bottom) {
       return null
@@ -295,7 +308,7 @@ class FlatGridProjection implements BattleGridProjection {
       return false
     }
 
-    return hit.column >= -0.5 && hit.column <= GRID_COLUMN_COUNT - 0.5
+    return hit.column >= -0.5 && hit.column <= this.columns - 0.5
   }
 
   cellSizeAt(_row: number): CellPixelSize {
@@ -310,12 +323,12 @@ class FlatGridProjection implements BattleGridProjection {
     return {
       left: this.gridLeft,
       top: this.gridTop,
-      right: this.gridLeft + this.cellSizePx * GRID_COLUMN_COUNT,
-      bottom: this.gridTop + this.cellSizePx * GRID_ROW_COUNT,
+      right: this.gridLeft + this.cellSizePx * this.columns,
+      bottom: this.gridTop + this.cellSizePx * this.rows,
       // rightInset-aware: tâm của chính khoảng [left, right] đã bị co/dịch
       // ở trên — KHÔNG dùng viewport.width/2 (bỏ qua rightInset), khớp
       // pattern derive-từ-centerX đã đúng ở PerspectiveGridProjection.
-      centerX: this.gridLeft + (this.cellSizePx * GRID_COLUMN_COUNT) / 2,
+      centerX: this.gridLeft + (this.cellSizePx * this.columns) / 2,
     }
   }
 }
@@ -327,15 +340,26 @@ class PerspectiveGridProjection implements BattleGridProjection {
 
   // Cùng lý do với FlatGridProjection ở trên — bản lưu sẵn luôn Required.
   viewport: Required<ProjectionViewport>
+  readonly rows: number
+  readonly columns: number
 
   private q = 1 + PERSPECTIVE_STRENGTH
   private bandTop = 0
   private bandHeight = 1
   private nearWidth = 1
   private centerX = 0
+  private minRoadHeight: number
 
-  constructor(viewport: ProjectionViewport) {
+  constructor(
+    viewport: ProjectionViewport,
+    rows: number = GRID_ROW_COUNT,
+    columns: number = GRID_COLUMN_COUNT,
+    minRoadHeight: number = PERSPECTIVE_MIN_ROAD_HEIGHT,
+  ) {
     this.viewport = makeViewport(viewport)
+    this.rows = rows
+    this.columns = columns
+    this.minRoadHeight = minRoadHeight
     this.recalculate()
   }
 
@@ -350,7 +374,7 @@ class PerspectiveGridProjection implements BattleGridProjection {
     // Nửa trên băng trống = phong cảnh (trời/núi, vẽ bởi backdrop tới
     // chân trời = bandTop); nửa dưới = mặt đường combat — với clamp thích
     // ứng giữ mặt đường tối thiểu trên màn thấp/portrait.
-    const geometry = computePerspectiveGeometry(this.viewport)
+    const geometry = computePerspectiveGeometry(this.viewport, this.minRoadHeight)
 
     this.bandTop = geometry.horizonY
     this.bandHeight = Math.max(1, geometry.roadHeight)
@@ -370,12 +394,12 @@ class PerspectiveGridProjection implements BattleGridProjection {
   }
 
   gridToScreen(row: number, column: number): GridScreenPoint {
-    const v = clamp01((row + 0.5) / GRID_ROW_COUNT)
+    const v = clamp01((row + 0.5) / this.rows)
     const denominator = this.denominatorAt(v)
     const scale = 1 / (denominator * denominator)
 
     return {
-      x: this.centerX + ((column + 0.5) / GRID_COLUMN_COUNT - 0.5) * this.nearWidth * scale,
+      x: this.centerX + ((column + 0.5) / this.columns - 0.5) * this.nearWidth * scale,
       y: this.bandTop + this.bandHeight * (v / denominator),
       scale,
     }
@@ -391,8 +415,8 @@ class PerspectiveGridProjection implements BattleGridProjection {
     const scale = 1 / (denominator * denominator)
 
     return {
-      row: v * GRID_ROW_COUNT - 0.5,
-      column: ((x - this.centerX) / (this.nearWidth * scale) + 0.5) * GRID_COLUMN_COUNT - 0.5,
+      row: v * this.rows - 0.5,
+      column: ((x - this.centerX) / (this.nearWidth * scale) + 0.5) * this.columns - 0.5,
     }
   }
 
@@ -411,17 +435,17 @@ class PerspectiveGridProjection implements BattleGridProjection {
       return false
     }
 
-    return hit.column >= -0.5 && hit.column <= GRID_COLUMN_COUNT - 0.5
+    return hit.column >= -0.5 && hit.column <= this.columns - 0.5
   }
 
   cellSizeAt(row: number): CellPixelSize {
-    const v = clamp01((row + 0.5) / GRID_ROW_COUNT)
+    const v = clamp01((row + 0.5) / this.rows)
     const scale = 1 / this.denominatorAt(v) ** 2
 
     return {
-      width: (this.nearWidth / GRID_COLUMN_COUNT) * scale,
+      width: (this.nearWidth / this.columns) * scale,
       // Chiều cao ô ∝ f'(v) = q/denom² — cùng hệ số scale với chiều ngang.
-      height: (this.bandHeight / GRID_ROW_COUNT) * this.q * scale,
+      height: (this.bandHeight / this.rows) * this.q * scale,
     }
   }
 
@@ -447,8 +471,11 @@ class PerspectiveGridProjection implements BattleGridProjection {
 export function createBattleGridProjection(
   mode: BattlefieldRenderMode,
   viewport: ProjectionViewport,
+  rows: number = GRID_ROW_COUNT,
+  columns: number = GRID_COLUMN_COUNT,
+  minRoadHeight: number = PERSPECTIVE_MIN_ROAD_HEIGHT,
 ): BattleGridProjection {
   return mode === 'perspective'
-    ? new PerspectiveGridProjection(viewport)
-    : new FlatGridProjection(viewport)
+    ? new PerspectiveGridProjection(viewport, rows, columns, minRoadHeight)
+    : new FlatGridProjection(viewport, rows, columns)
 }
