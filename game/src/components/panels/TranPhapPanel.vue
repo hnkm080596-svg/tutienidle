@@ -11,7 +11,8 @@
 // flag đó không tồn tại), cùng pattern OverlayPanel như mọi panel
 // standalone khác (SkillPathPanel.vue, ArtifactPanel.vue...). Mở qua
 // command wheel slot 'formation_slot' (game/support/commandWheelCatalog.ts).
-import { computed, ref } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
+import type Phaser from 'phaser'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useStateVersion } from '@/composables/useGameState'
@@ -19,6 +20,8 @@ import { TRAN_PHAP_FORMATIONS } from '@/data/formation/TranPhap'
 import type { TranPhapDefinition } from '@/data/formation/TranPhap'
 import type { FormationSlotAssignment } from '@/core/player/Player'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
+import { PREVIEW_CELL_SIZE, PREVIEW_GRID_SIZE } from '@/game/scenes/TranPhapPreviewScene'
+import type { TranPhapPreviewScene } from '@/game/scenes/TranPhapPreviewScene'
 
 const ui = useUiStore()
 const player = usePlayerStore()
@@ -104,23 +107,98 @@ function onConfirm() {
 function close() {
   ui.closeHomeOverlays()
 }
+
+// --- Hỗn Độn Trận visual test tooling (2026-09-06) --------------------
+// Lớp hiển thị Phaser (TranPhapPreviewScene, Task 4) vẽ NGAY BÊN DƯỚI
+// lưới CSS/overlay kéo-thả ở trên — thuần hiển thị (sprite animate tại
+// từng ô đã gán), KHÔNG phải drop target. Overlay HTML phía trên vẫn là
+// nơi nhận @dragover/@drop thật, giữ nguyên 100% logic đã có.
+const previewContainerRef = ref<HTMLDivElement | null>(null)
+
+let previewGame: Phaser.Game | null = null
+let previewScene: TranPhapPreviewScene | null = null
+
+// Bootstrap Phaser CHỈ khi panel thật sự mở — container ref (bên trong
+// slot của OverlayPanel) chỉ tồn tại trong DOM lúc `open`, nên onMounted
+// của CHÍNH component này (chạy 1 lần lúc GameRoot boot) không đủ — phải
+// theo dõi bằng watch() điều kiện panel mở/đóng.
+watch(
+  () => ui.standalonePanel === 'tran_phap',
+  async (isOpen) => {
+    if (isOpen) {
+      const container = previewContainerRef.value
+
+      if (!container) {
+        return
+      }
+
+      const [{ default: Phaser }, { TranPhapPreviewScene: TranPhapPreviewSceneClass }] = await Promise.all([
+        import('phaser'),
+        import('@/game/scenes/TranPhapPreviewScene'),
+      ])
+
+      // Panel có thể đã đóng lại trong lúc 2 dynamic import trên đang
+      // chạy (đóng rất nhanh) — kiểm tra lại trước khi tạo Game để
+      // tránh Game mồ côi không ai destroy.
+      if (ui.standalonePanel !== 'tran_phap' || !previewContainerRef.value) {
+        return
+      }
+
+      previewGame = new Phaser.Game({
+        type: Phaser.AUTO,
+        parent: previewContainerRef.value,
+        width: PREVIEW_CELL_SIZE * PREVIEW_GRID_SIZE,
+        height: PREVIEW_CELL_SIZE * PREVIEW_GRID_SIZE,
+        transparent: true,
+        scene: [TranPhapPreviewSceneClass],
+      })
+
+      previewGame.events.once('ready', () => {
+        previewScene = (previewGame?.scene.getScene('TranPhapPreviewScene') as TranPhapPreviewScene | undefined) ?? null
+        previewScene?.syncAssignments(currentAssignments.value)
+      })
+    } else {
+      previewGame?.destroy(true)
+      previewGame = null
+      previewScene = null
+    }
+  },
+  { flush: 'post' },
+)
+
+// Đồng bộ sprite mỗi khi assignment đổi (kéo-thả) trong lúc panel đang mở.
+watch(currentAssignments, (assignments) => {
+  previewScene?.syncAssignments(assignments)
+})
+
+// An toàn phòng trường hợp panel đang mở mà GameRoot bị unmount (watch
+// ở trên chỉ destroy khi panel ĐÓNG, không chạy khi component biến mất).
+onUnmounted(() => {
+  previewGame?.destroy(true)
+  previewGame = null
+  previewScene = null
+})
 </script>
 
 <template>
   <OverlayPanel :open="ui.standalonePanel === 'tran_phap'" title="Trận Pháp" width="min(1000px, 94vw)" height="min(680px, 88vh)" @close="close">
     <div class="tran-phap-panel">
       <div class="tran-phap-panel__body">
-        <div class="tran-phap-panel__grid">
-          <div v-for="row in 6" :key="row" class="tran-phap-panel__row">
-            <div
-              v-for="column in 6"
-              :key="column"
-              class="tran-phap-panel__cell"
-              :class="{ 'tran-phap-panel__cell--lit': isLitCell(row - 1, column - 1) }"
-              @dragover.prevent
-              @drop="(event) => onDrop(row - 1, column - 1, (event as DragEvent).dataTransfer?.getData('text/plain') ?? '')"
-            >
-              {{ assignmentAt(row - 1, column - 1)?.combatantId ?? '' }}
+        <div class="tran-phap-panel__grid-stack">
+          <div ref="previewContainerRef" class="tran-phap-panel__preview-canvas"></div>
+
+          <div class="tran-phap-panel__grid tran-phap-panel__grid--overlay">
+            <div v-for="row in 6" :key="row" class="tran-phap-panel__row">
+              <div
+                v-for="column in 6"
+                :key="column"
+                class="tran-phap-panel__cell"
+                :class="{ 'tran-phap-panel__cell--lit': isLitCell(row - 1, column - 1) }"
+                @dragover.prevent
+                @drop="(event) => onDrop(row - 1, column - 1, (event as DragEvent).dataTransfer?.getData('text/plain') ?? '')"
+              >
+                {{ assignmentAt(row - 1, column - 1)?.combatantId ?? '' }}
+              </div>
             </div>
           </div>
         </div>
@@ -174,10 +252,27 @@ function close() {
   gap: var(--space-4, 16px);
 }
 
+.tran-phap-panel__grid-stack {
+  position: relative;
+}
+
+.tran-phap-panel__preview-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
 .tran-phap-panel__grid {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.tran-phap-panel__grid--overlay {
+  position: relative;
+  z-index: 1;
+  /* Ô vẫn giữ background/border cũ để vẫn thấy rõ vùng lit khi kéo-thả —
+     Phaser canvas vẽ NGAY BÊN DƯỚI, không che overlay tương tác. */
 }
 
 .tran-phap-panel__row {
