@@ -1349,6 +1349,20 @@ export class CombatScene extends Phaser.Scene {
 
         this.snapInterpolationTarget(action.state.id, action.state.column)
         this.positionSprite(sprite, action.state.column, action.state.id)
+
+        // Bug fix (2026-09-06, user report "không thấy nhân vật nào trong
+        // combat") — sprite Player được tạo ẨN ở create() (setVisible(false),
+        // chờ event 'positions' LEGACY gọi reconcilePlayerSpawn() để hiện lại
+        // sau materialize). Turn-based combat không còn tick legacy
+        // BattleSystem (xem TurnActionPresentationEvents.ts) nên event đó
+        // không bao giờ tới nữa — sprite kẹt vô hình vĩnh viễn. Snapshot
+        // turn-based tự lo hiện sprite ngay khi id đó lần đầu xuất hiện.
+        sprite.rect.setVisible(true)
+
+        if (action.state.id === PLAYER_ID) {
+          this.playerMaterialized = true
+        }
+
         continue
       }
 

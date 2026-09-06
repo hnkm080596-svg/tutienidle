@@ -46,7 +46,11 @@ function testCompanionBasicSkill(id: string): TurnSkillDefinition {
   }
 }
 
-const TEST_COMPANIONS: CompanionDefinition[] = [1, 2, 3, 4, 5].map((n) => ({
+// Export (bug fix 2026-09-06, user report "không thấy nhân vật phụ test ở
+// đâu") — TranPhapPanel.vue cần đúng danh sách id này để cấp phát trực tiếp
+// vào player.companions (chưa có gacha UI thật để tự pull), thay vì đoán
+// prefix 'test_companion_' từ COMPANIONS một cách rời rạc/dễ vỡ.
+export const TEST_COMPANIONS: CompanionDefinition[] = [1, 2, 3, 4, 5].map((n) => ({
   id: `test_companion_${n}`,
   name: `Test Companion ${n}`,
   grade: 'hoang',

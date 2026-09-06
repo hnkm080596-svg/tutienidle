@@ -2413,6 +2413,25 @@ export class GameManager {
     return GENERIC_PHYSICAL_BASIC
   }
 
+  // Bug fix (2026-09-06, user report) — quái spawn giữa trận (wave thứ 2 trở
+  // đi, factory truyền cho TurnBattleSystem ở startTurnBattle()/restart cycle)
+  // KHÔNG hề gọi resolveEnemySpawnPosition() như buildTurnBattle() làm cho
+  // quái ĐẦU TIÊN, nên entity giữ nguyên x:0/row:0 mặc định của
+  // enemyToCombatEntity() — luôn dính góc trên-trái thay vì random trong
+  // ENEMY_SIDE_REGION. Helper dùng chung để 2 closure spawn giữa trận
+  // (startTurnBattle + restartTurnBattleCycle) không lệch nhau lần nữa.
+  private placeSpawnedEnemy(entity: CombatEntity): CombatEntity {
+    const position = resolveEnemySpawnPosition({
+      isBoss: entity.isBoss ?? false,
+      random: Math.random,
+    })
+
+    entity.row = position.row
+    entity.x = position.column
+
+    return entity
+  }
+
   private buildTurnBattle(playerEntity: CombatEntity, enemyEntities: CombatEntity[]): TurnBattle {
     const playerPath = this.activePlayer
 
@@ -2574,7 +2593,7 @@ export class GameManager {
         this.lastStageEnemyTemplate = template
 
         return toTurnBattleParticipant(
-          enemyToCombatEntity(this.enemySystem.spawn(template)),
+          this.placeSpawnedEnemy(enemyToCombatEntity(this.enemySystem.spawn(template))),
           this.turnBattle?.enemies.length ?? 0,
           GENERIC_PHYSICAL_BASIC,
         )
@@ -3287,7 +3306,7 @@ export class GameManager {
           this.lastStageEnemyTemplate = template
 
           return toTurnBattleParticipant(
-            enemyToCombatEntity(this.enemySystem.spawn(template)),
+            this.placeSpawnedEnemy(enemyToCombatEntity(this.enemySystem.spawn(template))),
             this.turnBattle?.enemies.length ?? 1,
             GENERIC_PHYSICAL_BASIC,
           )
