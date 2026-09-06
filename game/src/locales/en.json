@@ -326,7 +326,8 @@
           "decade": "Decade",
           "century": "Century",
           "millennium": "Millennium",
-          "myriadYear": "Myriad Year"
+          "myriadYear": "Myriad Year",
+          "thuongCo": "Primeval"
         },
         "realms": {
           "mortal": "Mortal",
@@ -343,24 +344,8 @@
       }
     },
     "vendor": {
-      "cards": {
-        "spiritStone": "Spirit Stones",
-        "wood": "Spirit Wood",
-        "ore": "Spirit Ore"
-      },
-      "sections": {
-        "tier": "Grade Conversion",
-        "tierRealm": "Grade Conversion (realm)"
-      },
-      "stone": {
-        "upTrung": "{ratio} Lesser → 1 Medium",
-        "upThuong": "{ratio} Medium → 1 Greater"
-      },
-      "tierConvert": "{ratio} → 1",
-      "empty": {
-        "wood": "No Spirit Wood to convert.",
-        "ore": "No Spirit Ore to convert."
-      },
+      "gateNotBelow": "Only items of a grade below your current realm can be sold",
+      "sellRejected": "This item cannot be sold.",
       "sell": {
         "title": "Liquidate",
         "rate": "Sell surplus materials for Spirit Stones at current grade rates.",
@@ -495,12 +480,12 @@
     "decompose": {
       "labels": {
         "gradeFilter": "Ore grade",
-        "qualityFilter": "Ore quality",
+        "ageFilter": "Ore age",
         "workers": "Workers"
       },
       "select": {
         "allGrades": "All grades",
-        "allQualities": "All qualities"
+        "allAges": "All ages"
       },
       "estimate": "≈ {amount} essence / cycle"
     }
@@ -809,7 +794,7 @@
       "job_slots_full": "The furnace is busy",
       "wrong_herb": "Wrong Spirit Herb — a recipe accepts exactly one herb type",
       "missing_herb": "Not enough Spirit Herb",
-      "missing_fuel_wood": "Not enough fuel wood of the required realm",
+      "missing_fuel_wood": "Not enough fuel wood matching the herb's realm and age",
       "missing_spirit_stone": "Not enough Spirit Stones"
     }
   },
@@ -850,7 +835,8 @@
         "decade": "Decade",
         "century": "Century",
         "millennium": "Millennium",
-        "myriadYear": "Myriad Year"
+        "myriadYear": "Myriad Year",
+        "thuongCo": "Primeval"
       },
       "quality": {
         "hoang": "Decade",

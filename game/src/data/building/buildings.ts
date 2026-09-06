@@ -3,17 +3,29 @@ import type { BuildingLevelDef } from '@/core/building/BuildingLevelEffect'
 import { SPIRIT_STONE_MATERIAL_ID } from '@/core/material/SpiritStoneMaterial'
 import { REALM_TIERS, getRealmIdForTier } from '@/core/realm/RealmTierMap'
 
-const QUALITY_BY_TIER = ['hoang', 'hoang', 'huyen', 'huyen', 'dia', 'dia', 'thien', 'thien', 'tien'] as const
+// gp123 6E (task C2): thang tuổi gỗ/khoáng theo tier — dùng trục tuổi
+// thống nhất (decade..thuong_co) thay hậu tố phẩm hoang..tien cũ.
+const AGE_BY_TIER: Record<number, 'decade' | 'century' | 'millennium' | 'myriad_year' | 'thuong_co'> = {
+  1: 'decade',
+  2: 'decade',
+  3: 'century',
+  4: 'century',
+  5: 'millennium',
+  6: 'millennium',
+  7: 'myriad_year',
+  8: 'myriad_year',
+  9: 'thuong_co',
+}
 
 function extendCosts(firstThree: Building['upgradeCost'], baseAmount: number): Building['upgradeCost'] {
   const future = REALM_TIERS.slice(3).map((_, offset) => {
     const tier = offset + 4
     const realmId = getRealmIdForTier(tier)
-    const quality = QUALITY_BY_TIER[tier - 1]!
+    const age = AGE_BY_TIER[tier]!
     const amount = Math.round(baseAmount * Math.pow(1.65, tier - 3))
     return [
-      { materialId: `${realmId}_wood_${quality}`, amount },
-      { materialId: `${realmId}_ore_${quality}`, amount: Math.max(1, Math.round(amount / 2)) },
+      { materialId: `${realmId}_wood_${age}`, amount },
+      { materialId: `${realmId}_ore_${age}`, amount: Math.max(1, Math.round(amount / 2)) },
     ]
   })
   return [...firstThree, ...future]
@@ -55,9 +67,10 @@ function pillRoomLevels(): BuildingLevelDef[] {
 // formation_altar (Trận Đài), talisman_institute (Phù Viện) đã bị loại
 // bỏ. Nguyên liệu đến thẳng từ ProductionSite (core/production).
 //
-// Chi phí xây/nâng dùng GỖ từ Thanh Vân Lâm (`<realm>_wood`) + nguyên
-// liệu khác — sink chính của Lâm (plan §5.2). Tàng Kinh Các KHÔNG phải
-// building (dong-fu-command-wheel plan Workstream C).
+// Chi phí xây/nâng dùng GỖ từ Thanh Vân Lâm (`<realm>_wood_<age>`, trục
+// tuổi thống nhất gp123 6E C2) + nguyên liệu khác — sink chính của Lâm
+// (plan §5.2). Tàng Kinh Các KHÔNG phải building (dong-fu-command-wheel
+// plan Workstream C).
 export const buildings: Building[] = [
   // Khai Vật Đường — gate Sản Xuất + LINH MẠCH (chi-hien-quan spec
   // 2026-09-02): chức năng ngưng tụ Linh Thạch của Linh Tuyền (đã xóa)
@@ -89,8 +102,8 @@ export const buildings: Building[] = [
 
     upgradeCost: extendCosts([
       [],
-      [{ materialId: 'qi_refining_wood', amount: 4 }],
-      [{ materialId: 'foundation_establishment_wood', amount: 6 }],
+      [{ materialId: 'qi_refining_wood_decade', amount: 4 }],
+      [{ materialId: 'foundation_establishment_wood_decade', amount: 6 }],
     ], 4),
   },
 
@@ -116,12 +129,12 @@ export const buildings: Building[] = [
     // Ngày 1-2 (Equipment) — gần như miễn phí, không được chặn nhịp độ
     // trang bị đầu game.
     upgradeCost: extendCosts([
-      [{ materialId: 'mortal_wood', amount: 3 }],
+      [{ materialId: 'mortal_wood_decade', amount: 3 }],
       [
-        { materialId: 'qi_refining_wood', amount: 6 },
-        { materialId: 'qi_refining_ore_hoang', amount: 3 },
+        { materialId: 'qi_refining_wood_decade', amount: 6 },
+        { materialId: 'qi_refining_ore_decade', amount: 3 },
       ],
-      [{ materialId: 'foundation_establishment_wood', amount: 4 }],
+      [{ materialId: 'foundation_establishment_wood_decade', amount: 4 }],
     ], 5),
 
     levels: equipmentHallLevels(),
@@ -150,11 +163,11 @@ export const buildings: Building[] = [
     // lần chi phí luyện đan.
     upgradeCost: extendCosts([
       [
-        { materialId: 'mortal_wood', amount: 5 },
-        { materialId: 'mortal_ore_hoang', amount: 2 },
+        { materialId: 'mortal_wood_decade', amount: 5 },
+        { materialId: 'mortal_ore_decade', amount: 2 },
       ],
-      [{ materialId: 'qi_refining_wood', amount: 5 }],
-      [{ materialId: 'foundation_establishment_wood', amount: 9 }],
+      [{ materialId: 'qi_refining_wood_decade', amount: 5 }],
+      [{ materialId: 'foundation_establishment_wood_decade', amount: 9 }],
     ], 7),
 
     levels: pillRoomLevels(),
@@ -178,7 +191,7 @@ export const buildings: Building[] = [
 
     functionType: 'stage_select',
 
-    upgradeCost: [[{ materialId: 'mortal_wood', amount: 3 }]],
+    upgradeCost: [[{ materialId: 'mortal_wood_decade', amount: 3 }]],
   },
 
   // Ký Bảo Các — building CHUYÊN cho mọi cơ chế "đổi/bán" (2026-08-30,
@@ -204,7 +217,7 @@ export const buildings: Building[] = [
 
     functionType: 'vendor',
 
-    upgradeCost: [[{ materialId: 'mortal_wood', amount: 3 }]],
+    upgradeCost: [[{ materialId: 'mortal_wood_decade', amount: 3 }]],
   },
 
   // Chiêu Hiền Quán (chi-hien-quan spec 2026-09-02) — NGUỒN NHÂN CÔNG
@@ -231,8 +244,8 @@ export const buildings: Building[] = [
 
     upgradeCost: extendCosts([
       [],
-      [{ materialId: 'mortal_ore_hoang', amount: 4 }],
-      [{ materialId: 'qi_refining_wood', amount: 6 }],
+      [{ materialId: 'mortal_ore_decade', amount: 4 }],
+      [{ materialId: 'qi_refining_wood_decade', amount: 6 }],
     ], 4),
   },
 ]

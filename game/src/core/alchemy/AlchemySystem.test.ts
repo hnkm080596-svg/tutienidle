@@ -201,45 +201,113 @@ function buildContext(
   const registry = new MaterialRegistry()
 
   registry.register(material('herb_decade'))
-  registry.register(material('mortal_wood'))
+  registry.register(material('mortal_wood_decade'))
 
   if (herbOnHand > 0) bag.add(registry.get('herb_decade'), herbOnHand)
-  if (woodOnHand > 0) bag.add(registry.get('mortal_wood'), woodOnHand)
+  if (woodOnHand > 0) bag.add(registry.get('mortal_wood_decade'), woodOnHand)
 
   const system = new AlchemySystem()
 
   return { recipe, bag, registry, system, maxConcurrentJobs }
 }
 
-describe('AlchemySystem — resolveFuelWood chọn gỗ đạt realm tối thiểu', () => {
-  it('trả null khi không có gỗ nào đạt realm tối thiểu', () => {
-    const bag = new MaterialBag()
-
-    expect(resolveFuelWood(bag, 'mortal', 1)).toBeNull()
-  })
-
-  it('chọn gỗ đạt realm tối thiểu (mortal_wood)', () => {
+describe('AlchemySystem — resolveFuelWood nhiên liệu CÙNG realm + CÙNG age (gp123 6E)', () => {
+  it('đúng realm + đúng age → trả id gỗ tương ứng', () => {
     const bag = new MaterialBag()
     const registry = new MaterialRegistry()
 
-    registry.register(material('herb_decade'))
-    registry.register(material('mortal_wood'))
+    registry.register(material('mortal_wood_decade'))
 
-    bag.add(registry.get('herb_decade'), 3)
-    bag.add(registry.get('mortal_wood'), 3)
+    bag.add(registry.get('mortal_wood_decade'), 1)
 
-    expect(resolveFuelWood(bag, 'mortal', 1)).toBe('mortal_wood')
+    expect(resolveFuelWood(bag, 'mortal', 1, 'decade')).toBe('mortal_wood_decade')
   })
 
-  it('nhu cầu vượt lượng có → không trả stack thiếu (kiểm tra bag.has amount)', () => {
+  it('sai age — bag chỉ có wood bậc khác → null (không thay thế age)', () => {
     const bag = new MaterialBag()
     const registry = new MaterialRegistry()
 
-    registry.register(material('mortal_wood'))
+    registry.register(material('mortal_wood_century'))
 
-    bag.add(registry.get('mortal_wood'), 2)
+    bag.add(registry.get('mortal_wood_century'), 3)
 
-    expect(resolveFuelWood(bag, 'mortal', 5)).toBeNull()
+    expect(resolveFuelWood(bag, 'mortal', 1, 'decade')).toBeNull()
+  })
+
+  it('sai realm — wood realm khác dù cùng age → null (không xuyên bậc realm)', () => {
+    const bag = new MaterialBag()
+    const registry = new MaterialRegistry()
+
+    registry.register(material('qi_refining_wood_decade'))
+
+    bag.add(registry.get('qi_refining_wood_decade'), 3)
+
+    expect(resolveFuelWood(bag, 'mortal', 1, 'decade')).toBeNull()
+  })
+
+  it('thiếu amount — stack cùng realm+age nhưng không đủ số lượng → null', () => {
+    const bag = new MaterialBag()
+    const registry = new MaterialRegistry()
+
+    registry.register(material('mortal_wood_decade'))
+
+    bag.add(registry.get('mortal_wood_decade'), 2)
+
+    expect(resolveFuelWood(bag, 'mortal', 5, 'decade')).toBeNull()
+  })
+})
+
+describe('AlchemySystem — nhiên liệu phải cùng tuổi với thảo được chọn (gp123 6E)', () => {
+  /** Recipe thảo vạn niên + bag chỉ chứa một loại gỗ (đúng hoặc bậc thấp hơn). */
+  function myriadContext(woodId: 'mortal_wood_myriad_year' | 'mortal_wood_decade') {
+    const recipe: AlchemyRecipe = {
+      ...RECIPE,
+      herbVariants: [{ materialId: 'herb_myriad_year', age: 'myriad_year', label: 'Vạn Niên' }],
+      fuelWoodAmount: WOOD_AMOUNT,
+    }
+
+    const bag = new MaterialBag()
+    const registry = new MaterialRegistry()
+
+    registry.register(material('herb_myriad_year'))
+    registry.register(material('mortal_wood_myriad_year'))
+    registry.register(material('mortal_wood_decade'))
+
+    bag.add(registry.get('herb_myriad_year'), 1)
+    bag.add(registry.get(woodId), WOOD_AMOUNT)
+
+    const system = new AlchemySystem()
+
+    return { recipe, bag, registry, system }
+  }
+
+  it('herb vạn niên + wood vạn niên đủ → job start', () => {
+    const { recipe, bag, registry, system } = myriadContext('mortal_wood_myriad_year')
+
+    const result = system.startJob(recipe, 'herb_myriad_year', bag, registry, 0, 1, 1_000, 1)
+
+    expect(result.ok).toBe(true)
+    expect(bag.getAmount('mortal_wood_myriad_year')).toBe(0)
+    expect(system.getJobs()).toHaveLength(1)
+  })
+
+  it('herb vạn niên + wood bậc thấp hơn (decade) → missing_fuel_wood, không trừ thảo', () => {
+    const { recipe, bag, registry, system } = myriadContext('mortal_wood_decade')
+
+    const result = system.startJob(recipe, 'herb_myriad_year', bag, registry, 0, 1, 1_000, 1)
+
+    expect(result).toEqual({ ok: false, reason: 'missing_fuel_wood' })
+    expect(bag.getAmount('herb_myriad_year')).toBe(1)
+    expect(bag.getAmount('mortal_wood_decade')).toBe(WOOD_AMOUNT)
+    expect(system.getJobs()).toHaveLength(0)
+  })
+
+  it('herb thập niên + wood thập niên → OK (bậc gốc vẫn chạy)', () => {
+    const { recipe, bag, registry, system, maxConcurrentJobs } = buildContext()
+
+    const result = system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 1_000, maxConcurrentJobs)
+
+    expect(result.ok).toBe(true)
   })
 })
 
@@ -252,7 +320,7 @@ describe('AlchemySystem — reserve nguyên liệu ATOMIC khi bắt đầu job (
     expect(result.ok).toBe(true)
 
     expect(bag.getAmount('herb_decade')).toBe(0)
-    expect(bag.getAmount('mortal_wood')).toBe(0)
+    expect(bag.getAmount('mortal_wood_decade')).toBe(0)
 
     const jobs = system.getJobs()
     expect(jobs).toHaveLength(1)
@@ -270,7 +338,7 @@ describe('AlchemySystem — reserve nguyên liệu ATOMIC khi bắt đầu job (
     const result = system.startJob(recipe, 'herb_decade', bag, registry, 0, 1, 1_000, maxConcurrentJobs)
 
     expect(result).toEqual({ ok: false, reason: 'missing_herb' })
-    expect(bag.getAmount('mortal_wood')).toBe(WOOD_AMOUNT)
+    expect(bag.getAmount('mortal_wood_decade')).toBe(WOOD_AMOUNT)
     expect(system.getJobs()).toHaveLength(0)
   })
 
@@ -296,7 +364,7 @@ describe('AlchemySystem — reserve nguyên liệu ATOMIC khi bắt đầu job (
 
     expect(result).toEqual({ ok: false, reason: 'missing_spirit_stone' })
     expect(bag.getAmount('herb_decade')).toBe(1)
-    expect(bag.getAmount('mortal_wood')).toBe(WOOD_AMOUNT)
+    expect(bag.getAmount('mortal_wood_decade')).toBe(WOOD_AMOUNT)
     expect(system.getJobs()).toHaveLength(0)
   })
 
@@ -319,7 +387,7 @@ describe('AlchemySystem — reserve nguyên liệu ATOMIC khi bắt đầu job (
 
     expect(result).toEqual({ ok: false, reason: 'wrong_herb' })
     expect(bag.getAmount('herb_decade')).toBe(1)
-    expect(bag.getAmount('mortal_wood')).toBe(WOOD_AMOUNT)
+    expect(bag.getAmount('mortal_wood_decade')).toBe(WOOD_AMOUNT)
   })
 
   it('vượt slot tối đa — job_slots_full, không trừ gì', () => {
@@ -359,7 +427,7 @@ describe('AlchemySystem — cancel job (lò đã khởi động, không hoàn tr
     expect(system.cancelJob(jobId)).toBe(true)
     expect(system.getJobs()).toHaveLength(0)
     expect(bag.getAmount('herb_decade')).toBe(3 - 1)
-    expect(bag.getAmount('mortal_wood')).toBe(WOOD_AMOUNT - WOOD_AMOUNT)
+    expect(bag.getAmount('mortal_wood_decade')).toBe(WOOD_AMOUNT - WOOD_AMOUNT)
   })
 
   it('cancel id không tồn tại — trả false, không throw', () => {

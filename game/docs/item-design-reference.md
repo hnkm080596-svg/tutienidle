@@ -280,22 +280,30 @@ giữ level khi đột phá, nâng bằng Gỗ cùng realm + Linh Thạch):
 
 | Nguồn | Ra gì | Dùng vào đâu |
 |---|---|---|
-| **Thanh Vân Lâm** (forest) | Gỗ theo realm (`mortal_wood` / `qi_refining_wood` / `foundation_establishment_wood`) | Nâng building/site, nhiên liệu luyện đan. |
-| **Huyền Thiết Quảng** (mine) | Linh khoáng: 3 realm × 5 phẩm (`<realm>_ore_<phẩm>`) | Tẩy Luyện (1 stack cùng cảnh giới item), nâng building, quy đổi cảnh giới. |
-| **Thanh Vân Động Thiên** (grotto) | Linh thảo: mỗi đan phương có ĐÚNG 1 thảo riêng, 4 biến thể niên đại | Luyện đan (Đan Phòng). |
+| **Thanh Vân Lâm** (forest) | Gỗ theo realm × 5 tuổi (`<realm>_wood_<age>`, gp123 6E C2 — plain wood đã xóa) | Nâng building/site, nhiên liệu luyện đan. |
+| **Huyền Thiết Quảng** (mine) | Linh khoáng: realm × 5 tuổi (`<realm>_ore_<age>`) | Tẩy Luyện (1 stack cùng cảnh giới item), nâng building. |
+| **Thanh Vân Động Thiên** (grotto) | Linh thảo: mỗi đan phương có ĐÚNG 1 thảo riêng, biến thể niên đại | Luyện đan (Đan Phòng). |
+
+- **Quy ước ID thống nhất (gp123 6E task C2, save v57)**: gỗ/khoáng/thảo đều dùng CÙNG trục
+  tuổi 5 bậc `decade`/`century`/`millennium`/`myriad_year`/`thuong_co` (Thập Niên → Thượng Cổ,
+  bảng `MATERIAL_AGE_LABELS`). Hậu tố phẩm cũ (`hoang|huyen|dia|thien|tien`) và plain
+  `<realm>_wood` KHÔNG TỒN TẠI nữa — meta `profession.quality` đổi thành `profession.age`,
+  save cũ bị từ chối (dev phase).
 
 - **Linh Thạch** — material thật trong `MaterialBag` (`SpiritStoneMaterial.ts`), 3 phẩm Hạ/Trung/
   Thượng. Nguồn: Linh Tuyền, quái rơi, quest. Sink: 4 thao tác Khí Đường, luyện đan, thuê worker,
-  Đột Phá Lệnh. Quy đổi **1 chiều lên** `100 Hạ → 1 Trung`, `100 Trung → 1 Thượng`
-  (`GameManager.convertSpiritStonesUp`); phẩm dùng resolve theo realm/enhance level, KHÔNG hard-code
-  Hạ Phẩm.
+  Đột Phá Lệnh. gp123 6G (commit `2c5855c`): quy đổi phẩm **ĐÃ BỊ XÓA** cùng
+  `GameManager.convertSpiritStonesUp`/`convertMaterialTier` — sink thay thế là **thu mua có gate
+  phẩm** (VendorSystem, chỉ bán được material phẩm THẤP HƠN cảnh giới người chơi). Phẩm dùng
+  resolve theo realm/enhance level, KHÔNG hard-code Hạ Phẩm.
 - **Tinh Hoa** (`tinh_hoa_*`) — ra từ **Hóa Luyện** trang bị, mapping theo realm
   (`RefinementBalance.EQUIPMENT_REALM_ESSENCE_MATERIAL`); là nguyên liệu của **Tinh Luyện**.
-- **Quy đổi cảnh giới linh mộc/linh khoáng** — gộp LÊN `10 bậc thấp → 1 bậc cao` theo thang
-  mortal→qi_refining→foundation_establishment (`MaterialTierConversionBalance` +
-  `GameManager.convertMaterialTier`); gỗ giữ dạng `<realm>_wood`, quáng giữ phẩm
-  `<realm>_ore_<phẩm>`; chỉ 1 chiều (giữ sink).
+- **Quy đổi cảnh giới linh mộc/linh khoáng** — **ĐÃ BỊ XÓA** ở gp123 6G (commit `2c5855c`, cùng
+  lượt dọn với quy đổi Linh Thạch): `MaterialTierConversionBalance` +
+  `GameManager.convertMaterialTier` không còn tồn tại. Đường sink duy nhất của gỗ/khoáng dư là
+  **thu mua** (VendorSystem, gate phẩm) + nâng building.
 - **Vật liệu mồ côi đã dọn (2026-08-28)**: 11 material legacy (thanh_linh_moc, xich_dong,
   huyen_thiet, thanh-dong, han-thiet, hoang_kim_linh_thiet, tinh_ngan, quang_sat, phu_chi, ...) đã
-  xóa; drop quái migrate về `qi_refining_ore_hoang`. Invariant test đảm bảo mọi material drop đều có
+  xóa; drop quái migrate về `qi_refining_ore_decade` (trước 6E C2 là `qi_refining_ore_hoang`).
+  Invariant test đảm bảo mọi material drop đều có
   sink (`EnemyDropSinkInvariant.test.ts`).

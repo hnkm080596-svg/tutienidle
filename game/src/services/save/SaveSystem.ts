@@ -193,8 +193,8 @@ export const SAVE_REVISION_KEY = 'tien-hiep-idle-save-revision'
 // vòng kinh tế "Địa Giới → Lâm/Quáng/Động Thiên → Bag"):
 // - materials: map cặp raw/processed cũ về material TRỰC TIẾP mới theo
 //   bảng quy đổi cố định (không parse tên ID ngoài pattern đã chốt):
-//   wood_*_raw/processed → `<realm>_wood`; ore_*_raw/processed →
-//   `<realm>_ore_hoang`; herb_*_raw/processed → thảo Động Thiên decade
+//   wood_*_raw/processed → `<realm>_wood_decade`; ore_*_raw/processed →
+//   `<realm>_ore_decade` (gp123 6E C2: trục tuổi thống nhất); herb_*_raw/processed → thảo Động Thiên decade
 //   đầu tiên của realm tương ứng (không xác định được đan phương cũ).
 // - Phù/Trận legacy KHAI TỬ (§10.1): talismans/formations trong Bag +
 //   socket trên slot quy đổi thành Linh Thạch theo bảng compensation

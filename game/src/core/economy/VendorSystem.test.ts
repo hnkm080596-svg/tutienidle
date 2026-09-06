@@ -18,11 +18,12 @@ import {
 } from '../material/SpiritStoneMaterial'
 import type { Material } from '../material/Material'
 import type { AlchemyRecipe } from '../alchemy/AlchemySystem'
+import type { HerbAge } from '../production/ProductionTypes'
 import { VendorSystem } from './VendorSystem'
 import { REALM_TIERS } from '../realm/RealmTierMap'
 import { LUYEN_KHI_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
 
-function herb(id: string, age: string, realmId = 'mortal'): Material {
+function herb(id: string, age: HerbAge, realmId = 'mortal'): Material {
   return {
     id,
 
@@ -46,7 +47,7 @@ function herb(id: string, age: string, realmId = 'mortal'): Material {
   }
 }
 
-function wood(id: string, realmId: string, quality?: string): Material {
+function wood(id: string, realmId: string, age: HerbAge): Material {
   return {
     id,
 
@@ -56,13 +57,11 @@ function wood(id: string, realmId: string, quality?: string): Material {
 
     sourceType: 'exploration',
 
-    profession: quality
-      ? { resourceKind: 'wood', realmId, quality }
-      : { resourceKind: 'wood', realmId },
+    profession: { resourceKind: 'wood', realmId, age },
   }
 }
 
-function ore(id: string, realmId: string, quality: string): Material {
+function ore(id: string, realmId: string, age: HerbAge): Material {
   return {
     id,
 
@@ -72,7 +71,7 @@ function ore(id: string, realmId: string, quality: string): Material {
 
     sourceType: 'exploration',
 
-    profession: { resourceKind: 'ore', realmId, quality },
+    profession: { resourceKind: 'ore', realmId, age },
   }
 }
 
@@ -86,7 +85,7 @@ function byproduct(id: string, realmId: string): Material {
 
     sourceType: 'building',
 
-    profession: { resourceKind: 'wood', realmId },
+    profession: { resourceKind: 'wood', realmId, age: 'decade' },
   }
 }
 
@@ -120,21 +119,21 @@ describe('VendorBalance — bảng giá Hóa Bán', () => {
     expect(getUnitSellPrice(decade, 'mortal')).toBe(2 * 3)
   })
 
-  it('wood — bảng theo phẩm, nhân realmGrowth theo realm của material', () => {
-    expect(getUnitSellPrice(wood('w_hoang', 'mortal', 'hoang'), 'mortal')).toBe(2)
-    expect(getUnitSellPrice(wood('w_huyen', 'mortal', 'huyen'), 'mortal')).toBe(5)
-    expect(getUnitSellPrice(wood('w_dia', 'mortal', 'dia'), 'mortal')).toBe(12)
-    expect(getUnitSellPrice(wood('w_thien', 'mortal', 'thien'), 'mortal')).toBe(30)
-    expect(getUnitSellPrice(wood('w_tien', 'mortal', 'tien'), 'mortal')).toBe(75)
-    expect(getUnitSellPrice(wood('w_hoang_qr', 'qi_refining', 'hoang'), 'qi_refining')).toBe(6)
+  it('wood — bảng theo tuổi, nhân realmGrowth theo realm của material (gp123 6E C2)', () => {
+    expect(getUnitSellPrice(wood('w_decade', 'mortal', 'decade'), 'mortal')).toBe(2)
+    expect(getUnitSellPrice(wood('w_century', 'mortal', 'century'), 'mortal')).toBe(5)
+    expect(getUnitSellPrice(wood('w_millennium', 'mortal', 'millennium'), 'mortal')).toBe(12)
+    expect(getUnitSellPrice(wood('w_myriad', 'mortal', 'myriad_year'), 'mortal')).toBe(30)
+    expect(getUnitSellPrice(wood('w_thuong_co', 'mortal', 'thuong_co'), 'mortal')).toBe(75)
+    expect(getUnitSellPrice(wood('w_decade_qr', 'qi_refining', 'decade'), 'qi_refining')).toBe(6)
   })
 
-  it('ore — bảng theo phẩm, nhân realmGrowth theo realm của material', () => {
-    expect(getUnitSellPrice(ore('o_hoang', 'mortal', 'hoang'), 'mortal')).toBe(3)
-    expect(getUnitSellPrice(ore('o_huyen', 'mortal', 'huyen'), 'mortal')).toBe(8)
-    expect(getUnitSellPrice(ore('o_dia', 'mortal', 'dia'), 'mortal')).toBe(20)
-    expect(getUnitSellPrice(ore('o_thien', 'mortal', 'thien'), 'mortal')).toBe(50)
-    expect(getUnitSellPrice(ore('o_tien', 'mortal', 'tien'), 'mortal')).toBe(120)
+  it('ore — bảng theo tuổi, nhân realmGrowth theo realm của material (gp123 6E C2)', () => {
+    expect(getUnitSellPrice(ore('o_decade', 'mortal', 'decade'), 'mortal')).toBe(3)
+    expect(getUnitSellPrice(ore('o_century', 'mortal', 'century'), 'mortal')).toBe(8)
+    expect(getUnitSellPrice(ore('o_millennium', 'mortal', 'millennium'), 'mortal')).toBe(20)
+    expect(getUnitSellPrice(ore('o_myriad', 'mortal', 'myriad_year'), 'mortal')).toBe(50)
+    expect(getUnitSellPrice(ore('o_thuong_co', 'mortal', 'thuong_co'), 'mortal')).toBe(120)
   })
 
   it('Luyện Khí Tinh Hoa — giá theo index realm của bối cảnh bán', () => {
@@ -243,13 +242,15 @@ function setupVendor(extraMaterials: readonly Material[] = [], recipes: readonly
 }
 
 describe('VendorSystem — Hóa Bán (economy-fixes-sinks-plan §3.2 B2)', () => {
-  it('atomic round trip: bán herb hạ — trừ nguyên liệu, cộng đúng số Linh Thạch', () => {
+  it('atomic round trip: bán herb hạ (phàm nhân) TỪ luyện khí — trừ nguyên liệu, cộng đúng số Linh Thạch', () => {
+    // gp123 6G: chỉ thu mua phẩm THẤP HƠN cảnh giới người chơi — herb phàm
+    // nhân phải bán từ bối cảnh luyện khí trở lên.
     const { vendor, bag, registry } = setupVendor()
 
     bag.add(registry.get('herb_a_decade'), 10)
     bag.add(SPIRIT_STONE_MATERIAL, 100)
 
-    const result = vendor.sellMaterial(bag, 'herb_a_decade', 10, 'mortal')
+    const result = vendor.sellMaterial(bag, 'herb_a_decade', 10, 'qi_refining')
 
     expect(result.ok).toBe(true)
     expect(result.gained).toBe(20)
@@ -262,7 +263,7 @@ describe('VendorSystem — Hóa Bán (economy-fixes-sinks-plan §3.2 B2)', () =>
 
     bag.add(SPIRIT_STONE_MATERIAL, 100)
 
-    const result = vendor.sellMaterial(bag, 'herb_a_decade', 5, 'mortal')
+    const result = vendor.sellMaterial(bag, 'herb_a_decade', 5, 'qi_refining')
 
     expect(result.ok).toBe(false)
     expect(result.reason).toBe('invalid_amount')
@@ -276,7 +277,7 @@ describe('VendorSystem — Hóa Bán (economy-fixes-sinks-plan §3.2 B2)', () =>
     bag.add(SPIRIT_STONE_MATERIAL, 100)
 
     for (const amount of [0, -1, 1.5]) {
-      const result = vendor.sellMaterial(bag, 'herb_a_decade', amount, 'mortal')
+      const result = vendor.sellMaterial(bag, 'herb_a_decade', amount, 'qi_refining')
 
       expect(result.ok).toBe(false)
       expect(result.reason).toBe('invalid_amount')
@@ -299,7 +300,7 @@ describe('VendorSystem — Hóa Bán (economy-fixes-sinks-plan §3.2 B2)', () =>
   it('material không tồn tại trong registry → unknown_material', () => {
     const { vendor, bag } = setupVendor()
 
-    const result = vendor.sellMaterial(bag, 'ghost_material', 1, 'mortal')
+    const result = vendor.sellMaterial(bag, 'ghost_material', 1, 'qi_refining')
 
     expect(result.ok).toBe(false)
     expect(result.reason).toBe('unknown_material')
@@ -326,13 +327,13 @@ describe('VendorSystem — Hóa Bán (economy-fixes-sinks-plan §3.2 B2)', () =>
 
     bag.add(soloHerb, 10)
 
-    // Bán 9 (còn 1) — vẫn ổn.
-    const partial = vendor.sellMaterial(bag, 'solo_herb_decade', 9, 'mortal')
+    // Bán 9 (còn 1) — vẫn ổn (phẩm thảo phàm nhân < cảnh giới luyện khí).
+    const partial = vendor.sellMaterial(bag, 'solo_herb_decade', 9, 'qi_refining')
 
     expect(partial.ok).toBe(true)
 
     // Bán nốt 1 → bag trống thảo duy nhất → từ chối.
-    const final = vendor.sellMaterial(bag, 'solo_herb_decade', 1, 'mortal')
+    const final = vendor.sellMaterial(bag, 'solo_herb_decade', 1, 'qi_refining')
 
     expect(final.ok).toBe(false)
     expect(final.reason).toBe('sole_recipe_ingredient')
@@ -347,22 +348,22 @@ describe('VendorSystem — Hóa Bán (economy-fixes-sinks-plan §3.2 B2)', () =>
     bag.add(registry.get('herb_a_decade'), 10)
     bag.add(SPIRIT_STONE_MATERIAL, 100)
 
-    const result = vendor.sellMaterial(bag, 'herb_a_decade', 10, 'mortal')
+    const result = vendor.sellMaterial(bag, 'herb_a_decade', 10, 'qi_refining')
 
     expect(result.ok).toBe(true)
     expect(bag.getAmount('herb_a_decade')).toBe(0)
   })
 
-  it('bán herb qi_refining (tier 2) — nhận Linh Thạch Hạ (factor 1)', () => {
-    // Herb qi_refining decade: 2 × 3 = 6 hạ/đơn vị. 100 đơn vị = 600 hạ,
-    // tier < 4 → factor 1 → 600 Hạ.
+  it('bán herb luyện khí (bát phẩm) TỪ trúc cơ — nhận Linh Thạch Hạ (factor 1)', () => {
+    // Herb luyện khí decade: 2 × 3 = 6 hạ/đơn vị. 100 đơn vị = 600 hạ,
+    // tier người chơi (3) < 4 → factor 1 → 600 Hạ.
     const qiHerb = herb('h_qi_decade', 'decade', 'qi_refining')
 
     const { vendor, bag, registry } = setupVendor([qiHerb])
 
     bag.add(qiHerb, 100)
 
-    const result = vendor.sellMaterial(bag, 'h_qi_decade', 100, 'qi_refining')
+    const result = vendor.sellMaterial(bag, 'h_qi_decade', 100, 'foundation_establishment')
 
     expect(result.ok).toBe(true)
     expect(result.gained).toBe(600)
@@ -370,8 +371,8 @@ describe('VendorSystem — Hóa Bán (economy-fixes-sinks-plan §3.2 B2)', () =>
     expect(bag.getAmount(SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID)).toBe(0)
   })
 
-  it('bán herb Kim Đan (tier 4) — nhận Linh Thạch Trung (factor 100)', () => {
-    // Herb golden_core decade: 2 × 27 = 54 hạ/đơn vị. 100 đơn vị = 5400 hạ
+  it('bán herb kim đan (lục phẩm) TỪ nguyên anh — nhận Linh Thạch Trung (factor 100)', () => {
+    // Herb kim đan decade: 2 × 27 = 54 hạ/đơn vị. 100 đơn vị = 5400 hạ
     // / 100 = 54 Trung.
     const gcHerb = herb('h_gc_decade', 'decade', 'golden_core')
 
@@ -379,28 +380,126 @@ describe('VendorSystem — Hóa Bán (economy-fixes-sinks-plan §3.2 B2)', () =>
 
     bag.add(gcHerb, 100)
 
-    const result = vendor.sellMaterial(bag, 'h_gc_decade', 100, 'golden_core')
+    const result = vendor.sellMaterial(bag, 'h_gc_decade', 100, 'nascent_soul')
 
     expect(result.ok).toBe(true)
     expect(result.gained).toBe(54)
     expect(bag.getAmount(SPIRIT_STONE_TRUNG_PHAM_MATERIAL_ID)).toBe(54)
   })
 
-  it('bán herb Vô Lượng (tier 7) — nhận Linh Thạch Thượng (factor 30 000)', () => {
-    // Herb void_refinement decade: 2 × 729 = 1458 hạ/đơn vị. 100 000 đơn vị
-    // = 145 800 000 hạ / 30 000 = 4860 Thượng. Nhưng stackLimit mặc định
-    // 1000, nên add 1000 để test đường code factor.
+  it('bán herb vô lượng (tam phẩm) TỪ hợp thể — nhận Linh Thạch Thượng (factor 30 000)', () => {
+    // Herb vô lượng decade: 2 × 729 = 1458 hạ/đơn vị. 1000 đơn vị =
+    // 1 458 000 hạ / 30 000 = 48 Thượng. StackLimit mặc định 1000 nên add
+    // 1000 để test đường code factor.
     const vrHerb = herb('h_vr_decade', 'decade', 'void_refinement')
 
     const { vendor, bag, registry } = setupVendor([vrHerb])
 
     bag.add(vrHerb, 1000)
 
-    const result = vendor.sellMaterial(bag, 'h_vr_decade', 1000, 'void_refinement')
+    const result = vendor.sellMaterial(bag, 'h_vr_decade', 1000, 'body_integration')
 
     expect(result.ok).toBe(true)
     expect(result.gained).toBe(48)
     expect(bag.getAmount(SPIRIT_STONE_THUONG_PHAM_MATERIAL_ID)).toBe(48)
+  })
+
+  // gp123 6G — gate thu mua theo phẩm: chỉ material phẩm NGHỀ thấp hơn
+  // cảnh giới người chơi mới bán được. Phẩm suy từ profession.realmId
+  // (nguồn sự thật PROFESSION_GRADE_BY_REALM) — herb/gỗ/khoáng đều có
+  // meta nghề; essence/byproduct không có meta đủ tốt → không bán được.
+  describe('gp123 6G — gate phẩm theo cảnh giới người chơi', () => {
+    it('phẩm THẤP HƠN cảnh giới người chơi → bán được, giá đúng bảng', () => {
+      const { vendor, bag, registry } = setupVendor()
+
+      bag.add(registry.get('herb_a_decade'), 10)
+
+      const result = vendor.sellMaterial(bag, 'herb_a_decade', 10, 'qi_refining')
+
+      expect(result.ok).toBe(true)
+
+      // 10 × 2 hạ (bảng, không nhân growth — giá là thuộc tính material).
+      expect(result.gained).toBe(20)
+      expect(bag.getAmount('herb_a_decade')).toBe(0)
+      expect(bag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(20)
+    })
+
+    it('phẩm BẰNG cảnh giới người chơi → từ chối grade_not_below', () => {
+      const { vendor, bag, registry } = setupVendor()
+
+      bag.add(registry.get('herb_a_decade'), 10)
+
+      const result = vendor.sellMaterial(bag, 'herb_a_decade', 10, 'mortal')
+
+      expect(result.ok).toBe(false)
+      expect(result.reason).toBe('grade_not_below')
+      expect(bag.getAmount('herb_a_decade')).toBe(10)
+      expect(bag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(0)
+    })
+
+    it('phẩm CAO HƠN cảnh giới người chơi → từ chối grade_not_below', () => {
+      const qrHerb = herb('h_qi_decade', 'decade', 'qi_refining')
+
+      const { vendor, bag } = setupVendor([qrHerb])
+
+      bag.add(qrHerb, 10)
+
+      const result = vendor.sellMaterial(bag, 'h_qi_decade', 10, 'mortal')
+
+      expect(result.ok).toBe(false)
+      expect(result.reason).toBe('grade_not_below')
+      expect(bag.getAmount('h_qi_decade')).toBe(10)
+    })
+
+    // Lọc rows qua getVendorSellableRows(bag, realm) nằm ở GameManager
+    // (VendorSystem chỉ có getUnitSellPrice đã gate) — xem
+    // GameManager.vendor.test.ts 'người chơi luyện khí KHÔNG thấy...'.
+
+    it('essence/byproduct không có meta nghề → không bán được (không suy được phẩm)', () => {
+      const essence: Material = {
+        id: 'luyen_khi_tinh_hoa',
+        name: 'Luyện Khí Tinh Hoa',
+        category: 'essence',
+        sourceType: 'building',
+      }
+
+      const { vendor, bag } = setupVendor([essence])
+
+      bag.add(essence, 10)
+
+      const result = vendor.sellMaterial(bag, 'luyen_khi_tinh_hoa', 10, 'qi_refining')
+
+      expect(result.ok).toBe(false)
+      expect(result.reason).toBe('grade_not_below')
+    })
+
+    it('wood/khoáng cũng chịu gate — gỗ phàm nhân bán được từ luyện khí', () => {
+      const mortalWood = wood('mortal_wood_decade', 'mortal', 'decade')
+
+      const { vendor, bag, registry } = setupVendor([mortalWood])
+
+      bag.add(registry.get('mortal_wood_decade'), 10)
+
+      const result = vendor.sellMaterial(bag, 'mortal_wood_decade', 10, 'qi_refining')
+
+      expect(result.ok).toBe(true)
+
+      // Gỗ thập niên: 2 hạ/đơn vị × 10 = 20 hạ.
+      expect(result.gained).toBe(20)
+    })
+
+    it('wood/khoáng cũng chịu gate — gỗ phàm nhân BẰNG cảnh phàm nhân → từ chối', () => {
+      const mortalWood = wood('mortal_wood_decade', 'mortal', 'decade')
+
+      const { vendor, bag, registry } = setupVendor([mortalWood])
+
+      bag.add(registry.get('mortal_wood_decade'), 10)
+
+      const result = vendor.sellMaterial(bag, 'mortal_wood_decade', 10, 'mortal')
+
+      expect(result.ok).toBe(false)
+      expect(result.reason).toBe('grade_not_below')
+    })
   })
 
   it('giá herb tăng theo tuổi và realm tier — sanity bảng', () => {
@@ -421,4 +520,20 @@ describe('VendorSystem — Hóa Bán (economy-fixes-sinks-plan §3.2 B2)', () =>
       previous = 0
     }
   })
+
+  it('getUnitSellPrice (system) gate theo cảnh giới người chơi', () => {
+    // Phẩm material (phàm nhân) < người chơi (luyện khí) → có giá.
+    expect(vendorSystemForGate().getUnitSellPrice('herb_a_decade', 'qi_refining')).toBeDefined()
+
+    // Phẩm bằng → undefined (bị gate loại khỏi rows).
+    expect(vendorSystemForGate().getUnitSellPrice('herb_a_decade', 'mortal')).toBeUndefined()
+  })
 })
+
+function vendorSystemForGate(): VendorSystem {
+  const registry = new MaterialRegistry()
+
+  registry.register(herb('herb_a_decade', 'decade'))
+
+  return new VendorSystem(registry, [])
+}

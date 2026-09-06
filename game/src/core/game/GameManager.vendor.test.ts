@@ -45,8 +45,11 @@ function setup(recipes: AlchemyRecipe[] = []) {
 }
 
 describe('GameManager.sellMaterialToVendor — economy-fixes-sinks-plan §3.2 B2', () => {
-  it('bán herb — trừ nguyên liệu, cộng Linh Thạch Hạ đúng giá', () => {
+  it('bán herb phẩm thấp hơn cảnh giới — trừ nguyên liệu, cộng Linh Thạch Hạ đúng giá', () => {
     const { gameManager, player } = setup()
+
+    // gp123 6G: người chơi luyện khí (bát phẩm) bán herb phàm nhân (cửu phẩm).
+    player.realmId = 'qi_refining'
 
     gameManager.materialBag.add(VENDOR_HERB, 10)
 
@@ -56,6 +59,58 @@ describe('GameManager.sellMaterialToVendor — economy-fixes-sinks-plan §3.2 B2
     expect(result.gained).toBe(20)
     expect(gameManager.materialBag.getAmount('vendor_test_herb_decade')).toBe(0)
     expect(gameManager.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(20)
+  })
+
+  it('người chơi phàm nhân bán herb phàm nhân (phẩm BẰNG) → grade_not_below', () => {
+    const { gameManager, player } = setup()
+
+    gameManager.materialBag.add(VENDOR_HERB, 10)
+
+    const result = gameManager.sellMaterialToVendor('vendor_test_herb_decade', 10, player)
+
+    expect(result.ok).toBe(false)
+    expect(result.reason).toBe('grade_not_below')
+    expect(gameManager.materialBag.getAmount('vendor_test_herb_decade')).toBe(10)
+    expect(gameManager.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(0)
+  })
+
+  it('người chơi luyện khí KHÔNG thấy herb kim đan trong getVendorSellableRows', () => {
+    const { gameManager, player } = setup()
+
+    player.realmId = 'qi_refining'
+
+    const gcHerb: Material = {
+      ...VENDOR_HERB,
+      id: 'vendor_test_herb_gc_decade',
+      profession: {
+        resourceKind: 'herb',
+
+        realmId: 'golden_core',
+
+        age: 'decade',
+
+        pillRecipeId: 'alchemy_vendor_test_golden_core',
+
+        herbBaseId: 'vendor_test_herb_gc',
+      },
+    }
+
+    gameManager.registerMaterials([gcHerb])
+
+    gameManager.materialBag.add(VENDOR_HERB, 5)
+    gameManager.materialBag.add(gcHerb, 5)
+
+    const rows = gameManager.getVendorSellableRows(player)
+
+    expect(rows.map((row) => row.materialId)).toEqual(['vendor_test_herb_decade'])
+  })
+
+  it('người chơi phàm nhân → getVendorSellableRows rỗng (không có phẩm thấp hơn Cửu Phẩm)', () => {
+    const { gameManager, player } = setup()
+
+    gameManager.materialBag.add(VENDOR_HERB, 5)
+
+    expect(gameManager.getVendorSellableRows(player)).toEqual([])
   })
 
   it('thảo DUY NHẤT của đan phương đã đăng ký — bán hết bị sole_recipe_ingredient chặn', () => {
@@ -80,6 +135,8 @@ describe('GameManager.sellMaterialToVendor — economy-fixes-sinks-plan §3.2 B2
         baseDurationSeconds: 10,
       },
     ])
+
+    player.realmId = 'qi_refining'
 
     gameManager.materialBag.add(VENDOR_HERB, 10)
 

@@ -1,6 +1,7 @@
 // Alchemy (2026-08-25, resource-professions-rework plan §8) — Đan Phòng
-// mới: mỗi đan phương nhận ĐÚng một Linh Thảo riêng (có niên đại) +
+// mới: mỗi đan phương nhận ĐÚNG một Linh Thảo riêng (có niên đại) +
 // Gỗ nhiên liệu + Linh Thạch. Không còn Recipe/CraftingSystem cho đan.
+// gp123 6E: nhiên liệu phải CÙNG realm + CÙNG age với thảo được chọn.
 //
 // §8.2: snapshot recipe/nguyên liệu/level phòng lúc bắt đầu; nguyên liệu
 // reserve/trừ atomically lúc start để không dùng một stack cho nhiều job.
@@ -10,8 +11,7 @@
 import type { PillBag } from '../pill/PillBag'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { MaterialRegistry } from '../material/MaterialRegistry'
-import { SUPPORTED_PROFESSION_REALMS } from '../profession/ProfessionMaterial'
-import { REALM_TIERS } from '../realm/RealmTierMap'
+import type { HerbAge } from '../production/ProductionTypes'
 import { HERB_AGE_BASE_SUCCESS_PERCENT } from '../production/ProductionBalance'
 import { mulberry32 } from '../production/ProductionBalance'
 
@@ -20,8 +20,8 @@ export interface AlchemyHerbVariant {
   /** Material id đầy đủ (kèm hậu tố niên đại hoặc biến thể legacy). */
   materialId: string
 
-  /** Khóa tra HERB_AGE_BASE_SUCCESS_PERCENT. */
-  age: 'decade' | 'century' | 'millennium' | 'myriad_year'
+  /** Khóa tra HERB_AGE_BASE_SUCCESS_PERCENT — trục HerbAge 5 bậc (6E C1). */
+  age: HerbAge
 
   /** Nhãn hiển thị biến thể (vd "Bách Niên"). */
   label: string
@@ -45,7 +45,10 @@ export interface AlchemyRecipe {
 
   herbAmount: number
 
-  /** Realm TỐI THIỂU của gỗ nhiên liệu — gỗ cao hơn KHÔNG tăng tỷ lệ (MVP §8.1). */
+  /**
+   * Realm của gỗ nhiên liệu (gp123 6E) — gỗ phải CÙNG realm này VÀ
+   * CÙNG age với thảo được chọn (resolveFuelWood).
+   */
   fuelWoodRealmId: string
 
   fuelWoodAmount: number
@@ -144,41 +147,21 @@ function nextJobId(): string {
 }
 
 /**
- * Chọn stack gỗ nhiên liệu rẻ nhất đạt realm tối thiểu (realm index
- * tăng dần theo SUPPORTED_PROFESSION_REALMS).
+ * Nhiên liệu lò (gp123 6E — design rule): gỗ phải CÙNG realm với recipe
+ * VÀ CÙNG age với thảo được chọn — KHÔNG cheapest-first scan, không
+ * xuyên realm, không thay thế age. Chỉ chấp nhận
+ * `<realmId>_wood_<requiredAge>`; thiếu → null (job từ chối
+ * `missing_fuel_wood`).
  */
 export function resolveFuelWood(
   bag: MaterialBag,
-  minRealmId: string,
+  realmId: string,
   amount: number,
+  requiredAge: AlchemyHerbVariant['age'],
 ): string | null {
-  const minIndex = SUPPORTED_PROFESSION_REALMS.indexOf(minRealmId)
-  const realmIndex = REALM_TIERS.findIndex(realmId => realmId === minRealmId)
+  const candidate = `${realmId}_wood_${requiredAge}`
 
-  if (minIndex < 0 && realmIndex < 0) {
-    return null
-  }
-
-  if (realmIndex >= SUPPORTED_PROFESSION_REALMS.length) {
-    const qualities = ['hoang', 'huyen', 'dia', 'thien', 'tien'] as const
-    for (let index = realmIndex; index < REALM_TIERS.length; index++) {
-      for (const quality of qualities) {
-        const candidate = `${REALM_TIERS[index]}_wood_${quality}`
-        if (bag.has(candidate, amount)) return candidate
-      }
-    }
-    return null
-  }
-
-  for (let index = minIndex; index < SUPPORTED_PROFESSION_REALMS.length; index++) {
-    const candidate = `${SUPPORTED_PROFESSION_REALMS[index]}_wood`
-
-    if (bag.has(candidate, amount)) {
-      return candidate
-    }
-  }
-
-  return null
+  return bag.has(candidate, amount) ? candidate : null
 }
 
 export class AlchemySystem {
@@ -234,7 +217,9 @@ export class AlchemySystem {
       return { ok: false, reason: 'wrong_herb' }
     }
 
-    const woodId = resolveFuelWood(bag, recipe.fuelWoodRealmId, recipe.fuelWoodAmount)
+    // 6E — nhiên liệu CÙNG age với thảo đã chọn (variant luôn có age
+    // theo type — post-C2 mọi thảo đều `profession.age`).
+    const woodId = resolveFuelWood(bag, recipe.fuelWoodRealmId, recipe.fuelWoodAmount, variant.age)
 
     if (!woodId) {
       return { ok: false, reason: 'missing_fuel_wood' }

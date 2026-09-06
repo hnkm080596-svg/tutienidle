@@ -3,7 +3,9 @@ import { SPIRIT_STONE_MATERIALS } from '@/core/material/SpiritStoneMaterial'
 import type { ProfessionMaterialMeta } from '@/core/profession/ProfessionMaterial'
 import { LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
 import { REALM_TIERS } from '@/core/realm/RealmTierMap'
+import { REALMS } from '@/data/realms/realm'
 import { PILL_FAMILIES } from '@/data/pill/PillFamilies'
+import type { HerbAge } from '@/core/production/ProductionTypes'
 
 // sourceType (MASTER SPEC Mục II-V) — nhãn nguồn CHÍNH, không ràng
 // buộc cứng. Nhóm nguyên liệu tự nhiên age-tiered (Linh Thảo/Linh Mộc/
@@ -120,47 +122,27 @@ const legacyMaterials: Material[] = [
 // ============================================================
 // NGUYÊN LIỆU NGHỀ MỚI (2026-08-25, resource-professions-rework plan
 // §5/§6): KHÔNG còn cặp raw|processed (plan §2). Ba nhóm trực tiếp:
-// - Lâm: 3 gỗ `<realm>_wood` — xây/nâng công trình + nhiên liệu đan lò.
-// - Quáng: `<realm>_ore_<quality>` — sink Khí Đường (Cường Hóa/Tẩy
-//   Luyện), phẩm là metadata material.
-// - Động Thiên: mỗi đan phương một thảo riêng × 4 niên đại
+// - Lâm: gỗ `<realm>_wood_<age>` — xây/nâng công trình + nhiên liệu
+//   đan lò (gp123 6E C2: plain `<realm>_wood` đã bị XÓA).
+// - Quáng: `<realm>_ore_<age>` — sink Khí Đường (Cường Hóa/Tẩy Luyện).
+// - Động Thiên: mỗi đan phương một thảo riêng × 5 niên đại
 //   `<herbBase>_<age>` — sink Đan Phòng.
-// Tất cả sinh bằng generator để tránh author tay 66 entry lệch chuẩn;
+// Tất cả sinh bằng generator để tránh author tay entry lệch chuẩn;
 // tên hiển thị đặt TRẦN ở đây (không parse từ id).
 // ============================================================
 
-interface ProfessionRealmCell {
-  realmId: string
-
-  realmLabel: string
-}
-
-const PROFESSION_REALM_CELLS: readonly ProfessionRealmCell[] = [
-  { realmId: 'mortal', realmLabel: 'Phàm Nhân' },
-  { realmId: 'qi_refining', realmLabel: 'Luyện Khí' },
-  { realmId: 'foundation_establishment', realmLabel: 'Trúc Cơ' },
-]
-
 // Nhãn "chất" thống nhất theo hệ TUỔI (2026-08-30, spec
-// 2026-08-30-unify-material-quality-names-design.md): Gỗ/Khoáng bỏ nhãn
-// Hoàng/Huyền/Địa/Thiên/Tiên — dùng cùng hệ tuổi với Linh Thảo. ID
-// quality (`hoang`..`tien`) GIỮ NGUYÊN (save/recipe/quy đổi tier không
-// đổi); chỉ nhãn hiển thị thay. Bậc 5 mở rộng "Thượng Cổ".
-const ORE_QUALITY_LABELS: Record<string, string> = {
-  hoang: 'Thập Niên',
-  huyen: 'Bách Niên',
-  dia: 'Thiên Niên',
-  thien: 'Vạn Niên',
-  tien: 'Thượng Cổ',
-}
-
-/** Gỗ thường Lâm (không phẩm) — mức tuổi thấp nhất của hệ thống. */
-const PLAIN_WOOD_AGE_LABEL = 'Thập Niên'
-
-function professionResourceName(realmId: string, kind: 'Linh Mộc' | 'Linh Khoáng', ageLabel?: string): string {
-  const suffix = ageLabel ? ` ${ageLabel}` : ''
-
-  return `${suffix} ${kind}`.trim()
+// 2026-08-30-unify-material-quality-names-design.md + gp123 6E task C2):
+// Gỗ/Khoáng dùng CÙNG trục tuổi với Linh Thảo — id `<realm>_wood_<age>` /
+// `<realm>_ore_<age>` (age decade..thuong_co). Bảng này là NGUỒN SỰ
+// THẬT DUY NHẤT của nhãn 5 bậc tuổi, dùng chung cho thảo/gỗ/khoáng.
+// Bảng phẩm cũ ORE_QUALITY_LABELS (hoang..tien) đã bị xóa cùng id phẩm cũ.
+export const MATERIAL_AGE_LABELS: Record<HerbAge, string> = {
+  decade: 'Thập Niên',
+  century: 'Bách Niên',
+  millennium: 'Thiên Niên',
+  myriad_year: 'Vạn Niên',
+  thuong_co: 'Thượng Cổ',
 }
 
 const HERB_AGE_YEARS: Record<string, number> = {
@@ -168,73 +150,52 @@ const HERB_AGE_YEARS: Record<string, number> = {
   century: 100,
   millennium: 1000,
   myriad_year: 10000,
+  thuong_co: 100000,
 }
+
+/** Nhãn realm (Phàm Nhân..Độ Kiếp) — tên material ghép nhãn tuổi + realm. */
+const REALM_LABEL_BY_ID: Readonly<Record<string, string>> = Object.fromEntries(
+  REALMS.map((realm) => [realm.id, realm.name]),
+)
 
 function buildProfessionMaterials(): Material[] {
   const list: Material[] = []
 
-  // ---- Lâm: 3 gỗ ----
-  for (const cell of PROFESSION_REALM_CELLS) {
-    list.push({
-      id: `${cell.realmId}_wood`,
-      name: professionResourceName(cell.realmId, 'Linh Mộc', PLAIN_WOOD_AGE_LABEL),
-      category: 'wood',
-      element: 'wood',
-      sourceType: 'exploration',
-      description: `Linh mộc ${cell.realmLabel} của Thanh Vân Lâm — xây công trình và làm nhiên liệu đan lò.`,
-      profession: {
-        resourceKind: 'wood',
-        realmId: cell.realmId,
-      },
-    })
-  }
+  // gp123 6E (task C2): trục tuổi thống nhất 5 bậc cho thảo/gỗ/khoáng —
+  // id `<realm>_wood_<age>` / `<realm>_ore_<age>`, plain wood XÓA hẳn.
+  // Tên hiển thị = "<Tuổi> Linh Mộc/Khoáng <Realm>" (đủ info khi tìm kiếm).
+  const ages = ['decade', 'century', 'millennium', 'myriad_year', 'thuong_co'] as const
 
-  // Scaffold 9 cảnh giới × 5 phẩm Linh Mộc. Các tier Kim Đan+ là data
-  // placeholder để building level 4-9 có cost hợp lệ trong registry.
+  // ---- Lâm: gỗ 9 realm × 5 tuổi ----
+  // Các tier Kim Đan+ là data placeholder để building level 4-9 có cost
+  // hợp lệ trong registry.
   for (const realmId of REALM_TIERS) {
-    for (const quality of ['hoang', 'huyen', 'dia', 'thien', 'tien']) {
+    for (const age of ages) {
       list.push({
-        id: `${realmId}_wood_${quality}`,
-        name: professionResourceName(realmId, 'Linh Mộc', ORE_QUALITY_LABELS[quality]),
+        id: `${realmId}_wood_${age}`,
+        name: `${MATERIAL_AGE_LABELS[age]} Linh Mộc ${REALM_LABEL_BY_ID[realmId] ?? realmId}`,
         category: 'wood',
         element: 'wood',
         sourceType: 'exploration',
+        years: HERB_AGE_YEARS[age],
         description: 'Linh mộc phân phẩm dùng cho xây dựng động phủ.',
-        profession: { resourceKind: 'wood', realmId, quality },
+        profession: { resourceKind: 'wood', realmId, age },
       })
     }
   }
 
-  // Bổ sung scaffold Linh Khoáng cho sáu cảnh giới chưa có production thật.
-  for (const realmId of REALM_TIERS.slice(3)) {
-    for (const quality of ['hoang', 'huyen', 'dia', 'thien', 'tien']) {
+  // ---- Quáng: khoáng 9 realm × 5 tuổi ----
+  for (const realmId of REALM_TIERS) {
+    for (const age of ages) {
       list.push({
-        id: `${realmId}_ore_${quality}`,
-        name: professionResourceName(realmId, 'Linh Khoáng', ORE_QUALITY_LABELS[quality]),
+        id: `${realmId}_ore_${age}`,
+        name: `${MATERIAL_AGE_LABELS[age]} Linh Khoáng ${REALM_LABEL_BY_ID[realmId] ?? realmId}`,
         category: 'ore',
         element: 'metal',
         sourceType: 'exploration',
+        years: HERB_AGE_YEARS[age],
         description: 'Linh khoáng phân phẩm dùng cho luyện khí và xây dựng.',
-        profession: { resourceKind: 'ore', realmId, quality },
-      })
-    }
-  }
-
-  // ---- Quáng: 3 tier × 5 phẩm ----
-  for (const cell of PROFESSION_REALM_CELLS) {
-    for (const quality of ['hoang', 'huyen', 'dia', 'thien', 'tien']) {
-      list.push({
-        id: `${cell.realmId}_ore_${quality}`,
-        name: professionResourceName(cell.realmId, 'Linh Khoáng', ORE_QUALITY_LABELS[quality]),
-        category: 'ore',
-        element: 'metal',
-        sourceType: 'exploration',
-        description: `Quảng thạch ${ORE_QUALITY_LABELS[quality]} của ${cell.realmLabel} — nguyên liệu Khí Đường.`,
-        profession: {
-          resourceKind: 'ore',
-          realmId: cell.realmId,
-          quality,
-        },
+        profession: { resourceKind: 'ore', realmId, age },
       })
     }
   }
@@ -243,16 +204,12 @@ function buildProfessionMaterials(): Material[] {
 }
 
 function buildReworkPillHerbs(): Material[] {
-  const ages = ['decade', 'century', 'millennium', 'myriad_year'] as const
+  // gp123 6E (task C1): trục tuổi 5 bậc — thuong_co mở bậc "Thượng Cổ".
+  const ages = ['decade', 'century', 'millennium', 'myriad_year', 'thuong_co'] as const
 
-  // Nhãn tuổi thảo — dùng chung bảng nhãn chất (decade..myriad_year trùng
-  // key với 4 bậc đầu của gỗ/khoáng).
-  const HERB_AGE_LABELS: Record<string, string> = {
-    decade: ORE_QUALITY_LABELS.decade!,
-    century: ORE_QUALITY_LABELS.century!,
-    millennium: ORE_QUALITY_LABELS.millennium!,
-    myriad_year: ORE_QUALITY_LABELS.thien!,
-  }
+  // Nhãn tuổi thảo — dùng chung MATERIAL_AGE_LABELS (gp123 6E C2: bảng
+  // nhãn 5 bậc duy nhất cho thảo/gỗ/khoáng).
+  const HERB_AGE_LABELS = MATERIAL_AGE_LABELS
 
   return REALM_TIERS.flatMap((realmId) =>
     PILL_FAMILIES.flatMap((family) => {

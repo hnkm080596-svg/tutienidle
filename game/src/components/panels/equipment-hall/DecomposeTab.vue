@@ -1,9 +1,11 @@
 ﻿<script setup lang="ts">
 // Task 14-UI (rework P4, 2026-09-01, spec §5.6) — Tab Phân Giải:
 // settings phân giải Linh Khoáng → Luyện Khí Tinh Hoa.
-// - gradeFilter / qualityFilter / worker slider → DecomposeSystem
-// - Output estimate: base(grade all→Cửu 1.0) × chất × workers (ước lượng
+// - gradeFilter / ageFilter / worker slider → DecomposeSystem
+// - Output estimate: base(grade all→Cửu 1.0) × tuổi × workers (ước lượng
 //   hiển thị — system tính chính xác theo tồn kho lúc tick)
+// gp123 6E (task C2): filter "chất" cũ (hoang..tien) đổi thành filter
+// TUỔI (decade..thuong_co) theo trục tuổi thống nhất.
 // Flexible rule (AGENTS.md): grid auto-fit, không hardcode px.
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -13,7 +15,8 @@ import {
   PROFESSION_GRADE_ORDER,
   PROFESSION_GRADE_NAMES,
 } from '@/core/profession/ProfessionGrade'
-import { ITEM_QUALITY_ORDER, ITEM_QUALITY_LABELS } from '@/core/item/ItemQuality'
+import { HERB_AGES } from '@/core/production/ProductionTypes'
+import { MATERIAL_AGE_LABELS } from '@/data/materials/materials'
 
 const { t } = useI18n()
 const gameManager = useGameManager()
@@ -35,22 +38,22 @@ function applySetting(patch: Partial<DecomposeSettings>) {
 const PREVIEW_BASE_BY_ALL = 1
 
 const estimate = computed(() => {
-  const { qualityFilter, workers } = settingsMirror.value
+  const { ageFilter, workers } = settingsMirror.value
 
-  const qualityIndex =
-    qualityFilter === 'all' ? 0 : ITEM_QUALITY_ORDER.indexOf(qualityFilter)
+  const ageIndex =
+    ageFilter === 'all' ? 0 : HERB_AGES.indexOf(ageFilter)
 
-  const qualityFactor = 2 ** Math.max(0, qualityIndex)
+  const ageFactor = 2 ** Math.max(0, ageIndex)
 
-  return PREVIEW_BASE_BY_ALL * qualityFactor * workers
+  return PREVIEW_BASE_BY_ALL * ageFactor * workers
 })
 
 function onGradeChange(event: Event) {
   applySetting({ gradeFilter: (event.target as HTMLSelectElement).value as never })
 }
 
-function onQualityChange(event: Event) {
-  applySetting({ qualityFilter: (event.target as HTMLSelectElement).value as never })
+function onAgeChange(event: Event) {
+  applySetting({ ageFilter: (event.target as HTMLSelectElement).value as never })
 }
 
 function onWorkersInput(event: Event) {
@@ -74,13 +77,13 @@ function onWorkersInput(event: Event) {
       </label>
 
       <label class="decompose-tab__filter">
-        <span>{{ t('panels.decompose.labels.qualityFilter') }}</span>
+        <span>{{ t('panels.decompose.labels.ageFilter') }}</span>
 
-        <select :value="settingsMirror.qualityFilter" @change="onQualityChange">
-          <option value="all">{{ t('panels.decompose.select.allQualities') }}</option>
+        <select :value="settingsMirror.ageFilter" @change="onAgeChange">
+          <option value="all">{{ t('panels.decompose.select.allAges') }}</option>
 
-          <option v-for="quality in ITEM_QUALITY_ORDER" :key="quality" :value="quality">
-            {{ ITEM_QUALITY_LABELS[quality] }}
+          <option v-for="age in HERB_AGES" :key="age" :value="age">
+            {{ MATERIAL_AGE_LABELS[age] }}
           </option>
         </select>
       </label>

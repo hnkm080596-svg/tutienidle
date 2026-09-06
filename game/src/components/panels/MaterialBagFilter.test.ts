@@ -18,48 +18,52 @@ import {
 } from '@/composables/useGameState'
 import { useUiStore } from '@/stores/ui'
 import type { Material } from '@/core/material/Material'
+import type { HerbAge } from '@/core/production/ProductionTypes'
 import { vTooltip } from '@/directives/tooltip'
 import { i18n } from '@/i18n'
 import { LUYEN_KHI_TINH_HOA_ID } from '@/core/equipment/TinhHoaMaterial'
 
 const WOOD: Material = {
-  id: 'mortal_wood',
+  id: 'mortal_wood_decade',
   name: 'Thập Niên Linh Mộc',
   category: 'wood',
   sourceType: 'exploration',
 }
 
 const ORE: Material = {
-  id: 'mortal_ore_hoang',
+  id: 'mortal_ore_decade',
   name: 'Thập Niên Linh Khoáng',
   category: 'ore',
   sourceType: 'exploration',
 }
 
-// Quáng thật (có profession meta) × 2 phẩm cùng realm — nhãn khác nhau
+// Quáng thật (có profession meta) × 2 tuổi cùng realm — nhãn khác nhau
 // ("Thập Niên"/"Bách Niên" Linh Khoáng) nhưng vẫn gộp về 1 ô như họ
 // thảo theo resourceKind+realmId (useBagFilter.familyKeyFor).
-function ore(quality: string): Material {
+function ore(age: HerbAge): Material {
   return {
-    id: `mortal_ore_${quality}`,
-    name: `${QUALITY_NAME[quality]} Linh Khoáng`,
+    id: `mortal_ore_${age}`,
+    name: `${AGE_NAME[age]} Linh Khoáng`,
     category: 'ore',
     sourceType: 'exploration',
     profession: {
       resourceKind: 'ore',
       realmId: 'mortal',
-      quality,
+      age,
     },
   }
 }
 
-const QUALITY_NAME: Record<string, string> = {
-  hoang: 'Thập Niên',
-  huyen: 'Bách Niên',
+const AGE_NAME: Record<HerbAge, string> = {
+  decade: 'Thập Niên',
+  century: 'Bách Niên',
+  millennium: 'Thiên Niên',
+  myriad_year: 'Vạn Niên',
+  thuong_co: 'Thượng Cổ',
 }
 
-const ORE_HOANG = ore('hoang')
-const ORE_HUYEN = ore('huyen')
+const ORE_HOANG = ore('decade')
+const ORE_HUYEN = ore('century')
 
 const ESSENCE: Material = {
   id: LUYEN_KHI_TINH_HOA_ID,
@@ -77,7 +81,7 @@ const OTHER: Material = {
 
 // Cùng 1 HỌ thảo (herbBaseId 'tu_linh_thao_mortal') × 2 niên đại —
 // gộp family phải collapse còn 1 ô duy nhất.
-function herb(id: string, age: string, years: number): Material {
+function herb(id: string, age: HerbAge, years: number): Material {
   return {
     id,
     name: 'Tứ Linh Thảo',
@@ -97,12 +101,16 @@ function herb(id: string, age: string, years: number): Material {
 const HERB_DECADE = herb('tu_linh_thao_mortal_decade', 'decade', 10)
 const HERB_CENTURY = herb('tu_linh_thao_mortal_century', 'century', 100)
 
-// Họ khác (realm khác) — gộp family KHÔNG nhầm với họ trên.
-const HERB_OTHER_FAMILY = {
-  ...herb('hoi_xuan_thao_mortal_decade', 'decade', 10),
+// Họ khác (recipe khác) — gộp family KHÔNG nhầm với họ trên. herbBaseId
+// phải khớp id conventions (validator: id = `${herbBaseId}_${age}`).
+const HERB_OTHER_FAMILY: Material = {
+  id: 'hoi_xuan_thao_mortal_decade',
   name: 'Hồi Xuân Thảo',
+  category: 'herb',
+  years: 10,
+  sourceType: 'exploration',
   profession: {
-    resourceKind: 'herb' as const,
+    resourceKind: 'herb',
     realmId: 'mortal',
     age: 'decade',
     pillRecipeId: 'alchemy_hoi_xuan_dan_mortal',
@@ -205,8 +213,8 @@ describe('MaterialBag — filter/search/group họ thảo (plan §3.2 B4)', () =
 
   function seedAll() {
     gameManager.registerMaterials([WOOD, ORE, ESSENCE, OTHER, HERB_DECADE, HERB_CENTURY])
-    gameManager.materialBag.add(gameManager.materialRegistry.get('mortal_wood'), 3)
-    gameManager.materialBag.add(gameManager.materialRegistry.get('mortal_ore_hoang'), 2)
+    gameManager.materialBag.add(gameManager.materialRegistry.get('mortal_wood_decade'), 3)
+    gameManager.materialBag.add(gameManager.materialRegistry.get('mortal_ore_decade'), 2)
     gameManager.materialBag.add(gameManager.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID), 5)
     gameManager.materialBag.add(gameManager.materialRegistry.get('doan_bao_thach'), 1)
     gameManager.materialBag.add(gameManager.materialRegistry.get(HERB_DECADE.id), 4)

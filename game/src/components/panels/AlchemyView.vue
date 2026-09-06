@@ -117,36 +117,36 @@ const preview = computed(() => {
   return gameManager.previewAlchemyOutcome(selectedRecipe.value.id, selectedHerbId.value)
 })
 
-/** Gỗ nhiên liệu rẻ nhất đạt realm tối thiểu của recipe (hiển thị cost). */
+/** Gỗ nhiên liệu theo biến thể thảo đã chọn (gp123 6E): `<realm>_wood_<age>`
+ * — CÙNG realm recipe + CÙNG tuổi thảo, KHÔNG thay thế bậc (không scan). */
 const fuelWoodRow = computed(() => {
   stateVersion.value
 
-  if (!selectedRecipe.value) {
+  const recipe = selectedRecipe.value
+
+  const herbId = selectedHerbId.value
+
+  if (!recipe || !herbId) {
     return null
   }
 
-  const realms = ['mortal', 'qi_refining', 'foundation_establishment']
+  const variant = recipe.herbVariants.find((candidate) => candidate.materialId === herbId)
 
-  const minIndex = Math.max(0, realms.indexOf(selectedRecipe.value.fuelWoodRealmId))
-
-  for (let index = minIndex; index < realms.length; index++) {
-    const woodId = `${realms[index]}_wood`
-
-    const name =
-      gameManager.materialRegistry.has(woodId)
-        ? gameManager.materialRegistry.get(woodId).name
-        : woodId
-
-    return {
-      label: name,
-
-      owned: gameManager.materialBag.getAmount(woodId),
-
-      amount: selectedRecipe.value.fuelWoodAmount,
-    }
+  if (!variant) {
+    return null
   }
 
-  return null
+  const woodId = `${recipe.fuelWoodRealmId}_wood_${variant.age}`
+
+  return {
+    label: gameManager.materialRegistry.has(woodId)
+      ? gameManager.materialRegistry.get(woodId).name
+      : woodId,
+
+    owned: gameManager.materialBag.getAmount(woodId),
+
+    amount: recipe.fuelWoodAmount,
+  }
 })
 
 // Plan Workstream F — Linh Thạch đọc từ MaterialBag.

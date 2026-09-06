@@ -15,28 +15,30 @@ export function isProductionSiteKind(value: unknown): value is ProductionSiteKin
   return value === 'forest' || value === 'mine' || value === 'grotto'
 }
 
-/** Phẩm Quáng (plan §5.3) — metadata material, không đổi thời gian cycle. */
-export type OreQuality = 'hoang' | 'huyen' | 'dia' | 'thien' | 'tien'
+/**
+ * Niên đại Linh Thảo (plan §6.1 + gp123 6E task C1) — trục tuổi 5 bậc:
+ * thuong_co là bậc trên cùng, trùng nhãn "Thượng Cổ" của hệ chất thống nhất.
+ * gp123 6E (task C2): trục tuổi 5 bậc (decade..thuong_co) giờ DÙNG CHUNG
+ * cho Linh Thảo, Gỗ và Khoáng — hậu tố phẩm cũ (hoang..tien) và plain
+ * wood `<realm>_wood` đã bị xóa khỏi material catalog (save bump v57).
+ */
+export type HerbAge = 'decade' | 'century' | 'millennium' | 'myriad_year' | 'thuong_co'
 
-export const ORE_QUALITIES: readonly OreQuality[] = ['hoang', 'huyen', 'dia', 'thien', 'tien']
-
-export function isOreQuality(value: unknown): value is OreQuality {
-  return (
-    value === 'hoang' || value === 'huyen' || value === 'dia' || value === 'thien' || value === 'tien'
-  )
-}
-
-/** Niên đại Linh Thảo (plan §6.1). */
-export type HerbAge = 'decade' | 'century' | 'millennium' | 'myriad_year'
-
-export const HERB_AGES: readonly HerbAge[] = ['decade', 'century', 'millennium', 'myriad_year']
+export const HERB_AGES: readonly HerbAge[] = [
+  'decade',
+  'century',
+  'millennium',
+  'myriad_year',
+  'thuong_co',
+]
 
 export function isHerbAge(value: unknown): value is HerbAge {
   return (
     value === 'decade' ||
     value === 'century' ||
     value === 'millennium' ||
-    value === 'myriad_year'
+    value === 'myriad_year' ||
+    value === 'thuong_co'
   )
 }
 
@@ -128,6 +130,9 @@ export interface ForestRewardDefinition {
   /** Realm tier mà loại gỗ này thuộc về trong Địa Giới. */
   realmId: string
 
+  /** gp123 6E C2: biến thể tuổi của gỗ (thay vì amount cố định 3/2/1). */
+  age: HerbAge
+
   amount: number
 }
 
@@ -136,7 +141,8 @@ export interface MineRewardDefinition {
 
   realmId: string
 
-  quality: OreQuality
+  /** gp123 6E C2: trục tuổi thống nhất (trước đây `quality: OreQuality`). */
+  age: HerbAge
 
   amount: number
 }

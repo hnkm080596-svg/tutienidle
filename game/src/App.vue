@@ -399,10 +399,11 @@ async function bootGame(createNewCharacter = false) {
         gameManager.refreshAutoWorkerCapacity(player.$state, instance)
       }
 
-      // Starter pack đủ xây 3 base (Linh Tuyền/Khí Đường/Đan Phòng).
+      // Starter pack đủ xây 3 base (Linh Tuyền/Khí Đường/Đan Phòng) —
+      // id theo trục tuổi thống nhất (gp123 6E C2).
       for (const [materialId, amount] of [
-        ['mortal_wood', 15],
-        ['mortal_ore_hoang', 6],
+        ['mortal_wood_decade', 15],
+        ['mortal_ore_decade', 6],
       ] as const) {
         if (gameManager.materialRegistry.has(materialId)) {
           gameManager.materialBag.add(gameManager.materialRegistry.get(materialId), amount)

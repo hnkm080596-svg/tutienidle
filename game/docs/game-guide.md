@@ -90,7 +90,7 @@ Quy tắc về phẩm chất, độ hiếm, affix, set, đặt tên, túi đồ 
 
 ## Công trình, chế tác và khai thác
 
-Địa Giới Thanh Vân (`src/core/production/ProductionCatalog.ts`) có đúng 3 nguồn khai thác, mỗi nguồn 1 site, level riêng (tối đa 9, giữ level khi đột phá, nâng bằng Gỗ cùng realm + Linh Thạch): **Thanh Vân Lâm** (gỗ), **Huyền Thiết Quảng** (linh khoáng 3 realm × 5 phẩm), **Thanh Vân Động Thiên** (linh thảo — mỗi đan phương có đúng 1 thảo riêng). Khai thác là job theo thời gian; worker tự động điều phối qua building Điều Phối Nhân Công.
+Địa Giới Thanh Vân (`src/core/production/ProductionCatalog.ts`) có đúng 3 nguồn khai thác, mỗi nguồn 1 site, level riêng (tối đa 9, giữ level khi đột phá, nâng bằng Gỗ cùng realm + Linh Thạch): **Thanh Vân Lâm** (gỗ), **Huyền Thiết Quảng** (linh khoáng — mỗi loại theo 5 bậc tuổi Thập Niên → Thượng Cổ, trục tuổi thống nhất với linh thảo theo gp123 6E), **Thanh Vân Động Thiên** (linh thảo — mỗi đan phương có đúng 1 thảo riêng). Khai thác là job theo thời gian; worker tự động điều phối qua building Điều Phối Nhân Công.
 
 `BuildingSystem` (`src/data/building/buildings.ts`) quản lý xây/nâng/tích trữ/thu hoạch 5 building:
 

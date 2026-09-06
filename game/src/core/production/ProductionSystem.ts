@@ -18,11 +18,10 @@ import type {
 } from './ProductionTypes'
 import {
   CYCLE_BASE_SECONDS_BY_REALM,
-  FOREST_WOOD_AMOUNTS_BY_TIER_INDEX,
   GROTTO_HERB_AMOUNT,
   HERB_AGE_WEIGHTS,
-  ORE_QUALITY_AMOUNTS,
-  ORE_QUALITY_WEIGHTS,
+  MATERIAL_AGE_AMOUNTS,
+  MATERIAL_AGE_WEIGHTS,
   PRODUCTION_OFFLINE_CAP_SECONDS,
   computeCycleSeconds,
   getSiteSpeedMultiplier,
@@ -30,7 +29,7 @@ import {
   mulberry32,
   rollWeightedIndex,
 } from './ProductionBalance'
-import { HERB_AGES, ORE_QUALITIES } from './ProductionTypes'
+import { HERB_AGES } from './ProductionTypes'
 
 /** Một giao dịch settle đã xảy ra — dùng cho notification UI (§9.1). */
 export interface ProductionSettlementEvent {
@@ -659,16 +658,32 @@ export class ProductionSystem {
     }
 
     if (definition.kind === 'forest') {
-      const entry = this.deps.forestRewards.find((reward) => reward.realmId === tierRealmId)
+      const pool = this.deps.forestRewards.filter((reward) => reward.realmId === tierRealmId)
+
+      if (pool.length === 0) {
+        return []
+      }
+
+      const ageIndex = rollWeightedIndex(
+        HERB_AGES.map((age) => MATERIAL_AGE_WEIGHTS[age]),
+        random,
+      )
+
+      const age = HERB_AGES[ageIndex] ?? 'decade'
+
+      const entry = pool.find((reward) => reward.age === age)
 
       if (!entry) {
         return []
       }
 
-      const amount =
-        entry.amount > 0 ? entry.amount : (FOREST_WOOD_AMOUNTS_BY_TIER_INDEX[tierIndex] ?? 1)
-
-      return [{ materialId: entry.materialId, amount }]
+      return [
+        {
+          materialId: entry.materialId,
+          amount: entry.amount > 0 ? entry.amount : MATERIAL_AGE_AMOUNTS[age],
+          detail: age,
+        },
+      ]
     }
 
     if (definition.kind === 'mine') {
@@ -678,14 +693,14 @@ export class ProductionSystem {
         return []
       }
 
-      const qualityIndex = rollWeightedIndex(
-        ORE_QUALITIES.map((quality) => ORE_QUALITY_WEIGHTS[quality]),
+      const ageIndex = rollWeightedIndex(
+        HERB_AGES.map((age) => MATERIAL_AGE_WEIGHTS[age]),
         random,
       )
 
-      const quality = ORE_QUALITIES[qualityIndex] ?? 'hoang'
+      const age = HERB_AGES[ageIndex] ?? 'decade'
 
-      const entry = pool.find((reward) => reward.quality === quality)
+      const entry = pool.find((reward) => reward.age === age)
 
       if (!entry) {
         return []
@@ -694,8 +709,8 @@ export class ProductionSystem {
       return [
         {
           materialId: entry.materialId,
-          amount: ORE_QUALITY_AMOUNTS[quality],
-          detail: quality,
+          amount: MATERIAL_AGE_AMOUNTS[age],
+          detail: age,
         },
       ]
     }

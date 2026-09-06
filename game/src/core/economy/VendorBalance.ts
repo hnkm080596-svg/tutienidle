@@ -8,7 +8,7 @@
 // byproduct không có meta đủ tốt thì fallback theo realmId truyền vào.
 import type { Material } from '../material/Material'
 import { getRealmTier } from '../realm/RealmTierMap'
-import type { OreQuality } from '../production/ProductionTypes'
+import type { HerbAge } from '../production/ProductionTypes'
 
 /** Danh mục material category được phép bán cho Vendor. */
 export const VENDOR_SELLABLE_CATEGORIES = [
@@ -21,30 +21,31 @@ export const VENDOR_SELLABLE_CATEGORIES = [
 
 export type VendorSellableCategory = (typeof VENDOR_SELLABLE_CATEGORIES)[number]
 
-/** Giá herb (hạ tương đương) theo biến thể niên đại. */
+/** Giá herb (hạ tương đương) theo biến thể niên đại — thuong_co bậc 6E. */
 export const VENDOR_HERB_PRICES: Record<string, number> = {
   decade: 2,
   century: 4,
   millennium: 8,
   myriad_year: 16,
+  thuong_co: 32,
 }
 
-/** Giá gỗ (hạ tương đương) theo phẩm. */
-export const VENDOR_WOOD_PRICES: Record<OreQuality, number> = {
-  hoang: 2,
-  huyen: 5,
-  dia: 12,
-  thien: 30,
-  tien: 75,
+/** Giá gỗ (hạ tương đương) theo tuổi (gp123 6E C2 — giá trị giữ nguyên từ bảng theo phẩm). */
+export const VENDOR_WOOD_PRICES: Record<HerbAge, number> = {
+  decade: 2,
+  century: 5,
+  millennium: 12,
+  myriad_year: 30,
+  thuong_co: 75,
 }
 
-/** Giá quáng (hạ tương đương) theo phẩm. */
-export const VENDOR_ORE_PRICES: Record<OreQuality, number> = {
-  hoang: 3,
-  huyen: 8,
-  dia: 20,
-  thien: 50,
-  tien: 120,
+/** Giá quáng (hạ tương đương) theo tuổi (gp123 6E C2 — giá trị giữ nguyên từ bảng theo phẩm). */
+export const VENDOR_ORE_PRICES: Record<HerbAge, number> = {
+  decade: 3,
+  century: 8,
+  millennium: 20,
+  myriad_year: 50,
+  thuong_co: 120,
 }
 
 /** Giá nền Tinh Hoa (essence) — nhân theo index realm trong essence tier. */
@@ -109,22 +110,15 @@ export function getUnitSellPrice(material: Material, realmId: string): number | 
       return base === undefined ? undefined : base * factor
     }
 
-    case 'wood': {
-      const quality = meta?.quality ?? 'hoang'
-
-      const base = VENDOR_WOOD_PRICES[quality as OreQuality]
-
-      return base === undefined ? undefined : base * factor
-    }
-
+    case 'wood':
     case 'ore': {
-      const quality = meta?.quality
+      const age = meta?.age
 
-      if (!quality) {
+      if (!age) {
         return undefined
       }
 
-      const base = VENDOR_ORE_PRICES[quality as OreQuality]
+      const base = category === 'wood' ? VENDOR_WOOD_PRICES[age] : VENDOR_ORE_PRICES[age]
 
       return base === undefined ? undefined : base * factor
     }

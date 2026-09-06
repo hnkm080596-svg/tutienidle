@@ -30,10 +30,10 @@ const TEMPLATE: Equipment = {
   grade: 1,
   maxEnhanceLevel: 10,
   mainStats: [{ stat: 'attack', min: 10, max: 20 }],
-  enhanceCost: [{ materialId: 'qi_refining_ore_huyen', amount: 1 }],
+  enhanceCost: [{ materialId: 'qi_refining_ore_century', amount: 1 }],
 }
 
-const ENHANCE_ORE = materials.find((m) => m.id === 'qi_refining_ore_huyen')!
+const ENHANCE_ORE = materials.find((m) => m.id === 'qi_refining_ore_century')!
 
 function setup() {
   const system = new EquipmentSystem()

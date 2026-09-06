@@ -326,7 +326,8 @@
           "decade": "Thập Niên",
           "century": "Bách Niên",
           "millennium": "Thiên Niên",
-          "myriadYear": "Vạn Niên"
+          "myriadYear": "Vạn Niên",
+          "thuongCo": "Thượng Cổ"
         },
         "realms": {
           "mortal": "Phàm Nhân",
@@ -343,24 +344,8 @@
       }
     },
     "vendor": {
-      "cards": {
-        "spiritStone": "Linh Thạch",
-        "wood": "Linh Mộc",
-        "ore": "Linh Khoáng"
-      },
-      "sections": {
-        "tier": "Đổi Phẩm",
-        "tierRealm": "Đổi Phẩm (theo Cảnh Giới)"
-      },
-      "stone": {
-        "upTrung": "{ratio} Hạ → 1 Trung",
-        "upThuong": "{ratio} Trung → 1 Thượng"
-      },
-      "tierConvert": "{ratio} → 1",
-      "empty": {
-        "wood": "Chưa có Linh Mộc để đổi phẩm.",
-        "ore": "Chưa có Linh Khoáng để đổi phẩm."
-      },
+      "gateNotBelow": "Chỉ thu mua vật phẩm có phẩm thấp hơn cảnh giới hiện tại",
+      "sellRejected": "Không bán được vật phẩm này.",
       "sell": {
         "title": "Hóa Bán",
         "rate": "Bán nguyên liệu dư thừa lấy Linh Thạch theo phẩm hiện hành.",
@@ -495,12 +480,12 @@
     "decompose": {
       "labels": {
         "gradeFilter": "Phẩm khoáng",
-        "qualityFilter": "Chất khoáng",
+        "ageFilter": "Tuổi khoáng",
         "workers": "Nhân công"
       },
       "select": {
         "allGrades": "Mọi phẩm",
-        "allQualities": "Mọi chất"
+        "allAges": "Mọi tuổi"
       },
       "estimate": "≈ {amount} Luyện Khí Tinh Hoa / lượt"
     }
@@ -809,7 +794,7 @@
       "job_slots_full": "Lò đang bận",
       "wrong_herb": "Sai Linh Thảo — đan phương chỉ nhận đúng một loại thảo",
       "missing_herb": "Không đủ Linh Thảo",
-      "missing_fuel_wood": "Không đủ Gỗ nhiên liệu đạt cảnh giới yêu cầu",
+      "missing_fuel_wood": "Không đủ Gỗ nhiên liệu cùng cảnh giới và cùng tuổi với Linh Thảo đã chọn",
       "missing_spirit_stone": "Không đủ Linh Thạch"
     }
   },
@@ -850,7 +835,8 @@
         "decade": "Thập Niên",
         "century": "Bách Niên",
         "millennium": "Thiên Niên",
-        "myriadYear": "Vạn Niên"
+        "myriadYear": "Vạn Niên",
+        "thuongCo": "Thượng Cổ"
       },
       "quality": {
         "hoang": "Thập Niên",

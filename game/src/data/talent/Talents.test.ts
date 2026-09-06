@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import type { TalentRarity } from '../../core/talent/Talent'
 import {
   CHARACTER_CREATION_TALENTS,
   PARKED_TALENTS,
@@ -25,6 +26,53 @@ describe('catalog v4 invariants (M1 combat)', () => {
     for (const talent of CHARACTER_CREATION_TALENTS) {
       expect(talent.weight).toBeGreaterThan(0)
       expect(talent.effects.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('ngân sách power (spec §4.1 §5) — 5 công + 5 thủ + Bất Tử Thể giữ, weight đúng thang rarity', () => {
+    // Thang weight cũ (spec §4 dòng đầu): di w1 / thiên w4 / địa w12 /
+    // linh w28 / phàm w55. Mỗi talent map đúng rarity của nó.
+    const WEIGHT_BY_RARITY: Record<TalentRarity, number> = {
+      di: 1,
+      thien: 4,
+      dia: 12,
+      linh: 28,
+      pham: 55,
+    }
+
+    for (const talent of CHARACTER_CREATION_TALENTS) {
+      expect(talent.weight).toBe(WEIGHT_BY_RARITY[talent.rarity])
+    }
+
+    // Đúng cơ cấu 11 combat (5 công + 5 thủ + Bất Tử Thể) + Phàm Cốt.
+    const combatIds = [
+      'kiem_quang',
+      'pha_giap',
+      'tat_phong',
+      'trong_kich',
+      'hap_linh',
+      'thach_giap',
+      'vo_anh',
+      'can_than',
+      'ho_the',
+      'thu_phat',
+      'bat_tu_the',
+    ]
+
+    // Thẻ phân loại UI theo quy ước sẵn có: nhóm công mang 'combat',
+    // nhóm thủ mang 'defense' (metadata, không thuộc ngân sách §5).
+    for (const id of combatIds) {
+      const talent = getTalentDefinition(id)
+
+      expect(talent, `talent ${id} phải thuộc pool M1`).toBeDefined()
+      expect(
+        CHARACTER_CREATION_TALENTS.some((entry) => entry.id === id),
+        `talent ${id} phải tham gia roll`,
+      ).toBe(true)
+      expect(
+        talent!.tags.includes('combat') || talent!.tags.includes('defense'),
+        `talent ${id} phải mang tag combat/defense`,
+      ).toBe(true)
     }
   })
 

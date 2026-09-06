@@ -87,14 +87,8 @@ import { ItemRegistry } from '../item/ItemRegistry'
 
 import { validateProfessionMaterialEntry } from '../profession/ProfessionValidators'
 import {
-  SPIRIT_STONE_CONVERSION_RATIO,
-  getNextSpiritStoneMaterialId,
   getSpiritStoneMaterialIdForRealmTier,
 } from '../material/SpiritStoneMaterial'
-import {
-  MATERIAL_TIER_CONVERSION_RATIO,
-  getNextTierMaterialId,
-} from '../material/MaterialTierConversionBalance'
 import { getRealmTier } from '../realm/RealmTierMap'
 import type { PersistentTimedEffect } from '../player/PersistentTimedEffect'
 import {
@@ -1854,103 +1848,6 @@ export class GameManager {
       return player.realmLevel >= CORE_REALM_LEVEL
     }
     return false
-  }
-
-  /**
-   * Quy d?i Linh Th?ch LÃ¯Â¿Â½N ph?m k? ti?p (review 2026-08-28,
-   * economy-ecosystem-plan T2): 100 H? ? 1 Trung, 100 Trung ? 1 Thu?ng.
-   * CH? cÃ¯Â¿Â½ chi?u lÃ¯Â¿Â½n Ã¯Â¿Â½ khÃ¯Â¿Â½ng cÃ¯Â¿Â½ quy d?i ngu?c (gi? sink). Giao d?ch
-   * atomic: check d? ? tr? ? c?ng; tr? th?t b?i thÃ¯Â¿Â½ khÃ¯Â¿Â½ng c?ng.
-
-   */
-  convertSpiritStonesUp(
-    fromMaterialId: string,
-    times = 1,
-  ): { ok: boolean; reason?: string; gained?: number } {
-    const targetId = getNextSpiritStoneMaterialId(fromMaterialId)
-
-    if (!targetId) {
-      return { ok: false, reason: 'no_higher_tier' }
-    }
-
-    if (!Number.isInteger(times) || times <= 0) {
-      return { ok: false, reason: 'invalid_amount' }
-    }
-
-    if (!this.materialRegistry.has(fromMaterialId) || !this.materialRegistry.has(targetId)) {
-      return { ok: false, reason: 'unknown_material' }
-    }
-
-    const cost = SPIRIT_STONE_CONVERSION_RATIO * times
-
-    if (!this.materialBag.remove(fromMaterialId, cost)) {
-      return { ok: false, reason: 'insufficient' }
-    }
-
-    const overflow = this.materialBag.add(this.materialRegistry.get(targetId), times)
-
-    if (overflow > 0) {
-      // TrÃ¡ÂºÂ§n stack Linh ThÃ¡ÂºÂ¡ch lÃƒÂ  MAX_SAFE_INTEGER nÃƒÂªn thÃ¡Â»Â±c tÃ¡ÂºÂ¿ khÃƒÂ´ng xÃ¡ÂºÂ£y
-      // ra; nÃ¡ÂºÂ¿u xÃ¡ÂºÂ£y ra thÃƒÂ¬ hoÃƒÂ n lÃ¡ÂºÂ¡i phÃ¡ÂºÂ©m thÃ¡ÂºÂ¥p Ã„â€˜Ã¡Â»Æ’ khÃƒÂ´ng mÃ¡ÂºÂ¥t trÃ¡ÂºÂ¯ng.
-      this.materialBag.add(
-        this.materialRegistry.get(fromMaterialId),
-        overflow * SPIRIT_STONE_CONVERSION_RATIO,
-      )
-
-      return { ok: false, reason: 'bag_full' }
-    }
-
-    this.notifyQuestMaterialGained(targetId, times)
-
-    return { ok: true, gained: times }
-  }
-
-  /**
-   * Quy Ã„â€˜Ã¡Â»â€¢i cÃ¡ÂºÂ£nh giÃ¡Â»â€ºi Linh MÃ¡Â»â„¢c/Linh KhoÃƒÂ¡ng LÃƒÅ N bÃ¡ÂºÂ­c kÃ¡ÂºÂ¿ (2026-08-28): gÃ¡Â»â„¢p
-   * 10 bÃ¡ÂºÂ­c thÃ¡ÂºÂ¥p Ã¢â€ â€™ 1 bÃ¡ÂºÂ­c cao theo thang PhÃƒÂ m NhÃƒÂ¢n Ã¢â€ â€™ LuyÃ¡Â»â€¡n KhÃƒÂ­ Ã¢â€ â€™ TrÃƒÂºc CÃ†Â¡.
-   * GÃ¡Â»â€” `<realm>_wood` Ã¢â€ â€™ `<nextRealm>_wood`; quÃƒÂ¡ng giÃ¡Â»Â¯ PHÃ¡ÂºÂ¨M khi lÃƒÂªn cÃ¡ÂºÂ£nh
-   * giÃ¡Â»â€ºi `<realm>_ore_<quality>` Ã¢â€ â€™ `<nextRealm>_ore_<quality>`. CHÃ¡Â»Ë† cÃƒÂ³
-   * chiÃ¡Â»Âu lÃƒÂªn (giÃ¡Â»Â¯ sink). Giao dÃ¡Â»â€¹ch atomic: check Ã„â€˜Ã¡Â»Â§ Ã¢â€ â€™ trÃ¡Â»Â« Ã¢â€ â€™ cÃ¡Â»â„¢ng; trÃ¡Â»Â«
-   * thÃ¡ÂºÂ¥t bÃ¡ÂºÂ¡i thÃƒÂ¬ khÃƒÂ´ng cÃ¡Â»â„¢ng.
-   */
-  convertMaterialTier(
-    fromMaterialId: string,
-    times = 1,
-  ): { ok: boolean; reason?: string; gained?: number } {
-    const targetId = getNextTierMaterialId(fromMaterialId)
-
-    if (!targetId) {
-      return { ok: false, reason: 'no_higher_tier' }
-    }
-
-    if (!Number.isInteger(times) || times <= 0) {
-      return { ok: false, reason: 'invalid_amount' }
-    }
-
-    if (!this.materialRegistry.has(fromMaterialId) || !this.materialRegistry.has(targetId)) {
-      return { ok: false, reason: 'unknown_material' }
-    }
-
-    const cost = MATERIAL_TIER_CONVERSION_RATIO * times
-
-    if (!this.materialBag.remove(fromMaterialId, cost)) {
-      return { ok: false, reason: 'insufficient' }
-    }
-
-    const overflow = this.materialBag.add(this.materialRegistry.get(targetId), times)
-
-    if (overflow > 0) {
-      this.materialBag.add(
-        this.materialRegistry.get(fromMaterialId),
-        overflow * MATERIAL_TIER_CONVERSION_RATIO,
-      )
-
-      return { ok: false, reason: 'bag_full' }
-    }
-
-    this.notifyQuestMaterialGained(targetId, times)
-
-    return { ok: true, gained: times }
   }
 
   /**
