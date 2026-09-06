@@ -7,6 +7,8 @@ import { createDefaultPlayer } from '../player/Player'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
 import { COMPANIONS } from '../../data/companion/Companions'
+import { TRAN_PHAP_FORMATIONS } from '../../data/formation/TranPhap'
+import type { TranPhapDefinition } from '../../data/formation/TranPhap'
 
 // Formation slot deliberately DISTINCT from HERO_LANE_INDEX(4)/HERO_COLUMN(1)
 // so this test can only pass if buildTurnBattle() actually reads
@@ -142,6 +144,60 @@ describe('GameManager.buildTurnBattle — resolves a real FormationLoadout, incl
       const index = COMPANIONS.findIndex((c) => c.id === TEST_COMPANION_DEFINITION.id)
       if (index >= 0) {
         ;(COMPANIONS as unknown as (typeof COMPANIONS)[number][]).splice(index, 1)
+      }
+    }
+  })
+})
+
+// Review Task 19 (finding Important) — TURN_BUFF_REGISTRY.get() throw nếu
+// definitionId của trận pháp không resolve được (gõ sai id, hoặc buff chưa
+// kịp thêm vào buffs.ts). Trước fix này, throw đó văng thẳng ra khỏi
+// buildTurnBattle() và làm SẬP CẢ TRẬN ĐẤU. Test này xác nhận trận vẫn
+// build được bình thường — chỉ mất đúng 1 buff, không throw — giống tinh
+// thần "skip gracefully" mà companion resolution đã làm.
+const TEST_FORMATION_WITH_MISSING_BUFF: TranPhapDefinition = {
+  id: 'test_formation_missing_buff',
+  name: 'Formation Missing Buff Test',
+  cellPattern: [{ row: 0, column: 0 }],
+  buff: { definitionId: 'nonexistent_buff_id_xyz' },
+  description: 'test-only formation referencing a buff id that does not exist',
+}
+
+describe('GameManager.buildTurnBattle — formation buff definitionId không resolve được', () => {
+  it('không throw, trận vẫn build bình thường khi TURN_BUFF_REGISTRY.get() thất bại', () => {
+    // TRAN_PHAP_FORMATIONS rỗng ở giai đoạn này của plan (nội dung roster
+    // ship sau) — đẩy tạm 1 definition test-only vào mảng, giống pattern
+    // COMPANIONS ở test phía trên.
+    ;(TRAN_PHAP_FORMATIONS as unknown as TranPhapDefinition[]).push(TEST_FORMATION_WITH_MISSING_BUFF)
+
+    try {
+      const gameManager = new GameManager()
+      const playerEntity = createPlayer()
+      const playerData = createDefaultPlayer()
+
+      gameManager.registerSkillTemplates([createBasicSkill()])
+      gameManager.learnSkill('basic_test')
+      gameManager.skillSystem.equipToSlot('basic_test', 0)
+
+      playerData.formationLoadout = {
+        formationId: TEST_FORMATION_WITH_MISSING_BUFF.id,
+        assignments: [{ row: 0, column: 0, combatantId: 'player' }],
+      }
+
+      gameManager.setActivePlayer(playerData)
+
+      expect(() => gameManager.startBattle(playerEntity, createDummy())).not.toThrow()
+
+      const battle = gameManager.getTurnBattle()
+      expect(battle).not.toBeNull()
+      expect(battle!.players).toHaveLength(1)
+      expect(battle!.players[0]!.id).toBe('player')
+    } finally {
+      // Dọn fixture khỏi mảng module-level dùng chung — tránh rò rỉ sang
+      // test khác chạy sau trong cùng process (vitest có thể share module).
+      const index = TRAN_PHAP_FORMATIONS.findIndex((f) => f.id === TEST_FORMATION_WITH_MISSING_BUFF.id)
+      if (index >= 0) {
+        ;(TRAN_PHAP_FORMATIONS as unknown as TranPhapDefinition[]).splice(index, 1)
       }
     }
   })

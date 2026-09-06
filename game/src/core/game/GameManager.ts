@@ -215,6 +215,7 @@ import { COMPANIONS } from '../../data/companion/Companions'
 import { TRAN_PHAP_FORMATIONS } from '../../data/formation/TranPhap'
 import { TURN_BUFF_REGISTRY } from '../../data/buff/TurnBuffRegistry'
 import { TurnBuffSystem } from '../battle/turn/TurnBuffSystem'
+import type { TurnBuffDefinition } from '../battle/turn/TurnBuffTypes'
 import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
 
 /**
@@ -2470,15 +2471,29 @@ export class GameManager {
       )
 
       if (formationDefinition) {
-        const buffDefinition = TURN_BUFF_REGISTRY.get(formationDefinition.buff.definitionId)
+        // Content Trận Pháp có thể tham chiếu buff id chưa tồn tại (gõ sai
+        // definitionId, hoặc buff chưa kịp thêm vào buffs.ts) —
+        // TURN_BUFF_REGISTRY.get() throw trong trường hợp đó. Bắt lỗi và bỏ
+        // qua buff (không áp gì cả) thay vì để cả trận đấu crash — cùng
+        // tinh thần "skip gracefully" với companion resolution ở trên
+        // (review Task 19 phát hiện).
+        let buffDefinition: TurnBuffDefinition | undefined
 
-        for (const participant of [playerParticipant, ...companionParticipants]) {
-          new TurnBuffSystem(participant.buffs).apply(
-            buffDefinition,
-            participant.entity,
-            participant.entity,
-            TURN_BUFF_REGISTRY,
-          )
+        try {
+          buffDefinition = TURN_BUFF_REGISTRY.get(formationDefinition.buff.definitionId)
+        } catch {
+          buffDefinition = undefined
+        }
+
+        if (buffDefinition) {
+          for (const participant of [playerParticipant, ...companionParticipants]) {
+            new TurnBuffSystem(participant.buffs).apply(
+              buffDefinition,
+              participant.entity,
+              participant.entity,
+              TURN_BUFF_REGISTRY,
+            )
+          }
         }
       }
     }
