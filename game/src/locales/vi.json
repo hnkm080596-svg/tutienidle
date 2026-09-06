@@ -810,7 +810,7 @@
       "job_slots_full": "Lò đang bận",
       "wrong_herb": "Sai Linh Thảo — đan phương chỉ nhận đúng một loại thảo",
       "missing_herb": "Không đủ Linh Thảo",
-      "missing_fuel_wood": "Không đủ Gỗ nhiên liệu đạt cảnh giới yêu cầu",
+      "missing_fuel_wood": "Không đủ Gỗ nhiên liệu cùng cảnh giới và cùng tuổi với Linh Thảo đã chọn",
       "missing_spirit_stone": "Không đủ Linh Thạch"
     }
   },

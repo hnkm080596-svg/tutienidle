@@ -810,7 +810,7 @@
       "job_slots_full": "The furnace is busy",
       "wrong_herb": "Wrong Spirit Herb — a recipe accepts exactly one herb type",
       "missing_herb": "Not enough Spirit Herb",
-      "missing_fuel_wood": "Not enough fuel wood of the required realm",
+      "missing_fuel_wood": "Not enough fuel wood matching the herb's realm and age",
       "missing_spirit_stone": "Not enough Spirit Stones"
     }
   },

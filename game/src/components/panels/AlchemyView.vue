@@ -117,50 +117,35 @@ const preview = computed(() => {
   return gameManager.previewAlchemyOutcome(selectedRecipe.value.id, selectedHerbId.value)
 })
 
-/** Gỗ nhiên liệu rẻ nhất đạt realm tối thiểu của recipe (hiển thị cost) — gp123 6E C2: id gỗ theo trục tuổi, ưu tiên decade. */
+/** Gỗ nhiên liệu theo biến thể thảo đã chọn (gp123 6E): `<realm>_wood_<age>`
+ * — CÙNG realm recipe + CÙNG tuổi thảo, KHÔNG thay thế bậc (không scan). */
 const fuelWoodRow = computed(() => {
   stateVersion.value
 
-  if (!selectedRecipe.value) {
+  const recipe = selectedRecipe.value
+
+  const herbId = selectedHerbId.value
+
+  if (!recipe || !herbId) {
     return null
   }
 
-  const realms = ['mortal', 'qi_refining', 'foundation_establishment']
+  const variant = recipe.herbVariants.find((candidate) => candidate.materialId === herbId)
 
-  const ages = ['decade', 'century', 'millennium', 'myriad_year', 'thuong_co'] as const
-
-  const minIndex = Math.max(0, realms.indexOf(selectedRecipe.value.fuelWoodRealmId))
-
-  for (let index = minIndex; index < realms.length; index++) {
-    for (const age of ages) {
-      const woodId = `${realms[index]}_wood_${age}`
-
-      if (!gameManager.materialRegistry.has(woodId)) {
-        continue
-      }
-
-      return {
-        label: gameManager.materialRegistry.get(woodId).name,
-
-        owned: gameManager.materialBag.getAmount(woodId),
-
-        amount: selectedRecipe.value.fuelWoodAmount,
-      }
-    }
+  if (!variant) {
+    return null
   }
 
-  // Không tìm thấy stack (cả registry fallback) — hiện id decade đầu tiên
-  // để row không biến mất hoàn toàn.
-  const fallbackId = `${realms[minIndex]}_wood_decade`
+  const woodId = `${recipe.fuelWoodRealmId}_wood_${variant.age}`
 
   return {
-    label: gameManager.materialRegistry.has(fallbackId)
-      ? gameManager.materialRegistry.get(fallbackId).name
-      : fallbackId,
+    label: gameManager.materialRegistry.has(woodId)
+      ? gameManager.materialRegistry.get(woodId).name
+      : woodId,
 
-    owned: gameManager.materialBag.getAmount(fallbackId),
+    owned: gameManager.materialBag.getAmount(woodId),
 
-    amount: selectedRecipe.value.fuelWoodAmount,
+    amount: recipe.fuelWoodAmount,
   }
 })
 
