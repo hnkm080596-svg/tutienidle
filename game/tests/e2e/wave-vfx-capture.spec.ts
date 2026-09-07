@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 import { test, expect } from '@playwright/test'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
@@ -124,9 +125,18 @@ test.describe('Turn-Based Wave VFX visual capture', () => {
     await page.screenshot({ path: path.join(outDir, 'visual-3-combat-in-progress.png') })
 
     // ===== Runtime proof (lớp bằng chứng chính xác) =====
-    const live = await page.evaluate(
-      () => (window as unknown as { __vfxLive: unknown }).__vfxLive,
-    )
+    const live = await page.evaluate(() => {
+      const w = window as unknown as {
+        __vfxLive: {
+          pending: number
+          countdown: boolean
+          countdownProgressMax: number
+          pendingEvents: { at: number; count: number; progress: number }[]
+          maxPending: number
+        }
+      }
+      return w.__vfxLive
+    })
     fs.writeFileSync(
       path.join(outDir, 'runtime-proof.json'),
       JSON.stringify(live, null, 2),
