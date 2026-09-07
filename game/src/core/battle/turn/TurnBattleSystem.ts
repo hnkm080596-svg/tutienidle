@@ -24,6 +24,7 @@ import type { BattleLogEntry } from './TurnOrderPreview'
 import { selectRandomDistinctElementPair } from './TurnSkillAction'
 import { REACTION_PATH_SPECIAL_ID } from '../../../data/skill/TurnReactionPathSkills'
 import { refundGauge, GAUGE_MAX } from './ActionGauge'
+import { TurnReactionManager } from './TurnReactionManager'
 import type { TurnBuffDefinition } from './TurnBuffTypes'
 
 /**
@@ -259,6 +260,9 @@ export class TurnBattleSystem {
     private readonly registry?: TurnBuffRegistry,
     private readonly spawnEnemy?: (occupiedSlots?: Set<string>) => TurnBattleParticipant,
     private readonly reactionPathPool?: readonly TurnSkillDefinition[],
+    // Phase A1 (2026-09-07) — optional collaborator, same pattern as
+    // registry/spawnEnemy above; consumers no-op safely when absent.
+    private readonly reactionManager?: TurnReactionManager,
   ) {}
 
   // Action Playback Task 3 — gauge-delta deferral chuyển từ local vars
