@@ -315,31 +315,44 @@ export class GameManager {
     this.eventBus,
     this.skillManager,
     this.skillSystem,
-    // Talent v4 (spec 2026-09-03 ï¿½3.3 E2) ï¿½ buffApplier: apply buff
-    // "bï¿½ng n?" c?a passiveConvertsTo lï¿½n PLAYER trong tr?n hi?n t?i
-    // (pool c?a player, source = player; ngoï¿½i tr?n thï¿½ b? qua ï¿½
-    // passive combat ch? ch?y trong tr?n).
+    // Talent v4 (spec 2026-09-03 §3.3 E2) — buffApplier: apply the
+    // passiveConvertsTo "burst" buff to the PLAYER in the current battle.
+    // Rewired 2026-09-07 (Phase A2) from the legacy real-time battle to
+    // the turn-based one — the legacy battleSystem does not run during
+    // real gameplay, so this previously never fired (silent gap, see
+    // docs/superpowers/specs/2026-09-07-phase-a2-buff-content-wiring-design.md).
     (buffId) => {
-      const battle = this.battleSystem.getBattle()
-      const definition = this.buffRegistry.get(buffId)
+      const player = this.turnBattle?.players[0]
 
-      if (!battle || !definition) {
+      if (!player) {
         return
       }
 
-      const buffs = new BuffSystem(battle.playerBuffs)
-      buffs.apply(definition, battle.player, battle.player, this.buffRegistry)
-    },
-    // hpReader ï¿½ HP ratio c?a player entity trong tr?n; ngoï¿½i tr?n
-    // undefined (passiveCondition coi nhu thï¿½ng qua).
-    () => {
-      const battle = this.battleSystem.getBattle()
+      let definition: TurnBuffDefinition | undefined
 
-      if (!battle || battle.player.maxHp <= 0) {
+      try {
+        definition = TURN_BUFF_REGISTRY.get(buffId)
+      } catch {
+        definition = undefined
+      }
+
+      if (!definition) {
+        return
+      }
+
+      new TurnBuffSystem(player.buffs).apply(definition, player.entity, player.entity, TURN_BUFF_REGISTRY)
+    },
+    // hpReader — player entity's HP ratio in the current turn-based
+    // battle; undefined outside battle (passiveCondition treats this as
+    // pass-through). Rewired alongside buffApplier, same reason.
+    () => {
+      const player = this.turnBattle?.players[0]
+
+      if (!player || player.entity.maxHp <= 0) {
         return undefined
       }
 
-      return battle.player.currentHp / battle.player.maxHp
+      return player.entity.currentHp / player.entity.maxHp
     },
   )
 
