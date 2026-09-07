@@ -90,7 +90,7 @@ describe('GameManager.setArtifactPath (doc §7.1)', () => {
     expect(player.artifact.selectedPath).toBe('control')
   })
 
-  it('chặn đổi hướng khi battle đang countdown/fighting', () => {
+  it('chặn đổi hướng khi battle đang intro/countdown/fighting', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
     player.artifact = createDefaultArtifactProgress('ngu_hanh_chau')
@@ -98,7 +98,7 @@ describe('GameManager.setArtifactPath (doc §7.1)', () => {
     gameManager.registerEnemyTemplates([defineEnemy(enemyDefinition())])
     gameManager.startBattle(createPlayerEntity(), defineEnemy(enemyDefinition()))
 
-    expect(gameManager.getBattle()?.state).toBe('countdown')
+    expect(gameManager.getBattle()?.state).toBe('intro')
     expect(gameManager.setArtifactPath(player, 'attack')).toBe(false)
     expect(player.artifact.selectedPath).toBeUndefined()
   })

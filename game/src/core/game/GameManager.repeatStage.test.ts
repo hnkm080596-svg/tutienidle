@@ -72,7 +72,7 @@ describe('GameManager continuous repeat stage', () => {
     expect(rewardParticles.filter(event => event.kind === 'currency')).toHaveLength(2)
   })
 
-  it('can abandon during countdown and releases the active stage immediately', () => {
+  it('can abandon during intro and releases the active stage immediately', () => {
     const gameManager = new GameManager()
     const enemy = defineEnemy({
       id: 'countdown_dummy', name: 'Countdown Dummy', level: 1, realmId: 'mortal', lane: 'ground',
@@ -90,7 +90,9 @@ describe('GameManager continuous repeat stage', () => {
     gameManager.registerStages([stage])
 
     expect(gameManager.startStage(player, stats, stage)).toBe(true)
-    expect(gameManager.getBattle()?.state).toBe('countdown')
+    // Intro (2026-09-07 plan Task 4) is the first wait phase - abandoning
+    // during it keeps the exact same semantics the countdown phase had.
+    expect(gameManager.getBattle()?.state).toBe('intro')
     expect(gameManager.abandonBattle()).toBe(true)
     expect(gameManager.getBattle()?.state).toBe('defeat')
     expect(gameManager.getStageProgress()).toBeNull()

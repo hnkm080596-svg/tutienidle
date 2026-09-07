@@ -544,6 +544,9 @@
       "countdown": {
         "go": "Xuất Trận!"
       },
+      "intro": {
+        "entering": "Vào Trận"
+      },
       "exitConfirm": {
         "message": "Thoát trận và về Động Phủ? Trận đấu hiện tại sẽ bị huỷ.",
         "stay": "Ở Lại",

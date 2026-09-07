@@ -276,6 +276,11 @@ const PHAP_TU_STARTER_SKILL_ID = 'hoa_cau_thuat'
 // tính countdownProgress) — tách hằng số ra để 2 nơi không bao giờ lệch.
 export const COUNTDOWN_TOTAL_TICKS = 30
 
+// Intro/transition phase (2026-09-07 plan Task 4) - 20 pacing ticks = 2s
+// curtain + zone/stage reveal BEFORE the 3s countdown. Shared with
+// GameManager.introPhase.test.ts; do not inline elsewhere.
+export const INTRO_TOTAL_TICKS = 20
+
 export class GameManager {
   readonly eventBus = new EventBus()
 
@@ -1360,7 +1365,7 @@ export class GameManager {
 
     const battle = this.getBattle()
 
-    if (battle && (battle.state === 'countdown' || battle.state === 'fighting')) {
+    if (battle && (battle.state === 'intro' || battle.state === 'countdown' || battle.state === 'fighting')) {
       return false
     }
 
@@ -1389,7 +1394,7 @@ export class GameManager {
 
     const battle = this.getBattle()
 
-    if (battle && (battle.state === 'countdown' || battle.state === 'fighting')) {
+    if (battle && (battle.state === 'intro' || battle.state === 'countdown' || battle.state === 'fighting')) {
       return false
     }
 
@@ -2444,7 +2449,10 @@ export class GameManager {
     return {
       players: [playerParticipant, ...companionParticipants],
       enemies: enemyParticipants,
-      state: 'countdown',
+      // Intro/transition phase (2026-09-07 plan Task 4) - curtain +
+      // zone/stage reveal before the 3-2-1 countdown. 20 ticks = 2s.
+      state: 'intro',
+      introTurnsRemaining: INTRO_TOTAL_TICKS,
       // 3s countdown hết số → 30 pacing ticks (BATTLE_FIXED_STEP 0.1s).
       countdownTurnsRemaining: COUNTDOWN_TOTAL_TICKS,
       totalTurnsElapsed: 0,
@@ -2941,8 +2949,11 @@ export class GameManager {
    * Trận" không hiện trong trận đó (xem CombatControlBar.vue).
    */
   abandonBattle(): boolean {
-    // Slice 6 cutover: TurnBattle lï¿½ ngu?n s? th?t cho "tr?n dang ch?y".
-    const turnActive = !!this.turnBattle && this.turnBattle.state === 'fighting'
+    // Slice 6 cutover: TurnBattle is the source of truth for "battle in
+    // progress". 'intro' also counts as in-progress (2026-09-07 plan
+    // Task 4) - countdown previously allowed abandoning in this wait
+    // phase; intro keeps that same behavior.
+    const turnActive = !!this.turnBattle && this.turnBattle.state !== 'victory' && this.turnBattle.state !== 'defeat'
 
     const battle = this.battleSystem.getBattle()
 
@@ -3450,6 +3461,17 @@ export class GameManager {
           // Defect Task 3 — chờ Phaser mount lần đầu (PresentationGate):
           // không tick countdown/fighting cho tới khi presentation layer
           // sẵn sàng hoặc safety-net timeout trôi qua.
+        } else if (this.turnBattle.state === 'intro') {
+          // Intro/transition phase (2026-09-07 plan Task 4): only
+          // decrement introTurnsRemaining and flip to 'countdown' at 0 -
+          // NO combat logic in this phase (same wait-phase contract as
+          // the countdown branch below).
+          this.turnBattleSystem.tickIntro(this.turnBattle)
+
+          // Snapshot emit so the overlay/scene observes the battle entering
+          // intro (reconcile pipeline mirrors countdown - wired callee,
+          // silent caller is the P13 bug class).
+          emitTurnBattleEntitySnapshot(this.eventBus, this.turnBattle)
         } else if (this.turnBattle.state === 'countdown') {
           this.turnBattleSystem.tickCountdown(this.turnBattle)
 

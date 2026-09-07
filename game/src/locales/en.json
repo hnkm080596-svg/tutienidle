@@ -544,6 +544,9 @@
       "countdown": {
         "go": "To Battle!"
       },
+      "intro": {
+        "entering": "Entering Battle"
+      },
       "exitConfirm": {
         "message": "Leave the battle and return to the Cave? The current battle will be abandoned.",
         "stay": "Stay",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { GameManager } from './GameManager'
+import { GameManager, INTRO_TOTAL_TICKS } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
@@ -173,7 +173,8 @@ describe('QA regression — refight after turn-battle victory (smoke test eviden
 
     // Refight — must succeed (was silently failing: StageManager.active stale)
     expect(gameManager.startStage(player, stats, stage, false)).toBe(true)
-    expect(gameManager.getTurnBattle()?.state).toBe('countdown')
+    expect(gameManager.getTurnBattle()?.state).toBe('intro')
+    expect(gameManager.getTurnBattle()?.introTurnsRemaining).toBe(INTRO_TOTAL_TICKS)
   })
 })
 
@@ -214,7 +215,9 @@ describe('Future Systems Task 10 — party manual pause', () => {
     // players[] đã là mảng; test này pin engine-side includes-check.)
     gameManager.setBattleManualMode(true)
 
-    for (let i = 0; i < 50; i++) {
+    // Intro 20 ticks (2026-09-07 plan Task 4) then fighting - speed 100
+    // reaches a ready actor well within 50 fighting ticks.
+    for (let i = 0; i < INTRO_TOTAL_TICKS + 50; i++) {
       gameManager.update(0.1)
     }
 
