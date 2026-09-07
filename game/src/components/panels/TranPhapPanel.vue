@@ -1,18 +1,19 @@
 <script setup lang="ts">
-// Trận Pháp panel (Combat Art Roster spec, 2026-09-05) — kéo-thả gán
-// player/companion vào lưới 3x3 STANDING SLOT (local slot indices 0-2,
-// luôn cố định bất kể vùng chiến trường tuyệt đối) của trận pháp đang
-// chọn. Standing-slot rework (2026-09-07): grid size đọc STANDING_SLOT_COUNT
-// dùng chung thay PREVIEW_GRID_SIZE local; grid resolution khớp CHÍNH XÁC
-// với canvas Phaser phía dưới (cùng nguồn 1 hằng số).
-// Việc map slot cục bộ sang PLAYER_SIDE_REGION tuyệt đối diễn ra ở
-// FormationPlacement.localCellToAbsolute() lúc build trận — panel này
-// CHỈ đọc/ghi PlayerData.formationLoadout, không đụng gì tới hệ toạ độ
-// chiến trường thật.
+// Formation panel (Combat Art Roster spec, 2026-09-05) - drag-and-drop
+// assignment of player/companions into the selected formation's 3x3
+// STANDING-SLOT grid (local slot indices 0-2, fixed regardless of the
+// absolute battlefield region). Standing-slot rework (2026-09-07): grid
+// size reads the shared STANDING_SLOT_COUNT instead of the old local
+// PREVIEW_GRID_SIZE; grid resolution matches the Phaser canvas below
+// exactly (both read the same constant).
+// Mapping local slots onto PLAYER_SIDE_REGION absolutes happens in
+// FormationPlacement.localCellToAbsolute() at battle build time -- this
+// panel only reads/writes PlayerData.formationLoadout and never touches
+// the real battlefield coordinate system.
 //
-// Gating dùng ui.standalonePanel (KHÔNG phải player.standalonePanel —
-// flag đó không tồn tại), cùng pattern OverlayPanel như mọi panel
-// standalone khác (SkillPathPanel.vue, ArtifactPanel.vue...). Mở qua
+// Gating uses ui.standalonePanel (NOT player.standalonePanel - that flag
+// does not exist), same OverlayPanel pattern as every other standalone
+// panel (SkillPathPanel.vue, ArtifactPanel.vue...). Opened via the
 // command wheel slot 'formation_slot' (game/support/commandWheelCatalog.ts).
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -26,10 +27,11 @@ import type { TranPhapDefinition } from '@/data/formation/TranPhap'
 import type { FormationSlotAssignment } from '@/core/player/Player'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import { STANDING_SLOT_COUNT } from '@/core/battle/BattlefieldRegions'
-// Battlefield Perspective Panel (2026-09-06) — canvas Phaser 420x480 (lớn
-// hơn lưới thuần để có không gian thể hiện chiều sâu phối cảnh, xem spec
-// §3). Panel canvas KHÔNG đổi kích thước trong standing-slot rework —
-// chỉ số ô lưới giảm 6x6 → 3x3 (cùng canvas, ô to hơn).
+// Battlefield Perspective Panel (2026-09-06) - Phaser canvas is 420x480
+// (larger than the pure grid to have room for perspective depth, see
+// spec section 3). Panel canvas does NOT change size in the standing-slot
+// rework - only the grid cell count drops 6x6 -> 3x3 (same canvas, bigger
+// cells).
 const PANEL_CANVAS_WIDTH = 420
 const PANEL_CANVAS_HEIGHT = 480
 import type { TranPhapCombatPreviewScene } from '@/game/scenes/TranPhapCombatPreviewScene'
@@ -223,11 +225,11 @@ watch(
         width: PANEL_CANVAS_WIDTH,
         height: PANEL_CANVAS_HEIGHT,
         transparent: true,
-        // Crash fix (standing-slot plan Task 6, 2026-09-07) — thiếu physics
-        // config khiến Phaser.Game bootstrap crash khi drop 1 quân vào panel
-        // (CombatGridView/sprite pipeline đụng physics world truy cập qua
-        // this.physics). Khớp CHÍNH XÁC bootstrap của PhaserCanvas.vue (combat
-        // thật): arcade, gravity 0, debug false.
+        // Crash fix (standing-slot plan Task 6, 2026-09-07) — missing
+        // physics config made the Phaser.Game bootstrap crash when dropping
+        // a unit into the panel (CombatGridView/sprite pipeline touches the
+        // physics world via this.physics). Mirrors PhaserCanvas.vue's
+        // real-combat bootstrap exactly: arcade, gravity 0, debug false.
         physics: { default: 'arcade', arcade: { gravity: { x: 0, y: 0 }, debug: false } },
         scene: [TranPhapCombatPreviewSceneClass],
       })
@@ -404,9 +406,10 @@ onUnmounted(() => {
   border-color: var(--jade, #4caf50);
 }
 
-/* Standing-slot plan Task 6 (2026-09-07) — occupied TÁCH khỏi enabled:
-   cùng viền xanh nhưng thêm nền xanh nhạt để phân biệt "ô trống bấm được"
-   với "ô đã có quân" bằng màu (không chỉ bằng text id bên trong). */
+/* Standing-slot plan Task 6 (2026-09-07) — occupied SPLIT from enabled:
+   same green border plus a light green background so "empty tappable cell"
+   is visually distinct from "cell already occupied" by color (not only by
+   the combatant id text inside). */
 .tran-phap-panel__cell--occupied {
   opacity: 1;
   border-color: var(--jade, #4caf50);
