@@ -5,7 +5,7 @@
 
 This document is the human-readable spec for all project rules. Two categories:
 
-- **Part 1 — Protection Rules** (P1–P14): hard rules the agent must NOT bypass. Also baked into `.opencode/agent/<name>.md` system prompts so the agent "lives in" them.
+- **Part 1 — Protection Rules** (P1–P16): hard rules the agent must NOT bypass. Also baked into `.opencode/agent/<name>.md` system prompts so the agent "lives in" them.
 - **Part 2 — Effectiveness Guidelines** (E1–E16): suggestions the agent reads and applies when relevant. May skip with reason.
 - **Part 3 — Opencode Agent Wiring**: technical note about how Part 1 is replicated into the four agent files.
 
@@ -81,7 +81,7 @@ When a rule below says "the agent", it means whichever opencode agent is current
 - The coordinator (the agent that delegated) must aggregate the subagent reports and the diff, and re-verify before declaring done.
 - Only request another review pass when evidence is missing, findings are unresolved, or the change is high-risk. Do not loop reviews for low-signal issues.
 - Subagents and coordinators MUST NOT commit, merge, integrate, push, or deploy — see P7.
-- Use the `subagent-driven-development` and `dispatching-parallel-agents` superpowers skills to plan and execute multi-agent work.
+- **Project convention (overrides the skill's own default recommendation):** prefer **Inline Execution** (`executing-plans` skill) over **Subagent-Driven Development** when executing an implementation plan in this repo. Do not dispatch one fresh subagent per task by default — execute the plan's tasks inline in the current session, with checkpoints for review. Only use `subagent-driven-development` / `dispatching-parallel-agents` when the user explicitly asks for multi-agent/parallel execution for a specific task.
 
 ### P7. No Commit / Push / Deploy + Specific Destructive Git List
 
@@ -149,6 +149,24 @@ When a rule below says "the agent", it means whichever opencode agent is current
   7. `playwright-cli close` when done, and delete any scratch files it created (`.playwright-cli/`, ad-hoc screenshots/snapshots, stray `*.yml`/`*.png` at the repo root) before finishing — these are not test artifacts and must never be committed.
 - A screenshot or snapshot showing the expected visual result is the evidence for this rule, the same way a passing test is evidence for P3. State what was visually confirmed in the summary (E11).
 - This is a real-browser spot-check for **this task's** change, not a substitute for the Playwright e2e suite (P13) or the QA skill (P4) — those are separate gates with separate evidence requirements. Do this in addition, not instead.
+
+### P15. Code Comments in English Only (mojibake prevention)
+
+**Why this rule exists.** This is a Windows environment where Vietnamese-diacritic comments have repeatedly been corrupted into mojibake (UTF-8 misread as Latin-1/CP1252, then re-saved) by find-and-replace tools and other non-UTF-8-safe writes — confirmed regressions in `CombatScene.ts` (347 instances, pre-existing) and `combat-grid-view.ts` (27 instances introduced by a single refactor commit). Restricting new comments to plain ASCII English removes the failure mode entirely: ASCII has no multi-byte encoding to corrupt.
+
+- All **new or edited code comments** (in `.ts`, `.vue`, `.js`, and similar source files) must be written in **English**, plain ASCII only — no Vietnamese diacritics.
+- This applies to comments only, not to: user-facing strings/i18n content, commit messages, chat/summary responses to the user, or documentation files (`.md`) — those may stay Vietnamese as the project already does.
+- Do not do a drive-by translation pass over unrelated existing Vietnamese comments in a file you are touching for another reason — stay in scope (P10). Translate only the comments adjacent to lines you are actually changing, when practical.
+- If a file has pre-existing mojibake near code you are editing and it is cheap to restore (e.g., recoverable from git history), fixing it is encouraged but not required — call it out in the summary either way.
+
+### P16. Vietnamese Text Confined to the i18n Gateway
+
+**Why this rule exists.** The only place Vietnamese should ever appear in this codebase is user-facing UI/UX content, and even that must go through the project's i18n gateway (`vue-i18n`, `useI18n()` + locale resource files) rather than as hardcoded string literals — so translation, search, and mojibake-safety all have one throat to choke.
+
+- Do not add new hardcoded Vietnamese string literals directly in `.vue` templates/`<script>` blocks or `.ts` files (button labels, panel titles, error/toast text, etc.). Add a key to the relevant i18n locale resource and reference it via `t('...')`, following the existing `useI18n({ useScope: 'local' })` pattern used elsewhere (e.g. `BagGrid.vue`).
+- Code comments are governed by P15 (English only) — not by this rule.
+- **Scope discipline:** this rule governs new code you write or files you substantially touch. It is not a mandate to retrofit the large pre-existing backlog of hardcoded Vietnamese content strings (item/skill/zone names, data files, etc.) — that is a separate, explicitly-scoped migration effort, not a drive-by (P10). If a task's own file already has hardcoded Vietnamese strings you are adding alongside, migrating that file's strings to i18n in the same change is encouraged.
+- Data-driven Vietnamese content authored in `data/**` (naming systems, lore, descriptions) is a pre-existing, accepted convention distinct from UI chrome strings — this rule targets new UI chrome text, not a mandate to i18n-wrap existing content data unless a task specifically calls for it.
 
 ---
 
@@ -266,10 +284,10 @@ Opencode supports per-agent system prompts via `.opencode/agent/<name>.md` files
 
 ### Agent files
 
-- `.opencode/agent/build.md` — primary agent that edits code. Embeds all 14 Protection rules.
-- `.opencode/agent/plan.md` — primary agent for spec / planning without edits. Embeds P1, P2, P6, P7, P8, P9, P10, P11. Does not need P3 / P4 / P5 / P12 / P13 / P14 because it does not ship code.
+- `.opencode/agent/build.md` — primary agent that edits code. Embeds all 16 Protection rules.
+- `.opencode/agent/plan.md` — primary agent for spec / planning without edits. Embeds P1, P2, P6, P7, P8, P9, P10, P11. Does not need P3 / P4 / P5 / P12 / P13 / P14 / P15 / P16 because it does not ship code.
 - `.opencode/agent/general.md` — primary fallback agent with the same Protection surface as `build.md`.
-- `.opencode/agent/explore.md` — primary read-only research agent. Embeds P1, P2, P6, P7, P8, P10. Does not need P3 / P4 / P5 / P9 / P12 / P13 / P14.
+- `.opencode/agent/explore.md` — primary read-only research agent. Embeds P1, P2, P6, P7, P8, P10. Does not need P3 / P4 / P5 / P9 / P12 / P13 / P14 / P15 / P16.
 
 ### Sync rule
 

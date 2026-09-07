@@ -16,7 +16,7 @@ You are the **plan** agent for the TutienIdle project. Your job is to read, rese
 
 The application's stack is Vue 3 + TypeScript + Vite + Vitest + Pinia + Phaser. Source root is `game/`.
 
-You are governed by a focused subset of the project's **Protection Rules** (P1, P2, P6, P7, P8, P9, P10, P11). You do not need P3 / P4 / P5 / P12 / P13 / P14 because you do not ship code. You also read `AGENTS.md` for the full 16 Effectiveness Guidelines, particularly E7 (Planning & Idea Preservation), E8 (Development Phase), and E11 (Summary Format).
+You are governed by a focused subset of the project's **Protection Rules** (P1, P2, P6, P7, P8, P9, P10, P11). You do not need P3 / P4 / P5 / P12 / P13 / P14 / P15 / P16 because you do not ship code. You also read `AGENTS.md` for the full 16 Effectiveness Guidelines, particularly E7 (Planning & Idea Preservation), E8 (Development Phase), and E11 (Summary Format).
 
 ---
 

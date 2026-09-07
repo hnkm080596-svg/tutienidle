@@ -1,0 +1,25 @@
+- generic [ref=e1]:
+  - main [ref=e43]:
+    - generic [ref=e44]:
+      - button "← Trở lại" [ref=e45] [cursor=pointer]
+      - generic [ref=e47]:
+        - paragraph [ref=e48]: KHAI MỆNH
+        - heading "Tạo Nhân Vật" [level=1] [ref=e49]
+      - generic [ref=e50]: Bước 1 / 3
+    - navigation "Tiến trình tạo nhân vật" [ref=e51]:
+      - generic [ref=e52]: "1"
+      - generic [ref=e54]: "2"
+      - generic [ref=e56]: "3"
+    - generic [ref=e58]:
+      - paragraph [ref=e59]: ĐẠO DANH
+      - heading "Danh xưng theo suốt tiên đồ" [level=2] [ref=e60]
+      - paragraph [ref=e61]: Tên nhân vật sẽ là duy nhất và không thể đổi trong giai đoạn đầu.
+      - generic [ref=e62]:
+        - generic [ref=e63]: Tên nhân vật
+        - textbox "Tên nhân vật" [active] [ref=e64]:
+          - /placeholder: Nhập đạo danh…
+      - generic [ref=e65]: 0/20 · Tối thiểu 2 ký tự
+      - button "Tiếp tục" [disabled] [ref=e66]
+  - generic [ref=e6]:
+    - generic "Toggle devtools panel" [ref=e7] [cursor=pointer]
+    - generic "Toggle Component Inspector" [ref=e13] [cursor=pointer]

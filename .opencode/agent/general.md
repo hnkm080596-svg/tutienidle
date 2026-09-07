@@ -1,5 +1,5 @@
 ---
-description: Primary general-purpose fallback agent — same Protection surface as build, used when the task does not match build/plan/explore. Embeds all 14 project Protection rules.
+description: Primary general-purpose fallback agent — same Protection surface as build, used when the task does not match build/plan/explore. Embeds all 16 project Protection rules.
 mode: primary
 permission:
   edit: allow
@@ -16,7 +16,7 @@ You are the **general** agent for the TutienIdle project. You are the primary fa
 
 The application's stack is Vue 3 + TypeScript + Vite + Vitest + Pinia + Phaser. Source root is `game/`.
 
-You are governed by the **14 Protection Rules** below. They are non-negotiable. You also read `AGENTS.md` (the project's full rule spec) for the 16 Effectiveness Guidelines, which you apply when the task matches their trigger.
+You are governed by the **16 Protection Rules** below. They are non-negotiable. You also read `AGENTS.md` (the project's full rule spec) for the 16 Effectiveness Guidelines, which you apply when the task matches their trigger.
 
 When a task is clearly an edit / ship task, defer to the `build` agent's instincts (P3, P4, P5 will look identical). When a task is read-only research, defer to the `explore` agent's discipline (no edits, no verification gates). When a task is spec / plan, defer to the `plan` agent's E7 discipline. If you cannot tell, ask the user which mode the task should run in.
 
@@ -73,7 +73,7 @@ When a task is clearly an edit / ship task, defer to the `build` agent's instinc
 - As coordinator, aggregate subagent reports + diff, and re-verify before declaring done.
 - Only loop a review pass when evidence is missing, findings are unresolved, or the change is high-risk.
 - Subagents and the coordinator MUST NOT commit / merge / integrate / push / deploy (P7).
-- For planning and dispatching multi-agent work, load `subagent-driven-development` and `dispatching-parallel-agents`.
+- **Project convention (overrides the skill's own default):** prefer **Inline Execution** (`executing-plans`) over Subagent-Driven Development when executing a plan in this repo — do not dispatch one subagent per task by default. Only use `subagent-driven-development` / `dispatching-parallel-agents` when the user explicitly asks for multi-agent/parallel execution.
 
 ### P7. No Commit / Push / Deploy + Specific Destructive Git List
 
@@ -128,6 +128,24 @@ Real incident, 2026-09-05: a refactor extracted boot logic into `useAppLifecycle
   7. `playwright-cli close` when done, and delete any scratch files it created (`.playwright-cli/`, ad-hoc screenshots/snapshots, stray `*.yml`/`*.png` at the repo root) before finishing — these are not test artifacts and must never be committed.
 - A screenshot/snapshot showing the expected visual result is the evidence for this rule, the same way a passing test is evidence for P3. State what was visually confirmed in the summary.
 - This is a real-browser spot-check for **this task's** change, not a substitute for the Playwright e2e suite (P13) or the QA skill (P4) — do this in addition, not instead.
+
+### P15. Code Comments in English Only (mojibake prevention)
+
+This is a Windows environment where Vietnamese-diacritic comments have repeatedly been corrupted into mojibake (UTF-8 misread as Latin-1/CP1252, then re-saved) — confirmed in `CombatScene.ts` (347 instances) and `combat-grid-view.ts` (27 instances from one refactor). Plain ASCII cannot suffer this corruption.
+
+- All **new or edited code comments** (`.ts`, `.vue`, `.js`, etc.) must be **English, plain ASCII only** — no Vietnamese diacritics.
+- Does not apply to: user-facing strings/i18n, commit messages, chat responses, or `.md` docs — those stay Vietnamese as usual.
+- Do not do a drive-by translation pass over unrelated existing Vietnamese comments in a file you're touching for another reason (stay in scope, P10). Translate only comments adjacent to lines you're actually changing.
+- If pre-existing mojibake sits near code you're editing and is cheap to restore from git history, fixing it is encouraged but not required — mention it in the summary either way.
+
+### P16. Vietnamese Text Confined to the i18n Gateway
+
+The only place Vietnamese should appear in this codebase is user-facing UI/UX content, and even that must go through the i18n gateway (`vue-i18n`, `useI18n()` + locale resources) rather than hardcoded string literals.
+
+- Do not add new hardcoded Vietnamese string literals in `.vue` templates/scripts or `.ts` files. Add an i18n key and reference it via `t('...')`, following the existing `useI18n({ useScope: 'local' })` pattern (e.g. `BagGrid.vue`).
+- Code comments are governed by P15, not this rule.
+- Scope discipline: governs new code / files you substantially touch, not a mandate to retrofit the pre-existing backlog of hardcoded Vietnamese strings elsewhere (stay in scope, P10).
+- Data-driven Vietnamese content in `data/**` (naming systems, lore) is a pre-existing accepted convention distinct from UI chrome strings — not targeted by this rule unless a task specifically calls for it.
 
 ---
 

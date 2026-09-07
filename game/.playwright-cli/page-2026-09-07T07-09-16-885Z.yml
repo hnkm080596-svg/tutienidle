@@ -1,0 +1,5 @@
+- generic [active] [ref=e1]:
+  - paragraph [ref=e4]: TIÊN HIỆP IDLE
+  - generic [ref=e6]:
+    - generic "Toggle devtools panel" [ref=e7] [cursor=pointer]
+    - generic "Toggle Component Inspector" [ref=e13] [cursor=pointer]
