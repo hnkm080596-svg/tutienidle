@@ -155,14 +155,21 @@ get fire's special/ultimate instead of the reaction skills.
    `BAT_KIEM_THUAT` is also a static definition, not converter output.
    This is a real branch point (not a fallback default), so the two
    paths never blend.
-3. `TURN_BUFF_REGISTRY` must resolve `'reaction_empowerment'` (referenced
-   by `PHAP_TU_REACTION_ULTIMATE.appliesBuff`) — confirm at
-   implementation time that `REACTION_EMPOWERMENT_BUFF` is registered
-   into whatever array `TURN_BUFF_REGISTRY` is built from (likely needs
-   adding to that array/registry construction site if it isn't already
-   there — the buff being defined in `TurnReactionPathSkills.ts` doesn't
-   automatically make it visible to `TURN_BUFF_REGISTRY` unless something
-   already imports and includes it).
+3. **Confirmed bug**: `TURN_BUFF_REGISTRY` (`game/src/data/buff/TurnBuffRegistry.ts:61-63`)
+   is built exclusively from `LIVE_BUFFS` (the legacy `game/src/data/buff/buffs.ts`
+   array) via `toTurnBuffDefinition()`. `REACTION_EMPOWERMENT_BUFF` is a
+   standalone `TurnBuffDefinition` declared in `TurnReactionPathSkills.ts`
+   — it is never added to `LIVE_BUFFS`, so `TURN_BUFF_REGISTRY.get('reaction_empowerment')`
+   throws `Error: TurnBuffRegistry: unknown buff id "reaction_empowerment"`
+   today. Casting `phap_tu_reaction_ultimate` would crash the battle the
+   moment its `appliesBuff` resolution runs. Fix: add a legacy
+   `BuffDefinition` for `reaction_empowerment` to `buffs.ts` (matching
+   every other Turn-side buff's provenance — they all originate from this
+   one array, converted automatically), then delete `TurnReactionPathSkills.ts`'s
+   standalone `REACTION_EMPOWERMENT_BUFF` export (it becomes dead
+   duplicate data once the real source of truth is `buffs.ts`) and update
+   any import of it (`TurnReactionPathSkills.test.ts` per the survey)
+   to reference the registry instead.
 4. The dead `unlocksSkillIds: ['phap_tu_reaction_special',
    'phap_tu_reaction_ultimate']` effect on `reaction_path_unlock_<tag>`
    (`PhapTuNodes.ts:275-278`) is left as-is (Non-Goals) — it's a
@@ -199,11 +206,9 @@ get fire's special/ultimate instead of the reaction skills.
 
 ## Open Items For The Implementation Plan (not decided here)
 
-- Exact confirmation of whether `REACTION_EMPOWERMENT_BUFF` is already
-  included in `TURN_BUFF_REGISTRY`'s source array, or needs adding.
-- Exact behavior of `learnSkill()` on an unresolvable id (Component 2,
-  point 4) — determines whether the dead `unlocksSkillIds` entries need
-  removing as part of this plan or can stay inert.
+- (Resolved during spec-writing: `learnSkill()` returns `false` on an
+  unresolvable id, `GameManager.ts:1038-1046` — confirmed harmless
+  no-op, the dead `unlocksSkillIds` entries stay as-is per Non-Goals.)
 - Whether `ElementType | undefined` or a plain `boolean` is the better
   return shape for the new reaction-path-detection accessor — implementer's
   call per Component 2, point 1.
