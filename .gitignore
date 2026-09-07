@@ -48,6 +48,13 @@ Thumbs.db
 # Isolated agent worktrees
 .agent-worktrees/
 
+# =========================
+# Personal tooling / scratch — not project code, never commit
+# =========================
+opencode-gemini-auth/
+.gemini/
+fixed_skills_full.txt
+
 # Python tooling caches
 __pycache__/
 *.py[cod]
