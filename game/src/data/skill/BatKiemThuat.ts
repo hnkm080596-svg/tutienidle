@@ -27,3 +27,22 @@ export const BAT_KIEM_THUAT: TurnSkillDefinition = {
   damage: { kind: 'physical', multiplier: 3 },
   targeting: { shape: 'single' },
 }
+
+// Phase A3 (2026-09-07) — Kiếm Tu ultimate: explicit stronger variant of
+// BAT_KIEM_THUAT (per locked design decision — "bản mạnh hơn của special
+// hiện có"), gated by currentThe ('the' resource type, Task 1) instead of
+// BAT_KIEM_THUAT's deliberate no-resource-gate design (see that skill's
+// own comment). Multiplier 5 / cooldown 8 are starting points for
+// playtesting, not locked balance — same convention as Phase A2's boss
+// enrage magnitudes. Gain path: BAT_KIEM_THUAT occupies the special slot,
+// so its landed hits accrue currentThe via the A3 Task 1 gain hook
+// (THE_GAIN_PER_LINK, capped at MAX_THE = 100); the ultimate consumes the
+// full pool through the generic resource gate when cast.
+export const TRU_TIEN_KIEM_TRAN: TurnSkillDefinition = {
+  id: 'tru_tien_kiem_tran',
+  cooldownTurns: 8,
+  resourceType: 'the',
+  resourceCost: 100,
+  damage: { kind: 'physical', multiplier: 5 },
+  targeting: { shape: 'single' },
+}

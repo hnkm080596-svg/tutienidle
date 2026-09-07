@@ -752,6 +752,9 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     // Phase A2 (2026-09-07) — turn-based enrage trigger; buff resolves
     // through TURN_BUFF_REGISTRY at spawn (see TurnBattleAdapter).
     bossTrigger: { afterTurns: 60, buffDefinitionId: 'qi_refining_serpent_enrage' },
+    // Phase A3 Task 5 — periodic heavy attack (every 4th own action),
+    // multiplier proportional to realm tier; playtesting starting points.
+    specialAttacks: [{ everyNth: 4, damageMultiplier: 2.5, presetId: 'water_surge' }],
     statsInput: {
       maxHp: 1320,
       attack: 102,
@@ -1356,6 +1359,9 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     // Phase A2 (2026-09-07) — turn-based enrage trigger; buff resolves
     // through TURN_BUFF_REGISTRY at spawn (see TurnBattleAdapter).
     bossTrigger: { afterTurns: 60, buffDefinitionId: 'mortal_crocodile_enrage' },
+    // Phase A3 Task 5 — periodic heavy attack (every 4th own action),
+    // multiplier proportional to realm tier; playtesting starting points.
+    specialAttacks: [{ everyNth: 4, damageMultiplier: 2, presetId: 'water_surge' }],
     statsInput: {
       maxHp: 395,
       attack: 31,
@@ -1775,6 +1781,9 @@ const FOUNDATION_ENEMIES: Enemy[] = [
     // đặc biệt data-driven: mỗi đòn thứ 4 là "Nuốt Sóng" — đòn nước nặng
     // (×2.5 damage) với preset riêng, windup caster chuẩn. Số minh hoạ,
     // playtest chỉnh. Boss KHÁC chưa khai — tiếp tục basic attack cứng.
+    // Phase A3 Task 5 — turn engine now READS this field (see
+    // TurnBattleSystem's specialAttackCounter), so this existing example
+    // is live in turn-based combat as of A3.
     specialAttacks: [{ everyNth: 4, damageMultiplier: 2.5, presetId: 'water_surge' }],
   }),
 ]

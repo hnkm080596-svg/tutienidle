@@ -433,6 +433,10 @@ export function playerToCombatEntity(
 
     currentKimThe: 0,
 
+    // Phase A3 (2026-09-07) — Pháp Tu Thế pool (Thuần-path ultimate
+    // resource). Same pattern as the other current*The pools.
+    currentThe: 0,
+
     timeSinceLastBleedProc: 0,
 
     tuLucActive: false,

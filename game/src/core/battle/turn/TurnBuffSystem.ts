@@ -412,4 +412,20 @@ export class TurnBuffSystem {
   getAll(): TurnBuff[] {
     return this.pool.getAll()
   }
+
+  /**
+   * Phase A3 (2026-09-07) — wrappers over TurnBuffPool's existing
+   * getAllById/removeAllById, ported from BuffSystem's same-named surface
+   * (BuffSystem.ts:404-410,431-433). Needed by TurnBattleSystem's
+   * consume-for-damage resolution: read a full id's instances, then clear
+   * every source's copy of that id (Detonate consumes the ailment, not
+   * just one attacker's stack of it).
+   */
+  getAllById(id: string): TurnBuff[] {
+    return this.pool.getAllById(id)
+  }
+
+  removeAllById(id: string): void {
+    this.pool.removeAllById(id)
+  }
 }

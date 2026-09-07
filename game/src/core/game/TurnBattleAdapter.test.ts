@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { toTurnBattleParticipant } from './TurnBattleAdapter'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
+import type { TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
 
 function entity(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0, speed: 130, ...overrides.stats }
@@ -81,5 +82,67 @@ describe('Phase A2 â€” bossTrigger population on spawn', () => {
     const participant = toTurnBattleParticipant(combatEntity, 0, BASIC)
 
     expect(participant.bossTrigger).toBeUndefined()
+  })
+})
+
+describe('Phase A3 — resolved special/ultimate override (Pháp Tu buildId fix)', () => {
+  const SPECIAL: TurnSkillDefinition = {
+    id: 'tam_muoi_chan_hoa',
+    cooldownTurns: 3,
+    damage: { kind: 'elemental', components: [{ kind: 'element', element: 'fire', ratio: 1 }], multiplier: 1.3 },
+    targeting: { shape: 'single' },
+  }
+
+  const ULTIMATE: TurnSkillDefinition = {
+    id: 'hoa_ha_cuu_thien',
+    cooldownTurns: 8,
+    resourceType: 'mana',
+    resourceCost: 30,
+    damage: { kind: 'elemental', components: [{ kind: 'element', element: 'fire', ratio: 1 }], multiplier: 2 },
+    targeting: { shape: 'single' },
+  }
+
+  it('populates special/ultimate from the resolved override when provided', () => {
+    const combatEntity = entity()
+
+    const participant = toTurnBattleParticipant(combatEntity, 0, BASIC, 'phap_tu', {
+      special: SPECIAL,
+      ultimate: ULTIMATE,
+    })
+
+    expect(participant.special?.skill.id).toBe('tam_muoi_chan_hoa')
+    expect(participant.ultimate?.skill.id).toBe('hoa_ha_cuu_thien')
+    expect(participant.ultimate?.remainingCooldownTurns).toBe(0)
+  })
+
+  it('override takes precedence over the static buildId map (Pháp Tu no longer silently empty)', () => {
+    const combatEntity = entity()
+
+    // 'phap_tu' as buildId matches nothing in SPECIALS_BY_BUILD (the A3
+    // Component 1 bug) — but with the override the slots still populate.
+    const participant = toTurnBattleParticipant(combatEntity, 0, BASIC, 'phap_tu', { special: SPECIAL })
+
+    expect(participant.special?.skill.id).toBe('tam_muoi_chan_hoa')
+  })
+
+  it('omits both slots when neither override nor matching buildId exists', () => {
+    const combatEntity = entity()
+
+    const participant = toTurnBattleParticipant(combatEntity, 0, BASIC, 'phap_tu')
+
+    expect(participant.special).toBeUndefined()
+    expect(participant.ultimate).toBeUndefined()
+  })
+
+  it('gives a Kiem Tu player TRU_TIEN_KIEM_TRAN as their ultimate (A3 Task 4)', () => {
+    const combatEntity = entity()
+
+    const participant = toTurnBattleParticipant(combatEntity, 0, BASIC, 'kiem_tu')
+
+    expect(participant.ultimate?.skill.id).toBe('tru_tien_kiem_tran')
+    expect(participant.ultimate?.skill.resourceType).toBe('the')
+    expect(participant.ultimate?.skill.resourceCost).toBe(100)
+    expect(participant.ultimate?.skill.cooldownTurns).toBe(8)
+    expect(participant.special?.skill.id).toBe('bat_kiem_thuat')
   })
 })

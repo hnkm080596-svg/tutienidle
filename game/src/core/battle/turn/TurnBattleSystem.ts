@@ -25,6 +25,7 @@ import { selectRandomDistinctElementPair } from './TurnSkillAction'
 import { REACTION_PATH_SPECIAL_ID } from '../../../data/skill/TurnReactionPathSkills'
 import { refundGauge, GAUGE_MAX } from './ActionGauge'
 import { TurnReactionManager } from './TurnReactionManager'
+import { MAX_THE, THE_GAIN_PER_LINK, THE_GAIN_PER_FINISHER } from '../../combat/CombatTypes'
 import type { TurnBuffDefinition } from './TurnBuffTypes'
 
 /**
@@ -103,6 +104,15 @@ export interface TurnBattleParticipant {
   /** Future Systems Task 7 — charge state (Thế→Trảm). CỐ Ý tách biệt counter CC Bá Thể. */
   chargingTurnsRemaining?: number
   pendingChargedSkillId?: string
+  /**
+   * Phase A3 (2026-09-07) — 1-based counter of this enemy's own actions,
+   * ported from BattleEnemy.specialAttackCounter (Battle.ts) with the same
+   * everyNth semantics as legacy EnemyAttackSystem.fireEnemyAttack():
+   * when counter % everyNth === 0, the special attack's damageMultiplier
+   * replaces the basic attack's for that action. Runtime-only, never
+   * resets mid-battle. undefined coerces to 0.
+   */
+  specialAttackCounter?: number
 }
 
 export interface TurnBattle {
@@ -719,6 +729,31 @@ export class TurnBattleSystem {
         ? selectForcedAction(actor, forcedSkillSlot)
         : selectAction(actor)
 
+      // Phase A3 (2026-09-07) — enemy specialAttacks reader, ported from
+      // legacy EnemyAttackSystem.fireEnemyAttack()'s everyNth semantics:
+      // 1-based counter on the actor's OWN actions; when
+      // counter % everyNth === 0 the matching special attack's
+      // damageMultiplier replaces the basic attack's damage (presetId
+      // carries for presentation). Only applies to plain basic attacks
+      // (slot null) — explicit skills (special/ultimate slots) are never
+      // replaced. Counter never resets mid-battle; undefined coerces to 0.
+      if (!action.slot && actor.entity.specialAttacks?.length) {
+        const attackCount = (actor.specialAttackCounter ?? 0) + 1
+
+        actor.specialAttackCounter = attackCount
+
+        const specialAttack = actor.entity.specialAttacks.find(
+          (candidate) => attackCount % candidate.everyNth === 0,
+        )
+
+        if (specialAttack) {
+          action = {
+            ...action,
+            damage: { kind: 'physical', multiplier: specialAttack.damageMultiplier },
+          }
+        }
+      }
+
       const isChargeInit = (action.skill?.chargeTurns ?? 0) > 0
 
       if (isChargeInit) {
@@ -857,6 +892,35 @@ export class TurnBattleSystem {
           this.combat.resolveActionHit(actor.entity, target.entity, declared.scaledDamage)
           targetIds.push(target.id)
 
+          // Phase A3 — consume-for-damage (Pháp Tu Detonate / Thổ Tu ward
+          // burst). Orchestration only: reads/clears state through
+          // TurnBuffSystem's own API (getAllById/removeAllById) and
+          // CombatEntity's plain currentWard field — this block does not
+          // own stack bookkeeping itself. True damage = direct HP
+          // subtraction, matching the reaction pipeline's
+          // applyModifiedDirectDamage bypass semantics at this resolution
+          // layer. Deliberately NOT registry-gated: these consume the
+          // skill's OWN authored fields, no registry content involved.
+          const skill = action.skill
+
+          if (skill?.consumesAilmentId && skill.damagePerStack) {
+            const stacks = new TurnBuffSystem(target.buffs).getStacks(skill.consumesAilmentId)
+
+            if (stacks > 0) {
+              target.entity.currentHp = Math.max(0, target.entity.currentHp - stacks * skill.damagePerStack)
+              new TurnBuffSystem(target.buffs).removeAllById(skill.consumesAilmentId)
+            }
+          }
+
+          if (skill?.consumesWardForDamage && skill.damagePerWardPoint) {
+            const ward = actor.entity.currentWard
+
+            if (ward > 0) {
+              target.entity.currentHp = Math.max(0, target.entity.currentHp - ward * skill.damagePerWardPoint)
+              actor.entity.currentWard = 0
+            }
+          }
+
           if (this.registry) {
             new TurnBuffSystem(actor.buffs).rollOnHitEffects(actor.entity, target.entity, this.registry)
 
@@ -893,7 +957,9 @@ export class TurnBattleSystem {
                 actor.buffs,
               )
             }
+
           }
+
         }
       }
 
@@ -905,6 +971,22 @@ export class TurnBattleSystem {
         commitAction(actor.entity, action)
       } else {
         commitAction(actor.entity, action)
+
+        // Phase A3 — Thế Thuần Hệ gain, simplified from legacy's
+        // chain-link-position rule (no turn-based chain state exists —
+        // see the A3 spec's Global Constraints). Fires once per landed
+        // action from special/ultimate slots only; basic attacks do not
+        // generate Thế. Capped at MAX_THE. Runs AFTER commitAction so an
+        // ultimate's pool consumption (100 → 0) is already reflected —
+        // the finisher gain lands on the post-cast pool, mirroring
+        // legacy's gain-after-consume ordering. Deliberately NOT inside
+        // the registry gate: Thế gain is engine-native resource accrual,
+        // not buff-registry content.
+        if (action.slot && action.slot === actor.special) {
+          actor.entity.currentThe = Math.min(MAX_THE, (actor.entity.currentThe ?? 0) + THE_GAIN_PER_LINK)
+        } else if (action.slot && action.slot === actor.ultimate) {
+          actor.entity.currentThe = Math.min(MAX_THE, (actor.entity.currentThe ?? 0) + THE_GAIN_PER_FINISHER)
+        }
 
         if (action.skill?.appliesBuff && this.registry) {
           const definition = this.registry.get(action.skill.appliesBuff.definitionId)

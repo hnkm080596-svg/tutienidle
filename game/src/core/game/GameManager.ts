@@ -212,6 +212,7 @@ import { TurnBuffSystem } from '../battle/turn/TurnBuffSystem'
 import { TurnReactionManager } from '../battle/turn/TurnReactionManager'
 import type { TurnBuffDefinition } from '../battle/turn/TurnBuffTypes'
 import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
+import { toTurnSkillDefinition } from './SkillToTurnSkillConverter'
 
 /**
  * GameManager là orchestrator (2026-08-24 refactor — tách business logic
@@ -2335,6 +2336,40 @@ export class GameManager {
     return GENERIC_PHYSICAL_BASIC
   }
 
+  /**
+   * Phase A3 (2026-09-07) — resolve the player's special/ultimate
+   * TurnSkillDefinitions for Pháp Tu builds, via the
+   * Skill→TurnSkillDefinition converter. Specialization resolution is
+   * entirely SkillSystem.getEffectiveSkill()'s job — this method only
+   * reads its output. Mirrors resolvePlayerBasicAttack()'s path/element
+   * branching. Kiếm Tu returns {} — its special/ultimate stay in
+   * TurnBattleAdapter's static buildId maps (BAT_KIEM_THUAT / the A3
+   * Task 4 ultimate), which are native turn-based content, not Skill
+   * objects.
+   */
+  private resolvePlayerSpecialUltimate(
+    player: PlayerData,
+  ): { special?: TurnSkillDefinition; ultimate?: TurnSkillDefinition } {
+    if (player.cultivationPath !== 'phap_tu') {
+      return {}
+    }
+
+    const element = this.getPhapTuThuanElement() ?? 'fire'
+    const [, specialId, ultimateId] = CHAIN_SKILL_IDS[element]
+
+    const specialSkill = this.skillManager.get(specialId)
+    const ultimateSkill = this.skillManager.get(ultimateId)
+
+    return {
+      special: specialSkill
+        ? toTurnSkillDefinition(specialSkill, this.skillSystem.getEffectiveSkill(specialSkill))
+        : undefined,
+      ultimate: ultimateSkill
+        ? toTurnSkillDefinition(ultimateSkill, this.skillSystem.getEffectiveSkill(ultimateSkill))
+        : undefined,
+    }
+  }
+
   // Bug fix (2026-09-06, user report) — quái spawn giữa trận (wave thứ 2 trở
   // đi, factory truyền cho TurnBattleSystem ở startTurnBattle()/restart cycle)
   // KHÔNG hề gọi resolveEnemySpawnPosition() như buildTurnBattle() làm cho
@@ -2380,6 +2415,11 @@ export class GameManager {
       0,
       playerPath ? this.resolvePlayerBasicAttack(playerPath) : GENERIC_PHYSICAL_BASIC,
       playerPath?.cultivationPath,
+      // Phase A3 — Pháp Tu special/ultimate resolved via the Skill
+      // converter (fixes the buildId lookup bug: 'phap_tu' never matched
+      // the static map). Kiếm Tu returns {} here and keeps its static
+      // buildId-based slots.
+      playerPath ? this.resolvePlayerSpecialUltimate(playerPath) : undefined,
     )
 
     // Companion Roster (2026-09-05) — mỗi companion trong player.companions

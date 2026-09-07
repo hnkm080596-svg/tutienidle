@@ -1,21 +1,31 @@
-// Turn-Based Combat Completion (Task 8) â€” cáº§u ná»‘i GameManager â†” TurnBattle.
-// Adapter chuyá»ƒn CombatEntity (Ä‘Ã£ cÃ³ tá»« playerToCombatEntity/
-// enemyToCombatEntity) thÃ nh TurnBattleParticipant, Ä‘á»c speed THáº¬T tá»«
-// Stat System (stats.speed, Ä‘Ã£ rename á»Ÿ conversion trÆ°á»›c).
+// Turn-Based Combat Completion (Task 8) — cầu nối GameManager ↔ TurnBattle.
+// Adapter chuyển CombatEntity (đã có từ playerToCombatEntity/
+// enemyToCombatEntity) thành TurnBattleParticipant, đọc speed THẬT từ
+// Stat System (stats.speed, đã rename ở conversion trước).
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
 import type { TurnSkillDefinition, TurnSkillSlot } from '../battle/turn/TurnSkillAction'
-import { BAT_KIEM_THUAT } from '../../data/skill/BatKiemThuat'
+import { BAT_KIEM_THUAT, TRU_TIEN_KIEM_TRAN } from '../../data/skill/BatKiemThuat'
 import { TurnBuffPool } from '../battle/turn/TurnBuffPool'
 
 /**
- * Future Systems Task 8 (2026-09-04) â€” special/ultimate role theo build.
- * Kiáº¿m Tu: Báº¡t Kiáº¿m Thuáº­t (2-phase charge, Task 7/8) á»Ÿ `special`;
- * ultimate chÆ°a cÃ³ content (Slice 2 priority-fallback xá»­ lÃ½ graceful).
- * CÃ¡c build khÃ¡c: chÆ°a author special/ultimate â€” undefined.
+ * Future Systems Task 8 (2026-09-04) — special/ultimate role theo build.
+ * Kiếm Tu: Bạt Kiếm Thuật (2-phase charge, Task 7/8) ở `special`;
+ * ultimate chưa có content (Slice 2 priority-fallback xử lý graceful).
+ *
+ * Phase A3 (2026-09-07) — Pháp Tu KHÔNG đi qua map buildId nữa: 'phap_tu'
+ * là path id, không đủ để biết element (bug Component 1 trong spec A3 —
+ * 'phap_tu' match không slot nào nên Pháp Tuplayer không có
+ * special/ultimate). GameManager resolve qua SkillToTurnSkillConverter
+ * rồi truyền `resolvedSpecialUltimate` trực tiếp (param 5). Kiếm Tu giữ
+ * lookup tĩnh qua buildId (ultimate tĩnh, xem Task 4 A3).
  */
 const SPECIALS_BY_BUILD: Record<string, TurnSkillDefinition> = {
   kiem_tu: BAT_KIEM_THUAT,
+}
+
+const ULTIMATES_BY_BUILD: Record<string, TurnSkillDefinition> = {
+  kiem_tu: TRU_TIEN_KIEM_TRAN,
 }
 
 export function toTurnBattleParticipant(
@@ -23,6 +33,7 @@ export function toTurnBattleParticipant(
   priority: number,
   basic: TurnSkillDefinition,
   buildId?: string,
+  resolvedSpecialUltimate?: { special?: TurnSkillDefinition; ultimate?: TurnSkillDefinition },
 ): TurnBattleParticipant {
   const participant: TurnBattleParticipant = {
     id: entity.id,
@@ -36,11 +47,21 @@ export function toTurnBattleParticipant(
     basic,
   }
 
-  const special = buildId !== undefined ? SPECIALS_BY_BUILD[buildId] : undefined
+  const special =
+    resolvedSpecialUltimate?.special ?? (buildId !== undefined ? SPECIALS_BY_BUILD[buildId] : undefined)
+  const ultimate =
+    resolvedSpecialUltimate?.ultimate ?? (buildId !== undefined ? ULTIMATES_BY_BUILD[buildId] : undefined)
 
   if (special) {
     participant.special = {
       skill: special,
+      remainingCooldownTurns: 0,
+    } satisfies TurnSkillSlot
+  }
+
+  if (ultimate) {
+    participant.ultimate = {
+      skill: ultimate,
       remainingCooldownTurns: 0,
     } satisfies TurnSkillSlot
   }

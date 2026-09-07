@@ -35,6 +35,10 @@ export type SkillResourceType =
   | 'mana'
   | 'sword_intent'
   | 'momentum'
+  // Phase A3 (2026-09-07) — Pháp Tu Thế pool (CombatEntity.currentThe),
+  // gates Thuần-path ultimates. Turn-based gating reuses the generic
+  // RESOURCE_FIELD mechanism (TurnSkillAction.ts) — no new code path.
+  | 'the'
 
 // Điều kiện tích stack cho passiveModifiers — mỗi passive tự chọn
 // 1 trigger, không dùng chung một cơ chế (xem PassiveSystem).
