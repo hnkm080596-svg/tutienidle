@@ -4,12 +4,12 @@ import { DEFAULT_PARTY_FORMATION } from './PartyFormation'
 import { createDefaultPlayer } from '../player/Player'
 
 describe('localCellToAbsolute', () => {
-  it('maps local (0,0) to PLAYER_SIDE_REGION\'s top-left corner (row 3, column 0)', () => {
+  it('converts local slot (0,0) to the region origin', () => {
     expect(localCellToAbsolute({ row: 0, column: 0 })).toEqual({ row: 3, column: 0 })
   })
 
-  it('maps local (5,5) to PLAYER_SIDE_REGION\'s bottom-right corner (row 8, column 5)', () => {
-    expect(localCellToAbsolute({ row: 5, column: 5 })).toEqual({ row: 8, column: 5 })
+  it('converts local slot (2,2) to the far corner of the player standing-slot grid', () => {
+    expect(localCellToAbsolute({ row: 2, column: 2 })).toEqual({ row: 7, column: 4 })
   })
 })
 
@@ -27,13 +27,13 @@ describe('resolvePartyFormation', () => {
       formationId: 'test_formation',
       assignments: [
         { row: 0, column: 0, combatantId: 'player' },
-        { row: 2, column: 3, combatantId: 'companion_a' },
+        { row: 2, column: 1, combatantId: 'companion_a' },
       ],
     }
 
     expect(resolvePartyFormation(player)).toEqual([
       { combatantId: 'player', row: 3, column: 0 },
-      { combatantId: 'companion_a', row: 5, column: 3 },
+      { combatantId: 'companion_a', row: 7, column: 2 },
     ])
   })
 })
