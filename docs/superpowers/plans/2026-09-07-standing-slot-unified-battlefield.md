@@ -43,7 +43,7 @@ an absolute `GridPosition` inside a `BattlefieldUsableRegion`. Combat math
 **Interfaces:**
 - Produces: `STANDING_SLOT_COUNT: number` (value `3`), `standingSlotPosition(region: BattlefieldUsableRegion, slotRow: number, slotColumn: number): GridPosition` — both exported from `BattlefieldRegions.ts`, consumed by Tasks 2 and 3.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Add to `game/src/core/battle/BattlefieldRegions.test.ts` (append near the existing `centerOfRegion` tests):
 
@@ -81,12 +81,12 @@ describe('STANDING_SLOT_COUNT', () => {
 
 Also add `centerOfRegion` to the existing import line at the top of the test file if not already imported.
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx.cmd vitest run game/src/core/battle/BattlefieldRegions.test.ts`
 Expected: FAIL — `standingSlotPosition`/`STANDING_SLOT_COUNT` not exported.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `game/src/core/battle/BattlefieldRegions.ts`, add after the `centerOfRegion` function:
 
@@ -110,12 +110,12 @@ export function standingSlotPosition(
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx.cmd vitest run game/src/core/battle/BattlefieldRegions.test.ts`
 Expected: PASS (all cases above).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add game/src/core/battle/BattlefieldRegions.ts game/src/core/battle/BattlefieldRegions.test.ts
@@ -134,7 +134,7 @@ git commit -m "feat(battlefield): add standingSlotPosition, 3x3 standing-slot an
 - Consumes: `standingSlotPosition(region, slotRow, slotColumn): GridPosition`, `PLAYER_SIDE_REGION` from Task 1 / `BattlefieldRegions.ts`.
 - Produces: `localCellToAbsolute(cell): GridPosition` — unchanged signature, changed semantics (`cell.row`/`cell.column` are now local slot indices 0-2, not 0-5).
 
-- [ ] **Step 1: Update the failing test**
+- [x] **Step 1: Update the failing test**
 
 In `game/src/core/game/FormationPlacement.test.ts`, update existing `localCellToAbsolute` assertions from local 0-5 coordinates to local 0-2 slot indices with the new expected absolute positions, e.g.:
 
@@ -150,12 +150,12 @@ it('converts local slot (2,2) to the far corner of the player region', () => {
 
 Also update any `resolvePartyFormation` test fixtures in this file that build `formationLoadout.assignments` with row/column values outside 0-2.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx.cmd vitest run game/src/core/game/FormationPlacement.test.ts`
 Expected: FAIL — old implementation still adds the cell directly instead of doubling it.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 import type { GridPosition } from '../battle/BattleGrid'
@@ -174,12 +174,12 @@ export function localCellToAbsolute(cell: { row: number; column: number }): Grid
 
 `resolvePartyFormation()` below it is unchanged (it already just calls `localCellToAbsolute()`). Remove the now-unused `LaneIndex` import if it becomes unused after this edit (check with type-check).
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx.cmd vitest run game/src/core/game/FormationPlacement.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add game/src/core/game/FormationPlacement.ts game/src/core/game/FormationPlacement.test.ts
@@ -198,7 +198,7 @@ git commit -m "refactor(formation): localCellToAbsolute uses shared standingSlot
 - Consumes: `standingSlotPosition`, `STANDING_SLOT_COUNT` from Task 1.
 - Produces: `resolveEnemySpawnPosition(input, region?): GridPosition` — unchanged signature; random branch now returns one of exactly 9 positions instead of any of 36.
 
-- [ ] **Step 1: Update the failing test**
+- [x] **Step 1: Update the failing test**
 
 In `game/src/core/battle/EnemySpawnPlacement.test.ts`, update the "random placement stays inside the region" style test(s) to assert the result is one of the 9 standing-slot positions rather than any row/column within `rowMin..rowMax`/`columnMin..columnMax`. Example:
 
@@ -222,12 +222,12 @@ it('random placement always lands on one of the 9 standing slots', () => {
 
 Keep the existing boss-centers test as-is (its expected value does not change — see Task 1's "middle slot matches centerOfRegion" test).
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx.cmd vitest run game/src/core/battle/EnemySpawnPlacement.test.ts`
 Expected: FAIL — current implementation returns continuous random positions across all 36 cells, most of which are not standing slots.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 import type { GridPosition } from './BattleGrid'
@@ -263,12 +263,12 @@ export function resolveEnemySpawnPosition(
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx.cmd vitest run game/src/core/battle/EnemySpawnPlacement.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add game/src/core/battle/EnemySpawnPlacement.ts game/src/core/battle/EnemySpawnPlacement.test.ts
@@ -287,16 +287,16 @@ git commit -m "refactor(enemy-spawn): random placement restricted to the 9 stand
 - Consumes: nothing new.
 - Produces: `TRAN_PHAP_FORMATIONS` — `HON_DON_TRAN.cellPattern` now has 9 entries (local rows/columns 0-2) instead of 36.
 
-- [ ] **Step 1: Update the failing test**
+- [x] **Step 1: Update the failing test**
 
 In `game/src/data/formation/TranPhap.test.ts`, update any assertion of `HON_DON_TRAN.cellPattern.length` (or equivalent) from `36` to `9`, and any assertion checking a specific cell's presence to use 0-2 coordinates.
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx.cmd vitest run game/src/data/formation/TranPhap.test.ts`
 Expected: FAIL — `cellPattern.length` is still 36.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ts
 export interface TranPhapCell {
@@ -341,12 +341,12 @@ export const TRAN_PHAP_FORMATIONS: readonly TranPhapDefinition[] = [HON_DON_TRAN
 
 Note: the top-of-file comment block (lines 1-8) also says "6x6" / references `localCellToAbsolute()` — update "6x6" to "3x3" there too. `name`/`description` stay Vietnamese (UI-facing content data, not touched by P15/P16 per the spec's Non-Goals).
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx.cmd vitest run game/src/data/formation/TranPhap.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add game/src/data/formation/TranPhap.ts game/src/data/formation/TranPhap.test.ts
@@ -365,19 +365,19 @@ git commit -m "feat(formation): Hon Don Tran opens 9 standing slots (3x3) instea
 - Consumes: `STANDING_SLOT_COUNT` from `@/core/battle/BattlefieldRegions` (Task 1).
 - Produces: same public class `TranPhapCombatPreviewScene` and constants `PANEL_WIDTH`/`PANEL_HEIGHT`/`PERSPECTIVE_MIN_ROAD_HEIGHT_PANEL` (unchanged). Removes: `PREVIEW_GRID_SIZE`, `PREVIEW_CELL_SIZE`, `previewCellTopLeft()` (dead code — confirmed zero production call sites, only referenced by its own test).
 
-- [ ] **Step 1: Update the failing test**
+- [x] **Step 1: Update the failing test**
 
 In `game/src/game/scenes/TranPhapCombatPreviewScene.test.ts`:
 - Delete the `describe('previewCellTopLeft', ...)` block entirely (the function is being removed as dead code).
 - Delete the import of `previewCellTopLeft`/`PREVIEW_CELL_SIZE` from this test file.
 - Replace any remaining reference to `PREVIEW_GRID_SIZE` with `STANDING_SLOT_COUNT` imported from `@/core/battle/BattlefieldRegions`, and update the expected grid-size value from `6` to `3` (it's already `3` if inherited from the constant — the point is the test now reads the constant instead of a local one).
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx.cmd vitest run game/src/game/scenes/TranPhapCombatPreviewScene.test.ts`
 Expected: FAIL — `PREVIEW_GRID_SIZE`/`previewCellTopLeft` still exist and are still imported from the old location; new import from `BattlefieldRegions` not yet exported by the scene module (irrelevant — it's a direct import, so this step's "fail" is really about the scene still using the old constant name if any test asserts on the new import path). If the test edits alone don't produce a red state because the values coincidentally still match, proceed to Step 3 directly — the primary correctness gate here is Step 4's full pass plus the dead-code removal.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `game/src/game/scenes/TranPhapCombatPreviewScene.ts`:
 
@@ -517,12 +517,12 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
 
 Removed: `PREVIEW_CELL_SIZE`, `PREVIEW_GRID_SIZE`, `previewCellTopLeft()`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx.cmd vitest run game/src/game/scenes/TranPhapCombatPreviewScene.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add game/src/game/scenes/TranPhapCombatPreviewScene.ts game/src/game/scenes/TranPhapCombatPreviewScene.test.ts
@@ -541,7 +541,7 @@ git commit -m "refactor(tran-phap-preview): use shared STANDING_SLOT_COUNT, remo
 **Interfaces:**
 - Consumes: `STANDING_SLOT_COUNT` from `@/core/battle/BattlefieldRegions` (Task 1/5).
 
-- [ ] **Step 1: Add i18n locale keys**
+- [x] **Step 1: Add i18n locale keys**
 
 In `game/src/locales/vi.json`, inside the `panels` object (alongside the existing `bag` key at line 270), add:
 
@@ -563,7 +563,7 @@ In `game/src/locales/en.json`, inside the equivalent `panels` object, add:
 }
 ```
 
-- [ ] **Step 2: Update imports and template in TranPhapPanel.vue**
+- [x] **Step 2: Update imports and template in TranPhapPanel.vue**
 
 Replace the dead-import block:
 
@@ -614,7 +614,7 @@ Replace the hardcoded title/labels:
 </button>
 ```
 
-- [ ] **Step 3: Fix the Phaser.Game bootstrap (crash fix)**
+- [x] **Step 3: Fix the Phaser.Game bootstrap (crash fix)**
 
 Locate the `new Phaser.Game({...})` call and add the missing `physics` block, matching `PhaserCanvas.vue`'s real-combat bootstrap exactly:
 
@@ -630,7 +630,7 @@ previewGame = new Phaser.Game({
 })
 ```
 
-- [ ] **Step 4: Fix the occupied/enabled CSS distinction**
+- [x] **Step 4: Fix the occupied/enabled CSS distinction**
 
 In the `<style scoped>` block, replace:
 
@@ -657,11 +657,11 @@ with:
 }
 ```
 
-- [ ] **Step 5: Update the stale canvas-size comment**
+- [x] **Step 5: Update the stale canvas-size comment**
 
 The comment above `.tran-phap-panel__preview-canvas` still says "360px / 356px" (a pre-existing stale reference from before the perspective-panel rework, unrelated to this plan's grid-size change but adjacent to code being touched) — leave it as a known limitation; do not attempt the canvas/overlay alignment fix here (out of scope per the spec's Non-Goals — needs its own future plan).
 
-- [ ] **Step 6: Type-check and full suite**
+- [x] **Step 6: Type-check and full suite**
 
 Run: `npm.cmd run type-check`
 Expected: 0 errors.
@@ -669,7 +669,7 @@ Expected: 0 errors.
 Run: `npx.cmd vitest run`
 Expected: all tests pass (2809+ baseline, no regressions).
 
-- [ ] **Step 7: P14 — Playwright real-browser verification (mandatory, this is exactly the change class P14 exists for)**
+- [x] **Step 7: P14 — Playwright real-browser verification (mandatory, this is exactly the change class P14 exists for)**
 
 1. `npm.cmd run dev` (background), read the printed Local URL.
 2. `playwright-cli open <url> --browser=msedge`, load an existing save or create a character to reach Trúc Cơ/home.
@@ -680,7 +680,7 @@ Expected: all tests pass (2809+ baseline, no regressions).
 7. `playwright-cli console` — confirm no unexpected errors.
 8. `playwright-cli close`, delete `.playwright-cli/` scratch files.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add game/src/components/panels/TranPhapPanel.vue game/src/locales/vi.json game/src/locales/en.json
@@ -693,7 +693,7 @@ git commit -m "fix(tran-phap-panel): fix drop crash (missing physics config), di
 
 **Files:** none (verification only).
 
-- [ ] **Step 1: Full verification**
+- [x] **Step 1: Full verification**
 
 Run: `npm.cmd run type-check`
 Run: `npm.cmd run build`
@@ -701,11 +701,40 @@ Run: `npx.cmd vitest run`
 
 Expected: all green, matching or exceeding the pre-plan baseline test count (2809 baseline + new tests added in Tasks 1-6).
 
-- [ ] **Step 2: Grep-check no lingering references to removed symbols**
+- [x] **Step 2: Grep-check no lingering references to removed symbols**
 
 Run: `grep -rn "PREVIEW_GRID_SIZE\|PREVIEW_CELL_SIZE\|previewCellTopLeft" game/src`
 Expected: no matches.
 
-- [ ] **Step 3: Summarize**
+- [x] **Step 3: Summarize**
 
 State in the final summary: what changed, P3 mode used (`full`), P14 evidence (screenshot/snapshot description from Task 6 Step 7), and confirmation that the crash bug and the CSS state bug are both fixed with browser evidence, not just code inspection.
+
+---
+
+## Completion note (2026-09-07)
+
+All 7 tasks done. Root-caused a separate issue discovered during closeout:
+the opencode agent's Task 4 edit to `TranPhap.ts` corrupted the Vietnamese
+`name`/`description` strings into literal `?`/`�` (non-UTF-8-safe write
+path, same failure class as P15's motivation but this time unrecoverable
+from the file itself -- fixed by retyping the correct Vietnamese text
+directly). This was the actual cause of the P14 e2e spec appearing to
+"hang" -- it wasn't stuck, it was waiting the full 120s timeout for a
+text-locator match (`'Hỗn Độn Trận'`) that could never succeed against
+the mangled rendered text (`'H?n D?n Tr?n'`).
+
+Final verification (P3 `full`, this session):
+- `npm.cmd run type-check` — 0 errors.
+- `npm.cmd run build` — succeeds.
+- `npx.cmd vitest run` — 2813/2813 passed (431 files), up from the
+  pre-plan baseline of 2809 (Tasks 1-5 added new tests).
+- P14 (`game/tests/e2e/standing-slot-panel.spec.ts`, real Chromium via
+  `npx playwright test`) — 1 passed (15.3s): panel opens, Hon Don Tran
+  selects, overlay renders 3x3 (9 cells, all enabled), Phaser canvas
+  bootstraps without throwing (crash fix confirmed), drag-drop of player
+  + a companion both succeed via real `DragEvent`/`DataTransfer`
+  dispatch, occupied cells get the distinct `--occupied` class (CSS fix
+  confirmed) and stay exactly 1/2 as expected, canvas survives both
+  drops, save button enables and saves, zero console/page errors.
+

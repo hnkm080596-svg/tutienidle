@@ -267,6 +267,11 @@
       "tierLock": "Locked — requires Mortal floor {level}",
       "empty": "All Body Refinement tiers completed."
     },
+    "tranPhap": {
+      "title": "Formation",
+      "confirm": "Save Formation",
+      "grantTest": "[TEST-ONLY] Grant 5 Test Companions"
+    },
     "bag": {
       "title": "Inventory",
       "countSuffix": "items",

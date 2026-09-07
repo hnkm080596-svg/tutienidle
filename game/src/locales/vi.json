@@ -267,6 +267,11 @@
       "tierLock": "Khóa — cần Phàm Nhân tầng {level}",
       "empty": "Đã hoàn thành toàn bộ Luyện Thể."
     },
+    "tranPhap": {
+      "title": "Trận Pháp",
+      "confirm": "Lưu Trận Pháp",
+      "grantTest": "[TEST-ONLY] Cấp 5 Companion Test"
+    },
     "bag": {
       "title": "Kho Vật",
       "countSuffix": "món",

@@ -1,11 +1,10 @@
-// Trận Pháp (Formation) content — spec 2026-09-05.
-// Mỗi trận pháp có một cellPattern cố định (không gian cục bộ 6x6),
-// được map lên PLAYER_SIDE_REGION tuyệt đối qua localCellToAbsolute()
-// trong FormationPlacement.ts (Task 18). Mỗi trận pháp chỉ có MỘT buff
-// đồng nhất áp dụng chung, không có vai trò riêng theo từng ô. Tất cả
-// trận pháp đều mở sẵn từ đầu, không có điều kiện unlock.
-// File này chỉ ship cơ chế (types + mảng nội dung rỗng); nội dung
-// roster/buff thực tế là công việc content riêng, làm ở task sau.
+// Tran Phap (Formation) content - spec 2026-09-05, standing-slot rework
+// 2026-09-07: local pattern space is 3x3 (9 standing slots), mapped onto
+// PLAYER_SIDE_REGION absolutes via localCellToAbsolute() in
+// FormationPlacement.ts. Each formation carries ONE shared buff - there
+// is no per-cell role. All formations are unlocked from the start.
+// Mechanism-only file (types + content array); real roster/buff content
+// is a separate content pass.
 export interface TranPhapCell {
   row: number
   column: number
@@ -19,15 +18,15 @@ export interface TranPhapDefinition {
   description: string
 }
 
-// Hỗn Độn Trận (2026-09-06, visual test tooling) — TEST-ONLY: mở toàn bộ
-// 36 ô của lưới cục bộ 6x6, dùng để test panel/wiring khi chưa có nội
-// dung Trận Pháp thật. Xoá khi có formation thật đầu tiên thay thế vai
-// trò "stress-test mọi ô" này.
+// Hon Don Tran (2026-09-06, visual test tooling) -- TEST-ONLY: opens all
+// 9 standing slots of the local 3x3 grid, used to test panel/wiring
+// before real Tran Phap content exists. Remove once a real formation
+// replaces this "stress-test every slot" role.
 function allLocalCells(): TranPhapCell[] {
   const cells: TranPhapCell[] = []
 
-  for (let row = 0; row <= 5; row++) {
-    for (let column = 0; column <= 5; column++) {
+  for (let row = 0; row <= 2; row++) {
+    for (let column = 0; column <= 2; column++) {
       cells.push({ row, column })
     }
   }
@@ -40,7 +39,7 @@ const HON_DON_TRAN: TranPhapDefinition = {
   name: 'Hỗn Độn Trận',
   cellPattern: allLocalCells(),
   buff: { definitionId: 'hon_don_tran_test_buff' },
-  description: 'TEST-ONLY — mở toàn bộ 36 ô để kiểm tra wiring đội hình.',
+  description: 'TEST-ONLY — mở toàn bộ 9 ô để kiểm tra wiring đội hình.',
 }
 
 export const TRAN_PHAP_FORMATIONS: readonly TranPhapDefinition[] = [HON_DON_TRAN]

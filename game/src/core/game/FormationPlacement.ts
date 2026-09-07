@@ -5,19 +5,17 @@
 // Pipeline spec lẫn Trận Pháp spec đều trỏ vào buildTurnBattle() — được
 // tách thành pure function riêng ở đây để buildTurnBattle() (Task 19)
 // chỉ đóng vai trò caller mỏng.
-import type { GridPosition, LaneIndex } from '../battle/BattleGrid'
-import { PLAYER_SIDE_REGION } from '../battle/BattlefieldRegions'
+import type { GridPosition } from '../battle/BattleGrid'
+import { PLAYER_SIDE_REGION, standingSlotPosition } from '../battle/BattlefieldRegions'
 import type { PlayerData } from '../player/Player'
 import { DEFAULT_PARTY_FORMATION, type PartyFormationSlot } from './PartyFormation'
 
-// Quy đổi một ô cục bộ (local cell, trong hệ tọa độ 6x6 riêng của phe
-// người chơi) thành vị trí tuyệt đối trên lưới chiến trường, bằng cách
-// cộng offset của PLAYER_SIDE_REGION (rowMin/columnMin).
+// Converts a local standing-slot index (0..STANDING_SLOT_COUNT-1 on each
+// axis, within the player's own 3x3 grid) into an absolute battlefield
+// position, via the single standingSlotPosition() anchor formula shared
+// with enemy spawn placement (EnemySpawnPlacement.ts).
 export function localCellToAbsolute(cell: { row: number; column: number }): GridPosition {
-  return {
-    row: (PLAYER_SIDE_REGION.rowMin + cell.row) as LaneIndex,
-    column: PLAYER_SIDE_REGION.columnMin + cell.column,
-  }
+  return standingSlotPosition(PLAYER_SIDE_REGION, cell.row, cell.column)
 }
 
 // Nếu player chưa từng lưu formationLoadout (null), trả về đội hình mặc
