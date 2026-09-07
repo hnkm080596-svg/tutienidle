@@ -65,8 +65,8 @@ export class CombatAnimationRuntime {
     return this.awaitedManualActor !== null
   }
 
-  /** Actor đang bị pause chờ manual choice, hoặc null. Dùng cho
-   * consumeAwaitedActorId()/buildTurnSkillPresentation() bên GameManager. */
+  /** The actor currently paused awaiting a manual choice, or null. Used by
+   * GameManager's consumeAwaitedActorId()/buildTurnSkillPresentation(). */
   getAwaitedManualActor(): TurnBattleParticipant | null {
     return this.awaitedManualActor
   }
