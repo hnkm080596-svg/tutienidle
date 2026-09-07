@@ -8,6 +8,9 @@
 // >1 player unit; polish đầy đủ là Party UI spec riêng sau).
 import { computed } from 'vue'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
+import { buffDisplayName } from '@/core/battle/turn/TurnBuffNames'
+import { TURN_BUFF_REGISTRY } from '@/data/buff/TurnBuffRegistry'
+import type { TurnBuff } from '@/core/battle/turn/TurnBuffTypes'
 
 const { isBattleFighting, upcomingActors, battle } = useTurnBattleInfo()
 
@@ -32,6 +35,34 @@ function label(index: number): string {
 
   return index === 0 ? '▶ ' : ''
 }
+
+// Phase A6 (2026-09-08) — visible buff badges for a party member's chip:
+// hidden buffs skipped (same convention as the buff pipeline), badge text
+// = name ×stacks (remainingTurns), title = description tooltip. Read-only
+// over TurnBuffPool (P17).
+function visibleBuffs(member: { buffs: { getAll(): TurnBuff[] } }): TurnBuff[] {
+  return member.buffs.getAll().filter((buff) => !buff.hidden)
+}
+
+function buffBadgeText(buff: TurnBuff): string {
+  const name = buffDisplayName(buff.id)
+
+  return buff.stacks > 1 ? `${name} ×${buff.stacks} (${Math.ceil(buff.remainingTurns)})` : `${name} (${Math.ceil(buff.remainingTurns)})`
+}
+
+function buffTooltip(buff: TurnBuff): string {
+  const definition = (() => {
+    try {
+      return TURN_BUFF_REGISTRY.get(buff.id)
+    } catch {
+      return undefined
+    }
+  })()
+
+  const description = definition?.description ?? ''
+
+  return description ? `${buffDisplayName(buff.id)} — ${description}` : buffDisplayName(buff.id)
+}
 </script>
 
 <template>
@@ -46,6 +77,13 @@ function label(index: number): string {
         {{ member.entity.name || member.id }}
         <span class="turn-order-strip__member-hp">{{ Math.max(0, Math.ceil(member.entity.currentHp)) }}/{{ member.entity.maxHp }}</span>
         <span v-if="!member.entity.alive" class="turn-order-strip__member-dead">†</span>
+        <span
+          v-for="buff in visibleBuffs(member)"
+          :key="`${buff.id}:${buff.sourceId}`"
+          class="turn-order-strip__buff"
+          :class="`is-${buff.polarity}`"
+          :title="buffTooltip(buff)"
+        >{{ buffBadgeText(buff) }}</span>
       </span>
     </div>
 
@@ -99,6 +137,23 @@ function label(index: number): string {
 }
 
 .turn-order-strip__member-dead {
+  color: var(--danger, #e53935);
+}
+
+/* Phase A6 — buff duration badges (buff = jade, debuff = danger). */
+.turn-order-strip__buff {
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: var(--text-2xs, 10px);
+}
+
+.turn-order-strip__buff.is-buff {
+  background: color-mix(in srgb, var(--jade, #4caf50) 25%, transparent);
+  color: var(--jade, #4caf50);
+}
+
+.turn-order-strip__buff.is-debuff {
+  background: color-mix(in srgb, var(--danger, #e53935) 25%, transparent);
   color: var(--danger, #e53935);
 }
 
