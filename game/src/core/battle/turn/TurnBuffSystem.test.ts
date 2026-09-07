@@ -533,3 +533,52 @@ describe('TurnBuffSystem port additions for ReactionManager (Phase A1)', () => {
     expect(pool.getAll()).toEqual([])
   })
 })
+
+describe('getAll / remove (Phase A0)', () => {
+  const A_DEF: TurnBuffDefinition = {
+    id: 'a0_bong', name: 'A0 Bong', polarity: 'debuff', duration: 5, stackMode: 'refresh',
+    effects: [{ type: 'dot', dpsRatio: 1, element: 'fire' }],
+  }
+  const B_DEF: TurnBuffDefinition = {
+    id: 'a0_te_cong', name: 'A0 Te Cong', polarity: 'debuff', duration: 5, stackMode: 'refresh',
+    effects: [],
+  }
+
+  function portedEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
+    const stats = { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats }
+    const { stats: _drop, ...rest } = overrides
+    return {
+      id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
+      currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
+      currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
+      timeSinceLastBleedProc: 0, tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
+      currentWard: 0, timeSinceLastHitTaken: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
+      ...rest,
+    } as CombatEntity
+  }
+
+  it('getAll returns every active buff instance', () => {
+    const pool = new TurnBuffPool()
+    const buffs = new TurnBuffSystem(pool)
+    const sourceA = portedEntity({ id: 'src_a' })
+    const target = portedEntity({ id: 'tgt' })
+
+    buffs.apply(A_DEF, sourceA, target)
+    buffs.apply(B_DEF, sourceA, target)
+
+    expect(buffs.getAll().map((b) => b.id).sort()).toEqual(['a0_bong', 'a0_te_cong'])
+  })
+
+  it('remove deletes exactly the (id, sourceId) instance', () => {
+    const pool = new TurnBuffPool()
+    const buffs = new TurnBuffSystem(pool)
+    const sourceA = portedEntity({ id: 'src_a' })
+    const target = portedEntity({ id: 'tgt' })
+
+    buffs.apply(A_DEF, sourceA, target)
+
+    buffs.remove('a0_bong', sourceA.id)
+
+    expect(buffs.getAll()).toHaveLength(0)
+  })
+})

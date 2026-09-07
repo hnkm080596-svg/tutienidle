@@ -402,4 +402,14 @@ export class TurnBuffSystem {
     this.pool.removeInstance(id, sourceId)
     this.pool.add({ ...existing, remainingTurns: existing.remainingTurns + extraTurns })
   }
+
+  /**
+   * Port verbatim from BuffSystem.getAll() (BuffSystem.ts:422-424). Needed
+   * by CombatSystem.killIfDead()'s survive-lethal cleanse (Phase A0), which
+   * must operate on the LIVE turn-based pool, not the legacy one. (The
+   * matching remove() already exists above, ported in Phase A1.)
+   */
+  getAll(): TurnBuff[] {
+    return this.pool.getAll()
+  }
 }
