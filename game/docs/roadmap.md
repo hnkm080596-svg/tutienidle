@@ -497,7 +497,7 @@ Dựng các primitive thuần (pure function), test riêng, KHÔNG đụng `Batt
 | 11 | **Boss enrage/tribulation content** bằng buff thủ công (KHÔNG phase-system) | Content | 🔴 Chờ #6 |
 | 12 | **Pháp Tu Reaction Path content thật** (pool element skills + ultimate % buff) | Content | 🟡 Cơ chế xong, `reaction_empowerment` inert — số liệu để implement-time |
 | 13 | **hpRegenPerTurn** — pills đã bỏ (user request 2026-09-05); techniques/equipment/realm vẫn có stat, engine đã wire (`TurnBattleSystem.ts:361-362`) | Quyết định design | 🟡 **Cần user chốt: giữ stat chung (đã chạy) hay bỏ hẳn** (mục 10) |
-| 14 | **Xóa `MomentumBreak.ts` dead code** (+ 2 test files) — mechanic đã bỏ ở Slice 4 nhưng file còn, 0 consumer từ M1 | Cleanup nhỏ | 🔴 Mới phát hiện khi gộp roadmap (verify 2026-09-05) |
+| 14 | ~~**Xóa `MomentumBreak.ts` dead code** (+ 2 test files) — mechanic đã bỏ ở Slice 4~~ | Cleanup nhỏ | ✅ **XONG (2026-09-07, merge `fc16dfa`)**: xóa module + 2 test riêng, dọn comment `TurnQueue`; type-check + turn/ 235 tests pass trên master sau merge; [QA quick](./qa/2026-09-05-momentum-break-cleanup-quick.md) PASS WITH EVIDENCE |
 
 ### 9.6. Rủi ro liên-plan đã đóng (hồ sơ)
 
@@ -596,7 +596,7 @@ Bịt nốt lỗ hổng ghi ở cuối mục 9.8 (dòng "cần playtest trực q
 
 - **Bảng 9.5 #4**: giá trị `perfectClearTurnLimit` cho từng stage (hiện 0/30 stage có) — cần bảng số hoặc quy tắc (vd theo `totalEnemyCount`).
 - **Bảng 9.5 #13**: giữ `hpRegenPerTurn` làm stat chung (engine đã wire) hay bỏ hẳn khỏi StatType.
-- **Bảng 9.5 #14**: xóa `MomentumBreak.ts` + tests luôn, hay giữ làm tài liệu tham khảo (đề xuất: xóa — git history còn).
+- ~~**Bảng 9.5 #14**: xóa `MomentumBreak.ts` + tests luôn, hay giữ làm tài liệu tham khảo~~ — ĐÃ CHỐT: xóa, merge `fc16dfa` 2026-09-07 (git history còn).
 - **3.5/3.6** (Stat cap Phàm Nhân, CDR cap 300%): chưa chốt từ 7.3.
 - **Talent v4 M2/M3**: khi làm, target phải là `TurnBuffDefinition`/turn engine (không phải legacy `BuffDefinition`) — cần ghi rõ trong plan M2/M3 lúc viết.
 - **World map vs stage list** (mục 5), **tutorial động** (mục 5): chờ quyết định riêng.
