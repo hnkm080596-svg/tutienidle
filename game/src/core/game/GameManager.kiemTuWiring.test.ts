@@ -53,7 +53,7 @@ function makeKiemTuPlayer() {
 }
 
 describe('GameManager — production wiring của 3 closure Kiếm Tu (kiem-tu §4.7)', () => {
-  it('getKiemYPermanent: bossKillCount=25 → tầng 2 → 20 kiếm ý vĩnh viễn → Kiếm Ý tạm đầu trận route BK = 20', () => {
+  it('getKiemYPermanent: bossKillCount=25 → tầng 2 → 20 kiếm ý vĩnh viễn — init vào player entity trong turn battle (C1: legacy mirror xoá)', () => {
     const manager = makeWiredManager()
     const player = makeKiemTuPlayer()
 
@@ -69,10 +69,11 @@ describe('GameManager — production wiring của 3 closure Kiếm Tu (kiem-tu �
 
     manager.startBattleWithPlayer(player, stats, enemy)
 
-    const battle = manager.battleSystem.getBattle()!
+    // C1 (2026-09-08): legacy mirror battle is gone — assert through the
+    // turn battle's player entity (same CombatEntity the Kiếm bar reads).
+    const turnPlayer = manager.getTurnBattle()!.players[0]!
 
-    // Trước fix: closure default () => 0 → currentKiemYTemp = 0.
-    expect(battle.player.currentKiemYTemp).toBe(20)
+    expect(turnPlayer.entity.currentKiemYTemp).toBe(20)
   })
 
   it('getTramTotalCasts: tram totalExperience đọc được từ skillManager (closure path)', () => {

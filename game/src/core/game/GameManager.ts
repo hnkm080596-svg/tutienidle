@@ -3,19 +3,14 @@ import { EventBus } from '../events/EventBus'
 import { CombatSystem } from '../combat/CombatSystem'
 import type { CombatEntity } from '../combat/CombatEntity'
 
-import { BattleSystem } from '../battle/legacy/BattleSystem'
 import type { Battle } from '../battle/Battle'
 import { ActionImpactSystem } from '../battle/ActionImpactSystem'
-import {
-  DEFAULT_COMBAT_AI_STRATEGY,
-  isCombatAiStrategy,
-  type CombatAiStrategy,
-} from '../battle/CombatAiStrategy'
+import { isCombatAiStrategy, type CombatAiStrategy } from '../battle/CombatAiStrategy'
 
 import { investTinhHoa, computeBreakthroughGrade } from '../realm/BodyRefinementSystem'
 import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../data/realm/BodyRefinement'
 import { grantRealmPassive } from '../realm/RealmPassiveSystem'
-import { getAlchemySuccessBonusPercentPoints, getReactionKeepChance, collectTalentEffects } from '../talent/TalentEffects'
+import { getAlchemySuccessBonusPercentPoints, collectTalentEffects } from '../talent/TalentEffects'
 import { TALENT_PASSIVE_SKILLS, getTalentPassiveSkill } from '../../data/skill/TalentPassives'
 import { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 import { DEFAULT_MAX_OFFLINE_SECONDS } from '../idle/GameClock'
@@ -167,6 +162,7 @@ import type { BattleRewardSummary } from '../reward/BattleRewardSummary'
 
 import { playerToCombatEntity, createPlayerRewardReceiver } from '../player/Player'
 import { getKiemYPermanent } from '../player/KiemYSystem'
+import { initKiemTuBattleResources } from '../battle/KiemTuResourceSystem'
 import { HERO_LANE_INDEX } from '../battle/BattleLane'
 import type { PlayerData, KiemTuRoute } from '../player/Player'
 import type { MainStatKey } from '../stats/StatTypes'
@@ -185,8 +181,6 @@ import {
 } from '../player/CultivationPathSystem'
 import type { ArtifactPath } from '../artifact/Artifact'
 import { tryUpgradeArtifactGrade } from '../artifact/ArtifactProgression'
-import { createArtifactRuntime } from '../artifact/ArtifactRuntime'
-import { filterNguHanhElements } from '../artifact/ArtifactSystem'
 
 import { CORE_REALM_LEVEL, getCurrentRealm, getRealmIndex } from '../realm/realmSystem'
 
@@ -405,60 +399,11 @@ export class GameManager {
     }
   }
 
-  // Khai báo sau skillManager/skillSystem/skillEffectSystem/
-  // buffRegistry vì field class khởi tạo theo thứ tự khai báo —
-  // BattleSystem cần các field này đã có giá trị (basic skill
-  // thay auto-attack + auto-cast, xem BattleSystem.ts).
-  readonly battleSystem = new BattleSystem(
-    this.combatSystem,
-    this.skillManager,
-    this.skillSystem,
-    this.skillEffectSystem,
-    this.buffRegistry,
-    this.eventBus,
-    this.actionImpact,
-
-    // Timed pill effects and socket modifiers remain live while the
-    // restored 10×16 battle recomputes effective stats each tick.
-    () => (this.activePlayer ? this.getActiveRuntimeModifiers(this.activePlayer) : []),
-
-    // Combat AI strategy (plan §7/§10) — PlayerData là authority; đọc
-    // LIVE để đổi strategy giữa trận có hiệu lực ngay trong tick kế.
-    () => this.activePlayer?.combatAiStrategy ?? DEFAULT_COMBAT_AI_STRATEGY,
-
-    // Thiên phú Phản Phác (talent-direction-choice-plan §6) — xác suất giữ
-    // ailment khi kích Reaction, đọc LIVE từ activePlayer.
-    () => getReactionKeepChance(this.activePlayer?.selectedTalentIds ?? []),
-
-    // Final review fix (Important #6) — nguồn sự thật DUY NHẤT cho việc
-    // kích hoạt channel Bạt Kiếm, khớp đúng điều kiện channel UI đang
-    // đọc (player.kiemTuRoute === 'bat_kiem').
-    () => this.activePlayer?.kiemTuRoute,
-
-    // Ki?m ï¿½ vinh vi?n (spec 2026-08-29-kiem-the-kiem-y m?c 3) ï¿½ closure
-    // ï¿½ï¿½ khai bï¿½o trong BattleSystem nhung chua t?ng du?c inject ? dï¿½y
-    // (profile kiem-tu ï¿½4.7): thi?u nï¿½ ? Ki?m ï¿½ t?m d?u tr?n = 0, nerf
-    // B?t Ki?m m?c k?t 0.6, on-hit khï¿½ng roll. ï¿½?c LIVE t? bossKillCount.
-    () => (this.activePlayer ? getKiemYPermanent(this.activePlayer.bossKillCount) : 0),
-
-    // H?p th? Huy Ki?m (spec m?c 3.4) ï¿½ t?ng cast c?a tram, d?c LIVE t?
-    // skillManager (flat bonus floor(casts/10) vï¿½o B?t Ki?m tick).
-    () => this.skillManager.get('tram')?.totalExperience ?? 0,
-
-    // On-hit Ki?m Tr?n (spec m?c 4) ï¿½ c?p node on-hit dï¿½ mua, l?c qua
-    // nodeRegistry (ch? node cï¿½ effect.onHitEffect).
-    () => this.getOnHitNodeLevelsSnapshot(),
-
-    // Phï¿½p Tu Thu?n H? (Task 12, 2026-09-03) ï¿½ hï¿½nh Thu?n dang ch?n, d?c
-    // LIVE t? node lap_dao_thuan_<el> dï¿½ mua (PlayerData lï¿½ authority).
-    () => this.getPhapTuThuanElement(),
-  )
-
   // =========================
-  // TURN-BASED COMBAT (Slice 6 cutover) — engine thật điều khiển combat.
-  // BattleSystem.ts vẫn giữ field tới khi mọi consumer nội bộ flip xong
-  // (legacy battle state dùng bởi passiveSystem/tribulation side).
-  // =========================
+  // TURN-BASED COMBAT — engine duy nhất điều khiển combat (C1 2026-09-08:
+  // legacy real-time BattleSystem + mirror Battle object đã XOÁ cùng
+  // battle/legacy/; mọi consumer đọc getBattle() → TurnBattle cast).
+
   private turnBattleSystem = new TurnBattleSystem(this.combatSystem)
 
   private turnBattle: TurnBattle | null = null
@@ -671,7 +616,6 @@ export class GameManager {
 
     this.stageWaves = new StageWaveSystem({
       eventBus: this.eventBus,
-      battleSystem: this.battleSystem,
       enemySystem: this.enemySystem,
       stageManager: this.stageManager,
       stageSystem: this.stageSystem,
@@ -2312,12 +2256,19 @@ export class GameManager {
     // Trận startBattle() trực tiếp (không PlayerData) thì không có thiên phú.
     this.combatSystem.setSurviveLethalSession(null)
 
-    this.battleSystem.start(player, enemyEntity)
-
-    // Slice 6 cutover: d?ng d?ng th?i TurnBattle ï¿½ engine turn-based ch?y
-    // SONG SONG v?i real-time battle (v?n lï¿½ ngu?n s? th?t cho cï¿½c consumer
-    // n?i b? chua flip). resolveNextStep() drive qua updateBattleFixedStep.
+    // C1 (2026-09-08) — legacy mirror Battle seed (battleSystem.start())
+    // removed with battle/legacy/; TurnBattle below is the only battle.
     this.turnBattle = this.buildTurnBattle(player, [enemyEntity])
+
+    // C1 parity — initKiemTuBattleResources used to run inside the legacy
+    // battleSystem.start() (initChannelState's resource half). Keep Kiếm
+    // bar parity: route KT resets Kiếm Thế; route BK seeds Kiếm Ý tạm with
+    // the permanent amount.
+    initKiemTuBattleResources(
+      this.turnBattle.players[0]!.entity,
+      this.activePlayer?.kiemTuRoute,
+      this.activePlayer ? getKiemYPermanent(this.activePlayer.bossKillCount) : 0,
+    )
   }
 
   /**
@@ -2612,7 +2563,7 @@ export class GameManager {
     getTurnBattleSystem: () => this.turnBattleSystem,
     eventBus: this.eventBus,
     getBattle: () => this.turnBattle,
-    syncLegacyBattleState: () => this.syncLegacyBattleState(),
+    syncLegacyBattleState: () => {},
   })
 
   /** Bật/tắt manual mode. Tắt giữa lúc đang chờ choice → hủy pause, engine tự chạy tiếp. */
@@ -2759,50 +2710,22 @@ export class GameManager {
       },
     })
 
-    // Bản Mệnh Pháp Bảo — snapshot level/grade/path/equippedElements
-    // NGAY lúc trận bắt đầu (doc §11); undefined nếu player không có
-    // artifact (Kiếm Tu/chưa Trúc Cơ) — updateArtifactActivation() tự
-    // no-op trong trường hợp đó.
-    this.battleSystem.setArtifactRuntime(
-      player.artifact
-        ? createArtifactRuntime(
-            player.artifact,
-            filterNguHanhElements(player.equippedElements),
-            playerEntity.currentWard,
-          )
-        : undefined,
-    )
-
-    // Phï¿½p Tu Thu?n H? (Task 12, spec ï¿½7) ï¿½ gate chu?i A?B?C?D?E cho
-    // Phï¿½p Tu dï¿½ L?p ï¿½?o Thu?n: setChainDefinition theo hï¿½nh d?c t? node
-    // lap_dao_thuan_<el> (d?c LIVE, cï¿½ng ngu?n v?i closure ult).
-    // undefined = khï¿½ng gate (m?i path cu/Ki?m Tu/guest gi? nguyï¿½n).
-    // Session-scoped: chain lï¿½ state c?a BattleSystem (s?ng qua stop()),
-    // set M?I l?n start d? tr?n k? khï¿½ng th?a hu?ng definition c?a player
-    // tru?c (multi-player session).
-    const thuanElement =
-      player.cultivationPath === 'phap_tu' ? this.getPhapTuThuanElement() : undefined
-
-    this.battleSystem.setChainDefinition(
-      thuanElement ? { skillIds: [...CHAIN_SKILL_IDS[thuanElement]] } : undefined,
-    )
-
+    // C1 (2026-09-08) — setArtifactRuntime/setChainDefinition removed with
+    // battle/legacy/: artifact activation has been inert since Slice 6
+    // (driven only by the dead BattleSystem.update(); HUD reads
+    // getBattle().artifactRuntime which is absent on TurnBattle → EMPTY
+    // state, unchanged behavior), and chain gating is a locked A3
+    // divergence (no chain gating in turn combat).
   }
 
   /**
-   * Slice 6 cutover (unified flow): getBattle() trả TurnBattle khi có trận
-   * turn-based — là NGUỒN SỰ THẬT DUY NHẤT cho mọi consumer (tests + 7 UI
-   * sites). Shape TurnBattle có `state` ('countdown' khớp isBattleInProgress
-   * hệ sống), `player`, `enemies[]` — đủ cho read-only consumers.
-   * Legacy Battle (real-time) chỉ trả khi KHÔNG có turnBattle (tribulation
-   * side chưa cutover).
+   * getBattle() returns the TurnBattle (cast to the Battle shape its
+   * read-only consumers expect: state/player/enemies). C1: the legacy
+   * fallback branch is gone — null when no turn battle (tribulation side
+   * never creates one).
    */
   getBattle(): Battle | null {
-    if (this.turnBattle) {
-      return this.turnBattle as unknown as Battle
-    }
-
-    return this.battleSystem.getBattle()
+    return (this.turnBattle as unknown as Battle) ?? null
   }
 
   /**
@@ -2956,10 +2879,13 @@ export class GameManager {
   // `stats` (mirrors startBattleWithPlayer()'s own construction) > fully-
   // populated neutral ghost.
   private resolvePersistentBuffEntity(stats?: Stats): CombatEntity {
-    const activeBattle = this.battleSystem.getBattle()
+    // C1 (2026-09-08) — the live in-battle entity now comes from the
+    // turn battle's player participant (was: the legacy mirror battle's
+    // player).
+    const activeBattle = this.turnBattle
 
     if (activeBattle) {
-      return activeBattle.player
+      return activeBattle.players[0]!.entity
     }
 
     if (stats && this.activePlayer) {
@@ -3025,24 +2951,17 @@ export class GameManager {
    * Trận" không hiện trong trận đó (xem CombatControlBar.vue).
    */
   abandonBattle(): boolean {
-    // Slice 6 cutover: TurnBattle is the source of truth for "battle in
-    // progress". 'intro' also counts as in-progress (2026-09-07 plan
-    // Task 4) - countdown previously allowed abandoning in this wait
-    // phase; intro keeps that same behavior.
+    // TurnBattle is the source of truth for "battle in progress".
+    // 'intro' also counts as in-progress (2026-09-07 plan Task 4).
+    // C1: the legacy mirror-battle branch is gone.
     const turnActive = !!this.turnBattle && this.turnBattle.state !== 'victory' && this.turnBattle.state !== 'defeat'
 
-    const battle = this.battleSystem.getBattle()
-
-    if (!turnActive && (!battle || (battle.state !== 'countdown' && battle.state !== 'fighting'))) {
+    if (!turnActive) {
       return false
     }
 
     if (this.turnBattle) {
       this.turnBattle.state = 'defeat'
-    }
-
-    if (battle) {
-      battle.state = 'defeat'
     }
     this.stageWaves.stopRepeat()
 
@@ -3622,8 +3541,6 @@ export class GameManager {
         }
       }
 
-      this.syncLegacyBattleState()
-
       // Auto-farm Task 4 — roll reward theo wall-clock (trước reward flow
       // thường; auto-farm không có turnBattle nên hai đường không giao).
       if (this.activePlayer) {
@@ -3658,18 +3575,11 @@ export class GameManager {
     this.tribulationDirector.update(deltaSeconds)
   }
   private grantBattleRewardIfNeeded() {
-    // Slice 6 cutover: rewards d?c t? TurnBattle (engine duy nh?t). Shim
-    // Battle-shape { enemies: [{ entity, rewardGranted }], player } gi?
-    // processDefeatedEnemies ho?t d?ng khï¿½ng c?n s?a BattleLootSystem.
+    // Rewards are read from TurnBattle (the only engine). C1: the legacy
+    // fallback branch (battleSystem.getBattle()) is gone — when no turn
+    // battle exists there is nothing to grant.
     if (this.turnBattle) {
       this.grantTurnBattleRewards()
-      return
-    }
-
-    const battle = this.battleSystem.getBattle()
-
-    if (battle) {
-      this.battleLoot.processDefeatedEnemies(battle)
     }
   }
 
@@ -3796,23 +3706,12 @@ export class GameManager {
   }
 
   /**
-   * Slice 6 cutover: legacy Battle state MIRROR TurnBattle state — mọi
-   * consumer đọc getBattle()?.state (UI gates, tests) thấy đúng pha trận
-   * mà không cần biết engine đã đổi. Countdown phase không tồn tại trong
-   * turn-based (bỏ) — fighting là pha đầu tiên.
+   * C1 (2026-09-08): legacy Battle state mirror REMOVED with
+   * battle/legacy/ — TurnBattle is the single source of truth; consumers
+   * read getBattle() (TurnBattle cast) directly. Kept as a no-op because
+   * CombatAnimationRuntime's deps contract still references it.
    */
-  private syncLegacyBattleState() {
-    const turnBattle = this.turnBattle
-    const legacy = this.battleSystem.getBattle()
-
-    if (!turnBattle || !legacy) {
-      return
-    }
-
-    if (legacy.state !== turnBattle.state) {
-      legacy.state = turnBattle.state
-    }
-  }  /** Repeat-continuously flag từ startStage — driver cho auto-repeat cycle của TurnBattle. */
+  private syncLegacyBattleState() {}  /** Repeat-continuously flag từ startStage — driver cho auto-repeat cycle của TurnBattle. */
   private turnBattleRepeatContinuously = false
 
   private activeStageForTurnBattle: Stage | null = null

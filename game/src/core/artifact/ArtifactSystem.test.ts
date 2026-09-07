@@ -88,9 +88,7 @@ function createBattle(overrides: Partial<Battle> = {}): Battle {
     playerMaterialized: true,
     playerBuffs: new BuffPool(),
     elapsedSeconds: 0,
-    pendingSummons: [],
-    lavaZones: [],
-    swordZones: [],
+    pendingSummons: [],
     pendingEnemySpawns: [],
     ...overrides,
   }

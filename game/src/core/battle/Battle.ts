@@ -6,8 +6,6 @@ import type { EnemySpawnVfxPresetId, PlayerSpawnVfxPresetId } from './CombatActi
 import type { GridPosition } from './BattleGrid'
 
 import type { BuffPool } from '../buff/BuffPool'
-import type { LavaZone } from './legacy/LavaZone'
-import type { SwordZone } from './legacy/SwordZone'
 import type { ArtifactRuntime } from '../artifact/ArtifactRuntime'
 
 /**
@@ -120,16 +118,6 @@ export interface Battle {
   // resolveBossSummons() rút hết mảng này mỗi tick rồi đặt lịch spawn
   // telegraph qua queueEnemySpawn() (plan §5.2).
   pendingSummons: string[]
-
-  // Plans/magicpathgeneral Phase 12 (2026-08-21) — Lava Zone, xem
-  // LavaZone.ts/BattleSystem.updateLavaZones(). Runtime-only, KHÔNG
-  // persist (giống playerBuffs/playerAilments — Battle không lưu save).
-  lavaZones: LavaZone[]
-
-  // Task 8 (Kiếm Trận keystone, 2026-08-28) — SwordZone, xem SwordZone.ts/
-  // BattleSystem.updateSwordZones(). Runtime-only, KHÔNG persist (cùng
-  // cardinality với lavaZones).
-  swordZones: SwordZone[]
 
   /**
    * Spawn telegraph (2026-08-24) — quái đang chờ hiệu ứng "telegraph →

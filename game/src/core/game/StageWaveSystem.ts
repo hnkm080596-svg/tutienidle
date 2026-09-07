@@ -1,6 +1,5 @@
-import type { BattleSystem } from '../battle/legacy/BattleSystem'
 import type { EventBus } from '../events/EventBus'
-import { enemyToCombatEntity, createEliteVariant, createBossVariant } from '../enemy/Enemy'
+import { createEliteVariant, createBossVariant } from '../enemy/Enemy'
 import type { Enemy } from '../enemy/Enemy'
 import { rollChance } from '../reward/DropRoll'
 import type { PlayerData } from '../player/Player'
@@ -15,7 +14,6 @@ import { effectiveTotalEnemyCount } from '../stage/EffectiveEnemyCount'
 
 export interface StageWaveSystemDeps {
   eventBus: EventBus
-  battleSystem: BattleSystem
   enemySystem: EnemySystem
   stageManager: StageManager
   stageSystem: StageSystem
@@ -79,100 +77,11 @@ export class StageWaveSystem {
     return true
   }
 
-  /**
-   * Gọi mỗi tick (sau grantBattleRewardIfNeeded() — cần battle.enemies
-   * đã được dọn quái chết trước khi đếm "còn sống bao nhiêu").
-   */
-  update(deltaSeconds: number) {
-    const active = this.deps.stageManager.get()
-
-    if (!active) {
-      return
-    }
-
-    const battle = this.deps.battleSystem.getBattle()
-
-    // Player chết (battle.state 'defeat') — BattleSystem.checkBattleEnd()
-    // chỉ tự set 'defeat', KHÔNG tự dừng stage (không nên biết về
-    // Stage, xem class doc). Phải dừng stageManager ở ĐÂY, không thì
-    // active không bao giờ về null, khoá cứng nút "Chiến Đấu" vĩnh viễn.
-    if (!battle || battle.state === 'defeat') {
-      this.stopRepeat()
-
-      return
-    }
-
-    if (battle.state !== 'fighting') {
-      return
-    }
-
-    const stage = this.deps.stageTemplates.get(active.stageId)
-
-    if (!stage) {
-      return
-    }
-
-    // "Còn trên sân" = quái ĐANG ĐÁNH + quái ĐANG TELEGRAPH (pending):
-    // thiếu pendingCount thì wave sau được đặt lịch ồ ạt (sân "trống" giả
-    // khi quái chưa materialize) và trận kết thúc sớm khi telegraph còn
-    // chạy (migration spawn telegraph 2026-08-24).
-    const aliveCount = battle.enemies.length + battle.pendingEnemySpawns.length
-
-    if (active.spawnedCount >= effectiveTotalEnemyCount(stage)) {
-      if (aliveCount === 0) {
-        if (
-          this.activeStagePlayer &&
-          !this.activeStagePlayer.completedStageIds.includes(stage.id)
-        ) {
-          this.activeStagePlayer.completedStageIds.push(stage.id)
-        }
-
-        if (this.repeatStageContinuously && this.deps.stageManager.restartCycle(stage)) {
-          // Giữ nguyên Battle/player HP, resource, cooldown và reward summary;
-          // cycle mới chỉ khởi động lại bộ đếm spawn của stage.
-          return
-        }
-
-        battle.state = 'victory'
-
-        this.deps.stageManager.stop()
-
-        // Chỉ chạy tới đây đúng 1 lần — tick kế battle.state đã là
-        // 'victory' (!== 'fighting'), hàm này return sớm ở trên.
-        this.deps.eventBus.emit('battle_end', { type: 'battle_end', state: 'victory' })
-      }
-
-      return
-    }
-
-    active.spawnCountdown -= deltaSeconds
-
-    // Sân trống quái giữa chừng thì spawn ngay (không đợi hết nhịp) —
-    // tránh "chết thời gian" khi player out-DPS nhịp spawn mặc định.
-    if (active.spawnCountdown > 0 && aliveCount > 0) {
-      return
-    }
-
-    const nextEnemyTemplate = this.pickEnemyForSpawn(
-      stage,
-      active.spawnedCount === effectiveTotalEnemyCount(stage) - 1,
-    )
-
-    if (!nextEnemyTemplate) {
-      return
-    }
-
-    const nextEnemyEntity = enemyToCombatEntity(this.deps.enemySystem.spawn(nextEnemyTemplate))
-
-    // Luồng mới (plan §5.2): ĐẶT LỊCH spawn (telegraph 0.75–1.4s) thay vì
-    // materialize ngay tại cột 16. Overlap hợp lệ nên queue LUÔN thành
-    // công — không còn retry "hết chỗ" (spawnedCount tăng ngay).
-    this.deps.battleSystem.queueEnemySpawn(battle, nextEnemyEntity)
-
-    active.spawnedCount++
-
-    active.spawnCountdown = stage.spawnIntervalSeconds
-  }
+  // C1 (2026-09-08) — the legacy real-time spawn loop (update()) and
+  // resolveBossSummons() are REMOVED: neither was called from any prod
+  // caller since the Slice 6 cutover (turn-based wave spawning lives in
+  // TurnBattleSystem.tickPacing via the spawnEnemy factory). The live
+  // surface is start/stopRepeat/getProgress/pickEnemyForTurnSpawn below.
 
   // Người chơi CHỦ ĐỘNG thoát trận giữa chừng / player chết — dừng stage
   // và tắt auto-repeat. Phần thưởng đã kiếm được KHÔNG mất (loot cấp theo
@@ -211,37 +120,6 @@ export class StageWaveSystem {
       // Boss hiện "1/5" thay vì "1/1" dù trận đã thắng.
       total: effectiveTotalEnemyCount(stage),
     }
-  }
-
-  /**
-   * Combat Rework Phase 4 (Boss Mechanics) — rút Battle.pendingSummons
-   * (BattleSystem đẩy vào khi 1 TribulationPhase.summonEnemyIds trigger,
-   * xem BattleSystem.updateTribulationPhases()) rồi spawn thật, cùng
-   * pattern update() dùng cho wave spawn — đây là nơi DUY NHẤT biết tra
-   * Enemy template theo id (enemyTemplates), BattleSystem không nên biết.
-   */
-  resolveBossSummons() {
-    const battle = this.deps.battleSystem.getBattle()
-
-    if (!battle || battle.pendingSummons.length === 0) {
-      return
-    }
-
-    // Spawn qua telegraph queue như quái thường; overlap hợp lệ nên
-    // luôn schedule được (plan §5.2).
-    for (const enemyId of battle.pendingSummons) {
-      const template = this.deps.enemyTemplates.get(enemyId)
-
-      if (!template) {
-        continue
-      }
-
-      const summonedEntity = enemyToCombatEntity(this.deps.enemySystem.spawn(template))
-
-      this.deps.battleSystem.queueEnemySpawn(battle, summonedEntity)
-    }
-
-    battle.pendingSummons = []
   }
 
   /**
