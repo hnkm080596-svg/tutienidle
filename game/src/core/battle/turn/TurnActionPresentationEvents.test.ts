@@ -8,6 +8,7 @@ import {
   emitTurnBattleEntitySnapshot,
   type TurnBattleEntitySnapshotEvent,
 } from './TurnActionPresentationEvents'
+import { COUNTDOWN_TOTAL_TICKS } from '@/core/game/GameManager'
 import { TurnBuffPool } from './TurnBuffPool'
 import type { TurnBattle, TurnBattleParticipant } from './TurnBattleSystem'
 import type { CombatEntity } from '../../combat/CombatEntity'
@@ -168,6 +169,122 @@ describe('TurnActionPresentationEvents', () => {
       emitTurnBattleEntitySnapshot(eventBus, battle)
 
       expect(received[0]!.players[0]!.isBoss).toBe(false)
+    })
+  })
+
+  describe('emitTurnBattleEntitySnapshot — pendingEnemySpawns (Turn-Based Wave Redesign, 2026-09-06)', () => {
+    it('maps battle.wave.pendingEnemySpawns into progress-based visual state', () => {
+      const eventBus = new EventBus()
+      const enemy = createCombatant({ id: 'enemy1', row: 3, x: 8 })
+      const participant = makeParticipant('enemy1', enemy, 10, 1)
+
+      const battle: TurnBattle = {
+        players: [],
+        enemies: [],
+        state: 'fighting',
+        wave: {
+          totalEnemyCount: 1,
+          spawnedCount: 1,
+          waves: [1],
+          waveIndex: 1,
+          pendingEnemySpawns: [{ participant, ticksRemaining: 2, totalTicks: 8 }],
+        },
+      }
+
+      let received: TurnBattleEntitySnapshotEvent | undefined
+
+      eventBus.on('turn_battle_entity_snapshot', (event) => {
+        received = event as TurnBattleEntitySnapshotEvent
+      })
+
+      emitTurnBattleEntitySnapshot(eventBus, battle)
+
+      expect(received!.pendingEnemySpawns).toHaveLength(1)
+      expect(received!.pendingEnemySpawns[0]!.id).toBe('enemy1')
+      expect(received!.pendingEnemySpawns[0]!.progress).toBeCloseTo(1 - 2 / 8, 6)
+      expect(received!.pendingEnemySpawns[0]!.presetId).toBe('enemy_spawn')
+    })
+
+    it('empty array when battle.wave is undefined (no regression for non-wave battles)', () => {
+      const eventBus = new EventBus()
+      const battle: TurnBattle = { players: [], enemies: [], state: 'fighting' }
+
+      let received: TurnBattleEntitySnapshotEvent | undefined
+
+      eventBus.on('turn_battle_entity_snapshot', (event) => {
+        received = event as TurnBattleEntitySnapshotEvent
+      })
+
+      emitTurnBattleEntitySnapshot(eventBus, battle)
+
+      expect(received!.pendingEnemySpawns).toEqual([])
+    })
+
+    it('maps boss pending spawn to boss_spawn preset', () => {
+      const eventBus = new EventBus()
+      const boss = createCombatant({ id: 'boss1', isBoss: true })
+      const participant = makeParticipant('boss1', boss, 10, 1)
+
+      const battle: TurnBattle = {
+        players: [],
+        enemies: [],
+        state: 'fighting',
+        wave: {
+          totalEnemyCount: 1,
+          spawnedCount: 1,
+          waves: [1],
+          waveIndex: 1,
+          pendingEnemySpawns: [{ participant, ticksRemaining: 14, totalTicks: 14 }],
+        },
+      }
+
+      let received: TurnBattleEntitySnapshotEvent | undefined
+
+      eventBus.on('turn_battle_entity_snapshot', (event) => {
+        received = event as TurnBattleEntitySnapshotEvent
+      })
+
+      emitTurnBattleEntitySnapshot(eventBus, battle)
+
+      expect(received!.pendingEnemySpawns[0]!.presetId).toBe('boss_spawn')
+      expect(received!.pendingEnemySpawns[0]!.isBoss).toBe(true)
+    })
+  })
+
+  describe('emitTurnBattleEntitySnapshot — countdownProgress', () => {
+    it('present and correctly computed while state is countdown', () => {
+      const eventBus = new EventBus()
+      const battle: TurnBattle = {
+        players: [],
+        enemies: [],
+        state: 'countdown',
+        countdownTurnsRemaining: 15,
+      }
+
+      let received: TurnBattleEntitySnapshotEvent | undefined
+
+      eventBus.on('turn_battle_entity_snapshot', (event) => {
+        received = event as TurnBattleEntitySnapshotEvent
+      })
+
+      emitTurnBattleEntitySnapshot(eventBus, battle)
+
+      expect(received!.countdownProgress).toBeCloseTo(1 - 15 / COUNTDOWN_TOTAL_TICKS, 6)
+    })
+
+    it('undefined once state is fighting', () => {
+      const eventBus = new EventBus()
+      const battle: TurnBattle = { players: [], enemies: [], state: 'fighting' }
+
+      let received: TurnBattleEntitySnapshotEvent | undefined
+
+      eventBus.on('turn_battle_entity_snapshot', (event) => {
+        received = event as TurnBattleEntitySnapshotEvent
+      })
+
+      emitTurnBattleEntitySnapshot(eventBus, battle)
+
+      expect(received!.countdownProgress).toBeUndefined()
     })
   })
 })
