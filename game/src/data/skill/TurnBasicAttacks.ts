@@ -20,12 +20,17 @@ export const KIEM_TU_BASIC: TurnSkillDefinition = {
   targeting: { shape: 'single' },
 }
 
+// Phase A1 (2026-09-07) — each entry gains appliesAilment with the EXACT
+// chance authored on the same skill's legacy Skill definition in Skills.ts
+// (ailmentChance): fire 0.5, water 0.5, wood 1.0, metal 0.4, earth 1.0.
+// These make elemental reactions (TurnReactionManager) reachable in real
+// turn-based combat.
 export const PHAP_TU_BASICS: Record<'fire' | 'water' | 'wood' | 'metal' | 'earth', TurnSkillDefinition> = {
-  fire: { id: 'hoa_cau_thuat', cooldownTurns: 0, damage: { kind: 'elemental', components: [{ kind: 'element', element: 'fire', ratio: 1 }], multiplier: 1 }, targeting: { shape: 'single' } },
-  water: { id: 'thuy_tien_thuat', cooldownTurns: 0, damage: { kind: 'elemental', components: [{ kind: 'element', element: 'water', ratio: 1 }], multiplier: 1 }, targeting: { shape: 'single' } },
-  wood: { id: 'doc_chuong', cooldownTurns: 0, damage: { kind: 'elemental', components: [{ kind: 'element', element: 'wood', ratio: 1 }], multiplier: 1 }, targeting: { shape: 'single' } },
-  metal: { id: 'diem_kim_thuat', cooldownTurns: 0, damage: { kind: 'elemental', components: [{ kind: 'element', element: 'metal', ratio: 1 }], multiplier: 1 }, targeting: { shape: 'single' } },
-  earth: { id: 'tho_cau_thuat', cooldownTurns: 0, damage: { kind: 'elemental', components: [{ kind: 'element', element: 'earth', ratio: 1 }], multiplier: 1 }, targeting: { shape: 'single' } },
+  fire: { id: 'hoa_cau_thuat', cooldownTurns: 0, damage: { kind: 'elemental', components: [{ kind: 'element', element: 'fire', ratio: 1 }], multiplier: 1 }, targeting: { shape: 'single' }, appliesAilment: { buffDefinitionId: 'bong', chance: 0.5 } },
+  water: { id: 'thuy_tien_thuat', cooldownTurns: 0, damage: { kind: 'elemental', components: [{ kind: 'element', element: 'water', ratio: 1 }], multiplier: 1 }, targeting: { shape: 'single' }, appliesAilment: { buffDefinitionId: 'te_cong', chance: 0.5 } },
+  wood: { id: 'doc_chuong', cooldownTurns: 0, damage: { kind: 'elemental', components: [{ kind: 'element', element: 'wood', ratio: 1 }], multiplier: 1 }, targeting: { shape: 'single' }, appliesAilment: { buffDefinitionId: 'trung_doc', chance: 1 } },
+  metal: { id: 'diem_kim_thuat', cooldownTurns: 0, damage: { kind: 'elemental', components: [{ kind: 'element', element: 'metal', ratio: 1 }], multiplier: 1 }, targeting: { shape: 'single' }, appliesAilment: { buffDefinitionId: 'chay_mau', chance: 0.4 } },
+  earth: { id: 'tho_cau_thuat', cooldownTurns: 0, damage: { kind: 'elemental', components: [{ kind: 'element', element: 'earth', ratio: 1 }], multiplier: 1 }, targeting: { shape: 'single' }, appliesAilment: { buffDefinitionId: 'thach_hoa', chance: 1 } },
 }
 
 /** Thể Tu + Phàm Nhân — generic melee, hệ sống không dùng Skill object. */

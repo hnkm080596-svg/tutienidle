@@ -10,6 +10,8 @@ import { GAUGE_MAX } from './ActionGauge'
 import { defineEnemy, enemyToCombatEntity } from '../../enemy/Enemy'
 import { toTurnBattleParticipant } from '../../game/TurnBattleAdapter'
 import { TURN_BUFF_REGISTRY } from '../../../data/buff/TurnBuffRegistry'
+import { PHAP_TU_BASICS } from '../../../data/skill/TurnBasicAttacks'
+import { TurnReactionManager } from './TurnReactionManager'
 
 // Fixture giá»‘ng há»‡t quy Æ°á»›c Ä‘Ã£ dÃ¹ng trong ActionTargetingSystem.test.ts â€”
 // selectTarget chá»‰ Ä‘á»c id/x/row/alive, khÃ´ng cáº§n Stats Ä‘áº§y Ä‘á»§.
@@ -2231,5 +2233,61 @@ describe('TurnBattleSystem appliesAilment (Phase A1)', () => {
 
     expect(() => system.resolveNextStep(battle)).not.toThrow()
     expect(enemyParticipant.buffs.hasAny('fixture_ailment')).toBe(false)
+  })
+})
+
+describe('TurnBattleSystem Phase A1 end-to-end � real production reaction content', () => {
+  it('real production content: H?a (hoa_cau_thuat) then Th?y T� C�ng triggers B?c Hoi', () => {
+    const eventBus = new EventBus()
+    const combatSystem = new CombatSystem(eventBus)
+    const reactionManager = new TurnReactionManager(eventBus)
+
+    const firePlayer = createCombatant({
+      id: 'fire_player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 },
+    })
+    const target = createCombatant({
+      id: 'target',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const firePlayerParticipant = makeParticipant('fire_player', firePlayer, 100, 0)
+    firePlayerParticipant.basic = PHAP_TU_BASICS.fire
+
+    const enemyParticipant = makeParticipant('target', target, 1, 1)
+
+    const battle: TurnBattle = {
+      players: [firePlayerParticipant],
+      enemies: [enemyParticipant],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(combatSystem, 10, TURN_BUFF_REGISTRY, undefined, undefined, reactionManager)
+
+    const reactionEvents: unknown[] = []
+    eventBus.on('reaction', (event) => reactionEvents.push(event))
+
+    // Force the second ailment (Th?y side of "B?c Hoi") � this test proves
+    // the WIRING works end-to-end with real data, not re-testing RNG.
+    new TurnBuffSystem(enemyParticipant.buffs).apply(
+      TURN_BUFF_REGISTRY.get('te_cong'),
+      firePlayer,
+      target,
+      TURN_BUFF_REGISTRY,
+    )
+
+    // hoa_cau_thuat's ailment chance is 0.5 � loop until a fire hit lands
+    // with overwhelming probability (matches this file's convention of
+    // looping enough iterations for chance-based content).
+    for (let i = 0; i < 50; i++) {
+      if (enemyParticipant.buffs.hasAny('bong')) break
+      system.resolveNextStep(battle)
+    }
+
+    expect(enemyParticipant.buffs.hasAny('bong')).toBe(true)
+    expect(reactionEvents.length).toBeGreaterThan(0)
   })
 })

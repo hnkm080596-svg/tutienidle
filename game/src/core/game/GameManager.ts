@@ -209,6 +209,7 @@ import { COMPANIONS } from '../../data/companion/Companions'
 import { TRAN_PHAP_FORMATIONS } from '../../data/formation/TranPhap'
 import { TURN_BUFF_REGISTRY } from '../../data/buff/TurnBuffRegistry'
 import { TurnBuffSystem } from '../battle/turn/TurnBuffSystem'
+import { TurnReactionManager } from '../battle/turn/TurnReactionManager'
 import type { TurnBuffDefinition } from '../battle/turn/TurnBuffTypes'
 import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
 
@@ -2529,6 +2530,8 @@ export class GameManager {
           GENERIC_PHYSICAL_BASIC,
         )
       },
+      undefined, // reactionPathPool — not populated until roadmap A4
+      new TurnReactionManager(this.eventBus),
     )
   }
 
@@ -3087,6 +3090,8 @@ export class GameManager {
             GENERIC_PHYSICAL_BASIC,
           )
         },
+        undefined, // reactionPathPool — not populated until roadmap A4
+        new TurnReactionManager(this.eventBus),
       )
     }
 
