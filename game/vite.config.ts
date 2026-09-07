@@ -14,6 +14,17 @@ const isElectron = Boolean(process.env.ELECTRON)
 
 // https://vite.dev/config/
 export default defineConfig({
+  // Port per-checkout (2026-09-07) — UITemp dùng 5174 (master dùng 5173):
+  // chạy song song 2 dev server không xung đột port. Biến env DEV_PORT
+  // override vẫn được: npm run dev -- --port 5999.
+  server: {
+    port: Number(process.env.DEV_PORT ?? 5174),
+    strictPort: false,
+  },
+  preview: {
+    port: Number(process.env.DEV_PORT ?? 5174),
+    strictPort: false,
+  },
   // Asset URL tương đối — bắt buộc để index.html load đúng qua file://
   // khi Electron đóng gói (electron-builder). Không ảnh hưởng dev server/
   // vite preview, cả 2 vẫn phục vụ qua http bình thường.
