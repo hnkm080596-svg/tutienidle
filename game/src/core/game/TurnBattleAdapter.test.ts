@@ -61,3 +61,25 @@ describe('Future Systems Task 8 â€” Kiáº¿m Tu special = Báº¡t Kiáº�
     expect(participant.special).toBeUndefined()
   })
 })
+
+describe('Phase A2 â€” bossTrigger population on spawn', () => {
+  it('populates bossTrigger with firedAlready: false when entity.bossTrigger is set', () => {
+    const combatEntity = entity({ bossTrigger: { afterTurns: 60, buffDefinitionId: 'fixture_enrage' } })
+
+    const participant = toTurnBattleParticipant(combatEntity, 0, BASIC)
+
+    expect(participant.bossTrigger).toEqual({
+      afterTurns: 60,
+      buffDefinitionId: 'fixture_enrage',
+      firedAlready: false,
+    })
+  })
+
+  it('leaves bossTrigger undefined when entity.bossTrigger is not set', () => {
+    const combatEntity = entity()
+
+    const participant = toTurnBattleParticipant(combatEntity, 0, BASIC)
+
+    expect(participant.bossTrigger).toBeUndefined()
+  })
+})

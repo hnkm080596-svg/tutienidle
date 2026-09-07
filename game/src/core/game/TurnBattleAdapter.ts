@@ -45,5 +45,13 @@ export function toTurnBattleParticipant(
     } satisfies TurnSkillSlot
   }
 
+  if (entity.bossTrigger) {
+    participant.bossTrigger = {
+      afterTurns: entity.bossTrigger.afterTurns,
+      buffDefinitionId: entity.bossTrigger.buffDefinitionId,
+      firedAlready: false,
+    }
+  }
+
   return participant
 }
