@@ -118,7 +118,10 @@ function handleImportFile(event: Event) {
         if (ok) {
           window.location.reload()
         } else {
-          window.alert(t('panels.settings.errors.invalidSaveFile'))
+          // UI-007 (Task 5) — window.alert native → toast store (in-game
+          // feedback, tự biến mất, không chặn luồng; giữ import input
+          // reset để retry ngay).
+          notification.push('error', t('panels.settings.errors.invalidSaveFile'))
         }
       }
 

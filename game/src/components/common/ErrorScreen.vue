@@ -5,15 +5,16 @@ import { useErrorStore } from '@/stores/error'
 
 const errorStore = useErrorStore()
 
-// "Thử Lại" chỉ đóng overlay tại chỗ (thử render lại, không mất tiến
-// trình phiên hiện tại) — "Về Trang Chủ" reload thật (reset an toàn,
-// chấp nhận mất vài giây chưa lưu, game đã có nút Lưu Tiến Trình thủ
-// công + toast xác nhận, xem stores/notification.ts).
-function retry() {
+// UI-014 (Task 9, 2026-09-07) — nút trước đây nhãn "Thử Lại" nhưng thực
+// chất CHỈ clear error store (không retry/re-mount operation nào). Đổi
+// nhãn thành "Đóng" khớp behavior thật (plan Task 9: "rename it if it
+// only clears the store"); "Tải Lại Trang" reload thật là path recovery
+// chính (reset an toàn, autosave đã có pagehide guard).
+function dismiss() {
   errorStore.clear()
 }
 
-function returnHome() {
+function reloadPage() {
   window.location.reload()
 }
 </script>
@@ -30,9 +31,9 @@ function returnHome() {
         <p class="error-screen__message">{{ errorStore.current }}</p>
 
         <div class="error-screen__actions">
-          <GameButton variant="primary" @click="retry">Thử Lại</GameButton>
+          <GameButton variant="primary" @click="dismiss">Đóng</GameButton>
 
-          <GameButton variant="secondary" @click="returnHome">Về Trang Chủ</GameButton>
+          <GameButton variant="secondary" @click="reloadPage">Tải Lại Trang</GameButton>
         </div>
       </div>
     </div>

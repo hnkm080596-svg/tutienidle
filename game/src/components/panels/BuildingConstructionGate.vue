@@ -9,12 +9,13 @@
 // Thám Hiểm rework — build() thêm window.confirm() (y/n mở khoá) TRƯỚC
 // khi trừ nguyên liệu, cùng pattern HomeBuildingIcons.vue's
 // BuildingDetailPopover.vue (2 nơi build Building giờ đều xác nhận).
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { isTestModeUnlockAll } from '@/core/dev/DevMode'
 import GameButton from '@/components/common/GameButton.vue'
+import ConfirmModal from '@/components/common/ConfirmModal.vue'
 
 const props = defineProps<{ buildingId: string }>()
 
@@ -65,14 +66,17 @@ function materialLabel(materialId: string): string {
   return gameManager.materialRegistry.has(materialId) ? gameManager.materialRegistry.get(materialId).name : materialId
 }
 
+// UI-007 (Task 5, 2026-09-07) — window.confirm() native → ConfirmModal
+// dùng chung (in-game modal, keyboard + focus trap, hủy các luồng native
+// còn sót). Modal xác nhận hiện khi bấm Xây; confirm mới trừ tài nguyên.
+const confirmOpen = ref(false)
+
+function requestBuild() {
+  confirmOpen.value = true
+}
+
 function build() {
-  const costLabel = buildCost.value.map(c => `${materialLabel(c.materialId)} x${formatNumber(c.amount)}`).join(', ') || 'miễn phí'
-
-  const confirmed = window.confirm(`Xây ${template.value.name}? Sẽ tốn ${costLabel}.`)
-
-  if (!confirmed) {
-    return
-  }
+  confirmOpen.value = false
 
   if (gameManager.buildBuilding(props.buildingId, player.$state)) {
     bumpState()
@@ -94,7 +98,7 @@ function build() {
         Cần: {{ buildCost.map(c => `${materialLabel(c.materialId)} x${formatNumber(c.amount)}`).join(', ') || 'Miễn phí' }}
       </p>
 
-      <GameButton class="construction-gate__build" size="sm" :disabled="!canBuild" @click="build">
+      <GameButton class="construction-gate__build" size="sm" :disabled="!canBuild" @click="requestBuild">
         Xây Dựng
       </GameButton>
     </div>
@@ -102,6 +106,17 @@ function build() {
     <div v-else class="construction-gate__content">
       <slot />
     </div>
+
+    <!-- UI-007 — xác nhận xây qua ConfirmModal dùng chung (thay window.confirm).
+         Đặt NGOÀI cặp v-if/v-else để không phá adjacency của chúng. -->
+    <ConfirmModal
+      :open="confirmOpen"
+      :title="`Xây ${template.name}?`"
+      :message="`Sẽ tốn ${buildCost.map(c => `${materialLabel(c.materialId)} x${formatNumber(c.amount)}`).join(', ') || 'miễn phí'}.`"
+      :confirm-label="'Xây Dựng'"
+      @confirm="build"
+      @cancel="confirmOpen = false"
+    />
   </div>
 </template>
 

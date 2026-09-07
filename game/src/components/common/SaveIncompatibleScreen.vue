@@ -59,7 +59,11 @@ function handleImport(event: Event) {
     if (ok) {
       window.location.reload()
     } else {
-      requestConfirm('Nhập Save Thất Bại', 'File save không hợp lệ.', () => {})
+      // UI-007/UI-014 (Task 5) — confirm rỗng-callback → alert close-only
+      // (không có action "xác nhận" vô nghĩa); reset file input để retry.
+      requestConfirm('Nhập Save Thất Bại', 'File save không hợp lệ.', () => {}, false)
+
+      input.value = ''
     }
   }
 
