@@ -152,6 +152,10 @@ The only place Vietnamese should appear in this codebase is user-facing UI/UX co
 - Scope discipline: governs new code / files you substantially touch, not a mandate to retrofit the pre-existing backlog of hardcoded Vietnamese strings elsewhere (stay in scope, P10).
 - Data-driven Vietnamese content in `data/**` (naming systems, lore) is a pre-existing accepted convention distinct from UI chrome strings — not targeted by this rule unless a task specifically calls for it.
 
+### P17. Runtime/Presentation/Logic Separation (single-responsibility systems, no cross-talk)
+
+A runtime/clock component's only job is timing (advance a gauge/counter, select current animation/VFX state, signal ticks) — never business/gating logic (targeting, spawn/wave conditions, victory conditions, damage math). Presentation (Phaser) owns animation/VFX playback and reports completion via explicit acknowledgment — it doesn't decide game-logic outcomes. Damage/effect resolution stays in its own system, never inlined into a runtime or presentation layer. Systems coordinate only through explicit interfaces/events (an ack call, an emitted event, a read-only query) — never by directly mutating a sibling system's private state. If you find timing, presentation, and business logic mixed in one function/class, treat it as a defect, not a style nitpick.
+
 ---
 
 ## What to read alongside this prompt

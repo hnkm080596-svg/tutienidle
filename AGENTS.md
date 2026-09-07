@@ -5,7 +5,7 @@
 
 This document is the human-readable spec for all project rules. Two categories:
 
-- **Part 1 — Protection Rules** (P1–P16): hard rules the agent must NOT bypass. Also baked into `.opencode/agent/<name>.md` system prompts so the agent "lives in" them.
+- **Part 1 — Protection Rules** (P1–P17): hard rules the agent must NOT bypass. Also baked into `.opencode/agent/<name>.md` system prompts so the agent "lives in" them.
 - **Part 2 — Effectiveness Guidelines** (E1–E16): suggestions the agent reads and applies when relevant. May skip with reason.
 - **Part 3 — Opencode Agent Wiring**: technical note about how Part 1 is replicated into the four agent files.
 
@@ -167,6 +167,16 @@ When a rule below says "the agent", it means whichever opencode agent is current
 - Code comments are governed by P15 (English only) — not by this rule.
 - **Scope discipline:** this rule governs new code you write or files you substantially touch. It is not a mandate to retrofit the large pre-existing backlog of hardcoded Vietnamese content strings (item/skill/zone names, data files, etc.) — that is a separate, explicitly-scoped migration effort, not a drive-by (P10). If a task's own file already has hardcoded Vietnamese strings you are adding alongside, migrating that file's strings to i18n in the same change is encouraged.
 - Data-driven Vietnamese content authored in `data/**` (naming systems, lore, descriptions) is a pre-existing, accepted convention distinct from UI chrome strings — this rule targets new UI chrome text, not a mandate to i18n-wrap existing content data unless a task specifically calls for it.
+
+### P17. Runtime/Presentation/Logic Separation (single-responsibility systems, no cross-talk)
+
+**Why this rule exists.** A 2026-09-07 combat-system audit found gauge advancement, Phaser animation selection, and turn-resolution gating all interleaved in the same tick handler (`GameManager.updateBattleFixedStep`), with presentation-ack state (`pendingReadyActor`/`presentationActive`/`playbackToken`) stored as loose fields on a large god-class. This made a single bug (a turn declared with no living target) hard to trace because timing, animation choice, and business rules were not separable. The user's standing project convention is "mỗi hệ thống làm việc độc lập, không trao đổi trực tiếp" (each system does its own job, no direct cross-talk) specifically so systems stay independently easy to fix and adjust — combat had drifted from this.
+
+- A **runtime/clock** component's only job is timing: advancing a gauge/counter, selecting the current animation/VFX state, and signaling ticks. It must never embed business/gating logic (targeting rules, spawn/wave conditions, victory conditions, damage math) — those branches belong in a dedicated logic system that the runtime calls into or reads from, never the reverse.
+- **Presentation (Phaser)** owns animation/VFX playback and reports completion back via explicit acknowledgment — it does not decide game-logic outcomes, and game logic does not reach into Phaser internals.
+- **Damage/effect resolution** stays in its own system (e.g. the existing damage/impact engine) — a runtime or presentation layer never computes damage inline.
+- Coordination between these systems happens through explicit interfaces/events only (an ack call, an emitted event, a read-only state query) — never by one system directly mutating another's private state.
+- When auditing or extending a system and you find timing, presentation, and business logic mixed in one function/class, treat that as a defect to flag (or fix, if in scope) under this rule — not a style nitpick.
 
 ---
 
