@@ -152,8 +152,8 @@ describe('buffs.ts — buff mới chuỗi Thuần (spec §7)', () => {
     expect(b.effects).toContainEqual({ type: 'statModifier', stat: 'thornsPercent', flat: 0.25 })
   })
 
-  it('all 51 definitions (1 test buff + 5 buffs + 2 reaction buffs + 5 on-hit proc buffs + 16 ported ailments + 14 thuan-he chain buffs + 5 talent v4 combat buffs + 3 Phase A2 boss enrage buffs) are present', () => {
-    expect(buffs).toHaveLength(51)
+  it('all 52 definitions (1 test buff + 5 buffs + 2 reaction buffs + 5 on-hit proc buffs + 16 ported ailments + 14 thuan-he chain buffs + 5 talent v4 combat buffs + 3 Phase A2 boss enrage buffs + 1 Phase A4 reaction empowerment) are present', () => {
+    expect(buffs).toHaveLength(52)
   })
 })
 

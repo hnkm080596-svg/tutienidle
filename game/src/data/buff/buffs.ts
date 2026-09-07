@@ -842,6 +842,22 @@ export const buffs: BuffDefinition[] = [
       { type: 'statModifier', stat: 'speed', percent: 0.2 },
     ],
   },
+  // Phase A4 (2026-09-07) — Reaction Path ultimate self-buff (Pháp Tu
+  // ẩn). Turn-native twin: REACTION_EMPOWERMENT_BUFF in
+  // data/skill/TurnReactionPathSkills.ts (same id/values, kept as two
+  // definitions until roadmap C1 removes the legacy engine — same
+  // precedent as A2's boss enrage twins). Values copied 1:1: duration 4
+  // turns, +25% reactionEffectPercent — amplifies TurnReactionManager's
+  // reaction damage via the standard stat fold (TurnStatsRecompute).
+  {
+    id: 'reaction_empowerment',
+    name: 'Cộng Minh Phản Ứng',
+    description: 'Cường hóa sát thương phản ứng nguyên tố 4 lượt (+25% hiệu lực phản ứng).',
+    polarity: 'buff',
+    duration: 4,
+    stackMode: 'refresh',
+    effects: [{ type: 'statModifier', stat: 'reactionEffectPercent', percent: 0.25 }],
+  },
 ]
 
 // Talent v4 — named exports cho consumer test/wiring (pattern
