@@ -212,7 +212,7 @@ import { TurnBuffSystem } from '../battle/turn/TurnBuffSystem'
 import { TurnReactionManager } from '../battle/turn/TurnReactionManager'
 import type { TurnBuffDefinition } from '../battle/turn/TurnBuffTypes'
 import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
-import { PHAP_TU_REACTION_SPECIAL, PHAP_TU_REACTION_ULTIMATE } from '../../data/skill/TurnReactionPathSkills'
+import { PHAP_TU_REACTION_SPECIAL, PHAP_TU_REACTION_ULTIMATE, REACTION_PATH_POOL } from '../../data/skill/TurnReactionPathSkills'
 import { toTurnSkillDefinition } from './SkillToTurnSkillConverter'
 
 /**
@@ -2588,7 +2588,7 @@ export class GameManager {
           GENERIC_PHYSICAL_BASIC,
         )
       },
-      undefined, // reactionPathPool — not populated until roadmap A4
+      REACTION_PATH_POOL, // Phase A4 — marker special's 2-pick pool now live
       new TurnReactionManager(this.eventBus),
     )
   }
@@ -3150,7 +3150,7 @@ export class GameManager {
             GENERIC_PHYSICAL_BASIC,
           )
         },
-        undefined, // reactionPathPool — not populated until roadmap A4
+        REACTION_PATH_POOL, // Phase A4 — marker special's 2-pick pool now live
         new TurnReactionManager(this.eventBus),
       )
     }
