@@ -41,6 +41,12 @@ const progress = computed(() => {
 
 <style scoped>
 .combat-top-bar {
+  /* Layout fix (2026-09-07, plan Task 13) — box-sizing border-box: trước
+     đây height:100% (46px token) + border-bottom 1px = 47px tổng (content-
+     box mặc định) → tràn 1px đè lên bởi skill dock (top: 46px), fail
+     combat-overlay-layout e2e cả 3 viewport. Border-box đưa tổng về đúng
+     token, dock và TopBar khớp mép tuyệt đối. */
+  box-sizing: border-box;
   height: 100%;
   display: flex;
   align-items: center;
