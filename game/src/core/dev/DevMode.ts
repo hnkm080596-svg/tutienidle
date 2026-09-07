@@ -35,6 +35,13 @@ export function isTestModeUnlockAll(): boolean {
 // sẵn mà không bị style cũ đè/che. Bật:
 //   localStorage.setItem('dev.artTestMode', '1')  → reload trang
 // Tắt: removeItem('dev.artTestMode') hoặc set giá trị khác '1'.
+//
+// 2026-09-07 (user quyết định) — DEFAULT ĐỔI THÀNH OFF: cần set localStorage
+// '1' mới bật. Lý do: cơ chế cũ không có key là "bật", khiến khung viền/UI
+// chrome bị tắt âm thầm trên môi trường dev mới (localStorage trống) —
+// người chạy dev không biết vì sao CSS mất. Giờ: localStorage trống = UI
+// đầy đủ (bình thường), set '1' = chủ ý bật art-test để làm art. UITemp
+// worktree (user tự sửa UI sang art real) giữ cơ chế cũ nếu cần.
 export function isArtTestMode(): boolean {
   if (!import.meta.env.DEV) {
     return false

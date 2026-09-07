@@ -20,7 +20,8 @@ import { isArtTestMode } from '@/core/dev/DevMode'
 initUiScale()
 
 // Art test mode (xem core/dev/DevMode.ts) — áp class TRƯỚC mount để
-// không nhấp nháy style gốc rồi mới tắt.
+// không nhấp nháy style gốc rồi mới tắt. 2026-09-07: default OFF — chỉ
+// bật khi localStorage 'dev.artTestMode' = '1' (set chủ ý khi làm art).
 if (isArtTestMode()) {
   document.documentElement.classList.add('dev-art-test-mode')
 }
