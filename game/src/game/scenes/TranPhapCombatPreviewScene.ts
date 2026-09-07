@@ -4,10 +4,15 @@
 // nguy cơ đụng key dù dùng lại ĐÚNG PLACEHOLDER_SHEET_KEY), nhưng giờ
 // implements CombatGridViewHost và dùng ĐÚNG CombatGridView mà combat
 // thật dùng (spec §4) — thay vì tự viết lại logic sprite/animation. Vẽ
-// lưới 6x6 ở 2.5D perspective (isPerspective: true — Battlefield
-// Perspective Panel 2026-09-06) + 2 lớp nền sky/ground cho art thật sau này.
-// Tương tác kéo-thả KHÔNG nằm ở đây — canvas này thuần hiển thị, overlay
-// HTML trong suốt (TranPhapPanel.vue, không đổi) mới là drop target thật.
+// lưới 3x3 standing-slot ở 2.5D perspective (isPerspective: true —
+// Battlefield Perspective Panel 2026-09-06) + 2 lớp nền sky/ground cho
+// art thật sau này. Tương tác kéo-thả KHÔNG nằm ở đây — canvas này thuần
+// hiển thị, overlay HTML trong suốt (TranPhapPanel.vue, không đổi) mới là
+// drop target thật.
+// Standing-slot rework (2026-09-07): grid resolution reads the shared
+// STANDING_SLOT_COUNT (3) from BattlefieldRegions — single source of
+// truth shared with FormationPlacement/EnemySpawnPlacement. Removed:
+// PREVIEW_CELL_SIZE, PREVIEW_GRID_SIZE, previewCellTopLeft() (dead code).
 import Phaser from 'phaser'
 import {
   PLACEHOLDER_SHEET_KEY,
@@ -22,19 +27,17 @@ import {
   computePerspectiveGeometry,
   type BattleGridProjection,
 } from '@/game/support/BattleGridProjection'
+import { STANDING_SLOT_COUNT } from '@/core/battle/BattlefieldRegions'
 import type { FormationSlotAssignment } from '@/core/player/Player'
 import type { LaneIndex } from '@/core/battle/BattleLane'
 import { CombatGridView } from './combat/combat-grid-view'
 import type { CombatGridViewHost } from './combat/CombatGridViewHost'
 import type { EntitySprite } from './combat/combatTypes'
 
-export const PREVIEW_CELL_SIZE = 60
-export const PREVIEW_GRID_SIZE = 6
-// PHẢI khớp CHÍNH XÁC với PANEL_CANVAS_WIDTH/HEIGHT trong TranPhapPanel.vue
-// (Task 3, cùng plan) — 2 nơi định nghĩa vì .vue component và scene này
-// không chia sẻ được scope; đổi 1 bên PHẢI đổi bên kia. Nếu lệch, canvas
-// Phaser thật sẽ khác kích thước scene tự tính (méo layout nhưng không
-// crash — an toàn nhưng sai hình).
+// PANEL_WIDTH/HEIGHT must match PANEL_CANVAS_WIDTH/HEIGHT in
+// TranPhapPanel.vue exactly (Task 3, battlefield-perspective-panel plan)
+// -- the two files can't share scope, so this stays a duplicated
+// constant pair; changing one requires changing the other.
 export const PANEL_WIDTH = 420
 export const PANEL_HEIGHT = 480
 export const PERSPECTIVE_MIN_ROAD_HEIGHT_PANEL = 140
@@ -43,10 +46,6 @@ const PANEL_SKY_COLOR = 0x22283a
 const PANEL_GROUND_COLOR = 0x1a1a1a
 
 const PREVIEW_IDLE_ANIMATION_KEY = 'tran-phap-preview-idle'
-
-export function previewCellTopLeft(row: number, column: number): { x: number; y: number } {
-  return { x: column * PREVIEW_CELL_SIZE, y: row * PREVIEW_CELL_SIZE }
-}
 
 export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGridViewHost {
   // Battlefield Perspective Panel (2026-09-06) — chuyển từ flat sang
@@ -64,15 +63,12 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
   arenaRect: Phaser.GameObjects.Rectangle | undefined
   private skyLayer: Phaser.GameObjects.Rectangle | undefined
   private groundLayer: Phaser.GameObjects.Rectangle | undefined
-  // 0.8 × cell (KHÔNG bằng PREVIEW_CELL_SIZE thẳng) — characterWidth/Height
-  // ở đây LÀ kích thước sprite hiển thị mong muốn (applySpriteSize()'s
-  // flat formula: displayHeight = characterHeight × sizeMultiplier, và
-  // sizeMultiplier của nhánh fallback panel dùng là 1, xem combat-grid-
-  // view.ts Task 2 Step 3) — 0.8 tái tạo ĐÚNG tỉ lệ sprite/ô của
-  // TranPhapPreviewScene cũ (`setDisplaySize(PREVIEW_CELL_SIZE * 0.8,
-  // PREVIEW_CELL_SIZE * 0.8)`), không để sprite to lấn sang ô kế bên.
-  characterWidth = PREVIEW_CELL_SIZE * 0.8
-  characterHeight = PREVIEW_CELL_SIZE * 0.8
+  // 0.8 x cell -- reproduces the sprite/cell ratio of the pre-perspective
+  // scene (setDisplaySize(cell * 0.8, cell * 0.8)); cell size now comes
+  // from the projection at STANDING_SLOT_COUNT resolution, not a fixed
+  // PREVIEW_CELL_SIZE constant.
+  characterWidth = (PANEL_WIDTH / STANDING_SLOT_COUNT) * 0.8
+  characterHeight = (PANEL_WIDTH / STANDING_SLOT_COUNT) * 0.8
   // Không dùng khi isPerspective=false (applySpriteSize() nhánh flat đọc
   // characterWidth/Height trực tiếp) — giữ 1:1 để tránh chia 0 nếu code
   // sau này lỡ đọc tới.
@@ -123,8 +119,8 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
     this.projection = createBattleGridProjection(
       'perspective',
       { width: PANEL_WIDTH, height: PANEL_HEIGHT, topInset: 0, bottomInset: 0 },
-      PREVIEW_GRID_SIZE,
-      PREVIEW_GRID_SIZE,
+      STANDING_SLOT_COUNT,
+      STANDING_SLOT_COUNT,
       PERSPECTIVE_MIN_ROAD_HEIGHT_PANEL,
     )
     this.gridGraphics = this.add.graphics()

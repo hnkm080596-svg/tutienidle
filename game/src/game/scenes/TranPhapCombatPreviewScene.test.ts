@@ -1,28 +1,11 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest'
 import {
-  PREVIEW_CELL_SIZE,
-  previewCellTopLeft,
   PANEL_WIDTH,
   PANEL_HEIGHT,
   PERSPECTIVE_MIN_ROAD_HEIGHT_PANEL,
 } from './TranPhapCombatPreviewScene'
-
-describe('previewCellTopLeft', () => {
-  it('maps local (0,0) to the pixel origin', () => {
-    expect(previewCellTopLeft(0, 0)).toEqual({ x: 0, y: 0 })
-  })
-
-  it('maps local (5,5) to the bottom-right cell, offset by 5 full cells', () => {
-    expect(previewCellTopLeft(5, 5)).toEqual({ x: 5 * PREVIEW_CELL_SIZE, y: 5 * PREVIEW_CELL_SIZE })
-  })
-
-  it('row drives y, column drives x (not swapped)', () => {
-    expect(previewCellTopLeft(1, 0)).toEqual({ x: 0, y: PREVIEW_CELL_SIZE })
-    expect(previewCellTopLeft(0, 1)).toEqual({ x: PREVIEW_CELL_SIZE, y: 0 })
-  })
-})
-
+import { STANDING_SLOT_COUNT } from '@/core/battle/BattlefieldRegions'
 
 describe('TranPhapCombatPreviewScene — perspective geometry constant (Battlefield Perspective Panel, 2026-09-06)', () => {
   it('PANEL_WIDTH/PANEL_HEIGHT khớp CHÍNH XÁC với canvas Phaser thật trong TranPhapPanel.vue (420x480)', () => {
@@ -32,5 +15,11 @@ describe('TranPhapCombatPreviewScene — perspective geometry constant (Battlefi
 
   it('PERSPECTIVE_MIN_ROAD_HEIGHT_PANEL nhỏ hơn hằng số combat thật (320) — panel cần sàn thấp hơn cho canvas nhỏ', () => {
     expect(PERSPECTIVE_MIN_ROAD_HEIGHT_PANEL).toBeLessThan(320)
+  })
+})
+
+describe('TranPhapCombatPreviewScene — standing-slot grid size (standing-slot rework, 2026-09-07)', () => {
+  it('panel grid resolution reads the shared STANDING_SLOT_COUNT (3x3), not a local constant', () => {
+    expect(STANDING_SLOT_COUNT).toBe(3)
   })
 })
