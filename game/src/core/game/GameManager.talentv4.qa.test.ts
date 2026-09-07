@@ -137,14 +137,15 @@ describe('QA talent v4 M1 — invariant wiring', () => {
     const enemy = ENEMIES[0]!
     const stats = calculateStats(player.baseStats, player.modifiers)
 
-    // Trận 1: kích Kiếm Vực (Phase A2 cutover — assert trên turn-based pool).
+    // Battle 1: trigger Kiếm Vực (Phase A2 cutover — assert on the
+    // turn-based pool).
     manager.startBattleWithPlayer(player, stats, enemy)
     for (let i = 0; i < 10; i++) {
       manager.eventBus.emit('critical', { type: 'critical', sourceId: 'player', targetId: 'enemy_1' })
     }
     expect(manager.getTurnBattle()!.players[0]!.buffs.hasAny('kiem_vuc')).toBe(true)
 
-    // Trận 2: pool mới — Kiếm Vực không kẹt lại, stack modifier reset.
+    // Battle 2: fresh pool — Kiếm Vực must not leak, stack modifier reset.
     manager.startBattleWithPlayer(player, stats, enemy)
 
     expect(manager.getTurnBattle()!.players[0]!.buffs.hasAny('kiem_vuc')).toBe(false)
