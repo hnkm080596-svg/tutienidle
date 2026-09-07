@@ -54,4 +54,11 @@
     opacity: 1;
   }
 }
+
+/* UI-006 (Task 4, 2026-09-07) — reduced motion: pulse đứng yên. */
+@media (prefers-reduced-motion: reduce) {
+  .loading-screen__pulse {
+    animation: none;
+  }
+}
 </style>

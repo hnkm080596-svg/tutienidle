@@ -53,8 +53,17 @@ onBeforeUnmount(() => {
           :key="toast.id"
           class="toast-item"
           :style="{ '--toast-color': toast.loot?.accentColorVar ? `var(${toast.loot.accentColorVar})` : KIND_COLOR[toast.kind] }"
-          @click="notification.dismiss(toast.id)"
+          role="status"
         >
+          <!-- UI-006 (Task 4, 2026-09-07) — toast message là live region
+               (role="status"), dismiss là NÚT RIÊNG (keyboard/SR reachable)
+               thay vì click div toàn toast. -->
+          <button
+            type="button"
+            class="toast-item__dismiss"
+            :aria-label="`Đóng thông báo: ${toast.loot?.nameSegments.at(-1)?.text ?? toast.message ?? ''}`"
+            @click="notification.dismiss(toast.id)"
+          >×</button>
           <template v-if="toast.loot">
             <div class="toast-item__icon-shell">
               <span class="toast-item__icon-fallback">{{ toast.loot.nameSegments.at(-1)?.text.charAt(0) }}</span>
@@ -100,6 +109,7 @@ onBeforeUnmount(() => {
 }
 
 .toast-item {
+  position: relative;
   pointer-events: auto;
   min-width: 100px;
   max-width: 160px;
@@ -112,8 +122,35 @@ onBeforeUnmount(() => {
   border-radius: var(--radius-sm);
   color: var(--paper-text);
   font-family: var(--font-body);
-  font-size: var(--text-xs);
+  /* UI-006 (Task 4) — toast text dài (vi/en) tự xuống dòng, không tràn. */
+  overflow-wrap: anywhere;
+}
+
+.toast-item__dismiss {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--paper-text-soft);
+  font: 700 var(--text-sm) / 1 var(--font-body);
   cursor: pointer;
+}
+
+.toast-item__dismiss:focus-visible {
+  outline: 2px solid var(--jade);
+  outline-offset: 1px;
+}
+
+.toast-item {
+  font-size: var(--text-xs);
+  cursor: default;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
 }
 

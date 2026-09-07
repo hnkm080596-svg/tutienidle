@@ -43,6 +43,13 @@ function submit() {
   if (!canSubmit.value) return
   void authenticate(mode.value)
 }
+
+// UI-003 (Task 2) — arrow-key tab navigation (WCAG tabs pattern).
+function switchTab(target: 'login' | 'register') {
+  mode.value = target
+
+  document.getElementById(`auth-tab-${target}`)?.focus()
+}
 </script>
 
 <template>
@@ -56,22 +63,58 @@ function submit() {
       <h1>Tiên Hiệp Idle</h1>
       <p class="auth-card__lead">{{ t('onboarding.auth.lead') }}</p>
 
-      <div class="auth-tabs" role="tablist">
-        <button :class="{ active: mode === 'login' }" type="button" @click="mode = 'login'">{{ t('onboarding.auth.tabs.login') }}</button>
-        <button :class="{ active: mode === 'register' }" type="button" @click="mode = 'register'">{{ t('onboarding.auth.tabs.register') }}</button>
+      <!-- UI-003/004 (Task 2, 2026-09-07) — tabs semantics thật: role="tab"
+           + aria-selected + arrow-key navigation; form errors qua
+           aria-invalid/aria-describedby + live region announcement. -->
+      <div class="auth-tabs" role="tablist" :aria-label="t('onboarding.auth.eyebrow')">
+        <button
+          id="auth-tab-login"
+          role="tab"
+          type="button"
+          :aria-selected="mode === 'login'"
+          :tabindex="mode === 'login' ? 0 : -1"
+          :class="{ active: mode === 'login' }"
+          @click="mode = 'login'"
+          @keydown.right.prevent="switchTab('register')"
+        >{{ t('onboarding.auth.tabs.login') }}</button>
+        <button
+          id="auth-tab-register"
+          role="tab"
+          type="button"
+          :aria-selected="mode === 'register'"
+          :tabindex="mode === 'register' ? 0 : -1"
+          :class="{ active: mode === 'register' }"
+          @click="mode = 'register'"
+          @keydown.left.prevent="switchTab('login')"
+        >{{ t('onboarding.auth.tabs.register') }}</button>
       </div>
 
       <form class="auth-form" @submit.prevent="submit">
-        <label>
+        <label for="auth-input-id">
           <span>{{ t('onboarding.auth.labels.loginId') }}</span>
-          <input v-model.trim="loginId" autocomplete="username" maxlength="20" :placeholder="t('onboarding.auth.placeholders.loginId')" />
+          <input
+            id="auth-input-id"
+            v-model.trim="loginId"
+            autocomplete="username"
+            maxlength="20"
+            :placeholder="t('onboarding.auth.placeholders.loginId')"
+            :aria-invalid="loginId && !validId ? true : undefined"
+            :aria-describedby="loginId && !validId ? 'auth-error-id' : undefined"
+          />
         </label>
-        <p v-if="loginId && !validId" class="auth-form__hint is-error">{{ t('onboarding.auth.errors.invalidId') }}</p>
-        <label>
+        <p v-if="loginId && !validId" id="auth-error-id" class="auth-form__hint is-error">{{ t('onboarding.auth.errors.invalidId') }}</p>
+        <label for="auth-input-password">
           <span>{{ t('onboarding.auth.labels.password') }}</span>
-          <input v-model="password" autocomplete="current-password" type="password" :placeholder="t('onboarding.auth.placeholders.password')" />
+          <input
+            id="auth-input-password"
+            v-model="password"
+            autocomplete="current-password"
+            type="password"
+            :placeholder="t('onboarding.auth.placeholders.password')"
+          />
         </label>
-        <p v-if="error" class="auth-form__hint is-error">{{ error }}</p>
+        <!-- UI-004 — submit-level error là live region (screen reader đọc khi hiện). -->
+        <p v-if="error" id="auth-error-submit" class="auth-form__hint is-error" role="alert">{{ error }}</p>
         <GameButton class="primary-action" type="submit" variant="primary" size="lg" :disabled="!canSubmit" :loading="submitting">
           {{ mode === 'login' ? t('onboarding.auth.submit.login') : t('onboarding.auth.submit.register') }}
         </GameButton>

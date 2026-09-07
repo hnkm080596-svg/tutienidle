@@ -71,4 +71,11 @@ const fontFamily = computed(() => {
     text-shadow: 0 0 20px var(--surface-glow-gold), 0 0 40px var(--surface-glow-gold), 0 0 60px var(--surface-glow-gold);
   }
 }
+
+/* UI-006 (Task 4) — reduced motion: glow đứng yên (giữ màu, bỏ pulse). */
+@media (prefers-reduced-motion: reduce) {
+  .menu-logo--glow .menu-logo__title {
+    animation: none;
+  }
+}
 </style>

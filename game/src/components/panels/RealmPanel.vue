@@ -124,5 +124,7 @@ function majorBreakthrough() {
 .realm-panel__passives article strong { font-size: var(--text-md); color: var(--text-primary); }
 .realm-panel__passives article span { color: var(--text-muted); font-size: var(--text-sm); }
 @keyframes realm-breathe { 50% { transform: scale(1.08); opacity: .65; } }
+/* UI-006 (Task 4) — reduced motion: aura đứng yên. */
+@media (prefers-reduced-motion: reduce) { .realm-panel__aura { animation: none; } }
 @container overlay-panel (max-width: 900px) { .realm-node::after { display: none; } }
 </style>

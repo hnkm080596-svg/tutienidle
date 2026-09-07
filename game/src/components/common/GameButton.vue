@@ -51,6 +51,7 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
     :class="[`game-button--${variant}`, `game-button--${size}`, `game-button--${shape}`, { 'is-loading': loading, 'has-accent': accentVar !== undefined }]"
     :style="accentVar ? { '--button-accent': accentVar } : undefined"
     :disabled="disabled || loading"
+    :aria-busy="loading || undefined"
     @click="$emit('click', $event)"
   >
     <InkNineSlice v-if="sliceAsset" :asset-id="sliceAsset" :layer="sliceLayer" :tint-var="sliceTint" />
@@ -134,8 +135,14 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
 }
 
 .game-button:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring-chrome);
+  /* UI-001 (Task 1, 2026-09-07) — fallback ring khi token thiếu: không
+     còn `outline: none` trần (mất focus indication hoàn toàn nếu
+     --focus-ring-chrome undefined). */
+  outline: 2px solid rgba(217, 212, 199, 0.65);
+  outline-offset: 2px;
+  outline-color: transparent;
+  outline-style: solid;
+  box-shadow: var(--focus-ring-chrome, 0 0 0 2px rgba(217, 212, 199, 0.65));
 }
 
 /* Dạng tròn — nút icon (+/−). */
@@ -178,6 +185,13 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
   border-top-color: transparent;
   border-radius: 50%;
   animation: game-button-spin 0.6s linear infinite;
+}
+
+/* UI-006 (Task 1) — reduced motion: spinner đứng yên, không quay. */
+@media (prefers-reduced-motion: reduce) {
+  .game-button__spinner {
+    animation: none;
+  }
 }
 
 @keyframes game-button-spin {
