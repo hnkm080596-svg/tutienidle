@@ -1,17 +1,21 @@
 <script setup lang="ts">
 // Trận Pháp panel (Combat Art Roster spec, 2026-09-05) — kéo-thả gán
-// player/companion vào lưới 6x6 CỤC BỘ (local coordinates, luôn cố định
-// 6x6 bất kể vùng chiến trường tuyệt đối) của trận pháp đang chọn.
-// Việc map lưới cục bộ này sang PLAYER_SIDE_REGION tuyệt đối diễn ra ở
-// FormationPlacement.localCellToAbsolute() lúc build trận (Task 18) —
-// panel này CHỈ đọc/ghi PlayerData.formationLoadout, không đụng gì tới
-// hệ toạ độ chiến trường thật.
+// player/companion vào lưới 3x3 STANDING SLOT (local slot indices 0-2,
+// luôn cố định bất kể vùng chiến trường tuyệt đối) của trận pháp đang
+// chọn. Standing-slot rework (2026-09-07): grid size đọc STANDING_SLOT_COUNT
+// dùng chung thay PREVIEW_GRID_SIZE local; grid resolution khớp CHÍNH XÁC
+// với canvas Phaser phía dưới (cùng nguồn 1 hằng số).
+// Việc map slot cục bộ sang PLAYER_SIDE_REGION tuyệt đối diễn ra ở
+// FormationPlacement.localCellToAbsolute() lúc build trận — panel này
+// CHỈ đọc/ghi PlayerData.formationLoadout, không đụng gì tới hệ toạ độ
+// chiến trường thật.
 //
 // Gating dùng ui.standalonePanel (KHÔNG phải player.standalonePanel —
 // flag đó không tồn tại), cùng pattern OverlayPanel như mọi panel
 // standalone khác (SkillPathPanel.vue, ArtifactPanel.vue...). Mở qua
 // command wheel slot 'formation_slot' (game/support/commandWheelCatalog.ts).
 import { computed, onUnmounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type Phaser from 'phaser'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
@@ -21,11 +25,11 @@ import { TEST_COMPANIONS } from '@/data/companion/Companions'
 import type { TranPhapDefinition } from '@/data/formation/TranPhap'
 import type { FormationSlotAssignment } from '@/core/player/Player'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
-import { PREVIEW_CELL_SIZE, PREVIEW_GRID_SIZE } from '@/game/scenes/TranPhapCombatPreviewScene'
-// Battlefield Perspective Panel (2026-09-06) — canvas Phaser to hơn kích
-// thước lưới thuần (PREVIEW_CELL_SIZE * PREVIEW_GRID_SIZE = 360x360) để có
-// không gian thể hiện chiều sâu phối cảnh (xem spec §3). Không đổi CSS
-// layout của formation cards/roster queue xung quanh — chỉ canvas Phaser.
+import { STANDING_SLOT_COUNT } from '@/core/battle/BattlefieldRegions'
+// Battlefield Perspective Panel (2026-09-06) — canvas Phaser 420x480 (lớn
+// hơn lưới thuần để có không gian thể hiện chiều sâu phối cảnh, xem spec
+// §3). Panel canvas KHÔNG đổi kích thước trong standing-slot rework —
+// chỉ số ô lưới giảm 6x6 → 3x3 (cùng canvas, ô to hơn).
 const PANEL_CANVAS_WIDTH = 420
 const PANEL_CANVAS_HEIGHT = 480
 import type { TranPhapCombatPreviewScene } from '@/game/scenes/TranPhapCombatPreviewScene'
@@ -34,6 +38,7 @@ import type { SlotState } from '@/game/support/SlotState'
 const ui = useUiStore()
 const player = usePlayerStore()
 const { stateVersion, bumpState } = useStateVersion()
+const { t } = useI18n({ useScope: 'local' })
 
 const selectedFormationId = ref<string | null>(player.formationLoadout?.formationId ?? null)
 
@@ -49,30 +54,30 @@ function isLitCell(row: number, column: number): boolean {
   return selectedFormation.value?.cellPattern.some((cell) => cell.row === row && cell.column === column) ?? false
 }
 
-    function assignmentAt(row: number, column: number): FormationSlotAssignment | undefined {
-      return currentAssignments.value.find((a) => a.row === row && a.column === column)
-    }
+function assignmentAt(row: number, column: number): FormationSlotAssignment | undefined {
+  return currentAssignments.value.find((a) => a.row === row && a.column === column)
+}
 
-    // Battlefield Slot spec (2026-09-06) — thay boolean rời (--lit) bằng
-    // SlotState dùng chung, để nếu sau này combat thật cần state tương tự
-    // (targeting thủ công, tooltip theo ô) không phải bịa lại tên khác.
-    const hoveredCell = ref<{ row: number; column: number } | null>(null)
+// Battlefield Slot spec (2026-09-06) — thay boolean rời (--lit) bằng
+// SlotState dùng chung, để nếu sau này combat thật cần state tương tự
+// (targeting thủ công, tooltip theo ô) không phải bịa lại tên khác.
+const hoveredCell = ref<{ row: number; column: number } | null>(null)
 
-    function slotStateAt(row: number, column: number): SlotState {
-      if (!isLitCell(row, column)) {
-        return 'locked'
-      }
+function slotStateAt(row: number, column: number): SlotState {
+  if (!isLitCell(row, column)) {
+    return 'locked'
+  }
 
-      if (assignmentAt(row, column)) {
-        return 'occupied'
-      }
+  if (assignmentAt(row, column)) {
+    return 'occupied'
+  }
 
-      if (hoveredCell.value?.row === row && hoveredCell.value?.column === column) {
-        return 'hover'
-      }
+  if (hoveredCell.value?.row === row && hoveredCell.value?.column === column) {
+    return 'hover'
+  }
 
-      return 'enabled'
-    }
+  return 'enabled'
+}
 
 // Danh sách quân "chưa được xếp vào ô nào" — kéo từ đây vào lưới.
 // Player luôn là 1 lá bài cố định (id 'player'), cộng thêm mọi
@@ -218,6 +223,12 @@ watch(
         width: PANEL_CANVAS_WIDTH,
         height: PANEL_CANVAS_HEIGHT,
         transparent: true,
+        // Crash fix (standing-slot plan Task 6, 2026-09-07) — thiếu physics
+        // config khiến Phaser.Game bootstrap crash khi drop 1 quân vào panel
+        // (CombatGridView/sprite pipeline đụng physics world truy cập qua
+        // this.physics). Khớp CHÍNH XÁC bootstrap của PhaserCanvas.vue (combat
+        // thật): arcade, gravity 0, debug false.
+        physics: { default: 'arcade', arcade: { gravity: { x: 0, y: 0 }, debug: false } },
         scene: [TranPhapCombatPreviewSceneClass],
       })
 
@@ -249,16 +260,16 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <OverlayPanel :open="ui.standalonePanel === 'tran_phap'" title="Trận Pháp" width="min(1000px, 94vw)" height="min(680px, 88vh)" @close="close">
+  <OverlayPanel :open="ui.standalonePanel === 'tran_phap'" :title="t('panels.tranPhap.title')" width="min(1000px, 94vw)" height="min(680px, 88vh)" @close="close">
     <div class="tran-phap-panel">
       <div class="tran-phap-panel__body">
         <div class="tran-phap-panel__grid-stack">
           <div ref="previewContainerRef" class="tran-phap-panel__preview-canvas"></div>
 
           <div class="tran-phap-panel__grid tran-phap-panel__grid--overlay">
-            <div v-for="row in PREVIEW_GRID_SIZE" :key="row" class="tran-phap-panel__row">
+            <div v-for="row in STANDING_SLOT_COUNT" :key="row" class="tran-phap-panel__row">
               <div
-                v-for="column in PREVIEW_GRID_SIZE"
+                v-for="column in STANDING_SLOT_COUNT"
                 :key="column"
                 :class="['tran-phap-panel__cell', `tran-phap-panel__cell--${slotStateAt(row - 1, column - 1)}`]"
                 :draggable="!!assignmentAt(row - 1, column - 1)"
@@ -295,7 +306,7 @@ onUnmounted(() => {
         class="tran-phap-panel__grant-test"
         @click="grantTestCompanions"
       >
-        [TEST-ONLY] Cấp 5 Companion Test
+        {{ t('panels.tranPhap.grantTest') }}
       </button>
 
       <div
@@ -315,7 +326,7 @@ onUnmounted(() => {
       </div>
 
       <button type="button" class="tran-phap-panel__confirm" :disabled="!selectedFormation" @click="onConfirm">
-        Lưu Trận Pháp
+        {{ t('panels.tranPhap.confirm') }}
       </button>
     </div>
   </OverlayPanel>
@@ -345,9 +356,9 @@ onUnmounted(() => {
   position: absolute;
   inset: 0;
   z-index: 0;
-  /* Canvas Phaser tổng (PREVIEW_CELL_SIZE * PREVIEW_GRID_SIZE = 360px)
-     dư 4px so với lưới CSS thật (356px, vì ô cuối không có gap theo
-     sau) — cắt phần tràn rìa phải/dưới, tránh canvas ló ra ngoài panel. */
+  /* Canvas Phaser 420x480 (PANEL_CANVAS_* ở trên) — overlay grid 3x3 lưới
+     slot vẽ PHỦ lên trên; canvas/overlay alignment là known limitation
+     (spec Part 2 Non-Goals, needs its own future plan). */
   overflow: hidden;
 }
 
@@ -388,10 +399,18 @@ onUnmounted(() => {
   opacity: 0.35;
 }
 
-.tran-phap-panel__cell--enabled,
+.tran-phap-panel__cell--enabled {
+  opacity: 1;
+  border-color: var(--jade, #4caf50);
+}
+
+/* Standing-slot plan Task 6 (2026-09-07) — occupied TÁCH khỏi enabled:
+   cùng viền xanh nhưng thêm nền xanh nhạt để phân biệt "ô trống bấm được"
+   với "ô đã có quân" bằng màu (không chỉ bằng text id bên trong). */
 .tran-phap-panel__cell--occupied {
   opacity: 1;
   border-color: var(--jade, #4caf50);
+  background: rgba(76, 175, 80, 0.22);
 }
 
 .tran-phap-panel__cell--hover {
