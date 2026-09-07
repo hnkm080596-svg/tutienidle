@@ -464,3 +464,72 @@ describe('TurnBuffSystem ported BuffSystem methods', () => {
     expect(system.getStacks('missing', 'src_a')).toBe(0)
   })
 })
+
+describe('TurnBuffSystem port additions for ReactionManager (Phase A1)', () => {
+  const A_DEF: TurnBuffDefinition = {
+    id: 'fixture_a', name: 'Fixture A', polarity: 'buff', duration: 5, stackMode: 'refresh',
+    effects: [{ type: 'statModifier', stat: 'attack', flat: 10 }],
+  }
+  const B_DEF: TurnBuffDefinition = {
+    id: 'fixture_b', name: 'Fixture B', polarity: 'buff', duration: 5, stackMode: 'refresh',
+    effects: [],
+  }
+
+  function portedEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
+    const stats = { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats }
+    const { stats: _drop, ...rest } = overrides
+    return {
+      id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
+      currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
+      currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
+      timeSinceLastBleedProc: 0, tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
+      currentWard: 0, timeSinceLastHitTaken: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
+      ...rest,
+    } as CombatEntity
+  }
+
+  it('getActiveIds returns the id of every active buff instance', () => {
+    const pool = new TurnBuffPool()
+    const system = new TurnBuffSystem(pool)
+    const source = portedEntity({ id: 'src' })
+    const target = portedEntity({ id: 'tgt' })
+
+    system.apply(A_DEF, source, target)
+    system.apply(B_DEF, source, target)
+
+    expect(system.getActiveIds().sort()).toEqual(['fixture_a', 'fixture_b'])
+  })
+
+  it('remove deletes only the matching (id, sourceId) instance', () => {
+    const pool = new TurnBuffPool()
+    const system = new TurnBuffSystem(pool)
+    const source = portedEntity({ id: 'src' })
+    const target = portedEntity({ id: 'tgt' })
+
+    system.apply(A_DEF, source, target)
+    system.remove('fixture_a', source.id)
+
+    expect(system.getActiveIds()).toEqual([])
+  })
+
+  it('renewWithExtension adds to remainingTurns without resetting stacks/other fields', () => {
+    const pool = new TurnBuffPool()
+    const system = new TurnBuffSystem(pool)
+    const source = portedEntity({ id: 'src' })
+    const target = portedEntity({ id: 'tgt' })
+
+    system.apply(A_DEF, source, target)
+    system.renewWithExtension('fixture_a', source.id, 3)
+
+    const buff = pool.getFromSource('fixture_a', source.id)
+    expect(buff?.remainingTurns).toBe(8)
+  })
+
+  it('renewWithExtension is a no-op when no matching instance exists', () => {
+    const pool = new TurnBuffPool()
+    const system = new TurnBuffSystem(pool)
+
+    expect(() => system.renewWithExtension('nonexistent', 'nobody', 3)).not.toThrow()
+    expect(pool.getAll()).toEqual([])
+  })
+})

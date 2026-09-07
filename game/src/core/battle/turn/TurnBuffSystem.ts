@@ -371,4 +371,35 @@ export class TurnBuffSystem {
     }
     return this.pool.getAllById(id).reduce((sum, buff) => sum + buff.stacks, 0)
   }
+
+  /**
+   * Port verbatim from BuffSystem.getActiveIds() (BuffSystem.ts:415-417) —
+   * every currently active id, NOT deduped (multiple sources may share one id).
+   */
+  getActiveIds(): string[] {
+    return this.pool.getAll().map((buff) => buff.id)
+  }
+
+  /**
+   * Port verbatim from BuffSystem.remove() (BuffSystem.ts:426-428).
+   */
+  remove(id: string, sourceId: string): void {
+    this.pool.removeInstance(id, sourceId)
+  }
+
+  /**
+   * Port verbatim from BuffSystem.renewWithExtension() (BuffSystem.ts:440-448),
+   * with remainingTime -> remainingTurns renamed. No-op when no (id, sourceId)
+   * instance matches.
+   */
+  renewWithExtension(id: string, sourceId: string, extraTurns: number): void {
+    const existing = this.pool.getFromSource(id, sourceId)
+
+    if (!existing) {
+      return
+    }
+
+    this.pool.removeInstance(id, sourceId)
+    this.pool.add({ ...existing, remainingTurns: existing.remainingTurns + extraTurns })
+  }
 }
