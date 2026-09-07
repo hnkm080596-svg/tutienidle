@@ -19,7 +19,7 @@
 | # | Việc | Phụ thuộc | Chi tiết |
 |---|---|---|---|
 | A1 | Wire ReactionManager/SkillEffectSystem vào TurnBattleSystem | — | mục 9.5 #2 |
-| A2 | Buff content migrate (Tribulation/trang bị/thiên phú) + wire registry thật vào TurnBattleSystem | — | mục 9.5 #6 (registry 46 buff đã có, 0 consumer) |
+| A2 | Buff content cho 3 nguồn: Tribulation/boss enrage (đổi kiểu sang `TurnBuffDefinition` + gán `TurnBossTrigger`, hiện trống), thiên phú (`passiveConvertsTo` đối chiếu lại `TurnBuffRegistry` thay vì registry cũ), trang bị (☑ **tạo mới**, Affix hiện không có field buff — không phải migrate) | — | ✅ Wiring `TURN_BUFF_REGISTRY`→`TurnBattleSystem` **đã xong** (xem mục 9.5 #6, ghi chú dòng ~609) — bảng cũ nói "0 consumer" đã lỗi thời, chỉ còn thiếu content 3 nguồn trên |
 | A3 | Skill content thật: special/ultimate cho mọi build (hiện chỉ Kiếm Tu) | — | mục 9.5 #3 |
 | A4 | Reaction Path nội dung thật (pool element skill + ultimate %) | A1 | mục 9.5 #12 |
 | A5 | Boss enrage content bằng buff thủ công | A2 | mục 9.5 #11 |
@@ -504,7 +504,7 @@ Dựng các primitive thuần (pure function), test riêng, KHÔNG đụng `Batt
 | Slice 7 — Manual UI | `peekNextActor()` + `resolveActorTurn()`; `TurnCombatSkillBar` 3 nút + toggle Thủ công/Tự động (persist `ui.combatInputMode`); turn-order preview (`peekUpcomingActors` + `TurnOrderStrip`) + battle log (`BattleLogPanel`); HUD rewrite + gỡ legacy (master plan Tasks 3-10, `bd69e0d`) | 🟢 Xong 2026-09-04/05 (`70cb22e`; turn/ 199/199; QA PASS WITH EVIDENCE) |
 | AOE Shape extension | `'cross'`/`'row'`/`'column'`, `'area'`→`'square'` | 🟢 Xong (`35c958f`; 2408/2408; QA PASS WITH EVIDENCE) |
 | BuffSystem turn-duration | `TurnBuffSystem.ts` mới (port verbatim, giây→lượt) + port nốt 4 method (`getActiveModifiers`/`isRooted`/`rollOnHitEffects`/`getStacks`) | 🟢 Xong (`8545866` + Completion Task 3/4: stats recompute `TurnStatsRecompute.ts`) |
-| Buff content migrate | Converter `toTurnBuffDefinition()` + `TURN_BUFF_REGISTRY` (46 buff) | 🟡 Converter xong; **registry 0 consumer + TribulationPhase/equipment/talent buff chưa migrate** → việc #6, bảng 9.5 |
+| Buff content migrate | Converter `toTurnBuffDefinition()` + `TURN_BUFF_REGISTRY` (46 buff) | 🟡 Converter xong + **registry wiring xong** (2026-09-06/07, GameManager.ts cả 2 constructor site) — dòng "0 consumer" cũ đã lỗi thời; còn thiếu content 3 nguồn (Tribulation/boss enrage, equipment — tạo mới, thiên phú) → mục 0 Phase A2 |
 | Buff turn-count policy | Giữ nguyên số (X giây → X lượt) | 🟢 Đã chốt policy |
 | Buff presentation theo lượt | Tooltip/VFX duration | 🔴 Chưa — chờ UI buff turn thật → việc #7 |
 | ReactionManager conversion | Event-triggered sẵn; `spawnLavaZone` → dot buff; **turn engine CHƯA gọi ReactionManager/SkillEffectSystem** (không có call site để swap) | 🔴 Chưa wire → việc #2 (definitions `dung_nham_burn`/`kiem_tran_burn` đã sẵn) |
@@ -544,7 +544,7 @@ Dựng các primitive thuần (pure function), test riêng, KHÔNG đụng `Batt
 | 3 | **Skill content thật**: special/ultimate các build + `Enemy.specialAttacks[]` → `TurnSkillDefinition` | Content data | 🟡 Basic 8 build xong (`TurnBasicAttacks.ts`); special/ultimate chỉ Kiếm Tu (`BAT_KIEM_THUAT` qua `SPECIALS_BY_BUILD`); `specialAttacks[]` mới 1 enemy dùng (`water_surge` boss) |
 | 4 | **perfectClearTurnLimit cho stage content** — chip perfect_farm đang disabled | Content data (1 field/stage) | 🔴 **0/30 stage** có field (type + record + UI đã sẵn) |
 | 5 | ~~**Skill name/icon/tooltip trong HUD turn** — mapping id → display metadata~~ | Content mapping nhỏ | ✅ **XONG (2026-09-07, trực tiếp trên master)**: `TurnSkillDisplayMeta.ts` mapping skillId → name/description (id trùng SKILLS đồng bộ tự động, id authored author riêng, sweep test guard 11 id); `TurnSkillPresentationEntry` thêm skillName/skillDescription optional; `TurnCombatSkillBar` truyền display-label + tooltip-override; fallback nhãn role khi id lạ. Icon PNG riêng chờ art (SlotView monogram fallback hiện có). 2809/2809 + type-check + build + e2e create-to-combat; QA quick PASS WITH EVIDENCE (`qa/2026-09-07-turn-skill-display-meta-quick.md`) |
-| 6 | **Buff content migrate TribulationPhase/equipment/talent passive** + wire registry vào TurnBattleSystem | Content + wiring | 🔴 Converter + registry 46 buff xong nhưng **0 consumer production** |
+| 6 | **Buff content cho TribulationPhase/boss enrage, equipment (mới), talent passive** | Content (wiring đã xong) | 🟡 Converter + registry 46 buff + **wiring GameManager→TurnBattleSystem đã xong (2026-09-06/07, cả 2 constructor site)**. Còn thiếu content 3 nguồn: TribulationPhase/BossEnrage vẫn kiểu `BuffDefinition` cũ (`TurnBossTrigger` có cơ chế, chưa gán data); equipment Affix không có field buff (tạo mới, không phải migrate); talent `passiveConvertsTo` đối chiếu registry cũ. Xem mục 0 Phase A2. |
 | 7 | **Buff duration presentation theo lượt** (tooltip/VFX) | UI nhỏ | 🔴 Chờ #6 |
 | 8 | **Party recruit/UI/companion content** (engine `players[]` đã xong) | Feature lớn — spec riêng | 🔴 Chưa lên lịch |
 | 9 | **Xoá `battle/legacy/`** + gỡ shim GameManager/StageWaveSystem (checklist trong `legacy/README.md`) | Cleanup — spec riêng | 🔴 Chờ #2 + #6 |
