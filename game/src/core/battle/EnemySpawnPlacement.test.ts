@@ -56,4 +56,40 @@ describe('resolveEnemySpawnPosition', () => {
       expect(position.column).toBeLessThanOrEqual(ENEMY_SIDE_REGION.columnMax)
     }
   })
+
+  it('assigns distinct slots to every enemy spawned in the same wave when the wave fits within the slot pool', () => {
+    const occupied = new Set<string>()
+    const positions = new Set<string>()
+
+    for (let i = 0; i < STANDING_SLOT_COUNT * STANDING_SLOT_COUNT; i++) {
+      const position = resolveEnemySpawnPosition({ isBoss: false, random: Math.random }, ENEMY_SIDE_REGION, occupied)
+
+      positions.add(`${position.row}-${position.column}`)
+    }
+
+    expect(positions.size).toBe(STANDING_SLOT_COUNT * STANDING_SLOT_COUNT)
+  })
+
+  it('falls back to uniform-random-among-all-9 (never null/throw) once the wave exceeds the slot pool', () => {
+    const occupied = new Set<string>()
+
+    for (let i = 0; i < STANDING_SLOT_COUNT * STANDING_SLOT_COUNT; i++) {
+      resolveEnemySpawnPosition({ isBoss: false, random: Math.random }, ENEMY_SIDE_REGION, occupied)
+    }
+
+    // every slot is now occupied — the resolver must still return a valid position
+    for (let i = 0; i < 5; i++) {
+      const position = resolveEnemySpawnPosition({ isBoss: false, random: Math.random }, ENEMY_SIDE_REGION, occupied)
+
+      expect(position.column).toBeGreaterThanOrEqual(ENEMY_SIDE_REGION.columnMin)
+      expect(position.column).toBeLessThanOrEqual(ENEMY_SIDE_REGION.columnMax)
+    }
+  })
+
+  it('boss branch is unaffected by occupiedSlots', () => {
+    const occupied = new Set<string>(['0-0'])
+    const position = resolveEnemySpawnPosition({ isBoss: true, random: fixedRandom(0) }, ENEMY_SIDE_REGION, occupied)
+
+    expect(position).toEqual({ row: 5, column: 9 })
+  })
 })

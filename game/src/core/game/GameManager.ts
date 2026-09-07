@@ -2323,11 +2323,15 @@ export class GameManager {
   // enemyToCombatEntity() — luôn dính góc trên-trái thay vì random trong
   // ENEMY_SIDE_REGION. Helper dùng chung để 2 closure spawn giữa trận
   // (startTurnBattle + restartTurnBattleCycle) không lệch nhau lần nữa.
-  private placeSpawnedEnemy(entity: CombatEntity): CombatEntity {
-    const position = resolveEnemySpawnPosition({
-      isBoss: entity.isBoss ?? false,
-      random: Math.random,
-    })
+  private placeSpawnedEnemy(entity: CombatEntity, occupiedSlots?: Set<string>): CombatEntity {
+    const position = resolveEnemySpawnPosition(
+      {
+        isBoss: entity.isBoss ?? false,
+        random: Math.random,
+      },
+      undefined,
+      occupiedSlots,
+    )
 
     entity.row = position.row
     entity.x = position.column
@@ -2486,7 +2490,7 @@ export class GameManager {
       this.combatSystem,
       10_000,
       TURN_BUFF_REGISTRY,
-      () => {
+      (occupiedSlots?: Set<string>) => {
         const isFinalSpawn = (this.turnBattle?.wave?.spawnedCount ?? 0) + 1 >= effectiveTotalEnemyCount(stageRef)
         const template =
           this.stageWaves.pickEnemyForTurnSpawn(stageRef, isFinalSpawn) ??
@@ -2499,7 +2503,7 @@ export class GameManager {
         this.lastStageEnemyTemplate = template
 
         return toTurnBattleParticipant(
-          this.placeSpawnedEnemy(enemyToCombatEntity(this.enemySystem.spawn(template))),
+          this.placeSpawnedEnemy(enemyToCombatEntity(this.enemySystem.spawn(template)), occupiedSlots),
           this.turnBattle?.enemies.length ?? 0,
           GENERIC_PHYSICAL_BASIC,
         )
@@ -3038,7 +3042,7 @@ export class GameManager {
         this.combatSystem,
         10_000,
         TURN_BUFF_REGISTRY,
-        () => {
+        (occupiedSlots?: Set<string>) => {
           // isFinalSpawn: lượt spawn cuối là boss (tầng 10) — factory chạy
           // TRƯỚC khi resolveNextStep tăng spawnedCount, nên tổng đã-spawn
           // sau lần này = spawnedCount + 1.
@@ -3054,7 +3058,7 @@ export class GameManager {
           this.lastStageEnemyTemplate = template
 
           return toTurnBattleParticipant(
-            this.placeSpawnedEnemy(enemyToCombatEntity(this.enemySystem.spawn(template))),
+            this.placeSpawnedEnemy(enemyToCombatEntity(this.enemySystem.spawn(template)), occupiedSlots),
             this.turnBattle?.enemies.length ?? 1,
             GENERIC_PHYSICAL_BASIC,
           )

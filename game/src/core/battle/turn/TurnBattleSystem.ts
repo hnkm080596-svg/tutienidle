@@ -249,7 +249,7 @@ export class TurnBattleSystem {
     private readonly combat: CombatSystem,
     private readonly maxTurns: number = DEFAULT_MAX_TURNS,
     private readonly registry?: TurnBuffRegistry,
-    private readonly spawnEnemy?: () => TurnBattleParticipant,
+    private readonly spawnEnemy?: (occupiedSlots?: Set<string>) => TurnBattleParticipant,
     private readonly reactionPathPool?: readonly TurnSkillDefinition[],
   ) {}
 
@@ -381,9 +381,16 @@ export class TurnBattleSystem {
         )
       ) {
         const waveSize = battle.wave.waves[battle.wave.waveIndex]!
+        // Within-wave standing-slot dedupe (2026-09-07 bugfix) -- one set
+        // shared across this wave-batch's spawns so enemies spawned in the
+        // same wave claim distinct slots when the wave fits within the
+        // 9-slot pool (see EnemySpawnPlacement.ts). A later wave starts a
+        // fresh set, so it may reuse a slot vacated by an earlier wave's
+        // dead enemy -- that is intended, not a bug.
+        const occupiedSlots = new Set<string>()
 
         for (let index = 0; index < waveSize; index++) {
-          const participant = this.spawnEnemy()
+          const participant = this.spawnEnemy(occupiedSlots)
           const totalTicks = spawnTelegraphTicks(participant.entity)
 
           battle.wave.pendingEnemySpawns.push({ participant, ticksRemaining: totalTicks, totalTicks })
