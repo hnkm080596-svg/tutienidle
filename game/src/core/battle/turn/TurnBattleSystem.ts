@@ -870,6 +870,29 @@ export class TurnBattleSystem {
               battle.queuedFollowUpActorIds = battle.queuedFollowUpActorIds ?? []
               battle.queuedFollowUpActorIds.push(target.id)
             }
+
+            // Phase A1 (2026-09-07) — chance-gated ailment application,
+            // then reaction check against the just-applied id (mirrors the
+            // legacy SkillEffectSystem 'debuff' call shape). Registry-gated
+            // like the on-hit block above; reactionManager is an optional
+            // collaborator that no-ops when absent.
+            const ailment = action.skill?.appliesAilment
+
+            if (ailment && Math.random() < ailment.chance) {
+              const definition = this.registry.get(ailment.buffDefinitionId)
+
+              new TurnBuffSystem(target.buffs).apply(definition, actor.entity, target.entity, this.registry)
+
+              this.reactionManager?.checkAndTrigger(
+                target.buffs,
+                ailment.buffDefinitionId,
+                actor.entity,
+                target.entity,
+                this.combat,
+                this.registry,
+                actor.buffs,
+              )
+            }
           }
         }
       }

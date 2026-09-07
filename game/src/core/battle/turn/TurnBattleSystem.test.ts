@@ -2158,3 +2158,78 @@ describe('TurnBattleSystem.tickPacing — wall-clock pacing', () => {
   })
 })
 })
+
+describe('TurnBattleSystem appliesAilment (Phase A1)', () => {
+  const AILMENT_DEF: TurnBuffDefinition = {
+    id: 'fixture_ailment',
+    name: 'Fixture Ailment',
+    polarity: 'debuff',
+    duration: 5,
+    stackMode: 'refresh',
+    effects: [{ type: 'dot', dpsRatio: 0.1, element: 'physical' }],
+  }
+
+  function ailmentBattle(chance: number) {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 },
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const playerParticipant = makeParticipant('player', player, 100, 0)
+    playerParticipant.basic = {
+      id: 'fixture_ailment_skill',
+      cooldownTurns: 0,
+      damage: { kind: 'physical' as const, multiplier: 1 },
+      targeting: { shape: 'single' as const },
+      appliesAilment: { buffDefinitionId: 'fixture_ailment', chance },
+    }
+
+    const enemyParticipant = makeParticipant('enemy', enemyEntity, 1, 1)
+
+    const battle: TurnBattle = {
+      players: [playerParticipant],
+      enemies: [enemyParticipant],
+      state: 'fighting',
+    }
+
+    return { battle, playerParticipant, enemyParticipant }
+  }
+
+  it('applies the ailment buff to the target on a successful chance roll', () => {
+    const { battle, enemyParticipant } = ailmentBattle(1)
+
+    const registry = new FixtureBuffRegistry([AILMENT_DEF])
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
+
+    system.resolveNextStep(battle) // player acts first (priority 0)
+
+    expect(enemyParticipant.buffs.hasAny('fixture_ailment')).toBe(true)
+  })
+
+  it('does not apply the ailment when the chance roll fails', () => {
+    const { battle, enemyParticipant } = ailmentBattle(0)
+
+    const registry = new FixtureBuffRegistry([AILMENT_DEF])
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
+
+    system.resolveNextStep(battle)
+
+    expect(enemyParticipant.buffs.hasAny('fixture_ailment')).toBe(false)
+  })
+
+  it('does not throw when appliesAilment is set but no registry was provided', () => {
+    const { battle, enemyParticipant } = ailmentBattle(1)
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    expect(() => system.resolveNextStep(battle)).not.toThrow()
+    expect(enemyParticipant.buffs.hasAny('fixture_ailment')).toBe(false)
+  })
+})

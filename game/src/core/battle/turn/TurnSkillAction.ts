@@ -27,6 +27,13 @@ export interface TurnSkillDefinition {
   damage: ActionDamageInfo
   targeting: ActionTargeting
   appliesBuff?: { definitionId: string; target: 'self' | 'target' }
+  /**
+   * Phase A1 (2026-09-07) — chance-gated ailment application, checked
+   * against TurnReactionManager after applying. Deliberately separate
+   * from appliesBuff (unconditional, no reaction check) — different
+   * semantics, do not merge the two fields.
+   */
+  appliesAilment?: { buffDefinitionId: string; chance: number }
   /** Future Systems Task 7 — skill charge N lượt (Thế) rồi tự resolve (Trảm). */
   chargeTurns?: number
   /** Action Playback (2026-09-05) — VFX preset cho action_impact. undefined = fallback preset mặc định (Task 4). */
