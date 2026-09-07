@@ -394,6 +394,32 @@ export class TurnBattleSystem {
       }
     }
 
+    const livingEnemyCount = battle.enemies.filter((enemy) => enemy.entity.alive).length
+
+    if (livingEnemyCount === 0) {
+      const pendingCount = battle.wave?.pendingEnemySpawns.length ?? 0
+      const waveIndex = battle.wave?.waveIndex ?? 0
+      const waveCount = battle.wave?.waves.length ?? 0
+      const spawnedCount = battle.wave?.spawnedCount ?? 0
+      const totalEnemyCount = battle.wave?.totalEnemyCount ?? 0
+
+      const moreComing = pendingCount > 0 || waveIndex < waveCount
+
+      if (moreComing) {
+        for (const participant of [...battle.players, ...battle.enemies]) {
+          participant.actionGauge = 0
+        }
+
+        return null
+      }
+
+      if (isStageComplete(spawnedCount, totalEnemyCount, livingEnemyCount, pendingCount)) {
+        battle.state = 'victory'
+
+        return null
+      }
+    }
+
     // Defect-fix Task 1 — follow-up/counter queue TRƯỚC gauge order: queue
     // là production path duy nhất đọc (peekNextActor không chạy trong loop).
     const followUpActor = this.dequeueFollowUpActor(battle)

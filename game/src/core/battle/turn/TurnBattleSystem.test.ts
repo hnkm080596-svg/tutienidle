@@ -1034,6 +1034,38 @@ describe('TurnBattleSystem.tickPacing wave-batch spawning', () => {
     expect(battle.enemies).toHaveLength(1)
   })
 
+  it('freezes and resets gauges when the arena is empty but more enemies are coming', () => {
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const battle: TurnBattle = {
+      players: [makeParticipant('player', player, 10, 0)],
+      enemies: [],
+      state: 'fighting',
+      wave: {
+        totalEnemyCount: 3,
+        spawnedCount: 1,
+        waves: [3],
+        waveIndex: 1,
+        pendingEnemySpawns: [
+          { participant: makeParticipant('enemy1', createCombatant({ id: 'enemy1' }), 10, 1), ticksRemaining: 5, totalTicks: 8 },
+        ],
+      },
+    }
+
+    battle.players[0]!.actionGauge = GAUGE_MAX - 1
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+
+    const ready = system.tickPacing(battle)
+
+    expect(ready).toBeNull()
+    expect(battle.players[0]!.actionGauge).toBe(0)
+  })
+
 const LONG_STUN_DEFINITION: TurnBuffDefinition = {
   id: 'fixture_long_stun',
   name: 'Fixture Long Stun',
