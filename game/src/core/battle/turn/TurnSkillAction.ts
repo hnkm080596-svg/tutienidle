@@ -47,11 +47,12 @@ export interface TurnSkillSlot {
 
 const RESOURCE_FIELD: Record<
   Exclude<SkillResourceType, 'none'>,
-  'currentMp' | 'currentSwordIntent' | 'currentMomentum'
+  'currentMp' | 'currentSwordIntent' | 'currentMomentum' | 'currentThe'
 > = {
   mana: 'currentMp',
   sword_intent: 'currentSwordIntent',
   momentum: 'currentMomentum',
+  the: 'currentThe',
 }
 
 /**
@@ -67,7 +68,9 @@ export function hasResourceFor(entity: CombatEntity, skill: TurnSkillDefinition)
 
   const field = RESOURCE_FIELD[skill.resourceType]
 
-  return entity[field] >= skill.resourceCost
+  // currentThe is optional on CombatEntity — an uninitialized pool reads as
+  // undefined, which correctly blocks the cast (undefined >= cost is false).
+  return (entity[field] ?? 0) >= skill.resourceCost
 }
 
 export function consumeResourceFor(entity: CombatEntity, skill: TurnSkillDefinition): void {

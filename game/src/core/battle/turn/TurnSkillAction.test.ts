@@ -310,3 +310,25 @@ describe('selectRandomDistinctElementPair', () => {
     expect(() => selectRandomDistinctElementPair([])).toThrow()
   })
 })
+
+describe('the resource type (Phase A3)', () => {
+  it('gates on currentThe reaching the resource cost', () => {
+    const theEntity = entity({ currentThe: 40 })
+    const theSkill = skill({ resourceType: 'the', resourceCost: 100 })
+
+    expect(hasResourceFor(theEntity, theSkill)).toBe(false)
+
+    theEntity.currentThe = 100
+
+    expect(hasResourceFor(theEntity, theSkill)).toBe(true)
+  })
+
+  it('consumes the full pool on cast, matching legacy consumeTheForUlt reset-to-zero', () => {
+    const theEntity = entity({ currentThe: 100 })
+    const theSkill = skill({ resourceType: 'the', resourceCost: 100 })
+
+    consumeResourceFor(theEntity, theSkill)
+
+    expect(theEntity.currentThe).toBe(0)
+  })
+})
