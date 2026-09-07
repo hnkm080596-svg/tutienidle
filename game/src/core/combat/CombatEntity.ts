@@ -206,6 +206,11 @@ export interface CombatEntity {
   // TribulationPhase.ts's BossEnrage, BattleSystem.updateEnrage().
   enrage?: BossEnrage
 
+  // Turn-based boss enrage (Phase A2, 2026-09-07) — see Enemy.ts's
+  // bossTrigger for the full comment; threaded here unchanged via
+  // enemyToCombatEntity(), read by TurnBattleAdapter.toTurnBattleParticipant().
+  bossTrigger?: { afterTurns: number; buffDefinitionId: string }
+
   // Combat Balance Pass (2026-08-29, plan §3.6) — action đặc biệt data-
   // driven thay basic attack cứng (xem core/enemy/Enemy.ts's
   // EnemySpecialAttack). Thread từ Enemy qua enemyToCombatEntity(), đọc
