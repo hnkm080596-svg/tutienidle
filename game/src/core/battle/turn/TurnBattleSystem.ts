@@ -25,6 +25,7 @@ import { selectRandomDistinctElementPair } from './TurnSkillAction'
 import { REACTION_PATH_SPECIAL_ID } from '../../../data/skill/TurnReactionPathSkills'
 import { refundGauge, GAUGE_MAX } from './ActionGauge'
 import { TurnReactionManager } from './TurnReactionManager'
+import { MAX_THE, THE_GAIN_PER_LINK, THE_GAIN_PER_FINISHER } from '../../combat/CombatTypes'
 import type { TurnBuffDefinition } from './TurnBuffTypes'
 
 /**
@@ -893,7 +894,9 @@ export class TurnBattleSystem {
                 actor.buffs,
               )
             }
+
           }
+
         }
       }
 
@@ -905,6 +908,22 @@ export class TurnBattleSystem {
         commitAction(actor.entity, action)
       } else {
         commitAction(actor.entity, action)
+
+        // Phase A3 — Thế Thuần Hệ gain, simplified from legacy's
+        // chain-link-position rule (no turn-based chain state exists —
+        // see the A3 spec's Global Constraints). Fires once per landed
+        // action from special/ultimate slots only; basic attacks do not
+        // generate Thế. Capped at MAX_THE. Runs AFTER commitAction so an
+        // ultimate's pool consumption (100 → 0) is already reflected —
+        // the finisher gain lands on the post-cast pool, mirroring
+        // legacy's gain-after-consume ordering. Deliberately NOT inside
+        // the registry gate: Thế gain is engine-native resource accrual,
+        // not buff-registry content.
+        if (action.slot && action.slot === actor.special) {
+          actor.entity.currentThe = Math.min(MAX_THE, (actor.entity.currentThe ?? 0) + THE_GAIN_PER_LINK)
+        } else if (action.slot && action.slot === actor.ultimate) {
+          actor.entity.currentThe = Math.min(MAX_THE, (actor.entity.currentThe ?? 0) + THE_GAIN_PER_FINISHER)
+        }
 
         if (action.skill?.appliesBuff && this.registry) {
           const definition = this.registry.get(action.skill.appliesBuff.definitionId)
