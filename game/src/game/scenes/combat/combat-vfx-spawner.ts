@@ -7,7 +7,8 @@
 import Phaser from 'phaser'
 
 import type { ActionImpactEvent, BattlePositionsEvent } from '@/core/battle/BattleEvents'
-import type { GridPosition } from '@/core/battle/BattleGrid'
+import type { GridPosition, LaneIndex } from '@/core/battle/BattleGrid'
+import type { EnemySpawnVfxPresetId } from '@/core/battle/CombatAction'
 import {
   spawnActionImpactVfx,
   type ActionImpactVfxHandle,
@@ -47,6 +48,23 @@ interface StatusEntry {
   remainingTime?: number
   icon: Phaser.GameObjects.Rectangle | Phaser.GameObjects.Arc
   stackLabel: Phaser.GameObjects.Text
+}
+
+// Turn-Based Wave Redesign (2026-09-06) — subset của BattlePositionsEvent
+// mà reconcileSpawnVfx() thực sự đọc. BattlePositionsEvent thỏa mãn cấu
+// trúc này (TypeScript structural typing) — legacy call site hiện có
+// (CombatScene.reconcileSpawnVfx()) KHÔNG cần thay đổi gì. Turn-based
+// combat tự dựng object shape này từ TurnBattleEntitySnapshotEvent
+// (CombatScene.onTurnBattleEntitySnapshot(), Task 7).
+export interface SpawnVfxSnapshot {
+  spawningEnemies?: {
+    id: string
+    row: LaneIndex
+    column: number
+    progress: number
+    isBoss: boolean
+    presetId: EnemySpawnVfxPresetId
+  }[]
 }
 
 export class CombatVfxSpawner {
@@ -455,7 +473,7 @@ export class CombatVfxSpawner {
    * (flash ngắn + fade-in sprite) và dọn handle. Flat mode bỏ qua (renderer
    * legacy giữ hành vi cũ).
    */
-  reconcileSpawnVfx(event: BattlePositionsEvent) {
+  reconcileSpawnVfx(event: SpawnVfxSnapshot) {
     if (!this.scene.isPerspective) {
       return
     }
