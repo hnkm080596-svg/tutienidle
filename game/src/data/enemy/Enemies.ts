@@ -749,6 +749,9 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     lane: 'ground',
     archetype: 'caster',
     family: 'flood_serpent',
+    // Phase A2 (2026-09-07) — turn-based enrage trigger; buff resolves
+    // through TURN_BUFF_REGISTRY at spawn (see TurnBattleAdapter).
+    bossTrigger: { afterTurns: 60, buffDefinitionId: 'qi_refining_serpent_enrage' },
     statsInput: {
       maxHp: 1320,
       attack: 102,
@@ -1350,6 +1353,9 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     realmId: 'mortal',
     lane: 'ground',
     family: 'crocodile',
+    // Phase A2 (2026-09-07) — turn-based enrage trigger; buff resolves
+    // through TURN_BUFF_REGISTRY at spawn (see TurnBattleAdapter).
+    bossTrigger: { afterTurns: 60, buffDefinitionId: 'mortal_crocodile_enrage' },
     statsInput: {
       maxHp: 395,
       attack: 31,
@@ -1466,6 +1472,9 @@ function foundationBeast(params: {
   resistance: number
   tribulationPhases?: TribulationPhase[]
   enrage?: BossEnrage
+  // Phase A2 (2026-09-07) — turn-based enrage trigger, threaded through
+  // to defineEnemy() unchanged. Separate from the legacy `enrage` above.
+  bossTrigger?: { afterTurns: number; buffDefinitionId: string }
   specialAttacks?: EnemySpecialAttack[]
 }) {
   const hp = Math.round(450 * 1.2 ** (params.t - 1))
@@ -1488,6 +1497,7 @@ function foundationBeast(params: {
     archetype: params.archetype,
     tribulationPhases: params.tribulationPhases,
     enrage: params.enrage,
+    bossTrigger: params.bossTrigger,
     specialAttacks: params.specialAttacks,
     statsInput: {
       maxHp: Math.round(hp * mult.hp),
@@ -1757,6 +1767,10 @@ const FOUNDATION_ENEMIES: Enemy[] = [
     resistance: 20,
     tribulationPhases: FLOOD_DRAGON_PHASES,
     enrage: FLOOD_DRAGON_ENRAGE,
+    // Phase A2 (2026-09-07) — turn-based twin of the legacy `enrage`
+    // above (same 60-turn magnitude); kept alongside until roadmap C1
+    // removes the legacy engine. Buff resolves via TURN_BUFF_REGISTRY.
+    bossTrigger: { afterTurns: 60, buffDefinitionId: 'foundation_dragon_enrage' },
     // Combat Balance Pass (2026-08-29, plan §3.6) — boss mẫu có action
     // đặc biệt data-driven: mỗi đòn thứ 4 là "Nuốt Sóng" — đòn nước nặng
     // (×2.5 damage) với preset riêng, windup caster chuẩn. Số minh hoạ,
