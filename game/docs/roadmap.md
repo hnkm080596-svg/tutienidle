@@ -6,6 +6,61 @@
 > Mỗi hạng mục lớn có plan chi tiết riêng (dẫn link bên dưới). Khi plan và roadmap lệch nhau, plan chi tiết là nguồn sự thật cho hạng mục đó.
 > Audit toàn diện mới nhất (bug list + trạng thái từng plan, verify theo file:line): [project-review-2026-08-28.md](./project-review-2026-08-28.md).
 > Baseline verify gần nhất (2026-09-05, main checkout): `type-check` sạch + full suite **2510/2510 pass (390 files)** + `build` pass.
+> **Cập nhật 2026-09-07**: mục 0 dưới đây là roadmap tới BETA đã hợp nhất — nguồn tham chiếu chính khi lập kế hoạch làm việc từ nay. Mục 1-10 phía dưới GIỮ NGUYÊN làm chi tiết/lịch sử tra cứu (không xóa) — khi mục 0 và chi tiết bên dưới lệch nhau, mục 0 là nguồn sự thật cho THỨ TỰ/PHẠM VI beta; chi tiết kỹ thuật từng hạng mục vẫn tra ở mục 1-10 hoặc plan link tương ứng.
+
+## 0. Roadmap tới Beta — hợp nhất (2026-09-07)
+
+**Trần nội dung: cảnh giới Trúc Cơ.** Không có Kim Đan+ trong beta (quyết định người dùng 2026-08-29, giữ nguyên — data realm cao hơn tồn tại nhưng không có nội dung gate mới). Beta coi là xong khi người chơi có thể chơi trọn vẹn Phàm Nhân → Trúc Cơ với nội dung thật ở mọi hệ thống chạm tới, không có mảng rỗng/placeholder nào lộ ra trong luồng chơi bình thường.
+
+**Đã xong, không cần làm lại** (chi tiết ở mục 1-10): toàn bộ hạ tầng combat turn-based (engine/ATB/targeting/wave-spawn/presentation split + P17 runtime separation, 2026-09-07), Phase 0 (bug/economy/save), phần lớn Phase 1 (nội dung Trúc Cơ M1 — 10 stage/20 enemy/boss/quest, talent catalog v4 M1 combat), phần lớn QA Deep lần 1 (mục 8), item-grade rework, i18n phần lớn, lint/E2E/code-split (Phase 4 một phần).
+
+### Phase A — Combat: nội dung thật (thứ tự phụ thuộc)
+
+| # | Việc | Phụ thuộc | Chi tiết |
+|---|---|---|---|
+| A1 | Wire ReactionManager/SkillEffectSystem vào TurnBattleSystem | — | mục 9.5 #2 |
+| A2 | Buff content migrate (Tribulation/trang bị/thiên phú) + wire registry thật vào TurnBattleSystem | — | mục 9.5 #6 (registry 46 buff đã có, 0 consumer) |
+| A3 | Skill content thật: special/ultimate cho mọi build (hiện chỉ Kiếm Tu) | — | mục 9.5 #3 |
+| A4 | Reaction Path nội dung thật (pool element skill + ultimate %) | A1 | mục 9.5 #12 |
+| A5 | Boss enrage content bằng buff thủ công | A2 | mục 9.5 #11 |
+| A6 | Buff duration presentation (tooltip/VFX theo lượt) | A2 | mục 9.5 #7 |
+| A7 | `hpRegenPerTurn` | — | ✅ **CHỐT 2026-09-07: giữ** cho kỹ thuật/trang bị/cảnh giới (Pill đã bỏ trước đó, không đổi) |
+
+### Phase B — Progression & thế giới: nội dung thật
+
+| # | Việc | Phụ thuộc | Chi tiết |
+|---|---|---|---|
+| B1 | `perfectClearTurnLimit` cho 30 stage (hiện 0/30, chip Hoàn Mỹ đang disabled) | — | mục 9.5 #4 |
+| B2 | Trận Pháp thật (thay `hon_don_tran` test-only) | — | mục 9.8 Part C, mục 9.9 |
+| B3 | Companion roster thật (tên/stat/skill từng companion) | — | ✅ **CHỐT 2026-09-07: TRONG beta.** Engine đã xong (`players[]`, gacha, exp curve) — mục 9.8 Part B, mục 9.5 #8. Cần spec riêng do khối lượng content lớn. |
+| B4 | Talent v4 M2 (tu luyện) + M3 (sản xuất) | — | mục 7.5 dòng 76 — target `TurnBuffDefinition`, không phải legacy `BuffDefinition` (mục 10.3) |
+| B5 | World Map thật cho Thanh Vân (hạ tầng hex layout đã có, chưa có data bản đồ) | — | ✅ **CHỐT 2026-09-07: TRONG beta**, thay vì giữ dạng danh sách stage. Cần spec riêng — hạ tầng (`src/core/world-map/`) mới có layout+validator, chưa có nội dung. |
+
+### Phase C — Dọn nợ kỹ thuật (chạy sau khi content ổn định, không chặn A/B)
+
+| # | Việc | Phụ thuộc | Chi tiết |
+|---|---|---|---|
+| C1 | Xóa `battle/legacy/` (engine real-time cũ) + gỡ shim | A1 + A2 | mục 9.5 #9 |
+| C2 | Tách tiếp `GameManager.ts` (2.939 dòng) | — | mục 10.4 |
+| C3 | Nameplate công trình + dọn placeholder/emoji còn lại | — | Phase 2 cũ (mục 3) |
+| C4 | Locale sweep (7.10 Task 6) + container-fit refactor (7.10 Task 7) | — | mục 7.10 |
+
+### Phase D — QA/Release trước beta
+
+| # | Việc |
+|---|---|
+| D1 | Regression toàn diện + balance pass cho nội dung mới (A+B) |
+| D2 | E2E bổ sung: auto-farm Hoàn Mỹ + manual tap-to-cast (sau khi B1 xong, ổn định) |
+| D3 | QA Deep pass lần 2 (như mục 8, chạy lại sau khi A+B+C xong) |
+| D4 | **Ngoài phạm vi beta** (✅ chốt 2026-09-07): Giai đoạn 6 Pre-production (online foundation/VIP/prestige) → hậu-beta. Âm thanh → vẫn ngoài phạm vi (quyết định 2026-08-29, chưa có tài nguyên). |
+
+### Ghi chú thứ tự
+
+- **A2 chặn đường nhiều nhất** (mở khóa A5, A6, C1) — nên làm sớm trong Phase A.
+- **A1 + A2 chặn C1** — không xóa engine cũ khi wiring chưa xong (an toàn rollback).
+- **B3 (Companion) và B5 (World Map)** là 2 hạng mục content lớn nhất, mỗi cái cần brainstorm + spec riêng trước khi viết plan — không gộp chung 1 plan (giữ nguyên convention "mỗi hệ thống 1 plan" đã có).
+- Phase C không chặn Phase A/B — chạy song song khi có capacity rảnh (đúng tinh thần Phase 4 cũ "chạy song song, không chặn phase khác").
+- 3.5/3.6 (Stat cap Phàm Nhân, CDR cap 300%) vẫn treo (mục 10.3) — không chặn beta, xử lý trong Phase D balance pass nếu còn thời gian.
 
 ## 1. Nhận định hiện trạng
 
@@ -594,12 +649,14 @@ Bịt nốt lỗ hổng ghi ở cuối mục 9.8 (dòng "cần playtest trực q
 
 ### 10.3. Cần user chốt (chưa quyết — không tự làm)
 
-- **Bảng 9.5 #4**: giá trị `perfectClearTurnLimit` cho từng stage (hiện 0/30 stage có) — cần bảng số hoặc quy tắc (vd theo `totalEnemyCount`).
-- **Bảng 9.5 #13**: giữ `hpRegenPerTurn` làm stat chung (engine đã wire) hay bỏ hẳn khỏi StatType.
+- **Bảng 9.5 #4**: giá trị `perfectClearTurnLimit` cho từng stage (hiện 0/30 stage có) — cần bảng số hoặc quy tắc (vd theo `totalEnemyCount`). Còn treo — xem mục 0 Phase B1.
+- ~~**Bảng 9.5 #13**: giữ `hpRegenPerTurn` làm stat chung (engine đã wire) hay bỏ hẳn khỏi StatType.~~ — ĐÃ CHỐT 2026-09-07: giữ, cho kỹ thuật/trang bị/cảnh giới (mục 0 Phase A7).
 - ~~**Bảng 9.5 #14**: xóa `MomentumBreak.ts` + tests luôn, hay giữ làm tài liệu tham khảo~~ — ĐÃ CHỐT: xóa, merge `fc16dfa` 2026-09-07 (git history còn).
-- **3.5/3.6** (Stat cap Phàm Nhân, CDR cap 300%): chưa chốt từ 7.3.
-- **Talent v4 M2/M3**: khi làm, target phải là `TurnBuffDefinition`/turn engine (không phải legacy `BuffDefinition`) — cần ghi rõ trong plan M2/M3 lúc viết.
-- **World map vs stage list** (mục 5), **tutorial động** (mục 5): chờ quyết định riêng.
+- **3.5/3.6** (Stat cap Phàm Nhân, CDR cap 300%): chưa chốt từ 7.3. Không chặn beta — xử lý ở Phase D balance pass nếu còn thời gian.
+- **Talent v4 M2/M3**: khi làm, target phải là `TurnBuffDefinition`/turn engine (không phải legacy `BuffDefinition`) — cần ghi rõ trong plan M2/M3 lúc viết. Xem mục 0 Phase B4.
+- ~~**World map vs stage list**~~ — ĐÃ CHỐT 2026-09-07: làm world map thật cho beta (mục 0 Phase B5). **Tutorial động** (mục 5) vẫn chờ quyết định riêng, không chặn beta.
+- **Companion roster** (mục 9.5 #8) — ĐÃ CHỐT 2026-09-07: trong beta (mục 0 Phase B3).
+- **Giai đoạn 6 Pre-production** (online foundation/VIP/prestige) — ĐÃ CHỐT 2026-09-07: hậu-beta, không trong scope beta (mục 0 Phase D4).
 - **Task 14 cũ** (nút ult manual + panel AI trong `PhapTuCombatHud.vue`, defer từ thuan-he QA): sau rework 3-skill, "ult manual" đã bao bởi `TurnCombatSkillBar` — **đề xuất đóng Task 14**, trừ khi user muốn panel AI riêng.
 
 ### 10.4. Đề xuất kỹ thuật (không làm lặng lẽ — chờ task yêu cầu, theo P9)
