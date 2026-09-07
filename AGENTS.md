@@ -180,6 +180,7 @@ When a rule below says "the agent", it means whichever opencode agent is current
 - **Damage/effect resolution** stays in its own system (e.g. the existing damage/impact engine) — a runtime or presentation layer never computes damage inline.
 - Coordination between these systems happens through explicit interfaces/events only (an ack call, an emitted event, a read-only state query) — never by one system directly mutating another's private state.
 - When auditing or extending a system and you find timing, presentation, and business logic mixed in one function/class, treat that as a defect to flag (or fix, if in scope) under this rule — not a style nitpick.
+- **Combat specifically:** before touching turn-based combat (`game/src/core/battle/turn/**`, `GameManager`'s battle-tick code, `CombatScene.ts`), read `docs/superpowers/specs/2026-09-07-turn-based-combat-reference.md` first — it is the authoritative description of the state machine, gauge, targeting, and presentation-timing split, plus an explicit list of mechanics this system deliberately does NOT have (no Break/Toughness, no per-turn banked resource, no per-path elemental requirement). If a change would make that document and the real code disagree, update the document in the same change.
 
 ---
 

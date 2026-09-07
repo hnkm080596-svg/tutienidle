@@ -151,6 +151,8 @@ The only place Vietnamese should appear in this codebase is user-facing UI/UX co
 
 A runtime/clock component's only job is timing (advance a gauge/counter, select current animation/VFX state, signal ticks) — never business/gating logic (targeting, spawn/wave conditions, victory conditions, damage math). Presentation (Phaser) owns animation/VFX playback and reports completion via explicit acknowledgment — it doesn't decide game-logic outcomes. Damage/effect resolution stays in its own system, never inlined into a runtime or presentation layer. Systems coordinate only through explicit interfaces/events (an ack call, an emitted event, a read-only query) — never by directly mutating a sibling system's private state. If you find timing, presentation, and business logic mixed in one function/class, treat it as a defect, not a style nitpick.
 
+**Combat specifically:** before touching turn-based combat (`game/src/core/battle/turn/**`, `GameManager`'s battle-tick code, `CombatScene.ts`), read `docs/superpowers/specs/2026-09-07-turn-based-combat-reference.md` first — authoritative description of the state machine/gauge/targeting/presentation-timing split, plus mechanics this system deliberately excludes (no Break/Toughness, no per-turn banked resource, no per-path elemental requirement). Keep it in sync with any change that affects it.
+
 ---
 
 ## What to read alongside this prompt
