@@ -30,7 +30,7 @@ an absolute `GridPosition` inside a `BattlefieldUsableRegion`. Combat math
 - New UI strings in `TranPhapPanel.vue` go through i18n, not hardcoded (P16, `AGENTS.md`).
 - Do not edit files outside this plan's task list (P10).
 - No new dependencies.
-- Do not touch codebase-wide Vietnamese comments outside the files this plan already edits — that is a separate, parallel migration (`docs/superpowers/plans/2026-09-07-vietnamese-comment-to-english-migration.md`).
+- Do not translate Vietnamese comments outside the files this plan already edits — a codebase-wide comment translation was considered and abandoned as not worth the cost/risk (2026-09-07); only P15 (new comments in English) and targeted mojibake fixes in files this plan already touches apply.
 
 ---
 

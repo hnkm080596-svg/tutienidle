@@ -54,3 +54,7 @@ __pycache__/
 
 # Superpowers SDD artifacts
 .superpowers/
+
+# playwright-cli scratch output (snapshots/screenshots from P14 checks)
+.playwright-cli/
+game/.playwright-cli/
