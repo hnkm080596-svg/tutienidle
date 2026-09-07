@@ -212,6 +212,7 @@ import { TurnBuffSystem } from '../battle/turn/TurnBuffSystem'
 import { TurnReactionManager } from '../battle/turn/TurnReactionManager'
 import type { TurnBuffDefinition } from '../battle/turn/TurnBuffTypes'
 import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
+import { PHAP_TU_REACTION_SPECIAL, PHAP_TU_REACTION_ULTIMATE } from '../../data/skill/TurnReactionPathSkills'
 import { toTurnSkillDefinition } from './SkillToTurnSkillConverter'
 
 /**
@@ -2352,6 +2353,23 @@ export class GameManager {
   ): { special?: TurnSkillDefinition; ultimate?: TurnSkillDefinition } {
     if (player.cultivationPath !== 'phap_tu') {
       return {}
+    }
+
+    // Phase A4 (2026-09-07) — Reaction Path branch: purchasing ANY
+    // `reaction_path_unlock_<tag>` node awakens the hidden path and
+    // REPLACES the element chain's special/ultimate with the Reaction
+    // Path's marker skills (the engine intercepts the special marker and
+    // casts 2 distinct elemental picks; the ultimate self-applies
+    // reaction_empowerment). Gating reads player.nodeLevels (§6.8 —
+    // PlayerData is the authority), mirroring getPhapTuThuanElement()'s
+    // nodeLevels read pattern.
+    for (const nodeKey of Object.keys(player.nodeLevels)) {
+      if (nodeKey.startsWith('reaction_path_unlock_') && player.nodeLevels[nodeKey]! > 0) {
+        return {
+          special: PHAP_TU_REACTION_SPECIAL,
+          ultimate: PHAP_TU_REACTION_ULTIMATE,
+        }
+      }
     }
 
     const element = this.getPhapTuThuanElement() ?? 'fire'
