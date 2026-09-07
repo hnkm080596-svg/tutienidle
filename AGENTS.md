@@ -5,7 +5,7 @@
 
 This document is the human-readable spec for all project rules. Two categories:
 
-- **Part 1 — Protection Rules** (P1–P12): hard rules the agent must NOT bypass. Also baked into `.opencode/agent/<name>.md` system prompts so the agent "lives in" them.
+- **Part 1 — Protection Rules** (P1–P14): hard rules the agent must NOT bypass. Also baked into `.opencode/agent/<name>.md` system prompts so the agent "lives in" them.
 - **Part 2 — Effectiveness Guidelines** (E1–E16): suggestions the agent reads and applies when relevant. May skip with reason.
 - **Part 3 — Opencode Agent Wiring**: technical note about how Part 1 is replicated into the four agent files.
 
@@ -134,6 +134,22 @@ When a rule below says "the agent", it means whichever opencode agent is current
 - The repo carries guard tests for this class of failure (app-shell orphaned-function and composable-consumer checks, plus an e2e spec that plays a battle to resolution). **Do not delete, skip, or weaken them to make a change pass.** If one fails, it is telling you something is unwired — fix the wiring.
 - If a symptom is "nothing happens, no error", suspect an uncalled function before suspecting broken logic. Silence is the signature of this bug class.
 
+### P14. Visual/Runtime Verification via Playwright (things `tsc`/Vitest cannot see)
+
+**Why this rule exists.** `npm.cmd run type-check` and Vitest (jsdom) prove logic and DOM structure — they cannot see actual pixel rendering, Phaser canvas draw output, whether an animation frame is actually advancing, CSS visual states (hover, drag-over, transition), z-index/overlap, or whether a native HTML5 drag-and-drop handler actually fires in a real browser. A change can pass P3 `full` with 100% green tests and still be visibly broken, invisible, or unusable — the test suite was structurally never looking at the thing that broke.
+
+- **Trigger:** the change affects any of — Phaser scene rendering (sprites, VFX, canvas layout, animation state), CSS visual state driven by user interaction (hover, drag-over, `:class` bindings, transitions, responsive layout), drag-and-drop or other native browser interaction, or any UI element whose correctness can only be confirmed by looking at the rendered page.
+- For a triggering change, P3 alone is **not sufficient**. Load the `playwright-cli` skill and drive the actual feature in a real browser before declaring done:
+  1. Start the dev server (`npm.cmd run dev`, run in background) and read its printed Local URL from stdout — do not assume a fixed port.
+  2. `playwright-cli open <url> --browser=msedge` — project convention (no bundled Chromium assumed available).
+  3. Navigate to the actual affected screen/panel, take a `snapshot`/`screenshot`, and visually confirm the expected rendered state — not just "no console error".
+  4. **Drag-and-drop / native HTML5 DnD:** `dragTo()` and other native Playwright drag actions do **not** reliably fire this codebase's Vue `@dragstart`/`@dragover`/`@drop` handlers. Use `run-code` to dispatch real `DragEvent`/`DataTransfer` objects via `page.evaluate()` instead.
+  5. After dispatching events, do **not** read the resulting DOM in the same `run-code` call — Vue's reactive DOM update is scheduled on the next microtask, so a synchronous read right after `dispatchEvent()` sees stale state. Dispatch in one call, then query the DOM in a separate, later call.
+  6. Run `playwright-cli console` and confirm no unexpected errors.
+  7. `playwright-cli close` when done, and delete any scratch files it created (`.playwright-cli/`, ad-hoc screenshots/snapshots, stray `*.yml`/`*.png` at the repo root) before finishing — these are not test artifacts and must never be committed.
+- A screenshot or snapshot showing the expected visual result is the evidence for this rule, the same way a passing test is evidence for P3. State what was visually confirmed in the summary (E11).
+- This is a real-browser spot-check for **this task's** change, not a substitute for the Playwright e2e suite (P13) or the QA skill (P4) — those are separate gates with separate evidence requirements. Do this in addition, not instead.
+
 ---
 
 ## Part 2 — Effectiveness Guidelines (Read & Apply When Relevant)
@@ -178,7 +194,7 @@ The agent reads these rules and applies them when the task matches the trigger. 
 ### E6. E2E Testing Skills
 
 - Writing e2e tests in `game/tests/e2e/**` → load the `playwright-best-practices` skill.
-- Running browser-based UI checks inside a session → load the `playwright-cli` skill.
+- Running browser-based UI checks inside a session → load the `playwright-cli` skill. **See P14 for when this is mandatory, not optional, and for this project's specific gotchas (drag-and-drop simulation, Vue microtask timing, browser choice).**
 - Vitest remains the default for unit and integration tests; Playwright is for end-to-end browser behavior.
 
 ### E7. Planning & Idea Preservation
@@ -250,10 +266,10 @@ Opencode supports per-agent system prompts via `.opencode/agent/<name>.md` files
 
 ### Agent files
 
-- `.opencode/agent/build.md` — primary agent that edits code. Embeds all 13 Protection rules.
-- `.opencode/agent/plan.md` — primary agent for spec / planning without edits. Embeds P1, P2, P6, P7, P8, P9, P10, P11. Does not need P3 / P4 / P5 / P12 / P13 because it does not ship code.
+- `.opencode/agent/build.md` — primary agent that edits code. Embeds all 14 Protection rules.
+- `.opencode/agent/plan.md` — primary agent for spec / planning without edits. Embeds P1, P2, P6, P7, P8, P9, P10, P11. Does not need P3 / P4 / P5 / P12 / P13 / P14 because it does not ship code.
 - `.opencode/agent/general.md` — primary fallback agent with the same Protection surface as `build.md`.
-- `.opencode/agent/explore.md` — primary read-only research agent. Embeds P1, P2, P6, P7, P8, P10. Does not need P3 / P4 / P5 / P9 / P12 / P13.
+- `.opencode/agent/explore.md` — primary read-only research agent. Embeds P1, P2, P6, P7, P8, P10. Does not need P3 / P4 / P5 / P9 / P12 / P13 / P14.
 
 ### Sync rule
 

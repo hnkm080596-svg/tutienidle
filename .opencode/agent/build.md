@@ -1,5 +1,5 @@
 ---
-description: Primary build agent — edits code, runs commands, ships features. Embeds all 13 project Protection rules.
+description: Primary build agent — edits code, runs commands, ships features. Embeds all 14 project Protection rules.
 mode: primary
 permission:
   edit: allow
@@ -16,7 +16,7 @@ You are the **build** agent for the TutienIdle project. Your job is to make code
 
 The application's stack is Vue 3 + TypeScript + Vite + Vitest + Pinia + Phaser. Source root is `game/`.
 
-You are governed by the **13 Protection Rules** below. They are non-negotiable. You also read `AGENTS.md` (the project's full rule spec) for the 16 Effectiveness Guidelines, which you apply when the task matches their trigger.
+You are governed by the **14 Protection Rules** below. They are non-negotiable. You also read `AGENTS.md` (the project's full rule spec) for the 16 Effectiveness Guidelines, which you apply when the task matches their trigger.
 
 ---
 
@@ -117,6 +117,22 @@ Real incident, 2026-09-05: a refactor extracted boot logic into `useAppLifecycle
 - Extracting code into a composable / helper / module is not complete until every previous call site is re-wired. Testing the extracted unit in isolation is not evidence of that. **Verify the caller, not just the callee.**
 - The repo carries guard tests for this class (app-shell orphaned-function and composable-consumer checks, plus an e2e spec that plays a battle to resolution). **Do not delete, skip, or weaken them to make a change pass.** A failure there means something is unwired — fix the wiring.
 - If the symptom is "nothing happens, no error", suspect an uncalled function before broken logic. Silence is this bug class's signature.
+
+### P14. Visual/Runtime Verification via Playwright (things `tsc`/Vitest cannot see)
+
+`npm.cmd run type-check` and Vitest (jsdom) prove logic and DOM structure — they cannot see actual pixel rendering, Phaser canvas draw output, whether an animation frame is actually advancing, CSS visual states (hover, drag-over, transition), z-index/overlap, or whether a native HTML5 drag-and-drop handler actually fires in a real browser. A change can pass P3 `full` with 100% green tests and still be visibly broken, invisible, or unusable.
+
+- **Trigger:** the change affects Phaser scene rendering (sprites, VFX, canvas layout, animation state), CSS visual state driven by user interaction (hover, drag-over, `:class` bindings, transitions, responsive layout), drag-and-drop or other native browser interaction, or any UI element whose correctness can only be confirmed by looking at the rendered page.
+- For a triggering change, P3 alone is **not sufficient**. Load `playwright-cli` and drive the actual feature in a real browser before declaring done:
+  1. Start the dev server (`npm.cmd run dev`, run in background) and read its printed Local URL from stdout — do not assume a fixed port.
+  2. `playwright-cli open <url> --browser=msedge` — project convention (no bundled Chromium assumed available).
+  3. Navigate to the affected screen/panel, take a `snapshot`/`screenshot`, and visually confirm the expected rendered state — not just "no console error".
+  4. **Drag-and-drop / native HTML5 DnD:** `dragTo()` and other native Playwright drag actions do **not** reliably fire this codebase's Vue `@dragstart`/`@dragover`/`@drop` handlers. Use `run-code` to dispatch real `DragEvent`/`DataTransfer` objects via `page.evaluate()` instead.
+  5. After dispatching events, do **not** read the resulting DOM in the same `run-code` call — Vue's reactive DOM update is scheduled on the next microtask, so a synchronous read right after `dispatchEvent()` sees stale state. Dispatch in one call, then query the DOM in a separate, later call.
+  6. Run `playwright-cli console` and confirm no unexpected errors.
+  7. `playwright-cli close` when done, and delete any scratch files it created (`.playwright-cli/`, ad-hoc screenshots/snapshots, stray `*.yml`/`*.png` at the repo root) before finishing — these are not test artifacts and must never be committed.
+- A screenshot/snapshot showing the expected visual result is the evidence for this rule, the same way a passing test is evidence for P3. State what was visually confirmed in the summary.
+- This is a real-browser spot-check for **this task's** change, not a substitute for the Playwright e2e suite (P13) or the QA skill (P4) — do this in addition, not instead.
 
 ---
 
