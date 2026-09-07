@@ -133,6 +133,7 @@ Real incident, 2026-09-05: a refactor extracted boot logic into `useAppLifecycle
   7. `playwright-cli close` when done, and delete any scratch files it created (`.playwright-cli/`, ad-hoc screenshots/snapshots, stray `*.yml`/`*.png` at the repo root) before finishing — these are not test artifacts and must never be committed.
 - A screenshot/snapshot showing the expected visual result is the evidence for this rule, the same way a passing test is evidence for P3. State what was visually confirmed in the summary.
 - This is a real-browser spot-check for **this task's** change, not a substitute for the Playwright e2e suite (P13) or the QA skill (P4) — do this in addition, not instead.
+- **Isolated-worktree exception.** `playwright-cli` is unreliable inside a sandboxed git worktree (`.claude/worktrees/...`, `.agent-worktrees/...`) — confirmed 2026-09-07 (fails fast in one worktree, hangs indefinitely in another). The main checkout (master) does not have this restriction. Do not burn time retrying playwright-cli inside a worktree. Instead: finish the rest of the task, report `DONE_WITH_CONCERNS` stating P14 is deferred to after merge (do not silently skip it), and let whoever runs the merge/finish step do the real-browser check on the main checkout.
 
 ### P15. Code Comments in English Only (mojibake prevention)
 
