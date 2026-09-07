@@ -195,13 +195,12 @@ import type { GameSave } from '../../services/save/SaveSystem'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { Stats } from '../stats/StatBlock'
 import { createBaseStats } from '../stats/StatBlock'
-import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
+import { TurnBattleSystem, type TurnBattle } from '../battle/turn/TurnBattleSystem'
 import { resolveEnemySpawnPosition } from '../battle/EnemySpawnPlacement'
 import type { TurnSkillDefinition, TurnSkillSlotRole } from '../battle/turn/TurnSkillAction'
 import { buildTurnSkillPresentation, type TurnSkillPresentationEntry } from '../combat/CombatSkillPresentation'
-import { PresentationGate } from '../battle/turn/PresentationGate'
-import { emitTurnReady, emitTurnCastStart, emitTurnActionImpact, emitTurnStandbyComplete, emitTurnBattleEntitySnapshot } from '../battle/turn/TurnActionPresentationEvents'
-import type { TurnDeclaredAction } from '../battle/turn/TurnBattleSystem'
+import { emitTurnBattleEntitySnapshot } from '../battle/turn/TurnActionPresentationEvents'
+import { CombatAnimationRuntime } from '../battle/turn/CombatAnimationRuntime'
 import { toTurnBattleParticipant } from './TurnBattleAdapter'
 import { DEFAULT_PARTY_FORMATION } from './PartyFormation'
 import { resolvePartyFormation } from './FormationPlacement'
@@ -2465,10 +2464,7 @@ export class GameManager {
 
     this.turnBattleRewardsGranted.clear()
     this.turnBattleEndEmitted = false
-    this.awaitedManualActor = null
-    this.pendingReadyActor = null
-    this.pendingDeclaredAction = null
-    this.pendingImpact = null
+    this.combatAnimationRuntime.resetPendingState()
 
     this.turnBattle = {
       players: previous.players,
@@ -2515,229 +2511,74 @@ export class GameManager {
     return this.turnBattle
   }
 
-  // --- Slice 7 (Completion Task 10) — manual mode --------------------------
+  // --- Combat Runtime Separation (Task 1, 2026-09-07, AGENTS.md P17) -------
+  // Presentation-ack timing (manual-mode pause, PresentationGate, the
+  // 5-phase ready/cast/impact/complete state machine) now lives in
+  // CombatAnimationRuntime — see game/src/core/battle/turn/
+  // CombatAnimationRuntime.ts. GameManager keeps only thin forwarders below
+  // so the public contract CombatScene.ts relies on is unchanged.
 
-  private battleManualMode = false
-
-  /**
-   * Actor phe player đang bị PAUSE chờ manual choice (manual mode), hoặc
-   * null khi không pause (auto mode, lượt enemy, hoặc chưa tới lượt).
-   * Reset khi battle kết thúc/restart.
-   */
-  private awaitedManualActor: TurnBattleParticipant | null = null
+  private readonly combatAnimationRuntime = new CombatAnimationRuntime({
+    // Live getter — this.turnBattleSystem is REASSIGNED wholesale by
+    // restartTurnBattleCycle()/startStage() (fresh instance w/ buff
+    // registry + spawnEnemy factory); capturing it by value here would
+    // freeze the runtime onto the original registry-less instance forever.
+    getTurnBattleSystem: () => this.turnBattleSystem,
+    eventBus: this.eventBus,
+    getBattle: () => this.turnBattle,
+    syncLegacyBattleState: () => this.syncLegacyBattleState(),
+  })
 
   /** Bật/tắt manual mode. Tắt giữa lúc đang chờ choice → hủy pause, engine tự chạy tiếp. */
   setBattleManualMode(enabled: boolean): void {
-    this.battleManualMode = enabled
-
-    if (!enabled) {
-      this.awaitedManualActor = null
-    }
+    this.combatAnimationRuntime.setBattleManualMode(enabled)
   }
 
   isBattleManualMode(): boolean {
-    return this.battleManualMode
+    return this.combatAnimationRuntime.isBattleManualMode()
   }
 
   /** Đang pause chờ player chọn skill cho lượt của chính mình? */
-  isAwaitingManualTurnChoice(): boolean
-  {
-    return this.awaitedManualActor !== null
+  isAwaitingManualTurnChoice(): boolean {
+    return this.combatAnimationRuntime.isAwaitingManualTurnChoice()
   }
-
-  // --- Action Playback Task 6 (2026-09-05) — presentation orchestration ---
-
-  /**
-   * false (mặc định): fixed-step tick resolve turn ngay lập tức (mọi
-   * headless test không đổi). true (CombatScene mount): engine chạy 5-phase
-   * state machine — ready → cast → impact → complete — chờ Phaser
-   * acknowledge qua 3 method dưới trước khi sang bước kế.
-   */
-  private presentationActive = false
-
-  /** Defect Task 3 (2026-09-05) — boot-race gate: chờ CombatScene mount lần
-  * đầu (hoặc safety-net timeout) trước khi tick battle — chặn headless-
-  * resolve toàn bộ trận 1 trước Phaser kịp mount. */
-  private readonly presentationGate = new PresentationGate()
 
   /** Called once at real-app boot ONLY (App.vue) — never from test fixtures. */
   expectPresentationLayer(): void {
-    this.presentationGate.expect()
+    this.combatAnimationRuntime.expectPresentationLayer()
   }
 
   /** True while the very first Phaser boot hasn't finished mounting CombatScene yet. */
   isAwaitingPresentationLayer(): boolean {
-    return this.presentationGate.isBlocking()
-  }
-
-  /** Tick đã peek actor ready, chờ acknowledgeTurnReady(). */
-  private pendingReadyActor: TurnBattleParticipant | null = null
-
-  /** Đã declare action, chờ acknowledgeActionImpact(). */
-  private pendingDeclaredAction: { actor: TurnBattleParticipant; declared: TurnDeclaredAction } | null = null
-
-  /** Đã áp damage, chờ acknowledgeActionComplete(). */
-  private pendingImpact: { actor: TurnBattleParticipant; declared: TurnDeclaredAction; targetIds: string[] } | null = null
-
-  // Remediation Task 1 (2026-09-05) — playback token: mỗi lần phase tiến
-  // tới 'ready' sinh 1 token mới; stale ack (token cũ) là no-op, chặn
-  // callback Phaser muộn đụng action/battle khác (cross-battle mutation).
-  private playbackToken = ''
-  private playbackTokenSeq = 0
-
-  private nextPlaybackToken(): string {
-    this.playbackTokenSeq += 1
-    this.playbackToken = `playback-${this.playbackTokenSeq}`
-
-    return this.playbackToken
+    return this.combatAnimationRuntime.isAwaitingPresentationLayer()
   }
 
   /** Test/UI đọc token hiện tại của phase đang chờ (null nếu không pending). */
   getPendingPlaybackToken(): string | null {
-    return this.pendingReadyActor !== null || this.pendingDeclaredAction !== null || this.pendingImpact !== null
-      ? this.playbackToken
-      : null
+    return this.combatAnimationRuntime.getPendingPlaybackToken()
   }
 
   setPresentationActive(active: boolean): void {
-    this.presentationActive = active
-
-    if (active) {
-      // Defect Task 3 — Phaser mounted lần đầu: mở boot-race gate (sticky).
-      this.presentationGate.markReady()
-    } else {
-      // Rời CombatScene giữa chừng — hoàn tất pending phases ngay lập tức
-      // (headless path) để trận không bị treo.
-      if (this.pendingReadyActor && this.turnBattle) {
-        const actor = this.pendingReadyActor
-        this.pendingReadyActor = null
-
-        // Defect Task 4 (2026-09-05) — manual player ở ready-phase KHÔNG
-        // được auto-resolve bằng AI khi rời scene: chuyển vào
-        // awaitedManualActor giữ choice chờ submitTurnChoice (cùng nhánh
-        // với acknowledgeTurnReady()).
-        const isManualActor = this.battleManualMode && this.turnBattle.players.includes(actor)
-
-        if (isManualActor) {
-          this.awaitedManualActor = actor
-        } else {
-          const declared = this.turnBattleSystem.declareActorAction(this.turnBattle, actor)
-          const { targetIds } = this.turnBattleSystem.applyActionImpact(this.turnBattle, declared)
-          this.turnBattleSystem.completeAction(this.turnBattle, actor, declared, targetIds)
-        }
-      } else if (this.pendingDeclaredAction && this.turnBattle) {
-        const { actor, declared } = this.pendingDeclaredAction
-        this.pendingDeclaredAction = null
-
-        const { targetIds } = this.turnBattleSystem.applyActionImpact(this.turnBattle, declared)
-        this.turnBattleSystem.completeAction(this.turnBattle, actor, declared, targetIds)
-      } else if (this.pendingImpact && this.turnBattle) {
-        const { actor, declared, targetIds } = this.pendingImpact
-        this.pendingImpact = null
-
-        this.turnBattleSystem.completeAction(this.turnBattle, actor, declared, targetIds)
-      }
-    }
+    this.combatAnimationRuntime.setPresentationActive(active)
   }
 
   isActionPlaybackWaiting(): boolean {
-    return this.pendingReadyActor !== null || this.pendingDeclaredAction !== null || this.pendingImpact !== null
+    return this.combatAnimationRuntime.isActionPlaybackWaiting()
   }
 
   /** Phaser gọi khi ready flourish xong → declare action, phát 'attack'. */
   acknowledgeTurnReady(token?: string): void {
-    // Remediation Task 1 — stale token (khớp token của action cũ) là no-op.
-    if (token !== undefined && token !== this.playbackToken) {
-      return
-    }
-
-    if (!this.pendingReadyActor || !this.turnBattle) {
-      return
-    }
-
-    const actor = this.pendingReadyActor
-    this.pendingReadyActor = null
-
-    if (this.battleManualMode && this.turnBattle.players.includes(actor)) {
-      // Slice 7 manual-choice flow giữ nguyên — pause chờ submitTurnChoice.
-      this.awaitedManualActor = actor
-      return
-    }
-
-    const declared = this.turnBattleSystem.declareActorAction(this.turnBattle, actor)
-    this.pendingDeclaredAction = { actor, declared }
-
-    emitTurnCastStart(this.eventBus, actor.id, declared.skillId, declared.affected.map((target) => target.id))
+    this.combatAnimationRuntime.acknowledgeTurnReady(token)
   }
 
   /** Phaser gọi tại impact frame (lunge tween xong) → áp damage, phát VFX. */
   acknowledgeActionImpact(token?: string): void {
-    // Remediation Task 1 — stale token là no-op.
-    if (token !== undefined && token !== this.playbackToken) {
-      return
-    }
-
-    if (!this.pendingDeclaredAction || !this.turnBattle) {
-      return
-    }
-
-    const { actor, declared } = this.pendingDeclaredAction
-    this.pendingDeclaredAction = null
-
-    const { targetIds } = this.turnBattleSystem.applyActionImpact(this.turnBattle, declared)
-    this.pendingImpact = { actor, declared, targetIds }
-
-    const primaryTargetId = targetIds[0] ?? declared.affected[0]?.id ?? ''
-    const anchorEntity =
-      this.turnBattle.players.find((member) => member.id === primaryTargetId)?.entity ??
-      this.turnBattle.enemies.find((enemy) => enemy.id === primaryTargetId)?.entity
-
-    const row = anchorEntity?.row ?? 0
-    const column = Math.round(anchorEntity?.x ?? 0)
-
-    emitTurnActionImpact(this.eventBus, {
-      actionId: `${actor.id}-${this.turnBattle.totalTurnsElapsed ?? 0}`,
-      sourceId: actor.id,
-      primaryTargetId,
-      anchorCell: { row, column },
-      affectedArea: {
-        shape: declared.action?.targeting.shape ?? 'single',
-        rowStart: row,
-        rowEnd: row,
-        colStart: column,
-        colEnd: column,
-      },
-      affectedTargetIds: declared.affected.map((target) => target.id),
-      landedTargetIds: targetIds,
-      dodgedTargetIds: declared.affected
-        .filter((target) => !targetIds.includes(target.id))
-        .map((target) => target.id),
-      hitCount: 1,
-      presetId: declared.action?.skill?.presetId,
-    })
-
-    this.syncLegacyBattleState()
+    this.combatAnimationRuntime.acknowledgeActionImpact(token)
   }
 
   /** Phaser gọi khi VFX tween xong → turn cleanup, phát standby tail. */
   acknowledgeActionComplete(token?: string): void {
-    // Remediation Task 1 — stale token là no-op.
-    if (token !== undefined && token !== this.playbackToken) {
-      return
-    }
-
-    if (!this.pendingImpact || !this.turnBattle) {
-      return
-    }
-
-    const { actor, declared, targetIds } = this.pendingImpact
-    this.pendingImpact = null
-
-    this.turnBattleSystem.completeAction(this.turnBattle, actor, declared, targetIds)
-
-    emitTurnStandbyComplete(this.eventBus, actor.id)
-
-    this.syncLegacyBattleState()
+    this.combatAnimationRuntime.acknowledgeActionComplete(token)
   }
 
   /**
@@ -2745,29 +2586,7 @@ export class GameManager {
    * (no-op an toàn — choice bị bỏ, không crash).
    */
   submitTurnChoice(role: TurnSkillSlotRole): boolean {
-    if (!this.awaitedManualActor || !this.turnBattle) {
-      return false
-    }
-
-    const actor = this.awaitedManualActor
-    this.awaitedManualActor = null
-
-    if (this.presentationActive) {
-      // Action Playback Task 6 — declare thay vì resolve ngay; impact
-      // áp khi Phaser acknowledge (cùng 5-phase machine như auto path).
-      const declared = this.turnBattleSystem.declareActorAction(this.turnBattle, actor, role)
-      this.pendingDeclaredAction = { actor, declared }
-
-      emitTurnCastStart(this.eventBus, actor.id, declared.skillId, declared.affected.map((target) => target.id))
-
-      return true
-    }
-
-    this.turnBattleSystem.resolveActorTurn(this.turnBattle, actor, role)
-
-    this.syncLegacyBattleState()
-
-    return true
+    return this.combatAnimationRuntime.submitTurnChoice(role)
   }
 
   /**
@@ -2775,7 +2594,7 @@ export class GameManager {
    * tại — party nhiều người là redesign tương lai), null khi không pause.
    */
   consumeAwaitedActorId(): string | null {
-    return this.awaitedManualActor?.id ?? null
+    return this.combatAnimationRuntime.getAwaitedManualActor()?.id ?? null
   }
 
   /**
@@ -2795,7 +2614,7 @@ export class GameManager {
     return buildTurnSkillPresentation(
       battle,
       isPlayerTurnPaused,
-      isPlayerTurnPaused ? (this.awaitedManualActor ?? undefined) : undefined,
+      isPlayerTurnPaused ? (this.combatAnimationRuntime.getAwaitedManualActor() ?? undefined) : undefined,
     )
   }
 
@@ -3182,10 +3001,7 @@ export class GameManager {
       // releases StageManager -> 3rd refight startStage fails).
       this.turnBattleRewardsGranted.clear()
       this.turnBattleEndEmitted = false
-      this.awaitedManualActor = null
-      this.pendingReadyActor = null
-      this.pendingDeclaredAction = null
-      this.pendingImpact = null
+      this.combatAnimationRuntime.resetPendingState()
       this.turnBattleStartedAtMs = Date.now()
 
 
@@ -3626,7 +3442,7 @@ export class GameManager {
       // Gauge combat → Wave spawn khi sân trống → Result khi hết wave.
       // Mỗi fixed step 0.1s = 1 pacing tick; turn resolution instant.
       if (this.turnBattle) {
-        if (this.presentationGate.isBlocking()) {
+        if (this.combatAnimationRuntime.isAwaitingPresentationLayer()) {
           // Defect Task 3 — chờ Phaser mount lần đầu (PresentationGate):
           // không tick countdown/fighting cho tới khi presentation layer
           // sẵn sàng hoặc safety-net timeout trôi qua.
@@ -3644,9 +3460,9 @@ export class GameManager {
           // nếu là player VÀ manual mode bật → PAUSE (không resolve, gauge
           // đã advance đúng tới ngưỡng ready bởi peek). Enemy turn và auto
           // mode resolve như thường (auto = cùng engine, không pause).
-          if (this.awaitedManualActor) {
+          if (this.combatAnimationRuntime.isAwaitingManualTurnChoice()) {
             // Paused — still waiting for submitTurnChoice.
-          } else if (this.presentationActive && (this.pendingReadyActor || this.pendingDeclaredAction || this.pendingImpact)) {
+          } else if (this.combatAnimationRuntime.isPresentationActive() && this.combatAnimationRuntime.isActionPlaybackWaiting()) {
             // Action Playback Task 6 — waiting for a Phaser acknowledgement,
             // do nothing this tick.
           } else {
@@ -3654,17 +3470,19 @@ export class GameManager {
             // gauge-step; Action Playback Task 6 — presentationActive chỉ
             // advance gauge, actor ready vào pendingReadyActor (5-phase
             // machine chờ Phaser acknowledge), headless path resolve ngay.
-            const readyActor = this.turnBattleSystem.tickPacing(this.turnBattle, !this.presentationActive)
+            const readyActor = this.turnBattleSystem.tickPacing(this.turnBattle, !this.combatAnimationRuntime.isPresentationActive())
 
-            if (readyActor !== null && this.presentationActive) {
+            if (readyActor !== null && this.combatAnimationRuntime.isPresentationActive()) {
               // Remediation Task 1 — token mới cho phase ready mới; mọi
               // callback cũ giữ token này sẽ trở thành stale (no-op).
-              this.pendingReadyActor = readyActor
-              this.playbackToken = this.nextPlaybackToken()
-
-              emitTurnReady(this.eventBus, readyActor.id)
-            } else if (readyActor !== null && this.turnBattle.players.includes(readyActor) && this.battleManualMode && !this.awaitedManualActor) {
-              this.awaitedManualActor = readyActor
+              this.combatAnimationRuntime.notifyReadyActor(readyActor)
+            } else if (
+              readyActor !== null &&
+              this.turnBattle.players.includes(readyActor) &&
+              this.combatAnimationRuntime.isBattleManualMode() &&
+              !this.combatAnimationRuntime.isAwaitingManualTurnChoice()
+            ) {
+              this.combatAnimationRuntime.pauseForManualActor(readyActor)
             }
           }
 
