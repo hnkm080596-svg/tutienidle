@@ -1,19 +1,26 @@
-// EnemySpawnPlacement — resolver thuần chọn ô spawn cho quái, giới hạn
-// trong ENEMY_SIDE_REGION (Combat Art Pipeline spec §6/§7, 2026-09-05).
-// Boss LUÔN ở trung tâm vùng địch (không còn cùng hàng với player).
-// NHIỀU quái được phép spawn trùng hoàn toàn một ô — resolver KHÔNG nhận
-// occupied/reserved cells và KHÔNG BAO GIỜ trả null.
+// EnemySpawnPlacement — pure enemy spawn position resolver, resolved
+// inside ENEMY_SIDE_REGION (Combat Art Pipeline spec §6/§7, 2026-09-05).
+// Boss ALWAYS takes the region center. Regular enemies land on one of
+// the 9 standing slots (standing-slot model, 2026-09-07) — multiple
+// enemies MAY share a cell; the resolver accepts no occupied/reserved
+// cells and NEVER returns null.
 import type { GridPosition } from './BattleGrid'
-import { ENEMY_SIDE_REGION, centerOfRegion, type BattlefieldUsableRegion } from './BattlefieldRegions'
+import {
+  ENEMY_SIDE_REGION,
+  centerOfRegion,
+  standingSlotPosition,
+  STANDING_SLOT_COUNT,
+  type BattlefieldUsableRegion,
+} from './BattlefieldRegions'
 
 export interface EnemySpawnPlacementInput {
   isBoss: boolean
 
-  /** RNG tiêm từ ngoài (Math.random hoặc seeded) — deterministic test được. */
+  /** External RNG (Math.random or seeded) — keeps tests deterministic. */
   random: () => number
 }
 
-/** Số nguyên trong [min, max] bằng ĐÚNG MỘT lần gọi random(). */
+/** Integer in [min, max] using EXACTLY ONE random() call. */
 function randomIntInclusive(random: () => number, min: number, max: number): number {
   return min + Math.floor(random() * (max - min + 1))
 }
@@ -26,8 +33,8 @@ export function resolveEnemySpawnPosition(
     return centerOfRegion(region)
   }
 
-  const row = randomIntInclusive(input.random, region.rowMin, region.rowMax)
-  const column = randomIntInclusive(input.random, region.columnMin, region.columnMax)
+  const slotRow = randomIntInclusive(input.random, 0, STANDING_SLOT_COUNT - 1)
+  const slotColumn = randomIntInclusive(input.random, 0, STANDING_SLOT_COUNT - 1)
 
-  return { row: row as GridPosition['row'], column }
+  return standingSlotPosition(region, slotRow, slotColumn)
 }
