@@ -1,11 +1,24 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, useId } from 'vue'
 import GameButton from '@/components/common/GameButton.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { usePlayerStore } from '@/stores/player'
+import { useDialogFocus } from '@/composables/useDialogFocus'
 import { TUTORIAL_STEPS } from '@/data/tutorial/tutorialSteps'
 
+// UI-005 (Task 3, 2026-09-07) — tutorial là modal blocking: role="dialog"
+// + aria-modal + focus trap qua useDialogFocus (cùng primitive ConfirmModal/
+// OverlayPanel đang dùng, không tự dựng overlay behavior riêng nữa).
 const player = usePlayerStore()
+
+const panelRef = ref<HTMLElement | null>(null)
+const isOpen = computed(() => !player.hasSeenTutorial)
+// Escape = bỏ qua tutorial (cùng action với nút "Bỏ Qua" — behavior hợp lý
+// cho dialog hướng dẫn, không mất dữ liệu gì).
+useDialogFocus(panelRef, isOpen, { onEscape: finish })
+
+const titleId = useId()
+const bodyId = useId()
 
 const currentIndex = ref(0)
 
@@ -29,15 +42,22 @@ function next() {
 
 <template>
   <div v-if="!player.hasSeenTutorial" class="tutorial-overlay">
-    <div class="tutorial-overlay__panel">
+    <div
+      ref="panelRef"
+      class="tutorial-overlay__panel"
+      role="dialog"
+      aria-modal="true"
+      :aria-labelledby="titleId"
+      :aria-describedby="bodyId"
+    >
       <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
       <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
 
       <p class="tutorial-overlay__progress">{{ currentIndex + 1 }} / {{ TUTORIAL_STEPS.length }}</p>
 
-      <h3 class="tutorial-overlay__title">{{ currentStep.title }}</h3>
+      <h3 :id="titleId" class="tutorial-overlay__title">{{ currentStep.title }}</h3>
 
-      <p class="tutorial-overlay__body">{{ currentStep.body }}</p>
+      <p :id="bodyId" class="tutorial-overlay__body">{{ currentStep.body }}</p>
 
       <div class="tutorial-overlay__actions">
         <GameButton variant="ghost" @click="finish">Bỏ Qua</GameButton>

@@ -8,10 +8,15 @@
 import { formatNumber } from '@/core/format/NumberFormatter'
 import { formatDuration } from '@/core/format/formatDuration'
 import { useI18n } from 'vue-i18n'
+import { ref, useId } from 'vue'
 import GameButton from './GameButton.vue'
 import StatRow from './primitives/StatRow.vue'
 import InkNineSlice from './primitives/InkNineSlice.vue'
+import { useDialogFocus } from '@/composables/useDialogFocus'
 
+// UI-005 (Task 3, 2026-09-07) — Offline summary là blocking dialog thật:
+// role="dialog" + aria-modal + focus trap/restore qua useDialogFocus
+// (UI-015: người chơi phải chủ động Continue, background không bấm được).
 const props = defineProps<{
   elapsedSeconds: number
 
@@ -21,15 +26,26 @@ const props = defineProps<{
 const emit = defineEmits<{ close: [] }>()
 
 const { t } = useI18n({ useScope: 'local' })
+
+const panelRef = ref<HTMLElement | null>(null)
+useDialogFocus(panelRef, ref(true), { onEscape: () => emit('close') })
+
+const titleId = useId()
 </script>
 
 <template>
   <div class="offline-summary">
-    <section class="offline-summary__panel">
+    <section
+      ref="panelRef"
+      class="offline-summary__panel"
+      role="dialog"
+      aria-modal="true"
+      :aria-labelledby="titleId"
+    >
       <InkNineSlice asset-id="surface-m-paper" layer="surface" />
       <InkNineSlice asset-id="frame-m-seal-corner" layer="frame" :thickness="18" />
 
-      <h3 class="offline-summary__title">{{ t('combat.offline.title') }}</h3>
+      <h3 :id="titleId" class="offline-summary__title">{{ t('combat.offline.title') }}</h3>
 
       <ul class="offline-summary__rows">
         <StatRow :label="t('combat.offline.labels.duration')">{{ formatDuration(props.elapsedSeconds) }}</StatRow>
