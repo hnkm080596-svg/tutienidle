@@ -30,10 +30,10 @@
 | `npx playwright test create-to-combat` | PASS (1.1-1.2m) | spec chơi trận thật tới kết quả — simulation advanced (P13) |
 | `npx playwright test boot-fresh save-reload ink-wash-ui` | 5/5 PASS | non-combat e2e sạch |
 | `npx playwright test turn-combat-hud / combat-overlay-layout` | FAIL | **baseline fail xác nhận bằng stash-run** (không có thay đổi Task 5-7 vẫn fail y hệt); roadmap mục 7.10 + 518 đã ghi nhận; deferred UI/UX plan Task 13 — pre-existing, không phải defect của task này |
-| Manual Playwright pass Task 8 (quan sát telegraph VFX trực quan) | **KHÔNG chạy được** | cần người quan sát canvas; coverage gap |
+| Manual Playwright pass Task 8 (quan sát telegraph VFX trực quan) | **ĐÃ LÀM — runtime probe + visual capture** | `tests/e2e/wave-vfx-capture.spec.ts`: event-bus listener đo trực tiếp trong browser thật — `countdownProgressMax=0.967` (party telegraph drive mỗi tick), wave 1 queue đồng loạt 3 quái pending với progress 0→0.875 tăng đều 0.1s/tick, transition pending→materialize xác nhận. 3 ảnh mốc (countdown party telegraph / enemies materialized / combat in progress) dump tại `test-results/wave-vfx-frames/`. |
 
 ## Verdict
 
 **PASS WITH EVIDENCE** cho logic/engine层: toàn bộ invariants engine đã được unit tests chứng minh; 2 Confirmed findings (INV-Q1, INV-Q2) đã fix trong dev workflow (trước QA report, hợp lệ vì QA gate cho phép exit QA → fix → re-run; cả 2 fix đã full-verify lại: 2807/2807 + type-check + create-to-combat e2e).
 
-**Coverage gap (không chặn completion vì đây là VFX trực quan cần người xem):** visual confirmation của telegraph circles (countdown party + wave spawn) cần manual quan sát — plan Task 8 yêu cầu nhưng không thể tự động assert canvas rendering từ Playwright spec hiện có.
+**Coverage gap ĐÃ ĐÓNG (2026-09-07, update):** visual/runtime confirmation telegraph VFX đã thực hiện qua `tests/e2e/wave-vfx-capture.spec.ts` — event-bus runtime probe (chính xác, định lượng) + 3 screenshot mốc. Kết quả chi tiết trong bảng evidence.
