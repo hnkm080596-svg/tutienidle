@@ -129,7 +129,7 @@ const PLAYER_SOURCE_SIZE = { w: 1244, h: 1264 }
 
 const ATTACK_LUNGE_PX = 8
 const HIT_RECOIL_PX = 6
-const ATTACK_LUNGE_DURATION_MS = 75
+const ATTACK_LUNGE_DURATION_MS = 350 // was 75 -- too fast to observe (2026-09-07 playtest)
 const HIT_RECOIL_DURATION_MS = 65
 
 /** DoT text flush 3 lÃ¡ÂºÂ§n/giÃƒÂ¢y (plan Ã‚Â§7.2) Ã¢â‚¬â€ cÃ¡Â»Â­a sÃ¡Â»â€¢ gom 333,33ms. */
@@ -2268,7 +2268,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       targets: visual,
       scaleX: 1.15,
       scaleY: 1.15,
-      duration: 90,
+      duration: 250, // was 90 -- too fast to observe (2026-09-07 playtest)
       yoyo: true,
       ease: 'Quad.easeOut',
       onComplete: () => {

@@ -68,7 +68,7 @@ describe('CombatScene player motion feedback', () => {
     expect(scene.tweens.killTweensOf).toHaveBeenCalledWith(player)
     expect(tween.targets).toBe(player)
     expect(tween.offsetX).toBe(8)
-    expect(tween.duration).toBe(75)
+    expect(tween.duration).toBe(350)
     expect(tween.yoyo).toBe(true)
 
     player.offsetX = 8
