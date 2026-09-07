@@ -129,6 +129,13 @@ export interface Enemy {
   // để trống.
   enrage?: BossEnrage
 
+  // Turn-based boss enrage (Phase A2, 2026-09-07) — static config only;
+  // TurnBattleAdapter.toTurnBattleParticipant() turns this into a live
+  // TurnBossTrigger (adds firedAlready: false) on spawn. Separate from
+  // the legacy `enrage`/`tribulationPhases` fields above, which remain
+  // consumed only by battle/legacy/BattleSystem and are untouched here.
+  bossTrigger?: { afterTurns: number; buffDefinitionId: string }
+
   // Thể Tu (Combat Rework Phase 7) — thanh Break, xem CombatEntity.ts.
   // CHỈ Boss/quái lớn cần khai, quái thường để trống.
   breakGaugeMax?: number
@@ -171,6 +178,11 @@ export interface EnemyDefinition {
 
   enrage?: BossEnrage
 
+  // Turn-based boss enrage (Phase A2, 2026-09-07) — same shape as the
+  // Enemy interface's bossTrigger; threaded through defineEnemy() and
+  // enemyToCombatEntity() unchanged.
+  bossTrigger?: { afterTurns: number; buffDefinitionId: string }
+
   breakGaugeMax?: number
 
   // Combat Balance Pass (2026-08-29, plan §3.6) — thread qua Enemy/
@@ -211,6 +223,8 @@ export function defineEnemy(definition: EnemyDefinition): Enemy {
     tribulationPhases: definition.tribulationPhases,
 
     enrage: definition.enrage,
+
+    bossTrigger: definition.bossTrigger,
 
     breakGaugeMax: definition.breakGaugeMax,
 
@@ -363,6 +377,8 @@ export function enemyToCombatEntity(enemy: Enemy): CombatEntity {
     tribulationPhases: enemy.tribulationPhases,
 
     enrage: enemy.enrage,
+
+    bossTrigger: enemy.bossTrigger,
 
     breakGaugeMax: enemy.breakGaugeMax,
 

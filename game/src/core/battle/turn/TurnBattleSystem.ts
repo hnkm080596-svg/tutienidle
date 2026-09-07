@@ -669,11 +669,25 @@ export class TurnBattleSystem {
       this.registry &&
       isTurnTriggerReady({ afterTurns: actor.bossTrigger.afterTurns }, battle.totalTurnsElapsed ?? 0)
     ) {
-      const definition = this.registry.get(actor.bossTrigger.buffDefinitionId)
+      // Phase A2 (2026-09-07) — TurnBuffRegistry.get() THROWS on an
+      // unknown id, and bossTrigger data is now populated for real
+      // enemies (content drift / renamed buff id would crash the whole
+      // battle tick). Skip the buff gracefully instead — same
+      // try/catch skip pattern as GameManager's formation-buff lookup.
+      // firedAlready stays false so a corrected id can still fire later.
+      let definition: TurnBuffDefinition | undefined
 
-      new TurnBuffSystem(actor.buffs).apply(definition, actor.entity, actor.entity, this.registry)
+      try {
+        definition = this.registry.get(actor.bossTrigger.buffDefinitionId)
+      } catch {
+        definition = undefined
+      }
 
-      actor.bossTrigger.firedAlready = true
+      if (definition) {
+        new TurnBuffSystem(actor.buffs).apply(definition, actor.entity, actor.entity, this.registry)
+
+        actor.bossTrigger.firedAlready = true
+      }
     }
 
     let action: SelectedAction | null = null

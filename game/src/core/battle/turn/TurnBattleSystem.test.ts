@@ -7,6 +7,9 @@ import { createBaseStats } from '../../stats/StatBlock'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 import { TurnBuffPool } from './TurnBuffPool'
 import { GAUGE_MAX } from './ActionGauge'
+import { defineEnemy, enemyToCombatEntity } from '../../enemy/Enemy'
+import { toTurnBattleParticipant } from '../../game/TurnBattleAdapter'
+import { TURN_BUFF_REGISTRY } from '../../../data/buff/TurnBuffRegistry'
 
 // Fixture giá»‘ng há»‡t quy Æ°á»›c Ä‘Ã£ dÃ¹ng trong ActionTargetingSystem.test.ts â€”
 // selectTarget chá»‰ Ä‘á»c id/x/row/alive, khÃ´ng cáº§n Stats Ä‘áº§y Ä‘á»§.
@@ -878,6 +881,65 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
     }).not.toThrow()
 
     expect(bossTrigger.firedAlready).toBe(false)
+  })
+
+  it('fires real production boss enrage content (mortal_crocodile_enrage) after 60 turns', () => {
+    // Player must survive ~600 boss turns while dealing no damage, so it
+    // gets a huge HP pool and zero attack. NOTE: totalTurnsElapsed only
+    // increments when an actor actually acts, and gauge build-up means the
+    // speed-100 boss acts roughly once every 10 resolveNextStep calls —
+    // hence the 650-call loop (60 boss turns + margin), not the naive 61.
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+    })
+
+    const bossEnemy = defineEnemy({
+      id: 'test_boss',
+      name: 'Test Boss',
+      level: 1,
+      realmId: 'mortal',
+      lane: 'ground',
+      statsInput: {
+        maxHp: 1_000_000,
+        attack: 10,
+        attackSpeed: 1,
+        attackRangeRanks: 1,
+        criticalRate: 0,
+        criticalDamage: 1.5,
+        armor: 0,
+        evasionRate: 0,
+      },
+      rewards: { techniqueInsight: 1, spiritStone: 1 },
+      bossTrigger: { afterTurns: 60, buffDefinitionId: 'mortal_crocodile_enrage' },
+    })
+
+    const basicSkill: TurnSkillDefinition = {
+      id: 'fixture_basic',
+      cooldownTurns: 0,
+      damage: { kind: 'physical' as const, multiplier: 1 },
+      targeting: { shape: 'single' as const },
+    }
+
+    const enemyParticipant = toTurnBattleParticipant(enemyToCombatEntity(bossEnemy), 1, basicSkill)
+
+    const battle: TurnBattle = {
+      players: [makeParticipant('player', player, 10, 0)],
+      enemies: [enemyParticipant],
+      state: 'fighting',
+    }
+
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, TURN_BUFF_REGISTRY)
+
+    for (let i = 0; i < 650; i++) {
+      system.resolveNextStep(battle)
+    }
+
+    expect(enemyParticipant.bossTrigger?.firedAlready).toBe(true)
+    expect(enemyParticipant.buffs.getAll().some((buff) => buff.id === 'mortal_crocodile_enrage')).toBe(true)
   })
 })
 

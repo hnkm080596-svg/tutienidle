@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ENEMIES } from './Enemies'
+import { TURN_BUFF_REGISTRY } from '../buff/TurnBuffRegistry'
 
 const FOUNDATION_IDS = [
   'foundation_wood_ape',
@@ -72,5 +73,32 @@ describe('foundation_floor_10 boss', () => {
     const t10 = ENEMIES.find((enemy) => enemy.id === 'foundation_ferocious_flood_dragon_whelp')!
     expect(t10.stats.maxHp).toBeGreaterThan(t9.stats.maxHp)
     expect(t10.stats.attack).toBeGreaterThan(t9.stats.attack)
+  })
+})
+describe('Phase A2 boss enrage content', () => {
+  const bossIds = [
+    'mortal_ferocious_giant_crocodile',
+    'ferocious_flood_serpent',
+    'foundation_ferocious_flood_dragon_whelp',
+  ]
+
+  it.each(bossIds)('%s has a bossTrigger with a resolvable buff in TURN_BUFF_REGISTRY', (id) => {
+    const boss = ENEMIES.find((enemy) => enemy.id === id)
+    expect(boss).toBeDefined()
+    expect(boss?.bossTrigger).toBeDefined()
+    expect(boss?.bossTrigger?.afterTurns).toBe(60)
+
+    expect(() => TURN_BUFF_REGISTRY.get(boss!.bossTrigger!.buffDefinitionId)).not.toThrow()
+  })
+
+  it('each boss enrage buff is a permanent +attack/+speed statModifier', () => {
+    for (const id of bossIds) {
+      const boss = ENEMIES.find((enemy) => enemy.id === id)
+      const definition = TURN_BUFF_REGISTRY.get(boss!.bossTrigger!.buffDefinitionId)
+
+      expect(definition.duration).toBe(Infinity)
+      expect(definition.effects.some((effect) => effect.type === 'statModifier' && effect.stat === 'attack')).toBe(true)
+      expect(definition.effects.some((effect) => effect.type === 'statModifier' && effect.stat === 'speed')).toBe(true)
+    }
   })
 })
