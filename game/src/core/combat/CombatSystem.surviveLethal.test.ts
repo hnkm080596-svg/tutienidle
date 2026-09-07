@@ -5,11 +5,16 @@ import { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from './CombatEntity'
 import type { EntityVitalsChangedEvent } from './EntityVitalsSystem'
-import { BuffSystem } from '../buff/BuffSystem'
-import { BuffPool } from '../buff/BuffPool'
-import { BuffRegistry } from '../buff/BuffRegistry'
+// Phase A0 (2026-09-07) — full cutover to turn-based buff types: the
+// survive-lethal session now operates on the LIVE TurnBuffPool during
+// real (turn-based) gameplay. The v4 describe block below builds its
+// fixtures with TurnBuffSystem/TurnBuffPool and TURN_BUFF_REGISTRY
+// accordingly.
+import { TurnBuffSystem } from '../battle/turn/TurnBuffSystem'
+import { TurnBuffPool } from '../battle/turn/TurnBuffPool'
+import type { TurnBuffRegistry } from '../battle/turn/TurnBuffTypes'
 import { TU_SINH_NGO_BUFF } from '../../data/buff/buffs'
-import type { BuffDefinition } from '../buff/BuffDefinition'
+import type { TurnBuffDefinition } from '../battle/turn/TurnBuffTypes'
 
 // Thiên phú Bất Tử Thể (talent-direction-choice-plan §6) — hook tại
 // CombatSystem.killIfDead(), điểm DUY NHẤT tuyên bố chết của mọi đường
@@ -48,7 +53,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
 interface SessionShape {
   guard: SurviveLethalGuard
   playerEntityId: string
-  surviveEffects?: { buffSystem: BuffSystem; registry: BuffRegistry }
+  surviveEffects?: { buffSystem: TurnBuffSystem; registry: TurnBuffRegistry }
 }
 
 function createSession(talentIds: string[]): SessionShape {
@@ -181,30 +186,35 @@ describe('CombatSystem — Bất Tử Thể (survive_lethal)', () => {
 // áp Tử Sinh Ngộ 10s (+30% sát thương cuối, +20% né chí mạng). Session
 // mở rộng trường surviveEffects — GameManager wiring set từ battle.
 describe('CombatSystem — Bất Tử Th thể v4 (survive + cleanse + Tử Sinh Ngộ)', () => {
-  const trungDoc: BuffDefinition = {
+  const trungDoc: TurnBuffDefinition = {
     id: 'trung_doc', name: 'Trúng Độc', polarity: 'debuff',
     duration: 5, stackMode: 'stack',
     effects: [{ type: 'dot', dpsRatio: 0.2, element: 'wood' }],
   }
-  const kiepThuong: BuffDefinition = {
+  const kiepThuong: TurnBuffDefinition = {
     id: 'kiep_thuong', name: 'Kiếp Thương', polarity: 'debuff',
     duration: 60, stackMode: 'refresh',
     effects: [{ type: 'statModifier', stat: 'attack', percent: -0.15 }],
   }
 
-  function makeRegistry(): BuffRegistry {
-    const registry = new BuffRegistry()
-    registry.register(trungDoc)
-    registry.register(kiepThuong)
-    registry.register(TU_SINH_NGO_BUFF)
+  function makeRegistry(): TurnBuffRegistry {
+    const registry: TurnBuffRegistry = {
+      get: (id) => {
+        if (id === 'trung_doc') return trungDoc
+        if (id === 'kiep_thuong') return kiepThuong
+        if (id === 'tu_sinh_ngo') return TU_SINH_NGO_BUFF as TurnBuffDefinition
+        throw new Error(`unknown fixture buff id: ${id}`)
+      },
+    }
+
     return registry
   }
 
   it('guard cứu sống — mọi debuff bị tẩy, Tử Sinh Ngộ active trên player', () => {
     const combat = new CombatSystem(new EventBus())
     const registry = makeRegistry()
-    const pool = new BuffPool()
-    const buffs = new BuffSystem(pool)
+    const pool = new TurnBuffPool()
+    const buffs = new TurnBuffSystem(pool)
 
     const session = createSession(['bat_tu_the'])
     session.surviveEffects = { buffSystem: buffs, registry }
@@ -247,8 +257,8 @@ describe('CombatSystem — Bất Tử Th thể v4 (survive + cleanse + Tử Sinh
   it('chết thật (hết lượt) — KHÔNG tẩy debuff (session có effects nhưng guard hết use)', () => {
     const combat = new CombatSystem(new EventBus())
     const registry = makeRegistry()
-    const pool = new BuffPool()
-    const buffs = new BuffSystem(pool)
+    const pool = new TurnBuffPool()
+    const buffs = new TurnBuffSystem(pool)
 
     const session = createSession(['bat_tu_the'])
     session.surviveEffects = { buffSystem: buffs, registry }

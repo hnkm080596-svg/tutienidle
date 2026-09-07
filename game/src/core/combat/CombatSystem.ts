@@ -22,6 +22,8 @@ import { BuffRegistry } from '../buff/BuffRegistry'
 import { BuffSystem } from '../buff/BuffSystem'
 import { BuffPool } from '../buff/BuffPool'
 import { ReactionManager } from '../element/ReactionManager'
+import type { TurnBuffRegistry } from '../battle/turn/TurnBuffTypes'
+import type { TurnBuffSystem } from '../battle/turn/TurnBuffSystem'
 
 // Thủy Tu Trúc Cơ Pure (Plans/waterpath mục IX, 2026-08-21) — trần %
 // giảm sát thương từ thuyThePercent, cùng tinh thần ARMOR_CAP (Armor.
@@ -70,7 +72,7 @@ export class CombatSystem {
   private surviveLethalSession: {
     playerEntityId: string
     guard: SurviveLethalGuard
-    surviveEffects?: { buffSystem: BuffSystem; registry: BuffRegistry }
+    surviveEffects?: { buffSystem: TurnBuffSystem; registry: TurnBuffRegistry }
   } | null = null
 
   // Trigger/Action rework Task 10 (2026-08-31 spec) — onKill firing.
@@ -96,7 +98,11 @@ export class CombatSystem {
     session: {
       playerEntityId: string
       guard: SurviveLethalGuard
-      surviveEffects?: { buffSystem: BuffSystem; registry: BuffRegistry }
+      // Phase A0 (2026-09-07) — full cutover to turn-based types: the
+      // legacy BuffSystem read a dead pool during real (turn-based)
+      // gameplay, so the cleanse/grant silently no-op'd. Same bug shape
+      // as the A2 passive-conversion fix.
+      surviveEffects?: { buffSystem: TurnBuffSystem; registry: TurnBuffRegistry }
     } | null,
   ): void {
     this.surviveLethalSession = session

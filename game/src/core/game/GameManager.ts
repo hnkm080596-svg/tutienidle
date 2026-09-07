@@ -2689,13 +2689,15 @@ export class GameManager {
     this.combatSystem.setSurviveLethalSession({
       playerEntityId: playerEntity.id,
       guard: this.surviveLethalGuard,
-      // v4 (spec 2026-09-03 ï¿½4.1) ï¿½ B?t T? Th th?: t?y debuff + T?
-      // Sinh Ng? khi guard c?u s?ng. BuffSystem b?c pool c?a PLAYER
-      // trong tr?n nï¿½y (getBuffSystem dï¿½ cï¿½ c?a BattleSystem cï¿½ng pool
-      // ï¿½ t? d?ng d? khï¿½ng l? internal map).
+      // v4 (spec 2026-09-03 §4.1) — Bat Tu The: cleanse debuffs + grant
+      // Tu Sinh Ngo when the guard saves. Rewired 2026-09-07 (Phase A0)
+      // from the legacy battleSystem pool (dead during real turn-based
+      // gameplay — cleanse/grant silently no-op'd) to the LIVE
+      // turn-based player pool. players[0] is the human player
+      // (companions are appended after index 0 in buildTurnBattle).
       surviveEffects: {
-        buffSystem: new BuffSystem(this.battleSystem.getPlayerBuffs() ?? new BuffPool()),
-        registry: this.buffRegistry,
+        buffSystem: new TurnBuffSystem(this.turnBattle!.players[0]!.buffs),
+        registry: TURN_BUFF_REGISTRY,
       },
     })
 

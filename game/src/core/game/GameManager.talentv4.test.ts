@@ -22,6 +22,8 @@ import { pills } from '../../data/pill/pills'
 import { talismans } from '../../data/talisman/talismans'
 import { buffs } from '../../data/buff/buffs'
 import { TALENT_PASSIVE_SKILLS, getTalentPassiveSkill } from '../../data/skill/TalentPassives'
+import { TurnBuffSystem } from '../battle/turn/TurnBuffSystem'
+import { TURN_BUFF_REGISTRY } from '../../data/buff/TurnBuffRegistry'
 
 function makeWiredManager(): GameManager {
   const manager = new GameManager()
@@ -126,6 +128,25 @@ describe('GameManager — talent v4 combat passive wiring', () => {
 
     expect(passive).toBeDefined()
     expect(manager.surviveLethalGuard.getRemainingUses()).toBe(1)
+
+    // Phase A0 (2026-09-07) — surviveEffects phải trỏ vào LIVE turn-based
+    // pool của player (không còn legacy battleSystem pool chết). Kiểm
+    // chứng hành vi thật: áp debuff lên pool turn-based, đòn chí mạng
+    // → debuff bị tẩy + Tử Sinh Ngộ xuất hiện trên CÙNG pool đó.
+    const playerParticipant = manager.getTurnBattle()!.players[0]!
+
+    new TurnBuffSystem(playerParticipant.buffs).apply(
+      TURN_BUFF_REGISTRY.get('bong'),
+      playerParticipant.entity,
+      playerParticipant.entity,
+      TURN_BUFF_REGISTRY,
+    )
+
+    manager.combatSystem.applyDirectDamage(playerParticipant.entity, 999_999, 'enemy_1')
+
+    expect(playerParticipant.entity.currentHp).toBe(1)
+    expect(playerParticipant.buffs.getAll().some((b) => b.id === 'bong')).toBe(false)
+    expect(playerParticipant.buffs.getAll().some((b) => b.id === 'tu_sinh_ngo')).toBe(true)
   })
 
   it('PassiveSystem hpReader — nối battle player entity (đọc được HP ratio trong trận)', () => {

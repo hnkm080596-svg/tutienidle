@@ -18,6 +18,8 @@ import { pills } from '../../data/pill/pills'
 import { talismans } from '../../data/talisman/talismans'
 import { buffs } from '../../data/buff/buffs'
 import { TALENT_PASSIVE_SKILLS } from '../../data/skill/TalentPassives'
+import { TurnBuffSystem } from '../battle/turn/TurnBuffSystem'
+import { TURN_BUFF_REGISTRY } from '../../data/buff/TurnBuffRegistry'
 
 // QA quick-mode adversarial checks (spec 2026-09-03 talent catalog v4
 // M1) — reproduction/invariant tests cho các hypothesis rủi ro cao nhất
@@ -199,5 +201,45 @@ describe('QA talent v4 M1 — invariant wiring', () => {
 
       expect(active).toHaveLength(expected)
     }
+  })
+})
+
+describe('QA A0 � B?t T? Th? cleanse/grant on the LIVE turn-based pool', () => {
+  it('A0: Bat Tu The cleanse + Tu Sinh Ngo grant land on the LIVE turn-based pool', () => {
+    const manager = makeWiredManager()
+    const player = createDefaultPlayer()
+
+    player.selectedTalentIds = ['bat_tu_the']
+    player.realmId = 'mortal'
+    player.realmLevel = 1
+    manager.setActivePlayer(player)
+    manager.syncTalentCombatPassive(player)
+
+    const enemy = ENEMIES[0]!
+    const stats = calculateStats(player.baseStats, player.modifiers)
+
+    manager.startBattleWithPlayer(player, stats, enemy)
+
+    const turnBattle = manager.getTurnBattle()!
+    const playerParticipant = turnBattle.players[0]!
+
+    // Seed a real debuff directly on the live turn-based pool (matching
+    // how a real enemy hit would have applied it).
+    new TurnBuffSystem(playerParticipant.buffs).apply(
+      TURN_BUFF_REGISTRY.get('bong'),
+      playerParticipant.entity,
+      playerParticipant.entity,
+      TURN_BUFF_REGISTRY,
+    )
+
+    expect(playerParticipant.buffs.getAll().some((b) => b.id === 'bong')).toBe(true)
+
+    // Force a lethal hit through the real production damage path.
+    manager.combatSystem.applyDirectDamage(playerParticipant.entity, 999_999, 'enemy_1')
+
+    expect(playerParticipant.entity.alive).toBe(true)
+    expect(playerParticipant.entity.currentHp).toBe(1)
+    expect(playerParticipant.buffs.getAll().some((b) => b.id === 'bong')).toBe(false)
+    expect(playerParticipant.buffs.getAll().some((b) => b.id === 'tu_sinh_ngo')).toBe(true)
   })
 })
