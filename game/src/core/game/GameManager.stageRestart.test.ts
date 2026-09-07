@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { GameManager } from './GameManager'
+import { GameManager, INTRO_TOTAL_TICKS } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import { createDefaultPlayer } from '../player/Player'
 import { calculateStats } from '../stats/StatCalculator'
@@ -41,7 +41,8 @@ describe('GameManager — stage restart clears stale Action Playback pending sta
 
     gameManager.setPresentationActive(true)
 
-    for (let i = 0; i < 30; i++) {
+    // Intro 20 ticks (2026-09-07 plan Task 4) + countdown 30 ticks.
+    for (let i = 0; i < INTRO_TOTAL_TICKS + 30; i++) {
       gameManager.update(0.1)
     }
 

@@ -82,7 +82,7 @@ function spawnTelegraphTicks(entity: Pick<CombatEntity, 'isBoss' | 'isElite'>): 
   return SPAWN_TELEGRAPH_TICKS.normal
 }
 
-export type TurnBattleState = 'countdown' | 'fighting' | 'victory' | 'defeat'
+export type TurnBattleState = 'intro' | 'countdown' | 'fighting' | 'victory' | 'defeat'
 
 export interface TurnBattleParticipant {
   id: string
@@ -122,6 +122,14 @@ export interface TurnBattle {
    * `tickCountdown()`), enemies đã spawn đứng yên chờ.
    */
   countdownTurnsRemaining?: number
+  /**
+   * Intro phase (2026-09-07 plan Task 4) - curtain/zone-reveal transition
+   * BEFORE the countdown. Number of pacing ticks remaining before state
+   * flips to 'countdown'. GameManager's pacing loop decrements it via
+   * tickIntro(); no combat logic (gauge, pacing, targeting) may run while
+   * this phase is active - identical contract to countdownTurnsRemaining.
+   */
+  introTurnsRemaining?: number
   wave?: {
     totalEnemyCount: number
     spawnedCount: number
@@ -303,6 +311,31 @@ export class TurnBattleSystem {
     this.pendingFollowUpBypassActorId = queued.id
 
     return queued
+  }
+
+  /**
+   * Intro phase pacing (2026-09-07 plan Task 4, flow: Intro -> Countdown ->
+   * Spawn -> Gauge combat -> Wave -> Result): decrement introTurnsRemaining
+   * by 1 per call. Reaching 0 flips state to 'countdown'. Called from
+   * GameManager's pacing loop on the fixed step; NO combat logic runs
+   * during the intro phase (gauges frozen, resolveNextStep untouched) -
+   * same wait-phase contract as tickCountdown() below.
+   */
+  tickIntro(battle: TurnBattle): TurnBattleState {
+    if (battle.state !== 'intro') {
+      return battle.state
+    }
+
+    const remaining = (battle.introTurnsRemaining ?? 0) - 1
+
+    if (remaining <= 0) {
+      battle.introTurnsRemaining = 0
+      battle.state = 'countdown'
+    } else {
+      battle.introTurnsRemaining = remaining
+    }
+
+    return battle.state
   }
 
   /**
@@ -933,6 +966,12 @@ export class TurnBattleSystem {
    * (auto mode, runToCompletion(), mọi test cũ).
    */
   resolveNextStep(battle: TurnBattle): TurnStepResult {
+    // Intro phase (2026-09-07 plan Task 4): combat has not started - safe
+    // no-op, same wait-phase contract as the countdown branch below.
+    if (battle.state === 'intro') {
+      return { state: 'intro', actorId: '', skillId: '', targetIds: [], ccBlocked: false }
+    }
+
     // Countdown phase: combat chưa bắt đầu — no-op an toàn (gauge không
     // chạy, không ai hành động; GameManager tick countdown qua
     // tickCountdown() thay vì gọi method này).
