@@ -3100,8 +3100,30 @@ export class GameManager {
     return true
   }
 
+  // Phase A0 (2026-09-07) — composes the HUD progress from the LIVE turn
+  // battle instead of StageWaveSystem's legacy-only dependencies:
+  // - `alive` used to read the legacy battleSystem's enemy list (always
+  //   empty during real turn-based gameplay → counter stuck at 0).
+  // - `spawned` comes from StageManager, whose counter seeds at 1 for the
+  //   legacy bootstrap enemy and is never incremented by the turn-based
+  //   wave flow → stuck at 1. The turn battle's own wave.spawnedCount is
+  //   the real count.
+  // Filtering on entity.alive matches the turn engine's own
+  // living-participant checks (a dead-but-not-yet-pruned enemy must not
+  // count as alive). `total` stays StageWaveSystem-sourced
+  // (effectiveTotalEnemyCount) — that one is correct.
   getStageProgress(): { spawned: number; total: number; alive: number } | null {
-    return this.stageWaves.getProgress()
+    const progress = this.stageWaves.getProgress()
+
+    if (!progress) {
+      return null
+    }
+
+    return {
+      spawned: this.turnBattle?.wave?.spawnedCount ?? progress.spawned,
+      total: progress.total,
+      alive: this.turnBattle?.enemies.filter((enemy) => enemy.entity.alive).length ?? 0,
+    }
   }
 
   // =========================

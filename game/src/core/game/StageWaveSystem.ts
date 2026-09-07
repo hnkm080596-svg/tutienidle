@@ -182,7 +182,14 @@ export class StageWaveSystem {
     this.repeatStageContinuously = false
   }
 
-  getProgress(): { spawned: number; total: number; alive: number } | null {
+  // Phase A0 (2026-09-07) — the `alive` field is REMOVED from this shape:
+  // it used to read the legacy battleSystem's enemy list, which is always
+  // empty during real turn-based gameplay (HUD counter stuck at 0).
+  // GameManager.getStageProgress() now composes the live count itself from
+  // this.turnBattle.enemies. resolveBossSummons() below still reads
+  // battleSystem for pendingSummons (separate, currently-dead code path —
+  // out of scope per the A0 spec).
+  getProgress(): { spawned: number; total: number } | null {
     const active = this.deps.stageManager.get()
 
     if (!active) {
@@ -203,8 +210,6 @@ export class StageWaveSystem {
       // để quyết định victory (xem update() ở trên), không thì stage
       // Boss hiện "1/5" thay vì "1/1" dù trận đã thắng.
       total: effectiveTotalEnemyCount(stage),
-
-      alive: this.deps.battleSystem.getBattle()?.enemies.length ?? 0,
     }
   }
 
