@@ -104,6 +104,15 @@ export interface TurnBattleParticipant {
   /** Future Systems Task 7 — charge state (Thế→Trảm). CỐ Ý tách biệt counter CC Bá Thể. */
   chargingTurnsRemaining?: number
   pendingChargedSkillId?: string
+  /**
+   * Phase A3 (2026-09-07) — 1-based counter of this enemy's own actions,
+   * ported from BattleEnemy.specialAttackCounter (Battle.ts) with the same
+   * everyNth semantics as legacy EnemyAttackSystem.fireEnemyAttack():
+   * when counter % everyNth === 0, the special attack's damageMultiplier
+   * replaces the basic attack's for that action. Runtime-only, never
+   * resets mid-battle. undefined coerces to 0.
+   */
+  specialAttackCounter?: number
 }
 
 export interface TurnBattle {
@@ -719,6 +728,31 @@ export class TurnBattleSystem {
       action = forcedSkillSlot
         ? selectForcedAction(actor, forcedSkillSlot)
         : selectAction(actor)
+
+      // Phase A3 (2026-09-07) — enemy specialAttacks reader, ported from
+      // legacy EnemyAttackSystem.fireEnemyAttack()'s everyNth semantics:
+      // 1-based counter on the actor's OWN actions; when
+      // counter % everyNth === 0 the matching special attack's
+      // damageMultiplier replaces the basic attack's damage (presetId
+      // carries for presentation). Only applies to plain basic attacks
+      // (slot null) — explicit skills (special/ultimate slots) are never
+      // replaced. Counter never resets mid-battle; undefined coerces to 0.
+      if (!action.slot && actor.entity.specialAttacks?.length) {
+        const attackCount = (actor.specialAttackCounter ?? 0) + 1
+
+        actor.specialAttackCounter = attackCount
+
+        const specialAttack = actor.entity.specialAttacks.find(
+          (candidate) => attackCount % candidate.everyNth === 0,
+        )
+
+        if (specialAttack) {
+          action = {
+            ...action,
+            damage: { kind: 'physical', multiplier: specialAttack.damageMultiplier },
+          }
+        }
+      }
 
       const isChargeInit = (action.skill?.chargeTurns ?? 0) > 0
 
