@@ -14,16 +14,16 @@ const isElectron = Boolean(process.env.ELECTRON)
 
 // https://vite.dev/config/
 export default defineConfig({
-  // Port per-checkout (2026-09-07) — master 5173, worktree UITemp 5174:
-  // chạy song song 2 dev server không xung đột port (vite otherwise
-  // auto-increment, nhưng Playwright baseURL cần port cố định biết trước).
-  // env override vẫn được: npm run dev -- --port 5999.
+  // Port per-checkout (2026-09-07) — standing-slot worktree dùng 5175
+  // (master 5173, UITemp 5174): chạy song song nhiều dev server không xung
+  // đột port (vite otherwise auto-increment, nhưng Playwright baseURL cần
+  // port cố định biết trước). Env override vẫn được: npm run dev -- --port 5999.
   server: {
-    port: Number(process.env.DEV_PORT ?? 5173),
+    port: Number(process.env.DEV_PORT ?? 5175),
     strictPort: false,
   },
   preview: {
-    port: Number(process.env.DEV_PORT ?? 5173),
+    port: Number(process.env.DEV_PORT ?? 5175),
     strictPort: false,
   },
   // Asset URL tương đối — bắt buộc để index.html load đúng qua file://

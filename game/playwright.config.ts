@@ -1,10 +1,9 @@
 import { defineConfig, devices } from '@playwright/test'
 
-// Port per-checkout (2026-09-07) — master 5173, worktree UITemp 5174.
-// Biến env DEV_PORT do npm script set (xem package.json "dev"/"test:e2e"),
-// fallback 5173 cho master checkout. Vite config đọc cùng env nên dev
-// server thủ công và webServer của Playwright luôn cùng port.
-const DEV_PORT = process.env.DEV_PORT ?? '5173'
+// Port per-checkout (2026-09-07) — standing-slot worktree dùng 5175
+// (master 5173, UITemp 5174). Vite config đọc cùng giá trị nên dev server
+// thủ công và webServer của Playwright luôn cùng port.
+const DEV_PORT = process.env.DEV_PORT ?? '5175'
 
 export default defineConfig({
   testDir: './tests/e2e',
