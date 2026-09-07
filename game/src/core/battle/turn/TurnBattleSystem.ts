@@ -858,6 +858,35 @@ export class TurnBattleSystem {
           this.combat.resolveActionHit(actor.entity, target.entity, declared.scaledDamage)
           targetIds.push(target.id)
 
+          // Phase A3 — consume-for-damage (Pháp Tu Detonate / Thổ Tu ward
+          // burst). Orchestration only: reads/clears state through
+          // TurnBuffSystem's own API (getAllById/removeAllById) and
+          // CombatEntity's plain currentWard field — this block does not
+          // own stack bookkeeping itself. True damage = direct HP
+          // subtraction, matching the reaction pipeline's
+          // applyModifiedDirectDamage bypass semantics at this resolution
+          // layer. Deliberately NOT registry-gated: these consume the
+          // skill's OWN authored fields, no registry content involved.
+          const skill = action.skill
+
+          if (skill?.consumesAilmentId && skill.damagePerStack) {
+            const stacks = new TurnBuffSystem(target.buffs).getStacks(skill.consumesAilmentId)
+
+            if (stacks > 0) {
+              target.entity.currentHp = Math.max(0, target.entity.currentHp - stacks * skill.damagePerStack)
+              new TurnBuffSystem(target.buffs).removeAllById(skill.consumesAilmentId)
+            }
+          }
+
+          if (skill?.consumesWardForDamage && skill.damagePerWardPoint) {
+            const ward = actor.entity.currentWard
+
+            if (ward > 0) {
+              target.entity.currentHp = Math.max(0, target.entity.currentHp - ward * skill.damagePerWardPoint)
+              actor.entity.currentWard = 0
+            }
+          }
+
           if (this.registry) {
             new TurnBuffSystem(actor.buffs).rollOnHitEffects(actor.entity, target.entity, this.registry)
 

@@ -34,6 +34,18 @@ export interface TurnSkillDefinition {
    * semantics, do not merge the two fields.
    */
   appliesAilment?: { buffDefinitionId: string; chance: number }
+  // Phase A3 — Pháp Tu Detonate: consume the target's stacks of this
+  // ailment for bonus true damage (bypasses armor/resistance), then
+  // clear them. Ported from legacy SkillEffect.consumesAilmentId/
+  // damagePerStack. Only meaningful together with damagePerStack.
+  consumesAilmentId?: string
+  damagePerStack?: number
+  // Phase A3 — Thổ Tu "tự nổ khiên": consume the SOURCE's entire
+  // currentWard for bonus true damage, then zero it. Ported from legacy
+  // SkillEffect.consumesWardForDamage/damagePerWardPoint. Only meaningful
+  // together with damagePerWardPoint.
+  consumesWardForDamage?: boolean
+  damagePerWardPoint?: number
   /** Future Systems Task 7 — skill charge N lượt (Thế) rồi tự resolve (Trảm). */
   chargeTurns?: number
   /** Action Playback (2026-09-05) — VFX preset cho action_impact. undefined = fallback preset mặc định (Task 4). */
