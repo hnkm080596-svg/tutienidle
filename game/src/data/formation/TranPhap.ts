@@ -1,4 +1,4 @@
-// Tr?n Ph?p (Formation) content - spec 2026-09-05, standing-slot rework
+// Tran Phap (Formation) content - spec 2026-09-05, standing-slot rework
 // 2026-09-07: local pattern space is 3x3 (9 standing slots), mapped onto
 // PLAYER_SIDE_REGION absolutes via localCellToAbsolute() in
 // FormationPlacement.ts. Each formation carries ONE shared buff - there
@@ -36,10 +36,10 @@ function allLocalCells(): TranPhapCell[] {
 
 const HON_DON_TRAN: TranPhapDefinition = {
   id: 'hon_don_tran',
-  name: 'H?n D?n Tr?n',
+  name: 'Hỗn Độn Trận',
   cellPattern: allLocalCells(),
   buff: { definitionId: 'hon_don_tran_test_buff' },
-  description: 'TEST-ONLY - m? to�n b? 9 � d? ki?m tra wiring d?i h�nh.',
+  description: 'TEST-ONLY — mở toàn bộ 9 ô để kiểm tra wiring đội hình.',
 }
 
 export const TRAN_PHAP_FORMATIONS: readonly TranPhapDefinition[] = [HON_DON_TRAN]
