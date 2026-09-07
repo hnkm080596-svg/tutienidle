@@ -41,7 +41,7 @@
 
 | # | Việc | Phụ thuộc | Chi tiết |
 |---|---|---|---|
-| C1 | Xóa `battle/legacy/` (engine real-time cũ) + gỡ shim | A1 + A2 | mục 9.5 #9 |
+| C1 | Xóa `battle/legacy/` (engine real-time cũ) + gỡ shim | A1 + A2 | ✅ **XONG 2026-09-08** (branch `feat/c1-legacy-retirement`, spec `docs/superpowers/specs/2026-09-08-phase-c1-legacy-retirement-design.md`): xoá toàn bộ `src/core/battle/legacy/` (BattleSystem/HazardZoneSystem/LavaZone/SwordZone/UltimateSystem + 4 test file + README) −5982 dòng; gỡ GameManager shim (battleSystem field+ctor, start(), setArtifactRuntime, setChainDefinition, legacy fallback trong getBattle/abandonBattle/grantBattleRewardIfNeeded, syncLegacyBattleState no-op); gỡ StageWaveSystem battleSystem dep + update() spawn loop chết + resolveBossSummons + spawnTelegraph test; PhapTuNodes.dao.test re-point sang `data/skill/PhapTuUltimates`; `initKiemTuBattleResources` gọi trong startBattle (parity Kiếm bar — KT reset Kiếm Thế, BK seed Kiếm Ý tạm). artifact activation vẫn inert từ Slice 6 (HUD đọc getBattle().artifactRuntime → EMPTY; làm turn-side là feature riêng). Full suite 2841/2841 (33 test legacy retire) + type-check + build OK. |
 | C2 | Tách tiếp `GameManager.ts` (2.939 dòng) | — | mục 10.4 |
 | C3 | Nameplate công trình + dọn placeholder/emoji còn lại | — | Phase 2 cũ (mục 3) |
 | C4 | Locale sweep (7.10 Task 6) + container-fit refactor (7.10 Task 7) | — | mục 7.10 |
