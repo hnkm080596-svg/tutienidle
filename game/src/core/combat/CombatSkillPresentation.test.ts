@@ -140,3 +140,42 @@ describe('buildTurnSkillPresentation (Slice 7 Task 4)', () => {
     expect(result.special.cooldownRemaining).toBe(2)
   })
 })
+
+// Bảng 9.5 #5 (2026-09-07) — display metadata (name/description) đi kèm
+// presentation entry, lookup theo skillId từ TurnSkillDisplayMeta.
+describe('buildTurnSkillPresentation — skillName/skillDescription (9.5 #5)', () => {
+  it('id có trong TurnSkillDisplayMeta → entry mang name/description thật', () => {
+    const b = battle()
+    b.players[0]!.basic!.id = 'tram'
+
+    const result = buildTurnSkillPresentation(b, true)
+
+    expect(result.basic.skillName).toBe('Huy Kiếm')
+    expect(result.basic.skillDescription).toBeTruthy()
+    expect(result.basic.skillDescription!.length).toBeGreaterThan(0)
+  })
+
+  it('id authored riêng (bat_kiem_thuat) → metadata từ map authored', () => {
+    const b = battle()
+    b.players[0]!.special!.skill.id = 'bat_kiem_thuat'
+
+    const result = buildTurnSkillPresentation(b, true)
+
+    expect(result.special.skillName).toBe('Bạt Kiếm Thuật')
+  })
+
+  it('id lạ (fixture không có trong map) → không set name/description (fallback nhãn role)', () => {
+    const result = buildTurnSkillPresentation(battle(), true)
+
+    expect(result.basic.skillId).toBe('fixture_basic')
+    expect(result.basic.skillName).toBeUndefined()
+    expect(result.basic.skillDescription).toBeUndefined()
+  })
+
+  it('empty entry (skillId rỗng) → không lookup, không metadata', () => {
+    const result = buildTurnSkillPresentation(battle({ noUltimate: true }), true)
+
+    expect(result.ultimate.state).toBe('empty')
+    expect(result.ultimate.skillName).toBeUndefined()
+  })
+})

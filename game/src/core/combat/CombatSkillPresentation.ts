@@ -1,6 +1,7 @@
 import type { TurnBattle, TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
 import type { TurnSkillDefinition, TurnSkillSlot } from '../battle/turn/TurnSkillAction'
 import { hasResourceFor } from '../battle/turn/TurnSkillAction'
+import { turnSkillDisplayMetaOf } from '../../data/skill/TurnSkillDisplayMeta'
 
 // Slice 7 (2026-09-04) — bản rewrite HOÀN TOÀN của CombatSkillPresentation:
 // bản cũ đọc shape real-time `Battle` (skillCadenceRemainingBySlot/castTime/
@@ -20,6 +21,12 @@ export type TurnSkillPresentationStateKind =
 export interface TurnSkillPresentationEntry {
   skillId: string
 
+  /** Bảng 9.5 #5 — tên hiển thị thật (TurnSkillDisplayMeta); undefined = fallback nhãn role. */
+  skillName?: string
+
+  /** Bảng 9.5 #5 — mô tả tooltip thật; undefined = không override tooltip. */
+  skillDescription?: string
+
   cooldownRemaining: number
 
   cooldownTotal: number
@@ -27,6 +34,17 @@ export interface TurnSkillPresentationEntry {
   resourceCost: number
 
   state: TurnSkillPresentationStateKind
+}
+
+/** Bổ sung display metadata (name/description) vào entry — lookup an toàn theo skillId. */
+function withDisplayMeta(entry: TurnSkillPresentationEntry): TurnSkillPresentationEntry {
+  const meta = turnSkillDisplayMetaOf(entry.skillId)
+
+  if (!meta) {
+    return entry
+  }
+
+  return { ...entry, skillName: meta.name, skillDescription: meta.description }
 }
 
 const EMPTY_ENTRY: TurnSkillPresentationEntry = {
@@ -122,8 +140,8 @@ export function buildTurnSkillPresentation(
   }
 
   return {
-    basic: basicEntry(player.basic, isPlayerTurnPaused),
-    special: slotEntry(player.special, isPlayerTurnPaused, player.entity),
-    ultimate: slotEntry(player.ultimate, isPlayerTurnPaused, player.entity),
+    basic: withDisplayMeta(basicEntry(player.basic, isPlayerTurnPaused)),
+    special: withDisplayMeta(slotEntry(player.special, isPlayerTurnPaused, player.entity)),
+    ultimate: withDisplayMeta(slotEntry(player.ultimate, isPlayerTurnPaused, player.entity)),
   }
 }

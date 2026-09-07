@@ -4,9 +4,10 @@
 // buildTurnSkillPresentation (slotList). Slot không sẵn sàng bị DISABLE
 // (chặn trước, spec Slice 7 §4). Targeting vẫn hoàn toàn tự động.
 //
-// Tên skill hiển thị: TurnSkillDefinition không phải Skill object sống —
-// hiển thị nhãn role cố định (Thường/Đặc Biệt/Tuyệt Kỹ), icon/name thật
-// là gap content hiển thị follow-up (không âm thầm bỏ qua).
+// Bảng 9.5 #5 (2026-09-07) — tên/tooltip skill thật: entry mang
+// skillName/skillDescription từ TurnSkillDisplayMeta (mapping skillId →
+// display metadata); fallback nhãn role (Thường/Đặc Biệt/Tuyệt Kỹ) khi
+// id không có trong map. Tooltip qua tooltipOverride của CombatSkillSlot.
 import { computed, onMounted } from 'vue'
 import CombatSkillSlot from './CombatSkillSlot.vue'
 import { useTurnCombatManual } from '@/composables/useTurnCombatManual'
@@ -14,6 +15,7 @@ import { useGameManager } from '@/composables/useGameState'
 import { useUiStore } from '@/stores/ui'
 import type { TurnSkillPresentationEntry } from '@/core/combat/CombatSkillPresentation'
 import type { TurnSkillSlotRole } from '@/core/battle/turn/TurnSkillAction'
+import type { TooltipContent } from '@/composables/useTooltip'
 
 const ROLE_ORDER: readonly TurnSkillSlotRole[] = ['basic', 'special', 'ultimate']
 
@@ -21,6 +23,17 @@ const ROLE_LABELS: Record<TurnSkillSlotRole, string> = {
   basic: 'Thường',
   special: 'Đặc Biệt',
   ultimate: 'Tuyệt Kỹ',
+}
+
+// Bảng 9.5 #5 — nhãn hiển thị do CombatSkillSlot tự resolve qua
+// displayLabel prop (skillName → fallback emptyLabel). Bar chỉ truyền
+// metadata; tooltip qua tooltipFor() bên dưới.
+function tooltipFor(entry: TurnSkillPresentationEntry): TooltipContent | undefined {
+  if (!entry.skillName || !entry.skillDescription) {
+    return undefined
+  }
+
+  return { title: entry.skillName, description: entry.skillDescription }
 }
 
 // Slice 7 master plan Task 9 — mode toggle đọc/ghi ui.combatInputMode
@@ -82,11 +95,13 @@ function tapSlot(role: TurnSkillSlotRole): void {
       >
         <CombatSkillSlot
           :empty-label="ROLE_LABELS[role]"
+          :display-label="entryAt(index).skillName"
           :remaining="entryAt(index).cooldownRemaining"
           :total="entryAt(index).cooldownTotal"
           :is-masked="entryAt(index).state === 'cooldown'"
           :resource-cost="entryAt(index).resourceCost"
           :is-insufficient-resource="entryAt(index).state === 'blocked_resource'"
+          :tooltip-override="tooltipFor(entryAt(index))"
         />
       </button>
     </div>
