@@ -133,4 +133,16 @@ describe('Phase A3 — resolved special/ultimate override (Pháp Tu buildId fix)
     expect(participant.special).toBeUndefined()
     expect(participant.ultimate).toBeUndefined()
   })
+
+  it('gives a Kiem Tu player TRU_TIEN_KIEM_TRAN as their ultimate (A3 Task 4)', () => {
+    const combatEntity = entity()
+
+    const participant = toTurnBattleParticipant(combatEntity, 0, BASIC, 'kiem_tu')
+
+    expect(participant.ultimate?.skill.id).toBe('tru_tien_kiem_tran')
+    expect(participant.ultimate?.skill.resourceType).toBe('the')
+    expect(participant.ultimate?.skill.resourceCost).toBe(100)
+    expect(participant.ultimate?.skill.cooldownTurns).toBe(8)
+    expect(participant.special?.skill.id).toBe('bat_kiem_thuat')
+  })
 })

@@ -5,7 +5,7 @@
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
 import type { TurnSkillDefinition, TurnSkillSlot } from '../battle/turn/TurnSkillAction'
-import { BAT_KIEM_THUAT } from '../../data/skill/BatKiemThuat'
+import { BAT_KIEM_THUAT, TRU_TIEN_KIEM_TRAN } from '../../data/skill/BatKiemThuat'
 import { TurnBuffPool } from '../battle/turn/TurnBuffPool'
 
 /**
@@ -24,7 +24,9 @@ const SPECIALS_BY_BUILD: Record<string, TurnSkillDefinition> = {
   kiem_tu: BAT_KIEM_THUAT,
 }
 
-const ULTIMATES_BY_BUILD: Record<string, TurnSkillDefinition> = {}
+const ULTIMATES_BY_BUILD: Record<string, TurnSkillDefinition> = {
+  kiem_tu: TRU_TIEN_KIEM_TRAN,
+}
 
 export function toTurnBattleParticipant(
   entity: CombatEntity,
