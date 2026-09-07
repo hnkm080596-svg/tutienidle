@@ -89,7 +89,7 @@ import { formatNumber } from '@/core/format/NumberFormatter'
 import { CombatDamageText } from './combat/combat-damage-text'
 import { CombatCastBar } from './combat/combat-cast-bar'
 import { CombatGridView } from './combat/combat-grid-view'
-import { CombatVfxSpawner } from './combat/combat-vfx-spawner'
+import { CombatVfxSpawner, type SpawnVfxSnapshot } from './combat/combat-vfx-spawner'
 import { CombatRewardGourd } from './combat/combat-reward-gourd'
 import { CombatEssenceStream } from './combat/combat-essence-stream'
 import { CombatPositionInterpolation } from './combat/combat-position-interpolation'
@@ -429,6 +429,16 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // (renderer legacy giÃ¡Â»Â¯ nguyÃƒÂªn hÃƒÂ nh vi cÃ…Â©).
   spawnVfxHandles = new Map<string, { handle: EnemySpawnVfxHandle; progress: number }>()
   materializingIds = new Set<string>()
+
+  // Party countdown telegraph (Turn-Based Wave Redesign, 2026-09-06) —
+  // handle riêng cho player + companion lúc đếm 3→2→1, TÁCH KHỎI
+  // spawnVfxHandles (dành cho enemy wave telegraph) vì lifecycle khác hẳn:
+  // mọi thành viên party materialize CÙNG LÚC theo 1 countdownProgress
+  // chung, không phải từng id một như enemy. KHÔNG đụng
+  // reconcilePlayerSpawn() (dành riêng cho legacy real-time, single-id) —
+  // xem spec §6b lý do tách biệt hoàn toàn.
+  turnCountdownSpawnVfxHandles = new Map<string, EnemySpawnVfxHandle>()
+  turnCountdownPendingIds = new Set<string>()
 
   // Player spawn telegraph (plan Ã‚Â§12.2) Ã¢â‚¬â€ handle DUY NHÃ¡ÂºÂ¤T cho telegraph
   // cÃ¡Â»Â§a avatar (preset 'player_spawn'); playerMaterialized false = KHÃƒâ€NG
@@ -1332,8 +1342,88 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // dữ liệu SỐNG mỗi fixed step từ turn engine (xem TurnActionPresentationEvents.ts).
   // Tổng quát hoá đúng tinh thần reconcileEnemySprites() cho CẢ HAI phe.
   private onTurnBattleEntitySnapshot(event: TurnBattleEntitySnapshotEvent) {
+    // Turn-Based Wave Redesign (2026-09-06) — countdown reconcile PHẢI
+    // chạy TRƯỚC reconcileCombatantSprites('player', ...): lần đầu 1
+    // player/companion id xuất hiện trong event.players (ngay từ tick đầu
+    // countdown, KHÔNG như enemy phải chờ pending), nhánh 'create' của
+    // reconcileCombatantSprites() sẽ setVisible(true) ngay — cần
+    // turnCountdownPendingIds đã có id đó SẴN để nhánh 'create' biết
+    // giữ ẩn (xem nhánh 'create').
+    this.reconcileTurnCountdownSpawn(event)
+
+    // Turn-Based Wave Redesign (2026-09-06) — enemy wave telegraph: tái dùng
+    // đúng reconcileSpawnVfx() của legacy qua SpawnVfxSnapshot (Task 6) —
+    // id biến mất khỏi pendingEnemySpawns = materialize → materializingIds
+    // đánh dấu TRƯỚC khi reconcileCombatantSprites tạo sprite (thứ tự giống
+    // applyPendingPositions() của legacy: spawn VFX reconcile chạy trước
+    // sprite reconcile) để nhánh 'create' kịp consume fade-in materialize.
+    this.reconcileSpawnVfx({
+      spawningEnemies: event.pendingEnemySpawns.map((pending) => ({
+        id: pending.id,
+        row: pending.row as LaneIndex,
+        column: pending.column,
+        progress: pending.progress,
+        isBoss: pending.isBoss,
+        presetId: pending.presetId,
+      })),
+    })
+
     this.reconcileCombatantSprites('player', event.players, PLAYER_COLOR)
     this.reconcileCombatantSprites('enemy', event.enemies, ENEMY_COLOR)
+  }
+
+  /**
+   * Turn-Based Wave Redesign (2026-09-06) — telegraph đếm 3→2→1 cho CẢ
+   * party (player + companion). countdownProgress undefined = countdown
+   * hết (hoặc chưa từng có) → flush mọi handle còn treo + hiện sprite
+   * từng id. KHÔNG đụng reconcilePlayerSpawn() (legacy real-time).
+   */
+  private reconcileTurnCountdownSpawn(event: TurnBattleEntitySnapshotEvent) {
+    if (event.countdownProgress === undefined) {
+      // Countdown vừa kết thúc (hoặc chưa từng bắt đầu) — flush mọi handle
+      // còn treo: flash materialize + hiện sprite thật cho từng id.
+      for (const [id, handle] of this.turnCountdownSpawnVfxHandles) {
+        handle.complete()
+
+        const sprite = this.sprites.get(id)
+
+        sprite?.rect.setVisible(true)
+      }
+
+      this.turnCountdownSpawnVfxHandles.clear()
+      this.turnCountdownPendingIds.clear()
+
+      return
+    }
+
+    for (const player of event.players) {
+      this.turnCountdownPendingIds.add(player.id)
+
+      const existing = this.turnCountdownSpawnVfxHandles.get(player.id)
+
+      if (existing) {
+        existing.update(event.countdownProgress)
+        continue
+      }
+
+      if (!this.projection) {
+        continue
+      }
+
+      const handle = spawnEnemySpawnVfx({
+        scene: this,
+        projection: this.projection,
+        row: player.row as LaneIndex,
+        column: player.column,
+        presetId: 'player_spawn',
+        uprightDepth: this.resolveUprightVfxDepth({
+          row: player.row as LaneIndex,
+          column: player.column,
+        }),
+      })
+
+      this.turnCountdownSpawnVfxHandles.set(player.id, handle)
+    }
   }
 
   private reconcileCombatantSprites(
@@ -1375,7 +1465,21 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
         // BattleSystem (xem TurnActionPresentationEvents.ts) nên event đó
         // không bao giờ tới nữa — sprite kẹt vô hình vĩnh viễn. Snapshot
         // turn-based tự lo hiện sprite ngay khi id đó lần đầu xuất hiện.
-        sprite.rect.setVisible(true)
+        // Turn-Based Wave Redesign (2026-09-06) — party countdown telegraph:
+        // id đang trong turnCountdownPendingIds nghĩa là countdown 3→2→1
+        // CHƯA xong — giữ sprite ẨN, reconcileTurnCountdownSpawn() sẽ tự
+        // setVisible(true) khi countdown kết thúc (xem hàm đó). Enemy
+        // KHÔNG BAO GIỜ vào turnCountdownPendingIds (set chỉ chứa
+        // event.players) nên nhánh này luôn no-op cho enemy, không đổi
+        // hành vi enemy hiện có.
+        sprite.rect.setVisible(!this.turnCountdownPendingIds.has(action.state.id))
+
+        // Materialize từ telegraph (Turn-Based Wave Redesign, 2026-09-06) —
+        // đúng cơ chế đã dùng cho legacy enemy (reconcileEnemySprites()).
+        if (this.materializingIds.has(action.state.id)) {
+          this.materializingIds.delete(action.state.id)
+          this.playMaterializeFadeIn(sprite)
+        }
 
         if (action.state.id === PLAYER_ID) {
           this.playerMaterialized = true
@@ -1607,12 +1711,14 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   /**
-   * Reconcile telegraph spawn VFX theo SNAPSHOT (khÃƒÂ´ng event tÃ¡Â»Â©c thÃ¡Â»Âi):
-   * id mÃ¡Â»â€ºi Ã¢â€ â€™ tÃ¡ÂºÂ¡o handle; id cÃƒÂ²n Ã¢â€ â€™ cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t progress; id MÃ¡ÂºÂ¤T Ã¢â€ â€™ materialize
-   * (flash ngÃ¡ÂºÂ¯n + fade-in sprite) vÃƒÂ  dÃ¡Â»Ân handle. Flat mode bÃ¡Â»Â qua (renderer
-   * legacy giÃ¡Â»Â¯ hÃƒÂ nh vi cÃ…Â©).
+   * Reconcile telegraph spawn VFX theo SNAPSHOT (không event tức thời):
+   * id mới → tạo handle; id còn → cập nhật progress; id MẤT → materialize
+   * (flash ngắn + fade-in sprite) và dọn handle. Flat mode bỏ qua (renderer
+   * legacy giữ hành vi cũ). Turn-Based Wave Redesign (2026-09-06) — kiểu
+   * tham số narrow xuống SpawnVfxSnapshot (subset BattlePositionsEvent);
+   * turn-based snapshot path gọi qua đúng delegate này.
    */
-  reconcileSpawnVfx(event: BattlePositionsEvent) {
+  reconcileSpawnVfx(event: SpawnVfxSnapshot) {
     this.vfxSpawner.reconcileSpawnVfx(event)
   }
 
