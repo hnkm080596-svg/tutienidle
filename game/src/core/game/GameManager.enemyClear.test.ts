@@ -137,7 +137,10 @@ describe('abandonBattle — EnemyManager cleanup (audit 2026-08-31, M1)', () => 
 
     // KHÔNG auto-repeat — mục tiêu là state 'victory' cuối cùng.
     expect(gameManager.startStage(player, stats, stage)).toBe(true)
-    expect(gameManager.enemySystem.getAliveEnemies().length).toBeGreaterThan(0)
+    // Turn-Based Wave Redesign (2026-09-06) — bootstrap enemy bị discard
+    // (spawn đồng loạt qua telegraph): ngay sau startStage CHƯA có enemy
+    // sống — pending telegraph materialize ở các tick kế tiếp.
+    expect(gameManager.enemySystem.getAliveEnemies().length).toBe(0)
 
     // Đập quái tới victory (pattern update loop của repeatStage test).
     let reachedVictory = false

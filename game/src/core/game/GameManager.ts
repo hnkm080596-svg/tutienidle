@@ -130,6 +130,7 @@ import { StageManager } from '../stage/StageManager'
 import { StageSystem } from '../stage/StageSystem'
 import type { Stage } from '../stage/Stage'
 import { effectiveTotalEnemyCount } from '../stage/EffectiveEnemyCount'
+import { effectiveWaves } from '../stage/EffectiveWaves'
 import { ZoneRegistry } from '../stage/ZoneRegistry'
 import type { Zone } from '../stage/Zone'
 
@@ -269,6 +270,12 @@ const BATTLE_MAX_CATCHUP_SECONDS = 30
 // khÃƒÂ´ng mÃƒÂ´ tÃ¡ÂºÂ£ khÃƒÂ¡i niÃ¡Â»â€¡m loadout slot.
 const PHAP_TU_STARTER_NODE_ID = 'hoa_linh_ngo'
 const PHAP_TU_STARTER_SKILL_ID = 'hoa_cau_thuat'
+
+// Turn-Based Wave Redesign (2026-09-06) — shared giữa buildTurnBattle()
+// (dùng để khởi tạo countdownTurnsRemaining) và
+// TurnActionPresentationEvents.emitTurnBattleEntitySnapshot() (dùng để
+// tính countdownProgress) — tách hằng số ra để 2 nơi không bao giờ lệch.
+export const COUNTDOWN_TOTAL_TICKS = 30
 
 export class GameManager {
   readonly eventBus = new EventBus()
@@ -2436,7 +2443,7 @@ export class GameManager {
       enemies: enemyParticipants,
       state: 'countdown',
       // 3s countdown hết số → 30 pacing ticks (BATTLE_FIXED_STEP 0.1s).
-      countdownTurnsRemaining: 30,
+      countdownTurnsRemaining: COUNTDOWN_TOTAL_TICKS,
       totalTurnsElapsed: 0,
     }
   }
@@ -2470,7 +2477,13 @@ export class GameManager {
       // Ã„â€˜Ã¡ÂºÂ§u trÃ¡ÂºÂ­n/bÃ¡ÂºÂ¯t Ã„â€˜Ã¡ÂºÂ§u stage Ã¢â‚¬â€ hÃ¡Â»â€¡ sÃ¡Â»â€˜ng restartCycle giÃ¡Â»Â¯ fighting ngay).
       state: 'fighting',
       totalTurnsElapsed: 0,
-      wave: { totalEnemyCount: effectiveTotalEnemyCount(stageRef), spawnedCount: 0 },
+      wave: {
+        totalEnemyCount: effectiveTotalEnemyCount(stageRef),
+        spawnedCount: 0,
+        waves: effectiveWaves(stageRef),
+        waveIndex: 0,
+        pendingEnemySpawns: [],
+      },
     }
 
     this.turnBattleSystem = new TurnBattleSystem(
@@ -3176,9 +3189,31 @@ export class GameManager {
       this.turnBattleStartedAtMs = Date.now()
 
 
+      // Turn-Based Wave Redesign (2026-09-06) — StageWaveSystem.start()
+      // (qua launchBattle → startBattleWithPlayer → startBattle →
+      // buildTurnBattle) đã spawn THẲNG 1 quái bootstrap vào
+      // this.turnBattle.enemies (bootstrap này PHỤC VỤ CHUNG cho cả legacy
+      // real-time engine — KHÔNG SỬA). User yêu cầu MỌI quái (kể cả con
+      // đầu) đều spawn đồng loạt qua telegraph — nên XÓA quái bootstrap
+      // đó khỏi mảng enemies ngay tại đây và để tick tiếp theo của
+      // tickPacing() tự nhiên queue LẠI toàn bộ wave 0 (kể cả "con #1")
+      // qua cơ chế pending/telegraph bình thường. Hơi lãng phí 1 lần roll
+      // template thừa (bootstrap đã roll 1 template không dùng tới), chấp
+      // nhận được để không phải sửa startBattle()/buildTurnBattle() — 2
+      // hàm dùng chung với legacy engine.
+      // Despawn bootstrap enemy khỏi EnemySystem (không chỉ turnBattle):
+      // nếu chỉ discard khỏi turnBattle.enemies, entity vẫn sống trong
+      // EnemySystem và victory-despawn assertion/flow không trống.
+      for (const bootstrap of this.turnBattle.enemies) {
+        this.enemySystem.despawn(bootstrap.entity.id)
+      }
+      this.turnBattle.enemies = []
       this.turnBattle.wave = {
         totalEnemyCount: effectiveTotalEnemyCount(stage),
-        spawnedCount: 1,
+        spawnedCount: 0,
+        waves: effectiveWaves(stage),
+        waveIndex: 0,
+        pendingEnemySpawns: [],
       }
 
       const stageRef = stage
@@ -3597,6 +3632,13 @@ export class GameManager {
           // sẵn sàng hoặc safety-net timeout trôi qua.
         } else if (this.turnBattle.state === 'countdown') {
           this.turnBattleSystem.tickCountdown(this.turnBattle)
+
+          // Turn-Based Wave Redesign (2026-09-06) — snapshot cũng phải chạy
+          // TRONG pha countdown: CombatScene cần countdownProgress mỗi tick
+          // để vẽ party telegraph 3→2→1 (reconcileTurnCountdownSpawn). Không
+          // emit ở đây thì progress vĩnh viễn không tới scene (callee đã
+          // wire, caller im lặng — đúng lớp bug P13).
+          emitTurnBattleEntitySnapshot(this.eventBus, this.turnBattle)
         } else if (this.turnBattle.state === 'fighting') {
           // Slice 7 manual mode: trÃ†Â°Ã¡Â»â€ºc khi resolve step kÃ¡ÂºÂ¿, peek actor Ã¢â‚¬â€
           // nÃ¡ÂºÂ¿u lÃƒÂ  player VÃƒâ‚¬ manual mode bÃ¡ÂºÂ­t Ã¢â€ â€™ PAUSE (khÃƒÂ´ng resolve, gauge

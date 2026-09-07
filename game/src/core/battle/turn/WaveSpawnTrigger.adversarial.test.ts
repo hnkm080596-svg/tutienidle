@@ -23,16 +23,20 @@ describe('WaveSpawnTrigger adversarial (QA probes)', () => {
     expect(shouldStartNextWave(0, 0, 3, 3)).toBe(false)
   })
 
-  it('INV-WST-4: mutual exclusion — không bao giờ spawn wave mới khi complete', () => {
-    // Với mọi trạng thái hợp lệ: nếu shouldStartNextWave true thì
-    // isStageComplete phải false (điều kiện aliveCount=0/pending=0 chung,
-    // nhưng waveIndex < waveCount vs spawnedCount >= total là 2 miền rời
-    // khi dữ liệu nhất quán — sum(waves) === totalEnemyCount).
-    for (let waveIndex = 0; waveIndex <= 3; waveIndex++) {
+  it('INV-WST-4: mutual exclusion with consistent data (spawnedCount < total iff waves remain), never spawns when complete', () => {    // Turn-Based Wave model: spawnedCount increments per waveIndex (sum of waves[0..i]).
+    // spawnedCount < total iff waveIndex < waveCount — the two conditions cannot both
+    // be true when data is consistent (invariant: sum(waves) === totalEnemyCount).
+    const waves = [3, 2]
+    const total = 5
+
+    for (let waveIndex = 0; waveIndex <= waves.length; waveIndex++) {
+      const spawned = waves.slice(0, waveIndex).reduce((sum, n) => sum + n, 0)
+
       for (const alive of [0, 1]) {
         for (const pending of [0, 1]) {
-          const spawn = shouldStartNextWave(alive, pending, waveIndex, 3)
-          const complete = isStageComplete(5, 5, alive, pending)
+          const spawn = shouldStartNextWave(alive, pending, waveIndex, waves.length)
+          const complete = isStageComplete(spawned, total, alive, pending)
+
           if (spawn) {
             expect(complete).toBe(false)
           }

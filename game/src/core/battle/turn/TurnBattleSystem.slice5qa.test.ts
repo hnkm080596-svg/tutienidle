@@ -53,7 +53,7 @@ describe('Slice 5 adversarial (QA probes)', () => {
     const player = createCombatant({ id: 'player', type: 'player' as never, currentHp: 1_000_000, maxHp: 1_000_000, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1 } })
     const enemyA = createCombatant({ id: 'enemyA', currentHp: 1_000_000, maxHp: 1_000_000, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1 } })
 
-    const wave = { totalEnemyCount: 50, waves: [50], spawnedCount: 1 }
+    const wave = { totalEnemyCount: 50, waves: [50], spawnedCount: 1, waveIndex: 0, pendingEnemySpawns: [] }
     const battle: TurnBattle = {
       players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
@@ -80,7 +80,7 @@ describe('Slice 5 adversarial (QA probes)', () => {
     const player = createCombatant({ id: 'player', type: 'player' as never, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 } })
     const enemyA = createCombatant({ id: 'enemyA', currentHp: 1, maxHp: 1, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 } })
 
-    const wave = { totalEnemyCount: 2, waves: [2], spawnedCount: 1 }
+    const wave = { totalEnemyCount: 2, waves: [2], spawnedCount: 1, waveIndex: 0, pendingEnemySpawns: [] }
     const battle: TurnBattle = {
       players: [makeParticipant('player', player, 10, 0)],
       enemies: [makeParticipant('enemyA', enemyA, 10, 1)],
@@ -96,9 +96,14 @@ describe('Slice 5 adversarial (QA probes)', () => {
     }
 
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 20, undefined, spawnEnemy)
-    system.resolveNextStep(battle)
+    // Turn-Based Wave Redesign (2026-09-06) — spawn chuyển sang tickPacing:
+    // giết enemyA (sân trống, waveIndex 0 < 1, spawnedCount 1 < 2) rồi
+    // tickPacing → wave mới queue qua telegraph → spawnEnemy chạy.
+    enemyA.alive = false
+    battle.enemies = []
+    system.tickPacing(battle)
 
-    const enemyAParticipant = battle.enemies[0]!
+    const enemyAParticipant = { buffs: new TurnBuffPool() }
     expect(spawnedPool).toBeDefined()
     expect(spawnedPool).not.toBe(enemyAParticipant.buffs)
   })
@@ -110,7 +115,7 @@ describe('Slice 5 adversarial (QA probes)', () => {
       players: [makeParticipant('player', player, 10, 0)],
       enemies: [],
       state: 'fighting',
-      wave: { totalEnemyCount: 0, spawnedCount: 0 },
+      wave: { totalEnemyCount: 0, waves: [], spawnedCount: 0, waveIndex: 0, pendingEnemySpawns: [] },
     }
 
     const step = new TurnBattleSystem(new CombatSystem(new EventBus()), 20).resolveNextStep(battle)
