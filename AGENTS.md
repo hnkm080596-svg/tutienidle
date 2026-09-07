@@ -81,7 +81,10 @@ When a rule below says "the agent", it means whichever opencode agent is current
 - The coordinator (the agent that delegated) must aggregate the subagent reports and the diff, and re-verify before declaring done.
 - Only request another review pass when evidence is missing, findings are unresolved, or the change is high-risk. Do not loop reviews for low-signal issues.
 - Subagents and coordinators MUST NOT commit, merge, integrate, push, or deploy — see P7.
-- **Project convention (overrides the skill's own default recommendation):** prefer **Inline Execution** (`executing-plans` skill) over **Subagent-Driven Development** when executing an implementation plan in this repo. Do not dispatch one fresh subagent per task by default — execute the plan's tasks inline in the current session, with checkpoints for review. Only use `subagent-driven-development` / `dispatching-parallel-agents` when the user explicitly asks for multi-agent/parallel execution for a specific task.
+- **Project convention (overrides the skill's own default recommendation), refined 2026-09-07:** which execution mode to use depends on whether the current session can dispatch subagents.
+  - **Claude Code sessions** (has the `Agent`/`Task` tool, i.e. can actually delegate): prefer **Subagent-Driven Development** (`subagent-driven-development` skill) when executing an implementation plan — dispatch a fresh implementer subagent per task, with task review between tasks.
+  - **Opencode agents** (`.opencode/agent/*.md` — no subagent-dispatch tool available to them): always use **Inline Execution** (`executing-plans` skill) — execute the plan's tasks directly in the current session, with checkpoints for review. They cannot use SDD because they have nothing to dispatch to.
+  - When in doubt about which kind of session you are, check whether an `Agent`/`Task`-style tool is actually available to you — its presence, not habit, decides.
 
 ### P7. No Commit / Push / Deploy + Specific Destructive Git List
 

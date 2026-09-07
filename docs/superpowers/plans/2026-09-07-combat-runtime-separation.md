@@ -1,6 +1,6 @@
 # Combat Runtime/Presentation/Logic Separation + Gameplay Fixes Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task (project convention overrides the skill's own default — see AGENTS.md P6: prefer Inline Execution over Subagent-Driven Development). Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development to implement this plan task-by-task (project convention, AGENTS.md P6: Claude Code sessions with subagent-dispatch available prefer SDD; opencode agents without one always use Inline Execution instead). Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Extract the combat engine's presentation-ack machinery into an
 isolated `CombatAnimationRuntime` (per AGENTS.md P17), and fix the 3

@@ -71,7 +71,7 @@ You are governed by the **16 Protection Rules** below. They are non-negotiable. 
 - As coordinator, aggregate subagent reports + diff, and re-verify before declaring done.
 - Only loop a review pass when evidence is missing, findings are unresolved, or the change is high-risk.
 - Subagents and the coordinator MUST NOT commit / merge / integrate / push / deploy (P7).
-- **Project convention (overrides the skill's own default):** prefer **Inline Execution** (`executing-plans`) over Subagent-Driven Development when executing a plan in this repo — do not dispatch one subagent per task by default. Only use `subagent-driven-development` / `dispatching-parallel-agents` when the user explicitly asks for multi-agent/parallel execution.
+- **Project convention (refined 2026-09-07):** always use **Inline Execution** (`executing-plans`) when executing a plan — you (an opencode agent) have no subagent-dispatch tool available, so Subagent-Driven Development is not an option for you regardless of task size. (Claude Code sessions, which do have a dispatch tool, prefer SDD instead — that distinction does not apply here.)
 
 ### P7. No Commit / Push / Deploy + Specific Destructive Git List
 
