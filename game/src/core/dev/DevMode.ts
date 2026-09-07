@@ -27,33 +27,3 @@ export function isTestModeUnlockAll(): boolean {
     return false
   }
 }
-
-// Art test mode (2026-09-06) — tắt CSS trang trí (background/border/
-// box-shadow/text-shadow/outline) trên MỌI component qua 1 class gốc
-// (xem assets/artTestMode.css), GIỮ NGUYÊN layout (width/height/flex/
-// grid/position không đụng tới) để lắp art thật vào xem đúng khung có
-// sẵn mà không bị style cũ đè/che. Bật:
-//   localStorage.setItem('dev.artTestMode', '1')  → reload trang
-// Tắt: removeItem('dev.artTestMode') hoặc set giá trị khác '1'.
-//
-// 2026-09-07 (user quyết định) — DEFAULT ĐỔI THÀNH OFF: cần set localStorage
-// '1' mới bật. Lý do: cơ chế cũ không có key là "bật", khiến khung viền/UI
-// chrome bị tắt âm thầm trên môi trường dev mới (localStorage trống) —
-// người chạy dev không biết vì sao CSS mất. Giờ: localStorage trống = UI
-// đầy đủ (bình thường), set '1' = chủ ý bật art-test để làm art. UITemp
-// worktree (user tự sửa UI sang art real) giữ cơ chế cũ nếu cần.
-export function isArtTestMode(): boolean {
-  if (!import.meta.env.DEV) {
-    return false
-  }
-
-  if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
-    return false
-  }
-
-  try {
-    return window.localStorage.getItem('dev.artTestMode') === '1'
-  } catch {
-    return false
-  }
-}
