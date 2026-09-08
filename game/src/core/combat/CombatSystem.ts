@@ -132,6 +132,15 @@ export class CombatSystem {
     return this.vitals.applyHealing(target, amount, reason, sourceId)
   }
 
+  /**
+   * Authoritative ward spend (R1 / AR-01): mutation belongs to the vitals
+   * owner; CombatSystem exposes the typed entry point so orchestrators do
+   * not write entity fields directly.
+   */
+  spendWard(target: CombatEntity, amount: number, reason: VitalsChangeReason = 'ward_spend', sourceId?: string) {
+    return this.vitals.spendWard(target, amount, reason, sourceId)
+  }
+
   resolveActionHit(
     source: CombatEntity,
     target: CombatEntity,
