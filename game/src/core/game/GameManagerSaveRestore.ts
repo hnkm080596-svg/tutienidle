@@ -266,12 +266,13 @@ export class GameManagerSaveRestore {
 
     const offlinePlayer = this.deps.getActivePlayer()
 
-    // R7 (AR-08) - decompose: restore processing state, re-supply live
-    // capacity (CHQ formula beats any stale saved value), settle the
-    // offline window under the shared cap concept, then deliver output
-    // through the SAME delivery/overflow path as the online tick.
-    this.deps.decomposeSystem.restore(save.decompose)
+    // R7 (AR-08) - decompose: re-supply live capacity FIRST (CHQ
+    // formula beats any stale saved value), THEN restore processing
+    // state so saved workers clamp against the real ceiling, settle
+    // the offline window under the shared cap concept, and deliver
+    // output through the SAME delivery/overflow path as the tick.
     this.deps.decomposeSystem.updateCapacity(offlinePlayer?.autoWorkerCapacity ?? 0)
+    this.deps.decomposeSystem.restore(save.decompose)
 
     if (offlinePlayer) {
       const elapsedOfflineSeconds = Math.max(

@@ -168,6 +168,13 @@ export class DecomposeSystem {
    * Restored workers clamp to the CURRENT capacity (a stale save must
    * not resurrect workers above the live CHQ ceiling). `undefined`
    * (old saves without the slice) keeps defaults.
+   *
+   * Repeat-application contract (A3 / QA-2026-09-08-R7-001): the cycle
+   * timer MERGES with the live state instead of rewinding it. A first
+   * restore into a fresh instance takes the saved deadline; restoring
+   * the SAME payload again into an instance that already settled that
+   * window keeps the advanced timer, so the offline settle cannot
+   * award twice.
    */
   restore(state: DecomposeSaveState | undefined): void {
     if (!state) {
@@ -179,8 +186,8 @@ export class DecomposeSystem {
       ageFilter: state.settings.ageFilter ?? 'all',
       workers: Math.min(Math.max(0, Math.floor(state.settings.workers ?? 0)), this.capacity),
     }
-    this.nextCycleAt = Math.max(0, Math.floor(state.nextCycleAt ?? 0))
-    this.started = Boolean(state.started)
+    this.nextCycleAt = Math.max(this.nextCycleAt, Math.max(0, Math.floor(state.nextCycleAt ?? 0)))
+    this.started = this.started || Boolean(state.started)
   }
 
   /**
