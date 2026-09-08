@@ -61,3 +61,7 @@ class MapTurnBuffRegistry implements TurnBuffRegistry {
 export const TURN_BUFF_REGISTRY: TurnBuffRegistry = new MapTurnBuffRegistry(
   LIVE_BUFFS.map(toTurnBuffDefinition),
 )
+
+// R4 (AR-19) — Canonical alias.
+export const BUFF_REGISTRY = TURN_BUFF_REGISTRY
+export type { TurnBuffRegistry as BuffRegistry } from '../../core/battle/turn/TurnBuffTypes'

@@ -146,7 +146,7 @@ describe('ArtifactSystem.updateArtifactActivation — acceptance §15.3', () => 
     // Player "bị stun" — playerBuffs có ccEffect stun — nhưng
     // updateArtifactActivation() KHÔNG được đọc field này ở đâu cả.
     battle.playerBuffs.add({
-      id: 'choang', sourceId: 'enemy_1', targetId: 'player', polarity: 'debuff', duration: 1, remainingTime: 1, stacks: 1, stackMode: 'refresh', continuousSeconds: 0, effects: [{ type: 'cc', ccEffect: 'stun' }],
+      id: 'choang', sourceId: 'enemy_1', targetId: 'player', polarity: 'debuff', duration: 1, remainingTurns: 1, remainingTime: 1, stacks: 1, stackMode: 'refresh', continuousTurns: 0, continuousSeconds: 0, effects: [{ type: 'cc', ccEffect: 'stun' }],
     })
     const deps = createDeps()
 

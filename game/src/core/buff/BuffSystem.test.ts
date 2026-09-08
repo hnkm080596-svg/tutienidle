@@ -54,9 +54,11 @@ function makeRuntimeBuff(overrides: Partial<Buff> = {}): Buff {
     targetId: 'target_1',
     polarity: 'debuff',
     duration: 5,
+    remainingTurns: 5,
     remainingTime: 5,
     stacks: 1,
     stackMode: 'refresh',
+    continuousTurns: 0,
     continuousSeconds: 0,
     effects: [],
     ...overrides,
@@ -370,7 +372,7 @@ describe('BuffSystem — Kiếm Tu armorIgnorePercentByRealm (2026-09-01 review 
     const withIgnoreEffect = pool.getFromSource('buff_ignore', 'source_1')!.effects[0] as Extract<Buff['effects'][number], { type: 'dot' }>
     const withoutIgnoreEffect = pool.getFromSource('buff_no_ignore', 'source_1')!.effects[0] as Extract<Buff['effects'][number], { type: 'dot' }>
 
-    expect(withIgnoreEffect.damagePerSecond).toBeGreaterThan(withoutIgnoreEffect.damagePerSecond)
+    expect(withIgnoreEffect.damagePerSecond!).toBeGreaterThan(withoutIgnoreEffect.damagePerSecond!)
   })
 })
 

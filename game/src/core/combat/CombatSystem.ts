@@ -56,6 +56,13 @@ const DOT_RESISTANCE_FLOOR = -1
  * bước không đổi kết quả cuối (phép nhân giao hoán) — chỉ thứ tự
  * SỰ KIỆN/emit mới theo đúng accuracy→dodge→block như yêu cầu.
  */
+export interface SurviveEffectsPolicy {
+  buffSystem: TurnBuffSystem
+  registry: TurnBuffRegistry
+  grantBuffId?: string
+  cleanseDebuffs?: boolean
+}
+
 export class CombatSystem {
   readonly vitals: EntityVitalsSystem
 
@@ -64,15 +71,13 @@ export class CombatSystem {
   // không bảo vệ (trận Độ Kiếp, trận không có PlayerData, hoặc không có
   // thiên phú). GameManager set/reset mỗi lần bắt đầu trận.
   //
-  // v4 (spec 2026-09-03 §4.1): surviveEffects mở rộng cho Bất Tử Th thể
-  // — khi guard cứu sống: tẩy mọi debuff trên player + áp Tử Sinh Ngộ.
-  // buffSystem/registry là pool + registry của PLAYER trong trận hiện
-  // tại (GameManager set từ battle.playerBuffs), optional để mọi session
-  // cũ/wiring ngoài trận không đổi hành vi.
+  // v4 (spec 2026-09-03 §4.1): surviveEffects mở rộng cho Bất Tử Thể
+  // — khi guard cứu sống: tẩy debuff trên player + áp buff sống sót (mặc định Tử Sinh Ngộ).
+  // R4 (AR-18): SurviveEffectsPolicy là cấu hình declarative, không hardcode 'tu_sinh_ngo'.
   private surviveLethalSession: {
     playerEntityId: string
     guard: SurviveLethalGuard
-    surviveEffects?: { buffSystem: TurnBuffSystem; registry: TurnBuffRegistry }
+    surviveEffects?: SurviveEffectsPolicy
   } | null = null
 
   // Trigger/Action rework Task 10 (2026-08-31 spec) — onKill firing.
@@ -98,11 +103,7 @@ export class CombatSystem {
     session: {
       playerEntityId: string
       guard: SurviveLethalGuard
-      // Phase A0 (2026-09-07) — full cutover to turn-based types: the
-      // legacy BuffSystem read a dead pool during real (turn-based)
-      // gameplay, so the cleanse/grant silently no-op'd. Same bug shape
-      // as the A2 passive-conversion fix.
-      surviveEffects?: { buffSystem: TurnBuffSystem; registry: TurnBuffRegistry }
+      surviveEffects?: SurviveEffectsPolicy
     } | null,
   ): void {
     this.surviveLethalSession = session
@@ -503,19 +504,22 @@ export class CombatSystem {
       const effects = surviveSession.surviveEffects
 
       if (effects) {
-        for (const buff of effects.buffSystem.getAll()) {
-          if (buff.polarity === 'debuff' && buff.targetId === entity.id) {
-            effects.buffSystem.remove(buff.id, buff.sourceId)
+        if (effects.cleanseDebuffs !== false) {
+          for (const buff of effects.buffSystem.getAll()) {
+            if (buff.polarity === 'debuff' && buff.targetId === entity.id) {
+              effects.buffSystem.remove(buff.id, buff.sourceId)
+            }
           }
         }
 
-        const tuSinhNgo = effects.registry.get('tu_sinh_ngo')
+        const grantId = effects.grantBuffId ?? 'tu_sinh_ngo'
+        const grantBuff = effects.registry.get(grantId)
 
-        if (tuSinhNgo) {
-          // Player vừa tự cứu mình — source của Tử Sinh Ngộ chính là
+        if (grantBuff) {
+          // Player vừa tự cứu mình — source của buff sống sót chính là
           // player (không phải kẻ đánh), để các nhánh clean-up theo
           // source không nhầm lẫn.
-          effects.buffSystem.apply(tuSinhNgo, entity, entity, effects.registry)
+          effects.buffSystem.apply(grantBuff, entity, entity, effects.registry)
         }
       }
 

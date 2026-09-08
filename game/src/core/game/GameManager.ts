@@ -2831,18 +2831,9 @@ export class GameManager {
       }
     }
 
-    // Task 9b: BuffSystem.update() now requires a real target:
-    // CombatEntity + combatSystem: CombatSystem (see BuffSystem.update()).
-    // No `Stats` naturally available in this per-tick scope (see
-    // resolvePersistentBuffEntity()'s note), so this resolves to the
-    // real in-battle entity when one exists, else the fully-populated
-    // neutral ghost.
-    this.buffSystem.update(
-      deltaSeconds,
-      this.resolvePersistentBuffEntity(),
-      this.combatSystem,
-      this.buffRegistry,
-    )
+    // R4 (AR-19): Persistent out-of-battle buffs (e.g. Kiếp Thương debuff)
+    // decrement duration by deltaSeconds via updateTime().
+    this.buffSystem.updateTime(deltaSeconds)
 
 
     // Turn-based conversion (2026-09-04) ï¿½ cooldownReduction retired;

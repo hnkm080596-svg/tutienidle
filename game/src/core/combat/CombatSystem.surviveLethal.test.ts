@@ -281,4 +281,48 @@ describe('CombatSystem — Bất Tử Th thể v4 (survive + cleanse + Tử Sinh
     expect(player.alive).toBe(false)
     expect(pool.getAllById('trung_doc')).toHaveLength(1)
   })
+
+  it('AR-18: applies custom grantBuffId and respects cleanseDebuffs policy', () => {
+    const customBuff: TurnBuffDefinition = {
+      id: 'custom_phoenix_buff',
+      name: 'Custom Phoenix',
+      polarity: 'buff',
+      duration: 5,
+      stackMode: 'refresh',
+      effects: [{ type: 'statModifier', stat: 'attack', percent: 0.5 }],
+    }
+    const registry: TurnBuffRegistry = {
+      get: (id) => {
+        if (id === 'trung_doc') return trungDoc
+        if (id === 'custom_phoenix_buff') return customBuff
+        throw new Error(`unknown fixture buff id: ${id}`)
+      },
+    }
+    const combat = new CombatSystem(new EventBus())
+    const pool = new TurnBuffPool()
+    const buffs = new TurnBuffSystem(pool)
+
+    const session = createSession(['bat_tu_the']) as any
+    session.surviveEffects = {
+      buffSystem: buffs,
+      registry,
+      grantBuffId: 'custom_phoenix_buff',
+      cleanseDebuffs: false,
+    }
+    combat.setSurviveLethalSession(session)
+
+    const player = createCombatant({ id: 'player', type: 'player', currentHp: 10, maxHp: 1000 })
+    const enemy = createCombatant({ id: 'enemy_1', currentHp: 100, maxHp: 100 })
+
+    buffs.apply(trungDoc, enemy, player, registry)
+
+    combat.applyDirectDamage(player, 9999, 'enemy_1')
+
+    expect(player.alive).toBe(true)
+    expect(player.currentHp).toBe(1)
+    // cleanseDebuffs: false -> debuff must NOT be cleansed
+    expect(pool.getAllById('trung_doc')).toHaveLength(1)
+    // custom buff applied instead of tu_sinh_ngo
+    expect(pool.getFromSource('custom_phoenix_buff', 'player')).toBeDefined()
+  })
 })
