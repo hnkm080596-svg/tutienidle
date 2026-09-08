@@ -206,20 +206,18 @@ export class DecomposeSystem {
       nowMs - PRODUCTION_OFFLINE_CAP_SECONDS * 1000,
     )
 
+    // Fast-forward deadlines that predate the settle window: they are
+    // forfeited, not replayed (timer still advances — a repeated call
+    // over the same window settles nothing twice).
+    while (this.nextCycleAt <= windowStartMs) {
+      this.nextCycleAt += this.cycleMs
+    }
+
     let settled = 0
 
+    // Bounded loop (5000 cycles = 41+ hours at 30s — far beyond the
+    // offline cap; the guard only protects against corrupt timers).
     while (this.nextCycleAt <= nowMs && settled < 5000) {
-      // Guard: cycles whose deadline predates the settle window are
-      // skipped (timer still advances — no double settle on replay).
-      while (this.nextCycleAt <= windowStartMs && settled < 5000) {
-        this.nextCycleAt += this.cycleMs
-        settled += 0
-      }
-
-      if (this.nextCycleAt > nowMs) {
-        break
-      }
-
       this.runOneCycle()
       settled += 1
       this.nextCycleAt += this.cycleMs
