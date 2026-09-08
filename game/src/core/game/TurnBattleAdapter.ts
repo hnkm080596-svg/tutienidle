@@ -38,6 +38,10 @@ export function toTurnBattleParticipant(
   const participant: TurnBattleParticipant = {
     id: entity.id,
     entity,
+    // R2 (AR-05): participant.speed starts as a copy of effective speed
+    // and is a READ-ONLY CACHE — the engine re-syncs it from
+    // entity.stats.speed at every recompute/pacing step. Never write it
+    // independently; effective combat stats own the speed value.
     speed: entity.stats.speed,
     priority,
     actionGauge: 0,

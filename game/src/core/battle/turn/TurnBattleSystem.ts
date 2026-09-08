@@ -505,6 +505,9 @@ export class TurnBattleSystem {
 
     for (const participant of allParticipants) {
       participant.alive = participant.entity.alive
+      // R2 (AR-05): sync the speed cache from its owner before pacing so
+      // buffs applied/expired during the previous turn take effect now.
+      participant.speed = participant.entity.stats.speed
     }
 
     const living = allParticipants.filter((actor) => actor.alive)
@@ -569,6 +572,9 @@ export class TurnBattleSystem {
 
     for (const participant of allParticipants) {
       participant.alive = participant.entity.alive
+      // R2 (AR-05): sync the speed cache from its owner before pacing so
+      // buffs applied/expired during the previous turn take effect now.
+      participant.speed = participant.entity.stats.speed
     }
 
     const resolved = resolveNextTurn(allParticipants)
@@ -738,9 +744,15 @@ export class TurnBattleSystem {
       tickCooldowns(actor)
 
       // Stats recompute (Completion Task 4): fold statModifier buffs đang
-      // active vào entity stats TRƯỚC khi chọn/hành động — luôn tính TỪ
-      // baseStats để không double-apply các recompute trước đó.
-      actor.entity.stats = recomputeEffectiveStats(actor.entity.baseStats ?? actor.entity.stats, actor.buffs)
+      // active vào entity stats TRƯỚC khi chọn/hành động. R2 (AR-02):
+      // baseStats giữ RESOLVED base (build từ player.finalStats / enemy
+      // normalization — attribute đã derive đúng 1 lần); effective stats
+      // chỉ fold buff tạm thời, KHÔNG derive lại attribute.
+      actor.entity.stats = recomputeEffectiveStats(actor.entity.baseStats, actor.buffs)
+
+      // R2 (AR-05): participant.speed is a read-only cache of effective
+      // combat speed — refresh it at every recompute (owner: entity.stats).
+      actor.speed = actor.entity.stats.speed
 
       action = forcedSkillSlot
         ? selectForcedAction(actor, forcedSkillSlot)

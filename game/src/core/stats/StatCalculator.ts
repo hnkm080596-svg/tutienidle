@@ -281,6 +281,18 @@ export function calculateStats(baseStats: Stats, modifiers: StatModifier[]): Sta
   return runPipeline(baseStats, [...modifiers, ...attributeModifiers])
 }
 
+/**
+ * Effective battle stats (R2 / AR-02): fold TEMPORARY battle modifiers
+ * (turn buffs) on top of an ALREADY-RESOLVED base. Runs the pipeline
+ * exactly once and never re-derives attribute bonuses — the input must
+ * be calculateStats() output (or an equivalent already-normalized stat
+ * snapshot). calculateStats() remains the only attribute-derivation
+ * owner; this function is the resolved→effective boundary.
+ */
+export function calculateEffectiveStats(resolvedBase: Stats, tempModifiers: StatModifier[]): Stats {
+  return runPipeline(resolvedBase, tempModifiers)
+}
+
 export function addStack(modifier: StatModifier, amount = 1) {
   const current = modifier.stacks ?? 0
 

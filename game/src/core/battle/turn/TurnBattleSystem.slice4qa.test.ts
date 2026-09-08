@@ -132,8 +132,11 @@ describe('Slice 4 adversarial (QA probes)', () => {
   })
 
   it('INV-S4-4: resource tick KHÔNG chạy cho actor khác — chỉ owner của pool', () => {
-    const player = createCombatant({ id: 'player', type: 'player' as never, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 } })
-    const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 } })
+    // R2 (AR-05): effective speed lives on entity.stats — the participant
+    // speed cache is synced from it. Fixtures must set speed there (the
+    // adapter copies entity.stats.speed into participant.speed).
+    const player = createCombatant({ id: 'player', type: 'player' as never, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0, speed: 1 } })
+    const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0, speed: 100 } })
 
     const playerP = makeParticipant('player', player, 1, 0)
     playerP.resources = {
