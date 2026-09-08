@@ -45,7 +45,7 @@ Exclusions: none (all changed paths task-owned). `unmappedPaths: GameManagerSave
 | `npx.cmd vitest run src/core/game/GameManager.r7qa.test.ts` | 1 PASS, 1 FAIL for the intended reason | INV-R7-1 double-award confirmed (pre-fix) |
 | Remediation (dev workflow): `DecomposeSystem.restore` timer merge + `GameManagerSaveRestore` capacity-before-restore ordering | `GameManager.r7qa.test.ts` 2/2 PASS | post-fix re-verification |
 | `npx.cmd vitest run` (production + save + GameManager scope, 18 files) | 200/200 PASS | post-fix |
-| Playwright browser (P14) | Not verified | isolated-worktree exception (`.agent-worktrees/`); deferred to integration checkout |
+| Playwright browser (P14) | Deferred - user waived live-browser pass (2026-09-08 integration session) | dev server booted clean on main checkout (0 console errors through auth screen, guest login, character-creation step 1) before the user skipped the rest; the DecomposeTab slider binding remains covered by jsdom unit tests (DecomposeTab.test.ts max-derivation case) |
 
 ## Findings
 

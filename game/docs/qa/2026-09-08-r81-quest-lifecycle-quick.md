@@ -37,7 +37,7 @@ Exclusions: none. `unmappedPaths` (useTribulation.ts, GameManagerSaveRestore.ts)
 | `npx.cmd vitest run src/core/game/GameManager.r81qa.test.ts` | 4/4 PASS | restore-boundary adversarial matrix |
 | grep `ensureActive\(` | only QuestManager def, QuestSystem.reconcile, 1 intentional test fixture | single activation path evidence |
 | `npm.cmd run build` | Not run this mode | quick mode; full build verified in R7 mission on adjacent shared code — run at integration if required |
-| Playwright browser (P14) | Not verified | isolated-worktree exception; quest panel visuals unchanged (same shape) — deferred to integration checkout |
+| Playwright browser (P14) | Deferred - user waived live-browser pass (2026-09-08 integration session) | app booted clean on main checkout during integration (0 console errors); quest panel consumes the unchanged read shape - jsdom component tests cover the panel |
 
 ## Findings
 
