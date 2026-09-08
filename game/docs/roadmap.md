@@ -920,6 +920,23 @@ Read Only
 
 Gameplay progress must not depend on opening QuestPanel.
 
+```text
+✅ DONE 2026-09-08 (branch r81-quest-lifecycle) — activation moved from
+   the getActiveQuests read to QuestSystem.reconcileActiveQuests
+   (lifecycle command, idempotent); triggers: restore (post-realm
+   finalization), daily-reset tick, realm-transition flag
+   (GameManager minor advance + Vue tribulation command until R8.2).
+   getActiveQuests is a pure read (same return shape; QuestPanel
+   unchanged). Preserved: counting-from-activation, no retroactive
+   credit, completedOnce permanence. TDD RED→GREEN; full suite
+   423 files / 2904 tests PASS + type-check PASS; QA quick PASS WITH
+   EVIDENCE incl. restore-boundary adversarial matrix
+   (game/docs/qa/2026-09-08-r81-quest-lifecycle-quick.md).
+   P14 deferred (isolated-worktree exception).
+```
+
+**Status: COMPLETE 2026-09-08**
+
 ---
 
 ## R8.2 — Major progression outcomes
@@ -1315,7 +1332,7 @@ R14 Architecture Enforcement
 | 6 | R5 — Combat Runtime / Presentation Boundary | AR-14, AR-20, AR-24, AR-29 | ✅ COMPLETE 2026-09-08 |
 | 7 | **R6 — Combat Character Art / Asset Contract** | **asset/presentation findings** | ⏭️ **NEXT** |
 | 8 | R7 — Worker Allocation / Decomposition | AR-07, AR-08 | ⏸ / may run independently |
-| 9 | R8 — Quest & Progression Authority | AR-09, AR-10, AR-13 | ⏸ |
+| 9 | R8 — Quest & Progression Authority | AR-09, AR-10, AR-13 | 🟡 R8.1 COMPLETE 2026-09-08; R8.2 ⏸ |
 | 10 | R9 — Equipment / Inventory Integrity | AR-21, AR-22, AR-23, AR-34 | ⏸ |
 | 11 | R10 — Save / Restore Boundary | AR-12, AR-15 | ⏸ |
 | 12 | R11 — UI Foundation Consolidation | AR-26, AR-27, AR-28 + domain UI | ⏸ |
