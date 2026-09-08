@@ -2750,12 +2750,23 @@ export class GameManager {
         this.activePlayer.realmId,
       )
 
+      // R7 (AR-08) shared worker pool — decompose claims its workers
+      // from the CHQ capacity FIRST; production receives the remainder.
+      // Capacity is re-supplied every tick so CHQ build/upgrade takes
+      // effect without a restart, and stale restored workers clamp down.
+      this.decomposeSystem.updateCapacity(this.activePlayer.autoWorkerCapacity ?? 0)
+      const decomposeWorkers = this.decomposeSystem.getSettings().workers
+      const productionCapacity = Math.max(
+        0,
+        (this.activePlayer.autoWorkerCapacity ?? 0) - decomposeWorkers,
+      )
+
       this.productionSystem.tickWorkers(
         Date.now(),
         this.materialBag,
         this.materialRegistry,
         this.activePlayer.realmId,
-        this.activePlayer.autoWorkerCapacity ?? 0,
+        productionCapacity,
         this.getWorkerAssignments(),
       )
 

@@ -7,9 +7,9 @@
 // gp123 6E (task C2): filter "chất" cũ (hoang..tien) đổi thành filter
 // TUỔI (decade..thuong_co) theo trục tuổi thống nhất.
 // Flexible rule (AGENTS.md): grid auto-fit, không hardcode px.
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useGameManager } from '@/composables/useGameState'
+import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import type { DecomposeSettings } from '@/core/production/DecomposeSystem'
 import {
   PROFESSION_GRADE_ORDER,
@@ -27,6 +27,23 @@ const gameManager = useGameManager()
 const system = gameManager.decomposeSystem
 
 const settingsMirror = ref<DecomposeSettings>(system.getSettings())
+
+// R7 (AR-08): slider max derives from the LIVE workforce capacity —
+// no hardcoded ceiling. The capacity snapshot re-syncs on every
+// state-version bump (CHQ build/upgrade mid-session) so the max stays
+// truthful; the system itself is plain TS, not reactive.
+const { stateVersion } = useStateVersion()
+
+const capacityMirror = ref(system.getCapacity())
+
+watch(
+  stateVersion,
+  () => {
+    settingsMirror.value = system.getSettings()
+    capacityMirror.value = system.getCapacity()
+  },
+  { immediate: true },
+)
 
 function applySetting(patch: Partial<DecomposeSettings>) {
   system.setSetting(patch)
@@ -94,7 +111,7 @@ function onWorkersInput(event: Event) {
         <input
           type="range"
           min="0"
-          :max="6"
+          :max="capacityMirror"
           step="1"
           :value="settingsMirror.workers"
           @input="onWorkersInput"
