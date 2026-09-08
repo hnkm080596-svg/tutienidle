@@ -55,6 +55,9 @@ export interface GameManagerSaveRestoreDeps {
   // Auto-farm Task 5 (2026-09-04) — offline catch-up closure (logic sống
   // trên GameManager, SaveRestore chỉ gọi lại — cùng pattern trên).
   settleAutoFarmOffline: (player: PlayerData, elapsedOfflineSeconds: number) => void
+  // R8.1 (AR-09) - quest lifecycle reconciliation command (logic lives
+  // on GameManager; restore triggers it at the right boundary).
+  reconcileQuestLifecycle: () => void
 }
 
 /**
@@ -300,6 +303,12 @@ export class GameManagerSaveRestore {
       Date.now(),
       getAlchemySuccessBonusPercentPoints(this.deps.getActivePlayer()?.selectedTalentIds ?? []),
     )
+
+    // R8.1 (AR-09) - activation is a lifecycle command, not a UI read:
+    // restore converges the active set to current eligibility BEFORE
+    // the first tick runs. Placed LAST so the restored player realm is
+    // final when unlock evaluation runs.
+    this.deps.reconcileQuestLifecycle()
 
     return this.deps.equipmentSystem.getModifiers()
   }

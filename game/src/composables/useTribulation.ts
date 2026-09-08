@@ -119,6 +119,11 @@ function resolveVictory(player: PlayerStore, gameManager: GameManager, active: A
   player.realmLevel = 1
   player.cultivation = 0
 
+  // R8.1 (AR-09) - realm transition may unlock quests; tell the
+  // lifecycle owner to reconcile on the next tick. Presentation issues
+  // the command; the domain stays the activation authority (A7).
+  gameManager.markQuestRealmTransition()
+
   // Task 17 (rework P5) — tháo toàn bộ trang bị NGAY sau khi đổi realm,
   // TRƯỚC mọi sync passive bên dưới — tránh kẹt đồ lệch phẩm mới (Task 16
   // gate chặn equip lệch phẩm nhưng không tự tháo đồ cũ). Slot state
