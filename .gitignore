@@ -55,6 +55,9 @@ opencode-gemini-auth/
 .gemini/
 fixed_skills_full.txt
 
+# Archived spec/plan docs (shipped work) — kept on disk for reference, untracked
+docs/archive/
+
 # Python tooling caches
 __pycache__/
 *.py[cod]
