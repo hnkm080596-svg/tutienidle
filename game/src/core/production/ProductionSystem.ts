@@ -30,6 +30,7 @@ import {
   rollWeightedIndex,
 } from './ProductionBalance'
 import { HERB_AGES } from './ProductionTypes'
+import { allocateWorkerSlots } from './WorkerAllocator'
 
 /** Một giao dịch settle đã xảy ra — dùng cho notification UI (§9.1). */
 export interface ProductionSettlementEvent {
@@ -314,29 +315,18 @@ export class ProductionSystem {
 
     const assignmentMap = assignments ?? new Map<string, number>()
 
-    // 1) Manual sites (thứ tự Map): min(assigned, capacity còn lại).
-    let remaining = Math.floor(capacity)
-    const manualSites: typeof activeStates = []
+    // R7 (AR-07): one allocation rule — the shared pure allocator.
+    // Manual sites first (min(assigned, remaining)); remainder
+    // round-robins UNASSIGNED sites; leftover capacity stays idle
+    // instead of crashing (no zero-eligible-site exception).
+    const slotsBySite = allocateWorkerSlots(
+      activeStates.map(state => state.siteId),
+      assignmentMap,
+      capacity,
+    )
 
     for (const state of activeStates) {
-      const assigned = assignmentMap.get(state.siteId)
-
-      if (assigned === undefined || remaining <= 0) {
-        continue
-      }
-
-      const slots = Math.min(Math.max(0, Math.floor(assigned)), remaining)
-
-      state.activeWorkerSlots = slots
-      remaining -= slots
-      manualSites.push(state)
-    }
-
-    // 2) Phần dư → round-robin cho sites auto không assignment.
-    const autoSites = activeStates.filter((state) => !assignmentMap.has(state.siteId))
-
-    for (let index = 0; index < remaining; index++) {
-      autoSites[index % autoSites.length]!.activeWorkerSlots++
+      state.activeWorkerSlots = slotsBySite.get(state.siteId) ?? 0
     }
 
     for (const state of activeStates) {
