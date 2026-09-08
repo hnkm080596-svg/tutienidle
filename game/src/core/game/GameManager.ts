@@ -13,7 +13,6 @@ import { grantRealmPassive } from '../realm/RealmPassiveSystem'
 import { getAlchemySuccessBonusPercentPoints, collectTalentEffects } from '../talent/TalentEffects'
 import { TALENT_PASSIVE_SKILLS, getTalentPassiveSkill } from '../../data/skill/TalentPassives'
 import { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
-import { DEFAULT_MAX_OFFLINE_SECONDS } from '../idle/GameClock'
 
 import { BuffPool } from '../buff/BuffPool'
 import { BuffSystem } from '../buff/BuffSystem'
@@ -117,15 +116,12 @@ import type { BuildingInstance } from '../building/BuildingInstance'
 
 import { EnemyManager } from '../enemy/EnemyManager'
 import { EnemySystem } from '../enemy/EnemySystem'
-import { enemyToCombatEntity } from '../enemy/Enemy'
 import type { Enemy } from '../enemy/Enemy'
 import type { NotificationEvent } from '../notification/NotificationEvent'
 
 import { StageManager } from '../stage/StageManager'
 import { StageSystem } from '../stage/StageSystem'
 import type { Stage } from '../stage/Stage'
-import { effectiveTotalEnemyCount } from '../stage/EffectiveEnemyCount'
-import { effectiveWaves } from '../stage/EffectiveWaves'
 import { ZoneRegistry } from '../stage/ZoneRegistry'
 import type { Zone } from '../stage/Zone'
 
@@ -139,6 +135,7 @@ import { GameManagerBuildingOps } from './GameManagerBuildingOps'
 import { GameManagerAlchemyOps } from './GameManagerAlchemyOps'
 import { GameManagerQuestOps } from './GameManagerQuestOps'
 import { GameManagerSaveRestore } from './GameManagerSaveRestore'
+import { GameManagerTurnBattleOps } from './GameManagerTurnBattleOps'
 import { HiddenBeastSystem } from './HiddenBeastSystem'
 import { TribulationDirector, type ActiveTribulationState } from '../tribulation/TribulationDirector'
 
@@ -154,6 +151,11 @@ import type { QuestProgress } from '../quest/QuestProgress'
 export { TRIBULATION_COOLDOWN_SECONDS } from '../tribulation/TribulationDirector'
 export type { ActiveTribulationState } from '../tribulation/TribulationDirector'
 
+// Turn-based pacing constants moved into GameManagerTurnBattleOps (C2 split)
+// - re-exported for existing import sites (TurnActionPresentationEvents,
+// intro-phase/action-playback tests).
+export { COUNTDOWN_TOTAL_TICKS, INTRO_TOTAL_TICKS } from './GameManagerTurnBattleOps'
+
 
 import { RewardSystem } from '../reward/RewardSystem'
 import type { RewardReceiver } from '../reward/RewardSystem'
@@ -161,8 +163,6 @@ import type { Reward } from '../reward/Reward'
 import type { BattleRewardSummary } from '../reward/BattleRewardSummary'
 
 import { playerToCombatEntity, createPlayerRewardReceiver } from '../player/Player'
-import { getKiemYPermanent } from '../player/KiemYSystem'
-import { initKiemTuBattleResources } from '../battle/KiemTuResourceSystem'
 import { HERO_LANE_INDEX } from '../battle/BattleLane'
 import type { PlayerData, KiemTuRoute } from '../player/Player'
 import type { MainStatKey } from '../stats/StatTypes'
@@ -172,7 +172,7 @@ import { BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
 import { CHAIN_SKILL_IDS } from '../../data/skill/Skills'
 import type { ElementType } from '../element/ElementType'
 import { getTechniqueInsightTotalRequired, getTechniqueTier } from '../technique/TechniqueTier'
-import { getSkillLoadoutSlotCount, KIEM_TRAN_SLOT_INDEX } from '../skill/SkillLoadoutSlots'
+import { getSkillLoadoutSlotCount } from '../skill/SkillLoadoutSlots'
 import { CULTIVATION_PATH_KITS } from '../player/CultivationPathKit'
 import type { CultivationPathId } from '../player/CultivationPathKit'
 import {
@@ -189,24 +189,14 @@ import type { GameSave } from '../../services/save/SaveSystem'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { Stats } from '../stats/StatBlock'
 import { createBaseStats } from '../stats/StatBlock'
-import { TurnBattleSystem, type TurnBattle } from '../battle/turn/TurnBattleSystem'
-import { resolveEnemySpawnPosition } from '../battle/EnemySpawnPlacement'
+import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import type { TurnSkillDefinition, TurnSkillSlotRole } from '../battle/turn/TurnSkillAction'
-import { buildTurnSkillPresentation, type TurnSkillPresentationEntry } from '../combat/CombatSkillPresentation'
-import { emitTurnBattleEntitySnapshot } from '../battle/turn/TurnActionPresentationEvents'
-import { CombatAnimationRuntime } from '../battle/turn/CombatAnimationRuntime'
-import { toTurnBattleParticipant } from './TurnBattleAdapter'
-import { DEFAULT_PARTY_FORMATION } from './PartyFormation'
-import { resolvePartyFormation } from './FormationPlacement'
-import { companionToCombatEntity } from '../companion/CompanionCombat'
-import { COMPANIONS } from '../../data/companion/Companions'
-import { TRAN_PHAP_FORMATIONS } from '../../data/formation/TranPhap'
+import type { TurnSkillPresentationEntry } from '../combat/CombatSkillPresentation'
 import { TURN_BUFF_REGISTRY } from '../../data/buff/TurnBuffRegistry'
 import { TurnBuffSystem } from '../battle/turn/TurnBuffSystem'
-import { TurnReactionManager } from '../battle/turn/TurnReactionManager'
 import type { TurnBuffDefinition } from '../battle/turn/TurnBuffTypes'
+import { PHAP_TU_REACTION_SPECIAL, PHAP_TU_REACTION_ULTIMATE } from '../../data/skill/TurnReactionPathSkills'
 import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
-import { PHAP_TU_REACTION_SPECIAL, PHAP_TU_REACTION_ULTIMATE, REACTION_PATH_POOL } from '../../data/skill/TurnReactionPathSkills'
 import { toTurnSkillDefinition } from './SkillToTurnSkillConverter'
 
 /**
@@ -243,40 +233,13 @@ import { toTurnSkillDefinition } from './SkillToTurnSkillConverter'
 // nhịp thật. Chia deltaSeconds thành các bước cố định nhỏ khi gọi các
 // hàm phụ thuộc timer-đếm-ngược-rồi-reset này sửa đúng gốc vấn đề mà
 // không cần viết lại vòng lặp catch-up riêng cho từng timer.
-const BATTLE_FIXED_STEP_SECONDS = 0.1
+// Turn-Based Wave Redesign constants (COUNTDOWN_TOTAL_TICKS/INTRO_TOTAL_TICKS)
+// now live in GameManagerTurnBattleOps - re-exported above for existing
+// imports (TurnActionPresentationEvents, intro-phase tests). The battle
+// fixed-step pacing constants moved with the driving loop.
 
-// Giới hạn tổng thời gian được "đuổi kịp" cho mỗi lần update() — tránh
-// hàng ngàn bước đồng bộ khoá UI sau khi máy ngủ/tab bị treo rất lâu.
-// Phần deltaSeconds vượt ngưỡng này bị bỏ qua cho riêng nhánh combat/
-// stage (coi như trận đấu "tạm dừng" trong khoảng đó) — các hệ thống
-// khác (buff/cooldown/passive/formation ở update() bên dưới) vẫn nhận
-// ĐỦ deltaSeconds thật vì chúng vốn đã an toàn với delta lớn.
-const BATTLE_MAX_CATCHUP_SECONDS = 30
-
-// Pháp Tu skill tree redesign (2026-08-21) — "Starter Skill KHÔNG nằm
-// bên ngoài skill tree, nó CHÍNH LÀ root node của skill tree hành đó"
-// (user spec). Không còn learnSkill() gọi trực tiếp ở đây nữa (đó là
-// "auto-grant system riêng" mà spec cấm) — chooseCultivationPath() giờ
-// mua node gốc của Hỏa (PHAP_TU_STARTER_NODE_ID, cost 0, xem
-// data/progression/PhapTuNodes.ts's FIRE_LINH_NGO) qua ĐÚNG con đường
-// purchaseNode() dùng chung với 4 hành còn lại (Thủy/Mộc/Thổ/Kim tốn 2
-// Skill Point, người chơi tự mua node gốc của hành đó). Chỉ Hỏa được
-// tự động mua sẵn (cost 0 = luôn đủ điểm); phần "trang bị vào slot 0"
-// vẫn giữ riêng (equip khác học, xem SkillSystem.ts) vì Node Tree
-// không mô tả khái niệm loadout slot.
 const PHAP_TU_STARTER_NODE_ID = 'hoa_linh_ngo'
 const PHAP_TU_STARTER_SKILL_ID = 'hoa_cau_thuat'
-
-// Turn-Based Wave Redesign (2026-09-06) — shared giữa buildTurnBattle()
-// (dùng để khởi tạo countdownTurnsRemaining) và
-// TurnActionPresentationEvents.emitTurnBattleEntitySnapshot() (dùng để
-// tính countdownProgress) — tách hằng số ra để 2 nơi không bao giờ lệch.
-export const COUNTDOWN_TOTAL_TICKS = 30
-
-// Intro/transition phase (2026-09-07 plan Task 4) - 20 pacing ticks = 2s
-// curtain + zone/stage reveal BEFORE the 3s countdown. Shared with
-// GameManager.introPhase.test.ts; do not inline elsewhere.
-export const INTRO_TOTAL_TICKS = 20
 
 export class GameManager {
   readonly eventBus = new EventBus()
@@ -319,7 +282,7 @@ export class GameManager {
     // real gameplay, so this previously never fired (silent gap, see
     // docs/superpowers/specs/2026-09-07-phase-a2-buff-content-wiring-design.md).
     (buffId) => {
-      const player = this.turnBattle?.players[0]
+      const player = this.turnBattleOps.getTurnBattle()?.players[0]
 
       if (!player) {
         return
@@ -343,7 +306,7 @@ export class GameManager {
     // battle; undefined outside battle (passiveCondition treats this as
     // pass-through). Rewired alongside buffApplier, same reason.
     () => {
-      const player = this.turnBattle?.players[0]
+      const player = this.turnBattleOps.getTurnBattle()?.players[0]
 
       if (!player || player.entity.maxHp <= 0) {
         return undefined
@@ -403,13 +366,12 @@ export class GameManager {
   // TURN-BASED COMBAT — engine duy nhất điều khiển combat (C1 2026-09-08:
   // legacy real-time BattleSystem + mirror Battle object đã XOÁ cùng
   // battle/legacy/; mọi consumer đọc getBattle() → TurnBattle cast).
-
-  private turnBattleSystem = new TurnBattleSystem(this.combatSystem)
-
-  private turnBattle: TurnBattle | null = null
-
-  /** Template enemy gần nhất đã spawn (fallback cho spawnEnemy factory). */
-  private lastStageEnemyTemplate: Enemy | null = null
+  // C2 (2026-09-08): runtime lifecycle (TurnBattle construction, fixed-step
+  // driving loop, rewards, auto-farm) moved verbatim into
+  // GameManagerTurnBattleOps - the methods below are thin delegates keeping
+  // the public API unchanged for Vue/tests (same pattern as the earlier
+  // Equipment/Building/Alchemy/Quest/Save Ops splits).
+  private readonly turnBattleOps: GameManagerTurnBattleOps
 
   /**
    * Snapshot c?p cï¿½c node on-hit Ki?m Tr?n dï¿½ mua (d?c t?
@@ -709,6 +671,32 @@ export class GameManager {
       getWorkerAssignments: () => this.getWorkerAssignments(),
       settleAutoFarmOffline: (player, elapsedSeconds) =>
         this.settleAutoFarmOffline(player, elapsedSeconds),
+    })
+
+    // Turn-battle runtime ops (C2 split, 2026-09-08) - owns the TurnBattle
+    // lifecycle/fixed-step loop/rewards/auto-farm. Initialized LAST because
+    // it reads this.battleLoot/stageWaves/saveRestore-adjacent state and the
+    // getActivePlayer() closure below references this.activePlayer, which is
+    // assigned later (same deferred-read pattern as the other Ops objects).
+    this.turnBattleOps = new GameManagerTurnBattleOps({
+      eventBus: this.eventBus,
+      combatSystem: this.combatSystem,
+      battleLoot: this.battleLoot,
+      stageWaves: this.stageWaves,
+      stageManager: this.stageManager,
+      enemySystem: this.enemySystem,
+      enemyManager: this.enemyManager,
+      enemyTemplates: this.enemyTemplates,
+      stageTemplates: this.stageTemplates,
+      surviveLethalGuard: this.surviveLethalGuard,
+      getActivePlayer: () => this.activePlayer,
+      getSkillRuntimeStats: (player) => this.getSkillRuntimeStats(player),
+      getSkillLevels: () =>
+        Object.fromEntries(this.skillManager.getAll().map((skill) => [skill.id, skill.level])),
+      resetPassiveStacks: () => this.passiveSystem.resetStacks(),
+      buildPlayerRewardReceiver: (player) => this.buildPlayerRewardReceiver(player),
+      getPhapTuThuanElement: () => this.getPhapTuThuanElement(),
+      resolvePlayerSpecialUltimate: (player) => this.resolvePlayerSpecialUltimate(player),
     })
   }
 
@@ -2227,48 +2215,17 @@ export class GameManager {
   }
 
   // =========================
-  // BATTLE
+  // BATTLE - thin delegates to GameManagerTurnBattleOps (C2 split). All
+  // real logic (TurnBattle construction, fixed-step driving, rewards,
+  // auto-farm) lives in GameManagerTurnBattleOps.ts verbatim.
   // =========================
 
   spawnEnemy(template: Enemy): Enemy {
-    return this.enemySystem.spawn(template)
+    return this.turnBattleOps.spawnEnemy(template)
   }
 
   startBattle(player: CombatEntity, enemy: Enemy) {
-    const enemyEntity = enemyToCombatEntity(this.enemySystem.spawn(enemy))
-
-    // Spawn placement (plan §5.1) — row/column do resolver roll trong
-    // queueEnemySpawn (Boss luôn row 4); không còn gán lane ngoài.
-
-    // Reset mặc định — startBattleWithPlayer() sẽ set lại session
-    // (receiver/player) thật ngay sau lệnh gọi này. Battle bắt đầu qua
-    // startBattle() trực tiếp (không phải PlayerData) thì không có ai
-    // nhận thưởng hay đồ rơi (equipment cần player để roll chỉ số chính).
-    // Stack passive (vd Linh Khí Cảm Ứng +công kích/đòn trúng) là
-    // buff TRONG TRẬN — reset về 0 mỗi khi 1 trận mới bắt đầu, kể cả
-    // khi Auto tự nối trận ngay lập tức (theo yêu cầu, khác thiết kế
-    // permanent progression ban đầu).
-    this.battleLoot.beginBattle()
-    this.passiveSystem.resetStacks()
-
-    // Bất Tử Thể — reset mặc định về KHÔNG bảo vệ; startBattleWithPlayer()
-    // sẽ set lại session thật ngay sau (cùng pattern battleLoot.setSession()).
-    // Trận startBattle() trực tiếp (không PlayerData) thì không có thiên phú.
-    this.combatSystem.setSurviveLethalSession(null)
-
-    // C1 (2026-09-08) — legacy mirror Battle seed (battleSystem.start())
-    // removed with battle/legacy/; TurnBattle below is the only battle.
-    this.turnBattle = this.buildTurnBattle(player, [enemyEntity])
-
-    // C1 parity — initKiemTuBattleResources used to run inside the legacy
-    // battleSystem.start() (initChannelState's resource half). Keep Kiếm
-    // bar parity: route KT resets Kiếm Thế; route BK seeds Kiếm Ý tạm with
-    // the permanent amount.
-    initKiemTuBattleResources(
-      this.turnBattle.players[0]!.entity,
-      this.activePlayer?.kiemTuRoute,
-      this.activePlayer ? getKiemYPermanent(this.activePlayer.bossKillCount) : 0,
-    )
+    this.turnBattleOps.startBattle(player, enemy)
   }
 
   /**
@@ -2339,283 +2296,67 @@ export class GameManager {
     }
   }
 
-  // Bug fix (2026-09-06, user report) — quái spawn giữa trận (wave thứ 2 trở
-  // đi, factory truyền cho TurnBattleSystem ở startTurnBattle()/restart cycle)
-  // KHÔNG hề gọi resolveEnemySpawnPosition() như buildTurnBattle() làm cho
-  // quái ĐẦU TIÊN, nên entity giữ nguyên x:0/row:0 mặc định của
-  // enemyToCombatEntity() — luôn dính góc trên-trái thay vì random trong
-  // ENEMY_SIDE_REGION. Helper dùng chung để 2 closure spawn giữa trận
-  // (startTurnBattle + restartTurnBattleCycle) không lệch nhau lần nữa.
-  private placeSpawnedEnemy(entity: CombatEntity, occupiedSlots?: Set<string>): CombatEntity {
-    const position = resolveEnemySpawnPosition(
-      {
-        isBoss: entity.isBoss ?? false,
-        random: Math.random,
-      },
-      undefined,
-      occupiedSlots,
-    )
-
-    entity.row = position.row
-    entity.x = position.column
-
-    return entity
-  }
-
-  private buildTurnBattle(playerEntity: CombatEntity, enemyEntities: CombatEntity[]): TurnBattle {
-    const playerPath = this.activePlayer
-
-    // Party placement (Trận Pháp spec §6-7, 2026-09-05) — vị trí party đọc
-    // từ player.formationLoadout THẬT qua resolvePartyFormation() (Task 18),
-    // fallback về DEFAULT_PARTY_FORMATION khi player chưa cấu hình trận
-    // pháp nào (chưa có playerPath, hoặc formationLoadout === null — xử lý
-    // ngay trong resolvePartyFormation()).
-    const formation = playerPath ? resolvePartyFormation(playerPath) : DEFAULT_PARTY_FORMATION
-
-    const playerSlot = formation.find((slot) => slot.combatantId === 'player')
-
-    if (playerSlot) {
-      playerEntity.row = playerSlot.row
-      playerEntity.x = playerSlot.column
-    }
-
-    const playerParticipant = toTurnBattleParticipant(
-      playerEntity,
-      0,
-      playerPath ? this.resolvePlayerBasicAttack(playerPath) : GENERIC_PHYSICAL_BASIC,
-      playerPath?.cultivationPath,
-      // Phase A3 — Pháp Tu special/ultimate resolved via the Skill
-      // converter (fixes the buildId lookup bug: 'phap_tu' never matched
-      // the static map). Kiếm Tu returns {} here and keeps its static
-      // buildId-based slots.
-      playerPath ? this.resolvePlayerSpecialUltimate(playerPath) : undefined,
-    )
-
-    // Companion Roster (2026-09-05) — mỗi companion trong player.companions
-    // được dựng lại thành CombatEntity/TurnBattleParticipant TƯƠI MỚI mỗi
-    // trận (companionToCombatEntity, Task 12), đặt tại đúng ô mà
-    // formationLoadout đã gán cho combatantId của nó. Companion thiếu
-    // definition (roster đã đổi) hoặc thiếu slot (chưa gán ô trong trận
-    // pháp hiện tại) bị bỏ qua thay vì làm crash cả trận.
-    const companionParticipants = (playerPath?.companions ?? []).flatMap((instance, index) => {
-      const definition = COMPANIONS.find((candidate) => candidate.id === instance.definitionId)
-      const slot = formation.find((entry) => entry.combatantId === instance.definitionId)
-
-      if (!definition || !slot) {
-        return []
-      }
-
-      const entity = companionToCombatEntity(instance, definition)
-
-      entity.row = slot.row
-      entity.x = slot.column
-
-      return [toTurnBattleParticipant(entity, index + 100, definition.basic)]
-    })
-
-    // Trận Pháp buff (2026-09-05) — trận pháp đang active áp MỘT buff đồng
-    // nhất cho toàn bộ party (player + companion) ngay khi trận bắt đầu.
-    // Dùng thẳng TURN_BUFF_REGISTRY thật (không phải field riêng trên
-    // GameManager) — registry này cũng chính là registry truyền vào cả 2
-    // nơi khởi tạo TurnBattleSystem bên dưới, nên buff áp ở đây tương thích
-    // với convertsToId/stack logic mà TurnBattleSystem xử lý trong trận.
-    if (playerPath?.formationLoadout) {
-      const formationDefinition = TRAN_PHAP_FORMATIONS.find(
-        (candidate) => candidate.id === playerPath.formationLoadout!.formationId,
-      )
-
-      if (formationDefinition) {
-        // Content Trận Pháp có thể tham chiếu buff id chưa tồn tại (gõ sai
-        // definitionId, hoặc buff chưa kịp thêm vào buffs.ts) —
-        // TURN_BUFF_REGISTRY.get() throw trong trường hợp đó. Bắt lỗi và bỏ
-        // qua buff (không áp gì cả) thay vì để cả trận đấu crash — cùng
-        // tinh thần "skip gracefully" với companion resolution ở trên
-        // (review Task 19 phát hiện).
-        let buffDefinition: TurnBuffDefinition | undefined
-
-        try {
-          buffDefinition = TURN_BUFF_REGISTRY.get(formationDefinition.buff.definitionId)
-        } catch {
-          buffDefinition = undefined
-        }
-
-        if (buffDefinition) {
-          for (const participant of [playerParticipant, ...companionParticipants]) {
-            new TurnBuffSystem(participant.buffs).apply(
-              buffDefinition,
-              participant.entity,
-              participant.entity,
-              TURN_BUFF_REGISTRY,
-            )
-          }
-        }
-      }
-    }
-
-    // Spawn placement (Combat Art Pipeline §6/§7, 2026-09-05) — vị trí spawn
-    // đứng yên tại resolve, không di chuyển. Tái dùng đúng
-    // resolveEnemySpawnPosition() của hệ sống: quái giới hạn trong
-    // ENEMY_SIDE_REGION, Boss LUÔN ở trung tâm vùng địch (center), quái
-    // thường random đều trong vùng.
-    const enemyParticipants = enemyEntities.map((enemyEntity, index) => {
-      const position = resolveEnemySpawnPosition({
-        isBoss: enemyEntity.isBoss ?? false,
-        random: Math.random,
-      })
-
-      enemyEntity.row = position.row
-      enemyEntity.x = position.column
-
-      return toTurnBattleParticipant(enemyEntity, index + 1, GENERIC_PHYSICAL_BASIC)
-    })
-
-    return {
-      players: [playerParticipant, ...companionParticipants],
-      enemies: enemyParticipants,
-      // Intro/transition phase (2026-09-07 plan Task 4) - curtain +
-      // zone/stage reveal before the 3-2-1 countdown. 20 ticks = 2s.
-      state: 'intro',
-      introTurnsRemaining: INTRO_TOTAL_TICKS,
-      // 3s countdown hết số → 30 pacing ticks (BATTLE_FIXED_STEP 0.1s).
-      countdownTurnsRemaining: COUNTDOWN_TOTAL_TICKS,
-      totalTurnsElapsed: 0,
-    }
-  }
-
   /** Tr?ng thï¿½i turn-based hi?n t?i ï¿½ consumer n?i b? flip d?n sang dï¿½y. */
-  /**
-   * Auto-repeat cycle (Completion Task 8): dựng TurnBattle mới sau victory
-   * khi repeatContinuously bật — giữ player participant (HP/resource giữ
-   * nguyên như hệ sống restartCycle), enemies mới qua spawnEnemy factory.
-   */
-  private restartTurnBattleCycle() {
-    const previous = this.turnBattle
-
-    if (!previous || !this.activeStageForTurnBattle) {
-      return
-    }
-
-    const stageRef = this.activeStageForTurnBattle
-
-    this.turnBattleRewardsGranted.clear()
-    this.turnBattleEndEmitted = false
-    this.combatAnimationRuntime.resetPendingState()
-
-    this.turnBattle = {
-      players: previous.players,
-      enemies: [],
-      // Auto-repeat cycle giữa stage KHÔNG countdown lại (countdown chỉ ở
-      // đầu trận/bắt đầu stage — hệ sống restartCycle giữ fighting ngay).
-      state: 'fighting',
-      totalTurnsElapsed: 0,
-      wave: {
-        totalEnemyCount: effectiveTotalEnemyCount(stageRef),
-        spawnedCount: 0,
-        waves: effectiveWaves(stageRef),
-        waveIndex: 0,
-        pendingEnemySpawns: [],
-      },
-    }
-
-    this.turnBattleSystem = new TurnBattleSystem(
-      this.combatSystem,
-      10_000,
-      TURN_BUFF_REGISTRY,
-      (occupiedSlots?: Set<string>) => {
-        const isFinalSpawn = (this.turnBattle?.wave?.spawnedCount ?? 0) + 1 >= effectiveTotalEnemyCount(stageRef)
-        const template =
-          this.stageWaves.pickEnemyForTurnSpawn(stageRef, isFinalSpawn) ??
-          this.lastStageEnemyTemplate
-
-        if (!template) {
-          throw new Error(`TurnBattle spawnEnemy: no template available for stage ${stageRef.id}`)
-        }
-
-        this.lastStageEnemyTemplate = template
-
-        return toTurnBattleParticipant(
-          this.placeSpawnedEnemy(enemyToCombatEntity(this.enemySystem.spawn(template)), occupiedSlots),
-          this.turnBattle?.enemies.length ?? 0,
-          GENERIC_PHYSICAL_BASIC,
-        )
-      },
-      REACTION_PATH_POOL, // Phase A4 — marker special's 2-pick pool now live
-      new TurnReactionManager(this.eventBus),
-    )
-  }
-
   getTurnBattle(): TurnBattle | null {
-    return this.turnBattle
+    return this.turnBattleOps.getTurnBattle()
   }
 
   // --- Combat Runtime Separation (Task 1, 2026-09-07, AGENTS.md P17) -------
-  // Presentation-ack timing (manual-mode pause, PresentationGate, the
-  // 5-phase ready/cast/impact/complete state machine) now lives in
-  // CombatAnimationRuntime — see game/src/core/battle/turn/
-  // CombatAnimationRuntime.ts. GameManager keeps only thin forwarders below
-  // so the public contract CombatScene.ts relies on is unchanged.
-
-  private readonly combatAnimationRuntime = new CombatAnimationRuntime({
-    // Live getter — this.turnBattleSystem is REASSIGNED wholesale by
-    // restartTurnBattleCycle()/startStage() (fresh instance w/ buff
-    // registry + spawnEnemy factory); capturing it by value here would
-    // freeze the runtime onto the original registry-less instance forever.
-    getTurnBattleSystem: () => this.turnBattleSystem,
-    eventBus: this.eventBus,
-    getBattle: () => this.turnBattle,
-    syncLegacyBattleState: () => {},
-  })
+  // Presentation-ack timing state machine lives in CombatAnimationRuntime
+  // (owned by GameManagerTurnBattleOps since the C2 split). GameManager keeps
+  // only thin forwarders below so the public contract CombatScene.ts relies
+  // on is unchanged.
 
   /** Bật/tắt manual mode. Tắt giữa lúc đang chờ choice → hủy pause, engine tự chạy tiếp. */
   setBattleManualMode(enabled: boolean): void {
-    this.combatAnimationRuntime.setBattleManualMode(enabled)
+    this.turnBattleOps.setBattleManualMode(enabled)
   }
 
   isBattleManualMode(): boolean {
-    return this.combatAnimationRuntime.isBattleManualMode()
+    return this.turnBattleOps.isBattleManualMode()
   }
 
   /** Đang pause chờ player chọn skill cho lượt của chính mình? */
   isAwaitingManualTurnChoice(): boolean {
-    return this.combatAnimationRuntime.isAwaitingManualTurnChoice()
+    return this.turnBattleOps.isAwaitingManualTurnChoice()
   }
 
   /** Called once at real-app boot ONLY (App.vue) — never from test fixtures. */
   expectPresentationLayer(): void {
-    this.combatAnimationRuntime.expectPresentationLayer()
+    this.turnBattleOps.expectPresentationLayer()
   }
 
   /** True while the very first Phaser boot hasn't finished mounting CombatScene yet. */
   isAwaitingPresentationLayer(): boolean {
-    return this.combatAnimationRuntime.isAwaitingPresentationLayer()
+    return this.turnBattleOps.isAwaitingPresentationLayer()
   }
 
   /** Test/UI đọc token hiện tại của phase đang chờ (null nếu không pending). */
   getPendingPlaybackToken(): string | null {
-    return this.combatAnimationRuntime.getPendingPlaybackToken()
+    return this.turnBattleOps.getPendingPlaybackToken()
   }
 
   setPresentationActive(active: boolean): void {
-    this.combatAnimationRuntime.setPresentationActive(active)
+    this.turnBattleOps.setPresentationActive(active)
   }
 
   isActionPlaybackWaiting(): boolean {
-    return this.combatAnimationRuntime.isActionPlaybackWaiting()
+    return this.turnBattleOps.isActionPlaybackWaiting()
   }
 
   /** Phaser gọi khi ready flourish xong → declare action, phát 'attack'. */
   acknowledgeTurnReady(token?: string): void {
-    this.combatAnimationRuntime.acknowledgeTurnReady(token)
+    this.turnBattleOps.acknowledgeTurnReady(token)
   }
 
   /** Phaser gọi tại impact frame (lunge tween xong) → áp damage, phát VFX. */
   acknowledgeActionImpact(token?: string): void {
-    this.combatAnimationRuntime.acknowledgeActionImpact(token)
+    this.turnBattleOps.acknowledgeActionImpact(token)
   }
 
   /** Phaser gọi khi VFX tween xong → turn cleanup, phát standby tail. */
   acknowledgeActionComplete(token?: string): void {
-    this.combatAnimationRuntime.acknowledgeActionComplete(token)
+    this.turnBattleOps.acknowledgeActionComplete(token)
   }
 
   /**
@@ -2623,7 +2364,7 @@ export class GameManager {
    * (no-op an toàn — choice bị bỏ, không crash).
    */
   submitTurnChoice(role: TurnSkillSlotRole): boolean {
-    return this.combatAnimationRuntime.submitTurnChoice(role)
+    return this.turnBattleOps.submitTurnChoice(role)
   }
 
   /**
@@ -2631,7 +2372,7 @@ export class GameManager {
    * tại — party nhiều người là redesign tương lai), null khi không pause.
    */
   consumeAwaitedActorId(): string | null {
-    return this.combatAnimationRuntime.getAwaitedManualActor()?.id ?? null
+    return this.turnBattleOps.consumeAwaitedActorId()
   }
 
   /**
@@ -2648,11 +2389,7 @@ export class GameManager {
     special: TurnSkillPresentationEntry
     ultimate: TurnSkillPresentationEntry
   } {
-    return buildTurnSkillPresentation(
-      battle,
-      isPlayerTurnPaused,
-      isPlayerTurnPaused ? (this.combatAnimationRuntime.getAwaitedManualActor() ?? undefined) : undefined,
-    )
+    return this.turnBattleOps.buildTurnSkillPresentation(battle, isPlayerTurnPaused)
   }
 
   getBattleRewardSummary(): BattleRewardSummary {
@@ -2667,55 +2404,7 @@ export class GameManager {
    * tránh 2 nơi tự gọi calculateStats() khác nhau.
    */
   startBattleWithPlayer(player: PlayerData, playerStats: Stats, enemy: Enemy) {
-    // DESIGN: mọi chỉ số combat, gồm skill runtime stats, được snapshot lúc
-    // bắt đầu trận. Mua node/đổi trang bị/loadout giữa trận chỉ có hiệu lực từ
-    // trận kế tiếp; không đụng tới CombatEntity đang chiến đấu.
-    //
-    // Runtime authority (2026-08-24, plan §5.4): `playerStats` là snapshot
-    // TĨNH (getAggregatedModifiers chỉ trả static — runtime không nằm ở
-    // đó); timed effect + socket modifier chảy vào combat qua provider
-    // MỖI TICK (updateStatsFromModifiers) → effect hết hạn giữa trận tự
-    // trở về baseline, không double-apply, không đóng băng trong baseStats.
-    const skillLevels = Object.fromEntries(
-      this.skillManager.getAll().map((skill) => [skill.id, skill.level]),
-    )
-    const playerEntity = playerToCombatEntity(
-      player,
-      playerStats,
-      this.getSkillRuntimeStats(player),
-      skillLevels,
-    )
-
-    this.startBattle(playerEntity, enemy)
-
-    this.battleLoot.setSession(this.buildPlayerRewardReceiver(player), player)
-
-    // Bất Tử Thể (talent-direction-choice-plan §6) — reset lượt sống sót
-    // theo thiên phú của player mỗi trận MỚI rồi gắn session cho
-    // combatSystem.killIfDead(). playerEntity.id là 'player' (xem
-    // playerToCombatEntity()).
-    this.surviveLethalGuard.beginBattle(player.selectedTalentIds)
-    this.combatSystem.setSurviveLethalSession({
-      playerEntityId: playerEntity.id,
-      guard: this.surviveLethalGuard,
-      // v4 (spec 2026-09-03 §4.1) — Bat Tu The: cleanse debuffs + grant
-      // Tu Sinh Ngo when the guard saves. Rewired 2026-09-07 (Phase A0)
-      // from the legacy battleSystem pool (dead during real turn-based
-      // gameplay — cleanse/grant silently no-op'd) to the LIVE
-      // turn-based player pool. players[0] is the human player
-      // (companions are appended after index 0 in buildTurnBattle).
-      surviveEffects: {
-        buffSystem: new TurnBuffSystem(this.turnBattle!.players[0]!.buffs),
-        registry: TURN_BUFF_REGISTRY,
-      },
-    })
-
-    // C1 (2026-09-08) — setArtifactRuntime/setChainDefinition removed with
-    // battle/legacy/: artifact activation has been inert since Slice 6
-    // (driven only by the dead BattleSystem.update(); HUD reads
-    // getBattle().artifactRuntime which is absent on TurnBattle → EMPTY
-    // state, unchanged behavior), and chain gating is a locked A3
-    // divergence (no chain gating in turn combat).
+    this.turnBattleOps.startBattleWithPlayer(player, playerStats, enemy)
   }
 
   /**
@@ -2725,7 +2414,7 @@ export class GameManager {
    * never creates one).
    */
   getBattle(): Battle | null {
-    return (this.turnBattle as unknown as Battle) ?? null
+    return this.turnBattleOps.getBattle()
   }
 
   /**
@@ -2882,7 +2571,7 @@ export class GameManager {
     // C1 (2026-09-08) — the live in-battle entity now comes from the
     // turn battle's player participant (was: the legacy mirror battle's
     // player).
-    const activeBattle = this.turnBattle
+    const activeBattle = this.turnBattleOps.getTurnBattle()
 
     if (activeBattle) {
       return activeBattle.players[0]!.entity
@@ -2951,36 +2640,15 @@ export class GameManager {
    * Trận" không hiện trong trận đó (xem CombatControlBar.vue).
    */
   abandonBattle(): boolean {
-    // TurnBattle is the source of truth for "battle in progress".
-    // 'intro' also counts as in-progress (2026-09-07 plan Task 4).
-    // C1: the legacy mirror-battle branch is gone.
-    const turnActive = !!this.turnBattle && this.turnBattle.state !== 'victory' && this.turnBattle.state !== 'defeat'
-
-    if (!turnActive) {
-      return false
-    }
-
-    if (this.turnBattle) {
-      this.turnBattle.state = 'defeat'
-    }
-    this.stageWaves.stopRepeat()
-
-    this.eventBus.emit('battle_end', { type: 'battle_end', state: 'defeat' })
-
-    // Audit fix 2026-08-31 ï¿½ enemy s?ng + pending spawn c?a tr?n b? b? khï¿½ng
-    // qua victory flow (processDefeatedEnemies despawn) ? orphan vinh vi?n
-    // trong EnemyManager. Clear ? ï¿½ï¿½NG di?m h?y tr?n, khï¿½ng d?ng flow victory
-    // (StageWave auto-repeat spawn tr?n m?i ngay sau victory).
-    this.enemyManager.clear()
-
-    return true
+    return this.turnBattleOps.abandonBattle()
   }
 
   // =========================
   // STAGE (wave spawn)
   // =========================
   // Vòng đời wave (spawn nhịp, victory, auto-repeat, boss summon) nằm ở
-  // StageWaveSystem — các method dưới đây là delegate giữ public API.
+  // GameManagerTurnBattleOps (C2 split) - các method dưới đây là delegate
+  // giữ public API.
 
   startStage(
     player: PlayerData,
@@ -2988,291 +2656,29 @@ export class GameManager {
     stage: Stage,
     repeatContinuously = false,
   ): boolean {
-    const started = this.stageWaves.start(player, playerStats, stage, repeatContinuously)
-
-    if (!started) {
-      return false
-    }
-
-    this.turnBattleRepeatContinuously = repeatContinuously
-    this.activeStageForTurnBattle = stage
-    this.playerDataForTurnBattle = player
-    this.playerStatsForTurnBattle = playerStats
-
-    // Slice 6 cutover (Completion Task 8): stage chạy trên TurnBattle —
-    // wave config (Slice 5) + spawnEnemy factory wrap pickEnemyForSpawn
-    // (spec §5.3 thin adapter). Enemy đầu tiên đã spawn qua launchBattle
-    // → startBattle → buildTurnBattle; bổ sung wave state vào TurnBattle.
-    if (this.turnBattle) {
-      // Gameplay fixes (2026-09-05): reset per-battle flags at every fresh
-      // startStage (NOT just restartTurnBattleCycle) — without this, the
-      // 2nd refight inherits turnBattleEndEmitted=true from the previous
-      // battle and its victory terminal never fires (stopRepeat never
-      // releases StageManager -> 3rd refight startStage fails).
-      this.turnBattleRewardsGranted.clear()
-      this.turnBattleEndEmitted = false
-      this.combatAnimationRuntime.resetPendingState()
-      this.turnBattleStartedAtMs = Date.now()
-
-
-      // Turn-Based Wave Redesign (2026-09-06) — StageWaveSystem.start()
-      // (qua launchBattle → startBattleWithPlayer → startBattle →
-      // buildTurnBattle) đã spawn THẲNG 1 quái bootstrap vào
-      // this.turnBattle.enemies (bootstrap này PHỤC VỤ CHUNG cho cả legacy
-      // real-time engine — KHÔNG SỬA). User yêu cầu MỌI quái (kể cả con
-      // đầu) đều spawn đồng loạt qua telegraph — nên XÓA quái bootstrap
-      // đó khỏi mảng enemies ngay tại đây và để tick tiếp theo của
-      // tickPacing() tự nhiên queue LẠI toàn bộ wave 0 (kể cả "con #1")
-      // qua cơ chế pending/telegraph bình thường. Hơi lãng phí 1 lần roll
-      // template thừa (bootstrap đã roll 1 template không dùng tới), chấp
-      // nhận được để không phải sửa startBattle()/buildTurnBattle() — 2
-      // hàm dùng chung với legacy engine.
-      // Despawn bootstrap enemy khỏi EnemySystem (không chỉ turnBattle):
-      // nếu chỉ discard khỏi turnBattle.enemies, entity vẫn sống trong
-      // EnemySystem và victory-despawn assertion/flow không trống.
-      for (const bootstrap of this.turnBattle.enemies) {
-        this.enemySystem.despawn(bootstrap.entity.id)
-      }
-      this.turnBattle.enemies = []
-      this.turnBattle.wave = {
-        totalEnemyCount: effectiveTotalEnemyCount(stage),
-        spawnedCount: 0,
-        waves: effectiveWaves(stage),
-        waveIndex: 0,
-        pendingEnemySpawns: [],
-      }
-
-      const stageRef = stage
-
-      this.turnBattleSystem = new TurnBattleSystem(
-        this.combatSystem,
-        10_000,
-        TURN_BUFF_REGISTRY,
-        (occupiedSlots?: Set<string>) => {
-          // isFinalSpawn: lượt spawn cuối là boss (tầng 10) — factory chạy
-          // TRƯỚC khi resolveNextStep tăng spawnedCount, nên tổng đã-spawn
-          // sau lần này = spawnedCount + 1.
-          const isFinalSpawn = (this.turnBattle?.wave?.spawnedCount ?? 0) + 1 >= effectiveTotalEnemyCount(stageRef)
-          const template =
-            this.stageWaves.pickEnemyForTurnSpawn(stageRef, isFinalSpawn) ??
-            this.lastStageEnemyTemplate
-
-          if (!template) {
-            throw new Error(`TurnBattle spawnEnemy: no template available for stage ${stageRef.id}`)
-          }
-
-          this.lastStageEnemyTemplate = template
-
-          return toTurnBattleParticipant(
-            this.placeSpawnedEnemy(enemyToCombatEntity(this.enemySystem.spawn(template)), occupiedSlots),
-            this.turnBattle?.enemies.length ?? 1,
-            GENERIC_PHYSICAL_BASIC,
-          )
-        },
-        REACTION_PATH_POOL, // Phase A4 — marker special's 2-pick pool now live
-        new TurnReactionManager(this.eventBus),
-      )
-    }
-
-    return true
+    return this.turnBattleOps.startStage(player, playerStats, stage, repeatContinuously)
   }
 
-  // Phase A0 (2026-09-07) — composes the HUD progress from the LIVE turn
-  // battle instead of StageWaveSystem's legacy-only dependencies:
-  // - `alive` used to read the legacy battleSystem's enemy list (always
-  //   empty during real turn-based gameplay → counter stuck at 0).
-  // - `spawned` comes from StageManager, whose counter seeds at 1 for the
-  //   legacy bootstrap enemy and is never incremented by the turn-based
-  //   wave flow → stuck at 1. The turn battle's own wave.spawnedCount is
-  //   the real count.
-  // Filtering on entity.alive matches the turn engine's own
-  // living-participant checks (a dead-but-not-yet-pruned enemy must not
-  // count as alive). `total` stays StageWaveSystem-sourced
-  // (effectiveTotalEnemyCount) — that one is correct.
   getStageProgress(): { spawned: number; total: number; alive: number } | null {
-    const progress = this.stageWaves.getProgress()
-
-    if (!progress) {
-      return null
-    }
-
-    return {
-      spawned: this.turnBattle?.wave?.spawnedCount ?? progress.spawned,
-      total: progress.total,
-      alive: this.turnBattle?.enemies.filter((enemy) => enemy.entity.alive).length ?? 0,
-    }
+    return this.turnBattleOps.getStageProgress()
   }
 
   // =========================
   // AUTO-FARM HOÀN MỸ (spec 2026-09-04-stage-auto-farm, Task 4)
   // =========================
+  // Logic moved verbatim into GameManagerTurnBattleOps (C2 split) - thin
+  // delegates keep the public API (and the saveRestore/settle hook below).
 
-  /**
-   * Bật auto-farm cho 1 stage đã đạt Hoàn Mỹ. Chiếm CÙNG single-slot
-   * StageManager với manual/repeat/progress (exclusivity uniform) — không
-   * chạy TurnBattleSystem, không hoạt ảnh; reward roll theo wall-clock.
-   */
   startAutoFarm(player: PlayerData, stageId: string): boolean {
-    if (!player.perfectClearStageIds.includes(stageId)) {
-      return false
-    }
-
-    if (this.stageManager.get() !== null) {
-      return false
-    }
-
-    const stage = this.stageTemplates.get(stageId)
-
-    if (!stage) {
-      return false
-    }
-
-    if (!this.stageManager.start(stage)) {
-      return false
-    }
-
-    player.autoFarmStage = { stageId, lastCheckedMs: Date.now() }
-
-    return true
+    return this.turnBattleOps.startAutoFarm(player, stageId)
   }
 
   stopAutoFarm(player: PlayerData): void {
-    if (player.autoFarmStage === null) {
-      return
-    }
-
-    player.autoFarmStage = null
-    this.stageManager.stop()
+    this.turnBattleOps.stopAutoFarm(player)
   }
 
-  /**
-   * Auto-farm Task 5 — offline catch-up khi restore save: roll reward cho
-   * các chu kỳ đã trôi ngoài tuyến tính (offline) — NGOẠI LỆ DUY NHẤT
-   * combat được nhận reward offline (chùng nguyên tắc Production catch-up).
-   * Cùng chu kỳ online (perfectClearSeconds/2); leftover dư giữ lại qua
-   * lastCheckedMs tiến đúng phần đã settle.
-   *
-   * Remediation Task 3 (2026-09-05) — BOUNDED settlement:
-   * - elapsedOfflineSeconds clamp theo DEFAULT_MAX_OFFLINE_SECONDS (24h —
-   *   NGUỒN DUY NHẤT GameClock, không tự chế cap thứ hai).
-   * - cycleSeconds <= 0 / non-finite → no-op an toàn (chặn Infinity cycles
-   *   từ malformed save — evidence: infinite-loop timeout trong test).
-   */
   settleAutoFarmOffline(player: PlayerData, elapsedOfflineSeconds: number): void {
-    const autoFarm = player.autoFarmStage
-
-    if (!autoFarm) {
-      return
-    }
-
-    const cycleSeconds = player.perfectClearSeconds[autoFarm.stageId]
-
-    if (cycleSeconds === undefined || !(cycleSeconds > 0) || !Number.isFinite(cycleSeconds)) {
-      return
-    }
-
-    // Clamp theo trần offline chuẩn của game (GameClock 24h).
-    const cappedElapsedSeconds = Math.min(
-      Math.max(0, elapsedOfflineSeconds),
-      DEFAULT_MAX_OFFLINE_SECONDS,
-    )
-
-    const cycleMs = (cycleSeconds / 2) * 1000
-    const elapsedMs = cappedElapsedSeconds * 1000
-    const completedCycles = Math.floor(elapsedMs / cycleMs)
-
-    if (completedCycles <= 0) {
-      return
-    }
-
-    const stage = this.stageTemplates.get(autoFarm.stageId)
-
-    if (!stage) {
-      return
-    }
-
-    for (let i = 0; i < completedCycles; i++) {
-      this.rollAutoFarmCycleReward(player, stage)
-    }
-
-    autoFarm.lastCheckedMs += completedCycles * cycleMs
-  }
-
-  /**
-   * Tick auto-farm từ fixed-step loop: mỗi chu kỳ hoàn thành roll thẳng
-   * reward qua BattleLootSystem shim (không simulation). Leftover partial
-   * cycle carry-over qua lastCheckedMs cộng đúng phần đã roll.
-   */
-  private tickAutoFarm(player: PlayerData) {
-    const autoFarm = player.autoFarmStage
-
-    if (!autoFarm) {
-      return
-    }
-
-    const cycleSeconds = player.perfectClearSeconds[autoFarm.stageId]
-
-    if (cycleSeconds === undefined) {
-      return
-    }
-
-    const cycleMs = (cycleSeconds / 2) * 1000
-    const now = Date.now()
-    const elapsedMs = now - autoFarm.lastCheckedMs
-    const completedCycles = Math.floor(elapsedMs / cycleMs)
-
-    if (completedCycles <= 0) {
-      return
-    }
-
-    const stage = this.stageTemplates.get(autoFarm.stageId)
-
-    if (!stage) {
-      return
-    }
-
-    for (let i = 0; i < completedCycles; i++) {
-      this.rollAutoFarmCycleReward(player, stage)
-    }
-
-    autoFarm.lastCheckedMs += completedCycles * cycleMs
-  }
-
-  /**
-   * Roll 1 chu kỳ auto-farm: dựng shim "quái đã chết" theo enemyPool rồi
-   * tái dùng processDefeatedEnemies (bounty/heal-on-kill/talent đúng như
-   * trận thật) — KHÔNG chạy TurnBattleSystem, không hoạt ảnh.
-   */
-  private rollAutoFarmCycleReward(player: PlayerData, stage: Stage) {
-    this.battleLoot.beginBattle()
-    this.battleLoot.setSession(this.buildPlayerRewardReceiver(player), player)
-
-    const killedEntities: { entity: CombatEntity; rewardGranted: boolean }[] = []
-
-    const rollTotalEnemyCount = effectiveTotalEnemyCount(stage)
-
-    for (let i = 0; i < rollTotalEnemyCount; i++) {
-      const isFinalSpawn = i === rollTotalEnemyCount - 1
-      const template = this.stageWaves.pickEnemyForTurnSpawn(stage, isFinalSpawn)
-
-      if (!template) {
-        continue
-      }
-
-      const entity = enemyToCombatEntity(this.enemySystem.spawn(template))
-      entity.alive = false
-
-      killedEntities.push({ entity, rewardGranted: false })
-    }
-
-    // player shim: chỉ processDefeatedEnemies's heal-on-kill branch đọc —
-    // entity không alive là placeholder inert (heal-on-kill math inert).
-    const shimBattle = {
-      player: killedEntities[0]?.entity,
-      enemies: killedEntities,
-    } as unknown as Battle
-
-    this.battleLoot.processDefeatedEnemies(shimBattle)
+    this.turnBattleOps.settleAutoFarmOffline(player, elapsedOfflineSeconds)
   }
 
   // =========================
@@ -3449,11 +2855,9 @@ export class GameManager {
   }
 
   /**
-   * Chia deltaSeconds thành các bước cố định BATTLE_FIXED_STEP_SECONDS
-   * cho nhánh phụ thuộc timer-đếm-ngược-rồi-reset (đòn đánh, spawn
-   * quái, phần thưởng) — xem ghi chú ở BATTLE_FIXED_STEP_SECONDS phía
-   * trên. Giới hạn ở BATTLE_MAX_CATCHUP_SECONDS để không lặp hàng ngàn
-   * bước khi deltaSeconds bất thường lớn.
+   * Chia deltaSeconds thành các bước cố định cho nhánh phụ thuộc
+   * timer-đếm-ngược-rồi-reset (đòn đánh, spawn quái, phần thưởng) - logic
+   * moved into GameManagerTurnBattleOps.updateBattleFixedStep() (C2 split).
    *
    * updateTribulation()/updateTribulationProgress() CHỦ Ý đứng NGOÀI
    * vòng lặp bước nhỏ: updateTribulation() đã tự có vòng lặp catch-up
@@ -3463,261 +2867,14 @@ export class GameManager {
    * sai số dấu phẩy động (0.1 không biểu diễn chẵn nhị phân) vào
    * active.nextStrikeInSeconds, có thể làm lệch 1 lôi kích so với thật.
    */
-
   private updateBattleFixedStep(deltaSeconds: number) {
-    let remaining = Math.min(deltaSeconds, BATTLE_MAX_CATCHUP_SECONDS)
-
-    while (remaining > 0) {
-      const step = Math.min(BATTLE_FIXED_STEP_SECONDS, remaining)
-
-      remaining -= step
-
-      // Slice 6 cutover — unified flow: Countdown → Spawn (đã có sẵn) →
-      // Gauge combat → Wave spawn khi sân trống → Result khi hết wave.
-      // Mỗi fixed step 0.1s = 1 pacing tick; turn resolution instant.
-      if (this.turnBattle) {
-        if (this.combatAnimationRuntime.isAwaitingPresentationLayer()) {
-          // Defect Task 3 — chờ Phaser mount lần đầu (PresentationGate):
-          // không tick countdown/fighting cho tới khi presentation layer
-          // sẵn sàng hoặc safety-net timeout trôi qua.
-        } else if (this.turnBattle.state === 'intro') {
-          // Intro/transition phase (2026-09-07 plan Task 4): only
-          // decrement introTurnsRemaining and flip to 'countdown' at 0 -
-          // NO combat logic in this phase (same wait-phase contract as
-          // the countdown branch below).
-          this.turnBattleSystem.tickIntro(this.turnBattle)
-
-          // Snapshot emit so the overlay/scene observes the battle entering
-          // intro (reconcile pipeline mirrors countdown - wired callee,
-          // silent caller is the P13 bug class).
-          emitTurnBattleEntitySnapshot(this.eventBus, this.turnBattle)
-        } else if (this.turnBattle.state === 'countdown') {
-          this.turnBattleSystem.tickCountdown(this.turnBattle)
-
-          // Turn-Based Wave Redesign (2026-09-06) — snapshot cũng phải chạy
-          // TRONG pha countdown: CombatScene cần countdownProgress mỗi tick
-          // để vẽ party telegraph 3→2→1 (reconcileTurnCountdownSpawn). Không
-          // emit ở đây thì progress vĩnh viễn không tới scene (callee đã
-          // wire, caller im lặng — đúng lớp bug P13).
-          emitTurnBattleEntitySnapshot(this.eventBus, this.turnBattle)
-        } else if (this.turnBattle.state === 'fighting') {
-          // Slice 7 manual mode: trước khi resolve step kế, peek actor —
-          // nếu là player VÀ manual mode bật → PAUSE (không resolve, gauge
-          // đã advance đúng tới ngưỡng ready bởi peek). Enemy turn và auto
-          // mode resolve như thường (auto = cùng engine, không pause).
-          if (this.combatAnimationRuntime.isAwaitingManualTurnChoice()) {
-            // Paused — still waiting for submitTurnChoice.
-          } else if (this.combatAnimationRuntime.isPresentationActive() && this.combatAnimationRuntime.isActionPlaybackWaiting()) {
-            // Action Playback Task 6 — waiting for a Phaser acknowledgement,
-            // do nothing this tick.
-          } else {
-            // Gameplay fixes (2026-09-05) — wall-clock pacing: 1 tick = 1
-            // gauge-step; Action Playback Task 6 — presentationActive chỉ
-            // advance gauge, actor ready vào pendingReadyActor (5-phase
-            // machine chờ Phaser acknowledge), headless path resolve ngay.
-            const readyActor = this.turnBattleSystem.tickPacing(this.turnBattle, !this.combatAnimationRuntime.isPresentationActive())
-
-            if (readyActor !== null && this.combatAnimationRuntime.isPresentationActive()) {
-              // Remediation Task 1 — token mới cho phase ready mới; mọi
-              // callback cũ giữ token này sẽ trở thành stale (no-op).
-              this.combatAnimationRuntime.notifyReadyActor(readyActor)
-            } else if (
-              readyActor !== null &&
-              this.turnBattle.players.includes(readyActor) &&
-              this.combatAnimationRuntime.isBattleManualMode() &&
-              !this.combatAnimationRuntime.isAwaitingManualTurnChoice()
-            ) {
-              this.combatAnimationRuntime.pauseForManualActor(readyActor)
-            }
-          }
-
-          // Combat Art Pipeline (2026-09-05) — emit LIVE entity snapshot mỗi
-          // fixed step trong lúc 'fighting', bất kể nhánh con nào ở trên vừa
-          // chạy (pause chờ manual input / chờ Phaser acknowledge / pacing
-          // bình thường). Đây là nguồn thay thế bridge 'positions' đã chết
-          // của legacy real-time engine — đặt ở CUỐI block 'fighting' để
-          // không phụ thuộc nhánh nào bên trên có resolve turn hay không.
-          emitTurnBattleEntitySnapshot(this.eventBus, this.turnBattle)
-        }
-      }
-
-      // Auto-farm Task 4 — roll reward theo wall-clock (trước reward flow
-      // thường; auto-farm không có turnBattle nên hai đường không giao).
-      if (this.activePlayer) {
-        this.tickAutoFarm(this.activePlayer)
-      }
-
-      this.grantBattleRewardIfNeeded()
-    }
-
-    // Victory event cho stage/turn flow — emit ĐÚNG 1 LẦN mỗi cycle.
-    // Single victory terminal: grantTurnBattleRewards() (trong while) la diem
-    // duy nhat emit 'battle_end' + record perfect-clear + push completedStageIds.
-    // (Block victory trung lap o day da bi XOA 2026-09-04: 2 terminal tranh
-    // nhau flag !emitted tung lam record miss — perfect-clear debug evidence.)
-
-    // Auto-repeat: victory + repeat bật → restart NGAY trong cùng call
-    // (không chờ step kế) để getBattle()?.state quay lại countdown →
-    // fighting tức thì sau khi rewards đã grant — khớp semantics hệ sống
-    // (StageWaveSystem restartCycle chạy ngay trong cùng tick victory).
-    if (
-      this.turnBattle &&
-      this.turnBattle.state === 'victory' &&
-      this.turnBattleRepeatContinuously &&
-      this.activeStageForTurnBattle !== null &&
-      this.stageManager.get() !== null
-    ) {
-      this.restartTurnBattleCycle()
-    }
+    this.turnBattleOps.updateBattleFixedStep(deltaSeconds)
 
     // Ngoài vòng fixed-step — TribulationDirector tự có catch-up dạng
     // đóng (spec dot-pha-loi-kiep §5.6), chia nhỏ sẽ cộng dồn sai số float.
     this.tribulationDirector.update(deltaSeconds)
   }
-  private grantBattleRewardIfNeeded() {
-    // Rewards are read from TurnBattle (the only engine). C1: the legacy
-    // fallback branch (battleSystem.getBattle()) is gone — when no turn
-    // battle exists there is nothing to grant.
-    if (this.turnBattle) {
-      this.grantTurnBattleRewards()
-    }
-  }
 
-  private turnBattleRewardsGranted = new Set<string>()
-
-  private grantTurnBattleRewards() {
-    const turnBattle = this.turnBattle
-
-    if (!turnBattle) {
-      return
-    }
-
-    const killedIds = turnBattle.enemies
-      .filter((enemy) => !enemy.entity.alive && !this.turnBattleRewardsGranted.has(enemy.entity.id))
-      .map((enemy) => enemy.entity.id)
-
-    if (killedIds.length === 0 && turnBattle.state === 'fighting') {
-      return
-    }
-
-
-    // Slice 6 cutover: dựng shim Battle-shape từ TurnBattle để
-    // processDefeatedEnemies xử lý bounty/heal-on-kill/talent đúng như hệ
-    // cũ mà không sửa BattleLootSystem. rewardGranted flag shim-side.
-    const shimEnemies = turnBattle.enemies.map((enemy) => ({
-      entity: enemy.entity,
-      rewardGranted: this.turnBattleRewardsGranted.has(enemy.entity.id),
-    }))
-
-    const shimBattle = {
-        player: turnBattle.players[0]?.entity,
-      enemies: shimEnemies,
-    } as unknown as Battle
-
-    this.battleLoot.processDefeatedEnemies(shimBattle)
-
-
-    for (const enemyId of killedIds) {
-      this.turnBattleRewardsGranted.add(enemyId)
-    }
-
-    // Victory/defeat terminal: bắn battle_end (StageWaveSystem.update cũ
-    // không chạy nữa — syncLegacyBattleState() set legacy.state trực tiếp
-    // khiến update() return sớm trước victory branch). StageManager.active
-    // PHẢI được release tại đây: nếu không, startStage() kế tiếp (Đánh Lại)
-    // return false vĩnh viễn trong session (smoke-test regression 2026-09-04).
-    // Auto-repeat KHÔNG stop — restartTurnBattleCycle tái dùng active.
-    if (
-      (turnBattle.state === 'victory' || turnBattle.state === 'defeat') &&
-      !this.turnBattleEndEmitted
-    ) {
-      this.turnBattleEndEmitted = true
-
-      if (!this.turnBattleRepeatContinuously) {
-        this.stageWaves.stopRepeat()
-      }
-
-      if (turnBattle.state === 'victory') {
-        this.eventBus.emit('battle_end', { type: 'battle_end', state: 'victory' })
-
-
-        this.recordPerfectClearIfEligible(turnBattle)
-
-        // Stage completion (StageWaveSystem.update cũ): push completedStageIds
-        // ĐÚNG 1 LẦN mỗi stage — auto-repeat vẫn push (player hoàn thành
-        // stage này dù đánh tiếp cycle mới).
-        if (
-          this.playerDataForTurnBattle &&
-          this.activeStageForTurnBattle &&
-          !this.playerDataForTurnBattle.completedStageIds.includes(this.activeStageForTurnBattle.id)
-        ) {
-          this.playerDataForTurnBattle.completedStageIds.push(this.activeStageForTurnBattle.id)
-        }
-      }
-    }
-  }
-
-  private turnBattleEndEmitted = false
-
-  /** Auto-farm spec Task 3 — wall-clock timestamp lúc bắt đầu stage (chuẩn hoá clearSeconds cho Hoàn Mỹ). */
-  private turnBattleStartedAtMs: number | null = null
-
-  /**
-   * Auto-farm spec Task 3 (2026-09-04) — Hoàn Mỹ: HP đội mất <=75% VÀ
-   * turns < stage.perfectClearTurnLimit → ghi perfectClearStageIds +
-   * perfectClearSeconds MỘT LẦN (không overwrite lần đạt đầu).
-   */
-  /**
-   * Auto-farm spec Task 3 (2026-09-04) — record helper marker
-   */
-  private recordPerfectClearIfEligible(turnBattle: TurnBattle) {
-    const stage = this.activeStageForTurnBattle
-    const player = this.playerDataForTurnBattle
-
-
-    if (!stage || !player || stage.perfectClearTurnLimit === undefined) {
-      return
-    }
-
-    if (player.perfectClearStageIds.includes(stage.id)) {
-      return
-    }
-
-    const entity = turnBattle.players[0]?.entity
-
-    if (!entity) {
-      return
-    }
-
-    const hpLossPercent = ((entity.maxHp - entity.currentHp) / entity.maxHp) * 100
-
-    const isPerfectClear =
-      hpLossPercent <= 75 && (turnBattle.totalTurnsElapsed ?? 0) < stage.perfectClearTurnLimit
-
-    if (!isPerfectClear) {
-      return
-    }
-
-    const startedAtMs = this.turnBattleStartedAtMs ?? Date.now()
-    const clearSeconds = Math.max(0, (Date.now() - startedAtMs) / 1000)
-
-    player.perfectClearStageIds.push(stage.id)
-    player.perfectClearSeconds[stage.id] = clearSeconds
-  }
-
-  /**
-   * C1 (2026-09-08): legacy Battle state mirror REMOVED with
-   * battle/legacy/ — TurnBattle is the single source of truth; consumers
-   * read getBattle() (TurnBattle cast) directly. Kept as a no-op because
-   * CombatAnimationRuntime's deps contract still references it.
-   */
-  private syncLegacyBattleState() {}  /** Repeat-continuously flag từ startStage — driver cho auto-repeat cycle của TurnBattle. */
-  private turnBattleRepeatContinuously = false
-
-  private activeStageForTurnBattle: Stage | null = null
-
-  private playerStatsForTurnBattle: Stats | null = null
-  private playerDataForTurnBattle: PlayerData | null = null
   /**
    * Vue layer (App.vue's tick()) gọi mỗi tick để rút toast phát sinh
    * TRONG core kể từ lần gọi trước — trả về rồi xoá hàng đợi.
