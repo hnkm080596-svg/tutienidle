@@ -1,7 +1,7 @@
 import type { CombatEntity } from './CombatEntity'
 import type { EventBus } from '../events/EventBus'
 
-export type VitalsChangeReason = 'damage' | 'dot' | 'thorns' | 'ward_break' | 'healing' | 'leech' | 'regen' | 'reaction' | 'heavenly_tribulation' | 'survive_lethal'
+export type VitalsChangeReason = 'damage' | 'dot' | 'thorns' | 'ward_break' | 'healing' | 'leech' | 'regen' | 'reaction' | 'heavenly_tribulation' | 'survive_lethal' | 'ward_spend'
 
 export interface EntityVitalsChangedEvent {
   type: 'entity_vitals_changed'
@@ -64,6 +64,23 @@ export class EntityVitalsSystem {
 
     target.currentHp = Math.min(target.currentHp, target.maxHp)
     this.emit(target, reason, hpBefore - target.currentHp, hpBefore, wardBefore, mpBefore, sourceId)
+  }
+
+  /**
+   * Authoritative ward mutation (R1 / AR-01). Resource spending must go
+   * through the vitals owner so observation (vitals events) stays uniform;
+   * ward never goes below zero and 0-cost spends still emit for parity.
+   */
+  spendWard(target: CombatEntity, amount: number, reason: VitalsChangeReason, sourceId?: string) {
+    const hpBefore = target.currentHp
+    const wardBefore = target.currentWard
+    const mpBefore = target.currentMp
+
+    target.currentWard = Math.max(0, target.currentWard - Math.max(0, amount))
+
+    this.emit(target, reason, wardBefore - target.currentWard, hpBefore, wardBefore, mpBefore, sourceId)
+
+    return wardBefore - target.currentWard
   }
 
   applyHealing(target: CombatEntity, amount: number, reason: VitalsChangeReason, sourceId?: string) {

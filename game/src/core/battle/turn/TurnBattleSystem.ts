@@ -26,6 +26,7 @@ import { REACTION_PATH_SPECIAL_ID } from '../../../data/skill/TurnReactionPathSk
 import { refundGauge, GAUGE_MAX } from './ActionGauge'
 import { TurnReactionManager } from './TurnReactionManager'
 import { MAX_THE, THE_GAIN_PER_LINK, THE_GAIN_PER_FINISHER } from '../../combat/CombatTypes'
+import { SurviveLethalGuard } from '../../talent/SurviveLethalGuard'
 import type { TurnBuffDefinition } from './TurnBuffTypes'
 
 /**
@@ -286,6 +287,18 @@ export class TurnBattleSystem {
   // declareActorAction(): set ngay trước khi trả bypass actor, đọc 1 lần
   // trong declare để populate TurnDeclaredAction.isFollowUpBypass rồi clear.
   private pendingFollowUpBypassActorId: string | null = null
+
+  /**
+   * R1 (AR-01) test seam — production wiring goes through
+   * GameManager.setSurviveLethalSession on the shared CombatSystem; this
+   * delegation lets engine-level tests exercise the survive-lethal
+   * interception without touching the private combat collaborator.
+   */
+  setSurviveLethalSessionForTest(
+    session: { playerEntityId: string; guard: SurviveLethalGuard } | null,
+  ): void {
+    this.combat.setSurviveLethalSession(session)
+  }
 
   /**
    * Defect-fix Task 1 — shared bởi tickPacing() và peekNextActor():
@@ -669,8 +682,12 @@ export class TurnBattleSystem {
 
     actorBuffSystem.update(actor.entity, this.combat, this.registry)
 
-    if (actor.entity.stats.hpRegenPerTurn > 0) {
-      actor.entity.currentHp = Math.min(actor.entity.maxHp, actor.entity.currentHp + actor.entity.stats.hpRegenPerTurn)
+    if (actor.entity.stats.hpRegenPerTurn > 0 && actor.entity.currentHp < actor.entity.maxHp) {
+      // R1 (AR-01) — regeneration is a vitals mutation: go through the
+      // vitals authority so healing events stay uniform. The full-HP guard
+      // skips a no-op healing event every turn (previous raw write only
+      // clamped silently); mutation itself is still authority-owned.
+      this.combat.applyHealing(actor.entity, actor.entity.stats.hpRegenPerTurn, actor.entity.id, 'regen')
     }
 
     if (actor.resources) {
@@ -894,10 +911,11 @@ export class TurnBattleSystem {
 
           // Phase A3 — consume-for-damage (Pháp Tu Detonate / Thổ Tu ward
           // burst). Orchestration only: reads/clears state through
-          // TurnBuffSystem's own API (getAllById/removeAllById) and
-          // CombatEntity's plain currentWard field — this block does not
-          // own stack bookkeeping itself. True damage = direct HP
-          // subtraction, matching the reaction pipeline's
+          // TurnBuffSystem's own API (getAllById/removeAllById); the HP and
+          // Ward mutations go through the authoritative damage/vitals
+          // pipeline (R1 / AR-01) so death, survive-lethal and vitals
+          // events stay exactly-once and uniform. True damage = direct
+          // HP damage via the authority, matching the reaction pipeline's
           // applyModifiedDirectDamage bypass semantics at this resolution
           // layer. Deliberately NOT registry-gated: these consume the
           // skill's OWN authored fields, no registry content involved.
@@ -907,7 +925,7 @@ export class TurnBattleSystem {
             const stacks = new TurnBuffSystem(target.buffs).getStacks(skill.consumesAilmentId)
 
             if (stacks > 0) {
-              target.entity.currentHp = Math.max(0, target.entity.currentHp - stacks * skill.damagePerStack)
+              this.combat.applyDirectDamage(target.entity, stacks * skill.damagePerStack, actor.entity.id)
               new TurnBuffSystem(target.buffs).removeAllById(skill.consumesAilmentId)
             }
           }
@@ -916,8 +934,8 @@ export class TurnBattleSystem {
             const ward = actor.entity.currentWard
 
             if (ward > 0) {
-              target.entity.currentHp = Math.max(0, target.entity.currentHp - ward * skill.damagePerWardPoint)
-              actor.entity.currentWard = 0
+              this.combat.applyDirectDamage(target.entity, ward * skill.damagePerWardPoint, actor.entity.id)
+              this.combat.spendWard(actor.entity, ward, 'ward_spend', actor.entity.id)
             }
           }
 
