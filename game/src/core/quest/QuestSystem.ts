@@ -41,9 +41,9 @@ function dayBucket(ms: number): number {
  */
 export class QuestSystem {
   /**
-   * R8.1 (AR-09) — lifecycle command: activate every eligible quest
+   * R8.1 (AR-09) - lifecycle command: activate every eligible quest
    * exactly once. Triggers: boot/restore, daily rollover, realm unlock
-   * transition. Idempotent. NOT a query — reads never call this.
+   * transition. Idempotent. NOT a query - reads never call this.
    *
    * Preserved semantics: counting starts from activation; no
    * retroactive credit for kills/collects before activation; 'once'
@@ -68,7 +68,7 @@ export class QuestSystem {
   }
 
   /**
-   * R8.1 (AR-09) — read-only projection: NO side effects. Activation
+   * R8.1 (AR-09) - read-only projection: NO side effects. Activation
    * belongs to reconcileActiveQuests; a query must never mutate quest
    * state (AGENTS.md A3/A7 query purity). Returns quests that ALREADY
    * have active progress only.
