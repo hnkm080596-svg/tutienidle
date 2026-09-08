@@ -478,41 +478,23 @@ export class ProductionSystem {
       return 0
     }
 
-    // Phân bổ slot — manual assignment trước (giống tickWorkers), phần dư
-    // round-robin: offline khớp online.
+    // R7 (AR-07): the SAME pure allocator as tickWorkers — online and
+    // offline settlement share one distribution rule (manual first,
+    // remainder round-robins unassigned sites, leftover idle).
     const activeStates = [...this.states.values()].filter((state) => state.autoRestart)
 
     if (activeStates.length === 0) {
       return 0
     }
 
-    const slotsBySite = new Map<string, number>()
+    const slotsBySite = allocateWorkerSlots(
+      activeStates.map((state) => state.siteId),
+      workerAssignments ?? new Map<string, number>(),
+      workerCapacity,
+    )
 
     for (const state of activeStates) {
-      slotsBySite.set(state.siteId, 0)
-    }
-
-    let remaining = workerCapacity
-
-    if (workerAssignments) {
-      for (const state of activeStates) {
-        const assigned = workerAssignments.get(state.siteId)
-
-        if (assigned === undefined || remaining <= 0) {
-          continue
-        }
-
-        const slots = Math.min(Math.max(0, Math.floor(assigned)), remaining)
-
-        slotsBySite.set(state.siteId, slots)
-        remaining -= slots
-      }
-    }
-
-    for (let index = 0; index < remaining; index++) {
-      const state = activeStates[index % activeStates.length]!
-
-      slotsBySite.set(state.siteId, (slotsBySite.get(state.siteId) ?? 0) + 1)
+      state.activeWorkerSlots = slotsBySite.get(state.siteId) ?? 0
     }
 
     let settled = 0

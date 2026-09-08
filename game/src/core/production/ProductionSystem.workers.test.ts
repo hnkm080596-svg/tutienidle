@@ -105,3 +105,53 @@ describe('tickWorkers — AR-07 regression', () => {
     expect(system.getState('thanh_van_quang')!.activeWorkerSlots).toBe(2)
   })
 })
+
+describe('online/offline allocation parity (AR-07 divergence)', () => {
+  it('settleOffline distributes exactly like tickWorkers for identical inputs', () => {
+    const assignments = new Map<string, number>([
+      ['thanh_van_lam', 4],
+      ['thanh_van_quang', 1],
+    ])
+
+    const online = makeAutoSystem(['thanh_van_lam', 'thanh_van_quang', 'thanh_van_dong_thien'])
+    const offline = makeAutoSystem(['thanh_van_lam', 'thanh_van_quang', 'thanh_van_dong_thien'])
+
+    const onlineBag = createBag()
+    const offlineBag = createBag()
+
+    online.tickWorkers(Date.now(), onlineBag.bag, onlineBag.registry, REALM, 6, assignments)
+
+    offline.settleOffline(offlineBag.bag, offlineBag.registry, REALM, Date.now() + 60_000, {
+      workerCapacity: 6,
+      workerAssignments: assignments,
+    })
+
+    // The audit divergence case: capacity 6, A=4 manual, B=1 manual,
+    // C unassigned. Online gives the remainder to C; the old offline
+    // loop round-robined ALL active states (giving it to A).
+    expect(offline.getState('thanh_van_lam')!.activeWorkerSlots).toBe(4)
+    expect(offline.getState('thanh_van_quang')!.activeWorkerSlots).toBe(1)
+    expect(offline.getState('thanh_van_dong_thien')!.activeWorkerSlots).toBe(1)
+    expect(online.getState('thanh_van_lam')!.activeWorkerSlots).toBe(4)
+    expect(online.getState('thanh_van_quang')!.activeWorkerSlots).toBe(1)
+    expect(online.getState('thanh_van_dong_thien')!.activeWorkerSlots).toBe(1)
+  })
+
+  it('offline remainder is idle when every site is manual (no second rule)', () => {
+    const assignments = new Map<string, number>([
+      ['thanh_van_lam', 2],
+      ['thanh_van_quang', 2],
+    ])
+
+    const offline = makeAutoSystem(['thanh_van_lam', 'thanh_van_quang'])
+    const { bag, registry } = createBag()
+
+    offline.settleOffline(bag, registry, REALM, Date.now() + 60_000, {
+      workerCapacity: 6,
+      workerAssignments: assignments,
+    })
+
+    expect(offline.getState('thanh_van_lam')!.activeWorkerSlots).toBe(2)
+    expect(offline.getState('thanh_van_quang')!.activeWorkerSlots).toBe(2)
+  })
+})
