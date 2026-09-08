@@ -601,6 +601,23 @@ No silent semantic degradation.
 - activate inert systems just because helpers exist;
 - create a third universal skill model without evidence.
 
+```text
+✅ DONE 2026-09-08 (branch feat/r3-skill-execution, merged fast-forward) —
+   strict SkillToTurnSkillConverter (self-buffs, multiple debuffs, add_stack
+   folding, leech healing, explicit rejection); targetScope ('self' | 'enemy')
+   executes without fake damage; CombatSystem.resolveActionHit critical roll
+   fallback (turn criticals functional); dodged hit outcome gating (bypasses
+   targetIds, on-hit procs, reactive triggers, ailments); DoT resolveSource
+   context (metal penetration & poison recovery functional); generic
+   compositePicks policy replaces hardcoded REACTION_PATH_SPECIAL_ID.
+   100% of 15 beta chain skills + specs verified with zero degradation.
+   TDD RED→GREEN; P3 full 419 files / 2886 tests PASS; P5 PASS; QA quick
+   PASS WITH EVIDENCE (game/docs/qa/2026-09-08-r3-skill-execution-quick.md).
+   P14 deferred (isolated-worktree exception).
+```
+
+**Status: COMPLETE 2026-09-08**
+
 ---
 
 # Phase R4 — Buff / Status Foundation Closure
@@ -1257,11 +1274,11 @@ R14 Architecture Enforcement
 | Order | Mission | Findings | Status |
 |---|---|---|---|
 | 0 | Mission 0 — Whole-project Architecture Audit | Whole project | ✅ COMPLETE |
-| 1 | R0 — Governance / preserve audit / rules / roadmap | Audit governance | 🟡 IN PROGRESS |
+| 1 | R0 — Governance / preserve audit / rules / roadmap | Audit governance | ✅ COMPLETE 2026-09-08 |
 | 2 | R1 — Combat / Vitals Authority Closure | AR-01 | ✅ COMPLETE 2026-09-08 |
 | 3 | R2 — Stat Provenance & Effective Stats | AR-02, AR-05 | ✅ COMPLETE 2026-09-08 |
-| 4 | **R3 — Active Skill Execution Contract** | **AR-03, AR-04, AR-06, AR-18** | ⏭️ **NEXT** |
-| 5 | R4 — Buff / Status Foundation Closure | AR-06, AR-19, AR-18 | ⏸ |
+| 4 | R3 — Active Skill Execution Contract | AR-03, AR-04, AR-06, AR-18 | ✅ COMPLETE 2026-09-08 |
+| 5 | **R4 — Buff / Status Foundation Closure** | **AR-06, AR-19, AR-18** | ⏭️ **NEXT** |
 | 6 | R5 — Combat Runtime / Presentation Boundary | AR-14, AR-20, AR-24, AR-29 | ⏸ |
 | 7 | R6 — Combat Character Art / Asset Contract | asset/presentation findings | ⏸ |
 | 8 | R7 — Worker Allocation / Decomposition | AR-07, AR-08 | ⏸ / may run independently |
@@ -1507,18 +1524,18 @@ as an implementation mission.
 
 The next implementation mission is:
 
-# NEXT — R3 Active Skill Execution Contract
+# NEXT — R4 Buff / Status Foundation Closure
 
 based on:
 
 ```text
-Mission 0 AR-03 + AR-04 + AR-06 + relevant AR-18
+Mission 0 AR-06 + AR-19 + buff-related AR-18
 ```
 
-(R2 Stat Provenance & Effective Combat Stats completed 2026-09-08; see its
-phase block for evidence.)
+(R3 Active Skill Execution Contract completed 2026-09-08; see its phase
+block for evidence.)
 
-Only after R3 reaches its completion gate should its dependent architecture mission advance.
+Only after R4 reaches its completion gate should its dependent architecture mission advance.
 
 ---
 
