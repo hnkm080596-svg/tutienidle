@@ -30,6 +30,7 @@ import {
   rollWeightedIndex,
 } from './ProductionBalance'
 import { HERB_AGES } from './ProductionTypes'
+import { allocateWorkerSlots } from './WorkerAllocator'
 
 /** Một giao dịch settle đã xảy ra — dùng cho notification UI (§9.1). */
 export interface ProductionSettlementEvent {
@@ -314,29 +315,18 @@ export class ProductionSystem {
 
     const assignmentMap = assignments ?? new Map<string, number>()
 
-    // 1) Manual sites (thứ tự Map): min(assigned, capacity còn lại).
-    let remaining = Math.floor(capacity)
-    const manualSites: typeof activeStates = []
+    // R7 (AR-07): one allocation rule - the shared pure allocator.
+    // Manual sites first (min(assigned, remaining)); remainder
+    // round-robins UNASSIGNED sites; leftover capacity stays idle
+    // instead of crashing (no zero-eligible-site exception).
+    const slotsBySite = allocateWorkerSlots(
+      activeStates.map(state => state.siteId),
+      assignmentMap,
+      capacity,
+    )
 
     for (const state of activeStates) {
-      const assigned = assignmentMap.get(state.siteId)
-
-      if (assigned === undefined || remaining <= 0) {
-        continue
-      }
-
-      const slots = Math.min(Math.max(0, Math.floor(assigned)), remaining)
-
-      state.activeWorkerSlots = slots
-      remaining -= slots
-      manualSites.push(state)
-    }
-
-    // 2) Phần dư → round-robin cho sites auto không assignment.
-    const autoSites = activeStates.filter((state) => !assignmentMap.has(state.siteId))
-
-    for (let index = 0; index < remaining; index++) {
-      autoSites[index % autoSites.length]!.activeWorkerSlots++
+      state.activeWorkerSlots = slotsBySite.get(state.siteId) ?? 0
     }
 
     for (const state of activeStates) {
@@ -488,41 +478,23 @@ export class ProductionSystem {
       return 0
     }
 
-    // Phân bổ slot — manual assignment trước (giống tickWorkers), phần dư
-    // round-robin: offline khớp online.
+    // R7 (AR-07): the SAME pure allocator as tickWorkers - online and
+    // offline settlement share one distribution rule (manual first,
+    // remainder round-robins unassigned sites, leftover idle).
     const activeStates = [...this.states.values()].filter((state) => state.autoRestart)
 
     if (activeStates.length === 0) {
       return 0
     }
 
-    const slotsBySite = new Map<string, number>()
+    const slotsBySite = allocateWorkerSlots(
+      activeStates.map((state) => state.siteId),
+      workerAssignments ?? new Map<string, number>(),
+      workerCapacity,
+    )
 
     for (const state of activeStates) {
-      slotsBySite.set(state.siteId, 0)
-    }
-
-    let remaining = workerCapacity
-
-    if (workerAssignments) {
-      for (const state of activeStates) {
-        const assigned = workerAssignments.get(state.siteId)
-
-        if (assigned === undefined || remaining <= 0) {
-          continue
-        }
-
-        const slots = Math.min(Math.max(0, Math.floor(assigned)), remaining)
-
-        slotsBySite.set(state.siteId, slots)
-        remaining -= slots
-      }
-    }
-
-    for (let index = 0; index < remaining; index++) {
-      const state = activeStates[index % activeStates.length]!
-
-      slotsBySite.set(state.siteId, (slotsBySite.get(state.siteId) ?? 0) + 1)
+      state.activeWorkerSlots = slotsBySite.get(state.siteId) ?? 0
     }
 
     let settled = 0

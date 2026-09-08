@@ -1,10 +1,8 @@
-// T4 (chi-hien-quan, 2026-09-02) — manual worker assignment song song
-// auto round-robin:
-// - Không assignments → round-robin như cũ (regression guard)
-// - Manual: site nhận đúng assignedWorkers slots; phần dư capacity →
-//   round-robin cho sites auto không assignment
-// - Vượt capacity → truncate; non-autoRestart không nhận slot
-// - assignedWorkers persist qua getAllStates → restoreStates
+// R7 (AR-07) regression + parity coverage: tickWorkers and
+// settleWorkersOffline must consume the SAME allocation rule. The
+// all-manual + spare-capacity case used to crash online allocation
+// ("Cannot read properties of undefined (reading 'activeWorkerSlots')")
+// and diverge offline.
 import { describe, expect, it } from 'vitest'
 import { MaterialBag } from '../material/MaterialBag'
 import { MaterialRegistry } from '../material/MaterialRegistry'
@@ -17,172 +15,143 @@ import {
   THANH_VAN_PRODUCTION_SITES,
 } from './ProductionCatalog'
 import { ProductionSystem } from './ProductionSystem'
-import type { ProductionSiteState } from './ProductionTypes'
 
 function createSystem(): ProductionSystem {
-  const system = new ProductionSystem({
+  return new ProductionSystem({
     territory: TERRITORY_THANH_VAN,
     sites: THANH_VAN_PRODUCTION_SITES,
     forestRewards: THANH_VAN_FOREST_REWARDS,
     mineRewards: THANH_VAN_MINE_REWARDS,
     grottoHerbs: THANH_VAN_GROTTO_HERBS,
   })
-
-  return system
 }
 
 function createBag(): { bag: MaterialBag; registry: MaterialRegistry } {
   const registry = new MaterialRegistry()
-
   for (const material of materials) {
     registry.register(material)
   }
-
   return { bag: new MaterialBag(), registry }
 }
 
+function makeAutoSystem(siteIds: string[]): ProductionSystem {
+  const system = createSystem()
+  // restoreStates REPLACES the whole map — pass all sites in ONE call.
+  system.restoreStates(
+    siteIds.map(siteId => ({
+      siteId,
+      level: 1,
+      autoRestart: true,
+      activeWorkerSlots: 0,
+      workerCycles: [],
+    })),
+  )
+  return system
+}
+
 const REALM = 'mortal'
-const NOW = 1_000_000
 
-function setupSites(system: ProductionSystem): ProductionSiteState[] {
-  const states: ProductionSiteState[] = []
-
-  for (const definition of THANH_VAN_PRODUCTION_SITES) {
-    const state = system.ensureSiteState(definition.siteId)
-    state.autoRestart = true
-    states.push(state)
-  }
-
-  return states
-}
-
-function assignmentMap(entries: Array<[string, number]>): Map<string, number> {
-  return new Map(entries)
-}
-
-describe('ProductionSystem — tickWorkers manual assignment', () => {
-  it('không assignments → round-robin như cũ (regression guard)', () => {
-    const system = createSystem()
-    const states = setupSites(system)
+describe('tickWorkers — AR-07 regression', () => {
+  it('does not throw when every site is manual and capacity has remainder', () => {
+    const system = makeAutoSystem(['thanh_van_lam'])
     const { bag, registry } = createBag()
 
-    system.tickWorkers(NOW, bag, registry, REALM, 6)
+    expect(() =>
+      system.tickWorkers(Date.now(), bag, registry, REALM, 3, new Map([['thanh_van_lam', 1]])),
+    ).not.toThrow()
 
-    // 6 slots / 3 sites → 2/2/2
-    expect(states.map((state) => state.activeWorkerSlots)).toEqual([2, 2, 2])
+    expect(system.getState('thanh_van_lam')!.activeWorkerSlots).toBe(1)
   })
 
-  it('manual: A=4, B=1 → phần dư 1 slot về C (auto không assignment)', () => {
-    const system = createSystem()
-    const states = setupSites(system)
+  it('matches allocator output for mixed manual/auto sites', () => {
+    const system = makeAutoSystem(['thanh_van_lam', 'thanh_van_quang', 'thanh_van_dong_thien'])
     const { bag, registry } = createBag()
 
     system.tickWorkers(
-      NOW,
+      Date.now(),
       bag,
       registry,
       REALM,
       6,
-      assignmentMap([
-        [states[0]!.siteId, 4],
-        [states[1]!.siteId, 1],
+      new Map([
+        ['thanh_van_lam', 4],
+        ['thanh_van_quang', 1],
       ]),
     )
 
-    expect(states[0]!.activeWorkerSlots).toBe(4)
-    expect(states[1]!.activeWorkerSlots).toBe(1)
-    expect(states[2]!.activeWorkerSlots).toBe(1) // phần dư round-robin
+    expect(system.getState('thanh_van_lam')!.activeWorkerSlots).toBe(4)
+    expect(system.getState('thanh_van_quang')!.activeWorkerSlots).toBe(1)
+    // remainder 1 -> the only unassigned site (audit divergence case)
+    expect(system.getState('thanh_van_dong_thien')!.activeWorkerSlots).toBe(1)
   })
 
-  it('manual vượt capacity → truncate theo thứ tự Map', () => {
-    const system = createSystem()
-    const states = setupSites(system)
+  it('remainder is idle when all sites are manual', () => {
+    const system = makeAutoSystem(['thanh_van_lam', 'thanh_van_quang'])
     const { bag, registry } = createBag()
 
     system.tickWorkers(
-      NOW,
+      Date.now(),
       bag,
       registry,
       REALM,
-      3,
-      assignmentMap([
-        [states[0]!.siteId, 5],
-        [states[1]!.siteId, 5],
+      6,
+      new Map([
+        ['thanh_van_lam', 2],
+        ['thanh_van_quang', 2],
       ]),
     )
 
-    // A ưu tiên theo thứ tự Map → min(5, 3)=3; B không còn dư.
-    expect(states[0]!.activeWorkerSlots).toBe(3)
-    expect(states[1]!.activeWorkerSlots).toBe(0)
-    expect(states[2]!.activeWorkerSlots).toBe(0)
+    expect(system.getState('thanh_van_lam')!.activeWorkerSlots).toBe(2)
+    expect(system.getState('thanh_van_quang')!.activeWorkerSlots).toBe(2)
   })
+})
 
-  it('site non-autoRestart không nhận slot dù được assigned', () => {
-    const system = createSystem()
-    const states = setupSites(system)
-    states[0]!.autoRestart = false
-
-    const { bag, registry } = createBag()
-
-    system.tickWorkers(NOW, bag, registry, REALM, 4, assignmentMap([[states[0]!.siteId, 2]]))
-
-    expect(states[0]!.activeWorkerSlots).toBe(0)
-
-    // Slots còn dư 4 toàn bộ cho 2 site auto còn lại (round-robin).
-    expect(states[1]!.activeWorkerSlots + states[2]!.activeWorkerSlots).toBe(4)
-  })
-
-  it('assignedWorkers persist qua getAllStates → restoreStates', () => {
-    const system = createSystem()
-    setupSites(system)
-    const state = system.getState(THANH_VAN_PRODUCTION_SITES[0]!.siteId)!
-
-    state.assignedWorkers = 3
-
-    const saved = system.getAllStates()
-
-    const restored = createSystem()
-    restored.restoreStates(saved as ProductionSiteState[])
-
-    expect(restored.getState(THANH_VAN_PRODUCTION_SITES[0]!.siteId)?.assignedWorkers).toBe(3)
-  })
-
-  it('workerCycles chạy đúng số slot manual (mỗi slot 1 cycle)', () => {
-    const system = createSystem()
-    const states = setupSites(system)
-    const { bag, registry } = createBag()
-
-    system.tickWorkers(NOW, bag, registry, REALM, 10, assignmentMap([[states[0]!.siteId, 2]]))
-
-    // A: 2 slots manual + phần dư 8 chia B/C round-robin (4/4) → A có 2 cycles.
-    expect(system.getState(states[0]!.siteId)!.workerCycles?.length).toBe(2)
-    expect(system.getState(states[1]!.siteId)!.workerCycles?.length).toBe(4)
-  })
-
-  it('settleWorkersOffline manual khớp online: cùng assignments → cùng phân bổ slots', () => {
-    const system = createSystem()
-    const states = setupSites(system)
-    const { bag, registry } = createBag()
-
-    const assignments = assignmentMap([
-      [states[0]!.siteId, 4],
-      [states[1]!.siteId, 1],
+describe('online/offline allocation parity (AR-07 divergence)', () => {
+  it('settleOffline distributes exactly like tickWorkers for identical inputs', () => {
+    const assignments = new Map<string, number>([
+      ['thanh_van_lam', 4],
+      ['thanh_van_quang', 1],
     ])
 
-    // Online: tick một lần với capacity 6 — slots 4/1/1.
-    system.tickWorkers(NOW, bag, registry, REALM, 6, assignments)
+    const online = makeAutoSystem(['thanh_van_lam', 'thanh_van_quang', 'thanh_van_dong_thien'])
+    const offline = makeAutoSystem(['thanh_van_lam', 'thanh_van_quang', 'thanh_van_dong_thien'])
 
-    expect(states.map((state) => state.activeWorkerSlots)).toEqual([4, 1, 1])
+    const onlineBag = createBag()
+    const offlineBag = createBag()
 
-    // Offline: settleOffline dùng cùng assignments — không crash, settle
-    // chạy qua đường worker với phân bổ 4/1/1 (dù không đủ dữ kiện cycle
-    // hoàn thành trong window, code path phải giống online).
-    const settled = system.settleOffline(bag, registry, REALM, NOW + 60_000, {
+    online.tickWorkers(Date.now(), onlineBag.bag, onlineBag.registry, REALM, 6, assignments)
+
+    offline.settleOffline(offlineBag.bag, offlineBag.registry, REALM, Date.now() + 60_000, {
       workerCapacity: 6,
       workerAssignments: assignments,
-      offlineSinceMs: NOW,
     })
 
-    expect(settled).toBeGreaterThanOrEqual(0)
+    // The audit divergence case: capacity 6, A=4 manual, B=1 manual,
+    // C unassigned. Online gives the remainder to C; the old offline
+    // loop round-robined ALL active states (giving it to A).
+    expect(offline.getState('thanh_van_lam')!.activeWorkerSlots).toBe(4)
+    expect(offline.getState('thanh_van_quang')!.activeWorkerSlots).toBe(1)
+    expect(offline.getState('thanh_van_dong_thien')!.activeWorkerSlots).toBe(1)
+    expect(online.getState('thanh_van_lam')!.activeWorkerSlots).toBe(4)
+    expect(online.getState('thanh_van_quang')!.activeWorkerSlots).toBe(1)
+    expect(online.getState('thanh_van_dong_thien')!.activeWorkerSlots).toBe(1)
+  })
+
+  it('offline remainder is idle when every site is manual (no second rule)', () => {
+    const assignments = new Map<string, number>([
+      ['thanh_van_lam', 2],
+      ['thanh_van_quang', 2],
+    ])
+
+    const offline = makeAutoSystem(['thanh_van_lam', 'thanh_van_quang'])
+    const { bag, registry } = createBag()
+
+    offline.settleOffline(bag, registry, REALM, Date.now() + 60_000, {
+      workerCapacity: 6,
+      workerAssignments: assignments,
+    })
+
+    expect(offline.getState('thanh_van_lam')!.activeWorkerSlots).toBe(2)
+    expect(offline.getState('thanh_van_quang')!.activeWorkerSlots).toBe(2)
   })
 })

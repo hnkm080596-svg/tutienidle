@@ -894,6 +894,23 @@ Before connecting decomposition:
 
 Do not invent offline decomposition behavior without an explicit decision.
 
+```text
+✅ DONE 2026-09-08 (branch r7-worker-allocation) — user decisions (chat):
+   decompose SHARES the production pool + offline settle approved.
+   One pure allocator (WorkerAllocator.allocateWorkerSlots) consumed by
+   BOTH tickWorkers + settleWorkersOffline (AR-07 crash + online/offline
+   divergence fixed; remainder IDLE when no unassigned site). DecomposeSystem
+   dynamic updateCapacity() (AR-08); GameManager tick splits the shared pool
+   (decompose first, production remainder); DecomposeTab slider max derives
+   from live capacity; decompose save slice + shape validation + bounded
+   offline settle under PRODUCTION_OFFLINE_CAP_SECONDS; one shared
+   delivery/overflow path (deliverDecomposeOutput). TDD RED→GREEN per task;
+   P3 full 418 files / 2873 tests PASS + build + type-check PASS;
+   P14 deferred (isolated-worktree exception).
+```
+
+**Status: COMPLETE 2026-09-08**
+
 ---
 
 # Phase R8 — Quest & Progression Lifecycle Authority
@@ -1314,7 +1331,7 @@ R14 Architecture Enforcement
 | 5 | R4 — Buff / Status Foundation Closure | AR-06, AR-19, AR-18 | ✅ COMPLETE 2026-09-08 |
 | 6 | R5 — Combat Runtime / Presentation Boundary | AR-14, AR-20, AR-24, AR-29 | ✅ COMPLETE 2026-09-08 |
 | 7 | **R6 — Combat Character Art / Asset Contract** | **asset/presentation findings** | ⏭️ **NEXT** |
-| 8 | R7 — Worker Allocation / Decomposition | AR-07, AR-08 | ⏸ / may run independently |
+| 8 | R7 — Worker Allocation / Decomposition | AR-07, AR-08 | ✅ COMPLETE 2026-09-08 |
 | 9 | R8 — Quest & Progression Authority | AR-09, AR-10, AR-13 | ⏸ |
 | 10 | R9 — Equipment / Inventory Integrity | AR-21, AR-22, AR-23, AR-34 | ⏸ |
 | 11 | R10 — Save / Restore Boundary | AR-12, AR-15 | ⏸ |

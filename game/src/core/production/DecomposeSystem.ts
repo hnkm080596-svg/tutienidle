@@ -24,6 +24,7 @@ import {
   type ProfessionGrade,
 } from '../profession/ProfessionGrade'
 import type { MaterialBag } from '../material/MaterialBag'
+import { PRODUCTION_OFFLINE_CAP_SECONDS } from './ProductionBalance'
 
 export interface DecomposeSettings {
   gradeFilter: ProfessionGrade | 'all'
@@ -37,8 +38,14 @@ export interface DecomposeOutputEntry {
 }
 
 export interface DecomposeSystemOptions {
-  autoWorkerCapacity: number
   cycleSeconds?: number
+}
+
+/** R7 (AR-08) - detached persistence slice for GameSave. */
+export interface DecomposeSaveState {
+  settings: DecomposeSettings
+  nextCycleAt: number
+  started: boolean
 }
 
 const DEFAULT_CYCLE_SECONDS = 30
@@ -49,7 +56,9 @@ const ORE_PER_WORKER_PER_CYCLE = 2
 export class DecomposeSystem {
   private readonly bag: MaterialBag
 
-  private readonly autoWorkerCapacity: number
+  // R7 (AR-08): live capacity supplied by the workforce authority
+  // (GameManager tick / restore) - NOT a constructor constant.
+  private capacity = 0
 
   private readonly cycleMs: number
 
@@ -61,11 +70,25 @@ export class DecomposeSystem {
 
   private pendingOutput: DecomposeOutputEntry[] = []
 
-  constructor(bag: MaterialBag, options: DecomposeSystemOptions) {
+  constructor(bag: MaterialBag, options: DecomposeSystemOptions = {}) {
     this.bag = bag
-    this.autoWorkerCapacity = Math.max(0, Math.floor(options.autoWorkerCapacity))
     this.cycleMs = (options.cycleSeconds ?? DEFAULT_CYCLE_SECONDS) * 1000
     this.settings = { gradeFilter: 'all', ageFilter: 'all', workers: 0 }
+  }
+
+  /** Live capacity from the workforce authority (GameManager per tick). */
+  updateCapacity(capacity: number): void {
+    this.capacity = Math.max(0, Math.floor(capacity))
+
+    // Shrink case: a CHQ downgrade or stale save must not leave workers
+    // above the new ceiling.
+    if (this.settings.workers > this.capacity) {
+      this.settings.workers = this.capacity
+    }
+  }
+
+  getCapacity(): number {
+    return this.capacity
   }
 
   getSettings(): DecomposeSettings {
@@ -78,7 +101,7 @@ export class DecomposeSystem {
       ageFilter: patch.ageFilter ?? this.settings.ageFilter,
       workers: Math.min(
         Math.max(0, Math.floor(patch.workers ?? this.settings.workers)),
-        this.autoWorkerCapacity,
+        this.capacity,
       ),
     }
   }
@@ -125,6 +148,89 @@ export class DecomposeSystem {
     this.pendingOutput = []
 
     return drained
+  }
+
+  /**
+   * R7 (AR-08) - detached snapshot for GameSave. A value at a point in
+   * time: mutating the live system after this call must not change the
+   * snapshot (A3).
+   */
+  getSaveState(): DecomposeSaveState {
+    return {
+      settings: { ...this.settings },
+      nextCycleAt: this.nextCycleAt,
+      started: this.started,
+    }
+  }
+
+  /**
+   * R7 (AR-08) - restore a snapshot produced by getSaveState.
+   * Restored workers clamp to the CURRENT capacity (a stale save must
+   * not resurrect workers above the live CHQ ceiling). `undefined`
+   * (old saves without the slice) keeps defaults.
+   *
+   * Repeat-application contract (A3 / QA-2026-09-08-R7-001): the cycle
+   * timer MERGES with the live state instead of rewinding it. A first
+   * restore into a fresh instance takes the saved deadline; restoring
+   * the SAME payload again into an instance that already settled that
+   * window keeps the advanced timer, so the offline settle cannot
+   * award twice.
+   */
+  restore(state: DecomposeSaveState | undefined): void {
+    if (!state) {
+      return
+    }
+
+    this.settings = {
+      gradeFilter: state.settings.gradeFilter ?? 'all',
+      ageFilter: state.settings.ageFilter ?? 'all',
+      workers: Math.min(Math.max(0, Math.floor(state.settings.workers ?? 0)), this.capacity),
+    }
+    this.nextCycleAt = Math.max(this.nextCycleAt, Math.max(0, Math.floor(state.nextCycleAt ?? 0)))
+    this.started = this.started || Boolean(state.started)
+  }
+
+  /**
+   * R7 (AR-08, user-approved offline settle) - bounded catch-up over
+   * [offlineSinceMs, nowMs]: settle every cycle whose deadline fell
+   * inside the window capped at PRODUCTION_OFFLINE_CAP_SECONDS, the
+   * SAME economy cap concept as production offline settlement. Ore
+   * stock bounds the run naturally (runOneCycle consumes the bag).
+   *
+   * Idempotent per window: cycles already settled advance
+   * nextCycleAt, so a repeated call over the same window settles 0.
+   */
+  settleOffline(nowMs: number, offlineSinceMs: number): number {
+    if (this.settings.workers <= 0 || !this.started) {
+      return 0
+    }
+
+    // The settle window starts at the latest of: restored timer,
+    // offline-since marker, or (cap - window) back from now.
+    const windowStartMs = Math.max(
+      this.nextCycleAt - this.cycleMs,
+      Math.floor(offlineSinceMs),
+      nowMs - PRODUCTION_OFFLINE_CAP_SECONDS * 1000,
+    )
+
+    // Fast-forward deadlines that predate the settle window: they are
+    // forfeited, not replayed (timer still advances - a repeated call
+    // over the same window settles nothing twice).
+    while (this.nextCycleAt <= windowStartMs) {
+      this.nextCycleAt += this.cycleMs
+    }
+
+    let settled = 0
+
+    // Bounded loop (5000 cycles = 41+ hours at 30s - far beyond the
+    // offline cap; the guard only protects against corrupt timers).
+    while (this.nextCycleAt <= nowMs && settled < 5000) {
+      this.runOneCycle()
+      settled += 1
+      this.nextCycleAt += this.cycleMs
+    }
+
+    return settled
   }
 
   private runOneCycle(): void {

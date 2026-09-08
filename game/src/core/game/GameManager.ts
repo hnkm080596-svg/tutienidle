@@ -51,7 +51,7 @@ import type { Material } from '../material/Material'
 import { EquipmentRegistry } from '../equipment/EquipmentRegistry'
 import { EquipmentBag } from '../equipment/EquipmentBag'
 import { EquipmentSystem } from '../equipment/EquipmentSystem'
-import { DecomposeSystem } from '../production/DecomposeSystem'
+import { DecomposeSystem, type DecomposeOutputEntry } from '../production/DecomposeSystem'
 import type { RefineValueEntry } from '../equipment/EquipmentSystem'
 import type { RolledAffix } from '../equipment/RolledAffix'
 import { createDefaultEquipmentOperationCostCatalog } from '../equipment/EquipmentOperationCostCatalog'
@@ -432,8 +432,10 @@ export class GameManager {
   readonly equipmentBag = new EquipmentBag()
   readonly equipmentSystem = new EquipmentSystem(createDefaultEquipmentOperationCostCatalog())
 
-  // Task 14 (rework P4) ï¿½ Tab Phï¿½n Gi?i: khoï¿½ng ? Luy?n Khï¿½ Tinh Hoa.
-  readonly decomposeSystem = new DecomposeSystem(this.materialBag, { autoWorkerCapacity: 0 })
+  // Task 14 (rework P4) - Decompose tab: ore -> refined essence.
+  // R7 (AR-08): capacity is dynamic - supplied per tick/restore via
+  // updateCapacity from the workforce authority (CHQ).
+  readonly decomposeSystem = new DecomposeSystem(this.materialBag)
 
   // Core Loop Foundation checklist (Phase 3, Mục AFFIX) — thay thế
   // hoàn toàn substatPool cũ.
@@ -671,6 +673,8 @@ export class GameManager {
       getWorkerAssignments: () => this.getWorkerAssignments(),
       settleAutoFarmOffline: (player, elapsedSeconds) =>
         this.settleAutoFarmOffline(player, elapsedSeconds),
+      decomposeSystem: this.decomposeSystem,
+      deliverDecomposeOutput: (entry) => this.deliverDecomposeOutput(entry),
     })
 
     // Turn-battle runtime ops (C2 split, 2026-09-08) - owns the TurnBattle
@@ -2748,12 +2752,23 @@ export class GameManager {
         this.activePlayer.realmId,
       )
 
+      // R7 (AR-08) shared worker pool - decompose claims its workers
+      // from the CHQ capacity FIRST; production receives the remainder.
+      // Capacity is re-supplied every tick so CHQ build/upgrade takes
+      // effect without a restart, and stale restored workers clamp down.
+      this.decomposeSystem.updateCapacity(this.activePlayer.autoWorkerCapacity ?? 0)
+      const decomposeWorkers = this.decomposeSystem.getSettings().workers
+      const productionCapacity = Math.max(
+        0,
+        (this.activePlayer.autoWorkerCapacity ?? 0) - decomposeWorkers,
+      )
+
       this.productionSystem.tickWorkers(
         Date.now(),
         this.materialBag,
         this.materialRegistry,
         this.activePlayer.realmId,
-        this.activePlayer.autoWorkerCapacity ?? 0,
+        productionCapacity,
         this.getWorkerAssignments(),
       )
 
@@ -2796,38 +2811,13 @@ export class GameManager {
         })
       }
 
-      // Task 14 (rework P4) ï¿½ Tab Phï¿½n Gi?i cycle: khoï¿½ng ? tinh hoa.
+      // Task 14 (rework P4) - Decompose cycle: ore -> refined essence.
+      // R7 (AR-08): online tick and offline restore share ONE delivery
+      // path (deliverDecomposeOutput) - no duplicated overflow rules.
       this.decomposeSystem.tick(Date.now())
 
       for (const entry of this.decomposeSystem.drainOutput()) {
-        const tinhHoa = this.materialRegistry.has(entry.materialId)
-          ? this.materialRegistry.get(entry.materialId)
-          : undefined
-
-        // 9.8 — toast craft hiển thị lượng DELIVERED (trừ tràn); tràn
-        // thì push bag.overflow. delivered === 0 → bỏ toast craft.
-        const overflow = this.materialBag.add(
-          tinhHoa ?? { id: entry.materialId, name: entry.materialId } as never,
-          entry.amount,
-        )
-
-        const delivered = entry.amount - overflow
-
-        if (delivered > 0) {
-          this.notifications.push({
-            kind: 'craft',
-            message: `Phân Giải +${delivered} ${(tinhHoa as { name?: string } | undefined)?.name ?? 'Tinh Hoa'}`,
-          })
-        }
-
-        if (overflow > 0) {
-          this.notifications.push(
-            createBagOverflowEvent(
-              (tinhHoa as { name?: string } | undefined)?.name ?? entry.materialId,
-              overflow,
-            ),
-          )
-        }
+        this.deliverDecomposeOutput(entry)
       }
     }
 
@@ -2843,6 +2833,42 @@ export class GameManager {
     this.passiveSystem.tick(deltaSeconds)
 
     this.updateBattleFixedStep(deltaSeconds)
+  }
+
+  /**
+   * R7 (AR-08) - single decompose delivery path shared by the online
+   * tick and the offline restore settle: toast shows the DELIVERED
+   * amount (minus overflow); overflow pushes a bag.overflow event;
+   * delivered === 0 skips the craft toast. Extracted verbatim from the
+   * old inline tick block.
+   */
+  private deliverDecomposeOutput(entry: DecomposeOutputEntry): void {
+    const tinhHoa = this.materialRegistry.has(entry.materialId)
+      ? this.materialRegistry.get(entry.materialId)
+      : undefined
+
+    const overflow = this.materialBag.add(
+      tinhHoa ?? { id: entry.materialId, name: entry.materialId } as never,
+      entry.amount,
+    )
+
+    const delivered = entry.amount - overflow
+
+    if (delivered > 0) {
+      this.notifications.push({
+        kind: 'craft',
+        message: `Phân Giải +${delivered} ${(tinhHoa as { name?: string } | undefined)?.name ?? 'Tinh Hoa'}`,
+      })
+    }
+
+    if (overflow > 0) {
+      this.notifications.push(
+        createBagOverflowEvent(
+          (tinhHoa as { name?: string } | undefined)?.name ?? entry.materialId,
+          overflow,
+        ),
+      )
+    }
   }
 
   /**
