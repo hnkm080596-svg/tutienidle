@@ -162,7 +162,7 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
     expect(outcome.save.decompose).toEqual(decomposeSnapshot)
 
     // Restore into a FRESH manager: settings + timer come back; workers
-    // clamp to the fresh manager's live capacity (0) — no resurrected
+    // clamp to the fresh manager's live capacity (0) - no resurrected
     // workforce; settling the same instant awards nothing new.
     const fresh = createBootedGameManager()
     const freshPlayer = createDefaultPlayer()
@@ -175,7 +175,7 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
       workers: 0, // clamped: fresh manager has no CHQ -> capacity 0
     })
 
-    // No offline window elapsed (same mocked instant) — no double award.
+    // No offline window elapsed (same mocked instant) - no double award.
     expect(fresh.decomposeSystem.drainOutput()).toEqual([])
   })
 })

@@ -315,7 +315,7 @@ export class ProductionSystem {
 
     const assignmentMap = assignments ?? new Map<string, number>()
 
-    // R7 (AR-07): one allocation rule — the shared pure allocator.
+    // R7 (AR-07): one allocation rule - the shared pure allocator.
     // Manual sites first (min(assigned, remaining)); remainder
     // round-robins UNASSIGNED sites; leftover capacity stays idle
     // instead of crashing (no zero-eligible-site exception).
@@ -478,7 +478,7 @@ export class ProductionSystem {
       return 0
     }
 
-    // R7 (AR-07): the SAME pure allocator as tickWorkers — online and
+    // R7 (AR-07): the SAME pure allocator as tickWorkers - online and
     // offline settlement share one distribution rule (manual first,
     // remainder round-robins unassigned sites, leftover idle).
     const activeStates = [...this.states.values()].filter((state) => state.autoRestart)

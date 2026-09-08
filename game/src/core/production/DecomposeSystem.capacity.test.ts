@@ -1,4 +1,4 @@
-// R7 (AR-08) — DecomposeSystem capacity must be DYNAMIC: the live
+// R7 (AR-08) - DecomposeSystem capacity must be DYNAMIC: the live
 // workforce capacity reaches the running instance through an explicit
 // update command instead of a constructor-only constant 0. The old
 // wiring made the UI's worker request silently clamp to zero.

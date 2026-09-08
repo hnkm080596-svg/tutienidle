@@ -3,7 +3,7 @@ import { allocateWorkerSlots } from './WorkerAllocator'
 
 // R7 (AR-07): single workforce distribution rule shared by online
 // tickWorkers and offline settleWorkersOffline. Matrix from the spec
-// (§6): manual-first order, remainder round-robin over UNASSIGNED
+// (spec 6): manual-first order, remainder round-robin over UNASSIGNED
 // sites only, idle remainder when no unassigned site exists.
 describe('allocateWorkerSlots', () => {
   it('assigns manual sites first in given order, clamped to remaining capacity', () => {

@@ -28,7 +28,7 @@ const system = gameManager.decomposeSystem
 
 const settingsMirror = ref<DecomposeSettings>(system.getSettings())
 
-// R7 (AR-08): slider max derives from the LIVE workforce capacity —
+// R7 (AR-08): slider max derives from the LIVE workforce capacity -
 // no hardcoded ceiling. The capacity snapshot re-syncs on every
 // state-version bump (CHQ build/upgrade mid-session) so the max stays
 // truthful; the system itself is plain TS, not reactive.

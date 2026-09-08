@@ -56,7 +56,7 @@ export interface GameManagerSaveRestoreDeps {
   // Auto-farm Task 5 (2026-09-04) — offline catch-up closure (logic sống
   // trên GameManager, SaveRestore chỉ gọi lại — cùng pattern trên).
   settleAutoFarmOffline: (player: PlayerData, elapsedOfflineSeconds: number) => void
-  // R7 (AR-08) — decompose restore + shared delivery closure (online
+  // R7 (AR-08) - decompose restore + shared delivery closure (online
   // tick and offline settle use the SAME delivery/overflow path).
   decomposeSystem: DecomposeSystem
   deliverDecomposeOutput: (entry: DecomposeOutputEntry) => void
@@ -266,7 +266,7 @@ export class GameManagerSaveRestore {
 
     const offlinePlayer = this.deps.getActivePlayer()
 
-    // R7 (AR-08) — decompose: restore processing state, re-supply live
+    // R7 (AR-08) - decompose: restore processing state, re-supply live
     // capacity (CHQ formula beats any stale saved value), settle the
     // offline window under the shared cap concept, then deliver output
     // through the SAME delivery/overflow path as the online tick.

@@ -158,7 +158,7 @@ describe('GameManager — assignWorkers (UI phân bổ, INV-CHQ-10)', () => {
   })
 })
 
-describe('GameManager — R7 full-tick wiring guard (P13 class)', () => {
+describe('GameManager - R7 full-tick wiring guard (P13 class)', () => {
   // The P13 incident class: unit tests on hand-built systems prove the
   // engine works while the REAL running instance stays unwired. This
   // guard drives the actual GameManager.update() and proves BOTH worker
@@ -191,7 +191,7 @@ describe('GameManager — R7 full-tick wiring guard (P13 class)', () => {
     expect(manager.decomposeSystem.getCapacity()).toBe(7)
     expect(manager.decomposeSystem.getSettings().workers).toBe(2)
 
-    // Production received the remainder 5 — the real tickWorkers call,
+    // Production received the remainder 5 - the real tickWorkers call,
     // not a hand-invoked one.
     const totalProductionSlots = manager
       .productionSystem.getAllStates()

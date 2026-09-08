@@ -1,4 +1,4 @@
-// R7 (AR-08) — shared worker pool wiring at the REAL GameManager tick
+// R7 (AR-08) - shared worker pool wiring at the REAL GameManager tick
 // boundary (P13 lesson: unit tests on hand-built systems do not prove
 // the running instance is wired). Decompose claims its workers from
 // the CHQ capacity FIRST; production tickWorkers receives the

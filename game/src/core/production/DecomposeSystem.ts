@@ -41,7 +41,7 @@ export interface DecomposeSystemOptions {
   cycleSeconds?: number
 }
 
-/** R7 (AR-08) — detached persistence slice for GameSave. */
+/** R7 (AR-08) - detached persistence slice for GameSave. */
 export interface DecomposeSaveState {
   settings: DecomposeSettings
   nextCycleAt: number
@@ -57,7 +57,7 @@ export class DecomposeSystem {
   private readonly bag: MaterialBag
 
   // R7 (AR-08): live capacity supplied by the workforce authority
-  // (GameManager tick / restore) — NOT a constructor constant.
+  // (GameManager tick / restore) - NOT a constructor constant.
   private capacity = 0
 
   private readonly cycleMs: number
@@ -151,7 +151,7 @@ export class DecomposeSystem {
   }
 
   /**
-   * R7 (AR-08) — detached snapshot for GameSave. A value at a point in
+   * R7 (AR-08) - detached snapshot for GameSave. A value at a point in
    * time: mutating the live system after this call must not change the
    * snapshot (A3).
    */
@@ -164,7 +164,7 @@ export class DecomposeSystem {
   }
 
   /**
-   * R7 (AR-08) — restore a snapshot produced by getSaveState.
+   * R7 (AR-08) - restore a snapshot produced by getSaveState.
    * Restored workers clamp to the CURRENT capacity (a stale save must
    * not resurrect workers above the live CHQ ceiling). `undefined`
    * (old saves without the slice) keeps defaults.
@@ -184,7 +184,7 @@ export class DecomposeSystem {
   }
 
   /**
-   * R7 (AR-08, user-approved offline settle) — bounded catch-up over
+   * R7 (AR-08, user-approved offline settle) - bounded catch-up over
    * [offlineSinceMs, nowMs]: settle every cycle whose deadline fell
    * inside the window capped at PRODUCTION_OFFLINE_CAP_SECONDS, the
    * SAME economy cap concept as production offline settlement. Ore
@@ -207,7 +207,7 @@ export class DecomposeSystem {
     )
 
     // Fast-forward deadlines that predate the settle window: they are
-    // forfeited, not replayed (timer still advances — a repeated call
+    // forfeited, not replayed (timer still advances - a repeated call
     // over the same window settles nothing twice).
     while (this.nextCycleAt <= windowStartMs) {
       this.nextCycleAt += this.cycleMs
@@ -215,7 +215,7 @@ export class DecomposeSystem {
 
     let settled = 0
 
-    // Bounded loop (5000 cycles = 41+ hours at 30s — far beyond the
+    // Bounded loop (5000 cycles = 41+ hours at 30s - far beyond the
     // offline cap; the guard only protects against corrupt timers).
     while (this.nextCycleAt <= nowMs && settled < 5000) {
       this.runOneCycle()

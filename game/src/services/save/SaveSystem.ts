@@ -428,7 +428,7 @@ export interface GameSave {
   /** v51: state Quest System (active progress + completedOnceIds + daily reset mốc). */
   quests?: QuestManagerState
 
-  /** R7 (AR-08): decompose settings + cycle timer. Optional — old
+  /** R7 (AR-08): decompose settings + cycle timer. Optional - old
    * development saves lack the slice (E8: no migration needed). */
   decompose?: DecomposeSaveState
 }
@@ -579,7 +579,7 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
 
     quests: structuredClone(gameManager.questManager.getState()),
 
-    // R7 (AR-08) — detached decompose snapshot (getSaveState returns a
+    // R7 (AR-08) - detached decompose snapshot (getSaveState returns a
     // value copy; structuredClone keeps it independent of live state).
     decompose: structuredClone(gameManager.decomposeSystem.getSaveState()),
   }

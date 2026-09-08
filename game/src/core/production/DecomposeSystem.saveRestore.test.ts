@@ -1,4 +1,4 @@
-// R7 (AR-08) — DecomposeSystem persistence + offline settle.
+// R7 (AR-08) - DecomposeSystem persistence + offline settle.
 // Processing state (settings + cycle timer) joins GameSave; restore
 // clamps to live capacity; a repeated settle over the same window
 // must not double-award (A3 restore semantics).
@@ -92,7 +92,7 @@ describe('DecomposeSystem offline settle (AR-08)', () => {
     system.setSetting({ workers: 1 })
     system.tick(0)
 
-    // "Offline" for 100 hours — the settle window is capped at
+    // "Offline" for 100 hours - the settle window is capped at
     // PRODUCTION_OFFLINE_CAP_SECONDS, so settled cycles are bounded.
     const offlineMs = 100 * 3600_000
     const settled = system.settleOffline(offlineMs, 0)
@@ -101,7 +101,7 @@ describe('DecomposeSystem offline settle (AR-08)', () => {
     expect(settled).toBeGreaterThan(0)
   })
 
-  it('workers 0 → offline settle is a no-op', () => {
+  it('workers 0 -> offline settle is a no-op', () => {
     const { system } = makeSystem()
     system.updateCapacity(4)
     system.setSetting({ workers: 0 })
@@ -110,7 +110,7 @@ describe('DecomposeSystem offline settle (AR-08)', () => {
     expect(system.drainOutput()).toEqual([])
   })
 
-  it('output respects ore stock — dry cycles produce no output', () => {
+  it('output respects ore stock - dry cycles produce no output', () => {
     const { system, bag } = makeSystem()
     addOre(bag, 'mortal_ore_decade', 4) // exactly one cycle of 2 workers
     system.updateCapacity(2)

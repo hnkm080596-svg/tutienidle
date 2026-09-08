@@ -432,8 +432,8 @@ export class GameManager {
   readonly equipmentBag = new EquipmentBag()
   readonly equipmentSystem = new EquipmentSystem(createDefaultEquipmentOperationCostCatalog())
 
-  // Task 14 (rework P4) — Tab Phân Giải: khoáng → Luyện Khí Tinh Hoa.
-  // R7 (AR-08): capacity is dynamic — supplied per tick/restore via
+  // Task 14 (rework P4) - Decompose tab: ore -> refined essence.
+  // R7 (AR-08): capacity is dynamic - supplied per tick/restore via
   // updateCapacity from the workforce authority (CHQ).
   readonly decomposeSystem = new DecomposeSystem(this.materialBag)
 
@@ -2752,7 +2752,7 @@ export class GameManager {
         this.activePlayer.realmId,
       )
 
-      // R7 (AR-08) shared worker pool — decompose claims its workers
+      // R7 (AR-08) shared worker pool - decompose claims its workers
       // from the CHQ capacity FIRST; production receives the remainder.
       // Capacity is re-supplied every tick so CHQ build/upgrade takes
       // effect without a restart, and stale restored workers clamp down.
@@ -2811,9 +2811,9 @@ export class GameManager {
         })
       }
 
-      // Task 14 (rework P4) — Tab Phân Giải cycle: khoáng → tinh hoa.
+      // Task 14 (rework P4) - Decompose cycle: ore -> refined essence.
       // R7 (AR-08): online tick and offline restore share ONE delivery
-      // path (deliverDecomposeOutput) — no duplicated overflow rules.
+      // path (deliverDecomposeOutput) - no duplicated overflow rules.
       this.decomposeSystem.tick(Date.now())
 
       for (const entry of this.decomposeSystem.drainOutput()) {
@@ -2844,7 +2844,7 @@ export class GameManager {
   }
 
   /**
-   * R7 (AR-08) — single decompose delivery path shared by the online
+   * R7 (AR-08) - single decompose delivery path shared by the online
    * tick and the offline restore settle: toast shows the DELIVERED
    * amount (minus overflow); overflow pushes a bag.overflow event;
    * delivered === 0 skips the craft toast. Extracted verbatim from the
