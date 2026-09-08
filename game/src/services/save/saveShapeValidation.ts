@@ -488,6 +488,24 @@ export function validateGameSaveShape(parsed: unknown): ShapeValidationResult {
     issues.push({ path: '.quests', message: 'phải là object hoặc vắng mặt' })
   }
 
+  // R7 (AR-08) — decompose slice is optional; when present it must be
+  // an object with a non-negative finite workers number (restore
+  // re-clamps; malformed input is rejected instead of crashing boot).
+  if (parsed.decompose !== undefined) {
+    if (!isObject(parsed.decompose)) {
+      issues.push({ path: '.decompose', message: 'phải là object hoặc vắng mặt' })
+    } else {
+      const decompose = parsed.decompose as Record<string, unknown>
+      const settings = decompose.settings
+
+      if (!isObject(settings) || !Number.isFinite((settings as { workers?: unknown }).workers)) {
+        issues.push({ path: '.decompose.settings.workers', message: 'phải là số hữu hạn' })
+      } else if ((settings as { workers: number }).workers < 0) {
+        issues.push({ path: '.decompose.settings.workers', message: 'không được âm' })
+      }
+    }
+  }
+
   if (techniques) {
     validateIdEntries(techniques, 'techniques', issues)
   }

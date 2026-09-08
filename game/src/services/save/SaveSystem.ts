@@ -6,6 +6,7 @@ import type { EquipmentInstance } from '../../core/equipment/EquipmentInstance'
 import type { BuildingInstance } from '../../core/building/BuildingInstance'
 import type { EquipmentSlotState } from '../../core/equipment/EquipmentSlotState'
 import type { QuestManagerState } from '../../core/quest/QuestManager'
+import type { DecomposeSaveState } from '../../core/production/DecomposeSystem'
 import type { OfflineResult } from '../../core/idle/OfflineProgressSystem'
 import type { StatModifier } from '../../core/stats/StatCalculator'
 import { validateGameSaveShape } from './saveShapeValidation'
@@ -426,6 +427,10 @@ export interface GameSave {
 
   /** v51: state Quest System (active progress + completedOnceIds + daily reset mốc). */
   quests?: QuestManagerState
+
+  /** R7 (AR-08): decompose settings + cycle timer. Optional — old
+   * development saves lack the slice (E8: no migration needed). */
+  decompose?: DecomposeSaveState
 }
 
 export interface GameSessionPlayerOwner {
@@ -573,6 +578,10 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
     alchemyJobs: gameManager.alchemySystem.getJobs(),
 
     quests: structuredClone(gameManager.questManager.getState()),
+
+    // R7 (AR-08) — detached decompose snapshot (getSaveState returns a
+    // value copy; structuredClone keeps it independent of live state).
+    decompose: structuredClone(gameManager.decomposeSystem.getSaveState()),
   }
 }
 

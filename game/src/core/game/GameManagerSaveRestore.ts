@@ -16,6 +16,7 @@ import type { BuildingInstance } from '../building/BuildingInstance'
 import { QuestManager } from '../quest/QuestManager'
 import { ProductionSystem } from '../production/ProductionSystem'
 import type { ProductionSiteState } from '../production/ProductionTypes'
+import { DecomposeSystem, type DecomposeOutputEntry } from '../production/DecomposeSystem'
 import { AlchemySystem, type ActiveAlchemyJob } from '../alchemy/AlchemySystem'
 import { getAlchemySuccessBonusPercentPoints } from '../talent/TalentEffects'
 import type { PlayerData } from '../player/Player'
@@ -55,6 +56,10 @@ export interface GameManagerSaveRestoreDeps {
   // Auto-farm Task 5 (2026-09-04) — offline catch-up closure (logic sống
   // trên GameManager, SaveRestore chỉ gọi lại — cùng pattern trên).
   settleAutoFarmOffline: (player: PlayerData, elapsedOfflineSeconds: number) => void
+  // R7 (AR-08) — decompose restore + shared delivery closure (online
+  // tick and offline settle use the SAME delivery/overflow path).
+  decomposeSystem: DecomposeSystem
+  deliverDecomposeOutput: (entry: DecomposeOutputEntry) => void
 }
 
 /**
@@ -261,6 +266,13 @@ export class GameManagerSaveRestore {
 
     const offlinePlayer = this.deps.getActivePlayer()
 
+    // R7 (AR-08) — decompose: restore processing state, re-supply live
+    // capacity (CHQ formula beats any stale saved value), settle the
+    // offline window under the shared cap concept, then deliver output
+    // through the SAME delivery/overflow path as the online tick.
+    this.deps.decomposeSystem.restore(save.decompose)
+    this.deps.decomposeSystem.updateCapacity(offlinePlayer?.autoWorkerCapacity ?? 0)
+
     if (offlinePlayer) {
       const elapsedOfflineSeconds = Math.max(
         0,
@@ -277,11 +289,24 @@ export class GameManagerSaveRestore {
           offlinePlayer.realmId,
           Date.now(),
           {
-            workerCapacity: offlinePlayer.autoWorkerCapacity ?? 0,
+            workerCapacity: Math.max(
+              0,
+              (offlinePlayer.autoWorkerCapacity ?? 0) -
+                this.deps.decomposeSystem.getSettings().workers,
+            ),
             offlineSinceMs: save.player.lastSavedAt ?? Date.now(),
             workerAssignments: this.deps.getWorkerAssignments(),
           },
         )
+
+        this.deps.decomposeSystem.settleOffline(
+          Date.now(),
+          save.player.lastSavedAt ?? Date.now(),
+        )
+
+        for (const entry of this.deps.decomposeSystem.drainOutput()) {
+          this.deps.deliverDecomposeOutput(entry)
+        }
 
         // Auto-farm Task 5 (2026-09-04) — NGOẠI LỆ DUY NHẤT combat nhận
         // reward offline: roll các chu kỳ auto-farm đã trôi trong cửa sổ

@@ -51,7 +51,7 @@ import type { Material } from '../material/Material'
 import { EquipmentRegistry } from '../equipment/EquipmentRegistry'
 import { EquipmentBag } from '../equipment/EquipmentBag'
 import { EquipmentSystem } from '../equipment/EquipmentSystem'
-import { DecomposeSystem } from '../production/DecomposeSystem'
+import { DecomposeSystem, type DecomposeOutputEntry } from '../production/DecomposeSystem'
 import type { RefineValueEntry } from '../equipment/EquipmentSystem'
 import type { RolledAffix } from '../equipment/RolledAffix'
 import { createDefaultEquipmentOperationCostCatalog } from '../equipment/EquipmentOperationCostCatalog'
@@ -673,6 +673,8 @@ export class GameManager {
       getWorkerAssignments: () => this.getWorkerAssignments(),
       settleAutoFarmOffline: (player, elapsedSeconds) =>
         this.settleAutoFarmOffline(player, elapsedSeconds),
+      decomposeSystem: this.decomposeSystem,
+      deliverDecomposeOutput: (entry) => this.deliverDecomposeOutput(entry),
     })
 
     // Turn-battle runtime ops (C2 split, 2026-09-08) - owns the TurnBattle
@@ -2809,43 +2811,17 @@ export class GameManager {
         })
       }
 
-      // Task 14 (rework P4) ï¿½ Tab Phï¿½n Gi?i cycle: khoï¿½ng ? tinh hoa.
+      // Task 14 (rework P4) — Tab Phân Giải cycle: khoáng → tinh hoa.
+      // R7 (AR-08): online tick and offline restore share ONE delivery
+      // path (deliverDecomposeOutput) — no duplicated overflow rules.
       this.decomposeSystem.tick(Date.now())
 
       for (const entry of this.decomposeSystem.drainOutput()) {
-        const tinhHoa = this.materialRegistry.has(entry.materialId)
-          ? this.materialRegistry.get(entry.materialId)
-          : undefined
-
-        // 9.8 — toast craft hiển thị lượng DELIVERED (trừ tràn); tràn
-        // thì push bag.overflow. delivered === 0 → bỏ toast craft.
-        const overflow = this.materialBag.add(
-          tinhHoa ?? { id: entry.materialId, name: entry.materialId } as never,
-          entry.amount,
-        )
-
-        const delivered = entry.amount - overflow
-
-        if (delivered > 0) {
-          this.notifications.push({
-            kind: 'craft',
-            message: `Phân Giải +${delivered} ${(tinhHoa as { name?: string } | undefined)?.name ?? 'Tinh Hoa'}`,
-          })
-        }
-
-        if (overflow > 0) {
-          this.notifications.push(
-            createBagOverflowEvent(
-              (tinhHoa as { name?: string } | undefined)?.name ?? entry.materialId,
-              overflow,
-            ),
-          )
-        }
+        this.deliverDecomposeOutput(entry)
       }
     }
 
     // Task 9b: BuffSystem.update() now requires a real target:
-    // CombatEntity + combatSystem: CombatSystem (see BuffSystem.update()).
     // No `Stats` naturally available in this per-tick scope (see
     // resolvePersistentBuffEntity()'s note), so this resolves to the
     // real in-battle entity when one exists, else the fully-populated
@@ -2865,6 +2841,42 @@ export class GameManager {
     this.passiveSystem.tick(deltaSeconds)
 
     this.updateBattleFixedStep(deltaSeconds)
+  }
+
+  /**
+   * R7 (AR-08) — single decompose delivery path shared by the online
+   * tick and the offline restore settle: toast shows the DELIVERED
+   * amount (minus overflow); overflow pushes a bag.overflow event;
+   * delivered === 0 skips the craft toast. Extracted verbatim from the
+   * old inline tick block.
+   */
+  private deliverDecomposeOutput(entry: DecomposeOutputEntry): void {
+    const tinhHoa = this.materialRegistry.has(entry.materialId)
+      ? this.materialRegistry.get(entry.materialId)
+      : undefined
+
+    const overflow = this.materialBag.add(
+      tinhHoa ?? { id: entry.materialId, name: entry.materialId } as never,
+      entry.amount,
+    )
+
+    const delivered = entry.amount - overflow
+
+    if (delivered > 0) {
+      this.notifications.push({
+        kind: 'craft',
+        message: `Phân Giải +${delivered} ${(tinhHoa as { name?: string } | undefined)?.name ?? 'Tinh Hoa'}`,
+      })
+    }
+
+    if (overflow > 0) {
+      this.notifications.push(
+        createBagOverflowEvent(
+          (tinhHoa as { name?: string } | undefined)?.name ?? entry.materialId,
+          overflow,
+        ),
+      )
+    }
   }
 
   /**
