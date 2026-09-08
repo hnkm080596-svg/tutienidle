@@ -428,7 +428,18 @@ AND alive === true
 
 must not be produced by a migrated authoritative damage path unless a specifically defined survival state explains it.
 
-**Status: NEXT**
+```text
+✅ DONE 2026-09-08 (branch feat/r1-combat-vitals-authority) — 3 direct-write paths
+   migrated (regen → applyHealing 'regen'; ailment/ward consumption bonus →
+   applyDirectDamage + spendWard 'ward_spend'); vitals authority gained
+   spendWard(); invariant HP<=0 AND alive===true no longer reachable from
+   migrated paths; TDD RED→GREEN; P3 full 413 files / 2845 tests PASS;
+   P5 PASS; QA quick PASS WITH EVIDENCE
+   (game/docs/qa/2026-09-08-r1-combat-vitals-authority-quick.md).
+   P14 deferred (isolated-worktree exception).
+```
+
+**Status: COMPLETE 2026-09-08**
 
 ---
 
@@ -1234,8 +1245,8 @@ R14 Architecture Enforcement
 |---|---|---|---|
 | 0 | Mission 0 — Whole-project Architecture Audit | Whole project | ✅ COMPLETE |
 | 1 | R0 — Governance / preserve audit / rules / roadmap | Audit governance | 🟡 IN PROGRESS |
-| 2 | **R1 — Combat / Vitals Authority Closure** | **AR-01** | ⏭️ **NEXT** |
-| 3 | R2 — Stat Provenance & Effective Stats | AR-02, AR-05 | ⏸ |
+| 2 | R1 — Combat / Vitals Authority Closure | AR-01 | ✅ COMPLETE 2026-09-08 |
+| 3 | **R2 — Stat Provenance & Effective Stats** | **AR-02, AR-05** | ⏭️ **NEXT** |
 | 4 | R3 — Active Skill Execution Contract | AR-03, AR-04, AR-06, AR-18 | ⏸ |
 | 5 | R4 — Buff / Status Foundation Closure | AR-06, AR-19, AR-18 | ⏸ |
 | 6 | R5 — Combat Runtime / Presentation Boundary | AR-14, AR-20, AR-24, AR-29 | ⏸ |
@@ -1483,15 +1494,18 @@ as an implementation mission.
 
 The next implementation mission is:
 
-# NEXT — R1 Combat / Vitals Authority Closure
+# NEXT — R2 Stat Provenance & Effective Combat Stats
 
 based on:
 
 ```text
-Mission 0 AR-01
+Mission 0 AR-02 + AR-05
 ```
 
-Only after R1 reaches its completion gate should its dependent architecture mission advance.
+(R1 Combat / Vitals Authority Closure completed 2026-09-08; see its phase
+block for evidence.)
+
+Only after R2 reaches its completion gate should its dependent architecture mission advance.
 
 ---
 
