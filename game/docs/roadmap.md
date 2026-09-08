@@ -1,70 +1,1509 @@
-# Roadmap Phát Triển — Tiên Hiệp Idle (Single Source of Truth)
+# Roadmap Phát Triển — Tiên Hiệp Idle
+> **Single Source of Truth cho thứ tự và phạm vi phát triển hiện tại.**
+>
+> Cập nhật kiến trúc: **2026-09-08**
+>
+> Baseline audit: `1f1a3a98f7d6661e3afecc6f1b684197276a85ee`
+>
+> Mission 0 — Whole-project Architecture Audit đã hoàn thành.
+>
+> Các mục lịch sử phía dưới vẫn được giữ để tra cứu các hệ thống, quyết định sản phẩm và công việc đã hoàn thành.
+>
+> **Khi roadmap kiến trúc ở mục 0 xung đột với thứ tự cũ ở các mục lịch sử, mục 0 thắng.**
+>
+> Deleted `TASK.md`, stale worklogs, obsolete plans và các tài liệu đã được đánh dấu lỗi thời không phải nguồn yêu cầu hiện tại.
 
-> Tài liệu định hướng tổng hợp DUY NHẤT của project.
-> Lập ngày 2026-08-27 sau đợt rà soát toàn diện 5 mảng: Chiến đấu, Tiến trình, Kinh tế, UI/UX, Kỹ thuật & Nội dung.
-> **Gộp 2026-09-05**: roadmap riêng `turn-based-combat-roadmap.md` đã được GỘP TOÀN BỘ vào đây (mục 9) — file cũ giờ chỉ còn là con trỏ, không phải nguồn sự thật thứ hai.
-> Mỗi hạng mục lớn có plan chi tiết riêng (dẫn link bên dưới). Khi plan và roadmap lệch nhau, plan chi tiết là nguồn sự thật cho hạng mục đó.
-> Audit toàn diện mới nhất (bug list + trạng thái từng plan, verify theo file:line): project-review-2026-08-28.md (lưu trữ — xoá khỏi repo 2026-09-08).
-> Baseline verify gần nhất (2026-09-05, main checkout): `type-check` sạch + full suite **2510/2510 pass (390 files)** + `build` pass.
-> **Cập nhật 2026-09-07**: mục 0 dưới đây là roadmap tới BETA đã hợp nhất — nguồn tham chiếu chính khi lập kế hoạch làm việc từ nay. Mục 1-10 phía dưới GIỮ NGUYÊN làm chi tiết/lịch sử tra cứu (không xóa) — khi mục 0 và chi tiết bên dưới lệch nhau, mục 0 là nguồn sự thật cho THỨ TỰ/PHẠM VI beta; chi tiết kỹ thuật từng hạng mục vẫn tra ở mục 1-10 hoặc plan link tương ứng.
+---
 
-## 0. Roadmap tới Beta — hợp nhất (2026-09-07)
+# 0. Architecture Repair Program
 
-**Trần nội dung: cảnh giới Trúc Cơ.** Không có Kim Đan+ trong beta (quyết định người dùng 2026-08-29, giữ nguyên — data realm cao hơn tồn tại nhưng không có nội dung gate mới). Beta coi là xong khi người chơi có thể chơi trọn vẹn Phàm Nhân → Trúc Cơ với nội dung thật ở mọi hệ thống chạm tới, không có mảng rỗng/placeholder nào lộ ra trong luồng chơi bình thường.
+## 0.1. Quyết định thay đổi ưu tiên
 
-**Đã xong, không cần làm lại** (chi tiết ở mục 1-10): toàn bộ hạ tầng combat turn-based (engine/ATB/targeting/wave-spawn/presentation split + P17 runtime separation, 2026-09-07), Phase 0 (bug/economy/save), phần lớn Phase 1 (nội dung Trúc Cơ M1 — 10 stage/20 enemy/boss/quest, talent catalog v4 M1 combat), phần lớn QA Deep lần 1 (mục 8), item-grade rework, i18n phần lớn, lint/E2E/code-split (Phase 4 một phần).
+Từ 2026-09-08, project chuyển từ:
 
-### Phase A — Combat: nội dung thật (thứ tự phụ thuộc)
+```text
+Feature / Content First
+```
 
-| # | Việc | Phụ thuộc | Chi tiết |
+sang:
+
+```text
+Architecture Repair First
+→ Stable Foundations
+→ Content Expansion
+→ Beta Completion
+```
+
+Lý do không phải vì project cần rewrite.
+
+Mission 0 xác nhận project đã có nhiều foundation tốt cần giữ:
+
+- damage/mitigation calculators;
+- stat calculator;
+- equipment instance model;
+- equipment stat policies;
+- typed content registries;
+- turn-based battle phases;
+- buff pools;
+- battle geometry;
+- UI primitives;
+- measured bag/grid layout;
+- tooltip/focus mechanisms;
+- asset manifests/validation;
+- extensive unit/regression coverage.
+
+Vấn đề chính là:
+
+> **authority migration chưa hoàn chỉnh.**
+
+Nhiều hệ thống mới đã tồn tại nhưng consumer thực tế vẫn:
+
+- bypass owner;
+- giữ duplicated authority;
+- truyền sai semantic input;
+- bỏ context bắt buộc;
+- tự mutate state của hệ thống khác;
+- hoặc dùng UI/presentation như gameplay authority.
+
+Do đó mục tiêu của chương trình này KHÔNG phải:
+
+> chia nhỏ tất cả file lớn.
+
+Mục tiêu là:
+
+> **mỗi rule có đúng một owner, mỗi mutable state có đúng một authority, và feature mới được xây từ primitive/mechanism ổn định thay vì tiếp tục vá vào consumer gần nhất.**
+
+---
+
+# 0.2. Architecture laws
+
+Mọi migration trong roadmap này phải tuân theo `AGENTS.md`.
+
+Các luật cốt lõi:
+
+```text
+Primitive
+→ Mechanism
+→ Domain System
+→ Orchestrator
+→ Presentation
+```
+
+và:
+
+1. One semantic rule → one authoritative owner.
+2. One mutable state → one authoritative writer.
+3. No long-arm systems.
+4. Orchestrators coordinate; they do not absorb domain rules.
+5. Presentation is never gameplay authority.
+6. Core/domain code points toward foundations, not Vue/Phaser.
+7. Shared semantic rules have one implementation.
+8. Generic mechanisms do not accumulate arbitrary content-ID behavior.
+9. Gameplay queries are observational.
+10. Paid/random/generated results remain domain-owned until validated commit.
+11. Compound operations define atomic or partial-delivery semantics explicitly.
+12. Fix root cause, not symptom.
+13. Prefer the smallest coherent architectural migration, not the smallest textual patch.
+14. Characterize the real production consumer before migration.
+15. Do not overengineer.
+
+---
+
+# 0.3. Migration discipline
+
+Architecture repair MUST NOT become a giant rewrite.
+
+Each implementation mission follows:
+
+```text
+Evidence
+→ Characterization
+→ Identify Owner
+→ Identify Missing Primitive / Mechanism
+→ Repair Owner
+→ Migrate Real Consumer
+→ Verify
+→ Remove Old Authority
+→ Stop
+```
+
+A mission is scoped by the architectural responsibility being repaired.
+
+Example:
+
+```text
+Combat vitals authority
+```
+
+may require edits in:
+
+```text
+TurnBattleSystem
+CombatSystem
+EntityVitalsSystem
+tests
+real battle integration
+```
+
+because they form one coherent dependency chain.
+
+It does NOT authorize unrelated cleanup in:
+
+```text
+Inventory
+World Map
+Crafting
+UI
+Save
+```
+
+---
+
+# 0.4. Completion gate for every architecture mission
+
+A migration is complete only when all applicable conditions are satisfied.
+
+### Ownership
+
+- target authoritative owner is explicit;
+- migrated consumer uses that owner;
+- old competing authority is removed or has an explicit retained purpose.
+
+### Behavior
+
+- intended behavior is characterized;
+- task-caused regressions are repaired;
+- edge cases relevant to the responsibility are covered.
+
+### Consumer parity
+
+- real production inputs have been inspected;
+- real production consumer has been migrated;
+- substitute fixtures alone are not accepted as production evidence.
+
+### Verification
+
+Use applicable gates from `AGENTS.md`:
+
+```text
+type-check
+Vitest
+build when required
+adversarial QA
+code review
+runtime/E2E
+real browser/Phaser verification
+```
+
+### Documentation
+
+When the migration establishes a stable domain contract, maintained architecture documentation must be updated.
+
+Do not document transient implementation detail as permanent architecture.
+
+---
+
+# 0.5. Architecture baseline — Mission 0
+
+Mission 0 Whole-project Architecture Audit:
+
+**Status: ✅ COMPLETE — 2026-09-08**
+
+Baseline:
+
+```text
+1f1a3a98f7d6661e3afecc6f1b684197276a85ee
+```
+
+Verification at audit baseline:
+
+```text
+type-check: PASS
+build: PASS
+Vitest: 413 files / 2,841 tests PASS
+```
+
+Mission 0 identified **34 evidence-backed architecture findings**.
+
+Important conclusion:
+
+> A green unit suite currently does not guarantee correct composition between real production consumers and domain systems.
+
+Confirmed examples include:
+
+```text
+HP = 0 while alive = true
+
+raw attack 10
+→ resolved attack 70
+→ turn recompute 130
+
+self-buff skill
+→ converted into physical enemy attack
+
+worker allocation
+→ runtime exception
+
+quest progression
+→ depends on opening quest UI
+```
+
+The audit report is architectural evidence.
+
+It is NOT permission to fix all findings in one mission.
+
+---
+
+# 0.6. Architecture Repair Phases
+
+The following phases replace the previous immediate priority of large content expansion.
+
+Content work remains parked unless explicitly required by an architecture migration.
+
+---
+
+# Phase R0 — Governance & Architecture Baseline
+
+**Goal:** establish stable project law and preserve Mission 0 evidence before production migration begins.
+
+### R0.1 — Preserve Mission 0 audit
+
+Store the completed audit as maintained architecture evidence.
+
+Recommended location:
+
+```text
+game/docs/architecture/
+  mission-0-architecture-audit-2026-09-08.md
+```
+
+Status:
+
+```text
+🟡 READY
+```
+
+Do not continuously rewrite this snapshot as code changes.
+
+Future migrations reference finding IDs from it.
+
+---
+
+### R0.2 — Architecture Constitution
+
+Update:
+
+```text
+AGENTS.md
+.opencode/agent/build.md
+```
+
+to reflect:
+
+- responsibility-based scope;
+- primitive-first architecture;
+- one-rule-one-owner;
+- state authority;
+- query purity;
+- domain-owned random/paid results;
+- transaction/delivery semantics;
+- real-consumer characterization.
+
+Keep project-specific:
+
+- worktree safety;
+- Playwright rules;
+- i18n gateway;
+- development save policy;
+- QA/review gates;
+- Opencode wiring.
+
+Status:
+
+```text
+🟡 READY
+```
+
+---
+
+### R0.3 — Roadmap architecture cutover
+
+Replace roadmap priority with this Architecture Repair Program.
+
+Status:
+
+```text
+🟡 CURRENT TASK
+```
+
+---
+
+### R0 completion gate
+
+R0 is complete when:
+
+```text
+Mission 0 audit is preserved
++
+AGENTS.md is current
++
+Opencode build mirror is synchronized
++
+roadmap points to architecture repair first
+```
+
+No production refactor is part of R0.
+
+---
+
+# Phase R1 — Combat / Vitals Authority Closure
+
+**Mission 0:** AR-01
+
+**Priority:** P0
+
+**Goal:**
+
+Establish exactly one authoritative pipeline for combat resource mutation and lethal outcome completion.
+
+Target responsibility:
+
+```text
+TurnBattleSystem
+    ↓ requests operation
+
+Combat / Damage Authority
+    ↓ resolves outcome
+
+Vitals Authority
+    ↓ owns mutation
+
+HP
+MP
+Ward
+alive/death
+vitals events
+```
+
+Remove migrated paths where TurnBattleSystem directly performs:
+
+```text
+target.currentHp -= ...
+target.currentHp += ...
+target.ward = ...
+```
+
+when those operations belong to damage/vitals resolution.
+
+### Must cover
+
+- ordinary damage;
+- bonus/consumption damage being migrated;
+- Ward consumption;
+- regeneration being migrated;
+- lethal outcome;
+- survive-lethal intervention;
+- exactly-once death;
+- vitals events;
+- battle terminal state;
+- reward/death consumer consistency.
+
+### Must NOT do
+
+- stat redesign;
+- skill redesign;
+- content balance;
+- broad GameManager extraction;
+- CombatScene rewrite;
+- unrelated buff cleanup.
+
+### Completion invariant
+
+Impossible state:
+
+```text
+HP <= 0
+AND alive === true
+```
+
+must not be produced by a migrated authoritative damage path unless a specifically defined survival state explains it.
+
+**Status: NEXT**
+
+---
+
+# Phase R2 — Stat Provenance & Effective Combat Stats
+
+**Mission 0:** AR-02 + AR-05
+
+**Priority:** P0/P1
+
+**Depends on:** R1 only where vitals reconciliation requires it.
+
+**Goal:**
+
+Define explicit semantic boundaries between:
+
+```text
+Raw Stats
+Static Resolved Stats
+Effective Battle Stats
+```
+
+Current architecture must stop accepting the same broad `Stats` object as all three meanings.
+
+Target:
+
+```text
+Raw attributes
++
+persistent/static modifiers
+        ↓
+Canonical Stat Resolution
+        ↓
+Resolved combat base
++
+temporary battle modifiers
+        ↓
+Effective Battle Stats
+```
+
+### Repair
+
+- final stats passed as raw input;
+- duplicated attribute derivation;
+- stale `participant.speed`;
+- queue/order preview reading a different effective speed than combat stats.
+
+### Verification
+
+Must include actual chain:
+
+```text
+Player Store
+→ GameManager battle adapter
+→ combat entity
+→ first turn
+→ buff application
+→ buff expiry
+→ gauge/order
+```
+
+Not only handcrafted raw stat fixtures.
+
+### Must NOT do
+
+- rebalance numbers to preserve accidental doubled stats;
+- rewrite the whole modifier system;
+- change authored enemy stats without evidence.
+
+**Status: BLOCKED BY R1/R2 PLANNING**
+
+---
+
+# Phase R3 — Active Skill Execution Contract
+
+**Mission 0:** AR-03 + AR-04 + AR-06 + relevant AR-18
+
+**Priority:** P0/P1
+
+**Depends on:** R1 + R2
+
+**Goal:**
+
+Make active skill execution explicit instead of relying on a lossy converter.
+
+A skill must preserve:
+
+```text
+Target Scope
+Cost
+Cooldown
+Ordered Effects
+Damage Effects
+Buff/Debuff Effects
+Reaction Effects
+Resource Effects
+Trigger Policy
+```
+
+Target conceptually:
+
+```text
+Authored Skill
+    ↓
+Validated Supported Execution Definition
+    ↓
+Action Request
+    ↓
+Ordered Effect Resolution
+```
+
+Unsupported skill semantics must fail explicitly during validation/development.
+
+They must never silently become:
+
+```text
+physical ×1 enemy attack
+```
+
+### Repair
+
+- self/ally/enemy target loss;
+- silent physical-damage fallback;
+- omitted critical policy;
+- ignored hit resolution;
+- omitted DoT source context;
+- specific content policy leaking into generic execution where a stable mechanism exists.
+
+### Verification
+
+Inventory every skill/build reachable in current beta content.
+
+For each active executable skill:
+
+```text
+supported correctly
+OR
+explicitly rejected as unsupported
+```
+
+No silent semantic degradation.
+
+### Must NOT do
+
+- add new skills;
+- rebalance existing skills;
+- activate inert systems just because helpers exist;
+- create a third universal skill model without evidence.
+
+---
+
+# Phase R4 — Buff / Status Foundation Closure
+
+**Mission 0:** AR-06 + AR-19 + buff-related AR-18
+
+**Depends on:** R3
+
+**Goal:**
+
+Define buff/status lifecycle as a stable set of mechanisms independent of whether time is measured in turns or seconds.
+
+Preserve distinct clock policies:
+
+```text
+Turn Duration
+Wall-clock Duration
+Offline Deadline
+```
+
+Do NOT force them into one time model.
+
+Share only genuinely equivalent mechanics such as:
+
+```text
+stack
+refresh
+replace
+max stack
+snapshot
+modifier extraction
+source identity
+polarity
+cleanse
+expiry
+```
+
+### Target
+
+```text
+Buff Definition
++
+Buff Instance
++
+Source
++
+Clock Policy
++
+Stack Policy
++
+Effect/Trigger
+        ↓
+Buff Authority
+```
+
+DoT must resolve through the correct damage authority.
+
+Generic combat/buff systems should not know arbitrary talent/content IDs where a stable intervention policy exists.
+
+### Completion
+
+- duplicate clock-independent rules removed where equivalent;
+- source semantics explicit;
+- DoT source/dead/removed source policy explicit;
+- reaction-consumed status behavior explicit;
+- no new parallel buff authority.
+
+---
+
+# Phase R5 — Combat Runtime & Presentation Boundary
+
+**Mission 0:** AR-14 + AR-20 + relevant AR-24 + AR-29
+
+**Depends on:** R1–R4
+
+**Goal:**
+
+Complete separation between:
+
+```text
+Gameplay Facts
+Runtime Scheduling
+Presentation Playback
+```
+
+Target:
+
+```text
+Gameplay
+→ committed typed fact
+
+Runtime
+→ schedules presentation / deadlines
+
+Presentation
+→ renders
+→ returns generation-scoped ACK
+
+Gameplay outcome
+≠ presentation availability
+```
+
+### Repair
+
+- attack gameplay event emitted from presentation path;
+- tokenless ready/impact acknowledgements;
+- stale playback callback risk;
+- presentation timing controlling progression investment;
+- scene helper classes writing scene-owned resource maps.
+
+### CombatScene rule
+
+Do NOT split `CombatScene` because of line count.
+
+Extract only mechanisms with real stable ownership:
+
+```text
+Playback
+Entity Visual Lifecycle
+Cast Bars
+Position Interpolation
+VFX
+HUD
+```
+
+when current evidence supports the boundary.
+
+### Browser gate
+
+This phase requires real Phaser/browser verification.
+
+Unit tests alone cannot close R5.
+
+---
+
+# Phase R6 — Combat Character Art & Asset Contract
+
+**Depends on:** R5
+
+**Goal:**
+
+Build a production combat-character asset pipeline using existing asset/presentation primitives.
+
+Minimum main-character combat states:
+
+```text
+idle
+ready
+cast
+standby
+death
+```
+
+After the minimum contract is stable, evaluate:
+
+```text
+hit
+basic_attack
+victory
+```
+
+### Stable contract
+
+Each animation set must define:
+
+```text
+source identity
+frame dimensions
+frame count/range
+FPS
+loop / one-shot
+body anchor
+facing
+transparent background
+fallback
+animation key
+```
+
+PixelLab is an asset producer.
+
+It is not part of gameplay architecture.
+
+Target:
+
+```text
+PixelLab / Source
+→ validated files
+→ metadata
+→ art catalog
+→ preload
+→ animation definition
+→ CombatScene
+```
+
+Do not hardwire feature code to PixelLab.
+
+### Verification
+
+- asset validator;
+- preload/animation registration;
+- actual CombatScene playback;
+- anchor consistency;
+- missing asset fallback;
+- real browser screenshot/playback.
+
+---
+
+# Phase R7 — Worker Allocation & Production Authority
+
+**Mission 0:** AR-07 + AR-08
+
+**Priority:** P0/P1
+
+**Can run independently after R1 if capacity allows.**
+
+**Goal:**
+
+One worker allocation rule for:
+
+```text
+online
+offline
+manual assignment
+automatic remainder
+```
+
+Production and decomposition consume the same workforce authority where product intent says they share workers.
+
+### Repair
+
+- online empty-auto-site crash;
+- online/offline allocation divergence;
+- decomposition permanent zero-capacity wiring;
+- UI maximum disconnected from runtime capacity.
+
+### Required product decision
+
+Before connecting decomposition:
+
+> Does decomposition share the same worker pool as production?
+
+Do not invent offline decomposition behavior without an explicit decision.
+
+---
+
+# Phase R8 — Quest & Progression Lifecycle Authority
+
+## R8.1 — Quest lifecycle
+
+**Mission 0:** AR-09
+
+Queries become observational.
+
+Target:
+
+```text
+Boot / Eligibility Change / Daily Reset
+        ↓
+Quest Lifecycle Reconciliation
+        ↓
+Active Quest State
+
+UI Query
+        ↓
+Read Only
+```
+
+Gameplay progress must not depend on opening QuestPanel.
+
+---
+
+## R8.2 — Major progression outcomes
+
+**Mission 0:** AR-10 + selected AR-13
+
+Move permanent tribulation/progression consequences out of Vue.
+
+Target:
+
+```text
+Encounter Result
+→ Domain Outcome Command
+→ Progression Authorities
+→ Typed Outcome Result
+→ UI Presentation
+```
+
+Vue displays results.
+
+Vue does not determine:
+
+- realm;
+- permanent opportunity;
+- foundation;
+- talent conversion;
+- currency consequence;
+- injury/penalty rules.
+
+Do not rewrite all progression at once.
+
+Migrate one complete outcome chain.
+
+---
+
+# Phase R9 — Equipment / Inventory Operation Integrity
+
+**Mission 0:** AR-21 + AR-22 + AR-23 + AR-34
+
+## R9.1 — Generated operation authority
+
+Repair equipment wash.
+
+Target pattern:
+
+```text
+Pay / Generate
+→ Domain retains PendingResult
+→ UI receives display copy + identity
+→ Accept / Discard
+→ Domain validates one-use identity
+```
+
+UI must not be able to fabricate authoritative affixes.
+
+Use existing refinement pending-result behavior as a bounded precedent.
+
+---
+
+## R9.2 — Atomic exchange
+
+Compound trades must define:
+
+```text
+preflight
+→ commit all
+```
+
+or intentional partial-delivery semantics.
+
+A failed atomic sale must not leave credited currency behind.
+
+---
+
+## R9.3 — Acquisition receipt
+
+Where required:
+
+```text
+requested
+delivered
+overflow
+reason
+```
+
+must be explicit.
+
+Quest events/notices use delivered values.
+
+Save restoration does not become new acquisition.
+
+---
+
+## R9.4 — Authoritative operation previews
+
+Gradually replace duplicated:
+
+- production costs;
+- alchemy success decomposition;
+- equipment roll ranges;
+- dissolve eligibility;
+
+with domain quote/projection results.
+
+Do not build a universal Quote framework.
+
+Each operation may expose the smallest domain-specific read model it needs.
+
+---
+
+# Phase R10 — Session Snapshot & Restore Boundary
+
+**Mission 0:** AR-12 + local scope of AR-15
+
+**Goal:**
+
+Define one supported session restore lifecycle.
+
+Target:
+
+```text
+Domain snapshots
+→ Detached Game Save
+→ Validation
+→ Session Restore Transaction
+→ Domain Owners
+```
+
+A snapshot must be a value at a point in time.
+
+A restore must define:
+
+```text
+replacement semantics
+idempotency
+session identity
+offline settlement ownership
+failure behavior
+```
+
+### Repair
+
+- shallow nested snapshots;
+- additive manager restore;
+- weak timestamp/cultivation identity;
+- repeat restore behavior.
+
+### Explicitly out of scope
+
+Remote account/cloud save.
+
+Current auth and local persistence remain separate until online work receives its own scope.
+
+Development-save backward compatibility remains unnecessary unless explicitly requested.
+
+---
+
+# Phase R11 — UI Foundation Consolidation
+
+**Depends on:** relevant domain authorities being stable.
+
+**Goal:**
+
+Do NOT redesign every screen.
+
+Finish canonical UI composition where real duplication exists.
+
+Preserve existing useful primitives:
+
+```text
+GameButton
+SlotView
+Bar
+StatRow
+Tooltip
+Modal/focus
+measured grid/pagination
+nine-slice surfaces
+```
+
+Repair only demonstrated gaps.
+
+Priority examples:
+
+```text
+Tabs / selection semantics
+Formation preview geometry
+Domain quote/read models
+Shared state formatting
+Async preview lifecycle
+```
+
+### Formation preview
+
+Mission 0 AR-26 + AR-27:
+
+```text
+Measured viewport
+→ one projection
+→ Phaser geometry
+→ DOM hit regions
+```
+
+and:
+
+```text
+open generation
+→ create preview
+→ captured instance
+→ destroy same generation
+```
+
+No universal UI framework.
+
+---
+
+# Phase R12 — Presentation / Asset Infrastructure Cleanup
+
+**Mission 0:** AR-24 + AR-27 + AR-29 + AR-30 + AR-31
+
+**Goal:**
+
+Remove remaining upward dependencies and duplicated presentation authorities after their consumers are understood.
+
+Examples:
+
+- presentation constant imported from GameManager;
+- equipment naming importing composable helper;
+- animation runtime importing presentation vocabulary;
+- duplicated enemy art list;
+- scene helpers owning behavior but not their resources;
+- asset router path escaping target directory.
+
+### Asset rule
+
+Canonical art catalog owns:
+
+```text
+art identity
+texture identity
+animation metadata
+preload enumeration
+```
+
+Do not require multiple synchronized enemy lists.
+
+Asset routing must validate normalized containment before moving files.
+
+---
+
+# Phase R13 — Legacy / Parallel Authority Retirement
+
+**Mission 0:** AR-19 + AR-25
+
+**Depends on:** consumer migrations above.
+
+**Goal:**
+
+Remove only migration scaffolding whose consumers are:
+
+```text
+migrated
+OR
+proven absent
+```
+
+Examples to inspect:
+
+- broad old `Battle` casts/shims;
+- retained no-op synchronization hooks;
+- duplicate buff mechanics;
+- executor/helper files with tests but no runtime consumers;
+- inert capability code.
+
+Rule:
+
+> Tests proving a helper works do not prove the feature is live.
+
+Do not delete code based on:
+
+```text
+legacy
+old
+unused-looking
+```
+
+names alone.
+
+Do not activate inert features simply because they exist.
+
+---
+
+# Phase R14 — Architecture Enforcement
+
+**Depends on:** each corresponding migration.
+
+Architecture checks are added **after** a stable contract exists.
+
+Potential guards:
+
+```text
+no authoritative HP write outside permitted vitals paths
+
+raw stat input cannot accept resolved-stat type
+
+gameplay queries cannot mutate lifecycle state
+
+paid random result requires domain capability/token
+
+core cannot import presentation/orchestrator upward
+
+asset destination must remain under asset root
+
+catalog/preload parity
+
+all presentation ACKs require generation token
+```
+
+Do not build a broad architecture testing framework before the contracts exist.
+
+Each enforcement rule should protect a real regression class discovered by Mission 0 or later evidence.
+
+---
+
+# 0.7. Architecture Repair dependency order
+
+Primary combat chain:
+
+```text
+R1 Combat/Vitals
+        ↓
+R2 Stat Provenance
+        ↓
+R3 Skill Execution
+        ↓
+R4 Buff Foundation
+        ↓
+R5 Runtime/Presentation
+        ↓
+R6 Combat Art
+        ↓
+R13 Combat Legacy Cleanup
+```
+
+Independent/high-priority chains:
+
+```text
+R7 Worker Allocation
+```
+
+```text
+R8 Quest / Progression
+```
+
+```text
+R9 Equipment / Inventory
+```
+
+```text
+R10 Save / Restore
+```
+
+UI/presentation consolidation:
+
+```text
+stable domain authority
+        ↓
+R11 UI Foundation
+        ↓
+R12 Presentation / Asset Infrastructure
+```
+
+Enforcement follows stabilized contracts:
+
+```text
+R1-R13
+        ↓
+R14 Architecture Enforcement
+```
+
+---
+
+# 0.8. Current execution queue
+
+| Order | Mission | Findings | Status |
 |---|---|---|---|
-| A0 | Fix 2 chỗ còn đọc nhầm legacy `battleSystem` sót lại từ Slice 6 cutover (cùng dạng bug với A2's talent passive-conversion fix, phát hiện qua audit "ownership" 2026-09-07): (1) Bất Tử Thể (thiên phú Immortal-Body) tẩy debuff/cấp Tử Sinh Ngộ ghi vào `BuffPool` legacy chết thay vì `TurnBuffPool` sống — hồi sinh vẫn hoạt động, chỉ phần tẩy/cấp buff im lặng no-op; (2) `CombatTopBar.vue`'s enemy "alive" count qua `GameManager.getStageProgress()` đọc `battleSystem.getBattle()?.enemies.length` (legacy, luôn rỗng suốt trận turn-based) thay vì `this.turnBattle.enemies` | — | ✅ **XONG 2026-09-07** (branch `fix/phase-a0-stale-legacy-reads`, plan `docs/superpowers/plans/2026-09-07-phase-a0-stale-legacy-battle-reads.md`): (1) `surviveEffects` full cutover sang `TurnBuffSystem`/`TurnBuffRegistry` (wiring từ `this.turnBattle!.players[0]!.buffs` + `TURN_BUFF_REGISTRY`); `TurnBuffSystem` +`getAll()` port (`remove()` đã có từ A1); `killIfDead()` không đổi (call shape khớp). (2) `getStageProgress()` compose từ turn battle: `alive` = đếm `entity.alive` trên `turnBattle.enemies`. **Mở rộng scope có kiểm soát (disclosed trong QA report):** `spawned` cũng stale — `StageManager` seed 1 cho bootstrap enemy và turn-flow không tăng counter này → HUD kẹt "1/N"; giờ lấy `turnBattle.wave.spawnedCount` (fallback giá trị legacy khi không có turn battle). `StageWaveSystem.getProgress()` drop `alive` khỏi shape nội bộ (public shape của GameManager giữ nguyên — CombatTopBar không đổi). Full suite 2879/2879 + type-check + build; QA quick `PASS WITH EVIDENCE` (`game/docs/qa/2026-09-07-phase-a0-stale-legacy-reads-quick.md`). Ghi chú: `resolveBossSummons()` vẫn đọc legacy (dead path, chết cùng C1); `CombatSystem` còn import legacy BuffSystem/BuffPool (live dùng cho onKill skill-context throwaway pools — C1 xử lý). |
-| A1 | Wire ReactionManager/SkillEffectSystem vào TurnBattleSystem | — | ✅ **XONG 2026-09-07** (branch `feat/phase-a1-reaction-wiring`, plan `docs/superpowers/plans/2026-09-07-phase-a1-reaction-manager-wiring.md`): (1) `TurnReactionManager` — port verbatim từ `ReactionManager` với type substitution `TurnBuffPool`/`TurnBuffSystem`/`TurnBuffRegistry`, DROP `spawnLavaZone` (zone-as-DoT đã chốt); 15 test port. (2) `TurnBuffSystem` +3 method port (`getActiveIds`/`remove`/`renewWithExtension`). (3) `TurnSkillDefinition.appliesAilment { buffDefinitionId, chance }` — field MỚI tách biệt `appliesBuff` (probabilistic vs deterministic), hook trong per-target loop của `applyActionImpact()` sau `rollOnHitEffects`, gọi `reactionManager.checkAndTrigger` với id vừa áp (đúng call shape legacy SkillEffectSystem 'debuff'). (4) Content: 5 Pháp Tu basic (`PHAP_TU_BASICS`) mang `appliesAilment` đúng chance legacy (`Skills.ts`): Hỏa 0.5/Thủy 0.5/Mộc 1.0/Kim 0.4/Thổ 1.0; GameManager truyền `new TurnReactionManager(this.eventBus)` vào CẢ 2 constructor site. Không cần SkillEffectSystem port (spec Non-Goals — chỉ 1 behavior 'debuff' được replicate inline). Full suite 2875/2875 + type-check + build; QA quick `PASS WITH EVIDENCE` (`game/docs/qa/2026-09-07-phase-a1-reaction-wiring-quick.md`). Mở khóa A4; C1 còn chờ merge A1+A2. |
-| A2 | Buff content cho 3 nguồn: Tribulation/boss enrage (đổi kiểu sang `TurnBuffDefinition` + gán `TurnBossTrigger`, hiện trống), thiên phú (`passiveConvertsTo` đối chiếu lại `TurnBuffRegistry` thay vì registry cũ), trang bị (☑ **tạo mới**, Affix hiện không có field buff — không phải migrate) | — | ✅ **XONG 2026-09-07** (branch `feat/phase-a2-buff-content`, plan `docs/superpowers/plans/2026-09-07-phase-a2-buff-content-wiring.md`): (1) **Boss enrage** — field `bossTrigger { afterTurns, buffDefinitionId }` thread qua `Enemy`/`CombatEntity` → `TurnBattleAdapter` (populate `firedAlready: false` on spawn) → engine fire sẵn có; content 3 boss cuối-mỗi-cảnh-giới (`mortal_crocodile_enrage`, `qi_refining_serpent_enrage`, `foundation_dragon_enrage` — +50% atk/+20% speed, vĩnh viễn, sau 60 lượt, số khởi điểm chờ playtest). Kèm fix guard `TurnBossTrigger` registry lookup throw-on-unknown-id (QA bắt được, test regression `TurnBattleSystem.bossTriggerUnknownId.qa.test.ts`); legacy `enrage`/`FLOOD_DRAGON_ENRAGE` giữ nguyên chờ C1. (2) **Thiên phú** — `passiveConvertsTo` buffApplier/hpReader rewire từ legacy `battleSystem` sang turn-based (`getTurnBattle().players[0]` + `TURN_BUFF_REGISTRY` + `TurnBuffSystem`) — sửa silent-bug "buff bùng nổ không bao giờ kích trong gameplay thật"; INV-2/2b/3 assert trên turn pool; `Talents.test.ts` validate `TURN_BUFF_REGISTRY`. (3) **Trang bị** — chốt stats-only, Affix không có field buff (quyết định user, xem spec Non-Goals). Full suite 2852/2852 + type-check + build; QA quick `PASS WITH EVIDENCE` (`game/docs/qa/2026-09-07-phase-a2-buff-content-quick.md`). **Limitations:** (a) lookup `appliesBuff` tại `TurnBattleSystem.ts:869` cùng shape không guard — vô hại hiện tại (`reaction_empowerment` chưa wire vào ultimate slot nào, known-gap 9.8) nhưng cần cùng try/catch khi Reaction Path ultimate ship (9.5 #12); (b) số liệu enrage +50/+20/60-lượt là khởi điểm, cần playtest/balance pass (Phase D1); (c) mojibake pre-existing trong `Enemies.ts` legacy `FLOOD_DRAGON_ENRAGE` + `TurnReactionPathSkills.ts` chưa dọn (ngoài scope P10); (d) enrage buff chưa có hiển thị player-facing (tooltip/VFX duration — đúng việc A6, chờ UI buff turn thật). |
-| A3 | Skill content thật: special/ultimate cho mọi build (hiện chỉ Kiếm Tu) | — | ✅ **XONG 2026-09-07** (branch `feat/phase-a3-special-ultimate`, plan `docs/superpowers/plans/2026-09-07-phase-a3-special-ultimate-content.md`): (1) `'the'` SkillResourceType + generic gate (`RESOURCE_FIELD`) + gain hook (+10/landed special hit, +20/ultimate, cap MAX_THE 100 — **đơn giản hóa có chủ đích khỏi legacy chain-gating, xem divergence note**). (2) Consume-for-damage fields (`consumesAilmentId`/`damagePerStack`, `consumesWardForDamage`/`damagePerWardPoint`) + resolution trong per-target loop + `TurnBuffSystem.getAllById/removeAllById` wrappers. (3) `SkillToTurnSkillConverter` — pure mapper qua `getEffectiveSkill()` (specialization đúng tầng); **fix buildId bug** ('phap_tu' không match SPECIALS_BY_BUILD → Pháp Tu không bao giờ có special/ultimate; giờ truyền `resolvedSpecialUltimate` trực tiếp qua adapter). (4) Kiếm Tu ultimate `tru_tien_kiem_tran` (×5, CD 8, gate full pool — khởi điểm playtest). (5) Turn engine đọc `specialAttacks` (1-based counter, % everyNth) — 2 boss mới (crocodile ×2, serpent ×2.5) + dragon whelp đã có sẵn giờ live. Full suite 2897/2897 + type-check + build; QA quick `PASS WITH EVIDENCE` (`game/docs/qa/2026-09-07-phase-a3-special-ultimate-quick.md`). **Divergence có chủ đích:** chain-gating Thuần-path KHÔNG port (plan Global Constraints — special/ultimate castable bằng cooldown+resource thuần). |
-| A4 | Reaction Path nội dung thật (pool element skill + ultimate %) | A1 | ✅ **XONG 2026-09-07** (branch `feat/phase-a4-reaction-path`, spec+plan `docs/superpowers/*phase-a4-reaction-path*`): (1) `reaction_empowerment` vào `buffs.ts`/registry — đóng known-gap 9.8 (ultimate tự buff trước đây sẽ throw khi lookup). (2) Gating: player mua node `reaction_path_unlock_*` → marker special/ultimate (`PHAP_TU_REACTION_*`) thay thế slot của chuỗi Thuần hệ; chưa mua → giữ chuỗi; đọc `nodeLevels` (§6.8 authority). (3) Wire `REACTION_PATH_POOL` vào CẢ 2 `TurnBattleSystem` site (trước đây `undefined` từ Slice 6 → marker cast là no-op-log không cooldown/mana). E2e: real-loop special cast + empowerment buff fold +25%. Full suite 2901/2901 + type-check + build; QA quick `PASS WITH EVIDENCE` (`game/docs/qa/2026-09-07-phase-a4-reaction-path-quick.md`). |
-| A5 | Boss enrage content bằng buff thủ công | A2 | ✅ **Đã xong qua A2, không phải việc riêng** — A2's Component 1 ("Buff content cho 3 nguồn... Tribulation/boss enrage") LÀ ĐÚNG nội dung A5 mô tả (buff thủ công, KHÔNG phase-system, 3 boss cuối-mỗi-cảnh-giới). Roadmap trước đó chưa gạch dòng này khi A2 xong — sửa ở đây (2026-09-08). mục 9.5 #11 cũng cần sửa tương tự. |
-| A6 | Buff duration presentation (tooltip/VFX theo lượt) | A2 | ✅ **XONG 2026-09-08** (branch `feat/phase-a6-buff-presentation`, spec+plan `docs/superpowers/*phase-a6-buff-duration*`): badge row trên TurnOrderStrip party chips — mỗi buff/debuff hiện badge `tên ×stacks (lượt còn lại)` với polarity màu (buff jade / debuff danger) + tooltip mô tả (title attr); hidden buff ẩn đúng convention; `TurnBuffNames` resolver throw-safe cho registry. Read-only qua TurnBuffPool (P17), không đổi combat logic. Full suite 2907/2907 + type-check + build; QA quick `PASS WITH EVIDENCE` (`game/docs/qa/2026-09-08-phase-a6-buff-presentation-quick.md`). |
-| A7 | `hpRegenPerTurn` | — | ✅ **CHỐT 2026-09-07: giữ** cho kỹ thuật/trang bị/cảnh giới (Pill đã bỏ trước đó, không đổi) |
+| 0 | Mission 0 — Whole-project Architecture Audit | Whole project | ✅ COMPLETE |
+| 1 | R0 — Governance / preserve audit / rules / roadmap | Audit governance | 🟡 IN PROGRESS |
+| 2 | **R1 — Combat / Vitals Authority Closure** | **AR-01** | ⏭️ **NEXT** |
+| 3 | R2 — Stat Provenance & Effective Stats | AR-02, AR-05 | ⏸ |
+| 4 | R3 — Active Skill Execution Contract | AR-03, AR-04, AR-06, AR-18 | ⏸ |
+| 5 | R4 — Buff / Status Foundation Closure | AR-06, AR-19, AR-18 | ⏸ |
+| 6 | R5 — Combat Runtime / Presentation Boundary | AR-14, AR-20, AR-24, AR-29 | ⏸ |
+| 7 | R6 — Combat Character Art / Asset Contract | asset/presentation findings | ⏸ |
+| 8 | R7 — Worker Allocation / Decomposition | AR-07, AR-08 | ⏸ / may run independently |
+| 9 | R8 — Quest & Progression Authority | AR-09, AR-10, AR-13 | ⏸ |
+| 10 | R9 — Equipment / Inventory Integrity | AR-21, AR-22, AR-23, AR-34 | ⏸ |
+| 11 | R10 — Save / Restore Boundary | AR-12, AR-15 | ⏸ |
+| 12 | R11 — UI Foundation Consolidation | AR-26, AR-27, AR-28 + domain UI | ⏸ |
+| 13 | R12 — Presentation / Asset Cleanup | AR-24, AR-27, AR-29, AR-30, AR-31 | ⏸ |
+| 14 | R13 — Parallel Authority / Legacy Retirement | AR-19, AR-25 | ⏸ |
+| 15 | R14 — Architecture Enforcement | AR-32, AR-33 + migrated invariants | ⏸ |
 
-### Phase B — Progression & thế giới: nội dung thật
+---
 
-| # | Việc | Phụ thuộc | Chi tiết |
-|---|---|---|---|
-| B1 | `perfectClearTurnLimit` cho 30 stage (hiện 0/30, chip Hoàn Mỹ đang disabled) | — | mục 9.5 #4 |
-| B2 | Trận Pháp thật (thay `hon_don_tran` test-only) | — | mục 9.8 Part C, mục 9.9 |
-| B3 | Companion roster thật (tên/stat/skill từng companion) | — | ✅ **CHỐT 2026-09-07: TRONG beta.** Engine đã xong (`players[]`, gacha, exp curve) — mục 9.8 Part B, mục 9.5 #8. Cần spec riêng do khối lượng content lớn. |
-| B4 | Talent v4 M2 (tu luyện) + M3 (sản xuất) | — | mục 7.5 dòng 76 — target `TurnBuffDefinition`, không phải legacy `BuffDefinition` (mục 10.3) |
-| B5 | World Map thật cho Thanh Vân (hạ tầng hex layout đã có, chưa có data bản đồ) | — | ✅ **CHỐT 2026-09-07: TRONG beta**, thay vì giữ dạng danh sách stage. Cần spec riêng — hạ tầng (`src/core/world-map/`) mới có layout+validator, chưa có nội dung. |
+# 0.9. Content freeze during foundation repair
 
-### Phase C — Dọn nợ kỹ thuật (chạy sau khi content ổn định, không chặn A/B)
+Major new content is temporarily **PARKED**, not cancelled.
 
-| # | Việc | Phụ thuộc | Chi tiết |
-|---|---|---|---|
-| C1 | Xóa `battle/legacy/` (engine real-time cũ) + gỡ shim | A1 + A2 | ✅ **XONG 2026-09-08** (branch `feat/c1-legacy-retirement`, spec `docs/superpowers/specs/2026-09-08-phase-c1-legacy-retirement-design.md`): xoá toàn bộ `src/core/battle/legacy/` (BattleSystem/HazardZoneSystem/LavaZone/SwordZone/UltimateSystem + 4 test file + README) −5982 dòng; gỡ GameManager shim (battleSystem field+ctor, start(), setArtifactRuntime, setChainDefinition, legacy fallback trong getBattle/abandonBattle/grantBattleRewardIfNeeded, syncLegacyBattleState no-op); gỡ StageWaveSystem battleSystem dep + update() spawn loop chết + resolveBossSummons + spawnTelegraph test; PhapTuNodes.dao.test re-point sang `data/skill/PhapTuUltimates`; `initKiemTuBattleResources` gọi trong startBattle (parity Kiếm bar — KT reset Kiếm Thế, BK seed Kiếm Ý tạm). artifact activation vẫn inert từ Slice 6 (HUD đọc getBattle().artifactRuntime → EMPTY; làm turn-side là feature riêng). Full suite 2841/2841 (33 test legacy retire) + type-check + build OK. |
-| C2 | Tách tiếp `GameManager.ts` (2.939 dòng) | — | mục 10.4 |
-| C3 | Nameplate công trình + dọn placeholder/emoji còn lại | — | Phase 2 cũ (mục 3) |
-| C4 | Locale sweep (7.10 Task 6) + container-fit refactor (7.10 Task 7) | — | mục 7.10 |
+This includes previous Beta Phase B:
 
-### Phase D — QA/Release trước beta
+```text
+B1 Perfect Clear stage thresholds
+B2 Production Trận Pháp content
+B3 Production Companion roster
+B4 Talent M2/M3
+B5 Thanh Vân World Map
+```
 
-| # | Việc |
-|---|---|
-| D1 | Regression toàn diện + balance pass cho nội dung mới (A+B) |
-| D2 | E2E bổ sung: auto-farm Hoàn Mỹ + manual tap-to-cast (sau khi B1 xong, ổn định) |
-| D3 | QA Deep pass lần 2 (như mục 8, chạy lại sau khi A+B+C xong) |
-| D4 | **Ngoài phạm vi beta** (✅ chốt 2026-09-07): Giai đoạn 6 Pre-production (online foundation/VIP/prestige) → hậu-beta. Âm thanh → vẫn ngoài phạm vi (quyết định 2026-08-29, chưa có tài nguyên). |
+Exception:
 
-### Ghi chú thứ tự
+Content may be touched when required to:
 
-- ~~**A0 là bugfix độc lập, không phụ thuộc/không chặn gì**~~ — ✅ XONG 2026-09-07 (xem dòng A0).
-- **A2 chặn đường nhiều nhất** (mở khóa A5, A6, C1) — nên làm sớm trong Phase A.
-- **A1 + A2 chặn C1** — không xóa engine cũ khi wiring chưa xong (an toàn rollback).
-- **B3 (Companion) và B5 (World Map)** là 2 hạng mục content lớn nhất, mỗi cái cần brainstorm + spec riêng trước khi viết plan — không gộp chung 1 plan (giữ nguyên convention "mỗi hệ thống 1 plan" đã có).
-- Phase C không chặn Phase A/B — chạy song song khi có capacity rảnh (đúng tinh thần Phase 4 cũ "chạy song song, không chặn phase khác").
-- 3.5/3.6 (Stat cap Phàm Nhân, CDR cap 300%) vẫn treo (mục 10.3) — không chặn beta, xử lý trong Phase D balance pass nếu còn thời gian.
+- characterize an active execution path;
+- migrate existing content to a repaired mechanism;
+- verify compatibility;
+- remove an invalid fallback.
+
+Do not use an architecture mission to redesign or rebalance that content.
+
+---
+
+# 0.10. Content Resume Gate
+
+Large content development resumes when the following foundation is stable:
+
+```text
+R1 Combat/Vitals       ✅
+R2 Stats               ✅
+R3 Skill Execution     ✅
+R4 Buff Foundation     ✅
+R5 Runtime/Presentation✅
+```
+
+and no unresolved P0 architecture finding remains in the normal player loop.
+
+R6 Combat Art does not necessarily block non-combat content work if the presentation contract is already stable.
+
+Independent P0/P1 issues such as R7 worker allocation must not be ignored indefinitely simply because they are outside combat.
+
+---
+
+# 0.11. Beta content after architecture foundation
+
+Once the Content Resume Gate is reached, resume content in this order unless new evidence changes dependencies:
+
+### B1 — Perfect Clear / Auto-farm completion
+
+- establish `perfectClearTurnLimit`;
+- verify auto-farm Hoàn Mỹ;
+- E2E through actual progression.
+
+### B2 — Trận Pháp production content
+
+Replace test-only formation content using the stabilized:
+
+```text
+modifier
+buff
+skill
+companion
+formation
+```
+
+mechanisms.
+
+### B3 — Companion roster
+
+Create production companion content only after combat skill/stat/buff contracts are stable.
+
+### B4 — Talent M2 / M3
+
+Target the stabilized authorities.
+
+Do not implement against obsolete buff or progression paths.
+
+### B5 — Thanh Vân World Map
+
+World-map content can then compose stable:
+
+```text
+stage
+progression
+quest
+reward
+production
+```
+
+systems.
+
+B3 and B5 remain separate large specifications.
+
+Do not combine them into one implementation mission.
+
+---
+
+# 0.12. Beta release gate
+
+Beta remains capped at:
+
+```text
+Phàm Nhân
+→ Luyện Khí
+→ Trúc Cơ
+```
+
+No Kim Đan+ content is required for beta unless explicitly reopened by the user.
+
+Beta architecture gate:
+
+- no known P0 architecture defect in normal player flow;
+- no competing authoritative damage/stat/buff execution paths;
+- normal gameplay does not depend on opening a UI query;
+- presentation does not determine gameplay outcomes;
+- normal operations cannot fabricate domain-owned results;
+- save/restore follows an explicit supported lifecycle;
+- major runtime consumers have actual integration evidence;
+- architecture guardrails exist for recurring critical invariants.
+
+Beta content gate:
+
+- normal Phàm Nhân → Trúc Cơ progression contains real content;
+- no required normal-flow placeholder/test-only content;
+- intended companion/formation/world-map scope completed;
+- balance pass complete.
+
+Beta verification gate:
+
+```text
+type-check
+build
+full Vitest
+relevant E2E
+real browser/Phaser inspection
+adversarial QA deep
+code review
+```
+
+---
+
+# 0.13. What NOT to do during Architecture Repair
+
+Do not:
+
+- rewrite the project from scratch;
+- split files based on line count;
+- create a generic internal framework;
+- convert every direct function call into events;
+- create interfaces for every class/function;
+- merge different concepts because they look similar;
+- unify turn clocks and wall clocks without semantic equivalence;
+- activate dormant systems merely because code exists;
+- rebalance around defective current outputs;
+- add migration compatibility for old development saves unless requested;
+- fix every Mission 0 finding in one branch;
+- perform broad UI redesign before domain ownership is stable.
+
+---
+
+# 0.14. Systems Mission 0 says to preserve
+
+Do not refactor these wholesale without new evidence:
+
+- Armor / Resistance / Accuracy / Endurance / RealmPressure;
+- canonical `calculateStats` formulas;
+- declare → impact → complete battle phases;
+- PresentationGate and playback-token concept;
+- source-indexed buff pools;
+- Wuxing/reaction pair definitions;
+- BattleGrid / HexLayout / body-anchor primitives;
+- EnemyStatInput normalization;
+- companion persistent → combatant construction boundary;
+- equipment instance vs slot progression distinction;
+- equipment stat/roll/affix policies;
+- refinement pending-result safeguards;
+- material-backed currency and bag mutation APIs;
+- NodeSystem prerequisite/level mechanics;
+- artifact progression helpers;
+- production cycle seed/deadline/reward snapshot model;
+- stage gate/effective-wave/progress resolvers;
+- BattleLootSystem's legitimate reward orchestration role;
+- existing UI primitives;
+- measured bag/grid/pagination mechanisms;
+- theme / nine-slice / layered asset pipeline;
+- primary Phaser host lifecycle/error cleanup.
+
+Architecture repair should make these foundations easier to compose, not replace them without evidence.
+
+---
+
+# 0.15. Roadmap operating rule
+
+Every architecture mission gets its own bounded plan.
+
+Plan must include:
+
+```text
+Finding / Evidence
+Invariant
+Current Owner
+Target Owner
+Existing Primitive
+Missing Primitive / Mechanism
+Real Consumers
+Migration Path
+Regression Tests
+Integration Evidence
+Explicit Out-of-Scope
+Completion Gate
+```
+
+Never issue:
+
+```text
+"fix architecture"
+```
+
+or:
+
+```text
+"fix all audit findings"
+```
+
+as an implementation mission.
+
+The next implementation mission is:
+
+# NEXT — R1 Combat / Vitals Authority Closure
+
+based on:
+
+```text
+Mission 0 AR-01
+```
+
+Only after R1 reaches its completion gate should its dependent architecture mission advance.
+
+---
+
+# Historical sections
+
+Sections below this point are retained as historical implementation detail, product decisions, completed work, and subsystem references.
+
+They do **not** override the execution priority defined in Section 0.
 
 ## 1. Nhận định hiện trạng
+<!-- Keep the existing historical sections from here downward unchanged unless
+     a future task deliberately synchronizes factual status/documentation. -->
 
 **Điểm mạnh cần giữ:**
 
