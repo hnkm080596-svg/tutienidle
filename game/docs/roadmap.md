@@ -767,6 +767,23 @@ This phase requires real Phaser/browser verification.
 
 Unit tests alone cannot close R5.
 
+```text
+✅ DONE 2026-09-08 (branch feat/r5-runtime-presentation, merged fast-forward) —
+   progression decoupled from visual particle arrival (investBodyRefinement auto-invests
+   directly in domain tick, Law A7); TurnBattleSystem emits gameplay 'attack' event
+   on action commit in both headless and presentation modes (Law A2); mandatory token
+   validation strictly enforced on acknowledgeTurnReady, acknowledgeActionImpact,
+   and acknowledgeActionComplete (Law A3); upward import cycles eliminated via
+   TurnBattleConstants and CombatAnimationTypes (Law A6); scene helpers
+   CombatCastBar and CombatPositionInterpolation encapsulate private maps (Law A3/A5);
+   App.wiring.test.ts 20/20 PASS with documented unwired members per P13.
+   TDD RED→GREEN; P3 full 421 files / 2892 tests PASS; P5 PASS; QA quick
+   PASS WITH EVIDENCE (game/docs/qa/2026-09-08-r5-runtime-presentation-quick.md).
+   P14 deferred (isolated-worktree exception).
+```
+
+**Status: COMPLETE 2026-09-08**
+
 ---
 
 # Phase R6 — Combat Character Art & Asset Contract
@@ -1295,8 +1312,8 @@ R14 Architecture Enforcement
 | 3 | R2 — Stat Provenance & Effective Stats | AR-02, AR-05 | ✅ COMPLETE 2026-09-08 |
 | 4 | R3 — Active Skill Execution Contract | AR-03, AR-04, AR-06, AR-18 | ✅ COMPLETE 2026-09-08 |
 | 5 | R4 — Buff / Status Foundation Closure | AR-06, AR-19, AR-18 | ✅ COMPLETE 2026-09-08 |
-| 6 | **R5 — Combat Runtime / Presentation Boundary** | **AR-14, AR-20, AR-24, AR-29** | ⏭️ **NEXT** |
-| 7 | R6 — Combat Character Art / Asset Contract | asset/presentation findings | ⏸ |
+| 6 | R5 — Combat Runtime / Presentation Boundary | AR-14, AR-20, AR-24, AR-29 | ✅ COMPLETE 2026-09-08 |
+| 7 | **R6 — Combat Character Art / Asset Contract** | **asset/presentation findings** | ⏭️ **NEXT** |
 | 8 | R7 — Worker Allocation / Decomposition | AR-07, AR-08 | ⏸ / may run independently |
 | 9 | R8 — Quest & Progression Authority | AR-09, AR-10, AR-13 | ⏸ |
 | 10 | R9 — Equipment / Inventory Integrity | AR-21, AR-22, AR-23, AR-34 | ⏸ |
@@ -1540,18 +1557,18 @@ as an implementation mission.
 
 The next implementation mission is:
 
-# NEXT — R5 Combat Runtime & Presentation Boundary
+# NEXT — R6 Combat Character Art & Asset Contract
 
 based on:
 
 ```text
-Mission 0 AR-14 + AR-20 + relevant AR-24 + AR-29
+asset / presentation findings from Mission 0
 ```
 
-(R4 Buff / Status Foundation Closure completed 2026-09-08; see its phase
+(R5 Combat Runtime & Presentation Boundary completed 2026-09-08; see its phase
 block for evidence.)
 
-Only after R5 reaches its completion gate should its dependent architecture mission advance.
+Only after R6 reaches its completion gate should its dependent architecture mission advance.
 
 ---
 
