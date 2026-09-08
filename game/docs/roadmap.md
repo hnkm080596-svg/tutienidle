@@ -685,6 +685,22 @@ Generic combat/buff systems should not know arbitrary talent/content IDs where a
 - reaction-consumed status behavior explicit;
 - no new parallel buff authority.
 
+```text
+✅ DONE 2026-09-08 (branch feat/r4-buff-foundation, merged fast-forward) —
+   canonical BuffSystem under src/core/buff/ consolidated from TurnBuffSystem;
+   legacy real-time duplicate code deleted (net −522 lines eliminated);
+   TurnBuff* transparent re-export aliases preserve 100% backwards compatibility;
+   universal update() supports turn ticks (with DoT source context) and
+   updateTime(deltaSeconds) for persistent buffs (Kiếp Thương);
+   TurnStatsRecompute deduplicated; CombatSystem surviveEffects decoupled
+   via SurviveEffectsPolicy (no hardcoded 'tu_sinh_ngo').
+   TDD RED→GREEN; P3 full 419 files / 2888 tests PASS; P5 PASS; QA quick
+   PASS WITH EVIDENCE (game/docs/qa/2026-09-08-r4-buff-foundation-quick.md).
+   P14 deferred (isolated-worktree exception).
+```
+
+**Status: COMPLETE 2026-09-08**
+
 ---
 
 # Phase R5 — Combat Runtime & Presentation Boundary
@@ -1278,8 +1294,8 @@ R14 Architecture Enforcement
 | 2 | R1 — Combat / Vitals Authority Closure | AR-01 | ✅ COMPLETE 2026-09-08 |
 | 3 | R2 — Stat Provenance & Effective Stats | AR-02, AR-05 | ✅ COMPLETE 2026-09-08 |
 | 4 | R3 — Active Skill Execution Contract | AR-03, AR-04, AR-06, AR-18 | ✅ COMPLETE 2026-09-08 |
-| 5 | **R4 — Buff / Status Foundation Closure** | **AR-06, AR-19, AR-18** | ⏭️ **NEXT** |
-| 6 | R5 — Combat Runtime / Presentation Boundary | AR-14, AR-20, AR-24, AR-29 | ⏸ |
+| 5 | R4 — Buff / Status Foundation Closure | AR-06, AR-19, AR-18 | ✅ COMPLETE 2026-09-08 |
+| 6 | **R5 — Combat Runtime / Presentation Boundary** | **AR-14, AR-20, AR-24, AR-29** | ⏭️ **NEXT** |
 | 7 | R6 — Combat Character Art / Asset Contract | asset/presentation findings | ⏸ |
 | 8 | R7 — Worker Allocation / Decomposition | AR-07, AR-08 | ⏸ / may run independently |
 | 9 | R8 — Quest & Progression Authority | AR-09, AR-10, AR-13 | ⏸ |
@@ -1524,18 +1540,18 @@ as an implementation mission.
 
 The next implementation mission is:
 
-# NEXT — R4 Buff / Status Foundation Closure
+# NEXT — R5 Combat Runtime & Presentation Boundary
 
 based on:
 
 ```text
-Mission 0 AR-06 + AR-19 + buff-related AR-18
+Mission 0 AR-14 + AR-20 + relevant AR-24 + AR-29
 ```
 
-(R3 Active Skill Execution Contract completed 2026-09-08; see its phase
+(R4 Buff / Status Foundation Closure completed 2026-09-08; see its phase
 block for evidence.)
 
-Only after R4 reaches its completion gate should its dependent architecture mission advance.
+Only after R5 reaches its completion gate should its dependent architecture mission advance.
 
 ---
 
