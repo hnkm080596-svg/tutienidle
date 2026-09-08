@@ -19,7 +19,9 @@ function makeGameManager() {
     bag.add(material, 100)
   }
 
-  const decompose = new DecomposeSystem(bag, { autoWorkerCapacity: 6 })
+  // R7 (AR-08): dynamic capacity replaces the constructor option.
+  const decompose = new DecomposeSystem(bag)
+  decompose.updateCapacity(6)
 
   return {
     decomposeSystem: decompose,

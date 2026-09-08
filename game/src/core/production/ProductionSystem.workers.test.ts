@@ -31,7 +31,7 @@ function createBag(): { bag: MaterialBag; registry: MaterialRegistry } {
   for (const material of materials) {
     registry.register(material)
   }
-  return { bag: new MaterialBag(registry), registry }
+  return { bag: new MaterialBag(), registry }
 }
 
 function makeAutoSystem(siteIds: string[]): ProductionSystem {

@@ -37,7 +37,6 @@ export interface DecomposeOutputEntry {
 }
 
 export interface DecomposeSystemOptions {
-  autoWorkerCapacity: number
   cycleSeconds?: number
 }
 
@@ -49,7 +48,9 @@ const ORE_PER_WORKER_PER_CYCLE = 2
 export class DecomposeSystem {
   private readonly bag: MaterialBag
 
-  private readonly autoWorkerCapacity: number
+  // R7 (AR-08): live capacity supplied by the workforce authority
+  // (GameManager tick / restore) — NOT a constructor constant.
+  private capacity = 0
 
   private readonly cycleMs: number
 
@@ -61,11 +62,25 @@ export class DecomposeSystem {
 
   private pendingOutput: DecomposeOutputEntry[] = []
 
-  constructor(bag: MaterialBag, options: DecomposeSystemOptions) {
+  constructor(bag: MaterialBag, options: DecomposeSystemOptions = {}) {
     this.bag = bag
-    this.autoWorkerCapacity = Math.max(0, Math.floor(options.autoWorkerCapacity))
     this.cycleMs = (options.cycleSeconds ?? DEFAULT_CYCLE_SECONDS) * 1000
     this.settings = { gradeFilter: 'all', ageFilter: 'all', workers: 0 }
+  }
+
+  /** Live capacity from the workforce authority (GameManager per tick). */
+  updateCapacity(capacity: number): void {
+    this.capacity = Math.max(0, Math.floor(capacity))
+
+    // Shrink case: a CHQ downgrade or stale save must not leave workers
+    // above the new ceiling.
+    if (this.settings.workers > this.capacity) {
+      this.settings.workers = this.capacity
+    }
+  }
+
+  getCapacity(): number {
+    return this.capacity
   }
 
   getSettings(): DecomposeSettings {
@@ -78,7 +93,7 @@ export class DecomposeSystem {
       ageFilter: patch.ageFilter ?? this.settings.ageFilter,
       workers: Math.min(
         Math.max(0, Math.floor(patch.workers ?? this.settings.workers)),
-        this.autoWorkerCapacity,
+        this.capacity,
       ),
     }
   }

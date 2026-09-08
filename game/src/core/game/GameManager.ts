@@ -432,8 +432,10 @@ export class GameManager {
   readonly equipmentBag = new EquipmentBag()
   readonly equipmentSystem = new EquipmentSystem(createDefaultEquipmentOperationCostCatalog())
 
-  // Task 14 (rework P4) ï¿½ Tab Phï¿½n Gi?i: khoï¿½ng ? Luy?n Khï¿½ Tinh Hoa.
-  readonly decomposeSystem = new DecomposeSystem(this.materialBag, { autoWorkerCapacity: 0 })
+  // Task 14 (rework P4) — Tab Phân Giải: khoáng → Luyện Khí Tinh Hoa.
+  // R7 (AR-08): capacity is dynamic — supplied per tick/restore via
+  // updateCapacity from the workforce authority (CHQ).
+  readonly decomposeSystem = new DecomposeSystem(this.materialBag)
 
   // Core Loop Foundation checklist (Phase 3, Mục AFFIX) — thay thế
   // hoàn toàn substatPool cũ.

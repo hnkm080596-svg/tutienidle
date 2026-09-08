@@ -315,7 +315,9 @@ function runOreChain(): OreChainResult {
     const registry = createRegistry()
     const bag = new MaterialBag()
 
-    const decompose = new DecomposeSystem(bag, { autoWorkerCapacity: 1 })
+    // R7 (AR-08): dynamic capacity replaces the constructor option.
+    const decompose = new DecomposeSystem(bag)
+    decompose.updateCapacity(1)
 
     decompose.setSetting({ gradeFilter: 'all', ageFilter: 'all', workers: 1 })
 
