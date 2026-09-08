@@ -508,7 +508,20 @@ Not only handcrafted raw stat fixtures.
 - rewrite the whole modifier system;
 - change authored enemy stats without evidence.
 
-**Status: BLOCKED BY R1/R2 PLANNING**
+```text
+✅ DONE 2026-09-08 (branch feat/r2-stat-provenance, merged fast-forward) —
+   calculateEffectiveStats() primitive (1-pass, no attribute re-derivation);
+   TurnStatsRecompute migrated; entity.baseStats = RESOLVED base contract;
+   participant.speed synced from entity.stats.speed at recompute + pacing
+   (AR-05 stale queue fixed). Intentional behavior change per spec §9:
+   in-battle attribute-derived stats apply once (10→70→130 becomes
+   10→70→70+buffs). TDD RED→GREEN; P3 full 414 files / 2851 tests PASS;
+   P5 PASS; QA quick PASS WITH EVIDENCE
+   (game/docs/qa/2026-09-08-r2-stat-provenance-quick.md).
+   P14 deferred (isolated-worktree exception).
+```
+
+**Status: COMPLETE 2026-09-08**
 
 ---
 
@@ -1246,8 +1259,8 @@ R14 Architecture Enforcement
 | 0 | Mission 0 — Whole-project Architecture Audit | Whole project | ✅ COMPLETE |
 | 1 | R0 — Governance / preserve audit / rules / roadmap | Audit governance | 🟡 IN PROGRESS |
 | 2 | R1 — Combat / Vitals Authority Closure | AR-01 | ✅ COMPLETE 2026-09-08 |
-| 3 | **R2 — Stat Provenance & Effective Stats** | **AR-02, AR-05** | ⏭️ **NEXT** |
-| 4 | R3 — Active Skill Execution Contract | AR-03, AR-04, AR-06, AR-18 | ⏸ |
+| 3 | R2 — Stat Provenance & Effective Stats | AR-02, AR-05 | ✅ COMPLETE 2026-09-08 |
+| 4 | **R3 — Active Skill Execution Contract** | **AR-03, AR-04, AR-06, AR-18** | ⏭️ **NEXT** |
 | 5 | R4 — Buff / Status Foundation Closure | AR-06, AR-19, AR-18 | ⏸ |
 | 6 | R5 — Combat Runtime / Presentation Boundary | AR-14, AR-20, AR-24, AR-29 | ⏸ |
 | 7 | R6 — Combat Character Art / Asset Contract | asset/presentation findings | ⏸ |
@@ -1494,18 +1507,18 @@ as an implementation mission.
 
 The next implementation mission is:
 
-# NEXT — R2 Stat Provenance & Effective Combat Stats
+# NEXT — R3 Active Skill Execution Contract
 
 based on:
 
 ```text
-Mission 0 AR-02 + AR-05
+Mission 0 AR-03 + AR-04 + AR-06 + relevant AR-18
 ```
 
-(R1 Combat / Vitals Authority Closure completed 2026-09-08; see its phase
-block for evidence.)
+(R2 Stat Provenance & Effective Combat Stats completed 2026-09-08; see its
+phase block for evidence.)
 
-Only after R2 reaches its completion gate should its dependent architecture mission advance.
+Only after R3 reaches its completion gate should its dependent architecture mission advance.
 
 ---
 
