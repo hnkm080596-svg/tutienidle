@@ -81,7 +81,7 @@ describe('QuestSystem', () => {
     const { registry, manager, system, bags, rewardSystem, materialRegistry, materialBag } = setup()
     const player = createPlayer()
 
-    system.getActiveQuests(registry, manager, player)
+    system.reconcileActiveQuests(registry, manager, player)
     materialBag.add(materialRegistry.get('linh_chi'), 5)
     manager.incrementProgress('collect_test', 5)
 
@@ -95,7 +95,7 @@ describe('QuestSystem', () => {
     const { registry, manager, system, bags, rewardSystem } = setup()
     const player = createPlayer()
 
-    system.getActiveQuests(registry, manager, player)
+    system.reconcileActiveQuests(registry, manager, player)
     manager.incrementProgress('collect_test', 5)
 
     const receiver = createReceiver()
@@ -106,7 +106,7 @@ describe('QuestSystem', () => {
     const { registry, manager, system, bags, rewardSystem, materialRegistry, materialBag } = setup()
     const player = createPlayer()
 
-    system.getActiveQuests(registry, manager, player)
+    system.reconcileActiveQuests(registry, manager, player)
     materialBag.add(materialRegistry.get('linh_chi'), 5)
     manager.incrementProgress('collect_test', 5)
 
@@ -119,7 +119,7 @@ describe('QuestSystem', () => {
     const { registry, manager, system } = setup()
     const player = createPlayer()
 
-    system.getActiveQuests(registry, manager, player)
+    system.reconcileActiveQuests(registry, manager, player)
     system.onEnemyDefeated(registry, manager, 'bandit', undefined)
     expect(manager.getProgress('kill_test')?.progress).toBe(0)
 
@@ -131,7 +131,7 @@ describe('QuestSystem', () => {
     const { registry, manager, system } = setup()
     const player = createPlayer()
 
-    system.getActiveQuests(registry, manager, player)
+    system.reconcileActiveQuests(registry, manager, player)
 
     // Material lệch id → không tăng.
     system.onMaterialCollected(registry, manager, 'other_material', 9)
@@ -149,7 +149,7 @@ describe('QuestSystem', () => {
     const { registry, manager, system, bags, rewardSystem, materialRegistry, materialBag } = setup()
     const player = createPlayer()
 
-    system.getActiveQuests(registry, manager, player)
+    system.reconcileActiveQuests(registry, manager, player)
     materialBag.add(materialRegistry.get('linh_chi'), 5)
     manager.incrementProgress('collect_test', 5)
 
@@ -167,7 +167,7 @@ describe('QuestSystem', () => {
     const { registry, manager, system } = setup()
     const player = createPlayer()
 
-    system.getActiveQuests(registry, manager, player)
+    system.reconcileActiveQuests(registry, manager, player)
     manager.incrementProgress('kill_test', 2)
     manager.markCompletedOnce('collect_test')
 
