@@ -16,6 +16,10 @@ When a rule says "the agent", it means whichever coding agent is currently activ
 
 Deleted `TASK.md` files, stale worklogs, historical implementation notes, and explicitly obsolete plans are not current requirements.
 
+Project intent: build a headlessly testable game from stable primitives and composable mechanisms, with one authority per rule and state. Repair the smallest coherent responsibility and migrate its real consumers; do not optimize for file count, line count, or a green suite alone. Preserve gameplay intent rather than silently redesigning it.
+
+Use `AstraDoctrine.md` for the reasoning workflow. Findings are evidence of defects, not new product requirements or authorization for an unrelated rewrite.
+
 ---
 
 # Part 1 — Protection Rules (Enforced)
@@ -504,25 +508,13 @@ One system must not directly mutate another system's private state.
 
 When timing, presentation, and business logic become mixed in the same function or class, treat it as an architectural defect rather than a style preference.
 
-#### Combat reference
+#### Combat contract and maintained references
 
-Before modifying turn-based combat in:
+Before modifying `game/src/core/battle/turn/**`, GameManager battle-tick integration, or `CombatScene.ts`, establish the current state-machine and presentation-timing contract from maintained documentation, production consumers, and tests.
 
-```text
-game/src/core/battle/turn/**
-GameManager battle-tick integration
-CombatScene.ts
-```
+The previously required `docs/superpowers/specs/2026-09-07-turn-based-combat-reference.md` is absent as of 2026-09-08. Do not claim to have read it or reconstruct requirements from deleted plans. Until a maintained replacement exists, record the relevant contract and evidence in the task's design/QA documentation before changing that behavior. Distinguish intended behavior from observed defects; ask only when unresolved ambiguity changes product intent.
 
-read:
-
-```text
-docs/superpowers/specs/2026-09-07-turn-based-combat-reference.md
-```
-
-It is the maintained behavioral reference for the current turn-state machine and presentation timing contract.
-
-If an authorized change intentionally changes that contract, update the reference in the same coherent change.
+An intentional contract change must update its maintained reference in the same coherent change. Verify that required reference paths exist; do not treat a missing document as either permission to invent behavior or a reason to abandon otherwise authorized work.
 
 ---
 
@@ -572,6 +564,10 @@ animation playback    → presentation authority
 
 Do not independently implement the same semantic rule in multiple places.
 
+An authoritative operation owns its complete outcome contract. Damage variants (including bonus, periodic, and true damage) must preserve the applicable vitals, survival/death, and event rules. Callers consume the resolved hit/effect result rather than independently inferring whether it landed, crit, or killed.
+
+Required execution context must be supplied by production callers. Do not hide missing sources, policies, or collaborators behind a default that silently changes gameplay.
+
 ### A3. One Mutable State, One Authority
 
 For important mutable state, the project must be able to answer:
@@ -587,6 +583,14 @@ Who persists it?
 Other systems request changes through the owner's explicit API.
 
 They do not directly mutate another domain's internals.
+
+Gameplay queries must not activate, claim, reset, or advance authoritative state. Lifecycle commands run independently of screen visibility.
+
+Paid or random preview results remain domain-owned, bound to the relevant operation/item/session, and accepted by identity at most once. Presentation receives a display copy; commit validates current eligibility and cannot accept caller-invented outcomes.
+
+Save snapshots must be detached values. Restore must have explicit identity, replacement/reset, and repeat-application semantics; it must not duplicate inventory or emit new-acquisition rewards. A partial fingerprint is not proof that a payload is unchanged.
+
+Async work must have an explicit lifecycle owner, cleanup, and stale-result policy. Where sessions or operations can overlap, validate their identity/generation; a shared boolean is not sufficient. Derived copies need an explicit refresh/invalidation contract or should be read from their owner.
 
 ### A4. No Long-Arm Systems
 
@@ -623,6 +627,8 @@ They should not reproduce formulas or directly manipulate another system's inter
 
 Large orchestrators are acceptable when their size comes from coordination rather than accumulated domain logic.
 
+Extracting a helper is not transferring ownership if it still reaches into the original object's private state. Move the state, lifecycle, and rule together behind a narrow contract.
+
 ### A6. Dependencies Point Toward Foundations
 
 Preferred conceptual direction:
@@ -640,6 +646,8 @@ Lower layers must not depend on higher layers.
 
 Core gameplay should remain independent of Vue and Phaser where practical and should be headlessly testable.
 
+Shared contracts and constants belong below their consumers. Check transitive dependencies and runtime cycles as well as direct imports; type-only imports do not justify putting a domain contract under presentation.
+
 ### A7. Presentation Is Not Gameplay Authority
 
 Vue and Phaser may:
@@ -653,6 +661,8 @@ Vue and Phaser may:
 They must not calculate or determine authoritative gameplay outcomes.
 
 Presentation failure must not silently change gameplay state.
+
+Visual arrival, animation completion, and UI mounting must not award resources, spend costs, activate progression, or originate authoritative gameplay events. A runtime-owned protocol may use acknowledgments to pace actions and request domain-owned transitions, with explicit stale/duplicate handling and fallback when presentation is unavailable. The acknowledgment is not the authority for the outcome.
 
 ### A8. Generic Mechanisms Must Not Accumulate Content Special Cases
 
@@ -672,6 +682,8 @@ When special behavior reveals a stable category of variation, introduce the smal
 
 Do not create one abstraction per content item.
 
+Adapters and content converters must preserve supported semantics: targeting, effect scope/order, conditions, and execution policy. Reject or explicitly report unsupported content; never silently replace it with a default attack or discard effects. Verify authored content against the actual execution capabilities.
+
 ### A9. Shared Rule, Single Implementation
 
 The same semantic formula or rule must not be copied between:
@@ -684,6 +696,12 @@ The same semantic formula or rule must not be copied between:
 - crafting preview and crafting execution.
 
 Consumers must use the authoritative rule owner.
+
+This includes online/offline allocation and operation-specific eligibility, costs, and previews. Share semantic rules while keeping genuinely different clocks and explicit time units separate.
+
+Distinguish raw/base, resolved, and effective stats in contracts. Apply attribute derivation and modifiers exactly once, preserving the provenance needed for recomputation.
+
+Failed exchanges preserve all involved balances. Acquisition receipts distinguish requested, delivered, and overflow amounts, and callers must handle them. Do not report a full grant from a partial delivery. Use the smallest domain operation that enforces these guarantees; do not introduce a universal transaction framework without demonstrated need.
 
 ### A10. UI Must Compose Canonical Primitives
 
@@ -724,6 +742,10 @@ Do not create universal mega-components.
 
 Do not duplicate an existing primitive because local implementation is faster.
 
+Canonical interaction primitives own keyboard and accessibility semantics. When Vue and Phaser share a layout, rendering and hit testing must use the same measured projection rather than independently copied dimensions.
+
+Asset resolution and preload enumeration should derive from one canonical catalog. Validate externally derived asset paths against the intended destination before filesystem operations.
+
 ### A11. Fix Root Causes, Not Symptoms
 
 Before fixing a non-trivial problem, ask:
@@ -761,6 +783,12 @@ Prove its consumer status.
 Do not introduce abstractions for hypothetical future needs.
 
 Every abstraction must pay rent.
+
+Characterize the real production input and consumer chain before replacing an execution path. Substitute test entities or configuration do not establish migration parity. Cover relevant raw/resolved data, required collaborators, runtime capacities, and authored content through actual factories/composition roots.
+
+Migrate in runnable vertical slices. Search for duplicate authorities and inspect callers, preview, persistence, reset/cleanup, error paths, and downstream events before retiring the old path. Classify adapters as live, transitional, or unused with evidence; casts, no-op bridges, and partial compatibility objects must not conceal an incomplete migration.
+
+For client/storage/server boundaries, verify the current schema and capability contract together. Do not infer an implemented cloud/backend capability from an interface or configuration alone.
 
 ---
 
@@ -922,6 +950,8 @@ Verification strategy
 Explicitly out of scope
 ```
 
+For long architectural missions, keep this as a concise ledger with current versus target authority, migrated consumers, verification status, and retained debt. Audit before a broad refactor; build foundations first and migrate one complete production path at a time.
+
 ### E8. Development Phase
 
 The project is currently a development build.
@@ -1013,6 +1043,10 @@ P7 still governs commit/merge/integration authority.
 Before applying P3, P4, or P5 completion gates, load `verification-before-completion`.
 
 It supplements rather than replaces project-specific verification rules.
+
+Make repeated architectural failures executable through focused types, validators, integration tests, or dependency checks within the authorized scope. Verify effective configuration, not merely the presence of a lint rule or script.
+
+A green aggregate suite is not proof of semantic parity. Exercise the violated invariant with production inputs and wiring; preserve existing guards until equivalent behavioral coverage is demonstrated. Documentation-only changes need consistency, reference, and mirror checks rather than production test runs.
 
 ### E14. Code-Review Workflow
 

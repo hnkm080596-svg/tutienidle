@@ -148,11 +148,41 @@ The only place Vietnamese should appear in this codebase is user-facing UI/UX co
 - Scope discipline: governs new code / files you substantially touch, not a mandate to retrofit the pre-existing backlog of hardcoded Vietnamese strings elsewhere (stay in scope, P10).
 - Data-driven Vietnamese content in `data/**` (naming systems, lore) is a pre-existing accepted convention distinct from UI chrome strings — not targeted by this rule unless a task specifically calls for it.
 
-### P17. Runtime/Presentation/Logic Separation (single-responsibility systems, no cross-talk)
+### P17. Runtime / Presentation / Logic Separation
 
-A runtime/clock component's only job is timing (advance a gauge/counter, select current animation/VFX state, signal ticks) — never business/gating logic (targeting, spawn/wave conditions, victory conditions, damage math). Presentation (Phaser) owns animation/VFX playback and reports completion via explicit acknowledgment — it doesn't decide game-logic outcomes. Damage/effect resolution stays in its own system, never inlined into a runtime or presentation layer. Systems coordinate only through explicit interfaces/events (an ack call, an emitted event, a read-only query) — never by directly mutating a sibling system's private state. If you find timing, presentation, and business logic mixed in one function/class, treat it as a defect, not a style nitpick.
+Each subsystem must do its own job.
 
-**Combat specifically:** before touching turn-based combat (`game/src/core/battle/turn/**`, `GameManager`'s battle-tick code, `CombatScene.ts`), read `docs/superpowers/specs/2026-09-07-turn-based-combat-reference.md` first — authoritative description of the state machine/gauge/targeting/presentation-timing split, plus mechanics this system deliberately excludes (no Break/Toughness, no per-turn banked resource, no per-path elemental requirement). Keep it in sync with any change that affects it.
+A runtime/clock system owns timing.
+
+Presentation owns rendering, animation, VFX, and visual playback.
+
+Gameplay systems own authoritative rules.
+
+Damage/effect resolution belongs to the relevant gameplay authority.
+
+Presentation may acknowledge playback completion, but must not determine gameplay outcomes.
+
+Gameplay must not manipulate Phaser internals.
+
+Coordination must happen through explicit contracts such as:
+
+- typed calls;
+- commands;
+- events;
+- acknowledgments;
+- read-only state queries.
+
+One system must not directly mutate another system's private state.
+
+When timing, presentation, and business logic become mixed in the same function or class, treat it as an architectural defect rather than a style preference.
+
+#### Combat contract and maintained references
+
+Before modifying `game/src/core/battle/turn/**`, GameManager battle-tick integration, or `CombatScene.ts`, establish the current state-machine and presentation-timing contract from maintained documentation, production consumers, and tests.
+
+The previously required `docs/superpowers/specs/2026-09-07-turn-based-combat-reference.md` is absent as of 2026-09-08. Do not claim to have read it or reconstruct requirements from deleted plans. Until a maintained replacement exists, record the relevant contract and evidence in the task's design/QA documentation before changing that behavior. Distinguish intended behavior from observed defects; ask only when unresolved ambiguity changes product intent.
+
+An intentional contract change must update its maintained reference in the same coherent change. Verify that required reference paths exist; do not treat a missing document as either permission to invent behavior or a reason to abandon otherwise authorized work.
 
 ---
 
