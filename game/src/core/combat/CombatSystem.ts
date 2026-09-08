@@ -145,11 +145,13 @@ export class CombatSystem {
     source: CombatEntity,
     target: CombatEntity,
     damage: ActionDamageInfo,
-    critical = false,
+    critical?: boolean,
   ): DamageResult {
     if (!this.rollHit(source, target)) {
       return this.resolveDodge(source, target, damage.kind)
     }
+
+    const isCritical = critical !== undefined ? critical : this.rollCritical(source, target)
 
     const effectiveMultiplier = damage.multiplier * getRealmPressureMultiplier(source, target)
 
@@ -161,7 +163,7 @@ export class CombatSystem {
       ? calculateSkillBaseDamage(source, target, damage.components, ignoreResistance)
       : calculateBaseDamage(source, target, damage.kind, ignoreResistance)
 
-    const afterCrit = applyMultiplierAndCritical(baseDamage, effectiveMultiplier, critical, source.stats.criticalDamage)
+    const afterCrit = applyMultiplierAndCritical(baseDamage, effectiveMultiplier, isCritical, source.stats.criticalDamage)
 
     const blocked = this.rollBlock(target)
 
@@ -193,7 +195,7 @@ export class CombatSystem {
 
       damageType: damage.kind,
 
-      critical,
+      critical: isCritical,
 
       dodged: false,
 
@@ -206,7 +208,7 @@ export class CombatSystem {
       targetKilled: target.currentHp <= finalDamage,
     }
 
-    return this.resolveAttack(source, target, result, critical, blocked)
+    return this.resolveAttack(source, target, result, isCritical, blocked)
   }
 
   private rollHit(source: CombatEntity, target: CombatEntity): boolean {

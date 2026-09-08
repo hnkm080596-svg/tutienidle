@@ -26,8 +26,8 @@ describe('toTurnSkillDefinition', () => {
     // Number-preserved cooldown (skill.cooldown = 3).
     expect(turnSkill.cooldownTurns).toBe(3)
     // Damage effect: elemental fire, value 1.3.
-    expect(turnSkill.damage.kind).toBe('elemental')
-    if (turnSkill.damage.kind === 'elemental') {
+    expect(turnSkill.damage?.kind).toBe('elemental')
+    if (turnSkill.damage && turnSkill.damage.kind === 'elemental') {
       expect(turnSkill.damage.components).toEqual([{ kind: 'element', element: 'fire', ratio: 1 }])
       expect(turnSkill.damage.multiplier).toBeCloseTo(1.3, 5)
     }
@@ -48,7 +48,7 @@ describe('toTurnSkillDefinition', () => {
     const turnSkill = toTurnSkillDefinition(manager.get(skill.id)!, effective)
 
     expect(turnSkill.targeting).toEqual({ shape: 'square', laneRadius: 1 })
-    if (turnSkill.damage.kind === 'elemental') {
+    if (turnSkill.damage && turnSkill.damage.kind === 'elemental') {
       expect(turnSkill.damage.multiplier).toBeCloseTo(1, 5)
     }
     expect(turnSkill.appliesAilment).toEqual({ buffDefinitionId: 'bong', chance: 0.7 })
@@ -99,5 +99,107 @@ describe('toTurnSkillDefinition', () => {
 
     expect(turnSkill.resourceType).toBe(skill.resourceType)
     expect(turnSkill.resourceCost).toBe(skill.cost)
+  })
+
+  // AR-03: Strict converter tests
+  describe('AR-03: Strict conversion of authored semantics', () => {
+    it('converts water self-buff special thanh_tuyen_duong_linh: targetScope self, no fake damage, appliesBuff', () => {
+      const manager = new SkillManager()
+      const skillSystem = new SkillSystem(manager)
+      const skill = structuredClone(SKILLS.find((s) => s.id === 'thanh_tuyen_duong_linh')!)
+      manager.add(skill)
+
+      const effective = skillSystem.getEffectiveSkill(skill)
+      const turnSkill = toTurnSkillDefinition(skill, effective)
+
+      expect(turnSkill.id).toBe('thanh_tuyen_duong_linh')
+      expect(turnSkill.targetScope).toBe('self')
+      expect(turnSkill.damage).toBeUndefined()
+      expect(turnSkill.appliesBuff).toEqual({ definitionId: 'thanh_tuyen', target: 'self' })
+    })
+
+    it('converts earth self-buff special dia_tru_thua_thien: targetScope self, no fake damage, appliesBuff', () => {
+      const manager = new SkillManager()
+      const skillSystem = new SkillSystem(manager)
+      const skill = structuredClone(SKILLS.find((s) => s.id === 'dia_tru_thua_thien')!)
+      manager.add(skill)
+
+      const effective = skillSystem.getEffectiveSkill(skill)
+      const turnSkill = toTurnSkillDefinition(skill, effective)
+
+      expect(turnSkill.id).toBe('dia_tru_thua_thien')
+      expect(turnSkill.targetScope).toBe('self')
+      expect(turnSkill.damage).toBeUndefined()
+      expect(turnSkill.appliesBuff).toEqual({ definitionId: 'dia_tru', target: 'self' })
+    })
+
+    it('converts specialization of self-buff skill (Băng Giáp)', () => {
+      const manager = new SkillManager()
+      const skillSystem = new SkillSystem(manager)
+      const skill = structuredClone(SKILLS.find((s) => s.id === 'thanh_tuyen_duong_linh')!)
+      manager.add(skill)
+
+      skillSystem.selectSpecialization(skill.id, 'duong_linh_bang_giap')
+      const effective = skillSystem.getEffectiveSkill(manager.get(skill.id)!)
+      const turnSkill = toTurnSkillDefinition(manager.get(skill.id)!, effective)
+
+      expect(turnSkill.targetScope).toBe('self')
+      expect(turnSkill.damage).toBeUndefined()
+      expect(turnSkill.appliesBuff).toEqual({ definitionId: 'bang_giap', target: 'self' })
+    })
+
+    it('maps multiple debuffs on wood special cau_mang_can_tri into appliesAilments', () => {
+      const manager = new SkillManager()
+      const skillSystem = new SkillSystem(manager)
+      const skill = structuredClone(SKILLS.find((s) => s.id === 'cau_mang_can_tri')!)
+      manager.add(skill)
+
+      const effective = skillSystem.getEffectiveSkill(skill)
+      const turnSkill = toTurnSkillDefinition(skill, effective)
+
+      expect(turnSkill.appliesAilments).toHaveLength(2)
+      expect(turnSkill.appliesAilments).toContainEqual({ buffDefinitionId: 'troi_chan', chance: 0.8 })
+      expect(turnSkill.appliesAilments).toContainEqual({ buffDefinitionId: 'trung_doc', chance: 0.6 })
+    })
+
+    it('folds add_stack effect into ailment stacks count (Tam Muội Tụ Diễm)', () => {
+      const manager = new SkillManager()
+      const skillSystem = new SkillSystem(manager)
+      const skill = structuredClone(SKILLS.find((s) => s.id === 'tam_muoi_chan_hoa')!)
+      manager.add(skill)
+
+      skillSystem.selectSpecialization(skill.id, 'tam_muoi_tu_diem')
+      const effective = skillSystem.getEffectiveSkill(manager.get(skill.id)!)
+      const turnSkill = toTurnSkillDefinition(manager.get(skill.id)!, effective)
+
+      // Debuff 1 stack + add_stack 1 stack = 2 stacks.
+      const bongAilment = turnSkill.appliesAilments?.find((a) => a.buffDefinitionId === 'bong')
+      expect(bongAilment).toBeDefined()
+      expect(bongAilment?.stacks).toBe(2)
+    })
+
+    it('maps healPercentOfDamage on wood ultimate doc_vien_bao_can', () => {
+      const manager = new SkillManager()
+      const skillSystem = new SkillSystem(manager)
+      const skill = structuredClone(SKILLS.find((s) => s.id === 'doc_vien_bao_can')!)
+      manager.add(skill)
+
+      const effective = skillSystem.getEffectiveSkill(skill)
+      const turnSkill = toTurnSkillDefinition(skill, effective)
+
+      expect(turnSkill.healPercentOfDamage).toBe(0.4)
+    })
+
+    it('fails explicitly with an Error on unsupported effect types', () => {
+      const manager = new SkillManager()
+      const skillSystem = new SkillSystem(manager)
+      const synthetic = structuredClone(SKILLS.find((s) => s.id === 'tam_muoi_chan_hoa')!)
+      synthetic.id = 'unsupported_skill'
+      synthetic.effects = [{ type: 'unknown_future_effect' as never }]
+      manager.add(synthetic)
+
+      const effective = skillSystem.getEffectiveSkill(synthetic)
+      expect(() => toTurnSkillDefinition(synthetic, effective)).toThrow(/Unsupported/)
+    })
   })
 })

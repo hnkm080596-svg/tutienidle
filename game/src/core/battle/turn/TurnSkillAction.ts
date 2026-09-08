@@ -19,13 +19,32 @@ import { isCellInShape, type AoeShapeSpec } from './AoeShape'
  * so future content-mapping from real Skill objects is a straight field
  * copy, not a redesign — see design spec §3.
  */
+export interface TurnSkillAilmentApplication {
+  buffDefinitionId: string
+  chance: number
+  stacks?: number
+}
+
 export interface TurnSkillDefinition {
   id: string
   cooldownTurns: number
+  /**
+   * R3 (AR-03) — Explicit target scope. Defaults to 'enemy'.
+   * 'self' targets the caster without dealing damage.
+   */
+  targetScope?: 'enemy' | 'self'
   resourceType?: SkillResourceType
   resourceCost?: number
-  damage: ActionDamageInfo
+  damage?: ActionDamageInfo
   targeting: ActionTargeting
+  /**
+   * R3 (AR-18) — Generic composite action policy. Replaces hardcoded
+   * content ID checks in the turn engine.
+   */
+  compositePicks?: {
+    poolType: 'reaction_path'
+    count: number
+  }
   appliesBuff?: { definitionId: string; target: 'self' | 'target' }
   /**
    * Phase A1 (2026-09-07) — chance-gated ailment application, checked
@@ -33,7 +52,11 @@ export interface TurnSkillDefinition {
    * from appliesBuff (unconditional, no reaction check) — different
    * semantics, do not merge the two fields.
    */
-  appliesAilment?: { buffDefinitionId: string; chance: number }
+  appliesAilment?: TurnSkillAilmentApplication
+  /**
+   * R3 (AR-03) — Multiple ailment applications on landed hit.
+   */
+  appliesAilments?: TurnSkillAilmentApplication[]
   // Phase A3 — Pháp Tu Detonate: consume the target's stacks of this
   // ailment for bonus true damage (bypasses armor/resistance), then
   // clear them. Ported from legacy SkillEffect.consumesAilmentId/
@@ -46,6 +69,8 @@ export interface TurnSkillDefinition {
   // together with damagePerWardPoint.
   consumesWardForDamage?: boolean
   damagePerWardPoint?: number
+  /** R3 (AR-03) — Leech healing: heals caster for % of final damage dealt. */
+  healPercentOfDamage?: number
   /** Future Systems Task 7 — skill charge N lượt (Thế) rồi tự resolve (Trảm). */
   chargeTurns?: number
   /** Action Playback (2026-09-05) — VFX preset cho action_impact. undefined = fallback preset mặc định (Task 4). */
@@ -98,7 +123,7 @@ export function consumeResourceFor(entity: CombatEntity, skill: TurnSkillDefinit
 export interface SelectedAction {
   skillId: string
   skill: TurnSkillDefinition | null
-  damage: ActionDamageInfo
+  damage?: ActionDamageInfo
   targeting: ActionTargeting
   slot: TurnSkillSlot | null
 }

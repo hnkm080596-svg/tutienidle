@@ -37,6 +37,7 @@ export const PHAP_TU_REACTION_SPECIAL: TurnSkillDefinition = {
   cooldownTurns: 4,
   resourceType: 'mana',
   resourceCost: 20,
+  compositePicks: { poolType: 'reaction_path', count: 2 },
   damage: { kind: 'physical', multiplier: 0 },
   targeting: { shape: 'single' },
 }

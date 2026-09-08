@@ -22,7 +22,6 @@ import { scaleActionDamage } from '../ActionImpactSystem'
 import { recomputeEffectiveStats } from './TurnStatsRecompute'
 import type { BattleLogEntry } from './TurnOrderPreview'
 import { selectRandomDistinctElementPair } from './TurnSkillAction'
-import { REACTION_PATH_SPECIAL_ID } from '../../../data/skill/TurnReactionPathSkills'
 import { refundGauge, GAUGE_MAX } from './ActionGauge'
 import { TurnReactionManager } from './TurnReactionManager'
 import { MAX_THE, THE_GAIN_PER_LINK, THE_GAIN_PER_FINISHER } from '../../combat/CombatTypes'
@@ -686,7 +685,16 @@ export class TurnBattleSystem {
       }
     }
 
-    actorBuffSystem.update(actor.entity, this.combat, this.registry)
+    // R3 (AR-06) — provide source entity resolver so elemental penetration
+    // and Mộc Tu poison recovery operate with authoritative source context.
+    const resolveSource = (sourceId: string): CombatEntity | undefined => {
+      const participant =
+        battle.players.find((p) => p.id === sourceId) ??
+        battle.enemies.find((e) => e.id === sourceId)
+      return participant?.entity
+    }
+
+    actorBuffSystem.update(actor.entity, this.combat, this.registry, resolveSource)
 
     if (actor.entity.stats.hpRegenPerTurn > 0 && actor.entity.currentHp < actor.entity.maxHp) {
       // R1 (AR-01) — regeneration is a vitals mutation: go through the
@@ -793,26 +801,38 @@ export class TurnBattleSystem {
         actor.pendingChargedSkillId = action.skillId
       }
 
-      opposingSide = battle.players.includes(actor) ? battle.enemies : battle.players
-      const primaryTarget = selectTarget(actor, opposingSide)
+      const targetScope = action.skill?.targetScope ?? 'enemy'
 
-      if (primaryTarget && !isChargeInit) {
-        affected = collectTurnTargets(primaryTarget, opposingSide, action.targeting)
+      if (targetScope === 'self') {
+        affected = [actor]
+        scaledDamage = null
+      } else {
+        opposingSide = battle.players.includes(actor) ? battle.enemies : battle.players
+        const primaryTarget = selectTarget(actor, opposingSide)
 
-        const suddenDeathMultiplier = this.suddenDeathDamageMultiplier(battle.totalTurnsElapsed ?? 0)
-        suddenDeathMultiplierCaptured = suddenDeathMultiplier
-        scaledDamage = suddenDeathMultiplier === 1 ? action.damage : scaleActionDamage(action.damage, suddenDeathMultiplier)
+        if (primaryTarget && !isChargeInit) {
+          affected = collectTurnTargets(primaryTarget, opposingSide, action.targeting)
 
-        // Future Systems Task 5 — Reaction Path marker: capture picks tại
-        // declare; hits áp tại applyActionImpact (Action Playback defer).
-        if (action.skillId === REACTION_PATH_SPECIAL_ID && this.reactionPathPool) {
-          reactionPathPicks = selectRandomDistinctElementPair([...this.reactionPathPool])
-          isReactionPath = true
-        } else if (action.skillId === REACTION_PATH_SPECIAL_ID) {
-          // Marker equipped nhưng pool chưa inject — placeholder damage
-          // vô nghĩa, bỏ qua hit hoàn toàn (không crash, không hit).
-          markerNoPool = true
-          scaledDamage = null
+          if (action.damage) {
+            const suddenDeathMultiplier = this.suddenDeathDamageMultiplier(battle.totalTurnsElapsed ?? 0)
+            suddenDeathMultiplierCaptured = suddenDeathMultiplier
+            scaledDamage = suddenDeathMultiplier === 1 ? action.damage : scaleActionDamage(action.damage, suddenDeathMultiplier)
+          }
+
+          // R3 (AR-18) — Generic composite action policy with backward-compatible ID check.
+          const isReactionComposite =
+            action.skill?.compositePicks?.poolType === 'reaction_path' ||
+            action.skillId === 'phap_tu_reaction_special'
+
+          if (isReactionComposite && this.reactionPathPool) {
+            reactionPathPicks = selectRandomDistinctElementPair([...this.reactionPathPool])
+            isReactionPath = true
+          } else if (isReactionComposite) {
+            // Marker equipped nhưng pool chưa inject — placeholder damage
+            // vô nghĩa, bỏ qua hit hoàn toàn (không crash, không hit).
+            markerNoPool = true
+            scaledDamage = null
+          }
         }
       }
     }
@@ -877,7 +897,7 @@ export class TurnBattleSystem {
     if (declared.isCharging && declared.chargeResolved) {
       const chargedSkill = declared.chargedSkill
 
-      if (chargedSkill) {
+      if (chargedSkill && chargedSkill.damage) {
         const opposingSide = battle.players.includes(actor) ? battle.enemies : battle.players
 
         const suddenDeathMultiplier = this.suddenDeathDamageMultiplier(battle.totalTurnsElapsed ?? 0)
@@ -890,8 +910,11 @@ export class TurnBattleSystem {
 
           if (!targetParticipant || !targetParticipant.entity.alive) continue
 
-          this.combat.resolveActionHit(actor.entity, targetParticipant.entity, chargedDamage)
-          targetIds.push(target)
+          const hitResult = this.combat.resolveActionHit(actor.entity, targetParticipant.entity, chargedDamage)
+
+          if (!hitResult.dodged) {
+            targetIds.push(target)
+          }
         }
       }
 
@@ -903,6 +926,8 @@ export class TurnBattleSystem {
 
       if (declared.isReactionPath && declared.reactionPathPicks) {
         for (const pickedSkill of declared.reactionPathPicks) {
+          if (!pickedSkill.damage) continue
+
           const pickedDamage = declared.suddenDeathMultiplier === 1
             ? pickedSkill.damage
             : scaleActionDamage(pickedSkill.damage, declared.suddenDeathMultiplier)
@@ -910,16 +935,33 @@ export class TurnBattleSystem {
           for (const target of declared.affected) {
             if (!target.entity.alive) continue
 
-            this.combat.resolveActionHit(actor.entity, target.entity, pickedDamage)
-            targetIds.push(target.id)
+            const hitResult = this.combat.resolveActionHit(actor.entity, target.entity, pickedDamage)
+
+            if (!hitResult.dodged) {
+              targetIds.push(target.id)
+            }
           }
         }
       } else if (declared.scaledDamage) {
         for (const target of declared.affected) {
           if (!target.entity.alive) continue
 
-          this.combat.resolveActionHit(actor.entity, target.entity, declared.scaledDamage)
-          targetIds.push(target.id)
+          const hitResult = this.combat.resolveActionHit(actor.entity, target.entity, declared.scaledDamage)
+
+          // AR-04: downstream on-hit effects, debuffs and consume triggers
+          // require a landed hit — dodged attacks bypass all of them.
+          if (!hitResult.dodged) {
+            targetIds.push(target.id)
+
+            // R3 (AR-03) — Leech healing: heals caster for % of final damage dealt.
+            if (action.skill?.healPercentOfDamage && hitResult.finalDamage > 0) {
+              this.combat.applyHealing(
+                actor.entity,
+                hitResult.finalDamage * action.skill.healPercentOfDamage,
+                actor.entity.id,
+                'leech',
+              )
+            }
 
           // Phase A3 — consume-for-damage (Pháp Tu Detonate / Thổ Tu ward
           // burst). Orchestration only: reads/clears state through
@@ -965,33 +1007,21 @@ export class TurnBattleSystem {
               battle.queuedFollowUpActorIds.push(target.id)
             }
 
-            // Phase A1 (2026-09-07) — chance-gated ailment application,
-            // then reaction check against the just-applied id (mirrors the
-            // legacy SkillEffectSystem 'debuff' call shape). Registry-gated
-            // like the on-hit block above; reactionManager is an optional
-            // collaborator that no-ops when absent.
-            const ailment = action.skill?.appliesAilment
-
-            if (ailment && Math.random() < ailment.chance) {
-              const definition = this.registry.get(ailment.buffDefinitionId)
-
-              new TurnBuffSystem(target.buffs).apply(definition, actor.entity, target.entity, this.registry)
-
-              this.reactionManager?.checkAndTrigger(
-                target.buffs,
-                ailment.buffDefinitionId,
-                actor.entity,
-                target.entity,
-                this.combat,
-                this.registry,
-                actor.buffs,
-              )
-            }
-
+            // Phase A1 (2026-09-07) / R3 (AR-03) — chance-gated ailment application,
+            // then reaction check against the just-applied id.
+            this.applySkillAilments(actor, target, action)
           }
-
         }
       }
+    } else if (action.skill?.targetScope !== 'self') {
+      // Non-damaging action targeting enemies (e.g. pure debuff skill like doc_chuong)
+      for (const target of declared.affected) {
+        if (!target.entity.alive) continue
+        targetIds.push(target.id)
+
+        this.applySkillAilments(actor, target, action)
+      }
+    }
 
       const isChargeInit = (action.skill?.chargeTurns ?? 0) > 0
 
@@ -1038,6 +1068,10 @@ export class TurnBattleSystem {
           }
 
           this.pendingGaugeDeltaDefinition = definition
+        }
+
+        if (action.skill?.targetScope === 'self') {
+          targetIds.push(actor.id)
         }
       }
     }
@@ -1161,6 +1195,44 @@ export class TurnBattleSystem {
 
     battle.state = 'defeat'
     return battle.state
+  }
+
+  /**
+   * R3 (AR-03) — Chance-gated ailment application supporting multiple ailments
+   * and multi-stack application. Shares reaction triggering across damaging
+   * and non-damaging skill execution paths.
+   */
+  private applySkillAilments(
+    actor: TurnBattleParticipant,
+    target: TurnBattleParticipant,
+    action: SelectedAction,
+  ): void {
+    if (!this.registry) return
+
+    const ailments =
+      action.skill?.appliesAilments ??
+      (action.skill?.appliesAilment ? [action.skill.appliesAilment] : [])
+
+    for (const ailment of ailments) {
+      if (Math.random() < ailment.chance) {
+        const definition = this.registry.get(ailment.buffDefinitionId)
+        const stackCount = ailment.stacks ?? 1
+
+        for (let s = 0; s < stackCount; s++) {
+          new TurnBuffSystem(target.buffs).apply(definition, actor.entity, target.entity, this.registry)
+        }
+
+        this.reactionManager?.checkAndTrigger(
+          target.buffs,
+          ailment.buffDefinitionId,
+          actor.entity,
+          target.entity,
+          this.combat,
+          this.registry,
+          actor.buffs,
+        )
+      }
+    }
   }
 
   private suddenDeathDamageMultiplier(totalTurnsElapsed: number): number {
