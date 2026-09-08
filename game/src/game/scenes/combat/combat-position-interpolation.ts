@@ -1,9 +1,5 @@
-// combat-position-interpolation (ui-discoverability-refactor-plan.md
-// §3.2) — tách từ CombatScene.ts: nội suy vị trí X liên tục giữa 2
-// snapshot 'positions' (segment tween theo thời gian thực, không phụ
-// thuộc framerate). Module nhận dependency tường minh qua `scene`; state
-// (Map interpolations) VẪN sống trên scene — test đọc trực tiếp
-// scene.interpolations, giữ nguyên seam cũ.
+// R5 (AR-29) — CombatPositionInterpolation encapsulates its own private interpolations map.
+// Manages smooth X-position interpolation segments between 'positions' snapshots.
 import Phaser from 'phaser'
 
 import type { CombatScene } from '../CombatScene'
@@ -11,14 +7,23 @@ import { MIN_SEGMENT_DURATION_MS } from './combatConstants'
 import type { PositionInterpolation } from './combatTypes'
 
 export class CombatPositionInterpolation {
+  private interpolationsMap = new Map<string, PositionInterpolation>()
+
+  get interpolations(): Map<string, PositionInterpolation> {
+    return this.interpolationsMap
+  }
+
+  set interpolations(map: Map<string, PositionInterpolation>) {
+    this.interpolationsMap = map
+  }
+
   constructor(private readonly scene: CombatScene) {}
 
   setInterpolationTarget(id: string, worldX: number, cadenceMs?: number, snapshotAt?: number) {
-    const existing = this.scene.interpolations.get(id)
+    const existing = this.interpolationsMap.get(id)
 
     if (!existing) {
       this.snapInterpolationTarget(id, worldX, snapshotAt)
-
       return
     }
 
@@ -28,11 +33,9 @@ export class CombatPositionInterpolation {
 
     const now = this.scene.time.now
     const currentVisualX = this.interpolate(existing, now)
-    // Cadence ưu tiên từ snapshot (khoảng cách 2 event 'positions'),
-    // fallback: khoảng cách từ segment trước, clamp sàn.
     const segmentDuration = Math.max(cadenceMs ?? MIN_SEGMENT_DURATION_MS, MIN_SEGMENT_DURATION_MS)
 
-    this.scene.interpolations.set(id, {
+    this.interpolationsMap.set(id, {
       fromX: currentVisualX,
       toX: worldX,
       segmentStart: now,
@@ -44,7 +47,7 @@ export class CombatPositionInterpolation {
   snapInterpolationTarget(id: string, worldX: number, snapshotAt?: number) {
     const now = this.scene.time.now
 
-    this.scene.interpolations.set(id, {
+    this.interpolationsMap.set(id, {
       fromX: worldX,
       toX: worldX,
       segmentStart: now,
@@ -60,12 +63,20 @@ export class CombatPositionInterpolation {
   }
 
   getInterpolatedX(id: string): number | undefined {
-    const entry = this.scene.interpolations.get(id)
+    const entry = this.interpolationsMap.get(id)
 
     if (!entry) {
       return undefined
     }
 
     return this.interpolate(entry, this.scene.time.now)
+  }
+
+  delete(id: string): void {
+    this.interpolationsMap.delete(id)
+  }
+
+  clear(): void {
+    this.interpolationsMap.clear()
   }
 }

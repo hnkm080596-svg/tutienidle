@@ -300,28 +300,11 @@ function tick() {
       breakthrough()
     }
 
-    // === Tinh hoa tuôn chảy (2026-08-30) ===
-    // 1. essenceArrivalSeen → stream hoàn tất → invest ngay.
-    // 2. essenceEmitted lâu quá chưa thấy arrival → headless → invest
-    //    (CombatScene không chạy, hoặc bail vì thiếu nguồn).
-    // 3. Cả hai đều drain qua investBodyRefinement() — tự gate.
-    // State sống trong lifecycle composable (handlers đăng ký một lần);
-    // tick đọc + reset qua getter/setter expose.
-    if (lifecycle.consumeEssenceArrival()) {
-      const consumed = gameManager.investBodyRefinement(player.$state)
-
-      if (consumed > 0) {
-        bumpState()
-      }
-    }
-
-    if (lifecycle.isEssenceHeadlessTimedOut()) {
-      lifecycle.clearEssenceEmitted()
-      const consumed = gameManager.investBodyRefinement(player.$state)
-
-      if (consumed > 0) {
-        bumpState()
-      }
+    // R5 (AR-14): Progression is decoupled from presentation particle arrival.
+    // Body refinement auto-invests directly during tick when materials are available.
+    const refinementConsumed = gameManager.investBodyRefinement(player.$state)
+    if (refinementConsumed > 0) {
+      bumpState()
     }
 
     // Đột Phá Trúc Cơ — phản ứng thắng/thua Độ Kiếp NGAY (battle

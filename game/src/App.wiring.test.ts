@@ -279,6 +279,12 @@ const INTENTIONALLY_UNWIRED_LIFECYCLE_MEMBERS: Record<string, string> = {
   // nguyên của interval, chỉ useAppLifecycle.test.ts assert qua đây.
   getTickHandle: 'Debug/test-only getter — chỉ useAppLifecycle.test.ts đọc để assert interval handle tồn tại/bị clear.',
   getAutosaveHandle: 'Debug/test-only getter — chỉ useAppLifecycle.test.ts đọc để assert interval handle tồn tại/bị clear.',
+  // R5 (AR-14 / Law A7) — investBodyRefinement() auto-invests directly in
+  // domain tick and is no longer gated on presentation particle arrival or
+  // the 2,000ms headless timeout fallback.
+  consumeEssenceArrival: 'R5 (AR-14 / Law A7): investBodyRefinement() auto-invests directly in domain tick and is no longer gated on presentation arrival.',
+  isEssenceHeadlessTimedOut: 'R5 (AR-14 / Law A7): progression no longer waits for a 2,000ms headless presentation timeout fallback.',
+  clearEssenceEmitted: 'R5 (AR-14 / Law A7): retired along with essence arrival gating.',
 }
 
 describe('useAppLifecycle() exports have a consumer in App.vue', () => {

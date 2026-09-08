@@ -46,18 +46,11 @@ import { buildTurnSkillPresentation } from '../combat/CombatSkillPresentation'
 /**
  * Turn-Based Wave Redesign (2026-09-06) - shared between buildTurnBattle()
  * (initial countdownTurnsRemaining) and TurnActionPresentationEvents's
- * countdownProgress computation. Split out as a constant so the 2 sites can
- * never drift. Exported from here; GameManager re-exports for compat with
- * old imports (TurnActionPresentationEvents, introPhase tests).
+ * countdownProgress computation.
+ * R5 (AR-24): Exported from TurnBattleConstants to eliminate upward dependency.
  */
-export const COUNTDOWN_TOTAL_TICKS = 30
-
-/**
- * Intro/transition phase (2026-09-07 plan Task 4) - 20 pacing ticks = 2s
- * curtain + zone/stage reveal BEFORE the 3s countdown. Same re-export
- * pattern as COUNTDOWN_TOTAL_TICKS.
- */
-export const INTRO_TOTAL_TICKS = 20
+import { COUNTDOWN_TOTAL_TICKS, INTRO_TOTAL_TICKS } from '../battle/turn/TurnBattleConstants'
+export { COUNTDOWN_TOTAL_TICKS, INTRO_TOTAL_TICKS }
 
 const BATTLE_FIXED_STEP_SECONDS = 0.1
 

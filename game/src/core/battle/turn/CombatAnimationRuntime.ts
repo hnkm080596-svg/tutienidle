@@ -3,7 +3,7 @@ import type { TurnSkillSlotRole } from './TurnSkillAction'
 import { PresentationGate } from './PresentationGate'
 import { emitTurnReady, emitTurnCastStart, emitTurnActionImpact, emitTurnStandbyComplete } from './TurnActionPresentationEvents'
 import type { EventBus } from '../../events/EventBus'
-import type { CombatAnimationName } from '../../../game/support/CombatAnimationSet'
+import type { CombatAnimationName } from '../CombatAnimationTypes'
 
 /**
  * Combat Runtime Separation (2026-09-07, AGENTS.md P17) — owns the
@@ -183,8 +183,8 @@ export class CombatAnimationRuntime {
 
   /** Phaser gọi khi ready flourish xong → declare action, phát 'attack'. */
   acknowledgeTurnReady(token?: string): void {
-    // Remediation Task 1 — stale token (khớp token của action cũ) là no-op.
-    if (token !== undefined && token !== this.playbackToken) {
+    // R5 (AR-20) — reject stale or empty token from presentation callers.
+    if (token !== undefined && (token === '' || token !== this.playbackToken)) {
       return
     }
 
@@ -211,8 +211,8 @@ export class CombatAnimationRuntime {
 
   /** Phaser gọi tại impact frame (lunge tween xong) → áp damage, phát VFX. */
   acknowledgeActionImpact(token?: string): void {
-    // Remediation Task 1 — stale token là no-op.
-    if (token !== undefined && token !== this.playbackToken) {
+    // R5 (AR-20) — reject stale or empty token from presentation callers.
+    if (token !== undefined && (token === '' || token !== this.playbackToken)) {
       return
     }
 
@@ -262,8 +262,8 @@ export class CombatAnimationRuntime {
 
   /** Phaser gọi khi VFX tween xong → turn cleanup, phát standby tail. */
   acknowledgeActionComplete(token?: string): void {
-    // Remediation Task 1 — stale token là no-op.
-    if (token !== undefined && token !== this.playbackToken) {
+    // R5 (AR-20) — reject stale or empty token from presentation callers.
+    if (token !== undefined && (token === '' || token !== this.playbackToken)) {
       return
     }
 

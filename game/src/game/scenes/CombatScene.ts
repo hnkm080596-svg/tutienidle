@@ -393,8 +393,24 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   gridGraphics: Phaser.GameObjects.Graphics | undefined
 
   sprites = new Map<string, EntitySprite>()
-  interpolations = new Map<string, PositionInterpolation>()
-  castBars = new Map<string, CastBarSprite>()
+
+  // R5 (AR-29) — Encapsulated helpers own their maps; getters/setters maintain
+  // backwards compatibility for test seams.
+  get interpolations(): Map<string, PositionInterpolation> {
+    return this.positionInterp.interpolations
+  }
+
+  set interpolations(map: Map<string, PositionInterpolation>) {
+    this.positionInterp.interpolations = map
+  }
+
+  get castBars(): Map<string, CastBarSprite> {
+    return this.castBar.castBars
+  }
+
+  set castBars(map: Map<string, CastBarSprite>) {
+    this.castBar.castBars = map
+  }
 
   // Combat Grid Rework Ã¢â‚¬â€ DOT VFX theo (targetId + ailmentId), bÃƒÂ¡m target.
   statuses = new Map<
@@ -510,8 +526,8 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // subscribeCombatEvents từ registry; scene KHÔNG import trực tiếp).
   private gameManagerRef?: {
     setPresentationActive: (active: boolean) => void
-    acknowledgeTurnReady: () => void
-    acknowledgeActionImpact: () => void
+    acknowledgeTurnReady: (token?: string) => void
+    acknowledgeActionImpact: (token?: string) => void
     acknowledgeActionComplete: (token?: string) => void
     getPendingPlaybackToken: () => string | null
   }
@@ -1558,8 +1574,8 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.gameManagerRef = this.registry.get('gameManager') as
       | {
           setPresentationActive: (active: boolean) => void
-          acknowledgeTurnReady: () => void
-          acknowledgeActionImpact: () => void
+          acknowledgeTurnReady: (token?: string) => void
+          acknowledgeActionImpact: (token?: string) => void
           acknowledgeActionComplete: (token?: string) => void
           getPendingPlaybackToken: () => string | null
         }
@@ -1811,18 +1827,17 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
       this.playHorizontalImpulse(attacker, dx, ATTACK_LUNGE_DURATION_MS)
 
-      // Action Playback Task 7 (2026-09-05) — impact frame tại midpoint
-      // lunge: damage áp đúng lúc đòn "trúng" trên màn hình (spec §4.3).
+      // Action Playback Task 7 (2026-09-05) / R5 (AR-20) — impact frame tại midpoint
+      // lunge: damage áp đúng lúc đòn "trúng" trên màn hình. Token bắt tại spawn.
+      const token = this.gameManagerRef?.getPendingPlaybackToken() ?? ''
       if (this.gameManagerRef && this.isActionPlaybackActive()) {
         this.time.delayedCall(ATTACK_LUNGE_DURATION_MS / 2, () => {
-          this.gameManagerRef?.acknowledgeActionImpact()
+          this.gameManagerRef?.acknowledgeActionImpact(token)
         })
       }
     } else if (this.gameManagerRef && this.isActionPlaybackActive()) {
-      // Defect Task 5 (2026-09-05) — không có sprite (late-join miss/cleanup
-      // race) — ack ngay để engine không treo vĩnh viễn ở
-      // pendingDeclaredAction (cùng fallback pattern với onTurnReady()).
-      this.gameManagerRef.acknowledgeActionImpact()
+      const token = this.gameManagerRef?.getPendingPlaybackToken() ?? ''
+      this.gameManagerRef.acknowledgeActionImpact(token)
     }
   }
 
@@ -2246,11 +2261,12 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
    * designed visual — polish sau).
    */
   private onTurnReady(event: { actorId: string }) {
+    const token = this.gameManagerRef?.getPendingPlaybackToken() ?? ''
     const sprite = this.spriteFor(event.actorId)
 
     if (!sprite) {
       // Không có sprite (late-join miss) — ack ngay để engine không treo.
-      this.gameManagerRef?.acknowledgeTurnReady()
+      this.gameManagerRef?.acknowledgeTurnReady(token)
       return
     }
 
@@ -2274,7 +2290,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       onComplete: () => {
         visual.setScale(1)
 
-        this.gameManagerRef?.acknowledgeTurnReady()
+        this.gameManagerRef?.acknowledgeTurnReady(token)
       },
     })
   }

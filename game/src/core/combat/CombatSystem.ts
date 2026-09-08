@@ -91,7 +91,7 @@ export class CombatSystem {
   private readonly skillTriggerRunner = new SkillTriggerRunner()
 
   constructor(
-    private readonly eventBus: EventBus,
+    readonly eventBus: EventBus,
     private readonly skillManager?: SkillManager,
     private readonly buffRegistry?: BuffRegistry,
     private readonly reactionManager?: ReactionManager,

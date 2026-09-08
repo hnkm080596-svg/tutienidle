@@ -5,7 +5,9 @@
 // cho phép test AnimationManager end-to-end. Khi có sheet thật nhiều-frame
 // thật sự được đưa vào sau (asset-drop workflow), chỉ cần đổi nội dung
 // định nghĩa — không đụng code path nào.
-export type CombatAnimationName = 'idle' | 'ready' | 'cast' | 'standby' | 'death'
+// R5 (AR-24): CombatAnimationName canonical type lives in core/battle/CombatAnimationTypes.
+import type { CombatAnimationName } from '@/core/battle/CombatAnimationTypes'
+export type { CombatAnimationName }
 
 export interface CombatAnimationClip {
   key: string

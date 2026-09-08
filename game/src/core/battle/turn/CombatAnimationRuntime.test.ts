@@ -166,6 +166,39 @@ describe('CombatAnimationRuntime', () => {
     expect(runtime.getPendingPlaybackToken()).toBe(currentToken)
   })
 
+  it('AR-20: when presentation is active, acknowledgeTurnReady and acknowledgeActionImpact reject missing or stale tokens', () => {
+    const { runtime, player } = fixture()
+
+    runtime.setPresentationActive(true)
+    runtime.notifyReadyActor(player)
+
+    const readyToken = runtime.getPendingPlaybackToken()!
+    expect(readyToken).toBeTruthy()
+
+    // 1. Empty/missing token from presentation -> rejected
+    runtime.acknowledgeTurnReady('')
+    expect(runtime.getAnimationState('player')).toBe('ready')
+
+    // 2. Mismatched token -> rejected
+    runtime.acknowledgeTurnReady('wrong_token')
+    expect(runtime.getAnimationState('player')).toBe('ready')
+
+    // 3. Correct token -> accepted, enters cast
+    runtime.acknowledgeTurnReady(readyToken)
+    expect(runtime.getAnimationState('player')).toBe('cast')
+
+    const impactToken = runtime.getPendingPlaybackToken()!
+    expect(impactToken).toBeTruthy()
+
+    // 4. Empty/missing token on impact -> rejected
+    runtime.acknowledgeActionImpact('')
+    expect(runtime.getAnimationState('player')).toBe('cast')
+
+    // 5. Correct token on impact -> accepted, enters standby
+    runtime.acknowledgeActionImpact(impactToken)
+    expect(runtime.getAnimationState('player')).toBe('standby')
+  })
+
   it('manual mode: acknowledgeTurnReady on a manual player actor pauses instead of declaring', () => {
     const { runtime, player, eventBus } = fixture()
 

@@ -3,7 +3,7 @@ import type { GridPosition, CellArea } from '../BattleGrid'
 import { entityGridPosition } from '../BattleGrid'
 import type { CombatVfxPresetId, ActionTargetingShape, EnemySpawnVfxPresetId } from '../CombatAction'
 import type { TurnBattle, TurnBattleParticipant, PendingEnemySpawn } from './TurnBattleSystem'
-import { COUNTDOWN_TOTAL_TICKS } from '../../game/GameManager'
+import { COUNTDOWN_TOTAL_TICKS } from './TurnBattleConstants'
 
 // Action Playback Task 4 (2026-09-05) — presentation event emitter cho
 // turn-based combat. GameManager là SOLE caller (Task 6), CombatScene là

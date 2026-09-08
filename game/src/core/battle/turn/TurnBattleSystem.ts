@@ -924,6 +924,15 @@ export class TurnBattleSystem {
     if (declared.action && declared.affected.length > 0 && !declared.markerNoPool) {
       const action = declared.action
 
+      // R5 (AR-14) — Emit authoritative gameplay 'attack' event on action commit,
+      // ensuring passive listeners receive events identically in headless and presentation modes.
+      this.combat.eventBus.emit('attack', {
+        type: 'attack',
+        sourceId: actor.id,
+        targetId: declared.affected[0]?.id ?? actor.id,
+        skillId: declared.skillId,
+      })
+
       if (declared.isReactionPath && declared.reactionPathPicks) {
         for (const pickedSkill of declared.reactionPathPicks) {
           if (!pickedSkill.damage) continue
