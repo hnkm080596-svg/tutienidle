@@ -3,315 +3,1111 @@
 - The application root is `game/`.
 - The stack is Vue 3, TypeScript, Vite, Vitest, Pinia, and Phaser.
 
-This document is the human-readable spec for all project rules. Two categories:
+This document is the human-readable source of truth for project agent rules.
 
-- **Part 1 — Protection Rules** (P1–P17): hard rules the agent must NOT bypass. Also baked into `.opencode/agent/<name>.md` system prompts so the agent "lives in" them.
-- **Part 2 — Effectiveness Guidelines** (E1–E16): suggestions the agent reads and applies when relevant. May skip with reason.
-- **Part 3 — Opencode Agent Wiring**: technical note about how Part 1 is replicated into the four agent files.
+Four categories:
 
-When a rule below says "the agent", it means whichever opencode agent is currently active (`build`, `plan`, `general`, `explore`).
+- **Part 1 — Protection Rules (P1-P17):** hard rules the agent must NOT bypass. Critical rules are mirrored into `.opencode/agent/<name>.md` system prompts.
+- **Part 2 — Architecture Constitution (A1-A12):** project-wide architecture laws. New code must follow them; existing violations should be fixed when they are inside the authorized architectural responsibility.
+- **Part 3 — Effectiveness Guidelines (E1-E16):** workflow guidance the agent reads and applies when relevant. May skip with reason.
+- **Part 4 — Opencode Agent Wiring:** how Part 1 is replicated into the built-in Opencode agent prompts.
+
+When a rule says "the agent", it means whichever coding agent is currently active.
+
+Deleted `TASK.md` files, stale worklogs, historical implementation notes, and explicitly obsolete plans are not current requirements.
 
 ---
 
-## Part 1 — Protection Rules (Enforced)
+# Part 1 — Protection Rules (Enforced)
 
 ### P1. Worktree Boundary + Safe Deletion
 
 - Operate strictly inside the worktree you were given. All file edits, scripts, and tests must run inside it.
 - File or directory deletion (`rm`, `Remove-Item`, editor delete, or any indirect form) is allowed **inside the worktree** without further authorization — the worktree is a sandbox, deletion there is not dangerous.
-- For any action **outside the worktree** (other branches, the main checkout, sibling worktrees), you must obtain explicit user authorization first.
-- The Iron Rule's "no destructive action without explicit user auth" still applies to actions that leave the worktree boundary. Treat crossing the worktree boundary the same as committing: the user decides.
+- For any action **outside the worktree** (other branches, the main checkout, sibling worktrees), obtain explicit user authorization first.
+- Treat crossing the worktree boundary the same as committing: the user decides.
 
 ### P2. Worktree MUST (except docs)
 
 - Multi-file features, risky changes, implementation plans, architectural changes, and delegated work MUST be done in a dedicated worktree.
-- Create the worktree via the `using-git-worktrees` skill. Project convention: path `<repo-root>/.agent-worktrees/<task-name>` (kebab-case from the user request), branch auto-prefixed by the skill (`feat/`, `fix/`, `chore/`).
-- Small focused changes (single small file, 1-line typo, comment-only) may be performed in the current worktree, but if the user has explicitly asked for isolation, follow the request.
-- **Exception — documentation edits:** editing `*.md` files (including this `AGENTS.md` and `game/docs/**`) is allowed without a worktree. For any doc edit made without a worktree, note clearly in the summary: **reason**, **time** (date or turn), and **line(s) changed**. Example: "Edited AGENTS.md L5 at 2026-09-04 to fix P3 wording — 1 line."
-- Never create a worktree via raw `git worktree add` directly. Always go through the `using-git-worktrees` skill so placement, branch, and cleanup are consistent.
+- Create the worktree via the `using-git-worktrees` skill.
+- Project convention: `<repo-root>/.agent-worktrees/<task-name>`, using a kebab-case task name and the branch prefix produced by the skill.
+- Small focused changes may remain in the current worktree when isolation is unnecessary.
+- **Documentation exception:** editing `*.md` files, including this `AGENTS.md` and `game/docs/**`, is allowed without a worktree.
+- For a documentation edit without a worktree, record in the summary: reason, time/date or turn, and file/section changed.
+- Never manually substitute raw `git worktree add` for the project workflow.
 
 ### P3. Smart Verification (2 modes: `quick` or `full`)
 
-- Verification is binary. Do not invent intermediate modes.
-- **`quick`** = `npm.cmd run type-check` + `npx.cmd vitest run` (focused on changed files / modules). Default for normal code changes.
-- **`full`** = `npm.cmd run type-check` + `npm.cmd run build` + `npx.cmd vitest run` (no filter, full suite).
-- Use **`full`** when the change touches:
-  - Config files: `vite.config.ts`, `tsconfig.json`, `vitest.config.ts`, `package.json`, `package-lock.json`
-  - Dependencies (added/removed/upgraded)
-  - Asset pipeline: `assets/`, `public/`, Vite plugins, build scripts
-  - Shared / broad code: Pinia root store, router, Phaser scene manager
-  - Pre-milestone or pre-release verification
-  - The user explicitly asks for full verification
-- Otherwise, use **`quick`**.
-- Stop on the first failure. Fix, then rerun the same mode. Do not let all steps run and then collect a failure list at the end.
-- Do not repeat a successful verification unless the code or environment has materially changed.
-- Failures introduced by the task must be fixed before declaring complete (see P12).
+Verification is binary. Do not invent intermediate modes.
 
-### P4. Adversarial QA Gate (FAIL with reason is acceptable)
+**`quick`**
 
-- After implementing a feature or bug fix, run the `tutienidle-adversarial-qa` skill in quick mode before claiming completion.
-- Use deep mode when the user invokes `$tutienidle-adversarial-qa deep`, or before milestone / release readiness claims.
-- During a QA run, the skill may write **only** to: `game/src/**/*.test.ts`, `game/tests/e2e/**/*.spec.ts`, `game/tests/e2e/helpers.ts`, `game/docs/qa/**`. Production code under `game/src/**` (non-test) MUST NOT be modified during a QA run. If the QA pass uncovers a production bug, exit QA, fix in development workflow, then re-run QA.
-- Treat a defect as confirmed only when a failing reproduction test or direct runtime evidence proves it. Otherwise report it as suspected or as a coverage gap.
-- If quick mode identifies materially broad risk (save/cloud, time/offline, economy/progression, Vue/Pinia/Phaser lifecycle), escalate to deep mode rather than issuing a quick pass verdict.
-- **Verdict rules (overriding the skill's defaults where this project is concerned):**
-  - `PASS WITH EVIDENCE` — the task may be declared done.
-  - `FAIL WITH REASON` — the task may be declared done **if** the reason is legitimate (example: "system is in development, requires later phases to complete"; "out of task scope, requires new authorization"; "blocked on external dependency, requires user input"). The reason must be specific, not generic.
-  - `PASS WITH GAPS` and `BLOCKED` — non-completion. Report unresolved findings, return to development workflow, re-run QA.
-- When the verdict is below `PASS WITH EVIDENCE` and is not a legitimate `FAIL WITH REASON`, do not present the work as done.
+```text
+npm.cmd run type-check
+npx.cmd vitest run <relevant scope>
+```
 
-### P5. Code-Review Hard-Block
+Default for normal focused code changes.
 
-- Before declaring a non-trivial change complete, run the `code-review` skill (from `anthropics/knowledge-work-plugins`) over the diff.
-- The diff under review must already be simplified: the E3 code-simplifier pass is a prerequisite for P5, and P5 reviews the post-simplify code. Do not run P5 on un-simplified code, and do not simplify after P5 on the same code (that would invalidate the review); if a post-review change is non-trivial, re-run E3 on it and re-review per the E3 fix clause.
-- Non-trivial = roughly 5+ lines of production code changed OR any new file OR any touched file that is not a pure rename / comment / whitespace.
-- The skill scores each issue 0–100 for confidence. Filter out anything below 80 (treat as false positive).
-- Issues at or above 80 confidence MUST be fixed before declaring done. The task is not done while any such issue is open, unless the user explicitly accepts it.
-- Skip this rule for 1-line typo fixes, comment-only edits, and pure formatting.
+**`full`**
+
+```text
+npm.cmd run type-check
+npm.cmd run build
+npx.cmd vitest run
+```
+
+Use `full` when the change touches:
+
+- `vite.config.ts`
+- `tsconfig.json`
+- `vitest.config.ts`
+- `package.json`
+- `package-lock.json`
+- dependencies
+- asset/build pipelines
+- broad shared infrastructure
+- Pinia root state
+- router/application infrastructure
+- Phaser scene infrastructure
+- major architecture
+- milestone/release readiness
+- or when explicitly requested.
+
+Otherwise use `quick`.
+
+- Stop on the first failure.
+- Fix it, then rerun the same mode.
+- Do not repeat successful verification unless code or environment materially changed.
+- Failures introduced by the task must be fixed before declaring complete.
+
+### P4. Adversarial QA Gate
+
+After implementing a feature or bug fix, run `tutienidle-adversarial-qa` in quick mode before claiming completion.
+
+Use deep mode:
+
+- when explicitly requested;
+- before milestone/release readiness;
+- when quick QA uncovers materially broad risk such as save/cloud, time/offline, economy/progression, or Vue/Pinia/Phaser lifecycle.
+
+During QA, writes are restricted to:
+
+```text
+game/src/**/*.test.ts
+game/tests/e2e/**/*.spec.ts
+game/tests/e2e/helpers.ts
+game/docs/qa/**
+```
+
+Production code must not be modified during a QA-only pass.
+
+If QA proves a production defect:
+
+```text
+exit QA
+→ return to development workflow
+→ fix
+→ verify
+→ rerun QA
+```
+
+A defect is confirmed only by:
+
+- deterministic reproduction;
+- failing test;
+- or direct runtime evidence.
+
+Verdicts:
+
+- `PASS WITH EVIDENCE` — may declare complete.
+- `FAIL WITH REASON` — may still represent completion only when the reason is legitimate and specific.
+- `PASS WITH GAPS` — not complete.
+- `BLOCKED` — not complete.
+
+### P5. Code-Review Hard Block
+
+Before declaring a non-trivial production change complete, run the `code-review` skill from `anthropics/knowledge-work-plugins`.
+
+The reviewed diff must already have received the E3 simplification pass.
+
+Preferred order:
+
+```text
+implement
+→ simplify
+→ verify
+→ code review
+→ final evidence
+```
+
+Non-trivial means approximately:
+
+- five or more changed lines of production behavior;
+- any new production file;
+- any touched production file beyond pure rename/comment/formatting.
+
+Ignore findings below confidence 80.
+
+Findings at confidence 80 or above must be resolved unless explicitly accepted by the user.
 
 ### P6. Multi-Agent Coordination
 
-- Before editing files (including via a subagent), run `git status` to check for overlapping uncommitted changes. If overlap exists with work you did not author, stop and notify the user before proceeding.
-- When dispatching a subagent (via the `task` tool, or any parallel delegation), require the subagent to report back in this exact format:
-  - **Worktree path** (absolute)
-  - **Branch**
-  - **Files changed** (list)
-  - **Verification evidence** (which verification mode ran, pass/fail summary)
-  - **Remaining limitations** (anything not done, anything needing follow-up)
-- The coordinator (the agent that delegated) must aggregate the subagent reports and the diff, and re-verify before declaring done.
-- Only request another review pass when evidence is missing, findings are unresolved, or the change is high-risk. Do not loop reviews for low-signal issues.
-- Subagents and coordinators MUST NOT commit, merge, integrate, push, or deploy — see P7.
-- **Project convention (overrides the skill's own default recommendation), refined 2026-09-07:** which execution mode to use depends on whether the current session can dispatch subagents.
-  - **Claude Code sessions** (has the `Agent`/`Task` tool, i.e. can actually delegate): prefer **Subagent-Driven Development** (`subagent-driven-development` skill) when executing an implementation plan — dispatch a fresh implementer subagent per task, with task review between tasks.
-  - **Opencode agents** (`.opencode/agent/*.md` — no subagent-dispatch tool available to them): always use **Inline Execution** (`executing-plans` skill) — execute the plan's tasks directly in the current session, with checkpoints for review. They cannot use SDD because they have nothing to dispatch to.
-  - When in doubt about which kind of session you are, check whether an `Agent`/`Task`-style tool is actually available to you — its presence, not habit, decides.
+Before editing, including before delegated editing:
 
-### P7. No Commit / Push / Deploy + Specific Destructive Git List
+```text
+git status
+```
 
-- The user is the final authority for commit, merge, integrate, push, and deploy. Never perform any of these without explicit user authorization in the current turn.
-- The following destructive Git commands always require explicit user authorization, **even inside a worktree** (they can still lose uncommitted work and history):
-  - `git reset --hard`
-  - `git clean -fd` / `git clean -fdx`
-  - `git push --force` / `git push -f`
-  - `git branch -D` (uppercase force-delete)
-  - `git stash drop` / `git stash clear`
-  - `git checkout .` / `git checkout -- <path>` (silent overwrite of working tree)
-  - `git restore .` / `git restore --staged .` without per-file confirmation
-- Normal Git operations are allowed inside a worktree: `git status`, `git log`, `git diff`, `git branch` (list), `git worktree *`, `git add`, `git commit` (only when user authorized, see above), `git checkout <existing-branch>`, `git switch`.
-- File deletion (`rm`, `Remove-Item`) is governed by P1, not by this rule.
+Check for overlapping uncommitted changes.
+
+If overlapping work exists that the current agent did not author, stop and notify the user.
+
+Delegated agents must report:
+
+- **Worktree path**
+- **Branch**
+- **Files changed**
+- **Verification evidence**
+- **Remaining limitations**
+
+The coordinator remains responsible for aggregate diff reasoning and final verification.
+
+Subagents and coordinators must obey P7.
+
+Execution mode depends on actual capability:
+
+- Claude Code sessions with Agent/Task-style delegation: prefer Subagent-Driven Development when appropriate.
+- Opencode agents without subagent dispatch: use Inline Execution / `executing-plans`.
+- Tool availability, not habit, determines execution mode.
+
+### P7. No Commit / Push / Deploy + Destructive Git Protection
+
+The user is the final authority for:
+
+- commit
+- merge
+- integrate
+- push
+- deploy.
+
+Never perform them without explicit current authorization.
+
+The following destructive commands always require explicit authorization:
+
+```text
+git reset --hard
+git clean -fd
+git clean -fdx
+git push --force
+git push -f
+git branch -D
+git stash drop
+git stash clear
+git checkout .
+git checkout -- <path>
+git restore .
+git restore --staged .
+```
+
+Normal inspection and non-destructive Git operations remain allowed.
+
+File deletion is governed by P1.
 
 ### P8. No `any` Unless Genuinely Necessary
 
-- Do not use TypeScript `any` unless the type is genuinely untyped (e.g., untyped third-party API, dynamic JSON, JSON-schema-driven parsing) and a typed alternative is not reasonably available.
-- Prefer `unknown` + a type guard, or a proper interface. Each `any` introduced is a debt item; if you add one, mention it in the summary.
+Do not introduce TypeScript `any` when a sound type can reasonably be expressed.
 
-### P9. No Architecture or Dependency Change Without Task Requirement
+Prefer:
 
-- Do not change architecture (folder layout, module boundaries, public API surface of stores/services, Phaser scene topology) or add / remove / upgrade dependencies unless the task explicitly requires it.
-- If you believe a change is needed, surface it in the summary as a "Note / Suggestion" rather than silently making it.
+```text
+specific type
+→ generic constraint
+→ unknown + validation/type guard
+→ any only when genuinely unavoidable
+```
 
-### P10. No Edit Outside Task Scope
+Any introduced `any` is technical debt and must be mentioned in the summary.
 
-- Edit only files that are required to complete the current task. Touching unrelated files is a scope violation.
-- If a file outside scope appears to need a change, stop and ask the user, or include it as a `Note / Suggestion` in the summary.
+### P9. Architecture or Dependency Changes Require Architectural Scope
+
+Do not silently change:
+
+- folder layout;
+- module boundaries;
+- public store/service APIs;
+- Phaser scene topology;
+- dependencies;
+- authoritative state ownership;
+
+during an unrelated task.
+
+Architecture work is allowed when:
+
+- explicitly requested;
+- required to correctly restore the authorized system boundary;
+- or part of an approved migration.
+
+A root-cause fix may legitimately cross several files or modules when they form one coherent architectural responsibility.
+
+Unrelated architectural cleanup remains out of scope.
+
+### P10. Scope Follows Responsibility, Not the First Symptom
+
+Edit only what is required to complete the current task.
+
+However, scope is **not** defined solely by the file where a bug or feature first appears.
+
+If a symptom exists in A because the authoritative rule belongs in B, correctly repairing B and migrating A to use it is still in scope.
+
+Preferred:
+
+```text
+symptom
+→ identify violated invariant
+→ identify authoritative owner
+→ repair smallest coherent dependency chain
+→ migrate affected consumer
+→ stop
+```
+
+Do not expand from that responsibility into unrelated cleanup.
+
+If another independent system appears problematic, report it as a Note / Suggestion.
 
 ### P11. No Secrets Exposure
 
-- Never read, log, print, or commit the contents of `APIKey`, `.env`, `.env.*`, `.mcp.json`, or any file containing Bearer tokens, credentials, or other secrets.
-- These files are listed in `.gitignore` and exist locally. Treat them as opaque identifiers, not as readable content.
-- If a task appears to require reading a secret, stop and ask the user to provide the value through a safe channel.
+Never read, log, print, or commit contents of:
+
+```text
+APIKey
+.env
+.env.*
+.mcp.json
+```
+
+or files containing credentials, bearer tokens, private keys, or similar secrets.
+
+Treat them as opaque configuration boundaries.
 
 ### P12. Fix Verification Failures Caused by the Implementation
 
-- If verification (any mode in P3) fails and the failure was introduced or worsened by the current task, the agent must fix it before declaring complete.
-- Pre-existing failures in unrelated code are not the agent's responsibility to fix; report them as suspected or coverage gaps instead.
+If verification fails because the current task introduced or worsened the failure, fix it before declaring complete.
 
-### P13. Runtime Wiring Verification (a green suite does not mean the game runs)
+Distinguish clearly between:
 
-**Why this rule exists.** On 2026-09-05 a refactor extracted boot logic into `useAppLifecycle.ts` and left `startTickLoop()` defined in `App.vue` but never called. Since `App.vue`'s `tick()` is the only non-test caller of `GameManager.update()`, the entire simulation froze in the browser — combat, cultivation, idle progression, production — with **zero console errors**. It shipped to master with **2651 unit tests green**, because every unit test calls `gameManager.update()` directly and bypasses `App.vue`. The refactor even added tests for the extracted helper in isolation, proving it worked while nothing called it. ESLint could not catch it either: in `<script setup>`, top-level functions are auto-exposed to the template, so an orphaned function stays lint-clean.
+- task-caused regression;
+- pre-existing failure;
+- coverage gap;
+- environment limitation.
 
-- **The unit suite proves engine logic, not that the app is wired to it.** Never present "tests pass" as evidence the game works when the change touches the wiring between app shell and engine.
-- A change is **wiring-critical** when it touches any of: `App.vue`, `game/src/composables/useAppLifecycle.ts`, boot / mount / lifecycle sequencing, timers or intervals driving `GameManager.update()`, Phaser scene creation or teardown, or the Vue↔Phaser bridge.
-- For a wiring-critical change, P3's `quick` mode is **not sufficient**. Additionally run runtime verification: the Playwright e2e suite (`game/tests/e2e/`), and where feasible actually drive the app to the affected behaviour and confirm it progresses. A boot smoke test alone does not count — assert that the simulation *advanced*.
-- **Extracting code into a composable, helper, or module is not complete until every previous call site is re-wired.** Testing the extracted unit in isolation is not evidence of that. Verify the caller, not just the callee.
-- The repo carries guard tests for this class of failure (app-shell orphaned-function and composable-consumer checks, plus an e2e spec that plays a battle to resolution). **Do not delete, skip, or weaken them to make a change pass.** If one fails, it is telling you something is unwired — fix the wiring.
-- If a symptom is "nothing happens, no error", suspect an uncalled function before suspecting broken logic. Silence is the signature of this bug class.
+### P13. Runtime Wiring Verification
 
-### P14. Visual/Runtime Verification via Playwright (things `tsc`/Vitest cannot see)
+**Why this rule exists:** a previous refactor extracted application lifecycle logic while leaving the actual `GameManager.update()` driving path unwired. Thousands of unit tests remained green while runtime progression completely stopped.
 
-**Why this rule exists.** `npm.cmd run type-check` and Vitest (jsdom) prove logic and DOM structure — they cannot see actual pixel rendering, Phaser canvas draw output, whether an animation frame is actually advancing, CSS visual states (hover, drag-over, transition), z-index/overlap, or whether a native HTML5 drag-and-drop handler actually fires in a real browser. A change can pass P3 `full` with 100% green tests and still be visibly broken, invisible, or unusable — the test suite was structurally never looking at the thing that broke.
+The unit suite proves engine logic, not application wiring.
 
-- **Trigger:** the change affects any of — Phaser scene rendering (sprites, VFX, canvas layout, animation state), CSS visual state driven by user interaction (hover, drag-over, `:class` bindings, transitions, responsive layout), drag-and-drop or other native browser interaction, or any UI element whose correctness can only be confirmed by looking at the rendered page.
-- For a triggering change, load the `playwright-cli` skill and drive the actual feature in a real browser before declaring done. P3 alone is **not sufficient**:
-  1. Start the dev server (`npm.cmd run dev`, run in background) and read its printed Local URL from stdout — do not assume a fixed port.
-  2. `playwright-cli open <url> --browser=msedge` — project convention (no bundled Chromium assumed available). **The global `playwright-cli` binary is not installed on this machine** (confirmed 2026-09-07, both worktree and main checkout) — if `playwright-cli: command not found`, use `npx playwright cli <command>` instead (note: space, not hyphen — this is `@playwright/test`'s own bundled CLI subcommand, already a project devDependency, not the separate `@playwright/cli` package). Every subsequent `playwright-cli <x>` command in this rule maps 1:1 to `npx playwright cli <x>`.
-  3. Navigate to the actual affected screen/panel, take a `snapshot`/`screenshot`, and visually confirm the expected rendered state — not just "no console error".
-  4. **Drag-and-drop / native HTML5 DnD:** `dragTo()` and other native Playwright drag actions do **not** reliably fire this codebase's Vue `@dragstart`/`@dragover`/`@drop` handlers. Use `run-code` to dispatch real `DragEvent`/`DataTransfer` objects via `page.evaluate()` instead.
-  5. After dispatching events, do **not** read the resulting DOM in the same `run-code` call — Vue's reactive DOM update is scheduled on the next microtask, so a synchronous read right after `dispatchEvent()` sees stale state. Dispatch in one call, then query the DOM in a separate, later call.
-  6. Run `playwright-cli console` and confirm no unexpected errors.
-  7. `playwright-cli close` when done, and delete any scratch files it created (`.playwright-cli/`, ad-hoc screenshots/snapshots, stray `*.yml`/`*.png` at the repo root) before finishing — these are not test artifacts and must never be committed.
-- A screenshot or snapshot showing the expected visual result is the evidence for this rule, the same way a passing test is evidence for P3. State what was visually confirmed in the summary (E11).
-- This is a real-browser spot-check for **this task's** change, not a substitute for the Playwright e2e suite (P13) or the QA skill (P4) — those are separate gates with separate evidence requirements. Do this in addition, not instead.
-- **Isolated-worktree exception.** Browser launch/attach via Playwright is unreliable inside a sandboxed git worktree (`.claude/worktrees/...`, `.agent-worktrees/...`, or any workspace a session's sandbox reports it "cannot verify stays inside the worktree") — confirmed 2026-09-07: an agent in one worktree hung indefinitely on browser launch even with a correct invocation. (A second, earlier-seen "could not determine executable to run" failure turned out to be the unrelated missing-global-bin issue above, reproducible identically on master with the wrong invocation — not worktree-specific; don't confuse the two.) The main checkout (master, no worktree isolation), using the correct `npx playwright cli` invocation, verified clean on 2026-09-07: browser opened, navigated through real gameplay (login → character creation → stage select → battle), 0 console errors, closed cleanly. **Do not burn time retrying browser automation inside an isolated worktree.** Instead:
-  1. Do the rest of the task (tests, type-check, commit) normally in the worktree.
-  2. Report `DONE_WITH_CONCERNS`, stating plainly: "P14 live-browser verification deferred — running inside an isolated worktree where playwright-cli is unreliable; will be verified in the main checkout after merge." Do not silently skip P14 with no note — that's a P14 violation on its own.
-  3. Whoever runs `superpowers:finishing-a-development-branch` for that branch performs the actual P14 real-browser check **after** merging to master (or on the PR's preview/checkout), before considering the work done — this is not optional cleanup, it is P14's evidence requirement relocated to where it can actually run.
+A change is wiring-critical when it touches areas such as:
 
-### P15. Code Comments in English Only (mojibake prevention)
+```text
+App.vue
+game/src/composables/useAppLifecycle.ts
+boot/mount lifecycle
+simulation timers
+GameManager.update() driving paths
+Phaser scene lifecycle
+Vue ↔ Phaser bridges
+runtime registration
+```
 
-**Why this rule exists.** This is a Windows environment where Vietnamese-diacritic comments have repeatedly been corrupted into mojibake (UTF-8 misread as Latin-1/CP1252, then re-saved) by find-and-replace tools and other non-UTF-8-safe writes — confirmed regressions in `CombatScene.ts` (347 instances, pre-existing) and `combat-grid-view.ts` (27 instances introduced by a single refactor commit). Restricting new comments to plain ASCII English removes the failure mode entirely: ASCII has no multi-byte encoding to corrupt.
+For wiring-critical changes:
 
-- All **new or edited code comments** (in `.ts`, `.vue`, `.js`, and similar source files) must be written in **English**, plain ASCII only — no Vietnamese diacritics.
-- This applies to comments only, not to: user-facing strings/i18n content, commit messages, chat/summary responses to the user, or documentation files (`.md`) — those may stay Vietnamese as the project already does.
-- Do not do a drive-by translation pass over unrelated existing Vietnamese comments in a file you are touching for another reason — stay in scope (P10). Translate only the comments adjacent to lines you are actually changing, when practical.
-- If a file has pre-existing mojibake near code you are editing and it is cheap to restore (e.g., recoverable from git history), fixing it is encouraged but not required — call it out in the summary either way.
+- P3 quick verification is insufficient;
+- run the relevant Playwright E2E suite;
+- where feasible, drive the actual behavior and verify that simulation advances.
+
+A boot-only smoke test does not prove runtime progression.
+
+An extracted helper/composable/system is not complete until all production consumers are correctly rewired.
+
+Do not delete, skip, or weaken guard tests intended to detect orphaned runtime wiring.
+
+If runtime behavior is "nothing happens and no error", investigate missing invocation/wiring before assuming lower-level logic is broken.
+
+### P14. Visual/Runtime Verification via Playwright
+
+Type-checking and Vitest/jsdom cannot verify:
+
+- Phaser canvas rendering;
+- actual animation advancement;
+- sprite/VFX visibility;
+- CSS hover/drag-over states;
+- transitions;
+- z-index/overlap;
+- responsive rendering;
+- native browser drag/drop;
+- other real-render behavior.
+
+Trigger P14 when correctness materially depends on these behaviors.
+
+For triggering changes, load `playwright-cli` and inspect the actual feature in a real browser.
+
+#### Project procedure
+
+1. Start the development server:
+
+```text
+npm.cmd run dev
+```
+
+Read the Local URL printed by Vite. Do not assume a fixed port.
+
+2. Prefer MS Edge.
+
+The global `playwright-cli` binary is not assumed to exist.
+
+If unavailable, use:
+
+```text
+npx playwright cli <command>
+```
+
+Every `playwright-cli <x>` instruction maps to `npx playwright cli <x>` when needed.
+
+3. Navigate to the actual affected screen or gameplay flow.
+
+4. Capture a snapshot/screenshot and visually inspect the result.
+
+"No console error" alone is not sufficient evidence.
+
+5. For native HTML5 drag/drop, ordinary Playwright drag helpers may not fire this project's Vue handlers reliably.
+
+When necessary, dispatch real `DragEvent` / `DataTransfer` objects through browser evaluation.
+
+6. Do not dispatch an interaction and synchronously read the resulting Vue DOM state in the same evaluation call.
+
+Vue updates may occur on the next microtask.
+
+Dispatch first; inspect in a later operation.
+
+7. Inspect browser console output.
+
+8. Close the browser session.
+
+9. Remove scratch browser artifacts such as:
+
+```text
+.playwright-cli/
+ad-hoc screenshots
+ad-hoc snapshots
+stray *.png
+stray *.yml
+```
+
+unless they are intentional test artifacts.
+
+State exactly what was visually confirmed in the final summary.
+
+P14 supplements rather than replaces P13, P4, or P3.
+
+#### Isolated-worktree exception
+
+Playwright browser launch/attachment has been observed to be unreliable inside isolated sandbox worktrees such as:
+
+```text
+.claude/worktrees/**
+.agent-worktrees/**
+```
+
+Do not repeatedly burn time retrying browser automation in that environment.
+
+Instead:
+
+1. complete all permitted implementation and non-browser verification in the worktree;
+2. report `DONE_WITH_CONCERNS`;
+3. explicitly state that P14 live-browser verification is deferred because the isolated worktree cannot reliably perform it;
+4. perform the browser verification from an authorized main/preview checkout during branch finishing/integration before treating the change as fully verified.
+
+Deferral is allowed.
+
+Silent omission is not.
+
+### P15. Code Comments in English Only
+
+All new or modified source-code comments in `.ts`, `.vue`, `.js`, and similar source files must use English plain ASCII.
+
+This prevents Windows encoding/mojibake regressions.
+
+This does not prohibit Vietnamese in:
+
+- localized UI;
+- documentation;
+- user-facing responses;
+- appropriate content data.
+
+Do not perform unrelated mass comment translation.
 
 ### P16. Vietnamese Text Confined to the i18n Gateway
 
-**Why this rule exists.** The only place Vietnamese should ever appear in this codebase is user-facing UI/UX content, and even that must go through the project's i18n gateway (`vue-i18n`, `useI18n()` + locale resource files) rather than as hardcoded string literals — so translation, search, and mojibake-safety all have one throat to choke.
+New Vietnamese UI chrome must not be hardcoded directly into Vue templates, Vue scripts, or TypeScript presentation code.
 
-- Do not add new hardcoded Vietnamese string literals directly in `.vue` templates/`<script>` blocks or `.ts` files (button labels, panel titles, error/toast text, etc.). Add a key to the relevant i18n locale resource and reference it via `t('...')`, following the existing `useI18n({ useScope: 'local' })` pattern used elsewhere (e.g. `BagGrid.vue`).
-- Code comments are governed by P15 (English only) — not by this rule.
-- **Scope discipline:** this rule governs new code you write or files you substantially touch. It is not a mandate to retrofit the large pre-existing backlog of hardcoded Vietnamese content strings (item/skill/zone names, data files, etc.) — that is a separate, explicitly-scoped migration effort, not a drive-by (P10). If a task's own file already has hardcoded Vietnamese strings you are adding alongside, migrating that file's strings to i18n in the same change is encouraged.
-- Data-driven Vietnamese content authored in `data/**` (naming systems, lore, descriptions) is a pre-existing, accepted convention distinct from UI chrome strings — this rule targets new UI chrome text, not a mandate to i18n-wrap existing content data unless a task specifically calls for it.
+Use the project's `vue-i18n` gateway and established patterns such as:
 
-### P17. Runtime/Presentation/Logic Separation (single-responsibility systems, no cross-talk)
+```text
+useI18n({ useScope: 'local' })
+t('...')
+```
 
-**Why this rule exists.** A 2026-09-07 combat-system audit found gauge advancement, Phaser animation selection, and turn-resolution gating all interleaved in the same tick handler (`GameManager.updateBattleFixedStep`), with presentation-ack state (`pendingReadyActor`/`presentationActive`/`playbackToken`) stored as loose fields on a large god-class. This made a single bug (a turn declared with no living target) hard to trace because timing, animation choice, and business rules were not separable. The user's standing project convention is "mỗi hệ thống làm việc độc lập, không trao đổi trực tiếp" (each system does its own job, no direct cross-talk) specifically so systems stay independently easy to fix and adjust — combat had drifted from this.
+This applies to UI chrome such as:
 
-- A **runtime/clock** component's only job is timing: advancing a gauge/counter, selecting the current animation/VFX state, and signaling ticks. It must never embed business/gating logic (targeting rules, spawn/wave conditions, victory conditions, damage math) — those branches belong in a dedicated logic system that the runtime calls into or reads from, never the reverse.
-- **Presentation (Phaser)** owns animation/VFX playback and reports completion back via explicit acknowledgment — it does not decide game-logic outcomes, and game logic does not reach into Phaser internals.
-- **Damage/effect resolution** stays in its own system (e.g. the existing damage/impact engine) — a runtime or presentation layer never computes damage inline.
-- Coordination between these systems happens through explicit interfaces/events only (an ack call, an emitted event, a read-only state query) — never by one system directly mutating another's private state.
-- When auditing or extending a system and you find timing, presentation, and business logic mixed in one function/class, treat that as a defect to flag (or fix, if in scope) under this rule — not a style nitpick.
-- **Combat specifically:** before touching turn-based combat (`game/src/core/battle/turn/**`, `GameManager`'s battle-tick code, `CombatScene.ts`), read `docs/superpowers/specs/2026-09-07-turn-based-combat-reference.md` first — it is the authoritative description of the state machine, gauge, targeting, and presentation-timing split, plus an explicit list of mechanics this system deliberately does NOT have (no Break/Toughness, no per-turn banked resource, no per-path elemental requirement). If a change would make that document and the real code disagree, update the document in the same change.
+- buttons;
+- panel titles;
+- errors;
+- toasts;
+- navigation;
+- labels.
+
+Code comments are governed by P15.
+
+This rule is not a mandate to migrate all historical Vietnamese content.
+
+Data-driven Vietnamese content under areas such as `data/**` remains an accepted separate convention unless an explicit localization migration changes that policy.
+
+When a substantially touched UI file contains nearby hardcoded UI chrome, migrating the immediately relevant strings is encouraged when coherent and low-risk.
+
+### P17. Runtime / Presentation / Logic Separation
+
+Each subsystem must do its own job.
+
+A runtime/clock system owns timing.
+
+Presentation owns rendering, animation, VFX, and visual playback.
+
+Gameplay systems own authoritative rules.
+
+Damage/effect resolution belongs to the relevant gameplay authority.
+
+Presentation may acknowledge playback completion, but must not determine gameplay outcomes.
+
+Gameplay must not manipulate Phaser internals.
+
+Coordination must happen through explicit contracts such as:
+
+- typed calls;
+- commands;
+- events;
+- acknowledgments;
+- read-only state queries.
+
+One system must not directly mutate another system's private state.
+
+When timing, presentation, and business logic become mixed in the same function or class, treat it as an architectural defect rather than a style preference.
+
+#### Combat reference
+
+Before modifying turn-based combat in:
+
+```text
+game/src/core/battle/turn/**
+GameManager battle-tick integration
+CombatScene.ts
+```
+
+read:
+
+```text
+docs/superpowers/specs/2026-09-07-turn-based-combat-reference.md
+```
+
+It is the maintained behavioral reference for the current turn-state machine and presentation timing contract.
+
+If an authorized change intentionally changes that contract, update the reference in the same coherent change.
 
 ---
 
-## Part 2 — Effectiveness Guidelines (Read & Apply When Relevant)
+# Part 2 — Architecture Constitution
 
-The agent reads these rules and applies them when the task matches the trigger. Skipping is allowed with a reason stated in the summary.
+These rules apply project-wide.
+
+They are deliberately short.
+
+Detailed architecture should live in maintained architecture/domain documentation, not be expanded indefinitely inside `AGENTS.md`.
+
+### A1. Build From Stable Primitives
+
+Prefer:
+
+```text
+primitive
+→ reusable mechanism
+→ domain system
+→ orchestrator
+→ presentation
+```
+
+over feature-local patches.
+
+Before adding another local exception, ask whether a stable lower-level building block is missing.
+
+Primitive-first does **not** mean abstraction-first.
+
+A primitive must represent a real, stable concept and remove actual complexity.
+
+### A2. One Rule, One Owner
+
+Every semantic rule must have one authoritative owner.
+
+Examples:
+
+```text
+damage formula        → damage authority
+HP/MP/Ward mutation   → vitals authority
+buff lifecycle        → buff authority
+inventory mutation    → inventory authority
+equipment calculation → equipment/stat authority
+realm progression     → progression authority
+animation playback    → presentation authority
+```
+
+Do not independently implement the same semantic rule in multiple places.
+
+### A3. One Mutable State, One Authority
+
+For important mutable state, the project must be able to answer:
+
+```text
+Who owns it?
+Who may write it?
+Who may read it?
+Who resets it?
+Who persists it?
+```
+
+Other systems request changes through the owner's explicit API.
+
+They do not directly mutate another domain's internals.
+
+### A4. No Long-Arm Systems
+
+A system must not perform another system's responsibility merely because it has access to the data.
+
+Examples of violations:
+
+```text
+Damage engine applies a cultivation-specific buff.
+CombatScene edits authoritative HP.
+UI calculates authoritative equipment formulas.
+Skill code manually mutates target health.
+Crafting manipulates inventory internals.
+Save logic decides gameplay progression.
+Generic manager contains detailed rules for every subsystem.
+```
+
+Repair the ownership boundary rather than adding another bypass.
+
+### A5. Orchestrators Coordinate; They Do Not Absorb Domain Rules
+
+Managers/coordinators may know several systems.
+
+Their job is sequencing:
+
+```text
+validate
+→ call owner A
+→ call owner B
+→ publish/return result
+```
+
+They should not reproduce formulas or directly manipulate another system's internals.
+
+Large orchestrators are acceptable when their size comes from coordination rather than accumulated domain logic.
+
+### A6. Dependencies Point Toward Foundations
+
+Preferred conceptual direction:
+
+```text
+foundation
+→ domain primitives
+→ mechanisms
+→ domain systems
+→ orchestration
+→ presentation
+```
+
+Lower layers must not depend on higher layers.
+
+Core gameplay should remain independent of Vue and Phaser where practical and should be headlessly testable.
+
+### A7. Presentation Is Not Gameplay Authority
+
+Vue and Phaser may:
+
+- render;
+- animate;
+- collect input;
+- issue commands;
+- acknowledge presentation completion.
+
+They must not calculate or determine authoritative gameplay outcomes.
+
+Presentation failure must not silently change gameplay state.
+
+### A8. Generic Mechanisms Must Not Accumulate Content Special Cases
+
+Skills, buffs, items, talents, enemies, stages, recipes, formations, and similar content should normally compose reusable engine capabilities.
+
+Generic systems should not accumulate arbitrary checks such as:
+
+```text
+if skillId === ...
+if buffId === ...
+if itemId === ...
+```
+
+unless that identity genuinely belongs to the system.
+
+When special behavior reveals a stable category of variation, introduce the smallest appropriate mechanism, effect, trigger, condition, policy, or resolver.
+
+Do not create one abstraction per content item.
+
+### A9. Shared Rule, Single Implementation
+
+The same semantic formula or rule must not be copied between:
+
+- runtime and preview;
+- UI and engine;
+- old/new systems;
+- buff and damage code;
+- equipment UI and equipment logic;
+- crafting preview and crafting execution.
+
+Consumers must use the authoritative rule owner.
+
+### A10. UI Must Compose Canonical Primitives
+
+UI should grow from reusable pieces rather than panel-local implementations.
+
+Conceptually:
+
+```text
+design tokens
+→ layout primitives
+→ interaction primitives
+→ game UI primitives
+→ domain components
+→ feature panels/screens
+```
+
+Examples may include:
+
+```text
+Surface
+Grid
+Stack
+Button
+Tooltip
+Modal
+ProgressBar
+Slot
+ItemIcon
+StatRow
+CostDisplay
+SkillNode
+EquipmentSlot
+```
+
+These names are examples, not mandatory abstractions.
+
+Do not create universal mega-components.
+
+Do not duplicate an existing primitive because local implementation is faster.
+
+### A11. Fix Root Causes, Not Symptoms
+
+Before fixing a non-trivial problem, ask:
+
+```text
+What invariant is broken?
+Who should own it?
+Why did this workaround become necessary?
+Is a primitive/mechanism missing?
+Is ownership duplicated?
+Is dependency direction wrong?
+```
+
+Prefer the smallest **coherent architectural change**, not the smallest textual patch.
+
+Do not use root-cause reasoning as permission for unrelated cleanup.
+
+### A12. Characterize Before Migration; Do Not Overengineer
+
+Before structurally moving working behavior:
+
+```text
+identify intended behavior
+→ inspect production consumers
+→ add characterization coverage when needed
+→ migrate one coherent path
+→ verify
+→ remove old authority only after migration
+```
+
+Do not delete code merely because it appears legacy.
+
+Prove its consumer status.
+
+Do not introduce abstractions for hypothetical future needs.
+
+Every abstraction must pay rent.
+
+---
+
+# Part 3 — Effectiveness Guidelines
+
+The agent reads these guidelines and applies them when the task matches the trigger.
+
+Skipping is allowed with a reason stated in the summary.
 
 ### E1. UI/UX Skill Requirement
 
-- For every task that designs, builds, reviews, or changes UI/UX, use the `ui-ux-pro-max` skill before making design or implementation decisions.
-- This includes pages, components, design systems, styling, layout, responsive behavior, accessibility, interactions, animation, typography, color, charts, and any change to how the interface looks, feels, moves, or is used.
-- Read `.agents/skills/ui-ux-pro-max/SKILL.md` and follow its workflow, using the smallest relevant search mode and the detected project stack. For this project, use the Vue stack guidance when stack-specific guidance is needed.
-- Skip this skill only for work that is entirely non-visual and does not affect how users interact with the application.
-- If the skill is unavailable, report the limitation instead of silently substituting an unverified UI/UX workflow.
+For every task that designs, builds, reviews, or materially changes UI/UX, use `ui-ux-pro-max` before design or implementation decisions.
 
-### E2. Stack Reference Skills (read-before-write)
+This includes:
 
-- Edit or create `.vue` files in `game/src/**` → load the `vue-best-practices` skill (and `vue-pinia-best-practices` if touching a Pinia store).
-- Edit or create files in `game/src/**` that import Phaser or instantiate `new Phaser.*` → load the `phaser-core` skill (and `phaser-arcade-physics` if using Arcade physics bodies, colliders, or velocity).
-- The `vue` skill (from `antfu/skills`) is a general Vue reference; load it alongside `vue-best-practices` for project-style guidance.
-- Skip for 1-line typo fixes, comment-only edits, or pure formatting changes.
+- pages;
+- components;
+- design systems;
+- styling;
+- layout;
+- responsive behavior;
+- accessibility;
+- interactions;
+- animation;
+- typography;
+- visual hierarchy.
 
-### E3. Code-Simplifier (mandatory, before P5 review)
+Read:
 
-- After writing or substantially editing production code (≥5 lines of production-code change, or a new file), the `code-simplifier` skill is MANDATORY — it must run on the session diff **before** the P5 code-review gate, so the reviewer sees the final, simplified form of the code.
-- Pipeline order: implement → simplify → verify (P3 quick) → code-review (P5) → done.
-- Simplification is refactor only — behavior must not change. If a candidate simplification would change behavior, skip that item and list it in the summary so the P5 reviewer knows what was left as-is.
-- Fixes arising from P5 findings are considered already-simplified if they reuse existing patterns; if a fix adds ≥5 new lines of production code, run a local simplify pass on the fix and re-review only that fix.
-- The user may still say "skip simplify" for a given turn. Honor that and note it in the summary.
+```text
+.agents/skills/ui-ux-pro-max/SKILL.md
+```
+
+and follow Vue-specific guidance where relevant.
+
+Skip only for entirely non-visual work.
+
+If unavailable, report the limitation.
+
+### E2. Stack Reference Skills
+
+Edit/create `.vue` files under `game/src/**`:
+
+- load `vue-best-practices`;
+- also load `vue-pinia-best-practices` when Pinia is involved.
+
+Code importing Phaser or instantiating `new Phaser.*`:
+
+- load `phaser-core`;
+- also load `phaser-arcade-physics` when using Arcade Physics.
+
+The general `vue` skill may supplement project-specific Vue guidance.
+
+Skip only for trivial formatting/comment/typo work.
+
+### E3. Code-Simplifier Before Review
+
+After substantial production-code edits — approximately five or more changed production lines or any new production file — run `code-simplifier` before P5.
+
+Pipeline:
+
+```text
+implement
+→ simplify
+→ verify
+→ code review
+→ done
+```
+
+Simplification must preserve behavior.
+
+If simplification would alter behavior, skip that candidate and report it.
+
+If a P5 fix introduces substantial new code, simplify and review the material fix again.
+
+The user may explicitly waive simplification for a task.
 
 ### E4. Game System Skills
 
-- Changing economy / progression / difficulty / reward / skill tree / cultivation curve → load `balance-check`.
-- Adding a new gameplay feature or redesigning an existing flow → load `improve-game`.
-- Fixing a player-reported bug, or running regression / bug-hunt on existing code → load `game-qa`.
-- **Designing or implementing a combat skill (kỹ năng, chiêu thức, passive), a SkillEffect, a ProgressionNode, an ailment or reaction, or any element-skill change → load `tutienidle-skill-design`.** This is project-specific and must be triggered for any change to combat data files in `game/src/data/skill` or `game/src/data/progression`, or to the SkillEffect / Skill / ProgressionNode type definitions.
+Use `balance-check` when changing:
+
+- economy;
+- progression;
+- difficulty;
+- reward;
+- skill tree;
+- cultivation curve.
+
+Use `improve-game` for new gameplay features or flow redesign.
+
+Use `game-qa` for player-reported bugs or regression investigations.
+
+For combat skill/content work involving areas such as:
+
+```text
+game/src/data/skill
+game/src/data/progression
+SkillEffect
+Skill
+ProgressionNode
+ailments
+reactions
+element-skill behavior
+```
+
+load `tutienidle-skill-design`.
 
 ### E5. Performance Skill
 
-- Before shipping a feature that affects runtime (FPS, save size, large scenes, heavy animation, long sessions) → load the `performance` skill (from `addyosmani/web-quality-skills`).
-- This is not a verification gate; it is a review pass to catch obvious runtime cliffs before they ship.
+Before shipping runtime-heavy work involving:
+
+- FPS;
+- save size;
+- large scenes;
+- heavy animation;
+- long sessions;
+
+load the `performance` skill.
+
+This is a review pass, not a replacement for verification.
 
 ### E6. E2E Testing Skills
 
-- Writing e2e tests in `game/tests/e2e/**` → load the `playwright-best-practices` skill.
-- Running browser-based UI checks inside a session → load the `playwright-cli` skill. **See P14 for when this is mandatory, not optional, and for this project's specific gotchas (drag-and-drop simulation, Vue microtask timing, browser choice).**
-- Vitest remains the default for unit and integration tests; Playwright is for end-to-end browser behavior.
+Writing E2E tests under:
+
+```text
+game/tests/e2e/**
+```
+
+requires `playwright-best-practices`.
+
+Interactive browser verification requires `playwright-cli` and P14's project-specific workflow.
+
+Vitest remains the default for unit and ordinary integration tests.
 
 ### E7. Planning & Idea Preservation
 
-**Trigger:** when the user requests a specification or plan.
+When the user requests a specification or plan:
 
-**Mandatory principles:**
+1. Preserve the user's original intent.
+2. Do not silently remove, replace, split, or redesign requested ideas.
+3. Research and add implementation detail, dependencies, state flow, tests, risks, and architecture implications without altering product intent.
+4. Review connected systems including architecture, state ownership, persistence, lifecycle, UI interaction, tests, and cross-system effects.
+5. Put proposed product changes in a separate **Notes / Suggestions** section.
+6. When ambiguity materially changes product intent and cannot be resolved from repository evidence, ask for clarification when the execution context allows it.
 
-1. **Absolutely respect the writer's original ideas.** Do not omit, split, replace, or "improve" ideas without prior consent.
-2. **Research and expand with control.** Proactively research related context, add technical detail, implementation steps, risks, and resources — without altering the essence of the original idea.
-3. **Review all systems related to the task while writing the specification.** Trace architecture, data flow, state ownership, dependencies, integrations, persistence, lifecycle, UI interactions, tests, and cross-system effects. Use system-wide context to produce a coherent spec while preserving the writer's intent. Explicitly identify affected systems, assumptions, constraints, risks, and integration points.
-4. **Detailed and stay true.** Every original idea must appear fully in the spec. New sections serve the original idea, never replace it.
-5. **Clearly note proposed changes.** If the original idea has issues (infeasibility, conflicts, etc.), put them in a separate "Notes / Suggestions" section with reasons and alternatives. Do not silently modify the original idea.
-6. **Confirm before finalizing** if the idea is ambiguous. Ask clarifying questions instead of guessing.
+For substantial system work, identify:
+
+```text
+Requirement
+Current evidence
+Authoritative owner
+Existing primitives
+Missing primitives/mechanisms
+State owner
+Affected dependency chain
+Migration boundary
+Verification strategy
+Explicitly out of scope
+```
 
 ### E8. Development Phase
 
-- The project is in a development build. Save-migration correctness does NOT need to be maintained or verified — breaking compatibility with old saves is acceptable in this phase. Do not spend effort on save migrations.
+The project is currently a development build.
+
+Backward compatibility with old development saves does NOT need to be maintained unless explicitly requested.
+
+Breaking old development-save compatibility is acceptable when required for correct current schema or architecture.
+
+Do not spend effort on save migrations by default.
 
 ### E9. UI Layout Rule: Flexible / Fit-to-Container
 
-- Grid slots, cards, items per row / page must be FLEXIBLE based on the actual container — fit the card or panel that contains them.
-- On window resize, the layout must self-adapt: no breakage, no overflow, no dead whitespace, no hard-coded column counts or pixel widths from the dev screen.
-- The project's standard pattern: CSS `auto-fill / minmax` for columns + `ResizeObserver` measuring `contentRect` (see `usePanelPagination` columnWidth, `useBagGridLayout`). Measure, do not assume.
-- Forbidden: fixed `px` width for the main region, hard-coded column counts, paginating across the wrong layout type (vertical list vs multi-column grid).
+Grid slots, cards, rows, and pagination must derive from the actual container.
 
-### E10. Focused Changes Over Rewrites
+Layouts must adapt to resizing without:
 
-- Prefer small, targeted edits to large rewrites. Rewrites are higher risk and harder to review.
+- overflow;
+- broken composition;
+- unjustified dead space;
+- hard-coded column counts tied to the developer screen.
+
+Preferred mechanisms include:
+
+```text
+CSS auto-fill / minmax
+ResizeObserver
+contentRect measurement
+```
+
+and existing project mechanisms such as:
+
+```text
+usePanelPagination
+useBagGridLayout
+```
+
+when they are the correct owner.
+
+Measure rather than assume.
+
+### E10. Focused Changes Over Patchwork or Rewrite
+
+Prefer small coherent changes to giant rewrites.
+
+However:
+
+> small means the smallest coherent architectural responsibility, not the fewest changed lines.
+
+Do not patch only the nearest file when the violated invariant clearly belongs to another owner.
+
+Preferred:
+
+```text
+identify invariant
+→ identify owner
+→ repair smallest required primitive/mechanism
+→ migrate affected consumer
+→ verify
+→ stop
+```
+
+Do not continue into unrelated cleanup.
 
 ### E11. Summary Format
 
-- Every task summary must state:
-  - What changed (files, sections, behavior).
-  - What was verified (which verification mode from P3, results; QA verdict from P4 if applicable; code-review verdict from P5 if applicable).
-  - Any remaining limitations, follow-ups, or Notes / Suggestions.
+Every task summary must state:
+
+- what changed;
+- relevant files/systems;
+- behavior affected;
+- verification evidence;
+- QA verdict when applicable;
+- code-review verdict when applicable;
+- P13/P14 evidence when applicable;
+- remaining limitations;
+- known retained debt;
+- Notes / Suggestions.
 
 ### E12. Worktree Workflow
 
-- When P2 triggers a worktree, load the `using-git-worktrees` skill to follow the project's create-isolated-workspace workflow (detection, placement, branch, setup, baseline).
-- When closing a worktree (merge done, branch cleanup, release), load the `finishing-a-development-branch` skill to follow the project's wrap-up workflow.
+When P2 requires a worktree, use `using-git-worktrees`.
+
+When closing/integrating an authorized branch/worktree, use `finishing-a-development-branch`.
+
+P7 still governs commit/merge/integration authority.
 
 ### E13. Verification Meta-Skill
 
-- Before applying any verification gate (P3, P4, or P5), load the `verification-before-completion` superpowers skill for the cross-cutting checklist (evidence collection, claim qualification, common gaps).
-- The meta-skill does not replace P3 / P4 / P5; it is the umbrella that frames them.
+Before applying P3, P4, or P5 completion gates, load `verification-before-completion`.
+
+It supplements rather than replaces project-specific verification rules.
 
 ### E14. Code-Review Workflow
 
-- When the user explicitly requests a review of a change, load the `requesting-code-review` superpowers skill to structure the request.
-- When responding to feedback from a reviewer (human or AI), load the `receiving-code-review` superpowers skill to evaluate and act on each item.
-- These complement P5 (which is about proactively running the `code-review` skill before declaring done).
+When the user explicitly requests review, use `requesting-code-review`.
+
+When responding to review feedback, use `receiving-code-review`.
+
+These complement P5.
 
 ### E15. Systematic Debugging
 
-- When a bug, exception, or unexpected behavior appears, load the `systematic-debugging` superpowers skill before guessing at a fix.
-- Reproduce first, isolate, then diagnose. The skill's order is intentional; do not skip to a fix because the cause seems obvious.
+When investigating a bug, exception, or unexpected behavior, load `systematic-debugging`.
+
+Preferred order:
+
+```text
+reproduce
+→ identify violated invariant
+→ isolate owner
+→ diagnose root cause
+→ create regression evidence where practical
+→ repair correct layer
+→ verify
+```
+
+Do not jump directly to a speculative patch because the cause appears obvious.
 
 ### E16. Test-Driven Development
 
-- When writing new tests or fixing a bug, load the `test-driven-development` superpowers skill and follow its red-green-refactor cycle.
-- Prefer to express the intended behavior as a failing test before writing the production code. Existing tests that already cover the area may be reused.
+When writing new tests or fixing a bug, load `test-driven-development`.
+
+Prefer:
+
+```text
+red
+→ green
+→ refactor
+```
+
+where practical.
+
+Existing tests may serve as characterization coverage.
+
+For structural migration, capture intended behavior before moving responsibility.
 
 ---
 
-## Part 3 — Opencode Agent Wiring
+# Part 4 — Opencode Agent Wiring
 
-Opencode supports per-agent system prompts via `.opencode/agent/<name>.md` files. The file body becomes the agent's prompt, which is higher priority than `AGENTS.md` (treated as instructions). To make the Protection Rules reliably trigger, the rules in Part 1 are also embedded into the four built-in agent prompts.
+Opencode supports per-agent system prompts under:
+
+```text
+.opencode/agent/<name>.md
+```
+
+The body of those files becomes a higher-priority agent prompt than repository instruction files such as `AGENTS.md`.
+
+Therefore critical Protection Rules are mirrored into the appropriate Opencode agent files.
+
+`AGENTS.md` remains the human-readable source of truth.
 
 ### Agent files
 
-- `.opencode/agent/build.md` — primary agent that edits code. Embeds all 16 Protection rules.
-- `.opencode/agent/plan.md` — primary agent for spec / planning without edits. Embeds P1, P2, P6, P7, P8, P9, P10, P11. Does not need P3 / P4 / P5 / P12 / P13 / P14 / P15 / P16 because it does not ship code.
-- `.opencode/agent/general.md` — primary fallback agent with the same Protection surface as `build.md`.
-- `.opencode/agent/explore.md` — primary read-only research agent. Embeds P1, P2, P6, P7, P8, P10. Does not need P3 / P4 / P5 / P9 / P12 / P13 / P14 / P15 / P16.
+- `.opencode/agent/build.md` — primary code-editing agent. Mirrors all applicable **P1-P17** Protection Rules.
+- `.opencode/agent/plan.md` — planning/specification agent. Mirrors the Protection Rules relevant to planning/research, including P1, P2, P6, P7, P8, P9, P10, and P11. It must also follow Part 2 when proposing architecture.
+- `.opencode/agent/general.md` — fallback implementation agent. Uses the same Protection surface as `build.md` when capable of modifying production code.
+- `.opencode/agent/explore.md` — read-only research agent. Mirrors the subset of Protection Rules relevant to safe research, worktree boundaries, Git safety, scope, and secrets.
+
+Do not mirror the entire Architecture Constitution into every agent system prompt by default.
+
+Part 2 remains repository-level architecture guidance.
+
+If repeated evidence shows that a specific architecture rule is frequently violated because repository instructions have insufficient priority, mirror only that critical subset into the relevant agent prompt.
 
 ### Sync rule
 
-- Part 1 is the source of truth for humans. The four agent files mirror Part 1 into each agent's system prompt.
-- When Part 1 changes, update the relevant agent files in the same change. Drift between Part 1 and the agent prompts is a bug.
+Part 1 is the Protection source of truth.
+
+Whenever a Protection Rule changes, update every affected `.opencode/agent/*.md` mirror in the same coherent change.
+
+Semantic drift between Part 1 and higher-priority agent prompts is a project defect.
+
+Agent-specific prompts may be stricter than `AGENTS.md`.
+
+They must not weaken it.
 
 ### Restart
 
-- After creating or editing any agent file or `AGENTS.md`, the user must quit and restart opencode. Config is loaded once on startup and is not hot-reloaded.
+After editing:
+
+```text
+AGENTS.md
+.opencode/agent/*.md
+```
+
+quit and restart Opencode.
+
+Agent configuration is loaded at startup and must not be assumed to hot-reload.
