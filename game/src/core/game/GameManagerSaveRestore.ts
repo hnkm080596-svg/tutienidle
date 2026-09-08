@@ -60,6 +60,9 @@ export interface GameManagerSaveRestoreDeps {
   // tick and offline settle use the SAME delivery/overflow path).
   decomposeSystem: DecomposeSystem
   deliverDecomposeOutput: (entry: DecomposeOutputEntry) => void
+  // R8.1 (AR-09) - quest lifecycle reconciliation command (logic lives
+  // on GameManager; restore triggers it at the right boundary).
+  reconcileQuestLifecycle: () => void
 }
 
 /**
@@ -326,6 +329,12 @@ export class GameManagerSaveRestore {
       Date.now(),
       getAlchemySuccessBonusPercentPoints(this.deps.getActivePlayer()?.selectedTalentIds ?? []),
     )
+
+    // R8.1 (AR-09) - activation is a lifecycle command, not a UI read:
+    // restore converges the active set to current eligibility BEFORE
+    // the first tick runs. Placed LAST so the restored player realm is
+    // final when unlock evaluation runs.
+    this.deps.reconcileQuestLifecycle()
 
     return this.deps.equipmentSystem.getModifiers()
   }

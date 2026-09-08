@@ -675,6 +675,7 @@ export class GameManager {
         this.settleAutoFarmOffline(player, elapsedSeconds),
       decomposeSystem: this.decomposeSystem,
       deliverDecomposeOutput: (entry) => this.deliverDecomposeOutput(entry),
+      reconcileQuestLifecycle: () => this.reconcileQuestLifecycle(),
     })
 
     // Turn-battle runtime ops (C2 split, 2026-09-08) - owns the TurnBattle
@@ -1281,6 +1282,10 @@ export class GameManager {
       player.realmId = 'qi_refining'
       player.realmLevel = 1
       player.cultivation = 0
+
+      // R8.1 (AR-09) - realm transition may unlock quests; reconcile on
+      // the next tick instead of waiting for a panel read.
+      this.markQuestRealmTransition()
 
       this.syncRealmPassive(player)
       this.syncRealmStatPassive(player)
@@ -2469,6 +2474,36 @@ export class GameManager {
     return this.questOps.getActiveQuests()
   }
 
+  /**
+   * R8.1 (AR-09) - set by the realm-transition writer; consumed and
+   * cleared by the next update tick. Lifecycle-owned quest
+   * reconciliation must run even though realm changes currently happen
+   * outside this manager (tribulation outcomes live in Vue until R8.2).
+   */
+  private questRealmReconcileNeeded = false
+
+  /** R8.1 (AR-09) - realm-transition writers call this; cheap flag set. */
+  markQuestRealmTransition(): void {
+    this.questRealmReconcileNeeded = true
+  }
+
+  /**
+   * R8.1 (AR-09) - lifecycle reconciliation command: activates every
+   * eligible quest exactly once (idempotent, cheap registry scan).
+   * Called from the tick path (after daily reset / realm transition
+   * flag) and from restore. Never from a read/query path.
+   */
+  reconcileQuestLifecycle(): void {
+    const player = this.activePlayer
+
+    if (!player) {
+      return
+    }
+
+    this.questSystem.reconcileActiveQuests(this.questRegistry, this.questManager, player)
+    this.questRealmReconcileNeeded = false
+  }
+
   canClaimQuest(questId: string): boolean {
     return this.questOps.canClaimQuest(questId)
   }
@@ -2731,6 +2766,13 @@ export class GameManager {
     if (this.activePlayer) {
       this.tickTimedEffects(this.activePlayer)
 
+      // R8.1 (AR-09) - realm-transition reconciliation: the writer set
+      // the flag; activate newly eligible quests on the first tick
+      // after the realm change, without any panel read.
+      if (this.questRealmReconcileNeeded) {
+        this.reconcileQuestLifecycle()
+      }
+
       // Quest daily reset (Quest System plan) — wall-clock day-bucket,
       // check mỗi tick nên vẫn reset kể cả khi panel Nhiệm Vụ đang đóng.
       if (
@@ -2740,7 +2782,12 @@ export class GameManager {
           this.activePlayer,
         )
       ) {
-      this.notifications.push({ kind: 'craft', message: 'Nhi?m v? hï¿½ng ngï¿½y dï¿½ lï¿½m m?i' })
+        this.notifications.push({ kind: 'craft', message: 'Nhi?m v? hï¿½ng ngï¿½y dï¿½ lï¿½m m?i' })
+
+        // R8.1 (AR-09) - daily reset removes daily entries; the
+        // lifecycle command rebuilds today's board immediately so
+        // kills/collects keep counting without opening QuestPanel.
+        this.reconcileQuestLifecycle()
       }
 
       // Production settle (plan §4.3) — delivery thẳng Bag khi cycle

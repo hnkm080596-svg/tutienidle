@@ -57,7 +57,9 @@ describe('GameManager — bag overflow surfacing (9.8)', () => {
     const player: PlayerData = createDefaultPlayer()
 
     manager.setActivePlayer(player)
-    manager.getActiveQuests() // activate collect quest progress
+    // R8.1 (AR-09): activation moved from the read query to the
+    // lifecycle command.
+    manager.reconcileQuestLifecycle()
 
     manager.materialBag.add(manager.materialRegistry.get('mat_overflow_test'), 60)
 
