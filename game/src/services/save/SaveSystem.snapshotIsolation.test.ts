@@ -30,7 +30,7 @@ describe('buildGameSave snapshot isolation (AR-12)', () => {
     player.name = 'changed-name'
     player.cultivation = 12345
     if (player.modifiers?.[0]) {
-      player.modifiers[0].value = 999
+      player.modifiers[0].sourceId = 'mutated-after-build'
     }
     player.lastSavedAt = 1
 
