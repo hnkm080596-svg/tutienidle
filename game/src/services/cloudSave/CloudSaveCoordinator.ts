@@ -1,10 +1,16 @@
 import type { GameSave } from '../save/SaveSystem'
-import type { CloudSaveLoadResult, CloudSaveService, CloudSaveWriteResult } from './CloudSaveService'
+import type { CloudSaveCapability, CloudSaveLoadResult, CloudSaveService, CloudSaveWriteResult } from './CloudSaveService'
 
 export class CloudSaveCoordinator {
   private revision = 0
 
   constructor(private readonly service: CloudSaveService) {}
+
+  // R10 (AR-15, local scope, S5) — passthrough so callers/tests can assert
+  // the adapter boundary without reaching into the private service field.
+  get capability(): CloudSaveCapability {
+    return this.service.capability
+  }
 
   async load(): Promise<CloudSaveLoadResult> {
     const result = await this.service.load()
