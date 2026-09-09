@@ -307,6 +307,18 @@ export class GameManagerBuildingOps {
     return this.deps.productionSystem.upgradeSite(siteId, this.deps.materialBag, getRealmTier(player.realmId))
   }
 
+  /**
+   * R9 (AR-23) - authoritative upgrade quote for the panel (replaces the
+   * duplicated gate/cost logic in ProductionPanel.vue).
+   */
+  quoteProductionUpgrade(siteId: string, player: PlayerData) {
+    return this.deps.productionSystem.quoteSiteUpgrade(
+      siteId,
+      this.deps.materialBag,
+      getRealmTier(player.realmId),
+    )
+  }
+
   getProductionUpgradeCost(siteId: string) {
     return this.deps.productionSystem.getSiteDefinition(siteId)?.upgradeCosts
   }

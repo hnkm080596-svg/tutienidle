@@ -2181,6 +2181,11 @@ export class GameManager {
     return this.buildingOps.upgradeProductionSite(siteId, player)
   }
 
+  /** R9 (AR-23): authoritative upgrade quote for the panel. */
+  quoteProductionUpgrade(siteId: string, player: PlayerData) {
+    return this.buildingOps.quoteProductionUpgrade(siteId, player)
+  }
+
   getProductionUpgradeCost(siteId: string) {
     return this.buildingOps.getProductionUpgradeCost(siteId)
   }
