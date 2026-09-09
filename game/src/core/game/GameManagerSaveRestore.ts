@@ -13,6 +13,7 @@ import { EquipmentSlotManager } from '../equipment/EquipmentSlotManager'
 import { AffixRegistry } from '../equipment/AffixRegistry'
 import { BuildingManager } from '../building/BuildingManager'
 import type { BuildingInstance } from '../building/BuildingInstance'
+import { BuildingRegistry } from '../building/BuildingRegistry'
 import { QuestManager } from '../quest/QuestManager'
 import { ProductionSystem } from '../production/ProductionSystem'
 import type { ProductionSiteState } from '../production/ProductionTypes'
@@ -40,6 +41,7 @@ export interface GameManagerSaveRestoreDeps {
   equipmentSystem: EquipmentSystem
   equipmentSlotManager: EquipmentSlotManager
   affixRegistry: AffixRegistry
+  buildingRegistry: BuildingRegistry
   buildingManager: BuildingManager
   questManager: QuestManager
   productionSystem: ProductionSystem
@@ -100,6 +102,34 @@ export class GameManagerSaveRestore {
         if (!this.deps.affixRegistry.has(affix.affixId)) {
           throw new Error(`Unknown equipment affix in save: ${affix.affixId}`)
         }
+      }
+    }
+
+    // R10 (AR-12, S4) — materials/pills/buildings previously had no
+    // preflight coverage at all: the restore loops silently dropped an
+    // unknown ID via `if (registry.has(id)) ...` instead of rejecting.
+    // Per the project's established registry-drift principle (learned-
+    // defects QA-2026-09-01-013), silently filtering an owned current
+    // entry is data loss, not recovery — hard-fail before any owner
+    // mutation, same contract equipment already had. Skills/techniques
+    // are intentionally NOT included here: an unknown template there
+    // keeps the save's own object as-authored by design (see the restore
+    // loops below), not a registry-drift rejection case.
+    for (const entry of save.materials) {
+      if (!this.deps.materialRegistry.has(entry.materialId)) {
+        throw new Error(`Unknown material in save: ${entry.materialId}`)
+      }
+    }
+
+    for (const entry of save.pills) {
+      if (!this.deps.pillRegistry.has(entry.pillId)) {
+        throw new Error(`Unknown pill in save: ${entry.pillId}`)
+      }
+    }
+
+    for (const instance of save.buildings) {
+      if (!this.deps.buildingRegistry.has(instance.buildingId)) {
+        throw new Error(`Unknown building in save: ${instance.buildingId}`)
       }
     }
   }
