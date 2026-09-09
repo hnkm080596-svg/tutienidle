@@ -394,22 +394,15 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
   sprites = new Map<string, EntitySprite>()
 
-  // R5 (AR-29) — Encapsulated helpers own their maps; getters/setters maintain
-  // backwards compatibility for test seams.
-  get interpolations(): Map<string, PositionInterpolation> {
+  // R5 (AR-29) / S3 — encapsulated helpers own their maps. Scene exposes
+  // read-only views; mutation goes through the helpers' owned
+  // setInterpolationTarget/snap/delete/clear and cast-bar API.
+  get interpolations(): ReadonlyMap<string, PositionInterpolation> {
     return this.positionInterp.interpolations
   }
 
-  set interpolations(map: Map<string, PositionInterpolation>) {
-    this.positionInterp.interpolations = map
-  }
-
-  get castBars(): Map<string, CastBarSprite> {
+  get castBars(): ReadonlyMap<string, CastBarSprite> {
     return this.castBar.castBars
-  }
-
-  set castBars(map: Map<string, CastBarSprite>) {
-    this.castBar.castBars = map
   }
 
   // Combat Grid Rework Ã¢â‚¬â€ DOT VFX theo (targetId + ailmentId), bÃƒÂ¡m target.
@@ -534,7 +527,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
   private getCombatEventBindings(): Array<[string, (event: any) => void]> {
     return [
-      ['attack', (event: CombatScenePayload) => this.onAttack(event)],
+      ['turn_cast_start', (event: CombatScenePayload) => this.onAttack(event)],
       ['critical', (event: CombatScenePayload) => this.onCritical(event)],
       ['hit', (event: CombatScenePayload) => this.onHit(event)],
       ['dodge', (event: CombatScenePayload) => this.onDodge(event)],
@@ -1153,7 +1146,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
     this.destroyEntitySprite(sprite)
     this.sprites.delete(id)
-    this.interpolations.delete(id)
+    this.positionInterp.delete(id)
   }
 
   updateEnemyHealthBar(sprite: EntitySprite, currentHp: number, maxHp: number) {
@@ -1262,8 +1255,8 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.playerMaterialized = true
 
     this.sprites.clear()
-    this.interpolations.clear()
-    this.castBars.clear()
+    this.positionInterp.clear()
+    this.castBar.clear()
     this.dyingIds.clear()
     this.playerDying = false
 
@@ -1349,7 +1342,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
       this.destroyEntitySprite(sprite)
       this.sprites.delete(id)
-      this.interpolations.delete(id)
+      this.positionInterp.delete(id)
     }
   }
 
@@ -2095,7 +2088,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       this.destroyEntitySprite(sprite)
       this.sprites.delete(id)
       this.dyingIds.delete(id)
-      this.interpolations.delete(id)
+      this.positionInterp.delete(id)
     }
 
     if (sprite.kind === 'sprite') {
@@ -2214,14 +2207,12 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
       this.destroyEntitySprite(sprite)
       this.sprites.delete(id)
-      this.interpolations.delete(id)
+      this.positionInterp.delete(id)
     }
 
     this.dyingIds.clear()
 
-    for (const id of [...this.castBars.keys()]) {
-      this.destroyCastBar(id)
-    }
+    this.castBar.clear()
   }
 
   // ================= Combat Grid Rework Ã¢â‚¬â€ VFX 2.5D theo space =================

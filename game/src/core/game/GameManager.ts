@@ -2765,6 +2765,7 @@ export class GameManager {
     // đăng ký qua setActivePlayer() sau boot/load.
     if (this.activePlayer) {
       this.tickTimedEffects(this.activePlayer)
+      this.investBodyRefinement(this.activePlayer)
 
       // R8.1 (AR-09) - realm-transition reconciliation: the writer set
       // the flag; activate newly eligible quests on the first tick

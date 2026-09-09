@@ -32,8 +32,8 @@ export function emitTurnCastStart(
   skillId: string,
   targetIds: string[],
 ): void {
-  eventBus.emit('attack', {
-    type: 'attack',
+  eventBus.emit('turn_cast_start', {
+    type: 'turn_cast_start',
     sourceId,
     targetId: targetIds[0],
     skillId,

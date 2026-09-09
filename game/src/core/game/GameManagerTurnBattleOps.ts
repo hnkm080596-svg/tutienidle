@@ -202,6 +202,8 @@ export class GameManagerTurnBattleOps {
       surviveEffects: {
         buffSystem: new TurnBuffSystem(this.turnBattle!.players[0]!.buffs),
         registry: TURN_BUFF_REGISTRY,
+        grantBuffId: 'tu_sinh_ngo',
+        cleanseDebuffs: true,
       },
     })
   }

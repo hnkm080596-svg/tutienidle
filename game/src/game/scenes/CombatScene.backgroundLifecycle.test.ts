@@ -125,8 +125,6 @@ function createPerspectiveScene(textureExists: true | Set<string>) {
   // Audit fix 2026-08-31 â€” onBattleStart giá» cÃ²n dá»n status VFX icons.
   scene.statuses = new Map()
   scene.sprites = new Map()
-  scene.interpolations = new Map()
-  scene.castBars = new Map()
   scene.spawnVfxHandles = new Map()
   scene.materializingIds = new Set()
   scene.dyingIds = new Set()

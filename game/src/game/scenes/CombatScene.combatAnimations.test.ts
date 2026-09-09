@@ -1,13 +1,13 @@
-// @vitest-environment jsdom
-// Combat Art Pipeline Task 9 (2026-09-05) — headless coverage cho phần
-// KHÔNG cần Phaser runtime thật: derive animation key theo actor, guard
-// đăng ký Animation (anims.exists skip), dispatch playCombatAnimation(), và
-// bookkeeping hoãn xóa sprite khi chết (death-deferral) — bao gồm case
-// player không bao giờ bị destroy và case id tái xuất hiện giữa lúc sprite
-// cũ còn đang chờ animation/tween chết (Task 5 review's orphan/double-
-// destroy concern). Theo đúng pattern createTestScene('bare') +
-// Object.create của các file CombatScene.*.test.ts khác — KHÔNG dựng
-// Phaser thật.
+﻿// @vitest-environment jsdom
+// Combat Art Pipeline Task 9 (2026-09-05) â€” headless coverage cho pháº§n
+// KHÃ”NG cáº§n Phaser runtime tháº­t: derive animation key theo actor, guard
+// Ä‘Äƒng kÃ½ Animation (anims.exists skip), dispatch playCombatAnimation(), vÃ 
+// bookkeeping hoÃ£n xÃ³a sprite khi cháº¿t (death-deferral) â€” bao gá»“m case
+// player khÃ´ng bao giá» bá»‹ destroy vÃ  case id tÃ¡i xuáº¥t hiá»‡n giá»¯a lÃºc sprite
+// cÅ© cÃ²n Ä‘ang chá» animation/tween cháº¿t (Task 5 review's orphan/double-
+// destroy concern). Theo Ä‘Ãºng pattern createTestScene('bare') +
+// Object.create cá»§a cÃ¡c file CombatScene.*.test.ts khÃ¡c â€” KHÃ”NG dá»±ng
+// Phaser tháº­t.
 import { describe, expect, it, vi } from 'vitest'
 import { createTestScene } from './combat/combatTestHarness'
 import { PLAYER_ID } from './combat/combatConstants'
@@ -19,8 +19,6 @@ function createScene() {
 
   scene.playerProfile = PLAYER_VISUAL_PROFILES.mortal
   scene.sprites = new Map()
-  scene.interpolations = new Map()
-  scene.castBars = new Map()
   scene.dotAccumulators = new Map()
   scene.dyingIds = new Set()
   scene.playerDying = false
@@ -72,15 +70,15 @@ function makeSprite(kind: 'sprite' | 'rect', rectOverride?: Record<string, unkno
     boost: { value: 1 },
     footY: 0,
     columnFloat: 0,
-    // any-có-chủ-đích (cùng pattern CombatScene.enemyScale.test.ts) — stub
-    // EntitySprite tối giản cho method Object.create test, không cần khớp
-    // interface đầy đủ.
+    // any-cÃ³-chá»§-Ä‘Ã­ch (cÃ¹ng pattern CombatScene.enemyScale.test.ts) â€” stub
+    // EntitySprite tá»‘i giáº£n cho method Object.create test, khÃ´ng cáº§n khá»›p
+    // interface Ä‘áº§y Ä‘á»§.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any
 }
 
-describe('CombatScene — entityAnimationKeyPrefix()', () => {
-  it('player → combatTextureKey của profile hiện hành', () => {
+describe('CombatScene â€” entityAnimationKeyPrefix()', () => {
+  it('player â†’ combatTextureKey cá»§a profile hiá»‡n hÃ nh', () => {
     const scene = createScene()
 
     expect(scene.entityAnimationKeyPrefix(PLAYER_ID)).toBe(
@@ -88,21 +86,21 @@ describe('CombatScene — entityAnimationKeyPrefix()', () => {
     )
   })
 
-  it('enemy trong batch Mortal → resolveEnemyTextureKey()', () => {
+  it('enemy trong batch Mortal â†’ resolveEnemyTextureKey()', () => {
     const scene = createScene()
 
     expect(scene.entityAnimationKeyPrefix('mortal_wild_boar_ab12')).toBe('mortal-wild-boar-v1')
   })
 
-  it('enemy ngoài batch (vẫn Rectangle) → undefined', () => {
+  it('enemy ngoÃ i batch (váº«n Rectangle) â†’ undefined', () => {
     const scene = createScene()
 
     expect(scene.entityAnimationKeyPrefix('enemy_1')).toBeUndefined()
   })
 })
 
-describe('CombatScene — registerCombatAnimations() guard', () => {
-  it('this.anims.exists() === false cho mọi clip → create() gọi đủ 5 lần (idle/ready/cast/standby/death)', () => {
+describe('CombatScene â€” registerCombatAnimations() guard', () => {
+  it('this.anims.exists() === false cho má»i clip â†’ create() gá»i Ä‘á»§ 5 láº§n (idle/ready/cast/standby/death)', () => {
     const scene = createScene()
     const created: Array<{ key: string }> = []
 
@@ -135,7 +133,7 @@ describe('CombatScene — registerCombatAnimations() guard', () => {
     expect(created.map((c) => c.key)).toContain('entity-x-idle')
   })
 
-  it('this.anims.exists() === true cho mọi clip → KHÔNG create() lần nào (đã đăng ký trước đó, AnimationManager dùng chung toàn Game)', () => {
+  it('this.anims.exists() === true cho má»i clip â†’ KHÃ”NG create() láº§n nÃ o (Ä‘Ã£ Ä‘Äƒng kÃ½ trÆ°á»›c Ä‘Ã³, AnimationManager dÃ¹ng chung toÃ n Game)', () => {
     const scene = createScene()
     const create = vi.fn()
 
@@ -158,18 +156,18 @@ describe('CombatScene — registerCombatAnimations() guard', () => {
   })
 })
 
-describe('CombatScene — playCombatAnimation()', () => {
-  it('kind rect (fallback Rectangle) → không gọi .play() (không có method này)', () => {
+describe('CombatScene â€” playCombatAnimation()', () => {
+  it('kind rect (fallback Rectangle) â†’ khÃ´ng gá»i .play() (khÃ´ng cÃ³ method nÃ y)', () => {
     const scene = createScene()
     const sprite = makeSprite('rect')
 
     scene.anims = { exists: () => true }
 
-    // Không throw dù rect không có .play — guard kind !== 'sprite' chặn trước.
+    // KhÃ´ng throw dÃ¹ rect khÃ´ng cÃ³ .play â€” guard kind !== 'sprite' cháº·n trÆ°á»›c.
     expect(() => scene.playCombatAnimation(sprite, 'mortal_wild_boar_1', 'ready')).not.toThrow()
   })
 
-  it('actorId không map được entity key (enemy ngoài batch) → không play', () => {
+  it('actorId khÃ´ng map Ä‘Æ°á»£c entity key (enemy ngoÃ i batch) â†’ khÃ´ng play', () => {
     const scene = createScene()
     const sprite = makeSprite('sprite')
 
@@ -179,7 +177,7 @@ describe('CombatScene — playCombatAnimation()', () => {
     expect((sprite.rect as ReturnType<typeof fakeGameSprite>).playCalls).toHaveLength(0)
   })
 
-  it('clip chưa đăng ký (anims.exists false) → không play', () => {
+  it('clip chÆ°a Ä‘Äƒng kÃ½ (anims.exists false) â†’ khÃ´ng play', () => {
     const scene = createScene()
     const sprite = makeSprite('sprite')
 
@@ -189,7 +187,7 @@ describe('CombatScene — playCombatAnimation()', () => {
     expect((sprite.rect as ReturnType<typeof fakeGameSprite>).playCalls).toHaveLength(0)
   })
 
-  it('player + clip đã đăng ký → play(đúng key theo profile hiện hành)', () => {
+  it('player + clip Ä‘Ã£ Ä‘Äƒng kÃ½ â†’ play(Ä‘Ãºng key theo profile hiá»‡n hÃ nh)', () => {
     const scene = createScene()
     const sprite = makeSprite('sprite')
 
@@ -201,7 +199,7 @@ describe('CombatScene — playCombatAnimation()', () => {
     ])
   })
 
-  it('actorId undefined (spriteFor miss upstream) → không throw, không play', () => {
+  it('actorId undefined (spriteFor miss upstream) â†’ khÃ´ng throw, khÃ´ng play', () => {
     const scene = createScene()
     const sprite = makeSprite('sprite')
 
@@ -212,7 +210,7 @@ describe('CombatScene — playCombatAnimation()', () => {
   })
 })
 
-describe('CombatScene — beginDeathSequence() death-deferral', () => {
+describe('CombatScene â€” beginDeathSequence() death-deferral', () => {
   function stubTweensCapturingOnComplete() {
     const tweenConfigs: Array<Record<string, unknown>> = []
 
@@ -225,7 +223,7 @@ describe('CombatScene — beginDeathSequence() death-deferral', () => {
     }
   }
 
-  it('enemy Rectangle (không animation khả dụng) — destroy CHỈ sau khi tween xong (hành vi y hệt trước Task 9)', () => {
+  it('enemy Rectangle (khÃ´ng animation kháº£ dá»¥ng) â€” destroy CHá»ˆ sau khi tween xong (hÃ nh vi y há»‡t trÆ°á»›c Task 9)', () => {
     const scene = createScene()
     const { tweens, tweenConfigs } = stubTweensCapturingOnComplete()
 
@@ -242,7 +240,7 @@ describe('CombatScene — beginDeathSequence() death-deferral', () => {
     expect(scene.dyingIds.has('enemy-1')).toBe(true)
     expect(scene._gridView.destroyEntitySprite).not.toHaveBeenCalled()
 
-    // Tween chính (rotation/alpha trên sprite.rect) luôn được add() đầu tiên.
+    // Tween chÃ­nh (rotation/alpha trÃªn sprite.rect) luÃ´n Ä‘Æ°á»£c add() Ä‘áº§u tiÃªn.
     const mainTweenOnComplete = tweenConfigs[0]!.onComplete as () => void
 
     mainTweenOnComplete()
@@ -252,7 +250,7 @@ describe('CombatScene — beginDeathSequence() death-deferral', () => {
     expect(scene.dyingIds.has('enemy-1')).toBe(false)
   })
 
-  it('enemy Sprite thật + clip -death đã đăng ký — phát animation NGAY, nhưng destroy CHỜ CẢ tween LẪN ANIMATION_COMPLETE (spec §9, không cắt ngang)', () => {
+  it('enemy Sprite tháº­t + clip -death Ä‘Ã£ Ä‘Äƒng kÃ½ â€” phÃ¡t animation NGAY, nhÆ°ng destroy CHá»œ Cáº¢ tween LáºªN ANIMATION_COMPLETE (spec Â§9, khÃ´ng cáº¯t ngang)', () => {
     const scene = createScene()
     const { tweens, tweenConfigs } = stubTweensCapturingOnComplete()
 
@@ -271,12 +269,12 @@ describe('CombatScene — beginDeathSequence() death-deferral', () => {
 
     const mainTweenOnComplete = tweenConfigs[0]!.onComplete as () => void
 
-    // Tween xong TRƯỚC — animation vẫn đang chạy → CHƯA destroy.
+    // Tween xong TRÆ¯á»šC â€” animation váº«n Ä‘ang cháº¡y â†’ CHÆ¯A destroy.
     mainTweenOnComplete()
     expect(scene._gridView.destroyEntitySprite).not.toHaveBeenCalled()
     expect(scene.sprites.has('mortal_wild_boar_1')).toBe(true)
 
-    // Animation xong SAU — CẢ 2 tín hiệu đã đủ → destroy đúng 1 lần.
+    // Animation xong SAU â€” Cáº¢ 2 tÃ­n hiá»‡u Ä‘Ã£ Ä‘á»§ â†’ destroy Ä‘Ãºng 1 láº§n.
     gameSprite.emit('animationcomplete', { key: combatAnimationKey('mortal-wild-boar-v1', 'death') })
 
     expect(scene._gridView.destroyEntitySprite).toHaveBeenCalledTimes(1)
@@ -284,7 +282,7 @@ describe('CombatScene — beginDeathSequence() death-deferral', () => {
     expect(scene.dyingIds.has('mortal_wild_boar_1')).toBe(false)
   })
 
-  it('animationcomplete của MỘT clip khác (key không khớp) không kích hoạt finalize', () => {
+  it('animationcomplete cá»§a Má»˜T clip khÃ¡c (key khÃ´ng khá»›p) khÃ´ng kÃ­ch hoáº¡t finalize', () => {
     const scene = createScene()
     const { tweens, tweenConfigs } = stubTweensCapturingOnComplete()
 
@@ -305,7 +303,7 @@ describe('CombatScene — beginDeathSequence() death-deferral', () => {
     expect(scene._gridView.destroyEntitySprite).not.toHaveBeenCalled()
   })
 
-  it('player — KHÔNG BAO GIỜ destroy dù cả tween lẫn animation đều xong (giữ vị trí cuối dưới overlay kết quả)', () => {
+  it('player â€” KHÃ”NG BAO GIá»œ destroy dÃ¹ cáº£ tween láº«n animation Ä‘á»u xong (giá»¯ vá»‹ trÃ­ cuá»‘i dÆ°á»›i overlay káº¿t quáº£)', () => {
     const scene = createScene()
     const { tweens, tweenConfigs } = stubTweensCapturingOnComplete()
 
@@ -331,8 +329,8 @@ describe('CombatScene — beginDeathSequence() death-deferral', () => {
   })
 })
 
-describe('CombatScene.getOrCreateSprite() — id tái xuất hiện giữa death sequence (Task 5 review: orphan/double-destroy)', () => {
-  it('id đang dyingIds → sprite cũ bị finalize NGAY (destroy) trước khi tạo sprite mới, và tín hiệu completion CŨ không đụng tới sprite MỚI', () => {
+describe('CombatScene.getOrCreateSprite() â€” id tÃ¡i xuáº¥t hiá»‡n giá»¯a death sequence (Task 5 review: orphan/double-destroy)', () => {
+  it('id Ä‘ang dyingIds â†’ sprite cÅ© bá»‹ finalize NGAY (destroy) trÆ°á»›c khi táº¡o sprite má»›i, vÃ  tÃ­n hiá»‡u completion CÅ¨ khÃ´ng Ä‘á»¥ng tá»›i sprite Má»šI', () => {
     const scene = createScene()
 
     scene.tweens = { killTweensOf: vi.fn(), add: vi.fn() }
@@ -360,18 +358,18 @@ describe('CombatScene.getOrCreateSprite() — id tái xuất hiện giữa death
 
     const result = scene.getOrCreateSprite('mortal_wild_boar_1', 0, 'Boar', 4)
 
-    // Sprite cũ bị dọn NGAY (không chờ animation/tween nào) — không rơi vào
-    // beginDeathSequence() lần hai.
+    // Sprite cÅ© bá»‹ dá»n NGAY (khÃ´ng chá» animation/tween nÃ o) â€” khÃ´ng rÆ¡i vÃ o
+    // beginDeathSequence() láº§n hai.
     expect(destroyEntitySprite).toHaveBeenCalledWith(oldSprite)
     expect((oldSprite.rect as ReturnType<typeof fakeGameSprite>).destroyed).toBe(true)
     expect(scene.dyingIds.has('mortal_wild_boar_1')).toBe(false)
 
-    // getOrCreateSprite() thật (gridView) được gọi để tạo sprite MỚI.
+    // getOrCreateSprite() tháº­t (gridView) Ä‘Æ°á»£c gá»i Ä‘á»ƒ táº¡o sprite Má»šI.
     expect(result).toBe(newSprite)
     expect(scene.sprites.get('mortal_wild_boar_1')).toBe(newSprite)
   })
 
-  it('id KHÔNG trong dyingIds → không đụng gì tới forceFinalizeDeath, đi thẳng qua gridView', () => {
+  it('id KHÃ”NG trong dyingIds â†’ khÃ´ng Ä‘á»¥ng gÃ¬ tá»›i forceFinalizeDeath, Ä‘i tháº³ng qua gridView', () => {
     const scene = createScene()
     const sprite = makeSprite('sprite')
 

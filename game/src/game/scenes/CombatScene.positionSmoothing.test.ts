@@ -36,8 +36,6 @@ function createScene() {
   const scene = createTestScene('bare')
 
   scene.sprites = new Map()
-  scene.interpolations = new Map()
-  scene.castBars = new Map()
   scene.statuses = new Map()
   scene.spawnVfxHandles = new Map()
   scene.materializingIds = new Set()

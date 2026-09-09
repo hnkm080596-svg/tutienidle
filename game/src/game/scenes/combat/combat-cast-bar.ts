@@ -8,12 +8,10 @@ import type { CastBarSprite, EntitySprite } from './combatTypes'
 export class CombatCastBar {
   private castBarsMap = new Map<string, CastBarSprite>()
 
-  get castBars(): Map<string, CastBarSprite> {
+  // S3 (AR-29) — read-only exposure; mutation only via the owned
+  // onCastStart/destroyCastBar/delete/clear API below.
+  get castBars(): ReadonlyMap<string, CastBarSprite> {
     return this.castBarsMap
-  }
-
-  set castBars(map: Map<string, CastBarSprite>) {
-    this.castBarsMap = map
   }
 
   constructor(private readonly scene: CombatScene) {}
@@ -88,5 +86,13 @@ export class CombatCastBar {
     for (const id of [...this.castBarsMap.keys()]) {
       this.destroyCastBar(id)
     }
+  }
+
+  clear(): void {
+    this.destroyAll()
+  }
+
+  delete(id: string): void {
+    this.destroyCastBar(id)
   }
 }

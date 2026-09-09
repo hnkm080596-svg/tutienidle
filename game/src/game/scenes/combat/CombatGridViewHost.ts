@@ -26,7 +26,8 @@ export interface CombatGridViewHost {
   readonly sprites: Map<string, EntitySprite>
   // resetVisual() only — host không cần interpolate thật vẫn thoả type
   // bằng 1 Map rỗng (xem TranPhapCombatPreviewScene, Task 4).
-  readonly interpolations: Map<string, unknown>
+  // S3 (AR-29): read-only view — hosts must not mutate interpolation state.
+  readonly interpolations: ReadonlyMap<string, unknown>
   entityFootMinY: number
   entityFootMaxY: number
 

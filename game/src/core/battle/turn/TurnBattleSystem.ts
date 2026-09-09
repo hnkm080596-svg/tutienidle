@@ -819,10 +819,9 @@ export class TurnBattleSystem {
             scaledDamage = suddenDeathMultiplier === 1 ? action.damage : scaleActionDamage(action.damage, suddenDeathMultiplier)
           }
 
-          // R3 (AR-18) — Generic composite action policy with backward-compatible ID check.
+          // R3 (AR-18) — Generic composite action policy.
           const isReactionComposite =
-            action.skill?.compositePicks?.poolType === 'reaction_path' ||
-            action.skillId === 'phap_tu_reaction_special'
+            action.skill?.compositePicks?.poolType === 'reaction_path'
 
           if (isReactionComposite && this.reactionPathPool) {
             reactionPathPicks = selectRandomDistinctElementPair([...this.reactionPathPool])
@@ -948,6 +947,10 @@ export class TurnBattleSystem {
 
             if (!hitResult.dodged) {
               targetIds.push(target.id)
+
+              if (this.registry) {
+                this.applySkillAilments(actor, target, pickedSkill)
+              }
             }
           }
         }
@@ -1214,13 +1217,16 @@ export class TurnBattleSystem {
   private applySkillAilments(
     actor: TurnBattleParticipant,
     target: TurnBattleParticipant,
-    action: SelectedAction,
+    actionOrSkill: SelectedAction | TurnSkillDefinition,
   ): void {
     if (!this.registry) return
 
+    const skill = 'skill' in actionOrSkill ? actionOrSkill.skill : actionOrSkill
+    if (!skill) return
+
     const ailments =
-      action.skill?.appliesAilments ??
-      (action.skill?.appliesAilment ? [action.skill.appliesAilment] : [])
+      skill.appliesAilments ??
+      (skill.appliesAilment ? [skill.appliesAilment] : [])
 
     for (const ailment of ailments) {
       if (Math.random() < ailment.chance) {

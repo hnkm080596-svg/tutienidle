@@ -47,7 +47,7 @@ export const PHAP_TU_REACTION_ULTIMATE: TurnSkillDefinition = {
   cooldownTurns: 6,
   resourceType: 'mana',
   resourceCost: 30,
-  damage: { kind: 'physical', multiplier: 0 },
+  targetScope: 'self',
   targeting: { shape: 'single' },
   appliesBuff: { definitionId: 'reaction_empowerment', target: 'self' },
 }

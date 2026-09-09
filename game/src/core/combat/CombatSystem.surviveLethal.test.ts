@@ -53,7 +53,12 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
 interface SessionShape {
   guard: SurviveLethalGuard
   playerEntityId: string
-  surviveEffects?: { buffSystem: TurnBuffSystem; registry: TurnBuffRegistry }
+  surviveEffects?: {
+    buffSystem: TurnBuffSystem
+    registry: TurnBuffRegistry
+    grantBuffId?: string
+    cleanseDebuffs?: boolean
+  }
 }
 
 function createSession(talentIds: string[]): SessionShape {
@@ -217,7 +222,7 @@ describe('CombatSystem — Bất Tử Th thể v4 (survive + cleanse + Tử Sinh
     const buffs = new TurnBuffSystem(pool)
 
     const session = createSession(['bat_tu_the'])
-    session.surviveEffects = { buffSystem: buffs, registry }
+    session.surviveEffects = { buffSystem: buffs, registry, grantBuffId: 'tu_sinh_ngo' }
     combat.setSurviveLethalSession(session)
 
     const player = createCombatant({ id: 'player', type: 'player', currentHp: 10, maxHp: 1000 })

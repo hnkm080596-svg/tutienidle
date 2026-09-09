@@ -512,14 +512,14 @@ export class CombatSystem {
           }
         }
 
-        const grantId = effects.grantBuffId ?? 'tu_sinh_ngo'
-        const grantBuff = effects.registry.get(grantId)
+        const grantId = effects.grantBuffId
 
-        if (grantBuff) {
-          // Player vừa tự cứu mình — source của buff sống sót chính là
-          // player (không phải kẻ đánh), để các nhánh clean-up theo
-          // source không nhầm lẫn.
-          effects.buffSystem.apply(grantBuff, entity, entity, effects.registry)
+        if (grantId) {
+          const grantBuff = effects.registry.get(grantId)
+
+          if (grantBuff) {
+            effects.buffSystem.apply(grantBuff, entity, entity, effects.registry)
+          }
         }
       }
 
