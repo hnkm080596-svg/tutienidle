@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CombatSystem } from './CombatSystem'
 import { EventBus } from '../events/EventBus'
 import { createBaseStats } from '../stats/StatBlock'
@@ -52,6 +52,19 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
 }
 
 describe('CombatSystem.resolveActionHit — skill scaling (R3 re-audit)', () => {
+  // Pin RNG deterministically — hit/crit/block/ignore-resistance rolls all
+  // consume Math.random(); a low fixed value guarantees hit (chance is
+  // always > 0 with evasion 0) and no crit/block/ignore-resistance (all
+  // zeroed chances) regardless of what the surrounding suite run order
+  // otherwise does to shared RNG state.
+  beforeEach(() => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.01)
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('applies attributeScaling from ActionDamageInfo.scaling against the live source stat', () => {
     const combat = new CombatSystem(new EventBus())
 
@@ -60,11 +73,11 @@ describe('CombatSystem.resolveActionHit — skill scaling (R3 re-audit)', () => 
       type: 'player',
       stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 100, attunement: 50 },
     })
-    const target = createCombatant({ id: 'target', currentHp: 100000, maxHp: 100000, stats: { ...createBaseStats(), evasionRate: 0, defense: 0, enduranceThreshold: 0 } })
+    const target = createCombatant({ id: 'target', currentHp: 100000, maxHp: 100000, stats: { ...createBaseStats(), evasionRate: 0, defense: 0, enduranceThreshold: 0, blockChance: 0 } })
 
     const withoutScaling = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, false)
 
-    const target2 = createCombatant({ id: 'target2', currentHp: 100000, maxHp: 100000, stats: { ...createBaseStats(), evasionRate: 0, defense: 0, enduranceThreshold: 0 } })
+    const target2 = createCombatant({ id: 'target2', currentHp: 100000, maxHp: 100000, stats: { ...createBaseStats(), evasionRate: 0, defense: 0, enduranceThreshold: 0, blockChance: 0 } })
     const withScaling = combat.resolveActionHit(
       source,
       target2,
@@ -84,7 +97,7 @@ describe('CombatSystem.resolveActionHit — skill scaling (R3 re-audit)', () => 
       type: 'player',
       stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 100, maxMp: 200 },
     })
-    const target = createCombatant({ id: 'target', currentHp: 100000, maxHp: 100000, stats: { ...createBaseStats(), evasionRate: 0, defense: 0, enduranceThreshold: 0 } })
+    const target = createCombatant({ id: 'target', currentHp: 100000, maxHp: 100000, stats: { ...createBaseStats(), evasionRate: 0, defense: 0, enduranceThreshold: 0, blockChance: 0 } })
 
     const result = combat.resolveActionHit(
       source,
@@ -106,7 +119,7 @@ describe('CombatSystem.resolveActionHit — skill scaling (R3 re-audit)', () => 
       stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 100 },
       currentSwordIntent: 500,
     })
-    const target = createCombatant({ id: 'target', currentHp: 100000, maxHp: 100000, stats: { ...createBaseStats(), evasionRate: 0, defense: 0, enduranceThreshold: 0 } })
+    const target = createCombatant({ id: 'target', currentHp: 100000, maxHp: 100000, stats: { ...createBaseStats(), evasionRate: 0, defense: 0, enduranceThreshold: 0, blockChance: 0 } })
 
     const result = combat.resolveActionHit(
       source,
@@ -127,7 +140,7 @@ describe('CombatSystem.resolveActionHit — skill scaling (R3 re-audit)', () => 
       type: 'player',
       stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 100, skillDamagePercent: 0.5 },
     })
-    const target = createCombatant({ id: 'target', currentHp: 100000, maxHp: 100000, stats: { ...createBaseStats(), evasionRate: 0, defense: 0, enduranceThreshold: 0 } })
+    const target = createCombatant({ id: 'target', currentHp: 100000, maxHp: 100000, stats: { ...createBaseStats(), evasionRate: 0, defense: 0, enduranceThreshold: 0, blockChance: 0 } })
 
     const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, false)
 
