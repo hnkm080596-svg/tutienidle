@@ -166,16 +166,18 @@ export class VendorSystem {
       return { ok: false, reason: 'unknown_material' }
     }
 
-    bag.remove(materialId, amount)
+    // R9 (AR-22) - atomic exchange: preflight the FULL currency credit
+    // BEFORE any mutation. A failed sale must leave all balances
+    // unchanged (A9) - no debit-then-refund dance.
+    const stoneMaterial = this.registry.get(stoneMaterialId)
 
-    const overflow = bag.add(this.registry.get(stoneMaterialId), gainedStone)
-
-    if (overflow > 0) {
-      // Hoàn lại toàn bộ material — atomic, không để người chơi mất trắng.
-      bag.add(material, amount)
-
+    if (bag.canAcceptAmount(stoneMaterial, gainedStone) < gainedStone) {
       return { ok: false, reason: 'bag_full' }
     }
+
+    bag.remove(materialId, amount)
+
+    bag.add(stoneMaterial, gainedStone)
 
     return { ok: true, gained: gainedStone }
   }

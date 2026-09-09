@@ -257,6 +257,59 @@ export class ProductionSystem {
     return true
   }
 
+  /**
+   * R9 (AR-23) - authoritative upgrade quote: the operation's own read
+   * model for costs/gate/affordability. Presentation renders this instead
+   * of reproducing the gate logic (ProductionPanel duplicate removed).
+   */
+  quoteSiteUpgrade(
+    siteId: string,
+    bag: MaterialBag,
+    currentRealmTier?: number,
+  ): {
+    upgradable: boolean
+    reasons: Array<'max_level' | 'no_cost' | 'realm_gate' | 'missing_wood' | 'missing_spirit_stone'>
+    cost: { woodMaterialId: string; woodAmount: number; spiritStone: number; spiritStoneId: string } | undefined
+  } {
+    const definition = this.getSiteDefinition(siteId)
+
+    const state = this.states.get(siteId)
+
+    const reasons: Array<'max_level' | 'no_cost' | 'realm_gate' | 'missing_wood' | 'missing_spirit_stone'> = []
+
+    if (!definition || !state || state.level >= definition.maxLevel) {
+      return { upgradable: false, reasons: ['max_level'], cost: undefined }
+    }
+
+    const cost = definition.upgradeCosts[state.level - 1]
+
+    if (!cost) {
+      return { upgradable: false, reasons: ['no_cost'], cost: undefined }
+    }
+
+    const targetLevel = state.level + 1
+
+    const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(targetLevel)
+
+    if (currentRealmTier !== undefined && currentRealmTier < targetLevel) {
+      reasons.push('realm_gate')
+    }
+
+    if (!bag.has(cost.woodMaterialId, cost.woodAmount)) {
+      reasons.push('missing_wood')
+    }
+
+    if (!bag.has(spiritStoneId, cost.spiritStone)) {
+      reasons.push('missing_spirit_stone')
+    }
+
+    return {
+      upgradable: reasons.length === 0,
+      reasons,
+      cost: { woodMaterialId: cost.woodMaterialId, woodAmount: cost.woodAmount, spiritStone: cost.spiritStone, spiritStoneId },
+    }
+  }
+
   // =========================
   // Tick & offline settle (§4.3)
   // =========================

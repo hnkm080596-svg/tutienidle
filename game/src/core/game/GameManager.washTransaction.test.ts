@@ -65,7 +65,9 @@ describe('GameManager wash transaction', () => {
     const preview = manager.previewWashItem(instance.instanceId)
 
     expect(preview.ok).toBe(true)
-    expect(preview.affixes).toHaveLength(3)
+    // R9 (AR-21): display copy read through the ticket read model.
+    const previewAffixes = manager.getWashPreviewAffixes(preview.ticketId!)!.affixes
+    expect(previewAffixes).toHaveLength(3)
     expect(instance.affixes).toEqual([{ affixId: 'suffix_accuracy', tier: 1, value: 3 }])
     expect(instance.forgeUsesRemaining).toBe(19)
     expect(manager.materialBag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(0)
@@ -73,7 +75,7 @@ describe('GameManager wash transaction', () => {
     expect(manager.materialBag.getAmount(oreId)).toBe(7)
     expect(manager.getEquipmentModifiers().map((modifier) => modifier.id).sort()).toEqual(modifierIdsBefore)
 
-    expect(manager.commitWashItem(instance.instanceId, preview.affixes ?? []).ok).toBe(true)
+    expect(manager.commitWashItem(instance.instanceId, preview.ticketId!).ok).toBe(true)
     expect(instance.mainStat).toEqual(mainStatBefore)
     expect(instance.forgeUsesRemaining).toBe(19)
     const committedAffixes = structuredClone(instance.affixes)
@@ -121,5 +123,45 @@ describe('GameManager wash transaction', () => {
         .map((modifier) => modifier.id)
         .sort(),
     ).toEqual(committedModifierIds)
+  })
+
+  // R9 (AR-21) regression - the audit's executed counterexample: the
+  // public GameManager.commitWashItem must NOT accept caller-fabricated
+  // affixes. Without a domain-issued ticket every commit fails and the
+  // instance is untouched.
+  it('commit without a domain ticket rejects fabricated affixes at the public API', () => {
+    const manager = new GameManager()
+    const player = createDefaultPlayer()
+    manager.registerMaterials(materials)
+    manager.registerEquipment(equipment)
+    manager.registerAffixes(affixes)
+
+    const instance = makeInstance({
+      instanceId: 'wash-fabricated-item',
+      itemId: 'base_kiem',
+      equipped: false,
+      quality: 'dia',
+      forgeUsesTotal: 20,
+      forgeUsesRemaining: 20,
+      mainStat: {
+        id: 'wash-main',
+        sourceId: 'wash-fabricated-item',
+        sourceType: 'equipment',
+        stat: 'attack',
+        flat: 12,
+      },
+      affixes: [{ affixId: 'suffix_accuracy', tier: 1, value: 3 }],
+    })
+    manager.equipmentBag.add(instance)
+
+    const before = structuredClone(instance.affixes)
+    const forgeBefore = instance.forgeUsesRemaining
+
+    const result = manager.commitWashItem(instance.instanceId, 'fabricated-ticket-id')
+
+    expect(result.ok).toBe(false)
+    expect(result.reason).toBe('no_pending_wash')
+    expect(instance.affixes).toEqual(before)
+    expect(instance.forgeUsesRemaining).toBe(forgeBefore)
   })
 })

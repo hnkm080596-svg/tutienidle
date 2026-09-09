@@ -50,6 +50,9 @@ export interface WashDeps {
     slotManager: EquipmentSlotManager,
     affixRegistry: AffixRegistry,
   ) => void
+
+  /** R9 (AR-21) — instance-owned pending wash slot (see createWashPendingSlotAccessor). */
+  washPendingSlot: WashPendingSlotAccessor
 }
 
 function rollWashAffixes(
@@ -215,21 +218,91 @@ export function washAffixes(
   deps: WashDeps,
   random: () => number = Math.random,
 ): { ok: boolean; reason?: string } {
-  const result = rollWashAffixes(instanceId, inventory, registry, materialBag, affixRegistry, deps, random)
+  const preview = previewWashAffixes(
+    instanceId, inventory, registry, materialBag, affixRegistry, deps, random,
+  )
 
-  if (!result.ok) {
-    return result
+  if (!preview.ok || !preview.ticketId) {
+    return preview
   }
 
-  return commitWashAffixes(instanceId, result.affixes, inventory, slotManager, affixRegistry, deps)
+  return commitWashAffixes(
+    instanceId, preview.ticketId, inventory, slotManager, affixRegistry, deps,
+  )
+}
+
+/**
+ * R9 (AR-21) — domain-owned paid wash result. Preview returns a one-use
+ * TICKET; the rolled affixes never leave the domain as authoritative
+ * data. Modeled on the refine pending-preview precedent. A single
+ * pending slot per wash flow: a new preview replaces (and thereby
+ * invalidates) the previous ticket, mirroring the refine contract.
+ *
+ * The pending slot is INSTANCE STATE of the owning EquipmentSystem
+ * (QA-R9-001: a module singleton survived restore and let a ticket
+ * from a previous session be committed). The instance injects the
+ * slot accessor through WashDeps.
+ */
+export interface PendingWashSlot {
+  ticketId: string
+  instanceId: string
+  affixes: RolledAffix[]
+}
+
+export interface WashPendingSlotAccessor {
+  get(): PendingWashSlot | null
+  set(next: PendingWashSlot | null): void
+  nextTicketId(): string
+}
+
+export function createWashPendingSlotAccessor(): WashPendingSlotAccessor {
+  let slot: PendingWashSlot | null = null
+  let counter = 0
+
+  return {
+    get(): PendingWashSlot | null {
+      return slot
+    },
+    set(next: PendingWashSlot | null): void {
+      slot = next
+    },
+    nextTicketId(): string {
+      counter += 1
+      return `wash-ticket-${counter}-${Math.floor(Math.random() * 1_000_000)}`
+    },
+  }
+}
+
+/** Display copy for the UI (never authoritative for commit). */
+export function getWashPreviewAffixes(
+  slot: WashPendingSlotAccessor,
+  ticketId: string,
+): { affixes: RolledAffix[] } | undefined {
+  const pending = slot.get()
+
+  if (!pending || pending.ticketId !== ticketId) {
+    return undefined
+  }
+
+  return { affixes: pending.affixes.map((affix) => ({ ...affix })) }
+}
+
+/** Explicitly drop a pending ticket (UI "re-roll"/cancel path). */
+export function discardWashTicket(
+  slot: WashPendingSlotAccessor,
+  ticketId: string,
+): void {
+  if (slot.get()?.ticketId === ticketId) {
+    slot.set(null)
+  }
 }
 
 /**
  * Xem trước Tẩy Luyện (UI "giữ/bỏ") — roll + validate + TRỪ COST giống
  * hệt washAffixes(), nhưng KHÔNG ghi affixes mới vào instance. Trả
- * affixes đã roll cho UI hiển thị cột "sau khi Tẩy" — người chơi bấm
- * lại (trả cost lần nữa, roll mới) hoặc "Giữ" (commitWashAffixes,
- * không tốn thêm) để chốt.
+ * TICKET cho UI; affixes hiển thị đọc qua getWashPreviewAffixes() —
+ * người chơi bấm lại (ticket cũ bị thay + trả cost lần nữa, roll mới)
+ * hoặc "Giữ" (commitWashAffixes, không tốn thêm) để chốt.
  */
 export function previewWashAffixes(
   instanceId: string,
@@ -239,26 +312,49 @@ export function previewWashAffixes(
   affixRegistry: AffixRegistry,
   deps: WashDeps,
   random: () => number = Math.random,
-): { ok: boolean; reason?: string; affixes?: RolledAffix[] } {
-  return rollWashAffixes(instanceId, inventory, registry, materialBag, affixRegistry, deps, random)
+): { ok: boolean; reason?: string; ticketId?: string } {
+  const result = rollWashAffixes(instanceId, inventory, registry, materialBag, affixRegistry, deps, random)
+
+  if (!result.ok) {
+    return result
+  }
+
+  const ticketId = deps.washPendingSlot.nextTicketId()
+  deps.washPendingSlot.set({ ticketId, instanceId, affixes: result.affixes })
+
+  return { ok: true, ticketId }
 }
 
-/** Chốt kết quả đã preview (previewWashAffixes) — không kiểm tra/trừ cost lần nữa. */
+/**
+ * Chốt kết quả đã preview — KHÔNG kiểm tra/trừ cost lần nữa. R9
+ * (AR-21): mọi commit attempt TIÊU ticket (kể cả khi item đã biến
+ * mất); affixes áp vào instance là bản DOMAIN đã giữ, không nhận
+ * dữ liệu từ caller.
+ */
 export function commitWashAffixes(
   instanceId: string,
-  affixes: RolledAffix[],
+  ticketId: string,
   inventory: EquipmentBag,
   slotManager: EquipmentSlotManager,
   affixRegistry: AffixRegistry,
   deps: WashDeps,
 ): { ok: boolean; reason?: string } {
+  const pending = deps.washPendingSlot.get()
+
+  // Consume the capability on EVERY attempt, refine-style.
+  deps.washPendingSlot.set(null)
+
   const instance = inventory.get(instanceId)
 
   if (!instance) {
     return { ok: false, reason: 'not_found' }
   }
 
-  instance.affixes = affixes
+  if (!pending || pending.ticketId !== ticketId || pending.instanceId !== instanceId) {
+    return { ok: false, reason: 'no_pending_wash' }
+  }
+
+  instance.affixes = pending.affixes.map((affix) => ({ ...affix }))
 
   deps.refreshEquippedModifiers(instance, slotManager, affixRegistry)
 

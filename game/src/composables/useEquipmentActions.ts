@@ -115,15 +115,17 @@ export function useEquipmentActions() {
 
     /**
      * Xem trước Tẩy Luyện (2026-08-30, UI "giữ/bỏ") — roll + TRỪ COST NGAY
-     * nhưng KHÔNG ghi vào instance; UI giữ affixes trả về ở state tạm rồi
-     * gọi washCommit() khi bấm "Giữ". Thất bại (thiếu nguyên liệu...) báo
-     * qua Nhật ký thao tác giống mọi action khác — KHÔNG bumpState vì
-     * chưa mutate gì nếu fail, có bumpState nếu thành công (cost đã trừ).
+     * nhưng KHÔNG ghi vào instance. R9 (AR-21): trả một-use TICKET —
+     * affixes hiển thị đọc qua washPreviewAffixes(ticketId); UI giữ
+     * ticketId ở state tạm rồi gọi washCommit(ticketId) khi bấm "Giữ".
+     * Thất bại (thiếu nguyên liệu...) báo qua Nhật ký thao tác giống mọi
+     * action khác — KHÔNG bumpState vì chưa mutate gì nếu fail, có
+     * bumpState nếu thành công (cost đã trừ).
      */
-    washPreview: (instanceId: string): RolledAffix[] | null => {
+    washPreview: (instanceId: string): string | null => {
       const result = gameManager.previewWashItem(instanceId)
 
-      if (!result.ok || !result.affixes) {
+      if (!result.ok || !result.ticketId) {
         reportFailure('wash', result.reason)
 
         return null
@@ -133,12 +135,24 @@ export function useEquipmentActions() {
 
       bumpState()
 
-      return result.affixes
+      return result.ticketId
     },
 
-    /** Chốt affixes đã washPreview() — không trừ cost lần nữa. */
-    washCommit: (instanceId: string, affixes: RolledAffix[]) =>
-      withSyncAndResult(gameManager.commitWashItem(instanceId, affixes), 'wash'),
+    /** R9 (AR-21) — display copy of the pending wash roll by ticket. */
+    washPreviewAffixes: (ticketId: string): RolledAffix[] | null =>
+      gameManager.getWashPreviewAffixes(ticketId)?.affixes ?? null,
+
+    /** R9 (AR-21) — drop the pending wash ticket (UI re-roll/cancel). */
+    washDiscard: (ticketId: string): void => {
+      gameManager.discardWashTicket(ticketId)
+    },
+
+    /**
+     * Chốt kết quả đã washPreview() — không trừ cost lần nữa. R9 (AR-21):
+     * commit nhận TICKET ID; affixes áp là bản domain-owned.
+     */
+    washCommit: (instanceId: string, ticketId: string) =>
+      withSyncAndResult(gameManager.commitWashItem(instanceId, ticketId), 'wash'),
 
     /** Xem trước Tinh Luyện (2026-08-30, UI "giữ/bỏ") — cùng cơ chế washPreview. */
     refinePreview: (instanceId: string, lockedIndices: readonly number[]): RefineValueEntry[] | null => {

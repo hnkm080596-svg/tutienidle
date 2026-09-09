@@ -256,10 +256,10 @@ export class EquipmentOpsSystem {
 
   /**
    * Xem trước Tẩy Luyện (2026-08-30, UI "giữ/bỏ") — roll + trừ cost NGAY,
-   * KHÔNG ghi affixes mới vào instance. UI giữ affixes trả về ở state
-   * tạm, gọi commitWashItem() khi người chơi bấm "Giữ".
+   * KHÔNG ghi affixes mới vào instance. R9 (AR-21): trả một-use TICKET —
+   * affixes hiển thị đọc qua getWashPreviewAffixes(ticketId).
    */
-  previewWashItem(instanceId: string): { ok: boolean; reason?: string; affixes?: RolledAffix[] } {
+  previewWashItem(instanceId: string): { ok: boolean; reason?: string; ticketId?: string } {
     this.syncEquipmentCostDiscount()
 
     return this.deps.equipmentSystem.previewWashAffixes(
@@ -271,11 +271,24 @@ export class EquipmentOpsSystem {
     )
   }
 
-  /** Chốt affixes đã preview (previewWashItem) — không trừ cost lần nữa. */
-  commitWashItem(instanceId: string, affixes: RolledAffix[]): { ok: boolean; reason?: string } {
+  /** R9 (AR-21) - display copy of the pending wash roll by ticket. */
+  getWashPreviewAffixes(ticketId: string): { affixes: RolledAffix[] } | undefined {
+    return this.deps.equipmentSystem.getWashPreviewAffixes(ticketId)
+  }
+
+  /** R9 (AR-21) - drop a pending wash ticket (UI cancel/re-roll). */
+  discardWashTicket(ticketId: string): void {
+    this.deps.equipmentSystem.discardWashTicket(ticketId)
+  }
+
+  /**
+   * Chốt kết quả đã preview (previewWashItem) — không trừ cost lần nữa.
+   * R9 (AR-21): commit nhận TICKET ID; affixes áp là bản domain-owned.
+   */
+  commitWashItem(instanceId: string, ticketId: string): { ok: boolean; reason?: string } {
     return this.deps.equipmentSystem.commitWashAffixes(
       instanceId,
-      affixes,
+      ticketId,
       this.deps.equipmentBag,
       this.deps.equipmentSlotManager,
       this.deps.affixRegistry,
@@ -368,41 +381,18 @@ export class EquipmentOpsSystem {
     return result
   }
 
-  /** Preview Tinh Hoa nhận được khi Hóa Luyện selection hiện tại (§9.2). */
+  /**
+   * R9 (AR-23 4d) - dissolve quote delegated to the DOMAIN (same dedupe
+   * + rejection semantics as dissolveItems). The old ops-level duplicate
+   * skipped invalid items silently; the domain quote now rejects
+   * explicitly.
+   */
   previewDissolveRewards(
     instanceIds: readonly string[],
   ): Array<{ materialId: string; minAmount: number; maxAmount: number }> {
-    const totals = new Map<string, { min: number; max: number }>()
+    const result = this.deps.equipmentSystem.quoteDissolveInstances(instanceIds, this.deps.equipmentBag)
 
-    for (const instanceId of instanceIds) {
-      const instance = this.deps.equipmentBag.get(instanceId)
-
-      if (!instance || instance.equipped || instance.locked || instance.favorite) {
-        continue
-      }
-
-      const range = ITEM_QUALITY_ESSENCE_RANGE[instance.quality]
-
-      if (!range) {
-        continue
-      }
-
-      const entry = totals.get(LUYEN_KHI_TINH_HOA_ID) ?? { min: 0, max: 0 }
-
-      entry.min += range.min
-
-      entry.max += range.max
-
-      totals.set(LUYEN_KHI_TINH_HOA_ID, entry)
-    }
-
-    return Array.from(totals, ([materialId, value]) => ({
-      materialId,
-
-      minAmount: value.min,
-
-      maxAmount: value.max,
-    }))
+    return result.ok ? result.totals ?? [] : []
   }
 
   /**

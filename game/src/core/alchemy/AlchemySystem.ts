@@ -91,6 +91,12 @@ export interface AlchemySettlementEvent {
   pills: number
 
   success: boolean
+
+  /** R9 (AR-34) receipt - amount that actually entered the pill bag. */
+  delivered: number
+
+  /** R9 (AR-34) receipt - amount lost to a full pill bag (0 = fit). */
+  overflow: number
 }
 
 export function jobSuccessPercent(
@@ -303,7 +309,14 @@ export class AlchemySystem {
         // không có event nào (review 2026-08-28). Giờ phát event thất bại để
         // UI thông báo; nguyên liệu đã đốt KHÔNG hoàn trả (job coi như luyện
         // thất bại — đúng semantic §8.3, không tạo refund exploit).
-        this.pendingEvents.push({ jobId: job.jobId, pillId: job.pillId, pills: 0, success: false })
+        this.pendingEvents.push({
+          jobId: job.jobId,
+          pillId: job.pillId,
+          pills: 0,
+          success: false,
+          delivered: 0,
+          overflow: 0,
+        })
 
         continue
       }
@@ -321,10 +334,29 @@ export class AlchemySystem {
       }
 
       if (pills > 0) {
-        pillBag.add(pill as Parameters<typeof pillBag.add>[0], pills)
+        const overflow = pillBag.add(pill as Parameters<typeof pillBag.add>[0], pills)
+
+        // R9 (AR-34): surface the delivery receipt instead of ignoring it.
+        this.pendingEvents.push({
+          jobId: job.jobId,
+          pillId: job.pillId,
+          pills,
+          success: pills > 0,
+          delivered: pills - overflow,
+          overflow,
+        })
+
+        continue
       }
 
-      this.pendingEvents.push({ jobId: job.jobId, pillId: job.pillId, pills, success: pills > 0 })
+      this.pendingEvents.push({
+        jobId: job.jobId,
+        pillId: job.pillId,
+        pills,
+        success: pills > 0,
+        delivered: 0,
+        overflow: 0,
+      })
     }
 
     this.jobs = remaining

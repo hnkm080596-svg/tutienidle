@@ -537,3 +537,69 @@ function vendorSystemForGate(): VendorSystem {
 
   return new VendorSystem(registry, [])
 }
+
+// R9 (AR-22) - failed compound exchange must leave ALL balances
+// unchanged. Fixture mirrors the audit: a low stone stack limit makes
+// the currency credit overflow after the debit.
+describe('VendorSystem - atomic exchange (AR-22)', () => {
+  it('failed sale (currency credit overflows) leaves stones + herbs bit-identical', () => {
+    const lowLimitStone: Material = {
+      ...SPIRIT_STONE_MATERIAL,
+      id: SPIRIT_STONE_MATERIAL_ID,
+      stackLimit: 100,
+    }
+
+    const registry = new MaterialRegistry()
+    for (const material of [lowLimitStone, herb('herb_a_decade', 'decade')]) {
+      registry.register(material)
+    }
+
+    const vendor = new VendorSystem(registry, [])
+    const bag = new MaterialBag()
+
+    // Credit would be 2 stones; stones hold 99/100 with limit 100 -> only
+    // 1 fits -> old code debited the herbs, credited 1 stone (1 overflow
+    // lost... actually credited 2 clamped), then refunded herbs while the
+    // stones stayed credited.
+    bag.add(lowLimitStone, 99)
+    bag.add(registry.get('herb_a_decade'), 2)
+
+    const before = bag.getAll().map((stack) => ({ id: stack.material.id, amount: stack.amount }))
+
+    const result = vendor.sellMaterial(bag, 'herb_a_decade', 2, 'qi_refining')
+
+    expect(result.ok).toBe(false)
+    expect(result.reason).toBe('bag_full')
+
+    const after = bag.getAll().map((stack) => ({ id: stack.material.id, amount: stack.amount }))
+    expect(after).toEqual(before)
+  })
+
+  it('exact-fit credit succeeds (preflight does not block valid sales)', () => {
+    const lowLimitStone: Material = {
+      ...SPIRIT_STONE_MATERIAL,
+      id: SPIRIT_STONE_MATERIAL_ID,
+      stackLimit: 100,
+    }
+
+    const registry = new MaterialRegistry()
+    for (const material of [lowLimitStone, herb('herb_a_decade', 'decade')]) {
+      registry.register(material)
+    }
+
+    const vendor = new VendorSystem(registry, [])
+    const bag = new MaterialBag()
+
+    // herb_a_decade = 2/unit; selling 1 herb from qi_refining credits 2
+    // stones. 98 + 2 == limit 100 -> exact fit.
+    bag.add(lowLimitStone, 98)
+    bag.add(registry.get('herb_a_decade'), 2)
+
+    const result = vendor.sellMaterial(bag, 'herb_a_decade', 1, 'qi_refining')
+
+    expect(result.ok).toBe(true)
+    expect(result.gained).toBe(2)
+    expect(bag.getAmount('herb_a_decade')).toBe(1)
+    expect(bag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(100)
+  })
+})
