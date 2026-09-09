@@ -3,22 +3,10 @@
 // name/insight must restore the CORRECT payload each (the old guard
 // restored the first one and skipped the second).
 import { describe, expect, it } from 'vitest'
-import { GameManager } from '../../core/game/GameManager'
 import { createDefaultPlayer } from '../../core/player/Player'
 import { materials } from '../../data/materials/materials'
-import { equipment } from '../../data/equipment/equipment'
-import { affixes } from '../../data/equipment/affixes'
 import { computeRestoreIdentity, type GameSave } from '../../services/save/SaveSystem'
 import { CURRENT_SAVE_VERSION } from '../../services/save/saveVersion'
-
-function makeManager(player?: ReturnType<typeof createDefaultPlayer>): GameManager {
-  const manager = new GameManager()
-  manager.registerMaterials(materials)
-  manager.registerEquipment(equipment)
-  manager.registerAffixes(affixes)
-  manager.setActivePlayer(player ?? createDefaultPlayer())
-  return manager
-}
 
 function baseSave(player: ReturnType<typeof createDefaultPlayer>): GameSave {
   return {
@@ -54,7 +42,7 @@ describe('restore identity (AR-12)', () => {
 
     const playerB = createDefaultPlayer()
     playerB.name = 'different-name'
-    playerB.skillInsight = { tram: 7 }
+    playerB.skillCastCounts = { tram: 7 }
     const saveB = baseSave(playerB)
 
     // The audit counterexample: old 2-field fingerprint saw these as equal.
