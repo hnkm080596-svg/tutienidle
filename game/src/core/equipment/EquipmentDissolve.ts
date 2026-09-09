@@ -86,3 +86,65 @@ export function dissolveInstances(
 
   return { ok: true, rewards }
 }
+
+/**
+ * R9 (AR-23 4d) — authoritative dissolve quote. Same validation as
+ * dissolveInstances (dedupe + rejection), aggregation into per-material
+ * min/max ranges; read-only (no state mutation, no preview discard).
+ */
+export function quoteDissolveRewards(
+  instanceIds: readonly string[],
+  inventory: EquipmentBag,
+): { ok: boolean; reason?: string; totals?: Array<{ materialId: string; minAmount: number; maxAmount: number }> } {
+  if (instanceIds.length === 0) {
+    return { ok: false, reason: 'empty_selection' }
+  }
+
+  // Dedupe - same selection semantics as the commit path.
+  const uniqueIds = Array.from(new Set(instanceIds))
+
+  const totals = new Map<string, { min: number; max: number }>()
+
+  for (const instanceId of uniqueIds) {
+    const instance = inventory.get(instanceId)
+
+    if (!instance) {
+      return { ok: false, reason: 'not_found' }
+    }
+
+    if (instance.equipped) {
+      return { ok: false, reason: 'equipped' }
+    }
+
+    if (instance.locked) {
+      return { ok: false, reason: 'locked' }
+    }
+
+    if (instance.favorite) {
+      return { ok: false, reason: 'favorite' }
+    }
+
+    const range = ITEM_QUALITY_ESSENCE_RANGE[instance.quality]
+
+    if (!range) {
+      return { ok: false, reason: 'no_conversion_rule' }
+    }
+
+    const entry = totals.get(LUYEN_KHI_TINH_HOA_ID) ?? { min: 0, max: 0 }
+
+    entry.min += range.min
+
+    entry.max += range.max
+
+    totals.set(LUYEN_KHI_TINH_HOA_ID, entry)
+  }
+
+  return {
+    ok: true,
+    totals: Array.from(totals, ([materialId, value]) => ({
+      materialId,
+      minAmount: value.min,
+      maxAmount: value.max,
+    })),
+  }
+}

@@ -52,7 +52,7 @@ import {
 } from './RefinementBalance'
 import { LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
 import { canUseItemGrade } from './canUseItem'
-import { dissolveInstances as dissolveInstancesImpl } from './EquipmentDissolve'
+import { dissolveInstances as dissolveInstancesImpl, quoteDissolveRewards } from './EquipmentDissolve'
 import {
   GLOBAL_MAX_AFFIXES,
   filterEligibleAffixes,
@@ -1377,6 +1377,18 @@ export class EquipmentSystem {
       (instanceId) => this.discardRefinePreview(instanceId),
       random,
     )
+  }
+
+  /**
+   * R9 (AR-23 4d) - authoritative dissolve quote (same validation +
+   * dedupe as the commit path); presentation renders it instead of
+   * reconstructing eligibility.
+   */
+  quoteDissolveInstances(
+    instanceIds: readonly string[],
+    inventory: EquipmentBag,
+  ): { ok: boolean; reason?: string; totals?: Array<{ materialId: string; minAmount: number; maxAmount: number }> } {
+    return quoteDissolveRewards(instanceIds, inventory)
   }
 
   getModifiers(): StatModifier[] {
