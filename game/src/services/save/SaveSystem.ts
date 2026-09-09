@@ -446,6 +446,22 @@ export type RestoreGameSessionResult =
   | { status: 'rejected'; message: string }
 
 /**
+ * R10 (AR-12) - whole-payload restore identity. A partial fingerprint
+ * (lastSavedAt|cultivation) is not proof that a payload is unchanged:
+ * two DIFFERENT saves can share those two fields and the old guard
+ * restored the wrong (first) payload. The hash covers the whole save
+ * EXCEPT player.lastSavedAt, so re-saving identical content with a new
+ * timestamp still converges on retry.
+ */
+export function computeRestoreIdentity(save: GameSave): string {
+  const { lastSavedAt: _excluded, ...playerWithoutTimestamp } = save.player
+
+  void _excluded
+
+  return JSON.stringify([save.version, playerWithoutTimestamp, save.materials, save.quests ?? null])
+}
+
+/**
  * Exact App restore order. Registry drift is rejected before Pinia, active-player,
  * or manager state can mutate; valid saves then restore through the existing owners.
  */

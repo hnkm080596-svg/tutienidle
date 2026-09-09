@@ -15,7 +15,7 @@ import {
 import type { ElementType } from '../core/element/ElementType'
 import { calculateOfflineProgress, type OfflineResult } from '../core/idle/OfflineProgressSystem'
 import { calculateOfflineTime } from '../core/idle/GameClock'
-import { buildGameSave, loadGame, type GameSave } from '../services/save/SaveSystem'
+import { buildGameSave, computeRestoreIdentity, loadGame, type GameSave } from '../services/save/SaveSystem'
 import { cloudSaveCoordinator } from '../services/cloudSave/CloudSaveServiceFactory'
 import { PLAYER_BASE_RANGE_RANKS } from '@/core/stats/StatBlock'
 import type { GameManager } from '@/core/game/GameManager'
@@ -314,12 +314,11 @@ export const usePlayerStore = defineStore('player', {
     },
 
     restoreFromSave(save: GameSave) {
-      // QA-002 idempotency — payload-identity guard (pattern
-      // lastExternalModifiers): cùng save gọi lại = no-op (chống
-      // double-credit offline cultivation + double Object.assign). Save
-      // KHÁC (boot retry/recovery) vẫn áp đầy đủ. Non-reactive, không
-      // persist (dev phase — không migration).
-      const payloadIdentity = `${save.player.lastSavedAt}|${save.player.cultivation}`
+      // R10 (AR-12) — payload-identity guard: WHOLE-payload hash (qua
+      // computeRestoreIdentity — exclude lastSavedAt), không còn
+      // fingerprint 2-field. Cùng save gọi lại = no-op; save KHÁC (dù
+      // cùng lastSavedAt|cultivation) áp đầy đủ.
+      const payloadIdentity = computeRestoreIdentity(save)
       const previousRestore = lastRestoredPayloads.get(this)
 
       if (previousRestore !== undefined && previousRestore.identity === payloadIdentity) {
