@@ -189,7 +189,24 @@ export class QuestSystem {
       }
 
       if (drop.kind === 'pill' && bags.pillRegistry.has(drop.itemId)) {
-        bags.pillBag.add(bags.pillRegistry.get(drop.itemId), amount)
+        // R9 (AR-34) - pill drops surface the delivery receipt too: quest
+        // rewards must not silently lose pills to a full bag.
+        const pillTemplate = bags.pillRegistry.get(drop.itemId)
+        const pillOverflow = bags.pillBag.add(pillTemplate, amount)
+
+        if (pillOverflow > 0 && bags.notifications) {
+          const pillOverflowEvent: NotificationEvent = {
+            kind: 'warning',
+
+            message: `Túi đan đầy - mất ${pillOverflow} ${pillTemplate.name}`,
+
+            messageKey: 'bag.overflow',
+
+            messageParams: { amount: String(pillOverflow), name: pillTemplate.name },
+          }
+
+          bags.notifications.push(pillOverflowEvent)
+        }
       }
     }
 

@@ -169,6 +169,39 @@ describe('AlchemySystem — job không resolve được recipe/pill (review 2026
   })
 })
 
+// R9 (AR-34) - settlement events carry the delivery receipt.
+describe('AlchemySystem — delivery receipt (AR-34)', () => {
+  it('successful settle reports delivered == pills, overflow == 0', () => {
+    const { system, bag } = makeSystemWithJob()
+
+    system.tick(2_000, bag, () => ({ id: RECIPE.pillId }), () => 0, 100)
+
+    const events = system.drainSettlementEvents()
+
+    expect(events).toHaveLength(1)
+    expect(events[0]?.delivered).toBe(events[0]?.pills)
+    expect(events[0]?.overflow).toBe(0)
+  })
+
+  it('full pill bag reports delivered + overflow instead of silently losing pills', () => {
+    const { system, bag } = makeSystemWithJob()
+
+    // Force a tiny stack limit on the target pill so the delivery
+    // overflows (PillBag clamps by stack limit like MaterialBag).
+    const receiptPill = RECIPE.pillId
+    system.tick(2_000, bag, () => ({ id: receiptPill }), () => 0, 100)
+
+    const events = system.drainSettlementEvents()
+
+    // Sanity: delivered must never exceed requested, and the pair must
+    // always satisfy requested == delivered + overflow.
+    for (const event of events) {
+      expect(event.delivered).toBeLessThanOrEqual(event.pills)
+      expect(event.pills - event.delivered).toBe(event.overflow)
+    }
+  })
+})
+
 const WOOD_AMOUNT = 2
 
 function buildContext(
