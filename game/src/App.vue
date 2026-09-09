@@ -300,12 +300,9 @@ function tick() {
       breakthrough()
     }
 
-    // R5 (AR-14): Progression is decoupled from presentation particle arrival.
-    // Body refinement auto-invests directly during tick when materials are available.
-    const refinementConsumed = gameManager.investBodyRefinement(player.$state)
-    if (refinementConsumed > 0) {
-      bumpState()
-    }
+    // R5 (AR-14) + F7 (QA-2026-09-09-RR7): Body refinement auto-invest is
+    // owned by GameManager.update() (domain authority, exactly-once per
+    // tick). App must not call it again; bumpState() below refreshes the UI.
 
     // Đột Phá Trúc Cơ — phản ứng thắng/thua Độ Kiếp NGAY (battle
     // Tribulation không qua Stage/Combat Scene result modal nào cả, xem

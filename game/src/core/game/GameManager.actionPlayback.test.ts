@@ -123,12 +123,12 @@ describe('GameManager — presentation orchestration (presentationActive=true)',
     expect(gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0).toBe(0)
   })
 
-  it('acknowledgeTurnReady → declare + emit attack (chưa damage)', () => {
+  it('acknowledgeTurnReady → declare + emit turn_cast_start (chưa damage)', () => {
     const gameManager = battleReady()
     gameManager.setPresentationActive(true)
 
     const events: string[] = []
-    gameManager.eventBus.on('attack', () => events.push('attack'))
+    gameManager.eventBus.on('turn_cast_start', () => events.push('turn_cast_start'))
 
     for (let i = 0; i < 20; i++) {
       gameManager.update(0.1)
@@ -136,9 +136,10 @@ describe('GameManager — presentation orchestration (presentationActive=true)',
 
     const enemyBefore = gameManager.getTurnBattle()!.enemies[0]!.entity.currentHp
 
-    gameManager.acknowledgeTurnReady()
+    const token = gameManager.getPendingPlaybackToken()!
+    gameManager.acknowledgeTurnReady(token)
 
-    expect(events).toContain('attack')
+    expect(events).toContain('turn_cast_start')
     expect(gameManager.getTurnBattle()!.enemies[0]!.entity.currentHp).toBe(enemyBefore)
   })
 
@@ -153,11 +154,12 @@ describe('GameManager — presentation orchestration (presentationActive=true)',
       gameManager.update(0.1)
     }
 
-    gameManager.acknowledgeTurnReady()
+    const token = gameManager.getPendingPlaybackToken()!
+    gameManager.acknowledgeTurnReady(token)
 
     const enemyBefore = gameManager.getTurnBattle()!.enemies[0]!.entity.currentHp
 
-    gameManager.acknowledgeActionImpact()
+    gameManager.acknowledgeActionImpact(token)
 
     expect(events).toContain('action_impact')
     expect(gameManager.getTurnBattle()!.enemies[0]!.entity.currentHp).toBeLessThan(enemyBefore)
@@ -174,9 +176,10 @@ describe('GameManager — presentation orchestration (presentationActive=true)',
       gameManager.update(0.1)
     }
 
-    gameManager.acknowledgeTurnReady()
-    gameManager.acknowledgeActionImpact()
-    gameManager.acknowledgeActionComplete()
+    const token = gameManager.getPendingPlaybackToken()!
+    gameManager.acknowledgeTurnReady(token)
+    gameManager.acknowledgeActionImpact(token)
+    gameManager.acknowledgeActionComplete(token)
 
     expect(events).toContain('turn_standby_complete')
     expect(gameManager.getTurnBattle()?.totalTurnsElapsed).toBe(1)
@@ -193,7 +196,8 @@ describe('GameManager — presentation orchestration (presentationActive=true)',
 
     // 5-phase machine: tick emit turn_ready (pendingReadyActor); Phaser ack
     // → manual player actor rơi vào awaitedManualActor pause (Slice 7 flow).
-    gameManager.acknowledgeTurnReady()
+    const token = gameManager.getPendingPlaybackToken()!
+    gameManager.acknowledgeTurnReady(token)
 
     expect(gameManager.isAwaitingManualTurnChoice()).toBe(true)
 
@@ -265,12 +269,13 @@ describe('Remediation Task 7 — duplicate + out-of-order acknowledgements', () 
     gameManager.eventBus.on('action_impact', (event) => impactEvents.push(event))
 
     for (let i = 0; i < 20; i++) { gameManager.update(0.1) }
-    gameManager.acknowledgeTurnReady()
+    const token = gameManager.getPendingPlaybackToken()!
+    gameManager.acknowledgeTurnReady(token)
 
     const enemy = gameManager.getTurnBattle()!.enemies[0]!.entity
     const hpBefore = enemy.currentHp
 
-    gameManager.acknowledgeActionImpact()
+    gameManager.acknowledgeActionImpact(token)
 
     expect(impactEvents).toHaveLength(1)
     expect(enemy.currentHp).toBeLessThan(hpBefore)
@@ -279,8 +284,8 @@ describe('Remediation Task 7 — duplicate + out-of-order acknowledgements', () 
     const eventsAfterFirst = impactEvents.length
 
     // Duplicate — pendingDeclaredAction đã null → no-op.
-    gameManager.acknowledgeActionImpact()
-    gameManager.acknowledgeActionImpact()
+    gameManager.acknowledgeActionImpact(token)
+    gameManager.acknowledgeActionImpact(token)
 
     expect(impactEvents).toHaveLength(eventsAfterFirst)
     expect(enemy.currentHp).toBe(hpAfterFirst)
@@ -294,10 +299,11 @@ describe('Remediation Task 7 — duplicate + out-of-order acknowledgements', () 
     gameManager.eventBus.on('turn_standby_complete', (event) => standbyEvents.push(event))
 
     for (let i = 0; i < 20; i++) { gameManager.update(0.1) }
-    gameManager.acknowledgeTurnReady()
-    gameManager.acknowledgeActionImpact()
+    const token = gameManager.getPendingPlaybackToken()!
+    gameManager.acknowledgeTurnReady(token)
+    gameManager.acknowledgeActionImpact(token)
 
-    gameManager.acknowledgeActionComplete()
+    gameManager.acknowledgeActionComplete(token)
 
     const turnsAfterFirst = gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0
     const eventsAfterFirst = standbyEvents.length
@@ -305,8 +311,8 @@ describe('Remediation Task 7 — duplicate + out-of-order acknowledgements', () 
     expect(turnsAfterFirst).toBe(1)
 
     // Duplicate — pendingImpact đã null → no-op.
-    gameManager.acknowledgeActionComplete()
-    gameManager.acknowledgeActionComplete()
+    gameManager.acknowledgeActionComplete(token)
+    gameManager.acknowledgeActionComplete(token)
 
     expect(gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0).toBe(turnsAfterFirst)
     expect(standbyEvents).toHaveLength(eventsAfterFirst)
@@ -321,20 +327,25 @@ describe('Remediation Task 7 — duplicate + out-of-order acknowledgements', () 
     const hpBefore = enemy.currentHp
 
     // Chưa ack ready → không có pendingDeclaredAction → impact no-op.
-    gameManager.acknowledgeActionImpact()
+    const token = gameManager.getPendingPlaybackToken()!
+    gameManager.acknowledgeActionImpact(token)
 
     expect(enemy.currentHp).toBe(hpBefore)
     expect(gameManager.isActionPlaybackWaiting()).toBe(true)
   })
 
-  it('ack với token ĐÚNG sau token null → vẫn hoạt động (backwards compat: không token = accept)', () => {
+  it('rejects missing token and accepts valid token', () => {
     const gameManager = battleReady()
     gameManager.setPresentationActive(true)
     for (let i = 0; i < 20; i++) { gameManager.update(0.1) }
 
-    // Không truyền token — backwards-compatible path (CombatScene cũ).
+    // Không truyền token — bị reject theo F5
     gameManager.acknowledgeTurnReady()
+    expect(gameManager.isActionPlaybackWaiting()).toBe(true)
 
+    // Truyền token đúng — accept
+    const token = gameManager.getPendingPlaybackToken()!
+    gameManager.acknowledgeTurnReady(token)
     expect(gameManager.isActionPlaybackWaiting()).toBe(true)
   })
 })
@@ -377,7 +388,8 @@ describe('GameManager — turn_battle_entity_snapshot fires every fixed-step tic
     // Declares the manual player's ready phase into awaitedManualActor —
     // same flow as the existing 'submitTurnChoice khi presentationActive'
     // test above.
-    gameManager.acknowledgeTurnReady()
+    const token = gameManager.getPendingPlaybackToken()!
+    gameManager.acknowledgeTurnReady(token)
 
     expect(gameManager.isAwaitingManualTurnChoice()).toBe(true)
 
@@ -422,9 +434,10 @@ describe('GameManager — turn_battle_entity_snapshot fires every fixed-step tic
       gameManager.update(0.1)
     }
 
-    gameManager.acknowledgeTurnReady()
+    const token = gameManager.getPendingPlaybackToken()!
+    gameManager.acknowledgeTurnReady(token)
 
-    // pendingDeclaredAction is now set ('attack' emitted); waiting on
+    // pendingDeclaredAction is now set ('turn_cast_start' emitted); waiting on
     // acknowledgeActionImpact().
     expect(gameManager.isActionPlaybackWaiting()).toBe(true)
 
@@ -444,8 +457,9 @@ describe('GameManager — turn_battle_entity_snapshot fires every fixed-step tic
       gameManager.update(0.1)
     }
 
-    gameManager.acknowledgeTurnReady()
-    gameManager.acknowledgeActionImpact()
+    const token = gameManager.getPendingPlaybackToken()!
+    gameManager.acknowledgeTurnReady(token)
+    gameManager.acknowledgeActionImpact(token)
 
     // pendingImpact is now set ('action_impact' emitted); waiting on
     // acknowledgeActionComplete().

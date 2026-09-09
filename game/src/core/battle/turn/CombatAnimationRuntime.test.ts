@@ -106,17 +106,18 @@ describe('CombatAnimationRuntime', () => {
     expect(events).toContain('turn_ready')
   })
 
-  it('acknowledgeTurnReady → declares action → getAnimationState reports cast + emits attack', () => {
+  it('acknowledgeTurnReady → declares action → getAnimationState reports cast + emits turn_cast_start', () => {
     const { runtime, player, eventBus } = fixture()
 
     const events: string[] = []
-    eventBus.on('attack', () => events.push('attack'))
+    eventBus.on('turn_cast_start', () => events.push('turn_cast_start'))
 
     runtime.notifyReadyActor(player)
-    runtime.acknowledgeTurnReady()
+    const token = runtime.getPendingPlaybackToken()!
+    runtime.acknowledgeTurnReady(token)
 
     expect(runtime.getAnimationState('player')).toBe('cast')
-    expect(events).toContain('attack')
+    expect(events).toContain('turn_cast_start')
   })
 
   it('acknowledgeActionImpact → applies impact → getAnimationState reports standby + emits action_impact', () => {
@@ -126,8 +127,9 @@ describe('CombatAnimationRuntime', () => {
     eventBus.on('action_impact', () => events.push('action_impact'))
 
     runtime.notifyReadyActor(player)
-    runtime.acknowledgeTurnReady()
-    runtime.acknowledgeActionImpact()
+    const token = runtime.getPendingPlaybackToken()!
+    runtime.acknowledgeTurnReady(token)
+    runtime.acknowledgeActionImpact(token)
 
     expect(runtime.getAnimationState('player')).toBe('standby')
     expect(events).toContain('action_impact')
@@ -140,9 +142,10 @@ describe('CombatAnimationRuntime', () => {
     eventBus.on('turn_standby_complete', () => events.push('turn_standby_complete'))
 
     runtime.notifyReadyActor(player)
-    runtime.acknowledgeTurnReady()
-    runtime.acknowledgeActionImpact()
-    runtime.acknowledgeActionComplete()
+    const token = runtime.getPendingPlaybackToken()!
+    runtime.acknowledgeTurnReady(token)
+    runtime.acknowledgeActionImpact(token)
+    runtime.acknowledgeActionComplete(token)
 
     expect(runtime.getAnimationState('player')).toBe('idle')
     expect(runtime.isActionPlaybackWaiting()).toBe(false)
@@ -207,7 +210,8 @@ describe('CombatAnimationRuntime', () => {
 
     runtime.setBattleManualMode(true)
     runtime.notifyReadyActor(player)
-    runtime.acknowledgeTurnReady()
+    const token = runtime.getPendingPlaybackToken()!
+    runtime.acknowledgeTurnReady(token)
 
     expect(runtime.isAwaitingManualTurnChoice()).toBe(true)
     expect(runtime.getAwaitedManualActor()?.id).toBe('player')
@@ -219,7 +223,8 @@ describe('CombatAnimationRuntime', () => {
 
     runtime.setBattleManualMode(true)
     runtime.notifyReadyActor(player)
-    runtime.acknowledgeTurnReady()
+    const token = runtime.getPendingPlaybackToken()!
+    runtime.acknowledgeTurnReady(token)
 
     expect(runtime.isAwaitingManualTurnChoice()).toBe(true)
 
@@ -241,7 +246,8 @@ describe('CombatAnimationRuntime', () => {
 
     runtime.setBattleManualMode(true)
     runtime.notifyReadyActor(player)
-    runtime.acknowledgeTurnReady()
+    const token = runtime.getPendingPlaybackToken()!
+    runtime.acknowledgeTurnReady(token)
 
     expect(runtime.isAwaitingManualTurnChoice()).toBe(true)
 
@@ -298,7 +304,8 @@ describe('CombatAnimationRuntime', () => {
 
     runtime.setBattleManualMode(true)
     runtime.notifyReadyActor(player)
-    runtime.acknowledgeTurnReady()
+    const token = runtime.getPendingPlaybackToken()!
+    runtime.acknowledgeTurnReady(token)
 
     expect(runtime.isAwaitingManualTurnChoice()).toBe(true)
 
@@ -352,7 +359,8 @@ describe('CombatAnimationRuntime', () => {
     turnBattleSystem = nextTurnBattleSystem
 
     runtime.notifyReadyActor(player)
-    runtime.acknowledgeTurnReady()
+    const token = runtime.getPendingPlaybackToken()!
+    runtime.acknowledgeTurnReady(token)
 
     expect(declareSpy).toHaveBeenCalled()
   })

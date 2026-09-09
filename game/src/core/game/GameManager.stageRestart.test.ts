@@ -55,9 +55,10 @@ describe('GameManager — stage restart clears stale Action Playback pending sta
       gameManager.update(0.1)
 
       if (gameManager.isActionPlaybackWaiting()) {
-        gameManager.acknowledgeTurnReady()
-        gameManager.acknowledgeActionImpact()
-        gameManager.acknowledgeActionComplete()
+        const token = gameManager.getPendingPlaybackToken() ?? ''
+        gameManager.acknowledgeTurnReady(token)
+        gameManager.acknowledgeActionImpact(token)
+        gameManager.acknowledgeActionComplete(token)
       }
     }
 

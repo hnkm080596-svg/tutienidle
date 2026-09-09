@@ -267,6 +267,10 @@ export class BuffSystem {
     const expired: Buff[] = []
 
     for (const buff of this.pool.getAll()) {
+      if (!this.pool.hasInstance(buff)) {
+        continue
+      }
+
       buff.continuousTurns = (buff.continuousTurns ?? 0) + deltaSeconds
       buff.continuousSeconds = (buff.continuousSeconds ?? 0) + deltaSeconds
 
@@ -284,6 +288,10 @@ export class BuffSystem {
       }
 
       for (const effect of buff.effects) {
+        if (!this.pool.hasInstance(buff)) {
+          break
+        }
+
         if (effect.type === 'dot' && target.alive) {
           const dotRate = effect.damagePerSecond ?? effect.damagePerTurn
           if (dotRate) {
@@ -298,8 +306,16 @@ export class BuffSystem {
               element: effect.element,
               effectId: buff.id,
             })
+
+            if (!this.pool.hasInstance(buff)) {
+              break
+            }
           }
         }
+      }
+
+      if (!this.pool.hasInstance(buff)) {
+        continue
       }
 
       buff.remainingTurns -= deltaSeconds

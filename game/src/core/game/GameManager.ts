@@ -2726,6 +2726,7 @@ export class GameManager {
     // đăng ký qua setActivePlayer() sau boot/load.
     if (this.activePlayer) {
       this.tickTimedEffects(this.activePlayer)
+      this.investBodyRefinement(this.activePlayer)
 
       // Quest daily reset (Quest System plan) — wall-clock day-bucket,
       // check mỗi tick nên vẫn reset kể cả khi panel Nhiệm Vụ đang đóng.

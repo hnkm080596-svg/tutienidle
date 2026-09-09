@@ -50,10 +50,10 @@ describe('TurnActionPresentationEvents', () => {
     expect(handler).toHaveBeenCalledWith({ actorId: 'player-1' })
   })
 
-  it('emitTurnCastStart emits attack với CombatScenePayload shape (sourceId/targetId/skillId)', () => {
+  it('emitTurnCastStart emits turn_cast_start với CombatScenePayload shape (sourceId/targetId/skillId)', () => {
     const bus = new EventBus()
     const handler = vi.fn()
-    bus.on('attack', handler)
+    bus.on('turn_cast_start', handler)
 
     emitTurnCastStart(bus, 'player-1', 'basic_attack', ['enemy-1', 'enemy-2'])
 

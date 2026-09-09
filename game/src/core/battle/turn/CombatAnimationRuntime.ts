@@ -181,10 +181,10 @@ export class CombatAnimationRuntime {
     return this.pendingReadyActor !== null || this.pendingDeclaredAction !== null || this.pendingImpact !== null
   }
 
-  /** Phaser gọi khi ready flourish xong → declare action, phát 'attack'. */
+  /** Phaser gọi khi ready flourish xong → declare action, phát 'turn_cast_start'. */
   acknowledgeTurnReady(token?: string): void {
-    // R5 (AR-20) — reject stale or empty token from presentation callers.
-    if (token !== undefined && (token === '' || token !== this.playbackToken)) {
+    // R5 (AR-20) — require identity at public boundary; reject missing, empty, or mismatched token.
+    if (!token || token !== this.playbackToken) {
       return
     }
 
@@ -211,8 +211,8 @@ export class CombatAnimationRuntime {
 
   /** Phaser gọi tại impact frame (lunge tween xong) → áp damage, phát VFX. */
   acknowledgeActionImpact(token?: string): void {
-    // R5 (AR-20) — reject stale or empty token from presentation callers.
-    if (token !== undefined && (token === '' || token !== this.playbackToken)) {
+    // R5 (AR-20) — require identity at public boundary; reject missing, empty, or mismatched token.
+    if (!token || token !== this.playbackToken) {
       return
     }
 
@@ -262,8 +262,8 @@ export class CombatAnimationRuntime {
 
   /** Phaser gọi khi VFX tween xong → turn cleanup, phát standby tail. */
   acknowledgeActionComplete(token?: string): void {
-    // R5 (AR-20) — reject stale or empty token from presentation callers.
-    if (token !== undefined && (token === '' || token !== this.playbackToken)) {
+    // R5 (AR-20) — require identity at public boundary; reject missing, empty, or mismatched token.
+    if (!token || token !== this.playbackToken) {
       return
     }
 

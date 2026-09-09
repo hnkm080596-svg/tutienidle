@@ -1842,6 +1842,7 @@ describe('TurnBattleSystem special role â€” Reaction Path double-cast', () 
         cooldownTurns: 4,
         resourceType: 'mana',
         resourceCost: 10,
+        compositePicks: { poolType: 'reaction_path', count: 2 },
         damage: { kind: 'physical', multiplier: 0 },
         targeting: { shape: 'single' },
       },

@@ -51,8 +51,6 @@ function createScene() {
   scene.entityFootMinY = PROJECTION.bounds().top
   scene.entityFootMaxY = PROJECTION.bounds().bottom
   scene.sprites = new Map()
-  scene.interpolations = new Map()
-  scene.castBars = new Map()
   scene.statuses = new Map()
   scene.materializingIds = new Set()
   scene.spawnVfxHandles = new Map()

@@ -9,12 +9,10 @@ import type { PositionInterpolation } from './combatTypes'
 export class CombatPositionInterpolation {
   private interpolationsMap = new Map<string, PositionInterpolation>()
 
-  get interpolations(): Map<string, PositionInterpolation> {
+  // S3 (AR-29) — read-only exposure; mutation only via the owned
+  // setInterpolationTarget/snap/delete/clear API below.
+  get interpolations(): ReadonlyMap<string, PositionInterpolation> {
     return this.interpolationsMap
-  }
-
-  set interpolations(map: Map<string, PositionInterpolation>) {
-    this.interpolationsMap = map
   }
 
   constructor(private readonly scene: CombatScene) {}

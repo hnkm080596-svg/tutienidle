@@ -23,6 +23,10 @@ export class BuffPool {
     return this.buffs.some((buff) => buff.id === id)
   }
 
+  hasInstance(buff: Buff): boolean {
+    return this.buffs.includes(buff)
+  }
+
   add(buff: Buff): void {
     this.buffs.push(buff)
   }

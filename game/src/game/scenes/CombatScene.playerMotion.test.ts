@@ -17,10 +17,6 @@ interface TweenConfig {
 
 interface TestableCombatScene {
   sprites: Map<string, MotionSprite>
-  interpolations: Map<
-    string,
-    { fromX: number; toX: number; segmentStart: number; segmentDuration: number }
-  >
   time: { now: number }
   tweens: {
     killTweensOf: ReturnType<typeof vi.fn>
@@ -40,7 +36,6 @@ function createScene() {
     ['player', player],
     ['enemy', enemy],
   ])
-  scene.interpolations = new Map()
   scene.time = { now: 0 }
   scene.tweens = {
     killTweensOf: vi.fn(),
