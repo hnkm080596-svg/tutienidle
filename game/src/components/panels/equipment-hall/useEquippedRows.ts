@@ -93,6 +93,8 @@ export function useEquippedRows() {
               gameManager.affixRegistry,
               gameManager.getSlotState(instance.slot),
               gameManager.zoneRegistry,
+              undefined,
+              gameManager.equipmentSystem.quoteMainStatRange(instance, gameManager.equipmentRegistry),
             )
           : undefined,
 

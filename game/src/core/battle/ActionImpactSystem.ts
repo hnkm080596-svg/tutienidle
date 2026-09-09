@@ -13,21 +13,28 @@ import type { CombatVfxPresetId } from './CombatAction'
 import type { ActionTargetingShape } from './CombatAction'
 import { getCellsInArea, worldToGridPosition, type CellArea, type GridPosition } from './BattleGrid'
 import type { CombatActionOrigin } from './BattleEvents'
+import type { DamageScalingConfig } from '../combat/DamageCalculator'
 
-/** Thay thế MissileDamageInfo — cùng shape, tên trung lập hành động. */
+/**
+ * Thay thế MissileDamageInfo — cùng shape, tên trung lập hành động.
+ * `scaling` (R3 re-audit, AR-03 gap) — carries the authored per-skill
+ * attributeScaling/manaScalingRatio/swordIntentDamageRatio through to
+ * CombatSystem.resolveActionHit(), which is the only place with a live
+ * `source` entity to evaluate them against.
+ */
 export type ActionDamageInfo =
-  | { kind: 'physical' | 'primordial'; multiplier: number }
-  | { kind: 'elemental'; components: SkillDamageComponent[]; multiplier: number }
+  | { kind: 'physical' | 'primordial'; multiplier: number; scaling?: DamageScalingConfig }
+  | { kind: 'elemental'; components: SkillDamageComponent[]; multiplier: number; scaling?: DamageScalingConfig }
 
 export function scaleActionDamage(
   info: ActionDamageInfo,
   percent: number,
 ): ActionDamageInfo {
   if (info.kind === 'elemental') {
-    return { kind: 'elemental', components: info.components, multiplier: info.multiplier * percent }
+    return { kind: 'elemental', components: info.components, multiplier: info.multiplier * percent, scaling: info.scaling }
   }
 
-  return { kind: info.kind, multiplier: info.multiplier * percent }
+  return { kind: info.kind, multiplier: info.multiplier * percent, scaling: info.scaling }
 }
 
 export interface HitResolveOptions {

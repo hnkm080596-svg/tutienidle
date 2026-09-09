@@ -6,11 +6,10 @@ import { BuildingSystem } from '../building/BuildingSystem'
 import {
   AlchemySystem,
   alchemySecondsFor,
-  alchemyRoomSuccessBonus,
+  jobSuccessPercent,
   type ActiveAlchemyJob,
   type AlchemyRecipe,
 } from '../alchemy/AlchemySystem'
-import { HERB_AGE_BASE_SUCCESS_PERCENT } from '../production/ProductionBalance'
 import { getSpiritStoneMaterialIdForRealmTier } from '../material/SpiritStoneMaterial'
 import { getRealmTier } from '../realm/RealmTierMap'
 import type { PlayerData } from '../player/Player'
@@ -138,9 +137,13 @@ export class GameManagerAlchemyOps {
       return null
     }
 
-    const totalPercent = Math.min(
-      (HERB_AGE_BASE_SUCCESS_PERCENT[variant.age] ?? 0) + alchemyRoomSuccessBonus(roomLevel),
-      300,
+    // R9 (AR-23): the success split is the alchemy authority's rule
+    // (jobSuccessPercent) - the preview no longer reproduces it. The
+    // preview is pre-job, so a minimal job shape carrying the two fields
+    // the formula reads (herbMaterialId, roomLevelAtStart) is enough.
+    const totalPercent = jobSuccessPercent(
+      { herbMaterialId, roomLevelAtStart: roomLevel } as ActiveAlchemyJob,
+      recipe,
     )
 
     return {

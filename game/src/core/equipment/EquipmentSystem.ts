@@ -52,7 +52,7 @@ import {
 } from './RefinementBalance'
 import { LUYEN_KHI_TINH_HOA_ID } from './TinhHoaMaterial'
 import { canUseItemGrade } from './canUseItem'
-import { dissolveInstances as dissolveInstancesImpl } from './EquipmentDissolve'
+import { dissolveInstances as dissolveInstancesImpl, quoteDissolveRewards } from './EquipmentDissolve'
 import {
   GLOBAL_MAX_AFFIXES,
   filterEligibleAffixes,
@@ -63,6 +63,9 @@ import {
 } from './EquipmentRollPrimitives'
 import {
   commitWashAffixes as commitWashAffixesImpl,
+  createWashPendingSlotAccessor,
+  discardWashTicket as discardWashTicketImpl,
+  getWashPreviewAffixes as getWashPreviewAffixesImpl,
   previewWashAffixes as previewWashAffixesImpl,
   washAffixes as washAffixesImpl,
   type WashDeps,
@@ -239,6 +242,11 @@ export class EquipmentSystem {
   // duy nhất vừa chặn provenance tích lũy vô hạn, vừa bảo đảm attempt mới (kể cả
   // thất bại) vô hiệu hóa payload trả phí trước đó ở bất kỳ item nào.
   private pendingRefinePreview: PendingRefinePreview | null = null
+
+  // R9 (AR-21) - instance-owned pending wash slot: the paid wash result
+  // dies with this system instance (restore into a fresh manager starts
+  // clean; no cross-session ticket replay).
+  private readonly washPendingSlot = createWashPendingSlotAccessor()
 
   constructor(costCatalog?: EquipmentOperationCostCatalog) {
     this.costCatalog = costCatalog
@@ -908,8 +916,9 @@ export class EquipmentSystem {
   /**
    * Xem trước Tẩy Luyện (2026-08-30, UI "giữ/bỏ") — roll + validate + TRỪ
    * COST giống hệt washAffixes(), nhưng KHÔNG ghi affixes mới vào
-   * instance. Trả affixes đã roll cho UI hiển thị cột "sau khi Tẩy" —
-   * người chơi bấm lại (trả cost lần nữa, roll mới) hoặc "Giữ"
+   * instance. R9 (AR-21): trả về một-use TICKET — affixes hiển thị đọc
+   * qua getWashPreviewAffixes(ticketId); người chơi bấm lại (ticket cũ
+   * bị thay, trả cost lần nữa, roll mới) hoặc "Giữ"
    * (commitWashAffixes, không tốn thêm) để chốt.
    */
   previewWashAffixes(
@@ -919,7 +928,7 @@ export class EquipmentSystem {
     materialBag: MaterialBag,
     affixRegistry: AffixRegistry,
     random: () => number = Math.random,
-  ): { ok: boolean; reason?: string; affixes?: RolledAffix[] } {
+  ): { ok: boolean; reason?: string; ticketId?: string } {
     return previewWashAffixesImpl(
       instanceId,
       inventory,
@@ -931,17 +940,64 @@ export class EquipmentSystem {
     )
   }
 
-  /** Chốt kết quả đã preview (previewWashAffixes) — không kiểm tra/trừ cost lần nữa. */
+  /** R9 (AR-21) — display copy of the pending roll (never authoritative). */
+  getWashPreviewAffixes(ticketId: string): { affixes: RolledAffix[] } | undefined {
+    return getWashPreviewAffixesImpl(this.washPendingSlot, ticketId)
+  }
+
+  /** R9 (AR-21) — drop the pending wash ticket (UI cancel/re-roll). */
+  discardWashTicket(ticketId: string): void {
+    discardWashTicketImpl(this.washPendingSlot, ticketId)
+  }
+
+  /**
+   * R9 (AR-23 4c) — authoritative main-stat range quote. The tooltip used
+   * to reproduce the quality/realm scaling here; now it renders this
+   * read model instead. Mirrors the createInstance roll pipeline:
+   * range x qualityMultiplier x (1 + globalLevel x MAIN_STAT_REALM_SCALE).
+   */
+  quoteMainStatRange(
+    instance: EquipmentInstance,
+    registry: EquipmentRegistry,
+  ): { min: number; max: number } | undefined {
+    const template = this.tryGetTemplate(registry, instance.itemId)
+
+    const range = template?.mainStats.find((candidate) => candidate.stat === instance.mainStat.stat)
+
+    if (!range) {
+      return undefined
+    }
+
+    const qualityMultiplier = ITEM_QUALITY_IMPLICIT_MULTIPLIER[instance.quality]
+
+    const globalLevel = getGlobalCultivationLevel(
+      realmFromGrade(instance.grade),
+      instance.realmLevel ?? 1,
+    )
+
+    const realmScale = 1 + globalLevel * MAIN_STAT_REALM_SCALE
+
+    return {
+      min: range.min * qualityMultiplier * realmScale,
+      max: range.max * qualityMultiplier * realmScale,
+    }
+  }
+
+  /**
+   * Chốt kết quả đã preview (previewWashAffixes) — không kiểm tra/trừ cost
+   * lần nữa. R9 (AR-21): commit nhận TICKET ID, affixes áp vào instance
+   * là bản domain-owned; mọi attempt tiêu ticket (refine precedent).
+   */
   commitWashAffixes(
     instanceId: string,
-    affixes: RolledAffix[],
+    ticketId: string,
     inventory: EquipmentBag,
     slotManager: EquipmentSlotManager,
     affixRegistry: AffixRegistry,
   ): { ok: boolean; reason?: string } {
     return commitWashAffixesImpl(
       instanceId,
-      affixes,
+      ticketId,
       inventory,
       slotManager,
       affixRegistry,
@@ -966,6 +1022,10 @@ export class EquipmentSystem {
           this.applyModifiers(instance, slotManager, affixRegistry)
         }
       },
+
+      // R9 (AR-21) - INSTANCE-owned pending slot (QA-R9-001: a module
+      // singleton survived restore and accepted cross-session commits).
+      washPendingSlot: this.washPendingSlot,
     }
   }
 
@@ -1327,6 +1387,18 @@ export class EquipmentSystem {
       (instanceId) => this.discardRefinePreview(instanceId),
       random,
     )
+  }
+
+  /**
+   * R9 (AR-23 4d) - authoritative dissolve quote (same validation +
+   * dedupe as the commit path); presentation renders it instead of
+   * reconstructing eligibility.
+   */
+  quoteDissolveInstances(
+    instanceIds: readonly string[],
+    inventory: EquipmentBag,
+  ): { ok: boolean; reason?: string; totals?: Array<{ materialId: string; minAmount: number; maxAmount: number }> } {
+    return quoteDissolveRewards(instanceIds, inventory)
   }
 
   getModifiers(): StatModifier[] {

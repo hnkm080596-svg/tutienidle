@@ -1011,6 +1011,28 @@ UI must not be able to fabricate authoritative affixes.
 
 Use existing refinement pending-result behavior as a bounded precedent.
 
+```text
+✅ DONE 2026-09-08 (branch r9-inventory-integrity):
+   R9.1 wash pending-result — one-use instance-owned ticket
+   (QA-R9-001: module singleton survived restore → fixed to die with
+   the EquipmentSystem instance); fabricated affixes rejected at the
+   public GameManager API (audit counterexample regression test).
+   R9.2 vendor atomic exchange — MaterialBag.canAcceptAmount preflight
+   before debit/credit; failed sale leaves all balances unchanged.
+   R9.3 acquisition receipt type + alchemy settle & quest pill-drop
+   consumers surface delivered/overflow. R9.4 domain quotes: production
+   upgrade (panel renders quote + parity tests), alchemy success split
+   reuses jobSuccessPercent, equipment main-stat range quote (tooltip +
+   4 callers), dissolve quote with dedupe/rejection parity. TDD
+   RED→GREEN per slice; P3 full 433 files / 2954 tests (1 flaky battle
+   test — passes on rerun, pre-existing class) + type-check + build
+   PASS; QA adversarial: 1 confirmed defect found & remediated
+   (QA-R9-001), P14 deferred (user waived live-browser pass at
+   integration).
+```
+
+**Status: COMPLETE 2026-09-08**
+
 ---
 
 ## R9.2 — Atomic exchange
@@ -1350,7 +1372,7 @@ R14 Architecture Enforcement
 | 7 | **R6 — Combat Character Art / Asset Contract** | **asset/presentation findings** | ⏭️ **NEXT** |
 | 8 | R7 — Worker Allocation / Decomposition | AR-07, AR-08 | ✅ COMPLETE 2026-09-08 |
 | 9 | R8 — Quest & Progression Authority | AR-09, AR-10, AR-13 | 🟡 R8.1 COMPLETE 2026-09-08; R8.2 ⏸ |
-| 10 | R9 — Equipment / Inventory Integrity | AR-21, AR-22, AR-23, AR-34 | ⏸ |
+| 10 | R9 — Equipment / Inventory Integrity | AR-21, AR-22, AR-23, AR-34 | ✅ COMPLETE 2026-09-08 |
 | 11 | R10 — Save / Restore Boundary | AR-12, AR-15 | ⏸ |
 | 12 | R11 — UI Foundation Consolidation | AR-26, AR-27, AR-28 + domain UI | ⏸ |
 | 13 | R12 — Presentation / Asset Cleanup | AR-24, AR-27, AR-29, AR-30, AR-31 | ⏸ |

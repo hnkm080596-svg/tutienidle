@@ -164,24 +164,25 @@ function toggleAuto(row: SiteRow) {
 function upgradeCostRows(siteId: string, level: number) {
   stateVersion.value
 
-  const costs = gameManager.getProductionUpgradeCost(siteId) ?? []
+  // R9 (AR-23): the domain quote owns costs + gate; the panel only
+  // renders it (old duplicated gate/cost logic removed).
+  const quote = gameManager.quoteProductionUpgrade(siteId, player.$state)
 
-  const cost = costs[level - 1]
-  const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(level + 1)
-
-  if (!cost) {
+  if (!quote.cost) {
     return []
   }
 
+  const spiritStoneId = quote.cost.spiritStoneId
+
   return [
     {
-      label: gameManager.materialRegistry.has(cost.woodMaterialId)
-        ? gameManager.materialRegistry.get(cost.woodMaterialId).name
-        : cost.woodMaterialId,
+      label: gameManager.materialRegistry.has(quote.cost.woodMaterialId)
+        ? gameManager.materialRegistry.get(quote.cost.woodMaterialId).name
+        : quote.cost.woodMaterialId,
 
-      owned: gameManager.materialBag.getAmount(cost.woodMaterialId),
+      owned: gameManager.materialBag.getAmount(quote.cost.woodMaterialId),
 
-      amount: cost.woodAmount,
+      amount: quote.cost.woodAmount,
     },
     {
       label: gameManager.materialRegistry.has(spiritStoneId)
@@ -191,15 +192,17 @@ function upgradeCostRows(siteId: string, level: number) {
       // Plan Workstream F — Linh Thạch đọc từ MaterialBag.
       owned: gameManager.materialBag.getAmount(spiritStoneId),
 
-      amount: cost.spiritStone,
+      amount: quote.cost.spiritStone,
     },
   ]
 }
 
 function canUpgrade(siteId: string, level: number): boolean {
-  const rowsForCost = upgradeCostRows(siteId, level)
+  // R9 (AR-23): parity with the authoritative upgradeSite gate via the
+  // domain quote (level parameter kept for row wiring).
+  void level
 
-  return level + 1 <= getRealmTier(player.realmId) && rowsForCost.every((entry) => entry.owned >= entry.amount)
+  return gameManager.quoteProductionUpgrade(siteId, player.$state).upgradable
 }
 
 function upgrade(siteId: string) {

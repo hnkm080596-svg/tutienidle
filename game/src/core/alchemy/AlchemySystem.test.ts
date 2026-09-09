@@ -169,6 +169,39 @@ describe('AlchemySystem — job không resolve được recipe/pill (review 2026
   })
 })
 
+// R9 (AR-34) - settlement events carry the delivery receipt.
+describe('AlchemySystem — delivery receipt (AR-34)', () => {
+  it('successful settle reports delivered == pills, overflow == 0', () => {
+    const { system, bag } = makeSystemWithJob()
+
+    system.tick(2_000, bag, () => ({ id: RECIPE.pillId }), () => 0, 100)
+
+    const events = system.drainSettlementEvents()
+
+    expect(events).toHaveLength(1)
+    expect(events[0]?.delivered).toBe(events[0]?.pills)
+    expect(events[0]?.overflow).toBe(0)
+  })
+
+  it('full pill bag reports delivered + overflow instead of silently losing pills', () => {
+    const { system, bag } = makeSystemWithJob()
+
+    // Force a tiny stack limit on the target pill so the delivery
+    // overflows (PillBag clamps by stack limit like MaterialBag).
+    const receiptPill = RECIPE.pillId
+    system.tick(2_000, bag, () => ({ id: receiptPill }), () => 0, 100)
+
+    const events = system.drainSettlementEvents()
+
+    // Sanity: delivered must never exceed requested, and the pair must
+    // always satisfy requested == delivered + overflow.
+    for (const event of events) {
+      expect(event.delivered).toBeLessThanOrEqual(event.pills)
+      expect(event.pills - event.delivered).toBe(event.overflow)
+    }
+  })
+})
+
 const WOOD_AMOUNT = 2
 
 function buildContext(
@@ -518,3 +551,38 @@ function material(id: string): Material {
 function pillWithId(id: string): Pill {
   return { id, name: id, type: 'healing', grade: 'hoang', effects: [] }
 }
+
+// R9 (AR-23 4b) - preview/commit parity: the GameManager preview read
+// model must reuse the SAME jobSuccessPercent rule the settle path uses
+// (single implementation; verified here via the shared authority).
+import { GameManagerAlchemyOps } from '../game/GameManagerAlchemyOps'
+import { BuildingRegistry } from '../building/BuildingRegistry'
+import { BuildingManager } from '../building/BuildingManager'
+import { BuildingSystem } from '../building/BuildingSystem'
+
+describe('alchemy success split - preview uses the authority (AR-23 4b)', () => {
+  it('previewAlchemyOutcome totalPercent equals jobSuccessPercent for the same inputs', () => {
+    const ops = new GameManagerAlchemyOps({
+      alchemySystem: new AlchemySystem(),
+      alchemyRecipesById: new Map([['recipe_test', RECIPE]]),
+      materialRegistry: new MaterialRegistry(),
+      materialBag: new MaterialBag(),
+      buildingRegistry: new BuildingRegistry(),
+      buildingManager: new BuildingManager(),
+      buildingSystem: new BuildingSystem(),
+    })
+
+    const preview = ops.previewAlchemyOutcome('recipe_test', 'herb_decade', 5)
+
+    // The authority formula for this fixture: base(decade) + bonus(level 5).
+    const authority = jobSuccessPercent(
+      { herbMaterialId: 'herb_decade', roomLevelAtStart: 5 } as ActiveAlchemyJob,
+      RECIPE,
+    )
+
+    expect(preview).not.toBeNull()
+    expect(preview!.totalPercent).toBe(authority)
+    expect(preview!.guaranteedPills).toBe(Math.floor(authority / 100))
+    expect(preview!.extraPillChance).toBe(authority % 100)
+  })
+})

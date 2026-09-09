@@ -25,7 +25,7 @@ const gameManager = useGameManager()
 
 const { stateVersion } = useStateVersion()
 
-const { washPreview, washCommit } = useEquipmentActions()
+const { washPreview, washPreviewAffixes, washDiscard, washCommit } = useEquipmentActions()
 
 const feedback = useActionFeedbackStore()
 
@@ -49,7 +49,13 @@ const selectedRow = computed(
 
 // Preview đang chờ "giữ/bỏ" (2026-08-30 spec) — LOCAL (v-if unmount tự
 // reset khi đổi tab, giữ đúng semantics switchTab() cũ).
-const pendingWashAffixes = ref<RolledAffix[] | null>(null)
+// R9 (AR-21): chỉ giữ TICKET ID + display copy; affixes authoritative
+// nằm trong domain — UI không thể fabricate kết quả commit.
+const pendingWashTicket = ref<string | null>(null)
+
+const pendingWashAffixes = computed<RolledAffix[]>(() =>
+  pendingWashTicket.value ? washPreviewAffixes(pendingWashTicket.value) ?? [] : [],
+)
 
 function selectHallSlotForAction(row: HallSlotRow) {
   if (row.equippedRow) {
@@ -58,7 +64,15 @@ function selectHallSlotForAction(row: HallSlotRow) {
     clearSelection()
   }
 
-  pendingWashAffixes.value = null
+  discardPendingTicket()
+}
+
+function discardPendingTicket() {
+  if (pendingWashTicket.value) {
+    washDiscard(pendingWashTicket.value)
+  }
+
+  pendingWashTicket.value = null
 }
 
 const washCost = computed(() => {
@@ -106,25 +120,27 @@ function doWashPreview() {
     return
   }
 
-  const affixes = washPreview(selectedRow.value.instanceId)
+  // A new preview replaces the old ticket (and its paid roll is forfeited,
+  // same as the old local-state behavior: re-roll pays again).
+  const ticketId = washPreview(selectedRow.value.instanceId)
 
-  if (affixes) {
-    pendingWashAffixes.value = affixes
+  if (ticketId) {
+    pendingWashTicket.value = ticketId
   }
 }
 
 function doWashKeep() {
-  if (!selectedRow.value || !pendingWashAffixes.value) {
+  if (!selectedRow.value || !pendingWashTicket.value) {
     return
   }
 
-  if (washCommit(selectedRow.value.instanceId, pendingWashAffixes.value)) {
-    pendingWashAffixes.value = null
+  if (washCommit(selectedRow.value.instanceId, pendingWashTicket.value)) {
+    pendingWashTicket.value = null
   }
 }
 
 const pendingWashAffixDisplay = computed(() =>
-  (pendingWashAffixes.value ?? []).map((rolled, index) => ({
+  pendingWashAffixes.value.map((rolled, index) => ({
     index,
 
     label: affixDisplayLabel(rolled, gameManager.affixRegistry),
@@ -260,7 +276,7 @@ const washRenAfter = computed(() =>
           {{ t('panels.equipmentHall.buttons.washPreview') }}
         </GameButton>
 
-        <GameButton v-if="pendingWashAffixes" size="lg" variant="secondary" @click="doWashKeep">
+        <GameButton v-if="pendingWashTicket" size="lg" variant="secondary" @click="doWashKeep">
           {{ t('panels.equipmentHall.buttons.keep') }}
         </GameButton>
       </div>

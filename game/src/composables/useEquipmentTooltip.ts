@@ -81,9 +81,19 @@ export function buildEquipmentTooltip(
   slotState: EquipmentSlotState | null,
   zoneRegistry: ZoneRegistry,
   comparedInstance?: EquipmentInstance,
+  mainStatRangeQuote?: { min: number; max: number },
 ): EquipmentTooltipContent {
   const mainStatValue = formatStat(instance.mainStat.stat, instance.mainStat.flat ?? 0)
-  const rolledRange = template.mainStats.find(range => range.stat === instance.mainStat.stat)
+  // R9 (AR-23 4c): the effective range is the EQUIPMENT SYSTEM's quote.
+  // The old self-computed scaling here duplicated the roll pipeline.
+  const effectiveMainRangeValues = mainStatRangeQuote ?? (() => {
+    const rolledRange = template.mainStats.find(range => range.stat === instance.mainStat.stat)
+    const realmScale = 1 + getGlobalCultivationLevel(realmFromGrade(instance.grade), instance.realmLevel ?? 1) * MAIN_STAT_REALM_SCALE
+    const qualityScale = ITEM_QUALITY_IMPLICIT_MULTIPLIER[instance.quality]
+    return rolledRange
+      ? { min: rolledRange.min * qualityScale * realmScale, max: rolledRange.max * qualityScale * realmScale }
+      : undefined
+  })()
 
   const sections: TooltipSection[] = [
     {
@@ -177,10 +187,11 @@ export function buildEquipmentTooltip(
     }
   }
 
-  const realmScale = 1 + getGlobalCultivationLevel(instanceRealmId, instance.realmLevel ?? 1) * MAIN_STAT_REALM_SCALE
-  const qualityScale = ITEM_QUALITY_IMPLICIT_MULTIPLIER[instance.quality]
-  const effectiveMainRange = rolledRange
-    ? `[${formatStat(instance.mainStat.stat, rolledRange.min * qualityScale * realmScale)}–${formatStat(instance.mainStat.stat, rolledRange.max * qualityScale * realmScale)}]`
+  // R9 (AR-23 4c): range from the domain quote when supplied; the inline
+  // fallback above (lines ~90) now owns the legacy path for callers
+  // without a system handle.
+  const effectiveMainRange = effectiveMainRangeValues
+    ? `[${formatStat(instance.mainStat.stat, effectiveMainRangeValues.min)}–${formatStat(instance.mainStat.stat, effectiveMainRangeValues.max)}]`
     : '[—]'
   const advancedMain = appendDelta(instance.mainStat.stat, `+${mainStatValue} ${effectiveMainRange}`)
 

@@ -121,6 +121,8 @@ const tooltipBySlot = computed<Record<EquipmentSlot, EquipmentTooltipContent | u
           gameManager.affixRegistry,
           gameManager.getSlotState(entry.slot),
           gameManager.zoneRegistry,
+          undefined,
+          gameManager.equipmentSystem.quoteMainStatRange(instance, gameManager.equipmentRegistry),
         )
       : undefined
   }
