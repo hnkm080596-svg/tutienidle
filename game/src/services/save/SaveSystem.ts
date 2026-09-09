@@ -531,7 +531,11 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
     version: CURRENT_SAVE_VERSION,
 
     player: {
-      ...player,
+      // R10 (AR-12): the snapshot must be a VALUE - deep-detach the
+      // player (nested baseStats/modifiers/flags alias the live store
+      // under a plain spread, so mutating live state after build used
+      // to change the "saved" payload).
+      ...structuredClone(player),
 
       lastSavedAt: Date.now(),
     },
