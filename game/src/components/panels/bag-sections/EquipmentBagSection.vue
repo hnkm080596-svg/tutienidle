@@ -129,6 +129,7 @@ const entries = computed<EquipmentEntry[]>(() => {
               instance.equipped ? gameManager.getSlotState(instance.slot) : null,
               gameManager.zoneRegistry,
               equippedComparison,
+              gameManager.equipmentSystem.quoteMainStatRange(instance, gameManager.equipmentRegistry),
             )
           : undefined,
 

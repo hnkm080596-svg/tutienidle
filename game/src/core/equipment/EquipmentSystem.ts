@@ -945,6 +945,39 @@ export class EquipmentSystem {
   }
 
   /**
+   * R9 (AR-23 4c) — authoritative main-stat range quote. The tooltip used
+   * to reproduce the quality/realm scaling here; now it renders this
+   * read model instead. Mirrors the createInstance roll pipeline:
+   * range x qualityMultiplier x (1 + globalLevel x MAIN_STAT_REALM_SCALE).
+   */
+  quoteMainStatRange(
+    instance: EquipmentInstance,
+    registry: EquipmentRegistry,
+  ): { min: number; max: number } | undefined {
+    const template = this.tryGetTemplate(registry, instance.itemId)
+
+    const range = template?.mainStats.find((candidate) => candidate.stat === instance.mainStat.stat)
+
+    if (!range) {
+      return undefined
+    }
+
+    const qualityMultiplier = ITEM_QUALITY_IMPLICIT_MULTIPLIER[instance.quality]
+
+    const globalLevel = getGlobalCultivationLevel(
+      realmFromGrade(instance.grade),
+      instance.realmLevel ?? 1,
+    )
+
+    const realmScale = 1 + globalLevel * MAIN_STAT_REALM_SCALE
+
+    return {
+      min: range.min * qualityMultiplier * realmScale,
+      max: range.max * qualityMultiplier * realmScale,
+    }
+  }
+
+  /**
    * Chốt kết quả đã preview (previewWashAffixes) — không kiểm tra/trừ cost
    * lần nữa. R9 (AR-21): commit nhận TICKET ID, affixes áp vào instance
    * là bản domain-owned; mọi attempt tiêu ticket (refine precedent).
