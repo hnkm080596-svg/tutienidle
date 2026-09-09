@@ -662,6 +662,7 @@ export class GameManager {
       equipmentSystem: this.equipmentSystem,
       equipmentSlotManager: this.equipmentSlotManager,
       affixRegistry: this.affixRegistry,
+      buildingRegistry: this.buildingRegistry,
       buildingManager: this.buildingManager,
       questManager: this.questManager,
       productionSystem: this.productionSystem,

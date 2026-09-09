@@ -13,6 +13,7 @@ import { EquipmentSlotManager } from '../equipment/EquipmentSlotManager'
 import { AffixRegistry } from '../equipment/AffixRegistry'
 import { BuildingManager } from '../building/BuildingManager'
 import type { BuildingInstance } from '../building/BuildingInstance'
+import { BuildingRegistry } from '../building/BuildingRegistry'
 import { QuestManager } from '../quest/QuestManager'
 import { ProductionSystem } from '../production/ProductionSystem'
 import type { ProductionSiteState } from '../production/ProductionTypes'
@@ -21,7 +22,7 @@ import { AlchemySystem, type ActiveAlchemyJob } from '../alchemy/AlchemySystem'
 import { getAlchemySuccessBonusPercentPoints } from '../talent/TalentEffects'
 import type { PlayerData } from '../player/Player'
 import type { StatModifier } from '../stats/StatCalculator'
-import type { GameSave } from '../../services/save/SaveSystem'
+import { computeRestoreIdentity, type GameSave } from '../../services/save/SaveSystem'
 import { NotificationQueue } from './NotificationQueue'
 import { createBagOverflowEvent } from '../notification/bagOverflow'
 import { TemplateRegistry } from './TemplateRegistry'
@@ -40,6 +41,7 @@ export interface GameManagerSaveRestoreDeps {
   equipmentSystem: EquipmentSystem
   equipmentSlotManager: EquipmentSlotManager
   affixRegistry: AffixRegistry
+  buildingRegistry: BuildingRegistry
   buildingManager: BuildingManager
   questManager: QuestManager
   productionSystem: ProductionSystem
@@ -78,6 +80,14 @@ export interface GameManagerSaveRestoreDeps {
 export class GameManagerSaveRestore {
   constructor(private readonly deps: GameManagerSaveRestoreDeps) {}
 
+  // R10 (AR-12, S4) — once-only settle: the identical payload hash as the
+  // last APPLIED restore (see computeRestoreIdentity) converges instead of
+  // re-running the full restore + offline settlement a second time. Scoped
+  // per GameManagerSaveRestore instance (one per GameManager/session),
+  // mirroring the store-level guard in stores/player.ts — same concept,
+  // separate tracker per restore owner.
+  private lastAppliedPayloadHash: string | undefined
+
   /**
    * Validate registry-backed save references without mutating any restore owner.
    * App calls this before Pinia restore; restoreFromSave repeats it defensively.
@@ -94,6 +104,34 @@ export class GameManagerSaveRestore {
         }
       }
     }
+
+    // R10 (AR-12, S4) — materials/pills/buildings previously had no
+    // preflight coverage at all: the restore loops silently dropped an
+    // unknown ID via `if (registry.has(id)) ...` instead of rejecting.
+    // Per the project's established registry-drift principle (learned-
+    // defects QA-2026-09-01-013), silently filtering an owned current
+    // entry is data loss, not recovery — hard-fail before any owner
+    // mutation, same contract equipment already had. Skills/techniques
+    // are intentionally NOT included here: an unknown template there
+    // keeps the save's own object as-authored by design (see the restore
+    // loops below), not a registry-drift rejection case.
+    for (const entry of save.materials) {
+      if (!this.deps.materialRegistry.has(entry.materialId)) {
+        throw new Error(`Unknown material in save: ${entry.materialId}`)
+      }
+    }
+
+    for (const entry of save.pills) {
+      if (!this.deps.pillRegistry.has(entry.pillId)) {
+        throw new Error(`Unknown pill in save: ${entry.pillId}`)
+      }
+    }
+
+    for (const instance of save.buildings) {
+      if (!this.deps.buildingRegistry.has(instance.buildingId)) {
+        throw new Error(`Unknown building in save: ${instance.buildingId}`)
+      }
+    }
   }
 
   /**
@@ -107,6 +145,18 @@ export class GameManagerSaveRestore {
    */
   restoreFromSave(save: GameSave): StatModifier[] {
     this.preflightSaveRegistryReferences(save)
+
+    // R10 (AR-12, S4) — converge on a repeated identical payload (boot
+    // retry, reload race): skip re-applying and re-settling entirely,
+    // return the already-current modifiers. A genuinely different payload
+    // (even sharing lastSavedAt|cultivation) always runs the full restore.
+    const payloadIdentity = computeRestoreIdentity(save)
+
+    if (payloadIdentity === this.lastAppliedPayloadHash) {
+      return this.deps.equipmentSystem.getModifiers()
+    }
+
+    this.lastAppliedPayloadHash = payloadIdentity
 
     for (const technique of save.techniques) {
       if (!this.deps.techniqueManager.has(technique.id)) {
@@ -160,6 +210,15 @@ export class GameManagerSaveRestore {
 
       this.deps.skillManager.add(skill)
     }
+
+    // R10 (AR-12, S3) — restore is REPLACEMENT, not additive: clear the
+    // live bag before applying the save's materials/pills, matching
+    // buildings/production sites/quests/decompose (already replace, see
+    // R7/R8.1). Without this, a live-session restore into a nonempty bag
+    // (boot retry, reload race) would merge saved amounts on top of
+    // whatever was already there instead of replacing it.
+    this.deps.materialBag.clear()
+    this.deps.pillBag.clear()
 
     // 9.8 — add() tràn stack trả lượng bị mất; gom MỖI LOẠI material
     // một event duy nhất (cả 2 loop materials + auto-dissolve rewards).

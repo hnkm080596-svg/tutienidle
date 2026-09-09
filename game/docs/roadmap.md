@@ -1131,6 +1131,19 @@ Current auth and local persistence remain separate until online work receives it
 
 Development-save backward compatibility remains unnecessary unless explicitly requested.
 
+✅ DONE 2026-09-09 (branch r10-save-restore-boundary) — snapshot detachment
+(S1), whole-payload restore identity gate replacing the weak
+lastSavedAt|cultivation fingerprint (S2), replacement semantics for
+materials/pills bags (S3), once-only offline settle + preflight coverage
+for materials/pills/buildings registry drift (S4), local-adapter boundary
+documented + guarded (S5). Also found and repaired two regressions beyond
+plan scope: `usePlayerStore.save()` was crashing on every real save
+(structuredClone cannot clone a Vue-reactive Proxy tree — the actual
+production call site, unlike test fixtures using plain PlayerData
+objects) and a restore-side aliasing bug that defeated the S2 identity
+guard on a repeated same-reference restore. Full evidence in
+`game/docs/qa/2026-09-09-r10-save-restore-boundary-deep.md`.
+
 ---
 
 # Phase R11 — UI Foundation Consolidation
@@ -1373,7 +1386,7 @@ R14 Architecture Enforcement
 | 8 | R7 — Worker Allocation / Decomposition | AR-07, AR-08 | ✅ COMPLETE 2026-09-08 |
 | 9 | R8 — Quest & Progression Authority | AR-09, AR-10, AR-13 | 🟡 R8.1 COMPLETE 2026-09-08; R8.2 ⏸ |
 | 10 | R9 — Equipment / Inventory Integrity | AR-21, AR-22, AR-23, AR-34 | ✅ COMPLETE 2026-09-08 |
-| 11 | R10 — Save / Restore Boundary | AR-12, AR-15 | ⏸ |
+| 11 | R10 — Save / Restore Boundary | AR-12, AR-15 | ✅ COMPLETE 2026-09-09 |
 | 12 | R11 — UI Foundation Consolidation | AR-26, AR-27, AR-28 + domain UI | ⏸ |
 | 13 | R12 — Presentation / Asset Cleanup | AR-24, AR-27, AR-29, AR-30, AR-31 | ⏸ |
 | 14 | R13 — Parallel Authority / Legacy Retirement | AR-19, AR-25 | ⏸ |

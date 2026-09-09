@@ -7,6 +7,8 @@ function readRevision(): number {
 }
 
 export class LocalCloudSaveService implements CloudSaveService {
+  readonly capability = 'local-only' as const
+
   async load(): Promise<CloudSaveLoadResult> {
     const outcome = loadGame()
     if (outcome.status === 'ok') return { ...outcome, revision: readRevision() }
