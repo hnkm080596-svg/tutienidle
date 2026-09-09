@@ -77,4 +77,40 @@ describe('GameManager - intro/transition phase before countdown (plan 2026-09-07
     expect(battle?.totalTurnsElapsed ?? 0).toBe(0)
     expect(battle?.players.every((participant) => participant.actionGauge === 0)).toBe(true)
   })
+
+  describe('Task 4: getCombatPresentationSnapshot pure snapshot query', () => {
+    it('returns initial combat view at intro with zero ticks without mutating or emitting', () => {
+      const gameManager = buildStartedGameManager()
+      const session = gameManager.getCurrentPresentationSession()!
+      expect(session).toBeDefined()
+
+      const eventBusEvents: unknown[] = []
+      gameManager.eventBus.on('turn_battle_entity_snapshot', (e) => eventBusEvents.push(e))
+
+      const snapshot = gameManager.getCombatPresentationSnapshot(session.sessionId)!
+      expect(snapshot).toBeDefined()
+      expect(snapshot.sessionId).toBe(session.sessionId)
+      expect(snapshot.entities.players).toHaveLength(1)
+      expect(snapshot.entities.players[0]!.id).toBe('player')
+      expect(snapshot.entities.players[0]!.alive).toBe(true)
+      expect(snapshot.entities.players[0]!.currentHp).toBeGreaterThan(0)
+
+      // Initial intro has 0 ticks: countdownProgress is undefined
+      expect(snapshot.entities.countdownProgress).toBeUndefined()
+
+      // Pure query: reading twice emits 0 events and changes no ticks
+      const introBefore = gameManager.getTurnBattle()?.introTurnsRemaining
+      const snapshot2 = gameManager.getCombatPresentationSnapshot(session.sessionId)!
+      expect(snapshot2).toEqual(snapshot)
+      expect(eventBusEvents).toHaveLength(0)
+      expect(gameManager.getTurnBattle()?.introTurnsRemaining).toBe(introBefore)
+
+      // Mutating snapshot arrays does not touch the battle
+      snapshot.entities.players.pop()
+      expect(gameManager.getTurnBattle()?.players).toHaveLength(1)
+
+      // Stale session ID returns null
+      expect(gameManager.getCombatPresentationSnapshot(99999)).toBeNull()
+    })
+  })
 })

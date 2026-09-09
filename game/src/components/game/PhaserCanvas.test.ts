@@ -28,6 +28,10 @@ import PhaserCanvas from './PhaserCanvas.vue'
 
 // Scene modules import 'phaser' ở top-level (extends Phaser.Scene) —
 // mock hẳn ra để test không phụ thuộc runtime WebGL/canvas thật.
+vi.mock('@/game/scenes/AssetLoaderScene', () => ({
+  AssetLoaderScene: class {},
+  ASSET_LOADER_SCENE_KEY: 'AssetLoaderScene',
+}))
 vi.mock('@/game/scenes/MainScene', () => ({ MainScene: class {} }))
 vi.mock('@/game/scenes/CombatScene', () => ({ CombatScene: class {} }))
 vi.mock('@/game/scenes/TribulationScene', () => ({ TribulationScene: class {} }))
@@ -46,6 +50,7 @@ vi.mock('phaser', () => {
     registry = { set: vi.fn() }
     scale = { resize: vi.fn() }
     destroy = vi.fn()
+    scene = { getScene: vi.fn(() => null) }
 
     constructor(config: unknown) {
       gameCtor(config)

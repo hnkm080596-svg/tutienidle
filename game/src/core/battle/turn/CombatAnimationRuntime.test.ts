@@ -275,20 +275,6 @@ describe('CombatAnimationRuntime', () => {
     expect(runtime.isActionPlaybackWaiting()).toBe(false)
   })
 
-  it('isAwaitingPresentationLayer gates only after expectPresentationLayer(), releases on setPresentationActive(true)', () => {
-    const { runtime } = fixture()
-
-    expect(runtime.isAwaitingPresentationLayer()).toBe(false)
-
-    runtime.expectPresentationLayer()
-
-    expect(runtime.isAwaitingPresentationLayer()).toBe(true)
-
-    runtime.setPresentationActive(true)
-
-    expect(runtime.isAwaitingPresentationLayer()).toBe(false)
-  })
-
   it('isPresentationActive reflects the last setPresentationActive() call', () => {
     const { runtime } = fixture()
 
@@ -363,5 +349,207 @@ describe('CombatAnimationRuntime', () => {
     runtime.acknowledgeTurnReady(token)
 
     expect(declareSpy).toHaveBeenCalled()
+  })
+
+  describe('Task 3: hold-safe action runtime and preparePresentationResume', () => {
+    it('returns null from preparePresentationResume when no phase is pending', () => {
+      const { runtime } = fixture()
+      expect(runtime.preparePresentationResume()).toBeNull()
+    })
+
+    it('resumes pending ready phase, renews token, invalidates old token', () => {
+      const { runtime, player } = fixture()
+      runtime.setPresentationActive(true)
+      runtime.notifyReadyActor(player)
+      const oldToken = runtime.getPendingPlaybackToken()!
+
+      const resume = runtime.preparePresentationResume()!
+      expect(resume).toBeDefined()
+      expect(resume.phase).toBe('ready')
+      if (resume.phase === 'ready') {
+        expect(resume.actorId).toBe(player.id)
+        expect(resume.token).not.toBe(oldToken)
+
+        // Old token rejected
+        runtime.acknowledgeTurnReady(oldToken)
+        expect(runtime.getAnimationState(player.id)).toBe('ready')
+
+        // New token accepted
+        runtime.acknowledgeTurnReady(resume.token)
+        expect(runtime.getAnimationState(player.id)).toBe('cast')
+      }
+    })
+
+    it('resumes pending cast phase, renews token, invalidates old token', () => {
+      const { runtime, player } = fixture()
+      runtime.setPresentationActive(true)
+      runtime.notifyReadyActor(player)
+      const readyToken = runtime.getPendingPlaybackToken()!
+      runtime.acknowledgeTurnReady(readyToken)
+      const oldCastToken = runtime.getPendingPlaybackToken()!
+      expect(runtime.getAnimationState(player.id)).toBe('cast')
+
+      const resume = runtime.preparePresentationResume()!
+      expect(resume).toBeDefined()
+      expect(resume.phase).toBe('cast')
+      if (resume.phase === 'cast') {
+        expect(resume.actorId).toBe(player.id)
+        expect(resume.skillId).toBeDefined()
+        expect(resume.targetIds).toBeDefined()
+        expect(resume.token).not.toBe(oldCastToken)
+
+        // Old token rejected
+        runtime.acknowledgeActionImpact(oldCastToken)
+        expect(runtime.getAnimationState(player.id)).toBe('cast')
+
+        // New token accepted -> advances to standby
+        runtime.acknowledgeActionImpact(resume.token)
+        expect(runtime.getAnimationState(player.id)).toBe('standby')
+      }
+    })
+
+    it('resumes pending complete phase, renews token, completes action on new token', () => {
+      const { runtime, player } = fixture()
+      runtime.setPresentationActive(true)
+      runtime.notifyReadyActor(player)
+      runtime.acknowledgeTurnReady(runtime.getPendingPlaybackToken()!)
+      runtime.acknowledgeActionImpact(runtime.getPendingPlaybackToken()!)
+      const oldCompleteToken = runtime.getPendingPlaybackToken()!
+      expect(runtime.getAnimationState(player.id)).toBe('standby')
+
+      const resume = runtime.preparePresentationResume()!
+      expect(resume).toBeDefined()
+      expect(resume.phase).toBe('complete')
+      if (resume.phase === 'complete') {
+        expect(resume.actorId).toBe(player.id)
+        expect(resume.targetIds).toBeDefined()
+        expect(resume.token).not.toBe(oldCompleteToken)
+
+        // Old token rejected
+        runtime.acknowledgeActionComplete(oldCompleteToken)
+        expect(runtime.isActionPlaybackWaiting()).toBe(true)
+
+        // New token accepted -> completes
+        runtime.acknowledgeActionComplete(resume.token)
+        expect(runtime.isActionPlaybackWaiting()).toBe(false)
+      }
+    })
+
+    it('resumes pending manual choice phase', () => {
+      const { runtime, player } = fixture()
+      runtime.setPresentationActive(true)
+      runtime.setBattleManualMode(true)
+      runtime.notifyReadyActor(player)
+      runtime.acknowledgeTurnReady(runtime.getPendingPlaybackToken()!)
+
+      expect(runtime.isAwaitingManualTurnChoice()).toBe(true)
+
+      const resume = runtime.preparePresentationResume()!
+      expect(resume).toBeDefined()
+      expect(resume.phase).toBe('manual')
+      if (resume.phase === 'manual') {
+        expect(resume.actorId).toBe(player.id)
+      }
+
+      // Choice still works
+      expect(runtime.submitTurnChoice('basic')).toBe(true)
+      expect(runtime.isAwaitingManualTurnChoice()).toBe(false)
+    })
+
+    it('rejects all acknowledgments and manual choice while isSessionBlocking is true', () => {
+      let blocking = true
+      const eventBus = new EventBus()
+      const combatSystem = new CombatSystem(eventBus)
+      const turnBattleSystem = new TurnBattleSystem(combatSystem)
+      const player = toTurnBattleParticipant(
+        createCombatant('player', { type: 'player', x: 0, row: 4 }),
+        0,
+        GENERIC_PHYSICAL_BASIC,
+      )
+      const enemy = toTurnBattleParticipant(
+        createCombatant('enemy', { type: 'enemy', x: 2, row: 4 }),
+        1,
+        GENERIC_PHYSICAL_BASIC,
+      )
+      const battle: TurnBattle = { players: [player], enemies: [enemy], state: 'fighting', totalTurnsElapsed: 0 }
+
+      const runtime = new CombatAnimationRuntime({
+        getTurnBattleSystem: () => turnBattleSystem,
+        eventBus,
+        getBattle: () => battle,
+        syncLegacyBattleState: vi.fn(),
+        isSessionBlocking: () => blocking,
+      })
+
+      runtime.setPresentationActive(true)
+      runtime.notifyReadyActor(player)
+      const token = runtime.getPendingPlaybackToken()!
+
+      // Blocked: acknowledgeTurnReady is rejected
+      runtime.acknowledgeTurnReady(token)
+      expect(runtime.getAnimationState(player.id)).toBe('ready')
+
+      // Unblock: acknowledgeTurnReady is accepted
+      blocking = false
+      runtime.acknowledgeTurnReady(token)
+      expect(runtime.getAnimationState(player.id)).toBe('cast')
+
+      // Blocked again: acknowledgeActionImpact is rejected
+      blocking = true
+      runtime.acknowledgeActionImpact(token)
+      expect(runtime.getAnimationState(player.id)).toBe('cast')
+
+      // Unblock: accepted
+      blocking = false
+      runtime.acknowledgeActionImpact(token)
+      expect(runtime.getAnimationState(player.id)).toBe('standby')
+
+      // Blocked again: acknowledgeActionComplete rejected
+      blocking = true
+      runtime.acknowledgeActionComplete(token)
+      expect(runtime.isActionPlaybackWaiting()).toBe(true)
+
+      // Unblock: accepted
+      blocking = false
+      runtime.acknowledgeActionComplete(token)
+      expect(runtime.isActionPlaybackWaiting()).toBe(false)
+    })
+
+    it('detachPresentation("hold") preserves pending work without drain', () => {
+      const { runtime, player, battle } = fixture()
+      runtime.setPresentationActive(true)
+      runtime.notifyReadyActor(player)
+      expect(runtime.isActionPlaybackWaiting()).toBe(true)
+
+      runtime.detachPresentation('hold')
+      expect(runtime.isActionPlaybackWaiting()).toBe(true)
+      expect(battle.totalTurnsElapsed).toBe(0)
+    })
+
+    it('detachPresentation("headless") drains pending work', () => {
+      const { runtime, player, battle } = fixture()
+      runtime.setPresentationActive(true)
+      runtime.notifyReadyActor(player)
+      expect(runtime.isActionPlaybackWaiting()).toBe(true)
+
+      runtime.detachPresentation('headless')
+      expect(runtime.isActionPlaybackWaiting()).toBe(false)
+      expect(battle.totalTurnsElapsed).toBe(1)
+      expect(runtime.isPresentationActive()).toBe(false)
+    })
+
+    it('resetPendingState clears playbackToken so late callbacks cannot match', () => {
+      const { runtime, player } = fixture()
+      runtime.setPresentationActive(true)
+      runtime.notifyReadyActor(player)
+      const token = runtime.getPendingPlaybackToken()!
+
+      runtime.resetPendingState()
+      expect(runtime.getPendingPlaybackToken()).toBeNull()
+
+      // Late ready callback with old token
+      runtime.acknowledgeTurnReady(token)
+      expect(runtime.isActionPlaybackWaiting()).toBe(false)
+    })
   })
 })

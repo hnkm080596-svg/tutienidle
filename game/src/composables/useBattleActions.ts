@@ -1,6 +1,8 @@
+import { inject } from 'vue'
 import { usePlayerStore } from '../stores/player'
 import { useUiStore } from '../stores/ui'
 import { useGameManager, useStateVersion } from './useGameState'
+import { GAME_PRESENTATION_KEY } from '@/presentation/PresentationContracts'
 import type { Stage } from '../core/stage/Stage'
 import type { BattleRunMode } from '../stores/ui'
 
@@ -27,36 +29,80 @@ export function useBattleActions() {
   const ui = useUiStore()
   const gameManager = useGameManager()
   const { bumpState } = useStateVersion()
+  const presentation = inject(GAME_PRESENTATION_KEY, null)
 
-  function startBattle(stage: Stage) {
-    // finalStats (từ store) đã cộng đủ modifiers + externalModifiers,
-    // GameManager chỉ nhận và convert sang CombatEntity, không tính lại.
-    const started = gameManager.startStage(player.$state, player.finalStats, stage, ui.battleRunMode === 'repeat')
+  /**
+   * One entry path for every stage start, so "UI side effects happen ONLY
+   * after the domain accepted the start" is structural instead of repeated
+   * at each call site (F07). `commit` runs only on acceptance.
+   *
+   * finalStats (từ store) đã cộng đủ modifiers + externalModifiers,
+   * GameManager chỉ nhận và convert sang CombatEntity, không tính lại.
+   */
+  function runStageStart(
+    stage: Stage,
+    repeat: boolean,
+    commit: () => void,
+  ): boolean | Promise<boolean> {
+    const startStage = () =>
+      gameManager.startStage(player.$state, player.finalStats, stage, repeat)
 
-    bumpState()
+    if (!presentation) {
+      const started = startStage()
 
-    return started
+      if (started) {
+        commit()
+      }
+
+      return started
+    }
+
+    return (async () => {
+      const result = await presentation.runAdmitted(
+        'combat',
+        () => {
+          if (!startStage()) {
+            return null
+          }
+
+          const session = gameManager.getCurrentPresentationSession('combat')
+
+          return session ? { target: 'combat', session } : null
+        },
+        { compensate: () => void gameManager.abandonBattle() },
+      )
+
+      if (result.status !== 'entered') {
+        return false
+      }
+
+      commit()
+
+      return true
+    })()
+  }
+
+  function startBattle(stage: Stage): boolean | Promise<boolean> {
+    return runStageStart(stage, ui.battleRunMode === 'repeat', () => {
+      ui.enterCombatScene('stage')
+      bumpState()
+    })
   }
 
   /**
-   * Bấm "Bắt Đầu" ở StageSelectPanel.vue — bỏ trạng thái tu luyện
-   * (spec "hero sẽ bỏ trạng thái tu luyện"), ghi nhớ Màn/chế độ đã
-   * chọn cho Auto-refight (xem App.vue's fightStage()), đóng panel để
-   * quay lại Home Scene xem trận đấu diễn ra.
+   * Bấm "Bắt Đầu" ở StageSelectPanel.vue — admission trước startSelectedStage (F07).
+   * Chỉ khi startStage thành công mới đóng panel, emit pose, và vào combat UI.
    */
-  function startSelectedStage(zoneId: string, stage: Stage, mode: BattleRunMode) {
-    // isCultivating giờ SUY RA từ isFighting mỗi tick (App.vue's tick()),
-    // KHÔNG cần set tay ở đây nữa — nhưng vẫn emit NGAY để pose ngồi
-    // thiền tắt tức thời lúc bấm "Bắt Đầu", không đợi tick kế tiếp.
-    gameManager.eventBus.emit('cultivation_changed', { isCultivating: false })
-
-    ui.selectedZoneId = zoneId
-    ui.selectedStageId = stage.id
-    ui.battleRunMode = mode
-    ui.leftPanelMode = null
-    ui.enterCombatScene('stage')
-
-    return startBattle(stage)
+  function startSelectedStage(zoneId: string, stage: Stage, mode: BattleRunMode): boolean | Promise<boolean> {
+    return runStageStart(stage, mode === 'repeat', () => {
+      gameManager.eventBus.emit('cultivation_changed', { isCultivating: false })
+      ui.selectedZoneId = zoneId
+      ui.selectedStageId = stage.id
+      ui.battleRunMode = mode
+      ui.leftPanelMode = null
+      ui.enterCombatScene('stage')
+      bumpState()
+    })
   }
 
   return { startBattle, startSelectedStage }

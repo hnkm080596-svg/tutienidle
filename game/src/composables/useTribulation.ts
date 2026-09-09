@@ -1,5 +1,8 @@
+import { inject } from 'vue'
 import { usePlayerStore } from '../stores/player'
 import { useGameManager } from './useGameState'
+import { GAME_PRESENTATION_KEY } from '@/presentation/PresentationContracts'
+import type { GamePresentation } from '@/presentation/createGamePresentation'
 import { getCurrentRealm } from '../core/realm/realmSystem'
 import { KIEP_THUONG_DEBUFF } from '../data/buff/buffs'
 import { FOUNDATION_LABELS } from '../core/breakthrough/FoundationType'
@@ -45,7 +48,8 @@ function resolveNextBreakthroughRealm(currentRealmId: string): string | null {
 export function triggerBreakthroughAction(
   player: PlayerStore,
   gameManager: GameManager,
-): boolean {
+  presentation?: GamePresentation | null,
+): boolean | Promise<boolean> {
   if (!gameManager.canTriggerBreakthrough(player.$state)) {
     return false
   }
@@ -60,6 +64,35 @@ export function triggerBreakthroughAction(
     return false
   }
 
+  if (presentation) {
+    return (async () => {
+      // No compensate: there is no domain cancel-tribulation command, and the
+      // spec forbids inventing one. Orphaning is prevented up front instead -
+      // canEnter('tribulation') is checked before this command runs, and the
+      // session is read kind-scoped so it can never be the combat session.
+      const result = await presentation.runAdmitted(
+        'tribulation',
+        () => {
+          // Admission confirmed: unequip only inside admitted start
+          gameManager.unequipAllEquipment()
+          player.setEquipmentModifiers(gameManager.getEquipmentModifiers())
+
+          const started = gameManager.startTribulation(player.$state, player.finalStats, targetRealmId)
+          if (!started) return null
+          const session = gameManager.getCurrentPresentationSession('tribulation')
+          return session ? { target: 'tribulation', session } : null
+        },
+      )
+
+      if (result.status === 'entered') {
+        useUiStore().enterTribulationScene()
+        return true
+      }
+      return false
+    })()
+  }
+
+  // Fallback for tests without presentation
   gameManager.unequipAllEquipment()
   player.setEquipmentModifiers(gameManager.getEquipmentModifiers())
 
@@ -80,7 +113,11 @@ export function triggerBreakthroughAction(
  * tick đó (tránh startStage() đè mất battle Tribulation vừa kết thúc
  * trước khi kịp đọc).
  */
-export function checkTribulationOutcomeAction(player: PlayerStore, gameManager: GameManager): boolean {
+export function checkTribulationOutcomeAction(
+  player: PlayerStore,
+  gameManager: GameManager,
+  presentation?: GamePresentation | null,
+): boolean {
   const active = gameManager.getActiveTribulation()
 
   if (!active) {
@@ -101,6 +138,10 @@ export function checkTribulationOutcomeAction(player: PlayerStore, gameManager: 
 
   gameManager.clearActiveTribulation()
   useUiStore().exitTribulationScene()
+
+  if (presentation) {
+    void presentation.coordinator.request({ target: 'home' })
+  }
   gameManager.eventBus.emit('tribulation_scene_exit', undefined)
 
   return true
@@ -219,9 +260,10 @@ function resolveDefeat(player: PlayerStore, gameManager: GameManager, active: Ac
 export function useTribulation() {
   const player = usePlayerStore()
   const gameManager = useGameManager()
+  const presentation = inject(GAME_PRESENTATION_KEY, null)
 
   return {
-    triggerBreakthrough: () => triggerBreakthroughAction(player, gameManager),
-    checkTribulationOutcome: () => checkTribulationOutcomeAction(player, gameManager),
+    triggerBreakthrough: () => triggerBreakthroughAction(player, gameManager, presentation),
+    checkTribulationOutcome: () => checkTribulationOutcomeAction(player, gameManager, presentation),
   }
 }

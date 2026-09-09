@@ -60,12 +60,28 @@ export async function createCharacterThroughUi(page: Page, name: string): Promis
 }
 
 /**
+ * Blocks until no presentation transition is in flight: the curtain is open,
+ * gameplay input is unlocked and the route has committed.
+ */
+export async function waitForPresentationIdle(page: Page, timeout = 30_000): Promise<void> {
+  const overlay = page.getByTestId('presentation-overlay')
+
+  await expect(overlay).toHaveAttribute('data-phase', 'idle', { timeout })
+  await expect(overlay).toHaveAttribute('data-curtain', 'opened', { timeout })
+}
+
+/**
  * Wait for the game home (Động Phủ) to be visible after character creation.
  * The home appears when entryStage === 'game' and isBooted === true.
  * Dismisses the tutorial overlay if it appears.
  */
 export async function enterHome(page: Page): Promise<void> {
   await expect(page.locator('.game-root')).toBeVisible({ timeout: 30_000 })
+
+  // The Home DOM mounts BEHIND the closed curtain, and the curtain locks
+  // pointer/keyboard input until the transition is revealed and released.
+  // Interacting before that is a race, so wait for the coordinator to settle.
+  await waitForPresentationIdle(page)
 
   // Tutorial overlay (z-index 1900) blocks all pointer events. Dismiss it.
   const tutorial = page.locator('.tutorial-overlay')

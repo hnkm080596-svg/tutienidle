@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-import { assertNoBrowserErrors, collectBrowserErrors } from './helpers'
+import { assertNoBrowserErrors, collectBrowserErrors, waitForPresentationIdle } from './helpers'
 
 /**
  * UI/UX QA remediation (Task 10, 2026-09-07) — keyboard-only journey:
@@ -20,6 +20,11 @@ test.describe('Keyboard accessibility journey', () => {
 
     const auth = page.getByTestId('auth-screen')
     await expect(auth).toBeVisible({ timeout: 15_000 })
+
+    // A screen mounts BEHIND the closed curtain, so "visible" is not yet
+    // "interactive": the curtain blocks pointer and keyboard until the
+    // transition is revealed (spec S9). Wait for the reveal before typing.
+    await waitForPresentationIdle(page)
 
     // Auth screen: guest button là focusable thứ 4 (tab login + tab register
     // + input id + input password + guest). Tab từng bước — SAU mỗi Tab kiểm
@@ -44,6 +49,7 @@ test.describe('Keyboard accessibility journey', () => {
     expect(activated, 'auth guest button phải reachable bằng Tab').toBe(true)
 
     await expect(page.getByTestId('character-creation-screen')).toBeVisible({ timeout: 15_000 })
+    await waitForPresentationIdle(page)
 
     // Character creation: name input bằng keyboard, continue bằng Enter.
     await page.getByTestId('creation-name-input').fill('Keyboard Hero')
@@ -75,6 +81,7 @@ test.describe('Keyboard accessibility journey', () => {
 
     // Home hiện sau boot — dismiss tutorial nếu có (keyboard: Enter = Bỏ Qua).
     await expect(page.locator('.game-root')).toBeVisible({ timeout: 30_000 })
+    await waitForPresentationIdle(page)
 
     const tutorial = page.locator('.tutorial-overlay')
 

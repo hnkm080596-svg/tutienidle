@@ -1,3 +1,10 @@
+import {
+  PresentationSession,
+  type PresentationHold,
+  type PresentationMode,
+  type SessionPresentationPort,
+  type SessionRef,
+} from '../presentation/PresentationSession'
 import type { PlayerData } from '../player/Player'
 import type { Stats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
@@ -89,9 +96,38 @@ export class TribulationDirector {
   private tank: TankRuntime | null = null
   private mindFailStacks = 0
   private mindCorrectLightningReduction = 0
+  private readonly presentationSession: PresentationSession
+  private presentationMode: PresentationMode = 'headless'
 
-  constructor(private readonly deps: { eventBus: EventBus }) {
+  constructor(private readonly deps: { eventBus: EventBus; sessionAllocator?: { allocate(): number } }) {
     this.vitals = new EntityVitalsSystem(deps.eventBus)
+    this.presentationSession = new PresentationSession(deps.sessionAllocator)
+  }
+
+  getCurrentPresentationSession(): SessionRef | null {
+    return this.presentationSession.getCurrentSession()
+  }
+
+  getPresentationPort(): SessionPresentationPort {
+    return this.presentationSession
+  }
+
+  setPresentationMode(mode: PresentationMode): void {
+    this.presentationMode = mode
+  }
+
+  getPresentationSnapshot(sessionId: number): { sessionId: number; state: ActiveTribulationState } | null {
+    const current = this.presentationSession.getCurrentSession()
+    if (!current || current.sessionId !== sessionId || current.kind !== 'tribulation') {
+      return null
+    }
+    if (!this.active) {
+      return null
+    }
+    return {
+      sessionId,
+      state: { ...this.active, hp: this.snapshotHp },
+    }
   }
 
   /**
@@ -152,6 +188,13 @@ export class TribulationDirector {
       maxHp,
     }
 
+    const sessionId = this.presentationSession.allocate()
+    const session: SessionRef = { kind: 'tribulation', sessionId }
+    this.presentationSession.begin(session, this.presentationMode)
+    if (this.presentationMode === 'interactive') {
+      this.presentationSession.hold(session)
+    }
+
     this.enterChapter(0)
 
     this.deps.eventBus.emit('tribulation_started', {
@@ -160,6 +203,8 @@ export class TribulationDirector {
       chapterIndex: 0,
       kind: chapters[0]!.kind,
     })
+
+    this.deps.eventBus.emit('presentation_session_started', session)
 
     return true
   }
@@ -170,6 +215,10 @@ export class TribulationDirector {
    * trong vòng lặp đóng — không chia nhỏ fixed-step (floating point).
    */
   update(deltaSeconds: number) {
+    if (this.presentationSession.isBlocking()) {
+      return
+    }
+
     const active = this.active
 
     if (!active || active.state !== 'ongoing') {
@@ -271,6 +320,10 @@ export class TribulationDirector {
 
   /** Trả lời câu hiện tại — true nếu câu được xử lý (đúng/sai đều tính). */
   answerQuestion(answerIndex: number): boolean {
+    if (this.presentationSession.isBlocking()) {
+      return false
+    }
+
     const active = this.active
     const mind = this.mind
 
@@ -475,6 +528,10 @@ export class TribulationDirector {
   }
 
   clear() {
+    const session = this.presentationSession.getCurrentSession()
+    if (session) {
+      this.presentationSession.end(session)
+    }
     this.active = null
     this.mind = null
     this.tank = null

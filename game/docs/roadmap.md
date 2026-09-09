@@ -1237,6 +1237,43 @@ Do not require multiple synchronized enemy lists.
 
 Asset routing must validate normalized containment before moving files.
 
+```text
+✅ DONE 2026-09-10 (branch codex/game-presentation-coordinator) — Game Presentation Coordinator
+   and Asset Bundle Infrastructure: single route/transition owner (`GamePresentationCoordinator`),
+   Phaser primary scene adapter (`PhaserSceneAdapter`), Vue composite adapter (`VueRouteAdapter`),
+   independent asset loader scene (`AssetLoaderScene`), and bundle catalog/manager
+   (`AssetBundleCatalog`, `AssetBundleManager`). Eliminated eager combat preload from cold Home;
+   bundle split verified (entry 584KB, phaser 1343KB separated). AST guard enforces
+   exclusive primary scene lifecycle calls in adapter.
+
+   Authority contract now in force:
+   - Readiness: `PresentationSession` hold is the ONLY authority. The old sticky
+     wall-clock `PresentationGate` is DELETED (it blocked a released session for the
+     first 15s of app life once its markReady caller was migrated away).
+   - Route: the coordinator owns every route. `useBootFlow` derives its stage from the
+     coordinator snapshot instead of keeping a second writable stage ref.
+   - Mounting: hosts that a transition DEPENDS on (the Phaser canvas, whose loader scene
+     the asset phase needs) mount on `targetRoute`; route screens mount on `renderRoute`
+     behind the closed curtain. Conflating the two deadlocks cold boot.
+   - Admission: entry points call `coordinator.canEnter(target)` BEFORE issuing a domain
+     start command, and read the session kind-scoped, so an accepted start can never be
+     left running held and unrendered.
+   - Assets: `getBundlesForRoute()` is the single route→bundle mapping. Non-Phaser routes
+     (boot/auth/character/error) require no Phaser bundle.
+
+   Evidence in `game/docs/qa/2026-09-09-presentation-coordinator.md` (section 15):
+   type-check + build + bundle-split PASS, vitest 456 files / 3103 tests PASS,
+   Playwright 17/17 PASS serially. F01 oracle green in a real browser — stage start
+   activates CombatScene and deactivates MainScene in the Phaser scene manager.
+
+   Retained debt: `queueCombatAssets` still called from `CombatScene.preload()` as a
+   transitional net (catalog parity test pins it) pending a live cold-combat texture pass;
+   `ui.combatSceneDismissed` / `ui.isTribulationSceneActive` remain only as the fallback
+   for standalone component tests — production visibility derives from the route;
+   E2E `--workers=4` can trip the spec's 10s READY deadline under WebGL contention
+   (serial run is green).
+```
+
 ---
 
 # Phase R13 — Legacy / Parallel Authority Retirement

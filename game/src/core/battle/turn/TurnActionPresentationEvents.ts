@@ -156,13 +156,8 @@ function toVisualState(participant: TurnBattleParticipant): TurnBattleEntityVisu
   }
 }
 
-// Combat Art Pipeline (2026-09-05) — thay thế bridge 'positions' đã chết của
-// legacy real-time engine (legacy/BattleSystem.ts không còn được tick cho
-// turn-based combat). Đọc TRỰC TIẾP từ TurnBattle.players/enemies mỗi fixed
-// step trong lúc 'fighting' — không phụ thuộc emitPositions()/update() của
-// legacy engine. GameManager gọi hàm này (Task 5 sẽ nối CombatScene nghe).
-export function emitTurnBattleEntitySnapshot(eventBus: EventBus, battle: TurnBattle): void {
-  eventBus.emit('turn_battle_entity_snapshot', {
+export function buildTurnBattleEntitySnapshot(battle: TurnBattle): TurnBattleEntitySnapshotEvent {
+  return {
     players: battle.players.map(toVisualState),
     enemies: battle.enemies.map(toVisualState),
     pendingEnemySpawns: (battle.wave?.pendingEnemySpawns ?? []).map(toPendingSpawnVisualState),
@@ -170,5 +165,14 @@ export function emitTurnBattleEntitySnapshot(eventBus: EventBus, battle: TurnBat
       battle.state === 'countdown' && battle.countdownTurnsRemaining !== undefined
         ? 1 - battle.countdownTurnsRemaining / COUNTDOWN_TOTAL_TICKS
         : undefined,
-  })
+  }
+}
+
+// Combat Art Pipeline (2026-09-05) — thay thế bridge 'positions' đã chết của
+// legacy real-time engine (legacy/BattleSystem.ts không còn được tick cho
+// turn-based combat). Đọc TRỰC TIẾP từ TurnBattle.players/enemies mỗi fixed
+// step trong lúc 'fighting' — không phụ thuộc emitPositions()/update() của
+// legacy engine. GameManager gọi hàm này (Task 5 sẽ nối CombatScene nghe).
+export function emitTurnBattleEntitySnapshot(eventBus: EventBus, battle: TurnBattle): void {
+  eventBus.emit('turn_battle_entity_snapshot', buildTurnBattleEntitySnapshot(battle))
 }

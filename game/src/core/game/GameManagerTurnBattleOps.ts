@@ -1,12 +1,24 @@
+import {
+  PresentationSession,
+  type PresentationHold,
+  type PresentationMode,
+  type SessionPresentationPort,
+  type SessionRef,
+} from '../presentation/PresentationSession'
 import type { Battle } from '../battle/Battle'
 import { initKiemTuBattleResources } from '../battle/KiemTuResourceSystem'
 import { resolveEnemySpawnPosition } from '../battle/EnemySpawnPlacement'
 import { TurnBattleSystem, type TurnBattle } from '../battle/turn/TurnBattleSystem'
-import { CombatAnimationRuntime } from '../battle/turn/CombatAnimationRuntime'
+import { CombatAnimationRuntime, type ResumePlayback } from '../battle/turn/CombatAnimationRuntime'
+export type { ResumePlayback } from '../battle/turn/CombatAnimationRuntime'
 import { TurnBuffSystem } from '../battle/turn/TurnBuffSystem'
 import { TurnReactionManager } from '../battle/turn/TurnReactionManager'
 import type { TurnSkillDefinition, TurnSkillSlotRole } from '../battle/turn/TurnSkillAction'
-import { emitTurnBattleEntitySnapshot } from '../battle/turn/TurnActionPresentationEvents'
+import {
+  emitTurnBattleEntitySnapshot,
+  buildTurnBattleEntitySnapshot,
+  type TurnBattleEntitySnapshotEvent,
+} from '../battle/turn/TurnActionPresentationEvents'
 import { enemyToCombatEntity } from '../enemy/Enemy'
 import type { Enemy } from '../enemy/Enemy'
 import type { CombatEntity } from '../combat/CombatEntity'
@@ -97,6 +109,9 @@ export class GameManagerTurnBattleOps {
   private turnBattleEndEmitted = false
 
   private readonly combatAnimationRuntime: CombatAnimationRuntime
+  private readonly presentationSession: PresentationSession
+  private presentationMode: PresentationMode = 'headless'
+  private isStageStarting = false
 
   constructor(private readonly deps: {
     eventBus: EventBus
@@ -109,6 +124,7 @@ export class GameManagerTurnBattleOps {
     enemyTemplates: TemplateRegistry<Enemy>
     stageTemplates: TemplateRegistry<Stage>
     surviveLethalGuard: SurviveLethalGuard
+    sessionAllocator?: { allocate(): number }
     // Live player/registry reads - GameManager owns these authorities; the
     // ops only reads through accessors (A3: no duplicate state ownership).
     getActivePlayer: () => PlayerData | undefined
@@ -125,6 +141,7 @@ export class GameManagerTurnBattleOps {
     ) => { special?: TurnSkillDefinition; ultimate?: TurnSkillDefinition }
   }) {
     this.turnBattleSystem = new TurnBattleSystem(deps.combatSystem)
+    this.presentationSession = new PresentationSession(deps.sessionAllocator)
 
     // Live getters for turnBattleSystem/turnBattle are required: both are
     // REASSIGNED wholesale by restartTurnBattleCycle()/startStage(), so
@@ -135,6 +152,7 @@ export class GameManagerTurnBattleOps {
       eventBus: deps.eventBus,
       getBattle: () => this.turnBattle,
       syncLegacyBattleState: () => {},
+      isSessionBlocking: () => this.presentationSession.isBlocking(),
     })
   }
 
@@ -142,6 +160,29 @@ export class GameManagerTurnBattleOps {
 
   getTurnBattle(): TurnBattle | null {
     return this.turnBattle
+  }
+
+  /**
+   * Pure snapshot query for presentation reconciliation (Task 4).
+   * Validates sessionId, emits zero events, changes zero state, returns detached plain data.
+   */
+  getCombatPresentationSnapshot(sessionId: number): {
+    sessionId: number
+    entities: TurnBattleEntitySnapshotEvent
+  } | null {
+    const currentSession = this.presentationSession.getCurrentSession()
+    if (!currentSession || currentSession.sessionId !== sessionId || currentSession.kind !== 'combat') {
+      return null
+    }
+
+    if (!this.turnBattle) {
+      return null
+    }
+
+    return {
+      sessionId,
+      entities: buildTurnBattleEntitySnapshot(this.turnBattle),
+    }
   }
 
   /** TurnBattle cast to the read-only Battle shape legacy consumers expect. */
@@ -173,6 +214,22 @@ export class GameManagerTurnBattleOps {
       this.deps.getActivePlayer()?.kiemTuRoute,
       this.deps.getActivePlayer() ? getKiemYPermanent(this.deps.getActivePlayer()!.bossKillCount) : 0,
     )
+
+    if (!this.isStageStarting) {
+      const activeSession = this.presentationSession.getCurrentSession()
+      if (activeSession) {
+        this.presentationSession.end(activeSession)
+      }
+      const session: SessionRef = {
+        kind: 'combat',
+        sessionId: this.presentationSession.allocate(),
+      }
+      this.presentationSession.begin(session, this.presentationMode)
+      if (this.presentationMode === 'interactive') {
+        this.presentationSession.hold(session)
+      }
+      this.deps.eventBus.emit('presentation_session_started', session)
+    }
   }
 
   startBattleWithPlayer(player: PlayerData, playerStats: Stats, enemy: Enemy) {
@@ -412,10 +469,21 @@ export class GameManagerTurnBattleOps {
     stage: Stage,
     repeatContinuously = false,
   ): boolean {
-    const started = this.deps.stageWaves.start(player, playerStats, stage, repeatContinuously)
+    this.isStageStarting = true
+    let started = false
+    try {
+      started = this.deps.stageWaves.start(player, playerStats, stage, repeatContinuously)
+    } finally {
+      this.isStageStarting = false
+    }
 
     if (!started) {
       return false
+    }
+
+    const activeSession = this.presentationSession.getCurrentSession()
+    if (activeSession) {
+      this.presentationSession.end(activeSession)
     }
 
     this.turnBattleRepeatContinuously = repeatContinuously
@@ -483,6 +551,16 @@ export class GameManagerTurnBattleOps {
       )
     }
 
+    const session: SessionRef = {
+      kind: 'combat',
+      sessionId: this.presentationSession.allocate(),
+    }
+    this.presentationSession.begin(session, this.presentationMode)
+    if (this.presentationMode === 'interactive') {
+      this.presentationSession.hold(session)
+    }
+    this.deps.eventBus.emit('presentation_session_started', session)
+
     return true
   }
 
@@ -517,6 +595,13 @@ export class GameManagerTurnBattleOps {
     if (!turnActive) {
       return false
     }
+
+    const session = this.presentationSession.getCurrentSession()
+    if (session) {
+      this.presentationSession.end(session)
+    }
+
+    this.combatAnimationRuntime.resetPendingState()
 
     if (this.turnBattle) {
       this.turnBattle.state = 'defeat'
@@ -554,9 +639,9 @@ export class GameManagerTurnBattleOps {
       // Unified flow: intro -> countdown -> fighting (gauge/wave/result).
       // Each 0.1s fixed step = 1 pacing tick; turn resolution instant.
       if (this.turnBattle) {
-        if (this.combatAnimationRuntime.isAwaitingPresentationLayer()) {
-          // PresentationGate: wait for the first Phaser mount (or the
-          // safety-net timeout) before ticking countdown/fighting.
+        if (this.presentationSession.isBlocking()) {
+          // Held by the presentation coordinator: drop presentation-wait time
+          // instead of accumulating catch-up. Single readiness authority.
         } else if (this.turnBattle.state === 'intro') {
           // Intro/transition: only decrement introTurnsRemaining and flip to
           // 'countdown' at 0 - NO combat logic in this phase.
@@ -764,17 +849,33 @@ export class GameManagerTurnBattleOps {
     return this.combatAnimationRuntime.isAwaitingManualTurnChoice()
   }
 
-  /** Called once at real-app boot ONLY (App.vue) - never from test fixtures. */
-  expectPresentationLayer(): void {
-    this.combatAnimationRuntime.expectPresentationLayer()
+  setPresentationMode(mode: PresentationMode): void {
+    this.presentationMode = mode
   }
 
+  getPresentationMode(): PresentationMode {
+    return this.presentationMode
+  }
+
+  getCurrentPresentationSession(): SessionRef | null {
+    return this.presentationSession.getCurrentSession()
+  }
+
+  getPresentationPort(): SessionPresentationPort {
+    return this.presentationSession
+  }
+
+  /** True while the current interactive session is held by the coordinator. */
   isAwaitingPresentationLayer(): boolean {
-    return this.combatAnimationRuntime.isAwaitingPresentationLayer()
+    return this.presentationSession.isBlocking()
   }
 
   getPendingPlaybackToken(): string | null {
     return this.combatAnimationRuntime.getPendingPlaybackToken()
+  }
+
+  preparePresentationResume(): ResumePlayback | null {
+    return this.combatAnimationRuntime.preparePresentationResume()
   }
 
   setPresentationActive(active: boolean): void {
