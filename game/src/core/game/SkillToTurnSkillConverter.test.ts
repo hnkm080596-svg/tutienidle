@@ -31,6 +31,13 @@ describe('toTurnSkillDefinition', () => {
       expect(turnSkill.damage.components).toEqual([{ kind: 'element', element: 'fire', ratio: 1 }])
       expect(turnSkill.damage.multiplier).toBeCloseTo(1.3, 5)
     }
+    // R3 re-audit (AR-03 gap) — authored manaScalingRatio/attributeScaling
+    // must survive conversion (previously silently dropped).
+    expect(turnSkill.damage?.scaling).toEqual({
+      attributeScaling: [{ attributes: ['attunement'], ratioPerPoint: 0.004 }],
+      manaScalingRatio: 0.001,
+      swordIntentDamageRatio: undefined,
+    })
     // Debuff effect → appliesAilment (bong, chance 1).
     expect(turnSkill.appliesAilment).toEqual({ buffDefinitionId: 'bong', chance: 1 })
   })
@@ -99,6 +106,20 @@ describe('toTurnSkillDefinition', () => {
 
     expect(turnSkill.resourceType).toBe(skill.resourceType)
     expect(turnSkill.resourceCost).toBe(skill.cost)
+  })
+
+  it('leaves damage.scaling undefined for a skill authoring no attributeScaling/manaScalingRatio/swordIntentDamageRatio', () => {
+    const manager = new SkillManager()
+    const skillSystem = new SkillSystem(manager)
+    const synthetic = structuredClone(SKILLS.find((s) => s.id === 'tam_muoi_chan_hoa')!)
+    synthetic.id = 'fixture_no_scaling'
+    synthetic.effects = [{ type: 'damage', value: 1, damageType: 'physical' }]
+    manager.add(synthetic)
+
+    const effective = skillSystem.getEffectiveSkill(synthetic)
+    const turnSkill = toTurnSkillDefinition(synthetic, effective)
+
+    expect(turnSkill.damage?.scaling).toBeUndefined()
   })
 
   // AR-03: Strict converter tests

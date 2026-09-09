@@ -5,6 +5,7 @@ import type { ActionDamageInfo } from '../battle/ActionImpactSystem'
 import type { ActionTargeting } from '../battle/CombatAction'
 import type { SkillEffect } from '../skill/SkillEffect'
 import type { SkillDamageComponent } from '../skill/SkillDamageComponent'
+import type { StatType } from '../stats/StatTypes'
 
 // R3 (AR-03) — Strict Skill → TurnSkillDefinition field mapper.
 // The caller ALWAYS resolves specialization first via
@@ -35,12 +36,26 @@ export function toTurnSkillDefinition(skill: Skill, effective: EffectiveSkill): 
   let damage: ActionDamageInfo | undefined
 
   if (damageEffect) {
+    // R3 re-audit (AR-03 gap) — attributeScaling/manaScalingRatio/
+    // swordIntentDamageRatio were being silently dropped here (only
+    // `.value` survived conversion), so every Pháp Tu/Kiếm Trận skill's
+    // authored scaling had zero effect once cast through the turn
+    // engine. `undefined` when the skill authors none, so unaffected
+    // skills produce an identical damage shape to before.
+    const scaling = damageEffect.attributeScaling || damageEffect.manaScalingRatio || damageEffect.swordIntentDamageRatio
+      ? {
+          attributeScaling: damageEffect.attributeScaling,
+          manaScalingRatio: damageEffect.manaScalingRatio,
+          swordIntentDamageRatio: damageEffect.swordIntentDamageRatio,
+        }
+      : undefined
+
     if (damageEffect.components && damageEffect.components.length > 0) {
-      damage = { kind: 'elemental', components: damageEffect.components, multiplier: damageEffect.value ?? 1 }
+      damage = { kind: 'elemental', components: damageEffect.components, multiplier: damageEffect.value ?? 1, scaling }
     } else if (damageEffect.damageType === 'primordial') {
-      damage = { kind: 'primordial', multiplier: damageEffect.value ?? 1 }
+      damage = { kind: 'primordial', multiplier: damageEffect.value ?? 1, scaling }
     } else {
-      damage = { kind: 'physical', multiplier: damageEffect.value ?? 1 }
+      damage = { kind: 'physical', multiplier: damageEffect.value ?? 1, scaling }
     }
   } else if (!isSelf && !effective.effects.some(isDebuffEffect)) {
     throw new Error(`Unsupported: non-self skill "${skill.id}" has neither damage nor debuff effects`)
@@ -130,6 +145,9 @@ function isDamageEffect(effect: SkillEffect): effect is SkillEffect & {
   consumesWardForDamage?: boolean
   damagePerWardPoint?: number
   healPercentOfDamage?: number
+  attributeScaling?: { attributes: StatType[]; ratioPerPoint: number }[]
+  manaScalingRatio?: number
+  swordIntentDamageRatio?: number
 } {
   return effect.type === 'damage'
 }

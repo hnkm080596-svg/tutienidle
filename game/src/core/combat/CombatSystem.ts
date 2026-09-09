@@ -1,6 +1,6 @@
 import type { CombatEntity } from './CombatEntity'
 
-import { calculateBaseDamage, applyMultiplierAndCritical } from './DamageCalculator'
+import { calculateBaseDamage, applyMultiplierAndCritical, calculateScalingBonus } from './DamageCalculator'
 import { calculateSkillBaseDamage } from './ElementDamageCalculator'
 import { getRealmPressureMultiplier } from './RealmPressure'
 import { getHitChance } from './Accuracy'
@@ -154,7 +154,19 @@ export class CombatSystem {
 
     const isCritical = critical !== undefined ? critical : this.rollCritical(source, target)
 
-    const effectiveMultiplier = damage.multiplier * getRealmPressureMultiplier(source, target)
+    // R3 re-audit (AR-03 gap) — authored per-skill scaling (attributeScaling/
+    // manaScalingRatio/swordIntentDamageRatio, carried on ActionDamageInfo.
+    // scaling since the converter used to drop them) plus the general
+    // skillDamagePercent stat (equipment/node/Kiếm Ý tier), which previously
+    // had no live consumer in the turn engine at all — same formula
+    // SkillEffectSystem.apply() used for the older, non-turn execution path.
+    const scalingBonus = calculateScalingBonus(source, damage.scaling)
+
+    const effectiveMultiplier =
+      damage.multiplier *
+      (1 + scalingBonus) *
+      (1 + clampStatValue('skillDamagePercent', source.stats.skillDamagePercent)) *
+      getRealmPressureMultiplier(source, target)
 
     // Chance to Ignore Resistance — roll 1 LẦN/đòn (khác Penetration phẳng,
     // đây là "bỏ qua hoàn toàn" mitigation của đòn đó nếu trúng).
