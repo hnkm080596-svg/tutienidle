@@ -1,9 +1,13 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { inject, onMounted, onUnmounted, ref, watch } from 'vue'
 import type Phaser from 'phaser'
 import type { MainScene } from '@/game/scenes/MainScene'
 import type { CombatScene } from '@/game/scenes/CombatScene'
 import type { TribulationScene } from '@/game/scenes/TribulationScene'
+import {
+  PHASER_SCENE_ADAPTER_KEY,
+  ASSET_BUNDLE_MANAGER_KEY,
+} from '@/presentation/PresentationContracts'
 import { useGameManager } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
 import type { BattlePositionsEvent } from '@/core/battle/BattleEvents'
@@ -15,11 +19,14 @@ import { makeKiemBarReader, registerKiemBarReader } from '@/game/support/kiemBar
 
 const gameManager = useGameManager()
 const player = usePlayerStore()
+const sceneAdapter = inject(PHASER_SCENE_ADAPTER_KEY, null)
+const bundleManager = inject(ASSET_BUNDLE_MANAGER_KEY, null)
 
 const containerRef = ref<HTMLDivElement | null>(null)
 
 let game: Phaser.Game | null = null
 let resizeObserver: ResizeObserver | null = null
+let hostPublished = false
 let positionsCleanup: (() => void) | null = null
 let isAlive = false
 
@@ -50,11 +57,13 @@ onMounted(() => {
     try {
       const [
         { default: Phaser },
+        { AssetLoaderScene: AssetLoaderSceneClass },
         { MainScene: MainSceneClass },
         { CombatScene: CombatSceneClass },
         { TribulationScene: TribulationSceneClass },
       ] = await Promise.all([
         import('phaser'),
+        import('@/game/scenes/AssetLoaderScene'),
         import('@/game/scenes/MainScene'),
         import('@/game/scenes/CombatScene'),
         import('@/game/scenes/TribulationScene'),
@@ -64,7 +73,7 @@ onMounted(() => {
         return
       }
 
-      setupGame(Phaser, [MainSceneClass, CombatSceneClass, TribulationSceneClass])
+      setupGame(Phaser, [AssetLoaderSceneClass, MainSceneClass, CombatSceneClass, TribulationSceneClass])
     } catch (error) {
       // Component đã unmount trước khi bootstrap xong (cleanup thật đã
       // chạy ở onUnmounted) — không báo lỗi/không đụng state nữa.
@@ -98,7 +107,12 @@ onMounted(() => {
 
 function setupGame(
   Phaser: typeof import('phaser'),
-  scenes: [typeof import('@/game/scenes/MainScene').MainScene, typeof import('@/game/scenes/CombatScene').CombatScene, typeof import('@/game/scenes/TribulationScene').TribulationScene],
+  scenes: [
+    typeof import('@/game/scenes/AssetLoaderScene').AssetLoaderScene,
+    typeof import('@/game/scenes/MainScene').MainScene,
+    typeof import('@/game/scenes/CombatScene').CombatScene,
+    typeof import('@/game/scenes/TribulationScene').TribulationScene,
+  ],
 ) {
   const container = containerRef.value!
 
@@ -143,10 +157,18 @@ function setupGame(
   // cần (vị trí player/quái, animation attack/critical/hit/dodge/cast/
   // death/battle_start/battle_end/combat_scene_exit) đều tới qua đây.
   game.registry.set('eventBus', gameManager.eventBus)
-  // Action Playback Task 7 (2026-09-05) — CombatScene cần ack lại
-  // GameManager (presentationActive + 3 acknowledge methods) — cùng bridge
-  // registry pattern với eventBus; scene không import trực tiếp GameManager.
   game.registry.set('gameManager', gameManager)
+  if (sceneAdapter) {
+    game.registry.set('sceneAdapter', sceneAdapter)
+  }
+  // AssetLoaderScene picks this up in its own create() and registers itself -
+  // see the note there on why the host cannot fetch the scene directly.
+  if (bundleManager) {
+    game.registry.set('bundleManager', bundleManager)
+  }
+  if (bundleManager) {
+    game.registry.set('bundleManager', bundleManager)
+  }
 
   // Late-join replay (fix spawn animation lần đầu, lớp bảo hiểm thứ 2
   // bên cạnh eager preload) — giữ snapshot 'positions' MỚI NHẤT trong
@@ -216,6 +238,26 @@ function setupGame(
     () => publishProfile(),
   )
 
+  /**
+   * Host readiness requires a NONZERO measured size, not just an existing
+   * game. The canvas can mount before its ancestors are laid out (now more
+   * easily, since it mounts behind a closed curtain), and Phaser locks its
+   * drawing-buffer size at construction - handing a 0x0 game to the adapter
+   * lets a primary scene start against a zero-sized buffer.
+   */
+  const publishHostWhenSized = () => {
+    if (!game || hostPublished) {
+      return
+    }
+
+    if (container.clientWidth <= 0 || container.clientHeight <= 0) {
+      return
+    }
+
+    hostPublished = true
+    sceneAdapter?.setGame(game)
+  }
+
   resizeObserver = new ResizeObserver((entries) => {
     const entry = entries[0]
 
@@ -227,14 +269,24 @@ function setupGame(
 
     if (width > 0 && height > 0) {
       game.scale.resize(width, height)
+      publishHostWhenSized()
     }
   })
 
   resizeObserver.observe(container)
+
+  publishHostWhenSized()
+  if (!game.isBooted) {
+    game.events.once('ready', publishHostWhenSized)
+  }
 }
 
 onUnmounted(() => {
   isAlive = false
+  hostPublished = false
+
+  sceneAdapter?.setGame(null)
+  bundleManager?.setLoaderScene(null)
 
   positionsCleanup?.()
 

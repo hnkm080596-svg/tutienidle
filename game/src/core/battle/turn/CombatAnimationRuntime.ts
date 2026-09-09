@@ -1,15 +1,24 @@
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant, type TurnDeclaredAction } from './TurnBattleSystem'
 import type { TurnSkillSlotRole } from './TurnSkillAction'
-import { PresentationGate } from './PresentationGate'
 import { emitTurnReady, emitTurnCastStart, emitTurnActionImpact, emitTurnStandbyComplete } from './TurnActionPresentationEvents'
 import type { EventBus } from '../../events/EventBus'
 import type { CombatAnimationName } from '../CombatAnimationTypes'
+
+export type ResumePlayback =
+  | Readonly<{ phase: 'ready'; token: string; actorId: string }>
+  | Readonly<{ phase: 'cast'; token: string; actorId: string; skillId: string; targetIds: readonly string[] }>
+  | Readonly<{ phase: 'complete'; token: string; actorId: string; targetIds: readonly string[] }>
+  | Readonly<{ phase: 'manual'; actorId: string }>
 
 /**
  * Combat Runtime Separation (2026-09-07, AGENTS.md P17) — owns the
  * presentation-ack timing state that used to live directly as loose private
  * fields on GameManager: 5-phase state machine (ready -> cast -> impact ->
- * complete), the manual-mode pause, and the boot-race PresentationGate.
+ * complete) and the manual-mode pause.
+ *
+ * Readiness is NOT owned here. PresentationSession (held per interactive
+ * session by the presentation coordinator) is the single readiness
+ * authority; this runtime only asks it via deps.isSessionBlocking().
  *
  * This class's only job is TIMING — advance/hold the phase, pick the
  * current animation state, and signal Phaser via the event bus. It owns
@@ -33,6 +42,7 @@ export class CombatAnimationRuntime {
       eventBus: EventBus
       getBattle: () => TurnBattle | null
       syncLegacyBattleState: () => void
+      isSessionBlocking?: () => boolean
     },
   ) {}
 
@@ -81,21 +91,6 @@ export class CombatAnimationRuntime {
    */
   private presentationActive = false
 
-  /** Defect Task 3 (2026-09-05) — boot-race gate: chờ CombatScene mount lần
-  * đầu (hoặc safety-net timeout) trước khi tick battle — chặn headless-
-  * resolve toàn bộ trận 1 trước Phaser kịp mount. */
-  private readonly presentationGate = new PresentationGate()
-
-  /** Called once at real-app boot ONLY (App.vue) — never from test fixtures. */
-  expectPresentationLayer(): void {
-    this.presentationGate.expect()
-  }
-
-  /** True while the very first Phaser boot hasn't finished mounting CombatScene yet. */
-  isAwaitingPresentationLayer(): boolean {
-    return this.presentationGate.isBlocking()
-  }
-
   /** Tick đã peek actor ready, chờ acknowledgeTurnReady(). */
   private pendingReadyActor: TurnBattleParticipant | null = null
 
@@ -129,13 +124,16 @@ export class CombatAnimationRuntime {
     return this.presentationActive
   }
 
+  /**
+   * Explicit playback-mode switch. `false` is the intentional headless path
+   * and keeps the historical drain contract (see handlePresentationDeactivated).
+   * A renderer FAILURE must never come through here - it uses
+   * detachPresentation('hold'), which preserves pending work.
+   */
   setPresentationActive(active: boolean): void {
     this.presentationActive = active
 
-    if (active) {
-      // Defect Task 3 — Phaser mounted lần đầu: mở boot-race gate (sticky).
-      this.presentationGate.markReady()
-    } else {
+    if (!active) {
       this.handlePresentationDeactivated()
     }
   }
@@ -183,6 +181,10 @@ export class CombatAnimationRuntime {
 
   /** Phaser gọi khi ready flourish xong → declare action, phát 'turn_cast_start'. */
   acknowledgeTurnReady(token?: string): void {
+    if (this.deps.isSessionBlocking?.()) {
+      return
+    }
+
     // R5 (AR-20) — require identity at public boundary; reject missing, empty, or mismatched token.
     if (!token || token !== this.playbackToken) {
       return
@@ -211,6 +213,10 @@ export class CombatAnimationRuntime {
 
   /** Phaser gọi tại impact frame (lunge tween xong) → áp damage, phát VFX. */
   acknowledgeActionImpact(token?: string): void {
+    if (this.deps.isSessionBlocking?.()) {
+      return
+    }
+
     // R5 (AR-20) — require identity at public boundary; reject missing, empty, or mismatched token.
     if (!token || token !== this.playbackToken) {
       return
@@ -262,6 +268,10 @@ export class CombatAnimationRuntime {
 
   /** Phaser gọi khi VFX tween xong → turn cleanup, phát standby tail. */
   acknowledgeActionComplete(token?: string): void {
+    if (this.deps.isSessionBlocking?.()) {
+      return
+    }
+
     // R5 (AR-20) — require identity at public boundary; reject missing, empty, or mismatched token.
     if (!token || token !== this.playbackToken) {
       return
@@ -288,6 +298,10 @@ export class CombatAnimationRuntime {
    * (no-op an toàn — choice bị bỏ, không crash).
    */
   submitTurnChoice(role: TurnSkillSlotRole): boolean {
+    if (this.deps.isSessionBlocking?.()) {
+      return false
+    }
+
     const battle = this.deps.getBattle()
 
     if (!this.awaitedManualActor || !battle) {
@@ -362,5 +376,66 @@ export class CombatAnimationRuntime {
     this.pendingReadyActor = null
     this.pendingDeclaredAction = null
     this.pendingImpact = null
+    this.playbackToken = ''
+  }
+
+  /**
+   * Detaches presentation under the specified policy:
+   * - 'hold': preserves pending work and keeps presentation active; does NOT drain.
+   * - 'headless': explicitly deactivates presentation mode and drains pending phases.
+   */
+  detachPresentation(policy: 'hold' | 'headless'): void {
+    if (policy === 'hold') {
+      this.presentationActive = true
+    } else if (policy === 'headless') {
+      this.presentationActive = false
+      this.handlePresentationDeactivated()
+    }
+  }
+
+  /**
+   * Inspects pending action playback state and prepares a resume payload.
+   * Renews the playback token once for each re-attachment attempt so old callbacks become stale.
+   * Returns null if no phase is pending.
+   */
+  preparePresentationResume(): ResumePlayback | null {
+    if (this.pendingReadyActor) {
+      const token = this.nextPlaybackToken()
+      return {
+        phase: 'ready',
+        token,
+        actorId: this.pendingReadyActor.id,
+      }
+    }
+
+    if (this.pendingDeclaredAction) {
+      const token = this.nextPlaybackToken()
+      return {
+        phase: 'cast',
+        token,
+        actorId: this.pendingDeclaredAction.actor.id,
+        skillId: this.pendingDeclaredAction.declared.skillId,
+        targetIds: this.pendingDeclaredAction.declared.affected.map((target) => target.id),
+      }
+    }
+
+    if (this.pendingImpact) {
+      const token = this.nextPlaybackToken()
+      return {
+        phase: 'complete',
+        token,
+        actorId: this.pendingImpact.actor.id,
+        targetIds: [...this.pendingImpact.targetIds],
+      }
+    }
+
+    if (this.awaitedManualActor) {
+      return {
+        phase: 'manual',
+        actorId: this.awaitedManualActor.id,
+      }
+    }
+
+    return null
   }
 }

@@ -3,12 +3,13 @@
 // nút "Chiến Đấu" trực tiếp cũ. 3 lựa chọn theo đúng thứ tự người
 // dùng mô tả: Địa Giới (map lớn) → Màn (trong Địa Giới đó) → chế độ
 // (Lặp Lại Khiêu Chiến / Tự Động Thám Hiểm) → Bắt Đầu.
-import { computed, ref, watch } from 'vue'
+import { computed, inject, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { usePlayerStore } from '@/stores/player'
 import { useUiStore, type BattleRunMode } from '@/stores/ui'
 import { useGameManager } from '@/composables/useGameState'
 import { useBattleActions } from '@/composables/useBattleActions'
+import { ASSET_BUNDLE_MANAGER_KEY } from '@/presentation/PresentationContracts'
 import BuildingConstructionGate from './BuildingConstructionGate.vue'
 import GameButton from '@/components/common/GameButton.vue'
 import Chip from '@/components/common/primitives/Chip.vue'
@@ -21,6 +22,11 @@ const player = usePlayerStore()
 const ui = useUiStore()
 const gameManager = useGameManager()
 const { startSelectedStage } = useBattleActions()
+const assetManager = inject(ASSET_BUNDLE_MANAGER_KEY, null)
+
+onMounted(() => {
+  assetManager?.prefetch(['combat']).catch(() => {})
+})
 
 // Combat UI Redesign mục 4/15 — Chọn Ải là nơi DUY NHẤT cấu hình Auto
 // Battle TRƯỚC trận (Combat Scene giờ chiếm toàn màn hình, không còn

@@ -1,3 +1,11 @@
+import {
+  SessionAllocator,
+  type PresentationHold,
+  type PresentationMode,
+  type SessionKind,
+  type SessionPresentationPort,
+  type SessionRef,
+} from '../presentation/PresentationSession'
 import { EventBus } from '../events/EventBus'
 
 import { CombatSystem } from '../combat/CombatSystem'
@@ -135,7 +143,7 @@ import { GameManagerBuildingOps } from './GameManagerBuildingOps'
 import { GameManagerAlchemyOps } from './GameManagerAlchemyOps'
 import { GameManagerQuestOps } from './GameManagerQuestOps'
 import { GameManagerSaveRestore } from './GameManagerSaveRestore'
-import { GameManagerTurnBattleOps } from './GameManagerTurnBattleOps'
+import { GameManagerTurnBattleOps, type ResumePlayback } from './GameManagerTurnBattleOps'
 import { HiddenBeastSystem } from './HiddenBeastSystem'
 import { TribulationDirector, type ActiveTribulationState } from '../tribulation/TribulationDirector'
 
@@ -150,11 +158,24 @@ import type { QuestProgress } from '../quest/QuestProgress'
 // ActiveTribulation/TRIBULATION_COOLDOWN_SECONDS t? GameManager).
 export { TRIBULATION_COOLDOWN_SECONDS } from '../tribulation/TribulationDirector'
 export type { ActiveTribulationState } from '../tribulation/TribulationDirector'
+export type {
+  PresentationHold,
+  PresentationMode,
+  SessionKind,
+  SessionPresentationPort,
+  SessionRef,
+} from '../presentation/PresentationSession'
 
 // Turn-based pacing constants moved into GameManagerTurnBattleOps (C2 split)
 // - re-exported for existing import sites (TurnActionPresentationEvents,
 // intro-phase/action-playback tests).
-export { COUNTDOWN_TOTAL_TICKS, INTRO_TOTAL_TICKS } from './GameManagerTurnBattleOps'
+export { COUNTDOWN_TOTAL_TICKS, INTRO_TOTAL_TICKS, type ResumePlayback } from './GameManagerTurnBattleOps'
+export {
+  buildTurnBattleEntitySnapshot,
+  type TurnBattleEntitySnapshotEvent,
+  type TurnBattleEntityVisualState,
+} from '../battle/turn/TurnActionPresentationEvents'
+import type { TurnBattleEntitySnapshotEvent } from '../battle/turn/TurnActionPresentationEvents'
 
 
 import { RewardSystem } from '../reward/RewardSystem'
@@ -525,6 +546,7 @@ export class GameManager {
   private readonly alchemyOps: GameManagerAlchemyOps
   private readonly questOps: GameManagerQuestOps
   private readonly saveRestore: GameManagerSaveRestore
+  private readonly sessionAllocator = new SessionAllocator()
 
   // Quï¿½i ?n (spec dot-pha-loi-kiep ï¿½4.1c) ï¿½ c?a s? 1000 kill Luy?n Khï¿½.
   readonly hiddenBeastSystem: HiddenBeastSystem
@@ -593,6 +615,7 @@ export class GameManager {
 
     this.tribulationDirector = new TribulationDirector({
       eventBus: this.eventBus,
+      sessionAllocator: this.sessionAllocator,
     })
 
     this.equipmentOps = new EquipmentOpsSystem({
@@ -695,6 +718,7 @@ export class GameManager {
       enemyTemplates: this.enemyTemplates,
       stageTemplates: this.stageTemplates,
       surviveLethalGuard: this.surviveLethalGuard,
+      sessionAllocator: this.sessionAllocator,
       getActivePlayer: () => this.activePlayer,
       getSkillRuntimeStats: (player) => this.getSkillRuntimeStats(player),
       getSkillLevels: () =>
@@ -2348,12 +2372,77 @@ export class GameManager {
     return this.turnBattleOps.isAwaitingManualTurnChoice()
   }
 
-  /** Called once at real-app boot ONLY (App.vue) — never from test fixtures. */
-  expectPresentationLayer(): void {
-    this.turnBattleOps.expectPresentationLayer()
+  setPresentationMode(mode: PresentationMode): void {
+    this.turnBattleOps.setPresentationMode(mode)
+    this.tribulationDirector.setPresentationMode(mode)
   }
 
-  /** True while the very first Phaser boot hasn't finished mounting CombatScene yet. */
+  getPresentationMode(): PresentationMode {
+    return this.turnBattleOps.getPresentationMode()
+  }
+
+  /**
+   * Without `kind` this answers "any active session", combat first - that is a
+   * recovery query for the coordinator, NOT an identity source for a caller
+   * that just issued a start command. Entry points MUST pass their kind:
+   * combat and tribulation sessions can be active at the same time (a terminal
+   * battle may still sit at Home), so an unscoped read can hand back the other
+   * owner's session and produce a request the coordinator must reject.
+   */
+  getCurrentPresentationSession(kind?: SessionKind): SessionRef | null {
+    if (kind === 'combat') {
+      return this.turnBattleOps.getCurrentPresentationSession()
+    }
+
+    if (kind === 'tribulation') {
+      return this.tribulationDirector.getCurrentPresentationSession()
+    }
+
+    return (
+      this.turnBattleOps.getCurrentPresentationSession() ??
+      this.tribulationDirector.getCurrentPresentationSession() ??
+      null
+    )
+  }
+
+  getPresentationPort(): SessionPresentationPort {
+    return {
+      getCurrentSession: () => this.getCurrentPresentationSession(),
+      hold: (session) => {
+        if (session.kind === 'combat') {
+          return this.turnBattleOps.getPresentationPort().hold(session)
+        }
+        if (session.kind === 'tribulation') {
+          return this.tribulationDirector.getPresentationPort().hold(session)
+        }
+        return null
+      },
+      attach: (token) => {
+        return (
+          this.turnBattleOps.getPresentationPort().attach(token) ||
+          this.tribulationDirector.getPresentationPort().attach(token)
+        )
+      },
+      release: (token) => {
+        return (
+          this.turnBattleOps.getPresentationPort().release(token) ||
+          this.tribulationDirector.getPresentationPort().release(token)
+        )
+      },
+      detach: (token, policy) => {
+        return (
+          this.turnBattleOps.getPresentationPort().detach(token, policy) ||
+          this.tribulationDirector.getPresentationPort().detach(token, policy)
+        )
+      },
+    }
+  }
+
+  getTribulationPresentationSnapshot(sessionId: number): { sessionId: number; state: ActiveTribulationState } | null {
+    return this.tribulationDirector.getPresentationSnapshot(sessionId)
+  }
+
+  /** True while the current interactive session is held by the coordinator. */
   isAwaitingPresentationLayer(): boolean {
     return this.turnBattleOps.isAwaitingPresentationLayer()
   }
@@ -2361,6 +2450,17 @@ export class GameManager {
   /** Test/UI đọc token hiện tại của phase đang chờ (null nếu không pending). */
   getPendingPlaybackToken(): string | null {
     return this.turnBattleOps.getPendingPlaybackToken()
+  }
+
+  preparePresentationResume(): ResumePlayback | null {
+    return this.turnBattleOps.preparePresentationResume()
+  }
+
+  getCombatPresentationSnapshot(sessionId: number): {
+    sessionId: number
+    entities: TurnBattleEntitySnapshotEvent
+  } | null {
+    return this.turnBattleOps.getCombatPresentationSnapshot(sessionId)
   }
 
   setPresentationActive(active: boolean): void {

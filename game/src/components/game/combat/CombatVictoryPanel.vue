@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, inject, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useGameManager } from '@/composables/useGameState'
 import { useBattleActions } from '@/composables/useBattleActions'
 import { useAutoRetryCountdown } from '@/composables/useAutoRetryCountdown'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
+import { GAME_PRESENTATION_KEY } from '@/presentation/PresentationContracts'
 import { formatDuration } from '@/core/format/formatDuration'
 import GameButton from '@/components/common/GameButton.vue'
 import { resolveNextProgressStage } from '@/core/stage/ProgressStageResolver'
@@ -27,10 +28,11 @@ const ui = useUiStore()
 const player = usePlayerStore()
 const { t } = useI18n({ useScope: 'local' })
 const { startBattle } = useBattleActions()
+const presentation = inject(GAME_PRESENTATION_KEY, null)
 
 const summary = computed(() => gameManager.getBattleRewardSummary())
 
-function refight(): boolean {
+function refight(): boolean | Promise<boolean> {
   if (!ui.selectedStageId) {
     return false
   }
@@ -50,6 +52,9 @@ function retryNow() {
 
 function continueToStageSelect() {
   ui.exitCombatScene()
+  if (presentation) {
+    void presentation.coordinator.request({ target: 'home' })
+  }
   gameManager.eventBus.emit('combat_scene_exit', undefined)
 }
 

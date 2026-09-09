@@ -1,4 +1,5 @@
 ﻿import Phaser from 'phaser'
+import type { ResumePlayback } from '@/core/battle/turn/CombatAnimationRuntime'
 import type { EventBus } from '@/core/events/EventBus'
 import type {
   BattlePositionsEvent,
@@ -518,7 +519,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // Action Playback Task 7 (2026-09-05) — GameManager bridge (set trong
   // subscribeCombatEvents từ registry; scene KHÔNG import trực tiếp).
   private gameManagerRef?: {
-    setPresentationActive: (active: boolean) => void
+    setPresentationActive?: (active: boolean) => void
     acknowledgeTurnReady: (token?: string) => void
     acknowledgeActionImpact: (token?: string) => void
     acknowledgeActionComplete: (token?: string) => void
@@ -535,7 +536,6 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       ['cast_start', (event: CombatScenePayload) => this.onCastStart(event)],
       ['cast_complete', (event: CombatScenePayload) => this.onCastComplete(event)],
       ['death', (event: CombatScenePayload) => this.onDeath(event)],
-      ['battle_start', () => this.onBattleStart()],
       [
         'player_visual_profile_changed',
         (event: CombatScenePayload) => {
@@ -553,7 +553,6 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       ],
       ['player_teleported', (event: PlayerTeleportedEvent) => this.onPlayerTeleported(event)],
       ['battle_end', () => this.onBattleEnd()],
-      ['combat_scene_exit', () => this.onExit()],
       ['damage', (event: CombatEvent) => this.onDamageNumber(event)],
       // 6A-T2 (2026-09-01) — floating kill/heal.
       [
@@ -618,10 +617,25 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   preload() {
-    // ToÃƒÂ n bÃ¡Â»â„¢ texture combat dÃƒÂ¹ng chung 1 helper vÃ¡Â»â€ºi MainScene (eager
-    // preload lÃƒÂºc boot Ã¢â‚¬â€ fix "lÃ¡ÂºÂ§n Ã„â€˜Ã¡ÂºÂ§u vÃƒÂ o combat khÃƒÂ´ng thÃ¡ÂºÂ¥y spawn
-    // animation", xem support/CombatPreload.ts).
+    // TRANSITIONAL net. AssetBundleManager now ensures the 'combat' bundle
+    // before this scene is ever activated, and AssetBundleCatalog's parity
+    // test pins its enumeration to this helper's queued keys - so in a correct
+    // run this queue is empty and Phaser skips it. It stays until the live
+    // browser pass (P14) confirms cold combat entry renders every texture;
+    // removing it earlier would trade a proven path for an unverified one.
     queueCombatAssets(this)
+  }
+
+  private initTransitionId = 0
+  private initSessionId?: number
+
+  init(data?: { transitionId?: number; sessionId?: number }): void {
+    if (data?.transitionId) {
+      this.initTransitionId = data.transitionId
+    }
+    if (data?.sessionId) {
+      this.initSessionId = data.sessionId
+    }
   }
 
   create() {
@@ -705,23 +719,44 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.ensurePlayerHud()
     this._playerHud?.setVisible(this.inBattle)
 
-    // Late-join replay (fix spawn animation lÃ¡ÂºÂ§n Ã„â€˜Ã¡ÂºÂ§u, 2026-08-26): nÃ¡ÂºÂ¿u
-    // scene start MUÃ¡Â»ËœN so vÃ¡Â»â€ºi battle_start, phÃƒÂ¡t lÃ¡ÂºÂ¡i snapshot positions
-    // mÃ¡Â»â€ºi nhÃ¡ÂºÂ¥t tÃ¡Â»Â« registry (bridge trong PhaserCanvas.vue) Ã„â€˜Ã¡Â»Æ’ reconcile
-    // telegraph/spawn theo Ã„â€˜ÃƒÂºng phase Ã„â€˜ang chÃ¡ÂºÂ¡y. Snapshot stale (>2s)
-    // bÃ¡Â»Â qua Ã¢â‚¬â€ trÃ¡ÂºÂ­n kÃ¡ÂºÂ¿ tiÃ¡ÂºÂ¿p tÃ¡Â»Â± cÃƒÂ³ snapshot tÃ†Â°Ã†Â¡i trong ~100ms.
-    const snapshot = this.registry.get('lastBattlePositionsSnapshot') as
-      | { event: BattlePositionsEvent; at: number }
-      | undefined
+    // Initial snapshot reconciliation via GameManager query (Task 4/10)
+    const gameManager = this.registry.get('gameManager') as {
+      getCombatPresentationSnapshot?: (sessionId: number) => {
+        sessionId: number
+        entities: TurnBattleEntitySnapshotEvent
+      } | null
+      preparePresentationResume?: () => ResumePlayback | null
+    } | undefined
 
-    if (snapshot && performance.now() - snapshot.at < 2000) {
-      this.onPositions(snapshot.event)
+    if (this.initSessionId && gameManager?.getCombatPresentationSnapshot) {
+      const initialSnapshot = gameManager.getCombatPresentationSnapshot(this.initSessionId)
+      if (initialSnapshot) {
+        this.onTurnBattleEntitySnapshot(initialSnapshot.entities)
+      }
+    } else {
+      // Fallback for standalone/legacy tests that don't supply sessionId
+      const snapshot = this.registry.get('lastBattlePositionsSnapshot') as
+        | { event: BattlePositionsEvent; at: number }
+        | undefined
+
+      if (snapshot && performance.now() - snapshot.at < 2000) {
+        this.onPositions(snapshot.event)
+      }
     }
 
-    // VÃƒÂ²ng Ã„â€˜Ã¡Â»Âi background (2026-08-26): KHÃƒâ€NG rotate Ã¡Â»Å¸ Ã„â€˜ÃƒÂ¢y nÃ¡Â»Â¯a Ã¢â‚¬â€ trÃ¡ÂºÂ­n
-    // Ã„â€˜Ã¡ÂºÂ§u dÃƒÂ¹ng Ã„â€˜ÃƒÂºng preset Ã„â€˜ÃƒÂ£ preload lÃƒÂºc boot; variant kÃ¡ÂºÂ¿ tiÃ¡ÂºÂ¿p Ã„â€˜Ã†Â°Ã¡Â»Â£c
-    // chÃ¡Â»Ân + load + swap tÃ¡ÂºÂ¡i battle_end (xem onBattleEnd()).
     this.inBattle = true
+
+    // Report READY to adapter
+    const adapter = this.registry.get('sceneAdapter') as {
+      reportReady: (ctx: { transitionId: number; sessionId?: number }) => void
+    } | undefined
+    adapter?.reportReady({
+      transitionId: this.initTransitionId,
+      sessionId: this.initSessionId,
+    })
+
+    // Apply resume playback if re-attaching to an in-flight action
+    this.applyResumePlayback(gameManager?.preparePresentationResume?.())
 
     this.events.once('shutdown', this.shutdownHandler)
   }
@@ -1566,15 +1601,13 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     // completion gắn token để stale callback bị engine từ chối.
     this.gameManagerRef = this.registry.get('gameManager') as
       | {
-          setPresentationActive: (active: boolean) => void
+          setPresentationActive?: (active: boolean) => void
           acknowledgeTurnReady: (token?: string) => void
           acknowledgeActionImpact: (token?: string) => void
           acknowledgeActionComplete: (token?: string) => void
           getPendingPlaybackToken: () => string | null
         }
       | undefined
-
-    this.gameManagerRef?.setPresentationActive(true)
   }
 
   private unsubscribeCombatEvents() {
@@ -1588,10 +1621,6 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
     this.boundHandlers = []
     this.eventBus = undefined
-
-    // Action Playback Task 7 — headless drain mọi pending phase (trận không
-    // treo nếu scene unmount giữa turn).
-    this.gameManagerRef?.setPresentationActive(false)
     this.gameManagerRef = undefined
   }
 
@@ -1798,12 +1827,6 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
    */
   playTeleportVfx(_from: GridPosition, to: GridPosition) {
     this.vfxSpawner.playTeleportVfx(_from, to)
-  }
-
-  // NgÃ†Â°Ã¡Â»Âi chÃ†Â¡i bÃ¡ÂºÂ¥m "TiÃ¡ÂºÂ¿p TÃ¡Â»Â¥c"/"VÃ¡Â»Â Ã„ÂÃ¡Â»â„¢ng PhÃ¡Â»Â§" (CombatResultModal.vue) Ã¢â‚¬â€
-  // quay lÃ¡ÂºÂ¡i Home Scene.
-  private onExit() {
-    this.scene.start('MainScene')
   }
 
   onAttack(event: CombatScenePayload) {
@@ -2213,6 +2236,60 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.dyingIds.clear()
 
     this.castBar.clear()
+  }
+
+  /**
+   * Rebinds an active CombatScene to a new domain session without destroying the scene or Game.
+   * Resets visual state, reconciles with the session's initial snapshot, and reports READY.
+   */
+  rebindSession(context: { transitionId: number; sessionId?: number }): void {
+    this.initTransitionId = context.transitionId
+    this.initSessionId = context.sessionId
+
+    this.onBattleStart()
+
+    const gameManager = this.registry.get('gameManager') as {
+      getCombatPresentationSnapshot?: (sessionId: number) => {
+        sessionId: number
+        entities: TurnBattleEntitySnapshotEvent
+      } | null
+      preparePresentationResume?: () => ResumePlayback | null
+    } | undefined
+
+    if (context.sessionId && gameManager?.getCombatPresentationSnapshot) {
+      const snapshot = gameManager.getCombatPresentationSnapshot(context.sessionId)
+      if (snapshot) {
+        this.onTurnBattleEntitySnapshot(snapshot.entities)
+      }
+    }
+
+    const adapter = this.registry.get('sceneAdapter') as {
+      reportReady: (ctx: { transitionId: number; sessionId?: number }) => void
+    } | undefined
+    adapter?.reportReady(context)
+
+    this.applyResumePlayback(gameManager?.preparePresentationResume?.())
+  }
+
+  private applyResumePlayback(resume: ResumePlayback | null | undefined): void {
+    if (!resume) {
+      return
+    }
+
+    if (resume.phase === 'ready') {
+      this.onTurnReady({ actorId: resume.actorId })
+    } else if (resume.phase === 'cast') {
+      this.onAttack({
+        sourceId: resume.actorId,
+        skillId: resume.skillId,
+        targetId: resume.targetIds[0],
+      })
+    } else if (resume.phase === 'complete') {
+      const token = resume.token
+      this.time.delayedCall(50, () => {
+        this.gameManagerRef?.acknowledgeActionComplete(token)
+      })
+    }
   }
 
   // ================= Combat Grid Rework Ã¢â‚¬â€ VFX 2.5D theo space =================

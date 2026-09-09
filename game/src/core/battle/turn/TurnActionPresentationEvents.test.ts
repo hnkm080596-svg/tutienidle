@@ -6,6 +6,7 @@ import {
   emitTurnActionImpact,
   emitTurnStandbyComplete,
   emitTurnBattleEntitySnapshot,
+  buildTurnBattleEntitySnapshot,
   type TurnBattleEntitySnapshotEvent,
 } from './TurnActionPresentationEvents'
 import { COUNTDOWN_TOTAL_TICKS } from '@/core/game/GameManager'
@@ -285,6 +286,71 @@ describe('TurnActionPresentationEvents', () => {
       emitTurnBattleEntitySnapshot(eventBus, battle)
 
       expect(received!.countdownProgress).toBeUndefined()
+    })
+  })
+
+  describe('buildTurnBattleEntitySnapshot (Task 4 pure snapshot builder)', () => {
+    it('produces identical payload to emitTurnBattleEntitySnapshot at same state', () => {
+      const eventBus = new EventBus()
+      let emitted: TurnBattleEntitySnapshotEvent | undefined
+      eventBus.on('turn_battle_entity_snapshot', (e) => {
+        emitted = e as TurnBattleEntitySnapshotEvent
+      })
+
+      const battle: TurnBattle = {
+        players: [makeParticipant('player', createCombatant({ id: 'player', name: 'Hero', row: 4, x: 1, currentHp: 90, maxHp: 100 }), 100, 0)],
+        enemies: [makeParticipant('enemy', createCombatant({ id: 'enemy', name: 'Monster', row: 2, x: 5, currentHp: 40, maxHp: 50 }), 80, 1)],
+        state: 'countdown',
+        countdownTurnsRemaining: 20,
+      }
+
+      emitTurnBattleEntitySnapshot(eventBus, battle)
+      const built = buildTurnBattleEntitySnapshot(battle)
+
+      expect(emitted).toEqual(built)
+    })
+
+    it('returns detached arrays and objects — mutating snapshot does not affect TurnBattle', () => {
+      const battle: TurnBattle = {
+        players: [makeParticipant('player', createCombatant({ id: 'player', name: 'Hero', row: 4, x: 1, currentHp: 90, maxHp: 100 }), 100, 0)],
+        enemies: [makeParticipant('enemy', createCombatant({ id: 'enemy', name: 'Monster', row: 2, x: 5, currentHp: 40, maxHp: 50 }), 80, 1)],
+        state: 'fighting',
+      }
+
+      const snapshot = buildTurnBattleEntitySnapshot(battle)
+      snapshot.players.push({
+        id: 'fake_player',
+        name: 'Fake',
+        row: 0,
+        column: 0,
+        currentHp: 10,
+        maxHp: 10,
+        alive: true,
+        isBoss: false,
+      })
+      snapshot.enemies[0]!.currentHp = 9999
+
+      expect(battle.players).toHaveLength(1)
+      expect(battle.enemies[0]!.entity.currentHp).toBe(40)
+    })
+
+    it('is a pure query with zero side effects: no ticks, no mutations, no events', () => {
+      const battle: TurnBattle = {
+        players: [makeParticipant('player', createCombatant({ id: 'player', name: 'Hero', row: 4, x: 1 }), 100, 0)],
+        enemies: [],
+        state: 'intro',
+        introTurnsRemaining: 20,
+        countdownTurnsRemaining: 30,
+        totalTurnsElapsed: 5,
+      }
+
+      const snapshot1 = buildTurnBattleEntitySnapshot(battle)
+      const snapshot2 = buildTurnBattleEntitySnapshot(battle)
+
+      expect(snapshot1).toEqual(snapshot2)
+      expect(battle.introTurnsRemaining).toBe(20)
+      expect(battle.countdownTurnsRemaining).toBe(30)
+      expect(battle.totalTurnsElapsed).toBe(5)
     })
   })
 })

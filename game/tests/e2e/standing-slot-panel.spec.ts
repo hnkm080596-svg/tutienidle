@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import { waitForPresentationIdle } from './helpers'
 
 /**
  * P14 verification (standing-slot plan Task 6 Step 7, 2026-09-07):
@@ -38,6 +39,10 @@ test.describe('Standing slot panel (P14)', () => {
     await page.getByTestId('creation-finish').click()
 
     await expect(page.locator('.game-root')).toBeVisible({ timeout: 30_000 })
+
+    // Home mounts behind the closed curtain, which locks pointer/keyboard
+    // until the transition is revealed - interacting before that is a race.
+    await waitForPresentationIdle(page)
 
     // Dismiss tutorial overlay if present (blocks pointer events).
     const tutorial = page.locator('.tutorial-overlay')

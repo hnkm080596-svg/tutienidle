@@ -44,8 +44,6 @@ const zoneStageLabel = computed(() => {
 
 <template>
   <div v-if="visible" class="combat-intro-overlay">
-    <div class="combat-intro-overlay__curtain combat-intro-overlay__curtain--left" />
-    <div class="combat-intro-overlay__curtain combat-intro-overlay__curtain--right" />
     <div class="combat-intro-overlay__content">
       <span class="combat-intro-overlay__label">{{ t('combat.overlay.intro.entering') }}</span>
       <span v-if="zoneStageLabel" class="combat-intro-overlay__zone-stage">{{ zoneStageLabel }}</span>
@@ -60,31 +58,6 @@ const zoneStageLabel = computed(() => {
   z-index: 13;
   pointer-events: none;
   overflow: hidden;
-}
-
-.combat-intro-overlay__curtain {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 50%;
-  background: var(--ink-950);
-  animation: combat-intro-curtain-close 0.4s ease-out forwards;
-}
-
-.combat-intro-overlay__curtain--left {
-  left: 0;
-  transform: translateX(-100%);
-}
-
-.combat-intro-overlay__curtain--right {
-  right: 0;
-  transform: translateX(100%);
-}
-
-@keyframes combat-intro-curtain-close {
-  to {
-    transform: translateX(0);
-  }
 }
 
 .combat-intro-overlay__content {

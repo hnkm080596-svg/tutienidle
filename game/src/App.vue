@@ -1,10 +1,22 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, provide, ref } from 'vue'
+import { computed, onMounted, onUnmounted, provide, ref } from 'vue'
 import { usePlayerStore } from './stores/player'
 import { useUiStore } from './stores/ui'
 import { GameClock, DEFAULT_MAX_OFFLINE_SECONDS } from './core/idle/GameClock'
 import { GameManager } from './core/game/GameManager'
 import { GAME_MANAGER_KEY, STATE_VERSION_KEY, BUMP_STATE_KEY } from './composables/useGameState'
+import {
+  PHASER_SCENE_ADAPTER_KEY,
+  ASSET_BUNDLE_MANAGER_KEY,
+  VUE_ROUTE_ADAPTER_KEY,
+  GAME_PRESENTATION_KEY,
+  type CurtainPort,
+} from './presentation/PresentationContracts'
+import { PhaserSceneAdapter } from './presentation/PhaserSceneAdapter'
+import { AssetBundleManager } from './presentation/assets/AssetBundleManager'
+import { CompositeRenderer, createVueRouteAdapter } from './presentation/VueRouteAdapter'
+import { GamePresentationCoordinator } from './presentation/GamePresentationCoordinator'
+import { createGamePresentation } from './presentation/createGamePresentation'
 import { checkTribulationOutcomeAction } from './composables/useTribulation'
 import { isBattleInProgress } from './core/battle/BattleTypes'
 import { useBreakthrough } from './composables/useBreakthrough'
@@ -16,6 +28,8 @@ import { useSaveIssueStore } from './stores/saveIssue'
 import { savePersistedUiAutomationFlags } from './stores/uiFlagsPersistence'
 import { useAppLifecycle } from './composables/useAppLifecycle'
 import GameRoot from './components/layout/GameRoot.vue'
+import RouteMount from './components/game/RouteMount.vue'
+import PresentationTransitionOverlay from './components/game/PresentationTransitionOverlay.vue'
 import LoadingScreen from './components/common/LoadingScreen.vue'
 import ErrorBoundary from './components/common/ErrorBoundary.vue'
 import ErrorScreen from './components/common/ErrorScreen.vue'
@@ -89,13 +103,64 @@ const saveIssue = useSaveIssueStore()
 // Home. Set true ở cuối onMounted() sau khi mọi thứ (load save/đăng
 // ký data/tick loop) đã sẵn sàng.
 const isBooted = ref(false)
-// MainMenu overlay — TẠM VÔ HIỆU HÓA (mặc định ẩn). Luồng boot hiện
-// hành là auth-first (AuthEntryScreen), e2e tests khóa contract đó.
-// MainMenu che AuthEntryScreen (fixed overlay z-1000) khiến luồng cũ
-// không dùng được. Task 8 của plan online-foundation thay thế cả
-// MainMenu lẫn AuthEntryScreen bằng WelcomeAuthScreen hợp nhất — khi
-// đó xoá luôn state này, không đầu tư thêm cho MainMenu.
-const showMainMenu = ref(false)
+// GameClock chỉ đo thời gian (pure clock). GameManager chỉ điều
+// phối các system. Việc "mỗi giây thì làm gì" là trách nhiệm của
+// vòng lặp tick() dưới đây — nơi duy nhất biết cả 2 bên.
+const clock = new GameClock()
+const gameManager = new GameManager()
+
+// Real app renders: every combat/tribulation session starts HELD and only
+// ticks after the coordinator has revealed it (READY -> attach -> curtain
+// open -> release). Headless instances (tests/tools) stay unheld.
+gameManager.setPresentationMode('interactive')
+
+// Presentation coordinator & adapters (Task 5-12, AGENTS.md P17)
+const phaserSceneAdapter = new PhaserSceneAdapter()
+const assetBundleManager = new AssetBundleManager()
+const compositeRenderer = new CompositeRenderer(phaserSceneAdapter)
+
+// The overlay IS the curtain. Before it was mounted the coordinator held a
+// no-op stub, so nothing ever covered the screen during a scene swap and the
+// close/open deadlines measured nothing.
+const transitionOverlayRef = ref<{
+  close: (id: number, signal: AbortSignal) => Promise<void>
+  open: (id: number, signal: AbortSignal) => Promise<void>
+} | null>(null)
+
+const curtainPort: CurtainPort = {
+  close: async (id, signal) => {
+    await transitionOverlayRef.value?.close(id, signal)
+  },
+  open: async (id, signal) => {
+    await transitionOverlayRef.value?.open(id, signal)
+  },
+}
+const coordinator = new GamePresentationCoordinator({
+  sessionPort: gameManager.getPresentationPort(),
+  renderer: compositeRenderer,
+  curtain: curtainPort,
+  assets: assetBundleManager,
+  initialRoute: 'boot',
+  initialBootSubphase: 'intro',
+  initialShowMainMenu: false,
+})
+const presentation = createGamePresentation({
+  coordinator,
+  eventBus: gameManager.eventBus,
+  getCurrentSession: () => gameManager.getCurrentPresentationSession(),
+})
+const routeAdapter = createVueRouteAdapter(coordinator, compositeRenderer)
+
+provide(PHASER_SCENE_ADAPTER_KEY, phaserSceneAdapter)
+provide(ASSET_BUNDLE_MANAGER_KEY, assetBundleManager)
+provide(VUE_ROUTE_ADAPTER_KEY, routeAdapter)
+provide(GAME_PRESENTATION_KEY, presentation)
+
+// MainMenu overlay state synced with coordinator snapshot
+const showMainMenu = computed({
+  get: () => routeAdapter.showMainMenu.value,
+  set: (val: boolean) => coordinator.setShowMainMenu(val),
+})
 
 function handleMenuStart() {
   showMainMenu.value = false
@@ -105,22 +170,39 @@ function handleMenuStart() {
 function handleMenuSettings() {
   ui.leftPanelMode = 'settings'
 }
-const bootFlow = useBootFlow()
+
+// A failed tribulation transition offers RETRY ONLY: there is no domain
+// cancel-tribulation command, and inventing a penalty-free way home would
+// silently rewrite the outcome of a breakthrough already in progress.
+const canRecoverToHome = computed(
+  () => routeAdapter.error.value?.failedRequest.target !== 'tribulation',
+)
+
+function onTransitionRetry() {
+  void presentation.coordinator.retry()
+}
+
+function onTransitionBack() {
+  const failed = routeAdapter.error.value?.failedRequest
+
+  if (!failed || failed.target === 'tribulation') {
+    return
+  }
+
+  // Returning home from a failed combat entry goes through the domain owner
+  // first - the battle must be abandoned, not merely hidden.
+  if (failed.target === 'combat') {
+    gameManager.abandonBattle()
+  }
+
+  coordinator.clearError()
+  void coordinator.request({ target: 'home' })
+}
+
+const bootFlow = useBootFlow(coordinator, routeAdapter)
 const entryStage = bootFlow.stage
 const bootError = ref('')
 let introHandle: number | undefined
-
-// GameClock chỉ đo thời gian (pure clock). GameManager chỉ điều
-// phối các system. Việc "mỗi giây thì làm gì" là trách nhiệm của
-// vòng lặp tick() dưới đây — nơi duy nhất biết cả 2 bên.
-const clock = new GameClock()
-const gameManager = new GameManager()
-
-// Defect Task 3 (2026-09-05) — boot-race gate: real app WILL mount a Phaser
-// presentation layer (PhaserCanvas async bootstrap). Combat ticking pauses
-// until CombatScene mounts (setPresentationActive(true) → markReady) or the
-// 15s safety-net trips (Phaser bootstrap failure fallback).
-gameManager.expectPresentationLayer()
 
 gameManager.registerMaterials(materials)
 gameManager.registerSkillTemplates(SKILLS)
@@ -457,9 +539,17 @@ onUnmounted(() => {
   }
 
   // Remediation Task 5 — symmetric cleanup: event-bus handlers, DOM
-  // listeners, tick + autosave intervals (idempotent, gọi lại an toàn).
+  // listeners, tick + autosave intervals (idempotent, gọi lại một cách an toàn).
   lifecycle.stopAll()
   window.removeEventListener(SAVE_RESET_REQUEST_EVENT, resetSaveFromSettings)
+
+  // Presentation teardown: aborts any in-flight transition and drops every
+  // subscription, so a late READY/asset callback cannot mount or commit into
+  // a disposed app (matters on HMR too, which unmounts this component).
+  presentation.dispose()
+  routeAdapter.dispose()
+  phaserSceneAdapter.dispose()
+  assetBundleManager.dispose()
 })
 </script>
 
@@ -478,23 +568,30 @@ onUnmounted(() => {
     />
   </Transition>
 
-  <LoadingScreen v-if="entryStage === 'intro'" />
+  <RouteMount v-if="entryStage === 'intro'" route="boot">
+    <LoadingScreen />
+  </RouteMount>
 
-  <AuthEntryScreen v-else-if="entryStage === 'auth'" @authenticated="onAuthenticated" />
+  <RouteMount v-else-if="entryStage === 'auth'" route="auth">
+    <AuthEntryScreen @authenticated="onAuthenticated" />
+  </RouteMount>
 
-  <CharacterCreationScreen
-    v-else-if="entryStage === 'character'"
-    @back="bootFlow.showAuth"
-    @complete="onCharacterCreated"
-  />
+  <RouteMount v-else-if="entryStage === 'character'" route="character">
+    <CharacterCreationScreen
+      @back="bootFlow.showAuth"
+      @complete="onCharacterCreated"
+    />
+  </RouteMount>
 
   <SaveIncompatibleScreen v-else-if="saveIssue.status" />
 
-  <main v-else-if="entryStage === 'error'" class="boot-error">
-    <h1>Không thể khởi động</h1>
-    <p>{{ bootError }}</p>
-    <button type="button" @click="bootFlow.showAuth">Trở về đăng nhập</button>
-  </main>
+  <RouteMount v-else-if="entryStage === 'error'" route="error">
+    <main class="boot-error">
+      <h1>Không thể khởi động</h1>
+      <p>{{ bootError }}</p>
+      <button type="button" @click="bootFlow.showAuth">Trở về đăng nhập</button>
+    </main>
+  </RouteMount>
 
   <ErrorBoundary v-else>
     <!-- LoadingScreen chỉ hiện TRONG QUÁ TRÌNH boot (loading_save /
@@ -504,6 +601,18 @@ onUnmounted(() => {
     <!-- GameRoot chỉ hiện khi boot xong -->
     <GameRoot v-if="isBooted" />
   </ErrorBoundary>
+
+  <!-- Curtain/loading/error cover lives ABOVE every entry branch so cold boot
+       and boot failures are covered too, not just in-game transitions. -->
+  <PresentationTransitionOverlay
+    ref="transitionOverlayRef"
+    :phase="routeAdapter.phase.value"
+    :is-locked="routeAdapter.isLocked.value"
+    :error="routeAdapter.error.value"
+    :can-return-home="canRecoverToHome"
+    @retry="onTransitionRetry"
+    @back="onTransitionBack"
+  />
 
   <ErrorScreen />
 </template>

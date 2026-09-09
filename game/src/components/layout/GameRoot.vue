@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 import MainScene from '../game/MainScene.vue'
+import RouteMount from '../game/RouteMount.vue'
 import CombatSceneOverlay from '../game/combat/CombatSceneOverlay.vue'
 import TribulationSceneOverlay from '../game/tribulation/TribulationSceneOverlay.vue'
+import { VUE_ROUTE_ADAPTER_KEY } from '@/presentation/PresentationContracts'
 import HomeResourceStrip from '../game/HomeResourceStrip.vue'
 import DongFuCommandWheel from '../game/DongFuCommandWheel.vue'
 import BuildingDetailPopover from '../game/BuildingDetailPopover.vue'
@@ -45,8 +47,25 @@ const ui = useUiStore()
 // trong DongFuScene để art công trình nằm đúng phía sau nhân vật.
 // MainScene (Phaser canvas) vẫn LUÔN mount (tự chuyển scene nội bộ,
 // xem MainScene.vue), chỉ DOM chrome xung quanh nó ẩn/hiện theo cờ này.
+const routeAdapter = inject(VUE_ROUTE_ADAPTER_KEY, null)
+
+// Scene visibility follows the coordinator route. The ui store flags stay only
+// as the fallback for standalone tests that mount without a coordinator.
 const isCombatSceneActive = useCombatSceneActive()
-const isFullSceneActive = computed(() => isCombatSceneActive.value || ui.isTribulationSceneActive)
+const isTribulationSceneActive = computed(() =>
+  routeAdapter
+    ? routeAdapter.activeRoute.value === 'tribulation'
+    : ui.isTribulationSceneActive,
+)
+const isFullSceneActive = computed(
+  () => isCombatSceneActive.value || isTribulationSceneActive.value,
+)
+
+/** Which route this Vue tree is currently standing in for (mount witness). */
+const mountedGameRoute = computed<'home' | 'combat' | 'tribulation'>(() => {
+  const route = routeAdapter?.activeRoute.value
+  return route === 'combat' || route === 'tribulation' ? route : 'home'
+})
 
 // Bấm khoảng trống giữa màn hình (MainScene — cảnh Phaser, không phải
 // panel/icon/popover nào) tự đóng panel chức năng đang mở. Gắn THẲNG
@@ -102,7 +121,7 @@ function closeSidePanels() {
       </template>
 
       <CombatSceneOverlay v-if="isCombatSceneActive" />
-      <TribulationSceneOverlay v-else-if="ui.isTribulationSceneActive" />
+      <TribulationSceneOverlay v-else-if="isTribulationSceneActive" />
 
       <Tooltip />
 
@@ -122,6 +141,8 @@ function closeSidePanels() {
       <BreakthroughRequirementPanel />
 
       <TutorialOverlay />
+
+      <RouteMount :route="mountedGameRoute" />
     </div>
   </div>
 </template>

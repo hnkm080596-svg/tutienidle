@@ -1,19 +1,21 @@
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 import { useGameManager, useStateVersion } from './useGameState'
 import { useUiStore } from '../stores/ui'
+import { VUE_ROUTE_ADAPTER_KEY } from '@/presentation/PresentationContracts'
 
 /**
  * Combat UI Redesign — Combat Scene (CombatSceneOverlay.vue + Phaser's
- * CombatScene.ts) chiếm TOÀN màn hình trong lúc 1 trận đang diễn ra
- * HOẶC vừa kết thúc nhưng CombatResultModal chưa bị đóng (battle.state
- * 'victory'/'defeat' vẫn "sticky" tới khi trận mới ghi đè, xem
- * BattleSystem.ts) — ui.combatSceneDismissed là cờ RIÊNG để phân biệt
- * "vừa xong, đang đợi người chơi xem kết quả" với "người chơi đã bấm
- * Tiếp Tục/Về Động Phủ, không hiện nữa dù object battle cũ vẫn còn".
- * Cùng pattern reactivity với useStageActive.ts (đọc stateVersion.value
- * trực tiếp vì gameManager.getBattle() trả object mutate-in-place).
+ * CombatScene.ts) chiếm TOÀN màn hình trong lúc 1 trận đang diễn ra.
+ * Derived from coordinator activeRoute when presentation is wired,
+ * with fallback for standalone tests.
  */
 export function useCombatSceneActive() {
+  const routeAdapter = inject(VUE_ROUTE_ADAPTER_KEY, null)
+
+  if (routeAdapter) {
+    return computed(() => routeAdapter.activeRoute.value === 'combat')
+  }
+
   const gameManager = useGameManager()
   const { stateVersion } = useStateVersion()
   const ui = useUiStore()
@@ -27,8 +29,6 @@ export function useCombatSceneActive() {
 
     const battle = gameManager.getBattle()
 
-    // Kiếp mới (spec dot-pha-loi-kiep §5.1) không còn battle mode
-    // 'tribulation' — TribulationScene riêng hiện qua uiStore flag.
     return battle !== null && battle.state !== 'idle'
   })
 }
