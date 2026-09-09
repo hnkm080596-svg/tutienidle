@@ -63,6 +63,8 @@ import {
 } from './EquipmentRollPrimitives'
 import {
   commitWashAffixes as commitWashAffixesImpl,
+  discardWashTicket as discardWashTicketImpl,
+  getWashPreviewAffixes as getWashPreviewAffixesImpl,
   previewWashAffixes as previewWashAffixesImpl,
   washAffixes as washAffixesImpl,
   type WashDeps,
@@ -908,8 +910,9 @@ export class EquipmentSystem {
   /**
    * Xem trước Tẩy Luyện (2026-08-30, UI "giữ/bỏ") — roll + validate + TRỪ
    * COST giống hệt washAffixes(), nhưng KHÔNG ghi affixes mới vào
-   * instance. Trả affixes đã roll cho UI hiển thị cột "sau khi Tẩy" —
-   * người chơi bấm lại (trả cost lần nữa, roll mới) hoặc "Giữ"
+   * instance. R9 (AR-21): trả về một-use TICKET — affixes hiển thị đọc
+   * qua getWashPreviewAffixes(ticketId); người chơi bấm lại (ticket cũ
+   * bị thay, trả cost lần nữa, roll mới) hoặc "Giữ"
    * (commitWashAffixes, không tốn thêm) để chốt.
    */
   previewWashAffixes(
@@ -919,7 +922,7 @@ export class EquipmentSystem {
     materialBag: MaterialBag,
     affixRegistry: AffixRegistry,
     random: () => number = Math.random,
-  ): { ok: boolean; reason?: string; affixes?: RolledAffix[] } {
+  ): { ok: boolean; reason?: string; ticketId?: string } {
     return previewWashAffixesImpl(
       instanceId,
       inventory,
@@ -931,17 +934,31 @@ export class EquipmentSystem {
     )
   }
 
-  /** Chốt kết quả đã preview (previewWashAffixes) — không kiểm tra/trừ cost lần nữa. */
+  /** R9 (AR-21) — display copy of the pending roll (never authoritative). */
+  getWashPreviewAffixes(ticketId: string): { affixes: RolledAffix[] } | undefined {
+    return getWashPreviewAffixesImpl(ticketId)
+  }
+
+  /** R9 (AR-21) — drop the pending wash ticket (UI cancel/re-roll). */
+  discardWashTicket(ticketId: string): void {
+    discardWashTicketImpl(ticketId)
+  }
+
+  /**
+   * Chốt kết quả đã preview (previewWashAffixes) — không kiểm tra/trừ cost
+   * lần nữa. R9 (AR-21): commit nhận TICKET ID, affixes áp vào instance
+   * là bản domain-owned; mọi attempt tiêu ticket (refine precedent).
+   */
   commitWashAffixes(
     instanceId: string,
-    affixes: RolledAffix[],
+    ticketId: string,
     inventory: EquipmentBag,
     slotManager: EquipmentSlotManager,
     affixRegistry: AffixRegistry,
   ): { ok: boolean; reason?: string } {
     return commitWashAffixesImpl(
       instanceId,
-      affixes,
+      ticketId,
       inventory,
       slotManager,
       affixRegistry,

@@ -256,10 +256,10 @@ export class EquipmentOpsSystem {
 
   /**
    * Xem trước Tẩy Luyện (2026-08-30, UI "giữ/bỏ") — roll + trừ cost NGAY,
-   * KHÔNG ghi affixes mới vào instance. UI giữ affixes trả về ở state
-   * tạm, gọi commitWashItem() khi người chơi bấm "Giữ".
+   * KHÔNG ghi affixes mới vào instance. R9 (AR-21): trả một-use TICKET —
+   * affixes hiển thị đọc qua getWashPreviewAffixes(ticketId).
    */
-  previewWashItem(instanceId: string): { ok: boolean; reason?: string; affixes?: RolledAffix[] } {
+  previewWashItem(instanceId: string): { ok: boolean; reason?: string; ticketId?: string } {
     this.syncEquipmentCostDiscount()
 
     return this.deps.equipmentSystem.previewWashAffixes(
@@ -271,11 +271,24 @@ export class EquipmentOpsSystem {
     )
   }
 
-  /** Chốt affixes đã preview (previewWashItem) — không trừ cost lần nữa. */
-  commitWashItem(instanceId: string, affixes: RolledAffix[]): { ok: boolean; reason?: string } {
+  /** R9 (AR-21) - display copy of the pending wash roll by ticket. */
+  getWashPreviewAffixes(ticketId: string): { affixes: RolledAffix[] } | undefined {
+    return this.deps.equipmentSystem.getWashPreviewAffixes(ticketId)
+  }
+
+  /** R9 (AR-21) - drop a pending wash ticket (UI cancel/re-roll). */
+  discardWashTicket(ticketId: string): void {
+    this.deps.equipmentSystem.discardWashTicket(ticketId)
+  }
+
+  /**
+   * Chốt kết quả đã preview (previewWashItem) — không trừ cost lần nữa.
+   * R9 (AR-21): commit nhận TICKET ID; affixes áp là bản domain-owned.
+   */
+  commitWashItem(instanceId: string, ticketId: string): { ok: boolean; reason?: string } {
     return this.deps.equipmentSystem.commitWashAffixes(
       instanceId,
-      affixes,
+      ticketId,
       this.deps.equipmentBag,
       this.deps.equipmentSlotManager,
       this.deps.affixRegistry,

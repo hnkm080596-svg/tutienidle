@@ -1931,12 +1931,24 @@ export class GameManager {
     return this.equipmentOps.refineItem(instanceId, lockedIndices, player)
   }
 
-  previewWashItem(instanceId: string): { ok: boolean; reason?: string; affixes?: RolledAffix[] } {
+  /** R9 (AR-21): preview returns a one-use TICKET, not authoritative affixes. */
+  previewWashItem(instanceId: string): { ok: boolean; reason?: string; ticketId?: string } {
     return this.equipmentOps.previewWashItem(instanceId)
   }
 
-  commitWashItem(instanceId: string, affixes: RolledAffix[]): { ok: boolean; reason?: string } {
-    return this.equipmentOps.commitWashItem(instanceId, affixes)
+  /** R9 (AR-21): display copy of the pending wash roll by ticket. */
+  getWashPreviewAffixes(ticketId: string): { affixes: RolledAffix[] } | undefined {
+    return this.equipmentOps.getWashPreviewAffixes(ticketId)
+  }
+
+  /** R9 (AR-21): drop the pending wash ticket (UI cancel/re-roll). */
+  discardWashTicket(ticketId: string): void {
+    this.equipmentOps.discardWashTicket(ticketId)
+  }
+
+  /** R9 (AR-21): commit consumes the domain-owned pending ticket. */
+  commitWashItem(instanceId: string, ticketId: string): { ok: boolean; reason?: string } {
+    return this.equipmentOps.commitWashItem(instanceId, ticketId)
   }
 
   previewRefineItem(
