@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { toRaw } from 'vue'
 import { createDefaultPlayer, type PlayerData } from '../core/player/Player'
 import {
   DEFAULT_COMBAT_AI_STRATEGY,
@@ -294,7 +295,14 @@ export const usePlayerStore = defineStore('player', {
       // (vì file lưu mốc thời gian cũ hơn thời điểm save thật).
       this.lastSavedAt = Date.now()
 
-      return cloudSaveCoordinator.save(buildGameSave(this, gameManager))
+      // R10 (AR-12) fix: buildGameSave's structuredClone(player) (S1)
+      // cannot clone a Vue-reactive Proxy tree at all (structuredClone
+      // has no concept of Proxy exotic objects, so it throws
+      // DataCloneError on the first nested reactive object/array it
+      // meets, even an empty one) — this.$state is still fully reactive.
+      // toRaw() exits reactivity down to the plain underlying object
+      // before it reaches structuredClone.
+      return cloudSaveCoordinator.save(buildGameSave(toRaw(this.$state), gameManager))
     },
 
     // Chỉ merge phần PlayerData vào store — phần còn lại của save
@@ -335,7 +343,18 @@ export const usePlayerStore = defineStore('player', {
 
       lastRestoredPayloads.set(this, { identity: payloadIdentity, offline })
 
-      Object.assign(this, save.player)
+      // R10 (AR-12, S4 follow-up) — deep-clone before assigning: a plain
+      // Object.assign shallow-copies nested fields (baseStats, modifiers,
+      // ...), so this.baseStats becomes the SAME object as
+      // save.player.baseStats. A later in-place store mutation (e.g.
+      // this.baseStats.attackRange below) then leaked back into the
+      // caller's `save` object — corrupting it for any later reuse (the
+      // payload-identity guard above included: a second restoreFromSave
+      // call with the SAME `save` reference would see a hash that changed
+      // out from under it and wrongly treat it as a new payload). A
+      // restore input must be treated as a value, same principle as
+      // buildGameSave's snapshot-is-a-value fix (S1).
+      Object.assign(this, structuredClone(save.player))
 
       // Node level (plan §6.1) — save cũ giữa v46 thiếu object này;
       // thiếu = chưa lĩnh ngộ node nào, KHÔNG được để undefined kẹo

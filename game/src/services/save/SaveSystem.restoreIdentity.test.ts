@@ -84,4 +84,34 @@ describe('restore identity (AR-12)', () => {
     store.restoreFromSave(saveB)
     expect(store.name).toBe(saveB.player.name)
   })
+
+  it('store-level: restoring must not alias nested fields back into the caller\'s save object', async () => {
+    // A plain Object.assign(this, save.player) shallow-copies nested
+    // objects by reference (e.g. store.baseStats becomes the SAME object
+    // as save.player.baseStats). A later in-place store mutation
+    // (attackRange normalization) would then corrupt the caller's `save`
+    // object, changing what a second restoreFromSave(save) call with the
+    // SAME reference computes as its identity — silently defeating the
+    // payload-identity guard itself. Restore input must be a value.
+    const { usePlayerStore } = await import('../../stores/player')
+    const { createPinia, setActivePinia } = await import('pinia')
+    setActivePinia(createPinia())
+
+    const player = createDefaultPlayer()
+    const save = baseSave(player)
+    const baseStatsSnapshot = structuredClone(save.player.baseStats)
+
+    const store = usePlayerStore()
+    const first = store.restoreFromSave(save)
+
+    // The restore's own normalization step mutates store.baseStats.attackRange
+    // — this must not be visible through save.player.baseStats afterward.
+    expect(save.player.baseStats).toEqual(baseStatsSnapshot)
+
+    const second = store.restoreFromSave(save)
+
+    // Same object reference, unmutated by the first restore -> identity
+    // gate must converge (no double-credited offline progress).
+    expect(second).toEqual(first)
+  })
 })
