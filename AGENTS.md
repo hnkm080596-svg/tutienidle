@@ -8,7 +8,7 @@ Root: `game/`. Stack: Vue 3, TypeScript, Vite, Vitest, Pinia, Phaser.
 
 1. **Protection Rules (P1-P17)** — hard rules, do not bypass. Critical ones are mirrored into `.opencode/agent/<name>.md`.
 2. **Architecture Constitution (A1-A12)** — project-wide laws. New code follows them; fix existing violations only within your authorized scope.
-3. **Effectiveness Guidelines (E1-E16)** — workflow guidance, skip with a stated reason.
+3. **Effectiveness Guidelines (E1-E17)** — workflow guidance, skip with a stated reason.
 4. **Opencode Agent Wiring** — how Part 1 is mirrored into agent prompts.
 
 "The agent" = whichever coding agent is active. Deleted `TASK.md`/stale worklogs/obsolete plans are not current requirements. Use `AstraDoctrine.md` for the reasoning workflow — findings are evidence of defects, not authorization for an unrelated rewrite.
@@ -133,6 +133,8 @@ Apply when the task matches the trigger; skip with a stated reason.
 **E15. Systematic debugging.** Investigating a bug/exception/unexpected behavior → load `systematic-debugging`: reproduce → identify violated invariant → isolate owner → diagnose root cause → regression evidence where practical → repair correct layer → verify. Don't jump to a speculative patch because the cause "looks obvious."
 
 **E16. Test-driven development.** Writing new tests or fixing a bug → load `test-driven-development`: red → green → refactor, where practical. Existing tests may serve as characterization coverage; for structural migration, capture intended behavior before moving responsibility.
+
+**E17. Debug report format.** When the user asks for debugging, the report-back (before or alongside implementing a fix) must state: where the bug lives (file/function), why it happens (root cause, not symptom — per E15), and when it was introduced (which change/assumption triggered it, if determinable). Then offer at least 2 distinct ways to fix it, and at least 1 explicitly marked as the long-term option (may cost more effort now, better for the project going forward) vs. the other(s) as shorter-term/local. Don't silently apply a fix without surfacing the alternatives first, unless the user has pre-authorized "just fix it."
 
 ---
 

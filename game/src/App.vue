@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, provide, ref, toRaw } from 'vue'
+import { onMounted, onUnmounted, provide, ref } from 'vue'
 import { usePlayerStore } from './stores/player'
 import { useUiStore } from './stores/ui'
 import { GameClock, DEFAULT_MAX_OFFLINE_SECONDS } from './core/idle/GameClock'
@@ -425,10 +425,9 @@ async function onCharacterCreated(payload: CharacterCreationPayload) {
   }
 
   await bootGame(true)
-  // R10 (AR-12) fix, same class as usePlayerStore.save(): buildGameSave's
-  // structuredClone(player) cannot clone a Vue-reactive Proxy tree —
-  // player.$state is still fully reactive. toRaw() exits reactivity first.
-  const result = await cloudSaveCoordinator.save(buildGameSave(toRaw(player.$state), gameManager))
+  // R10 (AR-12): buildGameSave() owns making player.$state's reactive
+  // Pinia proxy safe to snapshot — callers just pass it through.
+  const result = await cloudSaveCoordinator.save(buildGameSave(player.$state, gameManager))
   if (result.status !== 'ok') {
     bootError.value =
       result.status === 'conflict' ? 'Save đã thay đổi ở một phiên khác.' : result.message

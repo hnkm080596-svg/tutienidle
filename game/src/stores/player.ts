@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import { toRaw } from 'vue'
 import { createDefaultPlayer, type PlayerData } from '../core/player/Player'
 import {
   DEFAULT_COMBAT_AI_STRATEGY,
@@ -295,14 +294,12 @@ export const usePlayerStore = defineStore('player', {
       // (vì file lưu mốc thời gian cũ hơn thời điểm save thật).
       this.lastSavedAt = Date.now()
 
-      // R10 (AR-12) fix: buildGameSave's structuredClone(player) (S1)
-      // cannot clone a Vue-reactive Proxy tree at all (structuredClone
-      // has no concept of Proxy exotic objects, so it throws
-      // DataCloneError on the first nested reactive object/array it
-      // meets, even an empty one) — this.$state is still fully reactive.
-      // toRaw() exits reactivity down to the plain underlying object
-      // before it reaches structuredClone.
-      return cloudSaveCoordinator.save(buildGameSave(toRaw(this.$state), gameManager))
+      // R10 (AR-12): this.$state is a live reactive Pinia proxy —
+      // buildGameSave() owns making a detached-value snapshot safe from
+      // that (JSON round-trip, not structuredClone, since structuredClone
+      // cannot handle Proxy objects at any nesting depth). Callers just
+      // pass the state through.
+      return cloudSaveCoordinator.save(buildGameSave(this.$state, gameManager))
     },
 
     // Chỉ merge phần PlayerData vào store — phần còn lại của save

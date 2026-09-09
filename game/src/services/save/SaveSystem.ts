@@ -551,7 +551,20 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
       // player (nested baseStats/modifiers/flags alias the live store
       // under a plain spread, so mutating live state after build used
       // to change the "saved" payload).
-      ...structuredClone(player),
+      //
+      // JSON round-trip, NOT structuredClone: the real caller is a Pinia
+      // store's reactive state, and structuredClone has no concept of
+      // Proxy exotic objects at ANY nesting depth - it throws
+      // DataCloneError the moment it meets one, including a nested field
+      // Vue only wrapped in a Proxy lazily after some earlier getter/
+      // computed touched it during actual gameplay (not reproducible from
+      // a freshly-constructed player in isolation - toRaw() alone was not
+      // sufficient either, since it only unwraps the outermost proxy).
+      // JSON.stringify/parse reads through Proxies transparently via
+      // normal property access, at any depth - and this object is going
+      // to be JSON.stringify'd again by writeGameSave() for localStorage
+      // regardless, so this changes no on-disk behavior.
+      ...JSON.parse(JSON.stringify(player)),
 
       lastSavedAt: Date.now(),
     },

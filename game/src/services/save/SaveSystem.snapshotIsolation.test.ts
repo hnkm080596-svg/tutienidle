@@ -2,6 +2,7 @@
 // at a point in time. Mutating live state after the build must not
 // change the snapshot (nested player fields included).
 import { describe, expect, it } from 'vitest'
+import { reactive } from 'vue'
 import { GameManager } from '../../core/game/GameManager'
 import { createDefaultPlayer } from '../../core/player/Player'
 import { materials } from '../../data/materials/materials'
@@ -52,5 +53,35 @@ describe('buildGameSave snapshot isolation (AR-12)', () => {
     })
 
     expect(save).toEqual(snapshot)
+  })
+
+  // Production regression (found live, not from a synthetic fixture):
+  // usePlayerStore's actual `this.$state` is a Vue-reactive Proxy, not a
+  // plain PlayerData object. structuredClone has no concept of Proxy
+  // exotic objects — it throws DataCloneError the instant it meets one,
+  // at ANY nesting depth, including a field Vue only wrapped lazily after
+  // some earlier getter/computed touched it (this is why a
+  // freshly-constructed reactive() with no prior access still needs to
+  // exercise a getter here to reproduce it — real gameplay's `finalStats`
+  // getter runs every tick and touches baseStats/modifiers/
+  // externalModifiers this way). toRaw() alone is not sufficient either —
+  // it only unwraps the OUTERMOST proxy, not nested ones.
+  it('accepts a Vue-reactive player object (real usePlayerStore.$state shape), even after nested fields were reactively accessed', () => {
+    const gameManager = createBootedGameManager()
+    const reactivePlayer = reactive(createDefaultPlayer())
+
+    reactivePlayer.modifiers.push({ id: 'x', sourceId: 'x', sourceType: 'attribute', stat: 'attack', flat: 1 })
+    reactivePlayer.externalModifiers.push({ id: 'y', sourceId: 'y', sourceType: 'attribute', stat: 'attack', flat: 1 })
+
+    // Force Vue to lazily wrap nested modifier objects in their own
+    // reactive Proxies, matching what reading `finalStats` does live.
+    void reactivePlayer.baseStats.attack
+    for (const modifier of reactivePlayer.modifiers) void modifier.flat
+    for (const modifier of reactivePlayer.externalModifiers) void modifier.flat
+
+    expect(() => buildGameSave(reactivePlayer, gameManager)).not.toThrow()
+
+    const save = buildGameSave(reactivePlayer, gameManager)
+    expect(save.player.modifiers).toEqual([{ id: 'x', sourceId: 'x', sourceType: 'attribute', stat: 'attack', flat: 1 }])
   })
 })
