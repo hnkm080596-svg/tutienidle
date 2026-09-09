@@ -63,6 +63,7 @@ import {
 } from './EquipmentRollPrimitives'
 import {
   commitWashAffixes as commitWashAffixesImpl,
+  createWashPendingSlotAccessor,
   discardWashTicket as discardWashTicketImpl,
   getWashPreviewAffixes as getWashPreviewAffixesImpl,
   previewWashAffixes as previewWashAffixesImpl,
@@ -241,6 +242,11 @@ export class EquipmentSystem {
   // duy nhất vừa chặn provenance tích lũy vô hạn, vừa bảo đảm attempt mới (kể cả
   // thất bại) vô hiệu hóa payload trả phí trước đó ở bất kỳ item nào.
   private pendingRefinePreview: PendingRefinePreview | null = null
+
+  // R9 (AR-21) - instance-owned pending wash slot: the paid wash result
+  // dies with this system instance (restore into a fresh manager starts
+  // clean; no cross-session ticket replay).
+  private readonly washPendingSlot = createWashPendingSlotAccessor()
 
   constructor(costCatalog?: EquipmentOperationCostCatalog) {
     this.costCatalog = costCatalog
@@ -936,12 +942,12 @@ export class EquipmentSystem {
 
   /** R9 (AR-21) — display copy of the pending roll (never authoritative). */
   getWashPreviewAffixes(ticketId: string): { affixes: RolledAffix[] } | undefined {
-    return getWashPreviewAffixesImpl(ticketId)
+    return getWashPreviewAffixesImpl(this.washPendingSlot, ticketId)
   }
 
   /** R9 (AR-21) — drop the pending wash ticket (UI cancel/re-roll). */
   discardWashTicket(ticketId: string): void {
-    discardWashTicketImpl(ticketId)
+    discardWashTicketImpl(this.washPendingSlot, ticketId)
   }
 
   /**
@@ -1016,6 +1022,10 @@ export class EquipmentSystem {
           this.applyModifiers(instance, slotManager, affixRegistry)
         }
       },
+
+      // R9 (AR-21) - INSTANCE-owned pending slot (QA-R9-001: a module
+      // singleton survived restore and accepted cross-session commits).
+      washPendingSlot: this.washPendingSlot,
     }
   }
 

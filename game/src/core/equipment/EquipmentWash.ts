@@ -50,6 +50,9 @@ export interface WashDeps {
     slotManager: EquipmentSlotManager,
     affixRegistry: AffixRegistry,
   ) => void
+
+  /** R9 (AR-21) — instance-owned pending wash slot (see createWashPendingSlotAccessor). */
+  washPendingSlot: WashPendingSlotAccessor
 }
 
 function rollWashAffixes(
@@ -234,36 +237,63 @@ export function washAffixes(
  * data. Modeled on the refine pending-preview precedent. A single
  * pending slot per wash flow: a new preview replaces (and thereby
  * invalidates) the previous ticket, mirroring the refine contract.
+ *
+ * The pending slot is INSTANCE STATE of the owning EquipmentSystem
+ * (QA-R9-001: a module singleton survived restore and let a ticket
+ * from a previous session be committed). The instance injects the
+ * slot accessor through WashDeps.
  */
-interface PendingWashPreview {
+export interface PendingWashSlot {
   ticketId: string
   instanceId: string
   affixes: RolledAffix[]
 }
 
-let pendingWashPreview: PendingWashPreview | null = null
-let washTicketCounter = 0
+export interface WashPendingSlotAccessor {
+  get(): PendingWashSlot | null
+  set(next: PendingWashSlot | null): void
+  nextTicketId(): string
+}
 
-function nextWashTicketId(): string {
-  washTicketCounter += 1
-  return `wash-ticket-${Date.now().toString(36)}-${washTicketCounter}-${Math.floor(Math.random() * 1_000_000)}`
+export function createWashPendingSlotAccessor(): WashPendingSlotAccessor {
+  let slot: PendingWashSlot | null = null
+  let counter = 0
+
+  return {
+    get(): PendingWashSlot | null {
+      return slot
+    },
+    set(next: PendingWashSlot | null): void {
+      slot = next
+    },
+    nextTicketId(): string {
+      counter += 1
+      return `wash-ticket-${counter}-${Math.floor(Math.random() * 1_000_000)}`
+    },
+  }
 }
 
 /** Display copy for the UI (never authoritative for commit). */
 export function getWashPreviewAffixes(
+  slot: WashPendingSlotAccessor,
   ticketId: string,
 ): { affixes: RolledAffix[] } | undefined {
-  if (!pendingWashPreview || pendingWashPreview.ticketId !== ticketId) {
+  const pending = slot.get()
+
+  if (!pending || pending.ticketId !== ticketId) {
     return undefined
   }
 
-  return { affixes: pendingWashPreview.affixes.map((affix) => ({ ...affix })) }
+  return { affixes: pending.affixes.map((affix) => ({ ...affix })) }
 }
 
 /** Explicitly drop a pending ticket (UI "re-roll"/cancel path). */
-export function discardWashTicket(ticketId: string): void {
-  if (pendingWashPreview?.ticketId === ticketId) {
-    pendingWashPreview = null
+export function discardWashTicket(
+  slot: WashPendingSlotAccessor,
+  ticketId: string,
+): void {
+  if (slot.get()?.ticketId === ticketId) {
+    slot.set(null)
   }
 }
 
@@ -289,8 +319,8 @@ export function previewWashAffixes(
     return result
   }
 
-  const ticketId = nextWashTicketId()
-  pendingWashPreview = { ticketId, instanceId, affixes: result.affixes }
+  const ticketId = deps.washPendingSlot.nextTicketId()
+  deps.washPendingSlot.set({ ticketId, instanceId, affixes: result.affixes })
 
   return { ok: true, ticketId }
 }
@@ -309,10 +339,10 @@ export function commitWashAffixes(
   affixRegistry: AffixRegistry,
   deps: WashDeps,
 ): { ok: boolean; reason?: string } {
-  const pending = pendingWashPreview
+  const pending = deps.washPendingSlot.get()
 
   // Consume the capability on EVERY attempt, refine-style.
-  pendingWashPreview = null
+  deps.washPendingSlot.set(null)
 
   const instance = inventory.get(instanceId)
 
