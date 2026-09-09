@@ -551,3 +551,38 @@ function material(id: string): Material {
 function pillWithId(id: string): Pill {
   return { id, name: id, type: 'healing', grade: 'hoang', effects: [] }
 }
+
+// R9 (AR-23 4b) - preview/commit parity: the GameManager preview read
+// model must reuse the SAME jobSuccessPercent rule the settle path uses
+// (single implementation; verified here via the shared authority).
+import { GameManagerAlchemyOps } from '../game/GameManagerAlchemyOps'
+import { BuildingRegistry } from '../building/BuildingRegistry'
+import { BuildingManager } from '../building/BuildingManager'
+import { BuildingSystem } from '../building/BuildingSystem'
+
+describe('alchemy success split - preview uses the authority (AR-23 4b)', () => {
+  it('previewAlchemyOutcome totalPercent equals jobSuccessPercent for the same inputs', () => {
+    const ops = new GameManagerAlchemyOps({
+      alchemySystem: new AlchemySystem(),
+      alchemyRecipesById: new Map([['recipe_test', RECIPE]]),
+      materialRegistry: new MaterialRegistry(),
+      materialBag: new MaterialBag(),
+      buildingRegistry: new BuildingRegistry(),
+      buildingManager: new BuildingManager(),
+      buildingSystem: new BuildingSystem(),
+    })
+
+    const preview = ops.previewAlchemyOutcome('recipe_test', 'herb_decade', 5)
+
+    // The authority formula for this fixture: base(decade) + bonus(level 5).
+    const authority = jobSuccessPercent(
+      { herbMaterialId: 'herb_decade', roomLevelAtStart: 5 } as ActiveAlchemyJob,
+      RECIPE,
+    )
+
+    expect(preview).not.toBeNull()
+    expect(preview!.totalPercent).toBe(authority)
+    expect(preview!.guaranteedPills).toBe(Math.floor(authority / 100))
+    expect(preview!.extraPillChance).toBe(authority % 100)
+  })
+})
