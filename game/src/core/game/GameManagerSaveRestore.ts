@@ -21,7 +21,7 @@ import { AlchemySystem, type ActiveAlchemyJob } from '../alchemy/AlchemySystem'
 import { getAlchemySuccessBonusPercentPoints } from '../talent/TalentEffects'
 import type { PlayerData } from '../player/Player'
 import type { StatModifier } from '../stats/StatCalculator'
-import type { GameSave } from '../../services/save/SaveSystem'
+import { computeRestoreIdentity, type GameSave } from '../../services/save/SaveSystem'
 import { NotificationQueue } from './NotificationQueue'
 import { createBagOverflowEvent } from '../notification/bagOverflow'
 import { TemplateRegistry } from './TemplateRegistry'
@@ -78,6 +78,14 @@ export interface GameManagerSaveRestoreDeps {
 export class GameManagerSaveRestore {
   constructor(private readonly deps: GameManagerSaveRestoreDeps) {}
 
+  // R10 (AR-12, S4) — once-only settle: the identical payload hash as the
+  // last APPLIED restore (see computeRestoreIdentity) converges instead of
+  // re-running the full restore + offline settlement a second time. Scoped
+  // per GameManagerSaveRestore instance (one per GameManager/session),
+  // mirroring the store-level guard in stores/player.ts — same concept,
+  // separate tracker per restore owner.
+  private lastAppliedPayloadHash: string | undefined
+
   /**
    * Validate registry-backed save references without mutating any restore owner.
    * App calls this before Pinia restore; restoreFromSave repeats it defensively.
@@ -107,6 +115,18 @@ export class GameManagerSaveRestore {
    */
   restoreFromSave(save: GameSave): StatModifier[] {
     this.preflightSaveRegistryReferences(save)
+
+    // R10 (AR-12, S4) — converge on a repeated identical payload (boot
+    // retry, reload race): skip re-applying and re-settling entirely,
+    // return the already-current modifiers. A genuinely different payload
+    // (even sharing lastSavedAt|cultivation) always runs the full restore.
+    const payloadIdentity = computeRestoreIdentity(save)
+
+    if (payloadIdentity === this.lastAppliedPayloadHash) {
+      return this.deps.equipmentSystem.getModifiers()
+    }
+
+    this.lastAppliedPayloadHash = payloadIdentity
 
     for (const technique of save.techniques) {
       if (!this.deps.techniqueManager.has(technique.id)) {
