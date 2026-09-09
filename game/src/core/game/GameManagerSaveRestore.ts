@@ -161,6 +161,15 @@ export class GameManagerSaveRestore {
       this.deps.skillManager.add(skill)
     }
 
+    // R10 (AR-12, S3) — restore is REPLACEMENT, not additive: clear the
+    // live bag before applying the save's materials/pills, matching
+    // buildings/production sites/quests/decompose (already replace, see
+    // R7/R8.1). Without this, a live-session restore into a nonempty bag
+    // (boot retry, reload race) would merge saved amounts on top of
+    // whatever was already there instead of replacing it.
+    this.deps.materialBag.clear()
+    this.deps.pillBag.clear()
+
     // 9.8 — add() tràn stack trả lượng bị mất; gom MỖI LOẠI material
     // một event duy nhất (cả 2 loop materials + auto-dissolve rewards).
     const restoreOverflows = new Map<string, number>()
