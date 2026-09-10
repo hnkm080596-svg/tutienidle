@@ -380,6 +380,21 @@ export class CombatAnimationRuntime {
     // playback token here: submitTurnChoice's declare phase is the first thing
     // Phaser will acknowledge for this turn and it needs an identity to quote.
     this.playbackToken = this.nextPlaybackToken()
+
+    // The ready flourish belongs to the CLAIM, not to the action: manual mode
+    // gates the primary action, never the presentation (spec section 7), so the
+    // actor announces its turn here exactly as an auto actor does.
+    //
+    // The cue is emitted WITHOUT entering the pending-ready phase, and that is
+    // load-bearing rather than an omission. notifyReadyActor() would also set
+    // pendingReadyActor, and CombatScene.onTurnReady() calls
+    // acknowledgeTurnReady() when its flourish tween completes - which now
+    // declares unconditionally. A manual turn would therefore auto-declare the
+    // DEFAULT skill the moment the animation ended, before the player chose,
+    // and submitTurnChoice would then declare a second time. Emitting the cue
+    // alone lets the flourish play while that late ack lands on a null
+    // pendingReadyActor and is the no-op it should be.
+    emitTurnReady(this.deps.eventBus, actor.id)
   }
 
   /** Which animation clip an actor should currently show, derived purely

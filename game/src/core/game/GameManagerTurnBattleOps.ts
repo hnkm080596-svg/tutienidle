@@ -237,6 +237,12 @@ export class GameManagerTurnBattleOps {
     return this.combatClock.getState()
   }
 
+  /**
+   * Steps the clock has EMITTED, which is not always the number consumed:
+   * CombatClock counts a whole batch before invoking its listener, and
+   * advanceCombat then drops the rest of that batch the moment a step freezes
+   * or stops the clock. Diagnostic only - do not treat it as a turn counter.
+   */
   getElapsedCombatSteps(): number {
     return this.combatClock.getElapsedSteps()
   }
@@ -428,10 +434,18 @@ export class GameManagerTurnBattleOps {
    * Parks a step until the renderer reports the matching signal, or until the
    * fallback fires (spec section 4.1a). Whichever comes first wins;
    * TurnPipeline makes the completion idempotent, so the loser is harmless.
+   *
+   * The fallback plays the renderer's part before completing the step. A bare
+   * `done()` would satisfy the letter of 4.1a - no hang - while skipping the
+   * step's mechanical work entirely: no declare, no impact, and above all no
+   * completeAction, so the actor's gauge is never consumed and the very next
+   * combat step re-claims the SAME turn, forever. A step that completes has to
+   * mean the turn made progress.
    */
   private awaitStep(signal: TurnStepSignal, done: () => void): void {
     const timer = setTimeout(() => {
       this.pendingStepDone[signal] = undefined
+      this.driveStepWork(signal)
       done()
     }, ANIMATION_FALLBACK_MS)
 
@@ -459,18 +473,17 @@ export class GameManagerTurnBattleOps {
   }
 
   /**
-   * Headless: no renderer will ever report this step, so the engine plays
-   * Phaser's part immediately and the step completes inside its own run().
-   * The three acknowledge* bodies are exactly the three calls resolveActorTurn
-   * used to make inline (declare -> impact -> complete), so headless
-   * resolution is unchanged in substance; what changed is that the PIPELINE
-   * owns the ordering in both modes.
+   * Play the renderer's part for one step. The three acknowledge* bodies ARE
+   * the step's mechanical work - they are exactly the three calls
+   * resolveActorTurn used to make inline (declareActorAction ->
+   * applyActionImpact -> completeAction), so this is what makes a step's
+   * completion mean the turn advanced.
+   *
+   * Two callers, for two different reasons: the headless path (no renderer
+   * will ever report) and the fallback timer (a renderer that should have
+   * reported and did not).
    */
-  private settleHeadlessStep(signal: TurnStepSignal): void {
-    if (this.combatAnimationRuntime.isPresentationActive()) {
-      return
-    }
-
+  private driveStepWork(signal: TurnStepSignal): void {
     const token = this.combatAnimationRuntime.getPendingPlaybackToken() ?? undefined
 
     if (signal === 'ready') {
@@ -480,6 +493,20 @@ export class GameManagerTurnBattleOps {
     } else {
       this.combatAnimationRuntime.acknowledgeActionComplete(token)
     }
+  }
+
+  /**
+   * Headless: no renderer will ever report this step, so the engine plays
+   * Phaser's part immediately and the step completes inside its own run().
+   * Headless resolution is therefore unchanged in substance; what changed is
+   * that the PIPELINE owns the ordering in both modes.
+   */
+  private settleHeadlessStep(signal: TurnStepSignal): void {
+    if (this.combatAnimationRuntime.isPresentationActive()) {
+      return
+    }
+
+    this.driveStepWork(signal)
   }
 
   /**

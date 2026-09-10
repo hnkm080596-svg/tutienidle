@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '@/core/battle/turn/CombatClock'
+import { GAUGE_MAX } from '@/core/battle/turn/ActionGauge'
 import { GameManager } from './GameManager'
 import { startAStage } from './__fixtures__/startAStage'
 
@@ -96,6 +97,48 @@ describe('turn engine is actually wired', () => {
       vi.useRealTimers()
     }
   })
+
+  it('the fallback resolves the turn, it does not merely unpark the pipeline', () => {
+    // A step that "completes" has to mean the turn made progress. A bare
+    // done() would leave the token IDLE and the clock running (which the test
+    // above already checks) while skipping declareActorAction,
+    // applyActionImpact and completeAction entirely - so the gauge would never
+    // be consumed and the very next step would re-claim the SAME turn forever.
+    vi.useFakeTimers()
+
+    try {
+      const manager = new GameManager()
+      const source = new ManualClockSource()
+      manager.setCombatClockSource(source)
+      manager.setPresentationActive(true)
+      startAStage(manager)
+      source.advance(COMBAT_STEP_SECONDS * 260)
+
+      expect(manager.getTurnTokenState()).not.toBe('IDLE')
+      expect(manager.getTurnBattle()?.totalTurnsElapsed ?? 0).toBe(0)
+
+      const battle = manager.getTurnBattle()!
+      const claimant = [...battle.players, ...battle.enemies].find(
+        (participant) => participant.actionGauge >= GAUGE_MAX,
+      )
+
+      expect(claimant, 'an actor should be holding the turn').toBeDefined()
+
+      // Not one acknowledgement arrives - every step falls back.
+      vi.advanceTimersByTime(30_000)
+
+      expect(manager.getTurnTokenState()).toBe('IDLE')
+
+      // declareActorAction ran (it is what counts a turn).
+      expect(manager.getTurnBattle()?.totalTurnsElapsed ?? 0).toBe(1)
+
+      // completeAction ran, so the gauge was consumed: the claimant cannot
+      // immediately re-claim the turn it just took.
+      expect(claimant!.actionGauge).toBeLessThan(GAUGE_MAX)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
 })
 
 describe('turn engine integration - manual mode', () => {
@@ -111,6 +154,45 @@ describe('turn engine integration - manual mode', () => {
     expect(manager.getTurnTokenState()).toBe('AWAITING_INPUT')
     expect(manager.getCombatClockState()).toBe('frozen')
     expect(manager.getFreezeReasons()).toContain('turn-in-flight')
+  })
+
+  it('announces the claim with a ready cue before pausing for input', () => {
+    // Manual mode gates the primary ACTION, never the presentation (spec
+    // section 7), and the flourish belongs to the claim (section 3's
+    // CLAIMED -> AWAITING_INPUT is state routing, not a presentation change).
+    // Without this the skill panel appears in silence, with no actor animation.
+    const manager = new GameManager()
+    const source = new ManualClockSource()
+    manager.setCombatClockSource(source)
+    manager.setPresentationActive(true)
+    manager.setBattleManualMode(true)
+    startAStage(manager)
+
+    const readyCues: string[] = []
+    manager.eventBus.on('turn_ready', (event) =>
+      readyCues.push((event as { actorId: string }).actorId),
+    )
+
+    source.advance(COMBAT_STEP_SECONDS * 200)
+
+    expect(manager.getTurnTokenState()).toBe('AWAITING_INPUT')
+    expect(readyCues).toHaveLength(1)
+    expect(readyCues[0]).toBe(manager.consumeAwaitedActorId())
+
+    // The cue is announced WITHOUT entering the renderer's pending-ready
+    // phase, so the ack CombatScene fires when its flourish tween ends cannot
+    // auto-declare the default skill behind the player's back.
+    expect(manager.isActionPlaybackWaiting()).toBe(false)
+
+    manager.acknowledgeTurnReady(manager.getPendingPlaybackToken() ?? 'playback-1')
+
+    expect(manager.getTurnTokenState()).toBe('AWAITING_INPUT')
+    expect(manager.getTurnBattle()?.totalTurnsElapsed ?? 0).toBe(0)
+
+    // And the cue is not replayed when the player's choice resumes the turn.
+    manager.submitTurnChoice('basic')
+
+    expect(readyCues).toHaveLength(1)
   })
 
   it('returns to idle after a manual choice resolves', () => {
