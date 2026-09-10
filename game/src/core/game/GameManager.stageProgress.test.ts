@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { calculateStats } from '../stats/StatCalculator'
@@ -48,6 +49,8 @@ function makeStage(id: string, enemyId: string, total: number): Stage {
 describe('getStageProgress alive count (A0 fix)', () => {
   it('reflects the live turn-based enemy count, not the empty legacy one', () => {
     const gameManager = new GameManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
 
     const enemy = makeEnemy('a0_progress_dummy', 500)
     const stage = makeStage('a0_progress_stage', enemy.id, 2)
@@ -64,7 +67,7 @@ describe('getStageProgress alive count (A0 fix)', () => {
     // Both enemies of the single wave materialize through the turn-based
     // telegraph; drive ticks until the arena is fully populated.
     for (let i = 0; i < 60 && gameManager.getTurnBattle()!.enemies.length < 2; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
     expect(gameManager.getTurnBattle()!.enemies.length).toBe(2)

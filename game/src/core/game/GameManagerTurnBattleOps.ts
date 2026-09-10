@@ -8,7 +8,20 @@ import {
 import type { Battle } from '../battle/Battle'
 import { initKiemTuBattleResources } from '../battle/KiemTuResourceSystem'
 import { resolveEnemySpawnPosition } from '../battle/EnemySpawnPlacement'
-import { TurnBattleSystem, type TurnBattle } from '../battle/turn/TurnBattleSystem'
+import {
+  TurnBattleSystem,
+  type TurnBattle,
+  type TurnBattleParticipant,
+} from '../battle/turn/TurnBattleSystem'
+import {
+  CombatClock,
+  ManualClockSource,
+  type ClockSource,
+  type CombatClockState,
+  type FreezeReason,
+} from '../battle/turn/CombatClock'
+import { TurnToken, type TokenState } from '../battle/turn/TurnToken'
+import { TurnPipeline } from '../battle/turn/TurnPipeline'
 import { CombatAnimationRuntime, type ResumePlayback } from '../battle/turn/CombatAnimationRuntime'
 export type { ResumePlayback } from '../battle/turn/CombatAnimationRuntime'
 import { TurnBuffSystem } from '../battle/turn/TurnBuffSystem'
@@ -64,12 +77,19 @@ import { buildTurnSkillPresentation } from '../combat/CombatSkillPresentation'
 import { COUNTDOWN_TOTAL_TICKS, INTRO_TOTAL_TICKS } from '../battle/turn/TurnBattleConstants'
 export { COUNTDOWN_TOTAL_TICKS, INTRO_TOTAL_TICKS }
 
-const BATTLE_FIXED_STEP_SECONDS = 0.1
+/**
+ * Combat Turn Mechanism spec section 4.1a - how long a parked ANIMATION or
+ * SEMANTIC_VFX step waits for the renderer before completing itself.
+ *
+ * This is not an optimisation. It is what stops a destroyed sprite, a
+ * cancelled tween or a texture that failed to load from parking the pipeline
+ * forever, which would leave the turn token non-IDLE and the combat clock
+ * frozen for the rest of the session.
+ */
+export const ANIMATION_FALLBACK_MS = 4000
 
-// Cap on total catch-up time per update() call - avoids thousands of
-// synchronous steps after long suspend/tab-throttle. Overflow is dropped for
-// the combat/stage branch only; other systems receive the full real delta.
-const BATTLE_MAX_CATCHUP_SECONDS = 30
+/** The three renderer signals the pipeline's asynchronous steps wait on. */
+type TurnStepSignal = 'ready' | 'impact' | 'complete'
 
 /**
  * Turn-battle runtime Ops (C2 GameManager split, 2026-09-08) - owns the
@@ -113,6 +133,25 @@ export class GameManagerTurnBattleOps {
   private presentationMode: PresentationMode = 'headless'
   private isStageStarting = false
 
+  // --- Turn engine (2026-09-10 combat-turn-mechanism spec) ----------------
+  //
+  // Combat's own clock, the single turn token, and the single resolution
+  // pipeline. The clock counts for itself from an injected ClockSource; the
+  // token is the sole authority on whether a turn is in flight; the pipeline
+  // is the sole owner of turn-end. The default source is manual so a headless
+  // GameManager (tests, tools) advances only when a caller says so.
+  private combatClock = new CombatClock(new ManualClockSource())
+  private readonly turnToken = new TurnToken()
+  private readonly pipeline = new TurnPipeline(() => this.onTurnDrained())
+  private detachClockStep: (() => void) | null = null
+  private detachTokenListener: (() => void) | null = null
+
+  /** Completion callbacks for the steps currently parked on a renderer signal. */
+  private pendingStepDone: Partial<Record<TurnStepSignal, () => void>> = {}
+
+  /** Fallback timers owned by the parked steps, cleared when a turn restarts. */
+  private pendingStepTimers: Array<ReturnType<typeof setTimeout>> = []
+
   constructor(private readonly deps: {
     eventBus: EventBus
     combatSystem: CombatSystem
@@ -153,7 +192,361 @@ export class GameManagerTurnBattleOps {
       getBattle: () => this.turnBattle,
       syncLegacyBattleState: () => {},
       isSessionBlocking: () => this.presentationSession.isBlocking(),
+      stepCompletionSink: {
+        onReady: () => this.settleStep('ready'),
+        onImpact: () => this.settleStep('impact'),
+        onComplete: () => this.settleStep('complete'),
+      },
     })
+
+    this.detachClockStep = this.combatClock.onStep((steps) => this.advanceCombat(steps))
+    this.attachTurnTokenToClock()
+  }
+
+  // --- Combat clock, turn token, resolution pipeline ----------------------
+
+  /**
+   * Swap the source combat counts from. The browser installs a
+   * RafClockSource so combat advances at render cadence; tests install a
+   * ManualClockSource. Nothing is banked across the swap.
+   */
+  setCombatClockSource(source: ClockSource): void {
+    const wasRunning = this.combatClock.getState() !== 'stopped'
+
+    this.combatClock.stop()
+    this.detachClockStep?.()
+    this.combatClock = new CombatClock(source)
+    this.detachClockStep = this.combatClock.onStep((steps) => this.advanceCombat(steps))
+    this.attachTurnTokenToClock()
+
+    if (wasRunning) {
+      this.combatClock.start()
+      this.syncOffScreenFreeze()
+    }
+  }
+
+  freezeCombat(reason: FreezeReason): void {
+    this.combatClock.freeze(reason)
+  }
+
+  resumeCombat(reason: FreezeReason): void {
+    this.combatClock.resume(reason)
+  }
+
+  getCombatClockState(): CombatClockState {
+    return this.combatClock.getState()
+  }
+
+  getElapsedCombatSteps(): number {
+    return this.combatClock.getElapsedSteps()
+  }
+
+  getFreezeReasons(): readonly FreezeReason[] {
+    return this.combatClock.getFreezeReasons()
+  }
+
+  /** @internal - for tests and the dev inspector, never for gameplay code. */
+  getTurnTokenState(): TokenState {
+    return this.turnToken.getState()
+  }
+
+  /**
+   * The single predicate for "a turn is in flight". The clock learns about it
+   * through a freeze reason, not through a mirrored flag.
+   */
+  isTurnInFlight(): boolean {
+    return this.turnToken.getState() !== 'IDLE'
+  }
+
+  /**
+   * The token's state IS the clock's `turn-in-flight` freeze reason. This is
+   * the only channel through which the turn engine affects time (spec section
+   * 10); no other code adds or removes that reason.
+   */
+  private attachTurnTokenToClock(): void {
+    this.detachTokenListener?.()
+
+    this.detachTokenListener = this.turnToken.onStateChange((state) => {
+      if (state === 'IDLE') {
+        this.combatClock.resume('turn-in-flight')
+      } else {
+        this.combatClock.freeze('turn-in-flight')
+      }
+    })
+  }
+
+  /**
+   * The battle not being on screen is a freeze REASON, not a branch inside the
+   * step. A held interactive session means the presentation coordinator has
+   * not revealed the battle yet, so combat must not count.
+   */
+  private syncOffScreenFreeze(): void {
+    if (this.presentationSession.isBlocking()) {
+      this.combatClock.freeze('not-revealed')
+    } else {
+      this.combatClock.resume('not-revealed')
+    }
+  }
+
+  private advanceCombat(steps: number): void {
+    for (let i = 0; i < steps; i += 1) {
+      // A step may claim the token (which freezes the clock) or end the battle
+      // (which stops it). The remaining steps of this batch were earned before
+      // that happened and are DROPPED, not spent: spending them would tick the
+      // gauge while a turn is in flight, the exact thing the token exists to
+      // prevent, and banking them would be catch-up, which the spec forbids.
+      if (this.combatClock.getState() !== 'running') {
+        return
+      }
+
+      this.stepTurnBattle()
+    }
+  }
+
+  /**
+   * One combat step. Called only by CombatClock - never by the world tick.
+   *
+   * The former `presentationSession.isBlocking()` branch is gone: a held
+   * session means the battle is not on screen, which is an off-screen reason
+   * that stops the clock upstream (`not-revealed`). The former
+   * waiting-for-acknowledgement branches are gone too - while a turn is in
+   * flight the clock is frozen, so no step arrives at all.
+   */
+  private stepTurnBattle(): void {
+    const battle = this.turnBattle
+
+    if (!battle) {
+      return
+    }
+
+    if (battle.state === 'intro') {
+      // Intro/transition: only decrement introTurnsRemaining and flip to
+      // 'countdown' at 0 - NO combat logic in this phase, and the turn token
+      // cannot be claimed here (spec section 3.3).
+      this.turnBattleSystem.tickIntro(battle)
+      emitTurnBattleEntitySnapshot(this.deps.eventBus, battle)
+    } else if (battle.state === 'countdown') {
+      // Snapshot must ALSO run during countdown: CombatScene needs
+      // countdownProgress each step for the party telegraph 3-2-1.
+      this.turnBattleSystem.tickCountdown(battle)
+      emitTurnBattleEntitySnapshot(this.deps.eventBus, battle)
+    } else if (battle.state === 'fighting') {
+      this.drainBoundaryQueueIfIdle()
+
+      // tickPacing NEVER resolves a turn any more, in ANY mode. Resolution is
+      // the pipeline's job; leaving `resolve = !isPresentationActive()` here
+      // would give turn-end a second owner, which is the defect this spec
+      // exists to remove.
+      const readyActor = this.turnBattleSystem.tickPacing(battle, false)
+
+      if (readyActor !== null) {
+        this.turnToken.claim({
+          actorId: readyActor.id,
+          isPlayerTeam: battle.players.includes(readyActor),
+          manualMode: this.combatAnimationRuntime.isBattleManualMode(),
+        })
+
+        if (this.turnToken.getState() === 'AWAITING_INPUT') {
+          this.combatAnimationRuntime.pauseForManualActor(readyActor)
+          emitTurnBattleEntitySnapshot(this.deps.eventBus, battle)
+
+          return
+        }
+
+        this.beginTurnPipeline(readyActor, 'ready')
+      }
+
+      // Combat Art Pipeline - emit the LIVE entity snapshot every step during
+      // 'fighting'. Read through the field: a headless turn can resolve inside
+      // beginTurnPipeline above and auto-repeat can replace the battle.
+      if (this.turnBattle) {
+        emitTurnBattleEntitySnapshot(this.deps.eventBus, this.turnBattle)
+      }
+    }
+
+    this.settleCombatOutcome()
+  }
+
+  /**
+   * Task 10 seam: external commands are drained exactly once, at the turn
+   * boundary, before the next gauge check (spec section 9.2). The queue itself
+   * arrives with that task; the call site exists here so the boundary has one
+   * place and only one place.
+   */
+  private drainBoundaryQueueIfIdle(): void {}
+
+  /**
+   * One turn = one pipeline. The three asynchronous steps map onto the
+   * handshake CombatAnimationRuntime already exposes (ready -> impact ->
+   * complete); the mechanical idle-check completes inline.
+   *
+   * `from` is 'impact' for a manual turn: submitTurnChoice has already run the
+   * ready and cast phases with the player's chosen skill, so replaying the
+   * ready step would ask for a flourish that already happened.
+   */
+  private beginTurnPipeline(actor: TurnBattleParticipant, from: 'ready' | 'impact'): void {
+    // Safe here and only here: never called from inside a running step's
+    // run(), so the drain loop has no live reference to reset out from under.
+    this.clearPendingSteps()
+    this.pipeline.reset()
+
+    if (from === 'ready') {
+      this.pipeline.push({
+        kind: 'animation',
+        actorId: actor.id,
+        animationId: 'action',
+        run: (done) => {
+          this.awaitStep('ready', done)
+          this.combatAnimationRuntime.notifyReadyActor(actor)
+          this.settleHeadlessStep('ready')
+        },
+      })
+    }
+
+    this.pipeline.push({
+      kind: 'semantic-vfx',
+      run: (done) => {
+        this.awaitStep('impact', done)
+        this.settleHeadlessStep('impact')
+      },
+    })
+
+    this.pipeline.push({
+      kind: 'semantic-vfx',
+      run: (done) => {
+        this.awaitStep('complete', done)
+        this.settleHeadlessStep('complete')
+      },
+    })
+
+    this.pipeline.push({ kind: 'idle-check', run: (done) => done() })
+
+    this.pipeline.drain()
+  }
+
+  /**
+   * Parks a step until the renderer reports the matching signal, or until the
+   * fallback fires (spec section 4.1a). Whichever comes first wins;
+   * TurnPipeline makes the completion idempotent, so the loser is harmless.
+   */
+  private awaitStep(signal: TurnStepSignal, done: () => void): void {
+    const timer = setTimeout(() => {
+      this.pendingStepDone[signal] = undefined
+      done()
+    }, ANIMATION_FALLBACK_MS)
+
+    this.pendingStepTimers.push(timer)
+
+    this.pendingStepDone[signal] = () => {
+      clearTimeout(timer)
+      done()
+    }
+  }
+
+  private settleStep(signal: TurnStepSignal): void {
+    const settle = this.pendingStepDone[signal]
+    this.pendingStepDone[signal] = undefined
+    settle?.()
+  }
+
+  private clearPendingSteps(): void {
+    for (const timer of this.pendingStepTimers) {
+      clearTimeout(timer)
+    }
+
+    this.pendingStepTimers = []
+    this.pendingStepDone = {}
+  }
+
+  /**
+   * Headless: no renderer will ever report this step, so the engine plays
+   * Phaser's part immediately and the step completes inside its own run().
+   * The three acknowledge* bodies are exactly the three calls resolveActorTurn
+   * used to make inline (declare -> impact -> complete), so headless
+   * resolution is unchanged in substance; what changed is that the PIPELINE
+   * owns the ordering in both modes.
+   */
+  private settleHeadlessStep(signal: TurnStepSignal): void {
+    if (this.combatAnimationRuntime.isPresentationActive()) {
+      return
+    }
+
+    const token = this.combatAnimationRuntime.getPendingPlaybackToken() ?? undefined
+
+    if (signal === 'ready') {
+      this.combatAnimationRuntime.acknowledgeTurnReady(token)
+    } else if (signal === 'impact') {
+      this.combatAnimationRuntime.acknowledgeActionImpact(token)
+    } else {
+      this.combatAnimationRuntime.acknowledgeActionComplete(token)
+    }
+  }
+
+  /**
+   * Turn-end. Reached only when the pipeline is empty and nothing is parked,
+   * which is what "the turn is over" means (spec section 8).
+   */
+  private onTurnDrained(): void {
+    const battle = this.turnBattle
+
+    if (!battle || this.turnToken.getState() !== 'RESOLVING') {
+      return
+    }
+
+    // The battle's own phase is the authority on whether combat is over.
+    // A live players/enemies headcount would read COMBAT_OVER between waves,
+    // when every spawned enemy is dead and the next wave has not arrived yet.
+    const bothSidesAlive = battle.state !== 'victory' && battle.state !== 'defeat'
+
+    // resolve() moves the token, and the token's own listener is what tells
+    // the clock to resume - there is no second channel here on purpose.
+    this.turnToken.resolve({ bothSidesAlive })
+
+    if (this.turnToken.getState() === 'COMBAT_OVER') {
+      this.settleCombatOutcome()
+    }
+  }
+
+  /**
+   * Rewards, the victory/defeat terminal and the auto-repeat restart. These
+   * follow the BATTLE, so they run on the combat clock: combat-over STOPS that
+   * clock, and anything left behind on the world tick would never fire.
+   */
+  private settleCombatOutcome(): void {
+    this.grantBattleRewardIfNeeded()
+
+    const battle = this.turnBattle
+
+    if (!battle || (battle.state !== 'victory' && battle.state !== 'defeat')) {
+      return
+    }
+
+    // Auto-repeat: victory + repeat on -> restart in place, exactly where the
+    // world-tick loop used to do it at the end of updateBattleFixedStep().
+    if (
+      battle.state === 'victory' &&
+      this.turnBattleRepeatContinuously &&
+      this.activeStageForTurnBattle !== null &&
+      this.deps.stageManager.get() !== null
+    ) {
+      this.restartTurnBattleCycle()
+      this.resetTurnEngine()
+
+      return
+    }
+
+    // Spec section 8: combat-over STOPS the clock. It does not freeze it - the
+    // battle is over and nothing more will advance.
+    this.combatClock.stop()
+  }
+
+  /** Per-battle reset (spec section 3.3 / blocker A5): a token left in
+   * COMBAT_OVER would reject the next battle's first claim and freeze it
+   * permanently. */
+  private resetTurnEngine(): void {
+    this.clearPendingSteps()
+    this.pipeline.reset()
+    this.turnToken.reset()
   }
 
   // --- Battle state queries ---------------------------------------------
@@ -230,6 +623,13 @@ export class GameManagerTurnBattleOps {
       }
       this.deps.eventBus.emit('presentation_session_started', session)
     }
+
+    // A fresh battle owns a fresh turn engine and a fresh clock run. startStage
+    // does the same again after it rebuilds the battle; both are idempotent.
+    this.resetTurnEngine()
+    this.combatClock.stop()
+    this.combatClock.start()
+    this.syncOffScreenFreeze()
   }
 
   startBattleWithPlayer(player: PlayerData, playerStats: Stats, enemy: Enemy) {
@@ -561,6 +961,14 @@ export class GameManagerTurnBattleOps {
     }
     this.deps.eventBus.emit('presentation_session_started', session)
 
+    // The battle is built: give it a clean turn engine and start its clock.
+    // stop() before start() matters - the previous battle may have stopped the
+    // clock at combat-over, and stop() is what clears the stale freeze reasons.
+    this.resetTurnEngine()
+    this.combatClock.stop()
+    this.combatClock.start()
+    this.syncOffScreenFreeze()
+
     return true
   }
 
@@ -616,106 +1024,34 @@ export class GameManagerTurnBattleOps {
     // victory, so victory itself must not clear).
     this.deps.enemyManager.clear()
 
+    // The battle is destroyed: stop counting for it and drop any turn that was
+    // in flight, including its parked fallback timers.
+    this.resetTurnEngine()
+    this.combatClock.stop()
+
     return true
   }
 
   // --- Fixed-step driving loop ----------------------------------------------
 
   /**
-   * The single battle driver (combat reference spec section 1): splits deltaSeconds
-   * into fixed 0.1s pacing steps for the timer-countdown-reset-dependent
-   * branch; capped at BATTLE_MAX_CATCHUP_SECONDS. Tribulation is NOT stepped
-   * here (it owns its own closed-form catch-up - float-error note kept in
-   * GameManager.update()).
+   * The WORLD-tick half of what used to be one loop. Combat left it: the
+   * battle now advances on CombatClock at render cadence (see stepTurnBattle),
+   * because splitting the world's 1 Hz interval into ten 0.1s steps inside a
+   * single JS frame delivered a three-second countdown to Phaser as three
+   * bursts of ten.
+   *
+   * Auto-farm did NOT leave. It is a wall-clock reward cycle
+   * (perfectClearSeconds / lastCheckedMs) with no turnBattle at all, owned by
+   * the world clock, and its cadence is deliberately unchanged. It read
+   * Date.now() on every one of the old fixed steps, so calling it once per
+   * world tick settles exactly the same cycles.
    */
-  updateBattleFixedStep(deltaSeconds: number) {
-    let remaining = Math.min(deltaSeconds, BATTLE_MAX_CATCHUP_SECONDS)
+  updateBattleFixedStep(_deltaSeconds: number) {
+    const activePlayer = this.deps.getActivePlayer()
 
-    while (remaining > 0) {
-      const step = Math.min(BATTLE_FIXED_STEP_SECONDS, remaining)
-
-      remaining -= step
-
-      // Unified flow: intro -> countdown -> fighting (gauge/wave/result).
-      // Each 0.1s fixed step = 1 pacing tick; turn resolution instant.
-      if (this.turnBattle) {
-        if (this.presentationSession.isBlocking()) {
-          // Held by the presentation coordinator: drop presentation-wait time
-          // instead of accumulating catch-up. Single readiness authority.
-        } else if (this.turnBattle.state === 'intro') {
-          // Intro/transition: only decrement introTurnsRemaining and flip to
-          // 'countdown' at 0 - NO combat logic in this phase.
-          this.turnBattleSystem.tickIntro(this.turnBattle)
-
-          // Snapshot emit so the overlay/scene observes the battle entering
-          // intro (wired callee, silent caller is the P13 bug class).
-          emitTurnBattleEntitySnapshot(this.deps.eventBus, this.turnBattle)
-        } else if (this.turnBattle.state === 'countdown') {
-          this.turnBattleSystem.tickCountdown(this.turnBattle)
-
-          // Snapshot must ALSO run during countdown: CombatScene needs
-          // countdownProgress each tick for the party telegraph 3-2-1.
-          emitTurnBattleEntitySnapshot(this.deps.eventBus, this.turnBattle)
-        } else if (this.turnBattle.state === 'fighting') {
-          // Manual mode: peek actor - if it is a player actor AND manual mode
-          // is on, PAUSE instead of resolving (enemy turns + auto mode resolve
-          // normally). Waiting-for-ack holds the whole step.
-          if (this.combatAnimationRuntime.isAwaitingManualTurnChoice()) {
-            // Paused - still waiting for submitTurnChoice.
-          } else if (
-            this.combatAnimationRuntime.isPresentationActive() &&
-            this.combatAnimationRuntime.isActionPlaybackWaiting()
-          ) {
-            // Action Playback Task 6 - waiting for a Phaser acknowledgement.
-          } else {
-            const readyActor = this.turnBattleSystem.tickPacing(
-              this.turnBattle,
-              !this.combatAnimationRuntime.isPresentationActive(),
-            )
-
-            if (readyActor !== null && this.combatAnimationRuntime.isPresentationActive()) {
-              // Remediation Task 1 - fresh token per ready phase; stale
-              // callbacks holding older tokens become no-ops.
-              this.combatAnimationRuntime.notifyReadyActor(readyActor)
-            } else if (
-              readyActor !== null &&
-              this.turnBattle.players.includes(readyActor) &&
-              this.combatAnimationRuntime.isBattleManualMode() &&
-              !this.combatAnimationRuntime.isAwaitingManualTurnChoice()
-            ) {
-              this.combatAnimationRuntime.pauseForManualActor(readyActor)
-            }
-          }
-
-          // Combat Art Pipeline - emit the LIVE entity snapshot every fixed
-          // step during 'fighting' regardless of which sub-branch ran (this
-          // replaced the dead legacy 'positions' bridge).
-          emitTurnBattleEntitySnapshot(this.deps.eventBus, this.turnBattle)
-        }
-      }
-
-      // Auto-farm Task 4 - wall-clock reward roll (before the normal reward
-      // flow; auto-farm has no turnBattle so the two paths never interact).
-      const activePlayer = this.deps.getActivePlayer()
-
-      if (activePlayer) {
-        this.tickAutoFarm(activePlayer)
-      }
-
-      this.grantBattleRewardIfNeeded()
-    }
-
-    // Auto-repeat: victory + repeat on -> restart within the SAME call so
-    // getBattle()?.state returns to fighting immediately after rewards
-    // (matches the survival-mode semantics).
-    if (
-      this.turnBattle &&
-      this.turnBattle.state === 'victory' &&
-      this.turnBattleRepeatContinuously &&
-      this.activeStageForTurnBattle !== null &&
-      this.deps.stageManager.get() !== null
-    ) {
-      this.restartTurnBattleCycle()
+    if (activePlayer) {
+      this.tickAutoFarm(activePlayer)
     }
   }
 
@@ -838,15 +1174,30 @@ export class GameManagerTurnBattleOps {
   // --- Presentation facade (moved verbatim) -----------------------------------
 
   setBattleManualMode(enabled: boolean): void {
+    const stranded = enabled ? null : this.combatAnimationRuntime.getAwaitedManualActor()
+
     this.combatAnimationRuntime.setBattleManualMode(enabled)
+
+    // Turning manual off mid-wait must not strand the token in AWAITING_INPUT
+    // - that would freeze the clock for the rest of the battle waiting for a
+    // choice the UI no longer offers. The claimed turn becomes an auto turn.
+    if (stranded && this.turnToken.getState() === 'AWAITING_INPUT') {
+      this.turnToken.submitChoice()
+      this.beginTurnPipeline(stranded, 'ready')
+    }
   }
 
   isBattleManualMode(): boolean {
     return this.combatAnimationRuntime.isBattleManualMode()
   }
 
+  /**
+   * Derived from the token, which is the sole authority on whether combat is
+   * inside a turn (spec section 2). The runtime still remembers WHICH actor is
+   * waiting - that is identity, not a second copy of this fact.
+   */
   isAwaitingManualTurnChoice(): boolean {
-    return this.combatAnimationRuntime.isAwaitingManualTurnChoice()
+    return this.turnToken.getState() === 'AWAITING_INPUT'
   }
 
   setPresentationMode(mode: PresentationMode): void {
@@ -861,8 +1212,29 @@ export class GameManagerTurnBattleOps {
     return this.presentationSession.getCurrentSession()
   }
 
+  /**
+   * The port the presentation coordinator drives. Every transition that can
+   * change whether the battle is on screen re-evaluates the clock's
+   * `not-revealed` freeze reason, so readiness reaches combat time through the
+   * reason set and nowhere else.
+   */
   getPresentationPort(): SessionPresentationPort {
-    return this.presentationSession
+    return {
+      getCurrentSession: () => this.presentationSession.getCurrentSession(),
+      hold: (session) => this.withOffScreenSync(() => this.presentationSession.hold(session)),
+      attach: (token) => this.withOffScreenSync(() => this.presentationSession.attach(token)),
+      release: (token) => this.withOffScreenSync(() => this.presentationSession.release(token)),
+      detach: (token, policy) =>
+        this.withOffScreenSync(() => this.presentationSession.detach(token, policy)),
+    }
+  }
+
+  private withOffScreenSync<T>(operation: () => T): T {
+    const result = operation()
+
+    this.syncOffScreenFreeze()
+
+    return result
   }
 
   /** True while the current interactive session is held by the coordinator. */
@@ -898,8 +1270,28 @@ export class GameManagerTurnBattleOps {
     this.combatAnimationRuntime.acknowledgeActionComplete(token)
   }
 
+  /**
+   * submitTurnChoice is NOT an external command: it is consumed by the
+   * AWAITING_INPUT state and never queued past it (spec section 9.2). The
+   * runtime declares the chosen action; from there the turn runs the same
+   * pipeline an auto turn does, starting at the impact step because the ready
+   * and cast phases have just happened.
+   */
   submitTurnChoice(role: TurnSkillSlotRole): boolean {
-    return this.combatAnimationRuntime.submitTurnChoice(role)
+    const actor = this.combatAnimationRuntime.getAwaitedManualActor()
+    const accepted = this.combatAnimationRuntime.submitTurnChoice(role)
+
+    if (!accepted || !actor) {
+      return accepted
+    }
+
+    if (this.turnToken.getState() === 'AWAITING_INPUT') {
+      this.turnToken.submitChoice()
+    }
+
+    this.beginTurnPipeline(actor, 'impact')
+
+    return true
   }
 
   consumeAwaitedActorId(): string | null {

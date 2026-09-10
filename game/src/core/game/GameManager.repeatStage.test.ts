@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { calculateStats } from '../stats/StatCalculator'
@@ -11,6 +12,8 @@ import type { BattleRewardParticleEvent } from '../battle/BattleEvents'
 describe('GameManager continuous repeat stage', () => {
   it('starts another spawn cycle in the same battle without restoring the player', () => {
     const gameManager = new GameManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
 
     // Plan Workstream F — Linh Thạch credit vào MaterialBag, cần registry.
     gameManager.registerMaterials([SPIRIT_STONE_MATERIAL])
@@ -62,7 +65,7 @@ describe('GameManager continuous repeat stage', () => {
     const spiritStoneBalance = () => gameManager.materialBag.getAmount(SPIRIT_STONE_MATERIAL.id)
 
     for (let index = 0; index < 300 && spiritStoneBalance() < 2; index++) {
-      gameManager.update(0.05)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
     expect(spiritStoneBalance()).toBeGreaterThanOrEqual(2)

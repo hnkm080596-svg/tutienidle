@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import { createDefaultPlayer } from '../player/Player'
@@ -21,6 +22,8 @@ import { ENEMY_SIDE_REGION } from '../battle/BattlefieldRegions'
 describe('GameManager — turn-based wave spawn position (bug fix 2026-09-06)', () => {
   it('mọi quái trong wave (kể cả quái thứ 2 trở đi) spawn trong ENEMY_SIDE_REGION, không dính góc trên-trái (x=0)', () => {
     const gameManager = new GameManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
 
     gameManager.registerSkillTemplates(SKILLS)
 
@@ -70,7 +73,7 @@ describe('GameManager — turn-based wave spawn position (bug fix 2026-09-06)', 
     const seenAtSpawn = new Map<string, number>()
 
     for (let index = 0; index < 400; index++) {
-      gameManager.update(0.05)
+      combatSource.advance(COMBAT_STEP_SECONDS)
 
       for (const enemy of gameManager.getTurnBattle()?.enemies ?? []) {
         if (!seenAtSpawn.has(enemy.id)) {

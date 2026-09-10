@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager, INTRO_TOTAL_TICKS } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import { createBaseStats } from '../stats/StatBlock'
@@ -52,8 +53,14 @@ function createDummy() {
   })
 }
 
-function battleReady(): GameManager {
+// Combat runs on its own CombatClock (2026-09-10 turn-mechanism spec), so
+// every call below that used to drive the battle through update() now steps
+// a ManualClockSource. While a turn is in flight that clock is FROZEN, which
+// is why advancing it during a pending acknowledgement changes nothing.
+function battleReady(): { gameManager: GameManager; combatSource: ManualClockSource } {
   const gameManager = new GameManager()
+  const combatSource = new ManualClockSource()
+  gameManager.setCombatClockSource(combatSource)
   const player = createPlayer()
 
   gameManager.registerSkillTemplates([createBasicSkill()])
@@ -64,7 +71,7 @@ function battleReady(): GameManager {
 
   // Intro 20 ticks (2026-09-07 plan Task 4) + countdown 30 ticks.
   for (let i = 0; i < INTRO_TOTAL_TICKS + 30; i++) {
-    gameManager.update(0.1)
+    combatSource.advance(COMBAT_STEP_SECONDS)
   }
 
   // True root cause of the ~4/15 flake (fix round 1 — the previously
@@ -88,15 +95,15 @@ function battleReady(): GameManager {
   const enemyEntity = gameManager.getTurnBattle()!.enemies[0]!.entity
   enemyEntity.x = 2
 
-  return gameManager
+  return { gameManager, combatSource }
 }
 
 describe('GameManager — presentation orchestration (presentationActive=false default)', () => {
   it('default false → fixed-step tick resolve turn ngay như cũ (zero behavior change)', () => {
-    const gameManager = battleReady()
+    const { gameManager, combatSource } = battleReady()
 
     for (let i = 0; i < 20; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
     // Speed 100 → ~10 ticks = 1 turn. Sau 20 ticks ≥ 1 turn đã resolve.
@@ -106,7 +113,7 @@ describe('GameManager — presentation orchestration (presentationActive=false d
 
 describe('GameManager — presentation orchestration (presentationActive=true)', () => {
   it('tick có actor ready → emit turn_ready + PAUSE (chưa declare/impact/complete)', () => {
-    const gameManager = battleReady()
+    const { gameManager, combatSource } = battleReady()
     gameManager.setPresentationActive(true)
 
     const events: string[] = []
@@ -114,7 +121,7 @@ describe('GameManager — presentation orchestration (presentationActive=true)',
     gameManager.eventBus.on('attack', () => events.push('attack'))
 
     for (let i = 0; i < 20; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
     expect(events).toContain('turn_ready')
@@ -124,14 +131,14 @@ describe('GameManager — presentation orchestration (presentationActive=true)',
   })
 
   it('acknowledgeTurnReady → declare + emit turn_cast_start (chưa damage)', () => {
-    const gameManager = battleReady()
+    const { gameManager, combatSource } = battleReady()
     gameManager.setPresentationActive(true)
 
     const events: string[] = []
     gameManager.eventBus.on('turn_cast_start', () => events.push('turn_cast_start'))
 
     for (let i = 0; i < 20; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
     const enemyBefore = gameManager.getTurnBattle()!.enemies[0]!.entity.currentHp
@@ -144,14 +151,14 @@ describe('GameManager — presentation orchestration (presentationActive=true)',
   })
 
   it('acknowledgeActionImpact → damage applied + action_impact emitted', () => {
-    const gameManager = battleReady()
+    const { gameManager, combatSource } = battleReady()
     gameManager.setPresentationActive(true)
 
     const events: string[] = []
     gameManager.eventBus.on('action_impact', () => events.push('action_impact'))
 
     for (let i = 0; i < 20; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
     const token = gameManager.getPendingPlaybackToken()!
@@ -166,14 +173,14 @@ describe('GameManager — presentation orchestration (presentationActive=true)',
   })
 
   it('acknowledgeActionComplete → cleanup + turn_standby_complete + next tick peek mới', () => {
-    const gameManager = battleReady()
+    const { gameManager, combatSource } = battleReady()
     gameManager.setPresentationActive(true)
 
     const events: string[] = []
     gameManager.eventBus.on('turn_standby_complete', () => events.push('turn_standby_complete'))
 
     for (let i = 0; i < 20; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
     const token = gameManager.getPendingPlaybackToken()!
@@ -186,12 +193,12 @@ describe('GameManager — presentation orchestration (presentationActive=true)',
   })
 
   it('submitTurnChoice khi presentationActive → declare thay vì resolve ngay', () => {
-    const gameManager = battleReady()
+    const { gameManager, combatSource } = battleReady()
     gameManager.setPresentationActive(true)
     gameManager.setBattleManualMode(true)
 
     for (let i = 0; i < 50; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
     // 5-phase machine: tick emit turn_ready (pendingReadyActor); Phaser ack
@@ -213,18 +220,18 @@ describe('GameManager — presentation orchestration (presentationActive=true)',
 
 describe('Remediation Task 1 — playback token + idempotent teardown', () => {
   it('teardown ở ready-phase: setPresentationActive(false) drain xong isActionPlaybackWaiting = false', () => {
-    const gameManager = battleReady()
+    const { gameManager, combatSource } = battleReady()
     gameManager.setPresentationActive(true)
-    for (let i = 0; i < 20; i++) { gameManager.update(0.1) }
+    for (let i = 0; i < 20; i++) { combatSource.advance(COMBAT_STEP_SECONDS) }
     expect(gameManager.isActionPlaybackWaiting()).toBe(true)
     gameManager.setPresentationActive(false)
     expect(gameManager.isActionPlaybackWaiting()).toBe(false)
   })
 
   it('teardown idempotent: gọi false 2 lần không gây thêm damage/turn/event', () => {
-    const gameManager = battleReady()
+    const { gameManager, combatSource } = battleReady()
     gameManager.setPresentationActive(true)
-    for (let i = 0; i < 20; i++) { gameManager.update(0.1) }
+    for (let i = 0; i < 20; i++) { combatSource.advance(COMBAT_STEP_SECONDS) }
     gameManager.setPresentationActive(false)
     const turnsAfterFirst = gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0
     const logAfterFirst = gameManager.getTurnBattle()?.log?.length ?? 0
@@ -236,14 +243,14 @@ describe('Remediation Task 1 — playback token + idempotent teardown', () => {
   })
 
   it('stale ack: token cũ không đụng action mới (generation-based invalidation)', () => {
-    const gameManager = battleReady()
+    const { gameManager, combatSource } = battleReady()
     gameManager.setPresentationActive(true)
-    for (let i = 0; i < 20; i++) { gameManager.update(0.1) }
+    for (let i = 0; i < 20; i++) { combatSource.advance(COMBAT_STEP_SECONDS) }
     const oldToken = gameManager.getPendingPlaybackToken()
     gameManager.setPresentationActive(false)
 
     gameManager.setPresentationActive(true)
-    for (let i = 0; i < 20; i++) { gameManager.update(0.1) }
+    for (let i = 0; i < 20; i++) { combatSource.advance(COMBAT_STEP_SECONDS) }
     const newWaiting = gameManager.isActionPlaybackWaiting()
     const turnsBeforeStaleAck = gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0
     const logBeforeStaleAck = gameManager.getTurnBattle()?.log?.length ?? 0
@@ -262,13 +269,13 @@ describe('Remediation Task 1 — playback token + idempotent teardown', () => {
 
 describe('Remediation Task 7 — duplicate + out-of-order acknowledgements', () => {
   it('duplicate acknowledgeActionImpact → damage chỉ áp ĐÚNG 1 lần (no duplicate damage/event)', () => {
-    const gameManager = battleReady()
+    const { gameManager, combatSource } = battleReady()
     gameManager.setPresentationActive(true)
 
     const impactEvents: unknown[] = []
     gameManager.eventBus.on('action_impact', (event) => impactEvents.push(event))
 
-    for (let i = 0; i < 20; i++) { gameManager.update(0.1) }
+    for (let i = 0; i < 20; i++) { combatSource.advance(COMBAT_STEP_SECONDS) }
     const token = gameManager.getPendingPlaybackToken()!
     gameManager.acknowledgeTurnReady(token)
 
@@ -292,13 +299,13 @@ describe('Remediation Task 7 — duplicate + out-of-order acknowledgements', () 
   })
 
   it('duplicate acknowledgeActionComplete → turn count/reward chỉ tính 1 lần', () => {
-    const gameManager = battleReady()
+    const { gameManager, combatSource } = battleReady()
     gameManager.setPresentationActive(true)
 
     const standbyEvents: unknown[] = []
     gameManager.eventBus.on('turn_standby_complete', (event) => standbyEvents.push(event))
 
-    for (let i = 0; i < 20; i++) { gameManager.update(0.1) }
+    for (let i = 0; i < 20; i++) { combatSource.advance(COMBAT_STEP_SECONDS) }
     const token = gameManager.getPendingPlaybackToken()!
     gameManager.acknowledgeTurnReady(token)
     gameManager.acknowledgeActionImpact(token)
@@ -319,9 +326,9 @@ describe('Remediation Task 7 — duplicate + out-of-order acknowledgements', () 
   })
 
   it('out-of-order: acknowledgeActionImpact trước acknowledgeTurnReady → no-op (phase chưa declare)', () => {
-    const gameManager = battleReady()
+    const { gameManager, combatSource } = battleReady()
     gameManager.setPresentationActive(true)
-    for (let i = 0; i < 20; i++) { gameManager.update(0.1) }
+    for (let i = 0; i < 20; i++) { combatSource.advance(COMBAT_STEP_SECONDS) }
 
     const enemy = gameManager.getTurnBattle()!.enemies[0]!.entity
     const hpBefore = enemy.currentHp
@@ -335,9 +342,9 @@ describe('Remediation Task 7 — duplicate + out-of-order acknowledgements', () 
   })
 
   it('rejects missing token and accepts valid token', () => {
-    const gameManager = battleReady()
+    const { gameManager, combatSource } = battleReady()
     gameManager.setPresentationActive(true)
-    for (let i = 0; i < 20; i++) { gameManager.update(0.1) }
+    for (let i = 0; i < 20; i++) { combatSource.advance(COMBAT_STEP_SECONDS) }
 
     // Không truyền token — bị reject theo F5
     gameManager.acknowledgeTurnReady()
@@ -350,125 +357,95 @@ describe('Remediation Task 7 — duplicate + out-of-order acknowledgements', () 
   })
 })
 
-// --- Fix round 1 (Task 4 review) — turn_battle_entity_snapshot must fire on
-// EVERY updateBattleFixedStep() 'fighting' tick, regardless of which of the
-// 3 inner sub-branches ran that tick (normal pacing / awaitedManualActor
-// pause / presentationActive pending-acknowledgement wait). A regression
-// that moves emitTurnBattleEntitySnapshot() inside the pacing `else` branch
-// would freeze combat art only while paused on manual input or a Phaser
-// acknowledgement — exactly the bug this task exists to prevent, just
-// subtler. These tests drive each of the 3 states through the real public
-// surface (update()/acknowledgeTurnReady()/acknowledgeActionImpact()) —
-// see GameManager.actionPlayback.test.ts header for the battleReady()
+// --- Fix round 1 (Task 4 review), revised for the turn clock -------------
+//
+// The original three "sub-branches" (normal pacing / awaitedManualActor pause
+// / presentationActive pending-acknowledgement wait) were branches INSIDE one
+// fixed step, and the guard was that a snapshot fires on every one of them.
+// Those branches are gone: while a turn is in flight the combat clock is
+// FROZEN, so no step arrives at all and there is nothing to emit. The guard
+// that replaces them is the freeze itself - a running step must always emit a
+// snapshot, and a step must not be spendable while a turn is in flight.
+// See GameManager.actionPlayback.test.ts header for the battleReady()
 // determinism note (evasionRate: 0).
 
-describe('GameManager — turn_battle_entity_snapshot fires every fixed-step tick (all 3 sub-branches)', () => {
-  it('sub-branch 1: normal pacing (no manual actor, no pending ack) — snapshot fires', () => {
-    const gameManager = battleReady()
+describe('GameManager — turn_battle_entity_snapshot and the frozen clock', () => {
+  it('a running combat step emits a snapshot', () => {
+    const { gameManager, combatSource } = battleReady()
 
     expect(gameManager.getTurnBattle()?.state).toBe('fighting')
+    expect(gameManager.getCombatClockState()).toBe('running')
 
     const snapshots: unknown[] = []
     gameManager.eventBus.on('turn_battle_entity_snapshot', (event) => snapshots.push(event))
 
-    gameManager.update(0.1)
+    combatSource.advance(COMBAT_STEP_SECONDS)
 
     expect(snapshots).toHaveLength(1)
   })
 
-  it('sub-branch 2: awaitedManualActor set (paused waiting for submitTurnChoice) — snapshot still fires', () => {
-    const gameManager = battleReady()
+  it('a manual wait freezes the clock, so no step and no snapshot happens', () => {
+    const { gameManager, combatSource } = battleReady()
     gameManager.setPresentationActive(true)
     gameManager.setBattleManualMode(true)
 
     for (let i = 0; i < 50; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
-
-    // Declares the manual player's ready phase into awaitedManualActor —
-    // same flow as the existing 'submitTurnChoice khi presentationActive'
-    // test above.
-    const token = gameManager.getPendingPlaybackToken()!
-    gameManager.acknowledgeTurnReady(token)
 
     expect(gameManager.isAwaitingManualTurnChoice()).toBe(true)
+    expect(gameManager.getCombatClockState()).toBe('frozen')
+    expect(gameManager.getFreezeReasons()).toContain('turn-in-flight')
 
     const snapshots: unknown[] = []
     gameManager.eventBus.on('turn_battle_entity_snapshot', (event) => snapshots.push(event))
 
-    // This tick takes the `if (this.awaitedManualActor)` branch (still
-    // paused — no submitTurnChoice yet), NOT the tick that just set it.
-    gameManager.update(0.1)
+    const stepsBefore = gameManager.getElapsedCombatSteps()
+    combatSource.advance(COMBAT_STEP_SECONDS)
 
-    expect(snapshots).toHaveLength(1)
+    expect(gameManager.getElapsedCombatSteps()).toBe(stepsBefore)
+    expect(snapshots).toHaveLength(0)
   })
 
-  it('sub-branch 3a: presentationActive + pendingReadyActor outstanding — snapshot still fires', () => {
-    const gameManager = battleReady()
+  it('an outstanding renderer acknowledgement freezes the clock at every phase', () => {
+    const { gameManager, combatSource } = battleReady()
     gameManager.setPresentationActive(true)
 
     for (let i = 0; i < 20; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
-    // pendingReadyActor is now set (turn_ready emitted, PAUSE per the
-    // existing 'tick có actor ready' test above) and stays set until
-    // acknowledgeTurnReady() is called.
+    // Ready phase outstanding.
     expect(gameManager.isActionPlaybackWaiting()).toBe(true)
-
-    const snapshots: unknown[] = []
-    gameManager.eventBus.on('turn_battle_entity_snapshot', (event) => snapshots.push(event))
-
-    // This tick takes the presentationActive-pending `else if` branch
-    // (no-op — waiting on Phaser's ready-flourish acknowledgement).
-    gameManager.update(0.1)
-
-    expect(snapshots).toHaveLength(1)
-  })
-
-  it('sub-branch 3b: presentationActive + pendingDeclaredAction outstanding — snapshot still fires', () => {
-    const gameManager = battleReady()
-    gameManager.setPresentationActive(true)
-
-    for (let i = 0; i < 20; i++) {
-      gameManager.update(0.1)
-    }
+    expect(gameManager.getCombatClockState()).toBe('frozen')
 
     const token = gameManager.getPendingPlaybackToken()!
     gameManager.acknowledgeTurnReady(token)
 
-    // pendingDeclaredAction is now set ('turn_cast_start' emitted); waiting on
-    // acknowledgeActionImpact().
+    // Cast phase outstanding - the pipeline parked on the next step.
     expect(gameManager.isActionPlaybackWaiting()).toBe(true)
+    expect(gameManager.getCombatClockState()).toBe('frozen')
 
-    const snapshots: unknown[] = []
-    gameManager.eventBus.on('turn_battle_entity_snapshot', (event) => snapshots.push(event))
-
-    gameManager.update(0.1)
-
-    expect(snapshots).toHaveLength(1)
-  })
-
-  it('sub-branch 3c: presentationActive + pendingImpact outstanding — snapshot still fires', () => {
-    const gameManager = battleReady()
-    gameManager.setPresentationActive(true)
-
-    for (let i = 0; i < 20; i++) {
-      gameManager.update(0.1)
-    }
-
-    const token = gameManager.getPendingPlaybackToken()!
-    gameManager.acknowledgeTurnReady(token)
     gameManager.acknowledgeActionImpact(token)
 
-    // pendingImpact is now set ('action_impact' emitted); waiting on
-    // acknowledgeActionComplete().
+    // Impact phase outstanding.
     expect(gameManager.isActionPlaybackWaiting()).toBe(true)
+    expect(gameManager.getCombatClockState()).toBe('frozen')
+
+    const stepsBefore = gameManager.getElapsedCombatSteps()
+    combatSource.advance(COMBAT_STEP_SECONDS * 10)
+    expect(gameManager.getElapsedCombatSteps()).toBe(stepsBefore)
+
+    // The last acknowledgement drains the pipeline and releases the clock.
+    gameManager.acknowledgeActionComplete(token)
+
+    expect(gameManager.isActionPlaybackWaiting()).toBe(false)
+    expect(gameManager.getCombatClockState()).toBe('running')
 
     const snapshots: unknown[] = []
     gameManager.eventBus.on('turn_battle_entity_snapshot', (event) => snapshots.push(event))
 
-    gameManager.update(0.1)
+    combatSource.advance(COMBAT_STEP_SECONDS)
 
     expect(snapshots).toHaveLength(1)
   })

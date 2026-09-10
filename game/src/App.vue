@@ -18,6 +18,7 @@ import { CompositeRenderer, createVueRouteAdapter } from './presentation/VueRout
 import { GamePresentationCoordinator } from './presentation/GamePresentationCoordinator'
 import { createGamePresentation } from './presentation/createGamePresentation'
 import { bindPresentationActive } from './presentation/bindPresentationActive'
+import { RafClockSource } from './presentation/clock/RafClockSource'
 import { checkTribulationOutcomeAction } from './composables/useTribulation'
 import { isBattleInProgress } from './core/battle/BattleTypes'
 import { useBreakthrough } from './composables/useBreakthrough'
@@ -114,6 +115,12 @@ const gameManager = new GameManager()
 // ticks after the coordinator has revealed it (READY -> attach -> curtain
 // open -> release). Headless instances (tests/tools) stay unheld.
 gameManager.setPresentationMode('interactive')
+
+// Combat counts on its OWN clock, not on the 1 Hz world interval below.
+// The world tick would deliver a three-second countdown to Phaser as three
+// bursts of ten 0.1s steps inside one frame; on the render cadence the same
+// countdown arrives one step at a time, in step with what is drawn.
+gameManager.setCombatClockSource(new RafClockSource())
 
 // Presentation coordinator & adapters (Task 5-12, AGENTS.md P17)
 const phaserSceneAdapter = new PhaserSceneAdapter()
