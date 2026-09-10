@@ -57,4 +57,22 @@ describe('TurnToken', () => {
 
     expect(states).toEqual(['CLAIMED', 'RESOLVING', 'IDLE'])
   })
+
+  it('reset() returns a COMBAT_OVER token to idle so the next battle can claim', () => {
+    // Spec 3.3: startStage calls reset(). Without it, a battle that ended in
+    // COMBAT_OVER leaves a terminal token for the next battle, whose first
+    // claim() is rejected - the battle never starts.
+    const token = new TurnToken()
+    token.claim({ actorId: 'e1', isPlayerTeam: false, manualMode: false })
+    token.resolve({ bothSidesAlive: false })
+    expect(token.getState()).toBe('COMBAT_OVER')
+
+    token.reset()
+    expect(token.getState()).toBe('IDLE')
+
+    // Prove the state machine runs normally afterward, not just that
+    // claim() didn't throw.
+    token.claim({ actorId: 'p1', isPlayerTeam: true, manualMode: true })
+    expect(token.getState()).toBe('AWAITING_INPUT')
+  })
 })

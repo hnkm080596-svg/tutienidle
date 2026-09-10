@@ -65,6 +65,14 @@ export class TurnPipeline {
    * Clears everything for a new turn. The chain-depth counter belongs to the
    * TURN, not to a drain() call, so only this resets it - otherwise an async
    * step in the middle of a reaction chain would silently reset the guard.
+   *
+   * Not safe to call synchronously from inside a running step's run()
+   * (mid-drain, same call stack): the outer loop's local `step` reference
+   * would go stale and `this.queue` would be reassigned under it, so the
+   * loop could exit and fire onDrained() right after a reset that was
+   * presumably meant to abort. No caller does this today - nothing consumes
+   * TurnPipeline yet - so this is left as a warning for whoever wires the
+   * first real caller, not fixed here.
    */
   reset(): void {
     this.queue = []
