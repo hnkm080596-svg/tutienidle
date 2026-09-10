@@ -129,4 +129,28 @@ describe('PresentationTransitionOverlay', () => {
 
     app.unmount()
   })
+
+  it('resolves immediately when the panels already sit at the requested state', async () => {
+    vi.useFakeTimers()
+    const { instance, unmount } = mountOverlay()
+
+    try {
+      let settled = false
+      const controller = new AbortController()
+      const promise = instance.open(1, controller.signal).then(() => {
+        settled = true
+      })
+
+      await nextTick()
+      await nextTick()
+
+      expect(settled).toBe(true)
+      expect(instance.curtainState).toBe('opened')
+
+      await promise
+    } finally {
+      vi.useRealTimers()
+      unmount()
+    }
+  })
 })

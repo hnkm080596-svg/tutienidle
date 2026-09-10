@@ -75,6 +75,12 @@ function animateCurtain(state: 'closing' | 'opening', signal?: AbortSignal): Pro
     return nextTick()
   }
 
+  const settled = state === 'closing' ? 'closed' : 'opened'
+
+  if (curtainState.value === settled) {
+    return nextTick()
+  }
+
   return new Promise<void>((resolve, reject) => {
     let leftDone = false
     let rightDone = false
