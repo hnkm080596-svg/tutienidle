@@ -24,6 +24,7 @@ import { checkTribulationOutcomeAction } from './composables/useTribulation'
 import { isBattleInProgress } from './core/battle/BattleTypes'
 import { useBreakthrough } from './composables/useBreakthrough'
 import { useElectronBridge } from './composables/useElectronBridge'
+import { useCombatPause } from './composables/useCombatPause'
 import { useNotificationStore } from './stores/notification'
 import { useI18n } from 'vue-i18n'
 import { useOfflineSummaryStore } from './stores/offlineSummary'
@@ -33,6 +34,7 @@ import { useAppLifecycle } from './composables/useAppLifecycle'
 import GameRoot from './components/layout/GameRoot.vue'
 import RouteMount from './components/game/RouteMount.vue'
 import PresentationTransitionOverlay from './components/game/PresentationTransitionOverlay.vue'
+import CombatPauseOverlay from './components/game/combat/CombatPauseOverlay.vue'
 import LoadingScreen from './components/common/LoadingScreen.vue'
 import ErrorBoundary from './components/common/ErrorBoundary.vue'
 import ErrorScreen from './components/common/ErrorScreen.vue'
@@ -263,6 +265,15 @@ gameManager.registerProgressionNodes(KIEM_TU_NODES)
 gameManager.registerQuests(QUESTS)
 
 const { breakthrough } = useBreakthrough(gameManager)
+
+// Task 8 (A11, spec §6.1) — an unwatched battle pauses visibly and resumes
+// only on Continue; returning to the tab is not consent to resume. Gated on
+// getCombatClockState() !== 'stopped' so the overlay never appears outside
+// combat (no battle mounted == nothing to pause).
+const { isPaused: isCombatPaused, continueBattle, dispose: disposeCombatPause } = useCombatPause(
+  gameManager,
+  { isCombatActive: () => gameManager.getCombatClockState() !== 'stopped' },
+)
 
 // Cầu nối reactivity chung cho các panel đọc bag/equipment — xem
 // composables/useGameState.ts. tick() tự tăng mỗi giây; các action
@@ -568,6 +579,7 @@ onUnmounted(() => {
   }
 
   clock.stop()
+  disposeCombatPause()
 
   if (introHandle) {
     clearTimeout(introHandle)
@@ -637,6 +649,13 @@ onUnmounted(() => {
     <!-- GameRoot chỉ hiện khi boot xong -->
     <GameRoot v-if="isBooted" />
   </ErrorBoundary>
+
+  <!-- Task 8 (A11) — the unwatched pause. Data-driven by useCombatPause()
+       (visibilitychange -> freezeCombat('tab-hidden')), NOT the curtain
+       above: separate owner (the battle vs. the presentation coordinator),
+       separate z-layer (900 < curtain's 1000 so the curtain can always
+       cover it), neither may drive the other. -->
+  <CombatPauseOverlay v-if="isCombatPaused" @continue="continueBattle" />
 
   <!-- Curtain/loading/error cover lives ABOVE every entry branch so cold boot
        and boot failures are covered too, not just in-game transitions. -->

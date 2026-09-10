@@ -544,6 +544,11 @@
       "countdown": {
         "go": "Xuất Trận!"
       },
+      "pause": {
+        "title": "Trận đấu tạm dừng",
+        "body": "Trận chỉ diễn ra khi bạn đang xem.",
+        "action": "Tiếp tục"
+      },
       "intro": {
         "entering": "Vào Trận"
       },

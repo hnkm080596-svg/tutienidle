@@ -544,6 +544,11 @@
       "countdown": {
         "go": "To Battle!"
       },
+      "pause": {
+        "title": "Battle paused",
+        "body": "The battle only runs while you are watching.",
+        "action": "Continue"
+      },
       "intro": {
         "entering": "Entering Battle"
       },
