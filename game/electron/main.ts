@@ -1,7 +1,10 @@
 import { app, BrowserWindow, ipcMain, powerMonitor } from 'electron'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { createCombatClockHost } from '../src/main-process/combatClockHost'
+import {
+  createCombatClockHost,
+  attachPowerMonitorToClockHost,
+} from '../src/main-process/combatClockHost'
 
 // Uncommitted audit followup plan, Ưu tiên 2 "xử lý khi đóng gói Electron"
 // (2026-08-24) — main process cho bản desktop. Hai mục đích:
@@ -70,14 +73,13 @@ function main() {
     mainWindow?.webContents.send('system:suspend', Date.now())
   })
 
-  powerMonitor.on('resume', () => {
-    // Re-anchor the clock host's baseline before its own interval fires again,
-    // so the tick right after an OS sleep measures only time since resume
-    // instead of tripping combatClockHost's stall guard against the
-    // pre-sleep timestamp (Task 7, ruling 3 — this is the precise signal;
-    // the host's elapsed-threshold stays as a backstop for stalls that raise
-    // no power event, e.g. a hung process or a debugger pause).
-    clockHost.reset()
+  // Task 7, ruling 3 — the precise OS-resume signal re-anchors clockHost's
+  // baseline (the elapsed-threshold in combatClockHost.ts stays as a backstop
+  // for a stall that raises no power event). Wiring lives in
+  // combatClockHost.ts, not here, so it has test coverage — main.ts itself
+  // has none. reset() runs before the 'system:resume' forward below, in the
+  // order attachPowerMonitorToClockHost's own test asserts.
+  attachPowerMonitorToClockHost(powerMonitor, clockHost, () => {
     mainWindow?.webContents.send('system:resume', Date.now())
   })
 

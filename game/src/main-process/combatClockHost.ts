@@ -73,7 +73,38 @@ export function createCombatClockHost(): CombatClockHost {
     },
 
     reset() {
+      // Looks redundant next to the per-tick `last = now` above — it isn't.
+      // That per-tick update tracks the *interval*'s own cadence; this is a
+      // deliberate external re-anchor called from the OS 'resume' signal
+      // (see attachPowerMonitorToClockHost below), so the tick right after a
+      // real sleep is measured from the moment of resume, not against
+      // whatever `last` held before the OS suspended the process. Ruling 3:
+      // this is the precise signal, not a substitute for the elapsed
+      // threshold above, which stays as the backstop for a stall that raises
+      // no power event.
       last = Date.now()
     },
   }
+}
+
+/**
+ * Wires the OS 'resume' power event to the clock host's reset(), plus an
+ * optional caller hook (electron/main.ts uses it to forward 'system:resume'
+ * to the renderer, as it already did before this host existed).
+ *
+ * Pulled out of electron/main.ts so this glue has test coverage: main.ts
+ * itself has no test harness, and the failure modes here (wrong event name,
+ * reset() never called, or called after the hook instead of before) would
+ * otherwise sail through the suite untested. reset() is called before the
+ * hook so the resume-forwarding path never observes a stale baseline.
+ */
+export function attachPowerMonitorToClockHost(
+  powerMonitor: { on(event: 'resume', listener: () => void): void },
+  host: CombatClockHost,
+  onResume?: () => void,
+): void {
+  powerMonitor.on('resume', () => {
+    host.reset()
+    onResume?.()
+  })
 }

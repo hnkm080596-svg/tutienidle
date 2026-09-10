@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createCombatClockHost } from './combatClockHost'
+import { attachPowerMonitorToClockHost, createCombatClockHost } from './combatClockHost'
+import type { CombatClockHost } from './combatClockHost'
 
 describe('combatClockHost', () => {
   afterEach(() => {
@@ -72,5 +73,71 @@ describe('combatClockHost', () => {
 
     expect(ticks.length).toBeGreaterThanOrEqual(2)
     expect(ticks.every((d) => d > 0.04 && d < 0.06)).toBe(true)
+  })
+})
+
+describe('attachPowerMonitorToClockHost', () => {
+  function fakePowerMonitor() {
+    const listeners: Array<() => void> = []
+    return {
+      on(event: 'resume', listener: () => void) {
+        expect(event).toBe('resume')
+        listeners.push(listener)
+      },
+      fireResume() {
+        for (const listener of listeners) {
+          listener()
+        }
+      },
+    }
+  }
+
+  function fakeHost(): CombatClockHost & { resetCalls: number } {
+    return {
+      resetCalls: 0,
+      start: vi.fn(),
+      stop: vi.fn(),
+      reset() {
+        this.resetCalls += 1
+      },
+    }
+  }
+
+  it('calls reset() on the resume event', () => {
+    const powerMonitor = fakePowerMonitor()
+    const host = fakeHost()
+
+    attachPowerMonitorToClockHost(powerMonitor, host)
+    powerMonitor.fireResume()
+
+    expect(host.resetCalls).toBe(1)
+  })
+
+  it('does not require an onResume hook', () => {
+    const powerMonitor = fakePowerMonitor()
+    const host = fakeHost()
+
+    attachPowerMonitorToClockHost(powerMonitor, host)
+
+    expect(() => powerMonitor.fireResume()).not.toThrow()
+  })
+
+  it('calls reset() before the onResume hook, so the hook never observes a stale baseline', () => {
+    const powerMonitor = fakePowerMonitor()
+    const host = fakeHost()
+    const order: string[] = []
+
+    const originalReset = host.reset.bind(host)
+    host.reset = () => {
+      order.push('reset')
+      originalReset()
+    }
+
+    attachPowerMonitorToClockHost(powerMonitor, host, () => {
+      order.push('onResume')
+    })
+    powerMonitor.fireResume()
+
+    expect(order).toEqual(['reset', 'onResume'])
   })
 })

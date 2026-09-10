@@ -35,9 +35,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.on('combat-clock:tick', handler)
       ipcRenderer.send('combat-clock:start')
 
+      // Only unregisters the renderer-side listener. Sending
+      // 'combat-clock:stop' is left to the dedicated stop() below —
+      // MainProcessClockSource.stop() (src/presentation/clock/) always calls
+      // both, and having both send the same IPC message was a redundant
+      // double-send noted in Task 7 review.
       return () => {
         ipcRenderer.removeListener('combat-clock:tick', handler)
-        ipcRenderer.send('combat-clock:stop')
       }
     },
 
