@@ -75,6 +75,10 @@ export interface TurnSkillDefinition {
   chargeTurns?: number
   /** Action Playback (2026-09-05) — VFX preset cho action_impact. undefined = fallback preset mặc định (Task 4). */
   presetId?: CombatVfxPresetId
+  /** Spec §7.1 — may this skill be answered by a counter? Defaults to false. */
+  counterable?: boolean
+  /** Spec §7.1 — which skill this actor counters with. Defaults to null. */
+  counterSkillId?: string | null
 }
 
 export interface TurnSkillSlot {
