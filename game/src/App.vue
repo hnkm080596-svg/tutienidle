@@ -17,6 +17,7 @@ import { AssetBundleManager } from './presentation/assets/AssetBundleManager'
 import { CompositeRenderer, createVueRouteAdapter } from './presentation/VueRouteAdapter'
 import { GamePresentationCoordinator } from './presentation/GamePresentationCoordinator'
 import { createGamePresentation } from './presentation/createGamePresentation'
+import { bindPresentationActive } from './presentation/bindPresentationActive'
 import { checkTribulationOutcomeAction } from './composables/useTribulation'
 import { isBattleInProgress } from './core/battle/BattleTypes'
 import { useBreakthrough } from './composables/useBreakthrough'
@@ -150,6 +151,12 @@ const presentation = createGamePresentation({
   getCurrentSession: () => gameManager.getCurrentPresentationSession(),
 })
 const routeAdapter = createVueRouteAdapter(coordinator, compositeRenderer)
+
+// RC-3: presentationActive has exactly ONE owner — the coordinator, via this
+// binding. It is true only while the COMMITTED route is combat and the
+// combat session is attached. CombatScene must never assert this for
+// itself (self-report is the pattern the coordinator design rejected).
+const unbindPresentationActive = bindPresentationActive(coordinator, gameManager)
 
 provide(PHASER_SCENE_ADAPTER_KEY, phaserSceneAdapter)
 provide(ASSET_BUNDLE_MANAGER_KEY, assetBundleManager)
@@ -560,6 +567,7 @@ onUnmounted(() => {
   // a disposed app (matters on HMR too, which unmounts this component).
   presentation.dispose()
   routeAdapter.dispose()
+  unbindPresentationActive()
   phaserSceneAdapter.dispose()
   assetBundleManager.dispose()
 })

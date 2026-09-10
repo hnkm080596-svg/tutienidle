@@ -47,6 +47,7 @@ import { fileURLToPath } from 'node:url'
 import ts from 'typescript'
 import { parse as parseSFC } from '@vue/compiler-sfc'
 import { describe, expect, it } from 'vitest'
+import { bindPresentationActive } from './presentation/bindPresentationActive'
 
 const APP_VUE_PATH = fileURLToPath(new URL('./App.vue', import.meta.url))
 const LIFECYCLE_TS_PATH = fileURLToPath(new URL('./composables/useAppLifecycle.ts', import.meta.url))
@@ -339,5 +340,25 @@ describe('useAppLifecycle() exports have a consumer in App.vue', () => {
         `INTENTIONALLY_UNWIRED_LIFECYCLE_MEMBERS kèm lý do rõ ràng — ` +
         `KHÔNG được lặng lẽ bỏ qua.`,
     ).toBe(true)
+  })
+})
+
+// --- RC-3: presentationActive has exactly one owner (bindPresentationActive) ---
+
+describe('bindPresentationActive — presentationActive has exactly one owner', () => {
+  it('activates combat playback exactly when the combat route is committed', () => {
+    const calls: boolean[] = []
+    const gameManager = { setPresentationActive: (v: boolean) => calls.push(v) }
+    const listeners: Array<(s: any) => void> = []
+    const coordinator = { subscribe: (l: (s: any) => void) => { listeners.push(l); return () => {} } }
+
+    bindPresentationActive(coordinator as any, gameManager as any)
+
+    listeners[0]!({ currentRoute: 'home', currentSession: null })
+    listeners[0]!({ currentRoute: 'combat', currentSession: { kind: 'combat', sessionId: 1 } })
+    listeners[0]!({ currentRoute: 'combat', currentSession: { kind: 'combat', sessionId: 1 } })
+    listeners[0]!({ currentRoute: 'home', currentSession: null })
+
+    expect(calls).toEqual([false, true, false])
   })
 })
