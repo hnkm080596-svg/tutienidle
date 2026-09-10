@@ -2393,6 +2393,16 @@ export class GameManager {
     this.turnBattleOps.freezeCombat(reason)
   }
 
+  /**
+   * External command boundary (spec section 9). A command never mutates
+   * battle state at the moment it arrives: it runs immediately when there is
+   * no boundary to wait for (no battle, or the token is already idle), and
+   * otherwise waits for the next RESOLVING -> IDLE transition.
+   */
+  enqueueAtTurnBoundary(command: () => void): void {
+    this.turnBattleOps.enqueueAtTurnBoundary(command)
+  }
+
   resumeCombat(reason: FreezeReason): void {
     this.turnBattleOps.resumeCombat(reason)
   }

@@ -152,6 +152,14 @@ export class GameManagerTurnBattleOps {
   /** Fallback timers owned by the parked steps, cleared when a turn restarts. */
   private pendingStepTimers: Array<ReturnType<typeof setTimeout>> = []
 
+  /**
+   * Commands arrive on wall-clock time; battle state changes on turn
+   * boundaries. Queueing them gives exactly one instant at which combat state
+   * may change from outside, and at that instant no action is in flight
+   * (spec section 9).
+   */
+  private boundaryQueue: Array<() => void> = []
+
   constructor(private readonly deps: {
     eventBus: EventBus
     combatSystem: CombatSystem
@@ -374,12 +382,53 @@ export class GameManagerTurnBattleOps {
   }
 
   /**
-   * Task 10 seam: external commands are drained exactly once, at the turn
-   * boundary, before the next gauge check (spec section 9.2). The queue itself
-   * arrives with that task; the call site exists here so the boundary has one
-   * place and only one place.
+   * External command boundary (spec section 9). A command never mutates
+   * battle state at the moment it arrives:
+   *
+   * - No battle at all -> nothing to protect, run immediately.
+   * - Token already IDLE -> we ARE at a boundary right now, run immediately.
+   * - Otherwise a turn is in flight -> queue it; drainBoundaryQueueIfIdle()
+   *   flushes it the next time the token reports IDLE.
    */
-  private drainBoundaryQueueIfIdle(): void {}
+  enqueueAtTurnBoundary(command: () => void): void {
+    if (!this.turnBattle) {
+      command()
+      return
+    }
+
+    if (this.turnToken.getState() === 'IDLE') {
+      command()
+      return
+    }
+
+    this.boundaryQueue.push(command)
+  }
+
+  /**
+   * Task 10 seam: external commands are drained exactly once, at the turn
+   * boundary, before the next gauge check (spec section 9.2). The call site
+   * exists at the top of stepTurnBattle's 'fighting' branch so the boundary
+   * has one place and only one place: the clock is frozen whenever the token
+   * is not idle, so a step only ever arrives here when the token IS idle,
+   * which is precisely the instant after RESOLVING -> IDLE and before the
+   * next IDLE -> CLAIMED.
+   */
+  private drainBoundaryQueueIfIdle(): void {
+    if (this.boundaryQueue.length === 0) {
+      return
+    }
+
+    if (this.turnToken.getState() !== 'IDLE') {
+      return
+    }
+
+    const queued = this.boundaryQueue
+    this.boundaryQueue = []
+
+    for (const command of queued) {
+      command()
+    }
+  }
 
   /**
    * One turn = one pipeline. The three asynchronous steps map onto the
@@ -530,6 +579,11 @@ export class GameManagerTurnBattleOps {
     this.turnToken.resolve({ bothSidesAlive })
 
     if (this.turnToken.getState() === 'COMBAT_OVER') {
+      // Spec section 9.2: a victory or defeat never passes through
+      // abandonBattle, so a command queued in the last turn of THIS battle
+      // must be dropped here - draining it at the next boundary would apply
+      // it to whatever battle starts next, not the one it was queued against.
+      this.boundaryQueue = []
       this.settleCombatOutcome()
     }
   }
@@ -988,6 +1042,10 @@ export class GameManagerTurnBattleOps {
     }
     this.deps.eventBus.emit('presentation_session_started', session)
 
+    // A fresh battle owns a fresh boundary queue: nothing queued against the
+    // previous fight (or against no fight at all) should drain into this one.
+    this.boundaryQueue = []
+
     // The battle is built: give it a clean turn engine and start its clock.
     // stop() before start() matters - the previous battle may have stopped the
     // clock at combat-over, and stop() is what clears the stale freeze reasons.
@@ -1052,7 +1110,9 @@ export class GameManagerTurnBattleOps {
     this.deps.enemyManager.clear()
 
     // The battle is destroyed: stop counting for it and drop any turn that was
-    // in flight, including its parked fallback timers.
+    // in flight, including its parked fallback timers. Anything queued
+    // against this battle is destroyed with it (spec section 9.2).
+    this.boundaryQueue = []
     this.resetTurnEngine()
     this.combatClock.stop()
 
@@ -1200,10 +1260,21 @@ export class GameManagerTurnBattleOps {
 
   // --- Presentation facade (moved verbatim) -----------------------------------
 
+  /**
+   * Manual-mode toggle is listed as an external command in spec section 9.1,
+   * so the flag itself - which gates whether the NEXT claimed turn pauses for
+   * a choice - queues to the boundary like any other.
+   *
+   * The stranding rescue below is deliberately NOT part of that deferred
+   * body. It resolves the turn ALREADY in flight, the same role
+   * submitTurnChoice plays for a turn the player answers themselves (spec
+   * section 9.2 exempts that for the same reason) - and unlike
+   * submitTurnChoice, deferring it would be self-defeating: the rescue is
+   * the only thing that can move a stranded AWAITING_INPUT token to IDLE, so
+   * queuing it to "wait for IDLE" would wait forever.
+   */
   setBattleManualMode(enabled: boolean): void {
     const stranded = enabled ? null : this.combatAnimationRuntime.getAwaitedManualActor()
-
-    this.combatAnimationRuntime.setBattleManualMode(enabled)
 
     // Turning manual off mid-wait must not strand the token in AWAITING_INPUT
     // - that would freeze the clock for the rest of the battle waiting for a
@@ -1212,6 +1283,10 @@ export class GameManagerTurnBattleOps {
       this.turnToken.submitChoice()
       this.beginTurnPipeline(stranded, 'ready')
     }
+
+    this.enqueueAtTurnBoundary(() => {
+      this.combatAnimationRuntime.setBattleManualMode(enabled)
+    })
   }
 
   isBattleManualMode(): boolean {
