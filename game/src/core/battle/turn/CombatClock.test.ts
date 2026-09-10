@@ -1,6 +1,7 @@
+// @ts-expect-error project omits Node ambient types by design (pattern: deadReferences.test.ts)
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { CombatClock, ManualClockSource, COMBAT_STEP_SECONDS } from './CombatClock'
+import { CombatClock, ManualClockSource, COMBAT_STEP_SECONDS, type ClockSource } from './CombatClock'
 
 describe('CombatClock', () => {
   function makeClock() {
@@ -67,12 +68,36 @@ describe('CombatClock', () => {
     expect(clock.getState()).toBe('running')
   })
 
+  it('recovers from non-finite input via untrusted ClockSource', () => {
+    const maliciousSource: ClockSource = {
+      start(onFrame) {
+        // Send NaN
+        onFrame(NaN)
+        // Clock should recover and ignore NaN
+        onFrame(COMBAT_STEP_SECONDS)
+      },
+      stop() {},
+    }
+
+    const clock = new CombatClock(maliciousSource)
+    const steps: number[] = []
+    clock.onStep((n) => steps.push(n))
+    clock.start()
+
+    expect(steps).toEqual([1])
+    expect(clock.getState()).toBe('running')
+  })
+
   it('knows nothing about turns, actors, or pipelines', () => {
     // The clock must never become the place where other people's rules are
     // kept. Every consumer decides for itself when a step applies.
+    // The invariant: CombatClock never branches on a specific reason value.
     const source = readFileSync('src/core/battle/turn/CombatClock.ts', 'utf8')
 
-    expect(source).not.toMatch(/turn-in-flight[^']|actor|pipeline|gauge/i)
+    expect(source).not.toMatch(/if\s*\(\s*reason\s*===/)
+    expect(source).not.toMatch(/switch\s*\(\s*reason\s*\)/)
+    expect(source).not.toMatch(/reason\s*===\s*['"`]/)
+    expect(source).not.toMatch(/['"`]\s*===\s*reason/)
   })
 
   it('ignores non-finite and non-positive frames', () => {

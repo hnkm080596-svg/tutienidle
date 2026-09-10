@@ -19,8 +19,8 @@ export const COMBAT_STEP_SECONDS = 0.1
 export type CombatClockState = 'running' | 'frozen' | 'stopped'
 
 /**
- * Reasons the clock may be held back. 'tab-hidden' and 'not-revealed' describe
- * the battle not being on screen. 'turn-in-flight' describes the turn engine
+ * Reasons the clock may be held back. `tab-hidden` and `not-revealed` describe
+ * the battle not being on screen. `turn-in-flight` describes the turn engine
  * having claimed the token and not yet released it. All three compose
  * uniformly: the clock runs only when the reason set is empty.
  */
@@ -125,7 +125,7 @@ export class CombatClock {
   }
 
   private onFrame(elapsedSeconds: number): void {
-    if (this.state !== 'running' || elapsedSeconds <= 0) {
+    if (this.state !== 'running' || !Number.isFinite(elapsedSeconds) || elapsedSeconds <= 0) {
       return
     }
 
