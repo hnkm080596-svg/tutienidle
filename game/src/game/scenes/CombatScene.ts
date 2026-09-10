@@ -450,6 +450,14 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   turnCountdownSpawnVfxHandles = new Map<string, EnemySpawnVfxHandle>()
   turnCountdownPendingIds = new Set<string>()
 
+  // Task 9 (telegraph interpolation, §5.2) — countdownProgress from the
+  // snapshot is a TARGET, not a frame to paint. The handle is chased toward
+  // it every render frame in advanceTelegraph(), the same pattern
+  // positionInterp already uses for sprite X. Nothing here writes combat
+  // state; it only reads a target and closes the distance.
+  private telegraphTarget = 0
+  private telegraphShown = 0
+
   // Player spawn telegraph (plan Ã‚Â§12.2) Ã¢â‚¬â€ handle DUY NHÃ¡ÂºÂ¤T cho telegraph
   // cÃ¡Â»Â§a avatar (preset 'player_spawn'); playerMaterialized false = KHÃƒâ€NG
   // hiÃ¡Â»â€¡n Player sprite. Pending telegraph vÃƒÂ  materialized sprite loÃ¡ÂºÂ¡i
@@ -773,7 +781,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.clearSceneState()
   }
 
-  update() {
+  update(_time: number, delta: number) {
     for (const [id, sprite] of this.sprites) {
       const visualX = this.getInterpolatedX(id)
 
@@ -828,6 +836,33 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
     // 9.4 - Kiem bar (Kiem The / Kiem Y tam) poll MOI frame.
     this.pollKiemBar()
+
+    // Task 9 — party countdown telegraph chases its snapshot target on
+    // Phaser's own render clock (§5.2a), independent of how often
+    // CombatClock happens to publish a new countdownProgress (§5.2).
+    this.advanceTelegraph(delta)
+  }
+
+  /**
+   * Task 9 (telegraph interpolation) — closes the distance between the last
+   * shown progress and the latest snapshot target every render frame. This
+   * is art, not mechanism: it never writes combat state, only reads
+   * `telegraphTarget` (set by reconcileTurnCountdownSpawn from the
+   * snapshot) and repaints the VFX handles already owned by the countdown
+   * telegraph.
+   */
+  private advanceTelegraph(deltaMs: number): void {
+    if (this.turnCountdownSpawnVfxHandles.size === 0) {
+      return
+    }
+
+    const rate = Math.min(1, deltaMs / 120)
+
+    this.telegraphShown += (this.telegraphTarget - this.telegraphShown) * rate
+
+    for (const handle of this.turnCountdownSpawnVfxHandles.values()) {
+      handle.update(this.telegraphShown)
+    }
   }
 
   // 9.4 — Kiếm bar poll mỗi frame từ reader đăng ký trong PhaserCanvas
@@ -1437,6 +1472,12 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       this.turnCountdownSpawnVfxHandles.clear()
       this.turnCountdownPendingIds.clear()
 
+      // Reset interpolation state alongside the handles it drives — a
+      // refight's countdown must start its telegraph from 0, not resume
+      // from the previous battle's last shown value.
+      this.telegraphTarget = 0
+      this.telegraphShown = 0
+
       return
     }
 
@@ -1446,7 +1487,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       const existing = this.turnCountdownSpawnVfxHandles.get(player.id)
 
       if (existing) {
-        existing.update(event.countdownProgress)
+        this.telegraphTarget = event.countdownProgress
         continue
       }
 

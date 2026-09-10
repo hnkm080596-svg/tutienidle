@@ -38,6 +38,7 @@ function createScene() {
   scene.sprites = new Map()
   scene.statuses = new Map()
   scene.spawnVfxHandles = new Map()
+  scene.turnCountdownSpawnVfxHandles = new Map()
   scene.materializingIds = new Set()
   scene.playerSpawnHandle = undefined
   scene.playerMaterialized = true
@@ -97,7 +98,7 @@ describe('CombatScene â€” coalesce positions event (Phaser-driven)', () => 
     scene.onPositions(positionsEvent({ playerX: 2 }))
     scene.onPositions(positionsEvent({ playerX: 3 }))
 
-    scene.update()
+    scene.update(0, 16)
 
     expect(reconcileSpy).toHaveBeenCalledTimes(1)
     expect(scene.interpolations.get('player').toX).toBe(3)
@@ -107,7 +108,7 @@ describe('CombatScene â€” coalesce positions event (Phaser-driven)', () => 
     const { scene } = createScene()
     const reconcileSpy = vi.spyOn(scene, 'reconcileEnemySprites')
 
-    scene.update()
+    scene.update(0, 16)
 
     expect(reconcileSpy).not.toHaveBeenCalled()
   })
@@ -117,11 +118,11 @@ describe('CombatScene â€” coalesce positions event (Phaser-driven)', () => 
 
     scene.time.now = 0
     scene.onPositions(positionsEvent({ playerX: 0 }))
-    scene.update() // snap ban Ä‘áº§u
+    scene.update(0, 16) // snap ban Ä‘áº§u
 
     scene.time.now = 100
     scene.onPositions(positionsEvent({ playerX: 10 }))
-    scene.update()
+    scene.update(0, 16)
 
     const entry = scene.interpolations.get('player')
     expect(entry.toX).toBe(10)
@@ -134,11 +135,11 @@ describe('CombatScene â€” coalesce positions event (Phaser-driven)', () => 
 
     scene.time.now = 0
     scene.onPositions(positionsEvent({ playerX: 0 }))
-    scene.update()
+    scene.update(0, 16)
 
     scene.time.now = 10
     scene.onPositions(positionsEvent({ playerX: 5 }))
-    scene.update()
+    scene.update(0, 16)
 
     expect(scene.interpolations.get('player').segmentDuration).toBe(50)
   })
@@ -148,11 +149,11 @@ describe('CombatScene â€” coalesce positions event (Phaser-driven)', () => 
 
     scene.time.now = 0
     scene.onPositions(positionsEvent({ playerX: 0 }))
-    scene.update()
+    scene.update(0, 16)
 
     scene.time.now = 5000
     scene.onPositions(positionsEvent({ playerX: 5 }))
-    scene.update()
+    scene.update(0, 16)
 
     expect(scene.interpolations.get('player').segmentDuration).toBe(200)
   })
@@ -168,7 +169,7 @@ describe('CombatScene â€” coalesce positions event (Phaser-driven)', () => 
       }),
     )
 
-    scene.update()
+    scene.update(0, 16)
 
     const entry = scene.interpolations.get('enemy_a')
     expect(entry.fromX).toBe(42)
@@ -187,7 +188,7 @@ describe('CombatScene â€” coalesce positions event (Phaser-driven)', () => 
         ],
       }),
     )
-    scene.update()
+    scene.update(0, 16)
 
     scene.time.now = 100
     scene.onPositions(
@@ -197,7 +198,7 @@ describe('CombatScene â€” coalesce positions event (Phaser-driven)', () => 
         ],
       }),
     )
-    scene.update()
+    scene.update(0, 16)
 
     // Ngay táº¡i thá»i Ä‘iá»ƒm Ã¡p snapshot má»›i â€” visual X báº¯t Ä‘áº§u tá»« vá»‹ trÃ­
     // CÅ¨ (0, chÆ°a nháº£y tá»›i 100), tiáº¿n dáº§n theo interpolate() á»Ÿ update() sau.
@@ -212,13 +213,13 @@ describe('CombatScene â€” coalesce positions event (Phaser-driven)', () => 
 
     scene.time.now = 0
     scene.onPositions(positionsEvent({ playerX: 50 }))
-    scene.update()
+    scene.update(0, 16)
 
     const beforeEntry = scene.interpolations.get('player')
 
     scene.time.now = 100
     scene.onPositions(positionsEvent({ playerX: 50 }))
-    scene.update()
+    scene.update(0, 16)
 
     const afterEntry = scene.interpolations.get('player')
     expect(afterEntry.toX).toBe(50)
@@ -235,14 +236,14 @@ describe('CombatScene â€” coalesce positions event (Phaser-driven)', () => 
         ],
       }),
     )
-    scene.update()
+    scene.update(0, 16)
 
     expect(scene.sprites.has('enemy_a')).toBe(true)
 
     // QuÃ¡i cháº¿t â€” emitPositions() cá»§a core CHá»ˆ liá»‡t kÃª quÃ¡i cÃ²n alive,
     // nÃªn snapshot káº¿ tiáº¿p khÃ´ng cÃ²n 'enemy_a' trong máº£ng enemies.
     scene.onPositions(positionsEvent({ enemies: [] }))
-    scene.update()
+    scene.update(0, 16)
 
     expect(scene.sprites.has('enemy_a')).toBe(false)
     expect(scene.interpolations.has('enemy_a')).toBe(false)
