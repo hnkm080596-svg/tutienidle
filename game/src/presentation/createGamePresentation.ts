@@ -136,9 +136,21 @@ export function createGamePresentation(deps: GamePresentationDeps): GamePresenta
       return accepted !== null
     }
 
+    // Narrowing target per-branch (rather than one `{ target, behindCurtain }`
+    // literal) lets each branch structurally satisfy RouteRequest on its own -
+    // the combat/tribulation arm has no `session` field (behindCurtain is its
+    // only source of one), so a single literal typed against the full
+    // RouteRequest['target'] union would need an `as RouteRequest` cast.
+    let request: RouteRequest
+    if (target === 'combat' || target === 'tribulation') {
+      request = { target, behindCurtain }
+    } else {
+      request = { target, behindCurtain }
+    }
+
     let result: TransitionResult
     try {
-      result = await coordinator.request({ target, behindCurtain } as RouteRequest)
+      result = await coordinator.request(request)
     } finally {
       isAdmitting = false
       reservedSessionId = null

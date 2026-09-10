@@ -508,6 +508,75 @@ describe('GamePresentationCoordinator', () => {
     expect(openSpy).toHaveBeenCalled()
   })
 
+  it('retry never re-invokes behindCurtain when the command already produced and held a session', async () => {
+    // Regression (code review, task-2): retry() must not re-run the domain
+    // command outside runAdmitted's admission/compensate wiring. Simulates
+    // the reviewer's concrete scenario - behindCurtain succeeds and holds a
+    // session, then asset loading times out on the FIRST attempt only.
+    let assetAttempts = 0
+    assets.ensureFor = vi.fn(async () => {
+      assetAttempts += 1
+      if (assetAttempts === 1) {
+        throw new Error('asset load exploded')
+      }
+    })
+
+    const coordinator = createCoordinator({ initialRoute: 'home' })
+    const session = { kind: 'combat' as const, sessionId: 70 }
+    let commandCalls = 0
+
+    const behindCurtain = () => {
+      commandCalls += 1
+      ;(sessionPort as PresentationSession).begin(session, 'interactive')
+      return true
+    }
+
+    const first = await coordinator.request({ target: 'combat', session, behindCurtain })
+    expect(first.status).toBe('failed')
+    expect(commandCalls).toBe(1)
+    // Law A7: the produced session stays held across the failure, retryable.
+    expect((sessionPort as PresentationSession).isBlocking()).toBe(true)
+
+    const retried = await coordinator.retry()
+
+    expect(retried.status).toBe('entered')
+    expect(coordinator.getSnapshot().currentRoute).toBe('combat')
+    // The domain command must not have run a second time.
+    expect(commandCalls).toBe(1)
+  })
+
+  it('retry rejects a behindCurtain request that failed before ever producing a session', async () => {
+    // Regression (code review, task-2): with no session to resume, retry()
+    // must reject rather than re-run the domain command a second time - the
+    // "retry never re-issues the domain start command" contract holds even
+    // when nothing was ever produced/held.
+    const coordinator = createCoordinator({ initialRoute: 'home' })
+    let commandCalls = 0
+
+    // No `session` field - matches the real shape createGamePresentation.ts
+    // constructs (target, behindCurtain), where behindCurtain is the ONLY
+    // possible source of a session. A literal `session` field here would let
+    // retry()'s plain-session branch reject for the wrong reason even
+    // without this fix, defeating the point of the regression test.
+    const failed = await coordinator.request({
+      target: 'combat',
+      behindCurtain: () => {
+        commandCalls += 1
+        return false
+      },
+    })
+
+    expect(failed.status).toBe('failed')
+    expect(commandCalls).toBe(1)
+
+    const retried = await coordinator.retry()
+
+    expect(retried.status).toBe('rejected')
+    expect(commandCalls).toBe(1)
+    // The error/failed state is untouched by the rejected retry attempt.
+    expect(coordinator.getSnapshot().phase).toBe('failed')
+  })
+
   it('provides detached snapshots to subscribers so mutations cannot affect internal state', () => {
     const coordinator = createCoordinator({ initialRoute: 'home' })
     let received: CoordinatorSnapshot | undefined

@@ -165,6 +165,33 @@ export class GamePresentationCoordinator {
       return { status: 'rejected', transitionId: this.currentTransitionId }
     }
 
+    if (failed.behindCurtain) {
+      // The "retry never re-issues the domain start command" contract above
+      // must hold unconditionally - re-invoking behindCurtain here would run
+      // the domain command a second time (e.g. startStage()/startTribulation()
+      // again) completely outside runAdmitted's admission/compensate wiring.
+      // The ONLY way to retry such a request without doing that is to resume
+      // the session its command already produced and held before the failure,
+      // as a plain request with no behindCurtain attached. If no session was
+      // ever produced (the command declined, or never got the chance to run),
+      // there is nothing to resume - retry rejects, and the caller must make a
+      // fresh attempt through runAdmitted (which re-checks canEnter and
+      // re-wraps compensate) rather than through this method.
+      if (failed.target !== 'combat' && failed.target !== 'tribulation') {
+        return { status: 'rejected', transitionId: this.currentTransitionId }
+      }
+
+      const produced = this.sessionPort.getCurrentSession()
+
+      if (!produced || produced.kind !== failed.target) {
+        return { status: 'rejected', transitionId: this.currentTransitionId }
+      }
+
+      this.clearError()
+
+      return this.request({ target: failed.target, session: produced })
+    }
+
     if ('session' in failed) {
       const current = this.sessionPort.getCurrentSession()
 
@@ -412,13 +439,37 @@ export class GamePresentationCoordinator {
         this.sessionPort.detach(holdToken, 'hold')
       } else if (request.behindCurtain && curtainClosed) {
         // The domain command was rejected (or produced no session) before any
-        // hold was ever taken, and nothing downstream (assets, deactivate) has
-        // run yet - the prior route is still fully intact. Reopen the curtain
-        // best-effort so the failure surfaces as an error card over the
-        // unchanged prior screen instead of a permanently closed curtain. Use
-        // a fresh signal: the transition's own signal was just aborted above,
-        // and the curtain rejects immediately on an already-aborted signal.
-        void this.curtain.open(transitionId, new AbortController().signal).catch(() => {})
+        // hold was ever taken. Corrected mental model (code review, task-2):
+        // PresentationTransitionOverlay's error card is drawn above the
+        // curtain panels whenever phase === 'failed' regardless of curtain
+        // state, so the card ITSELF is not what this fixes - it shows either
+        // way. What differs is the backdrop behind it: the card's own
+        // background is only 65% opaque, so with the curtain left closed it
+        // would float over a solid black void, whereas reopening restores the
+        // dimmed-but-visible prior screen behind it - an ordinary "modal over
+        // content" look instead of a blank one. Awaiting this (rather than
+        // setting phase/calling notify() first) also means the card never
+        // renders over the wrong backdrop even for one frame: phase only
+        // flips to 'failed' and subscribers are only notified once this
+        // settles, a few lines below.
+        //
+        // Awaited, not fire-and-forget, for a second reason too: this
+        // method's promise must not resolve, and the single-in-flight guard
+        // in request() must not clear, until this settles - otherwise a
+        // Retry/Back click fired the instant the error card appears (App.vue's
+        // onTransitionRetry/onTransitionBack are not gated on curtain
+        // animation) could start a new transition's close() while this
+        // reopen is still animating, racing over the overlay's one shared
+        // curtainState ref with no transition-id/generation guard of its own.
+        //
+        // Use a fresh signal: the transition's own signal was just aborted
+        // above, and the curtain rejects immediately on an already-aborted one.
+        try {
+          await this.curtain.open(transitionId, new AbortController().signal)
+        } catch {
+          // Best-effort: the transition already failed for its own reason
+          // above; a reopen failure must not overwrite that with a different one.
+        }
       }
 
       this.phase = 'failed'

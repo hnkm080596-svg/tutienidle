@@ -171,12 +171,24 @@ function handleMenuSettings() {
   ui.leftPanelMode = 'settings'
 }
 
-// A failed tribulation transition offers RETRY ONLY: there is no domain
-// cancel-tribulation command, and inventing a penalty-free way home would
-// silently rewrite the outcome of a breakthrough already in progress.
-const canRecoverToHome = computed(
-  () => routeAdapter.error.value?.failedRequest.target !== 'tribulation',
-)
+// A failed tribulation transition with a breakthrough ALREADY in progress
+// offers RETRY ONLY: there is no domain cancel-tribulation command, and
+// inventing a penalty-free way home would silently rewrite the outcome of a
+// breakthrough already in progress. That only applies once a tribulation
+// session actually exists, though - a behindCurtain tribulation request that
+// failed before ever producing one (the domain declined at the door; see
+// GamePresentationCoordinator's Task 2 closed-curtain window) has no
+// breakthrough to protect, so Back is safe there. Kind-scoped so a lingering
+// combat session can never be misread as an active tribulation (same
+// footgun useTribulation.ts's kind-scoped read guards against).
+function hasActiveTribulationToProtect(): boolean {
+  return gameManager.getCurrentPresentationSession('tribulation') !== null
+}
+
+const canRecoverToHome = computed(() => {
+  const failedTarget = routeAdapter.error.value?.failedRequest.target
+  return failedTarget !== 'tribulation' || !hasActiveTribulationToProtect()
+})
 
 function onTransitionRetry() {
   void presentation.coordinator.retry()
@@ -185,7 +197,7 @@ function onTransitionRetry() {
 function onTransitionBack() {
   const failed = routeAdapter.error.value?.failedRequest
 
-  if (!failed || failed.target === 'tribulation') {
+  if (!failed || (failed.target === 'tribulation' && hasActiveTribulationToProtect())) {
     return
   }
 
