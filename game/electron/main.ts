@@ -1,14 +1,19 @@
 import { app, BrowserWindow, ipcMain, powerMonitor } from 'electron'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { createCombatClockHost } from '../src/main-process/combatClockHost'
 
 // Uncommitted audit followup plan, Ưu tiên 2 "xử lý khi đóng gói Electron"
-// (2026-08-24) — main process cho bản desktop, mục đích DUY NHẤT là
-// backgroundThrottling:false bên dưới (giữ nhịp setInterval(tick, 200) của
-// App.vue mượt khi cửa sổ bị ẩn/minimize/mất focus, thay vì Chromium tự
-// throttle). Correctness của combat/GameClock KHÔNG phụ thuộc file này —
-// GameManager.updateBattleFixedStep()/GameClock đã tự đúng với deltaSeconds
-// bất kỳ độ lớn nào từ trước (xem core/game/GameManager.ts).
+// (2026-08-24) — main process cho bản desktop. Hai mục đích:
+// 1) backgroundThrottling:false bên dưới, giữ nhịp setInterval(tick, 200) của
+//    App.vue mượt khi cửa sổ bị ẩn/minimize/mất focus thay vì Chromium tự
+//    throttle. Correctness của combat/GameClock KHÔNG phụ thuộc file này —
+//    GameManager.updateBattleFixedStep()/GameClock đã tự đúng với
+//    deltaSeconds bất kỳ độ lớn nào từ trước (xem core/game/GameManager.ts).
+// 2) (Task 7, 2026-09-10) host combatClockHost bên dưới — nguồn ClockSource
+//    "honest" hơn nữa cho renderer dưới Electron: main-process setInterval
+//    không bị Chromium throttle giống rAF, kể cả khi backgroundThrottling
+//    có lỡ bị bật lại. Xem src/main-process/combatClockHost.ts.
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // Save (SaveSystem.ts) là localStorage đồng bộ, không có coordination giữa
@@ -23,6 +28,23 @@ if (!gotSingleInstanceLock) {
 
 function main() {
   let mainWindow: BrowserWindow | null = null
+
+  // Main-process clock host (Task 7) — see src/main-process/combatClockHost.ts
+  // for why this exists: Chromium can throttle the renderer's rAF, so the
+  // production ClockSource under Electron ticks from here instead, over IPC.
+  // One host for the one BrowserWindow this app creates (see the
+  // single-instance lock above).
+  const clockHost = createCombatClockHost()
+
+  ipcMain.on('combat-clock:start', () => {
+    clockHost.start(16, (elapsed) => {
+      mainWindow?.webContents.send('combat-clock:tick', elapsed)
+    })
+  })
+
+  ipcMain.on('combat-clock:stop', () => {
+    clockHost.stop()
+  })
 
   app.on('second-instance', () => {
     if (!mainWindow) {
@@ -49,6 +71,13 @@ function main() {
   })
 
   powerMonitor.on('resume', () => {
+    // Re-anchor the clock host's baseline before its own interval fires again,
+    // so the tick right after an OS sleep measures only time since resume
+    // instead of tripping combatClockHost's stall guard against the
+    // pre-sleep timestamp (Task 7, ruling 3 — this is the precise signal;
+    // the host's elapsed-threshold stays as a backstop for stalls that raise
+    // no power event, e.g. a hung process or a debugger pause).
+    clockHost.reset()
     mainWindow?.webContents.send('system:resume', Date.now())
   })
 

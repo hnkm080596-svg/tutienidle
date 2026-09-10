@@ -19,6 +19,7 @@ import { GamePresentationCoordinator } from './presentation/GamePresentationCoor
 import { createGamePresentation } from './presentation/createGamePresentation'
 import { bindPresentationActive } from './presentation/bindPresentationActive'
 import { RafClockSource } from './presentation/clock/RafClockSource'
+import { MainProcessClockSource } from './presentation/clock/MainProcessClockSource'
 import { checkTribulationOutcomeAction } from './composables/useTribulation'
 import { isBattleInProgress } from './core/battle/BattleTypes'
 import { useBreakthrough } from './composables/useBreakthrough'
@@ -120,7 +121,15 @@ gameManager.setPresentationMode('interactive')
 // The world tick would deliver a three-second countdown to Phaser as three
 // bursts of ten 0.1s steps inside one frame; on the render cadence the same
 // countdown arrives one step at a time, in step with what is drawn.
-gameManager.setCombatClockSource(new RafClockSource())
+//
+// Task 7: under Electron, window.electronAPI.combatClock is the main-process
+// host (immune to Chromium's rAF throttling) — prefer it when present. Plain
+// web builds have no window.electronAPI and keep the RAF-driven fallback.
+// The engine only ever sees the ClockSource interface either way.
+const combatClockSource = window.electronAPI
+  ? new MainProcessClockSource(window.electronAPI.combatClock)
+  : new RafClockSource()
+gameManager.setCombatClockSource(combatClockSource)
 
 // Presentation coordinator & adapters (Task 5-12, AGENTS.md P17)
 const phaserSceneAdapter = new PhaserSceneAdapter()
