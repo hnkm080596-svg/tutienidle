@@ -90,8 +90,16 @@ describe('external commands land at a turn boundary', () => {
 
     // The last turn of this battle: knock the enemy to 1 hp so resolving the
     // manual player turn kills it outright and the battle goes straight to
-    // 'victory' - never through abandonBattle.
-    manager.getTurnBattle()!.enemies[0]!.entity.currentHp = 1
+    // 'victory' - never through abandonBattle. Zero evasionRate too -
+    // CombatSystem.ts rolls Math.random() < hitChance per hit, and the
+    // fixture enemy's default evasion makes a manual "basic" attack MISS
+    // (leaving currentHp at 1, battle still 'fighting') often enough to flake
+    // this test - the exact fix GameManager.actionPlayback.test.ts already
+    // documents for the same root cause.
+    const enemyEntity = manager.getTurnBattle()!.enemies[0]!.entity
+    enemyEntity.currentHp = 1
+    enemyEntity.baseStats.evasionRate = 0
+    enemyEntity.stats.evasionRate = 0
 
     const applied: string[] = []
     manager.enqueueAtTurnBoundary(() => applied.push('stale-victory'))

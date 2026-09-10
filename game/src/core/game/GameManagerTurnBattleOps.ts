@@ -705,6 +705,15 @@ export class GameManagerTurnBattleOps {
       this.deps.eventBus.emit('presentation_session_started', session)
     }
 
+    // A fresh battle owns a fresh boundary queue too - same reasoning as the
+    // startStage/abandonBattle clears (spec section 9.2): nothing queued
+    // against a previous battle (or against no battle at all) may drain into
+    // this one. startBattle() has no production caller today besides
+    // startStage (which already clears the queue itself before reaching
+    // here), but this keeps the invariant true of the method itself rather
+    // than of its only current caller.
+    this.boundaryQueue = []
+
     // A fresh battle owns a fresh turn engine and a fresh clock run. startStage
     // does the same again after it rebuilds the battle; both are idempotent.
     this.resetTurnEngine()
