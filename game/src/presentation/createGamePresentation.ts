@@ -115,40 +115,40 @@ export function createGamePresentation(deps: GamePresentationDeps): GamePresenta
     }
 
     isAdmitting = true
-    let request: RouteRequest | null = null
+    let accepted: RouteRequest | null = null
 
-    try {
-      request = command()
-    } catch {
-      isAdmitting = false
-      reservedSessionId = null
-      return rejected()
-    }
+    // Runs behind the closed curtain (GamePresentationCoordinator.executeTransition),
+    // after admission is already decided above. A combat -> combat refight is a
+    // transition against a renderer that is already live, so running the domain
+    // command before the transition (as this used to) reset the battle in full view.
+    const behindCurtain = (): boolean => {
+      try {
+        accepted = command()
+      } catch {
+        accepted = null
+      }
 
-    if (!request) {
-      isAdmitting = false
-      reservedSessionId = null
-      return rejected()
-    }
+      if (accepted && 'session' in accepted && accepted.session) {
+        reservedSessionId = accepted.session.sessionId
+        handledSessionIds.add(accepted.session.sessionId)
+      }
 
-    if ('session' in request && request.session) {
-      reservedSessionId = request.session.sessionId
-      handledSessionIds.add(request.session.sessionId)
+      return accepted !== null
     }
 
     let result: TransitionResult
     try {
-      result = await coordinator.request(request)
+      result = await coordinator.request({ target, behindCurtain } as RouteRequest)
     } finally {
       isAdmitting = false
       reservedSessionId = null
     }
 
-    if (result.status === 'rejected') {
+    if (result.status === 'rejected' && accepted) {
       // Unreachable while canEnter and request agree, but an accepted domain
       // command with no transition is the one outcome that must never survive
       // silently - the session would run held and unrendered forever.
-      forgetSession(request)
+      forgetSession(accepted)
       options.compensate?.()
     }
 

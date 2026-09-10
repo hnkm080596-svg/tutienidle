@@ -253,10 +253,15 @@ export class GamePresentationCoordinator {
     let holdToken: PresentationHold | null = null
     let priorDeactivated = false
 
-    const sessionInRequest = 'session' in request ? request.session : null
+    // When behindCurtain is set, no session exists yet - the domain command
+    // produces it inside the closed-curtain window (see below). Any session
+    // field on the request in that case is unused; adoption happens only
+    // after the command runs.
+    const sessionInRequest = !request.behindCurtain && 'session' in request ? request.session : null
     this.targetSession = sessionInRequest
     this.targetRoute = request.target
     this.notify()
+    let curtainClosed = false
 
     try {
       // Step 1: acquire hold if session requested
@@ -279,6 +284,32 @@ export class GamePresentationCoordinator {
         'Curtain close timed out',
         signal,
       )
+      curtainClosed = true
+
+      this.checkAborted(signal)
+
+      // Step 2b: run the domain command behind the closed curtain, then adopt
+      // the session it produces. A combat/tribulation refight against a live
+      // renderer must never reset visibly - this is why the command runs here
+      // instead of before the transition was requested.
+      if (request.behindCurtain && !request.behindCurtain()) {
+        throw new Error('Domain command rejected inside the closed-curtain window')
+      }
+
+      if (request.behindCurtain) {
+        const produced = this.sessionPort.getCurrentSession()
+
+        if (!produced || produced.kind !== request.target) {
+          throw new Error('Domain command produced no session for the target route')
+        }
+
+        this.targetSession = produced
+        holdToken = this.sessionPort.hold(produced)
+
+        if (!holdToken) {
+          throw new Error(`Failed to acquire hold for session ${produced.sessionId}`)
+        }
+      }
 
       this.checkAborted(signal)
 
@@ -327,7 +358,7 @@ export class GamePresentationCoordinator {
 
       // Step 6: commit currentRoute and attach hold
       this.currentRoute = request.target
-      this.currentSession = sessionInRequest
+      this.currentSession = this.targetSession
       this.renderRoute = null
 
       if (holdToken) {
@@ -379,6 +410,15 @@ export class GamePresentationCoordinator {
       // Failure detaches with 'hold' policy: never drain pending work
       if (holdToken) {
         this.sessionPort.detach(holdToken, 'hold')
+      } else if (request.behindCurtain && curtainClosed) {
+        // The domain command was rejected (or produced no session) before any
+        // hold was ever taken, and nothing downstream (assets, deactivate) has
+        // run yet - the prior route is still fully intact. Reopen the curtain
+        // best-effort so the failure surfaces as an error card over the
+        // unchanged prior screen instead of a permanently closed curtain. Use
+        // a fresh signal: the transition's own signal was just aborted above,
+        // and the curtain rejects immediately on an already-aborted signal.
+        void this.curtain.open(transitionId, new AbortController().signal).catch(() => {})
       }
 
       this.phase = 'failed'
@@ -397,6 +437,12 @@ export class GamePresentationCoordinator {
   }
 
   private isValidRequest(request: RouteRequest): boolean {
+    // A behindCurtain request produces its session inside the closed-curtain
+    // window (see executeTransition) - it cannot carry one up front.
+    if (request.behindCurtain) {
+      return true
+    }
+
     if (request.target === 'combat' || request.target === 'tribulation') {
       return (
         'session' in request &&

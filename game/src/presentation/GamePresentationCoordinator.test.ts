@@ -467,6 +467,47 @@ describe('GamePresentationCoordinator', () => {
     return session
   }
 
+  it('runs behindCurtain only after the curtain has fully closed', async () => {
+    const order: string[] = []
+    curtain.close = vi.fn(async () => {
+      order.push('curtain-closed')
+    })
+    curtain.open = vi.fn(async () => {
+      order.push('curtain-opened')
+    })
+
+    const coordinator = createCoordinator({ initialRoute: 'home' })
+    const session = { kind: 'combat' as const, sessionId: 40 }
+
+    const result = await coordinator.request({
+      target: 'combat',
+      session,
+      behindCurtain: () => {
+        order.push('domain-command')
+        ;(sessionPort as PresentationSession).begin(session, 'interactive')
+        return true
+      },
+    })
+
+    expect(result.status).toBe('entered')
+    expect(order).toEqual(['curtain-closed', 'domain-command', 'curtain-opened'])
+  })
+
+  it('fails the transition and reopens the curtain when behindCurtain returns false', async () => {
+    const coordinator = createCoordinator({ initialRoute: 'home' })
+    const openSpy = vi.spyOn(curtain, 'open')
+    const session = { kind: 'combat' as const, sessionId: 41 }
+
+    const result = await coordinator.request({
+      target: 'combat',
+      session,
+      behindCurtain: () => false,
+    })
+
+    expect(result.status).toBe('failed')
+    expect(openSpy).toHaveBeenCalled()
+  })
+
   it('provides detached snapshots to subscribers so mutations cannot affect internal state', () => {
     const coordinator = createCoordinator({ initialRoute: 'home' })
     let received: CoordinatorSnapshot | undefined
