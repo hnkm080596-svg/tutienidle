@@ -95,7 +95,7 @@ import { CombatRewardGourd } from './combat/combat-reward-gourd'
 import { CombatEssenceStream } from './combat/combat-essence-stream'
 import { CombatPositionInterpolation } from './combat/combat-position-interpolation'
 import { CombatPlayerVisual } from './combat/combat-player-visual'
-import { BUFF_ATTACH_COLOR, DEBUFF_ATTACH_COLOR } from './combat/combatConstants'
+import { BUFF_ATTACH_COLOR, DEBUFF_ATTACH_COLOR, MIN_SEGMENT_DURATION_MS } from './combat/combatConstants'
 import type { PositionInterpolation } from './combat/combatTypes'
 import type { CombatGridViewHost } from './combat/CombatGridViewHost'
 import { planCombatantSpriteReconciliation } from './combat/combat-entity-reconciliation'
@@ -450,13 +450,31 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   turnCountdownSpawnVfxHandles = new Map<string, EnemySpawnVfxHandle>()
   turnCountdownPendingIds = new Set<string>()
 
-  // Task 9 (telegraph interpolation, §5.2) — countdownProgress from the
-  // snapshot is a TARGET, not a frame to paint. The handle is chased toward
-  // it every render frame in advanceTelegraph(), the same pattern
-  // positionInterp already uses for sprite X. Nothing here writes combat
-  // state; it only reads a target and closes the distance.
+  // Task 9 (telegraph interpolation) — countdownProgress from the snapshot is
+  // a TARGET, not a frame to paint. The handle is chased toward it every
+  // render frame in advanceTelegraph(), the same { from, to, segmentStart,
+  // segmentDuration } shape combat-position-interpolation.ts already uses for
+  // sprite X (game/docs/superpowers/specs/2026-09-10-combat-realtime-turn-
+  // authority-design.md §4.4 frame-rate independence, §5.2a Phaser's render
+  // clock). Kept local to CombatScene rather than routed through
+  // `positionInterp` — the telegraph isn't an entity screen position, it's
+  // countdown-VFX state this class already owns (alongside
+  // turnCountdownSpawnVfxHandles/turnCountdownPendingIds below). Nothing here
+  // writes combat state; it only reads a target and closes the distance.
   private telegraphTarget = 0
   private telegraphShown = 0
+  private telegraphSegment = {
+    from: 0,
+    to: 0,
+    segmentStart: 0,
+    segmentDuration: MIN_SEGMENT_DURATION_MS,
+  }
+  // Wall-clock time of the last countdownProgress snapshot — derives the
+  // per-segment duration from the actual inter-snapshot cadence, same as
+  // `lastSnapshotAt`/`pendingCadence` do for position interpolation
+  // (applyPendingPositions/onPositions below). undefined = no countdown in
+  // flight (also true right after a flush/reset).
+  private telegraphSnapshotAt: number | undefined = undefined
 
   // Player spawn telegraph (plan Ã‚Â§12.2) Ã¢â‚¬â€ handle DUY NHÃ¡ÂºÂ¤T cho telegraph
   // cÃ¡Â»Â§a avatar (preset 'player_spawn'); playerMaterialized false = KHÃƒâ€NG
@@ -838,31 +856,87 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.pollKiemBar()
 
     // Task 9 — party countdown telegraph chases its snapshot target on
-    // Phaser's own render clock (§5.2a), independent of how often
-    // CombatClock happens to publish a new countdownProgress (§5.2).
-    this.advanceTelegraph(delta)
+    // Phaser's own render clock, independent of how often CombatClock
+    // happens to publish a new countdownProgress (game/docs/superpowers/
+    // specs/2026-09-10-combat-realtime-turn-authority-design.md §5.2a,
+    // §4.4 frame-rate independence).
+    this.advanceTelegraph()
   }
 
   /**
    * Task 9 (telegraph interpolation) — closes the distance between the last
    * shown progress and the latest snapshot target every render frame. This
    * is art, not mechanism: it never writes combat state, only reads
-   * `telegraphTarget` (set by reconcileTurnCountdownSpawn from the
-   * snapshot) and repaints the VFX handles already owned by the countdown
-   * telegraph.
+   * `telegraphSegment` (set by reconcileTurnCountdownSpawn/setTelegraphTarget
+   * from the snapshot) and repaints the VFX handles already owned by the
+   * countdown telegraph.
+   *
+   * Progress comes from absolute elapsed time over the segment — clamped to
+   * 1 — exactly like `CombatPositionInterpolation.interpolate()`
+   * (combat-position-interpolation.ts), NOT a per-frame exponential chase:
+   * that formula never reached its target and closed a different fraction
+   * of the remaining distance per wall-clock window at different frame
+   * rates, violating §4.4.
    */
-  private advanceTelegraph(deltaMs: number): void {
+  private advanceTelegraph(): void {
     if (this.turnCountdownSpawnVfxHandles.size === 0) {
       return
     }
 
-    const rate = Math.min(1, deltaMs / 120)
-
-    this.telegraphShown += (this.telegraphTarget - this.telegraphShown) * rate
+    this.telegraphShown = this.telegraphProgressNow()
 
     for (const handle of this.turnCountdownSpawnVfxHandles.values()) {
       handle.update(this.telegraphShown)
     }
+  }
+
+  /** Instantaneous interpolated value of `telegraphSegment` at `this.time.now`. */
+  private telegraphProgressNow(): number {
+    const { from, to, segmentStart, segmentDuration } = this.telegraphSegment
+    const progress = Phaser.Math.Clamp((this.time.now - segmentStart) / segmentDuration, 0, 1)
+
+    return Phaser.Math.Linear(from, to, progress)
+  }
+
+  /**
+   * Store the latest countdownProgress as a chase target instead of painting
+   * it directly — mirrors `CombatPositionInterpolation.setInterpolationTarget`
+   * (segment from current visual value to the new target, duration from the
+   * actual inter-snapshot cadence, floored at MIN_SEGMENT_DURATION_MS).
+   */
+  private setTelegraphTarget(target: number): void {
+    const now = this.time.now
+
+    if (this.telegraphSnapshotAt === undefined) {
+      // First value since the countdown started (or since the last flush) —
+      // nothing to chase from yet; snap so advanceTelegraph() has a real
+      // baseline instead of chasing from a stale/zeroed segment.
+      this.telegraphSegment = { from: target, to: target, segmentStart: now, segmentDuration: MIN_SEGMENT_DURATION_MS }
+      this.telegraphSnapshotAt = now
+      this.telegraphTarget = target
+
+      return
+    }
+
+    if (target === this.telegraphSegment.to) {
+      this.telegraphSnapshotAt = now
+
+      return
+    }
+
+    const cadenceMs = Math.min(
+      MAX_SEGMENT_DURATION_MS,
+      Math.max(MIN_SEGMENT_DURATION_MS, now - this.telegraphSnapshotAt),
+    )
+
+    this.telegraphSegment = {
+      from: this.telegraphProgressNow(),
+      to: target,
+      segmentStart: now,
+      segmentDuration: cadenceMs,
+    }
+    this.telegraphSnapshotAt = now
+    this.telegraphTarget = target
   }
 
   // 9.4 — Kiếm bar poll mỗi frame từ reader đăng ký trong PhaserCanvas
@@ -1315,6 +1389,21 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.spawnVfxHandles.clear()
     this.materializingIds.clear()
 
+    // Task 9 fix round (Finding 1) — the party countdown telegraph has its
+    // own handle map/pending-ids set, separate from spawnVfxHandles above,
+    // and was never cleared here. Phaser reuses the Scene instance across
+    // stop/restart, so leaving this out let a player who left mid-countdown
+    // and re-entered combat carry a leaked handle plus a stale non-zero
+    // telegraphShown into the next battle — exactly what resetTelegraphState()
+    // exists to prevent on a normal countdown-end flush.
+    for (const handle of this.turnCountdownSpawnVfxHandles.values()) {
+      handle.destroy()
+    }
+
+    this.turnCountdownSpawnVfxHandles.clear()
+    this.turnCountdownPendingIds.clear()
+    this.resetTelegraphState()
+
     // 6A-T4/T5 — HUD dọn khi scene shutdown (battle_end KHÔNG destroy —
     // chỉ shutdown mới hủy; restart scene tạo lại).
     this._playerHud?.destroy()
@@ -1475,8 +1564,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       // Reset interpolation state alongside the handles it drives — a
       // refight's countdown must start its telegraph from 0, not resume
       // from the previous battle's last shown value.
-      this.telegraphTarget = 0
-      this.telegraphShown = 0
+      this.resetTelegraphState()
 
       return
     }
@@ -1484,10 +1572,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     for (const player of event.players) {
       this.turnCountdownPendingIds.add(player.id)
 
-      const existing = this.turnCountdownSpawnVfxHandles.get(player.id)
-
-      if (existing) {
-        this.telegraphTarget = event.countdownProgress
+      if (this.turnCountdownSpawnVfxHandles.has(player.id)) {
         continue
       }
 
@@ -1509,6 +1594,19 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
       this.turnCountdownSpawnVfxHandles.set(player.id, handle)
     }
+
+    // The whole party shares ONE countdown progress — set the chase target
+    // once per snapshot rather than once per player (setTelegraphTarget is
+    // itself a no-op when the target hasn't actually changed).
+    this.setTelegraphTarget(event.countdownProgress)
+  }
+
+  /** Zeroes the telegraph's target/shown/segment state — see call sites. */
+  private resetTelegraphState(): void {
+    this.telegraphTarget = 0
+    this.telegraphShown = 0
+    this.telegraphSegment = { from: 0, to: 0, segmentStart: this.time.now, segmentDuration: MIN_SEGMENT_DURATION_MS }
+    this.telegraphSnapshotAt = undefined
   }
 
   private reconcileCombatantSprites(

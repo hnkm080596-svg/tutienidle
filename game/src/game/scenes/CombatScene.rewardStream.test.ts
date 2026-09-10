@@ -80,6 +80,13 @@ function createScene() {
   scene.playerSpawnHandle = undefined
   scene.playerMaterialized = true
 
+  // Task 9 fix round (Finding 1) — clearSceneState() now also tears down the
+  // party countdown telegraph; bare-mode scenes don't get the class-field
+  // initializers construct mode gives, so this file needs the same explicit
+  // stub already given to spawnVfxHandles/materializingIds above.
+  scene.turnCountdownSpawnVfxHandles = new Map()
+  scene.turnCountdownPendingIds = new Set()
+
   // Body-anchor/reward state (plan fields).
   scene.playerProfileId = 'mortal'
   scene.playerProfile = PLAYER_VISUAL_PROFILES.mortal
