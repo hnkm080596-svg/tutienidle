@@ -1,128 +1,135 @@
-# Perfect Clear (Hoàn Mỹ) + Stage Tinh Anh — Design Spec
+# Perfect Clear + Enemy Tag System — Design Spec
 
-- **Ngày:** 2026-09-11
-- **Trạng thái:** CHỜ USER REVIEW (các quyết định D1–D6 đã chốt qua chat; bản spec này tổng hợp thành văn — duyệt trước khi viết implementation plan)
-- **Nguồn yêu cầu:** user request 2026-09-11 + các chốt product qua 2 vòng question
-- **Việc roadmap tương ứng:** 9.5 #4 (perfectClearTurnLimit 0/30) + thay thế cơ chế `eliteChance` random kiểu realtime; mở đầu Phase B1 (Perfect Clear / Auto-farm completion)
+- **Ngày:** 2026-09-11 (bản 2 — thay thế thiết kế stage Tinh Anh sau chỉ đạo mới của user)
+- **Trạng thái:** CHỜ USER REVIEW bản cuối
+- **Việc roadmap:** 9.5 #4 (perfectClearTurnLimit 0/30) + generalize hệ spawn variant thành tag system
+- **Bản 1 bị thay thế vì sao:** user chốt "đã có tag thì cần gì stage Tinh Anh — spawn random, stage 10 là boss, thế thôi". Stage Tinh Anh riêng (floor 3/6/9 → 4/8/9), X=3/5/7, first-clear bonus — HỦY toàn bộ.
 
 ---
 
-## 0. Quyết định đã chốt (không mở lại)
+## 0. Quyết định đã chốt (bản cuối)
 
 | # | Quyết định | Nguồn |
 |---|---|---|
-| D1 | Điều kiện Hoàn Mỹ = **mọi member trong `players[]` còn `alive` lúc victory** + turns < X. Bỏ "HP-mất ≤75% của players[0]". "Cuối trận còn sống là được" — chết rồi hồi sinh vẫn OK (Kiếm Tu revive / Tử Sinh Ngô chống-chết đều hợp lệ). | user chat |
-| D2 | Tinh Anh là **stage thật trong tuyến chính**: floor **3/6/9** của mỗi chương là stage Tinh Anh, floor 10 là boss. Không phải optional endgame. | user chat |
-| D3 | X cho Tinh Anh **hard-code 3/5/7** theo floor 3/6/9 — không công thức. | user chat |
-| D4 | X cho stage thường + boss = **placeholder** (`totalEnemyCount × 2` cho thường, `14` cho boss), "không quan trọng, balance sau". | user chat |
-| D5 | Thưởng Tinh Anh = `eliteRewards` nguyên văn từ quái Elite + **first-clear bonus** per stage. | user question |
-| D6 | Retire `eliteChance` (roll random) khỏi mọi stage — stage Tinh Anh là nguồn elite deterministic duy nhất. | user chat (cơ chế realtime không hợp turn-based) |
-
----
+| D1 | Hoàn Mỹ = **mọi member `players[]` còn `alive` lúc victory** + `totalTurnsElapsed < stage.perfectClearTurnLimit`. Bỏ HP-loss-75% của players[0]. Chết-then-hồi-sinh OK (Kiếm Tu revive, Tử Sinh Ngô). Ghi 1 lần, không overwrite. | user (giữ từ bản 1) |
+| D2 | **KHÔNG có stage Tinh Anh.** Cấu trúc 10 tầng giữ nguyên: 1-9 thường, 10 boss. Tinh Anh là **tag gắn random lúc spawn** (eliteChance 0.1 giữ nguyên tên + giá trị, nghĩa mới = xác suất gắn tag). | user 2026-09-11 |
+| D3 | **Enemy Tag System**: tag = multiplier + prefix + flag + reward-tier, data-driven registry kiểu Diablo 2. Boss có thể stack tag tinh_anh → "Đại Vương Tinh Anh ...". Mỗi tag áp đúng 1 lần (dedupe), stack nhân liên tiếp. | user 2026-09-11 |
+| D4 | X placeholder: stage thường = `2 × totalEnemyCount`, boss = `14` — "không quan trọng, balance sau" (comment PLACEHOLDER 1 chỗ duy nhất trong builder). | user (giữ từ bản 1) |
+| D5 | **Builder `defineChapterStages`**: bỏ 30 literal — config chương (id/name/description/cặp loài) + 1 nơi quy định chung. BossEnemyId chỉ set floor 10. | user 2026-09-11 (giữ từ bản 1) |
+| D6 | Idle (auto-farm) giữ nguyên full reward roll — KHÔNG chặn material. | user Q3 |
+| D7 | Stat base 46 loài giữ nguyên authored. Tag multiplier tham chiếu `applyEliteMultiplier`/`applyBossMultiplier` có sẵn (không copy số — A9). Tier 4+ (sau beta) sẽ dùng factory pattern — ghi note, không làm trong mission này. | user Q2 |
 
 ## 1. Hiện trạng (evidence)
 
-- `recordPerfectClearIfEligible` (`GameManagerTurnBattleOps.ts:1235`): điều kiện = HP-mất ≤75% **chỉ của `players[0]`** + turns < `stage.perfectClearTurnLimit`. Ghi 1 lần `perfectClearStageIds` + `perfectClearSeconds` (→ auto-farm cycle = giây/2).
-- **0/30 stage** có `perfectClearTurnLimit` → chip Hoàn Mỹ trong `StageSelectPanel` disabled vĩnh viễn (9.5 #4).
-- `eliteChance: 0.1` trong từng entry `enemyPool` của mọi stage — roll random lúc spawn (`StageWaveSystem.pickEnemyForSpawn:163`), nguồn `eliteRewards` (Phá Cảnh Tâm Pháp đầu game...) hoàn toàn may rủi.
-- Tinh Anh nhân bản stat qua `createEliteVariant` (`EnemyStatInput.applyEliteMultiplier`): HP ×2.5, ATK ×1.35, DEF ×1.15, Accuracy ×1.1 — giữ nguyên.
-- `totalTurnsElapsed` (`TurnBattleSystem.ts:595`) đếm **mọi actor action** (kể cả lượt quái), không phải "lượt người chơi".
-- Unlock tuần tự: `isStageUnlocked` theo `completedStageIds` nối tiếp trong `Zones.ts stageIds` — stage Tinh Anh chèn vào sẽ **bắt buộc vượt qua** để tiến tiếp.
+- `recordPerfectClearIfEligible` (`GameManagerTurnBattleOps.ts`): HP-loss ≤75% chỉ của `players[0]` + turns < X. 0/30 stage có X → chip Hoàn Mỹ disabled vĩnh viễn.
+- `createEliteVariant`/`createBossVariant` (`Enemy.ts`): 2 hàm hardcode — đổi stat (qua `applyEliteMultiplier`/`applyBossMultiplier`), prefix tên ("Tinh Anh "/"Đại Vương "), switch rewards (eliteRewards / bossRewards ?? eliteRewards), set flag isElite/isBoss. Consumer duy nhất ngoài tests: `StageWaveSystem.pickEnemyForSpawn` + auto-farm roll.
+- `eliteChance: 0.1` author sẵn trên entry elite-eligible của cả 30 stage; roll tại `pickEnemyForSpawn:163`.
+- Floor-10 boss: `isFinalSpawn && floor === 10 && bossEnemyId` → `createBossVariant`. Floor 1-9 cũng khai `bossEnemyId` (metadata giả — guard chặn spawn, nhưng UI hiện badge Boss sai 30/30 node).
+- `normalizedStages` map hack ghi đè `totalEnemyCount` sau khai báo (mortal/qi) — builder sẽ thay.
+- Quy định chung thật (đo được): mortal/qi total = 9+floor, foundation = 9+floor; waves chia 3 phần dư về cuối (floor 10 raw `[total]`); pool = [common w5, elite-eligible w3 (eliteChance 0.1)]; spawnInterval 3s; bossEnemyId = loài w3.
 
 ## 2. Target behavior
 
-### 2.1 Điều kiện Hoàn Mỹ mới
+### 2.1 Tag system (core mới — Layer 1.5, không đụng Layer 2-4)
 
-```text
-victory
-→ MỌI member của turnBattle.players còn entity.alive === true
-→ AND (turnBattle.totalTurnsElapsed ?? 0) < stage.perfectClearTurnLimit
-→ record perfectClearStageIds + perfectClearSeconds (1 lần, không overwrite — giữ nguyên)
+```ts
+// core/enemy/EnemyTag.ts — generic contract, không biết tag cụ thể
+export interface EnemyTag {
+  id: string
+  namePrefix?: string                        // ghép theo thứ tự tag
+  applyStat?: (stats: Stats) => Stats         // THAM CHIẾU applyEliteMultiplier/BossMultiplier — không copy số
+  combatFlag?: 'isElite' | 'isBoss'          // set flag CombatEntity
+  rewardTier?: 'eliteRewards' | 'bossRewards' // fallback chuỗi boss→elite→base giữ nguyên
+}
+
+export function applyEnemyTags(enemy: Enemy, tagIds: readonly string[]): Enemy
 ```
 
-- Kiểm tra tại đúng thời điểm victory trong `grantTurnBattleRewards` victory block (vị trí hiện tại của `recordPerfectClearIfEligible` — không đổi flow, chỉ đổi predicate).
-- Xóa nhánh HP-loss-75% (kèm hardcode 75 và comment cũ).
-- Stage chưa author X (boss/placeholder chưa set): `undefined` → không bao giờ Hoàn Mỹ — behavior hiện có, giữ nguyên.
+- Applier: dedupe tagIds (mỗi tag 1 lần) → fold `applyStat` liên tiếp (stack nhân: boss+tinh_anh = ×7 ×2.5 HP), ghép prefix theo thứ tự, chọn rewards theo rewardTier (đúng chuỗi fallback hiện tại), set flag.
+- Tag data đầu tiên (data/enemy/EnemyTags.ts): `tinh_anh` + `boss` — hiện thực đúng 100% hành vi 2 hàm cũ (characterization: output của `applyEnemyTags(template, ['tinh_anh'])` === `createEliteVariant(template)`).
+- Tag mới sau này (Hấp Huyết/Cuồng Nộ/Thần Phù...) chỉ thêm 1 entry data.
+- `createEliteVariant`/`createBossVariant`: migrate consumer xong thì **xóa** (A12) — tests tham chiếu update.
 
-### 2.2 Cấu trúc 10 tầng mỗi chương
+### 2.2 Spawn integration
 
-| Floor | Loại | totalEnemyCount / waves | perfectClearTurnLimit |
-|---|---|---|---|
-| 1, 2, 4, 5, 7, 8 | Thường | giữ nguyên (10-19 quái, waves hiện có) | **placeholder** = 2 × totalEnemyCount |
-| **3** | **Tinh Anh** | **1 quái elite**, waves `[1]` | **3** |
-| **6** | **Tinh Anh** | **2 quái elite**, waves `[2]` | **5** |
-| **9** | **Tinh Anh** | **3 quái elite**, waves `[3]` | **7** |
-| 10 | Boss | giữ nguyên (solo, `effectiveWaves` override `[1]`) | **placeholder = 14** |
+```text
+pickEnemyForSpawn(stage, isFinalSpawn):
+  entry roll như cũ
+  entry.eliteChance roll trúng  → applyEnemyTags(template, ['tinh_anh'])
+  isFinalSpawn && floor === 10  → applyEnemyTags(template, ['boss'])
+```
 
-- Nhịp X cho Tinh Anh: elite cần ~2 turn/con → floor 3 (1 con) X=3, floor 6 (2 con) X=5, floor 9 (3 con) X=7 — mỗi con dư đúng 1 turn buffer.
-- Cả 3 chương (mortal / qi_refining / foundation_establishment) dùng cùng bộ 3/5/7.
-- **Số quái floor 3/6/9 thay đổi** (từ 10-12 → 1/2/3 elite): tường khó sớm ở floor 3 là chủ đích (D2), đánh đổi giai đoạn đầu có thể chậm — chấp nhận theo quyết định user.
-- Floor 3/6/9 hiện KHÔNG phải floor-10 nên không dính override `effectiveWaves`/`effectiveTotalEnemyCount` — hai hàm đó chỉ bắt `floor === 10 && bossEnemyId`.
+- `eliteChance` field GIỮ NGUYÊN (tên + giá trị 0.1 + type) — nghĩa mới: xác suất gắn tag tinh_anh.
+- Huyết Mông (quái ẩn) giữ nguyên — base enemy khác, không phải tag.
+- Consumer isElite/isBoss (ArtifactProgression, bossKillCount, telegraph, loot, HiddenBeast) KHÔNG ĐỔI — flag vẫn được set như cũ.
 
-### 2.3 Stage Tinh Anh — composition
+### 2.3 Builder defineChapterStages (D5)
 
-- **Loài quái:** mỗi stage Tinh Anh dùng đúng loài "elite-eligible" trong chương đó — entry `enemyPool` hiện có đang khai `eliteChance` (loài có `eliteRewards` authored trong `Enemies.ts`). Author `enemyPool` của stage Tinh Anh chỉ chứa loài đó (weight 1), KHÔNG eliteChance (D6).
-- **Spawn rule:** thêm `allElite?: boolean` (1 optional field) trên `Stage`. `StageWaveSystem.pickEnemyForSpawn`: `stage.allElite === true` → mọi spawn đi qua `createEliteVariant` (bỏ qua roll). Boss-floor logic không đổi.
-- **isElite vẫn set ở spawn** (từ `createEliteVariant`) → `ArtifactProgression`, `BattleLootSystem` đếm elite, telegraph `spawnTelegraphTicks` keyed `isElite` — toàn bộ pipeline phụ trợ tự hoạt động, không đụng.
-- **First-clear bonus:** thêm block reward nhỏ 1-lần duy nhất lần đầu thắng stage Tinh Anh — gate qua `completedStageIds` (pattern push-once đã có trong victory block), nội dung thưởng = `eliteRewards` gấp đôi của loài chủ đạo (data authored local trong Stages.ts, không mechanism mới — reward đi đúng `BattleLootSystem` kênh drop hiện có khi cần item, phần kỹ năng/linh thạch cộng thẳng qua reward grant path có sẵn). *Chi tiết enact trong implementation plan theo đúng reward API sẵn có — không dựng framework mới.*
+`Stages.ts` chỉ còn 3 config chương (nội dung thật: id/name/description/cặp loài) + builder sinh 30 stage:
 
-### 2.4 Retire eliteChance
+```text
+floor 1-9  → thường:  total = 9 + floor
+                      waves = chia đều 3 phần, dư về phần cuối
+                      pool = [common w5, elite w3 + eliteChance 0.1]
+                      perfectClearTurnLimit = 2 × total    // PLACEHOLDER (D4)
+floor 10   → boss:    total = 9 + floor
+                      waves = [total]  (raw; effectiveWaves override [1] giữ nguyên)
+                      bossEnemyId = loài elite — CHỈ floor 10 (dọn metadata giả)
+                      perfectClearTurnLimit = 14           // PLACEHOLDER (D4)
+mọi stage  → spawnIntervalSeconds = 3, chapter/floor/requiredRealmLevel theo config
+```
 
-- Xóa `eliteChance` khỏi toàn bộ entry `enemyPool` (30 stage) + xóa logic roll trong `pickEnemyForSpawn` + xóa field `eliteChance` khỏi `Stage.StageEnemyEntry` + dọn test liên quan.
-- `createEliteVariant` + `applyEliteMultiplier` GIỮ NGUYÊN (dùng cho allElite spawn).
-- `eliteRewards`/`bossRewards` data trong `Enemies.ts` GIỮ NGUYÊN (D5).
-- Kiểm tra consumer `eliteChance` còn lại (test/panel) — rà trong plan, không bỏ sót.
+- `normalizedStages` hack xóa — 3 chương qua cùng 1 builder.
+- Noted behavior change: badge Boss UI chỉ còn hiện đúng 3 node floor 10 (hiện sai 30/30).
+
+### 2.4 PC condition (D1) — như bản 1
+
+Predicate mới trong `recordPerfectClearIfEligible`: `players.every(alive) && totalTurnsElapsed < X`. Ghi 1 lần `perfectClearStageIds` + `perfectClearSeconds` (auto-farm cycle/2 giữ nguyên).
 
 ### 2.5 UI
 
-- `StageSelectPanel`: chip Hoàn Mỹ tự kích hoạt được theo data mới (đã có logic `isSelectedStagePerfectClear` — không cần sửa); thêm badge/nhãn "Tinh Anh" cho 9 stage mới + phân biệt 3 loại (thường/Tinh Anh/boss) ở list; sweep kèm việc 10.4 ẩn `spawnIntervalSeconds` khỏi display (cùng panel, cùng đợt).
-- i18n: mọi string mới qua locale keys (P16).
+- Badge Boss: tự nhiên đúng sau builder (chỉ 3 node có bossEnemyId).
+- Ẩn `spawnIntervalSeconds` khỏi StageSelectPanel display (10.4 sweep).
+- Chip Hoàn Mỹ: logic sẵn có (`isSelectedStagePerfectClear`) — tự enable khi có X + đạt điều kiện.
+- i18n: mọi string display mới qua locale keys (P16). Không có string mới trừ khi ẩn display làm key orphan (verify khi làm).
 
 ### 2.6 Save/compat
 
-- Dev phase — không migration (E8). Save cũ thiếu stage mới trong `completedStageIds` → stage đó hiện "chưa vượt", hợp lệ.
-- Không field save mới nào: `perfectClearTurnLimit`/`allElite` là registry data, `perfectClear*` giữ nguyên shape.
+Dev phase — không migration (E8). Không field save mới: X/spawnTags-ish đều registry data; `perfectClear*` giữ nguyên shape. Player save cũ thiếu X → stage chưa từng Hoàn Mỹ vẫn hợp lệ.
 
-## 3. Placeholder X — ghi chú balance
-
-- 24 stage thường: `X = 2 × totalEnemyCount` (mortal 10 quái → 20 ... foundation F9 18 quái → 36); 3 stage boss: `X = 14`. **Chỉ để field tồn tại + chip hoạt động — KHÔNG phải balance thật** (user: "không quan trọng, balance sau"). Ghi comment `// PLACEHOLDER - balance pass sau` tại từng số trong `Stages.ts` để đợt balance scan dễ tìm.
-- Simulation/balance check KHÔNG thuộc mission này (user đã duyệt skip) — khi mở đợt balance sau sẽ tune lại toàn bộ bảng X bằng playtest/simulation thật.
-
-## 4. Kiến trúc — owner & ranh giới
+## 3. Kiến trúc — owner & ranh giới
 
 | Trách nhiệm | Owner | Ghi chú |
 |---|---|---|
-| Predicate Hoàn Mỹ | `GameManagerTurnBattleOps.recordPerfectClearIfEligible` | đọc `turnBattle.players[].entity.alive` — query thuần, không mutate (A3) |
-| Định nghĩa stage | `data/stage/Stage.ts` + `Stages.ts` | data-driven như hiện có |
-| Spawn all-elite | `StageWaveSystem.pickEnemyForSpawn` | mechanism 1 nhánh, không content-ID check (A8) |
-| Elite stat | `EnemyStatInput.applyEliteMultiplier` + `createEliteVariant` | giữ nguyên 1 owner (A2) |
-| First-clear | victory block qua `completedStageIds` gate | đúng reward path có sẵn |
-| UI badge | `StageSelectPanel.vue` | presentation thuần (A7) |
+| Tag contract + applier | `core/enemy/EnemyTag.ts` | generic, không content-ID (A8) |
+| Tag data (tinh_anh/boss) | `data/enemy/EnemyTags.ts` | registry pattern như TURN_BUFF_REGISTRY |
+| Công thức stat multiplier | `EnemyStatInput.applyEliteMultiplier`/`applyBossMultiplier` — GIỮ NGUYÊN 1 owner (A2/A9) — tag tham chiếu, không copy số |
+| Quy định stage + builder | `data/stage/ChapterStages.ts` — `defineChapterStages` | 1 nơi cho mọi rule (D5) |
+| Roll elite + boss spawn | `StageWaveSystem.pickEnemyForSpawn` | chỉ đổi hàm áp tag |
+| Predicate Hoàn Mỹ | `GameManagerTurnBattleOps.recordPerfectClearIfEligible` | query thuần (A3) |
+| UI badge | `StageSelectPanel.vue` | presentation (A7) |
 
-Không đổi: damage/vitals (R1), stat (R2), skill (R3), buff (R4), runtime/presentation (R5), presentation coordinator (R12), QuestSystem (R8.1).
+Không đổi: normalize (Layer 2), combat pipeline (Layer 4, R1-R5), BattleLootSystem, Idle/auto-farm, QuestSystem, tribulation.
 
-## 5. Verification strategy
+## 4. Verification strategy
 
-- **TDD từng slice:** (a) predicate alive-for-all — RED test: 1 companion chết + victory → KHÔNG Hoàn Mỹ; mọi member sống → Hoàn Mỹ; (b) stage chưa author X → không ghi; (c) once-only regression (đã có); (d) `Stages.ts` data test: 9 stage Tinh Anh đúng floor 3/6/9, waves sum === totalEnemyCount (bất biến có sẵn), X=3/5/7 đúng chương nào cũng vậy, 0 eliteChance sót; (e) `StageWaveSystem` allElite spawn test; (f) first-clear đúng 1 lần.
-- **P3:** quick cho từng task; full ít nhất 1 lần cuối mission (chạm data + core).
-- **P14:** real-browser — vào trận stage Tinh Anh floor 3 thật, xác nhận 1 quái Elite (tên "Tinh Anh ...", telegraph), thắng dưới 3 turn với party sống → chip Hoàn Mỹ bật trong StageSelectPanel.
-- **E2E note:** không thay đổi boot/combat wiring — spec e2e hiện có không phá; có thể thêm 1 case create-to-combat mở rộng sau (optional, ghi trong plan).
-- **QA adversarial quick** cuối mission theo P4.
+- **TDD từng slice:** (a) characterization test: `applyEnemyTags(['tinh_anh'])` === `createEliteVariant` cũ (byte-equal các field stat/flag/rewards/name) — chạy được cả 2 hàm trong cùng test trước khi xóa hàm cũ; (b) stack test: boss+tinh_anh nhân liên tiếp + prefix ghép đúng + dedupe; (c) predicate alive-for-all (RED: party member chết + victory → không ghi); (d) data test: 30 stage có X, waves-sum === total (bất biến sẵn), bossEnemyId chỉ ở 3 floor-10, eliteChance 0.1 nguyên vẹn trên entry elite; (e) builder output parity: sinh stage === literal cũ (id/floor/total/waves/pool) trừ X (mới) + bossEnemyId floor 1-9 (đổi có chủ đích — noted behavior change).
+- **P3:** quick mỗi task; full cuối mission. **P14:** browser — vào Động 1 thật, thấy quái thường; stage map badge Boss chỉ node 10; thắng dưới X với toàn đội sống → chip Hoàn Mỹ enable. **P4:** adversarial quick cuối mission.
+- Hypothesis QA bắt buộc: roll elite 0.1 qua tag vẫn đúng phân phối (seeded test); auto-farm roll dùng tag path cho reward elite như cũ; once-only PC.
 
-## 6. Out of scope
+## 5. Out of scope
 
-- Balance thật bảng X thường/boss (D4 — đợt balance sau).
-- Rebalance `eliteRewards`/drop rate (giữ nguyên data authored).
-- Stage Tinh Anh art riêng (R6 — telegraph `isElite` key có sẵn tạm).
-- Xóa `battle/legacy/` (9.5 #9 — mission riêng).
-- Companion/party content (B3), world map (B5).
-- `eliteChance` field trong save cũ nếu từng persist (data registry, không persist — verify trong plan).
+- Stage Tinh Anh riêng / first-clear bonus / X=3/5/7 (ĐÃ HỦY theo chỉ đạo).
+- Tag mới ngoài tinh_anh/boss (mở sau bằng data).
+- Enemy stat factory tier 4+ (note D7 — mission riêng khi mở nội dung).
+- Balance thật X (đợt balance sau).
+- Rebalance eliteRewards/drop (giữ nguyên authored).
 
-## 7. Risks
+## 6. Risks
 
 | Rủi ro | Mitigation |
 |---|---|
-| Floor 3 mortal thành tường khó sớm (1 elite ×2.5 HP cho người chơi mới) | Chủ đích user (D2); elite mortal stat thấp, node Kiếm/Pháp basic đủ đánh — playtest P14 xác nhận không softlock |
-| Player 1 người + companion chết giữa trận khi chưa có companion content → party 1 member, điều kiện alive-for-all vô hại | Tự nhiên đúng: 1 member chết = thua rồi — không thay đổi outcome |
-| `totalEnemyCount` giảm ở floor 3/6/9 làm lệch quest/stage-progress consumer | Rà consumer của `totalEnemyCount`/`completedStageIds` trong plan (quest progress theo stage-clear, không theo số quái) |
-| Test cũ assert số quái/waves của floor 3/6/9 | Cập nhật đúng data mới trong cùng mission (task-caused, P12) |
+| Xóa createEliteVariant/BossVariant phá test/æn consumer ngầm | Characterization test trước khi xóa; grep consumer; migrate rồi mới remove (A12) |
+| Builder sinh lệch literal cũ ở field nào đó (waves chia, total) | Parity test builder-vs-literal cho mọi field trừ 2 thay đổi đã ghi |
+| Đổi bossEnemyId floor 1-9 ảnh hưởng logic khác ngoài UI | Grep toàn bộ consumer `bossEnemyId` (đã rà: EffectiveWaves/EffectiveEnemyCount floor-10 guard, StageWaveSystem floor-10 guard, StageSelect badge, Stages.test) — floor 1-9 chỉ là display sai được sửa |
+| Tag stack boss+tinh_anh chưa có trong game thật (chỉ tương lai) | Test unit lock hành vi stack; không cần content ngay |
