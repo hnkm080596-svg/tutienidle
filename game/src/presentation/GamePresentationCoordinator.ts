@@ -233,8 +233,14 @@ export class GamePresentationCoordinator {
       return { status: 'rejected', transitionId: this.currentTransitionId }
     }
 
-    // Validate route edge
-    if (!this.isAllowedEdge(this.currentRoute, request.target)) {
+    // Validate route edge. A request for the route we are already on is allowed
+    // even when no self-edge is declared - canEnter() has always said yes to it,
+    // and it is the only way out of a 'failed' phase whose transition never
+    // committed currentRoute (the error shell's Back button).
+    if (
+      request.target !== this.currentRoute &&
+      !this.isAllowedEdge(this.currentRoute, request.target)
+    ) {
       return { status: 'rejected', transitionId: this.currentTransitionId }
     }
 

@@ -428,6 +428,40 @@ describe('GamePresentationCoordinator', () => {
     expect(coordinator.getSnapshot().currentRoute).toBe('home')
   })
 
+  it('recovers to the route it never left after a failed entry (error shell Back)', async () => {
+    // The Back button on the error shell calls request({ target: currentRoute }).
+    // A failed entry never commits currentRoute, so this is a same-route request
+    // and ALLOWED_EDGES.home has no 'home' self-entry. If it is rejected, phase
+    // stays 'failed' forever: the overlay keeps pointer-events and both the
+    // error card's buttons are dead - a permanent app lock with no way out but
+    // a reload.
+    let failNext = true
+    renderer.prepare = vi.fn(async () => {
+      if (failNext) {
+        failNext = false
+        throw new Error('scene create exploded')
+      }
+    })
+
+    const coordinator = createCoordinator({ initialRoute: 'home' })
+    const session = { kind: 'combat' as const, sessionId: 91 }
+    ;(sessionPort as PresentationSession).begin(session, 'interactive')
+
+    const failed = await coordinator.request({ target: 'combat', session })
+    expect(failed.status).toBe('failed')
+    expect(coordinator.getSnapshot().phase).toBe('failed')
+    expect(coordinator.getSnapshot().currentRoute).toBe('home')
+
+    // What App.vue's onTransitionBack does.
+    coordinator.clearError()
+    const back = await coordinator.request({ target: 'home' })
+
+    expect(back.status).toBe('entered')
+    expect(coordinator.getSnapshot().phase).toBe('idle')
+    expect(coordinator.getSnapshot().currentRoute).toBe('home')
+    expect(coordinator.getSnapshot().error).toBeNull()
+  })
+
   it('retry with no recorded failure is rejected', async () => {
     const coordinator = createCoordinator({ initialRoute: 'home' })
 

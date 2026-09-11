@@ -30,7 +30,14 @@ export class RafClockSource implements ClockSource {
         const deltaMs = timestamp - this.lastTimestamp
 
         if (deltaMs < STALL_THRESHOLD_MS) {
-          onFrame(deltaMs / 1000)
+          // A throw from anywhere in the turn stack must not kill the loop:
+          // the rAF is re-armed below, and start() would refuse to re-arm it
+          // because handle is still non-null. Combat would stop forever.
+          try {
+            onFrame(deltaMs / 1000)
+          } catch (error) {
+            console.error('[RafClockSource] combat frame threw; clock continues', error)
+          }
         }
       }
 

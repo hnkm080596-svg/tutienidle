@@ -2331,9 +2331,11 @@ contract they establish:
   at their `HIT_RESOLUTION` step. `submitTurnChoice` is not an external
   command; it is consumed by `AWAITING_INPUT` directly.
 - Cooldowns are counted in turns, with one authority
-  (`TurnSkillAction`/`cooldownTurns`); the legacy seconds-based
-  `skillSystem.update(deltaSeconds, 0)` call was characterized as dead and
-  removed from `GameManager.update()`.
+  (`TurnSkillAction`/`cooldownTurns`). The legacy seconds-based
+  `skillSystem.update(deltaSeconds, 0)` call was characterized as dead for the
+  turn path, but it still stands in `GameManager.update()` and was NOT removed
+  on this branch - it feeds the doomed real-time SkillSystem and its removal
+  belongs to that engine's retirement, not here.
 - The world tick's cadence is unchanged (still 1 Hz via `useAppLifecycle`).
   `updateBattleFixedStep` no longer drives combat at all — it is auto-farm
   only, a wall-clock reward cycle with no `turnBattle`. Combat advances on
