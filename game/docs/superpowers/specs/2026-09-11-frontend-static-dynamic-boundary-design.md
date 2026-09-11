@@ -898,3 +898,26 @@ reference requires importing the type. What escapes both is a reference held
 structurally or as `any`, and P8 already requires an introduced `any` to be
 flagged. That residue is stated rather than hidden; it is not worth AST
 machinery today.
+
+### 11.3 Verification trap found while proving V8 on screen
+
+`playwright.config.ts` sets `reuseExistingServer: true` and defaults
+`DEV_PORT` to `5175` **for every checkout**, worktrees included. A dev server
+left running by one checkout therefore serves Playwright runs launched from any
+other. The first visual capture of V8 showed 58x58 uniform cells — the old code
+— because it was talking to a server started earlier from master.
+
+Two consequences worth keeping:
+
+1. **Any e2e comparison between a worktree and master is meaningless unless each
+   side runs on its own `DEV_PORT`.** Several such comparisons were made during
+   this work and had to be thrown away.
+2. A green e2e run proves nothing about the current tree unless you know which
+   server answered. Pass `DEV_PORT=<unique>` when running from a worktree.
+
+Separately, this machine runs the e2e suite about one second inside its 45s
+per-test budget: `standing-slot-panel` passes at 44.1s, and master's `ink-wash
+tall` passed at 44.0s. Full-suite runs therefore fail a shifting subset of the
+heavy tests, on master as readily as on a branch. That is a budget problem, not
+a correctness one, and it is worth raising before it is mistaken for a
+regression.
