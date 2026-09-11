@@ -22,11 +22,7 @@ import {
   PLACEHOLDER_FRAME_COUNT,
   PLACEHOLDER_FRAME_RATE,
 } from '@/game/support/CombatAnimationSet'
-import {
-  createBattleGridProjection,
-  computePerspectiveGeometry,
-  type BattleGridProjection,
-} from '@/presentation/geometry/BattleGridProjection'
+import type { BattleGridProjection } from '@/presentation/geometry/BattleGridProjection'
 import { STANDING_SLOT_COUNT } from '@/core/battle/BattlefieldRegions'
 import type { FormationSlotAssignment } from '@/core/player/Player'
 import type { LaneIndex } from '@/core/battle/BattleLane'
@@ -34,8 +30,11 @@ import { CombatGridView } from './combat/combat-grid-view'
 import type { CombatGridViewHost } from './combat/CombatGridViewHost'
 import type { EntitySprite } from './combat/combatTypes'
 import {
+  createFormationProjection,
+  formationPerspectiveGeometry,
   FORMATION_CANVAS_HEIGHT,
   FORMATION_CANVAS_WIDTH,
+  FORMATION_MIN_ROAD_HEIGHT,
 } from '@/presentation/geometry/FormationCanvasSpec'
 
 // Canvas size has ONE owner now (V9): FormationCanvasSpec, under
@@ -45,7 +44,8 @@ import {
 // same as before.
 export const PANEL_WIDTH = FORMATION_CANVAS_WIDTH
 export const PANEL_HEIGHT = FORMATION_CANVAS_HEIGHT
-export const PERSPECTIVE_MIN_ROAD_HEIGHT_PANEL = 140
+// Re-exported for existing consumers; the value's owner is FormationCanvasSpec.
+export const PERSPECTIVE_MIN_ROAD_HEIGHT_PANEL = FORMATION_MIN_ROAD_HEIGHT
 
 const PANEL_SKY_COLOR = 0x22283a
 const PANEL_GROUND_COLOR = 0x1a1a1a
@@ -106,10 +106,7 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
   create(): void {
     this.gridView = new CombatGridView(this)
 
-    const geometry = computePerspectiveGeometry(
-      { width: PANEL_WIDTH, height: PANEL_HEIGHT, topInset: 0, bottomInset: 0 },
-      PERSPECTIVE_MIN_ROAD_HEIGHT_PANEL,
-    )
+    const geometry = formationPerspectiveGeometry()
 
     // 2 lớp nền phẳng (sky/ground) — KHÔNG dùng attachBattlefieldBackdrop()
     // của combat thật (sao/trăng/núi/đá quá cầu kỳ cho panel test, và
@@ -121,13 +118,9 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
       .rectangle(0, geometry.horizonY, PANEL_WIDTH, geometry.roadHeight, PANEL_GROUND_COLOR)
       .setOrigin(0, 0)
 
-    this.projection = createBattleGridProjection(
-      'perspective',
-      { width: PANEL_WIDTH, height: PANEL_HEIGHT, topInset: 0, bottomInset: 0 },
-      STANDING_SLOT_COUNT,
-      STANDING_SLOT_COUNT,
-      PERSPECTIVE_MIN_ROAD_HEIGHT_PANEL,
-    )
+    // Same factory the shell calls (FormationCanvasSpec) — the five parameters
+    // are declared once and neither layer restates them (§3.6.2).
+    this.projection = createFormationProjection()
     this.gridGraphics = this.add.graphics()
     this.gridView.redrawGridLines()
 

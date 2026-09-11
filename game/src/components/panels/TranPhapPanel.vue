@@ -32,9 +32,12 @@ import { STANDING_SLOT_COUNT } from '@/core/battle/BattlefieldRegions'
 // comes from FormationCanvasSpec, its single owner (V9); this file no longer
 // declares it.
 import {
+  createFormationProjection,
   FORMATION_CANVAS_HEIGHT,
   FORMATION_CANVAS_WIDTH,
 } from '@/presentation/geometry/FormationCanvasSpec'
+import { createProjectionBridge } from '@/presentation/geometry/ProjectionBridge'
+import { formationSlotStyle } from '@/presentation/geometry/formationSlotBoxes'
 import type { TranPhapCombatPreviewScene } from '@/game/scenes/TranPhapCombatPreviewScene'
 import type { SlotState } from '@/game/support/SlotState'
 
@@ -65,6 +68,32 @@ function assignmentAt(row: number, column: number): FormationSlotAssignment | un
 // SlotState dùng chung, để nếu sau này combat thật cần state tương tự
 // (targeting thủ công, tooltip theo ô) không phải bịa lại tên khác.
 const hoveredCell = ref<{ row: number; column: number } | null>(null)
+
+// V8 — slot hit-zones are derived from the SAME projection the canvas draws
+// with, via the shared factory in FormationCanvasSpec (§3.6.2). Before this,
+// the DOM grid was a uniform 56px CSS grid laid over a perspective canvas: the
+// two could not align, and because the absolutely-positioned canvas left the
+// container to be sized by that 176px grid, most of the 420x480 render was
+// clipped away and never seen.
+//
+// The canvas already draws the grid lines (CombatGridView.redrawGridLines), so
+// the overlay draws no grid of its own. Its job is hit-testing and state tint.
+//
+// clip-path rather than SVG polygons on purpose: clip-path clips pointer events
+// too, so the trapezoid becomes the hit area while the existing HTML5
+// drag-and-drop handlers keep working untouched. SVG elements support native
+// DnD inconsistently, and swapping the interaction model is Phase 3's job, not
+// a side effect of fixing alignment.
+const slotBridge = createProjectionBridge(createFormationProjection())
+
+function slotStyle(row: number, column: number): Record<string, string> {
+  return formationSlotStyle(slotBridge, row, column)
+}
+
+const stackStyle = {
+  width: `${FORMATION_CANVAS_WIDTH}px`,
+  height: `${FORMATION_CANVAS_HEIGHT}px`,
+}
 
 function slotStateAt(row: number, column: number): SlotState {
   if (!isLitCell(row, column)) {
@@ -266,15 +295,16 @@ onUnmounted(() => {
   <OverlayPanel :open="ui.standalonePanel === 'tran_phap'" :title="t('panels.tranPhap.title')" width="min(1000px, 94vw)" height="min(680px, 88vh)" @close="close">
     <div class="tran-phap-panel">
       <div class="tran-phap-panel__body">
-        <div class="tran-phap-panel__grid-stack">
+        <div class="tran-phap-panel__grid-stack" :style="stackStyle">
           <div ref="previewContainerRef" class="tran-phap-panel__preview-canvas"></div>
 
           <div class="tran-phap-panel__grid tran-phap-panel__grid--overlay">
-            <div v-for="row in STANDING_SLOT_COUNT" :key="row" class="tran-phap-panel__row">
+            <template v-for="row in STANDING_SLOT_COUNT" :key="row">
               <div
                 v-for="column in STANDING_SLOT_COUNT"
-                :key="column"
+                :key="`${row}-${column}`"
                 :class="['tran-phap-panel__cell', `tran-phap-panel__cell--${slotStateAt(row - 1, column - 1)}`]"
+                :style="slotStyle(row - 1, column - 1)"
                 :draggable="!!assignmentAt(row - 1, column - 1)"
                 @dragstart="(event) => { const occupant = assignmentAt(row - 1, column - 1); if (occupant) (event as DragEvent).dataTransfer?.setData('text/plain', occupant.combatantId) }"
                 @dragenter="hoveredCell = { row: row - 1, column: column - 1 }"
@@ -285,7 +315,7 @@ onUnmounted(() => {
               >
                 {{ assignmentAt(row - 1, column - 1)?.combatantId ?? '' }}
               </div>
-            </div>
+            </template>
           </div>
         </div>
 
@@ -351,8 +381,12 @@ onUnmounted(() => {
   gap: var(--space-4, 16px);
 }
 
+/* V8 — the stack now declares the canvas's own size (FormationCanvasSpec).
+   It used to have none, so an absolutely-positioned canvas left the overlay
+   grid to size it: 176px, clipping ~85% of a 420x480 render. */
 .tran-phap-panel__grid-stack {
   position: relative;
+  flex: 0 0 auto;
 }
 
 .tran-phap-panel__preview-canvas {
@@ -369,32 +403,26 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
-.tran-phap-panel__grid {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
+/* Overlay covers the canvas exactly; each cell is placed by the projection,
+   so there is no CSS grid left to disagree with what Phaser drew. */
 .tran-phap-panel__grid--overlay {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 1;
-  /* Ô vẫn giữ background/border cũ để vẫn thấy rõ vùng lit khi kéo-thả —
-     Phaser canvas vẽ NGAY BÊN DƯỚI, không che overlay tương tác. */
-}
-
-.tran-phap-panel__row {
-  display: flex;
-  gap: 4px;
 }
 
 .tran-phap-panel__cell {
-  width: 56px;
-  height: 56px;
+  position: absolute;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--surface-line);
   font-size: var(--text-xs, 11px);
+  /* No border: the canvas below already draws the grid lines
+     (CombatGridView.redrawGridLines), and a rectangular border cannot follow a
+     clipped trapezoid anyway. The overlay tints state; the canvas draws shape.
+     clip-path also clips POINTER EVENTS, which is what makes the trapezoid the
+     real hit area and lets the existing drag-and-drop handlers stay as they
+     are. */
 }
 
 /* SlotState (Battlefield Slot spec, 2026-09-06) — 'locked' giữ đúng look
@@ -402,29 +430,32 @@ onUnmounted(() => {
    sáng cũ (--lit trước đây = true); 'hover' thêm viền nhấn khi đang kéo
    một quân TỚI ô này (chỉ hiện trên ô enabled, chưa có ai chiếm — xem
    slotStateAt()'s thứ tự ưu tiên locked > occupied > hover > enabled). */
+/* V8 — state is carried by a BACKGROUND FILL, not a border.
+   clip-path clips the background to the trapezoid exactly, giving a crisp
+   projected cell; a border traces the element's rectangle and a box-shadow
+   traces its border box, so neither can follow the clip. The four states keep
+   their original meanings and their original jade hue — only the property
+   carrying them changed. */
 .tran-phap-panel__cell--locked {
   opacity: 0.35;
 }
 
 .tran-phap-panel__cell--enabled {
   opacity: 1;
-  border-color: var(--jade, #4caf50);
+  background: rgba(76, 175, 80, 0.1);
 }
 
-/* Standing-slot plan Task 6 (2026-09-07) — occupied SPLIT from enabled:
-   same green border plus a light green background so "empty tappable cell"
-   is visually distinct from "cell already occupied" by color (not only by
-   the combatant id text inside). */
+/* Standing-slot plan Task 6 (2026-09-07) — occupied SPLIT from enabled, so
+   "empty tappable cell" reads differently from "cell already occupied" by
+   colour and not only by the combatant id text inside. */
 .tran-phap-panel__cell--occupied {
   opacity: 1;
-  border-color: var(--jade, #4caf50);
-  background: rgba(76, 175, 80, 0.22);
+  background: rgba(76, 175, 80, 0.28);
 }
 
 .tran-phap-panel__cell--hover {
   opacity: 1;
-  border-color: var(--jade, #4caf50);
-  box-shadow: 0 0 0 2px var(--jade, #4caf50) inset;
+  background: rgba(76, 175, 80, 0.45);
 }
 
 .tran-phap-panel__formation-list {
