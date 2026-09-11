@@ -1203,6 +1203,41 @@ open generation
 
 No universal UI framework.
 
+### Khí Đường 3-tab layout defect — root cause đã chẩn đoán, fix deferred vào R11 (2026-09-11)
+
+User report: 3 tab đầu Khí Đường (Cường Hóa/Tẩy Luyện/Tinh Luyện) không
+hiện UI vật phẩm; tab 4-5 (Hóa Luyện/Phân Giải) bình thường. Đã điều tra
+systematic-debugging + xác nhận bằng đo browser thật (P14, 2026-09-11),
+chưa sửa theo quyết định user — ghi lại đây để đợt R11 xử đúng chuẩn.
+
+**Where:** scoped CSS của `EnhanceTab.vue` / `WashTab.vue` / `RefineTab.vue`
+vs shell `EquipmentHallPanel.vue`.
+
+**Why (root cause):** node gốc 3 tab là `<section class="qi-hall__body qi-hall__split">`.
+Shell defining `.qi-hall__body { flex-direction: column }` và tab defining
+`.qi-hall__split { flex-direction: row }` CÙNG specificity (0,2,0 scoped) —
+thứ tự bundle quyết định: shell CSS inject SAU tab CSS nên `column` thắng.
+Đo thật trong browser: section render `flex-direction: column`,
+`.qi-hall__split-left` nở 989px (đúng ra phải 84px), 6 hàng grid slot bị
+squash còn ~10.6px/hàng, slot (aspect-ratio 1) 989×989 tràn `overflow:
+hidden` — lưới vật phẩm vô hình, bên phải chỉ còn "Chọn một trang bị...".
+
+**When:** commit `330b9feb` (2026-09-02, rework P6 tách 5 tab). File monolith
+cũ xếp `.qi-hall__split` SAU `.qi-hall__body` trong cùng file → row thắng →
+layout đúng. Tách file làm đổi thứ tự inject → vỡ layout từ đó.
+
+**2 phương án đã trình user (E17):**
+
+1. **Short-term (local):** compound selector `.qi-hall__body.qi-hall__split`
+   trong 3 tab (specificity 0,3,0 thắng shell bất kể thứ tự) — ~6 dòng.
+2. **Long-term (user chọn defer vào đây):** dọn trùng lặp CSS — shell chỉ giữ
+   style shell, layout split rút vào 1 owner dùng chung 3 tab (shared CSS hoặc
+   component `HallSplitLayout`), xóa 3 bản copy specificity-war.
+
+**Fix nên kèm:** guard test mount 3 tab assert computed flex-direction row +
+slot-grid đo được kích thước > 0 (kiểu DissolveTab T2.3 bug 2026-09-01 — CSS
+bug không bắt được bằng type-check).
+
 ---
 
 # Phase R12 — Presentation / Asset Infrastructure Cleanup
