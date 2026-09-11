@@ -19,12 +19,9 @@ import {
   rewardMoteScale,
   rewardSwirlOffset,
 } from '@/game/support/RewardGourd'
-import { resolveSpriteBodyAnchor } from '@/game/support/SpriteBodyAnchor'
-import { getBodyAnchors } from '@/presentation/art/PlayerVisualProfiles'
 import { DEPTH_OVERLAY_UI } from '@/game/support/BattleLayers'
 
 import type { CombatScene } from '../CombatScene'
-import { ENEMY_NEUTRAL_BODY_ANCHOR, PLAYER_ID } from './combatConstants'
 
 export class CombatRewardGourd {
   constructor(private readonly scene: CombatScene) {}
@@ -245,45 +242,22 @@ export class CombatRewardGourd {
 
   /**
    * Điểm phát reward (plan §7.1) — ưu tiên:
-   * 1. body anchor của sprite nguồn còn tồn tại (Player dùng catalog
-   *    anchor 'chest' của profile; enemy KHÔNG có catalog anchor nên
-   *    dùng điểm thân trung tính suy ra từ sprite bounds — audit P0-3,
-   *    không bao giờ áp Player anchor cho enemy);
+   * 1. body anchor 'centre' của sprite nguồn còn tồn tại — MỘT rule cho mọi
+   *    entity (Spec C §3.1), suy từ cell battlefield thay vì hand-authored
+   *    table riêng cho Player;
    * 2. last-known screen position theo entity ID;
    * 3. ô grid cuối cùng chiếu qua projection hiện hành.
    */
   resolveRewardSourcePoint(sourceId: string): { x: number; y: number } | undefined {
-    const source = this.scene.spriteFor(sourceId)
+    // Spec C §3.1 — one rule for every entity. This used to branch: the player's
+    // hand-authored `chest` anchor, and a hardcoded "~40% of height from the
+    // feet" for everything else. The audit ruling behind that branch (never
+    // borrow one character's proportions for another) is kept; what goes is the
+    // second code path, because an anchor derived from the CELL borrows nothing.
+    const bodyCentre = this.scene.bodyAnchorScreen(sourceId, 'centre')
 
-    if (source) {
-      const snapshot = {
-        x: source.rect.x,
-
-        y: source.rect.y,
-
-        displayWidth: source.rect.displayWidth,
-
-        displayHeight: source.rect.displayHeight,
-
-        originX: 0.5,
-
-        originY: this.scene.isPerspective ? 1 : 0.5,
-
-        flipX: false,
-
-        rotation: source.rect.rotation,
-      }
-
-      if (sourceId === PLAYER_ID) {
-        return resolveSpriteBodyAnchor(
-          getBodyAnchors(this.scene.playerProfile, 'combat').chest,
-          snapshot,
-        )
-      }
-
-      // Enemy/rect fallback — điểm thân trung tính (~40% chiều cao từ
-      // chân) suy thuần từ bounds sprite, ĐỘC LẬP với Player profile.
-      return resolveSpriteBodyAnchor(ENEMY_NEUTRAL_BODY_ANCHOR, snapshot)
+    if (bodyCentre) {
+      return bodyCentre
     }
 
     const cachedScreen = this.scene.lastKnownScreenPositions.get(sourceId)

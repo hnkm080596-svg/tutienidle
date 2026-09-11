@@ -16,7 +16,7 @@ import {
 import { spawnEnemySpawnVfx } from '@/game/support/EnemySpawnVfx'
 import { getCombatVfxPreset } from '@/data/vfx/CombatVfxPresets'
 import { getStatusVfxPreset } from '@/data/vfx/StatusVfxPresets'
-import type { PlayerBodyAnchorId } from '@/presentation/art/PlayerVisualProfiles'
+import type { BodyAnchorId } from '@/presentation/geometry/combatBodyAnchors'
 import {
   DEPTH_OVERLAY_UI,
   DEPTH_UPRIGHT_VFX,
@@ -610,22 +610,22 @@ export class CombatVfxSpawner {
 
     graphics.clear()
 
-    const colors: Record<PlayerBodyAnchorId, number> = {
-      head: 0xffffff,
-      chest: 0x00ffff,
-      castHand: 0xff8800,
-      offHand: 0x0088ff,
-      feet: 0xff00ff,
+    const colors: Record<BodyAnchorId, number> = {
+      top: 0xffffff,
+      centre: 0x00ffff,
+      front: 0xff8800,
+      back: 0x0088ff,
+      bottom: 0xff00ff,
     }
 
-    for (const anchorId of Object.keys(colors) as PlayerBodyAnchorId[]) {
-      const point = this.scene.getPlayerBodyAnchorScreen(anchorId)
+    for (const id of Object.keys(colors) as BodyAnchorId[]) {
+      const point = this.scene.bodyAnchorScreen(PLAYER_ID, id)
 
       if (!point) {
         continue
       }
 
-      graphics.fillStyle(colors[anchorId]!, 0.9)
+      graphics.fillStyle(colors[id]!, 0.9)
 
       graphics.fillCircle(point.x, point.y, 3)
     }

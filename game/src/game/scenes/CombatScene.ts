@@ -46,10 +46,15 @@ import { enemyTextureUrl, resolveEnemyTextureKey } from '@/game/support/EnemyArt
 import {
   PLAYER_VISUAL_PROFILES,
   resolvePlayerVisualProfileId,
-  type PlayerBodyAnchorId,
   type PlayerVisualProfile,
   type PlayerVisualProfileId,
 } from '@/presentation/art/PlayerVisualProfiles'
+import {
+  bodyAnchor,
+  type AnchorPoint,
+  type BodyAnchorId,
+  type BodyBox,
+} from '@/presentation/geometry/combatBodyAnchors'
 import {
   GOURD_MOUTH_ANCHOR,
   GOURD_PLACEHOLDER_SIZE,
@@ -234,6 +239,14 @@ interface EntitySprite {
    * mÃ¡Â»Âi kind='sprite' Ã„â€˜Ã¡Â»Æ’ setDisplaySize giÃ¡Â»Â¯ Ã„â€˜ÃƒÂºng tÃ¡Â»â€° lÃ¡Â»â€¡ khung hÃƒÂ¬nh.
    */
   sourceSize?: { w: number; h: number }
+
+  // The character's size on screen, as resolved by Spec C section 4.3 -- NOT
+  // the sprite's box. bodyBoxFor() reads these; combat-grid-view.ts's sizing
+  // methods write them (declared on combatTypes.ts's EntitySprite, the type
+  // that module imports -- this local interface mirrors the same shape
+  // since `sprites` here is typed against it instead).
+  personWidth?: number
+  personHeight?: number
 
   // Combat AI rework (plan Ã‚Â§12.1) + enemy art x2 (2026-08-26) Ã¢â‚¬â€ player
   // sprite Ãƒâ€”2, enemy PNG Ãƒâ€”2 (fallback Rectangle Ãƒâ€”1).
@@ -1157,12 +1170,41 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   /**
-   * Body anchor → screen point (plan §5.2). One-shot VFX gọi đúng lúc
-   * spawn; sustained VFX gọi lại mỗi frame để bám tay khi bob/lunge/
-   * recoil (transform snapshot đọc live).
+   * Spec C §4.2 — a body anchor in screen space, for any entity.
+   *
+   * Replaces getPlayerBodyAnchorScreen(), which could only answer for the
+   * player and read a hand-authored table describing the profile's static PNG
+   * rather than the art actually on screen.
+   *
+   * Works for a Rectangle fallback as well as a Sprite: the anchors describe a
+   * notional body standing in a cell, and a Rectangle stands in one too.
    */
-  getPlayerBodyAnchorScreen(anchorId: PlayerBodyAnchorId): { x: number; y: number } | undefined {
-    return this.playerVisual.getPlayerBodyAnchorScreen(anchorId)
+  bodyAnchorScreen(entityId: string, id: BodyAnchorId): AnchorPoint | undefined {
+    const box = this.bodyBoxFor(entityId)
+
+    return box ? bodyAnchor(id, box) : undefined
+  }
+
+  private bodyBoxFor(entityId: string): BodyBox | undefined {
+    const sprite = this.sprites.get(entityId)
+
+    if (!sprite) {
+      return undefined
+    }
+
+    // Fall back to the character baseline when the grid view has not sized this
+    // sprite yet (first frame after spawn). Better an anchor at the default body
+    // size than none at all.
+    const personHeight = sprite.personHeight ?? this.characterHeight
+    const personWidth = sprite.personWidth ?? this.characterWidth
+
+    return {
+      footX: sprite.rect.x,
+      footY: sprite.footY,
+      personWidth,
+      personHeight,
+      facing: entityId === PLAYER_ID ? 'right' : 'left',
+    }
   }
 
   /**
