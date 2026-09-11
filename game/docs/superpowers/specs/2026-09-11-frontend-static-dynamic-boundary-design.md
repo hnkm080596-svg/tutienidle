@@ -1,10 +1,12 @@
 # Frontend Static/Dynamic Boundary — Vue Shell, Phaser Region
 
-**Status:** Draft, awaiting review
+**Status:** **Accepted** (product owner, 2026-09-11)
 **Date:** 2026-09-11
 **Decided by:** user, in brainstorm, 2026-09-11
-**Reviewed by:** user, 2026-09-11. Every measured claim re-verified against the
-tree before acceptance — see §11.
+**Reviewed by:** user, 2026-09-11, over two rounds. Thirteen claims were put up
+for verification across the two rounds; all were measured against the tree, two
+were imprecise and corrected, and three dispositions reversed as a result — see
+§11 and §11.1.
 **Builds on:** `docs/architecture/mission-0-architecture-audit-2026-09-08.md`
 §11, §13, §14, §16, §17; `2026-09-08-r5-combat-runtime-presentation-boundary-design.md`
 **Adopts from:** `docs/superpowers/specs/VUE + Phaser checklist.md` v1.1
@@ -15,7 +17,7 @@ tree before acceptance — see §11.
 ## 1. Scope, and what this is deliberately not
 
 This spec settles one question: **which layer owns what on the frontend**, and
-gives the answer two mechanisms and a set of executable checks.
+gives the answer three mechanisms and a set of executable checks.
 
 It is **not** a new constitution. Mission 0 §17 examined exactly that idea and
 rejected it:
@@ -28,8 +30,8 @@ rejected it:
 That judgment is accepted here. Of the rules in §3, four are restatements of
 invariants that already exist and already bind; they appear only so the frontend
 boundary can be read in one place. **Exactly one rule is new** (§3.5, pointer
-ownership), and it is new because it records a decision only the product owner
-could make.
+handling and shared geometry), and it is new because it records a decision only
+the product owner could make.
 
 Out of scope, with its own spec to come: the per-clip animation metadata
 contract, sprite anchor and scale geometry, and animation/impact timing. Those
@@ -78,6 +80,28 @@ four, and the fourth is where the frontend boundary actually lives:
 Vue and Phaser do not meet at the Core. They meet at `presentation/`, which is
 where `GamePresentationCoordinator` already owns route and readiness authority.
 
+### 2.2 Geometry is a presentation asset, not a Phaser asset
+
+A consequence of §2.1 that is easy to miss: **anything both layers must agree
+about lives in `presentation/`, not in the layer that happens to use it first.**
+
+Grid projection is the case at hand. `BattleGridProjection` sits in
+`src/game/support/` because the canvas needed it first. But the canvas draws with
+it and the DOM must hit-test with it, so under §3.4 (Vue and Phaser do not call
+each other directly) it cannot stay there — a DOM overlay importing from
+`src/game/` would be the static layer reaching into the dynamic one.
+
+The move is cheap, which is worth stating because it removes the usual excuse for
+leaving such things where they are. Measured: `BattleGridProjection.ts` imports
+exactly two things — `@/core/battle/BattleGrid` (downward, legal) and
+`./BattlefieldRenderMode`, which imports **nothing at all**. Neither file imports
+`phaser`. They are pure mathematics. Relocating them is a file move with no
+decoupling work (§6/V7).
+
+The same test applies to anything added later: if both layers must agree about
+it, it is a presentation asset. Backgrounds shared between Combat and Formation
+are the next instance (§5.4).
+
 ---
 
 ## 3. The rules
@@ -125,13 +149,28 @@ advances, with no error anywhere. The runtime is safe; the type is not. R5 §3.3
 specified `token: string`, mandatory. Making it mandatory belongs to §4.3's
 declared `DomainCommandPort`.
 
-### 3.5 Pointer input belongs to the static layer — **NEW**
+### 3.5 Pointer is handled where it lands; shared geometry goes through the bridge — **NEW**
 
-Buttons, grid cells, target selection, drag: the static layer receives them all.
-The dynamic layer draws beneath and does not need to know where the pointer is.
+The rule is not "the static layer receives every pointer event". An earlier draft
+said that, and it was wrong in a way worth recording: it made the one canvas-side
+interaction in the tree (a tooltip on a world-anchored icon) a violation, when
+handling it canvas-side is the *correct* choice — that is where the geometry is.
 
-This is new as a written rule, but it is not a new practice — the repository had
-already chosen it and simply never wrote it down. Evidence:
+The rule is:
+
+> **Whichever layer receives a pointer event handles it. What neither layer may
+> do is guess the other's geometry.** Any DOM element positioned by world
+> coordinates, and any canvas hit-test that must agree with DOM layout, goes
+> through the projection bridge (§4.4) — never through a hand-copied constant, a
+> parallel grid, or an assumption that two independently-built layouts happen to
+> line up.
+
+Default placement still follows §2: controls, forms, panels and lists are static
+UI and belong to the DOM. The clause that does the work is the second one, and it
+is not hypothetical — §6/V8 documents a live defect that exists precisely because
+a DOM grid and a canvas grid were built independently and assumed to match.
+
+Two facts about where the repository stands today:
 
 - Phaser takes pointer input at exactly **one site** in the whole tree:
   `src/game/scenes/combat/combat-vfx-spawner.ts:242-245` — a status icon with
@@ -143,11 +182,14 @@ already chosen it and simply never wrote it down. Evidence:
   **no callers** outside their own module and its tests. They were built for the
   opposite model and then left unused.
 - Formation preview already works this way: a Vue grid takes the clicks, the
-  Phaser canvas draws below it.
+  Phaser canvas draws below it — and the two do **not** agree geometrically,
+  which is the defect at §6/V8.
 
-**Consequence for the two findings above:** `combat-vfx-spawner.ts:242` becomes
-a declared exception or moves to the shell (§6). The unused projection inverse
-is dead code under this rule; §6 records the decision rather than assuming it.
+**Consequence.** The canvas-side tooltip is legal under this rule as written
+(§6/V3). The unused projection inverse is not dead code — it is the *ground
+truth* a DOM overlay needs in order to hit-test against what the canvas actually
+drew (§6/V6). Both dispositions changed once the Formation grid was measured;
+the first draft had them backwards.
 
 ---
 
@@ -292,6 +334,61 @@ There is no approval ceremony beyond normal review. The constraint is that the
 edit is visible and argued, rather than a method appearing on a structural type
 that nobody declared.
 
+### 4.4 The projection bridge
+
+§3.5 says shared geometry goes through a bridge. This is that bridge, and it is
+deliberately thin — the mathematics already exists and is already correct; what
+is missing is a *declared way for the static layer to ask*.
+
+```ts
+// src/presentation/geometry/ProjectionBridge.ts  (name provisional)
+
+export interface ProjectionBridge {
+  /** Grid cell → screen. Returns the FOOT POINT plus the depth scale. */
+  gridToScreen(grid: GridPosition): ScreenPoint & { scale: number }
+
+  /** Screen → grid cell. null when the point is off the playable surface. */
+  screenToGridUnclamped(screen: ScreenPoint): GridPosition | null
+
+  /** Is this screen point on the playable surface at all? */
+  containsScreenPoint(screen: ScreenPoint): boolean
+}
+
+export function createProjectionBridge(
+  projection: BattleGridProjection,
+): ProjectionBridge
+```
+
+**Both directions already exist and are already used.** This is not new maths:
+
+- `gridToScreen` is declared at `BattleGridProjection.ts:153`, implemented in both
+  projections (`:279` flat, `:396` perspective), and called ten-plus times in
+  production by `combat-grid-view.ts` to draw grid lines, place sprites and apply
+  depth scale. The anchor convention — it returns the **foot point** at the cell
+  centre — is documented at `:19`.
+- `screenToGridUnclamped` and `containsScreenPoint` are implemented and tested,
+  with an exact closed-form inverse at `:414-420`. They have no production
+  callers. That is the half this spec connects.
+
+**Stateless by construction.** The bridge holds no cached geometry; every call
+delegates to the projection, which is pure and already recalculates on `resize()`.
+A cached bridge would be a second copy of the geometry that can disagree with the
+canvas — the exact failure mode §3.5 exists to prevent.
+
+**Why the inverse is trustworthy.** The transform is not affine, but it is not a
+true pinhole perspective either: depth maps through a rational function
+`y = bandTop + bandHeight·(v/d)` where `d = q + (1-q)v`, while width scales by
+`1/d²` rather than a camera's `1/d`. It is a deliberate pseudo-perspective. What
+matters for hit-testing is that it is **separable and free of rotation or shear**,
+so the inverse is exact and closed-form rather than iterative.
+
+**Access path.** The bridge reaches the static layer through the gate (§4.2) as
+an optional key, so a shell without a live region simply has no bridge rather
+than a broken one. Until the gate lands, a consumer may import
+`createProjectionBridge` directly from `presentation/geometry/` — legal under
+§3.4, since `presentation/` is where both layers meet — carrying a comment saying
+it moves behind the gate when §4 ships.
+
 ---
 
 ## 5. Mechanism 2 — the dynamic-region host
@@ -387,6 +484,30 @@ It is not a scene abstraction, a renderer wrapper, or a second coordinator.
 composable owns *hosting mechanics only*; what the region draws is entirely the
 scene's business.
 
+### 5.4 Shared backgrounds, per-region camera
+
+Once more than one region exists, they start wanting the same art with different
+motion. Combat and Formation both show a battlefield; Formation is a 420×480
+preview panel, Combat is a full viewport. The same sky and ground should be
+reusable without either region inheriting the other's camera.
+
+The rule follows §2.2: **the art is a presentation asset, the motion is a region
+parameter.**
+
+- A `BackgroundSpec` names layers and asset references. It lives under
+  `presentation/`, is shared, and carries **no parallax values**.
+- Each region supplies its own parallax and camera configuration when it
+  constructs its scene. Combat keeps exactly what it has today; Formation picks
+  its own, appropriate to a small static panel.
+- The gate (§4.2) hands a region its `BackgroundSpec`; the scene decides how to
+  move it.
+
+The failure this forbids is embedding parallax factors in the shared asset
+descriptor. Do that and the second consumer either inherits motion tuned for a
+viewport it does not have, or forks the descriptor — and a forked descriptor is
+two sources of truth for the same art, which is the defect shape §4.1 and §6/V9
+are both about.
+
 ---
 
 ## 6. Existing violations, and what changes
@@ -405,21 +526,58 @@ are visible to the build graph or a test.
 |---|---|---|---|
 | V1 | `src/game/support/themePhaserSync.ts:1-2` imports `watch` from `vue` and `useThemeStore` from Pinia | §3.2 | Move to `src/presentation/`. It is a bridge, not a visual. |
 | V2 | `src/game/support/commandWheelCatalog.ts:8` imports `LeftPanelMode`/`StandalonePanel` types from `@/stores/ui` | §3.2 | Type-only, so no runtime edge — but the direction is still wrong. Move the types down to a core or presentation contract. |
-| V3 | `src/game/scenes/combat/combat-vfx-spawner.ts:242-245` — a status icon with `setInteractive`, `pointerover`, `pointerout`, `pointerdown` | §3.5 | **Decide, do not assume**: move the interaction to the shell, or record it as a declared exception with its reason. Note it is a tooltip on a world-anchored icon, so moving it means the shell must track a world position — the trade is real, not cosmetic. |
+| V3 | `src/game/scenes/combat/combat-vfx-spawner.ts:242-245` — a status icon with `setInteractive`, `pointerover`, `pointerout`, `pointerdown` | §3.5 | **Legal as written.** The icon is world-anchored, so the canvas is where its geometry lives and where the hit-test belongs. It is a bridge consumer, not a violation. Optional follow-up, deferred by the product owner 2026-09-11: move only the tooltip *rendering* to the DOM, with the scene supplying screen coordinates. No action required by this spec. |
 | V4 | Two hand-rolled `Phaser.Game` bootstraps — `PhaserCanvas.vue:134` (the main canvas) and `TranPhapPanel.vue:222` (the Formation preview named in Mission 0 §13 and §2 above) | §3.1 | Migrate both onto §5's composable. |
 | V5 | 11 `registry.get(…) as {…}` casts, among 22 reads across 8 keys | §4 | Migrate to `readRequiredGate`/`readOptionalGate`/`writeGate`. |
-| V6 | `BattleGridProjection.screenToGridUnclamped()`, `containsScreenPoint()` — no callers | §3.5 | Dead under §3.5. **Decide, do not assume**: delete, or keep with a recorded reason if Formation work will need them. |
+| V6 | `BattleGridProjection.screenToGridUnclamped()`, `containsScreenPoint()` — no production callers | §3.5, §4.4 | **Keep.** Not dead code: this is the ground truth a DOM overlay needs to hit-test against what the canvas actually drew, and the drag interaction in the Formation fix (V8) is its first consumer. The first draft proposed deleting these; that proposal was made before the Formation grid was measured and is withdrawn. |
+| V7 | `BattleGridProjection.ts` and `BattlefieldRenderMode.ts` live in `src/game/support/` | §2.2, §3.4 | **Move to `src/presentation/geometry/`.** Both layers must agree about projection, so it is a presentation asset. Verified pure: one core import, one sibling that imports nothing, no `phaser`. A file move plus import updates at `CombatScene.ts:1014`, `TranPhapCombatPreviewScene.ts:119` and the other consumers. **Not blocked on r14** — touches neither `eslint.config.js` nor `tests/architecture/`. |
+| V8 | Formation panel: a uniform 176×176 DOM grid overlays a 420×480 perspective canvas, inside a container that clips it | §3.5 | **Own plan, not this spec.** See below — it is a user-visible defect, and this spec claims not to make those. |
+| V9 | `420`/`480` declared twice — `TranPhapPanel.vue:35-36` and `TranPhapCombatPreviewScene.ts:41-42` — kept in sync by a comment at `:37` saying "must match" | §2.2 | Give the number one owner under `presentation/geometry/`. Not overridden by theme, DPI or user setting anywhere; it is simply duplicated, and V8 cannot be fixed while two files disagree about the canvas size. |
 
 V3 and V6 are explicitly left as decisions, not foregone conclusions. Assuming
 either one would be the kind of silent narrowing this repository's review
 history has repeatedly caught.
 
-**Who decides V3 and V6:** the product owner, before the implementation plan is
-written — not the implementing agent mid-task, and not a reviewer after the
-fact. Each needs one piece of information the tree cannot supply: whether a
-world-anchored tooltip is worth moving to the DOM (V3), and whether Formation
-work will need screen→grid inversion (V6). Both answers belong in §6 of this
-spec once given, so the plan can cite them rather than re-litigate them.
+**V3 and V6 are settled** — decided by the product owner on 2026-09-11, after
+three measurements that the first draft had not made. Both reversed:
+
+- V3 was "decide whether this violates §3.5". It does not; §3.5 was the thing
+  that needed fixing, not the code. The tooltip is deferred as an optional
+  polish item, not carried as a violation.
+- V6 was "probably delete". It is kept, because the Formation grid turned out to
+  be the consumer nobody had written yet.
+
+**V8 gets its own plan, and this is the one item this spec hands off rather than
+absorbs.** The reason is the claim at the top of this section: A makes no
+user-visible change, and V8 is very visible. Measured, the Formation panel today:
+
+| | DOM grid (takes the clicks) | Canvas (draws) |
+|---|---|---|
+| Geometry | uniform 56×56 px cells, `gap: 4px` | perspective trapezoids, compressing toward the horizon |
+| Size | **176 × 176 px** | **420 × 480 px** |
+
+`.grid-stack` has `position: relative` and no declared size; `.preview-canvas` is
+`position: absolute; inset: 0` and therefore out of flow, so the container is
+sized entirely by the overlay — 176 px. The canvas element inside is a fixed
+420×480 under `overflow: hidden`. **Roughly 85% of what Phaser draws is clipped
+and never seen**, and the visible remainder is the top-left corner, which in this
+projection is the most compressed region near the horizon. There is no
+`ResizeObserver` and no `Phaser.Scale` mode; nothing recomputes anything.
+
+This is not an accident, and the repository already knew. The CSS carries the
+note at `TranPhapPanel.vue:361-363` — *"canvas/overlay alignment là known
+limitation (spec Part 2 Non-Goals, needs its own future plan)"* — and that spec
+is `docs/archive/specs/2026-09-06-battlefield-perspective-panel-design.md`, whose
+Non-Goals say plainly: *"Không đổi layout CSS xung quanh panel (formation cards,
+roster queue) — chỉ đổi kích thước chính canvas Phaser."* The canvas was enlarged
+to 420×480 and the surrounding CSS was deliberately left alone. The misalignment
+is the acknowledged, deferred consequence of that scope decision — **not** a
+decision never to fix it.
+
+Two constraints the V8 plan inherits from that older Non-Goal: it may change the
+grid-stack's own layout, and it should still leave the formation cards and roster
+queue alone. V8 depends on V7 and V9, and on neither r14 nor the rest of this
+spec.
 
 ---
 
@@ -437,6 +595,7 @@ carries four guard files holding ten tests — verified: `coreImportDirection` 2
 | `pointerOwnership.test.ts` | No `setInteractive` / pointer handler under `src/game/`, except a declared allowlist | Add a `setInteractive` call outside the allowlist |
 | `presentationGate.test.ts` | No `registry.get(` / `registry.set(` outside the gate module | Add a raw registry read in a scene |
 | `dynamicRegionHost.test.ts` | No `new Phaser.Game` outside the host composable | Construct a game in a component |
+| `projectionLocation.test.ts` | `BattleGridProjection` / `BattlefieldRenderMode` are defined only under `src/presentation/geometry/`, and nothing under `src/game/` defines a second projection | Re-add a projection class under `src/game/support/` |
 
 **Each guard must be proven to fail before it is accepted.** This is not
 ceremony: a source-grep guard that passes on a rename has shipped on this
@@ -499,7 +658,7 @@ written against this repository: it assumes Phaser 3, plain JS, `src/vue/` and
 | Vue and Phaser meet only at the Core | **Overruled.** They meet at `presentation/` (§2.1). |
 | Phaser never emits logic events (§11.4) | **Overruled by the user, 2026-09-11.** The turn mechanism spec makes Phaser's "skill VFX done" signal the thing that ends a turn. Legal, but the list is closed and typed (§3.4, §4.3). |
 | World-space → Phaser, screen-space → Vue | **Adopted** (§2) |
-| Anything needing pointer-events → Vue | **Adopted and sharpened** into §3.5 |
+| Anything needing pointer-events → Vue | **Overruled, after measurement.** The first draft adopted it; §3.5 now says pointer is handled where it lands, and the real constraint is that neither layer may guess the other's geometry. The checklist's version would have made the one correct canvas-side interaction in the tree a violation. |
 | Damage numbers, floating HP/cast bars → Phaser | **Adopted**; matches what is built |
 | Single canvas | **Overruled.** Multiple declared regions (§3.1, §5). |
 
@@ -515,16 +674,20 @@ written against this repository: it assumes Phaser 3, plain JS, `src/vue/` and
    not a structural inline type.
 4. Both existing regions are constructed by the shared host composable, each
    holding its own generation.
-5. V1, V2, V4, V5 are closed. V3 and V6 are closed **or** recorded as declared
-   exceptions with stated reasons — decided by the product owner before the plan
-   is written (§6), and written back into §6.
-6. Four guards exist, and each has been observed red against a probe before
+5. V1, V2, V4, V5, V7 and V9 are closed. V3 and V6 are settled as recorded in
+   §6 and need no code change here. V8 is handed to its own plan and is **not**
+   an acceptance criterion of this spec.
+6. Five guards exist, and each has been observed red against a probe before
    being accepted.
 7. Full gate green: type-check, build, vitest, Playwright. **No test expectation
-   changes, except where a V3 or V6 decision explicitly authorizes it** — and
-   such a change cites that decision. Outside those two, a test that needs its
-   expectation updated is a signal to stop, not to update the expectation: this
-   work moves code, it does not change what the code does.
+   changes, except for import paths that V7 necessarily moves** — and such a
+   change touches the path only, never an asserted value. A test whose expected
+   *value* needs updating is a signal to stop: this work moves code, it does not
+   change what the code does. (V3 and V6 need no code change; V8 is out of
+   scope, and its own plan carries its own criteria.)
+
+8. After V7, `BattleGridProjection` is imported by both `src/game/` and the
+   static layer, and by neither through the other.
 
 ---
 
@@ -551,3 +714,20 @@ found imprecise and corrected; the rest held.
 Nothing in C1–C9 turned out false, so no rule or enforcement item in this spec
 rests on a claim that did not survive checking. The two corrections were
 precision, not substance.
+
+### 11.1 Second measurement pass (B1–B4)
+
+The reviewer asked four further questions before the V3/V6/V7 dispositions were
+settled. Three changed a decision.
+
+| # | Question | Answer |
+|---|---|---|
+| B1 | Which spec is the CSS comment's "Part 2 Non-Goals"? | `docs/archive/specs/2026-09-06-battlefield-perspective-panel-design.md`. Its Non-Goals (`:51-52`) say the canvas size alone was to change and the surrounding CSS was to be left alone. So the misalignment is a **deferred consequence of a scope decision, not a decision never to fix it** — fixing it now honours the original intent. Two constraints inherited: formation cards and roster queue stay untouched. |
+| B2 | Does any other DOM position itself by world coordinates? | **No.** One site reads `battlefieldGeometry` on the DOM side — `PhaserCanvas.vue:151` — and it exists for the e2e/visual gate, not for positioning UI. Production sites: zero. Combat's overlays use the *reverse* relationship (`combatInsets`: the DOM tells the canvas where not to draw), which already works. Formation is the first and only consumer, so V8 is fixed in place and no `useProjectionOverlay` composable is written until a second consumer actually exists. |
+| B3 | Is 420×480 overridden anywhere? | **Not overridden — duplicated.** Declared in `TranPhapPanel.vue:35-36` and `TranPhapCombatPreviewScene.ts:41-42`, kept in sync by a comment at `:37` reading "must match". No theme, DPI or user setting touches it. Recorded as V9: the number needs one owner before V8 can be fixed. |
+| B4 | Does `BattleGridProjection` depend on `src/game/`? | **No.** Two imports: `@/core/battle/BattleGrid` and `./BattlefieldRenderMode`, and that second file imports nothing at all. Neither imports `phaser`. Pure mathematics, so V7 is a file move with zero decoupling. |
+
+The three dispositions these produced — V6 kept rather than deleted, V3 legal
+rather than violating, V7 added — all reversed or added to the first draft. None
+of them could have been reached without measuring the Formation grid, which the
+first draft did not do.
