@@ -14,11 +14,6 @@ import type { ResumePlayback } from '@/core/battle/turn/CombatAnimationRuntime'
 import type { TurnBattleEntitySnapshotEvent } from '@/core/battle/turn/TurnActionPresentationEvents'
 import type { EventBus } from '@/core/events/EventBus'
 import type { BattlefieldGeometrySnapshot } from '@/presentation/geometry/BattleGridProjection'
-// Direction note: this reaches into `src/game/` for a type. The profile-id
-// union is arguably a presentation contract, like `contracts/panelIds.ts`, and
-// moving it would be the same edit V2 made. Left where it is for now because
-// nothing forces the question yet — recorded so the next person does not have
-// to rediscover it.
 import type { PlayerVisualProfileId } from '@/presentation/art/PlayerVisualProfiles'
 import type { KiemBarReader } from '@/presentation/bridges/kiemBarBridge'
 

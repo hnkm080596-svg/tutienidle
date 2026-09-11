@@ -1046,3 +1046,52 @@ it a false conclusion.
 3243 passed, eslint 171 problems / 4 errors — the four are master's own.
 Architecture guards: 9 files, 30 tests, all probe-verified red before
 acceptance.
+
+### 11.5 Acceptance sweep — §10, measured rather than asserted
+
+Each criterion re-checked against the tree at the end of the pass, by a command
+rather than by memory.
+
+| § | Criterion | Measured |
+|---|---|---|
+| 1 | No `src/game/` file imports `vue` or `@/stores/` | **0** |
+| 2 | Every registry access through the gate, zero casts | **0** raw gate-key calls, **0** casts outside the module |
+| 3 | `gameManager` arrives as a declared port | Declared, plus `DomainSnapshotPort` for the two queries §4.3 had missed |
+| 4 | Both regions constructed by the shared host | **0** `new Phaser.Game` outside `useDynamicRegion` |
+| 5 | V1, V2, V4, V5, V7, V9, V10 closed | All closed; V3/V6 settled as recorded; V8 also done |
+| 5a | **No Vue file imports from `src/game/`** | **0**, from nine at the start |
+| 6 | Five guards, each observed red on a probe | 9 guard files, 30 tests; every new assertion probed |
+| 8 | `BattleGridProjection` imported by both layers, neither through the other | 9 importers under `src/game/`, 1 under the static side, no path crossing |
+
+**§10.5a is the one that caught a bad ruling.** The previous pass left
+`ThanhVanArt` in `src/game/` as a considered decision, with the reason written
+down — and the reason was sound as far as it went. It was still wrong, because
+§10.5a asks for zero and does not take reasons. Re-measuring found the module was
+two modules wearing one name: the art (which variant is showing, its texture
+keys, its load list — precisely what the three Vue files were reaching for) and
+the Phaser depth table plus tint. Split, the criterion is met with no fudge.
+
+The lesson is narrow and worth keeping: *a well-argued exception is still an
+exception, and the acceptance criteria are the place to check whether one is
+allowed.*
+
+**Criterion 7, honestly.** No test's expected VALUE changed. Two test fixtures
+did: `PhaserCanvas.test.ts`'s fake `Phaser.Game` gained a `registry.get` and an
+`events` emitter, because a real one has both and the write-only fake failed
+with `registry.get is not a function` before reaching the error the suite is
+about. That is a fixture becoming less of a lie, not an expectation moving.
+
+**The e2e budget took three tries, and the first two were wrong.**
+
+1. Raised the test timeout 45s → 90s. One green parallel run. Reported as fixed.
+2. Two further runs: 15/17, twice, with the failing set **shifting** between
+   them. One green run was never evidence.
+3. The real fix is `workers: 2`. Measured: 6 workers (the default, half of 12
+   cores) → 15/17 twice; 1 worker → 17/17 in 6.4m; 2 workers → 17/17 in 4.4m,
+   4.7m and 4.5m — reliable *and* fastest, because these tests wait on a browser
+   booting a real game rather than on CPU.
+
+Also worth recording, because it will mislead someone: under oversubscription
+the failure does not look like contention. The presentation overlay reaches
+`data-phase="failed"`, since a transition deadline elapses — indistinguishable
+at a glance from a genuine routing bug.
