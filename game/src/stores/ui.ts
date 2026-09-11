@@ -33,18 +33,11 @@ import {
 // Command-wheel plan (2026-08-26) — NavMenuOverlay/DongFuTopBar/
 // BottomBar đã xoá: mọi entry chức năng đi qua command wheel
 // (DongFuCommandWheel.vue) hoặc hotspot building.
-export type LeftPanelMode =
-  | 'character'
-  | 'inventory'
-  | 'exploration'
-  | 'settings'
-  | 'equipment_hall'
-  | 'pill_room'
-  | 'worker_lodge'
-  | 'scripture_pavilion'
-  | 'stage_select'
-  | 'vendor'
-  | null
+// Declared in `presentation/contracts/panelIds.ts` and re-exported here, so
+// that `src/game/` can name a panel without importing a Pinia store (V2/§3.2).
+// Every existing `from '@/stores/ui'` import keeps working.
+export type { LeftPanelMode, StandalonePanel } from '@/presentation/contracts/panelIds'
+import type { LeftPanelMode, StandalonePanel } from '@/presentation/contracts/panelIds'
 
 // Phù/Trận legacy khai tử — bag chỉ còn 3 tab.
 export type BagTab = 'equipment' | 'material' | 'pill'
@@ -75,8 +68,6 @@ export type ScripturePavilionTab = 'technique' | 'lore'
 // 'tran_phap' (TranPhapPanel.vue, Trận Pháp — Combat Art Roster spec,
 // 2026-09-05) — panel kéo-thả gán companion/player vào lưới 6x6 cục bộ
 // của trận pháp đang chọn, mở qua command wheel slot formation_slot.
-export type StandalonePanel =
-  'skill' | 'technique' | 'realm' | 'luyen_the' | 'quan_khi' | 'quest' | 'artifact' | 'tran_phap' | null
 
 export type BattleRunMode = 'manual' | 'repeat' | 'progress' | 'perfect_farm'
 

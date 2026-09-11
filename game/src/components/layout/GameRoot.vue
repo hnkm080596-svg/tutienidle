@@ -38,7 +38,7 @@ const offlineSummary = useOfflineSummaryStore()
 // wheel (trigger = nhân vật tu luyện giữa màn hình) hoặc hotspot
 // building. Canvas Phaser tự thích ứng theo container (ResizeObserver
 // trong PhaserCanvas.vue + các scene đã handle 'resize'); khoảng
-// reserved combat được đồng bộ qua game/support/combatInsets.ts.
+// reserved combat được đồng bộ qua presentation/geometry/combatInsets.ts.
 const ui = useUiStore()
 
 // Combat UI Redesign — Combat Scene chiếm TOÀN màn hình, thay hẳn

@@ -5,7 +5,7 @@
 // Building ring KHÔNG liệt kê id trùng lặp nơi khác — hotspot layer và
 // wheel cùng đọc catalog này (P2 cleanup: catalog là nguồn duy nhất cho
 // building id dùng chung trong UI mới).
-import type { LeftPanelMode, StandalonePanel } from '@/stores/ui'
+import type { LeftPanelMode, StandalonePanel } from '@/presentation/contracts/panelIds'
 
 export type PanelTarget =
   | { kind: 'left_panel'; mode: Exclude<LeftPanelMode, null> }

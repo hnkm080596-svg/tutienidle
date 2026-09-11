@@ -20,7 +20,7 @@ import {
   rewardSwirlOffset,
 } from '@/game/support/RewardGourd'
 import { resolveSpriteBodyAnchor } from '@/game/support/SpriteBodyAnchor'
-import { getBodyAnchors } from '@/game/support/PlayerVisualProfiles'
+import { getBodyAnchors } from '@/presentation/art/PlayerVisualProfiles'
 import { DEPTH_OVERLAY_UI } from '@/game/support/BattleLayers'
 
 import type { CombatScene } from '../CombatScene'

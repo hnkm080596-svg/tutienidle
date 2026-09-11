@@ -22,7 +22,7 @@
 import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import TurnCombatSkillBar from './hud/TurnCombatSkillBar.vue'
 import CombatBuildHud from './hud/CombatBuildHud.vue'
-import { clearSkillDockWidth, publishSkillDockWidth } from '@/game/support/combatInsets'
+import { clearSkillDockWidth, publishSkillDockWidth } from '@/presentation/geometry/combatInsets'
 
 const rootRef = ref<HTMLElement | null>(null)
 let observer: ResizeObserver | null = null

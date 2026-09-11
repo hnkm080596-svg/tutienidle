@@ -12,8 +12,8 @@ import {
   dongFuSeasonOverlayUrl,
   type DongFuBuildingArtEntry,
   type DongFuBuildingId,
-} from '@/game/support/DongFuBuildingArt'
-import type { ThanhVanVariant } from '@/game/support/ThanhVanArt'
+} from '@/presentation/background/DongFuBuildingArt'
+import type { ThanhVanVariant } from '@/presentation/background/BackgroundVariant'
 import DongFuBuildingSprite from './DongFuBuildingSprite.vue'
 
 interface SceneBuilding {

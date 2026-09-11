@@ -7,7 +7,7 @@
 // GameObject thành `SpriteTransformSnapshot` rồi truyền vào đây. One-shot
 // VFX giải đúng lúc spawn; sustained VFX gọi lại mỗi frame.
 
-import type { NormalizedBodyAnchor } from './PlayerVisualProfiles'
+import type { NormalizedBodyAnchor } from '@/presentation/art/PlayerVisualProfiles'
 
 export interface SpriteTransformSnapshot {
   /** Vị trí sprite trên màn hình (điểm origin). */

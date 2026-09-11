@@ -5,7 +5,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
 import Phaser from 'phaser'
-import { createBattleGridProjection } from './BattleGridProjection'
+import { createBattleGridProjection } from '@/presentation/geometry/BattleGridProjection'
 import { spawnEnemySpawnVfx, type EnemySpawnVfxParams } from './EnemySpawnVfx'
 
 type RecordingGraphics = Record<string, unknown> & {

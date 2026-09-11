@@ -23,7 +23,7 @@ import CombatSkillDockPanel from './CombatSkillDockPanel.vue'
 import TurnOrderStrip from './TurnOrderStrip.vue'
 import BattleLogPanel from './BattleLogPanel.vue'
 import CombatExitConfirmModal from './CombatExitConfirmModal.vue'
-import { publishTopBarHeight, resetCombatInsets } from '@/game/support/combatInsets'
+import { publishTopBarHeight, resetCombatInsets } from '@/presentation/geometry/combatInsets'
 
 const rootRef = ref<HTMLElement | null>(null)
 

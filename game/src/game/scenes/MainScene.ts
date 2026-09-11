@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import type { EventBus } from '@/core/events/EventBus'
+import { readOptionalGate } from '@/presentation/gate/PresentationGate'
 
 const GROUND_COLOR = 0x1c1712
 const SKY_COLOR = 0x11141c
@@ -48,7 +49,7 @@ import {
   getCultivateTexture,
   resolvePlayerVisualProfileId,
   type PlayerVisualProfileId,
-} from '@/game/support/PlayerVisualProfiles'
+} from '@/presentation/art/PlayerVisualProfiles'
 
 interface ResizeSize {
   width: number
@@ -98,9 +99,7 @@ export class MainScene extends Phaser.Scene {
       return
     }
 
-    const registryProfileId = this.registry.get('playerVisualProfileId') as
-      | PlayerVisualProfileId
-      | undefined
+    const registryProfileId = readOptionalGate(this.registry, 'playerVisualProfileId')
 
     if (registryProfileId && PLAYER_VISUAL_PROFILES[registryProfileId]) {
       this.player.profileId = registryProfileId
@@ -166,9 +165,7 @@ export class MainScene extends Phaser.Scene {
 
     // Player visual profile (plan §4.3) — static texture theo profile;
     // KHÔNG còn animation atlas idle/cultivate ở scene này.
-    const registryProfileId = this.registry.get('playerVisualProfileId') as
-      | PlayerVisualProfileId
-      | undefined
+    const registryProfileId = readOptionalGate(this.registry, 'playerVisualProfileId')
 
     const profileId =
       registryProfileId && PLAYER_VISUAL_PROFILES[registryProfileId]
@@ -186,9 +183,7 @@ export class MainScene extends Phaser.Scene {
 
     this.subscribeCombatEvents()
 
-    const adapter = this.registry.get('sceneAdapter') as {
-      reportReady: (ctx: { transitionId: number }) => void
-    } | undefined
+    const adapter = readOptionalGate(this.registry, 'sceneAdapter')
     adapter?.reportReady({ transitionId: this.initTransitionId })
 
     this.events.once('shutdown', this.shutdownHandler)
@@ -279,7 +274,7 @@ export class MainScene extends Phaser.Scene {
   }
 
   private subscribeCombatEvents() {
-    const eventBus = this.registry.get('eventBus') as EventBus | undefined
+    const eventBus = readOptionalGate(this.registry, 'eventBus')
 
     if (!eventBus) {
       return

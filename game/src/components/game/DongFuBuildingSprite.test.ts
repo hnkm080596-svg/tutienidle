@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h } from 'vue'
 import DongFuBuildingSprite from './DongFuBuildingSprite.vue'
-import { DONG_FU_BUILDING_ART } from '@/game/support/DongFuBuildingArt'
+import { DONG_FU_BUILDING_ART } from '@/presentation/background/DongFuBuildingArt'
 
 const pillRoomArt = DONG_FU_BUILDING_ART.find((entry) => entry.buildingId === 'pill_room')!
 

@@ -22,6 +22,6 @@ export const LEFT_PANEL_HEIGHT = DESIGN_HEIGHT - BOTTOM_BAR_HEIGHT - TOP_BAR_HEI
 // ui-discoverability-refactor-plan.md §3.3 (2026-08-29) — các hằng
 // COMBAT_TOP_BAR_HEIGHT / COMBAT_STATUS_BAR_HEIGHT / COMBAT_EVENT_BAR_HEIGHT /
 // COMBAT_CONTROL_BAR_HEIGHT ĐÃ XÓA: nguồn sự thật cho chrome combat là DOM
-// đo thật (getCombatInsets/setCombatInsets — xem src/game/support/combatInsets.ts,
+// đo thật (getCombatInsets/setCombatInsets — xem src/presentation/geometry/combatInsets.ts,
 // khớp CSS clamp() --combat-*-h trong theme.css); fallback tỉ lệ nằm ở
 // getFallbackCombatInsets() trong cùng module, KHÔNG còn ở đây.

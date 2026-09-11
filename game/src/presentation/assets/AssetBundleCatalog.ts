@@ -18,13 +18,12 @@ import {
 import {
   dongFuLayerList,
   type DongFuLayerDescriptor,
-} from '@/game/support/DongFuArt'
+} from '@/presentation/background/DongFuArt'
 import {
   peekThanhVanVariant,
   thanhVanLoadList,
-} from '@/game/support/ThanhVanArt'
+} from '@/presentation/background/ThanhVanBackdropArt'
 import {
-  allCombatAnimationSets,
   ENEMY_TEMPLATE_IDS,
   PLAYER_TEXTURE_KEY,
   PLAYER_TEXTURE_URL,
@@ -37,7 +36,8 @@ import {
   enemyTextureUrl,
   resolveEnemyTextureKey,
 } from '@/game/support/EnemyArt'
-import { PLAYER_VISUAL_PROFILES } from '@/game/support/PlayerVisualProfiles'
+import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
+import { animatedCombatEntities } from '@/presentation/art/CombatPresentationCatalogue'
 
 export type AssetBundleId = 'core-ui' | 'home' | 'combat' | 'tribulation'
 
@@ -168,17 +168,17 @@ export function getCombatDescriptors(): readonly AssetResourceDescriptor[] {
     }
   }
 
-  // Spritesheet placeholder clips
-  for (const { animationSet } of allCombatAnimationSets()) {
-    for (const clip of Object.values(animationSet)) {
+  // Character animation atlases (Spec B §3.1) — one entry per distinct sheet,
+  // however many entities and clips share it.
+  for (const { clips } of animatedCombatEntities()) {
+    for (const clip of Object.values(clips)) {
       if (seenKeys.has(clip.sheetKey)) continue
       seenKeys.add(clip.sheetKey)
       descriptors.push({
-        kind: 'spritesheet',
+        kind: 'atlas',
         key: clip.sheetKey,
-        url: clip.sheetUrl,
-        frameWidth: clip.frameWidth,
-        frameHeight: clip.frameHeight,
+        textureUrl: clip.sheetUrl,
+        atlasUrl: clip.atlasUrl,
       })
     }
   }

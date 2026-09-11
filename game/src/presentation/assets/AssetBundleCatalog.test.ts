@@ -9,14 +9,14 @@ import {
   getTribulationDescriptors,
 } from './AssetBundleCatalog'
 import {
-  allCombatAnimationSets,
   ENEMY_TEMPLATE_IDS,
   PLAYER_TEXTURE_KEY,
   queueCombatAssets,
 } from '@/game/support/CombatPreload'
 import { GOURD_TEXTURE_KEY } from '@/game/support/RewardGourd'
 import { resolveEnemyTextureKey } from '@/game/support/EnemyArt'
-import { PLAYER_VISUAL_PROFILES } from '@/game/support/PlayerVisualProfiles'
+import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
+import { animatedCombatEntities } from '@/presentation/art/CombatPresentationCatalogue'
 
 describe('AssetBundleCatalog', () => {
   it('core-ui contains ink-wash-ui atlas descriptor', () => {
@@ -58,7 +58,7 @@ describe('AssetBundleCatalog', () => {
       textures: { exists: () => false },
       load: {
         image: (key: string) => queuedKeys.add(key),
-        spritesheet: (key: string) => queuedKeys.add(key),
+        atlas: (key: string) => queuedKeys.add(key),
       },
     } as never
 
@@ -73,8 +73,8 @@ describe('AssetBundleCatalog', () => {
     }
 
     // Must contain animation sheet keys
-    for (const { animationSet } of allCombatAnimationSets()) {
-      for (const clip of Object.values(animationSet)) {
+    for (const { clips } of animatedCombatEntities()) {
+      for (const clip of Object.values(clips)) {
         expect(catalogKeys.has(clip.sheetKey)).toBe(true)
       }
     }

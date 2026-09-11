@@ -17,30 +17,38 @@ import Phaser from 'phaser'
 import {
   PLACEHOLDER_SHEET_KEY,
   PLACEHOLDER_SHEET_URL,
-  PLACEHOLDER_FRAME_WIDTH,
-  PLACEHOLDER_FRAME_HEIGHT,
+  PLACEHOLDER_ATLAS_URL,
+  PLACEHOLDER_FRAME_PREFIX,
+  PLACEHOLDER_FRAME_SUFFIX,
+  PLACEHOLDER_ZERO_PAD,
   PLACEHOLDER_FRAME_COUNT,
   PLACEHOLDER_FRAME_RATE,
-} from '@/game/support/CombatAnimationSet'
-import {
-  createBattleGridProjection,
-  computePerspectiveGeometry,
-  type BattleGridProjection,
-} from '@/game/support/BattleGridProjection'
+} from '@/presentation/art/CombatPresentationCatalogue'
+import type { BattleGridProjection } from '@/presentation/geometry/BattleGridProjection'
 import { STANDING_SLOT_COUNT } from '@/core/battle/BattlefieldRegions'
 import type { FormationSlotAssignment } from '@/core/player/Player'
 import type { LaneIndex } from '@/core/battle/BattleLane'
 import { CombatGridView } from './combat/combat-grid-view'
 import type { CombatGridViewHost } from './combat/CombatGridViewHost'
 import type { EntitySprite } from './combat/combatTypes'
+import { FORMATION_ASSIGNMENTS_EVENT } from '@/presentation/contracts/regionEvents'
+import {
+  createFormationProjection,
+  formationPerspectiveGeometry,
+  FORMATION_CANVAS_HEIGHT,
+  FORMATION_CANVAS_WIDTH,
+  FORMATION_MIN_ROAD_HEIGHT,
+} from '@/presentation/geometry/FormationCanvasSpec'
 
-// PANEL_WIDTH/HEIGHT must match PANEL_CANVAS_WIDTH/HEIGHT in
-// TranPhapPanel.vue exactly (Task 3, battlefield-perspective-panel plan)
-// -- the two files can't share scope, so this stays a duplicated
-// constant pair; changing one requires changing the other.
-export const PANEL_WIDTH = 420
-export const PANEL_HEIGHT = 480
-export const PERSPECTIVE_MIN_ROAD_HEIGHT_PANEL = 140
+// Canvas size has ONE owner now (V9): FormationCanvasSpec, under
+// presentation/geometry. It used to be declared here and again in
+// TranPhapPanel.vue, kept in sync by a comment -- which is not a mechanism.
+// Re-exported under the old local names so every use site below reads the
+// same as before.
+export const PANEL_WIDTH = FORMATION_CANVAS_WIDTH
+export const PANEL_HEIGHT = FORMATION_CANVAS_HEIGHT
+// Re-exported for existing consumers; the value's owner is FormationCanvasSpec.
+export const PERSPECTIVE_MIN_ROAD_HEIGHT_PANEL = FORMATION_MIN_ROAD_HEIGHT
 
 const PANEL_SKY_COLOR = 0x22283a
 const PANEL_GROUND_COLOR = 0x1a1a1a
@@ -92,19 +100,25 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
   }
 
   preload(): void {
-    this.load.spritesheet(PLACEHOLDER_SHEET_KEY, PLACEHOLDER_SHEET_URL, {
-      frameWidth: PLACEHOLDER_FRAME_WIDTH,
-      frameHeight: PLACEHOLDER_FRAME_HEIGHT,
-    })
+    // Atlas, matching combat (Spec B §3.1). The preview and the real battle
+    // load the same placeholder the same way, so a format problem cannot show
+    // up in one and not the other.
+    this.load.atlas(PLACEHOLDER_SHEET_KEY, PLACEHOLDER_SHEET_URL, PLACEHOLDER_ATLAS_URL)
   }
 
   create(): void {
     this.gridView = new CombatGridView(this)
 
-    const geometry = computePerspectiveGeometry(
-      { width: PANEL_WIDTH, height: PANEL_HEIGHT, topInset: 0, bottomInset: 0 },
-      PERSPECTIVE_MIN_ROAD_HEIGHT_PANEL,
-    )
+    // V10 / §3.6 surface two: the shell addresses the REGION, not this object.
+    // Subscribing here rather than exposing a method means the shell can send
+    // what this file names and nothing else. Unsubscribed on shutdown, because
+    // the emitter is the Game's and outlives a scene restart.
+    this.game.events.on(FORMATION_ASSIGNMENTS_EVENT, this.assignmentsHandler)
+    this.events.once('shutdown', () => {
+      this.game.events.off(FORMATION_ASSIGNMENTS_EVENT, this.assignmentsHandler)
+    })
+
+    const geometry = formationPerspectiveGeometry()
 
     // 2 lớp nền phẳng (sky/ground) — KHÔNG dùng attachBattlefieldBackdrop()
     // của combat thật (sao/trăng/núi/đá quá cầu kỳ cho panel test, và
@@ -116,20 +130,22 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
       .rectangle(0, geometry.horizonY, PANEL_WIDTH, geometry.roadHeight, PANEL_GROUND_COLOR)
       .setOrigin(0, 0)
 
-    this.projection = createBattleGridProjection(
-      'perspective',
-      { width: PANEL_WIDTH, height: PANEL_HEIGHT, topInset: 0, bottomInset: 0 },
-      STANDING_SLOT_COUNT,
-      STANDING_SLOT_COUNT,
-      PERSPECTIVE_MIN_ROAD_HEIGHT_PANEL,
-    )
+    // Same factory the shell calls (FormationCanvasSpec) — the five parameters
+    // are declared once and neither layer restates them (§3.6.2).
+    this.projection = createFormationProjection()
     this.gridGraphics = this.add.graphics()
     this.gridView.redrawGridLines()
 
     if (!this.anims.exists(PREVIEW_IDLE_ANIMATION_KEY)) {
       this.anims.create({
         key: PREVIEW_IDLE_ANIMATION_KEY,
-        frames: this.anims.generateFrameNumbers(PLACEHOLDER_SHEET_KEY, { start: 0, end: PLACEHOLDER_FRAME_COUNT - 1 }),
+        frames: this.anims.generateFrameNames(PLACEHOLDER_SHEET_KEY, {
+          prefix: PLACEHOLDER_FRAME_PREFIX,
+          suffix: PLACEHOLDER_FRAME_SUFFIX,
+          start: 0,
+          end: PLACEHOLDER_FRAME_COUNT - 1,
+          zeroPad: PLACEHOLDER_ZERO_PAD,
+        }),
         frameRate: PLACEHOLDER_FRAME_RATE,
         repeat: -1,
       })
@@ -146,6 +162,9 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
    * hiện → getOrCreateSprite() tạo sprite mới, play() từ frame 0 (đúng —
    * chưa từng animate trong panel này).
    */
+  private readonly assignmentsHandler = (assignments: FormationSlotAssignment[]) =>
+    this.syncAssignments(assignments)
+
   syncAssignments(assignments: FormationSlotAssignment[]): void {
     const nextIds = new Set(assignments.map((a) => a.combatantId))
 

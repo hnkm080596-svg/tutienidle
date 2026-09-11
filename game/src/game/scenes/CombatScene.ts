@@ -1,6 +1,11 @@
 ﻿import Phaser from 'phaser'
 import type { ResumePlayback } from '@/core/battle/turn/CombatAnimationRuntime'
 import type { EventBus } from '@/core/events/EventBus'
+import {
+  readOptionalGate,
+  writeGate,
+  type DomainCommandPort,
+} from '@/presentation/gate/PresentationGate'
 import type {
   BattlePositionsEvent,
   BattleEndEvent,
@@ -19,19 +24,19 @@ import {
   HERO_LANE_INDEX,
   type LaneIndex,
 } from '@/core/battle/BattleLane'
-import { getCombatInsets, getFallbackCombatInsets } from '@/game/support/combatInsets'
+import { getCombatInsets, getFallbackCombatInsets } from '@/presentation/geometry/combatInsets'
 import { PlayerHudLayer } from './combat/PlayerHudLayer'
-import { readKiemBar } from '@/game/support/kiemBarBridge'
+import { readKiemBar } from '@/presentation/bridges/kiemBarBridge'
 import type { GridPosition } from '@/core/battle/BattleGrid'
 import {
   createBattleGridProjection,
   type BattlefieldGeometrySnapshot,
   type BattleGridProjection,
-} from '@/game/support/BattleGridProjection'
+} from '@/presentation/geometry/BattleGridProjection'
 import {
   getBattlefieldRenderMode,
   type BattlefieldRenderMode,
-} from '@/game/support/BattlefieldRenderMode'
+} from '@/presentation/geometry/BattlefieldRenderMode'
 import { spawnActionImpactVfx, toVector2Points } from '@/game/support/ActionImpactVfx'
 import {
   spawnEnemySpawnVfx,
@@ -44,7 +49,7 @@ import {
   type PlayerBodyAnchorId,
   type PlayerVisualProfile,
   type PlayerVisualProfileId,
-} from '@/game/support/PlayerVisualProfiles'
+} from '@/presentation/art/PlayerVisualProfiles'
 import {
   GOURD_MOUTH_ANCHOR,
   GOURD_PLACEHOLDER_SIZE,
@@ -78,12 +83,13 @@ import {
   type ThanhVanVariant,
 } from '@/game/support/ThanhVanArt'
 import { attachThanhVanBackdrop, type ThanhVanBackdropHandle } from '@/game/support/ThanhVanBackdrop'
-import { queueCombatAssets, allCombatAnimationSets } from '@/game/support/CombatPreload'
+import { queueCombatAssets, animatedCombatAnimationSets } from '@/game/support/CombatPreload'
 import {
   combatAnimationKey,
+  type CombatAnimationCatalogue,
   type CombatAnimationName,
-  type CombatAnimationSet,
-} from '@/game/support/CombatAnimationSet'
+} from '@/presentation/art/CombatEntityPresentation'
+import { presentationFor } from '@/presentation/art/CombatPresentationCatalogue'
 import type { CombatEvent } from '@/core/combat/CombatEvent'
 import type { CombatHealEvent, EntityVitalsChangedEvent } from '@/core/combat/EntityVitalsSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
@@ -544,13 +550,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   private debugAnchorHandler = () => this.drawDebugBodyAnchors()
   // Action Playback Task 7 (2026-09-05) — GameManager bridge (set trong
   // subscribeCombatEvents từ registry; scene KHÔNG import trực tiếp).
-  private gameManagerRef?: {
-    setPresentationActive?: (active: boolean) => void
-    acknowledgeTurnReady: (token?: string) => void
-    acknowledgeActionImpact: (token?: string) => void
-    acknowledgeActionComplete: (token?: string) => void
-    getPendingPlaybackToken: () => string | null
-  }
+  private gameManagerRef?: DomainCommandPort
 
   private getCombatEventBindings(): Array<[string, (event: any) => void]> {
     return [
@@ -684,22 +684,20 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     // registry TRÃ†Â¯Ã¡Â»Å¡C khi dÃ¡Â»Â±ng sprite Ã„â€˜Ã¡Â»Æ’ khÃƒÂ´ng bÃ¡Â»Â lÃ¡Â»Â¡ trÃ¡ÂºÂ¡ng thÃƒÂ¡i khi scene
     // khÃ¡Â»Å¸i Ã„â€˜Ã¡Â»â„¢ng; cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t vÃ¡Â»Â sau qua event
     // 'player_visual_profile_changed' (subscribeCombatEvents).
-    const registryProfileId = this.registry.get('playerVisualProfileId') as
-      | PlayerVisualProfileId
-      | undefined
+    const registryProfileId = readOptionalGate(this.registry, 'playerVisualProfileId')
 
     if (registryProfileId && PLAYER_VISUAL_PROFILES[registryProfileId]) {
       this.applyPlayerVisualProfile(registryProfileId)
     }
 
-    // Combat Art Pipeline Task 9 (2026-09-05) — đăng ký animation placeholder
-    // cho MỌI entity combat (player theo mọi profile + enemy theo mọi
-    // template Mortal), CÙNG danh sách allCombatAnimationSets() mà
-    // queueCombatAssets() (preload()) dùng để load spritesheet — 2 nơi
-    // không bao giờ lệch key. preload() → loader COMPLETE → create() là thứ
+    // Spec B §3.2 (2026-09-11) — register animations for ANIMATED entities
+    // only. This used to walk every combat entity; enemies are `kind: 'static'`
+    // now, and registering their clips would leave a loaded gun beside
+    // playCombatAnimation(). Same list queueCombatAssets() (preload()) loads
+    // the atlas from, so the two can never name different keys. preload() → loader COMPLETE → create() là thứ
     // tự chuẩn của Phaser Scene nên texture các sheetKey này đã sẵn sàng.
-    for (const { entityKey, animationSet } of allCombatAnimationSets()) {
-      this.registerCombatAnimations(entityKey, animationSet)
+    for (const { entityKey, clips } of animatedCombatAnimationSets()) {
+      this.registerCombatAnimations(entityKey, clips)
     }
 
     // Reward gourd (plan Ã‚Â§6 + Ã‚Â§8) Ã¢â‚¬â€ art thÃ¡ÂºÂ­t nÃ¡ÂºÂ¿u texture sÃ¡ÂºÂµn sÃƒÂ ng,
@@ -727,6 +725,13 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
     player.rect.setVisible(false)
 
+    // Spec B §4.5/§6 B7 (2026-09-11) — `idle` finally has a call site. It was
+    // built for every entity and never played in combat at all (§2.3): the
+    // player stood on a single frozen frame between turns. This is the default
+    // state, played the moment the sprite exists, and the one every other clip
+    // returns to.
+    this.playCombatAnimation(player, PLAYER_ID, 'idle')
+
     this.playerMaterialized = false
     this.snapInterpolationTarget(PLAYER_ID, HERO_COLUMN)
     this.positionSprite(player, HERO_COLUMN)
@@ -746,13 +751,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this._playerHud?.setVisible(this.inBattle)
 
     // Initial snapshot reconciliation via GameManager query (Task 4/10)
-    const gameManager = this.registry.get('gameManager') as {
-      getCombatPresentationSnapshot?: (sessionId: number) => {
-        sessionId: number
-        entities: TurnBattleEntitySnapshotEvent
-      } | null
-      preparePresentationResume?: () => ResumePlayback | null
-    } | undefined
+    const gameManager = readOptionalGate(this.registry, 'gameManager')
 
     if (this.initSessionId && gameManager?.getCombatPresentationSnapshot) {
       const initialSnapshot = gameManager.getCombatPresentationSnapshot(this.initSessionId)
@@ -761,9 +760,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       }
     } else {
       // Fallback for standalone/legacy tests that don't supply sessionId
-      const snapshot = this.registry.get('lastBattlePositionsSnapshot') as
-        | { event: BattlePositionsEvent; at: number }
-        | undefined
+      const snapshot = readOptionalGate(this.registry, 'lastBattlePositionsSnapshot')
 
       if (snapshot && performance.now() - snapshot.at < 2000) {
         this.onPositions(snapshot.event)
@@ -773,9 +770,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.inBattle = true
 
     // Report READY to adapter
-    const adapter = this.registry.get('sceneAdapter') as {
-      reportReady: (ctx: { transitionId: number; sessionId?: number }) => void
-    } | undefined
+    const adapter = readOptionalGate(this.registry, 'sceneAdapter')
     adapter?.reportReady({
       transitionId: this.initTransitionId,
       sessionId: this.initSessionId,
@@ -1087,7 +1082,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
     // Snapshot hÃƒÂ¬nh hÃ¡Â»Âc cho e2e/visual gate Ã¢â‚¬â€ assertion bÃ¡Â»â€˜ cÃ¡Â»Â¥c (tÃ¡Â»â€° lÃ¡Â»â€¡
     // horizon, min road height) Ã„â€˜Ã¡Â»Âc tÃ¡Â»Â« Ã„â€˜ÃƒÂ¢y thay vÃƒÂ¬ Ã„â€˜o pixel.
-    this.game.registry.set('battlefieldGeometry', {
+    writeGate(this.game.registry, 'battlefieldGeometry', {
       viewportWidth: width,
       viewportHeight: height,
       topInset: viewport.topInset,
@@ -1311,15 +1306,24 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // `entityKey` không dùng trực tiếp trong thân hàm (mỗi clip đã tự mang
   // đủ key/sheetKey) — giữ tham số vì chữ ký khớp cách gọi tại create() và
   // để log/mở rộng sau này (vd. gắn nhãn lỗi khi generateFrameNumbers rỗng).
-  private registerCombatAnimations(_entityKey: string, animationSet: CombatAnimationSet): void {
-    for (const clip of Object.values(animationSet)) {
+  private registerCombatAnimations(_entityKey: string, clips: CombatAnimationCatalogue): void {
+    for (const clip of Object.values(clips)) {
       if (this.anims.exists(clip.key)) {
         continue
       }
 
       this.anims.create({
         key: clip.key,
-        frames: this.anims.generateFrameNumbers(clip.sheetKey, { start: 0, end: clip.frameCount - 1 }),
+        // Frame NAMES, not indices — the clip describes a TexturePacker atlas
+        // (Spec B §3.1/§4.2), so a frame is `frame_` + a zero-padded number
+        // + `.png` rather than an offset into a uniform grid.
+        frames: this.anims.generateFrameNames(clip.sheetKey, {
+          prefix: clip.framePrefix,
+          suffix: clip.frameSuffix,
+          start: clip.firstFrame,
+          end: clip.lastFrame,
+          zeroPad: clip.zeroPad,
+        }),
         frameRate: clip.frameRate,
         repeat: clip.repeat,
       })
@@ -1343,10 +1347,27 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   /**
+   * Spec B §3.2 — is this entity's art ANIMATED, or a still image?
+   *
+   * One question, asked of the catalogue, in the one place that plays clips.
+   * A static entity is not a degraded animated one: it has no clips at all, and
+   * asking for one is a no-op rather than a fallback.
+   */
+  private isAnimatedEntity(entityKey: string): boolean {
+    return presentationFor(entityKey)?.kind === 'animated'
+  }
+
+  /**
    * Phát 1 animation clip cho actor NẾU sprite là Sprite thật (kind ===
    * 'sprite') VÀ clip đó đã được registerCombatAnimations() đăng ký —
    * no-op an toàn cho Rectangle fallback (enemy ngoài batch) hoặc clip
    * chưa/không tồn tại (test fixture không stub this.anims đầy đủ).
+   *
+   * Spec B §3.2 (2026-09-11) — AND the entity's art is animated. Before this,
+   * an enemy taking its turn played the 32-frame placeholder, which SWAPPED its
+   * texture from its own Mortal PNG to a numbered stick figure for the length of
+   * the clip. Enemies are static now; their motion is the bob in
+   * `combat-grid-view.ts`.
    */
   private playCombatAnimation(
     sprite: EntitySprite,
@@ -1359,7 +1380,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
     const prefix = this.entityAnimationKeyPrefix(actorId)
 
-    if (!prefix) {
+    if (!prefix || !this.isAnimatedEntity(prefix)) {
       return
     }
 
@@ -1369,7 +1390,36 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       return
     }
 
-    ;(sprite.rect as Phaser.GameObjects.Sprite).play(key)
+    const gameSprite = sprite.rect as Phaser.GameObjects.Sprite
+
+    gameSprite.play(key)
+
+    // Spec B §4.5 — `idle` is the state every other clip returns to.
+    //
+    // Without this a one-shot leaves the sprite frozen on its last frame until
+    // something else happens to play. `death` is excluded: it has its own
+    // completion handler in onDeath(), which finalises and destroys the sprite,
+    // and returning a corpse to idle would undo it.
+    if (name === 'idle' || name === 'death') {
+      return
+    }
+
+    const idleKey = combatAnimationKey(prefix, 'idle')
+
+    if (!this.anims.exists(idleKey) || typeof gameSprite.once !== 'function') {
+      return
+    }
+
+    gameSprite.once(
+      Phaser.Animations.Events.ANIMATION_COMPLETE,
+      (anim: Phaser.Animations.Animation) => {
+        if (anim.key !== key) {
+          return
+        }
+
+        gameSprite.play(idleKey)
+      },
+    )
   }
 
   private clearSceneState() {
@@ -1720,7 +1770,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   private subscribeCombatEvents() {
-    const eventBus = this.registry.get('eventBus') as EventBus | undefined
+    const eventBus = readOptionalGate(this.registry, 'eventBus')
 
     if (!eventBus) {
       return
@@ -1738,15 +1788,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     // VFX tween complete) thay vì resolve instant headless.
     // Remediation Task 1+2 — bridge cũng expose token getter; ack từ VFX
     // completion gắn token để stale callback bị engine từ chối.
-    this.gameManagerRef = this.registry.get('gameManager') as
-      | {
-          setPresentationActive?: (active: boolean) => void
-          acknowledgeTurnReady: (token?: string) => void
-          acknowledgeActionImpact: (token?: string) => void
-          acknowledgeActionComplete: (token?: string) => void
-          getPendingPlaybackToken: () => string | null
-        }
-      | undefined
+    this.gameManagerRef = readOptionalGate(this.registry, 'gameManager')
   }
 
   private unsubscribeCombatEvents() {
@@ -2254,8 +2296,13 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     }
 
     if (sprite.kind === 'sprite') {
+      // Spec B §3.2 — this path bypasses playCombatAnimation() because it needs
+      // the ANIMATION_COMPLETE callback, so it has to ask the same question
+      // itself. A static enemy plays no death clip; the rotate/fade tween below
+      // is what it dies by, and always was.
       const prefix = this.entityAnimationKeyPrefix(id)
-      const deathKey = prefix ? combatAnimationKey(prefix, 'death') : undefined
+      const animated = prefix !== undefined && this.isAnimatedEntity(prefix)
+      const deathKey = animated && prefix ? combatAnimationKey(prefix, 'death') : undefined
 
       if (deathKey && this.anims.exists(deathKey)) {
         animDone = false
@@ -2387,13 +2434,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
     this.onBattleStart()
 
-    const gameManager = this.registry.get('gameManager') as {
-      getCombatPresentationSnapshot?: (sessionId: number) => {
-        sessionId: number
-        entities: TurnBattleEntitySnapshotEvent
-      } | null
-      preparePresentationResume?: () => ResumePlayback | null
-    } | undefined
+    const gameManager = readOptionalGate(this.registry, 'gameManager')
 
     if (context.sessionId && gameManager?.getCombatPresentationSnapshot) {
       const snapshot = gameManager.getCombatPresentationSnapshot(context.sessionId)
@@ -2402,9 +2443,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       }
     }
 
-    const adapter = this.registry.get('sceneAdapter') as {
-      reportReady: (ctx: { transitionId: number; sessionId?: number }) => void
-    } | undefined
+    const adapter = readOptionalGate(this.registry, 'sceneAdapter')
     adapter?.reportReady(context)
 
     this.applyResumePlayback(gameManager?.preparePresentationResume?.())

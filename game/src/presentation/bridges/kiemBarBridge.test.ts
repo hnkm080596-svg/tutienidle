@@ -14,7 +14,7 @@ import {
   readKiemBar,
   registerKiemBarReader,
   type KiemBarPlayerState,
-} from './kiemBarBridge'
+} from '@/presentation/bridges/kiemBarBridge'
 
 function fakeBattle(
   state: BattleState,

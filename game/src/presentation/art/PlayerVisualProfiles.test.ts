@@ -4,7 +4,7 @@ import {
   getBodyAnchors,
   getCultivateTexture,
   resolvePlayerVisualProfileId,
-} from './PlayerVisualProfiles'
+} from '@/presentation/art/PlayerVisualProfiles'
 
 // Player visual profile catalog (plan §4.1 + §9 unit tests):
 // - chọn đúng profile theo realmId/cultivationPath;

@@ -17,7 +17,7 @@ import Phaser from 'phaser'
 import type { CellArea, GridPosition } from '@/core/battle/BattleGrid'
 import type { CombatVfxPreset } from '@/data/vfx/CombatVfxPresets'
 import { DEPTH_GROUND_VFX } from './BattleLayers'
-import type { BattleGridProjection } from './BattleGridProjection'
+import type { BattleGridProjection } from '@/presentation/geometry/BattleGridProjection'
 
 export interface ActionImpactVfxParams {
   scene: Phaser.Scene

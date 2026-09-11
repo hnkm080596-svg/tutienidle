@@ -1,4 +1,4 @@
-import type { ThanhVanVariant } from './ThanhVanArt'
+import type { ThanhVanVariant } from './BackgroundVariant'
 
 const TIME_LAYERS = [
   { file: '00-sky', shiftX: 0, shiftY: 0, motion: 'static' },

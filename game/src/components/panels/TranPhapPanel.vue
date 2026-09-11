@@ -15,9 +15,8 @@
 // does not exist), same OverlayPanel pattern as every other standalone
 // panel (SkillPathPanel.vue, ArtifactPanel.vue...). Opened via the
 // command wheel slot 'formation_slot' (game/support/commandWheelCatalog.ts).
-import { computed, onUnmounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type Phaser from 'phaser'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useStateVersion } from '@/composables/useGameState'
@@ -27,15 +26,20 @@ import type { TranPhapDefinition } from '@/data/formation/TranPhap'
 import type { FormationSlotAssignment } from '@/core/player/Player'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import { STANDING_SLOT_COUNT } from '@/core/battle/BattlefieldRegions'
-// Battlefield Perspective Panel (2026-09-06) - Phaser canvas is 420x480
-// (larger than the pure grid to have room for perspective depth, see
-// spec section 3). Panel canvas does NOT change size in the standing-slot
-// rework - only the grid cell count drops 6x6 -> 3x3 (same canvas, bigger
-// cells).
-const PANEL_CANVAS_WIDTH = 420
-const PANEL_CANVAS_HEIGHT = 480
-import type { TranPhapCombatPreviewScene } from '@/game/scenes/TranPhapCombatPreviewScene'
-import type { SlotState } from '@/game/support/SlotState'
+// Battlefield Perspective Panel (2026-09-06) - the canvas is larger than the
+// pure grid to leave room for perspective depth (spec section 3). The size now
+// comes from FormationCanvasSpec, its single owner (V9); this file no longer
+// declares it.
+import {
+  createFormationProjection,
+  FORMATION_CANVAS_HEIGHT,
+  FORMATION_CANVAS_WIDTH,
+} from '@/presentation/geometry/FormationCanvasSpec'
+import { createProjectionBridge } from '@/presentation/geometry/ProjectionBridge'
+import { formationSlotStyle } from '@/presentation/geometry/formationSlotBoxes'
+import { useDynamicRegion } from '@/presentation/host/useDynamicRegion'
+import { FORMATION_ASSIGNMENTS_EVENT } from '@/presentation/contracts/regionEvents'
+import type { SlotState } from '@/presentation/contracts/SlotState'
 
 const ui = useUiStore()
 const player = usePlayerStore()
@@ -64,6 +68,37 @@ function assignmentAt(row: number, column: number): FormationSlotAssignment | un
 // SlotState dùng chung, để nếu sau này combat thật cần state tương tự
 // (targeting thủ công, tooltip theo ô) không phải bịa lại tên khác.
 const hoveredCell = ref<{ row: number; column: number } | null>(null)
+
+// V8 — slot hit-zones are derived from the SAME projection the canvas draws
+// with, via the shared factory in FormationCanvasSpec (§3.6.2). Before this,
+// the DOM grid was a uniform 56px CSS grid laid over a perspective canvas: the
+// two could not align, and because the absolutely-positioned canvas left the
+// container to be sized by that 176px grid, most of the 420x480 render was
+// clipped away and never seen.
+//
+// The canvas already draws the grid lines (CombatGridView.redrawGridLines), so
+// the overlay draws no grid of its own. Its job is hit-testing and state tint.
+//
+// clip-path rather than SVG polygons on purpose: clip-path clips pointer events
+// too, so the trapezoid becomes the hit area while the existing HTML5
+// drag-and-drop handlers keep working untouched. SVG elements support native
+// DnD inconsistently, and swapping the interaction model is Phase 3's job, not
+// a side effect of fixing alignment.
+const slotBridge = createProjectionBridge(createFormationProjection())
+
+function slotStyle(row: number, column: number): Record<string, string> {
+  return formationSlotStyle(slotBridge, row, column, {
+    width: FORMATION_CANVAS_WIDTH,
+    height: FORMATION_CANVAS_HEIGHT,
+  })
+}
+
+// The stack keeps the canvas's aspect ratio and shrinks to whatever height the
+// panel can spare. The overlay is expressed in percent, so it follows exactly.
+const stackStyle = {
+  aspectRatio: `${FORMATION_CANVAS_WIDTH} / ${FORMATION_CANVAS_HEIGHT}`,
+  maxWidth: `${FORMATION_CANVAS_WIDTH}px`,
+}
 
 function slotStateAt(row: number, column: number): SlotState {
   if (!isLitCell(row, column)) {
@@ -190,74 +225,58 @@ function close() {
 // nơi nhận @dragover/@drop thật, giữ nguyên 100% logic đã có.
 const previewContainerRef = ref<HTMLDivElement | null>(null)
 
-let previewGame: Phaser.Game | null = null
-let previewScene: TranPhapCombatPreviewScene | null = null
+// V4/V10 — the hosting mechanics (dynamic import, construction, teardown
+// ordering, the close-during-boot race, the local error boundary) belong to
+// useDynamicRegion, not to this panel; and this panel no longer holds the
+// scene. It holds a region handle and sends it one named event (§3.6).
+const previewRegion = useDynamicRegion({
+  container: previewContainerRef,
 
-// Bootstrap Phaser CHỈ khi panel thật sự mở — container ref (bên trong
-// slot của OverlayPanel) chỉ tồn tại trong DOM lúc `open`, nên onMounted
-// của CHÍNH component này (chạy 1 lần lúc GameRoot boot) không đủ — phải
-// theo dõi bằng watch() điều kiện panel mở/đóng.
+  // Fixed size, so no ResizeObserver: the preview canvas is exactly the size
+  // FormationCanvasSpec declares, and the CSS scales it to fit the panel.
+  size: { width: FORMATION_CANVAS_WIDTH, height: FORMATION_CANVAS_HEIGHT },
+
+  config: {
+    transparent: true,
+    // Crash fix (standing-slot plan Task 6, 2026-09-07) — missing physics
+    // config made the bootstrap crash when dropping a unit into the panel
+    // (CombatGridView/sprite pipeline touches the physics world). Mirrors
+    // PhaserCanvas.vue's real-combat bootstrap exactly.
+    physics: { default: 'arcade', arcade: { gravity: { x: 0, y: 0 }, debug: false } },
+  },
+
+  load: async () => {
+    const [{ default: Phaser }, { TranPhapCombatPreviewScene }] = await Promise.all([
+      import('phaser'),
+      import('@/game/scenes/TranPhapCombatPreviewScene'),
+    ])
+
+    return { Phaser, scenes: [TranPhapCombatPreviewScene] }
+  },
+
+  onReady: () => {
+    previewRegion.dispatch(FORMATION_ASSIGNMENTS_EVENT, currentAssignments.value)
+  },
+})
+
+// Bootstrap only while the panel is actually open — the container ref lives
+// inside OverlayPanel's slot, so it exists in the DOM only then, and this
+// component's own onMounted (which runs once at GameRoot boot) is too early.
 watch(
   () => ui.standalonePanel === 'tran_phap',
-  async (isOpen) => {
+  (isOpen) => {
     if (isOpen) {
-      const container = previewContainerRef.value
-
-      if (!container) {
-        return
-      }
-
-      const [{ default: Phaser }, { TranPhapCombatPreviewScene: TranPhapCombatPreviewSceneClass }] = await Promise.all([
-        import('phaser'),
-        import('@/game/scenes/TranPhapCombatPreviewScene'),
-      ])
-
-      // Panel có thể đã đóng lại trong lúc 2 dynamic import trên đang
-      // chạy (đóng rất nhanh) — kiểm tra lại trước khi tạo Game để
-      // tránh Game mồ côi không ai destroy.
-      if (ui.standalonePanel !== 'tran_phap' || !previewContainerRef.value) {
-        return
-      }
-
-      previewGame = new Phaser.Game({
-        type: Phaser.AUTO,
-        parent: previewContainerRef.value,
-        width: PANEL_CANVAS_WIDTH,
-        height: PANEL_CANVAS_HEIGHT,
-        transparent: true,
-        // Crash fix (standing-slot plan Task 6, 2026-09-07) — missing
-        // physics config made the Phaser.Game bootstrap crash when dropping
-        // a unit into the panel (CombatGridView/sprite pipeline touches the
-        // physics world via this.physics). Mirrors PhaserCanvas.vue's
-        // real-combat bootstrap exactly: arcade, gravity 0, debug false.
-        physics: { default: 'arcade', arcade: { gravity: { x: 0, y: 0 }, debug: false } },
-        scene: [TranPhapCombatPreviewSceneClass],
-      })
-
-      previewGame.events.once('ready', () => {
-        previewScene = (previewGame?.scene.getScene('TranPhapCombatPreviewScene') as TranPhapCombatPreviewScene | undefined) ?? null
-        previewScene?.syncAssignments(currentAssignments.value)
-      })
+      previewRegion.start()
     } else {
-      previewGame?.destroy(true)
-      previewGame = null
-      previewScene = null
+      previewRegion.destroy()
     }
   },
   { flush: 'post' },
 )
 
-// Đồng bộ sprite mỗi khi assignment đổi (kéo-thả) trong lúc panel đang mở.
+// Keep sprites in step with drag-and-drop while the panel is open.
 watch(currentAssignments, (assignments) => {
-  previewScene?.syncAssignments(assignments)
-})
-
-// An toàn phòng trường hợp panel đang mở mà GameRoot bị unmount (watch
-// ở trên chỉ destroy khi panel ĐÓNG, không chạy khi component biến mất).
-onUnmounted(() => {
-  previewGame?.destroy(true)
-  previewGame = null
-  previewScene = null
+  previewRegion.dispatch(FORMATION_ASSIGNMENTS_EVENT, assignments)
 })
 </script>
 
@@ -265,15 +284,16 @@ onUnmounted(() => {
   <OverlayPanel :open="ui.standalonePanel === 'tran_phap'" :title="t('panels.tranPhap.title')" width="min(1000px, 94vw)" height="min(680px, 88vh)" @close="close">
     <div class="tran-phap-panel">
       <div class="tran-phap-panel__body">
-        <div class="tran-phap-panel__grid-stack">
+        <div class="tran-phap-panel__grid-stack" :style="stackStyle">
           <div ref="previewContainerRef" class="tran-phap-panel__preview-canvas"></div>
 
           <div class="tran-phap-panel__grid tran-phap-panel__grid--overlay">
-            <div v-for="row in STANDING_SLOT_COUNT" :key="row" class="tran-phap-panel__row">
+            <template v-for="row in STANDING_SLOT_COUNT" :key="row">
               <div
                 v-for="column in STANDING_SLOT_COUNT"
-                :key="column"
+                :key="`${row}-${column}`"
                 :class="['tran-phap-panel__cell', `tran-phap-panel__cell--${slotStateAt(row - 1, column - 1)}`]"
+                :style="slotStyle(row - 1, column - 1)"
                 :draggable="!!assignmentAt(row - 1, column - 1)"
                 @dragstart="(event) => { const occupant = assignmentAt(row - 1, column - 1); if (occupant) (event as DragEvent).dataTransfer?.setData('text/plain', occupant.combatantId) }"
                 @dragenter="hoveredCell = { row: row - 1, column: column - 1 }"
@@ -284,7 +304,7 @@ onUnmounted(() => {
               >
                 {{ assignmentAt(row - 1, column - 1)?.combatantId ?? '' }}
               </div>
-            </div>
+            </template>
           </div>
         </div>
 
@@ -341,8 +361,15 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: var(--space-3, 12px);
+  overflow-y: auto;
 }
 
+/* V8 — the body sizes to its content instead of being squeezed.
+   It used to be `flex: 1 1 auto; min-height: 0`, which was harmless while the
+   grid stack was 176px tall: nothing ever hit the limit. With the stack at the
+   canvas's real 480px, a shrunken body let it overflow and cover the roster
+   queue below. The panel scrolls if a short viewport cannot fit everything,
+   rather than silently overlapping. */
 .tran-phap-panel__body {
   flex: 1 1 auto;
   min-height: 0;
@@ -350,46 +377,60 @@ onUnmounted(() => {
   gap: var(--space-4, 16px);
 }
 
+/* V8 — the stack now declares the canvas's own size (FormationCanvasSpec).
+   It used to have none, so an absolutely-positioned canvas left the overlay
+   grid to size it: 176px, clipping ~85% of a 420x480 render. */
 .tran-phap-panel__grid-stack {
   position: relative;
+  flex: 0 1 auto;
+  min-height: 0;
+  height: 100%;
 }
 
 .tran-phap-panel__preview-canvas {
   position: absolute;
   inset: 0;
+  /* The Phaser canvas renders at its declared backing size and is CSS-scaled
+     to whatever the stack can spare. The overlay is in percent, so it scales
+     with it rather than beside it. */
   z-index: 0;
-  /* Canvas Phaser 420x480 (PANEL_CANVAS_* ở trên) — overlay grid 3x3 lưới
-     slot vẽ PHỦ lên trên; canvas/overlay alignment là known limitation
-     (spec Part 2 Non-Goals, needs its own future plan). */
+  /* Canvas size: FormationCanvasSpec (presentation/geometry) — overlay grid
+     3x3 lưới slot vẽ PHỦ lên trên. Canvas/overlay alignment VẪN LÀ khuyết tật
+     đã biết: lưới DOM là ô vuông đều, canvas vẽ hình thang phối cảnh, và
+     container này bị lưới overlay quy định kích thước nên phần lớn canvas bị
+     cắt. Xem V8 trong
+     docs/superpowers/specs/2026-09-11-frontend-static-dynamic-boundary-design.md
+     — có plan riêng, KHÔNG sửa ở đợt dời hằng số này. */
   overflow: hidden;
 }
 
-.tran-phap-panel__grid {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
+/* Overlay covers the canvas exactly; each cell is placed by the projection,
+   so there is no CSS grid left to disagree with what Phaser drew. */
 .tran-phap-panel__grid--overlay {
-  position: relative;
+  position: absolute;
+  inset: 0;
   z-index: 1;
-  /* Ô vẫn giữ background/border cũ để vẫn thấy rõ vùng lit khi kéo-thả —
-     Phaser canvas vẽ NGAY BÊN DƯỚI, không che overlay tương tác. */
 }
 
-.tran-phap-panel__row {
-  display: flex;
-  gap: 4px;
+.tran-phap-panel__preview-canvas :deep(canvas),
+.tran-phap-panel__preview-canvas canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
 }
 
 .tran-phap-panel__cell {
-  width: 56px;
-  height: 56px;
+  position: absolute;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--surface-line);
   font-size: var(--text-xs, 11px);
+  /* No border: the canvas below already draws the grid lines
+     (CombatGridView.redrawGridLines), and a rectangular border cannot follow a
+     clipped trapezoid anyway. The overlay tints state; the canvas draws shape.
+     clip-path also clips POINTER EVENTS, which is what makes the trapezoid the
+     real hit area and lets the existing drag-and-drop handlers stay as they
+     are. */
 }
 
 /* SlotState (Battlefield Slot spec, 2026-09-06) — 'locked' giữ đúng look
@@ -397,29 +438,32 @@ onUnmounted(() => {
    sáng cũ (--lit trước đây = true); 'hover' thêm viền nhấn khi đang kéo
    một quân TỚI ô này (chỉ hiện trên ô enabled, chưa có ai chiếm — xem
    slotStateAt()'s thứ tự ưu tiên locked > occupied > hover > enabled). */
+/* V8 — state is carried by a BACKGROUND FILL, not a border.
+   clip-path clips the background to the trapezoid exactly, giving a crisp
+   projected cell; a border traces the element's rectangle and a box-shadow
+   traces its border box, so neither can follow the clip. The four states keep
+   their original meanings and their original jade hue — only the property
+   carrying them changed. */
 .tran-phap-panel__cell--locked {
   opacity: 0.35;
 }
 
 .tran-phap-panel__cell--enabled {
   opacity: 1;
-  border-color: var(--jade, #4caf50);
+  background: rgba(76, 175, 80, 0.1);
 }
 
-/* Standing-slot plan Task 6 (2026-09-07) — occupied SPLIT from enabled:
-   same green border plus a light green background so "empty tappable cell"
-   is visually distinct from "cell already occupied" by color (not only by
-   the combatant id text inside). */
+/* Standing-slot plan Task 6 (2026-09-07) — occupied SPLIT from enabled, so
+   "empty tappable cell" reads differently from "cell already occupied" by
+   colour and not only by the combatant id text inside. */
 .tran-phap-panel__cell--occupied {
   opacity: 1;
-  border-color: var(--jade, #4caf50);
-  background: rgba(76, 175, 80, 0.22);
+  background: rgba(76, 175, 80, 0.28);
 }
 
 .tran-phap-panel__cell--hover {
   opacity: 1;
-  border-color: var(--jade, #4caf50);
-  box-shadow: 0 0 0 2px var(--jade, #4caf50) inset;
+  background: rgba(76, 175, 80, 0.45);
 }
 
 .tran-phap-panel__formation-list {

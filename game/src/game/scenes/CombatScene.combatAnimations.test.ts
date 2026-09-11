@@ -8,11 +8,45 @@
 // destroy concern). Theo Ä‘Ãºng pattern createTestScene('bare') +
 // Object.create cá»§a cÃ¡c file CombatScene.*.test.ts khÃ¡c â€” KHÃ”NG dá»±ng
 // Phaser tháº­t.
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createTestScene } from './combat/combatTestHarness'
 import { PLAYER_ID } from './combat/combatConstants'
-import { combatAnimationKey } from '@/game/support/CombatAnimationSet'
-import { PLAYER_VISUAL_PROFILES } from '@/game/support/PlayerVisualProfiles'
+import { combatAnimationKey } from '@/presentation/art/CombatEntityPresentation'
+import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
+
+// Spec B §3.2 (2026-09-11) — enemies are `kind: 'static'`: they have no clips,
+// so the death-DEFERRAL machinery (wait for the tween AND
+// ANIMATION_COMPLETE) has no live enemy to exercise it. The player is the only
+// animated entity, and the player is never destroyed.
+//
+// Rather than delete that coverage, the promotion in §9 criterion 7 is
+// performed here: one entity's entry becomes `animated`, and NO playback code
+// changes for it to work. The tests below that assert the static behaviour
+// leave the override unset, so both halves are covered in one file.
+const PROMOTED = new Map<string, 'animated' | 'static'>()
+
+vi.mock('@/presentation/art/CombatPresentationCatalogue', async (importActual) => {
+  const actual = await importActual<
+    typeof import('@/presentation/art/CombatPresentationCatalogue')
+  >()
+
+  return {
+    ...actual,
+    presentationFor: (entityKey: string) => {
+      const override = PROMOTED.get(entityKey)
+
+      if (override === 'animated') {
+        return { kind: 'animated', clips: {} }
+      }
+
+      return actual.presentationFor(entityKey)
+    },
+  }
+})
+
+afterEach(() => {
+  PROMOTED.clear()
+})
 
 function createScene() {
   const scene = createTestScene('bare')
@@ -107,7 +141,7 @@ describe('CombatScene â€” registerCombatAnimations() guard', () => {
     scene.anims = {
       exists: () => false,
       create: (config: { key: string }) => created.push(config),
-      generateFrameNumbers: () => [],
+      generateFrameNames: () => [],
     }
 
     scene.registerCombatAnimations(
@@ -137,7 +171,7 @@ describe('CombatScene â€” registerCombatAnimations() guard', () => {
     const scene = createScene()
     const create = vi.fn()
 
-    scene.anims = { exists: () => true, create, generateFrameNumbers: () => [] }
+    scene.anims = { exists: () => true, create, generateFrameNames: () => [] }
 
     scene.registerCombatAnimations('entity-x', {
       idle: {
@@ -199,6 +233,92 @@ describe('CombatScene â€” playCombatAnimation()', () => {
     ])
   })
 
+  it('a STATIC enemy plays no clip at all, even with every animation registered (B5)', () => {
+    // The regression this pins is visible, not theoretical: before Spec B an
+    // enemy taking its turn played the shared 32-frame placeholder, which
+    // SWAPPED its texture off its own Mortal PNG onto a numbered stick figure
+    // for the length of the clip, then left it there.
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+
+    scene.anims = { exists: () => true }
+    scene.playCombatAnimation(sprite, 'mortal_wild_boar_1', 'ready')
+    scene.playCombatAnimation(sprite, 'mortal_wild_boar_1', 'cast')
+    scene.playCombatAnimation(sprite, 'mortal_wild_boar_1', 'standby')
+
+    expect((sprite.rect as ReturnType<typeof fakeGameSprite>).playCalls).toEqual([])
+  })
+
+  it('promoting that same enemy to animated makes it play — one data edit, no playback code (§9 criterion 7)', () => {
+    // This is the criterion that protects §3.2's reversibility. The ONLY
+    // difference from the test above is the catalogue entry.
+    PROMOTED.set('mortal-wild-boar-v1', 'animated')
+
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+
+    scene.anims = { exists: () => true }
+    scene.playCombatAnimation(sprite, 'mortal_wild_boar_1', 'ready')
+
+    expect((sprite.rect as ReturnType<typeof fakeGameSprite>).playCalls[0]).toBe(
+      combatAnimationKey('mortal-wild-boar-v1', 'ready'),
+    )
+  })
+
+  it('a one-shot clip returns the player to idle when it completes (B7)', () => {
+    // §4.5: idle is the state every other clip returns to. Without this the
+    // sprite freezes on the last frame of `cast` until something else plays.
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+    const profileKey = PLAYER_VISUAL_PROFILES.mortal.combatTextureKey
+
+    scene.anims = { exists: () => true }
+    scene.playCombatAnimation(sprite, PLAYER_ID, 'cast')
+
+    expect(gameSprite.playCalls).toEqual([combatAnimationKey(profileKey, 'cast')])
+
+    gameSprite.emit('animationcomplete', { key: combatAnimationKey(profileKey, 'cast') })
+
+    expect(gameSprite.playCalls).toEqual([
+      combatAnimationKey(profileKey, 'cast'),
+      combatAnimationKey(profileKey, 'idle'),
+    ])
+  })
+
+  it('a DIFFERENT clip completing does not yank the player back to idle', () => {
+    const scene = createScene()
+    const sprite = makeSprite('sprite')
+    const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+
+    scene.anims = { exists: () => true }
+    scene.playCombatAnimation(sprite, PLAYER_ID, 'cast')
+
+    gameSprite.emit('animationcomplete', { key: 'some-other-clip' })
+
+    expect(gameSprite.playCalls).toHaveLength(1)
+  })
+
+  it('idle does not re-trigger itself, and death is left to onDeath()', () => {
+    // Chaining idle off idle would restart a looping clip on every completion;
+    // chaining it off death would return a corpse to standing before the
+    // destroy handler runs.
+    const scene = createScene()
+    const profileKey = PLAYER_VISUAL_PROFILES.mortal.combatTextureKey
+
+    for (const name of ['idle', 'death'] as const) {
+      const sprite = makeSprite('sprite')
+      const gameSprite = sprite.rect as ReturnType<typeof fakeGameSprite>
+
+      scene.anims = { exists: () => true }
+      scene.playCombatAnimation(sprite, PLAYER_ID, name)
+
+      gameSprite.emit('animationcomplete', { key: combatAnimationKey(profileKey, name) })
+
+      expect(gameSprite.playCalls).toEqual([combatAnimationKey(profileKey, name)])
+    }
+  })
+
   it('actorId undefined (spriteFor miss upstream) â†’ khÃ´ng throw, khÃ´ng play', () => {
     const scene = createScene()
     const sprite = makeSprite('sprite')
@@ -250,7 +370,9 @@ describe('CombatScene â€” beginDeathSequence() death-deferral', () => {
     expect(scene.dyingIds.has('enemy-1')).toBe(false)
   })
 
-  it('enemy Sprite tháº­t + clip -death Ä‘Ã£ Ä‘Äƒng kÃ½ â€” phÃ¡t animation NGAY, nhÆ°ng destroy CHá»œ Cáº¢ tween LáºªN ANIMATION_COMPLETE (spec Â§9, khÃ´ng cáº¯t ngang)', () => {
+  it('an ANIMATED enemy (promoted, §9 criterion 7) plays -death at once, but destroy waits for BOTH the tween AND ANIMATION_COMPLETE', () => {
+    PROMOTED.set('mortal-wild-boar-v1', 'animated')
+
     const scene = createScene()
     const { tweens, tweenConfigs } = stubTweensCapturingOnComplete()
 
@@ -283,6 +405,8 @@ describe('CombatScene â€” beginDeathSequence() death-deferral', () => {
   })
 
   it('animationcomplete cá»§a Má»˜T clip khÃ¡c (key khÃ´ng khá»›p) khÃ´ng kÃ­ch hoáº¡t finalize', () => {
+    PROMOTED.set('mortal-wild-boar-v1', 'animated')
+
     const scene = createScene()
     const { tweens, tweenConfigs } = stubTweensCapturingOnComplete()
 

@@ -14,8 +14,8 @@ import {
   COMMAND_WHEEL_SLOTS,
   type CommandWheelDisabledContext,
   type CommandWheelSlot,
-} from '@/game/support/commandWheelCatalog'
-import { getCommandWheelOrbitDirection } from '@/game/support/commandWheelOrbit'
+} from '@/data/ui/commandWheelCatalog'
+import { getCommandWheelOrbitDirection } from '@/data/ui/commandWheelOrbit'
 import { getRealmIndex } from '@/core/realm/realmSystem'
 import { ARTIFACT_ID_BY_CULTIVATION_PATH } from '@/core/artifact/Artifact'
 import NotificationBadge from '@/components/common/NotificationBadge.vue'

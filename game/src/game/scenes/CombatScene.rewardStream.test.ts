@@ -8,7 +8,7 @@
 // - clearSceneState dá»n sáº¡ch gourd + caches (khÃ´ng rÃ² rá»‰ qua shutdown).
 import { describe, expect, it, vi } from 'vitest'
 import { createTestScene } from './combat/combatTestHarness'
-import { PLAYER_VISUAL_PROFILES } from '../support/PlayerVisualProfiles'
+import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 import {
   computeGourdPlacement,
   resolveGourdMouth,
