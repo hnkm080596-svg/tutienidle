@@ -45,6 +45,7 @@ export function triggerBreakthroughAction(
     return false
   }
 
+  const tribulationOutcomeService = new TribulationOutcomeService()
   const targetRealmId = resolveNextBreakthroughRealm(player.realmId)
   if (!targetRealmId) {
     return false
@@ -59,11 +60,15 @@ export function triggerBreakthroughAction(
       const result = await presentation.runAdmitted(
         'tribulation',
         () => {
-          // Admission confirmed: unequip only inside admitted start
-          gameManager.unequipAllEquipment()
-          player.setEquipmentModifiers(gameManager.getEquipmentModifiers())
-
-          const started = gameManager.startTribulation(player.$state, player.finalStats, targetRealmId)
+          // R8.2 Slice 3: domain owns the start-side prep (unequip-all +
+          // modifier sync) and the start itself; the adapter only reads the
+          // presentation session afterwards.
+          const started = tribulationOutcomeService.startTribulationPrepared(
+            player,
+            gameManager,
+            targetRealmId,
+            player.finalStats,
+          )
           if (!started) return null
           const session = gameManager.getCurrentPresentationSession('tribulation')
           return session ? { target: 'tribulation', session } : null
@@ -79,10 +84,12 @@ export function triggerBreakthroughAction(
   }
 
   // Fallback for tests without presentation
-  gameManager.unequipAllEquipment()
-  player.setEquipmentModifiers(gameManager.getEquipmentModifiers())
-
-  const started = gameManager.startTribulation(player.$state, player.finalStats, targetRealmId)
+  const started = tribulationOutcomeService.startTribulationPrepared(
+    player,
+    gameManager,
+    targetRealmId,
+    player.finalStats,
+  )
 
   if (started) {
     useUiStore().enterTribulationScene()

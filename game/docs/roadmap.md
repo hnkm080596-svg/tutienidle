@@ -1044,7 +1044,58 @@ Repair equipment wash.
 
 Target pattern:
 
+```
+
 ```text
+✅ DONE 2026-09-11 (branch r8-breakthrough-outcomes) — Slice 2: the MINOR-REALM
+   BREAKTHROUGH outcome chain is now domain-owned. New
+   core/tribulation/BreakthroughOutcomeService.ts + GameManager facade
+   breakthroughWithConsequences() sequence: CultivationSystem level-up,
+   realm passive sync (every success), banked artifact tier release, and
+   (documented-dead, preserved verbatim per A12) the major-realm
+   technique/artifact branches — proven unreachable because
+   CultivationSystem.breakthrough() never crosses major realms; major
+   transitions belong to the tribulation chain (Slice 1).
+   useBreakthrough.ts is now a thin adapter: announcement only, zero
+   player-state writes remain in Vue. App.vue tick call site unchanged.
+
+   Writer contract: BreakthroughPlayerWriter = PlayerData + the store
+   breakthrough() action; caller passes the Pinia store instance (same
+   absent-key probe semantics as Slice 1).
+
+   Verification: P3 full — type-check + build + 473 files / 3202 tests
+   PASS; R14 guards 10/10; QA quick PASS WITH EVIDENCE
+   (game/docs/qa/2026-09-11-r82-slice2-breakthrough-quick.md) with the
+   mapper deepAuditCandidate bounded by inspection (save schema
+   unchanged, no clock path touched). P14 deferred (worktree).
+```
+
+```text
+✅ DONE 2026-09-11 (branch r8-start-side-flow) — Slice 3: the tribulation
+   START-side prep is domain-owned. New
+   TribulationOutcomeService.startTribulationPrepared() sequences
+   unequip-all + store modifier sync + startTribulation (ordering
+   preserved: prep BEFORE the session opens). triggerBreakthroughAction
+   now calls the domain inside the admitted callback; the adapter keeps
+   only the session read, scene entry, and route flow. With Slices 1-3
+   the tribulation chain is fully domain-owned end to end: START ->
+   RUN -> OUTCOME. Zero gameplay-command writes remain in the Vue
+   tribulation/breakthrough adapters.
+
+   Behavior parity: 2 new service tests (success ordering + unknown-
+   realm refusal) + dotPha/artifact suites unchanged and green.
+
+   Note (parity wart kept): on start refusal the player is still
+   unequipped — identical to the pre-migration path; a future product
+   decision, not changed here.
+
+   Verification: P3 full — type-check + build + 475 files / 3206 tests
+   PASS; QA quick PASS WITH EVIDENCE
+   (game/docs/qa/2026-09-11-r82-slice3-startside-quick.md).
+   P14 deferred (worktree).
+```
+
+text
 Pay / Generate
 → Domain retains PendingResult
 → UI receives display copy + identity
@@ -1624,7 +1675,7 @@ R14 Architecture Enforcement
 | 6 | R5 — Combat Runtime / Presentation Boundary | AR-14, AR-20, AR-24, AR-29 | ✅ COMPLETE 2026-09-08 |
 | 7 | **R6 — Combat Character Art / Asset Contract** | **asset/presentation findings** | ⏭️ **NEXT** |
 | 8 | R7 — Worker Allocation / Decomposition | AR-07, AR-08 | ✅ COMPLETE 2026-09-08 |
-| 9 | R8 — Quest & Progression Authority | AR-09, AR-10, AR-13 | 🟡 R8.1 COMPLETE 2026-09-08; R8.2 tribulation outcome chain COMPLETE 2026-09-11 (start-side flow + other outcomes remain) |
+| 9 | R8 — Quest & Progression Authority | AR-09, AR-10, AR-13 | 🟡 R8.1 COMPLETE 2026-09-08; R8.2 COMPLETE 2026-09-11 (slices 1-3: tribulation outcome+start, breakthrough outcome; only technique/scripture content tweaks remain, no Vue-owned progression writes left) |
 | 10 | R9 — Equipment / Inventory Integrity | AR-21, AR-22, AR-23, AR-34 | ✅ COMPLETE 2026-09-08 |
 | 11 | R10 — Save / Restore Boundary | AR-12, AR-15 | ✅ COMPLETE 2026-09-09 |
 | 12 | R11 — UI Foundation Consolidation | AR-26, AR-27, AR-28 + domain UI | ⏸ |

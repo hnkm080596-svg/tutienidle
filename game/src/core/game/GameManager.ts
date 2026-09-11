@@ -145,6 +145,7 @@ import { GameManagerSaveRestore } from './GameManagerSaveRestore'
 import { GameManagerTurnBattleOps, type ResumePlayback } from './GameManagerTurnBattleOps'
 import { HiddenBeastSystem } from './HiddenBeastSystem'
 import { TribulationDirector, type ActiveTribulationState } from '../tribulation/TribulationDirector'
+import { BreakthroughOutcomeService, type BreakthroughOutcomeResult, type BreakthroughPlayerWriter } from '../tribulation/BreakthroughOutcomeService'
 
 import { QuestRegistry } from '../quest/QuestRegistry'
 import { QuestManager } from '../quest/QuestManager'
@@ -546,6 +547,7 @@ export class GameManager {
   private readonly battleLoot: BattleLootSystem
   private readonly stageWaves: StageWaveSystem
   private readonly tribulationDirector: TribulationDirector
+  private readonly breakthroughOutcomeService = new BreakthroughOutcomeService()
   private readonly equipmentOps: EquipmentOpsSystem
   private readonly buildingOps: GameManagerBuildingOps
   private readonly alchemyOps: GameManagerAlchemyOps
@@ -1074,6 +1076,18 @@ export class GameManager {
       learnTechnique: techniqueId => this.learnTechnique(techniqueId),
       equipTechnique: techniqueId => this.equipTechnique(techniqueId),
     })
+  }
+
+  /**
+   * R8.2 Slice 2 (AR-10): facade for the minor-realm breakthrough outcome
+   * chain. The service owns all consequences (passive sync, banked
+   * artifact release, and the documented-dead major-realm branches);
+   * this orchestrator only delegates (A5 — no formula logic here).
+   * `player` must be the Pinia store instance, NOT `store.$state`
+   * (same absent-key write semantics as TribulationOutcomeService).
+   */
+  breakthroughWithConsequences(player: BreakthroughPlayerWriter): BreakthroughOutcomeResult {
+    return this.breakthroughOutcomeService.breakthrough(player, this)
   }
 
   /**
