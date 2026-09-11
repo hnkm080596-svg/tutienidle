@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import {
-  PERSON_HEIGHT_IN_CELLS,
   resolveEntityDisplaySize,
   type EntityScaleInput,
 } from './combatEntityScale'
@@ -77,8 +76,29 @@ describe('resolveEntityDisplaySize', () => {
     expect(wide.personWidth).toBeCloseTo(narrow.personWidth, 5)
   })
 
-  it('the calibration constant is the product the tree already had', () => {
-    expect(PERSON_HEIGHT_IN_CELLS).toBeCloseTo(0.92 * 2, 5)
+  it('reproduces the pre-spec-C formula exactly for untrimmed art', () => {
+    // Spec C §3.2's calibration claim, exercised THROUGH the function rather
+    // than restated as a constant: the old chain was
+    //   characterHeight (nearCellWidth * 0.92) * depthScale * sizeMultiplier (2)
+    // and PERSON_HEIGHT_IN_CELLS exists to reproduce it. Deriving the expected
+    // value from the OLD factors is what makes this a guard and not an echo —
+    // if PERSON_HEIGHT_IN_CELLS drifts from 0.92 x 2, or the function stops
+    // multiplying by it, this fails.
+    const nearCellWidth = 94.49
+    const depthScale = 0.70735
+
+    const oldFormula = nearCellWidth * 0.92 * depthScale * 2
+
+    const size = resolveEntityDisplaySize({
+      nearCellWidth,
+      depthScale,
+      classFactor: 1,
+      extent: UNTRIMMED,
+      sourceSize: { w: 1254, h: 1254 },
+    })
+
+    expect(size.personHeight).toBeCloseTo(oldFormula, 4)
+    expect(size.boxHeight).toBeCloseTo(oldFormula, 4)
   })
 
   it('refuses an extent that would divide by zero', () => {
