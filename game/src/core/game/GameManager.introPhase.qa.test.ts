@@ -31,7 +31,7 @@ function buildGameManager(): {
   const combatSource = new ManualClockSource()
   gameManager.setCombatClockSource(combatSource)
   const player = createDefaultPlayer()
-  const stats = calculateStats({ ...player.baseStats, attack: 100, speed: 100 }, [])
+  const _stats = calculateStats({ ...player.baseStats, attack: 100, speed: 100 }, [])
 
   const enemy = defineEnemy({
     id: 'qa_intro_dummy', name: 'QA Intro Dummy', level: 1, realmId: 'mortal', lane: 'ground',

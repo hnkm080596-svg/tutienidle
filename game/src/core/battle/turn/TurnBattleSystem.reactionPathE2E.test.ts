@@ -5,7 +5,6 @@ import { createDefaultPlayer } from '../../player/Player'
 import { calculateStats } from '../../stats/StatCalculator'
 import { defineEnemy } from '../../enemy/Enemy'
 import { SKILLS } from '../../../data/skill/Skills'
-import { selectAction } from './TurnSkillAction'
 import type { Stage } from '../../stage/Stage'
 
 // Phase A4 (2026-09-07) — end-to-end proof of the Reaction Path: an
@@ -77,7 +76,7 @@ function makeAwakenedBattle() {
 
 describe('Reaction Path end-to-end (Phase A4)', () => {
   it('marker special casts and lands real damage (pool wiring live, no throw)', () => {
-    const { manager, participant, combatSource } = makeAwakenedBattle()
+    const { participant, combatSource } = makeAwakenedBattle()
 
     // Drive the real fixed-step loop until the special's cooldown commit
     // proves the marker resolved through the pool-interception path.

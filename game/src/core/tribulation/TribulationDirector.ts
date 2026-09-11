@@ -1,6 +1,5 @@
 import {
   PresentationSession,
-  type PresentationHold,
   type PresentationMode,
   type SessionPresentationPort,
   type SessionRef,
@@ -257,7 +256,7 @@ export class TribulationDirector {
     }
   }
 
-  private tickMind(step: number, chapter: TribulationChapterProfile) {
+  private tickMind(step: number, _chapter: TribulationChapterProfile) {
     const active = this.active!
     const mind = this.mind!
 

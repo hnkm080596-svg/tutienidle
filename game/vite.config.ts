@@ -81,6 +81,8 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
-    include: ['src/**/*.test.ts'],
+    // Architecture/meta guards live under tests/ (kept out of app source);
+    // e2e specs (*.spec.ts, Playwright) are unaffected.
+    include: ['src/**/*.test.ts', 'tests/**/*.test.ts'],
   },
 })

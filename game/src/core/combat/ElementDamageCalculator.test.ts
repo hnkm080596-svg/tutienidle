@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { calculateComponentDamage, calculateElementComponentDamage, calculateSkillBaseDamage, elementalBasePower } from './ElementDamageCalculator'
+import { calculateElementComponentDamage, calculateSkillBaseDamage, elementalBasePower } from './ElementDamageCalculator'
 import { baseAttackPlusPower, calculateBaseDamage } from './DamageCalculator'
 import { getResistanceMitigationPercent } from './Resistance'
 import { createBaseStats } from '../stats/StatBlock'

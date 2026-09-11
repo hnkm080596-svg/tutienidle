@@ -39,7 +39,7 @@ function setupWithSite(level = 1) {
 
 describe('quoteSiteUpgrade - quote/commit parity (AR-23)', () => {
   it('affordable quote -> upgradeSite succeeds; quote reflects new level', () => {
-    const { system, registry, bag, siteId } = setupWithSite(1)
+    const { system, bag, siteId } = setupWithSite(1)
     // Fill generously: the real upgrade costs come from the catalog.
     for (const material of materials) {
       bag.add(material, 1_000_000)
@@ -61,7 +61,7 @@ describe('quoteSiteUpgrade - quote/commit parity (AR-23)', () => {
   })
 
   it('realm-gated quote -> upgradeSite fails with the same gate', () => {
-    const { system, registry, bag, siteId } = setupWithSite(3)
+    const { system, bag, siteId } = setupWithSite(3)
     for (const material of materials) {
       bag.add(material, 1_000_000)
     }
@@ -86,7 +86,7 @@ describe('quoteSiteUpgrade - quote/commit parity (AR-23)', () => {
   })
 
   it('max level -> quote reports max_level', () => {
-    const { system, registry, bag, siteId } = setupWithSite(1)
+    const { system, bag, siteId } = setupWithSite(1)
     for (const material of materials) {
       bag.add(material, 1_000_000)
     }

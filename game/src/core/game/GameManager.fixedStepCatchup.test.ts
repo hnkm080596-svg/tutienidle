@@ -125,7 +125,7 @@ describe('CombatClock — chunking invariant + no world-tick catch-up for combat
     // emit) — turn-based đếm TỔNG TURNS đã resolve qua totalTurnsElapsed.
     // Invariant đang bảo vệ giữ nguyên: cùng tổng thời gian → cùng số
     // bước, bất kể chia nhỏ hay dồn 1 delta lớn (fixed-step loop).
-    let attackCount = 0
+    const _attackCount = 0
 
     if (stepSeconds === null) {
       // One long frame from the clock source (a stalled renderer catching up

@@ -5,7 +5,7 @@ import { useTooltip } from '@/composables/useTooltip'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import type { EquipmentTooltipContent, GradedItemTooltipContent, TechniqueTooltipContent } from '@/composables/useTooltip'
-import { isMaxRankTone } from '@/composables/slots/normalizeSlotRank'
+import { isMaxRankTone } from '@/core/profession/slotRank'
 
 const { content, reference } = useTooltip()
 const floating = ref<HTMLElement | null>(null)

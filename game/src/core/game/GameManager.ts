@@ -1,6 +1,5 @@
 import {
   SessionAllocator,
-  type PresentationHold,
   type PresentationMode,
   type SessionKind,
   type SessionPresentationPort,

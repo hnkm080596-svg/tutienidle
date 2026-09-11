@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { selectTarget, type TurnBattleParticipant } from './TurnBattleSystem'
 import type { CombatEntity } from '../../combat/CombatEntity'
-import { createBaseStats } from '../../stats/StatBlock'
 import { TurnBuffPool } from './TurnBuffPool'
 
 // QA debug evidence (2026-09-04 quick review) — xác nhận hành vi thật của

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { TribulationDirector } from './TribulationDirector'
-import { createDefaultPlayer, playerToCombatEntity, type PlayerData } from '../player/Player'
+import { createDefaultPlayer, type PlayerData } from '../player/Player'
 import { createBaseStats, type Stats } from '../stats/StatBlock'
 import { EventBus } from '../events/EventBus'
 import { MERIDIANS } from '../../data/realm/Meridians'

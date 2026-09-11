@@ -17,7 +17,7 @@ export interface BagCell {
 
   selected?: boolean
 
-  // Rank chuẩn hoá 1-9 (xem composables/slots/normalizeSlotRank.ts) —
+  // Rank chuẩn hoá 1-9 (xem core/profession/slotRank.ts) —
   // truyền thẳng vào SlotView.vue's prop `equipmentQualityRank`/`rarityRank`.
   equipmentQualityRank?: number
 

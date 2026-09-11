@@ -307,12 +307,14 @@ describe('CombatSystem — Bất Tử Th thể v4 (survive + cleanse + Tử Sinh
     const pool = new TurnBuffPool()
     const buffs = new TurnBuffSystem(pool)
 
-    const session = createSession(['bat_tu_the']) as any
-    session.surviveEffects = {
-      buffSystem: buffs,
-      registry,
-      grantBuffId: 'custom_phoenix_buff',
-      cleanseDebuffs: false,
+    const session: SessionShape = {
+      ...createSession(['bat_tu_the']),
+      surviveEffects: {
+        buffSystem: buffs,
+        registry,
+        grantBuffId: 'custom_phoenix_buff',
+        cleanseDebuffs: false,
+      },
     }
     combat.setSurviveLethalSession(session)
 

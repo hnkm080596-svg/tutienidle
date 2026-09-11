@@ -113,6 +113,10 @@ hosts it. Phaser does not appear anywhere on its own. Multiple concurrent
 regions are legitimate; each has exactly one declared host, and each host owns
 one generation (§5.2).
 
+"Owns the lifecycle" means the shell holds a **`DynamicRegion` handle**, not a
+scene object and not a `Phaser.Game`. §3.6 defines that handle as the only
+surface on which the shell may call a method at all.
+
 ### 3.2 `src/game/` imports neither `vue` nor `@/stores/` — *existing (A6)*
 
 Dependencies point downward. The dynamic layer receives what it needs through
@@ -190,6 +194,70 @@ Two facts about where the repository stands today:
 truth* a DOM overlay needs in order to hit-test against what the canvas actually
 drew (§6/V6). Both dispositions changed once the Formation grid was measured;
 the first draft had them backwards.
+
+### 3.6 Shell and region meet on three surfaces, and no others — **NEW**
+
+§3.1 says the static shell owns the dynamic region's lifecycle, so it must hold
+*something*. §3.4 says Vue and Phaser do not call each other directly. Those two
+read as a contradiction, and today's code sits inside it: `TranPhapPanel.vue`
+holds a `TranPhapCombatPreviewScene` and calls `syncAssignments()` on it.
+
+The contradiction dissolves once "holds something" is made precise. There are
+exactly three surfaces, each with its own mechanism:
+
+| Surface | Mechanism | Direction |
+|---|---|---|
+| **Lifecycle** | The shell holds a `DynamicRegion` handle — `generation`, `bootError`, `destroy()`. Never a scene or a `Phaser.Game`. | shell → region |
+| **State (push)** | Scoped events on the EventBus. Every payload carries a `regionId`; a region ignores what is not its own. | shell/core → region |
+| **Geometry** | Pure functions under `presentation/geometry/`. Both sides import them; neither asks the other. | shared |
+
+**No direct method call between shell and region**, and no `RegionCommandPort`.
+When a new interaction is needed, it is a new event or a new geometry function —
+never a new method. This is the mirror of §3.4: *Phaser reports, it does not
+decide; the shell commands by event, it does not invoke.*
+
+The asymmetry with `DomainCommandPort` (§4.3) is deliberate, not an oversight.
+That port has five members because Phaser **asks and needs an answer**. The shell
+asks the region nothing; it commands, or it pushes state. Making the two sides
+symmetric in form would make them asymmetric in meaning.
+
+#### 3.6.1 Push is by event; pull is by the gate
+
+State reaches a region two ways, and conflating them produces a race:
+
+- **Push** — a change that happens while the region is alive arrives as a scoped
+  event. Fire-and-forget.
+- **Pull** — the state that already existed when the region mounted is **read by
+  the region during `create()`, after it has subscribed**. Not re-emitted by the
+  shell.
+
+The pull path is not new and must not be replaced. `CombatScene` already does
+exactly this: `gameManager.getCombatPresentationSnapshot(sessionId)` on create,
+with a `lastBattlePositionsSnapshot` fallback carrying a two-second freshness
+window for standalone tests (`CombatScene.ts:758-771`). A region that mounts late
+catches up by reading, not by being told again.
+
+**A `REGION_READY` handshake is therefore rejected**, though it was proposed and
+is a reasonable design in the abstract. It would be a second mechanism for a
+problem this repository has already solved, in production, with a solution that
+has no race to reason about: the region subscribes, then reads, both inside
+`create()`. Mission 0 §17's finding applies directly — the need is better
+contracts, not more mechanisms.
+
+#### 3.6.2 What the geometry clause requires
+
+"Both sides import the pure function" is only safe while both sides derive the
+geometry from the **same declared parameters**. A projection is pure, but
+`resize()` makes an *instance* stateful, so two independently-constructed
+instances agree only as long as their inputs do.
+
+This is why §6/V9 gives the Formation canvas size one owner. For Formation it
+holds trivially: the size is fixed and nothing resizes it. For a region whose
+viewport is dynamic — Combat, whose projection is resized as the window and the
+DOM insets change — a shell-side copy would need the same viewport including
+insets, and that is not yet a shared declared value. **Until it is, a
+dynamic-viewport region's shell must not construct its own projection instance.**
+Formation is unblocked today; Combat is not, and no consumer needs it to be.
 
 ---
 
@@ -428,6 +496,12 @@ interface DynamicRegion {
 }
 ```
 
+**This is the whole handle, and that is the point (§3.6).** `useDynamicRegion`
+returns no scene, no `Phaser.Game`, and no object originating in `src/game/`.
+A shell holding a scene can call every public method on it and nobody reviews
+that; a shell holding this can call one. Everything else is an event or a
+geometry function.
+
 It owns: dynamic import and code-splitting, `Phaser.Game` construction, gate
 seeding through `writeGate`, `ResizeObserver` wiring, teardown ordering, the
 unmount-during-boot race that `PhaserCanvas.vue` already handles correctly, and
@@ -532,6 +606,7 @@ are visible to the build graph or a test.
 | V6 | `BattleGridProjection.screenToGridUnclamped()`, `containsScreenPoint()` — no production callers | §3.5, §4.4 | **Keep.** Not dead code: this is the ground truth a DOM overlay needs to hit-test against what the canvas actually drew, and the drag interaction in the Formation fix (V8) is its first consumer. The first draft proposed deleting these; that proposal was made before the Formation grid was measured and is withdrawn. |
 | V7 | `BattleGridProjection.ts` and `BattlefieldRenderMode.ts` live in `src/game/support/` | §2.2, §3.4 | **Move to `src/presentation/geometry/`.** Both layers must agree about projection, so it is a presentation asset. Verified pure: one core import, one sibling that imports nothing, no `phaser`. A file move plus import updates at `CombatScene.ts:1014`, `TranPhapCombatPreviewScene.ts:119` and the other consumers. **Not blocked on r14** — touches neither `eslint.config.js` nor `tests/architecture/`. |
 | V8 | Formation panel: a uniform 176×176 DOM grid overlays a 420×480 perspective canvas, inside a container that clips it | §3.5 | **Own plan, not this spec.** See below — it is a user-visible defect, and this spec claims not to make those. |
+| V10 | `TranPhapPanel.vue` holds a `TranPhapCombatPreviewScene` and calls `syncAssignments()` on it (`:195`, `:240`, `:253`); `PhaserCanvas.vue` has the same shape | §3.6 | **Migrate to the `DynamicRegion` handle**, with `syncAssignments` becoming a scoped event. Found while implementing Phase 1 — it was missing from the first violation list, and it is the concrete case that forced §3.6 to exist. Depends on §5's composable. |
 | V9 | `420`/`480` declared twice — `TranPhapPanel.vue:35-36` and `TranPhapCombatPreviewScene.ts:41-42` — kept in sync by a comment at `:37` saying "must match" | §2.2 | Give the number one owner under `presentation/geometry/`. Not overridden by theme, DPI or user setting anywhere; it is simply duplicated, and V8 cannot be fixed while two files disagree about the canvas size. |
 
 V3 and V6 are explicitly left as decisions, not foregone conclusions. Assuming
@@ -615,6 +690,38 @@ is stated rather than papered over.
 Agreed order: this spec (A), then the animation metadata contract (B), then
 anchor/scale geometry (C), then animation/impact timing (D).
 
+**Ruling, 2026-09-11 — the Formation alignment work (V8) proceeds before §5's
+region host, and does not wait for it.**
+
+The question was whether §5.2's `useDynamicRegion` had to be pulled forward,
+since V10 means the Formation panel still holds a scene object. Measured, it does
+not have to be:
+
+- V8's layout repair is CSS plus `FormationCanvasSpec`; it needs no region handle.
+- Its overlay uses a bridge the shell constructs itself, which §3.6.2 permits for
+  Formation *specifically* because the canvas size is fixed and now singly-owned.
+- Four of the five parameters the panel's projection is built from are already
+  reachable by both layers. Only `PERSPECTIVE_MIN_ROAD_HEIGHT_PANEL`
+  (`TranPhapCombatPreviewScene.ts:48`) is stranded in the Phaser layer, and
+  moving it is mechanical. That move is a prerequisite of V8, not of §5.
+- V8 adds no new V10 coupling: `syncAssignments` is left exactly as it is.
+
+Against pulling §5 forward: extracting the host composable means touching
+`PhaserCanvas.vue`, the application's primary surface, which carries the
+unmount-during-boot race handling and the local error boundary, and which the
+combat work has just finished stabilising. It does not block V8. Disturbing
+settled code to release something it is not holding is the wrong trade in
+development.
+
+Accepted cost: `TranPhapPanel.vue` is edited twice — template and CSS for V8,
+`script setup` for V10 later. Different halves; the second does not re-open the
+first.
+
+**Stop condition, stated so the ruling can be falsified rather than merely
+hoped:** if V8 turns out to need *any* new scene-object coupling, that is the
+signal to stop and pull §5.2 forward — not to reach for the scene reference
+because it happens to be in scope.
+
 **When B starts.** B's spec is written as soon as this one is accepted; it does
 **not** wait for A to be implemented. A's implementation is itself blocked on
 `r14-architecture-enforcement` merging, and leaving B idle behind that would
@@ -674,9 +781,15 @@ written against this repository: it assumes Phaser 3, plain JS, `src/vue/` and
    not a structural inline type.
 4. Both existing regions are constructed by the shared host composable, each
    holding its own generation.
-5. V1, V2, V4, V5, V7 and V9 are closed. V3 and V6 are settled as recorded in
-   §6 and need no code change here. V8 is handed to its own plan and is **not**
-   an acceptance criterion of this spec.
+5. V1, V2, V4, V5, V7, V9 and V10 are closed. V3 and V6 are settled as recorded
+   in §6 and need no code change here. V8 is handed to its own plan and is
+   **not** an acceptance criterion of this spec.
+
+5a. No Vue file imports from `src/game/`, and none holds a scene or
+   `Phaser.Game` object. The import guard largely subsumes the second clause:
+   a typed scene reference requires importing its type, so what escapes it is
+   only a reference held structurally or as `any` — and P8 already requires any
+   introduced `any` to be flagged.
 6. Five guards exist, and each has been observed red against a probe before
    being accepted.
 7. Full gate green: type-check, build, vitest, Playwright. **No test expectation
@@ -731,3 +844,42 @@ The three dispositions these produced — V6 kept rather than deleted, V3 legal
 rather than violating, V7 added — all reversed or added to the first draft. None
 of them could have been reached without measuring the Formation grid, which the
 first draft did not do.
+
+### 11.2 Third measurement pass — the three questions §3.6 left open
+
+Asked when §3.6 was proposed, and marked non-blocking. Two were answerable from
+the tree, and both changed something.
+
+**1. Does a region need to read state from outside, rather than receive it?**
+**Yes, and it already does — which is why §3.6.1 separates push from pull.**
+`CombatScene.create()` reads `gameManager.getCombatPresentationSnapshot(sessionId)`
+and falls back to `registry.get('lastBattlePositionsSnapshot')` with a
+two-second freshness window (`CombatScene.ts:758-771`). Scenes also pull
+`playerVisualProfileId`, `sceneAdapter`, `eventBus` and `bundleManager`. A
+"state arrives only by event" rule would have contradicted working production
+code. The consequence is larger than the clause: it retires the proposed
+`REGION_READY` handshake, because the late-join race it was designed to close is
+already closed by subscribing and then reading, both inside `create()`.
+
+**2. Does the shell ever need a synchronous return from a region?**
+**No — the suspicion was right.** The only shell-side read of region internals
+is `__tutienPhaserGame` at `PhaserCanvas.vue:151`, whose own comment says it
+exists for the e2e/visual gate and that no gameplay code uses it. Geometry
+suffices, and §3.6's three surfaces need no fourth.
+
+A consequence, recorded because it reverses something already built: the
+`projectionBridge` getter added to `TranPhapCombatPreviewScene` during Phase 1.1
+is the wrong shape under §3.6 — it is precisely a synchronous read of region
+internals by the shell. It is removed. The shell constructs its own bridge from
+`presentation/geometry/`, which §3.6.2 permits for Formation because its canvas
+size is fixed and now singly-owned.
+
+**3. What shape does the §3.6 guard take?**
+Two clauses, one cheap and one partial. *"No Vue file imports from `src/game/`"*
+is an import guard of the same shape as the others in §7, falsifiable by adding
+such an import. *"No Vue file holds a scene object"* would need AST work in
+general — but the import guard subsumes most of it, since a typed scene
+reference requires importing the type. What escapes both is a reference held
+structurally or as `any`, and P8 already requires an introduced `any` to be
+flagged. That residue is stated rather than hidden; it is not worth AST
+machinery today.

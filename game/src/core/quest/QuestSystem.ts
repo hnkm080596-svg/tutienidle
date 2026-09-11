@@ -76,7 +76,9 @@ export class QuestSystem {
   getActiveQuests(
     registry: QuestRegistry,
     manager: QuestManager,
-    player: PlayerData,
+    // Kept in the signature to mirror reconcileActiveQuests (same query
+    // shape for callers); the pure read does not consume player state.
+    _player: PlayerData,
   ): { quest: Quest; progress: QuestProgress }[] {
     const result: { quest: Quest; progress: QuestProgress }[] = []
 

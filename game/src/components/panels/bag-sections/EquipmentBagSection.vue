@@ -11,7 +11,7 @@ import { compareNumber, compareText, stableSort, withDirection } from '@/composa
 import type { BagCell } from './BagCell'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
-import { itemQualityRank, professionGradeRank } from '@/composables/slots/normalizeSlotRank'
+import { itemQualityRank, professionGradeRank } from '@/core/profession/slotRank'
 import { compareProfessionGrades } from '@/core/profession/ProfessionGrade'
 import { EQUIPMENT_SLOTS } from '@/core/equipment/EquipmentSlotState'
 import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'

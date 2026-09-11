@@ -7,7 +7,7 @@ import { calculateStats } from '../stats/StatCalculator'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 
-function debugEntity(): CombatEntity {
+function _debugEntity(): CombatEntity {
   const stats = { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0, attack: 100 }
   return {
     id: 'dbg_player', name: 'Dbg', type: 'player', baseStats: stats, stats,

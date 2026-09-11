@@ -25,7 +25,7 @@ import { canUseItemGrade } from '@/core/equipment/canUseItem'
 import SlotView from '@/components/common/SlotView.vue'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
-import { itemQualityRank, professionGradeRank } from '@/composables/slots/normalizeSlotRank'
+import { itemQualityRank, professionGradeRank } from '@/core/profession/slotRank'
 import GameButton from '@/components/common/GameButton.vue'
 
 const { t } = useI18n({ useScope: 'local' })

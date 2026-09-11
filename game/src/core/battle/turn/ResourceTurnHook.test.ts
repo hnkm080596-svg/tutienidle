@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applyTurnStartDeltas, type TurnResourceDelta } from './ResourceTurnHook'
+import { applyTurnStartDeltas } from './ResourceTurnHook'
 
 describe('applyTurnStartDeltas', () => {
   it('cộng amount vào stat hiện có', () => {

@@ -174,7 +174,7 @@ describe('GameManager — manual mode pause-on-player-turn (Slice 7)', () => {
   })
 
   it('submit khi KHÔNG pause → false (no-op an toàn)', () => {
-    const { gameManager, combatSource } = startManualBattle()
+    const { gameManager } = startManualBattle()
 
     expect(gameManager.submitTurnChoice('basic')).toBe(false)
   })

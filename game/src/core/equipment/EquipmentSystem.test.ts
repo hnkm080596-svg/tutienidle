@@ -17,7 +17,6 @@ import type { ItemQuality } from '../item/ItemQuality'
 import {
   ITEM_QUALITY_AFFIX_TIER,
   ITEM_QUALITY_FORGE_USES,
-  ITEM_QUALITY_SUBSTATS_RANGE,
   ITEM_QUALITY_UNLOCKED_POOLS,
 } from './ItemQualityBalance'
 import { affixes } from '../../data/equipment/affixes'
