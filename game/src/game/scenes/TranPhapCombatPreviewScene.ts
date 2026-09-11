@@ -34,10 +34,6 @@ import { CombatGridView } from './combat/combat-grid-view'
 import type { CombatGridViewHost } from './combat/CombatGridViewHost'
 import type { EntitySprite } from './combat/combatTypes'
 import {
-  createProjectionBridge,
-  type ProjectionBridge,
-} from '@/presentation/geometry/ProjectionBridge'
-import {
   FORMATION_CANVAS_HEIGHT,
   FORMATION_CANVAS_WIDTH,
 } from '@/presentation/geometry/FormationCanvasSpec'
@@ -70,20 +66,6 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
   // Boolean(this.host.arenaRect) — panel LUÔN perspective nên giữ
   // undefined là đúng, KHÔNG gán Rectangle nào vào field này).
   arenaRect: Phaser.GameObjects.Rectangle | undefined
-
-  /**
-   * The read-only view of this region's projection, for the static shell
-   * (spec §4.4). The shell needs the same geometry the canvas draws with in
-   * order to place hit-zones over it — but it must NOT be able to resize it,
-   * which is what handing over `this.projection` directly would allow. A
-   * projection resized by the DOM while the canvas believes otherwise is the
-   * exact failure §3.5 forbids.
-   *
-   * `undefined` before create() has run.
-   */
-  get projectionBridge(): ProjectionBridge | undefined {
-    return this.projection ? createProjectionBridge(this.projection) : undefined
-  }
   private skyLayer: Phaser.GameObjects.Rectangle | undefined
   private groundLayer: Phaser.GameObjects.Rectangle | undefined
   // 0.8 x cell -- reproduces the sprite/cell ratio of the pre-perspective
