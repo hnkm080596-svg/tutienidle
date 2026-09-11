@@ -168,17 +168,17 @@ export function getCombatDescriptors(): readonly AssetResourceDescriptor[] {
     }
   }
 
-  // Spritesheet placeholder clips
+  // Character animation atlases (Spec B §3.1) — one entry per distinct sheet,
+  // however many entities and clips share it.
   for (const { animationSet } of allCombatAnimationSets()) {
     for (const clip of Object.values(animationSet)) {
       if (seenKeys.has(clip.sheetKey)) continue
       seenKeys.add(clip.sheetKey)
       descriptors.push({
-        kind: 'spritesheet',
+        kind: 'atlas',
         key: clip.sheetKey,
-        url: clip.sheetUrl,
-        frameWidth: clip.frameWidth,
-        frameHeight: clip.frameHeight,
+        textureUrl: clip.sheetUrl,
+        atlasUrl: clip.atlasUrl,
       })
     }
   }

@@ -58,10 +58,7 @@ export const ENEMY_TEMPLATE_IDS = [
 // chung toàn Game, không phải riêng scene) — tránh một bảng tính key thứ
 // hai lệch khỏi bảng preload thật.
 export function playerCombatAnimationSet(profile: PlayerVisualProfile): CombatAnimationSet {
-  return buildPlaceholderAnimationSet(profile.combatTextureKey, profile.combatTextureUrl, {
-    width: profile.combatSourceSize.w,
-    height: profile.combatSourceSize.h,
-  })
+  return buildPlaceholderAnimationSet(profile.combatTextureKey)
 }
 
 // PLAYER_TEXTURE_KEY — key fallback riêng (PNG giống hệt profile mortal
@@ -69,17 +66,11 @@ export function playerCombatAnimationSet(profile: PlayerVisualProfile): CombatAn
 // hiện hành đã tải xong); dùng chung kích thước nguồn với mortal (CÙNG file
 // vật lý).
 export function fallbackPlayerCombatAnimationSet(): CombatAnimationSet {
-  return buildPlaceholderAnimationSet(PLAYER_TEXTURE_KEY, PLAYER_TEXTURE_URL, {
-    width: PLAYER_VISUAL_PROFILES.mortal.combatSourceSize.w,
-    height: PLAYER_VISUAL_PROFILES.mortal.combatSourceSize.h,
-  })
+  return buildPlaceholderAnimationSet(PLAYER_TEXTURE_KEY)
 }
 
 export function enemyCombatAnimationSet(textureKey: string): CombatAnimationSet {
-  return buildPlaceholderAnimationSet(textureKey, enemyTextureUrl(textureKey), {
-    width: ENEMY_SOURCE_SIZE.w,
-    height: ENEMY_SOURCE_SIZE.h,
-  })
+  return buildPlaceholderAnimationSet(textureKey)
 }
 
 /**
@@ -154,10 +145,9 @@ export function queueCombatAssets(scene: Phaser.Scene): void {
 
       queuedKeys.add(clip.sheetKey)
 
-      scene.load.spritesheet(clip.sheetKey, clip.sheetUrl, {
-        frameWidth: clip.frameWidth,
-        frameHeight: clip.frameHeight,
-      })
+      // Atlas, not spritesheet (Spec B §3.1): frames are addressed by name so
+      // the JSON's per-frame trim data survives to spec C.
+      scene.load.atlas(clip.sheetKey, clip.sheetUrl, clip.atlasUrl)
     }
   }
 

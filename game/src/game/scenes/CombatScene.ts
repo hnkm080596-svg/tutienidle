@@ -1306,7 +1306,16 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
       this.anims.create({
         key: clip.key,
-        frames: this.anims.generateFrameNumbers(clip.sheetKey, { start: 0, end: clip.frameCount - 1 }),
+        // Frame NAMES, not indices — the clip describes a TexturePacker atlas
+        // (Spec B §3.1/§4.2), so a frame is `frame_` + a zero-padded number
+        // + `.png` rather than an offset into a uniform grid.
+        frames: this.anims.generateFrameNames(clip.sheetKey, {
+          prefix: clip.framePrefix,
+          suffix: clip.frameSuffix,
+          start: clip.firstFrame,
+          end: clip.lastFrame,
+          zeroPad: clip.zeroPad,
+        }),
         frameRate: clip.frameRate,
         repeat: clip.repeat,
       })

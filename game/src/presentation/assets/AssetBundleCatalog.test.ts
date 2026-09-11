@@ -58,7 +58,7 @@ describe('AssetBundleCatalog', () => {
       textures: { exists: () => false },
       load: {
         image: (key: string) => queuedKeys.add(key),
-        spritesheet: (key: string) => queuedKeys.add(key),
+        atlas: (key: string) => queuedKeys.add(key),
       },
     } as never
 

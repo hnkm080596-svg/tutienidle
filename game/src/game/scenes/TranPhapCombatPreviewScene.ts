@@ -17,8 +17,10 @@ import Phaser from 'phaser'
 import {
   PLACEHOLDER_SHEET_KEY,
   PLACEHOLDER_SHEET_URL,
-  PLACEHOLDER_FRAME_WIDTH,
-  PLACEHOLDER_FRAME_HEIGHT,
+  PLACEHOLDER_ATLAS_URL,
+  PLACEHOLDER_FRAME_PREFIX,
+  PLACEHOLDER_FRAME_SUFFIX,
+  PLACEHOLDER_ZERO_PAD,
   PLACEHOLDER_FRAME_COUNT,
   PLACEHOLDER_FRAME_RATE,
 } from '@/game/support/CombatAnimationSet'
@@ -98,10 +100,10 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
   }
 
   preload(): void {
-    this.load.spritesheet(PLACEHOLDER_SHEET_KEY, PLACEHOLDER_SHEET_URL, {
-      frameWidth: PLACEHOLDER_FRAME_WIDTH,
-      frameHeight: PLACEHOLDER_FRAME_HEIGHT,
-    })
+    // Atlas, matching combat (Spec B §3.1). The preview and the real battle
+    // load the same placeholder the same way, so a format problem cannot show
+    // up in one and not the other.
+    this.load.atlas(PLACEHOLDER_SHEET_KEY, PLACEHOLDER_SHEET_URL, PLACEHOLDER_ATLAS_URL)
   }
 
   create(): void {
@@ -137,7 +139,13 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
     if (!this.anims.exists(PREVIEW_IDLE_ANIMATION_KEY)) {
       this.anims.create({
         key: PREVIEW_IDLE_ANIMATION_KEY,
-        frames: this.anims.generateFrameNumbers(PLACEHOLDER_SHEET_KEY, { start: 0, end: PLACEHOLDER_FRAME_COUNT - 1 }),
+        frames: this.anims.generateFrameNames(PLACEHOLDER_SHEET_KEY, {
+          prefix: PLACEHOLDER_FRAME_PREFIX,
+          suffix: PLACEHOLDER_FRAME_SUFFIX,
+          start: 0,
+          end: PLACEHOLDER_FRAME_COUNT - 1,
+          zeroPad: PLACEHOLDER_ZERO_PAD,
+        }),
         frameRate: PLACEHOLDER_FRAME_RATE,
         repeat: -1,
       })

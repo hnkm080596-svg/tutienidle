@@ -107,7 +107,7 @@ describe('CombatScene â€” registerCombatAnimations() guard', () => {
     scene.anims = {
       exists: () => false,
       create: (config: { key: string }) => created.push(config),
-      generateFrameNumbers: () => [],
+      generateFrameNames: () => [],
     }
 
     scene.registerCombatAnimations(
@@ -137,7 +137,7 @@ describe('CombatScene â€” registerCombatAnimations() guard', () => {
     const scene = createScene()
     const create = vi.fn()
 
-    scene.anims = { exists: () => true, create, generateFrameNumbers: () => [] }
+    scene.anims = { exists: () => true, create, generateFrameNames: () => [] }
 
     scene.registerCombatAnimations('entity-x', {
       idle: {
