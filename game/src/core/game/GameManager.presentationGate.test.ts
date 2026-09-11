@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager, INTRO_TOTAL_TICKS } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import { createBaseStats } from '../stats/StatBlock'
@@ -115,8 +116,11 @@ function createBasicSkill(): Skill {
   }
 }
 
-function battleReady(): GameManager {
+// Combat runs on its own CombatClock; the world tick no longer drives it.
+function battleReady(): { gameManager: GameManager; combatSource: ManualClockSource } {
   const gameManager = new GameManager()
+  const combatSource = new ManualClockSource()
+  gameManager.setCombatClockSource(combatSource)
   const player = createPlaybackPlayer()
   gameManager.registerSkillTemplates([createBasicSkill()])
   gameManager.learnSkill('basic_test')
@@ -129,25 +133,30 @@ function battleReady(): GameManager {
 
   // Intro 20 ticks (2026-09-07 plan Task 4) + countdown 30 ticks.
   for (let i = 0; i < INTRO_TOTAL_TICKS + 30; i++) {
-    gameManager.update(0.1)
+    combatSource.advance(COMBAT_STEP_SECONDS)
   }
 
   gameManager.getTurnBattle()!.enemies[0]!.entity.x = 2
 
-  return gameManager
+  return { gameManager, combatSource }
 }
 
 describe('GameManager — setPresentationActive(false) respects manual choice (Defect Task 4)', () => {
   it('does not silently auto-resolve a manual player pending ready-phase turn on scene teardown', () => {
-    const gameManager = battleReady()
+    const { gameManager, combatSource } = battleReady()
     gameManager.setPresentationActive(true)
     gameManager.setBattleManualMode(true)
 
     for (let i = 0; i < 20; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
-    expect(gameManager.isActionPlaybackWaiting()).toBe(true)
+    // Under the turn token a player-team claim in manual mode goes STRAIGHT
+    // to AWAITING_INPUT (spec section 3.2): it never enters the renderer's
+    // ready phase, so there is no playback ack outstanding to observe. What
+    // this test guards - scene teardown must not silently auto-resolve that
+    // turn - is asserted below and unchanged.
+    expect(gameManager.isAwaitingManualTurnChoice()).toBe(true)
 
     gameManager.setPresentationActive(false)
 
@@ -170,6 +179,8 @@ function stageFixture(id: string): Stage {
 describe('GameManager — presentation session lifecycle (Task 2)', () => {
   function createStartedManager(mode: 'interactive' | 'headless' = 'interactive') {
     const gameManager = new GameManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
     const player = createDefaultPlayer()
     const stats = calculateStats({ ...player.baseStats, attack: 100, speed: 100 }, [])
     const enemy = defineEnemy({
@@ -184,11 +195,11 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
     gameManager.setActivePlayer(player)
     gameManager.setPresentationMode(mode)
 
-    return { gameManager, player, stats, stage, enemy }
+    return { gameManager, player, stats, stage, enemy, combatSource }
   }
 
   it('successful startStage in interactive mode begins held, allocates session, and emits presentation_session_started', () => {
-    const { gameManager, player, stats, stage } = createStartedManager('interactive')
+    const { gameManager, player, stats, stage, combatSource } = createStartedManager('interactive')
     const events: unknown[] = []
     gameManager.eventBus.on('presentation_session_started', (e) => events.push(e))
 
@@ -207,9 +218,10 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
     const port = gameManager.getPresentationPort()
     expect(port.getCurrentSession()).toEqual(session)
 
-    // Ticking while held does NOT advance intro ticks
+    // A held session is not on screen, so the combat clock is frozen for
+    // 'not-revealed': advancing its source banks nothing.
     const introBefore = gameManager.getTurnBattle()?.introTurnsRemaining
-    gameManager.update(0.5)
+    combatSource.advance(0.5)
     expect(gameManager.getTurnBattle()?.introTurnsRemaining).toBe(introBefore)
 
     // Attach and release the hold
@@ -218,13 +230,13 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
     expect(port.attach(hold)).toBe(true)
     expect(port.release(hold)).toBe(true)
 
-    // Now ticking advances intro
-    gameManager.update(0.1)
+    // Now the clock is running again and one step advances intro
+    combatSource.advance(COMBAT_STEP_SECONDS)
     expect(gameManager.getTurnBattle()?.introTurnsRemaining).toBe((introBefore ?? 0) - 1)
   })
 
   it('headless startStage allocates session without being held', () => {
-    const { gameManager, player, stats, stage } = createStartedManager('headless')
+    const { gameManager, player, stats, stage, combatSource } = createStartedManager('headless')
     expect(gameManager.startStage(player, stats, stage, false)).toBe(true)
 
     const session = gameManager.getCurrentPresentationSession()!
@@ -233,7 +245,7 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
 
     // Ticking advances immediately
     const introBefore = gameManager.getTurnBattle()?.introTurnsRemaining
-    gameManager.update(0.1)
+    combatSource.advance(COMBAT_STEP_SECONDS)
     expect(gameManager.getTurnBattle()?.introTurnsRemaining).toBe((introBefore ?? 0) - 1)
   })
 

@@ -428,6 +428,40 @@ describe('GamePresentationCoordinator', () => {
     expect(coordinator.getSnapshot().currentRoute).toBe('home')
   })
 
+  it('recovers to the route it never left after a failed entry (error shell Back)', async () => {
+    // The Back button on the error shell calls request({ target: currentRoute }).
+    // A failed entry never commits currentRoute, so this is a same-route request
+    // and ALLOWED_EDGES.home has no 'home' self-entry. If it is rejected, phase
+    // stays 'failed' forever: the overlay keeps pointer-events and both the
+    // error card's buttons are dead - a permanent app lock with no way out but
+    // a reload.
+    let failNext = true
+    renderer.prepare = vi.fn(async () => {
+      if (failNext) {
+        failNext = false
+        throw new Error('scene create exploded')
+      }
+    })
+
+    const coordinator = createCoordinator({ initialRoute: 'home' })
+    const session = { kind: 'combat' as const, sessionId: 91 }
+    ;(sessionPort as PresentationSession).begin(session, 'interactive')
+
+    const failed = await coordinator.request({ target: 'combat', session })
+    expect(failed.status).toBe('failed')
+    expect(coordinator.getSnapshot().phase).toBe('failed')
+    expect(coordinator.getSnapshot().currentRoute).toBe('home')
+
+    // What App.vue's onTransitionBack does.
+    coordinator.clearError()
+    const back = await coordinator.request({ target: 'home' })
+
+    expect(back.status).toBe('entered')
+    expect(coordinator.getSnapshot().phase).toBe('idle')
+    expect(coordinator.getSnapshot().currentRoute).toBe('home')
+    expect(coordinator.getSnapshot().error).toBeNull()
+  })
+
   it('retry with no recorded failure is rejected', async () => {
     const coordinator = createCoordinator({ initialRoute: 'home' })
 
@@ -466,6 +500,116 @@ describe('GamePresentationCoordinator', () => {
     ;(sessionPort as PresentationSession).begin(session, 'interactive')
     return session
   }
+
+  it('runs behindCurtain only after the curtain has fully closed', async () => {
+    const order: string[] = []
+    curtain.close = vi.fn(async () => {
+      order.push('curtain-closed')
+    })
+    curtain.open = vi.fn(async () => {
+      order.push('curtain-opened')
+    })
+
+    const coordinator = createCoordinator({ initialRoute: 'home' })
+    const session = { kind: 'combat' as const, sessionId: 40 }
+
+    const result = await coordinator.request({
+      target: 'combat',
+      session,
+      behindCurtain: () => {
+        order.push('domain-command')
+        ;(sessionPort as PresentationSession).begin(session, 'interactive')
+        return true
+      },
+    })
+
+    expect(result.status).toBe('entered')
+    expect(order).toEqual(['curtain-closed', 'domain-command', 'curtain-opened'])
+  })
+
+  it('fails the transition and reopens the curtain when behindCurtain returns false', async () => {
+    const coordinator = createCoordinator({ initialRoute: 'home' })
+    const openSpy = vi.spyOn(curtain, 'open')
+    const session = { kind: 'combat' as const, sessionId: 41 }
+
+    const result = await coordinator.request({
+      target: 'combat',
+      session,
+      behindCurtain: () => false,
+    })
+
+    expect(result.status).toBe('failed')
+    expect(openSpy).toHaveBeenCalled()
+  })
+
+  it('retry never re-invokes behindCurtain when the command already produced and held a session', async () => {
+    // Regression (code review, task-2): retry() must not re-run the domain
+    // command outside runAdmitted's admission/compensate wiring. Simulates
+    // the reviewer's concrete scenario - behindCurtain succeeds and holds a
+    // session, then asset loading times out on the FIRST attempt only.
+    let assetAttempts = 0
+    assets.ensureFor = vi.fn(async () => {
+      assetAttempts += 1
+      if (assetAttempts === 1) {
+        throw new Error('asset load exploded')
+      }
+    })
+
+    const coordinator = createCoordinator({ initialRoute: 'home' })
+    const session = { kind: 'combat' as const, sessionId: 70 }
+    let commandCalls = 0
+
+    const behindCurtain = () => {
+      commandCalls += 1
+      ;(sessionPort as PresentationSession).begin(session, 'interactive')
+      return true
+    }
+
+    const first = await coordinator.request({ target: 'combat', session, behindCurtain })
+    expect(first.status).toBe('failed')
+    expect(commandCalls).toBe(1)
+    // Law A7: the produced session stays held across the failure, retryable.
+    expect((sessionPort as PresentationSession).isBlocking()).toBe(true)
+
+    const retried = await coordinator.retry()
+
+    expect(retried.status).toBe('entered')
+    expect(coordinator.getSnapshot().currentRoute).toBe('combat')
+    // The domain command must not have run a second time.
+    expect(commandCalls).toBe(1)
+  })
+
+  it('retry rejects a behindCurtain request that failed before ever producing a session', async () => {
+    // Regression (code review, task-2): with no session to resume, retry()
+    // must reject rather than re-run the domain command a second time - the
+    // "retry never re-issues the domain start command" contract holds even
+    // when nothing was ever produced/held.
+    const coordinator = createCoordinator({ initialRoute: 'home' })
+    let commandCalls = 0
+
+    // No `session` field - matches the real shape createGamePresentation.ts
+    // constructs (target, behindCurtain), where behindCurtain is the ONLY
+    // possible source of a session. A literal `session` field here would let
+    // retry()'s plain-session branch reject for the wrong reason even
+    // without this fix, defeating the point of the regression test.
+    const failed = await coordinator.request({
+      target: 'combat',
+      behindCurtain: () => {
+        commandCalls += 1
+        return false
+      },
+    })
+
+    expect(failed.status).toBe('failed')
+    expect(commandCalls).toBe(1)
+
+    const retried = await coordinator.retry()
+
+    expect(retried.status).toBe('rejected')
+    expect(commandCalls).toBe(1)
+    // The error/failed state is untouched by the rejected retry attempt.
+    expect(coordinator.getSnapshot().phase).toBe('failed')
+  })
 
   it('provides detached snapshots to subscribers so mutations cannot affect internal state', () => {
     const coordinator = createCoordinator({ initialRoute: 'home' })

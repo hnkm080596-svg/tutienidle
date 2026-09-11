@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager, INTRO_TOTAL_TICKS } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import { createDefaultPlayer } from '../player/Player'
@@ -18,8 +19,12 @@ function stageFixture(id: string, enemyId: string): Stage {
   }
 }
 
-function buildStartedGameManager(): GameManager {
+// Combat no longer rides the world tick: the battle advances on its own
+// CombatClock, so these tests step a ManualClockSource instead of update().
+function buildStartedGameManager(): { gameManager: GameManager; combatSource: ManualClockSource } {
   const gameManager = new GameManager()
+  const combatSource = new ManualClockSource()
+  gameManager.setCombatClockSource(combatSource)
   const player = createDefaultPlayer()
   const stats = calculateStats({ ...player.baseStats, attack: 100, speed: 100 }, [])
 
@@ -35,38 +40,38 @@ function buildStartedGameManager(): GameManager {
 
   expect(gameManager.startStage(player, stats, gameManager.getStage('intro_stage')!, false)).toBe(true)
 
-  return gameManager
+  return { gameManager, combatSource }
 }
 
 describe('GameManager - intro/transition phase before countdown (plan 2026-09-07 Task 4)', () => {
   it('starts a new battle in the intro phase before countdown', () => {
-    const gameManager = buildStartedGameManager()
+    const { gameManager, combatSource } = buildStartedGameManager()
 
     expect(gameManager.getTurnBattle()?.state).toBe('intro')
     expect(gameManager.getTurnBattle()?.introTurnsRemaining).toBe(INTRO_TOTAL_TICKS)
   })
 
   it('advances from intro to countdown after exactly INTRO_TOTAL_TICKS ticks', () => {
-    const gameManager = buildStartedGameManager()
+    const { gameManager, combatSource } = buildStartedGameManager()
 
     // INTRO_TOTAL_TICKS - 1 ticks: still in intro (last decrement pending).
     for (let i = 0; i < INTRO_TOTAL_TICKS - 1; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
 
       expect(gameManager.getTurnBattle()?.state).toBe('intro')
     }
 
     // The final tick flips intro -> countdown.
-    gameManager.update(0.1)
+    combatSource.advance(COMBAT_STEP_SECONDS)
 
     expect(gameManager.getTurnBattle()?.state).toBe('countdown')
   })
 
   it('keeps the battle paused for the whole intro - no pacing ticks reach the engine', () => {
-    const gameManager = buildStartedGameManager()
+    const { gameManager, combatSource } = buildStartedGameManager()
 
     for (let i = 0; i < INTRO_TOTAL_TICKS; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
     const battle = gameManager.getTurnBattle()
@@ -80,7 +85,7 @@ describe('GameManager - intro/transition phase before countdown (plan 2026-09-07
 
   describe('Task 4: getCombatPresentationSnapshot pure snapshot query', () => {
     it('returns initial combat view at intro with zero ticks without mutating or emitting', () => {
-      const gameManager = buildStartedGameManager()
+      const { gameManager, combatSource } = buildStartedGameManager()
       const session = gameManager.getCurrentPresentationSession()!
       expect(session).toBeDefined()
 

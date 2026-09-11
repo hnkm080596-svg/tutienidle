@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { calculateStats } from '../stats/StatCalculator'
@@ -56,6 +57,8 @@ describe('GameManager — restore skill legacy thiếu execution (bugfix 2026-08
 
   it('end-to-end: sau restore, Trảm gây sát thương lại bình thường (symptom của bug report)', () => {
     const gameManager = new GameManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
 
     gameManager.registerSkillTemplates(SKILLS)
 
@@ -99,7 +102,7 @@ describe('GameManager — restore skill legacy thiếu execution (bugfix 2026-08
 
     gameManager.registerEnemyTemplates([enemy])
     gameManager.startBattleWithPlayer(player, stats, enemy)
-    gameManager.update(3) // Bỏ qua countdown + telegraph spawn.
+    combatSource.advance(3) // Bỏ qua countdown + telegraph spawn.
 
     const battle = gameManager.getBattle()!
 
@@ -107,7 +110,7 @@ describe('GameManager — restore skill legacy thiếu execution (bugfix 2026-08
     battle.enemies[0]!.entity.row = HERO_LANE_INDEX
 
     for (let index = 0; index < 400; index++) {
-      gameManager.update(0.05)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
     expect(battle.enemies[0]!.entity.currentHp).toBeLessThan(1000)

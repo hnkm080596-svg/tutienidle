@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { calculateStats } from '../stats/StatCalculator'
@@ -55,6 +56,8 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
     vi.spyOn(Math, 'random').mockImplementation(mulberry32(MVP_LOOP_SEED))
 
     const gameManager = new GameManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
 
     gameManager.registerTechniqueTemplates(TECHNIQUES)
     gameManager.registerSkillTemplates(SKILLS)
@@ -182,7 +185,7 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
     // buff, sẽ thiết kế lại bằng BossTurnTriggers khi content thật tới) —
     // chỉ giữ assertions core: spawn qua wave + victory + loop terminate.
     for (let i = 0; i < 4000 && isBattleInProgress(gameManager.getBattle()?.state); i++) {
-      gameManager.update(0.05)
+      combatSource.advance(COMBAT_STEP_SECONDS)
 
       const battle = gameManager.getBattle()
 

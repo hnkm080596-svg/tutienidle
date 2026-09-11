@@ -7,8 +7,37 @@ import type {
 export type Route = 'boot' | 'auth' | 'character' | 'home' | 'combat' | 'tribulation' | 'error'
 
 export type RouteRequest =
-  | Readonly<{ target: 'combat' | 'tribulation'; session: SessionRef }>
-  | Readonly<{ target: 'boot' | 'auth' | 'character' | 'home' | 'error' }>
+  | Readonly<{
+      target: 'combat' | 'tribulation'
+      session: SessionRef
+      /**
+       * Domain work with visible effect, executed inside the closed-curtain window.
+       * Runs after the curtain is fully closed and before the target is revealed.
+       * Returning false fails the transition.
+       */
+      behindCurtain?: () => boolean
+    }>
+  | Readonly<{
+      target: 'combat' | 'tribulation'
+      /**
+       * Domain work with visible effect, executed inside the closed-curtain window.
+       * Runs after the curtain is fully closed and before the target is revealed.
+       * Returning false fails the transition. Required (not merely allowed) on
+       * this arm: it is the ONLY source of a session for a combat/tribulation
+       * request that does not already carry one - without it there would be
+       * nothing to adopt in Step 6 of GamePresentationCoordinator.executeTransition.
+       */
+      behindCurtain: () => boolean
+    }>
+  | Readonly<{
+      target: 'boot' | 'auth' | 'character' | 'home' | 'error'
+      /**
+       * Domain work with visible effect, executed inside the closed-curtain window.
+       * Runs after the curtain is fully closed and before the target is revealed.
+       * Returning false fails the transition.
+       */
+      behindCurtain?: () => boolean
+    }>
 
 export type Phase =
   | 'idle'

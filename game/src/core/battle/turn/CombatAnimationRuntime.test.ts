@@ -202,29 +202,45 @@ describe('CombatAnimationRuntime', () => {
     expect(runtime.getAnimationState('player')).toBe('standby')
   })
 
-  it('manual mode: acknowledgeTurnReady on a manual player actor pauses instead of declaring', () => {
+  it('manual mode: pauseForManualActor holds the turn and mints a playback token', () => {
+    // Manual routing is decided by the turn token at CLAIM time (spec 3.2),
+    // so a manual player-team turn never enters the renderer ready phase at
+    // all - it arrives here directly.
     const { runtime, player, eventBus } = fixture()
 
     const attackEvents: string[] = []
     eventBus.on('attack', () => attackEvents.push('attack'))
 
     runtime.setBattleManualMode(true)
-    runtime.notifyReadyActor(player)
-    const token = runtime.getPendingPlaybackToken()!
-    runtime.acknowledgeTurnReady(token)
+    runtime.pauseForManualActor(player)
 
     expect(runtime.isAwaitingManualTurnChoice()).toBe(true)
     expect(runtime.getAwaitedManualActor()?.id).toBe('player')
+    expect(runtime.isActionPlaybackWaiting()).toBe(false)
     expect(attackEvents).toEqual([])
   })
 
-  it('submitTurnChoice resolves the paused manual turn and clears the pause', () => {
-    const { runtime, player, syncLegacyBattleState } = fixture()
+  it('acknowledgeTurnReady declares even with manual mode on (toggle is a boundary command)', () => {
+    // Flipping the manual toggle mid-turn is an external command and takes
+    // effect at the NEXT turn boundary (spec 9.1). A turn already in flight
+    // must finish, never strand its pipeline waiting for a choice.
+    const { runtime, player } = fixture()
+
+    runtime.notifyReadyActor(player)
+    runtime.setBattleManualMode(true)
+    runtime.acknowledgeTurnReady(runtime.getPendingPlaybackToken()!)
+
+    expect(runtime.isAwaitingManualTurnChoice()).toBe(false)
+    expect(runtime.getAnimationState('player')).toBe('cast')
+  })
+
+  it('submitTurnChoice declares the paused manual turn and clears the pause', () => {
+    // Both modes declare and wait: the resolution pipeline owns impact and
+    // completion from here, so the runtime no longer resolves inline.
+    const { runtime, player } = fixture()
 
     runtime.setBattleManualMode(true)
-    runtime.notifyReadyActor(player)
-    const token = runtime.getPendingPlaybackToken()!
-    runtime.acknowledgeTurnReady(token)
+    runtime.pauseForManualActor(player)
 
     expect(runtime.isAwaitingManualTurnChoice()).toBe(true)
 
@@ -232,7 +248,8 @@ describe('CombatAnimationRuntime', () => {
 
     expect(submitted).toBe(true)
     expect(runtime.isAwaitingManualTurnChoice()).toBe(false)
-    expect(syncLegacyBattleState).toHaveBeenCalled()
+    expect(runtime.isActionPlaybackWaiting()).toBe(true)
+    expect(runtime.getAnimationState('player')).toBe('cast')
   })
 
   it('submitTurnChoice with no pending pause is a safe no-op (returns false)', () => {
@@ -245,9 +262,7 @@ describe('CombatAnimationRuntime', () => {
     const { runtime, player } = fixture()
 
     runtime.setBattleManualMode(true)
-    runtime.notifyReadyActor(player)
-    const token = runtime.getPendingPlaybackToken()!
-    runtime.acknowledgeTurnReady(token)
+    runtime.pauseForManualActor(player)
 
     expect(runtime.isAwaitingManualTurnChoice()).toBe(true)
 
@@ -289,9 +304,7 @@ describe('CombatAnimationRuntime', () => {
     const { runtime, player } = fixture()
 
     runtime.setBattleManualMode(true)
-    runtime.notifyReadyActor(player)
-    const token = runtime.getPendingPlaybackToken()!
-    runtime.acknowledgeTurnReady(token)
+    runtime.pauseForManualActor(player)
 
     expect(runtime.isAwaitingManualTurnChoice()).toBe(true)
 
@@ -439,8 +452,7 @@ describe('CombatAnimationRuntime', () => {
       const { runtime, player } = fixture()
       runtime.setPresentationActive(true)
       runtime.setBattleManualMode(true)
-      runtime.notifyReadyActor(player)
-      runtime.acknowledgeTurnReady(runtime.getPendingPlaybackToken()!)
+      runtime.pauseForManualActor(player)
 
       expect(runtime.isAwaitingManualTurnChoice()).toBe(true)
 

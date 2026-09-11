@@ -1,23 +1,22 @@
 import { describe, expect, it } from 'vitest'
+import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
 
-// Uncommitted audit followup plan, mục "Fixed-step/catch-up cho combat"
-// (2026-08-24) — App.vue đo deltaSeconds THẬT bằng GameClock; khi tab bị
-// trình duyệt throttle (nền/minimize/máy vừa resume), một lần gọi
-// gameManager.update() có thể nhận đúng TỔNG THỜI GIAN đó dồn vào MỘT
-// deltaSeconds lớn thay vì nhiều deltaSeconds nhỏ như lúc chạy nền trước
-// (foreground). Trước khi sửa, các timer đếm-ngược-rồi-reset (cadence/
-// attackTimer/spawnCountdown) chỉ kiểm
-// tra <= 0 MỘT LẦN mỗi lời gọi rồi reset thẳng về mốc mới — một
-// deltaSeconds lớn chỉ tạo ra ĐÚNG 1 đòn đánh dù đáng lẽ phải đủ N đòn
-// theo đúng nhịp thời gian thực đã trôi qua. Test này khoá lại bất biến
-// "cùng tổng thời gian mô phỏng phải cho cùng kết quả, bất kể delta được
-// chia nhỏ hay dồn lớn" — nó FAIL trên code trước khi sửa
-// (GameManager.updateBattleFixedStep()).
+// Originally (2026-08-24) this locked the fixed-step catch-up the WORLD tick
+// performed for combat: one lumped deltaSeconds had to produce the same number
+// of pacing steps as many small ones.
+//
+// Combat has since left the world tick (2026-09-10 combat-turn-mechanism
+// spec). The chunking invariant survives, but it belongs to CombatClock now:
+// the same total time through the clock's source must produce the same battle,
+// whether the source delivers it in one frame or two hundred. What does NOT
+// survive is the combat catch-up CEILING (the old BATTLE_MAX_CATCHUP_SECONDS)
+// - the spec forbids catch-up in combat outright, and the world tick can no
+// longer reach the battle at all, which the second test pins.
 const ATTACKER_STATS_INPUT = {
   maxHp: 500,
   attack: 50,
@@ -98,9 +97,11 @@ function createStubbornEnemy() {
   })
 }
 
-describe('GameManager — fixed-step catch-up cho combat (uncommitted audit followup plan)', () => {
+describe('CombatClock — chunking invariant + no world-tick catch-up for combat', () => {
   function runScenario(totalSeconds: number, stepSeconds: number | null): number {
     const gameManager = new GameManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
     const player = createAttackerPlayer()
 
     gameManager.registerSkillTemplates([createBasicSkill()])
@@ -112,7 +113,7 @@ describe('GameManager — fixed-step catch-up cho combat (uncommitted audit foll
     // Slice 6 cutover: countdown là phase của TurnBattle (30 pacing ticks
     // = 3s hệ sống) — chạy hết countdown trước khi đếm turn.
     for (let i = 0; i < 30; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
     // Materialize gán vị trí từ resolver — đặt quái trong tầm teleport
@@ -127,24 +128,22 @@ describe('GameManager — fixed-step catch-up cho combat (uncommitted audit foll
     let attackCount = 0
 
     if (stepSeconds === null) {
-      // Kịch bản "tab bị throttle": TOÀN BỘ thời gian dồn vào 1 lần
-      // gọi update() duy nhất, mô phỏng App.vue's tick() nhận 1
-      // deltaSeconds lớn từ GameClock sau khi callback bị hoãn.
-      gameManager.update(totalSeconds)
+      // One long frame from the clock source (a stalled renderer catching up
+      // in a single callback).
+      combatSource.advance(totalSeconds)
     } else {
-      // Kịch bản foreground bình thường: nhiều deltaSeconds nhỏ cộng
-      // dồn đúng bằng totalSeconds.
+      // The ordinary case: many small frames summing to totalSeconds.
       const steps = Math.round(totalSeconds / stepSeconds)
 
       for (let i = 0; i < steps; i++) {
-        gameManager.update(stepSeconds)
+        combatSource.advance(stepSeconds)
       }
     }
 
     return gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0
   }
 
-  it('tổng số đòn đánh giống nhau dù chia nhiều delta nhỏ (0.1s/lần) hay dồn 1 delta lớn (throttle tab)', () => {
+  it('cùng tổng thời gian trên CombatClock cho cùng số lượt, dù chia nhỏ hay dồn 1 frame lớn', () => {
     const totalSeconds = 20
 
     const manySmallDeltas = runScenario(totalSeconds, 0.1)
@@ -157,16 +156,23 @@ describe('GameManager — fixed-step catch-up cho combat (uncommitted audit foll
     expect(oneBigDelta).toBeGreaterThan(10)
   })
 
-  it('delta dồn vượt trần catch-up (BATTLE_MAX_CATCHUP_SECONDS) vẫn không khoá UI — chạy xong tức thời, không throw', () => {
+  it('một delta world khổng lồ KHÔNG còn chạm tới combat — không catch-up, không trần, không dồn nợ', () => {
     const gameManager = new GameManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
     const player = createAttackerPlayer()
 
     gameManager.startBattle(player, createStubbornEnemy())
-    gameManager.update(3)
+    combatSource.advance(3)
     gameManager.getTurnBattle()!.enemies[0]!.entity.x = 2
 
-    // Giả lập máy ngủ nhiều giờ rồi resume — deltaSeconds cực lớn.
+    const turnsBefore = gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0
+
+    // Máy ngủ nhiều giờ rồi resume: GameClock trả về deltaSeconds cực lớn.
+    // Cultivation/production/auto-farm vẫn nhận nó; combat thì không.
     expect(() => gameManager.update(6 * 60 * 60)).not.toThrow()
+
+    expect(gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0).toBe(turnsBefore)
     expect(gameManager.getTurnBattle()!.enemies[0]!.entity.alive).toBe(true)
   })
 })

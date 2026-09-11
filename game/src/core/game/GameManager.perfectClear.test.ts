@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { calculateStats } from '../stats/StatCalculator'
@@ -49,6 +50,8 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
 
   function harness(stageDef: Stage) {
     const gameManager = new GameManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
     const player = createDefaultPlayer()
     const stats = calculateStats({ ...player.baseStats, attack: 100 }, [])
 
@@ -58,15 +61,15 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
 
     gameManager.startStage(player, stats, stageDef, false)
 
-    return { gameManager, player, stageDef }
+    return { gameManager, player, stageDef, combatSource }
   }
 
   it('ghi perfectClearStageIds + perfectClearSeconds khi đủ điều kiện', () => {
-    const { gameManager, player } = harness(stage({ perfectClearTurnLimit: 10 }))
+    const { gameManager, player, combatSource } = harness(stage({ perfectClearTurnLimit: 10 }))
 
     try {
       for (let i = 0; i < 400 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
-        gameManager.update(0.05)
+        combatSource.advance(COMBAT_STEP_SECONDS)
       }
     } catch (error) {
       console.error('[PC-TEST-CAUGHT]', error instanceof Error ? error.stack?.split('\n').slice(0, 10).join(' | ') : String(error))
@@ -80,11 +83,11 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
   })
 
   it('không ghi khi stage chưa định nghĩa perfectClearTurnLimit', () => {
-    const { gameManager, player } = harness(stage())
+    const { gameManager, player, combatSource } = harness(stage())
 
     for (let i = 0; i < 400 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
       try {
-        gameManager.update(0.05)
+        combatSource.advance(COMBAT_STEP_SECONDS)
       } catch (error) {
         console.error('[PC-LOOP-THREW]', i, error instanceof Error ? error.message : String(error))
         break
@@ -96,12 +99,12 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
   })
 
   it('không overwrite perfectClearSeconds khi đạt Hoàn Mỹ lần 2', () => {
-    const { gameManager, player, stageDef } = harness(stage({ perfectClearTurnLimit: 50 }))
+    const { gameManager, player, stageDef, combatSource } = harness(stage({ perfectClearTurnLimit: 50 }))
     const stats = calculateStats({ ...player.baseStats, attack: 100 }, [])
 
     for (let i = 0; i < 400 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
       try {
-        gameManager.update(0.05)
+        combatSource.advance(COMBAT_STEP_SECONDS)
       } catch (error) {
         console.error('[PC-LOOP-THREW]', i, error instanceof Error ? error.message : String(error))
         break
@@ -116,7 +119,7 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
 
     for (let i = 0; i < 400 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
       try {
-        gameManager.update(0.05)
+        combatSource.advance(COMBAT_STEP_SECONDS)
       } catch (error) {
         console.error('[PC-LOOP-THREW]', i, error instanceof Error ? error.message : String(error))
         break

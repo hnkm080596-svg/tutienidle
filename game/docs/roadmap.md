@@ -2294,6 +2294,103 @@ Bịt nốt lỗ hổng ghi ở cuối mục 9.8 (dòng "cần playtest trực q
 
 ---
 
+---
+
+## 11. Combat turn mechanism + real-time/turn authority (2026-09-10, SHIPPED)
+
+Branch `feat/combat-turn-mechanism`, 11 tasks. Fixes 3 reported defects (scene
+transitions revealing before the curtain closes, the spawn telegraph moving
+in visible beats, units appearing to attack simultaneously) plus a fourth
+request — a written boundary between what runs in real time and what depends
+on turns. Two specs govern it, and this entry is the durable summary of the
+contract they establish:
+
+- `docs/superpowers/specs/2026-09-10-combat-turn-mechanism-design.md` — binding
+  authority on turn order, turn-end, the resolution pipeline, manual mode and
+  the external-command boundary.
+- `docs/superpowers/specs/2026-09-10-combat-realtime-turn-authority-design.md`
+  — in force except where the document above supersedes it; still owns the
+  two-clock separation, no catch-up, the off-screen pause, the closed-curtain
+  work window, `presentationActive` ownership, the cooldown authority, and the
+  §5 time classification.
+
+**The contract, as shipped:**
+
+- Combat owns a self-counting clock (`CombatClock`) with no catch-up. It never
+  receives time from the world tick and never gives time back. The clock
+  freezes while a turn is in flight, via the `'turn-in-flight'` freeze reason
+  — added and removed by the single `TurnToken`, which is the sole authority
+  on whether combat is between turns or inside one.
+- A turn is one token. Turn order is one-at-a-time by construction — the
+  token's non-`IDLE` state IS the enforcement, not a separate check. Turn-end
+  is a drained resolution pipeline (`TurnPipeline`), not an event: the last
+  step (mechanical or renderer-acknowledged) completing is what ends the turn.
+- External commands land at the turn boundary — the instant between
+  `RESOLVING → IDLE` and the next `IDLE → CLAIMED` — via a boundary queue.
+  Internal effects (damage, buffs, gauge fill from a skill) apply immediately
+  at their `HIT_RESOLUTION` step. `submitTurnChoice` is not an external
+  command; it is consumed by `AWAITING_INPUT` directly.
+- Cooldowns are counted in turns, with one authority
+  (`TurnSkillAction`/`cooldownTurns`). The legacy seconds-based
+  `skillSystem.update(deltaSeconds, 0)` call was characterized as dead for the
+  turn path, but it still stands in `GameManager.update()` and was NOT removed
+  on this branch - it feeds the doomed real-time SkillSystem and its removal
+  belongs to that engine's retirement, not here.
+- The world tick's cadence is unchanged (still 1 Hz via `useAppLifecycle`).
+  `updateBattleFixedStep` no longer drives combat at all — it is auto-farm
+  only, a wall-clock reward cycle with no `turnBattle`. Combat advances on
+  `CombatClock`'s own render-cadence source instead
+  (`GameManagerTurnBattleOps.stepTurnBattle`).
+- The Electron host runs the clock source on the main process
+  (`MainProcessClockSource`, via `electronAPI.combatClock`) with
+  `backgroundThrottling: false`, so a minimized/backgrounded window does not
+  starve combat of frames; the web build falls back to `RafClockSource`.
+
+**Measured evidence (real browser runs, not simulated):**
+
+- Units no longer attack simultaneously: 24 `turn_ready` events spaced
+  1.9–3.0 s apart, none in the same frame, once `presentationActive` was given
+  a real owner (the presentation coordinator).
+- The spawn telegraph no longer moves in three beats: moving combat off the
+  world tick took snapshot arrival gaps from median 0 ms / max 1029 ms /
+  66-of-73 same-frame to median 162 ms / max 215 ms; render-clock
+  interpolation then made the painted value change on every one of ~144
+  sampled frames per second between ~10 Hz target updates, landing exactly on
+  target 18 times across a 96-frame / 659 ms sample.
+- Character animation keeps running while combat is frozen: two screenshots
+  ~1 s apart during an off-screen pause show different sprite animation
+  frames while HP is byte-identical.
+
+**Enforcement:** `src/core/game/CombatTimeClassification.test.ts` is a static
+parity test guarding the §5 classification — it fails if a `deltaSeconds`/`dt`
+path reappears in the turn-domain files, if the world tick starts calling
+`tickPacing`/`tickIntro`/`tickCountdown` again, if a freeze is ever implemented
+by pausing the Phaser scene, if the turn-in-flight predicate stops being the
+token's own state, or if a seconds-valued field reappears outside the
+countdown display.
+
+**Retained debt (deliberately out of scope, unchanged by this branch):**
+
+- No mid-combat save or load. Combat state is ephemeral.
+- No multi-tab leader election. One instance is assumed.
+- OS sleep / lid-closed resumes the clock source without catch-up — no
+  banking of missed time.
+- Three pre-existing unpinned-`Math.random()` flakes in the turn battle test
+  suite (`TurnBattleSystem.selfBuff.qa.test.ts`, `TurnBattleSystem.test.ts`,
+  `TurnBattleSystem.dotSource.qa.test.ts`) make a clean full-suite run close to
+  a coin flip; not introduced by this branch, not fixed by it. The repo's own
+  `GameManager.actionPlayback.test.ts:77-94` shows the pinning pattern
+  (`evasionRate: 0`) that Task 10 used successfully for one flaky test in this
+  same family.
+- Real-hardware Electron minimize/restore and OS suspend/resume were not
+  empirically re-verified on this machine during this task; the stall-guard
+  logic is unit-proven (fake timers) and the visible-to-the-player case (tab
+  hidden) is independently covered by the pause overlay.
+
+See `docs/qa/2026-09-10-combat-turn-mechanism.md` for the full QA pass.
+
+---
+
 ## Cách cập nhật roadmap này (giữ từ bản turn-based cũ, áp cho toàn file)
 
 Sau mỗi lần khảo sát/brainstorm/viết plan/merge cho một hạng mục:

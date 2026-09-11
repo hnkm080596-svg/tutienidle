@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ManualClockSource, COMBAT_STEP_SECONDS } from './CombatClock'
 import { GameManager } from '../../game/GameManager'
 import { createDefaultPlayer } from '../../player/Player'
 import { calculateStats } from '../../stats/StatCalculator'
@@ -29,6 +30,8 @@ function makeStage(id: string, enemyId: string): Stage {
 
 function makeAwakenedBattle() {
   const manager = new GameManager()
+  const combatSource = new ManualClockSource()
+  manager.setCombatClockSource(combatSource)
   manager.registerSkillTemplates(SKILLS)
 
   const player = createDefaultPlayer()
@@ -69,12 +72,12 @@ function makeAwakenedBattle() {
   participant.entity.stats.maxMp = 100
   participant.entity.currentMp = 100
 
-  return { manager, participant }
+  return { manager, participant, combatSource }
 }
 
 describe('Reaction Path end-to-end (Phase A4)', () => {
   it('marker special casts and lands real damage (pool wiring live, no throw)', () => {
-    const { manager, participant } = makeAwakenedBattle()
+    const { manager, participant, combatSource } = makeAwakenedBattle()
 
     // Drive the real fixed-step loop until the special's cooldown commit
     // proves the marker resolved through the pool-interception path.
@@ -84,7 +87,7 @@ describe('Reaction Path end-to-end (Phase A4)', () => {
     let specialFired = false
 
     for (let i = 0; i < 300; i++) {
-      manager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
 
       if ((participant.special?.remainingCooldownTurns ?? 0) > 0) {
         specialFired = true
@@ -96,7 +99,7 @@ describe('Reaction Path end-to-end (Phase A4)', () => {
   })
 
   it('marker ultimate self-applies reaction_empowerment (+25% reactionEffectPercent folds)', () => {
-    const { manager, participant } = makeAwakenedBattle()
+    const { manager, participant, combatSource } = makeAwakenedBattle()
 
     participant.entity.currentMp = 100
 
@@ -106,7 +109,7 @@ describe('Reaction Path end-to-end (Phase A4)', () => {
     let submitted = false
 
     for (let i = 0; i < 100; i++) {
-      manager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
 
       if (!submitted && manager.isAwaitingManualTurnChoice()) {
         submitted = true

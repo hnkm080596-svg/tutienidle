@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { calculateStats } from '../stats/StatCalculator'
@@ -20,6 +21,8 @@ import type { Stage } from '../stage/Stage'
 describe('boss stage — restartTurnBattleCycle() repeat cycle keeps spawning the boss', () => {
   it('a floor-10 boss stage under turnBattleRepeatContinuously still spawns the boss (not an enemyPool mob) on the 2nd cycle', () => {
     const gameManager = new GameManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
 
     const bossTemplate = defineEnemy({
       id: 'repeat_test_boss', name: 'Repeat Boss', level: 1, realmId: 'mortal', lane: 'ground', isBoss: true,
@@ -61,7 +64,7 @@ describe('boss stage — restartTurnBattleCycle() repeat cycle keeps spawning th
     const seenEnemyIds: string[] = []
 
     for (let i = 0; i < 1000 && seenEnemyIds.length < 2; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
 
       for (const enemy of gameManager.getTurnBattle()?.enemies ?? []) {
         if (!seenEnemyIds.includes(enemy.entity.id)) {

@@ -115,25 +115,37 @@ export function createGamePresentation(deps: GamePresentationDeps): GamePresenta
     }
 
     isAdmitting = true
-    let request: RouteRequest | null = null
+    let accepted: RouteRequest | null = null
 
-    try {
-      request = command()
-    } catch {
-      isAdmitting = false
-      reservedSessionId = null
-      return rejected()
+    // Runs behind the closed curtain (GamePresentationCoordinator.executeTransition),
+    // after admission is already decided above. A combat -> combat refight is a
+    // transition against a renderer that is already live, so running the domain
+    // command before the transition (as this used to) reset the battle in full view.
+    const behindCurtain = (): boolean => {
+      try {
+        accepted = command()
+      } catch {
+        accepted = null
+      }
+
+      if (accepted && 'session' in accepted && accepted.session) {
+        reservedSessionId = accepted.session.sessionId
+        handledSessionIds.add(accepted.session.sessionId)
+      }
+
+      return accepted !== null
     }
 
-    if (!request) {
-      isAdmitting = false
-      reservedSessionId = null
-      return rejected()
-    }
-
-    if ('session' in request && request.session) {
-      reservedSessionId = request.session.sessionId
-      handledSessionIds.add(request.session.sessionId)
+    // Narrowing target per-branch (rather than one `{ target, behindCurtain }`
+    // literal) lets each branch structurally satisfy RouteRequest on its own -
+    // the combat/tribulation arm has no `session` field (behindCurtain is its
+    // only source of one), so a single literal typed against the full
+    // RouteRequest['target'] union would need an `as RouteRequest` cast.
+    let request: RouteRequest
+    if (target === 'combat' || target === 'tribulation') {
+      request = { target, behindCurtain }
+    } else {
+      request = { target, behindCurtain }
     }
 
     let result: TransitionResult
@@ -144,11 +156,11 @@ export function createGamePresentation(deps: GamePresentationDeps): GamePresenta
       reservedSessionId = null
     }
 
-    if (result.status === 'rejected') {
+    if (result.status === 'rejected' && accepted) {
       // Unreachable while canEnter and request agree, but an accepted domain
       // command with no transition is the one outcome that must never survive
       // silently - the session would run held and unrendered forever.
-      forgetSession(request)
+      forgetSession(accepted)
       options.compensate?.()
     }
 

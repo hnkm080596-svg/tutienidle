@@ -211,6 +211,12 @@ import type { StatModifier } from '../stats/StatCalculator'
 import type { Stats } from '../stats/StatBlock'
 import { createBaseStats } from '../stats/StatBlock'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
+import type {
+  ClockSource,
+  CombatClockState,
+  FreezeReason,
+} from '../battle/turn/CombatClock'
+import type { TokenState } from '../battle/turn/TurnToken'
 import type { TurnSkillDefinition, TurnSkillSlotRole } from '../battle/turn/TurnSkillAction'
 import type { TurnSkillPresentationEntry } from '../combat/CombatSkillPresentation'
 import { TURN_BUFF_REGISTRY } from '../../data/buff/TurnBuffRegistry'
@@ -2370,6 +2376,58 @@ export class GameManager {
   /** Đang pause chờ player chọn skill cho lượt của chính mình? */
   isAwaitingManualTurnChoice(): boolean {
     return this.turnBattleOps.isAwaitingManualTurnChoice()
+  }
+
+  // --- Combat clock + turn token (2026-09-10 combat-turn-mechanism spec) ---
+
+  /**
+   * Install the source combat counts from. The browser installs a
+   * RafClockSource so the battle advances exactly as fast as it is drawn;
+   * tests install a ManualClockSource and step it themselves.
+   */
+  setCombatClockSource(source: ClockSource): void {
+    this.turnBattleOps.setCombatClockSource(source)
+  }
+
+  freezeCombat(reason: FreezeReason): void {
+    this.turnBattleOps.freezeCombat(reason)
+  }
+
+  /**
+   * External command boundary (spec section 9). A command never mutates
+   * battle state at the moment it arrives: it runs immediately when there is
+   * no boundary to wait for (no battle, or the token is already idle), and
+   * otherwise waits for the next RESOLVING -> IDLE transition.
+   */
+  enqueueAtTurnBoundary(command: () => void): void {
+    this.turnBattleOps.enqueueAtTurnBoundary(command)
+  }
+
+  resumeCombat(reason: FreezeReason): void {
+    this.turnBattleOps.resumeCombat(reason)
+  }
+
+  getCombatClockState(): CombatClockState {
+    return this.turnBattleOps.getCombatClockState()
+  }
+
+  getElapsedCombatSteps(): number {
+    return this.turnBattleOps.getElapsedCombatSteps()
+  }
+
+  /** @internal - diagnostics; the freeze reason set is the engine's channel. */
+  getFreezeReasons(): readonly FreezeReason[] {
+    return this.turnBattleOps.getFreezeReasons()
+  }
+
+  /** @internal - for tests and the dev inspector, never for gameplay code. */
+  getTurnTokenState(): TokenState {
+    return this.turnBattleOps.getTurnTokenState()
+  }
+
+  /** The single predicate for "a turn is in flight" (spec section 2). */
+  isTurnInFlight(): boolean {
+    return this.turnBattleOps.isTurnInFlight()
   }
 
   setPresentationMode(mode: PresentationMode): void {

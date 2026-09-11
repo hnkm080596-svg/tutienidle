@@ -165,6 +165,33 @@ export class GamePresentationCoordinator {
       return { status: 'rejected', transitionId: this.currentTransitionId }
     }
 
+    if (failed.behindCurtain) {
+      // The "retry never re-issues the domain start command" contract above
+      // must hold unconditionally - re-invoking behindCurtain here would run
+      // the domain command a second time (e.g. startStage()/startTribulation()
+      // again) completely outside runAdmitted's admission/compensate wiring.
+      // The ONLY way to retry such a request without doing that is to resume
+      // the session its command already produced and held before the failure,
+      // as a plain request with no behindCurtain attached. If no session was
+      // ever produced (the command declined, or never got the chance to run),
+      // there is nothing to resume - retry rejects, and the caller must make a
+      // fresh attempt through runAdmitted (which re-checks canEnter and
+      // re-wraps compensate) rather than through this method.
+      if (failed.target !== 'combat' && failed.target !== 'tribulation') {
+        return { status: 'rejected', transitionId: this.currentTransitionId }
+      }
+
+      const produced = this.sessionPort.getCurrentSession()
+
+      if (!produced || produced.kind !== failed.target) {
+        return { status: 'rejected', transitionId: this.currentTransitionId }
+      }
+
+      this.clearError()
+
+      return this.request({ target: failed.target, session: produced })
+    }
+
     if ('session' in failed) {
       const current = this.sessionPort.getCurrentSession()
 
@@ -206,8 +233,14 @@ export class GamePresentationCoordinator {
       return { status: 'rejected', transitionId: this.currentTransitionId }
     }
 
-    // Validate route edge
-    if (!this.isAllowedEdge(this.currentRoute, request.target)) {
+    // Validate route edge. A request for the route we are already on is allowed
+    // even when no self-edge is declared - canEnter() has always said yes to it,
+    // and it is the only way out of a 'failed' phase whose transition never
+    // committed currentRoute (the error shell's Back button).
+    if (
+      request.target !== this.currentRoute &&
+      !this.isAllowedEdge(this.currentRoute, request.target)
+    ) {
       return { status: 'rejected', transitionId: this.currentTransitionId }
     }
 
@@ -253,10 +286,15 @@ export class GamePresentationCoordinator {
     let holdToken: PresentationHold | null = null
     let priorDeactivated = false
 
-    const sessionInRequest = 'session' in request ? request.session : null
+    // When behindCurtain is set, no session exists yet - the domain command
+    // produces it inside the closed-curtain window (see below). Any session
+    // field on the request in that case is unused; adoption happens only
+    // after the command runs.
+    const sessionInRequest = !request.behindCurtain && 'session' in request ? request.session : null
     this.targetSession = sessionInRequest
     this.targetRoute = request.target
     this.notify()
+    let curtainClosed = false
 
     try {
       // Step 1: acquire hold if session requested
@@ -279,6 +317,32 @@ export class GamePresentationCoordinator {
         'Curtain close timed out',
         signal,
       )
+      curtainClosed = true
+
+      this.checkAborted(signal)
+
+      // Step 2b: run the domain command behind the closed curtain, then adopt
+      // the session it produces. A combat/tribulation refight against a live
+      // renderer must never reset visibly - this is why the command runs here
+      // instead of before the transition was requested.
+      if (request.behindCurtain && !request.behindCurtain()) {
+        throw new Error('Domain command rejected inside the closed-curtain window')
+      }
+
+      if (request.behindCurtain) {
+        const produced = this.sessionPort.getCurrentSession()
+
+        if (!produced || produced.kind !== request.target) {
+          throw new Error('Domain command produced no session for the target route')
+        }
+
+        this.targetSession = produced
+        holdToken = this.sessionPort.hold(produced)
+
+        if (!holdToken) {
+          throw new Error(`Failed to acquire hold for session ${produced.sessionId}`)
+        }
+      }
 
       this.checkAborted(signal)
 
@@ -327,7 +391,7 @@ export class GamePresentationCoordinator {
 
       // Step 6: commit currentRoute and attach hold
       this.currentRoute = request.target
-      this.currentSession = sessionInRequest
+      this.currentSession = this.targetSession
       this.renderRoute = null
 
       if (holdToken) {
@@ -379,6 +443,39 @@ export class GamePresentationCoordinator {
       // Failure detaches with 'hold' policy: never drain pending work
       if (holdToken) {
         this.sessionPort.detach(holdToken, 'hold')
+      } else if (request.behindCurtain && curtainClosed) {
+        // The domain command was rejected (or produced no session) before any
+        // hold was ever taken. Corrected mental model (code review, task-2):
+        // PresentationTransitionOverlay's error card is drawn above the
+        // curtain panels whenever phase === 'failed' regardless of curtain
+        // state, so the card ITSELF is not what this fixes - it shows either
+        // way. What differs is the backdrop behind it: the card's own
+        // background is only 65% opaque, so with the curtain left closed it
+        // would float over a solid black void, whereas reopening restores the
+        // dimmed-but-visible prior screen behind it - an ordinary "modal over
+        // content" look instead of a blank one. Awaiting this (rather than
+        // setting phase/calling notify() first) also means the card never
+        // renders over the wrong backdrop even for one frame: phase only
+        // flips to 'failed' and subscribers are only notified once this
+        // settles, a few lines below.
+        //
+        // Awaited, not fire-and-forget, for a second reason too: this
+        // method's promise must not resolve, and the single-in-flight guard
+        // in request() must not clear, until this settles - otherwise a
+        // Retry/Back click fired the instant the error card appears (App.vue's
+        // onTransitionRetry/onTransitionBack are not gated on curtain
+        // animation) could start a new transition's close() while this
+        // reopen is still animating, racing over the overlay's one shared
+        // curtainState ref with no transition-id/generation guard of its own.
+        //
+        // Use a fresh signal: the transition's own signal was just aborted
+        // above, and the curtain rejects immediately on an already-aborted one.
+        try {
+          await this.curtain.open(transitionId, new AbortController().signal)
+        } catch {
+          // Best-effort: the transition already failed for its own reason
+          // above; a reopen failure must not overwrite that with a different one.
+        }
       }
 
       this.phase = 'failed'
@@ -397,6 +494,12 @@ export class GamePresentationCoordinator {
   }
 
   private isValidRequest(request: RouteRequest): boolean {
+    // A behindCurtain request produces its session inside the closed-curtain
+    // window (see executeTransition) - it cannot carry one up front.
+    if (request.behindCurtain) {
+      return true
+    }
+
     if (request.target === 'combat' || request.target === 'tribulation') {
       return (
         'session' in request &&

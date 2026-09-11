@@ -17,10 +17,14 @@ import { AssetBundleManager } from './presentation/assets/AssetBundleManager'
 import { CompositeRenderer, createVueRouteAdapter } from './presentation/VueRouteAdapter'
 import { GamePresentationCoordinator } from './presentation/GamePresentationCoordinator'
 import { createGamePresentation } from './presentation/createGamePresentation'
+import { bindPresentationActive } from './presentation/bindPresentationActive'
+import { RafClockSource } from './presentation/clock/RafClockSource'
+import { MainProcessClockSource } from './presentation/clock/MainProcessClockSource'
 import { checkTribulationOutcomeAction } from './composables/useTribulation'
 import { isBattleInProgress } from './core/battle/BattleTypes'
 import { useBreakthrough } from './composables/useBreakthrough'
 import { useElectronBridge } from './composables/useElectronBridge'
+import { useCombatPause } from './composables/useCombatPause'
 import { useNotificationStore } from './stores/notification'
 import { useI18n } from 'vue-i18n'
 import { useOfflineSummaryStore } from './stores/offlineSummary'
@@ -30,6 +34,7 @@ import { useAppLifecycle } from './composables/useAppLifecycle'
 import GameRoot from './components/layout/GameRoot.vue'
 import RouteMount from './components/game/RouteMount.vue'
 import PresentationTransitionOverlay from './components/game/PresentationTransitionOverlay.vue'
+import CombatPauseOverlay from './components/game/combat/CombatPauseOverlay.vue'
 import LoadingScreen from './components/common/LoadingScreen.vue'
 import ErrorBoundary from './components/common/ErrorBoundary.vue'
 import ErrorScreen from './components/common/ErrorScreen.vue'
@@ -114,6 +119,20 @@ const gameManager = new GameManager()
 // open -> release). Headless instances (tests/tools) stay unheld.
 gameManager.setPresentationMode('interactive')
 
+// Combat counts on its OWN clock, not on the 1 Hz world interval below.
+// The world tick would deliver a three-second countdown to Phaser as three
+// bursts of ten 0.1s steps inside one frame; on the render cadence the same
+// countdown arrives one step at a time, in step with what is drawn.
+//
+// Task 7: under Electron, window.electronAPI.combatClock is the main-process
+// host (immune to Chromium's rAF throttling) — prefer it when present. Plain
+// web builds have no window.electronAPI and keep the RAF-driven fallback.
+// The engine only ever sees the ClockSource interface either way.
+const combatClockSource = window.electronAPI
+  ? new MainProcessClockSource(window.electronAPI.combatClock)
+  : new RafClockSource()
+gameManager.setCombatClockSource(combatClockSource)
+
 // Presentation coordinator & adapters (Task 5-12, AGENTS.md P17)
 const phaserSceneAdapter = new PhaserSceneAdapter()
 const assetBundleManager = new AssetBundleManager()
@@ -151,6 +170,12 @@ const presentation = createGamePresentation({
 })
 const routeAdapter = createVueRouteAdapter(coordinator, compositeRenderer)
 
+// RC-3: presentationActive has exactly ONE owner — the coordinator, via this
+// binding. It is true only while the COMMITTED route is combat and the
+// combat session is attached. CombatScene must never assert this for
+// itself (self-report is the pattern the coordinator design rejected).
+const unbindPresentationActive = bindPresentationActive(coordinator, gameManager)
+
 provide(PHASER_SCENE_ADAPTER_KEY, phaserSceneAdapter)
 provide(ASSET_BUNDLE_MANAGER_KEY, assetBundleManager)
 provide(VUE_ROUTE_ADAPTER_KEY, routeAdapter)
@@ -171,12 +196,24 @@ function handleMenuSettings() {
   ui.leftPanelMode = 'settings'
 }
 
-// A failed tribulation transition offers RETRY ONLY: there is no domain
-// cancel-tribulation command, and inventing a penalty-free way home would
-// silently rewrite the outcome of a breakthrough already in progress.
-const canRecoverToHome = computed(
-  () => routeAdapter.error.value?.failedRequest.target !== 'tribulation',
-)
+// A failed tribulation transition with a breakthrough ALREADY in progress
+// offers RETRY ONLY: there is no domain cancel-tribulation command, and
+// inventing a penalty-free way home would silently rewrite the outcome of a
+// breakthrough already in progress. That only applies once a tribulation
+// session actually exists, though - a behindCurtain tribulation request that
+// failed before ever producing one (the domain declined at the door; see
+// GamePresentationCoordinator's Task 2 closed-curtain window) has no
+// breakthrough to protect, so Back is safe there. Kind-scoped so a lingering
+// combat session can never be misread as an active tribulation (same
+// footgun useTribulation.ts's kind-scoped read guards against).
+function hasActiveTribulationToProtect(): boolean {
+  return gameManager.getCurrentPresentationSession('tribulation') !== null
+}
+
+const canRecoverToHome = computed(() => {
+  const failedTarget = routeAdapter.error.value?.failedRequest.target
+  return failedTarget !== 'tribulation' || !hasActiveTribulationToProtect()
+})
 
 function onTransitionRetry() {
   void presentation.coordinator.retry()
@@ -185,7 +222,7 @@ function onTransitionRetry() {
 function onTransitionBack() {
   const failed = routeAdapter.error.value?.failedRequest
 
-  if (!failed || failed.target === 'tribulation') {
+  if (!failed || (failed.target === 'tribulation' && hasActiveTribulationToProtect())) {
     return
   }
 
@@ -228,6 +265,15 @@ gameManager.registerProgressionNodes(KIEM_TU_NODES)
 gameManager.registerQuests(QUESTS)
 
 const { breakthrough } = useBreakthrough(gameManager)
+
+// Task 8 (A11, spec §6.1) — an unwatched battle pauses visibly and resumes
+// only on Continue; returning to the tab is not consent to resume. Gated on
+// getCombatClockState() !== 'stopped' so the overlay never appears outside
+// combat (no battle mounted == nothing to pause).
+const { isPaused: isCombatPaused, continueBattle, dispose: disposeCombatPause } = useCombatPause(
+  gameManager,
+  { isCombatActive: () => gameManager.getCombatClockState() !== 'stopped' },
+)
 
 // Cầu nối reactivity chung cho các panel đọc bag/equipment — xem
 // composables/useGameState.ts. tick() tự tăng mỗi giây; các action
@@ -533,6 +579,7 @@ onUnmounted(() => {
   }
 
   clock.stop()
+  disposeCombatPause()
 
   if (introHandle) {
     clearTimeout(introHandle)
@@ -548,6 +595,7 @@ onUnmounted(() => {
   // a disposed app (matters on HMR too, which unmounts this component).
   presentation.dispose()
   routeAdapter.dispose()
+  unbindPresentationActive()
   phaserSceneAdapter.dispose()
   assetBundleManager.dispose()
 })
@@ -601,6 +649,13 @@ onUnmounted(() => {
     <!-- GameRoot chỉ hiện khi boot xong -->
     <GameRoot v-if="isBooted" />
   </ErrorBoundary>
+
+  <!-- Task 8 (A11) — the unwatched pause. Data-driven by useCombatPause()
+       (visibilitychange -> freezeCombat('tab-hidden')), NOT the curtain
+       above: separate owner (the battle vs. the presentation coordinator),
+       separate z-layer (900 < curtain's 1000 so the curtain can always
+       cover it), neither may drive the other. -->
+  <CombatPauseOverlay v-if="isCombatPaused" @continue="continueBattle" />
 
   <!-- Curtain/loading/error cover lives ABOVE every entry branch so cold boot
        and boot failures are covered too, not just in-game transitions. -->

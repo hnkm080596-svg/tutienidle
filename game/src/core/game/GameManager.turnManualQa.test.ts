@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager, INTRO_TOTAL_TICKS } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import { createBaseStats } from '../stats/StatBlock'
@@ -51,8 +52,11 @@ function createDummy() {
   })
 }
 
-function battleReady(): GameManager {
+// Combat runs on its own CombatClock now; these probes step it directly.
+function battleReady(): { gameManager: GameManager; combatSource: ManualClockSource } {
   const gameManager = new GameManager()
+  const combatSource = new ManualClockSource()
+  gameManager.setCombatClockSource(combatSource)
   const player = createPlayer()
 
   gameManager.registerSkillTemplates([createBasicSkill()])
@@ -61,22 +65,22 @@ function battleReady(): GameManager {
   gameManager.startBattle(player, createDummy())
 
   for (let i = 0; i < 30; i++) {
-    gameManager.update(0.1)
+    combatSource.advance(COMBAT_STEP_SECONDS)
   }
 
   gameManager.getTurnBattle()!.enemies[0]!.entity.x = 2
 
-  return gameManager
+  return { gameManager, combatSource }
 }
 
 describe('QA probe â€” manual mode adversarial (Slice 7)', () => {
   it('INV-TM-1: submitTurnChoice exactly-once â€” láº§n 2 sau resolve tráº£ false', () => {
-    const gameManager = battleReady()
+    const { gameManager, combatSource } = battleReady()
 
     gameManager.setBattleManualMode(true)
 
     for (let i = 0; i < 50; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
     expect(gameManager.isAwaitingManualTurnChoice()).toBe(true)
@@ -85,7 +89,7 @@ describe('QA probe â€” manual mode adversarial (Slice 7)', () => {
   })
 
   it('INV-TM-5: choose khi KHÃ”NG awaiting lÃ  no-op an toÃ n, khÃ´ng resolve gÃ¬', () => {
-    const gameManager = battleReady()
+    const { gameManager, combatSource } = battleReady()
 
     const turnsBefore = gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0
 
@@ -97,12 +101,12 @@ describe('QA probe â€” manual mode adversarial (Slice 7)', () => {
   })
 
   it('INV-TM-6: toggle manual off giá»¯a lÃºc pause â†’ há»§y pause, engine tá»± cháº¡y tiáº¿p', () => {
-    const gameManager = battleReady()
+    const { gameManager, combatSource } = battleReady()
 
     gameManager.setBattleManualMode(true)
 
     for (let i = 0; i < 50; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
     expect(gameManager.isAwaitingManualTurnChoice()).toBe(true)
@@ -112,19 +116,19 @@ describe('QA probe â€” manual mode adversarial (Slice 7)', () => {
     expect(gameManager.isAwaitingManualTurnChoice()).toBe(false)
 
     for (let i = 0; i < 10; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
     expect((gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0)).toBeGreaterThan(0)
   })
 
   it('INV-TM-2: pause khÃ´ng cháº·n reward/victory path â€” grantBattleRewardIfNeeded váº«n cháº¡y trong fixed-step', () => {
-    const gameManager = battleReady()
+    const { gameManager, combatSource } = battleReady()
 
     gameManager.setBattleManualMode(true)
 
     for (let i = 0; i < 50; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
     // Trong lÃºc pause, reward shim váº«n cháº¡y (khÃ´ng crash, khÃ´ng grant sá»›m
@@ -145,6 +149,8 @@ describe('QA probe â€” manual mode adversarial (Slice 7)', () => {
 describe('QA regression — refight after turn-battle victory (smoke test evidence)', () => {
   it('startStage thành công lại sau khi turn battle đã victory (StageManager.active được release)', () => {
     const gameManager = new GameManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
     const enemy = defineEnemy({
       id: 'refight_dummy', name: 'Refight Dummy', level: 1, realmId: 'mortal', lane: 'ground',
       statsInput: { maxHp: 1, attack: 0, attackSpeed: 1, attackRangeRanks: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
@@ -166,7 +172,7 @@ describe('QA regression — refight after turn-battle victory (smoke test eviden
 
     // Run to victory
     for (let i = 0; i < 400 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
-      gameManager.update(0.05)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
     expect(gameManager.getTurnBattle()?.state).toBe('victory')
@@ -187,6 +193,8 @@ describe('QA regression — refight after turn-battle victory (smoke test eviden
 describe('Future Systems Task 10 — party manual pause', () => {
   it('pause áp cho mọi party member; presentation facade theo paused actor', () => {
     const gameManager = new GameManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
     const enemy = defineEnemy({
       id: 'party_dummy', name: 'Party Dummy', level: 1, realmId: 'mortal', lane: 'ground',
       statsInput: { maxHp: 10_000_000, attack: 0, attackSpeed: 1, attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
@@ -218,7 +226,7 @@ describe('Future Systems Task 10 — party manual pause', () => {
     // Intro 20 ticks (2026-09-07 plan Task 4) then fighting - speed 100
     // reaches a ready actor well within 50 fighting ticks.
     for (let i = 0; i < INTRO_TOTAL_TICKS + 50; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
     // Pause xảy ra khi players[0] tới lượt (đơn vị duy nhất hiện có).
@@ -241,6 +249,8 @@ describe('Future Systems Task 10 — party manual pause', () => {
 describe('Gameplay fixes — refight chain', () => {
   it('startStage Victory loop 3 rounds lian tiep (Refight repeat)', () => {
     const gameManager = new GameManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
     const enemy = defineEnemy({
       id: 'refight3_dummy', name: 'Refight3', level: 1, realmId: 'mortal', lane: 'ground',
       statsInput: { maxHp: 1, attack: 0, attackSpeed: 1, attackRangeRanks: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
@@ -268,7 +278,7 @@ describe('Gameplay fixes — refight chain', () => {
       expect(battle, `round ${round}: no turnBattle`).not.toBeNull()
 
       for (let i = 0; i < 600 && battle!.state !== 'victory'; i++) {
-        gameManager.update(0.05)
+        combatSource.advance(COMBAT_STEP_SECONDS)
       }
 
       expect(battle!.state, `round ${round}: not victory`).toBe('victory')

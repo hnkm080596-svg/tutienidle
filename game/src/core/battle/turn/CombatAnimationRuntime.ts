@@ -43,6 +43,13 @@ export class CombatAnimationRuntime {
       getBattle: () => TurnBattle | null
       syncLegacyBattleState: () => void
       isSessionBlocking?: () => boolean
+      /**
+       * Combat Turn Mechanism (2026-09-10 spec section 4.1a) — the runtime
+       * reports that an asynchronous step FINISHED without knowing what a
+       * pipeline is. Each hook fires as the last statement of its ack body,
+       * so battle state is already applied when the pipeline advances.
+       */
+      stepCompletionSink?: { onReady(): void; onImpact(): void; onComplete(): void }
     },
   ) {}
 
@@ -70,7 +77,13 @@ export class CombatAnimationRuntime {
     return this.battleManualMode
   }
 
-  /** Đang pause chờ player chọn skill cho lượt của chính mình? */
+  /**
+   * The runtime's LOCAL record that it is holding an actor for a manual
+   * choice. It is bookkeeping for identity (which actor, which token), not the
+   * authority: whether combat is awaiting input is answered by the turn token
+   * (see GameManagerTurnBattleOps.isAwaitingManualTurnChoice, which is what
+   * GameManager and the UI read). Kept public for this class's own tests.
+   */
   isAwaitingManualTurnChoice(): boolean {
     return this.awaitedManualActor !== null
   }
@@ -173,8 +186,22 @@ export class CombatAnimationRuntime {
 
       turnBattleSystem.completeAction(battle, actor, declared, targetIds)
     }
+
+    // Leaving the scene mid-turn must not park the resolution pipeline: the
+    // pending phases above were just drained, so every step this turn is
+    // waiting on is reported complete, in order. Signals with nothing parked
+    // behind them are no-ops.
+    this.deps.stepCompletionSink?.onReady()
+    this.deps.stepCompletionSink?.onImpact()
+    this.deps.stepCompletionSink?.onComplete()
   }
 
+  /**
+   * A renderer acknowledgement is outstanding. This is NOT a second copy of
+   * "a turn is in flight" (the token owns that): it is false during a manual
+   * wait and false while the pipeline runs a mechanical step, and it is what
+   * tells a caller which of the three handshake signals is still owed.
+   */
   isActionPlaybackWaiting(): boolean {
     return this.pendingReadyActor !== null || this.pendingDeclaredAction !== null || this.pendingImpact !== null
   }
@@ -199,16 +226,17 @@ export class CombatAnimationRuntime {
     const actor = this.pendingReadyActor
     this.pendingReadyActor = null
 
-    if (this.battleManualMode && battle.players.includes(actor)) {
-      // Slice 7 manual-choice flow giữ nguyên — pause chờ submitTurnChoice.
-      this.awaitedManualActor = actor
-      return
-    }
-
+    // No manual branch here any more. Manual routing is decided by the turn
+    // token at CLAIM time (spec section 3.2), before any ready phase exists,
+    // so a ready phase always belongs to an auto turn. Flipping the manual
+    // toggle mid-turn is an external command and takes effect at the next turn
+    // boundary (spec section 9.1) — it must not strand the turn in flight.
     const declared = this.deps.getTurnBattleSystem().declareActorAction(battle, actor)
     this.pendingDeclaredAction = { actor, declared }
 
     emitTurnCastStart(this.deps.eventBus, actor.id, declared.skillId, declared.affected.map((target) => target.id))
+
+    this.deps.stepCompletionSink?.onReady()
   }
 
   /** Phaser gọi tại impact frame (lunge tween xong) → áp damage, phát VFX. */
@@ -264,6 +292,8 @@ export class CombatAnimationRuntime {
     })
 
     this.deps.syncLegacyBattleState()
+
+    this.deps.stepCompletionSink?.onImpact()
   }
 
   /** Phaser gọi khi VFX tween xong → turn cleanup, phát standby tail. */
@@ -291,6 +321,8 @@ export class CombatAnimationRuntime {
     emitTurnStandbyComplete(this.deps.eventBus, actor.id)
 
     this.deps.syncLegacyBattleState()
+
+    this.deps.stepCompletionSink?.onComplete()
   }
 
   /**
@@ -311,20 +343,15 @@ export class CombatAnimationRuntime {
     const actor = this.awaitedManualActor
     this.awaitedManualActor = null
 
-    if (this.presentationActive) {
-      // Action Playback Task 6 — declare thay vì resolve ngay; impact
-      // áp khi Phaser acknowledge (cùng 5-phase machine như auto path).
-      const declared = this.deps.getTurnBattleSystem().declareActorAction(battle, actor, role)
-      this.pendingDeclaredAction = { actor, declared }
+    // BOTH modes declare and wait. The resolution pipeline owns the rest of
+    // the turn (impact, then complete) and drives those acknowledgements
+    // itself when no renderer is attached, so a manual turn takes exactly the
+    // same path as an auto one from here on. Resolving inline would give
+    // turn-end a second owner, which is the defect the turn spec removes.
+    const declared = this.deps.getTurnBattleSystem().declareActorAction(battle, actor, role)
+    this.pendingDeclaredAction = { actor, declared }
 
-      emitTurnCastStart(this.deps.eventBus, actor.id, declared.skillId, declared.affected.map((target) => target.id))
-
-      return true
-    }
-
-    this.deps.getTurnBattleSystem().resolveActorTurn(battle, actor, role)
-
-    this.deps.syncLegacyBattleState()
+    emitTurnCastStart(this.deps.eventBus, actor.id, declared.skillId, declared.affected.map((target) => target.id))
 
     return true
   }
@@ -339,14 +366,35 @@ export class CombatAnimationRuntime {
     emitTurnReady(this.deps.eventBus, actor.id)
   }
 
-  /** Called by GameManager's tick loop for the headless (presentationActive
-   * false) manual-mode path — tickPacing() already resolved the actor's
-   * turn synchronously (resolve=true), this only sets the UI-facing pause
-   * flag gating subsequent ticks until submitTurnChoice(). Mirrors the
-   * inline `this.awaitedManualActor = readyActor` previously at
-   * GameManager.ts's updateBattleFixedStep() 'fighting' branch. */
+  /**
+   * Called when the turn token routes a claim to AWAITING_INPUT (spec section
+   * 3.2), in BOTH modes. Nothing is resolved: tickPacing never resolves a turn
+   * any more, so the actor's turn is genuinely still pending here and stays
+   * pending until submitTurnChoice(). The clock is frozen meanwhile by the
+   * token's own freeze reason, not by this flag.
+   */
   pauseForManualActor(actor: TurnBattleParticipant): void {
     this.awaitedManualActor = actor
+
+    // A manual turn no longer passes through notifyReadyActor, so mint the
+    // playback token here: submitTurnChoice's declare phase is the first thing
+    // Phaser will acknowledge for this turn and it needs an identity to quote.
+    this.playbackToken = this.nextPlaybackToken()
+
+    // The ready flourish belongs to the CLAIM, not to the action: manual mode
+    // gates the primary action, never the presentation (spec section 7), so the
+    // actor announces its turn here exactly as an auto actor does.
+    //
+    // The cue is emitted WITHOUT entering the pending-ready phase, and that is
+    // load-bearing rather than an omission. notifyReadyActor() would also set
+    // pendingReadyActor, and CombatScene.onTurnReady() calls
+    // acknowledgeTurnReady() when its flourish tween completes - which now
+    // declares unconditionally. A manual turn would therefore auto-declare the
+    // DEFAULT skill the moment the animation ended, before the player chose,
+    // and submitTurnChoice would then declare a second time. Emitting the cue
+    // alone lets the flourish play while that late ack lands on a null
+    // pendingReadyActor and is the no-op it should be.
+    emitTurnReady(this.deps.eventBus, actor.id)
   }
 
   /** Which animation clip an actor should currently show, derived purely

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import type { EnemyDefinition } from '../enemy/Enemy'
@@ -96,6 +97,8 @@ describe('abandonBattle — EnemyManager cleanup (audit 2026-08-31, M1)', () => 
 
   it('victory KHÔNG clear đột ngột — enemy chết dần qua despawn flow bình thường, không sót', () => {
     const gameManager = new GameManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
 
     // Pattern GameManager.repeatStage.test.ts — Linh Thạch credit vào
     // MaterialBag cần registry; skill Trảm chiếm slot 0 để player đánh.
@@ -146,7 +149,7 @@ describe('abandonBattle — EnemyManager cleanup (audit 2026-08-31, M1)', () => 
     let reachedVictory = false
 
     for (let index = 0; index < 300; index++) {
-      gameManager.update(0.05)
+      combatSource.advance(COMBAT_STEP_SECONDS)
 
       if (gameManager.getBattle()?.state === 'victory') {
         reachedVictory = true

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager, INTRO_TOTAL_TICKS } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import { createDefaultPlayer } from '../player/Player'
@@ -18,8 +19,17 @@ function stageFixture(id: string, enemyId: string): Stage {
   }
 }
 
-function buildGameManager(): { gameManager: GameManager; player: ReturnType<typeof createDefaultPlayer> } {
+// Combat advances on its own CombatClock now, so these probes step a
+// ManualClockSource; update() drives the world clock and no longer touches
+// the battle at all.
+function buildGameManager(): {
+  gameManager: GameManager
+  player: ReturnType<typeof createDefaultPlayer>
+  combatSource: ManualClockSource
+} {
   const gameManager = new GameManager()
+  const combatSource = new ManualClockSource()
+  gameManager.setCombatClockSource(combatSource)
   const player = createDefaultPlayer()
   const stats = calculateStats({ ...player.baseStats, attack: 100, speed: 100 }, [])
 
@@ -33,36 +43,36 @@ function buildGameManager(): { gameManager: GameManager; player: ReturnType<type
   gameManager.registerStages([stageFixture('qa_intro_stage', 'qa_intro_dummy')])
   gameManager.setActivePlayer(player)
 
-  return { gameManager, player }
+  return { gameManager, player, combatSource }
 }
 
 describe('QA quick — intro phase adversarial probes (2026-09-07 Task 4)', () => {
   it('timing boundary: one extra tick past INTRO_TOTAL_TICKS stays countdown (no double flip, no skip into fighting)', () => {
-    const { gameManager, player } = buildGameManager()
+    const { gameManager, player, combatSource } = buildGameManager()
 
     expect(gameManager.startStage(player, stats0(player), gameManager.getStage('qa_intro_stage')!, false)).toBe(true)
 
     for (let i = 0; i < INTRO_TOTAL_TICKS; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
     expect(gameManager.getTurnBattle()?.state).toBe('countdown')
     expect(gameManager.getTurnBattle()?.countdownTurnsRemaining).toBe(30)
 
     // One MORE tick: countdown decrements once, state stays 'countdown'.
-    gameManager.update(0.1)
+    combatSource.advance(COMBAT_STEP_SECONDS)
 
     expect(gameManager.getTurnBattle()?.state).toBe('countdown')
     expect(gameManager.getTurnBattle()?.countdownTurnsRemaining).toBe(29)
   })
 
   it('interruption: abandoning mid-intro terminals the battle and frees the stage slot immediately', () => {
-    const { gameManager, player } = buildGameManager()
+    const { gameManager, player, combatSource } = buildGameManager()
 
     expect(gameManager.startStage(player, stats0(player), gameManager.getStage('qa_intro_stage')!, false)).toBe(true)
 
-    gameManager.update(0.1)
-    gameManager.update(0.1)
+    combatSource.advance(COMBAT_STEP_SECONDS)
+    combatSource.advance(COMBAT_STEP_SECONDS)
 
     expect(gameManager.getTurnBattle()?.state).toBe('intro')
 
@@ -76,14 +86,14 @@ describe('QA quick — intro phase adversarial probes (2026-09-07 Task 4)', () =
   })
 
   it('repeat: startStage while a battle is mid-intro is rejected (pre-existing single-slot StageManager contract) and the intro battle keeps running', () => {
-    const { gameManager, player } = buildGameManager()
+    const { gameManager, player, combatSource } = buildGameManager()
 
     expect(gameManager.startStage(player, stats0(player), gameManager.getStage('qa_intro_stage')!, false)).toBe(true)
 
     // Partially drain intro.
-    gameManager.update(0.1)
-    gameManager.update(0.1)
-    gameManager.update(0.1)
+    combatSource.advance(COMBAT_STEP_SECONDS)
+    combatSource.advance(COMBAT_STEP_SECONDS)
+    combatSource.advance(COMBAT_STEP_SECONDS)
 
     // Single-slot StageManager rejects a second start while one is active.
     // Pre-existing contract: identical rejection applied during the old
@@ -96,13 +106,14 @@ describe('QA quick — intro phase adversarial probes (2026-09-07 Task 4)', () =
   })
 
   it('catch-up: a large delta (2s, exactly the intro length) advances intro to countdown in ONE update call', () => {
-    const { gameManager, player } = buildGameManager()
+    const { gameManager, player, combatSource } = buildGameManager()
 
     expect(gameManager.startStage(player, stats0(player), gameManager.getStage('qa_intro_stage')!, false)).toBe(true)
 
-    // BATTLE_MAX_CATCHUP_SECONDS is 5s per the fixed-step catch-up contract;
-    // a 2s lumped delta must be sliced into 20 fixed 0.1s steps internally.
-    gameManager.update(2)
+    // A 2s frame from the clock source is still sliced into 20 fixed 0.1s
+    // combat steps. There is no catch-up CEILING on combat any more - the
+    // ceiling belonged to the world tick, which no longer drives the battle.
+    combatSource.advance(2)
 
     expect(gameManager.getTurnBattle()?.state).toBe('countdown')
     expect(gameManager.getTurnBattle()?.countdownTurnsRemaining).toBe(30)

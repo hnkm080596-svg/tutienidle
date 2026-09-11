@@ -111,7 +111,7 @@ describe('CombatScene reconcileSpawnVfx', () => {
     scene.applyPendingPositions(
       positionsEvent(spawning.map((entry) => ({ ...entry, progress: 0.4 }))),
     )
-    scene.update()
+    scene.update(0, 16)
 
     expect(graphicsCreated).toHaveLength(2)
     expect(scene.spawnVfxHandles.get('enemy_1')!.progress).toBeCloseTo(0.4, 5)
@@ -133,7 +133,7 @@ describe('CombatScene reconcileSpawnVfx', () => {
     ]
 
     scene.applyPendingPositions(positionsEvent(spawning))
-    scene.update()
+    scene.update(0, 16)
 
     // Snapshot káº¿: telegraph xong â†’ enemy materialize.
     scene.applyPendingPositions(

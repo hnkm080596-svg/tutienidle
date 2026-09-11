@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { ManualClockSource, COMBAT_STEP_SECONDS } from '@/core/battle/turn/CombatClock'
 import { GameManager, INTRO_TOTAL_TICKS } from '../core/game/GameManager'
 import { defineEnemy } from '../core/enemy/Enemy'
 import { createDefaultPlayer } from '../core/player/Player'
@@ -37,6 +38,9 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
   let presentation: ReturnType<typeof createGamePresentation>
   let vueAdapter: ReturnType<typeof createVueRouteAdapter>
 
+  // Combat counts on its own CombatClock now; the world tick no longer
+  // advances a battle, so these routing tests step the source directly.
+  let combatSource: ManualClockSource
   let curtainCloseSpy: (id: number, signal: AbortSignal) => Promise<void>
   let curtainOpenSpy: (id: number, signal: AbortSignal) => Promise<void>
 
@@ -46,6 +50,8 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
 
   beforeEach(() => {
     gameManager = new GameManager()
+    combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
     player = createDefaultPlayer()
     stats = calculateStats({ ...player.baseStats, attack: 100, speed: 100 }, [])
     enemy = defineEnemy({
@@ -149,10 +155,11 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
     expect(snapshot.sessionId).toBe(session.sessionId)
     expect(snapshot.entities.players[0]!.alive).toBe(true)
 
-    // Runtime is held: update does not advance ticks
+    // Runtime is held: the combat clock is frozen for 'not-revealed', so
+    // advancing its source banks nothing.
     expect(gameManager.getTurnBattle()?.state).toBe('intro')
     expect(gameManager.getTurnBattle()?.introTurnsRemaining).toBe(INTRO_TOTAL_TICKS)
-    gameManager.update(0.5)
+    combatSource.advance(0.5)
     expect(gameManager.getTurnBattle()?.introTurnsRemaining).toBe(INTRO_TOTAL_TICKS)
 
     // Vue reports ready
@@ -162,8 +169,8 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
     expect(result.status).toBe('entered')
     expect(coordinator.getSnapshot().currentRoute).toBe('combat')
 
-    // After release, update advances intro ticks
-    gameManager.update(0.1)
+    // After release, a combat step advances intro
+    combatSource.advance(COMBAT_STEP_SECONDS)
     expect(gameManager.getTurnBattle()?.introTurnsRemaining).toBe(INTRO_TOTAL_TICKS - 1)
   })
 
@@ -209,7 +216,7 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
     // Second entry is held again
     const session2 = gameManager.getCurrentPresentationSession('combat')!
     const introBefore = gameManager.getTurnBattle()?.introTurnsRemaining
-    gameManager.update(0.5)
+    combatSource.advance(0.5)
     expect(gameManager.getTurnBattle()?.introTurnsRemaining).toBe(introBefore)
 
     vueAdapter.reportVueReady(vueAdapter.transitionId.value)
@@ -329,12 +336,12 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
 
     // Skip intro and countdown
     for (let i = 0; i < INTRO_TOTAL_TICKS + 30; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
     // Run to victory
     for (let i = 0; i < 100 && gameManager.getTurnBattle()?.state === 'fighting'; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
     // Auto-repeat cycle restarts within same session
@@ -355,14 +362,14 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
 
     // Skip intro and countdown
     for (let i = 0; i < INTRO_TOTAL_TICKS + 30; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
     expect(gameManager.getTurnBattle()?.state).toBe('fighting')
 
     // Advance through telegraph so enemy materializes into battle.enemies
     for (let i = 0; i < 15 && (gameManager.getTurnBattle()?.enemies.length ?? 0) === 0; i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
     expect(gameManager.getTurnBattle()!.enemies.length).toBeGreaterThan(0)
 
@@ -380,7 +387,7 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
 
     // Tick until an actor is ready
     for (let i = 0; i < 50 && !gameManager.isActionPlaybackWaiting(); i++) {
-      gameManager.update(0.1)
+      combatSource.advance(COMBAT_STEP_SECONDS)
     }
 
     expect(gameManager.isActionPlaybackWaiting()).toBe(true)

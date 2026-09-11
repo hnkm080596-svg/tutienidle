@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { createBaseStats } from '../stats/StatBlock'
@@ -26,18 +27,20 @@ function makeEnemy(techniqueInsight: number) {
 describe('GameManager — Cảm ngộ Kỹ năng khi hạ quái', () => {
   it('KHÔNG trang bị tâm pháp vẫn nhận skillInsight', () => {
     const gameManager = new GameManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
     const player = createDefaultPlayer()
     const stats = createBaseStats()
 
     // Không techniqueManager.equip() gì cả — cố ý không có tâm pháp.
     gameManager.startBattleWithPlayer(player, stats, makeEnemy(10))
-    gameManager.update(3) // bỏ qua countdown
+    combatSource.advance(3) // bỏ qua countdown
 
     const battleEnemy = gameManager.getTurnBattle()!.enemies[0]!
     battleEnemy.entity.currentHp = 0
     battleEnemy.entity.alive = false
 
-    gameManager.update(0.1)
+    combatSource.advance(COMBAT_STEP_SECONDS)
 
     expect(player.skillInsight).toBeGreaterThan(0)
     expect(player.totalSkillInsightGained).toBe(player.skillInsight)
@@ -46,21 +49,23 @@ describe('GameManager — Cảm ngộ Kỹ năng khi hạ quái', () => {
 
   it('chỉ cấp skillInsight đúng 1 lần dù nhiều tick cùng xử lý quái chết', () => {
     const gameManager = new GameManager()
+    const combatSource = new ManualClockSource()
+    gameManager.setCombatClockSource(combatSource)
     const player = createDefaultPlayer()
     const stats = createBaseStats()
 
     gameManager.startBattleWithPlayer(player, stats, makeEnemy(10))
-    gameManager.update(3)
+    combatSource.advance(3)
 
     const battleEnemy = gameManager.getTurnBattle()!.enemies[0]!
     battleEnemy.entity.currentHp = 0
     battleEnemy.entity.alive = false
 
-    gameManager.update(0.1)
+    combatSource.advance(COMBAT_STEP_SECONDS)
     const afterFirstTick = player.skillInsight
 
-    gameManager.update(0.1)
-    gameManager.update(0.1)
+    combatSource.advance(COMBAT_STEP_SECONDS)
+    combatSource.advance(COMBAT_STEP_SECONDS)
 
     expect(player.skillInsight).toBe(afterFirstTick)
   })

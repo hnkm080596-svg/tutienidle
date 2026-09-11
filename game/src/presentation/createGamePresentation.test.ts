@@ -92,18 +92,26 @@ describe('createGamePresentation and runAdmitted', () => {
     })
 
     expect(call2.status).toBe('rejected')
-    expect(callbackSpy).toHaveBeenCalledTimes(1)
 
     resolveFirst()
     const res1 = await call1
     expect(res1.status).toBe('entered')
+
+    // The domain command now runs behind the closed curtain (inside
+    // coordinator.request), so it has not necessarily run yet at the point
+    // call2 is rejected - only once call1 fully settles is it guaranteed to
+    // have run exactly once, never twice for the rejected second click.
+    expect(callbackSpy).toHaveBeenCalledTimes(1)
   })
 
   it('releases reservation and retains current route when command returns null', async () => {
     const presentation = createGamePresentation({ coordinator })
 
+    // The command now runs behind the already-closed curtain (inside
+    // coordinator.request), so declining there fails the in-flight transition
+    // rather than rejecting before any transition was ever started.
     const result = await presentation.runAdmitted('combat', () => null)
-    expect(result.status).toBe('rejected')
+    expect(result.status).toBe('failed')
     expect(presentation.getSnapshot().currentRoute).toBe('home')
 
     // Future call can run because reservation was released
@@ -121,11 +129,14 @@ describe('createGamePresentation and runAdmitted', () => {
   it('catches callback exceptions and releases reservation', async () => {
     const presentation = createGamePresentation({ coordinator })
 
+    // Same as the null-return case: the throw happens behind the closed
+    // curtain, so it fails the in-flight transition rather than rejecting
+    // before any transition was ever started.
     const result = await presentation.runAdmitted('combat', () => {
       throw new Error('Domain validation failed unexpectedly')
     })
 
-    expect(result.status).toBe('rejected')
+    expect(result.status).toBe('failed')
     expect(presentation.getSnapshot().currentRoute).toBe('home')
 
     // Reservation was released
@@ -295,10 +306,14 @@ describe('createGamePresentation and runAdmitted', () => {
     const session = { kind: 'combat' as const, sessionId: 42 }
     ;(sessionPort as PresentationSession).begin(session, 'interactive')
 
-    // Force the unreachable disagreement between canEnter and request.
-    vi.spyOn(coordinator, 'request').mockResolvedValue({
-      status: 'rejected',
-      transitionId: 0,
+    // Force the unreachable disagreement between canEnter and request. The
+    // domain command now only runs when coordinator.request invokes the
+    // behindCurtain it was handed, so the stub must do that itself to
+    // reproduce "command accepted, but the transition still came back
+    // rejected".
+    vi.spyOn(coordinator, 'request').mockImplementation(async (req: RouteRequest) => {
+      req.behindCurtain?.()
+      return { status: 'rejected', transitionId: 0 }
     })
 
     const result = await presentation.runAdmitted(
