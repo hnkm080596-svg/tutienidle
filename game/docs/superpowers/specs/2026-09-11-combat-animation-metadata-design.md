@@ -169,8 +169,8 @@ Two presentation classes, not one:
 
 | Class | Who | Presentation |
 |---|---|---|
-| **Animated** | The player, per visual profile | Real per-clip atlas animation |
-| **Static** | Every enemy | One still image, plus a procedural idle motion |
+| **Animated** | The player, and bosses (§3.2.1) | Real per-clip atlas animation |
+| **Static** | Ordinary and elite enemies | One still image, plus a procedural idle motion |
 
 The product owner named this as a departure from the general rule and as a
 temporary economy on **art cost**, not on engineering. This spec therefore has
@@ -182,6 +182,64 @@ two obligations it would not otherwise have:
    a code change — so the economy can be reversed per-entity when art exists
    (§4.3). The trap to avoid is a design in which "enemies are static" becomes
    load-bearing in the playback code.
+
+### 3.2.1 Art tier, so the policy is written once — **amendment, 2026-09-11**
+
+> *"có thể thêm một param art type vào để xử lý hành vi? quái thường thì tĩnh,
+> nhưng boss thì động, kiểu kiểu vậy"*
+
+Accepted, and it improves the design: without it, "enemies are static" is a fact
+repeated at every enemy entry, and the first boss that deserves animation makes
+the rule a lie in a place nobody is looking.
+
+**The domain already has the tier.** `Enemy` carries `isElite` and `isBoss`
+(`core/enemy/Enemy.ts:196`, normalised onto the runtime entity at `:373`), set by
+`createEliteVariant()` / `createBossVariant()`. Nothing new is classified:
+
+```ts
+// presentation/art/CombatArtTier.ts
+
+export type CombatArtTier = 'static' | 'animated'
+
+/**
+ * What an entity's art SHOULD be. Policy, in one place.
+ *
+ * Presentation reading a domain fact is legal under A7 — this reports, it does
+ * not decide anything the domain owns.
+ */
+export function artTierFor(entity: { isBoss?: boolean }): CombatArtTier {
+  return entity.isBoss ? 'animated' : 'static'
+}
+```
+
+**Elite is deliberately static.** Elites are a reward multiplier applied to an
+ordinary template, not a distinct creature, so they share the ordinary one's art.
+Animating them would multiply the art bill by every elite-able enemy, which is
+the opposite of §3.2's purpose. When an elite deserves its own look it becomes a
+boss variant or its own template.
+
+**What the tier does NOT do: decide whether art exists.** The union in §4.1 stays
+the single source of truth for what has actually been drawn. The tier says what
+an entity *deserves*; the entry says what it *has*. Collapsing the two would mean
+a boss whose atlas has not been drawn yet either crashes or silently downgrades,
+and §3.2 exists precisely because art arrives later than the design for it.
+
+The two are reconciled by a guard, not by a fallback (§7): an entity whose tier
+is `animated` and whose entry is `static` is **art debt** — listed, expected, and
+allowed, exactly the ratchet Spec A used for cross-layer imports. It may shrink
+without ceremony; it may not grow without someone editing the list.
+
+**One consequence, inherited rather than introduced.** `isBoss` is already
+overloaded: tribulation (Kiếp) enemies set it directly, *not* through
+`createBossVariant()`, and the code says why — *"Chỉ tái dùng cờ isBoss để Combat
+HUD hiện thanh máu cố định"* (`Enemy.ts:190-196`). They set it to get a fixed HP
+bar, not because they are bosses.
+
+So `artTierFor` will call every Kiếp enemy `animated`, and every one of them will
+start life as art debt. That is acceptable — the debt list makes it visible
+rather than surprising — but it is a flag doing two jobs, and if the debt list
+turns out to be mostly Kiếp enemies, the fix is a separate `hasFixedHealthBar`
+flag on the HUD side, not a special case buried in `artTierFor`.
 
 **A correction to the premise, stated rather than absorbed.** The decision
 described enemies as static "như hiện tại". They are not static today: enemies
@@ -305,6 +363,11 @@ export function presentationFor(entityKey: string): CombatEntityPresentation
 One function, one answer per entity. `CombatPreload`'s three
 `buildPlaceholderAnimationSet` call sites collapse into it.
 
+It answers from the catalogue — what has been drawn — and never from
+`artTierFor`. The tier is an expectation checked in a test (§7); letting it
+influence what a scene resolves at runtime would mean a boss without art
+resolving to something that does not exist.
+
 ### 4.5 The name list becomes honest
 
 `CombatAnimationName` is reduced to names that have **both** a clip and a call
@@ -400,6 +463,8 @@ it for C would hand C a bill without the receipt.
 | B7 | `idle` built, never played (§2.3) | Played as the player's default state (§4.5). |
 | B8 | `impactFrame` does not exist; `ATTACK_LUNGE_DURATION_MS / 2` stands (§2.4) | Field declared (§4.2). **The call site is NOT changed — that is D.** |
 | B9 | Player art is the placeholder | One real atlas for the `mortal` profile, wired end to end. The other profiles fall back, as they already do for cultivate art. |
+| B10 | "Enemies are static" would be restated at every enemy entry | `artTierFor` states it once, from `isBoss` (§3.2.1). |
+| B11 | Nothing reconciles deserved art with drawn art | The art-debt list plus its guard (§7). Expected to be non-empty on day one, and to be mostly Kiếp enemies. |
 
 **B8 is the one to watch in review.** It would be easy, having declared
 `impactFrame`, to also use it — the call site is four lines away. That is D, and
@@ -417,6 +482,7 @@ impossible to attribute.
 | `animationCatalogue.test.ts` | Every animated entity declares **every** `CombatAnimationName` — no partial records | Delete a clip from one entity |
 | `atlasFramesExist.test.ts` | For every clip, the atlas JSON on disk actually contains `framePrefix + pad(n) + frameSuffix` for every n in range | Extend `lastFrame` by one past the real art |
 | `staticEntityMotion.test.ts` | Every `kind: 'static'` entry has `amplitudePx > 0` and `periodMs > 0` | Set amplitude to 0 — a "static" entity that does not move at all is B5 done halfway |
+| `artTierDebt.test.ts` | Every entity whose `artTierFor` is `animated` but whose entry is `static` appears in the recorded debt list, and every listed entity is still a real one | Add a boss template without adding it to the list; and leave a listed entity in place after its atlas lands |
 
 **`atlasFramesExist` is the one that earns its keep.** §3.3 accepted that
 hand-written metadata can drift from the art; this guard reads the JSON and makes
@@ -464,6 +530,8 @@ is step 4 plus judgement.
    **still** the live call site (D's to change).
 7. Promoting one enemy to `kind: 'animated'` requires editing one data entry and
    no playback code. Demonstrated, not asserted.
+7a. `artTierFor` is the only place that says which tier deserves animation, and
+   no runtime path reads it to decide what to draw (§4.4).
 8. Five guards exist and each has been observed red against a probe.
 9. Full gate green: type-check, build, vitest, Playwright.
 10. Verified on screen: the player's idle animation plays, and enemies visibly
