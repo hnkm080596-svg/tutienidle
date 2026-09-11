@@ -3,7 +3,6 @@ import { test, expect } from '@playwright/test'
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { bootToGuestHome, createCharacterThroughUi, enterHome } from './helpers'
-import { ENEMY_IDLE_AMPLITUDE_PX } from '../../src/presentation/art/CombatPresentationCatalogue'
 
 /**
  * QA visual capture (2026-09-11) — Spec B §9 criterion 10.
@@ -24,6 +23,21 @@ import { ENEMY_IDLE_AMPLITUDE_PX } from '../../src/presentation/art/CombatPresen
  * player changes between the captured screenshots and the enemies move without
  * their own number changing, both halves are correct.
  */
+/**
+ * Mirrors `ENEMY_IDLE_AMPLITUDE_PX` in
+ * `src/presentation/art/CombatPresentationCatalogue.ts`, copied rather than
+ * imported ON PURPOSE: `tsconfig.node.json` compiles `tests/e2e/**` WITHOUT the
+ * `@/*` path mapping, so importing app source from here drags that module and
+ * everything it imports into a project that cannot resolve its own imports.
+ * (Measured 2026-09-11 — it fails type-check while vitest, which uses Vite's
+ * resolver, stays green, so the unit suite will not warn you.)
+ *
+ * The exact value is owned and asserted by
+ * `tests/architecture/staticEntityMotion.test.ts`. What this number does here is
+ * bound the bob, so a runaway amplitude is still caught on screen.
+ */
+const ENEMY_IDLE_AMPLITUDE_PX = 6
+
 test.describe('Combat idle motion (Spec B §9.10)', () => {
   test('player frames advance; static enemies bob without animating', async ({ page }) => {
     test.setTimeout(180_000)
