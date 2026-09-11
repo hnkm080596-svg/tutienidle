@@ -39,7 +39,7 @@ import { createProjectionBridge } from '@/presentation/geometry/ProjectionBridge
 import { formationSlotStyle } from '@/presentation/geometry/formationSlotBoxes'
 import { useDynamicRegion } from '@/presentation/host/useDynamicRegion'
 import { FORMATION_ASSIGNMENTS_EVENT } from '@/presentation/contracts/regionEvents'
-import type { SlotState } from '@/game/support/SlotState'
+import type { SlotState } from '@/presentation/contracts/SlotState'
 
 const ui = useUiStore()
 const player = usePlayerStore()

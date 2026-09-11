@@ -10,7 +10,7 @@ import {
   getBodyAnchors,
   type PlayerBodyAnchorId,
   type PlayerVisualProfileId,
-} from '@/game/support/PlayerVisualProfiles'
+} from '@/presentation/art/PlayerVisualProfiles'
 import { resolveSpriteBodyAnchor } from '@/game/support/SpriteBodyAnchor'
 
 import type { CombatScene } from '../CombatScene'

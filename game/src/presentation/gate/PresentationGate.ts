@@ -19,8 +19,8 @@ import type { BattlefieldGeometrySnapshot } from '@/presentation/geometry/Battle
 // moving it would be the same edit V2 made. Left where it is for now because
 // nothing forces the question yet — recorded so the next person does not have
 // to rediscover it.
-import type { PlayerVisualProfileId } from '@/game/support/PlayerVisualProfiles'
-import type { KiemBarReader } from '@/game/support/kiemBarBridge'
+import type { PlayerVisualProfileId } from '@/presentation/art/PlayerVisualProfiles'
+import type { KiemBarReader } from '@/presentation/bridges/kiemBarBridge'
 
 /**
  * What the dynamic layer may ask of the domain. Under §3.4 this list is

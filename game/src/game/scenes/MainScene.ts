@@ -49,7 +49,7 @@ import {
   getCultivateTexture,
   resolvePlayerVisualProfileId,
   type PlayerVisualProfileId,
-} from '@/game/support/PlayerVisualProfiles'
+} from '@/presentation/art/PlayerVisualProfiles'
 
 interface ResizeSize {
   width: number

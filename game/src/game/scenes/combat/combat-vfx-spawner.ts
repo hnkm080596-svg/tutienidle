@@ -16,7 +16,7 @@ import {
 import { spawnEnemySpawnVfx } from '@/game/support/EnemySpawnVfx'
 import { getCombatVfxPreset } from '@/data/vfx/CombatVfxPresets'
 import { getStatusVfxPreset } from '@/data/vfx/StatusVfxPresets'
-import type { PlayerBodyAnchorId } from '@/game/support/PlayerVisualProfiles'
+import type { PlayerBodyAnchorId } from '@/presentation/art/PlayerVisualProfiles'
 import {
   DEPTH_OVERLAY_UI,
   DEPTH_UPRIGHT_VFX,

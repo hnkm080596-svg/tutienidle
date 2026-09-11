@@ -24,9 +24,9 @@ import {
   HERO_LANE_INDEX,
   type LaneIndex,
 } from '@/core/battle/BattleLane'
-import { getCombatInsets, getFallbackCombatInsets } from '@/game/support/combatInsets'
+import { getCombatInsets, getFallbackCombatInsets } from '@/presentation/geometry/combatInsets'
 import { PlayerHudLayer } from './combat/PlayerHudLayer'
-import { readKiemBar } from '@/game/support/kiemBarBridge'
+import { readKiemBar } from '@/presentation/bridges/kiemBarBridge'
 import type { GridPosition } from '@/core/battle/BattleGrid'
 import {
   createBattleGridProjection,
@@ -49,7 +49,7 @@ import {
   type PlayerBodyAnchorId,
   type PlayerVisualProfile,
   type PlayerVisualProfileId,
-} from '@/game/support/PlayerVisualProfiles'
+} from '@/presentation/art/PlayerVisualProfiles'
 import {
   GOURD_MOUTH_ANCHOR,
   GOURD_PLACEHOLDER_SIZE,

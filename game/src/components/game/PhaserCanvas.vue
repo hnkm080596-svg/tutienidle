@@ -13,8 +13,8 @@ import { useDynamicRegion } from '@/presentation/host/useDynamicRegion'
 import {
   resolvePlayerVisualProfileId,
   type PlayerVisualProfileId,
-} from '@/game/support/PlayerVisualProfiles'
-import { makeKiemBarReader, registerKiemBarReader } from '@/game/support/kiemBarBridge'
+} from '@/presentation/art/PlayerVisualProfiles'
+import { makeKiemBarReader, registerKiemBarReader } from '@/presentation/bridges/kiemBarBridge'
 
 const gameManager = useGameManager()
 const player = usePlayerStore()

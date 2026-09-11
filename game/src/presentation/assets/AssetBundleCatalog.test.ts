@@ -16,7 +16,7 @@ import {
 } from '@/game/support/CombatPreload'
 import { GOURD_TEXTURE_KEY } from '@/game/support/RewardGourd'
 import { resolveEnemyTextureKey } from '@/game/support/EnemyArt'
-import { PLAYER_VISUAL_PROFILES } from '@/game/support/PlayerVisualProfiles'
+import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 
 describe('AssetBundleCatalog', () => {
   it('core-ui contains ink-wash-ui atlas descriptor', () => {

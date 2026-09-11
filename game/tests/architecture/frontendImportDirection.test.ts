@@ -12,8 +12,8 @@
  * Real violations at authoring time (2026-09-11):
  *   - `src/game/support/themePhaserSync.ts` imported `watch` from 'vue' and
  *     `useThemeStore` from '@/stores/themeStore'
- *   - `src/game/support/commandWheelCatalog.ts` imported two panel-id types
- *     from '@/stores/ui'
+ *   - `commandWheelCatalog.ts` (then in `src/game/support/`, now in
+ *     `src/data/ui/`) imported two panel-id types from '@/stores/ui'
  *
  * The second was type-only, so it emitted no runtime edge. It is still a
  * violation: §3.2 governs direction, and a type-only import is precisely how a
@@ -85,25 +85,33 @@ describe('frontend import direction', () => {
   it(
     'the static layer reaches into src/game/ only where it is recorded',
     () => {
-      // The MIRROR of the rule above, and the one §5.4 is about: a shared art
-      // descriptor read only by Vue, stranded in the dynamic layer's directory.
-      // Three were (DongFuArt, DongFuBuildingArt, DongFuStackLoader — zero
-      // consumers under src/game/, all consumers under src/components/); they
-      // now live in presentation/background/.
+      // The MIRROR of the rule above. It began at nine modules the static
+      // layer reached into `src/game/` for; eight now have a home that matches
+      // what they are, each decided on its own evidence:
       //
-      // What remains is listed rather than forbidden, because each entry needs
-      // its own decision and some are legitimately dynamic-layer facts. This is
-      // a ratchet: the list may shrink without ceremony, and may not grow
+      //   art descriptors with NO src/game/ consumer at all
+      //     DongFuArt, DongFuBuildingArt, DongFuStackLoader
+      //       -> presentation/background/
+      //   static-only UI data
+      //     commandWheelCatalog, commandWheelOrbit -> data/ui/
+      //   vocabulary both layers name
+      //     SlotState -> presentation/contracts/
+      //   a DOM<->canvas size bridge, as its own header already called it
+      //     combatInsets -> presentation/geometry/
+      //   a reader the shell registers and the scene polls each frame
+      //     kiemBarBridge -> presentation/bridges/
+      //   the player art contract, read by five scenes and by the gate
+      //     PlayerVisualProfiles -> presentation/art/
+      //
+      // ThanhVanArt is the one that stays, and for a reason rather than by
+      // omission: what remains in it after the variant vocabulary moved out is
+      // the Phaser DEPTH table, and display-list ordering is a dynamic-layer
+      // fact. Splitting the load list away from the depths is its own job with
+      // its own evidence.
+      //
+      // A ratchet: the list may shrink without ceremony, and may not grow
       // without editing it here.
-      const RECORDED = [
-        '@/game/support/PlayerVisualProfiles',
-        '@/game/support/SlotState',
-        '@/game/support/ThanhVanArt',
-        '@/game/support/combatInsets',
-        '@/game/support/commandWheelCatalog',
-        '@/game/support/commandWheelOrbit',
-        '@/game/support/kiemBarBridge',
-      ]
+      const RECORDED = ['@/game/support/ThanhVanArt']
 
       const shells = srcCorpus(SRC_DIR).filter(
         (file) =>

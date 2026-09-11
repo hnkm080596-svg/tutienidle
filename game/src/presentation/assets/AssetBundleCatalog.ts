@@ -37,7 +37,7 @@ import {
   enemyTextureUrl,
   resolveEnemyTextureKey,
 } from '@/game/support/EnemyArt'
-import { PLAYER_VISUAL_PROFILES } from '@/game/support/PlayerVisualProfiles'
+import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 
 export type AssetBundleId = 'core-ui' | 'home' | 'combat' | 'tribulation'
 

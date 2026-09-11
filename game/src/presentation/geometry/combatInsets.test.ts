@@ -13,7 +13,7 @@ import {
   resetCombatInsets,
   getCombatInsets,
   getFallbackCombatInsets,
-} from './combatInsets'
+} from '@/presentation/geometry/combatInsets'
 
 afterEach(() => {
   resetCombatInsets()

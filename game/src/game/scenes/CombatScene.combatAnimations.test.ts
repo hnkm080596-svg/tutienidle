@@ -12,7 +12,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { createTestScene } from './combat/combatTestHarness'
 import { PLAYER_ID } from './combat/combatConstants'
 import { combatAnimationKey } from '@/game/support/CombatAnimationSet'
-import { PLAYER_VISUAL_PROFILES } from '@/game/support/PlayerVisualProfiles'
+import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 
 function createScene() {
   const scene = createTestScene('bare')

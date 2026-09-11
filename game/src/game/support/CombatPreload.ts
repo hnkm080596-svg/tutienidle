@@ -12,7 +12,7 @@
 import type Phaser from 'phaser'
 import { GOURD_TEXTURE_KEY, GOURD_TEXTURE_URL } from './RewardGourd'
 import { ENEMY_SOURCE_SIZE, enemyTextureUrl, resolveEnemyTextureKey } from './EnemyArt'
-import { PLAYER_VISUAL_PROFILES, type PlayerVisualProfile } from './PlayerVisualProfiles'
+import { PLAYER_VISUAL_PROFILES, type PlayerVisualProfile } from '@/presentation/art/PlayerVisualProfiles'
 import { peekThanhVanVariant, thanhVanLoadList } from './ThanhVanArt'
 import { buildPlaceholderAnimationSet, type CombatAnimationSet } from './CombatAnimationSet'
 
