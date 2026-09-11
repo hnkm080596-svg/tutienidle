@@ -199,7 +199,46 @@ test.describe('Combat idle motion (Spec B §9.10)', () => {
       `player drawn at aspect ${drawnAspect.toFixed(3)} but authored at ${authoredAspect.toFixed(3)}`,
     ).toBeCloseTo(1, 1)
 
-    // 3. Every static enemy moved, and kept its feet on the ground.
+    // 3. Spec C §7 criterion 3 — the CHARACTER heights match, not the box heights.
+    //
+    // Measured before this spec: player 91.1px against boar 123.0px, while both
+    // carried the same multiplier and the boar was the one further away. A box
+    // comparison would have passed that.
+    const heights = await page.evaluate(() => {
+      const w = window as unknown as {
+        __tutienPhaserGame?: { scene: { getScene(k: string): unknown } }
+      }
+
+      const scene = w.__tutienPhaserGame?.scene.getScene('CombatScene') as {
+        sprites: Map<string, { row: number; personHeight?: number }>
+        projection?: { gridToScreen(row: number, col: number): { scale: number } }
+      }
+
+      const at = (id: string) => {
+        const s = scene.sprites.get(id)
+
+        if (!s?.personHeight) return undefined
+
+        // Normalise out perspective so two entities on different rows compare.
+        const depth = scene.projection?.gridToScreen(s.row, 8).scale ?? 1
+
+        return s.personHeight / depth
+      }
+
+      const enemyId = [...scene.sprites.keys()].find((k) => k !== 'player') as string
+
+      return { player: at('player'), enemy: at(enemyId) }
+    })
+
+    expect(heights.player, 'player has no resolved person height').toBeDefined()
+    expect(heights.enemy, 'enemy has no resolved person height').toBeDefined()
+
+    expect(
+      heights.player! / heights.enemy!,
+      `player ${heights.player!.toFixed(1)}px vs enemy ${heights.enemy!.toFixed(1)}px, depth-normalised`,
+    ).toBeCloseTo(1, 1)
+
+    // 4. Every static enemy moved, and kept its feet on the ground.
     const enemyIds = samples[0]!.enemies.map((enemy) => enemy.id)
 
     for (const id of enemyIds) {
