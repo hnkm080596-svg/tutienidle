@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
-import { defineEnemy } from '../enemy/Enemy'
 import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { EnemyDefinition } from '../enemy/Enemy'
@@ -23,7 +22,7 @@ const MINIMAL_STATS_INPUT = {
   armor: 0,
 }
 
-function createPlayerEntity(): CombatEntity {
+function _createPlayerEntity(): CombatEntity {
   const stats = { ...createBaseStats(), attack: 0 }
 
   return {
@@ -55,7 +54,7 @@ function createPlayerEntity(): CombatEntity {
   }
 }
 
-function enemyDefinition(): EnemyDefinition {
+function _enemyDefinition(): EnemyDefinition {
   return {
     id: 'target_dummy',
     name: 'Bia Tập',

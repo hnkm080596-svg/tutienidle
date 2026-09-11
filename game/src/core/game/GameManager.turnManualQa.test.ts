@@ -89,7 +89,7 @@ describe('QA probe â€” manual mode adversarial (Slice 7)', () => {
   })
 
   it('INV-TM-5: choose khi KHÃ”NG awaiting lÃ  no-op an toÃ n, khÃ´ng resolve gÃ¬', () => {
-    const { gameManager, combatSource } = battleReady()
+    const { gameManager } = battleReady()
 
     const turnsBefore = gameManager.getTurnBattle()?.totalTurnsElapsed ?? 0
 

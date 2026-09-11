@@ -45,7 +45,7 @@ function buildStartedGameManager(): { gameManager: GameManager; combatSource: Ma
 
 describe('GameManager - intro/transition phase before countdown (plan 2026-09-07 Task 4)', () => {
   it('starts a new battle in the intro phase before countdown', () => {
-    const { gameManager, combatSource } = buildStartedGameManager()
+    const { gameManager } = buildStartedGameManager()
 
     expect(gameManager.getTurnBattle()?.state).toBe('intro')
     expect(gameManager.getTurnBattle()?.introTurnsRemaining).toBe(INTRO_TOTAL_TICKS)
@@ -85,7 +85,7 @@ describe('GameManager - intro/transition phase before countdown (plan 2026-09-07
 
   describe('Task 4: getCombatPresentationSnapshot pure snapshot query', () => {
     it('returns initial combat view at intro with zero ticks without mutating or emitting', () => {
-      const { gameManager, combatSource } = buildStartedGameManager()
+      const { gameManager } = buildStartedGameManager()
       const session = gameManager.getCurrentPresentationSession()!
       expect(session).toBeDefined()
 

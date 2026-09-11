@@ -86,7 +86,7 @@ describe('TurnBattleSystem party (multi player-side unit)', () => {
   })
 
   it('1 party member chết → trận vẫn fighting (member còn sống tiếp tục)', () => {
-    const { battle, memberA, enemy } = partyBattle()
+    const { battle, memberA } = partyBattle()
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
 
     // memberA (10 HP) bị enemy giết qua vài lượt — ép enemy attack lớn.

@@ -10,7 +10,6 @@ import {
 } from './TheResourceSystem'
 import { MAX_THE } from '../combat/CombatTypes'
 import type { CombatEntity } from '../combat/CombatEntity'
-import type { SkillRuntimeStats } from '../skill/SkillRuntimeStats'
 import { BuffPool } from '../buff/BuffPool'
 import { BuffSystem } from '../buff/BuffSystem'
 import { BuffRegistry } from '../buff/BuffRegistry'

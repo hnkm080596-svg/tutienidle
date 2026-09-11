@@ -1,4 +1,4 @@
-import pluginVue from 'eslint-plugin-vue'
+﻿import pluginVue from 'eslint-plugin-vue'
 import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
 
 export default defineConfigWithVueTs(
@@ -44,7 +44,6 @@ export default defineConfigWithVueTs(
     // branch territory); fixing them there now would collide with that
     // branch. Revisit after it merges.
     files: ['src/core/**/*.{ts,vue}'],
-    ignores: ['**/*.test.ts'],
     rules: {
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
@@ -59,19 +58,6 @@ export default defineConfigWithVueTs(
       'vue/html-indent': 'off',
       'vue/attributes-order': 'off',
       'vue/component-name-in-template-casing': 'off',
-    },
-  },
-  {
-    // R14.1a follow-up: combat-held files (GameManager.ts /
-    // GameManagerTurnBattleOps.ts, owned by the in-flight
-    // combat-turn-mechanism branch) carry a pre-existing dead
-    // `type PresentationHold` import that the de-overlap surfaced as an
-    // error. Editing those files here would collide with that branch, so
-    // they temporarily stay at the repo-wide warning; delete this block and
-    // the dead import together when the branch merges.
-    files: ['src/core/game/GameManager.ts', 'src/core/game/GameManagerTurnBattleOps.ts'],
-    rules: {
-      '@typescript-eslint/no-unused-vars': 'warn',
     },
   },
 )

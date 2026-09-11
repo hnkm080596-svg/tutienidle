@@ -15,15 +15,16 @@
  * the owning contract, not a silent add.
  *
  * Explicitly OUT of this guard's scope:
- * - `core/battle/turn/**`, `core/game/**`, `presentation/**` — held by the
- *   in-flight combat-turn-mechanism branch; their writers get classified
- *   when that branch merges (see roadmap R14 note).
- * - `src/game/scenes/**` (CombatScene etc.) is NOT skipped: it is clean
- *   today, and if the combat branch introduces a new vitals write there,
- *   this guard failing at merge is the intended forcing function — the
- *   writer must be classified (allowlist entry + contract) consciously.
  * - Test files — fixtures may set up vitals directly; they are not
  *   production authority.
+ *
+ * Merge note (2026-09-11): the combat-turn-mechanism branch merged
+ * (5718137e); its regions (`core/battle/turn/**`, `core/game/**`,
+ * `presentation/**`) are now scanned like everything else. Post-merge
+ * classification found exactly ONE unclassified writer — the wave-spawn
+ * dead-spawn in GameManagerTurnBattleOps (allowlisted below with its
+ * contract). CombatScene.ts and all of src/game/scenes are clean (only
+ * the health-bar display mirror, exempted receiver-narrow below).
  */
 import { describe, expect, it } from 'vitest'
 import { join, relative } from 'node:path'
@@ -79,19 +80,22 @@ const ALLOWED: AllowedFile[] = [
     contract:
       'Mind-tribulation ghost HP snapshot restore (own director entity, not battle participants) — tribulation has its own time/outcome handling.',
   },
+  {
+    path: 'src/core/game/GameManagerTurnBattleOps.ts',
+    contract:
+      'Wave-spawn dead-spawn (post-merge 5718137e): pre-defeated reward-shim entities spawn with alive=false before entering the reward stream — entity construction-time flag, not battle resolution. Sole write is `entity.alive = false` at spawn.',
+  },
 ]
 
-const HELD_BY_COMBAT_BRANCH = [/^src[\\/](core[\\/](battle[\\/]turn|game)|presentation)/]
-
 /**
- * Presentation DISPLAY mirrors: these files write vitals-named fields on
+ * Authority-synced mirrors: these files write vitals-named fields on
  * their own Phaser display structs (health-bar widgets), never on battle
  * entities. The exemption is receiver-narrow (`sprite.healthBar.*`) so a
  * real entity write (`entity.currentHp = ...`) inside the same file still
  * fails the guard. A7: mirrors consume display copies; they are not the
  * vitals authority.
  */
-const PRESENTATION_MIRRORS: { path: string; narrow: RegExp; contract: string }[] = [
+const MIRRORS: { path: string; narrow: RegExp; contract: string }[] = [
   {
     path: 'src/game/scenes/combat/combat-grid-view.ts',
     // Accepts both the sprite.healthBar.x form and the local-variable form
@@ -100,6 +104,16 @@ const PRESENTATION_MIRRORS: { path: string; narrow: RegExp; contract: string }[]
     narrow: /(?:sprite\.)?healthBar\.(currentHp|maxHp)\s*[+\-]?=/,
     contract:
       'Mirrors the received HP display copy onto the Phaser EnemyHealthBar widget struct (own display state), not onto a CombatEntity.',
+  },
+  {
+    path: 'src/core/battle/turn/TurnBattleSystem.ts',
+    // Post-merge 5718137e: participant wrapper syncs its cache FROM the
+    // vitals authority (`participant.alive = participant.entity.alive`).
+    // RHS reads the authority; LHS is the wrapper's own cache field. Any
+    // other vitals write in this file still fails.
+    narrow: /participant\.alive\s*=\s*participant\.entity\.alive/,
+    contract:
+      'Participant wrapper re-syncs its alive cache from the entity (the vitals authority) at turn recompute/pacing (R2 AR-05 speed-cache sync does the same for speed).',
   },
 ]
 
@@ -116,10 +130,8 @@ function collectOffenders(): { violations: Offender[]; unclassified: Offender[] 
   for (const file of listProductionTs(SRC_DIR)) {
     const rel = relative(GAME_ROOT, file)
     const normalized = rel.replaceAll('\\', '/')
-    // Regions held by the in-flight combat branch — skip until it merges.
-    if (HELD_BY_COMBAT_BRANCH.some((re) => re.test(normalized))) continue
     const allowed = ALLOWED.find((a) => a.path === normalized)
-    const mirror = PRESENTATION_MIRRORS.find((m) => m.path === normalized)
+    const mirror = MIRRORS.find((m) => m.path === normalized)
     const lines = readTs(file).split('\n')
     lines.forEach((line, idx) => {
       if (!VITALS_WRITE_RE.test(line)) return

@@ -13,7 +13,6 @@ import { materials } from '../../data/materials/materials'
 import type { Equipment } from './Equipment'
 import type { PlayerData } from '../player/Player'
 import { createDefaultPlayer } from '../player/Player'
-import type { EventBus } from '../events/EventBus'
 import type { EquipmentInstance } from './EquipmentInstance'
 
 function registerMaterials(materialBag: MaterialBag): void {

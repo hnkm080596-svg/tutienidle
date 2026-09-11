@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { SkillEffectSystem } from './SkillEffectSystem'
 import type { SkillEffectContext } from './SkillEffectSystem'
 import { runSkillAction } from './SkillActionRegistry'

@@ -1349,11 +1349,8 @@ Each enforcement rule should protect a real regression class discovered by Missi
 
 ```text
 🟡 PARTIAL — first slice shipped 2026-09-11 (branch r14-architecture-enforcement),
-   covering COMPLETED missions only (R1, R2, R8.1 + AR-33/A6). Regions held by
-   the in-flight combat-turn-mechanism branch (core/battle/turn/**,
-   core/game/**, presentation/**) are EXPLICITLY UNGUARDED until it merges;
-   classifying their writers (incl. GameManagerTurnBattleOps.ts:1079
-   wave-spawn alive=false) is that branch's followup.
+   covering COMPLETED missions only (R1, R2, R8.1 + AR-33/A6). POST-MERGE (2026-09-11, 5718137e): those regions are now scanned and
+   classified — see POST-MERGE RESOLVED below.
 
    Guards live under game/tests/architecture/*.test.ts (vitest include was
    extended to tests/**/*.test.ts; e2e *.spec.ts unaffected).
@@ -1438,16 +1435,24 @@ Each enforcement rule should protect a real regression class discovered by Missi
      at de-overlap time they carried ~55 pre-existing unused-var/any
      violations, most inside core/battle/turn/** (combat branch territory)
      — fixing them now would collide with that branch. Revisit after merge.
-   - GameManager.ts / GameManagerTurnBattleOps.ts (combat-held, have a
-     pre-existing dead `type PresentationHold` import) got a documented
-     temporary carve-out block in eslint.config.js: delete the block AND
-     the dead import together when the combat branch merges.
+   - POST-MERGE RESOLVED (2026-09-11, branch rebased onto 5718137e):
+     dead PresentationHold imports removed from GameManager.ts /
+     GameManagerTurnBattleOps.ts; the temporary carve-out block deleted.
+     Core-test ignores removed: all ~55 surfaced violations fixed
+     mechanically (imports removed, locals _-prefixed, destructures
+     narrowed — object shapes untouched); eslint src/ now 2 errors (both
+     pre-existing on master) / 168 warnings (master: 231).
+     Combat-held guard regions UN-SKIPPED and classified: wave-spawn
+     dead-spawn allowlisted (GameManagerTurnBattleOps, construction-time
+     alive=false before reward stream); participant alive cache re-sync
+     exempted as an authority-synced mirror (TurnBattleSystem, mirrors
+     participant.entity.alive). Falsifiability re-probed post-merge.
    - 2 lint errors remain in src/data/skill/Skills.chain.test.ts
      (no-non-null-asserted-optional-chain) — verified PRE-EXISTING on
      master under the same config; not task-caused.
 
    Verification: P3 full (type-check + build + full vitest) PASS —
-   460 files / 3113 tests (baseline 456/3103; +4 guard files, +10 tests);
+   460 files / 3113 tests pre-merge; post-rebase onto 5718137e: 3187 tests PASS (3 consecutive full runs);
    eslint src/: 2 pre-existing errors / 213 warnings (was 2/231 on
    master — net fewer warnings, strict core effective); E3 simplification
    pass done (shared scan helpers, re-export coverage added); P5 code

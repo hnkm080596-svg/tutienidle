@@ -197,7 +197,7 @@ describe('PassiveSystem — E2 passiveCondition + passiveConvertsTo (spec talent
     }
 
     const bus = new EventBus()
-    const legacy = new PassiveSystem(
+    const _legacy = new PassiveSystem(
       bus,
       { getPassiveSkills: () => [skill] } as unknown as SkillManager,
       { getEffectiveSkill: (input: Skill) => input } as unknown as SkillSystem,

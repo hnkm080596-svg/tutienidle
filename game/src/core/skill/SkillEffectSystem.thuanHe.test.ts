@@ -464,7 +464,7 @@ describe("SkillEffectSystem — E-1: 'spreadsAilmentId' (lan độc)", () => {
   }
 
   it('primary 3 tầng, 2 phụ → mỗi phụ nhận 3 tầng (percent 1); primary không đổi', () => {
-    const { system, source, primary, secondaryA, secondaryB, primaryBuffs, pools, ctx } = spreadSetup(3)
+    const { system, source, primary, primaryBuffs, pools, ctx } = spreadSetup(3)
 
     system.apply({ type: 'damage', value: 1, spreadsAilmentId: 'trung_doc' }, source, primary, ctx)
 
@@ -474,7 +474,7 @@ describe("SkillEffectSystem — E-1: 'spreadsAilmentId' (lan độc)", () => {
   })
 
   it('spreadStackPercent 0.5 → ceil(3 × 0.5) = 2 tầng mỗi phụ', () => {
-    const { system, source, primary, secondaryA, pools, ctx } = spreadSetup(3)
+    const { system, source, primary, pools, ctx } = spreadSetup(3)
 
     system.apply(
       { type: 'damage', value: 1, spreadsAilmentId: 'trung_doc', spreadStackPercent: 0.5 },
@@ -487,7 +487,7 @@ describe("SkillEffectSystem — E-1: 'spreadsAilmentId' (lan độc)", () => {
   })
 
   it('primary không có ailment → không spread, không crash', () => {
-    const { system, source, primary, secondaryA, pools, ctx } = spreadSetup(0)
+    const { system, source, primary, pools, ctx } = spreadSetup(0)
 
     expect(() =>
       system.apply({ type: 'damage', value: 1, spreadsAilmentId: 'trung_doc' }, source, primary, ctx),
@@ -497,7 +497,7 @@ describe("SkillEffectSystem — E-1: 'spreadsAilmentId' (lan độc)", () => {
   })
 
   it('stack cap ở maxStacks của buff (trần 5)', () => {
-    const { system, source, primary, secondaryA, pools, ctx } = spreadSetup(5)
+    const { system, source, primary, pools, ctx } = spreadSetup(5)
 
     system.apply({ type: 'damage', value: 1, spreadsAilmentId: 'trung_doc' }, source, primary, ctx)
 

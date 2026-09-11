@@ -1,6 +1,5 @@
 import {
   PresentationSession,
-  type PresentationHold,
   type PresentationMode,
   type SessionPresentationPort,
   type SessionRef,

@@ -49,3 +49,63 @@ Deferred per isolated-worktree exception — no visual surface changed (guards +
 ## Verdict
 
 **PASS WITH EVIDENCE**
+
+---
+
+# Post-merge update (2026-09-11, same branch after rebase onto 5718137e)
+
+The combat-turn-mechanism branch merged into master. This update covers the
+promised followups, re-run on the rebased branch (commit 4f228c6c).
+
+## What was done
+
+1. **Carve-out removals** (all promised "delete when the branch merges"):
+   - Dead `type PresentationHold` imports removed from
+     `core/game/GameManager.ts` and `core/game/GameManagerTurnBattleOps.ts`;
+     the documented temporary eslint carve-out block for those two files
+     deleted.
+   - Core-test `ignores: ['**/*.test.ts']` removed from the strict block:
+     the ~55 surfaced pre-existing violations were fixed mechanically:
+     unused import members/whole imports removed, true locals `_`-prefixed,
+     destructured members omitted (object shapes untouched). Every fix
+     verified by full core test run (278 files / 2025 tests PASS) and
+     type-check. Two self-inflicted regressions from the first scripted pass
+     (destructure-member rename breaking object shape) were caught by
+     type-check and fully reverted before redoing the fixes precisely.
+   - Remaining lint state: `eslint src/` = 2 errors / 168 warnings — both
+     errors verified pre-existing on master (`Skills.chain.test.ts`
+     optional-chain assertions); warnings DOWN from master's 231.
+2. **Combat-held regions classified and un-skipped** in
+   `tests/architecture/vitalsWriteAuthority.test.ts`:
+   - Post-merge scan found exactly three writers in the previously-skipped
+     regions: the wave-spawn dead-spawn (`GameManagerTurnBattleOps`:
+     entity construction-time `alive=false` before the reward stream —
+     allowlisted with contract) and the participant `alive` cache re-sync
+     from the vitals authority in `TurnBattleSystem` (mirrors its entity
+     owner, receiver-narrow exemption alongside the health-bar mirror).
+   - `src/game/scenes` re-verified clean (only the health-bar mirror).
+   - Falsifiability re-probed: a scratch real entity write injected into
+     `TurnBattleSystem.ts` still trips the guard while the mirror pattern
+     stays legal; probe removed, file byte-identical after.
+3. **Rebase:** branch rebased onto master `5718137e` (single self-contained
+   commit; the only overlapping file, `roadmap.md`, merged cleanly).
+
+## Verification (post-merge update)
+
+- `npm run type-check`: PASS
+- `npm run build`: PASS
+- Full suite: **3187 tests PASS** (three consecutive full runs; one
+  single-test flake in the first run, passes consistently after — the known
+  battle-test flaky class from R9, not task-caused)
+- `eslint src/`: 2 pre-existing errors / 168 warnings (master: 2 / 231)
+- `eslint tests/architecture/`: clean
+- Guard suite: 10/10 including the newly un-skipped regions
+
+## P14 note
+
+Deferred per isolated-worktree exception (unchanged — no visual surface).
+
+## Verdict (post-merge update)
+
+**PASS WITH EVIDENCE**
+
