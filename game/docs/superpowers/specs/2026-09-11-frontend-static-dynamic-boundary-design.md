@@ -125,8 +125,8 @@ state management.
 
 ### 3.3 Core knows neither Vue nor Phaser — *existing (A6)*
 
-Already guarded by `game/tests/architecture/coreImportDirection.test.ts` on the
-`r14-architecture-enforcement` branch. (All guard paths in this spec are
+Already guarded by `game/tests/architecture/coreImportDirection.test.ts`, on
+master since `c58cf75a` (2026-09-11). (All guard paths in this spec are
 repo-root-relative: `game/tests/architecture/`, which is `tests/architecture/`
 relative to the `game/` package that runs vitest.)
 
@@ -721,6 +721,21 @@ first.
 hoped:** if V8 turns out to need *any* new scene-object coupling, that is the
 signal to stop and pull §5.2 forward — not to reach for the scene reference
 because it happens to be in scope.
+
+**The r14 dependency is discharged.** `r14-architecture-enforcement` merged to
+master as `c58cf75a` on 2026-09-11, bringing `game/tests/architecture/`, its
+`helpers/scanTs.ts`, and the vitest `include` that picks the directory up.
+Everything this spec deferred behind it — §4's typed gate, §5's region host, and
+the guards in §7 — is unblocked. Two consequences already applied: the
+projection guard has moved from the `src/` parking spot to its declared home,
+and guards no longer need the `@ts-expect-error` dance for Node types, because
+`tests/architecture/` is in neither tsconfig and so is not type-checked.
+
+One caution inherited with it: `eslintCoreSeverity.test.ts` shells out to eslint
+under a 60-second budget and sits near that edge during a full suite. It timed
+out once on this work before the new guard's tree walks were hoisted to module
+scope. Nothing is wrong with the assertion; the budget is tight, and a future
+guard that scans the tree should be written with that in mind.
 
 **When B starts.** B's spec is written as soon as this one is accepted; it does
 **not** wait for A to be implemented. A's implementation is itself blocked on
