@@ -3,9 +3,12 @@
 **Status:** Draft, awaiting review
 **Date:** 2026-09-11
 **Decided by:** user, in brainstorm, 2026-09-11
+**Reviewed by:** user, 2026-09-11. Every measured claim re-verified against the
+tree before acceptance — see §11.
 **Builds on:** `docs/architecture/mission-0-architecture-audit-2026-09-08.md`
 §11, §13, §14, §16, §17; `2026-09-08-r5-combat-runtime-presentation-boundary-design.md`
-**Adopts from:** `VUE + Phaser checklist.md` v1.1 (partially — see §9)
+**Adopts from:** `docs/superpowers/specs/VUE + Phaser checklist.md` v1.1
+(partially — see §9)
 
 ---
 
@@ -94,8 +97,10 @@ state management.
 
 ### 3.3 Core knows neither Vue nor Phaser — *existing (A6)*
 
-Already guarded by `tests/architecture/coreImportDirection.test.ts` on the
-`r14-architecture-enforcement` branch.
+Already guarded by `game/tests/architecture/coreImportDirection.test.ts` on the
+`r14-architecture-enforcement` branch. (All guard paths in this spec are
+repo-root-relative: `game/tests/architecture/`, which is `tests/architecture/`
+relative to the `game/` package that runs vitest.)
 
 ### 3.4 Phaser reports; it does not decide — *existing (A7 + R5 §2.A3)*
 
@@ -110,9 +115,10 @@ signal from the dynamic layer to the domain requires a declared addition, not an
 ad-hoc method on a structurally-typed reference.
 
 There is one residue worth closing while the gate is built. R5's AR-20 fix is
-live at runtime — `CombatAnimationRuntime.ts:215-217` rejects a missing token
-(`if (!token || token !== this.playbackToken) return`). But the signature is
-still `acknowledgeTurnReady(token?: string)`, and the inline type at
+live at runtime: all three acknowledgments reject a missing token, at
+`CombatAnimationRuntime.ts:216-218`, `:249-251` and `:306-308`
+(`if (!token || token !== this.playbackToken) return`). But the signatures are
+still `acknowledge*(token?: string)`, and the inline type at
 `CombatScene.ts:547-553` mirrors that optionality. So a caller that omits the
 token **compiles cleanly and silently does nothing** — the turn simply never
 advances, with no error anywhere. The runtime is safe; the type is not. R5 §3.3
@@ -127,8 +133,11 @@ The dynamic layer draws beneath and does not need to know where the pointer is.
 This is new as a written rule, but it is not a new practice — the repository had
 already chosen it and simply never wrote it down. Evidence:
 
-- Phaser takes pointer input in exactly **one** place in the whole tree:
-  `src/game/scenes/combat/combat-vfx-spawner.ts:242` (`setInteractive` on an icon).
+- Phaser takes pointer input at exactly **one site** in the whole tree:
+  `src/game/scenes/combat/combat-vfx-spawner.ts:242-245` — a status icon with
+  `setInteractive` plus three handlers (`pointerover` and `pointerout` drive a
+  tooltip, `pointerdown` acts on the status). One site, four handlers; it is a
+  real interactive affordance, not an incidental call.
 - `BattleGridProjection.screenToGridUnclamped()` and `containsScreenPoint()` —
   the machinery for converting a screen point back to a grid cell — have
   **no callers** outside their own module and its tests. They were built for the
@@ -147,22 +156,27 @@ is dead code under this rule; §6 records the decision rather than assuming it.
 ### 4.1 The problem, measured
 
 The dynamic layer receives everything through Phaser's `registry`, used as an
-untyped service locator. Today that is **8 distinct keys**:
+untyped service locator. Measured on the tree: **28 registry sites** outside
+tests, of which **22 are reads**, across **8 distinct keys**.
 
-| Key | Carries |
-|---|---|
-| `gameManager` | Domain orchestrator reference |
-| `sceneAdapter` | `PhaserSceneAdapter` (renderer port) |
-| `eventBus` | Core event bus |
-| `bundleManager` | `AssetBundleManager` |
-| `playerVisualProfileId` | Which player visual profile is current |
-| `lastBattlePositionsSnapshot` | Latest battle positions |
-| `battlefieldGeometry` | Grid geometry published *by* the scene |
-| `KIEM_BAR_READER_KEY` | Kiếm-bar reader function |
+| Key | Carries | Type | Required? |
+|---|---|---|---|
+| `gameManager` | Domain orchestrator reference | `DomainCommandPort` (§4.3, new) | required |
+| `sceneAdapter` | Phaser scene adapter | `RendererPort` | required |
+| `eventBus` | Core event bus | `EventBus` | required |
+| `bundleManager` | Asset bundle manager | `AssetPort` | required |
+| `battlefieldGeometry` | Grid geometry published *by* the scene | `BattlefieldGeometry` (new; the shape written at `CombatScene.ts:1090`) | required once published |
+| `playerVisualProfileId` | Which player visual profile is current | `PlayerVisualProfileId` | optional (falls back) |
+| `lastBattlePositionsSnapshot` | Latest battle positions | `BattlePositionsEvent` | optional |
+| `KIEM_BAR_READER_KEY` | Kiếm-bar reader function | `KiemBarReader` | optional |
 
-**11 read sites carry an `as { … }` cast.** A rename on the domain side produces
-no type error anywhere; it fails at runtime, inside a scene, usually as a
-silently missing visual.
+**11 of the 22 reads carry an `as { … }` cast.** A rename on the domain side
+produces no type error anywhere; it fails at runtime, inside a scene, usually as
+a silently missing visual.
+
+The required/optional column is not decoration — it drives §4.2's two accessors.
+Only `BattlefieldGeometry` and `DomainCommandPort` are new declarations; the
+other six types already exist and are merely being named at the boundary.
 
 This is the gate through which every positioning and identity fact for the
 visual layer already travels — and through which the animation metadata contract
@@ -187,7 +201,18 @@ export interface PresentationGateContents {
   kiemBarReader: KiemBarReader | undefined
 }
 
-export function readGate<K extends keyof PresentationGateContents>(
+/**
+ * Required keys: absence is a wiring bug, not a runtime condition. Throws, so
+ * the failure surfaces where the region was seeded rather than three frames
+ * later as a missing sprite.
+ */
+export function readRequiredGate<K extends RequiredGateKey>(
+  registry: Phaser.Data.DataManager,
+  key: K,
+): PresentationGateContents[K]
+
+/** Optional keys: absence is a legitimate state with a defined fallback. */
+export function readOptionalGate<K extends OptionalGateKey>(
   registry: Phaser.Data.DataManager,
   key: K,
 ): PresentationGateContents[K] | undefined
@@ -198,6 +223,19 @@ export function writeGate<K extends keyof PresentationGateContents>(
   value: PresentationGateContents[K],
 ): void
 ```
+
+**Why two accessors, not one.** A single `readGate` returning `T | undefined`
+forces every caller to handle absence, including for keys whose absence means
+the region was never wired — `gameManager`, `sceneAdapter`, `eventBus`,
+`bundleManager`. That converts a seed-time wiring bug into a slow, silent
+read-time failure, which is the exact class of defect this gate exists to kill.
+`RequiredGateKey` and `OptionalGateKey` partition the key union, so the compiler
+picks the right accessor and neither can be used for the other's keys.
+
+**Seed-time validation.** §5's host seeds the gate before the first scene is
+constructed and asserts that every `RequiredGateKey` is present. A region that
+cannot be fully seeded does not boot; it reports through the region's local
+error boundary (§5.2) instead of booting half-wired.
 
 Phaser's `registry` remains the transport — this is not a rewrite of how data
 travels, only of how it is declared. Every `registry.get('x') as {…}` becomes
@@ -213,8 +251,46 @@ design; §3.4 governs what may flow, not which way.
 `gameManager` is typed as a `DomainCommandPort` — a declared interface, not the
 structural `{ acknowledgeTurnReady: …; … }` shape currently inlined at
 `CombatScene.ts:547-553`. Under §3.4 that interface is the complete list of what
-the dynamic layer may ask of the domain. Adding to it is a deliberate edit to a
-named contract, which is the point.
+the dynamic layer may ask of the domain.
+
+"Closed" is only a claim unless the list is written down, so here it is in full.
+This is the entire contract as of 2026-09-11:
+
+```ts
+export interface DomainCommandPort {
+  /** The visual step that leads a turn has finished playing. */
+  acknowledgeTurnReady(token: string): void
+  /** The action's impact frame has been reached. */
+  acknowledgeActionImpact(token: string): void
+  /** The action's playback, including its VFX, has fully finished. */
+  acknowledgeActionComplete(token: string): void
+
+  /** The token the domain currently expects; the scene echoes it back. */
+  getPendingPlaybackToken(): string | null
+
+  /** Whether a renderer is attached and drawing. Not a decision, a fact. */
+  setPresentationActive(active: boolean): void
+}
+```
+
+Five members, three of which are the R5 acknowledgment triple. Tokens are
+**mandatory** here, closing the residue described in §3.4 — the runtime already
+rejects a missing token; this makes the compiler reject it too.
+
+**Amendment process.** Adding a member is a three-part edit, deliberately
+inconvenient in proportion to what it permits:
+
+1. Edit this interface, in this named file.
+2. Record the addition in this spec's §4.3 and state why the existing members
+   could not carry it.
+3. Confirm the new member reports rather than decides (§3.4/A7). A member that
+   selects an outcome, picks a target, or gates progression is refused — the
+   correct fix for such a need is a domain command the static layer issues, not
+   a new signal from the dynamic layer.
+
+There is no approval ceremony beyond normal review. The constraint is that the
+edit is visible and argued, rather than a method appearing on a structural type
+that nobody declared.
 
 ---
 
@@ -236,16 +312,21 @@ A single composable owns the mechanics of hosting a dynamic region:
 ```ts
 // src/presentation/host/useDynamicRegion.ts  (name provisional)
 
+/** Phaser's own scene-class shape; no new abstraction is introduced. */
+type SceneCtor = new (...args: never[]) => Phaser.Scene
+
 interface DynamicRegionOptions {
   container: Ref<HTMLElement | null>
   scenes: () => Promise<SceneCtor[]>   // dynamic import, code-split preserved
-  gate: Partial<PresentationGateContents>
+  gate: GateSeed                       // every RequiredGateKey, per §4.2
   config?: Partial<Phaser.Types.Core.GameConfig>
 }
 
 interface DynamicRegion {
   generation: Readonly<Ref<number>>
   bootError: Readonly<Ref<string | null>>
+  /** Capture at creation; compare before acting. See "Generation ownership". */
+  currentGeneration(): number
   destroy(): void
 }
 ```
@@ -257,10 +338,47 @@ the bootstrap error boundary — kept **local to the region**, per the existing
 reasoning at `PhaserCanvas.vue:33-41` that a failed canvas must not take the
 whole application down.
 
-**Generation ownership** is the part Mission 0 §13 asked for: each host holds a
-generation counter, incremented on every construction. A callback or tween that
-survives a teardown compares generations and is discarded — the same discipline
-R5 §3.3 established for playback tokens, applied to region lifecycle.
+**Teardown ordering.** The order is part of the contract, not an implementation
+detail — a teardown that destroys the game before cancelling an in-flight boot
+leaves a resolved dynamic import writing into a destroyed container, which is
+precisely the race `PhaserCanvas.vue` already handles by hand today:
+
+```
+destroy():
+  1. generation += 1            // every in-flight callback is now stale
+  2. resizeObserver.disconnect()
+  3. cancel pending boot        // a resolving import() sees a stale generation
+  4. game.destroy(true)         // Phaser tears down scenes, tweens, timers
+  5. null the game/container/observer refs
+```
+
+Step 1 comes first on purpose: everything after it can run while a callback is
+mid-flight, and the stale generation is what makes those callbacks harmless.
+
+**Generation ownership** is the part Mission 0 §13 asked for. Each host holds a
+counter incremented on every construction *and* every teardown. Anything that
+can outlive a teardown — a tween `onComplete`, a `delayedCall`, a resolving
+`import()`, an acknowledgment echoed back from a scene — captures the generation
+at creation and compares before acting:
+
+```ts
+const g = region.currentGeneration()
+
+scene.tweens.add({
+  /* … */
+  onComplete: () => {
+    if (g !== region.currentGeneration()) return   // teardown happened; drop it
+    port.acknowledgeActionComplete(token)
+  },
+})
+```
+
+This is the same discipline R5 §3.3 established for playback tokens, applied to
+region lifecycle. Note the two guards compose rather than duplicate: the
+playback token answers *"is this the turn the domain is waiting for?"*, the
+generation answers *"is this even the same region?"*. A cross-battle callback
+can carry a valid-looking token; only the generation catches a cross-*region*
+one.
 
 ### 5.3 What this is not
 
@@ -273,28 +391,45 @@ scene's business.
 
 ## 6. Existing violations, and what changes
 
-No behaviour changes. Nothing visible to a player moves. This is structural.
+**No user-visible behaviour changes. Structural moves only** — with two stated
+exceptions below, because the blanket claim would be false.
+
+V3 changes behaviour if the interaction moves to the shell: the handler changes
+owner, and hit geometry becomes the DOM's rather than the canvas's. V6 changes
+behaviour in the narrow sense that deleted code stops existing. V1 moves a
+module across a directory boundary, which can shift a code-split chunk even
+though nothing it does changes. None of these are visible to a player; all three
+are visible to the build graph or a test.
 
 | # | Site | Rule | Action |
 |---|---|---|---|
 | V1 | `src/game/support/themePhaserSync.ts:1-2` imports `watch` from `vue` and `useThemeStore` from Pinia | §3.2 | Move to `src/presentation/`. It is a bridge, not a visual. |
 | V2 | `src/game/support/commandWheelCatalog.ts:8` imports `LeftPanelMode`/`StandalonePanel` types from `@/stores/ui` | §3.2 | Type-only, so no runtime edge — but the direction is still wrong. Move the types down to a core or presentation contract. |
-| V3 | `src/game/scenes/combat/combat-vfx-spawner.ts:242-245` calls `setInteractive` + `pointerdown` | §3.5 | **Decide, do not assume**: either move the interaction to the shell, or record it as a declared exception with its reason. |
-| V4 | Two hand-rolled `Phaser.Game` bootstraps | §3.1 | Migrate both onto §5's composable. |
-| V5 | 11 `registry.get(…) as {…}` casts across 8 keys | §4 | Migrate to `readGate`/`writeGate`. |
+| V3 | `src/game/scenes/combat/combat-vfx-spawner.ts:242-245` — a status icon with `setInteractive`, `pointerover`, `pointerout`, `pointerdown` | §3.5 | **Decide, do not assume**: move the interaction to the shell, or record it as a declared exception with its reason. Note it is a tooltip on a world-anchored icon, so moving it means the shell must track a world position — the trade is real, not cosmetic. |
+| V4 | Two hand-rolled `Phaser.Game` bootstraps — `PhaserCanvas.vue:134` (the main canvas) and `TranPhapPanel.vue:222` (the Formation preview named in Mission 0 §13 and §2 above) | §3.1 | Migrate both onto §5's composable. |
+| V5 | 11 `registry.get(…) as {…}` casts, among 22 reads across 8 keys | §4 | Migrate to `readRequiredGate`/`readOptionalGate`/`writeGate`. |
 | V6 | `BattleGridProjection.screenToGridUnclamped()`, `containsScreenPoint()` — no callers | §3.5 | Dead under §3.5. **Decide, do not assume**: delete, or keep with a recorded reason if Formation work will need them. |
 
 V3 and V6 are explicitly left as decisions, not foregone conclusions. Assuming
 either one would be the kind of silent narrowing this repository's review
 history has repeatedly caught.
 
+**Who decides V3 and V6:** the product owner, before the implementation plan is
+written — not the implementing agent mid-task, and not a reviewer after the
+fact. Each needs one piece of information the tree cannot supply: whether a
+world-anchored tooltip is worth moving to the DOM (V3), and whether Formation
+work will need screen→grid inversion (V6). Both answers belong in §6 of this
+spec once given, so the plan can cite them rather than re-litigate them.
+
 ---
 
 ## 7. Enforcement — executable, falsifiable
 
 Guards live in `game/tests/architecture/`, following the pattern established by
-`r14-architecture-enforcement` (four guard files, ten tests, described there as
-*probe-verified falsifiable*).
+`r14-architecture-enforcement` and reusing its `helpers/scanTs.ts`. That branch
+carries four guard files holding ten tests — verified: `coreImportDirection` 2,
+`eslintCoreSeverity` 2, `statProvenanceAndQueryPurity` 3, `vitalsWriteAuthority`
+3 — described there as *probe-verified falsifiable*.
 
 | Guard | Asserts | Probe that must fail it |
 |---|---|---|
@@ -320,6 +455,14 @@ is stated rather than papered over.
 
 Agreed order: this spec (A), then the animation metadata contract (B), then
 anchor/scale geometry (C), then animation/impact timing (D).
+
+**When B starts.** B's spec is written as soon as this one is accepted; it does
+**not** wait for A to be implemented. A's implementation is itself blocked on
+`r14-architecture-enforcement` merging, and leaving B idle behind that would
+stall C and D behind a queue neither depends on. The only true ordering
+constraint is that B's metadata must travel through §4's gate, which is a design
+dependency on this document, not on its code. So: A spec → B spec (immediately
+after) → A implementation (when r14 lands) → B implementation → C → D.
 
 B is the actual unlock, and it waits on this spec because its data travels
 through §4's gate. The reason B must come before C and D is measurable:
@@ -373,9 +516,38 @@ written against this repository: it assumes Phaser 3, plain JS, `src/vue/` and
 4. Both existing regions are constructed by the shared host composable, each
    holding its own generation.
 5. V1, V2, V4, V5 are closed. V3 and V6 are closed **or** recorded as declared
-   exceptions with stated reasons.
+   exceptions with stated reasons — decided by the product owner before the plan
+   is written (§6), and written back into §6.
 6. Four guards exist, and each has been observed red against a probe before
    being accepted.
-7. Full gate green: type-check, build, vitest, Playwright. No behavioural change
-   is expected in any of them — a test that changes expectations is a signal to
-   stop, not to update the expectation.
+7. Full gate green: type-check, build, vitest, Playwright. **No test expectation
+   changes, except where a V3 or V6 decision explicitly authorizes it** — and
+   such a change cites that decision. Outside those two, a test that needs its
+   expectation updated is a signal to stop, not to update the expectation: this
+   work moves code, it does not change what the code does.
+
+---
+
+## 11. Verification log
+
+Every measured claim in this spec was re-verified against the tree on
+2026-09-11, at the reviewer's request, before the spec was accepted. Two were
+found imprecise and corrected; the rest held.
+
+| # | Claim | Result |
+|---|---|---|
+| C1 | Phaser takes pointer input at one site | **Corrected.** One site, but **four handlers** at `combat-vfx-spawner.ts:242-245`, not a lone `setInteractive` at `:242`. §3.5 and §6/V3 now say so. |
+| C2 | `screenToGridUnclamped` / `containsScreenPoint` have no callers | **Held.** Only `BattleGridProjection.test.ts` references them. Zero production callers. |
+| C3 | 8 keys, casts on reads | **Held and sharpened.** 28 registry sites outside tests, 22 of them reads, 11 carrying an `as` cast, across 8 keys. The first draft said "11 read sites" without the denominator. |
+| C4 | Exactly two hand-rolled `Phaser.Game` | **Held.** `PhaserCanvas.vue:134`, `TranPhapPanel.vue:222`. Three other matches are comments. |
+| C5 | `themePhaserSync.ts:1-2` imports `vue` + Pinia | **Held**, verbatim. |
+| C6 | `commandWheelCatalog.ts:8` type-imports from `@/stores/ui` | **Held**, verbatim. |
+| C7 | `buildPlaceholderAnimationSet` ignores two parameters | **Held.** `_staticTextureUrl` and `_frameSize` at `CombatAnimationSet.ts:56-57`, both unread. |
+| C8 | One animation sheet under `public/assets/characters/` | **Held.** 19 PNGs there; exactly one is an animation sheet (`placeholder/combat-anim-32frame.png`). The other 18 are static art. |
+| C9 | `coreImportDirection.test.ts` exists on r14 | **Held.** Path is `game/tests/architecture/coreImportDirection.test.ts`. §3.3's path was inconsistent with §7's and is now unified. |
+| N2 | R5 token guard line numbers | **Corrected.** `CombatAnimationRuntime.ts:216-218`, not `:215-217` — 215 is the comment. Two sibling guards at `:249-251` and `:306-308` were also missing from the first draft. |
+| N5 | r14 carries four guard files, ten tests | **Held**, exactly: 2 + 2 + 3 + 3. |
+
+Nothing in C1–C9 turned out false, so no rule or enforcement item in this spec
+rests on a claim that did not survive checking. The two corrections were
+precision, not substance.
