@@ -156,7 +156,50 @@ test.describe('Combat idle motion (Spec B §9.10)', () => {
       `player frame never changed across ${samples.length} samples: ${[...playerFrames].join(', ')}`,
     ).toBeGreaterThan(1)
 
-    // 2. Every static enemy moved, and kept its feet on the ground.
+    // 2. The player is drawn at the aspect ratio its ART is authored in.
+    //
+    //    The defect this pins, measured 2026-09-11: spec B moved what the
+    //    sprite DRAWS (an atlas frame authored at 200x350) without moving what
+    //    SIZES it (`PlayerVisualProfile.combatSourceSize`, 1312x1199), so the
+    //    figure rendered 3.44x too wide. Nothing failed — every clip was
+    //    correct, every frame advanced, and the proportions were nonsense.
+    const shape = await page.evaluate(() => {
+      const w = window as unknown as {
+        __tutienPhaserGame?: { scene: { getScene(k: string): unknown } }
+      }
+
+      const scene = w.__tutienPhaserGame?.scene.getScene('CombatScene') as {
+        sprites: Map<
+          string,
+          {
+            rect: {
+              displayWidth: number
+              displayHeight: number
+              frame: { realWidth: number; realHeight: number }
+            }
+          }
+        >
+      }
+
+      const player = scene.sprites.get('player')!
+
+      return {
+        displayWidth: player.rect.displayWidth,
+        displayHeight: player.rect.displayHeight,
+        authoredWidth: player.rect.frame.realWidth,
+        authoredHeight: player.rect.frame.realHeight,
+      }
+    })
+
+    const drawnAspect = shape.displayWidth / shape.displayHeight
+    const authoredAspect = shape.authoredWidth / shape.authoredHeight
+
+    expect(
+      drawnAspect / authoredAspect,
+      `player drawn at aspect ${drawnAspect.toFixed(3)} but authored at ${authoredAspect.toFixed(3)}`,
+    ).toBeCloseTo(1, 1)
+
+    // 3. Every static enemy moved, and kept its feet on the ground.
     const enemyIds = samples[0]!.enemies.map((enemy) => enemy.id)
 
     for (const id of enemyIds) {
@@ -188,7 +231,7 @@ test.describe('Combat idle motion (Spec B §9.10)', () => {
       expect(new Set(lifts.map((lift) => lift.toFixed(2))).size, `${id}: lift never changed`)
         .toBeGreaterThan(1)
 
-      // 3. And it is a tween, not an animation (§3.2).
+      // 4. And it is a tween, not an animation (§3.2).
       for (const entry of series) {
         expect(entry.anim, `${id}: a static enemy is playing '${entry.anim}'`).toBeFalsy()
       }

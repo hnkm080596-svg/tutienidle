@@ -95,6 +95,7 @@ function placeholderCatalogue(entityKey: string): CombatAnimationCatalogue {
       firstFrame: 0,
       lastFrame: PLACEHOLDER_FRAME_COUNT - 1,
       frameRate: PLACEHOLDER_FRAME_RATE,
+      sourceSize: { w: PLACEHOLDER_FRAME_WIDTH, h: PLACEHOLDER_FRAME_HEIGHT },
       repeat: looping ? -1 : 0,
 
       // Midpoint, and honest about being arbitrary: the placeholder has no

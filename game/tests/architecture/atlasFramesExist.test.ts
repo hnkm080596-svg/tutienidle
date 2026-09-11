@@ -176,6 +176,27 @@ describe('placeholder atlas frames exist', () => {
   )
 
   it(
+    "the clip's declared sourceSize is the box the atlas actually authored",
+    () => {
+      // The datum that sizes an animated sprite on screen. When it drifted from
+      // the art, nothing failed and the player rendered 3.44x too wide
+      // (measured 2026-09-11) — because the size came from a different file
+      // entirely than the pixels did.
+      //
+      // Read from the catalogue rather than imported, like everything else in
+      // this file: these guards police app code, so they do not import it.
+      const declaredWidth = numberConstant(source, 'PLACEHOLDER_FRAME_WIDTH')
+      const declaredHeight = numberConstant(source, 'PLACEHOLDER_FRAME_HEIGHT')
+
+      for (const [name, frame] of Object.entries(atlas.frames)) {
+        expect(frame.sourceSize.w, `${name}: authored width disagrees`).toBe(declaredWidth)
+        expect(frame.sourceSize.h, `${name}: authored height disagrees`).toBe(declaredHeight)
+      }
+    },
+    SCAN_TIMEOUT,
+  )
+
+  it(
     'nothing loads this atlas as a grid spritesheet any more',
     () => {
       // A leftover `load.spritesheet` on the atlas key would read the packed

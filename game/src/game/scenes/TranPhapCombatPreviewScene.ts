@@ -23,6 +23,8 @@ import {
   PLACEHOLDER_ZERO_PAD,
   PLACEHOLDER_FRAME_COUNT,
   PLACEHOLDER_FRAME_RATE,
+  PLACEHOLDER_FRAME_WIDTH,
+  PLACEHOLDER_FRAME_HEIGHT,
 } from '@/presentation/art/CombatPresentationCatalogue'
 import type { BattleGridProjection } from '@/presentation/geometry/BattleGridProjection'
 import { STANDING_SLOT_COUNT } from '@/core/battle/BattlefieldRegions'
@@ -80,7 +82,13 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
   // Không dùng khi isPerspective=false (applySpriteSize() nhánh flat đọc
   // characterWidth/Height trực tiếp) — giữ 1:1 để tránh chia 0 nếu code
   // sau này lỡ đọc tới.
-  readonly playerSourceSize = { w: 1, h: 1 }
+  // The authored box of the placeholder atlas every combatant in this panel
+  // draws. Was `{ w: 1, h: 1 }` — a square, which forced a 1.0 aspect onto art
+  // authored at 200x350 and rendered every figure ~1.8x too wide. Same class of
+  // defect as the player's in `combat-grid-view.ts`, found by the same
+  // measurement on 2026-09-11: what a sprite DRAWS and what SIZES it had drifted
+  // apart.
+  readonly playerSourceSize = { w: PLACEHOLDER_FRAME_WIDTH, h: PLACEHOLDER_FRAME_HEIGHT }
   readonly playerProfile = { combatTextureKey: PLACEHOLDER_SHEET_KEY }
   sprites = new Map<string, EntitySprite>()
   entityFootMinY = 0

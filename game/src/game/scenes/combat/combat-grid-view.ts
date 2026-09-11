@@ -34,6 +34,28 @@ import {
 import type { EnemyHealthBar, EntitySprite } from './combatTypes'
 
 /**
+ * The untrimmed box the player's art is authored in.
+ *
+ * An ANIMATED entity draws atlas frames, so its size must come from the clip's
+ * `sourceSize`, not from the entity's static PNG. A static entity keeps its
+ * texture's own size. `undefined` falls back to `host.playerSourceSize`, which
+ * is what a profile with no catalogue entry gets — the pre-existing behaviour.
+ */
+function playerArtSourceSize(entityKey: string): { w: number; h: number } | undefined {
+  const presentation = presentationFor(entityKey)
+
+  if (presentation?.kind === 'animated') {
+    return { ...presentation.clips.idle.sourceSize }
+  }
+
+  if (presentation?.kind === 'static') {
+    return { ...presentation.texture.sourceSize }
+  }
+
+  return undefined
+}
+
+/**
  * Start phase for one entity's idle bob, in ms within its own cycle.
  *
  * A PLAIN rolling hash is not enough here, and that is a measured fact rather
@@ -319,6 +341,15 @@ export class CombatGridView {
         color,
         offsetX: 0,
         row,
+        // The box the art this sprite DRAWS is authored in — not the entity's
+        // static PNG.
+        //
+        // Measured defect, 2026-09-11: the player's display size came from
+        // `playerSourceSize` (the profile PNG, 1312x1199) while the sprite drew
+        // an atlas frame authored at 200x350, so `applySpriteSize` forced a
+        // 1.094 aspect onto 0.571 art — 3.44x too wide on screen. Spec B moved
+        // what the sprite draws and left what sizes it behind.
+        sourceSize: playerArtSourceSize(this.host.playerProfile.combatTextureKey),
         sizeMultiplier: PLAYER_DISPLAY_SCALE_MULTIPLIER,
         boost: { value: 1 },
         footY: 0,

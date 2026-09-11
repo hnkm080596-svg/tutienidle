@@ -57,6 +57,26 @@ export interface AtlasClip {
 
   frameRate: number
 
+  /**
+   * The UNTRIMMED box every frame of this clip is authored in — the atlas
+   * JSON's `sourceSize`.
+   *
+   * Added 2026-09-11 after a MEASURED defect: the display size of an animated
+   * sprite was still being derived from the entity's static PNG
+   * (`PlayerVisualProfile.combatSourceSize`, 1312x1199 for the player) while the
+   * sprite was drawing an atlas frame authored at 200x350. The figure rendered
+   * 3.44x too wide.
+   *
+   * It belongs on the CLIP rather than on the entity because it is a property of
+   * the art the clip points at, and two clips of one entity may eventually be
+   * authored at different sizes. `atlasFramesExist` checks it against the JSON
+   * on disk, so it cannot drift silently.
+   *
+   * Note this is the AUTHORED box, not the trimmed pixels. The per-frame trim
+   * offset inside it is spec C's problem (§5.2), and it differs per frame.
+   */
+  sourceSize: { w: number; h: number }
+
   /** -1 = loop (idle/ready/standby), 0 = play once (cast/death). */
   repeat: number
 
