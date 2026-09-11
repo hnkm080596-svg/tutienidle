@@ -18,7 +18,7 @@
 | D5 | **Idle vs Active — 2 kênh 2 mục đích** (chi tiết §2.2). Idle KHÔNG roll tag; Active roll `eliteChance 0.1` gắn tag tinh_anh. | user v3 A1 |
 | D6 | [SỬA từ v2] **Idle giữ nguyên hiện trạng đã QA**: rate cá nhân hóa `cycleSeconds = perfectClearSeconds/2`, gate Perfect Clear giữ (idle chỉ mở cho stage đã PC), offline cap 24h chung GameClock (single source). | user chốt Q3 v3 |
 | D7 | Stat base 46 loài giữ nguyên authored. Tag multiplier tham chiếu `applyEliteMultiplier` (không copy số — A9). Factory tier 4+ ghi note roadmap. | user giữ từ v2 |
-| D8 | [MỚI] **Reward khi stack boss+tinh_anh: KHÔNG xử trong mission này** — tag tinh_anh stack chỉ nhân stat + prefix + flag; rewards theo data authored hiện có. Ghi debt roadmap: "hệ thống drop hoàn thiện" (reward multiplier per tag + item nâng bậc cảnh giới per stack). | user chốt Q1 v3 |
+| D8 | [MỚI] **Reward khi stack boss+tinh_anh: KHÔNG xử trong mission này** — tag tinh_anh stack chỉ nhân stat + prefix + flag; rewards theo data authored hiện có. Ghi debt roadmap: "hệ thống drop hoàn thiện". **[SỬA 2026-09-12 — nợ này ĐÃ ĐƯỢC THIẾT KẾ, xem `2026-09-12-drop-system-design.md`.** Hai điểm trong cách diễn đạt cũ của D8 nay đã sai và được sửa ở đó: (a) **tiền không nhân dồn** — luật chốt là `currency = 1 + sum(currencyBonus)`, chặn ở `MAX_CURRENCY_MULTIPLIER = 4`; phép **nhân liên tiếp của D3/§2.1 chỉ áp cho STAT**, không áp cho reward; (b) cái được nâng là **chất** (`ItemQuality`, 5 nấc `hoang→tien`), **không phải "bậc cảnh giới"**, và **chỉ trang bị mới có chất** — số nấc = `clamp(len(modifiers) − 1, 0, 2)`, nên boss đơn hoặc tinh_anh đơn đều **không** được nâng.**] | user chốt Q1 v3; sửa 2026-09-12 |
 | D9 | [MỚI] Builder `defineChapterStages` giữ từ v2 (D5 cũ): 3 config chương + quy định chung 1 nơi; bossEnemyId chỉ floor 10; X cứng 3/5 theo D2. | user giữ |
 
 ## 1. Hiện trạng (evidence) — [SỬA: bổ sung bằng chứng mode/idle]
@@ -124,7 +124,7 @@ Không đổi: normalize (Layer 2), combat pipeline (Layer 4), `createBossVarian
 
 ## 5. Out of scope [SỬA]
 
-- Boss+tinh_anh reward multiplier + item tier-up — **debt roadmap "hệ thống drop hoàn thiện" (D8)**. [MỚI]
+- Boss+tinh_anh reward multiplier + item tier-up — **debt roadmap "hệ thống drop hoàn thiện" (D8)**. [MỚI] **[SỬA 2026-09-12: nợ đã có spec riêng — `2026-09-12-drop-system-design.md`. Vẫn ngoài phạm vi mission PC; hai spec chạy độc lập, xem D8.]**
 - Tag mới ngoài tinh_anh; T_base idle cố định (D6 giữ rate cá nhân hóa); cap 12h riêng (D6 giữ 24h chung).
 - Enemy stat factory tier 4+ (D7 note); balance thật X (X=3/5 là khởi điểm — chỉnh bằng playtest đợt balance, nhưng không phải "placeholder" — là con số phát hành).
 - Rebalance eliteRewards/drop data; idle gate thay đổi.
