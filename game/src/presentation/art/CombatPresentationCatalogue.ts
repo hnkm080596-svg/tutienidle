@@ -55,6 +55,19 @@ export const PLACEHOLDER_FRAME_RATE = 8
 export const PLACEHOLDER_FRAME_WIDTH = 200
 export const PLACEHOLDER_FRAME_HEIGHT = 350
 
+/**
+ * The placeholder figure's own box inside the 200x350 authored frame, as
+ * fractions, taken from the tallest frame the generator emits.
+ *
+ * Checked against the atlas JSON by tests/architecture/artExtentDeclared.test.ts,
+ * so regenerating the art with different margins fails a test rather than
+ * silently resizing every character (Spec C §2.3).
+ */
+export const PLACEHOLDER_EXTENT_X = 0.28
+export const PLACEHOLDER_EXTENT_Y = 0.0943
+export const PLACEHOLDER_EXTENT_W = 0.44
+export const PLACEHOLDER_EXTENT_H = 0.7943
+
 /** Frame name for an index, matching what the generator wrote. */
 export function placeholderFrameName(index: number): string {
   return `${PLACEHOLDER_FRAME_PREFIX}${String(index).padStart(PLACEHOLDER_ZERO_PAD, '0')}${PLACEHOLDER_FRAME_SUFFIX}`
@@ -96,6 +109,12 @@ function placeholderCatalogue(entityKey: string): CombatAnimationCatalogue {
       lastFrame: PLACEHOLDER_FRAME_COUNT - 1,
       frameRate: PLACEHOLDER_FRAME_RATE,
       sourceSize: { w: PLACEHOLDER_FRAME_WIDTH, h: PLACEHOLDER_FRAME_HEIGHT },
+      extent: {
+        x: PLACEHOLDER_EXTENT_X,
+        y: PLACEHOLDER_EXTENT_Y,
+        w: PLACEHOLDER_EXTENT_W,
+        h: PLACEHOLDER_EXTENT_H,
+      },
       repeat: looping ? -1 : 0,
 
       // Midpoint, and honest about being arbitrary: the placeholder has no
@@ -235,6 +254,8 @@ function buildCatalogue(): Map<string, CombatEntityPresentation> {
         textureKey,
         textureUrl: enemyTextureUrl(textureKey),
         sourceSize: { ...ENEMY_SOURCE_SIZE },
+        // The Mortal PNGs are untrimmed: the animal fills its own file.
+        extent: { x: 0, y: 0, w: 1, h: 1 },
       },
       idleMotion: idleMotionFor(textureKey),
     })

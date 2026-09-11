@@ -33,6 +33,23 @@ export type { CombatAnimationName }
  * There is deliberately no `frameCount`: it is `lastFrame - firstFrame + 1`, and
  * two ways to state one number is the defect Spec A logged as V9.
  */
+/**
+ * Where the character's own pixels sit inside the authored box, as fractions of
+ * that box — the atlas's `spriteSourceSize` normalised by `sourceSize`.
+ *
+ * Measured from the art, never hand-written. Used by SCALE alone (Spec C §4.1):
+ * anchors do not read it, because they come from the battlefield cell (§3.1).
+ *
+ * `{ x: 0, y: 0, w: 1, h: 1 }` for untrimmed art, which makes every formula in
+ * §3.2 collapse to sizing the box directly.
+ */
+export interface ArtExtent {
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
 export interface AtlasClip {
   /** Phaser animation key, unique per entity+name. */
   key: string
@@ -77,6 +94,13 @@ export interface AtlasClip {
    */
   sourceSize: { w: number; h: number }
 
+  /**
+   * The character's own box inside `sourceSize`. One per clip, taken from the
+   * TALLEST frame: a per-frame extent would resize the character every frame,
+   * which is a defect rather than a feature.
+   */
+  extent: ArtExtent
+
   /** -1 = loop (idle/ready/standby), 0 = play once (cast/death). */
   repeat: number
 
@@ -104,6 +128,9 @@ export interface StaticEntityArt {
   textureKey: string
   textureUrl: string
   sourceSize: { w: number; h: number }
+
+  /** Untrimmed PNGs occupy their whole box; see `ArtExtent`. */
+  extent: ArtExtent
 }
 
 /**
