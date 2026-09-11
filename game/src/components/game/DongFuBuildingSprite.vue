@@ -6,7 +6,7 @@ import type {
   DongFuBuildingId,
 } from '@/presentation/background/DongFuBuildingArt'
 import { dongFuBuildingAssetUrls } from '@/presentation/background/DongFuBuildingArt'
-import type { ThanhVanSeason, ThanhVanTime } from '@/game/support/ThanhVanArt'
+import type { ThanhVanSeason, ThanhVanTime } from '@/presentation/background/BackgroundVariant'
 
 const props = defineProps<{
   art: DongFuBuildingArtEntry

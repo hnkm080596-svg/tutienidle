@@ -22,7 +22,7 @@ import {
 import {
   peekThanhVanVariant,
   thanhVanLoadList,
-} from '@/game/support/ThanhVanArt'
+} from '@/presentation/background/ThanhVanBackdropArt'
 import {
   allCombatAnimationSets,
   ENEMY_TEMPLATE_IDS,

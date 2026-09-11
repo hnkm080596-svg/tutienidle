@@ -85,9 +85,9 @@ describe('frontend import direction', () => {
   it(
     'the static layer reaches into src/game/ only where it is recorded',
     () => {
-      // The MIRROR of the rule above. It began at nine modules the static
-      // layer reached into `src/game/` for; eight now have a home that matches
-      // what they are, each decided on its own evidence:
+      // The MIRROR of the rule above, and §10.5a of the spec: "No Vue file
+      // imports from src/game/". It is now ZERO, having started at nine
+      // modules, each given a home that matches what it is:
       //
       //   art descriptors with NO src/game/ consumer at all
       //     DongFuArt, DongFuBuildingArt, DongFuStackLoader
@@ -102,16 +102,16 @@ describe('frontend import direction', () => {
       //     kiemBarBridge -> presentation/bridges/
       //   the player art contract, read by five scenes and by the gate
       //     PlayerVisualProfiles -> presentation/art/
+      //   the backdrop art: which variant is showing and which files it is
+      //   made of, SPLIT from the Phaser depth table and tint that stay behind
+      //     ThanhVanArt -> presentation/background/ThanhVanBackdropArt.ts
       //
-      // ThanhVanArt is the one that stays, and for a reason rather than by
-      // omission: what remains in it after the variant vocabulary moved out is
-      // the Phaser DEPTH table, and display-list ordering is a dynamic-layer
-      // fact. Splitting the load list away from the depths is its own job with
-      // its own evidence.
-      //
-      // A ratchet: the list may shrink without ceremony, and may not grow
-      // without editing it here.
-      const RECORDED = ['@/game/support/ThanhVanArt']
+      // Empty is the whole point, and it is not a vacuous assertion: the probe
+      // for this test is a component importing anything at all from src/game/,
+      // and it goes red. `src/game/` re-exports the moved halves, so a file
+      // that reaches for the old path still fails here rather than silently
+      // working.
+      const RECORDED: string[] = []
 
       const shells = srcCorpus(SRC_DIR).filter(
         (file) =>

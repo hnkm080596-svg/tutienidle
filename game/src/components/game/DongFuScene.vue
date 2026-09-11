@@ -20,10 +20,8 @@ import {
   type DongFuLayerDescriptor,
 } from '@/presentation/background/DongFuArt'
 import { preloadDongFuStack } from '@/presentation/background/DongFuStackLoader'
-import {
-  peekThanhVanVariant,
-  type ThanhVanVariant,
-} from '@/game/support/ThanhVanArt'
+import { peekThanhVanVariant } from '@/presentation/background/ThanhVanBackdropArt'
+import type { ThanhVanVariant } from '@/presentation/background/BackgroundVariant'
 import { useUiStore } from '@/stores/ui'
 import HomeBuildingIcons from './HomeBuildingIcons.vue'
 import PlayerPortrait from '../common/PlayerPortrait.vue'

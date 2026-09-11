@@ -13,7 +13,7 @@ import {
   type DongFuBuildingArtEntry,
   type DongFuBuildingId,
 } from '@/presentation/background/DongFuBuildingArt'
-import type { ThanhVanVariant } from '@/game/support/ThanhVanArt'
+import type { ThanhVanVariant } from '@/presentation/background/BackgroundVariant'
 import DongFuBuildingSprite from './DongFuBuildingSprite.vue'
 
 interface SceneBuilding {

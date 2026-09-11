@@ -25,6 +25,23 @@ export default defineConfig({
   // failure modes look alike in a summary and are not the same bug.
   expect: { timeout: 15_000 },
 
+  // Two workers, not Playwright's default of half the cores (6 here).
+  //
+  // Raising the timeouts above was necessary and not sufficient: at 6 workers
+  // the full suite still failed about 2 of 17, and the FAILING SET SHIFTED
+  // between runs -- reduced-motion in one, combat-overlay-layout and
+  // presentation-routing in the next. Shifting failures are contention, not
+  // regression. The symptom is not only slowness: the presentation overlay
+  // reaches `data-phase="failed"`, because a transition deadline elapses while
+  // the machine is oversubscribed, so it looks exactly like a real bug.
+  //
+  // Measured on this machine, full suite: 6 workers -> 15/17 twice with
+  // different tests failing; 1 worker -> 17/17 in 6.4m; 2 workers -> 17/17 in
+  // 4.4m and 4.7m. Two is both the reliable choice and the fast one, because
+  // these tests spend most of their time waiting on a real browser booting a
+  // real game rather than on CPU.
+  workers: 2,
+
   use: {
     ...devices['Desktop Chrome'],
     // 'localhost' not '127.0.0.1': `npm run dev` binds IPv6 ::1 by default on
