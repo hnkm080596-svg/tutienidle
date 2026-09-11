@@ -18,8 +18,8 @@ import { useStageActive } from '@/composables/useStageActive'
 import {
   dongFuLayerList,
   type DongFuLayerDescriptor,
-} from '@/game/support/DongFuArt'
-import { preloadDongFuStack } from '@/game/support/DongFuStackLoader'
+} from '@/presentation/background/DongFuArt'
+import { preloadDongFuStack } from '@/presentation/background/DongFuStackLoader'
 import {
   peekThanhVanVariant,
   type ThanhVanVariant,

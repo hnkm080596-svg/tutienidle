@@ -1,4 +1,4 @@
-import type { ThanhVanSeason, ThanhVanTime } from './ThanhVanArt'
+import type { ThanhVanSeason, ThanhVanTime } from './BackgroundVariant'
 
 export const DONG_FU_BUILDING_IDS = [
   'chi_hien_quan',

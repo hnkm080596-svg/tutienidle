@@ -12,7 +12,7 @@ import {
   dongFuSeasonOverlayUrl,
   type DongFuBuildingArtEntry,
   type DongFuBuildingId,
-} from '@/game/support/DongFuBuildingArt'
+} from '@/presentation/background/DongFuBuildingArt'
 import type { ThanhVanVariant } from '@/game/support/ThanhVanArt'
 import DongFuBuildingSprite from './DongFuBuildingSprite.vue'
 

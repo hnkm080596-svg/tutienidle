@@ -6,7 +6,7 @@ import { readFileSync } from 'node:fs'
 // @ts-expect-error The project intentionally omits Node ambient types; Vitest supplies this at runtime.
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import { dongFuLayerList } from '@/game/support/DongFuArt'
+import { dongFuLayerList } from '@/presentation/background/DongFuArt'
 import { THANH_VAN_SEASONS, THANH_VAN_TIMES } from '@/game/support/ThanhVanArt'
 
 const variants = THANH_VAN_SEASONS.flatMap((season) =>

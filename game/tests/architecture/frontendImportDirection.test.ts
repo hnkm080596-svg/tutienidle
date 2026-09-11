@@ -83,6 +83,50 @@ describe('frontend import direction', () => {
   )
 
   it(
+    'the static layer reaches into src/game/ only where it is recorded',
+    () => {
+      // The MIRROR of the rule above, and the one §5.4 is about: a shared art
+      // descriptor read only by Vue, stranded in the dynamic layer's directory.
+      // Three were (DongFuArt, DongFuBuildingArt, DongFuStackLoader — zero
+      // consumers under src/game/, all consumers under src/components/); they
+      // now live in presentation/background/.
+      //
+      // What remains is listed rather than forbidden, because each entry needs
+      // its own decision and some are legitimately dynamic-layer facts. This is
+      // a ratchet: the list may shrink without ceremony, and may not grow
+      // without editing it here.
+      const RECORDED = [
+        '@/game/support/PlayerVisualProfiles',
+        '@/game/support/SlotState',
+        '@/game/support/ThanhVanArt',
+        '@/game/support/combatInsets',
+        '@/game/support/commandWheelCatalog',
+        '@/game/support/commandWheelOrbit',
+        '@/game/support/kiemBarBridge',
+      ]
+
+      const shells = srcCorpus(SRC_DIR).filter(
+        (file) =>
+          !file.fromSrc.endsWith('.test.ts') &&
+          (file.fromSrc.startsWith('components/') ||
+            file.fromSrc.startsWith('composables/') ||
+            file.fromSrc.startsWith('stores/')),
+      )
+
+      const found = new Set<string>()
+
+      for (const file of shells) {
+        for (const match of file.text.matchAll(/from\s+['"](@\/game\/[^'"]+)['"]/g)) {
+          found.add(match[1]!)
+        }
+      }
+
+      expect([...found].sort()).toEqual(RECORDED)
+    },
+    SCAN_TIMEOUT,
+  )
+
+  it(
     'no file under src/game/ imports a Vue component or composable',
     () => {
       const offenders = GAME_FILES.filter(

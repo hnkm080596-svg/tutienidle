@@ -26,13 +26,25 @@ import {
   DEPTH_BACKGROUND_SKY,
 } from './BattleLayers'
 
-export const THANH_VAN_SEASONS = ['spring', 'summer', 'autumn', 'winter'] as const
+// The variant vocabulary is a presentation asset (§5.4) and is declared in
+// presentation/background/BackgroundVariant.ts; the DEPTH table below is a
+// Phaser display-list concern and stays here. Re-exported so every existing
+// import of this module keeps resolving.
+export {
+  THANH_VAN_SEASONS,
+  THANH_VAN_TIMES,
+  type ThanhVanSeason,
+  type ThanhVanTime,
+  type ThanhVanVariant,
+} from '@/presentation/background/BackgroundVariant'
 
-export const THANH_VAN_TIMES = ['morning', 'noon', 'evening', 'night'] as const
-
-export type ThanhVanSeason = (typeof THANH_VAN_SEASONS)[number]
-
-export type ThanhVanTime = (typeof THANH_VAN_TIMES)[number]
+import {
+  THANH_VAN_SEASONS,
+  THANH_VAN_TIMES,
+  type ThanhVanSeason,
+  type ThanhVanTime,
+  type ThanhVanVariant,
+} from '@/presentation/background/BackgroundVariant'
 
 export const THANH_VAN_CANVAS = { w: 1672, h: 941 } as const
 
@@ -51,12 +63,6 @@ const SEASON_LAYERS = [
   '05-foreground-right',
   '06-atmosphere',
 ] as const
-
-export interface ThanhVanVariant {
-  season: ThanhVanSeason
-
-  time: ThanhVanTime
-}
 
 function readConcreteOverride<T extends string>(key: string, allowed: readonly T[]): T | undefined {
   try {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { THANH_VAN_SEASONS, THANH_VAN_TIMES } from './ThanhVanArt'
+import { THANH_VAN_SEASONS, THANH_VAN_TIMES } from './BackgroundVariant'
 import { DONG_FU_LAYER_COUNT, dongFuLayerList } from './DongFuArt'
 
 describe('DongFuArt', () => {

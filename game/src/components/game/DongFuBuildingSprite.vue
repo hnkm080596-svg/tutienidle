@@ -4,8 +4,8 @@ import type { BuildingBadgeStatus } from '@/composables/useBuildingNavigation'
 import type {
   DongFuBuildingArtEntry,
   DongFuBuildingId,
-} from '@/game/support/DongFuBuildingArt'
-import { dongFuBuildingAssetUrls } from '@/game/support/DongFuBuildingArt'
+} from '@/presentation/background/DongFuBuildingArt'
+import { dongFuBuildingAssetUrls } from '@/presentation/background/DongFuBuildingArt'
 import type { ThanhVanSeason, ThanhVanTime } from '@/game/support/ThanhVanArt'
 
 const props = defineProps<{

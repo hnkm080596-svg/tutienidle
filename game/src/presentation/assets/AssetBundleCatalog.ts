@@ -18,7 +18,7 @@ import {
 import {
   dongFuLayerList,
   type DongFuLayerDescriptor,
-} from '@/game/support/DongFuArt'
+} from '@/presentation/background/DongFuArt'
 import {
   peekThanhVanVariant,
   thanhVanLoadList,
