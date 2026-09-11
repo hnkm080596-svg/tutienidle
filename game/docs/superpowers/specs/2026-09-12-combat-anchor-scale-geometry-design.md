@@ -91,8 +91,29 @@ an atlas frame authored at 200x350 in which the figure occupies y 28..305:
 `feet` sits about 9% of the box height BELOW the character's actual feet — around
 10 screen pixels at the current scale, in empty transparent space.
 
-Five anchors feed real effects: `combat-vfx-spawner.ts:622` spawns skill VFX at
-them, and `combat-reward-gourd.ts:278` launches reward motes from `chest`.
+**How much this actually costs, corrected 2026-09-12.** An earlier draft of this
+section claimed "five anchors feed real effects", citing
+`combat-vfx-spawner.ts:622`. That was wrong, and wrong in the way this project's
+discipline exists to catch: it was read off a grep line number without reading the
+function. Line 622 is inside `drawDebugBodyAnchors()`, which is dev-only, gated
+behind `localStorage['debug.playerBodyAnchors']='1'`, and whose own comment says
+*"Không có UI production nào đụng tới."*
+
+Measured, the production consumers of a named anchor are:
+
+| consumer | anchor | who |
+|---|---|---|
+| `combat-reward-gourd.ts:278` | `chest` | the player only |
+| `combat-reward-gourd.ts:286` | `ENEMY_NEUTRAL_BODY_ANCHOR` | every enemy, derived from bounds |
+| `combat-vfx-spawner.ts:599` | all five | **debug overlay, not production** |
+
+So exactly **one** production effect reads the hand-authored table, and no skill,
+no core data and no VFX ever picks an anchor by name — the five ids exist, and
+four of them are drawn as coloured dots for a developer.
+
+That changes what C is for. The anchors are not an urgent defect; they are an
+unused abstraction that is also wrong. §3.1 therefore does not re-author them —
+it deletes the authoring step, and then the authored data, altogether.
 
 **This is not a bug that was introduced; it is a contract that was never stated.**
 The anchors are normalised against "the source image", and nothing said which
@@ -149,51 +170,91 @@ fallbacks and health-bar widths, never for a Sprite, whose width comes from the
 aspect ratio instead. Two notions of "character width" coexist and only one is
 ever seen on a real entity.
 
-### 2.5 Enemies have no anchors, deliberately
+### 2.5 Enemies have no anchors, so there are two mechanisms
 
-`combat-reward-gourd.ts` uses `ENEMY_NEUTRAL_BODY_ANCHOR` — a neutral body point
-derived from sprite bounds — and a comment records the audit that put it there:
-never apply the player's anchors to an enemy. That decision stands and this spec
-does not disturb it (§3.1).
+`combat-reward-gourd.ts` uses `ENEMY_NEUTRAL_BODY_ANCHOR` — "~40% of height from
+the feet", derived from sprite bounds — and a comment records the audit that put
+it there: never apply the *player's* anchors to an enemy.
+
+**That ruling was right and its implementation is the problem.** The audit was
+about not borrowing one character's proportions for another; the fix was a second
+code path. So a reward launched from the player and one launched from a wolf are
+computed by different rules, and a third rule would be needed the day a companion
+appears.
+
+§3.1 keeps the ruling — no entity borrows another's proportions — and removes the
+second path, by making the rule depend on the cell rather than on whose art it is.
 
 ---
 
 ## 3. The decisions
 
-Both taken by the product owner on 2026-09-11.
+All taken by the product owner on 2026-09-11/12.
 
-### 3.1 One anchor set per entity, authored against the art the clip draws — **decided**
+### 3.1 Anchors come from the SLOT, not from the art — **decided 2026-09-12**
 
-Not per clip, and not per frame.
+> *"Không cần chính xác đâu, chỉ cần Trên đầu, dưới chân, sau lưng (trái) và
+> trước mặt (phải) là được."*
+> *"à, thêm một vị trí giữa người nữa, gọi là trung tâm."*
+> *"Hãy làm một cơ chế cho toàn bộ, thay vì từng art một, lệch không quan trọng,
+> đúng vị trí từ slot của trận là được."*
 
-| | cost | what it buys |
+Five directions, one mechanism, for every entity:
+
+| id | Vietnamese | where |
 |---|---|---|
-| **Per entity (chosen)** | 5 numbers per character | VFX attach to the right region of the body |
-| Per clip | 5 x 5 per character, re-tuned whenever art changes | a cast hand that is right during `cast` |
-| Per frame | 32 x 5 per character; not hand-writable, needs a tool | a hand that tracks exactly |
+| `top` | trên đầu | above the head |
+| `bottom` | dưới chân | at the feet |
+| `centre` | trung tâm | middle of the body |
+| `front` | trước mặt | in front |
+| `back` | sau lưng | behind |
 
-The constraint that decides it is the same one that decided §3.2 of Spec B: **art
-cost**. No character art is drawn yet, and a contract that demands 160 hand-tuned
-numbers per character before the first character exists is a contract that will be
-filled in with guesses.
+**They are computed from the battlefield cell the entity stands on, not from its
+artwork.** The projection already returns the foot point at the centre of a cell
+(`BattleGridProjection.gridToScreen`, and its "anchor quy ước" comment says so);
+a standing person occupies a known height above that point (§3.2); the five
+directions are the corners and midpoints of that notional body.
 
-**The accepted consequence, stated plainly:** during a clip with large limb
-movement, a VFX anchored to `castHand` will sit near the hand, not on it. For a
-palm strike or a sword flourish that is a few pixels at the scales in §2.3. It is
-wrong, it is bounded, and it is cheap to upgrade later — per-clip anchors are a
-strictly additive change to §4.1's shape, because a clip-level table can override
-an entity-level one without any consumer changing.
+Nothing about the art enters. Not the texture, not the frame, not the trim, not
+whether the entity is animated, static, or a coloured Rectangle fallback.
 
-**Enemies keep no anchor table at all.** They are still images (Spec B §3.2), and
-`ENEMY_NEUTRAL_BODY_ANCHOR` derived from bounds is both sufficient and the outcome
-of a previous audit (§2.5).
+**Why this is better than deriving from the art, and not merely cheaper.** Three
+reasons, in increasing order of how much they matter:
+
+1. It is **uniform**. Today an enemy outside the Mortal batch renders as a
+   `Phaser.GameObjects.Rectangle` and has no art to measure at all; the reward
+   gourd handles it with a separate hardcoded fallback (§2.5). Under a
+   slot-derived rule there is no second path, because there is nothing to be
+   missing.
+2. It is **stable across frames**. An extent-derived anchor moves as the character
+   breathes, so an effect attached to `top` jitters with the idle bob. A
+   slot-derived one does not, and nobody has to decide which frame is
+   authoritative.
+3. It **cannot go stale**, which is the property §2.2 lacked. There is no datum
+   describing the art, so there is no datum to describe the *wrong* art.
+
+**What is given up, stated plainly.** The anchors do not follow the character.
+A tall enemy and a short one get the same `top`, because the slot does not know
+how tall its occupant is. An effect at `front` leaves a notional body edge, not
+the actual hand, and during a big swing the hand will be somewhere else entirely.
+This is precisely what *"lệch không quan trọng"* accepted, and it is worth naming
+so that a later reader does not mistake it for an oversight.
+
+**The upgrade path stays open and cheap.** §4.2's function takes a body box; §3.2
+already computes a per-entity one from its `classFactor`. Making `top` follow a
+boss's real height is a change to what is passed in, not to any consumer.
+
+**`centre` retires a hardcoded estimate.** `ENEMY_NEUTRAL_BODY_ANCHOR` — "~40% of
+height from the feet", derived from sprite bounds — exists only because enemies
+had no anchors. `centre` is that point for every entity by the same rule, so the
+special case goes away rather than gaining a sibling.
 
 ### 3.2 C owns scale, stated as a measurable claim about the world — **decided**
 
 Replace the stack in §2.4 with one sentence that can be checked:
 
 > **An adult person stands `PERSON_HEIGHT_IN_CELLS` times the width of a near-row
-> grid cell.**
+> grid cell, and `PERSON_WIDTH_IN_CELLS` times that width across.**
 
 The near cell's **width** is the ruler, for the reason already recorded in the
 tree: the cell's height is perspective-compressed and is not a ruler for anything
@@ -203,14 +264,21 @@ Everything else derives:
 
 ```
 personHeightPx = nearCellWidth * PERSON_HEIGHT_IN_CELLS * depthScale * classFactor
-boxHeightPx    = personHeightPx / fillRatioH          // fillRatioH from the art
+personWidthPx  = nearCellWidth * PERSON_WIDTH_IN_CELLS  * depthScale * classFactor
+boxHeightPx    = personHeightPx / extent.h            // extent measured from the art
 boxWidthPx     = boxHeightPx * (sourceSize.w / sourceSize.h)
 ```
 
-The division by `fillRatioH` is the whole point: **the size that is specified is
-the size of the character, and the box is whatever it has to be to make that
-true.** Re-exported art with different margins then renders at the same size, and
-§5's guard is what proves it.
+The division by `extent.h` is the whole point: **the size that is specified is the
+size of the character, and the box is whatever it has to be to make that true.**
+Re-exported art with different margins then renders at the same size, and §5's
+guard is what proves it.
+
+`personWidthPx` is used only by §4.2's `front`/`back`. It is a declared constant
+rather than a measurement of the art for the same reason as §3.1: one mechanism,
+no per-art data. The alternative — putting `front`/`back` at the cell's own edges
+— needs no constant at all but places effects visibly outside the body, half a
+cell (≈47px at the near row) from its centre.
 
 `classFactor` keeps exactly one job — a boss is twice a person — and the existing
 `BOSS_DISPLAY_SCALE_MULTIPLIER = 2 x ENEMY` becomes `classFactor: 2` with its
@@ -222,16 +290,17 @@ bars. Health-bar width is a HUD decision, not a body measurement, and folding it
 into this would widen C for no gain. It is named in §2.4 so that nobody later
 reads its survival as an oversight.
 
-**Calibration, and a pleasant surprise.** The starting value is the one that
-reproduces today's *enemy* size, because the enemy is the entity whose art is real
-and whose size nobody has complained about. Measured at 1600x900:
+**Calibration, and a pleasant surprise.** The starting value for
+`PERSON_HEIGHT_IN_CELLS` is the one that reproduces today's *enemy* size, because
+the enemy is the entity whose art is real and whose size nobody has complained
+about. Measured at 1600x900:
 
 ```
 near cell width (row 9)        94.49
 characterHeight                86.93   = 94.49 * 0.92          ✓ formula confirmed
-enemy at row 4… row 5, depthScale 0.70735
+enemy at row 5, depthScale 0.70735
   boxHeight                   122.98   = 86.93 * 0.70735 * 2   ✓
-  fillRatioH                   1.000   (untrimmed PNG)
+  extent.h                      1.000  (untrimmed PNG)
   personHeight                122.98
 
 PERSON_HEIGHT_IN_CELLS = 122.98 / (94.49 * 0.70735) = 1.840
@@ -246,68 +315,88 @@ approximate one.
 The player moves, which is the point:
 
 ```
-now:      personHeight  91.13   (box 114.73 x fill 0.794)
+now:      personHeight  91.13   (box 114.73 x extent.h 0.794)
 under C:  personHeight 114.73   (box 144.45)     +25.9%
 ```
 
-That is the distribution of risk C wants: real art unchanged, the entity that was
-measurably wrong corrected.
+`PERSON_WIDTH_IN_CELLS` has no such anchor in the existing code and is a
+judgement: **0.42** puts a person's shoulders at about 40px at the near row,
+roughly the proportion of the enemy art, and §5.1 records that no test can say
+whether it looks right.
 
 ---
 
 ## 4. The contract
 
-### 4.1 Anchors move to the presentation catalogue
+### 4.1 One measured datum, for scale only
 
 ```ts
 // presentation/art/CombatEntityPresentation.ts
 
-export type BodyAnchorId = 'head' | 'chest' | 'castHand' | 'offHand' | 'feet'
-
-/** A fraction of the clip's AUTHORED box (§2.1 — not of the trimmed pixels). */
-export interface NormalizedBodyAnchor {
+/**
+ * Where the character's own pixels sit inside the clip's authored box, as
+ * fractions of that box — the atlas's `spriteSourceSize` normalised by
+ * `sourceSize`. Measured from the art, never hand-written.
+ *
+ * Used by SCALE alone (§3.2). Anchors do not read it: they come from the slot.
+ */
+export interface ArtExtent {
   x: number
   y: number
+  w: number
+  h: number
 }
-
-export type BodyAnchorTable = Record<BodyAnchorId, NormalizedBodyAnchor>
 ```
 
-The animated branch of `CombatEntityPresentation` gains `anchors: BodyAnchorTable`.
-The static branch does not: §3.1 keeps enemies on the neutral point.
+One field on `AtlasClip`, and one on `StaticEntityArt`, where it is `{0,0,1,1}`
+for an untrimmed PNG and every formula collapses to today's behaviour.
 
-`PlayerVisualProfile.bodyAnchors` stays where it is and keeps its current job —
-describing the profile's **static PNG**, which `MainScene` and the cultivation
-pose still draw. Nothing is deleted; what changes is that combat stops reading a
-table describing a picture it no longer shows.
+It replaces the separate `fillRatioH` an earlier draft proposed: **`extent.h` IS
+the fill ratio**, and two ways to say one number is the defect Spec A logged as V9.
 
-**Why the catalogue and not the profile.** The catalogue entry is the thing that
-says which art is drawn (Spec B §4.4). An anchor is a fact about that art. Putting
-them in one place is what makes §2.2 impossible to repeat: change the art and the
-anchors are right there, in the same object, failing the guard in §5 if they are
-not updated.
+Only `extent.h` is read today. The other three are carried because they come free
+from the same JSON field, and because they are what §3.1's upgrade path would need.
 
-### 4.2 Fill ratio is declared, not discovered
+### 4.2 Five anchors, computed from the slot
 
 ```ts
-export interface AtlasClip {
-  // … B's existing fields, including sourceSize …
+// presentation/geometry/combatBodyAnchors.ts
 
-  /**
-   * How much of the authored box the character's pixels actually occupy.
-   * Vertical only: it is the one that sizes a standing person.
-   */
-  fillRatioH: number
+export type BodyAnchorId = 'top' | 'bottom' | 'centre' | 'front' | 'back'
+
+/** Which way the entity faces. The player faces right; enemies face left. */
+export type Facing = 'right' | 'left'
+
+export interface BodyBox {
+  /** The projected foot point at the centre of the entity's cell. */
+  footX: number
+  footY: number
+  personHeight: number
+  personWidth: number
+  facing: Facing
 }
+
+export function bodyAnchor(id: BodyAnchorId, body: BodyBox): { x: number; y: number }
 ```
 
-It could be read from the live Phaser frame instead. It is declared because:
+A pure function, in `presentation/geometry/` beside the rest of the shared
+geometry (Spec A §3.6) — unit-testable without a canvas, like
+`BattleGridProjection`:
 
-- a value that only exists at runtime cannot be guarded against the art on disk,
-  and §5's second guard is the one that catches the §2.3 trap;
-- it varies per frame (the placeholder breathes), and a size that changes every
-  frame is a defect, not a feature. One number per clip, checked against the
-  **tallest** frame, keeps the character's feet planted and its head from jittering.
+```
+bottom  ( footX ,                     footY                    )
+top     ( footX ,                     footY - personHeight     )
+centre  ( footX ,                     footY - personHeight / 2 )
+front   ( footX ± personWidth / 2 ,   footY - personHeight / 2 )
+back    ( footX ∓ personWidth / 2 ,   footY - personHeight / 2 )
+```
+
+`±` resolves by `facing`: `right` puts `front` at `+x`.
+
+**Facing is the only state in an otherwise pure derivation**, and it is a
+parameter rather than a flag read off the sprite so that nothing downstream has to
+remember which way a wolf looks. A literal "front is +x" would put every enemy's
+effects behind it — §5's fourth guard exists for exactly that.
 
 ### 4.3 One resolver for size
 
@@ -318,31 +407,39 @@ export interface EntityScaleInput {
   nearCellWidth: number
   depthScale: number
   classFactor: number
-  fillRatioH: number
+  extent: ArtExtent
   sourceSize: { w: number; h: number }
 }
 
 export function resolveEntityDisplaySize(
   input: EntityScaleInput,
-): { boxWidth: number; boxHeight: number; personHeight: number }
+): { boxWidth: number; boxHeight: number; personWidth: number; personHeight: number }
 ```
-
-A pure function in `presentation/geometry/`, beside the rest of the shared
-geometry (Spec A §3.6), so it is unit-testable without a canvas — the same reason
-`BattleGridProjection` lives there.
 
 `applySpriteSize` and `applyEntityDepthScale` in `combat-grid-view.ts` both call
 it. Today they each carry their own copy of the formula, which is how they came to
 disagree with each other about `sourceSize` in the first place.
 
-### 4.4 The anchor resolver keeps its shape
+It returns `personWidth`/`personHeight` as well as the box, because §4.2 needs
+exactly those and computing them twice is how the two halves would drift apart.
 
-`resolveSpriteBodyAnchor` (`game/support/SpriteBodyAnchor.ts`) is **unchanged**.
-§2.1 is why: it already resolves against `displayWidth`/`displayHeight`, which
-Phaser reports as the authored box, which is exactly the space §4.1's anchors are
-expressed in. The function was right; only its inputs were wrong.
+### 4.4 `SpriteBodyAnchor` loses its last combat caller
 
-What changes is one line at each call site: where the anchor table comes from.
+`resolveSpriteBodyAnchor` (`game/support/SpriteBodyAnchor.ts`) resolves an anchor
+against a **sprite transform** — origin, display size, flip, rotation. §3.1 moved
+anchors off the sprite entirely, so combat stops calling it: the debug overlay and
+the reward gourd both take §4.2's slot-derived points instead.
+
+Measured: those two are its only callers in the tree. It therefore becomes dead
+code, and so does `PlayerVisualProfile.bodyAnchors` as far as combat is concerned.
+
+**Neither is deleted by this spec.** `bodyAnchors` still describes the profile's
+static PNG, which `MainScene` and the cultivation pose draw, and a future VFX there
+is exactly what it is for. Deleting a capability is a product decision, not a
+tidying decision — the same ruling this branch already applied to
+`themePhaserSync`. What C does is stop combat reading a table about a picture it
+does not show, and say out loud that `SpriteBodyAnchor.ts` now has no caller, so
+the next person to touch it knows it is a choice and not an accident.
 
 ---
 
@@ -353,47 +450,56 @@ Every guard is observed red against a probe before acceptance (Spec A §7).
 | Guard | Asserts | Probe that must fail it |
 |---|---|---|
 | `combatEntityScale.test.ts` | A player and an ordinary enemy on the same row resolve to the **same person height**; a boss to twice it | Give the player a different `classFactor` |
-| `combatEntityScale.test.ts` | Changing `fillRatioH` changes `boxHeight` and leaves `personHeight` **unchanged** | Make the resolver size the box directly |
-| `bodyAnchorTable.test.ts` | Every animated entity declares all five anchors, each within [0,1] | Delete one anchor; set one to 1.4 |
-| `bodyAnchorTable.test.ts` | `feet` and `head` lie inside the art's real vertical extent, read from the atlas JSON on disk | Restore `feet: 0.97` against art whose feet are at 0.871 |
-| `atlasFramesExist.test.ts` | The declared `fillRatioH` matches the tallest frame's `spriteSourceSize.h / sourceSize.h` | Declare 1.0 for trimmed art |
+| `combatEntityScale.test.ts` | Changing `extent.h` changes `boxHeight` and leaves `personHeight` **unchanged** | Make the resolver size the box directly |
+| `combatBodyAnchors.test.ts` | `top`/`bottom` bracket the body exactly; `centre` is their midpoint; `front`/`back` are level with `centre` | Hang `top` off the box instead of the person height |
+| `combatBodyAnchors.test.ts` | `front` and `back` **swap** when facing does, and `top`/`bottom`/`centre` do not move | Ignore the facing parameter |
+| `combatBodyAnchors.test.ts` | Two entities on the same cell with different ART get **identical** anchors | Read anything about the texture |
+| `atlasFramesExist.test.ts` | The declared `extent` matches the tallest frame's `spriteSourceSize` normalised by `sourceSize` | Declare `{0,0,1,1}` for trimmed art |
 | e2e capture | The player's **character height** on screen, not its box, sits within tolerance of the enemy's | Revert §4.3 and measure the box |
 
-**The second and the fifth are the ones that earn their keep.** Together they are
-the assertion whose absence let `c0826723` ship: that the thing being sized is the
-character, and that what the metadata says about the art matches the art.
+**The second and the sixth earn their keep together.** They are the assertion
+whose absence let `c0826723` ship: that the thing being sized is the character,
+and that what the metadata says about the art matches the art.
+
+**The fifth is what makes §3.1 a mechanism rather than a claim.** "One mechanism
+for everything" is only true if the anchors genuinely cannot see the art, and this
+is the assertion that notices if somebody later reaches for the sprite to make one
+case slightly nicer.
 
 ### 5.1 What these cannot catch
 
-They check that a character is the size it was declared to be. They cannot check
-that the declared size **looks right** — `PERSON_HEIGHT_IN_CELLS` is calibrated by
-eye (§3.2), and a value that is uniformly wrong passes every assertion here while
-making everybody a giant. That judgement is the e2e capture plus somebody looking
-at it, and it is stated here so nobody reads green as "the scale is good".
+They check arithmetic and measurement. They cannot check that either constant
+LOOKS right — `PERSON_HEIGHT_IN_CELLS` is calibrated against enemy art and
+`PERSON_WIDTH_IN_CELLS` is a judgement with no anchor in the existing code
+(§3.2). A value uniformly wrong passes everything here and makes everybody a
+giant. That judgement is the e2e capture plus somebody looking at it.
 
-Nor can they catch an anchor that is inside the character but on the wrong part of
-it — `chest` at the knee passes every check. Only §5's extent guard bounds this,
-and it bounds it loosely on purpose: a tight bound would need per-frame data,
-which §3.1 declined to pay for.
+Nor can they catch the thing §3.1 knowingly gave up: an anchor that is in the
+right place for the slot and the wrong place for the character standing in it.
+There is no test for "the effect should have left the hand", because the design
+does not promise it.
 
 ---
 
 ## 6. Sequencing
 
-1. **§4.3's resolver and its tests, called by nothing.** Pure arithmetic, verified
-   in isolation, no pixels move.
-2. **`combat-grid-view.ts` calls it.** Pixels move here, and only here — one step
+1. **§4.1's `extent`**, measured by the placeholder generator and guarded against
+   the atlas JSON. Data only; nothing reads it yet.
+2. **§4.3's scale resolver and its tests, called by nothing.** Pure arithmetic,
+   no pixels move.
+3. **`combat-grid-view.ts` calls it.** Pixels move here, and only here — one step
    whose entire visible effect is a size change, so a regression is attributable.
-   Enemies must be a no-op by §3.2's calibration; that is the step's own check.
-3. **§4.1's anchors into the catalogue**, with `PlayerVisualProfile.bodyAnchors`
-   left in place for the scenes that still draw the PNG.
-4. **The two call sites** (`combat-player-visual.ts`, `combat-reward-gourd.ts`)
-   read the catalogue.
-5. **Guards and the e2e capture**, each probed red.
+   Enemies must be a bit-exact no-op by §3.2's calibration; that is the step's own
+   check.
+4. **§4.2's `bodyAnchor()` and its tests**, called by nothing.
+5. **The two call sites** switch to it — the debug overlay and the reward gourd —
+   and `ENEMY_NEUTRAL_BODY_ANCHOR` is deleted in this step, not before.
+6. **The e2e capture**, extended to measure character height rather than box
+   height.
 
-Steps 2 and 3 are deliberately separate: one changes how big things are and the
-other changes where effects attach. Shipping them together would make a
-misplaced VFX impossible to attribute to either.
+Steps 3 and 5 are deliberately separate: one changes how big things are, the other
+where effects attach. Together they would make a misplaced effect impossible to
+attribute to either.
 
 ---
 
@@ -407,41 +513,44 @@ misplaced VFX impossible to attribute to either.
    height, measured on screen, not the same box height.
 4. Regenerating the placeholder art with different margins changes no character's
    size on screen. Demonstrated by regenerating it, not asserted.
-5. Combat reads anchors from the catalogue; `PlayerVisualProfile.bodyAnchors` is
-   still read by the scenes that draw the PNG, and is unchanged.
-6. No anchor lies in transparent space: every declared anchor is inside the art's
-   measured extent.
-7. Six guards exist and each has been observed red against a probe.
+5. Anchors are computed from the cell and the person box alone. No anchor code
+   reads a texture, a frame, an extent, or a sprite transform.
+6. `ENEMY_NEUTRAL_BODY_ANCHOR` is gone, and the reward gourd uses the same
+   `centre` for the player and for every enemy.
+7. Seven guards exist and each has been observed red against a probe.
 8. Full gate green: type-check, build, vitest, Playwright.
 9. Verified on screen: the player and an enemy stand at comparable height, and
-   skill VFX leave the player's body rather than the air beside it.
+   reward motes leave the body rather than the air beside it.
 
-**Criterion 4 is the one that protects §3.2.** If regenerating the art moves
-anybody, then the size is still being taken from the box and the design has not
-landed.
+**Criterion 4 protects §3.2** — if regenerating the art moves anybody, size is
+still being taken from the box. **Criterion 5 protects §3.1** — if any anchor code
+reads the art, the "one mechanism" has already grown a second one.
 
 ---
 
 ## 8. What this spec is honest about
 
-**The anchors will still be approximate.** §3.1 bought cheapness with accuracy,
-knowingly. A VFX on `castHand` during a big swing will be near the hand. If that
-reads badly once real art exists, the fix is per-clip anchors, which §4.1's shape
-already admits without a consumer changing.
+**The anchors do not follow the character, by design.** They describe a notional
+body standing in a cell. A boss's `top` is above a boss-sized body only because
+`classFactor` scales the box, not because anything looked at the boss. When real
+art arrives and an effect wants the actual hand, the answer is not to patch this —
+it is per-clip anchor data, which §4.2's signature already admits by taking a body
+box rather than reading one.
 
-**`PERSON_HEIGHT_IN_CELLS` is calibrated against art that is a placeholder.** The
-enemy PNGs are real art, which is why they are the calibration point — but they
-are enemies. The first real *character* art may well want a different number, and
-§5.1 says no test will tell anybody that.
+**`PERSON_WIDTH_IN_CELLS` is the weakest number in this spec.** Height was
+calibrated to reproduce existing enemy size exactly; width has no such reference,
+because nothing in the tree ever expressed a person's width for a Sprite
+(`CHARACTER_WIDTH_RATIO` is a health-bar measurement, §2.4). 0.42 is a judgement
+from looking at the enemy art, and it will likely be re-tuned once character art
+exists.
 
-**Two anchor tables now exist** — the catalogue's, for combat, and the profile's,
-for the PNG the home and cultivation scenes draw. That is duplication, and it is
-chosen: they describe two different pictures, and collapsing them is what caused
-§2.2. If the two pictures ever become one asset, the tables should merge, and
-whoever does that should delete this paragraph.
+**Two anchor systems now exist** — C's, for combat, and
+`PlayerVisualProfile.bodyAnchors` with `resolveSpriteBodyAnchor`, for the PNG the
+home and cultivation scenes draw. The second has **no caller at all** after step 5
+(§4.4). That is dead code kept deliberately, not an oversight; if it is still
+callerless when the cultivation scene is next touched, it should be deleted then.
 
 **C does not fix the empty-box problem for enemies**, because they have none —
-their PNGs are untrimmed. The first trimmed enemy export will exercise
-`fillRatioH` on the static branch, which this spec routes through the same
-resolver but cannot test today. Stated so that it is a known gap and not a
-surprise.
+their PNGs are untrimmed, so `extent` is `{0,0,1,1}`. The first trimmed enemy
+export will exercise the static branch for real. This spec routes it through the
+same resolver, but nothing can test that today: a known gap, not a surprise.
