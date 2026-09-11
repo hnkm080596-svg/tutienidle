@@ -29,6 +29,7 @@ import type { LaneIndex } from '@/core/battle/BattleLane'
 import { CombatGridView } from './combat/combat-grid-view'
 import type { CombatGridViewHost } from './combat/CombatGridViewHost'
 import type { EntitySprite } from './combat/combatTypes'
+import { FORMATION_ASSIGNMENTS_EVENT } from '@/presentation/contracts/regionEvents'
 import {
   createFormationProjection,
   formationPerspectiveGeometry,
@@ -106,6 +107,15 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
   create(): void {
     this.gridView = new CombatGridView(this)
 
+    // V10 / §3.6 surface two: the shell addresses the REGION, not this object.
+    // Subscribing here rather than exposing a method means the shell can send
+    // what this file names and nothing else. Unsubscribed on shutdown, because
+    // the emitter is the Game's and outlives a scene restart.
+    this.game.events.on(FORMATION_ASSIGNMENTS_EVENT, this.assignmentsHandler)
+    this.events.once('shutdown', () => {
+      this.game.events.off(FORMATION_ASSIGNMENTS_EVENT, this.assignmentsHandler)
+    })
+
     const geometry = formationPerspectiveGeometry()
 
     // 2 lớp nền phẳng (sky/ground) — KHÔNG dùng attachBattlefieldBackdrop()
@@ -144,6 +154,9 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
    * hiện → getOrCreateSprite() tạo sprite mới, play() từ frame 0 (đúng —
    * chưa từng animate trong panel này).
    */
+  private readonly assignmentsHandler = (assignments: FormationSlotAssignment[]) =>
+    this.syncAssignments(assignments)
+
   syncAssignments(assignments: FormationSlotAssignment[]): void {
     const nextIds = new Set(assignments.map((a) => a.combatantId))
 

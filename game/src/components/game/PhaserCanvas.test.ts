@@ -57,6 +57,8 @@ vi.mock('phaser', () => {
       get: vi.fn((key: string) => this.registryStore.get(key)),
     }
     scale = { resize: vi.fn() }
+    // A real Phaser.Game has an event emitter; the host subscribes 'ready' on it.
+    events = { once: vi.fn(), emit: vi.fn(), on: vi.fn(), off: vi.fn() }
     destroy = vi.fn()
     scene = { getScene: vi.fn(() => null) }
 

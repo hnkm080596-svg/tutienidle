@@ -15,9 +15,8 @@
 // does not exist), same OverlayPanel pattern as every other standalone
 // panel (SkillPathPanel.vue, ArtifactPanel.vue...). Opened via the
 // command wheel slot 'formation_slot' (game/support/commandWheelCatalog.ts).
-import { computed, onUnmounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type Phaser from 'phaser'
 import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useStateVersion } from '@/composables/useGameState'
@@ -38,7 +37,8 @@ import {
 } from '@/presentation/geometry/FormationCanvasSpec'
 import { createProjectionBridge } from '@/presentation/geometry/ProjectionBridge'
 import { formationSlotStyle } from '@/presentation/geometry/formationSlotBoxes'
-import type { TranPhapCombatPreviewScene } from '@/game/scenes/TranPhapCombatPreviewScene'
+import { useDynamicRegion } from '@/presentation/host/useDynamicRegion'
+import { FORMATION_ASSIGNMENTS_EVENT } from '@/presentation/contracts/regionEvents'
 import type { SlotState } from '@/game/support/SlotState'
 
 const ui = useUiStore()
@@ -225,74 +225,58 @@ function close() {
 // nơi nhận @dragover/@drop thật, giữ nguyên 100% logic đã có.
 const previewContainerRef = ref<HTMLDivElement | null>(null)
 
-let previewGame: Phaser.Game | null = null
-let previewScene: TranPhapCombatPreviewScene | null = null
+// V4/V10 — the hosting mechanics (dynamic import, construction, teardown
+// ordering, the close-during-boot race, the local error boundary) belong to
+// useDynamicRegion, not to this panel; and this panel no longer holds the
+// scene. It holds a region handle and sends it one named event (§3.6).
+const previewRegion = useDynamicRegion({
+  container: previewContainerRef,
 
-// Bootstrap Phaser CHỈ khi panel thật sự mở — container ref (bên trong
-// slot của OverlayPanel) chỉ tồn tại trong DOM lúc `open`, nên onMounted
-// của CHÍNH component này (chạy 1 lần lúc GameRoot boot) không đủ — phải
-// theo dõi bằng watch() điều kiện panel mở/đóng.
+  // Fixed size, so no ResizeObserver: the preview canvas is exactly the size
+  // FormationCanvasSpec declares, and the CSS scales it to fit the panel.
+  size: { width: FORMATION_CANVAS_WIDTH, height: FORMATION_CANVAS_HEIGHT },
+
+  config: {
+    transparent: true,
+    // Crash fix (standing-slot plan Task 6, 2026-09-07) — missing physics
+    // config made the bootstrap crash when dropping a unit into the panel
+    // (CombatGridView/sprite pipeline touches the physics world). Mirrors
+    // PhaserCanvas.vue's real-combat bootstrap exactly.
+    physics: { default: 'arcade', arcade: { gravity: { x: 0, y: 0 }, debug: false } },
+  },
+
+  load: async () => {
+    const [{ default: Phaser }, { TranPhapCombatPreviewScene }] = await Promise.all([
+      import('phaser'),
+      import('@/game/scenes/TranPhapCombatPreviewScene'),
+    ])
+
+    return { Phaser, scenes: [TranPhapCombatPreviewScene] }
+  },
+
+  onReady: () => {
+    previewRegion.dispatch(FORMATION_ASSIGNMENTS_EVENT, currentAssignments.value)
+  },
+})
+
+// Bootstrap only while the panel is actually open — the container ref lives
+// inside OverlayPanel's slot, so it exists in the DOM only then, and this
+// component's own onMounted (which runs once at GameRoot boot) is too early.
 watch(
   () => ui.standalonePanel === 'tran_phap',
-  async (isOpen) => {
+  (isOpen) => {
     if (isOpen) {
-      const container = previewContainerRef.value
-
-      if (!container) {
-        return
-      }
-
-      const [{ default: Phaser }, { TranPhapCombatPreviewScene: TranPhapCombatPreviewSceneClass }] = await Promise.all([
-        import('phaser'),
-        import('@/game/scenes/TranPhapCombatPreviewScene'),
-      ])
-
-      // Panel có thể đã đóng lại trong lúc 2 dynamic import trên đang
-      // chạy (đóng rất nhanh) — kiểm tra lại trước khi tạo Game để
-      // tránh Game mồ côi không ai destroy.
-      if (ui.standalonePanel !== 'tran_phap' || !previewContainerRef.value) {
-        return
-      }
-
-      previewGame = new Phaser.Game({
-        type: Phaser.AUTO,
-        parent: previewContainerRef.value,
-        width: FORMATION_CANVAS_WIDTH,
-        height: FORMATION_CANVAS_HEIGHT,
-        transparent: true,
-        // Crash fix (standing-slot plan Task 6, 2026-09-07) — missing
-        // physics config made the Phaser.Game bootstrap crash when dropping
-        // a unit into the panel (CombatGridView/sprite pipeline touches the
-        // physics world via this.physics). Mirrors PhaserCanvas.vue's
-        // real-combat bootstrap exactly: arcade, gravity 0, debug false.
-        physics: { default: 'arcade', arcade: { gravity: { x: 0, y: 0 }, debug: false } },
-        scene: [TranPhapCombatPreviewSceneClass],
-      })
-
-      previewGame.events.once('ready', () => {
-        previewScene = (previewGame?.scene.getScene('TranPhapCombatPreviewScene') as TranPhapCombatPreviewScene | undefined) ?? null
-        previewScene?.syncAssignments(currentAssignments.value)
-      })
+      previewRegion.start()
     } else {
-      previewGame?.destroy(true)
-      previewGame = null
-      previewScene = null
+      previewRegion.destroy()
     }
   },
   { flush: 'post' },
 )
 
-// Đồng bộ sprite mỗi khi assignment đổi (kéo-thả) trong lúc panel đang mở.
+// Keep sprites in step with drag-and-drop while the panel is open.
 watch(currentAssignments, (assignments) => {
-  previewScene?.syncAssignments(assignments)
-})
-
-// An toàn phòng trường hợp panel đang mở mà GameRoot bị unmount (watch
-// ở trên chỉ destroy khi panel ĐÓNG, không chạy khi component biến mất).
-onUnmounted(() => {
-  previewGame?.destroy(true)
-  previewGame = null
-  previewScene = null
+  previewRegion.dispatch(FORMATION_ASSIGNMENTS_EVENT, assignments)
 })
 </script>
 
