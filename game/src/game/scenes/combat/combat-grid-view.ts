@@ -10,6 +10,7 @@ import { toVector2Points } from '@/game/support/ActionImpactVfx'
 import { ENEMY_SOURCE_SIZE, resolveEnemyTextureKey } from '@/game/support/EnemyArt'
 import { PLAYER_TEXTURE_KEY } from '@/game/support/CombatPreload'
 import { presentationFor } from '@/presentation/art/CombatPresentationCatalogue'
+import { resolveEntityDisplaySize } from '@/presentation/geometry/combatEntityScale'
 import { DEPTH_ENTITY_SHADOW, DEPTH_OVERLAY_UI, entitySpriteDepth } from '@/game/support/BattleLayers'
 
 import type { CombatGridViewHost } from './CombatGridViewHost'
@@ -50,6 +51,21 @@ function playerArtSourceSize(entityKey: string): { w: number; h: number } | unde
 
   if (presentation?.kind === 'static') {
     return { ...presentation.texture.sourceSize }
+  }
+
+  return undefined
+}
+
+/** The art's own box inside its authored frame, for the entity being drawn. */
+function artExtentFor(entityKey: string): { x: number; y: number; w: number; h: number } | undefined {
+  const presentation = presentationFor(entityKey)
+
+  if (presentation?.kind === 'animated') {
+    return { ...presentation.clips.idle.extent }
+  }
+
+  if (presentation?.kind === 'static') {
+    return { ...presentation.texture.extent }
   }
 
   return undefined
@@ -162,6 +178,34 @@ export class CombatGridView {
   //
   // Perspective: baseline chá»‰ lÃ  kÃ­ch thÆ°á»›c á»Ÿ hÃ ng hiá»‡n hÃ nh â€” co giÃ£n
   // theo chiá»u sÃ¢u diá»…n ra trong applyEntityDepthScale() má»—i láº§n chiáº¿u.
+  /**
+   * Spec C §4.3 — one place that turns a sprite into a size.
+   *
+   * `sizeMultiplier` is the OLD field and keeps its stored values (2 for a
+   * person, 4 for a boss); `classFactor` is what the resolver speaks, where a
+   * person is 1. Halving here rather than renaming the field keeps this task to
+   * one responsibility (P9).
+   *
+   * Callers only reach this when `sprite.extent` is defined — see the ruling in
+   * the task brief: the Tran Phap preview panel's host-fallback sprites have no
+   * `extent` and must keep their pre-existing flat formula unchanged, because
+   * that panel precomputes its own characterWidth/Height and a classFactor of
+   * 0.5 (sizeMultiplier 1) would halve every sprite in it.
+   */
+  private entityDisplaySize(sprite: EntitySprite, depthScale: number) {
+    const sourceSize = sprite.sourceSize ?? this.host.playerSourceSize
+
+    return resolveEntityDisplaySize({
+      nearCellWidth: this.host.projection
+        ? this.host.projection.cellSizeAt(this.host.projection.rows - 1).width
+        : this.host.characterHeight,
+      depthScale,
+      classFactor: sprite.sizeMultiplier / 2,
+      extent: sprite.extent as NonNullable<EntitySprite['extent']>,
+      sourceSize,
+    })
+  }
+
   applySpriteSize(sprite: EntitySprite) {
     if (this.host.isPerspective && this.host.projection) {
       this.applyEntityDepthScale(sprite, this.host.projection.gridToScreen(sprite.row, 0).scale)
@@ -170,11 +214,22 @@ export class CombatGridView {
     }
 
     if (sprite.kind === 'sprite') {
+      const gameSprite = sprite.rect as Phaser.GameObjects.Sprite
+
+      if (sprite.extent) {
+        const size = this.entityDisplaySize(sprite, 1)
+
+        gameSprite.setDisplaySize(size.boxWidth, size.boxHeight)
+        sprite.personHeight = size.personHeight
+        sprite.personWidth = size.personWidth
+
+        return
+      }
+
       const width =
         this.host.characterHeight *
         sprite.sizeMultiplier *
         ((sprite.sourceSize ?? this.host.playerSourceSize).w / (sprite.sourceSize ?? this.host.playerSourceSize).h)
-      const gameSprite = sprite.rect as Phaser.GameObjects.Sprite
 
       gameSprite.setDisplaySize(width, this.host.characterHeight * sprite.sizeMultiplier)
 
@@ -209,10 +264,19 @@ export class CombatGridView {
     const multiplier = sprite.sizeMultiplier
 
     if (sprite.kind === 'sprite') {
-      const height = this.host.characterHeight * effectiveScale * multiplier
       const gameSprite = sprite.rect as Phaser.GameObjects.Sprite
 
-      gameSprite.setDisplaySize(height * ((sprite.sourceSize ?? this.host.playerSourceSize).w / (sprite.sourceSize ?? this.host.playerSourceSize).h), height)
+      if (sprite.extent) {
+        const size = this.entityDisplaySize(sprite, effectiveScale)
+
+        gameSprite.setDisplaySize(size.boxWidth, size.boxHeight)
+        sprite.personHeight = size.personHeight
+        sprite.personWidth = size.personWidth
+      } else {
+        const height = this.host.characterHeight * effectiveScale * multiplier
+
+        gameSprite.setDisplaySize(height * ((sprite.sourceSize ?? this.host.playerSourceSize).w / (sprite.sourceSize ?? this.host.playerSourceSize).h), height)
+      }
     } else {
       const rect = sprite.rect as Phaser.GameObjects.Rectangle
 
@@ -350,6 +414,7 @@ export class CombatGridView {
         // 1.094 aspect onto 0.571 art — 3.44x too wide on screen. Spec B moved
         // what the sprite draws and left what sizes it behind.
         sourceSize: playerArtSourceSize(this.host.playerProfile.combatTextureKey),
+        extent: artExtentFor(this.host.playerProfile.combatTextureKey),
         sizeMultiplier: PLAYER_DISPLAY_SCALE_MULTIPLIER,
         boost: { value: 1 },
         footY: 0,
@@ -415,6 +480,7 @@ export class CombatGridView {
         offsetX: 0,
         row,
         sourceSize: { ...ENEMY_SOURCE_SIZE },
+        extent: artExtentFor(enemyTextureKey),
         // Enemy art x2; Boss Ã—2 quy táº¯c enemy thÆ°á»ng (2026-09-05) â€” khÃ´ng
         // cÃ²n dÃ¹ng CÃ™NG multiplier nhÆ° trÆ°á»›c (xem
         // CombatScene.enemyScale.test.ts). BÃ³ng ellipse dÆ°á»›i chÃ¢n nhÃ¢n
