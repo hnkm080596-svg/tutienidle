@@ -7,7 +7,7 @@ import { createTestScene } from './combat/combatTestHarness'
 import {
   createBattleGridProjection,
   type BattleGridProjection,
-} from '../support/BattleGridProjection'
+} from '@/presentation/geometry/BattleGridProjection'
 import type { BattlePositionsEvent } from '@/core/battle/BattleEvents'
 
 const PROJECTION = createBattleGridProjection('perspective', {

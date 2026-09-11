@@ -4,7 +4,7 @@
 // đúng 1 class CombatGridView thay vì mỗi bên tự viết lại logic sprite/
 // animation — xem spec §1.
 import type Phaser from 'phaser'
-import type { BattleGridProjection } from '@/game/support/BattleGridProjection'
+import type { BattleGridProjection } from '@/presentation/geometry/BattleGridProjection'
 import type { EntitySprite } from './combatTypes'
 
 export interface CombatGridViewHost {

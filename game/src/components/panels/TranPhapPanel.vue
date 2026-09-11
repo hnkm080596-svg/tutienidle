@@ -27,13 +27,14 @@ import type { TranPhapDefinition } from '@/data/formation/TranPhap'
 import type { FormationSlotAssignment } from '@/core/player/Player'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
 import { STANDING_SLOT_COUNT } from '@/core/battle/BattlefieldRegions'
-// Battlefield Perspective Panel (2026-09-06) - Phaser canvas is 420x480
-// (larger than the pure grid to have room for perspective depth, see
-// spec section 3). Panel canvas does NOT change size in the standing-slot
-// rework - only the grid cell count drops 6x6 -> 3x3 (same canvas, bigger
-// cells).
-const PANEL_CANVAS_WIDTH = 420
-const PANEL_CANVAS_HEIGHT = 480
+// Battlefield Perspective Panel (2026-09-06) - the canvas is larger than the
+// pure grid to leave room for perspective depth (spec section 3). The size now
+// comes from FormationCanvasSpec, its single owner (V9); this file no longer
+// declares it.
+import {
+  FORMATION_CANVAS_HEIGHT,
+  FORMATION_CANVAS_WIDTH,
+} from '@/presentation/geometry/FormationCanvasSpec'
 import type { TranPhapCombatPreviewScene } from '@/game/scenes/TranPhapCombatPreviewScene'
 import type { SlotState } from '@/game/support/SlotState'
 
@@ -222,8 +223,8 @@ watch(
       previewGame = new Phaser.Game({
         type: Phaser.AUTO,
         parent: previewContainerRef.value,
-        width: PANEL_CANVAS_WIDTH,
-        height: PANEL_CANVAS_HEIGHT,
+        width: FORMATION_CANVAS_WIDTH,
+        height: FORMATION_CANVAS_HEIGHT,
         transparent: true,
         // Crash fix (standing-slot plan Task 6, 2026-09-07) — missing
         // physics config made the Phaser.Game bootstrap crash when dropping
@@ -358,9 +359,13 @@ onUnmounted(() => {
   position: absolute;
   inset: 0;
   z-index: 0;
-  /* Canvas Phaser 420x480 (PANEL_CANVAS_* ở trên) — overlay grid 3x3 lưới
-     slot vẽ PHỦ lên trên; canvas/overlay alignment là known limitation
-     (spec Part 2 Non-Goals, needs its own future plan). */
+  /* Canvas size: FormationCanvasSpec (presentation/geometry) — overlay grid
+     3x3 lưới slot vẽ PHỦ lên trên. Canvas/overlay alignment VẪN LÀ khuyết tật
+     đã biết: lưới DOM là ô vuông đều, canvas vẽ hình thang phối cảnh, và
+     container này bị lưới overlay quy định kích thước nên phần lớn canvas bị
+     cắt. Xem V8 trong
+     docs/superpowers/specs/2026-09-11-frontend-static-dynamic-boundary-design.md
+     — có plan riêng, KHÔNG sửa ở đợt dời hằng số này. */
   overflow: hidden;
 }
 

@@ -26,20 +26,25 @@ import {
   createBattleGridProjection,
   computePerspectiveGeometry,
   type BattleGridProjection,
-} from '@/game/support/BattleGridProjection'
+} from '@/presentation/geometry/BattleGridProjection'
 import { STANDING_SLOT_COUNT } from '@/core/battle/BattlefieldRegions'
 import type { FormationSlotAssignment } from '@/core/player/Player'
 import type { LaneIndex } from '@/core/battle/BattleLane'
 import { CombatGridView } from './combat/combat-grid-view'
 import type { CombatGridViewHost } from './combat/CombatGridViewHost'
 import type { EntitySprite } from './combat/combatTypes'
+import {
+  FORMATION_CANVAS_HEIGHT,
+  FORMATION_CANVAS_WIDTH,
+} from '@/presentation/geometry/FormationCanvasSpec'
 
-// PANEL_WIDTH/HEIGHT must match PANEL_CANVAS_WIDTH/HEIGHT in
-// TranPhapPanel.vue exactly (Task 3, battlefield-perspective-panel plan)
-// -- the two files can't share scope, so this stays a duplicated
-// constant pair; changing one requires changing the other.
-export const PANEL_WIDTH = 420
-export const PANEL_HEIGHT = 480
+// Canvas size has ONE owner now (V9): FormationCanvasSpec, under
+// presentation/geometry. It used to be declared here and again in
+// TranPhapPanel.vue, kept in sync by a comment -- which is not a mechanism.
+// Re-exported under the old local names so every use site below reads the
+// same as before.
+export const PANEL_WIDTH = FORMATION_CANVAS_WIDTH
+export const PANEL_HEIGHT = FORMATION_CANVAS_HEIGHT
 export const PERSPECTIVE_MIN_ROAD_HEIGHT_PANEL = 140
 
 const PANEL_SKY_COLOR = 0x22283a

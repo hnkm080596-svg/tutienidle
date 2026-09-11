@@ -27,11 +27,11 @@ import {
   createBattleGridProjection,
   type BattlefieldGeometrySnapshot,
   type BattleGridProjection,
-} from '@/game/support/BattleGridProjection'
+} from '@/presentation/geometry/BattleGridProjection'
 import {
   getBattlefieldRenderMode,
   type BattlefieldRenderMode,
-} from '@/game/support/BattlefieldRenderMode'
+} from '@/presentation/geometry/BattlefieldRenderMode'
 import { spawnActionImpactVfx, toVector2Points } from '@/game/support/ActionImpactVfx'
 import {
   spawnEnemySpawnVfx,
