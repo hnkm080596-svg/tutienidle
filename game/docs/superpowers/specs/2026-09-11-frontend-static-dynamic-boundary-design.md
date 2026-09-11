@@ -690,6 +690,38 @@ is stated rather than papered over.
 Agreed order: this spec (A), then the animation metadata contract (B), then
 anchor/scale geometry (C), then animation/impact timing (D).
 
+**Ruling, 2026-09-11 — the Formation alignment work (V8) proceeds before §5's
+region host, and does not wait for it.**
+
+The question was whether §5.2's `useDynamicRegion` had to be pulled forward,
+since V10 means the Formation panel still holds a scene object. Measured, it does
+not have to be:
+
+- V8's layout repair is CSS plus `FormationCanvasSpec`; it needs no region handle.
+- Its overlay uses a bridge the shell constructs itself, which §3.6.2 permits for
+  Formation *specifically* because the canvas size is fixed and now singly-owned.
+- Four of the five parameters the panel's projection is built from are already
+  reachable by both layers. Only `PERSPECTIVE_MIN_ROAD_HEIGHT_PANEL`
+  (`TranPhapCombatPreviewScene.ts:48`) is stranded in the Phaser layer, and
+  moving it is mechanical. That move is a prerequisite of V8, not of §5.
+- V8 adds no new V10 coupling: `syncAssignments` is left exactly as it is.
+
+Against pulling §5 forward: extracting the host composable means touching
+`PhaserCanvas.vue`, the application's primary surface, which carries the
+unmount-during-boot race handling and the local error boundary, and which the
+combat work has just finished stabilising. It does not block V8. Disturbing
+settled code to release something it is not holding is the wrong trade in
+development.
+
+Accepted cost: `TranPhapPanel.vue` is edited twice — template and CSS for V8,
+`script setup` for V10 later. Different halves; the second does not re-open the
+first.
+
+**Stop condition, stated so the ruling can be falsified rather than merely
+hoped:** if V8 turns out to need *any* new scene-object coupling, that is the
+signal to stop and pull §5.2 forward — not to reach for the scene reference
+because it happens to be in scope.
+
 **When B starts.** B's spec is written as soon as this one is accepted; it does
 **not** wait for A to be implemented. A's implementation is itself blocked on
 `r14-architecture-enforcement` merging, and leaving B idle behind that would
