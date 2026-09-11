@@ -32,14 +32,20 @@ import { SCAN_TIMEOUT } from './helpers/scanTs'
 
 const GAME_ROOT = process.cwd()
 
-const ANIMATION_SET_SOURCE = join(GAME_ROOT, 'src', 'game', 'support', 'CombatAnimationSet.ts')
+const ANIMATION_SET_SOURCE = join(
+  GAME_ROOT,
+  'src',
+  'presentation',
+  'art',
+  'CombatPresentationCatalogue.ts',
+)
 
 /** Pull a string constant out of the source, without importing it. */
 function stringConstant(source: string, name: string): string {
   const match = new RegExp(`export const ${name} = '([^']*)'`).exec(source)
 
   if (!match) {
-    throw new Error(`constant ${name} not found in CombatAnimationSet.ts`)
+    throw new Error(`constant ${name} not found in CombatPresentationCatalogue.ts`)
   }
 
   return match[1]!
@@ -50,7 +56,7 @@ function numberConstant(source: string, name: string): number {
   const match = new RegExp(`export const ${name} = (\\d+)`).exec(source)
 
   if (!match) {
-    throw new Error(`constant ${name} not found in CombatAnimationSet.ts`)
+    throw new Error(`constant ${name} not found in CombatPresentationCatalogue.ts`)
   }
 
   return Number(match[1])

@@ -9,6 +9,7 @@ import { HERO_LANE_INDEX } from '@/core/battle/BattleLane'
 import { toVector2Points } from '@/game/support/ActionImpactVfx'
 import { ENEMY_SOURCE_SIZE, resolveEnemyTextureKey } from '@/game/support/EnemyArt'
 import { PLAYER_TEXTURE_KEY } from '@/game/support/CombatPreload'
+import { presentationFor } from '@/presentation/art/CombatPresentationCatalogue'
 import { DEPTH_ENTITY_SHADOW, DEPTH_OVERLAY_UI, entitySpriteDepth } from '@/game/support/BattleLayers'
 
 import type { CombatGridViewHost } from './CombatGridViewHost'
@@ -31,6 +32,33 @@ import {
   SHADOW_COLOR,
 } from './combatConstants'
 import type { EnemyHealthBar, EntitySprite } from './combatTypes'
+
+/**
+ * Start phase for one entity's idle bob, in ms within its own cycle.
+ *
+ * A PLAIN rolling hash is not enough here, and that is a measured fact rather
+ * than a precaution: runtime enemy ids share a long template prefix and differ
+ * only in their tail, so `hash * 31 + char` leaves adjacent ids one apart, and
+ * one part in 100000 of a 2.2s period rounds to the same millisecond. Two wolves
+ * spawned in a row then breathe in perfect lockstep — the exact failure the
+ * jitter exists to prevent.
+ *
+ * The finalizer below (xorshift-multiply, as in MurmurHash3's avalanche) makes a
+ * one-character difference change the whole value.
+ */
+function phaseDelayMs(id: string, periodMs: number): number {
+  let hash = 0
+
+  for (let index = 0; index < id.length; index++) {
+    hash = (Math.imul(hash, 31) + id.charCodeAt(index)) | 0
+  }
+
+  hash ^= hash >>> 16
+  hash = Math.imul(hash, 0x85ebca6b)
+  hash ^= hash >>> 13
+
+  return Math.abs(hash) % Math.max(1, Math.round(periodMs))
+}
 
 // BÃ³ng ellipse dÆ°á»›i chÃ¢n â€” dáº¹t theo trá»¥c sÃ¢u (copy tá»« CombatScene).
 const SHADOW_WIDTH_RATIO = 1.12
@@ -213,7 +241,16 @@ export class CombatGridView {
     // bob/tilt ÄÃƒ XÃ“A Háº¾N (2026-08-26): di chuyá»ƒn bÃ¬nh thÆ°á»ng luÃ´n Ä‘áº·t
     // sprite táº¡i tá»a Ä‘á»™ chiáº¿u tháº³ng, rotation 0 (chá»‰ death tween xoay).
     const screenX = point.x + sprite.offsetX * point.scale
-    const screenY = point.y
+
+    // Spec B §4.3 — the idle bob, in SCREEN pixels and deliberately NOT scaled
+    // by `point.scale`. Scaling it by depth is more correct perspective and was
+    // explicitly not wanted: a far enemy is already small, and shrinking its
+    // motion too makes it read as frozen.
+    //
+    // Applied to the BODY only. `footY`, the shadow and the depth sort all stay
+    // on `point.y`, so a breathing enemy keeps its feet and its shadow planted
+    // and never changes draw order mid-breath.
+    const screenY = point.y + (sprite.idle?.offsetY ?? 0)
 
     if (this.host.isPerspective) {
       this.applyEntityDepthScale(sprite, point.scale)
@@ -367,6 +404,7 @@ export class CombatGridView {
       this.host.sprites.set(id, sprite)
       this.applySpriteSize(sprite)
       this.updateEnemyHealthBar(sprite, healthBar.currentHp, healthBar.maxHp)
+      this.startIdleMotion(sprite, id, enemyTextureKey)
 
       return sprite
     }
@@ -504,7 +542,52 @@ export class CombatGridView {
     healthBar.fill.setScale(ratio, 1)
   }
 
+  /**
+   * Spec B §4.3/§6 B6 — start the idle bob for a `kind: 'static'` entity.
+   *
+   * §3.2 described enemies as static "như hiện tại". They were not: walk sway/
+   * bob/tilt were deleted outright on 2026-08-26, leaving rotation 0 and a
+   * straight projected position. So "static plus a slight shake" is a TARGET
+   * state, and this is the half that had to be added rather than removed.
+   *
+   * It costs no art — the whole point of the economy in §3.2.
+   *
+   * PHASE comes from the runtime id, not from the texture key, and that
+   * distinction is the difference between working and not: five `mortal_wild_boar`
+   * share one texture key, so a per-key phase would make a row of five wolves
+   * breathe as one organism — which reads worse than not breathing at all. The
+   * catalogue varies the PERIOD per species; the delay below varies the phase per
+   * individual.
+   */
+  private startIdleMotion(sprite: EntitySprite, id: string, textureKey: string): void {
+    const presentation = presentationFor(textureKey)
+
+    if (presentation?.kind !== 'static') {
+      return
+    }
+
+    const { amplitudePx, periodMs } = presentation.idleMotion
+
+    sprite.idle = { offsetY: 0 }
+
+    this.host.tweens.add({
+      targets: sprite.idle,
+      offsetY: -amplitudePx,
+      duration: periodMs / 2,
+      delay: phaseDelayMs(id, periodMs),
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    })
+  }
+
   destroyEntitySprite(sprite: EntitySprite) {
+    // The idle tween targets a plain object, so it survives the GameObject and
+    // would keep running against a destroyed sprite's offset forever.
+    if (sprite.idle) {
+      this.host.tweens.killTweensOf(sprite.idle)
+    }
+
     sprite.shadow?.destroy()
     sprite.healthBar?.background.destroy()
     sprite.healthBar?.fill.destroy()

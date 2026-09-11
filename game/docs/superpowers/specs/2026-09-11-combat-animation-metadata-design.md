@@ -150,7 +150,9 @@ that reshaped §8 and §9, so it is worth reading before the contract in §4.
 ### 3.1 TexturePacker atlas is the standard format — **decided**
 
 Character art is authored and shipped as a **trimmed TexturePacker atlas**, loaded
-with `load.multiatlas`, played with `generateFrameNames`.
+with `load.atlas`, played with `generateFrameNames`. (Corrected 2026-09-11:
+this said `load.multiatlas`, which is the loader for a JSON naming its own image
+files. A single-image TexturePacker export is `load.atlas`. See §9 criterion 5.)
 
 The grid spritesheet path is **removed entirely**, including for the placeholder
 — see §3.4, which was decided afterwards and is the reason. One loading path, so
@@ -523,7 +525,7 @@ it for C would hand C a bill without the receipt.
 | B6 | No idle motion exists at all (sway deleted 2026-08-26) | A tween per §4.3, phase-jittered per entity. |
 | B7 | `idle` built, never played (§2.3) | Played as the player's default state (§4.5). |
 | B8 | `impactFrame` does not exist; `ATTACK_LUNGE_DURATION_MS / 2` stands (§2.4) | Field declared (§4.2). **The call site is NOT changed — that is D.** |
-| B9 | The placeholder is a grid spritesheet, so §3.1's atlas format would ship unused | The generator emits a TexturePacker-format JSON with real trim bounds; every entity loads through `multiatlas` (§3.4). |
+| B9 | The placeholder is a grid spritesheet, so §3.1's atlas format would ship unused | The generator emits a TexturePacker-format JSON with real trim bounds; every animated entity loads through `load.atlas` (§3.4). |
 | B12 | Nothing exercises §5.3's trim correction | The generated atlas is genuinely trimmed per frame, so `anchorForFrame` has real input before real art exists. |
 | B10 | "Enemies are static" would be restated at every enemy entry | `artTierFor` states it once, from `isBoss` (§3.2.1). |
 | B11 | Nothing reconciles deserved art with drawn art | The art-debt list plus its guard (§7). Expected to be non-empty on day one, and to be mostly Kiếp enemies. |
@@ -565,7 +567,7 @@ as "the timing is correct".
 
 1. **B9/B12 — the placeholder becomes a trimmed atlas.** First, deliberately:
    it is the only step that can be verified entirely on its own (the same 32
-   frames must still animate, now loaded through `multiatlas`), and every later
+   frames must still animate, now loaded through `load.atlas`), and every later
    step is designed against the format it establishes. A regression here is
    obvious; a regression here discovered in step 4 would not be.
 2. §4's types and the catalogue, resolving to that atlas. No visible change; the
@@ -599,9 +601,18 @@ will tell it to.
 3. No cast asserts the shape of an animation record.
 4. Every enemy is `kind: 'static'` with a non-zero `IdleMotion`, and moves on
    screen.
-5. Every entity — player profiles and enemies alike — resolves through the
-   catalogue to the **trimmed placeholder atlas**, loaded with `multiatlas`. No
-   entity resolves through `load.spritesheet`, and the grid path is gone.
+5. Every entity resolves through the catalogue, and every **animated** entity
+   resolves to the **trimmed placeholder atlas**. No entity resolves through
+   `load.spritesheet`, and the grid path is gone.
+
+   *Corrected 2026-09-11, during implementation.* This said "loaded with
+   `multiatlas`". That was wrong, and the code is right: `multiatlas` is for a
+   JSON that names its own image files (what `MainScene` and `TribulationScene`
+   use); a single-image atlas is `load.atlas`, which takes the PNG and the JSON
+   explicitly. §2.5's table named the loader correctly and this criterion copied
+   the wrong half of it. Also narrowed from "player profiles and enemies alike":
+   §3.2, decided in the same session, makes enemies static, so requiring them to
+   resolve to an atlas contradicted it.
 6. `impactFrame` is declared and populated; `ATTACK_LUNGE_DURATION_MS / 2` is
    **still** the live call site (D's to change).
 7. Promoting one enemy to `kind: 'animated'` requires editing one data entry and

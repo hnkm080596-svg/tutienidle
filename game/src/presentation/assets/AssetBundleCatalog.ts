@@ -24,7 +24,6 @@ import {
   thanhVanLoadList,
 } from '@/presentation/background/ThanhVanBackdropArt'
 import {
-  allCombatAnimationSets,
   ENEMY_TEMPLATE_IDS,
   PLAYER_TEXTURE_KEY,
   PLAYER_TEXTURE_URL,
@@ -38,6 +37,7 @@ import {
   resolveEnemyTextureKey,
 } from '@/game/support/EnemyArt'
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
+import { animatedCombatEntities } from '@/presentation/art/CombatPresentationCatalogue'
 
 export type AssetBundleId = 'core-ui' | 'home' | 'combat' | 'tribulation'
 
@@ -170,8 +170,8 @@ export function getCombatDescriptors(): readonly AssetResourceDescriptor[] {
 
   // Character animation atlases (Spec B §3.1) — one entry per distinct sheet,
   // however many entities and clips share it.
-  for (const { animationSet } of allCombatAnimationSets()) {
-    for (const clip of Object.values(animationSet)) {
+  for (const { clips } of animatedCombatEntities()) {
+    for (const clip of Object.values(clips)) {
       if (seenKeys.has(clip.sheetKey)) continue
       seenKeys.add(clip.sheetKey)
       descriptors.push({

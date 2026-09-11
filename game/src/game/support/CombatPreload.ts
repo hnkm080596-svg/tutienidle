@@ -12,13 +12,20 @@
 import type Phaser from 'phaser'
 import { GOURD_TEXTURE_KEY, GOURD_TEXTURE_URL } from './RewardGourd'
 import { ENEMY_SOURCE_SIZE, enemyTextureUrl, resolveEnemyTextureKey } from './EnemyArt'
-import { PLAYER_VISUAL_PROFILES, type PlayerVisualProfile } from '@/presentation/art/PlayerVisualProfiles'
+import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 import { peekThanhVanVariant, thanhVanLoadList } from './ThanhVanArt'
-import { buildPlaceholderAnimationSet, type CombatAnimationSet } from './CombatAnimationSet'
+import {
+  animatedCombatEntities,
+  FALLBACK_PLAYER_ENTITY_KEY,
+} from '@/presentation/art/CombatPresentationCatalogue'
+import type { CombatAnimationCatalogue } from '@/presentation/art/CombatEntityPresentation'
 
 // Combat uses the static mortal artwork. MainScene keeps its existing atlas;
 // the scenes intentionally use separate texture keys and presentations.
-export const PLAYER_TEXTURE_KEY = 'player-mortal'
+// The catalogue declares this key (it is a presentation fact: an entity whose
+// art is the mortal PNG under a second key). Re-exported here so the many
+// existing importers do not all have to move at once.
+export const PLAYER_TEXTURE_KEY = FALLBACK_PLAYER_ENTITY_KEY
 
 export const PLAYER_TEXTURE_URL =
   'assets/characters/player/mortal/player-mortal-ink-sword-concept-v2.png'
@@ -51,55 +58,19 @@ export const ENEMY_TEMPLATE_IDS = [
   'mortal_feral_dog',
 ]
 
-// Combat Art Pipeline Task 9 (2026-09-05) — animation set PLACEHOLDER cho
-// từng entity combat (player theo profile, enemy theo texture key). Export
-// để CombatScene.create() đăng ký ĐÚNG animation set này qua
-// registerCombatAnimations() (Phaser Animation registry là nguồn dùng
-// chung toàn Game, không phải riêng scene) — tránh một bảng tính key thứ
-// hai lệch khỏi bảng preload thật.
-export function playerCombatAnimationSet(profile: PlayerVisualProfile): CombatAnimationSet {
-  return buildPlaceholderAnimationSet(profile.combatTextureKey)
-}
-
-// PLAYER_TEXTURE_KEY — key fallback riêng (PNG giống hệt profile mortal
-// nhưng key khác, dùng khi combat-grid-view.ts không thấy texture profile
-// hiện hành đã tải xong); dùng chung kích thước nguồn với mortal (CÙNG file
-// vật lý).
-export function fallbackPlayerCombatAnimationSet(): CombatAnimationSet {
-  return buildPlaceholderAnimationSet(PLAYER_TEXTURE_KEY)
-}
-
-export function enemyCombatAnimationSet(textureKey: string): CombatAnimationSet {
-  return buildPlaceholderAnimationSet(textureKey)
-}
-
-/**
- * Toàn bộ animation set combat cần đăng ký — player (mọi profile + key
- * fallback) + enemy (mọi template id trong batch Mortal). MỘT nguồn dùng
- * chung cho queueCombatAssets() (load spritesheet) VÀ CombatScene.create()
- * (this.anims.create()) để hai bên KHÔNG BAO GIỜ lệch key nhau.
- */
-export function allCombatAnimationSets(): Array<{
+// Spec B §4.4 (2026-09-11) — ONE resolver answers what an entity's art is.
+// This used to be three near-identical wrappers around one placeholder builder
+// that discarded both of its data parameters (§2.1).
+//
+// `allCombatAnimationSets` is gone with them: it named every entity, but every
+// entity is no longer animated. Enemies are `kind: 'static'` now (§3.2), and a
+// list that still handed CombatScene a clip set for each of them would quietly
+// re-animate them.
+export function animatedCombatAnimationSets(): Array<{
   entityKey: string
-  animationSet: CombatAnimationSet
+  clips: CombatAnimationCatalogue
 }> {
-  const sets: Array<{ entityKey: string; animationSet: CombatAnimationSet }> = []
-
-  for (const profile of Object.values(PLAYER_VISUAL_PROFILES)) {
-    sets.push({ entityKey: profile.combatTextureKey, animationSet: playerCombatAnimationSet(profile) })
-  }
-
-  sets.push({ entityKey: PLAYER_TEXTURE_KEY, animationSet: fallbackPlayerCombatAnimationSet() })
-
-  for (const templateId of ENEMY_TEMPLATE_IDS) {
-    const textureKey = resolveEnemyTextureKey(templateId)
-
-    if (textureKey) {
-      sets.push({ entityKey: textureKey, animationSet: enemyCombatAnimationSet(textureKey) })
-    }
-  }
-
-  return sets
+  return animatedCombatEntities()
 }
 
 /**
@@ -137,8 +108,8 @@ export function queueCombatAssets(scene: Phaser.Scene): void {
     scene.load.image(key, url)
   }
 
-  const queueAnimationSetOnce = (animationSet: CombatAnimationSet) => {
-    for (const clip of Object.values(animationSet)) {
+  const queueAtlasOnce = (clips: CombatAnimationCatalogue) => {
+    for (const clip of Object.values(clips)) {
       if (queuedKeys.has(clip.sheetKey) || scene.textures.exists(clip.sheetKey)) {
         continue
       }
@@ -180,10 +151,11 @@ export function queueCombatAssets(scene: Phaser.Scene): void {
     }
   }
 
-  // Sprite-sheet placeholder cho toàn bộ entity combat (Task 9) — xem
-  // allCombatAnimationSets(); CombatScene.create() đăng ký Animation từ
-  // ĐÚNG cùng danh sách này.
-  for (const { animationSet } of allCombatAnimationSets()) {
-    queueAnimationSetOnce(animationSet)
+  // The placeholder atlas, for ANIMATED entities only (Spec B §3.2) —
+  // CombatScene.create() registers animations from the SAME list, so the two
+  // can never name different keys. Static entities queue nothing extra: their
+  // still PNG is already queued above, and their motion is a tween.
+  for (const { clips } of animatedCombatAnimationSets()) {
+    queueAtlasOnce(clips)
   }
 }

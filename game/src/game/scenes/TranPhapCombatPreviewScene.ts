@@ -23,7 +23,7 @@ import {
   PLACEHOLDER_ZERO_PAD,
   PLACEHOLDER_FRAME_COUNT,
   PLACEHOLDER_FRAME_RATE,
-} from '@/game/support/CombatAnimationSet'
+} from '@/presentation/art/CombatPresentationCatalogue'
 import type { BattleGridProjection } from '@/presentation/geometry/BattleGridProjection'
 import { STANDING_SLOT_COUNT } from '@/core/battle/BattlefieldRegions'
 import type { FormationSlotAssignment } from '@/core/player/Player'

@@ -35,6 +35,18 @@ export interface EntitySprite {
   // scale/geometry mà projection ghi mỗi frame.
   shadow?: Phaser.GameObjects.Ellipse
   boost: { value: number }
+
+  /**
+   * Spec B §4.3 — procedural idle motion for a `kind: 'static'` entity.
+   *
+   * A PLAIN OBJECT tweened separately from `rect`, for the same reason `boost`
+   * is: `positionSprite()` writes the sprite's position from the projection
+   * every frame, so a tween on `rect.y` would be overwritten within a frame.
+   * The projection reads this offset instead.
+   *
+   * Absent on animated entities, which move because their frames do.
+   */
+  idle?: { offsetY: number }
   footY: number
   columnFloat: number
 }

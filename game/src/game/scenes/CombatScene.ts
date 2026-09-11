@@ -83,12 +83,13 @@ import {
   type ThanhVanVariant,
 } from '@/game/support/ThanhVanArt'
 import { attachThanhVanBackdrop, type ThanhVanBackdropHandle } from '@/game/support/ThanhVanBackdrop'
-import { queueCombatAssets, allCombatAnimationSets } from '@/game/support/CombatPreload'
+import { queueCombatAssets, animatedCombatAnimationSets } from '@/game/support/CombatPreload'
 import {
   combatAnimationKey,
+  type CombatAnimationCatalogue,
   type CombatAnimationName,
-  type CombatAnimationSet,
-} from '@/game/support/CombatAnimationSet'
+} from '@/presentation/art/CombatEntityPresentation'
+import { presentationFor } from '@/presentation/art/CombatPresentationCatalogue'
 import type { CombatEvent } from '@/core/combat/CombatEvent'
 import type { CombatHealEvent, EntityVitalsChangedEvent } from '@/core/combat/EntityVitalsSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
@@ -689,14 +690,14 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       this.applyPlayerVisualProfile(registryProfileId)
     }
 
-    // Combat Art Pipeline Task 9 (2026-09-05) — đăng ký animation placeholder
-    // cho MỌI entity combat (player theo mọi profile + enemy theo mọi
-    // template Mortal), CÙNG danh sách allCombatAnimationSets() mà
-    // queueCombatAssets() (preload()) dùng để load spritesheet — 2 nơi
-    // không bao giờ lệch key. preload() → loader COMPLETE → create() là thứ
+    // Spec B §3.2 (2026-09-11) — register animations for ANIMATED entities
+    // only. This used to walk every combat entity; enemies are `kind: 'static'`
+    // now, and registering their clips would leave a loaded gun beside
+    // playCombatAnimation(). Same list queueCombatAssets() (preload()) loads
+    // the atlas from, so the two can never name different keys. preload() → loader COMPLETE → create() là thứ
     // tự chuẩn của Phaser Scene nên texture các sheetKey này đã sẵn sàng.
-    for (const { entityKey, animationSet } of allCombatAnimationSets()) {
-      this.registerCombatAnimations(entityKey, animationSet)
+    for (const { entityKey, clips } of animatedCombatAnimationSets()) {
+      this.registerCombatAnimations(entityKey, clips)
     }
 
     // Reward gourd (plan Ã‚Â§6 + Ã‚Â§8) Ã¢â‚¬â€ art thÃ¡ÂºÂ­t nÃ¡ÂºÂ¿u texture sÃ¡ÂºÂµn sÃƒÂ ng,
@@ -723,6 +724,13 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     const player = this.getOrCreateSprite(PLAYER_ID, PLAYER_COLOR, 'Player', HERO_LANE_INDEX)
 
     player.rect.setVisible(false)
+
+    // Spec B §4.5/§6 B7 (2026-09-11) — `idle` finally has a call site. It was
+    // built for every entity and never played in combat at all (§2.3): the
+    // player stood on a single frozen frame between turns. This is the default
+    // state, played the moment the sprite exists, and the one every other clip
+    // returns to.
+    this.playCombatAnimation(player, PLAYER_ID, 'idle')
 
     this.playerMaterialized = false
     this.snapInterpolationTarget(PLAYER_ID, HERO_COLUMN)
@@ -1298,8 +1306,8 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // `entityKey` không dùng trực tiếp trong thân hàm (mỗi clip đã tự mang
   // đủ key/sheetKey) — giữ tham số vì chữ ký khớp cách gọi tại create() và
   // để log/mở rộng sau này (vd. gắn nhãn lỗi khi generateFrameNumbers rỗng).
-  private registerCombatAnimations(_entityKey: string, animationSet: CombatAnimationSet): void {
-    for (const clip of Object.values(animationSet)) {
+  private registerCombatAnimations(_entityKey: string, clips: CombatAnimationCatalogue): void {
+    for (const clip of Object.values(clips)) {
       if (this.anims.exists(clip.key)) {
         continue
       }
@@ -1339,10 +1347,27 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   /**
+   * Spec B §3.2 — is this entity's art ANIMATED, or a still image?
+   *
+   * One question, asked of the catalogue, in the one place that plays clips.
+   * A static entity is not a degraded animated one: it has no clips at all, and
+   * asking for one is a no-op rather than a fallback.
+   */
+  private isAnimatedEntity(entityKey: string): boolean {
+    return presentationFor(entityKey)?.kind === 'animated'
+  }
+
+  /**
    * Phát 1 animation clip cho actor NẾU sprite là Sprite thật (kind ===
    * 'sprite') VÀ clip đó đã được registerCombatAnimations() đăng ký —
    * no-op an toàn cho Rectangle fallback (enemy ngoài batch) hoặc clip
    * chưa/không tồn tại (test fixture không stub this.anims đầy đủ).
+   *
+   * Spec B §3.2 (2026-09-11) — AND the entity's art is animated. Before this,
+   * an enemy taking its turn played the 32-frame placeholder, which SWAPPED its
+   * texture from its own Mortal PNG to a numbered stick figure for the length of
+   * the clip. Enemies are static now; their motion is the bob in
+   * `combat-grid-view.ts`.
    */
   private playCombatAnimation(
     sprite: EntitySprite,
@@ -1355,7 +1380,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
     const prefix = this.entityAnimationKeyPrefix(actorId)
 
-    if (!prefix) {
+    if (!prefix || !this.isAnimatedEntity(prefix)) {
       return
     }
 
@@ -1365,7 +1390,36 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       return
     }
 
-    ;(sprite.rect as Phaser.GameObjects.Sprite).play(key)
+    const gameSprite = sprite.rect as Phaser.GameObjects.Sprite
+
+    gameSprite.play(key)
+
+    // Spec B §4.5 — `idle` is the state every other clip returns to.
+    //
+    // Without this a one-shot leaves the sprite frozen on its last frame until
+    // something else happens to play. `death` is excluded: it has its own
+    // completion handler in onDeath(), which finalises and destroys the sprite,
+    // and returning a corpse to idle would undo it.
+    if (name === 'idle' || name === 'death') {
+      return
+    }
+
+    const idleKey = combatAnimationKey(prefix, 'idle')
+
+    if (!this.anims.exists(idleKey) || typeof gameSprite.once !== 'function') {
+      return
+    }
+
+    gameSprite.once(
+      Phaser.Animations.Events.ANIMATION_COMPLETE,
+      (anim: Phaser.Animations.Animation) => {
+        if (anim.key !== key) {
+          return
+        }
+
+        gameSprite.play(idleKey)
+      },
+    )
   }
 
   private clearSceneState() {
@@ -2242,8 +2296,13 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     }
 
     if (sprite.kind === 'sprite') {
+      // Spec B §3.2 — this path bypasses playCombatAnimation() because it needs
+      // the ANIMATION_COMPLETE callback, so it has to ask the same question
+      // itself. A static enemy plays no death clip; the rotate/fade tween below
+      // is what it dies by, and always was.
       const prefix = this.entityAnimationKeyPrefix(id)
-      const deathKey = prefix ? combatAnimationKey(prefix, 'death') : undefined
+      const animated = prefix !== undefined && this.isAnimatedEntity(prefix)
+      const deathKey = animated && prefix ? combatAnimationKey(prefix, 'death') : undefined
 
       if (deathKey && this.anims.exists(deathKey)) {
         animDone = false
