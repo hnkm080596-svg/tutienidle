@@ -272,12 +272,12 @@ tests, of which **22 are reads**, across **8 distinct keys**.
 | Key | Carries | Type | Required? |
 |---|---|---|---|
 | `gameManager` | Domain orchestrator reference | `DomainCommandPort` (§4.3, new) | required |
-| `sceneAdapter` | Phaser scene adapter | `RendererPort` | required |
+| `sceneAdapter` | Phaser scene adapter | `SceneReadyPort` (corrected — see below) | optional |
 | `eventBus` | Core event bus | `EventBus` | required |
-| `bundleManager` | Asset bundle manager | `AssetPort` | required |
+| `bundleManager` | Asset bundle manager | `AssetLoaderHostPort` (corrected) | optional |
 | `battlefieldGeometry` | Grid geometry published *by* the scene | `BattlefieldGeometry` (new; the shape written at `CombatScene.ts:1090`) | required once published |
 | `playerVisualProfileId` | Which player visual profile is current | `PlayerVisualProfileId` | optional (falls back) |
-| `lastBattlePositionsSnapshot` | Latest battle positions | `BattlePositionsEvent` | optional |
+| `lastBattlePositionsSnapshot` | Latest battle positions **with the time they arrived** | `PositionsSnapshotEntry` (corrected) | optional |
 | `KIEM_BAR_READER_KEY` | Kiếm-bar reader function | `KiemBarReader` | optional |
 
 **11 of the 22 reads carry an `as { … }` cast.** A rename on the domain side
@@ -285,8 +285,23 @@ produces no type error anywhere; it fails at runtime, inside a scene, usually as
 a silently missing visual.
 
 The required/optional column is not decoration — it drives §4.2's two accessors.
-Only `BattlefieldGeometry` and `DomainCommandPort` are new declarations; the
-other six types already exist and are merely being named at the boundary.
+
+**Three of the types above were wrong, and the table has been corrected in
+place** (implementation pass, 2026-09-11; original values kept in this
+paragraph so the correction is legible):
+
+- `sceneAdapter` was given as `RendererPort`. `RendererPort` is
+  `{ prepare, deactivate }`, and no scene calls either. What a scene calls is
+  `reportReady`, so the key is typed to that one method.
+- `bundleManager` was given as `AssetPort` (`{ ensureFor }`), which no scene
+  calls either; `AssetLoaderScene` calls `setLoaderScene`.
+- `lastBattlePositionsSnapshot` was given as `BattlePositionsEvent`. The
+  registry carries `{ event, at }` — and the timestamp is load-bearing, because
+  `CombatScene` uses it to reject a snapshot from a finished battle.
+
+Both were written from the port names in `PresentationContracts.ts` rather than
+from the read sites. The lesson is the one §11 keeps re-learning: name a type
+from what the consumer calls, not from what the value is.
 
 This is the gate through which every positioning and identity fact for the
 visual layer already travels — and through which the animation metadata contract
@@ -333,6 +348,23 @@ export function writeGate<K extends keyof PresentationGateContents>(
   value: PresentationGateContents[K],
 ): void
 ```
+
+**Amended by measurement (implementation pass, 2026-09-11).** The paragraph
+below reads as though the required/optional split partitions *readers*. It does
+not — it partitions what the HOST must seed, and the compiler said so
+immediately. Scenes in this tree are deliberately written to degrade rather than
+crash when a key is missing, and that tolerance is a guarded regression:
+`CombatScene.hudWiring.test.ts` carries a test named *"scene KHÔNG có registry
+(stub) → ẩn bar, không throw"*. Forcing those reads to throw would trade a
+supported configuration for a crash.
+
+So `readOptionalGate` accepts every key, `readRequiredGate` is used by
+`assertGateSeeded`, and the host calls that once after seeding. The wiring bug
+this section exists to catch is still caught — at the host, naming the key,
+before a scene runs, which is a better place for it than a read three frames
+into a battle. `REQUIRED_GATE_KEYS` is also narrower than the table above:
+`sceneAdapter` and `bundleManager` are seeded conditionally by
+`PhaserCanvas.vue`, so a region legitimately runs without them.
 
 **Why two accessors, not one.** A single `readGate` returning `T | undefined`
 forces every caller to handle absence, including for keys whose absence means
@@ -386,6 +418,15 @@ export interface DomainCommandPort {
 Five members, three of which are the R5 acknowledgment triple. Tokens are
 **mandatory** here, closing the residue described in §3.4 — the runtime already
 rejects a missing token; this makes the compiler reject it too.
+
+**Amendment recorded 2026-09-11 (implementation pass).** The list above is
+complete as a COMMAND list and unchanged. But `CombatScene` also reads two
+QUERIES off the same `gameManager` key — `getCombatPresentationSnapshot(sessionId)`
+and `preparePresentationResume()` — which the first draft did not measure. They
+report; they decide nothing. Widening `DomainCommandPort` to hold them would
+have reopened the closed list under a name that says "command", so they are
+declared separately as `DomainSnapshotPort`, and the gate key carries
+`DomainCommandPort & DomainSnapshotPort`. The five commands stay five.
 
 **Amendment process.** Adding a member is a three-part edit, deliberately
 inconvenient in proportion to what it permits:
@@ -496,6 +537,21 @@ interface DynamicRegion {
 }
 ```
 
+**Two additions, recorded at implementation (2026-09-11).** Both came from the
+call sites, not from taste:
+
+- `start()`. The handle above has no way to say "begin". It needs one: the
+  combat canvas starts on mount, the Formation preview when its panel opens.
+- `onReady()`, and it takes **no argument** on purpose. It is the moment a shell
+  wants to push initial state, and handing it the `Phaser.Game` to do that would
+  hand back exactly what §3.6 removes. It uses `dispatch` instead.
+
+A third thing the sketch above did not say, found only by running the tests: the
+`'ready'` subscription must be registered **after** the `ResizeObserver`. With it
+first, a throw from `observe()` surfaced as a failure inside the ready callback
+rather than as itself, and `PhaserCanvas.test.ts` asserts the observer's own
+message.
+
 **This is the whole handle, and that is the point (§3.6).** `useDynamicRegion`
 returns no scene, no `Phaser.Game`, and no object originating in `src/game/`.
 A shell holding a scene can call every public method on it and nobody reviews
@@ -576,6 +632,30 @@ parameter.**
 - The gate (§4.2) hands a region its `BackgroundSpec`; the scene decides how to
   move it.
 
+**Disposition, measured 2026-09-11.** Neither half of the paragraph above is
+true of the battlefield yet: **no Phaser scene in this tree does parallax at
+all**, and the Formation preview draws two flat rectangles rather than art. A
+`BackgroundSpec` written now would have one consumer and no second region to
+share with — scaffolding, not a contract. It waits for the second region.
+
+What the tree does have is the same defect SHAPE in the home scene, and that
+part was acted on:
+
+- `DongFuArt.ts`, `DongFuBuildingArt.ts` and `DongFuStackLoader.ts` had **zero**
+  consumers under `src/game/` and three under `src/components/` — presentation
+  assets living in the dynamic layer's directory. Moved to
+  `presentation/background/`.
+- The season/time variant vocabulary was declared inside `ThanhVanArt.ts`
+  alongside the Phaser depth table, and both layers name it. Split:
+  the vocabulary to `presentation/background/BackgroundVariant.ts`, the depths
+  left in `src/game/`, where display-list ordering belongs. `ThanhVanArt`
+  re-exports it, so no import site changed.
+- `DongFuArt` **does** carry parallax values (`shiftX`, `shiftY`, `motion`) in
+  the shared descriptor — the exact shape this section forbids, found in the
+  layer nobody was looking at. Not split, for the same reason the
+  `BackgroundSpec` is not written: one consumer. Recorded here so the split
+  happens when the second arrives.
+
 The failure this forbids is embedding parallax factors in the shared asset
 descriptor. Do that and the second consumer either inherits motion tuned for a
 viewport it does not have, or forks the descriptor — and a forked descriptor is
@@ -598,16 +678,16 @@ are visible to the build graph or a test.
 
 | # | Site | Rule | Action |
 |---|---|---|---|
-| V1 | `src/game/support/themePhaserSync.ts:1-2` imports `watch` from `vue` and `useThemeStore` from Pinia | §3.2 | Move to `src/presentation/`. It is a bridge, not a visual. |
-| V2 | `src/game/support/commandWheelCatalog.ts:8` imports `LeftPanelMode`/`StandalonePanel` types from `@/stores/ui` | §3.2 | Type-only, so no runtime edge — but the direction is still wrong. Move the types down to a core or presentation contract. |
+| V1 | `src/game/support/themePhaserSync.ts:1-2` imports `watch` from `vue` and `useThemeStore` from Pinia | §3.2 | **Done.** Moved to `src/presentation/`. Found to have no caller anywhere, production or test; moved rather than deleted because theme tinting is a capability someone intended and five themes exist to use it. Deleting it is a product call. |
+| V2 | `src/game/support/commandWheelCatalog.ts:8` imports `LeftPanelMode`/`StandalonePanel` types from `@/stores/ui` | §3.2 | **Done.** Declared in `presentation/contracts/panelIds.ts`; `stores/ui.ts` re-exports both, so every existing import resolves unchanged. |
 | V3 | `src/game/scenes/combat/combat-vfx-spawner.ts:242-245` — a status icon with `setInteractive`, `pointerover`, `pointerout`, `pointerdown` | §3.5 | **Legal as written.** The icon is world-anchored, so the canvas is where its geometry lives and where the hit-test belongs. It is a bridge consumer, not a violation. Optional follow-up, deferred by the product owner 2026-09-11: move only the tooltip *rendering* to the DOM, with the scene supplying screen coordinates. No action required by this spec. |
-| V4 | Two hand-rolled `Phaser.Game` bootstraps — `PhaserCanvas.vue:134` (the main canvas) and `TranPhapPanel.vue:222` (the Formation preview named in Mission 0 §13 and §2 above) | §3.1 | Migrate both onto §5's composable. |
-| V5 | 11 `registry.get(…) as {…}` casts, among 22 reads across 8 keys | §4 | Migrate to `readRequiredGate`/`readOptionalGate`/`writeGate`. |
+| V4 | Two hand-rolled `Phaser.Game` bootstraps — `PhaserCanvas.vue:134` (the main canvas) and `TranPhapPanel.vue:222` (the Formation preview named in Mission 0 §13 and §2 above) | §3.1 | **Done.** Both on `presentation/host/useDynamicRegion.ts`. |
+| V5 | 11 `registry.get(…) as {…}` casts, among 22 reads across 8 keys | §4 | **Done.** All 11 casts gone; zero raw gate-key registry calls outside the module. Three of §4.1's declared types were wrong and are corrected there. |
 | V6 | `BattleGridProjection.screenToGridUnclamped()`, `containsScreenPoint()` — no production callers | §3.5, §4.4 | **Keep.** Not dead code: this is the ground truth a DOM overlay needs to hit-test against what the canvas actually drew, and the drag interaction in the Formation fix (V8) is its first consumer. The first draft proposed deleting these; that proposal was made before the Formation grid was measured and is withdrawn. |
-| V7 | `BattleGridProjection.ts` and `BattlefieldRenderMode.ts` live in `src/game/support/` | §2.2, §3.4 | **Move to `src/presentation/geometry/`.** Both layers must agree about projection, so it is a presentation asset. Verified pure: one core import, one sibling that imports nothing, no `phaser`. A file move plus import updates at `CombatScene.ts:1014`, `TranPhapCombatPreviewScene.ts:119` and the other consumers. **Not blocked on r14** — touches neither `eslint.config.js` nor `tests/architecture/`. |
-| V8 | Formation panel: a uniform 176×176 DOM grid overlays a 420×480 perspective canvas, inside a container that clips it | §3.5 | **Own plan, not this spec.** See below — it is a user-visible defect, and this spec claims not to make those. |
-| V10 | `TranPhapPanel.vue` holds a `TranPhapCombatPreviewScene` and calls `syncAssignments()` on it (`:195`, `:240`, `:253`); `PhaserCanvas.vue` has the same shape | §3.6 | **Migrate to the `DynamicRegion` handle**, with `syncAssignments` becoming a scoped event. Found while implementing Phase 1 — it was missing from the first violation list, and it is the concrete case that forced §3.6 to exist. Depends on §5's composable. |
-| V9 | `420`/`480` declared twice — `TranPhapPanel.vue:35-36` and `TranPhapCombatPreviewScene.ts:41-42` — kept in sync by a comment at `:37` saying "must match" | §2.2 | Give the number one owner under `presentation/geometry/`. Not overridden by theme, DPI or user setting anywhere; it is simply duplicated, and V8 cannot be fixed while two files disagree about the canvas size. |
+| V7 | `BattleGridProjection.ts` and `BattlefieldRenderMode.ts` live in `src/game/support/` | §2.2, §3.4 | **Done.** Moved to `src/presentation/geometry/`. Both layers must agree about projection, so it is a presentation asset. Verified pure: one core import, one sibling that imports nothing, no `phaser`. A file move plus import updates at `CombatScene.ts:1014`, `TranPhapCombatPreviewScene.ts:119` and the other consumers. **Not blocked on r14** — touches neither `eslint.config.js` nor `tests/architecture/`. |
+| V8 | Formation panel: a uniform 176×176 DOM grid overlays a 420×480 perspective canvas, inside a container that clips it | §3.5 | **Done** (own plan, as ruled). Percentage-placed `clip-path` trapezoids derived from the projection; verified on screen. |
+| V10 | `TranPhapPanel.vue` holds a `TranPhapCombatPreviewScene` and calls `syncAssignments()` on it (`:195`, `:240`, `:253`); `PhaserCanvas.vue` has the same shape | §3.6 | **Done.** The panel holds a region handle and sends one event from `presentation/contracts/regionEvents.ts`; the scene subscribes in `create()`. Verified on screen, not only green — see §11.4. |
+| V9 | **Done.** `420`/`480` declared twice — `TranPhapPanel.vue:35-36` and `TranPhapCombatPreviewScene.ts:41-42` — kept in sync by a comment at `:37` saying "must match" | §2.2 | Give the number one owner under `presentation/geometry/`. Not overridden by theme, DPI or user setting anywhere; it is simply duplicated, and V8 cannot be fixed while two files disagree about the canvas size. |
 
 V3 and V6 are explicitly left as decisions, not foregone conclusions. Assuming
 either one would be the kind of silent narrowing this repository's review
@@ -666,11 +746,11 @@ carries four guard files holding ten tests — verified: `coreImportDirection` 2
 
 | Guard | Asserts | Probe that must fail it |
 |---|---|---|
-| `frontendImportDirection.test.ts` | No file under `src/game/` imports `vue` or `@/stores/` | Add such an import to a scratch fixture; the guard must go red |
-| `pointerOwnership.test.ts` | No `setInteractive` / pointer handler under `src/game/`, except a declared allowlist | Add a `setInteractive` call outside the allowlist |
-| `presentationGate.test.ts` | No `registry.get(` / `registry.set(` outside the gate module | Add a raw registry read in a scene |
-| `dynamicRegionHost.test.ts` | No `new Phaser.Game` outside the host composable | Construct a game in a component |
-| `projectionLocation.test.ts` | `BattleGridProjection` / `BattlefieldRenderMode` are defined only under `src/presentation/geometry/`, and nothing under `src/game/` defines a second projection | Re-add a projection class under `src/game/support/` |
+| `frontendImportDirection.test.ts` ✅ | No file under `src/game/` imports `vue` or `@/stores/`; and the static layer reaches into `src/game/` only at seven recorded modules (a ratchet: may shrink silently, may not grow) | Probed: a scratch `src/game/` file importing all three went red on 3 of 4; a component importing `BattleLayers` reddened the ratchet |
+| `pointerOwnership.test.ts` ✅ | No `setInteractive` / pointer handler under `src/game/`, except a declared allowlist; every entry still real and still carrying a reason | Probed twice: an unlisted `setInteractive`, and an allowlist entry pointing at a file that does not exist |
+| `presentationGate.test.ts` ✅ | No raw registry call on a GATE KEY, and no cast on a registry read, outside the gate module. Keyed on the gate's own key names rather than the word "registry", because `registry` is also the CONTENT registry in `src/core/` | Probed: a scratch scene doing `registry.get('gameManager') as {…}` reddened 2 of 4 |
+| `dynamicRegionHost.test.ts` ✅ | No `new Phaser.Game` outside the host composable, and no shell holding a scene from `src/game/` (V10). Comments are stripped before matching — both shells TALK about `new Phaser.Game()` in their prose — but string literals are KEPT, because the V10 check reads import paths out of them | Probed: a scratch component constructing a game and importing a scene type reddened both |
+| `projectionLocation.test.ts` ✅ | `BattleGridProjection` / `BattlefieldRenderMode` are defined only under `src/presentation/geometry/`, and nothing under `src/game/` defines a second projection | Re-add a projection class under `src/game/support/` |
 
 **Each guard must be proven to fail before it is accepted.** This is not
 ceremony: a source-grep guard that passes on a rename has shipped on this
@@ -921,3 +1001,48 @@ tall` passed at 44.0s. Full-suite runs therefore fail a shifting subset of the
 heavy tests, on master as readily as on a branch. That is a budget problem, not
 a correctness one, and it is worth raising before it is mistaken for a
 regression.
+
+### 11.4 Implementation pass — what the tree said back
+
+Everything in §4 through §7 is now built. Five things the implementation
+measured differently from the design, each corrected in place above rather than
+left as a discrepancy:
+
+1. **Three of §4.1's eight types were wrong.** `sceneAdapter` and
+   `bundleManager` were named from the port names in `PresentationContracts.ts`
+   rather than from the read sites, and no scene calls either port's methods.
+   `lastBattlePositionsSnapshot` dropped a timestamp that `CombatScene` depends
+   on.
+2. **§4.3's closed list was incomplete.** Two queries ride the same key.
+   Declared separately rather than by widening a "command" port.
+3. **§4.2's accessor partition was about the wrong thing.** The compiler
+   rejected the first migration outright; the tolerance it protects is a named
+   regression test.
+4. **§5.2's handle was missing `start()`**, and the `'ready'` subscription has
+   an ordering constraint no design could have predicted — it was found by a
+   test failing with the wrong error message.
+5. **§5.4's premise did not hold.** No Phaser parallax exists. The real instance
+   of its failure mode was in the Vue home scene, which the section was not
+   looking at.
+
+**Two verification notes, both about not trusting green.**
+
+`V1` turned out to be dead code — `themePhaserSync.ts` has no caller anywhere,
+which the "move it" disposition had assumed away. It was still moved, because
+deleting a capability is a product decision and the file now says so.
+
+The `standing-slot-panel` e2e spec asserts that the preview canvas is "still
+alive" and that there are zero console errors. A completely broken
+region-event path satisfies both. So V10 was proven with a throwaway probe that
+compared **compositor screenshots** of the preview canvas across a drop —
+10166 → 13133 bytes, so the sprite really draws through the new event. The
+first version of that probe used `canvas.toDataURL()`, which reads back blank
+on a WebGL canvas without `preserveDrawingBuffer` and reported "no change"
+whatever happened; it would have been a false failure, and a careless reading of
+it a false conclusion.
+
+**Gates at the end of the pass**, with master (through
+`0adc1b63`, R8.2 tribulation outcomes) merged in: type-check 0, build 0, vitest
+3243 passed, eslint 171 problems / 4 errors — the four are master's own.
+Architecture guards: 9 files, 30 tests, all probe-verified red before
+acceptance.
