@@ -26,7 +26,7 @@ import {
 import { ELEMENT_LABELS } from '@/core/element/ElementLabels'
 import { SPIRIT_STONE_LABEL } from '@/core/presentation/labels'
 import { getProfessionGradeForRealm } from '@/core/profession/ProfessionGrade'
-import { professionGradeRank } from '@/composables/slots/normalizeSlotRank'
+import { professionGradeRank } from '@/core/profession/slotRank'
 import type { BagCell } from './BagCell'
 import type { Material, MaterialCategory } from '@/core/material/Material'
 import type { GradedItemTooltipContent } from '@/composables/useTooltip'

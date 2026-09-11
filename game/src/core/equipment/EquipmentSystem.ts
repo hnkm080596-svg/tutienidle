@@ -34,7 +34,7 @@ import {
   realmFromGrade,
 } from '../profession/ProfessionGrade'
 import { randomInt, weightedRandom, rollChance } from '../reward/DropRoll'
-import { assertValidEquipmentMainStats, isValidEquipmentSubstat } from './EquipmentStatPolicy'
+import { assertValidEquipmentMainStats } from './EquipmentStatPolicy'
 import type {
   EquipmentOperation,
   EquipmentOperationCost,

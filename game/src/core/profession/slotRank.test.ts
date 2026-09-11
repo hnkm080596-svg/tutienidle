@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
-import { isMaxRankTone, itemQualityRank, professionGradeRank } from './normalizeSlotRank'
+﻿import { describe, expect, it } from 'vitest'
+import { isMaxRankTone, itemQualityRank, professionGradeRank } from './slotRank'
 
 describe('normalizeSlotRank', () => {
   it('itemQualityRank ánh xạ 5 bậc Phẩm Chất 1:1 vào rank 1-5 (dải riêng, không rải 1-3-5-7-9)', () => {

@@ -2,7 +2,7 @@
 import { onBeforeUnmount, onMounted } from 'vue'
 import { useNotificationStore } from '@/stores/notification'
 import type { NotificationKind } from '@/core/notification/NotificationEvent'
-import { isMaxRankTone } from '@/composables/slots/normalizeSlotRank'
+import { isMaxRankTone } from '@/core/profession/slotRank'
 
 const notification = useNotificationStore()
 
