@@ -2,7 +2,10 @@
 // QA (task 2.2 lô 1 — actionFeedback key-form entries): entry key-form mới
 // phải giữ nguyên hợp đồng gộp (dedup) của "Nhật ký thao tác" và không rò
 // raw key/param ra message. Runtime-only store — không liên quan save.
-import { describe, expect, it, beforeEach } from 'vitest'
+//
+// Auto-hide (user request 2026-09-11): the action log hides completely
+// after 5s without a new entry; a new entry shows it again immediately.
+import { describe, expect, it, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useActionFeedbackStore } from './actionFeedback'
 
@@ -85,5 +88,71 @@ describe('actionFeedback store — key-form entries (i18n 2.2 lô 1)', () => {
     feedback.error('')
 
     expect(feedback.entries).toHaveLength(2)
+  })
+})
+
+describe('actionFeedback store — auto-hide 5s (user request 2026-09-11)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    setActivePinia(createPinia())
+  })
+
+  it('mặc định ẩn (không entry nào) — log không chiếm chỗ trên màn hình', () => {
+    const feedback = useActionFeedbackStore()
+
+    expect(feedback.isVisible).toBe(false)
+  })
+
+  it('push entry → hiện ngay; 5 giây im lặng → ẩn lại hoàn toàn', () => {
+    const feedback = useActionFeedbackStore()
+
+    feedback.success('Cường Hóa thành công')
+
+    expect(feedback.isVisible).toBe(true)
+
+    vi.advanceTimersByTime(4999)
+    expect(feedback.isVisible).toBe(true)
+
+    vi.advanceTimersByTime(1)
+    expect(feedback.isVisible).toBe(false)
+  })
+
+  it('entry mới trong cửa sổ 5s → đợi lại từ đầu, log không nhấp nháy tắt', () => {
+    const feedback = useActionFeedbackStore()
+
+    feedback.success('Cường Hóa thành công')
+
+    vi.advanceTimersByTime(3000)
+    feedback.success('Tẩy Luyện thành công')
+
+    vi.advanceTimersByTime(2000)
+    expect(feedback.isVisible).toBe(true)
+
+    vi.advanceTimersByTime(3000)
+    expect(feedback.isVisible).toBe(false)
+  })
+
+  it('collapsed (user bấm Thu gọn) vẫn tự hiện lại khi entry mới xuất hiện', () => {
+    const feedback = useActionFeedbackStore()
+
+    feedback.success('A')
+    feedback.toggleCollapsed()
+    expect(feedback.collapsed).toBe(true)
+
+    feedback.success('B')
+
+    expect(feedback.collapsed).toBe(false)
+    expect(feedback.isVisible).toBe(true)
+  })
+
+  it('clear() hủy timer — không toggle isVisible sau khi đã dọn', () => {
+    const feedback = useActionFeedbackStore()
+
+    feedback.success('A')
+    feedback.clear()
+    expect(feedback.isVisible).toBe(false)
+
+    vi.advanceTimersByTime(6000)
+    expect(feedback.isVisible).toBe(false)
   })
 })

@@ -811,11 +811,6 @@
       "missing_spirit_stone": "Not enough Spirit Stones"
     }
   },
-  "resourceStrip": {
-    "show": "Show resources",
-    "hide": "Hide resource strip",
-    "spiritStones": "Spirit Stones"
-  },
   "layout": {
     "functionOverlay": {
       "titles": {
