@@ -219,7 +219,7 @@ function buildContext(
     herbOnHand = herbAmount,
     woodOnHand = WOOD_AMOUNT,
     spiritStoneCost = 0,
-    spiritStoneOnHand = spiritStoneCost,
+    spiritStoneOnHand: _spiritStoneOnHand = spiritStoneCost,
     maxConcurrentJobs = 1,
   } = overrides
 
@@ -464,7 +464,7 @@ describe('AlchemySystem — cancel job (lò đã khởi động, không hoàn tr
   })
 
   it('cancel id không tồn tại — trả false, không throw', () => {
-    const { recipe, bag, registry, system, maxConcurrentJobs } = buildContext()
+    const { system } = buildContext()
 
     expect(system.cancelJob('ghost_job')).toBe(false)
     expect(system.getJobs()).toHaveLength(0)

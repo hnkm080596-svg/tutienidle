@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
-import { TurnPipeline } from './TurnPipeline'
+import { TurnPipeline, type PipelineStep } from './TurnPipeline'
 
 /** Mechanical steps complete inline; this is the common shape. */
-const sync = (kind: any, fn: () => void) => ({ kind, run: (done: () => void) => { fn(); done() } })
+// 'animation' needs actorId/animationId and is always pushed explicitly.
+const sync = (kind: Exclude<PipelineStep['kind'], 'animation'>, fn: () => void): PipelineStep =>
+  ({ kind, run: (done: () => void) => { fn(); done() } }) as PipelineStep
 
 describe('TurnPipeline', () => {
   it('runs steps serially in push order', () => {

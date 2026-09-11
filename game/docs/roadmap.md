@@ -1,4 +1,4 @@
-# Roadmap Phát Triển — Tiên Hiệp Idle
+﻿# Roadmap Phát Triển — Tiên Hiệp Idle
 > **Single Source of Truth cho thứ tự và phạm vi phát triển hiện tại.**
 >
 > Cập nhật kiến trúc: **2026-09-08**
@@ -1362,26 +1362,149 @@ Architecture checks are added **after** a stable contract exists.
 Potential guards:
 
 ```text
-no authoritative HP write outside permitted vitals paths
-
-raw stat input cannot accept resolved-stat type
-
-gameplay queries cannot mutate lifecycle state
-
-paid random result requires domain capability/token
-
-core cannot import presentation/orchestrator upward
-
-asset destination must remain under asset root
-
-catalog/preload parity
-
-all presentation ACKs require generation token
+no authoritative HP write outside permitted vitals paths        → SHIPPED (R14.2)
+raw stat input cannot accept resolved-stat type                 → SHIPPED (R14.3a, writer-side)
+gameplay queries cannot mutate lifecycle state                  → SHIPPED (R14.3b)
+paid random result requires domain capability/token             → (R9 contract already has
+                                                                   runtime ticket validation;
+                                                                   static guard not yet shipped)
+core cannot import presentation/orchestrator upward             → SHIPPED (R14.1b)
+asset destination must remain under asset root                  → not yet
+catalog/preload parity                                          → not yet
+all presentation ACKs require generation token                  → deferred: combat-turn-
+                                                                   mechanism branch owns the
+                                                                   token contract right now
 ```
 
 Do not build a broad architecture testing framework before the contracts exist.
 
 Each enforcement rule should protect a real regression class discovered by Mission 0 or later evidence.
+
+### R14 execution status
+
+```text
+🟡 PARTIAL — first slice shipped 2026-09-11 (branch r14-architecture-enforcement),
+   covering COMPLETED missions only (R1, R2, R8.1 + AR-33/A6). POST-MERGE (2026-09-11, 5718137e): those regions are now scanned and
+   classified — see POST-MERGE RESOLVED below.
+
+   Guards live under game/tests/architecture/*.test.ts (vitest include was
+   extended to tests/**/*.test.ts; e2e *.spec.ts unaffected).
+
+   R14.1a — AR-33 effective lint severity (tests/architecture/
+   eslintCoreSeverity.test.ts): lints probe code through REAL ESLint flat-
+   config resolution and asserts effective severity (core no-explicit-any =
+   error/2; outside core = warn/1). RED reproduction confirmed the Mission 0
+   defect: block order in eslint.config.js let the later src/** block shadow
+   the src/core block, so core 'error' was effectively 'warn'. Fix: general
+   src/** block now precedes the stricter src/core block; guard fails on any
+   future re-overlap even if lint is not a CI gate.
+
+   R14.1b — A6 dependency direction (tests/architecture/
+   coreImportDirection.test.ts): src/core/** must not import
+   presentation|stores|components|composables|layouts|views, vue, pinia,
+   phaser (static AND dynamic imports scanned). Fixed the one real violation
+   found at authoring time: composables/slots/normalizeSlotRank.ts (pure
+   rank helpers) moved to core/profession/slotRank.ts; 8 consumer files
+   migrated (core/equipment/EquipmentNaming.ts now imports sideways inside
+   core; useEquippedRows/DissolveTab/EquipmentPaperdoll/SlotView/ToastContainer/
+   Tooltip/bag-sections point at @/core/profession/slotRank). Mojibake-heavy
+   header comments rewritten in ASCII English during the move (P15).
+   Authoring note for honesty: the guard's relative-import resolution was
+   itself buggy during development (resolved from core root instead of the
+   importing file's directory) and produced 2 false positives
+   (../presentation/PresentationSession imported from core/game and
+   core/tribulation actually resolves to core-internal core/presentation/);
+   fixed BEFORE shipping. The real violation (EquipmentNaming) was caught
+   both by manual grep and by the fixed guard.
+
+   R14.2 — R1/AR-01 vitals write authority (tests/architecture/
+   vitalsWriteAuthority.test.ts): production writes to currentHp /
+   currentWard / currentMp / alive outside the evidence-based allowlist
+   fail the suite. Allowlist entries each carry their owning contract:
+   EntityVitalsSystem (THE authority), CombatSystem (pipeline: manaShield
+   MP absorption, survive-lethal HP=1 grace, death flag), ArtifactSystem
+   (overworld ward-break regen, combat-independent), SkillSystem (mana
+   cost on source), SkillActionRegistry + SkillEffectSystem (ward-break
+   detonate on SOURCE, damage delegated to applyDirectDamage),
+   TribulationDirector (mind-ghost HP snapshot restore). Presentation
+   display mirror (combat-grid-view.ts healthBar widget) is exempt via a
+   RECEIVER-NARROW pattern so an entity write in the same file still
+   fails. A stale-allowlist test forces hygiene: when a file stops
+   writing vitals its entry must be removed. Test files are exempt
+   (fixtures may set up vitals). Explicitly skipped: core/battle/turn/**,
+   core/game/**, presentation/** (combat branch regions).
+
+   R14.3a — R2/AR-02+05 stat provenance writer side (tests/architecture/
+   statProvenanceAndQueryPurity.test.ts): full-tree scan enforces ZERO
+   production `.baseStats =` assignment sites (evidence at authoring time:
+   only test fixtures write it; the battle adapter owns construction).
+   The type-level half of the guard (raw vs resolved stat types) is NOT
+   shipped — it needs a nominal type refactor, tracked as remaining work.
+
+   R14.3b — R8.1/AR-09 quest query purity (same file): getActiveQuests
+   method body pinned free of activation calls
+   (reconcileActiveQuests/activateQuest/activeQuestIds assignment);
+   reconcileActiveQuests must remain present as the activation owner.
+   Behavioral coverage stays in QuestSystem.lifecycle.test.ts; this guard
+   survives a fixture weakening.
+
+   Falsifiability: every file-scan guard was probe-verified — a scratch
+   violation file (upward import + direct HP write + baseStats write)
+   tripped R14.1b, R14.2 and (after a fix) R14.3a, then was removed.
+   The baseStats guard initially scanned a fixed file list and MISSED the
+   probe; converted to full-tree scan before shipping. R14.3b also self-
+   caught that scanning must be comment-blind (an identifier mentioned in
+   a COMMENT is documentation, not a call) — the guard now strips comments
+   before scanning for activation commands.
+
+   ESLint de-overlap fallout (handled in the same change):
+   - Effective strictness surfaced 57 pre-existing violations in
+     src/core PRODUCTION files beyond the intended fix. Fixed in-place
+     where the file is NOT combat-held: dead imports removed
+     (EquipmentSystem.isValidEquipmentSubstat, EquipmentOpsSystem's
+     ITEM_QUALITY_ESSENCE_RANGE/LUYEN_KHI_TINH_HOA_ID, TribulationDirector's
+     type PresentationHold), unused args _-renamed with rationale comments
+     (QuestSystem.getActiveQuests _player — signature mirrors the command,
+     TribulationDirector.tickMind _chapter). All semantics-neutral.
+   - Core TEST files were carved out of the strict block (warn only):
+     at de-overlap time they carried ~55 pre-existing unused-var/any
+     violations, most inside core/battle/turn/** (combat branch territory)
+     — fixing them now would collide with that branch. Revisit after merge.
+   - POST-MERGE RESOLVED (2026-09-11, branch rebased onto 5718137e):
+     dead PresentationHold imports removed from GameManager.ts /
+     GameManagerTurnBattleOps.ts; the temporary carve-out block deleted.
+     Core-test ignores removed: all ~55 surfaced violations fixed
+     mechanically (imports removed, locals _-prefixed, destructures
+     narrowed — object shapes untouched); eslint src/ now 2 errors (both
+     pre-existing on master) / 168 warnings (master: 231).
+     Combat-held guard regions UN-SKIPPED and classified: wave-spawn
+     dead-spawn allowlisted (GameManagerTurnBattleOps, construction-time
+     alive=false before reward stream); participant alive cache re-sync
+     exempted as an authority-synced mirror (TurnBattleSystem, mirrors
+     participant.entity.alive). Falsifiability re-probed post-merge.
+   - 2 lint errors remain in src/data/skill/Skills.chain.test.ts
+     (no-non-null-asserted-optional-chain) — verified PRE-EXISTING on
+     master under the same config; not task-caused.
+
+   Verification: P3 full (type-check + build + full vitest) PASS —
+   460 files / 3113 tests pre-merge; post-rebase onto 5718137e: 3187 tests PASS (3 consecutive full runs);
+   eslint src/: 2 pre-existing errors / 213 warnings (was 2/231 on
+   master — net fewer warnings, strict core effective); E3 simplification
+   pass done (shared scan helpers, re-export coverage added); P5 code
+   review: Approve (2 review findings fixed in-place); P4 quick
+   adversarial QA: PASS WITH EVIDENCE
+   (game/docs/qa/2026-09-11-r14-enforcement-quick.md).
+   P14 deferred (isolated-worktree exception — guards are meta-tests, no
+   visual surface changed).
+
+   Known issue SURFACED, deliberately NOT fixed here (out of R14 scope):
+   ~30 components call useI18n({ useScope: 'local' }) without providing
+   local messages, so every key falls back to the root locale and emits
+   vue-i18n missing-key warnings at runtime (observed: panels.realm.* —
+   the keys DO exist at root). Fix belongs to a UI task: either register
+   local messages or use global scope. Candidate guard later: i18n key
+   existence/parity test.
+```
 
 ---
 
@@ -1462,7 +1585,7 @@ R14 Architecture Enforcement
 | 12 | R11 — UI Foundation Consolidation | AR-26, AR-27, AR-28 + domain UI | ⏸ |
 | 13 | R12 — Presentation / Asset Cleanup | AR-24, AR-27, AR-29, AR-30, AR-31 | ⏸ |
 | 14 | R13 — Parallel Authority / Legacy Retirement | AR-19, AR-25 | ⏸ |
-| 15 | R14 — Architecture Enforcement | AR-32, AR-33 + migrated invariants | ⏸ |
+| 15 | R14 — Architecture Enforcement | AR-32, AR-33 + migrated invariants | 🟡 First slice shipped 2026-09-11 (R1/R2/R8.1/AR-33/A6 guards); combat-branch regions + type-level stat guard + asset/catalog/ACK guards pending |
 
 ---
 

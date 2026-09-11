@@ -131,7 +131,7 @@ describe('GameManager wash transaction', () => {
   // instance is untouched.
   it('commit without a domain ticket rejects fabricated affixes at the public API', () => {
     const manager = new GameManager()
-    const player = createDefaultPlayer()
+    const _player = createDefaultPlayer()
     manager.registerMaterials(materials)
     manager.registerEquipment(equipment)
     manager.registerAffixes(affixes)

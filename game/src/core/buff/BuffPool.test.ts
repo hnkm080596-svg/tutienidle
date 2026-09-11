@@ -85,8 +85,8 @@ describe('BuffPool', () => {
   })
 
   it('clearCcEffects removes every active buff carrying a cc effect', () => {
-    pool.add(makeBuff({ id: 'stun_buff', effects: [{ type: 'cc', ccEffect: 'stun' } as any] }))
-    pool.add(makeBuff({ id: 'stat_buff', effects: [{ type: 'statModifier', stat: 'attack', flat: 10 } as any] }))
+    pool.add(makeBuff({ id: 'stun_buff', effects: [{ type: 'cc', ccEffect: 'stun' }] }))
+    pool.add(makeBuff({ id: 'stat_buff', effects: [{ type: 'statModifier', stat: 'attack', flat: 10 }] }))
 
     expect(pool.getAll()).toHaveLength(2)
     pool.clearCcEffects()

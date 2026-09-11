@@ -37,7 +37,7 @@ const props = defineProps<{
   nameSegments?: NameSegment[]
 
   /** Rank chuẩn hoá 1-10 (professionGradeRank, xem
-   * composables/slots/normalizeSlotRank.ts) — SlotView KHÔNG biết ID
+   * core/profession/slotRank.ts) — SlotView KHÔNG biết ID
    * domain như 'cuu_pham'/'tien_pham'. Hiện thành chấm nhỏ góc phải
    * (tín hiệu PHỤ — Chất/Tiềm Năng Rèn đang luyện). */
   equipmentQualityRank?: number

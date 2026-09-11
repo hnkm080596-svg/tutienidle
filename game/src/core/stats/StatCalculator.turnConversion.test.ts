@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { calculateStats, calculateEffectiveStats, type StatModifier } from './StatCalculator'
 import { createBaseStats } from './StatBlock'
-import { STAT_METADATA, clampStatValue, isPercentStat } from './StatMetadata'
+import { STAT_METADATA, isPercentStat } from './StatMetadata'
 import type { Stats } from './StatBlock'
 
 // Turn-based stat conversion (2026-09-04) — adversarial QA probes cho

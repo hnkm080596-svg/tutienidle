@@ -11,7 +11,7 @@ import { getRequiredCultivation } from '../realm/realmSystem'
 import { createBaseStats } from '../stats/StatBlock'
 import type { Enemy } from '../enemy/Enemy'
 
-function makeEnemyData(): Enemy {
+function _makeEnemyData(): Enemy {
   const stats = {
     ...createBaseStats(),
     attack: 0,

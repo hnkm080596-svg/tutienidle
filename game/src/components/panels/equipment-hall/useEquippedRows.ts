@@ -10,7 +10,7 @@ import type { EquipmentInstance } from '@/core/equipment/EquipmentInstance'
 import type { EquipmentSlot } from '@/core/equipment/EquipmentTypes'
 import { buildEquipmentTooltip } from '@/composables/useEquipmentTooltip'
 import { composeEquipmentNameSegments } from '@/core/equipment/EquipmentNaming'
-import { itemQualityRank, professionGradeRank } from '@/composables/slots/normalizeSlotRank'
+import { itemQualityRank, professionGradeRank } from '@/core/profession/slotRank'
 import { EQUIPMENT_SLOTS } from '@/core/equipment/EquipmentSlotState'
 
 export interface EquippedRow {

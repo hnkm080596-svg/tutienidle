@@ -2,9 +2,6 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   PresentationSession,
   SessionAllocator,
-  type PresentationHold,
-  type PresentationMode,
-  type SessionRef,
 } from './PresentationSession'
 
 describe('PresentationSession primitive', () => {

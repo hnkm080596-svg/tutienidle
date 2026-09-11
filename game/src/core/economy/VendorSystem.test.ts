@@ -359,7 +359,7 @@ describe('VendorSystem — Hóa Bán (economy-fixes-sinks-plan §3.2 B2)', () =>
     // tier người chơi (3) < 4 → factor 1 → 600 Hạ.
     const qiHerb = herb('h_qi_decade', 'decade', 'qi_refining')
 
-    const { vendor, bag, registry } = setupVendor([qiHerb])
+    const { vendor, bag } = setupVendor([qiHerb])
 
     bag.add(qiHerb, 100)
 
@@ -376,7 +376,7 @@ describe('VendorSystem — Hóa Bán (economy-fixes-sinks-plan §3.2 B2)', () =>
     // / 100 = 54 Trung.
     const gcHerb = herb('h_gc_decade', 'decade', 'golden_core')
 
-    const { vendor, bag, registry } = setupVendor([gcHerb])
+    const { vendor, bag } = setupVendor([gcHerb])
 
     bag.add(gcHerb, 100)
 
@@ -393,7 +393,7 @@ describe('VendorSystem — Hóa Bán (economy-fixes-sinks-plan §3.2 B2)', () =>
     // 1000 để test đường code factor.
     const vrHerb = herb('h_vr_decade', 'decade', 'void_refinement')
 
-    const { vendor, bag, registry } = setupVendor([vrHerb])
+    const { vendor, bag } = setupVendor([vrHerb])
 
     bag.add(vrHerb, 1000)
 
