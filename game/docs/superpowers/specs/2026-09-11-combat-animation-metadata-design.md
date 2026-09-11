@@ -2,7 +2,7 @@
 
 **Status:** Draft, for review
 **Date:** 2026-09-11
-**Decided by:** user, in brainstorm, 2026-09-11 (three decisions, §3)
+**Decided by:** user, in brainstorm, 2026-09-11 (four decisions and one amendment, §3)
 **Builds on:** `2026-09-11-frontend-static-dynamic-boundary-design.md` (Spec A)
 §2.2, §3.4, §4; `docs/architecture/mission-0-architecture-audit-2026-09-08.md` §14;
 `2026-09-08-r5-combat-runtime-presentation-boundary-design.md` §3.3
@@ -112,7 +112,7 @@ nothing better available. This is the single most concrete thing D is blocked on
 `AssetLoaderScene` already supports four descriptor kinds — `image`,
 `spritesheet`, `atlas`, `multiatlas`. **No loader work is needed by this spec.**
 
-### 2.6 Real multi-frame art already exists, unused by combat
+### 2.6 Multi-frame atlas assets already exist in the tree, unused by combat
 
 - `public/assets/idle.json` + `idle.png`, `cultivate.json` + `cultivate.png` —
   TexturePacker atlases, trimmed, carrying `sourceSize` and `spriteSourceSize`
@@ -120,8 +120,11 @@ nothing better available. This is the single most concrete thing D is blocked on
 - `public/assets/characters/player/mortal/idle/player-mortal-idle-v1-frame-00…04`
   — five discrete frames plus a combined sheet. Nothing in combat reads them.
 
-So the claim "there is no real animation art" is false; the claim "combat cannot
-describe any art but the placeholder" is the true one.
+The precise claim is not that the project has *finished* character art — §3.4
+records that it does not, and that backgrounds are the only drawn assets. It is
+that **a working trimmed-atlas animation already runs in this codebase today**,
+so the format in §3.1 is not a bet on unproven tooling. What is missing is any
+way for combat to describe art other than the one placeholder.
 
 ### 2.7 The asset pipeline carries no metadata
 
@@ -139,15 +142,20 @@ that, and this spec does not want it.
 
 ---
 
-## 3. Three decisions, and who made them
+## 3. The decisions, and who made them
 
-Taken by the product owner on 2026-09-11.
+All taken by the product owner on 2026-09-11. §3.4 arrived last and is the one
+that reshaped §8 and §9, so it is worth reading before the contract in §4.
 
 ### 3.1 TexturePacker atlas is the standard format — **decided**
 
 Character art is authored and shipped as a **trimmed TexturePacker atlas**, loaded
-with `load.multiatlas`, played with `generateFrameNames`. The grid spritesheet
-path stays only for the placeholder until it is retired.
+with `load.multiatlas`, played with `generateFrameNames`.
+
+The grid spritesheet path is **removed entirely**, including for the placeholder
+— see §3.4, which was decided afterwards and is the reason. One loading path, so
+the format has a consumer from day one rather than waiting for art that has no
+schedule.
 
 The reason this is not merely taste: a trimmed atlas's JSON carries `sourceSize`
 and `spriteSourceSize` for every frame, which is exactly the data C needs to place
@@ -266,6 +274,52 @@ The honest trade: frame counts can drift from the art, because nothing measures
 the file. §7's guard exists specifically to make that drift fail a test rather
 than a frame, and §7.1 records what that guard cannot catch.
 
+### 3.4 Every asset is still a placeholder, and B ships against that — **decided, 2026-09-11**
+
+> *"tất cả các art trừ backgrounds hiện tại vẫn chưa được vẽ. Tôi vẫn chưa có
+> thời gian, đó là lí do tôi cứ đòi bạn đặt placeholder."*
+
+This is the most load-bearing answer in this section, because the first draft of
+§8 and §9 assumed real `mortal` art would land inside B. It will not. Backgrounds
+are the only drawn art in the project; every character asset is placeholder or
+concept, and the schedule for real art is unknown.
+
+**B still ships, and its value is unchanged** — arguably larger. Every defect in
+§2 is a defect in how the code *describes* art, not in the art:
+
+- Two unread parameters (§2.1) are unread whatever they point at.
+- A type claiming eight names while five exist (§2.2) is a lie about a record,
+  not about a drawing.
+- An impact moment computed as half a tween (§2.4) is wrong for a placeholder
+  exactly as it is wrong for a real sword.
+- One global constant for every entity (§2.1) is what makes C and D impossible,
+  and replacing it with a real per-entity catalogue does not require the entries
+  to point at good art — only at *honestly described* art.
+
+**What changes is the danger.** A contract designed against a format that nothing
+uses is a contract nobody has tested. If the placeholder stays a grid spritesheet
+while §3.1 declares atlases the standard, then B's chosen format ships with
+**zero consumers**, and the first real atlas becomes simultaneously the first
+test of the loader path, the metadata shape, the frame naming, and the trim
+correction — with no way to tell which half is wrong.
+
+**So the placeholder becomes an atlas.** `scripts/generate-hon-don-tran-placeholder-art.mjs`
+already draws 32 frames onto a canvas and knows exactly where it drew each one.
+It gains a second output: a TexturePacker-format JSON beside the PNG, with
+**real** `sourceSize`/`spriteSourceSize` computed from the drawn bounds — not
+full-box values. That makes the atlas path, the frame-name path and §5.3's trim
+correction all live from day one, against art that is free to regenerate.
+
+Real packing stays the product owner's job and their tool (§10.2). The generator
+imitates TexturePacker's output shape; it does not replace it.
+
+**The residual risk, stated.** A contract validated only against generated
+placeholder art can still be wrong about real art — a hand-packed atlas may name
+frames differently, or trim more aggressively. `atlasFramesExist` (§7) is the
+guard that will catch it, and it will catch it on the day the first real atlas
+lands rather than in a frame nobody is watching. That is the best B can do, and
+pretending otherwise would be the kind of claim §2 exists to disprove.
+
 ---
 
 ## 4. The contract
@@ -337,7 +391,14 @@ export interface StaticEntityArt {
  * of §3.2's economy, and the reason "static" does not have to mean "dead".
  */
 export interface IdleMotion {
-  /** Peak vertical offset in px, at the near row, before depth scaling. */
+  /**
+   * Peak vertical offset, in SCREEN pixels, and not scaled by projection depth.
+   *
+   * Decided 2026-09-11: one size for every row. The alternative — scaling
+   * amplitude by the row's depth factor, so a far enemy breathes less — is more
+   * correct perspective and was explicitly not wanted. A far enemy is already
+   * small; scaling its motion too makes it read as frozen.
+   */
   amplitudePx: number
 
   /** One full cycle, in ms. Jittered per entity so a row does not pulse as one. */
@@ -462,7 +523,8 @@ it for C would hand C a bill without the receipt.
 | B6 | No idle motion exists at all (sway deleted 2026-08-26) | A tween per §4.3, phase-jittered per entity. |
 | B7 | `idle` built, never played (§2.3) | Played as the player's default state (§4.5). |
 | B8 | `impactFrame` does not exist; `ATTACK_LUNGE_DURATION_MS / 2` stands (§2.4) | Field declared (§4.2). **The call site is NOT changed — that is D.** |
-| B9 | Player art is the placeholder | One real atlas for the `mortal` profile, wired end to end. The other profiles fall back, as they already do for cultivate art. |
+| B9 | The placeholder is a grid spritesheet, so §3.1's atlas format would ship unused | The generator emits a TexturePacker-format JSON with real trim bounds; every entity loads through `multiatlas` (§3.4). |
+| B12 | Nothing exercises §5.3's trim correction | The generated atlas is genuinely trimmed per frame, so `anchorForFrame` has real input before real art exists. |
 | B10 | "Enemies are static" would be restated at every enemy entry | `artTierFor` states it once, from `isBoss` (§3.2.1). |
 | B11 | Nothing reconciles deserved art with drawn art | The art-debt list plus its guard (§7). Expected to be non-empty on day one, and to be mostly Kiếp enemies. |
 
@@ -501,19 +563,31 @@ as "the timing is correct".
 
 ## 8. Sequencing
 
-1. §4's types and the catalogue, with the placeholder still behind it. No visible
-   change; the shape lands first.
-2. B2/B3/B5 — the name list, the cast, and enemies to `kind: 'static'`. Enemies
-   stop animating here and have no motion yet; this step is visibly *worse* and
-   should not be demonstrated alone.
-3. B6 — `IdleMotion`, which is what makes step 2 acceptable. **2 and 3 ship
-   together.**
-4. B9 + B7 — the real `mortal` atlas and the player's idle.
-5. §5.3's `anchorForFrame` and its tests, unused, handed to C.
+1. **B9/B12 — the placeholder becomes a trimmed atlas.** First, deliberately:
+   it is the only step that can be verified entirely on its own (the same 32
+   frames must still animate, now loaded through `multiatlas`), and every later
+   step is designed against the format it establishes. A regression here is
+   obvious; a regression here discovered in step 4 would not be.
+2. §4's types and the catalogue, resolving to that atlas. No visible change; the
+   shape lands behind identical pixels.
+3. B2/B3 — the name list and the cast. Type-level only.
+4. B5 + B6 — enemies to `kind: 'static'`, and `IdleMotion`. **These ship
+   together**: step B5 alone removes animation from enemies and gives them
+   nothing back, which is visibly worse and must not be demonstrated or merged
+   on its own.
+5. B7 — the player's idle, played from the catalogue.
+6. §5.3's `anchorForFrame` and its tests, unused, handed to C.
 
-C may begin once 4 lands, because C needs real frame geometry to place anything.
-D needs `impactFrame` populated with values somebody has actually watched, which
-is step 4 plus judgement.
+**C is no longer gated on real art.** It was, in the first draft, because real
+art was expected inside B. With §3.4 it is gated on *real per-entity metadata*,
+which step 2 delivers — the placeholder's frame geometry is honest even though
+its pixels are not.
+
+D still needs `impactFrame` values somebody has watched. Against a numbered
+placeholder that is possible but shallow: you can confirm the acknowledgment
+fires on the declared frame, not that the frame is the right one. D should expect
+to re-tune every `impactFrame` when real art lands, and §7.1 says why no test
+will tell it to.
 
 ---
 
@@ -525,7 +599,9 @@ is step 4 plus judgement.
 3. No cast asserts the shape of an animation record.
 4. Every enemy is `kind: 'static'` with a non-zero `IdleMotion`, and moves on
    screen.
-5. The `mortal` player profile plays a real multi-frame atlas for all five names.
+5. Every entity — player profiles and enemies alike — resolves through the
+   catalogue to the **trimmed placeholder atlas**, loaded with `multiatlas`. No
+   entity resolves through `load.spritesheet`, and the grid path is gone.
 6. `impactFrame` is declared and populated; `ATTACK_LUNGE_DURATION_MS / 2` is
    **still** the live call site (D's to change).
 7. Promoting one enemy to `kind: 'animated'` requires editing one data entry and
@@ -535,26 +611,55 @@ is step 4 plus judgement.
 8. Five guards exist and each has been observed red against a probe.
 9. Full gate green: type-check, build, vitest, Playwright.
 10. Verified on screen: the player's idle animation plays, and enemies visibly
-    breathe. A screenshot proves layout; motion needs a capture across frames, or
-    watching it.
+    breathe. A screenshot proves layout and nothing else — motion needs a capture
+    across frames, or watching it. The numbered placeholder frames make this
+    unusually easy to check: if the number on the player changes and the enemies
+    bob without their number changing, both halves are correct.
+11. `anchorForFrame` is exercised by the generated atlas's real trim values, not
+    only by hand-written fixtures (§3.4, B12).
 
 **Criterion 7 is the one that protects §3.2's reversibility.** If it cannot be
 demonstrated, the economy has become load-bearing and the design is wrong.
 
 ---
 
-## 10. Open questions
+## 10. Open questions — answered 2026-09-11
 
-1. **Which `mortal` art becomes the first real atlas?** `player-mortal-idle-v1`
-   has five discrete frames (§2.6) but only covers `idle`. The other four names
-   need art that does not exist. Options: ship `idle` real and leave four on the
-   placeholder — which criterion 5 forbids as written — or commission four clips
-   first. This needs a product answer before step 4.
-2. **Does the `mortal` atlas need re-packing?** The existing frames are loose
-   PNGs, not a TexturePacker atlas. §3.1 requires an atlas, so something must
-   pack them; the repo has no packing script today (`scripts/` has seven asset
-   scripts, none of them a packer).
-3. **`IdleMotion` amplitude at depth.** Enemies sit at different grid rows and so
-   at different projection scales. Whether amplitude scales with depth (correct
-   perspective) or stays constant in screen px (uniform readability) is a look
-   decision, not a correctness one.
+All three closed by the product owner in the same session. Kept rather than
+deleted, because the answers constrain the work more than the questions did.
+
+1. **Which `mortal` art becomes the first real atlas?** — **None.** No character
+   art is drawn, and none is scheduled; backgrounds are the only drawn assets in
+   the project. B ships entirely against the placeholder. §3.4 is the ruling and
+   the reason it does not weaken B; criterion 5 was rewritten from "plays a real
+   atlas" to "resolves through the catalogue to the trimmed placeholder atlas".
+
+2. **Who packs the atlas?** — **The product owner, with TexturePacker**, when
+   real art exists. The repo gets no packing script. The placeholder generator
+   imitates TexturePacker's output format (§3.4) so the path is exercised; it is
+   a stand-in for the tool, not a replacement, and it should never grow into one.
+
+3. **Does `IdleMotion` amplitude scale with depth?** — **No. One size.**
+   Previously wanted, now explicitly not: a far enemy is already small, and
+   scaling its motion as well makes it read as frozen. §4.3 records the reasoning
+   so the question is not reopened by someone noticing the perspective is
+   "wrong".
+
+---
+
+## 11. What this spec is honest about
+
+Three things a reviewer should push on, listed so they are not discovered as
+surprises:
+
+1. **The contract is validated only against generated art.** §3.4 states the
+   residual risk and names `atlasFramesExist` as the guard that will catch a
+   real atlas that disagrees. No test can catch a real atlas that agrees
+   structurally and looks wrong.
+2. **`impactFrame` will be wrong.** It is declared here, populated with values
+   chosen against a numbered placeholder, and consumed by D. Every value should
+   be expected to change when real art lands. §7.1 says why no test will flag it.
+3. **§3.2's economy is a decision, not an oversight**, and criterion 7 is the
+   thing that keeps it reversible. If promoting an enemy to animated ever
+   requires touching playback code, the economy has leaked into the engine and
+   this design has failed at the thing it was most careful about.
