@@ -69,19 +69,45 @@ export function formationSlotBox(
   }
 }
 
-/** The same box as CSS declarations, ready to bind to an element's `style`. */
+/**
+ * The same box as CSS declarations, expressed in PERCENT of the canvas.
+ *
+ * Percent, not pixels, and for a specific reason: the panel is shorter than the
+ * canvas is tall, so the canvas has to be CSS-scaled to fit. A pixel overlay
+ * would keep its original size while the canvas shrank underneath it — the very
+ * disagreement this work exists to remove. In percent, both scale together and
+ * stay aligned at any size, with no ResizeObserver and no scale factor to keep
+ * in sync.
+ *
+ * `clip-path` percentages resolve against the element's own border box, so the
+ * polygon rides the element's own scaling too.
+ */
 export function formationSlotStyle(
   bridge: ProjectionBridge,
   row: number,
   column: number,
+  canvas: { width: number; height: number },
 ): Record<string, string> {
   const box = formationSlotBox(bridge, row, column)
 
+  const percentX = (value: number) => `${((value / canvas.width) * 100).toFixed(4)}%`
+  const percentY = (value: number) => `${((value / canvas.height) * 100).toFixed(4)}%`
+
+  const points = box.clipPath
+    .replace(/^polygon\(|\)$/g, '')
+    .split(', ')
+    .map((pair) => {
+      const [x, y] = pair.split(' ').map((n) => Number.parseFloat(n))
+
+      return `${((x! / box.width) * 100).toFixed(4)}% ${((y! / box.height) * 100).toFixed(4)}%`
+    })
+    .join(', ')
+
   return {
-    left: `${box.left.toFixed(2)}px`,
-    top: `${box.top.toFixed(2)}px`,
-    width: `${box.width.toFixed(2)}px`,
-    height: `${box.height.toFixed(2)}px`,
-    clipPath: box.clipPath,
+    left: percentX(box.left),
+    top: percentY(box.top),
+    width: percentX(box.width),
+    height: percentY(box.height),
+    clipPath: `polygon(${points})`,
   }
 }

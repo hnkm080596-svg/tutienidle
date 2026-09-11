@@ -20,7 +20,7 @@
 import { describe, expect, it } from 'vitest'
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
-import { listAllTs, readTs, SCAN_TIMEOUT } from './helpers/scanTs'
+import { listAllTs, SCAN_TIMEOUT } from './helpers/scanTs'
 
 const GAME_ROOT = process.cwd()
 const SRC_DIR = join(GAME_ROOT, 'src')
@@ -56,6 +56,20 @@ const ALL_TS = listAllTs(SRC_DIR)
 const ALL_VUE = listVue(SRC_DIR)
 const GAME_TS = ALL_TS.filter((file) => file.startsWith(GAME_DIR + sep))
 
+// Read each file ONCE. Two of the three assertions scan file contents, and a
+// naive implementation reads the overlapping corpus twice - roughly 750 reads
+// across src/. That measurably starves eslintCoreSeverity.test.ts, which spawns
+// eslint under a 60s budget in this same directory: with the duplicate reads the
+// full suite timed it out, without this guard entirely it passed. One pass over
+// the corpus keeps both guards inside their budgets.
+const SOURCE = new Map<string, string>(
+  [...ALL_TS, ...ALL_VUE].map((file) => [file, readFileSync(file, 'utf8')]),
+)
+
+function contentOf(file: string): string {
+  return SOURCE.get(file) ?? readFileSync(file, 'utf8')
+}
+
 describe('projection lives in presentation/geometry', () => {
   it(
     'no module under src/game/ defines a grid projection',
@@ -66,7 +80,7 @@ describe('projection lives in presentation/geometry', () => {
       const definesProjection =
         /(?:class\s+\w*GridProjection\b|export\s+function\s+createBattleGridProjection\b|export\s+interface\s+BattleGridProjection\b)/
 
-      const offenders = GAME_TS.filter((file) => definesProjection.test(readTs(file)))
+      const offenders = GAME_TS.filter((file) => definesProjection.test(contentOf(file)))
 
       expect(offenders.map(fromSrc)).toEqual([])
     },
@@ -98,7 +112,7 @@ describe('projection lives in presentation/geometry', () => {
 
       const offenders = [...ALL_TS, ...ALL_VUE]
         .filter((file) => !file.startsWith(GEOMETRY_DIR))
-        .filter((file) => stale.test(readFileSync(file, 'utf8')))
+        .filter((file) => stale.test(contentOf(file)))
 
       expect(offenders.map(fromSrc)).toEqual([])
     },

@@ -87,12 +87,17 @@ const hoveredCell = ref<{ row: number; column: number } | null>(null)
 const slotBridge = createProjectionBridge(createFormationProjection())
 
 function slotStyle(row: number, column: number): Record<string, string> {
-  return formationSlotStyle(slotBridge, row, column)
+  return formationSlotStyle(slotBridge, row, column, {
+    width: FORMATION_CANVAS_WIDTH,
+    height: FORMATION_CANVAS_HEIGHT,
+  })
 }
 
+// The stack keeps the canvas's aspect ratio and shrinks to whatever height the
+// panel can spare. The overlay is expressed in percent, so it follows exactly.
 const stackStyle = {
-  width: `${FORMATION_CANVAS_WIDTH}px`,
-  height: `${FORMATION_CANVAS_HEIGHT}px`,
+  aspectRatio: `${FORMATION_CANVAS_WIDTH} / ${FORMATION_CANVAS_HEIGHT}`,
+  maxWidth: `${FORMATION_CANVAS_WIDTH}px`,
 }
 
 function slotStateAt(row: number, column: number): SlotState {
@@ -372,8 +377,15 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: var(--space-3, 12px);
+  overflow-y: auto;
 }
 
+/* V8 — the body sizes to its content instead of being squeezed.
+   It used to be `flex: 1 1 auto; min-height: 0`, which was harmless while the
+   grid stack was 176px tall: nothing ever hit the limit. With the stack at the
+   canvas's real 480px, a shrunken body let it overflow and cover the roster
+   queue below. The panel scrolls if a short viewport cannot fit everything,
+   rather than silently overlapping. */
 .tran-phap-panel__body {
   flex: 1 1 auto;
   min-height: 0;
@@ -386,12 +398,17 @@ onUnmounted(() => {
    grid to size it: 176px, clipping ~85% of a 420x480 render. */
 .tran-phap-panel__grid-stack {
   position: relative;
-  flex: 0 0 auto;
+  flex: 0 1 auto;
+  min-height: 0;
+  height: 100%;
 }
 
 .tran-phap-panel__preview-canvas {
   position: absolute;
   inset: 0;
+  /* The Phaser canvas renders at its declared backing size and is CSS-scaled
+     to whatever the stack can spare. The overlay is in percent, so it scales
+     with it rather than beside it. */
   z-index: 0;
   /* Canvas size: FormationCanvasSpec (presentation/geometry) — overlay grid
      3x3 lưới slot vẽ PHỦ lên trên. Canvas/overlay alignment VẪN LÀ khuyết tật
@@ -409,6 +426,13 @@ onUnmounted(() => {
   position: absolute;
   inset: 0;
   z-index: 1;
+}
+
+.tran-phap-panel__preview-canvas :deep(canvas),
+.tran-phap-panel__preview-canvas canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
 }
 
 .tran-phap-panel__cell {
