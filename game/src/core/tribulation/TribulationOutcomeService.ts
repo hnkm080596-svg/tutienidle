@@ -250,5 +250,23 @@ export class TribulationOutcomeService {
       announceBody: 'Kiếp Thương còn vương lại — hãy dưỡng thương rồi thử lại.',
     }
   }
+
+  /**
+   * R8.2 Slice 3 — START-side prep, migrated from the Vue adapter's
+   * admitted-start callback: unequip-all, store modifier sync, then the
+   * domain startTribulation. Ordering preserved (prep BEFORE the session
+   * opens). The presentation session read stays with the adapter (A7).
+   */
+  startTribulationPrepared(
+    player: TribulationPlayerWriter,
+    gameManager: GameManager,
+    targetRealmId: string,
+    playerStats: Stats,
+  ): boolean {
+    gameManager.unequipAllEquipment()
+    player.setEquipmentModifiers(gameManager.getEquipmentModifiers())
+
+    return gameManager.startTribulation(player as PlayerData, playerStats, targetRealmId)
+  }
 }
 
