@@ -11,6 +11,7 @@ import {
 import { useGameManager } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
 import type { BattlePositionsEvent } from '@/core/battle/BattleEvents'
+import { assertGateSeeded, writeGate } from '@/presentation/gate/PresentationGate'
 import {
   resolvePlayerVisualProfileId,
   type PlayerVisualProfileId,
@@ -156,19 +157,22 @@ function setupGame(
   // này (không cầm tham chiếu GameManager trực tiếp) — mọi thứ chúng
   // cần (vị trí player/quái, animation attack/critical/hit/dodge/cast/
   // death/battle_start/battle_end/combat_scene_exit) đều tới qua đây.
-  game.registry.set('eventBus', gameManager.eventBus)
-  game.registry.set('gameManager', gameManager)
+  writeGate(game.registry, 'eventBus', gameManager.eventBus)
+  writeGate(game.registry, 'gameManager', gameManager)
   if (sceneAdapter) {
-    game.registry.set('sceneAdapter', sceneAdapter)
+    writeGate(game.registry, 'sceneAdapter', sceneAdapter)
   }
   // AssetLoaderScene picks this up in its own create() and registers itself -
   // see the note there on why the host cannot fetch the scene directly.
   if (bundleManager) {
-    game.registry.set('bundleManager', bundleManager)
+    writeGate(game.registry, 'bundleManager', bundleManager)
   }
-  if (bundleManager) {
-    game.registry.set('bundleManager', bundleManager)
-  }
+
+  // Seed-time validation (spec §4.2). Every read site downstream degrades
+  // rather than throws - deliberately, and with a regression test protecting
+  // it - so this is the one place a missing required key can still be reported
+  // as what it is: a wiring bug at the host, named, before a scene runs.
+  assertGateSeeded(game.registry)
 
   // Late-join replay (fix spawn animation lần đầu, lớp bảo hiểm thứ 2
   // bên cạnh eager preload) — giữ snapshot 'positions' MỚI NHẤT trong
@@ -180,13 +184,13 @@ function setupGame(
   const clearPositionsSnapshot = () => {
     lastPositionsSnapshot = null
 
-    game?.registry.set('lastBattlePositionsSnapshot', undefined)
+    if (game) writeGate(game.registry, 'lastBattlePositionsSnapshot', undefined)
   }
 
   const positionsHandler = (event: BattlePositionsEvent) => {
     lastPositionsSnapshot = { event, at: performance.now() }
 
-    game?.registry.set('lastBattlePositionsSnapshot', lastPositionsSnapshot)
+    if (game) writeGate(game.registry, 'lastBattlePositionsSnapshot', lastPositionsSnapshot)
   }
 
   gameManager.eventBus.on<BattlePositionsEvent>('positions', positionsHandler)
@@ -220,7 +224,7 @@ function setupGame(
     })
 
     if (game) {
-      game.registry.set('playerVisualProfileId', profileId)
+      writeGate(game.registry, 'playerVisualProfileId', profileId)
     }
 
     gameManager.eventBus.emit('player_visual_profile_changed', {

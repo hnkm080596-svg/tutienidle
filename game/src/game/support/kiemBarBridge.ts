@@ -18,6 +18,11 @@ import { getKiemYPermanent } from '@/core/player/KiemYSystem'
 import { isBattleInProgress } from '@/core/battle/BattleTypes'
 import type { GameManager } from '@/core/game/GameManager'
 import type { KiemTuRoute } from '@/core/player/Player'
+import {
+  readOptionalGate,
+  writeGate,
+  type GateRegistry,
+} from '@/presentation/gate/PresentationGate'
 
 export interface KiemBarSnapshot {
   current: number
@@ -27,7 +32,7 @@ export interface KiemBarSnapshot {
 
 export type KiemBarReader = () => KiemBarSnapshot | null
 
-export const KIEM_BAR_READER_KEY = 'kiemBarReader'
+export const KIEM_BAR_READER_KEY = 'kiemBarReader' as const
 
 /** Phần state player mà reader cần — structural, không import Pinia store
  * (bridge tách khỏi Vue để CombatScene/PhaserCanvas không kéo store). */
@@ -80,12 +85,12 @@ function getKiemYTierForPermanent(kiemYPermanent: number): number {
   return Math.max(0, Math.floor(kiemYPermanent / 10))
 }
 
-export function registerKiemBarReader(registry: { set: (key: string, value: unknown) => void }, reader: KiemBarReader): void {
-  registry.set(KIEM_BAR_READER_KEY, reader)
+export function registerKiemBarReader(registry: GateRegistry, reader: KiemBarReader): void {
+  writeGate(registry, KIEM_BAR_READER_KEY, reader)
 }
 
-export function readKiemBar(registry: { get: (key: string) => unknown }): KiemBarSnapshot | null {
-  const reader = registry.get(KIEM_BAR_READER_KEY) as KiemBarReader | undefined
+export function readKiemBar(registry: GateRegistry): KiemBarSnapshot | null {
+  const reader = readOptionalGate(registry, KIEM_BAR_READER_KEY)
 
   if (!reader) {
     return null

@@ -1,6 +1,11 @@
 ﻿import Phaser from 'phaser'
 import type { ResumePlayback } from '@/core/battle/turn/CombatAnimationRuntime'
 import type { EventBus } from '@/core/events/EventBus'
+import {
+  readOptionalGate,
+  writeGate,
+  type DomainCommandPort,
+} from '@/presentation/gate/PresentationGate'
 import type {
   BattlePositionsEvent,
   BattleEndEvent,
@@ -544,13 +549,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   private debugAnchorHandler = () => this.drawDebugBodyAnchors()
   // Action Playback Task 7 (2026-09-05) — GameManager bridge (set trong
   // subscribeCombatEvents từ registry; scene KHÔNG import trực tiếp).
-  private gameManagerRef?: {
-    setPresentationActive?: (active: boolean) => void
-    acknowledgeTurnReady: (token?: string) => void
-    acknowledgeActionImpact: (token?: string) => void
-    acknowledgeActionComplete: (token?: string) => void
-    getPendingPlaybackToken: () => string | null
-  }
+  private gameManagerRef?: DomainCommandPort
 
   private getCombatEventBindings(): Array<[string, (event: any) => void]> {
     return [
@@ -684,9 +683,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     // registry TRÃ†Â¯Ã¡Â»Å¡C khi dÃ¡Â»Â±ng sprite Ã„â€˜Ã¡Â»Æ’ khÃƒÂ´ng bÃ¡Â»Â lÃ¡Â»Â¡ trÃ¡ÂºÂ¡ng thÃƒÂ¡i khi scene
     // khÃ¡Â»Å¸i Ã„â€˜Ã¡Â»â„¢ng; cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t vÃ¡Â»Â sau qua event
     // 'player_visual_profile_changed' (subscribeCombatEvents).
-    const registryProfileId = this.registry.get('playerVisualProfileId') as
-      | PlayerVisualProfileId
-      | undefined
+    const registryProfileId = readOptionalGate(this.registry, 'playerVisualProfileId')
 
     if (registryProfileId && PLAYER_VISUAL_PROFILES[registryProfileId]) {
       this.applyPlayerVisualProfile(registryProfileId)
@@ -746,13 +743,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this._playerHud?.setVisible(this.inBattle)
 
     // Initial snapshot reconciliation via GameManager query (Task 4/10)
-    const gameManager = this.registry.get('gameManager') as {
-      getCombatPresentationSnapshot?: (sessionId: number) => {
-        sessionId: number
-        entities: TurnBattleEntitySnapshotEvent
-      } | null
-      preparePresentationResume?: () => ResumePlayback | null
-    } | undefined
+    const gameManager = readOptionalGate(this.registry, 'gameManager')
 
     if (this.initSessionId && gameManager?.getCombatPresentationSnapshot) {
       const initialSnapshot = gameManager.getCombatPresentationSnapshot(this.initSessionId)
@@ -761,9 +752,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       }
     } else {
       // Fallback for standalone/legacy tests that don't supply sessionId
-      const snapshot = this.registry.get('lastBattlePositionsSnapshot') as
-        | { event: BattlePositionsEvent; at: number }
-        | undefined
+      const snapshot = readOptionalGate(this.registry, 'lastBattlePositionsSnapshot')
 
       if (snapshot && performance.now() - snapshot.at < 2000) {
         this.onPositions(snapshot.event)
@@ -773,9 +762,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.inBattle = true
 
     // Report READY to adapter
-    const adapter = this.registry.get('sceneAdapter') as {
-      reportReady: (ctx: { transitionId: number; sessionId?: number }) => void
-    } | undefined
+    const adapter = readOptionalGate(this.registry, 'sceneAdapter')
     adapter?.reportReady({
       transitionId: this.initTransitionId,
       sessionId: this.initSessionId,
@@ -1087,7 +1074,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
     // Snapshot hÃƒÂ¬nh hÃ¡Â»Âc cho e2e/visual gate Ã¢â‚¬â€ assertion bÃ¡Â»â€˜ cÃ¡Â»Â¥c (tÃ¡Â»â€° lÃ¡Â»â€¡
     // horizon, min road height) Ã„â€˜Ã¡Â»Âc tÃ¡Â»Â« Ã„â€˜ÃƒÂ¢y thay vÃƒÂ¬ Ã„â€˜o pixel.
-    this.game.registry.set('battlefieldGeometry', {
+    writeGate(this.game.registry, 'battlefieldGeometry', {
       viewportWidth: width,
       viewportHeight: height,
       topInset: viewport.topInset,
@@ -1720,7 +1707,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   private subscribeCombatEvents() {
-    const eventBus = this.registry.get('eventBus') as EventBus | undefined
+    const eventBus = readOptionalGate(this.registry, 'eventBus')
 
     if (!eventBus) {
       return
@@ -1738,15 +1725,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     // VFX tween complete) thay vì resolve instant headless.
     // Remediation Task 1+2 — bridge cũng expose token getter; ack từ VFX
     // completion gắn token để stale callback bị engine từ chối.
-    this.gameManagerRef = this.registry.get('gameManager') as
-      | {
-          setPresentationActive?: (active: boolean) => void
-          acknowledgeTurnReady: (token?: string) => void
-          acknowledgeActionImpact: (token?: string) => void
-          acknowledgeActionComplete: (token?: string) => void
-          getPendingPlaybackToken: () => string | null
-        }
-      | undefined
+    this.gameManagerRef = readOptionalGate(this.registry, 'gameManager')
   }
 
   private unsubscribeCombatEvents() {
@@ -2387,13 +2366,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
     this.onBattleStart()
 
-    const gameManager = this.registry.get('gameManager') as {
-      getCombatPresentationSnapshot?: (sessionId: number) => {
-        sessionId: number
-        entities: TurnBattleEntitySnapshotEvent
-      } | null
-      preparePresentationResume?: () => ResumePlayback | null
-    } | undefined
+    const gameManager = readOptionalGate(this.registry, 'gameManager')
 
     if (context.sessionId && gameManager?.getCombatPresentationSnapshot) {
       const snapshot = gameManager.getCombatPresentationSnapshot(context.sessionId)
@@ -2402,9 +2375,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       }
     }
 
-    const adapter = this.registry.get('sceneAdapter') as {
-      reportReady: (ctx: { transitionId: number; sessionId?: number }) => void
-    } | undefined
+    const adapter = readOptionalGate(this.registry, 'sceneAdapter')
     adapter?.reportReady(context)
 
     this.applyResumePlayback(gameManager?.preparePresentationResume?.())

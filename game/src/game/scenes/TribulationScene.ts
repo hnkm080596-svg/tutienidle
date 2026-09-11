@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import type { EventBus } from '@/core/events/EventBus'
+import { readOptionalGate } from '@/presentation/gate/PresentationGate'
 import type { EntityVitalsChangedEvent } from '@/core/combat/EntityVitalsSystem'
 import type { CombatEvent } from '@/core/combat/CombatEvent'
 import { formatNumber } from '@/core/format/NumberFormatter'
@@ -90,7 +91,7 @@ export class TribulationScene extends Phaser.Scene {
       .play(CULTIVATE_KEY)
       .setDisplaySize(128, 132)
 
-    const bus = this.registry.get('eventBus') as EventBus | undefined
+    const bus = readOptionalGate(this.registry, 'eventBus')
     if (bus) {
       this.eventBus = bus
       bus.on('tribulation_lightning', this.lightningHandler)
@@ -100,9 +101,7 @@ export class TribulationScene extends Phaser.Scene {
 
     this.scale.on('resize', this.resizeHandler)
 
-    const adapter = this.registry.get('sceneAdapter') as {
-      reportReady: (ctx: { transitionId: number; sessionId?: number }) => void
-    } | undefined
+    const adapter = readOptionalGate(this.registry, 'sceneAdapter')
     adapter?.reportReady({
       transitionId: this.initTransitionId,
       sessionId: this.initSessionId,

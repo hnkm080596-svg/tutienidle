@@ -1,4 +1,5 @@
 import Phaser from 'phaser'
+import { readOptionalGate } from '@/presentation/gate/PresentationGate'
 import type { AssetResourceDescriptor } from '@/presentation/assets/AssetBundleCatalog'
 import { ASSET_LOADER_SCENE_KEY } from '@/presentation/PresentationContracts'
 
@@ -28,9 +29,7 @@ export class AssetLoaderScene extends Phaser.Scene {
    * wait for a loader that never arrives.
    */
   create(): void {
-    const bundleManager = this.registry.get('bundleManager') as {
-      setLoaderScene: (scene: AssetLoaderScene) => void
-    } | undefined
+    const bundleManager = readOptionalGate(this.registry, 'bundleManager')
 
     bundleManager?.setLoaderScene(this)
   }
