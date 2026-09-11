@@ -10,6 +10,7 @@ import { toVector2Points } from '@/game/support/ActionImpactVfx'
 import { ENEMY_SOURCE_SIZE, resolveEnemyTextureKey } from '@/game/support/EnemyArt'
 import { PLAYER_TEXTURE_KEY } from '@/game/support/CombatPreload'
 import { presentationFor } from '@/presentation/art/CombatPresentationCatalogue'
+import { resolveEntityDisplaySize } from '@/presentation/geometry/combatEntityScale'
 import { DEPTH_ENTITY_SHADOW, DEPTH_OVERLAY_UI, entitySpriteDepth } from '@/game/support/BattleLayers'
 
 import type { CombatGridViewHost } from './CombatGridViewHost'
@@ -32,6 +33,43 @@ import {
   SHADOW_COLOR,
 } from './combatConstants'
 import type { EnemyHealthBar, EntitySprite } from './combatTypes'
+
+/**
+ * The untrimmed box the player's art is authored in.
+ *
+ * An ANIMATED entity draws atlas frames, so its size must come from the clip's
+ * `sourceSize`, not from the entity's static PNG. A static entity keeps its
+ * texture's own size. `undefined` falls back to `host.playerSourceSize`, which
+ * is what a profile with no catalogue entry gets — the pre-existing behaviour.
+ */
+function playerArtSourceSize(entityKey: string): { w: number; h: number } | undefined {
+  const presentation = presentationFor(entityKey)
+
+  if (presentation?.kind === 'animated') {
+    return { ...presentation.clips.idle.sourceSize }
+  }
+
+  if (presentation?.kind === 'static') {
+    return { ...presentation.texture.sourceSize }
+  }
+
+  return undefined
+}
+
+/** The art's own box inside its authored frame, for the entity being drawn. */
+function artExtentFor(entityKey: string): { x: number; y: number; w: number; h: number } | undefined {
+  const presentation = presentationFor(entityKey)
+
+  if (presentation?.kind === 'animated') {
+    return { ...presentation.clips.idle.extent }
+  }
+
+  if (presentation?.kind === 'static') {
+    return { ...presentation.texture.extent }
+  }
+
+  return undefined
+}
 
 /**
  * Start phase for one entity's idle bob, in ms within its own cycle.
@@ -63,6 +101,15 @@ function phaseDelayMs(id: string, periodMs: number): number {
 // BÃ³ng ellipse dÆ°á»›i chÃ¢n â€” dáº¹t theo trá»¥c sÃ¢u (copy tá»« CombatScene).
 const SHADOW_WIDTH_RATIO = 1.12
 const SHADOW_HEIGHT_RATIO = 0.34
+
+/**
+ * Synthetic extent for a Rectangle-fallback entity — it has no authored art
+ * box, so its anchors are sized as if the art filled the whole box (Finding 1,
+ * final whole-branch review). Only `personWidth`/`personHeight` are read from
+ * the result; `boxWidth`/`boxHeight` are discarded since Rectangle DRAWING
+ * stays on its own pre-existing formula (see the comment at each call site).
+ */
+const RECT_ANCHOR_EXTENT: NonNullable<EntitySprite['extent']> = { x: 0, y: 0, w: 1, h: 1 }
 
 export class CombatGridView {
   constructor(private readonly host: CombatGridViewHost) {}
@@ -140,6 +187,47 @@ export class CombatGridView {
   //
   // Perspective: baseline chá»‰ lÃ  kÃ­ch thÆ°á»›c á»Ÿ hÃ ng hiá»‡n hÃ nh â€” co giÃ£n
   // theo chiá»u sÃ¢u diá»…n ra trong applyEntityDepthScale() má»—i láº§n chiáº¿u.
+  /**
+   * Spec C §4.3 — one place that turns a sprite into a size.
+   *
+   * `sizeMultiplier` is the OLD field and keeps its stored values (2 for a
+   * person, 4 for a boss); `classFactor` is what the resolver speaks, where a
+   * person is 1. Halving here rather than renaming the field keeps this task to
+   * one responsibility (P9).
+   *
+   * Callers pass `extent` explicitly rather than this method reading
+   * `sprite.extent` itself: a Rectangle fallback (see `RECT_ANCHOR_EXTENT`
+   * below) has no `extent` of its own but still needs a personHeight/Width
+   * for its body anchors, so it passes a synthetic full-box extent. Every
+   * call site already has the right value in hand (either narrowed from
+   * `sprite.extent` behind an `if`, or the Rectangle literal), so no cast is
+   * needed here.
+   *
+   * The two `sprite.kind === 'sprite'` callers only reach this when
+   * `sprite.extent` is defined — see the ruling in the task brief: the Tran
+   * Phap preview panel's host-fallback sprites have no `extent` and must
+   * keep their pre-existing flat formula unchanged, because that panel
+   * precomputes its own characterWidth/Height and a classFactor of 0.5
+   * (sizeMultiplier 1) would halve every sprite in it.
+   */
+  private entityDisplaySize(
+    sprite: EntitySprite,
+    depthScale: number,
+    extent: NonNullable<EntitySprite['extent']>,
+  ) {
+    const sourceSize = sprite.sourceSize ?? this.host.playerSourceSize
+
+    return resolveEntityDisplaySize({
+      nearCellWidth: this.host.projection
+        ? this.host.projection.cellSizeAt(this.host.projection.rows - 1).width
+        : this.host.characterHeight,
+      depthScale,
+      classFactor: sprite.sizeMultiplier / 2,
+      extent,
+      sourceSize,
+    })
+  }
+
   applySpriteSize(sprite: EntitySprite) {
     if (this.host.isPerspective && this.host.projection) {
       this.applyEntityDepthScale(sprite, this.host.projection.gridToScreen(sprite.row, 0).scale)
@@ -148,11 +236,22 @@ export class CombatGridView {
     }
 
     if (sprite.kind === 'sprite') {
+      const gameSprite = sprite.rect as Phaser.GameObjects.Sprite
+
+      if (sprite.extent) {
+        const size = this.entityDisplaySize(sprite, 1, sprite.extent)
+
+        gameSprite.setDisplaySize(size.boxWidth, size.boxHeight)
+        sprite.personHeight = size.personHeight
+        sprite.personWidth = size.personWidth
+
+        return
+      }
+
       const width =
         this.host.characterHeight *
         sprite.sizeMultiplier *
         ((sprite.sourceSize ?? this.host.playerSourceSize).w / (sprite.sourceSize ?? this.host.playerSourceSize).h)
-      const gameSprite = sprite.rect as Phaser.GameObjects.Sprite
 
       gameSprite.setDisplaySize(width, this.host.characterHeight * sprite.sizeMultiplier)
 
@@ -173,6 +272,19 @@ export class CombatGridView {
       sprite.healthBar.fill.setSize(width, ENEMY_HP_BAR_HEIGHT - 2).updateDisplayOrigin()
       this.updateEnemyHealthBar(sprite, sprite.healthBar.currentHp, sprite.healthBar.maxHp)
     }
+
+    // Finding 1 (final whole-branch review): a Rectangle has no `extent`, so
+    // it never went through `entityDisplaySize` and `bodyBoxFor` fell back to
+    // `characterHeight` — half the resolver's real personHeight and with no
+    // depth factor. Anchors must be uniform across sprite/rect/static per the
+    // design's own claim (Spec C §3.1), so compute them here too. This does
+    // NOT touch how the Rectangle is DRAWN — `rect.width/height` above stay
+    // untouched because TranPhapCombatPreviewScene renders through this same
+    // path and precomputes its own sizing (see `entityDisplaySize`'s doc).
+    const anchorSize = this.entityDisplaySize(sprite, 1, RECT_ANCHOR_EXTENT)
+
+    sprite.personWidth = anchorSize.personWidth
+    sprite.personHeight = anchorSize.personHeight
   }
 
   /**
@@ -187,10 +299,19 @@ export class CombatGridView {
     const multiplier = sprite.sizeMultiplier
 
     if (sprite.kind === 'sprite') {
-      const height = this.host.characterHeight * effectiveScale * multiplier
       const gameSprite = sprite.rect as Phaser.GameObjects.Sprite
 
-      gameSprite.setDisplaySize(height * ((sprite.sourceSize ?? this.host.playerSourceSize).w / (sprite.sourceSize ?? this.host.playerSourceSize).h), height)
+      if (sprite.extent) {
+        const size = this.entityDisplaySize(sprite, effectiveScale, sprite.extent)
+
+        gameSprite.setDisplaySize(size.boxWidth, size.boxHeight)
+        sprite.personHeight = size.personHeight
+        sprite.personWidth = size.personWidth
+      } else {
+        const height = this.host.characterHeight * effectiveScale * multiplier
+
+        gameSprite.setDisplaySize(height * ((sprite.sourceSize ?? this.host.playerSourceSize).w / (sprite.sourceSize ?? this.host.playerSourceSize).h), height)
+      }
     } else {
       const rect = sprite.rect as Phaser.GameObjects.Rectangle
 
@@ -207,6 +328,16 @@ export class CombatGridView {
         sprite.healthBar.fill.setSize(barWidth, ENEMY_HP_BAR_HEIGHT - 2).updateDisplayOrigin()
         this.updateEnemyHealthBar(sprite, sprite.healthBar.currentHp, sprite.healthBar.maxHp)
       }
+
+      // Finding 1 (final whole-branch review): see the matching comment in
+      // applySpriteSize() — same reasoning, but here `effectiveScale` is the
+      // depth factor this branch already computed (depthScale × boost), so
+      // the Rectangle's anchors scale with depth exactly like a sprite's do.
+      // rect.width/height above are left untouched (drawing stays as-is).
+      const anchorSize = this.entityDisplaySize(sprite, effectiveScale, RECT_ANCHOR_EXTENT)
+
+      sprite.personWidth = anchorSize.personWidth
+      sprite.personHeight = anchorSize.personHeight
     }
 
     if (sprite.shadow) {
@@ -319,6 +450,16 @@ export class CombatGridView {
         color,
         offsetX: 0,
         row,
+        // The box the art this sprite DRAWS is authored in — not the entity's
+        // static PNG.
+        //
+        // Measured defect, 2026-09-11: the player's display size came from
+        // `playerSourceSize` (the profile PNG, 1312x1199) while the sprite drew
+        // an atlas frame authored at 200x350, so `applySpriteSize` forced a
+        // 1.094 aspect onto 0.571 art — 3.44x too wide on screen. Spec B moved
+        // what the sprite draws and left what sizes it behind.
+        sourceSize: playerArtSourceSize(this.host.playerProfile.combatTextureKey),
+        extent: artExtentFor(this.host.playerProfile.combatTextureKey),
         sizeMultiplier: PLAYER_DISPLAY_SCALE_MULTIPLIER,
         boost: { value: 1 },
         footY: 0,
@@ -384,6 +525,7 @@ export class CombatGridView {
         offsetX: 0,
         row,
         sourceSize: { ...ENEMY_SOURCE_SIZE },
+        extent: artExtentFor(enemyTextureKey),
         // Enemy art x2; Boss Ã—2 quy táº¯c enemy thÆ°á»ng (2026-09-05) â€” khÃ´ng
         // cÃ²n dÃ¹ng CÃ™NG multiplier nhÆ° trÆ°á»›c (xem
         // CombatScene.enemyScale.test.ts). BÃ³ng ellipse dÆ°á»›i chÃ¢n nhÃ¢n

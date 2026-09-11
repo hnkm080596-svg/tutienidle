@@ -89,8 +89,6 @@ export const SHADOW_ALPHA = 0.32
 export const SHADOW_WIDTH_RATIO = 1.12
 export const SHADOW_HEIGHT_RATIO = 0.34
 
-export const ENEMY_NEUTRAL_BODY_ANCHOR = { x: 0.5, y: 0.4 } as const
-
 export const CHARACTER_HEIGHT_RATIO = 0.7
 export const CHARACTER_WIDTH_RATIO = 0.45
 

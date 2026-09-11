@@ -486,6 +486,18 @@ matters.**
 
 ### 5.2 The trim problem, named now because B chooses the format that creates it
 
+> **REFUTED 2026-09-12, by measurement, before spec C was written.** This section
+> and §5.3 are wrong. Phaser places a trimmed frame at its correct offset inside
+> the authored box, so `getBounds()` is bit-identical across frames whose trim
+> differs, and a point normalised against that box needs no correction at all.
+> `anchorForFrame` is cancelled; it would have corrected an error of exactly zero
+> and introduced one. See spec C §1.1 and §2.1 for the measurement.
+>
+> The instinct was sound and aimed at the wrong target: trim matters a great deal
+> for **scale** — the authored box includes empty margin, so sizing the box sizes
+> the character wrongly — which is spec C §2.3. Left in place rather than deleted
+> so the reasoning, and its refutation, both stay on the record.
+
 §3.1's atlas is trimmed, so a frame's pixels sit at `spriteSourceSize.{x,y}`
 inside the untrimmed `sourceSize` box, and the offset **differs per frame**. An
 anchor expressed against the untrimmed box is therefore wrong by a per-frame
@@ -494,7 +506,7 @@ amount unless corrected.
 This is not a new defect — it is a consequence of §3.1, and it is recorded here
 so C inherits a stated problem rather than discovering one.
 
-### 5.3 One correction function, in presentation/geometry/
+### 5.3 One correction function, in presentation/geometry/ — **CANCELLED, see §5.2**
 
 The correction is arithmetic over data the atlas JSON already carries, so it is a
 pure function next to the rest of the shared geometry (A §3.6):
@@ -626,8 +638,11 @@ will tell it to.
     across frames, or watching it. The numbered placeholder frames make this
     unusually easy to check: if the number on the player changes and the enemies
     bob without their number changing, both halves are correct.
-11. `anchorForFrame` is exercised by the generated atlas's real trim values, not
-    only by hand-written fixtures (§3.4, B12).
+11. ~~`anchorForFrame` is exercised by the generated atlas's real trim values, not
+    only by hand-written fixtures (§3.4, B12).~~ **Withdrawn 2026-09-12** — the
+    function it names should not exist (§5.2). B12's real value survives: the
+    generated atlas IS genuinely trimmed, which is what made §5.2 measurable and
+    refutable in the first place.
 
 **Criterion 7 is the one that protects §3.2's reversibility.** If it cannot be
 demonstrated, the economy has become load-bearing and the design is wrong.

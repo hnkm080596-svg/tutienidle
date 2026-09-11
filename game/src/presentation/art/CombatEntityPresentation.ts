@@ -33,6 +33,23 @@ export type { CombatAnimationName }
  * There is deliberately no `frameCount`: it is `lastFrame - firstFrame + 1`, and
  * two ways to state one number is the defect Spec A logged as V9.
  */
+/**
+ * Where the character's own pixels sit inside the authored box, as fractions of
+ * that box — the atlas's `spriteSourceSize` normalised by `sourceSize`.
+ *
+ * Measured from the art, never hand-written. Used by SCALE alone (Spec C §4.1):
+ * anchors do not read it, because they come from the battlefield cell (§3.1).
+ *
+ * `{ x: 0, y: 0, w: 1, h: 1 }` for untrimmed art, which makes every formula in
+ * §3.2 collapse to sizing the box directly.
+ */
+export interface ArtExtent {
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
 export interface AtlasClip {
   /** Phaser animation key, unique per entity+name. */
   key: string
@@ -56,6 +73,33 @@ export interface AtlasClip {
   lastFrame: number
 
   frameRate: number
+
+  /**
+   * The UNTRIMMED box every frame of this clip is authored in — the atlas
+   * JSON's `sourceSize`.
+   *
+   * Added 2026-09-11 after a MEASURED defect: the display size of an animated
+   * sprite was still being derived from the entity's static PNG
+   * (`PlayerVisualProfile.combatSourceSize`, 1312x1199 for the player) while the
+   * sprite was drawing an atlas frame authored at 200x350. The figure rendered
+   * 3.44x too wide.
+   *
+   * It belongs on the CLIP rather than on the entity because it is a property of
+   * the art the clip points at, and two clips of one entity may eventually be
+   * authored at different sizes. `atlasFramesExist` checks it against the JSON
+   * on disk, so it cannot drift silently.
+   *
+   * Note this is the AUTHORED box, not the trimmed pixels. The per-frame trim
+   * offset inside it is spec C's problem (§5.2), and it differs per frame.
+   */
+  sourceSize: { w: number; h: number }
+
+  /**
+   * The character's own box inside `sourceSize`. One per clip, taken from the
+   * TALLEST frame: a per-frame extent would resize the character every frame,
+   * which is a defect rather than a feature.
+   */
+  extent: ArtExtent
 
   /** -1 = loop (idle/ready/standby), 0 = play once (cast/death). */
   repeat: number
@@ -84,6 +128,9 @@ export interface StaticEntityArt {
   textureKey: string
   textureUrl: string
   sourceSize: { w: number; h: number }
+
+  /** Untrimmed PNGs occupy their whole box; see `ArtExtent`. */
+  extent: ArtExtent
 }
 
 /**

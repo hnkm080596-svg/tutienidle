@@ -32,7 +32,7 @@ function createFakeScene() {
       setSize: () => obj,
       setScale: () => obj,
       updateDisplayOrigin: () => obj,
-      setDisplaySize: () => obj,
+      setDisplaySize: vi.fn(() => obj),
       destroy: () => obj,
       // positionSprite() writes here. Captured so a test can read where the
       // body actually landed (Spec B §4.3's idle bob).
@@ -264,6 +264,7 @@ describe('CombatGridView — idle motion for static entities', () => {
       rows: 6,
       columns: 6,
       gridToScreen: () => ({ x: 100, y: 200, scale: 1 }),
+      cellSizeAt: () => ({ width: 94.49, height: 41.4 }),
       footprintPolygon: () => [],
     }
   }
@@ -368,5 +369,39 @@ describe('CombatGridView — idle motion for static entities', () => {
     expect((scene.tweens as { killTweensOf: ReturnType<typeof vi.fn> }).killTweensOf).toHaveBeenCalledWith(
       sprite.idle,
     )
+  })
+})
+
+describe('CombatGridView — size is the character, not the box (Spec C §3.2)', () => {
+  function perspectiveHost() {
+    const { scene, gridView } = createFakeScene()
+
+    scene.isPerspective = true
+    scene.projection = {
+      rows: 10,
+      columns: 16,
+      gridToScreen: () => ({ x: 100, y: 200, scale: 0.70735 }),
+      cellSizeAt: () => ({ width: 94.49, height: 41.4 }),
+      footprintPolygon: () => [],
+    }
+
+    return { scene, gridView }
+  }
+
+  it('trimmed art gets a BIGGER box so the character lands at the same height', () => {
+    const { gridView } = perspectiveHost()
+
+    const untrimmed = gridView.getOrCreateSprite('mortal_wild_boar_1', 0xd94a4a, 'Boar', 4, {
+      currentHp: 10,
+      maxHp: 10,
+      isBoss: false,
+    })
+
+    const boxHeight = (untrimmed.rect as unknown as { setDisplaySize: ReturnType<typeof vi.fn> })
+      .setDisplaySize.mock.calls.at(-1)![1] as number
+
+    // The boar's PNG is untrimmed, so its box IS its character height. Spec C
+    // §3.2's calibration says that must stay 122.98 at this depth.
+    expect(boxHeight).toBeCloseTo(122.98, 0)
   })
 })

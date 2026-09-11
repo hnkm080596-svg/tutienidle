@@ -156,7 +156,89 @@ test.describe('Combat idle motion (Spec B §9.10)', () => {
       `player frame never changed across ${samples.length} samples: ${[...playerFrames].join(', ')}`,
     ).toBeGreaterThan(1)
 
-    // 2. Every static enemy moved, and kept its feet on the ground.
+    // 2. The player is drawn at the aspect ratio its ART is authored in.
+    //
+    //    The defect this pins, measured 2026-09-11: spec B moved what the
+    //    sprite DRAWS (an atlas frame authored at 200x350) without moving what
+    //    SIZES it (`PlayerVisualProfile.combatSourceSize`, 1312x1199), so the
+    //    figure rendered 3.44x too wide. Nothing failed — every clip was
+    //    correct, every frame advanced, and the proportions were nonsense.
+    const shape = await page.evaluate(() => {
+      const w = window as unknown as {
+        __tutienPhaserGame?: { scene: { getScene(k: string): unknown } }
+      }
+
+      const scene = w.__tutienPhaserGame?.scene.getScene('CombatScene') as {
+        sprites: Map<
+          string,
+          {
+            rect: {
+              displayWidth: number
+              displayHeight: number
+              frame: { realWidth: number; realHeight: number }
+            }
+          }
+        >
+      }
+
+      const player = scene.sprites.get('player')!
+
+      return {
+        displayWidth: player.rect.displayWidth,
+        displayHeight: player.rect.displayHeight,
+        authoredWidth: player.rect.frame.realWidth,
+        authoredHeight: player.rect.frame.realHeight,
+      }
+    })
+
+    const drawnAspect = shape.displayWidth / shape.displayHeight
+    const authoredAspect = shape.authoredWidth / shape.authoredHeight
+
+    expect(
+      drawnAspect / authoredAspect,
+      `player drawn at aspect ${drawnAspect.toFixed(3)} but authored at ${authoredAspect.toFixed(3)}`,
+    ).toBeCloseTo(1, 1)
+
+    // 3. Spec C §7 criterion 3 — the CHARACTER heights match, not the box heights.
+    //
+    // Measured before this spec: player 91.1px against boar 123.0px, while both
+    // carried the same multiplier and the boar was the one further away. A box
+    // comparison would have passed that.
+    const heights = await page.evaluate(() => {
+      const w = window as unknown as {
+        __tutienPhaserGame?: { scene: { getScene(k: string): unknown } }
+      }
+
+      const scene = w.__tutienPhaserGame?.scene.getScene('CombatScene') as {
+        sprites: Map<string, { row: number; personHeight?: number }>
+        projection?: { gridToScreen(row: number, col: number): { scale: number } }
+      }
+
+      const at = (id: string) => {
+        const s = scene.sprites.get(id)
+
+        if (!s?.personHeight) return undefined
+
+        // Normalise out perspective so two entities on different rows compare.
+        const depth = scene.projection?.gridToScreen(s.row, 8).scale ?? 1
+
+        return s.personHeight / depth
+      }
+
+      const enemyId = [...scene.sprites.keys()].find((k) => k !== 'player') as string
+
+      return { player: at('player'), enemy: at(enemyId) }
+    })
+
+    expect(heights.player, 'player has no resolved person height').toBeDefined()
+    expect(heights.enemy, 'enemy has no resolved person height').toBeDefined()
+
+    expect(
+      heights.player! / heights.enemy!,
+      `player ${heights.player!.toFixed(1)}px vs enemy ${heights.enemy!.toFixed(1)}px, depth-normalised`,
+    ).toBeCloseTo(1, 1)
+
+    // 4. Every static enemy moved, and kept its feet on the ground.
     const enemyIds = samples[0]!.enemies.map((enemy) => enemy.id)
 
     for (const id of enemyIds) {
@@ -188,7 +270,7 @@ test.describe('Combat idle motion (Spec B §9.10)', () => {
       expect(new Set(lifts.map((lift) => lift.toFixed(2))).size, `${id}: lift never changed`)
         .toBeGreaterThan(1)
 
-      // 3. And it is a tween, not an animation (§3.2).
+      // 5. And it is a tween, not an animation (§3.2).
       for (const entry of series) {
         expect(entry.anim, `${id}: a static enemy is playing '${entry.anim}'`).toBeFalsy()
       }
