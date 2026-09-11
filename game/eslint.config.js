@@ -1,4 +1,4 @@
-﻿import pluginVue from 'eslint-plugin-vue'
+import pluginVue from 'eslint-plugin-vue'
 import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
 
 export default defineConfigWithVueTs(
@@ -37,12 +37,9 @@ export default defineConfigWithVueTs(
   {
     // Stricter layer-specific block: kept after src/** so it is the
     // effective winner for core files (see R14.1a comment above).
-    // Policy: strict severities target PRODUCTION core only. Core test
-    // fixtures stay at the src/** warnings — at de-overlap time (2026-09-11)
-    // effective errors would have surfaced 59 pre-existing violations in
-    // core *.test.ts, most inside core/battle/turn/** (combat-turn-mechanism
-    // branch territory); fixing them there now would collide with that
-    // branch. Revisit after it merges.
+    // Policy: strict severity applies to core files INCLUDING tests. The
+    // pre-existing violations this surfaced (2026-09-11) were fixed when the
+    // combat branch merged; keep this block last so it wins over src/**.
     files: ['src/core/**/*.{ts,vue}'],
     rules: {
       'no-unused-vars': 'off',
