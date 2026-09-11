@@ -1405,17 +1405,38 @@ Expected: PASS.
 
 - [ ] **Step 3: Probe it red**
 
-Temporarily set `classFactor: sprite.sizeMultiplier` (instead of `/ 2`) in
-`combat-grid-view.ts`'s `entityDisplaySize`, re-run, confirm the height ratio
-assertion fails, then restore.
+> **CORRECTED 2026-09-12 during execution — the probe below is INERT.** The
+> player and an ordinary enemy both carry `sizeMultiplier: 2`, so replacing
+> `/ 2` scales BOTH by the same factor, and the assertion compares a RATIO of
+> their heights, which cancels. It cannot fail. A probe that cannot fail proves
+> nothing — the exact defect this project's probe discipline exists to catch,
+> committed here in the plan itself.
+>
+> Use an ASYMMETRIC probe instead: break the symmetry so only one side moves,
+> e.g. `classFactor: sprite.healthBar ? sprite.sizeMultiplier : sprite.sizeMultiplier / 2`
+> (enemies carry a health bar, the player does not). Measured red: player
+> 123.4px vs enemy 246.9px, ratio 0.5 against an expected ~1.
+
+Apply the asymmetric probe above, re-run, confirm the height-ratio assertion
+fails, then restore.
 
 - [ ] **Step 4: Regenerate the art and prove criterion 4**
 
 This is the criterion that protects the whole design, and it is demonstrated, not
 asserted (Spec C §7).
 
-Edit `scripts/generate-hon-don-tran-placeholder-art.mjs` and change `PADDING` from
-`2` to `12`, then:
+> **CORRECTED 2026-09-12 during execution — changing `PADDING` is INERT here.**
+> `PADDING` feeds only `cellWidth`/`cellHeight` and where each frame is placed in
+> the packed sheet. `spriteSourceSize` comes from `opaqueBounds()`, measured on
+> the untrimmed frame canvas BEFORE packing, so the guard reads a number padding
+> never touches and stays green.
+>
+> Change what the figure actually occupies instead: `bodyH` from
+> `FRAME_HEIGHT * 0.56` to `FRAME_HEIGHT * 0.4`. Measured red: the guard reported
+> declared 0.7943 against measured 0.6343.
+
+Edit `scripts/generate-hon-don-tran-placeholder-art.mjs` and change `bodyH`'s
+factor from `0.56` to `0.4`, then:
 
 Run: `node scripts/generate-hon-don-tran-placeholder-art.mjs`
 Run: `npx.cmd vitest run tests/architecture/artExtentDeclared.test.ts`
@@ -1429,8 +1450,12 @@ Run: `DEV_PORT=5182 npx.cmd playwright test tests/e2e/combat-idle-motion-capture
 Expected: **PASS** — the character is still the same size on screen, which is
 criterion 4.
 
-Then restore `PADDING = 2`, re-run the generator, restore the constants, and
-confirm the guard passes again. Record both numbers in the task summary.
+Then restore `bodyH`'s `0.56`, re-run the generator, restore the constants, and
+confirm the guard passes again. Record both numbers in the task summary, and
+verify the regenerated PNG and JSON are byte-identical to their committed state
+(`git hash-object` against `git rev-parse HEAD:<path>`) — a line-ending-only
+difference is expected and harmless; a content difference means the restore
+failed.
 
 - [ ] **Step 5: Full gate (P3 full)**
 
