@@ -45,7 +45,7 @@ export interface EnemyTag {
 export function applyEnemyTags(enemy: Enemy, tagIds: readonly string[]): Enemy
 ```
 
-- Applier: dedupe tagIds (mỗi tag 1 lần) → fold `applyStat` liên tiếp (stack nhân: boss+tinh_anh = ×7 ×2.5 HP), ghép prefix theo thứ tự, chọn rewards theo rewardTier (đúng chuỗi fallback hiện tại), set flag.
+- Applier: dedupe tagIds (mỗi tag 1 lần) → fold `applyStat` liên tiếp (stack nhân: boss+tinh_anh = ×7 ×2.5 HP), ghép prefix theo thứ tự, set flag. **Rewards** theo tag CUỐI CÙNG có `rewardTier` (theo thứ tự áp), resolve đúng chuỗi fallback legacy: boss = `bossRewards ?? eliteRewards ?? rewards` (3 tầng như `createBossVariant`), tinh_anh = `eliteRewards ?? rewards` (như `createEliteVariant`).
 - Tag data đầu tiên (data/enemy/EnemyTags.ts): `tinh_anh` + `boss` — hiện thực đúng 100% hành vi 2 hàm cũ (characterization: output của `applyEnemyTags(template, ['tinh_anh'])` === `createEliteVariant(template)`).
 - Tag mới sau này (Hấp Huyết/Cuồng Nộ/Thần Phù...) chỉ thêm 1 entry data.
 - `createEliteVariant`/`createBossVariant`: migrate consumer xong thì **xóa** (A12) — tests tham chiếu update.
@@ -69,7 +69,8 @@ pickEnemyForSpawn(stage, isFinalSpawn):
 
 ```text
 floor 1-9  → thường:  total = 9 + floor
-                      waves = chia đều 3 phần, dư về phần cuối
+                      waves = chia đều 3 phần, dư PHÂN BỔ DẦN từ phần 2
+                      (khớp literal: 10→[3,3,4] · 11→[3,4,4] · 14→[4,5,5] · 17→[5,6,6])
                       pool = [common w5, elite w3 + eliteChance 0.1]
                       perfectClearTurnLimit = 2 × total    // PLACEHOLDER (D4)
 floor 10   → boss:    total = 9 + floor

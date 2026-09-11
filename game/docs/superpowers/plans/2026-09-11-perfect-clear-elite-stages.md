@@ -36,7 +36,7 @@
 - `src/data/stage/Stages.test.ts` — assert mới (Task 5)
 - `src/components/panels/StageSelectPanel.vue` — ẩn spawnIntervalSeconds (Task 6)
 - `src/core/game/GameManager.perfectClear.test.ts` — predicate test mới (Task 4)
-- `src/core/game/StageWaveSystem.spawnTelegraph.test.ts` — tag path test (Task 3)
+- `src/core/game/GameManager.bossRepeatCycle.test.ts` — append tag-path spawn tests (Task 3; file test spawn sống hiện tại — `StageWaveSystem.spawnTelegraph.test.ts` đã bị xóa cùng C1 retire legacy 2026-09-08)
 
 **Deleted (Task 3 cuối, sau characterization xanh):** thân hàm `createEliteVariant` + `createBossVariant` trong `Enemy.ts`.
 
@@ -51,7 +51,7 @@
 - Consumes: `Enemy` type (`Enemy.ts`), `Stats` (`StatBlock`), `applyEliteMultiplier`/`applyBossMultiplier` (`EnemyStatInput`).
 - Produces (Task 3 consume):
   - `interface EnemyTag { id: string; namePrefix?: string; applyStat?: (stats: Stats) => Stats; combatFlag?: 'isElite' | 'isBoss'; rewardTier?: 'eliteRewards' | 'bossRewards' }`
-  - `applyEnemyTags(enemy: Enemy, tagIds: readonly string[], registry?: EnemyTagRegistry): Enemy` — dedupe, fold applyStat, ghép prefix theo thứ tự, chọn rewards theo rewardTier (fallback boss→elite→base như cũ), set combatFlag.
+  - `applyEnemyTags(enemy: Enemy, tagIds: readonly string[], registry: EnemyTagRegistry): Enemy` — dedupe, fold applyStat, ghép prefix theo thứ tự, chọn rewards theo rewardTier (fallback boss→elite→base như cũ), set combatFlag.
 
 - [ ] **Step 1: Failing characterization + stack tests** — `EnemyTag.test.ts`:
 
@@ -149,10 +149,14 @@ export type EnemyTagRegistry = ReadonlyMap<string, EnemyTag>
 
 /** Apply tags to a template enemy. Each tag applies at most once (dedupe);
  * applyStat folds in the given order so tags stack multiplicatively.
- * Unknown ids are skipped. Base enemy is never mutated (spread copies). */
+ * Unknown ids are skipped. Base enemy is never mutated (spread copies).
+ * Rewards follow the LAST tag that declares rewardTier, resolved through
+ * that tag's legacy fallback chain (boss: bossRewards ?? eliteRewards ??
+ * rewards; tinh_anh: eliteRewards ?? rewards). */
 export function applyEnemyTags(enemy: Enemy, tagIds: readonly string[], registry: EnemyTagRegistry): Enemy {
   const seen = new Set<string>()
   let result = enemy
+  let resolvedRewards = enemy.rewards
 
   for (const tagId of tagIds) {
     if (seen.has(tagId)) continue
@@ -165,13 +169,27 @@ export function applyEnemyTags(enemy: Enemy, tagIds: readonly string[], registry
       stats: tag.applyStat ? tag.applyStat(result.stats) : result.stats,
       name: tag.namePrefix ? tag.namePrefix + result.name : result.name,
       isElite: tag.combatFlag === 'isElite' ? true : result.isElite,
-      isBoss: tag.combatFlag === 'boss' ? true : result.isBoss,
-      rewards: tag.rewardTier ? (result[tag.rewardTier] ?? result.rewards) : result.rewards,
+      isBoss: tag.combatFlag === 'isBoss' ? true : result.isBoss,
+    }
+
+    if (tag.rewardTier) {
+      // The fallback helper checks the tier field first, so one call covers
+      // both the present and the missing case (no redundant ?? chain here).
+      resolvedRewards = resolvedRewardsFallback(tag.rewardTier, result)
     }
   }
 
   // Mirror the legacy variants: currentHp/maxHp follow the final stats.
-  return { ...result, currentHp: result.stats.maxHp, maxHp: result.stats.maxHp }
+  return { ...result, rewards: resolvedRewards, currentHp: result.stats.maxHp, maxHp: result.stats.maxHp }
+}
+
+/** Legacy fallback chains, one per tier field (verified against
+ * createEliteVariant/createBossVariant in Enemy.ts):
+ * bossRewards tier falls through eliteRewards before base;
+ * eliteRewards tier falls straight to base. */
+function resolvedRewardsFallback(tier: 'eliteRewards' | 'bossRewards', enemy: Enemy) {
+  if (tier === 'bossRewards') return enemy.bossRewards ?? enemy.eliteRewards ?? enemy.rewards
+  return enemy.eliteRewards ?? enemy.rewards
 }
 ```
 
@@ -182,6 +200,12 @@ import { applyEliteMultiplier, applyBossMultiplier } from '../../core/enemy/Enem
 
 // First two tags reproduce the legacy createEliteVariant/createBossVariant
 // behavior EXACTLY (stat formula referenced, not copied — A9).
+// Reward resolution (shared, mirrors the legacy fallback chains):
+// - tinh_anh: eliteRewards ?? rewards          (legacy: eliteRewards ?? rewards)
+// - boss:     bossRewards ?? eliteRewards ?? rewards   (legacy 3-tier chain)
+// When tags STACK, rewards follow the LAST tag's chain applied in tag
+// order (boss applied after tinh_anh → boss chain wins), same rule the
+// legacy boss function used over elite.
 export const ENEMY_TAGS: EnemyTagRegistry = new Map<string, EnemyTag>([
   ['tinh_anh', {
     id: 'tinh_anh',
@@ -200,7 +224,7 @@ export const ENEMY_TAGS: EnemyTagRegistry = new Map<string, EnemyTag>([
 ])
 ```
 
-*(Lúc implement: đối chiếu lại thân 2 hàm legacy trong `Enemy.ts` — prefix, currentHp sync, isElite/isBoss set, rewards switch — characterization test ở Step 1 là chốt; nếu legacy còn đụng field nào (vd `bossRewards ?? eliteRewards ?? rewards` 3 tầng) thì rewardTier resolve đúng chuỗi đó.)*
+*(Lúc implement: đối chiếu lại thân 2 hàm legacy trong `Enemy.ts` — prefix, currentHp sync, isElite/isBoss set, rewards switch. Reward resolve trong applier: theo rewardTier của tag CUỐI CÙNG có rewardTier (stack order), chain `bossRewards ?? eliteRewards ?? rewards` cho tag boss và `eliteRewards ?? rewards` cho tag tinh_anh — ĐÚNG 2 chuỗi legacy. Characterization test ở Step 1 là chốt khóa.)*
 
 - [ ] **Step 4: Run — PASS** (5 test):
 
@@ -239,7 +263,7 @@ export function defineChapterStages(config: ChapterConfig): Stage[]
 
 Builder rules (mọi quy định chung tại ĐÚNG 1 chỗ):
 - `totalEnemyCount = 9 + floor` (mọi floor, đủ 3 chương — khớp literal đã đo).
-- floor 1-9: `waves = splitEvenly3(total)` (dư về phần cuối); floor 10: `waves = [total]`.
+- floor 1-9: `waves = splitEvenly3(total)` (chia đều, dư phân bổ dần từ phần 2 — xem code ở Step 3); floor 10: `waves = [total]`.
 - Pool: `[{ enemyId: common, weight: 5 }, { enemyId: elite, weight: 3, eliteChance: 0.1 }]`.
 - `bossEnemyId`: CHỈ floor 10 = loài elite (floor 1-9 KHÔNG set — noted behavior change).
 - `perfectClearTurnLimit`: floor 1-9 = `2 * total` — PLACEHOLDER; floor 10 = `14` — PLACEHOLDER. Comment 1 chỗ: `// PLACEHOLDER X - tune in the balance pass (user decision D4)`.
@@ -255,7 +279,19 @@ Builder rules (mọi quy định chung tại ĐÚNG 1 chỗ):
 
 - [ ] **Step 2: Run — FAIL** (module not found).
 
-- [ ] **Step 3: Implement** builder theo Interfaces. `splitEvenly3(total)`: `[Math.floor(t/3), Math.floor(t/3), t - 2*Math.floor(t/3)]` — verify khớp literal: 10 → [3,3,4] ✓; 12 → [4,4,4] ✓; 19 → [6,6,7]... *(đối chiếu literal: mortal_dong_10 waves [19]? — KHÔNG: floor-10 rule là `[total]` = [19] ✓ khớp; floor 9 total 18 → [6,6,6] ✓; floor 2 total 11 → [3,4,4] ✓.)*
+- [ ] **Step 3: Implement** builder theo Interfaces. `splitEvenly3(total)` — chia đều 3 phần, dư PHÂN BỔ DẦN từ phần 2 (khớp literal đã đo: 10→[3,3,4], 11→[3,4,4], 13→[4,4,5], 14→[4,5,5], 17→[5,6,6], 18→[6,6,6]):
+
+```ts
+function splitEvenly3(total: number): [number, number, number] {
+  const k = Math.floor(total / 3)
+  const r = total % 3
+  if (r === 0) return [k, k, k]
+  if (r === 1) return [k, k, k + 1]
+  return [k, k + 1, k + 1]
+}
+```
+
+*(LƯU Ý: KHÔNG dùng `[k, k, total - 2k]` — công thức đó gom cả dư về phần cuối và sai với r=2: total 11 sinh [3,3,5] thay vì [3,4,4].)* Floor-10 rule riêng: `waves = [total]` (khớp literal mortal_dong_10 [19], foundation_floor_10 [19]).
 
 - [ ] **Step 4: Run — PASS parity toàn bộ 30 stage.**
 
@@ -273,14 +309,14 @@ git commit -m "feat(stage): defineChapterStages builder - one owner for all floo
 ## Task 3 — Spawn qua tag path + retire legacy variant functions
 
 **Files:**
-- Modify: `src/core/game/StageWaveSystem.ts:136-180` (`pickEnemyForSpawn`), `src/core/enemy/Enemy.ts` (xóa 2 hàm cuối task), `src/core/game/StageWaveSystem.spawnTelegraph.test.ts`
-- Kiểm tra thêm 1 consumer đã rà: auto-farm `rollAutoFarmCycleReward` dùng `pickEnemyForTurnSpawn` wrapper — tự theo.
+- Modify: `src/core/game/StageWaveSystem.ts:136-180` (`pickEnemyForSpawn`), `src/core/enemy/Enemy.ts` (xóa 2 hàm cuối task), `src/core/game/GameManager.bossRepeatCycle.test.ts` (append test)
+- Kiểm tra thêm 1 consumer đã rà: auto-farm `rollAutoFarmCycleReward` dùng `pickEnemyForTurnSpawn` wrapper — tự theo. *(LƯU Ý: file test spawn cũ `StageWaveSystem.spawnTelegraph.test.ts` đã bị xóa trong C1 retire legacy 2026-09-08 — test mới append vào `GameManager.bossRepeatCycle.test.ts`, nơi test spawn hiện sống.)*
 
 **Interfaces:**
 - Consumes: `applyEnemyTags`, `ENEMY_TAGS` (Task 1).
 - Produces: spawn behavior KHÔNG ĐỔI (elite roll 0.1 như cũ, boss floor-10 như cũ) — chỉ đổi đường gọi.
 
-- [ ] **Step 1: Failing seeded test** — append `StageWaveSystem.spawnTelegraph.test.ts`:
+- [ ] **Step 1: Failing seeded test** — append `GameManager.bossRepeatCycle.test.ts` (nơi test spawn hiện sống):
 
 ```ts
 // D3: elite roll goes through the tag path — with a seeded RNG forcing
@@ -299,7 +335,7 @@ it('floor-10 final spawn applies boss tag', () => { /* same harness, assert
 //   spawned.isBoss === true, name prefix 'Đại Vương ', bossRewards chain */ })
 ```
 
-*(Cụ thể hóa theo harness thật của file lúc implement — pattern seeded roll đã có trong các test cũ.)*
+*(Cụ thể hóa theo harness thật của file lúc implement — pattern seeded roll đã có trong các test cũ của `GameManager.bossRepeatCycle.test.ts`.)*
 
 - [ ] **Step 2: Run — FAIL** (spawn vẫn đi `createEliteVariant` trực tiếp; test mới pass luôn nếu hành vi tương đương — nếu PASS ngay thì test chưa khóa được tag path: thêm assert gián tiếp qua spy/thứ tự gọi HOẶC chấp nhận parity-lock là đủ vì Task 3 Step 4 xóa hàm legacy sẽ khiến test đỏ nếu spawn chưa đi tag. Ghi chú cách chọn vào commit.)*
 
@@ -320,7 +356,7 @@ it('floor-10 final spawn applies boss tag', () => { /* same harness, assert
 
 - [ ] **Step 4: Run full spawn suite** — PASS:
 
-Run: `npx.cmd vitest run src/core/game/StageWaveSystem.spawnTelegraph.test.ts src/core/enemy src/core/game/GameManager.autoFarm.test.ts src/core/game/GameManager.autoFarmAdversarial.test.ts`
+Run: `npx.cmd vitest run src/core/game/GameManager.bossRepeatCycle.test.ts src/core/enemy src/core/game/GameManager.autoFarm.test.ts src/core/game/GameManager.autoFarmAdversarial.test.ts`
 
 - [ ] **Step 5: XÓA `createEliteVariant`/`createBossVariant`** khỏi `Enemy.ts` (sau khi grep 0 consumer ngoài test characterization — Task 1 Step 1 test đối chiếu đổi thành so với giá trị lock cứng từng field thay vì gọi hàm legacy, HOẶC giữ lại test file snapshot đối chiếu; chọn cách: đổi characterization test thành snapshot theo giá trị tính tay từ multiplier — ghi rõ trong commit). Grep xác nhận: `Select-String -Pattern 'createEliteVariant|createBossVariant'` chỉ còn lại trong `EnemyTag`/docs.
 
@@ -329,7 +365,7 @@ Run: `npx.cmd vitest run src/core/game/StageWaveSystem.spawnTelegraph.test.ts sr
 - [ ] **Step 7: Commit:**
 
 ```
-git add src/core/game/StageWaveSystem.ts src/core/enemy/Enemy.ts src/core/game/StageWaveSystem.spawnTelegraph.test.ts src/core/enemy/EnemyTag.test.ts
+git add src/core/game/StageWaveSystem.ts src/core/enemy/Enemy.ts src/core/game/GameManager.bossRepeatCycle.test.ts src/core/enemy/EnemyTag.test.ts
 git commit -m "feat(spawn): roll variants through the tag system; retire legacy createEliteVariant/createBossVariant (D3)"
 ```
 
