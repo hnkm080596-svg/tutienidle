@@ -36,7 +36,11 @@ function entryText(entry: ActionFeedbackEntry): string {
 
 <template>
   <Teleport to="body">
-    <div class="feedback-log" role="log" aria-live="polite" aria-relevant="additions">
+    <!-- Auto-hide (user request 2026-09-11): the log only exists on screen
+         while there is activity - after 5s of silence the store hides it
+         and this root v-if removes it entirely (not just opacity), so it
+         stops occupying the bottom-right corner of the Dong Fu screen. -->
+    <div v-if="feedback.isVisible" class="feedback-log" role="log" aria-live="polite" aria-relevant="additions">
       <div class="feedback-log__header">
         <span>Nhật ký thao tác</span>
 

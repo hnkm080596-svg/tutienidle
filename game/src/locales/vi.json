@@ -806,11 +806,6 @@
       "missing_spirit_stone": "Không đủ Linh Thạch"
     }
   },
-  "resourceStrip": {
-    "show": "Hiện tài nguyên",
-    "hide": "Ẩn dải tài nguyên",
-    "spiritStones": "Linh Thạch"
-  },
   "layout": {
     "functionOverlay": {
       "titles": {

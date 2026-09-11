@@ -5,7 +5,6 @@ import RouteMount from '../game/RouteMount.vue'
 import CombatSceneOverlay from '../game/combat/CombatSceneOverlay.vue'
 import TribulationSceneOverlay from '../game/tribulation/TribulationSceneOverlay.vue'
 import { VUE_ROUTE_ADAPTER_KEY } from '@/presentation/PresentationContracts'
-import HomeResourceStrip from '../game/HomeResourceStrip.vue'
 import DongFuCommandWheel from '../game/DongFuCommandWheel.vue'
 import BuildingDetailPopover from '../game/BuildingDetailPopover.vue'
 import LeftPanel from './LeftPanel.vue'
@@ -83,8 +82,6 @@ function closeSidePanels() {
       <MainScene @click="closeSidePanels" />
 
       <template v-if="!isFullSceneActive">
-        <HomeResourceStrip />
-
         <!-- Shared popover authority (plan Workstream C) — CHỈ MỘT
              BuildingDetailPopover cho CẢ hotspot lẫn command wheel,
              điều khiển qua ui.activeBuildingPopoverId. -->
