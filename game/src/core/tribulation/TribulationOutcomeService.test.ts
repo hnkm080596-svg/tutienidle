@@ -1,0 +1,170 @@
+// R8.2 slice-1 design fix: the service must write through a structurally
+// typed writer (the Pinia store in production), NOT the raw $state object.
+// Evidence (probe test, removed): writing an ABSENT optional key (e.g.
+// highestFoundationAchieved) on store.$state does not reflect through the
+// store proxy, while writes on the store do. The interface lives in core
+// (structural, no Pinia import — A6).
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
+import { createPinia, setActivePinia } from 'pinia'
+import { usePlayerStore } from '../../stores/player'
+import { GameManager } from '../game/GameManager'
+import { TribulationOutcomeService } from './TribulationOutcomeService'
+import { createBaseStats } from '../stats/StatBlock'
+import { pills } from '../../data/pill/pills'
+import { MERIDIANS } from '../../data/realm/Meridians'
+import type { ActiveTribulationState } from './TribulationDirector'
+
+/** Minimal ActiveTribulationState literal for outcome resolution. */
+function makeActive(
+  state: 'victory' | 'defeat',
+  targetRealmId: string,
+  grade: 'thien_dao' | 'great_dao' = 'thien_dao',
+): ActiveTribulationState {
+  return {
+    targetRealmId,
+    grade,
+    chapterIndex: 0,
+    chaptersTotal: 1,
+    chapterName: '',
+    state,
+    currentQuestion: null,
+    questionSecondsRemaining: 0,
+    questionSecondsLimit: 0,
+    secondsRemaining: 0,
+  } as ActiveTribulationState
+}
+
+/** Drive an active tribulation to completion by answering every question. */
+function driveToCompletion(gameManager: GameManager) {
+  let guard = 0
+  while (gameManager.getActiveTribulation()?.state === 'ongoing' && guard++ < 5000) {
+    gameManager.update(1)
+    const q = gameManager.getActiveTribulation()!.currentQuestion
+    if (q) gameManager.answerTribulationQuestion(q.correctAnswerIndex)
+  }
+}
+
+describe('TribulationOutcomeService — victory parity', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.useFakeTimers()
+  })
+  afterEach(() => vi.useRealTimers())
+
+  it('qi_refining victory is a pure announcement outcome: realm NOT entered, no talent/foundation writes', () => {
+    const gameManager = new GameManager()
+    const player = usePlayerStore()
+    const service = new TribulationOutcomeService()
+
+    const result = service.resolveVictory(player, gameManager, makeActive('victory', 'qi_refining'))
+
+    expect(result.kind).toBe('victory')
+    expect(result.realmEntered).toBeNull()
+    expect(player.realmId).toBe('mortal')
+    expect(result.standalonePanel).toBe('quan_khi')
+  })
+
+  it('foundation_establishment victory: realm/level reset, unequip-all, foundation recorded, talent converted, passives synced', () => {
+    const gameManager = new GameManager()
+    gameManager.registerPills(pills)
+    const player = usePlayerStore()
+    player.selectedTalentIds = ['pham_cot']
+    player.realmLevel = 12
+    player.bodyRefinementCompletedTiers = 6
+    player.mortalPerfectionAchieved = true
+    player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
+    gameManager.chooseCultivationPath('phap_tu', player.$state)
+    player.realmLevel = 18
+    player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
+    player.openedMeridianIds = MERIDIANS.map((m: { id: string }) => m.id)
+    gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
+
+    const stats = { ...createBaseStats(), maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 }
+    expect(gameManager.startTribulation(player.$state, stats, 'foundation_establishment')).toBe(true)
+    driveToCompletion(gameManager)
+    expect(gameManager.getActiveTribulation()!.state).toBe('victory')
+
+    const service = new TribulationOutcomeService()
+    const result = service.resolveVictory(player, gameManager, gameManager.getActiveTribulation()!)
+
+    expect(result.kind).toBe('victory')
+    expect(result.realmEntered).toBe('foundation_establishment')
+    expect(player.realmId).toBe('foundation_establishment')
+    expect(player.realmLevel).toBe(1)
+    expect(player.cultivation).toBe(0)
+    expect(player.highestFoundationAchieved).toBe('great_dao')
+    expect(result.talentConverted).toBe(true)
+    expect(player.selectedTalentIds).toContain('pham_nhan_chi_cot')
+    expect(player.selectedTalentIds).not.toContain('pham_cot')
+  })
+
+  it('quest realm-transition flag is marked on realm entry', () => {
+    const gameManager = new GameManager()
+    gameManager.registerPills(pills)
+    const player = usePlayerStore()
+    player.realmId = 'qi_refining'
+    player.openedMeridianIds = MERIDIANS.map((m: { id: string }) => m.id)
+    gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
+    const stats = { ...createBaseStats(), maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 }
+    expect(gameManager.startTribulation(player.$state, stats, 'foundation_establishment')).toBe(true)
+    driveToCompletion(gameManager)
+
+    const service = new TribulationOutcomeService()
+    const result = service.resolveVictory(player, gameManager, gameManager.getActiveTribulation()!)
+
+    expect(result.questRealmTransitionMarked).toBe(true)
+  })
+})
+
+describe('TribulationOutcomeService — defeat parity', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.useFakeTimers()
+  })
+  afterEach(() => vi.useRealTimers())
+
+  it('defeat applies cultivation loss with realm-scaled percent', () => {
+    const gameManager = new GameManager()
+    const player = usePlayerStore()
+    player.realmId = 'qi_refining'
+    player.cultivation = 1_000
+    const active = makeActive('defeat', 'foundation_establishment')
+
+    const service = new TribulationOutcomeService()
+    const result = service.resolveDefeat(player, gameManager, active, { ...createBaseStats(), maxHp: 1000 })
+
+    expect(result.kind).toBe('defeat')
+    expect(result.cultivationLossPercent).toBeGreaterThan(0)
+    expect(player.cultivation).toBeLessThan(1_000)
+    expect(result.spiritStonesLost).toBeGreaterThanOrEqual(0)
+  })
+
+  it('great_dao defeat sets greatDaoOpportunityLost permanently, talent untouched', () => {
+    const gameManager = new GameManager()
+    const player = usePlayerStore()
+    player.selectedTalentIds = ['pham_cot']
+    player.realmId = 'qi_refining'
+    const active = makeActive('defeat', 'foundation_establishment', 'great_dao')
+
+    const service = new TribulationOutcomeService()
+    const result = service.resolveDefeat(player, gameManager, active, { ...createBaseStats(), maxHp: 1000 })
+
+    expect(player.greatDaoOpportunityLost).toBe(true)
+    expect(result.greatDaoOpportunityLost).toBe(true)
+    expect(player.selectedTalentIds).toContain('pham_cot')
+    expect(result.announceTitle).toBe('Đại Đạo Đoạn Tuyệt')
+  })
+
+  it('non-great-dao defeat announces Kiep Thuong message, opportunity NOT lost', () => {
+    const gameManager = new GameManager()
+    const player = usePlayerStore()
+    player.realmId = 'qi_refining'
+    const active = makeActive('defeat', 'foundation_establishment', 'thien_dao')
+
+    const service = new TribulationOutcomeService()
+    const result = service.resolveDefeat(player, gameManager, active, { ...createBaseStats(), maxHp: 1000 })
+
+    expect(result.greatDaoOpportunityLost).toBe(false)
+    expect(result.announceTitle).toBe('Độ Kiếp Thất Bại')
+  })
+})

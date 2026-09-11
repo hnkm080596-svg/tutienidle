@@ -125,8 +125,8 @@ state management.
 
 ### 3.3 Core knows neither Vue nor Phaser — *existing (A6)*
 
-Already guarded by `game/tests/architecture/coreImportDirection.test.ts` on the
-`r14-architecture-enforcement` branch. (All guard paths in this spec are
+Already guarded by `game/tests/architecture/coreImportDirection.test.ts`, on
+master since `c58cf75a` (2026-09-11). (All guard paths in this spec are
 repo-root-relative: `game/tests/architecture/`, which is `tests/architecture/`
 relative to the `game/` package that runs vitest.)
 
@@ -722,6 +722,21 @@ hoped:** if V8 turns out to need *any* new scene-object coupling, that is the
 signal to stop and pull §5.2 forward — not to reach for the scene reference
 because it happens to be in scope.
 
+**The r14 dependency is discharged.** `r14-architecture-enforcement` merged to
+master as `c58cf75a` on 2026-09-11, bringing `game/tests/architecture/`, its
+`helpers/scanTs.ts`, and the vitest `include` that picks the directory up.
+Everything this spec deferred behind it — §4's typed gate, §5's region host, and
+the guards in §7 — is unblocked. Two consequences already applied: the
+projection guard has moved from the `src/` parking spot to its declared home,
+and guards no longer need the `@ts-expect-error` dance for Node types, because
+`tests/architecture/` is in neither tsconfig and so is not type-checked.
+
+One caution inherited with it: `eslintCoreSeverity.test.ts` shells out to eslint
+under a 60-second budget and sits near that edge during a full suite. It timed
+out once on this work before the new guard's tree walks were hoisted to module
+scope. Nothing is wrong with the assertion; the budget is tight, and a future
+guard that scans the tree should be written with that in mind.
+
 **When B starts.** B's spec is written as soon as this one is accepted; it does
 **not** wait for A to be implemented. A's implementation is itself blocked on
 `r14-architecture-enforcement` merging, and leaving B idle behind that would
@@ -883,3 +898,26 @@ reference requires importing the type. What escapes both is a reference held
 structurally or as `any`, and P8 already requires an introduced `any` to be
 flagged. That residue is stated rather than hidden; it is not worth AST
 machinery today.
+
+### 11.3 Verification trap found while proving V8 on screen
+
+`playwright.config.ts` sets `reuseExistingServer: true` and defaults
+`DEV_PORT` to `5175` **for every checkout**, worktrees included. A dev server
+left running by one checkout therefore serves Playwright runs launched from any
+other. The first visual capture of V8 showed 58x58 uniform cells — the old code
+— because it was talking to a server started earlier from master.
+
+Two consequences worth keeping:
+
+1. **Any e2e comparison between a worktree and master is meaningless unless each
+   side runs on its own `DEV_PORT`.** Several such comparisons were made during
+   this work and had to be thrown away.
+2. A green e2e run proves nothing about the current tree unless you know which
+   server answered. Pass `DEV_PORT=<unique>` when running from a worktree.
+
+Separately, this machine runs the e2e suite about one second inside its 45s
+per-test budget: `standing-slot-panel` passes at 44.1s, and master's `ink-wash
+tall` passed at 44.0s. Full-suite runs therefore fail a shifting subset of the
+heavy tests, on master as readily as on a branch. That is a budget problem, not
+a correctness one, and it is worth raising before it is mistaken for a
+regression.
