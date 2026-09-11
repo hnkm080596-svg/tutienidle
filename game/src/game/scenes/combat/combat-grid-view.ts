@@ -102,6 +102,15 @@ function phaseDelayMs(id: string, periodMs: number): number {
 const SHADOW_WIDTH_RATIO = 1.12
 const SHADOW_HEIGHT_RATIO = 0.34
 
+/**
+ * Synthetic extent for a Rectangle-fallback entity — it has no authored art
+ * box, so its anchors are sized as if the art filled the whole box (Finding 1,
+ * final whole-branch review). Only `personWidth`/`personHeight` are read from
+ * the result; `boxWidth`/`boxHeight` are discarded since Rectangle DRAWING
+ * stays on its own pre-existing formula (see the comment at each call site).
+ */
+const RECT_ANCHOR_EXTENT: NonNullable<EntitySprite['extent']> = { x: 0, y: 0, w: 1, h: 1 }
+
 export class CombatGridView {
   constructor(private readonly host: CombatGridViewHost) {}
 
@@ -186,13 +195,26 @@ export class CombatGridView {
    * person is 1. Halving here rather than renaming the field keeps this task to
    * one responsibility (P9).
    *
-   * Callers only reach this when `sprite.extent` is defined — see the ruling in
-   * the task brief: the Tran Phap preview panel's host-fallback sprites have no
-   * `extent` and must keep their pre-existing flat formula unchanged, because
-   * that panel precomputes its own characterWidth/Height and a classFactor of
-   * 0.5 (sizeMultiplier 1) would halve every sprite in it.
+   * Callers pass `extent` explicitly rather than this method reading
+   * `sprite.extent` itself: a Rectangle fallback (see `RECT_ANCHOR_EXTENT`
+   * below) has no `extent` of its own but still needs a personHeight/Width
+   * for its body anchors, so it passes a synthetic full-box extent. Every
+   * call site already has the right value in hand (either narrowed from
+   * `sprite.extent` behind an `if`, or the Rectangle literal), so no cast is
+   * needed here.
+   *
+   * The two `sprite.kind === 'sprite'` callers only reach this when
+   * `sprite.extent` is defined — see the ruling in the task brief: the Tran
+   * Phap preview panel's host-fallback sprites have no `extent` and must
+   * keep their pre-existing flat formula unchanged, because that panel
+   * precomputes its own characterWidth/Height and a classFactor of 0.5
+   * (sizeMultiplier 1) would halve every sprite in it.
    */
-  private entityDisplaySize(sprite: EntitySprite, depthScale: number) {
+  private entityDisplaySize(
+    sprite: EntitySprite,
+    depthScale: number,
+    extent: NonNullable<EntitySprite['extent']>,
+  ) {
     const sourceSize = sprite.sourceSize ?? this.host.playerSourceSize
 
     return resolveEntityDisplaySize({
@@ -201,7 +223,7 @@ export class CombatGridView {
         : this.host.characterHeight,
       depthScale,
       classFactor: sprite.sizeMultiplier / 2,
-      extent: sprite.extent as NonNullable<EntitySprite['extent']>,
+      extent,
       sourceSize,
     })
   }
@@ -217,7 +239,7 @@ export class CombatGridView {
       const gameSprite = sprite.rect as Phaser.GameObjects.Sprite
 
       if (sprite.extent) {
-        const size = this.entityDisplaySize(sprite, 1)
+        const size = this.entityDisplaySize(sprite, 1, sprite.extent)
 
         gameSprite.setDisplaySize(size.boxWidth, size.boxHeight)
         sprite.personHeight = size.personHeight
@@ -250,6 +272,19 @@ export class CombatGridView {
       sprite.healthBar.fill.setSize(width, ENEMY_HP_BAR_HEIGHT - 2).updateDisplayOrigin()
       this.updateEnemyHealthBar(sprite, sprite.healthBar.currentHp, sprite.healthBar.maxHp)
     }
+
+    // Finding 1 (final whole-branch review): a Rectangle has no `extent`, so
+    // it never went through `entityDisplaySize` and `bodyBoxFor` fell back to
+    // `characterHeight` — half the resolver's real personHeight and with no
+    // depth factor. Anchors must be uniform across sprite/rect/static per the
+    // design's own claim (Spec C §3.1), so compute them here too. This does
+    // NOT touch how the Rectangle is DRAWN — `rect.width/height` above stay
+    // untouched because TranPhapCombatPreviewScene renders through this same
+    // path and precomputes its own sizing (see `entityDisplaySize`'s doc).
+    const anchorSize = this.entityDisplaySize(sprite, 1, RECT_ANCHOR_EXTENT)
+
+    sprite.personWidth = anchorSize.personWidth
+    sprite.personHeight = anchorSize.personHeight
   }
 
   /**
@@ -267,7 +302,7 @@ export class CombatGridView {
       const gameSprite = sprite.rect as Phaser.GameObjects.Sprite
 
       if (sprite.extent) {
-        const size = this.entityDisplaySize(sprite, effectiveScale)
+        const size = this.entityDisplaySize(sprite, effectiveScale, sprite.extent)
 
         gameSprite.setDisplaySize(size.boxWidth, size.boxHeight)
         sprite.personHeight = size.personHeight
@@ -293,6 +328,16 @@ export class CombatGridView {
         sprite.healthBar.fill.setSize(barWidth, ENEMY_HP_BAR_HEIGHT - 2).updateDisplayOrigin()
         this.updateEnemyHealthBar(sprite, sprite.healthBar.currentHp, sprite.healthBar.maxHp)
       }
+
+      // Finding 1 (final whole-branch review): see the matching comment in
+      // applySpriteSize() — same reasoning, but here `effectiveScale` is the
+      // depth factor this branch already computed (depthScale × boost), so
+      // the Rectangle's anchors scale with depth exactly like a sprite's do.
+      // rect.width/height above are left untouched (drawing stays as-is).
+      const anchorSize = this.entityDisplaySize(sprite, effectiveScale, RECT_ANCHOR_EXTENT)
+
+      sprite.personWidth = anchorSize.personWidth
+      sprite.personHeight = anchorSize.personHeight
     }
 
     if (sprite.shadow) {

@@ -56,13 +56,67 @@ describe('CombatScene.bodyAnchorScreen()', () => {
     expect(scene.bodyAnchorScreen('nobody', 'centre')).toBeUndefined()
   })
 
-  it('a Rectangle fallback still gets anchors — it stands in a cell like anything else', () => {
-    // The uniformity claim in Spec C §3.1, asserted rather than described.
-    const scene = sceneWith('mortal_unknown_1', 5)
-    const sprite = scene.sprites.get('mortal_unknown_1')
+  it('a Rectangle fallback gets REAL anchors from entityDisplaySize, not the pre-fix half-height default', () => {
+    // Finding 1, final whole-branch review: the old version of this test
+    // hand-set personWidth: 40, personHeight: 120 on the fixture and only
+    // THEN flipped `kind` to 'rect' — a state production never produces
+    // (personWidth/personHeight are written by the sizing methods, which used
+    // to skip the Rectangle branch entirely). It asserted nothing about the
+    // fix. This version starts as a real Rectangle with NO personWidth/
+    // personHeight and drives the actual production sizing method
+    // (applyEntityDepthScale, in combat-grid-view.ts) before reading anchors,
+    // so it fails if that method ever again stops writing them for a
+    // Rectangle.
+    const scene = createTestScene('bare')
 
-    sprite.kind = 'rect'
+    scene.characterWidth = 40
+    scene.characterHeight = 50
+    scene.projection = undefined
+    scene.playerSourceSize = { w: 1, h: 1 } // any sourceSize works; only affects boxWidth, which is discarded here.
+    scene.sprites = new Map()
 
-    expect(scene.bodyAnchorScreen('mortal_unknown_1', 'centre')).toEqual({ x: 300, y: 440 })
+    const rect: { width: number; height: number; x: number; updateDisplayOrigin(): unknown } = {
+      width: 0,
+      height: 0,
+      x: 300,
+      updateDisplayOrigin() {
+        return this
+      },
+    }
+
+    const sprite: {
+      kind: string
+      rect: typeof rect
+      row: number
+      footY: number
+      columnFloat: number
+      sizeMultiplier: number
+      boost: { value: number }
+      personWidth?: number
+      personHeight?: number
+    } = {
+      kind: 'rect',
+      rect,
+      row: 5,
+      footY: 500,
+      columnFloat: 8,
+      sizeMultiplier: 1,
+      boost: { value: 1 },
+    }
+
+    scene.sprites.set('mortal_unknown_1', sprite)
+
+    scene.applyEntityDepthScale(sprite, 1)
+
+    // classFactor = sizeMultiplier / 2 = 0.5; no projection so nearCellWidth
+    // falls back to characterHeight (50); personHeight = 50 * 1 * 0.5 * 1.84.
+    expect(sprite.personHeight).toBeCloseTo(46, 5)
+    expect(sprite.personWidth).toBeCloseTo(50 * 0.5 * 0.42, 5)
+
+    expect(scene.bodyAnchorScreen('mortal_unknown_1', 'bottom')).toEqual({ x: 300, y: 500 })
+    expect(scene.bodyAnchorScreen('mortal_unknown_1', 'top')).toEqual({
+      x: 300,
+      y: 500 - (sprite.personHeight ?? 0),
+    })
   })
 })

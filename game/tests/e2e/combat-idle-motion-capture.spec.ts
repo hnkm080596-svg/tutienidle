@@ -270,7 +270,7 @@ test.describe('Combat idle motion (Spec B §9.10)', () => {
       expect(new Set(lifts.map((lift) => lift.toFixed(2))).size, `${id}: lift never changed`)
         .toBeGreaterThan(1)
 
-      // 4. And it is a tween, not an animation (§3.2).
+      // 5. And it is a tween, not an animation (§3.2).
       for (const entry of series) {
         expect(entry.anim, `${id}: a static enemy is playing '${entry.anim}'`).toBeFalsy()
       }

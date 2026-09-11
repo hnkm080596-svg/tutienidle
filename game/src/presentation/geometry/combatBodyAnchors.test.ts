@@ -62,14 +62,17 @@ describe('bodyAnchor', () => {
     expect(bodyAnchor('back', body()).y).toBe(centre.y)
   })
 
-  it('two entities on one cell get identical anchors whatever their art', () => {
-    // Spec C §5: this is what makes "one mechanism" true rather than claimed.
-    // The function takes no art, so the only way to fail this is to add one.
-    const wolf = body()
-    const player = body()
+  it('two differently-sized entities at different cells each get their own anchors, not shared state', () => {
+    // Spec C §5: "one mechanism" for every entity means the formula is the
+    // same, not that two DIFFERENT bodies produce the same numbers — a wolf
+    // half the player's height at a different foot position must not leak
+    // the player's geometry (or vice versa) through any shared/global state.
+    const wolf = body({ footX: 100, footY: 200, personWidth: 40, personHeight: 80, facing: 'left' })
+    const player = body({ footX: 300, footY: 400, personWidth: 60, personHeight: 140, facing: 'right' })
 
-    for (const id of ['top', 'bottom', 'centre', 'front', 'back'] as const) {
-      expect(bodyAnchor(id, wolf)).toEqual(bodyAnchor(id, player))
-    }
+    expect(bodyAnchor('top', wolf)).toEqual({ x: 100, y: 120 })
+    expect(bodyAnchor('top', player)).toEqual({ x: 300, y: 260 })
+    expect(bodyAnchor('front', wolf)).toEqual({ x: 80, y: bodyAnchor('centre', wolf).y })
+    expect(bodyAnchor('front', player)).toEqual({ x: 330, y: bodyAnchor('centre', player).y })
   })
 })

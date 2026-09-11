@@ -240,6 +240,14 @@ interface EntitySprite {
    */
   sourceSize?: { w: number; h: number }
 
+  // How much of its authored box this sprite's art fills (Spec C §4.1) --
+  // duplicated from combatTypes.ts's EntitySprite (see the note above on why
+  // this local interface mirrors that one); combat-grid-view.ts writes this
+  // field onto objects stored in `sprites`, which is typed against THIS
+  // interface, so it must declare the field too (final whole-branch review,
+  // Finding 2).
+  extent?: { x: number; y: number; w: number; h: number }
+
   // The character's size on screen, as resolved by Spec C section 4.3 -- NOT
   // the sprite's box. bodyBoxFor() reads these; combat-grid-view.ts's sizing
   // methods write them (declared on combatTypes.ts's EntitySprite, the type
