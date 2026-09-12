@@ -30,4 +30,5 @@
 // plain `<realm>_wood` và hậu tố phẩm cũ hoang..tien KHÔNG TỒN TẠI nữa
 // (meta profession.quality → profession.age). Save v58 bị từ chối (dev
 // phase, không migration).
-export const CURRENT_SAVE_VERSION = 59 as const
+// v60: companion gacha (instanceId/realmId/constellationRank, pity counter, duyenPhan)
+export const CURRENT_SAVE_VERSION = 60 as const
