@@ -15,6 +15,8 @@ Root: `game/`. Stack: Vue 3, TypeScript, Vite, Vitest, Pinia, Phaser.
 
 **Project intent:** headlessly testable game, stable primitives, one authority per rule/state. Repair the smallest coherent responsibility and migrate its real consumers. Don't optimize for file/line count or a green suite alone. Preserve gameplay intent — don't silently redesign it.
 
+**Architecture worker workflow (required):** Before planning, dispatching, or making non-trivial production changes, use [architecture-worker-workflow.md](game/docs/architecture/architecture-worker-workflow.md). Complete G0/G1 before production edits; carry the task card, Q1-Q12 evidence and triggered domain checks through G2-G5. Read-only planning/research and docs-only work use its proportional scope rules. Workers must return the G5 evidence report; coordinators check the aggregate diff against it. Use [architecture-worker-exercises.md](game/docs/architecture/architecture-worker-exercises.md) for workflow qualification, not as a substitute for production tests. This operationalizes A1-A12/E7/E13; it does not change P1-P17, authorize unrelated repairs, or turn the historical Mission 0 audit into current requirements.
+
 ---
 
 # Part 1 — Protection Rules (Enforced)

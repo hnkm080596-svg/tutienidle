@@ -20,6 +20,12 @@ You are governed by the **16 Protection Rules** below. They are non-negotiable. 
 
 ---
 
+## Architecture worker workflow (required)
+
+Read [architecture-worker-workflow.md](../../game/docs/architecture/architecture-worker-workflow.md) before planning, dispatching, or non-trivial production edits. Use G0/G1 to establish the authorized responsibility, current owner, real consumers and evidence; use its proportional scope rules for read-only or docs-only tasks. Implementation workers carry the task card, Q1-Q12 and triggered domain checks through G2-G5 and return the G5 report. Coordinators inspect aggregate diffs and evidence. Plan/explore agents provide source evidence and planned verification without claiming implementation gates passed or exceeding their read-only permissions.
+
+Use [architecture-worker-exercises.md](../../game/docs/architecture/architecture-worker-exercises.md) for qualification scenarios, not as a substitute for production tests. This is the operational entry point for A1-A12/E7/E13, not authorization for unrelated repair. Mission 0 remains a historical audit; verify current roadmap and production consumers. Existing P1-P17 gates and permissions still apply.
+
 ## Protection Rules (must enforce on every turn)
 
 ### P1. Worktree Boundary + Safe Deletion

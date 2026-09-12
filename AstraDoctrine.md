@@ -6,6 +6,8 @@ They supplement `AGENTS.md`.
 
 They do not replace it.
 
+Apply this doctrine through [the architecture worker workflow](game/docs/architecture/architecture-worker-workflow.md): G0/G1 establish the responsibility and evidence before edits; G2-G5 cover invariant tests, real-consumer migration and acceptance. Keep the task card/ledger in the existing task artifact. The [worker exercises](game/docs/architecture/architecture-worker-exercises.md) provide concrete counterexamples and evaluator criteria; they do not certify runtime behavior.
+
 If this file and `AGENTS.md` appear to conflict, follow the stricter interpretation and report the conflict.
 
 ---

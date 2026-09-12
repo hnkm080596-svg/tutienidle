@@ -111,6 +111,8 @@ và:
 
 # 0.3. Migration discipline
 
+Worker execution uses [architecture-worker-workflow.md](architecture/architecture-worker-workflow.md): G0 task card, G1 ownership questions, G2 invariant coverage, G3 real-consumer migration, G4 existing verification gates and G5 evidence handoff. [Worker qualification exercises](architecture/architecture-worker-exercises.md) test application of this workflow. These documents describe how to preserve architecture; phase status and current ownership remain in this roadmap and maintained QA evidence.
+
 Architecture repair MUST NOT become a giant rewrite.
 
 Each implementation mission follows:
