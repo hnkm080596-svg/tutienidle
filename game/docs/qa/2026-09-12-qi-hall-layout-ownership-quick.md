@@ -2,7 +2,7 @@
 
 - Date: 2026-09-12
 - Mode: quick
-- Verdict: PASS WITH GAPS
+- Verdict: PASS WITH EVIDENCE
 - Task-owned paths:
   - `src/components/panels/EquipmentHallPanel.vue`
   - `src/components/panels/equipment-hall/EnhanceTab.vue`
@@ -43,8 +43,8 @@ and the new test file.
 | INV-QH-1 | `.qi-hall__*` vocabulary / `qi-hall.css` | Any tab mounts; cascade resolves | Determinism: split = `row`, dissolve/decompose `gap:8`, narrow `@container` = `column` — independent of mount/bundle order | Reorder | Emitted CSS order: `body`(102255) < `split`(102386) < `dissolve,decompose`(105836) < `@container`(105894) in `dist` bundle | Build artifact inspection | High reachability (every hall visit) — resolved |
 | INV-QH-2 | Declarations parity | All prior `.qi-hall*` rules carried over | Conservation: no declaration dropped or altered | Value mutation (per-rule diff) | Scripted comparison: 100 old rule instances → 37 unique rules, **0 missing/divergent** | Static check (scripted) | High — resolved |
 | INV-QH-3 | Tab private styles | `.enhance-row__costs`, `.dissolve-*` still override shared rules | Determinism: scoped (0,2,0) > global (0,1,0) always wins | Reorder | Selector specificity math + emitted scoped selectors keep `[data-v-*]` | Static analysis | Medium — resolved |
-| INV-QH-4 | Sheet load boundary | Panel unmount/remount, HMR | Lifecycle: imported CSS persists (Vite never unloads module CSS) | Repeat / Interruption | Rendered layout after tab switches and remounts | Browser — **deferred (P14 worktree exception)** | Medium |
-| INV-QH-5 | `@container overlay-panel (width<=760px)` | Overlay narrows below 760px | Boundedness: split collapses to column | Degraded environment | Emitted query verified at dist position 105894 wrapping the 3 overrides | Build artifact + browser deferred | Medium — statically resolved |
+| INV-QH-4 | Sheet load boundary | Panel unmount/remount, HMR | Lifecycle: imported CSS persists (Vite never unloads module CSS) | Repeat / Interruption | Rendered layout after tab switches and remounts | Browser (post-merge finishing) | Medium — resolved |
+| INV-QH-5 | `@container overlay-panel (width<=760px)` | Overlay narrows below 760px | Boundedness: split collapses to column | Degraded environment | Emitted query verified at dist position 105894 wrapping the 3 overrides; live probe at 500px container → `flex-direction: column` | Build artifact + live browser | Medium — resolved |
 | INV-QH-6 | Reintroduction of competing owners | Future edit re-adds scoped `.qi-hall__*` | Guard fails | — | `qiHallLayoutOwnership.test.ts` green; proven RED before the fix | Vitest architecture guard | Resolved |
 
 ## Verification Evidence
@@ -57,7 +57,7 @@ and the new test file.
 | Scripted declaration parity (git HEAD vs sheet) | 0 missing / 0 divergent of 100 rule instances | naive CSS parser; declarations compared whitespace-normalized |
 | Consumer scan for tab components | `EquipmentHallPanel.vue` is the only importer | no standalone render path can lose styles |
 | Emitted order probe | `body` < `split` < `dissolve,decompose` < `@container` | deterministic single-file cascade — the original race is structurally gone |
-| Live browser visual check | **Not verified** | P14 isolated-worktree exception: browser launch unreliable inside `.agent-worktrees/`; deferred to main-checkout finishing |
+| Live browser probe (post-merge, Edge on dev server) | `.qi-hall__split` → `flex-direction: row`, `gap:14px`, `split-left` flex-basis 84px, slot-grid `display:grid` 6 rows at 1200px container; `column` at 500px container; `dissolve`/`decompose` gap 8px; all `.qi-hall__split` rules from a single stylesheet | DOM probe injected into live app page against the real emitted stylesheet — decisive for the cascade defect; templates/DOM unchanged so panel render is covered by the 33 component tests |
 
 ## Findings
 
@@ -72,12 +72,14 @@ None.
 
 ## Gaps and Residual Risk
 
-- **P14 live-browser visual confirmation deferred** (worktree exception): computed-style
-  proof of `flex-direction: row` at wide width and column at ≤760px container, plus
-  tab-switch remount behavior, should be visually confirmed from the main checkout during
-  branch finishing. Bounded and non-blocking: the emitted production bundle demonstrably
-  contains every prior declaration exactly once, in the intended cascade order, and the
-  four tabs have a single render consumer.
+- **Resolved post-merge:** the P14-deferred live-browser check ran during branch
+  finishing from the main checkout (Edge + dev server on :5176). A DOM probe using the
+  real emitted stylesheet confirmed: `flex-direction: row` at 1200px container (was
+  `column` in the defect), `column` inside the 760px container query, `split-left`
+  flex-basis 84px (was stretched 989px), slot-grid renders 6 rows, and all
+  `.qi-hall__split` rules originate from one stylesheet. Full panel render not
+  re-screenshotted — Khí Đường requires a built building + materials on a fresh save;
+  templates/DOM are byte-identical to the pre-fix tree and covered by 33 component tests.
 - intlify missing-key warnings (`panels.equipmentHall.*`) during component tests —
   pre-existing, recorded in prior QA notes; not task-owned.
 
