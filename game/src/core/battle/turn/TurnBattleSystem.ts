@@ -1100,25 +1100,36 @@ export class TurnBattleSystem {
         }
 
         if (action.skill?.appliesBuff && this.registry) {
-          const definition = this.registry.get(action.skill.appliesBuff.definitionId)
+          // Skip an unresolvable buff id gracefully (renamed/drifted content
+          // must not crash the tick) — same try/catch pattern as the
+          // bossTrigger lookup above.
+          let definition: TurnBuffDefinition | undefined
 
-          // gaugeDelta là ONE-SHOT push SAU consume (consume đặt gauge về 0,
-          // delta cộng lên trên — nếu áp trước sẽ bị consume ghi đè).
-          if (action.skill.appliesBuff.target === 'self') {
-            new TurnBuffSystem(actor.buffs).apply(definition, actor.entity, actor.entity, this.registry)
-            this.pendingGaugeDeltaTargets = [actor]
-          } else {
-            const targets: TurnBattleParticipant[] = []
-
-            for (const target of declared.affected) {
-              new TurnBuffSystem(target.buffs).apply(definition, actor.entity, target.entity, this.registry)
-              targets.push(target)
-            }
-
-            this.pendingGaugeDeltaTargets = targets
+          try {
+            definition = this.registry.get(action.skill.appliesBuff.definitionId)
+          } catch {
+            definition = undefined
           }
 
-          this.pendingGaugeDeltaDefinition = definition
+          if (definition) {
+            // gaugeDelta là ONE-SHOT push SAU consume (consume đặt gauge về 0,
+            // delta cộng lên trên — nếu áp trước sẽ bị consume ghi đè).
+            if (action.skill.appliesBuff.target === 'self') {
+              new TurnBuffSystem(actor.buffs).apply(definition, actor.entity, actor.entity, this.registry)
+              this.pendingGaugeDeltaTargets = [actor]
+            } else {
+              const targets: TurnBattleParticipant[] = []
+
+              for (const target of declared.affected) {
+                new TurnBuffSystem(target.buffs).apply(definition, actor.entity, target.entity, this.registry)
+                targets.push(target)
+              }
+
+              this.pendingGaugeDeltaTargets = targets
+            }
+
+            this.pendingGaugeDeltaDefinition = definition
+          }
         }
 
         if (action.skill?.targetScope === 'self') {
@@ -1269,22 +1280,33 @@ export class TurnBattleSystem {
 
     for (const ailment of ailments) {
       if (Math.random() < ailment.chance) {
-        const definition = this.registry.get(ailment.buffDefinitionId)
-        const stackCount = ailment.stacks ?? 1
+        // Skip an unresolvable ailment id gracefully — same try/catch
+        // pattern as the bossTrigger lookup in declareActorAction.
+        let definition: TurnBuffDefinition | undefined
 
-        for (let s = 0; s < stackCount; s++) {
-          new TurnBuffSystem(target.buffs).apply(definition, actor.entity, target.entity, this.registry)
+        try {
+          definition = this.registry.get(ailment.buffDefinitionId)
+        } catch {
+          definition = undefined
         }
 
-        this.reactionManager?.checkAndTrigger(
-          target.buffs,
-          ailment.buffDefinitionId,
-          actor.entity,
-          target.entity,
-          this.combat,
-          this.registry,
-          actor.buffs,
-        )
+        if (definition) {
+          const stackCount = ailment.stacks ?? 1
+
+          for (let s = 0; s < stackCount; s++) {
+            new TurnBuffSystem(target.buffs).apply(definition, actor.entity, target.entity, this.registry)
+          }
+
+          this.reactionManager?.checkAndTrigger(
+            target.buffs,
+            ailment.buffDefinitionId,
+            actor.entity,
+            target.entity,
+            this.combat,
+            this.registry,
+            actor.buffs,
+          )
+        }
       }
     }
   }
