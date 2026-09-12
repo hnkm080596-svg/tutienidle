@@ -150,6 +150,33 @@ describe('BattleLootSystem - companion battle EXP', () => {
     expect(player.companions[1]?.exp).toBe(4)
   })
 
+  it('a companion occupying two formation slots (malformed loadout) gains exp once, not per slot', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    const { killEnemy, player } = createLootTestSetup({
+      realmId: 'qi_refining',
+      stage: { stageId: 'qr_5', requiredRealmId: 'qi_refining', floor: 5 },
+    })
+
+    player.companions.push(makeCompanion('test_companion_1'))
+    // Malformed-but-loadable state: save validation never inspects
+    // formationLoadout.assignments, so a crafted/current save can place
+    // the same combatantId on two slots. Exactly-once is per COMPANION
+    // per kill - combat itself spawns one participant (formation.find
+    // takes the first slot), so granting twice overpays.
+    player.formationLoadout = {
+      formationId: 'test_formation',
+      assignments: [
+        { row: 0, column: 0, combatantId: 'player' },
+        { row: 1, column: 0, combatantId: 'test_companion_1' },
+        { row: 1, column: 1, combatantId: 'test_companion_1' },
+      ],
+    }
+
+    killEnemy()
+
+    expect(player.companions[0]?.exp).toBe(companionBattleExpPerKill('qi_refining'))
+  })
+
   it('the auto-farm shim path (processDefeatedEnemies with a stage override) grants exp', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
     const { loot, player } = createLootTestSetup({ realmId: 'mortal' })

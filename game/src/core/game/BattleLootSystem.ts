@@ -304,10 +304,16 @@ export class BattleLootSystem {
               stage?.requiredRealmId ?? enemy.realmId,
             )
 
+            // Exactly-once per companion per kill: a malformed loadout
+            // can assign the same combatantId to two slots (the save
+            // validator does not inspect assignments), but combat itself
+            // spawns only one participant per definitionId.
+            const grantedCombatantIds = new Set<string>(['player'])
             for (const slot of resolvePartyFormation(player)) {
-              if (slot.combatantId === 'player') {
+              if (grantedCombatantIds.has(slot.combatantId)) {
                 continue
               }
+              grantedCombatantIds.add(slot.combatantId)
 
               const companionIndex = player.companions.findIndex(
                 (companion) => companion.definitionId === slot.combatantId,

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { validateGameSaveShape } from './saveShapeValidation'
 import { CURRENT_SAVE_VERSION } from './saveVersion'
 import { createDefaultPlayer } from '../../core/player/Player'
+import { COMPANIONS } from '../../data/companion/Companions'
 
 function validSave(): Record<string, unknown> {
   return {
@@ -497,7 +498,9 @@ describe('validateGameSaveShape - companion gacha (v60)', () => {
   function validCompanionEntry(): Record<string, unknown> {
     return {
       instanceId: 'comp-1',
-      definitionId: 'test_companion_1',
+      // The validator rejects definitionIds absent from the live roster,
+      // so entries must use a real production id.
+      definitionId: COMPANIONS[0]!.id,
       realmId: 'mortal',
       realmLevel: 5,
       exp: 12,
@@ -665,7 +668,7 @@ describe('validateGameSaveShape - companion gacha (v60)', () => {
 
     playerOf(save).companions = [
       validCompanionEntry(),
-      { ...validCompanionEntry(), definitionId: 'test_companion_2' },
+      { ...validCompanionEntry(), definitionId: COMPANIONS[1]!.id },
     ]
 
     const result = validateGameSaveShape(save)
@@ -686,5 +689,24 @@ describe('validateGameSaveShape - companion gacha (v60)', () => {
 
     expect(result.ok).toBe(false)
     expect(pathsOf(result)).toContain('player.companions[1].definitionId')
+  })
+
+  it('từ chối companions entry có definitionId không tồn tại trong COMPANIONS (registry drift)', () => {
+    const save = validSave()
+    const entry = validCompanionEntry()
+
+    // An owned companion whose definitionId fell out of the roster is
+    // permanently inert - panel hides it, buildTurnBattle skips it,
+    // battle EXP skips it - while still occupying player.companions.
+    // Same registry-drift contract as realmId above and the
+    // learned-defect QA-2026-09-01-013 principle: an owned current
+    // entry must hard-fail, not silently load as dead weight.
+    entry.definitionId = 'khong_ton_tai_trong_roster'
+    playerOf(save).companions = [entry]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.companions[0].definitionId')
   })
 })

@@ -9,6 +9,7 @@
 // validator đòi, và ngược lại).
 import { CURRENT_SAVE_VERSION } from './saveVersion'
 import { REALMS } from '../../data/realms/realm'
+import { COMPANIONS } from '../../data/companion/Companions'
 import { MAX_CONSTELLATION_RANK } from '../../core/companion/CompanionProgression'
 import { ITEM_QUALITY_ORDER, type ItemQuality } from '../../core/item/ItemQuality'
 import { isProfessionGrade } from '../../core/profession/ProfessionGrade'
@@ -264,6 +265,16 @@ function validateCompanionEntries(
         issues.push({ path: `${entryPath}.definitionId`, message: 'bị trùng với companion entry khác' })
       } else {
         seenDefinitionIds.add(entry.definitionId)
+      }
+
+      // An owned companion whose definitionId is absent from the roster
+      // loads as permanently inert dead state (every consumer silently
+      // skips it) - fail loud like an unknown realmId.
+      if (!COMPANIONS.some((definition) => definition.id === entry.definitionId)) {
+        issues.push({
+          path: `${entryPath}.definitionId`,
+          message: 'không tồn tại trong roster companion',
+        })
       }
     }
 
