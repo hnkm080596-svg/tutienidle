@@ -1,22 +1,18 @@
 import type { Battle } from '../battle/Battle'
 import type { EventBus } from '../events/EventBus'
-import { rollChance, randomInt } from '../reward/DropRoll'
-import {
-  BOSS_EQUIPMENT_DROP_CHANCE,
-  NORMAL_EQUIPMENT_DROP_CHANCE,
-  rollMortalEssenceAmount,
-} from '../reward/StageDropRules'
+import { randomInt } from '../reward/DropRoll'
 import { getSkillInsightReward } from '../reward/SkillInsightBalance'
 import { getRealmRewardMultiplier } from '../reward/RealmRewardScale'
 import {
-  getEquipmentDropChanceMultiplier,
   getHealOnKillMaxHpPercent,
   getInsightGainMultiplier,
   getSpiritStoneGainMultiplier,
 } from '../talent/TalentEffects'
-import { ARTIFACT_STONE_BOSS_QUANTITY_MAX, ARTIFACT_STONE_BOSS_QUANTITY_MIN, ARTIFACT_STONE_DROP_CHANCE } from '../artifact/ArtifactDropBalance'
-import { DOAN_BAO_THACH_MATERIAL_ID, applyArtifactExperience, getArtifactExperienceReward } from '../artifact/ArtifactProgression'
-import { getRealmIndex } from '../realm/realmSystem'
+import { applyArtifactExperience, getArtifactExperienceReward } from '../artifact/ArtifactProgression'
+import { resolveDrops, type DropChannel, type ResolvedDropItem } from '../drop/resolveDrops'
+import { modifiersFor } from '../drop/DropContext'
+import { stageDropTableFor } from '../../data/drop/StageDropTables'
+import { familyDropTableFor } from '../../data/drop/FamilyDropTables'
 import type { RewardReceiver, RewardSystem } from '../reward/RewardSystem'
 import type { Reward } from '../reward/Reward'
 import {
@@ -32,7 +28,7 @@ import type { PlayerData } from '../player/Player'
 
 /** Màu tím chuỗi Tinh Hoa Phàm Thể (2026-08-30) — bay về người chơi. */
 const ESSENCE_PARTICLE_COLOR = 0xc792ea
-import type { Enemy, EnemyItemDrop, EnemyReward } from '../enemy/Enemy'
+import type { Enemy, EnemyReward } from '../enemy/Enemy'
 import type { LootNotificationPresentation } from '../notification/NotificationEvent'
 import type { NotificationQueue } from './NotificationQueue'
 import { createBagOverflowEvent } from '../notification/bagOverflow'
@@ -95,10 +91,13 @@ export interface BattleLootSystemDeps {
  * - BattleRewardSummary tích luỹ trong trận hiện tại cho
  *   CombatVictoryPanel/CombatDefeatPanel (reset mỗi trận MỚI qua
  *   beginBattle()).
- * - grantItemDrops()/grantRandomEquipmentDrop(): đồ rơi thẳng vào bag
- *   tương ứng ngay khi quái chết — không có bước "nhặt" thủ công/loot
- *   window. Mỗi lần cộng thành công đẩy 1 toast 'loot' vào
- *   NotificationQueue (Vue layer drain mỗi tick).
+ * - grantResolvedDrops(): đồ rơi thẳng vào bag tương ứng ngay khi quái
+ *   chết — không có bước "nhặt" thủ công/loot window. Mỗi lần cộng
+ *   thành công đẩy 1 toast 'loot' vào NotificationQueue (Vue layer
+ *   drain mỗi tick).
+ * - Drop-system (2026-09-12): QUYẾT ĐỊNH rơi gì thuộc resolveDrops()
+ *   (stage/family table + signature + modifiers) — hệ này chỉ orchestrate
+ *   cấp phát + notification, không tự roll thêm đường nào.
  */
 export class BattleLootSystem {
   private summary: BattleRewardSummary = createEmptyBattleRewardSummary()
@@ -111,7 +110,15 @@ export class BattleLootSystem {
   // rớt ra (chỉ số chính scale theo cảnh giới người chơi).
   private player: PlayerData | null = null
 
+  // Kênh drop hiện tại — 'active' mặc định; auto-farm idle bật 'idle'
+  // qua setChannel() rồi khôi phục sau mỗi cycle (Task 9 wiring).
+  private channel: DropChannel = 'active'
+
   constructor(private readonly deps: BattleLootSystemDeps) {}
+
+  setChannel(channel: DropChannel) {
+    this.channel = channel
+  }
 
   // Reset mỗi khi 1 TRẬN MỚI bắt đầu (startBattle) — xoá cả session.
   beginBattle() {
@@ -159,7 +166,7 @@ export class BattleLootSystem {
    * quái chết giữa chừng lúc battle vẫn 'fighting' vẫn phải cấp
    * thưởng ngay, không đợi cả trận kết thúc.
    */
-  processDefeatedEnemies(battle: Battle) {
+  processDefeatedEnemies(battle: Battle, stageOverride?: Stage) {
     for (const battleEnemy of battle.enemies) {
       if (battleEnemy.entity.alive || battleEnemy.rewardGranted) {
         continue
@@ -188,6 +195,30 @@ export class BattleLootSystem {
         const enemy = this.deps.enemySystem.get(battleEnemy.entity.id)
 
         if (enemy) {
+          // Drop-system (2026-09-12): resolveDrops owns the WHAT (stage
+          // table by realm+floor, family table, per-enemy signatures,
+          // boss/elite/tag modifiers). This system owns the HOW (bags,
+          // toasts, particles, summary, quest hooks).
+          const activeStage = stageOverride ? undefined : this.deps.stageManager.get()
+          const stage =
+            stageOverride ??
+            (activeStage ? this.deps.stageTemplates.get(activeStage.stageId) : undefined)
+          const drops = resolveDrops({
+            // Stage band is the progression anchor; a kill with no stage
+            // context (auto-farm shim, debug/startBattleWithPlayer fights)
+            // falls back to the enemy's own realm band rather than paying
+            // nothing.
+            stageTable: stageDropTableFor(stage?.requiredRealmId ?? enemy.realmId, stage?.floor),
+            familyTable: familyDropTableFor(enemy.family),
+            signatureDrops: enemy.signatureDrops,
+            modifiers: modifiersFor({
+              channel: this.channel,
+              isBoss: battleEnemy.entity.isBoss === true,
+              isElite: battleEnemy.entity.isElite === true,
+            }),
+            channel: this.channel,
+          })
+
           // Thiên phú Tụ Bảo — nhân Linh Thạch TRƯỚC khi giveReward để
           // lượng thật vào túi khớp summary (plan §6).
           const talentStoneMultiplier = this.player
@@ -197,21 +228,16 @@ export class BattleLootSystem {
           // RealmRewardScale) — Trúc Cơ tái sử dụng enemyPool Luyện Khí
           // nên phải nhân thưởng để thu nhập không bị khựng. Nhân cả
           // techniqueInsight (tác dụng phụ: artifact EXP + skill insight
-          // tăng theo ở Trúc Cơ, đã được duyệt 2026-08-28).
+          // tăng theo ở Trúc Cơ, đã được duyệt 2026-08-28). Currency now
+          // comes from the stage drop table (already multiplied by the
+          // modifier currency coefficient inside resolveDrops) — the
+          // realm/talent multipliers keep their position AFTER it.
           const realmRewardMultiplier = getRealmRewardMultiplier(enemy.realmId)
           const stoneMultiplier = talentStoneMultiplier * realmRewardMultiplier
-          const rewards: EnemyReward =
-            stoneMultiplier === 1 && realmRewardMultiplier === 1
-              ? enemy.rewards
-              : {
-                  ...enemy.rewards,
-                  spiritStone: enemy.rewards.spiritStone
-                    ? Math.floor(enemy.rewards.spiritStone * stoneMultiplier)
-                    : enemy.rewards.spiritStone,
-                  techniqueInsight: enemy.rewards.techniqueInsight
-                    ? Math.floor(enemy.rewards.techniqueInsight * realmRewardMultiplier)
-                    : enemy.rewards.techniqueInsight,
-                }
+          const rewards: EnemyReward = {
+            spiritStone: Math.floor(drops.spiritStone * stoneMultiplier),
+            techniqueInsight: Math.floor(drops.techniqueInsight * realmRewardMultiplier),
+          }
 
           // Tu vi giờ CHỈ đến từ tu luyện (2026-08-20) — EnemyReward
           // không còn field cultivation.
@@ -255,19 +281,12 @@ export class BattleLootSystem {
             this.emitRewardParticle(battleEnemy.entity.id, 'currency', 0xffd54f)
           }
 
-          this.grantItemDrops(
-            rewards.itemDrops,
-            battleEnemy.entity.isBoss === true,
+          this.grantResolvedDrops(
+            drops.items,
+            drops.qualityBonusSteps,
             battleEnemy.entity.id,
           )
-          this.grantRandomEquipmentDrop(battleEnemy.entity.isBoss === true, battleEnemy.entity.id)
 
-          this.grantArtifactStoneDrop(
-            enemy,
-            battleEnemy.entity.isBoss === true,
-            battleEnemy.entity.isElite === true,
-            battleEnemy.entity.id,
-          )
           this.grantArtifactExperience(enemy)
 
           const activeStageId = this.deps.stageManager.get()?.stageId
@@ -321,49 +340,76 @@ export class BattleLootSystem {
   }
 
   /**
-   * Đồ rơi thẳng vào bag tương ứng ngay khi quái chết. Mỗi lần cộng
-   * thành công đẩy 1 toast 'loot' vào NotificationQueue. Lượng tràn
-   * stack (túi đầy) được gom lại và báo MỘT toast duy nhất cuối đợt
-   * thay vì mất lặng lẽ.
+   * Đồ rơi thẳng vào bag tương ứng ngay khi quái chết — consume phần
+   * `items` resolveDrops đã quyết định (KHÔNG roll thêm gì ở đây; chỉ
+   * 'equipment_any' còn 1 lần rút template từ registry vì resolver
+   * không biết registry). Mỗi lần cộng thành công đẩy 1 toast 'loot'
+   * vào NotificationQueue. Lượng tràn stack (túi đầy) được gom lại và
+   * báo MỘT toast duy nhất cuối đợt thay vì mất lặng lẽ.
    */
-  private grantItemDrops(drops: EnemyItemDrop[] | undefined, isBoss: boolean, sourceId: string) {
-    if (!drops) {
-      return
-    }
-
+  private grantResolvedDrops(
+    items: ResolvedDropItem[],
+    qualityBonusSteps: number,
+    sourceId: string,
+  ) {
     const overflowParts: string[] = []
 
-    // Thiên phú Cơ Duyên — chỉ nhân chance của drop kind 'equipment',
-    // cap 1.0 (plan §6). Material/pill/technique giữ nguyên.
-    const equipmentChanceMultiplier = this.player
-      ? getEquipmentDropChanceMultiplier(this.player.selectedTalentIds)
-      : 1
+    // Địa Giới ghép động (2026-08-15) — Zone chứa Stage đang hoạt động
+    // lúc rớt đồ, xem ZoneRegistry.getZoneForStage()/EquipmentNaming.ts.
+    const activeStageId = this.deps.stageManager.get()?.stageId
+    const zoneId = activeStageId
+      ? this.deps.zoneRegistry.getZoneForStage(activeStageId)?.id
+      : undefined
 
-    for (const drop of drops) {
-      const chance =
-        drop.kind === 'equipment'
-          ? Math.min(1, drop.chance * equipmentChanceMultiplier)
-          : drop.chance
-
-      if (!rollChance(chance)) {
-        continue
+    const grantEquipment = (templateId: string | undefined) => {
+      if (!this.player) {
+        return
       }
 
+      const template = templateId
+        ? this.deps.equipmentRegistry.has(templateId)
+          ? this.deps.equipmentRegistry.get(templateId)
+          : undefined
+        : (() => {
+            const pool = this.deps.equipmentRegistry.getAll()
+
+            return pool.length > 0 ? pool[randomInt(0, pool.length - 1)] : undefined
+          })()
+
+      if (!template) {
+        return
+      }
+
+      const instance = this.deps.equipmentSystem.createInstance(
+        template,
+        this.player,
+        this.deps.affixRegistry,
+        zoneId,
+        qualityBonusSteps,
+      )
+
+      this.grantAutoDissolveRewards(this.deps.equipmentBag.add(instance))
+      this.emitRewardParticle(sourceId, 'item', this.getQualityParticleColor(instance.quality))
+
+      this.pushLootNotification(`+1 ${template.name}`, {
+        icon: instance.icon ?? template.icon,
+        nameSegments: composeEquipmentNameSegments(instance, template, this.deps.zoneRegistry),
+        amountLabel: '+1',
+        // Fix 2 follow-up (final review, optional minor) — dùng
+        // --grade-${quality} thay vì tự tính lại rank-color-N (dup logic
+        // ITEM_QUALITY_ORDER.indexOf), nhất quán với quality segment của
+        // composeEquipmentNameSegments.
+        accentColorVar: `--grade-${instance.quality}`,
+      })
+      this.addBattleRewardItem('equipment', template.id, template.name, 1)
+    }
+
+    for (const drop of items) {
       switch (drop.kind) {
         case 'material':
-          if (this.deps.materialRegistry.has(drop.itemId)) {
+          if (drop.itemId && this.deps.materialRegistry.has(drop.itemId)) {
             const material = this.deps.materialRegistry.get(drop.itemId)
-            const activeStage = this.deps.stageManager.get()
-            const stage = activeStage
-              ? this.deps.stageTemplates.get(activeStage.stageId)
-              : undefined
-            const isMortalStageDrop =
-              stage?.requiredRealmId === 'mortal' &&
-              (stage.floor ?? stage.requiredRealmLevel ?? 0) <= 10
-            const amount =
-              drop.itemId === TINH_HOA_PHAM_THE_MATERIAL_ID && isMortalStageDrop
-                ? rollMortalEssenceAmount(isBoss)
-                : (drop.amount ?? 1)
+            const amount = drop.amount
 
             const materialOverflow = this.deps.materialBag.add(material, amount)
 
@@ -401,9 +447,9 @@ export class BattleLootSystem {
           break
 
         case 'pill':
-          if (this.deps.pillRegistry.has(drop.itemId)) {
+          if (drop.itemId && this.deps.pillRegistry.has(drop.itemId)) {
             const pill = this.deps.pillRegistry.get(drop.itemId)
-            const amount = drop.amount ?? 1
+            const amount = drop.amount
 
             const pillOverflow = this.deps.pillBag.add(pill, amount)
 
@@ -424,48 +470,13 @@ export class BattleLootSystem {
           break
 
         case 'equipment':
-          if (this.deps.equipmentRegistry.has(drop.itemId) && this.player) {
-            const template = this.deps.equipmentRegistry.get(drop.itemId)
+          grantEquipment(drop.itemId)
+          break
 
-            // Địa Giới ghép động (2026-08-15) — Zone chứa Stage đang
-            // hoạt động lúc rớt đồ, xem ZoneRegistry.getZoneForStage()/
-            // EquipmentNaming.ts. undefined nếu không có Stage đang
-            // chạy (không nên xảy ra ở nhánh loot combat này, nhưng
-            // graceful nếu có).
-            const activeStageId = this.deps.stageManager.get()?.stageId
-
-            const zoneId = activeStageId
-              ? this.deps.zoneRegistry.getZoneForStage(activeStageId)?.id
-              : undefined
-
-            const instance = this.deps.equipmentSystem.createInstance(
-              template,
-              this.player,
-              this.deps.affixRegistry,
-              zoneId,
-            )
-
-            this.grantAutoDissolveRewards(this.deps.equipmentBag.add(instance))
-            this.emitRewardParticle(sourceId, 'item', this.getQualityParticleColor(instance.quality))
-
-            this.pushLootNotification(`+1 ${template.name}`, {
-              icon: instance.icon ?? template.icon,
-              nameSegments: composeEquipmentNameSegments(
-                instance,
-                template,
-                this.deps.zoneRegistry,
-              ),
-              amountLabel: '+1',
-              // Fix 2 follow-up (final review, optional minor) — dùng
-              // --grade-${quality} thay vì tự tính lại rank-color-N (dup
-              // logic ITEM_QUALITY_ORDER.indexOf), để nhất quán với
-              // composeEquipmentNameSegments's quality segment (cũng
-              // --grade-* sau Fix 2) thay vì lệch dải màu với chính tên
-              // vừa hiện trên cùng toast.
-              accentColorVar: `--grade-${instance.quality}`,
-            })
-            this.addBattleRewardItem('equipment', template.id, template.name, 1)
-          }
+        // 'equipment_any' — resolver trả về không kèm itemId; rút ngẫu
+        // nhiên 1 template từ registry (đường "rơi đồ ngẫu nhiên" cũ).
+        case 'equipment_any':
+          grantEquipment(undefined)
           break
 
         // Phá Cảnh Tâm Pháp — rơi thẳng vào danh sách tâm pháp ĐÃ HỌC
@@ -475,9 +486,10 @@ export class BattleLootSystem {
         // khi THỰC SỰ học mới (learn() trả true), tránh spam toast
         // trùng lặp mỗi lần rớt trúng công pháp đã sở hữu.
         case 'technique': {
-          const template = this.deps.techniqueTemplates.get(drop.itemId)
+          const itemId = drop.itemId
+          const template = itemId ? this.deps.techniqueTemplates.get(itemId) : undefined
 
-          if (template && this.deps.techniqueSystem.learn(template)) {
+          if (itemId && template && this.deps.techniqueSystem.learn(template)) {
             this.emitRewardParticle(sourceId, 'item', 0xffd54f)
             this.pushLootNotification(`Học được: ${template.name}`, {
               icon: template.icon,
@@ -485,7 +497,7 @@ export class BattleLootSystem {
               amountLabel: 'Học được',
               accentColorVar: '--gold-500',
             })
-            this.addBattleRewardItem('technique', drop.itemId, template.name, 1)
+            this.addBattleRewardItem('technique', itemId, template.name, 1)
           }
 
           break
@@ -506,112 +518,6 @@ export class BattleLootSystem {
         },
       })
     }
-  }
-
-  private grantRandomEquipmentDrop(isBoss: boolean, sourceId: string) {
-    if (!this.player) {
-      return
-    }
-
-    // Thiên phú Cơ Duyên — nhân cả chance rơi trang bị ngẫu nhiên
-    // (boss lẫn thường), cap 1.0 (plan §6).
-    const baseChance = isBoss ? BOSS_EQUIPMENT_DROP_CHANCE : NORMAL_EQUIPMENT_DROP_CHANCE
-    const chance = Math.min(
-      1,
-      baseChance * getEquipmentDropChanceMultiplier(this.player.selectedTalentIds),
-    )
-
-    if (!rollChance(chance)) {
-      return
-    }
-
-    const pool = this.deps.equipmentRegistry.getAll()
-
-    if (pool.length === 0) {
-      return
-    }
-
-    const template = pool[randomInt(0, pool.length - 1)]!
-    const activeStageId = this.deps.stageManager.get()?.stageId
-    const zoneId = activeStageId
-      ? this.deps.zoneRegistry.getZoneForStage(activeStageId)?.id
-      : undefined
-    const instance = this.deps.equipmentSystem.createInstance(
-      template,
-      this.player,
-      this.deps.affixRegistry,
-      zoneId,
-    )
-
-    this.grantAutoDissolveRewards(this.deps.equipmentBag.add(instance))
-    this.emitRewardParticle(sourceId, 'item', this.getQualityParticleColor(instance.quality))
-
-    // Uncommitted audit followup plan, mục "Đồng nhất thông báo trang bị
-    // rơi ngẫu nhiên" (2026-08-24) — nhánh drop này trước đây thiếu
-    // pushLootNotification() so với nhánh 'equipment' của grantItemDrops()
-    // ở trên (cùng formatter tên/icon/màu Phẩm), khiến rớt đồ ngẫu nhiên
-    // (BOSS/NORMAL_EQUIPMENT_DROP_CHANCE, KHÔNG khai trong enemy.rewards.itemDrops)
-    // không hiện toast dù đã cộng bag + particle + battle summary.
-    this.pushLootNotification(`+1 ${template.name}`, {
-      icon: instance.icon ?? template.icon,
-      nameSegments: composeEquipmentNameSegments(instance, template, this.deps.zoneRegistry),
-      amountLabel: '+1',
-      // Fix 2 follow-up (final review, optional minor) — xem comment ở
-      // nhánh 'equipment' của grantItemDrops() phía trên.
-      accentColorVar: `--grade-${instance.quality}`,
-    })
-    this.addBattleRewardItem('equipment', template.id, template.name, 1)
-  }
-
-  /**
-   * Đoán Bảo Thạch (doc §6) — chỉ roll khi quái Trúc Cơ trở lên. Mỗi
-   * quái chỉ dùng đúng MỘT dòng cao nhất (Boss KHÔNG roll thêm bảng
-   * Elite/Thường). Mirror nhánh 'material' của grantItemDrops() ở trên
-   * cho cách cộng bag/notification/summary.
-   */
-  private grantArtifactStoneDrop(enemy: Enemy, isBoss: boolean, isElite: boolean, sourceId: string) {
-    if (getRealmIndex(enemy.realmId) < getRealmIndex('foundation_establishment')) {
-      return
-    }
-
-    if (!this.deps.materialRegistry.has(DOAN_BAO_THACH_MATERIAL_ID)) {
-      return
-    }
-
-    const chance = isBoss
-      ? ARTIFACT_STONE_DROP_CHANCE.boss
-      : isElite
-        ? ARTIFACT_STONE_DROP_CHANCE.elite
-        : ARTIFACT_STONE_DROP_CHANCE.normal
-
-    if (!rollChance(chance)) {
-      return
-    }
-
-    const amount = isBoss
-      ? randomInt(ARTIFACT_STONE_BOSS_QUANTITY_MIN, ARTIFACT_STONE_BOSS_QUANTITY_MAX)
-      : 1
-
-    const material = this.deps.materialRegistry.get(DOAN_BAO_THACH_MATERIAL_ID)
-
-    const stoneOverflow = this.deps.materialBag.add(material, amount)
-
-    this.deps.questSystem.onMaterialCollected(
-      this.deps.questRegistry,
-      this.deps.questManager,
-      DOAN_BAO_THACH_MATERIAL_ID,
-      amount - stoneOverflow,
-    )
-
-    this.emitRewardParticle(sourceId, 'item', 0x6fbf73)
-
-    this.pushLootNotification(`+${amount} ${material.name}`, {
-      icon: material.icon,
-      nameSegments: [{ text: material.name }],
-      amountLabel: `+${amount}`,
-      accentColorVar: '--jade',
-    })
-    this.addBattleRewardItem('material', DOAN_BAO_THACH_MATERIAL_ID, material.name, amount)
   }
 
   /**

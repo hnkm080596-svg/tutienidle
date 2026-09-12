@@ -1590,6 +1590,6 @@ export class GameManagerTurnBattleOps {
       enemies: killedEntities,
     } as unknown as Battle
 
-    this.deps.battleLoot.processDefeatedEnemies(shimBattle)
+    this.deps.battleLoot.processDefeatedEnemies(shimBattle, stage)
   }
 }

@@ -6,6 +6,7 @@ import { normalizeEnemyStats, applyEliteMultiplier, applyBossMultiplier } from '
 import type { EnemyArchetype } from './EnemyArchetype'
 import type { TribulationPhase, BossEnrage } from './TribulationPhase'
 import type { CombatVfxPresetId } from '../battle/CombatAction'
+import type { SignatureDrop } from '../drop/DropTable'
 import { getRealmIndex } from '../realm/realmSystem'
 
 export type { EnemyLane }
@@ -117,6 +118,11 @@ export interface Enemy {
   // Core). Thuần label, không ảnh hưởng combat/stats.
   family?: string
 
+  // Drop-system (2026-09-12): per-enemy named drops (rare/narrative
+  // items) resolved as their own layer by resolveDrops — never scaled
+  // by the family/stage pool. Replaces hand-placed itemDrops lines.
+  signatureDrops?: SignatureDrop[]
+
   // Đột Phá Trúc Cơ (Phase 4) — quái Kiếp (Nhân/Địa/Thiên/Đại Đạo Kiếp,
   // xem data/enemy/Tribulations.ts) leo thang sức mạnh giữa trận qua
   // các mốc HP. Combat Rework Phase 4 generic hoá: Boss thường
@@ -174,6 +180,10 @@ export interface EnemyDefinition {
 
   family?: string
 
+  // Threaded to Enemy.signatureDrops by defineEnemy(); elite/boss
+  // variants inherit it via object spread.
+  signatureDrops?: SignatureDrop[]
+
   tribulationPhases?: TribulationPhase[]
 
   enrage?: BossEnrage
@@ -217,6 +227,8 @@ export function defineEnemy(definition: EnemyDefinition): Enemy {
     lane: definition.lane,
 
     family: definition.family,
+
+    signatureDrops: definition.signatureDrops,
 
     archetype: definition.archetype,
 

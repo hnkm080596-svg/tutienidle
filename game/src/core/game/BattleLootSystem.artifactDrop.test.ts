@@ -1,82 +1,16 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { Battle, BattleEnemy } from '../battle/Battle'
-import type { CombatEntity } from '../combat/CombatEntity'
-import type { Enemy } from '../enemy/Enemy'
-import type { RewardReceiver } from '../reward/RewardSystem'
-import { BattleLootSystem, type BattleLootSystemDeps } from './BattleLootSystem'
-import { MaterialRegistry } from '../material/MaterialRegistry'
-import { MaterialBag } from '../material/MaterialBag'
-import { createDefaultPlayer } from '../player/Player'
+import type { Battle } from '../battle/Battle'
 import { createDefaultArtifactProgress } from '../artifact/ArtifactProgression'
+import { createBattle, createDeadEnemy, createLootTestSetup } from './battleLootTestSetup'
 
-// Bản Mệnh Pháp Bảo (doc §6/§5.2) — mirror
-// BattleLootSystem.beginTribulation.test.ts's stub deps style, dùng
-// MaterialRegistry/MaterialBag THẬT (không stub) để verify drop thật
-// sự lên bag, không chỉ verify hàm được gọi.
-function createDeadEnemy(id: string, entity: Partial<CombatEntity> = {}): BattleEnemy {
-  return {
-    entity: { alive: false, id, isBoss: false, isElite: false, ...entity } as CombatEntity,
-    attackTimer: 0,
-    rewardGranted: false,
-  } as BattleEnemy
-}
-
-function createTestSetup(realmId: string, techniqueInsight = 10) {
-  const materialRegistry = new MaterialRegistry()
-  materialRegistry.register({
-    id: 'doan_bao_thach',
-    name: 'Đoán Bảo Thạch',
-    category: 'other',
-    sourceType: 'monster',
-    description: 'test fixture',
-  })
-  const materialBag = new MaterialBag()
-
-  const deps: BattleLootSystemDeps = {
-    eventBus: { emit: vi.fn() },
-    notifications: { push: vi.fn(), drain: () => [] },
-    combatSystem: {
-      applyHealing: (target: { currentHp: number; maxHp: number }, amount: number) => {
-        const before = target.currentHp
-        target.currentHp = Math.min(target.maxHp, target.currentHp + Math.max(0, amount))
-        return target.currentHp - before
-      },
-    },
-    materialRegistry,
-    materialBag,
-    pillRegistry: {},
-    pillBag: {},
-    equipmentRegistry: { getAll: () => [] },
-    equipmentBag: {},
-    equipmentSystem: {},
-    affixRegistry: {},
-    zoneRegistry: {},
-    techniqueManager: { getEquipped: () => undefined },
-    techniqueSystem: {},
-    techniqueTemplates: {},
-    enemySystem: {
-      get: () => ({
-        realmId,
-        rewards: { techniqueInsight, spiritStone: 0 },
-      }) as unknown as Enemy,
-      despawn: vi.fn(),
-    },
-    rewardSystem: { give: vi.fn() },
-    stageManager: { get: () => undefined },
-    stageTemplates: {},
-    questSystem: { onEnemyDefeated: vi.fn(), onMaterialCollected: vi.fn() },
-    questRegistry: {},
-    questManager: {},
-    hiddenBeast: { onEnemyDefeated: vi.fn() },
-  } as unknown as BattleLootSystemDeps
-
-  const loot = new BattleLootSystem(deps)
-  const player = createDefaultPlayer()
-  player.artifact = createDefaultArtifactProgress('ngu_hanh_chau')
-
-  loot.setSession({} as RewardReceiver, player)
-
-  return { loot, materialBag, player }
+// Bản Mệnh Pháp Bảo (doc §6/§5.2) — drop-system (2026-09-12): Đoán Bảo
+// Thạch không còn roll riêng có gate realm trong grantArtifactStoneDrop —
+// nó là 1 dòng weighted trong POOL của stage table Trúc Cơ (w25/60), vắng
+// mặt ở mọi bảng thấp hơn. "Gate" giờ là dữ liệu bảng, không phải `if`.
+const FOUNDATION_STAGE = {
+  stageId: 'fe_5',
+  requiredRealmId: 'foundation_establishment',
+  floor: 5,
 }
 
 describe('BattleLootSystem — Đoán Bảo Thạch drop (doc §6)', () => {
@@ -84,60 +18,80 @@ describe('BattleLootSystem — Đoán Bảo Thạch drop (doc §6)', () => {
     vi.restoreAllMocks()
   })
 
-  it('quái dưới Trúc Cơ không bao giờ rơi đá dù roll trúng', () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0) // luôn trúng mọi roll
+  it('stage dưới Trúc Cơ không rơi đá — bảng Luyện Khí không chứa nó', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0) // mọi roll trúng/draw entry đầu
 
-    const { loot, materialBag } = createTestSetup('qi_refining')
+    const { killEnemy, materialBag } = createLootTestSetup({
+      realmId: 'qi_refining',
+      stage: { stageId: 'qr_5', requiredRealmId: 'qi_refining', floor: 5 },
+      materialIds: ['doan_bao_thach', 'qi_refining_ore_decade'],
+    })
 
-    loot.processDefeatedEnemies({ enemies: [createDeadEnemy('mob')] } as unknown as Battle)
+    killEnemy()
 
     expect(materialBag.getAmount('doan_bao_thach')).toBe(0)
   })
 
-  it('quái Trúc Cơ thường roll trúng thì rơi đúng 1 đá', () => {
+  it('quái Trúc Cơ bốc trúng dòng đá (pool entry đầu) thì rơi đúng 1 viên (min amount)', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
-    const { loot, materialBag } = createTestSetup('foundation_establishment')
+    const { killEnemy, materialBag } = createLootTestSetup({
+      realmId: 'foundation_establishment',
+      stage: FOUNDATION_STAGE,
+      materialIds: ['doan_bao_thach'],
+    })
 
-    loot.processDefeatedEnemies({ enemies: [createDeadEnemy('mob')] } as unknown as Battle)
+    killEnemy()
 
     expect(materialBag.getAmount('doan_bao_thach')).toBe(1)
   })
 
-  it('quái Trúc Cơ roll trượt thì không rơi', () => {
+  it('pool draw trượt qua đá (roll vào equipment_any) thì không rơi', () => {
+    // rng 0.999 -> roll 59.94/60 -> entry cuối = equipment_any; registry
+    // trống nên không có gì rơi.
     vi.spyOn(Math, 'random').mockReturnValue(0.999)
 
-    const { loot, materialBag } = createTestSetup('foundation_establishment')
+    const { killEnemy, materialBag } = createLootTestSetup({
+      realmId: 'foundation_establishment',
+      stage: FOUNDATION_STAGE,
+      materialIds: ['doan_bao_thach'],
+    })
 
-    loot.processDefeatedEnemies({ enemies: [createDeadEnemy('mob')] } as unknown as Battle)
+    killEnemy()
 
     expect(materialBag.getAmount('doan_bao_thach')).toBe(0)
   })
 
-  it('Boss chỉ dùng đúng 1 bảng (boss), không roll thêm normal/elite, rơi 1-2', () => {
+  it('boss rơi NHIỀU hơn nhờ extraRolls: 4 lượt bốc → 4 viên (rng 0)', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
-    const { loot, materialBag } = createTestSetup('foundation_establishment')
+    const { killEnemy, materialBag } = createLootTestSetup({
+      realmId: 'foundation_establishment',
+      stage: FOUNDATION_STAGE,
+      materialIds: ['doan_bao_thach'],
+    })
 
-    loot.processDefeatedEnemies({
-      enemies: [createDeadEnemy('boss', { isBoss: true })],
-    } as unknown as Battle)
+    killEnemy({ isBoss: true })
 
-    const amount = materialBag.getAmount('doan_bao_thach')
-
-    expect(amount).toBeGreaterThanOrEqual(1)
-    expect(amount).toBeLessThanOrEqual(2)
+    // Boss modifier = 3 extraRolls → 4 pool draws, mỗi lượt trúng
+    // doan_bao_thach với amount min 1 → đúng 4 viên.
+    expect(materialBag.getAmount('doan_bao_thach')).toBe(4)
   })
 
   it('double-grant bị chặn bởi rewardGranted — chỉ cộng đúng 1 lần dù xử lý lặp', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
-    const { loot, materialBag } = createTestSetup('foundation_establishment')
-    const enemy = createDeadEnemy('mob')
+    const { loot, materialBag } = createLootTestSetup({
+      realmId: 'foundation_establishment',
+      stage: FOUNDATION_STAGE,
+      materialIds: ['doan_bao_thach'],
+    })
 
-    loot.processDefeatedEnemies({ enemies: [enemy] } as unknown as Battle)
+    const battleEnemy = createDeadEnemy('mob')
+
+    loot.processDefeatedEnemies(createBattle([battleEnemy]))
     // giả lập entity vẫn còn trong mảng do caller quên filter — rewardGranted đã true
-    loot.processDefeatedEnemies({ enemies: [enemy] } as unknown as Battle)
+    loot.processDefeatedEnemies({ enemies: [battleEnemy] } as unknown as Battle)
 
     expect(materialBag.getAmount('doan_bao_thach')).toBe(1)
   })
@@ -145,9 +99,13 @@ describe('BattleLootSystem — Đoán Bảo Thạch drop (doc §6)', () => {
   it('rơi vào bag + summary.items + notification đúng 1 lần', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
 
-    const { loot } = createTestSetup('foundation_establishment')
+    const { killEnemy, loot } = createLootTestSetup({
+      realmId: 'foundation_establishment',
+      stage: FOUNDATION_STAGE,
+      materialIds: ['doan_bao_thach'],
+    })
 
-    loot.processDefeatedEnemies({ enemies: [createDeadEnemy('mob')] } as unknown as Battle)
+    killEnemy()
 
     const summary = loot.getSummary()
     const stoneItem = summary.items.filter((item) => item.itemId === 'doan_bao_thach')
@@ -163,12 +121,19 @@ describe('BattleLootSystem — EXP Bản Mệnh Pháp Bảo (doc §5.2)', () => 
   })
 
   it('quái chết cấp đúng EXP theo base = max(1, floor(techniqueInsight*0.25))', () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0.999) // không rớt đá, cô lập EXP
+    vi.spyOn(Math, 'random').mockReturnValue(0.999) // pool draw trượt đá, cô lập EXP
 
-    const { loot, player } = createTestSetup('foundation_establishment', 10)
+    const { killEnemy, loot, player } = createLootTestSetup({
+      realmId: 'foundation_establishment',
+      rewards: { techniqueInsight: 10, spiritStone: 0 },
+      stage: FOUNDATION_STAGE,
+      materialIds: ['doan_bao_thach'],
+    })
+    player.artifact = createDefaultArtifactProgress('ngu_hanh_chau')
 
-    loot.processDefeatedEnemies({ enemies: [createDeadEnemy('mob')] } as unknown as Battle)
+    killEnemy()
 
+    // EXP đọc từ enemy.rewards (10) — KHÔNG phải từ drop table.
     expect(player.artifact?.experience).toBe(2)
     expect(loot.getSummary().artifactInsight).toBe(2)
   })
@@ -176,12 +141,14 @@ describe('BattleLootSystem — EXP Bản Mệnh Pháp Bảo (doc §5.2)', () => 
   it('không có artifact (Kiếm Tu) thì không crash, không cộng gì', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0.999)
 
-    const { loot, player } = createTestSetup('foundation_establishment', 10)
-    player.artifact = undefined
+    const { killEnemy, loot } = createLootTestSetup({
+      realmId: 'foundation_establishment',
+      rewards: { techniqueInsight: 10, spiritStone: 0 },
+      stage: FOUNDATION_STAGE,
+      materialIds: ['doan_bao_thach'],
+    })
 
-    expect(() =>
-      loot.processDefeatedEnemies({ enemies: [createDeadEnemy('mob')] } as unknown as Battle),
-    ).not.toThrow()
+    expect(() => killEnemy()).not.toThrow()
     expect(loot.getSummary().artifactInsight).toBe(0)
   })
 })
