@@ -1228,9 +1228,12 @@ export class GameManagerTurnBattleOps {
   }
 
   /**
-   * Auto-farm spec Task 3 (2026-09-04) - Hoan My: team HP loss <= 75% AND
-   * turns < stage.perfectClearTurnLimit -> record perfectClearStageIds +
-   * perfectClearSeconds ONCE (first achievement is never overwritten).
+   * Perfect clear (spec v3 D1): every party member must still be alive at
+   * the victory tick AND the battle must end under the stage's fixed
+   * perfectClearTurnLimit (3 normal / 5 boss). HP-loss is not consulted.
+   * Only the ACTIVE mode can ever evaluate this (idle runs no battle).
+   * Records perfectClearStageIds + perfectClearSeconds ONCE - the first
+   * achievement is never overwritten (B4).
    */
   private recordPerfectClearIfEligible(turnBattle: TurnBattle) {
     const stage = this.activeStageForTurnBattle
@@ -1244,16 +1247,11 @@ export class GameManagerTurnBattleOps {
       return
     }
 
-    const entity = turnBattle.players[0]?.entity
-
-    if (!entity) {
-      return
-    }
-
-    const hpLossPercent = ((entity.maxHp - entity.currentHp) / entity.maxHp) * 100
+    const everyoneAlive =
+      turnBattle.players.length > 0 && turnBattle.players.every((member) => member.entity.alive)
 
     const isPerfectClear =
-      hpLossPercent <= 75 && (turnBattle.totalTurnsElapsed ?? 0) < stage.perfectClearTurnLimit
+      everyoneAlive && (turnBattle.totalTurnsElapsed ?? 0) < stage.perfectClearTurnLimit
 
     if (!isPerfectClear) {
       return

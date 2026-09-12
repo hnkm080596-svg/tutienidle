@@ -61,8 +61,8 @@ export interface Stage {
   bossEnemyId?: string
 
   // Auto-farm Hoàn Mỹ (2026-09-04 spec) — số turn tối đa để đạt điều
-  // kiện "Hoàn Mỹ" (kết hợp với ngưỡng HP đội mất <=75%, hardcode ở
-  // GameManager). undefined = stage này chưa định nghĩa ngưỡng, không
+  // kiện "Hoàn Mỹ" (spec v3 D1: every party member alive at victory;
+  // the HP-loss threshold was removed). undefined = stage này chưa định nghĩa ngưỡng, không
   // bao giờ đạt Hoàn Mỹ (an toàn — không mở khoá auto-farm ngoài ý
   // muốn cho stage chưa balance). Content work, set theo từng stage.
   perfectClearTurnLimit?: number

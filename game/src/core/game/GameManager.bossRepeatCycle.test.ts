@@ -203,4 +203,16 @@ describe('pickEnemyForTurnSpawn - spawn mode plumbing (spec v3 D4/D5)', () => {
     expect(picked?.name).toBe('Tinh Anh Đại Vương Spawn Boss')
     expect(picked?.stats.maxHp).toBeCloseTo(TAG_BOSS.stats.maxHp * 7 * 2.5)
   })
+
+  it('idle floor-10 (allowTags:false) stays boss base even when the roll would hit', () => {
+    const { stageWaves } = stageWaveHarness()
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const picked = stageWaves.pickEnemyForTurnSpawn(TAG_BOSS_STAGE, true, { allowTags: false })
+
+    expect(picked?.isBoss).toBe(true)
+    expect(picked?.isElite).toBeFalsy()
+    expect(picked?.name.startsWith('Tinh Anh')).toBe(false)
+    expect(picked?.stats.maxHp).toBeCloseTo(TAG_BOSS.stats.maxHp * 7)
+  })
 })
