@@ -1,5 +1,4 @@
 import type { Skill } from './Skill'
-import type { SkillExecutionPolicy } from './Skill'
 import { SKILL_RESOURCE_STAT_KEYS, createSkillRuntimeStats, type SkillRuntimeStats } from './SkillRuntimeStats'
 import type { SkillEffect } from './SkillEffect'
 import type { StatModifier } from '../stats/StatCalculator'
@@ -13,9 +12,7 @@ import {
   SkillManager,
 } from './SkillManager'
 
-import type { CombatEntity } from '../combat/CombatEntity'
 import type { ActionTargeting } from '../battle/CombatAction'
-import { getRealmIndex } from '../realm/realmSystem'
 
 // Core Loop Foundation checklist (Mục SKILL, "Skill modifier") — mỗi
 // bậc level cộng thêm % sát thương cho effect 'damage' của skill chủ
@@ -41,16 +38,6 @@ export function getHuyKiemLevelForCasts(totalExperience: number): number {
 /** Ngưỡng cast Huy Kiếm đạt Lv3 — route Kiếm Tu chốt Bạt Kiếm khi
  * tram ≥ mốc này (spec 2026-08-29-kiem-the-kiem-y mục 1). */
 export const HUY_KIEM_L3_CASTS = 10000
-
-/** Policy dùng cooldown clock (chịu CDR) — còn lại dùng cadence Attack Speed/channel tick. */
-function usesCooldownClock(execution: SkillExecutionPolicy | undefined): boolean {
-  return !execution || execution.kind === 'cooldown' || execution.kind === 'cast_time'
-}
-
-/** Test-only export — usesCooldownClock() không cần public API thật. */
-export function usesCooldownClockForTest(execution: SkillExecutionPolicy | undefined): boolean {
-  return usesCooldownClock(execution)
-}
 
 export interface EffectiveSkill {
   effects: SkillEffect[]
@@ -82,8 +69,8 @@ export class SkillSystem {
   // Kiếm Tu (2026-08-28) — NodeSystem.hasPrerequisite() chỉ nhận
   // PlayerData (không có SkillManager) nên không đọc totalExperience/
   // level của skill trực tiếp. Sink này đồng bộ mirror
-  // player.skillCastCounts/skillLevels mỗi lần cast — GameManager nối
-  // vào activePlayer (xem GameManager's constructor).
+  // player.skillCastCounts/skillLevels mỗi lần recordCast() — GameManager
+  // nối vào activePlayer (xem GameManager's constructor).
   private castCountSink?: (skillId: string, totalExperience: number, level: number) => void
 
   setCastCountSink(sink: (skillId: string, totalExperience: number, level: number) => void): void {
@@ -260,8 +247,6 @@ export class SkillSystem {
       unlocked: true,
       equipped: false,
 
-      remainingCooldown: 0,
-      remainingCooldownBySlot: {},
       experience: skill.experience ?? 0,
       totalExperience: skill.totalExperience ?? 0,
     })
@@ -297,7 +282,6 @@ export class SkillSystem {
     skill.equipped = true
     skill.loadoutSlots = [...new Set([...(skill.loadoutSlots ?? []), slotIndex])].sort((a, b) => a - b)
     skill.loadoutSlot = skill.loadoutSlots[0]
-    skill.remainingCooldownBySlot ??= {}
 
     return true
   }
@@ -306,7 +290,6 @@ export class SkillSystem {
     const skill = this.manager.getEquippedInSlot(slotIndex)
     if (!skill) return false
     skill.loadoutSlots = (skill.loadoutSlots ?? []).filter(index => index !== slotIndex)
-    delete skill.remainingCooldownBySlot?.[slotIndex]
     skill.loadoutSlot = skill.loadoutSlots[0]
     skill.equipped = skill.loadoutSlots.length > 0
     return true
@@ -342,196 +325,41 @@ export class SkillSystem {
     skill.equipped = false
     skill.loadoutSlot = undefined
     skill.loadoutSlots = []
-    skill.remainingCooldownBySlot = {}
 
     return true
   }
 
-  canUse(skillId: string, entity: CombatEntity): boolean {
-    const skill =
-      this.manager.get(skillId)
-
-    if (!skill) {
-      return false
-    }
-
-    if (!skill.unlocked || !skill.equipped || skill.remainingCooldown > 0) {
-      return false
-    }
-
-    // "Luyện Khí kì chỉ mở đánh thường, Trúc Cơ mở tuyệt kỹ, nộ kỹ
-    // tạm thời chưa ra mắt" (2026-08-15, áp dụng MỌI path) —
-    // `unreleased` chặn cứng bất kể cảnh giới (dỡ bỏ sau khi nội dung
-    // thật sự phát hành, chỉ cần xoá field này). `requiredRealmId` so
-    // theo realmIndex (0-based, xem core/realm/realmSystem.ts) — thấp
-    // hơn cảnh giới yêu cầu thì chưa dùng được, KHÔNG liên quan gì
-    // đến việc đã HỌC skill hay chưa (unlocked/equipped vẫn giữ
-    // nguyên, chỉ tạm khoá quyền CAST).
-    if (skill.unreleased) {
-      return false
-    }
-
-    if (skill.requiredRealmId && entity.realmIndex < getRealmIndex(skill.requiredRealmId)) {
-      return false
-    }
-
-    return this.hasEnoughResource(skill, entity)
-  }
-
-  canUseInSlot(skillId: string, slotIndex: number, entity: CombatEntity): boolean {
-    const skill = this.manager.get(skillId)
-    if (!skill || (skill.remainingCooldownBySlot?.[slotIndex] ?? 0) > 0) return false
-    // Combat Balance Pass (2026-08-29, plan §3.7) — không mutate state
-    // để lách global check: inline các kiểm tra thay vì gọi canUse() rồi
-    // tạm set remainingCooldown=0.
-    if (!skill.unlocked || !skill.equipped) return false
-    if (skill.unreleased) return false
-    if (skill.requiredRealmId && entity.realmIndex < getRealmIndex(skill.requiredRealmId)) return false
-    return this.hasEnoughResource(skill, entity)
-  }
-
-  private hasEnoughResource(skill: Skill, entity: CombatEntity): boolean {
-    const cost = skill.cost ?? 0
-
-    switch (skill.resourceType) {
-      case 'mana':
-        return entity.currentMp >= cost
-
-      case 'sword_intent':
-        return entity.currentSwordIntent >= cost
-
-      case 'momentum':
-        return entity.currentMomentum >= cost
-
-      default:
-        return true
-    }
-  }
-
   /**
-   * Cast transaction (combat-skill-flow-element-power-dot-plan.md §4.1)
-   * — BẮT ĐẦU niệm: CHỈ trừ tài nguyên MỘT LẦN, KHÔNG set cooldown
-   * (cooldown commit lúc hoàn tất/fizzle qua commitSlotCooldown()).
-   * Trả null nếu không đủ điều kiện — khi đó KHÔNG mutate gì.
+   * 9.5 #9 — record ONE committed cast reported by the turn engine
+   * (TurnBattleSystem.onSkillCast, wired via GameManagerTurnBattleOps for
+   * the primary player only). Generic per learned skill: totalExperience
+   * is the cast counter the PlayerData skillCastCounts mirror reflects.
+   * Huy Kiem ('tram') additionally auto-levels via
+   * getHuyKiemLevelForCasts and keeps the legacy per-cast experience
+   * tick; every other skill levels only through upgradeSkill (Cam Ngo).
+   * No-op for unknown/unlearned ids (e.g. 'generic_physical').
    */
-  beginCastInSlot(skillId: string, slotIndex: number, entity: CombatEntity): Skill | null {
-    if (!this.canUseInSlot(skillId, slotIndex, entity)) return null
-
-    const skill = this.manager.get(skillId)!
-
-    this.consumeResource(skill, entity)
-    this.gainCastExperience(skill)
-
-    return skill
-  }
-
-  /**
-   * Nửa còn lại của transaction — commit cooldown ĐẦY ĐỦ cho đúng slot,
-   * gọi lúc HOÀN TẤT niệm (kể cả fizzle) hoặc ngay sau resolve với skill
-   * tức thời (§4.2). Policy 'attack_speed' không dùng cooldown clock →
-   * no-op ở đây (cadence do BattleSystem quản).
-   * Combat Balance Pass (2026-08-29, plan §3.5) — tham số `fraction`
-   * (0..1) cho phép commit MỘT PHẦN cooldown: fizzle commit 0.5 thay vì
-   * đủ (penalty nhẹ hơn cho idle game). Mặc định 1 giữ hành vi cũ.
-   */
-  commitSlotCooldown(skillId: string, slotIndex: number, fraction = 1): void {
+  recordCast(skillId: string): void {
     const skill = this.manager.get(skillId)
 
     if (!skill) {
       return
     }
 
-    skill.remainingCooldownBySlot ??= {}
-
-    if (usesCooldownClock(skill.execution)) {
-      skill.remainingCooldownBySlot[slotIndex] = skill.cooldown * Math.max(0, Math.min(1, fraction))
-    }
-  }
-
-  /**
-   * Combat Balance Pass (2026-08-29, plan §3.5) — HOÀN LẠI 100% tài
-   * nguyên đã trừ lúc beginCastInSlot() khi cast fizzle (cast bị hủy vì
-   * target chết/ra khỏi tầm — không phải quyết định của người chơi, idle
-   * game không thể phản ứng). Đối xứng với consumeResource().
-   */
-  refundResource(skill: Skill, entity: CombatEntity): void {
-    const cost = skill.cost ?? 0
-
-    if (cost <= 0) {
-      return
-    }
-
-    if (skill.resourceType === 'mana') entity.currentMp += cost
-    else if (skill.resourceType === 'sword_intent') entity.currentSwordIntent += cost
-    else if (skill.resourceType === 'momentum') entity.currentMomentum += cost
-  }
-
-  /**
-   * Legacy một-câu (begin + commit cùng lúc) — CHỈ còn cho skill TỨC
-   * THỜI ngoài scheduler; BattleSystem đã chuyển sang cặp
-   * beginCastInSlot()/commitSlotCooldown().
-   */
-  useInSlot(skillId: string, slotIndex: number, entity: CombatEntity): Skill | null {
-    const skill = this.beginCastInSlot(skillId, slotIndex, entity)
-
-    if (!skill) return null
-
-    this.commitSlotCooldown(skillId, slotIndex)
-
-    return skill
-  }
-
-  private consumeResource(skill: Skill, entity: CombatEntity) {
-    const cost = skill.cost ?? 0
-
-    if (skill.resourceType === 'mana') entity.currentMp -= cost
-    else if (skill.resourceType === 'sword_intent') entity.currentSwordIntent -= cost
-    else if (skill.resourceType === 'momentum') entity.currentMomentum -= cost
-  }
-
-  private gainCastExperience(skill: Skill): void {
-    if (skill.id !== 'tram') return
-
-    skill.experience = (skill.experience ?? 0) + 1
     skill.totalExperience = (skill.totalExperience ?? 0) + 1
 
-    const targetLevel = getHuyKiemLevelForCasts(skill.totalExperience)
+    if (skill.id === 'tram') {
+      skill.experience = (skill.experience ?? 0) + 1
 
-    if (targetLevel > skill.level) {
-      const levelsGained = targetLevel - skill.level
-      skill.level = targetLevel
-      this.onLevelUp?.(skill, levelsGained)
+      const targetLevel = getHuyKiemLevelForCasts(skill.totalExperience)
+
+      if (targetLevel > skill.level) {
+        const levelsGained = targetLevel - skill.level
+        skill.level = targetLevel
+        this.onLevelUp?.(skill, levelsGained)
+      }
     }
 
     this.castCountSink?.(skill.id, skill.totalExperience, skill.level)
-  }
-
-  update(deltaSeconds: number, cooldownReduction = 0) {
-    const effectiveDelta = deltaSeconds * (1 + Math.min(3, Math.max(0, cooldownReduction)))
-
-    for (
-      const skill
-      of this.manager.getAll()
-    ) {
-      for (const slot of Object.keys(skill.remainingCooldownBySlot ?? {})) {
-        const slotIndex = Number(slot)
-        skill.remainingCooldownBySlot![slotIndex] = Math.max(
-          0,
-          (skill.remainingCooldownBySlot![slotIndex] ?? 0) - effectiveDelta,
-        )
-      }
-      if (
-        skill.remainingCooldown <= 0
-      ) {
-        continue
-      }
-
-      skill.remainingCooldown =
-        Math.max(
-          0,
-          skill.remainingCooldown -
-            effectiveDelta,
-        )
-    }
   }
 }

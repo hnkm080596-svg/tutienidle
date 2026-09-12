@@ -15,7 +15,6 @@ function skillWith(effects: SkillEffect[]): Skill {
     level: 1,
     maxLevel: 5,
     cooldown: 1,
-    remainingCooldown: 0,
     target: 'enemy',
     effects,
     resourceType: 'none',

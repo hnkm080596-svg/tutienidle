@@ -44,7 +44,7 @@ function createPlayer(): CombatEntity {
 function createBasicSkill(): Skill {
   return {
     id: 'basic_test', name: 'Basic', description: '', type: 'active', level: 1, maxLevel: 10,
-    cooldown: 0, remainingCooldown: 0, cost: 0, target: 'enemy',
+    cooldown: 0, cost: 0, target: 'enemy',
     effects: [{ type: 'damage', value: 1, damageType: 'physical' }],
     execution: { kind: 'attack_speed' }, resourceType: 'none',
     unlocked: true, equipped: true, loadoutSlot: 0, loadoutSlots: [0],

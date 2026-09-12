@@ -279,6 +279,12 @@ export class TurnBattleSystem {
     // Phase A1 (2026-09-07) — optional collaborator, same pattern as
     // registry/spawnEnemy above; consumers no-op safely when absent.
     private readonly reactionManager?: TurnReactionManager,
+    // 9.5 #9 — committed-cast notification. Fires once per action that
+    // actually commits (same point as commitAction): normal casts and
+    // charge-initiation count; charge ticks/resolve, CC-blocked turns and
+    // markerNoPool placeholders do not. Generic over actors — consumers
+    // filter to the participants they care about.
+    private readonly onSkillCast?: (actor: TurnBattleParticipant, skillId: string) => void,
   ) {}
 
   // Action Playback Task 3 — gauge-delta deferral chuyển từ local vars
@@ -944,6 +950,17 @@ export class TurnBattleSystem {
       return { targetIds }
     }
 
+    // 9.5 #9 — charge-init commits its cast HERE, not in the
+    // affected-gated block below: enemy-targeted charge skills collect
+    // targets only at resolve time, so `affected` stays empty at declare
+    // and the block below never ran for them — their cooldown/resource
+    // were never committed (dead isChargeInit branch). The charge-resolve
+    // turn returns early above and never reaches this point.
+    if (declared.action && !declared.markerNoPool && (declared.action.skill?.chargeTurns ?? 0) > 0) {
+      commitAction(actor.entity, declared.action)
+      this.onSkillCast?.(actor, declared.action.skillId)
+    }
+
     if (declared.action && declared.affected.length > 0 && !declared.markerNoPool) {
       const action = declared.action
 
@@ -1059,14 +1076,12 @@ export class TurnBattleSystem {
       }
     }
 
-      const isChargeInit = (action.skill?.chargeTurns ?? 0) > 0
-
-      if (isChargeInit) {
-        // Charge-init: không hit — vẫn commit cooldown/resource (giá
-        // cast của lượt bắt đầu Thế).
+      // Charge-init is committed in the pre-block above (it cannot rely
+      // on `affected` — empty for enemy-targeted charge skills). Only
+      // non-charge casts commit here.
+      if ((action.skill?.chargeTurns ?? 0) === 0) {
         commitAction(actor.entity, action)
-      } else {
-        commitAction(actor.entity, action)
+        this.onSkillCast?.(actor, action.skillId)
 
         // Phase A3 — Thế Thuần Hệ gain, simplified from legacy's
         // chain-link-position rule (no turn-based chain state exists —

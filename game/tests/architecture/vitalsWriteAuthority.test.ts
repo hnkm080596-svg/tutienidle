@@ -61,11 +61,6 @@ const ALLOWED: AllowedFile[] = [
       'Persistent overworld ward regen (THU_T12 ward-break recovery) — combat-independent vitals recovery, deliberately outside battle (R1 evidence).',
   },
   {
-    path: 'src/core/skill/SkillSystem.ts',
-    contract:
-      'Skill mana cost refund/spend on the SOURCE entity (currentMp) — resource economics, not combat resolution.',
-  },
-  {
     path: 'src/core/skill/SkillActionRegistry.ts',
     contract:
       'Ward-break detonate: consumes SOURCE ward (currentWard = 0) before delegating damage to combatSystem.applyDirectDamage (R3 ward-consumption path).',

@@ -85,7 +85,6 @@ describe('GameManager.purchaseNode (Pháp Tu Redesign, Node Tree)', () => {
       level: 1,
       maxLevel: 10,
       cooldown: 1,
-      remainingCooldown: 0,
       cost: 0,
       target: 'enemy' as const,
       effects: [],

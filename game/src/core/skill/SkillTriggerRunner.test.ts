@@ -5,7 +5,7 @@ import type { CombatEntity } from '../combat/CombatEntity'
 import type { SkillEffectContext } from './SkillEffectSystem'
 
 function makeSkill(triggers: Skill['triggers']): Skill {
-  return { id: 's', name: 's', description: '', type: 'active', level: 1, maxLevel: 1, cooldown: 0, remainingCooldown: 0, target: 'enemy', effects: [], unlocked: true, equipped: true, triggers } as Skill
+  return { id: 's', name: 's', description: '', type: 'active', level: 1, maxLevel: 1, cooldown: 0, target: 'enemy', effects: [], unlocked: true, equipped: true, triggers } as Skill
 }
 
 function makeEntity(): CombatEntity {

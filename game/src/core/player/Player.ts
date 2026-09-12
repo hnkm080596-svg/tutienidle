@@ -260,7 +260,7 @@ export interface PlayerData {
 
   // Kiếm Tu (2026-08-28) — mirror của Skill.totalExperience/level cho
   // TỪNG skill (key = skillId), ghi mỗi lần cast trong
-  // SkillSystem.gainCastExperience() qua sink (xem
+  // SkillSystem.recordCast() qua sink (xem
   // GameManager's skillSystem.setCastCountSink()). Tồn tại VÌ
   // NodeSystem.hasPrerequisite() chỉ nhận PlayerData — không có
   // SkillManager để tra totalExperience/level trực tiếp. Skill instance

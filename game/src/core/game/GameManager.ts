@@ -734,6 +734,7 @@ export class GameManager {
       buildPlayerRewardReceiver: (player) => this.buildPlayerRewardReceiver(player),
       getPhapTuThuanElement: () => this.getPhapTuThuanElement(),
       resolvePlayerSpecialUltimate: (player) => this.resolvePlayerSpecialUltimate(player),
+      recordPrimaryPlayerCast: (skillId) => this.skillSystem.recordCast(skillId),
     })
   }
 
@@ -3066,11 +3067,6 @@ export class GameManager {
     // R4 (AR-19): Persistent out-of-battle buffs (e.g. Kiếp Thương debuff)
     // decrement duration by deltaSeconds via updateTime().
     this.buffSystem.updateTime(deltaSeconds)
-
-
-    // Turn-based conversion (2026-09-04) ï¿½ cooldownReduction retired;
-    // SkillSystem (engine doomed) nh?n 0 thay vï¿½ d?c stat dï¿½ xï¿½a.
-    this.skillSystem.update(deltaSeconds, 0)
 
     this.passiveSystem.tick(deltaSeconds)
 

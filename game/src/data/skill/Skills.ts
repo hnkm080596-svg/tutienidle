@@ -29,7 +29,6 @@ const KIEM_TRAN_SKILLS: Skill[] = TRAN_SEQUENCE.map((entry) => ({
 
   cooldown: 1,
 
-  remainingCooldown: 0,
 
   target: 'all_enemies',
 
@@ -97,7 +96,6 @@ export const SKILLS: Skill[] = [
 
     cooldown: 1,
 
-    remainingCooldown: 0,
 
     target: 'enemy',
 
@@ -153,7 +151,6 @@ export const SKILLS: Skill[] = [
     // cast 1.6s / cooldown 4s — đòn chậm mạnh, thay nhịp 1.2/1 cũ.
     cooldown: 4,
 
-    remainingCooldown: 0,
 
     castTime: 1.6,
 
@@ -230,7 +227,6 @@ export const SKILLS: Skill[] = [
 
     cooldown: 30,
 
-    remainingCooldown: 0,
 
     target: 'all_enemies',
 
@@ -273,7 +269,6 @@ export const SKILLS: Skill[] = [
 
     cooldown: 60,
 
-    remainingCooldown: 0,
 
     target: 'enemy',
 
@@ -333,7 +328,6 @@ export const SKILLS: Skill[] = [
     // 1.2s / cooldown 2s — áp độc mạnh, nhịp vừa.
     cooldown: 2,
 
-    remainingCooldown: 0,
 
     castTime: 1.2,
 
@@ -387,7 +381,6 @@ export const SKILLS: Skill[] = [
     // cast 0.9s / cooldown 1s — nhịp nhanh áp ailment.
     cooldown: 1,
 
-    remainingCooldown: 0,
 
     castTime: 0.9,
 
@@ -463,7 +456,6 @@ export const SKILLS: Skill[] = [
     // 1.0s / cooldown 2.5s — single-target nặng, nhịp nhanh-trung bình.
     cooldown: 2.5,
 
-    remainingCooldown: 0,
 
     castTime: 1.0,
 
@@ -545,7 +537,6 @@ export const SKILLS: Skill[] = [
     // cast 1.4s / cooldown 5s — CC chậm, mạnh về điều khiển.
     cooldown: 5,
 
-    remainingCooldown: 0,
 
     castTime: 1.4,
 
@@ -610,7 +601,6 @@ export const SKILLS: Skill[] = [
 
     cooldown: 0,
 
-    remainingCooldown: 0,
 
 
     target: 'self',
@@ -666,7 +656,6 @@ export const SKILLS: Skill[] = [
 
     cooldown: 0,
 
-    remainingCooldown: 0,
 
     target: 'all_enemies',
 
@@ -720,7 +709,6 @@ export const SKILLS: Skill[] = [
 
     cooldown: 0,
 
-    remainingCooldown: 0,
 
 
     target: 'self',
@@ -768,7 +756,6 @@ export const SKILLS: Skill[] = [
 
     cooldown: 0,
 
-    remainingCooldown: 0,
 
 
     target: 'self',
@@ -816,7 +803,6 @@ export const SKILLS: Skill[] = [
 
     cooldown: 0,
 
-    remainingCooldown: 0,
 
 
     target: 'self',
@@ -872,7 +858,6 @@ export const SKILLS: Skill[] = [
 
     cooldown: 0,
 
-    remainingCooldown: 0,
 
 
     target: 'self',
@@ -905,7 +890,6 @@ export const SKILLS: Skill[] = [
 
     cooldown: 0,
 
-    remainingCooldown: 0,
 
 
     target: 'self',
@@ -953,7 +937,6 @@ export const SKILLS: Skill[] = [
 
     cooldown: 0,
 
-    remainingCooldown: 0,
 
 
     target: 'self',
@@ -1001,7 +984,6 @@ export const SKILLS: Skill[] = [
 
     cooldown: 0,
 
-    remainingCooldown: 0,
 
 
     target: 'self',
@@ -1049,7 +1031,6 @@ export const SKILLS: Skill[] = [
 
     cooldown: 0,
 
-    remainingCooldown: 0,
 
 
     target: 'self',
@@ -1102,7 +1083,6 @@ export const SKILLS: Skill[] = [
 
     cooldown: 0,
 
-    remainingCooldown: 0,
 
 
     target: 'self',
@@ -1151,7 +1131,6 @@ export const SKILLS: Skill[] = [
 
     cooldown: 0,
 
-    remainingCooldown: 0,
 
 
     target: 'self',
@@ -1197,7 +1176,6 @@ export const SKILLS: Skill[] = [
 
     cooldown: 0,
 
-    remainingCooldown: 0,
 
 
     target: 'self',
@@ -1255,7 +1233,6 @@ export const SKILLS: Skill[] = [
     level: 1,
     maxLevel: 10,
     cooldown: 2,
-    remainingCooldown: 0,
     castTime: 1,
     execution: { kind: 'cast_time', castTime: 1 },
     target: 'enemy',
@@ -1281,7 +1258,6 @@ export const SKILLS: Skill[] = [
     level: 1,
     maxLevel: 10,
     cooldown: 3,
-    remainingCooldown: 0,
     castTime: 1.2,
     execution: { kind: 'cast_time', castTime: 1.2 },
     target: 'enemy',
@@ -1347,7 +1323,6 @@ export const SKILLS: Skill[] = [
     level: 1,
     maxLevel: 10,
     cooldown: 4,
-    remainingCooldown: 0,
     castTime: 1.4,
     execution: { kind: 'cast_time', castTime: 1.4 },
     target: 'enemy',
@@ -1412,7 +1387,6 @@ export const SKILLS: Skill[] = [
     level: 1,
     maxLevel: 10,
     cooldown: 6,
-    remainingCooldown: 0,
     castTime: 1.8,
     execution: { kind: 'cast_time', castTime: 1.8 },
     target: 'enemy',
@@ -1442,7 +1416,6 @@ export const SKILLS: Skill[] = [
     level: 1,
     maxLevel: 10,
     cooldown: 2,
-    remainingCooldown: 0,
     castTime: 1,
     execution: { kind: 'cast_time', castTime: 1 },
     target: 'enemy',
@@ -1468,7 +1441,6 @@ export const SKILLS: Skill[] = [
     level: 1,
     maxLevel: 10,
     cooldown: 3,
-    remainingCooldown: 0,
     castTime: 1.2,
     execution: { kind: 'cast_time', castTime: 1.2 },
     target: 'self',
@@ -1503,7 +1475,6 @@ export const SKILLS: Skill[] = [
     level: 1,
     maxLevel: 10,
     cooldown: 4,
-    remainingCooldown: 0,
     castTime: 1.4,
     execution: { kind: 'cast_time', castTime: 1.4 },
     target: 'enemy',
@@ -1572,7 +1543,6 @@ export const SKILLS: Skill[] = [
     level: 1,
     maxLevel: 10,
     cooldown: 6,
-    remainingCooldown: 0,
     castTime: 1.8,
     execution: { kind: 'cast_time', castTime: 1.8 },
     target: 'enemy',
@@ -1602,7 +1572,6 @@ export const SKILLS: Skill[] = [
     level: 1,
     maxLevel: 10,
     cooldown: 2,
-    remainingCooldown: 0,
     castTime: 1,
     execution: { kind: 'cast_time', castTime: 1 },
     target: 'enemy',
@@ -1628,7 +1597,6 @@ export const SKILLS: Skill[] = [
     level: 1,
     maxLevel: 10,
     cooldown: 3,
-    remainingCooldown: 0,
     castTime: 1.2,
     execution: { kind: 'cast_time', castTime: 1.2 },
     target: 'enemy',
@@ -1691,7 +1659,6 @@ export const SKILLS: Skill[] = [
     level: 1,
     maxLevel: 10,
     cooldown: 4,
-    remainingCooldown: 0,
     castTime: 1.4,
     execution: { kind: 'cast_time', castTime: 1.4 },
     target: 'enemy',
@@ -1766,7 +1733,6 @@ export const SKILLS: Skill[] = [
     level: 1,
     maxLevel: 10,
     cooldown: 6,
-    remainingCooldown: 0,
     castTime: 1.8,
     execution: { kind: 'cast_time', castTime: 1.8 },
     target: 'enemy',
@@ -1798,7 +1764,6 @@ export const SKILLS: Skill[] = [
     level: 1,
     maxLevel: 10,
     cooldown: 2,
-    remainingCooldown: 0,
     castTime: 1,
     execution: { kind: 'cast_time', castTime: 1 },
     target: 'self',
@@ -1815,7 +1780,6 @@ export const SKILLS: Skill[] = [
     level: 1,
     maxLevel: 10,
     cooldown: 3,
-    remainingCooldown: 0,
     castTime: 1.2,
     execution: { kind: 'cast_time', castTime: 1.2 },
     target: 'enemy',
@@ -1880,7 +1844,6 @@ export const SKILLS: Skill[] = [
     level: 1,
     maxLevel: 10,
     cooldown: 4,
-    remainingCooldown: 0,
     castTime: 1.4,
     execution: { kind: 'cast_time', castTime: 1.4 },
     target: 'enemy',
@@ -1943,7 +1906,6 @@ export const SKILLS: Skill[] = [
     level: 1,
     maxLevel: 10,
     cooldown: 6,
-    remainingCooldown: 0,
     castTime: 1.8,
     execution: { kind: 'cast_time', castTime: 1.8 },
     target: 'enemy',
@@ -1973,7 +1935,6 @@ export const SKILLS: Skill[] = [
     level: 1,
     maxLevel: 10,
     cooldown: 2,
-    remainingCooldown: 0,
     castTime: 1,
     execution: { kind: 'cast_time', castTime: 1 },
     target: 'enemy',
@@ -2000,7 +1961,6 @@ export const SKILLS: Skill[] = [
     level: 1,
     maxLevel: 10,
     cooldown: 3,
-    remainingCooldown: 0,
     castTime: 1.2,
     execution: { kind: 'cast_time', castTime: 1.2 },
     target: 'self',
@@ -2035,7 +1995,6 @@ export const SKILLS: Skill[] = [
     level: 1,
     maxLevel: 10,
     cooldown: 4,
-    remainingCooldown: 0,
     castTime: 1.4,
     execution: { kind: 'cast_time', castTime: 1.4 },
     target: 'enemy',
@@ -2098,7 +2057,6 @@ export const SKILLS: Skill[] = [
     level: 1,
     maxLevel: 10,
     cooldown: 6,
-    remainingCooldown: 0,
     castTime: 1.8,
     execution: { kind: 'cast_time', castTime: 1.8 },
     target: 'enemy',
@@ -2131,7 +2089,6 @@ export const SKILLS: Skill[] = [
     level: 1,
     maxLevel: 5,
     cooldown: 0,
-    remainingCooldown: 0,
     castTime: 1.5,
     execution: { kind: 'cast_time', castTime: 1.5 },
     target: 'enemy',
@@ -2164,7 +2121,6 @@ export const SKILLS: Skill[] = [
     level: 1,
     maxLevel: 5,
     cooldown: 0,
-    remainingCooldown: 0,
     castTime: 1.5,
     execution: { kind: 'cast_time', castTime: 1.5 },
     target: 'enemy',
@@ -2194,7 +2150,6 @@ export const SKILLS: Skill[] = [
     level: 1,
     maxLevel: 5,
     cooldown: 0,
-    remainingCooldown: 0,
     castTime: 1.5,
     execution: { kind: 'cast_time', castTime: 1.5 },
     target: 'enemy',
@@ -2229,7 +2184,6 @@ export const SKILLS: Skill[] = [
     level: 1,
     maxLevel: 5,
     cooldown: 0,
-    remainingCooldown: 0,
     castTime: 1.5,
     execution: { kind: 'cast_time', castTime: 1.5 },
     target: 'enemy',
@@ -2257,7 +2211,6 @@ export const SKILLS: Skill[] = [
     level: 1,
     maxLevel: 5,
     cooldown: 0,
-    remainingCooldown: 0,
     castTime: 1.5,
     execution: { kind: 'cast_time', castTime: 1.5 },
     target: 'enemy',
