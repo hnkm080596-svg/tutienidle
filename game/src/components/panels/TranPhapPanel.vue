@@ -194,7 +194,14 @@ function grantTestCompanions() {
 
   for (const definition of TEST_COMPANIONS) {
     if (!owned.has(definition.id)) {
-      player.companions.push({ definitionId: definition.id, level: 1, exp: 0 })
+      player.companions.push({
+        instanceId: crypto.randomUUID(),
+        definitionId: definition.id,
+        realmId: 'mortal',
+        realmLevel: 1,
+        exp: 0,
+        constellationRank: 0,
+      })
     }
   }
 

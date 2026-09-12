@@ -15,13 +15,19 @@ describe('companionLevelForExp', () => {
 })
 
 describe('grantCompanionExp', () => {
-  it('returns a NEW instance with exp increased and level recalculated', () => {
-    const instance = { definitionId: 'test', level: 1, exp: 0 }
+  it('returns a NEW instance with exp increased', () => {
+    const instance = {
+      instanceId: 'test_instance',
+      definitionId: 'test',
+      realmId: 'mortal',
+      realmLevel: 1,
+      exp: 0,
+      constellationRank: 0,
+    }
 
     const result = grantCompanionExp(instance, 5000)
 
     expect(result.exp).toBe(5000)
-    expect(result.level).toBe(companionLevelForExp(5000))
     expect(instance.exp).toBe(0) // original untouched (pure function)
   })
 })

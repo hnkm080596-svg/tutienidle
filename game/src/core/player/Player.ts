@@ -277,6 +277,14 @@ export interface PlayerData {
   // này cần trên PlayerData.
   companions: CompanionInstance[]
 
+  // Companion Gacha (2026-09-12) - pity counter: pulls since the last
+  // grade >= 'dia' result (reset on dia/thien/tien, see CompanionGacha).
+  companionPullsSinceRare: number
+
+  // Companion Gacha (2026-09-12) - Duyen Phan exchange currency, earned
+  // from duplicate pulls on constellation-maxed companions.
+  duyenPhan: number
+
   // Trận Pháp (2026-09-05) — trận pháp đang active + vị trí gán từng ô.
   // null = người chơi chưa từng cấu hình trận pháp nào; buildTurnBattle()
   // sẽ fallback về DEFAULT_PARTY_FORMATION (Combat Art Pipeline spec §7).
@@ -373,6 +381,8 @@ export function createDefaultPlayer(): PlayerData {
     combatAiStrategy: DEFAULT_COMBAT_AI_STRATEGY,
 
     companions: [],
+    companionPullsSinceRare: 0,
+    duyenPhan: 0,
 
     formationLoadout: null,
 

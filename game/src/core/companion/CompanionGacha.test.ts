@@ -5,8 +5,8 @@ import type { CompanionDefinition } from '@/data/companion/Companions'
 const RATES = { hoang: 0.5, huyen: 0.3, dia: 0.15, thien: 0.04, tien: 0.01 }
 
 const POOL: CompanionDefinition[] = [
-  { id: 'a', name: 'A', grade: 'hoang', baseStats: { maxHp: 100, attack: 10, speed: 100 }, basic: { id: 'a_basic', cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } } },
-  { id: 'b', name: 'B', grade: 'tien', baseStats: { maxHp: 100, attack: 10, speed: 100 }, basic: { id: 'b_basic', cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } } },
+  { id: 'a', name: 'A', grade: 'hoang', growthRate: 0.05, unlockThresholds: {}, baseStats: { maxHp: 100, attack: 10, speed: 100 }, basic: { id: 'a_basic', cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } } },
+  { id: 'b', name: 'B', grade: 'tien', growthRate: 0.05, unlockThresholds: {}, baseStats: { maxHp: 100, attack: 10, speed: 100 }, basic: { id: 'b_basic', cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } } },
 ]
 
 describe('rollCompanionGrade', () => {
@@ -30,20 +30,39 @@ describe('pickDefinitionOfGrade', () => {
 })
 
 describe('pullCompanion — duplicate converts to exp instead of a second instance', () => {
-  it('new companion: adds a fresh CompanionInstance at level 1', () => {
-    const { owned, result } = pullCompanion([], RATES, POOL, () => 0)
+  it('new companion: adds a fresh CompanionInstance at realmLevel 1', () => {
+    const { owned, result } = pullCompanion([], RATES, POOL, () => 0, () => 'new_instance_id')
 
     expect(result.isDuplicate).toBe(false)
-    expect(owned).toEqual([{ definitionId: 'a', level: 1, exp: 0 }])
+    expect(owned).toEqual([
+      {
+        instanceId: 'new_instance_id',
+        definitionId: 'a',
+        realmId: 'mortal',
+        realmLevel: 1,
+        exp: 0,
+        constellationRank: 0,
+      },
+    ])
   })
 
   it('duplicate companion: grants exp to the existing instance, does not add a second one', () => {
-    const existing = [{ definitionId: 'a', level: 1, exp: 0 }]
+    const existing = [
+      {
+        instanceId: 'existing_instance',
+        definitionId: 'a',
+        realmId: 'mortal',
+        realmLevel: 1,
+        exp: 0,
+        constellationRank: 0,
+      },
+    ]
 
     const { owned, result } = pullCompanion(existing, RATES, POOL, () => 0)
 
     expect(result.isDuplicate).toBe(true)
     expect(owned).toHaveLength(1)
     expect(owned[0]!.exp).toBeGreaterThan(0)
+    expect(owned[0]!.instanceId).toBe('existing_instance')
   })
 })

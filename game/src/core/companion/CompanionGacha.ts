@@ -56,6 +56,7 @@ export function pullCompanion(
   rates: Record<ItemGrade, number>,
   pool: readonly CompanionDefinition[],
   random: () => number = Math.random,
+  newInstanceId: () => string = crypto.randomUUID,
 ): { owned: CompanionInstance[]; result: { definitionId: string; isDuplicate: boolean } } {
   const grade = rollCompanionGrade(rates, random)
   const definition = pickDefinitionOfGrade(grade, pool, random)
@@ -64,7 +65,17 @@ export function pullCompanion(
 
   if (existingIndex === -1) {
     return {
-      owned: [...owned, { definitionId: definition.id, level: 1, exp: 0 }],
+      owned: [
+        ...owned,
+        {
+          instanceId: newInstanceId(),
+          definitionId: definition.id,
+          realmId: 'mortal',
+          realmLevel: 1,
+          exp: 0,
+          constellationRank: 0,
+        },
+      ],
       result: { definitionId: definition.id, isDuplicate: false },
     }
   }

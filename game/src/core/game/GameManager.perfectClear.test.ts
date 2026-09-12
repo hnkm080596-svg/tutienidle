@@ -145,6 +145,8 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
       id: 'pc_test_companion',
       name: 'PC Test Companion',
       grade: 'hoang',
+      growthRate: 0.05,
+      unlockThresholds: {},
       baseStats: { maxHp: 100, attack: 10, speed: 100 },
       basic: {
         id: 'pc_test_companion_basic',
@@ -179,7 +181,16 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
       // formationLoadout + companions must be set BEFORE
       // setActivePlayer/startStage - buildTurnBattle reads the live
       // PlayerData and only adds a companion that has a formation slot.
-      player.companions = [{ definitionId: TEST_COMPANION.id, level: 1, exp: 0 }]
+      player.companions = [
+        {
+          instanceId: 'pc_test_instance',
+          definitionId: TEST_COMPANION.id,
+          realmId: 'mortal',
+          realmLevel: 1,
+          exp: 0,
+          constellationRank: 0,
+        },
+      ]
       player.formationLoadout = {
         formationId: 'pc_test_formation',
         assignments: [

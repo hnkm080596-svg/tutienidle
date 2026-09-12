@@ -25,7 +25,9 @@ export function companionStatsAtLevel(baseStats: CompanionBaseStats, level: numb
 }
 
 export function companionToCombatEntity(instance: CompanionInstance, definition: CompanionDefinition): CombatEntity {
-  const scaled = companionStatsAtLevel(definition.baseStats, instance.level)
+  // 2026-09-12 schema: `level` was replaced by realmId/realmLevel - use the
+  // tier within the current realm until companionStatsAt lands (Task 2).
+  const scaled = companionStatsAtLevel(definition.baseStats, instance.realmLevel)
   const stats = { ...createBaseStats(), ...scaled, evasionRate: 0, dexterity: 0, criticalRate: 0 }
 
   return {

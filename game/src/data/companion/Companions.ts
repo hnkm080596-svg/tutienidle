@@ -14,20 +14,42 @@ export interface CompanionBaseStats {
   speed: number
 }
 
+export type CompanionSkillSlot = 'basic' | 'special' | 'ultimate'
+
+/** Whitelisted skill overrides - id/targeting may NOT be overridden (A8). */
+export interface CompanionSkillOverride {
+  cooldownTurns?: number
+  damageMultiplierPercent?: number   // multiplies damage.multiplier, e.g. 20 = x1.2
+  healPercentOfDamage?: number
+}
+
+export type ConstellationPerk =
+  | { atRank: number; kind: 'stat'; stat: keyof CompanionBaseStats; percent?: number; flat?: number }
+  | { atRank: number; kind: 'skill_override'; slot: CompanionSkillSlot; overrides: CompanionSkillOverride }
+
 export interface CompanionDefinition {
   id: string
   name: string
   grade: ItemGrade
+  growthRate: number                       // stat multiplier per global cultivation level
+  unlockThresholds: {                      // realm gate per slot (compare vs instance realm/tier)
+    special?: { realmId: string; realmLevel: number }
+    ultimate?: { realmId: string; realmLevel: number }
+  }
   baseStats: CompanionBaseStats
   basic: TurnSkillDefinition
   special?: TurnSkillDefinition
   ultimate?: TurnSkillDefinition
+  constellationPerks?: ConstellationPerk[]
 }
 
 export interface CompanionInstance {
+  instanceId: string          // stable identity - crypto.randomUUID(), never array index
   definitionId: string
-  level: number
-  exp: number
+  realmId: string             // starts 'mortal'
+  realmLevel: number          // tier within realmId (1..realm.maxLevel)
+  exp: number                 // exp banked within current tier
+  constellationRank: number   // 0..6
 }
 
 // TEST-ONLY: 5 companion placeholder (2026-09-06, Hỗn Độn Trận visual test tooling) —
@@ -54,6 +76,8 @@ export const TEST_COMPANIONS: CompanionDefinition[] = [1, 2, 3, 4, 5].map((n) =>
   id: `test_companion_${n}`,
   name: `Test Companion ${n}`,
   grade: 'hoang',
+  growthRate: 0.05,
+  unlockThresholds: {},
   baseStats: TEST_COMPANION_BASE_STATS,
   basic: testCompanionBasicSkill(`test_companion_${n}`),
 }))

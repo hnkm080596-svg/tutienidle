@@ -11,14 +11,12 @@ export function companionLevelForExp(exp: number): number {
   return 1 + Math.floor(exp / EXP_PER_LEVEL)
 }
 
-// Hàm pure: trả về instance MỚI với exp cộng dồn và level tính lại,
-// không mutate instance truyền vào.
+// Pure function: returns a NEW instance with exp accumulated, never
+// mutates the input. (2026-09-12 schema: instances no longer carry a
+// `level` field - this file is deleted wholesale by companion-gacha Task 2.)
 export function grantCompanionExp(instance: CompanionInstance, amount: number): CompanionInstance {
-  const exp = instance.exp + amount
-
   return {
     ...instance,
-    exp,
-    level: companionLevelForExp(exp),
+    exp: instance.exp + amount,
   }
 }

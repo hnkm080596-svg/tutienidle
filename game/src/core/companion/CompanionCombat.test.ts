@@ -6,6 +6,8 @@ const TEST_DEFINITION: CompanionDefinition = {
   id: 'test_companion',
   name: 'Test Companion',
   grade: 'hoang',
+  growthRate: 0.05,
+  unlockThresholds: {},
   baseStats: { maxHp: 100, attack: 10, speed: 100 },
   basic: { id: 'test_companion_basic', cooldownTurns: 0, damage: { kind: 'physical', multiplier: 1 }, targeting: { shape: 'single' } },
 }
@@ -25,7 +27,14 @@ describe('companionStatsAtLevel', () => {
 
 describe('companionToCombatEntity', () => {
   it('builds a fresh, alive CombatEntity with the definition id and full HP', () => {
-    const instance: CompanionInstance = { definitionId: 'test_companion', level: 1, exp: 0 }
+    const instance: CompanionInstance = {
+      instanceId: 'test_instance',
+      definitionId: 'test_companion',
+      realmId: 'mortal',
+      realmLevel: 1,
+      exp: 0,
+      constellationRank: 0,
+    }
 
     const entity = companionToCombatEntity(instance, TEST_DEFINITION)
 
