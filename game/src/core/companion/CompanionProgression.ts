@@ -1,5 +1,5 @@
-// CompanionProgression (companion-gacha Task 2, 2026-09-12) - replaces
-// CompanionLeveling: realm-aware exp curve, dynamic player-realm ceiling,
+// CompanionProgression (companion-gacha Task 2, 2026-09-12) - replaces the
+// old flat-curve leveling module: realm-aware exp curve, dynamic player-realm ceiling,
 // constellation-scaled stats, skill unlock/override resolution, feed values.
 // All functions are pure - they return new objects, never mutate inputs.
 import type {
@@ -141,8 +141,8 @@ export function applyConstellationRank(instance: CompanionInstance): ApplyConste
   return { maxed: false, instance: { ...instance, constellationRank: instance.constellationRank + 1 } }
 }
 
-// Replaces companionStatsAtLevel: base x level growth x constellation, then
-// 'stat' perks (flat first, percent on the post-flat value). Speed ignores
+// Resolved combat stats: base x level growth x constellation, then 'stat'
+// perks (flat first, percent on the post-flat value). Speed ignores
 // level growth but still takes the constellation multiplier and stat perks.
 export function companionStatsAt(definition: CompanionDefinition, instance: CompanionInstance): CompanionBaseStats {
   const globalLevel = companionGlobalLevel(instance)
