@@ -1501,9 +1501,7 @@ Potential guards:
 no authoritative HP write outside permitted vitals paths        → SHIPPED (R14.2)
 raw stat input cannot accept resolved-stat type                 → SHIPPED (R14.3a, writer-side)
 gameplay queries cannot mutate lifecycle state                  → SHIPPED (R14.3b)
-paid random result requires domain capability/token             → (R9 contract already has
-                                                                   runtime ticket validation;
-                                                                   static guard not yet shipped)
+paid random result requires domain capability/token             → SHIPPED (R14.6d, 2026-09-14)
 core cannot import presentation/orchestrator upward             → SHIPPED (R14.1b)
 asset destination must remain under asset root                  → SHIPPED (R14.6a, 2026-09-14)
 catalog/preload parity                                          → SHIPPED (R14.6b, 2026-09-14)
@@ -1778,7 +1776,7 @@ R14 Architecture Enforcement
 | 12 | R11 — UI Foundation Consolidation | AR-26, AR-27, AR-28 + domain UI | ⏸ — Khí Đường 3-tab layout defect FIXED 2026-09-12 (single-owner `qi-hall.css` + ownership guard); broader consolidation vẫn parked |
 | 13 | R12 — Presentation / Asset Cleanup | AR-24, AR-27, AR-29, AR-30, AR-31 | ⏸ |
 | 14 | R13 — Parallel Authority / Legacy Retirement | AR-19, AR-25 | ⏸ |
-| 15 | R14 — Architecture Enforcement | AR-32, AR-33 + migrated invariants | 🟡 Slices 1-3 shipped: R1/R2/R8.1/AR-33/A6 + combat-contract (two-clock, AC-7c/9b, command boundary) + R8.2 ownership guards (2026-09-11); asset containment + catalog/preload parity + ACK-token guards (2026-09-14); type-level stat guard + R9 paid-random static guard still pending |
+| 15 | R14 — Architecture Enforcement | AR-32, AR-33 + migrated invariants | 🟡 Slices 1-3 shipped: R1/R2/R8.1/AR-33/A6 + combat-contract (two-clock, AC-7c/9b, command boundary) + R8.2 ownership guards (2026-09-11); asset containment + catalog/preload parity + ACK-token guards (2026-09-14); R9 paid-random static guard (2026-09-14); type-level stat guard still pending (nominal-type refactor, not a guard) |
 
 ---
 
