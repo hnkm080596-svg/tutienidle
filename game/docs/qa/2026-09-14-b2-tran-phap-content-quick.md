@@ -74,11 +74,22 @@ through the existing `toTurnBuffDefinition` converter.
   coverage of `cuu_cung_tran`).
 - `buffs.test.ts` count pin updated 52 → 56.
 
-## Gaps / follow-ups
+## Live pass (P14, main checkout dev server, merge `00fdfb76`)
 
-- **P14 deferred to main checkout**: live panel check (open Tran Phap
-  panel, select a real formation, lit cells + drag/confirm) per the
-  isolated-worktree browser exception — verify after merge.
+Real browser drive (Playwright, fresh guest → creation → Dong Fu):
+
+- Command wheel 'Tran' slot opens `TranPhapPanel`.
+- All 5 production formations render by name: Doc Hanh / Luong Nghi /
+  Tam Tai / Ngu Hanh / Cuu Cung Tran.
+- Selecting `tam_tai_tran` lights exactly 3 cells (matches cellPattern);
+  enabled cells tint on the perspective grid.
+- Dragging the `player` card onto an enabled cell lands the assignment
+  (occupied state, sprite preview on canvas).
+- Confirm persists: localStorage save holds
+  `formationLoadout: { formationId: 'tam_tai_tran', assignments:
+  [{ row: 0, column: 0, combatantId: 'player' }] }` after autosave.
+
+## Gaps / follow-ups
 - **Balance**: magnitudes follow the spec's fewer-slots-stronger-buff
   guideline and stay within existing registry norms; real tuning belongs
   to the beta-gate balance pass, not this content pass.
@@ -95,5 +106,5 @@ through the existing `toTurnBuffDefinition` converter.
 
 ## Verdict
 
-PASS WITH EVIDENCE (P14 live check deferred to main checkout per
-worktree exception).
+PASS WITH EVIDENCE — unit/integration suite plus live browser pass on
+the merged main checkout.
