@@ -31,6 +31,10 @@ import {
   buildTurnBattleEntitySnapshot,
   type TurnBattleEntitySnapshotEvent,
 } from '../battle/turn/TurnActionPresentationEvents'
+import {
+  diffAndEmitTurnStatusVfx,
+  type TurnStatusSnapshotEntry,
+} from '../battle/turn/TurnStatusPresentationEvents'
 import { enemyToCombatEntity } from '../enemy/Enemy'
 import type { Enemy } from '../enemy/Enemy'
 import type { CombatEntity } from '../combat/CombatEntity'
@@ -126,6 +130,12 @@ export class GameManagerTurnBattleOps {
 
   private turnBattleRewardsGranted = new Set<string>()
   private turnBattleEndEmitted = false
+
+  // Phase A6 (9.5 #7) — last-emitted status snapshot + the battle instance
+  // it belongs to. Persistent across steps so construction-time buffs emit
+  // attach on first observation; a replaced battle resets via identity.
+  private statusVfxSnapshot = new Map<string, TurnStatusSnapshotEntry>()
+  private statusVfxBattle: TurnBattle | null = null
 
   private readonly combatAnimationRuntime: CombatAnimationRuntime
   private readonly presentationSession: PresentationSession
@@ -400,6 +410,22 @@ export class GameManagerTurnBattleOps {
       // beginTurnPipeline above and auto-repeat can replace the battle.
       if (this.turnBattle) {
         emitTurnBattleEntitySnapshot(this.deps.eventBus, this.turnBattle)
+        // Phase A6 (9.5 #7) — status-icon feed. `before` is the LAST-EMITTED
+        // snapshot for this battle instance (empty on first observation:
+        // buffs applied at construction/intro/countdown attach then). A
+        // replaced battle (auto-repeat) resets to empty — the scene clears
+        // stale icons itself on battle transition, and emitting removed
+        // events for a dead battle would be noise.
+        const statusBefore =
+          this.statusVfxBattle === this.turnBattle
+            ? this.statusVfxSnapshot
+            : new Map<string, TurnStatusSnapshotEntry>()
+        this.statusVfxSnapshot = diffAndEmitTurnStatusVfx(
+          this.deps.eventBus,
+          this.turnBattle,
+          statusBefore,
+        )
+        this.statusVfxBattle = this.turnBattle
       }
     }
 
