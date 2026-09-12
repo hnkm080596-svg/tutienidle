@@ -1,11 +1,11 @@
 // CompanionGacha (Companion Roster spec §7, 2026-09-05) — chỉ cơ chế:
 // giá trị rate table cụ thể và loại tiền tệ dùng để pull là quyết định
 // content/balance (spec §8), không thiết kế ở đây. Pull trùng (duplicate)
-// sẽ convert sang exp (qua CompanionLeveling.grantCompanionExp) thay vì
+// sẽ convert sang exp (qua CompanionProgression.applyCompanionExp) thay vì
 // no-op hoặc tạo thêm 1 instance sở hữu thứ hai — xem spec §7.
 import type { ItemGrade } from '@/core/item/ItemGrade'
 import type { CompanionDefinition, CompanionInstance } from '@/data/companion/Companions'
-import { grantCompanionExp } from './CompanionLeveling'
+import { applyCompanionExp } from './CompanionProgression'
 
 const GRADE_ORDER: readonly ItemGrade[] = ['hoang', 'huyen', 'dia', 'thien', 'tien']
 
@@ -82,7 +82,12 @@ export function pullCompanion(
 
   const updated = [...owned]
 
-  updated[existingIndex] = grantCompanionExp(updated[existingIndex]!, DUPLICATE_PULL_EXP)
+  // interim — Task 3 rewrites duplicate handling to constellation ranks
+  updated[existingIndex] = applyCompanionExp(
+    updated[existingIndex]!,
+    DUPLICATE_PULL_EXP,
+    updated[existingIndex]!.realmId,
+  ).instance
 
   return { owned: updated, result: { definitionId: definition.id, isDuplicate: true } }
 }
