@@ -401,7 +401,7 @@ P3 quick mỗi task, full cuối mission. P14 browser: giết boss tầng 10 nhi
 | R6 | Hệ drop giành quyền roll chất | Trung bình | Probe §5.6 |
 | R7 | `EnemyTag.ts` chưa tồn tại | Thấp | §3.2 — adapter đọc `isBoss`/`isElite`, không bị chặn |
 | R8 | Nhịp 3 xoá `eliteRewards` làm vỡ test ngầm | Trung bình | grep + characterization §5.1 trước khi xoá; nhịp 3 tách riêng |
-| R9 | [MỚI] **Nâng chất rơi vào khoảng không** — boss+tinh_anh nhưng không lượt nào ra trang bị | Chưa đo | **OQ1 §9** |
+| R9 | [MỚI] **Nâng chất rơi vào khoảng không** — boss+tinh_anh nhưng không lượt nào ra trang bị | Đã đo: 0.0% (2026-09-12) | **OQ1 §9 - ĐÃ ĐÓNG** |
 
 ---
 
@@ -452,3 +452,21 @@ Sau đợt này nó là **một dòng dữ liệu** trong `StageDropTables`, nê
 - Nếu **> 20%** → đổi E6 sang: *một trong các lượt bốc của lần giết đó được bảo đảm ra trang bị* khi `qualityBonusSteps > 0`.
 
 Con số ước lượng trên cho thấy nhánh thứ hai **nhiều khả năng sẽ trúng**. Ghi rõ ở đây để nó là một phép đo có kế hoạch, không phải một phát hiện muộn.
+
+**ĐÃ ĐO (Task 6, 2026-09-12):** `sampleDropExpectation('mortal', 'boar', [BOSS_MODIFIER, TINH_ANH_MODIFIER])`
+với 100,000 mẫu (seed cố định, `game/src/core/drop/dropSampling.ts`) cho
+`noEquipmentRate = 0.0%`. Nguyên nhân: bảng pool của realm `mortal`
+(`STAGE_DROP_TABLES`) chỉ có hai dòng — `equipment` weight 15 và
+`equipment_any` weight 20 — nên **mọi** lượt bốc trong pool ở realm này đều
+ra trang bị; ước lượng minh hoạ 53% ở trên dùng trọng số giả định không khớp
+dữ liệu thật.
+
+**Kết quả: nhánh 1 trúng** — `0.0% ≤ 20%` → **giữ nguyên E6**. Không cần bảo
+đảm trang bị. OQ1 **ĐÃ ĐÓNG**.
+
+Lưu ý cho các quyết định sau: realm `qi_refining` (boss) đo được
+`noEquipmentRate = 20.0%` và tầng `foundation_establishment` (không có
+`family`, corrected fact) đo được `19.7%` ở boss và `66.7%` ở kill thường —
+gần hoặc dưới sát ngưỡng 20%, vì pool của các realm này pha thêm dòng
+`material` làm loãng cơ hội ra trang bị. Bảng đầy đủ nằm trong
+`.superpowers/sdd/2026-09-12-drop-system/task-6-report.md`.
