@@ -231,6 +231,13 @@ function validateCompanionEntries(
   path: string,
   issues: ShapeIssue[],
 ) {
+  // Domain invariant: 1 instance per definitionId, and instanceId is the
+  // identity key every consumer first-matches on (findIndex). A duplicated
+  // id in a corrupted save loads state consumers treat as impossible -
+  // same dedupe rationale as the equipment instanceId check below.
+  const seenInstanceIds = new Set<string>()
+  const seenDefinitionIds = new Set<string>()
+
   for (let i = 0; i < entries.length; i += 1) {
     const entry = entries[i]
     const entryPath = `${path}[${i}]`
@@ -243,6 +250,22 @@ function validateCompanionEntries(
 
     requireNonEmptyString(entry, 'instanceId', entryPath, issues)
     requireNonEmptyString(entry, 'definitionId', entryPath, issues)
+
+    if (typeof entry.instanceId === 'string' && entry.instanceId.trim().length > 0) {
+      if (seenInstanceIds.has(entry.instanceId)) {
+        issues.push({ path: `${entryPath}.instanceId`, message: 'bị trùng với companion entry khác' })
+      } else {
+        seenInstanceIds.add(entry.instanceId)
+      }
+    }
+
+    if (typeof entry.definitionId === 'string' && entry.definitionId.trim().length > 0) {
+      if (seenDefinitionIds.has(entry.definitionId)) {
+        issues.push({ path: `${entryPath}.definitionId`, message: 'bị trùng với companion entry khác' })
+      } else {
+        seenDefinitionIds.add(entry.definitionId)
+      }
+    }
 
     const realm =
       typeof entry.realmId === 'string'

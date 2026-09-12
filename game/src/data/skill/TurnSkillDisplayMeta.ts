@@ -67,7 +67,7 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
     description: 'Thế: tích lực 3 lượt. Trảm: gây sát thương theo số lượt tích luỹ. Hồi 5 lượt sau Trảm.',
   },
 
-  // Kiem Tu ultimate — Tru Tien Kiem Tran (BatKiemThuat.ts: burns 100
+  // Kiem Tu ultimate - Tru Tien Kiem Tran (BatKiemThuat.ts: burns 100
   // The, physical x5 single target, cooldown 8). The turn version is
   // re-authored (no lingering sword field), so meta is authored directly
   // here instead of syncing the legacy Skills.ts description.

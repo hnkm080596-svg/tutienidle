@@ -493,7 +493,7 @@ describe('validateGameSaveShape — equipment & slot shape (chặn crash boot/Na
   })
 })
 
-describe('validateGameSaveShape — companion gacha (v60)', () => {
+describe('validateGameSaveShape - companion gacha (v60)', () => {
   function validCompanionEntry(): Record<string, unknown> {
     return {
       instanceId: 'comp-1',
@@ -658,5 +658,33 @@ describe('validateGameSaveShape — companion gacha (v60)', () => {
 
     expect(result.ok).toBe(false)
     expect(pathsOf(result)).toContain('player.companions[0]')
+  })
+
+  it('từ chối companions có instanceId trùng giữa 2 entry', () => {
+    const save = validSave()
+
+    playerOf(save).companions = [
+      validCompanionEntry(),
+      { ...validCompanionEntry(), definitionId: 'test_companion_2' },
+    ]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.companions[1].instanceId')
+  })
+
+  it('từ chối companions có definitionId trùng (invariant 1 instance / definition)', () => {
+    const save = validSave()
+
+    playerOf(save).companions = [
+      validCompanionEntry(),
+      { ...validCompanionEntry(), instanceId: 'comp-2' },
+    ]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.companions[1].definitionId')
   })
 })

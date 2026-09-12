@@ -29,6 +29,7 @@ import {
   companionExpRequiredForLevel,
   companionFeedExpValue,
   companionStatsAt,
+  isCompanionFeedable,
   isCompanionLevelMaxed,
   isCompanionSkillUnlocked,
   resolveCompanionSkillKit,
@@ -215,15 +216,15 @@ function pipTooltip(rank: number): string {
 }
 
 // --- Feed control -----------------------------------------------------
-// Material picker lists the material bag verbatim (MaterialBag.getAll);
-// the ops layer re-checks the count on commit.
+// Material picker lists only feedable stacks - the eligibility rule is
+// owned by isCompanionFeedable (A2); the ops layer re-checks on commit.
 const feedMaterialId = ref('')
 const feedCount = ref<number>(1)
 
 const feedStacks = computed(() => {
   stateVersion.value
 
-  return gameManager.materialBag.getAll()
+  return gameManager.materialBag.getAll().filter((stack) => isCompanionFeedable(stack.material))
 })
 
 // A stale selection (stack ran out after feeding) falls back to the first
@@ -250,6 +251,7 @@ const feedDisabled = computed(() => {
 const lastFeed = ref<{
   instanceId: string
   expGained: number
+  clampedExp: number
   levelsGained: number
   realmBreakthroughs: string[]
 } | null>(null)
@@ -266,6 +268,8 @@ function feedErrorMessage(reason: Extract<FeedCompanionResult, { ok: false }>['r
       return t('companion.feed.errors.unknownInstance')
     case 'unknown_material':
       return t('companion.feed.errors.unknownMaterial')
+    case 'not_feedable':
+      return t('companion.feed.errors.notFeedable')
     case 'level_maxed':
       return t('companion.feed.errors.levelMaxed')
     case 'insufficient_material':
@@ -293,6 +297,7 @@ function onFeed() {
   lastFeed.value = {
     instanceId: entry.instance.instanceId,
     expGained: result.expGained,
+    clampedExp: result.clampedExp,
     levelsGained: result.levelsGained,
     realmBreakthroughs: result.realmBreakthroughs,
   }
@@ -444,6 +449,7 @@ function close() {
                 class="companion-panel__feed-material"
                 :value="selectedFeedStack?.material.id ?? ''"
                 :disabled="feedStacks.length === 0"
+                :aria-label="t('companion.feed.materialAria')"
                 @change="feedMaterialId = ($event.target as HTMLSelectElement).value"
               >
                 <option
@@ -477,8 +483,12 @@ function close() {
             <small v-else-if="feedStacks.length === 0" class="companion-panel__feed-note">
               {{ t('companion.feed.noMaterial') }}
             </small>
+            <!-- Net exp only: exp discarded at the player-realm ceiling
+                 (clampedExp) never reached the companion. -->
             <small v-else-if="lastFeedVisible && lastFeed" class="companion-panel__feed-result">
-              {{ t('companion.feed.success', { exp: formatNumber(lastFeed.expGained), levels: lastFeed.levelsGained }) }}
+              {{ lastFeed.levelsGained > 0
+                ? t('companion.feed.success', { exp: formatNumber(lastFeed.expGained - lastFeed.clampedExp), levels: lastFeed.levelsGained })
+                : t('companion.feed.successNoLevel', { exp: formatNumber(lastFeed.expGained - lastFeed.clampedExp) }) }}
               <template v-if="lastFeed.realmBreakthroughs.length > 0">
                 · {{ t('companion.feed.breakthrough', { realm: realmLabel(lastFeed.realmBreakthroughs[lastFeed.realmBreakthroughs.length - 1]!) }) }}
               </template>

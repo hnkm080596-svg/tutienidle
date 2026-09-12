@@ -90,7 +90,7 @@ function collectSinkMaterialIds(): Set<string> {
   // Bát Mạch — Kỳ Kinh Thiên Địa Chi Kiều (đường 9) cần nguyên liệu ẩn.
   sinks.add(THIEN_DIA_CHI_KIEU_MATERIAL_ID)
 
-  // Chieu Hien Quan (companion gacha Task 6) — Chieu Hien Lenh is spent
+  // Chieu Hien Quan (companion gacha Task 6) - Chieu Hien Lenh is spent
   // by GameManagerCompanionOps.pullCompanion() via materialBag.remove.
   sinks.add(COMPANION_PULL_TOKEN_ID)
 

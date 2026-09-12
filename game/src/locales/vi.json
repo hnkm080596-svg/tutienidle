@@ -583,15 +583,18 @@
     "feed": {
       "title": "Nuôi",
       "materialOption": "{name} x{count} (+{exp} EXP)",
+      "materialAria": "Nguyên liệu nuôi đồng đội",
       "countAria": "Số lượng nguyên liệu",
       "button": "Nuôi",
       "maxedReason": "Đã đạt trần cảnh giới người chơi — đột phá để nuôi tiếp.",
       "noMaterial": "Kho nguyên liệu trống.",
       "success": "+{exp} EXP · lên {levels} tầng",
+      "successNoLevel": "+{exp} EXP",
       "breakthrough": "Phá cảnh → {realm}",
       "errors": {
         "unknownInstance": "Đồng đội không tồn tại.",
         "unknownMaterial": "Nguyên liệu không hợp lệ.",
+        "notFeedable": "Nguyên liệu này không thể nuôi đồng đội.",
         "levelMaxed": "Đồng đội đã đạt trần cảnh giới.",
         "insufficientMaterial": "Không đủ nguyên liệu.",
         "noActivePlayer": "Chưa có dữ liệu người chơi."

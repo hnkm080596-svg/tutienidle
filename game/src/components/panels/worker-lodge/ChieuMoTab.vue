@@ -55,24 +55,26 @@ function onPull() {
 
   pullInFlight.value = true
 
-  const result = gameManager.pullCompanion()
+  try {
+    const result = gameManager.pullCompanion()
 
-  pullInFlight.value = false
+    if (!result.ok) {
+      useNotificationStore().push(
+        'warning',
+        result.reason === 'missing_token'
+          ? t('chieuMo.errors.missingToken', { token: tokenName.value })
+          : t('chieuMo.errors.noActivePlayer'),
+      )
 
-  if (!result.ok) {
-    useNotificationStore().push(
-      'warning',
-      result.reason === 'missing_token'
-        ? t('chieuMo.errors.missingToken', { token: tokenName.value })
-        : t('chieuMo.errors.noActivePlayer'),
-    )
+      return
+    }
 
-    return
+    lastResult.value = result
+
+    bumpState()
+  } finally {
+    pullInFlight.value = false
   }
-
-  lastResult.value = result
-
-  bumpState()
 }
 </script>
 

@@ -583,15 +583,18 @@
     "feed": {
       "title": "Feed",
       "materialOption": "{name} x{count} (+{exp} EXP)",
+      "materialAria": "Feed material",
       "countAria": "Material amount",
       "button": "Feed",
       "maxedReason": "At the player realm cap — break through to keep feeding.",
       "noMaterial": "Material bag is empty.",
       "success": "+{exp} EXP · +{levels} floors",
+      "successNoLevel": "+{exp} EXP",
       "breakthrough": "Breakthrough → {realm}",
       "errors": {
         "unknownInstance": "Unknown companion.",
         "unknownMaterial": "Invalid material.",
+        "notFeedable": "This material cannot be fed to companions.",
         "levelMaxed": "Companion is at the realm cap.",
         "insufficientMaterial": "Not enough material.",
         "noActivePlayer": "No active player data."

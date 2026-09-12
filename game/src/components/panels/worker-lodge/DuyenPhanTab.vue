@@ -192,6 +192,13 @@ function onExchange(definitionId: string) {
   font-size: var(--text-xs);
 }
 
+/* Owned rows get the same jade tint convention as selected roster cards
+   (CompanionPanel) - "already claimed" without looking disabled. */
+.duyen-phan__row--owned {
+  border-color: color-mix(in srgb, var(--jade) 45%, var(--paper-line));
+  background: color-mix(in srgb, var(--jade) 8%, var(--paper-100));
+}
+
 .duyen-phan__name {
   font-weight: 700;
 }

@@ -20,6 +20,7 @@ import type { CompanionPullOutcome } from '../companion/CompanionGacha'
 import {
   applyCompanionExp,
   companionFeedExpValue,
+  isCompanionFeedable,
   isCompanionLevelMaxed,
   MAX_CONSTELLATION_RANK,
 } from '../companion/CompanionProgression'
@@ -51,7 +52,7 @@ export type ExchangeCompanionResult =
 
 export type FeedCompanionResult =
   | { ok: true; expGained: number; levelsGained: number; realmBreakthroughs: string[]; clampedExp: number }
-  | { ok: false; reason: 'unknown_instance' | 'unknown_material' | 'level_maxed' | 'insufficient_material' | 'no_active_player' }
+  | { ok: false; reason: 'unknown_instance' | 'unknown_material' | 'not_feedable' | 'level_maxed' | 'insufficient_material' | 'no_active_player' }
 
 export interface GameManagerCompanionOpsDeps {
   materialBag: MaterialBag
@@ -202,13 +203,21 @@ export class GameManagerCompanionOps {
       return { ok: false, reason: 'unknown_material' }
     }
 
+    const material = this.deps.materialRegistry.get(materialId)
+
+    // Feed scope is owned by CompanionProgression (isCompanionFeedable):
+    // currency/pity tokens and profession inputs reject BEFORE the bag is
+    // touched - the panel filters its picker through the same predicate.
+    if (!isCompanionFeedable(material)) {
+      return { ok: false, reason: 'not_feedable' }
+    }
+
     // A non-positive count is "the bag cannot supply it" - has(id, 0)
     // would otherwise pass vacuously and report a 0-exp success.
     if (!Number.isInteger(count) || count <= 0 || !this.deps.materialBag.has(materialId, count)) {
       return { ok: false, reason: 'insufficient_material' }
     }
 
-    const material = this.deps.materialRegistry.get(materialId)
     const expGained = companionFeedExpValue(material) * count
 
     this.deps.materialBag.remove(materialId, count)

@@ -16,7 +16,7 @@ import { RewardSystem } from '../../core/reward/RewardSystem'
 import type { RewardReceiver } from '../../core/reward/RewardSystem'
 import type { PlayerData } from '../../core/player/Player'
 
-// Companion gacha Task 6 — Chieu Hien Lenh token economy: registry
+// Companion gacha Task 6 - Chieu Hien Lenh token economy: registry
 // entry, floor-10 chapter boss signatureDrops, daily quest income.
 const BOSS_TOKEN_AMOUNTS: Readonly<Record<string, number>> = {
   mortal_ferocious_giant_crocodile: 1,

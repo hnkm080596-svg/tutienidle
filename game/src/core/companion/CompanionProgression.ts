@@ -13,6 +13,7 @@ import type { TurnSkillDefinition } from '@/core/battle/turn/TurnSkillAction'
 import { REALMS } from '@/data/realms/realm'
 import { getGlobalCultivationLevel, getRealmIndex } from '@/core/realm/realmSystem'
 import type { Material } from '@/core/material/Material'
+import { SPIRIT_STONE_MATERIALS } from '@/core/material/SpiritStoneMaterial'
 
 export const MAX_CONSTELLATION_RANK = 6
 export const CONSTELLATION_STAT_PER_RANK = 0.10
@@ -271,6 +272,28 @@ function applySkillOverride(skill: TurnSkillDefinition, overrides: CompanionSkil
   return next
 }
 
+// Feed scope (design spec section 5): only 'essence'/'other' materials
+// feed a companion - herb/wood/ore are profession inputs with their own
+// sinks. Two content ids are excluded even inside the allowed categories:
+// the spirit stone tiers (the currency, SpiritStoneMaterial.ts) and the
+// gacha pull token 'chieu_hien_lenh' (COMPANION_PULL_TOKEN_ID in
+// GameManagerCompanionOps - kept as a literal so this domain module never
+// depends on the ops layer, A6).
+const COMPANION_FEED_EXCLUDED_IDS: ReadonlySet<string> = new Set([
+  'chieu_hien_lenh',
+  ...SPIRIT_STONE_MATERIALS.map((material) => material.id),
+])
+
+// Single owner of the feed-eligibility rule (A2): the ops layer gates
+// commits and the panel filters its picker through this same predicate.
+export function isCompanionFeedable(material: Material | undefined): boolean {
+  return (
+    material !== undefined &&
+    (material.category === 'essence' || material.category === 'other') &&
+    !COMPANION_FEED_EXCLUDED_IDS.has(material.id)
+  )
+}
+
 // Feed value of one material: profession materials scale with their realm
 // index, everything else is a flat 10.
 export function companionFeedExpValue(material: Material): number {
@@ -278,5 +301,9 @@ export function companionFeedExpValue(material: Material): number {
     return FEED_EXP_BASE
   }
 
-  return FEED_EXP_BASE * (getRealmIndex(material.profession.realmId) + 1)
+  const realmIndex = getRealmIndex(material.profession.realmId)
+
+  // An unmapped profession realmId (index -1) would zero the value out -
+  // fall back to the flat default instead of returning 0 exp.
+  return realmIndex < 0 ? FEED_EXP_BASE : FEED_EXP_BASE * (realmIndex + 1)
 }

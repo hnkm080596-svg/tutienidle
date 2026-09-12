@@ -144,7 +144,7 @@ describe('DongFuCommandWheel', () => {
     expect(slot).not.toBeNull()
   })
 
-  // Companion Roster (companion-gacha Task 10, 2026-09-12) — SHIPPED:
+  // Companion Roster (companion-gacha Task 10, 2026-09-12) - SHIPPED:
   // companion_roster renders with no realm gate and opens CompanionPanel
   // (standalonePanel 'companion'), closing the wheel like every shortcut.
   it('slot Đồng Đội render và mở standalonePanel companion', async () => {

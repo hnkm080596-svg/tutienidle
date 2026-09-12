@@ -14,6 +14,7 @@ import type { CompanionInstance } from '../../data/companion/Companions'
 import { REALMS } from '../../data/realms/realm'
 import { EXCHANGE_COST } from './GameManagerCompanionOps'
 import { MAX_CONSTELLATION_RANK } from '../companion/CompanionProgression'
+import { SPIRIT_STONE_MATERIAL } from '../material/SpiritStoneMaterial'
 
 const PULL_TOKEN: Material = {
   id: 'chieu_hien_lenh',
@@ -238,6 +239,48 @@ describe('feedCompanion', () => {
     expect(result).toEqual({ ok: false, reason: 'level_maxed' })
     // The early-reject ordering is the point: bag untouched.
     expect(manager.materialBag.getAmount(FEED_MATERIAL.id)).toBe(5)
+    expect(player.companions[0]!.exp).toBe(0)
+  })
+
+  it('rejects a non-feedable material (out-of-scope category) without consuming it', () => {
+    const { manager, player } = makeManager()
+    const herb: Material = {
+      id: 'test_herb',
+      name: 'Test Herb',
+      category: 'herb',
+      sourceType: 'exploration',
+    }
+    manager.materialRegistry.register(herb)
+    manager.materialBag.add(herb, 5)
+    player.companions.push(ownedInstance())
+
+    const result = manager.feedCompanion('inst-1', herb.id, 2)
+
+    expect(result).toEqual({ ok: false, reason: 'not_feedable' })
+    expect(manager.materialBag.getAmount(herb.id)).toBe(5)
+    expect(player.companions[0]!.exp).toBe(0)
+  })
+
+  it('rejects currency and the pull token despite registry presence', () => {
+    const { manager, player } = makeManager()
+    manager.materialRegistry.register(SPIRIT_STONE_MATERIAL)
+    manager.materialRegistry.register(PULL_TOKEN)
+    manager.materialBag.add(SPIRIT_STONE_MATERIAL, 5)
+    manager.materialBag.add(PULL_TOKEN, 5)
+    player.companions.push(ownedInstance())
+
+    // PULL_TOKEN is category 'other' - inside the allowed feed scope - so
+    // this proves the explicit excluded-id gate, not the category filter.
+    expect(manager.feedCompanion('inst-1', SPIRIT_STONE_MATERIAL.id, 1)).toEqual({
+      ok: false,
+      reason: 'not_feedable',
+    })
+    expect(manager.feedCompanion('inst-1', PULL_TOKEN.id, 1)).toEqual({
+      ok: false,
+      reason: 'not_feedable',
+    })
+    expect(manager.materialBag.getAmount(SPIRIT_STONE_MATERIAL.id)).toBe(5)
+    expect(manager.materialBag.getAmount(PULL_TOKEN.id)).toBe(5)
     expect(player.companions[0]!.exp).toBe(0)
   })
 

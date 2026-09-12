@@ -1,9 +1,9 @@
-// companion-gacha Task 8 — buildTurnBattle() must hand each companion's
+// companion-gacha Task 8 - buildTurnBattle() must hand each companion's
 // RESOLVED skill kit (resolveCompanionSkillKit: unlockThresholds gating +
 // constellation skill_override perks) to toTurnBattleParticipant, and the
 // entity built by companionToCombatEntity must carry companionStatsAt stats
 // (realm-level growth x constellation x stat perks) plus a real realmIndex.
-// These tests drive the real GameManager.startBattle() path — wiring proof,
+// These tests drive the real GameManager.startBattle() path - wiring proof,
 // not a re-test of the resolver internals (those live in
 // CompanionProgression.test.ts / CompanionCombat.test.ts).
 import { afterEach, describe, expect, it } from 'vitest'
@@ -113,7 +113,7 @@ function battleCompanionParticipant(instance: CompanionInstance): TurnBattlePart
   return participant!
 }
 
-describe('GameManager.buildTurnBattle — companion resolved skill kit', () => {
+describe('GameManager.buildTurnBattle - companion resolved skill kit', () => {
   afterEach(() => {
     // Keep the shared module-level COMPANIONS clean between tests.
     const index = COMPANIONS.findIndex((candidate) => candidate.id === TEST_COMPANION_DEFINITION.id)

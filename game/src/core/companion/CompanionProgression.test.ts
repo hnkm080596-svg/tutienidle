@@ -7,6 +7,7 @@ import {
   companionFeedExpValue,
   companionGlobalLevel,
   companionStatsAt,
+  isCompanionFeedable,
   isCompanionLevelMaxed,
   isCompanionSkillUnlocked,
   MAX_CONSTELLATION_RANK,
@@ -14,6 +15,7 @@ import {
 } from './CompanionProgression'
 import type { CompanionDefinition, CompanionInstance } from '@/data/companion/Companions'
 import type { Material } from '@/core/material/Material'
+import { SPIRIT_STONE_MATERIAL } from '@/core/material/SpiritStoneMaterial'
 
 function makeInstance(overrides: Partial<CompanionInstance> = {}): CompanionInstance {
   return {
@@ -428,5 +430,48 @@ describe('companionFeedExpValue', () => {
 
     expect(companionFeedExpValue(mortal)).toBe(10)
     expect(companionFeedExpValue(qiRefining)).toBe(20)
+  })
+
+  it('falls back to the flat 10 when the profession realmId is unmapped', () => {
+    const orphan: Material = {
+      id: 'm4',
+      name: 'M4',
+      category: 'ore',
+      sourceType: 'exploration',
+      profession: { resourceKind: 'ore', realmId: 'not_a_realm' },
+    }
+
+    // getRealmIndex('not_a_realm') is -1 - must not zero the value out.
+    expect(companionFeedExpValue(orphan)).toBe(10)
+  })
+})
+
+describe('isCompanionFeedable', () => {
+  function feedableOf(category: Material['category'], id = 'test_material'): Material {
+    return { id, name: id, category, sourceType: 'monster' }
+  }
+
+  it('accepts essence and other materials', () => {
+    expect(isCompanionFeedable(feedableOf('essence'))).toBe(true)
+    expect(isCompanionFeedable(feedableOf('other'))).toBe(true)
+  })
+
+  it('rejects herb/wood/ore and other out-of-scope categories', () => {
+    for (const category of ['herb', 'wood', 'ore', 'monster_core', 'byproduct', 'spirit_stone'] as const) {
+      expect(isCompanionFeedable(feedableOf(category))).toBe(false)
+    }
+  })
+
+  it('rejects the pull token despite its allowed "other" category', () => {
+    expect(isCompanionFeedable(feedableOf('other', 'chieu_hien_lenh'))).toBe(false)
+  })
+
+  it('rejects spirit stones by id, even if a stone lands in an allowed category', () => {
+    expect(isCompanionFeedable(SPIRIT_STONE_MATERIAL)).toBe(false)
+    expect(isCompanionFeedable({ ...SPIRIT_STONE_MATERIAL, category: 'other' })).toBe(false)
+  })
+
+  it('rejects a missing material', () => {
+    expect(isCompanionFeedable(undefined)).toBe(false)
   })
 })

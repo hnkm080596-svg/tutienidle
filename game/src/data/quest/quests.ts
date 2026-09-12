@@ -49,7 +49,7 @@ export const QUESTS: Quest[] = [
     cadence: 'daily',
   },
 
-  // Companion gacha (Task 6, 2026-09-12) — daily Chieu Hien Lenh income
+  // Companion gacha (Task 6, 2026-09-12) - daily Chieu Hien Lenh income
   // alongside the floor-10 boss signatureDrops. Kill-generic (enemyId
   // omitted) so the quest is completable on any stage.
   {

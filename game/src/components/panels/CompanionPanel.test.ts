@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// CompanionPanel (companion-gacha Task 10, 2026-09-12) — mounted-component
+// CompanionPanel (companion-gacha Task 10, 2026-09-12) - mounted-component
 // tests over a real GameManager, same harness as RealmPanel.test.ts /
 // ChiHienQuan.integration.test.ts: the panel self-gates on
 // ui.standalonePanel === 'companion' and reads player.companions +
@@ -25,6 +25,21 @@ const FEED_MATERIAL: Material = {
   name: 'Test Feed',
   category: 'other',
   sourceType: 'monster',
+}
+
+// In-scope categories but feed-excluded ids (currency / pull token).
+const SPIRIT_STONE_STUB: Material = {
+  id: 'spirit_stone_ha_pham',
+  name: 'Test Spirit Stone',
+  category: 'spirit_stone',
+  sourceType: 'building',
+}
+
+const PULL_TOKEN_STUB: Material = {
+  id: 'chieu_hien_lenh',
+  name: 'Test Token',
+  category: 'other',
+  sourceType: 'boss',
 }
 
 const MORTAL_MAX_LEVEL = REALMS.find((realm) => realm.id === 'mortal')!.maxLevel
@@ -71,7 +86,7 @@ function mountPanel(prepare?: (deps: {
 
   useUiStore(pinia).standalonePanel = 'companion'
 
-  // Panel computeds cache on stateVersion — bag contents must exist before
+  // Panel computeds cache on stateVersion - bag contents must exist before
   // mount; player store fields are Pinia-reactive and can change anytime.
   prepare?.({ gameManager, player })
 
@@ -162,6 +177,25 @@ describe('CompanionPanel', () => {
     // 1 x flat-10 exp against a 40-exp tier cost: no level-up, bag -1.
     expect(mounted.gameManager.materialBag.getAmount(FEED_MATERIAL.id)).toBe(4)
     expect(mounted.player.companions[0]!.exp).toBe(10)
+
+    mounted.unmount()
+  })
+
+  it('lists only feedable materials in the feed picker', () => {
+    const mounted = mountPanel(({ player, gameManager }) => {
+      player.companions = [ownedInstance()]
+      gameManager.materialRegistry.register(SPIRIT_STONE_STUB)
+      gameManager.materialRegistry.register(PULL_TOKEN_STUB)
+      gameManager.materialBag.add(FEED_MATERIAL, 5)
+      gameManager.materialBag.add(SPIRIT_STONE_STUB, 5)
+      gameManager.materialBag.add(PULL_TOKEN_STUB, 5)
+    })
+
+    const options = Array.from(
+      mounted.container.querySelectorAll<HTMLOptionElement>('.companion-panel__feed-material option'),
+    ).map((option) => option.value)
+
+    expect(options).toEqual([FEED_MATERIAL.id])
 
     mounted.unmount()
   })
