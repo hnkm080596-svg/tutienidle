@@ -281,7 +281,6 @@ function start() {
 
         <div class="stage-select__encounter-summary">
           <span><strong>{{ selectedStage.totalEnemyCount }}</strong> {{ t('panels.stageSelect.labels.enemiesSuffix') }}</span>
-          <span>{{ t('panels.stageSelect.labels.spawnIntervalPrefix') }} <strong>{{ selectedStage.spawnIntervalSeconds }}s</strong></span>
           <span v-if="selectedBoss" class="is-boss">{{ t('panels.stageSelect.labels.bossNamePrefix') }} <strong>{{ selectedBoss.name }}</strong></span>
         </div>
 
