@@ -14,7 +14,7 @@ import { TurnBuffPool } from './TurnBuffPool'
 // QA adversarial probes (2026-09-04 quick review) — Slice 1 TurnBattleSystem.
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
 
   return {
     id: 'id',
@@ -124,19 +124,19 @@ describe('TurnBattleSystem adversarial (QA probes)', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 }),
     })
     const enemyA = createCombatant({
       id: 'enemyA',
       currentHp: 1,
       maxHp: 1,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
     const enemyB = createCombatant({
       id: 'enemyB',
       currentHp: 5,
       maxHp: 5,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const battle: TurnBattle = {

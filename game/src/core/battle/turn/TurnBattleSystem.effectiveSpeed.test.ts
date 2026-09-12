@@ -42,7 +42,7 @@ const BASIC = {
 }
 
 function createCombatant(id: string, overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), speed: 100, evasionRate: 0, dexterity: 0, criticalRate: 0 }
+  const stats = createBaseStats({ speed: 100, evasionRate: 0, dexterity: 0, criticalRate: 0 })
 
   return {
     id,

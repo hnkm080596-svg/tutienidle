@@ -13,7 +13,7 @@ import type { CombatEvent } from '../../combat/CombatEvent'
 // and observers receive committed combat actions identically.
 
 function makeEntity(id: string): CombatEntity {
-  const stats = { ...createBaseStats(), attack: 100 }
+  const stats = createBaseStats({ attack: 100 })
   return {
     id,
     name: id,

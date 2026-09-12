@@ -9,7 +9,7 @@ import { createBaseStats } from '../../stats/StatBlock'
 // QA adversarial probes (2026-09-04 quick review) — Slice 5 wave/stage.
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0 })
 
   return {
     id: 'id',
@@ -50,8 +50,8 @@ function makeParticipant(
 
 describe('Slice 5 adversarial (QA probes)', () => {
   it('INV-S5-1: maxTurns cap vẫn hoạt động với wave spawn loop — không treo vô hạn', () => {
-    const player = createCombatant({ id: 'player', type: 'player' as never, currentHp: 1_000_000, maxHp: 1_000_000, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1 } })
-    const enemyA = createCombatant({ id: 'enemyA', currentHp: 1_000_000, maxHp: 1_000_000, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1 } })
+    const player = createCombatant({ id: 'player', type: 'player' as never, currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1 }) })
+    const enemyA = createCombatant({ id: 'enemyA', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1 }) })
 
     const wave = { totalEnemyCount: 50, waves: [50], spawnedCount: 1, waveIndex: 0, pendingEnemySpawns: [] }
     const battle: TurnBattle = {
@@ -64,7 +64,7 @@ describe('Slice 5 adversarial (QA probes)', () => {
     let spawnCount = 0
     const spawnEnemy = (): TurnBattleParticipant => {
       spawnCount += 1
-      const e = createCombatant({ id: `spawned_${spawnCount}`, currentHp: 1_000_000, maxHp: 1_000_000, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1 } })
+      const e = createCombatant({ id: `spawned_${spawnCount}`, currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 1 }) })
       return makeParticipant(e.id, e, 10, spawnCount + 1)
     }
 
@@ -77,8 +77,8 @@ describe('Slice 5 adversarial (QA probes)', () => {
   })
 
   it('INV-S5-2: spawned enemy có TurnBuffPool riêng (không share pool với enemy cũ)', () => {
-    const player = createCombatant({ id: 'player', type: 'player' as never, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 } })
-    const enemyA = createCombatant({ id: 'enemyA', currentHp: 1, maxHp: 1, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 } })
+    const player = createCombatant({ id: 'player', type: 'player' as never, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }) })
+    const enemyA = createCombatant({ id: 'enemyA', currentHp: 1, maxHp: 1, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }) })
 
     const wave = { totalEnemyCount: 2, waves: [2], spawnedCount: 1, waveIndex: 0, pendingEnemySpawns: [] }
     const battle: TurnBattle = {
@@ -90,7 +90,7 @@ describe('Slice 5 adversarial (QA probes)', () => {
 
     let spawnedPool: TurnBuffPool | undefined
     const spawnEnemy = (): TurnBattleParticipant => {
-      const spawned = makeParticipant('enemyB', createCombatant({ id: 'enemyB', currentHp: 1_000_000, maxHp: 1_000_000, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 } }), 10, 2)
+      const spawned = makeParticipant('enemyB', createCombatant({ id: 'enemyB', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }) }), 10, 2)
       spawnedPool = spawned.buffs
       return spawned
     }
@@ -109,7 +109,7 @@ describe('Slice 5 adversarial (QA probes)', () => {
   })
 
   it('INV-S5-3: wave totalEnemyCount=0 với spawnedCount=0 — isStageComplete true ngay khi sân trống', () => {
-    const player = createCombatant({ id: 'player', type: 'player' as never, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 10 } })
+    const player = createCombatant({ id: 'player', type: 'player' as never, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 10 }) })
 
     const battle: TurnBattle = {
       players: [makeParticipant('player', player, 10, 0)],

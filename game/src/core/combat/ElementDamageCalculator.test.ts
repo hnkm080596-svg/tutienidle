@@ -46,11 +46,11 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
 describe('ElementDamageCalculator — Skill Power nền dùng chung (plan §3)', () => {
   it('Pure Fire dùng đúng (ATK + FirePower) × (1 - kháng)', () => {
     const source = createCombatant({
-      stats: { ...createBaseStats(), attack: 30, firePower: 70 },
+      stats: createBaseStats({ attack: 30, firePower: 70 }),
     })
 
     const target = createCombatant({
-      stats: { ...createBaseStats(), fireResistance: 20 },
+      stats: createBaseStats({ fireResistance: 20 }),
     })
 
     const damage = calculateElementComponentDamage(source, target, 'fire')
@@ -69,11 +69,11 @@ describe('ElementDamageCalculator — Skill Power nền dùng chung (plan §3)',
     const attack = 50
 
     const source = createCombatant({
-      stats: { ...createBaseStats(), attack, firePower: 40 },
+      stats: createBaseStats({ attack, firePower: 40 }),
     })
 
     const noArmorTarget = createCombatant({
-      stats: { ...createBaseStats() },
+      stats: createBaseStats({}),
     })
 
     const components: Parameters<typeof calculateSkillBaseDamage>[2] = [
@@ -89,7 +89,7 @@ describe('ElementDamageCalculator — Skill Power nền dùng chung (plan §3)',
 
   it('primordial component cũng cộng ATK vào Power nền', () => {
     const source = createCombatant({
-      stats: { ...createBaseStats(), attack: 25, primordialPower: 15 },
+      stats: createBaseStats({ attack: 25, primordialPower: 15 }),
     })
 
     const target = createCombatant()
@@ -105,7 +105,7 @@ describe('ElementDamageCalculator — Skill Power nền dùng chung (plan §3)',
     // attack + `${element}Power` — hai công thức độc lập dễ lệch. Giờ cả
     // hai đều qua baseAttackPlusPower().
     const source = createCombatant({
-      stats: { ...createBaseStats(), attack: 25, primordialPower: 15, firePower: 40 },
+      stats: createBaseStats({ attack: 25, primordialPower: 15, firePower: 40 }),
     })
 
     const target = createCombatant()

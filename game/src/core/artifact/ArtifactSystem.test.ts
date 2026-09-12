@@ -11,7 +11,7 @@ import { onArtifactHitResolved, updateArtifactActivation, type ArtifactSystemDep
 import { buffs } from '../../data/buff/buffs'
 
 function createCombatEntity(id: string, overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), attack: 0, attackRange: 10, woodPower: 100, firePower: 100 }
+  const stats = createBaseStats({ attack: 0, attackRange: 10, woodPower: 100, firePower: 100 })
 
   return {
     id,

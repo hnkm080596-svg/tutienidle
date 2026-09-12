@@ -13,7 +13,7 @@ import { TurnBuffPool } from './TurnBuffPool'
 // declareActorAction code path.
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
 
   return {
     id: 'id',

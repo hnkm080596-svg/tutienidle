@@ -10,7 +10,7 @@ import type { CombatEntity } from './CombatEntity'
 import type { ActionDamageInfo } from '../battle/ActionImpactSystem'
 
 function makeEntity(blockChance: number): CombatEntity {
-  const stats = { ...createBaseStats(), blockChance }
+  const stats = createBaseStats({ blockChance })
 
   return {
     id: 'e1',

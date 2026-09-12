@@ -9,7 +9,7 @@ import { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 import { TURN_BUFF_REGISTRY } from '../../data/buff/TurnBuffRegistry'
 
 function entity(id: string): CombatEntity {
-  const stats = { ...createBaseStats(), attack: 10000, fireDamage: 10000, woodDamage: 10000 }
+  const stats = createBaseStats({ attack: 10000 })
   return {
     id, name: id, type: 'player', baseStats: stats, stats,
     currentHp: 1000, maxHp: 1000, currentMp: stats.maxMp,

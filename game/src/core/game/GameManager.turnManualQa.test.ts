@@ -23,7 +23,7 @@ const ENEMY_STATS = {
 }
 
 function createPlayer(): CombatEntity {
-  const stats = { ...createBaseStats(), attack: 50, speed: 100, criticalRate: 0 }
+  const stats = createBaseStats({ attack: 50, speed: 100, criticalRate: 0 })
 
   return {
     id: 'player', name: 'Player', type: 'player', baseStats: stats, stats,

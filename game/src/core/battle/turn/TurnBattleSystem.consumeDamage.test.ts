@@ -19,7 +19,7 @@ import type { TurnBuffDefinition } from './TurnBuffTypes'
 // TurnBuffSystem/TurnBuffPool's own API.
 
 function createCombatant(id: string, overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
 
   return {
     id,

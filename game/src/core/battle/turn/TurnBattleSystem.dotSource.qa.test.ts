@@ -30,7 +30,7 @@ const REGISTRY: TurnBuffRegistry = {
 }
 
 function makeEntity(id: string, overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, ...overrides.stats }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, ...overrides.stats })
   return {
     id,
     name: id,
@@ -83,14 +83,14 @@ describe('AR-06: Turn DoT source context', () => {
     const player = makeEntity('player', {
       currentHp: 500,
       maxHp: 1000,
-      stats: { ...createBaseStats(), speed: 10, poisonRecoveryPercent: 0.5 },
+      stats: createBaseStats({ speed: 10, poisonRecoveryPercent: 0.5 }),
     })
 
     // Enemy has poison applied to its buff pool and is faster (speed 100 vs 10).
     const enemy = makeEntity('enemy', {
       currentHp: 10_000,
       maxHp: 10_000,
-      stats: { ...createBaseStats(), speed: 100 },
+      stats: createBaseStats({ speed: 100 }),
     })
 
     const playerP = makeParticipant('player', player, 0)

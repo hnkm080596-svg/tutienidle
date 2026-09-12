@@ -21,7 +21,7 @@ import { TurnBuffPool } from './TurnBuffPool'
 // action still commits, and resolveNextStep does NOT throw.
 
 function createCombatant(id: string): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 10 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 10 })
 
   return {
     id,

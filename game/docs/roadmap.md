@@ -1499,7 +1499,7 @@ Potential guards:
 
 ```text
 no authoritative HP write outside permitted vitals paths        → SHIPPED (R14.2)
-raw stat input cannot accept resolved-stat type                 → SHIPPED (R14.3a, writer-side)
+raw stat input cannot accept resolved-stat type                 → SHIPPED (R14.3a writer-side + R14.3c nominal BaseStats brand)
 gameplay queries cannot mutate lifecycle state                  → SHIPPED (R14.3b)
 paid random result requires domain capability/token             → SHIPPED (R14.6d, 2026-09-14)
 core cannot import presentation/orchestrator upward             → SHIPPED (R14.1b)
@@ -1570,8 +1570,15 @@ Each enforcement rule should protect a real regression class discovered by Missi
    statProvenanceAndQueryPurity.test.ts): full-tree scan enforces ZERO
    production `.baseStats =` assignment sites (evidence at authoring time:
    only test fixtures write it; the battle adapter owns construction).
-   The type-level half of the guard (raw vs resolved stat types) is NOT
-   shipped — it needs a nominal type refactor, tracked as remaining work.
+
+   R14.3c — type-level half SHIPPED (2026-09-14): `BaseStats` nominal
+   brand in StatBlock.ts (Stats & phantom brand). `createBaseStats()`
+   returns it (now takes `Partial<Stats>` overrides), `calculateStats`
+   requires it, `PlayerData.baseStats` carries it; `asBaseStats` is the
+   single named boundary cast. `CombatEntity.baseStats` deliberately
+   stays `Stats` — it holds the resolved at-entry snapshot (R2), not
+   authored raw input. Probe-verified: passing a resolved `Stats` into
+   `calculateStats` fails with TS2345. Same guard file, R14.3c pins.
 
    R14.3b — R8.1/AR-09 quest query purity (same file): getActiveQuests
    method body pinned free of activation calls
@@ -1776,7 +1783,7 @@ R14 Architecture Enforcement
 | 12 | R11 — UI Foundation Consolidation | AR-26, AR-27, AR-28 + domain UI | ⏸ — Khí Đường 3-tab layout defect FIXED 2026-09-12 (single-owner `qi-hall.css` + ownership guard); broader consolidation vẫn parked |
 | 13 | R12 — Presentation / Asset Cleanup | AR-24, AR-27, AR-29, AR-30, AR-31 | ⏸ |
 | 14 | R13 — Parallel Authority / Legacy Retirement | AR-19, AR-25 | ⏸ |
-| 15 | R14 — Architecture Enforcement | AR-32, AR-33 + migrated invariants | 🟡 Slices 1-3 shipped: R1/R2/R8.1/AR-33/A6 + combat-contract (two-clock, AC-7c/9b, command boundary) + R8.2 ownership guards (2026-09-11); asset containment + catalog/preload parity + ACK-token guards (2026-09-14); R9 paid-random static guard (2026-09-14); type-level stat guard still pending (nominal-type refactor, not a guard) |
+| 15 | R14 — Architecture Enforcement | AR-32, AR-33 + migrated invariants | 🟡 Slices 1-3 shipped: R1/R2/R8.1/AR-33/A6 + combat-contract (two-clock, AC-7c/9b, command boundary) + R8.2 ownership guards (2026-09-11); asset containment + catalog/preload parity + ACK-token guards (2026-09-14); R9 paid-random static guard (2026-09-14); type-level stat guard shipped (R14.3c nominal BaseStats brand, 2026-09-14) |
 
 ---
 

@@ -20,7 +20,7 @@ import type { TurnBuffDefinition } from '../battle/turn/TurnBuffTypes'
 // CombatSystem.killIfDead(), điểm DUY NHẤT tuyên bố chết của mọi đường
 // damage. Entity pattern mirror CombatSystem.manaShield.test.ts.
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
 
   return {
     id: 'id',

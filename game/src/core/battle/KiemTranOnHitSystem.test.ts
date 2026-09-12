@@ -9,7 +9,7 @@ import type { OnHitEffectKind } from '../progression/ProgressionNode'
 // modifier pipeline/buff/ailment sẵn có, KHÔNG hack damage trực tiếp.
 
 function makeEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats() }
+  const stats = createBaseStats({})
   return {
     id: 'player',
     name: 'P',

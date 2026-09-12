@@ -12,7 +12,7 @@ import { TurnBuffPool } from './TurnBuffPool'
 // before/after phải không đổi), và battle log: 1 entry/resolveActorTurn.
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
 
   return {
     id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
@@ -91,13 +91,13 @@ describe('battle log (resolveActorTurn)', () => {
       id: 'player',
       type: 'player',
       row: 4,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }),
     })
     const enemyEntity = createCombatant({
       id: 'enemy',
       currentHp: 1_000_000,
       maxHp: 1_000_000,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
     })
 
     const battle: TurnBattle = {

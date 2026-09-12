@@ -24,7 +24,7 @@ class Registry implements TurnBuffRegistry {
 }
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
   return {
     id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
     currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
@@ -39,7 +39,7 @@ describe('TurnBattleSystem — charging actor is immune to the CC counter side-e
   it('consecutiveHardCcTurns stays 0 across charging+stunned turns (no premature Bá Thể clear)', () => {
     const player = createCombatant({
       id: 'player', type: 'player', row: 4,
-      stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 100 },
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 100 }),
     })
     const enemyEntity = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000 })
 

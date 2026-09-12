@@ -16,7 +16,7 @@ import { GENERIC_PHYSICAL_BASIC } from '../../../data/skill/TurnBasicAttacks'
 // run for real (no mocking the business logic the runtime delegates to).
 
 function createCombatant(id: string, overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
 
   return {
     id,

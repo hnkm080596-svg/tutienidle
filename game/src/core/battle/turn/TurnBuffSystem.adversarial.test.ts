@@ -9,7 +9,7 @@ import { createBaseStats } from '../../stats/StatBlock'
 // QA adversarial probes (2026-09-04 quick review) — TurnBuffSystem.
 
 function makeEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats }
+  const stats = createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats })
   const { stats: _overrideStats, ...restOverrides } = overrides
   return {
     id: 'id',
@@ -97,7 +97,7 @@ describe('TurnBuffSystem adversarial (QA probes)', () => {
     const pool = new TurnBuffPool()
     const system = new TurnBuffSystem(pool)
     const source = makeEntity({ id: 'source_1' })
-    const target = makeEntity({ id: 'target_1', stats: { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0, ailmentResistPercent: 5 } })
+    const target = makeEntity({ id: 'target_1', stats: createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, ailmentResistPercent: 5 }) })
     const definition: TurnBuffDefinition = {
       id: 'test', name: 'Test', polarity: 'debuff', duration: 4, stackMode: 'refresh', effects: [],
     }

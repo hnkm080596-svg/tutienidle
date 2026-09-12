@@ -39,6 +39,34 @@ describe('R14.3a — R2: baseStats is written only at battle-adapter constructio
   })
 })
 
+describe('R14.3c — R2 type level: raw base stats are nominally branded', () => {
+  const STAT_BLOCK = join(GAME_ROOT, 'src/core/stats/StatBlock.ts')
+  const STAT_CALCULATOR = join(GAME_ROOT, 'src/core/stats/StatCalculator.ts')
+  const PLAYER = join(GAME_ROOT, 'src/core/player/Player.ts')
+
+  it('BaseStats is a branded Stats subtype produced only by createBaseStats/asBaseStats', () => {
+    const source = readTs(STAT_BLOCK)
+    expect(source).toMatch(/declare const baseStatsBrand: unique symbol/)
+    expect(source).toMatch(/export type BaseStats = Stats & \{ readonly \[baseStatsBrand\]: 'base' \}/)
+    expect(source).toMatch(/export function createBaseStats\([^)]*\): BaseStats/)
+    expect(source).toMatch(/export function asBaseStats\(stats: Stats\): BaseStats/)
+  })
+
+  it('the derivation pipeline accepts only the branded raw input', () => {
+    const source = readTs(STAT_CALCULATOR)
+    // Resolved Stats values (entity.stats, entity.baseStats — the resolved
+    // at-entry snapshot) must NOT be passable here: feeding a derived
+    // snapshot back into calculateStats re-derives attribute bonuses
+    // (R2 audit: 10 -> 70 -> 130). The brand makes that a compile error.
+    expect(source).toMatch(/export function calculateStats\(baseStats: BaseStats,/)
+  })
+
+  it('PlayerData.baseStats carries the brand (canonical raw source)', () => {
+    const source = readTs(PLAYER)
+    expect(source).toMatch(/\bbaseStats: BaseStats\b/)
+  })
+})
+
 describe('R14.3b — R8.1/AR-09: quest queries never activate', () => {
   const QUEST_SYSTEM = join(GAME_ROOT, 'src/core/quest/QuestSystem.ts')
 

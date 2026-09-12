@@ -5,7 +5,7 @@ import { createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from './CombatEntity'
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
 
   return {
     id: 'id',
@@ -42,7 +42,7 @@ describe('CombatSystem — damage floor sau finalDamageMultiplier', () => {
   it('finalDamagePercent âm kéo damage dưới 1 — floor kéo lại đúng 1', () => {
     const combat = new CombatSystem(new EventBus())
 
-    const sourceStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100, finalDamagePercent: -0.995 }
+    const sourceStats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100, finalDamagePercent: -0.995 })
     const source = createCombatant({ id: 'source', type: 'player', stats: sourceStats })
     const target = createCombatant({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
@@ -55,10 +55,10 @@ describe('CombatSystem — damage floor sau finalDamageMultiplier', () => {
   it('finalDamageReductionPercent tối đa (0.75) + damage nhỏ — vẫn gây ít nhất 1', () => {
     const combat = new CombatSystem(new EventBus())
 
-    const sourceStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 2 }
+    const sourceStats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 2 })
     const source = createCombatant({ id: 'source', type: 'player', stats: sourceStats })
 
-    const targetStats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, defense: 0, finalDamageReductionPercent: 0.75 }
+    const targetStats = createBaseStats({ evasionRate: 0, dexterity: 0, defense: 0, finalDamageReductionPercent: 0.75 })
     const target = createCombatant({ id: 'target', stats: targetStats, currentHp: 1000, maxHp: 1000 })
 
     const result = combat.resolveActionHit(source, target, { kind: 'physical', multiplier: 1 }, false)

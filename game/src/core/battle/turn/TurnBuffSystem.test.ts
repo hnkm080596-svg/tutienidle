@@ -7,7 +7,7 @@ import type { CombatSystem } from '../../combat/CombatSystem'
 import { createBaseStats } from '../../stats/StatBlock'
 
 function makeEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats }
+  const stats = createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats })
   const { stats: _overrideStats, ...restOverrides } = overrides
   return {
     id: 'id',
@@ -66,7 +66,7 @@ describe('TurnBuffSystem.apply — fresh instance', () => {
     const pool = new TurnBuffPool()
     const system = new TurnBuffSystem(pool)
     const source = makeEntity({ id: 'source_1' })
-    const target = makeEntity({ id: 'target_1', stats: { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0, ailmentResistPercent: 0.5 } })
+    const target = makeEntity({ id: 'target_1', stats: createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, ailmentResistPercent: 0.5 }) })
     const definition: TurnBuffDefinition = {
       id: 'test_buff', name: 'Test', polarity: 'debuff',
       duration: 10, stackMode: 'refresh', effects: [],
@@ -205,8 +205,8 @@ describe('TurnBuffSystem — DoT resolution at apply time', () => {
   it('resolves dpsRatio into a snapshotted damagePerTurn using source.stats.attack for physical element', () => {
     const pool = new TurnBuffPool()
     const system = new TurnBuffSystem(pool)
-    const source = makeEntity({ id: 'source_1', stats: { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0, attack: 100, ailmentPotencyPercent: 0 } })
-    const target = makeEntity({ id: 'target_1', stats: { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0, defense: 0 } })
+    const source = makeEntity({ id: 'source_1', stats: createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, attack: 100, ailmentPotencyPercent: 0 }) })
+    const target = makeEntity({ id: 'target_1', stats: createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, defense: 0 }) })
     const definition: TurnBuffDefinition = {
       id: 'bleed', name: 'Bleed', polarity: 'debuff',
       duration: 3, stackMode: 'refresh',
@@ -357,7 +357,7 @@ describe('TurnBuffSystem — CC checks', () => {
 
 describe('TurnBuffSystem ported BuffSystem methods', () => {
   function portedEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
-    const stats = { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats }
+    const stats = createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats })
     const { stats: _drop, ...rest } = overrides
     return {
       id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
@@ -476,7 +476,7 @@ describe('TurnBuffSystem port additions for ReactionManager (Phase A1)', () => {
   }
 
   function portedEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
-    const stats = { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats }
+    const stats = createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats })
     const { stats: _drop, ...rest } = overrides
     return {
       id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
@@ -545,7 +545,7 @@ describe('getAll / remove (Phase A0)', () => {
   }
 
   function portedEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
-    const stats = { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats }
+    const stats = createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats })
     const { stats: _drop, ...rest } = overrides
     return {
       id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,

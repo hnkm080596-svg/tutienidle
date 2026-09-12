@@ -26,7 +26,7 @@ import { TurnBuffPool } from './TurnBuffPool'
 // proving the defect is real, per the QA evidence gate.
 
 function createCombatant(id: string): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
 
   return {
     id,

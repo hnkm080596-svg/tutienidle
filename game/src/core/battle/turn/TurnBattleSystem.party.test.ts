@@ -10,7 +10,7 @@ import { TurnBuffPool } from './TurnBuffPool'
 // chung, thua khi TOÀN BỘ party chết, opposingSide đối diện toàn party.
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
 
   return {
     id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
