@@ -9,6 +9,7 @@ import { createDefaultEquipmentOperationCostCatalog } from '../../core/equipment
 import { SUPPORTED_PROFESSION_REALMS } from '../../core/profession/ProfessionMaterial'
 import { alchemyRecipes } from '../alchemy/alchemyRecipes'
 import { THIEN_DIA_CHI_KIEU_MATERIAL_ID } from '../realm/Meridians'
+import { COMPANION_PULL_TOKEN_ID } from '../../core/game/GameManagerCompanionOps'
 
 // Item lore / manh mối Đột Phá Trúc Cơ — CỐ Ý không có sink chức năng
 // (description ẩn công dụng, xem data/materials/materials.ts). Chúng được
@@ -88,6 +89,10 @@ function collectSinkMaterialIds(): Set<string> {
 
   // Bát Mạch — Kỳ Kinh Thiên Địa Chi Kiều (đường 9) cần nguyên liệu ẩn.
   sinks.add(THIEN_DIA_CHI_KIEU_MATERIAL_ID)
+
+  // Chieu Hien Quan (companion gacha Task 6) — Chieu Hien Lenh is spent
+  // by GameManagerCompanionOps.pullCompanion() via materialBag.remove.
+  sinks.add(COMPANION_PULL_TOKEN_ID)
 
   return sinks
 }

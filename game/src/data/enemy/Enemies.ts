@@ -2,6 +2,7 @@ import { defineEnemy } from '../../core/enemy/Enemy'
 import type { Enemy } from '../../core/enemy/Enemy'
 import type { EnemySpecialAttack } from '../../core/enemy/Enemy'
 import type { TribulationPhase, BossEnrage } from '../../core/enemy/TribulationPhase'
+import type { SignatureDrop } from '../../core/drop/DropTable'
 
 // defineEnemy() nhận statsInput gọn (~10-13 field, xem EnemyStatInput.ts)
 // thay vì phải khai đủ 41 field Stats như trước — đúng khuyến nghị
@@ -667,6 +668,10 @@ const ENEMY_DEFINITIONS: Enemy[] = [
       // nguyên liệu chính Thông Mạch Đan/Trúc Cơ Đan. chance:1 nên boss
       // idle (auto-farm) vẫn rơi theo E11.
       { kind: 'material', itemId: 'yeu_dan_hung_giao', amount: { min: 1, max: 1 }, chance: 1, requiresModifier: 'boss' },
+      // Companion gacha (Task 6) — chapter-2 floor-10 boss drops 2x
+      // Chieu Hien Lenh; boss-only via requiresModifier, chance:1 keeps
+      // the idle channel eligible (spec E11).
+      { kind: 'material', itemId: 'chieu_hien_lenh', amount: { min: 2, max: 2 }, chance: 1, requiresModifier: 'boss' },
     ],
   }),
 
@@ -1176,6 +1181,11 @@ const ENEMY_DEFINITIONS: Enemy[] = [
       techniqueInsight: 36,
       spiritStone: 8,
     },
+    signatureDrops: [
+      // Companion gacha (Task 6) — chapter-1 floor-10 boss drops 1x
+      // Chieu Hien Lenh; boss-only via requiresModifier.
+      { kind: 'material', itemId: 'chieu_hien_lenh', amount: { min: 1, max: 1 }, chance: 1, requiresModifier: 'boss' },
+    ],
   }),
 ]
 
@@ -1271,6 +1281,9 @@ function foundationBeast(params: {
   // to defineEnemy() unchanged. Separate from the legacy `enrage` above.
   bossTrigger?: { afterTurns: number; buffDefinitionId: string }
   specialAttacks?: EnemySpecialAttack[]
+  // Per-enemy named drops (Task 6: floor-10 boss Chieu Hien Lenh) —
+  // threaded to defineEnemy() unchanged, resolved by resolveDrops.
+  signatureDrops?: SignatureDrop[]
 }) {
   const hp = Math.round(450 * 1.2 ** (params.t - 1))
   const atk = Math.round(42 * 1.15 ** (params.t - 1))
@@ -1298,6 +1311,7 @@ function foundationBeast(params: {
     enrage: params.enrage,
     bossTrigger: params.bossTrigger,
     specialAttacks: params.specialAttacks,
+    signatureDrops: params.signatureDrops,
     statsInput: {
       maxHp: Math.round(hp * mult.hp),
       attack: Math.round(atk * mult.atk),
@@ -1560,6 +1574,11 @@ const FOUNDATION_ENEMIES: Enemy[] = [
     // TurnBattleSystem's specialAttackCounter), so this existing example
     // is live in turn-based combat as of A3.
     specialAttacks: [{ everyNth: 4, damageMultiplier: 2.5, presetId: 'water_surge' }],
+    signatureDrops: [
+      // Companion gacha (Task 6) — chapter-3 floor-10 boss drops 3x
+      // Chieu Hien Lenh; boss-only via requiresModifier.
+      { kind: 'material', itemId: 'chieu_hien_lenh', amount: { min: 3, max: 3 }, chance: 1, requiresModifier: 'boss' },
+    ],
   }),
 ]
 
