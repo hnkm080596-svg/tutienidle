@@ -2459,6 +2459,21 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.spawnVfxHandles.clear()
     this.materializingIds.clear()
 
+    // QA 2026-09-10 Task 9 follow-up (R14.4 guard): the party countdown
+    // telegraph handle map was NOT cleared here — the old reasoning relied
+    // on the turn engine always publishing a flush snapshot before combat
+    // proper, a cross-system invariant enforced nowhere. A forced start
+    // that skips that snapshot would carry a leaked handle and stale
+    // telegraph progress into the new battle. Clear it here, same as
+    // shutdown does.
+    for (const handle of this.turnCountdownSpawnVfxHandles.values()) {
+      handle.destroy()
+    }
+
+    this.turnCountdownSpawnVfxHandles.clear()
+    this.turnCountdownPendingIds.clear()
+    this.resetTelegraphState()
+
     for (const [id, sprite] of this.sprites) {
       if (id === PLAYER_ID) {
         continue

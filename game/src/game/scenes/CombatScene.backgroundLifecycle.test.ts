@@ -126,6 +126,11 @@ function createPerspectiveScene(textureExists: true | Set<string>) {
   scene.statuses = new Map()
   scene.sprites = new Map()
   scene.spawnVfxHandles = new Map()
+  // R14.4 (QA Task 9 follow-up): onBattleStart now clears the countdown
+  // telegraph maps too — stub the minimum shape the method reads.
+  scene.turnCountdownSpawnVfxHandles = new Map()
+  scene.turnCountdownPendingIds = new Set()
+  scene.resetTelegraphState = () => {}
   scene.materializingIds = new Set()
   scene.dyingIds = new Set()
   scene.playerDying = false
