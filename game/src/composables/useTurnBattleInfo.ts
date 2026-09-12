@@ -17,10 +17,21 @@ export function useTurnBattleInfo() {
     return gameManager.getTurnBattle()
   })
 
-  const isBattleFighting = computed(() => battle.value?.state === 'fighting')
+  // stateVersion must be read in EVERY computed below: the engine mutates
+  // the TurnBattle object in place (state/roundsElapsed/log), so `battle`
+  // resolves to the same reference forever — a computed depending only on
+  // `battle.value` is never invalidated again after first eval (strip stayed
+  // invisible in live combat; 2026-09-12).
+  const isBattleFighting = computed(() => {
+    stateVersion.value
+
+    return battle.value?.state === 'fighting'
+  })
 
   /** Tối đa 5 actor kế tiếp theo gauge order (turn-order strip). */
   const upcomingActors = computed<TurnBattleParticipant[]>(() => {
+    stateVersion.value
+
     const current = battle.value
 
     if (!current || current.state !== 'fighting') {
@@ -37,10 +48,27 @@ export function useTurnBattleInfo() {
     return battle.value?.log ?? []
   })
 
+  // Combat speed gauge + round indicator (2026-09-12) — ATB round counter
+  // and the stage that launched this battle (for its perfectClearTurnLimit).
+  // Both are read-only views over GameManager-owned state.
+  const roundsElapsed = computed(() => {
+    stateVersion.value
+
+    return battle.value?.roundsElapsed ?? 0
+  })
+
+  const activeStage = computed(() => {
+    stateVersion.value
+
+    return gameManager.getActiveTurnBattleStage()
+  })
+
   return {
     battle,
     isBattleFighting,
     upcomingActors,
     logEntries,
+    roundsElapsed,
+    activeStage,
   }
 }

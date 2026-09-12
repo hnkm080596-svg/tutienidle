@@ -636,6 +636,16 @@ export class GameManagerTurnBattleOps {
   }
 
   /**
+   * The stage that launched the CURRENT turn battle (null for non-stage
+   * battles like tribulation). Read-only query — combat UI needs the
+   * launching stage's own fields (perfectClearTurnLimit for the round
+   * indicator), not the UI selection, which may point elsewhere.
+   */
+  getActiveTurnBattleStage(): Stage | null {
+    return this.activeStageForTurnBattle
+  }
+
+  /**
    * Pure snapshot query for presentation reconciliation (Task 4).
    * Validates sessionId, emits zero events, changes zero state, returns detached plain data.
    */
@@ -689,6 +699,11 @@ export class GameManagerTurnBattleOps {
     )
 
     if (!this.isStageStarting) {
+      // Non-stage battle (tribulation, devtools) — drop the previous stage
+      // binding or a stale perfectClearTurnLimit would leak into a battle
+      // it does not apply to (round indicator, 2026-09-12).
+      this.activeStageForTurnBattle = null
+
       const activeSession = this.presentationSession.getCurrentSession()
       if (activeSession) {
         this.presentationSession.end(activeSession)

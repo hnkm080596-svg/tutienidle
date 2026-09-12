@@ -558,6 +558,11 @@
       },
       "topBar": {
         "enemiesSuffix": "quái"
+      },
+      "turnStrip": {
+        "upcoming": "Lượt tới",
+        "round": "Hiệp {current}",
+        "roundWithLimit": "Hiệp {current}/{limit}"
       }
     }
   },
