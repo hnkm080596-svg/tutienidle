@@ -53,13 +53,24 @@ Không đường nào biết stage đang chơi là tầng mấy. Stage chỉ gó
 
 ### 1.2 Dữ liệu quái
 
-- **43** `defineEnemy` trong `data/enemy/Enemies.ts`.
-- **10** khai `eliteRewards`. → **33 con còn lại: bản Tinh Anh (HP ×2.5, ATK ×1.35) rơi ra Y HỆT quái thường**, vì `enemy.eliteRewards ?? enemy.rewards` rơi về bảng thường.
-- **20** khai `bossRewards`.
-- **43/43 đã khai `family`** — 21 họ, phần lớn là cặp thường/hung. Di cư không phải đoán họ cho con nào.
-- Cảnh giới: `mortal` 20, `qi_refining` 23, `foundation_establishment` 1.
+> **[SỬA 2026-09-12 — bản đếm của bản 1 và bản 2 SAI.]** Bản trước ghi "43 quái, 43/43 có `family`". Con số đó đến từ một lệnh grep đếm chuỗi `defineEnemy({`, và nó **bỏ sót toàn bộ tầng Trúc Cơ**, vốn được dựng bằng factory `foundationBeast({...})` chứ không gọi `defineEnemy` trực tiếp trong data. Số đúng bên dưới, đã xác minh lại trên cây code.
 
-### 1.3 Hệ số tiền hiện tại (đo trên `bandit` / Sơn Tặc)
+`ENEMIES` (`Enemies.ts:1828`) = `[...ENEMY_DEFINITIONS, ...FOUNDATION_ENEMIES, ...HIDDEN_BEASTS]`:
+
+| Nguồn | Số quái | Có `family`? |
+|---|---|---|
+| `ENEMY_DEFINITIONS` (khai tay) | 43 | 42 |
+| `FOUNDATION_ENEMIES` (factory `foundationBeast`, dòng 1469) | 20 | **0** |
+| `HIDDEN_BEASTS` | 1 | 1 |
+| **Tổng** | **64** | **43** |
+
+- **21/64 quái KHÔNG có `family`** — gần như trọn tầng Trúc Cơ. Hệ quả thiết kế: **tầng họ quái không làm gì cho Trúc Cơ**, và **bảng stage của Trúc Cơ phải gánh toàn bộ bản sắc tầng đó**. Đây không phải lỗ hổng, mà là một ràng buộc phải biết khi cân bằng.
+- Trong 43 con khai tay: **10** có `eliteRewards` → **33 con còn lại: bản Tinh Anh (HP ×2.5, ATK ×1.35) rơi ra Y HỆT quái thường**, vì `enemy.eliteRewards ?? enemy.rewards` rơi về bảng thường. **20** có `bossRewards`.
+- Cảnh giới: `mortal` 20, `qi_refining` 23, `foundation_establishment` 20, quái ẩn 1.
+
+### 1.3 Hệ số tiền hiện tại
+
+**Quái khai tay** — đo trên `bandit` / Sơn Tặc:
 
 | | Cảm ngộ Tâm Pháp | Linh thạch |
 |---|---|---|
@@ -67,7 +78,17 @@ Không đường nào biết stage đang chơi là tầng mấy. Stage chỉ gó
 | `eliteRewards` | 200 = ×5 | 60 = ×6 |
 | `bossRewards` | 500 = ×12.5 | 150 = ×15 |
 
-E4 cắt **boss xuống ×3** và **elite xuống ×2** — xem §6 R1/R2.
+**[MỚI] Tầng Trúc Cơ — hệ số nằm trong CÔNG THỨC, không phải bảng chép tay.** `foundationBeast` (`Enemies.ts:1469`) sinh sẵn cả ba bảng từ hằng số, gate bằng `bossEligible`:
+
+| | Cảm ngộ | Linh thạch |
+|---|---|---|
+| `rewards` khi `bossEligible` | ×2.5 | ×6 |
+| `eliteRewards` | ×5 | ×6 |
+| `bossRewards` | ×12.5 | ×15 |
+
+Hai điều quan trọng ở bảng này: (a) `bandit` **không phải một ví dụ lẻ** — đúng bộ tỉ lệ ×12.5/×15 đó là hằng số áp cho **20 con cùng lúc**; (b) quái `bossEligible` đã được nhân **ngay ở `rewards` gốc** (×2.5/×6) *trước khi* bảng elite/boss áp — một tầng nhân thứ ba mà bản 1 của spec không biết là có.
+
+E4 cắt **boss xuống ×3** và **elite xuống ×2** — xem §6 R1/R2. Vì (a), đợt cắt này chạm tầng Trúc Cơ **qua factory**, nên §4 Nhịp 3 phải gỡ cả nhánh reward trong factory chứ không chỉ các khối khai tay; nếu bỏ sót, trần ×4 **lặng lẽ không áp cho 20/64 quái** và guard kinh tế §5.3 **không bắt được**, vì nó lấy mẫu resolver chứ không lấy mẫu `enemy.rewards`.
 
 ### 1.4 Chất trang bị đã có chủ
 
@@ -310,7 +331,7 @@ Hệ quả: **`EnemyTag.ts` chưa tồn tại trên bất kỳ nhánh nào, như
 
 **Nhịp 2 — chuyển đường dẫn.** `BattleLootSystem` đổi sang tiêu thụ `DropResult`; ba hàm hardcode bị hút vào bảng. Đây là nhịp **duy nhất** hành vi đổi, đổi một lần, có test kinh tế canh.
 
-**Nhịp 3 — dọn.** Xoá `eliteRewards`/`bossRewards` khỏi 43 định nghĩa và khỏi `Enemy`/`EnemyDefinition`. **Chỉ sau khi nhịp 2 xanh** — nhịp này không lùi được.
+**Nhịp 3 — dọn.** Xoá `eliteRewards`/`bossRewards` khỏi **ba** nơi, không phải một: (a) 10 + 20 khối khai tay trong `ENEMY_DEFINITIONS`; (b) **nhánh reward trong factory `foundationBeast`** (`Enemies.ts:1469`) — bỏ sót chỗ này thì 20/64 quái giữ nguyên hệ số cũ và trần ×4 không áp cho cả tầng Trúc Cơ [SỬA 2026-09-12]; (c) field trên `Enemy`/`EnemyDefinition`. **Chỉ sau khi nhịp 2 xanh** — nhịp này không lùi được.
 
 ---
 
@@ -320,7 +341,7 @@ Kỷ luật dự án: **mọi guard phải được nhìn thấy đỏ trước 
 
 ### 5.1 Characterization trước khi động vào gì
 
-RNG hạt giống cố định, giết mỗi con trong 43 con ở cả ba dạng (thường/elite/boss), ghi chính xác cái gì rơi. Lưới an toàn để biết cái gì *đã* đổi — không thay đổi nào lọt qua im lặng.
+RNG hạt giống cố định, giết mỗi con trong **64** con ở cả ba dạng (thường/elite/boss), ghi chính xác cái gì rơi. Lưới an toàn để biết cái gì *đã* đổi — không thay đổi nào lọt qua im lặng.
 
 ### 5.2 Invariant sink — phép thử ba-lần-đỏ
 
@@ -406,7 +427,7 @@ Sau đợt này nó là **một dòng dữ liệu** trong `StageDropTables`, nê
 1. Một con quái bất kỳ, ở một stage bất kỳ, với một tập modifier bất kỳ → **đúng một** hàm quyết định cái gì rơi.
 2. `data/enemy/Enemies.ts` không còn `eliteRewards`/`bossRewards`; mỗi quái khai `family` + `signatureDrops` khi thật sự cần.
 3. Không còn `isBoss`/`isElite` ternary nào trong `BattleLootSystem` quyết định *cái gì* rơi.
-4. Tinh Anh của **cả 43** con cho nhiều hơn quái thường — đo được, không phải khẳng định.
+4. Tinh Anh của **cả 64** con cho nhiều hơn quái thường — đo được, không phải khẳng định.
 5. Boss+tinh_anh cho 5 lượt, ×4 tiền, +1 nấc chất trang bị; không ra trang bị thì phần nâng mất.
 6. Phân phối chất với `qualityBonusSteps = 0` không phân biệt được với hôm nay.
 7. Invariant sink đỏ được ở cả ba nguồn dữ liệu mới.

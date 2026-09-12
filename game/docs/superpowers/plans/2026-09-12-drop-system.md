@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Thay "chọn bảng thưởng nào" bằng một resolver duy nhất nhận stage + họ quái + tập modifier, để boss+tinh_anh cộng dồn được và 33/43 con quái thôi cho Tinh Anh phần thưởng y hệt quái thường.
+**Goal:** Thay "chọn bảng thưởng nào" bằng một resolver duy nhất nhận stage + họ quái + tập modifier, để boss+tinh_anh cộng dồn được và 33 con quái thôi cho Tinh Anh phần thưởng y hệt quái thường.
 
 **Architecture:** Ba lớp thuần trong `core/drop/` (hợp đồng bảng, từ vựng modifier, resolver) + hai file dữ liệu trong `data/drop/`. `BattleLootSystem` giữ nguyên vai trò cấp phát (bag, toast, particle, quest hook) nhưng mất quyền quyết định *cái gì* rơi. Ba nhịp: dựng song song (không ai gọi) → chuyển đường dẫn → dọn dữ liệu cũ.
 
@@ -52,7 +52,7 @@
 
 | File | Xoá gì |
 |---|---|
-| `game/src/data/enemy/Enemies.ts` | 10 khối `eliteRewards`, 20 khối `bossRewards` |
+| `game/src/data/enemy/Enemies.ts` | 10 khối `eliteRewards` + 20 khối `bossRewards` khai tay, **VÀ nhánh reward trong factory `foundationBeast` (dòng ~1469)** |
 | `game/src/core/enemy/Enemy.ts` | Field `eliteRewards`, `bossRewards` trên `Enemy` và `EnemyDefinition` |
 | `game/src/core/reward/StageDropRules.ts` | Cả file (3 hằng số + 1 hàm đã hết consumer) |
 
@@ -1805,6 +1805,7 @@ git commit -m "test(drop): sink invariant walks all three sources, economy is a 
 
 **Files:**
 - Modify: `game/src/data/enemy/Enemies.ts` — xoá 10 khối `eliteRewards`, 20 khối `bossRewards`, chuyển các dòng đặt tay sang `signatureDrops`
+- Modify: `game/src/data/enemy/Enemies.ts` factory `foundationBeast` (dòng ~1469) — **[SỬA 2026-09-12, bắt buộc]** xoá hai nhánh `eliteRewards:`/`bossRewards:` sinh theo công thức, và bỏ `mult.insight`/`mult.stone` khỏi `rewards`. **Bỏ sót chỗ này thì 20/64 quái giữ nguyên hệ số ×2.5/×5/×12.5 và ×6/×6/×15 cũ, trần ×4 lặng lẽ không áp cho cả tầng Trúc Cơ, và guard kinh tế §5.3 KHÔNG bắt được** vì nó lấy mẫu resolver chứ không lấy mẫu `enemy.rewards`
 - Modify: `game/src/core/enemy/Enemy.ts` — xoá field `eliteRewards`/`bossRewards`, xoá `rewards: enemy.eliteRewards ?? …` trong hai variant
 - Delete: `game/src/core/reward/StageDropRules.ts`
 
