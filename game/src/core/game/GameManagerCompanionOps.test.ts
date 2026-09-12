@@ -12,12 +12,14 @@ import type { Material } from '../material/Material'
 import { COMPANIONS } from '../../data/companion/Companions'
 import type { CompanionInstance } from '../../data/companion/Companions'
 import { REALMS } from '../../data/realms/realm'
-import { EXCHANGE_COST } from './GameManagerCompanionOps'
+import { COMPANION_PULL_TOKEN_ID, EXCHANGE_COST } from './GameManagerCompanionOps'
 import { MAX_CONSTELLATION_RANK } from '../companion/CompanionProgression'
 import { SPIRIT_STONE_MATERIAL } from '../material/SpiritStoneMaterial'
 
+// Stub built from the ops constant so a token-id rename drags this stub
+// along and the not_feedable test pins the exclusion set to the real id.
 const PULL_TOKEN: Material = {
-  id: 'chieu_hien_lenh',
+  id: COMPANION_PULL_TOKEN_ID,
   name: 'Chiêu Hiền Lệnh',
   category: 'other',
   sourceType: 'boss',
