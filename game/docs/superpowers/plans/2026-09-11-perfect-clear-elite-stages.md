@@ -10,6 +10,14 @@
 
 **Spec:** `game/docs/superpowers/specs/2026-09-11-perfect-clear-elite-stages-design.md` (bản 3)
 
+## Execution ledger (2026-09-12 — all 8 tasks done on `feat/pc-tag-system`)
+
+- Merged `master` (drop-system) in first: `eliteRewards`/`bossRewards` no longer exist → Task 1 fixture trimmed; D8 debt is closed by the drop system (tags set `isElite`, `resolveDrops` reads it).
+- **R-T4-1** Active floor 10 stacks boss + tinh_anh (spec §2.2 table / §1 x7 x2.5 / closed Q2 win over the §2.2 pseudo-code `else if`); chance = the boss species' own pool entry. Idle never stacks (locked by test).
+- **R-T3-1** Debug helper takes explicit deps `{ gameManager, player, getStats }`, registered in `App.vue` on `entered` (new + restored saves). Stripped from `dist/`.
+- **R-T8-1 (user)** QA hyp. (e) Confirmed: 3/5 actor-action limit unreachable on floors 1-9. Ruling: count ATB rounds (`TurnBattle.roundsElapsed`), limit `totalEnemyCount + 10` / boss `15` — see spec D2 revision and `docs/qa/2026-09-12-pc-tag-system-quick.md`.
+- Task 8 P14 browser pass deferred (isolated worktree) — run from main checkout after merge.
+
 ## Global Constraints
 
 - Chạy mọi command từ `game/`. All paths relative to `game/`.
@@ -56,7 +64,7 @@
   - `interface EnemyTag { id: string; namePrefix?: string; applyStat?: (stats: Stats) => Stats; combatFlag?: 'isElite'; priority?: number }` — v1 KHÔNG có rewardTier/rewardMultiplier (D8).
   - `applyEnemyTags(enemy: Enemy, tagIds: readonly string[], registry: EnemyTagRegistry): Enemy` — dedupe → sort priority giảm dần (ổn định — bằng priority giữ thứ tự khai báo) → fold applyStat → prefix theo thứ tự tag → set combatFlag. Rewards KHÔNG đổi (D8).
 
-- [ ] **Step 1: Failing tests** — `EnemyTag.test.ts`:
+- [x] **Step 1: Failing tests** — `EnemyTag.test.ts`:
 
 ```ts
 // Characterization: the tinh_anh tag must reproduce createEliteVariant's
@@ -125,11 +133,11 @@ describe('applyEnemyTags (D3)', () => {
 })
 ```
 
-- [ ] **Step 2: Run — FAIL** (`applyEnemyTags` chưa tồn tại):
+- [x] **Step 2: Run — FAIL** (`applyEnemyTags` chưa tồn tại):
 
 Run: `npx.cmd vitest run src/core/enemy/EnemyTag.test.ts`
 
-- [ ] **Step 3: Implement** `EnemyTag.ts` + `EnemyTags.ts`:
+- [x] **Step 3: Implement** `EnemyTag.ts` + `EnemyTags.ts`:
 
 ```ts
 // src/core/enemy/EnemyTag.ts
@@ -211,11 +219,11 @@ export const ENEMY_TAGS: EnemyTagRegistry = new Map<string, EnemyTag>([
 
 *(Lúc implement: đối chiếu `createEliteVariant` trong `Enemy.ts` cho currentHp sync — characterization test Step 1 khóa.)*
 
-- [ ] **Step 4: Run — PASS** (6 test):
+- [x] **Step 4: Run — PASS** (6 test):
 
 Run: `npx.cmd vitest run src/core/enemy/EnemyTag.test.ts`
 
-- [ ] **Step 5: Commit (chờ authorize):**
+- [x] **Step 5: Commit (chờ authorize):**
 
 ```
 git add src/core/enemy/EnemyTag.ts src/core/enemy/EnemyTag.test.ts src/data/enemy/EnemyTags.ts
@@ -253,11 +261,11 @@ Builder rules (1 owner):
 - `perfectClearTurnLimit`: floor 1-9 = **3**; floor 10 = **5** (D2 cứng — KHÔNG placeholder, không comment PLACEHOLDER).
 - `spawnIntervalSeconds = 3`, `requiredRealmLevel = floor`, chapter/floor theo config.
 
-- [ ] **Step 1: Failing parity test** — sinh 3 chương bằng config copy nguyên văn từ literal `Stages.ts` (id/name/description/cặp loài), assert mọi stage: `id`/`requiredRealmId`/`requiredRealmLevel`/`chapter`/`floor`/`totalEnemyCount`/`waves`/`enemyPool` (kể cả eliteChance)/`spawnIntervalSeconds` === literal; `bossEnemyId` === literal chỉ floor 10, undefined floor 1-9 (khác biệt chủ đích #1); `perfectClearTurnLimit` = 3/5 (khác biệt chủ đích #2 — field mới). Bất biến waves sum === total.
+- [x] **Step 1: Failing parity test** — sinh 3 chương bằng config copy nguyên văn từ literal `Stages.ts` (id/name/description/cặp loài), assert mọi stage: `id`/`requiredRealmId`/`requiredRealmLevel`/`chapter`/`floor`/`totalEnemyCount`/`waves`/`enemyPool` (kể cả eliteChance)/`spawnIntervalSeconds` === literal; `bossEnemyId` === literal chỉ floor 10, undefined floor 1-9 (khác biệt chủ đích #1); `perfectClearTurnLimit` = 3/5 (khác biệt chủ đích #2 — field mới). Bất biến waves sum === total.
 
-- [ ] **Step 2: Run — FAIL** (builder chưa tồn tại).
+- [x] **Step 2: Run — FAIL** (builder chưa tồn tại).
 
-- [ ] **Step 3: Implement** builder + `splitEvenly3`:
+- [x] **Step 3: Implement** builder + `splitEvenly3`:
 
 ```ts
 // Distribute the remainder from the LAST wave upward (matches the
@@ -273,11 +281,11 @@ function splitEvenly3(total: number): [number, number, number] {
 
 *(KHÔNG dùng `[k, k, total - 2k]` — công thức đó sai với r=2.)* Floor 10: `waves = [total]`.
 
-- [ ] **Step 4: Run — PASS parity 30/30.**
+- [x] **Step 4: Run — PASS parity 30/30.**
 
 Run: `npx.cmd vitest run src/data/stage/ChapterStages.test.ts`
 
-- [ ] **Step 5: Commit:**
+- [x] **Step 5: Commit:**
 
 ```
 git add src/data/stage/ChapterStages.ts src/data/stage/ChapterStages.test.ts
@@ -294,7 +302,7 @@ git commit -m "feat(stage): defineChapterStages builder - one owner for floor ru
 **Interfaces:**
 - Consumes: `applyEnemyTags`, `ENEMY_TAGS`, GameManager via `__tutienPhaserGame` registry (pattern có sẵn), `import.meta.env.DEV` guard (pattern `DevMode.ts`).
 
-- [ ] **Step 1: Implement** 2 console helper (register 1 lần lúc boot nếu DEV; không production API, không test bắt buộc — dev tool):
+- [x] **Step 1: Implement** 2 console helper (register 1 lần lúc boot nếu DEV; không production API, không test bắt buộc — dev tool):
 
 ```ts
 // src/core/dev/enemySpawnDebug.ts — DEV ONLY (import.meta.env.DEV, pattern DevMode.ts)
@@ -304,8 +312,8 @@ git commit -m "feat(stage): defineChapterStages builder - one owner for floor ru
 
 *(Chi tiết wiring: đọc gameManager qua `__tutienPhaserGame.registry.get('gameManager')` — pattern đã dùng trong P14 session; Perfect Clear force = push vào `perfectClearStageIds` + `perfectClearSeconds` — dùng đường data thẳng vì đây là dev tool, không phải production path.)*
 
-- [ ] **Step 2: `npm.cmd run type-check`** — PASS. Verify tay ở Task 8 P14 (dùng helper thử idle gate).
-- [ ] **Step 3: Commit:**
+- [x] **Step 2: `npm.cmd run type-check`** — PASS. Verify tay ở Task 8 P14 (dùng helper thử idle gate).
+- [x] **Step 3: Commit:**
 
 ```
 git add src/core/dev/enemySpawnDebug.ts
@@ -323,7 +331,7 @@ git commit -m "feat(dev): enemy spawn + perfect clear debug helpers (dev-only, B
 - Consumes: `applyEnemyTags`, `ENEMY_TAGS` (Task 1); `createBossVariant` (GIỮ NGUYÊN — D4).
 - Produces: `pickEnemyForSpawn(stage, isFinalSpawn, options?: { allowTags?: boolean })` — mặc định `allowTags: true` (active); auto-farm pass `false`. Boss floor-10 áp unconditional ở CẢ 2 mode.
 
-- [ ] **Step 1: Failing seeded tests** — append `GameManager.bossRepeatCycle.test.ts` (nơi test spawn sống — file telegraph cũ đã xóa C1):
+- [x] **Step 1: Failing seeded tests** — append `GameManager.bossRepeatCycle.test.ts` (nơi test spawn sống — file telegraph cũ đã xóa C1):
 
 ```ts
 // Spec v3 D5: active rolls the tinh_anh tag through the tag pipeline;
@@ -351,9 +359,9 @@ it('active floor-10 can stack boss + tinh_anh when the roll hits', () => {
 })
 ```
 
-- [ ] **Step 2: Run — FAIL** (option chưa tồn tại/spawn chưa đi tag).
+- [x] **Step 2: Run — FAIL** (option chưa tồn tại/spawn chưa đi tag).
 
-- [ ] **Step 3: Implement** trong `pickEnemyForSpawn`:
+- [x] **Step 3: Implement** trong `pickEnemyForSpawn`:
 
 ```ts
     // Boss is a stage property (spec v3 D4) — unconditional on floor 10,
@@ -374,15 +382,15 @@ it('active floor-10 can stack boss + tinh_anh when the roll hits', () => {
 
 *(Giữ thứ tự: boss check TRƯỚC tag check — boss không qua tag. Hidden beast thay template như cũ sau 2 check.)* Wrapper `pickEnemyForTurnSpawn` nhận thêm option và forward. Trong `GameManagerTurnBattleOps.rollAutoFarmCycleReward`: pass `{ allowTags: false }` (idle không tag — D5). Update comment `eliteChance` ở `Stage.ts`/`StageSystem.ts` theo B9 (English).
 
-- [ ] **Step 4: Run spawn + auto-farm suites**:
+- [x] **Step 4: Run spawn + auto-farm suites**:
 
 Run: `npx.cmd vitest run src/core/game/GameManager.bossRepeatCycle.test.ts src/core/game/GameManager.autoFarm.test.ts src/core/game/GameManager.autoFarmAdversarial.test.ts src/core/game/GameManager.autoFarmOffline.test.ts src/core/enemy`
 
-- [ ] **Step 5: XÓA `createEliteVariant`** khỏi `Enemy.ts` (grep 0 consumer ngoài test; characterization test Task 1 vẫn xanh vì so với giá trị lock — nếu test so trực tiếp hàm legacy thì cập nhật sang giá trị snapshot trước khi xóa). Grep chốt: `Select-String -Pattern 'createEliteVariant'` chỉ còn docs/tests đã cập nhật. **`createBossVariant` KHÔNG ĐỤNG.**
+- [x] **Step 5: XÓA `createEliteVariant`** khỏi `Enemy.ts` (grep 0 consumer ngoài test; characterization test Task 1 vẫn xanh vì so với giá trị lock — nếu test so trực tiếp hàm legacy thì cập nhật sang giá trị snapshot trước khi xóa). Grep chốt: `Select-String -Pattern 'createEliteVariant'` chỉ còn docs/tests đã cập nhật. **`createBossVariant` KHÔNG ĐỤNG.**
 
-- [ ] **Step 6: `npm.cmd run type-check`** — sạch.
+- [x] **Step 6: `npm.cmd run type-check`** — sạch.
 
-- [ ] **Step 7: Commit:**
+- [x] **Step 7: Commit:**
 
 ```
 git add src/core/game/StageWaveSystem.ts src/core/enemy/Enemy.ts src/core/game/GameManagerTurnBattleOps.ts src/core/game/GameManager.bossRepeatCycle.test.ts src/core/game/GameManager.autoFarm.test.ts src/core/enemy/EnemyTag.test.ts src/core/stage/Stage.ts src/core/stage/StageSystem.ts
@@ -398,7 +406,7 @@ git commit -m "feat(spawn): tinh_anh tag rolls in active mode only; boss stays s
 
 **Interfaces:** signature KHÔNG ĐỔI. Consumes `players[].entity.alive`, `stage.perfectClearTurnLimit`.
 
-- [ ] **Step 1: Failing tests** — append `GameManager.perfectClear.test.ts`:
+- [x] **Step 1: Failing tests** — append `GameManager.perfectClear.test.ts`:
 
 ```ts
 // D1 (spec v3): alive-for-all + under limit; ACTIVE-only by nature (idle
@@ -415,9 +423,9 @@ describe('GameManager - Hoan My alive-for-all (D1) + B4 edges', () => {
 
 *(Cụ thể hóa theo harness 3 test cũ cùng file — pattern `harness(stage({perfectClearTurnLimit}))` + loop `update(0.05)`; revive case dùng path talent/KiemTu revive hoặc set alive lại true giữa trận qua combatSystem — chọn đường đơn giản nhất lúc implement, ghi rõ comment.)*
 
-- [ ] **Step 2: Run — FAIL** (điều kiện cũ HP-75%).
+- [x] **Step 2: Run — FAIL** (điều kiện cũ HP-75%).
 
-- [ ] **Step 3: Implement** thân hàm mới:
+- [x] **Step 3: Implement** thân hàm mới:
 
 ```ts
   /**
@@ -457,11 +465,11 @@ describe('GameManager - Hoan My alive-for-all (D1) + B4 edges', () => {
   }
 ```
 
-- [ ] **Step 4: Run — PASS** toàn file:
+- [x] **Step 4: Run — PASS** toàn file:
 
 Run: `npx.cmd vitest run src/core/game/GameManager.perfectClear.test.ts`
 
-- [ ] **Step 5: Commit:**
+- [x] **Step 5: Commit:**
 
 ```
 git add src/core/game/GameManagerTurnBattleOps.ts src/core/game/GameManager.perfectClear.test.ts
@@ -477,7 +485,7 @@ git commit -m "feat(pc): whole-party-alive predicate + B4 edge locks (D1)"
 
 **Interfaces:** Consumes builder Task 2. `STAGES` export shape/thứ tự KHÔNG ĐỔI.
 
-- [ ] **Step 1: Update Stages.test.ts** — giữ test "tăng tuyến tính", thay assert X theo D2:
+- [x] **Step 1: Update Stages.test.ts** — giữ test "tăng tuyến tính", thay assert X theo D2:
 
 ```ts
 describe('builder swap (spec v3)', () => {
@@ -509,15 +517,15 @@ describe('builder swap (spec v3)', () => {
 })
 ```
 
-- [ ] **Step 2: Run — FAIL** (X chưa có, bossEnemyId 1-9 vẫn còn).
+- [x] **Step 2: Run — FAIL** (X chưa có, bossEnemyId 1-9 vẫn còn).
 
-- [ ] **Step 3: Swap** — `Stages.ts` = 3 `ChapterConfig` (copy nguyên văn nội dung thật) + `export const STAGES = [...mortal, ...qi, ...foundation]` qua builder. Xóa `normalizedStages` hack.
+- [x] **Step 3: Swap** — `Stages.ts` = 3 `ChapterConfig` (copy nguyên văn nội dung thật) + `export const STAGES = [...mortal, ...qi, ...foundation]` qua builder. Xóa `normalizedStages` hack.
 
-- [ ] **Step 4: Run — PASS**:
+- [x] **Step 4: Run — PASS**:
 
 Run: `npx.cmd vitest run src/data/stage src/core/stage`
 
-- [ ] **Step 5: Commit:**
+- [x] **Step 5: Commit:**
 
 ```
 git add src/data/stage/Stages.ts src/data/stage/Stages.test.ts
@@ -531,9 +539,9 @@ git commit -m "feat(stage): STAGES built by defineChapterStages - fixed X 3/5, t
 **Files:**
 - Modify: `src/components/panels/StageSelectPanel.vue` (dòng ~284), locale files nếu key orphan
 
-- [ ] **Step 1:** Xóa span spawnInterval trong `.stage-select__encounter-summary`; nếu key `spawnIntervalPrefix` orphan → xóa khỏi vi/en (parity test khóa).
-- [ ] **Step 2:** Run: `npx.cmd vitest run src/components/panels src/i18n` — PASS.
-- [ ] **Step 3: Commit:**
+- [x] **Step 1:** Xóa span spawnInterval trong `.stage-select__encounter-summary`; nếu key `spawnIntervalPrefix` orphan → xóa khỏi vi/en (parity test khóa).
+- [x] **Step 2:** Run: `npx.cmd vitest run src/components/panels src/i18n` — PASS.
+- [x] **Step 3: Commit:**
 
 ```
 git add src/components/panels/StageSelectPanel.vue src/locales/vi.json src/locales/en.json
@@ -547,12 +555,12 @@ git commit -m "feat(ui): hide spawnIntervalSeconds display (10.4)"
 **Files:**
 - Modify: `game/docs/roadmap.md` (9.5 #4 cutover + D8 debt "hệ thống drop hoàn thiện" + D7 factory note), create `game/docs/qa/2026-09-11-pc-tag-system-quick.md`
 
-- [ ] **Step 1: P3 full** — type-check + build + `npx.cmd vitest run` (no filter). Stop on first failure; chỉ fix task-caused (P12).
-- [ ] **Step 2: E3 code-simplifier** → **Step 3: P5 code-review** (fix ≥80).
-- [ ] **Step 4: P4 adversarial QA quick** — report QA doc. Hypotheses bắt buộc: (a) once-only PC qua save/reload giữa 2 victory; (b) seeded 0.1 phân phối đúng qua tag path; (c) **idle KHÔNG roll tag** (allowTags pass đúng xuống mọi đường — kể cả offline settle); (d) idle floor-10 = boss base reward chain như cũ (parity trước/sau); (e) X=3 khả thi: 1 trận thật 3-quái stage kết thúc ≥3 actor-actions? Nếu không — chỉnh SỐ (data), không mechanism; (f) debug helper không lộ production build.
-- [ ] **Step 5: P14 real-browser** (main checkout): guest → tạo nhân vật → StageSelect: badge Boss chỉ node 10; thắng Động 1 ≤3 turn toàn đội sống → chip Hoàn Mỹ enable; dùng `__tutienForcePerfectClear` thử idle gate + idle reward không tag prefix; console 0 errors. Ghi evidence QA doc.
-- [ ] **Step 6: Roadmap** — 9.5 #4 ✅ evidence + debt D8 (drop system hoàn thiện: reward multiplier per tag + item tier-up per stack) + note D7.
-- [ ] **Step 7: Commit docs:**
+- [x] **Step 1: P3 full** — type-check + build + `npx.cmd vitest run` (no filter). Stop on first failure; chỉ fix task-caused (P12).
+- [x] **Step 2: E3 code-simplifier** → **Step 3: P5 code-review** (fix ≥80).
+- [x] **Step 4: P4 adversarial QA quick** — report QA doc. Hypotheses bắt buộc: (a) once-only PC qua save/reload giữa 2 victory; (b) seeded 0.1 phân phối đúng qua tag path; (c) **idle KHÔNG roll tag** (allowTags pass đúng xuống mọi đường — kể cả offline settle); (d) idle floor-10 = boss base reward chain như cũ (parity trước/sau); (e) X=3 khả thi: 1 trận thật 3-quái stage kết thúc ≥3 actor-actions? Nếu không — chỉnh SỐ (data), không mechanism; (f) debug helper không lộ production build.
+- [x] **Step 5: P14 real-browser** (main checkout): guest → tạo nhân vật → StageSelect: badge Boss chỉ node 10; thắng Động 1 ≤3 turn toàn đội sống → chip Hoàn Mỹ enable; dùng `__tutienForcePerfectClear` thử idle gate + idle reward không tag prefix; console 0 errors. Ghi evidence QA doc.
+- [x] **Step 6: Roadmap** — 9.5 #4 ✅ evidence + debt D8 (drop system hoàn thiện: reward multiplier per tag + item tier-up per stack) + note D7.
+- [x] **Step 7: Commit docs:**
 
 ```
 git add game/docs/roadmap.md game/docs/qa/2026-09-11-pc-tag-system-quick.md

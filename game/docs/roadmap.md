@@ -1762,8 +1762,8 @@ Once the Content Resume Gate is reached, resume content in this order unless new
 
 ### B1 — Perfect Clear / Auto-farm completion
 
-- establish `perfectClearTurnLimit`;
-- verify auto-farm Hoàn Mỹ;
+- ~~establish `perfectClearTurnLimit`~~ — done 2026-09-12 (`feat/pc-tag-system`, rounds-based, builder-owned; see 9.5 #4);
+- verify auto-farm Hoàn Mỹ (unit-verified; live P14 pass still pending);
 - E2E through actual progression.
 
 ### B2 — Trận Pháp production content
@@ -2444,7 +2444,7 @@ Dựng các primitive thuần (pure function), test riêng, KHÔNG đụng `Batt
 | ~~1~~ | **Action playback + VFX** - damage luc VFX land, engine cho presentation xong moi qua actor ke ([plan](../../docs/superpowers/plans/2026-09-05-turn-combat-action-playback.md) + [defect-fix batch](../../docs/superpowers/plans/2026-09-05-turn-combat-defect-fixes.md)) | Engine split + Phaser wiring | ~~○~~ 🟢 **XONG (2026-09-05, 8/8 Action Playback + 8/8 Defect-fix, branch feat/turn-defect-fixes)**: resolveActorTurn split 3 phase; PresentationGate boot-race fix (tran dau khong headless-resolve nua); follow-up queue FIFO + reciprocity cap hoat dong trong tickPacing; CC-counter khong cong trong charge; duplicate HUD da go (TurnCombatSkillBar la sole surface); 2541/2541 pass |
 | 2 | **Wire ReactionManager/SkillEffectSystem vào TurnBattleSystem** — reaction thật kích trong turn combat | Engine wiring lớn (spec riêng) | ✅ **XONG 2026-09-07** (branch `feat/phase-a1-reaction-wiring`) — `TurnReactionManager` + `appliesAilment` hook + 5 skill content + production wiring cả 2 site. Chi tiết ở mục 0 dòng A1. |
 | 3 | **Skill content thật**: special/ultimate các build + `Enemy.specialAttacks[]` → `TurnSkillDefinition` | Content data | ✅ **XONG 2026-09-07** (branch `feat/phase-a3-special-ultimate`) — mọi build có special/ultimate thật (Pháp Tu qua converter + buildId bug fix; Kiếm Tu thêm ultimate `tru_tien_kiem_tran`); boss `specialAttacks` giờ được turn engine đọc. Chi tiết ở mục 0 dòng A3. |
-| 4 | **perfectClearTurnLimit cho stage content** — chip perfect_farm đang disabled | Content data (1 field/stage) | 🔴 **0/30 stage** có field (type + record + UI đã sẵn) |
+| ~~4~~ | **perfectClearTurnLimit cho stage content** — chip perfect_farm đang disabled | Content data (1 field/stage) | ✅ **XONG 2026-09-12** (branch `feat/pc-tag-system`, [spec v3](../../docs/superpowers/specs/2026-09-11-perfect-clear-elite-stages-design.md)) — 30/30 stage sinh bởi `defineChapterStages` (1 owner: `data/stage/ChapterStages.ts`); limit đếm **ATB round** (`TurnBattle.roundsElapsed`, round đóng khi mọi actor sống đã hành động) = `totalEnemyCount + 10` floor 1-9 / `15` boss — số chốt theo đo thật (`GameManager.perfectClear.feasibility.test.ts`: best-case 8/15/18/0 round, 3-hit 14/16/21/12). Predicate Hoàn Mỹ = toàn đội sống + trong limit (bỏ HP≤75%). Kèm: tag system `tinh_anh` (`core/enemy/EnemyTag.ts` + `data/enemy/EnemyTags.ts`, `createEliteVariant` đã xóa; boss vẫn là stage property qua `createBossVariant`; idle `allowTags:false`), `bossEnemyId` chỉ floor 10, ẩn spawnIntervalSeconds. QA [report](qa/2026-09-12-pc-tag-system-quick.md) PASS WITH GAPS (P14 deferred). **Nợ D8** (reward theo tag) đã đóng bởi drop-system 2026-09-12. |
 | 5 | ~~**Skill name/icon/tooltip trong HUD turn** — mapping id → display metadata~~ | Content mapping nhỏ | ✅ **XONG (2026-09-07, trực tiếp trên master)**: `TurnSkillDisplayMeta.ts` mapping skillId → name/description (id trùng SKILLS đồng bộ tự động, id authored author riêng, sweep test guard 11 id); `TurnSkillPresentationEntry` thêm skillName/skillDescription optional; `TurnCombatSkillBar` truyền display-label + tooltip-override; fallback nhãn role khi id lạ. Icon PNG riêng chờ art (SlotView monogram fallback hiện có). 2809/2809 + type-check + build + e2e create-to-combat; QA quick PASS WITH EVIDENCE (`qa/2026-09-07-turn-skill-display-meta-quick.md`) |
 | 6 | **Buff content cho TribulationPhase/boss enrage, equipment (mới), talent passive** | Content (wiring đã xong) | ✅ **XONG 2026-09-07** (branch `feat/phase-a2-buff-content`) — boss enrage turn-based cho 3 boss cuối cảnh giới + talent `passiveConvertsTo` rewire sang turn engine (silent-bug fix) + guard registry lookup; chi tiết ở mục 0 dòng A2. Trang bị chốt stats-only (không có field buff). |
 | 7 | **Buff duration presentation theo lượt** (tooltip/VFX) | UI nhỏ | 🔴 Chờ #6 |
@@ -2551,7 +2551,7 @@ Bịt nốt lỗ hổng ghi ở cuối mục 9.8 (dòng "cần playtest trực q
 
 ### 10.3. Cần user chốt (chưa quyết — không tự làm)
 
-- **Bảng 9.5 #4**: giá trị `perfectClearTurnLimit` cho từng stage (hiện 0/30 stage có) — cần bảng số hoặc quy tắc (vd theo `totalEnemyCount`). Còn treo — xem mục 0 Phase B1.
+- ~~**Bảng 9.5 #4**: giá trị `perfectClearTurnLimit` cho từng stage (hiện 0/30 stage có) — cần bảng số hoặc quy tắc (vd theo `totalEnemyCount`).~~ — ĐÃ CHỐT 2026-09-12 (user): đếm ATB round, `totalEnemyCount + 10` / boss `15`, sinh trong builder `defineChapterStages` (bảng 9.5 #4).
 - ~~**Bảng 9.5 #13**: giữ `hpRegenPerTurn` làm stat chung (engine đã wire) hay bỏ hẳn khỏi StatType.~~ — ĐÃ CHỐT 2026-09-07: giữ, cho kỹ thuật/trang bị/cảnh giới (mục 0 Phase A7).
 - ~~**Bảng 9.5 #14**: xóa `MomentumBreak.ts` + tests luôn, hay giữ làm tài liệu tham khảo~~ — ĐÃ CHỐT: xóa, merge `fc16dfa` 2026-09-07 (git history còn).
 - **3.5/3.6** (Stat cap Phàm Nhân, CDR cap 300%): chưa chốt từ 7.3. Không chặn beta — xử lý ở Phase D balance pass nếu còn thời gian.
