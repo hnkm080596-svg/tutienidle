@@ -1312,7 +1312,23 @@ open generation
 
 No universal UI framework.
 
-### Khí Đường 3-tab layout defect — root cause đã chẩn đoán, fix deferred vào R11 (2026-09-11)
+### Khí Đường 3-tab layout defect — ✅ FIXED 2026-09-12 (branch `fix/r11-khi-duong-split`)
+
+**Fix shipped (phương án long-term):** toàn bộ vocabulary `.qi-hall__*` gom về
+một owner duy nhất — sheet unscoped `equipment-hall/qi-hall.css` do
+`EquipmentHallPanel.vue` import. Thứ tự trong 1 file giờ deterministic:
+`body` → `split` → modifier (`dissolve`/`decompose`) → `@container 760px`;
+không còn race theo bundle order. Shell chỉ giữ scoped `.qi-hall` +
+`.qi-hall__tabs` (structure riêng), 4 tab chỉ giữ private styles
+(`.enhance-row__costs`, `.dissolve-*`). Guard:
+`tests/architecture/qiHallLayoutOwnership.test.ts` cấm bất kỳ file nào
+ngoài sheet định nghĩa lại selector `qi-hall*` (đã fail RED trước fix).
+Evidence: declaration parity script 100→37 rules 0 rớt; emitted bundle
+verify đúng order; QA `docs/qa/2026-09-12-qi-hall-layout-ownership-quick.md`
+PASS WITH GAPS (P14 live-browser deferred tới branch finishing theo
+worktree exception).
+
+<details><summary>Chẩn đoán gốc (2026-09-11, giữ nguyên để tham khảo)</summary>
 
 User report: 3 tab đầu Khí Đường (Cường Hóa/Tẩy Luyện/Tinh Luyện) không
 hiện UI vật phẩm; tab 4-5 (Hóa Luyện/Phân Giải) bình thường. Đã điều tra
@@ -1346,6 +1362,8 @@ layout đúng. Tách file làm đổi thứ tự inject → vỡ layout từ đ�
 **Fix nên kèm:** guard test mount 3 tab assert computed flex-direction row +
 slot-grid đo được kích thước > 0 (kiểu DissolveTab T2.3 bug 2026-09-01 — CSS
 bug không bắt được bằng type-check).
+
+</details>
 
 ---
 
@@ -1715,7 +1733,7 @@ R14 Architecture Enforcement
 | 9 | R8 — Quest & Progression Authority | AR-09, AR-10, AR-13 | 🟡 R8.1 COMPLETE 2026-09-08; R8.2 COMPLETE 2026-09-11 (slices 1-3: tribulation outcome+start, breakthrough outcome; only technique/scripture content tweaks remain, no Vue-owned progression writes left) |
 | 10 | R9 — Equipment / Inventory Integrity | AR-21, AR-22, AR-23, AR-34 | ✅ COMPLETE 2026-09-08 |
 | 11 | R10 — Save / Restore Boundary | AR-12, AR-15 | ✅ COMPLETE 2026-09-09 |
-| 12 | R11 — UI Foundation Consolidation | AR-26, AR-27, AR-28 + domain UI | ⏸ |
+| 12 | R11 — UI Foundation Consolidation | AR-26, AR-27, AR-28 + domain UI | ⏸ — Khí Đường 3-tab layout defect FIXED 2026-09-12 (single-owner `qi-hall.css` + ownership guard); broader consolidation vẫn parked |
 | 13 | R12 — Presentation / Asset Cleanup | AR-24, AR-27, AR-29, AR-30, AR-31 | ⏸ |
 | 14 | R13 — Parallel Authority / Legacy Retirement | AR-19, AR-25 | ⏸ |
 | 15 | R14 — Architecture Enforcement | AR-32, AR-33 + migrated invariants | 🟡 Slices 1-2 shipped 2026-09-11: R1/R2/R8.1/AR-33/A6 + combat-contract (two-clock, AC-7c/9b, command boundary) + R8.2 ownership guards; type-level stat guard + asset/catalog/ACK-token guards still pending |

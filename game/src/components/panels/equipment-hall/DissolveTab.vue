@@ -312,45 +312,9 @@ function doDissolve() {
 </template>
 
 <style scoped>
-.qi-hall__body {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.qi-hall__slot {
-  min-width: 0;
-}
-
-.qi-hall__empty {
-  margin: 0;
-  padding: 12px;
-  border: 1px dashed var(--paper-line);
-  color: var(--paper-text-soft);
-  font-size: var(--text-sm);
-  text-align: center;
-}
-
-.qi-hall__primary-action {
-  width: 100%;
-  margin-top: 4px;
-}
-
-.qi-hall__warning {
-  font-size: var(--text-xs);
-  color: var(--crimson);
-}
-
-/* Hóa Luyện — cột đơn full width, không split trái/phải. */
-.qi-hall__dissolve {
-  gap: 8px;
-}
-
+/* Shared .qi-hall__* layout lives in ./qi-hall.css (one owner — see the
+   sheet header for the specificity-war rationale). Only Dissolve-private
+   classes stay scoped here. */
 .dissolve-filters {
   display: flex;
   gap: 6px;
