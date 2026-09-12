@@ -453,20 +453,30 @@ Sau đợt này nó là **một dòng dữ liệu** trong `StageDropTables`, nê
 
 Con số ước lượng trên cho thấy nhánh thứ hai **nhiều khả năng sẽ trúng**. Ghi rõ ở đây để nó là một phép đo có kế hoạch, không phải một phát hiện muộn.
 
-**ĐÃ ĐO (Task 6, 2026-09-12):** `sampleDropExpectation('mortal', 'boar', [BOSS_MODIFIER, TINH_ANH_MODIFIER])`
-với 100,000 mẫu (seed cố định, `game/src/core/drop/dropSampling.ts`) cho
-`noEquipmentRate = 0.0%`. Nguyên nhân: bảng pool của realm `mortal`
-(`STAGE_DROP_TABLES`) chỉ có hai dòng — `equipment` weight 15 và
-`equipment_any` weight 20 — nên **mọi** lượt bốc trong pool ở realm này đều
-ra trang bị; ước lượng minh hoạ 53% ở trên dùng trọng số giả định không khớp
-dữ liệu thật.
+**ĐÃ ĐO (Task 6, 2026-09-12, đo lại theo boss+tinh_anh 5 lượt):**
+`sampleDropExpectation` với 100,000 mẫu/realm (seed cố định,
+`game/src/core/drop/dropSampling.ts`), đúng tập modifier
+`[BOSS_MODIFIER, TINH_ANH_MODIFIER]`:
 
-**Kết quả: nhánh 1 trúng** — `0.0% ≤ 20%` → **giữ nguyên E6**. Không cần bảo
+| Realm | noEquipmentRate (boss+tinh_anh, 5 lượt) |
+|---|---|
+| `mortal` (family `boar`) | **0.0%** |
+| `qi_refining` (family `bandit`) | **13.3%** |
+| `foundation_establishment` (không `family`) | **13.2%** |
+
+Realm `mortal` không ràng buộc được câu hỏi: pool của nó toàn dòng equipment
+(`equipment` + `equipment_any` — phản ánh đúng lịch sử tầng này chỉ từng rơi
+`tinh_hoa_pham_the` và `base_kiem`), nên mọi lượt bốc đều ra trang bị. Hai
+realm còn lại pha dòng `material` vào pool nên mới là nơi câu hỏi cắn; luật
+quyết định áp lên **số xấu nhất** = 13.3%.
+
+**Kết quả: nhánh 1 trúng** — `13.3% ≤ 20%` → **giữ nguyên E6**. Không cần bảo
 đảm trang bị. OQ1 **ĐÃ ĐÓNG**.
 
-Lưu ý cho các quyết định sau: realm `qi_refining` (boss) đo được
-`noEquipmentRate = 20.0%` và tầng `foundation_establishment` (không có
-`family`, corrected fact) đo được `19.7%` ở boss và `66.7%` ở kill thường —
-gần hoặc dưới sát ngưỡng 20%, vì pool của các realm này pha thêm dòng
-`material` làm loãng cơ hội ra trang bị. Bảng đầy đủ nằm trong
+Lưu ý cho các quyết định sau: ở kill **thường** (1 lượt) thì
+`foundation_establishment` đo `noEquipmentRate = 66.7%` — phần lớn quái thường
+tầng Trúc Cơ không rơi trang bị, đúng thiết kế (không có quality bonus nên
+không có gì bị phí), nhưng là con số cần biết khi cân bằng lượt bốc. Số đo
+4-lượt trước đó (qi_refining boss 20.0%, foundation boss 19.7%) sát ngưỡng
+đúng như dự đoán suy ra ~13% ở 5 lượt. Bảng đầy đủ nằm trong
 `.superpowers/sdd/2026-09-12-drop-system/task-6-report.md`.
