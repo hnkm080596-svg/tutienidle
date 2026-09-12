@@ -34,19 +34,69 @@ export const KIEP_THUONG_DEBUFF: BuffDefinition = {
   ],
 }
 
-// Hỗn Độn Trận visual test tooling (2026-09-06) — buff TEST-ONLY, vô hại
-// (+1% attack, gần như không ảnh hưởng cân bằng), tồn tại DUY NHẤT để
-// formation test hon_don_tran có 1 buff.definitionId resolve được thật
-// trong TURN_BUFF_REGISTRY thay vì luôn rơi vào nhánh skip-an-toàn (Task
-// 19's fix) — xoá khi có buff Trận Pháp thật thay thế.
-export const HON_DON_TRAN_TEST_BUFF: BuffDefinition = {
-  id: 'hon_don_tran_test_buff',
-  name: 'Hỗn Độn Khí Tức (test)',
-  description: 'Buff test-only của Hỗn Độn Trận — không dùng cho nội dung thật.',
+// Tran Phap formation buffs (B2, 2026-09-14) - one shared battle-long buff
+// per formation, applied to every placed combatant at battle start by
+// buildTurnBattle(). Spec 2026-09-05 §2.5: fewer slots = stronger buff.
+export const TRAN_PHAP_DOC_HANH_BUFF: BuffDefinition = {
+  id: 'tran_phap_doc_hanh_buff',
+  name: 'Độc Hành Khí Tức',
+  description: 'Một mình gánh trận — +12% công, +12% thủ.',
   polarity: 'buff',
   duration: Infinity,
   stackMode: 'refresh',
-  effects: [{ type: 'statModifier', stat: 'attack', percent: 1 }],
+  effects: [
+    { type: 'statModifier', stat: 'attack', percent: 0.12 },
+    { type: 'statModifier', stat: 'defense', percent: 0.12 },
+  ],
+}
+
+export const TRAN_PHAP_LUONG_NGHI_BUFF: BuffDefinition = {
+  id: 'tran_phap_luong_nghi_buff',
+  name: 'Lưỡng Nghi Khí Tức',
+  description: 'Hai cực tương trợ — +10% công.',
+  polarity: 'buff',
+  duration: Infinity,
+  stackMode: 'refresh',
+  effects: [{ type: 'statModifier', stat: 'attack', percent: 0.1 }],
+}
+
+export const TRAN_PHAP_TAM_TAI_BUFF: BuffDefinition = {
+  id: 'tran_phap_tam_tai_buff',
+  name: 'Tam Tài Khí Tức',
+  description: 'Thiên-địa-nhân hợp thế — +6% công, +6% tốc độ.',
+  polarity: 'buff',
+  duration: Infinity,
+  stackMode: 'refresh',
+  effects: [
+    { type: 'statModifier', stat: 'attack', percent: 0.06 },
+    { type: 'statModifier', stat: 'speed', percent: 0.06 },
+  ],
+}
+
+export const TRAN_PHAP_NGU_HANH_BUFF: BuffDefinition = {
+  id: 'tran_phap_ngu_hanh_buff',
+  name: 'Ngũ Hành Khí Tức',
+  description: 'Ngũ hành tương sinh — +4% công, +6% thủ.',
+  polarity: 'buff',
+  duration: Infinity,
+  stackMode: 'refresh',
+  effects: [
+    { type: 'statModifier', stat: 'attack', percent: 0.04 },
+    { type: 'statModifier', stat: 'defense', percent: 0.06 },
+  ],
+}
+
+export const TRAN_PHAP_CUU_CUNG_BUFF: BuffDefinition = {
+  id: 'tran_phap_cuu_cung_buff',
+  name: 'Cửu Cung Khí Tức',
+  description: 'Chín vị trí cùng trận — +2% công, +2% thủ.',
+  polarity: 'buff',
+  duration: Infinity,
+  stackMode: 'refresh',
+  effects: [
+    { type: 'statModifier', stat: 'attack', percent: 0.02 },
+    { type: 'statModifier', stat: 'defense', percent: 0.02 },
+  ],
 }
 
 // Buff/debuff mà skill effect tham chiếu qua buffId (xem
@@ -68,7 +118,11 @@ export const HON_DON_TRAN_TEST_BUFF: BuffDefinition = {
 // chuyển hẳn sang BuffRegistry).
 export const buffs: BuffDefinition[] = [
   KIEP_THUONG_DEBUFF,
-  HON_DON_TRAN_TEST_BUFF,
+  TRAN_PHAP_DOC_HANH_BUFF,
+  TRAN_PHAP_LUONG_NGHI_BUFF,
+  TRAN_PHAP_TAM_TAI_BUFF,
+  TRAN_PHAP_NGU_HANH_BUFF,
+  TRAN_PHAP_CUU_CUNG_BUFF,
 
   // Pháp Tu (Thổ Tu, 2026-08-15) — Thạch Giáp Trận (special skill,
   // xem data/skill/Skills.ts) tự buff wardMax/thornsPercent tạm thời

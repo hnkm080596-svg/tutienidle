@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest'
+import { TURN_BUFF_REGISTRY } from '../buff/TurnBuffRegistry'
 import { TRAN_PHAP_FORMATIONS } from './TranPhap'
 
-describe('Tr?n Ph?p content file', () => {
+// B2 (2026-09-14) — production Tran Phap content contract. The mechanism
+// shipped earlier (spec 2026-09-05); these tests pin the authored roster:
+// distinct headcounts, unique cells, and every formation buff must resolve
+// through TURN_BUFF_REGISTRY (runtime only skips on unknown id — a typo'd
+// definitionId would silently cost the buff, so it is pinned here instead).
+describe('Tran Phap content file', () => {
   it('every formation cell is within the local 3x3 standing-slot space (0-2)', () => {
     for (const formation of TRAN_PHAP_FORMATIONS) {
       for (const cell of formation.cellPattern) {
@@ -18,11 +24,49 @@ describe('Tr?n Ph?p content file', () => {
 
     expect(new Set(ids).size).toBe(ids.length)
   })
+
+  it('no cell is duplicated within a formation pattern', () => {
+    for (const formation of TRAN_PHAP_FORMATIONS) {
+      const seen = new Set(formation.cellPattern.map((cell) => `${cell.row},${cell.column}`))
+
+      expect(seen.size).toBe(formation.cellPattern.length)
+    }
+  })
+
+  it('every formation buff.definitionId resolves in TURN_BUFF_REGISTRY', () => {
+    for (const formation of TRAN_PHAP_FORMATIONS) {
+      expect(() => TURN_BUFF_REGISTRY.get(formation.buff.definitionId)).not.toThrow()
+    }
+  })
+
+  it('formation buffs are battle-long party buffs (duration Infinity, polarity buff)', () => {
+    for (const formation of TRAN_PHAP_FORMATIONS) {
+      const buff = TURN_BUFF_REGISTRY.get(formation.buff.definitionId)
+
+      expect(buff.polarity).toBe('buff')
+      expect(buff.duration).toBe(Infinity)
+    }
+  })
+
+  it('authored headcount ladder — fewer slots means a stronger buff (spec 2026-09-05 §2.5)', () => {
+    const headcounts = TRAN_PHAP_FORMATIONS.map((formation) => ({
+      id: formation.id,
+      cells: formation.cellPattern.length,
+    }))
+
+    expect(headcounts).toEqual([
+      { id: 'doc_hanh_tran', cells: 1 },
+      { id: 'luong_nghi_tran', cells: 2 },
+      { id: 'tam_tai_tran', cells: 3 },
+      { id: 'ngu_hanh_tran', cells: 5 },
+      { id: 'cuu_cung_tran', cells: 9 },
+    ])
+  })
 })
 
-describe('hon_don_tran (TEST-ONLY stress-test formation)', () => {
+describe('cuu_cung_tran (full-board formation)', () => {
   it('unlocks all 9 standing slots of the local 3x3 space, each exactly once', () => {
-    const formation = TRAN_PHAP_FORMATIONS.find((f) => f.id === 'hon_don_tran')
+    const formation = TRAN_PHAP_FORMATIONS.find((f) => f.id === 'cuu_cung_tran')
 
     expect(formation).toBeDefined()
     expect(formation!.cellPattern).toHaveLength(9)

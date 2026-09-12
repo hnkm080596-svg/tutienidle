@@ -30,11 +30,13 @@ export interface CompanionInstance {
   exp: number
 }
 
-// TEST-ONLY: 5 companion placeholder (2026-09-06, Hỗn Độn Trận visual test tooling) —
-// chỉ để TranPhapPanel.vue có đủ quân lấp lưới 36 ô của hon_don_tran khi test.
-// Chỉ số/tên tạm bợ, dùng art placeholder chung (không có combatTextureKey riêng —
-// companionToCombatEntity()/render layer tự fallback về placeholder animation set
-// theo id). Sẽ bị xoá khi có roster thật.
+// TEST-ONLY: 5 companion placeholders (2026-09-06, Tran Phap visual test
+// tooling) — exist only so TranPhapPanel.vue has bodies to fill the 9
+// standing slots during testing (B2 replaced hon_don_tran with
+// cuu_cung_tran, also 9 cells). Stats/names are makeshift, shared
+// placeholder art (no own combatTextureKey — companionToCombatEntity()/
+// render layer falls back to the placeholder animation set by id). Will
+// be removed once the real roster lands (B3).
 const TEST_COMPANION_BASE_STATS: CompanionBaseStats = { maxHp: 100, attack: 10, speed: 100 }
 
 function testCompanionBasicSkill(id: string): TurnSkillDefinition {
