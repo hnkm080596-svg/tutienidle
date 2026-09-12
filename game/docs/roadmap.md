@@ -1602,6 +1602,30 @@ Each enforcement rule should protect a real regression class discovered by Missi
    existence/parity test.
 ```
 
+```text
+🟡+ 2026-09-11 (branch r14-slice2) — Slice 2 shipped: combat contract
+   + progression-ownership guards for the newly-stable contracts:
+   - R14.4 combatContract.test.ts: two-clock separation AC-8 (both
+     directions), CombatClock rule-freeze AC-7c (comment-blind), no
+     scene.pause/anims.pauseAll freeze AC-9b, external-command boundary
+     drains only at IDLE (spec section 9).
+   - R14.4 also fixed the QA 2026-09-10 Task 9 production gap behind the
+     guard: CombatScene.onBattleStart now destroys + clears the countdown
+     telegraph handle map (the "enforced nowhere" cross-system invariant).
+   - R14.5 progressionOutcomeOwnership.test.ts: greatDaoOpportunityLost
+     + highestFoundationAchieved written only by the outcome services;
+     tribulation/breakthrough adapters pinned presentation-only.
+   Flaky-test root-cause fixes (fd22f2b6 RNG-pin discipline):
+   HiddenBeastSystem (unpinned 100x5% rolls = 0.59%/run false-failure),
+   TurnBattleSystem.selfBuff leech (5% crit + rating hit-chance could
+   zero the heal). useAppLifecycle worker-spawn flake classified as
+   environment (cold-start contention), no test-logic fix available.
+   P3 full: 490 files / 3295 tests PASS — ZERO flakes in the full run
+   (first fully clean run). QA quick PASS WITH EVIDENCE
+   (game/docs/qa/2026-09-11-r14-slice2-combat-contract-quick.md).
+```
+
+
 ---
 
 # 0.7. Architecture Repair dependency order
@@ -1681,7 +1705,7 @@ R14 Architecture Enforcement
 | 12 | R11 — UI Foundation Consolidation | AR-26, AR-27, AR-28 + domain UI | ⏸ |
 | 13 | R12 — Presentation / Asset Cleanup | AR-24, AR-27, AR-29, AR-30, AR-31 | ⏸ |
 | 14 | R13 — Parallel Authority / Legacy Retirement | AR-19, AR-25 | ⏸ |
-| 15 | R14 — Architecture Enforcement | AR-32, AR-33 + migrated invariants | 🟡 First slice shipped 2026-09-11 (R1/R2/R8.1/AR-33/A6 guards); combat-branch regions + type-level stat guard + asset/catalog/ACK guards pending |
+| 15 | R14 — Architecture Enforcement | AR-32, AR-33 + migrated invariants | 🟡 Slices 1-2 shipped 2026-09-11: R1/R2/R8.1/AR-33/A6 + combat-contract (two-clock, AC-7c/9b, command boundary) + R8.2 ownership guards; type-level stat guard + asset/catalog/ACK-token guards still pending |
 
 ---
 
