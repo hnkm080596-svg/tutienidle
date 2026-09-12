@@ -1,17 +1,41 @@
 <script setup lang="ts">
-// Chiêu Hiền Quán panel (chi-hien-quan spec 2026-09-02, functionType
-// 'worker_lodge') — hiển thị cấp CHQ, nhân công tối đa (1+level×2),
-// capacity kế tiếp. Nâng cấp qua header dùng chung FunctionOverlayPanel
-// (useBuildingHeaderState) — panel chỉ đọc data + hiển thị.
-import { computed } from 'vue'
+// Chieu Hien Quan panel (chi-hien-quan spec 2026-09-02, functionType
+// 'worker_lodge'). Building upgrade goes through the shared
+// FunctionOverlayPanel header (useBuildingHeaderState) - this panel is
+// read-only display + the gacha surface added by companion-gacha Task 9
+// (2026-09-12): TabBar with nhan_cong (worker capacity, the original
+// body) / chieu_mo (ChieuMoTab - token pull) / duyen_phan
+// (DuyenPhanTab - pick-your-own exchange). Pattern copied from
+// EquipmentHallPanel.vue.
+import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { getWorkerCapacityForLevel } from '@/core/production/WorkerCapacity'
+import TabBar from '@/components/common/TabBar.vue'
+import ChieuMoTab from './worker-lodge/ChieuMoTab.vue'
+import DuyenPhanTab from './worker-lodge/DuyenPhanTab.vue'
 
 const BUILDING_ID = 'chi_hien_quan'
+
+const { t } = useI18n({ useScope: 'local' })
 
 const gameManager = useGameManager()
 
 const { stateVersion } = useStateVersion()
+
+const TABS = [
+  { id: 'nhan_cong', label: t('workerLodge.tabs.nhanCong') },
+  { id: 'chieu_mo', label: t('workerLodge.tabs.chieuMo') },
+  { id: 'duyen_phan', label: t('workerLodge.tabs.duyenPhan') },
+] as const
+
+type TabId = (typeof TABS)[number]['id']
+
+const activeTab = ref<TabId>('nhan_cong')
+
+function switchTab(tab: TabId) {
+  activeTab.value = tab
+}
 
 const instance = computed(() => {
   stateVersion.value
@@ -40,22 +64,33 @@ const nextCapacity = computed(() => {
   <section class="worker-lodge-panel">
     <p class="worker-lodge-panel__description">{{ template?.description }}</p>
 
-    <div class="worker-lodge-panel__card">
-      <h3>Nhân công</h3>
+    <TabBar
+      class="worker-lodge-panel__tabs"
+      :tabs="TABS.map((tab) => ({ id: tab.id, label: tab.label }))"
+      :model-value="activeTab"
+      @update:model-value="switchTab($event as TabId)"
+    />
+
+    <div v-if="activeTab === 'nhan_cong'" class="worker-lodge-panel__card">
+      <h3>{{ t('workerLodge.nhanCong.title') }}</h3>
 
       <p class="worker-lodge-panel__capacity">
-        <strong>{{ capacity }}</strong> hiền sĩ theo về
+        <strong>{{ capacity }}</strong> {{ t('workerLodge.nhanCong.capacitySuffix') }}
       </p>
 
       <small v-if="nextCapacity !== undefined" class="worker-lodge-panel__next">
-        Cấp {{ (instance?.level ?? 0) + 1 }}: {{ nextCapacity }} nhân công
+        {{ t('workerLodge.nhanCong.nextLevel', { level: (instance?.level ?? 0) + 1, count: nextCapacity }) }}
       </small>
-      <small v-else class="worker-lodge-panel__next">Cấp tối đa</small>
+      <small v-else class="worker-lodge-panel__next">{{ t('workerLodge.nhanCong.maxLevel') }}</small>
 
       <p class="worker-lodge-panel__hint">
-        Nhân công được phân bổ vào các nguồn khai thác ở panel Sản Xuất.
+        {{ t('workerLodge.nhanCong.hint') }}
       </p>
     </div>
+
+    <ChieuMoTab v-else-if="activeTab === 'chieu_mo'" />
+
+    <DuyenPhanTab v-else-if="activeTab === 'duyen_phan'" />
   </section>
 </template>
 
@@ -74,6 +109,10 @@ const nextCapacity = computed(() => {
   margin: 0 0 16px;
   color: var(--paper-text-soft);
   line-height: var(--lh-relaxed);
+}
+
+.worker-lodge-panel__tabs {
+  margin: 0 0 12px;
 }
 
 .worker-lodge-panel__card {

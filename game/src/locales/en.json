@@ -494,6 +494,52 @@
       "estimate": "≈ {amount} essence / cycle"
     }
   },
+  "workerLodge": {
+    "tabs": {
+      "nhanCong": "Workers",
+      "chieuMo": "Recruit",
+      "duyenPhan": "Duyen Phan Exchange"
+    },
+    "nhanCong": {
+      "title": "Workers",
+      "capacitySuffix": "sages have joined",
+      "nextLevel": "Level {level}: {count} workers",
+      "maxLevel": "Max level",
+      "hint": "Workers are assigned to extraction sites in the Production panel."
+    }
+  },
+  "chieuMo": {
+    "tokens": "{name}: {count}",
+    "pity": "Pity: {count}/{max}",
+    "pull": "Recruit (1 {token})",
+    "errors": {
+      "missingToken": "No {token} available.",
+      "noActivePlayer": "No active player data."
+    },
+    "result": {
+      "new": "New companion!",
+      "constellationUp": "Duplicate → Constellation +1 (C{rank})",
+      "constellationMaxed": "Duplicate — Constellation already maxed → +{bonus} Duyen Phan",
+      "pity": "Pity triggered"
+    }
+  },
+  "duyenPhan": {
+    "balance": "Duyen Phan: {count}",
+    "cost": "{cost} Duyen Phan",
+    "constellationBadge": "C{rank}",
+    "exchange": "Exchange",
+    "reason": {
+      "constellationMaxed": "Constellation already maxed (C{max})",
+      "insufficientDuyenPhan": "Not enough Duyen Phan (need {cost})"
+    },
+    "errors": {
+      "unknownDefinition": "Unknown companion.",
+      "constellationMaxed": "Constellation already maxed.",
+      "insufficientDuyenPhan": "Not enough Duyen Phan.",
+      "noActivePlayer": "No active player data."
+    },
+    "empty": "No companions available to exchange."
+  },
   "combat": {
     "victory": {
       "title": "★ VICTORY ★",

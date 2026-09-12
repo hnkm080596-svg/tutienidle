@@ -494,6 +494,52 @@
       "estimate": "≈ {amount} Luyện Khí Tinh Hoa / lượt"
     }
   },
+  "workerLodge": {
+    "tabs": {
+      "nhanCong": "Nhân Công",
+      "chieuMo": "Chiêu Mộ",
+      "duyenPhan": "Đổi Duyên Phận"
+    },
+    "nhanCong": {
+      "title": "Nhân công",
+      "capacitySuffix": "hiền sĩ theo về",
+      "nextLevel": "Cấp {level}: {count} nhân công",
+      "maxLevel": "Cấp tối đa",
+      "hint": "Nhân công được phân bổ vào các nguồn khai thác ở panel Sản Xuất."
+    }
+  },
+  "chieuMo": {
+    "tokens": "{name}: {count}",
+    "pity": "Bảo hiểm: {count}/{max}",
+    "pull": "Chiêu Mộ (1 {token})",
+    "errors": {
+      "missingToken": "Không có {token}.",
+      "noActivePlayer": "Chưa có dữ liệu người chơi."
+    },
+    "result": {
+      "new": "Đồng đội mới!",
+      "constellationUp": "Trùng → Cung Mệnh +1 (C{rank})",
+      "constellationMaxed": "Trùng — Cung Mệnh đã tối đa → +{bonus} Duyên Phận",
+      "pity": "Bảo hiểm kích hoạt"
+    }
+  },
+  "duyenPhan": {
+    "balance": "Duyên Phận: {count}",
+    "cost": "{cost} Duyên Phận",
+    "constellationBadge": "C{rank}",
+    "exchange": "Đổi",
+    "reason": {
+      "constellationMaxed": "Cung Mệnh đã đạt tối đa (C{max})",
+      "insufficientDuyenPhan": "Không đủ Duyên Phận (cần {cost})"
+    },
+    "errors": {
+      "unknownDefinition": "Đồng đội không tồn tại.",
+      "constellationMaxed": "Cung Mệnh đã đạt tối đa.",
+      "insufficientDuyenPhan": "Không đủ Duyên Phận.",
+      "noActivePlayer": "Chưa có dữ liệu người chơi."
+    },
+    "empty": "Chưa có đồng đội nào để đổi."
+  },
   "combat": {
     "victory": {
       "title": "★ THẮNG ★",
