@@ -39,13 +39,13 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 20,
       spiritStone: 5,
-
-      itemDrops: [
-        // Đột Phá Trúc Cơ (Phase 6) — loot vô thưởng vô phạt (mục 14
-        // spec `breakthrough`), chance thấp cố ý.
-        { kind: 'material', itemId: 'cultivator_diary', amount: 1, chance: 0.07 },
-      ],
     },
+
+    signatureDrops: [
+      // Đột Phá Trúc Cơ lore drop - low chance on purpose, carries no
+      // functional sink (LORE_ALLOWLIST in EnemyDropSinkInvariant).
+      { kind: 'material', itemId: 'cultivator_diary', amount: { min: 1, max: 1 }, chance: 0.07 },
+    ],
   }),
 
   defineEnemy({
@@ -80,46 +80,20 @@ const ENEMY_DEFINITIONS: Enemy[] = [
       techniqueInsight: 40,
       spiritStone: 10,
 
-      itemDrops: [
-        { kind: 'material', itemId: 'qi_refining_ore_decade', amount: 1, chance: 0.3 },
-        // Tăng tỷ lệ giai đoạn test (PLAN HOÀN CHỈNH mục 1) — trước
-        // 0.05/0.2/0.5, quá thấp để kiểm thử weapon drop thực tế.
-        { kind: 'equipment', itemId: 'base_kiem', chance: 0.15 },
-      ],
     },
 
     // Bản Elite ("Sơn Tặc Đầu Lĩnh", xem Stages.ts's eliteChance) —
     // thưởng đậm hơn hẳn + cơ hội rơi Phá Cảnh Tâm Pháp.
-    eliteRewards: {
-      techniqueInsight: 200,
-      spiritStone: 60,
-
-      itemDrops: [
-        { kind: 'material', itemId: 'qi_refining_ore_decade', amount: 3, chance: 0.6 },
-        { kind: 'equipment', itemId: 'base_kiem', chance: 0.35 },
-        { kind: 'technique', itemId: 'van_kiem_quyet', chance: 0.2 },
-      ],
-    },
-
-    // Core Loop Foundation checklist (Mục BOSS) — tier RIÊNG, tách
-    // hẳn khỏi eliteRewards: thưởng đậm hơn nhiều + GUARANTEED (chance
-    // 1.0) Phá Cảnh Tâm Pháp, vì Boss KHÔNG spawn ngẫu nhiên (luôn là
-    // quái cuối stage có bossEnemyId, xem data/stage/Stages.ts) — hiếm
-    // hơn Elite nên xứng đáng phần thưởng chắc chắn thay vì roll %.
-    bossRewards: {
-      techniqueInsight: 500,
-      spiritStone: 150,
-
-      itemDrops: [
-        { kind: 'material', itemId: 'qi_refining_ore_decade', amount: 6, chance: 1 },
-        { kind: 'equipment', itemId: 'base_kiem', chance: 0.75 },
-        { kind: 'technique', itemId: 'van_kiem_quyet', chance: 1 },
-        // Đột Phá Trúc Cơ (Phase 3) — 0.01%, mức thấp nhất từng có
-        // trong codebase, có chủ đích (xem data/materials/materials.ts's
-        // great_dao_seed).
-        { kind: 'material', itemId: 'great_dao_seed', amount: 1, chance: 0.0001 },
-      ],
-    },
+    // Core Loop Foundation checklist (Mục BOSS) — boss tier RIÊNG:
+    // GUARANTEED Phá Cảnh Tâm Pháp vì Boss KHÔNG spawn ngẫu nhiên. Giờ
+    // diễn đạt qua signatureDrops; drop thường đến từ bảng stage/family.
+    signatureDrops: [
+      { kind: 'technique', itemId: 'van_kiem_quyet', chance: 0.2, requiresModifier: 'tinh_anh' },
+      { kind: 'technique', itemId: 'van_kiem_quyet', chance: 1, requiresModifier: 'boss' },
+      // Đột Phá Trúc Cơ (Phase 3) — 0.01%, mức thấp nhất từng có trong
+      // codebase, có chủ đích (xem data/materials/materials.ts).
+      { kind: 'material', itemId: 'great_dao_seed', amount: { min: 1, max: 1 }, chance: 0.0001, requiresModifier: 'boss' },
+    ],
   }),
 
   defineEnemy({
@@ -197,13 +171,12 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 35,
       spiritStone: 8,
-
-      itemDrops: [
-        // Đột Phá Trúc Cơ (Phase 6) — loot vô thưởng vô phạt (mục 14
-        // spec `breakthrough`), chance thấp cố ý.
-        { kind: 'material', itemId: 'stele_fragment', amount: 1, chance: 0.07 },
-      ],
     },
+
+    signatureDrops: [
+      // Đột Phá Trúc Cơ lore drop - low chance on purpose.
+      { kind: 'material', itemId: 'stele_fragment', amount: { min: 1, max: 1 }, chance: 0.07 },
+    ],
   }),
 
   // Luyện Khí tầng 1-10 content pass (2026-08-14) — 18 quái MỚI, đúng
@@ -264,15 +237,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 50,
       spiritStone: 12,
-      itemDrops: [{ kind: 'material', itemId: 'qi_refining_ore_decade', amount: 1, chance: 0.3 }],
-    },
-    eliteRewards: {
-      techniqueInsight: 250,
-      spiritStone: 72,
-    },
-    bossRewards: {
-      techniqueInsight: 625,
-      spiritStone: 180,
     },
   }),
 
@@ -325,16 +289,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 55,
       spiritStone: 14,
-      itemDrops: [{ kind: 'material', itemId: 'qi_refining_ore_decade', amount: 1, chance: 0.3 }],
-    },
-    eliteRewards: {
-      techniqueInsight: 275,
-      spiritStone: 84,
-    },
-    bossRewards: {
-      techniqueInsight: 690,
-      spiritStone: 210,
-      itemDrops: [{ kind: 'equipment', itemId: 'base_quan', chance: 0.4 }],
     },
   }),
 
@@ -387,16 +341,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 65,
       spiritStone: 16,
-      itemDrops: [{ kind: 'material', itemId: 'qi_refining_ore_decade', amount: 1, chance: 0.3 }],
-    },
-    eliteRewards: {
-      techniqueInsight: 325,
-      spiritStone: 96,
-    },
-    bossRewards: {
-      techniqueInsight: 815,
-      spiritStone: 240,
-      itemDrops: [{ kind: 'equipment', itemId: 'base_quan', chance: 0.4 }],
     },
   }),
 
@@ -423,7 +367,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 40,
       spiritStone: 10,
-      itemDrops: [{ kind: 'material', itemId: 'qi_refining_ore_decade', amount: 1, chance: 0.35 }],
     },
   }),
 
@@ -449,16 +392,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 75,
       spiritStone: 18,
-      itemDrops: [{ kind: 'material', itemId: 'qi_refining_ore_decade', amount: 1, chance: 0.3 }],
-    },
-    eliteRewards: {
-      techniqueInsight: 375,
-      spiritStone: 108,
-    },
-    bossRewards: {
-      techniqueInsight: 940,
-      spiritStone: 270,
-      itemDrops: [{ kind: 'equipment', itemId: 'base_hai', chance: 0.4 }],
     },
   }),
 
@@ -485,7 +418,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 45,
       spiritStone: 11,
-      itemDrops: [{ kind: 'material', itemId: 'qi_refining_ore_decade', amount: 1, chance: 0.35 }],
     },
   }),
 
@@ -511,16 +443,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 85,
       spiritStone: 20,
-      itemDrops: [{ kind: 'material', itemId: 'qi_refining_ore_decade', amount: 1, chance: 0.3 }],
-    },
-    eliteRewards: {
-      techniqueInsight: 425,
-      spiritStone: 120,
-    },
-    bossRewards: {
-      techniqueInsight: 1065,
-      spiritStone: 300,
-      itemDrops: [{ kind: 'equipment', itemId: 'base_hai', chance: 0.4 }],
     },
   }),
 
@@ -548,7 +470,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 50,
       spiritStone: 12,
-      itemDrops: [{ kind: 'material', itemId: 'qi_refining_ore_decade', amount: 1, chance: 0.3 }],
     },
   }),
 
@@ -575,16 +496,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 95,
       spiritStone: 23,
-      itemDrops: [{ kind: 'material', itemId: 'qi_refining_ore_decade', amount: 1, chance: 0.3 }],
-    },
-    eliteRewards: {
-      techniqueInsight: 475,
-      spiritStone: 138,
-    },
-    bossRewards: {
-      techniqueInsight: 1190,
-      spiritStone: 345,
-      itemDrops: [{ kind: 'equipment', itemId: 'base_gioi', chance: 0.4 }],
     },
   }),
 
@@ -612,7 +523,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 55,
       spiritStone: 14,
-      itemDrops: [{ kind: 'material', itemId: 'qi_refining_ore_decade', amount: 1, chance: 0.3 }],
     },
   }),
 
@@ -639,16 +549,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 110,
       spiritStone: 27,
-      itemDrops: [{ kind: 'material', itemId: 'qi_refining_ore_decade', amount: 1, chance: 0.3 }],
-    },
-    eliteRewards: {
-      techniqueInsight: 550,
-      spiritStone: 162,
-    },
-    bossRewards: {
-      techniqueInsight: 1375,
-      spiritStone: 405,
-      itemDrops: [{ kind: 'equipment', itemId: 'base_gioi', chance: 0.4 }],
     },
   }),
 
@@ -702,15 +602,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 125,
       spiritStone: 31,
-    },
-    eliteRewards: {
-      techniqueInsight: 625,
-      spiritStone: 186,
-    },
-    bossRewards: {
-      techniqueInsight: 1565,
-      spiritStone: 465,
-      itemDrops: [{ kind: 'equipment', itemId: 'base_truy', chance: 0.4 }],
     },
   }),
 
@@ -771,20 +662,12 @@ const ENEMY_DEFINITIONS: Enemy[] = [
       techniqueInsight: 145,
       spiritStone: 35,
     },
-    eliteRewards: {
-      techniqueInsight: 725,
-      spiritStone: 210,
-    },
-    bossRewards: {
-      techniqueInsight: 1815,
-      spiritStone: 525,
-      itemDrops: [
-        { kind: 'equipment', itemId: 'base_truy', chance: 0.4 },
-        // Spec dot-pha-loi-kiep §4.1b — Yêu Đan 100% từ boss LK t10,
-        // nguyên liệu chính Thông Mạch Đan/Trúc Cơ Đan.
-        { kind: 'material', itemId: 'yeu_dan_hung_giao', amount: 1, chance: 1 },
-      ],
-    },
+    signatureDrops: [
+      // Spec dot-pha-loi-kiep §4.1b — Yêu Đan 100% từ boss LK t10,
+      // nguyên liệu chính Thông Mạch Đan/Trúc Cơ Đan. chance:1 nên boss
+      // idle (auto-farm) vẫn rơi theo E11.
+      { kind: 'material', itemId: 'yeu_dan_hung_giao', amount: { min: 1, max: 1 }, chance: 1, requiresModifier: 'boss' },
+    ],
   }),
 
   // Phàm Nhân Động 1-10 (2026-08-16) — cùng "quy luật" Ngũ Hành Tương
@@ -820,7 +703,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 5,
       spiritStone: 1,
-      itemDrops: [{ kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 1, chance: 0.7 }],
     },
   }),
 
@@ -846,18 +728,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 10,
       spiritStone: 2,
-      itemDrops: [{ kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 1, chance: 0.7 }],
-    },
-    bossRewards: {
-      techniqueInsight: 130,
-      spiritStone: 26,
-      // Guaranteed weapon drop (PLAN HOÀN CHỈNH mục 1) — boss Động 1,
-      // quái đầu tiên người chơi gặp, KHÔNG có nguồn vũ khí nào khác ở
-      // Phàm Nhân trước bản sửa này (toàn bộ realm chỉ rơi material).
-      itemDrops: [
-        { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 3, chance: 1 },
-        { kind: 'equipment', itemId: 'base_kiem', chance: 1 },
-      ],
     },
   }),
 
@@ -882,7 +752,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 6,
       spiritStone: 1,
-      itemDrops: [{ kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 2, chance: 0.7 }],
     },
   }),
 
@@ -908,15 +777,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 12,
       spiritStone: 2,
-      itemDrops: [{ kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 2, chance: 0.7 }],
-    },
-    bossRewards: {
-      techniqueInsight: 156,
-      spiritStone: 26,
-      itemDrops: [
-        { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 6, chance: 1 },
-        { kind: 'equipment', itemId: 'base_kiem', chance: 0.5 },
-      ],
     },
   }),
 
@@ -941,7 +801,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 7,
       spiritStone: 1,
-      itemDrops: [{ kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 3, chance: 0.7 }],
     },
   }),
 
@@ -967,15 +826,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 14,
       spiritStone: 2,
-      itemDrops: [{ kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 3, chance: 0.7 }],
-    },
-    bossRewards: {
-      techniqueInsight: 182,
-      spiritStone: 26,
-      itemDrops: [
-        { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 9, chance: 1 },
-        { kind: 'equipment', itemId: 'base_kiem', chance: 0.4 },
-      ],
     },
   }),
 
@@ -1000,7 +850,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 8,
       spiritStone: 2,
-      itemDrops: [{ kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 4, chance: 0.7 }],
     },
   }),
 
@@ -1026,12 +875,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 16,
       spiritStone: 4,
-      itemDrops: [{ kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 4, chance: 0.7 }],
-    },
-    bossRewards: {
-      techniqueInsight: 208,
-      spiritStone: 52,
-      itemDrops: [{ kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 12, chance: 1 }],
     },
   }),
 
@@ -1056,7 +899,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 9,
       spiritStone: 2,
-      itemDrops: [{ kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 5, chance: 0.7 }],
     },
   }),
 
@@ -1082,15 +924,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 18,
       spiritStone: 4,
-      itemDrops: [{ kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 5, chance: 0.7 }],
-    },
-    bossRewards: {
-      techniqueInsight: 234,
-      spiritStone: 52,
-      itemDrops: [
-        { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 15, chance: 1 },
-        { kind: 'equipment', itemId: 'base_kiem', chance: 0.4 },
-      ],
     },
   }),
 
@@ -1115,7 +948,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 10,
       spiritStone: 2,
-      itemDrops: [{ kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 6, chance: 0.7 }],
     },
   }),
 
@@ -1141,12 +973,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 20,
       spiritStone: 4,
-      itemDrops: [{ kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 6, chance: 0.7 }],
-    },
-    bossRewards: {
-      techniqueInsight: 260,
-      spiritStone: 52,
-      itemDrops: [{ kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 18, chance: 1 }],
     },
   }),
 
@@ -1171,7 +997,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 12,
       spiritStone: 2,
-      itemDrops: [{ kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 7, chance: 0.7 }],
     },
   }),
 
@@ -1197,15 +1022,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 24,
       spiritStone: 4,
-      itemDrops: [{ kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 7, chance: 0.7 }],
-    },
-    bossRewards: {
-      techniqueInsight: 312,
-      spiritStone: 52,
-      itemDrops: [
-        { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 21, chance: 1 },
-        { kind: 'equipment', itemId: 'base_kiem', chance: 0.4 },
-      ],
     },
   }),
 
@@ -1230,7 +1046,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 13,
       spiritStone: 3,
-      itemDrops: [{ kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 8, chance: 0.7 }],
     },
   }),
 
@@ -1256,12 +1071,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 26,
       spiritStone: 6,
-      itemDrops: [{ kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 8, chance: 0.7 }],
-    },
-    bossRewards: {
-      techniqueInsight: 338,
-      spiritStone: 78,
-      itemDrops: [{ kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 24, chance: 1 }],
     },
   }),
 
@@ -1286,7 +1095,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 15,
       spiritStone: 3,
-      itemDrops: [{ kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 9, chance: 0.7 }],
     },
   }),
 
@@ -1312,15 +1120,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 30,
       spiritStone: 6,
-      itemDrops: [{ kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 9, chance: 0.7 }],
-    },
-    bossRewards: {
-      techniqueInsight: 390,
-      spiritStone: 78,
-      itemDrops: [
-        { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 27, chance: 1 },
-        { kind: 'equipment', itemId: 'base_kiem', chance: 0.4 },
-      ],
     },
   }),
 
@@ -1345,7 +1144,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 18,
       spiritStone: 4,
-      itemDrops: [{ kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 10, chance: 0.7 }],
     },
   }),
 
@@ -1377,15 +1175,6 @@ const ENEMY_DEFINITIONS: Enemy[] = [
     rewards: {
       techniqueInsight: 36,
       spiritStone: 8,
-      itemDrops: [{ kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 10, chance: 0.7 }],
-    },
-    bossRewards: {
-      techniqueInsight: 468,
-      spiritStone: 104,
-      itemDrops: [
-        { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 30, chance: 1 },
-        { kind: 'equipment', itemId: 'base_kiem', chance: 0.5 },
-      ],
     },
   }),
 ]
@@ -1487,9 +1276,13 @@ function foundationBeast(params: {
   const atk = Math.round(42 * 1.15 ** (params.t - 1))
   const armor = 18 + 2 * params.t
 
+  // Stats keep the bossEligible bump; reward multipliers are gone - the
+  // drop system (resolveDrops + BOSS/TINH_ANH modifiers, cap x4) owns
+  // kill currency now. Leaving insight/stone here would smuggle the old
+  // x2.5/x12.5 and x6/x15 coefficients past the economy guard.
   const mult = params.bossEligible
-    ? { hp: 1.6, atk: 1.4, armor: 1.3, insight: 2.5, stone: 6 }
-    : { hp: 1, atk: 1, armor: 1, insight: 1, stone: 1 }
+    ? { hp: 1.6, atk: 1.4, armor: 1.3 }
+    : { hp: 1, atk: 1, armor: 1 }
 
   const insight = 40 + 6 * params.t
   const stone = 8 + 2 * params.t
@@ -1518,27 +1311,9 @@ function foundationBeast(params: {
       elemental: { element: params.element, power: params.power },
     },
     rewards: {
-      techniqueInsight: Math.round(insight * mult.insight),
-      spiritStone: Math.round(stone * mult.stone),
-      itemDrops: params.bossEligible
-        ? [{ kind: 'material' as const, itemId: 'qi_refining_ore_decade', amount: 1, chance: 0.3 }]
-        : undefined,
+      techniqueInsight: insight,
+      spiritStone: stone,
     },
-    eliteRewards: params.bossEligible
-      ? {
-          techniqueInsight: Math.round(insight * 5),
-          spiritStone: Math.round(stone * 6),
-        }
-      : undefined,
-    bossRewards: params.bossEligible
-      ? {
-          techniqueInsight: Math.round(insight * 12.5),
-          spiritStone: Math.round(stone * 15),
-          itemDrops: [
-            { kind: 'equipment' as const, itemId: 'base_kiem', chance: params.t === 10 ? 0.5 : 0.4 },
-          ],
-        }
-      : undefined,
   })
 }
 
@@ -1816,11 +1591,12 @@ const HIDDEN_BEASTS: Enemy[] = [
     rewards: {
       techniqueInsight: 500,
       spiritStone: 150,
-      itemDrops: [
-        { kind: 'material', itemId: 'thien_dia_chi_kieu', amount: 1, chance: 0.05 },
-        { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: 12, chance: 1 },
-      ],
     },
+    signatureDrops: [
+      // Thiên Địa Chi Kiều 5% — nguyên liệu Kỳ Kinh (đường 9 Bát Mạch).
+      { kind: 'material', itemId: 'thien_dia_chi_kieu', amount: { min: 1, max: 1 }, chance: 0.05 },
+      { kind: 'material', itemId: 'tinh_hoa_pham_the', amount: { min: 12, max: 12 }, chance: 1 },
+    ],
   }),
 ]
 

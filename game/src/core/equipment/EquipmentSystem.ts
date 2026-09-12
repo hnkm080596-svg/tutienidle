@@ -102,6 +102,28 @@ export function calculateEquipmentScale(enhanceLevel: number): number {
 }
 
 /**
+ * Applied AFTER rollItemQuality(), never instead of it (spec E5).
+ *
+ * The quality ladder is rolled at fixed weights and that roll stays owned by
+ * this system; a drop only ever nudges the result. Only equipment has a
+ * quality ladder at all, so this is the single place a stacked kill can turn
+ * into a better item.
+ */
+export function applyQualityBonusSteps(quality: ItemQuality, steps: number): ItemQuality {
+  if (steps <= 0) {
+    return quality
+  }
+
+  const index = ITEM_QUALITY_ORDER.indexOf(quality)
+
+  if (index < 0) {
+    return quality
+  }
+
+  return ITEM_QUALITY_ORDER[Math.min(ITEM_QUALITY_ORDER.length - 1, index + steps)]!
+}
+
+/**
  * 1 dòng giá trị Tinh Luyện đã roll (preview/commit — 2026-08-30, UI
  * "giữ/bỏ") — index trỏ vào instance.affixes, value là giá trị mới đã
  * roll tăng 5–20% cho dòng đó, clamp theo trần tier.
@@ -309,6 +331,7 @@ export class EquipmentSystem {
     player: PlayerData,
     affixRegistry: AffixRegistry,
     zoneId?: string,
+    qualityBonusSteps = 0,
   ): EquipmentInstance {
     assertValidEquipmentMainStats(template)
 
@@ -317,7 +340,7 @@ export class EquipmentSystem {
       throw new Error(`Missing profession grade for equipment realm ${player.realmId}`)
     }
 
-    const quality = this.rollItemQuality()
+    const quality = applyQualityBonusSteps(this.rollItemQuality(), qualityBonusSteps)
 
     const mainStat = this.rollMainStat(template, grade, player, quality)
 
