@@ -268,8 +268,7 @@
     },
     "tranPhap": {
       "title": "Trận Pháp",
-      "confirm": "Lưu Trận Pháp",
-      "grantTest": "[TEST-ONLY] Cấp 5 Companion Test"
+      "confirm": "Lưu Trận Pháp"
     },
     "bag": {
       "title": "Kho Vật",
@@ -493,6 +492,115 @@
       },
       "estimate": "≈ {amount} Luyện Khí Tinh Hoa / lượt"
     }
+  },
+  "workerLodge": {
+    "tabs": {
+      "nhanCong": "Nhân Công",
+      "chieuMo": "Chiêu Mộ",
+      "duyenPhan": "Đổi Duyên Phận"
+    },
+    "nhanCong": {
+      "title": "Nhân công",
+      "capacitySuffix": "hiền sĩ theo về",
+      "nextLevel": "Cấp {level}: {count} nhân công",
+      "maxLevel": "Cấp tối đa",
+      "hint": "Nhân công được phân bổ vào các nguồn khai thác ở panel Sản Xuất."
+    }
+  },
+  "chieuMo": {
+    "tokens": "{name}: {count}",
+    "pity": "Bảo hiểm: {count}/{max}",
+    "pull": "Chiêu Mộ (1 {token})",
+    "errors": {
+      "missingToken": "Không có {token}.",
+      "noActivePlayer": "Chưa có dữ liệu người chơi."
+    },
+    "result": {
+      "new": "Đồng đội mới!",
+      "constellationUp": "Trùng → Cung Mệnh +1 (C{rank})",
+      "constellationMaxed": "Trùng — Cung Mệnh đã tối đa → +{bonus} Duyên Phận",
+      "pity": "Bảo hiểm kích hoạt"
+    }
+  },
+  "duyenPhan": {
+    "balance": "Duyên Phận: {count}",
+    "cost": "{cost} Duyên Phận",
+    "constellationBadge": "C{rank}",
+    "exchange": "Đổi",
+    "reason": {
+      "constellationMaxed": "Cung Mệnh đã đạt tối đa (C{max})",
+      "insufficientDuyenPhan": "Không đủ Duyên Phận (cần {cost})"
+    },
+    "errors": {
+      "unknownDefinition": "Đồng đội không tồn tại.",
+      "constellationMaxed": "Cung Mệnh đã đạt tối đa.",
+      "insufficientDuyenPhan": "Không đủ Duyên Phận.",
+      "noActivePlayer": "Chưa có dữ liệu người chơi."
+    },
+    "empty": "Chưa có đồng đội nào để đổi."
+  },
+  "companion": {
+    "title": "Đồng Đội",
+    "empty": "Chưa có đồng đội nào — chiêu mộ tại Chiêu Hiền Quán.",
+    "constellationBadge": "C{rank}",
+    "realmLine": "{realm} · Tầng {level}",
+    "stats": {
+      "maxHp": "Sinh Mệnh",
+      "attack": "Công Kích",
+      "speed": "Tốc Độ"
+    },
+    "exp": {
+      "value": "{exp}/{required}",
+      "maxed": "Đã đạt trần cảnh giới"
+    },
+    "constellation": {
+      "title": "Cung Mệnh",
+      "unlocked": "Đã mở",
+      "locked": "Chưa mở",
+      "noPerks": "Đồng đội này chưa có perk Cung Mệnh."
+    },
+    "perks": {
+      "statFlat": "{stat} +{value}",
+      "statPercent": "{stat} +{value}%",
+      "cooldown": "hồi {turns} lượt",
+      "damage": "sát thương +{percent}%",
+      "heal": "hồi {percent}% sát thương",
+      "skillOverride": "Cường hóa {slot} ({detail})"
+    },
+    "skills": {
+      "title": "Kỹ Năng",
+      "slots": {
+        "basic": "Cơ Bản",
+        "special": "Đặc Biệt",
+        "ultimate": "Tuyệt Kỹ"
+      },
+      "unlocked": "Đã mở",
+      "locked": "Khoá",
+      "unlockAt": "Mở tại {realm} tầng {level}",
+      "absent": "—",
+      "cooldownTag": "Hồi {turns} lượt"
+    },
+    "feed": {
+      "title": "Nuôi",
+      "materialOption": "{name} x{count} (+{exp} EXP)",
+      "materialAria": "Nguyên liệu nuôi đồng đội",
+      "countAria": "Số lượng nguyên liệu",
+      "button": "Nuôi",
+      "maxedReason": "Đã đạt trần cảnh giới người chơi — đột phá để nuôi tiếp.",
+      "noMaterial": "Kho nguyên liệu trống.",
+      "success": "+{exp} EXP · lên {levels} tầng",
+      "successNoLevel": "+{exp} EXP",
+      "breakthrough": "Phá cảnh → {realm}",
+      "errors": {
+        "unknownInstance": "Đồng đội không tồn tại.",
+        "unknownMaterial": "Nguyên liệu không hợp lệ.",
+        "notFeedable": "Nguyên liệu này không thể nuôi đồng đội.",
+        "levelMaxed": "Đồng đội đã đạt trần cảnh giới.",
+        "insufficientMaterial": "Không đủ nguyên liệu.",
+        "noActivePlayer": "Chưa có dữ liệu người chơi."
+      }
+    },
+    "formationHint": "Gán đồng đội vào ô trận tại panel Trận Pháp (bánh lệnh → Trận)."
   },
   "combat": {
     "victory": {

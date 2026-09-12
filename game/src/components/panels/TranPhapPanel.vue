@@ -21,7 +21,6 @@ import { useUiStore } from '@/stores/ui'
 import { usePlayerStore } from '@/stores/player'
 import { useStateVersion } from '@/composables/useGameState'
 import { TRAN_PHAP_FORMATIONS } from '@/data/formation/TranPhap'
-import { TEST_COMPANIONS } from '@/data/companion/Companions'
 import type { TranPhapDefinition } from '@/data/formation/TranPhap'
 import type { FormationSlotAssignment } from '@/core/player/Player'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
@@ -175,32 +174,6 @@ function removeAssignment(combatantId: string) {
   currentAssignments.value = currentAssignments.value.filter((a) => a.combatantId !== combatantId)
 }
 
-// Bug fix (2026-09-06, user report "không thấy các nhân vật phụ test ở
-// đâu") — 5 companion test tồn tại trong COMPANIONS nhưng KHÔNG tự động
-// thuộc về player nào (chưa có UI gacha thật để tự pull) nên hàng chờ của
-// panel này luôn rỗng phần companion. Nút TEST-ONLY này cấp thẳng những
-// companion còn thiếu vào player.companions — chỉ để test Hỗn Độn Trận,
-// sẽ bỏ cùng lúc với TEST_COMPANIONS khi có roster/gacha thật.
-const hasUngrantedTestCompanions = computed(() => {
-  stateVersion.value
-
-  const owned = new Set(player.companions.map((instance) => instance.definitionId))
-
-  return TEST_COMPANIONS.some((definition) => !owned.has(definition.id))
-})
-
-function grantTestCompanions() {
-  const owned = new Set(player.companions.map((instance) => instance.definitionId))
-
-  for (const definition of TEST_COMPANIONS) {
-    if (!owned.has(definition.id)) {
-      player.companions.push({ definitionId: definition.id, level: 1, exp: 0 })
-    }
-  }
-
-  bumpState()
-}
-
 function onConfirm() {
   if (!selectedFormation.value) {
     return
@@ -321,15 +294,6 @@ watch(currentAssignments, (assignments) => {
           </button>
         </div>
       </div>
-
-      <button
-        v-if="hasUngrantedTestCompanions"
-        type="button"
-        class="tran-phap-panel__grant-test"
-        @click="grantTestCompanions"
-      >
-        {{ t('panels.tranPhap.grantTest') }}
-      </button>
 
       <div
         class="tran-phap-panel__queue"
@@ -514,18 +478,5 @@ watch(currentAssignments, (assignments) => {
 .tran-phap-panel__confirm:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-/* Nút TEST-ONLY (bug fix 2026-09-06) — cấp 5 companion test thẳng vào
-   player.companions, tô màu cảnh báo để không lẫn với nút Lưu Trận Pháp
-   thật. */
-.tran-phap-panel__grant-test {
-  align-self: flex-start;
-  padding: var(--space-1, 4px) var(--space-3, 12px);
-  border: 1px dashed var(--jade, #4caf50);
-  background: transparent;
-  color: var(--jade, #4caf50);
-  font-size: var(--text-xs, 11px);
-  cursor: pointer;
 }
 </style>

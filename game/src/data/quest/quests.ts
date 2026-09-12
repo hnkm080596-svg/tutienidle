@@ -49,6 +49,18 @@ export const QUESTS: Quest[] = [
     cadence: 'daily',
   },
 
+  // Companion gacha (Task 6, 2026-09-12) - daily Chieu Hien Lenh income
+  // alongside the floor-10 boss signatureDrops. Kill-generic (enemyId
+  // omitted) so the quest is completable on any stage.
+  {
+    id: 'daily_chieu_hien_lenh',
+    name: '[Hàng Ngày] Chiêu Hiền Chi Lễ',
+    description: 'Đánh bại 20 địch nhân bất kỳ để nhận 1 Chiêu Hiền Lệnh.',
+    condition: { kind: 'kill', amount: 20 },
+    reward: { itemDrops: [{ kind: 'material', itemId: 'chieu_hien_lenh', amount: 1 }] },
+    cadence: 'daily',
+  },
+
   // Trúc Cơ content pass M1 (2026-08-29) — 5 quest chuỗi Trúc Cơ,
   // tham chiếu quái `foundation_*` mới (data/enemy/Enemies.ts) + sink
   // Linh Khoáng hiện có. Phần thưởng tài nguyên (spiritStone/

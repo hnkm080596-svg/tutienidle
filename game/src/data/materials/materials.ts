@@ -71,6 +71,20 @@ const legacyMaterials: Material[] = [
     stackLimit: 10,
   },
 
+  // Companion gacha (2026-09-12, companion-gacha plan Task 6) - pull
+  // token for Chieu Hien Quan. Sources: floor-10 chapter boss
+  // signatureDrops (requiresModifier 'boss', x1/x2/x3 by chapter, see
+  // data/enemy/Enemies.ts) + daily_chieu_hien_lenh quest. Sink:
+  // GameManagerCompanionOps.pullCompanion() spends 1 per pull.
+  {
+    id: 'chieu_hien_lenh',
+    name: 'Chiêu Hiền Lệnh',
+    category: 'other',
+    sourceType: 'boss',
+    description: 'Lệnh bài khắc phù văn chiêu mộ — dùng tại Chiêu Hiền Quán để chiêu mộ đồng đội.',
+    stackLimit: 999,
+  },
+
   // Bản Mệnh Pháp Bảo (2026-08-27, foundation-artifact-system-plan.md
   // §6) — đá nâng phẩm, rơi từ quái Trúc Cơ trở lên (xem
   // BattleLootSystem.grantArtifactStoneDrop() + ArtifactDropBalance.ts).

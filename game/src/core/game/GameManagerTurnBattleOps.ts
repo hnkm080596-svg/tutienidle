@@ -55,6 +55,7 @@ import { DEFAULT_PARTY_FORMATION } from './PartyFormation'
 import { resolvePartyFormation } from './FormationPlacement'
 import { toTurnBattleParticipant } from './TurnBattleAdapter'
 import { companionToCombatEntity } from '../companion/CompanionCombat'
+import { resolveCompanionSkillKit } from '../companion/CompanionProgression'
 import { COMPANIONS } from '../../data/companion/Companions'
 import type { EventBus } from '../events/EventBus'
 import type { BattleLootSystem } from './BattleLootSystem'
@@ -896,7 +897,16 @@ export class GameManagerTurnBattleOps {
       entity.row = slot.row
       entity.x = slot.column
 
-      return [toTurnBattleParticipant(entity, index + 100, definition.basic)]
+      // Resolved per-instance kit (companion-gacha Task 8): unlockThresholds
+      // gate special/ultimate, constellation skill_override perks applied.
+      const kit = resolveCompanionSkillKit(definition, instance)
+
+      return [
+        toTurnBattleParticipant(entity, index + 100, kit.basic, undefined, {
+          special: kit.special,
+          ultimate: kit.ultimate,
+        }),
+      ]
     })
 
     // Tran Phap buff - the active formation applies ONE shared buff to the

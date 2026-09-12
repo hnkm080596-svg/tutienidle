@@ -18,6 +18,9 @@ import { GameManager } from '@/core/game/GameManager'
 import { BUMP_STATE_KEY, GAME_MANAGER_KEY, STATE_VERSION_KEY } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
 import { buildings } from '@/data/building/buildings'
+import { materials } from '@/data/materials/materials'
+import { COMPANIONS } from '@/data/companion/Companions'
+import { vTooltip } from '@/directives/tooltip'
 import { i18n } from '@/i18n'
 
 const WOOD = { id: 'test_wood', name: 'Linh Mộc Test', category: 'wood' as const, sourceType: 'building' as const }
@@ -152,6 +155,221 @@ describe('CHQ integration smoke — DOM oracle thay browser probe', () => {
     await nextTick()
 
     expect(deps.container.textContent ?? '').toContain('Linh Mạch')
+
+    deps.app.unmount()
+  })
+})
+
+// =========================
+// companion-gacha Task 9 (2026-09-12) - Chieu Hien Quan gacha tabs:
+// nhan_cong (original body) / chieu_mo (token pull) / duyen_phan
+// (Duyen Phan exchange). Mounted through the real WorkerLodgePanel so
+// the TabBar wiring is covered too.
+// =========================
+
+const PULL_TOKEN = materials.find((material) => material.id === 'chieu_hien_lenh')!
+
+function mountWorkerLodge(prepare?: (deps: ReturnType<typeof makeDeps> & { player: ReturnType<typeof usePlayerStore> }) => void) {
+  const deps = makeDeps(WorkerLodgePanel)
+
+  // Real material catalog so the Chieu Hien Lenh registry entry resolves
+  // (token name label) and the v-tooltip directive used by DuyenPhanTab
+  // registers like production (main.ts).
+  deps.gameManager.registerMaterials(materials)
+  deps.app.directive('tooltip', vTooltip)
+
+  const player = usePlayerStore(deps.pinia)
+
+  player.realmId = 'mortal'
+  deps.gameManager.setActivePlayer(player.$state)
+
+  // Panel computeds cache on stateVersion - any state the first render
+  // must see (building instances, bag contents) has to exist BEFORE
+  // mount; player store fields are Pinia-reactive so they can change
+  // at any time.
+  prepare?.({ ...deps, player })
+
+  deps.app.mount(deps.container)
+
+  return { ...deps, player }
+}
+
+async function openTab(container: HTMLElement, index: number) {
+  const tabs = container.querySelectorAll<HTMLButtonElement>('.worker-lodge-panel__tabs button')
+
+  tabs[index]!.click()
+
+  await nextTick()
+}
+
+function pullButton(container: HTMLElement) {
+  return container.querySelector<HTMLButtonElement>('.chieu-mo__pull')
+}
+
+function exchangeButtons(container: HTMLElement) {
+  return Array.from(container.querySelectorAll<HTMLButtonElement>('.duyen-phan__exchange'))
+}
+
+describe('CHQ gacha tabs (companion-gacha Task 9)', () => {
+  it('tab bar renders nhan_cong / chieu_mo / duyen_phan; default tab keeps worker capacity body', async () => {
+    const deps = mountWorkerLodge((prepared) => {
+      prepared.gameManager.buildingManager.add({
+        instanceId: 'chq_inst',
+        buildingId: 'chi_hien_quan',
+        level: 1,
+        lastCollectedAt: 0,
+      })
+    })
+
+    await nextTick()
+
+    const tabs = Array.from(
+      deps.container.querySelectorAll<HTMLButtonElement>('.worker-lodge-panel__tabs button'),
+    ).map((tab) => tab.textContent?.trim())
+
+    expect(tabs).toEqual(['Nhân Công', 'Chiêu Mộ', 'Đổi Duyên Phận'])
+
+    const text = deps.container.textContent ?? ''
+
+    expect(text).toContain('Nhân công')
+    expect(text).toContain('3')
+
+    deps.app.unmount()
+  })
+
+  it('chieu_mo tab: pull button disabled without a Chieu Hien Lenh token', async () => {
+    const deps = mountWorkerLodge()
+
+    await openTab(deps.container, 1)
+
+    const button = pullButton(deps.container)
+
+    expect(button).not.toBeNull()
+    expect(button!.disabled).toBe(true)
+
+    deps.app.unmount()
+  })
+
+  it('chieu_mo tab: pity counter renders player.companionPullsSinceRare', async () => {
+    const deps = mountWorkerLodge()
+
+    deps.player.companionPullsSinceRare = 12
+
+    await openTab(deps.container, 1)
+
+    expect(deps.container.textContent ?? '').toContain('12/30')
+
+    deps.app.unmount()
+  })
+
+  it('chieu_mo tab: duplicate pull renders reveal card with constellationRankAfter', async () => {
+    const deps = mountWorkerLodge()
+
+    // Owning every definition in the pool makes any roll a duplicate -
+    // deterministic constellation_up at rank 1 without mocking random.
+    deps.player.companions = COMPANIONS.map((definition) => ({
+      instanceId: `inst_${definition.id}`,
+      definitionId: definition.id,
+      realmId: 'mortal',
+      realmLevel: 1,
+      exp: 0,
+      constellationRank: 0,
+    }))
+
+    deps.gameManager.materialBag.add(PULL_TOKEN, 1)
+
+    await openTab(deps.container, 1)
+
+    const button = pullButton(deps.container)!
+
+    expect(button.disabled).toBe(false)
+
+    button.click()
+    await nextTick()
+
+    const result = deps.container.querySelector('.chieu-mo__result')
+
+    expect(result).not.toBeNull()
+    // "Trung -> Cung Menh +1 (C1)" via chieuMo.result.constellationUp.
+    expect(result!.textContent ?? '').toContain('C1')
+
+    // Ops layer side effects: token spent, +1 Duyen Phan, pity counter.
+    expect(deps.gameManager.materialBag.getAmount('chieu_hien_lenh')).toBe(0)
+    expect(deps.player.duyenPhan).toBe(1)
+    expect(deps.player.companionPullsSinceRare).toBe(1)
+
+    deps.app.unmount()
+  })
+
+  it('duyen_phan tab: exchange button disabled when Duyen Phan is short', async () => {
+    const deps = mountWorkerLodge()
+
+    deps.player.duyenPhan = 0
+
+    await openTab(deps.container, 2)
+
+    const buttons = exchangeButtons(deps.container)
+
+    expect(buttons.length).toBe(COMPANIONS.length)
+    expect(buttons.every((button) => button.disabled)).toBe(true)
+
+    deps.app.unmount()
+  })
+
+  it('duyen_phan tab: constellation-maxed companion stays disabled even with enough points', async () => {
+    const deps = mountWorkerLodge()
+
+    deps.player.duyenPhan = 1000
+    deps.player.companions = [
+      {
+        instanceId: 'inst_maxed',
+        definitionId: COMPANIONS[0]!.id,
+        realmId: 'mortal',
+        realmLevel: 1,
+        exp: 0,
+        constellationRank: 6,
+      },
+    ]
+
+    await openTab(deps.container, 2)
+
+    const rows = Array.from(deps.container.querySelectorAll<HTMLElement>('.duyen-phan__row'))
+
+    expect(rows.length).toBe(COMPANIONS.length)
+
+    const maxedRow = rows[0]!
+    const maxedButton = maxedRow.querySelector<HTMLButtonElement>('.duyen-phan__exchange')!
+
+    // Row carries the C6 badge + maxed reason text; button stays off.
+    expect(maxedRow.textContent ?? '').toContain('C6')
+    expect(maxedButton.disabled).toBe(true)
+
+    // A non-owned row stays enabled at the same duyenPhan balance.
+    const otherButton = rows[1]!.querySelector<HTMLButtonElement>('.duyen-phan__exchange')!
+
+    expect(otherButton.disabled).toBe(false)
+
+    deps.app.unmount()
+  })
+
+  it('duyen_phan tab: exchange spends Duyen Phan and grants the companion', async () => {
+    const deps = mountWorkerLodge()
+
+    deps.player.duyenPhan = 20
+
+    await openTab(deps.container, 2)
+
+    const button = exchangeButtons(deps.container)[0]!
+
+    expect(button.disabled).toBe(false)
+
+    button.click()
+    await nextTick()
+
+    expect(deps.player.duyenPhan).toBe(0)
+    expect(deps.player.companions.some((instance) => instance.definitionId === COMPANIONS[0]!.id)).toBe(
+      true,
+    )
 
     deps.app.unmount()
   })

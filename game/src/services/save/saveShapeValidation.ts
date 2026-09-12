@@ -9,6 +9,8 @@
 // validator đòi, và ngược lại).
 import { CURRENT_SAVE_VERSION } from './saveVersion'
 import { REALMS } from '../../data/realms/realm'
+import { COMPANIONS } from '../../data/companion/Companions'
+import { MAX_CONSTELLATION_RANK } from '../../core/companion/CompanionProgression'
 import { ITEM_QUALITY_ORDER, type ItemQuality } from '../../core/item/ItemQuality'
 import { isProfessionGrade } from '../../core/profession/ProfessionGrade'
 import { createBaseStats } from '../../core/stats/StatBlock'
@@ -206,6 +208,113 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   // tính ra NaN (review 2026-08-28 bug #2). Save hiện hành bắt buộc có.
   if (!isFiniteNumber(player.lastSavedAt)) {
     issues.push({ path: 'player.lastSavedAt', message: 'phải là number hữu hạn' })
+  }
+
+  // v60 companion gacha - pity counter and Duyen Phan currency. A NaN
+  // here would poison every later pull/exchange result.
+  requireNonNegativeNumber(player, 'companionPullsSinceRare', 'player', issues)
+  requireNonNegativeNumber(player, 'duyenPhan', 'player', issues)
+
+  const companions = requireArray(player, 'companions', 'player', issues)
+
+  if (companions) {
+    validateCompanionEntries(companions, 'player.companions', issues)
+  }
+}
+
+/**
+ * CompanionInstance entries (v60 schema). realmLevel is REJECTED when
+ * outside 1..realm.maxLevel - malformed progression data must fail loud
+ * like the rest of this validator, not be silently clamped.
+ */
+function validateCompanionEntries(
+  entries: unknown[],
+  path: string,
+  issues: ShapeIssue[],
+) {
+  // Domain invariant: 1 instance per definitionId, and instanceId is the
+  // identity key every consumer first-matches on (findIndex). A duplicated
+  // id in a corrupted save loads state consumers treat as impossible -
+  // same dedupe rationale as the equipment instanceId check below.
+  const seenInstanceIds = new Set<string>()
+  const seenDefinitionIds = new Set<string>()
+
+  for (let i = 0; i < entries.length; i += 1) {
+    const entry = entries[i]
+    const entryPath = `${path}[${i}]`
+
+    if (!isObject(entry)) {
+      issues.push({ path: entryPath, message: 'phải là object' })
+
+      continue
+    }
+
+    requireNonEmptyString(entry, 'instanceId', entryPath, issues)
+    requireNonEmptyString(entry, 'definitionId', entryPath, issues)
+
+    if (typeof entry.instanceId === 'string' && entry.instanceId.trim().length > 0) {
+      if (seenInstanceIds.has(entry.instanceId)) {
+        issues.push({ path: `${entryPath}.instanceId`, message: 'bị trùng với companion entry khác' })
+      } else {
+        seenInstanceIds.add(entry.instanceId)
+      }
+    }
+
+    if (typeof entry.definitionId === 'string' && entry.definitionId.trim().length > 0) {
+      if (seenDefinitionIds.has(entry.definitionId)) {
+        issues.push({ path: `${entryPath}.definitionId`, message: 'bị trùng với companion entry khác' })
+      } else {
+        seenDefinitionIds.add(entry.definitionId)
+      }
+
+      // An owned companion whose definitionId is absent from the roster
+      // loads as permanently inert dead state (every consumer silently
+      // skips it) - fail loud like an unknown realmId.
+      if (!COMPANIONS.some((definition) => definition.id === entry.definitionId)) {
+        issues.push({
+          path: `${entryPath}.definitionId`,
+          message: 'không tồn tại trong roster companion',
+        })
+      }
+    }
+
+    const realm =
+      typeof entry.realmId === 'string'
+        ? REALMS.find((candidate) => candidate.id === entry.realmId)
+        : undefined
+
+    if (!realm) {
+      issues.push({
+        path: `${entryPath}.realmId`,
+        message: 'không tồn tại trong danh sách cảnh giới',
+      })
+    }
+
+    if (
+      !isFiniteNumber(entry.realmLevel) ||
+      !Number.isInteger(entry.realmLevel) ||
+      entry.realmLevel < 1 ||
+      (realm !== undefined && entry.realmLevel > realm.maxLevel)
+    ) {
+      issues.push({
+        path: `${entryPath}.realmLevel`,
+        message: 'phải là số nguyên trong khoảng 1..maxLevel của cảnh giới',
+      })
+    }
+
+    requireNonNegativeNumber(entry, 'exp', entryPath, issues)
+
+    if (
+      !isFiniteNumber(entry.constellationRank) ||
+      !Number.isInteger(entry.constellationRank) ||
+      entry.constellationRank < 0 ||
+      entry.constellationRank > MAX_CONSTELLATION_RANK
+    ) {
+      issues.push({
+        path: `${entryPath}.constellationRank`,
+        message: `phải là số nguyên 0..${MAX_CONSTELLATION_RANK}`,
+      })
+    }
   }
 }
 

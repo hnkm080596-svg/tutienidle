@@ -6,6 +6,7 @@ import { defineEnemy } from '../enemy/Enemy'
 import type { Stage } from '../stage/Stage'
 import type { Material } from '../material/Material'
 import { modifiersFor } from '../drop/DropContext'
+import { companionBattleExpPerKill } from '../companion/CompanionProgression'
 import type { BattleLootSystem } from './BattleLootSystem'
 
 // Drop-system Task 9 (2026-09-12): the auto-farm shim runs on the IDLE
@@ -133,5 +134,51 @@ describe('rollAutoFarmCycleReward runs on the idle channel', () => {
     const calls = setChannel.mock.calls.map((call) => call[0])
     expect(calls).toContain('idle')
     expect(calls[calls.length - 1]).toBe('active')
+  })
+
+  // companion-gacha Task 7: auto-farm funnels through
+  // processDefeatedEnemies, so formation-assigned companions gain battle
+  // EXP on the idle channel with no second path (A9).
+  it('a farmed cycle grants companion battle EXP to the assigned companion only', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-04T10:00:00Z'))
+
+    const { gameManager, player } = harness()
+
+    player.companions.push(
+      {
+        instanceId: 'inst_assigned',
+        definitionId: 'test_companion_1',
+        realmId: 'mortal',
+        realmLevel: 1,
+        exp: 0,
+        constellationRank: 0,
+      },
+      {
+        instanceId: 'inst_benched',
+        definitionId: 'test_companion_2',
+        realmId: 'mortal',
+        realmLevel: 1,
+        exp: 0,
+        constellationRank: 0,
+      },
+    )
+    player.formationLoadout = {
+      formationId: 'farm_formation',
+      assignments: [
+        { row: 0, column: 0, combatantId: 'player' },
+        { row: 0, column: 1, combatantId: 'test_companion_1' },
+      ],
+    }
+
+    expect(gameManager.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
+
+    vi.setSystemTime(new Date('2026-09-04T10:01:00Z')) // 60s -> 1 cycle
+    gameManager.update(0.1)
+
+    // 1 cycle x totalEnemyCount 2 kills; FARM_STAGE has no requiredRealmId,
+    // so the exp anchor falls back to enemy.realmId 'mortal' -> 2 per kill.
+    expect(player.companions[0]?.exp).toBe(2 * companionBattleExpPerKill('mortal'))
+    expect(player.companions[1]?.exp).toBe(0)
   })
 })

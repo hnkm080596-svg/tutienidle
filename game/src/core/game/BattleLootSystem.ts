@@ -9,6 +9,8 @@ import {
   getSpiritStoneGainMultiplier,
 } from '../talent/TalentEffects'
 import { applyArtifactExperience, getArtifactExperienceReward } from '../artifact/ArtifactProgression'
+import { applyCompanionExp, companionBattleExpPerKill } from '../companion/CompanionProgression'
+import { resolvePartyFormation } from './FormationPlacement'
 import { resolveDrops, type DropChannel, type ResolvedDropItem } from '../drop/resolveDrops'
 import { modifiersFor } from '../drop/DropContext'
 import { stageDropTableFor } from '../../data/drop/StageDropTables'
@@ -288,6 +290,50 @@ export class BattleLootSystem {
           )
 
           this.grantArtifactExperience(enemy)
+
+          // Companion battle EXP (companion-gacha spec section 7,
+          // 2026-09-12): every companion assigned in the resolved party
+          // formation gains exp per kill, scaled by the stage realm - the
+          // same anchor as the drop table above, so a kill with no stage
+          // context falls back to enemy.realmId. The formation is
+          // re-resolved per kill (snapshot semantics): a mid-battle
+          // formation change only affects the NEXT kill.
+          const player = this.player
+          if (player && player.companions.length > 0) {
+            const expPerKill = companionBattleExpPerKill(
+              stage?.requiredRealmId ?? enemy.realmId,
+            )
+
+            // Exactly-once per companion per kill: a malformed loadout
+            // can assign the same combatantId to two slots (the save
+            // validator does not inspect assignments), but combat itself
+            // spawns only one participant per definitionId.
+            const grantedCombatantIds = new Set<string>(['player'])
+            for (const slot of resolvePartyFormation(player)) {
+              if (grantedCombatantIds.has(slot.combatantId)) {
+                continue
+              }
+              grantedCombatantIds.add(slot.combatantId)
+
+              const companionIndex = player.companions.findIndex(
+                (companion) => companion.definitionId === slot.combatantId,
+              )
+              const companion =
+                companionIndex >= 0 ? player.companions[companionIndex] : undefined
+
+              if (!companion) {
+                continue
+              }
+
+              // applyCompanionExp already clamps at the player-realm
+              // ceiling - no level-maxed pre-check here.
+              player.companions[companionIndex] = applyCompanionExp(
+                companion,
+                expPerKill,
+                player.realmId,
+              ).instance
+            }
+          }
 
           const activeStageId = this.deps.stageManager.get()?.stageId
           const zoneId = activeStageId

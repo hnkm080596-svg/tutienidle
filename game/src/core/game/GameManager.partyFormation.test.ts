@@ -90,6 +90,8 @@ const TEST_COMPANION_DEFINITION = {
   id: 'test_companion_for_formation',
   name: 'Formation Test Companion',
   grade: 'hoang' as const,
+  growthRate: 0.05,
+  unlockThresholds: {},
   baseStats: { maxHp: 100, attack: 10, speed: 100 },
   basic: {
     id: 'test_companion_for_formation_basic',
@@ -127,7 +129,16 @@ describe('GameManager.buildTurnBattle — resolves a real FormationLoadout, incl
           { row: 1, column: 1, combatantId: 'test_companion_for_formation' },
         ],
       }
-      playerData.companions = [{ definitionId: 'test_companion_for_formation', level: 1, exp: 0 }]
+      playerData.companions = [
+        {
+          instanceId: 'formation_test_instance',
+          definitionId: 'test_companion_for_formation',
+          realmId: 'mortal',
+          realmLevel: 1,
+          exp: 0,
+          constellationRank: 0,
+        },
+      ]
 
       gameManager.setActivePlayer(playerData)
       gameManager.startBattle(playerEntity, createDummy())

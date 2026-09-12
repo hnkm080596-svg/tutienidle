@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { validateGameSaveShape } from './saveShapeValidation'
 import { CURRENT_SAVE_VERSION } from './saveVersion'
 import { createDefaultPlayer } from '../../core/player/Player'
+import { COMPANIONS } from '../../data/companion/Companions'
 
 function validSave(): Record<string, unknown> {
   return {
@@ -490,5 +491,222 @@ describe('validateGameSaveShape — equipment & slot shape (chặn crash boot/Na
 
     expect(result.ok).toBe(false)
     expect(pathsOf(result)).toContain('equipmentSlots[0].enhanceFailStreak')
+  })
+})
+
+describe('validateGameSaveShape - companion gacha (v60)', () => {
+  function validCompanionEntry(): Record<string, unknown> {
+    return {
+      instanceId: 'comp-1',
+      // The validator rejects definitionIds absent from the live roster,
+      // so entries must use a real production id.
+      definitionId: COMPANIONS[0]!.id,
+      realmId: 'mortal',
+      realmLevel: 5,
+      exp: 12,
+      constellationRank: 2,
+    }
+  }
+
+  function playerOf(save: Record<string, unknown>): Record<string, unknown> {
+    return save.player as Record<string, unknown>
+  }
+
+  it('chấp nhận player shape v60 có companion hợp lệ', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    player.companions = [validCompanionEntry()]
+    player.companionPullsSinceRare = 3
+    player.duyenPhan = 7
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it.each([
+    ['companionPullsSinceRare', 'player.companionPullsSinceRare'],
+    ['duyenPhan', 'player.duyenPhan'],
+  ])('từ chối khi %s = NaN, path "%s"', (field, expectedPath) => {
+    const save = validSave()
+
+    playerOf(save)[field] = Number.NaN
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain(expectedPath)
+  })
+
+  it.each([
+    ['companionPullsSinceRare', 'player.companionPullsSinceRare'],
+    ['duyenPhan', 'player.duyenPhan'],
+    ['companions', 'player.companions'],
+  ])('từ chối khi thiếu %s, path "%s"', (field, expectedPath) => {
+    const save = validSave()
+
+    delete playerOf(save)[field]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain(expectedPath)
+  })
+
+  it('từ chối companions entry thiếu instanceId', () => {
+    const save = validSave()
+    const entry = validCompanionEntry()
+
+    delete entry.instanceId
+    playerOf(save).companions = [entry]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.companions[0].instanceId')
+  })
+
+  it('từ chối companions entry có instanceId rỗng', () => {
+    const save = validSave()
+    const entry = validCompanionEntry()
+
+    entry.instanceId = ''
+    playerOf(save).companions = [entry]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.companions[0].instanceId')
+  })
+
+  it('từ chối companions entry có realmId không tồn tại trong REALMS', () => {
+    const save = validSave()
+    const entry = validCompanionEntry()
+
+    entry.realmId = 'khong_ton_tai'
+    playerOf(save).companions = [entry]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.companions[0].realmId')
+  })
+
+  it.each([0, -1, 1.5, Number.NaN])(
+    'từ chối companions entry có realmLevel = %s',
+    (realmLevel) => {
+      const save = validSave()
+      const entry = validCompanionEntry()
+
+      entry.realmLevel = realmLevel
+      playerOf(save).companions = [entry]
+
+      const result = validateGameSaveShape(save)
+
+      expect(result.ok).toBe(false)
+      expect(pathsOf(result)).toContain('player.companions[0].realmLevel')
+    },
+  )
+
+  it('từ chối (không clamp) companions entry có realmLevel vượt maxLevel của cảnh giới', () => {
+    const save = validSave()
+    const entry = validCompanionEntry()
+
+    // mortal.maxLevel = 18 - 19 must fail loud, not be clamped.
+    entry.realmLevel = 19
+    playerOf(save).companions = [entry]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.companions[0].realmLevel')
+  })
+
+  it.each([7, -1, 1.5, Number.NaN])(
+    'từ chối companions entry có constellationRank = %s',
+    (constellationRank) => {
+      const save = validSave()
+      const entry = validCompanionEntry()
+
+      entry.constellationRank = constellationRank
+      playerOf(save).companions = [entry]
+
+      const result = validateGameSaveShape(save)
+
+      expect(result.ok).toBe(false)
+      expect(pathsOf(result)).toContain('player.companions[0].constellationRank')
+    },
+  )
+
+  it('từ chối companions entry có exp âm / NaN', () => {
+    for (const bad of [-1, Number.NaN]) {
+      const save = validSave()
+      const entry = validCompanionEntry()
+
+      entry.exp = bad
+      playerOf(save).companions = [entry]
+
+      const result = validateGameSaveShape(save)
+
+      expect(result.ok).toBe(false)
+      expect(pathsOf(result)).toContain('player.companions[0].exp')
+    }
+  })
+
+  it('từ chối companions entry không phải object', () => {
+    const save = validSave()
+
+    playerOf(save).companions = ['not-an-object']
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.companions[0]')
+  })
+
+  it('từ chối companions có instanceId trùng giữa 2 entry', () => {
+    const save = validSave()
+
+    playerOf(save).companions = [
+      validCompanionEntry(),
+      { ...validCompanionEntry(), definitionId: COMPANIONS[1]!.id },
+    ]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.companions[1].instanceId')
+  })
+
+  it('từ chối companions có definitionId trùng (invariant 1 instance / definition)', () => {
+    const save = validSave()
+
+    playerOf(save).companions = [
+      validCompanionEntry(),
+      { ...validCompanionEntry(), instanceId: 'comp-2' },
+    ]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.companions[1].definitionId')
+  })
+
+  it('từ chối companions entry có definitionId không tồn tại trong COMPANIONS (registry drift)', () => {
+    const save = validSave()
+    const entry = validCompanionEntry()
+
+    // An owned companion whose definitionId fell out of the roster is
+    // permanently inert - panel hides it, buildTurnBattle skips it,
+    // battle EXP skips it - while still occupying player.companions.
+    // Same registry-drift contract as realmId above and the
+    // learned-defect QA-2026-09-01-013 principle: an owned current
+    // entry must hard-fail, not silently load as dead weight.
+    entry.definitionId = 'khong_ton_tai_trong_roster'
+    playerOf(save).companions = [entry]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.companions[0].definitionId')
   })
 })
