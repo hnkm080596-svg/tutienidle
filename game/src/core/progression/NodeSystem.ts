@@ -1,6 +1,7 @@
 import type { PlayerData } from '../player/Player'
 import type { NodePrerequisite, ProgressionNode, SkillModifier } from './ProgressionNode'
 import { getRealmIndex } from '../realm/realmSystem'
+import { getNodeCostFreeChance } from '../talent/TalentEffects'
 
 /**
  * Node level hạ tầng dùng chung (combat-skill-flow-element-power-dot-plan.md
@@ -112,12 +113,42 @@ export function canUpgradeNode(player: PlayerData, node: ProgressionNode): boole
  * `unlocksSkillIds` xử lý ở GameManager.purchaseNode() sau khi gọi hàm
  * này (cần skillTemplates). Trả false nếu !canPurchaseNode().
  */
+/**
+ * Van Dao (M2, spec §4.3): each purchase/upgrade rolls a chance to waive
+ * the insight cost. The waived amount is recorded in
+ * player.nodeFreePurchaseRecord[nodeId] so refunds later repay only the
+ * insight ACTUALLY paid. The affordability gate (canPurchase/canUpgrade)
+ * is unchanged — a free roll still requires being able to afford it.
+ * Returns true when the cost was waived (caller deducts nothing).
+ */
+function rollVanDaoWaive(player: PlayerData, node: ProgressionNode, cost: number): boolean {
+  const chance = getNodeCostFreeChance(player.selectedTalentIds)
+
+  if (chance <= 0 || cost <= 0) {
+    return false
+  }
+
+  if (Math.random() >= chance) {
+    return false
+  }
+
+  player.nodeFreePurchaseRecord ??= {}
+  player.nodeFreePurchaseRecord[node.id] =
+    (player.nodeFreePurchaseRecord[node.id] ?? 0) + cost
+
+  return true
+}
+
 export function purchaseNode(player: PlayerData, node: ProgressionNode): boolean {
   if (!canPurchaseNode(player, node)) {
     return false
   }
 
-  player.skillInsight -= getNextLevelCost(node, 0)
+  const cost = getNextLevelCost(node, 0)
+
+  if (!rollVanDaoWaive(player, node, cost)) {
+    player.skillInsight -= cost
+  }
 
   // Defensive — save cũ có thể thiếu object này.
   player.nodeLevels ??= {}
@@ -145,7 +176,11 @@ export function upgradeNode(player: PlayerData, node: ProgressionNode): boolean 
     return false
   }
 
-  player.skillInsight -= getNextLevelCost(node, getNodeLevel(player, node.id))
+  const cost = getNextLevelCost(node, getNodeLevel(player, node.id))
+
+  if (!rollVanDaoWaive(player, node, cost)) {
+    player.skillInsight -= cost
+  }
 
   // Defensive — save cũ có thể thiếu object này.
   player.nodeLevels ??= {}
@@ -262,9 +297,21 @@ export function devResetBranch(
   for (const node of nodes) {
     const level = getNodeLevel(player, node.id)
 
+    let nodeRefund = 0
+
     for (let spent = 0; spent < level; spent++) {
-      refund += getNextLevelCost(node, spent)
+      nodeRefund += getNextLevelCost(node, spent)
     }
+
+    // Van Dao (M2): refund only the insight ACTUALLY paid — subtract the
+    // waived amounts recorded at purchase time, then clear the record
+    // alongside the node itself.
+    nodeRefund = Math.max(0, nodeRefund - (player.nodeFreePurchaseRecord?.[node.id] ?? 0))
+    if (player.nodeFreePurchaseRecord) {
+      delete player.nodeFreePurchaseRecord[node.id]
+    }
+
+    refund += nodeRefund
 
     delete player.nodeLevels[node.id]
 
@@ -297,9 +344,19 @@ export function devResetBranch(
       if (orphaned) {
         const level = getNodeLevel(player, node.id)
 
+        let nodeRefund = 0
+
         for (let spent = 0; spent < level; spent++) {
-          refund += getNextLevelCost(node, spent)
+          nodeRefund += getNextLevelCost(node, spent)
         }
+
+        // Van Dao (M2): same actually-paid refund rule as the main loop.
+        nodeRefund = Math.max(0, nodeRefund - (player.nodeFreePurchaseRecord?.[node.id] ?? 0))
+        if (player.nodeFreePurchaseRecord) {
+          delete player.nodeFreePurchaseRecord[node.id]
+        }
+
+        refund += nodeRefund
 
         delete player.nodeLevels[node.id]
 

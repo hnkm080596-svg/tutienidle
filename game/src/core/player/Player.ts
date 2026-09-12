@@ -28,6 +28,11 @@ export interface PlayerData {
   cultivation: number
   cultivationPerSecond: number
 
+  // Hai Nap talent (talent-catalog-v4 §4.3) — cultivation that would
+  // overflow past the current level cap banks here and pours into the
+  // next tier on breakthrough. Owned by CultivationSystem.
+  cultivationOvercharge: number
+
   /** Pool nhân công tự động dùng chung cho mọi ProductionSite. */
   autoWorkerCapacity: number
 
@@ -197,6 +202,11 @@ export interface PlayerData {
   // compat read-only, luôn đồng bộ = các id có level >= 1.
   nodeLevels: Record<string, number>
 
+  // Van Dao talent (talent-catalog-v4 §4.3) — nodeId -> times a node
+  // purchase or upgrade went free via the talent roll. Kept after the
+  // talent is removed so refund accounting stays honest.
+  nodeFreePurchaseRecord: Record<string, number>
+
   // Màn chỉ mở tuần tự: thắng một màn mới mở màn kế tiếp.
   completedStageIds: string[]
 
@@ -233,6 +243,17 @@ export interface PlayerData {
   // save cũ/nhân vật chưa từng qua Phàm Nhân — KHÔNG hồi tố phạt
   // nhân vật chưa từng có cơ hội chọn.
   breakthroughGrade: number
+
+  // Loi Kiep talent (talent-catalog-v4 §4.3) — permanent +10% all
+  // attributes per successful tribulation while the talent is held.
+  // Owned by TribulationOutcomeService's victory path.
+  tribulationBonusStacks: number
+
+  // Pha Giap talent M2 carry (talent-catalog-v4 §4.3) — half the Pha
+  // Giap passive's metalPenetration stacks bank at battle end and
+  // re-seed the next battle; resets when realmId changes.
+  phaGiapCarryStacks: number
+  phaGiapCarryRealmId: string | null
 
   // Idempotency guard cho Realm Passive theo cảnh giới (Nhập Đạo/Kiến
   // Cơ/...) — cùng pattern unlockedRealmEnhancements, key = realmId
@@ -364,16 +385,21 @@ export function createDefaultPlayer(): PlayerData {
     skillInsight: 0,
     totalSkillInsightGained: 0,
     cultivationInsightAccumulator: 0,
+    cultivationOvercharge: 0,
     attributePoints: 0,
     unlockedElements: [],
     equippedElements: [],
     purchasedNodeIds: [],
     nodeLevels: {},
+    nodeFreePurchaseRecord: {},
 
     bodyRefinementCompletedTiers: 0,
     bodyRefinementCurrentTierProgress: 0,
     breakthroughGrade: 6,
     grantedRealmPassiveIds: [],
+    tribulationBonusStacks: 0,
+    phaGiapCarryStacks: 0,
+    phaGiapCarryRealmId: null,
 
     persistentTimedEffects: [],
 

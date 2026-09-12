@@ -15,8 +15,8 @@ import { TURN_BUFF_REGISTRY } from '../buff/TurnBuffRegistry'
 // luyện, M3 thêm sản xuất (2 active + 2 PARKED). 13 id v3 retired.
 
 describe('catalog v4 invariants (M1 combat)', () => {
-  it('đúng 12 thiên phú tham gia roll (11 combat + Phàm Cốt)', () => {
-    expect(CHARACTER_CREATION_TALENTS).toHaveLength(12)
+  it('đúng 17 thiên phú tham gia roll (11 combat + 5 tu luyện M2 + Phàm Cốt)', () => {
+    expect(CHARACTER_CREATION_TALENTS).toHaveLength(17)
   })
 
   it('id duy nhất, weight dương, có effect thật', () => {

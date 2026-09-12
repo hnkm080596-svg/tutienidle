@@ -33,6 +33,23 @@ export type TalentEffect =
   // Talent v4 — talent cấp 1 hidden passive skill (data/skill/
   // TalentPassives.ts); GameManager grant/revoke theo talent đang chọn.
   | { kind: 'combat_passive'; passiveSkillId: string }
+  // M2 (spec §4.3) — Hai Nap: cultivation overflow past the level cap
+  // banks into PlayerData.cultivationOvercharge instead of being lost.
+  | { kind: 'cultivation_overflow_bank' }
+  // M2 — Hau Tich Bat Phat: cultivation rate curve per realm level.
+  // multiplier = max(0.01, 1 + startOffset + perRealmLevel * (realmLevel - 1)).
+  | { kind: 'cultivation_ramp'; startOffset: number; perRealmLevel: number }
+  // M2 — Loi Kiep: tribulation lightning intensity multiplier +
+  // permanent all-attribute percent granted per tribulation victory.
+  | { kind: 'tribulation_challenge'; intensityMultiplier: number; victoryAllStatsPercent: number }
+  // M2 — Van Dao: chance a node purchase/upgrade waives its insight
+  // cost; waived amounts are recorded in nodeFreePurchaseRecord so
+  // refunds pay back only what was actually paid.
+  | { kind: 'node_cost_free_chance'; chance: number }
+  // M2 — Pha Giap carry: a fraction of the bound passive's stacks bank
+  // at battle end into phaGiapCarryStacks and re-seed the next battle;
+  // decays when realmId changes.
+  | { kind: 'passive_stack_carry'; passiveSkillId: string; fraction: number }
 
 export interface TalentDefinition {
   id: string

@@ -3,6 +3,7 @@ import {
   getRequiredCultivation,
   getCurrentRealm,
 } from '../realm/realmSystem'
+import { hasCultivationOverflowBank } from '../talent/TalentEffects'
 
 export function addCultivation(
   player: PlayerData,
@@ -17,10 +18,36 @@ export function addCultivation(
   // vì cộng thẳng rồi để tràn, tránh trường hợp AFK lâu tích được vài
   // lần "required" rồi bấm đột phá một phát nhảy nhiều tầng. Đột phá
   // xong vẫn tự reset cultivation = 0 như cũ (xem breakthrough()).
-  player.cultivation = Math.min(
-    player.cultivation + amount,
-    required,
-  )
+  //
+  // Talent v4 M2 — Hai Nap (spec §4.3): phần tràn không mất mà ngân vào
+  // cultivationOvercharge; breakthrough() rót ngân quỹ sang tầng mới.
+  const total = player.cultivation + amount
+
+  if (total > required && hasCultivationOverflowBank(player.selectedTalentIds)) {
+    player.cultivationOvercharge += total - required
+    player.cultivation = required
+    return
+  }
+
+  player.cultivation = Math.min(total, required)
+}
+
+/**
+ * Hai Nap (M2) — pour the banked overflow into the current level, capped
+ * at that level's required so one breakthrough never skips a second
+ * tier; leftover stays banked for the next breakthrough. Shared by the
+ * minor-tier breakthrough() below and the major-realm transition in
+ * TribulationOutcomeService.
+ */
+export function pourCultivationOvercharge(player: PlayerData): void {
+  if (player.cultivationOvercharge <= 0) {
+    return
+  }
+
+  const required = getRequiredCultivation(player.realmId, player.realmLevel)
+  const poured = Math.min(player.cultivationOvercharge, required)
+  player.cultivation = Math.min(player.cultivation + poured, required)
+  player.cultivationOvercharge -= poured
 }
 
 export function canBreakthrough(player: PlayerData): boolean {
@@ -43,6 +70,9 @@ export function breakthrough(player: PlayerData): boolean {
     player.cultivation = 0
 
     player.realmLevel++
+
+    // Hai Nap (M2): the banked overflow pours into the new tier.
+    pourCultivationOvercharge(player)
 
     // skill-insight-and-auto-combat-hud-plan.md mục 1 — đột phá tiểu
     // cảnh giới KHÔNG còn cấp điểm progression skill nữa (skillPoints

@@ -710,3 +710,78 @@ describe('validateGameSaveShape - companion gacha (v60)', () => {
     expect(pathsOf(result)).toContain('player.companions[0].definitionId')
   })
 })
+
+describe('validateGameSaveShape - talent v4 M2 fields (v61)', () => {
+  function playerOf(save: Record<string, unknown>): Record<string, unknown> {
+    return save.player as Record<string, unknown>
+  }
+
+  it('chấp nhận player shape v61 với đầy đủ field M2', () => {
+    const save = validSave()
+    const player = playerOf(save)
+
+    player.cultivationOvercharge = 12
+    player.tribulationBonusStacks = 3
+    player.nodeFreePurchaseRecord = { node_a: 2 }
+    player.phaGiapCarryStacks = 4
+    player.phaGiapCarryRealmId = 'qi_refining'
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it.each([
+    ['cultivationOvercharge', 'player.cultivationOvercharge'],
+    ['tribulationBonusStacks', 'player.tribulationBonusStacks'],
+    ['nodeFreePurchaseRecord', 'player.nodeFreePurchaseRecord'],
+    ['phaGiapCarryStacks', 'player.phaGiapCarryStacks'],
+    ['phaGiapCarryRealmId', 'player.phaGiapCarryRealmId'],
+  ])('từ chối khi thiếu %s, path "%s"', (field, expectedPath) => {
+    const save = validSave()
+
+    delete playerOf(save)[field]
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain(expectedPath)
+  })
+
+  it.each([
+    ['cultivationOvercharge', 'player.cultivationOvercharge'],
+    ['tribulationBonusStacks', 'player.tribulationBonusStacks'],
+    ['phaGiapCarryStacks', 'player.phaGiapCarryStacks'],
+  ])('từ chối khi %s âm / NaN, path "%s"', (field, expectedPath) => {
+    for (const bad of [-1, Number.NaN]) {
+      const save = validSave()
+
+      playerOf(save)[field] = bad
+
+      const result = validateGameSaveShape(save)
+
+      expect(result.ok).toBe(false)
+      expect(pathsOf(result)).toContain(expectedPath)
+    }
+  })
+
+  it('từ chối nodeFreePurchaseRecord không phải object', () => {
+    const save = validSave()
+
+    playerOf(save).nodeFreePurchaseRecord = 'not-an-object'
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.nodeFreePurchaseRecord')
+  })
+
+  it('từ chối phaGiapCarryRealmId không phải string/null', () => {
+    const save = validSave()
+
+    playerOf(save).phaGiapCarryRealmId = 42
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.phaGiapCarryRealmId')
+  })
+})
