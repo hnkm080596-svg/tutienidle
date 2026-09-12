@@ -48,6 +48,9 @@ export function modifiersFor(input: DropContextInput): DropModifier[] {
   for (const tagId of input.tagIds ?? []) {
     const modifier = TAG_MODIFIERS[tagId]
 
+    // Unmapped tag ids are silently ignored for forward compatibility: if tag
+    // data ships before its modifier mapping lands, crashing would make that a
+    // deploy-order hazard. This system must not be what breaks when EnemyTag ships.
     if (modifier && !modifiers.some((existing) => existing.id === modifier.id)) {
       modifiers.push(modifier)
     }
