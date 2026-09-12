@@ -540,6 +540,66 @@
     },
     "empty": "No companions available to exchange."
   },
+  "companion": {
+    "title": "Companions",
+    "empty": "No companions yet — recruit at the Chieu Hien Quan.",
+    "constellationBadge": "C{rank}",
+    "realmLine": "{realm} · Floor {level}",
+    "stats": {
+      "maxHp": "HP",
+      "attack": "Attack",
+      "speed": "Speed"
+    },
+    "exp": {
+      "value": "{exp}/{required}",
+      "maxed": "Realm cap reached"
+    },
+    "constellation": {
+      "title": "Constellation",
+      "unlocked": "Unlocked",
+      "locked": "Locked",
+      "noPerks": "This companion has no constellation perks."
+    },
+    "perks": {
+      "statFlat": "{stat} +{value}",
+      "statPercent": "{stat} +{value}%",
+      "cooldown": "{turns}-turn cooldown",
+      "damage": "damage +{percent}%",
+      "heal": "heal {percent}% of damage",
+      "skillOverride": "Empower {slot} ({detail})"
+    },
+    "skills": {
+      "title": "Skills",
+      "slots": {
+        "basic": "Basic",
+        "special": "Special",
+        "ultimate": "Ultimate"
+      },
+      "unlocked": "Unlocked",
+      "locked": "Locked",
+      "unlockAt": "Unlocks at {realm} floor {level}",
+      "absent": "—",
+      "cooldownTag": "{turns}-turn cooldown"
+    },
+    "feed": {
+      "title": "Feed",
+      "materialOption": "{name} x{count} (+{exp} EXP)",
+      "countAria": "Material amount",
+      "button": "Feed",
+      "maxedReason": "At the player realm cap — break through to keep feeding.",
+      "noMaterial": "Material bag is empty.",
+      "success": "+{exp} EXP · +{levels} floors",
+      "breakthrough": "Breakthrough → {realm}",
+      "errors": {
+        "unknownInstance": "Unknown companion.",
+        "unknownMaterial": "Invalid material.",
+        "levelMaxed": "Companion is at the realm cap.",
+        "insufficientMaterial": "Not enough material.",
+        "noActivePlayer": "No active player data."
+      }
+    },
+    "formationHint": "Assign companions to formation slots in the Formation panel (command wheel → Tran)."
+  },
   "combat": {
     "victory": {
       "title": "★ VICTORY ★",

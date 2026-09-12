@@ -43,4 +43,5 @@ export type StandalonePanel =
   | 'quest'
   | 'artifact'
   | 'tran_phap'
+  | 'companion'
   | null

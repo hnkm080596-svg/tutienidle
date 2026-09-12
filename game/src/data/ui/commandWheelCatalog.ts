@@ -145,6 +145,17 @@ export const COMMAND_WHEEL_SLOTS: CommandWheelSlot[] = [
     target: { kind: 'standalone', panel: 'tran_phap' },
     available: ALWAYS_AVAILABLE,
   },
+  // Companion Roster (companion-gacha spec, 2026-09-12) — SHIPPED.
+  // Opens CompanionPanel.vue (roster by grade, detail, feed control).
+  // No realm gate: companions are available from the start, same
+  // always-available shape as the quest/tran_phap slots.
+  {
+    id: 'companion_roster',
+    ring: 2,
+    label: 'Đồng Đội',
+    target: { kind: 'standalone', panel: 'companion' },
+    available: ALWAYS_AVAILABLE,
+  },
 
   // ---- Ring 3 — building thật (dual-entry với hotspot background) ----
   {
