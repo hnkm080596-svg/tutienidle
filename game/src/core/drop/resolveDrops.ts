@@ -98,6 +98,23 @@ export function resolveDrops(input: ResolveDropsInput): DropResult {
 
   const items: ResolvedDropItem[] = []
 
+  // rng() consumption order, in full, since callers script a fixed replay
+  // sequence and any change here silently shifts every downstream draw:
+  //   1. One rng() per guaranteed line (stage then family), for its chance
+  //      check, in declaration order.
+  //   2. One rng() per signature drop line that passes its modifier/channel
+  //      gate, for its chance check, in declaration order.
+  //   3. One rng() per pool draw (1 + extraRolls total), for which weighted
+  //      entry is selected.
+  //   4. One rng() for the spiritStone amount, then one for the
+  //      techniqueInsight amount.
+  // On top of that base order: ANY entry above that carries an `amount`
+  // range (guaranteed, signature, or pool) consumes one EXTRA rng() call
+  // inline, immediately after its own selection roll and before the next
+  // line/draw is processed (see toResolved -> rollAmount). Adding an
+  // `amount` range to an entry that did not have one before will shift
+  // every rng() call that comes after it in this order.
+
   // 1. Guaranteed compartments of both layers - independent chance per line,
   //    unaffected by extra rolls.
   const guaranteed = [

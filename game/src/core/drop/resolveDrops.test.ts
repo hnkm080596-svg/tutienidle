@@ -75,6 +75,34 @@ describe('resolveDrops - both layers feed one bag', () => {
   })
 })
 
+describe('resolveDrops - amount roll interleaving', () => {
+  it('rolls an amount for a succeeding guaranteed line without disturbing the following pool draw', () => {
+    const localStage: StageDropTable = {
+      realmId: 'test',
+      floors: { min: 1, max: 1 },
+      currency: { spiritStone: { min: 0, max: 0 }, techniqueInsight: { min: 0, max: 0 } },
+      guaranteed: [{ kind: 'material', itemId: 'wide_amount_item', amount: { min: 1, max: 5 }, chance: 1 }],
+      pool: [
+        { kind: 'material', itemId: 'pool_low', weight: 50 },
+        { kind: 'material', itemId: 'pool_high', weight: 50 },
+      ],
+    }
+
+    // rng[0] = 0 passes the chance === 1 guaranteed line.
+    // rng[1] = 0.5 is consumed inline by the amount roll for that line (amount 1..5 -> 3).
+    // rng[2] = 0.1 is left for the pool draw, which must still pick the low-weight slot.
+    const result = resolveDrops({
+      modifiers: [],
+      channel: 'active',
+      stageTable: localStage,
+      rng: scriptedRng([0, 0.5, 0.1]),
+    })
+
+    expect(result.items[0]).toEqual({ kind: 'material', itemId: 'wide_amount_item', amount: 3 })
+    expect(result.items[1]!.itemId).toBe('pool_low')
+  })
+})
+
 describe('resolveDrops - currency', () => {
   it('multiplies the stage currency by the modifier law', () => {
     const plain = resolveDrops({ modifiers: [], channel: 'active', stageTable: STAGE, rng: scriptedRng([0.99]) })
