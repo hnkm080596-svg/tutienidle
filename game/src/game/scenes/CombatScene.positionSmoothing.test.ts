@@ -10,6 +10,8 @@
 // CombatScene.projectile.test.ts) Ä‘á»ƒ bug tÆ°Æ¡ng tá»± tÃ¡i diá»…n sáº½ bá»‹ báº¯t láº¡i.
 import { describe, expect, it, vi } from 'vitest'
 import { createTestScene } from './combat/combatTestHarness'
+import { CombatEntityVisualLifecycle } from './combat/combat-entity-visual-lifecycle'
+import type { CombatScene } from './CombatScene'
 import type { BattlePositionsEvent } from '@/core/battle/BattleEvents'
 
 // Stub Phaser GameObject chainable API (setOrigin/setPosition/setSize/
@@ -39,9 +41,8 @@ function createScene() {
   scene.statuses = new Map()
   scene.spawnVfxHandles = new Map()
   scene.turnCountdownSpawnVfxHandles = new Map()
-  scene.materializingIds = new Set()
+  scene.entityVisual = new CombatEntityVisualLifecycle(scene as unknown as CombatScene)
   scene.playerSpawnHandle = undefined
-  scene.playerMaterialized = true
   scene.renderMode = 'flat'
   scene.lastKnownScreenPositions = new Map()
   scene.lastKnownGridPositions = new Map()

@@ -19,7 +19,6 @@ function createScene() {
   scene.renderMode = 'perspective' // isPerspective getter Ä‘á»c tá»« renderMode.
   scene.sprites = new Map()
   scene.statuses = new Map()
-  scene.materializingIds = new Set()
   scene.spawnVfxHandles = new Map()
   scene.projection = {
     footprintPolygon: () => [],

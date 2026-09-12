@@ -106,6 +106,7 @@ import { CombatRewardGourd } from './combat/combat-reward-gourd'
 import { CombatEssenceStream } from './combat/combat-essence-stream'
 import { CombatPositionInterpolation } from './combat/combat-position-interpolation'
 import { CombatPlayerVisual } from './combat/combat-player-visual'
+import { CombatEntityVisualLifecycle } from './combat/combat-entity-visual-lifecycle'
 import { BUFF_ATTACH_COLOR, DEBUFF_ATTACH_COLOR, MIN_SEGMENT_DURATION_MS } from './combat/combatConstants'
 import type { PositionInterpolation } from './combat/combatTypes'
 import type { CombatGridViewHost } from './combat/CombatGridViewHost'
@@ -343,7 +344,9 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
   private _gridView?: CombatGridView
 
-  private get gridView(): CombatGridView {
+  // Public: CombatEntityVisualLifecycle applies visibility decisions
+  // through the grid view, which owns the sprite parts.
+  get gridView(): CombatGridView {
     this._gridView ??= new CombatGridView(this)
 
     return this._gridView
@@ -382,6 +385,12 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
     return this._playerVisual
   }
+
+  // Entity Visual Lifecycle (roadmap "CombatScene rule") - one owner of
+  // per-combatant sprite visibility state (pending / materializing /
+  // visible + the legacy player materialized flag). Eager field: pure
+  // state container, safe to construct before Phaser systems exist.
+  readonly entityVisual = new CombatEntityVisualLifecycle(this)
   // ChÃ¡Â»â€° tÃ¡Â»â€œn tÃ¡ÂºÂ¡i Ã¡Â»Å¸ chÃ¡ÂºÂ¿ Ã„â€˜Ã¡Â»â„¢ 'flat' (renderer legacy cÃ¡ÂºÂ§n nÃ¡Â»Ân phÃ¡ÂºÂ³ng Ã„â€˜Ã¡ÂºÂ·c);
   // 'perspective' thay bÃ¡ÂºÂ±ng BattlefieldBackdrop hÃ¡Â»â„¢i tÃ¡Â»Â¥ hÃ¡ÂºÂ­u cÃ¡ÂºÂ£nh.
   // Battlefield Slot (2026-09-06) — required-property `| undefined` để
@@ -465,7 +474,8 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // materialize Ã¢â€ â€™ flash + fade-in enemy sprite). Flat mode khÃƒÂ´ng chÃ¡ÂºÂ¡y
   // (renderer legacy giÃ¡Â»Â¯ nguyÃƒÂªn hÃƒÂ nh vi cÃ…Â©).
   spawnVfxHandles = new Map<string, { handle: EnemySpawnVfxHandle; progress: number }>()
-  materializingIds = new Set<string>()
+  // The materialize marks that used to sit here moved to entityVisual
+  // (combat-entity-visual-lifecycle.ts), the one visibility-state owner.
 
   // Party countdown telegraph (Turn-Based Wave Redesign, 2026-09-06) —
   // handle riêng cho player + companion lúc đếm 3→2→1, TÁCH KHỎI
@@ -475,7 +485,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // reconcilePlayerSpawn() (dành riêng cho legacy real-time, single-id) —
   // xem spec §6b lý do tách biệt hoàn toàn.
   turnCountdownSpawnVfxHandles = new Map<string, EnemySpawnVfxHandle>()
-  turnCountdownPendingIds = new Set<string>()
+  // Pre-combat gating ids moved to entityVisual (pending set).
 
   // Task 9 (telegraph interpolation) — countdownProgress from the snapshot is
   // a TARGET, not a frame to paint. The handle is chased toward it every
@@ -486,7 +496,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // clock). Kept local to CombatScene rather than routed through
   // `positionInterp` — the telegraph isn't an entity screen position, it's
   // countdown-VFX state this class already owns (alongside
-  // turnCountdownSpawnVfxHandles/turnCountdownPendingIds below). Nothing here
+  // turnCountdownSpawnVfxHandles/entityVisual below). Nothing here
   // writes combat state; it only reads a target and closes the distance.
   private telegraphTarget = 0
   private telegraphShown = 0
@@ -504,11 +514,11 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   private telegraphSnapshotAt: number | undefined = undefined
 
   // Player spawn telegraph (plan Ã‚Â§12.2) Ã¢â‚¬â€ handle DUY NHÃ¡ÂºÂ¤T cho telegraph
-  // cÃ¡Â»Â§a avatar (preset 'player_spawn'); playerMaterialized false = KHÃƒâ€NG
+  // cÃ¡Â»Â§a avatar (preset 'player_spawn'); entityVisual.playerMaterialized false = KHÃƒâ€NG
   // hiÃ¡Â»â€¡n Player sprite. Pending telegraph vÃƒÂ  materialized sprite loÃ¡ÂºÂ¡i
   // trÃ¡Â»Â« nhau Ã„â€˜Ã¡Â»Æ’ khÃƒÂ´ng render hai lÃ¡ÂºÂ§n.
   playerSpawnHandle?: EnemySpawnVfxHandle
-  playerMaterialized = true
+  // The playerMaterialized flag moved to entityVisual.playerMaterialized.
 
   // ================= Player visual profile (body-anchor plan Ã‚Â§4) ======
   // Profile hiÃ¡Â»â€¡n hÃƒÂ nh Ã¢â‚¬â€ Ã„â€˜Ã¡Â»Âc tÃ¡Â»Â« Phaser registry lÃƒÂºc create() vÃƒÂ  cÃ¡ÂºÂ­p nhÃ¡ÂºÂ­t
@@ -744,7 +754,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     // nhau. QuÃƒÂ¡i tÃ¡Â»â€ºi qua 'positions' Ã„â€˜Ã¡ÂºÂ§u tiÃƒÂªn nhÃ†Â° bÃƒÂ¬nh thÃ†Â°Ã¡Â»Âng.
     const player = this.getOrCreateSprite(PLAYER_ID, PLAYER_COLOR, 'Player', HERO_LANE_INDEX)
 
-    player.rect.setVisible(false)
+    this.entityVisual.hidePlayer(player)
 
     // Spec B §4.5/§6 B7 (2026-09-11) — `idle` finally has a call site. It was
     // built for every entity and never played in combat at all (§2.3): the
@@ -753,7 +763,6 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     // returns to.
     this.playCombatAnimation(player, PLAYER_ID, 'idle')
 
-    this.playerMaterialized = false
     this.snapInterpolationTarget(PLAYER_ID, HERO_COLUMN)
     this.positionSprite(player, HERO_COLUMN)
 
@@ -1487,7 +1496,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     }
 
     this.spawnVfxHandles.clear()
-    this.materializingIds.clear()
+    this.entityVisual.clear()
 
     // Task 9 fix round (Finding 1) — the party countdown telegraph has its
     // own handle map/pending-ids set, separate from spawnVfxHandles above,
@@ -1501,7 +1510,6 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     }
 
     this.turnCountdownSpawnVfxHandles.clear()
-    this.turnCountdownPendingIds.clear()
     this.resetTelegraphState()
 
     // 6A-T4/T5 — HUD dọn khi scene shutdown (battle_end KHÔNG destroy —
@@ -1511,7 +1519,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
     this.playerSpawnHandle?.destroy()
     this.playerSpawnHandle = undefined
-    this.playerMaterialized = true
+    this.entityVisual.markPlayerMaterialized()
 
     this.sprites.clear()
     this.positionInterp.clear()
@@ -1588,10 +1596,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
       // VÃ¡Â»Â«a materialize tÃ¡Â»Â« telegraph Ã¢â‚¬â€ fade-in + scale 0.7Ã¢â€ â€™1 (bÃƒÂ³ng/mÃƒÂ¡u/
       // tÃƒÂªn chÃ¡Â»â€° hiÃ¡Â»â€¡n tÃ¡Â»Â« khoÃ¡ÂºÂ£nh khÃ¡ÂºÂ¯c nÃƒÂ y, Ã„â€˜ÃƒÂºng spec spawn mÃ¡Â»â€ºi).
-      if (this.materializingIds.has(enemy.id)) {
-        this.materializingIds.delete(enemy.id)
-        this.playMaterializeFadeIn(sprite)
-      }
+      this.entityVisual.consumeMaterializing(enemy.id, sprite)
     }
 
     for (const [id, sprite] of this.sprites) {
@@ -1615,13 +1620,13 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     // player/companion id xuất hiện trong event.players (ngay từ tick đầu
     // countdown, KHÔNG như enemy phải chờ pending), nhánh 'create' của
     // reconcileCombatantSprites() sẽ setVisible(true) ngay — cần
-    // turnCountdownPendingIds đã có id đó SẴN để nhánh 'create' biết
+    // entityVisual.pending đã có id đó SẴN để nhánh 'create' biết
     // giữ ẩn (xem nhánh 'create').
     this.reconcileTurnCountdownSpawn(event)
 
     // Turn-Based Wave Redesign (2026-09-06) — enemy wave telegraph: tái dùng
     // đúng reconcileSpawnVfx() của legacy qua SpawnVfxSnapshot (Task 6) —
-    // id biến mất khỏi pendingEnemySpawns = materialize → materializingIds
+    // id biến mất khỏi pendingEnemySpawns = materialize → entityVisual.materializing
     // đánh dấu TRƯỚC khi reconcileCombatantSprites tạo sprite (thứ tự giống
     // applyPendingPositions() của legacy: spawn VFX reconcile chạy trước
     // sprite reconcile) để nhánh 'create' kịp consume fade-in materialize.
@@ -1665,13 +1670,8 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       // direct startBattle() may carry pre-materialized enemies in
       // battle.enemies, and "both sides spawn first, then appear" means
       // they stay hidden for the same intro window.
-      for (const state of event.players) {
-        this.turnCountdownPendingIds.add(state.id)
-      }
-
-      for (const state of event.enemies) {
-        this.turnCountdownPendingIds.add(state.id)
-      }
+      this.entityVisual.markPending(event.players.map((state) => state.id))
+      this.entityVisual.markPending(event.enemies.map((state) => state.id))
 
       return
     }
@@ -1688,20 +1688,13 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
         handle.complete()
       }
 
-      const revealedIds = new Set(this.turnCountdownPendingIds)
-
-      for (const state of [...event.players, ...event.enemies]) {
-        if (state.alive) {
-          revealedIds.add(state.id)
-        }
-      }
-
-      for (const id of revealedIds) {
-        this.sprites.get(id)?.rect.setVisible(true)
-      }
+      this.entityVisual.revealPending(
+        [...event.players, ...event.enemies]
+          .filter((state) => state.alive)
+          .map((state) => state.id),
+      )
 
       this.turnCountdownSpawnVfxHandles.clear()
-      this.turnCountdownPendingIds.clear()
 
       // Reset interpolation state alongside the handles it drives — a
       // refight's countdown must start its telegraph from 0, not resume
@@ -1716,12 +1709,10 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     // the 'create' branch keeps them hidden until the flush. They get no
     // countdown handle: the enemy telegraph belongs to the wave path
     // (pendingEnemySpawns), these simply materialize at flush.
-    for (const state of event.enemies) {
-      this.turnCountdownPendingIds.add(state.id)
-    }
+    this.entityVisual.markPending(event.enemies.map((state) => state.id))
 
     for (const player of event.players) {
-      this.turnCountdownPendingIds.add(player.id)
+      this.entityVisual.markPending([player.id])
 
       if (this.turnCountdownSpawnVfxHandles.has(player.id)) {
         continue
@@ -1800,7 +1791,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
         // không bao giờ tới nữa — sprite kẹt vô hình vĩnh viễn. Snapshot
         // turn-based tự lo hiện sprite ngay khi id đó lần đầu xuất hiện.
         // Turn-Based Wave Redesign (2026-09-06) — party countdown telegraph:
-        // an id in turnCountdownPendingIds means pre-combat gating is NOT
+        // a pending id in entityVisual means pre-combat gating is NOT
         // finished — keep the sprite hidden; reconcileTurnCountdownSpawn()
         // flips it visible at the countdown-end flush (see that function).
         // The set holds event.players during countdown plus BOTH sides
@@ -1808,17 +1799,14 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
         // materialized enemies — same hidden window as the party); wave
         // enemies come through pendingEnemySpawns instead and never enter
         // this set, so their behaviour is unchanged.
-        sprite.rect.setVisible(!this.turnCountdownPendingIds.has(action.state.id))
+        this.entityVisual.applyGating(action.state.id, sprite)
 
         // Materialize từ telegraph (Turn-Based Wave Redesign, 2026-09-06) —
         // đúng cơ chế đã dùng cho legacy enemy (reconcileEnemySprites()).
-        if (this.materializingIds.has(action.state.id)) {
-          this.materializingIds.delete(action.state.id)
-          this.playMaterializeFadeIn(sprite)
-        }
+        this.entityVisual.consumeMaterializing(action.state.id, sprite)
 
         if (action.state.id === PLAYER_ID) {
-          this.playerMaterialized = true
+          this.entityVisual.markPlayerMaterialized()
         }
 
         continue
@@ -1993,7 +1981,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     // materialize xong Ã¢â€ â€™ Ã„â€˜ÃƒÂ¡nh dÃ¡ÂºÂ¥u Ã„â€˜Ã¡Â»Æ’ sprite mÃ¡Â»â€ºi tÃ¡ÂºÂ¡o dÃ†Â°Ã¡Â»â€ºi Ã„â€˜ÃƒÂ¢y fade-in.
     this.reconcileSpawnVfx(event)
 
-    // Player spawn reconcile (plan Ã‚Â§12.2): playerMaterialized false =
+    // Player spawn reconcile (plan Ã‚Â§12.2): entityVisual.playerMaterialized false =
     // Ã¡ÂºÂ©n sprite; playerSpawn hiÃ¡Â»â€¡n = vÃ¡ÂºÂ½ telegraph tÃ¡ÂºÂ¡i projected cell;
     // telegraph biÃ¡ÂºÂ¿n mÃ¡ÂºÂ¥t = materialize Ã¢â€ â€™ hiÃ¡Â»â€¡n sprite vÃ¡Â»â€ºi fade-in.
     this.reconcilePlayerSpawn(event)
@@ -2490,9 +2478,8 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
       // TrÃ¡ÂºÂ­n mÃ¡Â»â€ºi = Player lÃ¡ÂºÂ¡i Ã„â€˜i qua telegraph spawn (plan Ã‚Â§12.2): Ã¡ÂºÂ©n
       // sprite tÃ¡Â»â€ºi khi snapshot bÃƒÂ¡o materialize, snap vÃ¡Â»Â cÃ¡Â»â„¢t cÃ¡Â»â€¢ng.
-      player.rect.setVisible(false)
+      this.entityVisual.hidePlayer(player)
 
-      this.playerMaterialized = false
       this.snapInterpolationTarget(PLAYER_ID, HERO_COLUMN)
       this.positionSprite(player, HERO_COLUMN)
     }
@@ -2510,7 +2497,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     }
 
     this.spawnVfxHandles.clear()
-    this.materializingIds.clear()
+    this.entityVisual.clear()
 
     // QA 2026-09-10 Task 9 follow-up (R14.4 guard): the party countdown
     // telegraph handle map was NOT cleared here — the old reasoning relied
@@ -2524,7 +2511,6 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     }
 
     this.turnCountdownSpawnVfxHandles.clear()
-    this.turnCountdownPendingIds.clear()
     this.resetTelegraphState()
 
     for (const [id, sprite] of this.sprites) {

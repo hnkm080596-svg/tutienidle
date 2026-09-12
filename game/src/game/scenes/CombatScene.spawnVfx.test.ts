@@ -52,7 +52,6 @@ function createScene() {
   scene.entityFootMaxY = PROJECTION.bounds().bottom
   scene.sprites = new Map()
   scene.statuses = new Map()
-  scene.materializingIds = new Set()
   scene.spawnVfxHandles = new Map()
   scene.tweens = { add: (config: Record<string, unknown>) => tweenConfigs.push(config) }
   scene.add = new Proxy(
@@ -162,7 +161,7 @@ describe('CombatScene reconcileSpawnVfx', () => {
 
     expect(sprite).toBeDefined()
     expect(sprite.boost.value).toBe(0.7)
-    expect(scene.materializingIds.has('enemy_1')).toBe(false)
+    expect(scene.entityVisual.materializing.has('enemy_1')).toBe(false)
     expect(scene.spawnVfxHandles.has('enemy_1')).toBe(false)
 
     // Cháº¡y alpha tween tá»›i cuá»‘i â†’ má»i target vá» alpha cuá»‘i (rect=1,
@@ -204,7 +203,7 @@ describe('CombatScene reconcileSpawnVfx', () => {
     scene.onBattleStart()
 
     expect(scene.spawnVfxHandles.size).toBe(0)
-    expect(scene.materializingIds.size).toBe(0)
+    expect(scene.entityVisual.materializing.size).toBe(0)
 
     // Tráº­n má»›i snapshot pending má»›i â†’ táº¡o handle Má»šI (khÃ´ng dÃ¹ng láº¡i cÅ©).
     scene.applyPendingPositions(

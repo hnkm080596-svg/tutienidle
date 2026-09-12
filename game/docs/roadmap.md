@@ -761,6 +761,19 @@ HUD
 
 when current evidence supports the boundary.
 
+```text
+✅ Entity Visual Lifecycle — extracted 2026-09-12 (fix/hp-bar-visibility).
+   Evidence: user-reported defect — toggling only sprite.rect left the HP
+   bar/label/shadow floating during intro/countdown. CombatEntityVisualLifecycle
+   (combat/combat-entity-visual-lifecycle.ts) is the ONE owner of per-combatant
+   visibility state (pending → materializing → visible + the legacy player
+   materialized flag); CombatGridView.setSpriteVisible applies it. Retired
+   the three ad-hoc holders (turnCountdownPendingIds, materializingIds,
+   playerMaterialized). Guard: tests/architecture/entityVisualLifecycle.test.ts
+   bans sprite-part .setVisible and setSpriteVisible calls outside the two
+   owners. QA: docs/qa/2026-09-12-hp-bar-visibility-quick.md.
+```
+
 ### Browser gate
 
 This phase requires real Phaser/browser verification.

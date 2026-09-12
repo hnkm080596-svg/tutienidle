@@ -8,6 +8,8 @@
 // - clearSceneState dá»n sáº¡ch gourd + caches (khÃ´ng rÃ² rá»‰ qua shutdown).
 import { describe, expect, it, vi } from 'vitest'
 import { createTestScene } from './combat/combatTestHarness'
+import { CombatEntityVisualLifecycle } from './combat/combat-entity-visual-lifecycle'
+import type { CombatScene } from './CombatScene'
 import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 import {
   computeGourdPlacement,
@@ -82,16 +84,14 @@ function createScene() {
   scene.statuses = new Map()
   scene.dyingIds = new Set()
   scene.spawnVfxHandles = new Map()
-  scene.materializingIds = new Set()
   scene.playerSpawnHandle = undefined
-  scene.playerMaterialized = true
+  scene.entityVisual = new CombatEntityVisualLifecycle(scene as unknown as CombatScene)
 
   // Task 9 fix round (Finding 1) — clearSceneState() now also tears down the
   // party countdown telegraph; bare-mode scenes don't get the class-field
   // initializers construct mode gives, so this file needs the same explicit
-  // stub already given to spawnVfxHandles/materializingIds above.
+  // stub already given to spawnVfxHandles/entityVisual above.
   scene.turnCountdownSpawnVfxHandles = new Map()
-  scene.turnCountdownPendingIds = new Set()
 
   // Body-anchor/reward state (plan fields).
   scene.playerProfileId = 'mortal'

@@ -513,7 +513,7 @@ export class CombatVfxSpawner {
       }
 
       this.scene.spawnVfxHandles.delete(id)
-      this.scene.materializingIds.add(id)
+      this.scene.entityVisual.markMaterializing(id)
       entry.handle.complete()
     }
   }
@@ -527,11 +527,7 @@ export class CombatVfxSpawner {
     const sprite = this.scene.sprites.get(PLAYER_ID)
 
     if (!event.playerMaterialized) {
-      this.scene.playerMaterialized = false
-
-      if (sprite) {
-        sprite.rect.setVisible(false)
-      }
+      this.scene.entityVisual.hidePlayer(sprite)
 
       // Telegraph tại projected cell (4,1) — chỉ perspective vẽ VFX.
       if (this.scene.isPerspective && event.playerSpawn && this.scene.projection) {
@@ -561,12 +557,7 @@ export class CombatVfxSpawner {
     this.scene.playerSpawnHandle?.complete()
     this.scene.playerSpawnHandle = undefined
 
-    if (!this.scene.playerMaterialized && sprite) {
-      sprite.rect.setVisible(true)
-      this.playMaterializeFadeIn(sprite)
-    }
-
-    this.scene.playerMaterialized = true
+    this.scene.entityVisual.materializePlayer(sprite)
   }
 
   /**
