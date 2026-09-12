@@ -26,8 +26,13 @@ export const FAMILY_DROP_TABLES: FamilyDropTable[] = [
   {
     familyId: 'bandit',
     guaranteed: [],
-    // Van Kiem Quyet is bandit-exclusive across the whole extraction.
-    pool: [{ kind: 'technique', itemId: 'van_kiem_quyet', weight: 10 }],
+    // van_kiem_quyet is NOT here on purpose: its authored contract is
+    // elite-gated ("Tâm pháp hiếm rơi từ Elite" - 20% elite / 100% boss
+    // on the qi_refining bandit). An ungated pool line would leak it to
+    // every bandit-family kill including the mortal-realm bandits - see
+    // resolveDrops.gating.qa.test.ts. The gate lives in the bandit's
+    // signatureDrops (requiresModifier tinh_anh / boss) instead.
+    pool: [],
   },
   {
     familyId: 'magma_boar',

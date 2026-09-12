@@ -108,4 +108,30 @@ describe('rollAutoFarmCycleReward runs on the idle channel', () => {
     // (spec E11), so nothing lands.
     expect(gameManager.materialBag.getAmount('idle_probe_mat')).toBe(0)
   })
+
+  it('a throw mid-cycle still restores the active channel (QA: no idle leak)', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-04T10:00:00Z'))
+
+    const { gameManager, player } = harness()
+    const loot = (gameManager as unknown as { battleLoot: BattleLootSystem }).battleLoot
+    const setChannel = vi.spyOn(loot, 'setChannel')
+    vi.spyOn(loot, 'processDefeatedEnemies').mockImplementation(() => {
+      throw new Error('simulated grant failure')
+    })
+
+    expect(gameManager.startAutoFarm(player, FARM_STAGE.id)).toBe(true)
+
+    vi.setSystemTime(new Date('2026-09-04T10:01:00Z')) // 60s -> 1 cycle
+    try {
+      gameManager.update(0.1)
+    } catch {
+      // the simulated failure may or may not propagate through update();
+      // either way the channel must already be restored.
+    }
+
+    const calls = setChannel.mock.calls.map((call) => call[0])
+    expect(calls).toContain('idle')
+    expect(calls[calls.length - 1]).toBe('active')
+  })
 })

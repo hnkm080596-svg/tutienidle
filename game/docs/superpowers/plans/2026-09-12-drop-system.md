@@ -81,7 +81,7 @@
   - `function qualityBonusStepsFor(modifiers: readonly DropModifier[]): number`
   - `function totalExtraRolls(modifiers: readonly DropModifier[]): number`
 
-- [ ] **Step 1: Viết test đỏ**
+- [x] **Step 1: Viết test đỏ**
 
 Tạo `game/src/core/drop/DropModifier.test.ts`:
 
@@ -150,12 +150,12 @@ describe('DropModifier - rolls', () => {
 })
 ```
 
-- [ ] **Step 2: Chạy để thấy nó đỏ**
+- [x] **Step 2: Chạy để thấy nó đỏ**
 
 Run: `cd game && npx vitest run src/core/drop/DropModifier.test.ts`
 Expected: FAIL — `Failed to resolve import "./DropModifier"`.
 
-- [ ] **Step 3: Viết cài đặt tối thiểu**
+- [x] **Step 3: Viết cài đặt tối thiểu**
 
 Tạo `game/src/core/drop/DropModifier.ts`:
 
@@ -228,12 +228,12 @@ export function qualityBonusStepsFor(modifiers: readonly DropModifier[]): number
 }
 ```
 
-- [ ] **Step 4: Chạy để thấy nó xanh**
+- [x] **Step 4: Chạy để thấy nó xanh**
 
 Run: `cd game && npx vitest run src/core/drop/DropModifier.test.ts`
 Expected: PASS, 8 test.
 
-- [ ] **Step 5: Probe — chứng minh test bắt được lỗi**
+- [x] **Step 5: Probe — chứng minh test bắt được lỗi**
 
 Đổi tạm `currencyMultiplierFor` sang nhân dồn:
 
@@ -243,7 +243,7 @@ const raw = modifiers.reduce((product, modifier) => product * (1 + modifier.curr
 
 Run lại. Expected: FAIL ở `adds contributions instead of multiplying them` — `expected 4, received 6` (`2 × 3`). **Hoàn tác thay đổi này** rồi chạy lại cho xanh.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add game/src/core/drop/DropModifier.ts game/src/core/drop/DropModifier.test.ts
@@ -272,7 +272,7 @@ git commit -m "feat(drop): modifier vocabulary - currency adds and caps, quality
   - `interface SignatureDrop extends DropEntry { chance: number; requiresModifier?: string }`
   - `function assertDropEntryIsAddressable(entry: DropEntry): void`
 
-- [ ] **Step 1: Viết test đỏ**
+- [x] **Step 1: Viết test đỏ**
 
 Tạo `game/src/core/drop/DropTable.test.ts`:
 
@@ -301,12 +301,12 @@ describe('DropTable - addressability', () => {
 })
 ```
 
-- [ ] **Step 2: Chạy để thấy nó đỏ**
+- [x] **Step 2: Chạy để thấy nó đỏ**
 
 Run: `cd game && npx vitest run src/core/drop/DropTable.test.ts`
 Expected: FAIL — không resolve được `./DropTable`.
 
-- [ ] **Step 3: Viết cài đặt**
+- [x] **Step 3: Viết cài đặt**
 
 Tạo `game/src/core/drop/DropTable.ts`:
 
@@ -391,12 +391,12 @@ export function assertDropEntryIsAddressable(entry: DropEntry): void {
 }
 ```
 
-- [ ] **Step 4: Chạy để thấy nó xanh**
+- [x] **Step 4: Chạy để thấy nó xanh**
 
 Run: `cd game && npx vitest run src/core/drop/DropTable.test.ts`
 Expected: PASS, 3 test.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add game/src/core/drop/DropTable.ts game/src/core/drop/DropTable.test.ts
@@ -425,7 +425,7 @@ git commit -m "feat(drop): table contract - two compartments, two layers"
 - `techniqueInsight` trả về **đã nhân** hệ số. `skillInsight` **không** nằm trong `DropResult` — nó được `BattleLootSystem` suy ra từ `techniqueInsight` đã nhân qua `getSkillInsightReward()` đang có, nên E12 (hệ số áp lên cả ba hồ) thoả mãn mà không cần đường thứ hai.
 - Luật idle cho signature (E11): `channel === 'idle'` thì **chỉ** nhận dòng có `chance === 1`.
 
-- [ ] **Step 1: Viết test đỏ**
+- [x] **Step 1: Viết test đỏ**
 
 Tạo `game/src/core/drop/resolveDrops.test.ts`:
 
@@ -574,12 +574,12 @@ describe('resolveDrops - signature drops (spec E7/E11)', () => {
 })
 ```
 
-- [ ] **Step 2: Chạy để thấy nó đỏ**
+- [x] **Step 2: Chạy để thấy nó đỏ**
 
 Run: `cd game && npx vitest run src/core/drop/resolveDrops.test.ts`
 Expected: FAIL — không resolve được `./resolveDrops`.
 
-- [ ] **Step 3: Viết cài đặt**
+- [x] **Step 3: Viết cài đặt**
 
 Tạo `game/src/core/drop/resolveDrops.ts`:
 
@@ -745,17 +745,17 @@ export function resolveDrops(input: ResolveDropsInput): DropResult {
 }
 ```
 
-- [ ] **Step 4: Chạy để thấy nó xanh**
+- [x] **Step 4: Chạy để thấy nó xanh**
 
 Run: `cd game && npx vitest run src/core/drop/resolveDrops.test.ts`
 Expected: PASS, 8 test.
 
-- [ ] **Step 5: Probe — luật idle phải thật sự lọc**
+- [x] **Step 5: Probe — luật idle phải thật sự lọc**
 
 Xoá tạm nhánh `if (input.channel === 'idle' && entry.chance < 1) continue`.
 Run lại. Expected: FAIL ở `on idle keeps only the certain lines` — nhận cả `great_dao_seed`. **Hoàn tác** rồi chạy lại cho xanh.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add game/src/core/drop/resolveDrops.ts game/src/core/drop/resolveDrops.test.ts
@@ -778,7 +778,7 @@ git commit -m "feat(drop): one resolver for what a kill drops"
 
 **Vì sao task này tồn tại:** spec §3.2. Luật idle (E10) sống ở **một** chỗ, không rải ra chỗ gọi, nên không có đường nào "quên pass cờ" được.
 
-- [ ] **Step 1: Viết test đỏ**
+- [x] **Step 1: Viết test đỏ**
 
 Tạo `game/src/core/drop/DropContext.test.ts`:
 
@@ -821,12 +821,12 @@ describe('DropContext - idle channel (spec E10)', () => {
 })
 ```
 
-- [ ] **Step 2: Chạy để thấy nó đỏ**
+- [x] **Step 2: Chạy để thấy nó đỏ**
 
 Run: `cd game && npx vitest run src/core/drop/DropContext.test.ts`
 Expected: FAIL — không resolve được `./DropContext`.
 
-- [ ] **Step 3: Viết cài đặt**
+- [x] **Step 3: Viết cài đặt**
 
 Tạo `game/src/core/drop/DropContext.ts`:
 
@@ -890,19 +890,19 @@ export function modifiersFor(input: DropContextInput): DropModifier[] {
 }
 ```
 
-- [ ] **Step 4: Chạy để thấy nó xanh**
+- [x] **Step 4: Chạy để thấy nó xanh**
 
 Run: `cd game && npx vitest run src/core/drop/DropContext.test.ts`
 Expected: PASS, 7 test.
 
-- [ ] **Step 5: Probe — idle phải thật sự giữ boss**
+- [x] **Step 5: Probe — idle phải thật sự giữ boss**
 
 Đổi tạm `if (input.channel === 'idle') return modifiers` thành `if (input.channel === 'idle') return []`.
 Run lại. Expected: FAIL ở cả `drops the tag but KEEPS the stage property` lẫn `still carries boss on idle floor 10`. **Hoàn tác** rồi chạy lại cho xanh.
 
 Probe này quan trọng: bản 1 của spec ghi sai đúng chỗ này (idle modifier rỗng), mâu thuẫn D4 spec PC.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add game/src/core/drop/DropContext.ts game/src/core/drop/DropContext.test.ts
@@ -928,7 +928,7 @@ git commit -m "feat(drop): idle keeps the stage property, drops the tag"
 
 **Quyết định phạm vi — đọc trước khi code:** khởi điểm là **một dải tầng phủ toàn bộ mỗi cảnh giới** (`floors: { min: 1, max: 10 }`), tức 3 bảng stage cho 3 cảnh giới đang có dữ liệu (`mortal` 20 quái, `qi_refining` 23, `foundation_establishment` 1). Chia nhỏ dải về sau **không cần sửa code**, chỉ thêm entry. Đừng chia nhỏ ngay — mỗi dải thêm vào là một ô nữa phải cân bằng ở Task 10.
 
-- [ ] **Step 1: Trích dữ liệu hiện có (script dùng một lần, KHÔNG commit)**
+- [x] **Step 1: Trích dữ liệu hiện có (script dùng một lần, KHÔNG commit)**
 
 Tạo `<scratchpad>/extract-drops.mjs` — in ra itemId nào đang rơi ở cảnh giới nào và họ nào, để bảng được **tổng hợp từ dữ liệu thật** thay vì bịa:
 
@@ -967,7 +967,7 @@ for (const [family, rows] of byFamily) {
 
 Run: `node <scratchpad>/extract-drops.mjs` từ thư mục gốc repo. Giữ output để dùng ở Step 2.
 
-- [ ] **Step 2: Viết test đỏ**
+- [x] **Step 2: Viết test đỏ**
 
 Tạo `game/src/data/drop/DropTables.test.ts`:
 
@@ -1032,12 +1032,12 @@ describe('drop tables - shape', () => {
 })
 ```
 
-- [ ] **Step 3: Chạy để thấy nó đỏ**
+- [x] **Step 3: Chạy để thấy nó đỏ**
 
 Run: `cd game && npx vitest run src/data/drop/DropTables.test.ts`
 Expected: FAIL — không resolve được hai module dữ liệu.
 
-- [ ] **Step 4: Viết `StageDropTables.ts`**
+- [x] **Step 4: Viết `StageDropTables.ts`**
 
 Dùng output Step 1 để điền `pool`/`guaranteed`. Khung bắt buộc, các dòng item lấy từ output:
 
@@ -1121,7 +1121,7 @@ export function stageDropTableFor(
 
 **Kiểm tra bắt buộc:** `doan_bao_thach` phải là giá trị thật của `DOAN_BAO_THACH_MATERIAL_ID` trong `core/artifact/ArtifactProgression.ts`. Mở file đó xác nhận chuỗi, đừng đoán.
 
-- [ ] **Step 5: Viết `FamilyDropTables.ts`**
+- [x] **Step 5: Viết `FamilyDropTables.ts`**
 
 21 họ từ output Step 1. Khung:
 
@@ -1151,12 +1151,12 @@ export function familyDropTableFor(familyId: string | undefined): FamilyDropTabl
 
 **Ràng buộc:** mọi `itemId` phải đã tồn tại trong registry tương ứng. **Không phát minh material mới** — spec §7 để việc đó ngoài phạm vi. Họ nào chưa có material riêng trong dữ liệu cũ thì cho `pool: []` và ghi comment một dòng nói rõ họ đó chưa có đồ đặc trưng.
 
-- [ ] **Step 6: Chạy để thấy nó xanh**
+- [x] **Step 6: Chạy để thấy nó xanh**
 
 Run: `cd game && npx vitest run src/data/drop/DropTables.test.ts`
 Expected: PASS, 6 test.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add game/src/data/drop/ game/src/data/drop/DropTables.test.ts
@@ -1177,7 +1177,7 @@ git commit -m "feat(drop): stage and family tables, extracted from the data that
 
 **Đây là task quan trọng nhất của Nhịp 1.** Nó là lưới an toàn cho Nhịp 2 và là nơi OQ1 được **đo**, không phải đoán.
 
-- [ ] **Step 1: Viết harness đo**
+- [x] **Step 1: Viết harness đo**
 
 Tạo `game/src/core/drop/dropCharacterization.test.ts`:
 
@@ -1266,12 +1266,12 @@ describe('drop characterization - the numbers this design is judged on', () => {
 })
 ```
 
-- [ ] **Step 2: Chạy và ĐỌC con số**
+- [x] **Step 2: Chạy và ĐỌC con số**
 
 Run: `cd game && npx vitest run src/core/drop/dropCharacterization.test.ts --reporter=verbose`
 Expected: PASS, và console in ra bảng kỳ vọng + một dòng `OQ1 noEquipmentRate = …%`.
 
-- [ ] **Step 3: Áp luật quyết định OQ1**
+- [x] **Step 3: Áp luật quyết định OQ1**
 
 Spec §9 đặt ngưỡng **20%**:
 
@@ -1280,18 +1280,18 @@ Spec §9 đặt ngưỡng **20%**:
 
 Ước lượng trong spec với trọng số minh hoạ là **~53%**, nên nhánh thứ hai nhiều khả năng trúng. Đừng bỏ qua bước này.
 
-- [ ] **Step 4: Ghi kết quả vào spec**
+- [x] **Step 4: Ghi kết quả vào spec**
 
 Sửa `game/docs/superpowers/specs/2026-09-12-drop-system-design.md` §9: thay phần "Ước lượng" bằng **số đo thật**, ghi ngày đo, ghi nhánh nào của luật quyết định đã trúng.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add game/src/core/drop/dropCharacterization.test.ts game/docs/superpowers/specs/2026-09-12-drop-system-design.md
 git commit -m "test(drop): measure the expectation table and close OQ1"
 ```
 
-- [ ] **Step 6: Cổng cuối Nhịp 1**
+- [x] **Step 6: Cổng cuối Nhịp 1**
 
 Run: `cd game && npm run type-check && npx vitest run`
 Expected: type-check 0 lỗi; toàn bộ suite xanh; **số test cũ không đổi kết quả** — chưa consumer nào gọi mã mới.
@@ -1318,7 +1318,7 @@ Nếu có test cũ đổi trạng thái ở đây thì Nhịp 1 đã rò rỉ ra
 
 **Ràng buộc cứng (spec E5):** `rollItemQuality()` **giữ nguyên trọng số và giữ nguyên quyền sở hữu**. Bậc cộng thêm áp **sau** khi roll xong, chặn ở `tien`.
 
-- [ ] **Step 1: Viết test đỏ**
+- [x] **Step 1: Viết test đỏ**
 
 Tạo `game/src/core/equipment/EquipmentSystem.qualityBonus.test.ts`:
 
@@ -1350,12 +1350,12 @@ describe('applyQualityBonusSteps (spec E5)', () => {
 })
 ```
 
-- [ ] **Step 2: Chạy để thấy nó đỏ**
+- [x] **Step 2: Chạy để thấy nó đỏ**
 
 Run: `cd game && npx vitest run src/core/equipment/EquipmentSystem.qualityBonus.test.ts`
 Expected: FAIL — `applyQualityBonusSteps` chưa được export.
 
-- [ ] **Step 3: Cài đặt**
+- [x] **Step 3: Cài đặt**
 
 Trong `game/src/core/equipment/EquipmentSystem.ts`, thêm export cạnh các helper thuần (ngoài class):
 
@@ -1405,12 +1405,12 @@ Thêm import `ITEM_QUALITY_ORDER` nếu file chưa có, rồi sửa `createInsta
 
 Phần còn lại của hàm **không đổi**.
 
-- [ ] **Step 4: Chạy để thấy nó xanh**
+- [x] **Step 4: Chạy để thấy nó xanh**
 
 Run: `cd game && npx vitest run src/core/equipment/EquipmentSystem.qualityBonus.test.ts src/core/equipment/EquipmentSystem.test.ts src/core/item/ItemRoll.test.ts`
 Expected: PASS toàn bộ — tham số mới có mặc định nên 4 consumer cũ không đổi hành vi.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add game/src/core/equipment/EquipmentSystem.ts game/src/core/equipment/EquipmentSystem.qualityBonus.test.ts
@@ -1432,7 +1432,7 @@ git commit -m "feat(equipment): a stacked kill nudges the quality roll, it does 
 
 **Quy tắc:** `BattleLootSystem` **giữ nguyên** mọi việc cấp phát — cộng bag, toast, particle, quest hook, overflow, auto-dissolve. Thứ bị lấy đi là quyền quyết định *cái gì* rơi.
 
-- [ ] **Step 1: Thêm `signatureDrops` vào `Enemy.ts`**
+- [x] **Step 1: Thêm `signatureDrops` vào `Enemy.ts`**
 
 Trong `game/src/core/enemy/Enemy.ts`, thêm vào cả `Enemy` và `EnemyDefinition`, và thread qua `defineEnemy()`:
 
@@ -1445,7 +1445,7 @@ Trong `game/src/core/enemy/Enemy.ts`, thêm vào cả `Enemy` và `EnemyDefiniti
 
 `defineEnemy()` thêm `signatureDrops: definition.signatureDrops,` vào object trả về. `createEliteVariant`/`createBossVariant` spread `...enemy` nên tự mang theo, không cần sửa.
 
-- [ ] **Step 2: Viết test đỏ**
+- [x] **Step 2: Viết test đỏ**
 
 Tạo `game/src/core/game/BattleLootSystem.dropResult.test.ts`. Dùng cùng fixture với `BattleLootSystem.realmReward.test.ts` đang có (đọc file đó trước để tái dùng `createTestSetup`, đừng viết fixture thứ hai):
 
@@ -1490,12 +1490,12 @@ describe('BattleLootSystem consumes DropResult', () => {
 
 **Lưu ý cho người làm:** nếu `createTestSetup` trong file cũ không export hoặc không có `killEnemy`, hãy **trích nó ra một helper dùng chung** `game/src/core/game/battleLootTestSetup.ts` và cho cả hai file dùng — đừng nhân bản fixture.
 
-- [ ] **Step 3: Chạy để thấy nó đỏ**
+- [x] **Step 3: Chạy để thấy nó đỏ**
 
 Run: `cd game && npx vitest run src/core/game/BattleLootSystem.dropResult.test.ts`
 Expected: FAIL — quái chưa nhận gì vì `BattleLootSystem` vẫn đọc `enemy.rewards`.
 
-- [ ] **Step 4: Sửa `processDefeatedEnemies`**
+- [x] **Step 4: Sửa `processDefeatedEnemies`**
 
 Thay khối tính `rewards` + 4 lời gọi grant bằng:
 
@@ -1527,14 +1527,14 @@ Rồi cấp phát:
 
 `this.channel` là field mới trên `BattleLootSystem`, mặc định `'active'`, đặt qua `setChannel(channel: DropChannel)` — Task 9 dùng.
 
-- [ ] **Step 5: Xoá ba kênh hardcode**
+- [x] **Step 5: Xoá ba kênh hardcode**
 
 - Xoá hẳn `grantRandomEquipmentDrop` và lời gọi nó.
 - Xoá hẳn `grantArtifactStoneDrop` và lời gọi nó — Đoán Bảo Thạch giờ là một dòng trong bảng stage Trúc Cơ (Task 5). **Xác nhận bằng mắt** rằng nó có trong bảng đó trước khi xoá, nếu không nó biến mất khỏi game.
 - Xoá import `BOSS_EQUIPMENT_DROP_CHANCE`, `NORMAL_EQUIPMENT_DROP_CHANCE`, `rollMortalEssenceAmount`, `ARTIFACT_STONE_*`, `getRealmIndex` nếu không còn ai dùng.
 - `grantArtifactExperience` **giữ nguyên** — đó là hồ EXP pháp bảo, không phải drop.
 
-- [ ] **Step 6: Chạy toàn bộ suite**
+- [x] **Step 6: Chạy toàn bộ suite**
 
 Run: `cd game && npx vitest run`
 Expected: test mới xanh. Một số test cũ về loot **sẽ đỏ** — đó là hành vi đổi có chủ đích. Với **từng** test đỏ, phân loại trước khi sửa:
@@ -1544,7 +1544,7 @@ Expected: test mới xanh. Một số test cũ về loot **sẽ đỏ** — đó
 
 Đừng sửa hàng loạt. Sai số ở bước này là cách một đợt nerf ngoài ý muốn lọt vào.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add game/src/core/game/BattleLootSystem.ts game/src/core/enemy/Enemy.ts game/src/core/game/BattleLootSystem.dropResult.test.ts
@@ -1563,7 +1563,7 @@ git commit -m "feat(drop): the loot system grants what the resolver decided"
 - Consumes: `BattleLootSystem.setChannel` (Task 8)
 - Produces: không có
 
-- [ ] **Step 1: Viết test đỏ**
+- [x] **Step 1: Viết test đỏ**
 
 Tạo `game/src/core/game/GameManagerTurnBattleOps.idleDrops.test.ts`:
 
@@ -1595,12 +1595,12 @@ describe('idle channel (spec E10)', () => {
 
 **Người làm:** test thứ ba ở trên là khung. Thay nó bằng một khẳng định thật qua fixture của `GameManagerTurnBattleOps` — tìm test file đang có cho auto-farm (`grep -rn "rollAutoFarmCycleReward\|settleAutoFarmOffline" game/src --include=*.test.ts`) và tái dùng fixture của nó. **Không** commit một test luôn xanh.
 
-- [ ] **Step 2: Chạy để thấy nó đỏ**
+- [x] **Step 2: Chạy để thấy nó đỏ**
 
 Run: `cd game && npx vitest run src/core/game/GameManagerTurnBattleOps.idleDrops.test.ts`
 Expected: FAIL ở khẳng định về `setChannel`.
 
-- [ ] **Step 3: Cài đặt**
+- [x] **Step 3: Cài đặt**
 
 Trong `rollAutoFarmCycleReward`:
 
@@ -1618,17 +1618,17 @@ và sau `processDefeatedEnemies(shimBattle)`:
     this.deps.battleLoot.setChannel('active')
 ```
 
-- [ ] **Step 4: Chạy để thấy nó xanh**
+- [x] **Step 4: Chạy để thấy nó xanh**
 
 Run: `cd game && npx vitest run src/core/game/`
 Expected: PASS.
 
-- [ ] **Step 5: Probe — idle phải thật sự khác active**
+- [x] **Step 5: Probe — idle phải thật sự khác active**
 
 Đổi tạm `setChannel('idle')` thành `setChannel('active')`.
 Run lại. Expected: FAIL. **Hoàn tác** rồi chạy lại cho xanh.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add game/src/core/game/GameManagerTurnBattleOps.ts game/src/core/game/GameManagerTurnBattleOps.idleDrops.test.ts
@@ -1650,7 +1650,7 @@ git commit -m "feat(drop): idle farms on its own channel"
 
 **Đây là task dễ tự lừa nhất trong cả plan.** Invariant cũ duyệt ba trường sắp bị xoá; viết lại mà quên một nguồn thì test **vẫn xanh trong khi luật đã thủng**.
 
-- [ ] **Step 1: Viết lại `collectDroppedMaterialIds` cho ba nguồn**
+- [x] **Step 1: Viết lại `collectDroppedMaterialIds` cho ba nguồn**
 
 Trong `EnemyDropSinkInvariant.test.ts`, thay thân hàm:
 
@@ -1689,7 +1689,7 @@ function collectDroppedMaterialIds(): Set<string> {
 
 Làm tương tự cho `EnemyAlchemyDrops.test.ts`.
 
-- [ ] **Step 2: PHÉP THỬ BA-LẦN-ĐỎ (spec §5.2) — bắt buộc, không bỏ qua**
+- [x] **Step 2: PHÉP THỬ BA-LẦN-ĐỎ (spec §5.2) — bắt buộc, không bỏ qua**
 
 Làm **ba lần riêng biệt**. Mỗi lần: thêm một material không có sink, chạy test, **xác nhận thấy đỏ**, rồi hoàn tác.
 
@@ -1702,7 +1702,7 @@ Làm **ba lần riêng biệt**. Mỗi lần: thêm một material không có si
 
 **Chỉ khi cả ba lần đều đỏ** mới tính là đã viết lại đúng. Ghi kết quả ba lần vào commit message.
 
-- [ ] **Step 3: Viết guard kinh tế**
+- [x] **Step 3: Viết guard kinh tế**
 
 Tạo `game/src/core/drop/dropEconomy.test.ts` — dùng lại `seededRng` và `sample` từ Task 6 (trích ra `game/src/core/drop/dropSampling.ts` để hai file dùng chung, đừng chép):
 
@@ -1775,18 +1775,18 @@ describe('drop economy (spec §5.3)', () => {
 
 Điền 4 hằng số từ bảng in ra ở Task 6.
 
-- [ ] **Step 4: Chạy để thấy nó xanh, rồi probe**
+- [x] **Step 4: Chạy để thấy nó xanh, rồi probe**
 
 Run: `cd game && npx vitest run src/core/drop/dropEconomy.test.ts`
 Expected: PASS.
 
 Probe: nâng `BOSS_MODIFIER.currencyBonus` từ 2 lên 4. Run lại. Expected: FAIL ở `mortal boss` **và** `mortal stacked`. Hoàn tác.
 
-- [ ] **Step 5: Ghi Δ so với hiện trạng vào spec**
+- [x] **Step 5: Ghi Δ so với hiện trạng vào spec**
 
 Sửa spec §5.3: thay bảng Δ ước tính bằng **số đo thật** cho `mortal`, giữ hàng `bandit` làm chứng cứ hiện trạng.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add game/src/data/enemy/EnemyDropSinkInvariant.test.ts game/src/data/enemy/EnemyAlchemyDrops.test.ts game/src/core/drop/dropEconomy.test.ts game/src/core/drop/dropSampling.ts game/docs/superpowers/specs/2026-09-12-drop-system-design.md
@@ -1813,7 +1813,7 @@ git commit -m "test(drop): sink invariant walks all three sources, economy is a 
 - Consumes: `SignatureDrop` (Task 2)
 - Produces: không có
 
-- [ ] **Step 1: Tìm mọi drop đặt tay cần giữ**
+- [x] **Step 1: Tìm mọi drop đặt tay cần giữ**
 
 Run:
 
@@ -1823,7 +1823,7 @@ cd game && grep -n "kind: 'technique'\|great_dao_seed\|broken_foundation_scroll\
 
 Mỗi dòng tìm được là một **ứng viên `signatureDrops`**. Cụ thể: 5 item trong `LORE_ALLOWLIST` của invariant và mọi `kind: 'technique'` (Phá Cảnh Tâm Pháp) là drop có chủ đích — chúng **phải** chuyển sang `signatureDrops`, không được để rơi vào bảng chung.
 
-- [ ] **Step 2: Chuyển từng quái**
+- [x] **Step 2: Chuyển từng quái**
 
 Với mỗi quái có `eliteRewards`/`bossRewards`:
 
@@ -1846,7 +1846,7 @@ signatureDrops: [
 
 `rewards.techniqueInsight`/`spiritStone` **giữ lại** trên `EnemyReward` (một số đường khác vẫn đọc nó, ví dụ `getArtifactExperienceReward`); chỉ `itemDrops` và hai bảng biến thể bị xoá. **Xác minh** bằng `grep -rn "\.rewards\b" game/src --include=*.ts | grep -v test` trước khi xoá gì.
 
-- [ ] **Step 3: Xoá field khỏi type**
+- [x] **Step 3: Xoá field khỏi type**
 
 Trong `Enemy.ts`: xoá `eliteRewards`/`bossRewards` khỏi `Enemy` và `EnemyDefinition`, xoá dòng gán trong `defineEnemy`, và trong hai variant đổi:
 
@@ -1858,11 +1858,11 @@ Trong `Enemy.ts`: xoá `eliteRewards`/`bossRewards` khỏi `Enemy` và `EnemyDef
 
 tức bỏ hẳn dòng `rewards: enemy.bossRewards ?? …` (spread `...enemy` đã mang `rewards` sang).
 
-- [ ] **Step 4: Xoá `StageDropRules.ts`**
+- [x] **Step 4: Xoá `StageDropRules.ts`**
 
 Run `grep -rn "StageDropRules\|NORMAL_EQUIPMENT_DROP_CHANCE\|BOSS_EQUIPMENT_DROP_CHANCE\|rollMortalEssenceAmount" game/src` — phải **không còn kết quả nào ngoài chính file đó**. Rồi `git rm game/src/core/reward/StageDropRules.ts`.
 
-- [ ] **Step 5: Cổng đầy đủ**
+- [x] **Step 5: Cổng đầy đủ**
 
 Run:
 
@@ -1872,13 +1872,13 @@ cd game && npm run type-check && npm run build && npx vitest run && npx eslint .
 
 Expected: type-check 0, build 0, toàn bộ vitest xanh, eslint đúng baseline của master (không thêm lỗi mới).
 
-- [ ] **Step 6: Kiểm tra trên trình duyệt**
+- [x] **Step 6: Kiểm tra trên trình duyệt**
 
 Run: `cd game && DEV_PORT=5182 npx playwright test`
 
 Rồi chơi tay: đánh Động 1 vài lần xác nhận có đồ rơi và có toast; đánh tầng 10 xác nhận boss rơi nhiều hơn; bật auto-farm một stage đã Hoàn Mỹ, xác nhận log thưởng **không** có tiền tố "Tinh Anh".
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add -A game/src

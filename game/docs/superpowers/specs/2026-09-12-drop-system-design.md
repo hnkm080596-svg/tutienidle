@@ -472,7 +472,7 @@ Con số ước lượng trên cho thấy nhánh thứ hai **nhiều khả năng
 | Realm | noEquipmentRate (boss+tinh_anh, 5 lượt) |
 |---|---|
 | `mortal` (family `boar`) | **0.0%** |
-| `qi_refining` (family `bandit`) | **13.3%** |
+| `qi_refining` (family `bandit`) | **13.3%** → **7.6%** (post-QA: rút `van_kiem_quyet` khỏi pool family — xem ghi chú dưới) |
 | `foundation_establishment` (không `family`) | **13.2%** |
 
 Realm `mortal` không ràng buộc được câu hỏi: pool của nó toàn dòng equipment
@@ -483,6 +483,12 @@ quyết định áp lên **số xấu nhất** = 13.3%.
 
 **Kết quả: nhánh 1 trúng** — `13.3% ≤ 20%` → **giữ nguyên E6**. Không cần bảo
 đảm trang bị. OQ1 **ĐÃ ĐÓNG**.
+
+Ghi chú hậu QA (2026-09-12): `van_kiem_quyet` bị rút khỏi pool family `bandit`
+vì mất cổng elite/boss khi trích xuất (quái bandit cảnh Phàm Nhân cũng bốc
+được) — cổng giờ nằm ở `signatureDrops` của bandit. Pool mỏng đi nên tỉ lệ
+không-trang-bị của `qi_refining` hạ còn **7.6%**; kết luận OQ1 không đổi
+(vẫn ≤ 20%).
 
 Lưu ý cho các quyết định sau: ở kill **thường** (1 lượt) thì
 `foundation_establishment` đo `noEquipmentRate = 66.7%` — phần lớn quái thường
