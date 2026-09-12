@@ -3,7 +3,8 @@
 // duy nhất; hideFor gắn theo statusInstanceId để onStatusRemoved đóng đúng.
 // Flexible rule: vị trí clamp trong viewport mỗi lần show.
 // Limitation đã chốt (spec §5): remainingTime là snapshot attach/update —
-// decay giữa 2 update không reflect vào tooltip đang mở (≤ vài giây lệch).
+// decay giữa 2 update không reflect vào tooltip đang mở. Phase A6 (9.5 #7):
+// giá trị giờ là số LƯỢT (turn engine feed), render "N lượt".
 import Phaser from 'phaser'
 import { DEPTH_OVERLAY_UI } from '@/game/support/BattleLayers'
 
@@ -87,6 +88,6 @@ export class StatusTooltip {
       return `×${data.stacks} · vĩnh viễn`
     }
 
-    return `×${data.stacks} · ${Math.max(0, Math.ceil(data.remainingTime ?? 0))}s`
+    return `×${data.stacks} · ${Math.max(0, Math.ceil(data.remainingTime ?? 0))} lượt`
   }
 }
