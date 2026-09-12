@@ -558,6 +558,11 @@
       },
       "topBar": {
         "enemiesSuffix": "enemies"
+      },
+      "turnStrip": {
+        "upcoming": "Next up",
+        "round": "Round {current}",
+        "roundWithLimit": "Round {current}/{limit}"
       }
     }
   },

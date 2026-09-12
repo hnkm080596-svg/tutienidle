@@ -7,16 +7,46 @@
 // member hiện cạnh turn-order (bare minimum để manual UI dùng được với
 // >1 player unit; polish đầy đủ là Party UI spec riêng sau).
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
 import { buffDisplayName } from '@/core/battle/turn/TurnBuffNames'
 import { TURN_BUFF_REGISTRY } from '@/data/buff/TurnBuffRegistry'
+import { GAUGE_MAX } from '@/core/battle/turn/ActionGauge'
 import type { TurnBuff } from '@/core/battle/turn/TurnBuffTypes'
+import type { TurnBattleParticipant } from '@/core/battle/turn/TurnBattleSystem'
 
-const { isBattleFighting, upcomingActors, battle } = useTurnBattleInfo()
+const { t } = useI18n()
+const { isBattleFighting, upcomingActors, battle, roundsElapsed, activeStage } = useTurnBattleInfo()
 
 const visible = computed(() => isBattleFighting.value)
 
 const partyMembers = computed(() => battle.value?.players ?? [])
+
+// Combat speed gauge (2026-09-12) — ATB fill on every combatant chip:
+// actionGauge / GAUGE_MAX as an integer percent, clamped (a ready actor can
+// overfill). Dead members keep their last value but the bar is hidden.
+function gaugePercent(actor: TurnBattleParticipant): number {
+  return Math.round(Math.min(100, Math.max(0, (actor.actionGauge / GAUGE_MAX) * 100)))
+}
+
+// Round indicator (2026-09-12) — the CURRENT round (1-based, i.e.
+// roundsElapsed + 1; the PC predicate requires roundsElapsed < limit at
+// victory, so the deadline reads "finish before this round completes"),
+// and the limit comes from the stage that launched THIS battle (not the
+// UI selection). is-over once roundsElapsed >= limit — PC already lost.
+const perfectClearLimit = computed(() => activeStage.value?.perfectClearTurnLimit)
+
+const currentRound = computed(() => roundsElapsed.value + 1)
+
+const roundLabel = computed(() =>
+  perfectClearLimit.value !== undefined
+    ? t('combat.overlay.turnStrip.roundWithLimit', { current: currentRound.value, limit: perfectClearLimit.value })
+    : t('combat.overlay.turnStrip.round', { current: currentRound.value }),
+)
+
+const isRoundOverLimit = computed(
+  () => perfectClearLimit.value !== undefined && roundsElapsed.value >= perfectClearLimit.value,
+)
 
 function hpPercent(entity: { currentHp: number; maxHp: number }): number {
   if (entity.maxHp <= 0) {
@@ -84,22 +114,53 @@ function buffTooltip(buff: TurnBuff): string {
           :class="`is-${buff.polarity}`"
           :title="buffTooltip(buff)"
         >{{ buffBadgeText(buff) }}</span>
+        <span
+          v-if="member.entity.alive"
+          class="turn-order-strip__gauge"
+          role="progressbar"
+          :aria-valuenow="gaugePercent(member)"
+          aria-valuemin="0"
+          aria-valuemax="100"
+        >
+          <span
+            class="turn-order-strip__gauge-fill"
+            :class="{ 'is-ready': gaugePercent(member) >= 100 }"
+            :style="{ width: `${gaugePercent(member)}%` }"
+          />
+        </span>
       </span>
     </div>
 
-    <div v-if="upcomingActors.length > 0" class="turn-order-strip__order">
-      <span class="turn-order-strip__title">Lượt tới</span>
+    <div class="turn-order-strip__order">
+      <span class="turn-order-strip__round" :class="{ 'is-over': isRoundOverLimit }">{{ roundLabel }}</span>
 
-      <ol class="turn-order-strip__list">
-        <li
-          v-for="(actor, index) in upcomingActors"
-          :key="`${actor.id}-${index}`"
-          class="turn-order-strip__item"
-          :class="{ 'is-current': index === 0 }"
-        >
-          {{ label(index) }}{{ actor.entity.name || actor.id }}
-        </li>
-      </ol>
+      <template v-if="upcomingActors.length > 0">
+        <span class="turn-order-strip__title">{{ t('combat.overlay.turnStrip.upcoming') }}</span>
+
+        <ol class="turn-order-strip__list">
+          <li
+            v-for="(actor, index) in upcomingActors"
+            :key="`${actor.id}-${index}`"
+            class="turn-order-strip__item"
+            :class="{ 'is-current': index === 0, 'is-enemy': actor.entity.type === 'enemy' }"
+          >
+            {{ label(index) }}{{ actor.entity.name || actor.id }}
+            <span
+              class="turn-order-strip__gauge"
+              role="progressbar"
+              :aria-valuenow="gaugePercent(actor)"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
+              <span
+                class="turn-order-strip__gauge-fill"
+                :class="{ 'is-ready': gaugePercent(actor) >= 100 }"
+                :style="{ width: `${gaugePercent(actor)}%` }"
+              />
+            </span>
+          </li>
+        </ol>
+      </template>
     </div>
   </div>
 </template>
@@ -120,7 +181,9 @@ function buffTooltip(buff: TurnBuff): string {
 }
 
 .turn-order-strip__member {
-  padding: 2px 8px;
+  position: relative;
+  overflow: hidden;
+  padding: 2px 8px 5px;
   border: 1px solid var(--ink-800, #333);
   border-radius: 4px;
   background: color-mix(in srgb, var(--ink-950, #111) 70%, transparent);
@@ -176,7 +239,9 @@ function buffTooltip(buff: TurnBuff): string {
 }
 
 .turn-order-strip__item {
-  padding: 2px 8px;
+  position: relative;
+  overflow: hidden;
+  padding: 2px 8px 5px;
   border: 1px solid var(--ink-800, #333);
   border-radius: 4px;
   background: color-mix(in srgb, var(--ink-950, #111) 70%, transparent);
@@ -187,5 +252,48 @@ function buffTooltip(buff: TurnBuff): string {
 .turn-order-strip__item.is-current {
   border-color: var(--jade, #4caf50);
   color: var(--jade, #4caf50);
+}
+
+/* Combat speed gauge (2026-09-12) — thin ATB fill along the bottom edge of
+   each combatant chip. Jade for the party, danger for enemies; a full bar
+   brightens to signal "ready to act". */
+.turn-order-strip__gauge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: color-mix(in srgb, var(--ink-800, #333) 60%, transparent);
+}
+
+.turn-order-strip__gauge-fill {
+  display: block;
+  height: 100%;
+  background: var(--jade, #4caf50);
+  transition: width 120ms linear;
+}
+
+.turn-order-strip__gauge-fill.is-ready {
+  background: var(--gold, #ffd75e);
+}
+
+.turn-order-strip__item.is-enemy .turn-order-strip__gauge-fill {
+  background: var(--danger, #e53935);
+}
+
+/* Round indicator (2026-09-12) — completed ATB rounds (+ perfect-clear
+   limit when the launching stage has one). is-over = window missed. */
+.turn-order-strip__round {
+  padding: 2px 8px;
+  border: 1px solid var(--ink-800, #333);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--ink-950, #111) 70%, transparent);
+  color: var(--gold, #ffd75e);
+  white-space: nowrap;
+}
+
+.turn-order-strip__round.is-over {
+  border-color: color-mix(in srgb, var(--danger, #e53935) 60%, transparent);
+  color: var(--danger, #e53935);
 }
 </style>

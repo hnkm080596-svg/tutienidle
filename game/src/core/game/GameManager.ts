@@ -2371,6 +2371,11 @@ export class GameManager {
     return this.turnBattleOps.getTurnBattle()
   }
 
+  /** Stage that launched the current turn battle (null for non-stage battles). */
+  getActiveTurnBattleStage(): Stage | null {
+    return this.turnBattleOps.getActiveTurnBattleStage()
+  }
+
   // --- Combat Runtime Separation (Task 1, 2026-09-07, AGENTS.md P17) -------
   // Presentation-ack timing state machine lives in CombatAnimationRuntime
   // (owned by GameManagerTurnBattleOps since the C2 split). GameManager keeps
