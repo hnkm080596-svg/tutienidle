@@ -1854,17 +1854,9 @@ Once the Content Resume Gate is reached, resume content in this order unless new
 
 ### B2 — Trận Pháp production content
 
-Replace test-only formation content using the stabilized:
+✅ **XONG 2026-09-14** (branch `feat/b2-tran-phap-content`) — production roster thay `hon_don_tran` test-only: 5 formations theo ladder "ít ô = buff mạnh hơn" (spec 2026-09-05 §2.5): `doc_hanh_tran` (1 ô, +12% công/thủ), `luong_nghi_tran` (2 ô, +10% công), `tam_tai_tran` (3 ô, +6% công/+6% tốc), `ngu_hanh_tran` (5 ô, +4% công/+6% thủ), `cuu_cung_tran` (9 ô — kế thừa vai trò stress-test toàn lưới, +2% công/+2% thủ). 5 buff `tran_phap_*` trong `buffs.ts` → `TURN_BUFF_REGISTRY` qua converter có sẵn; áp 1 lần/party khi `buildTurnBattle()`. QA [report](qa/2026-09-14-b2-tran-phap-content-quick.md) PASS WITH EVIDENCE (P14 live panel check deferred to main checkout).
 
-```text
-modifier
-buff
-skill
-companion
-formation
-```
-
-mechanisms.
+Scope đã đối chiếu với `future-talisman-formation-system-plan.md`: doc đó (2026-08-27) khóa Trận **socket-trên-equipment** (`formations.ts`/`formation_altar`) và đặt sản phẩm aura Nguyên Anh hậu kỳ — placement Tran Pháp (spec 2026-09-05, ungated by design) là mechanism khác, B2 chỉ đổ nội dung cho nó. Trùng tên "Trận Pháp" giữa 3 surface (placement panel / equipment socket / future aura) — reconcile tên là quyết định sản phẩm riêng, ghi nhận không làm trong B2.
 
 ### B3 — Companion roster
 

@@ -102,10 +102,10 @@ describe('GameManager — turn-based status VFX feed (Phase A6)', () => {
     gameManager.eventBus.on<StatusVfxAttachedEvent>('status_vfx_attached', (e) => attached.push(e))
 
     const player = createDefaultPlayer()
-    // hon_don_tran is the TEST-ONLY formation: its shared party buff is
-    // applied inside buildTurnBattle(), BEFORE the first 'fighting' step.
-    // First observation must emit attach or the icon can never spawn.
-    player.formationLoadout = { formationId: 'hon_don_tran', assignments: [] }
+    // A real formation's shared party buff is applied inside
+    // buildTurnBattle(), BEFORE the first 'fighting' step. First
+    // observation must emit attach or the icon can never spawn.
+    player.formationLoadout = { formationId: 'cuu_cung_tran', assignments: [] }
 
     gameManager.registerEnemyTemplates([makeDummyEnemy()])
     gameManager.registerStages([stageFixture()])
@@ -121,10 +121,10 @@ describe('GameManager — turn-based status VFX feed (Phase A6)', () => {
     }
 
     const grant = attached.find(
-      (e) => e.dotType === 'hon_don_tran_test_buff' && e.targetId === 'player',
+      (e) => e.dotType === 'tran_phap_cuu_cung_buff' && e.targetId === 'player',
     )
     expect(grant).toBeDefined()
-    // hon_don_tran_test_buff is authored duration: Infinity → permanent flag.
+    // Formation buffs are authored duration: Infinity → permanent flag.
     expect(grant!.permanent).toBe(true)
   })
 })
