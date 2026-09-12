@@ -1,229 +1,158 @@
 /**
- * Guard (Spec B §7) — every frame a clip asks for exists in the atlas on disk.
- *
- * Spec: docs/superpowers/specs/2026-09-11-combat-animation-metadata-design.md
- * §3.3 and §7.
- *
- * §3.3 chose hand-written metadata over a generated manifest, and accepted the
- * cost out loud: nothing measures the art, so a frame count can drift from the
- * file. This guard is the thing that makes that drift fail a test instead of a
- * frame.
- *
- * It matters most on the day it is least expected. Today the atlas is generated
- * by `scripts/generate-hon-don-tran-placeholder-art.mjs`, so metadata and art
- * agree by construction. When real art lands as a TexturePacker export (§3.4),
- * this is the first thing that will notice if it names its frames differently,
- * pads them to a different width, or simply has 24 frames where the catalogue
- * says 32.
- *
- * Phaser fails this case QUIETLY: `generateFrameNames` for a missing frame
- * yields nothing, and the animation plays short or not at all with no error.
- *
- * These guards must never import app code (they police it), so the clip data is
- * re-read from source rather than imported. That is a real limitation, stated:
- * it parses the placeholder constants, so a future entity whose clips are built
- * some other way is NOT covered until this file learns about it. The corpus
- * check below is what makes that visible rather than silent.
+ * Guard the authored mortal atlas against drift between hand-written clip
+ * metadata and the files Phaser reads at runtime.
  */
 import { describe, expect, it } from 'vitest'
-import { readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { readdirSync, readFileSync, statSync } from 'node:fs'
+import { basename, join } from 'node:path'
+import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
+import {
+  COMBAT_ANIMATION_NAMES,
+  presentationFor,
+} from '@/presentation/art/CombatPresentationCatalogue'
+import type { AtlasClip } from '@/presentation/art/CombatEntityPresentation'
 import { SCAN_TIMEOUT } from './helpers/scanTs'
 
 const GAME_ROOT = process.cwd()
-
-const ANIMATION_SET_SOURCE = join(
-  GAME_ROOT,
-  'src',
-  'presentation',
-  'art',
-  'CombatPresentationCatalogue.ts',
-)
-
-/** Pull a string constant out of the source, without importing it. */
-function stringConstant(source: string, name: string): string {
-  const match = new RegExp(`export const ${name} = '([^']*)'`).exec(source)
-
-  if (!match) {
-    throw new Error(`constant ${name} not found in CombatPresentationCatalogue.ts`)
-  }
-
-  return match[1]!
-}
-
-/** Pull a numeric constant out of the source. */
-function numberConstant(source: string, name: string): number {
-  const match = new RegExp(`export const ${name} = (\\d+)`).exec(source)
-
-  if (!match) {
-    throw new Error(`constant ${name} not found in CombatPresentationCatalogue.ts`)
-  }
-
-  return Number(match[1])
-}
-
-const source = readFileSync(ANIMATION_SET_SOURCE, 'utf8')
-
-const atlasUrl = stringConstant(source, 'PLACEHOLDER_ATLAS_URL')
-const sheetUrl = stringConstant(source, 'PLACEHOLDER_SHEET_URL')
-const framePrefix = stringConstant(source, 'PLACEHOLDER_FRAME_PREFIX')
-const frameSuffix = stringConstant(source, 'PLACEHOLDER_FRAME_SUFFIX')
-const zeroPad = numberConstant(source, 'PLACEHOLDER_ZERO_PAD')
-const frameCount = numberConstant(source, 'PLACEHOLDER_FRAME_COUNT')
-
-/** `assets/...` in the clip is `public/assets/...` on disk. */
-function publicPath(url: string): string {
-  return join(GAME_ROOT, 'public', url)
-}
+const MORTAL_ENTITY_KEY = PLAYER_VISUAL_PROFILES.mortal.combatTextureKey
 
 interface AtlasFrame {
   frame: { x: number; y: number; w: number; h: number }
+  rotated?: boolean
   trimmed: boolean
   spriteSourceSize: { x: number; y: number; w: number; h: number }
   sourceSize: { w: number; h: number }
 }
 
-const atlas = JSON.parse(readFileSync(publicPath(atlasUrl), 'utf8')) as {
+interface AtlasFile {
   frames: Record<string, AtlasFrame>
   meta: { image: string; size: { w: number; h: number } }
 }
 
-function frameName(index: number): string {
-  return `${framePrefix}${String(index).padStart(zeroPad, '0')}${frameSuffix}`
+function publicPath(url: string): string {
+  return join(GAME_ROOT, 'public', url)
 }
 
-describe('placeholder atlas frames exist', () => {
+function mortalClips(): Record<string, AtlasClip> {
+  const presentation = presentationFor(MORTAL_ENTITY_KEY)
+
+  if (!presentation || presentation.kind !== 'animated') {
+    throw new Error(`Expected animated mortal presentation for '${MORTAL_ENTITY_KEY}'`)
+  }
+
+  return presentation.clips
+}
+
+function frameName(clip: AtlasClip, index: number): string {
+  return `${clip.framePrefix}${String(index).padStart(clip.zeroPad, '0')}${clip.frameSuffix}`
+}
+
+function sourceFiles(root: string): string[] {
+  const files: string[] = []
+
+  for (const entry of readdirSync(root)) {
+    const path = join(root, entry)
+
+    if (statSync(path).isDirectory()) {
+      files.push(...sourceFiles(path))
+    } else if (/\.(?:ts|tsx|vue)$/.test(entry)) {
+      files.push(path)
+    }
+  }
+
+  return files
+}
+
+const clips = mortalClips()
+const atlasUrl = clips.idle.atlasUrl
+const sheetUrl = clips.idle.sheetUrl
+const atlas = JSON.parse(readFileSync(publicPath(atlasUrl), 'utf8')) as AtlasFile
+
+describe('mortal combat atlas frames', () => {
   it(
-    'the atlas json and its png are both on disk where the clip says',
+    'has the atlas json and its png on disk where the catalogue says',
     () => {
       expect(() => readFileSync(publicPath(atlasUrl))).not.toThrow()
       expect(() => readFileSync(publicPath(sheetUrl))).not.toThrow()
-
-      // The json names its own image; if that disagrees with the clip's
-      // sheetUrl, Phaser loads one file and indexes into another.
-      expect(atlas.meta.image).toBe(sheetUrl.split('/').pop())
+      expect(atlas.meta.image).toBe(basename(sheetUrl))
+      expect(atlas.meta.size.w).toBeGreaterThan(0)
+      expect(atlas.meta.size.h).toBeGreaterThan(0)
     },
     SCAN_TIMEOUT,
   )
 
   it(
-    'every frame the clip range asks for is present, by exact name',
+    'has every declared frame by exact frame_000.png naming',
     () => {
-      const missing: string[] = []
+      const declaredFrameNames = new Set<string>()
 
-      for (let index = 0; index < frameCount; index++) {
-        if (!atlas.frames[frameName(index)]) {
-          missing.push(frameName(index))
+      for (const name of COMBAT_ANIMATION_NAMES) {
+        const clip = clips[name]
+
+        for (let index = clip.firstFrame; index <= clip.lastFrame; index++) {
+          const key = frameName(clip, index)
+          declaredFrameNames.add(key)
+          expect(atlas.frames[key], `${name}: missing ${key}`).toBeDefined()
+          expect(key).toMatch(/^frame_\d{3}\.png$/)
         }
       }
 
-      expect(missing).toEqual([])
+      expect(Object.keys(atlas.frames).sort()).toEqual([...declaredFrameNames].sort())
     },
     SCAN_TIMEOUT,
   )
 
   it(
-    'the atlas holds no frames beyond the declared count',
+    'keeps all five clips on one sheet with consistent source frames',
     () => {
-      // The other direction, and not pedantry: extra frames mean the art has
-      // moved on and the metadata has not, which is exactly the drift §3.3
-      // accepted the risk of.
-      expect(Object.keys(atlas.frames)).toHaveLength(frameCount)
-    },
-    SCAN_TIMEOUT,
-  )
-
-  it(
-    'frames are really trimmed, so the trim path is exercised before real art',
-    () => {
-      // §3.4: a placeholder packed with identity trim would leave
-      // spriteSourceSize handling untested until the first real atlas. Distinct
-      // trimmed sizes prove the generator measured actual bounds.
-      const distinctWidths = new Set(
-        Object.values(atlas.frames).map((frame) => frame.spriteSourceSize.w),
+      expect(new Set(Object.values(clips).map((clip) => clip.sheetKey))).toEqual(
+        new Set([clips.idle.sheetKey]),
       )
 
-      expect(Object.values(atlas.frames).every((frame) => frame.trimmed)).toBe(true)
-      expect(distinctWidths.size).toBeGreaterThan(1)
-    },
-    SCAN_TIMEOUT,
-  )
+      for (const name of COMBAT_ANIMATION_NAMES) {
+        const clip = clips[name]
 
-  it(
-    'every trimmed frame sits inside its untrimmed box, and inside the sheet',
-    () => {
-      for (const [name, frame] of Object.entries(atlas.frames)) {
-        expect(
-          frame.spriteSourceSize.x + frame.spriteSourceSize.w,
-          `${name} overflows its sourceSize horizontally`,
-        ).toBeLessThanOrEqual(frame.sourceSize.w)
+        for (let index = clip.firstFrame; index <= clip.lastFrame; index++) {
+          const frame = atlas.frames[frameName(clip, index)]!
 
-        expect(
-          frame.spriteSourceSize.y + frame.spriteSourceSize.h,
-          `${name} overflows its sourceSize vertically`,
-        ).toBeLessThanOrEqual(frame.sourceSize.h)
-
-        expect(frame.frame.x + frame.frame.w, `${name} overflows the sheet`).toBeLessThanOrEqual(
-          atlas.meta.size.w,
-        )
-
-        expect(frame.frame.y + frame.frame.h, `${name} overflows the sheet`).toBeLessThanOrEqual(
-          atlas.meta.size.h,
-        )
-      }
-    },
-    SCAN_TIMEOUT,
-  )
-
-  it(
-    "the clip's declared sourceSize is the box the atlas actually authored",
-    () => {
-      // The datum that sizes an animated sprite on screen. When it drifted from
-      // the art, nothing failed and the player rendered 3.44x too wide
-      // (measured 2026-09-11) — because the size came from a different file
-      // entirely than the pixels did.
-      //
-      // Read from the catalogue rather than imported, like everything else in
-      // this file: these guards police app code, so they do not import it.
-      const declaredWidth = numberConstant(source, 'PLACEHOLDER_FRAME_WIDTH')
-      const declaredHeight = numberConstant(source, 'PLACEHOLDER_FRAME_HEIGHT')
-
-      for (const [name, frame] of Object.entries(atlas.frames)) {
-        expect(frame.sourceSize.w, `${name}: authored width disagrees`).toBe(declaredWidth)
-        expect(frame.sourceSize.h, `${name}: authored height disagrees`).toBe(declaredHeight)
-      }
-    },
-    SCAN_TIMEOUT,
-  )
-
-  it(
-    'nothing loads this atlas as a grid spritesheet any more',
-    () => {
-      // A leftover `load.spritesheet` on the atlas key would read the packed
-      // sheet as a uniform grid and produce garbage frames, silently.
-      const scenes = join(GAME_ROOT, 'src')
-
-      const offenders: string[] = []
-
-      const walk = (dir: string): void => {
-        for (const entry of readdirSync(dir, { withFileTypes: true })) {
-          const full = join(dir, entry.name)
-
-          if (entry.isDirectory()) {
-            walk(full)
-          } else if (entry.name.endsWith('.ts') || entry.name.endsWith('.vue')) {
-            const text = readFileSync(full, 'utf8')
-
-            if (/load\s*\.\s*spritesheet\s*\(\s*PLACEHOLDER_SHEET_KEY/.test(text)) {
-              offenders.push(full.slice(scenes.length + 1))
-            }
-          }
+          expect(frame.trimmed, `${name} frame ${index} is not trimmed`).toBe(true)
+          expect(frame.sourceSize, `${name} frame ${index} sourceSize drift`).toEqual(
+            clip.sourceSize,
+          )
+          expect(frame.frame.x).toBeGreaterThanOrEqual(0)
+          expect(frame.frame.y).toBeGreaterThanOrEqual(0)
+          expect(frame.frame.x + frame.frame.w).toBeLessThanOrEqual(atlas.meta.size.w)
+          expect(frame.frame.y + frame.frame.h).toBeLessThanOrEqual(atlas.meta.size.h)
+          expect(frame.spriteSourceSize.x).toBeGreaterThanOrEqual(0)
+          expect(frame.spriteSourceSize.y).toBeGreaterThanOrEqual(0)
+          expect(frame.spriteSourceSize.x + frame.spriteSourceSize.w).toBeLessThanOrEqual(
+            clip.sourceSize.w,
+          )
+          expect(frame.spriteSourceSize.y + frame.spriteSourceSize.h).toBeLessThanOrEqual(
+            clip.sourceSize.h,
+          )
+          expect(frame.spriteSourceSize.w).toBeGreaterThan(0)
+          expect(frame.spriteSourceSize.h).toBeGreaterThan(0)
+          expect(
+            frame.spriteSourceSize.w !== clip.sourceSize.w ||
+              frame.spriteSourceSize.h !== clip.sourceSize.h,
+            `${name} frame ${index} is identity-trimmed`,
+          ).toBe(true)
         }
       }
+    },
+    SCAN_TIMEOUT,
+  )
 
-      walk(scenes)
+  it(
+    'does not register the atlas through a grid spritesheet loader',
+    () => {
+      const source = sourceFiles(join(GAME_ROOT, 'src'))
+        .map((path) => readFileSync(path, 'utf8'))
+        .join('\n')
 
-      expect(offenders).toEqual([])
+      expect(source).not.toMatch(/load\.spritesheet[\s\S]{0,300}player-mortal-combat-atlas-v1/)
+      expect(source).not.toMatch(/player-mortal-combat-atlas-v1[\s\S]{0,300}load\.spritesheet/)
     },
     SCAN_TIMEOUT,
   )
