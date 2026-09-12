@@ -50,7 +50,6 @@ function makeKillSkill(): Skill {
     level: 1,
     maxLevel: 1,
     cooldown: 0,
-    remainingCooldown: 0,
     target: 'enemy',
     effects: [],
     triggers: [

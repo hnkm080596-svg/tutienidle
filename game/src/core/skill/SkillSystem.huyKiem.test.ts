@@ -2,16 +2,6 @@ import { describe, expect, it } from 'vitest'
 import { SkillManager } from './SkillManager'
 import { SkillSystem, getHuyKiemFlatDamageBonus } from './SkillSystem'
 import { SKILLS } from '@/data/skill/Skills'
-import type { CombatEntity } from '../combat/CombatEntity'
-
-function makeEntity(): CombatEntity {
-  return {
-    realmIndex: 0,
-    currentMp: 0,
-    currentSwordIntent: 0,
-    currentMomentum: 0,
-  } as CombatEntity
-}
 
 describe('Huy Kiếm — flat damage vĩnh viễn theo cast', () => {
   it('mỗi 10 cast +1 flat damage, không trần', () => {
@@ -70,19 +60,18 @@ describe('Huy Kiếm — 3 level mốc 1000/10000 cast', () => {
     const template = SKILLS.find((skill) => skill.id === 'tram')!
     system.learn(template)
     system.equipToSlot('tram', 0)
-    const entity = makeEntity()
     const skill = manager.get('tram')!
 
-    for (let cast = 0; cast < 999; cast++) system.useInSlot('tram', 0, entity)
+    for (let cast = 0; cast < 999; cast++) system.recordCast('tram')
     expect(skill.level).toBe(1)
 
-    system.useInSlot('tram', 0, entity)
+    system.recordCast('tram')
     expect(skill.level).toBe(2)
 
-    for (let cast = 0; cast < 9000; cast++) system.useInSlot('tram', 0, entity)
+    for (let cast = 0; cast < 9000; cast++) system.recordCast('tram')
     expect(skill.level).toBe(3)
 
-    for (let cast = 0; cast < 5000; cast++) system.useInSlot('tram', 0, entity)
+    for (let cast = 0; cast < 5000; cast++) system.recordCast('tram')
     expect(skill.level).toBe(3)
     expect(skill.totalExperience).toBe(15000)
   })

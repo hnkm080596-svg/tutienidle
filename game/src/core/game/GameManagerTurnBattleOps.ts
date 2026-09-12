@@ -145,6 +145,19 @@ export class GameManagerTurnBattleOps {
   private detachClockStep: (() => void) | null = null
   private detachTokenListener: (() => void) | null = null
 
+  /**
+   * 9.5 #9 — engine-side cast notification, filtered to the primary
+   * player. The engine reports every committed cast (enemy, companion,
+   * player); only players[0] writes into the skillCastCounts/skillLevels
+   * mirror via deps.recordPrimaryPlayerCast. Reads this.turnBattle live:
+   * players[0]'s participant identity is rebuilt per battle.
+   */
+  private readonly onSkillCast = (actor: TurnBattleParticipant, skillId: string): void => {
+    if (actor === this.turnBattle?.players[0]) {
+      this.deps.recordPrimaryPlayerCast?.(skillId)
+    }
+  }
+
   /** Completion callbacks for the steps currently parked on a renderer signal. */
   private pendingStepDone: Partial<Record<TurnStepSignal, () => void>> = {}
 
@@ -185,8 +198,21 @@ export class GameManagerTurnBattleOps {
     resolvePlayerSpecialUltimate: (
       player: PlayerData,
     ) => { special?: TurnSkillDefinition; ultimate?: TurnSkillDefinition }
+    // 9.5 #9 — committed-cast sink for the PRIMARY player only
+    // (SkillSystem.recordCast; engine fires for every actor, ops filters
+    // to turnBattle.players[0] so companion/enemy casts never write into
+    // the player's skillCastCounts/skillLevels mirror).
+    recordPrimaryPlayerCast?: (skillId: string) => void
   }) {
-    this.turnBattleSystem = new TurnBattleSystem(deps.combatSystem)
+    this.turnBattleSystem = new TurnBattleSystem(
+      deps.combatSystem,
+      10_000,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      this.onSkillCast,
+    )
     this.presentationSession = new PresentationSession(deps.sessionAllocator)
 
     // Live getters for turnBattleSystem/turnBattle are required: both are
@@ -966,6 +992,7 @@ export class GameManagerTurnBattleOps {
       },
       REACTION_PATH_POOL, // Phase A4 - marker special's 2-pick pool now live
       new TurnReactionManager(this.deps.eventBus),
+      this.onSkillCast,
     )
   }
 
@@ -1056,6 +1083,7 @@ export class GameManagerTurnBattleOps {
         },
         REACTION_PATH_POOL, // Phase A4 - marker special's 2-pick pool now live
         new TurnReactionManager(this.deps.eventBus),
+        this.onSkillCast,
       )
     }
 

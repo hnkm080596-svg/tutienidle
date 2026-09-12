@@ -2003,7 +2003,7 @@ They do **not** override the execution priority defined in Section 0.
 - Pipeline damage duy nhất, test phủ dày ở combat (~30 file battle/combat/skill, tổng 390 file test / 2510 tests — 2026-09-05).
 - Vòng lặp tu luyện → Độ Kiếp → chọn đường đã có cá tính riêng.
 - Kinh tế có file balance tách riêng, giao dịch atomic chống nhân bản.
-- Combat turn-based ATB đã thay hẳn engine real-time cũ (mục 9) — `TurnBattleSystem` là engine duy nhất, engine cũ nằm nguyên trong `battle/legacy/` chờ xóa.
+- Combat turn-based ATB đã thay hẳn engine real-time cũ (mục 9) — `TurnBattleSystem` là engine duy nhất; `battle/legacy/` + dead cast/cooldown surface của SkillSystem đã dọn xong (9.5 #9, 2026-09-12).
 
 **Vấn đề lớn nhất, theo thứ tự rủi ro:**
 
@@ -2480,7 +2480,7 @@ Dựng các primitive thuần (pure function), test riêng, KHÔNG đụng `Batt
 | 6 | **Buff content cho TribulationPhase/boss enrage, equipment (mới), talent passive** | Content (wiring đã xong) | ✅ **XONG 2026-09-07** (branch `feat/phase-a2-buff-content`) — boss enrage turn-based cho 3 boss cuối cảnh giới + talent `passiveConvertsTo` rewire sang turn engine (silent-bug fix) + guard registry lookup; chi tiết ở mục 0 dòng A2. Trang bị chốt stats-only (không có field buff). |
 | 7 | **Buff duration presentation theo lượt** (tooltip/VFX) | UI nhỏ | 🔴 Chờ #6 |
 | 8 | **Party recruit/UI/companion content** (engine `players[]` đã xong) | Feature lớn — spec riêng | 🔴 Chưa lên lịch |
-| 9 | **Xoá `battle/legacy/`** + gỡ shim GameManager/StageWaveSystem (checklist trong `legacy/README.md`) | Cleanup — spec riêng | 🔴 Chờ #2 + #6 |
+| 9 | **Xoá `battle/legacy/`** + gỡ shim GameManager/StageWaveSystem + revive đếm-cast | Cleanup — spec riêng | ✅ **XONG 2026-09-12** (branch `fix/95-9-legacy-cast-count`): `battle/legacy/` đã xóa từ C1 (`834113f6`); phần còn lại gồm dead `skillSystem.update()` call + cluster cast-transaction (`canUse`/`canUseInSlot`/`beginCastInSlot`/`commitSlotCooldown`/`refundResource`/`useInSlot`/`gainCastExperience`) đã xóa; `Skill.remainingCooldown`/`remainingCooldownBySlot` + 5 field cast-transaction trên `CombatEntity` (castingSkillId/castTime*/castTargetId/castingSlotIndex/skillCadenceRemainingBySlot) xóa theo. **Mechanic chết được revive**: `TurnBattleSystem.onSkillCast` (optional collaborator, bắn tại `commitAction` trong `applyActionImpact`) → ops filter `players[0]` → `SkillSystem.recordCast()` → `castCountSink` → `player.skillCastCounts`/`skillLevels` mirror — prereq `skillCastCount` (node Bạt Kiếm, `KiemTuNodes`), route `bat_kiem` (≥10000 cast tram), và Huy Kiếm level-theo-cast sống lại đúng ngưỡng authored (1000/10000, không rebalance). **Bug đi kèm**: charge-init `commitAction` trước đây nằm trong `affected`-gate — `affected` luôn rỗng cho enemy-targeted charge ⇒ `bat_kiem_thuat` chưa từng trả cooldownTurns:5; giờ commit ở declare đúng intent. QA quick + full verify ghi trong commit message |
 | 10 | ~~Multi-target death-mid-resolution hardening~~ | — | ✅ **XONG** (`d22ed4e`) — gạch khỏi danh sách việc |
 | 11 | ~~**Boss enrage/tribulation content** bằng buff thủ công (KHÔNG phase-system)~~ | Content | ✅ **XONG qua #6/A2** (2026-09-08 sửa dòng — cùng nội dung, chưa gạch trước đó) |
 | 12 | **Pháp Tu Reaction Path content thật** (pool element skills + ultimate % buff) | Content | 🟡 Cơ chế xong, `reaction_empowerment` inert — số liệu để implement-time |

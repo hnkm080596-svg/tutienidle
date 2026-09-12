@@ -4,7 +4,6 @@ import { SkillManager } from './SkillManager'
 import { SkillSystem } from './SkillSystem'
 import { getSkillUpgradeInsightCost } from './SkillUpgradeBalance'
 import { createDefaultPlayer } from '../player/Player'
-import type { CombatEntity } from '../combat/CombatEntity'
 
 function skill(overrides: Partial<Skill> = {}): Skill {
   return {
@@ -15,7 +14,6 @@ function skill(overrides: Partial<Skill> = {}): Skill {
     level: 1,
     maxLevel: 10,
     cooldown: 0,
-    remainingCooldown: 0,
     cost: 0,
     target: 'enemy',
     effects: [{ type: 'damage', value: 100, damageType: 'physical' }],
@@ -31,45 +29,6 @@ function setup(template = skill(), onLevelUp = vi.fn()) {
   expect(system.learn(template)).toBe(true)
   return { manager, system, learned: manager.get(template.id)!, onLevelUp }
 }
-
-describe('SkillSystem — execution policy cooldown clock', () => {
-  it('policy attack_speed KHÔNG set slot/global cooldown (cadence do BattleSystem quản)', () => {
-    const { system, learned } = setup(
-      skill({ cooldown: 10, execution: { kind: 'attack_speed' }, resourceType: 'none' }),
-    )
-    const entity = {
-      realmIndex: 0,
-      currentMp: 0,
-      currentSwordIntent: 0,
-      currentMomentum: 0,
-    } as CombatEntity
-
-    system.equipToSlot(learned.id, 0)
-
-    expect(system.useInSlot(learned.id, 0, entity)).toBe(learned)
-    // Không cooldown clock nào được commit — cadence timer là runtime
-    // trên CombatEntity.skillCadenceRemainingBySlot.
-    expect(learned.remainingCooldown).toBe(0)
-    expect(learned.remainingCooldownBySlot?.[0]).toBeUndefined()
-  })
-
-  it('policy cast_time commit cooldown ngay lúc BẮT ĐẦU niệm', () => {
-    const { system, learned } = setup(
-      skill({ cooldown: 10, execution: { kind: 'cast_time', castTime: 1.2 }, resourceType: 'none' }),
-    )
-    const entity = {
-      realmIndex: 0,
-      currentMp: 0,
-      currentSwordIntent: 0,
-      currentMomentum: 0,
-    } as CombatEntity
-
-    system.equipToSlot(learned.id, 0)
-
-    expect(system.useInSlot(learned.id, 0, entity)).toBe(learned)
-    expect(learned.remainingCooldownBySlot?.[0]).toBe(10)
-  })
-})
 
 describe('SkillSystem.upgradeSkill (Cảm ngộ Kỹ năng)', () => {
   it('đủ Cảm ngộ thì tăng đúng 1 level, trừ đúng chi phí, phát callback', () => {

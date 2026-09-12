@@ -69,7 +69,6 @@ function createBasicSkill(): Skill {
     level: 1,
     maxLevel: 10,
     cooldown: 0,
-    remainingCooldown: 0,
     cost: 0,
     target: 'enemy',
     effects: [{ type: 'damage', value: 1, damageType: 'physical' }],

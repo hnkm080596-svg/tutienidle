@@ -3,8 +3,7 @@ import { describe, expect, it } from 'vitest'
 // RETIRED (Completion Task 9, 2026-09-04) â€” category (c) not-yet-migrated.
 //
 // 2 test nÃ y pin co ch? real-time thu?n c?a chu?i PhÃ¡p Tu Thu?n:
-// - chain cast glue (skillSystem.update + battleSystem.update cadence
-//   real-time, event 'cast' t? BattleSystem cu),
+// - chain cast glue (legacy real-time cadence + event 'cast' t? BattleSystem cu),
 // - Th? (currentThe) tÃ­ch qua link chu?i (advanceChainAndGainThe glue),
 // - ult glue qua tryPlayerUltimate() (UltimateSystem â€” retire theo cutover).
 //
