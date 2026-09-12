@@ -1563,6 +1563,7 @@ export class GameManagerTurnBattleOps {
    */
   private rollAutoFarmCycleReward(player: PlayerData, stage: Stage) {
     this.deps.battleLoot.beginBattle()
+    this.deps.battleLoot.setChannel('idle')
     this.deps.battleLoot.setSession(this.deps.buildPlayerRewardReceiver(player), player)
 
     const killedEntities: { entity: CombatEntity; rewardGranted: boolean }[] = []
@@ -1591,5 +1592,9 @@ export class GameManagerTurnBattleOps {
     } as unknown as Battle
 
     this.deps.battleLoot.processDefeatedEnemies(shimBattle, stage)
+
+    // Restore the default so a real battle started later in the same tick is
+    // not silently farmed at idle rates.
+    this.deps.battleLoot.setChannel('active')
   }
 }
