@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
@@ -152,7 +152,17 @@ describe('AR-03: Self-buff execution and leech healing', () => {
 
     const hpBefore = player.currentHp
 
-    system.resolveNextStep(battle)
+    // Pin the hit/crit dice (fd22f2b6 discipline): base stats carry 5%
+    // criticalRate and rating-based hit chance, so an unpinned resolve can
+    // miss or crit — this suite flaked as "expected 500 to be greater than
+    // 500" when the attack missed and leech healed 0. 0.5 lands the hit
+    // without a crit for the default rating spread.
+    const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.5)
+    try {
+      system.resolveNextStep(battle)
+    } finally {
+      randomSpy.mockRestore()
+    }
 
     // Player should heal 40% of the damage dealt.
     expect(player.currentHp).toBeGreaterThan(hpBefore)

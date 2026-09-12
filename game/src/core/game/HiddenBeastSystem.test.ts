@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { HiddenBeastSystem, HIDDEN_BEAST_KILL_THRESHOLD } from './HiddenBeastSystem'
 import { createDefaultPlayer, type PlayerData } from '../player/Player'
 
@@ -46,16 +46,24 @@ describe('HiddenBeastSystem — cửa sổ quái ẩn (spec dot-pha-loi-kiep §4
     closed.luyenKhiKillsSinceBeast = 0
     expect(system.maybeReplaceSpawn(closed, 'qi_refining')).toBeUndefined()
 
-    // Deps controlled-roll: luôn trúng 5%
+    // Deps controlled-roll. Math.random is PINNED (same discipline as
+    // CombatSystem.skillScaling.test.ts, fd22f2b6): the old unpinned loop
+    // "accepted real binomial variance" on 100 rolls of 5% -> ~0.59% chance
+    // of zero hits per run, which surfaced as a full-suite flake. The pinned
+    // sequence hits on every 20th roll -> exactly 5 hits in 100 rolls,
+    // deterministically inside the (0, 20) bound below.
     const alwaysSystem = new HiddenBeastSystem({ getEnemyTemplate: (id) => ({ id } as never) })
     const open = luyenKhiPlayer()
     open.luyenKhiKillsSinceBeast = HIDDEN_BEAST_KILL_THRESHOLD
+    let rollIndex = 0
+    const randomSpy = vi.spyOn(Math, 'random').mockImplementation(() => (rollIndex++ % 20 === 0 ? 0.01 : 0.99))
     let sawBeast = 0
     for (let i = 0; i < 100; i++) {
       const replaced = alwaysSystem.maybeReplaceSpawn(open, 'qi_refining')
       if (replaced?.id === 'huyet_mong') sawBeast++
     }
-    // 5%/spawn × 100 lần — chấp nhận khoảng dao động binomial rộng
+    randomSpy.mockRestore()
+
     expect(sawBeast).toBeGreaterThan(0)
     expect(sawBeast).toBeLessThan(20)
   })
