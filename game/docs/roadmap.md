@@ -1849,8 +1849,8 @@ Once the Content Resume Gate is reached, resume content in this order unless new
 ### B1 — Perfect Clear / Auto-farm completion
 
 - ~~establish `perfectClearTurnLimit`~~ — done 2026-09-12 (`feat/pc-tag-system`, rounds-based, builder-owned; see 9.5 #4);
-- verify auto-farm Hoàn Mỹ (unit-verified; live P14 pass still pending);
-- E2E through actual progression.
+- ~~verify auto-farm Hoàn Mỹ~~ — done 2026-09-14 live pass on main checkout (real browser: gate chip → `startAutoFarm` → ~4 wall-clock cycles → cultivation/skillInsight accrued + persisted; QA [report](qa/2026-09-14-b1-autofarm-live-quick.md));
+- ~~E2E through actual progression~~ — covered by the same pass (create → stage select → battle mount → farm rewards → save persistence across reload).
 
 ### B2 — Trận Pháp production content
 
