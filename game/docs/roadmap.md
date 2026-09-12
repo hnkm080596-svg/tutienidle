@@ -1860,7 +1860,7 @@ Scope đã đối chiếu với `future-talisman-formation-system-plan.md`: doc 
 
 ### B3 — Companion roster
 
-Create production companion content only after combat skill/stat/buff contracts are stable.
+✅ **XONG 2026-09-13** (user merge `3e75c8d7`, branch `companion-gacha`) — vượt scope tối thiểu: production roster 10 companion (4 hoang / 3 huyen / 2 dia / 1 thien) thay test-only placeholders, gacha Chiêu Hiện Quán (pull + Duyên Phân exchange + pity), CompanionPanel, companion battle EXP, save v60 (`instanceId`/`realmId`/`realmLevel`/`constellationRank`). QA [report](qa/2026-09-12-companion-gacha-quick.md) — 2 defect đã fix trong `b4cc0887`.
 
 ### B4 — Talent M2 / M3
 
