@@ -72,7 +72,10 @@ describe('GameManager continuous repeat stage', () => {
     expect(gameManager.getBattle()?.state).toBe('fighting')
     expect(gameManager.getStageProgress()).not.toBeNull()
     expect(player.completedStageIds).toContain(stage.id)
-    expect(rewardParticles.filter(event => event.kind === 'currency')).toHaveLength(2)
+    // Drop-system (2026-09-12): mortal table pays 1-2 stone per kill, so
+    // kill count no longer equals particle count — >=1 proves the
+    // currency flow still fires inside the repeated cycle.
+    expect(rewardParticles.filter(event => event.kind === 'currency').length).toBeGreaterThanOrEqual(1)
   })
 
   it('can abandon during intro and releases the active stage immediately', () => {

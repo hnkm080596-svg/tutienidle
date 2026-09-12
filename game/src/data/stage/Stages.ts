@@ -21,8 +21,8 @@ const BASE_STAGES: Stage[] = [
     enemyPool: [
       { enemyId: 'wild_wolf', weight: 5 },
       // 10% cơ hội là "Sơn Tặc Đầu Lĩnh" (Tinh Anh) — nguồn rơi thật
-      // đầu tiên cho Phá Cảnh Tâm Pháp (xem eliteRewards trong
-      // data/enemy/Enemies.ts).
+      // đầu tiên cho Phá Cảnh Tâm Pháp (xem signatureDrops của bandit
+      // trong data/enemy/Enemies.ts + bảng family 'bandit').
       { enemyId: 'bandit', weight: 3, eliteChance: 0.1 },
       { enemyId: 'mountain_hawk', weight: 4 },
       { enemyId: 'giant_earthworm', weight: 2 },

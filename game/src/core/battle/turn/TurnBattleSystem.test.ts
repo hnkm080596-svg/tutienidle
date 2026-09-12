@@ -2273,22 +2273,27 @@ describe('TurnBattleSystem Phase A1 end-to-end � real production reaction cont
 
     // Force the second ailment (Th?y side of "B?c Hoi") � this test proves
     // the WIRING works end-to-end with real data, not re-testing RNG.
-    new TurnBuffSystem(enemyParticipant.buffs).apply(
-      TURN_BUFF_REGISTRY.get('te_cong'),
-      firePlayer,
-      target,
-      TURN_BUFF_REGISTRY,
-    )
+    // te_cong only lasts 4 turns, so refresh it while polling: otherwise a
+    // late bong hit (~6% of runs at 0.5 chance) finds no Thuy ailment and
+    // the reaction never fires. The reaction consumes both ailments on
+    // trigger, so poll on the reaction event, not on bong persisting.
+    const applyTeCong = () =>
+      new TurnBuffSystem(enemyParticipant.buffs).apply(
+        TURN_BUFF_REGISTRY.get('te_cong'),
+        firePlayer,
+        target,
+        TURN_BUFF_REGISTRY,
+      )
 
     // hoa_cau_thuat's ailment chance is 0.5 � loop until a fire hit lands
     // with overwhelming probability (matches this file's convention of
     // looping enough iterations for chance-based content).
     for (let i = 0; i < 50; i++) {
-      if (enemyParticipant.buffs.hasAny('bong')) break
+      if (reactionEvents.length > 0) break
+      applyTeCong()
       system.resolveNextStep(battle)
     }
 
-    expect(enemyParticipant.buffs.hasAny('bong')).toBe(true)
     expect(reactionEvents.length).toBeGreaterThan(0)
   })
 })

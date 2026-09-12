@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { ENEMIES } from './Enemies'
+import { STAGE_DROP_TABLES } from '../drop/StageDropTables'
+import { FAMILY_DROP_TABLES } from '../drop/FamilyDropTables'
 import { QUESTS } from '../quest/quests'
 import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../realm/BodyRefinement'
 import { DOAN_BAO_THACH_MATERIAL_ID } from '../../core/artifact/ArtifactProgression'
@@ -22,16 +24,31 @@ const LORE_ALLOWLIST = new Set([
 function collectDroppedMaterialIds(): Set<string> {
   const ids = new Set<string>()
 
-  // Spec dot-pha-loi-kiep §5.1 — quái Kiếp đã dỡ (TribulationDirector
-  // không dùng quái), chỉ ENEMIES còn rơi material.
-  for (const enemy of ENEMIES) {
-    for (const reward of [enemy.rewards, enemy.eliteRewards, enemy.bossRewards]) {
-      for (const drop of reward?.itemDrops ?? []) {
-        if (drop.kind === 'material') {
-          ids.add(drop.itemId)
-        }
+  // Drop-system (2026-09-12): materials drop from THREE sources now —
+  // stage tables, family tables, and per-enemy signatureDrops. The old
+  // rewards/eliteRewards/bossRewards fields are being retired; missing
+  // any one source here would leave this invariant green while the rule
+  // leaks.
+  const addFrom = (entries: readonly { kind: string; itemId?: string }[]) => {
+    for (const entry of entries) {
+      if (entry.kind === 'material' && entry.itemId) {
+        ids.add(entry.itemId)
       }
     }
+  }
+
+  for (const table of STAGE_DROP_TABLES) {
+    addFrom(table.guaranteed)
+    addFrom(table.pool)
+  }
+
+  for (const table of FAMILY_DROP_TABLES) {
+    addFrom(table.guaranteed)
+    addFrom(table.pool)
+  }
+
+  for (const enemy of ENEMIES) {
+    addFrom(enemy.signatureDrops ?? [])
   }
 
   return ids

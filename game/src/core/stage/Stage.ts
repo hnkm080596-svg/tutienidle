@@ -3,10 +3,10 @@ export interface StageEnemyEntry {
 
   weight: number
 
-  // 0..1 — cơ hội lần spawn đó là bản Elite (buff stat + rewards
-  // riêng, xem core/enemy/EnemyStatInput.ts's applyEliteMultiplier()
-  // và Enemy.eliteRewards) thay vì bản thường. Mặc định 0 (không có
-  // Elite) — tối giản, chỉ đủ để Phá Cảnh Tâm Pháp có nguồn rơi thật.
+  // 0..1 — cơ hội lần spawn đó là bản Elite (buff stat riêng, xem
+  // core/enemy/EnemyStatInput.ts's applyEliteMultiplier(); drop đậm hơn
+  // qua tinh_anh modifier trong core/drop) thay vì bản thường. Mặc định
+  // 0 (không có Elite).
   eliteChance?: number
 }
 

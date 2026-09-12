@@ -1563,33 +1563,42 @@ export class GameManagerTurnBattleOps {
    */
   private rollAutoFarmCycleReward(player: PlayerData, stage: Stage) {
     this.deps.battleLoot.beginBattle()
+    this.deps.battleLoot.setChannel('idle')
     this.deps.battleLoot.setSession(this.deps.buildPlayerRewardReceiver(player), player)
 
-    const killedEntities: { entity: CombatEntity; rewardGranted: boolean }[] = []
+    // try/finally: a throw mid-cycle (e.g. createInstance on a missing
+    // profession grade) must not leak 'idle' into the next real battle.
+    try {
+      const killedEntities: { entity: CombatEntity; rewardGranted: boolean }[] = []
 
-    const rollTotalEnemyCount = effectiveTotalEnemyCount(stage)
+      const rollTotalEnemyCount = effectiveTotalEnemyCount(stage)
 
-    for (let i = 0; i < rollTotalEnemyCount; i++) {
-      const isFinalSpawn = i === rollTotalEnemyCount - 1
-      const template = this.deps.stageWaves.pickEnemyForTurnSpawn(stage, isFinalSpawn)
+      for (let i = 0; i < rollTotalEnemyCount; i++) {
+        const isFinalSpawn = i === rollTotalEnemyCount - 1
+        const template = this.deps.stageWaves.pickEnemyForTurnSpawn(stage, isFinalSpawn)
 
-      if (!template) {
-        continue
+        if (!template) {
+          continue
+        }
+
+        const entity = enemyToCombatEntity(this.deps.enemySystem.spawn(template))
+        entity.alive = false
+
+        killedEntities.push({ entity, rewardGranted: false })
       }
 
-      const entity = enemyToCombatEntity(this.deps.enemySystem.spawn(template))
-      entity.alive = false
+      // Player shim: only processDefeatedEnemies's heal-on-kill branch reads
+      // it - a non-alive entity is an inert placeholder (heal math inert).
+      const shimBattle = {
+        player: killedEntities[0]?.entity,
+        enemies: killedEntities,
+      } as unknown as Battle
 
-      killedEntities.push({ entity, rewardGranted: false })
+      this.deps.battleLoot.processDefeatedEnemies(shimBattle, stage)
+    } finally {
+      // Restore the default so a real battle started later in the same tick
+      // is not silently farmed at idle rates.
+      this.deps.battleLoot.setChannel('active')
     }
-
-    // Player shim: only processDefeatedEnemies's heal-on-kill branch reads
-    // it - a non-alive entity is an inert placeholder (heal math inert).
-    const shimBattle = {
-      player: killedEntities[0]?.entity,
-      enemies: killedEntities,
-    } as unknown as Battle
-
-    this.deps.battleLoot.processDefeatedEnemies(shimBattle)
   }
 }

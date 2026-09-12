@@ -125,7 +125,7 @@ export class StageWaveSystem {
   /**
    * Roll 1 entry trong enemyPool theo weight, tra template, rồi roll
    * riêng `eliteChance` của ĐÚNG entry đó — trúng thì trả bản Elite
-   * (buff stat + eliteRewards nếu có, xem
+   * (buff stat, xem
    * core/enemy/Enemy.createEliteVariant()) thay vì bản thường. Dùng
    * chung cho quái ĐẦU (start) lẫn quái spawn giữa chừng (update).
    *

@@ -7,11 +7,10 @@ import { defineEnemy } from '../enemy/Enemy'
 import type { Equipment } from '../equipment/Equipment'
 
 // Uncommitted audit followup plan, mục "Đồng nhất thông báo trang bị rơi
-// ngẫu nhiên" (2026-08-24) — grantRandomEquipmentDrop() (rớt đồ NGẪU
-// NHIÊN theo BOSS/NORMAL_EQUIPMENT_DROP_CHANCE, tách biệt hoàn toàn với
-// enemy.rewards.itemDrops) trước đây thiếu pushLootNotification() so với
-// nhánh 'equipment' của grantItemDrops() — bag/particle/battle summary vẫn
-// cộng đúng nhưng KHÔNG có toast báo cho người chơi biết vừa rớt đồ.
+// ngẫu nhiên" (2026-08-24) — đường "rớt đồ NGẪU NHIÊN" giờ là pool entry
+// 'equipment_any' trong stage table (drop-system 2026-09-12): resolver
+// chọn nó, grantResolvedDrops rút template từ equipmentRegistry. Toast
+// 'loot' phải đi kèm bag + battle summary đúng 1 lần mỗi món.
 const TEST_EQUIPMENT: Equipment = {
   id: 'random_drop_test_sword',
   name: 'Kiếm',
@@ -27,10 +26,10 @@ describe('GameManager.grantRandomEquipmentDrop — toast đồng nhất với gr
   })
 
   it('bag, battle summary và loot notification chỉ cộng đúng 1 lần khi quái chết', () => {
-    // rollChance() dùng Math.random() < chance -> 0 luôn trúng mọi
-    // chance > 0. randomInt() cũng dùng Math.random() -> luôn chọn
-    // phần tử đầu tiên trong pool (chỉ có đúng 1 template ở đây).
-    vi.spyOn(Math, 'random').mockReturnValue(0)
+    // rng 0.8: guaranteed tinh_hoa (0.7) trượt; pool roll 0.8*35=28 trên
+    // bảng mortal -> qua base_kiem (w15) -> rơi vào equipment_any (w20)
+    // -> randomInt(0.8) chọn index 0 = template test duy nhất.
+    vi.spyOn(Math, 'random').mockReturnValue(0.8)
 
     const gameManager = new GameManager()
     const combatSource = new ManualClockSource()
@@ -50,10 +49,9 @@ describe('GameManager.grantRandomEquipmentDrop — toast đồng nhất với gr
         maxHp: 1, attack: 0, attackSpeed: 1,
         attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0,
       },
-      // KHÔNG khai itemDrops — cô lập đúng nhánh grantRandomEquipmentDrop(),
-      // không lẫn với grantItemDrops()'s nhánh 'equipment'.
+      // KHÔNG khai signatureDrops — cô lập đúng đường equipment_any của
+      // stage pool (quái thường = 1 pool draw → đúng 1 món).
       rewards: { techniqueInsight: 0, spiritStone: 0 },
-      isBoss: true, // BOSS_EQUIPMENT_DROP_CHANCE = 0.3, roll=0 luôn trúng.
     })
 
     gameManager.startBattleWithPlayer(player, stats, enemy)
