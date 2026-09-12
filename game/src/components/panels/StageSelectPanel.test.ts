@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it } from 'vitest'
-import { createApp, h, ref } from 'vue'
+import { createApp, h, nextTick, ref } from 'vue'
 import { createPinia } from 'pinia'
 import StageSelectPanel from './StageSelectPanel.vue'
 import { GameManager } from '@/core/game/GameManager'
@@ -49,7 +49,7 @@ function mountStageSelect() {
 afterEach(() => { document.body.innerHTML = '' })
 
 describe('StageSelectPanel — thông tin Truyền Tống Trận', () => {
-  it('hiện tên quái trên tuyến ải và đội hình của stage đang chọn (2026-08-30: bỏ banner ảnh dư thừa + intro text trùng lặp title bar)', () => {
+  it('hiện tên quái trên tuyến ải và đội hình của stage đang chọn (2026-08-30: bỏ banner ảnh dư thừa + intro text trùng lặp title bar)', async () => {
     const mounted = mountStageSelect()
 
     expect(mounted.container.querySelector('.stage-select__intro')).toBeNull()
@@ -59,7 +59,18 @@ describe('StageSelectPanel — thông tin Truyền Tống Trận', () => {
     expect(mounted.container.textContent).toContain('Dã Trư')
     expect(mounted.container.textContent).toContain('Sơn Khấu')
     expect(mounted.container.textContent).toContain(`10 ${t('panels.stageSelect.labels.enemiesSuffix')}`)
-    expect(mounted.container.textContent).toContain(`${t('panels.stageSelect.labels.bossNamePrefix')} Sơn Khấu`)
+
+    // Spec v3 D9 (2026-09-11): bossEnemyId only exists on floor 10 -
+    // floor 1 must NOT show the Boss badge (27 nodes had a false badge).
+    expect(mounted.container.textContent).not.toContain(t('panels.stageSelect.labels.bossNamePrefix'))
+
+    const nodes = mounted.container.querySelectorAll('.stage-map__node')
+    ;(nodes[9] as HTMLElement).click()
+    await nextTick()
+
+    const bossStage = STAGES.find((stage) => stage.id === 'mortal_dong_10')!
+    const bossTemplate = ENEMIES.find((enemy) => enemy.id === bossStage.bossEnemyId)!
+    expect(mounted.container.textContent).toContain(`${t('panels.stageSelect.labels.bossNamePrefix')} ${bossTemplate.name}`)
 
     mounted.unmount()
   })
