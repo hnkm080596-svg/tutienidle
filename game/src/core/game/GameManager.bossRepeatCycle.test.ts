@@ -1,10 +1,19 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
 import { calculateStats } from '../stats/StatCalculator'
 import { defineEnemy } from '../enemy/Enemy'
+import type { Enemy } from '../enemy/Enemy'
 import type { Stage } from '../stage/Stage'
+import { StageWaveSystem } from './StageWaveSystem'
+import { EventBus } from '../events/EventBus'
+import { EnemySystem } from '../enemy/EnemySystem'
+import { EnemyManager } from '../enemy/EnemyManager'
+import { StageManager } from '../stage/StageManager'
+import { StageSystem } from '../stage/StageSystem'
+import { TemplateRegistry } from './TemplateRegistry'
+import { HiddenBeastSystem } from './HiddenBeastSystem'
 
 // Fix round 1 (2026-09-05) — regression cho finding Critical của review Task 2/2.5:
 // restartTurnBattleCycle() (GameManager.ts) từng tính isFinalSpawn thẳng theo
@@ -83,5 +92,115 @@ describe('boss stage — restartTurnBattleCycle() repeat cycle keeps spawning th
     // Boss. Trước fix, dòng này lẽ ra là 'repeat_test_mob_should_not_spawn_...'.
     expect(seenEnemyIds[1]).toMatch(/^repeat_test_boss_/)
     expect(seenEnemyIds[1]).not.toContain('repeat_test_mob')
+  })
+})
+
+// Spec v3 D4/D5 (2026-09-11): the spawn pick rolls the tinh_anh tag only
+// on the ACTIVE channel; idle passes allowTags: false and never rolls.
+// Boss (floor 10) is a stage property applied unconditionally in BOTH
+// modes via createBossVariant; in active mode the tag roll can still
+// stack on top of the boss variant (spec section 2.2 table).
+// Seam: rollChance/weightedRandom read Math.random - forced via spyOn.
+describe('pickEnemyForTurnSpawn - spawn mode plumbing (spec v3 D4/D5)', () => {
+  const TAG_MOB = defineEnemy({
+    id: 'tag_spawn_mob', name: 'Spawn Mob', level: 1, realmId: 'mortal', lane: 'ground',
+    statsInput: { maxHp: 100, attack: 10, attackSpeed: 1, attackRangeRanks: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+    rewards: { techniqueInsight: 0, spiritStone: 0 },
+  })
+  const TAG_BOSS = defineEnemy({
+    id: 'tag_spawn_boss', name: 'Spawn Boss', level: 1, realmId: 'mortal', lane: 'ground',
+    statsInput: { maxHp: 50, attack: 10, attackSpeed: 1, attackRangeRanks: 1, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
+    rewards: { techniqueInsight: 0, spiritStone: 0 },
+  })
+
+  const TAG_STAGE: Stage = {
+    id: 'tag_spawn_stage', name: 'Tag Spawn Stage', description: '',
+    floor: 3,
+    enemyPool: [{ enemyId: TAG_MOB.id, weight: 1, eliteChance: 0.1 }],
+    totalEnemyCount: 3, waves: [3],
+    spawnIntervalSeconds: 0,
+  }
+  // Floor-10 boss stage: the boss species carries the pool eliteChance
+  // (builder rule: bossEnemyId on floor 10 IS the elite species).
+  const TAG_BOSS_STAGE: Stage = {
+    id: 'tag_spawn_boss_stage', name: 'Tag Spawn Boss Stage', description: '',
+    floor: 10, bossEnemyId: TAG_BOSS.id,
+    enemyPool: [{ enemyId: TAG_BOSS.id, weight: 1, eliteChance: 0.1 }],
+    totalEnemyCount: 5, waves: [5],
+    spawnIntervalSeconds: 0,
+  }
+
+  function stageWaveHarness() {
+    const enemyTemplates = new TemplateRegistry<Enemy>()
+    enemyTemplates.register(TAG_MOB.id, TAG_MOB)
+    enemyTemplates.register(TAG_BOSS.id, TAG_BOSS)
+
+    const stageWaves = new StageWaveSystem({
+      eventBus: new EventBus(),
+      enemySystem: new EnemySystem(new EnemyManager()),
+      stageManager: new StageManager(),
+      stageSystem: new StageSystem(),
+      stageTemplates: new TemplateRegistry<Stage>(),
+      enemyTemplates,
+      isStageUnlocked: () => true,
+      launchBattle: () => {},
+      hiddenBeast: new HiddenBeastSystem({ getEnemyTemplate: () => undefined }),
+    })
+
+    return { stageWaves }
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('active + elite roll hit -> spawned enemy has tinh_anh stats/flag/name', () => {
+    const { stageWaves } = stageWaveHarness()
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const picked = stageWaves.pickEnemyForTurnSpawn(TAG_STAGE, false)
+
+    expect(picked?.name).toBe('Tinh Anh Spawn Mob')
+    expect(picked?.isElite).toBe(true)
+    expect(picked?.stats.maxHp).toBeCloseTo(TAG_MOB.stats.maxHp * 2.5)
+  })
+
+  it('idle (allowTags:false) never applies tags even when the roll would hit', () => {
+    const { stageWaves } = stageWaveHarness()
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const picked = stageWaves.pickEnemyForTurnSpawn(TAG_STAGE, false, { allowTags: false })
+
+    expect(picked?.name).toBe('Spawn Mob')
+    expect(picked?.isElite).toBeFalsy()
+    expect(picked?.stats.maxHp).toBe(TAG_MOB.stats.maxHp)
+  })
+
+  it('floor-10 final spawn is boss base in BOTH active and idle (tag roll missed)', () => {
+    const { stageWaves } = stageWaveHarness()
+    vi.spyOn(Math, 'random').mockReturnValue(0.99)
+
+    const active = stageWaves.pickEnemyForTurnSpawn(TAG_BOSS_STAGE, true)
+    const idle = stageWaves.pickEnemyForTurnSpawn(TAG_BOSS_STAGE, true, { allowTags: false })
+
+    for (const picked of [active, idle]) {
+      expect(picked?.isBoss).toBe(true)
+      expect(picked?.isElite).toBeFalsy()
+      expect(picked?.name.endsWith('Spawn Boss')).toBe(true)
+      expect(picked?.name.startsWith('Tinh Anh')).toBe(false)
+      expect(picked?.stats.maxHp).toBeCloseTo(TAG_BOSS.stats.maxHp * 7)
+    }
+  })
+
+  it('active floor-10 stacks boss + tinh_anh when the roll hits (isBoss && isElite)', () => {
+    const { stageWaves } = stageWaveHarness()
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+
+    const picked = stageWaves.pickEnemyForTurnSpawn(TAG_BOSS_STAGE, true)
+
+    expect(picked?.isBoss).toBe(true)
+    expect(picked?.isElite).toBe(true)
+    expect(picked?.name).toBe('Tinh Anh Đại Vương Spawn Boss')
+    expect(picked?.stats.maxHp).toBeCloseTo(TAG_BOSS.stats.maxHp * 7 * 2.5)
   })
 })

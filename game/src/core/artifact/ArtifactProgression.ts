@@ -59,7 +59,7 @@ export function getArtifactExpRequired(level: number): number {
  * trần nhân vật, không mặc định luôn dính trần. Không yêu cầu artifact
  * kết liễu hoặc đã gây damage; hàm này chỉ đọc reward đã resolve sẵn
  * trên `enemy` (elite/boss variant đã ghi đè `rewards` lúc spawn, xem
- * createEliteVariant/createBossVariant), không tự phân biệt tier theo
+ * applyEnemyTags (tinh_anh tag)/createBossVariant), không tự phân biệt tier theo
  * field khác.
  */
 export function getArtifactExperienceReward(enemy: Pick<Enemy, 'rewards' | 'isElite' | 'isBoss'>): number {

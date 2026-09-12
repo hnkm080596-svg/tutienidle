@@ -187,8 +187,8 @@ const ENEMY_DEFINITIONS: Enemy[] = [
   // chỉ + tiền tố "Hung " (hung dữ hơn) + stat mạnh hơn theo công thức (xem
   // data/stage/Stages.ts's comment đầu file cho công thức đầy đủ) —
   // KHÔNG tự thêm từ chỉ đẳng cấp (Vương/Chúa/Đầu Lĩnh) vào tên, engine
-  // đã tự thêm "Tinh Anh "/"Đại Vương " lúc spawn (xem createEliteVariant/
-  // createBossVariant ở trên).
+  // đã tự thêm "Tinh Anh "/"Đại Vương " lúc spawn (xem tag tinh_anh qua
+  // applyEnemyTags / createBossVariant ở core/enemy).
 
   // --- Tầng 2 (Mộc, Thanh Vân Lâm) ---
   defineEnemy({

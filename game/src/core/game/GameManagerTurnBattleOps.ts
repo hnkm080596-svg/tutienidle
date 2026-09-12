@@ -1575,7 +1575,9 @@ export class GameManagerTurnBattleOps {
 
       for (let i = 0; i < rollTotalEnemyCount; i++) {
         const isFinalSpawn = i === rollTotalEnemyCount - 1
-        const template = this.deps.stageWaves.pickEnemyForTurnSpawn(stage, isFinalSpawn)
+        // Idle channel (spec v3 D5): never roll the tinh_anh tag - the
+        // boss gate still applies unconditionally on floor 10.
+        const template = this.deps.stageWaves.pickEnemyForTurnSpawn(stage, isFinalSpawn, { allowTags: false })
 
         if (!template) {
           continue

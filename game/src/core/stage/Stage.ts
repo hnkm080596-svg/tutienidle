@@ -3,10 +3,10 @@ export interface StageEnemyEntry {
 
   weight: number
 
-  // 0..1 — cơ hội lần spawn đó là bản Elite (buff stat riêng, xem
-  // core/enemy/EnemyStatInput.ts's applyEliteMultiplier(); drop đậm hơn
-  // qua tinh_anh modifier trong core/drop) thay vì bản thường. Mặc định
-  // 0 (không có Elite).
+  // 0..1 — chance to attach the tinh_anh tag to that spawn (spec v3 B9):
+  // stat buff via applyEliteMultiplier (core/enemy/EnemyStatInput.ts),
+  // applied through applyEnemyTags (core/enemy/EnemyTag.ts) on the active
+  // channel only. Default 0 (never tagged).
   eliteChance?: number
 }
 

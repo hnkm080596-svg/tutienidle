@@ -1,14 +1,15 @@
 // @vitest-environment jsdom
-// Spec v3 D3/D8 (2026-09-11): the tinh_anh tag must reproduce
-// createEliteVariant's STAT/FLAG/NAME output exactly. Rewards are NOT
-// asserted - v1 tags keep authored rewards untouched (the legacy
-// rewards switch is dropped together with the function in Task 4).
+// Spec v3 D3/D8 (2026-09-11): the tinh_anh tag must reproduce the retired
+// createEliteVariant's STAT/FLAG/NAME output exactly - locked here as
+// literal values (the legacy function was deleted in Task 4). Rewards are
+// NOT asserted - v1 tags keep authored rewards untouched.
 // Priority order is locked here for FUTURE tags (spec B3) even though
 // the v1 registry holds a single tag.
 import { describe, expect, it } from 'vitest'
 import { applyEnemyTags, type EnemyTagRegistry } from './EnemyTag'
 import { ENEMY_TAGS } from '../../data/enemy/EnemyTags'
-import { defineEnemy, createEliteVariant } from './Enemy'
+import { defineEnemy } from './Enemy'
+import { applyEliteMultiplier } from './EnemyStatInput'
 
 const BASE = defineEnemy({
   id: 'tag_test_beast',
@@ -28,18 +29,16 @@ const BASE = defineEnemy({
     elemental: { element: 'fire', power: 10 },
   },
   rewards: { techniqueInsight: 40, spiritStone: 12 },
-  eliteRewards: { techniqueInsight: 200, spiritStone: 60 },
-  bossRewards: { techniqueInsight: 500, spiritStone: 150 },
 })
 
 describe('applyEnemyTags (D3)', () => {
-  it('tinh_anh output matches createEliteVariant on stats/flag/name (characterization)', () => {
+  it('tinh_anh output matches the retired createEliteVariant on stats/flag/name (characterization)', () => {
     const viaTag = applyEnemyTags(BASE, ['tinh_anh'], ENEMY_TAGS)
-    const viaLegacy = createEliteVariant(BASE)
 
-    expect(viaTag.stats).toEqual(viaLegacy.stats)
-    expect(viaTag.isElite).toBe(viaLegacy.isElite)
-    expect(viaTag.name).toBe(viaLegacy.name)
+    // Locked values of the retired createEliteVariant(BASE):
+    expect(viaTag.stats).toEqual(applyEliteMultiplier(BASE.stats))
+    expect(viaTag.isElite).toBe(true)
+    expect(viaTag.name).toBe('Tinh Anh ' + BASE.name)
     // currentHp/maxHp follow the final stats, like the legacy variants.
     expect(viaTag.currentHp).toBe(viaTag.stats.maxHp)
     expect(viaTag.maxHp).toBe(viaTag.stats.maxHp)
