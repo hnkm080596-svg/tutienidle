@@ -12,7 +12,7 @@ import { createBaseStats } from '../stats/StatBlock'
 import { createSkillRuntimeStats } from '../skill/SkillRuntimeStats'
 
 function makeEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats }
+  const stats = createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats })
   // `stats` is destructured out of overrides (and merged into `stats`
   // above already) so the ...restOverrides spread below can't clobber the
   // merge with a raw partial (eg. `{ attack: 10 } as CombatEntity['stats']`)
@@ -354,8 +354,8 @@ describe('BuffSystem — Kiếm Tu armorIgnorePercentByRealm (2026-09-01 review 
     const pool = new BuffPool()
     const system = new BuffSystem(pool)
     // realmIndex 8 (Kiếp Lôi/tribulation, realm cuối) -> ignore 90% mitigation.
-    const source = makeEntity({ id: 'source_1', realmIndex: 8, stats: { ...createBaseStats(), attack: 100, defense: 0 } })
-    const target = makeEntity({ id: 'target_1', stats: { ...createBaseStats(), defense: 50 } })
+    const source = makeEntity({ id: 'source_1', realmIndex: 8, stats: createBaseStats({ attack: 100, defense: 0 }) })
+    const target = makeEntity({ id: 'target_1', stats: createBaseStats({ defense: 50 }) })
 
     const withIgnore: BuffDefinition = {
       id: 'buff_ignore', name: 'Ignore', polarity: 'debuff', duration: 5, stackMode: 'refresh',
@@ -437,7 +437,7 @@ describe('BuffSystem — Độc Căn (ported from AilmentSystem.poisonRoot.test.
     const system = new BuffSystem(pool)
     const combatSystem = new RealCombatSystem(new EventBus())
 
-    const source = makeEntity({ id: 'source', type: 'player', stats: { ...createBaseStats(), woodPower: 100 } })
+    const source = makeEntity({ id: 'source', type: 'player', stats: createBaseStats({ woodPower: 100 }) })
     const target = makeEntity({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
     system.apply(trungDoc(), source, target)
@@ -456,7 +456,7 @@ describe('BuffSystem — Độc Căn (ported from AilmentSystem.poisonRoot.test.
     const system = new BuffSystem(pool)
     const combatSystem = new RealCombatSystem(new EventBus())
 
-    const source = makeEntity({ id: 'source', type: 'player', stats: { ...createBaseStats(), woodPower: 100 } })
+    const source = makeEntity({ id: 'source', type: 'player', stats: createBaseStats({ woodPower: 100 }) })
     const target = makeEntity({ id: 'target', currentHp: 1000000, maxHp: 1000000 })
 
     system.apply(trungDoc({ poisonRootPercentPerStack: 0.03, poisonRootMaxStacks: 5 }), source, target)
@@ -484,7 +484,7 @@ describe('BuffSystem — Độc Căn (ported from AilmentSystem.poisonRoot.test.
     const system = new BuffSystem(pool)
     const combatSystem = new RealCombatSystem(new EventBus())
 
-    const source = makeEntity({ id: 'source', type: 'player', stats: { ...createBaseStats(), woodPower: 100 } })
+    const source = makeEntity({ id: 'source', type: 'player', stats: createBaseStats({ woodPower: 100 }) })
     const target = makeEntity({ id: 'target', currentHp: 1000000, maxHp: 1000000 })
 
     system.apply(
@@ -510,7 +510,7 @@ describe('BuffSystem — Độc Căn (ported from AilmentSystem.poisonRoot.test.
     const system = new BuffSystem(pool)
     const combatSystem = new RealCombatSystem(new EventBus())
 
-    const source = makeEntity({ id: 'source', type: 'player', stats: { ...createBaseStats(), woodPower: 100 } })
+    const source = makeEntity({ id: 'source', type: 'player', stats: createBaseStats({ woodPower: 100 }) })
     const target = makeEntity({ id: 'target', currentHp: 1000000, maxHp: 1000000 })
 
     system.apply(trungDoc({ poisonRootPercentPerStack: 0.03, poisonRootMaxStacks: 5 }), source, target)
@@ -545,7 +545,7 @@ describe('BuffSystem — Độc Căn (ported from AilmentSystem.poisonRoot.test.
     const system = new BuffSystem(pool)
     const combatSystem = new RealCombatSystem(new EventBus())
 
-    const source = makeEntity({ id: 'source', type: 'player', stats: { ...createBaseStats(), woodPower: 100, ailmentDurationPercent: 0.1 } })
+    const source = makeEntity({ id: 'source', type: 'player', stats: createBaseStats({ woodPower: 100, ailmentDurationPercent: 0.1 }) })
     const target = makeEntity({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
     system.apply(trungDoc(), source, target)
@@ -580,7 +580,7 @@ describe('BuffSystem — Kim Thế (ported from AilmentSystem.kimThe.test.ts)', 
     const system = new BuffSystem(pool)
     const combatSystem = new RealCombatSystem(new EventBus())
 
-    const source = makeEntity({ id: 'source', type: 'player', stats: { ...createBaseStats(), metalPower: 100 } })
+    const source = makeEntity({ id: 'source', type: 'player', stats: createBaseStats({ metalPower: 100 }) })
     const target = makeEntity({ id: 'target', currentHp: 1000, maxHp: 1000 })
 
     system.apply(chayMau, source, target)
@@ -600,7 +600,7 @@ describe('BuffSystem — Kim Thế (ported from AilmentSystem.kimThe.test.ts)', 
     const combatSystem = new RealCombatSystem(new EventBus())
 
     const source = makeEntity({
-      id: 'source', type: 'player', stats: { ...createBaseStats(), metalPower: 100 },
+      id: 'source', type: 'player', stats: createBaseStats({ metalPower: 100 }),
       skillStats: { ...createSkillRuntimeStats(), kimTheDotDamagePercentPerStack: 0.05 }, currentKimThe: 3,
     })
     const target = makeEntity({ id: 'target', currentHp: 1000, maxHp: 1000 })
@@ -621,7 +621,7 @@ describe('BuffSystem — Kim Thế (ported from AilmentSystem.kimThe.test.ts)', 
     const combatSystem = new RealCombatSystem(new EventBus())
 
     const source = makeEntity({
-      id: 'source', type: 'player', stats: { ...createBaseStats(), metalPower: 100 }, currentKimThe: 3,
+      id: 'source', type: 'player', stats: createBaseStats({ metalPower: 100 }), currentKimThe: 3,
       skillStats: { ...createSkillRuntimeStats(), kimTheDotDamagePercentPerStack: 0.05, metalAilmentPotencyPercent: 0.1 },
     })
     const target = makeEntity({ id: 'target', currentHp: 1000, maxHp: 1000 })
@@ -648,7 +648,7 @@ describe('BuffSystem — Kim Thế (ported from AilmentSystem.kimThe.test.ts)', 
     }
 
     const source = makeEntity({
-      id: 'source', type: 'player', stats: { ...createBaseStats(), woodPower: 100 }, currentKimThe: 5,
+      id: 'source', type: 'player', stats: createBaseStats({ woodPower: 100 }), currentKimThe: 5,
       skillStats: { ...createSkillRuntimeStats(), kimTheDotDamagePercentPerStack: 0.05, metalAilmentPotencyPercent: 0.1 },
     })
     const target = makeEntity({ id: 'target', currentHp: 1000, maxHp: 1000 })
@@ -892,7 +892,7 @@ describe('BuffSystem — conversion chain, Làm Chậm -> Đóng Băng (ported f
     const combatSystem = new RealCombatSystem(new EventBus())
     const registry = makeRegistry()
     const source = makeEntity({ id: 'source', type: 'player' })
-    const target = makeEntity({ id: 'target', stats: { ...createBaseStats(), ailmentResistPercent: 0.5 } })
+    const target = makeEntity({ id: 'target', stats: createBaseStats({ ailmentResistPercent: 0.5 }) })
 
     system.apply(lamCham, source, target, registry)
     system.update(2, target, combatSystem, registry)
@@ -911,8 +911,8 @@ describe('BuffSystem — conversion chain, Làm Chậm -> Đóng Băng (ported f
     const system = new BuffSystem(pool)
     const combatSystem = new RealCombatSystem(new EventBus())
     const registry = makeRegistry()
-    const source = makeEntity({ id: 'source', type: 'player', stats: { ...createBaseStats(), ailmentDurationPercent: 0.5 } })
-    const target = makeEntity({ id: 'target', stats: { ...createBaseStats(), ailmentResistPercent: 0.5 } })
+    const source = makeEntity({ id: 'source', type: 'player', stats: createBaseStats({ ailmentDurationPercent: 0.5 }) })
+    const target = makeEntity({ id: 'target', stats: createBaseStats({ ailmentResistPercent: 0.5 }) })
     const resolveSource = (sourceId: string) => (sourceId === source.id ? source : undefined)
 
     system.apply(lamCham, source, target, registry)

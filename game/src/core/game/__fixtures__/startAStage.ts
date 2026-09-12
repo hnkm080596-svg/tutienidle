@@ -1,6 +1,7 @@
 import { defineEnemy } from '../../enemy/Enemy'
 import { createDefaultPlayer, type PlayerData } from '../../player/Player'
 import { calculateStats } from '../../stats/StatCalculator'
+import { asBaseStats } from '../../stats/StatBlock'
 import type { Stage } from '../../stage/Stage'
 import type { GameManager } from '../GameManager'
 
@@ -25,7 +26,7 @@ export function startAStage(
   const enemyId = `${stageId}_dummy`
 
   const player = createDefaultPlayer()
-  const stats = calculateStats({ ...player.baseStats, attack: 100, speed: 100 }, [])
+  const stats = calculateStats(asBaseStats({ ...player.baseStats, attack: 100, speed: 100 }), [])
 
   const enemy = defineEnemy({
     id: enemyId,

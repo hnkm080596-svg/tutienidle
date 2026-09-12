@@ -31,7 +31,7 @@ const REGISTRY: TurnBuffRegistry = {
 }
 
 function makeEntity(id: string, overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, ...overrides.stats }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, ...overrides.stats })
   return {
     id,
     name: id,
@@ -81,10 +81,10 @@ describe('AR-04: Hit resolution and critical authority', () => {
     const system = new TurnBattleSystem(combat, 10, REGISTRY)
 
     const attacker = makeEntity('attacker', {
-      stats: { ...createBaseStats(), criticalRate: 1.0, attack: 100, accuracyRating: 9999 },
+      stats: createBaseStats({ criticalRate: 1.0, attack: 100, accuracyRating: 9999 }),
     })
     const defender = makeEntity('defender', {
-      stats: { ...createBaseStats(), criticalAvoidance: 0, evasionRate: 0 },
+      stats: createBaseStats({ criticalAvoidance: 0, evasionRate: 0 }),
     })
 
     const attackerP = makeParticipant('attacker', attacker, 0)
@@ -123,10 +123,10 @@ describe('AR-04: Hit resolution and critical authority', () => {
 
     // Attacker has 0 accuracy, defender has 99999 evasion -> guaranteed dodge.
     const attacker = makeEntity('attacker', {
-      stats: { ...createBaseStats(), accuracyRating: 0 },
+      stats: createBaseStats({ accuracyRating: 0 }),
     })
     const defender = makeEntity('defender', {
-      stats: { ...createBaseStats(), evasionRate: 99999 },
+      stats: createBaseStats({ evasionRate: 99999 }),
     })
 
     const attackerP = makeParticipant('attacker', attacker, 0)

@@ -19,7 +19,7 @@ import { TurnBuffPool } from './TurnBuffPool'
 // enemy's own actions.
 
 function createCombatant(id: string, overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
 
   return {
     id,

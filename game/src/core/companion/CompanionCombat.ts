@@ -26,7 +26,7 @@ export function companionStatsAtLevel(baseStats: CompanionBaseStats, level: numb
 
 export function companionToCombatEntity(instance: CompanionInstance, definition: CompanionDefinition): CombatEntity {
   const scaled = companionStatsAtLevel(definition.baseStats, instance.level)
-  const stats = { ...createBaseStats(), ...scaled, evasionRate: 0, dexterity: 0, criticalRate: 0 }
+  const stats = createBaseStats({ ...scaled, evasionRate: 0, dexterity: 0, criticalRate: 0 })
 
   return {
     id: definition.id,

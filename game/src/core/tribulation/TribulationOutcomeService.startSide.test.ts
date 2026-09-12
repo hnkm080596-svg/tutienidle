@@ -49,7 +49,7 @@ describe('TribulationOutcomeService — start-side prep parity', () => {
     expect(player.modifiers.some((m) => m.sourceType === 'equipment')).toBe(true)
 
     const service = new TribulationOutcomeService()
-    const stats = { ...createBaseStats(), maxHp: 500_000, defense: 10_000 }
+    const stats = createBaseStats({ maxHp: 500_000, defense: 10_000 })
     const started = service.startTribulationPrepared(
       player,
       gameManager,
@@ -72,7 +72,7 @@ describe('TribulationOutcomeService — start-side prep parity', () => {
     // Unknown target realm -> getTribulationChapters returns undefined.
 
     const service = new TribulationOutcomeService()
-    const stats = { ...createBaseStats(), maxHp: 500_000 }
+    const stats = createBaseStats({ maxHp: 500_000 })
     const started = service.startTribulationPrepared(
       player,
       gameManager,

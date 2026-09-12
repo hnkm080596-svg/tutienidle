@@ -14,7 +14,7 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 // fold onto 70 (=105), not re-derive strength (+60) first (=130).
 
 function qaEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats }
+  const stats = createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, ...overrides.stats })
   const { stats: _drop, ...rest } = overrides
   return {
     id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
@@ -85,7 +85,7 @@ function makePoolWithAttackBuff(percent: number, stacks: number): TurnBuffPool {
 
 describe('recomputeEffectiveStats (R2 effective boundary)', () => {
   it('folds buff modifiers onto the RESOLVED base without re-deriving attributes', () => {
-    const raw: Stats = { ...createBaseStats(), strength: 100, attack: 10 }
+    const raw = createBaseStats({ strength: 100, attack: 10 })
     const resolved = calculateStats(raw, [])
     expect(resolved.attack).toBe(70)
 
@@ -95,7 +95,7 @@ describe('recomputeEffectiveStats (R2 effective boundary)', () => {
   })
 
   it('no buffs: effective equals resolved base exactly', () => {
-    const raw: Stats = { ...createBaseStats(), strength: 100, attack: 10 }
+    const raw = createBaseStats({ strength: 100, attack: 10 })
     const resolved = calculateStats(raw, [])
 
     expect(recomputeEffectiveStats(resolved, new TurnBuffPool())).toEqual(resolved)
@@ -107,7 +107,7 @@ describe('recomputeEffectiveStats', () => {
     // R2: the input is a RESOLVED base — attribute derivation must NOT
     // run again, so the old strength-derivation expectations (+0.6) are
     // gone. Resolved attack 100 + flat buff 50 = 150 exactly.
-    const base = { ...createBaseStats(), attack: 100 }
+    const base = createBaseStats({ attack: 100 })
     const pool = new TurnBuffPool()
     const registry = new FixtureBuffRegistry([ATTACK_UP_DEFINITION])
     const source = qaEntity({ id: 'src' })
@@ -122,7 +122,7 @@ describe('recomputeEffectiveStats', () => {
 
   it('returns resolved base unchanged when no statModifier buffs are active', () => {
     // R2: no re-derivation — the resolved snapshot comes back untouched.
-    const base = { ...createBaseStats(), attack: 100 }
+    const base = createBaseStats({ attack: 100 })
     const pool = new TurnBuffPool()
 
     const effective = recomputeEffectiveStats(base, pool)
@@ -133,7 +133,7 @@ describe('recomputeEffectiveStats', () => {
   it('percent statModifier folds multiplicatively with the resolved base', () => {
     // R2: (100 resolved) × (1 + 0.5) = 150 — attribute derivation no
     // longer inflates the base before the percent fold.
-    const base = { ...createBaseStats(), attack: 100 }
+    const base = createBaseStats({ attack: 100 })
     const percentDef: TurnBuffDefinition = {
       id: 'fixture_attack_percent', name: 'Pct', polarity: 'buff', duration: 3, stackMode: 'refresh',
       effects: [{ type: 'statModifier', stat: 'attack', percent: 0.5 }],

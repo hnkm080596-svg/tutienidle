@@ -23,7 +23,7 @@ const MINIMAL_STATS_INPUT = {
 }
 
 function _createPlayerEntity(): CombatEntity {
-  const stats = { ...createBaseStats(), attack: 0 }
+  const stats = createBaseStats({ attack: 0 })
 
   return {
     id: 'player',

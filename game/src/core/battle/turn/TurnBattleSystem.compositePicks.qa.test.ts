@@ -26,7 +26,7 @@ const ELEMENTAL_BASIC_B: TurnSkillDefinition = {
 }
 
 function makeEntity(id: string): CombatEntity {
-  const stats = { ...createBaseStats(), attack: 100, accuracyRating: 9999, evasionRate: 0 }
+  const stats = createBaseStats({ attack: 100, accuracyRating: 9999, evasionRate: 0 })
   return {
     id,
     name: id,

@@ -11,7 +11,7 @@ import { createBaseStats } from '../../stats/StatBlock'
 // QA adversarial probes (2026-09-04 quick review) — Slice 3 buff/CC wiring.
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0 })
 
   return {
     id: 'id',
@@ -79,8 +79,8 @@ describe('Slice 3 adversarial (QA probes)', () => {
     // R2 (AR-05): effective speed lives on entity.stats — the participant
     // speed cache is synced from it. Fixtures must set speed there (the
     // adapter copies entity.stats.speed into participant.speed).
-    const player = createCombatant({ id: 'player', type: 'player' as never, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 10, speed: 10 } })
-    const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0, speed: 5 } })
+    const player = createCombatant({ id: 'player', type: 'player' as never, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 10, speed: 10 }) })
+    const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0, speed: 5 }) })
 
     const playerP = makeParticipant('player', player, 10, 0)
     const registry = new FixtureRegistry([STUN])
@@ -107,8 +107,8 @@ describe('Slice 3 adversarial (QA probes)', () => {
   })
 
   it('INV-S3-2: DoT tick tại lượt HOLDER gây damage lên holder (không lên source)', () => {
-    const player = createCombatant({ id: 'player', type: 'player' as never, currentHp: 1_000_000, maxHp: 1_000_000, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 } })
-    const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 10 } })
+    const player = createCombatant({ id: 'player', type: 'player' as never, currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }) })
+    const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 10 }) })
 
     const playerP = makeParticipant('player', player, 10, 0)
     const enemyP = makeParticipant('enemy', enemy, 5, 1)
@@ -127,8 +127,8 @@ describe('Slice 3 adversarial (QA probes)', () => {
   })
 
   it('INV-S3-3: buff tick tiếp trên holder đã chết? — resolveNextTurn không chọn dead, buff giữ nguyên', () => {
-    const player = createCombatant({ id: 'player', type: 'player' as never, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 } })
-    const dying = createCombatant({ id: 'dying', currentHp: 1, maxHp: 1, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 } })
+    const player = createCombatant({ id: 'player', type: 'player' as never, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }) })
+    const dying = createCombatant({ id: 'dying', currentHp: 1, maxHp: 1, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }) })
 
     const playerP = makeParticipant('player', player, 10, 0)
     const dyingP = makeParticipant('dying', dying, 5, 1)
@@ -146,8 +146,8 @@ describe('Slice 3 adversarial (QA probes)', () => {
   })
 
   it('INV-S3-4: CC blocked vẫn bị DoT của chính buff đó tick (stun không dừng dot pool processing)', () => {
-    const player = createCombatant({ id: 'player', type: 'player' as never, currentHp: 1_000_000, maxHp: 1_000_000, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 } })
-    const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 } })
+    const player = createCombatant({ id: 'player', type: 'player' as never, currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }) })
+    const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }) })
 
     const playerP = makeParticipant('player', player, 10, 0)
     const stunDot: TurnBuffDefinition = {
@@ -168,8 +168,8 @@ describe('Slice 3 adversarial (QA probes)', () => {
   })
 
   it('INV-S3-5: self-buff dot tự gây damage cho chính mình qua TurnBuffSystem (combat mock)', () => {
-    const player = createCombatant({ id: 'player', type: 'player' as never, currentHp: 1_000_000, maxHp: 1_000_000, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 } })
-    const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 } })
+    const player = createCombatant({ id: 'player', type: 'player' as never, currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 100 }) })
+    const enemy = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }) })
 
     const playerP = makeParticipant('player', player, 10, 0)
     playerP.basic = {

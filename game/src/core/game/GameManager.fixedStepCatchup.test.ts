@@ -28,7 +28,7 @@ const ATTACKER_STATS_INPUT = {
 }
 
 function createAttackerPlayer(): CombatEntity {
-  const stats = { ...createBaseStats(), attack: 50, speed: 2, criticalRate: 0 }
+  const stats = createBaseStats({ attack: 50, speed: 2, criticalRate: 0 })
 
   return {
     id: 'player',

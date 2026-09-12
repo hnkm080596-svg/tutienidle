@@ -31,7 +31,7 @@ const REGISTRY: TurnBuffRegistry = {
 }
 
 function makeEntity(id: string, overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), attack: 100, ...overrides.stats }
+  const stats = createBaseStats({ attack: 100, ...overrides.stats })
   return {
     id,
     name: id,

@@ -1,5 +1,5 @@
 import type { StatModifier } from '../stats/StatCalculator'
-import { createBaseStats, type Stats } from '../stats/StatBlock'
+import { createBaseStats, type BaseStats, type Stats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import { CENTER_LANE_INDEX } from '../battle/BattleLane'
 import {
@@ -31,7 +31,7 @@ export interface PlayerData {
   /** Pool nhân công tự động dùng chung cho mọi ProductionSite. */
   autoWorkerCapacity: number
 
-  baseStats: Stats
+  baseStats: BaseStats
 
   // Modifier "tĩnh", gắn trực tiếp với nhân vật: equipment, talent,
   // reincarnation... Người chơi tự thêm/bớt qua các hành động rõ ràng

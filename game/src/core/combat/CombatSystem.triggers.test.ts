@@ -9,7 +9,7 @@ import type { CombatEntity } from './CombatEntity'
 import type { Skill } from '../skill/Skill'
 
 function makeEntity(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0 }
+  const stats = createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0 })
   return {
     id: 'id',
     name: 'name',

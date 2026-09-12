@@ -5,7 +5,7 @@ import type { CombatEntity } from '../combat/CombatEntity'
 import type { TurnSkillDefinition } from '../battle/turn/TurnSkillAction'
 
 function entity(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, criticalRate: 0, blockChance: 0, speed: 130, ...overrides.stats }
+  const stats = createBaseStats({ evasionRate: 0, criticalRate: 0, blockChance: 0, speed: 130, ...overrides.stats })
   return {
     id: 'fixture', name: 'Fixture', type: 'enemy', baseStats: stats, stats,
     currentHp: 100, maxHp: 100, currentMp: 0,

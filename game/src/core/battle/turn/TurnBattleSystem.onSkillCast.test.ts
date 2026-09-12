@@ -31,7 +31,7 @@ class Registry implements TurnBuffRegistry {
 }
 
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0 }
+  const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
   return {
     id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
     currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
@@ -58,7 +58,7 @@ function makeParticipant(
 function fixture() {
   const player = createCombatant({
     id: 'player', type: 'player', row: 4,
-    stats: { ...createBaseStats(), evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 10 },
+    stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, speed: 100, attack: 10 }),
   })
   const enemyEntity = createCombatant({ id: 'enemy', currentHp: 1_000_000, maxHp: 1_000_000 })
 

@@ -11,7 +11,7 @@ import type { CombatEntity } from '../combat/CombatEntity'
 // TurnBattleParticipant and drove the 6 pre-existing test failures).
 
 function entity(overrides: Partial<CombatEntity> = {}): CombatEntity {
-  const stats = { ...createBaseStats(), evasionRate: 0, criticalRate: 0 }
+  const stats = createBaseStats({ evasionRate: 0, criticalRate: 0 })
 
   return {
     id: 'p', name: 'p', type: 'player', baseStats: stats, stats,

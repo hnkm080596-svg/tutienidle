@@ -2,6 +2,29 @@ import type { StatType } from './StatTypes'
 
 export type Stats = Record<StatType, number>
 
+// R14 (AR-02/AR-05, type-level half) — nominal marker for RAW authored
+// base stats (createBaseStats output, PlayerData.baseStats). The phantom
+// brand makes `calculateStats(baseStats)` reject resolved `Stats`
+// values: feeding an already-derived snapshot back into the derivation
+// pipeline (the R2 double-derivation regression class) no longer
+// compiles without an explicit `asBaseStats` boundary cast. Type-only:
+// zero runtime cost, save payloads unchanged. CombatEntity.baseStats
+// intentionally stays plain `Stats` — it holds the resolved-at-entry
+// snapshot (the combat base), not authored raw input.
+declare const baseStatsBrand: unique symbol
+
+export type BaseStats = Stats & { readonly [baseStatsBrand]: 'base' }
+
+/**
+ * Boundary cast for values that are KNOWN to be raw base stats but
+ * arrive through a plain `Stats` channel (authored data, save payloads,
+ * fixture overrides). Naming the seam keeps accidental resolved-stat
+ * reuse from compiling.
+ */
+export function asBaseStats(stats: Stats): BaseStats {
+  return stats as BaseStats
+}
+
 // Player KHÔNG còn tower tầm bắn vô hạn (combat-gate-teleport-autocast
 // plan §2.4 + balance pass 2026-08-26): avatar tấn công dùng Chebyshev
 // quanh ô đang đứng. Base range = 5 — khớp trần attackRange quái
@@ -16,7 +39,7 @@ export type Stats = Record<StatType, number>
 // đúng baseline này (xem stores/player.ts's restoreFromSave).
 export const PLAYER_BASE_RANGE_RANKS = 5
 
-export function createBaseStats(): Stats {
+export function createBaseStats(overrides: Partial<Stats> = {}): BaseStats {
   return {
     attack: 10,
     defense: 5,
@@ -135,5 +158,7 @@ export function createBaseStats(): Stats {
     // Hỗn Nguyên (Void) — bỏ qua mọi mitigation, không có Resistance/
     // Penetration riêng (xem StatTypes.ts).
     primordialPower: 0,
-  }
+
+    ...overrides,
+  } as BaseStats
 }

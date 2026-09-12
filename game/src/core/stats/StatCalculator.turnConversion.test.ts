@@ -106,7 +106,7 @@ describe('Adversarial QA — stat turn-based conversion invariants', () => {
     // calculateStats gọi deriveAttributeModifiers nội bộ — kết quả cuối
     // phải chứa ĐỦ 5 attribute dẫn xuất đúng, trong đó Thân Pháp/Dexterity
     // nhắm 'speed', Thần Thức/Intelligence KHÔNG nhắm gì đã retire.
-    const base: Stats = createBaseStats()
+    const base = createBaseStats()
     const result = calculateStats(base, [])
     // Thân Pháp 1: speed 100.15, accuracy +1.5, evasion +1.0, crit +0.05%.
     expect(result.accuracyRating).toBeCloseTo(100 + 1.5, 5)
@@ -120,7 +120,7 @@ describe('calculateEffectiveStats (R2 resolved→effective boundary)', () => {
   // resolves to attack 70 (10 + 100×0.6). Feeding that resolved snapshot
   // back into calculateStats re-derived +60 (130). The effective boundary
   // must fold temp modifiers onto 70 without re-deriving.
-  const RAW: Stats = { ...createBaseStats(), strength: 100, attack: 10 }
+  const RAW = createBaseStats({ strength: 100, attack: 10 })
 
   const ATTACK_BUFF: StatModifier = {
     id: 'b1',
