@@ -13,6 +13,24 @@ import { createBaseStats } from '../stats/StatBlock'
 import { pills } from '../../data/pill/pills'
 import { MERIDIANS } from '../../data/realm/Meridians'
 import type { ActiveTribulationState } from './TribulationDirector'
+import type { OutcomeAnnouncement } from '../presentation/OutcomeAnnouncement'
+import { i18n } from '../../i18n'
+import enMessages from '../../locales/en.json'
+
+/** Walk a dotted i18n key in a raw messages object. */
+function messageAt(messages: object, key: string): unknown {
+  return key.split('.').reduce<unknown>((node, part) => {
+    return node && typeof node === 'object' ? (node as Record<string, unknown>)[part] : undefined
+  }, messages)
+}
+
+/** Resolve an announcement descriptor through the real i18n gateway. */
+function resolveAnnouncement(a: OutcomeAnnouncement): { title: string; body: string } {
+  return {
+    title: i18n.global.t(a.titleKey, a.titleParams ?? {}),
+    body: i18n.global.t(a.bodyKey, a.bodyParams ?? {}),
+  }
+}
 
 /** Minimal ActiveTribulationState literal for outcome resolution. */
 function makeActive(
@@ -62,6 +80,8 @@ describe('TribulationOutcomeService — victory parity', () => {
     expect(result.realmEntered).toBeNull()
     expect(player.realmId).toBe('mortal')
     expect(result.standalonePanel).toBe('quan_khi')
+    expect(result.announcement.titleKey).toBe('announce.tribulation.quanKhi.title')
+    expect(result.announcement.bodyKey).toBe('announce.tribulation.quanKhi.body')
   })
 
   it('foundation_establishment victory: realm/level reset, unequip-all, foundation recorded, talent converted, passives synced', () => {
@@ -96,6 +116,12 @@ describe('TribulationOutcomeService — victory parity', () => {
     expect(result.talentConverted).toBe(true)
     expect(player.selectedTalentIds).toContain('pham_nhan_chi_cot')
     expect(player.selectedTalentIds).not.toContain('pham_cot')
+    expect(result.announcement).toEqual({
+      titleKey: 'announce.tribulation.foundation.title',
+      titleParams: { label: 'ĐẠI ĐẠO' },
+      bodyKey: 'announce.tribulation.foundation.body',
+    })
+    expect(resolveAnnouncement(result.announcement).title).toBe('★ ĐẠI ĐẠO TRÚC CƠ ★')
   })
 
   it('quest realm-transition flag is marked on realm entry', () => {
@@ -152,7 +178,9 @@ describe('TribulationOutcomeService — defeat parity', () => {
     expect(player.greatDaoOpportunityLost).toBe(true)
     expect(result.greatDaoOpportunityLost).toBe(true)
     expect(player.selectedTalentIds).toContain('pham_cot')
-    expect(result.announceTitle).toBe('Đại Đạo Đoạn Tuyệt')
+    expect(result.announcement.titleKey).toBe('announce.tribulation.defeatGreatDao.title')
+    expect(result.announcement.bodyKey).toBe('announce.tribulation.defeatGreatDao.body')
+    expect(resolveAnnouncement(result.announcement).title).toBe('Đại Đạo Đoạn Tuyệt')
   })
 
   it('non-great-dao defeat announces Kiep Thuong message, opportunity NOT lost', () => {
@@ -165,6 +193,80 @@ describe('TribulationOutcomeService — defeat parity', () => {
     const result = service.resolveDefeat(player, gameManager, active, { ...createBaseStats(), maxHp: 1000 })
 
     expect(result.greatDaoOpportunityLost).toBe(false)
-    expect(result.announceTitle).toBe('Độ Kiếp Thất Bại')
+    expect(result.announcement.titleKey).toBe('announce.tribulation.defeat.title')
+    expect(resolveAnnouncement(result.announcement).title).toBe('Độ Kiếp Thất Bại')
+  })
+})
+
+describe('TribulationOutcomeService — announcement descriptors resolve to the migrated strings (byte parity)', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.useFakeTimers()
+  })
+  afterEach(() => vi.useRealTimers())
+
+  it('every outcome variant resolves to the pre-migration Vietnamese text', () => {
+    const gameManager = new GameManager()
+    const player = usePlayerStore()
+    const service = new TribulationOutcomeService()
+
+    // Quan Khi victory
+    const quanKhi = service.resolveVictory(player, gameManager, makeActive('victory', 'qi_refining'))
+    expect(resolveAnnouncement(quanKhi.announcement)).toEqual({
+      title: 'QUÁN KHÍ THÀNH CÔNG',
+      body: 'Đạo hữu đã vượt lôi kiếp — hãy chọn con đường tu luyện để bước vào Luyện Khí kỳ.',
+    })
+
+    // Great Dao defeat
+    const daoDefeat = service.resolveDefeat(
+      player, gameManager, makeActive('defeat', 'foundation_establishment', 'great_dao'),
+      { ...createBaseStats(), maxHp: 1000 },
+    )
+    expect(resolveAnnouncement(daoDefeat.announcement)).toEqual({
+      title: 'Đại Đạo Đoạn Tuyệt',
+      body: 'Nghịch thiên bất thành — cơ duyên Đại Đạo Chi Cơ đã vĩnh viễn đóng lại. Lần tới tối đa là Thiên Đạo.',
+    })
+
+    // Generic defeat
+    const defeat = service.resolveDefeat(
+      player, gameManager, makeActive('defeat', 'foundation_establishment', 'thien_dao'),
+      { ...createBaseStats(), maxHp: 1000 },
+    )
+    expect(resolveAnnouncement(defeat.announcement)).toEqual({
+      title: 'Độ Kiếp Thất Bại',
+      body: 'Kiếp Thương còn vương lại — hãy dưỡng thương rồi thử lại.',
+    })
+
+    // Non-foundation realm victory (param-bearing title/body)
+    const realmWin = service.resolveVictory(player, gameManager, makeActive('victory', 'golden_core'))
+    expect(resolveAnnouncement(realmWin.announcement)).toEqual({
+      title: '★ KIM ĐAN ★',
+      body: 'Đạo hữu đã vượt qua Độ Kiếp, chính thức bước vào Kim Đan.',
+    })
+  })
+
+  it('every emitted announcement key exists in the en fallback locale', () => {
+    const gameManager = new GameManager()
+    const player = usePlayerStore()
+    const service = new TribulationOutcomeService()
+
+    const descriptors = [
+      service.resolveVictory(player, gameManager, makeActive('victory', 'qi_refining')).announcement,
+      service.resolveVictory(player, gameManager, makeActive('victory', 'golden_core')).announcement,
+      service.resolveDefeat(
+        player, gameManager, makeActive('defeat', 'foundation_establishment', 'great_dao'),
+        { ...createBaseStats(), maxHp: 1000 },
+      ).announcement,
+      service.resolveDefeat(
+        player, gameManager, makeActive('defeat', 'foundation_establishment', 'thien_dao'),
+        { ...createBaseStats(), maxHp: 1000 },
+      ).announcement,
+    ]
+
+    for (const d of descriptors) {
+      for (const key of [d.titleKey, d.bodyKey]) {
+        expect(typeof messageAt(enMessages, key), `en locale missing "${key}"`).toBe('string')
+      }
+    }
   })
 })

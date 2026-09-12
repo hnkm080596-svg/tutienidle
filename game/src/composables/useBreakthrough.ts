@@ -3,6 +3,7 @@ import { useGameManager } from './useGameState'
 import { useWorldAnnouncementStore } from '../stores/worldAnnouncement'
 import type { GameManager } from '../core/game/GameManager'
 import type { BreakthroughOutcomeResult } from '../core/tribulation/BreakthroughOutcomeService'
+import { i18n } from '@/i18n'
 
 /**
  * R8.2 Slice 2 (AR-10): outcome authority lives in
@@ -38,9 +39,13 @@ export function useBreakthrough(gameManagerOverride?: GameManager) {
 
     // Beta Phase 4 (World Announcement) — major-realm change is a
     // milestone (minor-level successes announce nothing; the tribulation
-    // chain owns its own announcements since Slice 1).
-    if (result.announceTitle && result.announceBody) {
-      worldAnnouncement.show(result.announceTitle, result.announceBody)
+    // chain owns its own announcements since Slice 1). P16: the domain
+    // returns i18n keys + params; the gateway resolves them here.
+    if (result.announcement) {
+      worldAnnouncement.show(
+        i18n.global.t(result.announcement.titleKey, result.announcement.titleParams ?? {}),
+        i18n.global.t(result.announcement.bodyKey, result.announcement.bodyParams ?? {}),
+      )
     }
 
     return true

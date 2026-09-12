@@ -756,6 +756,36 @@
       "description": "Added to the maximum The cap; the Ultimate only fires at this new cap."
     }
   },
+  "announce": {
+    "tribulation": {
+      "quanKhi": {
+        "title": "QI COMMUNION SUCCESS",
+        "body": "You have weathered the lightning tribulation — choose a cultivation path to enter Qi Refining."
+      },
+      "foundation": {
+        "title": "★ {label} FOUNDATION ESTABLISHMENT ★",
+        "body": "You have passed the Tribulation and formally entered Foundation Establishment."
+      },
+      "realm": {
+        "title": "★ {realm} ★",
+        "body": "You have passed the Tribulation and formally entered {realm}."
+      },
+      "defeatGreatDao": {
+        "title": "Great Dao Foreclosed",
+        "body": "Defiance has failed — the Great Dao opportunity is forever closed. The next attempt caps at Heavenly Dao."
+      },
+      "defeat": {
+        "title": "Tribulation Failed",
+        "body": "Tribulation wounds linger — recover, then try again."
+      }
+    },
+    "breakthrough": {
+      "major": {
+        "title": "{realm}",
+        "body": "You have broken through a major realm; your cultivation surges."
+      }
+    }
+  },
   "tribulation": {
     "stillEquipped": {
       "title": "Tribulation is also a trial of the self — nothing can aid you",

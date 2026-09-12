@@ -756,6 +756,36 @@
       "description": "Cộng thêm vào trần Thế tối đa; Ultimate chỉ nổ khi đạt trần mới này."
     }
   },
+  "announce": {
+    "tribulation": {
+      "quanKhi": {
+        "title": "QUÁN KHÍ THÀNH CÔNG",
+        "body": "Đạo hữu đã vượt lôi kiếp — hãy chọn con đường tu luyện để bước vào Luyện Khí kỳ."
+      },
+      "foundation": {
+        "title": "★ {label} TRÚC CƠ ★",
+        "body": "Đạo hữu đã vượt qua Độ Kiếp, chính thức bước vào Trúc Cơ kỳ."
+      },
+      "realm": {
+        "title": "★ {realm} ★",
+        "body": "Đạo hữu đã vượt qua Độ Kiếp, chính thức bước vào {realm}."
+      },
+      "defeatGreatDao": {
+        "title": "Đại Đạo Đoạn Tuyệt",
+        "body": "Nghịch thiên bất thành — cơ duyên Đại Đạo Chi Cơ đã vĩnh viễn đóng lại. Lần tới tối đa là Thiên Đạo."
+      },
+      "defeat": {
+        "title": "Độ Kiếp Thất Bại",
+        "body": "Kiếp Thương còn vương lại — hãy dưỡng thương rồi thử lại."
+      }
+    },
+    "breakthrough": {
+      "major": {
+        "title": "{realm}",
+        "body": "Đạo hữu đã đột phá đại cảnh giới, tu vi tăng vọt."
+      }
+    }
+  },
   "tribulation": {
     "stillEquipped": {
       "title": "Độ kiếp cũng là độ thân, không gì có thể giúp được ngươi",

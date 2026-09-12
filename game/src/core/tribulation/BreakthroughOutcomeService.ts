@@ -30,6 +30,7 @@ import { advanceArtifactRealmLevel } from '../artifact/ArtifactProgression'
 import { ARTIFACT_ID_BY_CULTIVATION_PATH } from '../artifact/Artifact'
 import { createDefaultArtifactProgress } from '../artifact/ArtifactProgression'
 import { getCurrentRealm } from '../realm/realmSystem'
+import type { OutcomeAnnouncement } from '../presentation/OutcomeAnnouncement'
 
 /** Breakthrough outcome facts for presentation. */
 export interface BreakthroughSuccessResult {
@@ -40,9 +41,8 @@ export interface BreakthroughSuccessResult {
   majorRealmChanged: boolean
   /** True when an artifact existed and the banked-tier release ran. */
   artifactTouched: boolean
-  /** Announcement title for a major-realm change (null for minor levels). */
-  announceTitle: string | null
-  announceBody: string | null
+  /** i18n descriptor for a major-realm change (null for minor levels). */
+  announcement: OutcomeAnnouncement | null
 }
 
 export interface BreakthroughFailureResult {
@@ -117,8 +117,11 @@ export class BreakthroughOutcomeService {
         newLevel: player.realmLevel,
         majorRealmChanged: true,
         artifactTouched,
-        announceTitle: getCurrentRealm(player.realmId).name.toUpperCase(),
-        announceBody: 'Đạo hữu đã đột phá đại cảnh giới, tu vi tăng vọt.',
+        announcement: {
+          titleKey: 'announce.breakthrough.major.title',
+          titleParams: { realm: getCurrentRealm(player.realmId).name.toUpperCase() },
+          bodyKey: 'announce.breakthrough.major.body',
+        },
       }
     }
 
@@ -127,8 +130,7 @@ export class BreakthroughOutcomeService {
       newLevel: player.realmLevel,
       majorRealmChanged: false,
       artifactTouched,
-      announceTitle: null,
-      announceBody: null,
+      announcement: null,
     }
   }
 }

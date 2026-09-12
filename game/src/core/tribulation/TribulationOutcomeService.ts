@@ -30,6 +30,7 @@ import type { Stats } from '../stats/StatBlock'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { GameManager } from '../game/GameManager'
 import type { ActiveTribulationState } from './TribulationDirector'
+import type { OutcomeAnnouncement } from '../presentation/OutcomeAnnouncement'
 import { getCurrentRealm } from '../realm/realmSystem'
 import { getRealmTier } from '../realm/RealmTierMap'
 import { FOUNDATION_LABELS } from '../breakthrough/FoundationType'
@@ -58,8 +59,8 @@ export interface TribulationVictoryResult {
   standalonePanel?: 'quan_khi'
   /** R8.1 glue: quest lifecycle reconcile was requested for the tick. */
   questRealmTransitionMarked: boolean
-  announceTitle: string
-  announceBody: string
+  /** i18n descriptor — the adapter resolves keys via t() (P16). */
+  announcement: OutcomeAnnouncement
 }
 
 /** Defeat outcome facts for presentation. */
@@ -69,8 +70,8 @@ export interface TribulationDefeatResult {
   spiritStoneId: string
   spiritStonesLost: number
   greatDaoOpportunityLost: boolean
-  announceTitle: string
-  announceBody: string
+  /** i18n descriptor — the adapter resolves keys via t() (P16). */
+  announcement: OutcomeAnnouncement
 }
 
 export type TribulationOutcomeResult = TribulationVictoryResult | TribulationDefeatResult
@@ -119,9 +120,10 @@ export class TribulationOutcomeService {
         talentConverted: false,
         standalonePanel: 'quan_khi',
         questRealmTransitionMarked: false,
-        announceTitle: 'QUÁN KHÍ THÀNH CÔNG',
-        announceBody:
-          'Đạo hữu đã vượt lôi kiếp — hãy chọn con đường tu luyện để bước vào Luyện Khí kỳ.',
+        announcement: {
+          titleKey: 'announce.tribulation.quanKhi.title',
+          bodyKey: 'announce.tribulation.quanKhi.body',
+        },
       }
     }
 
@@ -168,15 +170,19 @@ export class TribulationOutcomeService {
     }
 
     // Discovery announcement: foundation grade or plain realm name.
-    let announceTitle: string
-    let announceBody: string
-    if (active.targetRealmId === 'foundation_establishment') {
-      announceTitle = `★ ${FOUNDATION_LABELS[active.grade].toUpperCase()} TRÚC CƠ ★`
-      announceBody = 'Đạo hữu đã vượt qua Độ Kiếp, chính thức bước vào Trúc Cơ kỳ.'
-    } else {
-      announceTitle = `★ ${realm.name.toUpperCase()} ★`
-      announceBody = `Đạo hữu đã vượt qua Độ Kiếp, chính thức bước vào ${realm.name}.`
-    }
+    const announcement: OutcomeAnnouncement =
+      active.targetRealmId === 'foundation_establishment'
+        ? {
+            titleKey: 'announce.tribulation.foundation.title',
+            titleParams: { label: FOUNDATION_LABELS[active.grade].toUpperCase() },
+            bodyKey: 'announce.tribulation.foundation.body',
+          }
+        : {
+            titleKey: 'announce.tribulation.realm.title',
+            titleParams: { realm: realm.name.toUpperCase() },
+            bodyKey: 'announce.tribulation.realm.body',
+            bodyParams: { realm: realm.name },
+          }
 
     return {
       kind: 'victory',
@@ -185,8 +191,7 @@ export class TribulationOutcomeService {
       foundationGrade: active.targetRealmId === 'foundation_establishment' ? active.grade : undefined,
       talentConverted,
       questRealmTransitionMarked: true,
-      announceTitle,
-      announceBody,
+      announcement,
     }
   }
 
@@ -234,9 +239,10 @@ export class TribulationOutcomeService {
         spiritStoneId,
         spiritStonesLost: Math.min(owned, stoneLoss),
         greatDaoOpportunityLost: true,
-        announceTitle: 'Đại Đạo Đoạn Tuyệt',
-        announceBody:
-          'Nghịch thiên bất thành — cơ duyên Đại Đạo Chi Cơ đã vĩnh viễn đóng lại. Lần tới tối đa là Thiên Đạo.',
+        announcement: {
+          titleKey: 'announce.tribulation.defeatGreatDao.title',
+          bodyKey: 'announce.tribulation.defeatGreatDao.body',
+        },
       }
     }
 
@@ -246,8 +252,10 @@ export class TribulationOutcomeService {
       spiritStoneId,
       spiritStonesLost: Math.min(owned, stoneLoss),
       greatDaoOpportunityLost: false,
-      announceTitle: 'Độ Kiếp Thất Bại',
-      announceBody: 'Kiếp Thương còn vương lại — hãy dưỡng thương rồi thử lại.',
+      announcement: {
+        titleKey: 'announce.tribulation.defeat.title',
+        bodyKey: 'announce.tribulation.defeat.body',
+      },
     }
   }
 

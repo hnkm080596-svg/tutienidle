@@ -1035,9 +1035,16 @@ Migrate one complete outcome chain.
    the guard during development - the exemption is the intended fix, not
    a weakening of production rules.
 
-   Remaining R8.2 slices (NOT started): useBreakthrough start-side flow,
-   other progression outcomes (technique/scripture), i18n migration of
-   announcement strings (P16 backlog).
+   Remaining R8.2 slices — STATUS 2026-09-14: useBreakthrough start-side
+   flow + technique/scripture outcomes VERIFIED already domain-owned
+   (Slice 2 service + GameManager command facades; no Vue-owned
+   progression writes remain in those panels). i18n migration of
+   announcement strings SHIPPED (branch r82-announce-i18n): outcome
+   services now return an OutcomeAnnouncement descriptor (i18n keys +
+   data params, core/presentation/OutcomeAnnouncement.ts); the Vue
+   adapters resolve through i18n.global.t before worldAnnouncement.show
+   — same pattern QuanKhiPanel already used. Displayed strings pinned
+   byte-identical by descriptor-parity tests; en fallback keys asserted.
 
    Verification: P3 full - type-check + build + 472 files / 3197 tests
    PASS (baseline 471/3191); E3 done (dead re-export removed, as-never
@@ -1765,7 +1772,7 @@ R14 Architecture Enforcement
 | 6 | R5 — Combat Runtime / Presentation Boundary | AR-14, AR-20, AR-24, AR-29 | ✅ COMPLETE 2026-09-08 |
 | 7 | **R6 — Combat Character Art / Asset Contract** | **asset/presentation findings** | ⏭️ **NEXT** |
 | 8 | R7 — Worker Allocation / Decomposition | AR-07, AR-08 | ✅ COMPLETE 2026-09-08 |
-| 9 | R8 — Quest & Progression Authority | AR-09, AR-10, AR-13 | 🟡 R8.1 COMPLETE 2026-09-08; R8.2 COMPLETE 2026-09-11 (slices 1-3: tribulation outcome+start, breakthrough outcome; only technique/scripture content tweaks remain, no Vue-owned progression writes left) |
+| 9 | R8 — Quest & Progression Authority | AR-09, AR-10, AR-13 | ✅ COMPLETE — R8.1 2026-09-08; R8.2 slices 1-3 2026-09-11 (tribulation outcome+start, breakthrough outcome); announcement i18n migration 2026-09-14 (descriptor contract, adapters resolve via i18n gateway); no Vue-owned progression writes remain |
 | 10 | R9 — Equipment / Inventory Integrity | AR-21, AR-22, AR-23, AR-34 | ✅ COMPLETE 2026-09-08 |
 | 11 | R10 — Save / Restore Boundary | AR-12, AR-15 | ✅ COMPLETE 2026-09-09 |
 | 12 | R11 — UI Foundation Consolidation | AR-26, AR-27, AR-28 + domain UI | ⏸ — Khí Đường 3-tab layout defect FIXED 2026-09-12 (single-owner `qi-hall.css` + ownership guard); broader consolidation vẫn parked |
