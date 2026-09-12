@@ -111,3 +111,12 @@ Both fail for the intended reason and must remain as regression tests after repa
 ## Pre-existing Failures
 
 None observed — the only failing tests in this run are the two QA reproductions added by this review. `BattleLootSystem` shim `battle.player` can be `undefined` when `turnBattle.players` is empty (`grantTurnBattleRewards` line ~1217 dereferences `.currentHp` under heal-on-kill talents) — pre-existing, outside this diff.
+
+## Resolution (post-review, commit b4cc0887)
+
+Both Confirmed defects repaired; reproduction tests now pass and remain as regression tests:
+
+- **QA-2026-09-12-01**: `BattleLootSystem` dedupes `combatantId` per kill — a malformed loadout assigning one companion to two slots grants EXP once.
+- **QA-2026-09-12-02**: `validateCompanionEntries` rejects `definitionId` values absent from `COMPANIONS` (same fail-loud contract as `realmId`); validator test fixtures updated to real roster ids.
+
+Scoped verification: `vue-tsc` clean; `saveShapeValidation` (102) + `BattleLootSystem.*` + `SaveRoundTrip`/`SaveSystem` — 194/194 pass.
