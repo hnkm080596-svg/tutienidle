@@ -30,19 +30,6 @@ export interface EnemySpecialAttack {
   windupSeconds?: number
 }
 
-export interface EnemyItemDrop {
-  kind: 'material' | 'equipment' | 'pill' | 'technique'
-
-  itemId: string
-
-  // Dùng cho material/pill (số lượng cộng vào stack). Equipment luôn
-  // tạo đúng 1 instance mỗi lần rớt, bỏ qua field này.
-  amount?: number
-
-  // 1.0 = 100%
-  chance: number
-}
-
 export interface EnemyReward {
   // Cảm ngộ Tâm Pháp — CHỈ vào tâm pháp đang trang bị (undefined/hết
   // trần thì mất trắng, xem GameManager.gainEquippedTechniqueInsight()).
@@ -60,8 +47,6 @@ export interface EnemyReward {
   // tu vi, nên EnemyReward không có cultivation. Quest reward vẫn dùng
   // Reward.cultivation (core/reward/Reward.ts) — đó là đường riêng.
   spiritStone: number
-
-  itemDrops?: EnemyItemDrop[]
 }
 
 export interface Enemy {
@@ -86,13 +71,6 @@ export interface Enemy {
 
   rewards: EnemyReward
 
-  // Rewards dùng khi quái spawn dưới dạng Elite (roll trúng
-  // eliteChance, xem GameManager.updateStageProgress()) — thường thêm
-  // itemDrops chứa Phá Cảnh Tâm Pháp (kind 'technique'). Không khai
-  // thì Elite vẫn dùng `rewards` thường (chỉ buff stat, không đổi
-  // thưởng).
-  eliteRewards?: EnemyReward
-
   // Cờ đánh dấu bản Elite ("Tinh Anh") — buff vừa phải, spawn NGẪU
   // NHIÊN theo eliteChance (xem Stage.StageEnemyEntry). Chỉ true khi
   // tạo qua createEliteVariant().
@@ -103,10 +81,6 @@ export interface Enemy {
   // ngẫu nhiên (đặt CỐ ĐỊNH qua Stage.bossEnemyId, luôn là quái CUỐI
   // của stage) — chỉ true khi tạo qua createBossVariant().
   isBoss?: boolean
-
-  // Rewards dùng khi quái spawn dưới dạng Boss — không khai thì dùng
-  // eliteRewards ?? rewards (fallback chain, xem createBossVariant()).
-  bossRewards?: EnemyReward
 
   // Core Loop Foundation checklist (Mục MONSTER) — nhãn hành vi nhẹ
   // (không phải AI đầy đủ), xem EnemyArchetype.ts + BattleSystem.ts's
@@ -171,10 +145,6 @@ export interface EnemyDefinition {
   statsInput: EnemyStatInput
 
   rewards: EnemyReward
-
-  eliteRewards?: EnemyReward
-
-  bossRewards?: EnemyReward
 
   archetype?: EnemyArchetype
 
@@ -253,19 +223,17 @@ export function defineEnemy(definition: EnemyDefinition): Enemy {
     alive: true,
 
     rewards: definition.rewards,
-
-    eliteRewards: definition.eliteRewards,
-
-    bossRewards: definition.bossRewards,
   }
 }
 
 const ELITE_NAME_PREFIX = 'Tinh Anh '
 
 /**
- * Biến 1 Enemy TEMPLATE thành bản Elite (buff stat cố định + đổi
- * rewards nếu có eliteRewards) — gọi lúc SPAWN (GameManager.
- * updateStageProgress()), không đụng tới template gốc trong registry.
+ * Biến 1 Enemy TEMPLATE thành bản Elite (buff stat cố định) — gọi lúc
+ * SPAWN (GameManager.updateStageProgress()), không đụng tới template
+ * gốc trong registry. Rewards no longer switch tables: what a kill
+ * drops is decided by core/drop/resolveDrops.ts from the stage, the
+ * family and the modifiers the kill carries.
  */
 export function createEliteVariant(enemy: Enemy): Enemy {
   const stats = applyEliteMultiplier(enemy.stats)
@@ -280,8 +248,6 @@ export function createEliteVariant(enemy: Enemy): Enemy {
     currentHp: stats.maxHp,
 
     maxHp: stats.maxHp,
-
-    rewards: enemy.eliteRewards ?? enemy.rewards,
 
     isElite: true,
   }
@@ -308,8 +274,6 @@ export function createBossVariant(enemy: Enemy): Enemy {
     currentHp: stats.maxHp,
 
     maxHp: stats.maxHp,
-
-    rewards: enemy.bossRewards ?? enemy.eliteRewards ?? enemy.rewards,
 
     isBoss: true,
   }

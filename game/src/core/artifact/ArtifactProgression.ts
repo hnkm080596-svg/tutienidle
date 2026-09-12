@@ -2,7 +2,7 @@
 // Battle/PlayerData trực tiếp, chỉ nhận/trả state để test dễ và tái
 // dùng được ở cả BattleLootSystem (EXP combat) lẫn breakthrough hook
 // (bank-to-cap catch-up). Mirror phong cách hàm thuần của
-// core/reward/StageDropRules.ts và core/element/ElementLoadout.ts.
+// core/element/ElementLoadout.ts.
 import type { Enemy } from '../enemy/Enemy'
 import type { ArtifactGrade, ArtifactId, ArtifactProgress } from './Artifact'
 import { ARTIFACT_GRADE_ORDER, ARTIFACT_ID_BY_CULTIVATION_PATH, isArtifactGrade, isArtifactPath } from './Artifact'
