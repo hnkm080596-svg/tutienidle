@@ -723,6 +723,16 @@ export class CombatGridView {
     })
   }
 
+  /** Whole-combatant visibility: body, label, shadow and health bar toggle
+   * together. Callers must not touch sprite.rect.setVisible directly. */
+  setSpriteVisible(sprite: EntitySprite, visible: boolean) {
+    sprite.rect.setVisible(visible)
+    sprite.label.setVisible(visible)
+    sprite.shadow?.setVisible(visible)
+    sprite.healthBar?.background.setVisible(visible)
+    sprite.healthBar?.fill.setVisible(visible)
+  }
+
   destroyEntitySprite(sprite: EntitySprite) {
     // The idle tween targets a plain object, so it survives the GameObject and
     // would keep running against a destroyed sprite's offset forever.

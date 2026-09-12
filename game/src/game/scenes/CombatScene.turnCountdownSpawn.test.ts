@@ -5,7 +5,6 @@
 // reintroducing the "player invisible in combat" bug fixed 2026-09-06
 // (f179a2b) via the new countdown-telegraph hide-then-reveal path.
 import { describe, expect, it, vi } from 'vitest'
-import { CombatScene } from './CombatScene'
 import { createTestScene, type CombatSceneTestView } from './combat/combatTestHarness'
 import type { EntitySprite } from './combat/combatTypes'
 import { spawnEnemySpawnVfx } from '@/game/support/EnemySpawnVfx'
@@ -88,28 +87,25 @@ function snapshotWithProgress(countdownProgress: number): TurnBattleEntitySnapsh
 }
 
 describe('CombatScene party countdown telegraph visibility', () => {
-  it('player/companion sprite stays hidden while countdownProgress is defined, and becomes visible once it is undefined', () => {
-    const scene = Object.create(CombatScene.prototype) as CombatScene & {
-      turnCountdownPendingIds: Set<string>
-      sprites: Map<string, { rect: { setVisible: (visible: boolean) => void; visible?: boolean } }>
-    }
+  it('entityVisual.applyGating keeps a pending id hidden and reveals a non-pending id', () => {
+    // 'construct' so entityVisual is a real CombatEntityVisualLifecycle —
+    // this drives the same call the 'create' branch of
+    // reconcileCombatantSprites() makes.
+    const scene = createTestScene() as CombatSceneTestView
 
-    scene.turnCountdownPendingIds = new Set(['player'])
+    scene.entityVisual.markPending(['player'])
 
-    let visible: boolean | undefined
-    const rect = { setVisible: (value: boolean) => { visible = value } }
+    const visible: Record<string, boolean | undefined> = {}
+    const makeSprite = (id: string) => ({
+      rect: { setVisible: (value: boolean) => { visible[id] = value } },
+      label: { setVisible: () => {} },
+    })
 
-    scene.sprites = new Map([['player', { rect }]]) as unknown as Map<string, EntitySprite>
+    scene.entityVisual.applyGating('player', makeSprite('player') as unknown as EntitySprite)
+    scene.entityVisual.applyGating('companion_1', makeSprite('companion_1') as unknown as EntitySprite)
 
-    // Simulate the 'create' branch's visibility line directly (unit-level,
-    // no Phaser scene needed — same technique as CombatGridViewHost.test.ts).
-    rect.setVisible(!scene.turnCountdownPendingIds.has('player'))
-    expect(visible).toBe(false)
-
-    // Countdown ends — reconcileTurnCountdownSpawn()'s flush path.
-    scene.turnCountdownPendingIds.clear()
-    rect.setVisible(true)
-    expect(visible).toBe(true)
+    expect(visible['player']).toBe(false)
+    expect(visible['companion_1']).toBe(true)
   })
 })
 
@@ -142,7 +138,7 @@ describe('CombatScene party pre-spawn gating (2026-09-12 fix)', () => {
 
     // Marked pending (so 'create' keeps it hidden) but NO telegraph — the
     // countdown phase owns handle spawning, not the intro.
-    expect(scene.turnCountdownPendingIds.has('player')).toBe(true)
+    expect(scene.entityVisual.pending.has('player')).toBe(true)
     expect(scene.turnCountdownSpawnVfxHandles.size).toBe(0)
     expect(vi.mocked(spawnEnemySpawnVfx)).not.toHaveBeenCalled()
   })
@@ -157,18 +153,31 @@ describe('CombatScene party pre-spawn gating (2026-09-12 fix)', () => {
     // Pending from the intro window with NO handle (projection wasn't
     // ready) — the flush must still reveal it, or the sprite stays
     // invisible for the whole battle.
-    scene.turnCountdownPendingIds.add('player')
+    scene.entityVisual.markPending(['player'])
 
     const visible: Record<string, boolean | undefined> = {}
-    const makeRect = (id: string) => ({
-      setVisible: (value: boolean) => { visible[id] = value },
+    const labelVisible: Record<string, boolean | undefined> = {}
+    const barVisible: Record<string, { background?: boolean; fill?: boolean }> = {}
+    const makeSprite = (id: string, withHealthBar = false) => ({
+      rect: { setVisible: (value: boolean) => { visible[id] = value } },
+      label: { setVisible: (value: boolean) => { labelVisible[id] = value } },
+      ...(withHealthBar
+        ? {
+            healthBar: {
+              background: { setVisible: (value: boolean) => { (barVisible[id] ??= {}).background = value } },
+              fill: { setVisible: (value: boolean) => { (barVisible[id] ??= {}).fill = value } },
+            },
+          }
+        : {}),
     })
 
-    scene.sprites.set('player', { rect: makeRect('player') } as unknown as EntitySprite)
+    scene.sprites.set('player', makeSprite('player') as unknown as EntitySprite)
     // A companion materialized in the snapshot but never pending — e.g.
     // the scene rebinds mid-'fighting' and never saw the gating window.
     // onBattleStart() hid it; this flush is the only reveal it gets.
-    scene.sprites.set('companion_1', { rect: makeRect('companion_1') } as unknown as EntitySprite)
+    // Companions carry a healthBar - regression lock for the 2026-09-12
+    // "floating HP bar" bug: the whole sprite must reveal, not just rect.
+    scene.sprites.set('companion_1', makeSprite('companion_1', true) as unknown as EntitySprite)
 
     scene.reconcileTurnCountdownSpawn({
       players: [
@@ -182,7 +191,10 @@ describe('CombatScene party pre-spawn gating (2026-09-12 fix)', () => {
 
     expect(visible['player']).toBe(true)
     expect(visible['companion_1']).toBe(true)
-    expect(scene.turnCountdownPendingIds.size).toBe(0)
+    expect(labelVisible['player']).toBe(true)
+    expect(labelVisible['companion_1']).toBe(true)
+    expect(barVisible['companion_1']).toEqual({ background: true, fill: true })
+    expect(scene.entityVisual.pending.size).toBe(0)
   })
 
   it('countdown-phase snapshots also hide pre-materialized enemies — the party telegraph stays player-only', () => {
@@ -210,7 +222,7 @@ describe('CombatScene party pre-spawn gating (2026-09-12 fix)', () => {
       countdownProgress: 0.5,
     })
 
-    expect(scene.turnCountdownPendingIds.has('enemy_1')).toBe(true)
+    expect(scene.entityVisual.pending.has('enemy_1')).toBe(true)
     // Pending, but NO handle — spawnEnemySpawnVfx ran only for the player.
     expect(scene.turnCountdownSpawnVfxHandles.has('enemy_1')).toBe(false)
     expect(scene.turnCountdownSpawnVfxHandles.size).toBe(1)
@@ -361,13 +373,13 @@ describe('CombatScene party countdown telegraph scene-teardown reset (Task 9 fix
     scene.update(0, 16)
     expect(handles[0]?.lastProgress).toBeGreaterThan(0)
     expect(scene.turnCountdownSpawnVfxHandles.size).toBe(1)
-    expect(scene.turnCountdownPendingIds.size).toBe(1)
+    expect(scene.entityVisual.pending.size).toBe(1)
 
     scene.clearSceneState()
 
     expect(handles[0]?.destroy).toHaveBeenCalled()
     expect(scene.turnCountdownSpawnVfxHandles.size).toBe(0)
-    expect(scene.turnCountdownPendingIds.size).toBe(0)
+    expect(scene.entityVisual.pending.size).toBe(0)
     expect(scene.telegraphTarget).toBe(0)
     expect(scene.telegraphShown).toBe(0)
 

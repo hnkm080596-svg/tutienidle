@@ -12,6 +12,8 @@
 //   (generation token vÃ´ hiá»‡u callback cÅ©).
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createTestScene } from './combat/combatTestHarness'
+import { CombatEntityVisualLifecycle } from './combat/combat-entity-visual-lifecycle'
+import type { CombatScene } from './CombatScene'
 import combatSceneSource from './CombatScene.ts?raw'
 import { PLAYER_TEXTURE_KEY, queueCombatAssets } from '../support/CombatPreload'
 import { peekThanhVanVariant, thanhVanLoadList } from '../support/ThanhVanArt'
@@ -129,12 +131,10 @@ function createPerspectiveScene(textureExists: true | Set<string>) {
   // R14.4 (QA Task 9 follow-up): onBattleStart now clears the countdown
   // telegraph maps too — stub the minimum shape the method reads.
   scene.turnCountdownSpawnVfxHandles = new Map()
-  scene.turnCountdownPendingIds = new Set()
+  scene.entityVisual = new CombatEntityVisualLifecycle(scene as unknown as CombatScene)
   scene.resetTelegraphState = () => {}
-  scene.materializingIds = new Set()
   scene.dyingIds = new Set()
   scene.playerDying = false
-  scene.playerMaterialized = true
   scene.playerSpawnHandle = undefined
   scene.sys = { isActive: () => true }
   scene.scene = {}
