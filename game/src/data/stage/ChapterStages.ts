@@ -33,13 +33,19 @@ export interface ChapterConfig {
 }
 
 /**
- * Perfect clear turn limits (spec v3 D2 - fixed values, no formula):
- * normal floors need the battle done in under 3 turns, the boss floor
- * in under 5. Tune later via playtest if needed - these are release
- * values, not placeholders.
+ * Perfect clear limits (spec v3 D2, revised 2026-09-12 - counted in ATB
+ * ROUNDS via battle.roundsElapsed, not actor actions):
+ * - normal floors: totalEnemyCount + NORMAL_PERFECT_CLEAR_ROUND_MARGIN
+ *   (floor 1 = 20 ... floor 9 = 28). Measured best-case rounds were
+ *   7/16/21 on floors 1/5/9 and a 3-hit-per-kill run needed 14/17/22,
+ *   so a flat limit could never fit every floor - the +10 margin over
+ *   the enemy count keeps a flawless-but-not-perfect run earnable.
+ * - boss floor: a fixed 15 rounds (measured ~13 for a 3-hit boss kill).
+ * Evidence: docs/qa/2026-09-12-pc-tag-system-quick.md. Release values,
+ * not placeholders - tune later via playtest if needed.
  */
-const NORMAL_PERFECT_CLEAR_TURNS = 3
-const BOSS_PERFECT_CLEAR_TURNS = 5
+const NORMAL_PERFECT_CLEAR_ROUND_MARGIN = 10
+const BOSS_PERFECT_CLEAR_ROUNDS = 15
 
 const SPAWN_INTERVAL_SECONDS = 3
 
@@ -67,7 +73,8 @@ function splitEvenly3(total: number): [number, number, number] {
  * - pool = [common w5, elite w3 + eliteChance 0.1] on every floor.
  * - bossEnemyId ONLY on floor 10 (floor 1-9 declarations were fake
  *   metadata that made the UI badge lie on 27 nodes).
- * - perfectClearTurnLimit: 3 normal / 5 boss (D2).
+ * - perfectClearTurnLimit in ROUNDS: totalEnemyCount + 10 normal /
+ *   15 boss (D2 revised).
  */
 export function defineChapterStages(config: ChapterConfig): Stage[] {
   if (config.ids.length !== 10 || config.descriptions.length !== 10 || config.speciesByFloor.length !== 10) {
@@ -102,7 +109,9 @@ export function defineChapterStages(config: ChapterConfig): Stage[] {
       waves: isBossFloor ? [totalEnemyCount] : splitEvenly3(totalEnemyCount),
       spawnIntervalSeconds: SPAWN_INTERVAL_SECONDS,
       bossEnemyId: isBossFloor ? species.elite : undefined,
-      perfectClearTurnLimit: isBossFloor ? BOSS_PERFECT_CLEAR_TURNS : NORMAL_PERFECT_CLEAR_TURNS,
+      perfectClearTurnLimit: isBossFloor
+        ? BOSS_PERFECT_CLEAR_ROUNDS
+        : totalEnemyCount + NORMAL_PERFECT_CLEAR_ROUND_MARGIN,
     } satisfies Stage
   })
 }

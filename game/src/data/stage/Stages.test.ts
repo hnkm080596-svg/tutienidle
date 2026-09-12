@@ -62,15 +62,16 @@ describe('foundation stages', () => {
 
 // Spec v3 D2/D9 (2026-09-11): STAGES is built by defineChapterStages -
 // one owner for the floor rules. These lock the intended differences
-// vs the old literals: fixed perfectClearTurnLimit (3 normal / 5 boss)
-// and bossEnemyId only on floor 10 (no more fake badges on 27 nodes).
+// vs the old literals: perfectClearTurnLimit in rounds (normal =
+// totalEnemyCount + 10, boss = 15 - D2 revised) and bossEnemyId only
+// on floor 10 (no more fake badges on 27 nodes).
 describe('builder swap (spec v3)', () => {
-  it('perfectClearTurnLimit is fixed: 3 normal, 5 boss (D2)', () => {
+  it('perfectClearTurnLimit is fixed (rounds, D2 revised): totalEnemyCount + 10 normal, 15 boss', () => {
     for (const stage of STAGES) {
       if (stage.floor === 10) {
-        expect(stage.perfectClearTurnLimit).toBe(5)
+        expect(stage.perfectClearTurnLimit).toBe(15)
       } else {
-        expect(stage.perfectClearTurnLimit).toBe(3)
+        expect(stage.perfectClearTurnLimit).toBe(stage.totalEnemyCount + 10)
       }
     }
   })

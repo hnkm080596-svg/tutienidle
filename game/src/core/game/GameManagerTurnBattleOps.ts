@@ -883,6 +883,8 @@ export class GameManagerTurnBattleOps {
       introTurnsRemaining: INTRO_TOTAL_TICKS,
       countdownTurnsRemaining: COUNTDOWN_TOTAL_TICKS,
       totalTurnsElapsed: 0,
+      roundsElapsed: 0,
+      actedThisRound: [],
     }
   }
 
@@ -913,6 +915,8 @@ export class GameManagerTurnBattleOps {
       // to fighting.
       state: 'fighting',
       totalTurnsElapsed: 0,
+      roundsElapsed: 0,
+      actedThisRound: [],
       wave: {
         totalEnemyCount: effectiveTotalEnemyCount(stageRef),
         spawnedCount: 0,
@@ -1229,11 +1233,12 @@ export class GameManagerTurnBattleOps {
 
   /**
    * Perfect clear (spec v3 D1): every party member must still be alive at
-   * the victory tick AND the battle must end under the stage's fixed
-   * perfectClearTurnLimit (3 normal / 5 boss). HP-loss is not consulted.
-   * Only the ACTIVE mode can ever evaluate this (idle runs no battle).
-   * Records perfectClearStageIds + perfectClearSeconds ONCE - the first
-   * achievement is never overwritten (B4).
+   * the victory tick AND the battle must end within the stage's fixed
+   * perfectClearTurnLimit - counted in ROUNDS (roundsElapsed), not actor
+   * actions, so wave size does not inflate the count. HP-loss is not
+   * consulted. Only the ACTIVE mode can ever evaluate this (idle runs no
+   * battle). Records perfectClearStageIds + perfectClearSeconds ONCE -
+   * the first achievement is never overwritten (B4).
    */
   private recordPerfectClearIfEligible(turnBattle: TurnBattle) {
     const stage = this.activeStageForTurnBattle
@@ -1251,7 +1256,7 @@ export class GameManagerTurnBattleOps {
       turnBattle.players.length > 0 && turnBattle.players.every((member) => member.entity.alive)
 
     const isPerfectClear =
-      everyoneAlive && (turnBattle.totalTurnsElapsed ?? 0) < stage.perfectClearTurnLimit
+      everyoneAlive && (turnBattle.roundsElapsed ?? 0) < stage.perfectClearTurnLimit
 
     if (!isPerfectClear) {
       return

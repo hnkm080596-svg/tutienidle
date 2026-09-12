@@ -88,9 +88,11 @@ describe('defineChapterStages - floor rules (spec v3 D9)', () => {
     }
   })
 
-  it('perfectClearTurnLimit is fixed: 3 normal / 5 boss (D2)', () => {
+  it('perfectClearTurnLimit (rounds, D2 revised): totalEnemyCount + 10 normal / 15 boss', () => {
     for (const stage of built) {
-      expect(stage.perfectClearTurnLimit).toBe(stage.floor === 10 ? 5 : 3)
+      expect(stage.perfectClearTurnLimit).toBe(
+        stage.floor === 10 ? 15 : stage.totalEnemyCount + 10,
+      )
     }
   })
 

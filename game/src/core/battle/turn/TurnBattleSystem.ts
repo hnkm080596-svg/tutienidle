@@ -125,6 +125,12 @@ export interface TurnBattle {
   enemies: TurnBattleParticipant[]
   state: TurnBattleState
   totalTurnsElapsed?: number
+  /** Completed ATB rounds. A round completes when every participant that is
+   * alive at that moment has declared at least one action since the previous
+   * round boundary; newly spawned enemies join the current round. */
+  roundsElapsed?: number
+  /** Participant ids that have acted in the current (incomplete) round. */
+  actedThisRound?: string[]
   /**
    * Countdown phase (flow: Countdown → Spawn → Gauge combat → Wave →
    * Result) — số lượt-pacing còn lại trước khi state chuyển 'fighting'.
@@ -593,6 +599,24 @@ export class TurnBattleSystem {
     forcedSkillSlot?: TurnSkillSlotRole,
   ): TurnDeclaredAction {
     battle.totalTurnsElapsed = (battle.totalTurnsElapsed ?? 0) + 1
+
+    // Round tracking (spec v3 D1 revision, 2026-09-12): a round completes
+    // when every participant alive AT THIS MOMENT has declared an action
+    // since the last boundary. Reads entity.alive - the participant.alive
+    // cache is only synced inside the pacing loop, not here. A mid-round
+    // spawn joins the current round (it is in alive and must act before
+    // the boundary). totalTurnsElapsed stays a raw actor-action counter.
+    const acted = (battle.actedThisRound ??= [])
+    if (!acted.includes(actor.id)) {
+      acted.push(actor.id)
+    }
+    const aliveNow = [...battle.players, ...battle.enemies].filter(
+      (participant) => participant.entity.alive,
+    )
+    if (aliveNow.length > 0 && aliveNow.every((participant) => acted.includes(participant.id))) {
+      battle.roundsElapsed = (battle.roundsElapsed ?? 0) + 1
+      battle.actedThisRound = []
+    }
 
     const actorBuffSystem = new TurnBuffSystem(actor.buffs)
 

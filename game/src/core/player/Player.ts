@@ -201,7 +201,8 @@ export interface PlayerData {
   completedStageIds: string[]
 
   // Auto-farm Hoàn Mỹ (2026-09-04 spec) — stage đã đạt điều kiện "Hoàn
-  // Mỹ" (HP đội mất <=75% + turn < stage.perfectClearTurnLimit). Ghi 1
+  // Mỹ" (spec v3 D1: all party alive at victory + roundsElapsed <
+  // stage.perfectClearTurnLimit - rounds, not actor actions). Ghi 1
   // LẦN lúc đạt lần đầu, không cập nhật lại sau đó.
   perfectClearStageIds: string[]
 
