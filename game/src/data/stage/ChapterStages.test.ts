@@ -1,112 +1,114 @@
-// @vitest-environment jsdom
-// Parity test (spec v3 D9): defineChapterStages must reproduce the 30
-// play-tested stage literals for every field, EXCEPT the two intended
-// changes: (1) perfectClearTurnLimit is NEW (3 normal / 5 boss - D2),
-// (2) bossEnemyId is now only set on floor 10 (removes 27 nodes of fake
-// metadata that made the UI badge lie). The chapter configs used here
-// are the exact configs Stages.ts will carry after the swap.
+// Builder unit test for defineChapterStages (spec v3 D9). Uses one
+// small hand-written ChapterConfig fixture - NOT the shipped Stages.ts
+// configs - so the floor rules are verified independently of content.
 import { describe, expect, it } from 'vitest'
 import { defineChapterStages, type ChapterConfig } from './ChapterStages'
-import { STAGES } from './Stages'
 import type { Stage } from '../../core/stage/Stage'
 
-function buildConfigsFromLiterals(): ChapterConfig[] {
-  const byRealm = new Map<string, Stage[]>()
+const OVERRIDE_POOL = [
+  { enemyId: 'override_alpha', weight: 7 },
+  { enemyId: 'override_beta', weight: 2, eliteChance: 0.25 },
+]
 
-  for (const stage of STAGES) {
-    const realmKey = stage.requiredRealmId ?? ''
-    const list = byRealm.get(realmKey) ?? []
-    list.push(stage)
-    byRealm.set(realmKey, list)
-  }
-
-  const chapters: Array<{ realmId: string; chapter: number }> = [
-    { realmId: 'qi_refining', chapter: 2 },
-    { realmId: 'mortal', chapter: 1 },
-    { realmId: 'foundation_establishment', chapter: 3 },
-  ]
-
-  return chapters.map(({ realmId, chapter }) => {
-    const stages = byRealm.get(realmId)!.sort((a, b) => (a.floor ?? 0) - (b.floor ?? 0))
-
-    return {
-      realmId,
-      chapter,
-      ids: stages.map((stage) => stage.id),
-      names: (floor: number) => stages[floor - 1]!.name,
-      descriptions: stages.map((stage) => stage.description),
-      speciesByFloor: stages.map((stage) => ({
-        common: stage.enemyPool[0]!.enemyId,
-        elite: stage.enemyPool[1]?.enemyId ?? stage.enemyPool[0]!.enemyId,
-      })),
-      poolOverrides: Object.fromEntries(
-        stages
-          .filter((stage) => stage.enemyPool.length !== 2)
-          .map((stage) => [stage.floor!, stage.enemyPool]),
-      ),
-    }
-  })
+const FIXTURE: ChapterConfig = {
+  realmId: 'test_realm',
+  chapter: 9,
+  ids: Array.from({ length: 10 }, (_, i) => `test_stage_${i + 1}`),
+  names: (floor) => `Fixture Floor ${floor}`,
+  descriptions: Array.from({ length: 10 }, (_, i) => `desc ${i + 1}`),
+  speciesByFloor: Array.from({ length: 10 }, (_, i) => ({
+    common: `f${i + 1}_common`,
+    elite: `f${i + 1}_elite`,
+  })),
+  poolOverrides: { 3: OVERRIDE_POOL },
 }
 
-describe('defineChapterStages parity vs literals (D9)', () => {
-  const built: Stage[] = buildConfigsFromLiterals().flatMap(defineChapterStages)
-  const literalById = new Map(STAGES.map((stage) => [stage.id, stage]))
+const built: Stage[] = defineChapterStages(FIXTURE)
+const byFloor = new Map(built.map((stage) => [stage.floor, stage]))
 
-  it('builds exactly 30 stages with identical id order', () => {
-    expect(built).toHaveLength(30)
-    expect(built.map((stage) => stage.id)).toEqual(STAGES.map((stage) => stage.id))
+describe('defineChapterStages - floor rules (spec v3 D9)', () => {
+  it('builds exactly 10 stages in id order', () => {
+    expect(built).toHaveLength(10)
+    expect(built.map((stage) => stage.id)).toEqual(FIXTURE.ids)
   })
 
-  it.each(built.map((stage) => stage.id))('%s: every shared field matches the literal', (id) => {
-    const fromBuilder = built.find((stage) => stage.id === id)!
-    const fromLiteral = literalById.get(id)!
-
-    expect(fromBuilder.name).toBe(fromLiteral.name)
-    expect(fromBuilder.description).toBe(fromLiteral.description)
-    expect(fromBuilder.requiredRealmId).toBe(fromLiteral.requiredRealmId)
-    // Normalized (intended): old literals left floor 1 of mortal/qi
-    // undefined; behaviorally identical because the zone order is the
-    // real gate - compare the effective value.
-    expect(fromBuilder.requiredRealmLevel ?? fromBuilder.floor).toBe(fromLiteral.requiredRealmLevel ?? fromLiteral.floor)
-    expect(fromBuilder.chapter).toBe(fromLiteral.chapter)
-    expect(fromBuilder.floor).toBe(fromLiteral.floor)
-    expect(fromBuilder.enemyPool).toEqual(fromLiteral.enemyPool)
-    expect(fromBuilder.totalEnemyCount).toBe(fromLiteral.totalEnemyCount)
-    expect(fromBuilder.waves).toEqual(fromLiteral.waves)
-    expect(fromBuilder.spawnIntervalSeconds).toBe(fromLiteral.spawnIntervalSeconds)
-  })
-
-  it('perfectClearTurnLimit is new and fixed: 3 normal / 5 boss (D2)', () => {
+  it('maps chapter / floor / realm / name / description / requiredRealmLevel', () => {
     for (const stage of built) {
-      if (stage.floor === 10) {
-        expect(stage.perfectClearTurnLimit).toBe(5)
-      } else {
-        expect(stage.perfectClearTurnLimit).toBe(3)
-      }
+      expect(stage.chapter).toBe(FIXTURE.chapter)
+      expect(stage.requiredRealmId).toBe(FIXTURE.realmId)
+      expect(stage.requiredRealmLevel).toBe(stage.floor)
+      expect(stage.name).toBe(`Fixture Floor ${stage.floor}`)
+      expect(stage.description).toBe(`desc ${stage.floor}`)
     }
   })
 
-  it('bossEnemyId only on floor 10 (intended change: truthful metadata)', () => {
+  it('totalEnemyCount = 9 + floor on every floor', () => {
+    for (const stage of built) {
+      expect(stage.totalEnemyCount).toBe(9 + stage.floor!)
+    }
+  })
+
+  it.each([
+    [1, [3, 3, 4]],
+    [2, [3, 4, 4]],
+    [4, [4, 4, 5]],
+    [5, [4, 5, 5]],
+    [8, [5, 6, 6]],
+  ] as const)('floor %i: waves split evenly in 3 -> %j', (floor, expected) => {
+    expect(byFloor.get(floor)!.waves).toEqual(expected)
+  })
+
+  it('floor 10: waves = [totalEnemyCount] (solo-boss override lives downstream)', () => {
+    const boss = byFloor.get(10)!
+    expect(boss.waves).toEqual([boss.totalEnemyCount])
+  })
+
+  it('standard pool is [common w5, elite w3 + eliteChance 0.1]', () => {
+    for (const stage of built) {
+      if (stage.floor === 3) continue // overridden floor
+      const species = FIXTURE.speciesByFloor[stage.floor! - 1]!
+      expect(stage.enemyPool).toEqual([
+        { enemyId: species.common, weight: 5 },
+        { enemyId: species.elite, weight: 3, eliteChance: 0.1 },
+      ])
+    }
+  })
+
+  it('poolOverrides REPLACES the standard pool for that floor', () => {
+    expect(byFloor.get(3)!.enemyPool).toEqual(OVERRIDE_POOL)
+  })
+
+  it('bossEnemyId = elite species on floor 10 only', () => {
     for (const stage of built) {
       if (stage.floor === 10) {
-        expect(stage.bossEnemyId).toBeDefined()
+        expect(stage.bossEnemyId).toBe('f10_elite')
       } else {
         expect(stage.bossEnemyId).toBeUndefined()
       }
     }
   })
 
-  it('waves sum invariant holds for all built stages', () => {
+  it('perfectClearTurnLimit is fixed: 3 normal / 5 boss (D2)', () => {
+    for (const stage of built) {
+      expect(stage.perfectClearTurnLimit).toBe(stage.floor === 10 ? 5 : 3)
+    }
+  })
+
+  it('spawnIntervalSeconds is the shared constant (3)', () => {
+    for (const stage of built) {
+      expect(stage.spawnIntervalSeconds).toBe(3)
+    }
+  })
+
+  it('waves sum invariant holds on every floor', () => {
     for (const stage of built) {
       expect(stage.waves.reduce((a, b) => a + b, 0)).toBe(stage.totalEnemyCount)
     }
   })
 
   it('rejects a chapter that does not declare exactly 10 floors', () => {
-    const valid = buildConfigsFromLiterals()[0]!
-
     expect(() =>
-      defineChapterStages({ ...valid, ids: valid.ids.slice(0, 9) }),
+      defineChapterStages({ ...FIXTURE, ids: FIXTURE.ids.slice(0, 9) }),
     ).toThrow(/exactly 10 floors/)
   })
 })
