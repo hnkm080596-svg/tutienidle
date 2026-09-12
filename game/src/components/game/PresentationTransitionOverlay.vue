@@ -15,6 +15,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { CoordinatorError, Phase } from '@/presentation/PresentationContracts'
+import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 
 const props = withDefaults(
   defineProps<{
@@ -182,6 +183,7 @@ defineExpose({
 <template>
   <div
     class="presentation-overlay"
+    :style="{ zIndex: OVERLAY_LAYERS.curtain }"
     :class="{
       'is-locked': isLocked || curtainState !== 'opened' || error !== null,
       'is-curtain-closed': curtainState === 'closed' || curtainState === 'closing',
@@ -251,7 +253,9 @@ defineExpose({
 .presentation-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  /* z-index comes from OVERLAY_LAYERS.curtain (inline style) — the curtain
+     is the TOPMOST app layer: while closed it must cover every other
+     panel, including modals, toasts, the save gate and the error screen. */
   pointer-events: none;
   overflow: hidden;
 }

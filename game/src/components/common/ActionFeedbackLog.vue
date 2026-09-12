@@ -2,6 +2,7 @@
 import { useI18n } from 'vue-i18n'
 import { useActionFeedbackStore } from '@/stores/actionFeedback'
 import type { ActionFeedbackEntry, ActionFeedbackTone } from '@/stores/actionFeedback'
+import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 
 // Workstream A §4.3 — "Nhật ký thao tác": phản hồi cho action gameplay
 // (Cường Hóa/Tẩy Luyện/Tinh Luyện/Hóa Luyện, xây công trình, đột phá...),
@@ -40,7 +41,14 @@ function entryText(entry: ActionFeedbackEntry): string {
          while there is activity - after 5s of silence the store hides it
          and this root v-if removes it entirely (not just opacity), so it
          stops occupying the bottom-right corner of the Dong Fu screen. -->
-    <div v-if="feedback.isVisible" class="feedback-log" role="log" aria-live="polite" aria-relevant="additions">
+    <div
+      v-if="feedback.isVisible"
+      class="feedback-log"
+      :style="{ zIndex: OVERLAY_LAYERS.feedback }"
+      role="log"
+      aria-live="polite"
+      aria-relevant="additions"
+    >
       <div class="feedback-log__header">
         <span>Nhật ký thao tác</span>
 
@@ -81,7 +89,7 @@ function entryText(entry: ActionFeedbackEntry): string {
   position: fixed;
   right: 24px;
   bottom: 24px;
-  z-index: 1200;
+  /* z-index via OVERLAY_LAYERS.feedback (inline style). */
   display: flex;
   flex-direction: column;
   width: min(320px, 90vw);

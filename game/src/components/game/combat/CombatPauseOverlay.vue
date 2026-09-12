@@ -2,9 +2,10 @@
 /**
  * A11 (spec §6.1) — the pause overlay is NOT the curtain. The curtain
  * belongs to the presentation coordinator and covers route transitions
- * (App.vue's <PresentationTransitionOverlay>, position:fixed, z-index 1000);
- * this belongs to the battle and covers a stopped CombatClock. Separate
- * owners, separate state, separate z-layers — neither may drive the other.
+ * (App.vue's <PresentationTransitionOverlay>, position:fixed,
+ * OVERLAY_LAYERS.curtain); this belongs to the battle and covers a
+ * stopped CombatClock. Separate owners, separate state, separate
+ * z-layers — neither may drive the other.
  * Conflating them would recreate the dead-control defect the coordinator
  * design already had to fix once.
  *
@@ -14,6 +15,7 @@
  * paused battle still looks like a battle waiting, not a screenshot.
  */
 import { useI18n } from 'vue-i18n'
+import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 
 defineEmits<{ continue: [] }>()
 
@@ -21,7 +23,13 @@ const { t } = useI18n()
 </script>
 
 <template>
-  <div class="combat-pause" data-testid="combat-pause-overlay" role="dialog" aria-modal="true">
+  <div
+    class="combat-pause"
+    :style="{ zIndex: OVERLAY_LAYERS.combatPause }"
+    data-testid="combat-pause-overlay"
+    role="dialog"
+    aria-modal="true"
+  >
     <div class="combat-pause__card">
       <h3 class="combat-pause__title">{{ t('combat.overlay.pause.title') }}</h3>
       <p class="combat-pause__body">{{ t('combat.overlay.pause.body') }}</p>
@@ -40,12 +48,12 @@ const { t } = useI18n()
 <style scoped>
 /* position:fixed (not absolute) — mounted at App.vue's template top level,
    which has no positioned ancestor, same reasoning as the curtain's own
-   .transition-overlay rule. z-index sits BELOW the curtain's 1000: the
-   curtain must always be able to cover this, never the reverse. */
+   .transition-overlay rule. Layer is OVERLAY_LAYERS.combatPause (inline
+   style) — deliberately BELOW the curtain: the curtain must always be
+   able to cover this, never the reverse. */
 .combat-pause {
   position: fixed;
   inset: 0;
-  z-index: 900;
   display: flex;
   align-items: center;
   justify-content: center;

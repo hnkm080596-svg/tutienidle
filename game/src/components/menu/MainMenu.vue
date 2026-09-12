@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import MenuBackground from './MenuBackground.vue'
 import MenuLogo from './MenuLogo.vue'
 import MenuButton from './MenuButton.vue'
@@ -20,7 +21,7 @@ const handleExit = () => {
 </script>
 
 <template>
-  <div class="main-menu">
+  <div class="main-menu" :style="{ zIndex: OVERLAY_LAYERS.mainMenu }">
     <MenuBackground />
     <div class="main-menu__content">
       <MenuLogo />
@@ -39,7 +40,8 @@ const handleExit = () => {
 .main-menu {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  /* z-index via OVERLAY_LAYERS.mainMenu (inline style) — single source
+     for the app-level overlay order, so the curtain stays above it. */
   width: 100vw;
   height: 100vh;
   display: flex;

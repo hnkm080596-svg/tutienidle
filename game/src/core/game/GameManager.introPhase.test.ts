@@ -100,7 +100,10 @@ describe('GameManager - intro/transition phase before countdown (plan 2026-09-07
       expect(snapshot.entities.players[0]!.alive).toBe(true)
       expect(snapshot.entities.players[0]!.currentHp).toBeGreaterThan(0)
 
-      // Initial intro has 0 ticks: countdownProgress is undefined
+      // Initial intro has 0 ticks: countdownProgress is undefined — phase
+      // is what tells the presentation this means "not yet counting down"
+      // (keep combatants hidden) rather than "countdown finished" (reveal).
+      expect(snapshot.entities.phase).toBe('intro')
       expect(snapshot.entities.countdownProgress).toBeUndefined()
 
       // Pure query: reading twice emits 0 events and changes no ticks

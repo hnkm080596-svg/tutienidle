@@ -605,8 +605,8 @@ onUnmounted(() => {
   <!-- MainMenu overlay tạm (Task 8 online-foundation sẽ thay thế):
        hiện từ lúc mount phủ trên intro/auth, đóng vĩnh viễn khi
        bootGame() chạy — qua nút "Bắt đầu tu luyện" hoặc auth flow.
-       z-index 1000 (MainMenu.vue .main-menu-overlay) phủ LoadingScreen
-       3s đầu; user thấy menu thay vì màn loading. -->
+       Layer: OVERLAY_LAYERS.mainMenu (MainMenu.vue tự bind) phủ
+       LoadingScreen 3s đầu; user thấy menu thay vì màn loading. -->
   <Transition>
     <MainMenu
       v-if="showMainMenu"
@@ -653,8 +653,8 @@ onUnmounted(() => {
   <!-- Task 8 (A11) — the unwatched pause. Data-driven by useCombatPause()
        (visibilitychange -> freezeCombat('tab-hidden')), NOT the curtain
        above: separate owner (the battle vs. the presentation coordinator),
-       separate z-layer (900 < curtain's 1000 so the curtain can always
-       cover it), neither may drive the other. -->
+       separate z-layer (OVERLAY_LAYERS.combatPause < curtain so the
+       curtain can always cover it), neither may drive the other. -->
   <CombatPauseOverlay v-if="isCombatPaused" @continue="continueBattle" />
 
   <!-- Curtain/loading/error cover lives ABOVE every entry branch so cold boot
@@ -716,7 +716,8 @@ body {
 .main-menu-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  /* No z-index here — the component binds OVERLAY_LAYERS.mainMenu itself
+     so the app-level overlay order has a single source. */
 }
 
 .v-enter-active,

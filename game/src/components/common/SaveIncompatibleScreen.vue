@@ -4,6 +4,7 @@ import GameButton from '@/components/common/GameButton.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { useSaveIssueStore } from '@/stores/saveIssue'
 import { exportSaveToFile, deleteSave, importSaveRaw } from '@/services/save/SaveSystem'
+import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 import ConfirmModal from './ConfirmModal.vue'
 
 const saveIssue = useSaveIssueStore()
@@ -72,7 +73,7 @@ function handleImport(event: Event) {
 </script>
 
 <template>
-  <div class="save-incompatible">
+  <div class="save-incompatible" :style="{ zIndex: OVERLAY_LAYERS.saveGate }">
     <div class="save-incompatible__panel">
       <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
       <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
@@ -117,7 +118,8 @@ function handleImport(event: Event) {
 .save-incompatible {
   position: fixed;
   inset: 0;
-  z-index: 4000;
+  /* z-index via OVERLAY_LAYERS.saveGate (inline style) — top of the
+     content layers, still under the curtain by contract. */
   overflow: auto;
   display: flex;
   align-items: center;
