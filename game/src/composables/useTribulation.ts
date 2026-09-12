@@ -8,6 +8,7 @@ import { TribulationOutcomeService, type TribulationOutcomeResult, type Tribulat
 import { useWorldAnnouncementStore } from '../stores/worldAnnouncement'
 import { useUiStore } from '../stores/ui'
 import { isBattleInProgress } from '../core/battle/BattleTypes'
+import { i18n } from '@/i18n'
 
 // R8.2 (AR-10): outcome authority lives in TribulationOutcomeService (core).
 // This adapter keeps ONLY presentation sequencing: announcements, scene
@@ -102,8 +103,15 @@ export function triggerBreakthroughAction(
 function presentOutcome(result: TribulationOutcomeResult): void {
   const ui = useUiStore()
   const announcements = useWorldAnnouncementStore()
+  const { announcement } = result
 
-  announcements.show(result.announceTitle, result.announceBody)
+  // P16: the domain returns i18n keys + params; the gateway resolves the
+  // display strings here (module-level function — i18n.global.t, not the
+  // setup-scoped useI18n composable).
+  announcements.show(
+    i18n.global.t(announcement.titleKey, announcement.titleParams ?? {}),
+    i18n.global.t(announcement.bodyKey, announcement.bodyParams ?? {}),
+  )
 
   if (result.kind === 'victory' && result.standalonePanel) {
     ui.standalonePanel = result.standalonePanel

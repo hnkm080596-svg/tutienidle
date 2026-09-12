@@ -23,6 +23,7 @@ import { BreakthroughOutcomeService } from './BreakthroughOutcomeService'
 import { addCultivation } from '../cultivation/CultivationSystem'
 import { getCurrentRealm } from '../realm/realmSystem'
 import { createDefaultArtifactProgress } from '../artifact/ArtifactProgression'
+import { i18n } from '../../i18n'
 
 describe('BreakthroughOutcomeService — minor-realm breakthrough parity', () => {
   beforeEach(() => {
@@ -62,6 +63,7 @@ describe('BreakthroughOutcomeService — minor-realm breakthrough parity', () =>
     expect(player.attributePoints).toBe(pointsBefore + 1)
     // Minor-realm success never changes realmId: no announcement fact.
     expect(result.majorRealmChanged).toBe(false)
+    expect(result.announcement).toBeNull()
   })
 
   it('at max minor level the command fails cleanly (major transitions belong to the tribulation chain)', () => {
@@ -116,5 +118,32 @@ describe('BreakthroughOutcomeService — minor-realm breakthrough parity', () =>
     // realmLevel never DECREASES and the service reported the artifact touch.
     expect(player.artifact.realmLevel).toBeGreaterThanOrEqual(1)
     expect(success.artifactTouched).toBe(true)
+  })
+
+  it('documented-dead major-realm branch emits the announcement descriptor (pinned via stubbed breakthrough)', () => {
+    const gameManager = new GameManager()
+    const player = usePlayerStore()
+    // The production store action never crosses a realm (see header);
+    // stub the domain primitive to pin the unreachable branch's contract.
+    player.breakthrough = () => {
+      player.realmId = 'golden_core'
+      return true
+    }
+
+    const service = new BreakthroughOutcomeService()
+    const result = service.breakthrough(player, gameManager)
+
+    expect(result.kind).toBe('success')
+    if (result.kind !== 'success') throw new Error('unreachable')
+    expect(result.majorRealmChanged).toBe(true)
+    expect(result.announcement).toEqual({
+      titleKey: 'announce.breakthrough.major.title',
+      titleParams: { realm: 'KIM ĐAN' },
+      bodyKey: 'announce.breakthrough.major.body',
+    })
+    expect(i18n.global.t(result.announcement!.titleKey, result.announcement!.titleParams ?? {}))
+      .toBe('KIM ĐAN')
+    expect(i18n.global.t(result.announcement!.bodyKey))
+      .toBe('Đạo hữu đã đột phá đại cảnh giới, tu vi tăng vọt.')
   })
 })
