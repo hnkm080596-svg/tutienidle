@@ -268,8 +268,7 @@
     },
     "tranPhap": {
       "title": "Formation",
-      "confirm": "Save Formation",
-      "grantTest": "[TEST-ONLY] Grant 5 Test Companions"
+      "confirm": "Save Formation"
     },
     "bag": {
       "title": "Inventory",

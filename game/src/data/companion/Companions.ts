@@ -1,11 +1,23 @@
-// Companions (Companion Roster spec, 2026-09-05) — đồng đội chiêu mộ qua
-// gacha, có bộ kỹ năng CỐ ĐỊNH (không có node-tree/loadout Ngũ Hành riêng
-// từng nhân vật) và KHÔNG mang trang bị — chỉ số scale hoàn toàn từ
-// grade + realmLevel + constellationRank (xem companionStatsAt trong
-// core/companion/CompanionProgression.ts).
-// Dùng lại ItemGrade (Hoàng/Huyền/Địa/Thiên/Tiên Chất) làm hệ độ hiếm —
-// CÙNG một thang 5 bậc với Equipment/Pill/Talisman/Formation, khác hoàn
-// toàn ProfessionGrade 10 bậc (không liên quan).
+// Companions (Companion Roster spec, 2026-09-05; MVP roster pass
+// 2026-09-12) - recruitable gacha allies with a FIXED skill kit (no
+// per-character Ngu Hanh node-tree/loadout) and NO equipment - stats
+// scale purely from grade + realmLevel + constellationRank (see
+// companionStatsAt in core/companion/CompanionProgression.ts).
+// Reuses ItemGrade (Hoang/Huyen/Dia/Thien/Tien Chat) as the rarity
+// ladder - the SAME 5-step scale as Equipment/Pill/Talisman/Formation,
+// unrelated to the 10-step ProfessionGrade.
+//
+// MVP roster (design spec section 8): 4 hoang / 3 huyen / 2 dia /
+// 1 thien / 0 tien - tien stays in COMPANION_BASE_RATES but is filtered
+// out of effectiveCompanionRates until a tien definition exists.
+// growthRate (hoang 0.04 / huyen 0.05 / dia 0.06 / thien 0.08) and the
+// unlockThresholds below are starting balance constants for a later tune
+// pass: higher grades grow faster AND unlock earlier (hoang specials at
+// Luyen Khi, huyen/dia/thien specials mid-Pham Nhan; ultimates at Truc
+// Co+). Every skill is plain TurnSkillDefinition content - damage
+// shapes, ailments, self-buffs, detonate, leech, charge - no id-keyed
+// engine branches (A8). Display names for the skill ids live in
+// data/skill/TurnSkillDisplayMeta.ts (the HUD meta layer).
 import type { ItemGrade } from '@/core/item/ItemGrade'
 import type { TurnSkillDefinition } from '@/core/battle/turn/TurnSkillAction'
 
@@ -53,38 +65,481 @@ export interface CompanionInstance {
   constellationRank: number   // 0..6
 }
 
-// TEST-ONLY: 5 companion placeholder (2026-09-06, Hỗn Độn Trận visual test tooling) —
-// chỉ để TranPhapPanel.vue có đủ quân lấp lưới 36 ô của hon_don_tran khi test.
-// Chỉ số/tên tạm bợ, dùng art placeholder chung (không có combatTextureKey riêng —
-// companionToCombatEntity()/render layer tự fallback về placeholder animation set
-// theo id). Sẽ bị xoá khi có roster thật.
-const TEST_COMPANION_BASE_STATS: CompanionBaseStats = { maxHp: 100, attack: 10, speed: 100 }
-
-function testCompanionBasicSkill(id: string): TurnSkillDefinition {
-  return {
-    id: `${id}_basic`,
-    cooldownTurns: 0,
-    damage: { kind: 'physical', multiplier: 1 },
-    targeting: { shape: 'single' },
-  }
-}
-
-// Export (bug fix 2026-09-06, user report "không thấy nhân vật phụ test ở
-// đâu") — TranPhapPanel.vue cần đúng danh sách id này để cấp phát trực tiếp
-// vào player.companions (chưa có gacha UI thật để tự pull), thay vì đoán
-// prefix 'test_companion_' từ COMPANIONS một cách rời rạc/dễ vỡ.
-export const TEST_COMPANIONS: CompanionDefinition[] = [1, 2, 3, 4, 5].map((n) => ({
-  id: `test_companion_${n}`,
-  name: `Test Companion ${n}`,
-  grade: 'hoang',
-  growthRate: 0.05,
-  unlockThresholds: {},
-  baseStats: TEST_COMPANION_BASE_STATS,
-  basic: testCompanionBasicSkill(`test_companion_${n}`),
-}))
+// ---------------------------------------------------------------------------
+// Hoang (4) - growthRate 0.04. Lean kits: a themed basic, one special that
+// opens at Luyen Khi, one ultimate at Truc Co.
+// ---------------------------------------------------------------------------
 
 export const COMPANIONS: readonly CompanionDefinition[] = [
-  // Nội dung roster thêm ở pass balance/content sau — file này chỉ ship
-  // cơ chế (Companion Roster spec §8, nội dung roster nằm ngoài scope).
-  ...TEST_COMPANIONS,
+  {
+    id: 'ho_ly_tinh',
+    name: 'Hồ Ly Tinh',
+    grade: 'hoang',
+    growthRate: 0.04,
+    unlockThresholds: {
+      special: { realmId: 'qi_refining', realmLevel: 1 },
+      ultimate: { realmId: 'foundation_establishment', realmLevel: 1 },
+    },
+    baseStats: { maxHp: 90, attack: 12, speed: 110 },
+    // Fast foxfire caster - claws physically, then burns with Ho Hoa.
+    basic: {
+      id: 'ho_ly_tinh_basic',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'single' },
+      presetId: 'claw',
+    },
+    special: {
+      id: 'ho_ly_tinh_special',
+      cooldownTurns: 3,
+      damage: {
+        kind: 'elemental',
+        components: [{ kind: 'element', element: 'fire', ratio: 1 }],
+        multiplier: 1.6,
+      },
+      targeting: { shape: 'single' },
+      appliesAilment: { buffDefinitionId: 'bong', chance: 0.5 },
+      presetId: 'fire_burst',
+    },
+    ultimate: {
+      id: 'ho_ly_tinh_ultimate',
+      cooldownTurns: 7,
+      damage: {
+        kind: 'elemental',
+        components: [{ kind: 'element', element: 'fire', ratio: 1 }],
+        multiplier: 2.8,
+      },
+      targeting: { shape: 'single' },
+      appliesAilment: { buffDefinitionId: 'bong', chance: 1, stacks: 2 },
+      presetId: 'fire_burst',
+    },
+  },
+
+  {
+    id: 'khai_son_luc_si',
+    name: 'Khai Sơn Lực Sĩ',
+    grade: 'hoang',
+    growthRate: 0.04,
+    unlockThresholds: {
+      special: { realmId: 'qi_refining', realmLevel: 4 },
+      ultimate: { realmId: 'foundation_establishment', realmLevel: 6 },
+    },
+    baseStats: { maxHp: 150, attack: 10, speed: 95 },
+    // Slow frontline bruiser - stone-splitting blows petrify and stun.
+    basic: {
+      id: 'khai_son_luc_si_basic',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'single' },
+      presetId: 'slash',
+    },
+    special: {
+      id: 'khai_son_luc_si_special',
+      cooldownTurns: 4,
+      damage: { kind: 'physical', multiplier: 2 },
+      targeting: { shape: 'square', laneRadius: 1 },
+      appliesAilment: { buffDefinitionId: 'thach_hoa', chance: 0.4 },
+      presetId: 'earth_shockwave',
+    },
+    ultimate: {
+      id: 'khai_son_luc_si_ultimate',
+      cooldownTurns: 9,
+      damage: { kind: 'physical', multiplier: 3.2 },
+      targeting: { shape: 'square', laneRadius: 1, columnRadius: 1 },
+      appliesAilment: { buffDefinitionId: 'choang', chance: 0.35 },
+      presetId: 'boss_ground_slam',
+    },
+  },
+
+  {
+    id: 'linh_hac',
+    name: 'Linh Hạc',
+    grade: 'hoang',
+    growthRate: 0.04,
+    unlockThresholds: {
+      special: { realmId: 'qi_refining', realmLevel: 6 },
+      ultimate: { realmId: 'foundation_establishment', realmLevel: 4 },
+    },
+    baseStats: { maxHp: 80, attack: 9, speed: 120 },
+    // Spirit crane - fastest hoang pick; frosty wing-beats chill whole rows.
+    basic: {
+      id: 'linh_hac_basic',
+      cooldownTurns: 0,
+      damage: {
+        kind: 'elemental',
+        components: [{ kind: 'element', element: 'water', ratio: 1 }],
+        multiplier: 1,
+      },
+      targeting: { shape: 'single' },
+      appliesAilment: { buffDefinitionId: 'lam_cham', chance: 0.3 },
+      presetId: 'wind_blade',
+    },
+    special: {
+      id: 'linh_hac_special',
+      cooldownTurns: 4,
+      damage: {
+        kind: 'elemental',
+        components: [{ kind: 'element', element: 'water', ratio: 1 }],
+        multiplier: 1.5,
+      },
+      targeting: { shape: 'row' },
+      appliesAilment: { buffDefinitionId: 'han_khi', chance: 1 },
+      presetId: 'water_surge',
+    },
+    ultimate: {
+      id: 'linh_hac_ultimate',
+      cooldownTurns: 8,
+      damage: {
+        kind: 'elemental',
+        components: [{ kind: 'element', element: 'water', ratio: 1 }],
+        multiplier: 2.4,
+      },
+      targeting: { shape: 'all_lanes', columnRadius: 1 },
+      appliesAilment: { buffDefinitionId: 'lam_cham', chance: 1 },
+      presetId: 'water_surge',
+    },
+  },
+
+  {
+    id: 'duoc_dong_tu',
+    name: 'Dược Đồng Tử',
+    grade: 'hoang',
+    growthRate: 0.04,
+    unlockThresholds: {
+      special: { realmId: 'qi_refining', realmLevel: 2 },
+      ultimate: { realmId: 'foundation_establishment', realmLevel: 1 },
+    },
+    baseStats: { maxHp: 110, attack: 8, speed: 100 },
+    // Alchemy boy - poisons with herbs, then detonates the Trung Doc stacks.
+    basic: {
+      id: 'duoc_dong_tu_basic',
+      cooldownTurns: 0,
+      damage: {
+        kind: 'elemental',
+        components: [{ kind: 'element', element: 'wood', ratio: 1 }],
+        multiplier: 1,
+      },
+      targeting: { shape: 'single' },
+      appliesAilment: { buffDefinitionId: 'trung_doc', chance: 0.5 },
+      presetId: 'wood_spikes',
+    },
+    special: {
+      id: 'duoc_dong_tu_special',
+      cooldownTurns: 4,
+      damage: {
+        kind: 'elemental',
+        components: [{ kind: 'element', element: 'wood', ratio: 1 }],
+        multiplier: 1.4,
+      },
+      targeting: { shape: 'square', laneRadius: 1 },
+      appliesAilment: { buffDefinitionId: 'trung_doc', chance: 1 },
+      presetId: 'wood_spikes',
+    },
+    // Van Doc Quy Tong: detonate - consumes the target's Trung Doc stacks
+    // for flat true damage per stack on top of the hit.
+    ultimate: {
+      id: 'duoc_dong_tu_ultimate',
+      cooldownTurns: 7,
+      damage: {
+        kind: 'elemental',
+        components: [{ kind: 'element', element: 'wood', ratio: 1 }],
+        multiplier: 1.8,
+      },
+      targeting: { shape: 'single' },
+      consumesAilmentId: 'trung_doc',
+      damagePerStack: 15,
+      presetId: 'wood_spikes',
+    },
+  },
+
+  // -------------------------------------------------------------------------
+  // Huyen (3) - growthRate 0.05. Specials open mid-Pham Nhan, earlier than
+  // hoang's Luyen Khi gate; ultimates still Truc Co+.
+  // -------------------------------------------------------------------------
+
+  {
+    id: 'van_du_kiem_khach',
+    name: 'Vân Du Kiếm Khách',
+    grade: 'huyen',
+    growthRate: 0.05,
+    unlockThresholds: {
+      special: { realmId: 'mortal', realmLevel: 10 },
+      ultimate: { realmId: 'foundation_establishment', realmLevel: 1 },
+    },
+    baseStats: { maxHp: 120, attack: 15, speed: 108 },
+    // Wandering swordsman - clean physical lines, a charged draw-cut finish.
+    basic: {
+      id: 'van_du_kiem_khach_basic',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1.1 },
+      targeting: { shape: 'single' },
+      presetId: 'slash',
+    },
+    special: {
+      id: 'van_du_kiem_khach_special',
+      cooldownTurns: 4,
+      damage: { kind: 'physical', multiplier: 1.9 },
+      targeting: { shape: 'line' },
+      presetId: 'metal_slash',
+    },
+    // Tuyet Kiem Nhat Thu: two-turn The charge, then the resolving slash
+    // (same chargeTurns primitive as bat_kiem_thuat).
+    ultimate: {
+      id: 'van_du_kiem_khach_ultimate',
+      cooldownTurns: 6,
+      chargeTurns: 2,
+      damage: { kind: 'physical', multiplier: 3.6 },
+      targeting: { shape: 'single' },
+      presetId: 'slash',
+    },
+  },
+
+  {
+    id: 'thuy_linh_xa',
+    name: 'Thủy Linh Xà',
+    grade: 'huyen',
+    growthRate: 0.05,
+    unlockThresholds: {
+      special: { realmId: 'mortal', realmLevel: 12 },
+      ultimate: { realmId: 'foundation_establishment', realmLevel: 3 },
+    },
+    baseStats: { maxHp: 135, attack: 14, speed: 104 },
+    // Water spirit serpent - chilling bites, column floods, tidal rows.
+    basic: {
+      id: 'thuy_linh_xa_basic',
+      cooldownTurns: 0,
+      damage: {
+        kind: 'elemental',
+        components: [{ kind: 'element', element: 'water', ratio: 1 }],
+        multiplier: 1,
+      },
+      targeting: { shape: 'single' },
+      appliesAilment: { buffDefinitionId: 'te_cong', chance: 0.4 },
+      presetId: 'claw',
+    },
+    special: {
+      id: 'thuy_linh_xa_special',
+      cooldownTurns: 4,
+      damage: {
+        kind: 'elemental',
+        components: [{ kind: 'element', element: 'water', ratio: 1 }],
+        multiplier: 1.7,
+      },
+      targeting: { shape: 'column' },
+      appliesAilment: { buffDefinitionId: 'lam_cham', chance: 0.8 },
+      presetId: 'water_surge',
+    },
+    ultimate: {
+      id: 'thuy_linh_xa_ultimate',
+      cooldownTurns: 8,
+      damage: {
+        kind: 'elemental',
+        components: [{ kind: 'element', element: 'water', ratio: 1 }],
+        multiplier: 3,
+      },
+      targeting: { shape: 'row' },
+      appliesAilments: [
+        { buffDefinitionId: 'han_khi', chance: 1, stacks: 2 },
+        { buffDefinitionId: 'te_cong', chance: 0.5 },
+      ],
+      presetId: 'water_surge',
+    },
+  },
+
+  {
+    id: 'thiet_y_tang',
+    name: 'Thiết Y Tăng',
+    grade: 'huyen',
+    growthRate: 0.05,
+    unlockThresholds: {
+      special: { realmId: 'mortal', realmLevel: 14 },
+      ultimate: { realmId: 'foundation_establishment', realmLevel: 5 },
+    },
+    baseStats: { maxHp: 190, attack: 12, speed: 92 },
+    // Iron-robe monk - tanks up with Kim Giap, then a palm that weakens
+    // every enemy caught in the square.
+    basic: {
+      id: 'thiet_y_tang_basic',
+      cooldownTurns: 0,
+      damage: { kind: 'physical', multiplier: 1 },
+      targeting: { shape: 'single' },
+      presetId: 'slash',
+    },
+    // Kim Cang Ho The: self-buff stance, no damage (same self-scope shape
+    // as phap_tu_reaction_ultimate).
+    special: {
+      id: 'thiet_y_tang_special',
+      cooldownTurns: 5,
+      targetScope: 'self',
+      targeting: { shape: 'single' },
+      appliesBuff: { definitionId: 'kim_giap', target: 'self' },
+    },
+    ultimate: {
+      id: 'thiet_y_tang_ultimate',
+      cooldownTurns: 9,
+      damage: { kind: 'physical', multiplier: 2.6 },
+      targeting: { shape: 'square', laneRadius: 1 },
+      appliesBuff: { definitionId: 'uy_ap', target: 'target' },
+      presetId: 'holy_radiance',
+    },
+  },
+
+  // -------------------------------------------------------------------------
+  // Dia (2) - growthRate 0.06. Specials open early Pham Nhan; Cung Menh perks
+  // at ranks 2/4/6 mix raw stats with skill overrides.
+  // -------------------------------------------------------------------------
+
+  {
+    id: 'kim_quang_thanh_nhan',
+    name: 'Kim Quang Thánh Nhân',
+    grade: 'dia',
+    growthRate: 0.06,
+    unlockThresholds: {
+      special: { realmId: 'mortal', realmLevel: 6 },
+      ultimate: { realmId: 'foundation_establishment', realmLevel: 1 },
+    },
+    baseStats: { maxHp: 160, attack: 21, speed: 106 },
+    // Golden-light sage - metal sword-light that bleeds and sunders armor.
+    basic: {
+      id: 'kim_quang_thanh_nhan_basic',
+      cooldownTurns: 0,
+      damage: {
+        kind: 'elemental',
+        components: [{ kind: 'element', element: 'metal', ratio: 1 }],
+        multiplier: 1.2,
+      },
+      targeting: { shape: 'single' },
+      appliesAilment: { buffDefinitionId: 'chay_mau', chance: 0.4 },
+      presetId: 'metal_slash',
+    },
+    special: {
+      id: 'kim_quang_thanh_nhan_special',
+      cooldownTurns: 4,
+      damage: {
+        kind: 'elemental',
+        components: [{ kind: 'element', element: 'metal', ratio: 1 }],
+        multiplier: 2.1,
+      },
+      targeting: { shape: 'square', laneRadius: 1, columnRadius: 1 },
+      appliesAilment: { buffDefinitionId: 'chay_mau', chance: 0.8 },
+      presetId: 'metal_slash',
+    },
+    // Kim Quang Pha Giap: a wide blade strip that cracks metal resistance
+    // on everything it touches (giap_ran applies to all affected targets).
+    ultimate: {
+      id: 'kim_quang_thanh_nhan_ultimate',
+      cooldownTurns: 9,
+      damage: {
+        kind: 'elemental',
+        components: [{ kind: 'element', element: 'metal', ratio: 1 }],
+        multiplier: 3.4,
+      },
+      targeting: { shape: 'all_lanes', columnRadius: 2 },
+      appliesBuff: { definitionId: 'giap_ran', target: 'target' },
+      presetId: 'metal_slash',
+    },
+    constellationPerks: [
+      { atRank: 2, kind: 'stat', stat: 'attack', percent: 15 },
+      { atRank: 4, kind: 'skill_override', slot: 'special', overrides: { cooldownTurns: 2 } },
+      { atRank: 6, kind: 'skill_override', slot: 'ultimate', overrides: { damageMultiplierPercent: 25 } },
+    ],
+  },
+
+  {
+    id: 'huyen_vu',
+    name: 'Huyền Vũ',
+    grade: 'dia',
+    growthRate: 0.06,
+    unlockThresholds: {
+      special: { realmId: 'mortal', realmLevel: 8 },
+      ultimate: { realmId: 'foundation_establishment', realmLevel: 5 },
+    },
+    baseStats: { maxHp: 260, attack: 14, speed: 90 },
+    // Black-tortoise guardian - petrifying slams, rooting earth, then a
+    // Dia Tru bulwark stance as its ultimate.
+    basic: {
+      id: 'huyen_vu_basic',
+      cooldownTurns: 0,
+      damage: {
+        kind: 'elemental',
+        components: [{ kind: 'element', element: 'earth', ratio: 1 }],
+        multiplier: 1,
+      },
+      targeting: { shape: 'single' },
+      appliesAilment: { buffDefinitionId: 'thach_hoa', chance: 0.3 },
+      presetId: 'earth_shockwave',
+    },
+    special: {
+      id: 'huyen_vu_special',
+      cooldownTurns: 5,
+      damage: {
+        kind: 'elemental',
+        components: [{ kind: 'element', element: 'earth', ratio: 1 }],
+        multiplier: 1.6,
+      },
+      targeting: { shape: 'cross', laneRadius: 1 },
+      appliesAilment: { buffDefinitionId: 'troi_chan', chance: 0.5 },
+      presetId: 'earth_shockwave',
+    },
+    ultimate: {
+      id: 'huyen_vu_ultimate',
+      cooldownTurns: 8,
+      targetScope: 'self',
+      targeting: { shape: 'single' },
+      appliesBuff: { definitionId: 'dia_tru', target: 'self' },
+      presetId: 'earth_shockwave',
+    },
+    constellationPerks: [
+      { atRank: 2, kind: 'stat', stat: 'maxHp', percent: 20 },
+      { atRank: 4, kind: 'skill_override', slot: 'special', overrides: { cooldownTurns: 3 } },
+      { atRank: 6, kind: 'stat', stat: 'attack', flat: 8 },
+    ],
+  },
+
+  // -------------------------------------------------------------------------
+  // Thien (1) - growthRate 0.08. The MVP chase pull: primordial damage that
+  // ignores resistances, and the earliest unlocks in the roster.
+  // -------------------------------------------------------------------------
+
+  {
+    id: 'cuu_thien_huyen_nu',
+    name: 'Cửu Thiên Huyền Nữ',
+    grade: 'thien',
+    growthRate: 0.08,
+    unlockThresholds: {
+      special: { realmId: 'mortal', realmLevel: 4 },
+      ultimate: { realmId: 'foundation_establishment', realmLevel: 10 },
+    },
+    baseStats: { maxHp: 220, attack: 27, speed: 112 },
+    // Mystic Maiden of the Nine Heavens - starfall sword-light in rows,
+    // a sky-fall ultimate across three lanes that leeches back to her.
+    basic: {
+      id: 'cuu_thien_huyen_nu_basic',
+      cooldownTurns: 0,
+      damage: { kind: 'primordial', multiplier: 1.3 },
+      targeting: { shape: 'single' },
+      presetId: 'holy_radiance',
+    },
+    special: {
+      id: 'cuu_thien_huyen_nu_special',
+      cooldownTurns: 4,
+      damage: { kind: 'primordial', multiplier: 2.4 },
+      targeting: { shape: 'line' },
+      appliesAilment: { buffDefinitionId: 'uy_ap', chance: 0.5 },
+      presetId: 'holy_radiance',
+    },
+    ultimate: {
+      id: 'cuu_thien_huyen_nu_ultimate',
+      cooldownTurns: 10,
+      damage: { kind: 'primordial', multiplier: 4.2 },
+      targeting: { shape: 'all_lanes', columnRadius: 3 },
+      healPercentOfDamage: 0.3,
+      presetId: 'holy_radiance',
+    },
+    constellationPerks: [
+      { atRank: 2, kind: 'stat', stat: 'speed', flat: 15 },
+      { atRank: 4, kind: 'skill_override', slot: 'basic', overrides: { damageMultiplierPercent: 20 } },
+      { atRank: 6, kind: 'skill_override', slot: 'ultimate', overrides: { damageMultiplierPercent: 30 } },
+    ],
+  },
 ]

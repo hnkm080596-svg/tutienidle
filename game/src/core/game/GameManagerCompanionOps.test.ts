@@ -39,9 +39,10 @@ function makeManager(): { manager: GameManager; player: PlayerData } {
   return { manager, player }
 }
 
-// Math.random = 0 -> roll lands in the first pooled grade (hoang is the
-// only grade in the current pool) and pickDefinitionOfGrade takes index
-// 0, so every pull deterministically returns COMPANIONS[0].
+// Math.random = 0 -> roll lands in the first pooled grade in GRADE_ORDER
+// (hoang) and pickDefinitionOfGrade takes index 0 of the hoang pool, so
+// every pull deterministically returns COMPANIONS[0] (roster order keeps
+// the 4 hoang definitions first).
 function mockPullsToFirstDefinition(): void {
   vi.spyOn(Math, 'random').mockReturnValue(0)
 }

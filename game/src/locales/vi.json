@@ -268,8 +268,7 @@
     },
     "tranPhap": {
       "title": "Trận Pháp",
-      "confirm": "Lưu Trận Pháp",
-      "grantTest": "[TEST-ONLY] Cấp 5 Companion Test"
+      "confirm": "Lưu Trận Pháp"
     },
     "bag": {
       "title": "Kho Vật",
