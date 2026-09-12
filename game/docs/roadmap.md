@@ -1498,11 +1498,9 @@ paid random result requires domain capability/token             → (R9 contract
                                                                    runtime ticket validation;
                                                                    static guard not yet shipped)
 core cannot import presentation/orchestrator upward             → SHIPPED (R14.1b)
-asset destination must remain under asset root                  → not yet
-catalog/preload parity                                          → not yet
-all presentation ACKs require generation token                  → deferred: combat-turn-
-                                                                   mechanism branch owns the
-                                                                   token contract right now
+asset destination must remain under asset root                  → SHIPPED (R14.6a, 2026-09-14)
+catalog/preload parity                                          → SHIPPED (R14.6b, 2026-09-14)
+all presentation ACKs require generation token                  → SHIPPED (R14.6c, 2026-09-14)
 ```
 
 Do not build a broad architecture testing framework before the contracts exist.
@@ -1658,6 +1656,41 @@ Each enforcement rule should protect a real regression class discovered by Missi
    (game/docs/qa/2026-09-11-r14-slice2-combat-contract-quick.md).
 ```
 
+```text
+🟡+ 2026-09-14 (branch r14-guards) — Slice 3 shipped: asset containment +
+   catalog/preload parity + ACK-token guards:
+   - R14.6a assetContainment.test.ts: every AssetBundleCatalog descriptor
+     URL (url/textureUrl/atlasUrl/jsonUrl/basePath) and every literal
+     load.* URL arg in src/** stays under assets/ (rejects traversal,
+     absolute/scheme/backslash forms; `public/` prefix normalised away).
+     Asset-pipeline script root constants must derive from declared roots
+     (public/assets, art-source, src/assets, asset-drop); a quoted '..'
+     segment cannot ground a root via a base constant. patch-*.cjs source
+     patchers are out of scope (not asset writers).
+   - R14.6a also fixed the real defect the guard surfaced:
+     scripts/route-assets.mjs derived destinations from EXTERNAL filenames
+     (name__sub.png); a '..'-segment filename escaped DEST_ROOT. The
+     script now resolves each destination and requires it to stay under
+     resolve(DEST_ROOT)+sep before mkdir/rename — runtime-probed both
+     directions (traversal rejected, normal routing intact).
+   - R14.6b catalogPreloadParity.test.ts: queueCombatAssets() and the
+     combat bundle name the exact same key set (both directions);
+     every literal load.* URL is enumerated by some bundle; non-literal
+     load.* call sites are allowlisted to canonical feeders (CombatPreload,
+     AssetLoaderScene, InkWashUiPhaser, CombatScene Thanh Van swap,
+     TranPhapCombatPreviewScene, TribulationScene).
+   - R14.6c ackTokenContract.test.ts: signature-anchored (token?: param)
+     method-body slices pin acknowledgeTurnReady/acknowledgeActionImpact/
+     acknowledgeActionComplete rejecting !token || token !==
+     this.playbackToken BEFORE any pending-state mutation; playback token
+     regenerated per phase advance.
+   Falsifiability: planted-violation probes tripped the literal-URL guards
+   (both escape + unenumerated); route-assets containment runtime-probed.
+   P3 full: type-check + build + 521 files / 3480 tests PASS. QA quick
+   PASS WITH EVIDENCE (game/docs/qa/2026-09-14-r14-guards-quick.md).
+   P14 deferred (isolated-worktree exception; no visual surface).
+```
+
 
 ---
 
@@ -1738,7 +1771,7 @@ R14 Architecture Enforcement
 | 12 | R11 — UI Foundation Consolidation | AR-26, AR-27, AR-28 + domain UI | ⏸ — Khí Đường 3-tab layout defect FIXED 2026-09-12 (single-owner `qi-hall.css` + ownership guard); broader consolidation vẫn parked |
 | 13 | R12 — Presentation / Asset Cleanup | AR-24, AR-27, AR-29, AR-30, AR-31 | ⏸ |
 | 14 | R13 — Parallel Authority / Legacy Retirement | AR-19, AR-25 | ⏸ |
-| 15 | R14 — Architecture Enforcement | AR-32, AR-33 + migrated invariants | 🟡 Slices 1-2 shipped 2026-09-11: R1/R2/R8.1/AR-33/A6 + combat-contract (two-clock, AC-7c/9b, command boundary) + R8.2 ownership guards; type-level stat guard + asset/catalog/ACK-token guards still pending |
+| 15 | R14 — Architecture Enforcement | AR-32, AR-33 + migrated invariants | 🟡 Slices 1-3 shipped: R1/R2/R8.1/AR-33/A6 + combat-contract (two-clock, AC-7c/9b, command boundary) + R8.2 ownership guards (2026-09-11); asset containment + catalog/preload parity + ACK-token guards (2026-09-14); type-level stat guard + R9 paid-random static guard still pending |
 
 ---
 
