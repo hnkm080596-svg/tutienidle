@@ -1643,19 +1643,61 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   /**
    * Turn-Based Wave Redesign (2026-09-06) — telegraph đếm 3→2→1 cho CẢ
    * party (player + companion). countdownProgress undefined = countdown
-   * hết (hoặc chưa từng có) → flush mọi handle còn treo + hiện sprite
-   * từng id. KHÔNG đụng reconcilePlayerSpawn() (legacy real-time).
+   * hết → flush mọi handle còn treo + hiện sprite từng id. KHÔNG đụng
+   * reconcilePlayerSpawn() (legacy real-time).
+   *
+   * 2026-09-12 fix (user report: player art already on the field before
+   * its spawn telegraph ran) — 'intro' ALSO has countdownProgress ===
+   * undefined, but it means "countdown has not started", not "countdown
+   * done". An intro snapshot used to fall straight into the flush branch
+   * (empty pending set -> no-op), then the 'create' branch of
+   * reconcileCombatantSprites() saw the id as not pending and called
+   * setVisible(true) — the player stayed visible through intro and under
+   * its own countdown telegraph. The phase field on the snapshot contract
+   * separates the two meanings: intro marks pending so 'create' stays
+   * hidden; only the flush reveals.
    */
   private reconcileTurnCountdownSpawn(event: TurnBattleEntitySnapshotEvent) {
+    if (event.phase === 'intro') {
+      // Pre-combat intro: no telegraph runs yet, but ids already appear in
+      // the snapshot — mark them pending so the 'create' branch keeps them
+      // hidden until the countdown-end flush. Enemies are marked too: a
+      // direct startBattle() may carry pre-materialized enemies in
+      // battle.enemies, and "both sides spawn first, then appear" means
+      // they stay hidden for the same intro window.
+      for (const state of event.players) {
+        this.turnCountdownPendingIds.add(state.id)
+      }
+
+      for (const state of event.enemies) {
+        this.turnCountdownPendingIds.add(state.id)
+      }
+
+      return
+    }
+
     if (event.countdownProgress === undefined) {
-      // Countdown vừa kết thúc (hoặc chưa từng bắt đầu) — flush mọi handle
-      // còn treo: flash materialize + hiện sprite thật cho từng id.
-      for (const [id, handle] of this.turnCountdownSpawnVfxHandles) {
+      // Countdown ended — the gating window is over: complete every hanging
+      // handle (materialize flash), then reveal the union of still-pending
+      // ids and every materialized id in the snapshot. Pending ids can lack
+      // a handle (projection not ready when their telegraph would have
+      // spawned, or marked during 'intro') but must still materialize; and
+      // a scene that rebinds mid-'fighting' (never saw the gating window)
+      // reveals its party through the snapshot ids.
+      for (const handle of this.turnCountdownSpawnVfxHandles.values()) {
         handle.complete()
+      }
 
-        const sprite = this.sprites.get(id)
+      const revealedIds = new Set(this.turnCountdownPendingIds)
 
-        sprite?.rect.setVisible(true)
+      for (const state of [...event.players, ...event.enemies]) {
+        if (state.alive) {
+          revealedIds.add(state.id)
+        }
+      }
+
+      for (const id of revealedIds) {
+        this.sprites.get(id)?.rect.setVisible(true)
       }
 
       this.turnCountdownSpawnVfxHandles.clear()
@@ -1667,6 +1709,15 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       this.resetTelegraphState()
 
       return
+    }
+
+    // Enemies already materialized in the snapshot (a direct startBattle()
+    // that skipped 'intro') join the same hidden window — marked pending so
+    // the 'create' branch keeps them hidden until the flush. They get no
+    // countdown handle: the enemy telegraph belongs to the wave path
+    // (pendingEnemySpawns), these simply materialize at flush.
+    for (const state of event.enemies) {
+      this.turnCountdownPendingIds.add(state.id)
     }
 
     for (const player of event.players) {
@@ -1749,12 +1800,14 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
         // không bao giờ tới nữa — sprite kẹt vô hình vĩnh viễn. Snapshot
         // turn-based tự lo hiện sprite ngay khi id đó lần đầu xuất hiện.
         // Turn-Based Wave Redesign (2026-09-06) — party countdown telegraph:
-        // id đang trong turnCountdownPendingIds nghĩa là countdown 3→2→1
-        // CHƯA xong — giữ sprite ẨN, reconcileTurnCountdownSpawn() sẽ tự
-        // setVisible(true) khi countdown kết thúc (xem hàm đó). Enemy
-        // KHÔNG BAO GIỜ vào turnCountdownPendingIds (set chỉ chứa
-        // event.players) nên nhánh này luôn no-op cho enemy, không đổi
-        // hành vi enemy hiện có.
+        // an id in turnCountdownPendingIds means pre-combat gating is NOT
+        // finished — keep the sprite hidden; reconcileTurnCountdownSpawn()
+        // flips it visible at the countdown-end flush (see that function).
+        // The set holds event.players during countdown plus BOTH sides
+        // during 'intro' (a direct startBattle() may carry already-
+        // materialized enemies — same hidden window as the party); wave
+        // enemies come through pendingEnemySpawns instead and never enter
+        // this set, so their behaviour is unchanged.
         sprite.rect.setVisible(!this.turnCountdownPendingIds.has(action.state.id))
 
         // Materialize từ telegraph (Turn-Based Wave Redesign, 2026-09-06) —

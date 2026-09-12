@@ -82,6 +82,7 @@ function snapshotWithProgress(countdownProgress: number): TurnBattleEntitySnapsh
     ],
     enemies: [],
     pendingEnemySpawns: [],
+    phase: 'countdown',
     countdownProgress,
   }
 }
@@ -109,6 +110,111 @@ describe('CombatScene party countdown telegraph visibility', () => {
     scene.turnCountdownPendingIds.clear()
     rect.setVisible(true)
     expect(visible).toBe(true)
+  })
+})
+
+describe('CombatScene party pre-spawn gating (2026-09-12 fix)', () => {
+  // User report: the player art sat on the field while its own spawn
+  // telegraph still ran. Root cause: 'intro' snapshots carry
+  // countdownProgress === undefined, which used to fall into the flush
+  // branch (empty pending set -> no-op), leaving the 'create' branch of
+  // reconcileCombatantSprites() free to reveal the sprite immediately.
+  // The phase field now separates "not yet counting down" from
+  // "countdown finished".
+  it('intro-phase snapshots mark the party pending WITHOUT spawning telegraph handles', () => {
+    const scene = createTestScene() as CombatSceneTestView
+
+    scene.projection = {}
+    scene.renderMode = 'flat'
+    scene.time = { now: 0 }
+
+    vi.mocked(spawnEnemySpawnVfx).mockClear()
+
+    scene.reconcileTurnCountdownSpawn({
+      players: [
+        { id: 'player', name: 'Player', row: 4, column: 8, currentHp: 100, maxHp: 100, alive: true, isBoss: false },
+      ],
+      enemies: [],
+      pendingEnemySpawns: [],
+      phase: 'intro',
+      countdownProgress: undefined,
+    })
+
+    // Marked pending (so 'create' keeps it hidden) but NO telegraph — the
+    // countdown phase owns handle spawning, not the intro.
+    expect(scene.turnCountdownPendingIds.has('player')).toBe(true)
+    expect(scene.turnCountdownSpawnVfxHandles.size).toBe(0)
+    expect(vi.mocked(spawnEnemySpawnVfx)).not.toHaveBeenCalled()
+  })
+
+  it('intro-marked ids still materialize at the flush even without a handle', () => {
+    const scene = createTestScene() as CombatSceneTestView
+
+    scene.projection = {}
+    scene.renderMode = 'flat'
+    scene.time = { now: 0 }
+
+    // Pending from the intro window with NO handle (projection wasn't
+    // ready) — the flush must still reveal it, or the sprite stays
+    // invisible for the whole battle.
+    scene.turnCountdownPendingIds.add('player')
+
+    const visible: Record<string, boolean | undefined> = {}
+    const makeRect = (id: string) => ({
+      setVisible: (value: boolean) => { visible[id] = value },
+    })
+
+    scene.sprites.set('player', { rect: makeRect('player') } as unknown as EntitySprite)
+    // A companion materialized in the snapshot but never pending — e.g.
+    // the scene rebinds mid-'fighting' and never saw the gating window.
+    // onBattleStart() hid it; this flush is the only reveal it gets.
+    scene.sprites.set('companion_1', { rect: makeRect('companion_1') } as unknown as EntitySprite)
+
+    scene.reconcileTurnCountdownSpawn({
+      players: [
+        { id: 'companion_1', name: 'Companion', row: 3, column: 8, currentHp: 50, maxHp: 50, alive: true, isBoss: false },
+      ],
+      enemies: [],
+      pendingEnemySpawns: [],
+      phase: 'fighting',
+      countdownProgress: undefined,
+    })
+
+    expect(visible['player']).toBe(true)
+    expect(visible['companion_1']).toBe(true)
+    expect(scene.turnCountdownPendingIds.size).toBe(0)
+  })
+
+  it('countdown-phase snapshots also hide pre-materialized enemies — the party telegraph stays player-only', () => {
+    const scene = createTestScene() as CombatSceneTestView
+
+    scene.projection = {}
+    scene.renderMode = 'flat'
+    scene.time = { now: 0 }
+
+    vi.mocked(spawnEnemySpawnVfx).mockClear()
+
+    // A direct startBattle() that skipped 'intro' reaches 'countdown'
+    // carrying an already-materialized enemy — it must join the same
+    // hidden window as the party, or it pops in mid-countdown while the
+    // player is still telegraphing.
+    scene.reconcileTurnCountdownSpawn({
+      players: [
+        { id: 'player', name: 'Player', row: 4, column: 8, currentHp: 100, maxHp: 100, alive: true, isBoss: false },
+      ],
+      enemies: [
+        { id: 'enemy_1', name: 'Enemy', row: 1, column: 2, currentHp: 50, maxHp: 50, alive: true, isBoss: false },
+      ],
+      pendingEnemySpawns: [],
+      phase: 'countdown',
+      countdownProgress: 0.5,
+    })
+
+    expect(scene.turnCountdownPendingIds.has('enemy_1')).toBe(true)
+    // Pending, but NO handle — spawnEnemySpawnVfx ran only for the player.
+    expect(scene.turnCountdownSpawnVfxHandles.has('enemy_1')).toBe(false)
+    expect(scene.turnCountdownSpawnVfxHandles.size).toBe(1)
+    expect(vi.mocked(spawnEnemySpawnVfx)).toHaveBeenCalledTimes(1)
   })
 })
 
@@ -231,6 +337,7 @@ describe('CombatScene party countdown telegraph interpolation (Task 9)', () => {
       players: [],
       enemies: [],
       pendingEnemySpawns: [],
+      phase: 'fighting',
       countdownProgress: undefined,
     })
 

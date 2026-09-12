@@ -3,6 +3,7 @@ import { onBeforeUnmount, onMounted } from 'vue'
 import { useNotificationStore } from '@/stores/notification'
 import type { NotificationKind } from '@/core/notification/NotificationEvent'
 import { isMaxRankTone } from '@/core/profession/slotRank'
+import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 
 const notification = useNotificationStore()
 
@@ -46,7 +47,7 @@ onBeforeUnmount(() => {
 
 <template>
   <Teleport to="body">
-    <div class="toast-container">
+    <div class="toast-container" :style="{ zIndex: OVERLAY_LAYERS.toast }">
       <TransitionGroup name="toast">
         <div
           v-for="toast in notification.toasts"
@@ -101,7 +102,7 @@ onBeforeUnmount(() => {
   position: fixed;
   top: 24px;
   right: 24px;
-  z-index: 1500;
+  /* z-index via OVERLAY_LAYERS.toast (inline style). */
   display: flex;
   flex-direction: column;
   gap: 4px;

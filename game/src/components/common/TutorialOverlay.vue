@@ -5,6 +5,7 @@ import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { usePlayerStore } from '@/stores/player'
 import { useDialogFocus } from '@/composables/useDialogFocus'
 import { TUTORIAL_STEPS } from '@/data/tutorial/tutorialSteps'
+import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 
 // UI-005 (Task 3, 2026-09-07) — tutorial là modal blocking: role="dialog"
 // + aria-modal + focus trap qua useDialogFocus (cùng primitive ConfirmModal/
@@ -41,7 +42,7 @@ function next() {
 </script>
 
 <template>
-  <div v-if="!player.hasSeenTutorial" class="tutorial-overlay">
+  <div v-if="!player.hasSeenTutorial" class="tutorial-overlay" :style="{ zIndex: OVERLAY_LAYERS.modal }">
     <div
       ref="panelRef"
       class="tutorial-overlay__panel"
@@ -74,7 +75,7 @@ function next() {
 .tutorial-overlay {
   position: absolute;
   inset: 0;
-  z-index: 1900;
+  /* z-index via OVERLAY_LAYERS.modal (inline style). */
   display: flex;
   align-items: center;
   justify-content: center;

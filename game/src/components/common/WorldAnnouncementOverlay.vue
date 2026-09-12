@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { useWorldAnnouncementStore } from '@/stores/worldAnnouncement'
+import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 
 const store = useWorldAnnouncementStore()
 
@@ -51,7 +52,12 @@ watch(
 
 <template>
   <Transition name="world-announcement-fade">
-    <div v-if="store.active" class="world-announcement" @click="store.hide()">
+    <div
+      v-if="store.active"
+      class="world-announcement"
+      :style="{ zIndex: OVERLAY_LAYERS.announcement }"
+      @click="store.hide()"
+    >
       <div class="world-announcement__content">
         <h2 class="world-announcement__title">{{ store.active.title }}</h2>
 
@@ -68,7 +74,7 @@ watch(
      game, không neo theo viewport trình duyệt thật. */
   position: absolute;
   inset: 0;
-  z-index: 2000;
+  /* z-index via OVERLAY_LAYERS.announcement (inline style). */
   display: flex;
   align-items: center;
   justify-content: center;

@@ -13,6 +13,7 @@ import GameButton from './GameButton.vue'
 import StatRow from './primitives/StatRow.vue'
 import InkNineSlice from './primitives/InkNineSlice.vue'
 import { useDialogFocus } from '@/composables/useDialogFocus'
+import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 
 // UI-005 (Task 3, 2026-09-07) — Offline summary là blocking dialog thật:
 // role="dialog" + aria-modal + focus trap/restore qua useDialogFocus
@@ -34,7 +35,7 @@ const titleId = useId()
 </script>
 
 <template>
-  <div class="offline-summary">
+  <div class="offline-summary" :style="{ zIndex: OVERLAY_LAYERS.modal }">
     <section
       ref="panelRef"
       class="offline-summary__panel"
@@ -68,7 +69,8 @@ const titleId = useId()
 .offline-summary {
   position: absolute;
   inset: 0;
-  z-index: 1800;
+  /* z-index via OVERLAY_LAYERS.modal (inline style) — single source for
+     the app-level overlay order; the curtain must cover this modal. */
   display: flex;
   align-items: center;
   justify-content: center;

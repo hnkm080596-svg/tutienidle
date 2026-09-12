@@ -2,7 +2,7 @@ import type { EventBus } from '../../events/EventBus'
 import type { GridPosition, CellArea } from '../BattleGrid'
 import { entityGridPosition } from '../BattleGrid'
 import type { CombatVfxPresetId, ActionTargetingShape, EnemySpawnVfxPresetId } from '../CombatAction'
-import type { TurnBattle, TurnBattleParticipant, PendingEnemySpawn } from './TurnBattleSystem'
+import type { TurnBattle, TurnBattleParticipant, PendingEnemySpawn, TurnBattleState } from './TurnBattleSystem'
 import { COUNTDOWN_TOTAL_TICKS } from './TurnBattleConstants'
 
 // Action Playback Task 4 (2026-09-05) — presentation event emitter cho
@@ -100,6 +100,14 @@ export interface TurnBattleEntitySnapshotEvent {
   enemies: TurnBattleEntityVisualState[]
   /** Turn-Based Wave Redesign (2026-09-06) — quái đang telegraph, CHƯA vào battle.enemies. */
   pendingEnemySpawns: PendingSpawnVisualState[]
+  /**
+   * Battle phase at snapshot time. Needed because `countdownProgress` ===
+   * undefined carries TWO different meanings — 'intro' (countdown has not
+   * started yet: keep combatants HIDDEN) vs 'fighting'/terminal (countdown
+   * finished: REVEAL) — and presentation must not infer it itself (A7:
+   * the engine is the authority).
+   */
+  phase: TurnBattleState
   /** Chỉ có mặt khi battle.state === 'countdown'; 0→1 hết 3s countdown. */
   countdownProgress?: number
 }
@@ -161,6 +169,7 @@ export function buildTurnBattleEntitySnapshot(battle: TurnBattle): TurnBattleEnt
     players: battle.players.map(toVisualState),
     enemies: battle.enemies.map(toVisualState),
     pendingEnemySpawns: (battle.wave?.pendingEnemySpawns ?? []).map(toPendingSpawnVisualState),
+    phase: battle.state,
     countdownProgress:
       battle.state === 'countdown' && battle.countdownTurnsRemaining !== undefined
         ? 1 - battle.countdownTurnsRemaining / COUNTDOWN_TOTAL_TICKS

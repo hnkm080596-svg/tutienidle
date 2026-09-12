@@ -2,6 +2,7 @@
 import GameButton from '@/components/common/GameButton.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
 import { useErrorStore } from '@/stores/error'
+import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
 
 const errorStore = useErrorStore()
 
@@ -20,7 +21,7 @@ function reloadPage() {
 </script>
 
 <template>
-  <div v-if="errorStore.current" class="error-screen">
+  <div v-if="errorStore.current" class="error-screen" :style="{ zIndex: OVERLAY_LAYERS.appError }">
     <div class="error-screen__panel">
       <InkNineSlice asset-id="surface-xl-paper-scroll" layer="surface" />
       <InkNineSlice asset-id="frame-xl-ceremony" layer="frame" />
@@ -44,7 +45,8 @@ function reloadPage() {
 .error-screen {
   position: fixed;
   inset: 0;
-  z-index: 3000;
+  /* z-index via OVERLAY_LAYERS.appError (inline style) — high, but the
+     route-transition curtain still sits above it by contract. */
   display: flex;
   align-items: center;
   justify-content: center;
