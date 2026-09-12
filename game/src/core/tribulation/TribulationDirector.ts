@@ -17,6 +17,7 @@ import {
   type TribulationChapterProfile,
 } from '../../data/tribulation/TribulationChapters'
 import { TRIBULATION_MIND_QUESTIONS, type MindQuestion } from '../../data/tribulation/TribulationMindQuestions'
+import { getTribulationIntensityMultiplier } from '../talent/TalentEffects'
 
 // TribulationDirector (spec dot-pha-loi-kiep §5) — runtime lôi kiếp
 // MỚI thay TribulationSystem: KHÔNG đi qua BattleSystem, không quái
@@ -95,6 +96,10 @@ export class TribulationDirector {
   private tank: TankRuntime | null = null
   private mindFailStacks = 0
   private mindCorrectLightningReduction = 0
+  // Talent v4 M2 — Loi Kiep: snapshot of the player's tribulation
+  // intensity multiplier, captured at start() so the whole kiếp obeys
+  // the talent that was held when it began (neutral 1 otherwise).
+  private lightningTalentMultiplier = 1
   private readonly presentationSession: PresentationSession
   private presentationMode: PresentationMode = 'headless'
 
@@ -170,6 +175,9 @@ export class TribulationDirector {
     } as CombatEntity
     this.mindFailStacks = 0
     this.mindCorrectLightningReduction = 0
+    this.lightningTalentMultiplier = getTribulationIntensityMultiplier(
+      player.selectedTalentIds,
+    )
 
     this.active = {
       targetRealmId,
@@ -427,7 +435,14 @@ export class TribulationDirector {
     // Buff đúng câu: -% damage lôi (kháng lôi gộp, spec §5.3)
     const reduction = Math.min(0.8, this.mindCorrectLightningReduction)
 
-    const raw = this.snapshotMaxHp * maxHpPercent * multiplier * mitigation * takenMultiplier * (1 - reduction)
+    const raw =
+      this.snapshotMaxHp *
+      maxHpPercent *
+      multiplier *
+      this.lightningTalentMultiplier *
+      mitigation *
+      takenMultiplier *
+      (1 - reduction)
 
     const applied = this.vitals.applyDamage(this.ghost!, raw, 'heavenly_tribulation', 'tribulation')
     this.snapshotHp = Math.max(0, this.snapshotHp - applied)

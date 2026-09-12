@@ -193,6 +193,19 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
     issues.push({ path: 'player.nodeLevels', message: 'phải là object' })
   }
 
+  // Talent v4 M2 (v61) — 5 field mới: ngân tu vi tràn (Hải Nạp), tầng
+  // Lôi Kiếp, ledger mua node miễn phí (Vấn Đạo), tầng Phá Giáp mang
+  // sang trận sau + cảnh giới lúc bank.
+  requireNonNegativeNumber(player, 'cultivationOvercharge', 'player', issues)
+  requireNonNegativeNumber(player, 'tribulationBonusStacks', 'player', issues)
+  if (!isObject(player.nodeFreePurchaseRecord)) {
+    issues.push({ path: 'player.nodeFreePurchaseRecord', message: 'phải là object' })
+  }
+  requireNonNegativeNumber(player, 'phaGiapCarryStacks', 'player', issues)
+  if (player.phaGiapCarryRealmId !== null && typeof player.phaGiapCarryRealmId !== 'string') {
+    issues.push({ path: 'player.phaGiapCarryRealmId', message: 'phải là string hoặc null' })
+  }
+
   // Spec dot-pha-loi-kiep §6.1 — 4 field v54 (Bát Mạch, cửa sổ quái ẩn,
   // snapshot hoàn hảo, mất vĩnh viễn Đại Đào).
   requireArray(player, 'openedMeridianIds', 'player', issues)

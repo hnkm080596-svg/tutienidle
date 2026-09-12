@@ -5,6 +5,8 @@ import type { PassiveTrigger } from './SkillTypes'
 import type { Skill } from './Skill'
 import { addStack } from '../stats/StatCalculator'
 import type { StatModifier } from '../stats/StatCalculator'
+import type { PlayerData } from '../player/Player'
+import { getPassiveStackCarry } from '../talent/TalentEffects'
 
 export interface CombatEventPayload {
   type: string
@@ -161,6 +163,89 @@ export class PassiveSystem {
     }
 
     this.perSecondAccumulator.clear()
+  }
+
+  /**
+   * Talent v4 M2 — Pha Giap carry (spec §4.1 row 2 / §7): a fraction of
+   * the bound passive's stacks banks into player.phaGiapCarryStacks at
+   * battle victory and re-seeds the next battle (call AFTER resetStacks).
+   * The bank decays when realmId changes — a new realm wipes the old
+   * blade marks. Banked stacks belong to the realm they were earned in;
+   * both fields are persisted on PlayerData (save v61).
+   */
+  bankBattleCarryStacks(player: PlayerData): void {
+    const carry = getPassiveStackCarry(player.selectedTalentIds)
+
+    if (!carry) {
+      return
+    }
+
+    const skill = this.skillManager.get(carry.passiveSkillId)
+
+    if (!skill) {
+      return
+    }
+
+    const effective = this.skillSystem.getEffectiveSkill(skill)
+    const stacks = (effective.passiveModifiers ?? []).reduce(
+      (sum, modifier) => sum + (modifier.stacks ?? 0),
+      0,
+    )
+
+    player.phaGiapCarryStacks = Math.floor(stacks * carry.fraction)
+    player.phaGiapCarryRealmId = player.realmId
+  }
+
+  /**
+   * Re-seed the carried stacks onto the bound passive — call once per
+   * battle AFTER resetStacks(). Realm change lazily decays the bank
+   * (the bank records the realm it was earned in).
+   */
+  seedBattleCarryStacks(player: PlayerData): void {
+    const carry = getPassiveStackCarry(player.selectedTalentIds)
+
+    if (!carry) {
+      return
+    }
+
+    if (
+      player.phaGiapCarryRealmId !== null &&
+      player.phaGiapCarryRealmId !== undefined &&
+      player.phaGiapCarryRealmId !== player.realmId
+    ) {
+      player.phaGiapCarryStacks = 0
+      player.phaGiapCarryRealmId = null
+    }
+
+    let remaining = Math.floor(player.phaGiapCarryStacks ?? 0)
+
+    if (remaining <= 0) {
+      return
+    }
+
+    const skill = this.skillManager.get(carry.passiveSkillId)
+
+    if (!skill) {
+      return
+    }
+
+    const effective = this.skillSystem.getEffectiveSkill(skill)
+
+    for (const modifier of effective.passiveModifiers ?? []) {
+      const capacity = modifier.maxStacks ?? remaining
+      const seeded = Math.min(capacity - (modifier.stacks ?? 0), remaining)
+
+      if (seeded <= 0) {
+        continue
+      }
+
+      modifier.stacks = (modifier.stacks ?? 0) + seeded
+      remaining -= seeded
+
+      if (remaining <= 0) {
+        break
+      }
+    }
   }
 
   /**

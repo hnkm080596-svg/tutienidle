@@ -31,4 +31,7 @@
 // (meta profession.quality → profession.age). Save v58 bị từ chối (dev
 // phase, không migration).
 // v60: companion gacha (instanceId/realmId/constellationRank, pity counter, duyenPhan)
-export const CURRENT_SAVE_VERSION = 60 as const
+// v61 (2026-09-14, B4 talent v4 M2): cultivationOvercharge,
+// tribulationBonusStacks, nodeFreePurchaseRecord, phaGiapCarryStacks,
+// phaGiapCarryRealmId. Save v60 bị từ chối (dev phase, không migration).
+export const CURRENT_SAVE_VERSION = 61 as const

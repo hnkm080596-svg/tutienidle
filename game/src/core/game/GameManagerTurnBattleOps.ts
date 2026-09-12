@@ -203,6 +203,10 @@ export class GameManagerTurnBattleOps {
     getSkillLevels: () => Record<string, number>
     // PassiveSystem owns per-battle passive stacks; ops requests the reset.
     resetPassiveStacks: () => void
+    // M2 — Pha Giap carry: bank/seed the bound passive's stacks across
+    // battles (PassiveSystem owns the stacks; PlayerData owns the bank).
+    bankPassiveCarry: (player: PlayerData) => void
+    seedPassiveCarry: (player: PlayerData) => void
     buildPlayerRewardReceiver: (player: PlayerData) => RewardReceiver
     getPhapTuThuanElement: () => ElementType | undefined
     // Resolve special/ultimate via the Skill converter + effective skill.
@@ -801,6 +805,16 @@ export class GameManagerTurnBattleOps {
 
     this.startBattle(playerEntity, enemy)
 
+    // Non-stage battles need the player reference too — the victory
+    // terminal below banks Pha Giap carry stacks (M2). Stage-guarded
+    // readers (completedStageIds, perfect clear) all check
+    // activeStageForTurnBattle, so this stays inert for them.
+    this.playerDataForTurnBattle = player
+
+    // M2 — Pha Giap carry: re-seed banked stacks AFTER the per-battle
+    // reset that startBattle() just ran.
+    this.deps.seedPassiveCarry(player)
+
     this.deps.battleLoot.setSession(this.deps.buildPlayerRewardReceiver(player), player)
 
     // Bat Tu The (talent-direction-choice-plan section 6) - reset the
@@ -1192,6 +1206,14 @@ export class GameManagerTurnBattleOps {
     }
     this.deps.stageWaves.stopRepeat()
 
+    // M2 — Pha Giap carry: retreat also banks (plan Slice 6 — battle end
+    // regardless of outcome). turnBattleEndEmitted is NOT set here: the
+    // clock is stopped below so the terminal never re-runs, and the bank
+    // is an overwrite anyway.
+    if (this.playerDataForTurnBattle) {
+      this.deps.bankPassiveCarry(this.playerDataForTurnBattle)
+    }
+
     this.deps.eventBus.emit('battle_end', { type: 'battle_end', state: 'defeat' })
 
     // Audit fix 2026-08-31 - surviving enemies + pending spawns are dropped
@@ -1287,6 +1309,15 @@ export class GameManagerTurnBattleOps {
       !this.turnBattleEndEmitted
     ) {
       this.turnBattleEndEmitted = true
+
+      // M2 — Pha Giap carry: bank a fraction of the passive's stacks for
+      // the next battle, whatever the outcome (plan Slice 6: "bank at
+      // battle end regardless of outcome"). Exactly-once is guaranteed by
+      // turnBattleEndEmitted above; the write is an overwrite so a later
+      // re-entry cannot double-count.
+      if (this.playerDataForTurnBattle) {
+        this.deps.bankPassiveCarry(this.playerDataForTurnBattle)
+      }
 
       if (!this.turnBattleRepeatContinuously) {
         this.deps.stageWaves.stopRepeat()

@@ -1868,6 +1868,24 @@ Target the stabilized authorities.
 
 Do not implement against obsolete buff or progression paths.
 
+✅ **M2 XONG 2026-09-14** (worktree `b4-talent-m2`, plan
+`docs/superpowers/plans/2026-09-14-talent-v4-m2-cultivation.md`, QA
+`docs/qa/2026-09-14-talent-v4-m2-quick.md`) — 5 cultivation talent vào
+active pool (17 talents rollable): `ho_tich_bat_phat` ramp theo
+realmLevel (`cultivation_ramp` trong `cultivate()`), `loi_kiep` sét ×2
+(`TribulationDirector` snapshot) + stack vĩnh viễn +10% all-stat qua
+`player.modifiers` mỗi victory (`TribulationOutcomeService`),
+`van_dao` 50% miễn phí node + insight ×2 (baseline Cảm Ngộ giảm 1→0.6
+trong `SkillInsightBalance`; `nodeFreePurchaseRecord` chặn refund-exploit
+trong `devResetBranch`), `hai_na` overflow → `cultivationOvercharge`
+rót qua breakthrough + major-realm entry (cap `required`, không nhảy
+tầng), `ngo_dao` quy đổi Cảm Ngộ cả khi offline trong
+`restoreFromSave`. `pha_giap` M2: bank `floor(stacks×0.5)` lúc kết
+thúc trận (victory/defeat/abandon), seed lại sau `resetStacks`, decay
+khi đổi realm (`phaGiapCarryRealmId`). **Save v61** — 5 field mới
+validate bắt buộc, v60 bị từ chối (dev phase, không migration).
+Còn lại: **M3** (pool mở rộng + retired-id cleanup theo spec §4.4).
+
 ### B5 — Thanh Vân World Map
 
 World-map content can then compose stable:

@@ -32,6 +32,8 @@ import type { GameManager } from '../game/GameManager'
 import type { ActiveTribulationState } from './TribulationDirector'
 import type { OutcomeAnnouncement } from '../presentation/OutcomeAnnouncement'
 import { getCurrentRealm } from '../realm/realmSystem'
+import { pourCultivationOvercharge } from '../cultivation/CultivationSystem'
+import { getTribulationVictoryStatPercent } from '../talent/TalentEffects'
 import { getRealmTier } from '../realm/RealmTierMap'
 import { FOUNDATION_LABELS } from '../breakthrough/FoundationType'
 import { getSpiritStoneMaterialIdForRealmTier } from '../material/SpiritStoneMaterial'
@@ -108,6 +110,10 @@ export class TribulationOutcomeService {
     gameManager: GameManager,
     active: ActiveTribulationState,
   ): TribulationVictoryResult {
+    // Loi Kiep (M2): every survived kiếp banks a permanent all-attribute
+    // stack — including the announcement-only Quan Khi ritual below.
+    this.applyLoiKiepVictoryBonus(player)
+
     const realm = getCurrentRealm(active.targetRealmId)
 
     // Quan Khi victory: pure announcement + path-choice navigation.
@@ -133,6 +139,10 @@ export class TribulationOutcomeService {
     player.realmId = active.targetRealmId
     player.realmLevel = 1
     player.cultivation = 0
+
+    // Hai Nap (M2): banked overflow follows into the new realm's level
+    // 1 — same owner helper as the minor-tier breakthrough pour.
+    pourCultivationOvercharge(player)
 
     // R8.1 (AR-09): realm transition may unlock quests; tell the lifecycle
     // owner to reconcile on the next tick. The domain stays the activation
@@ -192,6 +202,40 @@ export class TribulationOutcomeService {
       talentConverted,
       questRealmTransitionMarked: true,
       announcement,
+    }
+  }
+
+  /**
+   * Loi Kiep (M2): +10% on all five attributes per victory while the
+   * talent is held. Upserts one percent modifier per attribute so the
+   * modifiers array stays O(5) regardless of stack count.
+   */
+  private applyLoiKiepVictoryBonus(player: TribulationPlayerWriter): void {
+    const percent = getTribulationVictoryStatPercent(player.selectedTalentIds)
+
+    if (percent <= 0) {
+      return
+    }
+
+    player.tribulationBonusStacks = (player.tribulationBonusStacks ?? 0) + 1
+
+    const attributes = ['strength', 'dexterity', 'intelligence', 'attunement', 'vitality'] as const
+
+    for (const stat of attributes) {
+      const id = `talent_loi_kiep_${stat}`
+      const existing = player.modifiers.find((modifier) => modifier.id === id)
+
+      if (existing) {
+        existing.percent = (existing.percent ?? 0) + percent
+      } else {
+        player.modifiers.push({
+          id,
+          sourceId: 'loi_kiep',
+          sourceType: 'talent',
+          stat,
+          percent,
+        })
+      }
     }
   }
 

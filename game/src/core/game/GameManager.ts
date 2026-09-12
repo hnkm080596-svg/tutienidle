@@ -745,6 +745,8 @@ export class GameManager {
       getSkillLevels: () =>
         Object.fromEntries(this.skillManager.getAll().map((skill) => [skill.id, skill.level])),
       resetPassiveStacks: () => this.passiveSystem.resetStacks(),
+      bankPassiveCarry: (player) => this.passiveSystem.bankBattleCarryStacks(player),
+      seedPassiveCarry: (player) => this.passiveSystem.seedBattleCarryStacks(player),
       buildPlayerRewardReceiver: (player) => this.buildPlayerRewardReceiver(player),
       getPhapTuThuanElement: () => this.getPhapTuThuanElement(),
       resolvePlayerSpecialUltimate: (player) => this.resolvePlayerSpecialUltimate(player),

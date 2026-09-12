@@ -84,9 +84,10 @@ describe('BattleLootSystem — realm reward scaling', () => {
 
     killEnemy()
 
-    // techniqueInsight 90 (min) × 3 realm = 270 -> skillInsight suy ra 270.
-    expect(player.skillInsight).toBe(270)
-    expect(loot.getSummary().skillInsight).toBe(270)
+    // techniqueInsight 90 (min) × 3 realm = 270 -> skillInsight suy ra
+    // round(270 x 0.6) = 162 (M2 baseline ratio, SkillInsightBalance.ts).
+    expect(player.skillInsight).toBe(162)
+    expect(loot.getSummary().skillInsight).toBe(162)
   })
 
   it('Trúc Cơ — hệ số áp lên giá trị resolver trả về (mid-range)', () => {

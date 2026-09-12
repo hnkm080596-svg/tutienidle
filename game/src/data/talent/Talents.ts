@@ -25,11 +25,16 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
   {
     id: 'pha_giap',
     name: 'Phá Giáp',
-    description: 'Giáp địch chỉ là lớp vỏ chờ kiếm gọt. Mỗi đòn trúng tích 1 tầng Mổ Tạc (+2% xuyên giáp, tối đa 5 tầng trong trận). Ngược lại: chỉ số xuyên không được cộng từ nguồn thiên phú nào khác.',
+    description: 'Giáp địch chỉ là lớp vỏ chờ kiếm gọt. Mỗi đòn trúng tích 1 tầng Mổ Tạc (+2% xuyên giáp, tối đa 5 tầng trong trận); hết trận giữ lại một nửa tầng mang sang trận sau — đổi cảnh giới thì vết kiếm cũ tan đi. Ngược lại: chỉ số xuyên không được cộng từ nguồn thiên phú nào khác.',
     rarity: 'dia',
     weight: 12,
     tags: ['combat'],
-    effects: [{ kind: 'combat_passive', passiveSkillId: 'talent_passive_pha_giap' }],
+    effects: [
+      { kind: 'combat_passive', passiveSkillId: 'talent_passive_pha_giap' },
+      // M2 (spec §4.1 row 2): half the accumulated stacks persist into
+      // the next battle, banked via PlayerData.phaGiapCarryStacks.
+      { kind: 'passive_stack_carry', passiveSkillId: 'talent_passive_pha_giap', fraction: 0.5 },
+    ],
   },
   {
     id: 'tat_phong',
@@ -136,6 +141,55 @@ export const CHARACTER_CREATION_TALENTS: TalentDefinition[] = [
     tags: ['mechanic', 'risk_reward'],
     effects: [{ kind: 'cultivation_speed', percent: -0.75 }],
   },
+  // ==================== M2 — TU LUYỆN (5, spec §4.3) ====================
+  {
+    id: 'ho_tich_bat_phat',
+    name: 'Hậu Tích Bạt Phát',
+    description: 'Đại khí tự chứa, một khi bộc phát không gì cản nổi. Trong một cảnh giới: tầng một tu chậm hơn một nửa (−50%), mỗi tiểu tầng sau nhanh thêm 10% — càng sâu càng vượt người thường. Ngược lại: tầng đầu của mọi cảnh giới luôn là khoản nợ thời gian.',
+    rarity: 'linh',
+    weight: 28,
+    tags: ['cultivation', 'risk_reward'],
+    effects: [{ kind: 'cultivation_ramp', startOffset: -0.5, perRealmLevel: 0.1 }],
+  },
+  {
+    id: 'loi_kiep',
+    name: 'Lôi Kiếp',
+    description: 'Thiên đạo càng đè, đạo tâm càng cứng. Lôi kiếp của ngươi mạnh gấp đôi người thường — nhưng mỗi lần độ kiếp thành công, toàn thân chỉ số vĩnh viễn tăng thêm một thành (10%). Ngược lại: kiếp mạnh gấp đôi nghĩa là cái chết thật sự gần hơn.',
+    rarity: 'dia',
+    weight: 12,
+    tags: ['cultivation', 'risk_reward'],
+    effects: [{ kind: 'tribulation_challenge', intensityMultiplier: 2, victoryAllStatsPercent: 0.1 }],
+  },
+  {
+    id: 'van_dao',
+    name: 'Vấn Đạo',
+    description: 'Hỏi một được mười, ngộ một thấu trăm. Mỗi lần lĩnh ngộ node có 50% khả năng không tốn Cảm Ngộ; Cảm Ngộ nhận từ chiến đấu tăng 100%. Ngược lại: dòng Cảm Ngộ của thiên hạ đã cạn dần — phần căn bản mỗi trận ít hơn trước.',
+    rarity: 'dia',
+    weight: 12,
+    tags: ['resource', 'mechanic'],
+    effects: [
+      { kind: 'node_cost_free_chance', chance: 0.5 },
+      { kind: 'insight_gain', percent: 1 },
+    ],
+  },
+  {
+    id: 'hai_na',
+    name: 'Hải Nạp',
+    description: 'Trăm sông đổ về biển, không một giọt nào mất. 100% tu vi tràn qua cửa ải được dồn vào một vực ngầm, tự rót sang tầng kế tiếp khi đột phá. Ngược lại: không nhanh hơn ai, chỉ là không lãng phí.',
+    rarity: 'pham',
+    weight: 55,
+    tags: ['cultivation'],
+    effects: [{ kind: 'cultivation_overflow_bank' }],
+  },
+  {
+    id: 'ngo_dao',
+    name: 'Ngộ Đạo',
+    description: 'Đạo ở khắp nơi, chẳng riêng gì trong chém giết. Mỗi 2.000 tu vi tích lũy được chuyển hóa thành 1 điểm Cảm Ngộ — kể cả lúc ngươi rời đạo tràng (tu vi ngoại tuyến cũng quy đổi).',
+    rarity: 'linh',
+    weight: 28,
+    tags: ['resource', 'mechanic'],
+    effects: [{ kind: 'insight_per_cultivation', cultivationPerInsight: 2000 }],
+  },
 ]
 
 // PARKED (spec §4.2 — M3 sản xuất) — Trận Tâm/Phù Văn cần mở Trận/Phù
@@ -162,21 +216,10 @@ export const PARKED_TALENTS: TalentDefinition[] = [
   },
 ]
 
-// M2 PENDING (spec §4.3 — nhóm tu luyện về pool ở milestone M2) —
-// definition giữ sẵn để save cũ resolve + test hiện hành không gãy;
-// weight 0 → KHÔNG thuộc roll M1. M2 nâng cấp hiệu ứng (Ngộ Đạo offline,
-// Hậu Tích Bạt Phát, Lôi Kiếp, Vấn Đạo, Hải Nạp) rồi đưa vào pool.
-export const M2_PENDING_TALENTS: TalentDefinition[] = [
-  {
-    id: 'ngo_dao',
-    name: 'Ngộ Đạo',
-    description: 'Đạo ở khắp nơi, chẳng riêng gì trong chém giết. Mỗi 2.000 tu vi tích lũy được chuyển hóa thành 1 điểm Cảm Ngộ.',
-    rarity: 'linh',
-    weight: 0,
-    tags: ['resource', 'mechanic'],
-    effects: [{ kind: 'insight_per_cultivation', cultivationPerInsight: 2000 }],
-  },
-]
+// M2 PENDING (spec §4.3) — M2 shipped 2026-09-14: all five cultivation
+// talents moved into the roll pool. Array kept (empty) so references in
+// tests/docs resolve; remove entirely once no reader remains.
+export const M2_PENDING_TALENTS: TalentDefinition[] = []
 
 // RETIRED v4 (spec §4.4) — 13 talent v3 rời pool roll. getTalentDefinition
 // vẫn resolve được để save cũ hiển thị đúng tên (TALENTS_BY_ID gồm cả

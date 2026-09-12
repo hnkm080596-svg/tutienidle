@@ -20,7 +20,7 @@ import { cloudSaveCoordinator } from '../services/cloudSave/CloudSaveServiceFact
 import { PLAYER_BASE_RANGE_RANKS } from '@/core/stats/StatBlock'
 import type { GameManager } from '@/core/game/GameManager'
 import { getRequiredCultivation, BASE_CULTIVATION_PER_SECOND } from '@/core/realm/realmSystem'
-import { getCultivationSpeedMultiplier, getInsightPerCultivation } from '@/core/talent/TalentEffects'
+import { getCultivationRampMultiplier, getCultivationSpeedMultiplier, getInsightPerCultivation } from '@/core/talent/TalentEffects'
 import { calculateStats, type StatModifier } from '@/core/stats/StatCalculator'
 import { getKiemYDamageMultipliers, getKiemYTier } from '@/core/player/KiemYSystem'
 import { normalizeArtifactProgress } from '@/core/artifact/ArtifactProgression'
@@ -160,7 +160,11 @@ export const usePlayerStore = defineStore('player', {
       // nhưng không bao giờ về 0/âm.
       this.cultivationPerSecond =
         BASE_CULTIVATION_PER_SECOND *
-        Math.max(0.01, getCultivationSpeedMultiplier(this.selectedTalentIds))
+        Math.max(0.01, getCultivationSpeedMultiplier(this.selectedTalentIds)) *
+        // M2 — Hau Tich Bat Phat: per-realm-level ramp (neutral 1 when
+        // absent). Multiplied into the saved rate so the offline grant
+        // (cultivationPerSecond * elapsed) inherits the same curve.
+        getCultivationRampMultiplier(this.selectedTalentIds, this.realmLevel)
 
       // Tụ Linh Trận (economy-fixes-sinks-plan §3.2 B1, 2026-08-29) —
       // cộng dồn % từ các effect tu_linh_tran đang active (thường chỉ 1
@@ -375,14 +379,35 @@ export const usePlayerStore = defineStore('player', {
       // chảy qua StatModifier) nên ép về đúng baseline hiện hành.
       this.baseStats.attackRange = PLAYER_BASE_RANGE_RANKS
 
-      this.cultivation += offline.cultivation
+      // Route the offline grant through addCultivation() — same
+      // clamp-at-required rule as before (the old `+=` then
+      // Math.min was a copy of that rule), plus the M2 Hai Nap
+      // overflow bank.
+      const cultivationBefore = this.cultivation + this.cultivationOvercharge
 
-      // Cùng luật "không tích lũy dư quá mức cần đột phá" như
-      // addCultivation() (xem CultivationSystem.ts) — save cũ (trước
-      // khi luật này có) hoặc offline progress dồn nhiều có thể đẩy
-      // cultivation vượt ngưỡng, phải chặn lại ở đây vì Object.assign
-      // gán thẳng, không đi qua addCultivation().
-      this.cultivation = Math.min(this.cultivation, this.cultivationRequired)
+      addCultivation(this, offline.cultivation)
+
+      const offlineGained =
+        this.cultivation + this.cultivationOvercharge - cultivationBefore
+
+      // M2 — Ngo Dao (spec §4.3 row 20): the insight_per_cultivation
+      // accumulator settles the offline grant too, through the SAME
+      // threshold/counters as the online cultivate() path.
+      const offlineInsightThreshold = getInsightPerCultivation(this.selectedTalentIds)
+
+      if (
+        offlineInsightThreshold !== undefined &&
+        offlineInsightThreshold > 0 &&
+        offlineGained > 0
+      ) {
+        this.cultivationInsightAccumulator += offlineGained
+
+        while (this.cultivationInsightAccumulator >= offlineInsightThreshold) {
+          this.cultivationInsightAccumulator -= offlineInsightThreshold
+          this.skillInsight += 1
+          this.totalSkillInsightGained += 1
+        }
+      }
 
       // Bản Mệnh Pháp Bảo (doc §10.2) — sửa mọi invariant sai ngay sau
       // blind Object.assign() ở trên: nghề không khớp, thiếu state dù
