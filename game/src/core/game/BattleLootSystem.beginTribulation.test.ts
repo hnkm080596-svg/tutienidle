@@ -91,7 +91,10 @@ describe('BattleLootSystem.beginTribulation — reset session battle-scoped', ()
     const { deps, give } = createStubDeps()
     const loot = new BattleLootSystem(deps)
 
-    const player = { name: 'player' } as PlayerData
+    // companions is a required PlayerData field (companion-gacha Task 7
+    // reads it per kill) - the stub must carry it even though this test
+    // only cares about the receiver gate.
+    const player = { name: 'player', companions: [] } as unknown as PlayerData
     loot.setSession({} as RewardReceiver, player)
 
     loot.processDefeatedEnemies({ enemies: [createDeadEnemy('stage-mob')] } as unknown as Battle)
