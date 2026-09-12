@@ -8,6 +8,8 @@ import type { RewardReceiver } from '../reward/RewardSystem'
 import { BattleLootSystem, type BattleLootSystemDeps } from './BattleLootSystem'
 import { MaterialRegistry } from '../material/MaterialRegistry'
 import { MaterialBag } from '../material/MaterialBag'
+import type { EquipmentInstance } from '../equipment/EquipmentInstance'
+import type { EquipmentSystem } from '../equipment/EquipmentSystem'
 import { createDefaultPlayer } from '../player/Player'
 
 // Shared fixture for the BattleLootSystem test files (drop-system Task 8,
@@ -94,7 +96,11 @@ export function createLootTestSetup(options: LootTestSetupOptions = {}) {
   const giveReward = vi.fn()
   const eventBus = { emit: vi.fn() }
   const notifications = { push: vi.fn(), drain: () => [] }
-  const createInstance = vi.fn(() => TEST_EQUIPMENT_INSTANCE)
+  // Typed to the real signature so tests can read mock.calls[n][4]
+  // (qualityBonusSteps) — an untyped vi.fn would type calls as [].
+  const createInstance = vi.fn<EquipmentSystem['createInstance']>(
+    () => TEST_EQUIPMENT_INSTANCE as EquipmentInstance,
+  )
   const learnTechnique = vi.fn(() => true)
   // Heal-on-kill talents are retired (v4 catalog) so the stub never heals;
   // it also must NOT write currentHp directly — this helper is a non-test

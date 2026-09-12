@@ -363,6 +363,17 @@ Test **sẽ đỏ ở boss và elite** — đó là bằng chứng cho E4, khôn
 | Boss | ×12.5 / ×15 | **×3** | ≈ −76% … −80% |
 | Boss + tinh anh | *không diễn đạt được* | **×4** | mới |
 
+**Số đo thật (N = 100.000 seeded, Task 6 — `mortal`/`boar`, kênh active):**
+
+| Dạng | Linh thạch/kill | Cảm ngộ/kill | Items/kill |
+|---|---|---|---|
+| Thường | 1.50 | 6.50 | 1.70 |
+| Tinh anh | 3.00 | 13.01 | 2.70 |
+| Boss | 4.50 | 19.50 | 4.70 |
+| Boss + tinh anh | 6.00 | 26.00 | 5.70 |
+
+Các con số này là hằng số có tên trong `dropEconomy.test.ts` (`EXPECTED_SPIRIT_STONE_PER_KILL`), dung sai ±5%. Guard kinh tế lấy mẫu `resolveDrops` — nó **không** thấy `enemy.rewards`, nên nhánh công thức cũ trong factory `foundationBeast` phải bị gỡ ở Nhịp 3 nếu không trần ×4 lặng lẽ không áp cho tầng Trúc Cơ.
+
 ### 5.4 Luật stack
 
 Boss+tinh_anh → 5 lượt, ×4, +1 nấc chất. **Probe:** bỏ `tinh_anh`, phải tụt về 4 lượt, ×3, **và qualityBonusSteps về 0**.

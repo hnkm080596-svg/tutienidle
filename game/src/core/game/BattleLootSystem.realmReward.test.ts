@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import type { EquipmentInstance } from '../equipment/EquipmentInstance'
 import { getRealmRewardMultiplier } from '../reward/RealmRewardScale'
 import {
   createLootTestSetup,
@@ -112,7 +113,10 @@ describe('BattleLootSystem — realm reward scaling', () => {
         equipmentTemplates: [TEST_EQUIPMENT_TEMPLATE],
       })
 
-    createInstance.mockReturnValue({ ...TEST_EQUIPMENT_INSTANCE, quality: 'tien' })
+    createInstance.mockReturnValue({
+      ...TEST_EQUIPMENT_INSTANCE,
+      quality: 'tien',
+    } as EquipmentInstance)
 
     killEnemy()
 
