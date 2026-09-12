@@ -1,104 +1,91 @@
 /**
- * Guard (Spec C §5) — the declared extent is the box the art actually occupies.
- *
- * Spec: docs/superpowers/specs/2026-09-12-combat-anchor-scale-geometry-design.md
- * §4.1 and §5.
- *
- * This is the datum that sizes every animated character (§3.2). When the size
- * came from a different file than the pixels did, the player rendered 3.44x too
- * wide and nothing failed (commit c0826723). This guard reads the atlas JSON on
- * disk so that cannot recur silently.
- *
- * Guards police app code, so they re-read the catalogue's constants from source
- * rather than importing it — the same rule `atlasFramesExist.test.ts` follows.
+ * Guard each clip's normalized body extent against the tallest trimmed frame
+ * in the atlas range that clip actually declares.
  */
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
+import {
+  COMBAT_ANIMATION_NAMES,
+  presentationFor,
+} from '@/presentation/art/CombatPresentationCatalogue'
+import type { AtlasClip } from '@/presentation/art/CombatEntityPresentation'
 import { SCAN_TIMEOUT } from './helpers/scanTs'
 
 const GAME_ROOT = process.cwd()
-
-const CATALOGUE_SOURCE = join(
-  GAME_ROOT,
-  'src',
-  'presentation',
-  'art',
-  'CombatPresentationCatalogue.ts',
-)
-
-const source = readFileSync(CATALOGUE_SOURCE, 'utf8')
-
-function numberConstant(name: string): number {
-  const match = new RegExp(`export const ${name} = ([\\d.]+)`).exec(source)
-
-  if (!match) {
-    throw new Error(`constant ${name} not found in CombatPresentationCatalogue.ts`)
-  }
-
-  return Number(match[1])
-}
-
-function stringConstant(name: string): string {
-  const match = new RegExp(`export const ${name} = '([^']*)'`).exec(source)
-
-  if (!match) {
-    throw new Error(`constant ${name} not found in CombatPresentationCatalogue.ts`)
-  }
-
-  return match[1]!
-}
+const MORTAL_ENTITY_KEY = PLAYER_VISUAL_PROFILES.mortal.combatTextureKey
 
 interface AtlasFrame {
   spriteSourceSize: { x: number; y: number; w: number; h: number }
   sourceSize: { w: number; h: number }
 }
 
-const atlas = JSON.parse(
-  readFileSync(join(GAME_ROOT, 'public', stringConstant('PLACEHOLDER_ATLAS_URL')), 'utf8'),
-) as { frames: Record<string, AtlasFrame> }
-
-/** The frame whose art is tallest — the one the declared extent must describe. */
-function tallestFrame(): AtlasFrame {
-  return Object.values(atlas.frames).reduce((tallest, frame) =>
-    frame.spriteSourceSize.h > tallest.spriteSourceSize.h ? frame : tallest,
-  )
+function publicPath(url: string): string {
+  return join(GAME_ROOT, 'public', url)
 }
 
-describe('declared art extent', () => {
-  it(
-    'the placeholder clip extent matches the tallest frame in the atlas on disk',
-    () => {
-      const frame = tallestFrame()
+function mortalClips(): Record<string, AtlasClip> {
+  const presentation = presentationFor(MORTAL_ENTITY_KEY)
 
-      expect(numberConstant('PLACEHOLDER_EXTENT_X')).toBeCloseTo(
-        frame.spriteSourceSize.x / frame.sourceSize.w,
-        4,
-      )
-      expect(numberConstant('PLACEHOLDER_EXTENT_Y')).toBeCloseTo(
-        frame.spriteSourceSize.y / frame.sourceSize.h,
-        4,
-      )
-      expect(numberConstant('PLACEHOLDER_EXTENT_W')).toBeCloseTo(
-        frame.spriteSourceSize.w / frame.sourceSize.w,
-        4,
-      )
-      expect(numberConstant('PLACEHOLDER_EXTENT_H')).toBeCloseTo(
-        frame.spriteSourceSize.h / frame.sourceSize.h,
-        4,
-      )
-    },
-    SCAN_TIMEOUT,
-  )
+  if (!presentation || presentation.kind !== 'animated') {
+    throw new Error(`Expected animated mortal presentation for '${MORTAL_ENTITY_KEY}'`)
+  }
 
+  return presentation.clips
+}
+
+function frameName(clip: AtlasClip, index: number): string {
+  return `${clip.framePrefix}${String(index).padStart(clip.zeroPad, '0')}${clip.frameSuffix}`
+}
+
+const clips = mortalClips()
+const atlas = JSON.parse(readFileSync(publicPath(clips.idle.atlasUrl), 'utf8')) as {
+  frames: Record<string, AtlasFrame>
+}
+
+function closeTo(actual: number, expected: number): void {
+  expect(actual).toBeCloseTo(expected, 4)
+}
+
+describe('mortal art extents', () => {
   it(
-    'the placeholder art is genuinely trimmed, so the extent path is exercised',
+    'declares the measured tallest trimmed frame for every clip',
     () => {
-      // An extent of {0,0,1,1} would make every formula in §3.2 collapse to the
-      // old box-sizing behaviour, and this guard would pass while proving
-      // nothing. Enemies legitimately have that; the placeholder must not.
-      expect(numberConstant('PLACEHOLDER_EXTENT_H')).toBeLessThan(1)
-      expect(numberConstant('PLACEHOLDER_EXTENT_W')).toBeLessThan(1)
+      for (const name of COMBAT_ANIMATION_NAMES) {
+        const clip = clips[name]
+        let tallest: AtlasFrame | undefined
+
+        for (let index = clip.firstFrame; index <= clip.lastFrame; index++) {
+          const frame = atlas.frames[frameName(clip, index)]
+
+          if (!frame) {
+            throw new Error(`${name}: missing frame ${index}`)
+          }
+
+          if (!tallest || frame.spriteSourceSize.h > tallest.spriteSourceSize.h) {
+            tallest = frame
+          }
+        }
+
+        if (!tallest) {
+          throw new Error(`${name}: empty clip range`)
+        }
+
+        const { sourceSize, spriteSourceSize } = tallest
+
+        expect(clip.extent.w).toBeGreaterThan(0)
+        expect(clip.extent.h).toBeGreaterThan(0)
+        expect(clip.extent.x).toBeGreaterThanOrEqual(0)
+        expect(clip.extent.y).toBeGreaterThanOrEqual(0)
+        expect(clip.extent.x + clip.extent.w).toBeLessThanOrEqual(1)
+        expect(clip.extent.y + clip.extent.h).toBeLessThanOrEqual(1)
+
+        closeTo(clip.extent.x, spriteSourceSize.x / sourceSize.w)
+        closeTo(clip.extent.y, spriteSourceSize.y / sourceSize.h)
+        closeTo(clip.extent.w, spriteSourceSize.w / sourceSize.w)
+        closeTo(clip.extent.h, spriteSourceSize.h / sourceSize.h)
+      }
     },
     SCAN_TIMEOUT,
   )

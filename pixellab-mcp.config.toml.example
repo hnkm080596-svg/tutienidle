@@ -1,0 +1,16 @@
+# Add this block to C:\Users\<your-user>\.codex\config.toml.
+# Replace the placeholder with the complete PixelLab Authorization header.
+
+[mcp_servers.pixellab]
+command = "npx"
+args = [
+  "mcp-remote@latest",
+  "https://api.pixellab.ai/mcp",
+  "--transport",
+  "http-only",
+  "--header",
+  "Authorization:${AUTH_HEADER}"
+]
+
+[mcp_servers.pixellab.env]
+AUTH_HEADER = "Bearer <PASTE_PIXELLAB_AUTH_HEADER_HERE>"

@@ -19,8 +19,10 @@ import {
   animatedCombatEntities,
   COMBAT_ANIMATION_NAMES,
   combatPresentationEntityKeys,
+  PLAYER_MORTAL_ATLAS_SHEET_KEY,
   presentationFor,
 } from '@/presentation/art/CombatPresentationCatalogue'
+import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 import { getCombatDescriptors } from '@/presentation/assets/AssetBundleCatalog'
 
 describe('combat animation catalogue', () => {
@@ -81,6 +83,36 @@ describe('combat animation catalogue', () => {
 
       expect(Object.keys(clips).sort()).toEqual([...COMBAT_ANIMATION_NAMES].sort())
     }
+  })
+
+  it('mortal uses one real atlas with authored per-state ranges', () => {
+    const presentation = presentationFor(PLAYER_VISUAL_PROFILES.mortal.combatTextureKey)
+
+    expect(presentation?.kind).toBe('animated')
+
+    if (!presentation || presentation.kind !== 'animated') {
+      return
+    }
+
+    expect(new Set(Object.values(presentation.clips).map((clip) => clip.sheetKey))).toEqual(
+      new Set([PLAYER_MORTAL_ATLAS_SHEET_KEY]),
+    )
+    expect(
+      Object.fromEntries(
+        COMBAT_ANIMATION_NAMES.map((name) => {
+          const clip = presentation.clips[name]
+          return [name, [clip.firstFrame, clip.lastFrame, clip.frameRate, clip.repeat]]
+        }),
+      ),
+    ).toEqual({
+      idle: [0, 12, 8, -1],
+      ready: [13, 23, 10, -1],
+      standby: [24, 34, 8, -1],
+      cast: [35, 49, 12, 0],
+      death: [50, 64, 10, 0],
+    })
+    expect(presentation.clips.cast.impactFrame).toBe(45)
+    expect(presentation.clips.death.impactFrame).toBe(53)
   })
 
   it("every clip's sheetKey is actually loaded by the combat bundle", () => {
