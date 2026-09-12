@@ -10,7 +10,7 @@
 // Chạy: npm run assets:route
 
 import { readdirSync, mkdirSync, renameSync, existsSync } from 'node:fs'
-import { join, dirname, extname } from 'node:path'
+import { join, dirname, extname, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)))
@@ -38,6 +38,19 @@ for (const file of files) {
   const relParts = file.slice(0, -ext.length).split('__') // bỏ đuôi file, tách theo "__"
   const destPath = join(DEST_ROOT, ...relParts) + ext
   const srcPath = join(DROP_DIR, file)
+
+  // Asset containment (R14): relParts comes from the EXTERNAL filename —
+  // a part like `..` (or an absolute segment) would escape DEST_ROOT via
+  // join()'s normalisation. Resolve and require the destination to stay
+  // strictly under the asset root before touching the filesystem.
+  const resolvedDest = resolve(DEST_ROOT, ...relParts) + ext
+  const destRootWithSep = resolve(DEST_ROOT) + sep
+
+  if (!resolvedDest.startsWith(destRootWithSep)) {
+    console.warn(`BỎ QUA (đích thoát khỏi asset root — kiểm tra ký tự "__"/".." trong tên): ${file} -> ${resolvedDest}`)
+    skipped++
+    continue
+  }
 
   if (existsSync(destPath)) {
     console.warn(`BỎ QUA (đã có file đích, xoá thủ công nếu muốn ghi đè): ${file} -> ${destPath}`)
