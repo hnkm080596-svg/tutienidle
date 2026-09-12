@@ -67,6 +67,15 @@ export const TURN_SKILL_DISPLAY_META: Record<string, TurnSkillDisplayMeta> = {
     description: 'Thế: tích lực 3 lượt. Trảm: gây sát thương theo số lượt tích luỹ. Hồi 5 lượt sau Trảm.',
   },
 
+  // Kiem Tu ultimate — Tru Tien Kiem Tran (BatKiemThuat.ts: burns 100
+  // The, physical x5 single target, cooldown 8). The turn version is
+  // re-authored (no lingering sword field), so meta is authored directly
+  // here instead of syncing the legacy Skills.ts description.
+  tru_tien_kiem_tran: {
+    name: 'Tru Tiên Kiếm Trận',
+    description: 'Đốt 100 Kiếm Thế — nhất trảm diệt một mục tiêu, sát thương vật lý ×5. Hồi 8 lượt.',
+  },
+
   // Enemy special — Thủy Giáp Long "Nuốt Sáng" (TurnBasicAttacks.ts:
   // everyNth 4, damage ×2.5).
   water_surge: {
