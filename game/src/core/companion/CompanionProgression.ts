@@ -117,7 +117,7 @@ export function applyCompanionExp(
 }
 
 // "Level-maxed" = at the top tier of the player's current realm - a dynamic
-// cap that rises when the player breaks through (design spec §5).
+// cap that rises when the player breaks through (design spec section 5).
 export function isCompanionLevelMaxed(instance: CompanionInstance, playerRealmId: string): boolean {
   const realmIndex = getRealmIndex(instance.realmId)
   const realm = realmIndex >= 0 ? REALMS[realmIndex] : undefined
@@ -132,7 +132,7 @@ export function isCompanionLevelMaxed(instance: CompanionInstance, playerRealmId
 export type ApplyConstellationRankResult = { maxed: true } | { maxed: false; instance: CompanionInstance }
 
 // rank < MAX -> +1 on a new instance; rank maxed -> { maxed: true } for the
-// caller to decide (pull converts to duyenPhan, exchange rejects) - spec §5.
+// caller to decide (pull converts to duyenPhan, exchange rejects) - spec section 5.
 export function applyConstellationRank(instance: CompanionInstance): ApplyConstellationRankResult {
   if (instance.constellationRank >= MAX_CONSTELLATION_RANK) {
     return { maxed: true }
