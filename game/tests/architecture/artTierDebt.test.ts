@@ -27,6 +27,7 @@ import { describe, expect, it } from 'vitest'
 import { artTierFor, ART_DEBT_ENTITY_KEYS } from '@/presentation/art/CombatArtTier'
 import {
   combatPresentationEntityKeys,
+  placeholderArtEntityKeys,
   presentationFor,
 } from '@/presentation/art/CombatPresentationCatalogue'
 
@@ -100,5 +101,21 @@ describe('art debt ratchet', () => {
     const phantom = ART_DEBT_ENTITY_KEYS.filter((entityKey) => !known.has(entityKey))
 
     expect(phantom, 'a listed key the catalogue does not know is a typo or a deletion').toEqual([])
+  })
+})
+
+describe('placeholder art debt ratchet', () => {
+  // R6 close-out (2026-09-14, user decision "art hoan thanh sau, debt di"):
+  // phap_tu is the last player profile on the shared placeholder sheet.
+  // Same ratchet rule as the tier list above — the set is DERIVED from the
+  // catalogue, so a new placeholder-backed entity (or a removed one whose
+  // debt was repaid) turns this test red instead of drifting silently.
+  const EXPECTED_PLACEHOLDER_KEYS = ['player-phap-tu-v1']
+
+  it('the placeholder-backed entity set is exactly the declared debt', () => {
+    expect(
+      placeholderArtEntityKeys(),
+      'placeholder debt changed — shrink it by shipping real art, grow it only by editing this list',
+    ).toEqual(EXPECTED_PLACEHOLDER_KEYS)
   })
 })
