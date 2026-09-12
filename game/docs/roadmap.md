@@ -871,6 +871,14 @@ Do not hardwire feature code to PixelLab.
 - missing asset fallback;
 - real browser screenshot/playback.
 
+**Status: COMPLETE 2026-09-14** — minimum contract shipped and verified
+(mortal atlas: 5 states, real trimmed atlas, browser-verified; pipeline +
+guards in place). Completion assessment: `docs/qa/2026-09-14-r6-completion-assessment.md`.
+Debt listed and ratcheted, not blocking: `phap_tu` placeholder catalogue
+(`placeholderArtEntityKeys()` = `['player-phap-tu-v1']`; real art deferred
+per user decision — style ref `player-phap-tu-v1.png`), boss-form art debt
+(`ART_DEBT_ENTITY_KEYS`), no per-state live-browser oracle.
+
 ---
 
 # Phase R7 — Worker Allocation & Production Authority
@@ -1775,7 +1783,7 @@ R14 Architecture Enforcement
 | 4 | R3 — Active Skill Execution Contract | AR-03, AR-04, AR-06, AR-18 | ✅ COMPLETE 2026-09-08 |
 | 5 | R4 — Buff / Status Foundation Closure | AR-06, AR-19, AR-18 | ✅ COMPLETE 2026-09-08 |
 | 6 | R5 — Combat Runtime / Presentation Boundary | AR-14, AR-20, AR-24, AR-29 | ✅ COMPLETE 2026-09-08 |
-| 7 | **R6 — Combat Character Art / Asset Contract** | **asset/presentation findings** | ⏭️ **NEXT** |
+| 7 | **R6 — Combat Character Art / Asset Contract** | **asset/presentation findings** | ✅ COMPLETE 2026-09-14 — minimum contract; `phap_tu` placeholder + boss-form art debt listed & ratcheted (`artTierDebt` guard) |
 | 8 | R7 — Worker Allocation / Decomposition | AR-07, AR-08 | ✅ COMPLETE 2026-09-08 |
 | 9 | R8 — Quest & Progression Authority | AR-09, AR-10, AR-13 | ✅ COMPLETE — R8.1 2026-09-08; R8.2 slices 1-3 2026-09-11 (tribulation outcome+start, breakthrough outcome); announcement i18n migration 2026-09-14 (descriptor contract, adapters resolve via i18n gateway); no Vue-owned progression writes remain |
 | 10 | R9 — Equipment / Inventory Integrity | AR-21, AR-22, AR-23, AR-34 | ✅ COMPLETE 2026-09-08 |
@@ -2017,20 +2025,11 @@ or:
 
 as an implementation mission.
 
-The next implementation mission is:
-
-# NEXT — R6 Combat Character Art & Asset Contract
-
-based on:
-
-```text
-asset / presentation findings from Mission 0
-```
-
-(R5 Combat Runtime & Presentation Boundary completed 2026-09-08; see its phase
-block for evidence.)
-
-Only after R6 reaches its completion gate should its dependent architecture mission advance.
+R6 Combat Character Art & Asset Contract reached its completion gate
+2026-09-14 (see the phase block and `docs/qa/2026-09-14-r6-completion-assessment.md`).
+Its dependent mission is R13 (parked, ⏸ in the queue table). With every
+serial phase resolved, the remaining work is the parked items (R11 broader
+consolidation, R12, R13) and the content-resume gate in §0.11.
 
 ---
 

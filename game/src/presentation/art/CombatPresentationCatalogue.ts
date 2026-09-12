@@ -351,6 +351,30 @@ export function presentationFor(entityKey: string): CombatEntityPresentation | u
   return CATALOGUE.get(entityKey)
 }
 
+/**
+ * Animated entity keys whose clips still point at the shared placeholder
+ * sheet — derived, not declared, so the answer cannot drift from the
+ * catalogue. This is the placeholder-art debt list; the ratchet guard is
+ * `tests/architecture/artTierDebt.test.ts` (shrink freely, never grow).
+ */
+export function placeholderArtEntityKeys(): readonly string[] {
+  const keys: string[] = []
+
+  for (const [entityKey, presentation] of CATALOGUE) {
+    if (presentation.kind !== 'animated') {
+      continue
+    }
+
+    const clips = Object.values(presentation.clips)
+
+    if (clips.every((clip) => clip.sheetKey === PLACEHOLDER_SHEET_KEY)) {
+      keys.push(entityKey)
+    }
+  }
+
+  return keys
+}
+
 /** Every animated entity's clips, for preload and animation registration. */
 export function animatedCombatEntities(): Array<{
   entityKey: string
