@@ -182,9 +182,9 @@ export interface CombatEntity {
 
   alive: boolean
 
-  // Cờ Elite ("Tinh Anh") cho Combat HUD (thanh máu luôn hiện) — xem
-  // core/enemy/Enemy.ts's createEliteVariant(). Player luôn falsy
-  // (không set trong playerToCombatEntity()).
+  // Cờ Elite ("Tinh Anh") cho Combat HUD (thanh máu luôn hiện) — set
+  // khi tag tinh_anh gắn qua applyEnemyTags (core/enemy/EnemyTag.ts).
+  // Player luôn falsy (không set trong playerToCombatEntity()).
   isElite?: boolean
 
   // Core Loop Foundation checklist (Mục BOSS) — tier RIÊNG, tách hẳn

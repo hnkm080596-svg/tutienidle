@@ -883,6 +883,8 @@ export class GameManagerTurnBattleOps {
       introTurnsRemaining: INTRO_TOTAL_TICKS,
       countdownTurnsRemaining: COUNTDOWN_TOTAL_TICKS,
       totalTurnsElapsed: 0,
+      roundsElapsed: 0,
+      actedThisRound: [],
     }
   }
 
@@ -913,6 +915,8 @@ export class GameManagerTurnBattleOps {
       // to fighting.
       state: 'fighting',
       totalTurnsElapsed: 0,
+      roundsElapsed: 0,
+      actedThisRound: [],
       wave: {
         totalEnemyCount: effectiveTotalEnemyCount(stageRef),
         spawnedCount: 0,
@@ -1228,9 +1232,13 @@ export class GameManagerTurnBattleOps {
   }
 
   /**
-   * Auto-farm spec Task 3 (2026-09-04) - Hoan My: team HP loss <= 75% AND
-   * turns < stage.perfectClearTurnLimit -> record perfectClearStageIds +
-   * perfectClearSeconds ONCE (first achievement is never overwritten).
+   * Perfect clear (spec v3 D1): every party member must still be alive at
+   * the victory tick AND the battle must end within the stage's fixed
+   * perfectClearTurnLimit - counted in ROUNDS (roundsElapsed), not actor
+   * actions, so wave size does not inflate the count. HP-loss is not
+   * consulted. Only the ACTIVE mode can ever evaluate this (idle runs no
+   * battle). Records perfectClearStageIds + perfectClearSeconds ONCE -
+   * the first achievement is never overwritten (B4).
    */
   private recordPerfectClearIfEligible(turnBattle: TurnBattle) {
     const stage = this.activeStageForTurnBattle
@@ -1244,16 +1252,11 @@ export class GameManagerTurnBattleOps {
       return
     }
 
-    const entity = turnBattle.players[0]?.entity
-
-    if (!entity) {
-      return
-    }
-
-    const hpLossPercent = ((entity.maxHp - entity.currentHp) / entity.maxHp) * 100
+    const everyoneAlive =
+      turnBattle.players.length > 0 && turnBattle.players.every((member) => member.entity.alive)
 
     const isPerfectClear =
-      hpLossPercent <= 75 && (turnBattle.totalTurnsElapsed ?? 0) < stage.perfectClearTurnLimit
+      everyoneAlive && (turnBattle.roundsElapsed ?? 0) < stage.perfectClearTurnLimit
 
     if (!isPerfectClear) {
       return
@@ -1575,7 +1578,9 @@ export class GameManagerTurnBattleOps {
 
       for (let i = 0; i < rollTotalEnemyCount; i++) {
         const isFinalSpawn = i === rollTotalEnemyCount - 1
-        const template = this.deps.stageWaves.pickEnemyForTurnSpawn(stage, isFinalSpawn)
+        // Idle channel (spec v3 D5): never roll the tinh_anh tag - the
+        // boss gate still applies unconditionally on floor 10.
+        const template = this.deps.stageWaves.pickEnemyForTurnSpawn(stage, isFinalSpawn, { allowTags: false })
 
         if (!template) {
           continue

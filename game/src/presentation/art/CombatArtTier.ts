@@ -8,9 +8,10 @@
 // nobody is looking.
 //
 // Nothing new is classified. The domain ALREADY carries the tier: `Enemy` has
-// `isElite`/`isBoss` (`core/enemy/Enemy.ts`), set by `createEliteVariant()` /
-// `createBossVariant()`. Presentation reading a domain fact is legal under A7 —
-// this reports, it does not decide anything the domain owns.
+// `isElite`/`isBoss` (`core/enemy/Enemy.ts`), set by the tinh_anh tag
+// (`applyEnemyTags()`) / `createBossVariant()`. Presentation reading a domain
+// fact is legal under A7 — this reports, it does not decide anything the
+// domain owns.
 
 /** What an entity's art should be — NOT what it has. See `presentationFor`. */
 export type CombatArtTier = 'static' | 'animated'

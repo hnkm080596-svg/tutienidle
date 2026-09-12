@@ -220,7 +220,6 @@
         "floorPrefix": "Floor {floor}",
         "boss": "BOSS",
         "enemiesSuffix": "enemies",
-        "spawnIntervalPrefix": "Every",
         "bossNamePrefix": "Boss:",
         "levelPrefix": "Lv.{level}",
         "eliteChance": "{percent}% Elite"

@@ -220,7 +220,6 @@
         "floorPrefix": "Tầng {floor}",
         "boss": "BOSS",
         "enemiesSuffix": "quái",
-        "spawnIntervalPrefix": "Mỗi",
         "bossNamePrefix": "Boss:",
         "levelPrefix": "Lv.{level}",
         "eliteChance": "{percent}% Tinh Anh"

@@ -27,11 +27,11 @@ describe('foundation stages', () => {
     const qi = STAGES.filter((stage) => stage.chapter === 2)
     const foundationIds = new Set(foundation.flatMap((stage) => [
       ...stage.enemyPool.map((entry) => entry.enemyId),
-      stage.bossEnemyId ?? '',
+      ...(stage.bossEnemyId ? [stage.bossEnemyId] : []),
     ]))
     const qiIds = new Set(qi.flatMap((stage) => [
       ...stage.enemyPool.map((entry) => entry.enemyId),
-      stage.bossEnemyId ?? '',
+      ...(stage.bossEnemyId ? [stage.bossEnemyId] : []),
     ]))
     for (const id of foundationIds) {
       expect(qiIds.has(id)).toBe(false)
@@ -57,5 +57,53 @@ describe('foundation stages', () => {
   it('foundation_floor_10 có boss đúng', () => {
     const boss = STAGES.find((stage) => stage.id === 'foundation_floor_10')!
     expect(boss.bossEnemyId).toBe('foundation_ferocious_flood_dragon_whelp')
+  })
+})
+
+// Spec v3 D2/D9 (2026-09-11): STAGES is built by defineChapterStages -
+// one owner for the floor rules. These lock the intended differences
+// vs the old literals: perfectClearTurnLimit in rounds (normal =
+// totalEnemyCount + 10, boss = 15 - D2 revised) and bossEnemyId only
+// on floor 10 (no more fake badges on 27 nodes).
+describe('builder swap (spec v3)', () => {
+  it('perfectClearTurnLimit is fixed (rounds, D2 revised): totalEnemyCount + 10 normal, 15 boss', () => {
+    for (const stage of STAGES) {
+      if (stage.floor === 10) {
+        expect(stage.perfectClearTurnLimit).toBe(15)
+      } else {
+        expect(stage.perfectClearTurnLimit).toBe(stage.totalEnemyCount + 10)
+      }
+    }
+  })
+
+  it('bossEnemyId exists only on floor 10 (fixes false badges)', () => {
+    for (const stage of STAGES) {
+      if (stage.floor === 10) {
+        expect(stage.bossEnemyId).toBeDefined()
+      } else {
+        expect(stage.bossEnemyId).toBeUndefined()
+      }
+    }
+  })
+
+  it('eliteChance entries intact on all 30 stages', () => {
+    let count = 0
+
+    for (const stage of STAGES) {
+      for (const entry of stage.enemyPool) {
+        if (entry.eliteChance !== undefined) {
+          expect(entry.eliteChance).toBe(0.1)
+          count++
+        }
+      }
+    }
+
+    expect(count).toBe(30)
+  })
+
+  it('waves sum invariant holds for all 30 stages', () => {
+    for (const stage of STAGES) {
+      expect(stage.waves.reduce((a, b) => a + b, 0)).toBe(stage.totalEnemyCount)
+    }
   })
 })

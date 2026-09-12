@@ -22,6 +22,7 @@ import { RafClockSource } from './presentation/clock/RafClockSource'
 import { MainProcessClockSource } from './presentation/clock/MainProcessClockSource'
 import { checkTribulationOutcomeAction } from './composables/useTribulation'
 import { isBattleInProgress } from './core/battle/BattleTypes'
+import { registerEnemySpawnDebug } from './core/dev/enemySpawnDebug'
 import { useBreakthrough } from './composables/useBreakthrough'
 import { useElectronBridge } from './composables/useElectronBridge'
 import { useCombatPause } from './composables/useCombatPause'
@@ -532,6 +533,11 @@ async function bootGame(createNewCharacter = false) {
     // No-op ngay nếu không chạy trong Electron (window.electronAPI không
     // tồn tại ở bản web) — xem composables/useElectronBridge.ts.
     useElectronBridge(gameManager)
+
+    // Dev-only console helpers (spec v3 B5) - registered here so BOTH
+    // new-character and restored-save entries get them; the function
+    // itself early-returns outside import.meta.env.DEV.
+    registerEnemySpawnDebug({ gameManager, player: player.$state, getStats: () => player.finalStats })
 
     isBooted.value = true
     lifecycle.startAutosave()

@@ -12,7 +12,7 @@
 | # | Quyết định | Nguồn |
 |---|---|---|
 | D1 | Hoàn Mỹ = **mọi member `players[]` còn `alive` lúc victory** + `totalTurnsElapsed < perfectClearTurnLimit`. [SỬA từ v2] Predicate áp CHỈ mode active (idle không chạy battle nên không bao giờ evaluate). Chết-then-hồi-sinh OK. Ghi 1 lần, không overwrite. | user giữ + v3 A1 |
-| D2 | **perfectClearTurnLimit chốt cứng: stage thường = 3, boss (floor 10) = 5.** [SỬA từ v2 — bỏ placeholder 2×total/14 theo chỉ đạo A2] Không công thức, không registry. | user v3 A2 |
+| D2 | ~~**perfectClearTurnLimit chốt cứng: stage thường = 3, boss (floor 10) = 5.**~~ [SỬA từ v2 — bỏ placeholder 2×total/14 theo chỉ đạo A2] **[SỬA 2026-09-12 — QA hyp. (e) đo thật: 3/5 theo actor-action KHÔNG THỂ đạt ở floor 1-9 (best-case 32/69/67 action). User chốt lại: (1) đơn vị = ATB ROUND (`TurnBattle.roundsElapsed` — round đóng khi mọi actor còn sống đã hành động ≥1 lần; quái spawn giữa round gia nhập round hiện tại), (2) số = `totalEnemyCount + 10` floor 1-9 (20…28) / `15` boss. Quy tắc sống trong builder, không registry. Evidence: `docs/qa/2026-09-12-pc-tag-system-quick.md`.]** | user v3 A2; sửa 2026-09-12 |
 | D3 | **Enemy Tag System**: tag = modifier data-driven kiểu Diablo 2 (stat multiply + prefix + flag), **chỉ chứa tag "thêm" — tinh_anh (+ tương lai)**. [SỬA lớn từ v2: BOSS KHÔNG PHẢI TAG] Mỗi tag 1 lần (dedupe), stack nhân liên tiếp, priority sort trước fold. | user v3 |
 | D4 | **Boss là stage property, không phải tag.** Floor 10 → `createBossVariant` áp unconditional cho CẢ idle lẫn active. KHÔNG qua tag pipeline; `createBossVariant` GIỮ NGUYÊN — không migrate. | user v3 sửa lớn |
 | D5 | **Idle vs Active — 2 kênh 2 mục đích** (chi tiết §2.2). Idle KHÔNG roll tag; Active roll `eliteChance 0.1` gắn tag tinh_anh. | user v3 A1 |
@@ -28,7 +28,7 @@
 - `eliteChance: 0.1` authored trên entry elite-eligible mọi stage; roll tại `pickEnemyForSpawn:163`. Signature hiện: `pickEnemyForSpawn(stage, isFinalSpawn)` — mode plumbing qua option mới (xem §2.2).
 - Auto-farm (idle): `rollAutoFarmCycleReward` (`GameManagerTurnBattleOps.ts:1564`) — gọi `pickEnemyForTurnSpawn` (wrapper `pickEnemyForSpawn`); cycle = `perfectClearSeconds/2`; cap offline `DEFAULT_MAX_OFFLINE_SECONDS = 24h` (GameClock single source); gate = `perfectClearStageIds`. **Idle hôm nay roll đủ itemDrops qua BattleLootSystem** — giữ (D6).
 - Boss spawn: `isFinalSpawn && floor === 10 && bossEnemyId` → `createBossVariant`. Floor 1-9 khai `bossEnemyId` metadata giả → UI badge Boss sai 30/30 node.
-- `totalTurnsElapsed` (`TurnBattleSystem.ts:595`) tăng sau **mỗi 1 actor action** (kể cả lượt quái) — định nghĩa "turn" cho PC. [MỚI — đóng open question Q1]
+- ~~`totalTurnsElapsed` (`TurnBattleSystem.ts:595`) tăng sau **mỗi 1 actor action** (kể cả lượt quái) — định nghĩa "turn" cho PC.~~ [MỚI — đóng open question Q1] **[SỬA 2026-09-12: PC đếm `roundsElapsed` (xem D2); `totalTurnsElapsed` giữ nguyên cho boss trigger / sudden death.]**
 - Builder rules đo được: total = 9+floor; waves floor 1-9 = chia đều 3 phần dư phân bổ dần từ phần 2 (10→[3,3,4], 11→[3,4,4], 14→[4,5,5], 17→[5,6,6]); floor 10 waves = [total]; pool = [common w5, elite w3 eliteChance 0.1]; spawnInterval 3s.
 
 ## 2. Target behavior

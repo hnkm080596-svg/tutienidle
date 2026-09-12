@@ -1,6 +1,8 @@
 import type { EventBus } from '../events/EventBus'
-import { createEliteVariant, createBossVariant } from '../enemy/Enemy'
+import { createBossVariant } from '../enemy/Enemy'
 import type { Enemy } from '../enemy/Enemy'
+import { applyEnemyTags } from '../enemy/EnemyTag'
+import { ENEMY_TAGS } from '../../data/enemy/EnemyTags'
 import { rollChance } from '../reward/DropRoll'
 import type { PlayerData } from '../player/Player'
 import type { Stats } from '../stats/StatBlock'
@@ -124,16 +126,21 @@ export class StageWaveSystem {
 
   /**
    * Roll 1 entry trong enemyPool theo weight, tra template, rồi roll
-   * riêng `eliteChance` của ĐÚNG entry đó — trúng thì trả bản Elite
-   * (buff stat, xem
-   * core/enemy/Enemy.createEliteVariant()) thay vì bản thường. Dùng
-   * chung cho quái ĐẦU (start) lẫn quái spawn giữa chừng (update).
+   * riêng `eliteChance` của ĐÚNG entry đó — trúng thì gắn tag tinh_anh
+   * lên bản spawn (stat/prefix/flag qua applyEnemyTags, xem
+   * core/enemy/EnemyTag.ts) thay vì trả bản thường. `eliteChance` nghĩa
+   * mới (spec v3 B9): chance to attach the tinh_anh tag. Dùng chung cho
+   * quái ĐẦU (start) lẫn quái spawn giữa chừng (update).
    *
    * `isFinalSpawn` — Core Loop Foundation checklist (Mục BOSS): lượt
    * spawn CUỐI của stage có bossEnemyId LUÔN LÀ Boss, bỏ qua roll
-   * enemyPool/eliteChance hoàn toàn (Boss KHÔNG ngẫu nhiên như Elite).
+   * enemyPool cho phần template (Boss KHÔNG ngẫu nhiên như tag).
+   *
+   * `options.allowTags` — spec v3 D5: tag chỉ roll ở kênh ACTIVE; idle
+   * (auto-farm cycle) pass `allowTags: false` nên không bao giờ gắn tag.
+   * Boss vẫn áp unconditional ở cả 2 kênh (D4).
    */
-  private pickEnemyForSpawn(stage: Stage, isFinalSpawn: boolean): Enemy | undefined {
+  private pickEnemyForSpawn(stage: Stage, isFinalSpawn: boolean, options?: { allowTags?: boolean }): Enemy | undefined {
     const floor = stage.floor ?? stage.requiredRealmLevel
 
     // Các chapter có thể tạm tái dùng encounter pool của chapter trước.
@@ -149,7 +156,19 @@ export class StageWaveSystem {
       const bossTemplate = this.deps.enemyTemplates.get(stage.bossEnemyId)
 
       if (bossTemplate) {
-        return applyStageRealm(createBossVariant(bossTemplate))
+        const boss = createBossVariant(bossTemplate)
+
+        // Spec v3 section 2.2 — active floor 10 can still stack the
+        // tinh_anh tag ON TOP of the boss variant (~10% boss+tinh_anh).
+        // The chance comes from the boss species' own pool entry (the
+        // builder authors bossEnemyId === the elite pool species); idle
+        // never rolls (allowTags: false).
+        const bossEntry = stage.enemyPool.find(poolEntry => poolEntry.enemyId === stage.bossEnemyId)
+        if (options?.allowTags !== false && bossEntry?.eliteChance && rollChance(bossEntry.eliteChance)) {
+          return applyStageRealm(applyEnemyTags(boss, ['tinh_anh'], ENEMY_TAGS))
+        }
+
+        return applyStageRealm(boss)
       }
     }
 
@@ -160,8 +179,10 @@ export class StageWaveSystem {
       return undefined
     }
 
-    if (entry.eliteChance && rollChance(entry.eliteChance)) {
-      return applyStageRealm(createEliteVariant(template))
+    // Tag roll — ACTIVE only (spec v3 D5): eliteChance is the chance to
+    // attach the tinh_anh tag; idle passes allowTags: false.
+    if (options?.allowTags !== false && entry.eliteChance && rollChance(entry.eliteChance)) {
+      return applyStageRealm(applyEnemyTags(template, ['tinh_anh'], ENEMY_TAGS))
     }
 
     // Quái ẩn trà trộn (spec dot-pha-loi-kiep §4.1c) — chỉ stage Luyện
@@ -182,10 +203,11 @@ export class StageWaveSystem {
   /**
    * Slice 6 cutover (Completion Task 8): public wrapper cho TurnBattle's
    * spawnEnemy factory — dùng chung nguyên logic roll thật (boss-at-10 +
-   * pool roll + elite chance + hidden beast + realm override). KHÔNG đổi
-   * logic, chỉ expose pickEnemyForSpawn cho adapter ngoài.
+   * pool roll + tag roll + hidden beast + realm override). KHÔNG đổi
+   * logic, chỉ expose pickEnemyForSpawn cho adapter ngoài. `allowTags`
+   * mặc định true (active); idle (auto-farm) truyền false (spec v3 D5).
    */
-  pickEnemyForTurnSpawn(stage: Stage, isFinalSpawn: boolean): Enemy | undefined {
-    return this.pickEnemyForSpawn(stage, isFinalSpawn)
+  pickEnemyForTurnSpawn(stage: Stage, isFinalSpawn: boolean, options?: { allowTags?: boolean }): Enemy | undefined {
+    return this.pickEnemyForSpawn(stage, isFinalSpawn, options)
   }
 }

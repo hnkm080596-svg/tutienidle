@@ -2,7 +2,7 @@ import type { CombatEntity } from '../combat/CombatEntity'
 import type { Stats } from '../stats/StatBlock'
 import type { EnemyLane } from '../battle/BattleLane'
 import type { EnemyStatInput } from './EnemyStatInput'
-import { normalizeEnemyStats, applyEliteMultiplier, applyBossMultiplier } from './EnemyStatInput'
+import { normalizeEnemyStats, applyBossMultiplier } from './EnemyStatInput'
 import type { EnemyArchetype } from './EnemyArchetype'
 import type { TribulationPhase, BossEnrage } from './TribulationPhase'
 import type { CombatVfxPresetId } from '../battle/CombatAction'
@@ -73,7 +73,7 @@ export interface Enemy {
 
   // Cờ đánh dấu bản Elite ("Tinh Anh") — buff vừa phải, spawn NGẪU
   // NHIÊN theo eliteChance (xem Stage.StageEnemyEntry). Chỉ true khi
-  // tạo qua createEliteVariant().
+  // tag tinh_anh được gắn qua applyEnemyTags() (core/enemy/EnemyTag.ts).
   isElite?: boolean
 
   // Core Loop Foundation checklist (Mục BOSS) — tier RIÊNG, tách hẳn
@@ -223,33 +223,6 @@ export function defineEnemy(definition: EnemyDefinition): Enemy {
     alive: true,
 
     rewards: definition.rewards,
-  }
-}
-
-const ELITE_NAME_PREFIX = 'Tinh Anh '
-
-/**
- * Biến 1 Enemy TEMPLATE thành bản Elite (buff stat cố định) — gọi lúc
- * SPAWN (GameManager.updateStageProgress()), không đụng tới template
- * gốc trong registry. Rewards no longer switch tables: what a kill
- * drops is decided by core/drop/resolveDrops.ts from the stage, the
- * family and the modifiers the kill carries.
- */
-export function createEliteVariant(enemy: Enemy): Enemy {
-  const stats = applyEliteMultiplier(enemy.stats)
-
-  return {
-    ...enemy,
-
-    name: ELITE_NAME_PREFIX + enemy.name,
-
-    stats,
-
-    currentHp: stats.maxHp,
-
-    maxHp: stats.maxHp,
-
-    isElite: true,
   }
 }
 
