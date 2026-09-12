@@ -141,6 +141,12 @@ import { EquipmentOpsSystem } from './EquipmentOpsSystem'
 import { GameManagerBuildingOps } from './GameManagerBuildingOps'
 import { GameManagerAlchemyOps } from './GameManagerAlchemyOps'
 import { GameManagerQuestOps } from './GameManagerQuestOps'
+import { GameManagerCompanionOps } from './GameManagerCompanionOps'
+import type {
+  PullCompanionResult,
+  ExchangeCompanionResult,
+  FeedCompanionResult,
+} from './GameManagerCompanionOps'
 import { GameManagerSaveRestore } from './GameManagerSaveRestore'
 import { GameManagerTurnBattleOps, type ResumePlayback } from './GameManagerTurnBattleOps'
 import { HiddenBeastSystem } from './HiddenBeastSystem'
@@ -552,6 +558,7 @@ export class GameManager {
   private readonly buildingOps: GameManagerBuildingOps
   private readonly alchemyOps: GameManagerAlchemyOps
   private readonly questOps: GameManagerQuestOps
+  private readonly companionOps: GameManagerCompanionOps
   private readonly saveRestore: GameManagerSaveRestore
   private readonly sessionAllocator = new SessionAllocator()
 
@@ -676,6 +683,13 @@ export class GameManager {
       notifications: this.notifications,
       getActivePlayer: () => this.activePlayer,
       buildPlayerRewardReceiver: (player) => this.buildPlayerRewardReceiver(player),
+    })
+
+    this.companionOps = new GameManagerCompanionOps({
+      materialBag: this.materialBag,
+      materialRegistry: this.materialRegistry,
+      notifications: this.notifications,
+      getActivePlayer: () => this.activePlayer,
     })
 
     this.saveRestore = new GameManagerSaveRestore({
@@ -2704,6 +2718,24 @@ export class GameManager {
 
   claimQuest(questId: string): boolean {
     return this.questOps.claimQuest(questId)
+  }
+
+  // =========================
+  // COMPANION GACHA (Chieu Mo / companion-gacha 2026-09-12)
+  // =========================
+
+  // Thin delegates into GameManagerCompanionOps - same convention as the
+  // QUEST delegates above; domain rules live in core/companion/*.
+  pullCompanion(): PullCompanionResult {
+    return this.companionOps.pullCompanion()
+  }
+
+  exchangeCompanion(definitionId: string): ExchangeCompanionResult {
+    return this.companionOps.exchangeCompanion(definitionId)
+  }
+
+  feedCompanion(instanceId: string, materialId: string, count: number): FeedCompanionResult {
+    return this.companionOps.feedCompanion(instanceId, materialId, count)
   }
 
   // gainEquippedTechniqueInsight() sits inside the // QUEST comment block
