@@ -56,11 +56,6 @@ import { FormationRegistry } from '../formation/FormationRegistry'
 
 import { ItemRegistry } from '../item/ItemRegistry'
 
-import {
-  getSpiritStoneMaterialIdForRealmTier,
-} from '../material/SpiritStoneMaterial'
-import { getRealmTier } from '../realm/RealmTierMap'
-
 import { ProductionSystem } from '../production/ProductionSystem'
 import {
   TERRITORY_THANH_VAN,
@@ -146,7 +141,6 @@ import type { BattleRewardSummary } from '../reward/BattleRewardSummary'
 
 
 import type { PlayerData } from '../player/Player'
-import type { MainStatKey } from '../stats/StatTypes'
 
 import { CHAIN_SKILL_IDS } from '../../data/skill/Skills'
 
@@ -207,9 +201,6 @@ import { toTurnSkillDefinition } from './SkillToTurnSkillConverter'
 // now live in GameManagerTurnBattleOps - re-exported above for existing
 // imports (TurnActionPresentationEvents, intro-phase tests). The battle
 // fixed-step pacing constants moved with the driving loop.
-
-const PHAP_TU_STARTER_NODE_ID = 'hoa_linh_ngo'
-const PHAP_TU_STARTER_SKILL_ID = 'hoa_cau_thuat'
 
 export class GameManager {
   readonly eventBus = new EventBus()

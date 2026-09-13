@@ -10,7 +10,6 @@ import {
   CombatAnimationRuntime,
   type ResumePlayback,
 } from '../battle/turn/CombatAnimationRuntime'
-import type { TurnSkillSlotRole } from '../battle/turn/TurnSkillAction'
 import {
   buildTurnBattleEntitySnapshot,
   type TurnBattleEntitySnapshotEvent,

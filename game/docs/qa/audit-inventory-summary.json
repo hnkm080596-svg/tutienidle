@@ -1,0 +1,608 @@
+{
+  "files": 615,
+  "tests": 559,
+  "counts": {
+    "src/App.vue": 1,
+    "src/assets": 4,
+    "src/components": 124,
+    "src/composables": 30,
+    "src/core/alchemy": 1,
+    "src/core/artifact": 6,
+    "src/core/audio": 1,
+    "src/core/battle": 36,
+    "src/core/breakthrough": 1,
+    "src/core/buff": 7,
+    "src/core/building": 7,
+    "src/core/combat": 14,
+    "src/core/companion": 3,
+    "src/core/cultivation": 2,
+    "src/core/dev": 2,
+    "src/core/drop": 5,
+    "src/core/economy": 3,
+    "src/core/element": 7,
+    "src/core/enemy": 7,
+    "src/core/equipment": 26,
+    "src/core/events": 1,
+    "src/core/format": 2,
+    "src/core/formation": 2,
+    "src/core/game": 30,
+    "src/core/idle": 3,
+    "src/core/inventory": 1,
+    "src/core/item": 5,
+    "src/core/material": 6,
+    "src/core/math": 1,
+    "src/core/notification": 2,
+    "src/core/pill": 7,
+    "src/core/player": 6,
+    "src/core/presentation": 5,
+    "src/core/production": 9,
+    "src/core/profession": 4,
+    "src/core/progression": 4,
+    "src/core/quest": 5,
+    "src/core/realm": 5,
+    "src/core/reward": 6,
+    "src/core/skill": 20,
+    "src/core/stage": 8,
+    "src/core/stats": 7,
+    "src/core/talent": 3,
+    "src/core/talisman": 2,
+    "src/core/technique": 4,
+    "src/core/tribulation": 3,
+    "src/core/ui": 2,
+    "src/core/world-map": 4,
+    "src/data": 62,
+    "src/directives": 1,
+    "src/game": 37,
+    "src/i18n": 1,
+    "src/main-process": 1,
+    "src/main.ts": 1,
+    "src/presentation": 34,
+    "src/router": 1,
+    "src/services": 19,
+    "src/stores": 12,
+    "electron/main.ts": 1,
+    "electron/preload.ts": 1
+  },
+  "cycles": [],
+  "unreachableCandidates": [
+    "src/assets/inkWashAssetValidation.ts",
+    "src/components/common/GamePanel.vue",
+    "src/components/common/iconRegistry.ts",
+    "src/components/common/SceneHeader.vue",
+    "src/components/common/ThemedIcon.vue",
+    "src/components/onboarding/OnboardingChapter.vue",
+    "src/core/artifact/ArtifactDropBalance.ts",
+    "src/core/battle/EnemyAttackSystem.ts",
+    "src/core/battle/KiemTranOnHitSystem.ts",
+    "src/core/battle/PhapTuBattleResourceSystem.ts",
+    "src/core/battle/SkillEffectResolver.ts",
+    "src/core/battle/TheResourceSystem.ts",
+    "src/core/buff/Buff.ts",
+    "src/core/combat/AttackTiming.ts",
+    "src/core/drop/dropSampling.ts",
+    "src/core/equipment/EquipmentInstance.fixture.ts",
+    "src/core/game/battleLootTestSetup.ts",
+    "src/core/game/__fixtures__/startAStage.ts",
+    "src/core/idle/SpeedSettings.ts",
+    "src/core/realm/MeridianSystem.ts",
+    "src/core/ui/DesignFrame.ts",
+    "src/core/world-map/HexCoordinate.ts",
+    "src/core/world-map/HexLayout.ts",
+    "src/core/world-map/WorldMap.ts",
+    "src/core/world-map/WorldMapValidator.ts",
+    "src/data/buff/ZoneDotBuffs.ts",
+    "src/game/scenes/combat/combatTestHarness.ts",
+    "src/game/support/SpriteBodyAnchor.ts",
+    "src/presentation/art/CombatArtTier.ts"
+  ],
+  "unmatchedListeners": [
+    {
+      "key": "pointerdown",
+      "consumers": [
+        {
+          "file": "src/App.vue",
+          "line": 189,
+          "method": "addEventListener",
+          "receiver": "window"
+        },
+        {
+          "file": "src/components/panels/bag-sections/BagPaginationControls.vue",
+          "line": 106,
+          "method": "addEventListener",
+          "receiver": "document"
+        },
+        {
+          "file": "src/game/scenes/combat/combat-vfx-spawner.ts",
+          "line": 245,
+          "method": "on",
+          "receiver": "icon"
+        }
+      ]
+    },
+    {
+      "key": "resize",
+      "consumers": [
+        {
+          "file": "src/components/common/ToastContainer.vue",
+          "line": 63,
+          "method": "addEventListener",
+          "receiver": "window"
+        },
+        {
+          "file": "src/components/game/DongFuCommandWheel.vue",
+          "line": 61,
+          "method": "addEventListener",
+          "receiver": "window"
+        },
+        {
+          "file": "src/game/scenes/CombatScene.ts",
+          "line": 786,
+          "method": "on",
+          "receiver": "this.scale"
+        },
+        {
+          "file": "src/game/scenes/MainScene.ts",
+          "line": 182,
+          "method": "on",
+          "receiver": "this.scale"
+        },
+        {
+          "file": "src/game/scenes/TribulationScene.ts",
+          "line": 102,
+          "method": "on",
+          "receiver": "this.scale"
+        }
+      ]
+    },
+    {
+      "key": "keydown",
+      "consumers": [
+        {
+          "file": "src/components/common/Tooltip.vue",
+          "line": 24,
+          "method": "addEventListener",
+          "receiver": "window"
+        },
+        {
+          "file": "src/components/game/DongFuCommandWheel.vue",
+          "line": 221,
+          "method": "addEventListener",
+          "receiver": "window"
+        },
+        {
+          "file": "src/components/game/PresentationTransitionOverlay.vue",
+          "line": 169,
+          "method": "addEventListener",
+          "receiver": "window"
+        },
+        {
+          "file": "src/components/panels/bag-sections/BagPaginationControls.vue",
+          "line": 108,
+          "method": "addEventListener",
+          "receiver": "document"
+        },
+        {
+          "file": "src/composables/useDialogFocus.ts",
+          "line": 60,
+          "method": "addEventListener",
+          "receiver": "cardRef.value"
+        },
+        {
+          "file": "src/directives/tooltip.ts",
+          "line": 73,
+          "method": "addEventListener",
+          "receiver": "el"
+        }
+      ]
+    },
+    {
+      "key": "keyup",
+      "consumers": [
+        {
+          "file": "src/components/common/Tooltip.vue",
+          "line": 25,
+          "method": "addEventListener",
+          "receiver": "window"
+        }
+      ]
+    },
+    {
+      "key": "blur",
+      "consumers": [
+        {
+          "file": "src/components/common/Tooltip.vue",
+          "line": 26,
+          "method": "addEventListener",
+          "receiver": "window"
+        }
+      ]
+    },
+    {
+      "key": "change",
+      "consumers": [
+        {
+          "file": "src/components/game/DongFuScene.vue",
+          "line": 154,
+          "method": "addEventListener",
+          "receiver": "reducedMotionQuery"
+        },
+        {
+          "file": "src/components/game/HomeBuildingIcons.vue",
+          "line": 99,
+          "method": "addEventListener",
+          "receiver": "reducedMotionQuery"
+        }
+      ]
+    },
+    {
+      "key": "pointermove",
+      "consumers": [
+        {
+          "file": "src/components/game/DongFuScene.vue",
+          "line": 155,
+          "method": "addEventListener",
+          "receiver": "window"
+        }
+      ]
+    },
+    {
+      "key": "positions",
+      "consumers": [
+        {
+          "file": "src/components/game/PhaserCanvas.vue",
+          "line": 83,
+          "method": "on",
+          "receiver": "gameManager.eventBus"
+        }
+      ]
+    },
+    {
+      "key": "abort",
+      "consumers": [
+        {
+          "file": "src/components/game/PresentationTransitionOverlay.vue",
+          "line": 124,
+          "method": "addEventListener",
+          "receiver": "signal"
+        },
+        {
+          "file": "src/game/scenes/AssetLoaderScene.ts",
+          "line": 142,
+          "method": "addEventListener",
+          "receiver": "signal"
+        },
+        {
+          "file": "src/presentation/assets/AssetBundleManager.ts",
+          "line": 59,
+          "method": "addEventListener",
+          "receiver": "signal"
+        },
+        {
+          "file": "src/presentation/assets/AssetBundleManager.ts",
+          "line": 189,
+          "method": "addEventListener",
+          "receiver": "signal"
+        },
+        {
+          "file": "src/presentation/assets/AssetBundleManager.ts",
+          "line": 297,
+          "method": "addEventListener",
+          "receiver": "signal"
+        },
+        {
+          "file": "src/presentation/GamePresentationCoordinator.ts",
+          "line": 596,
+          "method": "addEventListener",
+          "receiver": "signal"
+        },
+        {
+          "file": "src/presentation/PhaserSceneAdapter.ts",
+          "line": 219,
+          "method": "addEventListener",
+          "receiver": "signal"
+        },
+        {
+          "file": "src/presentation/PhaserSceneAdapter.ts",
+          "line": 260,
+          "method": "addEventListener",
+          "receiver": "signal"
+        },
+        {
+          "file": "src/presentation/VueRouteAdapter.ts",
+          "line": 90,
+          "method": "addEventListener",
+          "receiver": "signal"
+        }
+      ]
+    },
+    {
+      "key": "transitionend",
+      "consumers": [
+        {
+          "file": "src/components/game/PresentationTransitionOverlay.vue",
+          "line": 125,
+          "method": "addEventListener",
+          "receiver": "leftPanelRef.value"
+        },
+        {
+          "file": "src/components/game/PresentationTransitionOverlay.vue",
+          "line": 126,
+          "method": "addEventListener",
+          "receiver": "rightPanelRef.value"
+        }
+      ]
+    },
+    {
+      "key": "visibilitychange",
+      "consumers": [
+        {
+          "file": "src/composables/useCombatPause.ts",
+          "line": 56,
+          "method": "addEventListener",
+          "receiver": "document"
+        }
+      ]
+    },
+    {
+      "key": "pointerenter",
+      "consumers": [
+        {
+          "file": "src/directives/tooltip.ts",
+          "line": 69,
+          "method": "addEventListener",
+          "receiver": "el"
+        }
+      ]
+    },
+    {
+      "key": "pointerleave",
+      "consumers": [
+        {
+          "file": "src/directives/tooltip.ts",
+          "line": 70,
+          "method": "addEventListener",
+          "receiver": "el"
+        }
+      ]
+    },
+    {
+      "key": "focusin",
+      "consumers": [
+        {
+          "file": "src/directives/tooltip.ts",
+          "line": 71,
+          "method": "addEventListener",
+          "receiver": "el"
+        }
+      ]
+    },
+    {
+      "key": "focusout",
+      "consumers": [
+        {
+          "file": "src/directives/tooltip.ts",
+          "line": 72,
+          "method": "addEventListener",
+          "receiver": "el"
+        }
+      ]
+    },
+    {
+      "key": "pointerover",
+      "consumers": [
+        {
+          "file": "src/game/scenes/combat/combat-vfx-spawner.ts",
+          "line": 243,
+          "method": "on",
+          "receiver": "icon"
+        }
+      ]
+    },
+    {
+      "key": "pointerout",
+      "consumers": [
+        {
+          "file": "src/game/scenes/combat/combat-vfx-spawner.ts",
+          "line": 244,
+          "method": "on",
+          "receiver": "icon"
+        }
+      ]
+    },
+    {
+      "key": "shutdown",
+      "consumers": [
+        {
+          "file": "src/game/scenes/CombatScene.ts",
+          "line": 824,
+          "method": "once",
+          "receiver": "this.events"
+        },
+        {
+          "file": "src/game/scenes/MainScene.ts",
+          "line": 189,
+          "method": "once",
+          "receiver": "this.events"
+        },
+        {
+          "file": "src/game/scenes/TranPhapCombatPreviewScene.ts",
+          "line": 152,
+          "method": "once",
+          "receiver": "this.events"
+        },
+        {
+          "file": "src/game/scenes/TribulationScene.ts",
+          "line": 110,
+          "method": "once",
+          "receiver": "this.events"
+        }
+      ]
+    },
+    {
+      "key": "resume",
+      "consumers": [
+        {
+          "file": "src/main-process/combatClockHost.ts",
+          "line": 106,
+          "method": "on",
+          "receiver": "powerMonitor"
+        }
+      ]
+    },
+    {
+      "key": "ready",
+      "consumers": [
+        {
+          "file": "src/presentation/host/useDynamicRegion.ts",
+          "line": 231,
+          "method": "once",
+          "receiver": "created.events"
+        }
+      ]
+    },
+    {
+      "key": "create",
+      "consumers": [
+        {
+          "file": "src/presentation/host/useDynamicRegion.ts",
+          "line": 286,
+          "method": "once",
+          "receiver": "scene.events"
+        }
+      ]
+    },
+    {
+      "key": "combat-clock:start",
+      "consumers": [
+        {
+          "file": "electron/main.ts",
+          "line": 42,
+          "method": "on",
+          "receiver": "ipcMain"
+        }
+      ]
+    },
+    {
+      "key": "combat-clock:stop",
+      "consumers": [
+        {
+          "file": "electron/main.ts",
+          "line": 48,
+          "method": "on",
+          "receiver": "ipcMain"
+        }
+      ]
+    },
+    {
+      "key": "second-instance",
+      "consumers": [
+        {
+          "file": "electron/main.ts",
+          "line": 52,
+          "method": "on",
+          "receiver": "app"
+        }
+      ]
+    },
+    {
+      "key": "window-all-closed",
+      "consumers": [
+        {
+          "file": "electron/main.ts",
+          "line": 68,
+          "method": "on",
+          "receiver": "app"
+        }
+      ]
+    },
+    {
+      "key": "suspend",
+      "consumers": [
+        {
+          "file": "electron/main.ts",
+          "line": 72,
+          "method": "on",
+          "receiver": "powerMonitor"
+        }
+      ]
+    },
+    {
+      "key": "close",
+      "consumers": [
+        {
+          "file": "electron/main.ts",
+          "line": 110,
+          "method": "on",
+          "receiver": "win"
+        }
+      ]
+    },
+    {
+      "key": "closed",
+      "consumers": [
+        {
+          "file": "electron/main.ts",
+          "line": 112,
+          "method": "on",
+          "receiver": "win"
+        }
+      ]
+    },
+    {
+      "key": "app:flush-complete",
+      "consumers": [
+        {
+          "file": "electron/main.ts",
+          "line": 153,
+          "method": "once",
+          "receiver": "ipcMain"
+        }
+      ]
+    },
+    {
+      "key": "system:suspend",
+      "consumers": [
+        {
+          "file": "electron/preload.ts",
+          "line": 17,
+          "method": "on",
+          "receiver": "ipcRenderer"
+        }
+      ]
+    },
+    {
+      "key": "system:resume",
+      "consumers": [
+        {
+          "file": "electron/preload.ts",
+          "line": 21,
+          "method": "on",
+          "receiver": "ipcRenderer"
+        }
+      ]
+    },
+    {
+      "key": "app:before-quit-flush",
+      "consumers": [
+        {
+          "file": "electron/preload.ts",
+          "line": 25,
+          "method": "on",
+          "receiver": "ipcRenderer"
+        }
+      ]
+    },
+    {
+      "key": "combat-clock:tick",
+      "consumers": [
+        {
+          "file": "electron/preload.ts",
+          "line": 35,
+          "method": "on",
+          "receiver": "ipcRenderer"
+        }
+      ]
+    }
+  ],
+  "typeEscapes": 156
+}

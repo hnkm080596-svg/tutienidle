@@ -1,0 +1,1167 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--workers=1",
+      "--reporter=list,json",
+      "--output",
+      "docs/qa/audit-playwright-artifacts"
+    ],
+    "configFile": "E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\playwright.config.ts",
+    "rootDir": "E:/tutienidle/.agent-worktrees/full-project-audit-2026-09-14/game/tests/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "E:/tutienidle/.agent-worktrees/full-project-audit-2026-09-14/game/docs/qa/audit-playwright-artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "E:/tutienidle/.agent-worktrees/full-project-audit-2026-09-14/game/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 90000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.62.1",
+    "workers": 1,
+    "webServer": {
+      "command": "node node_modules/vite/bin/vite.js",
+      "url": "http://localhost:5984",
+      "reuseExistingServer": true,
+      "timeout": 30000
+    }
+  },
+  "suites": [
+    {
+      "title": "accessibility.spec.ts",
+      "file": "accessibility.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Keyboard accessibility journey",
+          "file": "accessibility.spec.ts",
+          "line": 11,
+          "column": 6,
+          "specs": [
+            {
+              "title": "auth + character creation operable by keyboard only",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 16742,
+                      "error": {
+                        "message": "Error: không được có console error ngoài allowlist\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 3\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED\",\u001b[39m\n\u001b[31m+ ]\u001b[39m",
+                        "stack": "Error: không được có console error ngoài allowlist\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 3\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED\",\u001b[39m\n\u001b[31m+ ]\u001b[39m\n    at assertNoBrowserErrors (E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\tests\\e2e\\helpers.ts:181:75)\n    at E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\tests\\e2e\\accessibility.spec.ts:94:5",
+                        "location": {
+                          "file": "E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\tests\\e2e\\helpers.ts",
+                          "column": 75,
+                          "line": 181
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39mhelpers.ts:181\n\n  179 | }): void {\n  180 |   expect(collected.pageErrors, 'không được có uncaught page error').toEqual([])\n> 181 |   expect(collected.errors, 'không được có console error ngoài allowlist').toEqual([])\n      |                                                                           ^\n  182 | }\n  183 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\tests\\e2e\\helpers.ts",
+                            "column": 75,
+                            "line": 181
+                          },
+                          "message": "Error: không được có console error ngoài allowlist\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // deep equality\u001b[22m\n\n\u001b[32m- Expected  - 1\u001b[39m\n\u001b[31m+ Received  + 3\u001b[39m\n\n\u001b[32m- Array []\u001b[39m\n\u001b[31m+ Array [\u001b[39m\n\u001b[31m+   \"Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED\",\u001b[39m\n\u001b[31m+ ]\u001b[39m\n\n   at helpers.ts:181\n\n  179 | }): void {\n  180 |   expect(collected.pageErrors, 'không được có uncaught page error').toEqual([])\n> 181 |   expect(collected.errors, 'không được có console error ngoài allowlist').toEqual([])\n      |                                                                           ^\n  182 | }\n  183 |\n    at assertNoBrowserErrors (E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\tests\\e2e\\helpers.ts:181:75)\n    at E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\tests\\e2e\\accessibility.spec.ts:94:5"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-13T17:21:17.054Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\docs\\qa\\audit-playwright-artifacts\\accessibility-Keyboard-acc-37cf6-n-operable-by-keyboard-only\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\docs\\qa\\audit-playwright-artifacts\\accessibility-Keyboard-acc-37cf6-n-operable-by-keyboard-only\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\tests\\e2e\\helpers.ts",
+                        "column": 75,
+                        "line": 181
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "ddd864604af8a6a0198f-38d4aa46a3a6fa17a093",
+              "file": "accessibility.spec.ts",
+              "line": 12,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "boot-fresh.spec.ts",
+      "file": "boot-fresh.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Boot fresh (no saved state)",
+          "file": "boot-fresh.spec.ts",
+          "line": 8,
+          "column": 6,
+          "specs": [
+            {
+              "title": "boots to character-creation when no save exists",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 7202,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-13T17:21:39.151Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8695de214c85285c8034-6bbcf10dc1ee3b2054a2",
+              "file": "boot-fresh.spec.ts",
+              "line": 9,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "combat-idle-motion-capture.spec.ts",
+      "file": "combat-idle-motion-capture.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Combat idle motion (Spec B §9.10)",
+          "file": "combat-idle-motion-capture.spec.ts",
+          "line": 41,
+          "column": 6,
+          "specs": [
+            {
+              "title": "player frames advance; static enemies bob without animating",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 80128,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-13T17:21:46.843Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "78386afd394bce7e34b8-213e60357d55d441f38d",
+              "file": "combat-idle-motion-capture.spec.ts",
+              "line": 42,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "combat-overlay-layout.spec.ts",
+      "file": "combat-overlay-layout.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Combat overlay layout (T8.3)",
+          "file": "combat-overlay-layout.spec.ts",
+          "line": 43,
+          "column": 6,
+          "specs": [
+            {
+              "title": "desktop: panels anchored, no canvas-HUD overlap",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 37994,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-13T17:23:07.477Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8ed1b95caedb32ac34a0-3d853c9674c9c5c2fde8",
+              "file": "combat-overlay-layout.spec.ts",
+              "line": 45,
+              "column": 5
+            },
+            {
+              "title": "compact: panels anchored, no canvas-HUD overlap",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 28916,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-13T17:23:45.600Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8ed1b95caedb32ac34a0-2f76804a9e4adbd08f06",
+              "file": "combat-overlay-layout.spec.ts",
+              "line": 45,
+              "column": 5
+            },
+            {
+              "title": "tall: panels anchored, no canvas-HUD overlap",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 19447,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-13T17:24:14.673Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8ed1b95caedb32ac34a0-b0e7c6615d8a58ac52b0",
+              "file": "combat-overlay-layout.spec.ts",
+              "line": 45,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "create-to-combat.spec.ts",
+      "file": "create-to-combat.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Create character to combat",
+          "file": "create-to-combat.spec.ts",
+          "line": 11,
+          "column": 6,
+          "specs": [
+            {
+              "title": "creates a character, starts a stage battle and shows a result",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 210000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 200305,
+                      "error": {
+                        "message": "Error: Combat result modal (victory/defeat) should appear\n\nCombat result modal (victory/defeat) should appear\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\nCall Log:\n- Timeout 180000ms exceeded while waiting on the predicate",
+                        "stack": "Error: Combat result modal (victory/defeat) should appear\n\nCombat result modal (victory/defeat) should appear\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\nCall Log:\n- Timeout 180000ms exceeded while waiting on the predicate\n    at E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\tests\\e2e\\create-to-combat.spec.ts:56:8",
+                        "location": {
+                          "file": "E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\tests\\e2e\\create-to-combat.spec.ts",
+                          "column": 8,
+                          "line": 56
+                        },
+                        "snippet": "  54 |         message: 'Combat result modal (victory/defeat) should appear',\n  55 |       })\n> 56 |       .toBe(true)\n     |        ^\n  57 |\n  58 |     // DOM assertion on the outcome — victory OR defeat, both end the battle.\n  59 |     const victory = page.locator('.combat-victory-panel')"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\tests\\e2e\\create-to-combat.spec.ts",
+                            "column": 8,
+                            "line": 56
+                          },
+                          "message": "Error: Combat result modal (victory/defeat) should appear\n\nCombat result modal (victory/defeat) should appear\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\nCall Log:\n- Timeout 180000ms exceeded while waiting on the predicate\n\n  54 |         message: 'Combat result modal (victory/defeat) should appear',\n  55 |       })\n> 56 |       .toBe(true)\n     |        ^\n  57 |\n  58 |     // DOM assertion on the outcome — victory OR defeat, both end the battle.\n  59 |     const victory = page.locator('.combat-victory-panel')\n    at E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\tests\\e2e\\create-to-combat.spec.ts:56:8"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-13T17:24:34.191Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\docs\\qa\\audit-playwright-artifacts\\create-to-combat-Create-ch-44d55-e-battle-and-shows-a-result\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\docs\\qa\\audit-playwright-artifacts\\create-to-combat-Create-ch-44d55-e-battle-and-shows-a-result\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\tests\\e2e\\create-to-combat.spec.ts",
+                        "column": 8,
+                        "line": 56
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "ec0c496f932c166b4d32-55fb040215373d9f11f2",
+              "file": "create-to-combat.spec.ts",
+              "line": 12,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "error-recovery.spec.ts",
+      "file": "error-recovery.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Save error recovery",
+          "file": "error-recovery.spec.ts",
+          "line": 12,
+          "column": 6,
+          "specs": [
+            {
+              "title": "corrupted save shows recovery screen with export/reset actions",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 14880,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-13T17:27:58.545Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "05e0588ec45ef101485c-33b881d9d81b61bec2f0",
+              "file": "error-recovery.spec.ts",
+              "line": 13,
+              "column": 3
+            }
+          ]
+        },
+        {
+          "title": "Reload recovery",
+          "file": "error-recovery.spec.ts",
+          "line": 53,
+          "column": 6,
+          "specs": [
+            {
+              "title": "reload during home returns to home without stuck state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 35519,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-13T17:28:15.809Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "05e0588ec45ef101485c-f3dfb9219c9649e35d01",
+              "file": "error-recovery.spec.ts",
+              "line": 54,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "ink-wash-ui.spec.ts",
+      "file": "ink-wash-ui.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "ink-wash UI visual smoke",
+          "file": "ink-wash-ui.spec.ts",
+          "line": 28,
+          "column": 6,
+          "specs": [
+            {
+              "title": "desktop: painting shell stays usable and inside the viewport",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 46677,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-13T17:28:51.975Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d59646fa04d418c36f41-39ad9476102555443d97",
+              "file": "ink-wash-ui.spec.ts",
+              "line": 30,
+              "column": 5
+            },
+            {
+              "title": "compact: painting shell stays usable and inside the viewport",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 54659,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-13T17:29:38.727Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d59646fa04d418c36f41-810d45324ee68324dbcf",
+              "file": "ink-wash-ui.spec.ts",
+              "line": 30,
+              "column": 5
+            },
+            {
+              "title": "tall: painting shell stays usable and inside the viewport",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 41073,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-13T17:30:34.285Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d59646fa04d418c36f41-0cc11038aaf566be595e",
+              "file": "ink-wash-ui.spec.ts",
+              "line": 30,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "presentation-routing.spec.ts",
+      "file": "presentation-routing.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Presentation routing regression (Task 1 baseline)",
+          "file": "presentation-routing.spec.ts",
+          "line": 13,
+          "column": 6,
+          "specs": [
+            {
+              "title": "stage start activates CombatScene and deactivates MainScene in Phaser",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 41930,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\nCall Log:\n- Timeout 15000ms exceeded while waiting on the predicate",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\nCall Log:\n- Timeout 15000ms exceeded while waiting on the predicate\n    at E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\tests\\e2e\\presentation-routing.spec.ts:51:8",
+                        "location": {
+                          "file": "E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\tests\\e2e\\presentation-routing.spec.ts",
+                          "column": 8,
+                          "line": 51
+                        },
+                        "snippet": "  49 |         }),\n  50 |       )\n> 51 |       .toBe(true)\n     |        ^\n  52 |   })\n  53 | })\n  54 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\tests\\e2e\\presentation-routing.spec.ts",
+                            "column": 8,
+                            "line": 51
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\nCall Log:\n- Timeout 15000ms exceeded while waiting on the predicate\n\n  49 |         }),\n  50 |       )\n> 51 |       .toBe(true)\n     |        ^\n  52 |   })\n  53 | })\n  54 |\n    at E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\tests\\e2e\\presentation-routing.spec.ts:51:8"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "BROWSER: [vite] connecting...\n"
+                        },
+                        {
+                          "text": "BROWSER: [vite] connected.\n"
+                        },
+                        {
+                          "text": "BROWSER: %c * Tone.js v15.1.22 *  background: #000; color: #fff\n"
+                        },
+                        {
+                          "text": "BROWSER: The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio\n"
+                        },
+                        {
+                          "text": "BROWSER: The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio\n"
+                        },
+                        {
+                          "text": "BROWSER: [VUE_ROUTER_R0004] No match found for location with path \"/\"\n├▶ fix: Add a route matching this path or check for typos in the location.\n╰▶ see: https://router.vuejs.org/guide/essentials/dynamic-matching.html#Catch-all-404-Not-found-Route\n"
+                        },
+                        {
+                          "text": "BROWSER: Failed to load resource: net::ERR_NETWORK_ACCESS_DENIED\n"
+                        },
+                        {
+                          "text": "BROWSER: 🍍 \"audio\" store installed 🆕\n"
+                        },
+                        {
+                          "text": "BROWSER: 🍍 \"actionFeedback\" store installed 🆕\n"
+                        },
+                        {
+                          "text": "BROWSER: 🍍 \"breakthroughRequirement\" store installed 🆕\n"
+                        },
+                        {
+                          "text": "BROWSER: %cPhaser v4.2.1 (WebGL | Web Audio)%c https://phaser.io/v4021 color: #ffffff; background-image: url(\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAOCAYAAAAmL5yKAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAARBJREFUeNpi/P//P0OHsPB/BiCoePuWkYFEwALSXJElzMBgLwE2CNkQxgWr/yMr/p8QimlBu5DQ//+8vBBco/ofzAe6imH+qv/53/6jYJAYSA4ZoxoANYTPKhiuCQZwGcJU+e4dqpMmvsDq14krV2MPAxDha2CMKvoXoiE/PBQUDgQD8j82UFae9B9bOIC8B9UD9gIjjIMN7Ns6lWHn4XMoYu62RgxO3tkMjIyMII2MYAOAtmFVhA+ADHf2ycGMRhANjUq8YO+WKWCvgAORIV8CkpDCrzIwsLIymC1qAtuAD4Bsh3sBmqAY3qcGwL2AC4DCpKtzHlgzOLWihwEuzTCN0GhDJHeYC4gByBphACDAAH2dDIxdjr+VAAAAAElFTkSuQmCC\"), linear-gradient(to bottom, #000814, #001d3d, #003566); background-repeat: no-repeat; background-position: 4px center, 0 0; padding: 2px 6px 2px 24px; background: transparent\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-13T17:31:15.875Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\docs\\qa\\audit-playwright-artifacts\\presentation-routing-Prese-bea6d-tivates-MainScene-in-Phaser\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\docs\\qa\\audit-playwright-artifacts\\presentation-routing-Prese-bea6d-tivates-MainScene-in-Phaser\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\tests\\e2e\\presentation-routing.spec.ts",
+                        "column": 8,
+                        "line": 51
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "67bf3aa72b24873013c4-1ff1779e6192aa45ce17",
+              "file": "presentation-routing.spec.ts",
+              "line": 14,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "reduced-motion.spec.ts",
+      "file": "reduced-motion.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Reduced motion",
+          "file": "reduced-motion.spec.ts",
+          "line": 11,
+          "column": 6,
+          "specs": [
+            {
+              "title": "animations disabled under prefers-reduced-motion: reduce",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 9357,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-13T17:32:01.707Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b3e080842fc0b9df9031-44de31b8eeb08dfe1cf7",
+              "file": "reduced-motion.spec.ts",
+              "line": 12,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "save-reload.spec.ts",
+      "file": "save-reload.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Save and reload persistence",
+          "file": "save-reload.spec.ts",
+          "line": 61,
+          "column": 6,
+          "specs": [
+            {
+              "title": "persists character and seeded spirit stones exactly across reload",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 25422,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-13T17:32:13.348Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "0acbe967b8d3ee3d2328-9a4bf443034ee809b0ec",
+              "file": "save-reload.spec.ts",
+              "line": 62,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "standing-slot-panel.spec.ts",
+      "file": "standing-slot-panel.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Standing slot panel (P14)",
+          "file": "standing-slot-panel.spec.ts",
+          "line": 103,
+          "column": 6,
+          "specs": [
+            {
+              "title": "panel opens, drag-drop works without crash, 3x3 grid with distinct occupied state",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 35059,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-13T17:32:38.809Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "1ba82e872ea9f6ef59fb-cea6ccb300ad5f972b04",
+              "file": "standing-slot-panel.spec.ts",
+              "line": 104,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "tribulation-flow.spec.ts",
+      "file": "tribulation-flow.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Tribulation flow (P13 oracle, F1 regression)",
+          "file": "tribulation-flow.spec.ts",
+          "line": 110,
+          "column": 6,
+          "specs": [
+            {
+              "title": "completed tribulation routes home and restores usable home chrome",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 210000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 210614,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 210000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 210000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 210000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\tests\\e2e\\tribulation-flow.spec.ts",
+                            "column": 26,
+                            "line": 232
+                          },
+                          "message": "Error: locator.click: Test timeout of 210000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.world-announcement')\u001b[22m\n\n\n  230 |     const announcement = page.locator('.world-announcement')\n  231 |     if (await announcement.isVisible()) {\n> 232 |       await announcement.click()\n      |                          ^\n  233 |     }\n  234 |     await expect(announcement).toHaveCount(0, { timeout: 15_000 })\n  235 |\n    at E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\tests\\e2e\\tribulation-flow.spec.ts:232:26"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-13T17:33:13.963Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\docs\\qa\\audit-playwright-artifacts\\tribulation-flow-Tribulati-cdd59-restores-usable-home-chrome\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\docs\\qa\\audit-playwright-artifacts\\tribulation-flow-Tribulati-cdd59-restores-usable-home-chrome\\error-context.md"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "1127eb15f161ff8ff66b-10526d5e6ae391536270",
+              "file": "tribulation-flow.spec.ts",
+              "line": 111,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "turn-combat-hud.spec.ts",
+      "file": "turn-combat-hud.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Slice 7 — turn combat HUD",
+          "file": "turn-combat-hud.spec.ts",
+          "line": 28,
+          "column": 6,
+          "specs": [
+            {
+              "title": "battle runs, combat slots render, legacy controls gone, refight works",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 210000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 212283,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 210000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 210000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 210000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\tests\\e2e\\turn-combat-hud.spec.ts",
+                            "column": 38,
+                            "line": 121
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: locator('.combat-victory-panel').or(locator('.combat-defeat-panel'))\nExpected: visible\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 120000ms\u001b[22m\n\u001b[2m  - waiting for locator('.combat-victory-panel').or(locator('.combat-defeat-panel'))\u001b[22m\n\u001b[2m  - Test timeout of 210000ms exceeded.\u001b[22m\n\n\n  119 |     // nhìn (gameplay thật, xem comment Task 11 ở trên — wiring đã được\n  120 |     // assert bằng event probe ở trận 1).\n> 121 |     await expect(victory.or(defeat)).toBeVisible({\n      |                                      ^\n  122 |       timeout: 120_000,\n  123 |     })\n  124 |\n    at E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\tests\\e2e\\turn-combat-hud.spec.ts:121:38"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-13T17:36:45.329Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\docs\\qa\\audit-playwright-artifacts\\turn-combat-hud-Slice-7-—--ef6c6-controls-gone-refight-works\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "E:\\tutienidle\\.agent-worktrees\\full-project-audit-2026-09-14\\game\\docs\\qa\\audit-playwright-artifacts\\turn-combat-hud-Slice-7-—--ef6c6-controls-gone-refight-works\\error-context.md"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "b940027c8bfcf88c824d-57205ac8a8c561b24206",
+              "file": "turn-combat-hud.spec.ts",
+              "line": 29,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "wave-vfx-capture.spec.ts",
+      "file": "wave-vfx-capture.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Turn-Based Wave VFX visual capture",
+          "file": "wave-vfx-capture.spec.ts",
+          "line": 19,
+          "column": 6,
+          "specs": [
+            {
+              "title": "captures countdown/materialize screenshots + runtime wave telegraph proof",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 180000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "",
+                  "projectName": "",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 28435,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-09-13T17:40:20.538Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "eb69d3bda398246b78b3-c69e6e5680454ba2f0c2",
+              "file": "wave-vfx-capture.spec.ts",
+              "line": 20,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-13T17:21:15.152Z",
+    "duration": 1175907.9179999998,
+    "expected": 14,
+    "skipped": 0,
+    "unexpected": 5,
+    "flaky": 0
+  }
+}

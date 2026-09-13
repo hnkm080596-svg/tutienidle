@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { recomputeEffectiveStats } from './TurnStatsRecompute'
 import { calculateStats } from '../../stats/StatCalculator'
-import { createBaseStats, type Stats } from '../../stats/StatBlock'
+import { createBaseStats } from '../../stats/StatBlock'
 import { BuffPool } from '../../buff/BuffPool'
 import { BuffSystem } from '../../buff/BuffSystem'
 import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'

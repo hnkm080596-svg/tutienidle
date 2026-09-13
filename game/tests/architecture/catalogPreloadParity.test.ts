@@ -19,7 +19,7 @@
  */
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
-import { readTs, srcCorpus, SCAN_TIMEOUT } from './helpers/scanTs'
+import { srcCorpus, SCAN_TIMEOUT } from './helpers/scanTs'
 import { queueCombatAssets } from '@/game/support/CombatPreload'
 import {
   enumerateResources,

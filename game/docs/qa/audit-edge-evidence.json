@@ -1,0 +1,62 @@
+{
+  "requestsFailed": [
+    {
+      "url": "https://fonts.googleapis.com/css2",
+      "error": "net::ERR_NETWORK_ACCESS_DENIED"
+    }
+  ],
+  "errors": [],
+  "runtime": {
+    "state": "fighting",
+    "turns": 3,
+    "rounds": 0,
+    "sceneActive": true,
+    "mainActive": false,
+    "domainSession": {
+      "kind": "combat",
+      "sessionId": 1
+    },
+    "dockText": "",
+    "controls": 0,
+    "components": [
+      {
+        "name": "TurnCombatSkillBar",
+        "keys": [
+          "ROLE_ORDER",
+          "ROLE_LABELS",
+          "tooltipFor",
+          "ui",
+          "gameManager",
+          "isAwaitingChoice",
+          "isBattleFighting",
+          "slotList",
+          "chooseSlot",
+          "isManualMode",
+          "setManualMode",
+          "visible",
+          "SLOT_EMPTY",
+          "entryAt",
+          "isTappable",
+          "tapSlot",
+          "CombatSkillSlot"
+        ],
+        "isBattleFighting": false,
+        "visible": false
+      },
+      {
+        "name": "BattleLogPanel",
+        "keys": [
+          "MAX_VISIBLE",
+          "isBattleFighting",
+          "logEntries",
+          "collapsed",
+          "visible",
+          "recentEntries",
+          "describe"
+        ],
+        "isBattleFighting": true,
+        "visible": true
+      }
+    ]
+  }
+}

@@ -1,7 +1,5 @@
 import { expect, test } from '@playwright/test'
 
-import { bootToGuestHome } from './helpers'
-
 /**
  * UI/UX QA remediation (Task 10, 2026-09-07) — reduced motion: với
  * `prefers-reduced-motion: reduce`, các animation CSS chính (loading

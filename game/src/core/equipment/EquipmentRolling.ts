@@ -1,6 +1,5 @@
 import type { Equipment } from './Equipment'
 import type { EquipmentInstance } from './EquipmentInstance'
-import type { EquipmentRegistry } from './EquipmentRegistry'
 import type { AffixRegistry } from './AffixRegistry'
 import type { Affix, AffixKind, AffixPool } from './Affix'
 import type { RolledAffix } from './RolledAffix'

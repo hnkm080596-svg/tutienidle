@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 // Task 14 patch — wire DecomposeSystem vào GameManager.
 const fs = require('fs')
 const p = 'src/core/game/GameManager.ts'

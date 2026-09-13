@@ -93,6 +93,7 @@ describe('NodeSystem — Van Dao free-purchase roll (M2)', () => {
 
     expect(player.skillInsight).toBe(5)
     expect(player.nodeFreePurchaseRecord).toEqual({})
+    expect(randomSpy).not.toHaveBeenCalled()
     // canPurchaseNode still gates — affordability unchanged.
   })
 

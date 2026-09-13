@@ -84,19 +84,21 @@ describe('Adversarial — offline auto-farm invariants (QA quick)', () => {
 // perfectClearSeconds, so a malformed save carries the poison straight
 // into the tick loop.
 function buildAutoFarmOps(processDefeatedEnemies: ReturnType<typeof vi.fn>) {
-  return new GameManagerAutoFarmOps({
-    stageManager: { get: () => null, start: () => true, stop: () => {} } as any,
-    stageTemplates: { get: () => STAGE } as any,
+  const deps = {
+    stageManager: { get: () => null, start: () => true, stop: () => {} },
+    stageTemplates: { get: () => STAGE },
     battleLoot: {
       beginBattle: vi.fn(),
       setChannel: vi.fn(),
       setSession: vi.fn(),
       processDefeatedEnemies,
-    } as any,
-    stageWaves: { pickEnemyForTurnSpawn: () => null } as any,
-    enemySystem: { spawn: vi.fn() } as any,
-    buildPlayerRewardReceiver: () => ({}) as any,
-  })
+    },
+    stageWaves: { pickEnemyForTurnSpawn: () => null },
+    enemySystem: { spawn: vi.fn() },
+    buildPlayerRewardReceiver: () => ({}),
+  } as unknown as ConstructorParameters<typeof GameManagerAutoFarmOps>[0]
+
+  return new GameManagerAutoFarmOps(deps)
 }
 
 describe('Adversarial — online auto-farm tick invariants', () => {

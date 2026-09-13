@@ -1,0 +1,2678 @@
+{
+  "method": "AST static imports and literal event names; type-only imports do not count as runtime cycles. Vue scripts extracted; dynamic registries/globs require manual review. Candidates are not findings.",
+  "files": 615,
+  "tests": 559,
+  "counts": {
+    "src/App.vue": 1,
+    "src/assets": 4,
+    "src/components": 124,
+    "src/composables": 30,
+    "src/core/alchemy": 1,
+    "src/core/artifact": 6,
+    "src/core/audio": 1,
+    "src/core/battle": 36,
+    "src/core/breakthrough": 1,
+    "src/core/buff": 7,
+    "src/core/building": 7,
+    "src/core/combat": 14,
+    "src/core/companion": 3,
+    "src/core/cultivation": 2,
+    "src/core/dev": 2,
+    "src/core/drop": 5,
+    "src/core/economy": 3,
+    "src/core/element": 7,
+    "src/core/enemy": 7,
+    "src/core/equipment": 26,
+    "src/core/events": 1,
+    "src/core/format": 2,
+    "src/core/formation": 2,
+    "src/core/game": 30,
+    "src/core/idle": 3,
+    "src/core/inventory": 1,
+    "src/core/item": 5,
+    "src/core/material": 6,
+    "src/core/math": 1,
+    "src/core/notification": 2,
+    "src/core/pill": 7,
+    "src/core/player": 6,
+    "src/core/presentation": 5,
+    "src/core/production": 9,
+    "src/core/profession": 4,
+    "src/core/progression": 4,
+    "src/core/quest": 5,
+    "src/core/realm": 5,
+    "src/core/reward": 6,
+    "src/core/skill": 20,
+    "src/core/stage": 8,
+    "src/core/stats": 7,
+    "src/core/talent": 3,
+    "src/core/talisman": 2,
+    "src/core/technique": 4,
+    "src/core/tribulation": 3,
+    "src/core/ui": 2,
+    "src/core/world-map": 4,
+    "src/data": 62,
+    "src/directives": 1,
+    "src/game": 37,
+    "src/i18n": 1,
+    "src/main-process": 1,
+    "src/main.ts": 1,
+    "src/presentation": 34,
+    "src/router": 1,
+    "src/services": 19,
+    "src/stores": 12,
+    "electron/main.ts": 1,
+    "electron/preload.ts": 1
+  },
+  "cycles": [],
+  "unreachableCandidates": [
+    "src/assets/inkWashAssetValidation.ts",
+    "src/components/common/GamePanel.vue",
+    "src/components/common/iconRegistry.ts",
+    "src/components/common/SceneHeader.vue",
+    "src/components/common/ThemedIcon.vue",
+    "src/components/onboarding/OnboardingChapter.vue",
+    "src/core/artifact/ArtifactDropBalance.ts",
+    "src/core/battle/EnemyAttackSystem.ts",
+    "src/core/battle/KiemTranOnHitSystem.ts",
+    "src/core/battle/PhapTuBattleResourceSystem.ts",
+    "src/core/battle/SkillEffectResolver.ts",
+    "src/core/battle/TheResourceSystem.ts",
+    "src/core/buff/Buff.ts",
+    "src/core/combat/AttackTiming.ts",
+    "src/core/drop/dropSampling.ts",
+    "src/core/equipment/EquipmentInstance.fixture.ts",
+    "src/core/game/battleLootTestSetup.ts",
+    "src/core/game/__fixtures__/startAStage.ts",
+    "src/core/idle/SpeedSettings.ts",
+    "src/core/realm/MeridianSystem.ts",
+    "src/core/ui/DesignFrame.ts",
+    "src/core/world-map/HexCoordinate.ts",
+    "src/core/world-map/HexLayout.ts",
+    "src/core/world-map/WorldMap.ts",
+    "src/core/world-map/WorldMapValidator.ts",
+    "src/data/buff/ZoneDotBuffs.ts",
+    "src/game/scenes/combat/combatTestHarness.ts",
+    "src/game/support/SpriteBodyAnchor.ts",
+    "src/presentation/art/CombatArtTier.ts"
+  ],
+  "events": {
+    "pointerdown": {
+      "emit": [],
+      "on": [
+        {
+          "file": "src/App.vue",
+          "line": 189,
+          "method": "addEventListener",
+          "receiver": "window"
+        },
+        {
+          "file": "src/components/panels/bag-sections/BagPaginationControls.vue",
+          "line": 106,
+          "method": "addEventListener",
+          "receiver": "document"
+        },
+        {
+          "file": "src/game/scenes/combat/combat-vfx-spawner.ts",
+          "line": 245,
+          "method": "on",
+          "receiver": "icon"
+        }
+      ],
+      "off": [
+        {
+          "file": "src/App.vue",
+          "line": 634,
+          "method": "removeEventListener",
+          "receiver": "window"
+        },
+        {
+          "file": "src/components/panels/bag-sections/BagPaginationControls.vue",
+          "line": 112,
+          "method": "removeEventListener",
+          "receiver": "document"
+        }
+      ]
+    },
+    "cultivation_changed": {
+      "emit": [
+        {
+          "file": "src/App.vue",
+          "line": 437,
+          "method": "emit",
+          "receiver": "gameManager.eventBus"
+        },
+        {
+          "file": "src/composables/useBattleActions.ts",
+          "line": 133,
+          "method": "emit",
+          "receiver": "gameManager.eventBus"
+        }
+      ],
+      "on": [
+        {
+          "file": "src/game/scenes/MainScene.ts",
+          "line": 285,
+          "method": "on",
+          "receiver": "eventBus"
+        }
+      ],
+      "off": [
+        {
+          "file": "src/game/scenes/MainScene.ts",
+          "line": 296,
+          "method": "off",
+          "receiver": "this.eventBus"
+        }
+      ]
+    },
+    "resize": {
+      "emit": [],
+      "on": [
+        {
+          "file": "src/components/common/ToastContainer.vue",
+          "line": 63,
+          "method": "addEventListener",
+          "receiver": "window"
+        },
+        {
+          "file": "src/components/game/DongFuCommandWheel.vue",
+          "line": 61,
+          "method": "addEventListener",
+          "receiver": "window"
+        },
+        {
+          "file": "src/game/scenes/CombatScene.ts",
+          "line": 786,
+          "method": "on",
+          "receiver": "this.scale"
+        },
+        {
+          "file": "src/game/scenes/MainScene.ts",
+          "line": 182,
+          "method": "on",
+          "receiver": "this.scale"
+        },
+        {
+          "file": "src/game/scenes/TribulationScene.ts",
+          "line": 102,
+          "method": "on",
+          "receiver": "this.scale"
+        }
+      ],
+      "off": [
+        {
+          "file": "src/components/common/ToastContainer.vue",
+          "line": 67,
+          "method": "removeEventListener",
+          "receiver": "window"
+        },
+        {
+          "file": "src/components/game/DongFuCommandWheel.vue",
+          "line": 65,
+          "method": "removeEventListener",
+          "receiver": "window"
+        },
+        {
+          "file": "src/game/scenes/CombatScene.ts",
+          "line": 834,
+          "method": "off",
+          "receiver": "this.scale"
+        },
+        {
+          "file": "src/game/scenes/MainScene.ts",
+          "line": 125,
+          "method": "off",
+          "receiver": "this.scale"
+        },
+        {
+          "file": "src/game/scenes/TribulationScene.ts",
+          "line": 36,
+          "method": "off",
+          "receiver": "this.scale"
+        }
+      ]
+    },
+    "keydown": {
+      "emit": [],
+      "on": [
+        {
+          "file": "src/components/common/Tooltip.vue",
+          "line": 24,
+          "method": "addEventListener",
+          "receiver": "window"
+        },
+        {
+          "file": "src/components/game/DongFuCommandWheel.vue",
+          "line": 221,
+          "method": "addEventListener",
+          "receiver": "window"
+        },
+        {
+          "file": "src/components/game/PresentationTransitionOverlay.vue",
+          "line": 169,
+          "method": "addEventListener",
+          "receiver": "window"
+        },
+        {
+          "file": "src/components/panels/bag-sections/BagPaginationControls.vue",
+          "line": 108,
+          "method": "addEventListener",
+          "receiver": "document"
+        },
+        {
+          "file": "src/composables/useDialogFocus.ts",
+          "line": 60,
+          "method": "addEventListener",
+          "receiver": "cardRef.value"
+        },
+        {
+          "file": "src/directives/tooltip.ts",
+          "line": 73,
+          "method": "addEventListener",
+          "receiver": "el"
+        }
+      ],
+      "off": [
+        {
+          "file": "src/components/common/Tooltip.vue",
+          "line": 30,
+          "method": "removeEventListener",
+          "receiver": "window"
+        },
+        {
+          "file": "src/components/game/DongFuCommandWheel.vue",
+          "line": 225,
+          "method": "removeEventListener",
+          "receiver": "window"
+        },
+        {
+          "file": "src/components/game/PresentationTransitionOverlay.vue",
+          "line": 173,
+          "method": "removeEventListener",
+          "receiver": "window"
+        },
+        {
+          "file": "src/components/panels/bag-sections/BagPaginationControls.vue",
+          "line": 114,
+          "method": "removeEventListener",
+          "receiver": "document"
+        },
+        {
+          "file": "src/composables/useDialogFocus.ts",
+          "line": 62,
+          "method": "removeEventListener",
+          "receiver": "cardRef.value"
+        },
+        {
+          "file": "src/composables/useDialogFocus.ts",
+          "line": 71,
+          "method": "removeEventListener",
+          "receiver": "cardRef.value"
+        },
+        {
+          "file": "src/directives/tooltip.ts",
+          "line": 96,
+          "method": "removeEventListener",
+          "receiver": "el"
+        }
+      ]
+    },
+    "keyup": {
+      "emit": [],
+      "on": [
+        {
+          "file": "src/components/common/Tooltip.vue",
+          "line": 25,
+          "method": "addEventListener",
+          "receiver": "window"
+        }
+      ],
+      "off": [
+        {
+          "file": "src/components/common/Tooltip.vue",
+          "line": 31,
+          "method": "removeEventListener",
+          "receiver": "window"
+        }
+      ]
+    },
+    "blur": {
+      "emit": [],
+      "on": [
+        {
+          "file": "src/components/common/Tooltip.vue",
+          "line": 26,
+          "method": "addEventListener",
+          "receiver": "window"
+        }
+      ],
+      "off": [
+        {
+          "file": "src/components/common/Tooltip.vue",
+          "line": 32,
+          "method": "removeEventListener",
+          "receiver": "window"
+        }
+      ]
+    },
+    "combat_exit_request": {
+      "emit": [
+        {
+          "file": "src/game/scenes/CombatScene.ts",
+          "line": 1713,
+          "method": "emit",
+          "receiver": "this.eventBus"
+        }
+      ],
+      "on": [
+        {
+          "file": "src/components/game/combat/CombatExitConfirmModal.vue",
+          "line": 52,
+          "method": "on",
+          "receiver": "gameManager.eventBus"
+        }
+      ],
+      "off": [
+        {
+          "file": "src/components/game/combat/CombatExitConfirmModal.vue",
+          "line": 56,
+          "method": "off",
+          "receiver": "gameManager.eventBus"
+        }
+      ]
+    },
+    "change": {
+      "emit": [],
+      "on": [
+        {
+          "file": "src/components/game/DongFuScene.vue",
+          "line": 154,
+          "method": "addEventListener",
+          "receiver": "reducedMotionQuery"
+        },
+        {
+          "file": "src/components/game/HomeBuildingIcons.vue",
+          "line": 99,
+          "method": "addEventListener",
+          "receiver": "reducedMotionQuery"
+        }
+      ],
+      "off": [
+        {
+          "file": "src/components/game/DongFuScene.vue",
+          "line": 160,
+          "method": "removeEventListener",
+          "receiver": "reducedMotionQuery"
+        },
+        {
+          "file": "src/components/game/HomeBuildingIcons.vue",
+          "line": 103,
+          "method": "removeEventListener",
+          "receiver": "reducedMotionQuery"
+        }
+      ]
+    },
+    "pointermove": {
+      "emit": [],
+      "on": [
+        {
+          "file": "src/components/game/DongFuScene.vue",
+          "line": 155,
+          "method": "addEventListener",
+          "receiver": "window"
+        }
+      ],
+      "off": [
+        {
+          "file": "src/components/game/DongFuScene.vue",
+          "line": 161,
+          "method": "removeEventListener",
+          "receiver": "window"
+        }
+      ]
+    },
+    "positions": {
+      "emit": [],
+      "on": [
+        {
+          "file": "src/components/game/PhaserCanvas.vue",
+          "line": 83,
+          "method": "on",
+          "receiver": "gameManager.eventBus"
+        }
+      ],
+      "off": [
+        {
+          "file": "src/components/game/PhaserCanvas.vue",
+          "line": 121,
+          "method": "off",
+          "receiver": "gameManager.eventBus"
+        }
+      ]
+    },
+    "battle_end": {
+      "emit": [
+        {
+          "file": "src/core/game/GameManagerBattleRewardOps.ts",
+          "line": 113,
+          "method": "emit",
+          "receiver": "this.deps.eventBus"
+        },
+        {
+          "file": "src/core/game/GameManagerTurnBattleOps.ts",
+          "line": 1217,
+          "method": "emit",
+          "receiver": "this.deps.eventBus"
+        }
+      ],
+      "on": [
+        {
+          "file": "src/components/game/PhaserCanvas.vue",
+          "line": 84,
+          "method": "on",
+          "receiver": "gameManager.eventBus"
+        },
+        {
+          "file": "src/presentation/audio/combatAudioBinding.ts",
+          "line": 51,
+          "method": "on",
+          "receiver": "eventBus"
+        }
+      ],
+      "off": [
+        {
+          "file": "src/components/game/PhaserCanvas.vue",
+          "line": 122,
+          "method": "off",
+          "receiver": "gameManager.eventBus"
+        }
+      ]
+    },
+    "combat_scene_exit": {
+      "emit": [
+        {
+          "file": "src/composables/useBattleActions.ts",
+          "line": 114,
+          "method": "emit",
+          "receiver": "gameManager.eventBus"
+        }
+      ],
+      "on": [
+        {
+          "file": "src/components/game/PhaserCanvas.vue",
+          "line": 85,
+          "method": "on",
+          "receiver": "gameManager.eventBus"
+        }
+      ],
+      "off": [
+        {
+          "file": "src/components/game/PhaserCanvas.vue",
+          "line": 123,
+          "method": "off",
+          "receiver": "gameManager.eventBus"
+        }
+      ]
+    },
+    "player_visual_profile_changed": {
+      "emit": [
+        {
+          "file": "src/components/game/PhaserCanvas.vue",
+          "line": 100,
+          "method": "emit",
+          "receiver": "gameManager.eventBus"
+        }
+      ],
+      "on": [
+        {
+          "file": "src/game/scenes/MainScene.ts",
+          "line": 288,
+          "method": "on",
+          "receiver": "eventBus"
+        }
+      ],
+      "off": [
+        {
+          "file": "src/game/scenes/MainScene.ts",
+          "line": 297,
+          "method": "off",
+          "receiver": "this.eventBus"
+        }
+      ]
+    },
+    "abort": {
+      "emit": [],
+      "on": [
+        {
+          "file": "src/components/game/PresentationTransitionOverlay.vue",
+          "line": 124,
+          "method": "addEventListener",
+          "receiver": "signal"
+        },
+        {
+          "file": "src/game/scenes/AssetLoaderScene.ts",
+          "line": 142,
+          "method": "addEventListener",
+          "receiver": "signal"
+        },
+        {
+          "file": "src/presentation/assets/AssetBundleManager.ts",
+          "line": 59,
+          "method": "addEventListener",
+          "receiver": "signal"
+        },
+        {
+          "file": "src/presentation/assets/AssetBundleManager.ts",
+          "line": 189,
+          "method": "addEventListener",
+          "receiver": "signal"
+        },
+        {
+          "file": "src/presentation/assets/AssetBundleManager.ts",
+          "line": 297,
+          "method": "addEventListener",
+          "receiver": "signal"
+        },
+        {
+          "file": "src/presentation/GamePresentationCoordinator.ts",
+          "line": 596,
+          "method": "addEventListener",
+          "receiver": "signal"
+        },
+        {
+          "file": "src/presentation/PhaserSceneAdapter.ts",
+          "line": 219,
+          "method": "addEventListener",
+          "receiver": "signal"
+        },
+        {
+          "file": "src/presentation/PhaserSceneAdapter.ts",
+          "line": 260,
+          "method": "addEventListener",
+          "receiver": "signal"
+        },
+        {
+          "file": "src/presentation/VueRouteAdapter.ts",
+          "line": 90,
+          "method": "addEventListener",
+          "receiver": "signal"
+        }
+      ],
+      "off": [
+        {
+          "file": "src/components/game/PresentationTransitionOverlay.vue",
+          "line": 94,
+          "method": "removeEventListener",
+          "receiver": "signal"
+        },
+        {
+          "file": "src/game/scenes/AssetLoaderScene.ts",
+          "line": 137,
+          "method": "removeEventListener",
+          "receiver": "signal"
+        },
+        {
+          "file": "src/presentation/assets/AssetBundleManager.ts",
+          "line": 43,
+          "method": "removeEventListener",
+          "receiver": "signal"
+        },
+        {
+          "file": "src/presentation/assets/AssetBundleManager.ts",
+          "line": 55,
+          "method": "removeEventListener",
+          "receiver": "signal"
+        },
+        {
+          "file": "src/presentation/assets/AssetBundleManager.ts",
+          "line": 185,
+          "method": "removeEventListener",
+          "receiver": "signal"
+        },
+        {
+          "file": "src/presentation/assets/AssetBundleManager.ts",
+          "line": 304,
+          "method": "removeEventListener",
+          "receiver": "signal"
+        },
+        {
+          "file": "src/presentation/GamePresentationCoordinator.ts",
+          "line": 606,
+          "method": "removeEventListener",
+          "receiver": "signal"
+        },
+        {
+          "file": "src/presentation/PhaserSceneAdapter.ts",
+          "line": 207,
+          "method": "removeEventListener",
+          "receiver": "signal"
+        },
+        {
+          "file": "src/presentation/PhaserSceneAdapter.ts",
+          "line": 256,
+          "method": "removeEventListener",
+          "receiver": "signal"
+        },
+        {
+          "file": "src/presentation/VueRouteAdapter.ts",
+          "line": 96,
+          "method": "removeEventListener",
+          "receiver": "signal"
+        },
+        {
+          "file": "src/presentation/VueRouteAdapter.ts",
+          "line": 100,
+          "method": "removeEventListener",
+          "receiver": "signal"
+        }
+      ]
+    },
+    "transitionend": {
+      "emit": [],
+      "on": [
+        {
+          "file": "src/components/game/PresentationTransitionOverlay.vue",
+          "line": 125,
+          "method": "addEventListener",
+          "receiver": "leftPanelRef.value"
+        },
+        {
+          "file": "src/components/game/PresentationTransitionOverlay.vue",
+          "line": 126,
+          "method": "addEventListener",
+          "receiver": "rightPanelRef.value"
+        }
+      ],
+      "off": [
+        {
+          "file": "src/components/game/PresentationTransitionOverlay.vue",
+          "line": 95,
+          "method": "removeEventListener",
+          "receiver": "leftPanelRef.value"
+        },
+        {
+          "file": "src/components/game/PresentationTransitionOverlay.vue",
+          "line": 96,
+          "method": "removeEventListener",
+          "receiver": "rightPanelRef.value"
+        }
+      ]
+    },
+    "reward_particle": {
+      "emit": [
+        {
+          "file": "src/core/game/BattleLootSystem.ts",
+          "line": 621,
+          "method": "emit",
+          "receiver": "this.deps.eventBus"
+        }
+      ],
+      "on": [
+        {
+          "file": "src/composables/useAppLifecycle.ts",
+          "line": 128,
+          "method": "on",
+          "receiver": "gameManager.eventBus"
+        }
+      ],
+      "off": [
+        {
+          "file": "src/composables/useAppLifecycle.ts",
+          "line": 321,
+          "method": "off",
+          "receiver": "gameManager.eventBus"
+        }
+      ]
+    },
+    "visibilitychange": {
+      "emit": [],
+      "on": [
+        {
+          "file": "src/composables/useCombatPause.ts",
+          "line": 56,
+          "method": "addEventListener",
+          "receiver": "document"
+        }
+      ],
+      "off": [
+        {
+          "file": "src/composables/useCombatPause.ts",
+          "line": 61,
+          "method": "removeEventListener",
+          "receiver": "document"
+        }
+      ]
+    },
+    "attack": {
+      "emit": [
+        {
+          "file": "src/core/battle/ActionImpactSystem.ts",
+          "line": 143,
+          "method": "emit",
+          "receiver": "this.deps.eventBus"
+        },
+        {
+          "file": "src/core/battle/ActionImpactSystem.ts",
+          "line": 154,
+          "method": "emit",
+          "receiver": "this.deps.eventBus"
+        },
+        {
+          "file": "src/core/battle/turn/TurnBattleSystem.ts",
+          "line": 969,
+          "method": "emit",
+          "receiver": "this.combat.eventBus"
+        }
+      ],
+      "on": [],
+      "off": []
+    },
+    "action_impact": {
+      "emit": [
+        {
+          "file": "src/core/battle/ActionImpactSystem.ts",
+          "line": 216,
+          "method": "emit",
+          "receiver": "this.deps.eventBus"
+        },
+        {
+          "file": "src/core/battle/ActionImpactSystem.ts",
+          "line": 278,
+          "method": "emit",
+          "receiver": "this.deps.eventBus"
+        },
+        {
+          "file": "src/core/battle/turn/TurnActionPresentationEvents.ts",
+          "line": 67,
+          "method": "emit",
+          "receiver": "eventBus"
+        },
+        {
+          "file": "src/core/skill/SkillActionRegistry.ts",
+          "line": 266,
+          "method": "emit",
+          "receiver": "ctx.eventBus"
+        }
+      ],
+      "on": [],
+      "off": []
+    },
+    "cast": {
+      "emit": [
+        {
+          "file": "src/core/battle/SkillEffectResolver.ts",
+          "line": 276,
+          "method": "emit",
+          "receiver": "this.deps.eventBus"
+        }
+      ],
+      "on": [],
+      "off": []
+    },
+    "turn_ready": {
+      "emit": [
+        {
+          "file": "src/core/battle/turn/TurnActionPresentationEvents.ts",
+          "line": 26,
+          "method": "emit",
+          "receiver": "eventBus"
+        }
+      ],
+      "on": [],
+      "off": []
+    },
+    "turn_cast_start": {
+      "emit": [
+        {
+          "file": "src/core/battle/turn/TurnActionPresentationEvents.ts",
+          "line": 35,
+          "method": "emit",
+          "receiver": "eventBus"
+        }
+      ],
+      "on": [],
+      "off": []
+    },
+    "turn_standby_complete": {
+      "emit": [
+        {
+          "file": "src/core/battle/turn/TurnActionPresentationEvents.ts",
+          "line": 84,
+          "method": "emit",
+          "receiver": "eventBus"
+        }
+      ],
+      "on": [],
+      "off": []
+    },
+    "turn_battle_entity_snapshot": {
+      "emit": [
+        {
+          "file": "src/core/battle/turn/TurnActionPresentationEvents.ts",
+          "line": 186,
+          "method": "emit",
+          "receiver": "eventBus"
+        }
+      ],
+      "on": [],
+      "off": []
+    },
+    "reaction": {
+      "emit": [
+        {
+          "file": "src/core/battle/turn/TurnReactionManager.ts",
+          "line": 137,
+          "method": "emit",
+          "receiver": "this.eventBus"
+        },
+        {
+          "file": "src/core/element/ReactionManager.ts",
+          "line": 233,
+          "method": "emit",
+          "receiver": "this.eventBus"
+        }
+      ],
+      "on": [],
+      "off": []
+    },
+    "status_vfx_attached": {
+      "emit": [
+        {
+          "file": "src/core/battle/turn/TurnStatusPresentationEvents.ts",
+          "line": 81,
+          "method": "emit",
+          "receiver": "eventBus"
+        }
+      ],
+      "on": [],
+      "off": []
+    },
+    "status_vfx_updated": {
+      "emit": [
+        {
+          "file": "src/core/battle/turn/TurnStatusPresentationEvents.ts",
+          "line": 98,
+          "method": "emit",
+          "receiver": "eventBus"
+        }
+      ],
+      "on": [],
+      "off": []
+    },
+    "status_vfx_removed": {
+      "emit": [
+        {
+          "file": "src/core/battle/turn/TurnStatusPresentationEvents.ts",
+          "line": 117,
+          "method": "emit",
+          "receiver": "eventBus"
+        }
+      ],
+      "on": [],
+      "off": []
+    },
+    "dodge": {
+      "emit": [
+        {
+          "file": "src/core/combat/CombatSystem.ts",
+          "line": 266,
+          "method": "emit",
+          "receiver": "this.eventBus"
+        }
+      ],
+      "on": [],
+      "off": []
+    },
+    "critical": {
+      "emit": [
+        {
+          "file": "src/core/combat/CombatSystem.ts",
+          "line": 312,
+          "method": "emit",
+          "receiver": "this.eventBus"
+        }
+      ],
+      "on": [],
+      "off": []
+    },
+    "block": {
+      "emit": [
+        {
+          "file": "src/core/combat/CombatSystem.ts",
+          "line": 322,
+          "method": "emit",
+          "receiver": "this.eventBus"
+        }
+      ],
+      "on": [],
+      "off": []
+    },
+    "hit": {
+      "emit": [
+        {
+          "file": "src/core/combat/CombatSystem.ts",
+          "line": 331,
+          "method": "emit",
+          "receiver": "this.eventBus"
+        }
+      ],
+      "on": [],
+      "off": []
+    },
+    "damage": {
+      "emit": [
+        {
+          "file": "src/core/combat/CombatSystem.ts",
+          "line": 375,
+          "method": "emit",
+          "receiver": "this.eventBus"
+        },
+        {
+          "file": "src/core/combat/CombatSystem.ts",
+          "line": 460,
+          "method": "emit",
+          "receiver": "this.eventBus"
+        }
+      ],
+      "on": [
+        {
+          "file": "src/game/scenes/TribulationScene.ts",
+          "line": 98,
+          "method": "on",
+          "receiver": "bus"
+        }
+      ],
+      "off": [
+        {
+          "file": "src/game/scenes/TribulationScene.ts",
+          "line": 138,
+          "method": "off",
+          "receiver": "this.eventBus"
+        }
+      ]
+    },
+    "talent_survive_lethal": {
+      "emit": [
+        {
+          "file": "src/core/combat/CombatSystem.ts",
+          "line": 547,
+          "method": "emit",
+          "receiver": "this.eventBus"
+        }
+      ],
+      "on": [],
+      "off": []
+    },
+    "death": {
+      "emit": [
+        {
+          "file": "src/core/combat/CombatSystem.ts",
+          "line": 558,
+          "method": "emit",
+          "receiver": "this.eventBus"
+        }
+      ],
+      "on": [],
+      "off": []
+    },
+    "kill": {
+      "emit": [
+        {
+          "file": "src/core/combat/CombatSystem.ts",
+          "line": 566,
+          "method": "emit",
+          "receiver": "this.eventBus"
+        }
+      ],
+      "on": [],
+      "off": []
+    },
+    "heal": {
+      "emit": [
+        {
+          "file": "src/core/combat/EntityVitalsSystem.ts",
+          "line": 99,
+          "method": "emit",
+          "receiver": "this.eventBus"
+        }
+      ],
+      "on": [],
+      "off": []
+    },
+    "entity_vitals_changed": {
+      "emit": [
+        {
+          "file": "src/core/combat/EntityVitalsSystem.ts",
+          "line": 127,
+          "method": "emit",
+          "receiver": "this.eventBus"
+        }
+      ],
+      "on": [
+        {
+          "file": "src/game/scenes/TribulationScene.ts",
+          "line": 99,
+          "method": "on",
+          "receiver": "bus"
+        }
+      ],
+      "off": [
+        {
+          "file": "src/game/scenes/TribulationScene.ts",
+          "line": 139,
+          "method": "off",
+          "receiver": "this.eventBus"
+        }
+      ]
+    },
+    "presentation_session_started": {
+      "emit": [
+        {
+          "file": "src/core/game/GameManagerTurnBattleOps.ts",
+          "line": 778,
+          "method": "emit",
+          "receiver": "this.deps.eventBus"
+        },
+        {
+          "file": "src/core/game/GameManagerTurnBattleOps.ts",
+          "line": 1148,
+          "method": "emit",
+          "receiver": "this.deps.eventBus"
+        },
+        {
+          "file": "src/core/tribulation/TribulationDirector.ts",
+          "line": 214,
+          "method": "emit",
+          "receiver": "this.deps.eventBus"
+        }
+      ],
+      "on": [
+        {
+          "file": "src/presentation/audio/combatAudioBinding.ts",
+          "line": 45,
+          "method": "on",
+          "receiver": "eventBus"
+        },
+        {
+          "file": "src/presentation/createGamePresentation.ts",
+          "line": 84,
+          "method": "on",
+          "receiver": "eventBus"
+        }
+      ],
+      "off": [
+        {
+          "file": "src/presentation/createGamePresentation.ts",
+          "line": 178,
+          "method": "off",
+          "receiver": "eventBus"
+        }
+      ]
+    },
+    "tribulation_started": {
+      "emit": [
+        {
+          "file": "src/core/tribulation/TribulationDirector.ts",
+          "line": 207,
+          "method": "emit",
+          "receiver": "this.deps.eventBus"
+        }
+      ],
+      "on": [],
+      "off": []
+    },
+    "mind_question_result": {
+      "emit": [
+        {
+          "file": "src/core/tribulation/TribulationDirector.ts",
+          "line": 349,
+          "method": "emit",
+          "receiver": "this.deps.eventBus"
+        },
+        {
+          "file": "src/core/tribulation/TribulationDirector.ts",
+          "line": 352,
+          "method": "emit",
+          "receiver": "this.deps.eventBus"
+        }
+      ],
+      "on": [],
+      "off": []
+    },
+    "tribulation_lightning": {
+      "emit": [
+        {
+          "file": "src/core/tribulation/TribulationDirector.ts",
+          "line": 421,
+          "method": "emit",
+          "receiver": "this.deps.eventBus"
+        }
+      ],
+      "on": [
+        {
+          "file": "src/game/scenes/TribulationScene.ts",
+          "line": 97,
+          "method": "on",
+          "receiver": "bus"
+        }
+      ],
+      "off": [
+        {
+          "file": "src/game/scenes/TribulationScene.ts",
+          "line": 137,
+          "method": "off",
+          "receiver": "this.eventBus"
+        }
+      ]
+    },
+    "tribulation_outcome": {
+      "emit": [
+        {
+          "file": "src/core/tribulation/TribulationDirector.ts",
+          "line": 457,
+          "method": "emit",
+          "receiver": "this.deps.eventBus"
+        },
+        {
+          "file": "src/core/tribulation/TribulationDirector.ts",
+          "line": 471,
+          "method": "emit",
+          "receiver": "this.deps.eventBus"
+        }
+      ],
+      "on": [],
+      "off": []
+    },
+    "tribulation_chapter_changed": {
+      "emit": [
+        {
+          "file": "src/core/tribulation/TribulationDirector.ts",
+          "line": 481,
+          "method": "emit",
+          "receiver": "this.deps.eventBus"
+        }
+      ],
+      "on": [],
+      "off": []
+    },
+    "pointerenter": {
+      "emit": [],
+      "on": [
+        {
+          "file": "src/directives/tooltip.ts",
+          "line": 69,
+          "method": "addEventListener",
+          "receiver": "el"
+        }
+      ],
+      "off": [
+        {
+          "file": "src/directives/tooltip.ts",
+          "line": 92,
+          "method": "removeEventListener",
+          "receiver": "el"
+        }
+      ]
+    },
+    "pointerleave": {
+      "emit": [],
+      "on": [
+        {
+          "file": "src/directives/tooltip.ts",
+          "line": 70,
+          "method": "addEventListener",
+          "receiver": "el"
+        }
+      ],
+      "off": [
+        {
+          "file": "src/directives/tooltip.ts",
+          "line": 93,
+          "method": "removeEventListener",
+          "receiver": "el"
+        }
+      ]
+    },
+    "focusin": {
+      "emit": [],
+      "on": [
+        {
+          "file": "src/directives/tooltip.ts",
+          "line": 71,
+          "method": "addEventListener",
+          "receiver": "el"
+        }
+      ],
+      "off": [
+        {
+          "file": "src/directives/tooltip.ts",
+          "line": 94,
+          "method": "removeEventListener",
+          "receiver": "el"
+        }
+      ]
+    },
+    "focusout": {
+      "emit": [],
+      "on": [
+        {
+          "file": "src/directives/tooltip.ts",
+          "line": 72,
+          "method": "addEventListener",
+          "receiver": "el"
+        }
+      ],
+      "off": [
+        {
+          "file": "src/directives/tooltip.ts",
+          "line": 95,
+          "method": "removeEventListener",
+          "receiver": "el"
+        }
+      ]
+    },
+    "pointerover": {
+      "emit": [],
+      "on": [
+        {
+          "file": "src/game/scenes/combat/combat-vfx-spawner.ts",
+          "line": 243,
+          "method": "on",
+          "receiver": "icon"
+        }
+      ],
+      "off": []
+    },
+    "pointerout": {
+      "emit": [],
+      "on": [
+        {
+          "file": "src/game/scenes/combat/combat-vfx-spawner.ts",
+          "line": 244,
+          "method": "on",
+          "receiver": "icon"
+        }
+      ],
+      "off": []
+    },
+    "shutdown": {
+      "emit": [],
+      "on": [
+        {
+          "file": "src/game/scenes/CombatScene.ts",
+          "line": 824,
+          "method": "once",
+          "receiver": "this.events"
+        },
+        {
+          "file": "src/game/scenes/MainScene.ts",
+          "line": 189,
+          "method": "once",
+          "receiver": "this.events"
+        },
+        {
+          "file": "src/game/scenes/TranPhapCombatPreviewScene.ts",
+          "line": 152,
+          "method": "once",
+          "receiver": "this.events"
+        },
+        {
+          "file": "src/game/scenes/TribulationScene.ts",
+          "line": 110,
+          "method": "once",
+          "receiver": "this.events"
+        }
+      ],
+      "off": []
+    },
+    "essence_stream_arrival": {
+      "emit": [
+        {
+          "file": "src/game/scenes/CombatScene.ts",
+          "line": 1519,
+          "method": "emit",
+          "receiver": "this.eventBus"
+        },
+        {
+          "file": "src/game/scenes/CombatScene.ts",
+          "line": 1532,
+          "method": "emit",
+          "receiver": "this.eventBus"
+        }
+      ],
+      "on": [],
+      "off": []
+    },
+    "resume": {
+      "emit": [],
+      "on": [
+        {
+          "file": "src/main-process/combatClockHost.ts",
+          "line": 106,
+          "method": "on",
+          "receiver": "powerMonitor"
+        }
+      ],
+      "off": []
+    },
+    "ready": {
+      "emit": [],
+      "on": [
+        {
+          "file": "src/presentation/host/useDynamicRegion.ts",
+          "line": 231,
+          "method": "once",
+          "receiver": "created.events"
+        }
+      ],
+      "off": []
+    },
+    "create": {
+      "emit": [],
+      "on": [
+        {
+          "file": "src/presentation/host/useDynamicRegion.ts",
+          "line": 286,
+          "method": "once",
+          "receiver": "scene.events"
+        }
+      ],
+      "off": []
+    },
+    "combat-clock:start": {
+      "emit": [],
+      "on": [
+        {
+          "file": "electron/main.ts",
+          "line": 42,
+          "method": "on",
+          "receiver": "ipcMain"
+        }
+      ],
+      "off": []
+    },
+    "combat-clock:stop": {
+      "emit": [],
+      "on": [
+        {
+          "file": "electron/main.ts",
+          "line": 48,
+          "method": "on",
+          "receiver": "ipcMain"
+        }
+      ],
+      "off": []
+    },
+    "second-instance": {
+      "emit": [],
+      "on": [
+        {
+          "file": "electron/main.ts",
+          "line": 52,
+          "method": "on",
+          "receiver": "app"
+        }
+      ],
+      "off": []
+    },
+    "window-all-closed": {
+      "emit": [],
+      "on": [
+        {
+          "file": "electron/main.ts",
+          "line": 68,
+          "method": "on",
+          "receiver": "app"
+        }
+      ],
+      "off": []
+    },
+    "suspend": {
+      "emit": [],
+      "on": [
+        {
+          "file": "electron/main.ts",
+          "line": 72,
+          "method": "on",
+          "receiver": "powerMonitor"
+        }
+      ],
+      "off": []
+    },
+    "close": {
+      "emit": [],
+      "on": [
+        {
+          "file": "electron/main.ts",
+          "line": 110,
+          "method": "on",
+          "receiver": "win"
+        }
+      ],
+      "off": []
+    },
+    "closed": {
+      "emit": [],
+      "on": [
+        {
+          "file": "electron/main.ts",
+          "line": 112,
+          "method": "on",
+          "receiver": "win"
+        }
+      ],
+      "off": []
+    },
+    "app:flush-complete": {
+      "emit": [],
+      "on": [
+        {
+          "file": "electron/main.ts",
+          "line": 153,
+          "method": "once",
+          "receiver": "ipcMain"
+        }
+      ],
+      "off": []
+    },
+    "system:suspend": {
+      "emit": [],
+      "on": [
+        {
+          "file": "electron/preload.ts",
+          "line": 17,
+          "method": "on",
+          "receiver": "ipcRenderer"
+        }
+      ],
+      "off": []
+    },
+    "system:resume": {
+      "emit": [],
+      "on": [
+        {
+          "file": "electron/preload.ts",
+          "line": 21,
+          "method": "on",
+          "receiver": "ipcRenderer"
+        }
+      ],
+      "off": []
+    },
+    "app:before-quit-flush": {
+      "emit": [],
+      "on": [
+        {
+          "file": "electron/preload.ts",
+          "line": 25,
+          "method": "on",
+          "receiver": "ipcRenderer"
+        }
+      ],
+      "off": []
+    },
+    "combat-clock:tick": {
+      "emit": [],
+      "on": [
+        {
+          "file": "electron/preload.ts",
+          "line": 35,
+          "method": "on",
+          "receiver": "ipcRenderer"
+        }
+      ],
+      "off": []
+    }
+  },
+  "dynamicEventCalls": [
+    {
+      "file": "src/App.vue",
+      "line": 325,
+      "method": "addEventListener",
+      "receiver": "document",
+      "arg": "type"
+    },
+    {
+      "file": "src/App.vue",
+      "line": 327,
+      "method": "addEventListener",
+      "receiver": "window",
+      "arg": "type"
+    },
+    {
+      "file": "src/App.vue",
+      "line": 332,
+      "method": "removeEventListener",
+      "receiver": "document",
+      "arg": "type"
+    },
+    {
+      "file": "src/App.vue",
+      "line": 334,
+      "method": "removeEventListener",
+      "receiver": "window",
+      "arg": "type"
+    },
+    {
+      "file": "src/App.vue",
+      "line": 601,
+      "method": "addEventListener",
+      "receiver": "window",
+      "arg": "SAVE_RESET_REQUEST_EVENT"
+    },
+    {
+      "file": "src/App.vue",
+      "line": 625,
+      "method": "removeEventListener",
+      "receiver": "window",
+      "arg": "SAVE_RESET_REQUEST_EVENT"
+    },
+    {
+      "file": "src/composables/useAppLifecycle.ts",
+      "line": 127,
+      "method": "on",
+      "receiver": "gameManager.eventBus",
+      "arg": "ESSENCE_STREAM_ARRIVAL_EVENT"
+    },
+    {
+      "file": "src/composables/useAppLifecycle.ts",
+      "line": 320,
+      "method": "off",
+      "receiver": "gameManager.eventBus",
+      "arg": "ESSENCE_STREAM_ARRIVAL_EVENT"
+    },
+    {
+      "file": "src/core/combat/EntityVitalsSystem.ts",
+      "line": 42,
+      "method": "emit",
+      "receiver": "this",
+      "arg": "target"
+    },
+    {
+      "file": "src/core/combat/EntityVitalsSystem.ts",
+      "line": 56,
+      "method": "emit",
+      "receiver": "this",
+      "arg": "target"
+    },
+    {
+      "file": "src/core/combat/EntityVitalsSystem.ts",
+      "line": 66,
+      "method": "emit",
+      "receiver": "this",
+      "arg": "target"
+    },
+    {
+      "file": "src/core/combat/EntityVitalsSystem.ts",
+      "line": 81,
+      "method": "emit",
+      "receiver": "this",
+      "arg": "target"
+    },
+    {
+      "file": "src/core/combat/EntityVitalsSystem.ts",
+      "line": 93,
+      "method": "emit",
+      "receiver": "this",
+      "arg": "target"
+    },
+    {
+      "file": "src/core/combat/EntityVitalsSystem.ts",
+      "line": 115,
+      "method": "emit",
+      "receiver": "this",
+      "arg": "target"
+    },
+    {
+      "file": "src/core/skill/PassiveSystem.ts",
+      "line": 72,
+      "method": "on",
+      "receiver": "eventBus",
+      "arg": "eventName"
+    },
+    {
+      "file": "src/game/scenes/AssetLoaderScene.ts",
+      "line": 135,
+      "method": "off",
+      "receiver": "this.load",
+      "arg": "Phaser.Loader.Events.FILE_LOAD_ERROR"
+    },
+    {
+      "file": "src/game/scenes/AssetLoaderScene.ts",
+      "line": 136,
+      "method": "off",
+      "receiver": "this.load",
+      "arg": "Phaser.Loader.Events.COMPLETE"
+    },
+    {
+      "file": "src/game/scenes/AssetLoaderScene.ts",
+      "line": 140,
+      "method": "on",
+      "receiver": "this.load",
+      "arg": "Phaser.Loader.Events.FILE_LOAD_ERROR"
+    },
+    {
+      "file": "src/game/scenes/AssetLoaderScene.ts",
+      "line": 141,
+      "method": "once",
+      "receiver": "this.load",
+      "arg": "Phaser.Loader.Events.COMPLETE"
+    },
+    {
+      "file": "src/game/scenes/combat/combat-animation-playback.ts",
+      "line": 139,
+      "method": "once",
+      "receiver": "gameSprite",
+      "arg": "Phaser.Animations.Events.ANIMATION_COMPLETE"
+    },
+    {
+      "file": "src/game/scenes/combat/combat-animation-playback.ts",
+      "line": 243,
+      "method": "once",
+      "receiver": "gameSprite",
+      "arg": "Phaser.Animations.Events.ANIMATION_COMPLETE"
+    },
+    {
+      "file": "src/game/scenes/CombatScene.ts",
+      "line": 1472,
+      "method": "on",
+      "receiver": "eventBus",
+      "arg": "eventName"
+    },
+    {
+      "file": "src/game/scenes/CombatScene.ts",
+      "line": 1489,
+      "method": "off",
+      "receiver": "this.eventBus",
+      "arg": "eventName"
+    },
+    {
+      "file": "src/game/scenes/CombatScene.ts",
+      "line": 2089,
+      "method": "once",
+      "receiver": "this.load",
+      "arg": "Phaser.Loader.Events.COMPLETE"
+    },
+    {
+      "file": "src/game/scenes/TranPhapCombatPreviewScene.ts",
+      "line": 151,
+      "method": "on",
+      "receiver": "this.game.events",
+      "arg": "FORMATION_ASSIGNMENTS_EVENT"
+    },
+    {
+      "file": "src/game/scenes/TranPhapCombatPreviewScene.ts",
+      "line": 153,
+      "method": "off",
+      "receiver": "this.game.events",
+      "arg": "FORMATION_ASSIGNMENTS_EVENT"
+    },
+    {
+      "file": "src/presentation/audio/combatAudioBinding.ts",
+      "line": 38,
+      "method": "on",
+      "receiver": "eventBus",
+      "arg": "eventType"
+    },
+    {
+      "file": "src/presentation/audio/combatAudioBinding.ts",
+      "line": 56,
+      "method": "off",
+      "receiver": "eventBus",
+      "arg": "eventType"
+    },
+    {
+      "file": "src/presentation/host/useDynamicRegion.ts",
+      "line": 263,
+      "method": "emit",
+      "receiver": "created.events",
+      "arg": "entry.event"
+    },
+    {
+      "file": "src/presentation/host/useDynamicRegion.ts",
+      "line": 350,
+      "method": "emit",
+      "receiver": "game.events",
+      "arg": "event"
+    }
+  ],
+  "typeEscapes": [
+    {
+      "file": "src/components/common/TutorialOverlay.vue",
+      "line": 26,
+      "kind": "NonNullExpression",
+      "text": "TUTORIAL_STEPS[currentIndex.value]!"
+    },
+    {
+      "file": "src/components/game/PhaserCanvas.vue",
+      "line": 179,
+      "kind": "AsExpression",
+      "text": "window as unknown as { __tutienPhaserGame?: Phaser.Game }"
+    },
+    {
+      "file": "src/components/game/PhaserCanvas.vue",
+      "line": 200,
+      "kind": "AsExpression",
+      "text": "window as unknown as { __tutienPhaserGame?: Phaser.Game }"
+    },
+    {
+      "file": "src/components/panels/AlchemyView.vue",
+      "line": 106,
+      "kind": "NonNullExpression",
+      "text": "selectedRecipe.value!"
+    },
+    {
+      "file": "src/components/panels/ArtifactPanel.vue",
+      "line": 111,
+      "kind": "NonNullExpression",
+      "text": "definition.value!"
+    },
+    {
+      "file": "src/components/panels/bag-sections/MaterialBagSection.vue",
+      "line": 240,
+      "kind": "NonNullExpression",
+      "text": "variants[0]!"
+    },
+    {
+      "file": "src/components/panels/equipment-hall/EnhanceTab.vue",
+      "line": 123,
+      "kind": "NonNullExpression",
+      "text": "EQUIPMENT_SLOTS[0]!"
+    },
+    {
+      "file": "src/components/panels/equipment-hall/WashTab.vue",
+      "line": 81,
+      "kind": "NonNullExpression",
+      "text": "ITEM_QUALITY_ORDER[0]!"
+    },
+    {
+      "file": "src/components/panels/loadout-sections/NodeTreePanel.vue",
+      "line": 327,
+      "kind": "NonNullExpression",
+      "text": "entry.parentId!"
+    },
+    {
+      "file": "src/components/panels/TranPhapPanel.vue",
+      "line": 103,
+      "kind": "NonNullExpression",
+      "text": "style.clipPath!"
+    },
+    {
+      "file": "src/composables/useBagFilter.ts",
+      "line": 214,
+      "kind": "NonNullExpression",
+      "text": "family.variants[0]!"
+    },
+    {
+      "file": "src/composables/useBagFilter.ts",
+      "line": 269,
+      "kind": "NonNullExpression",
+      "text": "meta!"
+    },
+    {
+      "file": "src/composables/useDialogFocus.ts",
+      "line": 48,
+      "kind": "NonNullExpression",
+      "text": "list[0]!"
+    },
+    {
+      "file": "src/composables/useDialogFocus.ts",
+      "line": 51,
+      "kind": "NonNullExpression",
+      "text": "list[0]!"
+    },
+    {
+      "file": "src/composables/useDialogFocus.ts",
+      "line": 52,
+      "kind": "NonNullExpression",
+      "text": "list[list.length - 1]!"
+    },
+    {
+      "file": "src/composables/useDialogFocus.ts",
+      "line": 55,
+      "kind": "NonNullExpression",
+      "text": "list[Math.max(0, list.indexOf(active as HTMLElement) - 1)]!"
+    },
+    {
+      "file": "src/composables/useDialogFocus.ts",
+      "line": 57,
+      "kind": "NonNullExpression",
+      "text": "list[Math.min(list.length - 1, list.indexOf(active as HTMLElement) + 1)]!"
+    },
+    {
+      "file": "src/core/artifact/ArtifactSystem.ts",
+      "line": 400,
+      "kind": "NonNullExpression",
+      "text": "battle.artifactRuntime!"
+    },
+    {
+      "file": "src/core/battle/CombatAiStrategy.ts",
+      "line": 95,
+      "kind": "NonNullExpression",
+      "text": "keys.get(a)!"
+    },
+    {
+      "file": "src/core/battle/CombatAiStrategy.ts",
+      "line": 95,
+      "kind": "NonNullExpression",
+      "text": "keys.get(b)!"
+    },
+    {
+      "file": "src/core/battle/EnemySpawnPlacement.ts",
+      "line": 64,
+      "kind": "NonNullExpression",
+      "text": "freeKeys[pickIndex]!"
+    },
+    {
+      "file": "src/core/battle/KiemTranOnHitSystem.ts",
+      "line": 71,
+      "kind": "NonNullExpression",
+      "text": "ON_HIT_KIND_ORDER[index]!"
+    },
+    {
+      "file": "src/core/battle/KiemTranOnHitSystem.ts",
+      "line": 72,
+      "kind": "NonNullExpression",
+      "text": "ON_HIT_NODE_IDS[index]!"
+    },
+    {
+      "file": "src/core/battle/turn/TurnBattleSystem.ts",
+      "line": 454,
+      "kind": "NonNullExpression",
+      "text": "battle.wave.waves[battle.wave.waveIndex]!"
+    },
+    {
+      "file": "src/core/battle/turn/TurnBattleSystem.ts",
+      "line": 830,
+      "kind": "NonNullExpression",
+      "text": "action.skill!"
+    },
+    {
+      "file": "src/core/battle/turn/TurnBattleSystem.ts",
+      "line": 1162,
+      "kind": "NonNullExpression",
+      "text": "this.pendingGaugeDeltaDefinition!"
+    },
+    {
+      "file": "src/core/battle/turn/TurnPipeline.ts",
+      "line": 96,
+      "kind": "NonNullExpression",
+      "text": "this.queue.shift()!"
+    },
+    {
+      "file": "src/core/battle/turn/TurnQueue.ts",
+      "line": 44,
+      "kind": "NonNullExpression",
+      "text": "ready[0]!"
+    },
+    {
+      "file": "src/core/battle/turn/TurnSkillAction.ts",
+      "line": 272,
+      "kind": "NonNullExpression",
+      "text": "pool[firstIndex]!"
+    },
+    {
+      "file": "src/core/battle/turn/TurnSkillAction.ts",
+      "line": 272,
+      "kind": "NonNullExpression",
+      "text": "pool[secondIndex]!"
+    },
+    {
+      "file": "src/core/buff/BuffSystem.ts",
+      "line": 184,
+      "kind": "NonNullExpression",
+      "text": "buff.convertsToId!"
+    },
+    {
+      "file": "src/core/companion/CompanionGacha.ts",
+      "line": 79,
+      "kind": "NonNullExpression",
+      "text": "GRADE_ORDER[GRADE_ORDER.length - 1]!"
+    },
+    {
+      "file": "src/core/companion/CompanionGacha.ts",
+      "line": 98,
+      "kind": "NonNullExpression",
+      "text": "candidates[index]!"
+    },
+    {
+      "file": "src/core/companion/CompanionGacha.ts",
+      "line": 181,
+      "kind": "NonNullExpression",
+      "text": "owned[existingIndex]!"
+    },
+    {
+      "file": "src/core/economy/VendorSystem.ts",
+      "line": 99,
+      "kind": "NonNullExpression",
+      "text": "recipe.herbVariants[0]!"
+    },
+    {
+      "file": "src/core/equipment/EquipmentRefine.ts",
+      "line": 324,
+      "kind": "NonNullExpression",
+      "text": "instance.affixes[entry.index]!"
+    },
+    {
+      "file": "src/core/equipment/EquipmentRefine.ts",
+      "line": 406,
+      "kind": "NonNullExpression",
+      "text": "instance.affixes[index]!"
+    },
+    {
+      "file": "src/core/equipment/EquipmentRolling.ts",
+      "line": 289,
+      "kind": "NonNullExpression",
+      "text": "candidates[randomInt(0, candidates.length - 1)]!"
+    },
+    {
+      "file": "src/core/equipment/EquipmentRolling.ts",
+      "line": 301,
+      "kind": "NonNullExpression",
+      "text": "eligibleTiers[randomInt(0, eligibleTiers.length - 1)]!"
+    },
+    {
+      "file": "src/core/equipment/EquipmentRollPrimitives.ts",
+      "line": 107,
+      "kind": "NonNullExpression",
+      "text": "candidates[Math.floor(random() * candidates.length)]!"
+    },
+    {
+      "file": "src/core/equipment/EquipmentRollPrimitives.ts",
+      "line": 108,
+      "kind": "NonNullExpression",
+      "text": "affix.tiers.find((candidate) => candidate.tier === tier)!"
+    },
+    {
+      "file": "src/core/equipment/EquipmentSlotManager.ts",
+      "line": 20,
+      "kind": "NonNullExpression",
+      "text": "this.slots.get(slot)!"
+    },
+    {
+      "file": "src/core/equipment/EquipmentSystem.ts",
+      "line": 457,
+      "kind": "NonNullExpression",
+      "text": "ITEM_QUALITY_ORDER[0]!"
+    },
+    {
+      "file": "src/core/equipment/EquipmentWash.ts",
+      "line": 167,
+      "kind": "NonNullExpression",
+      "text": "fallbackCandidates[Math.floor(random() * fallbackCandidates.length)]!"
+    },
+    {
+      "file": "src/core/equipment/EquipmentWash.ts",
+      "line": 179,
+      "kind": "NonNullExpression",
+      "text": "eligibleTiers[rollWeightedIndex(tierWeights, random)]!"
+    },
+    {
+      "file": "src/core/equipment/ItemQualityBalance.ts",
+      "line": 105,
+      "kind": "NonNullExpression",
+      "text": "ITEM_QUALITY_ORDER[Math.min(ITEM_QUALITY_ORDER.length - 1, index + steps)]!"
+    },
+    {
+      "file": "src/core/events/EventBus.ts",
+      "line": 19,
+      "kind": "NonNullExpression",
+      "text": "this.handlers\r\n      .get(eventType)!"
+    },
+    {
+      "file": "src/core/game/battleLootTestSetup.ts",
+      "line": 106,
+      "kind": "AsExpression",
+      "text": "{\r\n    id: 'mob',\r\n    realmId: options.realmId ?? 'mortal',\r\n    family: options.family,\r\n    signatureDrops: options.signatureDrops,\r\n    rewards: options.rewards ?? { techniqueI"
+    },
+    {
+      "file": "src/core/game/battleLootTestSetup.ts",
+      "line": 116,
+      "kind": "AsExpression",
+      "text": "{\r\n    eventBus,\r\n    notifications,\r\n    combatSystem: { applyHealing },\r\n    materialRegistry,\r\n    materialBag,\r\n    pillRegistry: {\r\n      has: (id: string) => pillTemplates.so"
+    },
+    {
+      "file": "src/core/game/battleLootTestSetup.ts",
+      "line": 149,
+      "kind": "AsExpression",
+      "text": "stage as unknown as Stage"
+    },
+    {
+      "file": "src/core/game/GameManager.ts",
+      "line": 811,
+      "kind": "NonNullExpression",
+      "text": "BASIC_ATTACKS_BY_BUILD.kiem_tu!"
+    },
+    {
+      "file": "src/core/game/GameManager.ts",
+      "line": 849,
+      "kind": "NonNullExpression",
+      "text": "player.nodeLevels[nodeKey]!"
+    },
+    {
+      "file": "src/core/game/GameManagerBuildingOps.ts",
+      "line": 277,
+      "kind": "NonNullExpression",
+      "text": "this.deps.productionSystem.getSiteView(definition.siteId, nowMs)!"
+    },
+    {
+      "file": "src/core/game/GameManagerCatalogOps.ts",
+      "line": 299,
+      "kind": "NonNullExpression",
+      "text": "zone.stageIds[index - 1]!"
+    },
+    {
+      "file": "src/core/game/GameManagerCatalogOps.ts",
+      "line": 306,
+      "kind": "NonNullExpression",
+      "text": "zones[zoneIndex - 1]!"
+    },
+    {
+      "file": "src/core/game/GameManagerCompanionOps.ts",
+      "line": 194,
+      "kind": "NonNullExpression",
+      "text": "player.companions[index]!"
+    },
+    {
+      "file": "src/core/game/GameManagerPersistentEffectOps.ts",
+      "line": 139,
+      "kind": "NonNullExpression",
+      "text": "technique!"
+    },
+    {
+      "file": "src/core/game/GameManagerPersistentEffectOps.ts",
+      "line": 140,
+      "kind": "NonNullExpression",
+      "text": "technique!"
+    },
+    {
+      "file": "src/core/game/GameManagerPersistentEffectOps.ts",
+      "line": 149,
+      "kind": "NonNullExpression",
+      "text": "technique!"
+    },
+    {
+      "file": "src/core/game/GameManagerPersistentEffectOps.ts",
+      "line": 150,
+      "kind": "NonNullExpression",
+      "text": "technique!"
+    },
+    {
+      "file": "src/core/game/GameManagerPersistentEffectOps.ts",
+      "line": 159,
+      "kind": "NonNullExpression",
+      "text": "technique!"
+    },
+    {
+      "file": "src/core/game/GameManagerPersistentEffectOps.ts",
+      "line": 160,
+      "kind": "NonNullExpression",
+      "text": "technique!"
+    },
+    {
+      "file": "src/core/game/GameManagerPersistentEffectOps.ts",
+      "line": 169,
+      "kind": "NonNullExpression",
+      "text": "technique!"
+    },
+    {
+      "file": "src/core/game/GameManagerPersistentEffectOps.ts",
+      "line": 170,
+      "kind": "NonNullExpression",
+      "text": "technique!"
+    },
+    {
+      "file": "src/core/game/GameManagerPersistentEffectOps.ts",
+      "line": 182,
+      "kind": "NonNullExpression",
+      "text": "technique!"
+    },
+    {
+      "file": "src/core/game/GameManagerPersistentEffectOps.ts",
+      "line": 183,
+      "kind": "NonNullExpression",
+      "text": "technique!"
+    },
+    {
+      "file": "src/core/game/GameManagerPersistentEffectOps.ts",
+      "line": 192,
+      "kind": "NonNullExpression",
+      "text": "technique!"
+    },
+    {
+      "file": "src/core/game/GameManagerPersistentEffectOps.ts",
+      "line": 193,
+      "kind": "NonNullExpression",
+      "text": "technique!"
+    },
+    {
+      "file": "src/core/game/GameManagerPersistentEffectOps.ts",
+      "line": 401,
+      "kind": "NonNullExpression",
+      "text": "activeBattle.players[0]!"
+    },
+    {
+      "file": "src/core/game/GameManagerProgressionOps.ts",
+      "line": 327,
+      "kind": "NonNullExpression",
+      "text": "this.deps.skillManager.get(skillId)!"
+    },
+    {
+      "file": "src/core/game/GameManagerTurnBattleOps.ts",
+      "line": 720,
+      "kind": "AsExpression",
+      "text": "this.turnBattle as unknown as Battle"
+    },
+    {
+      "file": "src/core/game/GameManagerTurnBattleOps.ts",
+      "line": 755,
+      "kind": "NonNullExpression",
+      "text": "this.turnBattle.players[0]!"
+    },
+    {
+      "file": "src/core/game/GameManagerTurnBattleOps.ts",
+      "line": 757,
+      "kind": "NonNullExpression",
+      "text": "this.deps.getActivePlayer()!"
+    },
+    {
+      "file": "src/core/game/GameManagerTurnBattleOps.ts",
+      "line": 833,
+      "kind": "NonNullExpression",
+      "text": "this.turnBattle!.players[0]!"
+    },
+    {
+      "file": "src/core/game/GameManagerTurnBattleOps.ts",
+      "line": 833,
+      "kind": "NonNullExpression",
+      "text": "this.turnBattle!"
+    },
+    {
+      "file": "src/core/game/GameManagerTurnBattleOps.ts",
+      "line": 845,
+      "kind": "NonNullExpression",
+      "text": "BASIC_ATTACKS_BY_BUILD.kiem_tu!"
+    },
+    {
+      "file": "src/core/game/GameManagerTurnBattleOps.ts",
+      "line": 933,
+      "kind": "NonNullExpression",
+      "text": "playerPath.formationLoadout!"
+    },
+    {
+      "file": "src/core/game/NotificationQueue.ts",
+      "line": 12,
+      "kind": "AsExpression",
+      "text": "Object.freeze([]) as unknown as NotificationEvent[]"
+    },
+    {
+      "file": "src/core/production/DecomposeSystem.ts",
+      "line": 334,
+      "kind": "NonNullExpression",
+      "text": "match[1]!"
+    },
+    {
+      "file": "src/core/production/ProductionCatalog.ts",
+      "line": 249,
+      "kind": "NonNullExpression",
+      "text": "HERB_AGES[index - 1]!"
+    },
+    {
+      "file": "src/core/production/ProductionCatalog.ts",
+      "line": 251,
+      "kind": "NonNullExpression",
+      "text": "HERB_AGES[index]!"
+    },
+    {
+      "file": "src/core/production/ProductionCatalog.ts",
+      "line": 259,
+      "kind": "NonNullExpression",
+      "text": "HERB_AGES[index - 1]!"
+    },
+    {
+      "file": "src/core/production/ProductionCatalog.ts",
+      "line": 261,
+      "kind": "NonNullExpression",
+      "text": "HERB_AGES[index]!"
+    },
+    {
+      "file": "src/core/profession/ProfessionValidators.ts",
+      "line": 107,
+      "kind": "NonNullExpression",
+      "text": "meta.pillRecipeId!"
+    },
+    {
+      "file": "src/core/profession/ProfessionValidators.ts",
+      "line": 109,
+      "kind": "NonNullExpression",
+      "text": "meta.age!"
+    },
+    {
+      "file": "src/core/profession/ProfessionValidators.ts",
+      "line": 111,
+      "kind": "NonNullExpression",
+      "text": "meta.pillRecipeId!"
+    },
+    {
+      "file": "src/core/realm/realmSystem.ts",
+      "line": 129,
+      "kind": "NonNullExpression",
+      "text": "REALMS[i]!"
+    },
+    {
+      "file": "src/core/realm/RealmTierMap.ts",
+      "line": 25,
+      "kind": "NonNullExpression",
+      "text": "REALM_TIERS[normalized - 1]!"
+    },
+    {
+      "file": "src/core/reward/DropRoll.ts",
+      "line": 43,
+      "kind": "NonNullExpression",
+      "text": "entries[entries.length - 1]!"
+    },
+    {
+      "file": "src/core/skill/SkillEffectSystem.ts",
+      "line": 454,
+      "kind": "NonNullExpression",
+      "text": "instances[i]!"
+    },
+    {
+      "file": "src/core/skill/SkillEffectSystem.ts",
+      "line": 456,
+      "kind": "NonNullExpression",
+      "text": "instances[i]!"
+    },
+    {
+      "file": "src/core/skill/SkillRuntimeStats.ts",
+      "line": 54,
+      "kind": "AsExpression",
+      "text": "Object.fromEntries(SKILL_RESOURCE_STAT_KEYS.map(key => [key, 0])) as unknown as SkillRuntimeStats"
+    },
+    {
+      "file": "src/core/technique/TechniqueTier.ts",
+      "line": 45,
+      "kind": "NonNullExpression",
+      "text": "TIER_THRESHOLDS[index]!"
+    },
+    {
+      "file": "src/core/technique/TechniqueTier.ts",
+      "line": 50,
+      "kind": "NonNullExpression",
+      "text": "TIER_THRESHOLDS[currentIndex]!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 187,
+      "kind": "NonNullExpression",
+      "text": "chapters[0]!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 211,
+      "kind": "NonNullExpression",
+      "text": "chapters[0]!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 253,
+      "kind": "NonNullExpression",
+      "text": "this.active!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 268,
+      "kind": "NonNullExpression",
+      "text": "this.active!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 269,
+      "kind": "NonNullExpression",
+      "text": "this.mind!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 292,
+      "kind": "NonNullExpression",
+      "text": "this.active!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 302,
+      "kind": "NonNullExpression",
+      "text": "this.active!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 303,
+      "kind": "NonNullExpression",
+      "text": "this.mind!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 304,
+      "kind": "NonNullExpression",
+      "text": "this.chapters[active.chapterIndex]!.mind!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 304,
+      "kind": "NonNullExpression",
+      "text": "this.chapters[active.chapterIndex]!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 364,
+      "kind": "NonNullExpression",
+      "text": "this.ghost!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 370,
+      "kind": "NonNullExpression",
+      "text": "this.ghost!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 378,
+      "kind": "NonNullExpression",
+      "text": "this.active!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 379,
+      "kind": "NonNullExpression",
+      "text": "this.tank!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 394,
+      "kind": "NonNullExpression",
+      "text": "chapter.tank!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 412,
+      "kind": "NonNullExpression",
+      "text": "chapter.tank!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 413,
+      "kind": "NonNullExpression",
+      "text": "this.active!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 419,
+      "kind": "NonNullExpression",
+      "text": "chapter.tank!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 420,
+      "kind": "NonNullExpression",
+      "text": "this.active!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 425,
+      "kind": "NonNullExpression",
+      "text": "this.active!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 447,
+      "kind": "NonNullExpression",
+      "text": "this.ghost!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 451,
+      "kind": "NonNullExpression",
+      "text": "this.ghost!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 452,
+      "kind": "NonNullExpression",
+      "text": "this.ghost!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 455,
+      "kind": "NonNullExpression",
+      "text": "this.active!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 462,
+      "kind": "NonNullExpression",
+      "text": "this.active!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 475,
+      "kind": "NonNullExpression",
+      "text": "this.chapters[index]!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 495,
+      "kind": "NonNullExpression",
+      "text": "pool[i % pool.length]!"
+    },
+    {
+      "file": "src/core/tribulation/TribulationDirector.ts",
+      "line": 514,
+      "kind": "NonNullExpression",
+      "text": "chapter.tank!"
+    },
+    {
+      "file": "src/data/breakthrough/BreakthroughGrades.ts",
+      "line": 51,
+      "kind": "NonNullExpression",
+      "text": "MERIDIANS[MERIDIANS.length - 1]!"
+    },
+    {
+      "file": "src/data/buff/buffs.ts",
+      "line": 142,
+      "kind": "NonNullExpression",
+      "text": "buffs.find((buff) => buff.id === 'tu_sinh_ngo')!"
+    },
+    {
+      "file": "src/data/building/buildings.ts",
+      "line": 24,
+      "kind": "NonNullExpression",
+      "text": "AGE_BY_TIER[tier]!"
+    },
+    {
+      "file": "src/data/pill/pills.ts",
+      "line": 54,
+      "kind": "NonNullExpression",
+      "text": "TIER_ITEM_GRADES[tierIndex]!"
+    },
+    {
+      "file": "src/data/progression/KiemTuNodes.ts",
+      "line": 88,
+      "kind": "NonNullExpression",
+      "text": "TRAN_SEQUENCE[index - 1]!"
+    },
+    {
+      "file": "src/data/progression/PhapTuNodes.builders.ts",
+      "line": 410,
+      "kind": "NonNullExpression",
+      "text": "chainSpecs[index - 1]!"
+    },
+    {
+      "file": "src/data/stage/ChapterStages.ts",
+      "line": 86,
+      "kind": "NonNullExpression",
+      "text": "config.speciesByFloor[index]!"
+    },
+    {
+      "file": "src/data/stage/ChapterStages.ts",
+      "line": 98,
+      "kind": "NonNullExpression",
+      "text": "config.descriptions[index]!"
+    },
+    {
+      "file": "src/data/talent/Talents.ts",
+      "line": 292,
+      "kind": "NonNullExpression",
+      "text": "pool[index]!"
+    },
+    {
+      "file": "src/data/talent/Talents.ts",
+      "line": 296,
+      "kind": "NonNullExpression",
+      "text": "pool.splice(index, 1)[0]!"
+    },
+    {
+      "file": "src/data/vfx/StatusVfxPresets.ts",
+      "line": 48,
+      "kind": "NonNullExpression",
+      "text": "STATUS_PRESETS[buffId]!"
+    },
+    {
+      "file": "src/game/scenes/combat/combat-status-tooltip.ts",
+      "line": 68,
+      "kind": "AsExpression",
+      "text": "container as unknown as { destroy(): void }"
+    },
+    {
+      "file": "src/game/scenes/combat/combat-vfx-spawner.ts",
+      "line": 619,
+      "kind": "NonNullExpression",
+      "text": "colors[id]!"
+    },
+    {
+      "file": "src/game/scenes/combat/combatTestHarness.ts",
+      "line": 17,
+      "kind": "AnyKeyword",
+      "text": "any"
+    },
+    {
+      "file": "src/game/scenes/CombatScene.ts",
+      "line": 590,
+      "kind": "AnyKeyword",
+      "text": "any"
+    },
+    {
+      "file": "src/game/scenes/CombatScene.ts",
+      "line": 597,
+      "kind": "AnyKeyword",
+      "text": "any"
+    },
+    {
+      "file": "src/game/scenes/CombatScene.ts",
+      "line": 1017,
+      "kind": "NonNullExpression",
+      "text": "this.projection!"
+    },
+    {
+      "file": "src/game/support/EnemyArt.ts",
+      "line": 56,
+      "kind": "NonNullExpression",
+      "text": "TEXTURE_KEY_BY_ID.get(templateId)!"
+    },
+    {
+      "file": "src/presentation/art/PlayerVisualProfiles.ts",
+      "line": 170,
+      "kind": "NonNullExpression",
+      "text": "PLAYER_VISUAL_PROFILES.mortal.cultivateTextureKey!"
+    },
+    {
+      "file": "src/presentation/art/PlayerVisualProfiles.ts",
+      "line": 172,
+      "kind": "NonNullExpression",
+      "text": "PLAYER_VISUAL_PROFILES.mortal.cultivateSourceSize!"
+    },
+    {
+      "file": "src/presentation/art/PlayerVisualProfiles.ts",
+      "line": 184,
+      "kind": "NonNullExpression",
+      "text": "PLAYER_VISUAL_PROFILES.mortal.cultivateBodyAnchors!"
+    },
+    {
+      "file": "src/presentation/background/ThanhVanBackdropArt.ts",
+      "line": 72,
+      "kind": "NonNullExpression",
+      "text": "pool[Math.floor(Math.random() * pool.length)]!"
+    },
+    {
+      "file": "src/presentation/geometry/formationSlotBoxes.ts",
+      "line": 102,
+      "kind": "NonNullExpression",
+      "text": "x!"
+    },
+    {
+      "file": "src/presentation/geometry/formationSlotBoxes.ts",
+      "line": 102,
+      "kind": "NonNullExpression",
+      "text": "y!"
+    },
+    {
+      "file": "src/presentation/host/useDynamicRegion.ts",
+      "line": 205,
+      "kind": "AsExpression",
+      "text": "created.registry as unknown as GateRegistry"
+    },
+    {
+      "file": "src/presentation/host/useDynamicRegion.ts",
+      "line": 209,
+      "kind": "AsExpression",
+      "text": "created.registry as unknown as GateRegistry"
+    },
+    {
+      "file": "src/presentation/PhaserSceneAdapter.ts",
+      "line": 147,
+      "kind": "NonNullExpression",
+      "text": "scene.rebindSession!"
+    },
+    {
+      "file": "src/presentation/PhaserSceneAdapter.ts",
+      "line": 157,
+      "kind": "NonNullExpression",
+      "text": "this.game!"
+    },
+    {
+      "file": "src/services/auth/SupabaseAuthService.ts",
+      "line": 26,
+      "kind": "NonNullExpression",
+      "text": "credentials!"
+    },
+    {
+      "file": "src/services/auth/SupabaseAuthService.ts",
+      "line": 26,
+      "kind": "NonNullExpression",
+      "text": "credentials!"
+    },
+    {
+      "file": "src/services/auth/SupabaseAuthService.ts",
+      "line": 32,
+      "kind": "NonNullExpression",
+      "text": "credentials!"
+    },
+    {
+      "file": "src/services/auth/SupabaseAuthService.ts",
+      "line": 32,
+      "kind": "NonNullExpression",
+      "text": "credentials!"
+    },
+    {
+      "file": "src/services/auth/SupabaseAuthService.ts",
+      "line": 32,
+      "kind": "NonNullExpression",
+      "text": "credentials!"
+    },
+    {
+      "file": "src/stores/notification.ts",
+      "line": 75,
+      "kind": "NonNullExpression",
+      "text": "this.queuedToasts.shift()!"
+    }
+  ]
+}
