@@ -17,7 +17,7 @@ function winFoundationTribulation(player: ReturnType<typeof usePlayerStore>, gam
   player.baseStats.maxHp = 500_000 // sống sót hết kiếp dù sai hết câu
 
   expect(
-    gameManager.startTribulation(player.$state, player.finalStats, 'foundation_establishment'),
+    gameManager.startTribulation(player.$state, 'foundation_establishment'),
   ).toBe(true)
 
   // Trôi đủ tổng thời gian các chương (không trả lời — hết giờ = sai

@@ -175,7 +175,7 @@ describe('Tribulation routing integration (Task 11)', () => {
 
     // Start in headless mode
     gameManager.setPresentationMode('headless')
-    gameManager.startTribulation(player, calculateStats(player.baseStats, []), 'qi_refining')
+    gameManager.startTribulation(player, 'qi_refining')
 
     const active = gameManager.tribulationDirector.getState()!
     expect(active).toBeDefined()
@@ -237,7 +237,7 @@ describe('Tribulation routing integration (Task 11)', () => {
 
     // Same headless entry dance as the duplicate-outcome test above.
     gameManager.setPresentationMode('headless')
-    gameManager.startTribulation(player, calculateStats(player.baseStats, []), 'qi_refining')
+    gameManager.startTribulation(player, 'qi_refining')
 
     await vi.waitFor(() => {
       expect(vueAdapter.phase.value).toBe('awaiting-ready')

@@ -12,7 +12,6 @@
 
 import type { GameManager } from '../game/GameManager'
 import type { PlayerData } from '../player/Player'
-import type { Stats } from '../stats/StatBlock'
 import { applyEnemyTags } from '../enemy/EnemyTag'
 import { ENEMY_TAGS } from '../../data/enemy/EnemyTags'
 import { isBattleInProgress } from '../battle/BattleTypes'
@@ -20,7 +19,6 @@ import { isBattleInProgress } from '../battle/BattleTypes'
 export interface EnemySpawnDebugDeps {
   gameManager: GameManager
   player: PlayerData
-  getStats: () => Stats
 }
 
 interface TutienEnemySpawnDebug {
@@ -55,7 +53,7 @@ export function registerEnemySpawnDebug(deps: EnemySpawnDebugDeps): void {
 
       const enemy = applyEnemyTags(template, tags, ENEMY_TAGS)
 
-      deps.gameManager.startBattleWithPlayer(deps.player, deps.getStats(), enemy)
+      deps.gameManager.startBattleWithPlayer(deps.player, enemy)
 
       return `spawned ${enemy.name} (tags: [${tags.join(', ')}])`
     },

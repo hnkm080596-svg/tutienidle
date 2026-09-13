@@ -50,7 +50,9 @@ interface SimResult {
 
 function runFloor(lab: Lab, stage: Stage): SimResult {
   const stats = lab.stats()
-  const started = lab.manager.turnBattleOps.startStage(lab.player, stats, stage, false)
+  // ARCH-002 (M7): startStage resolves stats internally from the player —
+  // the lab.stats() snapshot is report-only, not a call argument.
+  const started = lab.manager.turnBattleOps.startStage(lab.player, stage, false)
   if (!started) {
     return { state: 'START-FAILED', rounds: '?', hpPct: 0, playerLine: '', enemyLine: '' }
   }

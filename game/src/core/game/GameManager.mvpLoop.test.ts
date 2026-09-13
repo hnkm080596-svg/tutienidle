@@ -174,7 +174,7 @@ describe('GameManager — MVP loop end-to-end (Combat Rework Phase 9)', () => {
       ...gameManager.effectOps.getAggregatedModifiers(),
     ])
 
-    expect(gameManager.turnBattleOps.startStage(player, finalStats, stage)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stage)).toBe(true)
 
     let sawBossSpawn = false
     let sawMobSpawn = false

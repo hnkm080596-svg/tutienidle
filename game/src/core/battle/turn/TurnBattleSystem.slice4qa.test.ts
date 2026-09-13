@@ -17,7 +17,6 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     id: 'id',
     name: 'name',
     type: 'enemy',
-    baseStats: stats,
     stats,
     currentHp: stats.maxHp,
     maxHp: stats.maxHp,
@@ -38,6 +37,9 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     row: 2,
     alive: true,
     ...overrides,
+    // ARCH-002 (M7): entity.stats is derived from baseStats every refresh —
+    // an injected `stats` override must become the resolved base as well.
+    baseStats: overrides.baseStats ?? overrides.stats ?? stats,
   } as CombatEntity
 }
 

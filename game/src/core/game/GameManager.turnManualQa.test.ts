@@ -2,11 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager, INTRO_TOTAL_TICKS } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
-import { createBaseStats } from '../stats/StatBlock'
+import { createBaseStats, asBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
 import { createDefaultPlayer } from '../player/Player'
-import { calculateStats } from '../stats/StatCalculator'
 import type { Stage } from '../stage/Stage'
 
 // QA probes (Slice 7 manual mode) â€” adversarial checks: exactly-once
@@ -162,13 +161,13 @@ describe('QA regression — refight after turn-battle victory (smoke test eviden
       totalEnemyCount: 1, waves: [1], spawnIntervalSeconds: 0,
     }
     const player = createDefaultPlayer()
-    const stats = calculateStats({ ...player.baseStats, attack: 100 }, [])
+    player.baseStats = asBaseStats({ ...player.baseStats, attack: 100  })
 
     gameManager.catalogOps.registerEnemyTemplates([enemy])
     gameManager.catalogOps.registerStages([stage])
     gameManager.setActivePlayer(player)
 
-    expect(gameManager.turnBattleOps.startStage(player, stats, stage, false)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stage, false)).toBe(true)
 
     // Run to victory
     for (let i = 0; i < 400 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
@@ -178,7 +177,7 @@ describe('QA regression — refight after turn-battle victory (smoke test eviden
     expect(gameManager.getTurnBattle()?.state).toBe('victory')
 
     // Refight — must succeed (was silently failing: StageManager.active stale)
-    expect(gameManager.turnBattleOps.startStage(player, stats, stage, false)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stage, false)).toBe(true)
     expect(gameManager.getTurnBattle()?.state).toBe('intro')
     expect(gameManager.getTurnBattle()?.introTurnsRemaining).toBe(INTRO_TOTAL_TICKS)
   })
@@ -206,13 +205,13 @@ describe('Future Systems Task 10 — party manual pause', () => {
       totalEnemyCount: 1, waves: [1], spawnIntervalSeconds: 0,
     }
     const player = createDefaultPlayer()
-    const stats = calculateStats({ ...player.baseStats, attack: 50 }, [])
+    player.baseStats = asBaseStats({ ...player.baseStats, attack: 50  })
 
     gameManager.catalogOps.registerEnemyTemplates([enemy])
     gameManager.catalogOps.registerStages([stage])
     gameManager.setActivePlayer(player)
 
-    expect(gameManager.turnBattleOps.startStage(player, stats, stage, false)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stage, false)).toBe(true)
 
     // Mô phỏng party 2 người: thêm players[1] với gauge ready ngay.
     const battle = gameManager.getTurnBattle()
@@ -262,14 +261,14 @@ describe('Gameplay fixes — refight chain', () => {
       totalEnemyCount: 1, waves: [1], spawnIntervalSeconds: 0,
     }
     const player = createDefaultPlayer()
-    const stats = calculateStats({ ...player.baseStats, attack: 100, speed: 100 }, [])
+    player.baseStats = asBaseStats({ ...player.baseStats, attack: 100, speed: 100  })
 
     gameManager.catalogOps.registerEnemyTemplates([enemy])
     gameManager.catalogOps.registerStages([stage])
     gameManager.setActivePlayer(player)
 
     for (let round = 1; round <= 3; round++) {
-      const started = gameManager.turnBattleOps.startStage(player, stats, stage, false)
+      const started = gameManager.turnBattleOps.startStage(player, stage, false)
 
       expect(started, `round ${round}: startStage failed`).toBe(true)
 

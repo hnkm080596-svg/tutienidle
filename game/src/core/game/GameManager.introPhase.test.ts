@@ -3,7 +3,7 @@ import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClo
 import { GameManager, INTRO_TOTAL_TICKS } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import { createDefaultPlayer } from '../player/Player'
-import { calculateStats } from '../stats/StatCalculator'
+import { asBaseStats } from '../stats/StatBlock'
 import type { Stage } from '../stage/Stage'
 
 // Intro/transition phase (plan 2026-09-07 Task 4): a fresh battle starts in
@@ -26,7 +26,7 @@ function buildStartedGameManager(): { gameManager: GameManager; combatSource: Ma
   const combatSource = new ManualClockSource()
   gameManager.setCombatClockSource(combatSource)
   const player = createDefaultPlayer()
-  const stats = calculateStats({ ...player.baseStats, attack: 100, speed: 100 }, [])
+  player.baseStats = asBaseStats({ ...player.baseStats, attack: 100, speed: 100  })
 
   const enemy = defineEnemy({
     id: 'intro_dummy', name: 'Intro Dummy', level: 1, realmId: 'mortal', lane: 'ground',
@@ -38,7 +38,7 @@ function buildStartedGameManager(): { gameManager: GameManager; combatSource: Ma
   gameManager.catalogOps.registerStages([stageFixture('intro_stage', 'intro_dummy')])
   gameManager.setActivePlayer(player)
 
-  expect(gameManager.turnBattleOps.startStage(player, stats, gameManager.catalogOps.getStage('intro_stage')!, false)).toBe(true)
+  expect(gameManager.turnBattleOps.startStage(player, gameManager.catalogOps.getStage('intro_stage')!, false)).toBe(true)
 
   return { gameManager, combatSource }
 }

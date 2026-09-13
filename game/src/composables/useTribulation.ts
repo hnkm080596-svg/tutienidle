@@ -68,7 +68,6 @@ export function triggerBreakthroughAction(
             player,
             gameManager,
             targetRealmId,
-            player.finalStats,
           )
           if (!started) return null
           const session = gameManager.getCurrentPresentationSession('tribulation')
@@ -89,7 +88,6 @@ export function triggerBreakthroughAction(
     player,
     gameManager,
     targetRealmId,
-    player.finalStats,
   )
 
   if (started) {
@@ -148,12 +146,11 @@ export function checkTribulationOutcomeAction(
   // penalty writes; presentation consumes the typed result.
   const applyOutcome = (): boolean => {
     const service = new TribulationOutcomeService()
-    const stats = player.finalStats
     let result: TribulationOutcomeResult
     if (active.state === 'victory') {
       result = service.resolveVictory(player as TribulationPlayerWriter, gameManager, active)
     } else {
-      result = service.resolveDefeat(player as TribulationPlayerWriter, gameManager, active, stats)
+      result = service.resolveDefeat(player as TribulationPlayerWriter, gameManager, active)
     }
 
     presentOutcome(result)

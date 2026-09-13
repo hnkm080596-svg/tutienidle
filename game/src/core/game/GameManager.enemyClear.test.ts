@@ -3,10 +3,9 @@ import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClo
 import { GameManager } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import type { EnemyDefinition } from '../enemy/Enemy'
-import { createBaseStats } from '../stats/StatBlock'
+import { createBaseStats, asBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import { createDefaultPlayer } from '../player/Player'
-import { calculateStats } from '../stats/StatCalculator'
 import type { Stage } from '../stage/Stage'
 import { SKILLS } from '../../data/skill/Skills'
 import { SPIRIT_STONE_MATERIAL } from '../material/SpiritStoneMaterial'
@@ -130,7 +129,7 @@ describe('abandonBattle — EnemyManager cleanup (audit 2026-08-31, M1)', () => 
       spawnIntervalSeconds: 0,
     }
     const player = createDefaultPlayer()
-    const stats = calculateStats({ ...player.baseStats, attack: 100 }, [])
+    player.baseStats = asBaseStats({ ...player.baseStats, attack: 100  })
 
     gameManager.catalogOps.registerEnemyTemplates([enemy])
     gameManager.catalogOps.registerStages([stage])
@@ -139,7 +138,7 @@ describe('abandonBattle — EnemyManager cleanup (audit 2026-08-31, M1)', () => 
     expect(gameManager.skillSystem.equipToSlot('tram', 0)).toBe(true)
 
     // KHÔNG auto-repeat — mục tiêu là state 'victory' cuối cùng.
-    expect(gameManager.turnBattleOps.startStage(player, stats, stage)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stage)).toBe(true)
     // Turn-Based Wave Redesign (2026-09-06) — bootstrap enemy bị discard
     // (spawn đồng loạt qua telegraph): ngay sau startStage CHƯA có enemy
     // sống — pending telegraph materialize ở các tick kế tiếp.

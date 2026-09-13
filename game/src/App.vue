@@ -483,7 +483,13 @@ function tick() {
     // thật sự đổi, không còn recompute 10 lần/giây. Đây là lý do
     // bumpState() bên dưới CỐ Ý giữ nguyên (chạy mỗi tick cho đồng hồ/
     // resource counter): stat đã được tách hẳn khỏi stateVersion.
-    player.setExternalModifiers(gameManager.effectOps.getAggregatedModifiers(player.$state))
+    player.setExternalModifiers([
+      ...gameManager.effectOps.getAggregatedModifiers(player.$state),
+      // ARCH-002 (M7) — the live runtime channel (timed effects, Phu/Tran
+      // sockets) is part of the same modifier union the battle provider
+      // serves; the menu shows what combat actually uses.
+      ...gameManager.effectOps.getActiveRuntimeModifiers(player.$state),
+    ])
   }
 
   bumpState()
@@ -565,7 +571,7 @@ async function bootGame(createNewCharacter = false) {
     // Dev-only console helpers (spec v3 B5) - registered here so BOTH
     // new-character and restored-save entries get them; the function
     // itself early-returns outside import.meta.env.DEV.
-    registerEnemySpawnDebug({ gameManager, player: player.$state, getStats: () => player.finalStats })
+    registerEnemySpawnDebug({ gameManager, player: player.$state })
 
     isBooted.value = true
     lifecycle.startAutosave()

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
-import { calculateStats } from '../stats/StatCalculator'
 import { defineEnemy } from '../enemy/Enemy'
 import { SKILLS } from '../../data/skill/Skills'
 import type { Stage } from '../stage/Stage'
@@ -74,8 +73,7 @@ describe('Reaction Path gating + slot population (Phase A4)', () => {
     manager.setActivePlayer(player)
     learnChainSkills(manager)
 
-    const stats = calculateStats(player.baseStats, player.modifiers)
-    expect(manager.turnBattleOps.startStage(player, stats, stage, false)).toBe(true)
+    expect(manager.turnBattleOps.startStage(player, stage, false)).toBe(true)
 
     const participant = manager.getTurnBattle()!.players[0]!
 
@@ -96,8 +94,7 @@ describe('Reaction Path gating + slot population (Phase A4)', () => {
     manager.setActivePlayer(player)
     learnChainSkills(manager)
 
-    const stats = calculateStats(player.baseStats, player.modifiers)
-    expect(manager.turnBattleOps.startStage(player, stats, stage, false)).toBe(true)
+    expect(manager.turnBattleOps.startStage(player, stage, false)).toBe(true)
 
     const participant = manager.getTurnBattle()!.players[0]!
 

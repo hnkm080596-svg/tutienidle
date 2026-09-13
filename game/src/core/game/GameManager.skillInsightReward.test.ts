@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
-import { createBaseStats } from '../stats/StatBlock'
 import { defineEnemy } from '../enemy/Enemy'
 
 // skill-insight-and-auto-combat-hud-plan.md mục 3/11 — Cảm ngộ Kỹ năng
@@ -30,10 +29,9 @@ describe('GameManager — Cảm ngộ Kỹ năng khi hạ quái', () => {
     const combatSource = new ManualClockSource()
     gameManager.setCombatClockSource(combatSource)
     const player = createDefaultPlayer()
-    const stats = createBaseStats()
 
     // Không techniqueManager.equip() gì cả — cố ý không có tâm pháp.
-    gameManager.startBattleWithPlayer(player, stats, makeEnemy(10))
+    gameManager.startBattleWithPlayer(player, makeEnemy(10))
     combatSource.advance(3) // bỏ qua countdown
 
     const battleEnemy = gameManager.getTurnBattle()!.enemies[0]!
@@ -52,9 +50,8 @@ describe('GameManager — Cảm ngộ Kỹ năng khi hạ quái', () => {
     const combatSource = new ManualClockSource()
     gameManager.setCombatClockSource(combatSource)
     const player = createDefaultPlayer()
-    const stats = createBaseStats()
 
-    gameManager.startBattleWithPlayer(player, stats, makeEnemy(10))
+    gameManager.startBattleWithPlayer(player, makeEnemy(10))
     combatSource.advance(3)
 
     const battleEnemy = gameManager.getTurnBattle()!.enemies[0]!

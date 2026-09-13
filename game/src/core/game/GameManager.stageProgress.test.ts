@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
-import { calculateStats } from '../stats/StatCalculator'
+import { asBaseStats } from '../stats/StatBlock'
 import { defineEnemy } from '../enemy/Enemy'
 import type { Stage } from '../stage/Stage'
 
@@ -59,10 +59,10 @@ describe('getStageProgress alive count (A0 fix)', () => {
     gameManager.catalogOps.registerStages([stage])
 
     const player = createDefaultPlayer()
-    const stats = calculateStats({ ...player.baseStats, attack: 0 }, [])
+    player.baseStats = asBaseStats({ ...player.baseStats, attack: 0  })
 
     gameManager.setActivePlayer(player)
-    expect(gameManager.turnBattleOps.startStage(player, stats, stage, false)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stage, false)).toBe(true)
 
     // Both enemies of the single wave materialize through the turn-based
     // telegraph; drive ticks until the arena is fully populated.

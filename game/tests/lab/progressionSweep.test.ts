@@ -192,8 +192,8 @@ function buildIntended(lab: Lab, realmId: string, level: number, stageList: Stag
 }
 
 function attempt(lab: Lab, stage: Stage): { state: string; rounds: number | string; hpPct: number } {
-  const stats = lab.stats()
-  if (!lab.manager.turnBattleOps.startStage(lab.player, stats, stage, false)) {
+  // ARCH-002 (M7): startStage resolves stats internally from the player.
+  if (!lab.manager.turnBattleOps.startStage(lab.player, stage, false)) {
     return { state: 'START-FAILED', rounds: '?', hpPct: 0 }
   }
   lab.combat(COMBAT_CAP_SECONDS)

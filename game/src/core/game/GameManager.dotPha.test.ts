@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createDefaultPlayer } from '../player/Player'
-import { createBaseStats } from '../stats/StatBlock'
+import { asBaseStats } from '../stats/StatBlock'
 import { GameManager } from './GameManager'
 import { pills } from '../../data/pill/pills'
 
@@ -15,7 +15,7 @@ describe('GameManager — facade TribulationDirector', () => {
     player.realmId = 'mortal'
     player.realmLevel = 12
 
-    expect(gameManager.startTribulation(player, createBaseStats(), 'qi_refining')).toBe(true)
+    expect(gameManager.startTribulation(player, 'qi_refining')).toBe(true)
 
     const active = gameManager.tribulationDirector.getState()
     expect(active).not.toBeNull()
@@ -35,7 +35,7 @@ describe('GameManager — facade TribulationDirector', () => {
     player.bodyRefinementCompletedTiers = 3
 
     // KHÔNG có Trúc Cơ Đan trong túi → human
-    expect(gameManager.startTribulation(player, createBaseStats(), 'foundation_establishment')).toBe(true)
+    expect(gameManager.startTribulation(player, 'foundation_establishment')).toBe(true)
     expect(gameManager.tribulationDirector.getState()!.grade).toBe('human')
     gameManager.tribulationDirector.clear()
 
@@ -43,7 +43,7 @@ describe('GameManager — facade TribulationDirector', () => {
     const trucCoDan = gameManager.pillRegistry.get('truc_co_dan')
     expect(trucCoDan).toBeDefined()
     gameManager.pillBag.add(trucCoDan!, 1)
-    expect(gameManager.startTribulation(player, createBaseStats(), 'foundation_establishment')).toBe(true)
+    expect(gameManager.startTribulation(player, 'foundation_establishment')).toBe(true)
     expect(gameManager.tribulationDirector.getState()!.grade).toBe('earth')
   })
 
@@ -53,7 +53,7 @@ describe('GameManager — facade TribulationDirector', () => {
     player.realmId = 'mortal'
     player.realmLevel = 12
 
-    gameManager.startTribulation(player, createBaseStats(), 'qi_refining')
+    gameManager.startTribulation(player, 'qi_refining')
     const q = gameManager.tribulationDirector.getState()!.currentQuestion!
     expect(gameManager.tribulationDirector.answerQuestion(q.correctAnswerIndex)).toBe(true)
     expect(gameManager.tribulationDirector.answerQuestion(0)).toBe(false) // đang nghỉ giữa câu
@@ -61,7 +61,7 @@ describe('GameManager — facade TribulationDirector', () => {
 
   it('unknown realm → start false', () => {
     const gameManager = new GameManager()
-    expect(gameManager.startTribulation(createDefaultPlayer(), createBaseStats(), 'golden_core')).toBe(false)
+    expect(gameManager.startTribulation(createDefaultPlayer(), 'golden_core')).toBe(false)
     expect(gameManager.tribulationDirector.getState()).toBeNull()
   })
 
@@ -70,12 +70,10 @@ describe('GameManager — facade TribulationDirector', () => {
     const player = createDefaultPlayer()
     player.realmId = 'mortal'
     player.realmLevel = 12
-    const stats = createBaseStats()
-    stats.maxHp = 5000
-    stats.defense = 0
-    stats.hpRegenPerTurn = 0
+    // ARCH-002 (M7): resolved internally — patch the raw base.
+    player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 5000, defense: 0, hpRegenPerTurn: 0 })
 
-    gameManager.startTribulation(player, stats, 'qi_refining')
+    gameManager.startTribulation(player, 'qi_refining')
 
     let guard = 0
     while (gameManager.tribulationDirector.getState()?.state === 'ongoing' && guard++ < 2000) {

@@ -26,7 +26,6 @@
  */
 import type { FoundationType } from '../breakthrough/FoundationType'
 import type { PlayerData } from '../player/Player'
-import type { Stats } from '../stats/StatBlock'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { GameManager } from '../game/GameManager'
 import type { ActiveTribulationState } from './TribulationDirector'
@@ -249,7 +248,6 @@ export class TribulationOutcomeService {
     player: TribulationPlayerWriter,
     gameManager: GameManager,
     active: ActiveTribulationState,
-    playerStats: Stats,
   ): TribulationDefeatResult {
     // Spec SS5.7: realm-scaled loss with a hard floor.
     const lossPercent = Math.max(
@@ -270,8 +268,13 @@ export class TribulationOutcomeService {
     gameManager.materialBag.remove(spiritStoneId, Math.min(owned, stoneLoss))
 
     // Task 9b (fix round 2): debuff duration scaling reads the player's
-    // REAL gear — the caller threads finalStats, same as startTribulation().
-    gameManager.effectOps.applyPersistentBuff(KIEP_THUONG_DEBUFF, playerStats)
+    // REAL gear. ARCH-002 (M7): resolved through the GameManager ambient
+    // resolver — same post-reset-equivalent union as the tribulation
+    // ghost snapshot, never a caller-threaded stale mirror.
+    gameManager.effectOps.applyPersistentBuff(
+      KIEP_THUONG_DEBUFF,
+      gameManager.resolveAmbientPlayerStats(player as PlayerData),
+    )
 
     // Spec SS4.3: losing a Great Dao attempt closes the opportunity
     // FOREVER; later grade rolls cap at Thien Dao (BreakthroughGrades).
@@ -313,12 +316,14 @@ export class TribulationOutcomeService {
     player: TribulationPlayerWriter,
     gameManager: GameManager,
     targetRealmId: string,
-    playerStats: Stats,
   ): boolean {
     gameManager.equipmentOps.unequipAllEquipment()
     player.setEquipmentModifiers(gameManager.equipmentOps.getEquipmentModifiers())
 
-    return gameManager.startTribulation(player as PlayerData, playerStats, targetRealmId)
+    // ARCH-002 (M7) — the ghost snapshot resolves INSIDE
+    // startTribulation, after its passive-stack reset; no caller-side
+    // stats (same contract as startBattleWithPlayer).
+    return gameManager.startTribulation(player as PlayerData, targetRealmId)
   }
 }
 

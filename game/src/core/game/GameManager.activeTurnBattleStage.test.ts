@@ -3,7 +3,7 @@ import { ManualClockSource } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import { createDefaultPlayer } from '../player/Player'
-import { calculateStats } from '../stats/StatCalculator'
+import { asBaseStats } from '../stats/StatBlock'
 import type { Stage } from '../stage/Stage'
 
 // Combat speed gauge + round indicator (2026-09-12) — the round-limit chip
@@ -25,7 +25,7 @@ function buildGameManager() {
   const combatSource = new ManualClockSource()
   gameManager.setCombatClockSource(combatSource)
   const player = createDefaultPlayer()
-  const stats = calculateStats({ ...player.baseStats, attack: 100, speed: 100 }, [])
+  player.baseStats = asBaseStats({ ...player.baseStats, attack: 100, speed: 100  })
 
   const enemy = defineEnemy({
     id: 'stage_probe', name: 'Stage Probe', level: 1, realmId: 'mortal', lane: 'ground',
@@ -37,7 +37,7 @@ function buildGameManager() {
   gameManager.catalogOps.registerStages([stageFixture('bound_stage', 'stage_probe')])
   gameManager.setActivePlayer(player)
 
-  return { gameManager, player, stats, enemy }
+  return { gameManager, player, enemy }
 }
 
 describe('GameManager.getActiveTurnBattleStage', () => {
@@ -48,22 +48,22 @@ describe('GameManager.getActiveTurnBattleStage', () => {
   })
 
   it('returns the stage that launched the current stage battle', () => {
-    const { gameManager, player, stats } = buildGameManager()
+    const { gameManager, player } = buildGameManager()
 
-    expect(gameManager.turnBattleOps.startStage(player, stats, gameManager.catalogOps.getStage('bound_stage')!, false)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, gameManager.catalogOps.getStage('bound_stage')!, false)).toBe(true)
     expect(gameManager.getActiveTurnBattleStage()?.id).toBe('bound_stage')
   })
 
   it('does not leak a stale stage into a later non-stage battle', () => {
-    const { gameManager, player, stats, enemy } = buildGameManager()
+    const { gameManager, player, enemy } = buildGameManager()
 
-    expect(gameManager.turnBattleOps.startStage(player, stats, gameManager.catalogOps.getStage('bound_stage')!, false)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, gameManager.catalogOps.getStage('bound_stage')!, false)).toBe(true)
     expect(gameManager.getActiveTurnBattleStage()?.id).toBe('bound_stage')
 
     // Tribulation-style battle: launched without a stage — the previous
     // stage binding must be dropped or the round chip would show that
     // stage's perfect-clear limit during a battle it does not apply to.
-    gameManager.startBattleWithPlayer(player, stats, enemy)
+    gameManager.startBattleWithPlayer(player, enemy)
 
     expect(gameManager.getActiveTurnBattleStage()).toBeNull()
   })

@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
-import { calculateStats } from '../stats/StatCalculator'
+import { asBaseStats } from '../stats/StatBlock'
 import { defineEnemy } from '../enemy/Enemy'
 import type { Stage } from '../stage/Stage'
 import type { Enemy } from '../enemy/Enemy'
@@ -80,12 +80,12 @@ describe('perfect clear feasibility on a real floor shape', () => {
     gameManager.setCombatClockSource(combatSource)
     const player = createDefaultPlayer()
     player.realmLevel = 10
-    const stats = calculateStats({ ...player.baseStats, attack: playerAttack }, [])
+    player.baseStats = asBaseStats({ ...player.baseStats, attack: playerAttack  })
 
     gameManager.catalogOps.registerEnemyTemplates([species])
     gameManager.catalogOps.registerStages([stageDef])
     gameManager.setActivePlayer(player)
-    gameManager.turnBattleOps.startStage(player, stats, stageDef, false)
+    gameManager.turnBattleOps.startStage(player, stageDef, false)
 
     return { gameManager, player, combatSource }
   }

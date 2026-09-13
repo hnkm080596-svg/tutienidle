@@ -140,7 +140,7 @@ import { RewardSystem } from '../reward/RewardSystem'
 import type { BattleRewardSummary } from '../reward/BattleRewardSummary'
 
 
-import type { PlayerData } from '../player/Player'
+import { resolvePlayerFinalStats, type PlayerData } from '../player/Player'
 
 import { CHAIN_SKILL_IDS } from '../../data/skill/Skills'
 
@@ -581,8 +581,8 @@ export class GameManager {
       stageTemplates: this.stageTemplates,
       enemyTemplates: this.enemyTemplates,
       isStageUnlocked: (stageId, player) => this.catalogOps.isStageUnlocked(stageId, player),
-      launchBattle: (player, playerStats, enemy) =>
-        this.startBattleWithPlayer(player, playerStats, enemy),
+      launchBattle: (player, enemy) =>
+        this.startBattleWithPlayer(player, enemy),
       hiddenBeast: this.hiddenBeastSystem,
     })
 
@@ -706,6 +706,12 @@ export class GameManager {
       getSkillLevels: () =>
         Object.fromEntries(this.skillManager.getAll().map((skill) => [skill.id, skill.level])),
       resetPassiveStacks: () => this.passiveSystem.resetStacks(),
+      // ARCH-002 (M7) — battle base resolves HERE, post-reset, from the
+      // static partition only; the live partition reaches entity.stats via
+      // the engine's provider at every refresh.
+      resolvePlayerStats: (player) =>
+        resolvePlayerFinalStats(player, this.effectOps.getBattleBaseModifiers(player)),
+      getLiveBattleModifiers: (player) => this.effectOps.getLiveBattleModifiers(player),
       bankPassiveCarry: (player) => this.passiveSystem.bankBattleCarryStacks(player),
       seedPassiveCarry: (player) => this.passiveSystem.seedBattleCarryStacks(player),
       buildPlayerRewardReceiver: (player) => this.rewardOps.buildPlayerRewardReceiver(player),
@@ -1096,13 +1102,12 @@ export class GameManager {
 
   /**
    * Tiện ích: bắt đầu trận đấu thẳng từ PlayerData thay vì phải
-   * tự convert sang CombatEntity trước. `playerStats` truyền vào
-   * phải là finalStats (đã cộng modifiers) — lấy từ
-   * player store getter `finalStats`, không tính lại ở đây để
-   * tránh 2 nơi tự gọi calculateStats() khác nhau.
+   * tự convert sang CombatEntity trước. ARCH-002 (M7): the resolved
+   * base is computed inside the ops AFTER the passive reset (single
+   * resolvePlayerFinalStats owner) — callers no longer pass a snapshot.
    */
-  startBattleWithPlayer(player: PlayerData, playerStats: Stats, enemy: Enemy) {
-    this.turnBattleOps.startBattleWithPlayer(player, playerStats, enemy)
+  startBattleWithPlayer(player: PlayerData, enemy: Enemy) {
+    this.turnBattleOps.startBattleWithPlayer(player, enemy)
   }
 
   /**
@@ -1125,12 +1130,32 @@ export class GameManager {
     * nï¿½n khï¿½ng cï¿½ session nï¿½o d? xoï¿½.
     */
 
+  /**
+   * ARCH-002 (M7) — resolved stat snapshot for non-turn-engine paths
+   * (tribulation ghost, Kiep Thuong debuff scaling): the same modifier
+   * union the menu mirror serves (aggregated + runtime), resolved through
+   * the single owner resolvePlayerFinalStats. Callers needing a
+   * stack-clean snapshot must reset ephemeral passive state FIRST — see
+   * startTribulation below.
+   */
+  resolveAmbientPlayerStats(player: PlayerData): Stats {
+    return resolvePlayerFinalStats(player, [
+      ...this.effectOps.getAggregatedModifiers(player),
+      ...this.effectOps.getActiveRuntimeModifiers(player),
+    ])
+  }
+
   startTribulation(
     player: PlayerData,
-    playerStats: Stats,
     targetRealmId: string,
   ): boolean {
     const hasTrucCoDan = this.pillBag.has('truc_co_dan', 1)
+
+    // ARCH-002 (M7) — same ordering contract as startBattleWithPlayer:
+    // ephemeral passive stacks reset BEFORE the ghost snapshot is taken,
+    // so leftover battle stacks can never leak into the tribulation tank.
+    this.passiveSystem.resetStacks()
+    const playerStats = this.resolveAmbientPlayerStats(player)
 
     return this.tribulationDirector.start(player, playerStats, hasTrucCoDan, targetRealmId)
   }

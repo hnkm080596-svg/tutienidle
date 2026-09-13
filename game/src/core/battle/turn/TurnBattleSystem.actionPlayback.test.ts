@@ -3,7 +3,7 @@ import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from '.
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
-import { createBaseStats } from '../../stats/StatBlock'
+import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
 import { BuffPool } from '../../buff/BuffPool'
 
 // Action Playback Task 3 — equivalence tests cho split
@@ -13,7 +13,7 @@ import { BuffPool } from '../../buff/BuffPool'
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
 
-  return {
+  const entity = {
     id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
     currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
     currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
@@ -21,6 +21,18 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     currentWard: 0, timeSinceLastHitTaken: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
     ...overrides,
   } as CombatEntity
+
+  // ARCH-002 (M7 R1): refreshParticipantStats re-derives entity.stats from
+  // baseStats and reconciles entity.maxHp from stats.maxHp — mirror an
+  // injected stats override into the base and carry the declared vitals
+  // ceiling into both views or the first refresh reverts/clamps it.
+  entity.baseStats = (overrides.baseStats ?? overrides.stats ?? entity.baseStats) as CombatEntity['baseStats']
+  const ceiling = Math.max(entity.maxHp, entity.currentHp)
+  if (entity.stats.maxHp !== ceiling) {
+    entity.stats = { ...entity.stats, maxHp: ceiling }
+    entity.baseStats = asBaseStats({ ...entity.baseStats, maxHp: ceiling })
+  }
+  return entity
 }
 
 function makeParticipant(

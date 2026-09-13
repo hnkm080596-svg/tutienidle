@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
-import { calculateStats } from '../stats/StatCalculator'
 import { defineEnemy } from '../enemy/Enemy'
 import { SKILLS } from '../../data/skill/Skills'
 
@@ -47,8 +46,7 @@ describe('GameManager — turn-engine cast counting wiring (9.5 #9)', () => {
     gameManager.setActivePlayer(player)
     gameManager.progressionOps.learnSkill('tram')
 
-    const stats = calculateStats(player.baseStats, player.modifiers)
-    gameManager.startBattleWithPlayer(player, stats, makeDummyEnemy())
+    gameManager.startBattleWithPlayer(player, makeDummyEnemy())
 
     // intro + countdown + vài lượt fighting — tram là basic của kiem_tu.
     // Advance until the player's first cast lands (gauge fill depends on

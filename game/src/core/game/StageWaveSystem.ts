@@ -5,7 +5,6 @@ import { applyEnemyTags } from '../enemy/EnemyTag'
 import { ENEMY_TAGS } from '../../data/enemy/EnemyTags'
 import { rollChance } from '../reward/DropRoll'
 import type { PlayerData } from '../player/Player'
-import type { Stats } from '../stats/StatBlock'
 import type { StageManager } from '../stage/StageManager'
 import type { StageSystem } from '../stage/StageSystem'
 import type { Stage } from '../stage/Stage'
@@ -25,8 +24,10 @@ export interface StageWaveSystemDeps {
   // vì isStageUnlocked cần cả stageTemplates lẫn zoneRegistry.
   isStageUnlocked: (stageId: string, player: PlayerData) => boolean
   // Khởi trận với player thật (snapshot skill/stats) — GameManager cung cấp
-  // startBattleWithPlayer để không phải inject skill systems.
-  launchBattle: (player: PlayerData, playerStats: Stats, enemy: Enemy) => void
+  // startBattleWithPlayer để không phải inject skill systems. ARCH-002 (M7):
+  // stats are resolved inside the battle ops after the passive reset — the
+  // caller no longer passes a snapshot.
+  launchBattle: (player: PlayerData, enemy: Enemy) => void
   // Quái ẩn (spec dot-pha-loi-kiep §4.1c) — roll trà trộn pool spawn
   // Luyện Khí khi cửa sổ 1000 kill mở.
   hiddenBeast: HiddenBeastSystem
@@ -52,7 +53,7 @@ export class StageWaveSystem {
    * passiveSystem.resetStacks() bên trong, đúng điểm reset stack 1 LẦN/
    * màn chứ không phải mỗi wave).
    */
-  start(player: PlayerData, playerStats: Stats, stage: Stage, repeatContinuously = false): boolean {
+  start(player: PlayerData, stage: Stage, repeatContinuously = false): boolean {
     if (!this.deps.isStageUnlocked(stage.id, player)) {
       return false
     }
@@ -74,7 +75,7 @@ export class StageWaveSystem {
       return false
     }
 
-    this.deps.launchBattle(player, playerStats, firstEnemyTemplate)
+    this.deps.launchBattle(player, firstEnemyTemplate)
 
     return true
   }

@@ -2,7 +2,7 @@
 import { describe, expect, it, vi, afterEach } from 'vitest'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
-import { calculateStats } from '../stats/StatCalculator'
+import { asBaseStats } from '../stats/StatBlock'
 import { defineEnemy } from '../enemy/Enemy'
 import type { Stage } from '../stage/Stage'
 import { StageWaveSystem } from './StageWaveSystem'
@@ -80,9 +80,9 @@ describe('GameManager — auto-farm start/stop exclusivity', () => {
 
   it('startAutoFarm fail khi StageManager đang có stage active', () => {
     const { gameManager, player } = harness()
-    const stats = calculateStats({ ...player.baseStats }, [])
+    player.baseStats = asBaseStats({ ...player.baseStats,  })
 
-    gameManager.turnBattleOps.startStage(player, stats, FARM_STAGE, false)
+    gameManager.turnBattleOps.startStage(player, FARM_STAGE, false)
 
     expect(gameManager.turnBattleOps.autoFarmOps.startAutoFarm(player, FARM_STAGE.id)).toBe(false)
   })

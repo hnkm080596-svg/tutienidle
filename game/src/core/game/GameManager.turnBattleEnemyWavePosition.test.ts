@@ -3,7 +3,7 @@ import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClo
 import { GameManager } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import { createDefaultPlayer } from '../player/Player'
-import { calculateStats } from '../stats/StatCalculator'
+import { asBaseStats } from '../stats/StatBlock'
 import type { Stage } from '../stage/Stage'
 import { SKILLS } from '../../data/skill/Skills'
 import { ENEMY_SIDE_REGION } from '../battle/BattlefieldRegions'
@@ -65,9 +65,9 @@ describe('GameManager — turn-based wave spawn position (bug fix 2026-09-06)', 
     expect(gameManager.skillSystem.equipToSlot('tram', 0)).toBe(true)
 
     const player = createDefaultPlayer()
-    const stats = calculateStats({ ...player.baseStats, attack: 999 }, [])
+    player.baseStats = asBaseStats({ ...player.baseStats, attack: 999  })
 
-    expect(gameManager.turnBattleOps.startStage(player, stats, stage)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stage)).toBe(true)
 
     // id -> x (column) tại lần đầu thấy id đó trong turn battle.
     const seenAtSpawn = new Map<string, number>()

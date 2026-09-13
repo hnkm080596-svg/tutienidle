@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { createDefaultPlayer, type PlayerData } from '../core/player/Player'
+import { createDefaultPlayer, resolvePlayerFinalStats, type PlayerData } from '../core/player/Player'
 import {
   DEFAULT_COMBAT_AI_STRATEGY,
   isCombatAiStrategy,
@@ -21,8 +21,7 @@ import { PLAYER_BASE_RANGE_RANKS } from '@/core/stats/StatBlock'
 import type { GameManager } from '@/core/game/GameManager'
 import { getRequiredCultivation, BASE_CULTIVATION_PER_SECOND } from '@/core/realm/realmSystem'
 import { getCultivationRampMultiplier, getCultivationSpeedMultiplier, getInsightPerCultivation } from '@/core/talent/TalentEffects'
-import { calculateStats, type StatModifier } from '@/core/stats/StatCalculator'
-import { getKiemYDamageMultipliers, getKiemYTier } from '@/core/player/KiemYSystem'
+import type { StatModifier } from '@/core/stats/StatCalculator'
 import { normalizeArtifactProgress } from '@/core/artifact/ArtifactProgression'
 import {
   resolvePlayerVisualProfileId,
@@ -128,26 +127,11 @@ export const usePlayerStore = defineStore('player', {
     // Stats cuối cùng = baseStats + modifiers (equipment/talent, tĩnh)
     // + externalModifiers (buff/technique, do GameManager gộp mỗi tick).
     // Đây là nguồn duy nhất UI/CombatEntity nên đọc.
+    // ARCH-002 (M7): formula lives in resolvePlayerFinalStats() — the same
+    // owner the battle entry path resolves through (post-reset, fresh
+    // aggregation instead of this mirror field).
     finalStats(state) {
-      // Kiếm Ý vĩnh viễn (spec 2026-08-29-kiem-the-kiem-y mục 3.3) —
-      // thay SwordIntentSystem cũ (tier theo tu vi đã dỡ): tier theo
-      // bossKillCount (KiemYSystem), CHỈ áp khi đã chốt path Kiếm Tu
-      // route Bạt Kiếm (Đơn Kiếm ăn tier, Đa Kiếm không).
-      const kiemYModifiers: StatModifier[] = []
-      if (state.cultivationPath === 'kiem_tu' && state.kiemTuRoute === 'bat_kiem' && state.bossKillCount > 0) {
-        const multipliers = getKiemYDamageMultipliers(getKiemYTier(state.bossKillCount))
-        kiemYModifiers.push(
-          { id: 'kiem_y:skill_damage', sourceId: 'kiem_y', sourceType: 'attribute', stat: 'skillDamagePercent', flat: multipliers.skillDamagePercent },
-          { id: 'kiem_y:critical_rate', sourceId: 'kiem_y', sourceType: 'attribute', stat: 'criticalRate', flat: multipliers.criticalRate },
-          { id: 'kiem_y:critical_damage', sourceId: 'kiem_y', sourceType: 'attribute', stat: 'criticalDamage', flat: multipliers.criticalDamage },
-        )
-      }
-
-      return calculateStats(state.baseStats, [
-        ...state.modifiers,
-        ...state.externalModifiers,
-        ...kiemYModifiers,
-      ])
+      return resolvePlayerFinalStats(state, state.externalModifiers)
     },
 
     // The character's visual form — derived FROM the entity itself

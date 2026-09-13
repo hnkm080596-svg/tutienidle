@@ -11,7 +11,6 @@ import { createPinia, setActivePinia } from 'pinia'
 import { usePlayerStore } from '../../stores/player'
 import { GameManager } from '../game/GameManager'
 import { TribulationOutcomeService } from './TribulationOutcomeService'
-import { createBaseStats } from '../stats/StatBlock'
 import { pills } from '../../data/pill/pills'
 import { makeInstance } from '../../core/equipment/EquipmentInstance.fixture'
 import { PROFESSION_GRADE_BY_REALM } from '../profession/ProfessionGrade'
@@ -49,12 +48,10 @@ describe('TribulationOutcomeService — start-side prep parity', () => {
     expect(player.modifiers.some((m) => m.sourceType === 'equipment')).toBe(true)
 
     const service = new TribulationOutcomeService()
-    const stats = createBaseStats({ maxHp: 500_000, defense: 10_000 })
     const started = service.startTribulationPrepared(
       player,
       gameManager,
       'foundation_establishment',
-      stats,
     )
 
     expect(started).toBe(true)
@@ -72,12 +69,10 @@ describe('TribulationOutcomeService — start-side prep parity', () => {
     // Unknown target realm -> getTribulationChapters returns undefined.
 
     const service = new TribulationOutcomeService()
-    const stats = createBaseStats({ maxHp: 500_000 })
     const started = service.startTribulationPrepared(
       player,
       gameManager,
       'no_such_realm_id',
-      stats,
     )
 
     expect(started).toBe(false)

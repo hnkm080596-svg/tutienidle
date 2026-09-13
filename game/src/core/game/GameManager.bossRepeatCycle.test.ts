@@ -2,7 +2,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
-import { calculateStats } from '../stats/StatCalculator'
 import { defineEnemy } from '../enemy/Enemy'
 import type { Enemy } from '../enemy/Enemy'
 import type { Stage } from '../stage/Stage'
@@ -62,13 +61,12 @@ describe('boss stage — restartTurnBattleCycle() repeat cycle keeps spawning th
     gameManager.catalogOps.registerStages([stage])
 
     const player = createDefaultPlayer()
-    const stats = calculateStats(player.baseStats, [])
 
     gameManager.setActivePlayer(player)
 
     // repeatContinuously = true — bật đúng feature auto-repeat-farm thật
     // (GameManager.ts update() loop, gated bởi turnBattleRepeatContinuously).
-    expect(gameManager.turnBattleOps.startStage(player, stats, stage, true)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stage, true)).toBe(true)
 
     const seenEnemyIds: string[] = []
 

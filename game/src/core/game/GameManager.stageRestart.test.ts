@@ -3,7 +3,7 @@ import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClo
 import { GameManager, INTRO_TOTAL_TICKS } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import { createDefaultPlayer } from '../player/Player'
-import { calculateStats } from '../stats/StatCalculator'
+import { asBaseStats } from '../stats/StatBlock'
 import type { Stage } from '../stage/Stage'
 
 function stageFixture(id: string, enemyId: string): Stage {
@@ -21,7 +21,7 @@ describe('GameManager — stage restart clears stale Action Playback pending sta
     const combatSource = new ManualClockSource()
     gameManager.setCombatClockSource(combatSource)
     const player = createDefaultPlayer()
-    const stats = calculateStats({ ...player.baseStats, attack: 100, speed: 100 }, [])
+    player.baseStats = asBaseStats({ ...player.baseStats, attack: 100, speed: 100  })
 
     const enemyA = defineEnemy({
       id: 'restart_dummy_a', name: 'Dummy A', level: 1, realmId: 'mortal', lane: 'ground',
@@ -40,7 +40,7 @@ describe('GameManager — stage restart clears stale Action Playback pending sta
     gameManager.catalogOps.registerStages([stageA, stageB])
     gameManager.setActivePlayer(player)
 
-    expect(gameManager.turnBattleOps.startStage(player, stats, stageA, false)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stageA, false)).toBe(true)
 
     gameManager.setPresentationActive(true)
 
@@ -75,7 +75,7 @@ describe('GameManager — stage restart clears stale Action Playback pending sta
     // NOW a fresh stage — stale pending fields (if any survived the victory
     // terminal) would leak into battle B. startStage resets them (Defect
     // Task 6) so the new battle starts clean.
-    expect(gameManager.turnBattleOps.startStage(player, stats, stageB, false)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stageB, false)).toBe(true)
 
     expect(gameManager.isActionPlaybackWaiting()).toBe(false)
   })

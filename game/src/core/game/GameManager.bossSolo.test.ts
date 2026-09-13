@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
-import { calculateStats } from '../stats/StatCalculator'
 import { defineEnemy } from '../enemy/Enemy'
 import type { Stage } from '../stage/Stage'
 
@@ -35,11 +34,9 @@ describe('boss stage — GameManager.buildTurnBattle wave config never allows a 
     gameManager.catalogOps.registerStages([stage])
 
     const player = createDefaultPlayer()
-    const stats = calculateStats(player.baseStats, [])
-
     gameManager.setActivePlayer(player)
 
-    expect(gameManager.turnBattleOps.startStage(player, stats, stage, false)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stage, false)).toBe(true)
 
     expect(gameManager.getTurnBattle()!.wave?.totalEnemyCount).toBe(1)
   })

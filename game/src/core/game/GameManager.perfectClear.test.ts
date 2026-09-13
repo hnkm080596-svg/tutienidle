@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
-import { calculateStats } from '../stats/StatCalculator'
+import { asBaseStats } from '../stats/StatBlock'
 import { defineEnemy } from '../enemy/Enemy'
 import type { Stage } from '../stage/Stage'
 import { COMPANIONS } from '../../data/companion/Companions'
@@ -55,13 +55,13 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
     const combatSource = new ManualClockSource()
     gameManager.setCombatClockSource(combatSource)
     const player = createDefaultPlayer()
-    const stats = calculateStats({ ...player.baseStats, attack: 100 }, [])
+    player.baseStats = asBaseStats({ ...player.baseStats, attack: 100  })
 
     gameManager.catalogOps.registerEnemyTemplates([DUMMY_ENEMY])
     gameManager.catalogOps.registerStages([stageDef])
     gameManager.setActivePlayer(player)
 
-    gameManager.turnBattleOps.startStage(player, stats, stageDef, false)
+    gameManager.turnBattleOps.startStage(player, stageDef, false)
 
     return { gameManager, player, stageDef, combatSource }
   }
@@ -102,7 +102,7 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
 
   it('không overwrite perfectClearSeconds khi đạt Hoàn Mỹ lần 2', () => {
     const { gameManager, player, stageDef, combatSource } = harness(stage({ perfectClearTurnLimit: 50 }))
-    const stats = calculateStats({ ...player.baseStats, attack: 100 }, [])
+    player.baseStats = asBaseStats({ ...player.baseStats, attack: 100  })
 
     for (let i = 0; i < 400 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
       try {
@@ -119,7 +119,7 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
     // be 0 in a synchronous test loop - assert the RECORD, not the value.
     expect(player.perfectClearStageIds).toContain('perfect_stage')
 
-    gameManager.turnBattleOps.startStage(player, stats, stageDef, false)
+    gameManager.turnBattleOps.startStage(player, stageDef, false)
 
     for (let i = 0; i < 400 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
       try {
@@ -176,7 +176,7 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
       const combatSource = new ManualClockSource()
       gameManager.setCombatClockSource(combatSource)
       const player = createDefaultPlayer()
-      const stats = calculateStats({ ...player.baseStats, attack: 100 }, [])
+      player.baseStats = asBaseStats({ ...player.baseStats, attack: 100  })
 
       // formationLoadout + companions must be set BEFORE
       // setActivePlayer/startStage - buildTurnBattle reads the live
@@ -202,7 +202,7 @@ describe('GameManager — Hoàn Mỹ condition on turn-based victory', () => {
       gameManager.catalogOps.registerEnemyTemplates([DUMMY_ENEMY])
       gameManager.catalogOps.registerStages([stageDef])
       gameManager.setActivePlayer(player)
-      gameManager.turnBattleOps.startStage(player, stats, stageDef, false)
+      gameManager.turnBattleOps.startStage(player, stageDef, false)
 
       return { gameManager, player, stageDef, combatSource }
     }

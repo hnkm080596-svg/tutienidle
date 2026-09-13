@@ -4,6 +4,7 @@ import { GameManager, INTRO_TOTAL_TICKS } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import { createDefaultPlayer } from '../player/Player'
 import { calculateStats } from '../stats/StatCalculator'
+import { asBaseStats } from '../stats/StatBlock'
 import type { Stage } from '../stage/Stage'
 
 // QA quick-mode reproduction probes for the intro phase (2026-09-07 Task 4).
@@ -31,7 +32,7 @@ function buildGameManager(): {
   const combatSource = new ManualClockSource()
   gameManager.setCombatClockSource(combatSource)
   const player = createDefaultPlayer()
-  const _stats = calculateStats({ ...player.baseStats, attack: 100, speed: 100 }, [])
+  player.baseStats = asBaseStats({ ...player.baseStats, attack: 100, speed: 100  })
 
   const enemy = defineEnemy({
     id: 'qa_intro_dummy', name: 'QA Intro Dummy', level: 1, realmId: 'mortal', lane: 'ground',
@@ -50,7 +51,7 @@ describe('QA quick — intro phase adversarial probes (2026-09-07 Task 4)', () =
   it('timing boundary: one extra tick past INTRO_TOTAL_TICKS stays countdown (no double flip, no skip into fighting)', () => {
     const { gameManager, player, combatSource } = buildGameManager()
 
-    expect(gameManager.turnBattleOps.startStage(player, stats0(player), gameManager.catalogOps.getStage('qa_intro_stage')!, false)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, gameManager.catalogOps.getStage('qa_intro_stage')!, false)).toBe(true)
 
     for (let i = 0; i < INTRO_TOTAL_TICKS; i++) {
       combatSource.advance(COMBAT_STEP_SECONDS)
@@ -69,7 +70,7 @@ describe('QA quick — intro phase adversarial probes (2026-09-07 Task 4)', () =
   it('interruption: abandoning mid-intro terminals the battle and frees the stage slot immediately', () => {
     const { gameManager, player, combatSource } = buildGameManager()
 
-    expect(gameManager.turnBattleOps.startStage(player, stats0(player), gameManager.catalogOps.getStage('qa_intro_stage')!, false)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, gameManager.catalogOps.getStage('qa_intro_stage')!, false)).toBe(true)
 
     combatSource.advance(COMBAT_STEP_SECONDS)
     combatSource.advance(COMBAT_STEP_SECONDS)
@@ -81,14 +82,14 @@ describe('QA quick — intro phase adversarial probes (2026-09-07 Task 4)', () =
     expect(gameManager.turnBattleOps.getStageProgress()).toBeNull()
 
     // Stage slot must be released — refight starts cleanly.
-    expect(gameManager.turnBattleOps.startStage(player, stats0(player), gameManager.catalogOps.getStage('qa_intro_stage')!, false)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, gameManager.catalogOps.getStage('qa_intro_stage')!, false)).toBe(true)
     expect(gameManager.getTurnBattle()?.state).toBe('intro')
   })
 
   it('repeat: startStage while a battle is mid-intro is rejected (pre-existing single-slot StageManager contract) and the intro battle keeps running', () => {
     const { gameManager, player, combatSource } = buildGameManager()
 
-    expect(gameManager.turnBattleOps.startStage(player, stats0(player), gameManager.catalogOps.getStage('qa_intro_stage')!, false)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, gameManager.catalogOps.getStage('qa_intro_stage')!, false)).toBe(true)
 
     // Partially drain intro.
     combatSource.advance(COMBAT_STEP_SECONDS)
@@ -98,7 +99,7 @@ describe('QA quick — intro phase adversarial probes (2026-09-07 Task 4)', () =
     // Single-slot StageManager rejects a second start while one is active.
     // Pre-existing contract: identical rejection applied during the old
     // countdown phase (StageManager.start L23-26, untouched by Task 4).
-    expect(gameManager.turnBattleOps.startStage(player, stats0(player), gameManager.catalogOps.getStage('qa_intro_stage')!, false)).toBe(false)
+    expect(gameManager.turnBattleOps.startStage(player, gameManager.catalogOps.getStage('qa_intro_stage')!, false)).toBe(false)
 
     // The original battle is untouched and still in intro.
     expect(gameManager.getTurnBattle()?.state).toBe('intro')
@@ -108,7 +109,7 @@ describe('QA quick — intro phase adversarial probes (2026-09-07 Task 4)', () =
   it('catch-up: a large delta (2s, exactly the intro length) advances intro to countdown in ONE update call', () => {
     const { gameManager, player, combatSource } = buildGameManager()
 
-    expect(gameManager.turnBattleOps.startStage(player, stats0(player), gameManager.catalogOps.getStage('qa_intro_stage')!, false)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, gameManager.catalogOps.getStage('qa_intro_stage')!, false)).toBe(true)
 
     // A 2s frame from the clock source is still sliced into 20 fixed 0.1s
     // combat steps. There is no catch-up CEILING on combat any more - the

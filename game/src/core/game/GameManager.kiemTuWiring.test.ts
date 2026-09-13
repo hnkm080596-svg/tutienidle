@@ -7,7 +7,6 @@
 import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
-import { calculateStats } from '../stats/StatCalculator'
 import { ENEMIES } from '../../data/enemy/Enemies'
 import { buildings } from '../../data/building/buildings'
 import { SKILLS } from '../../data/skill/Skills'
@@ -65,9 +64,8 @@ describe('GameManager — production wiring của 3 closure Kiếm Tu (kiem-tu �
     manager.skillSystem.equipToSlot('bat_kiem_thuat', 0)
 
     const enemy = ENEMIES[0]!
-    const stats = calculateStats(player.baseStats, player.modifiers)
 
-    manager.startBattleWithPlayer(player, stats, enemy)
+    manager.startBattleWithPlayer(player, enemy)
 
     // C1 (2026-09-08): legacy mirror battle is gone — assert through the
     // turn battle's player entity (same CombatEntity the Kiếm bar reads).

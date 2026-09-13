@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
-import { calculateStats } from '../stats/StatCalculator'
+import { asBaseStats } from '../stats/StatBlock'
 import { defineEnemy } from '../enemy/Enemy'
 import { SKILLS } from '../../data/skill/Skills'
 import { HERO_LANE_INDEX } from '../battle/BattleLane'
@@ -80,7 +80,7 @@ describe('GameManager — restore skill legacy thiếu execution (bugfix 2026-08
     const player = createDefaultPlayer()
     // (2026-09-04) pin speed 1 như attackSpeed cũ — không pin thì cadence
     // 100 đòn/s khiến enemy chết hết trước khi assert.
-    const stats = calculateStats({ ...player.baseStats, attack: 100, speed: 100 }, [])
+    player.baseStats = asBaseStats({ ...player.baseStats, attack: 100, speed: 100  })
 
     const enemy = defineEnemy({
       id: 'legacy_restore_dummy',
@@ -101,7 +101,7 @@ describe('GameManager — restore skill legacy thiếu execution (bugfix 2026-08
     })
 
     gameManager.catalogOps.registerEnemyTemplates([enemy])
-    gameManager.startBattleWithPlayer(player, stats, enemy)
+    gameManager.startBattleWithPlayer(player, enemy)
     combatSource.advance(3) // Bỏ qua countdown + telegraph spawn.
 
     const battle = gameManager.getBattle()!

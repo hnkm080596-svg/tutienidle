@@ -22,7 +22,11 @@ function setup(skill: TurnSkillDefinition) {
   source.stats.criticalRate = 0
   const target = enemyToCombatEntity(structuredClone(ENEMIES[0]!))
   target.id = 'target'
+  // ARCH-002 (M7 R1): entity.maxHp reconciles from stats.maxHp on refresh —
+  // declare the intended ceiling in resolved/base stats, not just fields.
   target.currentHp = target.maxHp = 100000
+  target.stats.maxHp = 100000
+  target.baseStats.maxHp = 100000
   target.stats.evasionRate = 0
   target.stats.blockChance = 0
   const actor = toTurnBattleParticipant(source, 0, skill)
