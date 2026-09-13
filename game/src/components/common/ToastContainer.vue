@@ -1,11 +1,34 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted } from 'vue'
+import { onBeforeUnmount, onMounted, watch } from 'vue'
 import { useNotificationStore } from '@/stores/notification'
 import type { NotificationKind } from '@/core/notification/NotificationEvent'
 import { isMaxRankTone } from '@/core/profession/slotRank'
 import { OVERLAY_LAYERS } from '@/core/presentation/OverlayLayers'
+import { AudioManager, type SoundId } from '@/core/audio/AudioManager'
 
 const notification = useNotificationStore()
+
+// Toast kind -> SFX. Playing here (not in the store's push()) keeps the
+// notification store free of audio deps and — more importantly — plays the
+// sound at the moment the toast becomes visible, not when it is queued.
+const KIND_SOUND: Record<NotificationKind, SoundId> = {
+  loot: 'toastLoot',
+  craft: 'toastCraft',
+  upgrade: 'toastUpgrade',
+  save: 'toastSave',
+  warning: 'toastWarning',
+  error: 'toastError',
+}
+
+watch(
+  () => notification.toasts.map((toast) => toast.id),
+  (ids, prevIds) => {
+    const prev = new Set(prevIds)
+    for (const toast of notification.toasts) {
+      if (!prev.has(toast.id)) AudioManager.getInstance().play(KIND_SOUND[toast.kind])
+    }
+  },
+)
 
 // Khớp token màu có sẵn trong assets/theme.css — không thêm token
 // mới, tái dùng đúng bảng màu game đã có.

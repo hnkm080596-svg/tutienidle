@@ -445,7 +445,14 @@
         "uiScaleAria": "Interface font size",
         "uiScale": "Interface Font Size",
         "themeAria": "Appearance",
-        "theme": "Appearance"
+        "theme": "Appearance",
+        "audioAria": "Audio",
+        "audio": "Audio"
+      },
+      "audio": {
+        "on": "On",
+        "off": "Off",
+        "volume": "Volume"
       }
     },
     "technique": {

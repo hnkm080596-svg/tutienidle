@@ -2,10 +2,10 @@
 import { computed } from 'vue'
 import InkNineSlice from './primitives/InkNineSlice.vue'
 import type { InkWashUiAssetId } from '@/assets/inkWashUi'
-// Shared chrome primitive (UI/UX rework Giai đoạn A) — thay button
-// hand-roll (mỗi panel tự khai background/color/border riêng) bằng 1
-// component dùng chung, tái dùng token --gold/--jade/--crimson/--tap-*
-// có sẵn trong theme.css.
+import { AudioManager } from '@/core/audio/AudioManager'
+// Shared chrome primitive (UI/UX rework phase A) — replaces hand-rolled
+// buttons (each panel declaring its own background/color/border) with one
+// component reusing the --gold/--jade/--crimson/--tap-* tokens in theme.css.
 const props = withDefaults(defineProps<{
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost'
   size?: 'sm' | 'md' | 'lg'
@@ -14,6 +14,8 @@ const props = withDefaults(defineProps<{
   disabled?: boolean
   loading?: boolean
   type?: 'button' | 'submit'
+  /** When false (default true), the button does NOT play uiClick on click. */
+  sound?: boolean
 }>(), {
   variant: 'primary',
   size: 'md',
@@ -22,13 +24,31 @@ const props = withDefaults(defineProps<{
   disabled: false,
   loading: false,
   type: 'button',
+  sound: true,
 })
 
-defineEmits<{ click: [MouseEvent] }>()
+const emit = defineEmits<{ click: [MouseEvent] }>()
+
+// Direct AudioManager singleton (not the Pinia store) so GameButton can
+// mount in unit tests without an active Pinia. SettingsPanel and other
+// components needing reactive state use useAudioStore for
+// enabled + volume.
+const audio = AudioManager.getInstance()
+
+// Centralized click handler — plays uiClick SFX + unlocks the AudioContext
+// on the first click (autoplay policy requires a user gesture). The real
+// parent click still fires via emit('click').
+function handleClick(event: MouseEvent) {
+  audio.unlock()
+  if (props.sound) {
+    audio.play('uiClick')
+  }
+  emit('click', event)
+}
 
 const sliceAsset = computed<InkWashUiAssetId | undefined>(() => {
-  // border-image (InkNineSlice) không theo border-radius — nút circle
-  // dùng viền CSS thường (.game-button--circle) thay vì asset chữ nhật.
+  // border-image (InkNineSlice) does not follow border-radius — circle
+  // buttons use a plain CSS border (.game-button--circle) instead.
   if (props.shape === 'circle') return undefined
   switch (props.variant) {
     case 'secondary': return 'button-s-ink'
@@ -52,7 +72,7 @@ const sliceTint = computed(() => (props.variant === 'danger' ? '--cinnabar' : un
     :style="accentVar ? { '--button-accent': accentVar } : undefined"
     :disabled="disabled || loading"
     :aria-busy="loading || undefined"
-    @click="$emit('click', $event)"
+    @click="handleClick"
   >
     <InkNineSlice v-if="sliceAsset" :asset-id="sliceAsset" :layer="sliceLayer" :tint-var="sliceTint" />
     <span v-if="loading" class="game-button__spinner" aria-hidden="true" />
