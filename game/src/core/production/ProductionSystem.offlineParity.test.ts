@@ -17,6 +17,7 @@ import {
   THANH_VAN_PRODUCTION_SITES,
 } from './ProductionCatalog'
 import { ProductionSystem } from './ProductionSystem'
+import { advanceWorkerLanes } from './WorkerLaneAdvance'
 import {
   CYCLE_BASE_SECONDS_BY_REALM,
   PRODUCTION_OFFLINE_CAP_SECONDS,
@@ -355,5 +356,148 @@ describe('M11 / ARCH-007 — per-lane offline worker settlement', () => {
     // advanced independently — no pooling of partial work.
     expect(settled).toBe(4)
     expect(pendingDues(system)).toEqual([start + 300_000, start + 300_000])
+  })
+
+  it('shared budget exhausted -> saved past-due lanes forfeit (not granted, not left pending)', () => {
+    const { bag, registry } = createBag()
+    const start = 1_000_000
+    const now = start + 150_000
+    const capCycles = Math.floor((PRODUCTION_OFFLINE_CAP_SECONDS * 1000) / CYCLE_MS) // 360
+
+    // 370 saved past-due lanes (all due T+100s) on a 2-slot site: the
+    // shared 10h budget pays 360 completions; the remaining 10 saved
+    // cycles are FORFEITED — dropped without reward, never left pending.
+    const backlog = Array.from({ length: capCycles + 10 }, (_, index) =>
+      makeWorkerCycle(SITE, start, start + 100_000, `backlog_${index}`),
+    )
+
+    const system = createSystem()
+    system.restoreStates(siteState(backlog))
+
+    const settled = system.settleOffline(bag, registry, REALM, now, {
+      workerCapacity: 2,
+      offlineSinceMs: start,
+      workerAssignments: new Map([[SITE, 2]]),
+    })
+
+    expect(settled).toBe(capCycles)
+    expect(system.drainSettlementEvents()).toHaveLength(capCycles)
+
+    // No saved backlog id survives; only the two live chain tails remain,
+    // strictly in the future — nothing past-due lingers for a free
+    // online grant outside the cap.
+    const pending = system.getState(SITE)!.workerCycles ?? []
+    expect(pending).toHaveLength(2)
+    expect(pending.every((cycle) => !cycle.cycleId.startsWith('backlog_'))).toBe(true)
+    expect(pending.every((cycle) => cycle.completesAtMs > now)).toBe(true)
+  })
+
+  it('capacity 0 freezes worker lanes identically online and offline', () => {
+    const start = 1_000_000
+    const now = start + 150_000
+    const assignments = new Map([[SITE, 2]])
+    const saved = siteState([
+      makeWorkerCycle(SITE, start, start + 100_000, 'lane_a'),
+      makeWorkerCycle(SITE, start, start + 100_000, 'lane_b'),
+    ])
+
+    // Online: capacity 0 -> tickWorkers early-returns; in-flight lanes
+    // stay frozen (no completions, no top-up), exactly like before M11.
+    const online = createSystem()
+    const onlineBag = createBag()
+    online.restoreStates(structuredClone(saved))
+    online.tickWorkers(now, onlineBag.bag, onlineBag.registry, REALM, 0, assignments)
+    expect(online.drainSettlementEvents()).toEqual([])
+    expect(pendingDues(online)).toEqual([start + 100_000, start + 100_000])
+
+    // Offline: workerCapacity 0 -> the same freeze (settle returns 0,
+    // saved lanes preserved untouched for when capacity returns).
+    const offline = createSystem()
+    const offlineBag = createBag()
+    offline.restoreStates(structuredClone(saved))
+    const settled = offline.settleOffline(offlineBag.bag, offlineBag.registry, REALM, now, {
+      workerCapacity: 0,
+      offlineSinceMs: start,
+      workerAssignments: assignments,
+    })
+    expect(settled).toBe(0)
+    expect(offline.drainSettlementEvents()).toEqual([])
+    expect(pendingDues(offline)).toEqual([start + 100_000, start + 100_000])
+  })
+
+  it('0-slot site still drains saved due cycles once (no respawn) — online parity', () => {
+    const start = 1_000_000
+    const now = start + 150_000
+    // lam explicitly assigned 0 workers -> 0 slots; leftover capacity
+    // stays idle (no unassigned site). Saved in-flight lanes still
+    // complete on their own deadline — identical online and offline.
+    const zeroSlot = new Map([[SITE, 0]])
+    const saved = siteState([
+      makeWorkerCycle(SITE, start, start + 100_000, 'lane_a'),
+      makeWorkerCycle(SITE, start, start + 100_000, 'lane_b'),
+    ])
+
+    const online = createSystem()
+    const onlineBag = createBag()
+    online.restoreStates(structuredClone(saved))
+    online.tickWorkers(now, onlineBag.bag, onlineBag.registry, REALM, 2, zeroSlot)
+    expect(online.drainSettlementEvents()).toHaveLength(2)
+    expect(pendingDues(online)).toEqual([])
+
+    const offline = createSystem()
+    const offlineBag = createBag()
+    offline.restoreStates(structuredClone(saved))
+    const settled = offline.settleOffline(offlineBag.bag, offlineBag.registry, REALM, now, {
+      workerCapacity: 2,
+      offlineSinceMs: start,
+      workerAssignments: zeroSlot,
+    })
+    expect(settled).toBe(2)
+    expect(offline.drainSettlementEvents()).toHaveLength(2)
+    expect(pendingDues(offline)).toEqual([])
+  })
+
+  it('non-finite nowMs / budgetMs never advance lanes (defensive guard, no hang)', () => {
+    const { bag, registry } = createBag()
+    const start = 1_000_000
+    const assignments = new Map([[SITE, 2]])
+    const saved = siteState([makeWorkerCycle(SITE, start, start + 100_000, 'lane_a')])
+
+    // A corrupted clock reaching the pinned restore entry must not hang
+    // 'deadline' mode (dueMs > NaN / dueMs > Infinity are always false).
+    for (const badNow of [Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) {
+      const system = createSystem()
+      system.restoreStates(structuredClone(saved))
+      const settled = system.settleOffline(bag, registry, REALM, badNow, {
+        workerCapacity: 2,
+        offlineSinceMs: start,
+        workerAssignments: assignments,
+      })
+      expect(settled).toBe(0)
+      expect(system.drainSettlementEvents()).toEqual([])
+      expect(pendingDues(system)).toEqual([start + 100_000])
+    }
+
+    // Non-finite budget at the mechanism level -> zero-advance result.
+    const lane = makeWorkerCycle(SITE, start, start + 100_000, 'lane_a')
+    for (const badBudget of [Number.NaN, Number.POSITIVE_INFINITY]) {
+      const result = advanceWorkerLanes({
+        siteId: SITE,
+        collectionRealmId: REALM,
+        siteLevel: 1,
+        baseSeconds: CYCLE_BASE_SECONDS_BY_REALM[REALM]!,
+        cycleMs: CYCLE_MS,
+        pending: [lane],
+        slots: 1,
+        nowMs: start + 500_000,
+        emptyLaneStartMs: start,
+        advanceMode: 'deadline',
+        budgetMs: badBudget,
+      })
+      expect(result.completed).toEqual([])
+      expect(result.forfeited).toBe(0)
+      expect(result.consumedBudgetMs).toBe(0)
+      expect(result.pending).toEqual([lane])
+    }
   })
 })

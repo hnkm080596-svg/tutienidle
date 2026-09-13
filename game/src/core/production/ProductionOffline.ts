@@ -20,9 +20,9 @@ import { advanceWorkerLanes } from './WorkerLaneAdvance'
  * online qua CUNG allocateWorkerSlots + grantCycleRewards — online va
  * offline dung mot quy tac phan bo/settle.
  *
- * M11 (ARCH-007): worker-cycle advancement dung CUNG mechanism
- * advanceWorkerLanes (WorkerLaneAdvance.ts) voi tickWorkers — per-lane
- * deadline chaining thay cho pooling floor(windowMs * slots / cycleMs).
+ * M11 (ARCH-007): worker-cycle advancement shares the SAME mechanism
+ * advanceWorkerLanes (WorkerLaneAdvance.ts) with tickWorkers — per-lane
+ * deadline chaining replaces the pooled floor(windowMs * slots / cycleMs).
  */
 export interface ProductionOfflineDeps {
   states: Map<string, ProductionSiteState>
@@ -139,12 +139,15 @@ export function settleProductionOffline(
 
 /**
  * Offline settle cho worker cycles (T3) — chia ngân sách còn lại sau
- * manual settle. Mỗi site có `slots` LANE worker chạy song song trong
- * cửa sổ [offlineSinceMs, nowMs], mỗi lane một chuỗi cycle nối tiếp với
- * deadline RIÊNG (M11/ARCH-007 — cùng mechanism advanceWorkerLanes với
- * tickWorkers, driver 'deadline'). Cycle dở dang vượt nowMs được giữ lại
- * nguyên deadline/lane cho tickWorkers online; cycle hoàn thành mà hết
- * ngân sách bị forfeit. Không gộp phần lẻ giữa các lane thành cycle ảo.
+ * manual settle.
+ *
+ * M11 (ARCH-007): each site runs `slots` parallel worker LANES inside the
+ * [offlineSinceMs, nowMs] window — one sequential cycle chain per lane on
+ * its OWN deadline, via the same advanceWorkerLanes mechanism as
+ * tickWorkers (driver 'deadline'). Pending cycles past nowMs keep their
+ * original lane/deadline for the online tickWorkers; completions over the
+ * remaining budget are forfeited. Fractional lane time is never pooled
+ * into a synthetic cycle.
  *
  * Chi-hien-quan (2026-09-02): `workerAssignments` — cùng phân bổ manual
  * của tickWorkers để OFFLINE KHỚP ONLINE (spec §6).
@@ -204,13 +207,13 @@ function settleWorkersOffline(
 
     state.workerCycles ??= []
 
-    // M11 (ARCH-007) — per-lane advancement qua CÙNG mechanism với
-    // tickWorkers (advanceWorkerLanes): mỗi lane tự hoàn thành theo
-    // deadline RIÊNG của nó; cycle dở dang giữ nguyên lane + deadline
-    // gốc; lane trống chỉ chạy từ mốc save (offlineSinceMs). Không còn
-    // floor(windowMs * slots / cycleMs) gộp phần lẻ giữa các lane.
-    // Completions vượt ngân sách bị forfeit — backlog quá hạn không bao
-    // giờ để lại cho tick online cấp miễn phí ngoài cap.
+    // M11 (ARCH-007) — per-lane advancement via the SAME mechanism as
+    // tickWorkers (advanceWorkerLanes): each lane completes on its OWN
+    // deadline; pending cycles keep their lane + original deadline;
+    // empty lanes produce only from the save instant (offlineSinceMs).
+    // No floor(windowMs * slots / cycleMs) pooling across lanes.
+    // Completions over the budget are forfeited — past-due backlog is
+    // never left behind for a free online grant outside the cap.
     const result = advanceWorkerLanes({
       siteId: state.siteId,
       collectionRealmId: currentRealmId,

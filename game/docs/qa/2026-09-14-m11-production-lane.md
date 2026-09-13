@@ -143,6 +143,38 @@ pinned restore call site are untouched; behavior change is inside the domain mec
 `update()` path remains covered by `GameManager.sharedWorkerPool.test.ts` (drives production
 tickWorkers through the real manager). No visual surface changed; worktree P14 deferral noted.
 
+## Review round 1
+
+Task review verdict: SPEC compliant / QUALITY approved with three minor findings — fixed in one
+scoped round (same branch, second commit).
+
+1. **Non-finite inputs could hang 'deadline' mode** (correctness hardening). `advanceWorkerLanes`
+   now returns a zero-advance result — `completed: []`, `pending: [...params.pending]`,
+   `forfeited: 0`, `consumedBudgetMs: 0` — when `nowMs` is NaN/±Infinity (a completion check
+   `dueMs > nowMs` is always false for NaN/Infinity, so 'deadline' respawn chaining would never
+   terminate) or when a defined `budgetMs` is non-finite. Lanes are preserved untouched: no
+   completions, no respawns, no empty-lane seeding. Regression coverage: NaN/±Infinity `nowMs`
+   through the real `settleOffline` entry and NaN/Infinity `budgetMs` at the mechanism level.
+2. **P15 — comments must be English/ASCII.** The comment text this mission added to
+   `ProductionOffline.ts` (top-of-file M11 note, `settleWorkersOffline` JSDoc addition, inline
+   mechanism comment) was Vietnamese; translated to English. Pre-existing Vietnamese comments
+   untouched per the finding's scope.
+3. **Coverage additions** in `ProductionSystem.offlineParity.test.ts` (8 -> 12 tests):
+   - *Budget exhausted -> saved past-due lanes forfeit*: 370 saved past-due lanes against the
+     shared 360-cycle cap -> exactly 360 granted, the 10 over-cap lanes dropped (no saved id
+     survives), only in-flight chain tails remain, all due in the future.
+   - *Capacity-0 freeze parity*: `workerCapacity`/`capacity` 0 freezes in-flight lanes in BOTH
+     drivers — online `tickWorkers` grants nothing and keeps pending; `settleOffline` returns 0
+     with identical pending. (Reading note: "site capacity 0" was interpreted as the
+     budget-exhausted forfeit path above plus this freeze-parity path; a site with 0 allocated
+     *slots* under a live budget still settles its in-flight completions once — pinned by the
+     third new test — because the online tick does the same and forfeiting them would diverge.)
+   - *0-slot site drains saved due cycles once*: explicit `assignedWorkers: 0` -> both drivers
+     grant each in-flight cycle exactly once, no respawn, pending empties — online parity.
+
+Re-verification after the round: `npm run type-check` exit 0; `npx vitest run src/core/production`
+74/74 green (12 in the parity spec); `npx eslint` on touched files clean.
+
 ## Notes / Suggestions (out of scope, evidence only)
 
 - `tickWorkers` 'observe' order means a lane freed at tick T refills at the next tick — retained

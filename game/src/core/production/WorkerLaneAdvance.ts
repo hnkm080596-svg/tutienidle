@@ -90,6 +90,23 @@ interface LaneCursor {
 export function advanceWorkerLanes(params: WorkerLaneAdvanceParams): WorkerLaneAdvanceResult {
   const { siteId, collectionRealmId, siteLevel, baseSeconds, cycleMs, slots, nowMs } = params
 
+  // Defensive guard: a non-finite clock or budget can never advance a
+  // lane — 'deadline' mode would loop forever because dueMs > NaN and
+  // dueMs > Infinity are both always false. Zero-advance result: the
+  // in-flight lanes are preserved untouched (no completions, no
+  // respawns, no empty-lane seeding).
+  if (
+    !Number.isFinite(nowMs) ||
+    (params.budgetMs !== undefined && !Number.isFinite(params.budgetMs))
+  ) {
+    return {
+      completed: [],
+      pending: [...params.pending],
+      forfeited: 0,
+      consumedBudgetMs: 0,
+    }
+  }
+
   const canSpawn = cycleMs > 0 && baseSeconds > 0
 
   const hasBudget = params.budgetMs !== undefined
