@@ -146,24 +146,40 @@ export function checkTribulationOutcomeAction(
 
   // Outcome authority (R8.2): domain applies realm/talent/foundation/
   // penalty writes; presentation consumes the typed result.
-  const service = new TribulationOutcomeService()
-  const stats = player.finalStats
-  let result: TribulationOutcomeResult
-  if (active.state === 'victory') {
-    result = service.resolveVictory(player as TribulationPlayerWriter, gameManager, active)
-  } else {
-    result = service.resolveDefeat(player as TribulationPlayerWriter, gameManager, active, stats)
+  const applyOutcome = (): boolean => {
+    const service = new TribulationOutcomeService()
+    const stats = player.finalStats
+    let result: TribulationOutcomeResult
+    if (active.state === 'victory') {
+      result = service.resolveVictory(player as TribulationPlayerWriter, gameManager, active)
+    } else {
+      result = service.resolveDefeat(player as TribulationPlayerWriter, gameManager, active, stats)
+    }
+
+    presentOutcome(result)
+
+    gameManager.tribulationDirector.clear()
+    useUiStore().exitTribulationScene()
+    gameManager.eventBus.emit('tribulation_scene_exit', undefined)
+
+    return true
   }
 
-  presentOutcome(result)
-
-  gameManager.tribulationDirector.clear()
-  useUiStore().exitTribulationScene()
 
   if (presentation) {
-    void presentation.coordinator.request({ target: 'home' })
+    // Every visible effect of the outcome (realm/penalty writes reflecting
+    // in home UI, announcement overlay, standalone panel, tribulation exit)
+    // runs inside the closed-curtain window: the tribulation scene stays on
+    // screen while the curtain travels and home is revealed only after the
+    // swap completes. A rejected request leaves the outcome pending - the
+    // next tick re-issues it - and a duplicate tick while in-flight shares
+    // the same request, so the work still runs exactly once. Returning true
+    // regardless keeps the caller's same-tick auto-refight suppression.
+    void presentation.coordinator.request({ target: 'home', behindCurtain: applyOutcome })
+    return true
   }
-  gameManager.eventBus.emit('tribulation_scene_exit', undefined)
+
+  applyOutcome()
 
   return true
 }

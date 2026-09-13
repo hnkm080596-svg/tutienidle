@@ -329,7 +329,15 @@ export class GamePresentationCoordinator {
         throw new Error('Domain command rejected inside the closed-curtain window')
       }
 
-      if (request.behindCurtain) {
+      // Only session routes adopt a produced session here. behindCurtain on
+      // other targets is pure domain work (combat-exit teardown on the way
+      // home, tribulation outcome resolution, error-shell cleanup) - there is
+      // no session to adopt, and whatever session that work just ended must
+      // not be mistaken for a produced one.
+      if (
+        request.behindCurtain &&
+        (request.target === 'combat' || request.target === 'tribulation')
+      ) {
         const produced = this.sessionPort.getCurrentSession()
 
         if (!produced || produced.kind !== request.target) {
@@ -377,6 +385,12 @@ export class GamePresentationCoordinator {
 
       // Step 5: mount target & wait READY
       this.renderRoute = request.target
+      // The boot subphase describes the boot screen that was showing when
+      // the transition began - it is spent the moment the target starts
+      // mounting behind the closed curtain. Clearing here (not at request
+      // time) keeps the prior screen mounted through the whole close
+      // animation; useBootFlow no longer clears it ahead of request().
+      this.bootSubphase = null
       this.phase = 'awaiting-ready'
       this.notify()
 
@@ -513,6 +527,12 @@ export class GamePresentationCoordinator {
   }
 
   private isUnchanged(request: RouteRequest): boolean {
+    // A request carrying behind-curtain domain work is never "unchanged":
+    // short-circuiting here would return before the work ever ran.
+    if (request.behindCurtain) {
+      return false
+    }
+
     if (this.phase !== 'idle' || this.error !== null) {
       return false
     }

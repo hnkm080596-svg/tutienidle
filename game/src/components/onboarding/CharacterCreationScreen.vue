@@ -67,8 +67,9 @@ async function finish() {
   if (!validation.ok) { error.value = validation.message; return }
   creating.value = true
   const result = await characterCreationService.createCharacter(payload)
-  creating.value = false
-  if (!result.ok) { error.value = result.message; return }
+  if (!result.ok) { creating.value = false; error.value = result.message; return }
+  // Keep `creating` until unmount - the boot/save work that follows runs while
+  // this screen is still displayed under the closing curtain.
   emit('complete', payload)
 }
 

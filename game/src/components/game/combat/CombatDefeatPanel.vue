@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { computed, inject, onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useGameManager } from '@/composables/useGameState'
 import { useBattleActions } from '@/composables/useBattleActions'
 import { useAutoRetryCountdown } from '@/composables/useAutoRetryCountdown'
 import { useUiStore } from '@/stores/ui'
-import { GAME_PRESENTATION_KEY } from '@/presentation/PresentationContracts'
 import { formatDuration } from '@/core/format/formatDuration'
 import GameButton from '@/components/common/GameButton.vue'
 import InkNineSlice from '@/components/common/primitives/InkNineSlice.vue'
@@ -40,8 +39,7 @@ const RETURN_COUNTDOWN_SECONDS = 10
 const gameManager = useGameManager()
 const ui = useUiStore()
 const { t } = useI18n({ useScope: 'local' })
-const { startBattle } = useBattleActions()
-const presentation = inject(GAME_PRESENTATION_KEY, null)
+const { startBattle, exitCombatToHome } = useBattleActions()
 
 const summary = computed(() => gameManager.getBattleRewardSummary())
 
@@ -82,12 +80,10 @@ function retryNow() {
 
 function returnHome() {
   clearTimers()
-  ui.battleRunMode = 'manual'
-  ui.exitCombatScene()
-  if (presentation) {
-    void presentation.coordinator.request({ target: 'home' })
-  }
-  gameManager.eventBus.emit('combat_scene_exit', undefined)
+  // Teardown (run-mode reset, dismissed flag, scene-exit event) runs inside
+  // the closed curtain - the defeat panel stays on screen until the swap
+  // behind it is ready (useBattleActions).
+  exitCombatToHome()
 }
 
 onMounted(() => {

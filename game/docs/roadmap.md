@@ -1434,6 +1434,17 @@ Asset routing must validate normalized containment before moving files.
    - Mounting: hosts that a transition DEPENDS on (the Phaser canvas, whose loader scene
      the asset phase needs) mount on `targetRoute`; route screens mount on `renderRoute`
      behind the closed curtain. Conflating the two deadlocks cold boot.
+     Refinement (2026-09-12): `targetRoute` promotion is gated to post-close phases
+     (`loading` onward) — the coordinator publishes `targetRoute` at transition start,
+     and promoting there swapped the mounted screen mid-close. Boot subphases are
+     bookkeeping only and never displace a mounted screen; the coordinator clears
+     `bootSubphase` when the target mounts. Second refinement (same change): ALL
+     domain/UI work with visible effect runs inside `behindCurtain` — combat-exit
+     teardown (victory/defeat/exit-confirm), tribulation outcome resolution +
+     announcements, and error-shell dismissal all moved behind the closed curtain.
+     `behindCurtain` on a non-session target is pure domain work (no produced
+     session is required or adopted), and a request carrying it is never
+     short-circuited as 'unchanged' even when target === currentRoute.
    - Admission: entry points call `coordinator.canEnter(target)` BEFORE issuing a domain
      start command, and read the session kind-scoped, so an accepted start can never be
      left running held and unrendered.

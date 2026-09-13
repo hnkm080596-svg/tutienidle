@@ -29,13 +29,16 @@ async function authenticate(authenticationMode: AuthenticationMode) {
     authenticationMode,
     authenticationMode === 'guest' ? undefined : { loginId: loginId.value, password: password.value },
   )
-  submitting.value = false
 
   if (!result.ok) {
+    submitting.value = false
     error.value = result.message
     return
   }
 
+  // Keep the busy state until the curtain transition unmounts this screen -
+  // the save load and scene swap now run while the auth screen is still
+  // displayed, and the spinner is the feedback for that window.
   emit('authenticated', authenticationMode)
 }
 

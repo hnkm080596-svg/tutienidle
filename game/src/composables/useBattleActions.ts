@@ -90,6 +90,41 @@ export function useBattleActions() {
   }
 
   /**
+   * Combat -> home exit shared by every result/exit control (victory
+   * "Tiếp Tục", defeat "Về Động Phủ", exit-confirm "Thoát Trận", the 10s
+   * auto-return fallback). All visible teardown - battle abandon, run-mode
+   * reset, dismissed flag, the scene-exit event the canvas listens to -
+   * runs inside the closed-curtain window so nothing changes on screen
+   * while the curtain is still travelling. Without presentation
+   * (standalone tests) it runs synchronously, matching pre-coordinator
+   * behavior.
+   *
+   * `abandon` covers the mid-battle exit: abandonBattle() self-guards and
+   * returns false when the battle already ended on its own during the
+   * close - the exit still stands either way, so its result is ignored.
+   */
+  function exitCombatToHome(options: { abandon?: boolean } = {}): void {
+    const teardown = (): boolean => {
+      if (options.abandon) {
+        gameManager.abandonBattle()
+      }
+
+      ui.battleRunMode = 'manual'
+      ui.exitCombatScene()
+      gameManager.eventBus.emit('combat_scene_exit', undefined)
+
+      return true
+    }
+
+    if (!presentation) {
+      teardown()
+      return
+    }
+
+    void presentation.coordinator.request({ target: 'home', behindCurtain: teardown })
+  }
+
+  /**
    * Bấm "Bắt Đầu" ở StageSelectPanel.vue — admission trước startSelectedStage (F07).
    * Chỉ khi startStage thành công mới đóng panel, emit pose, và vào combat UI.
    */
@@ -105,5 +140,5 @@ export function useBattleActions() {
     })
   }
 
-  return { startBattle, startSelectedStage }
+  return { startBattle, startSelectedStage, exitCombatToHome }
 }
