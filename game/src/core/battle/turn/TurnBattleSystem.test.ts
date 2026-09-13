@@ -750,7 +750,7 @@ const ENRAGE_DEFINITION: BuffDefinition = {
 }
 
 describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
-  it('fires the boss trigger and applies the buff to self once totalTurnsElapsed reaches afterTurns', () => {
+  it('fires the boss trigger and applies the buff to self once roundsElapsed reaches afterTurns', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
@@ -776,8 +776,9 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
     const registry = new FixtureBuffRegistry([ENRAGE_DEFINITION])
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
 
-    // Turn 1: player acts (totalTurnsElapsed becomes 1). Turn 2: enemy acts
-    // (totalTurnsElapsed becomes 2, already >= afterTurns 1 by then).
+    // Turn 1: player acts (round 1 in progress). Turn 2: enemy acts —
+    // closes round 1 (roundsElapsed = 1 >= afterTurns 1) and its own
+    // trigger check runs after the round close in the same declare.
     system.resolveNextStep(battle)
     system.resolveNextStep(battle)
 
@@ -819,7 +820,7 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
     expect(afterBuffs).toHaveLength(1)
   })
 
-  it('does not fire before totalTurnsElapsed reaches afterTurns', () => {
+  it('does not fire before roundsElapsed reaches afterTurns', () => {
     const player = createCombatant({
       id: 'player',
       type: 'player',
@@ -850,6 +851,49 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
 
     expect(bossTrigger.firedAlready).toBe(false)
     expect(enemyParticipant.buffs.getAll()).toEqual([])
+  })
+
+  it('does not fire mid-round even when the raw action counter passed afterTurns', () => {
+    // Regression: afterTurns counts ATB rounds, not actor actions. At step
+    // 3 the action counter is 3 >= afterTurns 2, but round 2 has not
+    // closed — the boss must wait for its own round-2 action.
+    const player = createCombatant({
+      id: 'player',
+      type: 'player',
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+    })
+    const enemyEntity = createCombatant({
+      id: 'enemy',
+      currentHp: 1_000_000,
+      maxHp: 1_000_000,
+      stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }),
+    })
+
+    const enemyParticipant = makeParticipant('enemy', enemyEntity, 10, 1)
+    const bossTrigger = { afterTurns: 2, buffDefinitionId: 'fixture_enrage', firedAlready: false }
+    enemyParticipant.bossTrigger = bossTrigger
+
+    const battle: TurnBattle = {
+      players: [makeParticipant('player', player, 10, 0)],
+      enemies: [enemyParticipant],
+      state: 'fighting',
+    }
+
+    const registry = new FixtureBuffRegistry([ENRAGE_DEFINITION])
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
+
+    system.resolveNextStep(battle) // player — round 1 open
+    system.resolveNextStep(battle) // boss — closes round 1; 1 < 2, no fire
+    system.resolveNextStep(battle) // player — action 3, still mid round 2
+
+    expect(battle.totalTurnsElapsed).toBe(3)
+    expect(battle.roundsElapsed).toBe(1)
+    expect(bossTrigger.firedAlready).toBe(false)
+
+    system.resolveNextStep(battle) // boss — closes round 2; fires
+
+    expect(bossTrigger.firedAlready).toBe(true)
+    expect(enemyParticipant.buffs.getAll().some((buff) => buff.id === 'fixture_enrage')).toBe(true)
   })
 
   it('does not throw and does not fire when no registry was provided', () => {
@@ -885,12 +929,13 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
     expect(bossTrigger.firedAlready).toBe(false)
   })
 
-  it('fires real production boss enrage content (mortal_crocodile_enrage) after 60 turns', () => {
+  it('fires real production boss enrage content (mortal_crocodile_enrage) after 60 rounds', () => {
     // Player must survive ~600 boss turns while dealing no damage, so it
-    // gets a huge HP pool and zero attack. NOTE: totalTurnsElapsed only
-    // increments when an actor actually acts, and gauge build-up means the
-    // speed-100 boss acts roughly once every 10 resolveNextStep calls —
-    // hence the 650-call loop (60 boss turns + margin), not the naive 61.
+    // gets a huge HP pool and zero attack. NOTE: afterTurns counts ATB
+    // rounds (D2 contract) — a round only closes when the slow boss has
+    // acted, and its gauge means it acts roughly once every 10
+    // resolveNextStep calls, so 60 rounds need ~600+ steps — hence the
+    // 800-call loop (60 rounds + margin), not the naive 61.
     const player = createCombatant({
       id: 'player',
       type: 'player',
@@ -936,7 +981,7 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
 
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, BUFF_REGISTRY)
 
-    for (let i = 0; i < 650; i++) {
+    for (let i = 0; i < 800; i++) {
       system.resolveNextStep(battle)
     }
 
@@ -1247,7 +1292,7 @@ describe('TurnBattleSystem.resolveNextStep Bï¿½ Th? (CC-lock guard)', () => {
 })
 
 describe('TurnBattleSystem.resolveNextStep Sudden Death escalation', () => {
-  function bareBattle(totalTurnsElapsed: number) {
+  function bareBattle(roundsElapsed: number, extraEnemies = 0) {
     // blockChance: 0 â€” test so sÃ¡nh damage tuyá»‡t Ä‘á»‘i giá»¯a 2 runs; block
     // lÃ  roll 5% ngáº«u nhiÃªn (blockChance base 0.05) sáº½ lÃ m test flaky.
     const player = createCombatant({
@@ -1270,25 +1315,44 @@ describe('TurnBattleSystem.resolveNextStep Sudden Death escalation', () => {
       targeting: { shape: 'single' },
     }
 
+    const enemies = [makeParticipant('enemy', enemyEntity, 10, 1)]
+    for (let i = 0; i < extraEnemies; i += 1) {
+      const extraEntity = createCombatant({
+        id: `enemy_extra_${i}`,
+        currentHp: 1_000_000,
+        maxHp: 1_000_000,
+        stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, blockChance: 0, attack: 0, defense: 0 }),
+      })
+      enemies.push(makeParticipant(`enemy_extra_${i}`, extraEntity, 5, 1))
+    }
+
+    // Sudden Death counts ATB ROUNDS (D2 revision contract, 2026-09-12 —
+    // same unit perfectClearTurnLimit uses), not the raw actor-action
+    // counter: "from turn 11" = once 10 full rounds have elapsed. A
+    // per-action count makes escalation arrive participant-count times
+    // early and compound ~0.3 x actors per round — the reported
+    // "damage rises abnormally" defect.
     const battle: TurnBattle = {
       players: [playerParticipant],
-      enemies: [makeParticipant('enemy', enemyEntity, 10, 1)],
+      enemies,
       state: 'fighting',
-      totalTurnsElapsed,
+      totalTurnsElapsed: 0,
+      roundsElapsed,
+      actedThisRound: [],
     }
 
     return { player, enemyEntity, battle }
   }
 
-  it('deals unscaled damage (x1) when totalTurnsElapsed is 10 or below', () => {
-    const { enemyEntity, battle } = bareBattle(9) // becomes 10 after this step's own increment
+  it('deals unscaled damage (x1) while fewer than 10 rounds have elapsed', () => {
+    const { enemyEntity, battle } = bareBattle(9) // round 10 in progress
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
     const hpBefore = enemyEntity.currentHp
 
     system.resolveNextStep(battle)
 
     const rawDamageDealt = hpBefore - enemyEntity.currentHp
-    expect(battle.totalTurnsElapsed).toBe(10)
+    expect(battle.roundsElapsed).toBe(9)
     // At exactly turn 10, Sudden Death has not started yet (starts turn 11) ï¿½ damage is the normal, unscaled amount.
     // (Exact expected HP delta depends on calculateBaseDamage's real formula ï¿½ assert only that it's the SAME
     // as a control run at turn 1, not a hardcoded number, to avoid coupling this test to damage-formula internals.)
@@ -1300,8 +1364,8 @@ describe('TurnBattleSystem.resolveNextStep Sudden Death escalation', () => {
     expect(rawDamageDealt).toBe(controlDamage)
   })
 
-  it('scales damage by x1.3 at turn 11 (first Sudden Death turn)', () => {
-    const { enemyEntity, battle } = bareBattle(10) // becomes 11 after this step's own increment
+  it('scales damage by x1.3 once 10 rounds have elapsed (round 11 in progress)', () => {
+    const { enemyEntity, battle } = bareBattle(10)
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
     const hpBefore = enemyEntity.currentHp
 
@@ -1314,7 +1378,7 @@ describe('TurnBattleSystem.resolveNextStep Sudden Death escalation', () => {
     system.resolveNextStep(controlBattle)
     const baseDamage = controlHpBefore - controlEnemy.currentHp
 
-    expect(battle.totalTurnsElapsed).toBe(11)
+    expect(battle.roundsElapsed).toBe(10)
     // Endurance cá»§a há»‡ sá»‘ng trá»« PHáº²NG thresholdÃ—percent = 10Ã—0.7 = 7 SAU
     // scale (má»i Ä‘Ã²n > threshold), nÃªn scaled = baseÃ—m âˆ’ 7, khÃ´ng pháº£i
     // baseÃ—m nguyÃªn váº¹n (plan test gá»‘c Ä‘Ã£ bá» qua táº§ng endurance nÃ y).
@@ -1322,8 +1386,8 @@ describe('TurnBattleSystem.resolveNextStep Sudden Death escalation', () => {
     expect(scaledDamage).toBeCloseTo((baseDamage + enduranceFlat) * 1.3 - enduranceFlat, 1)
   })
 
-  it('scales damage by x2.5 at turn 15 (linear, additive: 1 + 0.3*(15-10))', () => {
-    const { enemyEntity, battle } = bareBattle(14) // becomes 15 after this step's own increment
+  it('scales damage by x2.5 once 14 rounds have elapsed (round 15: 1 + 0.3*5)', () => {
+    const { enemyEntity, battle } = bareBattle(14)
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
     const hpBefore = enemyEntity.currentHp
 
@@ -1338,6 +1402,26 @@ describe('TurnBattleSystem.resolveNextStep Sudden Death escalation', () => {
 
     const enduranceFlat = (10 * 0.7)
     expect(scaledDamage).toBeCloseTo((baseDamage + enduranceFlat) * 2.5 - enduranceFlat, 1)
+  })
+
+  it('does not escalate from the raw actor-action counter when rounds are few (1v3 regression)', () => {
+    // Regression for the reported defect: in a multi-enemy fight the action
+    // counter reaches 10+ within 3 rounds, so Sudden Death ramped ~4x early
+    // and compounded per action. Escalation must key off roundsElapsed.
+    const { enemyEntity, battle } = bareBattle(2, 2)
+    battle.totalTurnsElapsed = 14 // many actions have passed, only 2 rounds closed
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()))
+    const hpBefore = enemyEntity.currentHp
+
+    system.resolveNextStep(battle)
+
+    const rawDamageDealt = hpBefore - enemyEntity.currentHp
+    const { enemyEntity: controlEnemy, battle: controlBattle } = bareBattle(0, 2)
+    const controlHpBefore = controlEnemy.currentHp
+    system.resolveNextStep(controlBattle)
+    const baseDamage = controlHpBefore - controlEnemy.currentHp
+
+    expect(rawDamageDealt).toBeCloseTo(baseDamage, 1)
   })
 })
 

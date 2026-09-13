@@ -112,7 +112,10 @@ describe('TurnBattleSystem party (multi player-side unit)', () => {
 
     battle.enemies[0]!.entity.stats.attack = 10_000
 
-    for (let i = 0; i < 60 && battle.state === 'fighting'; i++) {
+    // memberB (1M HP) dies via Sudden Death escalation — which counts ATB
+    // rounds (D2 contract), not raw actions: ~3 actions per round here, so
+    // the ramp needs a larger step budget than the old per-action count.
+    for (let i = 0; i < 200 && battle.state === 'fighting'; i++) {
       system.resolveNextStep(battle)
     }
 
