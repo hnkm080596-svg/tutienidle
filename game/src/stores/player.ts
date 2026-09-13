@@ -24,6 +24,10 @@ import { getCultivationRampMultiplier, getCultivationSpeedMultiplier, getInsight
 import { calculateStats, type StatModifier } from '@/core/stats/StatCalculator'
 import { getKiemYDamageMultipliers, getKiemYTier } from '@/core/player/KiemYSystem'
 import { normalizeArtifactProgress } from '@/core/artifact/ArtifactProgression'
+import {
+  resolvePlayerVisualProfileId,
+  type PlayerVisualProfileId,
+} from '@/core/player/PlayerVisualForm'
 
 // Dirty-check cho setExternalModifiers (perf-optimize-pass Task 5).
 // App.vue gọi setExternalModifiers() MỖI TICK (10Hz) với mảng MỚI do
@@ -144,6 +148,19 @@ export const usePlayerStore = defineStore('player', {
         ...state.externalModifiers,
         ...kiemYModifiers,
       ])
+    },
+
+    // The character's visual form — derived FROM the entity itself
+    // (realmId + cultivationPath), one single source. Everywhere the
+    // character appears reads from here: PhaserCanvas writes the registry
+    // gate for CombatScene/MainScene, TranPhapPanel sends it to the
+    // preview scene. Art content (textures/anchors) lives in
+    // PLAYER_VISUAL_PROFILES on the presentation side — this is only the id.
+    visualProfileId(state): PlayerVisualProfileId {
+      return resolvePlayerVisualProfileId({
+        realmId: state.realmId,
+        cultivationPath: state.cultivationPath,
+      })
     },
   },
 

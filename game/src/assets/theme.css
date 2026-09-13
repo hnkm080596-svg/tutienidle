@@ -460,30 +460,32 @@
 }
 
 /* ============================================================
-   BORDER BEAM — 2 tia sáng (--fx-beam-color, mặc định azure) quay
-   quanh mép ô. Dùng chung cho MỌI slot surface:
+   BORDER BEAM — two light rays (--fx-beam-color, default azure)
+   rotating around a slot's edge. Shared by EVERY slot surface:
 
-   Gắn class `fx-border-beam` lên ô + một child
-   `<span class="fx-border-beam__fx" aria-hidden="true">` — beam
-   vẽ trên layer riêng đó nên KHÔNG BAO GIỜ đụng ::before/::after
-   sẵn có của ô. Ring mặc định trace border-box (mask-composite
-   content-box → chỉ chừa vành viền, theo cả border-radius).
+   Put class `fx-border-beam` on the slot + one child
+   `<span class="fx-border-beam__fx" aria-hidden="true">` — the beam
+   paints on that dedicated layer so it can never clash with the
+   slot's own ::before/::after. The default ring traces the
+   border-box (content-box mask-composite -> only the border ring
+   shows, border-radius included).
 
-   Ô bị clip-path (vd ô trận pháp hình thang): thêm modifier
-   `fx-border-beam--clip`, set `--fx-beam-clip: polygon(...)` và
-   `--fx-beam-fill: <màu ruột ô>` — __fx gradient clip theo
-   polygon, __fx::after thu nhỏ phủ lại ruột chỉ chừa vành mép.
-   (Ring mask chỉ trace được border-box, không theo clip-path.)
+   clip-path slots (e.g. trapezoid formation cells): add modifier
+   `fx-border-beam--clip`, set `--fx-beam-clip: polygon(...)` and
+   `--fx-beam-fill: <cell fill color>` — the __fx gradient clips to
+   the polygon, __fx::after insets to cover the interior, leaving a
+   beam ring hugging the real edge. (The ring mask can only trace
+   the border-box, not a clip-path.)
 
-   Trigger: mặc định beam mờ dần khi :hover (trừ ô aria-disabled);
-   consumer muốn beam theo state riêng (vd drag-hover của trận
-   pháp) thì bật class `fx-border-beam--active`.
+   Trigger: by default the beam fades in on :hover (skipping
+   aria-disabled slots); consumers wanting a state-driven beam
+   (e.g. formation drag-hover) toggle `fx-border-beam--active`.
 
-   Tùy biến per-surface qua custom props: --fx-beam-color,
-   --fx-beam-width (bề dày vành, mặc định 2px), --fx-beam-duration
-   (mặc định 2.4s/vòng), --fx-beam-inset (độ thu của ::after ở
-   mode clip, mặc định 7%). Browser thiếu @property → hiện glow
-   tĩnh 2 mỏm thay vì quay — degrade nhẹ, không vỡ.
+   Per-surface overrides via custom props: --fx-beam-color,
+   --fx-beam-width (ring thickness, default 2px), --fx-beam-duration
+   (default 2.4s/rev), --fx-beam-inset (::after shrink in clip mode,
+   default 7%). Browsers without @property -> static two-ray glow
+   instead of spinning — a mild degrade, not a breakage.
    ============================================================ */
 @property --fx-beam-angle {
   syntax: '<angle>';
@@ -547,5 +549,11 @@
 @keyframes fx-border-beam-spin {
   to {
     --fx-beam-angle: 1turn;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fx-border-beam > .fx-border-beam__fx {
+    animation: none;
   }
 }

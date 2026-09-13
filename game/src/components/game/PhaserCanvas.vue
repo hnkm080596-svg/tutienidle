@@ -10,10 +10,7 @@ import { usePlayerStore } from '@/stores/player'
 import type { BattlePositionsEvent } from '@/core/battle/BattleEvents'
 import { writeGate, type GateRegistry } from '@/presentation/gate/PresentationGate'
 import { useDynamicRegion } from '@/presentation/host/useDynamicRegion'
-import {
-  resolvePlayerVisualProfileId,
-  type PlayerVisualProfileId,
-} from '@/presentation/art/PlayerVisualProfiles'
+import type { PlayerVisualProfileId } from '@/presentation/art/PlayerVisualProfiles'
 import { makeKiemBarReader, registerKiemBarReader } from '@/presentation/bridges/kiemBarBridge'
 
 const gameManager = useGameManager()
@@ -96,11 +93,7 @@ function seedRegion(registry: GateRegistry): () => void {
   // khi scene khởi động muộn), và phát event qua EventBus mỗi khi realm/path
   // đổi. Scenes chỉ nhận PROFILE ID.
   const publishProfile = () => {
-    const profileId: PlayerVisualProfileId = resolvePlayerVisualProfileId({
-      realmId: player.realmId,
-
-      cultivationPath: player.cultivationPath,
-    })
+    const profileId: PlayerVisualProfileId = player.visualProfileId
 
     writeGate(registry, 'playerVisualProfileId', profileId)
 

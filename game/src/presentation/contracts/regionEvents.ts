@@ -9,5 +9,24 @@
 // a `DynamicRegion` can send the events named here, and adding one is an edit
 // to this file.
 
-/** The Formation preview's assignments changed. Payload: FormationSlotAssignment[]. */
+import type { FormationSlotAssignment } from '@/core/player/Player'
+import type { PlayerVisualProfileId } from '@/core/player/PlayerVisualForm'
+
+/** The Formation preview's assignments changed. */
 export const FORMATION_ASSIGNMENTS_EVENT = 'region:formation:assignments'
+
+/**
+ * Payload of {@link FORMATION_ASSIGNMENTS_EVENT} — one atomic snapshot: the
+ * slot contents AND which visual form the player entity is currently in
+ * (derived on the player entity, see `core/player/PlayerVisualForm.ts`).
+ * The preview scene resolves art from it through the shared combat
+ * catalogue; without it the scene would have to guess or hardcode.
+ *
+ * `playerProfileId` is optional only so older senders/tests passing a bare
+ * `FormationSlotAssignment[]` keep working — the scene accepts both shapes.
+ */
+export interface FormationAssignmentsPayload {
+  assignments: FormationSlotAssignment[]
+
+  playerProfileId?: PlayerVisualProfileId
+}

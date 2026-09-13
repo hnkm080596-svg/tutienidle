@@ -26,6 +26,10 @@ import {
   PLACEHOLDER_FRAME_WIDTH,
   PLACEHOLDER_FRAME_HEIGHT,
 } from '@/presentation/art/CombatPresentationCatalogue'
+import { PLAYER_VISUAL_PROFILES, type PlayerVisualProfile } from '@/presentation/art/PlayerVisualProfiles'
+import type { PlayerVisualProfileId } from '@/core/player/PlayerVisualForm'
+import type { FormationAssignmentsPayload } from '@/presentation/contracts/regionEvents'
+import { PLAYER_ID } from './combat/combatConstants'
 import type { BattleGridProjection } from '@/presentation/geometry/BattleGridProjection'
 import { STANDING_SLOT_COUNT } from '@/core/battle/BattlefieldRegions'
 import type { FormationSlotAssignment } from '@/core/player/Player'
@@ -55,7 +59,7 @@ export const PERSPECTIVE_MIN_ROAD_HEIGHT_PANEL = FORMATION_MIN_ROAD_HEIGHT
 const PANEL_SKY_COLOR = 0x22283a
 const PANEL_GROUND_COLOR = 0x1a1a1a
 
-const PREVIEW_IDLE_ANIMATION_KEY = 'tran-phap-preview-idle'
+export const PREVIEW_IDLE_ANIMATION_KEY = 'tran-phap-preview-idle'
 
 export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGridViewHost {
   // Battlefield Perspective Panel (2026-09-06) — chuyển từ flat sang
@@ -88,8 +92,23 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
   // defect as the player's in `combat-grid-view.ts`, found by the same
   // measurement on 2026-09-11: what a sprite DRAWS and what SIZES it had drifted
   // apart.
-  readonly playerSourceSize = { w: PLACEHOLDER_FRAME_WIDTH, h: PLACEHOLDER_FRAME_HEIGHT }
-  readonly playerProfile = { combatTextureKey: PLACEHOLDER_SHEET_KEY }
+  // The player's visual form is DERIVED from the entity (player store getter
+  // `visualProfileId` -> payload below), not hardcoded — the same id CombatScene
+  // receives through the registry gate. `mortal` is only the pre-payload
+  // default; syncAssignments() updates it on every assignments event.
+  private currentProfileId: PlayerVisualProfileId = 'mortal'
+
+  private activeProfile(): PlayerVisualProfile {
+    return PLAYER_VISUAL_PROFILES[this.currentProfileId] ?? PLAYER_VISUAL_PROFILES.mortal
+  }
+
+  get playerSourceSize(): { w: number; h: number } {
+    return { ...this.activeProfile().combatSourceSize }
+  }
+
+  get playerProfile(): { combatTextureKey: string } {
+    return this.activeProfile()
+  }
   sprites = new Map<string, EntitySprite>()
   entityFootMinY = 0
   entityFootMaxY = 1
@@ -108,10 +127,18 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
   }
 
   preload(): void {
-    // Atlas, matching combat (Spec B §3.1). The preview and the real battle
-    // load the same placeholder the same way, so a format problem cannot show
-    // up in one and not the other.
+    // Placeholder atlas stays: it is the declared fallback for combatants with
+    // no registered presentation (companions have no art yet).
     this.load.atlas(PLACEHOLDER_SHEET_KEY, PLACEHOLDER_SHEET_URL, PLACEHOLDER_ATLAS_URL)
+
+    // Real art, same source CombatScene uses: every profile's static combat
+    // PNG (the sprite's base texture — the player renders static art in
+    // combat, `playerUsesStaticTexture`, so no atlas is needed here).
+    for (const profile of Object.values(PLAYER_VISUAL_PROFILES)) {
+      if (!this.textures.exists(profile.combatTextureKey)) {
+        this.load.image(profile.combatTextureKey, profile.combatTextureUrl.replace(/^\/+/, ''))
+      }
+    }
   }
 
   create(): void {
@@ -158,6 +185,7 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
         repeat: -1,
       })
     }
+
   }
 
   /**
@@ -170,10 +198,29 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
    * hiện → getOrCreateSprite() tạo sprite mới, play() từ frame 0 (đúng —
    * chưa từng animate trong panel này).
    */
-  private readonly assignmentsHandler = (assignments: FormationSlotAssignment[]) =>
-    this.syncAssignments(assignments)
+  private readonly assignmentsHandler = (
+    payload: FormationSlotAssignment[] | FormationAssignmentsPayload,
+  ) => this.syncAssignments(payload)
 
-  syncAssignments(assignments: FormationSlotAssignment[]): void {
+  syncAssignments(payload: FormationSlotAssignment[] | FormationAssignmentsPayload): void {
+    // Phaser event payloads are untyped at runtime — accept the current
+    // snapshot shape and the legacy bare array, ignore anything else.
+    let assignments: FormationSlotAssignment[]
+    let profileId: PlayerVisualProfileId | undefined
+
+    if (Array.isArray(payload)) {
+      assignments = payload
+    } else if (payload && Array.isArray(payload.assignments)) {
+      assignments = payload.assignments
+      profileId = payload.playerProfileId
+    } else {
+      return
+    }
+
+    if (profileId && PLAYER_VISUAL_PROFILES[profileId]) {
+      this.currentProfileId = profileId
+    }
+
     const nextIds = new Set(assignments.map((a) => a.combatantId))
 
     for (const [id, sprite] of this.sprites) {
@@ -184,6 +231,23 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
     }
 
     for (const assignment of assignments) {
+      // The player's visual form can change while the panel is open (the
+      // panel re-dispatches on player.visualProfileId changes). Rebuild the
+      // sprite so it picks up the new profile PNG — same outcome as
+      // CombatScene.applyPlayerVisualProfile's setTexture + re-size.
+      if (assignment.combatantId === PLAYER_ID) {
+        const existing = this.sprites.get(PLAYER_ID)
+
+        if (
+          existing &&
+          existing.kind === 'sprite' &&
+          (existing.rect as Phaser.GameObjects.Sprite).texture.key !== this.playerProfile.combatTextureKey
+        ) {
+          this.gridView.destroyEntitySprite(existing)
+          this.sprites.delete(PLAYER_ID)
+        }
+      }
+
       const sprite = this.gridView.getOrCreateSprite(
         assignment.combatantId,
         0x4caf50,
@@ -191,7 +255,14 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
         assignment.row as LaneIndex,
       )
 
-      if (sprite.kind === 'sprite' && !(sprite.rect as Phaser.GameObjects.Sprite).anims.isPlaying) {
+      // The player renders the static profile PNG exactly like CombatScene
+      // (playerUsesStaticTexture — no idle clip); everyone else keeps the
+      // placeholder idle until they have authored art.
+      if (
+        sprite.kind === 'sprite' &&
+        assignment.combatantId !== PLAYER_ID &&
+        !(sprite.rect as Phaser.GameObjects.Sprite).anims.isPlaying
+      ) {
         ;(sprite.rect as Phaser.GameObjects.Sprite).play(PREVIEW_IDLE_ANIMATION_KEY)
       }
 
