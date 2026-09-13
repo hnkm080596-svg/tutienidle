@@ -31,6 +31,7 @@ import {
 } from './ProductionBalance'
 import { HERB_AGES } from './ProductionTypes'
 import { allocateWorkerSlots } from './WorkerAllocator'
+import { advanceWorkerLanes } from './WorkerLaneAdvance'
 import { buildProductionCycle as buildCycle } from './ProductionCycles'
 import {
   settleProductionOffline,
@@ -362,16 +363,34 @@ export class ProductionSystem {
 
     for (const state of activeStates) {
       state.workerCycles ??= []
-      while (state.workerCycles.length < state.activeWorkerSlots) {
-        const definition = this.getSiteDefinition(state.siteId)
-        const baseSeconds = CYCLE_BASE_SECONDS_BY_REALM[currentRealmId]
-        if (!definition || !baseSeconds) break
-        state.workerCycles.push(buildCycle(state.siteId, currentRealmId, state.level, baseSeconds, nowMs))
-      }
 
-      const completed = state.workerCycles.filter(cycle => cycle.completesAtMs <= nowMs)
-      state.workerCycles = state.workerCycles.filter(cycle => cycle.completesAtMs > nowMs)
-      for (const cycle of completed) {
+      const definition = this.getSiteDefinition(state.siteId)
+
+      const baseSeconds = CYCLE_BASE_SECONDS_BY_REALM[currentRealmId]
+
+      const cycleMs =
+        definition && baseSeconds ? computeCycleSeconds(baseSeconds, state.level) * 1000 : 0
+
+      // M11 (ARCH-007) — same per-lane advancement mechanism as
+      // settleWorkersOffline (A9): 'observe' = single tick — due heads
+      // grant once, freed lanes refill on the NEXT tick via
+      // emptyLaneStartMs (top-up-then-settle order preserved).
+      const result = advanceWorkerLanes({
+        siteId: state.siteId,
+        collectionRealmId: currentRealmId,
+        siteLevel: state.level,
+        baseSeconds: baseSeconds ?? 0,
+        cycleMs,
+        pending: state.workerCycles,
+        slots: state.activeWorkerSlots,
+        nowMs,
+        emptyLaneStartMs: nowMs,
+        advanceMode: 'observe',
+      })
+
+      state.workerCycles = result.pending
+
+      for (const cycle of result.completed) {
         this.grantCycleRewards(cycle, bag, registry)
       }
     }

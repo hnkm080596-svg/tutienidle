@@ -11,14 +11,18 @@ import {
   computeCycleSeconds,
 } from './ProductionBalance'
 import { allocateWorkerSlots } from './WorkerAllocator'
-import { buildProductionCycle as buildCycle } from './ProductionCycles'
+import { advanceWorkerLanes } from './WorkerLaneAdvance'
 
 /**
  * Offline settle (plan §4.3) — tach khoi ProductionSystem
  * (large-file-split): policy catch-up (ngan sach PRODUCTION_OFFLINE_CAP,
  * forfeit backlog, worker-cycle window) song hanh voi tickWorkers
  * online qua CUNG allocateWorkerSlots + grantCycleRewards — online va
- * offline dung mot quy tac phan bo/settle. Hanh vi giu NGUYEN 1:1.
+ * offline dung mot quy tac phan bo/settle.
+ *
+ * M11 (ARCH-007): worker-cycle advancement dung CUNG mechanism
+ * advanceWorkerLanes (WorkerLaneAdvance.ts) voi tickWorkers — per-lane
+ * deadline chaining thay cho pooling floor(windowMs * slots / cycleMs).
  */
 export interface ProductionOfflineDeps {
   states: Map<string, ProductionSiteState>
@@ -135,10 +139,12 @@ export function settleProductionOffline(
 
 /**
  * Offline settle cho worker cycles (T3) — chia ngân sách còn lại sau
- * manual settle. Mỗi site có slot worker chạy các chuỗi cycle song song
- * nối tiếp nhau trong cửa sổ [offlineSinceMs, nowMs], mỗi cycle một
- * seed riêng. Cycle dở dang vượt nowMs được giữ lại cho tickWorkers
- * online; cycle hoàn thành mà hết ngân sách bị forfeit.
+ * manual settle. Mỗi site có `slots` LANE worker chạy song song trong
+ * cửa sổ [offlineSinceMs, nowMs], mỗi lane một chuỗi cycle nối tiếp với
+ * deadline RIÊNG (M11/ARCH-007 — cùng mechanism advanceWorkerLanes với
+ * tickWorkers, driver 'deadline'). Cycle dở dang vượt nowMs được giữ lại
+ * nguyên deadline/lane cho tickWorkers online; cycle hoàn thành mà hết
+ * ngân sách bị forfeit. Không gộp phần lẻ giữa các lane thành cycle ảo.
  *
  * Chi-hien-quan (2026-09-02): `workerAssignments` — cùng phân bổ manual
  * của tickWorkers để OFFLINE KHỚP ONLINE (spec §6).
@@ -154,16 +160,21 @@ function settleWorkersOffline(
   offlineSinceMs?: number,
   workerAssignments?: Map<string, number>,
 ): number {
-  if (workerCapacity <= 0 || budgetRemainingMs <= 0) {
-    return 0
-  }
-
   // R7 (AR-07): the SAME pure allocator as tickWorkers - online and
   // offline settlement share one distribution rule (manual first,
   // remainder round-robins unassigned sites, leftover idle).
   const activeStates = [...deps.states.values()].filter((state) => state.autoRestart)
 
-  if (activeStates.length === 0) {
+  // Same order as tickWorkers: slots zero out on every state first.
+  for (const state of deps.states.values()) {
+    state.activeWorkerSlots = 0
+  }
+
+  // workerCapacity <= 0 mirrors the online early-return (tickWorkers
+  // freezes workerCycles entirely when capacity is 0). Budget 0 must
+  // STILL run: due cycles forfeit under the cap instead of lingering
+  // past-due for a free online grant.
+  if (activeStates.length === 0 || workerCapacity <= 0) {
     return 0
   }
 
@@ -184,76 +195,41 @@ function settleWorkersOffline(
   for (const state of activeStates) {
     const slots = slotsBySite.get(state.siteId) ?? 0
 
-    if (slots <= 0 || budgetMs <= 0) {
-      continue
-    }
-
     const definition = deps.getSiteDefinition(state.siteId)
 
     const baseSeconds = CYCLE_BASE_SECONDS_BY_REALM[currentRealmId]
 
-    if (!definition || !baseSeconds) {
-      continue
-    }
-
-    const cycleMs = computeCycleSeconds(baseSeconds, state.level) * 1000
-
-    if (cycleMs <= 0) {
-      continue
-    }
+    const cycleMs =
+      definition && baseSeconds ? computeCycleSeconds(baseSeconds, state.level) * 1000 : 0
 
     state.workerCycles ??= []
 
-    // 1) Settle cycle dở dang từ save hoàn thành trước nowMs, trong ngân sách.
-    const kept: ProductionCycle[] = []
+    // M11 (ARCH-007) — per-lane advancement qua CÙNG mechanism với
+    // tickWorkers (advanceWorkerLanes): mỗi lane tự hoàn thành theo
+    // deadline RIÊNG của nó; cycle dở dang giữ nguyên lane + deadline
+    // gốc; lane trống chỉ chạy từ mốc save (offlineSinceMs). Không còn
+    // floor(windowMs * slots / cycleMs) gộp phần lẻ giữa các lane.
+    // Completions vượt ngân sách bị forfeit — backlog quá hạn không bao
+    // giờ để lại cho tick online cấp miễn phí ngoài cap.
+    const result = advanceWorkerLanes({
+      siteId: state.siteId,
+      collectionRealmId: currentRealmId,
+      siteLevel: state.level,
+      baseSeconds: baseSeconds ?? 0,
+      cycleMs,
+      pending: state.workerCycles,
+      slots,
+      nowMs,
+      emptyLaneStartMs: offlineSinceMs,
+      advanceMode: 'deadline',
+      budgetMs,
+    })
 
-    let lastCompleteMs = offlineSinceMs ?? nowMs
+    state.workerCycles = result.pending
 
-    const pending = [...state.workerCycles].sort((a, b) => a.completesAtMs - b.completesAtMs)
+    budgetMs -= result.consumedBudgetMs
 
-    for (const cycle of pending) {
-      if (cycle.completesAtMs > nowMs) {
-        kept.push(cycle)
-
-        continue
-      }
-
-      const durationMs = Math.max(0, cycle.completesAtMs - cycle.startedAtMs)
-
-      if (durationMs > budgetMs) {
-        continue
-      }
-
-      budgetMs -= durationMs
-
-      deps.grantCycleRewards(cycle, bag, registry)
-
-      settled += 1
-
-      lastCompleteMs = Math.max(lastCompleteMs, cycle.completesAtMs)
-    }
-
-    state.workerCycles = kept
-
-    // 2) Chạy nối tiếp các cycle mới trong cửa sổ offline còn lại —
-    // `slots` chuỗi song song từ lastCompleteMs tới nowMs, tổng thời
-    // gian sản xuất bị chặn bởi ngân sách còn lại. Mỗi cycle một seed
-    // riêng (buildCycle).
-    const windowMs = Math.max(0, nowMs - lastCompleteMs)
-
-    const cyclesInWindow = Math.floor((windowMs * slots) / cycleMs)
-
-    const affordableCycles = Math.floor(budgetMs / cycleMs)
-
-    const newCycles = Math.max(0, Math.min(affordableCycles, cyclesInWindow))
-
-    for (let index = 0; index < newCycles; index++) {
-      const startMs = nowMs - (index + 1) * cycleMs
-
-      const cycle = buildCycle(state.siteId, currentRealmId, state.level, baseSeconds, startMs)
-
-      budgetMs -= cycleMs
-
+    for (const cycle of result.completed) {
       deps.grantCycleRewards(cycle, bag, registry)
 
       settled += 1
