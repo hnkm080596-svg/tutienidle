@@ -979,6 +979,8 @@ export class GameManager {
   getPresentationPort(): SessionPresentationPort {
     return {
       getCurrentSession: () => this.getCurrentPresentationSession(),
+      isCurrentSession: (session) =>
+        this.getCurrentPresentationSession(session.kind)?.sessionId === session.sessionId,
       hold: (session) => {
         if (session.kind === 'combat') {
           return this.turnBattleOps.presentationOps.getPresentationPort().hold(session)

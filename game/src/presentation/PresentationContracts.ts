@@ -22,12 +22,16 @@ export type RouteRequest =
       /**
        * Domain work with visible effect, executed inside the closed-curtain window.
        * Runs after the curtain is fully closed and before the target is revealed.
-       * Returning false fails the transition. Required (not merely allowed) on
-       * this arm: it is the ONLY source of a session for a combat/tribulation
-       * request that does not already carry one - without it there would be
-       * nothing to adopt in Step 6 of GamePresentationCoordinator.executeTransition.
+       * Required (not merely allowed) on this arm: it is the ONLY source of a
+       * session for a combat/tribulation request that does not already carry one
+       * - without it there would be nothing to adopt in GamePresentationCoordinator.
+       *
+       * The return value is the accepted RouteRequest itself: the session the
+       * domain command committed to travels with it to the coordinator, which
+       * adopts THAT identity for the rest of the transition (ARCH-004) instead
+       * of re-deriving one from ambient session state. null fails the transition.
        */
-      behindCurtain: () => boolean
+      behindCurtain: () => RouteRequest | null
     }>
   | Readonly<{
       target: 'boot' | 'auth' | 'character' | 'home' | 'error'

@@ -99,6 +99,7 @@ export class GameManagerTurnBattlePresentationOps {
   getPresentationPort(): SessionPresentationPort {
     return {
       getCurrentSession: () => this.session.getCurrentSession(),
+      isCurrentSession: (session) => this.session.isCurrentSession(session),
       hold: (session) => this.withOffScreenSync(() => this.session.hold(session)),
       attach: (token) => this.withOffScreenSync(() => this.session.attach(token)),
       release: (token) => this.withOffScreenSync(() => this.session.release(token)),

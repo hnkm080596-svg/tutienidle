@@ -40,18 +40,18 @@ export class TribulationScene extends Phaser.Scene {
 
   private initTransitionId = 0
   private initSessionId?: number
+  private initGameGeneration = 0
 
   constructor() {
     super('TribulationScene')
   }
 
-  init(data?: { transitionId?: number; sessionId?: number }): void {
-    if (data?.transitionId) {
-      this.initTransitionId = data.transitionId
-    }
-    if (data?.sessionId) {
-      this.initSessionId = data.sessionId
-    }
+  init(data?: { transitionId?: number; sessionId?: number; gameGeneration?: number }): void {
+    // Assign unconditionally: a (re)start without data must reset the READY
+    // identity echo, never leak the previous session's.
+    this.initTransitionId = data?.transitionId ?? 0
+    this.initSessionId = data?.sessionId
+    this.initGameGeneration = data?.gameGeneration ?? 0
   }
 
   preload() {
@@ -105,6 +105,7 @@ export class TribulationScene extends Phaser.Scene {
     adapter?.reportReady({
       transitionId: this.initTransitionId,
       sessionId: this.initSessionId,
+      gameGeneration: this.initGameGeneration,
     })
 
     this.events.once('shutdown', this.shutdownHandler)

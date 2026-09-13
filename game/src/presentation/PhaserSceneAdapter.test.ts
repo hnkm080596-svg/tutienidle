@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { PhaserSceneAdapter } from './PhaserSceneAdapter'
+import { PhaserSceneAdapter, type ReadyContext } from './PhaserSceneAdapter'
 
 interface FakeSceneManager {
   isActive: (key: string) => boolean
@@ -47,14 +47,12 @@ describe('PhaserSceneAdapter', () => {
   })
 
   it('handles synchronous reportReady during scene activation', async () => {
-    // Scene calls reportReady synchronously when started
+    // Scene calls reportReady synchronously when started, echoing the exact
+    // init payload the adapter handed it (transitionId + sessionId +
+    // gameGeneration).
     fakeGame.scene.start = vi.fn((key: string, data?: unknown) => {
       fakeGame._activeScenes.add(key)
-      const context = data as { transitionId: number; sessionId?: number }
-      adapter.reportReady({
-        transitionId: context.transitionId,
-        sessionId: context.sessionId,
-      })
+      adapter.reportReady(data as ReadyContext)
     })
 
     const signal = new AbortController().signal
@@ -66,6 +64,7 @@ describe('PhaserSceneAdapter', () => {
     expect(fakeGame.scene.start).toHaveBeenCalledWith('MainScene', {
       transitionId: 1,
       sessionId: undefined,
+      gameGeneration: adapter.getGameGeneration(),
     })
   })
 
@@ -85,7 +84,7 @@ describe('PhaserSceneAdapter', () => {
     // First: activate MainScene
     fakeGame.scene.start = vi.fn((key, data) => {
       fakeGame._activeScenes.add(key)
-      adapter.reportReady({ transitionId: (data as any).transitionId })
+      adapter.reportReady(data as ReadyContext)
     })
 
     await adapter.prepare({ target: 'home' }, 1, signal)
@@ -114,7 +113,7 @@ describe('PhaserSceneAdapter', () => {
     // Put adapter in combat route
     fakeGame.scene.start = vi.fn((key, data) => {
       fakeGame._activeScenes.add(key)
-      adapter.reportReady(data as any)
+      adapter.reportReady(data as ReadyContext)
     })
     await adapter.prepare(
       { target: 'combat', session: { kind: 'combat', sessionId: 1 } },
@@ -132,23 +131,32 @@ describe('PhaserSceneAdapter', () => {
 
     // Must NOT destroy or restart scene via scene.start
     expect(fakeGame.scene.start).not.toHaveBeenCalled()
-    expect(rebindSpy).toHaveBeenCalledWith({ transitionId: 2, sessionId: 2 })
+    expect(rebindSpy).toHaveBeenCalledWith({
+      transitionId: 2,
+      sessionId: 2,
+      gameGeneration: adapter.getGameGeneration(),
+    })
   })
 
   it('rejects stale reportReady call from old transitionId or game generation', async () => {
     const signal = new AbortController().signal
+    const generation = adapter.getGameGeneration()
 
     // Start preparation (which doesn't report ready immediately)
     const prepPromise = adapter.prepare({ target: 'home' }, 1, signal)
 
     // Stale transitionId does not resolve
-    expect(adapter.reportReady({ transitionId: 999 })).toBe(false)
+    expect(adapter.reportReady({ transitionId: 999, gameGeneration: generation })).toBe(false)
 
     // Stale game generation does not resolve
     expect(adapter.reportReady({ transitionId: 1, gameGeneration: 999 })).toBe(false)
 
-    // Correct transition resolves
-    expect(adapter.reportReady({ transitionId: 1 })).toBe(true)
+    // Missing generation does not resolve either - "undefined matches
+    // anything" acceptance is gone (ARCH-004 strict READY).
+    expect(adapter.reportReady({ transitionId: 1 } as ReadyContext)).toBe(false)
+
+    // Correct identity resolves
+    expect(adapter.reportReady({ transitionId: 1, gameGeneration: generation })).toBe(true)
     await expect(prepPromise).resolves.toBeUndefined()
   })
 
@@ -180,7 +188,7 @@ describe('PhaserSceneAdapter', () => {
     // When game starts scene, report ready
     fakeGame.scene.start = vi.fn((key, data) => {
       fakeGame._activeScenes.add(key)
-      lateAdapter.reportReady({ transitionId: (data as any).transitionId })
+      lateAdapter.reportReady(data as ReadyContext)
     })
 
     const prepPromise = lateAdapter.prepare({ target: 'home' }, 1, signal)

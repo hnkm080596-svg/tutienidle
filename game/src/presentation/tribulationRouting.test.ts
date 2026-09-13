@@ -127,6 +127,7 @@ describe('Tribulation routing integration (Task 11)', () => {
     phaserAdapter.reportReady({
       transitionId: vueAdapter.transitionId.value,
       sessionId: session.sessionId,
+      gameGeneration: phaserAdapter.getGameGeneration(),
     })
     vueAdapter.reportVueReady(vueAdapter.transitionId.value)
 
@@ -192,6 +193,7 @@ describe('Tribulation routing integration (Task 11)', () => {
     phaserAdapter.reportReady({
       transitionId: vueAdapter.transitionId.value,
       sessionId: entrySession.sessionId,
+      gameGeneration: phaserAdapter.getGameGeneration(),
     })
     vueAdapter.reportVueReady(vueAdapter.transitionId.value)
     await vi.waitFor(() => {
@@ -246,6 +248,7 @@ describe('Tribulation routing integration (Task 11)', () => {
     phaserAdapter.reportReady({
       transitionId: vueAdapter.transitionId.value,
       sessionId: entrySession.sessionId,
+      gameGeneration: phaserAdapter.getGameGeneration(),
     })
     vueAdapter.reportVueReady(vueAdapter.transitionId.value)
     await vi.waitFor(() => {
@@ -288,7 +291,10 @@ describe('Tribulation routing integration (Task 11)', () => {
       expect(vueAdapter.phase.value).toBe('awaiting-ready')
     })
 
-    phaserAdapter.reportReady({ transitionId: vueAdapter.transitionId.value })
+    phaserAdapter.reportReady({
+      transitionId: vueAdapter.transitionId.value,
+      gameGeneration: phaserAdapter.getGameGeneration(),
+    })
     vueAdapter.reportVueReady(vueAdapter.transitionId.value)
 
     await vi.waitFor(() => {
@@ -301,6 +307,7 @@ describe('Tribulation routing integration (Task 11)', () => {
     const readyAccepted = phaserAdapter.reportReady({
       transitionId: 9999, // Stale transition
       sessionId: 888,
+      gameGeneration: phaserAdapter.getGameGeneration(),
     })
     expect(readyAccepted).toBe(false)
   })

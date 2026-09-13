@@ -148,11 +148,11 @@ export class MainScene extends Phaser.Scene {
   }
 
   private initTransitionId = 0
+  private initGameGeneration = 0
 
-  init(data?: { transitionId?: number }): void {
-    if (data?.transitionId) {
-      this.initTransitionId = data.transitionId
-    }
+  init(data?: { transitionId?: number; gameGeneration?: number }): void {
+    this.initTransitionId = data?.transitionId ?? 0
+    this.initGameGeneration = data?.gameGeneration ?? 0
   }
 
   create() {
@@ -184,7 +184,10 @@ export class MainScene extends Phaser.Scene {
     this.subscribeCombatEvents()
 
     const adapter = readOptionalGate(this.registry, 'sceneAdapter')
-    adapter?.reportReady({ transitionId: this.initTransitionId })
+    adapter?.reportReady({
+      transitionId: this.initTransitionId,
+      gameGeneration: this.initGameGeneration,
+    })
 
     this.events.once('shutdown', this.shutdownHandler)
   }

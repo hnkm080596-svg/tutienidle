@@ -21,8 +21,19 @@ export const PRIMARY_SCENE_ROUTES: Record<string, string> = {
 
 export interface ReadyContext {
   transitionId: number
+  /**
+   * Optional on the type because non-session routes (MainScene) have none -
+   * but for a session-route waiter READY only resolves when this echoes the
+   * exact session id the adapter registered.
+   */
   sessionId?: number
-  gameGeneration?: number
+  /**
+   * Required echo of the gameGeneration the adapter handed the scene in its
+   * start/rebind payload. READY is an identity ack: all three fields must
+   * match the pending waiter exactly - there is no "undefined matches
+   * anything" acceptance (ARCH-004).
+   */
+  gameGeneration: number
 }
 
 interface PendingWaiter {
@@ -82,30 +93,29 @@ export class PhaserSceneAdapter implements RendererPort {
   }
 
   reportReady(context: ReadyContext): boolean {
-    if (!this.pendingWaiter) {
+    const waiter = this.pendingWaiter
+
+    if (!waiter) {
       return false
     }
 
-    if (this.pendingWaiter.transitionId !== context.transitionId) {
+    // Exact-identity ack: transitionId + sessionId + gameGeneration must all
+    // equal what the waiter registered. A session-route READY that omits its
+    // session id, or any READY from a replaced game host, resolves nothing -
+    // the waiter stays pending for the genuine report or the deadline.
+    if (waiter.transitionId !== context.transitionId) {
       return false
     }
 
-    if (
-      this.pendingWaiter.sessionId !== undefined &&
-      context.sessionId !== undefined &&
-      this.pendingWaiter.sessionId !== context.sessionId
-    ) {
+    if (waiter.sessionId !== context.sessionId) {
       return false
     }
 
-    if (
-      context.gameGeneration !== undefined &&
-      context.gameGeneration !== this.pendingWaiter.gameGeneration
-    ) {
+    if (waiter.gameGeneration !== context.gameGeneration) {
       return false
     }
 
-    const resolve = this.pendingWaiter.resolve
+    const resolve = waiter.resolve
     this.pendingWaiter = null
     resolve()
     return true
@@ -139,12 +149,16 @@ export class PhaserSceneAdapter implements RendererPort {
     // Case 1: Same Combat route rebind
     if (request.target === 'combat' && this.activePrimarySceneKey === 'CombatScene') {
       const scene = this.game.scene.getScene('CombatScene') as {
-        rebindSession?: (context: { transitionId: number; sessionId?: number }) => void
+        rebindSession?: (context: ReadyContext) => void
       }
 
       if (scene && typeof scene.rebindSession === 'function') {
         return this.registerWaiter(sceneKey, transitionId, sessionId, currentGeneration, signal, () => {
-          scene.rebindSession!({ transitionId, sessionId })
+          scene.rebindSession!({
+            transitionId,
+            sessionId,
+            gameGeneration: currentGeneration,
+          })
         })
       }
     }
@@ -154,7 +168,11 @@ export class PhaserSceneAdapter implements RendererPort {
 
     return this.registerWaiter(sceneKey, transitionId, sessionId, currentGeneration, signal, () => {
       this.activePrimarySceneKey = sceneKey
-      this.game!.scene.start(sceneKey, { transitionId, sessionId })
+      this.game!.scene.start(sceneKey, {
+        transitionId,
+        sessionId,
+        gameGeneration: currentGeneration,
+      })
     })
   }
 

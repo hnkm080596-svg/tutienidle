@@ -121,7 +121,13 @@ export function createGamePresentation(deps: GamePresentationDeps): GamePresenta
     // after admission is already decided above. A combat -> combat refight is a
     // transition against a renderer that is already live, so running the domain
     // command before the transition (as this used to) reset the battle in full view.
-    const behindCurtain = (): boolean => {
+    //
+    // The return value is the accepted RouteRequest itself: the session the
+    // domain command committed to travels with it to the coordinator, which
+    // adopts THAT identity for the rest of the transition (ARCH-004) instead
+    // of re-deriving one from ambient session state - where an unrelated
+    // retained session of another kind can shadow the one just produced.
+    const behindCurtain = (): RouteRequest | null => {
       try {
         accepted = command()
       } catch {
@@ -133,19 +139,18 @@ export function createGamePresentation(deps: GamePresentationDeps): GamePresenta
         handledSessionIds.add(accepted.session.sessionId)
       }
 
-      return accepted !== null
+      return accepted
     }
 
     // Narrowing target per-branch (rather than one `{ target, behindCurtain }`
     // literal) lets each branch structurally satisfy RouteRequest on its own -
-    // the combat/tribulation arm has no `session` field (behindCurtain is its
-    // only source of one), so a single literal typed against the full
-    // RouteRequest['target'] union would need an `as RouteRequest` cast.
+    // the combat/tribulation arm's behindCurtain returns the accepted request,
+    // while the non-session arm's is plain boolean domain work.
     let request: RouteRequest
     if (target === 'combat' || target === 'tribulation') {
       request = { target, behindCurtain }
     } else {
-      request = { target, behindCurtain }
+      request = { target, behindCurtain: () => behindCurtain() !== null }
     }
 
     let result: TransitionResult

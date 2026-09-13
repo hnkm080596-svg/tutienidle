@@ -70,7 +70,13 @@ export interface DomainSnapshotPort {
  * it is the one method below.
  */
 export interface SceneReadyPort {
-  reportReady(context: { transitionId: number; sessionId?: number }): boolean
+  /**
+   * Identity ack for the pending transition waiter. All three fields must
+   * echo the adapter's start/rebind payload exactly: transitionId, the
+   * session id (absent only for non-session routes like home), and the game
+   * host generation. A missing field never matches - the waiter stays pending.
+   */
+  reportReady(context: { transitionId: number; sessionId?: number; gameGeneration: number }): boolean
 }
 
 /**
