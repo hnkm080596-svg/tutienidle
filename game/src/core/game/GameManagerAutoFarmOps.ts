@@ -161,7 +161,11 @@ export class GameManagerAutoFarmOps {
     }
 
     const cycleMs = (cycleSeconds / 2) * 1000
-    const elapsedMs = now - autoFarm.lastCheckedMs
+    // A corrupt save can persist a small-positive lastCheckedMs — the
+    // uncapped remainder (years of "elapsed" time) turned the reward loop
+    // below into ~10^8 iterations per tick. Same bound as
+    // settleAutoFarmOffline: one GameClock cap, no second constant.
+    const elapsedMs = Math.min(now - autoFarm.lastCheckedMs, DEFAULT_MAX_OFFLINE_SECONDS * 1000)
     const completedCycles = Math.floor(elapsedMs / cycleMs)
 
     if (completedCycles <= 0) {
@@ -178,7 +182,11 @@ export class GameManagerAutoFarmOps {
       this.rollAutoFarmCycleReward(player, stage)
     }
 
-    autoFarm.lastCheckedMs += completedCycles * cycleMs
+    // Anchor to now minus the unsettled remainder: identical to
+    // `+= completedCycles * cycleMs` when elapsed fit under the cap, but a
+    // clamped (corrupt) timestamp forfeits the over-cap time instead of
+    // re-paying a fresh 24h batch on every world tick.
+    autoFarm.lastCheckedMs = now - (elapsedMs - completedCycles * cycleMs)
   }
 
   /**

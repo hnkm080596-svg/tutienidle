@@ -108,10 +108,18 @@ code review. (These must run last — they certify the final state.)
       content-gate item 1.
 
 ### Wave C — Close architecture residuals
-- [ ] C1. Triage the 3 corrupt-save residuals: add cheap save-shape
+- [x] C1. Triage the 3 corrupt-save residuals: add cheap save-shape
       checks where the validator pattern supports them; anything not
       cheap gets formally accepted with rationale recorded in the
       roadmap (accepting a residual is a decision, not an omission).
+      — done 2026-09-14: shape checks added for `perfectClearSeconds`
+      (object + finite>0 entries), `autoFarmStage` (null|{stageId,
+      lastCheckedMs≥0 finite}), `formationLoadout` (null|{formationId,
+      assignments[]} with integer row/column). `tickAutoFarm` catch-up
+      now clamps elapsed to `DEFAULT_MAX_OFFLINE_SECONDS` (24h) and
+      anchors `lastCheckedMs` to `now − carry`, so a deep-past corrupt
+      timestamp pays at most one capped batch then converges (no
+      per-tick faucet). Tests: saveShapeValidation + adversarial tick.
 - [ ] C2. Re-run the §0.12 architecture checklist against the final
       tree with evidence links per item.
 

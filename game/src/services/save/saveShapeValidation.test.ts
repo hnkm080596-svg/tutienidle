@@ -785,3 +785,126 @@ describe('validateGameSaveShape - talent v4 M2 fields (v61)', () => {
     expect(pathsOf(result)).toContain('player.phaGiapCarryRealmId')
   })
 })
+
+describe('validateGameSaveShape — C1 corrupt-save residuals', () => {
+  function playerOf(save: Record<string, unknown>): Record<string, unknown> {
+    return save.player as Record<string, unknown>
+  }
+
+  it.each([undefined, 'not-an-object', 5, []])(
+    'từ chối perfectClearSeconds = %s',
+    (value) => {
+      const save = validSave()
+      const player = playerOf(save)
+
+      if (value === undefined) {
+        delete player.perfectClearSeconds
+      } else {
+        player.perfectClearSeconds = value
+      }
+
+      const result = validateGameSaveShape(save)
+
+      expect(result.ok).toBe(false)
+      expect(pathsOf(result)).toContain('player.perfectClearSeconds')
+    },
+  )
+
+  it.each([0, -3, Number.NaN, Number.POSITIVE_INFINITY, 'not-a-number'])(
+    'từ chối perfectClearSeconds entry = %s (consumer assumes finite > 0)',
+    (value) => {
+      const save = validSave()
+
+      playerOf(save).perfectClearSeconds = { some_stage: value }
+
+      const result = validateGameSaveShape(save)
+
+      expect(result.ok).toBe(false)
+      expect(pathsOf(result)).toContain('player.perfectClearSeconds.some_stage')
+    },
+  )
+
+  it('chấp nhận perfectClearSeconds entry hợp lệ', () => {
+    const save = validSave()
+
+    playerOf(save).perfectClearSeconds = { mortal_dong_1: 42.5 }
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it.each([undefined, 'not-an-object', 5, []])(
+    'từ chối formationLoadout = %s (non-null nhưng sai shape)',
+    (value) => {
+      const save = validSave()
+      const player = playerOf(save)
+
+      if (value === undefined) {
+        delete player.formationLoadout
+      } else {
+        player.formationLoadout = value
+      }
+
+      const result = validateGameSaveShape(save)
+
+      expect(result.ok).toBe(false)
+      expect(pathsOf(result)).toContain('player.formationLoadout')
+    },
+  )
+
+  it('từ chối formationLoadout thiếu assignments — resolvePartyFormation đọc .assignments.map trực tiếp', () => {
+    const save = validSave()
+
+    playerOf(save).formationLoadout = { formationId: 'ngu_hanh_tran' }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.formationLoadout.assignments')
+  })
+
+  it('từ chối formationLoadout assignment sai shape field', () => {
+    const save = validSave()
+
+    playerOf(save).formationLoadout = {
+      formationId: 'ngu_hanh_tran',
+      assignments: [
+        { row: 0, column: 0, combatantId: 'player' },
+        { row: 'front', column: 1, combatantId: 'comp-1' },
+        'not-an-object',
+      ],
+    }
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain('player.formationLoadout.assignments[1].row')
+    expect(pathsOf(result)).toContain('player.formationLoadout.assignments[2]')
+  })
+
+  it('chấp nhận formationLoadout hợp lệ (shape-only; semantic check ở commitFormationLoadout)', () => {
+    const save = validSave()
+
+    playerOf(save).formationLoadout = {
+      formationId: 'ngu_hanh_tran',
+      assignments: [{ row: 0, column: 0, combatantId: 'player' }],
+    }
+
+    expect(validateGameSaveShape(save).ok).toBe(true)
+  })
+
+  it.each([
+    [{}, 'player.autoFarmStage.stageId'],
+    [{ stageId: 'x' }, 'player.autoFarmStage.lastCheckedMs'],
+    [{ stageId: 'x', lastCheckedMs: Number.NaN }, 'player.autoFarmStage.lastCheckedMs'],
+    [{ stageId: 'x', lastCheckedMs: -1 }, 'player.autoFarmStage.lastCheckedMs'],
+  ])('từ chối autoFarmStage = %j, path "%s"', (value, expectedPath) => {
+    const save = validSave()
+
+    playerOf(save).autoFarmStage = value
+
+    const result = validateGameSaveShape(save)
+
+    expect(result.ok).toBe(false)
+    expect(pathsOf(result)).toContain(expectedPath)
+  })
+})

@@ -233,6 +233,71 @@ function validatePlayer(player: unknown, issues: ShapeIssue[]) {
   if (companions) {
     validateCompanionEntries(companions, 'player.companions', issues)
   }
+
+  // C1 triage (2026-09-14) — 3 corrupt-save residuals closed save-side:
+  // perfectClearSeconds feeds auto-farm cycleSeconds (a missing/non-object
+  // field crashes the tick's index read; junk values are additionally
+  // guarded at consumption by isValidCycleSeconds).
+  if (!isObject(player.perfectClearSeconds)) {
+    issues.push({ path: 'player.perfectClearSeconds', message: 'phải là object' })
+  } else {
+    for (const [stageId, seconds] of Object.entries(player.perfectClearSeconds)) {
+      if (!isFiniteNumber(seconds) || seconds <= 0) {
+        issues.push({
+          path: `player.perfectClearSeconds.${stageId}`,
+          message: 'phải là số hữu hạn > 0',
+        })
+      }
+    }
+  }
+
+  // autoFarmStage: null | { stageId, lastCheckedMs }. A malformed entry
+  // previously slipped through shape validation; lastCheckedMs is only
+  // shape-checked here — the unbounded catch-up a small-positive value
+  // used to cause is bounded in tickAutoFarm's elapsed clamp instead.
+  if (player.autoFarmStage !== null) {
+    if (!isObject(player.autoFarmStage)) {
+      issues.push({ path: 'player.autoFarmStage', message: 'phải là object hoặc null' })
+    } else {
+      requireNonEmptyString(player.autoFarmStage, 'stageId', 'player.autoFarmStage', issues)
+      requireNonNegativeNumber(player.autoFarmStage, 'lastCheckedMs', 'player.autoFarmStage', issues)
+    }
+  }
+
+  // formationLoadout: null | { formationId, assignments[] }. The write
+  // path validates content (commitFormationLoadout); here shape-only —
+  // resolvePartyFormation() maps .assignments blindly, so a malformed
+  // object crashes battle construction.
+  if (player.formationLoadout !== null) {
+    if (!isObject(player.formationLoadout)) {
+      issues.push({ path: 'player.formationLoadout', message: 'phải là object hoặc null' })
+    } else {
+      requireNonEmptyString(player.formationLoadout, 'formationId', 'player.formationLoadout', issues)
+      const assignments = requireArray(player.formationLoadout, 'assignments', 'player.formationLoadout', issues)
+
+      if (assignments) {
+        for (let i = 0; i < assignments.length; i += 1) {
+          const assignment = assignments[i]
+          const assignmentPath = `player.formationLoadout.assignments[${i}]`
+
+          if (!isObject(assignment)) {
+            issues.push({ path: assignmentPath, message: 'phải là object' })
+            continue
+          }
+
+          requireNonEmptyString(assignment, 'combatantId', assignmentPath, issues)
+
+          if (!isFiniteNumber(assignment.row) || !Number.isInteger(assignment.row)) {
+            issues.push({ path: `${assignmentPath}.row`, message: 'phải là số nguyên hữu hạn' })
+          }
+
+          if (!isFiniteNumber(assignment.column) || !Number.isInteger(assignment.column)) {
+            issues.push({ path: `${assignmentPath}.column`, message: 'phải là số nguyên hữu hạn' })
+          }
+        }
+      }
+    }
+  }
 }
 
 /**

@@ -136,3 +136,32 @@ describe('Adversarial — online auto-farm tick invariants', () => {
     expect(Number.isFinite(player.autoFarmStage!.lastCheckedMs)).toBe(true)
   })
 })
+
+describe('Adversarial — corrupt lastCheckedMs bound (C1)', () => {
+  it('small-positive lastCheckedMs settles at most one 24h batch, then converges', () => {
+    const processDefeatedEnemies = vi.fn()
+    const ops = buildAutoFarmOps(processDefeatedEnemies)
+    const player = createDefaultPlayer()
+    player.perfectClearStageIds.push('adv_stage')
+    player.perfectClearSeconds['adv_stage'] = 100 // cycle 50s
+    // Corrupt save: epoch timestamp. Elapsed is ~55 years -> completedCycles
+    // would be ~10^8 without the clamp (pre-fix: main-thread hang).
+    player.autoFarmStage = { stageId: 'adv_stage', lastCheckedMs: 1 }
+
+    ops.tickAutoFarm(player)
+
+    // 24h cap / 50s cycle = 1728 cycles max on the catch-up tick.
+    const firstTickRolls = processDefeatedEnemies.mock.calls.length
+    expect(firstTickRolls).toBeLessThanOrEqual(24 * 60 * 60 / 50 + 1)
+    expect(firstTickRolls).toBeGreaterThan(0)
+    expect(Number.isFinite(player.autoFarmStage!.lastCheckedMs)).toBe(true)
+
+    // The clamped window forfeits over-cap time: lastCheckedMs lands at
+    // now minus the sub-cycle carry, so the NEXT tick rolls ~0 cycles —
+    // not another 24h batch (which would be an infinite per-tick faucet).
+    expect(player.autoFarmStage!.lastCheckedMs).toBeGreaterThan(Date.now() - 60_000)
+
+    ops.tickAutoFarm(player)
+    expect(processDefeatedEnemies.mock.calls.length).toBe(firstTickRolls)
+  })
+})
