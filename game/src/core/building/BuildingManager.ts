@@ -32,8 +32,11 @@ export class BuildingManager {
   /**
    * Nạp lại state từ save — bỏ qua toàn bộ state cũ, giống
    * ExplorationManager.restore()/CraftingManager.restore().
+   *
+   * M1 (ARCH-001) — restored entries are detached copies: the payload is
+   * a value, so mutating it afterwards must not leak into live state.
    */
   restore(entries: BuildingInstance[]) {
-    this.instances = [...entries]
+    this.instances = entries.map((entry) => structuredClone(entry))
   }
 }

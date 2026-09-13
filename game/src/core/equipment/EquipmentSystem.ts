@@ -49,6 +49,7 @@ import {
   commitWashAffixes as commitWashAffixesImpl,
   createWashPendingSlotAccessor,
   discardWashTicket as discardWashTicketImpl,
+  invalidatePendingWashTicket as invalidatePendingWashTicketImpl,
   getWashPreviewAffixes as getWashPreviewAffixesImpl,
   previewWashAffixes as previewWashAffixesImpl,
   washAffixes as washAffixesImpl,
@@ -58,6 +59,7 @@ import {
   commitRefineValues as commitRefineValuesImpl,
   createRefinePendingSlotAccessor,
   discardRefinePreview as discardRefinePreviewImpl,
+  invalidatePendingRefinePreview as invalidatePendingRefinePreviewImpl,
   previewRefineValues as previewRefineValuesImpl,
   refineAffixValues as refineAffixValuesImpl,
   type RefineDeps,
@@ -132,6 +134,24 @@ export class EquipmentSystem {
   // dies with this system instance (restore into a fresh manager starts
   // clean; no cross-session ticket replay).
   private readonly washPendingSlot = createWashPendingSlotAccessor()
+
+  /**
+   * M1 (ARCH-001) — pending-operations invalidation hook. A session
+   * restore replaces the item set wholesale: the pending wash ticket and
+   * refine preview were issued against pre-restore item objects and must
+   * not commit onto the restored set (a stale wash ticket would overwrite
+   * freshly-restored affixes — see QA-R9-001's cross-session ticket
+   * finding). GameManagerSaveRestore calls this on every applied payload;
+   * M2 (ARCH-011) builds the per-item lifetime binding on this boundary.
+   */
+  invalidatePendingOperationTickets(): void {
+    // Writes stay inside the domain owner modules (R14 paid-random
+    // contract): EquipmentSystem issues the invalidation command, the
+    // pending slots themselves are only mutated by
+    // EquipmentRefine.ts/EquipmentWash.ts.
+    invalidatePendingRefinePreviewImpl(this.refineDeps())
+    invalidatePendingWashTicketImpl(this.washPendingSlot)
+  }
 
   constructor(costCatalog?: EquipmentOperationCostCatalog) {
     this.costCatalog = costCatalog

@@ -166,8 +166,11 @@ export class DecomposeSystem {
   /**
    * R7 (AR-08) - restore a snapshot produced by getSaveState.
    * Restored workers clamp to the CURRENT capacity (a stale save must
-   * not resurrect workers above the live CHQ ceiling). `undefined`
-   * (old saves without the slice) keeps defaults.
+   * not resurrect workers above the live CHQ ceiling).
+   *
+   * M1 (ARCH-001) — an absent slice (`undefined`, old saves without the
+   * field) resets to DEFAULTS like every other owner instead of keeping
+   * the previous session's settings.
    *
    * Repeat-application contract (A3 / QA-2026-09-08-R7-001): the cycle
    * timer MERGES with the live state instead of rewinding it. A first
@@ -177,17 +180,19 @@ export class DecomposeSystem {
    * award twice.
    */
   restore(state: DecomposeSaveState | undefined): void {
-    if (!state) {
-      return
+    const source: DecomposeSaveState = state ?? {
+      settings: { gradeFilter: 'all', ageFilter: 'all', workers: 0 },
+      nextCycleAt: 0,
+      started: false,
     }
 
     this.settings = {
-      gradeFilter: state.settings.gradeFilter ?? 'all',
-      ageFilter: state.settings.ageFilter ?? 'all',
-      workers: Math.min(Math.max(0, Math.floor(state.settings.workers ?? 0)), this.capacity),
+      gradeFilter: source.settings.gradeFilter ?? 'all',
+      ageFilter: source.settings.ageFilter ?? 'all',
+      workers: Math.min(Math.max(0, Math.floor(source.settings.workers ?? 0)), this.capacity),
     }
-    this.nextCycleAt = Math.max(this.nextCycleAt, Math.max(0, Math.floor(state.nextCycleAt ?? 0)))
-    this.started = this.started || Boolean(state.started)
+    this.nextCycleAt = Math.max(this.nextCycleAt, Math.max(0, Math.floor(source.nextCycleAt ?? 0)))
+    this.started = this.started || Boolean(source.started)
   }
 
   /**

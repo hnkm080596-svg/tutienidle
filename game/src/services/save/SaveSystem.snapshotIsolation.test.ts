@@ -8,6 +8,10 @@ import { createDefaultPlayer } from '../../core/player/Player'
 import { materials } from '../../data/materials/materials'
 import { equipment } from '../../data/equipment/equipment'
 import { affixes } from '../../data/equipment/affixes'
+import { buildings } from '../../data/building/buildings'
+import { SKILLS } from '../../data/skill/Skills'
+import { TECHNIQUES } from '../../data/technique/Techniques'
+import { makeInstance } from '../../core/equipment/EquipmentInstance.fixture'
 import { buildGameSave } from './SaveSystem'
 
 function createBootedGameManager(): GameManager {
@@ -15,6 +19,7 @@ function createBootedGameManager(): GameManager {
   gameManager.catalogOps.registerMaterials(materials)
   gameManager.catalogOps.registerEquipment(equipment)
   gameManager.catalogOps.registerAffixes(affixes)
+  gameManager.catalogOps.registerBuildings(buildings)
   return gameManager
 }
 
@@ -53,6 +58,123 @@ describe('buildGameSave snapshot isolation (AR-12)', () => {
     })
 
     expect(save).toEqual(snapshot)
+  })
+
+  // M1 (ARCH-001) — every GameSave slice is a detached value: mutating a
+  // live manager object AFTER buildGameSave() must not reach the snapshot,
+  // and mutating the snapshot must not reach live state. Before this fix,
+  // getAll()-sourced slices (skills/techniques/equipment/buildings/
+  // equipmentSlots/alchemyJobs/production nested cycles) aliased the live
+  // objects in both directions.
+  it('mutating a live skill after buildGameSave (level 1 -> 11) does not alter the snapshot — and neither does any other slice', () => {
+    const gameManager = createBootedGameManager()
+    const player = createDefaultPlayer()
+
+    const liveSkill = structuredClone(SKILLS[0]!)
+    liveSkill.level = 1
+    gameManager.skillManager.add(liveSkill)
+
+    const liveTechnique = structuredClone(TECHNIQUES[0]!)
+    gameManager.techniqueManager.add(liveTechnique)
+
+    const liveItem = makeInstance({ instanceId: 'iso-item', itemId: 'base_kiem' })
+    gameManager.equipmentBag.add(liveItem)
+
+    gameManager.buildingManager.add({
+      instanceId: 'iso-building',
+      buildingId: buildings[0]!.id,
+      level: 1,
+      lastCollectedAt: 0,
+    })
+
+    gameManager.equipmentSlotManager.get('weapon').enhanceLevel = 4
+
+    const siteId = gameManager.productionSystem.getSiteDefinitions()[0]!.siteId
+    const liveSite = gameManager.productionSystem.ensureSiteState(siteId)
+    liveSite.activeCycle = {
+      cycleId: 'c1',
+      siteId,
+      collectionRealmId: 'mortal',
+      siteLevelAtStart: 1,
+      rewardTableVersion: 1,
+      rollSeed: 1,
+      startedAtMs: 0,
+      completesAtMs: 1000,
+    }
+    liveSite.workerCycles = [{ cycleId: 'w1', siteId, collectionRealmId: 'mortal', siteLevelAtStart: 1, rewardTableVersion: 1, rollSeed: 2, startedAtMs: 0, completesAtMs: 1000 }]
+
+    gameManager.alchemySystem.restoreJobs([{
+      jobId: 'iso-job',
+      recipeId: 'r',
+      pillId: 'p',
+      herbMaterialId: 'h',
+      startedAtMs: 0,
+      completesAtMs: 999,
+      roomLevelAtStart: 1,
+    }])
+
+    const save = buildGameSave(player, gameManager)
+    const snapshot = structuredClone(save)
+
+    // Mutate every live source the snapshot was built from.
+    liveSkill.level = 11
+    liveTechnique.name = 'mutated-after-build'
+    liveItem.affixes.push({ affixId: 'suffix_accuracy', tier: 1, value: 9 })
+    liveItem.forgeUsesRemaining = 0
+    gameManager.buildingManager.get('iso-building')!.level = 9
+    gameManager.equipmentSlotManager.get('weapon').enhanceLevel = 99
+    liveSite.activeCycle!.startedAtMs = -1
+    liveSite.workerCycles![0]!.rollSeed = -1
+    liveSite.level = 9
+    gameManager.alchemySystem.getJobs()[0]!.completesAtMs = -1
+
+    expect(save).toEqual(snapshot)
+    expect(save.skills[0]!.level).toBe(1)
+  })
+
+  it('mutating the built save does not reach live manager state (the snapshot is a value in both directions)', () => {
+    const gameManager = createBootedGameManager()
+    const player = createDefaultPlayer()
+
+    const liveSkill = structuredClone(SKILLS[0]!)
+    liveSkill.level = 1
+    gameManager.skillManager.add(liveSkill)
+    gameManager.techniqueManager.add(structuredClone(TECHNIQUES[0]!))
+    const liveItem = makeInstance({ instanceId: 'iso-item', itemId: 'base_kiem' })
+    gameManager.equipmentBag.add(liveItem)
+    gameManager.buildingManager.add({
+      instanceId: 'iso-building',
+      buildingId: buildings[0]!.id,
+      level: 1,
+      lastCollectedAt: 0,
+    })
+    gameManager.equipmentSlotManager.get('weapon').enhanceLevel = 4
+    gameManager.alchemySystem.restoreJobs([{
+      jobId: 'iso-job', recipeId: 'r', pillId: 'p', herbMaterialId: 'h',
+      startedAtMs: 0, completesAtMs: 999, roomLevelAtStart: 1,
+    }])
+    gameManager.questManager.ensureActive({
+      id: 'iso_quest', name: 'q', description: 'd',
+      condition: { kind: 'kill', amount: 1 }, reward: {}, cadence: 'daily',
+    })
+
+    const save = buildGameSave(player, gameManager)
+
+    save.skills[0]!.level = 77
+    save.techniques[0]!.name = 'save-side mutation'
+    save.equipment[0]!.forgeUsesRemaining = 0
+    save.buildings[0]!.level = 9
+    save.equipmentSlots.find((entry) => entry.slot === 'weapon')!.enhanceLevel = 99
+    save.alchemyJobs![0]!.completesAtMs = -1
+    save.quests!.active[0]!.progress = 999
+
+    expect(gameManager.skillManager.get(liveSkill.id)!.level).toBe(1)
+    expect(gameManager.techniqueManager.getAll()[0]!.name).not.toBe('save-side mutation')
+    expect(gameManager.equipmentBag.get('iso-item')!.forgeUsesRemaining).toBe(liveItem.forgeUsesTotal)
+    expect(gameManager.buildingManager.get('iso-building')!.level).toBe(1)
+    expect(gameManager.equipmentSlotManager.get('weapon').enhanceLevel).toBe(4)
+    expect(gameManager.alchemySystem.getJobs()[0]!.completesAtMs).toBe(999)
+    expect(gameManager.questManager.getState().active[0]!.progress).toBe(0)
   })
 
   // Production regression (found live, not from a synthetic fixture):

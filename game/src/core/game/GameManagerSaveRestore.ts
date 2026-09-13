@@ -156,28 +156,36 @@ export class GameManagerSaveRestore {
       return this.deps.equipmentSystem.getModifiers()
     }
 
-    this.lastAppliedPayloadHash = payloadIdentity
+    // M1 (ARCH-001) — restore is REPLACEMENT for every slice: each owner
+    // below receives a detached copy of the payload and resets its live
+    // set to exactly what the save declares (absent/empty = defaults).
+    // The identity hash commits at the END of this method — a mid-restore
+    // throw must leave the payload uncommitted so a retry re-applies the
+    // un-applied slices instead of being skipped by the guard above.
 
-    for (const technique of save.techniques) {
-      if (!this.deps.techniqueManager.has(technique.id)) {
-        // Text-refresh-on-load: cung logic voi skill ben duoi -- name/
-        // description la du lieu hien thi thuan, luon dong bo tu template
-        // dang dang ky thay vi giu nguyen ban da dong bang trong save cu.
-        const template = this.deps.techniqueTemplates.get(technique.id)
+    // Techniques/skills — full replace of the learned sets. The text/
+    // backfill refresh below runs on CLONES: the input save is a value
+    // and must never be mutated by restore.
+    const restoredTechniques = save.techniques.map((savedTechnique) => {
+      const technique = structuredClone(savedTechnique)
 
-        if (template) {
-          technique.name = template.name
-          technique.description = template.description
-        }
+      // Text-refresh-on-load: cung logic voi skill ben duoi -- name/
+      // description la du lieu hien thi thuan, luon dong bo tu template
+      // dang dang ky thay vi giu nguyen ban da dong bang trong save cu.
+      const template = this.deps.techniqueTemplates.get(technique.id)
 
-        this.deps.techniqueManager.add(technique)
+      if (template) {
+        technique.name = template.name
+        technique.description = template.description
       }
-    }
 
-    for (const skill of save.skills) {
-      if (this.deps.skillManager.has(skill.id)) {
-        continue
-      }
+      return technique
+    })
+
+    this.deps.techniqueManager.restore(restoredTechniques)
+
+    const restoredSkills = save.skills.map((savedSkill) => {
+      const skill = structuredClone(savedSkill)
 
       // Execution policy rework + development-build no-migration (2026-
       // 08-26): save của nhân vật CŨ lưu skill object nguyên trạng trước
@@ -208,17 +216,28 @@ export class GameManagerSaveRestore {
         skill.description = template.description
       }
 
-      this.deps.skillManager.add(skill)
-    }
+      return skill
+    })
+
+    this.deps.skillManager.restore(restoredSkills)
 
     // R10 (AR-12, S3) — restore is REPLACEMENT, not additive: clear the
-    // live bag before applying the save's materials/pills, matching
-    // buildings/production sites/quests/decompose (already replace, see
-    // R7/R8.1). Without this, a live-session restore into a nonempty bag
-    // (boot retry, reload race) would merge saved amounts on top of
-    // whatever was already there instead of replacing it.
+    // live bags before applying the save's materials/pills/equipment,
+    // matching buildings/production sites/quests/decompose (already
+    // replace, see R7/R8.1). Without this, a live-session restore into a
+    // nonempty bag (boot retry, reload race) would merge saved entries on
+    // top of whatever was already there instead of replacing it.
     this.deps.materialBag.clear()
     this.deps.pillBag.clear()
+    this.deps.equipmentBag.clear()
+
+    // M1 (ARCH-001, hook for M2/ARCH-011) — pending paid-op tickets
+    // (equipment wash/refine) were bound to pre-restore item objects and
+    // must die WITH the old set: a ticket's instanceId string can silently
+    // re-resolve to a restored object, so the invalidation runs adjacent
+    // to clear() — no window exists where a stale ticket observes a
+    // replaced (or half-replaced) bag.
+    this.deps.equipmentSystem.invalidatePendingOperationTickets()
 
     // 9.8 — add() tràn stack trả lượng bị mất; gom MỖI LOẠI material
     // một event duy nhất (cả 2 loop materials + auto-dissolve rewards).
@@ -254,10 +273,12 @@ export class GameManagerSaveRestore {
     // xem ghi chú tại hàm đó).
     let restoredAutoDissolved: AutoDissolveReward[] = []
 
-    for (const instance of save.equipment) {
+    for (const savedInstance of save.equipment) {
+      // Detached copy — the bag owns live objects; the payload stays a
+      // value the caller may reuse/mutate without reaching live state.
       restoredAutoDissolved = [
         ...restoredAutoDissolved,
-        ...(this.deps.equipmentBag.add(instance) ?? []),
+        ...(this.deps.equipmentBag.add(structuredClone(savedInstance)) ?? []),
       ]
     }
 
@@ -396,6 +417,11 @@ export class GameManagerSaveRestore {
     // the first tick runs. Placed LAST so the restored player realm is
     // final when unlock evaluation runs.
     this.deps.reconcileQuestLifecycle()
+
+    // M1 (ARCH-001) — commit the payload identity only AFTER every slice
+    // applied successfully: a mid-restore throw keeps the payload
+    // uncommitted, so a retry of the same payload is not skipped.
+    this.lastAppliedPayloadHash = payloadIdentity
 
     return this.deps.equipmentSystem.getModifiers()
   }

@@ -277,73 +277,89 @@ export function restoreGameSession(
     }
   }
 
-  const offline = player.restoreFromSave(save)
+  // M1 (ARCH-001) — a mid-restore failure is a handled rejection, not an
+  // uncaught boot exception. Identity hashes commit only after each owner
+  // finished applying, so retrying the same payload re-applies the
+  // un-committed slices instead of skipping them.
+  try {
+    const offline = player.restoreFromSave(save)
 
-  gameManager.setActivePlayer(player.$state)
+    gameManager.setActivePlayer(player.$state)
 
-  const equipmentModifiers = gameManager.saveOps.restoreFromSave(save)
+    const equipmentModifiers = gameManager.saveOps.restoreFromSave(save)
 
-  player.setEquipmentModifiers(equipmentModifiers)
+    player.setEquipmentModifiers(equipmentModifiers)
 
-  return { status: 'ok', offline }
+    return { status: 'ok', offline }
+  } catch (error: unknown) {
+    return {
+      status: 'rejected',
+      message: error instanceof Error ? error.message : 'Session restore failed',
+    }
+  }
 }
 
-/** Shape persist của một ProductionCycle — khớp core/production. */
+/**
+ * M1 (ARCH-001) — the snapshot-boundary detach. EVERY GameSave slice
+ * must be a detached VALUE: mutating live manager state after the build,
+ * or mutating the built save itself, must never reach the other side.
+ *
+ * JSON round-trip, NOT structuredClone: a save is also built from a
+ * Pinia store's reactive $state (the player slice), and structuredClone
+ * has no concept of Proxy exotic objects at ANY nesting depth — it throws
+ * DataCloneError the moment it meets one, including a nested field Vue
+ * only wrapped in a Proxy lazily after some earlier getter/computed
+ * touched it during actual gameplay (toRaw() alone is not sufficient —
+ * it only unwraps the outermost proxy). JSON.stringify/parse reads
+ * through Proxies transparently at any depth, and the built save is
+ * exactly what writeGameSave() serializes to localStorage anyway — the
+ * in-memory snapshot now equals its persisted form byte-for-byte.
+ */
+function detachSaveValue<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T
+}
+
 export function buildGameSave(player: PlayerData, gameManager: GameManager): GameSave {
   return {
     version: CURRENT_SAVE_VERSION,
 
     player: {
-      // R10 (AR-12): the snapshot must be a VALUE - deep-detach the
-      // player (nested baseStats/modifiers/flags alias the live store
-      // under a plain spread, so mutating live state after build used
-      // to change the "saved" payload).
-      //
-      // JSON round-trip, NOT structuredClone: the real caller is a Pinia
-      // store's reactive state, and structuredClone has no concept of
-      // Proxy exotic objects at ANY nesting depth - it throws
-      // DataCloneError the moment it meets one, including a nested field
-      // Vue only wrapped in a Proxy lazily after some earlier getter/
-      // computed touched it during actual gameplay (not reproducible from
-      // a freshly-constructed player in isolation - toRaw() alone was not
-      // sufficient either, since it only unwraps the outermost proxy).
-      // JSON.stringify/parse reads through Proxies transparently via
-      // normal property access, at any depth - and this object is going
-      // to be JSON.stringify'd again by writeGameSave() for localStorage
-      // regardless, so this changes no on-disk behavior.
-      ...JSON.parse(JSON.stringify(player)),
+      ...detachSaveValue(player),
 
       lastSavedAt: Date.now(),
     },
 
-    techniques: gameManager.techniqueManager.getAll(),
+    // Manager getters intentionally return LIVE domain objects for
+    // gameplay consumers — the detach happens HERE, at the save
+    // boundary, so every slice in the returned save is a value copy.
+    techniques: detachSaveValue(gameManager.techniqueManager.getAll()),
 
-    skills: gameManager.skillManager.getAll(),
+    skills: detachSaveValue(gameManager.skillManager.getAll()),
 
-    materials: gameManager.materialBag.getAll().map((stack) => ({
+    materials: detachSaveValue(gameManager.materialBag.getAll().map((stack) => ({
       materialId: stack.material.id,
 
       amount: stack.amount,
-    })),
+    }))),
 
-    equipment: gameManager.equipmentBag.getAll(),
+    equipment: detachSaveValue(gameManager.equipmentBag.getAll()),
 
-    pills: gameManager.pillBag.getAll().map((stack) => ({
+    pills: detachSaveValue(gameManager.pillBag.getAll().map((stack) => ({
       pillId: stack.pill.id,
 
       amount: stack.amount,
-    })),
+    }))),
 
     // Phù/Trận khai tử (§10.1) — bag không còn; mảng rỗng giữ shape save.
     talismans: [],
 
     formations: [],
 
-    buildings: gameManager.buildingManager.getAll(),
+    buildings: detachSaveValue(gameManager.buildingManager.getAll()),
 
-    equipmentSlots: gameManager.equipmentSlotManager.getAll(),
+    equipmentSlots: detachSaveValue(gameManager.equipmentSlotManager.getAll()),
 
-    productionSites: gameManager.productionSystem.getAllStates().map((state) => ({
+    productionSites: detachSaveValue(gameManager.productionSystem.getAllStates().map((state) => ({
       siteId: state.siteId,
 
       level: state.level,
@@ -353,15 +369,15 @@ export function buildGameSave(player: PlayerData, gameManager: GameManager): Gam
       activeCycle: state.activeCycle,
 
       workerCycles: state.workerCycles?.length ? state.workerCycles : undefined,
-    })),
+    }))),
 
-    alchemyJobs: gameManager.alchemySystem.getJobs(),
+    alchemyJobs: detachSaveValue(gameManager.alchemySystem.getJobs()),
 
-    quests: structuredClone(gameManager.questManager.getState()),
+    quests: detachSaveValue(gameManager.questManager.getState()),
 
     // R7 (AR-08) - detached decompose snapshot (getSaveState returns a
-    // value copy; structuredClone keeps it independent of live state).
-    decompose: structuredClone(gameManager.decomposeSystem.getSaveState()),
+    // value copy; detachSaveValue keeps it independent of live state).
+    decompose: detachSaveValue(gameManager.decomposeSystem.getSaveState()),
   }
 }
 

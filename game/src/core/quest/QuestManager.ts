@@ -103,11 +103,16 @@ export class QuestManager {
     this.state.lastDailyResetAtMs = now
   }
 
+  /**
+   * M1 (ARCH-001) — restore replaces the whole state with a DETACHED
+   * copy: the payload is a value, so mutating it afterwards must not
+   * leak into live state (A3).
+   */
   restore(state: QuestManagerState): void {
     this.state = {
-      active: state.active ?? [],
+      active: structuredClone(state.active ?? []),
 
-      completedOnceIds: state.completedOnceIds ?? [],
+      completedOnceIds: [...(state.completedOnceIds ?? [])],
 
       lastDailyResetAtMs: state.lastDailyResetAtMs ?? 0,
     }

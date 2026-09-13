@@ -187,6 +187,19 @@ export class EquipmentBag {
     this.slotIndex.set(instance.slot, instance)
   }
 
+  /**
+   * M1 (ARCH-001) — session-restore boundary: drop every live instance so
+   * the payload's item set REPLACES the bag instead of merging into it.
+   * Membership generations die with their objects (WeakMap self-collects);
+   * pending paid-op tickets bound to the removed set are the caller's
+   * concern — GameManagerSaveRestore invalidates them via
+   * EquipmentSystem.invalidatePendingOperationTickets().
+   */
+  clear(): void {
+    this.instances = []
+    this.slotIndex.clear()
+  }
+
   has(instanceId: string): boolean {
     return this.instances.some((instance) => instance.instanceId === instanceId)
   }

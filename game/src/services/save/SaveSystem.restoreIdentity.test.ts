@@ -5,6 +5,7 @@
 import { describe, expect, it } from 'vitest'
 import { createDefaultPlayer } from '../../core/player/Player'
 import { materials } from '../../data/materials/materials'
+import { makeInstance } from '../../core/equipment/EquipmentInstance.fixture'
 import { computeRestoreIdentity, type GameSave } from '../../services/save/SaveSystem'
 import { CURRENT_SAVE_VERSION } from '../../services/save/saveVersion'
 
@@ -58,6 +59,86 @@ describe('restore identity (AR-12)', () => {
 
     const ore = materials.find((m) => m.id === 'qi_refining_ore_century')!
     saveB.materials = [{ materialId: ore.id, amount: 5 }]
+
+    expect(computeRestoreIdentity(saveA)).not.toBe(computeRestoreIdentity(saveB))
+  })
+
+  it('a pills-only change produces a different identity (ARCH-001)', () => {
+    const player = createDefaultPlayer()
+    const saveA = baseSave(player)
+    const saveB = baseSave(player)
+
+    saveB.pills = [{ pillId: 'pill_regen_mortal', amount: 1 }]
+
+    expect(computeRestoreIdentity(saveA)).not.toBe(computeRestoreIdentity(saveB))
+  })
+
+  // M1 (ARCH-001) — every meaningful GameSave slice must contribute to
+  // the restore identity: a payload that differs ONLY in one slice is a
+  // different payload and must not be skipped by the idempotency guard.
+  it.each([
+    ['techniques', (save: GameSave) => {
+      save.techniques = [{ id: 't1', name: 'T', description: '', unlocked: true, equipped: false }]
+    }],
+    ['skills', (save: GameSave) => {
+      save.skills = [{
+        id: 's1', name: 'S', description: '', type: 'active', level: 1, maxLevel: 10,
+        cooldown: 1, target: 'enemy', effects: [], unlocked: true, equipped: false,
+      }]
+    }],
+    ['equipment', (save: GameSave) => {
+      save.equipment = [makeInstance({ instanceId: 'identity-item' })]
+    }],
+    ['talismans', (save: GameSave) => {
+      save.talismans = [{ talismanId: 'legacy-talisman', amount: 1 }]
+    }],
+    ['formations', (save: GameSave) => {
+      save.formations = [{ formationId: 'legacy-formation', amount: 1 }]
+    }],
+    ['buildings', (save: GameSave) => {
+      save.buildings = [{ instanceId: 'b1', buildingId: 'b', level: 1, lastCollectedAt: 0 }]
+    }],
+    ['equipmentSlots', (save: GameSave) => {
+      save.equipmentSlots = [{
+        slot: 'weapon', enhanceLevel: 1, enhanceFailStreak: 0,
+        bonusAffixSlots: 0, appliedTalismanIds: [],
+      }]
+    }],
+    ['productionSites', (save: GameSave) => {
+      save.productionSites = [{ siteId: 'site-1', level: 2, autoRestart: true }]
+    }],
+    ['alchemyJobs', (save: GameSave) => {
+      save.alchemyJobs = [{
+        jobId: 'j1', recipeId: 'r1', pillId: 'p1', herbMaterialId: 'h1',
+        startedAtMs: 0, completesAtMs: 1, roomLevelAtStart: 1,
+      }]
+    }],
+    ['quests', (save: GameSave) => {
+      save.quests = { active: [{ questId: 'q1', progress: 1, claimed: false }], completedOnceIds: [], lastDailyResetAtMs: 0 }
+    }],
+    ['decompose', (save: GameSave) => {
+      save.decompose = {
+        settings: { gradeFilter: 'all', ageFilter: 'all', workers: 2 },
+        nextCycleAt: 1000,
+        started: true,
+      }
+    }],
+  ] as const)('a change confined to save.%s changes the restore identity', (_slice, mutate) => {
+    const player = createDefaultPlayer()
+    const saveA = baseSave(player)
+    const saveB = baseSave(player)
+
+    mutate(saveB)
+
+    expect(computeRestoreIdentity(saveA)).not.toBe(computeRestoreIdentity(saveB))
+  })
+
+  it('an absent optional slice differs from a present-but-empty one (presence is a payload difference)', () => {
+    const player = createDefaultPlayer()
+    const saveA = baseSave(player)
+    const saveB = baseSave(player)
+
+    delete saveB.quests
 
     expect(computeRestoreIdentity(saveA)).not.toBe(computeRestoreIdentity(saveB))
   })

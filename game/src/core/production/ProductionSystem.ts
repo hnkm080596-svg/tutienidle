@@ -105,6 +105,12 @@ export class ProductionSystem {
     return state
   }
 
+  /**
+   * M1 (ARCH-001) — restore REPLACES the whole site-state map, and every
+   * restored entry is a detached copy (activeCycle/workerCycles included):
+   * the payload is a value, so mutating it afterwards must not leak into
+   * live state (A3).
+   */
   restoreStates(states: ProductionSiteState[]): void {
     this.states.clear()
 
@@ -112,7 +118,8 @@ export class ProductionSystem {
       this.states.set(state.siteId, {
         ...state,
         activeWorkerSlots: state.activeWorkerSlots ?? 0,
-        workerCycles: state.workerCycles?.length ? [...state.workerCycles] : [],
+        activeCycle: state.activeCycle ? { ...state.activeCycle } : undefined,
+        workerCycles: (state.workerCycles ?? []).map((cycle) => ({ ...cycle })),
       })
     }
   }

@@ -175,8 +175,13 @@ export class AlchemySystem {
 
   private pendingEvents: AlchemySettlementEvent[] = []
 
+  /**
+   * M1 (ARCH-001) — restore REPLACES the job list with detached copies:
+   * the payload is a value, so mutating it afterwards must not leak into
+   * live state (A3).
+   */
   restoreJobs(jobs: ActiveAlchemyJob[]): void {
-    this.jobs = [...jobs]
+    this.jobs = jobs.map((job) => ({ ...job }))
   }
 
   getJobs(): ActiveAlchemyJob[] {
