@@ -10,8 +10,15 @@
 //
 // Scenes chỉ nhận PROFILE ID (không cầm Player store/GameManager) qua
 // Phaser registry + event `player_visual_profile_changed`.
+//
+// 2026-09-14 — the id type + resolution rule moved to
+// `core/player/PlayerVisualForm.ts`: the visual form is entity domain data,
+// derived once (player store getter `visualProfileId`) for every place the
+// character appears. Re-exports kept so existing importers stay unchanged.
+export type { PlayerVisualProfileId } from '@/core/player/PlayerVisualForm'
+export { resolvePlayerVisualProfileId } from '@/core/player/PlayerVisualForm'
 
-export type PlayerVisualProfileId = 'mortal' | 'phap_tu' | 'kiem_tu'
+import type { PlayerVisualProfileId } from '@/core/player/PlayerVisualForm'
 
 /** Điểm bám VFX chuẩn hoá trên ảnh nguồn (plan §5.1). */
 export type PlayerBodyAnchorId =
@@ -151,30 +158,6 @@ export const PLAYER_VISUAL_PROFILES: Record<PlayerVisualProfileId, PlayerVisualP
 
     cultivateBodyAnchors: lotusAnchors(),
   },
-}
-
-/**
- * Chọn profile theo trạng thái nhân vật (plan §9 unit test #1):
- * - `cultivationPath` quyết định khi đã nhập môn (phap_tu/kiem_tu);
- * - còn Phàm Nhân (không path) hoặc giá trị lạ → `mortal`;
- * - `kiem_tu` trả về profile fallback Phàm Nhân (id giữ nguyên để
- *   caller biết hình thái logic, texture tự trỏ sang mortal).
- */
-export function resolvePlayerVisualProfileId(input: {
-  realmId?: string
-
-  cultivationPath?: string
-}): PlayerVisualProfileId {
-  switch (input?.cultivationPath) {
-    case 'phap_tu':
-      return 'phap_tu'
-
-    case 'kiem_tu':
-      return 'kiem_tu'
-
-    default:
-      return 'mortal'
-  }
 }
 
 /** Texture tu luyện hiệu lực — fallback chuỗi về mortal khi profile thiếu. */

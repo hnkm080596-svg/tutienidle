@@ -28,6 +28,7 @@ import { TRAN_PHAP_FORMATIONS } from '@/data/formation/TranPhap'
 import type { TranPhapDefinition } from '@/data/formation/TranPhap'
 import type { FormationSlotAssignment } from '@/core/player/Player'
 import OverlayPanel from '@/components/common/OverlayPanel.vue'
+import SlotView from '@/components/common/SlotView.vue'
 import { STANDING_SLOT_COUNT } from '@/core/battle/BattlefieldRegions'
 // Battlefield Perspective Panel (2026-09-06) - the canvas is larger than the
 // pure grid to leave room for perspective depth (spec section 3). The size now
@@ -41,7 +42,7 @@ import {
 import { createProjectionBridge } from '@/presentation/geometry/ProjectionBridge'
 import { formationSlotStyle } from '@/presentation/geometry/formationSlotBoxes'
 import { useDynamicRegion } from '@/presentation/host/useDynamicRegion'
-import { FORMATION_ASSIGNMENTS_EVENT } from '@/presentation/contracts/regionEvents'
+import { FORMATION_ASSIGNMENTS_EVENT, type FormationAssignmentsPayload } from '@/presentation/contracts/regionEvents'
 import type { SlotState } from '@/presentation/contracts/SlotState'
 
 const ui = useUiStore()
@@ -96,7 +97,7 @@ function slotStyle(row: number, column: number): Record<string, string> {
     height: FORMATION_CANVAS_HEIGHT,
   })
 
-  // The hover beam's ::before cannot read the element's own clip-path, so the
+  // The beam's __fx layer cannot read the element's own clip-path, so the
   // same polygon is re-published as the shared beam layer's clip variable.
   style['--fx-beam-clip'] = style.clipPath!
 
@@ -227,6 +228,14 @@ function close() {
 // nơi nhận @dragover/@drop thật, giữ nguyên 100% logic đã có.
 const previewContainerRef = ref<HTMLDivElement | null>(null)
 
+// One atomic snapshot per dispatch: slot contents + the player's current
+// visual form, derived on the entity (player.visualProfileId). The preview
+// scene resolves art from it through the shared combat catalogue — without
+// it the scene would have to guess or hardcode a placeholder.
+function assignmentsPayload(): FormationAssignmentsPayload {
+  return { assignments: currentAssignments.value, playerProfileId: player.visualProfileId }
+}
+
 // V4/V10 — the hosting mechanics (dynamic import, construction, teardown
 // ordering, the close-during-boot race, the local error boundary) belong to
 // useDynamicRegion, not to this panel; and this panel no longer holds the
@@ -257,7 +266,7 @@ const previewRegion = useDynamicRegion({
   },
 
   onReady: () => {
-    previewRegion.dispatch(FORMATION_ASSIGNMENTS_EVENT, currentAssignments.value)
+    previewRegion.dispatch(FORMATION_ASSIGNMENTS_EVENT, assignmentsPayload())
   },
 })
 
@@ -295,9 +304,10 @@ watch(
   { flush: 'post' },
 )
 
-// Keep sprites in step with drag-and-drop while the panel is open.
-watch(currentAssignments, (assignments) => {
-  previewRegion.dispatch(FORMATION_ASSIGNMENTS_EVENT, assignments)
+// Keep sprites in step with drag-and-drop AND with the entity's visual form
+// (cultivation path changes can arrive while the panel is open).
+watch([currentAssignments, () => player.visualProfileId], () => {
+  previewRegion.dispatch(FORMATION_ASSIGNMENTS_EVENT, assignmentsPayload())
 })
 </script>
 
@@ -314,6 +324,7 @@ watch(currentAssignments, (assignments) => {
                 v-for="column in STANDING_SLOT_COUNT"
                 :key="`${row}-${column}`"
                 :class="['tran-phap-panel__cell', `tran-phap-panel__cell--${slotStateAt(row - 1, column - 1)}`, 'fx-border-beam', 'fx-border-beam--clip', { 'fx-border-beam--active': slotStateAt(row - 1, column - 1) === 'hover' }]"
+                :aria-disabled="slotStateAt(row - 1, column - 1) === 'locked' ? 'true' : undefined"
                 :style="slotStyle(row - 1, column - 1)"
                 :draggable="!!assignmentAt(row - 1, column - 1)"
                 @dragstart="(event) => { const occupant = assignmentAt(row - 1, column - 1); if (occupant) (event as DragEvent).dataTransfer?.setData('text/plain', occupant.combatantId) }"
@@ -349,15 +360,15 @@ watch(currentAssignments, (assignments) => {
         @dragover.prevent
         @drop="(event) => removeAssignment((event as DragEvent).dataTransfer?.getData('text/plain') ?? '')"
       >
-        <div
+        <SlotView
           v-for="card in combatantCards()"
           :key="card.combatantId"
+          :item="card"
+          :label="card.label"
           draggable="true"
           class="tran-phap-panel__card"
-          @dragstart="(event) => (event as DragEvent).dataTransfer?.setData('text/plain', card.combatantId)"
-        >
-          {{ card.label }}
-        </div>
+          @dragstart="(event: Event) => (event as DragEvent).dataTransfer?.setData('text/plain', card.combatantId)"
+        />
       </div>
 
       <button type="button" class="tran-phap-panel__confirm" :disabled="!selectedFormation" @click="onConfirm">
@@ -478,8 +489,8 @@ watch(currentAssignments, (assignments) => {
   opacity: 1;
   background: rgba(76, 175, 80, 0.45);
   /* Shared border-beam (theme.css .fx-border-beam--clip): the beam ring is
-     produced by ::before clipped to --fx-beam-clip; this var gives ::after
-     the interior fill to cover, leaving only the trapezoid's edge ring.
+     produced by the __fx layer clipped to --fx-beam-clip; this var gives its
+     ::after the interior fill to cover, leaving only the trapezoid's edge ring.
      'hover' only applies to empty enabled slots (slotStateAt priority), so
      the fill never hides an occupant label. */
   --fx-beam-fill: rgba(76, 175, 80, 0.45);
@@ -514,10 +525,12 @@ watch(currentAssignments, (assignments) => {
   flex-wrap: wrap;
 }
 
+/* Queue cards are SlotView slots containing a combatant — shrink the
+   default 100%-width grid slot to a fixed chip in the wrapping queue row. */
 .tran-phap-panel__card {
+  width: 64px;
+  flex: 0 0 auto;
   cursor: grab;
-  padding: var(--space-2, 8px);
-  border: 1px solid var(--surface-line);
 }
 
 .tran-phap-panel__confirm {

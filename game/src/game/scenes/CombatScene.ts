@@ -42,7 +42,6 @@ import type { EnemySpawnVfxHandle } from '@/game/support/EnemySpawnVfx'
 
 import {
   PLAYER_VISUAL_PROFILES,
-  resolvePlayerVisualProfileId,
   type PlayerVisualProfile,
   type PlayerVisualProfileId,
 } from '@/presentation/art/PlayerVisualProfiles'
