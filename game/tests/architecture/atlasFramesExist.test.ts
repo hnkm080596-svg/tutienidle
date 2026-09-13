@@ -103,7 +103,7 @@ describe('mortal combat atlas frames', () => {
   )
 
   it(
-    'keeps all five clips on one sheet with consistent source frames',
+    'keeps all mortal clips on one sheet with consistent source frames',
     () => {
       expect(new Set(Object.values(clips).map((clip) => clip.sheetKey))).toEqual(
         new Set([clips.idle.sheetKey]),
@@ -151,8 +151,8 @@ describe('mortal combat atlas frames', () => {
         .map((path) => readFileSync(path, 'utf8'))
         .join('\n')
 
-      expect(source).not.toMatch(/load\.spritesheet[\s\S]{0,300}player-mortal-combat-atlas-v1/)
-      expect(source).not.toMatch(/player-mortal-combat-atlas-v1[\s\S]{0,300}load\.spritesheet/)
+      expect(source).not.toMatch(/load\.spritesheet[\s\S]{0,300}player-mortal-combat-atlas-v2/)
+      expect(source).not.toMatch(/player-mortal-combat-atlas-v2[\s\S]{0,300}load\.spritesheet/)
     },
     SCAN_TIMEOUT,
   )

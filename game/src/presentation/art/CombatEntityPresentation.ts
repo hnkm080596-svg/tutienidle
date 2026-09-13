@@ -101,7 +101,7 @@ export interface AtlasClip {
    */
   extent: ArtExtent
 
-  /** -1 = loop (idle/ready/standby), 0 = play once (cast/death). */
+  /** -1 = loop (idle/ready/standby), 0 = play once (attack/death). */
   repeat: number
 
   /**

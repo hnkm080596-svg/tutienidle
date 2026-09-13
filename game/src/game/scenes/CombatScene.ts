@@ -94,7 +94,10 @@ import {
   type CombatAnimationCatalogue,
   type CombatAnimationName,
 } from '@/presentation/art/CombatEntityPresentation'
-import { presentationFor } from '@/presentation/art/CombatPresentationCatalogue'
+import {
+  combatAnimationForSkill,
+  presentationFor,
+} from '@/presentation/art/CombatPresentationCatalogue'
 import type { CombatEvent } from '@/core/combat/CombatEvent'
 import type { CombatHealEvent, EntityVitalsChangedEvent } from '@/core/combat/EntityVitalsSystem'
 import { formatNumber } from '@/core/format/NumberFormatter'
@@ -772,7 +775,6 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     // chÃ¡ÂºÂ¡y mÃ¡Â»â€”i resize). events.once Ã„â€˜Ã¡ÂºÂ£m bÃ¡ÂºÂ£o shutdown handler tÃ¡Â»Â± gÃ¡Â»Â¡.
     this.scale.on('resize', this.resizeHandler)
 
-
     this.subscribeCombatEvents()
 
     // 6A-T4 — HUD player trong canvas (HP/MP/Kiếm) — tạo một lần cho
@@ -981,7 +983,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
    * Depth sort entity sprite theo projected foot Y (gÃ¡ÂºÂ§n Ã„â€˜ÃƒÂ¨ xa). min/max
    * lÃƒÂ  BIÃƒÅ N CÃ¡Â»Â Ã„ÂÃ¡Â»Å NH cÃ¡Â»Â§a mÃ¡ÂºÂ·t Ã„â€˜Ã†Â°Ã¡Â»Âng (entityFootMinY/MaxY Ã„â€˜Ã¡ÂºÂ·t tÃ¡Â»Â«
    * projection.bounds() mÃ¡Â»â€”i layout) Ã¢â‚¬â€ KHÃƒâ€NG tÃƒÂ­nh lÃ¡ÂºÂ¡i tÃ¡Â»Â« tÃ¡ÂºÂ­p entity Ã„â€˜ang
-   * sÃ¡Â»â€˜ng: spawn/death cÃ¡Â»Â§a 1 entity khÃƒÂ´ng remap depth cÃ¡Â»Â§a entity khÃƒÂ¡c vÃƒÂ 
+   * sÃ¡Â»â€˜ng: spawn/death cÃ¡Â»Â§a 1 entity khÃƒÂ´ng remap depth cÃ¡Â»Â§a entity khÃƒÂ¡c vÃƒÂ
    * upright VFX (chÃ¡Â»â€˜t depth lÃƒÂºc spawn) luÃƒÂ´n cÃƒÂ¹ng thÃ†Â°Ã¡Â»â€ºc vÃ¡Â»â€ºi entity.
    */
   entityFootMinY = 0
@@ -1236,7 +1238,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   /**
    * VÃ¡ÂºÂ½ lÃ†Â°Ã¡Â»â€ºi lane qua projection Ã¢â‚¬â€ cÃ¡ÂºÂ£ 2 mode dÃƒÂ¹ng chung 1 code path:
    * flat tÃ¡Â»Â± cho ra ÃƒÂ´ vuÃƒÂ´ng Ã„â€˜Ã¡Â»Âu khÃ¡Â»â€ºp renderer cÃ…Â©; perspective cho lÃ†Â°Ã¡Â»â€ºi
-   * hÃ¡Â»â„¢i tÃ¡Â»Â¥ vÃ¡Â»Â hÃ¡ÂºÂ­u cÃ¡ÂºÂ£nh vÃ¡Â»â€ºi vÃ¡ÂºÂ¡ch RÃ¡ÂºÂ¤T NHÃ¡ÂºÂ T (texture Ã„â€˜Ã¡ÂºÂ¥t trong backdrop lÃƒÂ 
+   * hÃ¡Â»â„¢i tÃ¡Â»Â¥ vÃ¡Â»Â hÃ¡ÂºÂ­u cÃ¡ÂºÂ£nh vÃ¡Â»â€ºi vÃ¡ÂºÂ¡ch RÃ¡ÂºÂ¤T NHÃ¡ÂºÂ T (texture Ã„â€˜Ã¡ÂºÂ¥t trong backdrop lÃƒÂ
    * chÃƒÂ­nh, trÃƒÂ¡nh cÃ¡ÂºÂ£m giÃƒÂ¡c bÃƒÂ n cÃ¡Â»Â). KHÃƒâ€NG bake vÃƒÂ o background.
    */
   redrawGridLines() {
@@ -1244,7 +1246,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   }
 
   // Rectangle (enemy) cÃ¡ÂºÂ§n width/height + updateDisplayOrigin() (mutate
-  // geometry trÃ¡Â»Â±c tiÃ¡ÂºÂ¿p); Sprite (player) cÃ¡ÂºÂ§n setDisplaySize() vÃ¡Â»â€ºi TÃ¡Â»Ë† LÃ¡Â»â€ 
+  // geometry trÃ¡Â»Â±c tiÃ¡ÂºÂ¿p); Sprite (player) cÃ¡ÂºÂ§n setDisplaySize() vÃ¡Â»â€ºi TÃ¡Â»Ë† LÃ¡Â»â€
   // Ã„ÂÃƒÅ¡NG cÃ¡Â»Â§a artwork gÃ¡Â»â€˜c (playerSourceSize theo profile hiÃ¡Â»â€¡n hÃƒÂ nh Ã¢â‚¬â€
   // body-anchor plan Ã‚Â§4.3),
   // nÃ¡ÂºÂ¿u khÃƒÂ´ng nhÃƒÂ¢n vÃ¡ÂºÂ­t sÃ¡ÂºÂ½ mÃƒÂ©o hÃƒÂ¬nh khi ÃƒÂ©p cÃƒÂ¹ng characterWidth/Height
@@ -2045,7 +2047,6 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // presentation tÃ¡ÂºÂ¡i chÃ¡Â»â€”. ViÃ¡Â»â€¡c cÃƒÂ²n lÃ¡ÂºÂ¡i Ã¡Â»Å¸ Ã„â€˜ÃƒÂ¢y: chÃ¡Â»Ân + load trÃ†Â°Ã¡Â»â€ºc variant
   // nÃ¡Â»Ân cho trÃ¡ÂºÂ­n KÃ¡ÂºÂ¾ TIÃ¡ÂºÂ¾P vÃƒÂ  dÃ¡Â»Ân DoT accumulator.
   onBattleEnd() {
-
     // 6A-T5 — HUD theo dõi battle end.
     this._playerHud?.setVisible(false)
     this.inBattle = false
@@ -2111,7 +2112,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
       // Combat Art Pipeline Task 9 (2026-09-05) — phát clip '-cast' TRƯỚC
       // tween lunge (đòn đánh niệm/vung trước khi lao vào), cạnh tween vị
       // trí hiện có (không thay thế).
-      this.playCombatAnimation(attacker, event.sourceId, 'cast')
+      this.playCombatAnimation(attacker, event.sourceId, combatAnimationForSkill(event.skillId))
 
       this.playHorizontalImpulse(attacker, dx, ATTACK_LUNGE_DURATION_MS)
 
@@ -2144,7 +2145,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // NÃ¡ÂºÂ£y sÃ¡Â»â€˜ sÃƒÂ¡t thÃ†Â°Ã†Â¡ng Ã¢â‚¬â€ dÃƒÂ¹ng CHUNG event 'damage' mÃƒÂ  CombatStatusBar.vue
   // Ã„â€˜Ã¡Â»Âc Ã„â€˜Ã¡Â»Æ’ vÃ¡ÂºÂ½ thanh HP (xem ghi chÃƒÂº DAMAGE_*_COLOR Ã„â€˜Ã¡ÂºÂ§u file), nÃƒÂªn sÃ¡Â»â€˜
   // nÃ¡ÂºÂ£y lÃƒÂªn LUÃƒâ€N khÃ¡Â»â€ºp vÃ¡Â»â€ºi thanh mÃƒÂ¡u vÃ¡Â»Â«a hÃ¡Â»Â¥t, khÃƒÂ´ng lÃ¡Â»â€¡ch nhÃ¡Â»â€¹p. ChÃ¡ÂºÂ¡y cho
-  // CÃ¡ÂºÂ¢ 2 chiÃ¡Â»Âu Ã¢â‚¬â€ target lÃƒÂ  quÃƒÂ¡i (player gÃƒÂ¢y sÃƒÂ¡t thÃ†Â°Ã†Â¡ng) hay target lÃƒÂ 
+  // CÃ¡ÂºÂ¢ 2 chiÃ¡Â»Âu Ã¢â‚¬â€ target lÃƒÂ  quÃƒÂ¡i (player gÃƒÂ¢y sÃƒÂ¡t thÃ†Â°Ã†Â¡ng) hay target lÃƒÂ
   // player (quÃƒÂ¡i gÃƒÂ¢y sÃƒÂ¡t thÃ†Â°Ã†Â¡ng) Ã„â€˜Ã¡Â»Âu qua Ã„â€˜ÃƒÂºng 1 handler nÃƒÂ y.
   //
   // DoT presentation (combat-skill-flow-element-power-dot-plan.md Ã‚Â§7) Ã¢â‚¬â€
@@ -2158,7 +2159,6 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   /** BÃ¡Â»â„¢ gom DoT Ã¢â‚¬â€ khÃƒÂ³a `targetId|effectId|sourceId`, cÃ¡Â»Â­a sÃ¡Â»â€¢ 1/3 giÃƒÂ¢y. */
   // Internal (module boundary).
   dotAccumulators = new Map<string, { value: number; nextFlushAt: number }>()
-
 
   /** Flush cÃƒÂ¡c bucket Ã„â€˜ÃƒÂ£ Ã„â€˜Ã¡ÂºÂ¿n hÃ¡ÂºÂ¡n Ã¢â‚¬â€ MÃ¡Â»â€“I KHÃƒâ€œA Ã„â€˜ÃƒÂºng 1 text (Ã‚Â§7.2). */
   private flushDueDotTexts() {
@@ -2711,7 +2711,6 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.vfxSpawner.onStatusRemoved(event)
   }
 
-
   updateStatusIconPositions() {
     this.vfxSpawner.updateStatusIconPositions()
   }
@@ -2825,8 +2824,3 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
     this.redrawGridLines()
   }
 }
-
-
-
-
-

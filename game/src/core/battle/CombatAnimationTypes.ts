@@ -17,5 +17,7 @@ export type CombatAnimationName =
   | 'idle'
   | 'ready'
   | 'cast'
+  | 'sweep_hand'
+  | 'punch'
   | 'standby'
   | 'death'

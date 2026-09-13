@@ -1,7 +1,7 @@
 ﻿// @vitest-environment jsdom
 // Combat Art Pipeline Task 9 (2026-09-05) â€” headless coverage cho pháº§n
 // KHÃ”NG cáº§n Phaser runtime tháº­t: derive animation key theo actor, guard
-// Ä‘Äƒng kÃ½ Animation (anims.exists skip), dispatch playCombatAnimation(), vÃ 
+// Ä‘Äƒng kÃ½ Animation (anims.exists skip), dispatch playCombatAnimation(), vÃ
 // bookkeeping hoÃ£n xÃ³a sprite khi cháº¿t (death-deferral) â€” bao gá»“m case
 // player khÃ´ng bao giá» bá»‹ destroy vÃ  case id tÃ¡i xuáº¥t hiá»‡n giá»¯a lÃºc sprite
 // cÅ© cÃ²n Ä‘ang chá» animation/tween cháº¿t (Task 5 review's orphan/double-
@@ -147,7 +147,7 @@ describe('CombatScene â€” registerCombatAnimations() guard', () => {
     scene.registerCombatAnimations(
       'entity-x',
       Object.fromEntries(
-        ['idle', 'ready', 'cast', 'standby', 'death'].map((name) => [
+        ['idle', 'ready', 'cast', 'sweep_hand', 'punch', 'standby', 'death'].map((name) => [
           name,
           {
             key: combatAnimationKey('entity-x', name as never),
@@ -157,13 +157,13 @@ describe('CombatScene â€” registerCombatAnimations() guard', () => {
             frameHeight: 10,
             frameCount: 1,
             frameRate: 1,
-            repeat: name === 'cast' || name === 'death' ? 0 : -1,
+            repeat: ['cast', 'sweep_hand', 'punch', 'death'].includes(name) ? 0 : -1,
           },
         ]),
       ),
     )
 
-    expect(created).toHaveLength(5)
+    expect(created).toHaveLength(7)
     expect(created.map((c) => c.key)).toContain('entity-x-idle')
   })
 

@@ -61,37 +61,29 @@ export const PLACEHOLDER_EXTENT_Y = 0.0943
 export const PLACEHOLDER_EXTENT_W = 0.44
 export const PLACEHOLDER_EXTENT_H = 0.7943
 
-export const PLAYER_MORTAL_ATLAS_SHEET_KEY = 'player-mortal-combat-atlas-v1'
+export const PLAYER_MORTAL_ATLAS_SHEET_KEY = 'player-mortal-combat-atlas-v2'
 export const PLAYER_MORTAL_ATLAS_SHEET_URL =
-  'assets/characters/player/mortal/player-mortal-combat-atlas-v1.png'
+  'assets/characters/player/mortal/player-mortal-combat-atlas-v2.png'
 export const PLAYER_MORTAL_ATLAS_URL =
-  'assets/characters/player/mortal/player-mortal-combat-atlas-v1.json'
+  'assets/characters/player/mortal/player-mortal-combat-atlas-v2.json'
 export const PLAYER_MORTAL_FRAME_PREFIX = 'frame_'
 export const PLAYER_MORTAL_FRAME_SUFFIX = '.png'
 export const PLAYER_MORTAL_ZERO_PAD = 3
 export const PLAYER_MORTAL_SOURCE_WIDTH = 128
 export const PLAYER_MORTAL_SOURCE_HEIGHT = 128
 
-const PLAYER_MORTAL_IDLE_EXTENT = { x: 0, y: 0, w: 0.78125, h: 0.8984375 }
-const PLAYER_MORTAL_READY_EXTENT = {
-  x: 0.1171875,
-  y: 0,
-  w: 0.671875,
-  h: 0.9609375,
+const PLAYER_MORTAL_IDLE_EXTENT = { x: 0.203125, y: 0.0625, w: 0.6328125, h: 0.8671875 }
+const PLAYER_MORTAL_READY_EXTENT = { x: 0.203125, y: 0.0625, w: 0.6328125, h: 0.8671875 }
+const PLAYER_MORTAL_STANDBY_EXTENT = { x: 0.203125, y: 0.0625, w: 0.6328125, h: 0.8671875 }
+const PLAYER_MORTAL_CAST_EXTENT = { x: 0.203125, y: 0.0625, w: 0.6328125, h: 0.8671875 }
+const PLAYER_MORTAL_SWEEP_HAND_EXTENT = {
+  x: 0.203125,
+  y: 0.0625,
+  w: 0.6328125,
+  h: 0.8671875,
 }
-const PLAYER_MORTAL_STANDBY_EXTENT = { x: 0, y: 0, w: 0.78125, h: 0.8984375 }
-const PLAYER_MORTAL_CAST_EXTENT = {
-  x: 0.125,
-  y: 0.015625,
-  w: 0.6796875,
-  h: 0.9296875,
-}
-const PLAYER_MORTAL_DEATH_EXTENT = {
-  x: 0.2265625,
-  y: 0.0234375,
-  w: 0.5546875,
-  h: 0.9609375,
-}
+const PLAYER_MORTAL_PUNCH_EXTENT = { x: 0.203125, y: 0.0625, w: 0.6328125, h: 0.8671875 }
+const PLAYER_MORTAL_DEATH_EXTENT = { x: 0.2109375, y: 0.0625, w: 0.609375, h: 0.8671875 }
 
 /** Frame name for an index, matching what the generator wrote. */
 export function placeholderFrameName(index: number): string {
@@ -131,16 +123,49 @@ function playerMortalClip(
 
 function playerMortalCatalogue(entityKey: string): CombatAnimationCatalogue {
   return {
-    idle: playerMortalClip(entityKey, 'idle', 0, 12, 8, PLAYER_MORTAL_IDLE_EXTENT, -1),
-    ready: playerMortalClip(entityKey, 'ready', 13, 23, 10, PLAYER_MORTAL_READY_EXTENT, -1),
-    standby: playerMortalClip(entityKey, 'standby', 24, 34, 8, PLAYER_MORTAL_STANDBY_EXTENT, -1),
-    cast: playerMortalClip(entityKey, 'cast', 35, 49, 12, PLAYER_MORTAL_CAST_EXTENT, 0, 45),
-    death: playerMortalClip(entityKey, 'death', 50, 64, 10, PLAYER_MORTAL_DEATH_EXTENT, 0, 53),
+    idle: playerMortalClip(entityKey, 'idle', 0, 31, 8, PLAYER_MORTAL_IDLE_EXTENT, -1),
+    ready: playerMortalClip(entityKey, 'ready', 32, 42, 10, PLAYER_MORTAL_READY_EXTENT, -1),
+    standby: playerMortalClip(entityKey, 'standby', 32, 42, 8, PLAYER_MORTAL_STANDBY_EXTENT, -1),
+    cast: playerMortalClip(entityKey, 'cast', 43, 58, 12, PLAYER_MORTAL_CAST_EXTENT, 0, 53),
+    sweep_hand: playerMortalClip(
+      entityKey,
+      'sweep_hand',
+      59,
+      74,
+      12,
+      PLAYER_MORTAL_SWEEP_HAND_EXTENT,
+      0,
+      69,
+    ),
+    punch: playerMortalClip(entityKey, 'punch', 75, 90, 12, PLAYER_MORTAL_PUNCH_EXTENT, 0, 85),
+    death: playerMortalClip(entityKey, 'death', 91, 106, 10, PLAYER_MORTAL_DEATH_EXTENT, 0, 94),
   }
 }
 
+/** Presentation-only mapping for the mortal opening skill gestures. */
+const MORTAL_SKILL_ANIMATIONS: Readonly<Record<string, CombatAnimationName>> = {
+  linh_chuong: 'cast',
+  tram: 'sweep_hand',
+  dam: 'punch',
+  generic_physical: 'punch',
+  basic_attack: 'punch',
+}
+
+export function combatAnimationForSkill(skillId: string | undefined): CombatAnimationName {
+  if (!skillId) {
+    return 'cast'
+  }
+
+  return MORTAL_SKILL_ANIMATIONS[skillId] ?? 'cast'
+}
+
 const LOOPING_NAMES = ['idle', 'ready', 'standby'] as const satisfies readonly CombatAnimationName[]
-const ONE_SHOT_NAMES = ['cast', 'death'] as const satisfies readonly CombatAnimationName[]
+const ONE_SHOT_NAMES = [
+  'cast',
+  'sweep_hand',
+  'punch',
+  'death',
+] as const satisfies readonly CombatAnimationName[]
 
 /**
  * Declared but not iterated when building a catalogue: the record below is
@@ -201,6 +226,8 @@ function legacyPlaceholderCatalogue(entityKey: string): CombatAnimationCatalogue
     ready: clip('ready'),
     standby: clip('standby'),
     cast: clip('cast'),
+    sweep_hand: clip('sweep_hand'),
+    punch: clip('punch'),
     death: clip('death'),
   }
 }

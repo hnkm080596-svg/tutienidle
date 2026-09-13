@@ -18,6 +18,7 @@ import { describe, expect, it } from 'vitest'
 import {
   animatedCombatEntities,
   COMBAT_ANIMATION_NAMES,
+  combatAnimationForSkill,
   combatPresentationEntityKeys,
   PLAYER_MORTAL_ATLAS_SHEET_KEY,
   presentationFor,
@@ -105,14 +106,26 @@ describe('combat animation catalogue', () => {
         }),
       ),
     ).toEqual({
-      idle: [0, 12, 8, -1],
-      ready: [13, 23, 10, -1],
-      standby: [24, 34, 8, -1],
-      cast: [35, 49, 12, 0],
-      death: [50, 64, 10, 0],
+      idle: [0, 31, 8, -1],
+      ready: [32, 42, 10, -1],
+      standby: [32, 42, 8, -1],
+      cast: [43, 58, 12, 0],
+      sweep_hand: [59, 74, 12, 0],
+      punch: [75, 90, 12, 0],
+      death: [91, 106, 10, 0],
     })
-    expect(presentation.clips.cast.impactFrame).toBe(45)
-    expect(presentation.clips.death.impactFrame).toBe(53)
+    expect(presentation.clips.cast.impactFrame).toBe(53)
+    expect(presentation.clips.sweep_hand.impactFrame).toBe(69)
+    expect(presentation.clips.punch.impactFrame).toBe(85)
+    expect(presentation.clips.death.impactFrame).toBe(94)
+  })
+
+  it('maps mortal opening skills to body-only gestures', () => {
+    expect(combatAnimationForSkill('linh_chuong')).toBe('cast')
+    expect(combatAnimationForSkill('tram')).toBe('sweep_hand')
+    expect(combatAnimationForSkill('dam')).toBe('punch')
+    expect(combatAnimationForSkill('generic_physical')).toBe('punch')
+    expect(combatAnimationForSkill('unknown_skill')).toBe('cast')
   })
 
   it("every clip's sheetKey is actually loaded by the combat bundle", () => {
