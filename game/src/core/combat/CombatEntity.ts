@@ -146,14 +146,13 @@ export interface CombatEntity {
   // reset về 0 lúc BattleSystem.start()/createBattleEnemy().
   currentWard: number
 
-  // Pháp Tu (Thổ Tu, 2026-08-15) — giây đã trôi qua kể từ lần cuối
-  // NHẬN 1 đòn trúng (reset về 0 trong CombatSystem.resolveAttack()
-  // khi hit thật sự landed lên entity này) — gate cho
-  // wardRegenPerSecond (chỉ hồi Ward sau khi không bị đánh trúng đủ
-  // lâu, xem BattleSystem.updateRegen()'s WARD_REGEN_DELAY_SECONDS).
-  // wardRegenPerSecond từng là "dead stat" (có field, chưa từng được
-  // tick ở đâu) — cùng tình trạng hpRegenPerTurn (đổi tên từ
-  // hpRegenPerSecond, 2026-09-04) đã gặp trước đó.
+  // Phap Tu (Tho Tu, 2026-08-15) — holder turns elapsed since the last
+  // LANDED hit on this entity (reset to 0 in CombatSystem.resolveAttack;
+  // incremented once per declareActorAction — follow-up bypass declares
+  // count too). Gates ward regen via WARD_REGEN_DELAY_TURNS in
+  // TurnBattleSystem. Unit changed seconds -> holder-turns in M8
+  // (ARCH-003); the legacy seconds-based gate lived in the retired
+  // engine's updateRegen.
   timeSinceLastHitTaken: number
 
   // Vị trí (0-based) trong REALMS — dùng để tính Realm Pressure giữa
