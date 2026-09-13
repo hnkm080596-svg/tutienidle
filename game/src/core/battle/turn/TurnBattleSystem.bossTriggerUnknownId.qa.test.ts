@@ -4,12 +4,12 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import type { TurnBuffDefinition, TurnBuffRegistry } from './TurnBuffTypes'
-import { TurnBuffPool } from './TurnBuffPool'
+import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
+import { BuffPool } from '../../buff/BuffPool'
 
 // QA reproduction (Phase A2 adversarial quick, 2026-09-07):
 // TurnBattleSystem's boss-trigger block calls registry.get() unguarded.
-// The registry contract (MapTurnBuffRegistry.get) THROWS on unknown ids,
+// The registry contract (MapBuffRegistry.get) THROWS on unknown ids,
 // and an unknown bossTrigger buffDefinitionId becomes reachable with real
 // data as of Phase A2 (any future/renamed enrage buff id in enemy data
 // crashes every fixed-step tick from the moment the trigger fires, with
@@ -56,7 +56,7 @@ function createCombatant(id: string): CombatEntity {
 }
 
 function makeParticipant(id: string, entity: CombatEntity, speed: number, priority: number): TurnBattleParticipant {
-  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
 }
 
 // No-op skill: no damage, no targets — nothing outside the boss-trigger
@@ -69,7 +69,7 @@ const BASIC: { id: string; cooldownTurns: number; damage: { kind: 'physical'; mu
   targeting: { shape: 'single' },
 }
 
-const OTHER_DEFINITION: TurnBuffDefinition = {
+const OTHER_DEFINITION: BuffDefinition = {
   id: 'unrelated_buff',
   name: 'Unrelated Buff',
   polarity: 'buff',
@@ -78,12 +78,12 @@ const OTHER_DEFINITION: TurnBuffDefinition = {
   effects: [],
 }
 
-class SingleEntryRegistry implements TurnBuffRegistry {
-  constructor(private readonly definition: TurnBuffDefinition) {}
+class SingleEntryRegistry implements BuffDefinitionCatalog {
+  constructor(private readonly definition: BuffDefinition) {}
 
-  get(id: string): TurnBuffDefinition {
+  get(id: string): BuffDefinition {
     if (id !== this.definition.id) {
-      throw new Error(`TurnBuffRegistry: unknown buff id "${id}"`)
+      throw new Error(`BuffDefinitionCatalog: unknown buff id "${id}"`)
     }
 
     return this.definition
@@ -112,7 +112,7 @@ describe('QA — TurnBattleSystem boss trigger vs unknown buff id (Phase A2 quic
 
     battle.players[0]!.basic = BASIC
 
-    const registry: TurnBuffRegistry = new SingleEntryRegistry(OTHER_DEFINITION)
+    const registry: BuffDefinitionCatalog = new SingleEntryRegistry(OTHER_DEFINITION)
     const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, registry)
 
     // Turn 1 resolves the player (no bossTrigger — block skipped).

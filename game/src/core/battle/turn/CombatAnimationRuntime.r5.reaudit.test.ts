@@ -69,16 +69,13 @@ function fixture() {
     totalTurnsElapsed: 0,
   }
 
-  const syncLegacyBattleState = vi.fn()
-
   const runtime = new CombatAnimationRuntime({
     getTurnBattleSystem: () => turnBattleSystem,
     eventBus,
     getBattle: () => battle,
-    syncLegacyBattleState,
   })
 
-  return { runtime, battle, player, enemy, eventBus, syncLegacyBattleState, turnBattleSystem }
+  return { runtime, battle, player, enemy, eventBus, turnBattleSystem }
 }
 
 describe('R5 runtime contract re-audit', () => {

@@ -5,11 +5,11 @@ import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
 import type { TurnSkillDefinition } from './TurnSkillAction'
-import { TurnBuffPool } from './TurnBuffPool'
+import { BuffPool } from '../../buff/BuffPool'
 import { GAUGE_MAX } from './ActionGauge'
 import { defineEnemy, enemyToCombatEntity } from '../../enemy/Enemy'
 import { toTurnBattleParticipant } from '../../game/TurnBattleAdapter'
-import { TURN_BUFF_REGISTRY } from '../../../data/buff/TurnBuffRegistry'
+import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 import { PHAP_TU_BASICS } from '../../../data/skill/TurnBasicAttacks'
 import { TurnReactionManager } from './TurnReactionManager'
 
@@ -30,7 +30,7 @@ function participant(
   speed = 10,
   priority = 0,
 ): TurnBattleParticipant {
-  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
 }
 
 describe('selectTarget', () => {
@@ -105,7 +105,7 @@ function makeParticipant(
   speed: number,
   priority: number,
 ): TurnBattleParticipant {
-  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
 }
 
 describe('TurnBattleSystem.runToCompletion', () => {
@@ -326,19 +326,19 @@ describe('TurnBattleSystem.resolveNextStep', () => {
   })
 })
 
-import { TurnBuffSystem } from './TurnBuffSystem'
-import type { TurnBuffDefinition, TurnBuffRegistry } from './TurnBuffTypes'
+import { BuffSystem } from '../../buff/BuffSystem'
+import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
 
-class FixtureBuffRegistry implements TurnBuffRegistry {
-  private readonly definitions = new Map<string, TurnBuffDefinition>()
+class FixtureBuffRegistry implements BuffDefinitionCatalog {
+  private readonly definitions = new Map<string, BuffDefinition>()
 
-  constructor(definitions: TurnBuffDefinition[]) {
+  constructor(definitions: BuffDefinition[]) {
     for (const definition of definitions) {
       this.definitions.set(definition.id, definition)
     }
   }
 
-  get(id: string): TurnBuffDefinition {
+  get(id: string): BuffDefinition {
     const definition = this.definitions.get(id)
 
     if (!definition) {
@@ -349,7 +349,7 @@ class FixtureBuffRegistry implements TurnBuffRegistry {
   }
 }
 
-const STUN_DEFINITION: TurnBuffDefinition = {
+const STUN_DEFINITION: BuffDefinition = {
   id: 'fixture_stun',
   name: 'Fixture Stun',
   polarity: 'debuff',
@@ -375,7 +375,7 @@ describe('TurnBattleSystem.resolveNextStep buff/CC wiring', () => {
     const playerParticipant = makeParticipant('player', player, 10, 0)
 
     const registry = new FixtureBuffRegistry([STUN_DEFINITION])
-    new TurnBuffSystem(playerParticipant.buffs).apply(STUN_DEFINITION, enemyEntity, player, registry)
+    new BuffSystem(playerParticipant.buffs).apply(STUN_DEFINITION, enemyEntity, player, registry)
 
     const battle: TurnBattle = {
       players: [playerParticipant],
@@ -406,7 +406,7 @@ describe('TurnBattleSystem.resolveNextStep buff/CC wiring', () => {
     const playerParticipant = makeParticipant('player', player, 10, 0)
 
     const registry = new FixtureBuffRegistry([STUN_DEFINITION])
-    new TurnBuffSystem(playerParticipant.buffs).apply(STUN_DEFINITION, enemyEntity, player, registry)
+    new BuffSystem(playerParticipant.buffs).apply(STUN_DEFINITION, enemyEntity, player, registry)
 
     const battle: TurnBattle = {
       players: [playerParticipant],
@@ -449,7 +449,7 @@ describe('TurnBattleSystem.resolveNextStep buff/CC wiring', () => {
   })
 })
 
-const BURN_DEFINITION: TurnBuffDefinition = {
+const BURN_DEFINITION: BuffDefinition = {
   id: 'fixture_burn',
   name: 'Fixture Burn',
   polarity: 'debuff',
@@ -740,7 +740,7 @@ describe('TurnBattleSystem.resolveNextStep resource tick + totalTurnsElapsed', (
   })
 })
 
-const ENRAGE_DEFINITION: TurnBuffDefinition = {
+const ENRAGE_DEFINITION: BuffDefinition = {
   id: 'fixture_enrage',
   name: 'Fixture Enrage',
   polarity: 'buff',
@@ -934,7 +934,7 @@ describe('TurnBattleSystem.resolveNextStep boss trigger', () => {
       state: 'fighting',
     }
 
-    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, TURN_BUFF_REGISTRY)
+    const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 10, BUFF_REGISTRY)
 
     for (let i = 0; i < 650; i++) {
       system.resolveNextStep(battle)
@@ -1130,7 +1130,7 @@ describe('TurnBattleSystem.tickPacing wave-batch spawning', () => {
     expect(battle.players[0]!.actionGauge).toBe(0)
   })
 
-const LONG_STUN_DEFINITION: TurnBuffDefinition = {
+const LONG_STUN_DEFINITION: BuffDefinition = {
   id: 'fixture_long_stun',
   name: 'Fixture Long Stun',
   polarity: 'debuff',
@@ -1173,7 +1173,7 @@ describe('TurnBattleSystem.resolveNextStep Bï¿½ Th? (CC-lock guard)', () => {
     // Applied ONCE ï¿½ duration 100 means it cannot expire within this
     // test's turn count, so every subsequent player turn stays hard-CC'd
     // without needing to reason about Slice 3's tick/expiry ordering.
-    new TurnBuffSystem(playerParticipant.buffs).apply(LONG_STUN_DEFINITION, enemyEntity, player, registry)
+    new BuffSystem(playerParticipant.buffs).apply(LONG_STUN_DEFINITION, enemyEntity, player, registry)
 
     return { player, playerParticipant, enemyEntity, enemyParticipant, battle, registry }
   }
@@ -1928,7 +1928,7 @@ describe('TurnBattleSystem gauge-delta buff (one-shot)', () => {
       state: 'fighting',
     }
 
-    const registry: TurnBuffRegistry = {
+    const registry: BuffDefinitionCatalog = {
       get: (id) => {
         if (id !== 'fixture_haste') throw new Error(`unknown buff ${id}`)
         return {
@@ -2163,7 +2163,7 @@ describe('TurnBattleSystem.tickPacing — wall-clock pacing', () => {
 })
 
 describe('TurnBattleSystem appliesAilment (Phase A1)', () => {
-  const AILMENT_DEF: TurnBuffDefinition = {
+  const AILMENT_DEF: BuffDefinition = {
     id: 'fixture_ailment',
     name: 'Fixture Ailment',
     polarity: 'debuff',
@@ -2266,7 +2266,7 @@ describe('TurnBattleSystem Phase A1 end-to-end � real production reaction cont
       state: 'fighting',
     }
 
-    const system = new TurnBattleSystem(combatSystem, 10, TURN_BUFF_REGISTRY, undefined, undefined, reactionManager)
+    const system = new TurnBattleSystem(combatSystem, 10, BUFF_REGISTRY, undefined, undefined, reactionManager)
 
     const reactionEvents: unknown[] = []
     eventBus.on('reaction', (event) => reactionEvents.push(event))
@@ -2278,11 +2278,11 @@ describe('TurnBattleSystem Phase A1 end-to-end � real production reaction cont
     // the reaction never fires. The reaction consumes both ailments on
     // trigger, so poll on the reaction event, not on bong persisting.
     const applyTeCong = () =>
-      new TurnBuffSystem(enemyParticipant.buffs).apply(
-        TURN_BUFF_REGISTRY.get('te_cong'),
+      new BuffSystem(enemyParticipant.buffs).apply(
+        BUFF_REGISTRY.get('te_cong'),
         firePlayer,
         target,
-        TURN_BUFF_REGISTRY,
+        BUFF_REGISTRY,
       )
 
     // hoa_cau_thuat's ailment chance is 0.5 � loop until a fire hit lands

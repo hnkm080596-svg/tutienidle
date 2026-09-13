@@ -8,7 +8,7 @@ import {
   rollCharacterCreationTalents,
 } from './Talents'
 import { TALENT_PASSIVE_SKILLS } from '../skill/TalentPassives'
-import { TURN_BUFF_REGISTRY } from '../buff/TurnBuffRegistry'
+import { BUFF_REGISTRY } from '../buff/BuffRegistry'
 
 // Catalog v4 (spec 2026-09-03-talent-catalog-v4-design.md) — M1 combat:
 // pool roll = 11 talent combat + Phàm Cốt (easter egg). M2 thêm tu
@@ -116,10 +116,10 @@ describe('catalog v4 invariants (M1 combat)', () => {
     expect(PARKED_TALENTS.every((talent) => talent.weight === 0)).toBe(true)
   })
 
-  it('mọi passiveConvertsTo.buffId tham chiếu tồn tại trong TURN_BUFF_REGISTRY (registry runtime consult lúc Phase A2 cutover)', () => {
+  it('mọi passiveConvertsTo.buffId tham chiếu tồn tại trong BUFF_REGISTRY (registry runtime consult lúc Phase A2 cutover)', () => {
     for (const skill of TALENT_PASSIVE_SKILLS) {
       if (skill.passiveConvertsTo) {
-        expect(() => TURN_BUFF_REGISTRY.get(skill.passiveConvertsTo!.buffId)).not.toThrow()
+        expect(() => BUFF_REGISTRY.get(skill.passiveConvertsTo!.buffId)).not.toThrow()
       }
     }
   })

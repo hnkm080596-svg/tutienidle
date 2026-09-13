@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { buffDisplayName } from './TurnBuffNames'
-import { TURN_BUFF_REGISTRY } from '../../../data/buff/TurnBuffRegistry'
+import { buffDisplayName } from '../../buff/BuffNames'
+import { BUFF_REGISTRY } from '../../../data/buff/BuffRegistry'
 
 // Phase A6 (2026-09-08) — throw-safe display-name resolver for buff
-// badges. TURN_BUFF_REGISTRY.get() THROWS on unknown ids; presentation
+// badges. BUFF_REGISTRY.get() THROWS on unknown ids; presentation
 // code needs a soft fallback (raw id) instead.
 
 describe('buffDisplayName', () => {
   it('returns the registry name for a known buff id', () => {
-    expect(buffDisplayName('bong')).toBe(TURN_BUFF_REGISTRY.get('bong').name)
+    expect(buffDisplayName('bong')).toBe(BUFF_REGISTRY.get('bong').name)
   })
 
   it('falls back to the raw id for an unknown buff id without throwing', () => {

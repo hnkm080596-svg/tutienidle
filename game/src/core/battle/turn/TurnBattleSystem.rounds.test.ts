@@ -4,7 +4,7 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import { TurnBuffPool } from './TurnBuffPool'
+import { BuffPool } from '../../buff/BuffPool'
 
 // Round tracking (spec v3 D1 revision, 2026-09-12): perfectClearTurnLimit
 // counts ATB ROUNDS, not actor actions. A round completes when every
@@ -56,7 +56,7 @@ function makeParticipant(
     priority,
     actionGauge: 0,
     alive: combatEntity.alive,
-    buffs: new TurnBuffPool(),
+    buffs: new BuffPool(),
     consecutiveHardCcTurns: 0,
   }
 }

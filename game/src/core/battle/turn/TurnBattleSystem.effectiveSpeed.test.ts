@@ -5,9 +5,9 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import { TurnBuffPool } from './TurnBuffPool'
-import { TurnBuffSystem } from './TurnBuffSystem'
-import type { TurnBuffDefinition } from './TurnBuffTypes'
+import { BuffPool } from '../../buff/BuffPool'
+import { BuffSystem } from '../../buff/BuffSystem'
+import type { BuffDefinition } from '../../buff/BuffTypes'
 
 // R2 (AR-05) — participant.speed is a synced read-only cache of effective
 // combat speed. Before this fix, TurnBattleAdapter copied
@@ -15,7 +15,7 @@ import type { TurnBuffDefinition } from './TurnBuffTypes'
 // it, so a +100% speed buff raised stats.speed to 200 while the gauge
 // kept incrementing by 100 (stale copy).
 
-const SPEED_BUFF: TurnBuffDefinition = {
+const SPEED_BUFF: BuffDefinition = {
   id: 'qa_speed_buff',
   name: 'QA Speed Buff',
   polarity: 'buff',
@@ -26,7 +26,7 @@ const SPEED_BUFF: TurnBuffDefinition = {
 }
 
 const REGISTRY = {
-  get: (id: string): TurnBuffDefinition => {
+  get: (id: string): BuffDefinition => {
     if (id === SPEED_BUFF.id) {
       return SPEED_BUFF
     }
@@ -74,7 +74,7 @@ function createCombatant(id: string, overrides: Partial<CombatEntity> = {}): Com
 }
 
 function makeParticipant(id: string, entity: CombatEntity, speed: number, priority: number): TurnBattleParticipant {
-  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity, speed, priority, actionGauge: 0, alive: entity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
 }
 
 function battleWithPlayerSpeedBuff(): {
@@ -94,7 +94,7 @@ function battleWithPlayerSpeedBuff(): {
 
   // Pre-apply the +100% speed buff to the player's pool (as if applied
   // during a previous turn by any buff source).
-  new TurnBuffSystem(player.buffs).apply(SPEED_BUFF, playerEntity, playerEntity, REGISTRY)
+  new BuffSystem(player.buffs).apply(SPEED_BUFF, playerEntity, playerEntity, REGISTRY)
 
   const battle: TurnBattle = { players: [player], enemies: [enemy], state: 'fighting' }
   const system = new TurnBattleSystem(new CombatSystem(new EventBus()), 100, REGISTRY)

@@ -1,17 +1,17 @@
 // Turn-based port of ReactionManager.ts (Phase A1, 2026-09-07) — verbatim
 // logic with the established turn-engine type substitutions, following the
-// TurnBuffPool/TurnBuffSystem port precedent (no import from the legacy
-// file). Buff pools are passed as TurnBuffPool and wrapped in
-// TurnBuffSystem at each use site. The legacy spawnLavaZone parameter is
+// BuffPool/BuffSystem port precedent (no import from the legacy
+// file). Buff pools are passed as BuffPool and wrapped in
+// BuffSystem at each use site. The legacy spawnLavaZone parameter is
 // DROPPED entirely: the turn-based engine has no hazard-zone system
 // (zone = DoT via AOE + buff, roadmap mục 9.3) — appliesAilmentId:
 // 'dung_nham' alone already produces the DoT.
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { getSkillRuntimeStat } from '../../skill/SkillRuntimeStats'
 import type { CombatSystem } from '../../combat/CombatSystem'
-import { TurnBuffSystem } from './TurnBuffSystem'
-import type { TurnBuffPool } from './TurnBuffPool'
-import type { TurnBuffRegistry } from './TurnBuffTypes'
+import { BuffSystem } from '../../buff/BuffSystem'
+import type { BuffPool } from '../../buff/BuffPool'
+import type { BuffDefinitionCatalog } from '../../buff/BuffTypes'
 import type { EventBus } from '../../events/EventBus'
 import { elementalBasePower } from '../../combat/ElementDamageCalculator'
 import { ELEMENT_REACTIONS } from '../../element/ElementReaction'
@@ -32,18 +32,18 @@ export class TurnReactionManager {
   constructor(private readonly eventBus: EventBus) {}
 
   checkAndTrigger(
-    targetBuffs: TurnBuffPool,
+    targetBuffs: BuffPool,
     newBuffId: string,
     source: CombatEntity,
     target: CombatEntity,
     combatSystem: CombatSystem,
-    buffRegistry?: TurnBuffRegistry,
-    sourceBuffs?: TurnBuffPool,
+    buffRegistry?: BuffDefinitionCatalog,
+    sourceBuffs?: BuffPool,
     // Ported verbatim from ReactionManager's reactionKeepChance (Phan Phac
     // talent) — keep-both-sides roll on the standard consume branch.
     reactionKeepChance = 0,
   ) {
-    const targetBuffSystem = new TurnBuffSystem(targetBuffs)
+    const targetBuffSystem = new BuffSystem(targetBuffs)
 
     for (const existingId of targetBuffSystem.getActiveIds()) {
       if (existingId === newBuffId) {
@@ -96,7 +96,7 @@ export class TurnReactionManager {
         targetBuffs.removeInstance(existingId, existingSourceId)
         targetBuffs.removeInstance(newBuffId, source.id)
 
-        new TurnBuffSystem(sourceBuffs).apply(buffRegistry.get(reaction.appliesBuffId), source, source, buffRegistry)
+        new BuffSystem(sourceBuffs).apply(buffRegistry.get(reaction.appliesBuffId), source, source, buffRegistry)
       } else if (reaction.appliesAilmentId && buffRegistry) {
         targetBuffs.removeInstance(existingId, existingSourceId)
         targetBuffs.removeInstance(newBuffId, source.id)

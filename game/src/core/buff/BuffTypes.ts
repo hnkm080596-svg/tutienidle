@@ -122,6 +122,6 @@ export interface Buff {
   effects: BuffEffect[]
 }
 
-export interface BuffRegistry {
+export interface BuffDefinitionCatalog {
   get(id: string): BuffDefinition
 }

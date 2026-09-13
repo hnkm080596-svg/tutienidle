@@ -117,7 +117,7 @@ describe('Reaction Path end-to-end (Phase A4)', () => {
     }
 
     expect(submitted).toBe(true)
-    // The empowerment buff resolved through TURN_BUFF_REGISTRY and applied
+    // The empowerment buff resolved through BUFF_REGISTRY and applied
     // to the player's own pool.
     expect(participant.buffs.hasAny('reaction_empowerment')).toBe(true)
     expect(

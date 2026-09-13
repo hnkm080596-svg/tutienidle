@@ -17,7 +17,7 @@ import {
 import { TurnToken, type TokenState } from '../battle/turn/TurnToken'
 import { TurnPipeline } from '../battle/turn/TurnPipeline'
 export type { ResumePlayback } from '../battle/turn/CombatAnimationRuntime'
-import { TurnBuffSystem } from '../battle/turn/TurnBuffSystem'
+import { BuffSystem } from '../buff/BuffSystem'
 import { TurnReactionManager } from '../battle/turn/TurnReactionManager'
 import type { TurnSkillDefinition, TurnSkillSlotRole } from '../battle/turn/TurnSkillAction'
 import { emitTurnBattleEntitySnapshot } from '../battle/turn/TurnActionPresentationEvents'
@@ -35,8 +35,8 @@ import type { Stage } from '../stage/Stage'
 import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
 import { REACTION_PATH_POOL } from '../../data/skill/TurnReactionPathSkills'
 import { TRAN_PHAP_FORMATIONS } from '../../data/formation/TranPhap'
-import { TURN_BUFF_REGISTRY } from '../../data/buff/TurnBuffRegistry'
-import type { TurnBuffDefinition } from '../battle/turn/TurnBuffTypes'
+import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
+import type { BuffDefinition } from '../buff/BuffTypes'
 import type { PlayerData } from '../player/Player'
 import { playerToCombatEntity } from '../player/Player'
 import { getKiemYPermanent } from '../player/KiemYSystem'
@@ -818,8 +818,8 @@ export class GameManagerTurnBattleOps {
       // v4 (spec 2026-09-03 section 4.1) - Bat Tu The cleanse/grant on save,
       // wired to the LIVE turn-based player pool (Phase A0 cutover).
       surviveEffects: {
-        buffSystem: new TurnBuffSystem(this.turnBattle!.players[0]!.buffs),
-        registry: TURN_BUFF_REGISTRY,
+        buffSystem: new BuffSystem(this.turnBattle!.players[0]!.buffs),
+        registry: BUFF_REGISTRY,
         grantBuffId: 'tu_sinh_ngo',
         cleanseDebuffs: true,
       },
@@ -922,21 +922,21 @@ export class GameManagerTurnBattleOps {
       )
 
       if (formationDefinition) {
-        let buffDefinition: TurnBuffDefinition | undefined
+        let buffDefinition: BuffDefinition | undefined
 
         try {
-          buffDefinition = TURN_BUFF_REGISTRY.get(formationDefinition.buff.definitionId)
+          buffDefinition = BUFF_REGISTRY.get(formationDefinition.buff.definitionId)
         } catch {
           buffDefinition = undefined
         }
 
         if (buffDefinition) {
           for (const participant of [playerParticipant, ...companionParticipants]) {
-            new TurnBuffSystem(participant.buffs).apply(
+            new BuffSystem(participant.buffs).apply(
               buffDefinition,
               participant.entity,
               participant.entity,
-              TURN_BUFF_REGISTRY,
+              BUFF_REGISTRY,
             )
           }
         }
@@ -1009,7 +1009,7 @@ export class GameManagerTurnBattleOps {
     this.turnBattleSystem = new TurnBattleSystem(
       this.deps.combatSystem,
       10_000,
-      TURN_BUFF_REGISTRY,
+      BUFF_REGISTRY,
       (occupiedSlots?: Set<string>) => {
         const isFinalSpawn =
           (this.turnBattle?.wave?.spawnedCount ?? 0) + 1 >= effectiveTotalEnemyCount(stageRef)
@@ -1096,7 +1096,7 @@ export class GameManagerTurnBattleOps {
       this.turnBattleSystem = new TurnBattleSystem(
         this.deps.combatSystem,
         10_000,
-        TURN_BUFF_REGISTRY,
+        BUFF_REGISTRY,
         (occupiedSlots?: Set<string>) => {
           // isFinalSpawn: the last spawn of the stage is the boss (floor 10).
           // The factory runs BEFORE resolveNextStep increments spawnedCount,

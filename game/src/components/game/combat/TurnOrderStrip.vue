@@ -9,10 +9,10 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useTurnBattleInfo } from '@/composables/useTurnBattleInfo'
-import { buffDisplayName } from '@/core/battle/turn/TurnBuffNames'
-import { TURN_BUFF_REGISTRY } from '@/data/buff/TurnBuffRegistry'
+import { buffDisplayName } from '@/core/buff/BuffNames'
+import { BUFF_REGISTRY } from '@/data/buff/BuffRegistry'
 import { GAUGE_MAX } from '@/core/battle/turn/ActionGauge'
-import type { TurnBuff } from '@/core/battle/turn/TurnBuffTypes'
+import type { Buff } from '@/core/buff/BuffTypes'
 import type { TurnBattleParticipant } from '@/core/battle/turn/TurnBattleSystem'
 
 const { t } = useI18n()
@@ -69,21 +69,21 @@ function label(index: number): string {
 // Phase A6 (2026-09-08) — visible buff badges for a party member's chip:
 // hidden buffs skipped (same convention as the buff pipeline), badge text
 // = name ×stacks (remainingTurns), title = description tooltip. Read-only
-// over TurnBuffPool (P17).
-function visibleBuffs(member: { buffs: { getAll(): TurnBuff[] } }): TurnBuff[] {
+// over BuffPool (P17).
+function visibleBuffs(member: { buffs: { getAll(): Buff[] } }): Buff[] {
   return member.buffs.getAll().filter((buff) => !buff.hidden)
 }
 
-function buffBadgeText(buff: TurnBuff): string {
+function buffBadgeText(buff: Buff): string {
   const name = buffDisplayName(buff.id)
 
   return buff.stacks > 1 ? `${name} ×${buff.stacks} (${Math.ceil(buff.remainingTurns)})` : `${name} (${Math.ceil(buff.remainingTurns)})`
 }
 
-function buffTooltip(buff: TurnBuff): string {
+function buffTooltip(buff: Buff): string {
   const definition = (() => {
     try {
-      return TURN_BUFF_REGISTRY.get(buff.id)
+      return BUFF_REGISTRY.get(buff.id)
     } catch {
       return undefined
     }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { DUNG_NHAM_BURN_DEFINITION, KIEM_TRAN_BURN_DEFINITION } from './TurnBuffs'
+import { DUNG_NHAM_BURN_DEFINITION, KIEM_TRAN_BURN_DEFINITION } from './ZoneDotBuffs'
 
 // Completion plan Task 7 Step 2 — structural assertions cho 2 dot buff
 // definition thay Lava Zone (Dung Nham reaction) / Sword Zone (Kiếm Trận
@@ -12,7 +12,7 @@ import { DUNG_NHAM_BURN_DEFINITION, KIEM_TRAN_BURN_DEFINITION } from './TurnBuff
 // Duration giữ nguyên SỐ (no-rebalance policy): 6s tick 1s = 6 lượt;
 // charges 3 = 3 lượt.
 
-describe('TurnBuffs zone-as-dot definitions', () => {
+describe('ZoneDotBuffs zone-as-dot definitions', () => {
   it('dung_nham_burn — dot fire dpsRatio 2.0, 6 lượt, polarity debuff', () => {
     expect(DUNG_NHAM_BURN_DEFINITION.id).toBe('dung_nham_burn')
     expect(DUNG_NHAM_BURN_DEFINITION.polarity).toBe('debuff')

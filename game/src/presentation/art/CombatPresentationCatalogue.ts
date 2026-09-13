@@ -17,7 +17,12 @@
 // runtime would mean a boss without art resolving to something that does not
 // exist.
 import { PLAYER_VISUAL_PROFILES } from './PlayerVisualProfiles'
-import { ENEMY_SOURCE_SIZE, enemyTextureUrl, resolveEnemyTextureKey } from '@/game/support/EnemyArt'
+import {
+  ENEMY_SOURCE_SIZE,
+  enemyTextureUrl,
+  resolveEnemyTextureKey,
+  MORTAL_ENEMY_TEMPLATE_IDS,
+} from '@/game/support/EnemyArt'
 import {
   combatAnimationKey,
   type AtlasClip,
@@ -286,32 +291,10 @@ function idleMotionFor(entityKey: string): IdleMotion {
 export const FALLBACK_PLAYER_ENTITY_KEY = 'player-mortal'
 
 /**
- * Enemy template ids whose art is drawn. Resolved through
- * `resolveEnemyTextureKey` so the texture keys come from `EnemyArt`'s own table
- * rather than being spelled a second time here.
+ * Enemy template ids whose art is drawn: the canonical
+ * `MORTAL_ENEMY_TEMPLATE_IDS` from EnemyArt (R12/AR-30 — one enumeration,
+ * resolved through `resolveEnemyTextureKey` for texture keys).
  */
-const STATIC_ENEMY_TEMPLATE_IDS = [
-  'mortal_ferocious_wild_boar',
-  'mortal_ferocious_water_wolf',
-  'mortal_ferocious_savage_tiger',
-  'mortal_ferocious_mountain_bandit',
-  'mortal_ferocious_giant_crocodile',
-  'mortal_ferocious_stone_lynx',
-  'mortal_ferocious_silver_fox',
-  'mortal_ferocious_iron_boar',
-  'mortal_ferocious_mud_ox',
-  'mortal_ferocious_feral_dog',
-  'mortal_wild_boar',
-  'mortal_water_wolf',
-  'mortal_savage_tiger',
-  'mortal_mountain_bandit',
-  'mortal_giant_crocodile',
-  'mortal_stone_lynx',
-  'mortal_silver_fox',
-  'mortal_iron_boar',
-  'mortal_mud_ox',
-  'mortal_feral_dog',
-] as const
 
 function buildCatalogue(): Map<string, CombatEntityPresentation> {
   const entries = new Map<string, CombatEntityPresentation>()
@@ -336,7 +319,7 @@ function buildCatalogue(): Map<string, CombatEntityPresentation> {
 
   // Enemies are still images plus a bob. Promoting one is a data change;
   // playback code does not move.
-  for (const templateId of STATIC_ENEMY_TEMPLATE_IDS) {
+  for (const templateId of MORTAL_ENEMY_TEMPLATE_IDS) {
     const textureKey = resolveEnemyTextureKey(templateId)
 
     if (!textureKey) {

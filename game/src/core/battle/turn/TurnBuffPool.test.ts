@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { TurnBuffPool } from './TurnBuffPool'
-import type { TurnBuff } from './TurnBuffTypes'
+import { BuffPool } from '../../buff/BuffPool'
+import type { Buff } from '../../buff/BuffTypes'
 
-function makeBuff(overrides: Partial<TurnBuff> = {}): TurnBuff {
+function makeBuff(overrides: Partial<Buff> = {}): Buff {
   return {
     id: 'test_buff',
     sourceId: 'source_1',
@@ -18,9 +18,9 @@ function makeBuff(overrides: Partial<TurnBuff> = {}): TurnBuff {
   }
 }
 
-describe('TurnBuffPool', () => {
+describe('BuffPool', () => {
   it('add + getFromSource finds the exact (id, sourceId) instance', () => {
-    const pool = new TurnBuffPool()
+    const pool = new BuffPool()
     pool.add(makeBuff())
 
     expect(pool.getFromSource('test_buff', 'source_1')).toBeDefined()
@@ -28,7 +28,7 @@ describe('TurnBuffPool', () => {
   })
 
   it('getAllById returns every instance of an id regardless of source', () => {
-    const pool = new TurnBuffPool()
+    const pool = new BuffPool()
     pool.add(makeBuff({ sourceId: 'source_1' }))
     pool.add(makeBuff({ sourceId: 'source_2' }))
 
@@ -36,7 +36,7 @@ describe('TurnBuffPool', () => {
   })
 
   it('hasAny reflects presence by id only', () => {
-    const pool = new TurnBuffPool()
+    const pool = new BuffPool()
     expect(pool.hasAny('test_buff')).toBe(false)
 
     pool.add(makeBuff())
@@ -44,7 +44,7 @@ describe('TurnBuffPool', () => {
   })
 
   it('removeInstance removes only the matching (id, sourceId) pair', () => {
-    const pool = new TurnBuffPool()
+    const pool = new BuffPool()
     pool.add(makeBuff({ sourceId: 'source_1' }))
     pool.add(makeBuff({ sourceId: 'source_2' }))
 
@@ -55,7 +55,7 @@ describe('TurnBuffPool', () => {
   })
 
   it('removeAllById removes every instance of an id across all sources', () => {
-    const pool = new TurnBuffPool()
+    const pool = new BuffPool()
     pool.add(makeBuff({ sourceId: 'source_1' }))
     pool.add(makeBuff({ sourceId: 'source_2' }))
 
@@ -65,7 +65,7 @@ describe('TurnBuffPool', () => {
   })
 
   it('clear empties the pool', () => {
-    const pool = new TurnBuffPool()
+    const pool = new BuffPool()
     pool.add(makeBuff())
     pool.clear()
 
@@ -73,7 +73,7 @@ describe('TurnBuffPool', () => {
   })
 
   it('getAll returns a snapshot copy, not the live internal array', () => {
-    const pool = new TurnBuffPool()
+    const pool = new BuffPool()
     pool.add(makeBuff())
 
     const snapshot = pool.getAll()

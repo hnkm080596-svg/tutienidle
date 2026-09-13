@@ -3,8 +3,8 @@ import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from '.
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import { TurnBuffPool } from './TurnBuffPool'
-import type { TurnBuffDefinition, TurnBuffRegistry } from './TurnBuffTypes'
+import { BuffPool } from '../../buff/BuffPool'
+import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 
@@ -14,7 +14,7 @@ import type { TurnSkillDefinition } from './TurnSkillAction'
 // 2. Dodged outcome gating: dodged attacks must not add target to targetIds,
 //    must not apply on-hit effects, and must not apply ailments.
 
-const BURN_BUFF: TurnBuffDefinition = {
+const BURN_BUFF: BuffDefinition = {
   id: 'qa_burn',
   name: 'QA Burn',
   polarity: 'debuff',
@@ -23,8 +23,8 @@ const BURN_BUFF: TurnBuffDefinition = {
   effects: [{ type: 'dot', dpsRatio: 1, element: 'fire' }],
 }
 
-const REGISTRY: TurnBuffRegistry = {
-  get: (id: string): TurnBuffDefinition => {
+const REGISTRY: BuffDefinitionCatalog = {
+  get: (id: string): BuffDefinition => {
     if (id === BURN_BUFF.id) return BURN_BUFF
     throw new Error(`unknown buff id: ${id}`)
   },
@@ -69,7 +69,7 @@ function makeParticipant(id: string, entity: CombatEntity, priority: number): Tu
     priority,
     actionGauge: 0,
     alive: entity.alive,
-    buffs: new TurnBuffPool(),
+    buffs: new BuffPool(),
     consecutiveHardCcTurns: 0,
   }
 }

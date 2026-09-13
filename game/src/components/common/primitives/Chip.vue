@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed, useAttrs } from 'vue'
 import InkNineSlice from './InkNineSlice.vue'
 // Primitive pill chọn được — atom cho TabBar và mọi filter/mode switcher.
 // Công thức chuẩn: idle paper-200 (đủ tối để phân biệt trang giấy phía
@@ -13,6 +14,12 @@ withDefaults(defineProps<{
   active: false,
   disabled: false,
 })
+
+// R11 (AR-28) — selection semantics: a Chip under role="tab" (TabBar) lets
+// the tab role carry aria-selected; everywhere else it is a toggle, so
+// active maps to aria-pressed.
+const attrs = useAttrs()
+const isTab = computed(() => attrs.role === 'tab')
 </script>
 
 <template>
@@ -21,6 +28,7 @@ withDefaults(defineProps<{
     class="chip"
     :class="{ 'is-active': active }"
     :disabled="disabled"
+    :aria-pressed="isTab ? undefined : active"
   >
     <InkNineSlice
       asset-id="frame-xs-ink-line"

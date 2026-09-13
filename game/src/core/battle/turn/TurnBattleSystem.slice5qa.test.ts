@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
-import { TurnBuffPool } from './TurnBuffPool'
+import { BuffPool } from '../../buff/BuffPool'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
@@ -45,7 +45,7 @@ function makeParticipant(
   speed: number,
   priority: number,
 ): TurnBattleParticipant {
-  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0 }
+  return { id, entity: combatEntity, speed, priority, actionGauge: 0, alive: combatEntity.alive, buffs: new BuffPool(), consecutiveHardCcTurns: 0 }
 }
 
 describe('Slice 5 adversarial (QA probes)', () => {
@@ -76,7 +76,7 @@ describe('Slice 5 adversarial (QA probes)', () => {
     expect(battle.enemies.length).toBeLessThanOrEqual(6)
   })
 
-  it('INV-S5-2: spawned enemy có TurnBuffPool riêng (không share pool với enemy cũ)', () => {
+  it('INV-S5-2: spawned enemy có BuffPool riêng (không share pool với enemy cũ)', () => {
     const player = createCombatant({ id: 'player', type: 'player' as never, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 999 }) })
     const enemyA = createCombatant({ id: 'enemyA', currentHp: 1, maxHp: 1, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }) })
 
@@ -88,7 +88,7 @@ describe('Slice 5 adversarial (QA probes)', () => {
       wave,
     }
 
-    let spawnedPool: TurnBuffPool | undefined
+    let spawnedPool: BuffPool | undefined
     const spawnEnemy = (): TurnBattleParticipant => {
       const spawned = makeParticipant('enemyB', createCombatant({ id: 'enemyB', currentHp: 1_000_000, maxHp: 1_000_000, stats: createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0, attack: 0 }) }), 10, 2)
       spawnedPool = spawned.buffs
@@ -103,7 +103,7 @@ describe('Slice 5 adversarial (QA probes)', () => {
     battle.enemies = []
     system.tickPacing(battle)
 
-    const enemyAParticipant = { buffs: new TurnBuffPool() }
+    const enemyAParticipant = { buffs: new BuffPool() }
     expect(spawnedPool).toBeDefined()
     expect(spawnedPool).not.toBe(enemyAParticipant.buffs)
   })

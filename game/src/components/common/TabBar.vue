@@ -10,7 +10,7 @@ import NotificationBadge from './NotificationBadge.vue'
 // UI primitives refactor (2026-08-29) — mọi item giờ là Chip primitive;
 // + layout prop: 'grid' (default, chiếm đều cột) hoặc 'row' (flex:1 từng
 // chip, cho switcher dạng hàng như ScripturePavilion).
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
   tabs: { id: string; label: string; badge?: number }[]
   modelValue: string
   columns?: number
@@ -20,15 +20,57 @@ withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{ 'update:modelValue': [string] }>()
+
+// R11 (AR-28) — TabBar is a tab switcher: expose tablist/tab semantics and
+// roving tabindex + arrow-key navigation on the Chip buttons.
+function onKeydown(event: KeyboardEvent) {
+  const key = event.key
+  if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(key)) {
+    return
+  }
+
+  const nav = event.currentTarget as HTMLElement
+  const buttons = Array.from(nav.querySelectorAll<HTMLButtonElement>('[role="tab"]'))
+  const index = buttons.indexOf(event.target as HTMLButtonElement)
+  if (index === -1) {
+    return
+  }
+
+  event.preventDefault()
+
+  let next = index
+  if (key === 'ArrowRight' || key === 'ArrowDown') next = (index + 1) % buttons.length
+  else if (key === 'ArrowLeft' || key === 'ArrowUp') next = (index - 1 + buttons.length) % buttons.length
+  else if (key === 'Home') next = 0
+  else if (key === 'End') next = buttons.length - 1
+
+  const target = buttons[next]
+  if (target) {
+    target.focus()
+    const tab = props.tabs[next]
+    if (tab) {
+      emit('update:modelValue', tab.id)
+    }
+  }
+}
 </script>
 
 <template>
-  <nav class="tab-bar" :class="`tab-bar--${layout}`" :style="{ '--tab-columns': columns ?? tabs.length }">
+  <nav
+    class="tab-bar"
+    :class="`tab-bar--${layout}`"
+    :style="{ '--tab-columns': columns ?? tabs.length }"
+    role="tablist"
+    @keydown="onKeydown"
+  >
     <Chip
       v-for="tab in tabs"
       :key="tab.id"
       class="tab-bar__item"
       :active="modelValue === tab.id"
+      role="tab"
+      :aria-selected="modelValue === tab.id"
+      :tabindex="modelValue === tab.id ? 0 : -1"
       @click="emit('update:modelValue', tab.id)"
     >
       {{ tab.label }}

@@ -6,7 +6,7 @@ import type { CombatEntity } from '../combat/CombatEntity'
 import type { TurnBattleParticipant } from '../battle/turn/TurnBattleSystem'
 import type { TurnSkillDefinition, TurnSkillSlot } from '../battle/turn/TurnSkillAction'
 import { BAT_KIEM_THUAT, TRU_TIEN_KIEM_TRAN } from '../../data/skill/BatKiemThuat'
-import { TurnBuffPool } from '../battle/turn/TurnBuffPool'
+import { BuffPool } from '../buff/BuffPool'
 
 /**
  * Future Systems Task 8 (2026-09-04) — special/ultimate role theo build.
@@ -46,7 +46,7 @@ export function toTurnBattleParticipant(
     priority,
     actionGauge: 0,
     alive: entity.alive,
-    buffs: new TurnBuffPool(),
+    buffs: new BuffPool(),
     consecutiveHardCcTurns: 0,
     basic,
   }

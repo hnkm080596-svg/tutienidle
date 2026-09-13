@@ -6,13 +6,13 @@ import type { ItemGrade } from '@/core/item/ItemGrade'
 import { REALMS } from '@/data/realms/realm'
 import { MAX_CONSTELLATION_RANK } from '@/core/companion/CompanionProgression'
 import { COMPANION_BASE_RATES, effectiveCompanionRates } from '@/core/companion/CompanionGacha'
-import { TURN_BUFF_REGISTRY } from '@/data/buff/TurnBuffRegistry'
+import { BUFF_REGISTRY } from '@/data/buff/BuffRegistry'
 import type { TurnSkillDefinition } from '@/core/battle/turn/TurnSkillAction'
 
 // MVP roster invariants (companion-gacha Task 11, 2026-09-12): the pool
 // shape the gacha ops layer assumes, realm gates that can actually be
 // reached, and registry references that resolve at battle time
-// (TURN_BUFF_REGISTRY.get throws on an unknown id mid-battle).
+// (BUFF_REGISTRY.get throws on an unknown id mid-battle).
 
 const GATED_SLOTS = ['special', 'ultimate'] as const
 
@@ -137,14 +137,14 @@ describe('COMPANIONS constellation perks', () => {
 })
 
 describe('COMPANIONS skill content resolves', () => {
-  it('every appliesAilment/appliesBuff id exists in TURN_BUFF_REGISTRY', () => {
+  it('every appliesAilment/appliesBuff id exists in BUFF_REGISTRY', () => {
     for (const definition of COMPANIONS) {
       for (const skill of skillsOf(definition)) {
         const ailments = skill.appliesAilments ?? (skill.appliesAilment ? [skill.appliesAilment] : [])
 
         for (const ailment of ailments) {
           expect(
-            () => TURN_BUFF_REGISTRY.get(ailment.buffDefinitionId),
+            () => BUFF_REGISTRY.get(ailment.buffDefinitionId),
             `${definition.id}/${skill.id} ailment "${ailment.buffDefinitionId}"`,
           ).not.toThrow()
           expect(ailment.chance).toBeGreaterThan(0)
@@ -153,7 +153,7 @@ describe('COMPANIONS skill content resolves', () => {
 
         if (skill.appliesBuff) {
           expect(
-            () => TURN_BUFF_REGISTRY.get(skill.appliesBuff!.definitionId),
+            () => BUFF_REGISTRY.get(skill.appliesBuff!.definitionId),
             `${definition.id}/${skill.id} buff "${skill.appliesBuff!.definitionId}"`,
           ).not.toThrow()
         }

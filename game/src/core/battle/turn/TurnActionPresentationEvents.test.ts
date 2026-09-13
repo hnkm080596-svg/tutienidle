@@ -10,7 +10,7 @@ import {
   type TurnBattleEntitySnapshotEvent,
 } from './TurnActionPresentationEvents'
 import { COUNTDOWN_TOTAL_TICKS } from '@/core/game/GameManager'
-import { TurnBuffPool } from './TurnBuffPool'
+import { BuffPool } from '../../buff/BuffPool'
 import type { TurnBattle, TurnBattleParticipant } from './TurnBattleSystem'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { createBaseStats } from '../../stats/StatBlock'
@@ -32,7 +32,7 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
 function makeParticipant(id: string, entity: CombatEntity, speed: number, priority: number): TurnBattleParticipant {
   return {
     id, entity, speed, priority, actionGauge: 0, alive: entity.alive,
-    buffs: new TurnBuffPool(), consecutiveHardCcTurns: 0,
+    buffs: new BuffPool(), consecutiveHardCcTurns: 0,
   }
 }
 

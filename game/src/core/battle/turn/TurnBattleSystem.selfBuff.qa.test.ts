@@ -3,9 +3,9 @@ import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from '.
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import { TurnBuffPool } from './TurnBuffPool'
-import { TurnBuffSystem } from './TurnBuffSystem'
-import type { TurnBuffDefinition, TurnBuffRegistry } from './TurnBuffTypes'
+import { BuffPool } from '../../buff/BuffPool'
+import { BuffSystem } from '../../buff/BuffSystem'
+import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
 import type { CombatEntity } from '../../combat/CombatEntity'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 
@@ -14,7 +14,7 @@ import type { TurnSkillDefinition } from './TurnSkillAction'
 //    Enemy takes 0 damage; actor receives buff; targetIds contains actor ID.
 // 2. Leech healing: healPercentOfDamage on hit heals source entity via vitals.
 
-const DIA_TRU_BUFF: TurnBuffDefinition = {
+const DIA_TRU_BUFF: BuffDefinition = {
   id: 'dia_tru',
   name: 'Địa Trụ',
   polarity: 'buff',
@@ -23,8 +23,8 @@ const DIA_TRU_BUFF: TurnBuffDefinition = {
   effects: [{ type: 'statModifier', stat: 'wardMax', flat: 100 }],
 }
 
-const REGISTRY: TurnBuffRegistry = {
-  get: (id: string): TurnBuffDefinition => {
+const REGISTRY: BuffDefinitionCatalog = {
+  get: (id: string): BuffDefinition => {
     if (id === DIA_TRU_BUFF.id) return DIA_TRU_BUFF
     throw new Error(`unknown buff id: ${id}`)
   },
@@ -69,7 +69,7 @@ function makeParticipant(id: string, entity: CombatEntity, priority: number): Tu
     priority,
     actionGauge: 0,
     alive: entity.alive,
-    buffs: new TurnBuffPool(),
+    buffs: new BuffPool(),
     consecutiveHardCcTurns: 0,
   }
 }
@@ -172,7 +172,7 @@ describe('AR-03: Self-buff execution and leech healing', () => {
     const eventBus = new EventBus()
     const combat = new CombatSystem(eventBus)
 
-    const POISON_BUFF: TurnBuffDefinition = {
+    const POISON_BUFF: BuffDefinition = {
       id: 'trung_doc',
       name: 'Trúng Độc',
       polarity: 'debuff',
@@ -181,7 +181,7 @@ describe('AR-03: Self-buff execution and leech healing', () => {
       stackMode: 'stack',
       effects: [{ type: 'dot', dpsRatio: 1, element: 'wood' }],
     }
-    const ROOT_BUFF: TurnBuffDefinition = {
+    const ROOT_BUFF: BuffDefinition = {
       id: 'troi_chan',
       name: 'Trói Chân',
       polarity: 'debuff',
@@ -190,8 +190,8 @@ describe('AR-03: Self-buff execution and leech healing', () => {
       effects: [{ type: 'cc', ccEffect: 'root' }],
     }
 
-    const registry: TurnBuffRegistry = {
-      get: (id: string): TurnBuffDefinition => {
+    const registry: BuffDefinitionCatalog = {
+      get: (id: string): BuffDefinition => {
         if (id === 'trung_doc') return POISON_BUFF
         if (id === 'troi_chan') return ROOT_BUFF
         throw new Error(`unknown buff id: ${id}`)
@@ -231,6 +231,6 @@ describe('AR-03: Self-buff execution and leech healing', () => {
 
     // Enemy should have both buffs, with trung_doc having 2 stacks.
     expect(enemyP.buffs.getAllById('troi_chan')).toHaveLength(1)
-    expect(new TurnBuffSystem(enemyP.buffs).getStacks('trung_doc')).toBe(2)
+    expect(new BuffSystem(enemyP.buffs).getStacks('trung_doc')).toBe(2)
   })
 })

@@ -18,8 +18,8 @@ import { pills } from '../../data/pill/pills'
 import { talismans } from '../../data/talisman/talismans'
 import { buffs } from '../../data/buff/buffs'
 import { TALENT_PASSIVE_SKILLS } from '../../data/skill/TalentPassives'
-import { TurnBuffSystem } from '../battle/turn/TurnBuffSystem'
-import { TURN_BUFF_REGISTRY } from '../../data/buff/TurnBuffRegistry'
+import { BuffSystem } from '../buff/BuffSystem'
+import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 
 // QA quick-mode adversarial checks (spec 2026-09-03 talent catalog v4
 // M1) — reproduction/invariant tests cho các hypothesis rủi ro cao nhất
@@ -225,11 +225,11 @@ describe('QA A0 � B?t T? Th? cleanse/grant on the LIVE turn-based pool', () =>
 
     // Seed a real debuff directly on the live turn-based pool (matching
     // how a real enemy hit would have applied it).
-    new TurnBuffSystem(playerParticipant.buffs).apply(
-      TURN_BUFF_REGISTRY.get('bong'),
+    new BuffSystem(playerParticipant.buffs).apply(
+      BUFF_REGISTRY.get('bong'),
       playerParticipant.entity,
       playerParticipant.entity,
-      TURN_BUFF_REGISTRY,
+      BUFF_REGISTRY,
     )
 
     expect(playerParticipant.buffs.getAll().some((b) => b.id === 'bong')).toBe(true)

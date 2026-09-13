@@ -6,7 +6,7 @@ import type { CombatEntity } from '../combat/CombatEntity'
 import { EventBus } from '../events/EventBus'
 import { createBaseStats } from '../stats/StatBlock'
 import { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
-import { TURN_BUFF_REGISTRY } from '../../data/buff/TurnBuffRegistry'
+import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 
 function entity(id: string): CombatEntity {
   const stats = createBaseStats({ attack: 10000 })
@@ -31,14 +31,14 @@ describe('R4 canonical buff lifecycle reaudit', () => {
     guard.beginBattle(['bat_tu_the'])
     combat.setSurviveLethalSession({
       playerEntityId: target.id, guard,
-      surviveEffects: { buffSystem: buffs, registry: TURN_BUFF_REGISTRY },
+      surviveEffects: { buffSystem: buffs, registry: BUFF_REGISTRY },
     })
-    buffs.apply(TURN_BUFF_REGISTRY.get('bong'), source, target, TURN_BUFF_REGISTRY)
-    buffs.apply(TURN_BUFF_REGISTRY.get('trung_doc'), source, target, TURN_BUFF_REGISTRY)
+    buffs.apply(BUFF_REGISTRY.get('bong'), source, target, BUFF_REGISTRY)
+    buffs.apply(BUFF_REGISTRY.get('trung_doc'), source, target, BUFF_REGISTRY)
     target.currentHp = 1
     const damageEffects: string[] = []
     events.on<{ effectId: string }>('damage', event => damageEffects.push(event.effectId))
-    buffs.update(target, combat, TURN_BUFF_REGISTRY, id => id === source.id ? source : target)
+    buffs.update(target, combat, BUFF_REGISTRY, id => id === source.id ? source : target)
     expect(buffs.getAll().filter(buff => buff.polarity === 'debuff')).toHaveLength(0)
     expect.soft(damageEffects).toEqual(['bong'])
     expect.soft(target.alive).toBe(true)

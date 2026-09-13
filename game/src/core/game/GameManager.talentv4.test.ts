@@ -22,8 +22,8 @@ import { pills } from '../../data/pill/pills'
 import { talismans } from '../../data/talisman/talismans'
 import { buffs } from '../../data/buff/buffs'
 import { TALENT_PASSIVE_SKILLS, getTalentPassiveSkill } from '../../data/skill/TalentPassives'
-import { TurnBuffSystem } from '../battle/turn/TurnBuffSystem'
-import { TURN_BUFF_REGISTRY } from '../../data/buff/TurnBuffRegistry'
+import { BuffSystem } from '../buff/BuffSystem'
+import { BUFF_REGISTRY } from '../../data/buff/BuffRegistry'
 
 function makeWiredManager(): GameManager {
   const manager = new GameManager()
@@ -135,11 +135,11 @@ describe('GameManager — talent v4 combat passive wiring', () => {
     // → debuff bị tẩy + Tử Sinh Ngộ xuất hiện trên CÙNG pool đó.
     const playerParticipant = manager.getTurnBattle()!.players[0]!
 
-    new TurnBuffSystem(playerParticipant.buffs).apply(
-      TURN_BUFF_REGISTRY.get('bong'),
+    new BuffSystem(playerParticipant.buffs).apply(
+      BUFF_REGISTRY.get('bong'),
       playerParticipant.entity,
       playerParticipant.entity,
-      TURN_BUFF_REGISTRY,
+      BUFF_REGISTRY,
     )
 
     manager.combatSystem.applyDirectDamage(playerParticipant.entity, 999_999, 'enemy_1')

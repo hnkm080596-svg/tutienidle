@@ -3,9 +3,9 @@ import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from '.
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
 import { createBaseStats } from '../../stats/StatBlock'
-import { TurnBuffPool } from './TurnBuffPool'
-import { TurnBuffSystem } from './TurnBuffSystem'
-import type { TurnBuffDefinition, TurnBuffRegistry } from './TurnBuffTypes'
+import { BuffPool } from '../../buff/BuffPool'
+import { BuffSystem } from '../../buff/BuffSystem'
+import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
 import type { CombatEntity } from '../../combat/CombatEntity'
 
 // AR-06 QA Probes:
@@ -13,7 +13,7 @@ import type { CombatEntity } from '../../combat/CombatEntity'
 // actorBuffSystem.update(). CombatSystem.applyDotDamage needs source to
 // apply elemental penetration and poisonRecoveryPercent leech healing.
 
-const POISON_BUFF: TurnBuffDefinition = {
+const POISON_BUFF: BuffDefinition = {
   id: 'qa_poison',
   name: 'QA Poison',
   polarity: 'debuff',
@@ -22,8 +22,8 @@ const POISON_BUFF: TurnBuffDefinition = {
   effects: [{ type: 'dot', dpsRatio: 1, element: 'wood' }],
 }
 
-const REGISTRY: TurnBuffRegistry = {
-  get: (id: string): TurnBuffDefinition => {
+const REGISTRY: BuffDefinitionCatalog = {
+  get: (id: string): BuffDefinition => {
     if (id === POISON_BUFF.id) return POISON_BUFF
     throw new Error(`unknown buff id: ${id}`)
   },
@@ -68,7 +68,7 @@ function makeParticipant(id: string, entity: CombatEntity, priority: number): Tu
     priority,
     actionGauge: 0,
     alive: entity.alive,
-    buffs: new TurnBuffPool(),
+    buffs: new BuffPool(),
     consecutiveHardCcTurns: 0,
   }
 }
@@ -96,7 +96,7 @@ describe('AR-06: Turn DoT source context', () => {
     const playerP = makeParticipant('player', player, 0)
     const enemyP = makeParticipant('enemy', enemy, 1)
 
-    new TurnBuffSystem(enemyP.buffs).apply(POISON_BUFF, player, enemy, REGISTRY)
+    new BuffSystem(enemyP.buffs).apply(POISON_BUFF, player, enemy, REGISTRY)
 
     const battle: TurnBattle = {
       players: [playerP],
@@ -132,7 +132,7 @@ describe('AR-06: Turn DoT source context', () => {
     playerP.alive = false
     const enemyP = makeParticipant('enemy', enemy, 1)
 
-    new TurnBuffSystem(enemyP.buffs).apply(POISON_BUFF, player, enemy, REGISTRY)
+    new BuffSystem(enemyP.buffs).apply(POISON_BUFF, player, enemy, REGISTRY)
 
     const battle: TurnBattle = {
       players: [playerP],
