@@ -383,11 +383,20 @@ export class TribulationDirector {
     tank.nextStrikeInSeconds -= step
 
     // Vòng strike catch-up đóng — interval > 0 guard chống vòng vô hạn
+    // Liveness = state 'ongoing': a lethal strike commits 'defeat' inside
+    // the loop; exit immediately, no further strikes (M5 / ARCH-006).
     const interval = this.effectiveStrikeInterval(chapter)
 
-    while (interval > 0 && tank.nextStrikeInSeconds <= 0 && this.snapshotHp > 0) {
+    while (interval > 0 && tank.nextStrikeInSeconds <= 0 && active.state === 'ongoing') {
       this.strikeLightning(chapter)
       tank.nextStrikeInSeconds += interval
+    }
+
+    // Recheck liveness after a phase that may kill the actor: once the
+    // outcome is committed there is no final strike and no chapter
+    // advance (M5 / ARCH-006).
+    if (active.state !== 'ongoing') {
+      return
     }
 
     // Đại lôi cuối chương (chỉ lightning có finalStrike)
@@ -395,11 +404,15 @@ export class TribulationDirector {
     if (
       profile.finalStrikeMaxHpDamagePercent !== undefined &&
       !tank.finalStrikeFired &&
-      tank.secondsRemaining <= 0 &&
-      this.snapshotHp > 0
+      tank.secondsRemaining <= 0
     ) {
       this.applyLightningDamage(profile.finalStrikeMaxHpDamagePercent)
       tank.finalStrikeFired = true
+    }
+
+    // Recheck liveness again - the final strike may also be lethal.
+    if (active.state !== 'ongoing') {
+      return
     }
 
     if (tank.secondsRemaining <= 0) {
@@ -416,13 +429,27 @@ export class TribulationDirector {
   }
 
   private strikeLightning(chapter: TribulationChapterProfile) {
+    const active = this.active!
+
+    // Terminal guard - after a committed outcome there is no strike to
+    // report (a lightning event must pair with real damage, M5 / ARCH-006).
+    if (active.state !== 'ongoing') {
+      return
+    }
+
     this.applyLightningDamage(chapter.tank!.lightningMaxHpDamagePercent)
-    this.active!.lightningStrikesTaken += 1
+    active.lightningStrikesTaken += 1
     this.deps.eventBus.emit('tribulation_lightning', { targetId: 'player' })
   }
 
   private applyLightningDamage(maxHpPercent: number) {
     const active = this.active!
+
+    // Terminal guard - no damage processing once the outcome is committed.
+    if (active.state !== 'ongoing') {
+      return
+    }
+
     const multiplier = GRADE_DIFFICULTY_MULTIPLIER[active.grade] ?? 1
 
     // Debuff sai câu: +% damage taken + -% defense (spec §5.3)
@@ -452,23 +479,48 @@ export class TribulationDirector {
     this.ghost!.alive = this.snapshotHp > 0
 
     if (this.snapshotHp <= 0) {
-      this.active!.state = 'defeat'
-      this.cooldownUntil = Date.now() + TRIBULATION_COOLDOWN_SECONDS * 1000
-      this.deps.eventBus.emit('tribulation_outcome', { state: 'defeat' })
+      this.commitOutcome('defeat')
     }
+  }
+
+  /**
+   * Single terminal-transition site (M5 / ARCH-006): a run commits exactly
+   * one outcome. Calling it while already terminal is a no-op - no state
+   * write, no second 'tribulation_outcome' emission.
+   */
+  private commitOutcome(outcome: 'victory' | 'defeat') {
+    const active = this.active
+
+    if (!active || active.state !== 'ongoing') {
+      return
+    }
+
+    active.state = outcome
+
+    if (outcome === 'defeat') {
+      this.cooldownUntil = Date.now() + TRIBULATION_COOLDOWN_SECONDS * 1000
+    }
+
+    this.deps.eventBus.emit('tribulation_outcome', { state: outcome })
   }
 
   private enterChapter(index: number) {
     const active = this.active!
 
+    // Terminal guard (M5 / ARCH-006): once an outcome is committed there
+    // is no chapter advance - in particular 'victory' never overwrites a
+    // committed 'defeat'.
+    if (active.state !== 'ongoing') {
+      return
+    }
+
     // Hết chương cuối còn sống → victory
     if (index >= this.chapters.length) {
-      active.state = 'victory'
       active.currentQuestion = null
       active.chapterName = ''
       this.mind = null
       this.tank = null
-      this.deps.eventBus.emit('tribulation_outcome', { state: 'victory' })
+      this.commitOutcome('victory')
       return
     }
 
