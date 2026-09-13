@@ -2018,7 +2018,9 @@ Trận Tâm/Phù Văn vẫn PARKED chờ rework Trận/Phù.
 
 ### B5 — Thanh Vân World Map
 
-World-map content can then compose stable:
+⏸ **PARKED — hậu-beta/tương lai** (quyết định người dùng 2026-09-13:
+"không có worldmap" trong scope beta). Khi mở lại, world-map content
+compose các system đã ổn định:
 
 ```text
 stage
@@ -2063,7 +2065,7 @@ Beta content gate:
 
 - normal Phàm Nhân → Trúc Cơ progression contains real content;
 - no required normal-flow placeholder/test-only content;
-- intended companion/formation/world-map scope completed;
+- intended companion/formation scope completed (world-map parked hậu-beta 2026-09-13);
 - balance pass complete.
 
 Beta verification gate:
