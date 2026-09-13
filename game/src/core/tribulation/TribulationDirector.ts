@@ -9,6 +9,7 @@ import type { Stats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { FoundationType } from '../breakthrough/FoundationType'
 import type { EventBus } from '../events/EventBus'
+import type { TribulationOutcomeResult } from './TribulationOutcomeService'
 import { EntityVitalsSystem } from '../combat/EntityVitalsSystem'
 import { resolveKienCoGrade } from '../../data/breakthrough/BreakthroughGrades'
 import {
@@ -30,6 +31,35 @@ import { getTribulationIntensityMultiplier } from '../talent/TalentEffects'
 // point như TribulationSystem cũ, xem git history).
 
 export type TribulationOutcome = 'ongoing' | 'victory' | 'defeat'
+
+/**
+ * M6 / ARCH-006 - the domain-owned committed outcome. commitOutcome
+ * stamps this record exactly once per run, bound to the attempt identity
+ * (the presentation-session id allocated at start()). The outcome facts
+ * are snapshotted here so settlement never re-reads the mutable live
+ * state, and the `receipt` slot is the once-only dedup identity:
+ * TribulationOutcomeService.settleOutcome fills it on first settle and
+ * every later settle returns the SAME receipt instead of re-applying
+ * consequences. The record survives rejected/failed route requests -
+ * the outcome stays pending until clear() drains the run - which is
+ * what makes settlement independent of curtain success.
+ */
+export interface CommittedTribulationOutcome {
+  /** Attempt identity - this run's presentation sessionId. */
+  readonly attemptId: number
+  readonly outcome: 'victory' | 'defeat'
+  readonly targetRealmId: string
+  readonly grade: FoundationType
+  /** Bound once by the outcome service; presentation renders it. */
+  receipt: TribulationOutcomeResult | null
+  /**
+   * M6 r1 - set by the outcome service when the consequence apply threw
+   * mid-flight. The record is then terminal-after-first-attempt: later
+   * settle calls see this marker and never re-run the apply, so
+   * partially-landed consequences cannot compound.
+   */
+  settlementError: Error | null
+}
 
 export interface ActiveTribulationState {
   targetRealmId: string
@@ -96,6 +126,10 @@ export class TribulationDirector {
   private tank: TankRuntime | null = null
   private mindFailStacks = 0
   private mindCorrectLightningReduction = 0
+  // M6 / ARCH-006 - the committed outcome record for the current run,
+  // bound to attemptId (the session id allocated at start()).
+  private committedOutcome: CommittedTribulationOutcome | null = null
+  private attemptId = 0
   // Talent v4 M2 — Loi Kiep: snapshot of the player's tribulation
   // intensity multiplier, captured at start() so the whole kiếp obeys
   // the talent that was held when it began (neutral 1 otherwise).
@@ -175,6 +209,9 @@ export class TribulationDirector {
     } as CombatEntity
     this.mindFailStacks = 0
     this.mindCorrectLightningReduction = 0
+    // M6 - a fresh run carries no committed outcome; its attempt identity
+    // is the session id allocated below.
+    this.committedOutcome = null
     this.lightningTalentMultiplier = getTribulationIntensityMultiplier(
       player.selectedTalentIds,
     )
@@ -196,6 +233,7 @@ export class TribulationDirector {
     }
 
     const sessionId = this.presentationSession.allocate()
+    this.attemptId = sessionId
     const session: SessionRef = { kind: 'tribulation', sessionId }
     this.presentationSession.begin(session, this.presentationMode)
     if (this.presentationMode === 'interactive') {
@@ -497,6 +535,20 @@ export class TribulationDirector {
 
     active.state = outcome
 
+    // M6 / ARCH-006 - stamp the domain-owned settlement record at the
+    // same single commit site. From here the resolved outcome has an
+    // identity (attemptId) and a once-only receipt slot; consequences
+    // settle against this record, not against the mutable live state or
+    // the curtain lifecycle.
+    this.committedOutcome = {
+      attemptId: this.attemptId,
+      outcome,
+      targetRealmId: active.targetRealmId,
+      grade: active.grade,
+      receipt: null,
+      settlementError: null,
+    }
+
     if (outcome === 'defeat') {
       this.cooldownUntil = Date.now() + TRIBULATION_COOLDOWN_SECONDS * 1000
     }
@@ -593,6 +645,19 @@ export class TribulationDirector {
     return this.active
   }
 
+  /**
+   * The committed terminal outcome awaiting settlement/drain for the
+   * current run, or null while the run is ongoing, absent, or already
+   * drained. This is the domain-owned once-only settlement slot (M6 /
+   * ARCH-006): it exists only because commitOutcome ran, and it survives
+   * until clear() - so a rejected route request leaves the outcome
+   * pending for the next tick, and a duplicate tick re-reads the same
+   * record (and its already-bound receipt).
+   */
+  getCommittedOutcome(): CommittedTribulationOutcome | null {
+    return this.committedOutcome
+  }
+
   clear() {
     const session = this.presentationSession.getCurrentSession()
     if (session) {
@@ -601,6 +666,7 @@ export class TribulationDirector {
     this.active = null
     this.mind = null
     this.tank = null
+    this.committedOutcome = null
   }
 
   getCooldownSeconds(now = Date.now()): number {
