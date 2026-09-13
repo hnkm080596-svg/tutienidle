@@ -663,7 +663,7 @@ export class TurnBattleSystem {
             const affected = collectTurnTargets(primaryTarget, opposingSide, chargedSkill.targeting)
 
             // Defect Task 8 (2026-09-05): damage tính lại ở applyActionImpact()
-            // (đọc declared.chargedSkill + totalTurnsElapsed độc lập) — không
+            // (đọc declared.chargedSkill + roundsElapsed độc lập) — không
             // cần tính trùng ở đây.
             chargeTargetIds = affected.filter((target) => target.entity.alive).map((target) => target.id)
             chargedSkillCaptured = chargedSkill
@@ -742,7 +742,7 @@ export class TurnBattleSystem {
       actor.bossTrigger &&
       !actor.bossTrigger.firedAlready &&
       this.registry &&
-      isTurnTriggerReady({ afterTurns: actor.bossTrigger.afterTurns }, battle.totalTurnsElapsed ?? 0)
+      isTurnTriggerReady({ afterTurns: actor.bossTrigger.afterTurns }, battle.roundsElapsed ?? 0)
     ) {
       // Phase A2 (2026-09-07) — BuffDefinitionCatalog.get() THROWS on an
       // unknown id, and bossTrigger data is now populated for real
@@ -844,7 +844,7 @@ export class TurnBattleSystem {
           affected = collectTurnTargets(primaryTarget, opposingSide, action.targeting)
 
           if (action.damage) {
-            const suddenDeathMultiplier = this.suddenDeathDamageMultiplier(battle.totalTurnsElapsed ?? 0)
+            const suddenDeathMultiplier = this.suddenDeathDamageMultiplier(battle.roundsElapsed ?? 0)
             suddenDeathMultiplierCaptured = suddenDeathMultiplier
             scaledDamage = suddenDeathMultiplier === 1 ? action.damage : scaleActionDamage(action.damage, suddenDeathMultiplier)
           }
@@ -929,7 +929,7 @@ export class TurnBattleSystem {
       if (chargedSkill && chargedSkill.damage) {
         const opposingSide = battle.players.includes(actor) ? battle.enemies : battle.players
 
-        const suddenDeathMultiplier = this.suddenDeathDamageMultiplier(battle.totalTurnsElapsed ?? 0)
+        const suddenDeathMultiplier = this.suddenDeathDamageMultiplier(battle.roundsElapsed ?? 0)
         const chargedDamage = suddenDeathMultiplier === 1
           ? chargedSkill.damage
           : scaleActionDamage(chargedSkill.damage, suddenDeathMultiplier)
@@ -1311,9 +1311,16 @@ export class TurnBattleSystem {
     }
   }
 
-  private suddenDeathDamageMultiplier(totalTurnsElapsed: number): number {
-    const turnsPastGrace = totalTurnsElapsed - 10
+  // Sudden Death (roadmap 9.5 Combat Fairness Guards): damage +30%/turn
+  // from turn 11. The unit is ATB ROUNDS — the same contract the
+  // 2026-09-12 D2 revision gave perfectClearTurnLimit. Reading the raw
+  // totalTurnsElapsed actor-action counter made escalation arrive
+  // participant-count times early (a 1v3 stage hit the grace boundary in
+  // ~3 rounds) and compound ~0.3 x actors per round — the reported
+  // abnormal damage ramp.
+  private suddenDeathDamageMultiplier(roundsElapsed: number): number {
+    const roundsPastGrace = roundsElapsed - 9
 
-    return turnsPastGrace > 0 ? 1 + 0.3 * turnsPastGrace : 1
+    return roundsPastGrace > 0 ? 1 + 0.3 * roundsPastGrace : 1
   }
 }
