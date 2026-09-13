@@ -365,7 +365,7 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
 
   // Internal (module boundary — combat-animation-playback deletes entries).
   get positionInterp(): CombatPositionInterpolation {
-    this._positionInterp ??= new CombatPositionInterpolation(this)
+    this._positionInterp ??= new CombatPositionInterpolation(() => this.time.now)
 
     return this._positionInterp
   }
@@ -512,32 +512,17 @@ export class CombatScene extends Phaser.Scene implements CombatGridViewHost {
   // Pre-combat gating ids moved to entityVisual (pending set).
 
   // Task 9 (telegraph interpolation) — countdownProgress from the snapshot is
-  // a TARGET, not a frame to paint. The handle is chased toward it every
-  // render frame in advanceTelegraph(), the same { from, to, segmentStart,
-  // segmentDuration } shape combat-position-interpolation.ts already uses for
-  // sprite X (game/docs/superpowers/specs/2026-09-10-combat-realtime-turn-
-  // authority-design.md §4.4 frame-rate independence, §5.2a Phaser's render
-  // clock). Kept local to CombatScene rather than routed through
-  // `positionInterp` — the telegraph isn't an entity screen position, it's
-  // countdown-VFX state this class already owns (alongside
-  // turnCountdownSpawnVfxHandles/entityVisual below). Nothing here
-  // writes combat state; it only reads a target and closes the distance.
-  // Internal (module boundary — combat/combat-telegraph.ts owns the chase
-  // mechanism; the fields stay here beside the handles they drive).
-  telegraphTarget = 0
-  telegraphShown = 0
-  telegraphSegment = {
-    from: 0,
-    to: 0,
-    segmentStart: 0,
-    segmentDuration: MIN_SEGMENT_DURATION_MS,
+  // a TARGET, not a frame to paint. The chase state (target/shown/segment/
+  // snapshotAt) lives inside combat/combat-telegraph.ts; the read-only
+  // passthroughs below exist for existing observers (same pattern as
+  // castBars/interpolations).
+  get telegraphTarget(): number {
+    return this.telegraph.target
   }
-  // Wall-clock time of the last countdownProgress snapshot — derives the
-  // per-segment duration from the actual inter-snapshot cadence, same as
-  // `lastSnapshotAt`/`pendingCadence` do for position interpolation
-  // (applyPendingPositions/onPositions below). undefined = no countdown in
-  // flight (also true right after a flush/reset).
-  telegraphSnapshotAt: number | undefined = undefined
+
+  get telegraphShown(): number {
+    return this.telegraph.shown
+  }
 
   // Player spawn telegraph (plan Ã‚Â§12.2) Ã¢â‚¬â€ handle DUY NHÃ¡ÂºÂ¤T cho telegraph
   // cÃ¡Â»Â§a avatar (preset 'player_spawn'); entityVisual.playerMaterialized false = KHÃƒâ€NG

@@ -2,7 +2,6 @@
 // Manages smooth X-position interpolation segments between 'positions' snapshots.
 import Phaser from 'phaser'
 
-import type { CombatScene } from '../CombatScene'
 import { MIN_SEGMENT_DURATION_MS } from './combatConstants'
 import type { PositionInterpolation } from './combatTypes'
 
@@ -15,7 +14,9 @@ export class CombatPositionInterpolation {
     return this.interpolationsMap
   }
 
-  constructor(private readonly scene: CombatScene) {}
+  // R11 (AR-29) — the only host capability this mechanism consumes is the
+  // wall clock, so that is all it takes.
+  constructor(private readonly now: () => number) {}
 
   setInterpolationTarget(id: string, worldX: number, cadenceMs?: number, snapshotAt?: number) {
     const existing = this.interpolationsMap.get(id)
@@ -29,7 +30,7 @@ export class CombatPositionInterpolation {
       return
     }
 
-    const now = this.scene.time.now
+    const now = this.now()
     const currentVisualX = this.interpolate(existing, now)
     const segmentDuration = Math.max(cadenceMs ?? MIN_SEGMENT_DURATION_MS, MIN_SEGMENT_DURATION_MS)
 
@@ -43,7 +44,7 @@ export class CombatPositionInterpolation {
   }
 
   snapInterpolationTarget(id: string, worldX: number, snapshotAt?: number) {
-    const now = this.scene.time.now
+    const now = this.now()
 
     this.interpolationsMap.set(id, {
       fromX: worldX,
@@ -67,7 +68,7 @@ export class CombatPositionInterpolation {
       return undefined
     }
 
-    return this.interpolate(entry, this.scene.time.now)
+    return this.interpolate(entry, this.now())
   }
 
   delete(id: string): void {

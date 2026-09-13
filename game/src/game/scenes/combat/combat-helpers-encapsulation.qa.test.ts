@@ -54,8 +54,7 @@ describe('AR-29: Encapsulation of scene helpers', () => {
   })
 
   it('CombatPositionInterpolation exposes a read-only interpolations map with no replacement setter', () => {
-    const scene = makeMockScene()
-    const interpolationHelper = new CombatPositionInterpolation(scene)
+    const interpolationHelper = new CombatPositionInterpolation(() => 1000)
 
     expect(interpolationHelper.interpolations).toBeInstanceOf(Map)
     expect(interpolationHelper.interpolations.size).toBe(0)
