@@ -91,6 +91,12 @@ export class AssetBundleManager implements AssetPort {
   private readonly inFlightLoads = new Map<string, Promise<void>>()
   private readonly loaderSceneResolvers = new Set<(scene: AssetLoaderScene) => void>()
   private disposed = false
+  // ARCH-013/L04 — loadedResources records what the CURRENT loader's cache
+  // holds. setLoaderScene/dispose bump this; a physical load that resolves
+  // afterward must not publish into a cache it was cleared out of (the old
+  // continuation would resurrect keys the swap deliberately dropped while
+  // the new Phaser.Game's texture manager does not actually hold them).
+  private loaderGeneration = 0
 
   constructor(options: AssetBundleManagerOptions = {}) {
     this.loaderScene = options.loaderScene ?? null
@@ -99,8 +105,11 @@ export class AssetBundleManager implements AssetPort {
 
   setLoaderScene(scene: AssetLoaderScene | null): void {
     if (this.loaderScene !== scene) {
-      // Scene changed or game recreated: clear cache bound to previous scene
+      // Scene changed or game recreated: clear cache bound to previous scene.
+      // The generation bump is what stops a still-running old-generation load
+      // from re-publishing its result into the fresh cache when it resolves.
       this.loaderScene = scene
+      this.loaderGeneration += 1
       this.loadedResources.clear()
       this.inFlightLoads.clear()
 
@@ -204,6 +213,7 @@ export class AssetBundleManager implements AssetPort {
     if (this.disposed) return
     this.disposed = true
     this.loaderScene = null
+    this.loaderGeneration += 1
     this.loaderSceneResolvers.clear()
     this.inFlightLoads.clear()
     this.loadedResources.clear()
@@ -238,14 +248,30 @@ export class AssetBundleManager implements AssetPort {
       return this.wrapWithSignal(existingPromise, signal)
     }
 
-    const loadPromise = (async () => {
+    const generation = this.loaderGeneration
+
+    const runLoad = async (): Promise<void> => {
       try {
         await this.domImageLoader(desc.url)
+        // Stale generation (loader swap/dispose during the await): the cache
+        // this result was headed for was cleared — publishing would mark a
+        // key loaded that the CURRENT loader does not hold. Reject so the
+        // caller sees a retriable failure, not a false "loaded" success.
+        if (generation !== this.loaderGeneration) {
+          throw new Error('Asset load superseded by loader swap')
+        }
         this.loadedResources.add(desc.key)
       } finally {
-        this.inFlightLoads.delete(desc.key)
+        // Identity-guarded delete: a loader swap clears the map, and a NEW
+        // generation may already have registered its own entry for this key
+        // — a stale continuation must not remove it.
+        if (this.inFlightLoads.get(desc.key) === loadPromise) {
+          this.inFlightLoads.delete(desc.key)
+        }
       }
-    })()
+    }
+
+    const loadPromise = runLoad()
 
     this.inFlightLoads.set(desc.key, loadPromise)
     return this.wrapWithSignal(loadPromise, signal)
@@ -261,24 +287,45 @@ export class AssetBundleManager implements AssetPort {
       return Promise.resolve()
     }
 
+    // Reached after an await boundary — the waitForLoaderScene in
+    // ensureLoaded may have resolved while the caller's signal aborted.
+    // Checking before the batch starts keeps an already-dead transition
+    // from spending a fresh physical load on the new loader (its
+    // wrapWithSignal would still reject, but only after the work ran).
+    if (signal?.aborted) {
+      return Promise.reject(new Error('Load aborted'))
+    }
+
     const batchKey = uncommitted.map((d) => d.key).sort().join(',')
     const existing = this.inFlightLoads.get(batchKey)
     if (existing) {
       return this.wrapWithSignal(existing, signal)
     }
 
-    const batchPromise = (async () => {
+    const generation = this.loaderGeneration
+
+    const runBatch = async (): Promise<void> => {
       try {
         await loader.loadDescriptors(uncommitted)
+        // Same generation fence as the DOM path: these keys were written
+        // into the OLD scene's texture cache — the new loader does not hold
+        // them, so they must not be published (or claimed as success).
+        if (generation !== this.loaderGeneration) {
+          throw new Error('Asset load superseded by loader swap')
+        }
         for (const d of uncommitted) {
           if (loader.isTextureLoaded(d.key)) {
             this.loadedResources.add(d.key)
           }
         }
       } finally {
-        this.inFlightLoads.delete(batchKey)
+        if (this.inFlightLoads.get(batchKey) === batchPromise) {
+          this.inFlightLoads.delete(batchKey)
+        }
       }
-    })()
+    }
+
+    const batchPromise = runBatch()
 
     this.inFlightLoads.set(batchKey, batchPromise)
     return this.wrapWithSignal(batchPromise, signal)

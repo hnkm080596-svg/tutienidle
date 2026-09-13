@@ -17,6 +17,14 @@ import { ESSENCE_STREAM_ARRIVAL_EVENT } from '../core/battle/BattleEvents'
  *    (saveInFlight — đã có trước đây, giữ nguyên contract).
  * 4. stopAll()/unmount: MỌI event-bus handler + DOM listener gỡ
  *    symmetric với đăng ký; gọi lại là no-op (idempotent teardown).
+ * 5. ARCH-013/L04 — stopAll() là terminal: bump `lifecycleGeneration` để
+ *    mọi continuation còn pending qua await (boot load) trở thành stale —
+ *    không restore, không start interval, không route request nào được
+ *    ghi vào App đã teardown; và chặn luôn boot/timer/listener MỚI sau đó
+ *    (cùng idiom generation fence của useDynamicRegion/PhaserSceneAdapter).
+ *    persistProgress là ngoại lệ CỐ Ý: flush cuối của App.vue's onUnmounted
+ *    chạy SAU onBeforeUnmount(stopAll) — listener-driven callers thì đã bị
+ *    gỡ hết rồi nên không có stale persist nào tới được đó.
  */
 export interface UseAppLifecycleDeps {
   clock: { start: () => void; stop: () => void; nowSeconds: () => number }
@@ -101,6 +109,12 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
   let saveInFlight = false
   let persistenceSuppressed = false
   let stopped = false
+  // ARCH-013/L04 — boot generation. `stopAll()` bumps it, so every async
+  // continuation that captured the pre-stop value can tell it is stale and
+  // must not write (restore, timers, route transitions) into a disposed
+  // lifecycle. Same generation-fence idiom as useDynamicRegion /
+  // PhaserSceneAdapter gameGeneration.
+  let lifecycleGeneration = 0
 
   const AUTOSAVE_INTERVAL_MS = 15_000
   const TICK_INTERVAL_MS = 1_000
@@ -150,7 +164,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
    * tickHandle, interval trước đó thành rác chạy mãi mãi).
    */
   function startTickLoop(tick: () => void): void {
-    if (tickHandle !== undefined) {
+    if (tickHandle !== undefined || stopped) {
       return
     }
 
@@ -159,7 +173,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
   }
 
   function startAutosave(): void {
-    if (autosaveHandle !== undefined) {
+    if (autosaveHandle !== undefined || stopped) {
       return
     }
 
@@ -171,6 +185,14 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
   // --- Persistence ---
 
   async function persistProgress(): Promise<void> {
+    // `stopped` CỐ Ý không nằm trong gate này: mọi caller do listener/interval
+    // điều khiển đã bị stopAll() gỡ (visibilitychange/pagehide off, autosave
+    // cleared), nên không còn stale caller nào tới được đây. Caller duy nhất
+    // còn lại sau stopAll là flush TẬN CÙNG chủ đích trong App.vue's
+    // onUnmounted — và nó BẮT BUỘC phải chạy: Vue gọi onBeforeUnmount(stopAll)
+    // TRƯỚC onUnmounted, nếu stopped chặn save thì "persist first so a
+    // development reload cannot roll the player back" là dead code
+    // (review round 1 — ARCH-013/L04).
     if (persistenceSuppressed || entryStage.value !== 'game' || saveInFlight) {
       return
     }
@@ -189,11 +211,16 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
   // --- Boot flow (idempotent while in-flight) ---
 
   async function bootGame(options: BootOptions): Promise<BootOutcome> {
-    if (bootInFlight) {
+    if (bootInFlight || stopped) {
       return { status: 'skipped' }
     }
 
     bootInFlight = true
+    // Captured BEFORE the first await. Everything past the await below
+    // compares against this: a stopAll() that landed while the load was in
+    // flight makes every later side effect (restore, clock, intervals,
+    // route requests) stale work for a disposed lifecycle.
+    const bootGeneration = lifecycleGeneration
 
     try {
       const { createNewCharacter, onRestoreOk, onNewCharacter } = options
@@ -205,6 +232,16 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
       const loaded = createNewCharacter
         ? (coordinator.reset(), await Promise.resolve({ status: 'empty' as const, revision: 0 as const }))
         : await coordinator.load()
+
+      // ARCH-013/L04 generation fence — spans EVERY status branch below:
+      // 'ok' would restore/start/enter, but the failure branches are route
+      // transitions too (boot.fail -> 'error', requireCharacter ->
+      // 'character'), and onError/saveIssue.report write UI state into a
+      // possibly-unmounted App. New awaits added here must re-check this
+      // same generation.
+      if (bootGeneration !== lifecycleGeneration) {
+        return { status: 'skipped' }
+      }
 
       if (loaded.status === 'unavailable') {
         onError(loaded.message)
@@ -309,11 +346,18 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
   }
 
   /**
-   * Teardown: gỡ mọi listener + interval. Idempotent — gọi nhiều lần
-   * an toàn (guard `stopped` cho unsubscribe; clearHandle chỉ chạy khi
-   * handle còn tồn tại).
+   * Teardown TERMINAL: gỡ mọi listener + interval VÀ vô hiệu mọi async
+   * continuation còn pending (boot generation bump — ARCH-013/L04). Sau
+   * stopAll không còn boot/timer/listener mới được đăng ký: composable
+   * này thuộc 1 mount, mount mới dựng instance mới. persistProgress() vẫn
+   * được phép — caller post-stop duy nhất là flush tận cùng trong App.vue's
+   * onUnmounted (beforeUnmount đã gỡ mọi listener-driven caller). Idempotent
+   * — gọi nhiều lần an toàn (guard `stopped` cho unsubscribe; clearHandle
+   * chỉ chạy khi handle còn tồn tại; generation cứ bump — inequality là đủ).
    */
   function stopAll(): void {
+    lifecycleGeneration += 1
+
     if (!stopped) {
       stopped = true
 

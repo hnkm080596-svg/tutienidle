@@ -14,7 +14,7 @@
 // KHÔNG có @vue/test-utils → mount thủ công createApp (pattern
 // usePanelPagination.test.ts). Fake timers cho interval/tick.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createApp, h, ref } from 'vue'
+import { createApp, h, onUnmounted, ref } from 'vue'
 import { useAppLifecycle } from './useAppLifecycle'
 import type { GameSave } from '../services/save/SaveSystem'
 import type { GameManager } from '../core/game/GameManager'
@@ -241,6 +241,129 @@ describe('useAppLifecycle — boot idempotence (Remediation Task 5)', () => {
   })
 })
 
+describe('useAppLifecycle — ARCH-013/L04 boot generation fence', () => {
+  // Audit L04 executed: deferred load -> real stopAll -> resolve 'ok'
+  // produced {intervals:1, restores:1, entries:1, handle:1} — a disposed
+  // App's boot continuation restored state, started the world tick and
+  // drove a route transition. The generation fence must zero ALL of it.
+  it('stopAll trong lúc load pending → resolve vẫn: 0 restore / 0 interval / 0 route entry (outcome skipped)', async () => {
+    const stubs = makeStubs()
+
+    let releaseLoad: (value: unknown) => void = () => undefined
+    ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockImplementation(
+      () => new Promise((resolve) => (releaseLoad = resolve)),
+    )
+
+    const lifecycle = makeLifecycle(stubs)
+
+    const boot = lifecycle.bootGame({ createNewCharacter: false })
+    lifecycle.stopAll()
+    releaseLoad({ status: 'ok', revision: 3, save: { player: {} } })
+
+    const outcome = await boot
+
+    expect(outcome.status).toBe('skipped')
+    expect(stubs.restoreGameSession).not.toHaveBeenCalled()
+    expect(stubs.intervals).toHaveLength(0)
+    expect(stubs.clock.start).not.toHaveBeenCalled()
+    expect(lifecycle.getTickHandle()).toBeUndefined()
+
+    // Every branch below the fence is a route/UI write — none may run:
+    // enterGame (home), fail (error), requireCharacter, offline modal,
+    // onRestoreOk/onNewCharacter side effects, onError.
+    expect(stubs.boot.enterGame).not.toHaveBeenCalled()
+    expect(stubs.boot.fail).not.toHaveBeenCalled()
+    expect(stubs.boot.requireCharacter).not.toHaveBeenCalled()
+    expect(stubs.offlineSummary.show).not.toHaveBeenCalled()
+    expect(stubs.onError).not.toHaveBeenCalled()
+  })
+
+  it('stopAll trong lúc load pending → load FAIL cũng không route error/saveIssue vào App đã teardown', async () => {
+    const stubs = makeStubs()
+
+    let releaseLoad: (value: unknown) => void = () => undefined
+    ;(stubs.coordinator.load as ReturnType<typeof vi.fn>).mockImplementation(
+      () => new Promise((resolve) => (releaseLoad = resolve)),
+    )
+
+    const lifecycle = makeLifecycle(stubs)
+
+    const boot = lifecycle.bootGame({ createNewCharacter: false })
+    lifecycle.stopAll()
+    releaseLoad({ status: 'corrupted', raw: 'garbage' })
+
+    const outcome = await boot
+
+    expect(outcome.status).toBe('skipped')
+    expect(stubs.boot.fail).not.toHaveBeenCalled()
+    expect(stubs.saveIssue.report).not.toHaveBeenCalled()
+    expect(stubs.onError).not.toHaveBeenCalled()
+  })
+
+  it('stopAll trong lúc new-character boot pending → continuation vẫn stale (cùng generation, synthetic await)', async () => {
+    const stubs = makeStubs()
+    const lifecycle = makeLifecycle(stubs)
+
+    // createNewCharacter path awaits Promise.resolve — still an await
+    // boundary; a synchronous stopAll between call and continuation must
+    // fence it too.
+    const boot = lifecycle.bootGame({ createNewCharacter: true })
+    lifecycle.stopAll()
+
+    const outcome = await boot
+
+    expect(outcome.status).toBe('skipped')
+    expect(stubs.boot.enterGame).not.toHaveBeenCalled()
+    expect(stubs.intervals).toHaveLength(0)
+    expect(stubs.clock.start).not.toHaveBeenCalled()
+  })
+
+  it('bootGame SAU stopAll → skipped ngay, không gọi load (teardown là terminal)', async () => {
+    const stubs = makeStubs()
+    const lifecycle = makeLifecycle(stubs)
+
+    lifecycle.stopAll()
+    const outcome = await lifecycle.bootGame({ createNewCharacter: false })
+
+    expect(outcome.status).toBe('skipped')
+    expect(stubs.coordinator.load).not.toHaveBeenCalled()
+    expect(stubs.boot.startSaveLoad).not.toHaveBeenCalled()
+  })
+
+  it('stopAll xong → startTickLoop/startAutosave no-op nhưng persistProgress VẪN chạy (flush tận cùng chủ đích)', async () => {
+    const stubs = makeStubs()
+    const lifecycle = makeLifecycle(stubs)
+
+    lifecycle.stopAll()
+    lifecycle.startTickLoop(() => undefined)
+    lifecycle.startAutosave()
+    await lifecycle.persistProgress()
+
+    // No interval re-armed, no DOM listener re-registered — nhưng save cuối
+    // VẪN được phép: persistProgress không có listener-driven caller nào sót
+    // lại sau stopAll (tất cả đã bị gỡ), nên call duy nhất tới được nó là
+    // flush chủ đích trong App.vue's onUnmounted — cái flush "persist first
+    // so a development reload cannot roll the player back" phải thật sự
+    // chạy (regression review round 1: gate `stopped` ở đây đã giết nó).
+    expect(stubs.intervals).toHaveLength(0)
+    expect(stubs.addEventListener).not.toHaveBeenCalled()
+    expect(stubs.persistPlayer).toHaveBeenCalledTimes(1)
+  })
+
+  it('boot bình thường (không stop) vẫn chạy trọn — fence không phá happy path', async () => {
+    const stubs = makeStubs()
+    const lifecycle = makeLifecycle(stubs)
+
+    const outcome = await lifecycle.bootGame({ createNewCharacter: true })
+
+    expect(outcome.status).toBe('entered')
+    expect(stubs.boot.enterGame).toHaveBeenCalledTimes(1)
+    expect(stubs.intervals).toHaveLength(1)
+
+    lifecycle.stopAll()
+  })
+})
+
 describe('useAppLifecycle — save in-flight guard (Remediation Task 5)', () => {
   it('persistProgress dồn 2 lần trong 1 tick → 1 lần player.save', async () => {
     const stubs = makeStubs()
@@ -367,6 +490,56 @@ describe('useAppLifecycle — entry smoke qua createApp (pattern usePanelPaginat
     } finally {
       vi.useRealTimers()
     }
+  })
+
+  it('unmount-time persist vẫn fire SAU stopAll — ordering thật của App.vue (review round 1)', async () => {
+    // Ordering thật: composable tự đăng ký onBeforeUnmount(stopAll), còn
+    // App.vue gọi persistProgress() trong onUnmounted — Vue chạy
+    // beforeUnmount TRƯỚC unmounted, nên flush cuối luôn đến sau stopAll.
+    // Test này tái tạo đúng thứ tự đó: nếu persistProgress lại bị gate bởi
+    // `stopped`, "persist first so a dev reload cannot roll the player
+    // back" lại thành dead code mà không test nào kêu.
+    const stubs = makeStubs()
+
+    const container = document.createElement('div')
+    document.body.appendChild(container)
+
+    const app = createApp({
+      setup() {
+        const lifecycle = useAppLifecycle({
+          clock: stubs.clock,
+          scheduleInterval: stubs.scheduleInterval,
+          clearHandle: stubs.clearHandle,
+          addEventListener: stubs.addEventListener,
+          removeEventListener: stubs.removeEventListener,
+          boot: stubs.boot,
+          coordinator: stubs.coordinator,
+          player: stubs.player,
+          gameManager: stubs.gameManager,
+          tick: stubs.tick,
+          offlineSummary: stubs.offlineSummary,
+          saveIssue: stubs.saveIssue,
+          entryStage: stubs.entryStage,
+          restoreGameSession: stubs.restoreGameSession,
+          persistPlayer: stubs.persistPlayer,
+          onError: stubs.onError,
+        })
+
+        // Mirror App.vue's onUnmounted flush — fires strictly after the
+        // composable's onBeforeUnmount(stopAll).
+        onUnmounted(() => {
+          void lifecycle.persistProgress()
+        })
+
+        return () => h('div')
+      },
+    })
+
+    app.mount(container)
+    app.unmount()
+
+    await vi.waitFor(() => expect(stubs.persistPlayer).toHaveBeenCalledTimes(1))
+    expect(stubs.removeEventListener).toHaveBeenCalled() // stopAll ran first
   })
 
   it('GameSave type import không phá build test (contract giữ nguyên)', () => {

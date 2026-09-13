@@ -138,6 +138,13 @@ export function useDynamicRegion(options: DynamicRegionOptions): DynamicRegion {
   // created) — replayed in order once every scene has run create().
   let pendingDispatches: Array<{ event: string; payload: unknown }> = []
   let regionReady = false
+  // The generation an in-flight import belongs to, null when none. Dedupes
+  // repeat start() calls against the CURRENT generation only: a start after
+  // teardown (generation bumped) or after a failure (game still null) is a
+  // legitimate NEW attempt — that is how panel reopen and the coordinator
+  // retry hook recover a dead host — while a second start during the same
+  // pending import must not run a parallel bootstrap.
+  let pendingBootGeneration: number | null = null
 
   const currentGeneration = () => generation.value
 
@@ -148,10 +155,19 @@ export function useDynamicRegion(options: DynamicRegionOptions): DynamicRegion {
       return
     }
 
+    if (pendingBootGeneration !== null && pendingBootGeneration === generation.value) {
+      return
+    }
+
+    // A fresh attempt supersedes the recorded failure: the fallback text
+    // disappears while the retry runs and is rewritten if this one fails too.
+    bootError.value = null
+
     // Captured BEFORE the await. Everything after it compares against this, so
     // a teardown mid-import leaves a resolving import() harmless rather than
     // writing into a destroyed container.
     const bootGeneration = generation.value
+    pendingBootGeneration = bootGeneration
 
     void (async () => {
       try {
@@ -179,6 +195,13 @@ export function useDynamicRegion(options: DynamicRegionOptions): DynamicRegion {
         teardownResources()
 
         bootError.value = message
+      } finally {
+        // Clear only OUR marker — a newer attempt may already have
+        // overwritten it (teardown bumped the generation mid-import, then a
+        // restart began); clearing theirs would re-admit a parallel boot.
+        if (pendingBootGeneration === bootGeneration) {
+          pendingBootGeneration = null
+        }
       }
     })()
   }

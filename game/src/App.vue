@@ -33,7 +33,7 @@ import { useI18n } from 'vue-i18n'
 import { useOfflineSummaryStore } from './stores/offlineSummary'
 import { useSaveIssueStore } from './stores/saveIssue'
 import { savePersistedUiAutomationFlags } from './stores/uiFlagsPersistence'
-import { useAppLifecycle } from './composables/useAppLifecycle'
+import { useAppLifecycle, type BootOutcome } from './composables/useAppLifecycle'
 import GameRoot from './components/layout/GameRoot.vue'
 import RouteMount from './components/game/RouteMount.vue'
 import PresentationTransitionOverlay from './components/game/PresentationTransitionOverlay.vue'
@@ -135,6 +135,12 @@ const combatClockSource = window.electronAPI
   ? new MainProcessClockSource(window.electronAPI.combatClock)
   : new RafClockSource()
 gameManager.setCombatClockSource(combatClockSource)
+
+// ARCH-013/L04 — the Electron bridge subscriptions are an owned resource:
+// ipcRenderer.on handlers have no auto-dispose, so unmount must call the
+// disposer useElectronBridge returns or a remount/HMR would stack a second
+// quit-flush save. Disposed again before each re-subscribe (entered twice).
+let electronBridgeDispose: (() => void) | undefined
 
 // Presentation coordinator & adapters (Task 5-12, AGENTS.md P17)
 const phaserSceneAdapter = new PhaserSceneAdapter()
@@ -495,7 +501,7 @@ function tick() {
   bumpState()
 }
 
-async function bootGame(createNewCharacter = false) {
+async function bootGame(createNewCharacter = false): Promise<BootOutcome> {
   // MainMenu là entry tạm thời — mọi đường vào game (menu "Bắt đầu",
   // guest auth, đăng nhập, tạo nhân vật) đều phải tắt nó để GameRoot
   // hiện được. Idempotent: gọi lại khi menu đã ẩn là no-op.
@@ -564,9 +570,12 @@ async function bootGame(createNewCharacter = false) {
   })
 
   if (outcome.status === 'entered') {
-    // No-op ngay nếu không chạy trong Electron (window.electronAPI không
-    // tồn tại ở bản web) — xem composables/useElectronBridge.ts.
-    useElectronBridge(gameManager)
+    // No-op (undefined) ngay nếu không chạy trong Electron (window.electronAPI
+    // không tồn tại ở bản web) — xem composables/useElectronBridge.ts.
+    // Dispose lần trước nếu có: boot 'entered' hai lần không được chồng
+    // subscription.
+    electronBridgeDispose?.()
+    electronBridgeDispose = useElectronBridge(gameManager)
 
     // Dev-only console helpers (spec v3 B5) - registered here so BOTH
     // new-character and restored-save entries get them; the function
@@ -576,6 +585,8 @@ async function bootGame(createNewCharacter = false) {
     isBooted.value = true
     lifecycle.startAutosave()
   }
+
+  return outcome
 }
 
 function onAuthenticated() {
@@ -592,7 +603,17 @@ async function onCharacterCreated(payload: CharacterCreationPayload) {
     player.baseStats[stat] += amount
   }
 
-  await bootGame(true)
+  const outcome = await bootGame(true)
+
+  // ARCH-013/L04 (review round 1): chỉ persist khi boot THẬT SỰ chạy grants
+  // — outcome 'skipped' (teardown giữa load / double-invoke) nghĩa là
+  // onNewCharacter chưa grant technique/skill/buildings/starter materials,
+  // lưu lúc này sẽ ghi một nhân vật thiếu starter content; 'failed' đã bị
+  // bootFlow.fail() xử lý rồi, không có gì hợp lệ để save.
+  if (outcome.status !== 'entered') {
+    return
+  }
+
   // R10 (AR-12): buildGameSave() owns making player.$state's reactive
   // Pinia proxy safe to snapshot — callers just pass it through.
   const result = await cloudSaveCoordinator.save(buildGameSave(player.$state, gameManager))
@@ -619,6 +640,14 @@ onUnmounted(() => {
   }
 
   clock.stop()
+
+  // ARCH-013/L04 — combat counts on its own clock source: an unmounted App
+  // that leaves it running keeps a live rAF loop (or main-process IPC
+  // subscription) driving a detached GameManager — under HMR that is a
+  // second invisible game advancing alongside the new mount.
+  combatClockSource.stop()
+  electronBridgeDispose?.()
+  electronBridgeDispose = undefined
   disposeCombatPause()
 
   if (introHandle) {

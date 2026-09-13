@@ -4,7 +4,9 @@ import type Phaser from 'phaser'
 import {
   PHASER_SCENE_ADAPTER_KEY,
   ASSET_BUNDLE_MANAGER_KEY,
+  VUE_ROUTE_ADAPTER_KEY,
 } from '@/presentation/PresentationContracts'
+import { PRIMARY_SCENE_ROUTES } from '@/presentation/PhaserSceneAdapter'
 import { useGameManager } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
 import type { BattlePositionsEvent } from '@/core/battle/BattleEvents'
@@ -17,6 +19,7 @@ const gameManager = useGameManager()
 const player = usePlayerStore()
 const sceneAdapter = inject(PHASER_SCENE_ADAPTER_KEY, null)
 const bundleManager = inject(ASSET_BUNDLE_MANAGER_KEY, null)
+const routeAdapter = inject(VUE_ROUTE_ADAPTER_KEY, null)
 
 const containerRef = ref<HTMLDivElement | null>(null)
 
@@ -202,6 +205,28 @@ const region = useDynamicRegion({
 })
 
 onMounted(() => region.start())
+
+// ARCH-013/L04 — host bootstrap retry hook. A failed import/construct leaves
+// region.bootError set and NO Phaser.Game behind it, while a failed game-route
+// transition keeps this component mounted (useBootFlow's failedRequest clause)
+// so the error shell's Retry/Back stay reachable. coordinator.retry() — and
+// Back, and any later request — only re-runs the TRANSITION; it cannot
+// recreate the game, so without this hook the retried transition would strand
+// inside ensureFor's waitForLoaderScene until the asset deadline. Every new
+// transition bumps transitionId with targetRoute already set; when that target
+// is a Phaser-backed route and this host is down, boot it again. start() is a
+// no-op while a game lives or an import for the current generation is in
+// flight, so healthy transitions pay nothing.
+watch(
+  () => routeAdapter?.transitionId.value,
+  () => {
+    const target = routeAdapter?.targetRoute.value ?? null
+
+    if (region.bootError.value !== null && target !== null && PRIMARY_SCENE_ROUTES[target]) {
+      region.start()
+    }
+  },
+)
 
 // Task 4 (perf-optimize-pass, phần 3) — bootstrap error boundary. bootError is
 // the region's, and it stays LOCAL: the fallback UI is the <p> below, inside
