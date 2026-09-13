@@ -259,14 +259,6 @@ export const SAVE_REVISION_KEY = 'tien-hiep-idle-save-revision'
 /** Settings phát sự kiện này để App dừng autosave trước khi xóa save. */
 export const SAVE_RESET_REQUEST_EVENT = 'tien-hiep:reset-save-requested'
 
-export function computeRestoreIdentity(save: GameSave): string {
-  const { lastSavedAt: _excluded, ...playerWithoutTimestamp } = save.player
-
-  void _excluded
-
-  return JSON.stringify([save.version, playerWithoutTimestamp, save.materials, save.quests ?? null])
-}
-
 /**
  * Exact App restore order. Registry drift is rejected before Pinia, active-player,
  * or manager state can mutate; valid saves then restore through the existing owners.

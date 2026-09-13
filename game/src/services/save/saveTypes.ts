@@ -209,6 +209,13 @@ export type RestoreGameSessionResult =
  * EXCEPT player.lastSavedAt, so re-saving identical content with a new
  * timestamp still converges on retry.
  */
+export function computeRestoreIdentity(save: GameSave): string {
+  const { lastSavedAt: _excluded, ...playerWithoutTimestamp } = save.player
+
+  void _excluded
+
+  return JSON.stringify([save.version, playerWithoutTimestamp, save.materials, save.quests ?? null])
+}
 
 export interface ProductionCycleSave {
   cycleId: string

@@ -111,6 +111,22 @@ import {
   DEBUFF_ATTACH_COLOR,
   MIN_SEGMENT_DURATION_MS,
   PLAYER_COLOR,
+  PLAYER_ID,
+  DOT_TEXT_FLUSH_INTERVAL_MS,
+  DAMAGE_DEALT_COLOR,
+  DAMAGE_TAKEN_COLOR,
+  CAST_BAR_BG_COLOR,
+  CAST_BAR_FILL_COLOR,
+  CAST_BAR_HEIGHT,
+  CAST_BAR_OFFSET_Y,
+  LANE_DIVIDER_COLOR,
+  PERSPECTIVE_GRID_COLOR,
+  PERSPECTIVE_GRID_ALPHA,
+  PERSPECTIVE_BORDER_COLOR,
+  PERSPECTIVE_BORDER_ALPHA,
+  SHADOW_WIDTH_RATIO,
+  SHADOW_HEIGHT_RATIO,
+  CHARACTER_WIDTH_RATIO,
 } from './combat/combatConstants'
 import type { PositionInterpolation } from './combat/combatTypes'
 import type { CombatGridViewHost } from './combat/CombatGridViewHost'
@@ -126,34 +142,13 @@ export { formatDotDamageText } from './combat/combatTextFormat'
 // 'perspective' chuyÃ¡Â»Æ’n sang BattlefieldBackdrop + lÃ†Â°Ã¡Â»â€ºi phÃ¡Â»â€˜i cÃ¡ÂºÂ£nh rÃ¡ÂºÂ¥t nhÃ¡ÂºÂ¡t
 // Ã„â€˜Ã¡Â»Æ’ texture Ã„â€˜Ã¡ÂºÂ¥t lÃƒÂ m chÃƒÂ­nh, trÃƒÂ¡nh lÃ¡Â»â„¢ cÃ¡ÂºÂ£m giÃƒÂ¡c bÃƒÂ n cÃ¡Â»Â 10 lane.
 const ARENA_COLOR = 0x14161c
-const LANE_DIVIDER_COLOR = 0x2a2d38
-const PERSPECTIVE_GRID_COLOR = 0x8a94ad
-const PERSPECTIVE_GRID_ALPHA = 0.14
-const PERSPECTIVE_BORDER_COLOR = 0xaeb9d4
-const PERSPECTIVE_BORDER_ALPHA = 0.3
-
-// BÃƒÂ³ng ellipse dÃ†Â°Ã¡Â»â€ºi chÃƒÂ¢n Ã¢â‚¬â€ dÃ¡ÂºÂ¹t theo trÃ¡Â»Â¥c sÃƒÂ¢u, Ã„â€˜Ã¡ÂºÂ­m vÃ¡Â»Â«a Ã„â€˜Ã¡Â»Æ’ tÃƒÂ¡ch unit khÃ¡Â»Âi
-// mÃ¡ÂºÂ·t Ã„â€˜Ã¡ÂºÂ¥t; luÃƒÂ´n nÃ¡ÂºÂ±m Ã¡Â»Å¸ lÃ¡Â»â€ºp ENTITY_SHADOW dÃ†Â°Ã¡Â»â€ºi MÃ¡Â»Å’I sprite.
-const SHADOW_WIDTH_RATIO = 1.12
-const SHADOW_HEIGHT_RATIO = 0.34
-
-// Combat uses the static mortal artwork. MainScene keeps its existing atlas;
-// the scenes intentionally use separate texture keys and presentations.
-// Key/URL sÃ¡Â»â€˜ng Ã¡Â»Å¸ support/CombatPreload.ts (dÃƒÂ¹ng chung 2 scene Ã¢â‚¬â€ fix spawn
-// animation lÃ¡ÂºÂ§n Ã„â€˜Ã¡ÂºÂ§u, xem file Ã„â€˜ÃƒÂ³).
-const PLAYER_SOURCE_SIZE = { w: 1244, h: 1264 }
 
 /** DoT text flush 3 lÃ¡ÂºÂ§n/giÃƒÂ¢y (plan Ã‚Â§7.2) Ã¢â‚¬â€ cÃ¡Â»Â­a sÃ¡Â»â€¢ gom 333,33ms. */
-const DOT_TEXT_FLUSH_INTERVAL_MS = 1000 / 3
 
 // Cast Time (2026-08-21) Ã¢â‚¬â€ cast bar hiÃ¡Â»â€¡n phÃƒÂ­a TRÃƒÅ N Ã„â€˜Ã¡ÂºÂ§u unit (Ã„â€˜Ã¡Â»â€˜i xÃ¡Â»Â©ng
 // vÃ¡Â»â€ºi label tÃƒÂªn hiÃ¡Â»â€¡n phÃƒÂ­a dÃ†Â°Ã¡Â»â€ºi), mÃƒÂ u vÃƒÂ ng tÃƒÂ¡ch hÃ¡ÂºÂ³n khÃ¡Â»Âi mÃ¡Â»Âi mÃƒÂ u sÃ¡Â»â€˜ nÃ¡ÂºÂ£y
 // (Ã„â€˜Ã¡Â»Â/trÃ¡ÂºÂ¯ng/vÃƒÂ ng chÃƒÂ³i cÃ¡Â»Â§a ChÃƒÂ­ MÃ¡ÂºÂ¡ng) Ã„â€˜Ã¡Â»Æ’ khÃƒÂ´ng lÃ¡ÂºÂ«n Ã¢â‚¬â€ dÃƒÂ¹ng CÃƒâ„¢NG gold nhÃ¡ÂºÂ¡t
 // hÃ†Â¡n CRITICAL_DAMAGE_COLOR.
-const CAST_BAR_BG_COLOR = 0x1c1712
-const CAST_BAR_FILL_COLOR = 0xf4c542
-const CAST_BAR_HEIGHT = 5
-const CAST_BAR_OFFSET_Y = 10
 
 // NÃ¡ÂºÂ£y sÃ¡Â»â€˜ sÃƒÂ¡t thÃ†Â°Ã†Â¡ng (spec CombatUIredesign mÃ¡Â»Â¥c 10 Ã¢â‚¬â€ "Damage thÃƒÂ´ng
 // thÃ†Â°Ã¡Â»Âng vÃ¡ÂºÂ«n hiÃ¡Â»Æ’n thÃ¡Â»â€¹ trÃ¡Â»Â±c tiÃ¡ÂºÂ¿p trÃƒÂªn enemy") Ã¢â‚¬â€ cÃƒÂ¹ng nguÃ¡Â»â€œn dÃ¡Â»Â¯ liÃ¡Â»â€¡u
@@ -162,12 +157,9 @@ const CAST_BAR_OFFSET_Y = 10
 // vÃƒÂ¬ Vue vÃ¡ÂºÂ½ thanh mÃƒÂ¡u) Ã¢â‚¬â€ 1 event, 2 cÃƒÂ¡ch thÃ¡Â»Æ’ hiÃ¡Â»â€¡n trÃ¡Â»Â±c quan song song.
 // Ã„ÂÃ¡Â»Â cho sÃƒÂ¡t thÃ†Â°Ã†Â¡ng NHÃ¡ÂºÂ¬N vÃƒÂ o (target lÃƒÂ  player), trÃ¡ÂºÂ¯ng cho sÃƒÂ¡t thÃ†Â°Ã†Â¡ng
 // GÃƒâ€šY RA (target lÃƒÂ  quÃƒÂ¡i), vÃƒÂ ng riÃƒÂªng cho Ã„â€˜ÃƒÂ²n ChÃƒÂ­ MÃ¡ÂºÂ¡ng bÃ¡ÂºÂ¥t kÃ¡Â»Æ’ chiÃ¡Â»Âu.
-const DAMAGE_DEALT_COLOR = '#f4f4f0'
-const DAMAGE_TAKEN_COLOR = '#ff6b6b'
 // TÃ¡Â»â€° lÃ¡Â»â€¡ theo CHIÃ¡Â»â‚¬U CAO 1 HÃƒâ‚¬NG lane (khÃƒÂ´ng phÃ¡ÂºÂ£i cÃ¡ÂºÂ£ battlefield nhÃ†Â° side-
 // view cÃ…Â©) Ã¢â‚¬â€ 5 lane top-down (2026-08-22), nhÃƒÂ¢n vÃ¡ÂºÂ­t phÃ¡ÂºÂ£i nhÃ¡Â»Â hÃ†Â¡n hÃ¡ÂºÂ³n
 // hÃƒÂ ng cÃ¡Â»Â§a nÃƒÂ³ Ã„â€˜Ã¡Â»Æ’ cÃƒÂ²n chÃ¡Â»Â«a lÃ¡Â»Â trÃƒÂªn/dÃ†Â°Ã¡Â»â€ºi, khÃƒÂ´ng Ã„â€˜ÃƒÂ¨ hÃƒÂ ng kÃ¡ÂºÂ¿ bÃƒÂªn.
-const CHARACTER_WIDTH_RATIO = 0.45 // tỉ lệ so với chiều cao nhân vật
 
 // Combat AI rework (plan Ã‚Â§12.1) Ã¢â‚¬â€ avatar Player LÃ¡Â»Å¡N GÃ¡ÂºÂ¤P Ã„ÂÃƒâ€I enemy: chÃ¡Â»â€°
 // nhÃƒÂ¢n lÃƒÂªn PLAYER sprite, khÃƒÂ´ng Ã„â€˜Ã¡Â»Â¥ng enemy/VFX footprint. KÃƒÂ­ch thÃ†Â°Ã¡Â»â€ºc cuÃ¡Â»â€˜i
@@ -181,7 +173,6 @@ const CHARACTER_WIDTH_RATIO = 0.45 // tỉ lệ so với chiều cao nhân vật
 // thay layout side-view cÃ…Â© cÃƒÂ³ layout side-view cÃ…Â©) Ã¢â‚¬â€ chÃ¡Â»Â«a 1
 // lÃ¡Â»Â nhÃ¡Â»Â Ã„â€˜Ã¡Â»Æ’ sprite khÃƒÂ´ng bÃ¡Â»â€¹ cÃ¡ÂºÂ¯t viÃ¡Â»Ân trÃƒÂ¡i.
 
-const PLAYER_ID = 'player'
 
 // Audit P0-3 Ã¢â‚¬â€ anchor THÃƒâ€šN TRUNG TÃƒÂNH cho enemy reward particle,
 // chuÃ¡ÂºÂ©n hoÃƒÂ¡ theo bounds cÃ¡Â»Â§a chÃƒÂ­nh sprite enemy (0.5, ~0.4 tÃ¡Â»Â« chÃƒÂ¢n).
