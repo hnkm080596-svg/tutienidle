@@ -171,7 +171,7 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
 <template>
   <button
     type="button"
-    class="slot-view"
+    class="slot-view fx-border-beam"
     :class="[
       filled ? 'slot-view--filled' : 'slot-view--empty',
       showSelected ? 'slot-view--selected' : '',
@@ -223,6 +223,11 @@ const tooltipContent = computed(() => props.tooltip ?? (props.label || props.des
     </span>
 
     <span v-else-if="label" class="slot-view__caption">{{ label }}</span>
+
+    <!-- layer 7.5: border-beam fx — ::before/::after của slot-view đã bận
+         (max-rank bar + rarity tint) nên beam vẽ qua layer riêng; shared
+         class trong theme.css, chỉ hiện khi hover. -->
+    <span class="fx-border-beam__fx" aria-hidden="true" />
 
     <!-- layer 8: locked/disabled/processing veil -->
     <span v-if="veil !== 'none'" class="slot-view__veil" aria-hidden="true">
