@@ -898,6 +898,10 @@
       "defeat": {
         "title": "Tribulation Failed",
         "body": "Tribulation wounds linger — recover, then try again."
+      },
+      "settlementError": {
+        "title": "Outcome Recorded With Error",
+        "body": "The tribulation outcome is final, but applying its consequences hit an error — please report this."
       }
     },
     "breakthrough": {

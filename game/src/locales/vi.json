@@ -898,6 +898,10 @@
       "defeat": {
         "title": "Độ Kiếp Thất Bại",
         "body": "Kiếp Thương còn vương lại — hãy dưỡng thương rồi thử lại."
+      },
+      "settlementError": {
+        "title": "Kiếp Quả Ghi Nhận Lỗi",
+        "body": "Kết quả độ kiếp đã được chốt, nhưng ghi nhận hậu quả gặp lỗi — xin hãy báo lại cho quản trị."
       }
     },
     "breakthrough": {

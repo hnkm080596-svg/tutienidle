@@ -28,7 +28,7 @@ import type { FoundationType } from '../breakthrough/FoundationType'
 import type { PlayerData } from '../player/Player'
 import type { StatModifier } from '../stats/StatCalculator'
 import type { GameManager } from '../game/GameManager'
-import type { ActiveTribulationState } from './TribulationDirector'
+import type { TribulationDirector } from './TribulationDirector'
 import type { OutcomeAnnouncement } from '../presentation/OutcomeAnnouncement'
 import { getCurrentRealm } from '../realm/realmSystem'
 import { pourCultivationOvercharge } from '../cultivation/CultivationSystem'
@@ -78,6 +78,17 @@ export interface TribulationDefeatResult {
 export type TribulationOutcomeResult = TribulationVictoryResult | TribulationDefeatResult
 
 /**
+ * The outcome facts a settlement needs from the finished run. Both the
+ * live ActiveTribulationState and the domain-owned CommittedTribulationOutcome
+ * record satisfy this shape - M6 settles against the committed record,
+ * never re-derived from mutable live state.
+ */
+export interface TribulationOutcomeFacts {
+  readonly targetRealmId: string
+  readonly grade: FoundationType
+}
+
+/**
  * Writer over the player state this service owns. Extends PlayerData so
  * the SAME object flows into GameManager methods without casts. In
  * production the caller passes the Pinia player store INSTANCE — never
@@ -100,6 +111,58 @@ export interface TribulationPlayerWriter extends PlayerData {
 
 export class TribulationOutcomeService {
   /**
+   * M6 / ARCH-006 - once-only settlement of the run's committed outcome.
+   * The record's receipt slot is the dedup identity: the first call
+   * applies the full consequence set (realm/cultivation/foundation/
+   * talent on victory; cultivation/stone/Kiep Thuong/Great Dao penalties
+   * on defeat) and binds the receipt; every later call returns the SAME
+   * receipt without re-applying. Returns null when no outcome is
+   * committed. Independent of any curtain/transition - safe to invoke on
+   * every tick while the outcome is pending.
+   *
+   * M6 r1 - a resolve that throws MID-APPLY marks the record
+   * terminal-failed (settlementError) instead of leaving the receipt
+   * unbound: later calls see the marker and return null without
+   * re-running the apply, so partially-landed consequences can never
+   * compound. The exception is contained here (logged once, never
+   * propagated into the tick loop); the adapter reads
+   * committed.settlementError to surface and drain the failed run.
+   */
+  settleOutcome(
+    player: TribulationPlayerWriter,
+    gameManager: GameManager,
+    director: TribulationDirector,
+  ): TribulationOutcomeResult | null {
+    const committed = director.getCommittedOutcome()
+
+    if (!committed) {
+      return null
+    }
+
+    if (committed.receipt) {
+      return committed.receipt
+    }
+
+    if (committed.settlementError) {
+      return null
+    }
+
+    try {
+      const result =
+        committed.outcome === 'victory'
+          ? this.resolveVictory(player, gameManager, committed)
+          : this.resolveDefeat(player, gameManager, committed)
+
+      committed.receipt = result
+      return result
+    } catch (err) {
+      committed.settlementError = err instanceof Error ? err : new Error(String(err))
+      console.error('[tribulation] outcome settlement failed; record marked terminal-failed', committed.settlementError)
+      return null
+    }
+  }
+
+  /**
    * Apply victory consequences and return the typed outcome. The session
    * itself (clear/exit/route) stays with the caller: this is outcome
    * authority, not presentation sequencing.
@@ -107,17 +170,17 @@ export class TribulationOutcomeService {
   resolveVictory(
     player: TribulationPlayerWriter,
     gameManager: GameManager,
-    active: ActiveTribulationState,
+    facts: TribulationOutcomeFacts,
   ): TribulationVictoryResult {
     // Loi Kiep (M2): every survived kiếp banks a permanent all-attribute
     // stack — including the announcement-only Quan Khi ritual below.
     this.applyLoiKiepVictoryBonus(player)
 
-    const realm = getCurrentRealm(active.targetRealmId)
+    const realm = getCurrentRealm(facts.targetRealmId)
 
     // Quan Khi victory: pure announcement + path-choice navigation.
     // No realm/talent/foundation writes (spec dot-pha-loi-kiep SS5.1).
-    if (active.targetRealmId === 'qi_refining') {
+    if (facts.targetRealmId === 'qi_refining') {
       return {
         kind: 'victory',
         realmEntered: null,
@@ -135,7 +198,7 @@ export class TribulationOutcomeService {
     // Order preserved from the Vue path (rework P5, Task 17): realm write
     // FIRST, then unequip-all + modifier sync (avoids stuck gear from the
     // new realm's grade gate), then passive syncs, then path reward.
-    player.realmId = active.targetRealmId
+    player.realmId = facts.targetRealmId
     player.realmLevel = 1
     player.cultivation = 0
 
@@ -153,8 +216,8 @@ export class TribulationOutcomeService {
 
     // Spec dot-pha-loi-kiep SS4.2/SS4.4: foundation grade recorded on
     // entry; highestFoundationAchieved feeds the foundation passive.
-    if (active.targetRealmId === 'foundation_establishment') {
-      player.highestFoundationAchieved = active.grade
+    if (facts.targetRealmId === 'foundation_establishment') {
+      player.highestFoundationAchieved = facts.grade
     }
 
     gameManager.realmAdvanceOps.syncRealmPassive(player)
@@ -167,7 +230,7 @@ export class TribulationOutcomeService {
     // Spec SS4.3/SS4.4: Great Dao victory converts the penalty talent into
     // the permanent reward talent.
     let talentConverted = false
-    if (active.targetRealmId === 'foundation_establishment' && active.grade === 'great_dao') {
+    if (facts.targetRealmId === 'foundation_establishment' && facts.grade === 'great_dao') {
       const index = player.selectedTalentIds.indexOf('pham_cot')
       if (index >= 0) {
         player.selectedTalentIds.splice(index, 1)
@@ -180,10 +243,10 @@ export class TribulationOutcomeService {
 
     // Discovery announcement: foundation grade or plain realm name.
     const announcement: OutcomeAnnouncement =
-      active.targetRealmId === 'foundation_establishment'
+      facts.targetRealmId === 'foundation_establishment'
         ? {
             titleKey: 'announce.tribulation.foundation.title',
-            titleParams: { label: FOUNDATION_LABELS[active.grade].toUpperCase() },
+            titleParams: { label: FOUNDATION_LABELS[facts.grade].toUpperCase() },
             bodyKey: 'announce.tribulation.foundation.body',
           }
         : {
@@ -195,9 +258,9 @@ export class TribulationOutcomeService {
 
     return {
       kind: 'victory',
-      realmEntered: active.targetRealmId,
+      realmEntered: facts.targetRealmId,
       realmName: realm.name,
-      foundationGrade: active.targetRealmId === 'foundation_establishment' ? active.grade : undefined,
+      foundationGrade: facts.targetRealmId === 'foundation_establishment' ? facts.grade : undefined,
       talentConverted,
       questRealmTransitionMarked: true,
       announcement,
@@ -247,12 +310,12 @@ export class TribulationOutcomeService {
   resolveDefeat(
     player: TribulationPlayerWriter,
     gameManager: GameManager,
-    active: ActiveTribulationState,
+    facts: TribulationOutcomeFacts,
   ): TribulationDefeatResult {
     // Spec SS5.7: realm-scaled loss with a hard floor.
     const lossPercent = Math.max(
       TRIBULATION_DEFEAT_CULTIVATION_LOSS_FLOOR,
-      TRIBULATION_DEFEAT_CULTIVATION_LOSS_BY_REALM[active.targetRealmId] ??
+      TRIBULATION_DEFEAT_CULTIVATION_LOSS_BY_REALM[facts.targetRealmId] ??
         TRIBULATION_DEFEAT_CULTIVATION_LOSS_FALLBACK,
     )
 
@@ -261,9 +324,9 @@ export class TribulationOutcomeService {
     // Plan Workstream F: the penalty can exceed the balance — remove the
     // actually-owned amount (MaterialBag partial-delivery contract).
     const stoneLoss =
-      TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM[active.targetRealmId] ??
+      TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_BY_REALM[facts.targetRealmId] ??
       TRIBULATION_DEFEAT_SPIRIT_STONE_LOSS_FALLBACK
-    const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(active.targetRealmId))
+    const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(facts.targetRealmId))
     const owned = gameManager.materialBag.getAmount(spiritStoneId)
     gameManager.materialBag.remove(spiritStoneId, Math.min(owned, stoneLoss))
 
@@ -278,7 +341,7 @@ export class TribulationOutcomeService {
 
     // Spec SS4.3: losing a Great Dao attempt closes the opportunity
     // FOREVER; later grade rolls cap at Thien Dao (BreakthroughGrades).
-    if (active.targetRealmId === 'foundation_establishment' && active.grade === 'great_dao') {
+    if (facts.targetRealmId === 'foundation_establishment' && facts.grade === 'great_dao') {
       player.greatDaoOpportunityLost = true
       return {
         kind: 'defeat',

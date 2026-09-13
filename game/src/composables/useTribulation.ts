@@ -11,8 +11,11 @@ import { isBattleInProgress } from '../core/battle/BattleTypes'
 import { i18n } from '@/i18n'
 
 // R8.2 (AR-10): outcome authority lives in TribulationOutcomeService (core).
-// This adapter keeps ONLY presentation sequencing: announcements, scene
-// exit, route home, panel navigation. Zero player-state writes here.
+// M6 (ARCH-006): the once-only settlement commit is domain-owned too -
+// TribulationDirector stamps a committed-outcome record at the terminal
+// transition and the service settles it exactly once, independent of the
+// curtain. This adapter keeps ONLY presentation sequencing: announcements,
+// scene exit, route home, panel navigation. Zero player-state writes here.
 
 // Tr?m gate (blockIfNoBasicAttack, 2026-08-20 -> gap 2026-08-21) - PhA?p
 // Tu t? h?c + trang b? S?N 1 chiA?u c? b?n ngay lA?c ch?n path, tA�nh
@@ -117,6 +120,20 @@ function presentOutcome(result: TribulationOutcomeResult): void {
 }
 
 /**
+ * M6 r1 - the outcome committed at the domain level but its consequence
+ * apply threw mid-flight (record marked terminal-failed). There is no
+ * receipt to render, so surface a generic failure announcement instead;
+ * the run still drains home so the player is never soft-locked.
+ */
+function presentSettlementError(): void {
+  const announcements = useWorldAnnouncementStore()
+  announcements.show(
+    i18n.global.t('announce.tribulation.settlementError.title'),
+    i18n.global.t('announce.tribulation.settlementError.body'),
+  )
+}
+
+/**
  * Gọi mỗi tick từ App.vue, TRƯỚC nhánh Auto-refight Stage — battle
  * Tribulation không qua Stage nên GameManager chỉ tự set 'victory'/
  * 'defeat'. Domain (TribulationOutcomeService) áp kết quả lên player;
@@ -130,53 +147,92 @@ export function checkTribulationOutcomeAction(
   gameManager: GameManager,
   presentation?: GamePresentation | null,
 ): boolean {
-  const active = gameManager.tribulationDirector.getState()
+  // M6 / ARCH-006: settlement is a domain command that runs BEFORE and
+  // INDEPENDENT of the curtain (P17/A7). The trigger is the domain-owned
+  // committed-outcome record - stamped once by the director's single
+  // terminal commit (commitOutcome), bound to the run's attempt identity -
+  // not the mutable live state object. The once-only commit of
+  // realm/cultivation/stones/foundation/talent/penalty writes lands here
+  // on the tick, so a rejected request, a curtain failure, or a reload
+  // mid-transition can never strand an uncommitted outcome. Repeat calls
+  // re-settle onto the SAME bound receipt - consequences can never
+  // double-apply, and a duplicate tick while the route request is
+  // in-flight is a no-op. The record stays pending until clear() drains
+  // the run inside the curtain.
+  const director = gameManager.tribulationDirector
+  const committed = director.getCommittedOutcome()
 
-  if (!active) {
+  if (!committed) {
     return false
   }
 
-  // Kiếp mới (spec dot-pha-loi-kiep §5.1) KHÔNG qua battle — state nằm
-  // trong ActiveTribulationState của Director.
-  if (active.state === 'ongoing') {
-    return false
-  }
+  const service = new TribulationOutcomeService()
+  const result = service.settleOutcome(
+    player as TribulationPlayerWriter,
+    gameManager,
+    director,
+  )
 
-  // Outcome authority (R8.2): domain applies realm/talent/foundation/
-  // penalty writes; presentation consumes the typed result.
-  const applyOutcome = (): boolean => {
-    const service = new TribulationOutcomeService()
-    let result: TribulationOutcomeResult
-    if (active.state === 'victory') {
-      result = service.resolveVictory(player as TribulationPlayerWriter, gameManager, active)
-    } else {
-      result = service.resolveDefeat(player as TribulationPlayerWriter, gameManager, active)
+  if (result) {
+    // Presentation consumes the committed receipt. The visible effects
+    // (announcement overlay, standalone panel, tribulation scene exit and
+    // the run drain) stay behind the curtain per R12 sequencing - but they
+    // only RENDER the receipt; the commit already happened above.
+    const consumeReceipt = (): boolean => {
+      presentOutcome(result)
+
+      director.clear()
+      useUiStore().exitTribulationScene()
+
+      return true
     }
 
-    presentOutcome(result)
+    if (presentation) {
+      // Every visible effect of the outcome (announcement overlay,
+      // standalone panel, tribulation exit) runs inside the closed-curtain
+      // window: the tribulation scene stays on screen while the curtain
+      // travels and home is revealed only after the swap completes. A
+      // rejected request leaves the committed outcome pending - the next
+      // tick re-issues it (settlement itself is already done and idempotent)
+      // - and a duplicate tick while in-flight shares the same request, so
+      // the drain still runs exactly once. Returning true regardless keeps
+      // the caller's same-tick auto-refight suppression.
+      void presentation.coordinator.request({ target: 'home', behindCurtain: consumeReceipt })
+      return true
+    }
 
-    gameManager.tribulationDirector.clear()
-    useUiStore().exitTribulationScene()
+    consumeReceipt()
 
     return true
   }
 
-  if (presentation) {
-    // Every visible effect of the outcome (realm/penalty writes reflecting
-    // in home UI, announcement overlay, standalone panel, tribulation exit)
-    // runs inside the closed-curtain window: the tribulation scene stays on
-    // screen while the curtain travels and home is revealed only after the
-    // swap completes. A rejected request leaves the outcome pending - the
-    // next tick re-issues it - and a duplicate tick while in-flight shares
-    // the same request, so the work still runs exactly once. Returning true
-    // regardless keeps the caller's same-tick auto-refight suppression.
-    void presentation.coordinator.request({ target: 'home', behindCurtain: applyOutcome })
+  // M6 r1 containment: a resolve that threw mid-apply marked the record
+  // terminal-failed inside settleOutcome (the exception never escapes
+  // into the tick loop, and later settles can never re-run the apply).
+  // The outcome is still domain-final, so route the player home and drain
+  // the run inside the curtain - the failure surfaces as an announcement
+  // and the same pending/retry semantics apply.
+  if (committed.settlementError) {
+    const drainFailedRun = (): boolean => {
+      presentSettlementError()
+
+      director.clear()
+      useUiStore().exitTribulationScene()
+
+      return true
+    }
+
+    if (presentation) {
+      void presentation.coordinator.request({ target: 'home', behindCurtain: drainFailedRun })
+      return true
+    }
+
+    drainFailedRun()
+
     return true
   }
 
-  applyOutcome()
-
-  return true
+  return false
 }
 
 /**
