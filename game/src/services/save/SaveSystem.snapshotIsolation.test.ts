@@ -12,9 +12,9 @@ import { buildGameSave } from './SaveSystem'
 
 function createBootedGameManager(): GameManager {
   const gameManager = new GameManager()
-  gameManager.registerMaterials(materials)
-  gameManager.registerEquipment(equipment)
-  gameManager.registerAffixes(affixes)
+  gameManager.catalogOps.registerMaterials(materials)
+  gameManager.catalogOps.registerEquipment(equipment)
+  gameManager.catalogOps.registerAffixes(affixes)
   return gameManager
 }
 

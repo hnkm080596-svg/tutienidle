@@ -143,7 +143,7 @@ function toggleLock(index: number) {
 const refineCost = computed(() => {
   stateVersion.value
 
-  return gameManager.getRefineCost(
+  return gameManager.equipmentOps.getRefineCost(
     selectedAffixes.value.length,
     lockedIndices.value.length,
     selectedRow.value?.quality,

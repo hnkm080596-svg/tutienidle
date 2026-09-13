@@ -25,19 +25,19 @@ import { buffs } from '../../data/buff/buffs'
 function makeWiredManager(): GameManager {
   const manager = new GameManager()
 
-  manager.registerMaterials(materials)
-  manager.registerSkillTemplates(SKILLS)
-  manager.registerTechniqueTemplates(TECHNIQUES)
-  manager.registerEnemyTemplates(ENEMIES)
-  manager.registerStages(STAGES)
-  manager.registerZones(zones)
-  manager.registerEquipment(equipment)
-  manager.registerAffixes(affixes)
-  manager.registerPills(pills)
-  manager.registerTalismans(talismans)
-  manager.registerBuffs(buffs)
-  manager.registerBuildings(buildings)
-  manager.registerProgressionNodes(KIEM_TU_NODES)
+  manager.catalogOps.registerMaterials(materials)
+  manager.catalogOps.registerSkillTemplates(SKILLS)
+  manager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+  manager.catalogOps.registerEnemyTemplates(ENEMIES)
+  manager.catalogOps.registerStages(STAGES)
+  manager.catalogOps.registerZones(zones)
+  manager.catalogOps.registerEquipment(equipment)
+  manager.catalogOps.registerAffixes(affixes)
+  manager.catalogOps.registerPills(pills)
+  manager.catalogOps.registerTalismans(talismans)
+  manager.catalogOps.registerBuffs(buffs)
+  manager.catalogOps.registerBuildings(buildings)
+  manager.catalogOps.registerProgressionNodes(KIEM_TU_NODES)
 
   return manager
 }
@@ -60,8 +60,8 @@ describe('GameManager — production wiring của 3 closure Kiếm Tu (kiem-tu �
     manager.setActivePlayer(player)
 
     // Học + equip Bạt Kiếm Thuật để initChannelState kích hoạt.
-    manager.learnSkill('tram')
-    manager.learnSkill('bat_kiem_thuat')
+    manager.progressionOps.learnSkill('tram')
+    manager.progressionOps.learnSkill('bat_kiem_thuat')
     manager.skillSystem.equipToSlot('bat_kiem_thuat', 0)
 
     const enemy = ENEMIES[0]!
@@ -81,8 +81,8 @@ describe('GameManager — production wiring của 3 closure Kiếm Tu (kiem-tu �
     const player = makeKiemTuPlayer()
 
     manager.setActivePlayer(player)
-    manager.learnSkill('tram')
-    manager.learnSkill('bat_kiem_thuat')
+    manager.progressionOps.learnSkill('tram')
+    manager.progressionOps.learnSkill('bat_kiem_thuat')
     manager.skillSystem.equipToSlot('bat_kiem_thuat', 0)
 
     const tram = manager.skillManager.get('tram')!
@@ -102,11 +102,11 @@ describe('GameManager — production wiring của 3 closure Kiếm Tu (kiem-tu �
     player.kiemTuRoute = 'kiem_tran'
     manager.setActivePlayer(player)
 
-    expect(manager.getOnHitNodeLevelsSnapshot()).toEqual({})
+    expect(manager.progressionOps.getOnHitNodeLevelsSnapshot()).toEqual({})
 
     player.nodeLevels = { ...player.nodeLevels, onhit_khiem_khi: 3 }
 
-    expect(manager.getOnHitNodeLevelsSnapshot()).toEqual({ onhit_khiem_khi: 3 })
+    expect(manager.progressionOps.getOnHitNodeLevelsSnapshot()).toEqual({ onhit_khiem_khi: 3 })
   })
 
   it('getOnHitNodeLevelsSnapshot: node không phải on-hit bị lọc; level 0 bỏ qua; id lạ không throw', () => {
@@ -122,6 +122,6 @@ describe('GameManager — production wiring của 3 closure Kiếm Tu (kiem-tu �
       onhit_xuat_huyet: 4,
     }
 
-    expect(manager.getOnHitNodeLevelsSnapshot()).toEqual({ onhit_xuat_huyet: 4 })
+    expect(manager.progressionOps.getOnHitNodeLevelsSnapshot()).toEqual({ onhit_xuat_huyet: 4 })
   })
 })

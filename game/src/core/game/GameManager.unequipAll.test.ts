@@ -18,7 +18,7 @@ describe('GameManager — unequipAllEquipment() (rework P5, Task 17)', () => {
     manager.equipmentBag.add(helmet)
     manager.equipmentBag.add(unequippedRing)
 
-    manager.unequipAllEquipment()
+    manager.equipmentOps.unequipAllEquipment()
 
     expect(weapon.equipped).toBe(false)
     expect(helmet.equipped).toBe(false)
@@ -39,11 +39,11 @@ describe('GameManager — unequipAllEquipment() (rework P5, Task 17)', () => {
       manager.equipmentSlotManager,
       manager.affixRegistry,
     )
-    expect(manager.getEquipmentModifiers().length).toBeGreaterThan(0)
+    expect(manager.equipmentOps.getEquipmentModifiers().length).toBeGreaterThan(0)
 
-    manager.unequipAllEquipment()
+    manager.equipmentOps.unequipAllEquipment()
 
-    expect(manager.getEquipmentModifiers()).toHaveLength(0)
+    expect(manager.equipmentOps.getEquipmentModifiers()).toHaveLength(0)
   })
 
   it('GIỮ NGUYÊN enhanceLevel/enhanceFailStreak của slot state — không reset', () => {
@@ -56,7 +56,7 @@ describe('GameManager — unequipAllEquipment() (rework P5, Task 17)', () => {
       { ...manager.equipmentSlotManager.get('weapon'), enhanceLevel: 5, enhanceFailStreak: 3 },
     ])
 
-    manager.unequipAllEquipment()
+    manager.equipmentOps.unequipAllEquipment()
 
     const slotState = manager.equipmentSlotManager.get('weapon')
     expect(slotState.enhanceLevel).toBe(5)
@@ -66,7 +66,7 @@ describe('GameManager — unequipAllEquipment() (rework P5, Task 17)', () => {
   it('không có item nào equipped → không throw, no-op an toàn', () => {
     const manager = new GameManager()
 
-    expect(() => manager.unequipAllEquipment()).not.toThrow()
+    expect(() => manager.equipmentOps.unequipAllEquipment()).not.toThrow()
     expect(manager.equipmentBag.getEquipped()).toHaveLength(0)
   })
 })

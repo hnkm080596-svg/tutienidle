@@ -31,7 +31,7 @@ function makeAwakenedBattle() {
   const manager = new GameManager()
   const combatSource = new ManualClockSource()
   manager.setCombatClockSource(combatSource)
-  manager.registerSkillTemplates(SKILLS)
+  manager.catalogOps.registerSkillTemplates(SKILLS)
 
   const player = createDefaultPlayer()
   player.cultivationPath = 'phap_tu'
@@ -51,14 +51,14 @@ function makeAwakenedBattle() {
   })
   const stage = makeStage('a4_e2e_stage', enemy.id)
 
-  manager.registerEnemyTemplates([enemy])
-  manager.registerStages([stage])
+  manager.catalogOps.registerEnemyTemplates([enemy])
+  manager.catalogOps.registerStages([stage])
   manager.setActivePlayer(player)
-  manager.learnSkill('tam_muoi_chan_hoa')
-  manager.learnSkill('hoa_ha_cuu_thien')
+  manager.progressionOps.learnSkill('tam_muoi_chan_hoa')
+  manager.progressionOps.learnSkill('hoa_ha_cuu_thien')
 
   const stats = calculateStats(player.baseStats, player.modifiers)
-  expect(manager.startStage(player, stats, stage, false)).toBe(true)
+  expect(manager.turnBattleOps.startStage(player, stats, stage, false)).toBe(true)
 
   // Marker slots are populated from the unlock gating.
   const participant = manager.getTurnBattle()!.players[0]!

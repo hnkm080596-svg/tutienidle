@@ -72,8 +72,8 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
       rewards: { techniqueInsight: 0, spiritStone: 0 },
     })
     stage = stageFixture('cr_stage', enemy.id)
-    gameManager.registerEnemyTemplates([enemy])
-    gameManager.registerStages([stage])
+    gameManager.catalogOps.registerEnemyTemplates([enemy])
+    gameManager.catalogOps.registerStages([stage])
     gameManager.setActivePlayer(player)
     gameManager.setPresentationMode('interactive')
 
@@ -134,7 +134,7 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
 
     // Start stage through runAdmitted
     const startPromise = presentation.runAdmitted('combat', () => {
-      const started = gameManager.startStage(player, stats, stage, false)
+      const started = gameManager.turnBattleOps.startStage(player, stats, stage, false)
       if (!started) return null
       const session = gameManager.getCurrentPresentationSession('combat')!
       return { target: 'combat', session }
@@ -189,7 +189,7 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
 
     // Entry 1
     const p1 = presentation.runAdmitted('combat', () => {
-      gameManager.startStage(player, stats, stage, false)
+      gameManager.turnBattleOps.startStage(player, stats, stage, false)
       return { target: 'combat', session: gameManager.getCurrentPresentationSession('combat')! }
     })
     for (let i = 0; i < 30 && vueAdapter.phase.value !== 'awaiting-ready'; i++) await Promise.resolve()
@@ -208,7 +208,7 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
 
     // Entry 2
     const p2 = presentation.runAdmitted('combat', () => {
-      gameManager.startStage(player, stats, stage, false)
+      gameManager.turnBattleOps.startStage(player, stats, stage, false)
       return { target: 'combat', session: gameManager.getCurrentPresentationSession('combat')! }
     })
     for (let i = 0; i < 30 && vueAdapter.phase.value !== 'awaiting-ready'; i++) await Promise.resolve()
@@ -238,7 +238,7 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
     phaserAdapter.setGame(fakeGame)
 
     const p = presentation.runAdmitted('combat', () => {
-      gameManager.startStage(player, stats, stage, false)
+      gameManager.turnBattleOps.startStage(player, stats, stage, false)
       return { target: 'combat', session: gameManager.getCurrentPresentationSession('combat')! }
     })
     for (let i = 0; i < 30 && vueAdapter.phase.value !== 'awaiting-ready'; i++) await Promise.resolve()
@@ -287,7 +287,7 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
 
     // Entry 1
     const p1 = presentation.runAdmitted('combat', () => {
-      gameManager.startStage(player, stats, stage, false)
+      gameManager.turnBattleOps.startStage(player, stats, stage, false)
       return { target: 'combat', session: gameManager.getCurrentPresentationSession('combat')! }
     })
     for (let i = 0; i < 30 && vueAdapter.phase.value !== 'awaiting-ready'; i++) await Promise.resolve()
@@ -299,7 +299,7 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
 
     // Fresh refight on same Combat route
     const p2 = presentation.runAdmitted('combat', () => {
-      gameManager.startStage(player, stats, stage, false)
+      gameManager.turnBattleOps.startStage(player, stats, stage, false)
       return { target: 'combat', session: gameManager.getCurrentPresentationSession('combat')! }
     })
     for (let i = 0; i < 30 && vueAdapter.phase.value !== 'awaiting-ready'; i++) await Promise.resolve()
@@ -325,7 +325,7 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
     phaserAdapter.setGame(fakeGame)
 
     const p = presentation.runAdmitted('combat', () => {
-      gameManager.startStage(player, stats, stage, true) // repeatContinuously
+      gameManager.turnBattleOps.startStage(player, stats, stage, true) // repeatContinuously
       return { target: 'combat', session: gameManager.getCurrentPresentationSession('combat')! }
     })
     for (let i = 0; i < 30 && vueAdapter.phase.value !== 'awaiting-ready'; i++) await Promise.resolve()
@@ -358,7 +358,7 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
 
     // In headless mode to let battle step to fighting
     gameManager.setPresentationMode('headless')
-    gameManager.startStage(player, stats, stage, false)
+    gameManager.turnBattleOps.startStage(player, stats, stage, false)
 
     // Skip intro and countdown
     for (let i = 0; i < INTRO_TOTAL_TICKS + 30; i++) {

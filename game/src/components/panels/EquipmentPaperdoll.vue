@@ -51,7 +51,7 @@ const enhanceLevelBySlot = computed<Record<EquipmentSlot, number>>(() => {
   const result = {} as Record<EquipmentSlot, number>
 
   for (const entry of SLOT_LAYOUT) {
-    result[entry.slot] = gameManager.getSlotState(entry.slot).enhanceLevel
+    result[entry.slot] = gameManager.equipmentOps.getSlotState(entry.slot).enhanceLevel
   }
 
   return result
@@ -62,15 +62,15 @@ const enhanceLevelBySlot = computed<Record<EquipmentSlot, number>>(() => {
 // getEquipmentTemplate() tra an toàn trả undefined (GameManager.ts) +
 // fallback hiển thị itemId thô (pattern Task 13 EquipmentBagSection).
 function itemName(instance: EquipmentInstance): string {
-  return gameManager.getEquipmentTemplate(instance.itemId)?.name ?? instance.itemId
+  return gameManager.equipmentOps.getEquipmentTemplate(instance.itemId)?.name ?? instance.itemId
 }
 
 function itemDescription(instance: EquipmentInstance): string | undefined {
-  return gameManager.getEquipmentTemplate(instance.itemId)?.description
+  return gameManager.equipmentOps.getEquipmentTemplate(instance.itemId)?.description
 }
 
 function itemIcon(instance: EquipmentInstance): string | undefined {
-  return instance.icon ?? gameManager.getEquipmentTemplate(instance.itemId)?.icon
+  return instance.icon ?? gameManager.equipmentOps.getEquipmentTemplate(instance.itemId)?.icon
 }
 
 // Tên ghép động (2026-08-15) — Phẩm · Set (nếu có) · Địa Giới+Tên gốc,
@@ -87,7 +87,7 @@ const nameSegmentsBySlot = computed<Record<EquipmentSlot, NameSegment[] | undefi
 
     // Audit fix 2026-08-31 — registry miss → hiển thị itemId thô thay vì
     // chết panel (composeEquipmentNameSegments đòi template thật).
-    const template = instance ? gameManager.getEquipmentTemplate(instance.itemId) : undefined
+    const template = instance ? gameManager.equipmentOps.getEquipmentTemplate(instance.itemId) : undefined
 
     result[entry.slot] = instance
       ? template
@@ -112,14 +112,14 @@ const tooltipBySlot = computed<Record<EquipmentSlot, EquipmentTooltipContent | u
 
     // Audit fix 2026-08-31 — registry miss → không tooltip (SlotView
     // tooltip optional), slot vẫn hiển thị, không chết panel.
-    const template = instance ? gameManager.getEquipmentTemplate(instance.itemId) : undefined
+    const template = instance ? gameManager.equipmentOps.getEquipmentTemplate(instance.itemId) : undefined
 
     result[entry.slot] = instance && template
       ? buildEquipmentTooltip(
           instance,
           template,
           gameManager.affixRegistry,
-          gameManager.getSlotState(entry.slot),
+          gameManager.equipmentOps.getSlotState(entry.slot),
           gameManager.zoneRegistry,
           undefined,
           gameManager.equipmentSystem.quoteMainStatRange(instance, gameManager.equipmentRegistry),

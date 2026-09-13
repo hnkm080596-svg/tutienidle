@@ -25,7 +25,7 @@ describe('R8.2 slice 2 — auto-breakthrough tick path via facade', () => {
 
     for (let i = 0; i < 3; i++) {
       addCultivation(player.$state, player.cultivationRequired)
-      const result = gameManager.breakthroughWithConsequences(player)
+      const result = gameManager.realmAdvanceOps.breakthroughWithConsequences(player)
       expect(result.kind).toBe('success')
     }
 
@@ -41,7 +41,7 @@ describe('R8.2 slice 2 — auto-breakthrough tick path via facade', () => {
     const pointsBefore = player.attributePoints
     const levelBefore = player.realmLevel
 
-    const result = gameManager.breakthroughWithConsequences(player)
+    const result = gameManager.realmAdvanceOps.breakthroughWithConsequences(player)
 
     expect(result.kind).toBe('failure')
     expect(player.realmLevel).toBe(levelBefore)

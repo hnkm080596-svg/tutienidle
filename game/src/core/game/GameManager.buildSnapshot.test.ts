@@ -59,25 +59,25 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
   it('cả 3 nguồn build cộng dồn đúng vào finalStats, rồi flow đúng vào battle.players[0].stats lúc vào trận', () => {
     const gameManager = new GameManager()
 
-    gameManager.registerTechniqueTemplates(TECHNIQUES)
-    gameManager.registerSkillTemplates(SKILLS)
-    gameManager.registerEquipment([TEST_WEAPON])
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerEquipment([TEST_WEAPON])
 
     const player = createDefaultPlayer()
 
     const attackBeforeAnyBuild = calculateStats(player.baseStats, [
       ...player.modifiers,
-      ...gameManager.getAggregatedModifiers(),
+      ...gameManager.effectOps.getAggregatedModifiers(),
     ]).attack
 
     // --- Class: chọn Kiếm Tu (path THẬT đã ship, không phải fixture)
     // — tự cấp Tâm Pháp (Technique) + 3 skill cố định.
     player.realmLevel = 12
-    expect(gameManager.chooseCultivationPath('kiem_tu', player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('kiem_tu', player)).toBe(true)
 
     const attackAfterClass = calculateStats(player.baseStats, [
       ...player.modifiers,
-      ...gameManager.getAggregatedModifiers(),
+      ...gameManager.effectOps.getAggregatedModifiers(),
     ]).attack
 
     // --- Equipment: trang bị vũ khí +50 attack (static modifier, KHÔNG
@@ -85,13 +85,13 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
     // đúng kiến trúc thật, xem stores/player.ts's finalStats).
     gameManager.equipmentBag.add(manualWeaponInstance())
 
-    expect(gameManager.equipItem('build-snapshot-test-1', player)).toEqual({ ok: true })
+    expect(gameManager.equipmentOps.equipItem('build-snapshot-test-1', player)).toEqual({ ok: true })
 
-    player.modifiers = gameManager.getEquipmentModifiers()
+    player.modifiers = gameManager.equipmentOps.getEquipmentModifiers()
 
     const attackAfterEquipment = calculateStats(player.baseStats, [
       ...player.modifiers,
-      ...gameManager.getAggregatedModifiers(),
+      ...gameManager.effectOps.getAggregatedModifiers(),
     ]).attack
 
     expect(attackAfterEquipment).toBeGreaterThanOrEqual(attackAfterClass + 50)
@@ -100,7 +100,7 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
     // 2026-08-29 — skill Thai Hư có specialization đã chuyển thành
     // passive node; giờ upgrade nguồn là skill insight cấp skill chủ
     // động của route).
-    gameManager.learnSkill('bat_kiem_thuat')
+    gameManager.progressionOps.learnSkill('bat_kiem_thuat')
     gameManager.skillSystem.equipToSlot('bat_kiem_thuat', 0)
 
     const rawSkill = gameManager.skillManager.get('bat_kiem_thuat')!
@@ -113,7 +113,7 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
     // battle.players[0].stats khi bắt đầu trận — không tính lại gì khác.
     const finalStats = calculateStats(player.baseStats, [
       ...player.modifiers,
-      ...gameManager.getAggregatedModifiers(),
+      ...gameManager.effectOps.getAggregatedModifiers(),
     ])
 
     expect(finalStats.attack).toBeGreaterThan(attackBeforeAnyBuild)

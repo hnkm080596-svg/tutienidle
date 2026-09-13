@@ -59,8 +59,8 @@ function battleReady(): { gameManager: GameManager; combatSource: ManualClockSou
   gameManager.setCombatClockSource(combatSource)
   const player = createPlayer()
 
-  gameManager.registerSkillTemplates([createBasicSkill()])
-  gameManager.learnSkill('basic_test')
+  gameManager.catalogOps.registerSkillTemplates([createBasicSkill()])
+  gameManager.progressionOps.learnSkill('basic_test')
   gameManager.skillSystem.equipToSlot('basic_test', 0)
   gameManager.startBattle(player, createDummy())
 
@@ -164,11 +164,11 @@ describe('QA regression — refight after turn-battle victory (smoke test eviden
     const player = createDefaultPlayer()
     const stats = calculateStats({ ...player.baseStats, attack: 100 }, [])
 
-    gameManager.registerEnemyTemplates([enemy])
-    gameManager.registerStages([stage])
+    gameManager.catalogOps.registerEnemyTemplates([enemy])
+    gameManager.catalogOps.registerStages([stage])
     gameManager.setActivePlayer(player)
 
-    expect(gameManager.startStage(player, stats, stage, false)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stats, stage, false)).toBe(true)
 
     // Run to victory
     for (let i = 0; i < 400 && gameManager.getTurnBattle()?.state !== 'victory'; i++) {
@@ -178,7 +178,7 @@ describe('QA regression — refight after turn-battle victory (smoke test eviden
     expect(gameManager.getTurnBattle()?.state).toBe('victory')
 
     // Refight — must succeed (was silently failing: StageManager.active stale)
-    expect(gameManager.startStage(player, stats, stage, false)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stats, stage, false)).toBe(true)
     expect(gameManager.getTurnBattle()?.state).toBe('intro')
     expect(gameManager.getTurnBattle()?.introTurnsRemaining).toBe(INTRO_TOTAL_TICKS)
   })
@@ -208,11 +208,11 @@ describe('Future Systems Task 10 — party manual pause', () => {
     const player = createDefaultPlayer()
     const stats = calculateStats({ ...player.baseStats, attack: 50 }, [])
 
-    gameManager.registerEnemyTemplates([enemy])
-    gameManager.registerStages([stage])
+    gameManager.catalogOps.registerEnemyTemplates([enemy])
+    gameManager.catalogOps.registerStages([stage])
     gameManager.setActivePlayer(player)
 
-    expect(gameManager.startStage(player, stats, stage, false)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stats, stage, false)).toBe(true)
 
     // Mô phỏng party 2 người: thêm players[1] với gauge ready ngay.
     const battle = gameManager.getTurnBattle()
@@ -264,12 +264,12 @@ describe('Gameplay fixes — refight chain', () => {
     const player = createDefaultPlayer()
     const stats = calculateStats({ ...player.baseStats, attack: 100, speed: 100 }, [])
 
-    gameManager.registerEnemyTemplates([enemy])
-    gameManager.registerStages([stage])
+    gameManager.catalogOps.registerEnemyTemplates([enemy])
+    gameManager.catalogOps.registerStages([stage])
     gameManager.setActivePlayer(player)
 
     for (let round = 1; round <= 3; round++) {
-      const started = gameManager.startStage(player, stats, stage, false)
+      const started = gameManager.turnBattleOps.startStage(player, stats, stage, false)
 
       expect(started, `round ${round}: startStage failed`).toBe(true)
 

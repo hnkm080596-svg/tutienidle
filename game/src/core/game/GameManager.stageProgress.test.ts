@@ -55,14 +55,14 @@ describe('getStageProgress alive count (A0 fix)', () => {
     const enemy = makeEnemy('a0_progress_dummy', 500)
     const stage = makeStage('a0_progress_stage', enemy.id, 2)
 
-    gameManager.registerEnemyTemplates([enemy])
-    gameManager.registerStages([stage])
+    gameManager.catalogOps.registerEnemyTemplates([enemy])
+    gameManager.catalogOps.registerStages([stage])
 
     const player = createDefaultPlayer()
     const stats = calculateStats({ ...player.baseStats, attack: 0 }, [])
 
     gameManager.setActivePlayer(player)
-    expect(gameManager.startStage(player, stats, stage, false)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stats, stage, false)).toBe(true)
 
     // Both enemies of the single wave materialize through the turn-based
     // telegraph; drive ticks until the arena is fully populated.
@@ -74,7 +74,7 @@ describe('getStageProgress alive count (A0 fix)', () => {
 
     // The core A0 assertion: alive is NOT the legacy 0 while enemies are
     // alive, and equals the count of living turn-based enemies.
-    const progress = gameManager.getStageProgress()
+    const progress = gameManager.turnBattleOps.getStageProgress()
     expect(progress).not.toBeNull()
     expect(progress!.alive).toBe(2)
     expect(progress!.spawned).toBe(2)
@@ -85,7 +85,7 @@ describe('getStageProgress alive count (A0 fix)', () => {
     const firstEnemy = gameManager.getTurnBattle()!.enemies[0]!
     gameManager.combatSystem.applyDirectDamage(firstEnemy.entity, 999_999, 'player')
 
-    const after = gameManager.getStageProgress()
+    const after = gameManager.turnBattleOps.getStageProgress()
     expect(after!.alive).toBe(1)
     expect(gameManager.getTurnBattle()!.enemies.filter((e) => e.entity.alive)).toHaveLength(1)
   })

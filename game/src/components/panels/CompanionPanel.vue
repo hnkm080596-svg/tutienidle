@@ -3,7 +3,7 @@
 // overlay listing owned companions grouped by grade, with a detail pane:
 // realm/tier, EXP bar, resolved stats, 6 Cung Menh pips + perk states,
 // skill list with unlock thresholds, and a feed control that calls
-// gameManager.feedCompanion(). Presentation only - the ops layer
+// gameManager.companionOps.feedCompanion(). Presentation only - the ops layer
 // re-validates every commit; this panel never derives outcomes (A7).
 //
 // Gating uses ui.standalonePanel, the same OverlayPanel pattern as
@@ -287,7 +287,7 @@ function onFeed() {
     return
   }
 
-  const result = gameManager.feedCompanion(entry.instance.instanceId, stack.material.id, Math.trunc(feedCount.value))
+  const result = gameManager.companionOps.feedCompanion(entry.instance.instanceId, stack.material.id, Math.trunc(feedCount.value))
 
   if (!result.ok) {
     useNotificationStore().push('warning', feedErrorMessage(result.reason))

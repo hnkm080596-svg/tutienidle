@@ -33,8 +33,8 @@ function buildGameManager() {
     rewards: { techniqueInsight: 0, spiritStone: 0 },
   })
 
-  gameManager.registerEnemyTemplates([enemy])
-  gameManager.registerStages([stageFixture('bound_stage', 'stage_probe')])
+  gameManager.catalogOps.registerEnemyTemplates([enemy])
+  gameManager.catalogOps.registerStages([stageFixture('bound_stage', 'stage_probe')])
   gameManager.setActivePlayer(player)
 
   return { gameManager, player, stats, enemy }
@@ -50,14 +50,14 @@ describe('GameManager.getActiveTurnBattleStage', () => {
   it('returns the stage that launched the current stage battle', () => {
     const { gameManager, player, stats } = buildGameManager()
 
-    expect(gameManager.startStage(player, stats, gameManager.getStage('bound_stage')!, false)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stats, gameManager.catalogOps.getStage('bound_stage')!, false)).toBe(true)
     expect(gameManager.getActiveTurnBattleStage()?.id).toBe('bound_stage')
   })
 
   it('does not leak a stale stage into a later non-stage battle', () => {
     const { gameManager, player, stats, enemy } = buildGameManager()
 
-    expect(gameManager.startStage(player, stats, gameManager.getStage('bound_stage')!, false)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stats, gameManager.catalogOps.getStage('bound_stage')!, false)).toBe(true)
     expect(gameManager.getActiveTurnBattleStage()?.id).toBe('bound_stage')
 
     // Tribulation-style battle: launched without a stage — the previous

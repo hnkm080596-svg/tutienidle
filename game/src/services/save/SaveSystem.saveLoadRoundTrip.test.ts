@@ -51,9 +51,9 @@ beforeEach(() => {
 function createBootedGameManager(): GameManager {
   const gameManager = new GameManager()
 
-  gameManager.registerMaterials(materials)
-  gameManager.registerEquipment(equipment)
-  gameManager.registerAffixes(affixes)
+  gameManager.catalogOps.registerMaterials(materials)
+  gameManager.catalogOps.registerEquipment(equipment)
+  gameManager.catalogOps.registerAffixes(affixes)
 
   return gameManager
 }
@@ -167,7 +167,7 @@ describe('SaveSystem — build/write/load round-trip (Task 3, double-serialize a
     const fresh = createBootedGameManager()
     const freshPlayer = createDefaultPlayer()
     fresh.setActivePlayer(freshPlayer)
-    const restoredModifiers = fresh.restoreFromSave(outcome.save as ReturnType<typeof buildGameSave>)
+    const restoredModifiers = fresh.saveOps.restoreFromSave(outcome.save as ReturnType<typeof buildGameSave>)
     expect(Array.isArray(restoredModifiers)).toBe(true)
     expect(fresh.decomposeSystem.getSettings()).toEqual({
       gradeFilter: 'all',

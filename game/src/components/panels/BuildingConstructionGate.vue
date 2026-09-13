@@ -78,7 +78,7 @@ function requestBuild() {
 function build() {
   confirmOpen.value = false
 
-  if (gameManager.buildBuilding(props.buildingId, player.$state)) {
+  if (gameManager.buildingOps.buildBuilding(props.buildingId, player.$state)) {
     bumpState()
   }
 }

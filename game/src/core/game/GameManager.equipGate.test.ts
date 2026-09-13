@@ -10,7 +10,7 @@ import { equipment } from '../../data/equipment/equipment'
 describe('GameManager — equipItem() grade gate (rework P5, Task 16)', () => {
   function setup() {
     const manager = new GameManager()
-    manager.registerEquipment(equipment)
+    manager.catalogOps.registerEquipment(equipment)
     const player = createDefaultPlayer()
     return { manager, player }
   }
@@ -26,7 +26,7 @@ describe('GameManager — equipItem() grade gate (rework P5, Task 16)', () => {
     })
     manager.equipmentBag.add(instance)
 
-    expect(manager.equipItem(instance.instanceId, player)).toEqual({ ok: true })
+    expect(manager.equipmentOps.equipItem(instance.instanceId, player)).toEqual({ ok: true })
     expect(instance.equipped).toBe(true)
   })
 
@@ -41,7 +41,7 @@ describe('GameManager — equipItem() grade gate (rework P5, Task 16)', () => {
     })
     manager.equipmentBag.add(instance)
 
-    expect(manager.equipItem(instance.instanceId, player)).toEqual({
+    expect(manager.equipmentOps.equipItem(instance.instanceId, player)).toEqual({
       ok: false,
       reason: 'grade_mismatch',
     })
@@ -59,7 +59,7 @@ describe('GameManager — equipItem() grade gate (rework P5, Task 16)', () => {
     })
     manager.equipmentBag.add(instance)
 
-    expect(manager.equipItem(instance.instanceId, player)).toEqual({
+    expect(manager.equipmentOps.equipItem(instance.instanceId, player)).toEqual({
       ok: false,
       reason: 'grade_mismatch',
     })
@@ -78,13 +78,13 @@ describe('GameManager — equipItem() grade gate (rework P5, Task 16)', () => {
     })
     manager.equipmentBag.add(instance)
 
-    expect(manager.equipItem(instance.instanceId, player)).toEqual({ ok: true })
+    expect(manager.equipmentOps.equipItem(instance.instanceId, player)).toEqual({ ok: true })
   })
 
   it('instanceId không tồn tại → not_found', () => {
     const { manager, player } = setup()
 
-    expect(manager.equipItem('does-not-exist', player)).toEqual({
+    expect(manager.equipmentOps.equipItem('does-not-exist', player)).toEqual({
       ok: false,
       reason: 'not_found',
     })

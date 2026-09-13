@@ -13,7 +13,7 @@ import type { PlayerData } from '../player/Player'
 function makeManager(): GameManager {
   const manager = new GameManager()
 
-  manager.registerBuildings(buildings)
+  manager.catalogOps.registerBuildings(buildings)
 
   return manager
 }
@@ -30,18 +30,18 @@ describe('GameManager — worker capacity nguồn CHQ duy nhất', () => {
     manager.setActivePlayer(player)
 
     // Xây CHQ level 1 (canBuild qua buildingSystem — chi phí [] band đầu).
-    expect(manager.buildBuilding('chi_hien_quan', player)).not.toBe(false)
+    expect(manager.buildingOps.buildBuilding('chi_hien_quan', player)).not.toBe(false)
 
     const instance = manager.buildingManager.getByBuildingId('chi_hien_quan')!
 
     expect(player.autoWorkerCapacity).toBe(3)
 
     instance.level = 2
-    manager.refreshAutoWorkerCapacity(player, instance)
+    manager.buildingOps.refreshAutoWorkerCapacity(player, instance)
     expect(player.autoWorkerCapacity).toBe(5)
 
     instance.level = 9
-    manager.refreshAutoWorkerCapacity(player, instance)
+    manager.buildingOps.refreshAutoWorkerCapacity(player, instance)
     expect(player.autoWorkerCapacity).toBe(19)
   })
 
@@ -64,7 +64,7 @@ describe('GameManager — worker capacity nguồn CHQ duy nhất', () => {
     const outpost = buildInstance('outpost_inst', 'gathering_outpost', 9)
 
     manager.buildingManager.add(outpost)
-    manager.refreshAutoWorkerCapacity(player, outpost)
+    manager.buildingOps.refreshAutoWorkerCapacity(player, outpost)
 
     expect(player.autoWorkerCapacity).toBe(0)
   })
@@ -76,7 +76,7 @@ describe('GameManager — worker capacity nguồn CHQ duy nhất', () => {
     manager.setActivePlayer(player)
 
     // save.buildings chứa CHQ level 2 — restore phải re-apply capacity 5.
-    manager.restoreFromSave({
+    manager.saveOps.restoreFromSave({
       version: CURRENT_SAVE_VERSION,
       player: { ...player, autoWorkerCapacity: 0 },
       techniques: [],
@@ -106,7 +106,7 @@ describe('GameManager — assignWorkers (UI phân bổ, INV-CHQ-10)', () => {
     const chq = buildInstance('chq_inst', 'chi_hien_quan', capacityLevel)
 
     manager.buildingManager.add(chq)
-    manager.refreshAutoWorkerCapacity(player, chq)
+    manager.buildingOps.refreshAutoWorkerCapacity(player, chq)
 
     // Đăng ký production sites thật (THANH_VAN) để assignWorkers có state.
     const siteId = THANH_VAN_PRODUCTION_SITES[0]!.siteId
@@ -119,7 +119,7 @@ describe('GameManager — assignWorkers (UI phân bổ, INV-CHQ-10)', () => {
   it('clamp: count > capacity → gán bằng capacity', () => {
     const { manager, siteId } = managerWithChq(1) // capacity 3
 
-    manager.assignWorkers(siteId, 99)
+    manager.buildingOps.assignWorkers(siteId, 99)
 
     expect(manager.productionSystem.getState(siteId)?.assignedWorkers).toBe(3)
   })
@@ -127,18 +127,18 @@ describe('GameManager — assignWorkers (UI phân bổ, INV-CHQ-10)', () => {
   it('clamp: count âm → 0; NaN → 0 (UI path an toàn)', () => {
     const { manager, siteId } = managerWithChq(2) // capacity 5
 
-    manager.assignWorkers(siteId, -7)
+    manager.buildingOps.assignWorkers(siteId, -7)
     expect(manager.productionSystem.getState(siteId)?.assignedWorkers).toBe(0)
 
-    manager.assignWorkers(siteId, Number.NaN)
+    manager.buildingOps.assignWorkers(siteId, Number.NaN)
     expect(manager.productionSystem.getState(siteId)?.assignedWorkers).toBe(0)
   })
 
   it('undefined → xóa assignment (về auto)', () => {
     const { manager, siteId } = managerWithChq(2)
 
-    manager.assignWorkers(siteId, 2)
-    manager.assignWorkers(siteId, undefined)
+    manager.buildingOps.assignWorkers(siteId, 2)
+    manager.buildingOps.assignWorkers(siteId, undefined)
 
     expect(manager.productionSystem.getState(siteId)?.assignedWorkers).toBeUndefined()
   })
@@ -146,13 +146,13 @@ describe('GameManager — assignWorkers (UI phân bổ, INV-CHQ-10)', () => {
   it('site không tồn tại → no-op không crash', () => {
     const { manager } = managerWithChq(1)
 
-    expect(() => manager.assignWorkers('khong_co_site_nao', 3)).not.toThrow()
+    expect(() => manager.buildingOps.assignWorkers('khong_co_site_nao', 3)).not.toThrow()
   })
 
   it('floor: số thập phân → floor', () => {
     const { manager, siteId } = managerWithChq(3) // capacity 7
 
-    manager.assignWorkers(siteId, 2.9)
+    manager.buildingOps.assignWorkers(siteId, 2.9)
 
     expect(manager.productionSystem.getState(siteId)?.assignedWorkers).toBe(2)
   })
@@ -172,19 +172,19 @@ describe('GameManager - R7 full-tick wiring guard (P13 class)', () => {
     // CHQ level 3 -> capacity 7 via the capacity authority.
     const chq = buildInstance('chq_inst', 'chi_hien_quan', 3)
     manager.buildingManager.add(chq)
-    manager.refreshAutoWorkerCapacity(player, chq)
+    manager.buildingOps.refreshAutoWorkerCapacity(player, chq)
     expect(player.autoWorkerCapacity).toBe(7)
 
     // Decompose claims 2 workers. In the real app the tick loop has
     // already supplied capacity before the player can touch the slider
     // (first update runs at boot); mirror that order here.
-    manager.update(1)
+    manager.tickOps.update(1)
     manager.decomposeSystem.setSetting({ workers: 2 })
     for (const definition of manager.productionSystem.getSiteDefinitions()) {
-      manager.setProductionAutoRestart(definition.siteId, true)
+      manager.buildingOps.setProductionAutoRestart(definition.siteId, true)
     }
 
-    manager.update(1)
+    manager.tickOps.update(1)
 
     // Decompose got the LIVE capacity (not the old constant 0) and
     // its settings survived the tick's clamp pass.

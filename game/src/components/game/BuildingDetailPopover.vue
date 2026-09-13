@@ -26,7 +26,7 @@ const isBusy = ref(false)
 const template = computed(() => {
   stateVersion.value
 
-  return gameManager.getBuildingDefinitions().find((entry) => entry.id === props.buildingId)
+  return gameManager.buildingOps.getBuildingDefinitions().find((entry) => entry.id === props.buildingId)
 })
 
 const instance = computed(() => {
@@ -44,7 +44,7 @@ const instance = computed(() => {
 const canBuild = computed(() => {
   stateVersion.value
 
-  return !instance.value && gameManager.canBuildBuilding(props.buildingId, player.$state)
+  return !instance.value && gameManager.buildingOps.canBuildBuilding(props.buildingId, player.$state)
 })
 
 const buildCost = computed(() => template.value?.upgradeCost[0] ?? [])
@@ -70,7 +70,7 @@ async function build() {
   isBusy.value = true
 
   try {
-    const wasBuilt = gameManager.buildBuilding(props.buildingId, player.$state, Date.now() / 1000)
+    const wasBuilt = gameManager.buildingOps.buildBuilding(props.buildingId, player.$state, Date.now() / 1000)
 
     if (wasBuilt && template.value?.functionType) {
       ui.openLeftPanel(template.value.functionType as Exclude<LeftPanelMode, null>)

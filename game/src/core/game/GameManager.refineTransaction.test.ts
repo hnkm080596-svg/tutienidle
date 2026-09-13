@@ -20,9 +20,9 @@ describe('GameManager refine transaction', () => {
 
     const manager = new GameManager()
     const player = createDefaultPlayer()
-    manager.registerMaterials(materials)
-    manager.registerEquipment(equipment)
-    manager.registerAffixes(affixes)
+    manager.catalogOps.registerMaterials(materials)
+    manager.catalogOps.registerEquipment(equipment)
+    manager.catalogOps.registerAffixes(affixes)
 
     const instance = makeInstance({
       instanceId: 'refine-transaction-item',
@@ -41,18 +41,18 @@ describe('GameManager refine transaction', () => {
       affixes: [{ affixId: 'suffix_accuracy', tier: 1, value: 3 }],
     })
     manager.equipmentBag.add(instance)
-    expect(manager.equipItem(instance.instanceId, player)).toEqual({ ok: true })
+    expect(manager.equipmentOps.equipItem(instance.instanceId, player)).toEqual({ ok: true })
 
     manager.materialBag.add(manager.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID), 5)
     manager.materialBag.add(manager.materialRegistry.get(SPIRIT_STONE_MATERIAL_ID), 50)
     const identityBefore = structuredClone(instance.affixes)
-    const modifiersBefore = structuredClone(manager.getEquipmentModifiers())
+    const modifiersBefore = structuredClone(manager.equipmentOps.getEquipmentModifiers())
     const accuracyBefore = modifiersBefore.find(
       (modifier) => modifier.id === `${instance.instanceId}:accuracyRating`,
     )
     expect(accuracyBefore).toBeDefined()
 
-    const preview = manager.previewRefineItem(instance.instanceId, [])
+    const preview = manager.equipmentOps.previewRefineItem(instance.instanceId, [])
 
     expect(preview.ok).toBe(true)
     expect(preview.values).toHaveLength(1)
@@ -62,9 +62,9 @@ describe('GameManager refine transaction', () => {
     expect(instance.forgeUsesRemaining).toBe(19)
     expect(manager.materialBag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(0)
     expect(manager.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(0)
-    expect(manager.getEquipmentModifiers()).toEqual(modifiersBefore)
+    expect(manager.equipmentOps.getEquipmentModifiers()).toEqual(modifiersBefore)
 
-    expect(manager.commitRefineItem(instance.instanceId, preview.values ?? []).ok).toBe(true)
+    expect(manager.equipmentOps.commitRefineItem(instance.instanceId, preview.values ?? []).ok).toBe(true)
     expect(instance.affixes).toEqual([
       { affixId: 'suffix_accuracy', tier: 1, value: preview.values![0]!.value },
     ])
@@ -72,7 +72,7 @@ describe('GameManager refine transaction', () => {
     expect(manager.materialBag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(0)
     expect(manager.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(0)
     const committedAccuracy = manager
-      .getEquipmentModifiers()
+      .equipmentOps.getEquipmentModifiers()
       .find((modifier) => modifier.id === `${instance.instanceId}:accuracyRating`)
     expect(committedAccuracy).toBeDefined()
     expect(committedAccuracy!.flat).toBeGreaterThan(accuracyBefore!.flat ?? 0)
@@ -86,10 +86,10 @@ describe('GameManager refine transaction', () => {
     }
 
     const restoredManager = new GameManager()
-    restoredManager.registerMaterials(materials)
-    restoredManager.registerEquipment(equipment)
-    restoredManager.registerAffixes(affixes)
-    restoredManager.restoreFromSave(validated.normalizedSave as ReturnType<typeof buildGameSave>)
+    restoredManager.catalogOps.registerMaterials(materials)
+    restoredManager.catalogOps.registerEquipment(equipment)
+    restoredManager.catalogOps.registerAffixes(affixes)
+    restoredManager.saveOps.restoreFromSave(validated.normalizedSave as ReturnType<typeof buildGameSave>)
 
     expect(restoredManager.equipmentBag.get(instance.instanceId)).toMatchObject({
       affixes: [{ affixId: 'suffix_accuracy', tier: 1, value: preview.values![0]!.value }],
@@ -100,7 +100,7 @@ describe('GameManager refine transaction', () => {
     expect(restoredManager.materialBag.getAmount(SPIRIT_STONE_MATERIAL_ID)).toBe(0)
     expect(
       restoredManager
-        .getEquipmentModifiers()
+        .equipmentOps.getEquipmentModifiers()
         .find((modifier) => modifier.id === `${instance.instanceId}:accuracyRating`),
     ).toEqual(committedAccuracy)
   })
@@ -125,9 +125,9 @@ describe('GameManager refine transaction', () => {
     (_case, corruptReference, expectedError) => {
     const manager = new GameManager()
     const player = createDefaultPlayer()
-    manager.registerMaterials(materials)
-    manager.registerEquipment(equipment)
-    manager.registerAffixes(affixes)
+    manager.catalogOps.registerMaterials(materials)
+    manager.catalogOps.registerEquipment(equipment)
+    manager.catalogOps.registerAffixes(affixes)
     manager.materialBag.add(manager.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID), 3)
     const firstValid = makeInstance({
       instanceId: 'valid-before-unknown-reference',
@@ -161,15 +161,15 @@ describe('GameManager refine transaction', () => {
     corruptReference(save)
 
     const restored = new GameManager()
-    restored.registerMaterials(materials)
-    restored.registerEquipment(equipment)
-    restored.registerAffixes(affixes)
+    restored.catalogOps.registerMaterials(materials)
+    restored.catalogOps.registerEquipment(equipment)
+    restored.catalogOps.registerAffixes(affixes)
     restored.materialBag.add(restored.materialRegistry.get(LUYEN_KHI_TINH_HOA_ID), 11)
 
-    expect(() => restored.restoreFromSave(save)).toThrow(expectedError)
+    expect(() => restored.saveOps.restoreFromSave(save)).toThrow(expectedError)
     expect(restored.equipmentBag.getAll()).toEqual([])
     expect(restored.materialBag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(11)
-    expect(restored.getEquipmentModifiers()).toEqual([])
+    expect(restored.equipmentOps.getEquipmentModifiers()).toEqual([])
     },
   )
 })

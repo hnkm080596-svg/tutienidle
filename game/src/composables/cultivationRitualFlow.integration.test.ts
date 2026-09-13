@@ -30,35 +30,35 @@ describe('chuỗi nghi lễ tu luyện Pháp Tu', () => {
     const gameManager = new GameManager()
     const player = usePlayerStore()
 
-    gameManager.registerSkillTemplates(SKILLS)
-    gameManager.registerTechniqueTemplates(TECHNIQUES)
-    gameManager.registerProgressionNodes(PHAP_TU_NODES)
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerTechniqueTemplates(TECHNIQUES)
+    gameManager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
 
     player.realmLevel = 12
     player.baseStats.defense = 10_000
     player.baseStats.maxHp = 500_000
 
     expect(triggerBreakthroughAction(player, gameManager)).toBe(true)
-    gameManager.update(tribulationTotalSeconds('qi_refining'))
+    gameManager.tickOps.update(tribulationTotalSeconds('qi_refining'))
     expect(checkTribulationOutcomeAction(player, gameManager)).toBe(true)
     expect(player.realmId).toBe('mortal')
     expect(useUiStore().standalonePanel).toBe('quan_khi')
 
-    expect(gameManager.chooseCultivationPath('phap_tu', player.$state)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', player.$state)).toBe(true)
     expect(player.realmId).toBe('qi_refining')
     expect(player.realmLevel).toBe(1)
 
     player.realmLevel = 12
 
     expect(triggerBreakthroughAction(player, gameManager)).toBe(true)
-    gameManager.update(tribulationTotalSeconds('foundation_establishment'))
+    gameManager.tickOps.update(tribulationTotalSeconds('foundation_establishment'))
     expect(checkTribulationOutcomeAction(player, gameManager)).toBe(true)
 
     expect(player.realmId).toBe('foundation_establishment')
     expect(player.realmLevel).toBe(1)
     expect(player.artifact?.artifactId).toBe('ngu_hanh_chau')
     expect(gameManager.techniqueManager.getEquipped()?.id).toBe('dai_ngu_hanh_quyet_truc_co')
-    expect(gameManager.getAggregatedModifiers(player.$state).filter(
+    expect(gameManager.effectOps.getAggregatedModifiers(player.$state).filter(
       modifier => modifier.sourceId === 'phap_tu',
     )).toHaveLength(3)
   })

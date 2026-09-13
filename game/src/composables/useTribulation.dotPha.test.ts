@@ -39,7 +39,7 @@ describe('Snapshot hoàn hảo Phàm Nhân (spec §4.2)', () => {
     player.bodyRefinementCompletedTiers = 6
     player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
 
-    expect(gameManager.chooseCultivationPath('phap_tu', player.$state)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', player.$state)).toBe(true)
     expect(player.mortalPerfectionAchieved).toBe(true)
   })
 
@@ -52,7 +52,7 @@ describe('Snapshot hoàn hảo Phàm Nhân (spec §4.2)', () => {
     player.bodyRefinementCompletedTiers = 6
     player.baseStats = { ...player.baseStats, strength: 9, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
 
-    expect(gameManager.chooseCultivationPath('phap_tu', player.$state)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', player.$state)).toBe(true)
     expect(player.mortalPerfectionAchieved).toBe(false)
 
     // Reset để chọn lại (case 2: đủ stat nhưng Luyện Th thể 5/6)
@@ -62,7 +62,7 @@ describe('Snapshot hoàn hảo Phàm Nhân (spec §4.2)', () => {
     player.bodyRefinementCompletedTiers = 5
     player.baseStats = { ...player.baseStats, strength: 10 }
 
-    expect(gameManager.chooseCultivationPath('phap_tu', player.$state)).toBe(true)
+    expect(gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', player.$state)).toBe(true)
     expect(player.mortalPerfectionAchieved).toBe(false)
   })
 
@@ -73,7 +73,7 @@ describe('Snapshot hoàn hảo Phàm Nhân (spec §4.2)', () => {
     player.bodyRefinementCompletedTiers = 6
     player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
 
-    gameManager.chooseCultivationPath('phap_tu', player.$state)
+    gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', player.$state)
     expect(player.mortalPerfectionAchieved).toBe(true)
 
     // Sau khi vào Luyện Khí, "hoàn hảo" không đổi dù stat/luyện thể đổi
@@ -102,7 +102,7 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
 
   it('thắng kiếp Đại Đạo Trúc Cơ: Phàm Cốt chuyển thành Phàm Nhân Chi Cốt + highestFoundationAchieved = great_dao', () => {
     const gameManager = new GameManager()
-    gameManager.registerPills(pills)
+    gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
 
     // Dựng nhân vật đủ mọi điều kiện Đại Đạo
@@ -113,7 +113,7 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
 
     // Quán Khí trước (vào Luyện Khí)
-    gameManager.chooseCultivationPath('phap_tu', player.$state)
+    gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', player.$state)
     expect(player.realmId).toBe('qi_refining')
 
     // Đầu tư tiếp để đủ điều kiện Đại Đạo ở Luyện Khí
@@ -127,17 +127,17 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     const stats = createBaseStats({ maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
 
     expect(gameManager.startTribulation(player.$state, stats, 'foundation_establishment')).toBe(true)
-    expect(gameManager.getActiveTribulation()!.grade).toBe('great_dao')
+    expect(gameManager.tribulationDirector.getState()!.grade).toBe('great_dao')
 
     // Trôi hết kiếp + trả lời đúng mọi câu
     let guard = 0
-    while (gameManager.getActiveTribulation()?.state === 'ongoing' && guard++ < 5000) {
-      gameManager.update(1)
-      const q = gameManager.getActiveTribulation()!.currentQuestion
-      if (q) gameManager.answerTribulationQuestion(q.correctAnswerIndex)
+    while (gameManager.tribulationDirector.getState()?.state === 'ongoing' && guard++ < 5000) {
+      gameManager.tickOps.update(1)
+      const q = gameManager.tribulationDirector.getState()!.currentQuestion
+      if (q) gameManager.tribulationDirector.answerQuestion(q.correctAnswerIndex)
     }
 
-    expect(gameManager.getActiveTribulation()!.state).toBe('victory')
+    expect(gameManager.tribulationDirector.getState()!.state).toBe('victory')
     checkTribulationOutcomeAction(player, gameManager)
 
     expect(player.highestFoundationAchieved).toBe('great_dao')
@@ -148,7 +148,7 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
 
   it('thua kiếp Đại Đạo: greatDaoOpportunityLost vĩnh viễn + KHÔNG đổi talent; lần xét sau cap Thiên', () => {
     const gameManager = new GameManager()
-    gameManager.registerPills(pills)
+    gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
 
     player.selectedTalentIds = ['pham_cot']
@@ -156,7 +156,7 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     player.bodyRefinementCompletedTiers = 6
     player.mortalPerfectionAchieved = true
     player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
-    gameManager.chooseCultivationPath('phap_tu', player.$state)
+    gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', player.$state)
 
     player.realmLevel = 18
     player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
@@ -167,16 +167,16 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     const stats = createBaseStats({ maxHp: 1, defense: 0, hpRegenPerTurn: 0 })
 
     expect(gameManager.startTribulation(player.$state, stats, 'foundation_establishment')).toBe(true)
-    expect(gameManager.getActiveTribulation()!.grade).toBe('great_dao')
+    expect(gameManager.tribulationDirector.getState()!.grade).toBe('great_dao')
 
     let guard = 0
-    while (gameManager.getActiveTribulation()?.state === 'ongoing' && guard++ < 5000) {
-      gameManager.update(1)
-      const q = gameManager.getActiveTribulation()!.currentQuestion
-      if (q) gameManager.answerTribulationQuestion(q.correctAnswerIndex)
+    while (gameManager.tribulationDirector.getState()?.state === 'ongoing' && guard++ < 5000) {
+      gameManager.tickOps.update(1)
+      const q = gameManager.tribulationDirector.getState()!.currentQuestion
+      if (q) gameManager.tribulationDirector.answerQuestion(q.correctAnswerIndex)
     }
 
-    expect(gameManager.getActiveTribulation()!.state).toBe('defeat')
+    expect(gameManager.tribulationDirector.getState()!.state).toBe('defeat')
     checkTribulationOutcomeAction(player, gameManager)
 
     expect(player.greatDaoOpportunityLost).toBe(true)
@@ -189,7 +189,7 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     const stats2 = createBaseStats({ maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
     expect(gameManager.startTribulation(player.$state, stats2, 'foundation_establishment')).toBe(true)
-    expect(gameManager.getActiveTribulation()!.grade).toBe('heaven')
+    expect(gameManager.tribulationDirector.getState()!.grade).toBe('heaven')
   })
 })
 
@@ -205,7 +205,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
 
   it('victory realm mới → mọi item equipped=false + modifier equipment sync rỗng; slot state GIỮ enhanceLevel', () => {
     const gameManager = new GameManager()
-    gameManager.registerPills(pills)
+    gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
 
     player.selectedTalentIds = ['pham_cot']
@@ -213,7 +213,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
     player.bodyRefinementCompletedTiers = 6
     player.mortalPerfectionAchieved = true
     player.baseStats = { ...player.baseStats, strength: 10, dexterity: 10, intelligence: 10, attunement: 10, vitality: 10 }
-    gameManager.chooseCultivationPath('phap_tu', player.$state)
+    gameManager.realmAdvanceOps.chooseCultivationPath('phap_tu', player.$state)
     expect(player.realmId).toBe('qi_refining')
 
     // Mặc 1 món đồ ĐÚNG phẩm hiện tại (qi_refining → bat_pham, Task 16 gate).
@@ -232,7 +232,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
       gameManager.equipmentSlotManager,
       gameManager.affixRegistry,
     )
-    player.setEquipmentModifiers(gameManager.getEquipmentModifiers())
+    player.setEquipmentModifiers(gameManager.equipmentOps.getEquipmentModifiers())
     expect(player.modifiers.some((m) => m.sourceType === 'equipment')).toBe(true)
 
     // Đầu tư đủ điều kiện Trúc Cơ (nhánh heaven, không cần great_dao).
@@ -244,13 +244,13 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
     expect(gameManager.startTribulation(player.$state, stats, 'foundation_establishment')).toBe(true)
 
     let guard = 0
-    while (gameManager.getActiveTribulation()?.state === 'ongoing' && guard++ < 5000) {
-      gameManager.update(1)
-      const q = gameManager.getActiveTribulation()!.currentQuestion
-      if (q) gameManager.answerTribulationQuestion(q.correctAnswerIndex)
+    while (gameManager.tribulationDirector.getState()?.state === 'ongoing' && guard++ < 5000) {
+      gameManager.tickOps.update(1)
+      const q = gameManager.tribulationDirector.getState()!.currentQuestion
+      if (q) gameManager.tribulationDirector.answerQuestion(q.correctAnswerIndex)
     }
 
-    expect(gameManager.getActiveTribulation()!.state).toBe('victory')
+    expect(gameManager.tribulationDirector.getState()!.state).toBe('victory')
     checkTribulationOutcomeAction(player, gameManager)
 
     expect(player.realmId).toBe('foundation_establishment')
@@ -266,7 +266,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
 
   it('triggerBreakthroughAction auto-unequip TRƯỚC khi vào kiếp', () => {
     const gameManager = new GameManager()
-    gameManager.registerPills(pills)
+    gameManager.catalogOps.registerPills(pills)
     const player = usePlayerStore()
 
     player.realmId = 'qi_refining'
@@ -286,7 +286,7 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
       gameManager.equipmentSlotManager,
       gameManager.affixRegistry,
     )
-    player.setEquipmentModifiers(gameManager.getEquipmentModifiers())
+    player.setEquipmentModifiers(gameManager.equipmentOps.getEquipmentModifiers())
     expect(player.modifiers.some((m) => m.sourceType === 'equipment')).toBe(true)
 
     expect(triggerBreakthroughAction(player, gameManager)).toBe(true)
@@ -294,6 +294,6 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
     expect(gameManager.equipmentBag.getEquipped()).toHaveLength(0)
     // Modifier equipment đã sync rỗng NGAY lúc trigger (trước cả resolveVictory).
     expect(player.modifiers.some((m) => m.sourceType === 'equipment')).toBe(false)
-    expect(gameManager.getActiveTribulation()).not.toBeNull()
+    expect(gameManager.tribulationDirector.getState()).not.toBeNull()
   })
 })

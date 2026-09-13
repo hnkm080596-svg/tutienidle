@@ -78,7 +78,7 @@ function discardPendingTicket() {
 const washCost = computed(() => {
   stateVersion.value
 
-  return gameManager.getWashCost(selectedRow.value?.quality ?? ITEM_QUALITY_ORDER[0]!)
+  return gameManager.equipmentOps.getWashCost(selectedRow.value?.quality ?? ITEM_QUALITY_ORDER[0]!)
 })
 
 const washSpiritStoneCostName = computed(() =>

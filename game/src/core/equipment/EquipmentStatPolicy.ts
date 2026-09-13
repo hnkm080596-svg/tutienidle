@@ -142,7 +142,7 @@ export function isValidEquipmentSubstat(slot: EquipmentSlot, stat: StatType): bo
   return !isForbiddenEquipmentStat(stat) && EQUIPMENT_SLOT_STAT_POLICY[slot].substats.includes(stat)
 }
 
-// Dùng chung bởi GameManager.registerEquipment() (validate 1 lần lúc
+// Dùng chung bởi GameManager.catalogOps.registerEquipment() (validate 1 lần lúc
 // startup, TASK.md yêu cầu) VÀ EquipmentSystem.createInstance() (validate
 // lại lúc roll, phòng template lọt qua chưa đăng ký) — tránh 2 nơi tự copy
 // cùng 1 rule rồi lệch nhau khi rule đổi.

@@ -64,8 +64,8 @@ describe('GameManager.buildTurnBattle — reads DEFAULT_PARTY_FORMATION when no 
     const gameManager = new GameManager()
     const player = createPlayer()
 
-    gameManager.registerSkillTemplates([createBasicSkill()])
-    gameManager.learnSkill('basic_test')
+    gameManager.catalogOps.registerSkillTemplates([createBasicSkill()])
+    gameManager.progressionOps.learnSkill('basic_test')
     gameManager.skillSystem.equipToSlot('basic_test', 0)
     gameManager.startBattle(player, createDummy())
 
@@ -114,8 +114,8 @@ describe('GameManager.buildTurnBattle — resolves a real FormationLoadout, incl
       const playerEntity = createPlayer()
       const playerData = createDefaultPlayer()
 
-      gameManager.registerSkillTemplates([createBasicSkill()])
-      gameManager.learnSkill('basic_test')
+      gameManager.catalogOps.registerSkillTemplates([createBasicSkill()])
+      gameManager.progressionOps.learnSkill('basic_test')
       gameManager.skillSystem.equipToSlot('basic_test', 0)
 
       // formationLoadout phải set TRƯỚC setActivePlayer/startBattle —
@@ -186,8 +186,8 @@ describe('GameManager.buildTurnBattle — formation buff definitionId không res
       const playerEntity = createPlayer()
       const playerData = createDefaultPlayer()
 
-      gameManager.registerSkillTemplates([createBasicSkill()])
-      gameManager.learnSkill('basic_test')
+      gameManager.catalogOps.registerSkillTemplates([createBasicSkill()])
+      gameManager.progressionOps.learnSkill('basic_test')
       gameManager.skillSystem.equipToSlot('basic_test', 0)
 
       playerData.formationLoadout = {

@@ -11,7 +11,7 @@ import { CURRENT_SAVE_VERSION } from '../../services/save/saveVersion'
 
 function makeManager(player?: PlayerData): { manager: GameManager; player: PlayerData } {
   const manager = new GameManager()
-  manager.registerQuests(QUESTS)
+  manager.catalogOps.registerQuests(QUESTS)
   const resolved = player ?? createDefaultPlayer()
   manager.setActivePlayer(resolved)
   return { manager, player: resolved }
@@ -48,7 +48,7 @@ describe('QA R8.1 - restore-boundary quest lifecycle', () => {
     })
 
     const target = makeManager()
-    target.manager.restoreFromSave(save)
+    target.manager.saveOps.restoreFromSave(save)
 
     // Reconcile must converge eligibility WITHOUT zeroing banked progress.
     expect(target.manager.questManager.getProgress(DAILY_ID)!.progress).toBe(7)
@@ -65,7 +65,7 @@ describe('QA R8.1 - restore-boundary quest lifecycle', () => {
     })
 
     const target = makeManager()
-    target.manager.restoreFromSave(save)
+    target.manager.saveOps.restoreFromSave(save)
 
     expect(target.manager.questManager.getProgress(ONCE_ID)).toBeUndefined()
   })
@@ -80,8 +80,8 @@ describe('QA R8.1 - restore-boundary quest lifecycle', () => {
     })
 
     const target = makeManager()
-    target.manager.restoreFromSave(save)
-    target.manager.update(1)
+    target.manager.saveOps.restoreFromSave(save)
+    target.manager.tickOps.update(1)
 
     // Day rolled over: board rebuilt with zero progress (v1 semantics),
     // then normal kills count without any UI read.
@@ -107,9 +107,9 @@ describe('QA R8.1 - restore-boundary quest lifecycle', () => {
     })
 
     const target = makeManager()
-    target.manager.restoreFromSave(save) // reconcile #1 (restore boundary)
-    target.manager.update(1) // reconcile #2 may run via tick paths
-    target.manager.reconcileQuestLifecycle() // explicit #3
+    target.manager.saveOps.restoreFromSave(save) // reconcile #1 (restore boundary)
+    target.manager.tickOps.update(1) // reconcile #2 may run via tick paths
+    target.manager.tickOps.reconcileQuestLifecycle() // explicit #3
 
     const activeIds = target.manager.questManager.getActive().map((p) => p.questId)
     const unique = new Set(activeIds)

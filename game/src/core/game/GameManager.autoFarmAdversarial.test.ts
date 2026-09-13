@@ -17,8 +17,8 @@ describe('Adversarial — offline auto-farm invariants (QA quick)', () => {
   it('settle tiến lastCheckedMs ĐÚNG bằng cycles đã roll (2 cycles trên 120s)', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
-    gameManager.registerEnemyTemplates([DUMMY])
-    gameManager.registerStages([STAGE])
+    gameManager.catalogOps.registerEnemyTemplates([DUMMY])
+    gameManager.catalogOps.registerStages([STAGE])
     player.perfectClearStageIds.push('adv_stage')
     player.perfectClearSeconds['adv_stage'] = 100 // cycle 50s
 
@@ -26,7 +26,7 @@ describe('Adversarial — offline auto-farm invariants (QA quick)', () => {
     player.autoFarmStage = { stageId: 'adv_stage', lastCheckedMs }
 
     // Settle 120s = 2 cycles (50s mỗi cycle) + 20s dư → lastCheckedMs tiến 100s.
-    gameManager.settleAutoFarmOffline(player, 120)
+    gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, 120)
     const afterFirst = player.autoFarmStage!.lastCheckedMs
 
     expect(afterFirst).toBeGreaterThanOrEqual(lastCheckedMs + 100_000 - 1000)
@@ -36,15 +36,15 @@ describe('Adversarial — offline auto-farm invariants (QA quick)', () => {
   it('elapsed ÂM (clock rollback) → no-op, lastCheckedMs KHÔNG lùi', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
-    gameManager.registerEnemyTemplates([DUMMY])
-    gameManager.registerStages([STAGE])
+    gameManager.catalogOps.registerEnemyTemplates([DUMMY])
+    gameManager.catalogOps.registerStages([STAGE])
     player.perfectClearStageIds.push('adv_stage')
     player.perfectClearSeconds['adv_stage'] = 100
 
     const lastCheckedMs = Date.now() - 10_000
     player.autoFarmStage = { stageId: 'adv_stage', lastCheckedMs }
 
-    gameManager.settleAutoFarmOffline(player, -5000)
+    gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, -5000)
 
     expect(player.autoFarmStage!.lastCheckedMs).toBe(lastCheckedMs)
   })
@@ -52,26 +52,26 @@ describe('Adversarial — offline auto-farm invariants (QA quick)', () => {
   it('cycleSeconds NaN → no-op (boundedness)', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
-    gameManager.registerEnemyTemplates([DUMMY])
-    gameManager.registerStages([STAGE])
+    gameManager.catalogOps.registerEnemyTemplates([DUMMY])
+    gameManager.catalogOps.registerStages([STAGE])
     player.perfectClearStageIds.push('adv_stage')
     player.perfectClearSeconds['adv_stage'] = NaN
     player.autoFarmStage = { stageId: 'adv_stage', lastCheckedMs: Date.now() - 60_000 }
 
-    expect(() => gameManager.settleAutoFarmOffline(player, 60)).not.toThrow()
+    expect(() => gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, 60)).not.toThrow()
     expect(Number.isFinite(player.autoFarmStage!.lastCheckedMs)).toBe(true)
   })
 
   it('elapsed Infinity → clamp về cap 24h, KHÔNG vòng lặp vô hạn', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
-    gameManager.registerEnemyTemplates([DUMMY])
-    gameManager.registerStages([STAGE])
+    gameManager.catalogOps.registerEnemyTemplates([DUMMY])
+    gameManager.catalogOps.registerStages([STAGE])
     player.perfectClearStageIds.push('adv_stage')
     player.perfectClearSeconds['adv_stage'] = 100
 
     player.autoFarmStage = { stageId: 'adv_stage', lastCheckedMs: Date.now() - 60_000 }
 
-    expect(() => gameManager.settleAutoFarmOffline(player, Number.POSITIVE_INFINITY)).not.toThrow()
+    expect(() => gameManager.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, Number.POSITIVE_INFINITY)).not.toThrow()
   })
 })

@@ -104,7 +104,7 @@ const dissolveCandidates = computed<DissolveCandidate[]>(() => {
     .filter((instance) => !instance.equipped && !instance.locked && !instance.favorite)
     .filter((instance) => passesDissolveFilter(instance))
     .map((instance) => {
-      const template = gameManager.getEquipmentTemplate(instance.itemId)
+      const template = gameManager.equipmentOps.getEquipmentTemplate(instance.itemId)
 
       return {
         instanceId: instance.instanceId,
@@ -127,7 +127,7 @@ const dissolveCandidates = computed<DissolveCandidate[]>(() => {
               instance,
               template,
               gameManager.affixRegistry,
-              gameManager.getSlotState(instance.slot),
+              gameManager.equipmentOps.getSlotState(instance.slot),
               gameManager.zoneRegistry,
               undefined,
               gameManager.equipmentSystem.quoteMainStatRange(instance, gameManager.equipmentRegistry),
@@ -191,7 +191,7 @@ function clearDissolveSelection() {
 const dissolvePreview = computed(() => {
   stateVersion.value
 
-  return gameManager.previewDissolveRewards(Array.from(dissolveSelected.value))
+  return gameManager.equipmentOps.previewDissolveRewards(Array.from(dissolveSelected.value))
 })
 
 const dissolveConfirming = ref(false)

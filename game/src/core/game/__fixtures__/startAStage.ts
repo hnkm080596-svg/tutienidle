@@ -57,11 +57,11 @@ export function startAStage(
     spawnIntervalSeconds: 0,
   }
 
-  manager.registerEnemyTemplates([enemy])
-  manager.registerStages([stage])
+  manager.catalogOps.registerEnemyTemplates([enemy])
+  manager.catalogOps.registerStages([stage])
   manager.setActivePlayer(player)
 
-  if (!manager.startStage(player, stats, stage, options.repeatContinuously ?? false)) {
+  if (!manager.turnBattleOps.startStage(player, stats, stage, options.repeatContinuously ?? false)) {
     throw new Error(`startAStage fixture failed to start stage ${stageId}`)
   }
 

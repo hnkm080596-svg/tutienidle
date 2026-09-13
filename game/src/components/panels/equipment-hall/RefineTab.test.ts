@@ -47,9 +47,9 @@ function mountTab(prepare?: (manager: GameManager) => void) {
   const pinia = createPinia()
   const manager = new GameManager()
   const version = ref(0)
-  manager.registerMaterials(materials)
-  manager.registerEquipment(equipment)
-  manager.registerAffixes(affixes)
+  manager.catalogOps.registerMaterials(materials)
+  manager.catalogOps.registerEquipment(equipment)
+  manager.catalogOps.registerAffixes(affixes)
   manager.equipmentBag.add(equipmentInstance('equipped', true))
   manager.equipmentBag.add(equipmentInstance('in-bag', false))
   prepare?.(manager)
@@ -140,7 +140,7 @@ describe('RefineTab — Tinh Luyện', () => {
 
     expect(mounted.container.textContent).not.toContain(discardLabel)
     expect(
-      mounted.manager.commitRefineItem('equipped', [{ index: 0, value: 3.15 }]),
+      mounted.manager.equipmentOps.commitRefineItem('equipped', [{ index: 0, value: 3.15 }]),
     ).toEqual({ ok: false, reason: 'invalid_refine_preview' })
     expect(mounted.manager.equipmentBag.get('equipped')!.affixes[0]!.value).toBe(3)
 
@@ -166,7 +166,7 @@ describe('RefineTab — Tinh Luyện', () => {
     mounted.unmount()
 
     expect(
-      mounted.manager.commitRefineItem('equipped', [{ index: 0, value: 3.15 }]),
+      mounted.manager.equipmentOps.commitRefineItem('equipped', [{ index: 0, value: 3.15 }]),
     ).toEqual({ ok: false, reason: 'invalid_refine_preview' })
     expect(mounted.manager.equipmentBag.get('equipped')!.affixes[0]!.value).toBe(3)
   })

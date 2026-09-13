@@ -37,7 +37,7 @@ function refight(): boolean | Promise<boolean> {
     return false
   }
 
-  const stage = gameManager.getStage(ui.selectedStageId)
+  const stage = gameManager.catalogOps.getStage(ui.selectedStageId)
 
   if (!stage) {
     return false
@@ -73,7 +73,7 @@ const { remaining: countdown, start: startAutoRefightCountdown } = useAutoRetryC
     if (resolution.status === 'ready') {
       const nextStageId = resolution.stage.id
 
-      if (!gameManager.isStageUnlocked(nextStageId, player.$state)) {
+      if (!gameManager.catalogOps.isStageUnlocked(nextStageId, player.$state)) {
         // Có màn kế tiếp nhưng progression hiện tại chưa mở nó (vd thắng 1.5
         // khi mới ở cảnh giới tầng 5). Kết thúc auto bằng UI thủ công thay vì
         // gọi startStage() thất bại rồi kẹt modal victory ở countdown 0s.

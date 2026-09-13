@@ -32,8 +32,8 @@ function makeDeps(panel: unknown) {
   const stateVersion = ref(0)
 
   document.body.appendChild(container)
-  gameManager.registerMaterials([WOOD])
-  gameManager.registerBuildings(buildings)
+  gameManager.catalogOps.registerMaterials([WOOD])
+  gameManager.catalogOps.registerBuildings(buildings)
   gameManager.materialBag.add(WOOD, 999)
 
   const app = createApp({ render: () => h(panel as never) })
@@ -72,7 +72,7 @@ describe('CHQ integration smoke — DOM oracle thay browser probe', () => {
 
     const chq = deps.gameManager.buildingManager.getByBuildingId('chi_hien_quan')!
 
-    deps.gameManager.refreshAutoWorkerCapacity(player.$state, chq)
+    deps.gameManager.buildingOps.refreshAutoWorkerCapacity(player.$state, chq)
 
     const text = deps.container.textContent ?? ''
 
@@ -107,7 +107,7 @@ describe('CHQ integration smoke — DOM oracle thay browser probe', () => {
 
     const chq = deps.gameManager.buildingManager.getByBuildingId('chi_hien_quan')!
 
-    deps.gameManager.refreshAutoWorkerCapacity(player.$state, chq)
+    deps.gameManager.buildingOps.refreshAutoWorkerCapacity(player.$state, chq)
 
     await nextTick()
 
@@ -122,14 +122,14 @@ describe('CHQ integration smoke — DOM oracle thay browser probe', () => {
     expect(text).toContain('Linh Mạch')
 
     // Manual: assign qua GameManager (như handler slider) → state persist.
-    const siteId = deps.gameManager.getProductionViews(Date.now())[0]!.definition.siteId
+    const siteId = deps.gameManager.buildingOps.getProductionViews(Date.now())[0]!.definition.siteId
 
-    deps.gameManager.assignWorkers(siteId, 2)
+    deps.gameManager.buildingOps.assignWorkers(siteId, 2)
 
     expect(deps.gameManager.productionSystem.getState(siteId)?.assignedWorkers).toBe(2)
 
     // Quay auto: undefined.
-    deps.gameManager.assignWorkers(siteId, undefined)
+    deps.gameManager.buildingOps.assignWorkers(siteId, undefined)
 
     expect(deps.gameManager.productionSystem.getState(siteId)?.assignedWorkers).toBeUndefined()
 
@@ -175,7 +175,7 @@ function mountWorkerLodge(prepare?: (deps: ReturnType<typeof makeDeps> & { playe
   // Real material catalog so the Chieu Hien Lenh registry entry resolves
   // (token name label) and the v-tooltip directive used by DuyenPhanTab
   // registers like production (main.ts).
-  deps.gameManager.registerMaterials(materials)
+  deps.gameManager.catalogOps.registerMaterials(materials)
   deps.app.directive('tooltip', vTooltip)
 
   const player = usePlayerStore(deps.pinia)

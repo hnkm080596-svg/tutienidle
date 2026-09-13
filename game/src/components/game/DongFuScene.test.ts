@@ -92,7 +92,7 @@ function mountDongFuScene() {
   document.body.appendChild(container)
 
   const gameManager = new GameManager()
-  gameManager.registerBuildings(buildings)
+  gameManager.catalogOps.registerBuildings(buildings)
   const app = createApp({ render: () => h(DongFuScene) })
   const pinia = createPinia()
 

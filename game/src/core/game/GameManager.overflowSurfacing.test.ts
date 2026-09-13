@@ -44,9 +44,9 @@ const OVERFLOW_QUEST: Quest = {
 function makeManager(): GameManager {
   const manager = new GameManager()
 
-  manager.registerMaterials([OVERFLOW_MATERIAL])
-  manager.registerBuildings([OVERFLOW_BUILDING])
-  manager.registerQuests([OVERFLOW_QUEST])
+  manager.catalogOps.registerMaterials([OVERFLOW_MATERIAL])
+  manager.catalogOps.registerBuildings([OVERFLOW_BUILDING])
+  manager.catalogOps.registerQuests([OVERFLOW_QUEST])
 
   return manager
 }
@@ -59,7 +59,7 @@ describe('GameManager — bag overflow surfacing (9.8)', () => {
     manager.setActivePlayer(player)
     // R8.1 (AR-09): activation moved from the read query to the
     // lifecycle command.
-    manager.reconcileQuestLifecycle()
+    manager.tickOps.reconcileQuestLifecycle()
 
     manager.materialBag.add(manager.materialRegistry.get('mat_overflow_test'), 60)
 
@@ -70,7 +70,7 @@ describe('GameManager — bag overflow surfacing (9.8)', () => {
       lastCollectedAt: 0,
     })
 
-    const returned = manager.collectBuilding('overflow_inst', player, 1000)
+    const returned = manager.buildingOps.collectBuilding('overflow_inst', player, 1000)
 
     expect(returned).toBe(500)
     expect(manager.materialBag.getAmount('mat_overflow_test')).toBe(100)
@@ -97,7 +97,7 @@ describe('GameManager — bag overflow surfacing (9.8)', () => {
 
     manager.setActivePlayer(player)
 
-    manager.restoreFromSave({
+    manager.saveOps.restoreFromSave({
       version: CURRENT_SAVE_VERSION,
       player: { ...player },
       techniques: [],

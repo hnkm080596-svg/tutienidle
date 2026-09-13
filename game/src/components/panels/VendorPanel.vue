@@ -28,13 +28,13 @@ const { stateVersion, bumpState } = useStateVersion()
 const template = computed(() => {
   stateVersion.value
 
-  return gameManager.getBuildingDefinitions().find((entry) => entry.id === BUILDING_ID)
+  return gameManager.buildingOps.getBuildingDefinitions().find((entry) => entry.id === BUILDING_ID)
 })
 
 const sellableRows = computed(() => {
   stateVersion.value
 
-  return gameManager
+  return gameManager.economyOps
     .getVendorSellableRows(player.$state)
     .filter((row) => row.owned > 0)
     .sort((a, b) => a.name.localeCompare(b.name))
@@ -45,7 +45,7 @@ function sellAll(materialId: string, owned: number) {
     return
   }
 
-  const result = gameManager.sellMaterialToVendor(materialId, owned, player.$state)
+  const result = gameManager.economyOps.sellMaterialToVendor(materialId, owned, player.$state)
 
   // gp123 6G fix round 1 — gate message CHỈ khi reason là grade_not_below;
   // reason khác (sole_recipe_ingredient, bag_full, ...) nhận message

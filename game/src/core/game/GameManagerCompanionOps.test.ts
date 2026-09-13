@@ -70,7 +70,7 @@ describe('pullCompanion', () => {
   it('rejects without a token and preserves all balances', () => {
     const { manager, player } = makeManager()
 
-    const result = manager.pullCompanion()
+    const result = manager.companionOps.pullCompanion()
 
     expect(result).toEqual({ ok: false, reason: 'missing_token' })
     expect(player.duyenPhan).toBe(0)
@@ -83,7 +83,7 @@ describe('pullCompanion', () => {
     manager.materialBag.add(PULL_TOKEN, 2)
     mockPullsToFirstDefinition()
 
-    const result = manager.pullCompanion()
+    const result = manager.companionOps.pullCompanion()
 
     if (!result.ok) {
       throw new Error(`expected ok, got ${result.reason}`)
@@ -108,7 +108,7 @@ describe('pullCompanion', () => {
     mockPullsToFirstDefinition()
     player.companions.push(ownedInstance({ constellationRank: 2 }))
 
-    const result = manager.pullCompanion()
+    const result = manager.companionOps.pullCompanion()
 
     if (!result.ok) {
       throw new Error(`expected ok, got ${result.reason}`)
@@ -128,7 +128,7 @@ describe('pullCompanion', () => {
     mockPullsToFirstDefinition()
     player.companions.push(ownedInstance({ constellationRank: MAX_CONSTELLATION_RANK }))
 
-    const result = manager.pullCompanion()
+    const result = manager.companionOps.pullCompanion()
 
     if (!result.ok) {
       throw new Error(`expected ok, got ${result.reason}`)
@@ -147,7 +147,7 @@ describe('exchangeCompanion', () => {
     const { manager, player } = makeManager()
     player.duyenPhan = 1000
 
-    const result = manager.exchangeCompanion('no_such_companion')
+    const result = manager.companionOps.exchangeCompanion('no_such_companion')
 
     expect(result).toEqual({ ok: false, reason: 'unknown_definition' })
     expect(player.duyenPhan).toBe(1000)
@@ -157,7 +157,7 @@ describe('exchangeCompanion', () => {
     const { manager, player } = makeManager()
     player.duyenPhan = EXCHANGE_COST.hoang - 1
 
-    const result = manager.exchangeCompanion(COMPANIONS[0]!.id)
+    const result = manager.companionOps.exchangeCompanion(COMPANIONS[0]!.id)
 
     expect(result).toEqual({ ok: false, reason: 'insufficient_duyen_phan' })
     expect(player.duyenPhan).toBe(EXCHANGE_COST.hoang - 1)
@@ -168,7 +168,7 @@ describe('exchangeCompanion', () => {
     const { manager, player } = makeManager()
     player.duyenPhan = EXCHANGE_COST.hoang
 
-    const result = manager.exchangeCompanion(COMPANIONS[0]!.id)
+    const result = manager.companionOps.exchangeCompanion(COMPANIONS[0]!.id)
 
     if (!result.ok) {
       throw new Error(`expected ok, got ${result.reason}`)
@@ -189,7 +189,7 @@ describe('exchangeCompanion', () => {
     player.duyenPhan = EXCHANGE_COST.hoang + 7
     player.companions.push(ownedInstance({ constellationRank: 1 }))
 
-    const result = manager.exchangeCompanion(COMPANIONS[0]!.id)
+    const result = manager.companionOps.exchangeCompanion(COMPANIONS[0]!.id)
 
     if (!result.ok) {
       throw new Error(`expected ok, got ${result.reason}`)
@@ -208,7 +208,7 @@ describe('exchangeCompanion', () => {
     // 0 DP on purpose: the constellation_maxed gate runs first.
     player.companions.push(ownedInstance({ constellationRank: MAX_CONSTELLATION_RANK }))
 
-    const result = manager.exchangeCompanion(COMPANIONS[0]!.id)
+    const result = manager.companionOps.exchangeCompanion(COMPANIONS[0]!.id)
 
     expect(result).toEqual({ ok: false, reason: 'constellation_maxed' })
     expect(player.duyenPhan).toBe(0)
@@ -223,7 +223,7 @@ describe('feedCompanion', () => {
     manager.materialBag.add(FEED_MATERIAL, 5)
     player.companions.push(ownedInstance())
 
-    const result = manager.feedCompanion('not-an-instance', FEED_MATERIAL.id, 1)
+    const result = manager.companionOps.feedCompanion('not-an-instance', FEED_MATERIAL.id, 1)
 
     expect(result).toEqual({ ok: false, reason: 'unknown_instance' })
     expect(manager.materialBag.getAmount(FEED_MATERIAL.id)).toBe(5)
@@ -236,7 +236,7 @@ describe('feedCompanion', () => {
     // Player is mortal; a mortal companion at realm maxLevel is capped.
     player.companions.push(ownedInstance({ realmLevel: MORTAL_MAX_LEVEL }))
 
-    const result = manager.feedCompanion('inst-1', FEED_MATERIAL.id, 2)
+    const result = manager.companionOps.feedCompanion('inst-1', FEED_MATERIAL.id, 2)
 
     expect(result).toEqual({ ok: false, reason: 'level_maxed' })
     // The early-reject ordering is the point: bag untouched.
@@ -256,7 +256,7 @@ describe('feedCompanion', () => {
     manager.materialBag.add(herb, 5)
     player.companions.push(ownedInstance())
 
-    const result = manager.feedCompanion('inst-1', herb.id, 2)
+    const result = manager.companionOps.feedCompanion('inst-1', herb.id, 2)
 
     expect(result).toEqual({ ok: false, reason: 'not_feedable' })
     expect(manager.materialBag.getAmount(herb.id)).toBe(5)
@@ -273,11 +273,11 @@ describe('feedCompanion', () => {
 
     // PULL_TOKEN is category 'other' - inside the allowed feed scope - so
     // this proves the explicit excluded-id gate, not the category filter.
-    expect(manager.feedCompanion('inst-1', SPIRIT_STONE_MATERIAL.id, 1)).toEqual({
+    expect(manager.companionOps.feedCompanion('inst-1', SPIRIT_STONE_MATERIAL.id, 1)).toEqual({
       ok: false,
       reason: 'not_feedable',
     })
-    expect(manager.feedCompanion('inst-1', PULL_TOKEN.id, 1)).toEqual({
+    expect(manager.companionOps.feedCompanion('inst-1', PULL_TOKEN.id, 1)).toEqual({
       ok: false,
       reason: 'not_feedable',
     })
@@ -292,7 +292,7 @@ describe('feedCompanion', () => {
     manager.materialBag.add(FEED_MATERIAL, 5)
     player.companions.push(ownedInstance())
 
-    const result = manager.feedCompanion('inst-1', FEED_MATERIAL.id, 1)
+    const result = manager.companionOps.feedCompanion('inst-1', FEED_MATERIAL.id, 1)
 
     expect(result).toEqual({ ok: false, reason: 'unknown_material' })
     expect(manager.materialBag.getAmount(FEED_MATERIAL.id)).toBe(5)
@@ -304,7 +304,7 @@ describe('feedCompanion', () => {
     manager.materialBag.add(FEED_MATERIAL, 1)
     player.companions.push(ownedInstance())
 
-    const result = manager.feedCompanion('inst-1', FEED_MATERIAL.id, 3)
+    const result = manager.companionOps.feedCompanion('inst-1', FEED_MATERIAL.id, 3)
 
     expect(result).toEqual({ ok: false, reason: 'insufficient_material' })
     expect(manager.materialBag.getAmount(FEED_MATERIAL.id)).toBe(1)
@@ -317,7 +317,7 @@ describe('feedCompanion', () => {
     manager.materialBag.add(FEED_MATERIAL, 5)
     player.companions.push(ownedInstance())
 
-    const result = manager.feedCompanion('inst-1', FEED_MATERIAL.id, 5)
+    const result = manager.companionOps.feedCompanion('inst-1', FEED_MATERIAL.id, 5)
 
     if (!result.ok) {
       throw new Error(`expected ok, got ${result.reason}`)
@@ -338,8 +338,8 @@ describe('no active player', () => {
   it('every op returns no_active_player', () => {
     const manager = new GameManager()
 
-    expect(manager.pullCompanion()).toEqual({ ok: false, reason: 'no_active_player' })
-    expect(manager.exchangeCompanion('x')).toEqual({ ok: false, reason: 'no_active_player' })
-    expect(manager.feedCompanion('x', 'y', 1)).toEqual({ ok: false, reason: 'no_active_player' })
+    expect(manager.companionOps.pullCompanion()).toEqual({ ok: false, reason: 'no_active_player' })
+    expect(manager.companionOps.exchangeCompanion('x')).toEqual({ ok: false, reason: 'no_active_player' })
+    expect(manager.companionOps.feedCompanion('x', 'y', 1)).toEqual({ ok: false, reason: 'no_active_player' })
   })
 })

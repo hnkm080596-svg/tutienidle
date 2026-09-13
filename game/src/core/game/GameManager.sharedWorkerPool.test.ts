@@ -11,7 +11,7 @@ import type { PlayerData } from '../player/Player'
 
 function makeManager(): { manager: GameManager; player: PlayerData } {
   const manager = new GameManager()
-  manager.registerBuildings(buildings)
+  manager.catalogOps.registerBuildings(buildings)
   const player = createDefaultPlayer()
   manager.setActivePlayer(player)
   return { manager, player }
@@ -20,7 +20,7 @@ function makeManager(): { manager: GameManager; player: PlayerData } {
 function enableAllProductionSites(manager: GameManager): void {
   // States are created lazily; iterate the DEFINITIONS, not the states.
   for (const definition of manager.productionSystem.getSiteDefinitions()) {
-    manager.setProductionAutoRestart(definition.siteId, true)
+    manager.buildingOps.setProductionAutoRestart(definition.siteId, true)
   }
 }
 
@@ -35,7 +35,7 @@ describe('GameManager shared worker pool (AR-08 wiring)', () => {
     manager.decomposeSystem.setSetting({ workers: 2 })
 
     enableAllProductionSites(manager)
-    manager.update(1)
+    manager.tickOps.update(1)
 
     expect(manager.decomposeSystem.getCapacity()).toBe(7)
     expect(manager.decomposeSystem.getSettings().workers).toBe(2)
@@ -50,7 +50,7 @@ describe('GameManager shared worker pool (AR-08 wiring)', () => {
     const { manager } = makeManager()
 
     enableAllProductionSites(manager)
-    manager.update(1)
+    manager.tickOps.update(1)
 
     expect(manager.decomposeSystem.getCapacity()).toBe(0)
     expect(manager.decomposeSystem.getSettings().workers).toBe(0)
@@ -60,11 +60,11 @@ describe('GameManager shared worker pool (AR-08 wiring)', () => {
     const { manager, player } = makeManager()
 
     player.autoWorkerCapacity = 4
-    manager.update(1)
+    manager.tickOps.update(1)
     expect(manager.decomposeSystem.getCapacity()).toBe(4)
 
     player.autoWorkerCapacity = 9
-    manager.update(1)
+    manager.tickOps.update(1)
     expect(manager.decomposeSystem.getCapacity()).toBe(9)
   })
 })

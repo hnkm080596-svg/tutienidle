@@ -63,7 +63,7 @@ function enemyDefinition(): EnemyDefinition {
 }
 
 function registerDoanBaoThach(gameManager: GameManager) {
-  gameManager.registerMaterials([
+  gameManager.catalogOps.registerMaterials([
     {
       id: 'doan_bao_thach',
       name: 'Đoán Bảo Thạch',
@@ -79,7 +79,7 @@ describe('GameManager.tryUpgradeArtifactGrade (doc §5.3)', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
 
-    expect(gameManager.tryUpgradeArtifactGrade(player)).toBe(false)
+    expect(gameManager.realmAdvanceOps.tryUpgradeArtifactGrade(player)).toBe(false)
   })
 
   it('ngoài combat, đủ đá -> nâng phẩm thành công qua materialBag thật', () => {
@@ -91,7 +91,7 @@ describe('GameManager.tryUpgradeArtifactGrade (doc §5.3)', () => {
     player.artifact = createDefaultArtifactProgress('ngu_hanh_chau')
     gameManager.materialBag.add(gameManager.materialRegistry.get('doan_bao_thach'), 10)
 
-    expect(gameManager.tryUpgradeArtifactGrade(player)).toBe(true)
+    expect(gameManager.realmAdvanceOps.tryUpgradeArtifactGrade(player)).toBe(true)
     expect(player.artifact.grade).toBe('linh')
     expect(gameManager.materialBag.getAmount('doan_bao_thach')).toBe(0)
   })
@@ -100,7 +100,7 @@ describe('GameManager.tryUpgradeArtifactGrade (doc §5.3)', () => {
     const gameManager = new GameManager()
 
     registerDoanBaoThach(gameManager)
-    gameManager.registerEnemyTemplates([defineEnemy(enemyDefinition())])
+    gameManager.catalogOps.registerEnemyTemplates([defineEnemy(enemyDefinition())])
 
     const player = createDefaultPlayer()
     player.artifact = createDefaultArtifactProgress('ngu_hanh_chau')
@@ -109,7 +109,7 @@ describe('GameManager.tryUpgradeArtifactGrade (doc §5.3)', () => {
     gameManager.startBattle(createPlayerEntity(), defineEnemy(enemyDefinition()))
     expect(gameManager.getBattle()?.state).toBe('intro')
 
-    expect(gameManager.tryUpgradeArtifactGrade(player)).toBe(false)
+    expect(gameManager.realmAdvanceOps.tryUpgradeArtifactGrade(player)).toBe(false)
     expect(player.artifact.grade).toBe('pham')
     expect(gameManager.materialBag.getAmount('doan_bao_thach')).toBe(10)
   })

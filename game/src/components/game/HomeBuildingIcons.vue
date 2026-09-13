@@ -30,7 +30,7 @@ const gameManager = useGameManager()
 const stageActive = useStageActive()
 const navigation = useBuildingNavigation()
 const ui = useUiStore()
-const definitions = computed(() => gameManager.getBuildingDefinitions())
+const definitions = computed(() => gameManager.buildingOps.getBuildingDefinitions())
 const reducedMotion = ref(false)
 const assetErrors = ref<Set<DongFuBuildingId>>(new Set())
 

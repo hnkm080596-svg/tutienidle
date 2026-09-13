@@ -57,25 +57,25 @@ describe('Reaction Path gating + slot population (Phase A4)', () => {
   // Both variants learn the element chain skills (a progressing fire Pháp
   // Tu has them learned); only the unlock node differs.
   function learnChainSkills(manager: GameManager) {
-    manager.learnSkill('tam_muoi_chan_hoa')
-    manager.learnSkill('hoa_ha_cuu_thien')
+    manager.progressionOps.learnSkill('tam_muoi_chan_hoa')
+    manager.progressionOps.learnSkill('hoa_ha_cuu_thien')
   }
 
   it('reaction-awakened player gets the marker special/ultimate in their participant', () => {
     const manager = new GameManager()
-    manager.registerSkillTemplates(SKILLS)
+    manager.catalogOps.registerSkillTemplates(SKILLS)
 
     const player = makePlayer('phap_tu', true)
     const enemy = makeEnemy('a4_dummy')
     const stage = makeStage('a4_stage', enemy.id)
 
-    manager.registerEnemyTemplates([enemy])
-    manager.registerStages([stage])
+    manager.catalogOps.registerEnemyTemplates([enemy])
+    manager.catalogOps.registerStages([stage])
     manager.setActivePlayer(player)
     learnChainSkills(manager)
 
     const stats = calculateStats(player.baseStats, player.modifiers)
-    expect(manager.startStage(player, stats, stage, false)).toBe(true)
+    expect(manager.turnBattleOps.startStage(player, stats, stage, false)).toBe(true)
 
     const participant = manager.getTurnBattle()!.players[0]!
 
@@ -85,19 +85,19 @@ describe('Reaction Path gating + slot population (Phase A4)', () => {
 
   it('non-awakened player keeps the element chain special/ultimate', () => {
     const manager = new GameManager()
-    manager.registerSkillTemplates(SKILLS)
+    manager.catalogOps.registerSkillTemplates(SKILLS)
 
     const player = makePlayer('phap_tu', false)
     const enemy = makeEnemy('a4_dummy2')
     const stage = makeStage('a4_stage2', enemy.id)
 
-    manager.registerEnemyTemplates([enemy])
-    manager.registerStages([stage])
+    manager.catalogOps.registerEnemyTemplates([enemy])
+    manager.catalogOps.registerStages([stage])
     manager.setActivePlayer(player)
     learnChainSkills(manager)
 
     const stats = calculateStats(player.baseStats, player.modifiers)
-    expect(manager.startStage(player, stats, stage, false)).toBe(true)
+    expect(manager.turnBattleOps.startStage(player, stats, stage, false)).toBe(true)
 
     const participant = manager.getTurnBattle()!.players[0]!
 

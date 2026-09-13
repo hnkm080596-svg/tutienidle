@@ -34,13 +34,13 @@ describe('GameManager — stage restart clears stale Action Playback pending sta
       rewards: { techniqueInsight: 0, spiritStone: 0 },
     })
 
-    gameManager.registerEnemyTemplates([enemyA, enemyB])
+    gameManager.catalogOps.registerEnemyTemplates([enemyA, enemyB])
     const stageA = stageFixture('restart_stage_a', 'restart_dummy_a')
     const stageB = stageFixture('restart_stage_b', 'restart_dummy_b')
-    gameManager.registerStages([stageA, stageB])
+    gameManager.catalogOps.registerStages([stageA, stageB])
     gameManager.setActivePlayer(player)
 
-    expect(gameManager.startStage(player, stats, stageA, false)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stats, stageA, false)).toBe(true)
 
     gameManager.setPresentationActive(true)
 
@@ -75,7 +75,7 @@ describe('GameManager — stage restart clears stale Action Playback pending sta
     // NOW a fresh stage — stale pending fields (if any survived the victory
     // terminal) would leak into battle B. startStage resets them (Defect
     // Task 6) so the new battle starts clean.
-    expect(gameManager.startStage(player, stats, stageB, false)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stats, stageB, false)).toBe(true)
 
     expect(gameManager.isActionPlaybackWaiting()).toBe(false)
   })

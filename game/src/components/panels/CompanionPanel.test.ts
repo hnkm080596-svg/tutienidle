@@ -82,7 +82,7 @@ function mountPanel(prepare?: (deps: {
 
   player.realmId = 'mortal'
   gameManager.setActivePlayer(player.$state)
-  gameManager.registerMaterials([FEED_MATERIAL])
+  gameManager.catalogOps.registerMaterials([FEED_MATERIAL])
 
   useUiStore(pinia).standalonePanel = 'companion'
 

@@ -98,7 +98,7 @@ function exchangeErrorMessage(reason: Extract<ExchangeCompanionResult, { ok: fal
 }
 
 function onExchange(definitionId: string) {
-  const result = gameManager.exchangeCompanion(definitionId)
+  const result = gameManager.companionOps.exchangeCompanion(definitionId)
 
   if (!result.ok) {
     useNotificationStore().push('warning', exchangeErrorMessage(result.reason))

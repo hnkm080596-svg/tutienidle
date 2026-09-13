@@ -43,9 +43,9 @@ describe('GameManager — turn-engine cast counting wiring (9.5 #9)', () => {
     const player = createDefaultPlayer()
     player.cultivationPath = 'kiem_tu'
 
-    gameManager.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
     gameManager.setActivePlayer(player)
-    gameManager.learnSkill('tram')
+    gameManager.progressionOps.learnSkill('tram')
 
     const stats = calculateStats(player.baseStats, player.modifiers)
     gameManager.startBattleWithPlayer(player, stats, makeDummyEnemy())

@@ -72,10 +72,10 @@ function mountVendorPanel(recipes: AlchemyRecipe[] = []) {
   const app = createApp({ render: () => h(VendorPanel) })
 
   document.body.appendChild(container)
-  gameManager.registerMaterials([SPIRIT_STONE_MATERIAL, VENDOR_HERB])
+  gameManager.catalogOps.registerMaterials([SPIRIT_STONE_MATERIAL, VENDOR_HERB])
 
   if (recipes.length > 0) {
-    gameManager.registerAlchemyRecipes(recipes)
+    gameManager.catalogOps.registerAlchemyRecipes(recipes)
   }
 
   app.use(pinia)
@@ -147,7 +147,7 @@ describe('VendorPanel — toast lý do từ chối (gp123 6G fix round 1)', () =
     mounted.bumpState()
     await nextTick()
 
-    vi.spyOn(mounted.gameManager, 'sellMaterialToVendor').mockReturnValue({
+    vi.spyOn(mounted.gameManager.economyOps, 'sellMaterialToVendor').mockReturnValue({
       ok: false,
       reason: 'grade_not_below',
     })

@@ -25,7 +25,7 @@ const requirement = useBreakthroughRequirementStore()
 const { realmStatPassiveRows } = useRealmStatPassives()
 
 const currentTier = computed(() => getRealmTier(player.realmId))
-const canBreakthrough = computed(() => gameManager.canTriggerBreakthrough(player.$state))
+const canBreakthrough = computed(() => gameManager.realmAdvanceOps.canTriggerBreakthrough(player.$state))
 const nextRealmName = computed(() => getNextRealm(player.realmId)?.name ?? '')
 const realmName = computed(() => getCurrentRealm(player.realmId).name)
 const majorBreakthroughLabel = computed(() => {

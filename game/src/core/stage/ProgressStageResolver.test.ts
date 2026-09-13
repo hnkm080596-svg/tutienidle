@@ -25,7 +25,7 @@ const zone: Zone = {
 
 function setup() {
   const gameManager = new GameManager()
-  gameManager.registerStages(stages)
+  gameManager.catalogOps.registerStages(stages)
   gameManager.zoneRegistry.register(zone)
   return gameManager
 }

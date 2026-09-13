@@ -80,10 +80,10 @@ const enhanceRows = computed<EnhanceSlotRow[]>(() => {
 
   const equippedRowBySlot = new Map(equippedRows.value.map((row) => [row.slot, row]))
 
-  return gameManager.getAllSlotStates().map((slotState) => {
+  return gameManager.equipmentOps.getAllSlotStates().map((slotState) => {
     const equipped = gameManager.equipmentBag.getEquippedInSlot(slotState.slot)
 
-    const costs = gameManager.getEnhanceCost(slotState.slot, realmId).map((entry) => ({
+    const costs = gameManager.equipmentOps.getEnhanceCost(slotState.slot, realmId).map((entry) => ({
       materialId: entry.materialId,
 
       label: materialLabel(entry.materialId, gameManager.materialRegistry),
@@ -93,7 +93,7 @@ const enhanceRows = computed<EnhanceSlotRow[]>(() => {
       owned: gameManager.materialBag.getAmount(entry.materialId),
     }))
 
-    const spiritStone = gameManager.getEnhanceSpiritStoneCost(slotState.slot, realmId)
+    const spiritStone = gameManager.equipmentOps.getEnhanceSpiritStoneCost(slotState.slot, realmId)
     const spiritStoneMaterialId = getSpiritStoneMaterialIdForEnhanceLevel(slotState.enhanceLevel)
 
     const maxLevel = MAX_SLOT_ENHANCE_LEVEL
@@ -102,7 +102,7 @@ const enhanceRows = computed<EnhanceSlotRow[]>(() => {
       slot: slotState.slot,
 
       itemName: equipped
-        ? gameManager.getEquipmentTemplate(equipped.itemId)?.name ?? equipped.itemId
+        ? gameManager.equipmentOps.getEquipmentTemplate(equipped.itemId)?.name ?? equipped.itemId
         : t('panels.equipmentHall.labels.emptySlotPlaceholder'),
 
       enhanceLevel: slotState.enhanceLevel,

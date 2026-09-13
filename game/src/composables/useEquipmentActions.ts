@@ -47,7 +47,7 @@ export function useEquipmentActions() {
   }
 
   function syncEquipmentModifiers() {
-    player.setEquipmentModifiers(gameManager.getEquipmentModifiers())
+    player.setEquipmentModifiers(gameManager.equipmentOps.getEquipmentModifiers())
   }
 
   function withSync(ok: boolean): boolean {
@@ -73,7 +73,7 @@ export function useEquipmentActions() {
   }
 
   function dissolve(instanceIds: readonly string[]): boolean {
-    const result = gameManager.dissolveItems(instanceIds)
+    const result = gameManager.equipmentOps.dissolveItems(instanceIds)
 
     if (result.ok && result.rewards) {
       for (const reward of result.rewards) {
@@ -97,21 +97,21 @@ export function useEquipmentActions() {
 
   return {
     equip: (instanceId: string) =>
-      withSyncAndResult(gameManager.equipItem(instanceId, player.$state), 'equip'),
+      withSyncAndResult(gameManager.equipmentOps.equipItem(instanceId, player.$state), 'equip'),
 
-    unequip: (instanceId: string) => withSync(gameManager.unequipItem(instanceId)),
+    unequip: (instanceId: string) => withSync(gameManager.equipmentOps.unequipItem(instanceId)),
 
     // Cường Hóa gắn SLOT (slot-level rework) — slot trống vẫn nâng được.
     enhance: (slot: EquipmentSlot) =>
-      withSyncAndResult(gameManager.enhanceSlot(slot, player.$state), 'enhance'),
+      withSyncAndResult(gameManager.equipmentOps.enhanceSlot(slot, player.$state), 'enhance'),
 
     /** Tẩy Luyện — tiêu Tinh Hoa, Linh Thạch và một lượt Rèn. */
     wash: (instanceId: string) =>
-      withSyncAndResult(gameManager.washItem(instanceId, player.$state), 'wash'),
+      withSyncAndResult(gameManager.equipmentOps.washItem(instanceId, player.$state), 'wash'),
 
     /** Tinh Luyện — lockedIndices là các dòng giữ nguyên (§7.4). */
     refine: (instanceId: string, lockedIndices: readonly number[]) =>
-      withSyncAndResult(gameManager.refineItem(instanceId, lockedIndices, player.$state), 'refine'),
+      withSyncAndResult(gameManager.equipmentOps.refineItem(instanceId, lockedIndices, player.$state), 'refine'),
 
     /**
      * Xem trước Tẩy Luyện (2026-08-30, UI "giữ/bỏ") — roll + TRỪ COST NGAY
@@ -123,7 +123,7 @@ export function useEquipmentActions() {
      * bumpState nếu thành công (cost đã trừ).
      */
     washPreview: (instanceId: string): string | null => {
-      const result = gameManager.previewWashItem(instanceId)
+      const result = gameManager.equipmentOps.previewWashItem(instanceId)
 
       if (!result.ok || !result.ticketId) {
         reportFailure('wash', result.reason)
@@ -140,11 +140,11 @@ export function useEquipmentActions() {
 
     /** R9 (AR-21) — display copy of the pending wash roll by ticket. */
     washPreviewAffixes: (ticketId: string): RolledAffix[] | null =>
-      gameManager.getWashPreviewAffixes(ticketId)?.affixes ?? null,
+      gameManager.equipmentOps.getWashPreviewAffixes(ticketId)?.affixes ?? null,
 
     /** R9 (AR-21) — drop the pending wash ticket (UI re-roll/cancel). */
     washDiscard: (ticketId: string): void => {
-      gameManager.discardWashTicket(ticketId)
+      gameManager.equipmentOps.discardWashTicket(ticketId)
     },
 
     /**
@@ -152,11 +152,11 @@ export function useEquipmentActions() {
      * commit nhận TICKET ID; affixes áp là bản domain-owned.
      */
     washCommit: (instanceId: string, ticketId: string) =>
-      withSyncAndResult(gameManager.commitWashItem(instanceId, ticketId), 'wash'),
+      withSyncAndResult(gameManager.equipmentOps.commitWashItem(instanceId, ticketId), 'wash'),
 
     /** Xem trước Tinh Luyện (2026-08-30, UI "giữ/bỏ") — cùng cơ chế washPreview. */
     refinePreview: (instanceId: string, lockedIndices: readonly number[]): RefineValueEntry[] | null => {
-      const result = gameManager.previewRefineItem(instanceId, lockedIndices)
+      const result = gameManager.equipmentOps.previewRefineItem(instanceId, lockedIndices)
 
       if (!result.ok || !result.values) {
         reportFailure('refine', result.reason)
@@ -173,10 +173,10 @@ export function useEquipmentActions() {
 
     /** Chốt values đã refinePreview() — không trừ cost lần nữa. */
     refineCommit: (instanceId: string, values: RefineValueEntry[]) =>
-      withSyncAndResult(gameManager.commitRefineItem(instanceId, values), 'refine'),
+      withSyncAndResult(gameManager.equipmentOps.commitRefineItem(instanceId, values), 'refine'),
 
     /** Bỏ preview Refine ở cả UI lẫn capability core; không hoàn lại cost đã roll. */
-    refineDiscard: (instanceId?: string) => gameManager.discardRefinePreview(instanceId),
+    refineDiscard: (instanceId?: string) => gameManager.equipmentOps.discardRefinePreview(instanceId),
 
     /** Hóa Luyện batch all-or-nothing (§7.5). */
     dissolve,

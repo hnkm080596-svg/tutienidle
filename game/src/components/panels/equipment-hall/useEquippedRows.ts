@@ -60,7 +60,7 @@ export function useEquippedRows() {
       // Audit fix 2026-08-31 — equipmentRegistry.get() THROW với itemId
       // lạ (data edit/save lệch) từng chết cả panel qua ErrorBoundary;
       // getEquipmentTemplate() tra an toàn trả undefined (GameManager.ts).
-      const template = gameManager.getEquipmentTemplate(instance.itemId)
+      const template = gameManager.equipmentOps.getEquipmentTemplate(instance.itemId)
 
       return {
         instance,
@@ -91,7 +91,7 @@ export function useEquippedRows() {
               instance,
               template,
               gameManager.affixRegistry,
-              gameManager.getSlotState(instance.slot),
+              gameManager.equipmentOps.getSlotState(instance.slot),
               gameManager.zoneRegistry,
               undefined,
               gameManager.equipmentSystem.quoteMainStatRange(instance, gameManager.equipmentRegistry),
@@ -149,7 +149,7 @@ export function useItemRenState(selectedInstanceId: Ref<string | null> | Compute
     }
 
     return {
-      points: gameManager.itemRefinementPoints(instance),
+      points: gameManager.equipmentOps.itemRefinementPoints(instance),
 
       max: instance.forgeUsesTotal,
     }

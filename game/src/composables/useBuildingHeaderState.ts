@@ -19,7 +19,7 @@ export function useBuildingHeaderState(buildingId: Ref<string | undefined>) {
 
     if (!buildingId.value) return undefined
 
-    return gameManager.getBuildingDefinitions().find((entry) => entry.id === buildingId.value)
+    return gameManager.buildingOps.getBuildingDefinitions().find((entry) => entry.id === buildingId.value)
   })
 
   const instance = computed(() => {
@@ -78,7 +78,7 @@ export function useBuildingHeaderState(buildingId: Ref<string | undefined>) {
       return
     }
 
-    if (gameManager.upgradeBuilding(instance.value.instanceId)) {
+    if (gameManager.buildingOps.upgradeBuilding(instance.value.instanceId)) {
       bumpState()
     }
   }

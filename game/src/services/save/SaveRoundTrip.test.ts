@@ -20,7 +20,7 @@ const TEST_MATERIAL: Material = {
 function createBootedGameManager(): GameManager {
   const gameManager = new GameManager()
 
-  gameManager.registerMaterials([TEST_MATERIAL])
+  gameManager.catalogOps.registerMaterials([TEST_MATERIAL])
 
   return gameManager
 }

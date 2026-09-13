@@ -12,13 +12,8 @@ import type { CombatEntity } from '../combat/CombatEntity'
 
 import type { Battle } from '../battle/Battle'
 import { ActionImpactSystem } from '../battle/ActionImpactSystem'
-import { isCombatAiStrategy, type CombatAiStrategy } from '../battle/CombatAiStrategy'
 
-import { investTinhHoa, computeBreakthroughGrade } from '../realm/BodyRefinementSystem'
-import { TINH_HOA_PHAM_THE_MATERIAL_ID } from '../../data/realm/BodyRefinement'
-import { grantRealmPassive } from '../realm/RealmPassiveSystem'
-import { getAlchemySuccessBonusPercentPoints, collectTalentEffects } from '../talent/TalentEffects'
-import { TALENT_PASSIVE_SKILLS, getTalentPassiveSkill } from '../../data/skill/TalentPassives'
+
 import { SurviveLethalGuard } from '../talent/SurviveLethalGuard'
 
 import { BuffPool } from '../buff/BuffPool'
@@ -27,22 +22,9 @@ import { BuffRegistry } from '../buff/BuffRegistry'
 import type { BuffDefinition } from '../buff/BuffDefinition'
 
 import { NodeRegistry } from '../progression/NodeRegistry'
-import type { ProgressionNode } from '../progression/ProgressionNode'
-import {
-  aggregateNodeSkillModifiers,
-  aggregateNodeStatModifiers,
-  canPurchaseNode as canPurchaseNodeSystem,
-  canUpgradeNode as canUpgradeNodeSystem,
-  devResetBranch as devResetBranchSystem,
-  getNodeLevel as getNodeLevelSystem,
-  getNextLevelCost as getNextLevelCostSystem,
-  getNodeMaxLevel as getNodeMaxLevelSystem,
-  purchaseNode as purchaseNodeSystem,
-  upgradeNode as upgradeNodeSystem,
-} from '../progression/NodeSystem'
 
 import { SkillManager } from '../skill/SkillManager'
-import { SkillSystem, HUY_KIEM_L3_CASTS } from '../skill/SkillSystem'
+import { SkillSystem } from '../skill/SkillSystem'
 import { SkillEffectSystem } from '../skill/SkillEffectSystem'
 import { PassiveSystem } from '../skill/PassiveSystem'
 import type { Skill } from '../skill/Skill'
@@ -53,53 +35,31 @@ import type { Technique } from '../technique/Technique'
 
 import { MaterialRegistry } from '../material/MaterialRegistry'
 import { MaterialBag } from '../material/MaterialBag'
-import type { Material } from '../material/Material'
 
 import { EquipmentRegistry } from '../equipment/EquipmentRegistry'
 import { EquipmentBag } from '../equipment/EquipmentBag'
 import { EquipmentSystem } from '../equipment/EquipmentSystem'
-import { DecomposeSystem, type DecomposeOutputEntry } from '../production/DecomposeSystem'
-import type { RefineValueEntry } from '../equipment/EquipmentSystem'
-import type { RolledAffix } from '../equipment/RolledAffix'
+import { DecomposeSystem } from '../production/DecomposeSystem'
 import { createDefaultEquipmentOperationCostCatalog } from '../equipment/EquipmentOperationCostCatalog'
 import { EquipmentSlotManager } from '../equipment/EquipmentSlotManager'
-import type { EquipmentSlot } from '../equipment/EquipmentTypes'
-import type { EquipmentSlotState } from '../equipment/EquipmentSlotState'
-import type { Equipment } from '../equipment/Equipment'
-import type { EquipmentInstance } from '../equipment/EquipmentInstance'
-import type { ItemQuality } from '../item/ItemQuality'
 import { AffixRegistry } from '../equipment/AffixRegistry'
-import type { Affix } from '../equipment/Affix'
-import { assertValidEquipmentMainStats } from '../equipment/EquipmentStatPolicy'
+
 
 import { PillRegistry } from '../pill/PillRegistry'
 import { PillBag } from '../pill/PillBag'
 import { PillSystem } from '../pill/PillSystem'
-import type { Pill } from '../pill/Pill'
-import type { PillTarget } from '../pill/PillSystem'
+
 
 import { TalismanRegistry } from '../talisman/TalismanRegistry'
-import type { Talisman } from '../talisman/Talisman'
 
 import { FormationRegistry } from '../formation/FormationRegistry'
-import type { Formation } from '../formation/Formation'
 
 import { ItemRegistry } from '../item/ItemRegistry'
 
-import { validateProfessionMaterialEntry } from '../profession/ProfessionValidators'
 import {
   getSpiritStoneMaterialIdForRealmTier,
 } from '../material/SpiritStoneMaterial'
 import { getRealmTier } from '../realm/RealmTierMap'
-import type { PersistentTimedEffect } from '../player/PersistentTimedEffect'
-import {
-  TU_LINH_TRAN_BUFF_PERCENT,
-  TU_LINH_TRAN_DURATION_MS,
-  TU_LINH_TRAN_EFFECT_GROUP,
-  getTuLinhTranCost,
-} from '../economy/TuLinhTranBalance'
-import { VendorSystem } from '../economy/VendorSystem'
-import { EQUIPMENT_SLOTS } from '../equipment/EquipmentSlotState'
 
 import { ProductionSystem } from '../production/ProductionSystem'
 import {
@@ -111,15 +71,12 @@ import {
 } from '../production/ProductionCatalog'
 import {
   AlchemySystem,
-  type ActiveAlchemyJob,
   type AlchemyRecipe,
 } from '../alchemy/AlchemySystem'
 
 import { BuildingRegistry } from '../building/BuildingRegistry'
 import { BuildingManager } from '../building/BuildingManager'
 import { BuildingSystem } from '../building/BuildingSystem'
-import type { Building } from '../building/Building'
-import type { BuildingInstance } from '../building/BuildingInstance'
 
 import { EnemyManager } from '../enemy/EnemyManager'
 import { EnemySystem } from '../enemy/EnemySystem'
@@ -130,11 +87,9 @@ import { StageManager } from '../stage/StageManager'
 import { StageSystem } from '../stage/StageSystem'
 import type { Stage } from '../stage/Stage'
 import { ZoneRegistry } from '../stage/ZoneRegistry'
-import type { Zone } from '../stage/Zone'
 
 import { TemplateRegistry } from './TemplateRegistry'
 import { NotificationQueue } from './NotificationQueue'
-import { createBagOverflowEvent } from '../notification/bagOverflow'
 import { BattleLootSystem } from './BattleLootSystem'
 import { StageWaveSystem } from './StageWaveSystem'
 import { EquipmentOpsSystem } from './EquipmentOpsSystem'
@@ -142,22 +97,24 @@ import { GameManagerBuildingOps } from './GameManagerBuildingOps'
 import { GameManagerAlchemyOps } from './GameManagerAlchemyOps'
 import { GameManagerQuestOps } from './GameManagerQuestOps'
 import { GameManagerCompanionOps } from './GameManagerCompanionOps'
-import type {
-  PullCompanionResult,
-  ExchangeCompanionResult,
-  FeedCompanionResult,
-} from './GameManagerCompanionOps'
 import { GameManagerSaveRestore } from './GameManagerSaveRestore'
+import { GameManagerCatalogOps } from './GameManagerCatalogOps'
+import { GameManagerRewardOps } from './GameManagerRewardOps'
+import { GameManagerProgressionOps } from './GameManagerProgressionOps'
+import { GameManagerRealmAdvanceOps } from './GameManagerRealmAdvanceOps'
+import { GameManagerPersistentEffectOps } from './GameManagerPersistentEffectOps'
+import { GameManagerEconomyOps } from './GameManagerEconomyOps'
+import { GameManagerPillOps } from './GameManagerPillOps'
+import { GameManagerTickOps } from './GameManagerTickOps'
 import { GameManagerTurnBattleOps, type ResumePlayback } from './GameManagerTurnBattleOps'
 import { HiddenBeastSystem } from './HiddenBeastSystem'
 import { TribulationDirector, type ActiveTribulationState } from '../tribulation/TribulationDirector'
-import { BreakthroughOutcomeService, type BreakthroughOutcomeResult, type BreakthroughPlayerWriter } from '../tribulation/BreakthroughOutcomeService'
+import { BreakthroughOutcomeService } from '../tribulation/BreakthroughOutcomeService'
 
 import { QuestRegistry } from '../quest/QuestRegistry'
 import { QuestManager } from '../quest/QuestManager'
 import { QuestSystem } from '../quest/QuestSystem'
-import type { Quest } from '../quest/Quest'
-import type { QuestProgress } from '../quest/QuestProgress'
+
 
 
 // Re-export gi? tuong thï¿½ch import cu (useTribulation.ts import
@@ -185,37 +142,19 @@ import type { TurnBattleEntitySnapshotEvent } from '../battle/turn/TurnActionPre
 
 
 import { RewardSystem } from '../reward/RewardSystem'
-import type { RewardReceiver } from '../reward/RewardSystem'
-import type { Reward } from '../reward/Reward'
 import type { BattleRewardSummary } from '../reward/BattleRewardSummary'
 
-import { playerToCombatEntity, createPlayerRewardReceiver } from '../player/Player'
-import { HERO_LANE_INDEX } from '../battle/BattleLane'
-import type { PlayerData, KiemTuRoute } from '../player/Player'
+
+import type { PlayerData } from '../player/Player'
 import type { MainStatKey } from '../stats/StatTypes'
-import { getMainStatCap } from '../stats/StatCap'
-import { MAIN_STAT_KEYS } from '../stats/StatTypes'
-import { BODY_REFINEMENT_TIERS } from '../../data/realm/BodyRefinement'
+
 import { CHAIN_SKILL_IDS } from '../../data/skill/Skills'
-import type { ElementType } from '../element/ElementType'
-import { getTechniqueInsightTotalRequired, getTechniqueTier } from '../technique/TechniqueTier'
-import { getSkillLoadoutSlotCount } from '../skill/SkillLoadoutSlots'
-import { CULTIVATION_PATH_KITS } from '../player/CultivationPathKit'
-import type { CultivationPathId } from '../player/CultivationPathKit'
-import {
-  getCultivationPathStatModifiers,
-  grantCultivationPathRealmReward as grantPathRealmReward,
-} from '../player/CultivationPathSystem'
-import type { ArtifactPath } from '../artifact/Artifact'
-import { tryUpgradeArtifactGrade } from '../artifact/ArtifactProgression'
 
-import { CORE_REALM_LEVEL, getCurrentRealm, getRealmIndex } from '../realm/realmSystem'
 
-import type { GameSave } from '../../services/save/SaveSystem'
 
-import type { StatModifier } from '../stats/StatCalculator'
+
+
 import type { Stats } from '../stats/StatBlock'
-import { createBaseStats } from '../stats/StatBlock'
 import type { TurnBattle } from '../battle/turn/TurnBattleSystem'
 import type {
   ClockSource,
@@ -353,48 +292,6 @@ export class GameManager {
   // path, xem core/progression/.
   readonly nodeRegistry = new NodeRegistry()
 
-  registerProgressionNodes(nodes: ProgressionNode[]) {
-    for (const node of nodes) {
-      if (!this.nodeRegistry.has(node.id)) {
-        this.nodeRegistry.register(node)
-      }
-    }
-  }
-
-  /**
-   * Talent v4 (spec 2026-09-03 ï¿½4.1, plan M1 Task 4) ï¿½ grant/revoke
-   * hidden passive skill c?a talent combat dang ch?n vï¿½o SkillManager.
-   * Idempotent: revoke m?i talent passive cu tru?c khi grant (d?i
-   * talent qua save edit khï¿½ng nhï¿½n dï¿½i, khï¿½ng leak gi?a player).
-   * G?i sau setActivePlayer/restore + sau khi App.vue ghi
-   * selectedTalentIds lï¿½c t?o nhï¿½n v?t.
-   */
-  syncTalentCombatPassive(player: PlayerData) {
-    const allTalentPassiveIds = TALENT_PASSIVE_SKILLS.map((skill) => skill.id)
-
-    // Revoke m?i talent passive hi?n cï¿½ (dï¿½ dï¿½ng talent ï¿½ grant l?i
-    // ngay sau, d?m b?o idempotent + khï¿½ng k?t passive cu khi d?i).
-    for (const passiveId of allTalentPassiveIds) {
-      if (this.skillManager.get(passiveId)) {
-        this.skillManager.remove(passiveId)
-      }
-    }
-
-    // Grant theo talent ï¿½?U TIï¿½N (collectTalentEffects si?t id d?u ï¿½
-    // spec ï¿½3.2): m?i talent combat khai 1-2 combat_passive effect.
-    for (const effect of collectTalentEffects(player.selectedTalentIds)) {
-      if (effect.kind === 'combat_passive') {
-        const template = getTalentPassiveSkill(effect.passiveSkillId)
-
-        if (template) {
-          // Copy shallow ï¿½ passiveModifiers stacks lï¿½ state runtime
-          // per-battle, khï¿½ng chia s? object v?i template data.
-          this.skillManager.add({ ...template, passiveModifiers: template.passiveModifiers?.map((modifier) => ({ ...modifier })) })
-        }
-      }
-    }
-  }
-
   // =========================
   // TURN-BASED COMBAT — engine duy nhất điều khiển combat (C1 2026-09-08:
   // legacy real-time BattleSystem + mirror Battle object đã XOÁ cùng
@@ -404,56 +301,7 @@ export class GameManager {
   // GameManagerTurnBattleOps - the methods below are thin delegates keeping
   // the public API unchanged for Vue/tests (same pattern as the earlier
   // Equipment/Building/Alchemy/Quest/Save Ops splits).
-  private readonly turnBattleOps: GameManagerTurnBattleOps
-
-  /**
-   * Snapshot c?p cï¿½c node on-hit Ki?m Tr?n dï¿½ mua (d?c t?
-   * PlayerData.nodeLevels qua registry ï¿½ node lï¿½ ngu?n s? th?t c?a
-   * `effect.onHitEffect`). Tr? `{}` khi chua cï¿½ player/chua mua node.
-   */
-  getOnHitNodeLevelsSnapshot(): Record<string, number> {
-    const levels: Record<string, number> = {}
-
-    if (!this.activePlayer) {
-      return levels
-    }
-
-    for (const [nodeId, level] of Object.entries(this.activePlayer.nodeLevels)) {
-      if (level <= 0 || !this.nodeRegistry.has(nodeId)) {
-        continue
-      }
-
-      const node = this.nodeRegistry.get(nodeId)
-
-      if (node.effect.onHitEffect) {
-        levels[nodeId] = level
-      }
-    }
-
-    return levels
-  }
-
-  /**
-   * Phï¿½p Tu Thu?n H? (Task 12, 2026-09-03) ï¿½ hï¿½nh Thu?n ï¿½ANG CH?N c?a
-   * player ho?t d?ng: node `lap_dao_thuan_<el>` (keystone mutex ï¿½ data
-   * d?m b?o t?i da 1 hï¿½nh) dï¿½ mua level = 1. undefined = chua L?p ï¿½?o
-   * Thu?n / khï¿½ng ph?i Phï¿½p Tu ? chain khï¿½ng gate, ult khï¿½ng n?.
-   */
-  getPhapTuThuanElement(): ElementType | undefined {
-    if (!this.activePlayer) {
-      return undefined
-    }
-
-    for (const element of Object.keys(CHAIN_SKILL_IDS) as ElementType[]) {
-      const level = this.activePlayer.nodeLevels[`lap_dao_thuan_${element}`]
-
-      if (level !== undefined && level > 0) {
-        return element
-      }
-    }
-
-    return undefined
-  }
+  readonly turnBattleOps: GameManagerTurnBattleOps
 
   readonly techniqueManager = new TechniqueManager()
   readonly techniqueSystem = new TechniqueSystem(this.techniqueManager)
@@ -552,15 +400,50 @@ export class GameManager {
 
   private readonly battleLoot: BattleLootSystem
   private readonly stageWaves: StageWaveSystem
-  private readonly tribulationDirector: TribulationDirector
+  readonly tribulationDirector: TribulationDirector
   private readonly breakthroughOutcomeService = new BreakthroughOutcomeService()
-  private readonly equipmentOps: EquipmentOpsSystem
-  private readonly buildingOps: GameManagerBuildingOps
-  private readonly alchemyOps: GameManagerAlchemyOps
-  private readonly questOps: GameManagerQuestOps
-  private readonly companionOps: GameManagerCompanionOps
-  private readonly saveRestore: GameManagerSaveRestore
+  readonly equipmentOps: EquipmentOpsSystem
+  readonly buildingOps: GameManagerBuildingOps
+  readonly alchemyOps: GameManagerAlchemyOps
+  readonly questOps: GameManagerQuestOps
+  readonly companionOps: GameManagerCompanionOps
+  readonly saveOps: GameManagerSaveRestore
   private readonly sessionAllocator = new SessionAllocator()
+
+  // Static data registration + template/stage/zone catalog lookups.
+  // Public: callers use gameManager.catalogOps.* directly (no facade).
+  readonly catalogOps: GameManagerCatalogOps
+
+  // Reward issuing (player RewardReceiver, technique insight, giveReward).
+  // Public: callers use gameManager.rewardOps.* directly (no facade).
+  readonly rewardOps: GameManagerRewardOps
+
+  // Node Tree / skill loadout / talent-sync progression operations.
+  // Public: callers use gameManager.progressionOps.* directly (no facade).
+  readonly progressionOps: GameManagerProgressionOps
+
+  // Realm advance: technique learn/equip, cultivation path, artifact,
+  // realm passives, body refinement, breakthrough gate.
+  // Public: callers use gameManager.realmAdvanceOps.* directly (no facade).
+  readonly realmAdvanceOps: GameManagerRealmAdvanceOps
+
+  // Persistent/live modifier authority (timed effects, sockets,
+  // aggregation, persistent buffs, Tu Linh Tran).
+  // Public: callers use gameManager.effectOps.* directly (no facade).
+  readonly effectOps: GameManagerPersistentEffectOps
+
+  // Vendor economy operations.
+  // Public: callers use gameManager.economyOps.* directly (no facade).
+  readonly economyOps: GameManagerEconomyOps
+
+  // Pill consumption operations.
+  // Public: callers use gameManager.pillOps.* directly (no facade).
+  readonly pillOps: GameManagerPillOps
+
+  // Per-tick orchestration (update() settle loop, decompose delivery,
+  // quest lifecycle reconciliation).
+  // Public: callers use gameManager.tickOps.* directly (no facade).
+  readonly tickOps: GameManagerTickOps
 
   // Quï¿½i ?n (spec dot-pha-loi-kiep ï¿½4.1c) ï¿½ c?a s? 1000 kill Luy?n Khï¿½.
   readonly hiddenBeastSystem: HiddenBeastSystem
@@ -584,8 +467,95 @@ export class GameManager {
 
     // Quï¿½i ?n (spec dot-pha-loi-kiep ï¿½4.1c) ï¿½ tra template qua registry
     // chung (registerEnemyTemplates dï¿½ dang kï¿½ Huy?t Mï¿½ng qua ENEMIES).
+    this.catalogOps = new GameManagerCatalogOps({
+      materialRegistry: this.materialRegistry,
+      buffRegistry: this.buffRegistry,
+      buildingRegistry: this.buildingRegistry,
+      questRegistry: this.questRegistry,
+      alchemyRecipesById: this.alchemyRecipesById,
+      alchemySystem: this.alchemySystem,
+      equipmentRegistry: this.equipmentRegistry,
+      affixRegistry: this.affixRegistry,
+      pillRegistry: this.pillRegistry,
+      formationRegistry: this.formationRegistry,
+      talismanRegistry: this.talismanRegistry,
+      zoneRegistry: this.zoneRegistry,
+      nodeRegistry: this.nodeRegistry,
+      skillTemplates: this.skillTemplates,
+      techniqueTemplates: this.techniqueTemplates,
+      enemyTemplates: this.enemyTemplates,
+      stageTemplates: this.stageTemplates,
+    })
+
+    this.rewardOps = new GameManagerRewardOps({
+      rewardSystem: this.rewardSystem,
+      techniqueManager: this.techniqueManager,
+      materialRegistry: this.materialRegistry,
+      materialBag: this.materialBag,
+      notifications: this.notifications,
+      // Deferred closure - questOps is assigned later in this constructor.
+      notifyQuestMaterialGained: (materialId, amount) =>
+        this.questOps.notifyQuestMaterialGained(materialId, amount),
+    })
+
+    this.progressionOps = new GameManagerProgressionOps({
+      nodeRegistry: this.nodeRegistry,
+      skillTemplates: this.skillTemplates,
+      skillSystem: this.skillSystem,
+      skillManager: this.skillManager,
+      getActivePlayer: () => this.activePlayer,
+    })
+
+    this.realmAdvanceOps = new GameManagerRealmAdvanceOps({
+      techniqueManager: this.techniqueManager,
+      techniqueTemplates: this.techniqueTemplates,
+      techniqueSystem: this.techniqueSystem,
+      skillManager: this.skillManager,
+      skillSystem: this.skillSystem,
+      skillTemplates: this.skillTemplates,
+      materialBag: this.materialBag,
+      breakthroughOutcomeService: this.breakthroughOutcomeService,
+      progressionOps: this.progressionOps,
+      // Deferred closures - turnBattleOps/activePlayer are assigned later.
+      getBattle: () => this.getBattle(),
+      // Deferred closure - tickOps is assigned later in this constructor.
+      markQuestRealmTransition: () => this.tickOps.markQuestRealmTransition(),
+    })
+
+    this.effectOps = new GameManagerPersistentEffectOps({
+      buffSystem: this.buffSystem,
+      buffRegistry: this.buffRegistry,
+      skillSystem: this.skillSystem,
+      techniqueManager: this.techniqueManager,
+      nodeRegistry: this.nodeRegistry,
+      equipmentBag: this.equipmentBag,
+      equipmentSlotManager: this.equipmentSlotManager,
+      materialRegistry: this.materialRegistry,
+      materialBag: this.materialBag,
+      // Deferred closures - turnBattleOps/activePlayer assigned later.
+      getActivePlayer: () => this.activePlayer,
+      getTurnBattle: () => this.turnBattleOps.getTurnBattle(),
+      getSkillRuntimeStats: (player) => this.progressionOps.getSkillRuntimeStats(player),
+    })
+
+    this.economyOps = new GameManagerEconomyOps({
+      materialRegistry: this.materialRegistry,
+      materialBag: this.materialBag,
+      // Deferred closures - alchemyOps/questOps assigned later.
+      getAlchemyRecipes: () => this.alchemyOps.getAlchemyRecipes(),
+      notifyQuestMaterialGained: (materialId, amount) =>
+        this.questOps.notifyQuestMaterialGained(materialId, amount),
+    })
+
+    this.pillOps = new GameManagerPillOps({
+      pillBag: this.pillBag,
+      pillRegistry: this.pillRegistry,
+      pillSystem: this.pillSystem,
+      applyTimedEffect: (player, effect) => this.effectOps.applyTimedEffect(player, effect),
+    })
+
     this.hiddenBeastSystem = new HiddenBeastSystem({
-      getEnemyTemplate: (id) => this.enemyTemplates.get(id),
+      getEnemyTemplate: (id) => this.catalogOps.getEnemyTemplate(id),
     })
 
     this.battleLoot = new BattleLootSystem({
@@ -621,7 +591,7 @@ export class GameManager {
       stageSystem: this.stageSystem,
       stageTemplates: this.stageTemplates,
       enemyTemplates: this.enemyTemplates,
-      isStageUnlocked: (stageId, player) => this.isStageUnlocked(stageId, player),
+      isStageUnlocked: (stageId, player) => this.catalogOps.isStageUnlocked(stageId, player),
       launchBattle: (player, playerStats, enemy) =>
         this.startBattleWithPlayer(player, playerStats, enemy),
       hiddenBeast: this.hiddenBeastSystem,
@@ -645,7 +615,7 @@ export class GameManager {
       buildingSystem: this.buildingSystem,
       notifications: this.notifications,
       notifyQuestMaterialGained: (materialId, amount) =>
-        this.notifyQuestMaterialGained(materialId, amount),
+        this.questOps.notifyQuestMaterialGained(materialId, amount),
     })
 
     this.buildingOps = new GameManagerBuildingOps({
@@ -658,7 +628,7 @@ export class GameManager {
       notifications: this.notifications,
       getActivePlayer: () => this.activePlayer,
       notifyQuestMaterialGained: (materialId, amount) =>
-        this.notifyQuestMaterialGained(materialId, amount),
+        this.questOps.notifyQuestMaterialGained(materialId, amount),
     })
 
     this.alchemyOps = new GameManagerAlchemyOps({
@@ -682,7 +652,7 @@ export class GameManager {
       pillBag: this.pillBag,
       notifications: this.notifications,
       getActivePlayer: () => this.activePlayer,
-      buildPlayerRewardReceiver: (player) => this.buildPlayerRewardReceiver(player),
+      buildPlayerRewardReceiver: (player) => this.rewardOps.buildPlayerRewardReceiver(player),
     })
 
     this.companionOps = new GameManagerCompanionOps({
@@ -692,7 +662,7 @@ export class GameManager {
       getActivePlayer: () => this.activePlayer,
     })
 
-    this.saveRestore = new GameManagerSaveRestore({
+    this.saveOps = new GameManagerSaveRestore({
       skillManager: this.skillManager,
       skillTemplates: this.skillTemplates,
       techniqueManager: this.techniqueManager,
@@ -714,13 +684,14 @@ export class GameManager {
       notifications: this.notifications,
       getActivePlayer: () => this.activePlayer,
       refreshAutoWorkerCapacity: (player, instance) =>
-        this.refreshAutoWorkerCapacity(player, instance),
-      getWorkerAssignments: () => this.getWorkerAssignments(),
+        this.buildingOps.refreshAutoWorkerCapacity(player, instance),
+      getWorkerAssignments: () => this.buildingOps.getWorkerAssignments(),
       settleAutoFarmOffline: (player, elapsedSeconds) =>
-        this.settleAutoFarmOffline(player, elapsedSeconds),
+        this.turnBattleOps.autoFarmOps.settleAutoFarmOffline(player, elapsedSeconds),
       decomposeSystem: this.decomposeSystem,
-      deliverDecomposeOutput: (entry) => this.deliverDecomposeOutput(entry),
-      reconcileQuestLifecycle: () => this.reconcileQuestLifecycle(),
+      // Deferred closures - tickOps is assigned later in this constructor.
+      deliverDecomposeOutput: (entry) => this.tickOps.deliverDecomposeOutput(entry),
+      reconcileQuestLifecycle: () => this.tickOps.reconcileQuestLifecycle(),
     })
 
     // Turn-battle runtime ops (C2 split, 2026-09-08) - owns the TurnBattle
@@ -741,162 +712,45 @@ export class GameManager {
       surviveLethalGuard: this.surviveLethalGuard,
       sessionAllocator: this.sessionAllocator,
       getActivePlayer: () => this.activePlayer,
-      getSkillRuntimeStats: (player) => this.getSkillRuntimeStats(player),
+      getSkillRuntimeStats: (player) => this.progressionOps.getSkillRuntimeStats(player),
       getSkillLevels: () =>
         Object.fromEntries(this.skillManager.getAll().map((skill) => [skill.id, skill.level])),
       resetPassiveStacks: () => this.passiveSystem.resetStacks(),
       bankPassiveCarry: (player) => this.passiveSystem.bankBattleCarryStacks(player),
       seedPassiveCarry: (player) => this.passiveSystem.seedBattleCarryStacks(player),
-      buildPlayerRewardReceiver: (player) => this.buildPlayerRewardReceiver(player),
-      getPhapTuThuanElement: () => this.getPhapTuThuanElement(),
+      buildPlayerRewardReceiver: (player) => this.rewardOps.buildPlayerRewardReceiver(player),
+      getPhapTuThuanElement: () => this.progressionOps.getPhapTuThuanElement(),
       resolvePlayerSpecialUltimate: (player) => this.resolvePlayerSpecialUltimate(player),
       recordPrimaryPlayerCast: (skillId) => this.skillSystem.recordCast(skillId),
     })
-  }
 
-  /**
-   * Skill runtime stats + node-derived skillModifiers (plan §6.8) —
-   * thay đường mutate Skill instance lúc purchase: cộng flat/perLevel
-   * suy ra từ (registry, nodeLevels) lên trên tổng hợp của SkillSystem.
-   * Public cho UI/test; combat snapshot đi qua cùng đường này.
-   */
-  getSkillRuntimeStats(player: PlayerData) {
-    const stats = this.skillSystem.getSkillRuntimeStats()
-
-    for (const { statModifiers } of aggregateNodeSkillModifiers(this.nodeRegistry, player)) {
-      for (const modifier of statModifiers) {
-        stats[modifier.stat] += modifier.flat ?? 0
-      }
-    }
-
-    return stats
-  }
-
-  // =========================
-  // DATA REGISTRATION
-  // =========================
-  // Nạp dữ liệu tĩnh (từ /data) vào các Manager. Gọi 1 lần lúc
-  // khởi tạo game. Tách riêng khỏi constructor để có thể gọi lại
-  // trong test hoặc khi cần nạp thêm data theo DLC/patch sau này.
-
-  registerMaterials(materials: Material[]) {
-    // Boot validator (plan §4.1/§10 Phase 1): lỗi authoring dữ liệu nghề
-    // fail NGAY khi đăng ký — không âm thầm tạo kinh tế hỏng. Chỉ validate
-    // material CÓ meta nghề (legacy material không đụng); kiểm tra
-    // PER-ENTRY (id convention + realm scope) — completeness toàn catalog
-    // (đủ 3 rarity/cell) enforce ở ProfessionDataIntegrity.test trên
-    // TOÀN BỘ mảng materials (registerMaterials có thể được gọi từng
-    // phần trong test).
-    for (const material of materials) {
-      if (!material.profession) {
-        continue
-      }
-
-      const error = validateProfessionMaterialEntry(material.id, material.profession)
-
-      if (error) {
-        throw new Error(`Profession material invalid: ${error}`)
-      }
-    }
-
-    for (const material of materials) {
-      if (!this.materialRegistry.has(material.id)) {
-        this.materialRegistry.register(material)
-      }
-    }
-  }
-
-  registerBuffs(buffs: BuffDefinition[]) {
-    for (const buff of buffs) {
-      if (!this.buffRegistry.has(buff.id)) {
-        this.buffRegistry.register(buff)
-      }
-    }
-  }
-
-  registerBuildings(items: Building[]) {
-    for (const item of items) {
-      if (!this.buildingRegistry.has(item.id)) {
-        this.buildingRegistry.register(item)
-      }
-    }
-  }
-
-  registerQuests(quests: Quest[]) {
-    for (const quest of quests) {
-      if (!this.questRegistry.has(quest.id)) {
-        this.questRegistry.register(quest)
-      }
-    }
-  }
-
-  /** Đăng ký đan phương (plan §8) — validate mapping thảo duy nhất. */
-  registerAlchemyRecipes(recipes: AlchemyRecipe[]) {
-    for (const recipe of recipes) {
-      if (this.alchemyRecipesById.has(recipe.id)) {
-        throw new Error(`Alchemy recipe already registered: ${recipe.id}`)
-      }
-
-      const herbBases = new Set(
-        recipe.herbVariants.map((variant) => variant.materialId.split('_')[0]),
-      )
-
-      if (
-        herbBases.size > 1 &&
-        new Set(recipe.herbVariants.map((v) => v.materialId)).size !== recipe.herbVariants.length
-      ) {
-        throw new Error(`Alchemy recipe ${recipe.id}: herb variants trï¿½ng l?p`)
-      }
-
-      this.alchemyRecipesById.set(recipe.id, recipe)
-    }
-
-    this.alchemySystem.setRecipeLookup((recipeId) => this.alchemyRecipesById.get(recipeId))
-  }
-
-  registerEquipment(items: Equipment[]) {
-    for (const item of items) {
-      assertValidEquipmentMainStats(item)
-
-      if (!this.equipmentRegistry.has(item.id)) {
-        this.equipmentRegistry.register(item)
-      }
-    }
-  }
-
-  registerAffixes(items: Affix[]) {
-    for (const item of items) {
-      if (!this.affixRegistry.has(item.id)) {
-        this.affixRegistry.register(item)
-      }
-    }
-  }
-
-  registerPills(pills: Pill[]) {
-    for (const pill of pills) {
-      if (!this.pillRegistry.has(pill.id)) {
-        this.pillRegistry.register(pill)
-      }
-    }
-  }
-
-  registerFormations(formations: Formation[]) {
-    // Tombstone-only (plan §10.1.4).
-    for (const formation of formations) {
-      if (!this.formationRegistry.has(formation.id)) {
-        this.formationRegistry.register(formation)
-      }
-    }
-  }
-
-  registerTalismans(talismans: Talisman[]) {
-    // Tombstone-only (plan §10.1.4) — đăng ký để save cũ load không
-    // crash, KHÔNG tạo nguồn mới.
-    for (const talisman of talismans) {
-      if (!this.talismanRegistry.has(talisman.id)) {
-        this.talismanRegistry.register(talisman)
-      }
-    }
+    // Tick orchestration (C3 split) - constructed LAST because it reads
+    // the ops/services above (effectOps/realmAdvanceOps/turnBattleOps/
+    // tribulationDirector) and saveRestore-adjacent deferred closures
+    // point back into it.
+    this.tickOps = new GameManagerTickOps({
+      getActivePlayer: () => this.activePlayer,
+      tickTimedEffects: (player) => this.effectOps.tickTimedEffects(player),
+      investBodyRefinement: (player) => this.realmAdvanceOps.investBodyRefinement(player),
+      questSystem: this.questSystem,
+      questRegistry: this.questRegistry,
+      questManager: this.questManager,
+      notifyQuestMaterialGained: (materialId, amount) =>
+        this.questOps.notifyQuestMaterialGained(materialId, amount),
+      notifications: this.notifications,
+      productionSystem: this.productionSystem,
+      materialBag: this.materialBag,
+      materialRegistry: this.materialRegistry,
+      decomposeSystem: this.decomposeSystem,
+      getWorkerAssignments: () => this.buildingOps.getWorkerAssignments(),
+      alchemySystem: this.alchemySystem,
+      pillBag: this.pillBag,
+      pillRegistry: this.pillRegistry,
+      buffSystem: this.buffSystem,
+      passiveSystem: this.passiveSystem,
+      turnBattleOps: this.turnBattleOps,
+      tribulationDirector: this.tribulationDirector,
+    })
   }
 
   // Skill/Technique không "register" sẵn có toàn bộ danh sách gốc
@@ -921,632 +775,6 @@ export class GameManager {
   // tiếp, không chỉ tra theo id đơn lẻ.
   readonly zoneRegistry = new ZoneRegistry()
 
-  registerZones(zones: Zone[]) {
-    for (const zone of zones) {
-      this.zoneRegistry.register(zone)
-    }
-  }
-
-  registerSkillTemplates(skills: Skill[]) {
-    for (const skill of skills) {
-      this.skillTemplates.register(skill.id, skill)
-    }
-  }
-
-  registerTechniqueTemplates(techniques: Technique[]) {
-    for (const technique of techniques) {
-      this.techniqueTemplates.register(technique.id, technique)
-    }
-  }
-
-  registerEnemyTemplates(enemies: Enemy[]) {
-    for (const enemy of enemies) {
-      this.enemyTemplates.register(enemy.id, enemy)
-    }
-  }
-
-  registerStages(stages: Stage[]) {
-    for (const stage of stages) {
-      this.stageTemplates.register(stage.id, stage)
-    }
-  }
-
-  getStage(stageId: string): Stage | undefined {
-    return this.stageTemplates.get(stageId)
-  }
-
-  /**
-   * Tự Động Thám Hiểm (mode 'auto', xem stores/ui.ts) — Màn kế tiếp
-   * trong CÙNG Địa Giới với `currentStageId`, theo đúng thứ tự khai
-   * trong `Zone.stageIds`. Trả về null nếu đã ở Màn cuối hoặc
-   * currentStageId không thuộc zone này — caller (App.vue's
-   * fightStage()) tự fallback lặp lại Màn hiện tại khi null (graceful,
-   * không cần biết trước zone có bao nhiêu Màn).
-   */
-  getNextStageInZone(zoneId: string, currentStageId: string): string | null {
-    if (!this.zoneRegistry.has(zoneId)) {
-      return null
-    }
-
-    const zone = this.zoneRegistry.get(zoneId)
-
-    const index = zone.stageIds.indexOf(currentStageId)
-
-    if (index === -1) {
-      return null
-    }
-
-    return zone.stageIds[index + 1] ?? null
-  }
-
-  isStageUnlocked(stageId: string, player: PlayerData): boolean {
-    const stage = this.stageTemplates.get(stageId)
-
-    if (stage?.requiredRealmId) {
-      const requiredRealmIndex = getRealmIndex(stage.requiredRealmId)
-      const playerRealmIndex = getRealmIndex(player.realmId)
-
-      if (playerRealmIndex < requiredRealmIndex) {
-        return false
-      }
-
-      if (
-        playerRealmIndex === requiredRealmIndex &&
-        stage.requiredRealmLevel !== undefined &&
-        player.realmLevel < stage.requiredRealmLevel
-      ) {
-        return false
-      }
-    }
-
-    const zones = this.zoneRegistry.getAll()
-    const zoneIndex = zones.findIndex((candidate) => candidate.stageIds.includes(stageId))
-    const zone = zones[zoneIndex]
-
-    if (!zone) {
-      // Stage độc lập (Độ Kiếp/test/debug) không thuộc tuyến thám hiểm.
-      return true
-    }
-
-    const index = zone.stageIds.indexOf(stageId)
-
-    if (index > 0) {
-      return player.completedStageIds.includes(zone.stageIds[index - 1]!)
-    }
-
-    if (zoneIndex === 0) {
-      return true
-    }
-
-    const previousZone = zones[zoneIndex - 1]!
-    const previousFinalStage = previousZone.stageIds.at(-1)
-    return Boolean(previousFinalStage && player.completedStageIds.includes(previousFinalStage))
-  }
-
-  learnSkill(skillId: string): boolean {
-    const template = this.skillTemplates.get(skillId)
-
-    if (!template) {
-      return false
-    }
-
-    return this.skillSystem.learn(template)
-  }
-
-  /**
-   * Pháp Tu Redesign (magicpath) — mua 1 ProgressionNode (LĨNH NGỘ,
-   * 0→1). Gọi `purchaseNode()` thuần (core/progression/NodeSystem.ts)
-   * trước — hàm đó tự xử lý mọi thứ không cần registry. Chỉ còn
-   * `unlocksSkillIds` cần learnSkill() (cần skillTemplates, GameManager
-   * mới có). KHÔNG tự equip skill vừa unlock.
-   *
-   * §6.8 — KHÔNG còn mutate Skill instance / push player.modifiers lúc
-   * mua: mọi hiệu lực suy ra từ (registry, nodeLevels) qua aggregator
-   * (getAggregatedModifiers + buildSkillRuntimeStats), recompute luôn
-   * cho cùng kết quả xác định.
-   */
-  purchaseNode(nodeId: string, player: PlayerData): boolean {
-    if (!this.nodeRegistry.has(nodeId)) {
-      return false
-    }
-
-    const node = this.nodeRegistry.get(nodeId)
-
-    if (!purchaseNodeSystem(player, node)) {
-      return false
-    }
-
-    // Effect mở khoá skill chỉ chạy ở chuyển tiếp 0 → 1 —
-    // purchaseNodeSystem chỉ trả true đúng ở chuyển tiếp này.
-    for (const skillId of node.effect.unlocksSkillIds ?? []) {
-      this.learnSkill(skillId)
-
-      // Ki?m Th? / Ki?m ï¿½ (spec 2026-08-29 m?c 5.1) ï¿½ ki?m tr?n ti?n
-      // hï¿½a: m?i route ï¿½ï¿½NG 1 active skill ? slot 0, keystone m?i t?
-      // THAY TH? tr?n cu (equipToSlot t? d?i occupant cu). KHï¿½NG cï¿½n
-      // slot riï¿½ng KIEM_TRAN_SLOT_INDEX.
-      if (skillId.startsWith('kiem_tran_')) {
-        this.skillSystem.equipToSlot(skillId, 0)
-      }
-    }
-
-    // Phï¿½p Tu Thu?n H? (E-8, 2026-09-03) ï¿½ node bi?n th?: mua node lï¿½ CH?N
-    // specialization c?a skill qua SkillSystem (cï¿½ng du?ng
-    // selectSkillSpecialization c?a UI). Skill chua h?c / spec khï¿½ng t?n
-    // t?i ? selectSpecialization tr? false, KHï¿½NG rollback purchase (data
-    // Task 8 t? d?m b?o prereq unlocksSkillIds ch?y tru?c trong vï¿½ng l?p
-    // trï¿½n).
-    const selectsSpec = node.effect.selectsSpecialization
-
-    if (selectsSpec) {
-      this.skillSystem.selectSpecialization(selectsSpec.skillId, selectsSpec.specializationId)
-    }
-
-    return true
-  }
-
-  /** Cấp reward đại cảnh giới theo cultivation path từ data kit. */
-  grantCultivationPathRealmReward(player: PlayerData, realmId: string): boolean {
-    return grantPathRealmReward(player, realmId, {
-      getEquippedTechnique: () => this.techniqueManager.getEquipped(),
-      getTechnique: techniqueId => this.techniqueManager.get(techniqueId),
-      learnTechnique: techniqueId => this.learnTechnique(techniqueId),
-      equipTechnique: techniqueId => this.equipTechnique(techniqueId),
-    })
-  }
-
-  /**
-   * R8.2 Slice 2 (AR-10): facade for the minor-realm breakthrough outcome
-   * chain. The service owns all consequences (passive sync, banked
-   * artifact release, and the documented-dead major-realm branches);
-   * this orchestrator only delegates (A5 — no formula logic here).
-   * `player` must be the Pinia store instance, NOT `store.$state`
-   * (same absent-key write semantics as TribulationOutcomeService).
-   */
-  breakthroughWithConsequences(player: BreakthroughPlayerWriter): BreakthroughOutcomeResult {
-    return this.breakthroughOutcomeService.breakthrough(player, this)
-  }
-
-  /**
-   * Nâng node đã lĩnh ngộ lên +1 cấp bằng Cảm Ngộ (§6.2) — cost theo
-   * data node; không vượt maxLevel; thất bại không mutate gì.
-   */
-  upgradeNode(nodeId: string, player: PlayerData): boolean {
-    if (!this.nodeRegistry.has(nodeId)) {
-      return false
-    }
-
-    return upgradeNodeSystem(player, this.nodeRegistry.get(nodeId))
-  }
-
-  getNodeLevel(nodeId: string, player: PlayerData): number {
-    return this.nodeRegistry.has(nodeId) ? getNodeLevelSystem(player, nodeId) : 0
-  }
-
-  getNodeMaxLevel(nodeId: string): number {
-    return this.nodeRegistry.has(nodeId) ? getNodeMaxLevelSystem(this.nodeRegistry.get(nodeId)) : 0
-  }
-
-  /** Cost Cảm Ngộ của lần mua/nâng KẾ TIẾP — undefined khi đã max. */
-  getNextNodeCost(nodeId: string, player: PlayerData): number | undefined {
-    if (!this.nodeRegistry.has(nodeId)) {
-      return undefined
-    }
-
-    const node = this.nodeRegistry.get(nodeId)
-
-    const level = getNodeLevelSystem(player, nodeId)
-
-    if (level >= getNodeMaxLevelSystem(node)) {
-      return undefined
-    }
-
-    return getNextLevelCostSystem(node, level)
-  }
-
-  canPurchaseNode(nodeId: string, player: PlayerData): boolean {
-    return (
-      this.nodeRegistry.has(nodeId) && canPurchaseNodeSystem(player, this.nodeRegistry.get(nodeId))
-    )
-  }
-
-  canUpgradeNode(nodeId: string, player: PlayerData): boolean {
-    return (
-      this.nodeRegistry.has(nodeId) && canUpgradeNodeSystem(player, this.nodeRegistry.get(nodeId))
-    )
-  }
-
-  /**
-   * Reset development một nhánh (§6.10) — hoàn đúng tổng Cảm Ngộ đã
-   * tiêu (suy từ level/cost data), cascade gỡ node con mồ côi; modifier
-   * tự cập nhật qua aggregator (không trừ ngược modifier cũ).
-   */
-  devResetBranch(branchTag: string, player: PlayerData): number {
-    return devResetBranchSystem(player, this.nodeRegistry, branchTag)
-  }
-
-  /**
-   * skill-insight-and-auto-combat-hud-plan.md mục 5 — nâng cấp skill
-   * bằng Cảm ngộ Kỹ năng, thuần pass-through xuống SkillSystem (đã có
-   * skillManager qua constructor, không cần gì thêm từ GameManager).
-   */
-  upgradeSkill(skillId: string, player: PlayerData): boolean {
-    return this.skillSystem.upgradeSkill(skillId, player)
-  }
-
-  getSkillUpgradeInsightCost(skillId: string): number | undefined {
-    return this.skillSystem.getSkillUpgradeInsightCost(skillId)
-  }
-
-  /**
-   * PLAN HOÀN CHỈNH mục 2 — tiêu 1 attributePoint vào ĐÚNG 1 Main Stat.
-   * No-op (trả false) nếu hết điểm hoặc stat đã chạm trần đại cảnh
-   * giới hiện tại (getMainStatCap()) — trần tính riêng từng stat,
-   * KHÔNG có trần tổng của cả 5 (đúng "Nguyên tắc" mục 2 của doc).
-   */
-  allocateAttributePoint(player: PlayerData, stat: MainStatKey): boolean {
-    if (player.attributePoints <= 0) {
-      return false
-    }
-
-    if (player.baseStats[stat] >= getMainStatCap(player.realmId)) {
-      return false
-    }
-
-    player.attributePoints--
-    player.baseStats[stat]++
-
-    return true
-  }
-
-  learnTechnique(techniqueId: string): boolean {
-    const template = this.techniqueTemplates.get(techniqueId)
-
-    if (!template) {
-      return false
-    }
-
-    return this.techniqueSystem.learn(template)
-  }
-
-  /**
-   * Tâm Pháp Chiến Đấu có thể mang `innateSkillId` (nội tại chiến đấu
-   * đặc trưng) — tự học + equip skill passive đó ngay khi tâm pháp
-   * được trang bị, pattern Y HỆT syncRealmPassive() (idempotent qua
-   * skillManager.has(), un-equip technique sau đó KHÔNG tự gỡ skill —
-   * giữ tinh thần "học rồi thì giữ" toàn hệ thống).
-   */
-  equipTechnique(techniqueId: string): boolean {
-    const success = this.techniqueSystem.equip(techniqueId)
-
-    if (!success) {
-      return false
-    }
-
-    const technique = this.techniqueManager.get(techniqueId)
-
-    if (technique?.innateSkillId && !this.skillManager.has(technique.innateSkillId)) {
-      const template = this.skillTemplates.get(technique.innateSkillId)
-
-      if (template) {
-        this.skillSystem.learn(template)
-
-        // innateSkillId luôn là passive (xem Technique.ts) — không
-        // thuộc Skill Loadout, dùng equipWithoutSlot() như mọi passive
-        // khác (syncRealmPassive()).
-        this.skillSystem.equipWithoutSlot(technique.innateSkillId)
-      }
-    }
-
-    return true
-  }
-
-  unequipTechnique(techniqueId: string): boolean {
-    return this.techniqueSystem.unequip(techniqueId)
-  }
-
-  /**
-   * Pháp Tu profession-tier ladder (2026-08-14, hợp nhất Tâm Pháp
-   * 2026-08-15) — "chọn nghề nghiệp", MỘT LẦN DUY NHẤT, VĨNH VIỄN (xem
-   * PlayerData.cultivationPath) — tự cấp ĐÚNG bộ kit cố định của tier
-   * đó: 1 Tâm Pháp hợp nhất (GHI ĐÈ tâm pháp đang trang bị, kể cả tâm
-   * pháp khởi đầu) + 3 skill cố định (basic/special/ultimate, GHI ĐÈ
-   * bất kỳ skill nào đang chiếm 3 slot đó). KHÔNG phải hệ thống build
-   * tự do — tái dùng nguyên vẹn learnTechnique()/equipTechnique()/
-   * learnSkill()/equipSkill() đã có.
-   *
-   * Nghi Lễ Nhập Môn (2026-08-16) — chọn path CHÍNH LÀ nghi lễ đột phá
-   * Phàm Nhân -> Luyện Khí (đúng "đột phá lên cảnh giới mới luôn có
-   * nghi lễ" — Trúc Cơ có Độ Kiếp riêng, Phàm Nhân->Luyện Khí dùng
-   * chính hành động chọn nghề này thay vì 1 nút Đột Phá thường, xem
-   * CultivationSystem.breakthrough()'s guard chặn realmId === 'mortal').
-   * Nếu player đang ở Phàm Nhân lúc chọn, atomically chuyển luôn sang
-   * qi_refining tầng 1 — 3 hàm gọi sau đó GIỐNG HỆT useBreakthrough.ts/
-   * useTribulation.ts gọi sau mọi lần đột phá đại cảnh giới.
-   */
-  chooseCultivationPath(pathId: CultivationPathId, player: PlayerData): boolean {
-    if (
-      player.cultivationPath ||
-      player.realmId !== 'mortal' ||
-      player.realmLevel < CORE_REALM_LEVEL
-    ) {
-      return false
-    }
-
-    const kit = CULTIVATION_PATH_KITS[pathId]
-
-    player.cultivationPath = pathId
-
-    this.learnTechnique(kit.techniqueId)
-    this.equipTechnique(kit.techniqueId)
-
-    // Ki?m Th? / Ki?m ï¿½ (spec 2026-08-29-kiem-the-kiem-y m?c 1) ï¿½ route
-    // ch?t VINH VI?N dï¿½ng lï¿½c ch?n path: Huy Ki?m (tram) dï¿½ d?t Lv3
-    // (10.000 l?n tr?m) ? B?t Ki?m; chua ? Ki?m Tr?n. KHï¿½NG cï¿½n API
-    // d?i route (setKiemTuRoute dï¿½ d?) ï¿½ branch node cï¿½n l?i b? ?n ?
-    // UI (SkillPathPanel hi?n th? dï¿½ng 1 branch theo route).
-    // kit.skillIds c?a Ki?m Tu gi? KHï¿½NG dï¿½ng n?a (m?i route 1 skill
-    // duy nh?t, gï¿½n trong nhï¿½nh nï¿½y) ï¿½ tuple 3-skill cu dï¿½ d? kh?i
-    // CultivationPathKit.
-    if (pathId === 'kiem_tu') {
-      const tramCasts = player.skillCastCounts?.['tram'] ?? 0
-      const route: KiemTuRoute = tramCasts >= HUY_KIEM_L3_CASTS ? 'bat_kiem' : 'kiem_tran'
-
-      player.kiemTuRoute = route
-
-      // M?i route ï¿½ï¿½NG 1 active skill duy nh?t (spec m?c 5) ï¿½ thï¿½o b?
-      // skill kit cu + tram kh?i loadout (KHï¿½NG unlearn: Phï¿½m Nhï¿½n save
-      // khï¿½c v?n dï¿½ng tram du?c; Ki?m Tu dï¿½ ch?t route thï¿½ tram b? khï¿½a
-      // re-equip qua guard ? SkillSystem ï¿½ xem guard tram phï¿½a du?i).
-      this.skillSystem.unequip('tram')
-      for (const skillId of ['ngu_kiem_thuat', 'kiem_khai_thien_mon', 'van_kiem_trieu_tong']) {
-        this.skillSystem.unequip(skillId)
-      }
-    } else if (kit.skillIds) {
-      kit.skillIds.forEach((skillId, index) => {
-        this.learnSkill(skillId)
-        this.skillSystem.equipToSlot(skillId, index)
-      })
-    } else {
-      // Skill tree redesign (2026-08-21) — Hỏa Cầu Thuật là ROOT NODE
-      // của Hỏa skill tree (không phải 1 skill học riêng bên ngoài cây),
-      // xem data/progression/PhapTuNodes.ts's FIRE_LINH_NGO — cost 0 nên
-      // luôn mua được ngay, purchaseNode() tự lo learnSkill() qua
-      // unlocksSkillIds. Sau đó trang bị NGAY vào slot 0, thay vì bắt
-      // người chơi tự mở Node Tree + Radial Skill Selector trước khi
-      // đánh được trận nào. equipToSlot() tự dời skill đang chiếm slot 0
-      // (Trảm của Phàm Nhân) — execution policy rework (plan §8.6) không
-      // còn mutual-exclusion đòn cơ bản riêng. Vì luôn có skill ngay
-      // sau bước này, gate blockIfNoBasicAttack() ở useBattleActions.ts/
-      // useTribulation.ts đã GỠ theo (không còn tình huống "chưa trang bị
-      // gì" nữa). Thủy/Mộc/Thổ/Kim KHÔNG tự mua — root node của 4 hành
-      // đó tốn 2 Skill Point, người chơi tự mua qua Node Tree UI.
-      this.purchaseNode(PHAP_TU_STARTER_NODE_ID, player)
-
-      this.skillSystem.equipToSlot(PHAP_TU_STARTER_SKILL_ID, 0)
-    }
-
-    if (player.realmId === 'mortal') {
-      // Realm Passive & Pressure System (2026-08-20) — chốt Bậc Nhập
-      // Đạo TRƯỚC khi grant, để Nhập Đạo (RealmPassives.ts) đọc đúng
-      // giá trị cuối cùng của Luyện Thể tại thời điểm Lễ Nhập Môn.
-      player.breakthroughGrade = computeBreakthroughGrade(player)
-
-      // Spec dot-pha-loi-kiep ï¿½4.2 ï¿½ snapshot "hoï¿½n h?o Phï¿½m Nhï¿½n"
-      // (5/5 main stat d?t cap mortal + Luy?n Th th? 6/6) ch?t dï¿½ng
-      // lï¿½c b?m Quï¿½n Khï¿½, KHï¿½NG h?i c?u sau khi vï¿½o Luy?n Khï¿½. Lï¿½ 1
-      // di?u ki?n ï¿½?i ï¿½?o Trï¿½c Co.
-      player.mortalPerfectionAchieved =
-        player.bodyRefinementCompletedTiers >= BODY_REFINEMENT_TIERS.length &&
-        MAIN_STAT_KEYS.every((stat) => player.baseStats[stat] >= getMainStatCap('mortal'))
-
-      player.realmId = 'qi_refining'
-      player.realmLevel = 1
-      player.cultivation = 0
-
-      // R8.1 (AR-09) - realm transition may unlock quests; reconcile on
-      // the next tick instead of waiting for a panel read.
-      this.markQuestRealmTransition()
-
-      this.syncRealmPassive(player)
-      this.syncRealmStatPassive(player)
-    }
-
-    // Ki?m Th? / Ki?m ï¿½ (spec m?c 1/5) ï¿½ grant skill route SAU realm
-    // advance: root Lu?ng Nghi cï¿½ realm prereq 'qi_refining', ph?i d?i
-    // L? Nh?p Mï¿½n d?i realm xong m?i purchaseNode du?c. M?i route ï¿½ï¿½NG
-    // 1 active skill ? slot 0 (don ki?m/b?t ki?m th?c ho?c da ki?m/
-    // lu?ng nghi ti?n hï¿½a).
-    if (pathId === 'kiem_tu' && player.kiemTuRoute === 'bat_kiem') {
-      this.learnSkill('bat_kiem_thuat')
-      this.skillSystem.equipToSlot('bat_kiem_thuat', 0)
-    } else if (pathId === 'kiem_tu') {
-      this.purchaseNode('kiem_tran_luong_nghi', player)
-    }
-
-    return true
-  }
-
-  /**
-   * Bản Mệnh Pháp Bảo (doc §7.1) — chọn/đổi hướng Công/Thủ/Khống. Đổi
-   * được NHIỀU LẦN ngoài combat (khác chooseCultivationPath() ở trên —
-   * đó là lựa chọn vĩnh viễn, đây là "đổi miễn phí ngoài combat để
-   * test"). Giữ nguyên EXP/tầng/phẩm, chỉ áp dụng từ trận kế (runtime
-   * artifact snapshot path lúc Battle bắt đầu, không đọc lại giữa trận).
-   * KHÔNG dùng window.confirm — khác QuanKhiPanel.vue (lựa chọn đó
-   * không thể đổi lại, đây thì có).
-   */
-  setArtifactPath(player: PlayerData, path: ArtifactPath): boolean {
-    if (!player.artifact) {
-      return false
-    }
-
-    const battle = this.getBattle()
-
-    if (battle && (battle.state === 'intro' || battle.state === 'countdown' || battle.state === 'fighting')) {
-      return false
-    }
-
-    player.artifact.selectedPath = path
-
-    return true
-  }
-
-  /**
-   * Ki?m Tu t? l?c (2026-08-28) t?ng cï¿½ setKiemTuRoute() d?i route
-   * ngoï¿½i combat ï¿½ ï¿½ï¿½ D? (spec 2026-08-29-kiem-the-kiem-y m?c 1): route
-   * gi? ch?t VINH VI?N trong chooseCultivationPath('kiem_tu') theo
-   * tram Lv3, khï¿½ng cï¿½n thao tï¿½c d?i sau nï¿½y.
-   */
-
-
-  /**
-   * Bản Mệnh Pháp Bảo (doc §5.3) — nâng phẩm bằng Đoán Bảo Thạch, CHỈ
-   * ngoài combat (transaction thật nằm ở tryUpgradeArtifactGrade() core
-   * thuần — enforce guard combat NGAY TẠI ĐÂY, không chỉ ở UI).
-   */
-  tryUpgradeArtifactGrade(player: PlayerData): boolean {
-    if (!player.artifact) {
-      return false
-    }
-
-    const battle = this.getBattle()
-
-    if (battle && (battle.state === 'intro' || battle.state === 'countdown' || battle.state === 'fighting')) {
-      return false
-    }
-
-    return tryUpgradeArtifactGrade(player.artifact, this.materialBag)
-  }
-
-  /**
-   * PLAN HOÀN CHỈNH mục 8/12 — "Set Skill vào Loadout" (Tầng 4), tách
-   * biệt HOÀN TOÀN khỏi learnSkill()/purchaseNode() (Tầng 3, "học").
-   * skillId === null thì DỌN slot đó (unequip skill đang chiếm, nếu
-   * có). Validate slotIndex theo tiến trình cảnh giới ở ĐÂY (không
-   * phải SkillSystem — domain thuần không biết realm).
-   */
-  setSkillLoadoutSlot(player: PlayerData, slotIndex: number, skillId: string | null): boolean {
-    if (skillId === null) {
-      const current = this.skillManager.getEquippedInSlot(slotIndex)
-
-      return current ? this.skillSystem.unequipFromSlot(slotIndex) : false
-    }
-
-    if (slotIndex < 0 || slotIndex >= getSkillLoadoutSlotCount(player.realmId)) {
-      return false
-    }
-
-    if (!this.skillManager.has(skillId) || !this.skillManager.get(skillId)!.unlocked) {
-      return false
-    }
-
-    return this.skillSystem.equipToSlot(skillId, slotIndex)
-  }
-
-  unequipSkill(skillId: string): boolean {
-    return this.skillSystem.unequip(skillId)
-  }
-
-  /**
-   * Combat AI strategy (plan §10) — PlayerData là nguồn sự thật duy nhất;
-   * UI không tự giữ state. Validate qua isCombatAiStrategy() dùng chung,
-   * trả false nếu giá trị sai. Lưu tự kích hoạt qua save scheduling hiện
-   * có (autosave/visibilitychange) sau khi UI bumpState().
-   */
-  setCombatAiStrategy(player: PlayerData, strategy: CombatAiStrategy): boolean {
-    if (!isCombatAiStrategy(strategy)) {
-      return false
-    }
-
-    player.combatAiStrategy = strategy
-
-    return true
-  }
-
-  // Core Loop Foundation checklist (Mục SKILL) — "behavior-changing
-  // node".
-  selectSkillSpecialization(skillId: string, specializationId: string): boolean {
-    return this.skillSystem.selectSpecialization(skillId, specializationId)
-  }
-
-  // =========================
-  // MODIFIER AGGREGATION
-  // =========================
-
-  /**
-   * Modifier tổng hợp từ Buff + Technique đang trang bị + Skill
-   * passive đang equipped. Stack của passiveModifiers được
-   * PassiveSystem tích trực tiếp lên object Skill (xem
-   * PassiveSystem.ts) nên chỉ cần đọc thẳng từ skillManager, không
-   * cần một bước "gộp" riêng như trước đây comment cũ nhắc tới.
-   *
-   * Đây là điểm duy nhất trong toàn bộ game tổng hợp modifier
-   * theo thời gian thực. player.ts (store) chỉ cần gọi hàm này
-   * mỗi tick thay vì tự đi gộp từ buffSystem/techniqueSystem/skillManager.
-   */
-  /**
-   * `player` optional (mặc định bỏ qua tier tâm pháp) — nhiều call site
-   * cũ (test files, vài panel refresh phụ) gọi hàm này KHÔNG có sẵn
-   * PlayerData tiện tay; chữ ký cũ vẫn hợp lệ nguyên vẹn. Call site
-   * "thật" mỗi tick (App.vue) LUÔN truyền player để tier tâm pháp có
-   * hiệu lực — xem getTechniqueTierModifiers().
-   */
-  getAggregatedModifiers(player?: PlayerData): StatModifier[] {
-    // STATIC-ONLY (2026-08-24, plan §5.4): timed effect + socket
-    // Phù/Trận là modifier SỐNG — KHÔNG nằm ở đây để finalStats caller
-    // truyền vào battle là snapshot tĩnh sạch (không double-apply);
-    // combat recompute nhận runtime qua provider mỗi tick, menu hiển thị
-    // qua store getter cộng getActiveRuntimeModifiers().
-    return [
-      ...this.buffSystem.getActiveModifiers(),
-      // Core Loop Foundation checklist (Mục SKILL) - qua
-      // getScaledPassiveModifiers() thay vì đọc thẳng
-      // skill.passiveModifiers, để áp Specialization + level scaling.
-      ...this.skillSystem.getScaledPassiveModifiers(),
-      ...(player ? this.getTechniqueTierModifiers(player) : []),
-      ...(player ? getCultivationPathStatModifiers(player) : []),
-      // Node level (plan §6.8) — modifier node suy ra từ (registry,
-      // nodeLevels), scale theo level hiện hành; KHÔNG nằm trong
-      // player.modifiers nữa.
-      ...(player ? aggregateNodeStatModifiers(this.nodeRegistry, player) : []),
-      // Combat-gate-teleport-autocast plan §9 — combatModifiers của tâm
-      // pháp ĐANG trang bị (+2 attackRange Đại Ngũ Hành Chân Quyết):
-      // cố định, không theo tier, chỉ khi equipped. DUY NHẤT đường tổng
-      // hợp để tránh cộng hai lần.
-      ...this.getTechniqueCombatModifiers(),
-    ]
-  }
-
-  /** Modifier combat cố định của tâm pháp đang trang bị (plan §9). */
-  private getTechniqueCombatModifiers(): StatModifier[] {
-    const technique = this.techniqueManager.getEquipped()
-
-    if (!technique?.equipped || !technique.combatModifiers) {
-      return []
-    }
-
-    return [...technique.combatModifiers]
-  }
-
-  /**
-   * PLAN HOÀN CHỈNH mục 5 rework (2026-08-20) — hiệu ứng chỉ số của tâm
-   * pháp ĐANG trang bị, theo ĐÚNG tier hiện tại (getTechniqueTier(),
-   * giờ tính từ techniqueExperience — thanh kinh nghiệm riêng của Tâm
-   * Pháp, xem TechniqueTier.ts). manaRegenPercent cố ý map vào percent
-   * CỦA stat manaRegenPerSecond (Increased chuẩn, xem StatCalculator.ts's
-   * runPipeline) thay vì %maxMp — %maxMp sẽ tạo phụ thuộc vòng (maxMp
-   * chưa tính xong ngay tại bước gộp modifier này).
-   */
-  // =========================
-  // RUNTIME MODIFIER AUTHORITY (2026-08-24, resource-professions-rework
-  // Phase 4/6 — plan §5.4/§7.2): modifier SỐNG theo thời gian (timed
-  // effect) + modifier socket trên slot (Phù/Trận). MỘT authority duy
-  // nhất ở đây — menu (getAggregatedModifiers) và combat recompute
-  // (BattleSystem qua provider) cùng đọc, không hai bản sao lệch nhau.
-  // KHÔNG bao giờ vào CombatEntity.baseStats snapshot.
-  // =========================
-
   private activePlayer?: PlayerData
 
   /**
@@ -1557,748 +785,12 @@ export class GameManager {
     this.activePlayer = player
 
     // Load save: b? effect dï¿½ h?t h?n ngay (plan ï¿½9).
-    this.tickTimedEffects(player)
+    this.effectOps.tickTimedEffects(player)
 
     // Talent v4 (spec 2026-09-03 ï¿½4.1) ï¿½ grant hidden passive c?a
     // talent combat ngay khi active player d?i (load save / restore /
     // sau L? Nh?p Mï¿½n t?o nhï¿½n v?t).
-    this.syncTalentCombatPassive(player)
-  }
-
-  getActiveTimedModifiers(player: PlayerData, now = Date.now()): StatModifier[] {
-    return player.persistentTimedEffects
-      .filter((effect) => effect.expiresAtMs > now)
-      .flatMap((effect) => effect.modifiers)
-  }
-
-  /**
-   * Toàn bộ modifier SỐNG của player: timed effect + socket Phù/Trận
-   * trên slot đang có equipment. Battle recompute gọi qua provider mỗi
-   * tick — effect hết hạn giữa trận tự rơi khỏi recompute kế tiếp.
-   */
-  getActiveRuntimeModifiers(player: PlayerData, now = Date.now()): StatModifier[] {
-    return [...this.getActiveTimedModifiers(player, now), ...this.getSlotModifiers()]
-  }
-
-  /**
-   * Stack policy MVP (plan §5.4): cùng effectGroup → refresh deadline
-   * (max) và giữ giá trị mạnh hơn per-modifier; khác nhóm → thêm mới.
-   *
-   * Merge key theo IDENTITY THỰC của modifier: `stat` + `tag` (tag phân
-   * biệt pool Increased trong runPipeline(), xem StatCalculator) — KHÔNG
-   * dùng giá trị `percent` làm key (bug audit P0-1: hai percent khác nhau
-   * của cùng stat không match và cộng dồn ngoài policy). Khi match, chọn
-   * giá trị mạnh hơn RIÊNG cho flat/percent/multiplier để modifier yếu và
-   * mạnh không cùng tồn tại.
-   */
-  applyTimedEffect(player: PlayerData, effect: PersistentTimedEffect) {
-    const group = effect.effectGroup
-
-    if (group) {
-      const existing = player.persistentTimedEffects.find(
-        (candidate) => candidate.effectGroup === group,
-      )
-
-      if (existing) {
-        if (effect.durationStackable) {
-          const duration = Math.max(0, effect.expiresAtMs - effect.appliedAtMs)
-          existing.expiresAtMs = Math.max(Date.now(), existing.expiresAtMs) + duration
-        } else {
-          existing.expiresAtMs = Math.max(existing.expiresAtMs, effect.expiresAtMs)
-        }
-
-        for (const modifier of effect.modifiers) {
-          const old = existing.modifiers.find(
-            (candidate) => candidate.stat === modifier.stat && candidate.tag === modifier.tag,
-          )
-
-          if (!old) {
-            existing.modifiers.push(modifier)
-
-            continue
-          }
-
-          if ((modifier.flat ?? 0) > (old.flat ?? 0)) {
-            old.flat = modifier.flat
-          }
-
-          if ((modifier.percent ?? 0) > (old.percent ?? 0)) {
-            old.percent = modifier.percent
-          }
-
-          if ((modifier.multiplier ?? 1) > (old.multiplier ?? 1)) {
-            old.multiplier = modifier.multiplier
-          }
-        }
-
-        return
-      }
-    }
-
-    player.persistentTimedEffects.push(effect)
-  }
-
-  /** Bỏ effect hết hạn — trả số effect đã rơi (debug/test). */
-  tickTimedEffects(player: PlayerData, now = Date.now()): number {
-    const before = player.persistentTimedEffects.length
-
-    player.persistentTimedEffects = player.persistentTimedEffects.filter(
-      (effect) => effect.expiresAtMs > now,
-    )
-
-    return before - player.persistentTimedEffects.length
-  }
-
-  /**
-   * T? LINH TR?N (economy-fixes-sinks-plan ï¿½3.2 B1, 2026-08-29) ï¿½ sink
-   * Linh Th?ch mua % t?c d? tu luy?n 24h. Cost leo thang theo s? effect
-   * Cï¿½NG NHï¿½M dang active (expiresAtMs > now); ch? M?T effect group t?n
-   * t?i t?i 1 th?i di?m (stack policy MVP c?a applyTimedEffect ï¿½ refresh
-   * deadline). Giao d?ch atomic: thi?u Linh Th?ch ? khï¿½ng tr? gï¿½.
-   */
-  activateTuLinhTran(player: PlayerData, now = Date.now()): { ok: boolean; reason?: string } {
-    const activeStacks = player.persistentTimedEffects.filter(
-      (effect) => effect.effectGroup === TU_LINH_TRAN_EFFECT_GROUP && effect.expiresAtMs > now,
-    ).length
-
-    const cost = getTuLinhTranCost(player.realmId, activeStacks)
-
-    if (!this.materialRegistry.has(cost.materialId) || !this.materialBag.has(cost.materialId, cost.amount)) {
-      return { ok: false, reason: 'missing_spirit_stone' }
-    }
-
-    this.materialBag.remove(cost.materialId, cost.amount)
-
-    this.applyTimedEffect(player, {
-      id: 'tu_linh_tran',
-
-      sourceItemId: 'tu_linh_tran',
-
-      effectGroup: TU_LINH_TRAN_EFFECT_GROUP,
-
-      appliedAtMs: now,
-
-      expiresAtMs: now + TU_LINH_TRAN_DURATION_MS,
-
-      modifiers: [],
-
-      cultivationSpeedPercent: TU_LINH_TRAN_BUFF_PERCENT,
-    })
-
-    return { ok: true }
-  }
-
-  /**
-   * Nguồn DUY NHẤT tổng hợp 2+2 modifier Phù/Trận trên các slot đang có
-   * equipment (plan §7.2). Socket modifier giữ sourceId/sourceType ổn
-   * định để tooltip/debug truy nguồn, KHÔNG vào baseStats snapshot.
-   */
-  getSlotModifiers(): StatModifier[] {
-    const result: StatModifier[] = []
-
-    for (const slot of EQUIPMENT_SLOTS) {
-      if (!this.equipmentBag.getEquippedInSlot(slot)) {
-        continue
-      }
-
-      const state = this.equipmentSlotManager.get(slot)
-
-      if (state.socketedTalisman) {
-        result.push(...state.socketedTalisman.modifiers)
-      }
-
-      if (state.socketedFormation) {
-        result.push(...state.socketedFormation.modifiers)
-      }
-    }
-
-    return result
-  }
-
-  private getTechniqueTierModifiers(_player: PlayerData): StatModifier[] {
-    const technique = this.techniqueManager.getEquipped()
-
-    const effect =
-      technique?.tierEffects?.[
-        getTechniqueTier(technique.insight ?? 0, getTechniqueInsightTotalRequired(technique))
-      ]
-
-    if (!effect) {
-      return []
-    }
-
-    const modifiers: StatModifier[] = []
-
-    if (effect.attackFlat !== undefined) {
-      modifiers.push({
-        id: `technique-tier:${technique!.id}:attack`,
-        sourceId: technique!.id,
-        sourceType: 'technique',
-        stat: 'attack',
-        flat: effect.attackFlat,
-      })
-    }
-
-    if (effect.defenseFlat !== undefined) {
-      modifiers.push({
-        id: `technique-tier:${technique!.id}:defense`,
-        sourceId: technique!.id,
-        sourceType: 'technique',
-        stat: 'defense',
-        flat: effect.defenseFlat,
-      })
-    }
-
-    if (effect.maxMpPercent !== undefined) {
-      modifiers.push({
-        id: `technique-tier:${technique!.id}:maxMp`,
-        sourceId: technique!.id,
-        sourceType: 'technique',
-        stat: 'maxMp',
-        percent: effect.maxMpPercent,
-      })
-    }
-
-    if (effect.manaRegenPercent !== undefined) {
-      modifiers.push({
-        id: `technique-tier:${technique!.id}:manaRegen`,
-        sourceId: technique!.id,
-        sourceType: 'technique',
-        stat: 'manaRegenPerSecond',
-        percent: effect.manaRegenPercent,
-      })
-    }
-
-    // Yêu cầu 2026-08-26 — HP/s & MP/s mặc định của tâm pháp: flat trực
-    // tiếp lên 2 stat hồi/giây, áp cho MỌI technique khai tierEffects.
-    if (effect.hpRegenFlat !== undefined) {
-      modifiers.push({
-        id: `technique-tier:${technique!.id}:hpRegen`,
-        sourceId: technique!.id,
-        sourceType: 'technique',
-        stat: 'hpRegenPerTurn',
-        flat: effect.hpRegenFlat,
-      })
-    }
-
-    if (effect.mpRegenFlat !== undefined) {
-      modifiers.push({
-        id: `technique-tier:${technique!.id}:mpRegen`,
-        sourceId: technique!.id,
-        sourceType: 'technique',
-        stat: 'manaRegenPerSecond',
-        flat: effect.mpRegenFlat,
-      })
-    }
-
-    return modifiers
-  }
-
-  /**
-   * Mở khóa + tự equip passive skill ứng với cảnh giới hiện tại của
-   * player — gọi ngay sau breakthrough() thành công. Nguồn passive
-   * giờ đến từ tâm pháp ĐANG trang bị (Technique.passiveSkillIdsByRealm,
-   * hợp nhất 2026-08-15 — không còn slot 'cultivation' riêng), không
-   * còn cố định theo cảnh giới (RealmData.unlockSkillId cũ) — đổi tâm
-   * pháp thì 9 passive tương lai cũng đổi theo, passive đã học trước
-   * đó thì giữ nguyên. Không có tâm pháp nào đang trang bị thì không
-   * có passive nào được học. Idempotent (kiểm tra skillManager.has()
-   * trước khi learn) nên an toàn khi gọi lặp hoặc sau khi load save.
-   */
-  syncRealmPassive(player: PlayerData) {
-    const realm = getCurrentRealm(player.realmId)
-
-    const technique = this.techniqueManager.getEquipped()
-
-    const skillId = technique?.passiveSkillIdsByRealm?.[realm.id]
-
-    if (!skillId) {
-      return
-    }
-
-    if (this.skillManager.has(skillId)) {
-      return
-    }
-
-    const template = this.skillTemplates.get(skillId)
-
-    if (!template) {
-      return
-    }
-
-    this.skillSystem.learn(template)
-
-    // Passive KHÔNG thuộc Skill Loadout (không tranh slot với active
-    // skill) — equipWithoutSlot() y hệt hành vi equip() cũ cho passive.
-    this.skillSystem.equipWithoutSlot(skillId)
-  }
-
-  /**
-   * Realm Passive & Pressure System (2026-08-20) — cấp buff VĨNH VIỄN
-   * (Nhập Đạo/Kiến Cơ/..., xem data/realm/RealmPassives.ts) của cảnh
-   * giới HIỆN TẠI, tên tách biệt syncRealmPassive() ở trên (đó là
-   * passive SKILL theo tâm pháp, đây là stat modifier theo Breakthrough
-   * Grade/Loại Trúc Cơ) để khỏi nhầm 2 khái niệm. Idempotent (xem
-   * RealmPassiveSystem.grantRealmPassive()) — gọi cùng 3 điểm với
-   * syncRealmPassive() (chooseCultivationPath() dưới đây,
-   * useBreakthrough.ts, useTribulation.ts's resolveVictory()).
-   */
-  syncRealmStatPassive(player: PlayerData) {
-    grantRealmPassive(player, getCurrentRealm(player.realmId).id)
-  }
-
-  /**
-   * Đầu tư Tinh Hoa Phàm Thể (đang cầm trong materialBag) vào tầng
-   * Luyện Thể đang dở — xem core/realm/BodyRefinementSystem.ts. Trả về số
-   * Tinh Hoa thật sự đã tiêu (0 nếu không còn tầng nào để đầu tư hoặc
-   * không cầm Tinh Hoa nào).
-   */
-  investBodyRefinement(player: PlayerData): number {
-    const available = this.materialBag.getAmount(TINH_HOA_PHAM_THE_MATERIAL_ID)
-
-    const consumed = investTinhHoa(player, available)
-
-    if (consumed > 0) {
-      this.materialBag.remove(TINH_HOA_PHAM_THE_MATERIAL_ID, consumed)
-    }
-
-    return consumed
-  }
-
-  /**
-   * Gate d?t phï¿½ unified ï¿½ 1 hï¿½m cho M?I c?nh gi?i. Tr? v? true n?u
-   * ngu?i choi d? di?u ki?n b?m nï¿½t ï¿½?t Phï¿½ (Quï¿½n Khï¿½ / Trï¿½c Co / ...).
-   *
-   * PRODUCT SCOPE: game hi?n ch? thi?t k? t?i Trï¿½c Co t?ng 18. Cï¿½c realm
-   * placeholder (Kim ï¿½an+) tr? false cho t?i khi cï¿½ content pass tuong ?ng.
-   */
-  canTriggerBreakthrough(player: PlayerData): boolean {
-    if (player.realmId === 'mortal' || player.realmId === 'qi_refining') {
-      return player.realmLevel >= CORE_REALM_LEVEL
-    }
-    return false
-  }
-
-  /**
-   * Hï¿½A Bï¿½N (economy-fixes-sinks-plan ï¿½3.2 B2, 2026-08-29) ï¿½ bï¿½n nguyï¿½n
-   * li?u th?a cho Vendor l?y Linh Th?ch dï¿½ng ph?m. VendorSystem kh?i t?o
-   * per-call (nh?, stateless) v?i registry + dan phuong hi?n hï¿½nh ï¿½ sole-
-   * ingredient guard c?n danh sï¿½ch herbVariants c?a m?i recipe.
-   */
-  sellMaterialToVendor(
-    materialId: string,
-    amount: number,
-    player: PlayerData,
-  ): { ok: boolean; reason?: string; gained?: number } {
-    const vendorSystem = new VendorSystem(this.materialRegistry, this.getAlchemyRecipes())
-
-    const result = vendorSystem.sellMaterial(this.materialBag, materialId, amount, player.realmId)
-
-    if (result.ok && result.gained) {
-      this.notifyQuestMaterialGained(
-        getSpiritStoneMaterialIdForRealmTier(getRealmTier(player.realmId)),
-        result.gained,
-      )
-    }
-
-    return result
-  }
-
-  /**
-   * Danh sï¿½ch material ngu?i choi ï¿½ANG S? H?U vï¿½ bï¿½n du?c cho Vendor
-   * (Kï¿½ B?o Cï¿½c, 2026-08-30) ï¿½ dï¿½ng cho VendorPanel.vue li?t kï¿½ UI, tï¿½ch
-   * kh?i sellMaterialToVendor() (hï¿½nh d?ng) d? panel khï¿½ng t? l?p logic
-   * l?c category/giï¿½.
-   */
-  getVendorSellableRows(
-    player: PlayerData,
-  ): Array<{ materialId: string; name: string; owned: number; unitPrice: number }> {
-    const vendorSystem = new VendorSystem(this.materialRegistry, this.getAlchemyRecipes())
-
-    const rows: Array<{ materialId: string; name: string; owned: number; unitPrice: number }> = []
-
-    for (const stack of this.materialBag.getAll()) {
-      const unitPrice = vendorSystem.getUnitSellPrice(stack.material.id, player.realmId)
-
-      if (unitPrice === undefined) {
-        continue
-      }
-
-      rows.push({
-        materialId: stack.material.id,
-        name: stack.material.name,
-        owned: stack.amount,
-        unitPrice,
-      })
-    }
-
-    return rows
-  }
-
-  // =========================
-  // EQUIPMENT
-  // =========================
-
-  // Tï¿½ch kh?i GameManager (2026-09-02, task 1 ï¿½ GameManager split) ï¿½
-  // toï¿½n b? logic dï¿½ chuy?n sang EquipmentOpsSystem (xem
-  // EquipmentOpsSystem.ts). Cï¿½c method du?i dï¿½y lï¿½ thin delegate GI?
-  // NGUYï¿½N public API d? call site ngoï¿½i GameManager.ts khï¿½ng ph?i d?i.
-
-  obtainEquipment(equipmentId: string, player: PlayerData): EquipmentInstance | null {
-    return this.equipmentOps.obtainEquipment(equipmentId, player)
-  }
-
-  equipItem(instanceId: string, player: PlayerData): { ok: boolean; reason?: string } {
-    return this.equipmentOps.equipItem(instanceId, player)
-  }
-
-  unequipItem(instanceId: string): boolean {
-    return this.equipmentOps.unequipItem(instanceId)
-  }
-
-  enhanceSlot(slot: EquipmentSlot, player: PlayerData): { ok: boolean; reason?: string } {
-    return this.equipmentOps.enhanceSlot(slot, player)
-  }
-
-  getEnhanceCost(slot: EquipmentSlot, realmId: string) {
-    return this.equipmentOps.getEnhanceCost(slot, realmId)
-  }
-
-  getEnhanceSpiritStoneCost(slot: EquipmentSlot, realmId: string): number {
-    return this.equipmentOps.getEnhanceSpiritStoneCost(slot, realmId)
-  }
-
-  getSlotMaxEnhanceLevel(slot: EquipmentSlot, realmId: string): number {
-    return this.equipmentOps.getSlotMaxEnhanceLevel(slot, realmId)
-  }
-
-  getEquipmentTemplate(itemId: string): Equipment | undefined {
-    return this.equipmentOps.getEquipmentTemplate(itemId)
-  }
-
-  itemRefinementPoints(instance: EquipmentInstance): number {
-    return this.equipmentOps.itemRefinementPoints(instance)
-  }
-
-  washItem(instanceId: string, player: PlayerData): { ok: boolean; reason?: string } {
-    return this.equipmentOps.washItem(instanceId, player)
-  }
-
-  refineItem(
-    instanceId: string,
-    lockedIndices: readonly number[],
-    player: PlayerData,
-  ): { ok: boolean; reason?: string } {
-    return this.equipmentOps.refineItem(instanceId, lockedIndices, player)
-  }
-
-  /** R9 (AR-21): preview returns a one-use TICKET, not authoritative affixes. */
-  previewWashItem(instanceId: string): { ok: boolean; reason?: string; ticketId?: string } {
-    return this.equipmentOps.previewWashItem(instanceId)
-  }
-
-  /** R9 (AR-21): display copy of the pending wash roll by ticket. */
-  getWashPreviewAffixes(ticketId: string): { affixes: RolledAffix[] } | undefined {
-    return this.equipmentOps.getWashPreviewAffixes(ticketId)
-  }
-
-  /** R9 (AR-21): drop the pending wash ticket (UI cancel/re-roll). */
-  discardWashTicket(ticketId: string): void {
-    this.equipmentOps.discardWashTicket(ticketId)
-  }
-
-  /** R9 (AR-21): commit consumes the domain-owned pending ticket. */
-  commitWashItem(instanceId: string, ticketId: string): { ok: boolean; reason?: string } {
-    return this.equipmentOps.commitWashItem(instanceId, ticketId)
-  }
-
-  previewRefineItem(
-    instanceId: string,
-    lockedIndices: readonly number[],
-  ): { ok: boolean; reason?: string; values?: RefineValueEntry[] } {
-    return this.equipmentOps.previewRefineItem(instanceId, lockedIndices)
-  }
-
-  commitRefineItem(instanceId: string, values: RefineValueEntry[]): { ok: boolean; reason?: string } {
-    return this.equipmentOps.commitRefineItem(instanceId, values)
-  }
-
-  discardRefinePreview(instanceId?: string): void {
-    this.equipmentOps.discardRefinePreview(instanceId)
-  }
-
-  getWashCost(quality: ItemQuality) {
-    return this.equipmentOps.getWashCost(quality)
-  }
-
-  getRefineCost(lineCount: number, lockedCount: number, quality?: ItemQuality) {
-    return this.equipmentOps.getRefineCost(lineCount, lockedCount, quality)
-  }
-
-  dissolveItems(instanceIds: readonly string[]): {
-    ok: boolean
-    reason?: string
-    rewards?: Array<{ materialId: string; amount: number }>
-  } {
-    return this.equipmentOps.dissolveItems(instanceIds)
-  }
-
-  previewDissolveRewards(
-    instanceIds: readonly string[],
-  ): Array<{ materialId: string; minAmount: number; maxAmount: number }> {
-    return this.equipmentOps.previewDissolveRewards(instanceIds)
-  }
-
-  getSlotState(slot: EquipmentSlot): EquipmentSlotState {
-    return this.equipmentOps.getSlotState(slot)
-  }
-
-  getAllSlotStates(): EquipmentSlotState[] {
-    return this.equipmentOps.getAllSlotStates()
-  }
-
-  getEquipmentModifiers(): StatModifier[] {
-    return this.equipmentOps.getEquipmentModifiers()
-  }
-
-  unequipAllEquipment(): void {
-    this.equipmentOps.unequipAllEquipment()
-  }
-
-  // =========================
-  // FORMATION
-  // =========================
-
-  // Không còn nhận instanceId (MASTER SPEC Mục XVI, Phase 9) — trận
-
-  // =========================
-  // RECIPE / CRAFTING (Đan/Phù/Trận — Khí dùng EquipmentSystem, không qua đây)
-  // =========================
-
-  // BUILDing spec mục 15-16 — Building crafting-station (Đan Phòng/
-
-  // =========================
-  // PILL
-  // =========================
-
-  /**
-   * Uống pill (2026-08-24, plan §5.2) — ATOMIC consumption: mọi
-   * validation + apply thành công rồi mới remove khỏi PillBag. Pill
-   * nghề (có realmId): gate ĐÚNG cảnh giới + 4 effect MVP; legacy pill
-   * (không realmId) giữ hành vi cũ. `random` inject cho main stat roll.
-   */
-  usePillDetailed(
-    pillId: string,
-    target: PillTarget,
-    player: PlayerData,
-    random: () => number = Math.random,
-  ): {
-    ok: boolean
-    reason?: 'not_found' | 'wrong_realm' | 'all_main_stats_capped' | 'requires_phap_tu' | 'cap'
-    mainStat?: MainStatKey
-  } {
-    if (!this.pillBag.has(pillId, 1)) {
-      return { ok: false, reason: 'not_found' }
-    }
-
-    const pill = this.pillRegistry.get(pillId)
-
-    // Exact-realm gate cho pill nghề (plan §5.2).
-    if (pill.realmId && pill.realmId !== player.realmId) {
-      return { ok: false, reason: 'wrong_realm' }
-    }
-
-    const isProfessionPill = pill.effects.some(
-      (effect) =>
-        effect.type === 'random_main_stat' ||
-        effect.type === 'regen' ||
-        effect.type === 'skill_insight' ||
-        (effect.type === 'cultivation' && effect.cultivationPercent !== undefined),
-    )
-
-    if (isProfessionPill) {
-      const reason = this.pillSystem.canUseProfessionPill(pill, player)
-
-      if (reason !== 'ok') {
-        return { ok: false, reason }
-      }
-
-      const result = this.pillSystem.useProfessionPill(pill, player, random)
-
-      if (result.timedEffect) {
-        this.applyTimedEffect(player, result.timedEffect)
-      }
-
-      this.pillBag.remove(pillId, 1)
-
-      return { ok: true, mainStat: result.mainStat }
-    }
-
-    // Legacy path — giữ nguyên hành vi cũ (permanent_stat cap + heal/
-    // buff/cultivation flat).
-    const cap = getCurrentRealm(player.realmId).attributeCap
-
-    if (!this.pillSystem.canUse(pill, player, cap)) {
-      return { ok: false, reason: 'cap' }
-    }
-
-    const permanentModifiers = this.pillSystem.use(pill, target)
-
-    for (const modifier of permanentModifiers) {
-      const existing = player.modifiers.find((candidate) => candidate.id === modifier.id)
-
-      if (existing) {
-        existing.flat = (existing.flat ?? 0) + (modifier.flat ?? 0)
-      } else {
-        player.modifiers.push(modifier)
-      }
-    }
-
-    this.pillBag.remove(pillId, 1)
-
-    return { ok: true }
-  }
-
-  usePill(pillId: string, target: PillTarget, player: PlayerData): boolean {
-    return this.usePillDetailed(pillId, target, player).ok
-  }
-
-  // =========================
-  // TALISMAN
-  // =========================
-
-  // =========================
-  // EXPLORATION
-  // =========================
-
-  // =========================
-  // BUILDING + PRODUCTION ï¿½ toï¿½n b? logic dï¿½ chuy?n sang
-  // GameManagerBuildingOps (xem GameManagerBuildingOps.ts, task 2 ï¿½
-  // GameManager split). Cï¿½c method du?i dï¿½y lï¿½ thin delegate GI? public
-  // API cho UI/composables/tests.
-  // =========================
-
-  getBuildingDefinitions(): Building[] {
-    return this.buildingOps.getBuildingDefinitions()
-  }
-
-  canBuildBuilding(buildingId: string, player: PlayerData): boolean {
-    return this.buildingOps.canBuildBuilding(buildingId, player)
-  }
-
-  buildBuilding(buildingId: string, player: PlayerData, currentTime = Date.now() / 1000) {
-    return this.buildingOps.buildBuilding(buildingId, player, currentTime)
-  }
-
-  refreshAutoWorkerCapacity(player: PlayerData, instance: BuildingInstance): void {
-    this.buildingOps.refreshAutoWorkerCapacity(player, instance)
-  }
-
-  getWorkerAssignments(): Map<string, number> {
-    return this.buildingOps.getWorkerAssignments()
-  }
-
-  assignWorkers(siteId: string, count: number | undefined): void {
-    this.buildingOps.assignWorkers(siteId, count)
-  }
-
-  upgradeBuilding(instanceId: string): boolean {
-    return this.buildingOps.upgradeBuilding(instanceId)
-  }
-
-  getEnemyTemplate(enemyId: string): Enemy | undefined {
-    return this.enemyTemplates.get(enemyId)
-  }
-
-  collectBuilding(instanceId: string, player: PlayerData, currentTime = Date.now() / 1000): number {
-    return this.buildingOps.collectBuilding(instanceId, player, currentTime)
-  }
-
-  getBuildingStoredAmount(instanceId: string, currentTime = Date.now() / 1000): number {
-    return this.buildingOps.getBuildingStoredAmount(instanceId, currentTime)
-  }
-
-  getBuildingCapacity(instanceId: string): number {
-    return this.buildingOps.getBuildingCapacity(instanceId)
-  }
-
-  getBuildingRatePerMinute(instanceId: string): number {
-    return this.buildingOps.getBuildingRatePerMinute(instanceId)
-  }
-
-  getProductionViews(nowMs = Date.now()) {
-    return this.buildingOps.getProductionViews(nowMs)
-  }
-
-  startProductionCycle(siteId: string, player: PlayerData): boolean {
-    return this.buildingOps.startProductionCycle(siteId, player)
-  }
-
-  setProductionAutoRestart(siteId: string, enabled: boolean): boolean {
-    return this.buildingOps.setProductionAutoRestart(siteId, enabled)
-  }
-
-  upgradeProductionSite(siteId: string, player: PlayerData): boolean {
-    return this.buildingOps.upgradeProductionSite(siteId, player)
-  }
-
-  /** R9 (AR-23): authoritative upgrade quote for the panel. */
-  quoteProductionUpgrade(siteId: string, player: PlayerData) {
-    return this.buildingOps.quoteProductionUpgrade(siteId, player)
-  }
-
-  getProductionUpgradeCost(siteId: string) {
-    return this.buildingOps.getProductionUpgradeCost(siteId)
-  }
-
-  // =========================
-  // ALCHEMY ï¿½ toï¿½n b? logic dï¿½ chuy?n sang GameManagerAlchemyOps (xem
-  // GameManagerAlchemyOps.ts, task 3 ï¿½ GameManager split). Cï¿½c method
-  // du?i dï¿½y lï¿½ thin delegate GI? public API cho UI/composables/tests.
-  // =========================
-
-  getAlchemyRecipes(): AlchemyRecipe[] {
-    return this.alchemyOps.getAlchemyRecipes()
-  }
-
-  getAlchemyRecipe(recipeId: string): AlchemyRecipe | undefined {
-    return this.alchemyOps.getAlchemyRecipe(recipeId)
-  }
-
-  getAlchemyRoomLevel(): number {
-    return this.alchemyOps.getAlchemyRoomLevel()
-  }
-
-  getAlchemyJobs(): ActiveAlchemyJob[] {
-    return this.alchemyOps.getAlchemyJobs()
-  }
-
-  startAlchemyJob(
-    recipeId: string,
-    herbMaterialId: string,
-    player: PlayerData,
-  ): { ok: boolean; reason?: string } {
-    return this.alchemyOps.startAlchemyJob(recipeId, herbMaterialId, player)
-  }
-
-  cancelAlchemyJob(jobId: string): boolean {
-    return this.alchemyOps.cancelAlchemyJob(jobId)
-  }
-
-  previewAlchemyOutcome(
-    recipeId: string,
-    herbMaterialId: string,
-    roomLevel = Math.max(1, this.getAlchemyRoomLevel()),
-  ): {
-    totalPercent: number
-
-    guaranteedPills: number
-
-    extraPillChance: number
-
-    durationSeconds: number
-  } | null {
-    return this.alchemyOps.previewAlchemyOutcome(recipeId, herbMaterialId, roomLevel)
+    this.progressionOps.syncTalentCombatPassive(player)
   }
 
   // =========================
@@ -2306,10 +798,6 @@ export class GameManager {
   // real logic (TurnBattle construction, fixed-step driving, rewards,
   // auto-farm) lives in GameManagerTurnBattleOps.ts verbatim.
   // =========================
-
-  spawnEnemy(template: Enemy): Enemy {
-    return this.turnBattleOps.spawnEnemy(template)
-  }
 
   startBattle(player: CombatEntity, enemy: Enemy) {
     this.turnBattleOps.startBattle(player, enemy)
@@ -2325,7 +813,7 @@ export class GameManager {
     }
 
     if (player.cultivationPath === 'phap_tu') {
-      const element = this.getPhapTuThuanElement() ?? 'fire'
+      const element = this.progressionOps.getPhapTuThuanElement() ?? 'fire'
       return BASIC_ATTACKS_BY_BUILD[`phap_tu_${element}`] ?? GENERIC_PHYSICAL_BASIC
     }
 
@@ -2367,7 +855,7 @@ export class GameManager {
       }
     }
 
-    const element = this.getPhapTuThuanElement() ?? 'fire'
+    const element = this.progressionOps.getPhapTuThuanElement() ?? 'fire'
     const [, specialId, ultimateId] = CHAIN_SKILL_IDS[element]
 
     const specialSkill = this.skillManager.get(specialId)
@@ -2405,7 +893,7 @@ export class GameManager {
   }
 
   isBattleManualMode(): boolean {
-    return this.turnBattleOps.isBattleManualMode()
+    return this.turnBattleOps.presentationOps.isBattleManualMode()
   }
 
   /** Đang pause chờ player chọn skill cho lượt của chính mình? */
@@ -2466,12 +954,12 @@ export class GameManager {
   }
 
   setPresentationMode(mode: PresentationMode): void {
-    this.turnBattleOps.setPresentationMode(mode)
+    this.turnBattleOps.presentationOps.setPresentationMode(mode)
     this.tribulationDirector.setPresentationMode(mode)
   }
 
   getPresentationMode(): PresentationMode {
-    return this.turnBattleOps.getPresentationMode()
+    return this.turnBattleOps.presentationOps.getPresentationMode()
   }
 
   /**
@@ -2484,7 +972,7 @@ export class GameManager {
    */
   getCurrentPresentationSession(kind?: SessionKind): SessionRef | null {
     if (kind === 'combat') {
-      return this.turnBattleOps.getCurrentPresentationSession()
+      return this.turnBattleOps.presentationOps.getCurrentPresentationSession()
     }
 
     if (kind === 'tribulation') {
@@ -2492,7 +980,7 @@ export class GameManager {
     }
 
     return (
-      this.turnBattleOps.getCurrentPresentationSession() ??
+      this.turnBattleOps.presentationOps.getCurrentPresentationSession() ??
       this.tribulationDirector.getCurrentPresentationSession() ??
       null
     )
@@ -2503,7 +991,7 @@ export class GameManager {
       getCurrentSession: () => this.getCurrentPresentationSession(),
       hold: (session) => {
         if (session.kind === 'combat') {
-          return this.turnBattleOps.getPresentationPort().hold(session)
+          return this.turnBattleOps.presentationOps.getPresentationPort().hold(session)
         }
         if (session.kind === 'tribulation') {
           return this.tribulationDirector.getPresentationPort().hold(session)
@@ -2512,19 +1000,19 @@ export class GameManager {
       },
       attach: (token) => {
         return (
-          this.turnBattleOps.getPresentationPort().attach(token) ||
+          this.turnBattleOps.presentationOps.getPresentationPort().attach(token) ||
           this.tribulationDirector.getPresentationPort().attach(token)
         )
       },
       release: (token) => {
         return (
-          this.turnBattleOps.getPresentationPort().release(token) ||
+          this.turnBattleOps.presentationOps.getPresentationPort().release(token) ||
           this.tribulationDirector.getPresentationPort().release(token)
         )
       },
       detach: (token, policy) => {
         return (
-          this.turnBattleOps.getPresentationPort().detach(token, policy) ||
+          this.turnBattleOps.presentationOps.getPresentationPort().detach(token, policy) ||
           this.tribulationDirector.getPresentationPort().detach(token, policy)
         )
       },
@@ -2537,46 +1025,46 @@ export class GameManager {
 
   /** True while the current interactive session is held by the coordinator. */
   isAwaitingPresentationLayer(): boolean {
-    return this.turnBattleOps.isAwaitingPresentationLayer()
+    return this.turnBattleOps.presentationOps.isAwaitingPresentationLayer()
   }
 
   /** Test/UI đọc token hiện tại của phase đang chờ (null nếu không pending). */
   getPendingPlaybackToken(): string | null {
-    return this.turnBattleOps.getPendingPlaybackToken()
+    return this.turnBattleOps.presentationOps.getPendingPlaybackToken()
   }
 
   preparePresentationResume(): ResumePlayback | null {
-    return this.turnBattleOps.preparePresentationResume()
+    return this.turnBattleOps.presentationOps.preparePresentationResume()
   }
 
   getCombatPresentationSnapshot(sessionId: number): {
     sessionId: number
     entities: TurnBattleEntitySnapshotEvent
   } | null {
-    return this.turnBattleOps.getCombatPresentationSnapshot(sessionId)
+    return this.turnBattleOps.presentationOps.getCombatPresentationSnapshot(sessionId)
   }
 
   setPresentationActive(active: boolean): void {
-    this.turnBattleOps.setPresentationActive(active)
+    this.turnBattleOps.presentationOps.setPresentationActive(active)
   }
 
   isActionPlaybackWaiting(): boolean {
-    return this.turnBattleOps.isActionPlaybackWaiting()
+    return this.turnBattleOps.presentationOps.isActionPlaybackWaiting()
   }
 
   /** Phaser gọi khi ready flourish xong → declare action, phát 'attack'. */
   acknowledgeTurnReady(token?: string): void {
-    this.turnBattleOps.acknowledgeTurnReady(token)
+    this.turnBattleOps.presentationOps.acknowledgeTurnReady(token)
   }
 
   /** Phaser gọi tại impact frame (lunge tween xong) → áp damage, phát VFX. */
   acknowledgeActionImpact(token?: string): void {
-    this.turnBattleOps.acknowledgeActionImpact(token)
+    this.turnBattleOps.presentationOps.acknowledgeActionImpact(token)
   }
 
   /** Phaser gọi khi VFX tween xong → turn cleanup, phát standby tail. */
   acknowledgeActionComplete(token?: string): void {
-    this.turnBattleOps.acknowledgeActionComplete(token)
+    this.turnBattleOps.presentationOps.acknowledgeActionComplete(token)
   }
 
   /**
@@ -2592,7 +1080,7 @@ export class GameManager {
    * tại — party nhiều người là redesign tương lai), null khi không pause.
    */
   consumeAwaitedActorId(): string | null {
-    return this.turnBattleOps.consumeAwaitedActorId()
+    return this.turnBattleOps.presentationOps.consumeAwaitedActorId()
   }
 
   /**
@@ -2609,7 +1097,7 @@ export class GameManager {
     special: TurnSkillPresentationEntry
     ultimate: TurnSkillPresentationEntry
   } {
-    return this.turnBattleOps.buildTurnSkillPresentation(battle, isPlayerTurnPaused)
+    return this.turnBattleOps.presentationOps.buildTurnSkillPresentation(battle, isPlayerTurnPaused)
   }
 
   getBattleRewardSummary(): BattleRewardSummary {
@@ -2638,129 +1126,6 @@ export class GameManager {
   }
 
   /**
-   * RewardReceiver dùng chung cho mọi nơi cấp Reward trực tiếp cho
-   * player (battle victory, claim quest...) — insight đổ vào tâm pháp
-   * đang trang bị, Linh Thạch đổ vào MaterialBag (Plan Workstream F).
-   */
-  private buildPlayerRewardReceiver(player: PlayerData): RewardReceiver {
-    return createPlayerRewardReceiver(
-      player,
-      (amount) => this.gainEquippedTechniqueInsight(amount),
-      (amount) => {
-        // Cấp ĐÚNG phẩm Linh Thạch theo cảnh giới hiện tại (khớp phẩm mà
-        // chi phí Đột Phá/Cường Hóa/nâng cấp công trình đòi hỏi ở cảnh
-        // giới đó) — không cấp cứng Hạ Phẩm khiến người chơi cảnh giới
-        // cao kẹt lại vì có Linh Thạch nhưng sai phẩm.
-        const spiritStoneId = getSpiritStoneMaterialIdForRealmTier(getRealmTier(player.realmId))
-
-        if (amount > 0 && this.materialRegistry.has(spiritStoneId)) {
-          // 9.8 — Linh Thạch tràn túi: quest chỉ tính delivered + toast.
-          const overflow = this.materialBag.add(this.materialRegistry.get(spiritStoneId), amount)
-
-          this.notifyQuestMaterialGained(spiritStoneId, amount - overflow)
-
-          if (overflow > 0) {
-            this.notifications.push(
-              createBagOverflowEvent(this.materialRegistry.get(spiritStoneId).name, overflow),
-            )
-          }
-        }
-      },
-    )
-  }
-
-  // =========================
-  // QUEST (Nhiệm Vụ)
-  // =========================
-
-  // Tï¿½ch kh?i GameManager (2026-09-03, task 4 ï¿½ GameManager split) ï¿½ logic
-  // th?t n?m trong GameManagerQuestOps (xem GameManagerQuestOps.ts). Cï¿½c
-  // method du?i dï¿½y lï¿½ thin delegate GI? NGUYï¿½N public API d? call site
-  // ngoï¿½i GameManager.ts (QuestPanel.vue...) khï¿½ng ph?i d?i.
-  private notifyQuestMaterialGained(materialId: string, amount: number): void {
-    this.questOps.notifyQuestMaterialGained(materialId, amount)
-  }
-
-  getActiveQuests(): { quest: Quest; progress: QuestProgress }[] {
-    return this.questOps.getActiveQuests()
-  }
-
-  /**
-   * R8.1 (AR-09) - set by the realm-transition writer; consumed and
-   * cleared by the next update tick. Lifecycle-owned quest
-   * reconciliation must run even though realm changes currently happen
-   * outside this manager (tribulation outcomes live in Vue until R8.2).
-   */
-  private questRealmReconcileNeeded = false
-
-  /** R8.1 (AR-09) - realm-transition writers call this; cheap flag set. */
-  markQuestRealmTransition(): void {
-    this.questRealmReconcileNeeded = true
-  }
-
-  /**
-   * R8.1 (AR-09) - lifecycle reconciliation command: activates every
-   * eligible quest exactly once (idempotent, cheap registry scan).
-   * Called from the tick path (after daily reset / realm transition
-   * flag) and from restore. Never from a read/query path.
-   */
-  reconcileQuestLifecycle(): void {
-    const player = this.activePlayer
-
-    if (!player) {
-      return
-    }
-
-    this.questSystem.reconcileActiveQuests(this.questRegistry, this.questManager, player)
-    this.questRealmReconcileNeeded = false
-  }
-
-  canClaimQuest(questId: string): boolean {
-    return this.questOps.canClaimQuest(questId)
-  }
-
-  claimQuest(questId: string): boolean {
-    return this.questOps.claimQuest(questId)
-  }
-
-  // =========================
-  // COMPANION GACHA (Chieu Mo / companion-gacha 2026-09-12)
-  // =========================
-
-  // Thin delegates into GameManagerCompanionOps - same convention as the
-  // QUEST delegates above; domain rules live in core/companion/*.
-  pullCompanion(): PullCompanionResult {
-    return this.companionOps.pullCompanion()
-  }
-
-  exchangeCompanion(definitionId: string): ExchangeCompanionResult {
-    return this.companionOps.exchangeCompanion(definitionId)
-  }
-
-  feedCompanion(instanceId: string, materialId: string, count: number): FeedCompanionResult {
-    return this.companionOps.feedCompanion(instanceId, materialId, count)
-  }
-
-  // gainEquippedTechniqueInsight() sits inside the // QUEST comment block
-  // (task 4 brief scope) but is unrelated to quests ï¿½ it advances Phï¿½p Tu
-  // technique insight, used by buildPlayerRewardReceiver() below (battle
-  // victory + quest claim rewards alike). Left in place, same pattern as
-  // task 2's getEnemyTemplate() finding.
-  gainEquippedTechniqueInsight(amount: number): number {
-    const technique = this.techniqueManager.getEquipped()
-
-    if (!technique || amount <= 0) {
-      return 0
-    }
-
-    const before = technique.insight ?? 0
-    const cap = getTechniqueInsightTotalRequired(technique)
-    technique.insight = Math.min(cap, before + amount)
-
-    return technique.insight - before
-  }
-
-  /**
 
     * ï¿½? Ki?p (spec dot-pha-loi-kiep ï¿½5.1) ï¿½ delegate xu?ng
     * TribulationDirector (runtime chuong ki?p m?i: tï¿½m ma + tank lï¿½i,
@@ -2780,119 +1145,6 @@ export class GameManager {
     return this.tribulationDirector.start(player, playerStats, hasTrucCoDan, targetRealmId)
   }
 
-
-  /** Tr? l?i cï¿½u h?i tï¿½m ma hi?n t?i (overlay Vue g?i qua facade nï¿½y). */
-  answerTribulationQuestion(answerIndex: number): boolean {
-    return this.tribulationDirector.answerQuestion(answerIndex)
-
-  }
-
-  getTribulationCooldownSeconds(now = Date.now()): number {
-    return this.tribulationDirector.getCooldownSeconds(now)
-  }
-
-  getActiveTribulation(): ActiveTribulationState | null {
-    return this.tribulationDirector.getState()
-  }
-
-  clearActiveTribulation() {
-    this.tribulationDirector.clear()
-  }
-
-  /**
-   * Áp 1 buff/debuff PERSISTENT (ngoài trận) lên player — dùng cho
-   * Kiếp Thương khi thất bại Độ Kiếp (mục 13 spec `breakthrough`).
-   * Cùng buffSystem/buffManager nuôi getAggregatedModifiers() mỗi
-   * tick (xem PillSystem's effect 'buff' — cùng cơ chế).
-   */
-  // Unified Buff System (Task 9b, fix round 2) - BuffSystem.apply() now
-  // requires a real source/target CombatEntity (to read
-  // ailmentResistPercent/ailmentDurationPercent for duration scaling),
-  // even for a buff with no dot effect like KIEP_THUONG_DEBUFF.
-  // `stats` (the caller's already-calculateStats()'d Stats, same
-  // `player.finalStats` pattern startTribulation()/startBattleWithPlayer()
-  // already use - see useTribulation.ts's resolveDefeat()) lets us build
-  // the REAL player CombatEntity via playerToCombatEntity() (same helper
-  // battle start uses), so this debuff's resist/duration correctly reads
-  // the player's actual gear. Falls back to the in-battle entity if one
-  // somehow exists, then to a fully-populated neutral ghost only if
-  // neither is available (today: only reachable if a caller forgets to
-  // pass `stats` - see resolvePersistentBuffEntity()).
-  applyPersistentBuff(buff: BuffDefinition, stats?: Stats) {
-    const entity = this.resolvePersistentBuffEntity(stats)
-
-    this.buffSystem.apply(buff, entity, entity, this.buffRegistry)
-  }
-
-  // Shared entity resolution for applyPersistentBuff() and the per-tick
-  // buffSystem.update() call in tick() - both need 1 CombatEntity to hand
-  // BuffSystem, and neither has one implicitly guaranteed outside battle
-  // (GameManager keeps no persistent player CombatEntity of its own; only
-  // playerToCombatEntity() at battle start, which needs `Stats` already
-  // calculateStats()'d by the Pinia store - GameManager deliberately
-  // avoids calling calculateStats() itself to prevent 2 divergent call
-  // sites, see startBattleWithPlayer()'s note). Preference order: real
-  // in-battle entity > real player entity built from caller-supplied
-  // `stats` (mirrors startBattleWithPlayer()'s own construction) > fully-
-  // populated neutral ghost.
-  private resolvePersistentBuffEntity(stats?: Stats): CombatEntity {
-    // C1 (2026-09-08) — the live in-battle entity now comes from the
-    // turn battle's player participant (was: the legacy mirror battle's
-    // player).
-    const activeBattle = this.turnBattleOps.getTurnBattle()
-
-    if (activeBattle) {
-      return activeBattle.players[0]!.entity
-    }
-
-    if (stats && this.activePlayer) {
-      return playerToCombatEntity(this.activePlayer, stats, this.getSkillRuntimeStats(this.activePlayer))
-    }
-
-    return this.createPersistentBuffGhostEntity()
-  }
-
-  // Fully-populated neutral placeholder CombatEntity (no gear, no active
-  // buffs, every non-optional CombatEntity field explicitly set - NOT an
-  // `as CombatEntity` cast papering over missing fields) used only when
-  // resolvePersistentBuffEntity() has neither a real in-battle entity nor
-  // caller-supplied Stats to build one from. Safe even for a future
-  // persistent buff with a `dot` effect (combatSystem.applyDotDamage()
-  // would read real currentHp/maxHp/alive, not undefined).
-  private createPersistentBuffGhostEntity(): CombatEntity {
-    const stats = createBaseStats()
-
-    return {
-      id: 'player',
-      name: this.activePlayer?.name ?? 'player',
-      type: 'player',
-      baseStats: stats,
-      stats,
-      currentHp: stats.maxHp,
-      maxHp: stats.maxHp,
-      currentMp: stats.maxMp,
-      currentSwordIntent: 0,
-      currentMomentum: 0,
-      currentHoaThe: 0,
-      currentThoThe: 0,
-      currentKimThe: 0,
-      timeSinceLastBleedProc: 0,
-      currentWard: 0,
-      timeSinceLastHitTaken: Infinity,
-      realmIndex: 0,
-      x: 0,
-      row: HERO_LANE_INDEX,
-      alive: true,
-      tuLucActive: false,
-      tuLucElapsed: 0,
-      tuLucDamageTakenPercent: 0,
-    }
-  }
-
-  giveReward(receiver: RewardReceiver, reward: Reward) {
-    this.rewardSystem.give(receiver, reward)
-  }
-
   /**
    * Người chơi CHỦ ĐỘNG thoát trận giữa chừng (nút "Thoát Trận" ở
    * CombatControlBar.vue, có xác nhận trước khi gọi tới đây) — TÁI
@@ -2909,259 +1161,6 @@ export class GameManager {
    */
   abandonBattle(): boolean {
     return this.turnBattleOps.abandonBattle()
-  }
-
-  // =========================
-  // STAGE (wave spawn)
-  // =========================
-  // Vòng đời wave (spawn nhịp, victory, auto-repeat, boss summon) nằm ở
-  // GameManagerTurnBattleOps (C2 split) - các method dưới đây là delegate
-  // giữ public API.
-
-  startStage(
-    player: PlayerData,
-    playerStats: Stats,
-    stage: Stage,
-    repeatContinuously = false,
-  ): boolean {
-    return this.turnBattleOps.startStage(player, playerStats, stage, repeatContinuously)
-  }
-
-  getStageProgress(): { spawned: number; total: number; alive: number } | null {
-    return this.turnBattleOps.getStageProgress()
-  }
-
-  // =========================
-  // AUTO-FARM HOÀN MỸ (spec 2026-09-04-stage-auto-farm, Task 4)
-  // =========================
-  // Logic moved verbatim into GameManagerTurnBattleOps (C2 split) - thin
-  // delegates keep the public API (and the saveRestore/settle hook below).
-
-  startAutoFarm(player: PlayerData, stageId: string): boolean {
-    return this.turnBattleOps.startAutoFarm(player, stageId)
-  }
-
-  stopAutoFarm(player: PlayerData): void {
-    this.turnBattleOps.stopAutoFarm(player)
-  }
-
-  settleAutoFarmOffline(player: PlayerData, elapsedOfflineSeconds: number): void {
-    this.turnBattleOps.settleAutoFarmOffline(player, elapsedOfflineSeconds)
-  }
-
-  // =========================
-  // SAVE / LOAD
-  // =========================
-
-  /**
-   * Validate registry-backed save references without mutating any restore owner.
-   * App calls this before Pinia restore; restoreFromSave repeats it defensively.
-   */
-  preflightSaveRegistryReferences(save: GameSave): void {
-    this.saveRestore.preflightSaveRegistryReferences(save)
-  }
-
-  /**
-   * Restore persisted state into the corresponding managers. Call only after
-   * registerMaterials/registerEquipment/registerAffixes/registerPills/
-   * registerTalismans/registerSkillTemplates/registerTechniqueTemplates have
-   * populated every ID-backed registry.
-   *
-   * Returns the latest equipment modifiers so the caller can synchronize them
-   * into player.modifiers; EquipmentSystem does not own the player store.
-   */
-  restoreFromSave(save: GameSave): StatModifier[] {
-    return this.saveRestore.restoreFromSave(save)
-  }
-
-  // =========================
-  // TICK
-  // =========================
-
-  /**
-   * Gọi mỗi tick từ game loop (App.vue) với deltaSeconds đo được
-   * từ GameClock. GameManager chỉ forward xuống các system có
-   * trạng thái phụ thuộc thời gian — không tự tính thời gian.
-   */
-  update(deltaSeconds: number) {
-    if (deltaSeconds <= 0) {
-      return
-    }
-
-    // Timed effect theo thời gian thực — tick expiry ở MỌI update (cả
-    // khi pause battle) vì deadline là Date.now() tuyệt đối, không dùng
-    // game delta kéo dài buff (plan §5.4). Player reference do App.vue
-    // đăng ký qua setActivePlayer() sau boot/load.
-    if (this.activePlayer) {
-      this.tickTimedEffects(this.activePlayer)
-      this.investBodyRefinement(this.activePlayer)
-
-      // R8.1 (AR-09) - realm-transition reconciliation: the writer set
-      // the flag; activate newly eligible quests on the first tick
-      // after the realm change, without any panel read.
-      if (this.questRealmReconcileNeeded) {
-        this.reconcileQuestLifecycle()
-      }
-
-      // Quest daily reset (Quest System plan) — wall-clock day-bucket,
-      // check mỗi tick nên vẫn reset kể cả khi panel Nhiệm Vụ đang đóng.
-      if (
-        this.questSystem.checkAndResetDaily(
-          this.questRegistry,
-          this.questManager,
-          this.activePlayer,
-        )
-      ) {
-        this.notifications.push({ kind: 'craft', message: 'Nhi?m v? hï¿½ng ngï¿½y dï¿½ lï¿½m m?i' })
-
-        // R8.1 (AR-09) - daily reset removes daily entries; the
-        // lifecycle command rebuilds today's board immediately so
-        // kills/collects keep counting without opening QuestPanel.
-        this.reconcileQuestLifecycle()
-      }
-
-      // Production settle (plan §4.3) — delivery thẳng Bag khi cycle
-      // hoàn thành; notification ghi rõ vật liệu + số lượng (§9.1).
-      this.productionSystem.tick(
-        Date.now(),
-        this.materialBag,
-        this.materialRegistry,
-        this.activePlayer.realmId,
-      )
-
-      // R7 (AR-08) shared worker pool - decompose claims its workers
-      // from the CHQ capacity FIRST; production receives the remainder.
-      // Capacity is re-supplied every tick so CHQ build/upgrade takes
-      // effect without a restart, and stale restored workers clamp down.
-      this.decomposeSystem.updateCapacity(this.activePlayer.autoWorkerCapacity ?? 0)
-      const decomposeWorkers = this.decomposeSystem.getSettings().workers
-      const productionCapacity = Math.max(
-        0,
-        (this.activePlayer.autoWorkerCapacity ?? 0) - decomposeWorkers,
-      )
-
-      this.productionSystem.tickWorkers(
-        Date.now(),
-        this.materialBag,
-        this.materialRegistry,
-        this.activePlayer.realmId,
-        productionCapacity,
-        this.getWorkerAssignments(),
-      )
-
-      for (const event of this.productionSystem.drainSettlementEvents()) {
-        const material = this.materialRegistry.has(event.materialId)
-          ? this.materialRegistry.get(event.materialId)
-          : undefined
-
-        // Collect-quest hook (review 2026-08-28) — production settle là
-        // nguồn material chính của collect-quest. Chỉ tính lượng thật sự
-        // vào túi (trừ overflow).
-        this.notifyQuestMaterialGained(event.materialId, event.amount - (event.overflow ?? 0))
-
-        this.notifications.push({
-          kind: 'loot',
-          message: `${material?.name ?? event.materialId} ï¿½${event.amount}`,
-        })
-      }
-
-      // Đan Phòng settle (§8.3). Thiên phú Đan Duyên cộng điểm % thành
-      // đan (plan §6) — đọc từ activePlayer mỗi tick, đổi talent là có hiệu lực.
-      this.alchemySystem.tick(
-        Date.now(),
-        this.pillBag,
-        (pillId) => (this.pillRegistry.has(pillId) ? this.pillRegistry.get(pillId) : undefined),
-        Math.random,
-        getAlchemySuccessBonusPercentPoints(this.activePlayer.selectedTalentIds),
-      )
-
-      for (const event of this.alchemySystem.drainSettlementEvents()) {
-        const pill = this.pillRegistry.has(event.pillId)
-          ? this.pillRegistry.get(event.pillId)
-          : undefined
-
-        this.notifications.push({
-          kind: 'craft',
-          message: event.success
-            ? `${pill?.name ?? event.pillId} x${event.pills}`
-            : `Luy?n ${pill?.name ?? event.pillId} th?t b?i`,
-        })
-      }
-
-      // Task 14 (rework P4) - Decompose cycle: ore -> refined essence.
-      // R7 (AR-08): online tick and offline restore share ONE delivery
-      // path (deliverDecomposeOutput) - no duplicated overflow rules.
-      this.decomposeSystem.tick(Date.now())
-
-      for (const entry of this.decomposeSystem.drainOutput()) {
-        this.deliverDecomposeOutput(entry)
-      }
-    }
-
-    // R4 (AR-19): Persistent out-of-battle buffs (e.g. Kiếp Thương debuff)
-    // decrement duration by deltaSeconds via updateTime().
-    this.buffSystem.updateTime(deltaSeconds)
-
-    this.passiveSystem.tick(deltaSeconds)
-
-    this.updateBattleFixedStep(deltaSeconds)
-  }
-
-  /**
-   * R7 (AR-08) - single decompose delivery path shared by the online
-   * tick and the offline restore settle: toast shows the DELIVERED
-   * amount (minus overflow); overflow pushes a bag.overflow event;
-   * delivered === 0 skips the craft toast. Extracted verbatim from the
-   * old inline tick block.
-   */
-  private deliverDecomposeOutput(entry: DecomposeOutputEntry): void {
-    const tinhHoa = this.materialRegistry.has(entry.materialId)
-      ? this.materialRegistry.get(entry.materialId)
-      : undefined
-
-    const overflow = this.materialBag.add(
-      tinhHoa ?? { id: entry.materialId, name: entry.materialId } as never,
-      entry.amount,
-    )
-
-    const delivered = entry.amount - overflow
-
-    if (delivered > 0) {
-      this.notifications.push({
-        kind: 'craft',
-        message: `Phân Giải +${delivered} ${(tinhHoa as { name?: string } | undefined)?.name ?? 'Tinh Hoa'}`,
-      })
-    }
-
-    if (overflow > 0) {
-      this.notifications.push(
-        createBagOverflowEvent(
-          (tinhHoa as { name?: string } | undefined)?.name ?? entry.materialId,
-          overflow,
-        ),
-      )
-    }
-  }
-
-  /**
-   * Chia deltaSeconds thành các bước cố định cho nhánh phụ thuộc
-   * timer-đếm-ngược-rồi-reset (đòn đánh, spawn quái, phần thưởng) - logic
-   * moved into GameManagerTurnBattleOps.updateBattleFixedStep() (C2 split).
-   *
-   * updateTribulation()/updateTribulationProgress() CHỦ Ý đứng NGOÀI
-   * vòng lặp bước nhỏ: updateTribulation() đã tự có vòng lặp catch-up
-   * riêng (while nextStrikeInSeconds <= 0) hoạt động đúng với deltaSeconds
-   * lớn dạng đóng (không tích luỹ theo bước), gọi 1 lần với deltaSeconds
-   * gốc là chính xác. Chia nhỏ nó thành hàng trăm bước 0.1s sẽ CỘNG DỒN
-   * sai số dấu phẩy động (0.1 không biểu diễn chẵn nhị phân) vào
-   * active.nextStrikeInSeconds, có thể làm lệch 1 lôi kích so với thật.
-   */
-  private updateBattleFixedStep(deltaSeconds: number) {
-    this.turnBattleOps.updateBattleFixedStep(deltaSeconds)
-
-    // Ngoài vòng fixed-step — TribulationDirector tự có catch-up dạng
-    // đóng (spec dot-pha-loi-kiep §5.6), chia nhỏ sẽ cộng dồn sai số float.
-    this.tribulationDirector.update(deltaSeconds)
   }
 
   /**

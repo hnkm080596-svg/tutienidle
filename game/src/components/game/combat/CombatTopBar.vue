@@ -14,7 +14,7 @@ const gameManager = useGameManager()
 const { stateVersion } = useStateVersion()
 const ui = useUiStore()
 
-const stage = computed(() => ui.selectedStageId ? gameManager.getStage(ui.selectedStageId) : undefined)
+const stage = computed(() => ui.selectedStageId ? gameManager.catalogOps.getStage(ui.selectedStageId) : undefined)
 
 const zoneName = computed(() => {
   if (!ui.selectedZoneId) {
@@ -27,7 +27,7 @@ const zoneName = computed(() => {
 const progress = computed(() => {
   stateVersion.value
 
-  return gameManager.getStageProgress()
+  return gameManager.turnBattleOps.getStageProgress()
 })
 </script>
 

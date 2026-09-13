@@ -51,7 +51,7 @@ function registerPill(gameManager: GameManager, pillId: string, amount = 1) {
   // Pill đã register qua bootstrap data ở App.vue; ở test, lấy từ registry
   // data bằng import gián tiếp để tránh phụ thuộc App.vue.
   return import('../../data/pill/pills').then(({ pills }) => {
-    gameManager.registerPills(pills.filter((pill) => pill.id === pillId))
+    gameManager.catalogOps.registerPills(pills.filter((pill) => pill.id === pillId))
     gameManager.pillBag.add(gameManager.pillRegistry.get(pillId), amount)
   })
 }
@@ -76,7 +76,7 @@ describe('Pill nghề — gate + atomic consumption', () => {
 
     const playerWrongRealm = { ...player, realmId: 'golden_core' }
 
-    const result = gameManager.usePillDetailed(REGEN_PILL, pillTarget(), playerWrongRealm as never)
+    const result = gameManager.pillOps.usePillDetailed(REGEN_PILL, pillTarget(), playerWrongRealm as never)
 
     expect(result.ok).toBe(false)
     expect(result.reason).toBe('wrong_realm')
@@ -87,7 +87,7 @@ describe('Pill nghề — gate + atomic consumption', () => {
     const { gameManager, player } = setup()
 
     await registerPill(gameManager, PERMANENT_PILL, 2)
-    const result = gameManager.usePillDetailed(PERMANENT_PILL, pillTarget(), player)
+    const result = gameManager.pillOps.usePillDetailed(PERMANENT_PILL, pillTarget(), player)
 
     expect(result.ok).toBe(true)
     expect(player.modifiers.find((modifier) => modifier.id === 'pill-permanent:strength')?.flat).toBe(1)
@@ -101,7 +101,7 @@ describe('Pill nghề — gate + atomic consumption', () => {
 
     const cap = getMainStatCap('mortal')
     player.baseStats.strength = cap
-    const result = gameManager.usePillDetailed(PERMANENT_PILL, pillTarget(), player)
+    const result = gameManager.pillOps.usePillDetailed(PERMANENT_PILL, pillTarget(), player)
 
     expect(result.ok).toBe(false)
     expect(result.reason).toBe('cap')
@@ -119,7 +119,7 @@ describe('Pill nghề — gate + atomic consumption', () => {
 
     player.cultivation = required - 1
 
-    expect(gameManager.usePillDetailed(CULTIVATION_PILL, pillTarget(), player).ok).toBe(true)
+    expect(gameManager.pillOps.usePillDetailed(CULTIVATION_PILL, pillTarget(), player).ok).toBe(true)
 
     expect(player.cultivation).toBe(required)
   })
@@ -132,7 +132,7 @@ describe('Regen timed effect — hpRegen pill REMOVED (user request 2026-09-05)'
   it('uong Hoi Xuan Dan KHONG con cap modifier hpRegenPerTurn', async () => {
     const { gameManager, player } = setup()
     await registerPill(gameManager, REGEN_PILL)
-    gameManager.usePillDetailed(REGEN_PILL, pillTarget(), player)
+    gameManager.pillOps.usePillDetailed(REGEN_PILL, pillTarget(), player)
     const effects = player.persistentTimedEffects
     const hpModifiers = effects.flatMap((e) => e.modifiers).filter((m) => m.stat === 'hpRegenPerTurn')
     expect(hpModifiers).toHaveLength(0)

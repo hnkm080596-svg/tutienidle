@@ -14,8 +14,8 @@ import { LUYEN_KHI_TINH_HOA_ID } from '../equipment/TinhHoaMaterial'
 
 function makeManager(): { manager: GameManager; player: ReturnType<typeof createDefaultPlayer> } {
   const manager = new GameManager()
-  manager.registerBuildings(buildings)
-  manager.registerMaterials(materials)
+  manager.catalogOps.registerBuildings(buildings)
+  manager.catalogOps.registerMaterials(materials)
   const player = createDefaultPlayer()
   manager.setActivePlayer(player)
   return { manager, player }
@@ -26,15 +26,15 @@ describe('QA R7 - shared pool boundedness', () => {
   it('decompose + production slots never exceed total capacity (overcommit)', () => {
     const { manager, player } = makeManager()
     player.autoWorkerCapacity = 5
-    manager.update(1)
+    manager.tickOps.update(1)
     manager.decomposeSystem.setSetting({ workers: 5 })
 
     // Production manual assignment asks for MORE than the remainder 0.
     const siteId = manager.productionSystem.getSiteDefinitions()[0]!.siteId
-    manager.setProductionAutoRestart(siteId, true)
-    manager.assignWorkers(siteId, 4)
+    manager.buildingOps.setProductionAutoRestart(siteId, true)
+    manager.buildingOps.assignWorkers(siteId, 4)
 
-    manager.update(1)
+    manager.tickOps.update(1)
 
     const decomposeWorkers = manager.decomposeSystem.getSettings().workers
     const productionSlots = manager
@@ -72,9 +72,9 @@ describe('QA R7 - decompose slice boot safety', () => {
     // Source session: build a mid-cycle decompose state with 2 workers.
     const source = makeManager()
     source.player.autoWorkerCapacity = 2
-    source.manager.update(1)
+    source.manager.tickOps.update(1)
     source.manager.decomposeSystem.setSetting({ workers: 2 })
-    source.manager.update(1)
+    source.manager.tickOps.update(1)
 
     const save = baseSave(source.player)
     save.decompose = source.manager.decomposeSystem.getSaveState()
@@ -96,7 +96,7 @@ describe('QA R7 - decompose slice boot safety', () => {
     // boot, before any tick loop runs on this instance).
     const target = makeManager()
     target.player.autoWorkerCapacity = 2
-    target.manager.restoreFromSave(save)
+    target.manager.saveOps.restoreFromSave(save)
     const tinhHoaAfterFirst =
       target.manager.materialBag.getAll().find((s) => s.material.id === LUYEN_KHI_TINH_HOA_ID)?.amount ?? 0
 
@@ -104,7 +104,7 @@ describe('QA R7 - decompose slice boot safety', () => {
     // (retry-load path). The live timer has advanced past the settled
     // window, so the second restore must not replay it.
     target.manager.materialBag.add(ore!, 1000)
-    target.manager.restoreFromSave(save)
+    target.manager.saveOps.restoreFromSave(save)
     const tinhHoaAfterSecond =
       target.manager.materialBag.getAll().find((s) => s.material.id === LUYEN_KHI_TINH_HOA_ID)?.amount ?? tinhHoaAfterFirst
 

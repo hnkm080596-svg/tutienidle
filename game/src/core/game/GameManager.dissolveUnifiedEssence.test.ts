@@ -22,8 +22,8 @@ const TEST_WEAPON: Equipment = {
 
 function registeredManager(): GameManager {
   const gameManager = new GameManager()
-  gameManager.registerMaterials(materials)
-  gameManager.registerEquipment([TEST_WEAPON])
+  gameManager.catalogOps.registerMaterials(materials)
+  gameManager.catalogOps.registerEquipment([TEST_WEAPON])
   return gameManager
 }
 
@@ -37,7 +37,7 @@ function seedFormerEssenceCapacity(gameManager: GameManager): void {
 describe('GameManager — unified essence dissolve persistence', () => {
   it('applies a duplicate selection once and persists the resulting Luyện Khí Tinh Hoa stack', () => {
     const gameManager = new GameManager()
-    gameManager.registerMaterials(materials)
+    gameManager.catalogOps.registerMaterials(materials)
     gameManager.equipmentBag.add(
       makeInstance({
         instanceId: 'dissolve-once',
@@ -46,7 +46,7 @@ describe('GameManager — unified essence dissolve persistence', () => {
       }),
     )
 
-    const result = gameManager.dissolveItems([
+    const result = gameManager.equipmentOps.dissolveItems([
       'dissolve-once',
       'dissolve-once',
       'dissolve-once',
@@ -87,7 +87,7 @@ describe('GameManager — unified essence dissolve persistence', () => {
       }),
     )
 
-    const result = gameManager.dissolveItems(['manual-capacity-boundary'])
+    const result = gameManager.equipmentOps.dissolveItems(['manual-capacity-boundary'])
 
     expect(result.ok).toBe(true)
     const reward = result.rewards![0]!
@@ -126,7 +126,7 @@ describe('GameManager — unified essence dissolve persistence', () => {
       )
     }
 
-    expect(gameManager.obtainEquipment(TEST_WEAPON.id, createDefaultPlayer())).not.toBeNull()
+    expect(gameManager.equipmentOps.obtainEquipment(TEST_WEAPON.id, createDefaultPlayer())).not.toBeNull()
 
     expect(gameManager.equipmentBag.getAll()).toHaveLength(EQUIPMENT_BAG_SOFT_CAP)
     expect(gameManager.materialBag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(10_000)
@@ -149,7 +149,7 @@ describe('GameManager — unified essence dissolve persistence', () => {
     }
     const restoredManager = registeredManager()
 
-    restoredManager.restoreFromSave(save)
+    restoredManager.saveOps.restoreFromSave(save)
 
     expect(restoredManager.equipmentBag.getAll()).toHaveLength(EQUIPMENT_BAG_SOFT_CAP)
     expect(restoredManager.materialBag.getAmount(LUYEN_KHI_TINH_HOA_ID)).toBe(10_000)

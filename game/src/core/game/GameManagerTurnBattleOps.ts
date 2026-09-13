@@ -1,9 +1,4 @@
-import {
-  PresentationSession,
-  type PresentationMode,
-  type SessionPresentationPort,
-  type SessionRef,
-} from '../presentation/PresentationSession'
+import type { SessionRef } from '../presentation/PresentationSession'
 import type { Battle } from '../battle/Battle'
 import { initKiemTuBattleResources } from '../battle/KiemTuResourceSystem'
 import { resolveEnemySpawnPosition } from '../battle/EnemySpawnPlacement'
@@ -21,16 +16,11 @@ import {
 } from '../battle/turn/CombatClock'
 import { TurnToken, type TokenState } from '../battle/turn/TurnToken'
 import { TurnPipeline } from '../battle/turn/TurnPipeline'
-import { CombatAnimationRuntime, type ResumePlayback } from '../battle/turn/CombatAnimationRuntime'
 export type { ResumePlayback } from '../battle/turn/CombatAnimationRuntime'
 import { TurnBuffSystem } from '../battle/turn/TurnBuffSystem'
 import { TurnReactionManager } from '../battle/turn/TurnReactionManager'
 import type { TurnSkillDefinition, TurnSkillSlotRole } from '../battle/turn/TurnSkillAction'
-import {
-  emitTurnBattleEntitySnapshot,
-  buildTurnBattleEntitySnapshot,
-  type TurnBattleEntitySnapshotEvent,
-} from '../battle/turn/TurnActionPresentationEvents'
+import { emitTurnBattleEntitySnapshot } from '../battle/turn/TurnActionPresentationEvents'
 import {
   diffAndEmitTurnStatusVfx,
   type TurnStatusSnapshotEntry,
@@ -41,7 +31,7 @@ import type { CombatEntity } from '../combat/CombatEntity'
 import { effectiveTotalEnemyCount } from '../stage/EffectiveEnemyCount'
 import { effectiveWaves } from '../stage/EffectiveWaves'
 import type { Stage } from '../stage/Stage'
-import { DEFAULT_MAX_OFFLINE_SECONDS } from '../idle/GameClock'
+
 import { BASIC_ATTACKS_BY_BUILD, GENERIC_PHYSICAL_BASIC } from '../../data/skill/TurnBasicAttacks'
 import { REACTION_PATH_POOL } from '../../data/skill/TurnReactionPathSkills'
 import { TRAN_PHAP_FORMATIONS } from '../../data/formation/TranPhap'
@@ -69,8 +59,7 @@ import type { RewardReceiver } from '../reward/RewardSystem'
 import type { ElementType } from '../element/ElementType'
 import type { TemplateRegistry } from './TemplateRegistry'
 import type { SkillRuntimeStats } from '../skill/SkillRuntimeStats'
-import type { TurnSkillPresentationEntry } from '../combat/CombatSkillPresentation'
-import { buildTurnSkillPresentation } from '../combat/CombatSkillPresentation'
+
 
 /**
  * Turn-Based Wave Redesign (2026-09-06) - shared between buildTurnBattle()
@@ -93,7 +82,10 @@ export { COUNTDOWN_TOTAL_TICKS, INTRO_TOTAL_TICKS }
 export const ANIMATION_FALLBACK_MS = 4000
 
 /** The three renderer signals the pipeline's asynchronous steps wait on. */
-type TurnStepSignal = 'ready' | 'impact' | 'complete'
+import type { TurnStepSignal } from './GameManagerTurnBattlePresentationOps'
+import { GameManagerTurnBattlePresentationOps } from './GameManagerTurnBattlePresentationOps'
+import { GameManagerBattleRewardOps } from './GameManagerBattleRewardOps'
+import { GameManagerAutoFarmOps } from './GameManagerAutoFarmOps'
 
 /**
  * Turn-battle runtime Ops (C2 GameManager split, 2026-09-08) - owns the
@@ -129,8 +121,8 @@ export class GameManagerTurnBattleOps {
   /** Wall-clock timestamp at stage start (Hoan My clearSeconds normalization). */
   private turnBattleStartedAtMs: number | null = null
 
-  private turnBattleRewardsGranted = new Set<string>()
-  private turnBattleEndEmitted = false
+  // Reward-flow flags (rewardsGranted set + battleEndEmitted) live in
+  // rewardOps - the terminal/grant flow owns them exclusively.
 
   // Phase A6 (9.5 #7) — last-emitted status snapshot + the battle instance
   // it belongs to. Persistent across steps so construction-time buffs emit
@@ -138,9 +130,13 @@ export class GameManagerTurnBattleOps {
   private statusVfxSnapshot = new Map<string, TurnStatusSnapshotEntry>()
   private statusVfxBattle: TurnBattle | null = null
 
-  private readonly combatAnimationRuntime: CombatAnimationRuntime
-  private readonly presentationSession: PresentationSession
-  private presentationMode: PresentationMode = 'headless'
+  // Wave-2 sub-splits: presentation facade owns CombatAnimationRuntime +
+  // PresentationSession + mode; rewardOps owns the grant/terminal flags;
+  // autoFarmOps owns the wall-clock farm cycle (no battle state).
+  readonly presentationOps: GameManagerTurnBattlePresentationOps
+  readonly rewardOps: GameManagerBattleRewardOps
+  readonly autoFarmOps: GameManagerAutoFarmOps
+
   private isStageStarting = false
 
   // --- Turn engine (2026-09-10 combat-turn-mechanism spec) ----------------
@@ -228,23 +224,39 @@ export class GameManagerTurnBattleOps {
       undefined,
       this.onSkillCast,
     )
-    this.presentationSession = new PresentationSession(deps.sessionAllocator)
-
-    // Live getters for turnBattleSystem/turnBattle are required: both are
-    // REASSIGNED wholesale by restartTurnBattleCycle()/startStage(), so
-    // capturing by value would freeze the runtime onto the first
-    // registry-less instance (same rationale as the original inline wiring).
-    this.combatAnimationRuntime = new CombatAnimationRuntime({
-      getTurnBattleSystem: () => this.turnBattleSystem,
+    // Presentation facade (Wave-2 split) - owns the PresentationSession +
+    // CombatAnimationRuntime + mode flag. Deferred closures keep the
+    // runtime reading the LIVE turnBattleSystem/turnBattle (both are
+    // reassigned wholesale by restartTurnBattleCycle()/startStage()) and
+    // route step completion back into this core's pipeline settleStep.
+    this.presentationOps = new GameManagerTurnBattlePresentationOps({
+      sessionAllocator: deps.sessionAllocator,
       eventBus: deps.eventBus,
+      getTurnBattleSystem: () => this.turnBattleSystem,
       getBattle: () => this.turnBattle,
-      syncLegacyBattleState: () => {},
-      isSessionBlocking: () => this.presentationSession.isBlocking(),
-      stepCompletionSink: {
-        onReady: () => this.settleStep('ready'),
-        onImpact: () => this.settleStep('impact'),
-        onComplete: () => this.settleStep('complete'),
-      },
+      syncOffScreenFreeze: () => this.syncOffScreenFreeze(),
+      settleStep: (signal) => this.settleStep(signal),
+    })
+
+    this.rewardOps = new GameManagerBattleRewardOps({
+      getTurnBattle: () => this.turnBattle,
+      getActiveStage: () => this.activeStageForTurnBattle,
+      getPlayerData: () => this.playerDataForTurnBattle,
+      getStartedAtMs: () => this.turnBattleStartedAtMs,
+      getRepeatContinuously: () => this.turnBattleRepeatContinuously,
+      battleLoot: deps.battleLoot,
+      stageWaves: deps.stageWaves,
+      eventBus: deps.eventBus,
+      bankPassiveCarry: deps.bankPassiveCarry,
+    })
+
+    this.autoFarmOps = new GameManagerAutoFarmOps({
+      stageManager: deps.stageManager,
+      stageTemplates: deps.stageTemplates,
+      battleLoot: deps.battleLoot,
+      stageWaves: deps.stageWaves,
+      enemySystem: deps.enemySystem,
+      buildPlayerRewardReceiver: deps.buildPlayerRewardReceiver,
     })
 
     this.detachClockStep = this.combatClock.onStep((steps) => this.advanceCombat(steps))
@@ -335,7 +347,7 @@ export class GameManagerTurnBattleOps {
    * not revealed the battle yet, so combat must not count.
    */
   private syncOffScreenFreeze(): void {
-    if (this.presentationSession.isBlocking()) {
+    if (this.presentationOps.session.isBlocking()) {
       this.combatClock.freeze('not-revealed')
     } else {
       this.combatClock.resume('not-revealed')
@@ -397,11 +409,11 @@ export class GameManagerTurnBattleOps {
         this.turnToken.claim({
           actorId: readyActor.id,
           isPlayerTeam: battle.players.includes(readyActor),
-          manualMode: this.combatAnimationRuntime.isBattleManualMode(),
+          manualMode: this.presentationOps.runtime.isBattleManualMode(),
         })
 
         if (this.turnToken.getState() === 'AWAITING_INPUT') {
-          this.combatAnimationRuntime.pauseForManualActor(readyActor)
+          this.presentationOps.runtime.pauseForManualActor(readyActor)
           emitTurnBattleEntitySnapshot(this.deps.eventBus, battle)
 
           return
@@ -508,7 +520,7 @@ export class GameManagerTurnBattleOps {
         animationId: 'action',
         run: (done) => {
           this.awaitStep('ready', done)
-          this.combatAnimationRuntime.notifyReadyActor(actor)
+          this.presentationOps.runtime.notifyReadyActor(actor)
           this.settleHeadlessStep('ready')
         },
       })
@@ -589,14 +601,14 @@ export class GameManagerTurnBattleOps {
    * reported and did not).
    */
   private driveStepWork(signal: TurnStepSignal): void {
-    const token = this.combatAnimationRuntime.getPendingPlaybackToken() ?? undefined
+    const token = this.presentationOps.runtime.getPendingPlaybackToken() ?? undefined
 
     if (signal === 'ready') {
-      this.combatAnimationRuntime.acknowledgeTurnReady(token)
+      this.presentationOps.runtime.acknowledgeTurnReady(token)
     } else if (signal === 'impact') {
-      this.combatAnimationRuntime.acknowledgeActionImpact(token)
+      this.presentationOps.runtime.acknowledgeActionImpact(token)
     } else {
-      this.combatAnimationRuntime.acknowledgeActionComplete(token)
+      this.presentationOps.runtime.acknowledgeActionComplete(token)
     }
   }
 
@@ -607,7 +619,7 @@ export class GameManagerTurnBattleOps {
    * that the PIPELINE owns the ordering in both modes.
    */
   private settleHeadlessStep(signal: TurnStepSignal): void {
-    if (this.combatAnimationRuntime.isPresentationActive()) {
+    if (this.presentationOps.runtime.isPresentationActive()) {
       return
     }
 
@@ -650,7 +662,7 @@ export class GameManagerTurnBattleOps {
    * clock, and anything left behind on the world tick would never fire.
    */
   private settleCombatOutcome(): void {
-    this.grantBattleRewardIfNeeded()
+    this.rewardOps.grantBattleRewardIfNeeded()
 
     const battle = this.turnBattle
 
@@ -702,28 +714,6 @@ export class GameManagerTurnBattleOps {
     return this.activeStageForTurnBattle
   }
 
-  /**
-   * Pure snapshot query for presentation reconciliation (Task 4).
-   * Validates sessionId, emits zero events, changes zero state, returns detached plain data.
-   */
-  getCombatPresentationSnapshot(sessionId: number): {
-    sessionId: number
-    entities: TurnBattleEntitySnapshotEvent
-  } | null {
-    const currentSession = this.presentationSession.getCurrentSession()
-    if (!currentSession || currentSession.sessionId !== sessionId || currentSession.kind !== 'combat') {
-      return null
-    }
-
-    if (!this.turnBattle) {
-      return null
-    }
-
-    return {
-      sessionId,
-      entities: buildTurnBattleEntitySnapshot(this.turnBattle),
-    }
-  }
 
   /** TurnBattle cast to the read-only Battle shape legacy consumers expect. */
   getBattle(): Battle | null {
@@ -761,17 +751,17 @@ export class GameManagerTurnBattleOps {
       // it does not apply to (round indicator, 2026-09-12).
       this.activeStageForTurnBattle = null
 
-      const activeSession = this.presentationSession.getCurrentSession()
+      const activeSession = this.presentationOps.session.getCurrentSession()
       if (activeSession) {
-        this.presentationSession.end(activeSession)
+        this.presentationOps.session.end(activeSession)
       }
       const session: SessionRef = {
         kind: 'combat',
-        sessionId: this.presentationSession.allocate(),
+        sessionId: this.presentationOps.session.allocate(),
       }
-      this.presentationSession.begin(session, this.presentationMode)
-      if (this.presentationMode === 'interactive') {
-        this.presentationSession.hold(session)
+      this.presentationOps.session.begin(session, this.presentationOps.getPresentationMode())
+      if (this.presentationOps.getPresentationMode() === 'interactive') {
+        this.presentationOps.session.hold(session)
       }
       this.deps.eventBus.emit('presentation_session_started', session)
     }
@@ -994,9 +984,8 @@ export class GameManagerTurnBattleOps {
 
     const stageRef = this.activeStageForTurnBattle
 
-    this.turnBattleRewardsGranted.clear()
-    this.turnBattleEndEmitted = false
-    this.combatAnimationRuntime.resetPendingState()
+    this.rewardOps.resetRewardState()
+    this.presentationOps.runtime.resetPendingState()
 
     this.turnBattle = {
       players: previous.players,
@@ -1066,9 +1055,9 @@ export class GameManagerTurnBattleOps {
       return false
     }
 
-    const activeSession = this.presentationSession.getCurrentSession()
+    const activeSession = this.presentationOps.session.getCurrentSession()
     if (activeSession) {
-      this.presentationSession.end(activeSession)
+      this.presentationOps.session.end(activeSession)
     }
 
     this.turnBattleRepeatContinuously = repeatContinuously
@@ -1084,9 +1073,8 @@ export class GameManagerTurnBattleOps {
       // Gameplay fixes (2026-09-05): reset per-battle flags at every fresh
       // startStage - otherwise the 2nd refight inherits turnBattleEndEmitted
       // and its victory terminal never fires.
-      this.turnBattleRewardsGranted.clear()
-      this.turnBattleEndEmitted = false
-      this.combatAnimationRuntime.resetPendingState()
+      this.rewardOps.resetRewardState()
+      this.presentationOps.runtime.resetPendingState()
       this.turnBattleStartedAtMs = Date.now()
 
       // Despawn the bootstrap enemy from EnemySystem too (not only
@@ -1139,11 +1127,11 @@ export class GameManagerTurnBattleOps {
 
     const session: SessionRef = {
       kind: 'combat',
-      sessionId: this.presentationSession.allocate(),
+      sessionId: this.presentationOps.session.allocate(),
     }
-    this.presentationSession.begin(session, this.presentationMode)
-    if (this.presentationMode === 'interactive') {
-      this.presentationSession.hold(session)
+    this.presentationOps.session.begin(session, this.presentationOps.getPresentationMode())
+    if (this.presentationOps.getPresentationMode() === 'interactive') {
+      this.presentationOps.session.hold(session)
     }
     this.deps.eventBus.emit('presentation_session_started', session)
 
@@ -1194,12 +1182,12 @@ export class GameManagerTurnBattleOps {
       return false
     }
 
-    const session = this.presentationSession.getCurrentSession()
+    const session = this.presentationOps.session.getCurrentSession()
     if (session) {
-      this.presentationSession.end(session)
+      this.presentationOps.session.end(session)
     }
 
-    this.combatAnimationRuntime.resetPendingState()
+    this.presentationOps.runtime.resetPendingState()
 
     if (this.turnBattle) {
       this.turnBattle.state = 'defeat'
@@ -1251,135 +1239,9 @@ export class GameManagerTurnBattleOps {
     const activePlayer = this.deps.getActivePlayer()
 
     if (activePlayer) {
-      this.tickAutoFarm(activePlayer)
+      this.autoFarmOps.tickAutoFarm(activePlayer)
     }
   }
-
-  // --- Reward flow ------------------------------------------------------------
-
-  private grantBattleRewardIfNeeded() {
-    // Rewards are read from TurnBattle (the only engine).
-    if (this.turnBattle) {
-      this.grantTurnBattleRewards()
-    }
-  }
-
-  private grantTurnBattleRewards() {
-    const turnBattle = this.turnBattle
-
-    if (!turnBattle) {
-      return
-    }
-
-    const killedIds = turnBattle.enemies
-      .filter(
-        (enemy) => !enemy.entity.alive && !this.turnBattleRewardsGranted.has(enemy.entity.id),
-      )
-      .map((enemy) => enemy.entity.id)
-
-    if (killedIds.length === 0 && turnBattle.state === 'fighting') {
-      return
-    }
-
-    // Slice 6 cutover: build a Battle-shape shim from TurnBattle so
-    // processDefeatedEnemies handles bounty/heal-on-kill/talent exactly like
-    // the old system without modifying BattleLootSystem.
-    const shimEnemies = turnBattle.enemies.map((enemy) => ({
-      entity: enemy.entity,
-      rewardGranted: this.turnBattleRewardsGranted.has(enemy.entity.id),
-    }))
-
-    const shimBattle = {
-      player: turnBattle.players[0]?.entity,
-      enemies: shimEnemies,
-    } as unknown as Battle
-
-    this.deps.battleLoot.processDefeatedEnemies(shimBattle)
-
-    for (const enemyId of killedIds) {
-      this.turnBattleRewardsGranted.add(enemyId)
-    }
-
-    // Victory/defeat terminal: emit battle_end EXACTLY ONCE per cycle and
-    // release StageManager.active (otherwise the next startStage/Rematch
-    // fails forever in-session - smoke-test regression 2026-09-04). Auto-repeat
-    // does NOT stop - restartTurnBattleCycle reuses the active stage.
-    if (
-      (turnBattle.state === 'victory' || turnBattle.state === 'defeat') &&
-      !this.turnBattleEndEmitted
-    ) {
-      this.turnBattleEndEmitted = true
-
-      // M2 — Pha Giap carry: bank a fraction of the passive's stacks for
-      // the next battle, whatever the outcome (plan Slice 6: "bank at
-      // battle end regardless of outcome"). Exactly-once is guaranteed by
-      // turnBattleEndEmitted above; the write is an overwrite so a later
-      // re-entry cannot double-count.
-      if (this.playerDataForTurnBattle) {
-        this.deps.bankPassiveCarry(this.playerDataForTurnBattle)
-      }
-
-      if (!this.turnBattleRepeatContinuously) {
-        this.deps.stageWaves.stopRepeat()
-      }
-
-      if (turnBattle.state === 'victory') {
-        this.deps.eventBus.emit('battle_end', { type: 'battle_end', state: 'victory' })
-
-        this.recordPerfectClearIfEligible(turnBattle)
-
-        // Stage completion: push completedStageIds exactly once per stage
-        // (auto-repeat still pushes - the player did complete the stage).
-        if (
-          this.playerDataForTurnBattle &&
-          this.activeStageForTurnBattle &&
-          !this.playerDataForTurnBattle.completedStageIds.includes(this.activeStageForTurnBattle.id)
-        ) {
-          this.playerDataForTurnBattle.completedStageIds.push(this.activeStageForTurnBattle.id)
-        }
-      }
-    }
-  }
-
-  /**
-   * Perfect clear (spec v3 D1): every party member must still be alive at
-   * the victory tick AND the battle must end within the stage's fixed
-   * perfectClearTurnLimit - counted in ROUNDS (roundsElapsed), not actor
-   * actions, so wave size does not inflate the count. HP-loss is not
-   * consulted. Only the ACTIVE mode can ever evaluate this (idle runs no
-   * battle). Records perfectClearStageIds + perfectClearSeconds ONCE -
-   * the first achievement is never overwritten (B4).
-   */
-  private recordPerfectClearIfEligible(turnBattle: TurnBattle) {
-    const stage = this.activeStageForTurnBattle
-    const player = this.playerDataForTurnBattle
-
-    if (!stage || !player || stage.perfectClearTurnLimit === undefined) {
-      return
-    }
-
-    if (player.perfectClearStageIds.includes(stage.id)) {
-      return
-    }
-
-    const everyoneAlive =
-      turnBattle.players.length > 0 && turnBattle.players.every((member) => member.entity.alive)
-
-    const isPerfectClear =
-      everyoneAlive && (turnBattle.roundsElapsed ?? 0) < stage.perfectClearTurnLimit
-
-    if (!isPerfectClear) {
-      return
-    }
-
-    const startedAtMs = this.turnBattleStartedAtMs ?? Date.now()
-    const clearSeconds = Math.max(0, (Date.now() - startedAtMs) / 1000)
-
-    player.perfectClearStageIds.push(stage.id)
-    player.perfectClearSeconds[stage.id] = clearSeconds
-  }
-
-  // --- Presentation facade (moved verbatim) -----------------------------------
 
   /**
    * Manual-mode toggle is listed as an external command in spec section 9.1,
@@ -1395,7 +1257,7 @@ export class GameManagerTurnBattleOps {
    * queuing it to "wait for IDLE" would wait forever.
    */
   setBattleManualMode(enabled: boolean): void {
-    const stranded = enabled ? null : this.combatAnimationRuntime.getAwaitedManualActor()
+    const stranded = enabled ? null : this.presentationOps.runtime.getAwaitedManualActor()
 
     // Turning manual off mid-wait must not strand the token in AWAITING_INPUT
     // - that would freeze the clock for the rest of the battle waiting for a
@@ -1406,12 +1268,8 @@ export class GameManagerTurnBattleOps {
     }
 
     this.enqueueAtTurnBoundary(() => {
-      this.combatAnimationRuntime.setBattleManualMode(enabled)
+      this.presentationOps.runtime.setBattleManualMode(enabled)
     })
-  }
-
-  isBattleManualMode(): boolean {
-    return this.combatAnimationRuntime.isBattleManualMode()
   }
 
   /**
@@ -1423,76 +1281,6 @@ export class GameManagerTurnBattleOps {
     return this.turnToken.getState() === 'AWAITING_INPUT'
   }
 
-  setPresentationMode(mode: PresentationMode): void {
-    this.presentationMode = mode
-  }
-
-  getPresentationMode(): PresentationMode {
-    return this.presentationMode
-  }
-
-  getCurrentPresentationSession(): SessionRef | null {
-    return this.presentationSession.getCurrentSession()
-  }
-
-  /**
-   * The port the presentation coordinator drives. Every transition that can
-   * change whether the battle is on screen re-evaluates the clock's
-   * `not-revealed` freeze reason, so readiness reaches combat time through the
-   * reason set and nowhere else.
-   */
-  getPresentationPort(): SessionPresentationPort {
-    return {
-      getCurrentSession: () => this.presentationSession.getCurrentSession(),
-      hold: (session) => this.withOffScreenSync(() => this.presentationSession.hold(session)),
-      attach: (token) => this.withOffScreenSync(() => this.presentationSession.attach(token)),
-      release: (token) => this.withOffScreenSync(() => this.presentationSession.release(token)),
-      detach: (token, policy) =>
-        this.withOffScreenSync(() => this.presentationSession.detach(token, policy)),
-    }
-  }
-
-  private withOffScreenSync<T>(operation: () => T): T {
-    const result = operation()
-
-    this.syncOffScreenFreeze()
-
-    return result
-  }
-
-  /** True while the current interactive session is held by the coordinator. */
-  isAwaitingPresentationLayer(): boolean {
-    return this.presentationSession.isBlocking()
-  }
-
-  getPendingPlaybackToken(): string | null {
-    return this.combatAnimationRuntime.getPendingPlaybackToken()
-  }
-
-  preparePresentationResume(): ResumePlayback | null {
-    return this.combatAnimationRuntime.preparePresentationResume()
-  }
-
-  setPresentationActive(active: boolean): void {
-    this.combatAnimationRuntime.setPresentationActive(active)
-  }
-
-  isActionPlaybackWaiting(): boolean {
-    return this.combatAnimationRuntime.isActionPlaybackWaiting()
-  }
-
-  acknowledgeTurnReady(token?: string): void {
-    this.combatAnimationRuntime.acknowledgeTurnReady(token)
-  }
-
-  acknowledgeActionImpact(token?: string): void {
-    this.combatAnimationRuntime.acknowledgeActionImpact(token)
-  }
-
-  acknowledgeActionComplete(token?: string): void {
-    this.combatAnimationRuntime.acknowledgeActionComplete(token)
-  }
-
   /**
    * submitTurnChoice is NOT an external command: it is consumed by the
    * AWAITING_INPUT state and never queued past it (spec section 9.2). The
@@ -1501,8 +1289,8 @@ export class GameManagerTurnBattleOps {
    * and cast phases have just happened.
    */
   submitTurnChoice(role: TurnSkillSlotRole): boolean {
-    const actor = this.combatAnimationRuntime.getAwaitedManualActor()
-    const accepted = this.combatAnimationRuntime.submitTurnChoice(role)
+    const actor = this.presentationOps.runtime.getAwaitedManualActor()
+    const accepted = this.presentationOps.runtime.submitTurnChoice(role)
 
     if (!accepted || !actor) {
       return accepted
@@ -1517,203 +1305,4 @@ export class GameManagerTurnBattleOps {
     return true
   }
 
-  consumeAwaitedActorId(): string | null {
-    return this.combatAnimationRuntime.getAwaitedManualActor()?.id ?? null
-  }
-
-  buildTurnSkillPresentation(
-    battle: TurnBattle,
-    isPlayerTurnPaused: boolean,
-  ): {
-    basic: TurnSkillPresentationEntry
-    special: TurnSkillPresentationEntry
-    ultimate: TurnSkillPresentationEntry
-  } {
-    return buildTurnSkillPresentation(
-      battle,
-      isPlayerTurnPaused,
-      isPlayerTurnPaused
-        ? (this.combatAnimationRuntime.getAwaitedManualActor() ?? undefined)
-        : undefined,
-    )
-  }
-
-  // --- Auto-farm (spec 2026-09-04-stage-auto-farm, Task 4) ---------------------
-
-  /**
-   * Enable auto-farm for a stage that reached Hoan My. Shares the SAME
-   * single-slot StageManager with manual/repeat/progress (exclusivity
-   * uniform) - no TurnBattleSystem, no animation; reward rolls by wall-clock.
-   */
-  startAutoFarm(player: PlayerData, stageId: string): boolean {
-    if (!player.perfectClearStageIds.includes(stageId)) {
-      return false
-    }
-
-    if (this.deps.stageManager.get() !== null) {
-      return false
-    }
-
-    const stage = this.deps.stageTemplates.get(stageId)
-
-    if (!stage) {
-      return false
-    }
-
-    if (!this.deps.stageManager.start(stage)) {
-      return false
-    }
-
-    player.autoFarmStage = { stageId, lastCheckedMs: Date.now() }
-
-    return true
-  }
-
-  stopAutoFarm(player: PlayerData): void {
-    if (player.autoFarmStage === null) {
-      return
-    }
-
-    player.autoFarmStage = null
-    this.deps.stageManager.stop()
-  }
-
-  /**
-   * Auto-farm Task 5 - offline catch-up on save restore: roll rewards for
-   * cycles elapsed offline (the ONE exception where combat rewards are
-   * granted offline). Online cycle time (perfectClearSeconds/2); leftover
-   * time carries via lastCheckedMs advancing by exactly the settled part.
-   *
-   * Remediation Task 3 (2026-09-05) - BOUNDED settlement:
-   * - elapsedOfflineSeconds clamped by DEFAULT_MAX_OFFLINE_SECONDS (24h -
-   *   the single GameClock source, no second cap invented here).
-   * - cycleSeconds <= 0 / non-finite -> safe no-op (blocks Infinity cycles
-   *   from malformed saves - evidence: infinite-loop timeout in tests).
-   */
-  settleAutoFarmOffline(player: PlayerData, elapsedOfflineSeconds: number): void {
-    const autoFarm = player.autoFarmStage
-
-    if (!autoFarm) {
-      return
-    }
-
-    const cycleSeconds = player.perfectClearSeconds[autoFarm.stageId]
-
-    if (cycleSeconds === undefined || !(cycleSeconds > 0) || !Number.isFinite(cycleSeconds)) {
-      return
-    }
-
-    const cappedElapsedSeconds = Math.min(
-      Math.max(0, elapsedOfflineSeconds),
-      DEFAULT_MAX_OFFLINE_SECONDS,
-    )
-
-    const cycleMs = (cycleSeconds / 2) * 1000
-    const elapsedMs = cappedElapsedSeconds * 1000
-    const completedCycles = Math.floor(elapsedMs / cycleMs)
-
-    if (completedCycles <= 0) {
-      return
-    }
-
-    const stage = this.deps.stageTemplates.get(autoFarm.stageId)
-
-    if (!stage) {
-      return
-    }
-
-    for (let i = 0; i < completedCycles; i++) {
-      this.rollAutoFarmCycleReward(player, stage)
-    }
-
-    autoFarm.lastCheckedMs += completedCycles * cycleMs
-  }
-
-  /**
-   * Tick auto-farm from the fixed-step loop: each completed cycle rolls its
-   * reward through the BattleLootSystem shim (no simulation). Partial cycle
-   * time carries over via lastCheckedMs.
-   */
-  private tickAutoFarm(player: PlayerData) {
-    const autoFarm = player.autoFarmStage
-
-    if (!autoFarm) {
-      return
-    }
-
-    const cycleSeconds = player.perfectClearSeconds[autoFarm.stageId]
-
-    if (cycleSeconds === undefined) {
-      return
-    }
-
-    const cycleMs = (cycleSeconds / 2) * 1000
-    const now = Date.now()
-    const elapsedMs = now - autoFarm.lastCheckedMs
-    const completedCycles = Math.floor(elapsedMs / cycleMs)
-
-    if (completedCycles <= 0) {
-      return
-    }
-
-    const stage = this.deps.stageTemplates.get(autoFarm.stageId)
-
-    if (!stage) {
-      return
-    }
-
-    for (let i = 0; i < completedCycles; i++) {
-      this.rollAutoFarmCycleReward(player, stage)
-    }
-
-    autoFarm.lastCheckedMs += completedCycles * cycleMs
-  }
-
-  /**
-   * Roll one auto-farm cycle: build a "dead enemies" shim from the stage
-   * enemyPool and reuse processDefeatedEnemies (bounty/heal-on-kill/talent
-   * identical to a real battle) - no TurnBattleSystem, no animation.
-   */
-  private rollAutoFarmCycleReward(player: PlayerData, stage: Stage) {
-    this.deps.battleLoot.beginBattle()
-    this.deps.battleLoot.setChannel('idle')
-    this.deps.battleLoot.setSession(this.deps.buildPlayerRewardReceiver(player), player)
-
-    // try/finally: a throw mid-cycle (e.g. createInstance on a missing
-    // profession grade) must not leak 'idle' into the next real battle.
-    try {
-      const killedEntities: { entity: CombatEntity; rewardGranted: boolean }[] = []
-
-      const rollTotalEnemyCount = effectiveTotalEnemyCount(stage)
-
-      for (let i = 0; i < rollTotalEnemyCount; i++) {
-        const isFinalSpawn = i === rollTotalEnemyCount - 1
-        // Idle channel (spec v3 D5): never roll the tinh_anh tag - the
-        // boss gate still applies unconditionally on floor 10.
-        const template = this.deps.stageWaves.pickEnemyForTurnSpawn(stage, isFinalSpawn, { allowTags: false })
-
-        if (!template) {
-          continue
-        }
-
-        const entity = enemyToCombatEntity(this.deps.enemySystem.spawn(template))
-        entity.alive = false
-
-        killedEntities.push({ entity, rewardGranted: false })
-      }
-
-      // Player shim: only processDefeatedEnemies's heal-on-kill branch reads
-      // it - a non-alive entity is an inert placeholder (heal math inert).
-      const shimBattle = {
-        player: killedEntities[0]?.entity,
-        enemies: killedEntities,
-      } as unknown as Battle
-
-      this.deps.battleLoot.processDefeatedEnemies(shimBattle, stage)
-    } finally {
-      // Restore the default so a real battle started later in the same tick
-      // is not silently farmed at idle rates.
-      this.deps.battleLoot.setChannel('active')
-    }
-  }
 }

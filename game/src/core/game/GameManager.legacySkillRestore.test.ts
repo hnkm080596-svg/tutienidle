@@ -34,7 +34,7 @@ describe('GameManager — restore skill legacy thiếu execution (bugfix 2026-08
   it('backfill execution từ template cho skill save cũ', () => {
     const gameManager = new GameManager()
 
-    gameManager.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
 
     // Mô phỏng skill object trong save cũ: progression state THẬT của
     // nhân vật đã học+trang bị (unlocked/equipped true), nhưng KHÔNG có
@@ -47,7 +47,7 @@ describe('GameManager — restore skill legacy thiếu execution (bugfix 2026-08
     legacyTram.unlocked = true
     legacyTram.equipped = true
 
-    gameManager.restoreFromSave(buildLegacySave([legacyTram]))
+    gameManager.saveOps.restoreFromSave(buildLegacySave([legacyTram]))
 
     const restored = gameManager.skillManager.get('tram')!
 
@@ -60,7 +60,7 @@ describe('GameManager — restore skill legacy thiếu execution (bugfix 2026-08
     const combatSource = new ManualClockSource()
     gameManager.setCombatClockSource(combatSource)
 
-    gameManager.registerSkillTemplates(SKILLS)
+    gameManager.catalogOps.registerSkillTemplates(SKILLS)
 
     const legacyTram = JSON.parse(
       JSON.stringify(SKILLS.find((skill) => skill.id === 'tram')),
@@ -70,7 +70,7 @@ describe('GameManager — restore skill legacy thiếu execution (bugfix 2026-08
     legacyTram.unlocked = true
     legacyTram.equipped = true
 
-    gameManager.restoreFromSave(buildLegacySave([legacyTram]))
+    gameManager.saveOps.restoreFromSave(buildLegacySave([legacyTram]))
 
     // App.vue's boot path — bảo đảm Trảm chiếm slot mặc định.
     if (!gameManager.skillManager.getEquippedInSlot(0)) {
@@ -100,7 +100,7 @@ describe('GameManager — restore skill legacy thiếu execution (bugfix 2026-08
       rewards: { techniqueInsight: 0, spiritStone: 0 },
     })
 
-    gameManager.registerEnemyTemplates([enemy])
+    gameManager.catalogOps.registerEnemyTemplates([enemy])
     gameManager.startBattleWithPlayer(player, stats, enemy)
     combatSource.advance(3) // Bỏ qua countdown + telegraph spawn.
 

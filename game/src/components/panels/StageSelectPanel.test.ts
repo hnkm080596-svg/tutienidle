@@ -23,10 +23,10 @@ function mountStageSelect() {
   const pinia = createPinia()
   const manager = new GameManager()
   const version = ref(0)
-  manager.registerEnemyTemplates(ENEMIES)
-  manager.registerStages(STAGES)
-  manager.registerZones(zones)
-  manager.registerBuildings(buildings)
+  manager.catalogOps.registerEnemyTemplates(ENEMIES)
+  manager.catalogOps.registerStages(STAGES)
+  manager.catalogOps.registerZones(zones)
+  manager.catalogOps.registerBuildings(buildings)
   manager.buildingManager.add({
     instanceId: 'teleport-array',
     buildingId: 'teleport_array',

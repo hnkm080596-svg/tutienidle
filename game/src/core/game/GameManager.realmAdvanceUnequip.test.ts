@@ -15,9 +15,9 @@ import { PHAP_TU_NODES } from '../../data/progression/PhapTuNodes'
 // git history (deecb9e, commit 3fa501f trên master). Test này khóa hợp đồng mới.
 function setup() {
   const manager = new GameManager()
-  manager.registerSkillTemplates(SKILLS)
-  manager.registerProgressionNodes(PHAP_TU_NODES)
-  manager.registerEquipment(equipment)
+  manager.catalogOps.registerSkillTemplates(SKILLS)
+  manager.catalogOps.registerProgressionNodes(PHAP_TU_NODES)
+  manager.catalogOps.registerEquipment(equipment)
   return manager
 }
 
@@ -35,7 +35,7 @@ describe('GameManager — chooseCultivationPath realm advance và trang bị đa
     })
     manager.equipmentBag.add(weapon)
 
-    expect(manager.chooseCultivationPath('phap_tu', player)).toBe(true)
+    expect(manager.realmAdvanceOps.chooseCultivationPath('phap_tu', player)).toBe(true)
     expect(player.realmId).toBe('qi_refining')
     expect(weapon.equipped).toBe(true)
   })

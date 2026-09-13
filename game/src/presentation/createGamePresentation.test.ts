@@ -172,8 +172,8 @@ describe('createGamePresentation and runAdmitted', () => {
       rewards: { techniqueInsight: 0, spiritStone: 0 },
     })
     const stage = stageFixture('admit_stage', enemy.id)
-    gameManager.registerEnemyTemplates([enemy])
-    gameManager.registerStages([stage])
+    gameManager.catalogOps.registerEnemyTemplates([enemy])
+    gameManager.catalogOps.registerStages([stage])
     gameManager.setActivePlayer(player)
     gameManager.setPresentationMode('interactive')
 
@@ -196,7 +196,7 @@ describe('createGamePresentation and runAdmitted', () => {
     })
 
     const result = await presentation.runAdmitted('combat', () => {
-      const started = gameManager.startStage(player, stats, stage, false)
+      const started = gameManager.turnBattleOps.startStage(player, stats, stage, false)
       if (!started) return null
       const session = gameManager.getCurrentPresentationSession('combat')
       return session ? { target: 'combat', session } : null
@@ -231,8 +231,8 @@ describe('createGamePresentation and runAdmitted', () => {
       rewards: { techniqueInsight: 0, spiritStone: 0 },
     })
     const stage = stageFixture('ext_stage', enemy.id)
-    gameManager.registerEnemyTemplates([enemy])
-    gameManager.registerStages([stage])
+    gameManager.catalogOps.registerEnemyTemplates([enemy])
+    gameManager.catalogOps.registerStages([stage])
     gameManager.setActivePlayer(player)
     gameManager.setPresentationMode('interactive')
 
@@ -250,7 +250,7 @@ describe('createGamePresentation and runAdmitted', () => {
     })
 
     // Start stage externally (simulating external caller or debug command)
-    gameManager.startStage(player, stats, stage, false)
+    gameManager.turnBattleOps.startStage(player, stats, stage, false)
 
     // Wait for async transition initiated by notification to reach idle
     for (let i = 0; i < 50 && realCoordinator.getSnapshot().phase !== 'idle'; i++) {
@@ -359,12 +359,12 @@ describe('createGamePresentation and runAdmitted', () => {
       rewards: { techniqueInsight: 0, spiritStone: 0 },
     })
     const stage = stageFixture('kind_stage', enemy.id)
-    gameManager.registerEnemyTemplates([enemy])
-    gameManager.registerStages([stage])
+    gameManager.catalogOps.registerEnemyTemplates([enemy])
+    gameManager.catalogOps.registerStages([stage])
     gameManager.setActivePlayer(player)
     gameManager.setPresentationMode('interactive')
 
-    gameManager.startStage(player, stats, stage, false)
+    gameManager.turnBattleOps.startStage(player, stats, stage, false)
 
     const combatSession = gameManager.getCurrentPresentationSession('combat')
     expect(combatSession?.kind).toBe('combat')

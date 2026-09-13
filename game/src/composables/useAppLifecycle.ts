@@ -262,7 +262,7 @@ export function useAppLifecycle(deps: UseAppLifecycleDeps) {
       // App.vue sang composable này (commit d6d9a1d) — kết quả:
       // GameManager.update() không bao giờ chạy trong browser thật, toàn
       // bộ game (combat/tu luyện/sản xuất...) đứng hình vô thời hạn dù
-      // 2651 unit test vẫn xanh (test gọi thẳng gameManager.update(), bỏ
+      // 2651 unit test vẫn xanh (test gọi thẳng gameManager.tickOps.update(), bỏ
       // qua đúng lớp wiring này). Gộp vào bootGame() — nơi đã sở hữu
       // clock.start()/startAutosave() — để "extract composable, quên
       // rewire" không còn khả năng lặp lại được nữa.

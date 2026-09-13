@@ -45,7 +45,7 @@ export function useBattleActions() {
     commit: () => void,
   ): boolean | Promise<boolean> {
     const startStage = () =>
-      gameManager.startStage(player.$state, player.finalStats, stage, repeat)
+      gameManager.turnBattleOps.startStage(player.$state, player.finalStats, stage, repeat)
 
     if (!presentation) {
       const started = startStage()

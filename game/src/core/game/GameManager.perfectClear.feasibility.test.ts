@@ -82,10 +82,10 @@ describe('perfect clear feasibility on a real floor shape', () => {
     player.realmLevel = 10
     const stats = calculateStats({ ...player.baseStats, attack: playerAttack }, [])
 
-    gameManager.registerEnemyTemplates([species])
-    gameManager.registerStages([stageDef])
+    gameManager.catalogOps.registerEnemyTemplates([species])
+    gameManager.catalogOps.registerStages([stageDef])
     gameManager.setActivePlayer(player)
-    gameManager.startStage(player, stats, stageDef, false)
+    gameManager.turnBattleOps.startStage(player, stats, stageDef, false)
 
     return { gameManager, player, combatSource }
   }
