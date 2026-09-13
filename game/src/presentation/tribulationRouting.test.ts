@@ -224,7 +224,7 @@ describe('Tribulation routing integration (Task 11)', () => {
     expect(secondCheck).toBe(false)
   })
 
-  it('REPRO: production outcome check (no presentation arg, as App.vue calls it) leaves the route stranded on tribulation', async () => {
+  it('production outcome check (presentation wired, as App.vue calls it) routes home', async () => {
     const fakeGame = {
       scene: {
         isActive: () => true,
@@ -264,17 +264,35 @@ describe('Tribulation routing integration (Task 11)', () => {
       selectedTalentIds: [],
     } as any
 
-    // This is the exact call signature App.vue:451 uses in production:
-    // no presentation argument, so no request({target:'home'}) is ever
-    // issued. The outcome is applied (director cleared), but the
-    // coordinator's route can never leave 'tribulation' - home chrome
-    // stays hidden, the overlay renders nothing (active === null), and
-    // the TribulationScene is never deactivated. Soft-lock until reload.
-    const handled = checkTribulationOutcomeAction(playerStoreMock, gameManager)
+    // This is the exact call signature App.vue's tick() uses in
+    // production after the F1 fix: the presentation argument routes the
+    // outcome through the coordinator, so request({ target: 'home' }) is
+    // issued and the route can leave 'tribulation'. Before the fix
+    // App.vue omitted the third argument: the outcome was applied
+    // (director cleared) but the coordinator's route could never leave
+    // 'tribulation' - home chrome stayed hidden, the overlay rendered
+    // nothing (active === null), and the TribulationScene was never
+    // deactivated. Soft-lock until reload. The static guard in
+    // tests/architecture/tribulationOutcomeWiring.test.ts pins the
+    // 3-argument call site so the wiring cannot silently regress.
+    const handled = checkTribulationOutcomeAction(playerStoreMock, gameManager, presentation)
     expect(handled).toBe(true)
-    expect(gameManager.tribulationDirector.getState()).toBeNull()
+
+    // The outcome work runs inside the closed-curtain window (the
+    // director clears on a microtask), then the home transition does the
+    // same readiness dance as the tribulation entry above: the
+    // coordinator holds at awaiting-ready until Phaser (MainScene) and
+    // Vue report.
+    await vi.waitFor(() => {
+      expect(gameManager.tribulationDirector.getState()).toBeNull()
+      expect(vueAdapter.phase.value).toBe('awaiting-ready')
+    })
+
+    phaserAdapter.reportReady({ transitionId: vueAdapter.transitionId.value })
+    vueAdapter.reportVueReady(vueAdapter.transitionId.value)
 
     await vi.waitFor(() => {
+      expect(coordinator.getSnapshot().phase).toBe('idle')
       expect(coordinator.getSnapshot().currentRoute).toBe('home')
     })
   })

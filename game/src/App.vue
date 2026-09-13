@@ -448,7 +448,13 @@ function tick() {
     // Tribulation không qua Stage/Combat Scene result modal nào cả, xem
     // useTribulation.ts's resolveVictory/resolveDefeat + World
     // Announcement — đây vẫn là luồng kết quả DUY NHẤT cho Tribulation).
-    checkTribulationOutcomeAction(player, gameManager)
+    //
+    // F1 fix (2026-09-13): `presentation` is required - without it the
+    // outcome is applied but the coordinator never issues
+    // request({ target: 'home' }), so the route soft-locks on
+    // 'tribulation' until reload. Guarded by
+    // tests/architecture/tribulationOutcomeWiring.test.ts.
+    checkTribulationOutcomeAction(player, gameManager, presentation)
 
     // Combat UI Redesign — Auto-refight (thắng/thua Stage thì tự đánh
     // tiếp) KHÔNG còn chạy tức thời ở tick() nữa: CombatVictoryPanel.vue

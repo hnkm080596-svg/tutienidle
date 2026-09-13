@@ -196,6 +196,5 @@ export function useTribulation() {
 
   return {
     triggerBreakthrough: () => triggerBreakthroughAction(player, gameManager, presentation),
-    checkTribulationOutcome: () => checkTribulationOutcomeAction(player, gameManager, presentation),
   }
 }
