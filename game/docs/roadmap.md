@@ -1979,6 +1979,23 @@ khi đổi realm (`phaGiapCarryRealmId`). **Save v61** — 5 field mới
 validate bắt buộc, v60 bị từ chối (dev phase, không migration).
 Còn lại: **M3** (pool mở rộng + retired-id cleanup theo spec §4.4).
 
+✅ **M3 XONG 2026-09-15** (worktree `talent-m3`) — 2 talent sản xuất vào
+active pool (19 rollable): `hoa_hau_thong_than` — `alchemy_double_pill`
+(yield ×2 tại `AlchemySystem.tick`/`settleOffline`, potency ×1.5 tại
+`PillSystem.useProfessionPill` qua `GameManagerPillOps`, cost ×2
+gỗ+Linh Thạch tại `startJob` qua `GameManagerAlchemyOps`);
+`bach_luyen_thanh_khi` — `enhance_guaranteed` (never-fail + cost ×3 trong
+`EquipmentSystem` qua `setEnhancePolicy`, sync per-call bởi
+`EquipmentOpsSystem`). **Retired cleanup §4.4**: `RETIRED_V4_TALENTS` +
+`M2_PENDING_TALENTS` xoá hẳn — `getTalentDefinition` trả undefined cho
+13 id v3, save cũ bỏ qua an toàn (CharacterPanel filter, collect
+effects rỗng). Preview parity (review): `previewAlchemyOutcome` nhận
+`player` + trả cost/yield đã scale — AlchemyView hiển thị đúng giá ×2.
+**Deviation ghi nhận** (QA `2026-09-14-talent-m3-quick.md`): potency
+×1.5 áp cho MỌI đan nghề uống (PillBag chưa track provenance — đan
+loot/quest cũng hưởng); mô tả ghi "đan ngươi dùng" khớp hành vi.
+Trận Tâm/Phù Văn vẫn PARKED chờ rework Trận/Phù.
+
 ### B5 — Thanh Vân World Map
 
 World-map content can then compose stable:
@@ -2210,7 +2227,7 @@ Mục tiêu: phá tường nội dung Trúc Cơ và biến thiên phú thành qu
 | Hạng mục | Plan | Trạng thái |
 |---|---|---|
 | Thiên phú chọn hướng Đạo (roll 9 chọn 1) + easter egg Phàm Cốt | talent-direction-choice-plan (đã dọn sau khi hoàn thành) | ✅ Xong (v3, thay bởi v4 ở dòng dưới) |
-| **Talent Catalog v4 — "thiên phú là luật chơi"** (11 combat + 5 tu luyện + 2+2 sản xuất, power budget chung, siết đa talent) | [spec 2026-09-03-talent-catalog-v4-design.md](./specs/2026-09-03-talent-catalog-v4-design.md) + [plan M1](./plans/2026-09-03-talent-catalog-v4-m1-combat.md) | ✅ **M1 combat XONG** (2026-09-03 catalog/wiring/QA + 2026-09-06 rhythm locks 11 talent + power budget weights — branch gp123-group3-talent 4907ed6+7caad43): E1 convert-on-max khóa test, E2 passiveCondition/passiveConvertsTo, catalog 12 roll (11 combat + Phàm Cốt) + 13 retired + 2 PARKED M3, 5 buff E1, hidden passives `TalentPassives.ts`, GameManager grant/revoke + Bất Tử Thể v4 (cleanse + Tử Sinh Ngộ), collectTalentEffects siết id đầu. **M2 (tu luyện — Hậu Tích Bạt Phát, Lôi Kiếp, Vấn Đạo, Hải Nạp, Ngộ Đạo offline) + M3 (sản xuất — Hỏa Hầu Thông Thần, Bách Luyện Thành Khí, +2 PARKED Trận/Phù) chưa làm** — ⚠️ M2/M3 thiết kế sau rework combat nên phải target `TurnBuffDefinition` (không phải legacy `BuffDefinition`), xem mục 10 |
+| **Talent Catalog v4 — "thiên phú là luật chơi"** (11 combat + 5 tu luyện + 2+2 sản xuất, power budget chung, siết đa talent) | [spec 2026-09-03-talent-catalog-v4-design.md](./specs/2026-09-03-talent-catalog-v4-design.md) + [plan M1](./plans/2026-09-03-talent-catalog-v4-m1-combat.md) | ✅ **M1 combat XONG** (2026-09-03 catalog/wiring/QA + 2026-09-06 rhythm locks 11 talent + power budget weights — branch gp123-group3-talent 4907ed6+7caad43): E1 convert-on-max khóa test, E2 passiveCondition/passiveConvertsTo, catalog 12 roll (11 combat + Phàm Cốt) + 13 retired + 2 PARKED M3, 5 buff E1, hidden passives `TalentPassives.ts`, GameManager grant/revoke + Bất Tử Thể v4 (cleanse + Tử Sinh Ngộ), collectTalentEffects siết id đầu. **M2 xong 2026-09-14 + M3 xong 2026-09-15** (5 tu luyện + 2 sản xuất đã ship; Trận Tâm/Phù Văn vẫn PARKED chờ rework Trận/Phù) — ⚠️ M2/M3 thiết kế sau rework combat nên phải target `TurnBuffDefinition` (không phải legacy `BuffDefinition`), xem mục 10 |
 | Nội dung Trúc Cơ thật | truc-co-kim-dan-content-plan.md (lưu trữ — xoá khỏi repo 2026-09-08) | ✅ M1 xong (2026-08-29) — 10 stage Trúc Cơ thật (`foundation_floor_1..10`) + 20 enemy `foundation_*` + boss 2-phase/enrage + 5 quest. **Kim Đan (M2 gate + M3 đời sống) BỎ khỏi roadmap 2026-08-29 (quyết định người dùng)** — plan đóng ở M1; các phụ thuộc Kim Đan trong plan khác chuyển thành parked/khóa vĩnh viễn đến khi người dùng mở lại |
 | Reaction scale theo Power, đa dạng nhịp skill, fizzle refund, nền boss skill | combat-balance-pass-plan.md (lưu trữ — xoá khỏi repo 2026-09-08) | ✅ Xong 2026-08-29 — 8/8 task (xem "Kết quả playtest" cuối plan): dọn cost chết + invariant; reaction `powerScalingRatio 0.5` qua `elementalBasePower`; nhịp 5 skill Pháp Tu riêng biệt (Hỏa 1.6/4, Thủy 0.9/1, Mộc 1.2/2, Kim 1.0/2.5, Thổ 1.4/5); fizzle hoàn 100% resource + 50% cooldown; boss `foundation_ferocious_flood_dragon_whelp` có special attack data-driven; dọn `canUseInSlot`/`use()`/emoji reaction. **Mana giữ nguyên vai trò Linh lực hộ thể** (`manaShieldPercent`), không thêm cost cast (quyết định người dùng). Giữ lại có chủ đích: `attack_speed_cast`, `Skill.castTime` legacy |
 

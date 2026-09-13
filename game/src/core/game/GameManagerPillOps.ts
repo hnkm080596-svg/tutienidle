@@ -4,6 +4,7 @@ import type { PillSystem, PillTarget } from '../pill/PillSystem'
 import type { PersistentTimedEffect } from '../player/PersistentTimedEffect'
 import type { PlayerData } from '../player/Player'
 import { getCurrentRealm } from '../realm/realmSystem'
+import { getAlchemyDoublePill } from '../talent/TalentEffects'
 import type { MainStatKey } from '../stats/StatTypes'
 
 /**
@@ -65,7 +66,13 @@ export class GameManagerPillOps {
         return { ok: false, reason }
       }
 
-      const result = this.deps.pillSystem.useProfessionPill(pill, player, random)
+      const result = this.deps.pillSystem.useProfessionPill(
+        pill,
+        player,
+        random,
+        // M3 — Hoa Hau Thong Than: +50% effectiveness on crafted pills.
+        getAlchemyDoublePill(player.selectedTalentIds)?.potencyMultiplier ?? 1,
+      )
 
       if (result.timedEffect) {
         this.deps.applyTimedEffect(player, result.timedEffect)

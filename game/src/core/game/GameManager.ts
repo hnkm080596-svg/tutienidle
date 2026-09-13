@@ -614,6 +614,7 @@ export class GameManager {
       notifications: this.notifications,
       notifyQuestMaterialGained: (materialId, amount) =>
         this.questOps.notifyQuestMaterialGained(materialId, amount),
+      getActivePlayer: () => this.activePlayer,
     })
 
     this.buildingOps = new GameManagerBuildingOps({

@@ -139,3 +139,79 @@ describe('Regen timed effect — hpRegen pill REMOVED (user request 2026-09-05)'
     expect(effects.length).toBeGreaterThan(0)
   })
 })
+// M3 (spec 2026-09-03 talent catalog v4 §4.2) — Hoa Hau Thong Than: dan
+// tu luyen dung hieu qua +50% — scale tai PillSystem consumption seam.
+describe('Pill nghề — Hỏa Hầu Thông Thần +50% hiệu quả (M3)', () => {
+  it('đan tu vi: cultivationPercent ×1.5 khi có talent', async () => {
+    const { gameManager, player } = setup()
+    player.selectedTalentIds = ['hoa_hau_thong_than']
+
+    await registerPill(gameManager, CULTIVATION_PILL)
+
+    const pill = gameManager.pillRegistry.get(CULTIVATION_PILL)
+    const basePercent = pill.effects.find((effect) => effect.type === 'cultivation')?.cultivationPercent ?? 0
+    const required = getRequiredCultivation(player.realmId, player.realmLevel)
+
+    player.cultivation = 0
+
+    expect(gameManager.pillOps.usePillDetailed(CULTIVATION_PILL, pillTarget(), player).ok).toBe(true)
+    expect(player.cultivation).toBe(Math.floor(required * basePercent * 1.5))
+  })
+
+  it('không talent — đan tu vi giữ nguyên % gốc', async () => {
+    const { gameManager, player } = setup()
+
+    await registerPill(gameManager, CULTIVATION_PILL)
+
+    const pill = gameManager.pillRegistry.get(CULTIVATION_PILL)
+    const basePercent = pill.effects.find((effect) => effect.type === 'cultivation')?.cultivationPercent ?? 0
+    const required = getRequiredCultivation(player.realmId, player.realmLevel)
+
+    player.cultivation = 0
+
+    expect(gameManager.pillOps.usePillDetailed(CULTIVATION_PILL, pillTarget(), player).ok).toBe(true)
+    expect(player.cultivation).toBe(Math.floor(required * basePercent))
+  })
+
+  it('đan Cảm Ngộ (skill_insight): value ×1.5 round, cả current + lifetime', async () => {
+    const { gameManager, player } = setup()
+    player.selectedTalentIds = ['hoa_hau_thong_than']
+
+    // Không có production pill nào emit skill_insight — đăng ký synthetic.
+    const insightPill = {
+      id: 'test_insight_pill',
+      name: 'Đan Cảm Ngộ Test',
+      type: 'cultivation',
+      grade: 'hoang',
+      realmId: 'mortal',
+      effects: [{ type: 'skill_insight', value: 10 }],
+    } as never
+
+    gameManager.catalogOps.registerPills([insightPill])
+    gameManager.pillBag.add(gameManager.pillRegistry.get('test_insight_pill'), 1)
+
+    expect(gameManager.pillOps.usePillDetailed('test_insight_pill', pillTarget(), player).ok).toBe(true)
+    expect(player.skillInsight).toBe(15)
+    expect(player.totalSkillInsightGained).toBe(15)
+  })
+
+  it('đan hồi MP (regen): mpPerSecond ×1.5 trong timed effect', async () => {
+    const { gameManager, player } = setup()
+    player.selectedTalentIds = ['hoa_hau_thong_than']
+    player.cultivationPath = 'phap_tu' // MP regen pill gate
+
+    await registerPill(gameManager, 'hoi_linh_dan_mortal')
+
+    const pill = gameManager.pillRegistry.get('hoi_linh_dan_mortal')
+    const baseMp = pill.effects.find((effect) => effect.type === 'regen')?.mpPerSecond ?? 0
+
+    expect(baseMp).toBeGreaterThan(0)
+    expect(gameManager.pillOps.usePillDetailed('hoi_linh_dan_mortal', pillTarget(), player).ok).toBe(true)
+
+    const modifier = player.persistentTimedEffects
+      .flatMap((effect) => effect.modifiers)
+      .find((entry) => entry.stat === 'manaRegenPerSecond')
+
+    expect(modifier?.flat).toBe(baseMp * 1.5)
+  })
+})

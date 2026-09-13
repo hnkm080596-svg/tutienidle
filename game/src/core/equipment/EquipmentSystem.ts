@@ -176,6 +176,34 @@ export class EquipmentSystem {
     return Math.max(1, Math.floor(amount * (1 - this.costDiscountPercent)))
   }
 
+  /**
+   * M3 (talent v4 §4.2) — Bach Luyen Thanh Khi policy: enhance never
+   * fails; each attempt pays costMultiplier on materials + spirit stone.
+   * Synced per-call by EquipmentOpsSystem (same pattern as costDiscount).
+   */
+  private enhanceAlwaysSucceed = false
+  private enhanceCostMultiplier = 1
+
+  setEnhancePolicy(policy: { alwaysSucceed: boolean; costMultiplier: number }) {
+    this.enhanceAlwaysSucceed = policy.alwaysSucceed
+    this.enhanceCostMultiplier = Math.max(1, policy.costMultiplier)
+  }
+
+  /** Cost Cường Hóa sau policy talent — applied on the resolved cost. */
+  private applyEnhanceCostPolicy(cost: { materials: RecipeMaterialCost[]; spiritStone: number }) {
+    if (this.enhanceCostMultiplier <= 1) {
+      return cost
+    }
+
+    return {
+      materials: cost.materials.map((entry) => ({
+        materialId: entry.materialId,
+        amount: Math.ceil(entry.amount * this.enhanceCostMultiplier),
+      })),
+      spiritStone: Math.ceil(cost.spiritStone * this.enhanceCostMultiplier),
+    }
+  }
+
   private resolveCatalogCost(
     operation: EquipmentOperation,
     realmId: string,
@@ -289,6 +317,19 @@ export class EquipmentSystem {
    */
   /** Một nguồn resolve cost Cường Hóa: catalog nghi�m  template  fallback. */
   private resolveEnhanceCost(
+    realmId: string,
+
+    enhanceLevel: number,
+
+    template?: Equipment,
+  ): { materials: RecipeMaterialCost[]; spiritStone: number } {
+    // M3 — Bach Luyen Thanh Khi: xN the resolved cost so preview
+    // (getEnhanceCost/getEnhanceSpiritStoneCost) and enhance() spend the
+    // same authoritative amount.
+    return this.applyEnhanceCostPolicy(this.resolveEnhanceCostBase(realmId, enhanceLevel, template))
+  }
+
+  private resolveEnhanceCostBase(
     realmId: string,
 
     enhanceLevel: number,
@@ -492,7 +533,8 @@ export class EquipmentSystem {
     // lieu lan thu (da tru o tren), KHONG doi level.
     const successRate = enhanceSuccessRate(enhanceLevel + 1)
     const pityGuaranteed = slotState.enhanceFailStreak >= ENHANCE_PITY_THRESHOLD
-    const success = pityGuaranteed || random() * 100 < successRate
+    // M3 — Bach Luyen Thanh Khi: enhance never fails while the policy is on.
+    const success = pityGuaranteed || this.enhanceAlwaysSucceed || random() * 100 < successRate
 
     if (!success) {
       slotState.enhanceFailStreak += 1

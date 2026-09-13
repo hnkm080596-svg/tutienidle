@@ -26,7 +26,6 @@ export type TalentEffect =
   | { kind: 'spirit_stone_gain'; percent: number }
   | { kind: 'equipment_drop_chance'; percent: number }
   | { kind: 'body_refinement_progress'; percent: number }
-  | { kind: 'alchemy_success_bonus'; percentPoints: number }
   | { kind: 'survive_lethal'; usesPerBattle: number }
   | { kind: 'reaction_keep_chance'; percent: number }
   | { kind: 'heal_on_kill'; maxHpPercent: number }
@@ -50,6 +49,13 @@ export type TalentEffect =
   // at battle end into phaGiapCarryStacks and re-seed the next battle;
   // decays when realmId changes.
   | { kind: 'passive_stack_carry'; passiveSkillId: string; fraction: number }
+  // M3 (spec §4.2) — Hoa Hau Thong Than: successful alchemy jobs yield
+  // yieldMultiplier pills; consumed profession pills gain potencyMultiplier
+  // effectiveness; each job costs costMultiplier fuel wood + spirit stone.
+  | { kind: 'alchemy_double_pill'; yieldMultiplier: number; potencyMultiplier: number; costMultiplier: number }
+  // M3 — Bach Luyen Thanh Khi: enhance never fails; each attempt costs
+  // costMultiplier materials + spirit stone vs a normal player.
+  | { kind: 'enhance_guaranteed'; costMultiplier: number }
 
 export interface TalentDefinition {
   id: string
