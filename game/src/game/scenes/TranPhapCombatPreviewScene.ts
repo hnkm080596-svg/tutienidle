@@ -255,6 +255,12 @@ export class TranPhapCombatPreviewScene extends Phaser.Scene implements CombatGr
         assignment.row as LaneIndex,
       )
 
+      // Cell->cell drags reuse the existing sprite: getOrCreateSprite's
+      // early-return keeps the ORIGINAL row, and positionSprite projects
+      // gridToScreen(sprite.row, column) — refresh it or the unit draws in
+      // its old cell while the DOM grid shows the new one.
+      sprite.row = assignment.row as LaneIndex
+
       // The player renders the static profile PNG exactly like CombatScene
       // (playerUsesStaticTexture — no idle clip); everyone else keeps the
       // placeholder idle until they have authored art.

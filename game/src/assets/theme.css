@@ -517,7 +517,6 @@
   mask-composite: exclude;
   opacity: 0;
   transition: opacity 0.18s ease;
-  animation: fx-border-beam-spin var(--fx-beam-duration, 2.4s) linear infinite;
   pointer-events: none;
   z-index: 8;
 }
@@ -525,6 +524,12 @@
 .fx-border-beam:hover:not([aria-disabled='true']) > .fx-border-beam__fx,
 .fx-border-beam--active > .fx-border-beam__fx {
   opacity: 1;
+  /* The spin lives ONLY on the visible state: an @property-animated
+     conic-gradient re-rasterizes every frame on the main thread, and the
+     base rule used to run it 24/7 at opacity 0 on every slot in the game —
+     a permanent paint storm (worst during drags, when per-cell beams also
+     activate on top). Invisible beams must cost nothing. */
+  animation: fx-border-beam-spin var(--fx-beam-duration, 2.4s) linear infinite;
 }
 
 /* --clip variant: polygon-shaped slots. Ring mask chỉ trace được

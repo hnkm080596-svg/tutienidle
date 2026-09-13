@@ -147,6 +147,27 @@ describe('TranPhapCombatPreviewScene — real art resolution', () => {
     expect(played).toEqual([PREVIEW_IDLE_ANIMATION_KEY])
   })
 
+  it('cell->cell move updates the sprite row — preview shows the unit in the new cell', () => {
+    const scene = bareScene()
+
+    scene.syncAssignments({
+      assignments: [{ row: 0, column: 1, combatantId: 'player' }],
+      playerProfileId: 'mortal',
+    })
+
+    // Drag the same combatant to a different row. getOrCreateSprite returns
+    // the existing sprite (it ignores the row argument on that path), so
+    // syncAssignments must refresh sprite.row or positionSprite projects
+    // the STALE row and the unit draws in the old cell while the DOM grid
+    // shows the new one.
+    scene.syncAssignments({
+      assignments: [{ row: 2, column: 1, combatantId: 'player' }],
+      playerProfileId: 'mortal',
+    })
+
+    expect(scene.sprites.get('player')!.row).toBe(2)
+  })
+
   it('legacy array payload still works (playerProfileId optional)', () => {
     const scene = bareScene()
 

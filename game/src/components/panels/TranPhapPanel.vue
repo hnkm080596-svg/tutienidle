@@ -43,6 +43,7 @@ import { createProjectionBridge } from '@/presentation/geometry/ProjectionBridge
 import { formationSlotStyle } from '@/presentation/geometry/formationSlotBoxes'
 import { useDynamicRegion } from '@/presentation/host/useDynamicRegion'
 import { FORMATION_ASSIGNMENTS_EVENT, type FormationAssignmentsPayload } from '@/presentation/contracts/regionEvents'
+import { PLAYER_VISUAL_PROFILES } from '@/presentation/art/PlayerVisualProfiles'
 import type { SlotState } from '@/presentation/contracts/SlotState'
 
 const ui = useUiStore()
@@ -130,12 +131,20 @@ function slotStateAt(row: number, column: number): SlotState {
 // Danh sách quân "chưa được xếp vào ô nào" — kéo từ đây vào lưới.
 // Player luôn là 1 lá bài cố định (id 'player'), cộng thêm mọi
 // companion đã thu phục (Task 11) chưa được gán ô.
-function combatantCards(): { combatantId: string; label: string }[] {
+function combatantCards(): { combatantId: string; label: string; icon?: string }[] {
   const placed = new Set(currentAssignments.value.map((a) => a.combatantId))
-  const cards: { combatantId: string; label: string }[] = []
+  const cards: { combatantId: string; label: string; icon?: string }[] = []
 
   if (!placed.has('player')) {
-    cards.push({ combatantId: 'player', label: player.name })
+    // The queue card is the entity's face — the same profile PNG the combat
+    // surfaces draw (entity-derived visualProfileId -> shared profile
+    // catalogue), not a monogram. Companions have no art yet: they keep the
+    // monogram fallback until companion art exists.
+    cards.push({
+      combatantId: 'player',
+      label: player.name,
+      icon: PLAYER_VISUAL_PROFILES[player.visualProfileId]?.combatTextureUrl,
+    })
   }
 
   for (const instance of player.companions) {
@@ -365,6 +374,7 @@ watch([currentAssignments, () => player.visualProfileId], () => {
           :key="card.combatantId"
           :item="card"
           :label="card.label"
+          :icon="card.icon"
           draggable="true"
           class="tran-phap-panel__card"
           @dragstart="(event: Event) => (event as DragEvent).dataTransfer?.setData('text/plain', card.combatantId)"

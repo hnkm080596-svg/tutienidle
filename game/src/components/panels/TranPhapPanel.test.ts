@@ -158,6 +158,24 @@ describe('TranPhapPanel', () => {
     mounted.unmount()
   })
 
+  it('queue card for the player shows the entity-derived profile art, not a bare monogram', async () => {
+    const mounted = mountPanel()
+    await mounted.open()
+
+    const card = mounted.container.querySelector<HTMLElement>('.tran-phap-panel__card')
+
+    expect(card).not.toBeNull()
+
+    const img = card!.querySelector<HTMLImageElement>('img.slot-view__item-icon')
+
+    expect(img).not.toBeNull()
+    expect(img!.getAttribute('src') ?? '').toContain(
+      'player-mortal-ink-sword-concept-v2',
+    )
+
+    mounted.unmount()
+  })
+
   it('resyncs the draft when formationLoadout changes externally while open', async () => {
     const mounted = mountPanel()
     await mounted.open()
