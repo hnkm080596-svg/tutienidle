@@ -14,6 +14,7 @@ import type { ActionDamageInfo } from '../ActionImpactSystem'
 import { BuffPool } from '../../buff/BuffPool'
 import { BuffSystem } from '../../buff/BuffSystem'
 import type { BuffDefinitionCatalog } from '../../buff/BuffTypes'
+import type { StatModifier } from '../../stats/StatCalculator'
 import { applyTurnStartDeltas } from './ResourceTurnHook'
 import type { TurnResourceDelta } from './ResourceTurnHook'
 import { isTurnTriggerReady } from './BossTurnTriggers'
@@ -285,6 +286,15 @@ export class TurnBattleSystem {
     // markerNoPool placeholders do not. Generic over actors — consumers
     // filter to the participants they care about.
     private readonly onSkillCast?: (actor: TurnBattleParticipant, skillId: string) => void,
+    /**
+     * ARCH-002 (M7) — battle-scoped live-modifier provider. Supplies the
+     * runtime modifier set that cannot bake into the resolved base
+     * (passive stacks, persistent buff pool, timed/socket effects).
+     * Returns StatModifier[] only — the assembly stays in
+     * recomputeEffectiveStats, so this engine never owns a second stat
+     * path and stays headless (the ops layer injects the closure).
+     */
+    private readonly liveStatModifiers?: (entity: CombatEntity) => StatModifier[],
   ) {}
 
   // Action Playback Task 3 — gauge-delta deferral chuyển từ local vars
@@ -309,6 +319,48 @@ export class TurnBattleSystem {
     session: { playerEntityId: string; guard: SurviveLethalGuard } | null,
   ): void {
     this.combat.setSurviveLethalSession(session)
+  }
+
+  /**
+   * ARCH-002 (M7) — entity.stats is the LIVE effective view, not a
+   * build-time constant: recompute it from the immutable resolved base +
+   * the participant's active buff modifiers + the provider's live runtime
+   * modifiers, then mirror speed into the participant cache (R2/AR-05:
+   * participant.speed is a read-only cache of entity.stats.speed).
+   */
+  private refreshParticipantStats(participant: TurnBattleParticipant): void {
+    const entity = participant.entity
+    entity.stats = recomputeEffectiveStats(
+      entity.baseStats,
+      participant.buffs,
+      this.liveStatModifiers?.(entity) ?? [],
+    )
+    participant.speed = entity.stats.speed
+
+    // ARCH-002 (M7) — entity.maxHp is the REAL vitals ceiling (heal clamp,
+    // regen gate, entity_vitals_changed.maxHp, snapshot maxHp) and is
+    // frozen at build; entity.stats.maxHp is the live effective view.
+    // Reconcile here so a live maxHp modifier moves the heal ceiling the
+    // same step it lands: shrink clamps currentHp through the vitals
+    // authority (emits entity_vitals_changed carrying the new ceiling),
+    // growth keeps currentHp — no free heal.
+    if (entity.stats.maxHp !== entity.maxHp) {
+      entity.maxHp = entity.stats.maxHp
+      this.combat.vitals.clampToMaxHp(entity, 'stat_refresh')
+    }
+  }
+
+  /**
+   * ARCH-002 (M7) — refresh every participant's effective stats. Pacing
+   * and actor-peek call this before any gauge/speed read so buff
+   * apply/remove/expire and live runtime modifiers are already folded;
+   * the battle builder also calls it once after construction so
+   * formation buffs are effective before the first tick.
+   */
+  refreshEffectiveStats(battle: TurnBattle): void {
+    for (const participant of [...battle.players, ...battle.enemies]) {
+      this.refreshParticipantStats(participant)
+    }
   }
 
   /**
@@ -472,6 +524,14 @@ export class TurnBattleSystem {
       }
     }
 
+    // ARCH-002 (M7) — fold every live stat source into entity.stats BEFORE
+    // any gauge/speed read this step AND before the empty-field early
+    // return below: during spawn/telegraph windows (no living enemies yet)
+    // the refresh must still run so live modifiers (passive stacks,
+    // persistent pool, timed effects) are effective for UI/stat reads and
+    // for the first turn after materialization.
+    this.refreshEffectiveStats(battle)
+
     const livingEnemyCount = battle.enemies.filter((enemy) => enemy.entity.alive).length
 
     if (livingEnemyCount === 0) {
@@ -516,9 +576,6 @@ export class TurnBattleSystem {
 
     for (const participant of allParticipants) {
       participant.alive = participant.entity.alive
-      // R2 (AR-05): sync the speed cache from its owner before pacing so
-      // buffs applied/expired during the previous turn take effect now.
-      participant.speed = participant.entity.stats.speed
     }
 
     const living = allParticipants.filter((actor) => actor.alive)
@@ -583,10 +640,11 @@ export class TurnBattleSystem {
 
     for (const participant of allParticipants) {
       participant.alive = participant.entity.alive
-      // R2 (AR-05): sync the speed cache from its owner before pacing so
-      // buffs applied/expired during the previous turn take effect now.
-      participant.speed = participant.entity.stats.speed
     }
+
+    // ARCH-002 (M7) — same effective-stat refresh as tickPacing so the
+    // previewed actor order reflects live speeds.
+    this.refreshEffectiveStats(battle)
 
     const resolved = resolveNextTurn(allParticipants)
 
@@ -726,6 +784,13 @@ export class TurnBattleSystem {
 
     actorBuffSystem.update(actor.entity, this.combat, this.registry, resolveSource)
 
+    // ARCH-002 (M7) — refresh immediately after the buff tick so an
+    // expiry inside update() is reflected before the very next stat read
+    // (hpRegenPerTurn below must not fire one extra turn off an expired
+    // buff). The refresh after bossTrigger below still covers
+    // trigger-granted buffs for action selection.
+    this.refreshParticipantStats(actor)
+
     if (actor.entity.stats.hpRegenPerTurn > 0 && actor.entity.currentHp < actor.entity.maxHp) {
       // R1 (AR-01) — regeneration is a vitals mutation: go through the
       // vitals authority so healing events stay uniform. The full-HP guard
@@ -765,6 +830,13 @@ export class TurnBattleSystem {
       }
     }
 
+    // ARCH-002 (M7) — unconditional effective-stat refresh at every
+    // declare: buff expiry (BuffSystem.update above), duration-1 buffs,
+    // boss-trigger applications, Ba The CC clears and the live runtime
+    // modifiers all land here — including for CC-blocked and charging
+    // actors, whose stat view must not freeze while locked.
+    this.refreshParticipantStats(actor)
+
     let action: SelectedAction | null = null
     let opposingSide: TurnBattleParticipant[] = []
     let affected: TurnBattleParticipant[] = []
@@ -781,17 +853,9 @@ export class TurnBattleSystem {
     if (actor.entity.alive && !ccBlocked && !isCharging) {
       tickCooldowns(actor)
 
-      // Stats recompute (Completion Task 4): fold statModifier buffs đang
-      // active vào entity stats TRƯỚC khi chọn/hành động. R2 (AR-02):
-      // baseStats giữ RESOLVED base (build từ player.finalStats / enemy
-      // normalization — attribute đã derive đúng 1 lần); effective stats
-      // chỉ fold buff tạm thời, KHÔNG derive lại attribute.
-      actor.entity.stats = recomputeEffectiveStats(actor.entity.baseStats, actor.buffs)
-
-      // R2 (AR-05): participant.speed is a read-only cache of effective
-      // combat speed — refresh it at every recompute (owner: entity.stats).
-      actor.speed = actor.entity.stats.speed
-
+      // ARCH-002 (M7) — the effective-stat refresh moved above the gate
+      // (covers expiry/CC/charge too); action selection reads the fresh
+      // entity.stats.
       action = forcedSkillSlot
         ? selectForcedAction(actor, forcedSkillSlot)
         : selectAction(actor)
@@ -944,6 +1008,12 @@ export class TurnBattleSystem {
           if (!hitResult.dodged) {
             targetIds.push(target)
           }
+
+          // ARCH-002 (M7) — the hit may have mutated either pool (survive-
+          // lethal grants, defensive procs inside the damage authority):
+          // refresh both effective views before the next hit/read.
+          this.refreshParticipantStats(targetParticipant)
+          this.refreshParticipantStats(actor)
         }
       }
 
@@ -992,6 +1062,12 @@ export class TurnBattleSystem {
               if (this.registry) {
                 this.applySkillAilments(actor, target, pickedSkill)
               }
+
+              // ARCH-002 (M7) — refresh after hit + ailment mutations; the
+              // actor too: applySkillAilments -> TurnReactionManager can
+              // grant the SOURCE a buff (e.g. Tho Tu self-stack).
+              this.refreshParticipantStats(target)
+              this.refreshParticipantStats(actor)
             }
           }
         }
@@ -1064,6 +1140,15 @@ export class TurnBattleSystem {
             // then reaction check against the just-applied id.
             this.applySkillAilments(actor, target, action)
           }
+
+          // ARCH-002 (M7) — every pool mutation above (consume-removal —
+          // removeAllById runs OUTSIDE the registry gate — on-hit procs on
+          // the actor, reactive triggers and ailments on the target,
+          // survive-lethal grants inside resolveActionHit) must be
+          // effective before the next hit/read in this loop, so the
+          // refresh is deliberately not registry-gated either.
+          this.refreshParticipantStats(target)
+          this.refreshParticipantStats(actor)
         }
       }
     } else if (action.skill?.targetScope !== 'self') {
@@ -1073,6 +1158,10 @@ export class TurnBattleSystem {
         targetIds.push(target.id)
 
         this.applySkillAilments(actor, target, action)
+        // ARCH-002 (M7) — reactions off the applied ailment can grant the
+        // SOURCE a buff; refresh both sides (same as the damaging path).
+        this.refreshParticipantStats(target)
+        this.refreshParticipantStats(actor)
       }
     }
 
@@ -1117,12 +1206,16 @@ export class TurnBattleSystem {
             if (action.skill.appliesBuff.target === 'self') {
               new BuffSystem(actor.buffs).apply(definition, actor.entity, actor.entity, this.registry)
               this.pendingGaugeDeltaTargets = [actor]
+              // ARCH-002 (M7) — statModifier buffs are effective NOW, not
+              // at the actor's next turn (kim_giap counter-read class).
+              this.refreshParticipantStats(actor)
             } else {
               const targets: TurnBattleParticipant[] = []
 
               for (const target of declared.affected) {
                 new BuffSystem(target.buffs).apply(definition, actor.entity, target.entity, this.registry)
                 targets.push(target)
+                this.refreshParticipantStats(target)
               }
 
               this.pendingGaugeDeltaTargets = targets

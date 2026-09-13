@@ -99,6 +99,42 @@ export class GameManagerPersistentEffectOps {
     ]
   }
 
+  /**
+   * ARCH-002 (M7) — the STATIC partition of the aggregation: sources that
+   * cannot change during a battle (technique tier, cultivation path, node
+   * levels, equipped-technique combat modifiers). The battle entry ops
+   * resolve the entity's baseStats from this list via
+   * resolvePlayerFinalStats() — duration/stack-bound sources are excluded
+   * on purpose so they reach combat ONLY through getLiveBattleModifiers()
+   * (baking them into the resolved base would double-apply and re-leak
+   * stale stacks between battles).
+   */
+  getBattleBaseModifiers(player: PlayerData): StatModifier[] {
+    return [
+      ...this.getTechniqueTierModifiers(player),
+      ...getCultivationPathStatModifiers(player),
+      ...aggregateNodeStatModifiers(this.deps.nodeRegistry, player),
+      ...this.getTechniqueCombatModifiers(),
+    ]
+  }
+
+  /**
+   * ARCH-002 (M7) — the LIVE partition: modifiers bound to runtime state
+   * that can change mid-battle — the persistent buff pool (Kiep Thuong
+   * debuffs et al), scaled passive-skill stacks (PassiveSystem mutates
+   * stacks on combat events), timed effects and Phu/Tran sockets.
+   * TurnBattleSystem reads this through its liveStatModifiers provider at
+   * every effective-stat refresh; the menu mirror keeps showing the same
+   * union via getAggregatedModifiers() + getActiveRuntimeModifiers().
+   */
+  getLiveBattleModifiers(player: PlayerData): StatModifier[] {
+    return [
+      ...this.deps.buffSystem.getActiveModifiers(),
+      ...this.deps.skillSystem.getScaledPassiveModifiers(),
+      ...this.getActiveRuntimeModifiers(player),
+    ]
+  }
+
   /** Fixed combat modifiers of the equipped technique (plan §9). */
   private getTechniqueCombatModifiers(): StatModifier[] {
     const technique = this.deps.techniqueManager.getEquipped()

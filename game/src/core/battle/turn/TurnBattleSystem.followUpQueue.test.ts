@@ -32,12 +32,15 @@ class Registry implements BuffDefinitionCatalog {
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
   return {
-    id: 'id', name: 'name', type: 'enemy', baseStats: stats, stats,
+    id: 'id', name: 'name', type: 'enemy', stats,
     currentHp: stats.maxHp, maxHp: stats.maxHp, currentMp: stats.maxMp,
     currentSwordIntent: 0, currentMomentum: 0, currentHoaThe: 0, currentThoThe: 0, currentKimThe: 0,
     timeSinceLastBleedProc: 0, tuLucActive: false, tuLucElapsed: 0, tuLucDamageTakenPercent: 0,
     currentWard: 0, timeSinceLastHitTaken: Infinity, realmIndex: 0, x: 0, row: 2, alive: true,
     ...overrides,
+    // ARCH-002 (M7): entity.stats is derived from baseStats every refresh —
+    // an injected `stats` override must become the resolved base as well.
+    baseStats: overrides.baseStats ?? overrides.stats ?? stats,
   } as CombatEntity
 }
 

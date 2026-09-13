@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
-import { calculateStats } from '../stats/StatCalculator'
 import { defineEnemy } from '../enemy/Enemy'
 import type { Stage } from '../stage/Stage'
 import { ENEMIES } from '../../data/enemy/Enemies'
@@ -63,9 +62,8 @@ describe('QA talent v4 M1 — invariant wiring', () => {
     // Trong trận: player được grant passive; crit event → stack; đủ 10
     // tầng → buff kiem_vuc phải nằm trong pool của turn-based player.
     const enemy = ENEMIES[0]!
-    const stats = calculateStats(player.baseStats, player.modifiers)
 
-    manager.startBattleWithPlayer(player, stats, enemy)
+    manager.startBattleWithPlayer(player, enemy)
 
     const bus = manager.eventBus
 
@@ -113,9 +111,8 @@ describe('QA talent v4 M1 — invariant wiring', () => {
     manager.catalogOps.registerEnemyTemplates([enemy])
     manager.catalogOps.registerStages([stage])
 
-    const stats = calculateStats(player.baseStats, player.modifiers)
 
-    expect(manager.turnBattleOps.startStage(player, stats, stage)).toBe(true)
+    expect(manager.turnBattleOps.startStage(player, stage)).toBe(true)
 
     const bus = manager.eventBus
 
@@ -137,18 +134,17 @@ describe('QA talent v4 M1 — invariant wiring', () => {
     manager.setActivePlayer(player)
 
     const enemy = ENEMIES[0]!
-    const stats = calculateStats(player.baseStats, player.modifiers)
 
     // Battle 1: trigger Kiếm Vực (Phase A2 cutover — assert on the
     // turn-based pool).
-    manager.startBattleWithPlayer(player, stats, enemy)
+    manager.startBattleWithPlayer(player, enemy)
     for (let i = 0; i < 10; i++) {
       manager.eventBus.emit('critical', { type: 'critical', sourceId: 'player', targetId: 'enemy_1' })
     }
     expect(manager.getTurnBattle()!.players[0]!.buffs.hasAny('kiem_vuc')).toBe(true)
 
     // Battle 2: fresh pool — Kiếm Vực must not leak, stack modifier reset.
-    manager.startBattleWithPlayer(player, stats, enemy)
+    manager.startBattleWithPlayer(player, enemy)
 
     expect(manager.getTurnBattle()!.players[0]!.buffs.hasAny('kiem_vuc')).toBe(false)
 
@@ -216,9 +212,8 @@ describe('QA A0 � B?t T? Th? cleanse/grant on the LIVE turn-based pool', () =>
     manager.progressionOps.syncTalentCombatPassive(player)
 
     const enemy = ENEMIES[0]!
-    const stats = calculateStats(player.baseStats, player.modifiers)
 
-    manager.startBattleWithPlayer(player, stats, enemy)
+    manager.startBattleWithPlayer(player, enemy)
 
     const turnBattle = manager.getTurnBattle()!
     const playerParticipant = turnBattle.players[0]!

@@ -14,7 +14,7 @@ import {
 import { GameManager } from '../core/game/GameManager'
 import { defineEnemy } from '../core/enemy/Enemy'
 import { createDefaultPlayer } from '../core/player/Player'
-import { calculateStats } from '../core/stats/StatCalculator'
+import { asBaseStats } from '../core/stats/StatBlock'
 import type { Stage } from '../core/stage/Stage'
 
 function stageFixture(id: string, enemyId: string): Stage {
@@ -153,7 +153,7 @@ describe('createGamePresentation and runAdmitted', () => {
   it('integrates with real GameManager: notification plus returned request cause exactly one transition', async () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
-    const stats = calculateStats({ ...player.baseStats, attack: 100 }, [])
+    player.baseStats = asBaseStats({ ...player.baseStats, attack: 100  })
     const enemy = defineEnemy({
       id: 'admit_dummy',
       name: 'Dummy',
@@ -196,7 +196,7 @@ describe('createGamePresentation and runAdmitted', () => {
     })
 
     const result = await presentation.runAdmitted('combat', () => {
-      const started = gameManager.turnBattleOps.startStage(player, stats, stage, false)
+      const started = gameManager.turnBattleOps.startStage(player, stage, false)
       if (!started) return null
       const session = gameManager.getCurrentPresentationSession('combat')
       return session ? { target: 'combat', session } : null
@@ -212,7 +212,7 @@ describe('createGamePresentation and runAdmitted', () => {
   it('observes external accepted session start through notification bridge without runAdmitted', async () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
-    const stats = calculateStats({ ...player.baseStats, attack: 100 }, [])
+    player.baseStats = asBaseStats({ ...player.baseStats, attack: 100  })
     const enemy = defineEnemy({
       id: 'ext_dummy',
       name: 'Dummy',
@@ -250,7 +250,7 @@ describe('createGamePresentation and runAdmitted', () => {
     })
 
     // Start stage externally (simulating external caller or debug command)
-    gameManager.turnBattleOps.startStage(player, stats, stage, false)
+    gameManager.turnBattleOps.startStage(player, stage, false)
 
     // Wait for async transition initiated by notification to reach idle
     for (let i = 0; i < 50 && realCoordinator.getSnapshot().phase !== 'idle'; i++) {
@@ -349,7 +349,7 @@ describe('createGamePresentation and runAdmitted', () => {
   it('kind-scoped session query keeps a lingering combat session out of a tribulation request', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
-    const stats = calculateStats({ ...player.baseStats, attack: 100 }, [])
+    player.baseStats = asBaseStats({ ...player.baseStats, attack: 100  })
     const enemy = defineEnemy({
       id: 'kind_dummy', name: 'Dummy', level: 1, realmId: 'mortal', lane: 'ground',
       statsInput: {
@@ -364,7 +364,7 @@ describe('createGamePresentation and runAdmitted', () => {
     gameManager.setActivePlayer(player)
     gameManager.setPresentationMode('interactive')
 
-    gameManager.turnBattleOps.startStage(player, stats, stage, false)
+    gameManager.turnBattleOps.startStage(player, stage, false)
 
     const combatSession = gameManager.getCurrentPresentationSession('combat')
     expect(combatSession?.kind).toBe('combat')

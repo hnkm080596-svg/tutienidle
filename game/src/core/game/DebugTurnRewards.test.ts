@@ -3,8 +3,7 @@ import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClo
 import { GameManager } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import { createDefaultPlayer } from '../player/Player'
-import { calculateStats } from '../stats/StatCalculator'
-import { createBaseStats } from '../stats/StatBlock'
+import { asBaseStats, createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 
 function _debugEntity(): CombatEntity {
@@ -28,7 +27,7 @@ describe('debug turn battle rewards', () => {
     const combatSource = new ManualClockSource()
     gameManager.setCombatClockSource(combatSource)
     const player = createDefaultPlayer()
-    const stats = calculateStats({ ...player.baseStats, attack: 100 }, [])
+    player.baseStats = asBaseStats({ ...player.baseStats, attack: 100  })
     const enemy = defineEnemy({
       id: 'dbg_enemy',
       name: 'Dbg Enemy',
@@ -39,7 +38,7 @@ describe('debug turn battle rewards', () => {
       rewards: { techniqueInsight: 5, spiritStone: 2 },
     })
 
-    gameManager.startBattleWithPlayer(player, stats, enemy)
+    gameManager.startBattleWithPlayer(player, enemy)
     combatSource.advance(COMBAT_STEP_SECONDS)
 
     const tb = gameManager.getTurnBattle()

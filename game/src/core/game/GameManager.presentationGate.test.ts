@@ -2,12 +2,11 @@ import { describe, expect, it, vi } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager, INTRO_TOTAL_TICKS } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
-import { createBaseStats } from '../stats/StatBlock'
+import { asBaseStats, createBaseStats } from '../stats/StatBlock'
 import type { CombatEntity } from '../combat/CombatEntity'
 import type { Skill } from '../skill/Skill'
 import type { Stage } from '../stage/Stage'
 import { createDefaultPlayer } from '../player/Player'
-import { calculateStats } from '../stats/StatCalculator'
 
 // Readiness has exactly ONE authority: the per-session PresentationSession
 // hold. The old sticky PresentationGate (wall-clock 15s fallback that mutated
@@ -70,7 +69,7 @@ describe('GameManager — presentation readiness authority', () => {
 /** Registers a minimal stage and starts it, leaving the session in its begin state. */
 function startGatedStage(gameManager: GameManager): void {
   const player = createDefaultPlayer()
-  const stats = calculateStats({ ...player.baseStats, attack: 100, speed: 100 }, [])
+  player.baseStats = asBaseStats({ ...player.baseStats, attack: 100, speed: 100  })
   const enemy = defineEnemy({
     id: 'gate_dummy', name: 'Gate Dummy', level: 1, realmId: 'mortal', lane: 'ground',
     statsInput: { maxHp: 500, attack: 0, attackSpeed: 1, attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
@@ -83,7 +82,7 @@ function startGatedStage(gameManager: GameManager): void {
   gameManager.catalogOps.registerStages([stage])
   gameManager.setActivePlayer(player)
 
-  if (!gameManager.turnBattleOps.startStage(player, stats, stage, false)) {
+  if (!gameManager.turnBattleOps.startStage(player, stage, false)) {
     throw new Error('startGatedStage fixture failed to start its stage')
   }
 }
@@ -182,7 +181,7 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
     const combatSource = new ManualClockSource()
     gameManager.setCombatClockSource(combatSource)
     const player = createDefaultPlayer()
-    const stats = calculateStats({ ...player.baseStats, attack: 100, speed: 100 }, [])
+    player.baseStats = asBaseStats({ ...player.baseStats, attack: 100, speed: 100  })
     const enemy = defineEnemy({
       id: 'session_dummy', name: 'Session Dummy', level: 1, realmId: 'mortal', lane: 'ground',
       statsInput: { maxHp: 500, attack: 0, attackSpeed: 1, attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
@@ -195,15 +194,15 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
     gameManager.setActivePlayer(player)
     gameManager.setPresentationMode(mode)
 
-    return { gameManager, player, stats, stage, enemy, combatSource }
+    return { gameManager, player, stage, enemy, combatSource }
   }
 
   it('successful startStage in interactive mode begins held, allocates session, and emits presentation_session_started', () => {
-    const { gameManager, player, stats, stage, combatSource } = createStartedManager('interactive')
+    const { gameManager, player, stage, combatSource } = createStartedManager('interactive')
     const events: unknown[] = []
     gameManager.eventBus.on('presentation_session_started', (e) => events.push(e))
 
-    const started = gameManager.turnBattleOps.startStage(player, stats, stage, false)
+    const started = gameManager.turnBattleOps.startStage(player, stage, false)
     expect(started).toBe(true)
 
     const session = gameManager.getCurrentPresentationSession()!
@@ -236,8 +235,8 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
   })
 
   it('headless startStage allocates session without being held', () => {
-    const { gameManager, player, stats, stage, combatSource } = createStartedManager('headless')
-    expect(gameManager.turnBattleOps.startStage(player, stats, stage, false)).toBe(true)
+    const { gameManager, player, stage, combatSource } = createStartedManager('headless')
+    expect(gameManager.turnBattleOps.startStage(player, stage, false)).toBe(true)
 
     const session = gameManager.getCurrentPresentationSession()!
     expect(session).toBeDefined()
@@ -250,7 +249,7 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
   })
 
   it('failed startStage creates no session and emits no event', () => {
-    const { gameManager, player, stats, stage } = createStartedManager('interactive')
+    const { gameManager, player, stage } = createStartedManager('interactive')
     const events: unknown[] = []
     gameManager.eventBus.on('presentation_session_started', (e) => events.push(e))
 
@@ -258,7 +257,7 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
     const lockedStage: Stage = { ...stage, id: 'locked_stage', requiredRealmId: 'mortal', requiredRealmLevel: 99 }
     gameManager.catalogOps.registerStages([lockedStage])
 
-    const started = gameManager.turnBattleOps.startStage(player, stats, lockedStage, false)
+    const started = gameManager.turnBattleOps.startStage(player, lockedStage, false)
     expect(started).toBe(false)
 
     expect(gameManager.getCurrentPresentationSession()).toBeNull()
@@ -266,8 +265,8 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
   })
 
   it('fresh startStage increments session ID and invalidates old hold tokens', () => {
-    const { gameManager, player, stats, stage } = createStartedManager('interactive')
-    gameManager.turnBattleOps.startStage(player, stats, stage, false)
+    const { gameManager, player, stage } = createStartedManager('interactive')
+    gameManager.turnBattleOps.startStage(player, stage, false)
     const session1 = gameManager.getCurrentPresentationSession()!
     const port = gameManager.getPresentationPort()
     const hold1 = port.hold(session1)!
@@ -276,7 +275,7 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
     expect(gameManager.abandonBattle()).toBe(true)
 
     // Fresh start on same manager
-    gameManager.turnBattleOps.startStage(player, stats, stage, false)
+    gameManager.turnBattleOps.startStage(player, stage, false)
     const session2 = gameManager.getCurrentPresentationSession()!
 
     expect(session2.sessionId).toBeGreaterThan(session1.sessionId)
@@ -285,8 +284,8 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
   })
 
   it('abandonBattle invalidates the current session', () => {
-    const { gameManager, player, stats, stage } = createStartedManager('interactive')
-    gameManager.turnBattleOps.startStage(player, stats, stage, false)
+    const { gameManager, player, stage } = createStartedManager('interactive')
+    gameManager.turnBattleOps.startStage(player, stage, false)
     const session = gameManager.getCurrentPresentationSession()!
     expect(session).toBeDefined()
 
@@ -297,7 +296,7 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
   it('direct startBattle publishes single session and nested startStage does not double-publish', () => {
     const gameManager = new GameManager()
     const player = createDefaultPlayer()
-    const stats = calculateStats({ ...player.baseStats, attack: 100 }, [])
+    player.baseStats = asBaseStats({ ...player.baseStats, attack: 100  })
     const enemy = defineEnemy({
       id: 'session_dummy2', name: 'Dummy', level: 1, realmId: 'mortal', lane: 'ground',
       statsInput: { maxHp: 500, attack: 0, attackSpeed: 1, attackRangeRanks: 9, criticalRate: 0, criticalDamage: 1.5, armor: 0 },
@@ -318,7 +317,7 @@ describe('GameManager — presentation session lifecycle (Task 2)', () => {
     events.length = 0
 
     // startStage has nested startBattle call, but must publish exactly ONE session
-    gameManager.turnBattleOps.startStage(player, stats, stage, false)
+    gameManager.turnBattleOps.startStage(player, stage, false)
     expect(events).toHaveLength(1)
   })
 })

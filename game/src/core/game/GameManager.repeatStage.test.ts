@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
-import { calculateStats } from '../stats/StatCalculator'
+import { asBaseStats } from '../stats/StatBlock'
 import { defineEnemy } from '../enemy/Enemy'
 import type { Stage } from '../stage/Stage'
 import { SKILLS } from '../../data/skill/Skills'
@@ -44,7 +44,7 @@ describe('GameManager continuous repeat stage', () => {
       spawnIntervalSeconds: 0,
     }
     const player = createDefaultPlayer()
-    const stats = calculateStats({ ...player.baseStats, attack: 100 }, [])
+    player.baseStats = asBaseStats({ ...player.baseStats, attack: 100  })
 
     gameManager.catalogOps.registerEnemyTemplates([enemy])
     gameManager.catalogOps.registerStages([stage])
@@ -59,7 +59,7 @@ describe('GameManager continuous repeat stage', () => {
     // — tương đương boot flow thật.
     gameManager.setActivePlayer(player)
 
-    expect(gameManager.turnBattleOps.startStage(player, stats, stage, true)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stage, true)).toBe(true)
 
     // Plan Workstream F — Linh Thạch credit vào MaterialBag.
     const spiritStoneBalance = () => gameManager.materialBag.getAmount(SPIRIT_STONE_MATERIAL.id)
@@ -90,18 +90,17 @@ describe('GameManager continuous repeat stage', () => {
       enemyPool: [{ enemyId: enemy.id, weight: 1 }], totalEnemyCount: 1, waves: [1], spawnIntervalSeconds: 1,
     }
     const player = createDefaultPlayer()
-    const stats = calculateStats(player.baseStats, [])
 
     gameManager.catalogOps.registerEnemyTemplates([enemy])
     gameManager.catalogOps.registerStages([stage])
 
-    expect(gameManager.turnBattleOps.startStage(player, stats, stage)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stage)).toBe(true)
     // Intro (2026-09-07 plan Task 4) is the first wait phase - abandoning
     // during it keeps the exact same semantics the countdown phase had.
     expect(gameManager.getBattle()?.state).toBe('intro')
     expect(gameManager.abandonBattle()).toBe(true)
     expect(gameManager.getBattle()?.state).toBe('defeat')
     expect(gameManager.turnBattleOps.getStageProgress()).toBeNull()
-    expect(gameManager.turnBattleOps.startStage(player, stats, stage)).toBe(true)
+    expect(gameManager.turnBattleOps.startStage(player, stage)).toBe(true)
   })
 })

@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from './CombatClock'
 import { GameManager } from '../../game/GameManager'
 import { createDefaultPlayer } from '../../player/Player'
-import { calculateStats } from '../../stats/StatCalculator'
 import { defineEnemy } from '../../enemy/Enemy'
 import { SKILLS } from '../../../data/skill/Skills'
 import type { Stage } from '../../stage/Stage'
@@ -57,8 +56,7 @@ function makeAwakenedBattle() {
   manager.progressionOps.learnSkill('tam_muoi_chan_hoa')
   manager.progressionOps.learnSkill('hoa_ha_cuu_thien')
 
-  const stats = calculateStats(player.baseStats, player.modifiers)
-  expect(manager.turnBattleOps.startStage(player, stats, stage, false)).toBe(true)
+  expect(manager.turnBattleOps.startStage(player, stage, false)).toBe(true)
 
   // Marker slots are populated from the unlock gating.
   const participant = manager.getTurnBattle()!.players[0]!

@@ -2,7 +2,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
-import { createBaseStats } from '../stats/StatBlock'
 import { defineEnemy } from '../enemy/Enemy'
 import type { Equipment } from '../equipment/Equipment'
 
@@ -35,7 +34,6 @@ describe('GameManager.grantRandomEquipmentDrop — toast đồng nhất với gr
     const combatSource = new ManualClockSource()
     gameManager.setCombatClockSource(combatSource)
     const player = createDefaultPlayer()
-    const stats = createBaseStats()
 
     gameManager.catalogOps.registerEquipment([TEST_EQUIPMENT])
 
@@ -54,7 +52,7 @@ describe('GameManager.grantRandomEquipmentDrop — toast đồng nhất với gr
       rewards: { techniqueInsight: 0, spiritStone: 0 },
     })
 
-    gameManager.startBattleWithPlayer(player, stats, enemy)
+    gameManager.startBattleWithPlayer(player, enemy)
     combatSource.advance(3) // bỏ qua countdown 3s trước trận
 
     // Giết quái trực tiếp — không cần chờ player tự đánh (không equip

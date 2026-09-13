@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClock'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
-import { calculateStats } from '../stats/StatCalculator'
+
 import { defineEnemy } from '../enemy/Enemy'
 import { SKILLS } from '../../data/skill/Skills'
 import type { Stage } from '../stage/Stage'
@@ -68,12 +68,11 @@ describe('GameManager — turn-based status VFX feed (Phase A6)', () => {
     gameManager.catalogOps.registerStages([stageFixture()])
     gameManager.setActivePlayer(player)
 
-    const stats = calculateStats(player.baseStats, player.modifiers)
-    // Stage battles construct the engine WITH BUFF_REGISTRY —
-    // non-stage battles (startBattleWithPlayer) intentionally run a
-    // registry-less engine where applySkillAilments no-ops.
+    // ARCH-002 (M7): every engine construction now runs WITH
+    // BUFF_REGISTRY — non-stage battles (startBattleWithPlayer) included,
+    // so applySkillAilments/appliesBuff branches are live everywhere.
     expect(
-      gameManager.turnBattleOps.startStage(player, stats, gameManager.catalogOps.getStage('status_vfx_stage')!, false),
+      gameManager.turnBattleOps.startStage(player, gameManager.catalogOps.getStage('status_vfx_stage')!, false),
     ).toBe(true)
 
     // Advance until the first doc_chuong hit lands trung_doc (chance 1.0)
@@ -111,9 +110,8 @@ describe('GameManager — turn-based status VFX feed (Phase A6)', () => {
     gameManager.catalogOps.registerStages([stageFixture()])
     gameManager.setActivePlayer(player)
 
-    const stats = calculateStats(player.baseStats, player.modifiers)
     expect(
-      gameManager.turnBattleOps.startStage(player, stats, gameManager.catalogOps.getStage('status_vfx_stage')!, false),
+      gameManager.turnBattleOps.startStage(player, gameManager.catalogOps.getStage('status_vfx_stage')!, false),
     ).toBe(true)
 
     for (let i = 0; i < 300 && attached.length === 0; i++) {

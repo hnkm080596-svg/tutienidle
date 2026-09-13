@@ -9,7 +9,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { usePlayerStore } from '../../stores/player'
 import { GameManager } from '../game/GameManager'
 import { TribulationOutcomeService } from './TribulationOutcomeService'
-import { createBaseStats } from '../stats/StatBlock'
+import { asBaseStats } from '../stats/StatBlock'
 import { pills } from '../../data/pill/pills'
 import { MERIDIANS } from '../../data/realm/Meridians'
 import type { ActiveTribulationState } from './TribulationDirector'
@@ -99,8 +99,10 @@ describe('TribulationOutcomeService — victory parity', () => {
     player.openedMeridianIds = MERIDIANS.map((m: { id: string }) => m.id)
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
 
-    const stats = createBaseStats({ maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
-    expect(gameManager.startTribulation(player.$state, stats, 'foundation_establishment')).toBe(true)
+    // ARCH-002 (M7): startTribulation resolves stats internally — patch
+    // the RAW base so the tribulation ghost survives the strikes.
+    player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
+    expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)
     driveToCompletion(gameManager)
     expect(gameManager.tribulationDirector.getState()!.state).toBe('victory')
 
@@ -131,8 +133,8 @@ describe('TribulationOutcomeService — victory parity', () => {
     player.realmId = 'qi_refining'
     player.openedMeridianIds = MERIDIANS.map((m: { id: string }) => m.id)
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
-    const stats = createBaseStats({ maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
-    expect(gameManager.startTribulation(player.$state, stats, 'foundation_establishment')).toBe(true)
+    player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
+    expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)
     driveToCompletion(gameManager)
 
     const service = new TribulationOutcomeService()
@@ -157,7 +159,7 @@ describe('TribulationOutcomeService — defeat parity', () => {
     const active = makeActive('defeat', 'foundation_establishment')
 
     const service = new TribulationOutcomeService()
-    const result = service.resolveDefeat(player, gameManager, active, createBaseStats({ maxHp: 1000 }))
+    const result = service.resolveDefeat(player, gameManager, active)
 
     expect(result.kind).toBe('defeat')
     expect(result.cultivationLossPercent).toBeGreaterThan(0)
@@ -173,7 +175,7 @@ describe('TribulationOutcomeService — defeat parity', () => {
     const active = makeActive('defeat', 'foundation_establishment', 'great_dao')
 
     const service = new TribulationOutcomeService()
-    const result = service.resolveDefeat(player, gameManager, active, createBaseStats({ maxHp: 1000 }))
+    const result = service.resolveDefeat(player, gameManager, active)
 
     expect(player.greatDaoOpportunityLost).toBe(true)
     expect(result.greatDaoOpportunityLost).toBe(true)
@@ -190,7 +192,7 @@ describe('TribulationOutcomeService — defeat parity', () => {
     const active = makeActive('defeat', 'foundation_establishment', 'thien_dao')
 
     const service = new TribulationOutcomeService()
-    const result = service.resolveDefeat(player, gameManager, active, createBaseStats({ maxHp: 1000 }))
+    const result = service.resolveDefeat(player, gameManager, active)
 
     expect(result.greatDaoOpportunityLost).toBe(false)
     expect(result.announcement.titleKey).toBe('announce.tribulation.defeat.title')
@@ -220,7 +222,6 @@ describe('TribulationOutcomeService — announcement descriptors resolve to the 
     // Great Dao defeat
     const daoDefeat = service.resolveDefeat(
       player, gameManager, makeActive('defeat', 'foundation_establishment', 'great_dao'),
-      createBaseStats({ maxHp: 1000 }),
     )
     expect(resolveAnnouncement(daoDefeat.announcement)).toEqual({
       title: 'Đại Đạo Đoạn Tuyệt',
@@ -230,7 +231,6 @@ describe('TribulationOutcomeService — announcement descriptors resolve to the 
     // Generic defeat
     const defeat = service.resolveDefeat(
       player, gameManager, makeActive('defeat', 'foundation_establishment', 'thien_dao'),
-      createBaseStats({ maxHp: 1000 }),
     )
     expect(resolveAnnouncement(defeat.announcement)).toEqual({
       title: 'Độ Kiếp Thất Bại',
@@ -255,11 +255,9 @@ describe('TribulationOutcomeService — announcement descriptors resolve to the 
       service.resolveVictory(player, gameManager, makeActive('victory', 'golden_core')).announcement,
       service.resolveDefeat(
         player, gameManager, makeActive('defeat', 'foundation_establishment', 'great_dao'),
-        createBaseStats({ maxHp: 1000 }),
       ).announcement,
       service.resolveDefeat(
         player, gameManager, makeActive('defeat', 'foundation_establishment', 'thien_dao'),
-        createBaseStats({ maxHp: 1000 }),
       ).announcement,
     ]
 

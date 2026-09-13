@@ -3,7 +3,6 @@ import { ManualClockSource, COMBAT_STEP_SECONDS } from '../battle/turn/CombatClo
 import { GameManager } from './GameManager'
 import { defineEnemy } from '../enemy/Enemy'
 import { createDefaultPlayer } from '../player/Player'
-import { calculateStats } from '../stats/StatCalculator'
 
 // Talent v4 M2 — Pha Giap cross-battle carry wiring (spec §4.1 row 2,
 // §7): the ops layer banks floor(stacks * 0.5) at the victory terminal
@@ -61,10 +60,9 @@ describe('GameManager — Pha Giap carry wiring (M2)', () => {
     manager.setActivePlayer(player)
     manager.progressionOps.syncTalentCombatPassive(player)
 
-    const stats = calculateStats(player.baseStats, player.modifiers)
 
     // Battle 1: build 4 stacks via 'hit' events, then win.
-    manager.startBattleWithPlayer(player, stats, makeEnemy())
+    manager.startBattleWithPlayer(player, makeEnemy())
     for (let i = 0; i < 4; i++) {
       manager.eventBus.emit('hit', { type: 'hit', sourceId: 'player', targetId: 'e' })
     }
@@ -77,7 +75,7 @@ describe('GameManager — Pha Giap carry wiring (M2)', () => {
 
     // Battle 2: resetStacks ran inside startBattle, then the bank
     // re-seeded the passive — stacks open at 2, not 0.
-    manager.startBattleWithPlayer(player, stats, makeEnemy())
+    manager.startBattleWithPlayer(player, makeEnemy())
 
     expect(phaGiapModifier(manager).stacks).toBe(2)
   })
@@ -93,9 +91,8 @@ describe('GameManager — Pha Giap carry wiring (M2)', () => {
     manager.setActivePlayer(player)
     manager.progressionOps.syncTalentCombatPassive(player)
 
-    const stats = calculateStats(player.baseStats, player.modifiers)
 
-    manager.startBattleWithPlayer(player, stats, makeEnemy())
+    manager.startBattleWithPlayer(player, makeEnemy())
     phaGiapModifier(manager).stacks = 4
     winBattle(manager, clock)
 
@@ -103,7 +100,7 @@ describe('GameManager — Pha Giap carry wiring (M2)', () => {
 
     // Player crossed to golden_core between battles.
     player.realmId = 'golden_core'
-    manager.startBattleWithPlayer(player, stats, makeEnemy())
+    manager.startBattleWithPlayer(player, makeEnemy())
 
     expect(player.phaGiapCarryStacks).toBe(0)
     expect(phaGiapModifier(manager).stacks ?? 0).toBe(0)
@@ -120,9 +117,8 @@ describe('GameManager — Pha Giap carry wiring (M2)', () => {
     manager.setActivePlayer(player)
     manager.progressionOps.syncTalentCombatPassive(player)
 
-    const stats = calculateStats(player.baseStats, player.modifiers)
 
-    manager.startBattleWithPlayer(player, stats, makeEnemy())
+    manager.startBattleWithPlayer(player, makeEnemy())
     for (let i = 0; i < 80 && manager.getTurnBattle()!.state !== 'fighting'; i++) {
       clock.advance(COMBAT_STEP_SECONDS)
     }
@@ -149,9 +145,8 @@ describe('GameManager — Pha Giap carry wiring (M2)', () => {
     player.realmId = 'qi_refining'
     manager.setActivePlayer(player)
 
-    const stats = calculateStats(player.baseStats, player.modifiers)
 
-    manager.startBattleWithPlayer(player, stats, makeEnemy())
+    manager.startBattleWithPlayer(player, makeEnemy())
     winBattle(manager, clock)
 
     expect(player.phaGiapCarryStacks).toBe(0)

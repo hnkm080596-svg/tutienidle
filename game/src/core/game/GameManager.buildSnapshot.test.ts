@@ -118,7 +118,7 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
 
     expect(finalStats.attack).toBeGreaterThan(attackBeforeAnyBuild)
 
-    gameManager.startBattleWithPlayer(player, finalStats, createTestEnemy())
+    gameManager.startBattleWithPlayer(player, createTestEnemy())
 
     expect(gameManager.getTurnBattle()!.players[0]!.entity.stats.attack).toBe(finalStats.attack)
   })
@@ -133,8 +133,7 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
     }
     gameManager.skillManager.add(runtimeSkill)
 
-    const stats = calculateStats(player.baseStats, [])
-    gameManager.startBattleWithPlayer(player, stats, createTestEnemy())
+    gameManager.startBattleWithPlayer(player, createTestEnemy())
     expect(gameManager.getTurnBattle()!.players[0]!.entity.skillStats?.hoaTheGainPerCast).toBe(1)
     expect(gameManager.getTurnBattle()!.players[0]!.entity.skillLevels?.snapshot_runtime_skill).toBe(runtimeSkill.level)
 
@@ -143,7 +142,7 @@ describe('GameManager — Build Snapshot: Class + Equipment + Pre-Battle Upgrade
     expect(gameManager.getTurnBattle()!.players[0]!.entity.skillStats?.hoaTheGainPerCast).toBe(1)
     expect(gameManager.getTurnBattle()!.players[0]!.entity.skillLevels?.snapshot_runtime_skill).toBe(1)
 
-    gameManager.startBattleWithPlayer(player, stats, createTestEnemy())
+    gameManager.startBattleWithPlayer(player, createTestEnemy())
     expect(gameManager.getTurnBattle()!.players[0]!.entity.skillStats?.hoaTheGainPerCast).toBe(5)
     expect(gameManager.getTurnBattle()!.players[0]!.entity.skillLevels?.snapshot_runtime_skill).toBe(5)
   })

@@ -41,6 +41,7 @@ import type { FormationLoadout, PlayerData } from '../player/Player'
 import { playerToCombatEntity } from '../player/Player'
 import { getKiemYPermanent } from '../player/KiemYSystem'
 import type { Stats } from '../stats/StatBlock'
+import type { StatModifier } from '../stats/StatCalculator'
 import { DEFAULT_PARTY_FORMATION } from './PartyFormation'
 import { commitFormationLoadout, resolvePartyFormation } from './FormationPlacement'
 import { toTurnBattleParticipant } from './TurnBattleAdapter'
@@ -165,6 +166,24 @@ export class GameManagerTurnBattleOps {
     }
   }
 
+  /**
+   * ARCH-002 (M7) — battle-scoped live-modifier provider handed to
+   * TurnBattleSystem. Only the primary player has a runtime modifier
+   * channel today (passive stacks, persistent pool, timed/socket
+   * effects); companions and enemies return []. The closure reads the
+   * aggregation owner live, so mid-battle stack/expiry changes fold at
+   * the next effective-stat refresh.
+   */
+  private readonly liveStatModifiers = (entity: CombatEntity): StatModifier[] => {
+    if (entity.id !== 'player') {
+      return []
+    }
+
+    const player = this.deps.getActivePlayer()
+
+    return player ? this.deps.getLiveBattleModifiers(player) : []
+  }
+
   /** Completion callbacks for the steps currently parked on a renderer signal. */
   private pendingStepDone: Partial<Record<TurnStepSignal, () => void>> = {}
 
@@ -199,6 +218,16 @@ export class GameManagerTurnBattleOps {
     getSkillLevels: () => Record<string, number>
     // PassiveSystem owns per-battle passive stacks; ops requests the reset.
     resetPassiveStacks: () => void
+    // ARCH-002 (M7) — resolved-base authority for the battle snapshot:
+    // GameManager wires resolvePlayerFinalStats(player,
+    // effectOps.getBattleBaseModifiers(player)). Called INSIDE the
+    // post-reset window so ephemeral stacks can never bake into baseStats.
+    resolvePlayerStats: (player: PlayerData) => Stats
+    // ARCH-002 (M7) — live runtime modifiers for the engine's
+    // liveStatModifiers provider (passive stacks, persistent pool,
+    // timed/socket effects). Same owner as the menu aggregation
+    // (GameManagerPersistentEffectOps) — never a second calculator.
+    getLiveBattleModifiers: (player: PlayerData) => StatModifier[]
     // M2 — Pha Giap carry: bank/seed the bound passive's stacks across
     // battles (PassiveSystem owns the stacks; PlayerData owns the bank).
     bankPassiveCarry: (player: PlayerData) => void
@@ -218,11 +247,16 @@ export class GameManagerTurnBattleOps {
     this.turnBattleSystem = new TurnBattleSystem(
       deps.combatSystem,
       10_000,
-      undefined,
+      // ARCH-002 (M7) — non-stage battles still need the live buff
+      // registry: skill appliesBuff branches (kim_giap/dia_tru self-buffs,
+      // target debuffs) no-op silently without it. Stage-path systems
+      // below already pass BUFF_REGISTRY.
+      BUFF_REGISTRY,
       undefined,
       undefined,
       undefined,
       this.onSkillCast,
+      this.liveStatModifiers,
     )
     // Presentation facade (Wave-2 split) - owns the PresentationSession +
     // CombatAnimationRuntime + mode flag. Deferred closures keep the
@@ -750,6 +784,11 @@ export class GameManagerTurnBattleOps {
 
     this.turnBattle = this.buildTurnBattle(player, [enemyEntity])
 
+    // ARCH-002 (M7) — fold construction-time buffs (formation Tran Phap)
+    // and the live runtime modifiers into entity.stats immediately, so no
+    // dependent read can observe the pre-buff base.
+    this.turnBattleSystem.refreshEffectiveStats(this.turnBattle)
+
     // C1 parity - Kiem bar init used to run inside legacy battleSystem.start().
     initKiemTuBattleResources(
       this.turnBattle.players[0]!.entity,
@@ -795,9 +834,22 @@ export class GameManagerTurnBattleOps {
     this.syncOffScreenFreeze()
   }
 
-  startBattleWithPlayer(player: PlayerData, playerStats: Stats, enemy: Enemy) {
-    // DESIGN: all combat stats (incl. skill runtime stats) snapshot at battle
-    // start; purchases/loadout changes mid-battle take effect next battle.
+  startBattleWithPlayer(player: PlayerData, enemy: Enemy) {
+    // ARCH-002 (M7) — ordering fix: ephemeral passive state resets BEFORE
+    // the resolved snapshot is taken. Previously the caller resolved
+    // finalStats eagerly (carrying last battle's live stacks via the
+    // per-tick aggregation mirror) and the reset ran inside startBattle()
+    // AFTER the snapshot — the stacks leaked into the new baseStats.
+    //
+    // DESIGN: all combat stats (incl. skill runtime stats) snapshot at
+    // battle start; purchases/loadout changes mid-battle take effect next
+    // battle. The base resolves from the STATIC partition only — live
+    // runtime modifiers (passive stacks, persistent pool, timed effects)
+    // reach entity.stats through the engine's provider each refresh.
+    this.deps.resetPassiveStacks()
+
+    const playerStats = this.deps.resolvePlayerStats(player)
+
     const playerEntity = playerToCombatEntity(
       player,
       playerStats,
@@ -816,6 +868,13 @@ export class GameManagerTurnBattleOps {
     // M2 — Pha Giap carry: re-seed banked stacks AFTER the per-battle
     // reset that startBattle() just ran.
     this.deps.seedPassiveCarry(player)
+
+    // ARCH-002 (M7) — the seed lands AFTER startBattle()'s construction
+    // refresh, and intro/countdown ticks do not refresh: fold the carried
+    // stacks into entity.stats now so no read can observe a pre-seed view.
+    if (this.turnBattle) {
+      this.turnBattleSystem.refreshEffectiveStats(this.turnBattle)
+    }
 
     this.deps.battleLoot.setSession(this.deps.buildPlayerRewardReceiver(player), player)
 
@@ -1044,6 +1103,7 @@ export class GameManagerTurnBattleOps {
       REACTION_PATH_POOL, // Phase A4 - marker special's 2-pick pool now live
       new TurnReactionManager(this.deps.eventBus),
       this.onSkillCast,
+      this.liveStatModifiers,
     )
   }
 
@@ -1051,14 +1111,13 @@ export class GameManagerTurnBattleOps {
 
   startStage(
     player: PlayerData,
-    playerStats: Stats,
     stage: Stage,
     repeatContinuously = false,
   ): boolean {
     this.isStageStarting = true
     let started = false
     try {
-      started = this.deps.stageWaves.start(player, playerStats, stage, repeatContinuously)
+      started = this.deps.stageWaves.start(player, stage, repeatContinuously)
     } finally {
       this.isStageStarting = false
     }
@@ -1134,6 +1193,7 @@ export class GameManagerTurnBattleOps {
         REACTION_PATH_POOL, // Phase A4 - marker special's 2-pick pool now live
         new TurnReactionManager(this.deps.eventBus),
         this.onSkillCast,
+        this.liveStatModifiers,
       )
     }
 

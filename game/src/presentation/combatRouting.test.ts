@@ -132,7 +132,7 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
 
     // Start stage through runAdmitted
     const startPromise = presentation.runAdmitted('combat', () => {
-      const started = gameManager.turnBattleOps.startStage(player, stats, stage, false)
+      const started = gameManager.turnBattleOps.startStage(player, stage, false)
       if (!started) return null
       const session = gameManager.getCurrentPresentationSession('combat')!
       return { target: 'combat', session }
@@ -187,7 +187,7 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
 
     // Entry 1
     const p1 = presentation.runAdmitted('combat', () => {
-      gameManager.turnBattleOps.startStage(player, stats, stage, false)
+      gameManager.turnBattleOps.startStage(player, stage, false)
       return { target: 'combat', session: gameManager.getCurrentPresentationSession('combat')! }
     })
     for (let i = 0; i < 30 && vueAdapter.phase.value !== 'awaiting-ready'; i++) await Promise.resolve()
@@ -206,7 +206,7 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
 
     // Entry 2
     const p2 = presentation.runAdmitted('combat', () => {
-      gameManager.turnBattleOps.startStage(player, stats, stage, false)
+      gameManager.turnBattleOps.startStage(player, stage, false)
       return { target: 'combat', session: gameManager.getCurrentPresentationSession('combat')! }
     })
     for (let i = 0; i < 30 && vueAdapter.phase.value !== 'awaiting-ready'; i++) await Promise.resolve()
@@ -236,7 +236,7 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
     phaserAdapter.setGame(fakeGame)
 
     const p = presentation.runAdmitted('combat', () => {
-      gameManager.turnBattleOps.startStage(player, stats, stage, false)
+      gameManager.turnBattleOps.startStage(player, stage, false)
       return { target: 'combat', session: gameManager.getCurrentPresentationSession('combat')! }
     })
     for (let i = 0; i < 30 && vueAdapter.phase.value !== 'awaiting-ready'; i++) await Promise.resolve()
@@ -285,7 +285,7 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
 
     // Entry 1
     const p1 = presentation.runAdmitted('combat', () => {
-      gameManager.turnBattleOps.startStage(player, stats, stage, false)
+      gameManager.turnBattleOps.startStage(player, stage, false)
       return { target: 'combat', session: gameManager.getCurrentPresentationSession('combat')! }
     })
     for (let i = 0; i < 30 && vueAdapter.phase.value !== 'awaiting-ready'; i++) await Promise.resolve()
@@ -297,7 +297,7 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
 
     // Fresh refight on same Combat route
     const p2 = presentation.runAdmitted('combat', () => {
-      gameManager.turnBattleOps.startStage(player, stats, stage, false)
+      gameManager.turnBattleOps.startStage(player, stage, false)
       return { target: 'combat', session: gameManager.getCurrentPresentationSession('combat')! }
     })
     for (let i = 0; i < 30 && vueAdapter.phase.value !== 'awaiting-ready'; i++) await Promise.resolve()
@@ -323,7 +323,7 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
     phaserAdapter.setGame(fakeGame)
 
     const p = presentation.runAdmitted('combat', () => {
-      gameManager.turnBattleOps.startStage(player, stats, stage, true) // repeatContinuously
+      gameManager.turnBattleOps.startStage(player, stage, true) // repeatContinuously
       return { target: 'combat', session: gameManager.getCurrentPresentationSession('combat')! }
     })
     for (let i = 0; i < 30 && vueAdapter.phase.value !== 'awaiting-ready'; i++) await Promise.resolve()
@@ -356,7 +356,7 @@ describe('Combat routing integration (Task 10 - Checkpoint A)', () => {
 
     // In headless mode to let battle step to fighting
     gameManager.setPresentationMode('headless')
-    gameManager.turnBattleOps.startStage(player, stats, stage, false)
+    gameManager.turnBattleOps.startStage(player, stage, false)
 
     // Skip intro and countdown
     for (let i = 0; i < INTRO_TOTAL_TICKS + 30; i++) {

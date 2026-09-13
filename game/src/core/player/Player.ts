@@ -1,5 +1,6 @@
-import type { StatModifier } from '../stats/StatCalculator'
+import { calculateStats, type StatModifier } from '../stats/StatCalculator'
 import { createBaseStats, type BaseStats, type Stats } from '../stats/StatBlock'
+import { getKiemYDamageMultipliers, getKiemYTier } from './KiemYSystem'
 import type { CombatEntity } from '../combat/CombatEntity'
 import { CENTER_LANE_INDEX } from '../battle/BattleLane'
 import {
@@ -424,8 +425,45 @@ export function createDefaultPlayer(): PlayerData {
 }
 
 /**
- * Chuyển PlayerData thành CombatEntity để đưa vào BattleSystem.
+ * ARCH-002 (M7) — the single raw -> resolved stat assembly for the player.
+ * Extracted from the player store's `finalStats` getter so the battle entry
+ * path can resolve the same value WITHOUT reading the store's
+ * `externalModifiers` mirror (a per-tick cache that can hold stale
+ * battle-scoped modifiers — the ARCH-002 leak channel).
  *
+ * `externalModifiers` here is the caller-provided modifier list: the store
+ * passes its mirror field; the battle ops pass the fresh static aggregation
+ * (`GameManagerPersistentEffectOps.getBattleBaseModifiers`). Permanent
+ * Kiem Y modifiers (bat_kiem route, tier by bossKillCount) are folded in
+ * exactly once — same formula as the menu view.
+ */
+export function resolvePlayerFinalStats(
+  player: PlayerData,
+  externalModifiers: StatModifier[],
+): Stats {
+  const kiemYModifiers: StatModifier[] = []
+  if (
+    player.cultivationPath === 'kiem_tu' &&
+    player.kiemTuRoute === 'bat_kiem' &&
+    player.bossKillCount > 0
+  ) {
+    const multipliers = getKiemYDamageMultipliers(getKiemYTier(player.bossKillCount))
+    kiemYModifiers.push(
+      { id: 'kiem_y:skill_damage', sourceId: 'kiem_y', sourceType: 'attribute', stat: 'skillDamagePercent', flat: multipliers.skillDamagePercent },
+      { id: 'kiem_y:critical_rate', sourceId: 'kiem_y', sourceType: 'attribute', stat: 'criticalRate', flat: multipliers.criticalRate },
+      { id: 'kiem_y:critical_damage', sourceId: 'kiem_y', sourceType: 'attribute', stat: 'criticalDamage', flat: multipliers.criticalDamage },
+    )
+  }
+
+  return calculateStats(player.baseStats, [
+    ...player.modifiers,
+    ...externalModifiers,
+    ...kiemYModifiers,
+  ])
+}
+
+/**
+ * Chuyển PlayerData thành CombatEntity để đưa vào BattleSystem.
  * `stats` phải là finalStats đã tính sẵn (baseStats + modifiers +
  * externalModifiers) — hàm này KHÔNG tự gọi calculateStats, để
  * tránh phụ thuộc ngược vào StatCalculator theo 2 cách khác nhau

@@ -1,6 +1,5 @@
 import { defineEnemy } from '../../enemy/Enemy'
 import { createDefaultPlayer, type PlayerData } from '../../player/Player'
-import { calculateStats } from '../../stats/StatCalculator'
 import { asBaseStats } from '../../stats/StatBlock'
 import type { Stage } from '../../stage/Stage'
 import type { GameManager } from '../GameManager'
@@ -25,8 +24,15 @@ export function startAStage(
   const stageId = options.stageId ?? 'fixture_stage'
   const enemyId = `${stageId}_dummy`
 
-  const player = createDefaultPlayer()
-  const stats = calculateStats(asBaseStats({ ...player.baseStats, attack: 100, speed: 100 }), [])
+  const basePlayer = createDefaultPlayer()
+  // ARCH-002 (M7): startStage resolves stats internally — patch the RAW
+  // baseStats at construction so the resolved snapshot keeps the
+  // documented attack/speed (object-literal form: the R14.3a guard forbids
+  // post-creation baseStats assignments in src/).
+  const player: PlayerData = {
+    ...basePlayer,
+    baseStats: asBaseStats({ ...basePlayer.baseStats, attack: 100, speed: 100 }),
+  }
 
   const enemy = defineEnemy({
     id: enemyId,
@@ -61,7 +67,7 @@ export function startAStage(
   manager.catalogOps.registerStages([stage])
   manager.setActivePlayer(player)
 
-  if (!manager.turnBattleOps.startStage(player, stats, stage, options.repeatContinuously ?? false)) {
+  if (!manager.turnBattleOps.startStage(player, stage, options.repeatContinuously ?? false)) {
     throw new Error(`startAStage fixture failed to start stage ${stageId}`)
   }
 

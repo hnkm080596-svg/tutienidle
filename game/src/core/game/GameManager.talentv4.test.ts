@@ -7,7 +7,6 @@
 import { describe, expect, it } from 'vitest'
 import { GameManager } from './GameManager'
 import { createDefaultPlayer } from '../player/Player'
-import { calculateStats } from '../stats/StatCalculator'
 import { ENEMIES } from '../../data/enemy/Enemies'
 import { buildings } from '../../data/building/buildings'
 import { SKILLS } from '../../data/skill/Skills'
@@ -116,9 +115,8 @@ describe('GameManager — talent v4 combat passive wiring', () => {
     manager.progressionOps.syncTalentCombatPassive(player)
 
     const enemy = ENEMIES[0]!
-    const stats = calculateStats(player.baseStats, player.modifiers)
 
-    manager.startBattleWithPlayer(player, stats, enemy)
+    manager.startBattleWithPlayer(player, enemy)
 
     // Truy cập session qua combatSystem — kiểm chứng nội bộ qua hành
     // vi: đòn chí mạng giết player trong trận thật sẽ tẩy debuff +
@@ -158,9 +156,8 @@ describe('GameManager — talent v4 combat passive wiring', () => {
     manager.progressionOps.syncTalentCombatPassive(player)
 
     const enemy = ENEMIES[0]!
-    const stats = calculateStats(player.baseStats, player.modifiers)
 
-    manager.startBattleWithPlayer(player, stats, enemy)
+    manager.startBattleWithPlayer(player, enemy)
 
     // hpReader là private wiring — kiểm chứng qua hành vi công khai:
     // passive hap_linh có condition hpBelow 0.5; ngoài trận reader

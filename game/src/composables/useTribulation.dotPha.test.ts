@@ -4,7 +4,7 @@ import { usePlayerStore } from '../stores/player'
 import { GameManager } from '../core/game/GameManager'
 import { checkTribulationOutcomeAction, triggerBreakthroughAction } from './useTribulation'
 import { getTribulationChapters } from '../data/tribulation/TribulationChapters'
-import { createBaseStats } from '../core/stats/StatBlock'
+import { asBaseStats } from '../core/stats/StatBlock'
 import { CHARACTER_CREATION_TALENTS, getTalentDefinition } from '../data/talent/Talents'
 import { pills } from '../data/pill/pills'
 import { MERIDIANS } from '../data/realm/Meridians'
@@ -123,10 +123,11 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     const trucCoDan = gameManager.pillRegistry.get('truc_co_dan')!
     gameManager.pillBag.add(trucCoDan, 1)
 
-    // Stats đủ trụ kiếp Đại Đạo (×1.85 khó hơn)
-    const stats = createBaseStats({ maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
+    // Stats đủ trụ kiếp Đại Đạo (×1.85 khó hơn) — ARCH-002 (M7): the
+    // snapshot resolves internally; patch the RAW base.
+    player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
 
-    expect(gameManager.startTribulation(player.$state, stats, 'foundation_establishment')).toBe(true)
+    expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)
     expect(gameManager.tribulationDirector.getState()!.grade).toBe('great_dao')
 
     // Trôi hết kiếp + trả lời đúng mọi câu
@@ -164,9 +165,9 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
 
     // HP thấp → thua kiếp Đại Đạo
-    const stats = createBaseStats({ maxHp: 1, defense: 0, hpRegenPerTurn: 0 })
+    player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 1, defense: 0, hpRegenPerTurn: 0 })
 
-    expect(gameManager.startTribulation(player.$state, stats, 'foundation_establishment')).toBe(true)
+    expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)
     expect(gameManager.tribulationDirector.getState()!.grade).toBe('great_dao')
 
     let guard = 0
@@ -186,9 +187,9 @@ describe('Phàm Nhân Chi Cốt (spec §4.4)', () => {
     // Lần xét sau: cap Thiên (resolver test đã khóa; ở đây kiểm qua
     // Director). Bỏ qua cooldown 5 phút bằng cách đẩy system time.
     vi.setSystemTime(Date.now() + 6 * 60 * 1000)
-    const stats2 = createBaseStats({ maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
+    player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
     gameManager.pillBag.add(gameManager.pillRegistry.get('truc_co_dan')!, 1)
-    expect(gameManager.startTribulation(player.$state, stats2, 'foundation_establishment')).toBe(true)
+    expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)
     expect(gameManager.tribulationDirector.getState()!.grade).toBe('heaven')
   })
 })
@@ -240,8 +241,10 @@ describe('Đột phá tháo toàn bộ trang bị (rework P5, Task 17)', () => {
     player.baseStats = { ...player.baseStats, strength: 30, dexterity: 30, intelligence: 30, attunement: 30, vitality: 30 }
     player.openedMeridianIds = MERIDIANS.map((m) => m.id)
 
-    const stats = createBaseStats({ maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
-    expect(gameManager.startTribulation(player.$state, stats, 'foundation_establishment')).toBe(true)
+    // ARCH-002 (M7): startTribulation resolves internally — patch the
+    // RAW base so the tribulation ghost survives the strikes.
+    player.baseStats = asBaseStats({ ...player.baseStats, maxHp: 5_000_000, defense: 50_000, hpRegenPerTurn: 0 })
+    expect(gameManager.startTribulation(player.$state, 'foundation_establishment')).toBe(true)
 
     let guard = 0
     while (gameManager.tribulationDirector.getState()?.state === 'ongoing' && guard++ < 5000) {

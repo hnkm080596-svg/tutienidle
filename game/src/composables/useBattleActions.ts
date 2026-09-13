@@ -36,8 +36,8 @@ export function useBattleActions() {
    * after the domain accepted the start" is structural instead of repeated
    * at each call site (F07). `commit` runs only on acceptance.
    *
-   * finalStats (từ store) đã cộng đủ modifiers + externalModifiers,
-   * GameManager chỉ nhận và convert sang CombatEntity, không tính lại.
+   * ARCH-002 (M7): callers no longer pass finalStats — the ops resolves
+   * the base post-reset via resolvePlayerFinalStats + the live provider.
    */
   function runStageStart(
     stage: Stage,
@@ -45,7 +45,7 @@ export function useBattleActions() {
     commit: () => void,
   ): boolean | Promise<boolean> {
     const startStage = () =>
-      gameManager.turnBattleOps.startStage(player.$state, player.finalStats, stage, repeat)
+      gameManager.turnBattleOps.startStage(player.$state, stage, repeat)
 
     if (!presentation) {
       const started = startStage()

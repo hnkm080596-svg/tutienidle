@@ -3,7 +3,7 @@ import { selectTarget, TurnBattleSystem, type TurnBattle, type TurnBattlePartici
 import type { CombatEntity } from '../../combat/CombatEntity'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
-import { createBaseStats } from '../../stats/StatBlock'
+import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
 import type { TurnSkillDefinition } from './TurnSkillAction'
 import { BuffPool } from '../../buff/BuffPool'
 import { GAUGE_MAX } from './ActionGauge'
@@ -71,11 +71,10 @@ describe('selectTarget', () => {
 function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ evasionRate: 0, dexterity: 0, criticalRate: 0 })
 
-  return {
+  const entity = {
     id: 'id',
     name: 'name',
     type: 'enemy',
-    baseStats: stats,
     stats,
     currentHp: stats.maxHp,
     maxHp: stats.maxHp,
@@ -96,7 +95,22 @@ function createCombatant(overrides: Partial<CombatEntity> = {}): CombatEntity {
     row: 2,
     alive: true,
     ...overrides,
+    // ARCH-002 (M7): entity.stats is the derived effective view — a fixture
+    // that injects `stats` must have them as the resolved base too, or the
+    // per-tick recompute reverts them to the defaults above.
+    baseStats: overrides.baseStats ?? overrides.stats ?? stats,
   } as CombatEntity
+
+  // ARCH-002 (M7 R1): refreshParticipantStats reconciles entity.maxHp from
+  // entity.stats.maxHp and clamps currentHp — the fixture's declared vitals
+  // ceiling must exist in the resolved/base stats or the first refresh
+  // reverts it.
+  const ceiling = Math.max(entity.maxHp, entity.currentHp)
+  if (entity.stats.maxHp !== ceiling) {
+    entity.stats = { ...entity.stats, maxHp: ceiling }
+    entity.baseStats = asBaseStats({ ...entity.baseStats, maxHp: ceiling })
+  }
+  return entity
 }
 
 function makeParticipant(

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { TurnBattleSystem, type TurnBattle, type TurnBattleParticipant } from './TurnBattleSystem'
 import { CombatSystem } from '../../combat/CombatSystem'
 import { EventBus } from '../../events/EventBus'
-import { createBaseStats } from '../../stats/StatBlock'
+import { asBaseStats, createBaseStats } from '../../stats/StatBlock'
 import { BuffPool } from '../../buff/BuffPool'
 import { BuffSystem } from '../../buff/BuffSystem'
 import type { BuffDefinition, BuffDefinitionCatalog } from '../../buff/BuffTypes'
@@ -32,7 +32,7 @@ const REGISTRY: BuffDefinitionCatalog = {
 
 function makeEntity(id: string, overrides: Partial<CombatEntity> = {}): CombatEntity {
   const stats = createBaseStats({ attack: 100, ...overrides.stats })
-  return {
+  const entity = {
     id,
     name: id,
     type: 'player',
@@ -59,6 +59,17 @@ function makeEntity(id: string, overrides: Partial<CombatEntity> = {}): CombatEn
     alive: true,
     ...overrides,
   } as CombatEntity
+
+  // ARCH-002 (M7 R1): refreshParticipantStats reconciles entity.maxHp from
+  // entity.stats.maxHp and clamps currentHp — the fixture's declared vitals
+  // ceiling must exist in the resolved/base stats or refresh reverts it.
+  entity.baseStats = (overrides.baseStats ?? overrides.stats ?? entity.baseStats) as CombatEntity['baseStats']
+  const ceiling = Math.max(entity.maxHp, entity.currentHp)
+  if (entity.stats.maxHp !== ceiling) {
+    entity.stats = { ...entity.stats, maxHp: ceiling }
+    entity.baseStats = asBaseStats({ ...entity.baseStats, maxHp: ceiling })
+  }
+  return entity
 }
 
 function makeParticipant(id: string, entity: CombatEntity, priority: number): TurnBattleParticipant {

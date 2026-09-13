@@ -3,7 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { usePlayerStore } from '../../stores/player'
 import { GameManager } from '../game/GameManager'
 import { TribulationOutcomeService } from './TribulationOutcomeService'
-import { createBaseStats } from '../stats/StatBlock'
+
 import type { ActiveTribulationState } from './TribulationDirector'
 
 // Talent v4 M2 — Loi Kiep victory reward (spec §4.3 row 17): every
@@ -114,7 +114,6 @@ describe('TribulationOutcomeService — Loi Kiep victory stacks (M2)', () => {
       player,
       gameManager,
       makeActive('defeat', 'golden_core'),
-      createBaseStats({ maxHp: 1000 }),
     )
 
     expect(player.tribulationBonusStacks).toBe(0)
