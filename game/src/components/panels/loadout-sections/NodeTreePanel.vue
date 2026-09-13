@@ -28,6 +28,7 @@ import { usePlayerStore } from '@/stores/player'
 import { useGameManager, useStateVersion } from '@/composables/useGameState'
 import { canPurchaseNode, canUpgradeNode, getNodeLevel, getNextLevelCost } from '@/core/progression/NodeSystem'
 import { ELEMENT_LABELS, ELEMENT_COLOR_VARS } from '@/core/element/ElementLabels'
+import { HIDDEN_BRANCH_TAGS, viewBranchTags } from '@/core/progression/NodeBranchViews'
 import SkillConnections from './SkillConnections.vue'
 import type { SkillConnectionEntry, SkillConnectionRect } from './SkillConnections.vue'
 import type { ElementType } from '@/core/element/ElementType'
@@ -57,10 +58,24 @@ function branchLabel(branchTag: string | undefined): string {
     return t('panels.nodeTree.labels.otherBranch')
   }
 
+  if (branchTag === 'lap_dao') {
+    return t('panels.nodeTree.branchLabels.lapDao')
+  }
+
+  if (branchTag.startsWith('thuan_')) {
+    const element = branchTag.slice('thuan_'.length) as ElementType
+    return t('panels.nodeTree.branchLabels.thuan', { element: ELEMENT_LABELS[element] ?? branchTag })
+  }
+
   return ELEMENT_LABELS[branchTag as ElementType] ?? branchTag
 }
 
 function branchColor(branchTag: string | undefined): string {
+  if (branchTag?.startsWith('thuan_')) {
+    const element = branchTag.slice('thuan_'.length) as ElementType
+    return ELEMENT_COLOR_VARS[element] ?? 'var(--paper-text)'
+  }
+
   return ELEMENT_COLOR_VARS[branchTag as ElementType] ?? 'var(--paper-text)'
 }
 interface TreeEntry {
@@ -87,7 +102,14 @@ const branches = computed(() => {
 
   const allNodes = gameManager.nodeRegistry.getAll()
 
-  const nodes = props.branchTag ? allNodes.filter(node => node.branchTag === props.branchTag) : allNodes
+  // B1 fix (2026-09-14): element views render the element branch plus the
+  // shared lap_dao gate and the element's thuan_* sub-branch — the tag
+  // mapping is owned by NodeBranchViews (single source for the coverage
+  // guard tests/architecture/nodeBranchCoverage.test.ts).
+  const visibleTags = props.branchTag ? new Set<string>(viewBranchTags(props.branchTag)) : null
+  const nodes = visibleTags
+    ? allNodes.filter(node => node.branchTag !== undefined && visibleTags.has(node.branchTag))
+    : allNodes.filter(node => !(node.branchTag !== undefined && (HIDDEN_BRANCH_TAGS as readonly string[]).includes(node.branchTag)))
 
   const groups = new Map<string, typeof nodes>()
 
