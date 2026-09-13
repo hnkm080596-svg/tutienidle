@@ -393,6 +393,102 @@ describe('useDynamicRegion', () => {
     expect(region.bootError.value).toContain('chunk load failed')
   })
 
+  it('start() again after a failed bootstrap retries and clears bootError (ARCH-013/L04)', async () => {
+    // The coordinator-retry host hook (PhaserCanvas) depends on this: a
+    // failed bootstrap leaves game === null, so a later start() must run a
+    // NEW import — before this existed, nothing ever re-invoked start().
+    let attempts = 0
+
+    const { region } = mountWith(() =>
+      useDynamicRegion({
+        container: container(),
+        load: async () => {
+          attempts += 1
+          if (attempts === 1) {
+            throw new Error('chunk load failed')
+          }
+          return { Phaser: makeFakePhaser(), scenes: [] }
+        },
+        onBooted: () => trace.push('booted'),
+      }),
+    )
+
+    region.start()
+    await vi.waitFor(() => expect(region.bootError.value).not.toBeNull())
+    expect(attempts).toBe(1)
+
+    region.start()
+
+    await vi.waitFor(() => expect(games).toHaveLength(1))
+    expect(attempts).toBe(2)
+    expect(region.bootError.value).toBeNull()
+    expect(trace).toContain('booted')
+  })
+
+  it('a repeat start() during the same pending import does not double-boot', async () => {
+    let attempts = 0
+    let resolveLoad: (() => void) | null = null
+
+    const { region } = mountWith(() =>
+      useDynamicRegion({
+        container: container(),
+        load: async () => {
+          attempts += 1
+          await new Promise<void>((resolve) => {
+            resolveLoad = resolve
+          })
+          return { Phaser: makeFakePhaser(), scenes: [] }
+        },
+      }),
+    )
+
+    region.start()
+    region.start() // same generation, import still in flight — dedupe
+
+    await vi.waitFor(() => expect(resolveLoad).not.toBeNull())
+    resolveLoad!()
+
+    await vi.waitFor(() => expect(games).toHaveLength(1))
+    expect(attempts).toBe(1)
+  })
+
+  it('start() after teardown begins a NEW attempt even while the old import is still pending', async () => {
+    // TranPhapPanel's close-mid-import -> reopen path: destroy() bumps the
+    // generation, so the still-pending import is already stale — a reopen
+    // must not dedupe against it and wait forever on a dead boot.
+    let attempts = 0
+    const resolvers: Array<() => void> = []
+
+    const { region } = mountWith(() =>
+      useDynamicRegion({
+        container: container(),
+        load: async () => {
+          const index = attempts
+          attempts += 1
+          await new Promise<void>((resolve) => {
+            resolvers[index] = resolve
+          })
+          return { Phaser: makeFakePhaser(), scenes: [] }
+        },
+        onBooted: () => trace.push('booted'),
+      }),
+    )
+
+    region.start()
+    await vi.waitFor(() => expect(attempts).toBe(1))
+
+    region.destroy()
+    region.start()
+
+    await vi.waitFor(() => expect(attempts).toBe(2))
+
+    resolvers[0]!() // stale import resolves — must not boot
+    resolvers[1]!() // current import resolves — boots
+
+    await vi.waitFor(() => expect(trace).toContain('booted'))
+    expect(games).toHaveLength(1)
+  })
+
   it('a fixed-size region observes nothing', async () => {
     const { region } = mountWith(() =>
       useDynamicRegion({

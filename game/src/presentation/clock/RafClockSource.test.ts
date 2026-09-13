@@ -92,4 +92,75 @@ describe('RafClockSource', () => {
     expect(seen[0]).toBeCloseTo(0.016, 3)
     expect(consoleError).toHaveBeenCalled()
   })
+
+  it('stop() inside its own frame callback leaves no pending frame (ARCH-013/L04)', () => {
+    // Combat-over calls clock.stop() from inside the step the clock itself
+    // delivered. Before the generation fence the frame tail still re-armed
+    // after that stop, and each fired frame re-armed again — a ghost loop
+    // of no-op frames for the rest of the session.
+    const frames: Array<(t: number) => void> = []
+    vi.stubGlobal('requestAnimationFrame', ((cb: (t: number) => void) => {
+      frames.push(cb)
+      return frames.length
+    }) as typeof requestAnimationFrame)
+    const cancelMock = vi.fn()
+    vi.stubGlobal('cancelAnimationFrame', cancelMock as typeof cancelAnimationFrame)
+
+    const source = new RafClockSource()
+    let fired = 0
+    const pump = (t: number) => {
+      frames[fired++]!(t)
+    }
+
+    source.start(() => source.stop())
+
+    pump(1000) // first frame only primes the timestamp and re-arms
+    expect(frames.length - fired).toBe(1)
+
+    pump(1016) // onFrame runs -> stop() must prevent the re-arm
+
+    expect(frames.length - fired).toBe(0)
+    expect(cancelMock).toHaveBeenCalled()
+  })
+
+  it('stop()+start() inside the callback keeps exactly one live loop', () => {
+    // A battle restart can legitimately happen inside a frame (stop/start
+    // is the engine's per-battle reset). The old frame must NOT also
+    // re-arm: two scheduled frame closures sharing the loop would double
+    // every subsequent tick.
+    const frames: Array<(t: number) => void> = []
+    vi.stubGlobal('requestAnimationFrame', ((cb: (t: number) => void) => {
+      frames.push(cb)
+      return frames.length
+    }) as typeof requestAnimationFrame)
+    vi.stubGlobal('cancelAnimationFrame', vi.fn() as typeof cancelAnimationFrame)
+
+    const source = new RafClockSource()
+    const deltas: number[] = []
+    let fired = 0
+    const pump = (t: number) => {
+      frames[fired++]!(t)
+    }
+
+    source.start((d) => {
+      deltas.push(d)
+      source.stop()
+      source.start((d2) => deltas.push(d2))
+    })
+
+    pump(1000)
+    pump(1016) // cbA runs -> stop+start -> the NEW generation armed its frame
+
+    // Exactly one pending rAF — the stale frame did not re-arm alongside it.
+    expect(frames.length - fired).toBe(1)
+    expect(deltas).toHaveLength(1)
+
+    pump(1032) // new generation's first frame: lastTimestamp was reset -> no delta
+    expect(deltas).toHaveLength(1)
+
+    pump(1048)
+    pump(1064)
+    expect(deltas).toHaveLength(3)
+    expect(frames.length - fired).toBe(1)
+  })
 })

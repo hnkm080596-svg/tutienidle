@@ -13,16 +13,32 @@ import { contextBridge, ipcRenderer } from 'electron'
 contextBridge.exposeInMainWorld('electronAPI', {
   isElectron: true,
 
+  // Mỗi onX TRẢ VỀ hàm unsubscribe (gỡ đúng handler đã đăng ký) — giữ
+  // symmetric với combatClock.onTick và để renderer teardown/HMR có thể
+  // gỡ subscription thay vì chồng listener (xem useElectronBridge: App
+  // gọi disposer khi unmount — ARCH-013/L04).
   onSystemSuspend(callback: (timestamp: number) => void) {
-    ipcRenderer.on('system:suspend', (_event, timestamp: number) => callback(timestamp))
+    const handler = (_event: Electron.IpcRendererEvent, timestamp: number) => callback(timestamp)
+    ipcRenderer.on('system:suspend', handler)
+    return () => {
+      ipcRenderer.removeListener('system:suspend', handler)
+    }
   },
 
   onSystemResume(callback: (timestamp: number) => void) {
-    ipcRenderer.on('system:resume', (_event, timestamp: number) => callback(timestamp))
+    const handler = (_event: Electron.IpcRendererEvent, timestamp: number) => callback(timestamp)
+    ipcRenderer.on('system:resume', handler)
+    return () => {
+      ipcRenderer.removeListener('system:resume', handler)
+    }
   },
 
   onBeforeQuitFlush(callback: () => void) {
-    ipcRenderer.on('app:before-quit-flush', () => callback())
+    const handler = () => callback()
+    ipcRenderer.on('app:before-quit-flush', handler)
+    return () => {
+      ipcRenderer.removeListener('app:before-quit-flush', handler)
+    }
   },
 
   notifyFlushComplete() {

@@ -19,9 +19,12 @@ import type { CombatClockBridge } from '../presentation/clock/MainProcessClockSo
 // giữa phiên.
 export interface ElectronBridgeAPI {
   isElectron: true
-  onSystemSuspend(callback: (timestamp: number) => void): void
-  onSystemResume(callback: (timestamp: number) => void): void
-  onBeforeQuitFlush(callback: () => void): void
+  // Mỗi onX trả về hàm unsubscribe (preload.ts gỡ đúng ipcRenderer handler
+  // đã đăng ký) — teardown gọi được, không chồng listener qua HMR/remount
+  // (ARCH-013/L04).
+  onSystemSuspend(callback: (timestamp: number) => void): () => void
+  onSystemResume(callback: (timestamp: number) => void): () => void
+  onBeforeQuitFlush(callback: () => void): () => void
   notifyFlushComplete(): void
   // Task 7 (2026-09-10) — main-process clock host bridge, consumed by
   // MainProcessClockSource (src/presentation/clock/). Shape must match
@@ -40,11 +43,17 @@ declare global {
 // App.vue gọi composable này trên CHÍNH cây component đã provide()
 // GameManager ra, useGameManager() inject bên trong sẽ throw nếu tự gọi
 // trên chính App.vue — truyền thẳng instance cục bộ để bỏ qua inject.
-export function useElectronBridge(gameManagerOverride?: GameManager) {
+//
+// Trả về disposer gỡ cả 3 subscription (ARCH-013/L04): trước đây các
+// ipcRenderer.on này không có đường gỡ — App unmount/HMR để lại handler
+// mồ côi, và mount lại sẽ đăng ký TRÙNG (quit-flush save chạy kép).
+// Caller giữ disposer; gọi lại useElectronBridge sau khi đã dispose, hoặc
+// dispose trước khi subscribe lần nữa.
+export function useElectronBridge(gameManagerOverride?: GameManager): (() => void) | undefined {
   const electronAPI = window.electronAPI
 
   if (!electronAPI) {
-    return
+    return undefined
   }
 
   const player = usePlayerStore()
@@ -53,7 +62,7 @@ export function useElectronBridge(gameManagerOverride?: GameManager) {
   // Autosave khi đóng cửa sổ (electron/main.ts's bindQuitFlush()) — tái
   // dùng ĐÚNG action save() đã có (SettingsPanel.vue's nút Save gọi cùng
   // hàm này), không tạo cơ chế save mới.
-  electronAPI.onBeforeQuitFlush(() => {
+  const offBeforeQuitFlush = electronAPI.onBeforeQuitFlush(() => {
     // Audit fix 2026-08-31 — PHẢI đợi write xong: player.save chạy async qua
     // cloudSaveCoordinator → LocalCloudSaveService; flush-complete trước đó
     // khiến main process đóng app tin rằng đã lưu (silent data loss khi
@@ -70,11 +79,17 @@ export function useElectronBridge(gameManagerOverride?: GameManager) {
     })()
   })
 
-  electronAPI.onSystemSuspend(timestamp => {
+  const offSystemSuspend = electronAPI.onSystemSuspend(timestamp => {
     console.info('[electron] system suspend', new Date(timestamp).toISOString())
   })
 
-  electronAPI.onSystemResume(timestamp => {
+  const offSystemResume = electronAPI.onSystemResume(timestamp => {
     console.info('[electron] system resume', new Date(timestamp).toISOString())
   })
+
+  return () => {
+    offBeforeQuitFlush()
+    offSystemSuspend()
+    offSystemResume()
+  }
 }

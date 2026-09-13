@@ -179,6 +179,133 @@ describe('AssetBundleManager', () => {
     expect(manager.isLoaded('core-ui')).toBe(false)
   })
 
+  it('loader swap mid-load: the stale batch cannot publish into the new cache (ARCH-013/L04)', async () => {
+    let resolveOld!: () => void
+    const blocker = new Promise<void>((resolve) => {
+      resolveOld = resolve
+    })
+    loaderScene.loadDescriptors = vi.fn(async (descriptors) => {
+      await blocker
+      for (const d of descriptors) {
+        loaderScene._loadedKeys.add(d.key)
+      }
+    })
+
+    const manager = createManager()
+
+    // Physical load in flight on the OLD loader scene.
+    const pending = manager.ensureLoaded(['core-ui'])
+
+    // Host teardown/swap while it is still running: the result belongs to a
+    // texture cache that no longer exists.
+    const newLoader = createMockLoaderScene()
+    manager.setLoaderScene(newLoader)
+    resolveOld()
+
+    // The stale load fails honestly — resolving it would claim success for
+    // resources the CURRENT loader does not hold.
+    await expect(pending).rejects.toThrow('superseded')
+    expect(manager.isLoaded('core-ui')).toBe(false)
+
+    // A fresh ensure on the new loader loads and publishes normally.
+    await manager.ensureLoaded(['core-ui'])
+    expect(manager.isLoaded('core-ui')).toBe(true)
+    expect(newLoader._loadCalls.length).toBe(1)
+  })
+
+  it('stale batch resolution does not remove the new generation in-flight entry', async () => {
+    let resolveOld!: () => void
+    let resolveNew!: () => void
+    const oldBlocker = new Promise<void>((resolve) => {
+      resolveOld = resolve
+    })
+    const newBlocker = new Promise<void>((resolve) => {
+      resolveNew = resolve
+    })
+
+    loaderScene.loadDescriptors = vi.fn(async (descriptors) => {
+      await oldBlocker
+      for (const d of descriptors) {
+        loaderScene._loadedKeys.add(d.key)
+      }
+    })
+
+    const newLoader = createMockLoaderScene()
+    newLoader.loadDescriptors = vi.fn(async (descriptors) => {
+      await newBlocker
+      for (const d of descriptors) {
+        newLoader._loadedKeys.add(d.key)
+      }
+    })
+
+    const manager = createManager()
+
+    const stale = manager.ensureLoaded(['core-ui']) // batch on old loader
+    manager.setLoaderScene(newLoader)
+
+    const freshA = manager.ensureLoaded(['core-ui']) // new batch on new loader
+    const freshB = manager.ensureLoaded(['core-ui']) // dedupes onto freshA
+
+    resolveOld()
+    await expect(stale).rejects.toThrow('superseded')
+
+    // If the stale continuation's finally had deleted the shared inFlight
+    // entry blindly, this third ensure would start ANOTHER physical load.
+    const freshC = manager.ensureLoaded(['core-ui'])
+    expect(newLoader.loadDescriptors).toHaveBeenCalledTimes(1)
+
+    resolveNew()
+    await Promise.all([freshA, freshB, freshC])
+    expect(manager.isLoaded('core-ui')).toBe(true)
+    expect(newLoader.loadDescriptors).toHaveBeenCalledTimes(1)
+  })
+
+  it('loader swap mid-DOM-load: the stale decode cannot publish either', async () => {
+    let resolveDom!: () => void
+    const domBlocker = new Promise<void>((resolve) => {
+      resolveDom = resolve
+    })
+    const blockingDomLoader: DomImageLoader = vi.fn(async () => {
+      await domBlocker
+    })
+
+    const manager = new AssetBundleManager({
+      loaderScene,
+      domImageLoader: blockingDomLoader,
+    })
+
+    // 'home' mixes dom-image layers with Phaser textures — both start here.
+    const pending = manager.ensureLoaded(['home'])
+    manager.setLoaderScene(createMockLoaderScene())
+    resolveDom()
+
+    await expect(pending).rejects.toThrow('superseded')
+    expect(manager.isLoaded('home')).toBe(false)
+  })
+
+  it('dispose mid-load fences publication the same way', async () => {
+    let resolveLoad!: () => void
+    const blocker = new Promise<void>((resolve) => {
+      resolveLoad = resolve
+    })
+    loaderScene.loadDescriptors = vi.fn(async (descriptors) => {
+      await blocker
+      for (const d of descriptors) {
+        loaderScene._loadedKeys.add(d.key)
+      }
+    })
+
+    const manager = createManager()
+    const pending = manager.ensureLoaded(['core-ui'])
+
+    manager.dispose()
+    resolveLoad()
+
+    await expect(pending).rejects.toThrow('superseded')
+    expect(manager.isLoaded('core-ui')).toBe(false)
+    await expect(manager.ensureLoaded(['core-ui'])).rejects.toThrow('disposed')
+  })
+
   it('implements AssetPort.ensureFor routing target to corresponding bundles', async () => {
     const manager = createManager()
     const ensureSpy = vi.spyOn(manager, 'ensureLoaded')

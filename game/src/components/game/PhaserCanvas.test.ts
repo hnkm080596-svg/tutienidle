@@ -20,10 +20,15 @@
 // Mount theo pattern project (createApp + h + provide, KHÔNG
 // @vue/test-utils — xem CombatExitConfirmModal.test.ts).
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createApp, h, ref, type App } from 'vue'
+import { createApp, h, ref, type App, type Ref } from 'vue'
 import { createPinia, type Pinia } from 'pinia'
 import { GAME_MANAGER_KEY } from '@/composables/useGameState'
 import { usePlayerStore } from '@/stores/player'
+import {
+  VUE_ROUTE_ADAPTER_KEY,
+  type Route,
+} from '@/presentation/PresentationContracts'
+import type { VueRouteAdapter } from '@/presentation/VueRouteAdapter'
 import PhaserCanvas from './PhaserCanvas.vue'
 
 // Scene modules import 'phaser' ở top-level (extends Phaser.Scene) —
@@ -120,7 +125,24 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-function mountCanvas(gm: MockGameManager) {
+/**
+ * The retry hook only reads two adapter fields — a partial carrying those
+ * refs is enough to drive it (the real adapter mirrors coordinator
+ * snapshots; the fake writes them directly).
+ */
+interface FakeRouteAdapter {
+  transitionId: Ref<number>
+  targetRoute: Ref<Route | null>
+}
+
+function makeRouteAdapter(): FakeRouteAdapter {
+  return {
+    transitionId: ref(0),
+    targetRoute: ref<Route | null>(null),
+  }
+}
+
+function mountCanvas(gm: MockGameManager, routeAdapter?: FakeRouteAdapter) {
   container = document.createElement('div')
   document.body.appendChild(container)
 
@@ -134,6 +156,10 @@ function mountCanvas(gm: MockGameManager) {
   pinia = createPinia()
   app.use(pinia)
   app.provide(GAME_MANAGER_KEY, gm as unknown as import('@/core/game/GameManager').GameManager)
+
+  if (routeAdapter) {
+    app.provide(VUE_ROUTE_ADAPTER_KEY, routeAdapter as unknown as VueRouteAdapter)
+  }
 
   // usePlayerStore() cần pinia active trước khi mount.
   usePlayerStore(pinia)
@@ -221,5 +247,98 @@ describe('PhaserCanvas — bootstrap error boundary (Task 4)', () => {
     expect(gm.eventBus.off).toHaveBeenCalledTimes(3)
     expect(resizeObserverDisconnect).toHaveBeenCalledTimes(1)
     expect((window as { __tutienPhaserGame?: unknown }).__tutienPhaserGame).toBeUndefined()
+  })
+})
+
+describe('PhaserCanvas — host bootstrap retry hook (ARCH-013/L04)', () => {
+  beforeEach(() => {
+    // jsdom has no ResizeObserver — a SUCCESSFUL construct() reaches
+    // observe(), so the healthy/retry tests need a working stub (the
+    // existing suite only ever exercised the throwing path on purpose).
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        observe = vi.fn()
+        unobserve = vi.fn()
+        disconnect = vi.fn()
+      },
+    )
+  })
+
+  // L04 gap: import/construct failure leaves the region's game === null and
+  // bootError set, while a failed game-route transition keeps this component
+  // mounted. coordinator.retry()/Back only re-run the TRANSITION — they
+  // cannot recreate the Phaser.Game — so the host must reboot itself when a
+  // new transition (transitionId bump) targets a Phaser-backed route.
+  async function waitFor(assertion: () => void) {
+    for (let i = 0; i < 50; i += 1) {
+      try {
+        assertion()
+        return
+      } catch {
+        await new Promise((resolve) => setTimeout(resolve, 0))
+      }
+    }
+    assertion()
+  }
+
+  it('construct failure + transitionId bump toward a game route → bootstrap retried', async () => {
+    phaserMockState.failGameCtor = true
+    const routeAdapter = makeRouteAdapter()
+    const gm = makeGameManager()
+
+    const { instance } = mountCanvas(gm, routeAdapter)
+
+    await waitForBootError(instance)
+    expect(instance.bootError).toContain('Phaser.Game khởi tạo thất bại')
+    expect(gameCtor).toHaveBeenCalledTimes(1)
+
+    // Retry path: the coordinator admits a new transition with the failed
+    // (Phaser-backed) target already recorded — transitionId bumps first.
+    phaserMockState.failGameCtor = false
+    routeAdapter.targetRoute.value = 'home'
+    routeAdapter.transitionId.value = 1
+
+    await waitFor(() => {
+      expect(gameCtor).toHaveBeenCalledTimes(2)
+    })
+    expect(instance.bootError).toBeNull()
+  })
+
+  it('transitionId bump toward a non-Phaser route does NOT reboot the host', async () => {
+    phaserMockState.failGameCtor = true
+    const routeAdapter = makeRouteAdapter()
+    const gm = makeGameManager()
+
+    const { instance } = mountCanvas(gm, routeAdapter)
+
+    await waitForBootError(instance)
+    expect(gameCtor).toHaveBeenCalledTimes(1)
+
+    routeAdapter.targetRoute.value = 'auth'
+    routeAdapter.transitionId.value = 1
+
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(gameCtor).toHaveBeenCalledTimes(1)
+    expect(instance.bootError).not.toBeNull()
+  })
+
+  it('transitionId bump while the host is healthy does not re-boot', async () => {
+    const routeAdapter = makeRouteAdapter()
+    routeAdapter.targetRoute.value = 'home'
+    const gm = makeGameManager()
+
+    mountCanvas(gm, routeAdapter)
+
+    await waitFor(() => {
+      expect(gameCtor).toHaveBeenCalledTimes(1)
+    })
+
+    routeAdapter.transitionId.value = 1
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    // bootError is null on a healthy host — the hook must stay inert.
+    expect(gameCtor).toHaveBeenCalledTimes(1)
   })
 })

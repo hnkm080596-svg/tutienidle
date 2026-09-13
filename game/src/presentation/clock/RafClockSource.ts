@@ -19,13 +19,26 @@ const STALL_THRESHOLD_MS = 500
 export class RafClockSource implements ClockSource {
   private handle: number | null = null
   private lastTimestamp: number | null = null
+  // ARCH-013/L04 — a scheduled frame belongs to the start() that armed it.
+  // stop() bumps the generation, so a frame whose callback stopped (or
+  // stopped-then-restarted) the clock never re-arms: without the fence the
+  // tail `requestAnimationFrame(frame)` below would resurrect the loop after
+  // every stop() that ran inside onFrame, leaving a self-perpetuating ghost
+  // loop of no-op frames (combat-over calls stop() from exactly there).
+  private generation = 0
 
   start(onFrame: (elapsedSeconds: number) => void): void {
     if (this.handle !== null) {
       return
     }
 
+    const generation = this.generation
+
     const frame = (timestamp: number) => {
+      if (generation !== this.generation) {
+        return
+      }
+
       if (this.lastTimestamp !== null) {
         const deltaMs = timestamp - this.lastTimestamp
 
@@ -41,6 +54,15 @@ export class RafClockSource implements ClockSource {
         }
       }
 
+      // Re-check AFTER the callback: onFrame is the whole turn stack and may
+      // have stopped this clock (combat-over) or even restarted it. A stale
+      // generation must neither record its timestamp nor re-arm; a restarted
+      // clock owns a NEW frame closure under a new generation, so re-arming
+      // here would double the loop.
+      if (generation !== this.generation) {
+        return
+      }
+
       this.lastTimestamp = timestamp
       this.handle = requestAnimationFrame(frame)
     }
@@ -49,6 +71,8 @@ export class RafClockSource implements ClockSource {
   }
 
   stop(): void {
+    this.generation += 1
+
     if (this.handle !== null) {
       cancelAnimationFrame(this.handle)
     }
