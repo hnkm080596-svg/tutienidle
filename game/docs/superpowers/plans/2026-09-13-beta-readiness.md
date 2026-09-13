@@ -120,8 +120,12 @@ code review. (These must run last — they certify the final state.)
       anchors `lastCheckedMs` to `now − carry`, so a deep-past corrupt
       timestamp pays at most one capped batch then converges (no
       per-tick faucet). Tests: saveShapeValidation + adversarial tick.
-- [ ] C2. Re-run the §0.12 architecture checklist against the final
+- [x] C2. Re-run the §0.12 architecture checklist against the final
       tree with evidence links per item.
+      — done 2026-09-14: `docs/qa/2026-09-14-beta-c2-architecture-gate.md`.
+      Architecture + content gates PASS; remaining gaps recorded there
+      (perfectClear fixture calibration, sub-second-cycle residual,
+      dead-write cleanup candidates, cloud-save live check → D2).
 
 ### Wave D — Release readiness
 - [ ] D1. Distribution: pick web vs Electron; run `dist:win` (or web
