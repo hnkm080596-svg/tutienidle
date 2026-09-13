@@ -216,6 +216,17 @@ const DEFAULT_MAX_TURNS = 10_000
  * (không có normal turn xen vào) — chặn chain vô hạn starving turn order. */
 const MAX_FOLLOW_UP_CHAIN_DEPTH = 4
 
+/**
+ * M8 (ARCH-003) — Ward delayed-regen gate in TURN units. Legacy
+ * BattleSystem measured WARD_REGEN_DELAY_SECONDS = 3 on the wall clock;
+ * the turn engine preserves the same numeric intent against the actor's
+ * own turn cadence: `timeSinceLastHitTaken` counts the holder's turns
+ * (incremented once per declare, reset to 0 by CombatSystem on every
+ * landed hit) and Ward regen resumes once 3 turns pass unhit. `Infinity`
+ * (never hit) regenerates from the first turn, matching legacy.
+ */
+const WARD_REGEN_DELAY_TURNS = 3
+
 export interface TurnStepResult {
   state: TurnBattleState
   actorId: string
@@ -791,13 +802,64 @@ export class TurnBattleSystem {
     // trigger-granted buffs for action selection.
     this.refreshParticipantStats(actor)
 
-    if (actor.entity.stats.hpRegenPerTurn > 0 && actor.entity.currentHp < actor.entity.maxHp) {
-      // R1 (AR-01) — regeneration is a vitals mutation: go through the
-      // vitals authority so healing events stay uniform. The full-HP guard
-      // skips a no-op healing event every turn (previous raw write only
-      // clamped silently); mutation itself is still authority-owned.
-      this.combat.applyHealing(actor.entity, actor.entity.stats.hpRegenPerTurn, actor.entity.id, 'regen')
+    // M8 (ARCH-010) — post-status liveness boundary: a status/DoT tick
+    // that killed the actor ends the turn HERE — no regeneration, no
+    // resource deltas, no boss trigger, no action selection, and no
+    // charged-hit resolution downstream (chargeResolved is forced off so
+    // applyActionImpact's early charge branch cannot fire post-death
+    // hits). Follow-up bypass bookkeeping still drains so the flag can
+    // never leak into a later turn.
+    if (!actor.entity.alive) {
+      const isFollowUpBypass = this.pendingFollowUpBypassActorId === actor.id
+
+      if (isFollowUpBypass) {
+        this.pendingFollowUpBypassActorId = null
+      }
+
+      return {
+        actorId: actor.id,
+        skillId: '',
+        ccBlocked,
+        isCharging,
+        chargeResolved: false,
+        chargeTargetIds: [],
+        chargedSkill: null,
+        markerNoPool: false,
+        action: null,
+        opposingSide: [],
+        affected: [],
+        scaledDamage: null,
+        isReactionPath: false,
+        suddenDeathMultiplier: 1,
+        reactionPathPicks: null,
+        isFollowUpBypass,
+      }
     }
+
+    // M8 (ARCH-003) — per-turn HP/MP/Ward regeneration through the vitals
+    // authority, AFTER the status tick and liveness boundary above (a
+    // lethal DoT leaves no regen). This is the ONE normalization point
+    // for the legacy `*RegenPerSecond` stat names: authored content keeps
+    // its legacy fields and the turn engine applies them once per entity
+    // turn — the same cadence family as hpRegenPerTurn (R1/AR-01 already
+    // routed HP regen through the vitals authority). Ward keeps its
+    // delayed-regen intent: timeSinceLastHitTaken advances on the
+    // holder's own turn cadence and CombatSystem resets it to 0 on every
+    // landed hit.
+    actor.entity.timeSinceLastHitTaken += 1
+
+    this.combat.applyTurnRegen(
+      actor.entity,
+      {
+        hp: actor.entity.stats.hpRegenPerTurn,
+        mp: actor.entity.stats.manaRegenPerSecond,
+        ward:
+          actor.entity.timeSinceLastHitTaken >= WARD_REGEN_DELAY_TURNS
+            ? actor.entity.stats.wardRegenPerSecond
+            : 0,
+      },
+      actor.entity.id,
+    )
 
     if (actor.resources) {
       actor.resources.values = applyTurnStartDeltas(actor.resources.values, actor.resources.deltasPerTurn)
@@ -1014,6 +1076,24 @@ export class TurnBattleSystem {
           // refresh both effective views before the next hit/read.
           this.refreshParticipantStats(targetParticipant)
           this.refreshParticipantStats(actor)
+        }
+      }
+
+      // M8 (ARCH-010) — the shared per-action The gain below lives past
+      // this branch's early return, so a charged completion fires it
+      // HERE, exactly once, resolved through the slot that owns the
+      // charged skill (same special/ultimate inference declare uses).
+      // Ordering parity with the normal path is preserved: the cast
+      // resource/cooldown was already committed at charge-init, so the
+      // gain lands on the post-consume pool — Bat Kiem Thuat accrues
+      // currentThe at hit completion and Tru Tien Kiem Tran stays
+      // reachable. Gated on captured targets like the normal path's
+      // `affected.length > 0` requirement.
+      if (chargedSkill && declared.chargeTargetIds.length > 0) {
+        if (actor.special?.skill.id === chargedSkill.id) {
+          actor.entity.currentThe = Math.min(MAX_THE, (actor.entity.currentThe ?? 0) + THE_GAIN_PER_LINK)
+        } else if (actor.ultimate?.skill.id === chargedSkill.id) {
+          actor.entity.currentThe = Math.min(MAX_THE, (actor.entity.currentThe ?? 0) + THE_GAIN_PER_FINISHER)
         }
       }
 

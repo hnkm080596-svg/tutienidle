@@ -26,7 +26,12 @@ const ELEMENTAL_BASIC_B: TurnSkillDefinition = {
 }
 
 function makeEntity(id: string): CombatEntity {
-  const stats = createBaseStats({ attack: 100, accuracyRating: 9999, evasionRate: 0 })
+  // M8 flake fix — stats.maxHp must agree with the 1M currentHp/maxHp
+  // fixture below: refreshParticipantStats clamps currentHp to the
+  // EFFECTIVE maxHp, so the old default (100) silently turned this
+  // "immortal" target into a 100-hp one that a random ~5% crit (143)
+  // killed, dropping the second composite pick's hit (~2-5% flake).
+  const stats = createBaseStats({ attack: 100, accuracyRating: 9999, evasionRate: 0, maxHp: 1_000_000 })
   return {
     id,
     name: id,
