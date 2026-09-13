@@ -3,9 +3,12 @@ import type { EquipmentBag } from './EquipmentBag'
 import type { EquipmentRegistry } from './EquipmentRegistry'
 import type { EquipmentSlotManager } from './EquipmentSlotManager'
 import type { AffixRegistry } from './AffixRegistry'
-import type { EquipmentSlot } from './EquipmentTypes'
 import type { MaterialBag } from '../material/MaterialBag'
-import type { StatModifier } from '../stats/StatCalculator'
+import {
+  captureEquipmentInstanceSnapshot,
+  equipmentInstanceMatchesSnapshot,
+  type EquipmentInstanceSnapshot,
+} from './EquipmentInstanceSnapshot'
 import {
   REFINE_INCREASE_MAX,
   REFINE_INCREASE_MIN,
@@ -47,88 +50,14 @@ export interface RefineValueEntry {
   value: number
 }
 
-interface RefineAffixSnapshot {
-  affixId: string
-
-  tier: number
-
-  value: number
-}
-
-interface RefineInstanceSnapshot {
-  instanceId: string
-
-  itemId: string
-
-  slot: EquipmentSlot
-
-  equipped: boolean
-
-  locked: boolean | undefined
-
-  favorite: boolean | undefined
-
-  grade: EquipmentInstance['grade']
-
-  quality: EquipmentInstance['quality']
-
-  realmLevel: number | undefined
-
-  zoneId: string | undefined
-
-  icon: string | undefined
-
-  forgeUsesTotal: number
-
-  forgeUsesRemaining: number
-
-  mainStat: StatModifier
-
-  affixes: RefineAffixSnapshot[]
-}
-
 interface PendingRefinePreview {
   instance: EquipmentInstance
 
   membershipGeneration: number
 
-  snapshot: RefineInstanceSnapshot
+  snapshot: EquipmentInstanceSnapshot
 
   values: RefineValueEntry[]
-}
-
-function cloneRefineMainStat(mainStat: StatModifier): StatModifier {
-  return {
-    id: mainStat.id,
-    sourceId: mainStat.sourceId,
-    sourceType: mainStat.sourceType,
-    stat: mainStat.stat,
-    tag: mainStat.tag,
-    flat: mainStat.flat,
-    percent: mainStat.percent,
-    multiplier: mainStat.multiplier,
-    stacks: mainStat.stacks,
-    maxStacks: mainStat.maxStacks,
-    perLevelFlat: mainStat.perLevelFlat,
-    perLevelPercent: mainStat.perLevelPercent,
-  }
-}
-
-function refineMainStatMatches(current: StatModifier, expected: StatModifier): boolean {
-  return (
-    current.id === expected.id &&
-    current.sourceId === expected.sourceId &&
-    current.sourceType === expected.sourceType &&
-    current.stat === expected.stat &&
-    current.tag === expected.tag &&
-    current.flat === expected.flat &&
-    current.percent === expected.percent &&
-    current.multiplier === expected.multiplier &&
-    current.stacks === expected.stacks &&
-    current.maxStacks === expected.maxStacks &&
-    current.perLevelFlat === expected.perLevelFlat &&
-    current.perLevelPercent === expected.perLevelPercent
-  )
 }
 
 function isExactRefineValueEntry(value: unknown): value is RefineValueEntry {
@@ -282,35 +211,10 @@ export function commitRefineValues(
     return { ok: false, reason: 'invalid_refine_preview' }
   }
 
-  const snapshot = pending.snapshot
   const snapshotMatches =
     pending.instance === instance &&
     inventory.getMembershipGeneration(instance) === pending.membershipGeneration &&
-    instance.instanceId === snapshot.instanceId &&
-    instance.itemId === snapshot.itemId &&
-    instance.slot === snapshot.slot &&
-    instance.equipped === snapshot.equipped &&
-    instance.locked === snapshot.locked &&
-    instance.favorite === snapshot.favorite &&
-    instance.grade === snapshot.grade &&
-    instance.quality === snapshot.quality &&
-    instance.realmLevel === snapshot.realmLevel &&
-    instance.zoneId === snapshot.zoneId &&
-    instance.icon === snapshot.icon &&
-    instance.forgeUsesTotal === snapshot.forgeUsesTotal &&
-    instance.forgeUsesRemaining === snapshot.forgeUsesRemaining &&
-    refineMainStatMatches(instance.mainStat, snapshot.mainStat) &&
-    instance.affixes.length === snapshot.affixes.length &&
-    instance.affixes.every((affix, index) => {
-      const expected = snapshot.affixes[index]
-
-      return (
-        expected !== undefined &&
-        affix.affixId === expected.affixId &&
-        affix.tier === expected.tier &&
-        affix.value === expected.value
-      )
-    })
+    equipmentInstanceMatchesSnapshot(instance, pending.snapshot)
 
   const payloadMatches =
     Array.isArray(values) &&
@@ -498,23 +402,7 @@ function rollRefineValues(
   deps.refinePendingSlot.set({
     instance,
     membershipGeneration,
-    snapshot: {
-      instanceId: instance.instanceId,
-      itemId: instance.itemId,
-      slot: instance.slot,
-      equipped: instance.equipped,
-      locked: instance.locked,
-      favorite: instance.favorite,
-      grade: instance.grade,
-      quality: instance.quality,
-      realmLevel: instance.realmLevel,
-      zoneId: instance.zoneId,
-      icon: instance.icon,
-      forgeUsesTotal: instance.forgeUsesTotal,
-      forgeUsesRemaining: instance.forgeUsesRemaining,
-      mainStat: cloneRefineMainStat(instance.mainStat),
-      affixes: instance.affixes.map(({ affixId, tier, value }) => ({ affixId, tier, value })),
-    },
+    snapshot: captureEquipmentInstanceSnapshot(instance),
     values: values.map(({ index, value }) => ({ index, value })),
   })
 

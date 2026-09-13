@@ -10,6 +10,11 @@ import type { StatType } from '../stats/StatTypes'
 import type { MaterialBag } from '../material/MaterialBag'
 import type { ItemQuality } from '../item/ItemQuality'
 import {
+  captureEquipmentInstanceSnapshot,
+  equipmentInstanceMatchesSnapshot,
+  type EquipmentInstanceSnapshot,
+} from './EquipmentInstanceSnapshot'
+import {
   ITEM_QUALITY_AFFIX_TIER,
   ITEM_QUALITY_EXALTED_AFFIX_CHANCE,
   ITEM_QUALITY_SUBSTATS_RANGE,
@@ -63,7 +68,9 @@ function rollWashAffixes(
   affixRegistry: AffixRegistry,
   deps: WashDeps,
   random: () => number = Math.random,
-): { ok: true; affixes: RolledAffix[] } | { ok: false; reason: string } {
+):
+  | { ok: true; instance: EquipmentInstance; membershipGeneration: number; affixes: RolledAffix[] }
+  | { ok: false; reason: string } {
   const instance = inventory.get(instanceId)
 
   if (!instance || !registry.has(instance.itemId)) {
@@ -197,6 +204,16 @@ function rollWashAffixes(
     rolled.push(exalted)
   }
 
+  // M2 (ARCH-011) — exact-object membership capability, captured before
+  // payment (refine precedent): the lookup above already proved this is
+  // the live object in the bag; the undefined guard keeps a misbehaving
+  // EquipmentBag from charging resources for an unbindable ticket.
+  const membershipGeneration = inventory.getMembershipGeneration(instance)
+
+  if (membershipGeneration === undefined) {
+    return { ok: false, reason: 'not_found' }
+  }
+
   // Every failure path exits before this transaction mutates resources.
   // Preview pays here; commit only applies the already-paid roll.
   deps.spendItemRefinementPoints(instance, 1)
@@ -205,7 +222,7 @@ function rollWashAffixes(
 
   materialBag.remove(SPIRIT_STONE_MATERIAL_ID, cost.spiritStone)
 
-  return { ok: true, affixes: rolled }
+  return { ok: true, instance, membershipGeneration, affixes: rolled }
 }
 
 export function washAffixes(
@@ -242,10 +259,25 @@ export function washAffixes(
  * (QA-R9-001: a module singleton survived restore and let a ticket
  * from a previous session be committed). The instance injects the
  * slot accessor through WashDeps.
+ *
+ * M2 (ARCH-011) — the ticket binds ONE item lifetime, not a string id:
+ * the exact live object, its bag-membership generation, and a detached
+ * issued-at snapshot. Commit revalidates all three plus current
+ * locked/favorite eligibility, so a same-instanceId replacement, a
+ * remove/re-add generation bump, or any item mutation voids the ticket.
  */
 export interface PendingWashSlot {
   ticketId: string
-  instanceId: string
+
+  /** Exact object the paid roll was issued for (identity, not id). */
+  instance: EquipmentInstance
+
+  /** Bag membership generation captured at preview time. */
+  membershipGeneration: number
+
+  /** Detached issued-at item shape (id, quality/grade, affixes, flags). */
+  snapshot: EquipmentInstanceSnapshot
+
   affixes: RolledAffix[]
 }
 
@@ -331,7 +363,17 @@ export function previewWashAffixes(
   }
 
   const ticketId = deps.washPendingSlot.nextTicketId()
-  deps.washPendingSlot.set({ ticketId, instanceId, affixes: result.affixes })
+
+  // M2 (ARCH-011) — bind the paid roll to the exact item lifetime: the
+  // live object, its current membership generation, and the post-payment
+  // snapshot (same position as refine: forge spend already recorded).
+  deps.washPendingSlot.set({
+    ticketId,
+    instance: result.instance,
+    membershipGeneration: result.membershipGeneration,
+    snapshot: captureEquipmentInstanceSnapshot(result.instance),
+    affixes: result.affixes,
+  })
 
   return { ok: true, ticketId }
 }
@@ -341,6 +383,12 @@ export function previewWashAffixes(
  * (AR-21): mọi commit attempt TIÊU ticket (kể cả khi item đã biến
  * mất); affixes áp vào instance là bản DOMAIN đã giữ, không nhận
  * dữ liệu từ caller.
+ *
+ * M2 (ARCH-011) — commit revalidates against the CURRENT bag: the
+ * ticket only authorizes the exact bound object while it still occupies
+ * the same membership generation AND keeps its issued-at snapshot
+ * (locked/favorite included). Current eligibility is re-checked so a
+ * same-id replacement that is itself protected reports its real state.
  */
 export function commitWashAffixes(
   instanceId: string,
@@ -361,7 +409,27 @@ export function commitWashAffixes(
     return { ok: false, reason: 'not_found' }
   }
 
-  if (!pending || pending.ticketId !== ticketId || pending.instanceId !== instanceId) {
+  if (!pending || pending.ticketId !== ticketId || pending.snapshot.instanceId !== instanceId) {
+    return { ok: false, reason: 'no_pending_wash' }
+  }
+
+  // Eligibility revalidation — flags flipped after preview must reject
+  // instead of overwriting a protected item (preview vocabulary kept).
+  if (instance.locked) {
+    return { ok: false, reason: 'locked' }
+  }
+
+  if (instance.favorite) {
+    return { ok: false, reason: 'favorite' }
+  }
+
+  // Item-lifetime binding: same exact object, same membership
+  // generation (remove/re-add bumps it), unchanged issued-at shape.
+  if (
+    pending.instance !== instance ||
+    inventory.getMembershipGeneration(instance) !== pending.membershipGeneration ||
+    !equipmentInstanceMatchesSnapshot(instance, pending.snapshot)
+  ) {
     return { ok: false, reason: 'no_pending_wash' }
   }
 
