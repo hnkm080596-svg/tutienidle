@@ -1382,6 +1382,27 @@ bug không bắt được bằng type-check).
 
 </details>
 
+### R11 close-out — ✅ DONE 2026-09-14 (branch `feat/r11-r14-missions`)
+
+- **AR-28 (tab/selection semantics) — fixed:** `TabBar` renders a real
+  tablist (`role="tablist"`, per-tab `role="tab"` + `aria-selected` +
+  roving tabindex, Arrow/Home/End navigation moving focus and selection
+  together). Standalone `Chip` uses (filters, mode switchers) report
+  `aria-pressed`; chips under `role="tab"` keep `aria-selected`.
+- **AR-29 (scene-helper ownership) — fixed:** the three named helpers now
+  take narrow host contracts instead of the full `CombatScene`:
+  `CombatCastBar` → `CastBarHost`; `CombatPositionInterpolation` → a
+  `now()` clock only; `CombatTelegraph` → `TelegraphHost` + its chase
+  state (target/shown/segment/snapshotAt) moved into the module (scene
+  keeps read-only passthroughs). Guards:
+  `tests/architecture/sceneHelperBoundaries.test.ts`.
+- **AR-26 + AR-27 — verified already resolved** by the V4/V10
+  static/dynamic boundary work (2026-09-11): `formationSlotStyle` derives
+  DOM hit regions from the same `ProjectionBridge` the preview canvas
+  draws with; `useDynamicRegion` owns the open→create→captured→destroy
+  generation contract for the async preview (close-during-boot race
+  guarded by `bootGeneration`).
+
 ---
 
 # Phase R12 — Presentation / Asset Infrastructure Cleanup
@@ -1464,6 +1485,26 @@ Asset routing must validate normalized containment before moving files.
    (serial run is green).
 ```
 
+### R12 close-out — ✅ DONE 2026-09-14 (branch `feat/r11-r14-missions`)
+
+- **AR-30 (duplicated enemy-art lists) — fixed:** the three identical
+  20-entry mortal enemy template-id lists folded into one canonical
+  `MORTAL_ENEMY_TEMPLATE_IDS` in `src/game/support/EnemyArt.ts`;
+  `CombatPreload` re-exports it as `ENEMY_TEMPLATE_IDS` and
+  `CombatPresentationCatalogue` consumes it directly. Guard:
+  `tests/architecture/enemyArtEnumeration.test.ts`.
+- **AR-24 residual — fixed:** `computeRestoreIdentity` moved to
+  `saveTypes.ts` (pure types module) so `GameManagerSaveRestore` (core)
+  no longer value-imports the localStorage-touching `SaveSystem` module.
+- **`CombatScene` constant drift — fixed:** module-local duplicates of
+  `combatConstants` removed (cast-bar, damage colors, lane/perspective/
+  shadow, `CHARACTER_WIDTH_RATIO`, `PLAYER_ID`,
+  `DOT_TEXT_FLUSH_INTERVAL_MS`) plus dead `PLAYER_SOURCE_SIZE`; values
+  verified identical before deletion.
+- `PLAYER_TEXTURE_URL` now derives from
+  `PLAYER_VISUAL_PROFILES.mortal.combatTextureUrl` instead of a second
+  literal spelling.
+
 ---
 
 # Phase R13 — Legacy / Parallel Authority Retirement
@@ -1505,6 +1546,29 @@ unused-looking
 names alone.
 
 Do not activate inert features simply because they exist.
+
+### R13 close-out — ✅ DONE 2026-09-14 (branch `feat/r11-r14-missions`)
+
+- **Dead modules removed** (zero production consumers, proven by
+  full-tree scan): `ChainStateSystem`, `BounceChain`, `ChannelQueue`,
+  `TrueShot`, `useCadenceSmoothing`, `AcquisitionReceipt` (contract never
+  adopted — receipt semantics live inline in alchemy/quest results +
+  tests), `WuxingRelations` (parallel sinh/khac table; `ElementReaction`
+  owns the live one), `themePhaserSync` + `phaserThemeBridge`
+  (zero-caller chain), `termGlossary` (roadmap 10.4 item).
+- **AR-25 — no-op sync hook removed:** `syncLegacyBattleState` dropped
+  from `CombatAnimationRuntime` deps and the presentation-ops wiring.
+- **AR-19 residual — TurnBuff* alias layer retired:** TurnBuffSystem/
+  TurnBuffPool/TurnBuffTypes/TurnBuffNames deleted; consumers migrated to
+  canonical `core/buff/*`. `data/buff/TurnBuffRegistry.ts` →
+  `BuffRegistry.ts`; the minimal definition-lookup contract renamed
+  `BuffDefinitionCatalog` (was colliding with the `BuffRegistry` class).
+  `data/buff/TurnBuffs.ts` → `ZoneDotBuffs.ts` (real zone-as-dot content,
+  retired naming only).
+- **Kept with reason:** `Battle` interface + `getBattle()` cast
+  (documented compat boundary, ~10 live consumers); `LegacyBuffs` (live
+  content); world-map HexLayout/WorldMapValidator (parked feature);
+  `dropSampling` (shared test infra).
 
 ---
 
@@ -1722,6 +1786,24 @@ Each enforcement rule should protect a real regression class discovered by Missi
    P14 deferred (isolated-worktree exception; no visual surface).
 ```
 
+```text
+✅+ 2026-09-14 (branch feat/r11-r14-missions) — Slice 4 shipped: guards
+   for the contracts R11/R12/R13 stabilized in the same branch:
+   - canonicalBuffSurface.test.ts: zero TurnBuff* tokens and zero
+     syncLegacyBattleState references in production source — the AR-19
+     alias layer and AR-25 no-op hook stay retired.
+   - enemyArtEnumeration.test.ts: CombatPreload +
+     CombatPresentationCatalogue must consume MORTAL_ENEMY_TEMPLATE_IDS
+     from EnemyArt and declare no id literals of their own (AR-30).
+   - sceneHelperBoundaries.test.ts: the three AR-29 helpers
+     (combat-cast-bar, combat-position-interpolation, combat-telegraph)
+     may not reference CombatScene; telegraph chase state must live in
+     the module, not on the scene.
+   With R11-R13 shipped, every roadmap-listed guard now has its contract
+   enforced. R14 is COMPLETE for the current audit set — new stabilized
+   contracts add slices as needed.
+```
+
 
 ---
 
@@ -1799,10 +1881,10 @@ R14 Architecture Enforcement
 | 9 | R8 — Quest & Progression Authority | AR-09, AR-10, AR-13 | ✅ COMPLETE — R8.1 2026-09-08; R8.2 slices 1-3 2026-09-11 (tribulation outcome+start, breakthrough outcome); announcement i18n migration 2026-09-14 (descriptor contract, adapters resolve via i18n gateway); no Vue-owned progression writes remain |
 | 10 | R9 — Equipment / Inventory Integrity | AR-21, AR-22, AR-23, AR-34 | ✅ COMPLETE 2026-09-08 |
 | 11 | R10 — Save / Restore Boundary | AR-12, AR-15 | ✅ COMPLETE 2026-09-09 |
-| 12 | R11 — UI Foundation Consolidation | AR-26, AR-27, AR-28 + domain UI | ⏸ — Khí Đường 3-tab layout defect FIXED 2026-09-12 (single-owner `qi-hall.css` + ownership guard); broader consolidation vẫn parked |
-| 13 | R12 — Presentation / Asset Cleanup | AR-24, AR-27, AR-29, AR-30, AR-31 | ⏸ |
-| 14 | R13 — Parallel Authority / Legacy Retirement | AR-19, AR-25 | ⏸ |
-| 15 | R14 — Architecture Enforcement | AR-32, AR-33 + migrated invariants | 🟡 Slices 1-3 shipped: R1/R2/R8.1/AR-33/A6 + combat-contract (two-clock, AC-7c/9b, command boundary) + R8.2 ownership guards (2026-09-11); asset containment + catalog/preload parity + ACK-token guards (2026-09-14); R9 paid-random static guard (2026-09-14); type-level stat guard shipped (R14.3c nominal BaseStats brand, 2026-09-14) |
+| 12 | R11 — UI Foundation Consolidation | AR-26, AR-27, AR-28 + domain UI | ✅ DONE 2026-09-14 — AR-28 tab semantics (tablist/aria-selected/roving tabindex + Chip aria-pressed) + AR-29 narrow host contracts for the three named helpers; AR-26/AR-27 verified already resolved by the V4/V10 boundary work; Khí Đường defect fixed earlier 2026-09-12 |
+| 13 | R12 — Presentation / Asset Cleanup | AR-24, AR-27, AR-29, AR-30, AR-31 | ✅ DONE 2026-09-14 — AR-30 canonical MORTAL_ENEMY_TEMPLATE_IDS in EnemyArt consumed by preload + catalogue; AR-24 computeRestoreIdentity → saveTypes; CombatScene constant drift removed |
+| 14 | R13 — Parallel Authority / Legacy Retirement | AR-19, AR-25 | ✅ DONE 2026-09-14 — dead modules deleted (ChainStateSystem/BounceChain/ChannelQueue/TrueShot/useCadenceSmoothing/AcquisitionReceipt/WuxingRelations/themePhaserSync+phaserThemeBridge/termGlossary); syncLegacyBattleState hook removed; TurnBuff* alias layer retired to canonical core/buff/* |
+| 15 | R14 — Architecture Enforcement | AR-32, AR-33 + migrated invariants | ✅ DONE 2026-09-14 — Slices 1-3 (R1/R2/R8.1/AR-33/A6, combat-contract, R8.2 ownership, asset containment, catalog/preload parity, ACK-token, paid-random, stat-type brand) + Slice 4 guards for the R11-R13 contracts (canonicalBuffSurface, enemyArtEnumeration, sceneHelperBoundaries). Every roadmap-listed guard now has its contract enforced |
 
 ---
 
